@@ -587,7 +587,7 @@ pub override fn dumpFilter.processExpOp2(
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node,
-         "%s → %s" (node.get_op().txt, node.$expType.getTxt( self.$typeNameCtrl## )) );
+         "%s -> %s" (node.get_op().txt, node.$expType.getTxt( self.$typeNameCtrl## )) );
    filter( node.get_exp1(), self, opt.nextOpt() );
    filter( node.get_exp2(), self, opt.nextOpt() );
 };
@@ -664,6 +664,14 @@ pub override fn dumpFilter.processAlias(
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node, "%s = %s" (node.$newName, node.$typeInfo.getTxt(##) ) );
+}
+
+pub override fn dumpFilter.processTestBlock(
+   node: &Nodes.TestBlockNode, opt:Opt ) mut
+{
+   let prefix, depth = opt.get();
+   dump( prefix, depth, node, node.$name.txt );
+   filter( node.$block, self, opt.nextOpt() );
 }
 
 pub override fn dumpFilter.processBoxing(

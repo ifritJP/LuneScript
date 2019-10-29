@@ -624,7 +624,7 @@ fn TransUnit.checkMatchType(
    mut message:str, pos: &Parser.Position, dstTypeList: &List<&Ast.TypeInfo>,
    expListNode: &Nodes.ExpListNode!, allowDstShort:bool, warnForFollow:bool,
    genericsClassType:&Ast.TypeInfo! ) mut :
-   Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!, &List<&Ast.TypeInfo>
+Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!, &List<&Ast.TypeInfo>
 {
    let! expNodeList:&List<&Nodes.Node> = expListNode$.$expList {
       expNodeList = [];
@@ -736,7 +736,7 @@ fn TransUnit.checkMatchType(
             self.addErrMess( pos, "illegal auto boxing error -- %d" (autoBoxingCount) );
          }
          
-         return alt2typeMap, newExpListNode, expTypeList;
+         return result, alt2typeMap, newExpListNode, expTypeList;
       }
       elseif Ast.CanEvalCtrlTypeInfo.hasNeedAutoBoxing( alt2typeMap ) {
          self.addErrMess( pos, "not support auto boxing" );
@@ -744,7 +744,7 @@ fn TransUnit.checkMatchType(
 
       
       if hasImplictCast {
-         return alt2typeMap, newExpListNode, expTypeList;
+         return result, alt2typeMap, newExpListNode, expTypeList;
       }
    }
    if not Ast.CanEvalCtrlTypeInfo.finishNeedAutoBoxing( alt2typeMap, 0 ) {
@@ -752,7 +752,7 @@ fn TransUnit.checkMatchType(
    }
    
    
-   return alt2typeMap, nil, expTypeList;
+   return result, alt2typeMap, nil, expTypeList;
 }
 
 
@@ -772,7 +772,7 @@ fn TransUnit.checkMatchType(
 fn TransUnit.checkMatchValType(
    pos: &Parser.Position, funcTypeInfo:&Ast.TypeInfo, expList:&Nodes.ExpListNode!,
    genericTypeList: &List<&Ast.TypeInfo>, genericsClass:&Ast.TypeInfo! ) mut :
-   Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
+   Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
 {
    let mut argTypeList = funcTypeInfo.$argTypeInfoList;
    switch funcTypeInfo {
@@ -800,14 +800,14 @@ fn TransUnit.checkMatchValType(
       }
    }
 
-   let mut alt2typeMap, newExpNodeList = self.checkMatchType(
+   let matchResult, mut alt2typeMap, newExpNodeList = self.checkMatchType(
       funcTypeInfo.getTxt(##), pos,
       argTypeList, expList, false, warnForFollow, genericsClass );
    
    when! expList, newExpNodeList {
-      return alt2typeMap, newExpNodeList;
+      return matchResult, alt2typeMap, newExpNodeList;
    }
-   return alt2typeMap, expList;
+   return matchResult, alt2typeMap, expList;
 }
 
 
@@ -984,7 +984,7 @@ fn TransUnit.prepareExpCall(
    Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
 {
 
-   if funcTypeInfo.get_kind() == .Macro {
+   if funcTypeInfo.$kind == .Macro {
       self.macroCtrl.startAnalyzeArgMode();
    }
 
@@ -1007,8 +1007,13 @@ fn TransUnit.prepareExpCall(
    }
 
    // 引数の型チェック
-   let mut alt2typeMap, workArgList = self.checkMatchValType(
+   let matchResult, mut alt2typeMap, workArgList = self.checkMatchValType(
       position, funcTypeInfo, argList, genericTypeList, genericsClass );
+
+   if funcTypeInfo.$kind == .Macro and matchResult == .Error {
+      // マクロの場合、引数が一致していない時はエラーで止める。
+      self.error( "unmatch macro arguments. -- %s" (funcTypeInfo.getTxt(##) ) );
+   }
 
    return alt2typeMap, workArgList;
 }
@@ -1481,7 +1486,7 @@ fn TransUnit.analyzeAccessClassField(
    let mut getterFlag = false;
    if mode == .Get or mode == .GetNil {
       let fieldSymbolInfo = classScope.getSymbolInfo(
-         "get_%s" (token.txt), self.scope, false );
+         "get_%s" (token.txt), self.scope, false, self.scopeAccess );
       when! fieldSymbolInfo {
          if ( fieldSymbolInfo.get_kind() == .Mtd or fieldSymbolInfo.get_kind() == .Fun )
          {
@@ -1506,9 +1511,11 @@ fn TransUnit.analyzeAccessClassField(
       //     token.txt, self.scope, false );
       // fieldTypeInfo = classScope.getTypeInfoField(
       //    token.txt, true, self.scope );
-      symbolInfo = classScope.getSymbolInfoField( token.txt, true, self.scope );
+      symbolInfo = classScope.getSymbolInfoField(
+         token.txt, true, self.scope, self.scopeAccess );
       if not symbolInfo {
-         symbolInfo = classScope.getSymbolInfoIfField( token.txt, self.scope );
+         symbolInfo = classScope.getSymbolInfoIfField(
+            token.txt, self.scope, self.scopeAccess );
       }
       when! symbolInfo {
          fieldTypeInfo = symbolInfo.$typeInfo;
@@ -1634,7 +1641,7 @@ fn TransUnit.dumpFieldComp(
    };
 
    scope.filterTypeInfoField(
-      true, self.scope,
+      true, self.scope, self.scopeAccess,
       fn ( symbolInfo: &Ast.SymbolInfo ) : bool {
          if ( isPrefixType ) {
             if not symbolInfo.$staticFlag and
@@ -1671,7 +1678,7 @@ fn TransUnit.dumpFieldComp(
 
 fn TransUnit.dumpSymbolComp( writer: Writer.Writer, scope: &Ast.Scope, pattern: str ) {
    scope.filterSymbolTypeInfo(
-      scope, self.moduleScope,
+      scope, self.moduleScope, self.scopeAccess,
       fn ( symbolInfo: &Ast.SymbolInfo ) : bool {
          return self.dumpComp(writer, pattern, symbolInfo, false );
       });    
@@ -1752,7 +1759,7 @@ fn TransUnit.checkEnumComp(
 
          let pattern = prefix == "" and "" or "^" .. prefix;
          scope.filterTypeInfoField(
-            true, self.scope,
+            true, self.scope, self.scopeAccess,
             fn ( symbolInfo: &Ast.SymbolInfo ) : bool {
                if symbolInfo.$kind == .Mbr {
                   return self.dumpComp( jsonWriter, pattern, symbolInfo, false );
@@ -1959,7 +1966,8 @@ fn TransUnit.analyzeExpField(
    if not symbolInfo {
       let prefixScope = prefixExpType.$scope;
       if! prefixScope {
-         symbolInfo = _exp.getSymbolInfoField( token.txt, true, self.scope );
+         symbolInfo = _exp.getSymbolInfoField(
+            token.txt, true, self.scope, self.scopeAccess );
       }
    }
    
@@ -2061,7 +2069,7 @@ fn TransUnit.analyzeNewAlge(
          argListNode = nil;
       }
 
-      if! let alt2typeMap, mut newExpNodeList = self.checkMatchType(
+      if! let matchResult, alt2typeMap, mut newExpNodeList = self.checkMatchType(
          "call", symbolToken.pos, valInfo.$typeList, argListNode, false, true, nil )
       {
          argList = newExpNodeList.$expList;
@@ -2124,24 +2132,25 @@ fn TransUnit.analyzeExpSymbol(
          self.checkSymbolComp( token );
 
          let! symbolInfo = self.scope.getSymbolTypeInfo(
-            token.txt, self.scope, self.moduleScope )
+            token.txt, self.scope, self.moduleScope, self.scopeAccess )
          {
-            let mut work = self.scope;
-            while true {
-               print( work, self.globalScope, Ast.rootScope );
-               if work == work.$parent {
-                  break;
+            if self.analyzeMode ~= .Diag {
+               let mut work = self.scope;
+               while true {
+                  print( work, self.globalScope, Ast.rootScope );
+                  if work == work.$parent {
+                     break;
+                  }
+                  work = work.$parent;
                }
-               work = work.$parent;
-            }
 
-            self.scope.filterSymbolTypeInfo(
-               self.scope, self.moduleScope,
-               fn ( workSymbolInfo:&Ast.SymbolInfo ): bool {
-                  print( "sym", workSymbolInfo.$name );
-                  return true;
-               } );
-            
+               self.scope.filterSymbolTypeInfo(
+                  self.scope, self.moduleScope, self.scopeAccess,
+                  fn ( workSymbolInfo:&Ast.SymbolInfo ): bool {
+                     print( "sym", workSymbolInfo.$name );
+                     return true;
+                  } );
+            }
             self.error( "not found type -- " .. token.txt );
          };
 
@@ -2212,7 +2221,7 @@ fn TransUnit.analyzeExpOpSet(
                        (Nodes.getNodeKindName( exp.$kind ) ) );
    }
 
-   let alt2typeMap, newExpListNode, expTypeList =
+   let matchResult, alt2typeMap, newExpListNode, expTypeList =
       self.checkMatchType( "= operator", opeToken.pos, exp.$expTypeList,
                            expList, true, false, nil );
 
@@ -2714,7 +2723,7 @@ fn TransUnit.analyzeSuper( firstToken:&Parser.Token ) mut : Nodes.Node {
          }
          else {
             if! let superFunc = (unwrap superType.$scope).getTypeInfoField(
-               currentFunc.$rawTxt, true, self.scope )
+               currentFunc.$rawTxt, true, self.scope, self.scopeAccess )
             {
                if superFunc.$abstractFlag {
                   self.addErrMess( firstToken.pos, "super is abstract." );
@@ -2916,7 +2925,7 @@ fn TransUnit.analyzeExp(
             "can't access to __init of %s" (classTypeInfo.getTxt(##)));
       }
 
-      let alt2type, newArgList = self.checkMatchValType(
+      let matchResult, alt2type, newArgList = self.checkMatchValType(
          exp.$pos, initTypeInfo, argList,
          classTypeInfo.$itemTypeInfoList, classTypeInfo );
 

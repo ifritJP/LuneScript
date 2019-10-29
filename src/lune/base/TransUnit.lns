@@ -76,13 +76,28 @@ class AccessSymPos {
 }
 
 /**
-初期値を持たないシンボルの型を確定させるための処理を行なう。
+初期値を持たない変数について、次処理を行なう。
+
+- 変数の型を確定させる
+- 変数の初期値未確定パス検知
 
 ブロック毎にこのインスタンスを生成し、ブロック終了時にシンボルの型を確定する。
 */
 class TentativeSymbol {
-   pri let mut oldSymbolSet:Set<&Ast.SymbolInfo>!;
+   /** ブロックで値をセットしたシンボルの集合。 */
    pri let mut symbolSet:Set<&Ast.SymbolInfo>;
+   /**
+以前のブロックで値をセットしたシンボルの集合。
+ 
+例えば、 if {} else {} などの条件分岐するブロックで、
+if のブロックを解析中の情報は symbolSet で管理し、
+if のブロックを解析終了時に symbolSet を oldSymbolSet にセットする。
+そして else のブロックを解析し symbolSet で管理する。
+両方が終った所で oldSymbolSet と symbolSet で共通するシンボルの値が確定する。
+    */  
+   pri let mut oldSymbolSet:Set<&Ast.SymbolInfo>!;
+
+   /** 親ブロックを管理する TentativeSymbol */
    pri let mut parent:TentativeSymbol!;
    pri let mut scope:&Ast.Scope;
    pri let mut skipFlag:bool;
@@ -99,15 +114,29 @@ class TentativeSymbol {
       self.accessSymList = [];
    }
 
+   /**
+このブロック内でアクセスしているシンボルを登録する。
+
+未初期化シンボルへのアクセスがないかを検出するために利用する。
+   */
    pub fn addAccessSym( accessSym:&AccessSymPos ) mut {
       self.accessSymList.insert( accessSym );
    }
+   /**
+   このブロック内でアクセスしているシンボルの登録をクリアする。
+   */
    pub fn clearAccessSym() mut {
       if #self.accessSymList ~= 0 {
          self.accessSymList = [];
       }
    }
 
+   /**
+指定のシンボルに値をセット済みかどうかチェックする。
+セット済みの場合、セット済み集合から除外する。
+
+@return セット済みの場合 true
+   */
    pub fn checkAndExclude( mut symbolInfo:&Ast.SymbolInfo ) mut : bool {
       symbolInfo = symbolInfo.getOrg();
       if self.symbolSet.has( symbolInfo ) {
@@ -117,6 +146,9 @@ class TentativeSymbol {
       return false;
    }
 
+   /**
+値をセットしたシンボルを登録する。   
+   */
    pub fn regist( symbolInfo:&Ast.SymbolInfo ) mut : bool {
       self.symbolSet.add( symbolInfo.getOrg() );
       symbolInfo.set_hasValueFlag( true );
@@ -145,6 +177,11 @@ class TentativeSymbol {
       return true;
    }
 
+   /**
+return や break などでそのブロック自体を抜ける場合、
+そこまで解析した情報は無意味になる。
+よって解析情報を捨てることを通知する。
+   */
    pub fn skip() mut {
       foreach symbolInfo in self.symbolSet {
          symbolInfo.set_hasValueFlag( false );
@@ -152,6 +189,10 @@ class TentativeSymbol {
       self.skipFlag = true;
    }
 
+   /**
+   oldSymbolSet と symbolSet に共通するシンボルを確定し、
+   確定した情報を symbolSet にセットする。
+     */   
    fn merge( finishFlag:bool ) mut {
       if self.skipFlag {
          self.skipFlag = false;
@@ -188,6 +229,12 @@ class TentativeSymbol {
       }
    }
 
+   /*
+ブロックの解析処理を終了する。
+
+if {} else {} の if のブロック終了時は、 else のブロックが残っているので、
+complete は false を指定する。
+   */
    pub fn finish( complete:bool ) mut : TentativeSymbol! {
       self.merge( true );
       if! let mut parent = self.parent {
@@ -257,6 +304,8 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
    pri let mut topScope: Ast.Scope;
    /** モジュールの最上位スコープ */
    pri let mut moduleScope: Ast.Scope;
+   /** macro-statement の最上位スコープ */
+   pri let mut macroScope: Ast.Scope!;
 
    /** 解析中の scope */
    pri let mut scope: Ast.Scope;
@@ -279,8 +328,6 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
    pri let mut errMessList: str[] { pub };
    /** 解析警告ーメッセージ */
    pri let mut warnMessList: str[] { pub };
-   /** macro-statement の最上位スコープ */
-   pri let mut macroScope: Ast.Scope!;
 
    /** インポートしているモジュールの TypeInfo -> シンボル情報 */
    pri let mut importModule2ModuleInfo: Map<&Ast.TypeInfo,&Nodes.ModuleInfo>;
@@ -338,12 +385,16 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
    
    pri let mut typeNameCtrl:&Ast.TypeNameCtrl;
 
+   /** __Test ブロック内を解析中の場合 true */
+   pri let mut scopeAccess:Ast.ScopeAccess;
+
    pub fn __init( moduleId:&frontInterface.ModuleId,
                   importModuleInfo:frontInterface.ImportModuleInfo,
                   macroEval: Nodes.MacroEval, analyzeModule:str!, mode:AnalyzeMode!,
                   pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
                   ctrl_info: &Option.TransCtrlInfo )
    {
+      self.scopeAccess = .Normal;
       self.macroCtrl = new Macro.MacroCtrl( macroEval );
       self.typeNameCtrl = Ast.defaultTypeNameCtrl;
       self.protoClassMap = {};
@@ -732,7 +783,8 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
       &Ast.SymbolInfo
    {
       if not allowShadow {
-         if self.scope.getSymbolTypeInfo( name, self.scope, self.moduleScope ) {
+         if self.scope.getSymbolTypeInfo(
+            name, self.scope, self.moduleScope, self.scopeAccess ) {
             self.addErrMess( pos, "shadowing variable -- %s" (name) );
          }
       }
@@ -833,6 +885,7 @@ class ImportParam {
    pub let metaInfo:_MetaInfo;
    pub let scope:Ast.Scope;
    pub let moduleTypeInfo: &Ast.TypeInfo;
+   pub let scopeAccess:Ast.ScopeAccess;
 
    pri let typeId2AtomMap:Map<int,&_TypeInfo>;
 }
@@ -1204,7 +1257,8 @@ class _TypeInfoNormal extend _TypeInfo {
          }
       }
       else {
-         newTypeInfo = param.scope.getTypeInfo( self.txt, param.scope, false );
+         newTypeInfo = param.scope.getTypeInfo(
+            self.txt, param.scope, false, param.scopeAccess );
          if not newTypeInfo {
             foreach val, key in self._toMap() {
                Util.errorLog( "error: illegal self %s:%s" ( key, val ) );
@@ -1394,6 +1448,7 @@ _DefBuiltinFuncType( [
          "_fcall": { "arg": [ "form", "&..." ], "ret": [""] },
          "_load": { "arg": [ "str", "stem!" ], "ret": ["__loadedfunc!", "str!"] },
          "_kind": { "arg": [ "stem!" ], "ret":[ "int" ] },
+         "__eq": { "type": [ "macro" ], "arg": [ "stat", "stat" ], "ret":[ ] },
       },
    },
    {
@@ -1562,7 +1617,7 @@ fn TransUnit.registBuiltInScope() mut {
          scope:&Ast.Scope, symbol:str, genTyeList:List<&Ast.TypeInfo> ) :
          &Ast.TypeInfo!
       {
-         let! typeInfo = scope.getTypeInfo( symbol, scope, false ) {
+         let! typeInfo = scope.getTypeInfo( symbol, scope, false, self.scopeAccess ) {
             return nil;
          };
          return typeInfo;
@@ -1633,15 +1688,34 @@ fn TransUnit.registBuiltInScope() mut {
             }
 
             let funcType = info.type$[1];
-            let methodFlag = funcType == "method" or funcType == "mut";
             let mutable = funcType == "mut";
 
+            let staticFlag;
+            let kind:Ast.TypeInfoKind;
+            let symbolKind:Ast.SymbolKind;
+            switch funcType {
+               case "method", "mut" {
+                  staticFlag = false;
+                  kind = .Method;
+                  symbolKind = .Mtd;
+               }
+               case "macro" {
+                  staticFlag = true;
+                  kind = .Macro;
+                  symbolKind = .Mac;
+               }
+               default {
+                  staticFlag = true;
+                  kind = .Func;
+                  symbolKind = .Fun;
+               }
+            }
+            
             self.pushScope( false ## );
 
             let typeInfo = Ast.NormalTypeInfo.createFunc(
-               false, true, self.scope,
-               methodFlag and Ast.TypeInfoKind.Method or Ast.TypeInfoKind.Func,
-               parentInfo, false, true, not methodFlag, .Pub,
+               false, true, self.scope, kind,
+               parentInfo, false, true, staticFlag, .Pub,
                fieldName, nil, argTypeList, retTypeList, mutable );
 
             self.popScope();
@@ -1651,9 +1725,8 @@ fn TransUnit.registBuiltInScope() mut {
                Ast.builtInTypeIdSet[ typeInfo.$nilableTypeInfo.$typeId ] = typeInfo.$nilableTypeInfo;
             }
             self.scope.add(
-               methodFlag and Ast.SymbolKind.Mtd or Ast.SymbolKind.Fun,
-               not methodFlag, not methodFlag,
-               fieldName, typeInfo, .Pub, not methodFlag,
+               symbolKind, false, kind == .Func,
+               fieldName, typeInfo, .Pub, staticFlag,
                mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true );
 
             setupBuiltinTypeInfo( name, fieldName, typeInfo );
@@ -1767,6 +1840,9 @@ fn TransUnit.registBuiltInScope() mut {
          }
       }
    }
+
+
+   self.macroCtrl.registBuiltinMacro( self.moduleScope );
 
    self.scope = self.topScope;
 }
@@ -2066,11 +2142,17 @@ fn TransUnit.analyzeLuneControl(
 }
 
 enum TentativeMode {
+   /** 関数定義の本体ブロックなど、独立したブロックの最外ブロックに使用する */
    Ignore,
+   /** for 文などのループ処理のブロックで使用する */
    Loop,
+   /** 単純なブロック文など、一つのブロックで完結する場合に使用する */
    Simple,
+   /** if else などの複数ブロックの、if など先頭のブロックで使用する */
    Start,
+   /** if elseif else などの複数ブロックの、elseif などの途中のブロックで使用する */
    Merge,
+   /** if else などの複数ブロックの、 else などの最後のブロックで使用する */
    Finish,
 }
 
@@ -2135,6 +2217,20 @@ fn TransUnit.analyzeBlock(
    }
 
    return node;
+}
+
+fn TransUnit.analyzeTest( firstToken:&Parser.Token ) mut : Nodes.TestBlockNode
+{
+   let nameToken = self.getSymbolToken( .MustNot_ );
+
+   self.scopeAccess = .Full;
+
+   let block = self.analyzeBlock( .Test, .Ignore## );
+
+   self.scopeAccess = .Normal;
+   
+   return Nodes.TestBlockNode.create(
+      self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ], nameToken, block );
 }
 
 
@@ -2320,8 +2416,8 @@ fn TransUnit.processImport( modulePath:str ) mut :
 
    // 初めに child 以外で TypeInfo を登録
    let mut importParam = new ImportParam(
-      self.currentToken.pos, self, typeId2Scope,
-      typeId2TypeInfo, metaInfo, self.scope, moduleTypeInfo, id2atomMap );
+      self.currentToken.pos, self, typeId2Scope, typeId2TypeInfo,
+      metaInfo, self.scope, moduleTypeInfo, self.scopeAccess, id2atomMap );
    foreach atomInfo in _typeInfoList {
       let newTypeInfo, errMess = atomInfo.createTypeInfo( importParam );
       if! errMess {
@@ -2779,7 +2875,9 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
       if nextToken.txt == "(" {
          foreach paramType in valInfo.$typeList {
             let paramName = self.getSymbolToken( .MustNot_ );
-            if self.scope.getTypeInfo( paramName.txt, self.scope, true ) {
+            if self.scope.getTypeInfo(
+               paramName.txt, self.scope, true, self.scopeAccess )
+            {
                self.addErrMess( paramName.pos,
                                 "shadowing variable -- %s" (paramName.txt) );
             }

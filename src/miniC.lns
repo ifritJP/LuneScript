@@ -1,16 +1,5 @@
-class Test<T> {
-   let val:T {pub};
-   pub fn func( val:T ):T {
-      return val;
-   }
+fn func( val:bool ) {
+   print( val, not val, val or true );
 }
-
-fn sub<T>( val:T ): T {
-   return val;
-}
-
-let test = new Test(1);
-print( test.$val + 1 );
-print( test.func( 10 ) + 10 );
-print( sub( 100 ) );
-
+func( true );
+func( false );

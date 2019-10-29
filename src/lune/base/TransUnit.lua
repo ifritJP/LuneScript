@@ -723,6 +723,7 @@ function TransUnit.new( moduleId, importModuleInfo, macroEval, analyzeModule, mo
    return obj
 end
 function TransUnit:__init(moduleId, importModuleInfo, macroEval, analyzeModule, mode, pos, targetLuaVer, ctrl_info) 
+   self.scopeAccess = Ast.ScopeAccess.Normal
    self.macroCtrl = Macro.MacroCtrl.new(macroEval)
    self.typeNameCtrl = Ast.defaultTypeNameCtrl
    self.protoClassMap = {}
@@ -1003,7 +1004,7 @@ end
 function TransUnit:addLocalVar( pos, argFlag, canBeLeft, name, typeInfo, mutable, allowShadow )
 
    if not allowShadow then
-      if self.scope:getSymbolTypeInfo( name, self.scope, self.moduleScope ) then
+      if self.scope:getSymbolTypeInfo( name, self.scope, self.moduleScope, self.scopeAccess ) then
          self:addErrMess( pos, string.format( "shadowing variable -- %s", name) )
       end
       
@@ -1114,15 +1115,15 @@ local ImportParam = {}
 function ImportParam.setmeta( obj )
   setmetatable( obj, { __index = ImportParam  } )
 end
-function ImportParam.new( pos, transUnit, typeId2Scope, typeId2TypeInfo, metaInfo, scope, moduleTypeInfo, typeId2AtomMap )
+function ImportParam.new( pos, transUnit, typeId2Scope, typeId2TypeInfo, metaInfo, scope, moduleTypeInfo, scopeAccess, typeId2AtomMap )
    local obj = {}
    ImportParam.setmeta( obj )
    if obj.__init then
-      obj:__init( pos, transUnit, typeId2Scope, typeId2TypeInfo, metaInfo, scope, moduleTypeInfo, typeId2AtomMap )
+      obj:__init( pos, transUnit, typeId2Scope, typeId2TypeInfo, metaInfo, scope, moduleTypeInfo, scopeAccess, typeId2AtomMap )
    end
    return obj
 end
-function ImportParam:__init( pos, transUnit, typeId2Scope, typeId2TypeInfo, metaInfo, scope, moduleTypeInfo, typeId2AtomMap )
+function ImportParam:__init( pos, transUnit, typeId2Scope, typeId2TypeInfo, metaInfo, scope, moduleTypeInfo, scopeAccess, typeId2AtomMap )
 
    self.pos = pos
    self.transUnit = transUnit
@@ -1131,6 +1132,7 @@ function ImportParam:__init( pos, transUnit, typeId2Scope, typeId2TypeInfo, meta
    self.metaInfo = metaInfo
    self.scope = scope
    self.moduleTypeInfo = moduleTypeInfo
+   self.scopeAccess = scopeAccess
    self.typeId2AtomMap = typeId2AtomMap
 end
 
@@ -1847,7 +1849,7 @@ function _TypeInfoNormal:createTypeInfo( param )
       
    else
     
-      newTypeInfo = param.scope:getTypeInfo( self.txt, param.scope, false )
+      newTypeInfo = param.scope:getTypeInfo( self.txt, param.scope, false, param.scopeAccess )
       if not newTypeInfo then
          for key, val in pairs( self:_toMap(  ) ) do
             Util.errorLog( string.format( "error: illegal self %s:%s", key, val) )
@@ -2152,6 +2154,7 @@ function BuiltinFuncType.new(  )
    return obj
 end
 function BuiltinFuncType:__init() 
+   self.lune___eq = Ast.headTypeInfo
    self.lune__fcall = Ast.headTypeInfo
    self.lune__kind = Ast.headTypeInfo
    self.lune__load = Ast.headTypeInfo
@@ -2252,7 +2255,9 @@ local function setupBuiltinTypeInfo( name, fieldName, typeInfo )
    
       do
          local _switchExp = fieldName
-         if _switchExp == '_fcall' then
+         if _switchExp == '__eq' then
+            builtinFunc.lune___eq = typeInfo
+         elseif _switchExp == '_fcall' then
             builtinFunc.lune__fcall = typeInfo
          elseif _switchExp == '_kind' then
             builtinFunc.lune__kind = typeInfo
@@ -2581,7 +2586,7 @@ local function setupBuiltinTypeInfo( name, fieldName, typeInfo )
 end
 local function getBuiltInInfo(  )
 
-   return {{[""] = {["_fcall"] = {["arg"] = {"form", "&..."}, ["ret"] = {""}}, ["_kind"] = {["arg"] = {"stem!"}, ["ret"] = {"int"}}, ["_load"] = {["arg"] = {"str", "stem!"}, ["ret"] = {"__loadedfunc!", "str!"}}, ["collectgarbage"] = {["arg"] = {}, ["ret"] = {}}, ["error"] = {["arg"] = {"str"}, ["ret"] = {"__"}}, ["load"] = {["arg"] = {"str", "str!", "str!", "stem!"}, ["ret"] = {"form!", "str!"}}, ["loadfile"] = {["arg"] = {"str"}, ["ret"] = {"form!", "str!"}}, ["print"] = {["arg"] = {"&..."}, ["ret"] = {}}, ["require"] = {["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["tonumber"] = {["arg"] = {"str", "int!"}, ["ret"] = {"real!"}}, ["tostring"] = {["arg"] = {"&stem"}, ["ret"] = {"str"}}, ["type"] = {["arg"] = {"&stem!"}, ["ret"] = {"str"}}}}, {["iStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["close"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["read"] = {["arg"] = {"stem!"}, ["ret"] = {"str!"}, ["type"] = {"mut"}}}}, {["oStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["close"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["flush"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["write"] = {["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}, ["type"] = {"mut"}}}}, {["luaStream"] = {["__attrib"] = {["inplements"] = {"iStream", "oStream"}}, ["close"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["flush"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["read"] = {["arg"] = {"stem!"}, ["ret"] = {"str!"}, ["type"] = {"mut"}}, ["seek"] = {["arg"] = {"str", "int"}, ["ret"] = {"int!", "str!"}, ["type"] = {"mut"}}, ["write"] = {["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}, ["type"] = {"mut"}}}}, {["Mapping"] = {["__attrib"] = {["type"] = {"interface"}}, ["_toMap"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"method"}}}}, {["io"] = {["open"] = {["arg"] = {"str", "str!"}, ["ret"] = {"luaStream!"}}, ["popen"] = {["arg"] = {"str"}, ["ret"] = {"luaStream!"}}, ["stderr"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["stdin"] = {["type"] = {"member"}, ["typeInfo"] = {"iStream"}}, ["stdout"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}}}, {["package"] = {["path"] = {["type"] = {"member"}, ["typeInfo"] = {"str"}}, ["searchpath"] = {["arg"] = {"str", "str"}, ["ret"] = {"str!"}}}}, {["os"] = {["clock"] = {["arg"] = {}, ["ret"] = {"real"}}, ["date"] = {["arg"] = {"str!", "stem!"}, ["ret"] = {"stem!"}}, ["difftime"] = {["arg"] = {"stem", "stem"}, ["ret"] = {"int"}}, ["exit"] = {["arg"] = {"int!"}, ["ret"] = {"__"}}, ["remove"] = {["arg"] = {"str"}, ["ret"] = {"bool!", "str!"}}, ["rename"] = {["arg"] = {"str", "str"}, ["ret"] = {"stem!", "str!"}}, ["time"] = {["arg"] = {"stem!"}, ["ret"] = {"stem!"}}}}, {["string"] = {["byte"] = {["arg"] = {"str", "int!", "int!"}, ["ret"] = {"int!"}}, ["dump"] = {["arg"] = {"form", "bool!"}, ["ret"] = {"str"}}, ["find"] = {["arg"] = {"str", "str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["format"] = {["arg"] = {"str", "..."}, ["ret"] = {"str"}}, ["gmatch"] = {["arg"] = {"str", "str"}, ["ret"] = {"form", "stem!", "stem!"}}, ["gsub"] = {["arg"] = {"str", "str", "str"}, ["ret"] = {"str", "int"}}, ["lower"] = {["arg"] = {"str"}, ["ret"] = {"str"}}, ["rep"] = {["arg"] = {"str", "int"}, ["ret"] = {"str"}}, ["reverse"] = {["arg"] = {"str"}, ["ret"] = {"str"}}, ["sub"] = {["arg"] = {"str", "int", "int!"}, ["ret"] = {"str"}}, ["upper"] = {["arg"] = {"str"}, ["ret"] = {"str"}}}}, {["str"] = {["__attrib"] = {["inplements"] = {"Mapping"}}, ["byte"] = {["arg"] = {"int!", "int!"}, ["ret"] = {"int"}, ["type"] = {"method"}}, ["find"] = {["arg"] = {"str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}, ["type"] = {"method"}}, ["format"] = {["arg"] = {"&..."}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["gmatch"] = {["arg"] = {"str"}, ["ret"] = {"form", "stem!", "stem!"}, ["type"] = {"method"}}, ["gsub"] = {["arg"] = {"str", "str"}, ["ret"] = {"str", "int"}, ["type"] = {"method"}}, ["lower"] = {["arg"] = {}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["rep"] = {["arg"] = {"int"}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["reverse"] = {["arg"] = {}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["sub"] = {["arg"] = {"int", "int!"}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["upper"] = {["arg"] = {}, ["ret"] = {"str"}, ["type"] = {"method"}}}}, {["List<T>"] = {["insert"] = {["arg"] = {"&T"}, ["ret"] = {""}, ["type"] = {"mut"}}, ["remove"] = {["arg"] = {"int!"}, ["ret"] = {"T!"}, ["type"] = {"mut"}}, ["sort"] = {["arg"] = {"form!"}, ["ret"] = {}, ["type"] = {"mut"}}, ["unpack"] = {["arg"] = {}, ["ret"] = {"..."}, ["type"] = {"method"}}}}, {["Array<T>"] = {["sort"] = {["arg"] = {"form!"}, ["ret"] = {}, ["type"] = {"mut"}}, ["unpack"] = {["arg"] = {}, ["ret"] = {"..."}, ["type"] = {"method"}}}}, {["Set<T>"] = {["add"] = {["arg"] = {"T"}, ["ret"] = {}, ["type"] = {"mut"}}, ["and"] = {["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}, ["type"] = {"mut"}}, ["clone"] = {["arg"] = {}, ["ret"] = {"Set<T>"}, ["type"] = {"method"}}, ["del"] = {["arg"] = {"T"}, ["ret"] = {}, ["type"] = {"mut"}}, ["has"] = {["arg"] = {"T"}, ["ret"] = {"bool"}, ["type"] = {"method"}}, ["len"] = {["arg"] = {}, ["ret"] = {"int"}, ["type"] = {"method"}}, ["or"] = {["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}, ["type"] = {"mut"}}, ["sub"] = {["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}, ["type"] = {"mut"}}}}, {["math"] = {["random"] = {["arg"] = {"int!", "int!"}, ["ret"] = {"real"}}, ["randomseed"] = {["arg"] = {"int!"}, ["ret"] = {}}}}, {["debug"] = {["getinfo"] = {["arg"] = {"int"}, ["ret"] = {"stem!"}}, ["getlocal"] = {["arg"] = {"int", "int"}, ["ret"] = {"str!", "stem!"}}}}, {["Nilable<_T>"] = {["val"] = {["arg"] = {}, ["ret"] = {"_T!"}, ["type"] = {"method"}}}}}
+   return {{[""] = {["__eq"] = {["arg"] = {"stat", "stat"}, ["ret"] = {}, ["type"] = {"macro"}}, ["_fcall"] = {["arg"] = {"form", "&..."}, ["ret"] = {""}}, ["_kind"] = {["arg"] = {"stem!"}, ["ret"] = {"int"}}, ["_load"] = {["arg"] = {"str", "stem!"}, ["ret"] = {"__loadedfunc!", "str!"}}, ["collectgarbage"] = {["arg"] = {}, ["ret"] = {}}, ["error"] = {["arg"] = {"str"}, ["ret"] = {"__"}}, ["load"] = {["arg"] = {"str", "str!", "str!", "stem!"}, ["ret"] = {"form!", "str!"}}, ["loadfile"] = {["arg"] = {"str"}, ["ret"] = {"form!", "str!"}}, ["print"] = {["arg"] = {"&..."}, ["ret"] = {}}, ["require"] = {["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["tonumber"] = {["arg"] = {"str", "int!"}, ["ret"] = {"real!"}}, ["tostring"] = {["arg"] = {"&stem"}, ["ret"] = {"str"}}, ["type"] = {["arg"] = {"&stem!"}, ["ret"] = {"str"}}}}, {["iStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["close"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["read"] = {["arg"] = {"stem!"}, ["ret"] = {"str!"}, ["type"] = {"mut"}}}}, {["oStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["close"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["flush"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["write"] = {["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}, ["type"] = {"mut"}}}}, {["luaStream"] = {["__attrib"] = {["inplements"] = {"iStream", "oStream"}}, ["close"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["flush"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["read"] = {["arg"] = {"stem!"}, ["ret"] = {"str!"}, ["type"] = {"mut"}}, ["seek"] = {["arg"] = {"str", "int"}, ["ret"] = {"int!", "str!"}, ["type"] = {"mut"}}, ["write"] = {["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}, ["type"] = {"mut"}}}}, {["Mapping"] = {["__attrib"] = {["type"] = {"interface"}}, ["_toMap"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"method"}}}}, {["io"] = {["open"] = {["arg"] = {"str", "str!"}, ["ret"] = {"luaStream!"}}, ["popen"] = {["arg"] = {"str"}, ["ret"] = {"luaStream!"}}, ["stderr"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["stdin"] = {["type"] = {"member"}, ["typeInfo"] = {"iStream"}}, ["stdout"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}}}, {["package"] = {["path"] = {["type"] = {"member"}, ["typeInfo"] = {"str"}}, ["searchpath"] = {["arg"] = {"str", "str"}, ["ret"] = {"str!"}}}}, {["os"] = {["clock"] = {["arg"] = {}, ["ret"] = {"real"}}, ["date"] = {["arg"] = {"str!", "stem!"}, ["ret"] = {"stem!"}}, ["difftime"] = {["arg"] = {"stem", "stem"}, ["ret"] = {"int"}}, ["exit"] = {["arg"] = {"int!"}, ["ret"] = {"__"}}, ["remove"] = {["arg"] = {"str"}, ["ret"] = {"bool!", "str!"}}, ["rename"] = {["arg"] = {"str", "str"}, ["ret"] = {"stem!", "str!"}}, ["time"] = {["arg"] = {"stem!"}, ["ret"] = {"stem!"}}}}, {["string"] = {["byte"] = {["arg"] = {"str", "int!", "int!"}, ["ret"] = {"int!"}}, ["dump"] = {["arg"] = {"form", "bool!"}, ["ret"] = {"str"}}, ["find"] = {["arg"] = {"str", "str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["format"] = {["arg"] = {"str", "..."}, ["ret"] = {"str"}}, ["gmatch"] = {["arg"] = {"str", "str"}, ["ret"] = {"form", "stem!", "stem!"}}, ["gsub"] = {["arg"] = {"str", "str", "str"}, ["ret"] = {"str", "int"}}, ["lower"] = {["arg"] = {"str"}, ["ret"] = {"str"}}, ["rep"] = {["arg"] = {"str", "int"}, ["ret"] = {"str"}}, ["reverse"] = {["arg"] = {"str"}, ["ret"] = {"str"}}, ["sub"] = {["arg"] = {"str", "int", "int!"}, ["ret"] = {"str"}}, ["upper"] = {["arg"] = {"str"}, ["ret"] = {"str"}}}}, {["str"] = {["__attrib"] = {["inplements"] = {"Mapping"}}, ["byte"] = {["arg"] = {"int!", "int!"}, ["ret"] = {"int"}, ["type"] = {"method"}}, ["find"] = {["arg"] = {"str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}, ["type"] = {"method"}}, ["format"] = {["arg"] = {"&..."}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["gmatch"] = {["arg"] = {"str"}, ["ret"] = {"form", "stem!", "stem!"}, ["type"] = {"method"}}, ["gsub"] = {["arg"] = {"str", "str"}, ["ret"] = {"str", "int"}, ["type"] = {"method"}}, ["lower"] = {["arg"] = {}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["rep"] = {["arg"] = {"int"}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["reverse"] = {["arg"] = {}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["sub"] = {["arg"] = {"int", "int!"}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["upper"] = {["arg"] = {}, ["ret"] = {"str"}, ["type"] = {"method"}}}}, {["List<T>"] = {["insert"] = {["arg"] = {"&T"}, ["ret"] = {""}, ["type"] = {"mut"}}, ["remove"] = {["arg"] = {"int!"}, ["ret"] = {"T!"}, ["type"] = {"mut"}}, ["sort"] = {["arg"] = {"form!"}, ["ret"] = {}, ["type"] = {"mut"}}, ["unpack"] = {["arg"] = {}, ["ret"] = {"..."}, ["type"] = {"method"}}}}, {["Array<T>"] = {["sort"] = {["arg"] = {"form!"}, ["ret"] = {}, ["type"] = {"mut"}}, ["unpack"] = {["arg"] = {}, ["ret"] = {"..."}, ["type"] = {"method"}}}}, {["Set<T>"] = {["add"] = {["arg"] = {"T"}, ["ret"] = {}, ["type"] = {"mut"}}, ["and"] = {["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}, ["type"] = {"mut"}}, ["clone"] = {["arg"] = {}, ["ret"] = {"Set<T>"}, ["type"] = {"method"}}, ["del"] = {["arg"] = {"T"}, ["ret"] = {}, ["type"] = {"mut"}}, ["has"] = {["arg"] = {"T"}, ["ret"] = {"bool"}, ["type"] = {"method"}}, ["len"] = {["arg"] = {}, ["ret"] = {"int"}, ["type"] = {"method"}}, ["or"] = {["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}, ["type"] = {"mut"}}, ["sub"] = {["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}, ["type"] = {"mut"}}}}, {["math"] = {["random"] = {["arg"] = {"int!", "int!"}, ["ret"] = {"real"}}, ["randomseed"] = {["arg"] = {"int!"}, ["ret"] = {}}}}, {["debug"] = {["getinfo"] = {["arg"] = {"int"}, ["ret"] = {"stem!"}}, ["getlocal"] = {["arg"] = {"int", "int"}, ["ret"] = {"str!", "stem!"}}}}, {["Nilable<_T>"] = {["val"] = {["arg"] = {}, ["ret"] = {"_T!"}, ["type"] = {"method"}}}}}
 end
 
 local function isStrFormFunc( typeInfo )
@@ -2615,7 +2620,7 @@ function TransUnit:registBuiltInScope(  )
       
       local function getTypeInfoFromScope( scope, symbol, genTyeList )
       
-         local typeInfo = scope:getTypeInfo( symbol, scope, false )
+         local typeInfo = scope:getTypeInfo( symbol, scope, false, self.scopeAccess )
          if  nil == typeInfo then
             local _typeInfo = typeInfo
          
@@ -2697,17 +2702,40 @@ function TransUnit:registBuiltInScope(  )
             end
             
             local funcType = _lune.nilacc( info['type'], nil, 'item', 1)
-            local methodFlag = funcType == "method" or funcType == "mut"
             local mutable = funcType == "mut"
+            local staticFlag
+            
+            local kind
+            
+            local symbolKind
+            
+            do
+               local _switchExp = funcType
+               if _switchExp == "method" or _switchExp == "mut" then
+                  staticFlag = false
+                  kind = Ast.TypeInfoKind.Method
+                  symbolKind = Ast.SymbolKind.Mtd
+               elseif _switchExp == "macro" then
+                  staticFlag = true
+                  kind = Ast.TypeInfoKind.Macro
+                  symbolKind = Ast.SymbolKind.Mac
+               else 
+                  
+                     staticFlag = true
+                     kind = Ast.TypeInfoKind.Func
+                     symbolKind = Ast.SymbolKind.Fun
+               end
+            end
+            
             self:pushScope( false )
-            local typeInfo = Ast.NormalTypeInfo.createFunc( false, true, self.scope, methodFlag and Ast.TypeInfoKind.Method or Ast.TypeInfoKind.Func, parentInfo, false, true, not methodFlag, Ast.AccessMode.Pub, fieldName, nil, argTypeList, retTypeList, mutable )
+            local typeInfo = Ast.NormalTypeInfo.createFunc( false, true, self.scope, kind, parentInfo, false, true, staticFlag, Ast.AccessMode.Pub, fieldName, nil, argTypeList, retTypeList, mutable )
             self:popScope(  )
             Ast.builtInTypeIdSet[typeInfo:get_typeId(  )] = typeInfo
             if typeInfo:get_nilableTypeInfo() ~= Ast.headTypeInfo then
                Ast.builtInTypeIdSet[typeInfo:get_nilableTypeInfo():get_typeId()] = typeInfo:get_nilableTypeInfo()
             end
             
-            self.scope:add( methodFlag and Ast.SymbolKind.Mtd or Ast.SymbolKind.Fun, not methodFlag, not methodFlag, fieldName, typeInfo, Ast.AccessMode.Pub, not methodFlag, mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true )
+            self.scope:add( symbolKind, false, kind == Ast.TypeInfoKind.Func, fieldName, typeInfo, Ast.AccessMode.Pub, staticFlag, mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true )
             setupBuiltinTypeInfo( name, fieldName, typeInfo )
          end
          
@@ -2828,6 +2856,7 @@ function TransUnit:registBuiltInScope(  )
       
    end
    
+   self.macroCtrl:registBuiltinMacro( self.moduleScope )
    self.scope = self.topScope
 end
 
@@ -3236,6 +3265,15 @@ function TransUnit:analyzeBlock( blockKind, tentativeMode, scope )
    return node
 end
 
+function TransUnit:analyzeTest( firstToken )
+
+   local nameToken = self:getSymbolToken( SymbolMode.MustNot_ )
+   self.scopeAccess = Ast.ScopeAccess.Full
+   local block = self:analyzeBlock( Nodes.BlockKind.Test, TentativeMode.Ignore )
+   self.scopeAccess = Ast.ScopeAccess.Normal
+   return Nodes.TestBlockNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeNone}, nameToken, block )
+end
+
 local DependModuleInfo = {}
 function DependModuleInfo:getTypeInfo( metaTypeId )
 
@@ -3261,7 +3299,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = '@lune.@base.@TransUnit.TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2162, function (  )
+   Log.log( Log.Level.Info, __func__, 2258, function (  )
    
       return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), modulePath)
    end )
@@ -3276,7 +3314,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2174, function (  )
+               Log.log( Log.Level.Info, __func__, 2270, function (  )
                
                   return string.format( "%s already", modulePath)
                end )
@@ -3306,7 +3344,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2194, function (  )
+   Log.log( Log.Level.Info, __func__, 2290, function (  )
    
       return string.format( "%s processing", modulePath)
    end )
@@ -3442,7 +3480,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local orgId2MacroTypeInfo = {}
-   local importParam = ImportParam.new(self.currentToken.pos, self, typeId2Scope, typeId2TypeInfo, metaInfo, self.scope, moduleTypeInfo, id2atomMap)
+   local importParam = ImportParam.new(self.currentToken.pos, self, typeId2Scope, typeId2TypeInfo, metaInfo, self.scope, moduleTypeInfo, self.scopeAccess, id2atomMap)
    for __index, atomInfo in pairs( _typeInfoList ) do
       local newTypeInfo, errMess = atomInfo:createTypeInfo( importParam )
       do
@@ -3624,7 +3662,7 @@ function TransUnit:processImport( modulePath )
    self.importModule2ModuleInfo[moduleTypeInfo] = moduleInfo
    self.importModuleName2ModuleInfo[modulePath] = moduleInfo
    self.importModuleInfo:remove(  )
-   Log.log( Log.Level.Info, __func__, 2523, function (  )
+   Log.log( Log.Level.Info, __func__, 2619, function (  )
    
       return string.format( "%s complete", modulePath)
    end )
@@ -3848,7 +3886,7 @@ function TransUnit:analyzeMatch( firstToken )
       if nextToken.txt == "(" then
          for __index, paramType in pairs( valInfo:get_typeList() ) do
             local paramName = self:getSymbolToken( SymbolMode.MustNot_ )
-            if self.scope:getTypeInfo( paramName.txt, self.scope, true ) then
+            if self.scope:getTypeInfo( paramName.txt, self.scope, true, self.scopeAccess ) then
                self:addErrMess( paramName.pos, string.format( "shadowing variable -- %s", paramName.txt) )
             end
             
@@ -4367,7 +4405,7 @@ function TransUnit:analyzeDeclArgList( accessMode, scope, argList, parentPub )
       else
        
          argName = self:checkSymbol( argName, SymbolMode.MustNot_ )
-         if scope:getSymbolTypeInfo( argName.txt, scope, self.moduleScope ) then
+         if scope:getSymbolTypeInfo( argName.txt, scope, self.moduleScope, self.scopeAccess ) then
             self:addErrMess( argName.pos, string.format( "shadowing variable -- %s", argName.txt) )
          end
          
@@ -4388,7 +4426,7 @@ function TransUnit:checkOverriededMethod(  )
 
    local function checkOverrideMethodSub( pos, alt2typeMap, classScope, scope )
    
-      scope:filterTypeInfoField( true, classScope, function ( symbolInfo )
+      scope:filterTypeInfoField( true, classScope, self.scopeAccess, function ( symbolInfo )
       
          if symbolInfo:get_name() == "__init" then
             return true
@@ -4397,7 +4435,7 @@ function TransUnit:checkOverriededMethod(  )
          if symbolInfo:get_typeInfo():get_kind() == Ast.TypeInfoKind.Method then
             local noImp = false
             do
-               local impMethodType = classScope:getTypeInfoField( symbolInfo:get_name(), true, classScope )
+               local impMethodType = classScope:getTypeInfoField( symbolInfo:get_name(), true, classScope, self.scopeAccess )
                if impMethodType ~= nil then
                   if not impMethodType:canEvalWith( symbolInfo:get_typeInfo(), Ast.CanEvalType.SetOp, alt2typeMap ) then
                      self:addErrMess( pos, string.format( "mismatch method -- %s %s", symbolInfo:get_typeInfo():get_display_stirng(), impMethodType:get_display_stirng()) )
@@ -4767,7 +4805,7 @@ function TransUnit:analyzeExtend( accessMode, firstPos )
    
    local symbol2TypeInfo = {}
    for __index, ifType in pairs( interfaceList ) do
-      _lune.nilacc( ifType:get_scope(), 'filterTypeInfoField', 'callmtd' , true, self.scope, function ( symbolInfo )
+      _lune.nilacc( ifType:get_scope(), 'filterTypeInfoField', 'callmtd' , true, self.scope, self.scopeAccess, function ( symbolInfo )
       
          do
             local ifFuncType = symbol2TypeInfo[symbolInfo:get_name()]
@@ -4840,7 +4878,7 @@ function TransUnit:analyzeDeclAlternateType( belongClassFlag, token, accessMode 
    while true do
       altIndex = altIndex + 1
       local genericSymToken = self:getSymbolToken( SymbolMode.MustNot_ )
-      if self.scope:getTypeInfo( genericSymToken.txt, self.scope, true ) then
+      if self.scope:getTypeInfo( genericSymToken.txt, self.scope, true, self.scopeAccess ) then
          self:addErrMess( genericSymToken.pos, string.format( "shadowing Type -- %s", genericSymToken.txt) )
       else
        
@@ -5233,6 +5271,8 @@ function TransUnit:analyzeDecl( accessMode, staticFlag, firstToken, token )
       return self:analyzeDeclForm( accessMode, firstToken )
    elseif token.txt == "alias" then
       return self:analyzeAlias( accessMode, firstToken )
+   elseif token.txt == "__test" then
+      return self:analyzeTest( firstToken )
    end
    
    return nil
@@ -5441,7 +5481,7 @@ function TransUnit:analyzeFuncBlock( analyzingState, firstToken, classTypeInfo, 
 
    if classTypeInfo ~= nil then
       do
-         local overrideType = self.scope:get_parent():getTypeInfoField( funcName, false, funcBodyScope )
+         local overrideType = self.scope:get_parent():getTypeInfoField( funcName, false, funcBodyScope, self.scopeAccess )
          if overrideType ~= nil then
             if not overrideType:get_abstractFlag() then
                funcBodyScope:addLocalVar( false, false, "super", overrideType, Ast.MutMode.IMut )
@@ -5693,7 +5733,7 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
          else
           
             do
-               local symbolInfo = self.scope:getSymbolInfo( token.txt, self.scope, false )
+               local symbolInfo = self.scope:getSymbolInfo( token.txt, self.scope, false, self.scopeAccess )
                if symbolInfo ~= nil then
                   if symbolInfo:get_kind() == Ast.SymbolKind.Mac then
                      self:checkNextToken( "(" )
@@ -5793,7 +5833,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
       
    end
    
-   local existSymbolInfo = self.scope:getSymbolTypeInfo( name.txt, self.scope, self.scope )
+   local existSymbolInfo = self.scope:getSymbolTypeInfo( name.txt, self.scope, self.scope, self.scopeAccess )
    local nextToken, classTypeInfo = self:analyzePushClass( mode ~= DeclClassMode.Interface, classAbstructFlag, firstToken, name, classAccessMode, altTypeList )
    if self.protoClassMap[classTypeInfo] then
       self.protoClassMap[classTypeInfo] = nil
@@ -6163,7 +6203,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
       
       
       do
-         local overrideType = self.scope:get_parent():getTypeInfoField( funcName, false, funcBodyScope )
+         local overrideType = self.scope:get_parent():getTypeInfoField( funcName, false, funcBodyScope, self.scopeAccess )
          if overrideType ~= nil then
             if overrideType:get_accessMode(  ) ~= accessMode then
                self:addErrMess( firstToken.pos, string.format( "mismatch override accessMode -- %s,%s,%s", funcName, Ast.AccessMode:_getTxt( overrideType:get_accessMode(  ))
@@ -6206,12 +6246,12 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
     
       if name ~= nil then
          if name.txt ~= "__init" then
-            if self.scope:get_parent():getTypeInfoField( name.txt, false, funcBodyScope ) then
+            if self.scope:get_parent():getTypeInfoField( name.txt, false, funcBodyScope, self.scopeAccess ) then
                self:addErrMess( firstToken.pos, "mismatch override --" .. funcName )
             else
              
                do
-                  local ifFunc = self.scope:get_parent():getSymbolInfoIfField( name.txt, funcBodyScope )
+                  local ifFunc = self.scope:get_parent():getSymbolInfoIfField( name.txt, funcBodyScope, self.scopeAccess )
                   if ifFunc ~= nil then
                      if not ifFunc:get_typeInfo():canEvalWith( typeInfo, Ast.CanEvalType.SetOp, alt2typeMap ) then
                         self:addErrMess( firstToken.pos, string.format( "mismatch method type -- %s", funcName) )
@@ -6665,7 +6705,7 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
       end
       
       if mode == Nodes.DeclVarMode.Sync then
-         if self.scope:getTypeInfo( varName.txt, self.scope, true ) then
+         if self.scope:getTypeInfo( varName.txt, self.scope, true, self.scopeAccess ) then
             table.insert( syncSymbolList, varInfo )
          end
          
@@ -6673,7 +6713,7 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
       
       if mode == Nodes.DeclVarMode.Let or mode == Nodes.DeclVarMode.Sync then
          if mode == Nodes.DeclVarMode.Let then
-            if self.scope:getTypeInfo( varName.txt, self.scope, true ) then
+            if self.scope:getTypeInfo( varName.txt, self.scope, true, self.scopeAccess ) then
                self:addErrMess( varName.pos, string.format( "shadowing variable -- %s", varName.txt) )
             end
             
@@ -6696,7 +6736,7 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
          self.scope:addVar( accessMode, varName.txt, typeInfo, letVarInfo.mutable, hasValue )
       end
       
-      table.insert( symbolInfoList, _lune.unwrap( self.scope:getSymbolInfo( varName.txt, self.scope, true )) )
+      table.insert( symbolInfoList, _lune.unwrap( self.scope:getSymbolInfo( varName.txt, self.scope, true, self.scopeAccess )) )
    end
    
    if mode ~= Nodes.DeclVarMode.Sync and self.macroScope then
@@ -7444,13 +7484,13 @@ function TransUnit:checkMatchType( message, pos, dstTypeList, expListNode, allow
             self:addErrMess( pos, string.format( "illegal auto boxing error -- %d", autoBoxingCount) )
          end
          
-         return alt2typeMap, newExpListNode, expTypeList
+         return result, alt2typeMap, newExpListNode, expTypeList
       elseif Ast.CanEvalCtrlTypeInfo.hasNeedAutoBoxing( alt2typeMap ) then
          self:addErrMess( pos, "not support auto boxing" )
       end
       
       if hasImplictCast then
-         return alt2typeMap, newExpListNode, expTypeList
+         return result, alt2typeMap, newExpListNode, expTypeList
       end
       
    end
@@ -7459,7 +7499,7 @@ function TransUnit:checkMatchType( message, pos, dstTypeList, expListNode, allow
       self:addErrMess( pos, "can't auto boxing error" )
    end
    
-   return alt2typeMap, nil, expTypeList
+   return result, alt2typeMap, nil, expTypeList
 end
 
 function TransUnit:checkMatchValType( pos, funcTypeInfo, expList, genericTypeList, genericsClass )
@@ -7485,12 +7525,12 @@ function TransUnit:checkMatchValType( pos, funcTypeInfo, expList, genericTypeLis
       
    end
    
-   local alt2typeMap, newExpNodeList = self:checkMatchType( funcTypeInfo:getTxt(  ), pos, argTypeList, expList, false, warnForFollow, genericsClass )
+   local matchResult, alt2typeMap, newExpNodeList = self:checkMatchType( funcTypeInfo:getTxt(  ), pos, argTypeList, expList, false, warnForFollow, genericsClass )
    if expList ~= nil and newExpNodeList ~= nil then
-      return alt2typeMap, newExpNodeList
+      return matchResult, alt2typeMap, newExpNodeList
    end
    
-   return alt2typeMap, expList
+   return matchResult, alt2typeMap, expList
 end
 
 function TransUnit:evalMacroOp( firstToken, macroTypeInfo, expList, evalMacroCallback )
@@ -7649,7 +7689,7 @@ end
 
 function TransUnit:prepareExpCall( position, funcTypeInfo, genericTypeList, genericsClass )
 
-   if funcTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Macro then
+   if funcTypeInfo:get_kind() == Ast.TypeInfoKind.Macro then
       self.macroCtrl:startAnalyzeArgMode(  )
    end
    
@@ -7671,7 +7711,11 @@ function TransUnit:prepareExpCall( position, funcTypeInfo, genericTypeList, gene
       
    end
    
-   local alt2typeMap, workArgList = self:checkMatchValType( position, funcTypeInfo, argList, genericTypeList, genericsClass )
+   local matchResult, alt2typeMap, workArgList = self:checkMatchValType( position, funcTypeInfo, argList, genericTypeList, genericsClass )
+   if funcTypeInfo:get_kind() == Ast.TypeInfoKind.Macro and matchResult == Ast.MatchType.Error then
+      self:error( string.format( "unmatch macro arguments. -- %s", funcTypeInfo:getTxt(  )) )
+   end
+   
    return alt2typeMap, workArgList
 end
 
@@ -8081,7 +8125,7 @@ function TransUnit:analyzeAccessClassField( classTypeInfo, mode, token )
    local fieldTypeInfo = nil
    local getterFlag = false
    if mode == ExpSymbolMode.Get or mode == ExpSymbolMode.GetNil then
-      local fieldSymbolInfo = classScope:getSymbolInfo( string.format( "get_%s", token.txt), self.scope, false )
+      local fieldSymbolInfo = classScope:getSymbolInfo( string.format( "get_%s", token.txt), self.scope, false, self.scopeAccess )
       if fieldSymbolInfo ~= nil then
          if (fieldSymbolInfo:get_kind(  ) == Ast.SymbolKind.Mtd or fieldSymbolInfo:get_kind(  ) == Ast.SymbolKind.Fun ) then
             local retTypeList = fieldSymbolInfo:get_typeInfo():get_retTypeInfoList(  )
@@ -8108,9 +8152,9 @@ function TransUnit:analyzeAccessClassField( classTypeInfo, mode, token )
    end
    
    if not symbolInfo then
-      symbolInfo = classScope:getSymbolInfoField( token.txt, true, self.scope )
+      symbolInfo = classScope:getSymbolInfoField( token.txt, true, self.scope, self.scopeAccess )
       if not symbolInfo then
-         symbolInfo = classScope:getSymbolInfoIfField( token.txt, self.scope )
+         symbolInfo = classScope:getSymbolInfoIfField( token.txt, self.scope, self.scopeAccess )
       end
       
       if symbolInfo ~= nil then
@@ -8251,7 +8295,7 @@ function TransUnit:dumpFieldComp( writer, isPrefixType, prefixTypeInfo, pattern,
       return 
    end
    
-   scope:filterTypeInfoField( true, self.scope, function ( symbolInfo )
+   scope:filterTypeInfoField( true, self.scope, self.scopeAccess, function ( symbolInfo )
    
       if (isPrefixType ) then
          if not symbolInfo:get_staticFlag() and not symbolInfo:get_typeInfo():get_staticFlag() and symbolInfo:get_kind() ~= Ast.SymbolKind.Typ then
@@ -8286,7 +8330,7 @@ end
 
 function TransUnit:dumpSymbolComp( writer, scope, pattern )
 
-   scope:filterSymbolTypeInfo( scope, self.moduleScope, function ( symbolInfo )
+   scope:filterSymbolTypeInfo( scope, self.moduleScope, self.scopeAccess, function ( symbolInfo )
    
       return self:dumpComp( writer, pattern, symbolInfo, false )
    end )
@@ -8363,7 +8407,7 @@ function TransUnit:checkEnumComp( token, enumTypeInfo )
       end
       
       local pattern = prefix == "" and "" or "^" .. prefix
-      scope:filterTypeInfoField( true, self.scope, function ( symbolInfo )
+      scope:filterTypeInfoField( true, self.scope, self.scopeAccess, function ( symbolInfo )
       
          if symbolInfo:get_kind() == Ast.SymbolKind.Mbr then
             return self:dumpComp( jsonWriter, pattern, symbolInfo, false )
@@ -8552,7 +8596,7 @@ function TransUnit:analyzeExpField( firstToken, token, mode, prefixExp )
       do
          local _exp = prefixScope
          if _exp ~= nil then
-            symbolInfo = _exp:getSymbolInfoField( token.txt, true, self.scope )
+            symbolInfo = _exp:getSymbolInfoField( token.txt, true, self.scope, self.scopeAccess )
          end
       end
       
@@ -8640,8 +8684,8 @@ function TransUnit:analyzeNewAlge( firstToken, algeTypeInfo, prefix )
          end
          
          do
-            local alt2typeMap, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, nil )
-            if alt2typeMap ~= nil and newExpNodeList ~= nil then
+            local matchResult, alt2typeMap, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, nil )
+            if matchResult ~= nil and alt2typeMap ~= nil and newExpNodeList ~= nil then
                argList = newExpNodeList:get_expList()
             end
          end
@@ -8693,25 +8737,28 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
       else
        
          self:checkSymbolComp( token )
-         local symbolInfo = self.scope:getSymbolTypeInfo( token.txt, self.scope, self.moduleScope )
+         local symbolInfo = self.scope:getSymbolTypeInfo( token.txt, self.scope, self.moduleScope, self.scopeAccess )
          if  nil == symbolInfo then
             local _symbolInfo = symbolInfo
          
-            local work = self.scope
-            while true do
-               print( work, self.globalScope, Ast.rootScope )
-               if work == work:get_parent() then
-                  break
+            if self.analyzeMode ~= AnalyzeMode.Diag then
+               local work = self.scope
+               while true do
+                  print( work, self.globalScope, Ast.rootScope )
+                  if work == work:get_parent() then
+                     break
+                  end
+                  
+                  work = work:get_parent()
                end
                
-               work = work:get_parent()
+               self.scope:filterSymbolTypeInfo( self.scope, self.moduleScope, self.scopeAccess, function ( workSymbolInfo )
+               
+                  print( "sym", workSymbolInfo:get_name() )
+                  return true
+               end )
             end
             
-            self.scope:filterSymbolTypeInfo( self.scope, self.moduleScope, function ( workSymbolInfo )
-            
-               print( "sym", workSymbolInfo:get_name() )
-               return true
-            end )
             self:error( "not found type -- " .. token.txt )
          end
          
@@ -8776,7 +8823,7 @@ function TransUnit:analyzeExpOpSet( exp, opeToken, expList )
       self:addErrMess( exp:get_pos(), string.format( "this node can not be l-value. -- %s", Nodes.getNodeKindName( exp:get_kind() )) )
    end
    
-   local alt2typeMap, newExpListNode, expTypeList = self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), expList, true, false, nil )
+   local matchResult, alt2typeMap, newExpListNode, expTypeList = self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), expList, true, false, nil )
    for index, symbolInfo in pairs( exp:getSymbolInfo(  ) ) do
       if not symbolInfo:get_mutable() and symbolInfo:get_hasValueFlag() then
          if self.validMutControl then
@@ -9195,7 +9242,7 @@ function TransUnit:analyzeSuper( firstToken )
          else
           
             do
-               local superFunc = (_lune.unwrap( superType:get_scope()) ):getTypeInfoField( currentFunc:get_rawTxt(), true, self.scope )
+               local superFunc = (_lune.unwrap( superType:get_scope()) ):getTypeInfoField( currentFunc:get_rawTxt(), true, self.scope, self.scopeAccess )
                if superFunc ~= nil then
                   if superFunc:get_abstractFlag() then
                      self:addErrMess( firstToken.pos, "super is abstract." )
@@ -9381,7 +9428,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, prevOpLevel, expectTy
          self:addErrMess( token.pos, string.format( "can't access to __init of %s", classTypeInfo:getTxt(  )) )
       end
       
-      local alt2type, newArgList = self:checkMatchValType( exp:get_pos(), initTypeInfo, argList, classTypeInfo:get_itemTypeInfoList(), classTypeInfo )
+      local matchResult, alt2type, newArgList = self:checkMatchValType( exp:get_pos(), initTypeInfo, argList, classTypeInfo:get_itemTypeInfoList(), classTypeInfo )
       if #classTypeInfo:get_itemTypeInfoList() > 0 then
          if classTypeInfo:get_itemTypeInfoList()[1]:get_kind() == Ast.TypeInfoKind.Alternate then
             local genTypeList = {}
@@ -9656,8 +9703,8 @@ function TransUnit:analyzeReturn( token )
    
    if expList ~= nil then
       do
-         local alt2typeMap, newExpNodeList = self:checkMatchType( "return", token.pos, retTypeList, expList, false, not expList:get_followOn(), nil )
-         if alt2typeMap ~= nil and newExpNodeList ~= nil then
+         local matchResult, alt2typeMap, newExpNodeList = self:checkMatchType( "return", token.pos, retTypeList, expList, false, not expList:get_followOn(), nil )
+         if matchResult ~= nil and alt2typeMap ~= nil and newExpNodeList ~= nil then
             expList = newExpNodeList
          end
       end

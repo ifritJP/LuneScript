@@ -256,7 +256,8 @@ fn TransUnit.analyzeDeclArgList(
       else {
          argName = self.checkSymbol( argName, .MustNot_ );
 
-         if scope.getSymbolTypeInfo( argName.txt, scope, self.moduleScope ) {
+         if scope.getSymbolTypeInfo(
+            argName.txt, scope, self.moduleScope, self.scopeAccess ) {
             self.addErrMess( argName.pos,
                              "shadowing variable -- %s" (argName.txt) );
          }
@@ -287,7 +288,7 @@ fn TransUnit.checkOverriededMethod() mut
       classScope:&Ast.Scope, scope:&Ast.Scope )
    {
       scope.filterTypeInfoField(
-         true, classScope,
+         true, classScope, self.scopeAccess,
          fn ( symbolInfo:&Ast.SymbolInfo ): bool {
             if symbolInfo.$name == "__init" {
                return true;
@@ -295,7 +296,7 @@ fn TransUnit.checkOverriededMethod() mut
             if symbolInfo.$typeInfo.$kind == .Method {
                let mut noImp = false;
                if! let impMethodType = classScope.getTypeInfoField(
-                  symbolInfo.$name, true, classScope )
+                  symbolInfo.$name, true, classScope, self.scopeAccess )
                {
                   if not impMethodType.canEvalWith(
                      symbolInfo.$typeInfo, .SetOp, alt2typeMap )
@@ -629,7 +630,7 @@ fn TransUnit.analyzeDeclMacro(
    // スコープをマクロ用スコープに変更
    let mut backScope = self.scope;
    self.scope = scope;   
-
+  
    let mut node = self.analyzeDeclMacroSub(
       accessMode, firstToken, nameToken, scope, parentInfo, workArgList );
 
@@ -713,7 +714,7 @@ fn TransUnit.analyzeExtend( accessMode:Ast.AccessMode, firstPos: &Parser.Positio
    let mut symbol2TypeInfo:Map<str,&Ast.TypeInfo> = {};
    foreach ifType in interfaceList {
       ifType.$scope$.filterTypeInfoField$(
-         true, self.scope,
+         true, self.scope, self.scopeAccess,
          fn ( symbolInfo:&Ast.SymbolInfo ): bool {
             if! let ifFuncType = symbol2TypeInfo[ symbolInfo.$name ] {
                let ret, mess = ifFuncType.canEvalWith(
@@ -801,7 +802,9 @@ fn TransUnit.analyzeDeclAlternateType(
    while true {
       altIndex = altIndex + 1;
       let genericSymToken = self.getSymbolToken( .MustNot_ );
-      if self.scope.getTypeInfo( genericSymToken.txt, self.scope, true) {
+      if self.scope.getTypeInfo(
+         genericSymToken.txt, self.scope, true, self.scopeAccess)
+      {
          self.addErrMess( genericSymToken.pos,
                           "shadowing Type -- %s" (genericSymToken.txt) );
       }
@@ -1130,6 +1133,7 @@ fn TransUnit.analyzeAlias(
 }
 
 
+
 fn TransUnit.analyzeRetTypeList(
    pubToExtFlag:bool, accessMode:Ast.AccessMode,
    mut token:&Parser.Token, parentPub:bool ) mut :
@@ -1275,6 +1279,9 @@ fn TransUnit.analyzeDecl(
    }
    elseif token.txt == "alias" {
       return self.analyzeAlias( accessMode, firstToken );
+   }
+   elseif token.txt == "__test" {
+      return self.analyzeTest( firstToken );
    }
 
    return nil;
@@ -1524,8 +1531,8 @@ fn TransUnit.analyzeFuncBlock(
    funcBodyScope:Ast.Scope, retTypeInfoList:&List<&Ast.TypeInfo> ) mut : Nodes.BlockNode
 {
    when! classTypeInfo {
-      if! let overrideType =
-         self.scope.$parent.getTypeInfoField( funcName, false, funcBodyScope )
+      if! let overrideType = self.scope.$parent.getTypeInfoField(
+         funcName, false, funcBodyScope, self.scopeAccess )
       {
          if not overrideType.$abstractFlag {
             funcBodyScope.addLocalVar( false, false, "super", overrideType, .IMut );
@@ -1822,7 +1829,7 @@ fn TransUnit.analyzeClassBody(
          }
          else {
             if! let symbolInfo = self.scope.getSymbolInfo(
-               token.txt, self.scope, false )
+               token.txt, self.scope, false, self.scopeAccess )
             {
                if symbolInfo.$kind == .Mac {
 
@@ -1941,7 +1948,8 @@ fn TransUnit.analyzeDeclClass(
       }
    }
 
-   let existSymbolInfo = self.scope.getSymbolTypeInfo( name.txt, self.scope, self.scope );
+   let existSymbolInfo = self.scope.getSymbolTypeInfo(
+      name.txt, self.scope, self.scope, self.scopeAccess );
 
    let mut nextToken, classTypeInfo = self.analyzePushClass(
       mode ~= .Interface, classAbstructFlag,
@@ -2443,8 +2451,8 @@ fn TransUnit.analyzeDeclFunc(
       if not name {
          self.addErrMess( firstToken.pos, "can't override anonymous func" );
       };
-      if! let overrideType =
-         self.scope.$parent.getTypeInfoField( funcName, false, funcBodyScope )
+      if! let overrideType = self.scope.$parent.getTypeInfoField(
+         funcName, false, funcBodyScope, self.scopeAccess )
       {
          if overrideType.get_accessMode() ~= accessMode {
             self.addErrMess( firstToken.pos, "mismatch override accessMode -- %s,%s,%s"
@@ -2486,13 +2494,15 @@ fn TransUnit.analyzeDeclFunc(
    else {
       when! name {
          if name.txt ~= "__init" {
-            if self.scope.$parent.getTypeInfoField( name.txt, false, funcBodyScope ) {
+            if self.scope.$parent.getTypeInfoField(
+               name.txt, false, funcBodyScope, self.scopeAccess ) {
                // override 宣言していないのに、オーバーライドしている場合エラー
                self.addErrMess( firstToken.pos, "mismatch override --" .. funcName );
             }
             else {
                if! let ifFunc =
-                  self.scope.$parent.getSymbolInfoIfField( name.txt, funcBodyScope )
+                  self.scope.$parent.getSymbolInfoIfField(
+                     name.txt, funcBodyScope, self.scopeAccess )
                {
                   if not ifFunc.$typeInfo.canEvalWith( typeInfo, .SetOp, alt2typeMap ) {
                      self.addErrMess( firstToken.pos,
@@ -3033,14 +3043,14 @@ fn TransUnit.analyzeDeclVar(
       }
       if mode == .Sync {
          // スコープに登録する前に、シンボルを検索
-         if self.scope.getTypeInfo( varName.txt, self.scope, true ) {
+         if self.scope.getTypeInfo( varName.txt, self.scope, true, self.scopeAccess ) {
             syncSymbolList.insert( varInfo );
          }
       }
       // スコープに変数を登録
       if mode == .Let or mode == .Sync {
          if mode == .Let {
-            if self.scope.getTypeInfo( varName.txt, self.scope, true ) {
+            if self.scope.getTypeInfo( varName.txt, self.scope, true, self.scopeAccess ) {
                self.addErrMess( varName.pos,
                                 "shadowing variable -- %s" (varName.txt) );
             }
@@ -3063,7 +3073,8 @@ fn TransUnit.analyzeDeclVar(
             accessMode, varName.txt, typeInfo, letVarInfo.mutable, hasValue );
       }
       symbolInfoList.insert(
-         unwrap self.scope.getSymbolInfo( varName.txt, self.scope, true ) );
+         unwrap self.scope.getSymbolInfo( varName.txt, self.scope,
+                                          true, self.scopeAccess ) );
    }
    if mode ~= .Sync and self.macroScope {
       self.macroCtrl.registVar( symbolInfoList );

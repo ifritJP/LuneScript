@@ -1425,6 +1425,9 @@ BlockKind.__allList[17] = BlockKind.IfUnwrap
 BlockKind.When = 17
 BlockKind._val2NameMap[17] = 'When'
 BlockKind.__allList[18] = BlockKind.When
+BlockKind.Test = 18
+BlockKind._val2NameMap[18] = 'Test'
+BlockKind.__allList[19] = BlockKind.Test
 
 function NodeKind.get_Block(  )
 
@@ -7341,7 +7344,7 @@ end
 function DeclClassNode:hasUserInit(  )
 
    local scope = _lune.unwrap( self:get_expType():get_scope())
-   local initFuncType = _lune.unwrap( scope:getTypeInfoField( "__init", true, scope ))
+   local initFuncType = _lune.unwrap( scope:getTypeInfoField( "__init", true, scope, Ast.ScopeAccess.Normal ))
    return not initFuncType:get_autoFlag()
 end
 
@@ -8020,6 +8023,96 @@ end
 function MacroEval:__init(  )
 
 end
+
+function NodeKind.get_TestBlock(  )
+
+   return _lune.unwrap( _moduleObj.nodeKind['TestBlock'])
+end
+
+
+regKind( "TestBlock" )
+function Filter:processTestBlock( node, opt )
+
+end
+
+
+function NodeManager:getTestBlockNodeList(  )
+
+   return self:getList( _lune.unwrap( _moduleObj.nodeKind['TestBlock']) )
+end
+
+
+local TestBlockNode = {}
+setmetatable( TestBlockNode, { __index = Node } )
+_moduleObj.TestBlockNode = TestBlockNode
+function TestBlockNode:processFilter( filter, opt )
+
+   filter:processTestBlock( self, opt )
+end
+function TestBlockNode:canBeRight(  )
+
+   return false
+end
+function TestBlockNode:canBeLeft(  )
+
+   return false
+end
+function TestBlockNode:canBeStatement(  )
+
+   return true
+end
+function TestBlockNode.new( id, pos, typeList, name, block )
+   local obj = {}
+   TestBlockNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, typeList, name, block ); end
+   return obj
+end
+function TestBlockNode:__init(id, pos, typeList, name, block) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['TestBlock']), pos, typeList)
+   
+   
+   self.name = name
+   self.block = block
+   
+end
+function TestBlockNode.create( nodeMan, pos, typeList, name, block )
+
+   local node = TestBlockNode.new(nodeMan:nextId(  ), pos, typeList, name, block)
+   nodeMan:addNode( node )
+   return node
+end
+function TestBlockNode:visit( visitor, depth )
+
+   do
+      local child = self.block
+      do
+         local _switchExp = visitor( child, self, 'block', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   
+   return true
+end
+function TestBlockNode.setmeta( obj )
+  setmetatable( obj, { __index = TestBlockNode  } )
+end
+function TestBlockNode:get_name()
+   return self.name
+end
+function TestBlockNode:get_block()
+   return self.block
+end
+
 
 function NodeKind.get_Abbr(  )
 

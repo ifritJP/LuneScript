@@ -243,6 +243,7 @@ local cTypeVarP = "lune_var_t *"
 local cValNil = "lune_global.nilStem"
 local accessAny = ".val.pAny"
 local stepIndent = 3
+local scopeAccess = Ast.ScopeAccess.Full
 local function getSymbolName( symbolInfo )
 
    if Ast.isPubToExternal( symbolInfo:get_accessMode() ) then
@@ -284,19 +285,19 @@ local function isClosure( funcType )
    
    return false
 end
-local PubVerInfo = {}
-function PubVerInfo.setmeta( obj )
-  setmetatable( obj, { __index = PubVerInfo  } )
+local PubVarInfo = {}
+function PubVarInfo.setmeta( obj )
+  setmetatable( obj, { __index = PubVarInfo  } )
 end
-function PubVerInfo.new( staticFlag, accessMode, mutable, typeInfo )
+function PubVarInfo.new( staticFlag, accessMode, mutable, typeInfo )
    local obj = {}
-   PubVerInfo.setmeta( obj )
+   PubVarInfo.setmeta( obj )
    if obj.__init then
       obj:__init( staticFlag, accessMode, mutable, typeInfo )
    end
    return obj
 end
-function PubVerInfo:__init( staticFlag, accessMode, mutable, typeInfo )
+function PubVarInfo:__init( staticFlag, accessMode, mutable, typeInfo )
 
    self.staticFlag = staticFlag
    self.accessMode = accessMode
@@ -467,7 +468,7 @@ local function isStemRet( retTypeList )
    
    return true
 end
-local function getCType( valType, varFlag )
+local function getCType( valType )
 
    local expType = valType:get_srcTypeInfo()
    do
@@ -475,18 +476,14 @@ local function getCType( valType, varFlag )
       if _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeChar then
          return cTypeInt
       elseif _switchExp == Ast.builtinTypeReal then
-         return "lune_real_t"
+         return cTypeReal
       else 
          
             do
                local enumType = _lune.__Cast( expType, 3, Ast.EnumTypeInfo )
                if enumType ~= nil then
-                  return getCType( enumType:get_valTypeInfo(), varFlag )
+                  return getCType( enumType:get_valTypeInfo() )
                end
-            end
-            
-            if varFlag then
-               return cTypeVarP
             end
             
             return cTypeStem
@@ -501,7 +498,7 @@ local function getCRetType( retTypeList )
       if _switchExp == 0 then
          return "void"
       elseif _switchExp == 1 then
-         return getCType( retTypeList[1], false )
+         return getCType( retTypeList[1] )
       end
    end
    
@@ -568,9 +565,9 @@ function ModuleCtrl:__init(typeNameCtrl, moduleInfoManager)
    self.typeNameCtrl = typeNameCtrl
    self.moduleInfoManager = moduleInfoManager
 end
-function ModuleCtrl:getFilePath( typeInfo )
+function ModuleCtrl:getFilePath( moduleTypeInfo )
 
-   local workName = typeInfo:getFullName( self.typeNameCtrl, self.moduleInfoManager, false )
+   local workName = moduleTypeInfo:getFullName( self.typeNameCtrl, self.moduleInfoManager, false )
    local fullName = string.format( "%s", (workName:gsub( "[&@]", "" ):gsub( "%.", "/" ) ))
    return fullName
 end
@@ -716,18 +713,15 @@ ValKind.__allList[1] = ValKind.Prim
 ValKind.StemWork = 1
 ValKind._val2NameMap[1] = 'StemWork'
 ValKind.__allList[2] = ValKind.StemWork
-ValKind.StemMbr = 2
-ValKind._val2NameMap[2] = 'StemMbr'
-ValKind.__allList[3] = ValKind.StemMbr
-ValKind.Stem = 3
-ValKind._val2NameMap[3] = 'Stem'
-ValKind.__allList[4] = ValKind.Stem
-ValKind.Var = 4
-ValKind._val2NameMap[4] = 'Var'
-ValKind.__allList[5] = ValKind.Var
-ValKind.Other = 5
-ValKind._val2NameMap[5] = 'Other'
-ValKind.__allList[6] = ValKind.Other
+ValKind.Stem = 2
+ValKind._val2NameMap[2] = 'Stem'
+ValKind.__allList[3] = ValKind.Stem
+ValKind.Var = 3
+ValKind._val2NameMap[3] = 'Var'
+ValKind.__allList[4] = ValKind.Var
+ValKind.Other = 4
+ValKind._val2NameMap[4] = 'Other'
+ValKind.__allList[5] = ValKind.Other
 
 local SymbolParam = {}
 function SymbolParam.setmeta( obj )
@@ -902,7 +896,7 @@ function ScopeMgr:setupScopeParam( scope )
                            stemNum = stemNum + 1
                         else
                          
-                           param = SymbolParam.new(ValKind.Prim, 0, getCType( symbol:get_typeInfo(), false ))
+                           param = SymbolParam.new(ValKind.Prim, 0, getCType( symbol:get_typeInfo() ))
                         end
                         
                      elseif _switchExp == Ast.SymbolKind.Mtd then
@@ -917,16 +911,10 @@ function ScopeMgr:setupScopeParam( scope )
                      else 
                         
                            if isStemType( symbol:get_typeInfo() ) then
-                              if symbol:get_kind() == Ast.SymbolKind.Mbr then
-                                 param = SymbolParam.new(ValKind.StemMbr, 0, cTypeStem)
-                              else
-                               
-                                 param = SymbolParam.new(ValKind.Other, 0, cTypeStem)
-                              end
-                              
+                              param = SymbolParam.new(ValKind.Other, 0, cTypeStem)
                            else
                             
-                              param = SymbolParam.new(ValKind.Prim, 0, getCType( symbol:get_typeInfo(), false ))
+                              param = SymbolParam.new(ValKind.Prim, 0, getCType( symbol:get_typeInfo() ))
                            end
                            
                      end
@@ -1765,7 +1753,7 @@ function convFilter:processDeclEnum( node, opt )
                local _switchExp = out2HMode
                if _switchExp == Out2HMode.HeaderPub or _switchExp == Out2HMode.SourcePri then
                   self:writeln( string.format( "%s%s %s_get__allList( lune_env_t * _pEnv );", prefix, cTypeStem, enumFullName) )
-                  self:writeln( string.format( "%s%s %s_get__txt( %s _pEnv, %s val );", prefix, cTypeStem, enumFullName, cTypeEnvP, getCType( enumType:get_valTypeInfo(), false )) )
+                  self:writeln( string.format( "%s%s %s_get__txt( %s _pEnv, %s val );", prefix, cTypeStem, enumFullName, cTypeEnvP, getCType( enumType:get_valTypeInfo() )) )
                end
             end
             
@@ -1816,14 +1804,14 @@ function convFilter:processDeclEnum( node, opt )
             self:write( "static " )
          end
          
-         self:writeln( string.format( "%s %s_get__txt( %s _pEnv, %s val ) {", cTypeStem, enumFullName, cTypeEnvP, getCType( enumType:get_valTypeInfo(), false )) )
+         self:writeln( string.format( "%s %s_get__txt( %s _pEnv, %s val ) {", cTypeStem, enumFullName, cTypeEnvP, getCType( enumType:get_valTypeInfo() )) )
          self:pushIndent(  )
          self:write( string.format( "%s _work =  lune_mtd_Map_get( _pEnv, %s, ", cTypeStem, self.moduleCtrl:getEnumVal2NameMapName( enumType )) )
          if isStemType( enumType:get_valTypeInfo() ) then
             self:writeln( "val );" )
          else
           
-            local workSym = WorkSymbol.new(_lune.unwrap( self.moduleTypeInfo:get_scope()), Ast.AccessMode.Local, "val", enumType:get_valTypeInfo(), Ast.SymbolKind.Arg, SymbolParam.new(ValKind.Prim, -1, getCType( enumType:get_valTypeInfo(), false )))
+            local workSym = WorkSymbol.new(_lune.unwrap( self.moduleTypeInfo:get_scope()), Ast.AccessMode.Local, "val", enumType:get_valTypeInfo(), Ast.SymbolKind.Arg, SymbolParam.new(ValKind.Prim, -1, getCType( enumType:get_valTypeInfo() )))
             self:processSym2stem( workSym )
             self:writeln( ");" )
          end
@@ -1906,7 +1894,7 @@ local function processAlgeNewProto( stream, moduleCtrl, typeInfo, valInfo )
 
    stream:write( string.format( "%s %s( %s _pEnv", cTypeStem, moduleCtrl:getNewAlgeCName( typeInfo, valInfo:get_name() ), cTypeEnvP) )
    for index, typeInfo in pairs( valInfo:get_typeList() ) do
-      stream:write( string.format( ", %s _val%d", getCType( typeInfo, false ), index) )
+      stream:write( string.format( ", %s _val%d", getCType( typeInfo ), index) )
    end
    
    stream:write( ")" )
@@ -1952,7 +1940,7 @@ local function processAlgePrototype( stream, moduleCtrl, node )
             stream:writeln( "typedef struct {" )
             stream:pushIndent(  )
             for index, typeInfo in pairs( valInfo:get_typeList() ) do
-               stream:writeln( string.format( "%s _val%d;", getCType( typeInfo, false ), index) )
+               stream:writeln( string.format( "%s _val%d;", getCType( typeInfo ), index) )
             end
             
             stream:popIndent(  )
@@ -2208,9 +2196,9 @@ local function processNewConstrProto( stream, moduleCtrl, node, out2HMode )
    stream:write( getOut2HeaderPrefix( out2HMode ) )
    stream:write( string.format( "%s lune_class_%s_new( %s _pEnv", cTypeStem, className, cTypeEnvP) )
    local scope = _lune.unwrap( node:get_expType():get_scope())
-   local initFuncType = _lune.unwrap( scope:getTypeInfoField( "__init", true, scope ))
+   local initFuncType = _lune.unwrap( scope:getTypeInfoField( "__init", true, scope, scopeAccess ))
    for index, argType in pairs( initFuncType:get_argTypeInfoList() ) do
-      stream:write( string.format( ", %s arg%d", getCType( argType, false ), index) )
+      stream:write( string.format( ", %s arg%d", getCType( argType ), index) )
    end
    
    stream:write( ")" )
@@ -2237,7 +2225,7 @@ local function processMethodDeclTxt( stream, moduleCtrl, callFlag, methodTypeInf
          do
             local declArgNode = _lune.__Cast( argNode, 3, Nodes.DeclArgNode )
             if declArgNode ~= nil then
-               stream:write( string.format( ", %s %s", getCType( declArgNode:get_expType(), false ), declArgNode:get_name().txt) )
+               stream:write( string.format( ", %s %s", getCType( declArgNode:get_expType() ), declArgNode:get_name().txt) )
             end
          end
          
@@ -2245,7 +2233,7 @@ local function processMethodDeclTxt( stream, moduleCtrl, callFlag, methodTypeInf
       
    else
       for index, arg in pairs( methodTypeInfo:get_argTypeInfoList() ) do
-         stream:write( string.format( ", %s arg%d", getCType( arg, false ), index) )
+         stream:write( string.format( ", %s arg%d", getCType( arg ), index) )
       end
       
    end
@@ -2320,7 +2308,7 @@ local function processDeclMemberTable( stream, classTypeInfo )
                   local _switchExp = symbolInfo:get_kind()
                   if _switchExp == Ast.SymbolKind.Mbr then
                      if not symbolInfo:get_staticFlag() then
-                        stream:writeln( string.format( "%s %s;", getCType( symbolInfo:get_typeInfo(), false ), symbolInfo:get_name()) )
+                        stream:writeln( string.format( "%s %s;", getCType( symbolInfo:get_typeInfo() ), symbolInfo:get_name()) )
                      end
                      
                   end
@@ -2339,7 +2327,7 @@ local function hasGC( classTypeInfo )
    do
       local scope = classTypeInfo:get_scope()
       if scope ~= nil then
-         if scope:getSymbolInfoField( "_gc", true, scope ) then
+         if scope:getSymbolInfoField( "_gc", true, scope, scopeAccess ) then
             return true
          end
          
@@ -2352,7 +2340,7 @@ local function hasGC( classTypeInfo )
       do
          local scope = classTypeInfo:get_scope()
          if scope ~= nil then
-            if scope:getSymbolInfoField( "_gc", true, scope ) then
+            if scope:getSymbolInfoField( "_gc", true, scope, scopeAccess ) then
                return true
             end
             
@@ -2374,13 +2362,13 @@ local function processDeclClassPrototype( stream, moduleCtrl, node )
    for __index, member in pairs( node:get_memberList() ) do
       local memberName = member:get_name().txt
       if member:get_getterMode() ~= Ast.AccessMode.None then
-         local getterType = _lune.unwrap( node:get_scope():getTypeInfoField( string.format( "get_%s", memberName), true, node:get_scope() ))
+         local getterType = _lune.unwrap( node:get_scope():getTypeInfoField( string.format( "get_%s", memberName), true, node:get_scope(), scopeAccess ))
          processMethodDeclTxt( stream, moduleCtrl, false, getterType )
          stream:writeln( ";" )
       end
       
       if member:get_setterMode() ~= Ast.AccessMode.None then
-         local setterType = _lune.unwrap( node:get_scope():getTypeInfoField( string.format( "set_%s", memberName), true, node:get_scope() ))
+         local setterType = _lune.unwrap( node:get_scope():getTypeInfoField( string.format( "set_%s", memberName), true, node:get_scope(), scopeAccess ))
          processMethodDeclTxt( stream, moduleCtrl, false, setterType )
          stream:writeln( ";" )
       end
@@ -2388,10 +2376,10 @@ local function processDeclClassPrototype( stream, moduleCtrl, node )
    end
    
    if not node:hasUserInit(  ) then
-      local ctorType = _lune.unwrap( node:get_scope():getTypeInfoField( "__init", true, node:get_scope() ))
+      local ctorType = _lune.unwrap( node:get_scope():getTypeInfoField( "__init", true, node:get_scope(), scopeAccess ))
       stream:write( string.format( "static void u_mtd_%s___init( lune_env_t * _pEnv, %s pAny", className, cTypeAnyP) )
       for index, argType in pairs( ctorType:get_argTypeInfoList() ) do
-         stream:write( string.format( ", %s _arg%d", getCType( argType, false ), index) )
+         stream:write( string.format( ", %s _arg%d", getCType( argType ), index) )
       end
       
       stream:writeln( ") {" )
@@ -2399,7 +2387,7 @@ local function processDeclClassPrototype( stream, moduleCtrl, node )
       do
          local baseScope = node:get_scope():get_inherit()
          if baseScope ~= nil then
-            local superInitType = _lune.unwrap( baseScope:getTypeInfoField( "__init", true, baseScope ))
+            local superInitType = _lune.unwrap( baseScope:getTypeInfoField( "__init", true, baseScope, scopeAccess ))
             stream:write( string.format( "u_mtd_%s___init( _pEnv, pAny", moduleCtrl:getClassCName( node:get_expType():get_baseTypeInfo() )) )
             for index, argType in pairs( superInitType:get_argTypeInfoList() ) do
                stream:write( string.format( ", _arg%d", index) )
@@ -2578,7 +2566,7 @@ function convFilter:processDeclClassDef( node )
    self:writeln( string.format( "lune_class_new_( _pEnv, %s, pAny, pObj );", className) )
    self:write( string.format( "u_mtd_%s___init( _pEnv, pAny%s", className, accessAny) )
    local scope = _lune.unwrap( node:get_expType():get_scope())
-   local initFuncType = _lune.unwrap( scope:getTypeInfoField( "__init", true, scope ))
+   local initFuncType = _lune.unwrap( scope:getTypeInfoField( "__init", true, scope, scopeAccess ))
    for index, argType in pairs( initFuncType:get_argTypeInfoList() ) do
       self:write( string.format( ", arg%d", index) )
    end
@@ -2593,7 +2581,7 @@ function convFilter:processDeclClassDef( node )
    for __index, member in pairs( node:get_memberList() ) do
       local memberName = member:get_name().txt
       if member:get_getterMode() ~= Ast.AccessMode.None then
-         local getterType = _lune.unwrap( node:get_scope():getTypeInfoField( string.format( "get_%s", memberName), true, node:get_scope() ))
+         local getterType = _lune.unwrap( node:get_scope():getTypeInfoField( string.format( "get_%s", memberName), true, node:get_scope(), scopeAccess ))
          if getterType:get_autoFlag() then
             processMethodDeclTxt( self.stream, self.moduleCtrl, false, getterType )
             self:writeln( "{" )
@@ -2612,7 +2600,7 @@ function convFilter:processDeclClassDef( node )
       end
       
       if member:get_setterMode() ~= Ast.AccessMode.None then
-         local setterType = _lune.unwrap( node:get_scope():getTypeInfoField( string.format( "set_%s", memberName), true, node:get_scope() ))
+         local setterType = _lune.unwrap( node:get_scope():getTypeInfoField( string.format( "set_%s", memberName), true, node:get_scope(), scopeAccess ))
          if setterType:get_autoFlag() then
             processMethodDeclTxt( self.stream, self.moduleCtrl, false, setterType )
             self:writeln( "{" )
@@ -2713,7 +2701,7 @@ local function processInitIFMethodTable( stream, moduleCtrl, ifType, classTypeIn
                   local _switchExp = symbolInfo:get_kind()
                   if _switchExp == Ast.SymbolKind.Mtd then
                      if symbolInfo:get_name() ~= "__init" then
-                        local impMethodType = _lune.unwrap( impScope:getTypeInfoField( symbolInfo:get_name(), true, impScope ))
+                        local impMethodType = _lune.unwrap( impScope:getTypeInfoField( symbolInfo:get_name(), true, impScope, scopeAccess ))
                         outputField( moduleCtrl:getMethodCName( impMethodType ), impMethodType:get_retTypeInfoList() )
                      end
                      
@@ -2768,7 +2756,7 @@ local function processClassDataInit( stream, moduleCtrl, classTypeInfo )
    stream:writeln( "};" )
    for __index, symbolInfo in pairs( (_lune.unwrap( classTypeInfo:get_scope()) ):get_symbol2SymbolInfoMap() ) do
       if symbolInfo:get_kind() == Ast.SymbolKind.Mbr and symbolInfo:get_staticFlag() then
-         stream:writeln( string.format( "%s %s;", getCType( symbolInfo:get_typeInfo(), false ), moduleCtrl:getClassMemberName( symbolInfo )) )
+         stream:writeln( string.format( "%s %s;", getCType( symbolInfo:get_typeInfo() ), moduleCtrl:getClassMemberName( symbolInfo )) )
       end
       
    end
@@ -3780,7 +3768,7 @@ function convFilter:processDeclVar( node, opt )
       self:writeln( "" )
       for index, var in pairs( varSymList ) do
          local name = getSymbolName( var )
-         self.pubVarName2InfoMap[name] = PubVerInfo.new(node:get_staticFlag(), node:get_accessMode(), node:get_symbolInfoList()[index]:get_mutable(), node:get_typeInfoList()[index])
+         self.pubVarName2InfoMap[name] = PubVarInfo.new(node:get_staticFlag(), node:get_accessMode(), node:get_symbolInfoList()[index]:get_mutable(), node:get_typeInfoList()[index])
       end
       
    end
@@ -3834,7 +3822,7 @@ end
 
 function convFilter:processDeclArg( node, opt )
 
-   self:write( getCType( node:get_expType(), false ) )
+   self:write( getCType( node:get_expType() ) )
    if node:get_symbolInfo():get_hasAccessFromClosure() then
       self:write( ' _' )
    else
@@ -4140,7 +4128,7 @@ function convFilter:processMatch( node, opt )
          self:writeln( string.format( "%s * _pVal = (%s *)_matchExp->val.alge.pVal;", structTxt, structTxt) )
          for paramIndex, paramType in pairs( valInfo:get_typeList() ) do
             local paramName = caseInfo:get_valParamNameList()[paramIndex]
-            self:writeln( string.format( "%s %s = _pVal->_val%d;", getCType( paramType, false ), paramName, paramIndex) )
+            self:writeln( string.format( "%s %s = _pVal->_val%d;", getCType( paramType ), paramName, paramIndex) )
          end
          
       end
@@ -4639,7 +4627,7 @@ function convFilter:processCallWithMRet( parent, mRetFuncName, retTypeName, func
             end
             
             local argType = argNode:get_expType()
-            self:write( string.format( ", %s arg%d", getCType( argType, false ), index) )
+            self:write( string.format( ", %s arg%d", getCType( argType ), index) )
          end
          
          self:write( string.format( ", %s pMRet )", cTypeStem) )
@@ -4719,7 +4707,7 @@ function convFilter:processCallWithMRet( parent, mRetFuncName, retTypeName, func
                            local typeTxt
                            
                            if primFlag then
-                              typeTxt = getCType( argType, false )
+                              typeTxt = getCType( argType )
                               table.insert( argTypeList, argType:get_srcTypeInfo() )
                            else
                             
@@ -5386,7 +5374,7 @@ function convFilter:processWrapForm2Func( funcType )
 
    self:write( string.format( "static %s _wrap_%s_%d( %s _pEnv, %s _pForm, ", cTypeStem, funcType:get_rawTxt(), funcType:get_typeId(), cTypeEnvP, cTypeAnyP) )
    for index, argType in pairs( funcType:get_argTypeInfoList() ) do
-      self:write( string.format( ", %s arg%d", getCType( argType, false ), index) )
+      self:write( string.format( ", %s arg%d", getCType( argType ), index) )
    end
    
    self:writeln( ")" )
@@ -5704,7 +5692,7 @@ function convFilter:processGetField( node, opt )
       end
       
    elseif prefixType:get_kind() == Ast.TypeInfoKind.Class or prefixType:get_kind() == Ast.TypeInfoKind.IF then
-      local getterType = _lune.unwrap( _lune.nilacc( prefixType:get_scope(), 'getTypeInfoField', 'callmtd' , string.format( "get_%s", fieldTxt), true, _lune.unwrap( prefixType:get_scope()) ))
+      local getterType = _lune.unwrap( _lune.nilacc( prefixType:get_scope(), 'getTypeInfoField', 'callmtd' , string.format( "get_%s", fieldTxt), true, _lune.unwrap( prefixType:get_scope()), scopeAccess ))
       local function process(  )
       
          self:write( string.format( "%s( _pEnv, ", self.moduleCtrl:getCallMethodCName( getterType )) )

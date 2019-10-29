@@ -736,6 +736,7 @@ pub enum BlockKind {
    LetUnwrap,
    IfUnwrap,
    When,
+   Test,
 }
 
 _declNodeClass( "Block", Node, false, false, true,
@@ -1469,7 +1470,7 @@ _declNodeClass( "DeclClass", Node, false, false, true,
 
 pub fn DeclClassNode.hasUserInit() : bool {
    let scope = unwrap self.$expType.$scope;
-   let initFuncType = unwrap scope.getTypeInfoField( "__init", true, scope );
+   let initFuncType = unwrap scope.getTypeInfoField( "__init", true, scope, .Normal );
    return not initFuncType.$autoFlag;
 }
 
@@ -1527,6 +1528,13 @@ pub abstract class MacroEval {
       name:str, argNameList:&List<str>, code:str! ): macroStatmentProc;
    pub abstract fn eval( macroNode: DeclMacroNode ): macroStatmentProc;
 }
+
+
+_declNodeClass( "TestBlock", Node, false, false, true,
+                [ { "name": "&Parser.Token" },
+                  { "block": "&BlockNode" } ]
+);
+
 
 _declNodeClass( "Abbr", Node, false, true, false,
                 [ {} ]

@@ -192,7 +192,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 2129
+   return 2143
 end
 
 local ModeKind = {}

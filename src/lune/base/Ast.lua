@@ -659,6 +659,35 @@ function TypeNameCtrl:set_moduleTypeInfo( moduleTypeInfo )
    self.moduleTypeInfo = moduleTypeInfo
 end
 
+local ScopeAccess = {}
+_moduleObj.ScopeAccess = ScopeAccess
+ScopeAccess._val2NameMap = {}
+function ScopeAccess:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "ScopeAccess.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+function ScopeAccess._from( val )
+   if ScopeAccess._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+    
+ScopeAccess.__allList = {}
+function ScopeAccess.get__allList()
+   return ScopeAccess.__allList
+end
+
+ScopeAccess.Normal = 0
+ScopeAccess._val2NameMap[0] = 'Normal'
+ScopeAccess.__allList[1] = ScopeAccess.Normal
+ScopeAccess.Full = 1
+ScopeAccess._val2NameMap[1] = 'Full'
+ScopeAccess.__allList[2] = ScopeAccess.Full
+
 local SymbolInfo = {}
 setmetatable( SymbolInfo, { ifList = {LowSymbol,} } )
 _moduleObj.SymbolInfo = SymbolInfo
@@ -1699,7 +1728,7 @@ end
 
 
 
-function Scope:filterTypeInfoField( includeSelfFlag, fromScope, callback )
+function Scope:filterTypeInfoField( includeSelfFlag, fromScope, access, callback )
 
    if self.classFlag then
       if includeSelfFlag then
@@ -1713,7 +1742,7 @@ function Scope:filterTypeInfoField( includeSelfFlag, fromScope, callback )
             for __index, __key in ipairs( __sorted ) do
                local symbolInfo = __map[ __key ]
                do
-                  if symbolInfo:canAccess( fromScope ) then
+                  if symbolInfo:canAccess( fromScope, access ) then
                      if not callback( symbolInfo ) then
                         return false
                      end
@@ -1729,7 +1758,7 @@ function Scope:filterTypeInfoField( includeSelfFlag, fromScope, callback )
       do
          local scope = self.inherit
          if scope ~= nil then
-            if not scope:filterTypeInfoField( true, fromScope, callback ) then
+            if not scope:filterTypeInfoField( true, fromScope, access, callback ) then
                return false
             end
             
@@ -1741,14 +1770,14 @@ function Scope:filterTypeInfoField( includeSelfFlag, fromScope, callback )
    return true
 end
 
-function Scope:getSymbolInfoField( name, includeSelfFlag, fromScope )
+function Scope:getSymbolInfoField( name, includeSelfFlag, fromScope, access )
 
    if self.classFlag then
       if includeSelfFlag then
          do
             local _exp = self.symbol2SymbolInfoMap[name]
             if _exp ~= nil then
-               local symbolInfo = _exp:canAccess( fromScope )
+               local symbolInfo = _exp:canAccess( fromScope, access )
                if  nil == symbolInfo then
                   local _symbolInfo = symbolInfo
                
@@ -1764,7 +1793,7 @@ function Scope:getSymbolInfoField( name, includeSelfFlag, fromScope )
       do
          local scope = self.inherit
          if scope ~= nil then
-            local symbolInfo = scope:getSymbolInfoField( name, true, fromScope )
+            local symbolInfo = scope:getSymbolInfoField( name, true, fromScope, access )
             if symbolInfo then
                return symbolInfo
             end
@@ -1777,12 +1806,12 @@ function Scope:getSymbolInfoField( name, includeSelfFlag, fromScope )
    return nil
 end
 
-function Scope:getSymbolInfoIfField( name, fromScope )
+function Scope:getSymbolInfoIfField( name, fromScope, access )
 
    if self.classFlag then
       for __index, scope in pairs( self.ifScopeList ) do
          do
-            local symbolInfo = scope:getSymbolInfoField( name, true, fromScope )
+            local symbolInfo = scope:getSymbolInfoField( name, true, fromScope, access )
             if symbolInfo ~= nil then
                return symbolInfo
             end
@@ -1796,7 +1825,7 @@ function Scope:getSymbolInfoIfField( name, fromScope )
       local scope = self.inherit
       if scope ~= nil then
          do
-            local symbolInfo = scope:getSymbolInfoIfField( name, fromScope )
+            local symbolInfo = scope:getSymbolInfoIfField( name, fromScope, access )
             if symbolInfo ~= nil then
                return symbolInfo
             end
@@ -1808,10 +1837,10 @@ function Scope:getSymbolInfoIfField( name, fromScope )
    return nil
 end
 
-function Scope:filterSymbolInfoIfField( fromScope, callback )
+function Scope:filterSymbolInfoIfField( fromScope, access, callback )
 
    for __index, scope in pairs( self.ifScopeList ) do
-      if not scope:filterTypeInfoField( true, fromScope, callback ) then
+      if not scope:filterTypeInfoField( true, fromScope, access, callback ) then
          return false
       end
       
@@ -1820,7 +1849,7 @@ function Scope:filterSymbolInfoIfField( fromScope, callback )
    do
       local scope = self.inherit
       if scope ~= nil then
-         if not scope:filterSymbolInfoIfField( fromScope, callback ) then
+         if not scope:filterSymbolInfoIfField( fromScope, access, callback ) then
             return false
          end
          
@@ -1830,9 +1859,9 @@ function Scope:filterSymbolInfoIfField( fromScope, callback )
    return true
 end
 
-function Scope:getTypeInfoField( name, includeSelfFlag, fromScope )
+function Scope:getTypeInfoField( name, includeSelfFlag, fromScope, access )
 
-   local symbolInfo = self:getSymbolInfoField( name, includeSelfFlag, fromScope )
+   local symbolInfo = self:getSymbolInfoField( name, includeSelfFlag, fromScope, access )
    do
       local _exp = symbolInfo
       if _exp ~= nil then
@@ -1843,12 +1872,12 @@ function Scope:getTypeInfoField( name, includeSelfFlag, fromScope )
    return nil
 end
 
-function Scope:getSymbolInfo( name, fromScope, onlySameNsFlag )
+function Scope:getSymbolInfo( name, fromScope, onlySameNsFlag, access )
 
    do
       local _exp = self.symbol2SymbolInfoMap[name]
       if _exp ~= nil then
-         local symbolInfo = _exp:canAccess( fromScope )
+         local symbolInfo = _exp:canAccess( fromScope, access )
          if  nil == symbolInfo then
             local _symbolInfo = symbolInfo
          
@@ -1863,7 +1892,7 @@ function Scope:getSymbolInfo( name, fromScope, onlySameNsFlag )
       do
          local scope = self.inherit
          if scope ~= nil then
-            local symbolInfo = scope:getSymbolInfoField( name, true, fromScope )
+            local symbolInfo = scope:getSymbolInfoField( name, true, fromScope, access )
             if symbolInfo then
                return symbolInfo
             end
@@ -1875,7 +1904,7 @@ function Scope:getSymbolInfo( name, fromScope, onlySameNsFlag )
    
    if not onlySameNsFlag or not self.ownerTypeInfo then
       if self.parent ~= self then
-         return self.parent:getSymbolInfo( name, fromScope, onlySameNsFlag )
+         return self.parent:getSymbolInfo( name, fromScope, onlySameNsFlag, access )
       end
       
    end
@@ -1894,9 +1923,9 @@ function Scope:getSymbolInfo( name, fromScope, onlySameNsFlag )
    return nil
 end
 
-function Scope:getTypeInfo( name, fromScope, onlySameNsFlag )
+function Scope:getTypeInfo( name, fromScope, onlySameNsFlag, access )
 
-   local symbolInfo = self:getSymbolInfo( name, fromScope, onlySameNsFlag )
+   local symbolInfo = self:getSymbolInfo( name, fromScope, onlySameNsFlag, access )
    if  nil == symbolInfo then
       local _symbolInfo = symbolInfo
    
@@ -1906,7 +1935,7 @@ function Scope:getTypeInfo( name, fromScope, onlySameNsFlag )
    return symbolInfo:get_typeInfo()
 end
 
-function Scope:getSymbolTypeInfo( name, fromScope, moduleScope )
+function Scope:getSymbolTypeInfo( name, fromScope, moduleScope, access )
 
    local validThisScope = false
    local limitSymbol = false
@@ -1932,7 +1961,7 @@ function Scope:getSymbolTypeInfo( name, fromScope, moduleScope )
          local symbolInfo = self.symbol2SymbolInfoMap[name]
          if symbolInfo ~= nil then
             if not limitSymbol or name == "self" or (symbolInfo:get_typeInfo():get_kind() == TypeInfoKind.Alternate and symbolInfo:get_kind() == SymbolKind.Typ ) then
-               return symbolInfo:canAccess( fromScope )
+               return symbolInfo:canAccess( fromScope, access )
             end
             
          end
@@ -1941,13 +1970,13 @@ function Scope:getSymbolTypeInfo( name, fromScope, moduleScope )
    end
    
    if self.parent ~= self then
-      return self.parent:getSymbolTypeInfo( name, fromScope, moduleScope )
+      return self.parent:getSymbolTypeInfo( name, fromScope, moduleScope, access )
    end
    
    return _moduleObj.sym2builtInTypeMap[name]
 end
 
-function Scope:filterSymbolTypeInfo( fromScope, moduleScope, callback )
+function Scope:filterSymbolTypeInfo( fromScope, moduleScope, access, callback )
 
    if self.classFlag then
       do
@@ -1970,7 +1999,7 @@ function Scope:filterSymbolTypeInfo( fromScope, moduleScope, callback )
    end
    
    if self.parent ~= self then
-      self.parent:filterSymbolTypeInfo( fromScope, moduleScope, callback )
+      self.parent:filterSymbolTypeInfo( fromScope, moduleScope, access, callback )
    end
    
 end
@@ -2260,8 +2289,12 @@ function Scope:getClassTypeInfo(  )
    return _moduleObj.headTypeInfo
 end
 
-function NormalSymbolInfo:canAccess( fromScope )
+function NormalSymbolInfo:canAccess( fromScope, access )
 
+   if access == ScopeAccess.Full then
+      return self
+   end
+   
    local typeInfo = self:get_typeInfo()
    if self.scope == fromScope then
       return self

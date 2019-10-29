@@ -77,6 +77,7 @@ pub interface ModuleInfoIF {
    pub fn get_modulePath():str;
 }
 
+/** 所定の TypeInfo が属するモジュールの ModuleInfoIF の問い合わせを行なう */
 pub interface ModuleInfoManager {
    pub fn getModuleInfo( typeInfo:&TypeInfo ) : &ModuleInfoIF!;
 }
@@ -252,6 +253,11 @@ pub class TypeNameCtrl {
       mut typeInfo:&TypeInfo, mut importInfo:&ModuleInfoManager!, localFlag:bool! ) : str;
 }
 
+pub enum ScopeAccess {
+   Normal,
+   Full,
+}
+
 /** シンボル情報 */
 pub abstract class SymbolInfo extend (LowSymbol) {
    pri let allmut namespaceTypeInfo: &TypeInfo!;
@@ -301,7 +307,7 @@ pub abstract class SymbolInfo extend (LowSymbol) {
 
 @param fromScope このシンボルにアクセスしようとしているスコープ。
 */
-   pub abstract fn canAccess( fromScope:&Scope ) : &SymbolInfo!;
+   pub abstract fn canAccess( fromScope:&Scope, access:ScopeAccess ) : &SymbolInfo!;
 
    pub abstract fn getOrg(): &SymbolInfo;
 
@@ -940,7 +946,7 @@ pub class NormalSymbolInfo extend SymbolInfo {
 
 @param fromScope このシンボルにアクセスしようとしているスコープ。
 */
-   pub override fn canAccess( fromScope:&Scope ) : &SymbolInfo!;
+   pub override fn canAccess( fromScope:&Scope, access:ScopeAccess ) : &SymbolInfo!;
 }
 
 pro static fn TypeInfo.isInherit(
@@ -1167,13 +1173,13 @@ pub form filterForm( symbolInfo:&SymbolInfo ): bool;
 @param callback コールバック。
 @return bool 列挙を続ける場合 true
 */
-pub fn Scope.filterTypeInfoField(
-   includeSelfFlag: bool!, fromScope:&Scope, callback:filterForm ):bool
+pub fn Scope.filterTypeInfoField( includeSelfFlag: bool!, fromScope:&Scope,
+                                  access:ScopeAccess, callback:filterForm ):bool
 {
    if self.classFlag {
       if includeSelfFlag {
          forsort symbolInfo in self.symbol2SymbolInfoMap {
-            if symbolInfo.canAccess(  fromScope ) {
+            if symbolInfo.canAccess(  fromScope, access ) {
                if not callback( symbolInfo ) {
                   return false;
                }
@@ -1182,7 +1188,7 @@ pub fn Scope.filterTypeInfoField(
       }
       if! let scope = self.inherit {
          if not scope.filterTypeInfoField(
-            true, fromScope, callback ) {
+            true, fromScope, access, callback ) {
             return false;
          }
       }
@@ -1196,20 +1202,20 @@ pub fn Scope.filterTypeInfoField(
 
 インタフェースは含めない。
 */
-pub fn Scope.getSymbolInfoField(
-   name: str, includeSelfFlag: bool!, fromScope:&Scope ) : &SymbolInfo!
+pub fn Scope.getSymbolInfoField( name: str, includeSelfFlag: bool!,
+                                 fromScope:&Scope, access:ScopeAccess ) : &SymbolInfo!
 {
    if self.classFlag {
       if includeSelfFlag {
          if! self.symbol2SymbolInfoMap[ name ] {
-            let! symbolInfo = _exp.canAccess(  fromScope ) {
+            let! symbolInfo = _exp.canAccess(  fromScope, access ) {
                return nil;
             };
             return symbolInfo;
          }
       }
       if! let mut scope = self.inherit {
-         let symbolInfo = scope.getSymbolInfoField( name, true, fromScope );
+         let symbolInfo = scope.getSymbolInfoField( name, true, fromScope, access );
          if symbolInfo {
             return symbolInfo;
          }
@@ -1225,12 +1231,12 @@ pub fn Scope.getSymbolInfoField(
 インタフェースを含む。
 */
 pub fn Scope.getSymbolInfoIfField(
-   name: str, fromScope:&Scope ) : &SymbolInfo!
+   name: str, fromScope:&Scope, access:ScopeAccess ) : &SymbolInfo!
 {
    if self.classFlag {
       foreach scope in self.ifScopeList {
          if! let symbolInfo =
-            scope.getSymbolInfoField( name, true, fromScope )
+            scope.getSymbolInfoField( name, true, fromScope, access )
          {
             return symbolInfo;
          }
@@ -1238,7 +1244,7 @@ pub fn Scope.getSymbolInfoIfField(
    }
 
    if! let scope = self.inherit {
-      if! let symbolInfo = scope.getSymbolInfoIfField( name, fromScope ) {
+      if! let symbolInfo = scope.getSymbolInfoIfField( name, fromScope, access ) {
          return symbolInfo;
       }
    }
@@ -1252,16 +1258,16 @@ pub fn Scope.getSymbolInfoIfField(
 インタフェースを含む。
 */
 pub fn Scope.filterSymbolInfoIfField(
-   fromScope:&Scope, callback:filterForm ) : bool
+   fromScope:&Scope, access:ScopeAccess, callback:filterForm ) : bool
 {
    foreach scope in self.ifScopeList {
-      if not scope.filterTypeInfoField( true, fromScope, callback ) {
+      if not scope.filterTypeInfoField( true, fromScope, access, callback ) {
          return false;
       }
    }
 
    if! let scope = self.inherit {
-      if not scope.filterSymbolInfoIfField( fromScope, callback ) {
+      if not scope.filterSymbolInfoIfField( fromScope, access, callback ) {
          return false;
       }
    }
@@ -1272,10 +1278,10 @@ pub fn Scope.filterSymbolInfoIfField(
 
 
 pub fn Scope.getTypeInfoField(
-   name: str, includeSelfFlag: bool!, fromScope:&Scope ) : &TypeInfo!
+   name: str, includeSelfFlag: bool!, fromScope:&Scope, access:ScopeAccess ) : &TypeInfo!
 {
    let symbolInfo =
-      self.getSymbolInfoField( name, includeSelfFlag, fromScope );
+      self.getSymbolInfoField( name, includeSelfFlag, fromScope, access );
    if! symbolInfo {
       return _exp.$typeInfo;
    }
@@ -1290,18 +1296,18 @@ pub fn Scope.getTypeInfoField(
 @param fromScope シンボルを参照する位置のスコープ
 @param onlySameNsFlag true の場合、検索対象を同一名前空間内に限定する。
 */
-pub fn Scope.getSymbolInfo(
-   name: str, fromScope:&Scope, onlySameNsFlag:bool ) : &SymbolInfo!
+pub fn Scope.getSymbolInfo( name: str, fromScope:&Scope,
+                            onlySameNsFlag:bool, access:ScopeAccess ) : &SymbolInfo!
 {
    if! self.symbol2SymbolInfoMap[ name ] {
-      let! symbolInfo = _exp.canAccess( fromScope ) {
+      let! symbolInfo = _exp.canAccess( fromScope, access  ) {
          return nil;
       };
       return symbolInfo;
    }
    if not onlySameNsFlag {
       if! let scope = self.inherit {
-         let symbolInfo = scope.getSymbolInfoField( name, true, fromScope );
+         let symbolInfo = scope.getSymbolInfoField( name, true, fromScope, access );
          if symbolInfo {
             return symbolInfo;
          }
@@ -1309,7 +1315,7 @@ pub fn Scope.getSymbolInfo(
    }
    if not onlySameNsFlag or not self.ownerTypeInfo {
       if self.parent ~= self {
-         return self.parent.getSymbolInfo( name, fromScope, onlySameNsFlag );
+         return self.parent.getSymbolInfo( name, fromScope, onlySameNsFlag, access );
       }
    }
    if onlySameNsFlag {
@@ -1322,9 +1328,9 @@ pub fn Scope.getSymbolInfo(
 }
 
 pub fn Scope.getTypeInfo(
-   name: str, fromScope:&Scope, onlySameNsFlag:bool ) : &TypeInfo!
+   name: str, fromScope:&Scope, onlySameNsFlag:bool, access:ScopeAccess ) : &TypeInfo!
 {
-   let! symbolInfo = self.getSymbolInfo(name, fromScope, onlySameNsFlag ) {
+   let! symbolInfo = self.getSymbolInfo(name, fromScope, onlySameNsFlag, access ) {
       return nil;
    };
    return symbolInfo.$typeInfo;
@@ -1338,8 +1344,8 @@ pub fn Scope.getTypeInfo(
 @param name シンボル名
 @param fromScope シンボルを参照する位置のスコープ
 */
-pub fn Scope.getSymbolTypeInfo(
-   name: str, fromScope:&Scope, moduleScope:&Scope ) : &SymbolInfo!
+pub fn Scope.getSymbolTypeInfo( name: str, fromScope:&Scope,
+                                moduleScope:&Scope, access:ScopeAccess ) : &SymbolInfo!
 {
    let mut validThisScope = false;
    let mut limitSymbol = false;
@@ -1369,19 +1375,19 @@ pub fn Scope.getSymbolTypeInfo(
             ( symbolInfo.$typeInfo.$kind == .Alternate and
               symbolInfo.$kind == .Typ )
          {
-            return symbolInfo.canAccess( fromScope );
+            return symbolInfo.canAccess( fromScope, access  );
          }
       }
    }
    if self.parent ~= self {
-      return self.parent.getSymbolTypeInfo( name, fromScope, moduleScope );
+      return self.parent.getSymbolTypeInfo( name, fromScope, moduleScope, access );
    }
    return sym2builtInTypeMap[ name ];
 }
 
 
 pub fn Scope.filterSymbolTypeInfo(
-   fromScope:&Scope, moduleScope:&Scope, callback:filterForm )
+   fromScope:&Scope, moduleScope:&Scope, access:ScopeAccess, callback:filterForm )
 {
    if self.classFlag {
       if! self.symbol2SymbolInfoMap[ "self" ] {
@@ -1397,7 +1403,7 @@ pub fn Scope.filterSymbolTypeInfo(
    }
 
    if self.parent ~= self {
-      self.parent.filterSymbolTypeInfo( fromScope, moduleScope, callback );
+      self.parent.filterSymbolTypeInfo( fromScope, moduleScope, access, callback );
    }
 }
 
@@ -1744,8 +1750,13 @@ pub fn Scope.getClassTypeInfo(): &TypeInfo {
 /**
 このシンボルが、fromScope のスコープからアクセスできるか調べる。
  */
-pub override fn NormalSymbolInfo.canAccess( fromScope:&Scope ) : &SymbolInfo!
+pub override fn NormalSymbolInfo.canAccess(
+   fromScope:&Scope, access:ScopeAccess ) : &SymbolInfo!
 {
+   if access == .Full {
+      return self;
+   }
+   
    let typeInfo = self.$typeInfo;
    if self.scope == fromScope {
       return self;

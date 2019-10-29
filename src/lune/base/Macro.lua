@@ -609,7 +609,7 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
       
    end
    
-   return MacroPaser.new(macroInfo:getTokenList(  ), string.format( "%s:%d(macro %s)", streamName, firstToken.pos.lineNo, macroTypeInfo:getTxt(  ))), nil
+   return MacroPaser.new(macroInfo:getTokenList(  ), string.format( "%s:%d:%d: (macro %s)", streamName, firstToken.pos.lineNo, firstToken.pos.column, macroTypeInfo:getTxt(  ))), nil
 end
 
 function MacroCtrl:importMacro( macroInfoStem, macroTypeInfo, typeId2TypeInfo )
@@ -658,6 +658,12 @@ function MacroCtrl:regist( node )
    local macroObj = self.macroEval:eval( node )
    self.typeId2MacroInfo[node:get_expType():get_typeId(  )] = Nodes.DefMacroInfo.new(macroObj, node:get_declInfo(), self.symbol2ValueMapForMacro)
    self.symbol2ValueMapForMacro = {}
+end
+
+function MacroCtrl:registBuiltinMacro( scope )
+
+   local name = "__eq"
+   local eqTypeInfo = _lune.unwrap( scope:getTypeInfo( name, scope, true, Ast.ScopeAccess.Normal ))
 end
 
 local function expandVal( tokenList, val, pos )

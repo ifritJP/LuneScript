@@ -279,8 +279,8 @@ pub fn MacroCtrl.evalMacroOp(
 
    return new MacroPaser(
       macroInfo.getTokenList(),
-      "%s:%d(macro %s)" ( streamName,
-                          firstToken.pos.lineNo, macroTypeInfo.getTxt(##)) ), nil;
+      "%s:%d:%d: (macro %s)" ( streamName, firstToken.pos.lineNo, firstToken.pos.column,
+                               macroTypeInfo.getTxt(##)) ), nil;
 }
 
 
@@ -346,6 +346,17 @@ pub fn MacroCtrl.regist( node:Nodes.DeclMacroNode ) mut {
       new Nodes.DefMacroInfo( macroObj, node.$declInfo,
                               self.symbol2ValueMapForMacro );  
    self.symbol2ValueMapForMacro = {};
+}
+
+pub fn MacroCtrl.registBuiltinMacro( scope:&Ast.Scope ) mut {
+   let name = "__eq";
+   let eqTypeInfo = unwrap scope.getTypeInfo( name, scope, true, .Normal );
+   // let macroObj = self.macroEval.evalFromCode(
+   //    name, [ "stat1", "stat2" ],
+   //    ```
+      
+   //    ```
+   // );
 }
 
 

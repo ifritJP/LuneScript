@@ -7,6 +7,16 @@ let mut g_val = 100;
 {
    _section();
    class Test<T> {
+      pub static fn func(val:T): T {
+         return val;
+      }
+   }
+
+   print( Test.func( 100 ) );
+}
+{
+   _section();
+   class Test<T> {
       let val:T {pub};
       pub fn func( val:T ):T {
          return val;
