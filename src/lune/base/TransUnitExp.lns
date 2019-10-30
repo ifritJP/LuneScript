@@ -135,7 +135,19 @@ fn TransUnit.analyzeExpList(
             }
          }
       }
-      let exp = self.analyzeExp( allowNoneType, skipOp2Flag, 0, expectType );
+
+      let mut exp;
+      
+      if self.macroCtrl.$macroMode == .AnalyzeArg and expectType == Ast.builtinTypeExp {
+         self.macroCtrl.switchMacroMode();
+         exp = self.analyzeExp( allowNoneType, skipOp2Flag, 0, expectType );
+         self.macroCtrl.restoreMacroMode();
+      }
+      else {
+         exp = self.analyzeExp( allowNoneType, skipOp2Flag, 0, expectType );
+      }
+
+      
       if not allowNoneType and not exp.canBeRight() {
          self.addErrMess(
             exp.$pos,
@@ -144,6 +156,11 @@ fn TransUnit.analyzeExpList(
       if not pos {
          pos = exp.$pos;
       }
+      if expectType == Ast.builtinTypeExp {
+         exp = Nodes.ExpMacroStatNode.create(
+            self.nodeManager, exp.$pos, exp.$expTypeList, [ exp ], .Exp );
+      }
+      
       expList.insert( exp );
       expTypeList.insert( exp.$expType );
       let mut token = self.getToken(##);
@@ -487,11 +504,16 @@ fn TransUnit.checkImplicitCast(
    callback:checkImplicitCastCallback ) mut : Nodes.ExpListNode!
 {
    let expNodeList = expListNode.$expList;
-   let mut hasModNode = false;
    let mut newExpNodeList:List<&Nodes.Node> = [];
    let mut expTypeList:List<&Ast.TypeInfo> = [];
 
 
+   // 暗黙キャストを行なった場合 true にセットする
+   let mut hasModNode = false;
+   
+
+   // 代入元の値から、代入先の型に暗黙キャストしているかどうか確認し、
+   // 暗黙キャストしている場合は ExpCastNode を生成する。
    fn process( index:int, dstType:&Ast.TypeInfo,
                expNode:&Nodes.Node, mut workNode:&Nodes.Node ) : &Nodes.Node, bool
    {
@@ -2680,7 +2702,7 @@ fn TransUnit.analyzeExpMacroStat( firstToken: &Parser.Token ) mut : Nodes.ExpMac
    }
 
    return Nodes.ExpMacroStatNode.create(
-      self.nodeManager, firstToken.pos, [ Ast.builtinTypeStat ], expStrList );
+      self.nodeManager, firstToken.pos, [ Ast.builtinTypeStat ], expStrList, .Stat );
 }
 
 

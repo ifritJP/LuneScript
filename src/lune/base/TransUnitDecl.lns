@@ -47,7 +47,8 @@ fn TransUnit.analyzeRefType(
       mutFlag = true;
       token = self.getToken(##);
    }
-   self.checkSymbol( token, .MustNot_ );
+   // builtin の型名などは _ で始まることもあるので、シンボル名チェックしない
+   // self.checkSymbol( token, .MustNot_ );
 
    let name = self.analyzeExpSymbol( firstToken, token, .Symbol, nil, true );
    return self.analyzeRefTypeWithSymbol(
@@ -923,27 +924,30 @@ fn TransUnit.analyzeDeclEnum(
 
       if nextToken.txt == "=" {
          let exp = self.analyzeExp( false, false ## );
-         let! literal = exp.getLiteral() {
-            self.error( "illegal enum val" );
-         };
-         match literal {
-            case .Int( val ) {
-               enumVal = .Int( val );
-               number = val@@real;
-               valTypeInfo = Ast.builtinTypeInt;
+         let literal, mess = exp.getLiteral();
+         when! literal {
+            match literal {
+               case .Int( val ) {
+                  enumVal = .Int( val );
+                  number = val@@real;
+                  valTypeInfo = Ast.builtinTypeInt;
+               }
+               case .Real( val ) {
+                  enumVal = .Real( val );
+                  number = val;
+                  valTypeInfo = Ast.builtinTypeReal;
+               }
+               case .Str( val ) {
+                  enumVal = .Str( val );
+                  valTypeInfo = Ast.builtinTypeString;
+               }
+               default {
+                  self.error( "illegal enum val -- %s" ( literal.$_txt ) );
+               }
             }
-            case .Real( val ) {
-               enumVal = .Real( val );
-               number = val;
-               valTypeInfo = Ast.builtinTypeReal;
-            }
-            case .Str( val ) {
-               enumVal = .Str( val );
-               valTypeInfo = Ast.builtinTypeString;
-            }
-            default {
-               self.error( "illegal enum val -- %s" ( literal.$_txt ) );
-            }
+         }
+         else {
+            self.error( "illegal enum val -- %s" (mess) );
          }
 
          nextToken = self.getToken(##);
@@ -1425,7 +1429,8 @@ fn TransUnit.analyzeDeclMember(
          varName.txt, typeInfo, accessMode, staticFlag, mutMode );
 
       return Nodes.DeclMemberNode.create(
-         self.nodeManager, firstToken.pos, [ typeInfo ], varName, refType, symbolInfo,
+         self.nodeManager, firstToken.pos, [ typeInfo ],
+         varName, refType, symbolInfo, classTypeInfo, 
          staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode );
    }
 
@@ -1702,7 +1707,7 @@ fn TransUnit.analyzeClassBody(
          .InitBlock, token, classTypeInfo, name, initBlockScope, [] );
 
       let mut info = new Nodes.DeclFuncInfo(
-         classTypeInfo, token, [], true, .Pri, block, [], false );
+         .InitBlock, classTypeInfo, token, [], true, .Pri, block, [], false );
       let initBlockNode = Nodes.DeclMethodNode.create(
          self.nodeManager, firstToken.pos, [ funcTypeInfo ], info );
       initBlockInfo.set_func( initBlockNode );
@@ -2565,12 +2570,25 @@ fn TransUnit.analyzeDeclFunc(
       if isCtorFlag {
          when! classTypeInfo {
             if classTypeInfo.$baseTypeInfo ~= Ast.headTypeInfo {
-               // Super クラスを持っている場合
-               if #workBody.$stmtList == 0 or
-                  workBody.$stmtList[ 1 ].$kind ~= Nodes.nodeKind.ExpCallSuper
-               {
-                  self.addErrMess( workBody.$pos,
-                                   "__init must call super() with first." );
+               // Super クラスを持っている場合、
+               // 先頭の処理で super() をコールしているか調べる
+               let mut needCall = true;
+               foreach stmt in workBody.$stmtList {
+                  switch stmt.$kind {
+                     case Nodes.nodeKind.ExpCallSuper {
+                        needCall = false;
+                     }
+                     case Nodes.nodeKind.BlankLine {
+                     }
+                     default {
+                        break;
+                     }
+                  }
+               }
+               if needCall {
+                  self.addErrMess(
+                     workBody.$pos,             
+                     "__init must call super() with first." );
                }
             }
          }
@@ -2578,25 +2596,30 @@ fn TransUnit.analyzeDeclFunc(
    }
 
    if needNode {
-      let mut info = new Nodes.DeclFuncInfo(
-         classTypeInfo, name, argList, orgStaticFlag, accessMode,
-         body, retTypeInfoList, self.has__func__Symbol.has( typeInfo ) );
-      // node = self.createNode( kind, firstToken.pos, [ typeInfo ], info );
+      fn createDeclFuncInfo( funcKind:Nodes.FuncKind ): &Nodes.DeclFuncInfo {
+         return new Nodes.DeclFuncInfo(
+            funcKind, classTypeInfo, name, argList, orgStaticFlag, accessMode,
+            body, retTypeInfoList, self.has__func__Symbol.has( typeInfo ) );
+      }
 
       switch ( kind ) {
          case Nodes.NodeKind.$DeclConstr {
+            let info = createDeclFuncInfo( .Ctor );
             node = Nodes.DeclConstrNode.create(
                self.nodeManager, firstToken.pos, [ typeInfo ], info );
          }
          case Nodes.NodeKind.$DeclDestr {
+            let info = createDeclFuncInfo( .Dstr );
             node = Nodes.DeclDestrNode.create(
                self.nodeManager, firstToken.pos, [ typeInfo ], info );
          }
          case Nodes.NodeKind.$DeclMethod {
+            let info = createDeclFuncInfo( .Mtd );
             node = Nodes.DeclMethodNode.create(
                self.nodeManager, firstToken.pos, [ typeInfo ], info );
          }
          case Nodes.NodeKind.$DeclFunc {
+            let info = createDeclFuncInfo( .Func );
             node = Nodes.DeclFuncNode.create(
                self.nodeManager, firstToken.pos, [ typeInfo ], info );
          }

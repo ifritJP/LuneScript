@@ -82,6 +82,12 @@ pub override fn dumpFilter.processNone(
    let prefix, depth = opt.get();
    dump( prefix, depth, node, "" );
 };
+pub override fn dumpFilter.processBlankLine(
+   node: &Nodes.BlankLineNode, opt:Opt ) mut
+{
+   let prefix, depth = opt.get();
+   dump( prefix, depth, node, "%d" (node.$lineNum) );
+};
 pub override fn dumpFilter.processImport(
    node: &Nodes.ImportNode, opt:Opt ) mut
 {
@@ -316,7 +322,7 @@ pub override fn dumpFilter.processDeclForm( node: &Nodes.DeclFormNode, opt:Opt )
 }
 
 fn dumpFilter.processDeclFuncInfo(
-   node: &Nodes.Node, declInfo: Nodes.DeclFuncInfo, opt:Opt ) mut
+   node: &Nodes.Node, declInfo: &Nodes.DeclFuncInfo, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
    let mut name = "<anonymous>";

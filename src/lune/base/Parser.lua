@@ -145,7 +145,9 @@ end
 if not _lune1 then
    _lune1 = _lune
 end
+
 local Util = _lune.loadModule( 'lune.base.Util' )
+
 local luaKeywordSet = {}
 luaKeywordSet["let"]= true
 luaKeywordSet["if"]= true
@@ -166,16 +168,19 @@ luaKeywordSet["require"]= true
 luaKeywordSet["function"]= true
 luaKeywordSet["then"]= true
 luaKeywordSet["until"]= true
+
 local function isLuaKeyword( txt )
 
    return _lune._Set_has(luaKeywordSet, txt )
 end
 _moduleObj.isLuaKeyword = isLuaKeyword
+
 local function createReserveInfo( luaMode )
 
    local keywordSet = {}
    local typeSet = {}
    local builtInSet = {}
+   
    builtInSet["require"]= true
    for key, __val in pairs( luaKeywordSet ) do
       if not _lune._Set_has(builtInSet, key ) then
@@ -183,6 +188,7 @@ local function createReserveInfo( luaMode )
       end
       
    end
+   
    
    if not luaMode then
       keywordSet["null"]= true
@@ -203,6 +209,7 @@ local function createReserveInfo( luaMode )
       keywordSet["!"]= true
       keywordSet["unwrap"]= true
       keywordSet["sync"]= true
+      
       typeSet["int"]= true
       typeSet["real"]= true
       typeSet["stem"]= true
@@ -211,10 +218,12 @@ local function createReserveInfo( luaMode )
       typeSet["bool"]= true
    end
    
+   
    local multiCharDelimitMap = {}
    multiCharDelimitMap["="] = {"=="}
    multiCharDelimitMap["<"] = {"<="}
    multiCharDelimitMap[">"] = {">="}
+   
    if not luaMode then
       multiCharDelimitMap["|"] = {"|<", "|>"}
       multiCharDelimitMap["|<"] = {"|<<"}
@@ -239,8 +248,10 @@ local function createReserveInfo( luaMode )
       multiCharDelimitMap["~"] = {"~="}
    end
    
+   
    return keywordSet, typeSet, builtInSet, multiCharDelimitMap
 end
+
 local TxtStream = {}
 setmetatable( TxtStream, { ifList = {iStream,} } )
 _moduleObj.TxtStream = TxtStream
@@ -261,6 +272,7 @@ function TxtStream:get_pos(  )
 end
 function TxtStream:read( mode )
 
+   
    if self.eof then
       return nil
    end
@@ -296,6 +308,7 @@ function TxtStream:get_txt()
    return self.txt
 end
 
+
 local Position = {}
 _moduleObj.Position = Position
 function Position.setmeta( obj )
@@ -314,6 +327,7 @@ function Position:__init( lineNo, column )
    self.lineNo = lineNo
    self.column = column
 end
+
 
 local TokenKind = {}
 _moduleObj.TokenKind = TokenKind
@@ -371,6 +385,7 @@ TokenKind.Eof = 10
 TokenKind._val2NameMap[10] = 'Eof'
 TokenKind.__allList[11] = TokenKind.Eof
 
+
 local Token = {}
 _moduleObj.Token = Token
 function Token.new( kind, txt, pos, consecutive, commentList )
@@ -414,6 +429,7 @@ function Token:get_commentList()
    return self.commentList
 end
 
+
 local Parser = {}
 _moduleObj.Parser = Parser
 function Parser.setmeta( obj )
@@ -431,6 +447,7 @@ function Parser:__init(  )
 
 end
 
+
 local PushbackParser = {}
 _moduleObj.PushbackParser = PushbackParser
 function PushbackParser.setmeta( obj )
@@ -447,6 +464,7 @@ end
 function PushbackParser:__init(  )
 
 end
+
 
 local WrapParser = {}
 setmetatable( WrapParser, { __index = Parser } )
@@ -478,8 +496,10 @@ function WrapParser:__init( parser, name )
    self.name = name
 end
 
+
 local noneToken = Token.new(TokenKind.Eof, "", Position.new(0, -1), false, {})
 _moduleObj.noneToken = noneToken
+
 
 local StreamParser = {}
 setmetatable( StreamParser, { __index = Parser } )
@@ -505,7 +525,9 @@ function StreamParser:__init(stream, name, luaMode)
    self.pos = 1
    self.lineTokenList = {}
    self.prevToken = _moduleObj.noneToken
+   
    local keywordSet, typeSet, builtInSet, multiCharDelimitMap = createReserveInfo( luaMode )
+   
    self.keywordSet = keywordSet
    self.typeSet = typeSet
    self.builtInSet = builtInSet
@@ -528,6 +550,7 @@ function StreamParser.create( path, luaMode, moduleName )
       
    end
    
+   
    return StreamParser.new(stream, path, luaMode or string.find( path, "%.lua$" ) and true)
 end
 function StreamParser.setmeta( obj )
@@ -537,6 +560,7 @@ do
    StreamParser.stdinStreamModuleName = nil
    StreamParser.stdinTxt = ""
 end
+
 
 local quotedCharSet = {}
 quotedCharSet['a']= true
@@ -549,6 +573,7 @@ quotedCharSet['v']= true
 quotedCharSet['\\']= true
 quotedCharSet['"']= true
 quotedCharSet["'"]= true
+
 local op2Set = {}
 op2Set['+']= true
 op2Set['-']= true
@@ -574,6 +599,7 @@ op2Set['@']= true
 op2Set['@@']= true
 op2Set['@@@']= true
 op2Set['=']= true
+
 local op1Set = {}
 op1Set['-']= true
 op1Set['not']= true
@@ -584,16 +610,19 @@ op1Set['`']= true
 op1Set[',,']= true
 op1Set[',,,']= true
 op1Set[',,,,']= true
+
 local function isOp2( ope )
 
    return _lune._Set_has(op2Set, ope )
 end
 _moduleObj.isOp2 = isOp2
+
 local function isOp1( ope )
 
    return _lune._Set_has(op1Set, ope )
 end
 _moduleObj.isOp1 = isOp1
+
 function StreamParser:parse(  )
 
    local function readLine(  )
@@ -617,8 +646,10 @@ function StreamParser:parse(  )
       return nil
    end
    
+   
    local list = {}
    local startIndex = 1
+   
    local function multiComment( comIndex, termStr )
    
       local searchIndex = comIndex
@@ -638,6 +669,7 @@ function StreamParser:parse(  )
       end
       
    end
+   
    
    local function addVal( kind, val, column )
    
@@ -663,6 +695,7 @@ function StreamParser:parse(  )
          self.prevToken = newToken
          return newToken
       end
+      
       local function analyzeNumber( token, beginIndex )
       
          local nonNumIndex = token:find( '[^%d]', beginIndex )
@@ -723,9 +756,11 @@ function StreamParser:parse(  )
          
          return nonNumIndex - 1, intFlag
       end
+      
       if kind == TokenKind.Symb then
          local searchIndex = 1
          while true do
+            
             local tokenIndex, tokenEndIndex = string.find( val, "[%p%w]+", searchIndex )
             if  nil == tokenIndex or  nil == tokenEndIndex then
                local _tokenIndex = tokenIndex
@@ -740,6 +775,7 @@ function StreamParser:parse(  )
             local startIndex = 1
             while true do
                if token:find( '^[%d]', startIndex ) or token:find( '^-[%d]', startIndex ) then
+                  
                   local checkIndex = startIndex
                   if string.byte( token, 1 ) == 45 then
                      checkIndex = checkIndex + 1
@@ -751,6 +787,7 @@ function StreamParser:parse(  )
                   startIndex = endIndex + 1
                else
                 
+                  
                   do
                      local _exp = string.find( token, '[^%w_]', startIndex )
                      if _exp ~= nil then
@@ -781,6 +818,7 @@ function StreamParser:parse(  )
                         end
                         
                         startIndex = index + #delimit
+                        
                         local workKind = TokenKind.Dlmt
                         if _lune._Set_has(op2Set, delimit ) or _lune._Set_has(op1Set, delimit ) then
                            workKind = TokenKind.Ope
@@ -821,9 +859,12 @@ function StreamParser:parse(  )
       
    end
    
+   
    local searchIndex = startIndex
+   
    while true do
       local syncIndexFlag = true
+      
       local pattern = [==[[/%-%?"%'%`].]==]
       local index = string.find( rawLine, pattern, searchIndex )
       if  nil == index then
@@ -833,8 +874,10 @@ function StreamParser:parse(  )
          return list
       end
       
+      
       local findChar = string.byte( rawLine, index )
       local nextChar = string.byte( rawLine, index + 1 )
+      
       if findChar == 45 and nextChar ~= 45 then
          searchIndex = index + 1
          syncIndexFlag = false
@@ -845,11 +888,14 @@ function StreamParser:parse(  )
          end
          
          if findChar == 47 then
+            
             if nextChar == 42 then
+               
                local comment, nextIndex = multiComment( index + 2, "*/" )
                addVal( TokenKind.Cmnt, "/*" .. comment, index )
                searchIndex = nextIndex
             elseif nextChar == 47 then
+               
                addVal( TokenKind.Cmnt, rawLine:sub( index ), index )
                searchIndex = #rawLine + 1
             else
@@ -859,6 +905,7 @@ function StreamParser:parse(  )
             end
             
          elseif findChar == 39 or findChar == 34 then
+            
             local workIndex = index + 1
             local workPattern = '["\'\\]'
             while true do
@@ -866,15 +913,18 @@ function StreamParser:parse(  )
                if  nil == endIndex then
                   local _endIndex = endIndex
                
+                  
                   Util.err( string.format( "%s:%d:%d: error: illegal string -- %s", self:getStreamName(  ), self.lineNo, index, rawLine) )
                end
                
                local workChar = string.byte( rawLine, endIndex )
                if workChar == findChar then
+                  
                   addVal( TokenKind.Str, rawLine:sub( index, endIndex ), index )
                   searchIndex = endIndex + 1
                   break
                elseif workChar == 92 then
+                  
                   workIndex = endIndex + 2
                else
                 
@@ -885,6 +935,7 @@ function StreamParser:parse(  )
             
          elseif findChar == 96 then
             if (nextChar == findChar and string.byte( rawLine, index + 2 ) == 96 ) then
+               
                local txt, nextIndex = multiComment( index + 3, '```' )
                addVal( TokenKind.Str, '```' .. txt, index )
                searchIndex = nextIndex
@@ -927,6 +978,7 @@ function StreamParser:parse(  )
    
 end
 
+
 function StreamParser:getToken(  )
 
    if #self.lineTokenList < self.pos then
@@ -945,10 +997,13 @@ function StreamParser:getToken(  )
       
    end
    
+   
    local token = self.lineTokenList[self.pos]
    self.pos = self.pos + 1
+   
    return token
 end
+
 
 local eofToken = Token.new(TokenKind.Eof, "<EOF>", Position.new(0, 0), false, {})
 local function getEofToken(  )

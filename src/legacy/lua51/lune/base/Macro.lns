@@ -187,7 +187,7 @@ pub fn MacroCtrl.evalMacroOp(
    self.useModuleMacroSet.add( macroTypeInfo.getModule() );
 
    when! expList {
-      foreach exp in expList.get_expList() {
+      foreach exp in expList.$expList {
          let kind = exp.$kind;
          switch kind {
             case Nodes.NodeKind.$LiteralNil,
@@ -224,8 +224,8 @@ pub fn MacroCtrl.evalMacroOp(
    let macroArgNodeList = macroInfo.getArgList();
    let mut macroArgName2ArgNode:Map<str,&Nodes.Node> = {};
    when! expList {
-      foreach argNode, index in expList.get_expList() {
-         let literal = argNode.getLiteral();
+      foreach argNode, index in expList.$expList {
+         let literal, mess = argNode.getLiteral();
          when! literal {
             if! let val = getLiteralMacroVal( literal ) {
                argValMap[ index ] = val;
@@ -234,6 +234,11 @@ pub fn MacroCtrl.evalMacroOp(
                macroArgValMap[ declArgNode.$name ] = val;
                macroArgName2ArgNode[ declArgNode.$name ] = argNode;
             }
+         }
+         else {
+            let errmess = "not support node -- %s:%s"
+                ( Nodes.getNodeKindName( argNode.$kind ), mess );
+            return nil, errmess;
          }
       }
    }
@@ -445,11 +450,13 @@ pub fn MacroCtrl.expandMacroVal(
                parser.pushbackToken( nextToken );
             }
          }
-         elseif macroVal.typeInfo.equals( Ast.builtinTypeStat ## ) {
+         elseif macroVal.typeInfo.equals( Ast.builtinTypeStat ## ) or
+            macroVal.typeInfo.equals( Ast.builtinTypeExp ## )
+         {
             parser.pushbackStr( "macroVal %s" (nextToken.txt),
                                 (unwrap macroVal.val)@@str );
          }
-         elseif macroVal.typeInfo.get_kind() == .Array or
+         elseif macroVal.typeInfo.$kind == .Array or
             macroVal.typeInfo.get_kind() == .List
          {
             if macroVal.typeInfo.$itemTypeInfoList[ 1 ].equals( Ast.builtinTypeStat ##) {
@@ -527,7 +534,9 @@ pub fn MacroCtrl.expandMacroVal(
                Parser.TokenKind.Str, "'%s'" (newToken), nextToken.pos, false ## );
             parser.pushbackToken( nextToken );
          }
-         elseif macroVal.typeInfo.equals( Ast.builtinTypeStat ## ) {
+         elseif macroVal.typeInfo.equals( Ast.builtinTypeStat ## ) or
+            macroVal.typeInfo.equals( Ast.builtinTypeExp ## )
+         {
             nextToken = new Parser.Token(
                Parser.TokenKind.Str,
                "'%s'" (unwrap macroVal.val), nextToken.pos, false ##);
@@ -569,6 +578,7 @@ pub fn MacroCtrl.expandSymbol(
          when! macroInfo {
             let valType = macroInfo.typeInfo;
             if valType.equals( Ast.builtinTypeSymbol ##) or
+               valType.equals( Ast.builtinTypeExp ##) or
                valType.equals( Ast.builtinTypeStat ##)
             {
                format = "' %s '";
@@ -595,7 +605,9 @@ pub fn MacroCtrl.expandSymbol(
             {
                format = "'%s' ";
             }
-            elseif exp.$expType.equals( Ast.builtinTypeStat ##) {
+            elseif exp.$expType.equals( Ast.builtinTypeStat ##) or
+               exp.$expType.equals( Ast.builtinTypeExp ##)
+            {
                format = "' %s '";
             }
          }
@@ -635,4 +647,12 @@ pub fn MacroCtrl.finishMacroMode() mut {
 pub fn MacroCtrl.startAnalyzeArgMode() mut {
    self.macroMode = .AnalyzeArg;
    self.symbol2ValueMapForMacro = {};
+}
+
+pub fn MacroCtrl.switchMacroMode() mut {
+   self.macroMode = .None;
+}
+
+pub fn MacroCtrl.restoreMacroMode() mut {
+   self.macroMode = .AnalyzeArg;
 }

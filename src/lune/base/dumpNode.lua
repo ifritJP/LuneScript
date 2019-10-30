@@ -182,9 +182,11 @@ end
 if not _lune1 then
    _lune1 = _lune
 end
+
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
+
 local Opt = {}
 _moduleObj.Opt = Opt
 function Opt.new( prefix, depth )
@@ -219,6 +221,7 @@ function Opt.setmeta( obj )
   setmetatable( obj, { __index = Opt  } )
 end
 
+
 local dumpFilter = {}
 setmetatable( dumpFilter, { __index = Nodes.Filter } )
 function dumpFilter.setmeta( obj )
@@ -237,11 +240,13 @@ function dumpFilter:__init( __superarg1, __superarg2 )
    Nodes.Filter.__init( self, __superarg1, __superarg2 )
 end
 
+
 local function createFilter( moduleTypeInfo )
 
    return dumpFilter.new(moduleTypeInfo, moduleTypeInfo:get_scope())
 end
 _moduleObj.createFilter = createFilter
+
 local function dump( prefix, depth, node, txt )
 
    local typeStr = ""
@@ -252,18 +257,28 @@ local function dump( prefix, depth, node, txt )
    
    print( string.format( "%s: %s %s %s", prefix, Nodes.getNodeKindName( node:get_kind(  ) ), txt, typeStr) )
 end
+
 local function filter( node, filter, opt )
 
    node:processFilter( filter, opt )
 end
+
 local function getTxt( token )
 
    return token.txt
 end
+
 function dumpFilter:processNone( node, opt )
 
    local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
+end
+
+
+function dumpFilter:processBlankLine( node, opt )
+
+   local prefix, depth = opt:get(  )
+   dump( prefix, depth, node, string.format( "%d", node:get_lineNum()) )
 end
 
 
@@ -310,6 +325,7 @@ function dumpFilter:processStmtExp( node, opt )
 end
 
 
+
 function dumpFilter:processDeclEnum( node, opt )
 
    local prefix, depth = opt:get(  )
@@ -321,6 +337,7 @@ function dumpFilter:processDeclEnum( node, opt )
    end
    
 end
+
 
 function dumpFilter:processDeclAlge( node, opt )
 
@@ -344,6 +361,7 @@ function dumpFilter:processDeclAlge( node, opt )
    
 end
 
+
 function dumpFilter:processNewAlgeVal( node, opt )
 
    local prefix, depth = opt:get(  )
@@ -353,6 +371,7 @@ function dumpFilter:processNewAlgeVal( node, opt )
    end
    
 end
+
 
 function dumpFilter:processDeclClass( node, opt )
 
@@ -403,17 +422,20 @@ function dumpFilter:processExpMacroStat( node, opt )
 end
 
 
+
 function dumpFilter:processUnwrapSet( node, opt )
 
    local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
    filter( node:get_dstExpList(), self, opt:nextOpt(  ) )
    filter( node:get_srcExpList(), self, opt:nextOpt(  ) )
+   
    if node:get_unwrapBlock() then
       filter( _lune.unwrap( node:get_unwrapBlock()), self, opt:nextOpt(  ) )
    end
    
 end
+
 
 function dumpFilter:processIfUnwrap( node, opt )
 
@@ -430,13 +452,16 @@ function dumpFilter:processIfUnwrap( node, opt )
    
 end
 
+
 function dumpFilter:processWhen( node, opt )
 
    local prefix, depth = opt:get(  )
+   
    local symTxt = ""
    for index, symPair in pairs( node:get_symPairList() ) do
       symTxt = string.format( "%s %s", symTxt, symPair:get_src())
    end
+   
    
    dump( prefix, depth, node, symTxt )
    filter( node:get_block(), self, opt:nextOpt(  ) )
@@ -448,6 +473,7 @@ function dumpFilter:processWhen( node, opt )
    end
    
 end
+
 
 function dumpFilter:processDeclVar( node, opt )
 
@@ -466,6 +492,7 @@ function dumpFilter:processDeclVar( node, opt )
    end
    
    varName = string.format( "%s %s", node:get_mode(), varName)
+   
    dump( prefix, depth, node, varName )
    for index, var in pairs( node:get_varList(  ) ) do
       do
@@ -547,11 +574,13 @@ function dumpFilter:processExpSubDDD( node, opt )
 end
 
 
+
 function dumpFilter:processDeclForm( node, opt )
 
    local prefix, depth = opt:get(  )
    dump( prefix, depth, node, node:get_expType():getTxt( self:get_typeNameCtrl() ) )
 end
+
 
 function dumpFilter:processDeclFuncInfo( node, declInfo, opt )
 
@@ -601,11 +630,13 @@ function dumpFilter:processDeclConstr( node, opt )
 end
 
 
+
 function dumpFilter:processDeclDestr( node, opt )
 
    local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
 end
+
 
 
 function dumpFilter:processExpCallSuper( node, opt )
@@ -771,6 +802,7 @@ function dumpFilter:processForsort( node, opt )
 end
 
 
+
 function dumpFilter:processExpUnwrap( node, opt )
 
    local prefix, depth = opt:get(  )
@@ -785,6 +817,7 @@ function dumpFilter:processExpUnwrap( node, opt )
    
 end
 
+
 local function getTypeListTxt( typeList )
 
    local txt = ""
@@ -798,6 +831,7 @@ local function getTypeListTxt( typeList )
    
    return txt
 end
+
 function dumpFilter:processExpCall( node, opt )
 
    local prefix, depth = opt:get(  )
@@ -851,6 +885,7 @@ function dumpFilter:processExpOp1( node, opt )
 end
 
 
+
 function dumpFilter:processExpToDDD( node, opt )
 
    local prefix, depth = opt:get(  )
@@ -858,12 +893,14 @@ function dumpFilter:processExpToDDD( node, opt )
    filter( node:get_expList(), self, opt:nextOpt(  ) )
 end
 
+
 function dumpFilter:processExpMultiTo1( node, opt )
 
    local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
    filter( node:get_exp(), self, opt:nextOpt(  ) )
 end
+
 
 function dumpFilter:processExpCast( node, opt )
 
@@ -942,12 +979,14 @@ function dumpFilter:processExpOmitEnum( node, opt )
 end
 
 
+
 function dumpFilter:processGetField( node, opt )
 
    local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "get_" .. node:get_field(  ).txt )
    filter( node:get_prefix(  ), self, opt:nextOpt(  ) )
 end
+
 
 
 function dumpFilter:processReturn( node, opt )
@@ -964,17 +1003,20 @@ function dumpFilter:processReturn( node, opt )
 end
 
 
+
 function dumpFilter:processProvide( node, opt )
 
    local prefix, depth = opt:get(  )
    dump( prefix, depth, node, node:get_symbol():get_name() )
 end
 
+
 function dumpFilter:processAlias( node, opt )
 
    local prefix, depth = opt:get(  )
    dump( prefix, depth, node, string.format( "%s = %s", node:get_newName(), node:get_typeInfo():getTxt(  )) )
 end
+
 
 function dumpFilter:processTestBlock( node, opt )
 
@@ -983,6 +1025,7 @@ function dumpFilter:processTestBlock( node, opt )
    filter( node:get_block(), self, opt:nextOpt(  ) )
 end
 
+
 function dumpFilter:processBoxing( node, opt )
 
    local prefix, depth = opt:get(  )
@@ -990,12 +1033,14 @@ function dumpFilter:processBoxing( node, opt )
    filter( node:get_src(), self, opt:nextOpt(  ) )
 end
 
+
 function dumpFilter:processUnboxing( node, opt )
 
    local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
    filter( node:get_src(), self, opt:nextOpt(  ) )
 end
+
 
 function dumpFilter:processLiteralList( node, opt )
 
@@ -1110,6 +1155,7 @@ function dumpFilter:processLiteralSymbol( node, opt )
    local prefix, depth = opt:get(  )
    dump( prefix, depth, node, node:get_token(  ).txt )
 end
+
 
 
 function dumpFilter:processAbbr( node, opt )

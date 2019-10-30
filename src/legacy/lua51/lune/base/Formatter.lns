@@ -1,0 +1,946 @@
+/*
+MIT License
+
+Copyright (c) 2018 ifritJP
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+import lune.base.Ast;
+import lune.base.Nodes;
+import lune.base.Parser;
+import lune.base.Util;
+
+pub class Opt {
+   let parent:&Nodes.Node {pub};
+
+   pub fn __init( parent:&Nodes.Node ) {
+      self.parent = parent;
+   }
+   pub fn nextOpt( parent:&Nodes.Node ) mut : Opt {
+      return new Opt( parent );
+   }
+}
+
+class FormatterFilter extend Nodes.Filter<Opt> {
+   let mut stream:Util.SimpleSourceOStream;
+
+   pub fn __init( moduleTypeInfo:&Ast.TypeInfo,
+                  moduleInfoManager:&Ast.ModuleInfoManager! )
+   {
+      super( moduleTypeInfo, moduleInfoManager );
+      self.stream = new Util.SimpleSourceOStream( io.stdout, nil, 3 );
+   }
+
+   advertise stream;
+}
+
+pub fn createFilter( moduleTypeInfo:&Ast.TypeInfo ): Nodes.Filter<Opt> {
+   return new FormatterFilter(moduleTypeInfo, moduleTypeInfo.$scope);
+}
+
+fn filter( node: &Nodes.Node, filter: FormatterFilter, opt:Opt ) {
+   node.processFilter( filter, opt );
+}
+
+fn getTxt( token: Parser.Token ): str {
+   return token.txt;
+}
+
+pub override fn FormatterFilter.processNone(
+   node: &Nodes.NoneNode, opt:Opt ) mut
+{
+   
+};
+
+pub override fn FormatterFilter.processBlankLine(
+   node: &Nodes.BlankLineNode, opt:Opt ) mut
+{
+   for index = 1, node.$lineNum {
+      self.writeln( "" );
+   }
+};
+
+pub override fn FormatterFilter.processImport(
+   node: &Nodes.ImportNode, opt:Opt ) mut
+{
+   self.write( "import %s" (node.$modulePath) );
+   if not node.$modulePath.find( "%." .. node.$assignName .. "$"## ) {
+      self.write( " as %s" (node.$assignName) );
+   }
+   self.writeln( ";" );
+};
+pub override fn FormatterFilter.processRoot(
+   node: &Nodes.RootNode, opt:Opt ) mut
+{
+   
+   foreach child, index in node.$children {
+      filter( child, self, opt.nextOpt( node ) );
+   }	
+};
+pub override fn FormatterFilter.processSubfile(
+   node: &Nodes.SubfileNode, opt:Opt ) mut
+{
+   
+}
+pub override fn FormatterFilter.processBlockSub(
+   node: &Nodes.BlockNode, opt:Opt ) mut
+{
+   self.writeln( "{" );
+   self.pushIndent(##);
+   
+   foreach statement, index in node.$stmtList {
+      filter( statement, self, opt.nextOpt( node ) );
+   }
+
+   self.popIndent();
+
+   switch node.$blockKind {
+      case .LetUnwrap {
+         self.write( "}" );
+      }
+      default {
+         self.writeln( "}" );
+      }
+   }
+};
+pub override fn FormatterFilter.processStmtExp(
+   node: &Nodes.StmtExpNode, opt:Opt ) mut
+{
+   filter( node.$exp, self, opt.nextOpt( node ) );
+   self.writeln( ";" );
+};
+
+pub override fn FormatterFilter.processDeclEnum(
+   node: &Nodes.DeclEnumNode, opt:Opt ) mut
+{
+   
+   let enumTypeInfo = unwrap (node.$expType@@@Ast.EnumTypeInfo);
+   foreach name in node.$valueNameList {
+      let valInfo = unwrap enumTypeInfo.getEnumValInfo( name.txt );
+   }
+}
+
+pub override fn FormatterFilter.processDeclAlge(
+   node: &Nodes.DeclAlgeNode, opt:Opt ) mut
+{
+   
+   let algeTypeInfo = node.$algeType;
+   forsort valInfo in algeTypeInfo.$valInfoMap {
+   }
+}
+
+pub override fn FormatterFilter.processNewAlgeVal(
+   node: &Nodes.NewAlgeValNode, opt:Opt ) mut
+{
+   
+   foreach exp in node.$paramList {
+      filter( exp, self, opt.nextOpt( node ) );
+   }
+}
+
+
+pub override fn FormatterFilter.processDeclClass(
+   node: &Nodes.DeclClassNode, opt:Opt ) mut
+{
+   if node.$accessMode == .Pub {
+      self.write( "pub " );
+   }
+   switch node.$expType.$kind {
+      case .Class {
+         if node.$moduleName {
+            self.write( "module " );
+         }
+         else {
+            self.write( "class " );
+         }
+      }
+      case .IF {
+         self.write( "interface " );
+      }
+   }
+   self.write( node.$name.txt );
+
+   let classType = node.$expType;
+   if #classType.$itemTypeInfoList > 0 {
+      self.write( "<" );
+      foreach genType, index in classType.$itemTypeInfoList {
+         if index > 1 {
+            self.write( ",");
+         }
+         self.write( genType.getTxt( ## ) );
+      }
+      self.write( ">" );
+   }
+
+   if! let moduleName = node.$moduleName {
+      self.write( " require " );
+      self.write( "%s " ( moduleName.txt ) );
+      if! let gluePrefix = node.$gluePrefix {
+         self.write( "glue " );
+         self.write( gluePrefix );
+      }
+   }
+
+   if classType.hasBase() or #classType.$interfaceList > 0 {
+      self.write( " extend " );
+      if classType.hasBase() {
+         self.write( classType.$baseTypeInfo.getTxt(##) );
+      }
+      if #classType.$interfaceList > 0 {
+         self.write( "(" );
+         foreach ifType, index in classType.$interfaceList {
+            if index > 1 {
+               self.write( "," );
+            }
+            self.write( ifType.getTxt(##) );
+         }
+         self.write( ")" );
+      }
+   }
+   self.writeln( "" );
+   self.writeln( "{" );
+   self.pushIndent( ## );
+   
+   foreach field, index in node.$fieldList {
+      filter( field, self, opt.nextOpt( node ) );
+   }
+
+   self.popIndent();
+   self.writeln( "}" );
+};
+pub override fn FormatterFilter.processDeclMember(
+   node: &Nodes.DeclMemberNode, opt:Opt ) mut
+{
+   switch node.$accessMode {
+      case .Pub, .Pro, .None, .Local {
+         self.write( Ast.accessMode2txt( node.$accessMode ) );
+         self.write( " " );
+      }
+   }
+   self.write( "let " );
+
+   let sym = node.$symbolInfo;
+   if sym.$mutable {
+      self.write( "mut " );
+   }
+   self.write( sym.$name );
+   self.write( ":" );
+
+   filter( node.$refType, self, opt.nextOpt( node ) );
+
+
+   if node.$getterMode == .None {
+      if node.$setterMode ~= .None {
+         self.write( "{none," );
+         self.write( Ast.accessMode2txt( node.$setterMode ) );
+         self.write( "}" );
+      }
+   }
+   else {
+      self.write( "{" );
+      self.write( Ast.accessMode2txt( node.$getterMode ) );
+      if not node.$getterMutable {
+         self.write( "&" );
+      }
+      if node.$getterRetType ~= sym.$typeInfo {
+         self.write( ":" );
+         self.write( node.$getterRetType.getTxt(##) );
+      }
+      if node.$setterMode ~= .None {
+         self.write( "," );
+         self.write( Ast.accessMode2txt( node.$setterMode ) );
+      }
+      self.write( "}" );
+      
+   }
+   self.writeln( ";" );
+};
+pub override fn FormatterFilter.processExpMacroExp(
+   node: &Nodes.ExpMacroExpNode, opt:Opt ) mut
+{
+   
+   let stmtList = node.$stmtList;
+   foreach stmt in stmtList {
+      filter( stmt, self,  opt.nextOpt( node ) );
+   }
+};
+pub override fn FormatterFilter.processDeclMacro(
+   node: &Nodes.DeclMacroNode, opt:Opt ) mut
+{
+   
+};
+pub override fn FormatterFilter.processExpMacroStat(
+   node: &Nodes.ExpMacroStatNode, opt:Opt ) mut
+{
+   
+   foreach node in node.$expStrList {
+      filter( node, self, opt.nextOpt( node ) );
+   }
+};
+
+
+pub override fn FormatterFilter.processUnwrapSet(
+   node: &Nodes.UnwrapSetNode, opt:Opt ) mut
+{
+   
+   filter( node.$dstExpList, self, opt.nextOpt( node ) );
+   filter( node.$srcExpList, self, opt.nextOpt( node ) );
+
+   if node.$unwrapBlock {
+      filter( unwrap node.$unwrapBlock, self, opt.nextOpt( node ) );
+   }
+}
+
+pub override fn FormatterFilter.processIfUnwrap(
+   node: &Nodes.IfUnwrapNode, opt:Opt ) mut
+{
+   self.write( "if! " );
+   if #node.$varSymList ~= 0 {
+      self.write( "let " );
+      foreach varSym, index in node.$varSymList {
+         if index > 1 {
+            self.write( "," );
+         }
+         self.write( varSym.$name );
+                           }
+      self.write( " = " );
+   }
+   filter( node.$expList, self, opt.nextOpt( node ) );
+   filter( node.$block, self, opt.nextOpt( node ) );
+   if node.$nilBlock {
+      self.write( "else " );
+      filter( unwrap node.$nilBlock, self, opt.nextOpt( node ) );
+   }
+}
+
+pub override fn FormatterFilter.processWhen(
+   node: &Nodes.WhenNode, opt:Opt ) mut
+{
+   
+
+   let mut symTxt = "";
+   foreach symPair, index in node.$symPairList {
+      symTxt = "%s %s" (symTxt, symPair.$src);
+   }
+   
+   filter( node.$block, self, opt.nextOpt( node ) );
+   if! node.$elseBlock {
+      filter( _exp, self, opt.nextOpt( node ) );
+   }
+}
+
+
+pub override fn FormatterFilter.processDeclVar(
+   node: &Nodes.DeclVarNode, opt:Opt ) mut
+{
+   switch node.$accessMode {
+      case .Pub {
+         self.write( "pub " );
+      }
+   }
+   
+   switch node.$mode {
+      case .Let {
+         self.write( "let " );
+      }
+      case .Unwrap {
+         self.write( "let! " );
+      }
+   }
+   
+   foreach sym, index in node.$symbolInfoList {
+      if index > 1 {
+	 self.write( ", " );
+      }
+      if sym.$mutable {
+         self.write( "mut " );
+      }
+      self.write( sym.$name );
+   }
+
+   if! node.$expList {
+      self.write( " = " );
+      filter( _exp, self, opt.nextOpt( node ) );
+   }
+   if! node.$unwrapBlock {
+      self.write( " " );
+      filter( _exp, self, opt.nextOpt( node ) );
+   }
+   if! node.$thenBlock {
+      self.write( "then" );
+      filter( _exp, self, opt.nextOpt( node ) );
+   }
+   if! node.$syncBlock {
+      self.write( "do" );
+      filter( _exp, self, opt.nextOpt( node ) );
+   }
+   self.writeln( ";" );
+};
+pub override fn FormatterFilter.processDeclArg(
+   node: &Nodes.DeclArgNode, opt:Opt ) mut
+{
+   self.write( node.$symbolInfo.$name );
+   self.write( ":" );
+   
+   filter( node.$argType, self, opt.nextOpt( node ) );
+};
+pub override fn FormatterFilter.processDeclArgDDD(
+   node: &Nodes.DeclArgDDDNode, opt:Opt ) mut
+{
+   
+};
+pub override fn FormatterFilter.processExpDDD(
+   node: &Nodes.ExpDDDNode, opt:Opt ) mut
+{
+   
+};
+pub override fn FormatterFilter.processExpSubDDD(
+   node: &Nodes.ExpSubDDDNode, opt:Opt ) mut
+{
+   
+};
+
+
+pub override fn FormatterFilter.processDeclForm( node: &Nodes.DeclFormNode, opt:Opt ) mut
+{
+   
+}
+
+fn FormatterFilter.processDeclFuncInfo(
+   node: &Nodes.Node, declInfo: &Nodes.DeclFuncInfo, opt:Opt ) mut
+{
+   let funcType = node.$expType;
+   if funcType.$accessMode == .Pub {
+      self.write( "pub " );
+   }
+   self.write( "fn " );
+
+   if opt.$parent.$kind ~= Nodes.NodeKind.$DeclClass and funcType.$kind == .Method
+   {
+      let classType = funcType.$parentInfo;
+      self.write( classType.$rawTxt );
+      self.write( "." );
+   }
+   
+   if! let nameToken = declInfo.$name {
+      self.write( nameToken.txt );
+   }
+   self.write( "(" );
+   
+   let argList = declInfo.$argList;
+   if #argList ~= 0 {
+      self.write( " " );
+   }
+   foreach arg, index in argList {
+      if index > 1 {
+         self.write( ", " );
+      }
+      filter( arg, self, opt.nextOpt( node ) );
+   }
+   if #argList ~= 0 {
+      self.write( " " );
+   }
+   self.write( ")" );
+      
+   if Ast.TypeInfo.isMut( funcType ) and declInfo.$kind == .Mtd {
+      self.write( " mut" );
+   }
+
+   if #funcType.$retTypeInfoList ~= 0 {
+      self.write( " : " );
+      foreach retType, index in funcType.$retTypeInfoList {
+         if index > 1 {
+            self.write( ", " );
+         }
+         self.write( retType.getTxt(##) );
+      }
+   }
+
+   if! declInfo.$body {
+      self.write( " " );
+      filter( _exp, self, opt.nextOpt( node ) );
+   }
+   else {
+      self.writeln( ";" );
+   }
+}
+pub override fn FormatterFilter.processDeclFunc(
+   node: &Nodes.DeclFuncNode, opt:Opt ) mut
+{
+   self.processDeclFuncInfo( node, node.$declInfo, opt );
+};	
+pub override fn FormatterFilter.processDeclMethod(
+   node: &Nodes.DeclMethodNode, opt:Opt ) mut
+{
+   self.processDeclFuncInfo( node, node.$declInfo, opt );
+};	
+pub override fn FormatterFilter.processDeclConstr(
+   node: &Nodes.DeclConstrNode, opt:Opt ) mut
+{
+   self.processDeclFuncInfo( node, node.$declInfo, opt );
+};
+
+pub override fn FormatterFilter.processDeclDestr(
+   node: &Nodes.DeclDestrNode, opt:Opt ) mut
+{
+   
+};
+
+pub override fn FormatterFilter.processExpCallSuper(
+   node: &Nodes.ExpCallSuperNode, opt:Opt ) mut
+{
+   
+   let typeInfo:Ast.TypeInfo = node.$superType;
+};
+pub override fn FormatterFilter.processRefType(
+   node: &Nodes.RefTypeNode, opt:Opt ) mut
+{
+   self.write( node.$expType.getTxt( ## ) );
+};
+pub override fn FormatterFilter.processIf(
+   node: &Nodes.IfNode, opt:Opt ) mut
+{
+   let stmtList = node.$stmtList;
+   foreach stmt, index in stmtList {
+      switch stmt.$kind {
+         case .If {
+            self.write( "if " );
+         }
+         case .ElseIf {
+            self.write( "elseif " );
+         }
+         case .Else {
+            self.write( "else " );
+         }
+      }
+      filter( stmt.$exp, self, opt.nextOpt( node ) );
+      self.write( " " );
+      filter( stmt.$block, self, opt.nextOpt( node ) );
+   }
+};
+pub override fn FormatterFilter.processSwitch(
+   node: &Nodes.SwitchNode, opt:Opt ) mut
+{
+   
+   filter( node.$exp, self, opt.nextOpt( node ) );
+   let caseList = node.$caseList;
+   foreach caseInfo in caseList {
+      filter( caseInfo.$expList, self, opt.nextOpt( node ) );
+      filter( caseInfo.$block, self, opt.nextOpt( node ) );
+   }
+   if! node.$default {
+      filter( _exp, self, opt.nextOpt( node ) );
+   }
+};
+pub override fn FormatterFilter.processMatch(
+   node: &Nodes.MatchNode, opt:Opt ) mut
+{
+   
+   filter( node.$val, self, opt.nextOpt( node ) );
+   let caseList = node.$caseList;
+   foreach caseInfo in caseList {
+      filter( caseInfo.$block, self, opt.nextOpt( node ) );
+   }
+   if! node.$defaultBlock {
+      filter( _exp, self, opt.nextOpt( node ) );
+   }
+};
+pub override fn FormatterFilter.processWhile(
+   node: &Nodes.WhileNode, opt:Opt ) mut
+{
+   self.write( "while " );
+   filter( node.$exp, self, opt.nextOpt( node ) );
+   self.write( " " );
+   filter( node.$block, self, opt.nextOpt( node ) );
+};
+pub override fn FormatterFilter.processRepeat(
+   node: &Nodes.RepeatNode, opt:Opt ) mut
+{
+   
+   filter( node.$block, self, opt.nextOpt( node ) );
+   filter( node.$exp, self, opt.nextOpt( node ) );
+};
+pub override fn FormatterFilter.processFor(
+   node: &Nodes.ForNode, opt:Opt ) mut
+{
+   self.write( "for %s = " (node.$val.$name) );
+   filter( node.$init, self, opt.nextOpt( node ) );
+   self.write( ", " );
+   filter( node.$to, self, opt.nextOpt( node ) );
+   if! node.$delta {
+      self.write( ", " );
+      filter( _exp, self, opt.nextOpt( node ) );
+   }
+   self.write( " " );
+   filter( node.$block, self, opt.nextOpt( node ) );
+};
+pub override fn FormatterFilter.processApply(
+   node: &Nodes.ApplyNode, opt:Opt ) mut
+{
+   self.write( "apply " );
+   
+   foreach var, index in node.$varList {
+      if index > 1 {
+         self.write( ", " );
+      }
+      self.write( var.txt );
+   }
+   self.write( " of " );
+   filter( node.$exp, self, opt.nextOpt( node ) );
+   self.write( " " );
+   filter( node.$block, self, opt.nextOpt( node ) );
+};
+pub override fn FormatterFilter.processForeach(
+   node: &Nodes.ForeachNode, opt:Opt ) mut
+{
+   self.write( "foreach " );
+   self.write( (unwrap node.$val).txt );
+   if! let key = node.$key {
+      self.write( ", " );
+      self.write( key.txt );
+   }
+   self.write( " in " );
+   filter( node.$exp, self, opt.nextOpt( node ) );
+   self.writeln( "" );
+   filter( node.$block, self, opt.nextOpt( node ) );
+};
+pub override fn FormatterFilter.processForsort(
+   node: &Nodes.ForsortNode, opt:Opt ) mut
+{
+   
+   let mut index = "";
+   if! node.$key {
+      index = _exp.txt;
+   }
+   filter( node.$exp, self, opt.nextOpt( node ) );
+   filter( node.$block, self, opt.nextOpt( node ) );
+};
+
+pub override fn FormatterFilter.processExpUnwrap(
+   node: &Nodes.ExpUnwrapNode, opt:Opt ) mut
+{
+   self.write( "unwrap " );
+   filter( node.$exp, self, opt.nextOpt( node ) );
+   if! node.$default {
+      self.write( " default " );
+      filter( _exp, self, opt.nextOpt( node ) );
+   }
+}
+
+fn getTypeListTxt( typeList:&List<&Ast.TypeInfo> ): str {
+   let mut txt = "";
+   foreach typeInfo, index in typeList {
+      if index > 1 {
+         txt = txt .. ", ";
+      }
+      txt = txt .. typeInfo.getTxt( ## );
+   }
+   return txt;
+}
+
+pub override fn FormatterFilter.processExpCall(
+   node: &Nodes.ExpCallNode, opt:Opt ) mut
+{
+   filter( node.$func, self, opt.nextOpt( node ) );
+   self.write( "(" );
+   if! node.$argList {
+      self.write( " " );
+      filter( _exp, self, opt.nextOpt( node ) );
+      self.write( " " );
+   }
+   self.write( ")" );
+};
+pub override fn FormatterFilter.processExpList(
+   node: &Nodes.ExpListNode, opt:Opt ) mut
+
+{
+   let expList = node.$expList;
+   foreach exp, index in expList {
+      if index > 1 {
+         if exp.$expType.$kind ~= .Abbr { 
+            self.write( ", " );
+         }
+         else {
+            self.write( " " );
+         }
+      }
+      filter( exp, self, opt.nextOpt( node ) );
+   }	
+};
+pub override fn FormatterFilter.processExpAccessMRet(
+   node: &Nodes.ExpAccessMRetNode, opt:Opt ) mut
+
+{
+   
+};
+pub override fn FormatterFilter.processExpOp1(
+   node: &Nodes.ExpOp1Node, opt:Opt ) mut
+{
+   self.write( node.$op.txt );
+   switch node.$op.txt {
+      case "not" {
+         self.write( " " );
+      }
+   }
+   filter( node.$exp, self, opt.nextOpt( node ) );
+};
+
+pub override fn FormatterFilter.processExpToDDD(
+   node: Nodes.ExpToDDDNode, opt: Opt ) mut
+{
+   
+   filter( node.$expList, self, opt.nextOpt( node ) );
+}
+
+pub override fn FormatterFilter.processExpMultiTo1(
+   node: Nodes.ExpMultiTo1Node, opt: Opt ) mut
+{
+   
+   filter( node.$exp, self, opt.nextOpt( node ) );
+}
+
+pub override fn FormatterFilter.processExpCast(
+   node: &Nodes.ExpCastNode, opt:Opt ) mut
+{
+   
+   filter( node.$exp, self, opt.nextOpt( node ) );
+};
+pub override fn FormatterFilter.processExpParen(
+   node: &Nodes.ExpParenNode, opt:Opt ) mut
+{
+   
+   filter( node.$exp, self, opt.nextOpt( node ) );
+};
+pub override fn FormatterFilter.processExpOp2(
+   node: &Nodes.ExpOp2Node, opt:Opt ) mut
+{
+   filter( node.$exp1, self, opt.nextOpt( node ) );
+   self.write( " %s " (node.$op.txt) );
+   filter( node.$exp2, self, opt.nextOpt( node ) );
+};
+pub override fn FormatterFilter.processExpNew(
+   node: &Nodes.ExpNewNode, opt:Opt ) mut
+{
+   self.write( "new " );
+
+   filter( node.$symbol, self, opt.nextOpt( node ) );
+   self.write( "(" );
+   if! node.$argList {
+      filter( _exp, self, opt.nextOpt( node ) );
+   }
+   self.write( ")" );
+};
+pub override fn FormatterFilter.processExpRef(
+   node: &Nodes.ExpRefNode, opt:Opt ) mut
+{
+   self.write( node.$token.txt );
+};
+pub override fn FormatterFilter.processExpRefItem(
+   node: &Nodes.ExpRefItemNode, opt:Opt ) mut
+{
+   filter( node.$val, self, opt.nextOpt( node ) );
+   if node.$nilAccess {
+      self.write( "$" );
+   }
+   if! node.$index {
+      self.write( "[ " );
+      filter( _exp, self, opt.nextOpt( node ) );
+      self.write( " ]" );
+   }
+   else {
+      if! node.$symbol {
+         self.write( "." );
+         self.write( _exp );
+      }
+   }
+};
+pub override fn FormatterFilter.processRefField(
+   node: &Nodes.RefFieldNode, opt:Opt ) mut
+{
+   filter( node.$prefix, self, opt.nextOpt( node ) );
+   self.write( "." );
+   self.write( node.$field.txt );
+};
+pub override fn FormatterFilter.processExpOmitEnum(
+   node: &Nodes.ExpOmitEnumNode, opt:Opt ) mut
+{
+   
+};
+
+pub override fn FormatterFilter.processGetField(
+   node: &Nodes.GetFieldNode, opt:Opt ) mut
+{
+   filter( node.$prefix, self, opt.nextOpt( node ) );
+   if node.$nilAccess {
+      self.write( "$" );
+   }
+   self.write( ".$" );
+   self.write( node.$field.txt );
+};
+
+pub override fn FormatterFilter.processReturn(
+   node: &Nodes.ReturnNode, opt:Opt ) mut
+
+{
+   self.write( "return" );
+   if! node.$expList {
+      self.write( " " );
+      filter( _exp, self, opt.nextOpt( node ) );
+   }
+   self.writeln( ";" );
+};
+
+pub override fn FormatterFilter.processProvide(
+   node: &Nodes.ProvideNode, opt:Opt ) mut
+{
+   
+}
+
+pub override fn FormatterFilter.processAlias(
+   node: &Nodes.AliasNode, opt:Opt ) mut
+{
+   
+}
+
+pub override fn FormatterFilter.processTestBlock(
+   node: &Nodes.TestBlockNode, opt:Opt ) mut
+{
+   
+   filter( node.$block, self, opt.nextOpt( node ) );
+}
+
+pub override fn FormatterFilter.processBoxing(
+   node: &Nodes.BoxingNode, opt:Opt ) mut
+{
+   
+   filter( node.$src, self, opt.nextOpt( node ) );
+}
+
+pub override fn FormatterFilter.processUnboxing(
+   node: &Nodes.UnboxingNode, opt:Opt ) mut
+{
+   
+   filter( node.$src, self, opt.nextOpt( node ) );
+}
+
+pub override fn FormatterFilter.processLiteralList(
+   node: &Nodes.LiteralListNode, opt:Opt ) mut
+{
+   self.write( "[" );
+   
+   if! node.$expList {
+      self.write( " " );
+      filter( _exp, self, opt.nextOpt( node ) );
+      self.write( " " );
+   }
+
+   self.write( "]" );
+};
+pub override fn FormatterFilter.processLiteralSet(
+   node: &Nodes.LiteralSetNode, opt:Opt ) mut
+{
+   self.write( "(@" );
+   
+   if! node.$expList {
+      self.write( " " );
+      filter( _exp, self, opt.nextOpt( node ) );
+      self.write( " " );
+   }
+
+   self.write( ")" );
+};
+pub override fn FormatterFilter.processLiteralMap(
+   node: &Nodes.LiteralMapNode, opt:Opt ) mut
+
+{
+   
+   let pairList = node.$pairList;
+   foreach pair in pairList {
+      filter( pair.$key, self, opt.nextOpt( node ) );
+      filter( pair.$val, self, opt.nextOpt( node ) );
+   }
+};
+pub override fn FormatterFilter.processLiteralArray(
+   node: &Nodes.LiteralArrayNode, opt:Opt ) mut
+{
+   
+   if! node.$expList {
+      filter( _exp, self, opt.nextOpt( node ) );
+   }
+};
+pub override fn FormatterFilter.processLiteralChar(
+   node: &Nodes.LiteralCharNode, opt:Opt ) mut
+{
+   
+};
+pub override fn FormatterFilter.processLiteralInt(
+   node: &Nodes.LiteralIntNode, opt:Opt ) mut
+{
+   self.write( node.$token.txt );
+   
+};
+pub override fn FormatterFilter.processLiteralReal(
+   node: &Nodes.LiteralRealNode, opt:Opt ) mut
+{
+   
+};
+pub override fn FormatterFilter.processLiteralString(
+   node: &Nodes.LiteralStringNode, opt:Opt ) mut
+{
+   self.write( node.$token.txt );
+
+   if #node.$argList > 0 {
+      self.write( " ( " );
+      foreach param, index in node.$argList {
+         if index > 1 {
+            self.write( ", " );
+         }
+         filter( param, self, opt.nextOpt( node ) );
+      }
+      self.write( " )" );
+   }
+};
+pub override fn FormatterFilter.processLiteralBool(
+   node: &Nodes.LiteralBoolNode, opt:Opt ) mut
+{
+   self.write( node.$token.txt );
+};
+pub override fn FormatterFilter.processLiteralNil(
+   node: &Nodes.LiteralNilNode, opt:Opt ) mut
+{
+   self.write( "nil" );
+};
+pub override fn FormatterFilter.processBreak(
+   node: &Nodes.BreakNode, opt:Opt ) mut
+{
+   self.writeln( "break;" );
+   
+};
+pub override fn FormatterFilter.processLiteralSymbol(
+   node: &Nodes.LiteralSymbolNode, opt:Opt ) mut
+{
+   
+};
+
+pub override fn FormatterFilter.processAbbr(
+   node: Nodes.AbbrNode, opt: Opt ) mut
+{
+   self.write( "##" );
+};

@@ -271,6 +271,7 @@ end
 if not _lune1 then
    _lune1 = _lune
 end
+
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local convLua = _lune.loadModule( 'lune.base.convLua' )
@@ -284,8 +285,12 @@ local Depend = _lune.loadModule( 'lune.base.Depend' )
 local OutputDepend = _lune.loadModule( 'lune.base.OutputDepend' )
 local Ver = _lune.loadModule( 'lune.base.Ver' )
 local Log = _lune.loadModule( 'lune.base.Log' )
+local Formatter = _lune.loadModule( 'lune.base.Formatter' )
+
+
 
 local forceUpdateMeta = true
+
 function __luneGetLocal( varName )
 
    local index = 1
@@ -299,11 +304,13 @@ function __luneGetLocal( varName )
          break
       end
       
+      
       index = index + 1
    end
    
    error( "not found -- " .. varName )
 end
+
 function __luneSym2Str( val )
 
    do
@@ -312,6 +319,7 @@ function __luneSym2Str( val )
          if type( _exp ) ~= "table" then
             return string.format( "%s", _exp )
          end
+         
          
          local txt = ""
          for __index, item in pairs( _exp ) do
@@ -324,6 +332,7 @@ function __luneSym2Str( val )
    
    return nil
 end
+
 local LoadInfo = {}
 function LoadInfo.setmeta( obj )
   setmetatable( obj, { __index = LoadInfo  } )
@@ -342,6 +351,7 @@ function LoadInfo:__init( mod, meta )
    self.meta = meta
 end
 
+
 local Front = {}
 setmetatable( Front, { ifList = {frontInterface.frontInterface,} } )
 function Front.new( option )
@@ -355,11 +365,13 @@ function Front:__init(option)
    self.loadedMap = {}
    self.loadedMetaMap = {}
    self.convertedMap = {}
+   
    frontInterface.setFront( self )
 end
 function Front.setmeta( obj )
   setmetatable( obj, { __index = Front  } )
 end
+
 
 function Front:error( message )
 
@@ -367,6 +379,7 @@ function Front:error( message )
    Util.printStackTrace(  )
    os.exit( 1 )
 end
+
 
 function Front:loadLua( path )
 
@@ -378,6 +391,7 @@ function Front:loadLua( path )
    Util.errorLog( _lune.unwrapDefault( err, string.format( "load error -- %s.", path)) )
    return nil
 end
+
 
 local function createPaser( path, mod )
 
@@ -391,6 +405,7 @@ local function createPaser( path, mod )
    
    error( "failed to open " .. path )
 end
+
 local function scriptPath2Module( path )
 
    if path:find( "^/" ) then
@@ -401,11 +416,13 @@ local function scriptPath2Module( path )
    return (string.gsub( mod, "%.lns$", "" ) )
 end
 _moduleObj.scriptPath2Module = scriptPath2Module
+
 function Front:createPaser(  )
 
    local mod = scriptPath2Module( self.option.scriptPath )
    return createPaser( self.option.scriptPath, mod )
 end
+
 
 function Front:createAst( importModuleInfo, parser, mod, moduleId, analyzeModule, analyzeMode, pos )
 
@@ -413,11 +430,13 @@ function Front:createAst( importModuleInfo, parser, mod, moduleId, analyzeModule
    return transUnit:createAST( parser, false, mod )
 end
 
+
 function Front:convert( ast, streamName, stream, metaStream, convMode, inMacro )
 
    local conv = convLua.createFilter( streamName, stream, metaStream, convMode, inMacro, ast:get_moduleTypeInfo(), ast:get_moduleSymbolKind(), self.option.useLuneModule, self.option.targetLuaVer )
    ast:get_node():processFilter( conv, convLua.Opt.new(ast:get_node()) )
 end
+
 
 local function loadFromChunk( chunk, err )
 
@@ -431,10 +450,13 @@ local function loadFromChunk( chunk, err )
    
    error( "failed to error" )
 end
+
 local function loadFromLuaTxt( txt )
 
+   
    return loadFromChunk( _lune.loadstring52( txt ) )
 end
+
 local function byteCompileFromLuaTxt( txt, stripDebugInfo )
 
    local chunk, err = _lune.loadstring52( txt )
@@ -444,23 +466,30 @@ local function byteCompileFromLuaTxt( txt, stripDebugInfo )
    
    error( _lune.unwrapDefault( err, "load error") )
 end
+
 function Front:convertFromAst( ast, streamName, mode )
 
    local stream = Util.memStream.new()
    local metaStream = Util.memStream.new()
+   
    self:convert( ast, streamName, stream, metaStream, mode, false )
+   
    return metaStream:get_txt(), stream:get_txt()
 end
+
 
 function Front:loadFromLnsTxt( importModuleInfo, name, txt )
 
    local transUnit = TransUnit.TransUnit.new(frontInterface.ModuleId.tempId, importModuleInfo, convLua.MacroEvalImp.new(self.option.mode), nil, nil, nil, self.option.targetLuaVer, self.option.transCtrlInfo)
    local stream = Parser.TxtStream.new(txt)
    local parser = Parser.StreamParser.new(stream, name, false)
+   
    local ast = transUnit:createAST( parser, false, nil )
+   
    local metaTxt, luaTxt = self:convertFromAst( ast, name, convLua.ConvMode.Exec )
    return _lune.unwrap( loadFromLuaTxt( luaTxt ))
 end
+
 
 local DependMetaInfo = {}
 setmetatable( DependMetaInfo, { ifList = {Mapping,} } )
@@ -504,6 +533,7 @@ function DependMetaInfo._fromMapSub( obj, val )
    end
    return obj
 end
+
 
 local MetaForBuildId = {}
 setmetatable( MetaForBuildId, { ifList = {Mapping,} } )
@@ -555,6 +585,7 @@ function MetaForBuildId._fromMapSub( obj, val )
    return obj
 end
 
+
 function MetaForBuildId.LoadFromMeta( metaPath )
 
    do
@@ -573,6 +604,7 @@ function MetaForBuildId.LoadFromMeta( metaPath )
    return nil, nil
 end
 
+
 local function getMetaInfo( lnsPath, mod, outdir )
 
    local moduleMetaPath = lnsPath
@@ -590,15 +622,19 @@ local function getMetaInfo( lnsPath, mod, outdir )
    
    return nil, moduleMetaPath, ""
 end
+
 function Front:searchModuleFile( mod, suffix, addPath )
 
    local lnsSearchPath = package.path
+   
    if addPath ~= nil then
       lnsSearchPath = string.format( "%s/?%s;%s", addPath, suffix, package.path )
    end
    
+   
    lnsSearchPath = lnsSearchPath:gsub( "%.lua$", suffix )
    lnsSearchPath = lnsSearchPath:gsub( "%.lua;", suffix .. ";" )
+   
    local foundPath = Depend.searchpath( mod, lnsSearchPath )
    if  nil == foundPath then
       local _foundPath = foundPath
@@ -608,6 +644,7 @@ function Front:searchModuleFile( mod, suffix, addPath )
    
    return (foundPath:gsub( "^./", "" ) )
 end
+
 
 local function getModuleId( lnsPath, mod, outdir, metaInfo )
 
@@ -630,6 +667,7 @@ local function getModuleId( lnsPath, mod, outdir, metaInfo )
    
    return frontInterface.ModuleId.createId( fileTime, buildCount )
 end
+
 local ModuleUptodate = {}
 ModuleUptodate._name2Val = {}
 function ModuleUptodate:_getTxt( val )
@@ -651,13 +689,17 @@ ModuleUptodate._name2Val["NeedUpdate"] = ModuleUptodate.NeedUpdate
 ModuleUptodate.Uptodate = { "Uptodate", {{ func=MetaForBuildId._fromMap, nilable=false, child={} }}}
 ModuleUptodate._name2Val["Uptodate"] = ModuleUptodate.Uptodate
 
+
 function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
    local __func__ = '@lune.@base.@front.Front.getModuleIdAndCheckUptodate'
 
    local uptodate = _lune.newAlge( ModuleUptodate.NeedUpdate)
+   
    if self.option.transCtrlInfo.uptodateMode == Option.CheckingUptodateMode.Force then
+      
       return frontInterface.ModuleId.tempId, uptodate
    end
+   
    
    local function checkDependUptodate( metaTime, metaInfo, metaCode )
       local __func__ = '@lune.@base.@front.Front.getModuleIdAndCheckUptodate.checkDependUptodate'
@@ -667,7 +709,8 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
          if  nil == modMetaPath then
             local _modMetaPath = modMetaPath
          
-            Log.log( Log.Level.Debug, __func__, 352, function (  )
+            
+            Log.log( Log.Level.Debug, __func__, 353, function (  )
             
                return "NeedUpdate"
             end )
@@ -679,7 +722,8 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
          if  nil == time then
             local _time = time
          
-            Log.log( Log.Level.Debug, __func__, 357, function (  )
+            
+            Log.log( Log.Level.Debug, __func__, 358, function (  )
             
                return "NeedUpdate"
             end )
@@ -688,11 +732,12 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
          end
          
          if time > metaTime then
+            
             local dependMeta = MetaForBuildId.LoadFromMeta( modMetaPath )
             if  nil == dependMeta then
                local _dependMeta = dependMeta
             
-               Log.log( Log.Level.Debug, __func__, 365, function (  )
+               Log.log( Log.Level.Debug, __func__, 366, function (  )
                
                   return "NeedUpdate"
                end )
@@ -703,7 +748,8 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
             local orgMetaModuleId = frontInterface.ModuleId.createIdFromTxt( dependItem.buildId )
             local metaModuleId = dependMeta:createModuleId(  )
             if metaModuleId:get_buildCount() ~= 0 and metaModuleId:get_buildCount() ~= orgMetaModuleId:get_buildCount() then
-               Log.log( Log.Level.Debug, __func__, 375, function (  )
+               
+               Log.log( Log.Level.Debug, __func__, 376, function (  )
                
                   return string.format( "NeedUpdate: %s, %d, %d", modMetaPath, metaModuleId:get_buildCount(), orgMetaModuleId:get_buildCount())
                end )
@@ -721,14 +767,18 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
       
       return _lune.newAlge( ModuleUptodate.Uptodate, {metaInfo})
    end
+   
    local metaInfo, metaPath, metaCode = getMetaInfo( lnsPath, mod, self.option.outputDir )
+   
    if metaInfo ~= nil then
+      
       local buildId = frontInterface.ModuleId.createIdFromTxt( metaInfo.__buildId )
       if buildId ~= frontInterface.ModuleId.tempId then
          local lnsTime = Depend.getFileLastModifiedTime( lnsPath )
          local metaTime = Depend.getFileLastModifiedTime( metaPath )
          if lnsTime ~= nil and metaTime ~= nil then
             if lnsTime == buildId:get_modTime() then
+               
                uptodate = checkDependUptodate( metaTime, metaInfo, metaCode )
             end
             
@@ -737,12 +787,13 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
       end
       
    else
-      Log.log( Log.Level.Debug, __func__, 408, function (  )
+      Log.log( Log.Level.Debug, __func__, 409, function (  )
       
          return "not found meta"
       end )
       
    end
+   
    
    local moduleId = getModuleId( lnsPath, mod, self.option.outputDir, metaInfo )
    if moduleId == frontInterface.ModuleId.tempId then
@@ -752,10 +803,13 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
    return moduleId, uptodate
 end
 
+
 function Front:loadFile( importModuleInfo, path, mod, onlyMeta )
 
    local ast = self:createAst( importModuleInfo, createPaser( path, mod ), mod, getModuleId( path, mod ), nil, TransUnit.AnalyzeMode.Compile, nil )
+   
    local metaTxt, luaTxt = self:convertFromAst( ast, path, convLua.ConvMode.Exec )
+   
    if self.option.updateOnLoad then
       local function saveFile( suffix, txt, byteCompile, stripDebugInfo, checkUpdate )
       
@@ -780,6 +834,7 @@ function Front:loadFile( importModuleInfo, path, mod, onlyMeta )
                if fileObj ~= nil then
                   local oldTxt = fileObj:read( "*a" )
                   if saveTxt == oldTxt then
+                     
                      return 
                   end
                   
@@ -801,6 +856,7 @@ function Front:loadFile( importModuleInfo, path, mod, onlyMeta )
       saveFile( ".meta", metaTxt, self.option.byteCompile, true, true )
    end
    
+   
    local meta = _lune.unwrap( loadFromLuaTxt( metaTxt ))
    if onlyMeta then
       return meta, luaTxt
@@ -809,10 +865,12 @@ function Front:loadFile( importModuleInfo, path, mod, onlyMeta )
    return meta, _lune.unwrap( loadFromLuaTxt( luaTxt ))
 end
 
+
 function Front:searchModule( mod )
 
    return self:searchModuleFile( mod, ".lns", nil )
 end
+
 
 function Front:searchLuaFile( moduleFullName, addSearchPath )
 
@@ -824,6 +882,7 @@ function Front:searchLuaFile( moduleFullName, addSearchPath )
       end
    end
    
+   
    local foundPath = Depend.searchpath( moduleFullName, luaSearchPath )
    if  nil == foundPath then
       local _foundPath = foundPath
@@ -833,6 +892,7 @@ function Front:searchLuaFile( moduleFullName, addSearchPath )
    
    return (foundPath:gsub( "^./", "" ) )
 end
+
 
 function Front:checkUptodateMeta( metaPath, addSearchPath )
 
@@ -854,6 +914,7 @@ function Front:checkUptodateMeta( metaPath, addSearchPath )
          if moduleLuaPath ~= nil then
             local moduleLnsPath = moduleLuaPath:gsub( "%.lua$", ".lns" )
             if not Util.getReadyCode( moduleLnsPath, metaPath ) then
+               
                return nil
             end
             
@@ -869,6 +930,7 @@ function Front:checkUptodateMeta( metaPath, addSearchPath )
    
    return meta
 end
+
 
 function Front:loadModule( mod )
 
@@ -890,12 +952,14 @@ function Front:loadModule( mod )
                local lnsPath = self:searchModule( mod )
                if lnsPath ~= nil then
                   local luaPath = string.gsub( lnsPath, "%.lns$", ".lua" )
+                  
                   do
                      local dir = self.option.outputDir
                      if dir ~= nil then
                         luaPath = self:searchLuaFile( mod, dir )
                      end
                   end
+                  
                   
                   local loadVal = nil
                   if luaPath ~= nil then
@@ -947,6 +1011,7 @@ function Front:loadModule( mod )
    error( string.format( "load error, %s", mod) )
 end
 
+
 function Front:loadMeta( importModuleInfo, mod )
    local __func__ = '@lune.@base.@front.Front.loadMeta'
 
@@ -956,7 +1021,7 @@ function Front:loadMeta( importModuleInfo, mod )
          if _exp ~= nil then
             self.loadedMetaMap[mod] = _exp.meta
          else
-            Log.log( Log.Level.Info, __func__, 577, function (  )
+            Log.log( Log.Level.Info, __func__, 578, function (  )
             
                return string.format( "%s checking", mod)
             end )
@@ -965,12 +1030,14 @@ function Front:loadMeta( importModuleInfo, mod )
                local lnsPath = self:searchModule( mod )
                if lnsPath ~= nil then
                   local luaPath = string.gsub( lnsPath, "%.lns$", ".lua" )
+                  
                   do
                      local dir = self.option.outputDir
                      if dir ~= nil then
                         luaPath = self:searchLuaFile( mod, dir )
                      end
                   end
+                  
                   
                   local meta = nil
                   if luaPath ~= nil then
@@ -1005,9 +1072,11 @@ function Front:loadMeta( importModuleInfo, mod )
    return self.loadedMetaMap[mod]
 end
 
+
 function Front:dumpTokenize(  )
 
    frontInterface.setFront( self )
+   
    local parser = self:createPaser(  )
    while true do
       local token = parser:getToken(  )
@@ -1022,9 +1091,11 @@ function Front:dumpTokenize(  )
    
 end
 
+
 function Front:dumpAst(  )
 
    frontInterface.setFront( self )
+   
    local mod = scriptPath2Module( self.option.scriptPath )
    Util.profile( self.option.validProf, function (  )
    
@@ -1033,29 +1104,48 @@ function Front:dumpAst(  )
    end, self.option.scriptPath .. ".profi" )
 end
 
+
+function Front:format(  )
+
+   frontInterface.setFront( self )
+   
+   local mod = scriptPath2Module( self.option.scriptPath )
+   
+   local ast = self:createAst( frontInterface.ImportModuleInfo.new(), self:createPaser(  ), mod, getModuleId( self.option.scriptPath, mod ), nil, TransUnit.AnalyzeMode.Compile )
+   ast:get_node():processFilter( Formatter.createFilter( ast:get_moduleTypeInfo() ), Formatter.Opt.new(ast:get_node()) )
+end
+
+
 function Front:checkDiag(  )
 
    frontInterface.setFront( self )
+   
    local mod = scriptPath2Module( self.option.scriptPath )
    Util.setErrorCode( 0 )
    self:createAst( frontInterface.ImportModuleInfo.new(), self:createPaser(  ), mod, getModuleId( self.option.scriptPath, mod ), nil, TransUnit.AnalyzeMode.Diag )
 end
 
+
 function Front:complete(  )
 
    frontInterface.setFront( self )
+   
    local mod = scriptPath2Module( self.option.scriptPath )
    self:createAst( frontInterface.ImportModuleInfo.new(), self:createPaser(  ), mod, getModuleId( self.option.scriptPath, mod ), self.option.analyzeModule, TransUnit.AnalyzeMode.Complete, self.option.analyzePos )
 end
 
+
 function Front:createGlue(  )
 
    frontInterface.setFront( self )
+   
    local mod = scriptPath2Module( self.option.scriptPath )
    local ast = self:createAst( frontInterface.ImportModuleInfo.new(), self:createPaser(  ), mod, getModuleId( self.option.scriptPath, mod ), nil, TransUnit.AnalyzeMode.Compile )
    local filter = glueFilter.createFilter( self.option.outputDir )
    ast:get_node():processFilter( filter, 0 )
 end
+
+
 
 
 
@@ -1082,9 +1172,13 @@ function Front:convertLuaToStreamFromScript( convMode, path, mod, byteCompile, s
       end
       
    end
+   
    local retAst = nil
+   
    local moduleId, uptodate = self:getModuleIdAndCheckUptodate( path, mod )
+   
    local stream, metaStream, dependsStream = openOStream( uptodate )
+   
    do
       local _matchExp = uptodate
       if _matchExp[1] == ModuleUptodate.Uptodate[1] then
@@ -1094,24 +1188,32 @@ function Front:convertLuaToStreamFromScript( convMode, path, mod, byteCompile, s
          outputDependInfo( dependsStream, metaInfo )
       elseif _matchExp[1] == ModuleUptodate.NeedUpdate[1] then
       
+         
          if stream ~= nil and metaStream ~= nil then
             local ast = self:createAst( frontInterface.ImportModuleInfo.new(), createPaser( path, mod ), mod, moduleId, nil, TransUnit.AnalyzeMode.Compile )
             retAst = ast
+            
             if dependsStream ~= nil then
                ast:get_node():processFilter( OutputDepend.createFilter( dependsStream ), 1 )
             end
             
+            
             local oStream = stream
             local oMetaStream = metaStream
+            
             local byteStream = Util.memStream.new()
             local byteMetaStream = Util.memStream.new()
             if byteCompile then
+               
                oStream = byteStream
                oMetaStream = byteMetaStream
             end
             
+            
             self:convert( ast, path, oStream, oMetaStream, convMode, false )
+            
             if byteCompile then
+               
                stream:write( byteCompileFromLuaTxt( byteStream:get_txt(), stripDebugInfo ) )
                if metaStream ~= stream then
                   metaStream:write( byteCompileFromLuaTxt( byteMetaStream:get_txt(), true ) )
@@ -1127,6 +1229,7 @@ function Front:convertLuaToStreamFromScript( convMode, path, mod, byteCompile, s
          local metaCode = _matchExp[2][1]
          local metaInfo = _matchExp[2][2]
       
+         
          Util.errorLog( "touch -- " .. path )
          if metaStream ~= nil then
             metaStream:write( metaCode )
@@ -1134,25 +1237,31 @@ function Front:convertLuaToStreamFromScript( convMode, path, mod, byteCompile, s
             Util.err( "failed to open meta stream" )
          end
          
+         
          outputDependInfo( dependsStream, metaInfo )
       end
    end
+   
    
    if closeOStream ~= nil then
       closeOStream( stream, metaStream, dependsStream )
    end
    
+   
    return retAst
 end
+
 
 function Front:convertToLua(  )
 
    frontInterface.setFront( self )
+   
    local mod = scriptPath2Module( self.option.scriptPath )
    local convMode = convLua.ConvMode.Convert
    if self.option.mode == Option.ModeKind.LuaMeta then
       convMode = convLua.ConvMode.ConvMeta
    end
+   
    
    self:convertLuaToStreamFromScript( convMode, self.option.scriptPath, mod, self.option.byteCompile, self.option.stripDebugInfo, function ( mode )
    
@@ -1166,15 +1275,18 @@ function Front:convertToLua(  )
    end )
 end
 
+
 function Front:saveToC( ast )
 
    local cPath = self.option.scriptPath:gsub( "%.lns$", ".c" )
+   
    local file = io.open( cPath, "w" )
    if  nil == file then
       local _file = file
    
       return 
    end
+   
    
    local hPath = self.option.scriptPath:gsub( "%.lns$", ".h" )
    local hFile = io.open( hPath, "w" )
@@ -1184,20 +1296,25 @@ function Front:saveToC( ast )
       return 
    end
    
+   
    local conv = convCC.createFilter( cPath, file, hFile, ast )
    ast:get_node():processFilter( conv, convCC.Opt.new(ast:get_node()) )
+   
    file:close(  )
    hFile:close(  )
 end
 
+
 function Front:saveToLua(  )
 
    frontInterface.setFront( self )
+   
    local function txt2ModuleId( txt )
    
       local buildIdTxt = txt:gsub( "^_moduleObj.__buildId = ", "" ):gsub( '"', "" )
       return frontInterface.ModuleId.createIdFromTxt( buildIdTxt )
    end
+   
    local function checkDiff( oldStream, newStream )
       local __func__ = '@lune.@base.@front.Front.saveToLua.checkDiff'
    
@@ -1228,6 +1345,7 @@ function Front:saveToLua(  )
             
          end
          
+         
          if newLine ~= oldLine then
             local cont = false
             if newLine ~= nil and oldLine ~= nil then
@@ -1249,7 +1367,7 @@ function Front:saveToLua(  )
             end
             
             if not cont then
-               Log.log( Log.Level.Debug, __func__, 899, function (  )
+               Log.log( Log.Level.Debug, __func__, 913, function (  )
                
                   return string.format( "<%s>, <%s>", oldLine, newLine)
                end )
@@ -1264,14 +1382,17 @@ function Front:saveToLua(  )
             end
             
             if not oldLine then
+               
                if tailBeginPos == 0 then
                   return true, oldStream:get_txt()
                end
+               
                
                local oldBuildId = txt2ModuleId( oldBuildIdLine )
                local newBuildId = txt2ModuleId( newBuildIdLine )
                local worlBuildId = frontInterface.ModuleId.createId( newBuildId:get_modTime(), oldBuildId:get_buildCount() )
                local buildIdLine = string.format( "_moduleObj.__buildId = %q", worlBuildId:get_idStr())
+               
                local txt = string.format( "%s%s\n%s", newStream:get_txt():sub( 1, headEndPos - 1 ), buildIdLine, newStream:get_txt():sub( tailBeginPos ))
                return true, txt
             end
@@ -1281,8 +1402,10 @@ function Front:saveToLua(  )
       end
       
    end
+   
    local updateFlag = true
    local ast = nil
+   
    local mod = scriptPath2Module( self.option.scriptPath )
    Util.profile( self.option.validProf, function (  )
    
@@ -1294,6 +1417,7 @@ function Front:saveToLua(  )
          metaPath = string.format( "%s/%s.meta", self.option.outputDir, filename)
       end
       
+      
       if luaPath == self.option.scriptPath then
          Util.errorLog( string.format( "%s is illegal filename.", luaPath) )
       else
@@ -1303,8 +1427,10 @@ function Front:saveToLua(  )
             convMode = convLua.ConvMode.ConvMeta
          end
          
+         
          local metaFileObj = nil
          local tempMetaPath = metaPath .. ".tmp"
+         
          ast = self:convertLuaToStreamFromScript( convMode, self.option.scriptPath, mod, self.option.byteCompile, self.option.stripDebugInfo, function ( mode )
          
             local function openLuaStream(  )
@@ -1324,6 +1450,7 @@ function Front:saveToLua(  )
                if luaFlag then
                   stream = openLuaStream(  )
                end
+               
                
                local metaStream = stream
                local convMode = convLua.ConvMode.Convert
@@ -1362,6 +1489,7 @@ function Front:saveToLua(  )
                end
             end
             
+            
             return stream, metaStream, self.option:openDepend(  )
          end, function ( stream, metaStream, dependStream )
          
@@ -1373,7 +1501,9 @@ function Front:saveToLua(  )
                dependStream:close(  )
             end
             
+            
             if metaFileObj ~= nil then
+               
                metaFileObj:flush(  )
                metaFileObj:seek( "set", 0 )
                local newMetaTxt = metaFileObj:read( "*a" )
@@ -1392,6 +1522,7 @@ function Front:saveToLua(  )
                      oldFileObj:close(  )
                   end
                end
+               
                
                local sameFlag, txt = checkDiff( Parser.TxtStream.new(oldMetaTxt), Parser.TxtStream.new(newMetaTxt) )
                if not sameFlag then
@@ -1421,9 +1552,11 @@ function Front:saveToLua(  )
       end
       
    end, self.option.scriptPath .. ".profi" )
+   
    if updateFlag then
       self.option.scriptPath:gsub( "%.lns$", ".lua" )
    end
+   
    
    if ast ~= nil then
       if self.option.convertC then
@@ -1432,8 +1565,10 @@ function Front:saveToLua(  )
       
    end
    
+   
    return updateFlag
 end
+
 
 function Front:outputBootC(  )
 
@@ -1461,10 +1596,11 @@ function Front:outputBootC(  )
    convCC.outputBootcode( stream, initModule )
 end
 
+
 function Front:exec(  )
    local __func__ = '@lune.@base.@front.Front.exec'
 
-   Log.log( Log.Level.Trace, __func__, 1095, function (  )
+   Log.log( Log.Level.Trace, __func__, 1109, function (  )
    
       return Option.ModeKind:_getTxt( self.option.mode)
       
@@ -1476,6 +1612,8 @@ function Front:exec(  )
          self:dumpTokenize(  )
       elseif _switchExp == Option.ModeKind.Ast then
          self:dumpAst(  )
+      elseif _switchExp == Option.ModeKind.Format then
+         self:format(  )
       elseif _switchExp == Option.ModeKind.Diag then
          self:checkDiag(  )
       elseif _switchExp == Option.ModeKind.Complete then
@@ -1488,6 +1626,7 @@ function Front:exec(  )
          self:saveToLua(  )
       elseif _switchExp == Option.ModeKind.Exec then
          frontInterface.setFront( self )
+         
          self:loadModule( scriptPath2Module( self.option.scriptPath ) )
       elseif _switchExp == Option.ModeKind.BootC then
          self:outputBootC(  )
@@ -1499,16 +1638,20 @@ function Front:exec(  )
    
 end
 
+
 local function exec( args )
 
    local version = _lune.unwrapDefault( tonumber( _VERSION:gsub( "^[^%d]+", "" ), nil ), 0.0)
+   
    if version < 5.1 then
       io.stderr:write( string.format( "LuneScript doesn't support this lua version(%s). %s\n", version, "please use the version >= 5.1." ) )
       os.exit( 1 )
    end
    
+   
    local option = Option.analyze( args )
    local front = Front.new(option)
+   
    front:exec(  )
 end
 _moduleObj.exec = exec

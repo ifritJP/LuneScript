@@ -62,6 +62,7 @@ pub enum ModeKind {
    Exec = "exe",
    Glue = "glue",
    BootC = "bootC",
+   Format = "format",
 }
 
 /** meta ファイルの更新必要性チェックモード */

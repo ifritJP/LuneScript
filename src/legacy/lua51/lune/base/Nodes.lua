@@ -228,11 +228,13 @@ end
 if not _lune1 then
    _lune1 = _lune
 end
+
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
+
 local SimpleModuleInfoManager = {}
 setmetatable( SimpleModuleInfoManager, { ifList = {Ast.ModuleInfoManager,} } )
 function SimpleModuleInfoManager.new( moduleInfoManager )
@@ -268,6 +270,7 @@ function SimpleModuleInfoManager:getModuleInfo( ... )
 end
 
 
+
 local Filter = {}
 _moduleObj.Filter = Filter
 function Filter.new( moduleTypeInfo, moduleInfoManager )
@@ -299,6 +302,7 @@ end
 function Filter:get_typeNameCtrl()
    return self.typeNameCtrl
 end
+
 
 local BreakKind = {}
 _moduleObj.BreakKind = BreakKind
@@ -335,6 +339,7 @@ BreakKind.NeverRet = 3
 BreakKind._val2NameMap[3] = 'NeverRet'
 BreakKind.__allList[4] = BreakKind.NeverRet
 
+
 local CheckBreakMode = {}
 _moduleObj.CheckBreakMode = CheckBreakMode
 CheckBreakMode._val2NameMap = {}
@@ -369,6 +374,7 @@ CheckBreakMode.__allList[3] = CheckBreakMode.IgnoreFlow
 CheckBreakMode.IgnoreFlowReturn = 3
 CheckBreakMode._val2NameMap[3] = 'IgnoreFlowReturn'
 CheckBreakMode.__allList[4] = CheckBreakMode.IgnoreFlowReturn
+
 
 local Literal = {}
 Literal._name2Val = {}
@@ -408,6 +414,7 @@ Literal.Str = { "Str", {{ func=_lune._toStr, nilable=false, child={} }}}
 Literal._name2Val["Str"] = Literal.Str
 Literal.Symbol = { "Symbol", {{ func=_lune._toStr, nilable=false, child={} }}}
 Literal._name2Val["Symbol"] = Literal.Symbol
+
 
 local function getLiteralObj( obj )
 
@@ -465,6 +472,8 @@ local function getLiteralObj( obj )
 end
 _moduleObj.getLiteralObj = getLiteralObj
 
+
+
 local NodeVisitMode = {}
 _moduleObj.NodeVisitMode = NodeVisitMode
 NodeVisitMode._val2NameMap = {}
@@ -498,6 +507,8 @@ NodeVisitMode._val2NameMap[2] = 'End'
 NodeVisitMode.__allList[3] = NodeVisitMode.End
 
 
+
+
 local Node = {}
 _moduleObj.Node = Node
 function Node:get_expType(  )
@@ -518,7 +529,7 @@ function Node:setupLiteralTokenList( list )
 end
 function Node:getLiteral(  )
 
-   return nil
+   return nil, nil
 end
 function Node:processFilter( filter, opt )
 
@@ -570,6 +581,7 @@ function Node:get_expTypeList()
    return self.expTypeList
 end
 
+
 local NamespaceInfo = {}
 _moduleObj.NamespaceInfo = NamespaceInfo
 function NamespaceInfo.setmeta( obj )
@@ -589,6 +601,8 @@ function NamespaceInfo:__init( name, scope, typeInfo )
    self.scope = scope
    self.typeInfo = typeInfo
 end
+
+
 
 
 
@@ -631,10 +645,12 @@ function DeclMacroInfo:get_tokenList()
    return self.tokenList
 end
 
+
 local nodeKind2NameMap = {}
 local nodeKindSeed = 1
 local nodeKind = {}
 _moduleObj.nodeKind = nodeKind
+
 
 local function regKind( name )
 
@@ -644,11 +660,13 @@ local function regKind( name )
    _moduleObj.nodeKind[name] = kind
    return kind
 end
+
 local function getNodeKindName( kind )
 
    return _lune.unwrap( nodeKind2NameMap[kind])
 end
 _moduleObj.getNodeKindName = getNodeKindName
+
 local NodeManager = {}
 _moduleObj.NodeManager = NodeManager
 function NodeManager.new(  )
@@ -723,6 +741,7 @@ function NodeManager.setmeta( obj )
   setmetatable( obj, { __index = NodeManager  } )
 end
 
+
 local NodeKind = {}
 _moduleObj.NodeKind = NodeKind
 function NodeKind.setmeta( obj )
@@ -741,10 +760,13 @@ function NodeKind:__init(  )
 end
 
 
+
+
 function NodeKind.get_None(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['None'])
 end
+
 
 
 regKind( "None" )
@@ -757,6 +779,7 @@ function NodeManager:getNoneNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['None']) )
 end
+
 
 
 local NoneNode = {}
@@ -789,6 +812,7 @@ function NoneNode:__init(id, pos, typeList)
    
    
    
+   
 end
 function NoneNode.create( nodeMan, pos, typeList )
 
@@ -806,10 +830,84 @@ function NoneNode.setmeta( obj )
 end
 
 
+function NodeKind.get_BlankLine(  )
+
+   return _lune.unwrap( _moduleObj.nodeKind['BlankLine'])
+end
+
+
+
+regKind( "BlankLine" )
+function Filter:processBlankLine( node, opt )
+
+end
+
+
+function NodeManager:getBlankLineNodeList(  )
+
+   return self:getList( _lune.unwrap( _moduleObj.nodeKind['BlankLine']) )
+end
+
+
+
+local BlankLineNode = {}
+setmetatable( BlankLineNode, { __index = Node } )
+_moduleObj.BlankLineNode = BlankLineNode
+function BlankLineNode:processFilter( filter, opt )
+
+   filter:processBlankLine( self, opt )
+end
+function BlankLineNode:canBeRight(  )
+
+   return false
+end
+function BlankLineNode:canBeLeft(  )
+
+   return false
+end
+function BlankLineNode:canBeStatement(  )
+
+   return true
+end
+function BlankLineNode.new( id, pos, typeList, lineNum )
+   local obj = {}
+   BlankLineNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, typeList, lineNum ); end
+   return obj
+end
+function BlankLineNode:__init(id, pos, typeList, lineNum) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['BlankLine']), pos, typeList)
+   
+   
+   
+   self.lineNum = lineNum
+   
+   
+end
+function BlankLineNode.create( nodeMan, pos, typeList, lineNum )
+
+   local node = BlankLineNode.new(nodeMan:nextId(  ), pos, typeList, lineNum)
+   nodeMan:addNode( node )
+   return node
+end
+function BlankLineNode:visit( visitor, depth )
+
+   
+   return true
+end
+function BlankLineNode.setmeta( obj )
+  setmetatable( obj, { __index = BlankLineNode  } )
+end
+function BlankLineNode:get_lineNum()
+   return self.lineNum
+end
+
+
 function NodeKind.get_Subfile(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['Subfile'])
 end
+
 
 
 regKind( "Subfile" )
@@ -822,6 +920,7 @@ function NodeManager:getSubfileNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['Subfile']) )
 end
+
 
 
 local SubfileNode = {}
@@ -853,7 +952,9 @@ function SubfileNode:__init(id, pos, typeList, usePath)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Subfile']), pos, typeList)
    
    
+   
    self.usePath = usePath
+   
    
 end
 function SubfileNode.create( nodeMan, pos, typeList, usePath )
@@ -881,6 +982,7 @@ function NodeKind.get_Import(  )
 end
 
 
+
 regKind( "Import" )
 function Filter:processImport( node, opt )
 
@@ -891,6 +993,7 @@ function NodeManager:getImportNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['Import']) )
 end
+
 
 
 local ImportNode = {}
@@ -922,10 +1025,12 @@ function ImportNode:__init(id, pos, typeList, modulePath, assignName, symbolInfo
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Import']), pos, typeList)
    
    
+   
    self.modulePath = modulePath
    self.assignName = assignName
    self.symbolInfo = symbolInfo
    self.moduleTypeInfo = moduleTypeInfo
+   
    
 end
 function ImportNode.create( nodeMan, pos, typeList, modulePath, assignName, symbolInfo, moduleTypeInfo )
@@ -957,6 +1062,8 @@ end
 
 
 
+
+
 local LuneHelperInfo = {}
 _moduleObj.LuneHelperInfo = LuneHelperInfo
 function LuneHelperInfo.setmeta( obj )
@@ -981,6 +1088,7 @@ function LuneHelperInfo:__init( useNilAccess, useUnwrapExp, hasMappingClassDef, 
    self.useSet = useSet
    self.callAnonymous = callAnonymous
 end
+
 
 local ModuleInfo = {}
 setmetatable( ModuleInfo, { ifList = {Ast.ModuleInfoIF,} } )
@@ -1029,6 +1137,7 @@ function ModuleInfo:get_moduleId()
    return self.moduleId
 end
 
+
 local MacroValInfo = {}
 _moduleObj.MacroValInfo = MacroValInfo
 function MacroValInfo.setmeta( obj )
@@ -1048,6 +1157,7 @@ function MacroValInfo:__init( val, typeInfo, argNode )
    self.typeInfo = typeInfo
    self.argNode = argNode
 end
+
 
 local MacroArgInfo = {}
 _moduleObj.MacroArgInfo = MacroArgInfo
@@ -1075,6 +1185,8 @@ function MacroArgInfo:get_typeInfo()
 end
 
 
+
+
 local MacroInfo = {}
 _moduleObj.MacroInfo = MacroInfo
 function MacroInfo.setmeta( obj )
@@ -1094,10 +1206,12 @@ function MacroInfo:__init( func, symbol2MacroValInfoMap )
    self.symbol2MacroValInfoMap = symbol2MacroValInfoMap
 end
 
+
 function NodeKind.get_Root(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['Root'])
 end
+
 
 
 regKind( "Root" )
@@ -1110,6 +1224,7 @@ function NodeManager:getRootNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['Root']) )
 end
+
 
 
 local RootNode = {}
@@ -1141,6 +1256,7 @@ function RootNode:__init(id, pos, typeList, children, moduleScope, useModuleMacr
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Root']), pos, typeList)
    
    
+   
    self.children = children
    self.moduleScope = moduleScope
    self.useModuleMacroSet = useModuleMacroSet
@@ -1153,6 +1269,7 @@ function RootNode:__init(id, pos, typeList, children, moduleScope, useModuleMacr
    self.importModule2moduleInfo = importModule2moduleInfo
    self.typeId2MacroInfo = typeId2MacroInfo
    self.typeId2ClassMap = typeId2ClassMap
+   
    
 end
 function RootNode.create( nodeMan, pos, typeList, children, moduleScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap )
@@ -1207,6 +1324,7 @@ function RootNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function RootNode.setmeta( obj )
@@ -1250,15 +1368,18 @@ function RootNode:get_typeId2ClassMap()
 end
 
 
+
 function RootNode:set_provide( node )
 
    self.provideNode = node
 end
 
+
 function NodeKind.get_RefType(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['RefType'])
 end
+
 
 
 regKind( "RefType" )
@@ -1271,6 +1392,7 @@ function NodeManager:getRefTypeNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['RefType']) )
 end
+
 
 
 local RefTypeNode = {}
@@ -1302,10 +1424,12 @@ function RefTypeNode:__init(id, pos, typeList, name, refFlag, mutFlag, array)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['RefType']), pos, typeList)
    
    
+   
    self.name = name
    self.refFlag = refFlag
    self.mutFlag = mutFlag
    self.array = array
+   
    
 end
 function RefTypeNode.create( nodeMan, pos, typeList, name, refFlag, mutFlag, array )
@@ -1334,6 +1458,7 @@ function RefTypeNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function RefTypeNode.setmeta( obj )
@@ -1351,6 +1476,7 @@ end
 function RefTypeNode:get_array()
    return self.array
 end
+
 
 
 local BlockKind = {}
@@ -1433,10 +1559,12 @@ BlockKind.Test = 18
 BlockKind._val2NameMap[18] = 'Test'
 BlockKind.__allList[19] = BlockKind.Test
 
+
 function NodeKind.get_Block(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['Block'])
 end
+
 
 
 regKind( "Block" )
@@ -1445,6 +1573,7 @@ function NodeManager:getBlockNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['Block']) )
 end
+
 
 
 local BlockNode = {}
@@ -1476,9 +1605,11 @@ function BlockNode:__init(id, pos, typeList, blockKind, scope, stmtList)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Block']), pos, typeList)
    
    
+   
    self.blockKind = blockKind
    self.scope = scope
    self.stmtList = stmtList
+   
    
 end
 function BlockNode.create( nodeMan, pos, typeList, blockKind, scope, stmtList )
@@ -1511,6 +1642,7 @@ function BlockNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function BlockNode.setmeta( obj )
@@ -1525,6 +1657,8 @@ end
 function BlockNode:get_stmtList()
    return self.stmtList
 end
+
+
 
 
 
@@ -1579,6 +1713,7 @@ function BlockNode:getBreakKind( checkMode )
    return BreakKind.None
 end
 
+
 local IfKind = {}
 _moduleObj.IfKind = IfKind
 IfKind._val2NameMap = {}
@@ -1610,6 +1745,7 @@ IfKind.__allList[2] = IfKind.ElseIf
 IfKind.Else = 2
 IfKind._val2NameMap[2] = 'Else'
 IfKind.__allList[3] = IfKind.Else
+
 
 local IfStmtInfo = {}
 _moduleObj.IfStmtInfo = IfStmtInfo
@@ -1646,6 +1782,7 @@ function NodeKind.get_If(  )
 end
 
 
+
 regKind( "If" )
 function Filter:processIf( node, opt )
 
@@ -1656,6 +1793,7 @@ function NodeManager:getIfNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['If']) )
 end
+
 
 
 local IfNode = {}
@@ -1687,7 +1825,9 @@ function IfNode:__init(id, pos, typeList, stmtList)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['If']), pos, typeList)
    
    
+   
    self.stmtList = stmtList
+   
    
 end
 function IfNode.create( nodeMan, pos, typeList, stmtList )
@@ -1707,6 +1847,7 @@ end
 function IfNode:get_stmtList()
    return self.stmtList
 end
+
 
 
 function IfNode:getBreakKind( checkMode )
@@ -1755,8 +1896,10 @@ function IfNode:getBreakKind( checkMode )
       return kind
    end
    
+   
    return BreakKind.None
 end
+
 
 local MRetExp = {}
 _moduleObj.MRetExp = MRetExp
@@ -1783,10 +1926,12 @@ function MRetExp:get_index()
    return self.index
 end
 
+
 function NodeKind.get_ExpList(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpList'])
 end
+
 
 
 regKind( "ExpList" )
@@ -1799,6 +1944,7 @@ function NodeManager:getExpListNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['ExpList']) )
 end
+
 
 
 local ExpListNode = {}
@@ -1822,9 +1968,11 @@ function ExpListNode:__init(id, pos, typeList, expList, mRetExp, followOn)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpList']), pos, typeList)
    
    
+   
    self.expList = expList
    self.mRetExp = mRetExp
    self.followOn = followOn
+   
    
 end
 function ExpListNode.create( nodeMan, pos, typeList, expList, mRetExp, followOn )
@@ -1855,6 +2003,7 @@ function ExpListNode:visit( visitor, depth )
       
       
    end
+   
    
    
    return true
@@ -1897,6 +2046,7 @@ function ExpListNode:canBeRight(  )
    return true
 end
 
+
 local CaseInfo = {}
 _moduleObj.CaseInfo = CaseInfo
 function CaseInfo.setmeta( obj )
@@ -1928,6 +2078,7 @@ function NodeKind.get_Switch(  )
 end
 
 
+
 regKind( "Switch" )
 function Filter:processSwitch( node, opt )
 
@@ -1938,6 +2089,7 @@ function NodeManager:getSwitchNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['Switch']) )
 end
+
 
 
 local SwitchNode = {}
@@ -1969,9 +2121,11 @@ function SwitchNode:__init(id, pos, typeList, exp, caseList, default)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Switch']), pos, typeList)
    
    
+   
    self.exp = exp
    self.caseList = caseList
    self.default = default
+   
    
 end
 function SwitchNode.create( nodeMan, pos, typeList, exp, caseList, default )
@@ -2022,6 +2176,7 @@ function SwitchNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function SwitchNode.setmeta( obj )
@@ -2036,6 +2191,7 @@ end
 function SwitchNode:get_default()
    return self.default
 end
+
 
 
 function SwitchNode:getBreakKind( checkMode )
@@ -2113,14 +2269,18 @@ function SwitchNode:getBreakKind( checkMode )
       end
    end
    
+   
    return BreakKind.None
 end
+
+
 
 
 function NodeKind.get_While(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['While'])
 end
+
 
 
 regKind( "While" )
@@ -2133,6 +2293,7 @@ function NodeManager:getWhileNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['While']) )
 end
+
 
 
 local WhileNode = {}
@@ -2164,8 +2325,10 @@ function WhileNode:__init(id, pos, typeList, exp, block)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['While']), pos, typeList)
    
    
+   
    self.exp = exp
    self.block = block
+   
    
 end
 function WhileNode.create( nodeMan, pos, typeList, exp, block )
@@ -2211,6 +2374,7 @@ function WhileNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function WhileNode.setmeta( obj )
@@ -2224,10 +2388,12 @@ function WhileNode:get_block()
 end
 
 
+
 function NodeKind.get_Repeat(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['Repeat'])
 end
+
 
 
 regKind( "Repeat" )
@@ -2240,6 +2406,7 @@ function NodeManager:getRepeatNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['Repeat']) )
 end
+
 
 
 local RepeatNode = {}
@@ -2271,8 +2438,10 @@ function RepeatNode:__init(id, pos, typeList, block, exp)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Repeat']), pos, typeList)
    
    
+   
    self.block = block
    self.exp = exp
+   
    
 end
 function RepeatNode.create( nodeMan, pos, typeList, block, exp )
@@ -2318,6 +2487,7 @@ function RepeatNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function RepeatNode.setmeta( obj )
@@ -2331,6 +2501,7 @@ function RepeatNode:get_exp()
 end
 
 
+
 function RepeatNode:getBreakKind( checkMode )
 
    local kind = BreakKind.None
@@ -2342,10 +2513,12 @@ function RepeatNode:getBreakKind( checkMode )
 end
 
 
+
 function NodeKind.get_For(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['For'])
 end
+
 
 
 regKind( "For" )
@@ -2358,6 +2531,7 @@ function NodeManager:getForNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['For']) )
 end
+
 
 
 local ForNode = {}
@@ -2389,11 +2563,13 @@ function ForNode:__init(id, pos, typeList, block, val, init, to, delta)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['For']), pos, typeList)
    
    
+   
    self.block = block
    self.val = val
    self.init = init
    self.to = to
    self.delta = delta
+   
    
 end
 function ForNode.create( nodeMan, pos, typeList, block, val, init, to, delta )
@@ -2478,6 +2654,7 @@ function ForNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function ForNode.setmeta( obj )
@@ -2500,6 +2677,7 @@ function ForNode:get_delta()
 end
 
 
+
 function ForNode:getBreakKind( checkMode )
 
    local kind = BreakKind.None
@@ -2511,10 +2689,12 @@ function ForNode:getBreakKind( checkMode )
 end
 
 
+
 function NodeKind.get_Apply(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['Apply'])
 end
+
 
 
 regKind( "Apply" )
@@ -2527,6 +2707,7 @@ function NodeManager:getApplyNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['Apply']) )
 end
+
 
 
 local ApplyNode = {}
@@ -2558,9 +2739,11 @@ function ApplyNode:__init(id, pos, typeList, varList, exp, block)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Apply']), pos, typeList)
    
    
+   
    self.varList = varList
    self.exp = exp
    self.block = block
+   
    
 end
 function ApplyNode.create( nodeMan, pos, typeList, varList, exp, block )
@@ -2606,6 +2789,7 @@ function ApplyNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function ApplyNode.setmeta( obj )
@@ -2622,6 +2806,7 @@ function ApplyNode:get_block()
 end
 
 
+
 function ApplyNode:getBreakKind( checkMode )
 
    local kind = BreakKind.None
@@ -2633,10 +2818,12 @@ function ApplyNode:getBreakKind( checkMode )
 end
 
 
+
 function NodeKind.get_Foreach(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['Foreach'])
 end
+
 
 
 regKind( "Foreach" )
@@ -2649,6 +2836,7 @@ function NodeManager:getForeachNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['Foreach']) )
 end
+
 
 
 local ForeachNode = {}
@@ -2680,10 +2868,12 @@ function ForeachNode:__init(id, pos, typeList, val, key, exp, block)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Foreach']), pos, typeList)
    
    
+   
    self.val = val
    self.key = key
    self.exp = exp
    self.block = block
+   
    
 end
 function ForeachNode.create( nodeMan, pos, typeList, val, key, exp, block )
@@ -2729,6 +2919,7 @@ function ForeachNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function ForeachNode.setmeta( obj )
@@ -2748,6 +2939,7 @@ function ForeachNode:get_block()
 end
 
 
+
 function ForeachNode:getBreakKind( checkMode )
 
    local kind = BreakKind.None
@@ -2759,10 +2951,12 @@ function ForeachNode:getBreakKind( checkMode )
 end
 
 
+
 function NodeKind.get_Forsort(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['Forsort'])
 end
+
 
 
 regKind( "Forsort" )
@@ -2775,6 +2969,7 @@ function NodeManager:getForsortNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['Forsort']) )
 end
+
 
 
 local ForsortNode = {}
@@ -2806,11 +3001,13 @@ function ForsortNode:__init(id, pos, typeList, val, key, exp, block, sort)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Forsort']), pos, typeList)
    
    
+   
    self.val = val
    self.key = key
    self.exp = exp
    self.block = block
    self.sort = sort
+   
    
 end
 function ForsortNode.create( nodeMan, pos, typeList, val, key, exp, block, sort )
@@ -2856,6 +3053,7 @@ function ForsortNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function ForsortNode.setmeta( obj )
@@ -2878,6 +3076,7 @@ function ForsortNode:get_sort()
 end
 
 
+
 function ForsortNode:getBreakKind( checkMode )
 
    local kind = BreakKind.None
@@ -2889,10 +3088,12 @@ function ForsortNode:getBreakKind( checkMode )
 end
 
 
+
 function NodeKind.get_Return(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['Return'])
 end
+
 
 
 regKind( "Return" )
@@ -2905,6 +3106,7 @@ function NodeManager:getReturnNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['Return']) )
 end
+
 
 
 local ReturnNode = {}
@@ -2936,7 +3138,9 @@ function ReturnNode:__init(id, pos, typeList, expList)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Return']), pos, typeList)
    
    
+   
    self.expList = expList
+   
    
 end
 function ReturnNode.create( nodeMan, pos, typeList, expList )
@@ -2970,6 +3174,7 @@ function ReturnNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function ReturnNode.setmeta( obj )
@@ -2985,10 +3190,12 @@ function ReturnNode:getBreakKind( checkMode )
    return BreakKind.Return
 end
 
+
 function NodeKind.get_Break(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['Break'])
 end
+
 
 
 regKind( "Break" )
@@ -3001,6 +3208,7 @@ function NodeManager:getBreakNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['Break']) )
 end
+
 
 
 local BreakNode = {}
@@ -3033,6 +3241,7 @@ function BreakNode:__init(id, pos, typeList)
    
    
    
+   
 end
 function BreakNode.create( nodeMan, pos, typeList )
 
@@ -3050,15 +3259,18 @@ function BreakNode.setmeta( obj )
 end
 
 
+
 function BreakNode:getBreakKind( checkMode )
 
    return BreakKind.Break
 end
 
+
 function NodeKind.get_Provide(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['Provide'])
 end
+
 
 
 regKind( "Provide" )
@@ -3071,6 +3283,7 @@ function NodeManager:getProvideNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['Provide']) )
 end
+
 
 
 local ProvideNode = {}
@@ -3102,7 +3315,9 @@ function ProvideNode:__init(id, pos, typeList, symbol)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Provide']), pos, typeList)
    
    
+   
    self.symbol = symbol
+   
    
 end
 function ProvideNode.create( nodeMan, pos, typeList, symbol )
@@ -3124,10 +3339,12 @@ function ProvideNode:get_symbol()
 end
 
 
+
 function NodeKind.get_ExpNew(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpNew'])
 end
+
 
 
 regKind( "ExpNew" )
@@ -3140,6 +3357,7 @@ function NodeManager:getExpNewNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['ExpNew']) )
 end
+
 
 
 local ExpNewNode = {}
@@ -3171,9 +3389,11 @@ function ExpNewNode:__init(id, pos, typeList, symbol, ctorTypeInfo, argList)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpNew']), pos, typeList)
    
    
+   
    self.symbol = symbol
    self.ctorTypeInfo = ctorTypeInfo
    self.argList = argList
+   
    
 end
 function ExpNewNode.create( nodeMan, pos, typeList, symbol, ctorTypeInfo, argList )
@@ -3224,6 +3444,7 @@ function ExpNewNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function ExpNewNode.setmeta( obj )
@@ -3240,10 +3461,12 @@ function ExpNewNode:get_argList()
 end
 
 
+
 function NodeKind.get_ExpUnwrap(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpUnwrap'])
 end
+
 
 
 regKind( "ExpUnwrap" )
@@ -3256,6 +3479,7 @@ function NodeManager:getExpUnwrapNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['ExpUnwrap']) )
 end
+
 
 
 local ExpUnwrapNode = {}
@@ -3287,8 +3511,10 @@ function ExpUnwrapNode:__init(id, pos, typeList, exp, default)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpUnwrap']), pos, typeList)
    
    
+   
    self.exp = exp
    self.default = default
+   
    
 end
 function ExpUnwrapNode.create( nodeMan, pos, typeList, exp, default )
@@ -3339,6 +3565,7 @@ function ExpUnwrapNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function ExpUnwrapNode.setmeta( obj )
@@ -3352,10 +3579,12 @@ function ExpUnwrapNode:get_default()
 end
 
 
+
 function NodeKind.get_ExpRef(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpRef'])
 end
+
 
 
 regKind( "ExpRef" )
@@ -3368,6 +3597,7 @@ function NodeManager:getExpRefNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['ExpRef']) )
 end
+
 
 
 local ExpRefNode = {}
@@ -3391,8 +3621,10 @@ function ExpRefNode:__init(id, pos, typeList, token, symbolInfo)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpRef']), pos, typeList)
    
    
+   
    self.token = token
    self.symbolInfo = symbolInfo
+   
    
 end
 function ExpRefNode.create( nodeMan, pos, typeList, token, symbolInfo )
@@ -3417,20 +3649,24 @@ function ExpRefNode:get_symbolInfo()
 end
 
 
+
 function ExpRefNode:canBeLeft(  )
 
    return self:get_symbolInfo():get_canBeLeft()
 end
+
 
 function ExpRefNode:canBeRight(  )
 
    return self:get_symbolInfo():get_canBeRight() and self:get_symbolInfo():get_hasValueFlag()
 end
 
+
 function NodeKind.get_ExpOp2(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpOp2'])
 end
+
 
 
 regKind( "ExpOp2" )
@@ -3443,6 +3679,7 @@ function NodeManager:getExpOp2NodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['ExpOp2']) )
 end
+
 
 
 local ExpOp2Node = {}
@@ -3470,9 +3707,11 @@ function ExpOp2Node:__init(id, pos, typeList, op, exp1, exp2)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpOp2']), pos, typeList)
    
    
+   
    self.op = op
    self.exp1 = exp1
    self.exp2 = exp2
+   
    
 end
 function ExpOp2Node.create( nodeMan, pos, typeList, op, exp1, exp2 )
@@ -3518,6 +3757,7 @@ function ExpOp2Node:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function ExpOp2Node.setmeta( obj )
@@ -3534,15 +3774,18 @@ function ExpOp2Node:get_exp2()
 end
 
 
+
 function ExpOp2Node:canBeStatement(  )
 
    return self:get_op().txt == '='
 end
 
+
 function NodeKind.get_UnwrapSet(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['UnwrapSet'])
 end
+
 
 
 regKind( "UnwrapSet" )
@@ -3555,6 +3798,7 @@ function NodeManager:getUnwrapSetNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['UnwrapSet']) )
 end
+
 
 
 local UnwrapSetNode = {}
@@ -3586,9 +3830,11 @@ function UnwrapSetNode:__init(id, pos, typeList, dstExpList, srcExpList, unwrapB
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['UnwrapSet']), pos, typeList)
    
    
+   
    self.dstExpList = dstExpList
    self.srcExpList = srcExpList
    self.unwrapBlock = unwrapBlock
+   
    
 end
 function UnwrapSetNode.create( nodeMan, pos, typeList, dstExpList, srcExpList, unwrapBlock )
@@ -3656,6 +3902,7 @@ function UnwrapSetNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function UnwrapSetNode.setmeta( obj )
@@ -3672,10 +3919,12 @@ function UnwrapSetNode:get_unwrapBlock()
 end
 
 
+
 function NodeKind.get_IfUnwrap(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['IfUnwrap'])
 end
+
 
 
 regKind( "IfUnwrap" )
@@ -3688,6 +3937,7 @@ function NodeManager:getIfUnwrapNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['IfUnwrap']) )
 end
+
 
 
 local IfUnwrapNode = {}
@@ -3719,10 +3969,12 @@ function IfUnwrapNode:__init(id, pos, typeList, varSymList, expList, block, nilB
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['IfUnwrap']), pos, typeList)
    
    
+   
    self.varSymList = varSymList
    self.expList = expList
    self.block = block
    self.nilBlock = nilBlock
+   
    
 end
 function IfUnwrapNode.create( nodeMan, pos, typeList, varSymList, expList, block, nilBlock )
@@ -3790,6 +4042,7 @@ function IfUnwrapNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function IfUnwrapNode.setmeta( obj )
@@ -3807,6 +4060,7 @@ end
 function IfUnwrapNode:get_nilBlock()
    return self.nilBlock
 end
+
 
 
 function IfUnwrapNode:getBreakKind( checkMode )
@@ -3884,6 +4138,7 @@ function IfUnwrapNode:getBreakKind( checkMode )
    return BreakKind.None
 end
 
+
 local UnwrapSymbolPair = {}
 _moduleObj.UnwrapSymbolPair = UnwrapSymbolPair
 function UnwrapSymbolPair.setmeta( obj )
@@ -3909,10 +4164,12 @@ function UnwrapSymbolPair:get_dst()
    return self.dst
 end
 
+
 function NodeKind.get_When(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['When'])
 end
+
 
 
 regKind( "When" )
@@ -3925,6 +4182,7 @@ function NodeManager:getWhenNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['When']) )
 end
+
 
 
 local WhenNode = {}
@@ -3956,9 +4214,11 @@ function WhenNode:__init(id, pos, typeList, symPairList, block, elseBlock)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['When']), pos, typeList)
    
    
+   
    self.symPairList = symPairList
    self.block = block
    self.elseBlock = elseBlock
+   
    
 end
 function WhenNode.create( nodeMan, pos, typeList, symPairList, block, elseBlock )
@@ -4009,6 +4269,7 @@ function WhenNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function WhenNode.setmeta( obj )
@@ -4023,6 +4284,7 @@ end
 function WhenNode:get_elseBlock()
    return self.elseBlock
 end
+
 
 
 function WhenNode:getBreakKind( checkMode )
@@ -4100,6 +4362,7 @@ function WhenNode:getBreakKind( checkMode )
    return BreakKind.None
 end
 
+
 local CastKind = {}
 _moduleObj.CastKind = CastKind
 CastKind._val2NameMap = {}
@@ -4132,10 +4395,12 @@ CastKind.Implicit = 2
 CastKind._val2NameMap[2] = 'Implicit'
 CastKind.__allList[3] = CastKind.Implicit
 
+
 function NodeKind.get_ExpCast(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpCast'])
 end
+
 
 
 regKind( "ExpCast" )
@@ -4148,6 +4413,7 @@ function NodeManager:getExpCastNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['ExpCast']) )
 end
+
 
 
 local ExpCastNode = {}
@@ -4179,9 +4445,11 @@ function ExpCastNode:__init(id, pos, typeList, exp, castType, castKind)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpCast']), pos, typeList)
    
    
+   
    self.exp = exp
    self.castType = castType
    self.castKind = castKind
+   
    
 end
 function ExpCastNode.create( nodeMan, pos, typeList, exp, castType, castKind )
@@ -4210,6 +4478,7 @@ function ExpCastNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function ExpCastNode.setmeta( obj )
@@ -4226,6 +4495,7 @@ function ExpCastNode:get_castKind()
 end
 
 
+
 function ExpCastNode:getLiteral(  )
 
    return self.exp:getLiteral(  )
@@ -4236,10 +4506,12 @@ function ExpCastNode:setupLiteralTokenList( list )
    return self.exp:setupLiteralTokenList( list )
 end
 
+
 function NodeKind.get_ExpToDDD(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpToDDD'])
 end
+
 
 
 regKind( "ExpToDDD" )
@@ -4252,6 +4524,7 @@ function NodeManager:getExpToDDDNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['ExpToDDD']) )
 end
+
 
 
 local ExpToDDDNode = {}
@@ -4283,7 +4556,9 @@ function ExpToDDDNode:__init(id, pos, typeList, expList)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpToDDD']), pos, typeList)
    
    
+   
    self.expList = expList
+   
    
 end
 function ExpToDDDNode.create( nodeMan, pos, typeList, expList )
@@ -4312,6 +4587,7 @@ function ExpToDDDNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function ExpToDDDNode.setmeta( obj )
@@ -4322,10 +4598,12 @@ function ExpToDDDNode:get_expList()
 end
 
 
+
 function NodeKind.get_ExpSubDDD(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpSubDDD'])
 end
+
 
 
 regKind( "ExpSubDDD" )
@@ -4338,6 +4616,7 @@ function NodeManager:getExpSubDDDNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['ExpSubDDD']) )
 end
+
 
 
 local ExpSubDDDNode = {}
@@ -4369,8 +4648,10 @@ function ExpSubDDDNode:__init(id, pos, typeList, src, remainIndex)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpSubDDD']), pos, typeList)
    
    
+   
    self.src = src
    self.remainIndex = remainIndex
+   
    
 end
 function ExpSubDDDNode.create( nodeMan, pos, typeList, src, remainIndex )
@@ -4399,6 +4680,7 @@ function ExpSubDDDNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function ExpSubDDDNode.setmeta( obj )
@@ -4410,6 +4692,7 @@ end
 function ExpSubDDDNode:get_remainIndex()
    return self.remainIndex
 end
+
 
 
 local MacroMode = {}
@@ -4444,10 +4727,12 @@ MacroMode.AnalyzeArg = 2
 MacroMode._val2NameMap[2] = 'AnalyzeArg'
 MacroMode.__allList[3] = MacroMode.AnalyzeArg
 
+
 function NodeKind.get_ExpOp1(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpOp1'])
 end
+
 
 
 regKind( "ExpOp1" )
@@ -4460,6 +4745,7 @@ function NodeManager:getExpOp1NodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['ExpOp1']) )
 end
+
 
 
 local ExpOp1Node = {}
@@ -4491,9 +4777,11 @@ function ExpOp1Node:__init(id, pos, typeList, op, macroMode, exp)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpOp1']), pos, typeList)
    
    
+   
    self.op = op
    self.macroMode = macroMode
    self.exp = exp
+   
    
 end
 function ExpOp1Node.create( nodeMan, pos, typeList, op, macroMode, exp )
@@ -4522,6 +4810,7 @@ function ExpOp1Node:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function ExpOp1Node.setmeta( obj )
@@ -4538,10 +4827,12 @@ function ExpOp1Node:get_exp()
 end
 
 
+
 function NodeKind.get_ExpRefItem(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpRefItem'])
 end
+
 
 
 regKind( "ExpRefItem" )
@@ -4554,6 +4845,7 @@ function NodeManager:getExpRefItemNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['ExpRefItem']) )
 end
+
 
 
 local ExpRefItemNode = {}
@@ -4581,10 +4873,12 @@ function ExpRefItemNode:__init(id, pos, typeList, val, nilAccess, symbol, index)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpRefItem']), pos, typeList)
    
    
+   
    self.val = val
    self.nilAccess = nilAccess
    self.symbol = symbol
    self.index = index
+   
    
 end
 function ExpRefItemNode.create( nodeMan, pos, typeList, val, nilAccess, symbol, index )
@@ -4635,6 +4929,7 @@ function ExpRefItemNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function ExpRefItemNode.setmeta( obj )
@@ -4660,13 +4955,16 @@ function ExpRefItemNode:canBeLeft(  )
       return false
    end
    
+   
    return Ast.TypeInfo.isMut( self:get_val():get_expType() ) and not self.nilAccess
 end
+
 
 function NodeKind.get_ExpCall(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpCall'])
 end
+
 
 
 regKind( "ExpCall" )
@@ -4679,6 +4977,7 @@ function NodeManager:getExpCallNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['ExpCall']) )
 end
+
 
 
 local ExpCallNode = {}
@@ -4706,10 +5005,12 @@ function ExpCallNode:__init(id, pos, typeList, func, errorFunc, nilAccess, argLi
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpCall']), pos, typeList)
    
    
+   
    self.func = func
    self.errorFunc = errorFunc
    self.nilAccess = nilAccess
    self.argList = argList
+   
    
 end
 function ExpCallNode.create( nodeMan, pos, typeList, func, errorFunc, nilAccess, argList )
@@ -4760,6 +5061,7 @@ function ExpCallNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function ExpCallNode.setmeta( obj )
@@ -4789,6 +5091,7 @@ function ExpCallNode:canBeRight(  )
    return true
 end
 
+
 function ExpCallNode:getBreakKind( checkMode )
 
    if self.errorFunc then
@@ -4798,10 +5101,12 @@ function ExpCallNode:getBreakKind( checkMode )
    return BreakKind.None
 end
 
+
 function NodeKind.get_ExpAccessMRet(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpAccessMRet'])
 end
+
 
 
 regKind( "ExpAccessMRet" )
@@ -4814,6 +5119,7 @@ function NodeManager:getExpAccessMRetNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['ExpAccessMRet']) )
 end
+
 
 
 local ExpAccessMRetNode = {}
@@ -4845,8 +5151,10 @@ function ExpAccessMRetNode:__init(id, pos, typeList, mRet, index)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpAccessMRet']), pos, typeList)
    
    
+   
    self.mRet = mRet
    self.index = index
+   
    
 end
 function ExpAccessMRetNode.create( nodeMan, pos, typeList, mRet, index )
@@ -4875,6 +5183,7 @@ function ExpAccessMRetNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function ExpAccessMRetNode.setmeta( obj )
@@ -4888,10 +5197,12 @@ function ExpAccessMRetNode:get_index()
 end
 
 
+
 function NodeKind.get_ExpMultiTo1(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpMultiTo1'])
 end
+
 
 
 regKind( "ExpMultiTo1" )
@@ -4904,6 +5215,7 @@ function NodeManager:getExpMultiTo1NodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['ExpMultiTo1']) )
 end
+
 
 
 local ExpMultiTo1Node = {}
@@ -4935,7 +5247,9 @@ function ExpMultiTo1Node:__init(id, pos, typeList, exp)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpMultiTo1']), pos, typeList)
    
    
+   
    self.exp = exp
+   
    
 end
 function ExpMultiTo1Node.create( nodeMan, pos, typeList, exp )
@@ -4964,6 +5278,7 @@ function ExpMultiTo1Node:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function ExpMultiTo1Node.setmeta( obj )
@@ -4974,10 +5289,12 @@ function ExpMultiTo1Node:get_exp()
 end
 
 
+
 function NodeKind.get_ExpDDD(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpDDD'])
 end
+
 
 
 regKind( "ExpDDD" )
@@ -4990,6 +5307,7 @@ function NodeManager:getExpDDDNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['ExpDDD']) )
 end
+
 
 
 local ExpDDDNode = {}
@@ -5021,7 +5339,9 @@ function ExpDDDNode:__init(id, pos, typeList, token)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpDDD']), pos, typeList)
    
    
+   
    self.token = token
+   
    
 end
 function ExpDDDNode.create( nodeMan, pos, typeList, token )
@@ -5043,10 +5363,12 @@ function ExpDDDNode:get_token()
 end
 
 
+
 function NodeKind.get_ExpParen(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpParen'])
 end
+
 
 
 regKind( "ExpParen" )
@@ -5059,6 +5381,7 @@ function NodeManager:getExpParenNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['ExpParen']) )
 end
+
 
 
 local ExpParenNode = {}
@@ -5090,7 +5413,9 @@ function ExpParenNode:__init(id, pos, typeList, exp)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpParen']), pos, typeList)
    
    
+   
    self.exp = exp
+   
    
 end
 function ExpParenNode.create( nodeMan, pos, typeList, exp )
@@ -5119,6 +5444,7 @@ function ExpParenNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function ExpParenNode.setmeta( obj )
@@ -5134,10 +5460,12 @@ function ExpParenNode:getSymbolInfo(  )
    return self.exp:getSymbolInfo(  )
 end
 
+
 function NodeKind.get_ExpMacroExp(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpMacroExp'])
 end
+
 
 
 regKind( "ExpMacroExp" )
@@ -5150,6 +5478,7 @@ function NodeManager:getExpMacroExpNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['ExpMacroExp']) )
 end
+
 
 
 local ExpMacroExpNode = {}
@@ -5181,7 +5510,9 @@ function ExpMacroExpNode:__init(id, pos, typeList, stmtList)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpMacroExp']), pos, typeList)
    
    
+   
    self.stmtList = stmtList
+   
    
 end
 function ExpMacroExpNode.create( nodeMan, pos, typeList, stmtList )
@@ -5214,6 +5545,7 @@ function ExpMacroExpNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function ExpMacroExpNode.setmeta( obj )
@@ -5222,6 +5554,7 @@ end
 function ExpMacroExpNode:get_stmtList()
    return self.stmtList
 end
+
 
 
 function ExpMacroExpNode:getBreakKind( checkMode )
@@ -5274,10 +5607,42 @@ function ExpMacroExpNode:getBreakKind( checkMode )
    return BreakKind.None
 end
 
+
+local MacroStatKind = {}
+_moduleObj.MacroStatKind = MacroStatKind
+MacroStatKind._val2NameMap = {}
+function MacroStatKind:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "MacroStatKind.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+function MacroStatKind._from( val )
+   if MacroStatKind._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+    
+MacroStatKind.__allList = {}
+function MacroStatKind.get__allList()
+   return MacroStatKind.__allList
+end
+
+MacroStatKind.Stat = 0
+MacroStatKind._val2NameMap[0] = 'Stat'
+MacroStatKind.__allList[1] = MacroStatKind.Stat
+MacroStatKind.Exp = 1
+MacroStatKind._val2NameMap[1] = 'Exp'
+MacroStatKind.__allList[2] = MacroStatKind.Exp
+
+
 function NodeKind.get_ExpMacroStat(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpMacroStat'])
 end
+
 
 
 regKind( "ExpMacroStat" )
@@ -5290,6 +5655,7 @@ function NodeManager:getExpMacroStatNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['ExpMacroStat']) )
 end
+
 
 
 local ExpMacroStatNode = {}
@@ -5311,22 +5677,25 @@ function ExpMacroStatNode:canBeStatement(  )
 
    return false
 end
-function ExpMacroStatNode.new( id, pos, typeList, expStrList )
+function ExpMacroStatNode.new( id, pos, typeList, expStrList, statKind )
    local obj = {}
    ExpMacroStatNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, typeList, expStrList ); end
+   if obj.__init then obj:__init( id, pos, typeList, expStrList, statKind ); end
    return obj
 end
-function ExpMacroStatNode:__init(id, pos, typeList, expStrList) 
+function ExpMacroStatNode:__init(id, pos, typeList, expStrList, statKind) 
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpMacroStat']), pos, typeList)
    
    
+   
    self.expStrList = expStrList
+   self.statKind = statKind
+   
    
 end
-function ExpMacroStatNode.create( nodeMan, pos, typeList, expStrList )
+function ExpMacroStatNode.create( nodeMan, pos, typeList, expStrList, statKind )
 
-   local node = ExpMacroStatNode.new(nodeMan:nextId(  ), pos, typeList, expStrList)
+   local node = ExpMacroStatNode.new(nodeMan:nextId(  ), pos, typeList, expStrList, statKind)
    nodeMan:addNode( node )
    return node
 end
@@ -5354,6 +5723,7 @@ function ExpMacroStatNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function ExpMacroStatNode.setmeta( obj )
@@ -5362,12 +5732,17 @@ end
 function ExpMacroStatNode:get_expStrList()
    return self.expStrList
 end
+function ExpMacroStatNode:get_statKind()
+   return self.statKind
+end
+
 
 
 function NodeKind.get_StmtExp(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['StmtExp'])
 end
+
 
 
 regKind( "StmtExp" )
@@ -5380,6 +5755,7 @@ function NodeManager:getStmtExpNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['StmtExp']) )
 end
+
 
 
 local StmtExpNode = {}
@@ -5407,7 +5783,9 @@ function StmtExpNode:__init(id, pos, typeList, exp)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['StmtExp']), pos, typeList)
    
    
+   
    self.exp = exp
+   
    
 end
 function StmtExpNode.create( nodeMan, pos, typeList, exp )
@@ -5436,6 +5814,7 @@ function StmtExpNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function StmtExpNode.setmeta( obj )
@@ -5451,15 +5830,18 @@ function StmtExpNode:canBeStatement(  )
    return self:get_exp():canBeStatement(  )
 end
 
+
 function StmtExpNode:getBreakKind( checkMode )
 
    return self:get_exp():getBreakKind( checkMode )
 end
 
+
 function NodeKind.get_ExpMacroStatList(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpMacroStatList'])
 end
+
 
 
 regKind( "ExpMacroStatList" )
@@ -5472,6 +5854,7 @@ function NodeManager:getExpMacroStatListNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['ExpMacroStatList']) )
 end
+
 
 
 local ExpMacroStatListNode = {}
@@ -5503,7 +5886,9 @@ function ExpMacroStatListNode:__init(id, pos, typeList, exp)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpMacroStatList']), pos, typeList)
    
    
+   
    self.exp = exp
+   
    
 end
 function ExpMacroStatListNode.create( nodeMan, pos, typeList, exp )
@@ -5532,6 +5917,7 @@ function ExpMacroStatListNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function ExpMacroStatListNode.setmeta( obj )
@@ -5542,10 +5928,12 @@ function ExpMacroStatListNode:get_exp()
 end
 
 
+
 function NodeKind.get_ExpOmitEnum(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpOmitEnum'])
 end
+
 
 
 regKind( "ExpOmitEnum" )
@@ -5558,6 +5946,7 @@ function NodeManager:getExpOmitEnumNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['ExpOmitEnum']) )
 end
+
 
 
 local ExpOmitEnumNode = {}
@@ -5589,9 +5978,11 @@ function ExpOmitEnumNode:__init(id, pos, typeList, valToken, valInfo, enumTypeIn
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpOmitEnum']), pos, typeList)
    
    
+   
    self.valToken = valToken
    self.valInfo = valInfo
    self.enumTypeInfo = enumTypeInfo
+   
    
 end
 function ExpOmitEnumNode.create( nodeMan, pos, typeList, valToken, valInfo, enumTypeInfo )
@@ -5619,10 +6010,12 @@ function ExpOmitEnumNode:get_enumTypeInfo()
 end
 
 
+
 function NodeKind.get_RefField(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['RefField'])
 end
+
 
 
 regKind( "RefField" )
@@ -5635,6 +6028,7 @@ function NodeManager:getRefFieldNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['RefField']) )
 end
+
 
 
 local RefFieldNode = {}
@@ -5658,10 +6052,12 @@ function RefFieldNode:__init(id, pos, typeList, field, symbolInfo, nilAccess, pr
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['RefField']), pos, typeList)
    
    
+   
    self.field = field
    self.symbolInfo = symbolInfo
    self.nilAccess = nilAccess
    self.prefix = prefix
+   
    
 end
 function RefFieldNode.create( nodeMan, pos, typeList, field, symbolInfo, nilAccess, prefix )
@@ -5688,6 +6084,7 @@ function RefFieldNode:visit( visitor, depth )
       
       
    end
+   
    
    
    return true
@@ -5718,6 +6115,7 @@ function RefFieldNode:canBeLeft(  )
       end
    end
    
+   
    return false
 end
 
@@ -5730,13 +6128,16 @@ function RefFieldNode:canBeRight(  )
       end
    end
    
+   
    return true
 end
+
 
 function NodeKind.get_GetField(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['GetField'])
 end
+
 
 
 regKind( "GetField" )
@@ -5749,6 +6150,7 @@ function NodeManager:getGetFieldNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['GetField']) )
 end
+
 
 
 local GetFieldNode = {}
@@ -5776,11 +6178,13 @@ function GetFieldNode:__init(id, pos, typeList, field, symbolInfo, nilAccess, pr
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['GetField']), pos, typeList)
    
    
+   
    self.field = field
    self.symbolInfo = symbolInfo
    self.nilAccess = nilAccess
    self.prefix = prefix
    self.getterTypeInfo = getterTypeInfo
+   
    
 end
 function GetFieldNode.create( nodeMan, pos, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo )
@@ -5807,6 +6211,7 @@ function GetFieldNode:visit( visitor, depth )
       
       
    end
+   
    
    
    return true
@@ -5840,13 +6245,16 @@ function GetFieldNode:canBeLeft(  )
       end
    end
    
+   
    return false
 end
+
 
 function NodeKind.get_Alias(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['Alias'])
 end
+
 
 
 regKind( "Alias" )
@@ -5859,6 +6267,7 @@ function NodeManager:getAliasNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['Alias']) )
 end
+
 
 
 local AliasNode = {}
@@ -5890,9 +6299,11 @@ function AliasNode:__init(id, pos, typeList, newName, srcNode, typeInfo)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Alias']), pos, typeList)
    
    
+   
    self.newName = newName
    self.srcNode = srcNode
    self.typeInfo = typeInfo
+   
    
 end
 function AliasNode.create( nodeMan, pos, typeList, newName, srcNode, typeInfo )
@@ -5921,6 +6332,7 @@ function AliasNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function AliasNode.setmeta( obj )
@@ -5935,6 +6347,7 @@ end
 function AliasNode:get_typeInfo()
    return self.typeInfo
 end
+
 
 
 local VarInfo = {}
@@ -5965,6 +6378,7 @@ end
 function VarInfo:get_actualType()
    return self.actualType
 end
+
 
 local DeclVarMode = {}
 _moduleObj.DeclVarMode = DeclVarMode
@@ -5998,10 +6412,12 @@ DeclVarMode.Unwrap = 2
 DeclVarMode._val2NameMap[2] = 'Unwrap'
 DeclVarMode.__allList[3] = DeclVarMode.Unwrap
 
+
 function NodeKind.get_DeclVar(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['DeclVar'])
 end
+
 
 
 regKind( "DeclVar" )
@@ -6014,6 +6430,7 @@ function NodeManager:getDeclVarNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['DeclVar']) )
 end
+
 
 
 local DeclVarNode = {}
@@ -6045,6 +6462,7 @@ function DeclVarNode:__init(id, pos, typeList, mode, accessMode, staticFlag, var
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['DeclVar']), pos, typeList)
    
    
+   
    self.mode = mode
    self.accessMode = accessMode
    self.staticFlag = staticFlag
@@ -6057,6 +6475,7 @@ function DeclVarNode:__init(id, pos, typeList, mode, accessMode, staticFlag, var
    self.thenBlock = thenBlock
    self.syncVarList = syncVarList
    self.syncBlock = syncBlock
+   
    
 end
 function DeclVarNode.create( nodeMan, pos, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock )
@@ -6156,6 +6575,7 @@ function DeclVarNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function DeclVarNode.setmeta( obj )
@@ -6199,8 +6619,10 @@ function DeclVarNode:get_syncBlock()
 end
 
 
+
 function DeclVarNode:getBreakKind( checkMode )
 
+   
    local kind = BreakKind.None
    local work = BreakKind.None
    do
@@ -6322,10 +6744,12 @@ function DeclVarNode:getBreakKind( checkMode )
    return BreakKind.None
 end
 
+
 function NodeKind.get_DeclForm(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['DeclForm'])
 end
+
 
 
 regKind( "DeclForm" )
@@ -6338,6 +6762,7 @@ function NodeManager:getDeclFormNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['DeclForm']) )
 end
+
 
 
 local DeclFormNode = {}
@@ -6369,7 +6794,9 @@ function DeclFormNode:__init(id, pos, typeList, argList)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['DeclForm']), pos, typeList)
    
    
+   
    self.argList = argList
+   
    
 end
 function DeclFormNode.create( nodeMan, pos, typeList, argList )
@@ -6402,6 +6829,7 @@ function DeclFormNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function DeclFormNode.setmeta( obj )
@@ -6412,21 +6840,62 @@ function DeclFormNode:get_argList()
 end
 
 
+
+local FuncKind = {}
+_moduleObj.FuncKind = FuncKind
+FuncKind._val2NameMap = {}
+function FuncKind:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "FuncKind.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+function FuncKind._from( val )
+   if FuncKind._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+    
+FuncKind.__allList = {}
+function FuncKind.get__allList()
+   return FuncKind.__allList
+end
+
+FuncKind.Func = 0
+FuncKind._val2NameMap[0] = 'Func'
+FuncKind.__allList[1] = FuncKind.Func
+FuncKind.Mtd = 1
+FuncKind._val2NameMap[1] = 'Mtd'
+FuncKind.__allList[2] = FuncKind.Mtd
+FuncKind.Ctor = 2
+FuncKind._val2NameMap[2] = 'Ctor'
+FuncKind.__allList[3] = FuncKind.Ctor
+FuncKind.Dstr = 3
+FuncKind._val2NameMap[3] = 'Dstr'
+FuncKind.__allList[4] = FuncKind.Dstr
+FuncKind.InitBlock = 4
+FuncKind._val2NameMap[4] = 'InitBlock'
+FuncKind.__allList[5] = FuncKind.InitBlock
+
+
 local DeclFuncInfo = {}
 _moduleObj.DeclFuncInfo = DeclFuncInfo
 function DeclFuncInfo.setmeta( obj )
   setmetatable( obj, { __index = DeclFuncInfo  } )
 end
-function DeclFuncInfo.new( classTypeInfo, name, argList, staticFlag, accessMode, body, retTypeInfoList, has__func__Symbol )
+function DeclFuncInfo.new( kind, classTypeInfo, name, argList, staticFlag, accessMode, body, retTypeInfoList, has__func__Symbol )
    local obj = {}
    DeclFuncInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( classTypeInfo, name, argList, staticFlag, accessMode, body, retTypeInfoList, has__func__Symbol )
+      obj:__init( kind, classTypeInfo, name, argList, staticFlag, accessMode, body, retTypeInfoList, has__func__Symbol )
    end
    return obj
 end
-function DeclFuncInfo:__init( classTypeInfo, name, argList, staticFlag, accessMode, body, retTypeInfoList, has__func__Symbol )
+function DeclFuncInfo:__init( kind, classTypeInfo, name, argList, staticFlag, accessMode, body, retTypeInfoList, has__func__Symbol )
 
+   self.kind = kind
    self.classTypeInfo = classTypeInfo
    self.name = name
    self.argList = argList
@@ -6435,6 +6904,9 @@ function DeclFuncInfo:__init( classTypeInfo, name, argList, staticFlag, accessMo
    self.body = body
    self.retTypeInfoList = retTypeInfoList
    self.has__func__Symbol = has__func__Symbol
+end
+function DeclFuncInfo:get_kind()
+   return self.kind
 end
 function DeclFuncInfo:get_classTypeInfo()
    return self.classTypeInfo
@@ -6461,15 +6933,18 @@ function DeclFuncInfo:get_has__func__Symbol()
    return self.has__func__Symbol
 end
 
+
 function DeclFuncInfo.createFrom( info, name )
 
-   return DeclFuncInfo.new(info.classTypeInfo, name, info.argList, info.staticFlag, info.accessMode, info.body, info.retTypeInfoList, info.has__func__Symbol)
+   return DeclFuncInfo.new(info:get_kind(), info.classTypeInfo, name, info.argList, info.staticFlag, info.accessMode, info.body, info.retTypeInfoList, info.has__func__Symbol)
 end
+
 
 function NodeKind.get_DeclFunc(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['DeclFunc'])
 end
+
 
 
 regKind( "DeclFunc" )
@@ -6482,6 +6957,7 @@ function NodeManager:getDeclFuncNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['DeclFunc']) )
 end
+
 
 
 local DeclFuncNode = {}
@@ -6509,7 +6985,9 @@ function DeclFuncNode:__init(id, pos, typeList, declInfo)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['DeclFunc']), pos, typeList)
    
    
+   
    self.declInfo = declInfo
+   
    
 end
 function DeclFuncNode.create( nodeMan, pos, typeList, declInfo )
@@ -6533,13 +7011,16 @@ end
 
 function DeclFuncNode:canBeRight(  )
 
+   
    return self.declInfo:get_name() == nil
 end
+
 
 function NodeKind.get_DeclMethod(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['DeclMethod'])
 end
+
 
 
 regKind( "DeclMethod" )
@@ -6552,6 +7033,7 @@ function NodeManager:getDeclMethodNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['DeclMethod']) )
 end
+
 
 
 local DeclMethodNode = {}
@@ -6583,7 +7065,9 @@ function DeclMethodNode:__init(id, pos, typeList, declInfo)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['DeclMethod']), pos, typeList)
    
    
+   
    self.declInfo = declInfo
+   
    
 end
 function DeclMethodNode.create( nodeMan, pos, typeList, declInfo )
@@ -6605,10 +7089,12 @@ function DeclMethodNode:get_declInfo()
 end
 
 
+
 function NodeKind.get_DeclConstr(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['DeclConstr'])
 end
+
 
 
 regKind( "DeclConstr" )
@@ -6621,6 +7107,7 @@ function NodeManager:getDeclConstrNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['DeclConstr']) )
 end
+
 
 
 local DeclConstrNode = {}
@@ -6652,7 +7139,9 @@ function DeclConstrNode:__init(id, pos, typeList, declInfo)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['DeclConstr']), pos, typeList)
    
    
+   
    self.declInfo = declInfo
+   
    
 end
 function DeclConstrNode.create( nodeMan, pos, typeList, declInfo )
@@ -6674,10 +7163,12 @@ function DeclConstrNode:get_declInfo()
 end
 
 
+
 function NodeKind.get_DeclDestr(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['DeclDestr'])
 end
+
 
 
 regKind( "DeclDestr" )
@@ -6690,6 +7181,7 @@ function NodeManager:getDeclDestrNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['DeclDestr']) )
 end
+
 
 
 local DeclDestrNode = {}
@@ -6721,7 +7213,9 @@ function DeclDestrNode:__init(id, pos, typeList, declInfo)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['DeclDestr']), pos, typeList)
    
    
+   
    self.declInfo = declInfo
+   
    
 end
 function DeclDestrNode.create( nodeMan, pos, typeList, declInfo )
@@ -6743,10 +7237,12 @@ function DeclDestrNode:get_declInfo()
 end
 
 
+
 function NodeKind.get_ExpCallSuper(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpCallSuper'])
 end
+
 
 
 regKind( "ExpCallSuper" )
@@ -6759,6 +7255,7 @@ function NodeManager:getExpCallSuperNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['ExpCallSuper']) )
 end
+
 
 
 local ExpCallSuperNode = {}
@@ -6790,9 +7287,11 @@ function ExpCallSuperNode:__init(id, pos, typeList, superType, methodType, expLi
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpCallSuper']), pos, typeList)
    
    
+   
    self.superType = superType
    self.methodType = methodType
    self.expList = expList
+   
    
 end
 function ExpCallSuperNode.create( nodeMan, pos, typeList, superType, methodType, expList )
@@ -6826,6 +7325,7 @@ function ExpCallSuperNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function ExpCallSuperNode.setmeta( obj )
@@ -6842,10 +7342,12 @@ function ExpCallSuperNode:get_expList()
 end
 
 
+
 function NodeKind.get_DeclMember(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['DeclMember'])
 end
+
 
 
 regKind( "DeclMember" )
@@ -6858,6 +7360,7 @@ function NodeManager:getDeclMemberNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['DeclMember']) )
 end
+
 
 
 local DeclMemberNode = {}
@@ -6879,19 +7382,21 @@ function DeclMemberNode:canBeStatement(  )
 
    return true
 end
-function DeclMemberNode.new( id, pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode )
+function DeclMemberNode.new( id, pos, typeList, name, refType, symbolInfo, classType, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode )
    local obj = {}
    DeclMemberNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode ); end
+   if obj.__init then obj:__init( id, pos, typeList, name, refType, symbolInfo, classType, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode ); end
    return obj
 end
-function DeclMemberNode:__init(id, pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode) 
+function DeclMemberNode:__init(id, pos, typeList, name, refType, symbolInfo, classType, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode) 
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['DeclMember']), pos, typeList)
+   
    
    
    self.name = name
    self.refType = refType
    self.symbolInfo = symbolInfo
+   self.classType = classType
    self.staticFlag = staticFlag
    self.accessMode = accessMode
    self.getterMutable = getterMutable
@@ -6899,10 +7404,11 @@ function DeclMemberNode:__init(id, pos, typeList, name, refType, symbolInfo, sta
    self.getterRetType = getterRetType
    self.setterMode = setterMode
    
+   
 end
-function DeclMemberNode.create( nodeMan, pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode )
+function DeclMemberNode.create( nodeMan, pos, typeList, name, refType, symbolInfo, classType, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode )
 
-   local node = DeclMemberNode.new(nodeMan:nextId(  ), pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode)
+   local node = DeclMemberNode.new(nodeMan:nextId(  ), pos, typeList, name, refType, symbolInfo, classType, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode)
    nodeMan:addNode( node )
    return node
 end
@@ -6926,6 +7432,7 @@ function DeclMemberNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function DeclMemberNode.setmeta( obj )
@@ -6939,6 +7446,9 @@ function DeclMemberNode:get_refType()
 end
 function DeclMemberNode:get_symbolInfo()
    return self.symbolInfo
+end
+function DeclMemberNode:get_classType()
+   return self.classType
 end
 function DeclMemberNode:get_staticFlag()
    return self.staticFlag
@@ -6960,10 +7470,12 @@ function DeclMemberNode:get_setterMode()
 end
 
 
+
 function NodeKind.get_DeclArg(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['DeclArg'])
 end
+
 
 
 regKind( "DeclArg" )
@@ -6976,6 +7488,7 @@ function NodeManager:getDeclArgNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['DeclArg']) )
 end
+
 
 
 local DeclArgNode = {}
@@ -7007,9 +7520,11 @@ function DeclArgNode:__init(id, pos, typeList, name, symbolInfo, argType)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['DeclArg']), pos, typeList)
    
    
+   
    self.name = name
    self.symbolInfo = symbolInfo
    self.argType = argType
+   
    
 end
 function DeclArgNode.create( nodeMan, pos, typeList, name, symbolInfo, argType )
@@ -7038,6 +7553,7 @@ function DeclArgNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function DeclArgNode.setmeta( obj )
@@ -7054,10 +7570,12 @@ function DeclArgNode:get_argType()
 end
 
 
+
 function NodeKind.get_DeclArgDDD(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['DeclArgDDD'])
 end
+
 
 
 regKind( "DeclArgDDD" )
@@ -7070,6 +7588,7 @@ function NodeManager:getDeclArgDDDNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['DeclArgDDD']) )
 end
+
 
 
 local DeclArgDDDNode = {}
@@ -7102,6 +7621,7 @@ function DeclArgDDDNode:__init(id, pos, typeList)
    
    
    
+   
 end
 function DeclArgDDDNode.create( nodeMan, pos, typeList )
 
@@ -7117,6 +7637,7 @@ end
 function DeclArgDDDNode.setmeta( obj )
   setmetatable( obj, { __index = DeclArgDDDNode  } )
 end
+
 
 
 local AdvertiseInfo = {}
@@ -7175,6 +7696,7 @@ function NodeKind.get_DeclClass(  )
 end
 
 
+
 regKind( "DeclClass" )
 function Filter:processDeclClass( node, opt )
 
@@ -7185,6 +7707,7 @@ function NodeManager:getDeclClassNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['DeclClass']) )
 end
+
 
 
 local DeclClassNode = {}
@@ -7216,6 +7739,7 @@ function DeclClassNode:__init(id, pos, typeList, accessMode, name, gluePrefix, d
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['DeclClass']), pos, typeList)
    
    
+   
    self.accessMode = accessMode
    self.name = name
    self.gluePrefix = gluePrefix
@@ -7228,6 +7752,7 @@ function DeclClassNode:__init(id, pos, typeList, accessMode, name, gluePrefix, d
    self.advertiseList = advertiseList
    self.trustList = trustList
    self.outerMethodSet = outerMethodSet
+   
    
 end
 function DeclClassNode.create( nodeMan, pos, typeList, accessMode, name, gluePrefix, declStmtList, fieldList, moduleName, memberList, scope, initBlock, advertiseList, trustList, outerMethodSet )
@@ -7302,6 +7827,7 @@ function DeclClassNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function DeclClassNode.setmeta( obj )
@@ -7345,6 +7871,7 @@ function DeclClassNode:get_outerMethodSet()
 end
 
 
+
 function DeclClassNode:hasUserInit(  )
 
    local scope = _lune.unwrap( self:get_expType():get_scope())
@@ -7352,10 +7879,12 @@ function DeclClassNode:hasUserInit(  )
    return not initFuncType:get_autoFlag()
 end
 
+
 function NodeKind.get_DeclEnum(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['DeclEnum'])
 end
+
 
 
 regKind( "DeclEnum" )
@@ -7368,6 +7897,7 @@ function NodeManager:getDeclEnumNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['DeclEnum']) )
 end
+
 
 
 local DeclEnumNode = {}
@@ -7399,10 +7929,12 @@ function DeclEnumNode:__init(id, pos, typeList, accessMode, name, valueNameList,
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['DeclEnum']), pos, typeList)
    
    
+   
    self.accessMode = accessMode
    self.name = name
    self.valueNameList = valueNameList
    self.scope = scope
+   
    
 end
 function DeclEnumNode.create( nodeMan, pos, typeList, accessMode, name, valueNameList, scope )
@@ -7433,10 +7965,12 @@ function DeclEnumNode:get_scope()
 end
 
 
+
 function NodeKind.get_DeclAlge(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['DeclAlge'])
 end
+
 
 
 regKind( "DeclAlge" )
@@ -7449,6 +7983,7 @@ function NodeManager:getDeclAlgeNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['DeclAlge']) )
 end
+
 
 
 local DeclAlgeNode = {}
@@ -7480,9 +8015,11 @@ function DeclAlgeNode:__init(id, pos, typeList, accessMode, algeType, scope)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['DeclAlge']), pos, typeList)
    
    
+   
    self.accessMode = accessMode
    self.algeType = algeType
    self.scope = scope
+   
    
 end
 function DeclAlgeNode.create( nodeMan, pos, typeList, accessMode, algeType, scope )
@@ -7510,10 +8047,12 @@ function DeclAlgeNode:get_scope()
 end
 
 
+
 function NodeKind.get_NewAlgeVal(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['NewAlgeVal'])
 end
+
 
 
 regKind( "NewAlgeVal" )
@@ -7526,6 +8065,7 @@ function NodeManager:getNewAlgeValNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['NewAlgeVal']) )
 end
+
 
 
 local NewAlgeValNode = {}
@@ -7557,11 +8097,13 @@ function NewAlgeValNode:__init(id, pos, typeList, name, prefix, algeTypeInfo, va
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['NewAlgeVal']), pos, typeList)
    
    
+   
    self.name = name
    self.prefix = prefix
    self.algeTypeInfo = algeTypeInfo
    self.valInfo = valInfo
    self.paramList = paramList
+   
    
 end
 function NewAlgeValNode.create( nodeMan, pos, typeList, name, prefix, algeTypeInfo, valInfo, paramList )
@@ -7616,6 +8158,7 @@ function NewAlgeValNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function NewAlgeValNode.setmeta( obj )
@@ -7638,10 +8181,12 @@ function NewAlgeValNode:get_paramList()
 end
 
 
+
 function NodeKind.get_LuneControl(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['LuneControl'])
 end
+
 
 
 regKind( "LuneControl" )
@@ -7654,6 +8199,7 @@ function NodeManager:getLuneControlNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['LuneControl']) )
 end
+
 
 
 local LuneControlNode = {}
@@ -7685,7 +8231,9 @@ function LuneControlNode:__init(id, pos, typeList, pragma)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['LuneControl']), pos, typeList)
    
    
+   
    self.pragma = pragma
+   
    
 end
 function LuneControlNode.create( nodeMan, pos, typeList, pragma )
@@ -7705,6 +8253,7 @@ end
 function LuneControlNode:get_pragma()
    return self.pragma
 end
+
 
 
 local MatchCase = {}
@@ -7736,10 +8285,12 @@ function MatchCase:get_block()
    return self.block
 end
 
+
 function NodeKind.get_Match(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['Match'])
 end
+
 
 
 regKind( "Match" )
@@ -7752,6 +8303,7 @@ function NodeManager:getMatchNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['Match']) )
 end
+
 
 
 local MatchNode = {}
@@ -7783,10 +8335,12 @@ function MatchNode:__init(id, pos, typeList, val, algeTypeInfo, caseList, defaul
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Match']), pos, typeList)
    
    
+   
    self.val = val
    self.algeTypeInfo = algeTypeInfo
    self.caseList = caseList
    self.defaultBlock = defaultBlock
+   
    
 end
 function MatchNode.create( nodeMan, pos, typeList, val, algeTypeInfo, caseList, defaultBlock )
@@ -7837,6 +8391,7 @@ function MatchNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function MatchNode.setmeta( obj )
@@ -7856,10 +8411,12 @@ function MatchNode:get_defaultBlock()
 end
 
 
+
 function NodeKind.get_LuneKind(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['LuneKind'])
 end
+
 
 
 regKind( "LuneKind" )
@@ -7872,6 +8429,7 @@ function NodeManager:getLuneKindNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['LuneKind']) )
 end
+
 
 
 local LuneKindNode = {}
@@ -7903,7 +8461,9 @@ function LuneKindNode:__init(id, pos, typeList, exp)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['LuneKind']), pos, typeList)
    
    
+   
    self.exp = exp
+   
    
 end
 function LuneKindNode.create( nodeMan, pos, typeList, exp )
@@ -7932,6 +8492,7 @@ function LuneKindNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function LuneKindNode.setmeta( obj )
@@ -7942,10 +8503,12 @@ function LuneKindNode:get_exp()
 end
 
 
+
 function NodeKind.get_DeclMacro(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['DeclMacro'])
 end
+
 
 
 regKind( "DeclMacro" )
@@ -7958,6 +8521,7 @@ function NodeManager:getDeclMacroNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['DeclMacro']) )
 end
+
 
 
 local DeclMacroNode = {}
@@ -7989,7 +8553,9 @@ function DeclMacroNode:__init(id, pos, typeList, declInfo)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['DeclMacro']), pos, typeList)
    
    
+   
    self.declInfo = declInfo
+   
    
 end
 function DeclMacroNode.create( nodeMan, pos, typeList, declInfo )
@@ -8011,6 +8577,7 @@ function DeclMacroNode:get_declInfo()
 end
 
 
+
 local MacroEval = {}
 _moduleObj.MacroEval = MacroEval
 function MacroEval.setmeta( obj )
@@ -8028,10 +8595,12 @@ function MacroEval:__init(  )
 
 end
 
+
 function NodeKind.get_TestBlock(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['TestBlock'])
 end
+
 
 
 regKind( "TestBlock" )
@@ -8044,6 +8613,7 @@ function NodeManager:getTestBlockNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['TestBlock']) )
 end
+
 
 
 local TestBlockNode = {}
@@ -8075,8 +8645,10 @@ function TestBlockNode:__init(id, pos, typeList, name, block)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['TestBlock']), pos, typeList)
    
    
+   
    self.name = name
    self.block = block
+   
    
 end
 function TestBlockNode.create( nodeMan, pos, typeList, name, block )
@@ -8105,6 +8677,7 @@ function TestBlockNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function TestBlockNode.setmeta( obj )
@@ -8118,10 +8691,12 @@ function TestBlockNode:get_block()
 end
 
 
+
 function NodeKind.get_Abbr(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['Abbr'])
 end
+
 
 
 regKind( "Abbr" )
@@ -8134,6 +8709,7 @@ function NodeManager:getAbbrNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['Abbr']) )
 end
+
 
 
 local AbbrNode = {}
@@ -8166,6 +8742,7 @@ function AbbrNode:__init(id, pos, typeList)
    
    
    
+   
 end
 function AbbrNode.create( nodeMan, pos, typeList )
 
@@ -8183,10 +8760,12 @@ function AbbrNode.setmeta( obj )
 end
 
 
+
 function NodeKind.get_Boxing(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['Boxing'])
 end
+
 
 
 regKind( "Boxing" )
@@ -8199,6 +8778,7 @@ function NodeManager:getBoxingNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['Boxing']) )
 end
+
 
 
 local BoxingNode = {}
@@ -8230,7 +8810,9 @@ function BoxingNode:__init(id, pos, typeList, src)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Boxing']), pos, typeList)
    
    
+   
    self.src = src
+   
    
 end
 function BoxingNode.create( nodeMan, pos, typeList, src )
@@ -8259,6 +8841,7 @@ function BoxingNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function BoxingNode.setmeta( obj )
@@ -8269,10 +8852,12 @@ function BoxingNode:get_src()
 end
 
 
+
 function NodeKind.get_Unboxing(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['Unboxing'])
 end
+
 
 
 regKind( "Unboxing" )
@@ -8285,6 +8870,7 @@ function NodeManager:getUnboxingNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['Unboxing']) )
 end
+
 
 
 local UnboxingNode = {}
@@ -8316,7 +8902,9 @@ function UnboxingNode:__init(id, pos, typeList, src)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Unboxing']), pos, typeList)
    
    
+   
    self.src = src
+   
    
 end
 function UnboxingNode.create( nodeMan, pos, typeList, src )
@@ -8345,6 +8933,7 @@ function UnboxingNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function UnboxingNode.setmeta( obj )
@@ -8355,10 +8944,12 @@ function UnboxingNode:get_src()
 end
 
 
+
 function NodeKind.get_LiteralNil(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['LiteralNil'])
 end
+
 
 
 regKind( "LiteralNil" )
@@ -8371,6 +8962,7 @@ function NodeManager:getLiteralNilNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['LiteralNil']) )
 end
+
 
 
 local LiteralNilNode = {}
@@ -8403,6 +8995,7 @@ function LiteralNilNode:__init(id, pos, typeList)
    
    
    
+   
 end
 function LiteralNilNode.create( nodeMan, pos, typeList )
 
@@ -8420,10 +9013,12 @@ function LiteralNilNode.setmeta( obj )
 end
 
 
+
 function NodeKind.get_LiteralChar(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['LiteralChar'])
 end
+
 
 
 regKind( "LiteralChar" )
@@ -8436,6 +9031,7 @@ function NodeManager:getLiteralCharNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['LiteralChar']) )
 end
+
 
 
 local LiteralCharNode = {}
@@ -8467,8 +9063,10 @@ function LiteralCharNode:__init(id, pos, typeList, token, num)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['LiteralChar']), pos, typeList)
    
    
+   
    self.token = token
    self.num = num
+   
    
 end
 function LiteralCharNode.create( nodeMan, pos, typeList, token, num )
@@ -8493,10 +9091,12 @@ function LiteralCharNode:get_num()
 end
 
 
+
 function NodeKind.get_LiteralInt(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['LiteralInt'])
 end
+
 
 
 regKind( "LiteralInt" )
@@ -8509,6 +9109,7 @@ function NodeManager:getLiteralIntNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['LiteralInt']) )
 end
+
 
 
 local LiteralIntNode = {}
@@ -8540,8 +9141,10 @@ function LiteralIntNode:__init(id, pos, typeList, token, num)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['LiteralInt']), pos, typeList)
    
    
+   
    self.token = token
    self.num = num
+   
    
 end
 function LiteralIntNode.create( nodeMan, pos, typeList, token, num )
@@ -8566,10 +9169,12 @@ function LiteralIntNode:get_num()
 end
 
 
+
 function NodeKind.get_LiteralReal(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['LiteralReal'])
 end
+
 
 
 regKind( "LiteralReal" )
@@ -8582,6 +9187,7 @@ function NodeManager:getLiteralRealNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['LiteralReal']) )
 end
+
 
 
 local LiteralRealNode = {}
@@ -8613,8 +9219,10 @@ function LiteralRealNode:__init(id, pos, typeList, token, num)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['LiteralReal']), pos, typeList)
    
    
+   
    self.token = token
    self.num = num
+   
    
 end
 function LiteralRealNode.create( nodeMan, pos, typeList, token, num )
@@ -8639,10 +9247,12 @@ function LiteralRealNode:get_num()
 end
 
 
+
 function NodeKind.get_LiteralArray(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['LiteralArray'])
 end
+
 
 
 regKind( "LiteralArray" )
@@ -8655,6 +9265,7 @@ function NodeManager:getLiteralArrayNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['LiteralArray']) )
 end
+
 
 
 local LiteralArrayNode = {}
@@ -8686,7 +9297,9 @@ function LiteralArrayNode:__init(id, pos, typeList, expList)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['LiteralArray']), pos, typeList)
    
    
+   
    self.expList = expList
+   
    
 end
 function LiteralArrayNode.create( nodeMan, pos, typeList, expList )
@@ -8720,6 +9333,7 @@ function LiteralArrayNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function LiteralArrayNode.setmeta( obj )
@@ -8730,10 +9344,12 @@ function LiteralArrayNode:get_expList()
 end
 
 
+
 function NodeKind.get_LiteralList(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['LiteralList'])
 end
+
 
 
 regKind( "LiteralList" )
@@ -8746,6 +9362,7 @@ function NodeManager:getLiteralListNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['LiteralList']) )
 end
+
 
 
 local LiteralListNode = {}
@@ -8777,7 +9394,9 @@ function LiteralListNode:__init(id, pos, typeList, expList)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['LiteralList']), pos, typeList)
    
    
+   
    self.expList = expList
+   
    
 end
 function LiteralListNode.create( nodeMan, pos, typeList, expList )
@@ -8811,6 +9430,7 @@ function LiteralListNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function LiteralListNode.setmeta( obj )
@@ -8821,10 +9441,12 @@ function LiteralListNode:get_expList()
 end
 
 
+
 function NodeKind.get_LiteralSet(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['LiteralSet'])
 end
+
 
 
 regKind( "LiteralSet" )
@@ -8837,6 +9459,7 @@ function NodeManager:getLiteralSetNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['LiteralSet']) )
 end
+
 
 
 local LiteralSetNode = {}
@@ -8868,7 +9491,9 @@ function LiteralSetNode:__init(id, pos, typeList, expList)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['LiteralSet']), pos, typeList)
    
    
+   
    self.expList = expList
+   
    
 end
 function LiteralSetNode.create( nodeMan, pos, typeList, expList )
@@ -8902,6 +9527,7 @@ function LiteralSetNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function LiteralSetNode.setmeta( obj )
@@ -8910,6 +9536,7 @@ end
 function LiteralSetNode:get_expList()
    return self.expList
 end
+
 
 
 local PairItem = {}
@@ -8943,6 +9570,7 @@ function NodeKind.get_LiteralMap(  )
 end
 
 
+
 regKind( "LiteralMap" )
 function Filter:processLiteralMap( node, opt )
 
@@ -8953,6 +9581,7 @@ function NodeManager:getLiteralMapNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['LiteralMap']) )
 end
+
 
 
 local LiteralMapNode = {}
@@ -8984,8 +9613,10 @@ function LiteralMapNode:__init(id, pos, typeList, map, pairList)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['LiteralMap']), pos, typeList)
    
    
+   
    self.map = map
    self.pairList = pairList
+   
    
 end
 function LiteralMapNode.create( nodeMan, pos, typeList, map, pairList )
@@ -9039,6 +9670,7 @@ function LiteralMapNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function LiteralMapNode.setmeta( obj )
@@ -9052,10 +9684,12 @@ function LiteralMapNode:get_pairList()
 end
 
 
+
 function NodeKind.get_LiteralString(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['LiteralString'])
 end
+
 
 
 regKind( "LiteralString" )
@@ -9068,6 +9702,7 @@ function NodeManager:getLiteralStringNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['LiteralString']) )
 end
+
 
 
 local LiteralStringNode = {}
@@ -9099,8 +9734,10 @@ function LiteralStringNode:__init(id, pos, typeList, token, argList)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['LiteralString']), pos, typeList)
    
    
+   
    self.token = token
    self.argList = argList
+   
    
 end
 function LiteralStringNode.create( nodeMan, pos, typeList, token, argList )
@@ -9133,6 +9770,7 @@ function LiteralStringNode:visit( visitor, depth )
    end
    
    
+   
    return true
 end
 function LiteralStringNode.setmeta( obj )
@@ -9146,10 +9784,12 @@ function LiteralStringNode:get_argList()
 end
 
 
+
 function NodeKind.get_LiteralBool(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['LiteralBool'])
 end
+
 
 
 regKind( "LiteralBool" )
@@ -9162,6 +9802,7 @@ function NodeManager:getLiteralBoolNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['LiteralBool']) )
 end
+
 
 
 local LiteralBoolNode = {}
@@ -9193,7 +9834,9 @@ function LiteralBoolNode:__init(id, pos, typeList, token)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['LiteralBool']), pos, typeList)
    
    
+   
    self.token = token
+   
    
 end
 function LiteralBoolNode.create( nodeMan, pos, typeList, token )
@@ -9215,10 +9858,12 @@ function LiteralBoolNode:get_token()
 end
 
 
+
 function NodeKind.get_LiteralSymbol(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['LiteralSymbol'])
 end
+
 
 
 regKind( "LiteralSymbol" )
@@ -9231,6 +9876,7 @@ function NodeManager:getLiteralSymbolNodeList(  )
 
    return self:getList( _lune.unwrap( _moduleObj.nodeKind['LiteralSymbol']) )
 end
+
 
 
 local LiteralSymbolNode = {}
@@ -9262,7 +9908,9 @@ function LiteralSymbolNode:__init(id, pos, typeList, token)
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['LiteralSymbol']), pos, typeList)
    
    
+   
    self.token = token
+   
    
 end
 function LiteralSymbolNode.create( nodeMan, pos, typeList, token )
@@ -9282,6 +9930,7 @@ end
 function LiteralSymbolNode:get_token()
    return self.token
 end
+
 
 
 function Node:getSymbolInfo(  )
@@ -9362,6 +10011,7 @@ function Node:getSymbolInfo(  )
    return processExpNode( self )
 end
 
+
 function WhileNode:getBreakKind( checkMode )
 
    if checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return then
@@ -9426,10 +10076,13 @@ function WhileNode:getBreakKind( checkMode )
          
       end
       
+      
       local mode = CheckBreakMode.IgnoreFlow
+      
       local kind = BreakKind.None
       for __index, stmt in pairs( self.block:get_stmtList() ) do
          local work = stmt:getBreakKind( mode )
+         
          if mode == CheckBreakMode.IgnoreFlowReturn then
             if work == BreakKind.Return then
                return BreakKind.Return
@@ -9475,9 +10128,10 @@ function WhileNode:getBreakKind( checkMode )
    
 end
 
+
 function LiteralNilNode:getLiteral(  )
 
-   return _lune.newAlge( Literal.Nil)
+   return _lune.newAlge( Literal.Nil), nil
 end
 
 function LiteralNilNode:setupLiteralTokenList( list )
@@ -9486,9 +10140,10 @@ function LiteralNilNode:setupLiteralTokenList( list )
    return true
 end
 
+
 function LiteralCharNode:getLiteral(  )
 
-   return _lune.newAlge( Literal.Int, {self.num})
+   return _lune.newAlge( Literal.Int, {self.num}), nil
 end
 
 function LiteralCharNode:setupLiteralTokenList( list )
@@ -9497,9 +10152,10 @@ function LiteralCharNode:setupLiteralTokenList( list )
    return true
 end
 
+
 function LiteralIntNode:getLiteral(  )
 
-   return _lune.newAlge( Literal.Int, {self.num})
+   return _lune.newAlge( Literal.Int, {self.num}), nil
 end
 
 function LiteralIntNode:setupLiteralTokenList( list )
@@ -9508,9 +10164,10 @@ function LiteralIntNode:setupLiteralTokenList( list )
    return true
 end
 
+
 function LiteralRealNode:getLiteral(  )
 
-   return _lune.newAlge( Literal.Real, {self.num})
+   return _lune.newAlge( Literal.Real, {self.num}), nil
 end
 
 function LiteralRealNode:setupLiteralTokenList( list )
@@ -9519,6 +10176,7 @@ function LiteralRealNode:setupLiteralTokenList( list )
    return true
 end
 
+
 function LiteralArrayNode:getLiteral(  )
 
    local literalList = {}
@@ -9526,11 +10184,11 @@ function LiteralArrayNode:getLiteral(  )
       local _exp = self.expList
       if _exp ~= nil then
          for __index, node in pairs( _exp:get_expList(  ) ) do
-            local literal = node:getLiteral(  )
+            local literal, mess = node:getLiteral(  )
             if literal ~= nil then
                table.insert( literalList, literal )
             else
-               return nil
+               return nil, mess
             end
             
          end
@@ -9538,8 +10196,9 @@ function LiteralArrayNode:getLiteral(  )
       end
    end
    
-   return _lune.newAlge( Literal.ARRAY, {literalList})
+   return _lune.newAlge( Literal.ARRAY, {literalList}), nil
 end
+
 
 function LiteralArrayNode:setupLiteralTokenList( list )
 
@@ -9565,6 +10224,7 @@ function LiteralArrayNode:setupLiteralTokenList( list )
    return true
 end
 
+
 function LiteralListNode:getLiteral(  )
 
    local literalList = {}
@@ -9572,11 +10232,11 @@ function LiteralListNode:getLiteral(  )
       local _exp = self.expList
       if _exp ~= nil then
          for __index, node in pairs( _exp:get_expList(  ) ) do
-            local literal = node:getLiteral(  )
+            local literal, mess = node:getLiteral(  )
             if literal ~= nil then
                table.insert( literalList, literal )
             else
-               return nil
+               return nil, mess
             end
             
          end
@@ -9584,8 +10244,9 @@ function LiteralListNode:getLiteral(  )
       end
    end
    
-   return _lune.newAlge( Literal.LIST, {literalList})
+   return _lune.newAlge( Literal.LIST, {literalList}), nil
 end
+
 
 function LiteralListNode:setupLiteralTokenList( list )
 
@@ -9611,6 +10272,7 @@ function LiteralListNode:setupLiteralTokenList( list )
    return true
 end
 
+
 function LiteralSetNode:getLiteral(  )
 
    local literalList = {}
@@ -9618,11 +10280,11 @@ function LiteralSetNode:getLiteral(  )
       local _exp = self.expList
       if _exp ~= nil then
          for __index, node in pairs( _exp:get_expList(  ) ) do
-            local literal = node:getLiteral(  )
+            local literal, mess = node:getLiteral(  )
             if literal ~= nil then
                table.insert( literalList, literal )
             else
-               return nil
+               return nil, mess
             end
             
          end
@@ -9630,8 +10292,9 @@ function LiteralSetNode:getLiteral(  )
       end
    end
    
-   return _lune.newAlge( Literal.SET, {literalList})
+   return _lune.newAlge( Literal.SET, {literalList}), nil
 end
+
 
 function LiteralSetNode:setupLiteralTokenList( list )
 
@@ -9657,24 +10320,36 @@ function LiteralSetNode:setupLiteralTokenList( list )
    return true
 end
 
+
 function LiteralMapNode:getLiteral(  )
 
    local litMap = {}
    for key, val in pairs( self.map ) do
-      local keyLiteral = key:getLiteral(  )
-      local valLiteral = val:getLiteral(  )
+      local keyLiteral, keyMess = key:getLiteral(  )
+      local valLiteral, valMess = val:getLiteral(  )
       if keyLiteral ~= nil and valLiteral ~= nil then
          litMap[keyLiteral] = valLiteral
+      else
+         if not keyLiteral then
+            return nil, keyMess
+         end
+         
+         if not valLiteral then
+            return nil, valMess
+         end
+         
       end
       
    end
    
-   return _lune.newAlge( Literal.MAP, {litMap})
+   return _lune.newAlge( Literal.MAP, {litMap}), nil
 end
+
 
 function LiteralMapNode:setupLiteralTokenList( list )
 
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
+   
    local lit2valNode = {}
    for key, val in pairs( self.map ) do
       local literal = key:getLiteral(  )
@@ -9704,6 +10379,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
       
    end
    
+   
    do
       local __sorted = {}
       local __map = lit2valNode
@@ -9732,6 +10408,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    return true
 end
 
+
 function LiteralStringNode:getLiteral(  )
 
    local txt = self.token.txt
@@ -9743,24 +10420,25 @@ function LiteralStringNode:getLiteral(  )
    end
    
    local argList = self:get_argList()
+   
    if #argList > 0 then
       local paramList = {}
       for __index, argNode in pairs( argList ) do
-         local arg = argNode:getLiteral(  )
-         if  nil == arg then
-            local _arg = arg
-         
-            return nil
+         local arg, mess = argNode:getLiteral(  )
+         if arg ~= nil then
+            paramList[#paramList + 1] = getLiteralObj( arg )
+         else
+            return nil, mess
          end
          
-         paramList[#paramList + 1] = getLiteralObj( arg )
       end
       
       txt = string.format( txt, table.unpack( paramList ) )
    end
    
-   return _lune.newAlge( Literal.Str, {txt})
+   return _lune.newAlge( Literal.Str, {txt}), nil
 end
+
 
 function LiteralStringNode:setupLiteralTokenList( list )
 
@@ -9783,10 +10461,12 @@ function LiteralStringNode:setupLiteralTokenList( list )
    return true
 end
 
+
 function LiteralBoolNode:getLiteral(  )
 
-   return _lune.newAlge( Literal.Bool, {self.token.txt == "true"})
+   return _lune.newAlge( Literal.Bool, {self.token.txt == "true"}), nil
 end
+
 
 function LiteralBoolNode:setupLiteralTokenList( list )
 
@@ -9794,10 +10474,12 @@ function LiteralBoolNode:setupLiteralTokenList( list )
    return true
 end
 
+
 function LiteralSymbolNode:getLiteral(  )
 
-   return _lune.newAlge( Literal.Symbol, {self.token.txt})
+   return _lune.newAlge( Literal.Symbol, {self.token.txt}), nil
 end
+
 
 function LiteralSymbolNode:setupLiteralTokenList( list )
 
@@ -9805,87 +10487,96 @@ function LiteralSymbolNode:setupLiteralTokenList( list )
    return true
 end
 
+
 function RefFieldNode:getLiteral(  )
 
    local tokenList = {}
-   do
-      local _matchExp = _lune.unwrap( self.prefix:getLiteral(  ))
-      if _matchExp[1] == Literal.Symbol[1] then
-         local symbol = _matchExp[2][1]
-      
-         table.insert( tokenList, symbol )
-      elseif _matchExp[1] == Literal.Field[1] then
-         local symList = _matchExp[2][1]
-      
-         for __index, symbol in pairs( symList ) do
-            table.insert( tokenList, symbol )
-         end
-         
-      else 
+   local literal, mess = self.prefix:getLiteral(  )
+   if literal ~= nil then
       do
-         Util.errorLog( "not support" )
+         local _matchExp = literal
+         if _matchExp[1] == Literal.Symbol[1] then
+            local symbol = _matchExp[2][1]
+         
+            table.insert( tokenList, symbol )
+         elseif _matchExp[1] == Literal.Field[1] then
+            local symList = _matchExp[2][1]
+         
+            for __index, symbol in pairs( symList ) do
+               table.insert( tokenList, symbol )
+            end
+            
+         else 
+         do
+            return nil, string.format( "not support -- %s", Literal:_getTxt( literal)
+            )
+         end
+         end
       end
+      
+      if self.nilAccess then
+         table.insert( tokenList, "$." )
+      else
+       
+         table.insert( tokenList, "." )
       end
+      
+      table.insert( tokenList, self.field.txt )
+      return _lune.newAlge( Literal.Field, {tokenList}), nil
    end
    
-   if self.nilAccess then
-      table.insert( tokenList, "$." )
-   else
-    
-      table.insert( tokenList, "." )
-   end
-   
-   table.insert( tokenList, self.field.txt )
-   return _lune.newAlge( Literal.Field, {tokenList})
+   return nil, mess
 end
+
 
 function ExpMacroStatNode:getLiteral(  )
 
    local txt = ""
    for __index, token in pairs( self.expStrList ) do
-      local literal = token:getLiteral(  )
-      if  nil == literal then
-         local _literal = literal
-      
-         Util.err( "illegal literal" )
-      end
-      
-      do
-         local _matchExp = literal
-         if _matchExp[1] == Literal.Str[1] then
-            local work = _matchExp[2][1]
-         
-            txt = string.format( "%s%s", txt, work)
+      local literal, mess = token:getLiteral(  )
+      if literal ~= nil then
+         do
+            local _matchExp = literal
+            if _matchExp[1] == Literal.Str[1] then
+               local work = _matchExp[2][1]
+            
+               txt = string.format( "%s%s", txt, work)
+            end
          end
+         
+      else
+         return nil, string.format( "illegal literal -- %s", getNodeKindName( token:get_kind() ))
       end
       
    end
    
-   return _lune.newAlge( Literal.Str, {txt})
+   return _lune.newAlge( Literal.Str, {txt}), nil
 end
 
-local function enumLiiteral2Literal( obj )
+
+local function enumLiteral2Literal( obj )
 
    do
       local _matchExp = obj
       if _matchExp[1] == Ast.EnumLiteral.Int[1] then
          local val = _matchExp[2][1]
       
-         return _lune.newAlge( Literal.Int, {val})
+         return _lune.newAlge( Literal.Int, {val}), nil
       elseif _matchExp[1] == Ast.EnumLiteral.Real[1] then
          local val = _matchExp[2][1]
       
-         return _lune.newAlge( Literal.Real, {val})
+         return _lune.newAlge( Literal.Real, {val}), nil
       elseif _matchExp[1] == Ast.EnumLiteral.Str[1] then
          local val = _matchExp[2][1]
       
-         return _lune.newAlge( Literal.Str, {val})
+         return _lune.newAlge( Literal.Str, {val}), nil
       end
    end
    
-   Util.err( "illegal enum" .. Ast.EnumLiteral:_getTxt( obj)
-    )
+   return nil, "illegal enum: " .. Ast.EnumLiteral:_getTxt( obj)
+   
 end
+
 function ExpRefNode:getLiteral(  )
 
    local typeInfo = self.symbolInfo:get_typeInfo()
@@ -9893,34 +10584,40 @@ function ExpRefNode:getLiteral(  )
       local enumTypeInfo = _lune.__Cast( typeInfo, 3, Ast.EnumTypeInfo )
       if enumTypeInfo ~= nil then
          local enumval = _lune.unwrap( enumTypeInfo:getEnumValInfo( self.symbolInfo:get_name() ))
-         local val = enumLiiteral2Literal( enumval:get_val() )
-         return val
+         return enumLiteral2Literal( enumval:get_val() )
       end
    end
    
-   return nil
+   
+   return nil, string.format( "unsupport refnode -- %s", typeInfo:getTxt(  ))
 end
+
 
 function ExpOmitEnumNode:getLiteral(  )
 
    local enumTypeInfo = self.enumTypeInfo
+   
    local enumval = self.valInfo
-   local val = enumLiiteral2Literal( enumval:get_val() )
-   return val
+   return enumLiteral2Literal( enumval:get_val() )
 end
+
 
 function ExpOmitEnumNode:setupLiteralTokenList( list )
 
    local enumTypeInfo = self.enumTypeInfo
+   
    local enumval = self.valInfo
    self:addTokenList( list, Parser.TokenKind.Dlmt, "." )
+   
    self:addTokenList( list, Parser.TokenKind.Symb, (Ast.EnumLiteral:_getTxt( enumval:get_val())
    :gsub( ".*%.", "" ) ) )
    return true
 end
 
+
 function ExpOp2Node:getLiteral(  )
 
+   
    local function getValType( node )
    
       local literal = node:getLiteral(  )
@@ -9930,8 +10627,10 @@ function ExpOp2Node:getLiteral(  )
          return false, 0, 0.0, "", Ast.headTypeInfo
       end
       
+      
       local intVal, realVal, strVal = 0, 0.0, ""
       local retTypeInfo = Ast.builtinTypeNone
+      
       local function getEnum( txt, typeInfo )
       
          do
@@ -9961,6 +10660,7 @@ function ExpOp2Node:getLiteral(  )
          end
          
       end
+      
       do
          local _matchExp = literal
          if _matchExp[1] == Literal.Int[1] then
@@ -9989,11 +10689,18 @@ function ExpOp2Node:getLiteral(  )
       
       return true, intVal, realVal, strVal, retTypeInfo
    end
+   
    local ret1, int1, real1, str1, type1 = getValType( self:get_exp1() )
    local ret2, int2, real2, str2, type2 = getValType( self:get_exp2() )
-   if not ret1 or not ret2 then
-      return nil
+   
+   if not ret1 then
+      return nil, string.format( "not support literal -- %s", getNodeKindName( self:get_exp1():get_kind() ))
    end
+   
+   if not ret2 then
+      return nil, string.format( "not support literal -- %s", getNodeKindName( self:get_exp2():get_kind() ))
+   end
+   
    
    if (type1 == Ast.builtinTypeInt or type1 == Ast.builtinTypeReal ) and (type2 == Ast.builtinTypeInt or type2 == Ast.builtinTypeReal ) then
       local retType = Ast.builtinTypeInt
@@ -10001,44 +10708,48 @@ function ExpOp2Node:getLiteral(  )
          retType = Ast.builtinTypeReal
       end
       
+      
       do
          local _switchExp = (self.op.txt )
          if _switchExp == "+" then
             if retType == Ast.builtinTypeInt then
-               return _lune.newAlge( Literal.Int, {int1 + int2})
+               return _lune.newAlge( Literal.Int, {int1 + int2}), nil
             end
             
-            return _lune.newAlge( Literal.Real, {real1 + real2})
+            return _lune.newAlge( Literal.Real, {real1 + real2}), nil
          elseif _switchExp == "-" then
             if retType == Ast.builtinTypeInt then
-               return _lune.newAlge( Literal.Int, {int1 - int2})
+               return _lune.newAlge( Literal.Int, {int1 - int2}), nil
             end
             
-            return _lune.newAlge( Literal.Real, {real1 - real2})
+            return _lune.newAlge( Literal.Real, {real1 - real2}), nil
          elseif _switchExp == "*" then
             if retType == Ast.builtinTypeInt then
-               return _lune.newAlge( Literal.Int, {int1 * int2})
+               return _lune.newAlge( Literal.Int, {int1 * int2}), nil
             end
             
-            return _lune.newAlge( Literal.Real, {real1 * real2})
+            return _lune.newAlge( Literal.Real, {real1 * real2}), nil
          elseif _switchExp == "/" then
             if retType == Ast.builtinTypeInt then
-               return _lune.newAlge( Literal.Int, {math.floor(int1 / int2)})
+               return _lune.newAlge( Literal.Int, {math.floor(int1 / int2)}), nil
             end
             
-            return _lune.newAlge( Literal.Real, {real1 / real2})
+            return _lune.newAlge( Literal.Real, {real1 / real2}), nil
          end
       end
       
    elseif type1 == Ast.builtinTypeString and type2 == Ast.builtinTypeString then
       if self.op.txt == ".." then
-         return _lune.newAlge( Literal.Str, {str1 .. str2})
+         return _lune.newAlge( Literal.Str, {str1 .. str2}), nil
       end
       
    end
    
-   return nil
+   
+   local mess = string.format( "not support literal operation -- %s %s %s", type1:getTxt(  ), self.op.txt, type2:getTxt(  ))
+   return nil, mess
 end
+
 
 local DefMacroInfo = {}
 setmetatable( DefMacroInfo, { __index = MacroInfo } )
@@ -10080,6 +10791,7 @@ function DefMacroInfo.setmeta( obj )
   setmetatable( obj, { __index = DefMacroInfo  } )
 end
 
+
 function NodeManager:MultiTo1( node )
 
    local expType = node:get_expType()
@@ -10092,16 +10804,21 @@ function NodeManager:MultiTo1( node )
    return node
 end
 
+
 function Filter:processBlockSub( node, opt )
 
 end
 
+
 function Filter:processBlock( node, opt )
 
    self.moduleInfoManager:push( node:get_scope() )
+   
    self:processBlockSub( node, opt )
+   
    self.moduleInfoManager:pop(  )
 end
+
 
 local function hasMultiValNode( node )
 

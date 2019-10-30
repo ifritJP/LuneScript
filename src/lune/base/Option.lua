@@ -182,6 +182,7 @@ end
 if not _lune1 then
    _lune1 = _lune
 end
+
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
@@ -190,10 +191,13 @@ local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
 local Log = _lune.loadModule( 'lune.base.Log' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 
+
+
 local function getBuildCount(  )
 
-   return 2143
+   return 2150
 end
+
 
 local ModeKind = {}
 _moduleObj.ModeKind = ModeKind
@@ -253,6 +257,10 @@ ModeKind.__allList[11] = ModeKind.Glue
 ModeKind.BootC = 'bootC'
 ModeKind._val2NameMap['bootC'] = 'BootC'
 ModeKind.__allList[12] = ModeKind.BootC
+ModeKind.Format = 'format'
+ModeKind._val2NameMap['format'] = 'Format'
+ModeKind.__allList[13] = ModeKind.Format
+
 
 local CheckingUptodateMode = {}
 _moduleObj.CheckingUptodateMode = CheckingUptodateMode
@@ -286,6 +294,7 @@ CheckingUptodateMode.Touch = 'touch'
 CheckingUptodateMode._val2NameMap['touch'] = 'Touch'
 CheckingUptodateMode.__allList[3] = CheckingUptodateMode.Touch
 
+
 local TransCtrlInfo = {}
 _moduleObj.TransCtrlInfo = TransCtrlInfo
 function TransCtrlInfo.setmeta( obj )
@@ -306,10 +315,12 @@ function TransCtrlInfo:__init( checkingDefineAbbr, stopByWarning, uptodateMode )
    self.uptodateMode = uptodateMode
 end
 
+
 function TransCtrlInfo.create_normal(  )
 
    return TransCtrlInfo.new(true, false, CheckingUptodateMode.Touch)
 end
+
 
 local Option = {}
 _moduleObj.Option = Option
@@ -347,6 +358,7 @@ function Option.setmeta( obj )
   setmetatable( obj, { __index = Option  } )
 end
 
+
 local function outputLuneMod( path )
 
    local lune_path = "_lune.lua"
@@ -363,6 +375,7 @@ local function outputLuneMod( path )
    
       return string.format( "failed to open -- %s", lune_path)
    end
+   
    
    fileObj:write( [==[
 --[[
@@ -389,16 +402,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]
 ]==] )
+   
    for __index, kind in pairs( LuaMod.CodeKind.get__allList() ) do
       fileObj:write( LuaMod.getCode( kind ) )
    end
+   
    
    fileObj:close(  )
    return nil
 end
 _moduleObj.outputLuneMod = outputLuneMod
+
 local function analyze( argList )
 
+   
    local function printUsage( code )
    
       print( [==[
@@ -438,11 +455,14 @@ usage:
 ]==] )
       os.exit( code )
    end
+   
    local option = Option.new()
    local useStdInFlag = false
    local lineNo = nil
    local column = nil
+   
    local index = 1
+   
    local function getNextOp(  )
    
       if #argList <= index then
@@ -452,8 +472,10 @@ usage:
       index = index + 1
       return argList[index]
    end
+   
    while #argList >= index do
       local arg = argList[index]
+      
       if arg:find( "^-" ) then
          do
             local _switchExp = (arg )
@@ -612,16 +634,20 @@ usage:
          
       end
       
+      
       index = index + 1
    end
+   
    
    if option.scriptPath == "" or option.mode == ModeKind.Unknown then
       printUsage( (#argList == 0 or argList[1] == "" ) and 0 or 1 )
    end
    
+   
    if useStdInFlag and option.analyzeModule then
       Parser.StreamParser.setStdinStream( _lune.unwrap( option.analyzeModule) )
    end
+   
    
    return option
 end

@@ -68,6 +68,7 @@ end
 if not _lune1 then
    _lune1 = _lune
 end
+
 local CodeKind = {}
 _moduleObj.CodeKind = CodeKind
 CodeKind._val2NameMap = {}
@@ -136,15 +137,19 @@ CodeKind.Finalize = 14
 CodeKind._val2NameMap[14] = 'Finalize'
 CodeKind.__allList[15] = CodeKind.Finalize
 
+
 local codeMap = {}
+
 codeMap[CodeKind.Init] = [==[
 local _lune = {}
 ]==]
+
 codeMap[CodeKind.Unpack] = [==[
 if not table.unpack then
    table.unpack = unpack
 end
 ]==]
+
 codeMap[CodeKind.NilAcc] = [==[
 function _lune.nilacc( val, fieldName, access, ... )
    if not val then
@@ -188,6 +193,7 @@ function _lune.nilacc( val, fieldName, access, ... )
    error( string.format( "illegal access -- %s", access ) )
 end
 ]==]
+
 codeMap[CodeKind.Unwrap] = [==[
 function _lune.unwrap( val )
    if val == nil then
@@ -202,6 +208,7 @@ function _lune.unwrapDefault( val, defval )
    return val
 end
 ]==]
+
 codeMap[CodeKind.LoadModule] = [==[
 function _lune.loadModule( mod )
    if __luneScript then
@@ -210,6 +217,7 @@ function _lune.loadModule( mod )
    return require( mod )
 end
 ]==]
+
 codeMap[CodeKind.LoadStr51] = [==[
 function _lune.loadstring51( txt, env )
    local func = loadstring( txt )
@@ -219,6 +227,7 @@ function _lune.loadstring51( txt, env )
    return func
 end
 ]==]
+
 codeMap[CodeKind.LoadStr52] = [==[
 function _lune.loadstring52( txt, env )
    if not env then
@@ -227,6 +236,7 @@ function _lune.loadstring52( txt, env )
    return load( txt, "", "bt", env )
 end
 ]==]
+
 codeMap[CodeKind.Mapping] = [==[
 function _lune._toStem( val )
    return val
@@ -310,6 +320,7 @@ function _lune._fromMap( obj, map, memInfoList )
    return true
 end
 ]==]
+
 codeMap[CodeKind.SetOp] = [==[
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
@@ -359,6 +370,7 @@ function _lune._Set_clone( setObj )
    return obj
 end
 ]==]
+
 codeMap[CodeKind.SetMapping] = [==[
 function _lune._toSet( val, toKeyInfo )
    if type( val ) == "table" then
@@ -382,6 +394,7 @@ function _lune._toSet( val, toKeyInfo )
    return nil
 end
 ]==]
+
 codeMap[CodeKind.AlgeMapping] = [==[
 function _lune._fromList( obj, list, memInfoList )
    if type( list ) ~= "table" then
@@ -412,6 +425,7 @@ function _lune._AlgeFrom( Alge, val )
    return { work[ 1 ], paramList }
 end
 ]==]
+
 codeMap[CodeKind.Alge] = [==[
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -421,6 +435,7 @@ function _lune.newAlge( kind, vals )
    return { kind[ 1 ], vals }
 end
 ]==]
+
 codeMap[CodeKind.InstanceOf] = [==[
 function _lune.__isInstanceOf( obj, class )
    while obj do
@@ -444,6 +459,7 @@ function _lune.__isInstanceOf( obj, class )
    return false
 end
 ]==]
+
 local CastKind = {}
 _moduleObj.CastKind = CastKind
 CastKind._val2NameMap = {}
@@ -479,6 +495,7 @@ CastKind.Class = 3
 CastKind._val2NameMap[3] = 'Class'
 CastKind.__allList[4] = CastKind.Class
 
+
 codeMap[CodeKind.Cast] = string.format( [==[
 function _lune.__Cast( obj, kind, class )
    if kind == %d then -- int
@@ -505,9 +522,11 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 ]==], CastKind.Int, CastKind.Real, CastKind.Str, CastKind.Class)
+
 codeMap[CodeKind.Finalize] = [==[
 return _lune
 ]==]
+
 local function getCode( kind )
 
    return _lune.unwrap( codeMap[kind])

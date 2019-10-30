@@ -217,6 +217,17 @@ pub fn txt2AccessMode( accessMode:str ) : AccessMode! {
    return txt2AccessModeMap[ accessMode ];
 }
 
+let mut accessMode2txtMap:Map<AccessMode,str> = {};
+accessMode2txtMap[ .None ] = "none";
+accessMode2txtMap[ .Pub ] = "pub";
+accessMode2txtMap[ .Pro ] = "pro";
+accessMode2txtMap[ .Pri ] = "pri";
+accessMode2txtMap[ .Local ] = "local";
+accessMode2txtMap[ .Global ] = "global";
+pub fn accessMode2txt( accessMode:AccessMode ) : str {
+   return unwrap accessMode2txtMap[ accessMode ];
+}
+
 pub enum MutMode {
    IMut,
    /**
@@ -3960,6 +3971,8 @@ pub let builtinTypeSymbol:TypeInfo =
    NormalTypeInfo.createBuiltin( "Symbol", "sym" , .Prim## );
 pub let builtinTypeStat:TypeInfo =
    NormalTypeInfo.createBuiltin( "Stat", "stat" , .Prim## );
+pub let builtinTypeExp:TypeInfo =
+   NormalTypeInfo.createBuiltin( "Exp", "__exp" , .Prim## );
 
 
 
@@ -4873,6 +4886,11 @@ pub static fn TypeInfo.canEvalWithBase(
    dest:&TypeInfo, destMut:bool, other:&TypeInfo, canEvalType:CanEvalType,
    alt2type:Map<&TypeInfo,&TypeInfo> ) : bool, str!
 {
+   if dest == builtinTypeExp {
+      // とりあえず全て OK とする
+      return true, nil;
+   }
+   
    let otherMut = TypeInfo.isMut( other );
    let mut otherSrc = other.$srcTypeInfo;
    if otherSrc.$kind == .DDD {

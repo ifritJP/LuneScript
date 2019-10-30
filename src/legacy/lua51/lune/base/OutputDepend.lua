@@ -169,11 +169,13 @@ end
 if not _lune1 then
    _lune1 = _lune
 end
+
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local TransUnit = _lune.loadModule( 'lune.base.TransUnit' )
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
+
 local DependInfo = {}
 _moduleObj.DependInfo = DependInfo
 function DependInfo.new( targetModule )
@@ -212,6 +214,7 @@ function DependInfo.setmeta( obj )
   setmetatable( obj, { __index = DependInfo  } )
 end
 
+
 local convFilter = {}
 setmetatable( convFilter, { __index = Nodes.Filter } )
 function convFilter.new( stream )
@@ -229,10 +232,12 @@ function convFilter.setmeta( obj )
   setmetatable( obj, { __index = convFilter  } )
 end
 
+
 function convFilter:processRoot( node, dummy )
 
    local moduleFull = node:get_moduleTypeInfo():getFullName( self:get_typeNameCtrl(), Ast.DummyModuleInfoManager:get_instance() )
    local dependInfo = DependInfo.new(moduleFull)
+   
    for __index, impNode in pairs( node:get_nodeManager():getImportNodeList(  ) ) do
       dependInfo:addImpotModule( impNode:get_modulePath() )
    end
@@ -247,8 +252,10 @@ function convFilter:processRoot( node, dummy )
       
    end
    
+   
    dependInfo:output( self.stream )
 end
+
 
 
 local function createFilter( stream )

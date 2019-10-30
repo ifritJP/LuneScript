@@ -48,6 +48,7 @@ help:
 	@echo "  make build-cc"
 	@echo "  make test-miniC"
 	@echo "  make test-subC"
+	@echo "  make test-formatter"
 
 exec:
 	$(LUA) lune/base/base.lua test/test.lns token
@@ -93,6 +94,7 @@ define buildLns
 	$(call transwork,$1,$2,$3,base/Ast)
 	$(call transwork,$1,$2,$3,base/Option)
 	$(call transwork,$1,$2,$3,base/Nodes)
+	$(call transwork,$1,$2,$3,base/Formatter)
 	$(call transwork,$1,$2,$3,base/dumpNode)
 	$(call transwork,$1,$2,$3,base/Macro)
 	$(call transwork,$1,$2,$3,base/TransUnit)
@@ -658,4 +660,8 @@ build-cc:
 	$(LUA) lune/base/base.lua ccc.lns save -langC
 	$(LUA) lune/base/base.lua subC.lns save -langC
 	$(call test-convC-exe,ccc.lns subC.lns,ccc,ccc)
+
+test-formatter:
+	$(call transwork,.,.,,base/Formatter)
+	$(call exeLune,.,lune/base/Util.lns,format,)
 

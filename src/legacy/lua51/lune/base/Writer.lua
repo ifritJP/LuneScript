@@ -187,7 +187,9 @@ end
 if not _lune1 then
    _lune1 = _lune
 end
+
 local Util = _lune.loadModule( 'lune.base.Util' )
+
 local Writer = {}
 _moduleObj.Writer = Writer
 function Writer.setmeta( obj )
@@ -204,6 +206,7 @@ end
 function Writer:__init(  )
 
 end
+
 
 local XML = {}
 setmetatable( XML, { ifList = {Writer,} } )
@@ -224,6 +227,7 @@ function XML.convertXmlTxt( val )
    if val == "" then
       return ""
    end
+   
    
    if type( val ) == "number" then
       return string.format( "%g", val * 1.0)
@@ -276,6 +280,7 @@ function XML.setmeta( obj )
   setmetatable( obj, { __index = XML  } )
 end
 
+
 local JsonLayer = {}
 function JsonLayer.setmeta( obj )
   setmetatable( obj, { __index = JsonLayer  } )
@@ -299,12 +304,14 @@ function JsonLayer:__init( state, arrayFlag, name, madeByArrayFlag, elementNameS
    self.openElement = openElement
 end
 
+
 local JSON = {}
 setmetatable( JSON, { ifList = {Writer,} } )
 _moduleObj.JSON = JSON
 function JSON:startLayer( arrayFlag, madeByArrayFlag )
 
    local info = JsonLayer.new('none', arrayFlag, self.prevName, madeByArrayFlag, {}, true, false)
+   
    table.insert( self.layerQueue, info )
    self.stream:write( arrayFlag and "[" or "{" )
 end
@@ -333,6 +340,7 @@ function JSON:endLayer(  )
    if #self.layerQueue == 0 then
       Util.err( "illegal depth" )
    end
+   
    
    while #self.layerQueue > 0 do
       local info = _lune.unwrap( self:getLayerInfo(  ))
@@ -385,16 +393,19 @@ end
 function JSON:startParent( name, arrayFlag )
 
    self:addElementName( name )
+   
    if self:equalLayerState( 'termed' ) or self:equalLayerState( 'named' ) or self:equalLayerState( 'valued' ) then
       self.stream:write( "," )
    elseif self:equalLayerState( 'none' ) then
       
    end
    
+   
    local parentInfo = self:getLayerInfo(  )
    if not arrayFlag and _lune.nilacc( parentInfo, "arrayFlag" ) then
       self:startLayer( false, true )
    end
+   
    
    self.stream:write( string.format( '"%s": ', name) )
    self:startLayer( arrayFlag, false )
@@ -403,6 +414,7 @@ end
 function JSON:startElement( name )
 
    self:addElementName( name )
+   
    if self:equalLayerState( 'termed' ) then
       self.stream:write( "," )
    elseif self:equalLayerState( 'named' ) then
@@ -415,12 +427,15 @@ function JSON:startElement( name )
       self:startLayer( false, true )
    end
    
+   
    local info = _lune.unwrap( self:getLayerInfo(  ))
+   
    if info.openElement then
       Util.err( 'illegal openElement' )
    end
    
    info.openElement = true
+   
    self.stream:write( string.format( '"%s": ', name) )
    self:setLayerState( 'named' )
    self.prevName = name
@@ -469,6 +484,7 @@ function JSON:writeValue( val )
     
       txt = string.format( '"%s"', JSON.convertJsonTxt( string.format( '%s', tostring( val)) ))
    end
+   
    
    self.stream:write( txt )
    self:setLayerState( 'valued' )

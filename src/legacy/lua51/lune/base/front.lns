@@ -35,6 +35,7 @@ import lune.base.Depend;
 import lune.base.OutputDepend;
 import lune.base.Ver;
 import lune.base.Log;
+import lune.base.Formatter;
 
 _lune_control ignore_symbol_;
 
@@ -636,6 +637,19 @@ pub fn Front.dumpAst() mut {
       }, self.option.scriptPath .. ".profi" );
 }
 
+pub fn Front.format() mut {
+   frontInterface.setFront( self );
+
+   let mod = scriptPath2Module( self.option.scriptPath );
+
+   let ast = self.createAst(
+      new frontInterface.ImportModuleInfo(),
+      self.createPaser(), mod, getModuleId( self.option.scriptPath, mod ## ),
+      nil, .Compile ## );
+   ast.$node.processFilter(
+      Formatter.createFilter( ast.$moduleTypeInfo ), new Formatter.Opt( ast.$node ) );
+}
+
 pub fn Front.checkDiag() mut {
    frontInterface.setFront( self );
 
@@ -1099,6 +1113,9 @@ pub fn Front.exec() mut
       }
       case .Ast {
          self.dumpAst();
+      }
+      case .Format {
+         self.format();
       }
       case .Diag {
          self.checkDiag();

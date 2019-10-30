@@ -182,10 +182,12 @@ end
 if not _lune1 then
    _lune1 = _lune
 end
+
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Util = _lune.loadModule( 'lune.base.Util' )
+
 local glueGenerator = {}
 function glueGenerator.setmeta( obj )
   setmetatable( obj, { __index = glueGenerator  } )
@@ -204,15 +206,18 @@ function glueGenerator:__init( srcStream, headerStream )
    self.headerStream = headerStream
 end
 
+
 function glueGenerator:write( txt )
 
    self.srcStream:write( txt )
 end
 
+
 function glueGenerator:writeHeader( txt )
 
    self.headerStream:write( txt )
 end
+
 
 function glueGenerator:getArgInfo( argNode )
 
@@ -241,6 +246,7 @@ function glueGenerator:getArgInfo( argNode )
    
    return typeTxt, argType:get_nilable() and nilableTypeTxt or typeTxt, orgType, argName
 end
+
 
 local function getDeclFuncInfo( node )
 
@@ -272,8 +278,10 @@ local function getDeclFuncInfo( node )
       end
    end
    
+   
    Util.err( "failed to get DeclFuncInfo" )
 end
+
 local function getFuncName( name )
 
    if name == "__free" then
@@ -282,16 +290,21 @@ local function getFuncName( name )
    
    return name
 end
+
 function glueGenerator:outputPrototype( node )
 
    local name = getFuncName( node:get_expType():get_rawTxt() )
+   
    self:write( string.format( "static int lns_glue_%s( lua_State * pLua )", name) )
 end
+
 
 function glueGenerator:outputUserPrototype( node, gluePrefix )
 
    local expType = node:get_expType()
+   
    self:writeHeader( string.format( "extern int %s%s( lua_State * pLua", gluePrefix, getFuncName( expType:get_rawTxt() )) )
+   
    local declInfo = getDeclFuncInfo( node )
    for __index, argNode in pairs( declInfo:get_argList() ) do
       local typeTxt, argTypeTxt, argType, argName = self:getArgInfo( argNode )
@@ -305,8 +318,10 @@ function glueGenerator:outputUserPrototype( node, gluePrefix )
       
    end
    
+   
    self:writeHeader( " )" )
 end
+
 
 function glueGenerator:outputPrototypeList( methodNodeList )
 
@@ -317,6 +332,7 @@ function glueGenerator:outputPrototypeList( methodNodeList )
    
 end
 
+
 function glueGenerator:outputUserPrototypeList( methodNodeList, gluePrefix )
 
    for __index, node in pairs( methodNodeList ) do
@@ -325,6 +341,7 @@ function glueGenerator:outputUserPrototypeList( methodNodeList, gluePrefix )
    end
    
 end
+
 
 function glueGenerator:outputFuncReg( symbolName, methodNodeList )
 
@@ -343,6 +360,7 @@ function glueGenerator:outputFuncReg( symbolName, methodNodeList )
    self:write( '  { NULL, NULL }\n};\n' )
 end
 
+
 function glueGenerator:outputCommonFunc( moduleSymbolFull )
 
    self:writeHeader( string.format( [==[
@@ -350,6 +368,7 @@ extern int luaopen_%s( lua_State * pLua );
 extern void * lns_glue_get_%s( lua_State * pLua, int index );
 extern void * lns_glue_new_%s( lua_State * pLua, size_t size );
 ]==], moduleSymbolFull, moduleSymbolFull, moduleSymbolFull) )
+   
    self:write( string.format( [==[
 void * lns_glue_get_%s( lua_State * pLua, int index )
 {
@@ -405,6 +424,7 @@ int luaopen_%s( lua_State * pLua )
 ]==], moduleSymbolFull, moduleSymbolFull, moduleSymbolFull) )
 end
 
+
 local GlueArgInfo = {}
 function GlueArgInfo.setmeta( obj )
   setmetatable( obj, { __index = GlueArgInfo  } )
@@ -445,29 +465,36 @@ function GlueArgInfo:get_typeInfo()
    return self.typeInfo
 end
 
+
 function glueGenerator:outputMethod( node, gluePrefix )
 
    local declInfo = getDeclFuncInfo( node )
+   
    local name
    
    do
       local _exp = declInfo:get_name()
       if _exp ~= nil then
+         
          name = gluePrefix .. getFuncName( _exp.txt )
       else
          return 
       end
    end
    
+   
    self:outputPrototype( node )
    self:write( "{\n" )
+   
    local glueArgInfoList = {}
    for index, argNode in pairs( declInfo:get_argList() ) do
       local typeTxt, argTypeTxt, argType, argName = self:getArgInfo( argNode )
       if typeTxt ~= "" then
          local addVal = declInfo:get_staticFlag() and 0 or 1
          local callArgName = argName
+         
          self:write( string.format( "  %s %s = ", typeTxt, argName) )
+         
          do
             local _switchExp = argType
             if _switchExp == Ast.builtinTypeInt then
@@ -479,6 +506,7 @@ function glueGenerator:outputMethod( node, gluePrefix )
             end
          end
          
+         
          if argNode:get_expType():get_nilable() then
             if argType ~= Ast.builtinTypeString then
                callArgName = string.format( "_p%s", argName)
@@ -487,8 +515,10 @@ function glueGenerator:outputMethod( node, gluePrefix )
             
          end
          
+         
          local setTxt = ""
          local callTxt = ""
+         
          do
             local _switchExp = argType
             if _switchExp == Ast.builtinTypeInt then
@@ -504,10 +534,12 @@ function glueGenerator:outputMethod( node, gluePrefix )
             end
          end
          
+         
          table.insert( glueArgInfoList, GlueArgInfo.new(index + addVal, argName, callArgName, callTxt, setTxt, argNode:get_expType()) )
       end
       
    end
+   
    
    for __index, glueArgInfo in pairs( glueArgInfoList ) do
       if glueArgInfo:get_typeInfo():get_nilable() then
@@ -526,19 +558,23 @@ function glueGenerator:outputMethod( node, gluePrefix )
       
    end
    
+   
    self:write( string.format( "  return %s( pLua", name) )
    for __index, glueArgInfo in pairs( glueArgInfoList ) do
       self:write( ", " )
       self:write( glueArgInfo:get_callTxt() )
    end
    
+   
    self:write( ");\n" )
    self:write( "}\n" )
 end
 
+
 function glueGenerator:outputClass( moduleFullName, node, gluePrefix )
 
    local moduleSymbolFull = moduleFullName:gsub( "%.", "_" )
+   
    local staticMethodNodeList = {}
    local methodNodeList = {}
    for __index, fieldNode in pairs( node:get_fieldList() ) do
@@ -565,17 +601,24 @@ function glueGenerator:outputClass( moduleFullName, node, gluePrefix )
       
    end
    
+   
    self:writeHeader( '#include <lauxlib.h>\n' )
    self:outputUserPrototypeList( staticMethodNodeList, gluePrefix )
    self:outputUserPrototypeList( methodNodeList, gluePrefix )
+   
    self:write( string.format( '#include "%s_glue.h"\n', moduleSymbolFull) )
+   
    self:outputPrototypeList( staticMethodNodeList )
    self:outputPrototypeList( methodNodeList )
+   
    self:write( string.format( 'static const char * s_full_class_name = "%s";\n', moduleFullName) )
+   
    self:outputFuncReg( "s_lua_func_info", staticMethodNodeList )
    self:outputFuncReg( "s_lua_method_info", methodNodeList )
+   
    local classSymbolFull = moduleSymbolFull .. "_" .. node:get_name().txt
    self:outputCommonFunc( moduleSymbolFull )
+   
    for __index, methodNode in pairs( methodNodeList ) do
       self:outputMethod( methodNode, gluePrefix )
    end
@@ -585,6 +628,7 @@ function glueGenerator:outputClass( moduleFullName, node, gluePrefix )
    end
    
 end
+
 
 local glueFilter = {}
 setmetatable( glueFilter, { __index = Nodes.Filter } )
@@ -605,11 +649,13 @@ function glueFilter:__init( __superarg1, __superarg2,outputDir )
    self.outputDir = outputDir
 end
 
+
 local function createFilter( outputDir )
 
    return glueFilter.new(nil, nil, outputDir)
 end
 _moduleObj.createFilter = createFilter
+
 function glueFilter:processRoot( node, dummy )
 
    local function createFile( filename )
@@ -624,6 +670,7 @@ function glueFilter:processRoot( node, dummy )
       
       error( string.format( "open error -- %s ", filePath) )
    end
+   
    for __index, node in pairs( node:get_nodeManager():getDeclClassNodeList(  ) ) do
       do
          local moduleName = node:get_moduleName()
@@ -633,6 +680,7 @@ function glueFilter:processRoot( node, dummy )
                local _exp = node:get_gluePrefix()
                if _exp ~= nil then
                   local glue = glueGenerator.new(createFile( moduleSymbolName .. "_glue.c" ), createFile( moduleSymbolName .. "_glue.h" ))
+                  
                   glue:outputClass( moduleSymbolName, node, _exp )
                end
             end

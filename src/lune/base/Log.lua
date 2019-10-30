@@ -55,6 +55,7 @@ end
 if not _lune1 then
    _lune1 = _lune
 end
+
 local Level = {}
 _moduleObj.Level = Level
 Level._val2NameMap = {}
@@ -96,6 +97,7 @@ Level.Trace = 5
 Level._val2NameMap[5] = 'Trace'
 Level.__allList[6] = Level.Trace
 
+
 local name2levelMap = {}
 name2levelMap["fatal"] = Level.Fatal
 name2levelMap["error"] = Level.Err
@@ -103,17 +105,22 @@ name2levelMap["warn"] = Level.Warn
 name2levelMap["info"] = Level.Info
 name2levelMap["debug"] = Level.Debug
 name2levelMap["trace"] = Level.Trace
+
 local function str2level( txt )
 
    return name2levelMap[txt]
 end
 _moduleObj.str2level = str2level
+
 local outputLevel = Level.Err
+
 local function setLevel( level )
 
    outputLevel = level
 end
 _moduleObj.setLevel = setLevel
+
+
 
 local function log( level, funcName, lineNo, callback )
 
@@ -127,5 +134,6 @@ local function log( level, funcName, lineNo, callback )
    
 end
 _moduleObj.log = log
+
 
 return _moduleObj

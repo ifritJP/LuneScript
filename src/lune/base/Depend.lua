@@ -187,7 +187,9 @@ end
 if not _lune1 then
    _lune1 = _lune
 end
+
 local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
+
 local function getFileLastModifiedTime( path )
 
    local file = io.open( path )
@@ -200,6 +202,7 @@ local function getFileLastModifiedTime( path )
       end
    end
    
+   
    local stream = io.popen( string.format( "stat -c '%%Y' %s", path) )
    do
       local _exp = _lune.nilacc( stream, 'read', 'callmtd' , '*a' )
@@ -208,9 +211,11 @@ local function getFileLastModifiedTime( path )
       end
    end
    
+   
    return nil
 end
 _moduleObj.getFileLastModifiedTime = getFileLastModifiedTime
+
 local function searchpath51( mod, pathPattern )
 
    for path in string.gmatch( pathPattern, "[^;]+" ) do
@@ -236,10 +241,13 @@ local function searchpath51( mod, pathPattern )
    return nil
 end
 
+
+
 local searchpathForm = searchpath51
 if LuaVer.curVer:get_hasSearchPath() then
    searchpathForm = (_lune.unwrap( _lune.nilacc( _G['package'], nil, 'item', 'searchpath')) )
 end
+
 
 local function searchpath( mod, pathPattern )
 

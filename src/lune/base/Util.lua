@@ -145,7 +145,9 @@ end
 if not _lune1 then
    _lune1 = _lune
 end
+
 local Depend = _lune.loadModule( 'lune.base.Depend' )
+
 local debugFlag = true
 local function setDebugFlag( flag )
 
@@ -158,11 +160,13 @@ local function setErrorCode( code )
    errorCode = code
 end
 _moduleObj.setErrorCode = setErrorCode
+
 local function errorLog( message )
 
    io.stderr:write( message .. "\n" )
 end
 _moduleObj.errorLog = errorLog
+
 local function err( message )
 
    if debugFlag then
@@ -173,6 +177,7 @@ local function err( message )
    os.exit( errorCode )
 end
 _moduleObj.err = err
+
 local OrderedSet = {}
 _moduleObj.OrderedSet = OrderedSet
 function OrderedSet.new(  )
@@ -210,6 +215,7 @@ function OrderedSet:get_list()
    return self.list
 end
 
+
 local memStream = {}
 setmetatable( memStream, { ifList = {oStream,} } )
 _moduleObj.memStream = memStream
@@ -240,6 +246,7 @@ function memStream:get_txt()
    return self.txt
 end
 
+
 local SourceStream = {}
 _moduleObj.SourceStream = SourceStream
 function SourceStream.setmeta( obj )
@@ -256,6 +263,7 @@ end
 function SourceStream:__init(  )
 
 end
+
 
 local SimpleSourceOStream = {}
 setmetatable( SimpleSourceOStream, { ifList = {SourceStream,} } )
@@ -286,10 +294,12 @@ end
 function SimpleSourceOStream:writeRaw( txt )
 
    local stream = self.nowStream
+   
    if self.needIndent then
       stream:write( string.rep( " ", self:get_indent() ) )
       self.needIndent = false
    end
+   
    
    for cr in string.gmatch( txt, "\n" ) do
       self.curLineNo = self.curLineNo + 1
@@ -348,6 +358,7 @@ function SimpleSourceOStream.setmeta( obj )
   setmetatable( obj, { __index = SimpleSourceOStream  } )
 end
 
+
 local function log( message )
 
    if debugFlag then
@@ -356,6 +367,7 @@ local function log( message )
    
 end
 _moduleObj.log = log
+
 local function printStackTrace(  )
 
    for level = 2, 8 do
@@ -370,20 +382,27 @@ local function printStackTrace(  )
    
 end
 _moduleObj.printStackTrace = printStackTrace
+
 local function profile( validTest, func, path )
 
    if not validTest then
       return func(  )
    end
    
+   
    local ProFi = require( 'ProFi' )
+   
    ProFi:start(  )
+   
    local result = func(  )
+   
    ProFi:stop(  )
    ProFi:writeReport( path )
+   
    return result
 end
 _moduleObj.profile = profile
+
 local function getReadyCode( lnsPath, luaPath )
 
    local luaTime, lnsTime = Depend.getFileLastModifiedTime( luaPath ), Depend.getFileLastModifiedTime( lnsPath )
@@ -391,12 +410,15 @@ local function getReadyCode( lnsPath, luaPath )
       local _luaTime = luaTime
       local _lnsTime = lnsTime
    
+      
       return false
    end
+   
    
    return luaTime >= lnsTime
 end
 _moduleObj.getReadyCode = getReadyCode
+
 local function existFile( path )
 
    local fileObj = io.open( path )

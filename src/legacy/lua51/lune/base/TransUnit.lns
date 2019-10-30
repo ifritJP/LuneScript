@@ -1897,6 +1897,7 @@ pub fn TransUnit.pushbackToken( token: &Parser.Token ) mut {
       self.pushbackList.insert( token );
    }
    self.currentToken = self.usedTokenList[ #self.usedTokenList ];
+   self.usedTokenList.remove(##);
 }
 
 
@@ -1905,6 +1906,7 @@ fn TransUnit.newPushback( tokenList: List<&Parser.Token> ) mut {
       self.pushbackList.insert( tokenList[ index ] );
    }
    self.currentToken = self.usedTokenList[ #self.usedTokenList ];
+   self.usedTokenList.remove(##);
 }
 
 fn TransUnit.getTokenNoErr() mut : &Parser.Token {
@@ -2083,16 +2085,27 @@ fn TransUnit.analyzeStatementList(
    }
 
    let mut lastStatement:&Nodes.Node! = nil;
+   let mut lastLineNo = self.currentToken.pos.lineNo;
    while true {
       let statement = self.analyzeStatement( termTxt );
-      if! statement {
+      when! statement {
          if breakKind ~= .None {
-            self.addErrMess( _exp.$pos,
+            self.addErrMess( statement.$pos,
                              "This statement is not reached -- %s" (breakKind.$_txt) );
          }
-         stmtList.insert( _exp );
+
+         let blank = statement.$pos.lineNo - lastLineNo;
+         if blank > 1 {
+            stmtList.insert(
+               Nodes.BlankLineNode.create(
+                  self.nodeManager, new Parser.Position( lastLineNo + 1, 0 ),
+                  [ Ast.builtinTypeNone ], blank - 1 ) );
+         }
+         lastLineNo = self.currentToken.pos.lineNo;
+
+         stmtList.insert( statement );
          lastStatement = statement;
-         breakKind = _exp.getBreakKind( .Normal );
+         breakKind = statement.getBreakKind( .Normal );
       }
       else {
          break;

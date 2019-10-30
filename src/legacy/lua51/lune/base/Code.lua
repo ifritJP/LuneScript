@@ -8,6 +8,7 @@ end
 if not _lune1 then
    _lune1 = _lune
 end
+
 local ID = {}
 _moduleObj.ID = ID
 ID._val2NameMap = {}
@@ -34,11 +35,13 @@ ID.nothing_define_abbr = 0
 ID._val2NameMap[0] = 'nothing_define_abbr'
 ID.__allList[1] = ID.nothing_define_abbr
 
+
 local function format( id, mess )
 
    return string.format( "%05d:%s", id, mess )
 end
 _moduleObj.format = format
+
 local function isMessageOf( id, mess )
 
    local pat = string.format( "^%05d:", id)

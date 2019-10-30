@@ -202,8 +202,8 @@ pub abstract class Node {
       return false;
    }
    
-   pub fn getLiteral(): Literal! {
-      return nil;
+   pub fn getLiteral(): Literal!, str! {
+      return nil, nil;
    }
    pub fn processFilter<OPT>( filter: Filter<OPT>, opt:OPT ) {
    }
@@ -569,6 +569,9 @@ macro _declNodeClass(
 }
 
 _declNodeClass( "None", Node, false, false, true, []);
+_declNodeClass( "BlankLine", Node, false, false, true,
+                [ { "lineNum": "int" } ]
+);
 _declNodeClass( "Subfile", Node, false, false, true,
                 [ { "usePath": "str!" } ]);
 _declNodeClass( "Import", Node, false, false, true,
@@ -1080,8 +1083,8 @@ _declNodeClass( "ExpCast", Node, false, true, false,
                   { "castKind": "CastKind" } ]
 );
 
-pub override fn ExpCastNode.getLiteral(): Literal! {
-   return self.exp.getLiteral();
+pub override fn ExpCastNode.getLiteral(): Literal!, str! {
+   return self.exp.getLiteral()**;
 }
 pub override fn ExpCastNode.setupLiteralTokenList( list: List<&Parser.Token> ): bool {
    return self.exp.setupLiteralTokenList( list );
@@ -1198,9 +1201,15 @@ pub override fn ExpMacroExpNode.getBreakKind( checkMode:CheckBreakMode ): BreakK
    return .None;
 }
 
+pub enum MacroStatKind {
+   Stat,
+   Exp,
+}
 
 _declNodeClass( "ExpMacroStat", Node, false, true, false,
-                [ { "expStrList": "List<&Node>" } ]
+                [ { "expStrList": "List<&Node>" },
+                  // __exp 型の場合 true, stat 型の場合 false
+                  { "statKind": "MacroStatKind" } ]
 );
 
 _declNodeClass( "StmtExp", Node, false, true, nil,
@@ -1378,27 +1387,41 @@ _declNodeClass( "DeclForm", Node, false, false, true,
                 [ { "argList": "&List<&Node>" } ]
 );
 
+pub enum FuncKind {
+   /** 関数定義 */
+   Func,
+   /** メドッ定義 */
+   Mtd,
+   /** コンストラクタ定義 */
+   Ctor,
+   /** デストラクタ定義 */
+   Dstr,
+   /** クラスの __init ブロック */
+   InitBlock,
+}
+
 pub class DeclFuncInfo {
-   pri let classTypeInfo: &Ast.TypeInfo! { pub };
-   pri let name: &Parser.Token! { pub };
-   pri let argList: List<&Node> { pub };
-   pri let staticFlag: bool { pub };
-   pri let accessMode: Ast.AccessMode { pub };
-   pri let body: &BlockNode! { pub };
-   pri let retTypeInfoList: List<&Ast.TypeInfo> { pub };
-   pri let has__func__Symbol:bool { pub };
+   let kind:FuncKind { pub };
+   let classTypeInfo: &Ast.TypeInfo! { pub };
+   let name: &Parser.Token! { pub };
+   let argList: &List<&Node> { pub };
+   let staticFlag: bool { pub };
+   let accessMode: Ast.AccessMode { pub };
+   let body: &BlockNode! { pub };
+   let retTypeInfoList: &List<&Ast.TypeInfo> { pub };
+   let has__func__Symbol:bool { pub };
 }
 
 pub static fn DeclFuncInfo.createFrom(
    info:&DeclFuncInfo, name:&Parser.Token ): DeclFuncInfo
 {
    return new DeclFuncInfo(
-      info.classTypeInfo, name, info.argList, info.staticFlag,
+      info.$kind, info.classTypeInfo, name, info.argList, info.staticFlag,
       info.accessMode, info.body, info.retTypeInfoList, info.has__func__Symbol );
 }
 
 _declNodeClass( "DeclFunc", Node, false, nil, true,
-                [ { "declInfo": "DeclFuncInfo" } ]
+                [ { "declInfo": "&DeclFuncInfo" } ]
 );
 pub override fn DeclFuncNode.canBeRight():bool {
    // anonymous 関数なら r-value に成れる
@@ -1408,15 +1431,15 @@ pub override fn DeclFuncNode.canBeRight():bool {
 
 
 _declNodeClass( "DeclMethod", Node, false, false, true,
-                [ { "declInfo": "DeclFuncInfo" } ]
+                [ { "declInfo": "&DeclFuncInfo" } ]
 );
 
 _declNodeClass( "DeclConstr", Node, false, false, true,
-                [ { "declInfo": "DeclFuncInfo" } ]
+                [ { "declInfo": "&DeclFuncInfo" } ]
 );
 
 _declNodeClass( "DeclDestr", Node, false, false, true,
-                [ { "declInfo": "DeclFuncInfo" } ]
+                [ { "declInfo": "&DeclFuncInfo" } ]
 );
 
 _declNodeClass( "ExpCallSuper", Node, false, false, true,
@@ -1429,6 +1452,7 @@ _declNodeClass( "DeclMember", Node, false, false, true,
                 [ { "name": "&Parser.Token" },
                   { "refType": "&RefTypeNode" },
                   { "symbolInfo": "&Ast.SymbolInfo" },
+                  { "classType" : "&Ast.TypeInfo" },
                   { "staticFlag": "bool" },
                   { "accessMode": "Ast.AccessMode" },
                   { "getterMutable": "bool" },
@@ -1706,8 +1730,8 @@ pub override fn WhileNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
 }
 
 
-pub override fn LiteralNilNode.getLiteral(): Literal! {
-   return .Nil;
+pub override fn LiteralNilNode.getLiteral(): Literal!, str! {
+   return .Nil, nil;
 }
 pub override fn LiteralNilNode.setupLiteralTokenList( list: List<&Parser.Token> ): bool {
    self.addTokenList( list, .Symb, "nil" );
@@ -1715,44 +1739,44 @@ pub override fn LiteralNilNode.setupLiteralTokenList( list: List<&Parser.Token> 
 }
 
 
-pub override fn LiteralCharNode.getLiteral(): Literal! {
-   return .Int( self.num );
+pub override fn LiteralCharNode.getLiteral(): Literal!, str! {
+   return .Int( self.num ), nil;
 }
 pub override fn LiteralCharNode.setupLiteralTokenList( list: List<&Parser.Token> ): bool {
    self.addTokenList( list, .Char, "%d" (self.num) );
    return true;
 }
 
-pub override fn LiteralIntNode.getLiteral(): Literal! {
-   return .Int( self.num );
+pub override fn LiteralIntNode.getLiteral(): Literal!, str! {
+   return .Int( self.num ), nil;
 }
 pub override fn LiteralIntNode.setupLiteralTokenList( list: List<&Parser.Token> ): bool {
    self.addTokenList( list, .Int, "%d" (self.num) );
    return true;
 }
 
-pub override fn LiteralRealNode.getLiteral(): Literal! {
-   return .Real( self.num );
+pub override fn LiteralRealNode.getLiteral(): Literal!, str! {
+   return .Real( self.num ), nil;
 }
 pub override fn LiteralRealNode.setupLiteralTokenList( list: List<&Parser.Token> ): bool {
    self.addTokenList( list, .Real, "%g" (self.num) );
    return true;
 }
 
-pub override fn LiteralArrayNode.getLiteral(): Literal! {
+pub override fn LiteralArrayNode.getLiteral(): Literal!, str! {
    let mut literalList:List<Literal> = [];
    if! self.expList {
       foreach node in _exp.get_expList() {
-         let mut literal = node.getLiteral();
+         let literal, mess = node.getLiteral();
          when! literal {
             literalList.insert( literal );
          }
          else {
-            return nil;
+            return nil, mess;
          }
       } 
    }
-   return .ARRAY( literalList );
+   return .ARRAY( literalList ), nil;
 }
 
 pub override fn LiteralArrayNode.setupLiteralTokenList( list: List<&Parser.Token> ): bool
@@ -1772,20 +1796,20 @@ pub override fn LiteralArrayNode.setupLiteralTokenList( list: List<&Parser.Token
    return true;
 }
 
-pub override fn LiteralListNode.getLiteral(): Literal! {
+pub override fn LiteralListNode.getLiteral(): Literal!, str! {
    let mut literalList:List<Literal> = [];
    if! self.expList {
       foreach node in _exp.get_expList() {
-         let mut literal = node.getLiteral();
+         let literal, mess = node.getLiteral();
          when! literal {
             literalList.insert( literal );
          }
          else {
-            return nil;
+            return nil, mess;
          }
       } 
    }
-   return .LIST( literalList );
+   return .LIST( literalList ), nil;
 }
 
 pub override fn LiteralListNode.setupLiteralTokenList( list: List<&Parser.Token> ): bool
@@ -1806,20 +1830,20 @@ pub override fn LiteralListNode.setupLiteralTokenList( list: List<&Parser.Token>
 }
 
 
-pub override fn LiteralSetNode.getLiteral(): Literal! {
+pub override fn LiteralSetNode.getLiteral(): Literal!, str! {
    let mut literalList:List<Literal> = [];
    if! self.expList {
       foreach node in _exp.get_expList() {
-         let mut literal = node.getLiteral();
+         let literal, mess = node.getLiteral();
          when! literal {
             literalList.insert( literal );
          }
          else {
-            return nil;
+            return nil, mess;
          }
       } 
    }
-   return .SET( literalList );
+   return .SET( literalList ), nil;
 }
 
 pub override fn LiteralSetNode.setupLiteralTokenList( list: List<&Parser.Token> ): bool
@@ -1839,16 +1863,24 @@ pub override fn LiteralSetNode.setupLiteralTokenList( list: List<&Parser.Token> 
    return true;
 }
 
-pub override fn LiteralMapNode.getLiteral(): Literal! {
+pub override fn LiteralMapNode.getLiteral(): Literal!, str! {
    let mut litMap:Map<&Literal,&Literal> = {};
    foreach val, key in self.map {
-      let keyLiteral = key.getLiteral();
-      let valLiteral = val.getLiteral();
+      let keyLiteral, keyMess = key.getLiteral();
+      let valLiteral, valMess = val.getLiteral();
       when! keyLiteral, valLiteral {
          litMap[ keyLiteral ] = valLiteral;
       }
+      else {
+         if not keyLiteral {
+            return nil, keyMess;
+         }
+         if not valLiteral {
+            return nil, valMess;
+         }
+      }
    }
-   return .MAP( litMap );
+   return .MAP( litMap ), nil;
 }
 
 pub override fn LiteralMapNode.setupLiteralTokenList( list: List<&Parser.Token> ): bool
@@ -1891,7 +1923,7 @@ pub override fn LiteralMapNode.setupLiteralTokenList( list: List<&Parser.Token> 
 }
 
 
-pub override fn LiteralStringNode.getLiteral(): Literal! {
+pub override fn LiteralStringNode.getLiteral(): Literal!, str! {
    let mut txt = self.token.txt;
    if string.find( txt, '^```' ##) {
       txt = txt.sub( 4, -4 );
@@ -1904,14 +1936,17 @@ pub override fn LiteralStringNode.getLiteral(): Literal! {
    if #argList > 0 {
       let mut paramList:List<stem!> = [];
       foreach argNode in argList {
-         let! arg = argNode.getLiteral() {
-            return nil;
-         };
-         paramList[ #paramList + 1 ] = getLiteralObj( arg );
+         let arg, mess = argNode.getLiteral();
+         when! arg {
+            paramList[ #paramList + 1 ] = getLiteralObj( arg );
+         }
+         else {
+            return nil, mess;
+         }
       }
       txt = string.format( txt, paramList.unpack() );
    }
-   return .Str(txt);
+   return .Str(txt), nil;
 }
 
 pub override fn LiteralStringNode.setupLiteralTokenList( list: List<&Parser.Token> ): bool
@@ -1931,8 +1966,8 @@ pub override fn LiteralStringNode.setupLiteralTokenList( list: List<&Parser.Toke
    return true;
 }
 
-pub override fn LiteralBoolNode.getLiteral(): Literal! {
-   return .Bool( self.token.txt == "true" );
+pub override fn LiteralBoolNode.getLiteral(): Literal!, str! {
+   return .Bool( self.token.txt == "true" ), nil;
 }
 
 pub override fn LiteralBoolNode.setupLiteralTokenList( list: List<&Parser.Token> ): bool
@@ -1942,8 +1977,8 @@ pub override fn LiteralBoolNode.setupLiteralTokenList( list: List<&Parser.Token>
 }
 
 
-pub override fn LiteralSymbolNode.getLiteral(): Literal! {
-   return .Symbol(self.token.txt);
+pub override fn LiteralSymbolNode.getLiteral(): Literal!, str! {
+   return .Symbol(self.token.txt), nil;
 }
 
 pub override fn LiteralSymbolNode.setupLiteralTokenList( list: List<&Parser.Token> ): bool
@@ -1953,78 +1988,83 @@ pub override fn LiteralSymbolNode.setupLiteralTokenList( list: List<&Parser.Toke
 }
 
 
-pub override fn RefFieldNode.getLiteral(): Literal! {
+pub override fn RefFieldNode.getLiteral(): Literal!, str! {
    let mut tokenList:List<str> = [];
-   match unwrap self.prefix.getLiteral() {
-      case .Symbol( symbol ) {
-         tokenList.insert( symbol );
-      }
-      case .Field( symList ) {
-         foreach symbol in symList {
+   let literal, mess = self.prefix.getLiteral();
+   when! literal {
+      match literal {
+         case .Symbol( symbol ) {
             tokenList.insert( symbol );
          }
-      }
-      default {
-         Util.errorLog( "not support" );
-      }
-   }
-   if self.nilAccess {
-      tokenList.insert( "$." );
-   }
-   else {
-      tokenList.insert( "." );
-   }
-   tokenList.insert( self.field.txt );
-   return .Field( tokenList );
-}
-
-pub override fn ExpMacroStatNode.getLiteral(): Literal! {
-   let mut txt = "";
-   foreach token in self.expStrList {
-      let! literal = token.getLiteral() {
-         Util.err( "illegal literal" );
-      };
-      match literal {
-         case .Str( work ) {
-            txt = "%s%s" (txt, work );
+         case .Field( symList ) {
+            foreach symbol in symList {
+               tokenList.insert( symbol );
+            }
+         }
+         default {
+            return nil, "not support -- %s" (literal.$_txt) ;
          }
       }
+      if self.nilAccess {
+         tokenList.insert( "$." );
+      }
+      else {
+         tokenList.insert( "." );
+      }
+      tokenList.insert( self.field.txt );
+      return .Field( tokenList ), nil;
    }
-   return .Str( txt );
+   return nil, mess;
 }
 
-fn enumLiiteral2Literal( obj:&Ast.EnumLiteral ) : Literal {
+pub override fn ExpMacroStatNode.getLiteral(): Literal!, str! {
+   let mut txt = "";
+   foreach token in self.expStrList {
+      let literal, mess = token.getLiteral();
+      when! literal {
+         match literal {
+            case .Str( work ) {
+               txt = "%s%s" (txt, work );
+            }
+         }
+      }
+      else {
+         return nil, "illegal literal -- %s" ( getNodeKindName( token.$kind ) );
+      }
+   }
+   return .Str( txt ), nil;
+}
+
+fn enumLiteral2Literal( obj:&Ast.EnumLiteral ) : Literal!, str! {
    match obj {
       case .Int( val ) {
-         return Literal.Int( val );
+         return Literal.Int( val ), nil;
       }
       case .Real( val ) {
-         return Literal.Real( val );
+         return Literal.Real( val ), nil;
       }
       case .Str( val ) {
-         return Literal.Str( val );
+         return Literal.Str( val ), nil;
       }
    }
-   Util.err( "illegal enum" .. obj.$_txt );
+   return nil, "illegal enum: " .. obj.$_txt;
 }
 
-pub override fn ExpRefNode.getLiteral(): Literal! {
+pub override fn ExpRefNode.getLiteral(): Literal!, str! {
    let typeInfo = self.symbolInfo.$typeInfo;
    if! let enumTypeInfo = typeInfo@@@Ast.EnumTypeInfo {
       let enumval = unwrap enumTypeInfo.getEnumValInfo( self.symbolInfo.$name );
-      let val = enumLiiteral2Literal( enumval.$val );
-      return val;
+      return enumLiteral2Literal( enumval.$val )**;
    }
 
-   return nil;
+   return nil, "unsupport refnode -- %s" (typeInfo.getTxt(##));
 }
 
-pub override fn ExpOmitEnumNode.getLiteral(): Literal! {
+pub override fn ExpOmitEnumNode.getLiteral(): Literal!, str! {
    let enumTypeInfo = self.enumTypeInfo;
 
    let enumval = self.valInfo;
-   let val = enumLiiteral2Literal( enumval.$val );
-   return val;
+   return enumLiteral2Literal( enumval.$val )**;
    
 }
 
@@ -2039,7 +2079,7 @@ pub override fn ExpOmitEnumNode.setupLiteralTokenList( list: List<&Parser.Token>
    return true;
 }
 
-pub override fn ExpOp2Node.getLiteral(): Literal! {
+pub override fn ExpOp2Node.getLiteral(): Literal!, str! {
 
    fn getValType( node:&Node ): bool, int, real, str, &Ast.TypeInfo {
       let! literal = node.getLiteral() {
@@ -2093,8 +2133,11 @@ pub override fn ExpOp2Node.getLiteral(): Literal! {
    let ret1, int1, real1, str1, type1 = getValType( self.$exp1 );
    let ret2, int2, real2, str2, type2 = getValType( self.$exp2 );
 
-   if not ret1 or not ret2 {
-      return nil;
+   if not ret1 {
+      return nil, "not support literal -- %s" ( getNodeKindName( self.$exp1.$kind ) );
+   }
+   if not ret2 {
+      return nil, "not support literal -- %s" ( getNodeKindName( self.$exp2.$kind ) );
    }
 
 
@@ -2109,37 +2152,39 @@ pub override fn ExpOp2Node.getLiteral(): Literal! {
       switch ( self.op.txt ) {
          case "+" {
             if retType == Ast.builtinTypeInt {
-               return .Int( int1 + int2 );
+               return .Int( int1 + int2 ), nil;
             }
-            return .Real( real1 + real2 );
+            return .Real( real1 + real2 ), nil;
          }
          case "-" {
             if retType == Ast.builtinTypeInt {
-               return .Int( int1 - int2 );
+               return .Int( int1 - int2 ), nil;
             }
-            return .Real( real1 - real2);
+            return .Real( real1 - real2), nil;
          }
          case "*" {
             if retType == Ast.builtinTypeInt {
-               return .Int( int1 * int2 );
+               return .Int( int1 * int2 ), nil;
             }
-            return .Real( real1 * real2);
+            return .Real( real1 * real2), nil;
          }
          case "/" {
             if retType == Ast.builtinTypeInt {
-               return .Int( int1 / int2 );
+               return .Int( int1 / int2 ), nil;
             }
-            return .Real( real1 / real2);
+            return .Real( real1 / real2), nil;
          }
       }
    }
    elseif type1 == Ast.builtinTypeString and type2 == Ast.builtinTypeString {
       if self.op.txt == ".." {
-         return .Str( str1 .. str2 );
+         return .Str( str1 .. str2 ), nil;
       }
    }
 
-   return nil;
+   let mess = "not support literal operation -- %s %s %s"
+       (type1.getTxt(##), self.op.txt, type2.getTxt(##) );
+   return nil, mess;
 }
 
 pub class DefMacroInfo extend MacroInfo {

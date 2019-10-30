@@ -145,7 +145,10 @@ end
 if not _lune1 then
    _lune1 = _lune
 end
+
 local Util = _lune.loadModule( 'lune.base.Util' )
+
+
 
 local ModuleId = {}
 _moduleObj.ModuleId = ModuleId
@@ -192,6 +195,7 @@ function ModuleId.createIdFromTxt( idStr )
    return ModuleId.new(modTime, math.floor(buildCount))
 end
 
+
 local ImportModuleInfo = {}
 _moduleObj.ImportModuleInfo = ImportModuleInfo
 function ImportModuleInfo.new(  )
@@ -236,6 +240,7 @@ function ImportModuleInfo.setmeta( obj )
   setmetatable( obj, { __index = ImportModuleInfo  } )
 end
 
+
 local frontInterface = {}
 _moduleObj.frontInterface = frontInterface
 function frontInterface.setmeta( obj )
@@ -253,10 +258,12 @@ function frontInterface:__init(  )
 
 end
 
+
 local dummyFront = {}
 setmetatable( dummyFront, { ifList = {frontInterface,} } )
 function dummyFront:loadModule( mod )
 
+   
    return require( mod ), {}
 end
 function dummyFront:loadMeta( importModuleInfo, mod )
@@ -290,32 +297,39 @@ function dummyFront:__init(  )
 
 end
 
+
 __luneScript = dummyFront.new()
+
 local function setFront( newFront )
 
    __luneScript = newFront
 end
 _moduleObj.setFront = setFront
+
 local function loadModule( mod )
 
    return __luneScript:loadModule( mod )
 end
 _moduleObj.loadModule = loadModule
+
 local function loadFromLnsTxt( importModuleInfo, name, txt )
 
    return __luneScript:loadFromLnsTxt( importModuleInfo, name, txt )
 end
 _moduleObj.loadFromLnsTxt = loadFromLnsTxt
+
 local function loadMeta( importModuleInfo, mod )
 
    return __luneScript:loadMeta( importModuleInfo, mod )
 end
 _moduleObj.loadMeta = loadMeta
+
 local function searchModule( mod )
 
    return __luneScript:searchModule( mod )
 end
 _moduleObj.searchModule = searchModule
+
 local function error( message )
 
    __luneScript:error( message )

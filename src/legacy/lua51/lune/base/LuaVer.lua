@@ -132,7 +132,9 @@ end
 if not _lune1 then
    _lune1 = _lune
 end
+
 local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
+
 local BitOp = {}
 _moduleObj.BitOp = BitOp
 BitOp._val2NameMap = {}
@@ -164,6 +166,7 @@ BitOp.__allList[2] = BitOp.HasMod
 BitOp.Cant = 2
 BitOp._val2NameMap[2] = 'Cant'
 BitOp.__allList[3] = BitOp.Cant
+
 
 local LuaVerInfo = {}
 _moduleObj.LuaVerInfo = LuaVerInfo
@@ -216,6 +219,7 @@ function LuaVerInfo:get_canUseMetaGc()
    return self.canUseMetaGc
 end
 
+
 local ver51 = LuaVerInfo.new(BitOp.Cant, false, false, false, "loadstring51", false, LuaMod.CodeKind.LoadStr51, {["package.searchpath"] = true})
 _moduleObj.ver51 = ver51
 
@@ -224,6 +228,7 @@ _moduleObj.ver52 = ver52
 
 local ver53 = LuaVerInfo.new(BitOp.HasOp, true, true, true, "loadstring52", true, LuaMod.CodeKind.LoadStr52, {})
 _moduleObj.ver53 = ver53
+
 
 local function getCurrentVer(  )
 
@@ -236,6 +241,7 @@ local function getCurrentVer(  )
    
    return _moduleObj.ver51
 end
+
 local curVer = getCurrentVer(  )
 _moduleObj.curVer = curVer
 
