@@ -575,6 +575,7 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
    local macroArgValMap = {}
    local macroArgNodeList = macroInfo:getArgList(  )
    local macroArgName2ArgNode = {}
+   
    if expList ~= nil then
       for index, argNode in pairs( expList:get_expList() ) do
          local literal, mess = argNode:getLiteral(  )
@@ -619,7 +620,6 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
       if arg:get_typeInfo():get_kind() ~= Ast.TypeInfoKind.DDD then
          local argType = arg:get_typeInfo()
          local argName = arg:get_name()
-         
          self.symbol2ValueMapForMacro[argName] = Nodes.MacroValInfo.new(argValMap[index], argType, macroArgName2ArgNode[argName])
       else
        
@@ -640,6 +640,7 @@ function MacroCtrl:importMacro( macroInfoStem, macroTypeInfo, typeId2TypeInfo )
       local argList = {}
       local argNameList = {}
       local symbol2MacroValInfoMap = {}
+      
       for __index, argInfo in pairs( macroInfo.argList ) do
          local argTypeInfo = _lune.unwrap( typeId2TypeInfo[argInfo.typeId])
          table.insert( argList, Nodes.MacroArgInfo.new(argInfo.name, argTypeInfo) )
@@ -963,5 +964,6 @@ function MacroCtrl:restoreMacroMode(  )
 
    self.macroMode = Nodes.MacroMode.AnalyzeArg
 end
+
 
 return _moduleObj

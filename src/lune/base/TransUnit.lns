@@ -322,6 +322,9 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
    pri let mut pushbackList: List<&Parser.Token>;
    /** 現在のトークン */
    pri let mut currentToken: &Parser.Token;
+   /** コメントリスト */
+   pri let mut commentCtrl: Parser.CommentCtrl;
+   
    /** 解析済みトークンリスト */
    pri let mut usedTokenList: List<&Parser.Token>;
    /** 解析エラーメッセージ */
@@ -437,6 +440,7 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
       self.typeId2ClassMap = {};
       self.typeInfo2ClassNode = {};
       self.currentToken = Parser.getEofToken();
+      self.commentCtrl = new Parser.CommentCtrl();
       self.errMessList = [];
       self.warnMessList = [];
       self.analyzeMode = unwrap mode default AnalyzeMode.Compile;
@@ -1910,42 +1914,48 @@ fn TransUnit.newPushback( tokenList: List<&Parser.Token> ) mut {
 }
 
 fn TransUnit.getTokenNoErr() mut : &Parser.Token {
+
    if #self.pushbackList > 0 {
       if self.currentToken ~= Parser.getEofToken() {
          self.usedTokenList.insert( self.currentToken );
       }
       self.currentToken = self.pushbackList[ #self.pushbackList ];
       self.pushbackList.remove(##);
-      return self.currentToken;
    }
-
-   let mut commentList:List<&Parser.Token> = [];
-   let mut token:&Parser.Token! = nil;
-   while true {
-      token = self.parser.getToken();
-      if! token {
-         if _exp.kind ~= Parser.TokenKind.Cmnt {
+   else {
+      let mut commentList:List<&Parser.Token> = [];
+      let mut token:&Parser.Token! = nil;
+      while true {
+         token = self.parser.getToken();
+         if! token {
+            if _exp.kind ~= Parser.TokenKind.Cmnt {
+               break;
+            }
+            commentList.insert( _exp );
+         }
+         else {
             break;
          }
-         commentList.insert( _exp );
+      }
+
+      if! token {
+         if self.macroCtrl.$macroMode == .Expand {
+            token = self.macroCtrl.expandMacroVal(
+               self.typeNameCtrl, self.scope, self, _exp );
+         }
+         _exp.set_commentList( commentList );
       }
       else {
-         break;
+         self.commentCtrl.addDirect( commentList );
       }
+
+      self.usedTokenList.insert( self.currentToken );
+      self.currentToken = unwrap token default Parser.getEofToken();
    }
 
-   if! token {
-      if self.macroCtrl.$macroMode == .Expand {
-         token = self.macroCtrl.expandMacroVal(
-            self.typeNameCtrl, self.scope, self, _exp );
-      }
+   if #self.currentToken.$commentList > 0 {
+      self.commentCtrl.add( self.currentToken );
    }
-   // if! token {
-   //    _exp.set_commentList( commentList );
-   // }
-
-   self.usedTokenList.insert( self.currentToken );
-   self.currentToken = unwrap token default Parser.getEofToken();
 
    return self.currentToken;
 }
@@ -2077,7 +2087,7 @@ fn TransUnit.getContinueToken() mut : &Parser.Token, bool {
 
 
 fn TransUnit.analyzeStatementList(
-   stmtList: List<&Nodes.Node>, termTxt: str! ) mut : &Nodes.Node!
+   stmtList: List<&Nodes.Node>, termTxt: str! ) mut : &Nodes.Node!, int
 {
    let mut breakKind = Nodes.BreakKind.None;
    if #stmtList > 0 {
@@ -2086,15 +2096,64 @@ fn TransUnit.analyzeStatementList(
 
    let mut lastStatement:&Nodes.Node! = nil;
    let mut lastLineNo = self.currentToken.pos.lineNo;
+
+   // コメントが、直前の文の末尾と同じ行にあるかどうか調べ、
+   // 同じ行にある場合は、直前の文のコメントとしてセットする
+   fn setTailComment( statement:Nodes.Node! ): int {
+      let blank;
+      let mut commentList = self.commentCtrl.$commentList;
+      if #commentList > 0 {
+         when! lastStatement {
+            let mut tailComment:&Parser.Token! = nil;
+            foreach comment in commentList {
+               if comment.pos.lineNo == lastStatement.$pos.lineNo {
+                  if not tailComment {
+                     lastStatement.set_tailComment( comment );
+                     tailComment = comment;
+                  }
+                  else {
+                     // 1行に複数のコメントがあるのはエラー
+                     // self.addErrMess(
+                     //    comment.pos,
+                     //    "there are multi comment per line. -- %s" (comment.txt) );
+                  }
+               }
+               if! let invalidComment = self.commentCtrl.hasInvalidComment() {
+                  // 1行に複数のコメントがあるのはエラー
+                  // self.addErrMess(
+                  //    invalidComment.pos,
+                  //    "there are multi comment per line. -- %s" (invalidComment.txt) );
+               }
+            }
+            if tailComment {
+               commentList.remove( 1 );
+            }
+         }
+      }
+      if #commentList > 0 {
+         blank = commentList[ 1 ].pos.lineNo - lastLineNo;
+      }
+      else {
+         when! statement {
+            blank = statement.$pos.lineNo - lastLineNo;
+         }
+         else {
+            blank = self.currentToken.pos.lineNo - lastLineNo;
+         }
+      }
+      return blank;
+   }
+   
    while true {
-      let statement = self.analyzeStatement( termTxt );
+      let mut statement = self.analyzeStatement( termTxt );
       when! statement {
          if breakKind ~= .None {
             self.addErrMess( statement.$pos,
                              "This statement is not reached -- %s" (breakKind.$_txt) );
          }
 
-         let blank = statement.$pos.lineNo - lastLineNo;
+         // 空白行と、コメントの処理
+         let blank = setTailComment( statement );
          if blank > 1 {
             stmtList.insert(
                Nodes.BlankLineNode.create(
@@ -2106,12 +2165,16 @@ fn TransUnit.analyzeStatementList(
          stmtList.insert( statement );
          lastStatement = statement;
          breakKind = statement.getBreakKind( .Normal );
+         
+         statement.addComment( self.commentCtrl.$commentList );
+         self.commentCtrl.clear();
       }
       else {
-         break;
+         setTailComment( nil );
+         break;   
       }
    }
-   return lastStatement;
+   return lastStatement, lastLineNo;
 }
 
 fn TransUnit.analyzeStatementListSubfile( stmtList: List<&Nodes.Node> ) mut : &Nodes.Node! {
@@ -2126,7 +2189,7 @@ fn TransUnit.analyzeStatementListSubfile( stmtList: List<&Nodes.Node> ) mut : &N
       self.error( "subfile must have 'subfile' declaration at top." );
    }
 
-   return self.analyzeStatementList( stmtList ## );
+   return (self.analyzeStatementList( stmtList ## ));
 }
 
 fn TransUnit.analyzeLuneControl(

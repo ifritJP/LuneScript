@@ -532,4 +532,5 @@ local function getCode( kind )
    return _lune.unwrap( codeMap[kind])
 end
 _moduleObj.getCode = getCode
+
 return _moduleObj

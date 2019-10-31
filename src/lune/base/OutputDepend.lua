@@ -263,4 +263,5 @@ local function createFilter( stream )
    return convFilter.new(stream)
 end
 _moduleObj.createFilter = createFilter
+
 return _moduleObj

@@ -616,7 +616,7 @@ pub fn Front.dumpTokenize() mut {
       let! token = parser.getToken() {
          break;
       };
-      print( token.kind, token.pos.lineNo, token.pos.column, token.txt );
+      print( token.kind.$_txt, token.pos.lineNo, token.pos.column, token.txt );
    }
 }
 

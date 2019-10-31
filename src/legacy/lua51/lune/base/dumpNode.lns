@@ -64,8 +64,22 @@ fn dump( prefix:str, depth:int, node: &Nodes.Node, txt: str ) {
                                expType.getTxt(##),
                                expType.get_kind() );
    }
-   print( "%s: %s %s %s"
-	  (prefix, Nodes.getNodeKindName( node.get_kind() ), txt, typeStr ) );
+
+   let comment;
+   if! let commentList = node.$commentList {
+      comment = "comment:%d,%d" (#commentList, node.$tailComment and 1 or 0);
+   }
+   else {
+      if node.$tailComment {
+         comment = "comment:0,1";
+      }
+      else {
+         comment = "";
+      }
+   }
+
+   print( "%s: %s %s %s %s"
+	  (prefix, Nodes.getNodeKindName( node.get_kind() ), txt, typeStr, comment ) );
 }
 
 fn filter( node: &Nodes.Node, filter: dumpFilter, opt:Opt ) {

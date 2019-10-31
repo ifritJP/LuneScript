@@ -511,6 +511,42 @@ NodeVisitMode.__allList[3] = NodeVisitMode.End
 
 local Node = {}
 _moduleObj.Node = Node
+function Node.new( id, kind, pos, expTypeList )
+   local obj = {}
+   Node.setmeta( obj )
+   if obj.__init then obj:__init( id, kind, pos, expTypeList ); end
+   return obj
+end
+function Node:__init(id, kind, pos, expTypeList) 
+   self.id = id
+   self.kind = kind
+   self.pos = pos
+   self.expTypeList = expTypeList
+   self.commentList = nil
+   self.tailComment = nil
+end
+function Node:addComment( commentList )
+
+   if #commentList ~= 0 then
+      local workList
+      
+      do
+         local _exp = self.commentList
+         if _exp ~= nil then
+            workList = _exp
+         else
+            workList = {}
+            self.commentList = workList
+         end
+      end
+      
+      for __index, comment in pairs( commentList ) do
+         table.insert( workList, comment )
+      end
+      
+   end
+   
+end
 function Node:get_expType(  )
 
    if #self.expTypeList == 0 then
@@ -553,21 +589,6 @@ end
 function Node.setmeta( obj )
   setmetatable( obj, { __index = Node  } )
 end
-function Node.new( id, kind, pos, expTypeList )
-   local obj = {}
-   Node.setmeta( obj )
-   if obj.__init then
-      obj:__init( id, kind, pos, expTypeList )
-   end
-   return obj
-end
-function Node:__init( id, kind, pos, expTypeList )
-
-   self.id = id
-   self.kind = kind
-   self.pos = pos
-   self.expTypeList = expTypeList
-end
 function Node:get_id()
    return self.id
 end
@@ -579,6 +600,15 @@ function Node:get_pos()
 end
 function Node:get_expTypeList()
    return self.expTypeList
+end
+function Node:get_commentList()
+   return self.commentList
+end
+function Node:get_tailComment()
+   return self.tailComment
+end
+function Node:set_tailComment( tailComment )
+   self.tailComment = tailComment
 end
 
 
@@ -1929,6 +1959,7 @@ end
 
 function NodeKind.get_ExpList(  )
 
+   
    return _lune.unwrap( _moduleObj.nodeKind['ExpList'])
 end
 
@@ -4167,6 +4198,7 @@ end
 
 function NodeKind.get_When(  )
 
+   
    return _lune.unwrap( _moduleObj.nodeKind['When'])
 end
 
@@ -4398,6 +4430,7 @@ CastKind.__allList[3] = CastKind.Implicit
 
 function NodeKind.get_ExpCast(  )
 
+   
    return _lune.unwrap( _moduleObj.nodeKind['ExpCast'])
 end
 
@@ -4509,6 +4542,7 @@ end
 
 function NodeKind.get_ExpToDDD(  )
 
+   
    return _lune.unwrap( _moduleObj.nodeKind['ExpToDDD'])
 end
 
@@ -4951,10 +4985,10 @@ end
 
 function ExpRefItemNode:canBeLeft(  )
 
+   
    if self.val:get_expType() == Ast.builtinTypeStem then
       return false
    end
-   
    
    return Ast.TypeInfo.isMut( self:get_val():get_expType() ) and not self.nilAccess
 end
@@ -5104,6 +5138,7 @@ end
 
 function NodeKind.get_ExpAccessMRet(  )
 
+   
    return _lune.unwrap( _moduleObj.nodeKind['ExpAccessMRet'])
 end
 
@@ -5200,6 +5235,7 @@ end
 
 function NodeKind.get_ExpMultiTo1(  )
 
+   
    return _lune.unwrap( _moduleObj.nodeKind['ExpMultiTo1'])
 end
 
@@ -5640,6 +5676,7 @@ MacroStatKind.__allList[2] = MacroStatKind.Exp
 
 function NodeKind.get_ExpMacroStat(  )
 
+   
    return _lune.unwrap( _moduleObj.nodeKind['ExpMacroStat'])
 end
 
@@ -6013,6 +6050,7 @@ end
 
 function NodeKind.get_RefField(  )
 
+   
    return _lune.unwrap( _moduleObj.nodeKind['RefField'])
 end
 
@@ -6108,6 +6146,7 @@ end
 
 function RefFieldNode:canBeLeft(  )
 
+   
    do
       local _exp = self:get_symbolInfo()
       if _exp ~= nil then
@@ -6115,12 +6154,12 @@ function RefFieldNode:canBeLeft(  )
       end
    end
    
-   
    return false
 end
 
 function RefFieldNode:canBeRight(  )
 
+   
    do
       local _exp = self:get_symbolInfo()
       if _exp ~= nil then
@@ -6128,13 +6167,13 @@ function RefFieldNode:canBeRight(  )
       end
    end
    
-   
    return true
 end
 
 
 function NodeKind.get_GetField(  )
 
+   
    return _lune.unwrap( _moduleObj.nodeKind['GetField'])
 end
 
@@ -6238,13 +6277,13 @@ end
 
 function GetFieldNode:canBeLeft(  )
 
+   
    do
       local _exp = self:get_symbolInfo()
       if _exp ~= nil then
          return _exp:get_canBeLeft()
       end
    end
-   
    
    return false
 end
@@ -6622,7 +6661,6 @@ end
 
 function DeclVarNode:getBreakKind( checkMode )
 
-   
    local kind = BreakKind.None
    local work = BreakKind.None
    do
@@ -7011,7 +7049,6 @@ end
 
 function DeclFuncNode:canBeRight(  )
 
-   
    return self.declInfo:get_name() == nil
 end
 
@@ -7692,6 +7729,7 @@ end
 
 function NodeKind.get_DeclClass(  )
 
+   
    return _lune.unwrap( _moduleObj.nodeKind['DeclClass'])
 end
 
@@ -10061,6 +10099,7 @@ function WhileNode:getBreakKind( checkMode )
          return BreakKind.None
       end
       
+      
       if self.exp:get_expType():equals( Ast.builtinTypeBool ) then
          do
             local boolNode = _lune.__Cast( self.exp, 3, LiteralBoolNode )
@@ -10076,9 +10115,7 @@ function WhileNode:getBreakKind( checkMode )
          
       end
       
-      
       local mode = CheckBreakMode.IgnoreFlow
-      
       local kind = BreakKind.None
       for __index, stmt in pairs( self.block:get_stmtList() ) do
          local work = stmt:getBreakKind( mode )
@@ -10825,4 +10862,5 @@ local function hasMultiValNode( node )
    return #node:get_expTypeList() > 1 or node:get_expType():get_kind() == Ast.TypeInfoKind.DDD
 end
 _moduleObj.hasMultiValNode = hasMultiValNode
+
 return _moduleObj

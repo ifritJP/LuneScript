@@ -263,69 +263,87 @@ test-etc:
 	@(cd $(TEST_DIR); find test/error -iname '__.*')
 
 
+TEST_CASE += nilable1.lns
+TEST_CASE += access1.lns
+TEST_CASE += access2.lns
+TEST_CASE += access3.lns
+TEST_CASE += access4.lns
+TEST_CASE += access5.lns
+TEST_CASE += list.lns
+TEST_CASE += map.lns
+TEST_CASE += set.lns
+TEST_CASE += scope1.lns
+TEST_CASE += scope2.lns
+TEST_CASE += func.lns
+TEST_CASE += class.lns
+TEST_CASE += class2.lns
+TEST_CASE += class3.lns
+TEST_CASE += class4.lns
+TEST_CASE += class5.lns
+TEST_CASE += class6.lns
+TEST_CASE += provide1.lns
+TEST_CASE += provide2.lns
+TEST_CASE += provide3.lns
+TEST_CASE += shadowing.lns
+TEST_CASE += enum.lns
+TEST_CASE += eof.lns
+TEST_CASE += mutable.lns
+TEST_CASE += var.lns
+TEST_CASE += arg.lns
+TEST_CASE += arg2.lns
+TEST_CASE += unwrap.lns
+TEST_CASE += operand.lns
+TEST_CASE += loop.lns
+TEST_CASE += cast.lns
+TEST_CASE += prototype.lns
+TEST_CASE += statement.lns
+TEST_CASE += flow.lns
+TEST_CASE += import.lns
+TEST_CASE += import2.lns
+TEST_CASE += import3.lns
+TEST_CASE += import4.lns
+TEST_CASE += import5.lns
+TEST_CASE += strformat.lns
+TEST_CASE += Alge.lns
+TEST_CASE += Alge2.lns
+TEST_CASE += Alge3.lns
+TEST_CASE += Alge4.lns
+TEST_CASE += exp.lns
+TEST_CASE += symbol.lns
+TEST_CASE += symbolEmpty.lns
+TEST_CASE += static.lns
+TEST_CASE += generics.lns
+TEST_CASE += generics2.lns
+TEST_CASE += generics3.lns
+TEST_CASE += generics4.lns
+TEST_CASE += box.lns
+TEST_CASE += form.lns
+TEST_CASE += ddd.lns
+TEST_CASE += immediate.lns
+TEST_CASE += macro.lns
+TEST_CASE_SRCS := $(addprefix test/error/,$(TEST_CASE))
+TEST_CASE_LOGS := $(addprefix $(LOG_DIR)/,$(addsuffix .log,$(TEST_CASE)))
+
+
+
+# テストケースを実行して、テストケース毎にログをログディレクトリに出力する
+$(LOG_DIR)/%.log: test/error/%
+	-$(call exeLune,$(TEST_DIR),$<,exe,2>&1) | grep -e 'error:' -e 'warning:' > $@
+
+test-error-all: $(TEST_CASE_LOGS)
+	cat $(TEST_CASE_LOGS)
+
+# エラー系テストケースを実行し、結果を stdout に出力する
+define test-error-all-case
+	-rm -rf $1
+	mkdir -p $1
+	$(MAKE) test-error-all LOG_DIR=$1 TEST_DIR=$2
+endef
 
 test-error:
-	-$(call exeLune,$(TEST_DIR),test/error/nilable1.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/access1.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/access2.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/access3.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/access4.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/access5.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/list.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/map.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/set.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/scope1.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/scope2.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/func.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/class.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/class2.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/class3.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/class4.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/class5.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/class6.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/provide1.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/provide2.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/provide3.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/shadowing.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/enum.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/eof.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/mutable.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/var.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/arg.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/arg2.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/unwrap.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/operand.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/loop.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/cast.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/prototype.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/statement.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/flow.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/import.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/import2.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/import3.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/import4.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/import5.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/strformat.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/Alge.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/Alge2.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/Alge3.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/Alge4.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/exp.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/symbol.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/symbolEmpty.lns,exe,2>&1)
+	$(call test-error-all-case,$(LOG_DIR),$(TEST_DIR))
+
 	-$(call exeLune,$(TEST_DIR),test/error/noexist.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/static.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/generics.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/generics2.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/generics3.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/generics4.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/box.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/form.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/ddd.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/immediate.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/macro.lns,exe,2>&1)
-
-
 	-$(call exeLune,$(TEST_DIR),test/error/abbr.lns,exe -Werror,2>&1) && echo error:NG
 
 	cat test/error/mutable.lns | sed 's@//_lune@_lune@' > $(TEST_DIR)/test/error/dis_mutable.lns
@@ -353,7 +371,7 @@ test-comp2:
 	$(call exeComp,.,test/comp6.lns,test/comp6.lns,test.comp6 3 3) >> work/test1.result
 	$(call exeComp,.,test/comp7.lns,test/comp7.lns,test.comp7 6 7) >> work/test1.result
 	$(call exeComp,.,test/comp8.lns,test/comp8.lns,test.comp8 4 15) >> work/test1.result
-	$(MAKE) -s TEST_DIR=. test-error | grep -e 'error:' -e 'warning:' >> work/test1.result
+	$(MAKE) -s TEST_DIR=. LOG_DIR=work/1/log test-error | grep -e 'error:' -e 'warning:' >> work/test1.result
 	$(MAKE) TEST_DIR=. test-etc >> work/test1.result
 	$(MAKE) -C test/proj/ test MKFILE=Makefile SRC_DIR= 2>&1 | \
 		grep -v /test/proj >> work/test1.result
@@ -387,7 +405,7 @@ test-comp2:
 	$(call exeComp,work/3,test/comp6.lns,test/comp6.lns,test.comp6 3 2) | tee -a work/test2.result
 	$(call exeComp,work/3,test/comp7.lns,test/comp7.lns,test.comp7 6 7) | tee -a work/test2.result
 	$(call exeComp,work/3,test/comp8.lns,test/comp8.lns,test.comp8 4 15) | tee -a work/test2.result
-	$(MAKE) -s TEST_DIR=work/3 test-error | grep -e 'error:' -e 'warning:' | \
+	$(MAKE) -s TEST_DIR=work/3 LOG_DIR=work/3/log  test-error | grep -e 'error:' -e 'warning:' | \
 				tee -a work/test2.result
 	$(MAKE) TEST_DIR=work/3 test-etc >> work/test2.result
 	$(MAKE) -C work/3/test/proj/ test MKFILE=Makefile SRC_DIR= 2>&1 | \

@@ -255,7 +255,26 @@ local function dump( prefix, depth, node, txt )
       typeStr = string.format( "(%d:%s:%s)", expType:get_typeId(  ), expType:getTxt(  ), tostring( expType:get_kind(  )))
    end
    
-   print( string.format( "%s: %s %s %s", prefix, Nodes.getNodeKindName( node:get_kind(  ) ), txt, typeStr) )
+   
+   local comment
+   
+   do
+      local commentList = node:get_commentList()
+      if commentList ~= nil then
+         comment = string.format( "comment:%d,%d", #commentList, node:get_tailComment() and 1 or 0)
+      else
+         if node:get_tailComment() then
+            comment = "comment:0,1"
+         else
+          
+            comment = ""
+         end
+         
+      end
+   end
+   
+   
+   print( string.format( "%s: %s %s %s %s", prefix, Nodes.getNodeKindName( node:get_kind(  ) ), txt, typeStr, comment) )
 end
 
 local function filter( node, filter, opt )
@@ -1163,6 +1182,7 @@ function dumpFilter:processAbbr( node, opt )
    local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "##" )
 end
+
 
 
 return _moduleObj

@@ -775,7 +775,6 @@ function StreamParser:parse(  )
             local startIndex = 1
             while true do
                if token:find( '^[%d]', startIndex ) or token:find( '^-[%d]', startIndex ) then
-                  
                   local checkIndex = startIndex
                   if string.byte( token, 1 ) == 45 then
                      checkIndex = checkIndex + 1
@@ -864,7 +863,6 @@ function StreamParser:parse(  )
    
    while true do
       local syncIndexFlag = true
-      
       local pattern = [==[[/%-%?"%'%`].]==]
       local index = string.find( rawLine, pattern, searchIndex )
       if  nil == index then
@@ -890,12 +888,10 @@ function StreamParser:parse(  )
          if findChar == 47 then
             
             if nextChar == 42 then
-               
                local comment, nextIndex = multiComment( index + 2, "*/" )
                addVal( TokenKind.Cmnt, "/*" .. comment, index )
                searchIndex = nextIndex
             elseif nextChar == 47 then
-               
                addVal( TokenKind.Cmnt, rawLine:sub( index ), index )
                searchIndex = #rawLine + 1
             else
@@ -905,7 +901,6 @@ function StreamParser:parse(  )
             end
             
          elseif findChar == 39 or findChar == 34 then
-            
             local workIndex = index + 1
             local workPattern = '["\'\\]'
             while true do
@@ -913,18 +908,15 @@ function StreamParser:parse(  )
                if  nil == endIndex then
                   local _endIndex = endIndex
                
-                  
                   Util.err( string.format( "%s:%d:%d: error: illegal string -- %s", self:getStreamName(  ), self.lineNo, index, rawLine) )
                end
                
                local workChar = string.byte( rawLine, endIndex )
                if workChar == findChar then
-                  
                   addVal( TokenKind.Str, rawLine:sub( index, endIndex ), index )
                   searchIndex = endIndex + 1
                   break
                elseif workChar == 92 then
-                  
                   workIndex = endIndex + 2
                else
                 
@@ -935,7 +927,6 @@ function StreamParser:parse(  )
             
          elseif findChar == 96 then
             if (nextChar == findChar and string.byte( rawLine, index + 2 ) == 96 ) then
-               
                local txt, nextIndex = multiComment( index + 3, '```' )
                addVal( TokenKind.Str, '```' .. txt, index )
                searchIndex = nextIndex
@@ -1037,5 +1028,104 @@ function DummyParser:__init(  )
 
    Parser.__init( self)
 end
+
+
+local CommentLayer = {}
+_moduleObj.CommentLayer = CommentLayer
+function CommentLayer.new(  )
+   local obj = {}
+   CommentLayer.setmeta( obj )
+   if obj.__init then obj:__init(  ); end
+   return obj
+end
+function CommentLayer:__init() 
+   self.commentList = {}
+   self.tokenSet = {}
+   self.tokenList = {}
+end
+function CommentLayer:addDirect( commentList )
+
+   for __index, comment in pairs( commentList ) do
+      table.insert( self.commentList, comment )
+   end
+   
+end
+function CommentLayer:add( token )
+
+   if not _lune._Set_has(self.tokenSet, token ) then
+      self.tokenSet[token]= true
+      table.insert( self.tokenList, token )
+      
+      self:addDirect( token:get_commentList() )
+   end
+   
+end
+function CommentLayer:clear(  )
+
+   if #self.commentList ~= 0 then
+      self.commentList = {}
+      self.tokenSet = {}
+      self.tokenList = {}
+   end
+   
+end
+function CommentLayer:hasInvalidComment(  )
+
+   return #self.tokenList > 1 and self.tokenList[2]:get_commentList()[1] or nil
+end
+function CommentLayer.setmeta( obj )
+  setmetatable( obj, { __index = CommentLayer  } )
+end
+function CommentLayer:get_commentList()
+   return self.commentList
+end
+
+
+local CommentCtrl = {}
+_moduleObj.CommentCtrl = CommentCtrl
+function CommentCtrl.new(  )
+   local obj = {}
+   CommentCtrl.setmeta( obj )
+   if obj.__init then obj:__init(  ); end
+   return obj
+end
+function CommentCtrl:__init() 
+   self.layer = CommentLayer.new()
+   self.layerStack = {self.layer}
+end
+function CommentCtrl:push(  )
+
+   self.layer = CommentLayer.new()
+   table.insert( self.layerStack, self.layer )
+end
+function CommentCtrl:pop(  )
+
+   self.layer = self.layerStack[#self.layerStack]
+   table.remove( self.layerStack )
+end
+function CommentCtrl.setmeta( obj )
+  setmetatable( obj, { __index = CommentCtrl  } )
+end
+function CommentCtrl:addDirect( ... )
+   return self.layer:addDirect( ... )
+end
+
+function CommentCtrl:add( ... )
+   return self.layer:add( ... )
+end
+
+function CommentCtrl:clear( ... )
+   return self.layer:clear( ... )
+end
+
+function CommentCtrl:hasInvalidComment( ... )
+   return self.layer:hasInvalidComment( ... )
+end
+
+function CommentCtrl:get_commentList( ... )
+   return self.layer:get_commentList( ... )
+end
+
+
 
 return _moduleObj

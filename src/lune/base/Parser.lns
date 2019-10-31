@@ -195,7 +195,7 @@ pub class Token {
    pub let pos: &Position;
    /** 直前のトークンと連続しているトークンかどうか。 true の場合連続。 */
    pub let consecutive: bool;
-   pri let mut commentList: Token[] { pub };
+   pri let allmut commentList: &List<&Token> { pub& };
 
    pub fn __init( kind: TokenKind, txt: str, pos: &Position,
                   consecutive:bool, commentList: Token[]! )
@@ -222,7 +222,7 @@ pub class Token {
       error( "illegal delimit -- %s" (self.txt) );
    }
 
-   pub fn set_commentList( commentList: Token[] ) mut {
+   pub fn set_commentList( commentList: &List<&Token> ) {
       self.commentList = commentList;
    }
 }
@@ -757,4 +757,76 @@ pub class DummyParser extend Parser {
    pub override fn getStreamName(): str {
       return "dummy";
    }
+}
+
+pub class CommentLayer {
+   /** コメントトークンリスト */
+   pri let mut commentList: List<&Token> {pub};
+   /** commentList に追加したコメントを保持するトークンの Set */
+   pri let mut tokenSet: Set<&Token>;
+   /** commentList に追加したコメントを保持するトークンのリスト */
+   pri let mut tokenList: List<&Token>;
+
+   pub fn __init() {
+      self.commentList = [];
+      self.tokenSet = (@);
+      self.tokenList = [];
+   }
+
+   pub fn addDirect( commentList:&List<&Token> ) mut {
+      foreach comment in commentList {
+         self.commentList.insert( comment );
+      }
+      
+   }
+   pub fn add( token:&Token ) mut {
+      if not self.tokenSet.has( token ) {
+         self.tokenSet.add( token );
+         self.tokenList.insert( token );
+
+         self.addDirect( token.$commentList );
+      }
+   }
+
+   pub fn clear() mut {
+      if #self.commentList ~= 0 {
+         self.commentList = [];
+         self.tokenSet = (@);
+         self.tokenList = [];
+      }
+   }
+   
+
+   /**
+文の中途半端な位置にコメントがある調べる。
+ 
+たとえば、次のような箇所にコメントがあるかどうか。
+
+func( val1 コメント, val )
+*/
+   pub fn hasInvalidComment(): &Token! {
+      return #self.tokenList > 1 and self.tokenList[ 2 ].$commentList[1] or nil;
+   }
+}
+
+pub class CommentCtrl {
+   let mut layerStack:List<CommentLayer>;
+   let mut layer:CommentLayer;
+
+   pub fn __init() {
+      self.layer = new CommentLayer();
+      self.layerStack = [ self.layer ];
+   }
+   
+   pub fn push() mut {
+      self.layer = new CommentLayer();
+      self.layerStack.insert( self.layer );
+   }
+
+   pub fn pop() mut {
+      self.layer = self.layerStack[ #self.layerStack ];
+      self.layerStack.remove(##);
+   }
+
+   advertise layer;
 }

@@ -393,7 +393,16 @@ pub fn TransUnit.createAST(
    }
    else {
       let mut children:List<&Nodes.Node> = [];
-      lastStatement = self.analyzeStatementList( children ## );
+      let lastLineNo;
+      lastStatement, lastLineNo = self.analyzeStatementList( children ## );
+
+      let mut statement = Nodes.BlankLineNode.create(
+         self.nodeManager, new Parser.Position( lastLineNo + 1, 0 ),
+         [ Ast.builtinTypeNone ], 0 );
+      statement.addComment( self.commentCtrl.$commentList );
+      self.commentCtrl.clear();
+      children.insert( statement );
+      
 
       let mut token = self.getTokenNoErr();
       if token ~= Parser.getEofToken() {
@@ -895,6 +904,7 @@ fn TransUnit.analyzeDeclEnum(
    let name = self.getSymbolToken( .MustNot_ );
 
    self.checkNextToken( "{" );
+   self.commentCtrl.push();
 
    let mut valueList:List<&Parser.Token> = [];
    let mut valueName2Info:Map<str,Ast.EnumValInfo> = {};
@@ -996,6 +1006,8 @@ fn TransUnit.analyzeDeclEnum(
       number = number + 1;
    }
 
+   self.commentCtrl.pop();
+   
    if not enumTypeInfo {
       enumTypeInfo = Ast.NormalTypeInfo.createEnum(
          scope, self.getCurrentNamespaceTypeInfo(),

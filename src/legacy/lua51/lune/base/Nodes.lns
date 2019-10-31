@@ -186,7 +186,36 @@ pub abstract class Node {
    pri let kind: int { pub };
    pri let pos: &Parser.Position { pub };
    pri let expTypeList: &List<&Ast.TypeInfo> { pub };
+   let mut commentList: List<&Parser.Token>! { pub& };
+   let mut tailComment: &Parser.Token! { pub&,pub };
 
+   pub fn __init( id: int, kind: int,
+                  pos: &Parser.Position, expTypeList: &List<&Ast.TypeInfo> )
+   {
+      self.id = id;
+      self.kind = kind;
+      self.pos = pos;
+      self.expTypeList = expTypeList;
+      self.commentList = nil;
+      self.tailComment = nil;
+   }
+
+   pub fn addComment( commentList: &List<&Parser.Token> ) mut {
+      if #commentList ~= 0 {
+         let mut workList;
+         if! self.commentList {
+            workList = _exp;
+         }
+         else {
+            workList = [];
+            self.commentList = workList;
+         }
+         foreach comment in commentList {
+            workList.insert( comment );
+         }
+      }
+   }
+   
    pub fn get_expType(): &Ast.TypeInfo {
       if #self.expTypeList == 0 {
          return Ast.builtinTypeNone;

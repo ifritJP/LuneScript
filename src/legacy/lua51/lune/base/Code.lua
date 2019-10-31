@@ -52,4 +52,5 @@ local function isMessageOf( id, mess )
    return false
 end
 _moduleObj.isMessageOf = isMessageOf
+
 return _moduleObj

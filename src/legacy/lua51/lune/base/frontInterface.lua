@@ -263,7 +263,6 @@ local dummyFront = {}
 setmetatable( dummyFront, { ifList = {frontInterface,} } )
 function dummyFront:loadModule( mod )
 
-   
    return require( mod ), {}
 end
 function dummyFront:loadMeta( importModuleInfo, mod )
@@ -335,4 +334,5 @@ local function error( message )
    __luneScript:error( message )
 end
 _moduleObj.error = error
+
 return _moduleObj
