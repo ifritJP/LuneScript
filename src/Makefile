@@ -35,8 +35,14 @@ INSTALL=/usr/bin/install -c
 
 NDIR=$(shell pwd)
 
-.PHONY: help exec build build-glue accept-package
-.PHONY: check_lua_mod_dir install uninstall test-ccc test-comp build-cc
+.PHONY: help exec build build_from_d luarocks-check luarocks-check-sub
+.PHONY: release-check build test-save build-countup test-comp
+.PHONY: test-registered-rockspec test-etc test-error-all test-error test-org
+.PHONY: test-new test-parallel test-comp2 check-rockspec diff-result
+.PHONY: test-lua51 test-lua51-sub accept-package check-runtime-format
+.PHONY: check-meta-format build-glue check_lua_mod_dir install uninstall
+.PHONY: test-ccc clean-ccc build-miniC test-miniC test-subC build-cc test-formatter
+
 
 help:
 	@echo usage:
@@ -55,6 +61,24 @@ exec:
 	$(LUA) lune/base/base.lua test/test.lns ast
 	$(LUA) lune/base/base.lua test/test.lns LUA
 
+ifdef depend_on
+DEPENDS := $(shell find lune -iname '*.d')
+DEPENDS_META := $(patsubst %.d,%.meta,$(DEPENDS))
+
+include $(DEPENDS)
+
+$(DEPENDS_META):
+
+%.meta: %.lns
+	(cd $(FROM_DIR); \
+		LUA_PATH=./?.lua $(LUA) lune/base/base.lua $< SAVE $(TO_DIR) \
+			$(BYTECOMP) -Werror $(LOG_OPT) $(LNS_OPT))
+
+build_from_d: $(DEPENDS_META)
+
+endif
+
+
 
 define cutMeta
 	(cd work/$2/lune/base; cat $1.lua | awk '/^----- meta/{META++;}; //{if (META != 1) {print $$0}} ' > $1.cut.lua )
@@ -63,6 +87,11 @@ endef
 define transwork
 	(cd $1; LUA_PATH=./?.lua $(LUA) lune/base/base.lua lune/$4.lns SAVE $2 $3 $(BYTECOMP) -Werror $(LOG_OPT) )
 endef
+
+define transwork_dep
+	(cd $1; LUA_PATH=./?.lua $(LUA) lune/base/base.lua lune/$4.lns SAVE $2 --depends $2/lune/$4.d $3 $(BYTECOMP) -Werror $(LOG_OPT) )
+endef
+
 
 ifndef LNSC_ENABLE
 define exeLune
@@ -79,36 +108,45 @@ define exeComp
 			json_pp --json_opt=canonical,pretty | sort
 endef
 
-define buildLns
-	$(call transwork,$1,$2,$3,base/Ver)
-	$(call transwork,$1,$2,$3,base/LuaMod)
-	$(call transwork,$1,$2,$3,base/LuneControl)
-	$(call transwork,$1,$2,$3,base/Code)
-	$(call transwork,$1,$2,$3,base/Log)
-	$(call transwork,$1,$2,$3,base/LuaVer)
-	$(call transwork,$1,$2,$3,base/Depend)
-	$(call transwork,$1,$2,$3,base/Util)
-	$(call transwork,$1,$2,$3,base/frontInterface)
-	$(call transwork,$1,$2,$3,base/Writer)
-	$(call transwork,$1,$2,$3,base/Parser)
-	$(call transwork,$1,$2,$3,base/Ast)
-	$(call transwork,$1,$2,$3,base/Option)
-	$(call transwork,$1,$2,$3,base/Nodes)
-	$(call transwork,$1,$2,$3,base/Formatter)
-	$(call transwork,$1,$2,$3,base/dumpNode)
-	$(call transwork,$1,$2,$3,base/Macro)
-	$(call transwork,$1,$2,$3,base/TransUnit)
-	$(call transwork,$1,$2,$3,base/convLua)
-	$(call transwork,$1,$2,$3,base/convCC)
-	$(call transwork,$1,$2,$3,base/OutputDepend)
-	$(call transwork,$1,$2,$3,base/front)
-	$(call transwork,$1,$2,$3,base/glueFilter)
-	$(call transwork,$1,$2,$3,Util)
+define buildLnsOp
+	$(call $4,$1,$2,$3,base/Ver)
+	$(call $4,$1,$2,$3,base/LuaMod)
+	$(call $4,$1,$2,$3,base/LuneControl)
+	$(call $4,$1,$2,$3,base/Code)
+	$(call $4,$1,$2,$3,base/Log)
+	$(call $4,$1,$2,$3,base/LuaVer)
+	$(call $4,$1,$2,$3,base/Depend)
+	$(call $4,$1,$2,$3,base/Util)
+	$(call $4,$1,$2,$3,base/frontInterface)
+	$(call $4,$1,$2,$3,base/Writer)
+	$(call $4,$1,$2,$3,base/Parser)
+	$(call $4,$1,$2,$3,base/Ast)
+	$(call $4,$1,$2,$3,base/Option)
+	$(call $4,$1,$2,$3,base/Nodes)
+	$(call $4,$1,$2,$3,base/Formatter)
+	$(call $4,$1,$2,$3,base/dumpNode)
+	$(call $4,$1,$2,$3,base/Macro)
+	$(call $4,$1,$2,$3,base/TransUnit)
+	$(call $4,$1,$2,$3,base/convLua)
+	$(call $4,$1,$2,$3,base/convCC)
+	$(call $4,$1,$2,$3,base/OutputDepend)
+	$(call $4,$1,$2,$3,base/front)
+	$(call $4,$1,$2,$3,base/glueFilter)
+	$(call $4,$1,$2,$3,Util)
 	$(call exeLune,$1/$2,-mklunemod,lune/base/_lune.lua) > /dev/null
 	cat $1/$2/$(VER_PATH) | $(RUNTIME_VER_PICK) | \
 		awk '//{printf( "$1/$2/lune/base/_lune%s.lua",$$0);}' | \
 		xargs cp $1/$2/lune/base/_lune.lua 
 endef
+
+define buildLns
+	$(call buildLnsOp,$1,$2,$3,transwork)
+endef
+
+define buildLns_dep
+	$(call buildLnsOp,$1,$2,$3,transwork_dep)
+endef
+
 
 
 define build-testcode
@@ -202,6 +240,31 @@ define mk_lune_proj_dir
 	cp $(BUILD_COUNTER) $1
 endef
 
+
+# 第1引数のディレクト直下にある、第2引数のパターンファイルを、
+# 第3引数のディレクトリにコピーする
+define cp_src_set_sub
+	@find $1 -maxdepth 1 -type f \
+		-iname $2 -exec cp {} $3 \;
+endef
+
+# lns のビルドに必要なソース群をコピーする
+#
+# $1: コピー先ディレクトリ
+# $2: コピー元ディレクトリ
+define cp_src_set
+	mkdir -p $1/
+	cp $2/Makefile $1/
+	$(call mk_lune_proj_dir,$1)
+	$(call cp_src_set_sub,$2/lune/base,'base*.lua',$1/lune/base)
+	$(call cp_src_set_sub,$2/lune/base,'_lune*.lua',$1/lune/base)
+	$(call cp_src_set_sub,$2/lune/base,'*.lns',$1/lune/base)
+	$(call cp_src_set_sub,$2/lune/base,'*.d',$1/lune/base)
+#	@cp lune/base/base*.lua lune/base/*.lns lune/base/*.d $1/lune/base
+	$(call cp_src_set_sub,$2/lune,'*.lns',$1/lune)
+	$(call cp_src_set_sub,$2/lune,'*.d',$1/lune)
+endef
+
 # LuneScript 自身のソースを Lua に変換する。
 #
 # 次の手順で実行する。
@@ -231,19 +294,12 @@ test-comp:
 	mkdir -p work/glue
 	$(call mk_lune_proj_dir,work/1)
 	mkdir -p work/1/test
-	$(call mk_lune_proj_dir,work/2)
-	$(call mk_lune_proj_dir,work/3)
-	$(call mk_lune_proj_dir,work/5)
 	mkdir -p work/newglue
-	@cp lune/base/base*.lua lune/base/*.lns work/1/lune/base
-	@cp lune/*.lns work/1/lune
-	@cp lune/base/base*.lua lune/base/*.lns work/2/lune/base
-	@cp lune/*.lns work/2/lune
-	@cp lune/base/base*.lua lune/base/*.lns work/3/lune/base
-	@cp lune/*.lns work/3/lune
-	@cp lune/base/base*.lua lune/base/*.lns work/5/lune/base
-	@cp lune/*.lns work/5/lune
-	$(call buildLns,.,work/1)
+	$(call cp_src_set,work/1,.)
+	$(call buildLns_dep,.,work/1,)
+	$(call cp_src_set,work/2,work/1)
+	$(call cp_src_set,work/3,work/1)
+	$(call cp_src_set,work/5,work/1)
 	$(MAKE) check-runtime-format
 	$(MAKE) test-comp2
 
@@ -350,7 +406,11 @@ test-error:
 	-$(call exeLune,$(TEST_DIR),test/error/dis_mutable.lns,exe,2>&1)
 	rm $(TEST_DIR)/test/error/dis_mutable.lns
 
-test-comp2:
+
+# オリジナルの LuneScript のテストを行ない、結果を work/test1.resut に出力する
+test-org:
+	@echo $(MAKECMDGOALS)
+
 	$(call exeLune,.,test/start.lns,glue,work/glue 2>&1)
 	$(MAKE) build-glue
 	$(call exeLune,.,test/start.lns,exe,2>&1) > work/test1.result
@@ -379,14 +439,9 @@ test-comp2:
 #		sed 's/.*error:/error:/' >> work/test1.result
 
 
-# 新しいトランコンパイラで再度自分自身をコンパイルした結果が同じになることを確認する。
-	$(call buildLns,work/1,../2)
-	$(call buildLns,work/2,../3)
-	diff -r -I '_moduleObj.__buildId.*' -I '.*buildId = .*' work/2 work/3
-
-	cp -a test work/3
-#	$(call exeLune,work/3,-mklunemod,lune/base)
-
+# 新しくビルドした LuneScript のテストを行ない、結果を work/test2.resut に出力する
+test-new:
+	@echo $(MAKECMDGOALS)
 
 	$(call exeLune,work/3,test/start.lns,glue, ../newglue 2>&1)
 	$(MAKE) build-glue GLUE_DIR=work/newglue
@@ -414,35 +469,62 @@ test-comp2:
 
 
 
-
+test-new2:
+	cp -a work/3 work/3_2
 
 ## テストスクリプトを lua 化して、 lunescript なしで動かすテスト。
-	$(call build-testcode,work/3)
-	(cd work/3; $(LUA) test/start.lua) > work/test3.result
+	$(call build-testcode,work/3_2)
+	(cd work/3_2; $(LUA) test/start.lua) > work/test3.result
 
 # テストスクリプトを lua 化して、 _lune をロードしてテスト。
-	$(call build-testcode,work/3,-r)
-	(cd work/3; $(LUA) test/start.lua) > work/test4.result
+	$(call build-testcode,work/3_2,-r)
+	(cd work/3_2; $(LUA) test/start.lua) > work/test4.result
 
 # 使用するランタイム名指定してテスト
-	$(call exeLune,work/3,-mklunemod,runtime.lua) > /dev/null
-	$(call build-testcode,work/3,--runtime runtime )
+	$(call exeLune,work/3_2,-mklunemod,runtime.lua) > /dev/null
+	$(call build-testcode,work/3_2,--runtime runtime )
 # ランタイムを使用していることを確認するため _lune.lua を移動しておく
 	mkdir backup
-	mv work/3/lune/base/_lune*.lua backup
-	(cd work/3; $(LUA) test/start.lua) > work/test4-2.result
+	mv work/3_2/lune/base/_lune*.lua backup
+	(cd work/3_2; $(LUA) test/start.lua) > work/test4-2.result
 # _lune.lua を戻す
-	mv backup/* work/3/lune/base/
+	mv backup/* work/3_2/lune/base/
 	rmdir backup
 
-	$(call exeLune,work/3,test/start.lns,save,--depends start.dep)
+	$(call exeLune,work/3_2,test/start.lns,save,--depends start.dep)
 
 # オプション -u 付きで save して実行テスト
 	$(call mk_lune_proj_dir,work/4)
 	cp -a test work/4
-	cp -a work/3/lune work/4
-	$(call exeLune,work/3,test/start.lns,-u SAVE ../4,)
+	cp -a work/3_2/lune work/4
+	$(call exeLune,work/3_2,test/start.lns,-u SAVE ../4,)
 	(cd work/4; $(LUA) test/start.lua) > work/test5.result
+
+
+
+test-parallel: test-org test-new test-new2
+
+
+test-comp2:
+#	$(MAKE) test-org
+
+
+# 新しいトランコンパイラで再度自分自身をコンパイルした結果が同じになることを確認する。
+#	$(call buildLns,work/1,../2)
+#	$(call buildLns,work/2,../3)
+	$(MAKE) -C work/2 build_from_d depend_on=y FROM_DIR=../1 TO_DIR=../2
+	$(MAKE) -C work/3 build_from_d depend_on=y FROM_DIR=../2 TO_DIR=../3
+	diff -r -I '_moduleObj.__buildId.*' -I '.*buildId = .*' work/2 work/3
+
+
+	cp -a test work/3
+#	$(call exeLune,work/3,-mklunemod,lune/base)
+
+#	$(MAKE) test-new
+
+	$(MAKE) test-parallel
+
+
 
 ifeq ($(MAKECMDGOALS),test-comp2)
 ifdef LUA51
@@ -494,7 +576,7 @@ diff-result:
 	diff work/test3.result work/test4.result
 	diff work/test4.result work/test4-2.result
 	diff work/test4.result work/test5.result
-	diff work/1/start.dep work/3/start.dep
+	diff work/1/start.dep work/3_2/start.dep
 	diff -r work/glue work/newglue
 
 
@@ -507,7 +589,9 @@ endef
 
 test-lua51:
 # LuneScript を Lua 5.1 にクロスコンパイルして実行
-	$(call buildLns,work/3,../5,-ol 51)
+	$(MAKE) -C work/5 build_from_d depend_on=y \
+			FROM_DIR=../3 TO_DIR=../5 LNS_OPT="-ol 51"
+#	$(call buildLns,work/3,../5,-ol 51)
 	$(call exeLune,work/5,-mklunemod,lune/base/_lune.lua)
 	$(call setup-lua51-test,work/5)
 	(cd work/5; LUA_PATH=./?.lua $(LUA51) lune/base/base.lua test/start.lns -u exe ) > work/test6.result
@@ -530,9 +614,9 @@ test-lua51:
 
 test-lua51-sub:
 	$(call mk_lune_proj_dir,work/6)
-	@cp lune/base/base.lua lune/base/_lune.lua lune/base/*.lns work/6/lune/base
-	@cp lune/*.lns work/6/lune
-	$(call buildLns,work/5,../6)
+	$(call cp_src_set,work/6,work/1)
+	$(MAKE) -C work/6 build_from_d depend_on=y FROM_DIR=../5 TO_DIR=../6
+#	$(call buildLns,work/5,../6)
 	$(call setup-lua51-test,work/6)
 	$(call exeLune,work/6,-mklunemod,lune/base/_lune.lua)
 	$(call exeLune,work/6,test/start.lns,exe,) | sed 's/\.0//g' > work/test7.result
