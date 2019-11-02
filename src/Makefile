@@ -103,11 +103,6 @@ define exeLune
 endef
 endif
 
-define exeComp
-	echo lune | cat $3 - | $(call exeLune,$1,$2,comp -i,$4) | \
-			json_pp --json_opt=canonical,pretty | sort
-endef
-
 define buildLnsOp
 	$(call $4,$1,$2,$3,base/Ver)
 	$(call $4,$1,$2,$3,base/LuaMod)
@@ -394,7 +389,6 @@ test-error-all: $(TEST_CASE_LOGS)
 
 # エラー系テストケースを実行し、結果を stdout に出力する
 define test-error-all-case
-	-rm -rf $1
 	mkdir -p $1
 	$(MAKE) test-error-all LOG_DIR=$1 TEST_DIR=$2
 endef
@@ -410,10 +404,65 @@ test-error:
 	rm $(TEST_DIR)/test/error/dis_mutable.lns
 
 
+define exeComp
+	echo lune | cat $3 - | $(call exeLune,$1,$2,comp -i,$4) | \
+			json_pp --json_opt=canonical,pretty | sort
+endef
+
+
+#>>>>>>>>>>>>>>>>>>>>
+# 補完系テストを並列実行するための設定郡
+
+define path2mod
+	$(shell echo $1 | sed 's:\.lns$$::g' | sed 's:/:.:g')
+endef
+
+define exec_compl-wrap2
+	$(call exeComp,$(TEST_DIR),$1,$2,$(call path2mod,$2) $3)
+endef
+
+# ダミーのターゲットから目的の文字列を切り出す処理
+define strip_1
+	$(shell echo $1 | sed 's:@1_.*::')
+endef
+define strip_2
+	$(shell echo $1 | sed 's:.*@1_\(.*\)@2_.*:\1:')
+endef
+define strip_3
+	$(shell echo $1 | sed 's:.*@2_\(.*\).comp:\1:' | sed 's:\.: :' )
+endef
+
+%.comp:
+	$(call exec_compl-wrap2,$(call strip_1,$@),$(call strip_2,$@),$(call strip_3,$@)) > \
+		$(LOG_DIR)/$(notdir $(call strip_1,$@))
+#<<<<<<<<<<<<<<<<<<<<
+
+# 補完にかけるファイルのパターン。
+# PATH1@1_PATH2@2_POS.comp
+#  PATH1: 解析にかける lns ファイルパス
+#  PATH2: 補完対象の lns ファイルパス
+#  POS: 補完対象の位置 (line.column)
+COMP_TARGETS += test/comp.lns@1_test/comp.lns@2_17.7.comp
+COMP_TARGETS += test/comp-2.lns@1_test/comp-2.lns@2_17.7.comp
+COMP_TARGETS += test/comp-3.lns@1_test/comp-3.lns@2_17.7.comp
+COMP_TARGETS += test/comp-4.lns@1_test/comp-4.lns@2_17.12.comp
+COMP_TARGETS += test/comp-5.lns@1_test/comp-5.lns@2_17.15.comp
+COMP_TARGETS += test/comp2.lns@1_test/compSub.lns@2_5.6.comp
+COMP_TARGETS += test/comp4.lns@1_test/comp4.lns@2_9.8.comp
+COMP_TARGETS += test/comp5.lns@1_test/comp5.lns@2_7.7.comp
+COMP_TARGETS += test/comp6.lns@1_test/comp6.lns@2_3.2.comp
+COMP_TARGETS += test/comp7.lns@1_test/comp7.lns@2_6.7.comp
+COMP_TARGETS += test/comp8.lns@1_test/comp8.lns@2_4.15.comp
+
+
+
+# コード補完のテスト
+test-compl: $(COMP_TARGETS)
+	find $(LOG_DIR) -type f | sort | xargs cat >> $(LOG_FILE)
+
+
 # オリジナルの LuneScript のテストを行ない、結果を work/test1.resut に出力する
 test-org:
-	@echo $(MAKECMDGOALS)
-
 	$(call exeLune,.,test/start.lns,glue,work/glue 2>&1)
 	$(MAKE) build-glue
 	$(call exeLune,.,test/start.lns,exe,2>&1) > work/test1.result
@@ -423,51 +472,43 @@ test-org:
 
 
 	grep -v 'warning:' work/test1.result > work/test.result
-	$(call exeComp,.,test/comp.lns,test/comp.lns,test.comp 17 7) >> work/test1.result
-	$(call exeComp,.,test/comp-2.lns,test/comp-2.lns,test.comp-2 17 7) >> work/test1.result
-	$(call exeComp,.,test/comp-3.lns,test/comp-3.lns,test.comp-3 17 7) >> work/test1.result
-	$(call exeComp,.,test/comp-4.lns,test/comp-4.lns,test.comp-4 17 12) >> work/test1.result
-	$(call exeComp,.,test/comp-5.lns,test/comp-5.lns,test.comp-5 17 15) >> work/test1.result
-	$(call exeComp,.,test/comp2.lns,test/compSub.lns,test.compSub 5 6) >> work/test1.result
-	$(call exeComp,.,test/comp4.lns,test/comp4.lns,test.comp4 9 8) >> work/test1.result
-	$(call exeComp,.,test/comp5.lns,test/comp5.lns,test.comp5 7 7) >> work/test1.result
-	$(call exeComp,.,test/comp6.lns,test/comp6.lns,test.comp6 3 3) >> work/test1.result
-	$(call exeComp,.,test/comp7.lns,test/comp7.lns,test.comp7 6 7) >> work/test1.result
-	$(call exeComp,.,test/comp8.lns,test/comp8.lns,test.comp8 4 15) >> work/test1.result
-	$(MAKE) -s TEST_DIR=. LOG_DIR=work/1/log test-error | grep -e 'error:' -e 'warning:' >> work/test1.result
+
+	mkdir -p work/0/log/comp
+	$(MAKE) test-compl TEST_DIR=. LOG_DIR=work/0/log/comp LOG_FILE=work/test1.result
+
+	$(MAKE) -s TEST_DIR=. LOG_DIR=work/0/log test-error | \
+		grep -e 'error:' -e 'warning:' >> work/test1.result
 	$(MAKE) TEST_DIR=. test-etc >> work/test1.result
+
+test-org-proj:
 	$(MAKE) -C test/proj/ test MKFILE=Makefile SRC_DIR= 2>&1 | \
-		grep -v /test/proj >> work/test1.result
+		grep -v /test/proj > work/0/log/proj
 
 #		sed 's/.*error:/error:/' >> work/test1.result
 
 
+
+
 # 新しくビルドした LuneScript のテストを行ない、結果を work/test2.resut に出力する
 test-new:
-	@echo $(MAKECMDGOALS)
-
 #	$(call exeLune,work/3,test/start.lns,glue, ../newglue 2>&1)
 #	$(MAKE) build-glue GLUE_DIR=work/newglue
 
 	$(call exeLune,work/3,test/start.lns,ast,) > work/ast2.result
 	$(call exeLune,work/3,test/start.lns,lua,) > work/lua.result
-	$(call exeLune,work/3,test/start.lns,exe,2>&1) | tee work/test2.result
-	$(call exeComp,work/3,test/comp.lns,test/comp.lns,test.comp 17 7) | tee -a work/test2.result
-	$(call exeComp,work/3,test/comp-2.lns,test/comp-2.lns,test.comp-2 17 7) | tee -a work/test2.result
-	$(call exeComp,work/3,test/comp-3.lns,test/comp-3.lns,test.comp-3 17 7) | tee -a work/test2.result
-	$(call exeComp,work/3,test/comp-4.lns,test/comp-4.lns,test.comp-4 17 12) | tee -a work/test2.result
-	$(call exeComp,work/3,test/comp-5.lns,test/comp-5.lns,test.comp-5 17 15) | tee -a work/test2.result
-	$(call exeComp,work/3,test/comp2.lns,test/compSub.lns,test.compSub 5 6) | tee -a work/test2.result
-	$(call exeComp,work/3,test/comp4.lns,test/comp4.lns,test.comp4 9 8) | tee -a work/test2.result
-	$(call exeComp,work/3,test/comp5.lns,test/comp5.lns,test.comp5 7 7) | tee -a work/test2.result
-	$(call exeComp,work/3,test/comp6.lns,test/comp6.lns,test.comp6 3 2) | tee -a work/test2.result
-	$(call exeComp,work/3,test/comp7.lns,test/comp7.lns,test.comp7 6 7) | tee -a work/test2.result
-	$(call exeComp,work/3,test/comp8.lns,test/comp8.lns,test.comp8 4 15) | tee -a work/test2.result
-	$(MAKE) -s TEST_DIR=work/3 LOG_DIR=work/3/log  test-error | grep -e 'error:' -e 'warning:' | \
-				tee -a work/test2.result
+	$(call exeLune,work/3,test/start.lns,exe,2>&1) > work/test2.result
+
+
+	mkdir -p work/3/log/comp
+	$(MAKE) test-compl TEST_DIR=work/3 LOG_DIR=work/3/log/comp LOG_FILE=work/test2.result
+
+	$(MAKE) -s TEST_DIR=work/3 LOG_DIR=work/3/log  test-error | \
+		grep -e 'error:' -e 'warning:' >> work/test2.result
 	$(MAKE) TEST_DIR=work/3 test-etc >> work/test2.result
+
+test-new-proj:
 	$(MAKE) -C work/3/test/proj/ test MKFILE=Makefile SRC_DIR= 2>&1 | \
-			grep -v /test/proj >> work/test2.result
+		grep -v /test/proj > work/3/log/proj
 #sed 's/.*error:/error:/' | tee -a work/test2.result
 
 
@@ -503,7 +544,8 @@ test-new2:
 
 
 
-test-parallel: test-org test-new test-new2
+test-parallel: test-org test-org-proj \
+			test-new test-new-proj test-new2
 
 
 test-comp2:
@@ -529,7 +571,12 @@ test-comp2:
 	cp -a work/3 work/3_2
 
 
+	mkdir -p work/0/log
+	mkdir -p work/3/log
+
 	$(MAKE) test-parallel
+	cat work/0/log/proj >> work/test1.result
+	cat work/3/log/proj >> work/test2.result
 
 
 
