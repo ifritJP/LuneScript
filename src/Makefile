@@ -112,6 +112,7 @@ define buildLnsOp
 	$(call $4,$1,$2,$3,base/Ver)
 	$(call $4,$1,$2,$3,base/LuaMod)
 	$(call $4,$1,$2,$3,base/LuneControl)
+	$(call $4,$1,$2,$3,base/Testing)
 	$(call $4,$1,$2,$3,base/Code)
 	$(call $4,$1,$2,$3,base/Log)
 	$(call $4,$1,$2,$3,base/LuaVer)
@@ -377,6 +378,8 @@ TEST_CASE += form.lns
 TEST_CASE += ddd.lns
 TEST_CASE += immediate.lns
 TEST_CASE += macro.lns
+TEST_CASE += macro2.lns
+TEST_CASE += macro3.lns
 TEST_CASE_SRCS := $(addprefix test/error/,$(TEST_CASE))
 TEST_CASE_LOGS := $(addprefix $(LOG_DIR)/,$(addsuffix .log,$(TEST_CASE)))
 

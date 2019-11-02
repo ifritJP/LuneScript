@@ -157,8 +157,9 @@ fn TransUnit.analyzeExpList(
          pos = exp.$pos;
       }
       if expectType == Ast.builtinTypeExp {
-         exp = Nodes.ExpMacroStatNode.create(
-            self.nodeManager, exp.$pos, exp.$expTypeList, [ exp ], .Exp );
+         exp = Nodes.ExpMacroArgExpNode.create(
+            self.nodeManager, exp.$pos, exp.$expTypeList,
+            Macro.nodeToCodeTxt( exp, self.moduleType ) );
       }
       
       expList.insert( exp );
@@ -867,6 +868,13 @@ fn TransUnit.evalMacroOp(
    evalMacroCallback();
 
    self.macroCtrl.finishMacroMode();
+
+   let nextToken = self.getTokenNoErr();
+   if nextToken ~= Parser.getEofToken() {
+      self.addErrMess( firstToken.pos,
+                       "remain macro expand-statement token -- %s" (nextToken.txt) );
+   }
+   
    self.parser = bakParser;
 }
 
@@ -879,13 +887,45 @@ fn TransUnit.evalMacro(
    
    self.evalMacroOp( firstToken, macroTypeInfo, expList,
                      fn () {
-                        self.analyzeStatementList( stmtList, "}" );
+                        if #macroTypeInfo.$retTypeInfoList == 0 {
+                           self.analyzeStatementList( stmtList, "}" );
+                        }
+                        else {
+                           stmtList.insert( self.analyzeExp( false, false ## ) );
+                        }
                      } );
 
    // return self.createNode(
    //     nodeKindExpMacroExp, firstToken.pos, builtinTypeNone, stmtList );
+
+   let expTypeList;
+   if #macroTypeInfo.$retTypeInfoList ~= 0 {
+      expTypeList = macroTypeInfo.$retTypeInfoList;
+      if #stmtList == 1 {
+         let node = stmtList[ 1 ];
+         if #node.$expTypeList == 1 {
+            if not expTypeList[ 1 ].equals( node.$expType ## ) {
+               self.addErrMess( firstToken.pos,
+                                "mismatch type -- %s != %s"
+                                (expTypeList[ 1 ].getTxt(##),
+                                  node.$expType.getTxt(##)) );
+            }
+         }
+         else {
+            self.addErrMess( firstToken.pos,
+                             "macro can't return multipul values." );
+         }
+      }
+      else {
+         self.addErrMess( firstToken.pos, "nothing exp" );
+      }
+   }
+   else {
+      expTypeList = [ Ast.builtinTypeNone ];
+   }
+   
    return Nodes.ExpMacroExpNode.create(
-      self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ], stmtList );
+      self.nodeManager, firstToken.pos, expTypeList, stmtList );
 }
 
 /**
@@ -1336,7 +1376,7 @@ fn TransUnit.analyzeExpCall(
       exp = processFunc();
    }
 
-   return exp, self.getToken(##);
+   return exp, self.getTokenNoErr();
 }
 
 fn TransUnit.analyzeExpCast(
@@ -2300,7 +2340,7 @@ fn TransUnit.analyzeExpOp2(
    firstToken: &Parser.Token, mut exp: Nodes.Node, prevOpLevel: int! ) mut : Nodes.Node
 {
    while true {
-      let nextToken = self.getToken(##);
+      let nextToken = self.getTokenNoErr();
       let opTxt = nextToken.txt;
 
       if nextToken.txt == "@@" or nextToken.txt == "@@@" or nextToken.txt ==  "@@=" {
@@ -2702,7 +2742,7 @@ fn TransUnit.analyzeExpMacroStat( firstToken: &Parser.Token ) mut : Nodes.ExpMac
    }
 
    return Nodes.ExpMacroStatNode.create(
-      self.nodeManager, firstToken.pos, [ Ast.builtinTypeStat ], expStrList, .Stat );
+      self.nodeManager, firstToken.pos, [ Ast.builtinTypeStat ], expStrList );
 }
 
 

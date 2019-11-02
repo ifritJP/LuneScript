@@ -1296,3 +1296,7 @@ print( '\\""\"\'\\.\\' );
    let test = SUB2.test3;
    test.func();
 }
+{
+   Macro._section();
+   print( SUB2._Test() );
+}

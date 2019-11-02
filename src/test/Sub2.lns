@@ -233,3 +233,6 @@ pub class Test3 {
    }
 }
 pub let test3 = new Test3( new Hoge3( 100 ) );
+pub macro _Test():int {
+   1
+}

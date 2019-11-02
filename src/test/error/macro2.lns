@@ -1,0 +1,5 @@
+macro _hoge():int {
+   1, 2  // error
+}
+
+print( _hoge() );  // error

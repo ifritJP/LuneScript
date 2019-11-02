@@ -26,6 +26,7 @@ import lune.base.Util;
 import lune.base.Nodes;
 import lune.base.Ast;
 import lune.base.Parser;
+import lune.base.Formatter;
 
 class MacroMetaArgInfo extend (Mapping) {
    pub let name:str;
@@ -202,6 +203,7 @@ pub fn MacroCtrl.evalMacroOp(
                  Nodes.NodeKind.$LiteralSymbol,
                  Nodes.NodeKind.$RefField,
                  Nodes.NodeKind.$ExpMacroStat,
+                 Nodes.NodeKind.$ExpMacroArgExp,
                  Nodes.NodeKind.$ExpOmitEnum,
                  Nodes.NodeKind.$ExpCast
             {
@@ -422,6 +424,12 @@ fn expandVal( tokenList:List<&Parser.Token>, val: stem!, pos: &Parser.Position )
    return nil;
 }
 
+/**
+macro-expand 内のトークン処理。
+
+,, や ,,,の展開を行なう。
+
+*/
 pub fn MacroCtrl.expandMacroVal(
    typeNameCtrl:&Ast.TypeNameCtrl, scope:&Ast.Scope,
    parser:Parser.PushbackParser, mut token:&Parser.Token ) mut : &Parser.Token
@@ -522,6 +530,10 @@ pub fn MacroCtrl.expandMacroVal(
                nextToken.kind, (unwrap macroVal.val)@@str, nextToken.pos, false ## );
             parser.pushbackToken( nextToken );
          }
+         else {
+            parser.error( "',,,' does not support this type -- %s"
+                          (macroVal.typeInfo.getTxt(##)) );
+         }
       }
       elseif tokenTxt == ',,,,' {
          if macroVal.typeInfo.equals( Ast.builtinTypeSymbol ## ) {
@@ -598,7 +610,7 @@ pub fn MacroCtrl.expandSymbol(
                   new ErrorMess(    
                      refToken.pos, "not support ,, -- %s" (valType.getTxt(##)) ) );
             }
-         }  
+         }
          else {
             if exp.$expType.equals( Ast.builtinTypeInt ##) or
                exp.$expType.equals( Ast.builtinTypeReal ##)
@@ -655,4 +667,15 @@ pub fn MacroCtrl.switchMacroMode() mut {
 
 pub fn MacroCtrl.restoreMacroMode() mut {
    self.macroMode = .AnalyzeArg;
+}
+
+
+pub fn nodeToCodeTxt(node:&Nodes.Node, moduleTypeInfo:&Ast.TypeInfo ):str
+{
+   let mut memStream = new Util.memStream();
+   let mut formatter = Formatter.createFilter( moduleTypeInfo, memStream );
+
+   node.processFilter( formatter, new Formatter.Opt( node ) );
+   
+   return memStream.$txt;
 }

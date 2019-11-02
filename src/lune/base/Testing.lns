@@ -1,0 +1,54 @@
+pub proto class Ctrl;
+
+let mut ctrlList:List<Ctrl> = [];
+
+pub fn getCtrlList() : &List<&Ctrl> {
+   return ctrlList;
+}
+
+pub class Ctrl {
+   let mut okNum:int {pub};
+   let mut ngNum:int {pub};
+
+   pub fn __init() {
+      self.okNum = 0;
+      self.ngNum = 0;
+      ctrlList.insert( self );
+   }
+   
+   pub fn checkEq(
+      val1:stem, val2:stem, val1txt:str, val2txt:str, mod:str, lineNo:int ) mut : bool
+   {
+      if val1 == val2 {
+         self.okNum = self.okNum + 1;
+         return true;
+      }
+      self.ngNum = self.ngNum + 1;
+      io.stderr.write(
+         "error:%s:%d: not equal -- %s:[%s] != %s:[%s]\n"
+         ( mod, lineNo, val1txt, val1, val2txt, val2 ) );
+      return false;
+   }
+
+   pub fn checkNotEq(
+      val1:stem, val2:stem, val1txt:str, val2txt:str, mod:str, lineNo:int ) mut : bool
+   {
+      if val1 ~= val2 {
+         self.okNum = self.okNum + 1;
+         return true;
+      }
+      self.ngNum = self.ngNum + 1;
+      io.stderr.write(
+         "error:%s:%d: equal -- %s:[%s] == %s:[%s]\n"
+         ( mod, lineNo, val1txt, val1, val2txt, val2 ) );
+      return false;
+   }
+}
+
+pub macro _eq( ctrl:sym, val1:__exp, val2:__exp ): bool {
+   ,,ctrl.checkEq( ,,val1, ,,val2, ,,,,val1, ,,,,val2, __mod__, __line__ )
+}
+
+pub macro _neq( ctrl:sym, val1:__exp, val2:__exp ): bool {
+   ,,ctrl.checkEq( ,,val1, ,,val2, ,,,,val1, ,,,,val2, __mod__, __line__ )
+}

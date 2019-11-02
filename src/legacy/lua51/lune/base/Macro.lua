@@ -269,6 +269,7 @@ local Util = _lune.loadModule( 'lune.base.Util' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
+local Formatter = _lune.loadModule( 'lune.base.Formatter' )
 
 local MacroMetaArgInfo = {}
 setmetatable( MacroMetaArgInfo, { ifList = {Mapping,} } )
@@ -556,7 +557,7 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
          local kind = exp:get_kind()
          do
             local _switchExp = kind
-            if _switchExp == Nodes.NodeKind.get_LiteralNil() or _switchExp == Nodes.NodeKind.get_LiteralChar() or _switchExp == Nodes.NodeKind.get_LiteralInt() or _switchExp == Nodes.NodeKind.get_LiteralReal() or _switchExp == Nodes.NodeKind.get_LiteralArray() or _switchExp == Nodes.NodeKind.get_LiteralList() or _switchExp == Nodes.NodeKind.get_LiteralMap() or _switchExp == Nodes.NodeKind.get_LiteralString() or _switchExp == Nodes.NodeKind.get_LiteralBool() or _switchExp == Nodes.NodeKind.get_LiteralSymbol() or _switchExp == Nodes.NodeKind.get_RefField() or _switchExp == Nodes.NodeKind.get_ExpMacroStat() or _switchExp == Nodes.NodeKind.get_ExpOmitEnum() or _switchExp == Nodes.NodeKind.get_ExpCast() then
+            if _switchExp == Nodes.NodeKind.get_LiteralNil() or _switchExp == Nodes.NodeKind.get_LiteralChar() or _switchExp == Nodes.NodeKind.get_LiteralInt() or _switchExp == Nodes.NodeKind.get_LiteralReal() or _switchExp == Nodes.NodeKind.get_LiteralArray() or _switchExp == Nodes.NodeKind.get_LiteralList() or _switchExp == Nodes.NodeKind.get_LiteralMap() or _switchExp == Nodes.NodeKind.get_LiteralString() or _switchExp == Nodes.NodeKind.get_LiteralBool() or _switchExp == Nodes.NodeKind.get_LiteralSymbol() or _switchExp == Nodes.NodeKind.get_RefField() or _switchExp == Nodes.NodeKind.get_ExpMacroStat() or _switchExp == Nodes.NodeKind.get_ExpMacroArgExp() or _switchExp == Nodes.NodeKind.get_ExpOmitEnum() or _switchExp == Nodes.NodeKind.get_ExpCast() then
             else 
                
                   local mess = string.format( "Macro arguments must be literal value. -- %d:%d:%s", exp:get_pos().lineNo, exp:get_pos().column, Nodes.getNodeKindName( kind ))
@@ -825,6 +826,9 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
          if macroVal.typeInfo:equals( Ast.builtinTypeString ) then
             nextToken = Parser.Token.new(nextToken.kind, (_lune.unwrap( macroVal.val) ), nextToken.pos, false)
             parser:pushbackToken( nextToken )
+         else
+          
+            parser:error( string.format( "',,,' does not support this type -- %s", macroVal.typeInfo:getTxt(  )) )
          end
          
       elseif tokenTxt == ',,,,' then
@@ -965,5 +969,16 @@ function MacroCtrl:restoreMacroMode(  )
    self.macroMode = Nodes.MacroMode.AnalyzeArg
 end
 
+
+local function nodeToCodeTxt( node, moduleTypeInfo )
+
+   local memStream = Util.memStream.new()
+   local formatter = Formatter.createFilter( moduleTypeInfo, memStream )
+   
+   node:processFilter( formatter, Formatter.Opt.new(node) )
+   
+   return memStream:get_txt()
+end
+_moduleObj.nodeToCodeTxt = nodeToCodeTxt
 
 return _moduleObj

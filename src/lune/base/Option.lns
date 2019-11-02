@@ -118,7 +118,11 @@ pub class Option {
    /** true の場合 C への変換を行なう */
    pub let mut convertC:bool;
 
+   /** テストする時 true */
+   pub let mut testing:bool;
+
    pub fn __init() {
+      self.testing = false;
       self.convertC = false;
       self.validProf = false;
       self.mode = .Unknown;
@@ -302,6 +306,9 @@ usage:
                      Util.errorLog( "illegal level -- %s" ( txt ) );
                   }
                }
+            }
+            case "--testing" {
+               option.testing = true;
             }
             case "--depends" {
                option.dependsPath = getNextOp();

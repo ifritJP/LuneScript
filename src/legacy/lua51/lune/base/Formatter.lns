@@ -42,17 +42,17 @@ class FormatterFilter extend Nodes.Filter<Opt> {
    let mut stream:Util.SimpleSourceOStream;
 
    pub fn __init( moduleTypeInfo:&Ast.TypeInfo,
-                  moduleInfoManager:&Ast.ModuleInfoManager! )
+                  moduleInfoManager:&Ast.ModuleInfoManager!, stream:oStream )
    {
       super( moduleTypeInfo, moduleInfoManager );
-      self.stream = new Util.SimpleSourceOStream( io.stdout, nil, 3 );
+      self.stream = new Util.SimpleSourceOStream( stream, nil, 3 );
    }
 
    advertise stream;
 }
 
-pub fn createFilter( moduleTypeInfo:&Ast.TypeInfo ): Nodes.Filter<Opt> {
-   return new FormatterFilter(moduleTypeInfo, moduleTypeInfo.$scope);
+pub fn createFilter( moduleTypeInfo:&Ast.TypeInfo, stream:oStream ): Nodes.Filter<Opt> {
+   return new FormatterFilter(moduleTypeInfo, moduleTypeInfo.$scope, stream );
 }
 
 fn filter( node: &Nodes.Node, filter: FormatterFilter, opt:Opt ) {

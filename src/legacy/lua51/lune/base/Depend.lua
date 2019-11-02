@@ -75,6 +75,14 @@ function _lune._toSet( val, toKeyInfo )
    return nil
 end
 
+function _lune.loadstring51( txt, env )
+   local func = loadstring( txt )
+   if func and env then
+      setfenv( func, env )
+   end
+   return func
+end
+
 function _lune.nilacc( val, fieldName, access, ... )
    if not val then
       return nil
@@ -254,5 +262,12 @@ local function searchpath( mod, pathPattern )
    return searchpathForm( mod, pathPattern )
 end
 _moduleObj.searchpath = searchpath
+
+local function getLoadedMod(  )
+
+   local loaded = _lune.nilacc( _lune.loadstring51( "return package.loaded" ), nil, 'call' )
+   return (_lune.unwrap( loaded) )
+end
+_moduleObj.getLoadedMod = getLoadedMod
 
 return _moduleObj

@@ -364,15 +364,16 @@ end
 
 local convFilter = {}
 setmetatable( convFilter, { __index = Nodes.Filter,ifList = {oStream,} } )
-function convFilter.new( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer )
+function convFilter.new( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest )
    local obj = {}
    convFilter.setmeta( obj )
-   if obj.__init then obj:__init( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer ); end
+   if obj.__init then obj:__init( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest ); end
    return obj
 end
-function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer) 
+function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest) 
    Nodes.Filter.__init( self,moduleTypeInfo, moduleTypeInfo:get_scope())
    
+   self.enableTest = enableTest
    self.macroVarSymSet = {}
    self.needModuleObj = true
    self.indentQueue = {0}
@@ -911,7 +912,7 @@ function convFilter:outputMeta( node )
             if stmtBlock ~= nil then
                local memStream = Util.memStream.new()
                
-               local filter = convFilter.new(declInfo:get_name().txt, memStream, memStream, ConvMode.Convert, false, Ast.headTypeInfo, Ast.SymbolKind.Typ, self.useLuneRuntime, self.targetLuaVer)
+               local filter = convFilter.new(declInfo:get_name().txt, memStream, memStream, ConvMode.Convert, false, Ast.headTypeInfo, Ast.SymbolKind.Typ, self.useLuneRuntime, self.targetLuaVer, self.enableTest)
                
                filter.macroDepth = filter.macroDepth + 1
                filter:processBlock( stmtBlock, Opt.new(node) )
@@ -3649,6 +3650,15 @@ function convFilter:processLuneKind( node, opt )
 end
 
 
+function convFilter:processTestBlock( node, opt )
+
+   if self.enableTest then
+      filter( node:get_block(), self, node )
+   end
+   
+end
+
+
 function convFilter:processProvide( node, opt )
 
 end
@@ -3861,9 +3871,9 @@ function convFilter:processLuneControl( node, opt )
 end
 
 
-local function createFilter( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer )
+local function createFilter( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest )
 
-   return convFilter.new(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer)
+   return convFilter.new(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest)
 end
 _moduleObj.createFilter = createFilter
 
@@ -3885,7 +3895,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3247, function (  )
+   Log.log( Log.Level.Info, __func__, 3256, function (  )
    
       return string.format( "code: %s", code)
    end )
@@ -3910,7 +3920,7 @@ end
 function MacroEvalImp:evalFromCode( name, argNameList, code )
 
    local oStream = Util.memStream.new()
-   local conv = convFilter.new("macro", oStream, oStream, ConvMode.Exec, true, Ast.headTypeInfo, Ast.SymbolKind.Typ, nil, LuaVer.curVer)
+   local conv = convFilter.new("macro", oStream, oStream, ConvMode.Exec, true, Ast.headTypeInfo, Ast.SymbolKind.Typ, nil, LuaVer.curVer, false)
    
    conv:outputDeclMacro( name, argNameList, function (  )
    
@@ -3925,7 +3935,7 @@ end
 function MacroEvalImp:eval( node )
 
    local oStream = Util.memStream.new()
-   local conv = convFilter.new("macro", oStream, oStream, ConvMode.Exec, true, Ast.headTypeInfo, Ast.SymbolKind.Typ, nil, LuaVer.curVer)
+   local conv = convFilter.new("macro", oStream, oStream, ConvMode.Exec, true, Ast.headTypeInfo, Ast.SymbolKind.Typ, nil, LuaVer.curVer, false)
    
    conv:processDeclMacro( node, Opt.new(node) )
    

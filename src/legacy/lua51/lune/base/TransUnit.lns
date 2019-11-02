@@ -1452,7 +1452,7 @@ _DefBuiltinFuncType( [
          "_fcall": { "arg": [ "form", "&..." ], "ret": [""] },
          "_load": { "arg": [ "str", "stem!" ], "ret": ["__loadedfunc!", "str!"] },
          "_kind": { "arg": [ "stem!" ], "ret":[ "int" ] },
-         "__eq": { "type": [ "macro" ], "arg": [ "stat", "stat" ], "ret":[ ] },
+         "__eq": { "type": [ "macro" ], "arg": [ "__exp", "__exp" ], "ret":[ ] },
       },
    },
    {

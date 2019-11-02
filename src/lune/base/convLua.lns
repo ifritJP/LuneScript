@@ -93,15 +93,16 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
    pri let mut needModuleObj: bool;
    pri let useLuneRuntime: str!;
    pri let targetLuaVer:&LuaVer.LuaVerInfo;
+   pri let enableTest:bool;
 
 
    pub fn __init( streamName: str, stream: oStream, metaStream: oStream,
                   convMode: ConvMode, inMacro: bool, moduleTypeInfo: &Ast.TypeInfo,
                   moduleSymbolKind: Ast.SymbolKind, useLuneRuntime: str!,
-                  targetLuaVer:&LuaVer.LuaVerInfo )
+                  targetLuaVer:&LuaVer.LuaVerInfo, enableTest:bool  )
    {
       super(moduleTypeInfo, moduleTypeInfo.$scope);
-      //Util.errorLog( "__init: %s" (mode) );
+      self.enableTest = enableTest;
       self.macroVarSymSet = (@);
       self.needModuleObj = true;
       self.indentQueue = [ 0 ];
@@ -590,7 +591,8 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
 
             let mut filter = new convFilter(
                declInfo.$name.txt, memStream, memStream, .Convert, false,
-               Ast.headTypeInfo, .Typ, self.useLuneRuntime, self.targetLuaVer );
+               Ast.headTypeInfo, .Typ, self.useLuneRuntime,
+               self.targetLuaVer, self.enableTest );
 
             filter.macroDepth = filter.macroDepth + 1;
             filter.processBlock( stmtBlock, new Opt( node ) );
@@ -3031,7 +3033,14 @@ pub override fn convFilter.processLuneKind( node: Nodes.LuneKindNode, opt: Opt )
       self.write( "%d" ( node.$exp.$expType.$kind ) );
    }
 }
-   
+
+
+pub override fn convFilter.processTestBlock( node: Nodes.TestBlockNode, opt: Opt ) mut
+{
+   if self.enableTest {
+      filter( node.$block, self, node );
+   }
+}
 
 pub override fn convFilter.processProvide(
    node: Nodes.ProvideNode, opt: Opt ) mut
@@ -3220,11 +3229,11 @@ pub fn createFilter(
    streamName: str, stream: oStream, metaStream: oStream,
    convMode: ConvMode, inMacro: bool, moduleTypeInfo: &Ast.TypeInfo,
    moduleSymbolKind: &Ast.SymbolKind, useLuneRuntime:str!,
-   targetLuaVer:&LuaVer.LuaVerInfo ) : Nodes.Filter<Opt>
+   targetLuaVer:&LuaVer.LuaVerInfo, enableTest:bool ) : Nodes.Filter<Opt>
 {
    return new convFilter(
       streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo,
-      moduleSymbolKind, useLuneRuntime, targetLuaVer );
+      moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest );
 }
 
 
@@ -3266,7 +3275,7 @@ pub class MacroEvalImp extend Nodes.MacroEval {
       let mut oStream = new Util.memStream();
       let mut conv = new convFilter(
          "macro", oStream, oStream, .Exec, true,
-         Ast.headTypeInfo, .Typ, nil, LuaVer.curVer );
+         Ast.headTypeInfo, .Typ, nil, LuaVer.curVer, false );
 
       conv.outputDeclMacro(
          name, argNameList,
@@ -3285,7 +3294,7 @@ pub class MacroEvalImp extend Nodes.MacroEval {
       let mut oStream = new Util.memStream();
       let mut conv = new convFilter(
          "macro", oStream, oStream, .Exec, true,
-         Ast.headTypeInfo, .Typ, nil, LuaVer.curVer );
+         Ast.headTypeInfo, .Typ, nil, LuaVer.curVer, false );
 
       conv.processDeclMacro( node, new Opt( node ) );
 

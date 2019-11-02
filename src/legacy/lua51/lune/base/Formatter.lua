@@ -213,16 +213,16 @@ end
 
 local FormatterFilter = {}
 setmetatable( FormatterFilter, { __index = Nodes.Filter } )
-function FormatterFilter.new( moduleTypeInfo, moduleInfoManager )
+function FormatterFilter.new( moduleTypeInfo, moduleInfoManager, stream )
    local obj = {}
    FormatterFilter.setmeta( obj )
-   if obj.__init then obj:__init( moduleTypeInfo, moduleInfoManager ); end
+   if obj.__init then obj:__init( moduleTypeInfo, moduleInfoManager, stream ); end
    return obj
 end
-function FormatterFilter:__init(moduleTypeInfo, moduleInfoManager) 
+function FormatterFilter:__init(moduleTypeInfo, moduleInfoManager, stream) 
    Nodes.Filter.__init( self,moduleTypeInfo, moduleInfoManager)
    
-   self.stream = Util.SimpleSourceOStream.new(io.stdout, nil, 3)
+   self.stream = Util.SimpleSourceOStream.new(stream, nil, 3)
 end
 function FormatterFilter.setmeta( obj )
   setmetatable( obj, { __index = FormatterFilter  } )
@@ -253,9 +253,9 @@ end
 
 
 
-local function createFilter( moduleTypeInfo )
+local function createFilter( moduleTypeInfo, stream )
 
-   return FormatterFilter.new(moduleTypeInfo, moduleTypeInfo:get_scope())
+   return FormatterFilter.new(moduleTypeInfo, moduleTypeInfo:get_scope(), stream)
 end
 _moduleObj.createFilter = createFilter
 

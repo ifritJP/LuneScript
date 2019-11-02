@@ -5495,6 +5495,7 @@ end
 
 function NodeKind.get_ExpMacroExp(  )
 
+   
    return _lune.unwrap( _moduleObj.nodeKind['ExpMacroExp'])
 end
 
@@ -5519,10 +5520,6 @@ _moduleObj.ExpMacroExpNode = ExpMacroExpNode
 function ExpMacroExpNode:processFilter( filter, opt )
 
    filter:processExpMacroExp( self, opt )
-end
-function ExpMacroExpNode:canBeRight(  )
-
-   return false
 end
 function ExpMacroExpNode:canBeLeft(  )
 
@@ -5587,6 +5584,12 @@ function ExpMacroExpNode:get_stmtList()
    return self.stmtList
 end
 
+
+
+function ExpMacroExpNode:canBeRight(  )
+
+   return self:get_expType() ~= Ast.builtinTypeNone
+end
 
 
 function ExpMacroExpNode:getBreakKind( checkMode )
@@ -5672,7 +5675,6 @@ MacroStatKind.__allList[2] = MacroStatKind.Exp
 
 function NodeKind.get_ExpMacroStat(  )
 
-   
    return _lune.unwrap( _moduleObj.nodeKind['ExpMacroStat'])
 end
 
@@ -5710,25 +5712,24 @@ function ExpMacroStatNode:canBeStatement(  )
 
    return false
 end
-function ExpMacroStatNode.new( id, pos, typeList, expStrList, statKind )
+function ExpMacroStatNode.new( id, pos, typeList, expStrList )
    local obj = {}
    ExpMacroStatNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, typeList, expStrList, statKind ); end
+   if obj.__init then obj:__init( id, pos, typeList, expStrList ); end
    return obj
 end
-function ExpMacroStatNode:__init(id, pos, typeList, expStrList, statKind) 
+function ExpMacroStatNode:__init(id, pos, typeList, expStrList) 
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpMacroStat']), pos, typeList)
    
    
    
    self.expStrList = expStrList
-   self.statKind = statKind
    
    
 end
-function ExpMacroStatNode.create( nodeMan, pos, typeList, expStrList, statKind )
+function ExpMacroStatNode.create( nodeMan, pos, typeList, expStrList )
 
-   local node = ExpMacroStatNode.new(nodeMan:nextId(  ), pos, typeList, expStrList, statKind)
+   local node = ExpMacroStatNode.new(nodeMan:nextId(  ), pos, typeList, expStrList)
    nodeMan:addNode( node )
    return node
 end
@@ -5765,8 +5766,79 @@ end
 function ExpMacroStatNode:get_expStrList()
    return self.expStrList
 end
-function ExpMacroStatNode:get_statKind()
-   return self.statKind
+
+
+
+function NodeKind.get_ExpMacroArgExp(  )
+
+   return _lune.unwrap( _moduleObj.nodeKind['ExpMacroArgExp'])
+end
+
+
+
+regKind( "ExpMacroArgExp" )
+function Filter:processExpMacroArgExp( node, opt )
+
+end
+
+
+function NodeManager:getExpMacroArgExpNodeList(  )
+
+   return self:getList( _lune.unwrap( _moduleObj.nodeKind['ExpMacroArgExp']) )
+end
+
+
+
+local ExpMacroArgExpNode = {}
+setmetatable( ExpMacroArgExpNode, { __index = Node } )
+_moduleObj.ExpMacroArgExpNode = ExpMacroArgExpNode
+function ExpMacroArgExpNode:processFilter( filter, opt )
+
+   filter:processExpMacroArgExp( self, opt )
+end
+function ExpMacroArgExpNode:canBeRight(  )
+
+   return true
+end
+function ExpMacroArgExpNode:canBeLeft(  )
+
+   return false
+end
+function ExpMacroArgExpNode:canBeStatement(  )
+
+   return false
+end
+function ExpMacroArgExpNode.new( id, pos, typeList, codeTxt )
+   local obj = {}
+   ExpMacroArgExpNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, typeList, codeTxt ); end
+   return obj
+end
+function ExpMacroArgExpNode:__init(id, pos, typeList, codeTxt) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpMacroArgExp']), pos, typeList)
+   
+   
+   
+   self.codeTxt = codeTxt
+   
+   
+end
+function ExpMacroArgExpNode.create( nodeMan, pos, typeList, codeTxt )
+
+   local node = ExpMacroArgExpNode.new(nodeMan:nextId(  ), pos, typeList, codeTxt)
+   nodeMan:addNode( node )
+   return node
+end
+function ExpMacroArgExpNode:visit( visitor, depth )
+
+   
+   return true
+end
+function ExpMacroArgExpNode.setmeta( obj )
+  setmetatable( obj, { __index = ExpMacroArgExpNode  } )
+end
+function ExpMacroArgExpNode:get_codeTxt()
+   return self.codeTxt
 end
 
 
@@ -10584,6 +10656,12 @@ function ExpMacroStatNode:getLiteral(  )
    end
    
    return _lune.newAlge( Literal.Str, {txt}), nil
+end
+
+
+function ExpMacroArgExpNode:getLiteral(  )
+
+   return _lune.newAlge( Literal.Str, {self:get_codeTxt()}), nil
 end
 
 

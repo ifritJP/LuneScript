@@ -78,3 +78,9 @@ if LuaVer.curVer.$hasSearchPath {
 pub fn searchpath( mod:str, pathPattern:str ) : str! {
    return searchpathForm( mod, pathPattern );
 }
+
+pub fn getLoadedMod() : &Map<str,stem>
+{
+   let loaded = _load( "return package.loaded"## )$();
+   return (unwrap loaded)@@Map<str,stem>;
+}

@@ -195,7 +195,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 2206
+   return 2284
 end
 
 
@@ -331,6 +331,7 @@ function Option.new(  )
    return obj
 end
 function Option:__init() 
+   self.testing = false
    self.convertC = false
    self.validProf = false
    self.mode = ModeKind.Unknown
@@ -544,6 +545,8 @@ usage:
                   end
                end
                
+            elseif _switchExp == "--testing" then
+               option.testing = true
             elseif _switchExp == "--depends" then
                option.dependsPath = getNextOp(  )
             elseif _switchExp == "--uptodate" then

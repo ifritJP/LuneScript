@@ -533,12 +533,21 @@ fn TransUnit.analyzeDeclMacroSub(
       argTypeList.insert( argType );
    }
 
-
-   self.checkNextToken( "{" );
-
    let mut nextToken = self.getToken(##);
 
-   let mut stmtBlock : Nodes.BlockNode! = nil;
+   let retTypeList;
+   if nextToken.txt == ":" {
+      retTypeList = self.analyzeRefType( accessMode, true, false ).$expTypeList;
+      self.checkNextToken( "{");
+   }
+   else {
+      retTypeList = [];
+      self.checkToken( nextToken, "{");
+   }
+   
+   nextToken = self.getToken(##);
+
+   let mut stmtNode : Nodes.BlockNode! = nil;
    if nextToken.txt == "{" {
       let mut parser = new Parser.WrapParser( self.parser, self.parser.getStreamName() );
 
@@ -562,17 +571,19 @@ fn TransUnit.analyzeDeclMacroSub(
       let mut stmtList:List<&Nodes.Node> = [];
       self.prepareTentativeSymbol( self.scope, false );
       self.analyzeStatementList( stmtList, "}" );
+
+      stmtNode = Nodes.BlockNode.create(
+         self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ],
+         .Macro, scope, stmtList );
+
       self.checkNextToken( "}" );
       self.finishTentativeSymbol( false );
-
 
       self.parser = bakParser;
 
 
+      
       self.macroScope = nil;
-      stmtBlock = Nodes.BlockNode.create(
-         self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ],
-         .Macro, scope, stmtList );
    }
    else {
       self.pushback();
@@ -599,14 +610,14 @@ fn TransUnit.analyzeDeclMacroSub(
    }
 
    let typeInfo = Ast.NormalTypeInfo.createFunc(
-      false, false, scope, .Macro, parentType,
-      false, false, true, accessMode, nameToken.txt, nil, argTypeList ## );
+      false, false, scope, .Macro, parentType, false, false, true,
+      accessMode, nameToken.txt, nil, argTypeList, retTypeList## );
    //self.scope.addLocalVar( false, false, nameToken.txt, typeInfo, false );
    // self.scope.addMacro( typeInfo, accessMode );
 
 
    let mut declMacroInfo = new Nodes.DeclMacroInfo(
-      pubFlag, nameToken, argList, stmtBlock, tokenList ) ;
+      pubFlag, nameToken, argList, stmtNode, tokenList ) ;
    let mut node = Nodes.DeclMacroNode.create(
       self.nodeManager, firstToken.pos, [ typeInfo ], declMacroInfo );
 
@@ -625,6 +636,7 @@ fn TransUnit.analyzeDeclMacro(
    self.checkNextToken( "(" );
 
 
+   // マクロ内は、独立スコープにするため、
    // マクロ用のスコープを topScope 直下に生成
    let mut scope = Ast.TypeInfo.createScope( self.topScope, false, nil, nil );
 

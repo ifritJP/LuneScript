@@ -1209,9 +1209,14 @@ pub override fn ExpParenNode.getSymbolInfo(): &List<&Ast.AccessSymbolInfo> {
 }
 
 
-_declNodeClass( "ExpMacroExp", Node, false, false, true,
+/** マクロ展開 */
+_declNodeClass( "ExpMacroExp", Node, false, nil, true,
                 [ { "stmtList": "List<&Node>" } ]
 );
+
+pub override fn ExpMacroExpNode.canBeRight():bool {
+   return self.$expType ~= Ast.builtinTypeNone;
+}
 
 pub override fn ExpMacroExpNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
    if checkMode ~= .Normal and checkMode ~= .Return {
@@ -1236,10 +1241,13 @@ pub enum MacroStatKind {
 }
 
 _declNodeClass( "ExpMacroStat", Node, false, true, false,
-                [ { "expStrList": "List<&Node>" },
-                  // __exp 型の場合 true, stat 型の場合 false
-                  { "statKind": "MacroStatKind" } ]
+                [ { "expStrList": "List<&Node>" } ]
 );
+
+_declNodeClass( "ExpMacroArgExp", Node, false, true, false,
+                [ { "codeTxt": "str" } ]
+);
+
 
 _declNodeClass( "StmtExp", Node, false, true, nil,
                 [ { "exp": "&Node" } ]
@@ -1575,6 +1583,8 @@ _declNodeClass( "LuneKind", Node, false, true, false,
 _declNodeClass( "DeclMacro", Node, false, false, true,
                 [ { "declInfo": "DeclMacroInfo" } ]
 );
+
+
 
 pub abstract class MacroEval {
    pub abstract fn evalFromCode(
@@ -2046,7 +2056,8 @@ pub override fn RefFieldNode.getLiteral(): Literal!, str! {
    return nil, mess;
 }
 
-pub override fn ExpMacroStatNode.getLiteral(): Literal!, str! {
+pub override fn ExpMacroStatNode.getLiteral(): Literal!, str!
+{
    let mut txt = "";
    foreach token in self.expStrList {
       let literal, mess = token.getLiteral();
@@ -2063,6 +2074,12 @@ pub override fn ExpMacroStatNode.getLiteral(): Literal!, str! {
    }
    return .Str( txt ), nil;
 }
+
+pub override fn ExpMacroArgExpNode.getLiteral(): Literal!, str!
+{
+   return .Str( self.$codeTxt ), nil;
+}
+
 
 fn enumLiteral2Literal( obj:&Ast.EnumLiteral ) : Literal!, str! {
    match obj {

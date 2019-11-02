@@ -1,0 +1,20 @@
+{
+   macro _test():int {
+      1.0
+   }
+   print( _test() ); // error
+}
+{
+   fn func(): int, int {
+      return 1, 2;
+   }
+   macro _test():int {
+      func()
+   }
+   print( _test() ); // error
+}
+{
+   macro _test():int {
+   }
+   print( _test() ); // error
+}
