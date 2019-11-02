@@ -446,8 +446,8 @@ test-org:
 test-new:
 	@echo $(MAKECMDGOALS)
 
-	$(call exeLune,work/3,test/start.lns,glue, ../newglue 2>&1)
-	$(MAKE) build-glue GLUE_DIR=work/newglue
+#	$(call exeLune,work/3,test/start.lns,glue, ../newglue 2>&1)
+#	$(MAKE) build-glue GLUE_DIR=work/newglue
 
 	$(call exeLune,work/3,test/start.lns,ast,) > work/ast2.result
 	$(call exeLune,work/3,test/start.lns,lua,) > work/lua.result
@@ -473,8 +473,6 @@ test-new:
 
 
 test-new2:
-	cp -a work/3 work/3_2
-
 ## テストスクリプトを lua 化して、 lunescript なしで動かすテスト。
 	$(call build-testcode,work/3_2)
 	(cd work/3_2; $(LUA) test/start.lua) > work/test3.result
@@ -524,6 +522,12 @@ test-comp2:
 #	$(call exeLune,work/3,-mklunemod,lune/base)
 
 #	$(MAKE) test-new
+
+	$(call exeLune,work/3,test/start.lns,glue, ../newglue 2>&1)
+	$(MAKE) build-glue GLUE_DIR=work/newglue
+	mv test/glueTest.so work/3/test/glueTest.so 
+	cp -a work/3 work/3_2
+
 
 	$(MAKE) test-parallel
 
