@@ -677,14 +677,14 @@ extern "C" {
 
 #define lune_lenDDD( ANY ) ANY->val.ddd.len
 
-#define lune_str2stem( ENV, VAL )               \
-    _lune_str2stem( LUNE_DEBUG_POS, ENV, VAL )
-#define lune_litStr2stem( ENV, STR )            \
-    _lune_litStr2stem( LUNE_DEBUG_POS, ENV, STR )
-#define lune_cloneBin2stem( ENV, STR, LEN )               \
-    _lune_cloneBin2stem( LUNE_DEBUG_POS, ENV, STR, LEN )
-#define lune_func2stem( ENV, FUNC, ARGNUM, HASDDD, NUM, ... )            \
-    _lune_func2stem( LUNE_DEBUG_POS, ENV, FUNC, ARGNUM, HASDDD, NUM, ##__VA_ARGS__ )
+#define lune_str2any( ENV, VAL )               \
+    _lune_str2any( LUNE_DEBUG_POS, ENV, VAL )
+#define lune_litStr2any( ENV, STR )            \
+    _lune_litStr2any( LUNE_DEBUG_POS, ENV, STR )
+#define lune_cloneBin2any( ENV, STR, LEN )               \
+    _lune_cloneBin2any( LUNE_DEBUG_POS, ENV, STR, LEN )
+#define lune_func2any( ENV, FUNC, ARGNUM, HASDDD, NUM, ... )            \
+    _lune_func2any( LUNE_DEBUG_POS, ENV, FUNC, ARGNUM, HASDDD, NUM, ##__VA_ARGS__ )
 #define lune_createDDD( ENV, HASDDD, NUM, ... )         \
     _lune_createDDD( LUNE_DEBUG_POS, ENV, HASDDD, NUM, ##__VA_ARGS__)
 #define lune_createDDDOnly( ENV, NUM )          \
@@ -717,9 +717,9 @@ extern "C" {
 
     extern void _lune_abort( const char * pMessage, const char * pFile, int lineNo );
     
-    extern lune_any_t * _lune_str2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_str_t val );
-    extern lune_any_t * _lune_litStr2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, const char * pStr );
-    extern lune_any_t * _lune_func2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_closure_t * pFunc, int argNum, bool hasDDD, int num, ... );
+    extern lune_any_t * _lune_str2any( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_str_t val );
+    extern lune_any_t * _lune_litStr2any( LUNE_DEBUG_DECL, lune_env_t * _pEnv, const char * pStr );
+    extern lune_any_t * _lune_func2any( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_closure_t * pFunc, int argNum, bool hasDDD, int num, ... );
     extern lune_stem_t _lune_createDDD( LUNE_DEBUG_DECL, lune_env_t * _pEnv, bool hasDDD, int num, ... );
     extern lune_stem_t _lune_createDDDOnly( LUNE_DEBUG_DECL, lune_env_t * _pEnv, int num );
     extern lune_stem_t _lune_createSubDDD(
@@ -729,7 +729,7 @@ extern "C" {
     extern lune_any_t * _lune_alge_new( LUNE_DEBUG_DECL, lune_env_t * _pEnv, int valType, int size, lune_algeVal_gc_t * gc );
     extern lune_any_t * _lune_it_new(
         LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_value_type_t type, void * pVal );
-    extern lune_any_t * _lune_cloneBin2stem(
+    extern lune_any_t * _lune_cloneBin2any(
         const char * pFile, int lineNo, lune_env_t * _pEnv, const void * pBuf, int len );
 
     extern lune_any_t * _lune_luaVal_new(

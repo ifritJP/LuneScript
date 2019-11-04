@@ -1462,7 +1462,7 @@ fn convFilter.getPrepareClosure(
 {
    let mut txt;
 
-   txt = "lune_func2stem( _pEnv, (lune_closure_t *)%s, %d, %s, %d"
+   txt = "lune_func2any( _pEnv, (lune_closure_t *)%s, %d, %s, %d"
        (funcName, argNum, hasDDD, #symList );
    foreach symbolInfo in symList {
       txt = txt .. ", ";
@@ -1675,9 +1675,9 @@ pub override fn convFilter.processDeclEnum(
                let anyVar = self.moduleCtrl.getEnumValCName( enumType, valName.txt );
                anyVarList.insert( "LUNE_STEM_ANY( %s )" (anyVar) );
 
-               // self.writeln( "lune_setQ( %s, lune_litStr2stem( _pEnv, %s ) );"
+               // self.writeln( "lune_setQ( %s, lune_litStr2any( _pEnv, %s ) );"
                //               (anyVar, valTxt));
-               self.writeln( "%s = lune_litStr2stem( _pEnv, %s );" (anyVar, valTxt));
+               self.writeln( "%s = lune_litStr2any( _pEnv, %s );" (anyVar, valTxt));
             }
          }
          else {
@@ -1716,7 +1716,7 @@ pub override fn convFilter.processDeclEnum(
                (enumFullName, anyVar ));
             
             self.writeln(
-               '  LUNE_STEM_ANY( lune_litStr2stem( _pEnv, "%s.%s" ) ) );'
+               '  LUNE_STEM_ANY( lune_litStr2any( _pEnv, "%s.%s" ) ) );'
                (fullName, node.$valueNameList[ index ].txt));
          }
          
@@ -2403,7 +2403,8 @@ fn hasGC( classTypeInfo:&Ast.TypeInfo ): bool {
    
 
 fn processDeclClassPrototype(
-   stream:Util.SourceStream, moduleCtrl:ModuleCtrl, node:&Nodes.DeclClassNode )
+   stream:Util.SourceStream, moduleCtrl:ModuleCtrl,
+   scopeMgr:ScopeMgr, node:&Nodes.DeclClassNode )
 {
    let className = moduleCtrl.getClassCName( node.$expType );
    
@@ -2463,12 +2464,24 @@ fn processDeclClassPrototype(
       stream.writeln( "%s * pObj = lune_obj_%s( pAny );" (className, className) );
       foreach member, index in node.$memberList {
          if not member.$staticFlag {
-            if isStemType( member.$expType ) {
-               stream.writeln(
-                  "lune_setQ( pObj->%s, _arg%d );" (member.$name.txt, index ));
-            }
-            else {
-               stream.writeln( "pObj->%s = _arg%d;" (member.$name.txt, index));
+            let valKind = scopeMgr.getSymbolValKind( member.$symbolInfo );
+            switch valKind {
+               case .Stem {
+                  stream.writeln(
+                     "lune_setQ( pObj->%s, _arg%d );" (member.$name.txt, index ));
+               }
+               case .Any {
+                  stream.writeln(
+                     "lune_setQ_any( &pObj->%s, _arg%d );" (member.$name.txt, index ));
+               }
+               case .Prim {
+                  stream.writeln( "pObj->%s = _arg%d;" (member.$name.txt, index));
+               }
+               default {
+                  Util.err(
+                     "no support -- %s:%s:%d"
+                     (member.$name.txt, valKind.$_txt, __line__) );
+               }
             }
          }
       }
@@ -2594,7 +2607,7 @@ fn convFilter.processDeclClassNodePrototype( node:&Nodes.DeclClassNode ) mut
       });
 
    if kind == .Class {
-      processDeclClassPrototype( self.stream, self.moduleCtrl, node );
+      processDeclClassPrototype( self.stream, self.moduleCtrl, self.scopeMgr, node );
    }
 }
 
@@ -2701,14 +2714,26 @@ fn convFilter.processDeclClassDef( node:&Nodes.DeclClassNode ) mut
                self.stream, self.moduleCtrl, false, setterType## );
             self.writeln( "{" );
             self.pushIndent(##);
-            if isStemType( member.$expType ) {
-               self.writeln(
-                  'lune_setq( _pEnv, lune_obj_%s(pObj)->%s, arg1 );'
-                  (className, memberName) );
-            }
-            else {
-               self.writeln( "lune_obj_%s(pObj)->%s = arg1;"
-                  (className, memberName) );
+            let valKind = self.scopeMgr.getSymbolValKind( member.$symbolInfo );
+            switch valKind {
+               case .Stem {
+                  self.writeln(
+                     'lune_setq( _pEnv, lune_obj_%s(pObj)->%s, arg1 );'
+                     (className, memberName) );
+               }
+               case .Any {
+                  self.writeln(
+                     'lune_setq_any( _pEnv, &lune_obj_%s(pObj)->%s, arg1 );'
+                     (className, memberName) );
+               }
+               case .Prim {
+                  self.writeln( "lune_obj_%s(pObj)->%s = arg1;"
+                     (className, memberName) );
+               }
+               default {
+                  Util.err( "no support -- %s:%s:%d"
+                     (member.$symbolInfo.$name,valKind.$_txt,__line__));
+               }
             }
             self.popIndent();
             self.writeln( "}" );
@@ -3320,7 +3345,7 @@ pub fn convFilter.processVal2stem( node:&Nodes.Node, parent: &Nodes.Node ) mut
                         // let hasDDD =
                         //    #argList > 0 and argList[ #argList ].$kind == .DDD or false;
                         
-                        // // self.write( "lune_func2stem( _pEnv, (lune_closure_t *)" );
+                        // // self.write( "lune_func2any( _pEnv, (lune_closure_t *)" );
                         // // self.write( getFuncName( expType ) );
                         // // self.write( ", %d, %s, %d"
                         // //             ( #node.$expType.$argTypeInfoList, hasDDD,
@@ -5800,7 +5825,7 @@ fn convFilter.processCall(
       if! let scope = funcType.$scope {
          if #scope.$closureSymList > 0 {
             // クロージャの場合
-            // self.write( "lune_func2stem( _pEnv, (lune_closure_t *)NULL, 0, false, %d"
+            // self.write( "lune_func2any( _pEnv, (lune_closure_t *)NULL, 0, false, %d"
             //             (#scope.$closureSymList) );
             // foreach symbolInfo in scope.$closureSymList {
             //    self.write( ", " );
@@ -6434,7 +6459,7 @@ pub override fn convFilter.processExpCall(
       //    if! let scope = funcType.$scope {
       //       if #scope$.$closureSymList > 0 {
       //          // クロージャの場合
-      //          self.write( "lune_func2stem( _pEnv, (lune_closure_t *)NULL, 0, false, %d"
+      //          self.write( "lune_func2any( _pEnv, (lune_closure_t *)NULL, 0, false, %d"
       //                      (#scope$.$closureSymList) );
       //          foreach symbolInfo in scope.$closureSymList {
       //             self.write( ", %s" (symbolInfo.$name) );
@@ -7574,7 +7599,7 @@ pub override fn convFilter.processLiteralString(
    }
    let opList = TransUnit.findForm( txt );
 
-   self.write( "lune_litStr2stem( _pEnv, " );
+   self.write( "lune_litStr2any( _pEnv, " );
    
    let argList = node.get_argList();
    if #argList > 0 {

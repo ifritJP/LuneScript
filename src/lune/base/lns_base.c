@@ -850,7 +850,7 @@ static void lune_class_del( lune_env_t * _pEnv, void * pObj )
  * @param ... フォーム内でアクセスする外部変数
  * @return any
  */
-lune_any_t * _lune_func2stem(
+lune_any_t * _lune_func2any(
     const char * pFile, int lineNo, 
     lune_env_t * _pEnv, lune_closure_t * pFunc, int argNum, bool hasDDD, int num, ... )
 {
@@ -912,7 +912,7 @@ lune_str_t lune_createLiteralStr( const char * pStr ) {
  * @param val 文字列型データ
  * @return any
  */
-lune_any_t * _lune_str2stem(
+lune_any_t * _lune_str2any(
     const char * pFile, int lineNo, lune_env_t * _pEnv, lune_str_t val )
 {
     lune_any_t * pAny =
@@ -921,7 +921,7 @@ lune_any_t * _lune_str2stem(
     return pAny;
 }
 
-lune_any_t * _lune_litStr2stem(
+lune_any_t * _lune_litStr2any(
     const char * pFile, int lineNo, lune_env_t * _pEnv, const char * pStr )
 {
     lune_any_t * pAny =
@@ -973,7 +973,7 @@ lune_bool_t lune_stem2bool( lune_stem_t stem )
 }
 
 
-lune_any_t * _lune_cloneBin2stem(
+lune_any_t * _lune_cloneBin2any(
     const char * pFile, int lineNo, lune_env_t * _pEnv, const void * pBuf, int len )
 {
     lune_any_t * pAny = lune_alloc_any( _pEnv, lune_value_type_str, pFile, lineNo );

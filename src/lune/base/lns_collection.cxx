@@ -45,7 +45,7 @@ lune_stem_t _lune_createImmediateVal(
     case lune_imdType_real:
         return LUNE_STEM_REAL( pVal->val.valReal );
     case lune_imdType_str:
-        return LUNE_STEM_ANY( _lune_litStr2stem( LUNE_DEBUG_POS, _pEnv, pVal->val.str ) );
+        return LUNE_STEM_ANY( _lune_litStr2any( LUNE_DEBUG_POS, _pEnv, pVal->val.str ) );
     case lune_imdType_list:
         return LUNE_STEM_ANY( _lune_createList( LUNE_DEBUG_POS, _pEnv, pVal->val.list ) );
     case lune_imdType_map:

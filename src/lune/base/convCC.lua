@@ -1854,7 +1854,7 @@ function convFilter:getPrepareClosure( funcName, argNum, hasDDD, symList )
    local txt
    
    
-   txt = string.format( "lune_func2stem( _pEnv, (lune_closure_t *)%s, %d, %s, %d", funcName, argNum, hasDDD, #symList)
+   txt = string.format( "lune_func2any( _pEnv, (lune_closure_t *)%s, %d, %s, %d", funcName, argNum, hasDDD, #symList)
    for __index, symbolInfo in pairs( symList ) do
       txt = txt .. ", "
       txt = txt .. self.scopeMgr:symbol2Any( symbolInfo )
@@ -2075,7 +2075,7 @@ function convFilter:processDeclEnum( node, opt )
                local anyVar = self.moduleCtrl:getEnumValCName( enumType, valName.txt )
                table.insert( anyVarList, string.format( "LUNE_STEM_ANY( %s )", anyVar) )
                
-               self:writeln( string.format( "%s = lune_litStr2stem( _pEnv, %s );", anyVar, valTxt) )
+               self:writeln( string.format( "%s = lune_litStr2any( _pEnv, %s );", anyVar, valTxt) )
             end
             
          else
@@ -2111,7 +2111,7 @@ function convFilter:processDeclEnum( node, opt )
          for index, anyVar in pairs( anyVarList ) do
             self:writeln( string.format( "lune_mtd_Map_add( _pEnv, %s_val2NameMap, %s, ", enumFullName, anyVar) )
             
-            self:writeln( string.format( '  LUNE_STEM_ANY( lune_litStr2stem( _pEnv, "%s.%s" ) ) );', fullName, node:get_valueNameList()[index].txt) )
+            self:writeln( string.format( '  LUNE_STEM_ANY( lune_litStr2any( _pEnv, "%s.%s" ) ) );', fullName, node:get_valueNameList()[index].txt) )
          end
          
          
@@ -2659,7 +2659,7 @@ local function hasGC( classTypeInfo )
    return false
 end
 
-local function processDeclClassPrototype( stream, moduleCtrl, node )
+local function processDeclClassPrototype( stream, moduleCtrl, scopeMgr, node )
 
    local className = moduleCtrl:getClassCName( node:get_expType() )
    
@@ -2714,11 +2714,20 @@ local function processDeclClassPrototype( stream, moduleCtrl, node )
       stream:writeln( string.format( "%s * pObj = lune_obj_%s( pAny );", className, className) )
       for index, member in pairs( node:get_memberList() ) do
          if not member:get_staticFlag() then
-            if isStemType( member:get_expType() ) then
-               stream:writeln( string.format( "lune_setQ( pObj->%s, _arg%d );", member:get_name().txt, index) )
-            else
-             
-               stream:writeln( string.format( "pObj->%s = _arg%d;", member:get_name().txt, index) )
+            local valKind = scopeMgr:getSymbolValKind( member:get_symbolInfo() )
+            do
+               local _switchExp = valKind
+               if _switchExp == ValKind.Stem then
+                  stream:writeln( string.format( "lune_setQ( pObj->%s, _arg%d );", member:get_name().txt, index) )
+               elseif _switchExp == ValKind.Any then
+                  stream:writeln( string.format( "lune_setQ_any( &pObj->%s, _arg%d );", member:get_name().txt, index) )
+               elseif _switchExp == ValKind.Prim then
+                  stream:writeln( string.format( "pObj->%s = _arg%d;", member:get_name().txt, index) )
+               else 
+                  
+                     Util.err( string.format( "no support -- %s:%s:%d", member:get_name().txt, ValKind:_getTxt( valKind)
+                     , 2483) )
+               end
             end
             
          end
@@ -2862,7 +2871,7 @@ function convFilter:processDeclClassNodePrototype( node )
    
    
    if kind == Ast.TypeInfoKind.Class then
-      processDeclClassPrototype( self.stream, self.moduleCtrl, node )
+      processDeclClassPrototype( self.stream, self.moduleCtrl, self.scopeMgr, node )
    end
    
 end
@@ -2965,11 +2974,20 @@ function convFilter:processDeclClassDef( node )
             processMethodDeclTxt( self.stream, self.moduleCtrl, false, setterType )
             self:writeln( "{" )
             self:pushIndent(  )
-            if isStemType( member:get_expType() ) then
-               self:writeln( string.format( 'lune_setq( _pEnv, lune_obj_%s(pObj)->%s, arg1 );', className, memberName) )
-            else
-             
-               self:writeln( string.format( "lune_obj_%s(pObj)->%s = arg1;", className, memberName) )
+            local valKind = self.scopeMgr:getSymbolValKind( member:get_symbolInfo() )
+            do
+               local _switchExp = valKind
+               if _switchExp == ValKind.Stem then
+                  self:writeln( string.format( 'lune_setq( _pEnv, lune_obj_%s(pObj)->%s, arg1 );', className, memberName) )
+               elseif _switchExp == ValKind.Any then
+                  self:writeln( string.format( 'lune_setq_any( _pEnv, &lune_obj_%s(pObj)->%s, arg1 );', className, memberName) )
+               elseif _switchExp == ValKind.Prim then
+                  self:writeln( string.format( "lune_obj_%s(pObj)->%s = arg1;", className, memberName) )
+               else 
+                  
+                     Util.err( string.format( "no support -- %s:%s:%d", member:get_symbolInfo():get_name(), ValKind:_getTxt( valKind)
+                     , 2735) )
+               end
             end
             
             self:popIndent(  )
@@ -3402,7 +3420,7 @@ function convFilter:processSym2Any( symbol )
       else 
          
             Util.err( string.format( "not suppport -- %s, %d", ValKind:_getTxt( valKind)
-            , 3264) )
+            , 3289) )
       end
    end
    
@@ -3498,7 +3516,7 @@ function convFilter:processVal2any( node, parent )
       else 
          
             Util.err( string.format( "not suppport -- %s, %d", ValKind:_getTxt( valKind)
-            , 3380) )
+            , 3405) )
       end
    end
    
@@ -3547,7 +3565,7 @@ function convFilter:processSetValSingleDirect( parent, node, var, initFlag, expV
       
       Util.err( string.format( "illegal %s %s -- %d", ValKind:_getTxt( valKind)
       , ValKind:_getTxt( expValKind)
-      , 3434) )
+      , 3459) )
    end
    
    
@@ -5211,7 +5229,7 @@ function convFilter:processExpUnwrap( node, opt )
                   self:write( "lune_unwrap_any( " )
                else 
                   
-                     Util.err( string.format( "no support -- %d", 5365) )
+                     Util.err( string.format( "no support -- %d", 5390) )
                end
             end
             
@@ -6516,7 +6534,7 @@ function convFilter:processReturn( node, opt )
                   filter( expList[1], self, node )
                else 
                   
-                     Util.err( string.format( "no support -- %d", 7180) )
+                     Util.err( string.format( "no support -- %d", 7205) )
                end
             end
             
@@ -6535,7 +6553,7 @@ function convFilter:processReturn( node, opt )
                elseif _switchExp == ValKind.Prim then
                else 
                   
-                     Util.err( string.format( "no support -- %d", 7199) )
+                     Util.err( string.format( "no support -- %d", 7224) )
                end
             end
             
@@ -6953,7 +6971,7 @@ function convFilter:processLiteralString( node, opt )
    
    local opList = TransUnit.findForm( txt )
    
-   self:write( "lune_litStr2stem( _pEnv, " )
+   self:write( "lune_litStr2any( _pEnv, " )
    
    local argList = node:get_argList(  )
    if #argList > 0 then
