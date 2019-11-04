@@ -1676,13 +1676,13 @@ pub fn Node.getSymbolInfo(): &List<&Ast.AccessSymbolInfo> {
                }
             }
          }
-         case NodeKind.$GetField {
-            if! let getFieldNode = node@@@GetFieldNode {
-               if! getFieldNode.$symbolInfo {
-                  return [_exp];
-               }
-            }
-         }
+         // case NodeKind.$GetField {
+         //    if! let getFieldNode = node@@@GetFieldNode {
+         //       if! getFieldNode.$symbolInfo {
+         //          return [_exp];
+         //       }
+         //    }
+         // }
          case NodeKind.$ExpList {
             if! let expListNode = node@@@ExpListNode {
                let mut list: List<&Ast.AccessSymbolInfo> = [];

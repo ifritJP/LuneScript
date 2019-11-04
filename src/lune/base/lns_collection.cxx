@@ -45,13 +45,13 @@ lune_stem_t _lune_createImmediateVal(
     case lune_imdType_real:
         return LUNE_STEM_REAL( pVal->val.valReal );
     case lune_imdType_str:
-        return _lune_litStr2stem( LUNE_DEBUG_POS, _pEnv, pVal->val.str );
+        return LUNE_STEM_ANY( _lune_litStr2stem( LUNE_DEBUG_POS, _pEnv, pVal->val.str ) );
     case lune_imdType_list:
-        return _lune_createList( LUNE_DEBUG_POS, _pEnv, pVal->val.list );
+        return LUNE_STEM_ANY( _lune_createList( LUNE_DEBUG_POS, _pEnv, pVal->val.list ) );
     case lune_imdType_map:
-        return _lune_createMap( LUNE_DEBUG_POS, _pEnv, pVal->val.map );
+        return LUNE_STEM_ANY( _lune_createMap( LUNE_DEBUG_POS, _pEnv, pVal->val.map ) );
     case lune_imdType_set:
-        return _lune_createSet( LUNE_DEBUG_POS, _pEnv, pVal->val.set );
+        return LUNE_STEM_ANY( _lune_createSet( LUNE_DEBUG_POS, _pEnv, pVal->val.set ) );
     case lune_imdType_any:
         return LUNE_STEM_ANY( pVal->val.any );
     default:
@@ -136,7 +136,7 @@ void lune_class_List_init( lune_env_t * _pEnv, lune_List_t * pObj )
 }
 
 
-lune_stem_t lune_class_List_new( lune_env_t * _pEnv )
+lune_any_t * lune_class_List_new( lune_env_t * _pEnv )
 {
     lune_class_new2_( _pEnv, lune_List_t, List, pAny, pObj );
     
@@ -145,16 +145,16 @@ lune_stem_t lune_class_List_new( lune_env_t * _pEnv )
     return pAny;
 }
 
-lune_stem_t lune_List_ctor( lune_env_t * _pEnv, lune_any_t * pDDDAny )
+lune_any_t * lune_List_ctor( lune_env_t * _pEnv, lune_any_t * pDDDAny )
 {
-    lune_stem_t pAny = lune_class_List_new( _pEnv );
+    lune_any_t * pAny = lune_class_List_new( _pEnv );
 
     int index;
     for ( index = 0; index < pDDDAny->val.ddd.len; index++ ) {
         lune_stem_t stem = lune_fromDDD( pDDDAny, index );
         SETQ( &stem );
         
-        lune_obj_List_obj( pAny.val.pAny )->push_back( stem );
+        lune_obj_List_obj( pAny )->push_back( stem );
     }
     
     return pAny;
@@ -208,10 +208,11 @@ lune_stem_t lune_mtd_List_refAt(
 /**
    List.unpack() 処理
 */
-lune_stem_t lune_mtd_List_unpack( lune_env_t * _pEnv, lune_any_t * pObj )
+lune_any_t * lune_mtd_List_unpack( lune_env_t * _pEnv, lune_any_t * pObj )
 {
-    lune_stem_t pDDD =
-        lune_createDDDOnly( _pEnv, lune_obj_List_obj( pObj )->size() );
+    lune_stem_t ddd = lune_createDDDOnly( _pEnv, lune_obj_List_obj( pObj )->size() );
+    lune_any_t * pDDD = ddd.val.pAny;
+        
 
     lune_ListIterator it;
     lune_ListIterator end = lune_obj_List_obj( pObj )->end();
@@ -219,7 +220,7 @@ lune_stem_t lune_mtd_List_unpack( lune_env_t * _pEnv, lune_any_t * pObj )
     int index = 0;
     for ( it = lune_obj_List_obj( pObj )->begin(); it != end; it++, index++ )
     {
-        lune_set2DDDArg( pDDD.val.pAny, index, *it );
+        lune_set2DDDArg( pDDD, index, *it );
     }
 
     return pDDD;
@@ -340,15 +341,14 @@ lune_stem_t lune_mtd_List_sort(
  * @param pList 生成するリストの要素
  * @return 生成したリスト
  */
-lune_stem_t _lune_createList(
+lune_any_t * _lune_createList(
     LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_imdVal_t * pList )
 {
-    lune_stem_t pAny = lune_class_List_new( _pEnv );
+    lune_any_t * pAny = lune_class_List_new( _pEnv );
 
     for ( ; pList->type != lune_imdType_sentinel; pList++ ) {
         lune_mtd_List_insert(
-            _pEnv, pAny.val.pAny,
-            _lune_createImmediateVal( LUNE_DEBUG_POS, _pEnv, pList ) );
+            _pEnv, pAny, _lune_createImmediateVal( LUNE_DEBUG_POS, _pEnv, pList ) );
     }
     return pAny;
 }
@@ -423,7 +423,7 @@ lune_stem_t lune_mtd_Set_or_(
     lune_env_t * _pEnv, lune_any_t * pObj, lune_stem_t pSet );
 lune_stem_t lune_mtd_Set_sub(
     lune_env_t * _pEnv, lune_any_t * pObj, lune_stem_t pSet );
-lune_stem_t lune_mtd_Set_clone( lune_env_t * _pEnv, lune_any_t * pObj );
+lune_any_t * lune_mtd_Set_clone( lune_env_t * _pEnv, lune_any_t * pObj );
 lune_int_t lune_mtd_Set_len( lune_env_t * _pEnv, lune_any_t * pObj );
 
 
@@ -450,7 +450,7 @@ void lune_class_Set_init( lune_env_t * _pEnv, lune_Set_t * pObj )
 }
 
 
-lune_stem_t lune_class_Set_new( lune_env_t * _pEnv )
+lune_any_t * lune_class_Set_new( lune_env_t * _pEnv )
 {
     lune_class_new2_( _pEnv, lune_Set_t, Set, pAny, pObj );
     
@@ -459,16 +459,16 @@ lune_stem_t lune_class_Set_new( lune_env_t * _pEnv )
     return pAny;
 }
 
-lune_stem_t lune_Set_ctor( lune_env_t * _pEnv, lune_any_t * pDDDAny )
+lune_any_t * lune_Set_ctor( lune_env_t * _pEnv, lune_any_t * pDDDAny )
 {
-    lune_stem_t pAny = lune_class_Set_new( _pEnv );
+    lune_any_t * pAny = lune_class_Set_new( _pEnv );
 
     int index;
     for ( index = 0; index < pDDDAny->val.ddd.len; index++ ) {
         lune_stem_t stem = lune_fromDDD( pDDDAny, index );
         SETQ( &stem );
     
-        lune_obj_Set_obj( pAny.val.pAny )->insert( stem );
+        lune_obj_Set_obj( pAny )->insert( stem );
     }
     
     return pAny;
@@ -636,9 +636,9 @@ lune_stem_t lune_mtd_Set_sub(
     return LUNE_STEM_ANY( pObj );
 }
 
-lune_stem_t lune_mtd_Set_clone( lune_env_t * _pEnv, lune_any_t * pObj )
+lune_any_t * lune_mtd_Set_clone( lune_env_t * _pEnv, lune_any_t * pObj )
 {
-    lune_stem_t pAny = lune_class_Set_new( _pEnv );
+    lune_any_t * pAny = lune_class_Set_new( _pEnv );
 
     lune_SetIterator it = lune_obj_Set_obj( pObj )->begin();
     lune_SetIterator end = lune_obj_Set_obj( pObj )->begin();
@@ -647,7 +647,7 @@ lune_stem_t lune_mtd_Set_clone( lune_env_t * _pEnv, lune_any_t * pObj )
         lune_stem_t stem = *it;
         SETQ( &stem );
 
-        lune_obj_Set_obj( pAny.val.pAny )->insert( stem );
+        lune_obj_Set_obj( pAny )->insert( stem );
     }
     
     return pAny;
@@ -658,16 +658,16 @@ lune_int_t lune_mtd_Set_len( lune_env_t * _pEnv, lune_any_t * pObj )
     return (lune_int_t)lune_obj_Set_obj( pObj )->size();
 }
 
-lune_stem_t lune_mtd_Set_createList( lune_env_t * _pEnv, lune_any_t * pObj )
+lune_any_t * lune_mtd_Set_createList( lune_env_t * _pEnv, lune_any_t * pObj )
 {
-    lune_stem_t pList = lune_class_List_new( _pEnv );
+    lune_any_t * pList = lune_class_List_new( _pEnv );
 
     lune_SetClass * pSet = lune_obj_Set_obj( pObj );
     lune_SetIterator it;
     lune_SetIterator end = pSet->end();
     
     for ( it = pSet->begin(); it != end; it++ ) {
-        lune_mtd_List_insert( _pEnv, pList.val.pAny, *it );
+        lune_mtd_List_insert( _pEnv, pList, *it );
     }
 
     return pList;
@@ -680,15 +680,14 @@ lune_stem_t lune_mtd_Set_createList( lune_env_t * _pEnv, lune_any_t * pObj )
  * @param pSet 生成する Set の要素
  * @return 生成した Set
  */
-lune_stem_t _lune_createSet(
+lune_any_t * _lune_createSet(
     LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_imdVal_t * pSet )
 {
-    lune_stem_t pAny = lune_class_Set_new( _pEnv );
+    lune_any_t * pAny = lune_class_Set_new( _pEnv );
 
     for ( ; pSet->type != lune_imdType_sentinel; pSet++ ) {
         lune_mtd_Set_add(
-            _pEnv, pAny.val.pAny,
-            _lune_createImmediateVal( LUNE_DEBUG_POS, _pEnv, pSet ) );
+            _pEnv, pAny, _lune_createImmediateVal( LUNE_DEBUG_POS, _pEnv, pSet ) );
     }
     return pAny;
 }
@@ -733,7 +732,7 @@ void lune_class_Map_init( lune_env_t * _pEnv, lune_Map_t * pObj )
 }
 
 
-lune_stem_t lune_class_Map_new( lune_env_t * _pEnv )
+lune_any_t * lune_class_Map_new( lune_env_t * _pEnv )
 {
     lune_class_new2_( _pEnv, lune_Map_t, Map, pAny, pObj );
     
@@ -742,10 +741,10 @@ lune_stem_t lune_class_Map_new( lune_env_t * _pEnv )
     return pAny;
 }
 
-lune_stem_t lune_Map_ctor( lune_env_t * _pEnv, lune_any_t * pDDDAny )
+lune_any_t * lune_Map_ctor( lune_env_t * _pEnv, lune_any_t * pDDDAny )
 {
-    lune_stem_t pAny = lune_class_Map_new( _pEnv );
-    lune_MapClass * pMap = lune_obj_Map_obj( pAny.val.pAny );
+    lune_any_t * pAny = lune_class_Map_new( _pEnv );
+    lune_MapClass * pMap = lune_obj_Map_obj( pAny );
 
     int index;
     for ( index = 0; index < pDDDAny->val.ddd.len; index += 2 ) {
@@ -812,7 +811,7 @@ bool lune_itMap_hasNext( lune_env_t * _pEnv, lune_any_t * it, lune_Map_entry_t *
 }
 
 void lune_mtd_Map_add( lune_env_t * _pEnv, lune_any_t * pObj,
-                               lune_stem_t key, lune_stem_t val )
+                       lune_stem_t key, lune_stem_t val )
 {
     lune_MapClass * pMap = lune_obj_Map_obj( pObj );
     if ( val.type == lune_stem_type_nil )
@@ -854,17 +853,17 @@ lune_stem_t lune_mtd_Map_get(
     return it->second;
 }
 
-lune_stem_t lune_mtd_Map_createKeyList(
+lune_any_t * lune_mtd_Map_createKeyList(
     lune_env_t * _pEnv, lune_any_t * pObj )
 {
-    lune_stem_t pList = lune_class_List_new( _pEnv );
+    lune_any_t * pList = lune_class_List_new( _pEnv );
 
     lune_MapClass * pMap = lune_obj_Map_obj( pObj );
     lune_MapIterator it;
     lune_MapIterator end = pMap->end();
     
     for ( it = pMap->begin(); it != end; it++ ) {
-        lune_mtd_List_insert( _pEnv, pList.val.pAny, it->first );
+        lune_mtd_List_insert( _pEnv, pList, it->first );
     }
 
     return pList;
@@ -878,14 +877,14 @@ lune_stem_t lune_mtd_Map_createKeyList(
  * @param pMap 生成する Map の要素
  * @return 生成した Map
  */
-lune_stem_t _lune_createMap(
+lune_any_t * _lune_createMap(
     LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_imdEntry_t * pEntry )
 {
-    lune_stem_t pAny = lune_class_Map_new( _pEnv );
+    lune_any_t * pAny = lune_class_Map_new( _pEnv );
 
     for ( ; pEntry->key.type != lune_imdType_sentinel; pEntry++ ) {
         lune_mtd_Map_add(
-            _pEnv, pAny.val.pAny,
+            _pEnv, pAny,
             _lune_createImmediateVal( LUNE_DEBUG_POS, _pEnv, &pEntry->key ),
             _lune_createImmediateVal( LUNE_DEBUG_POS, _pEnv, &pEntry->val ) );
     }

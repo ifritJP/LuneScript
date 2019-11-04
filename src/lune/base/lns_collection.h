@@ -45,15 +45,15 @@ extern "C" {
         lune_method_t * sort;
     };
     
-    extern lune_stem_t lune_class_List_new( lune_env_t * _pEnv );
-    extern lune_stem_t lune_List_ctor( lune_env_t * _pEnv, lune_any_t * pDDDAny );
+    extern lune_any_t * lune_class_List_new( lune_env_t * _pEnv );
+    extern lune_any_t * lune_List_ctor( lune_env_t * _pEnv, lune_any_t * pDDDAny );
 
 
     extern lune_stem_t lune_mtd_List_insert(
         lune_env_t * _pEnv, lune_any_t * pListAny, lune_stem_t pVal );
     extern lune_stem_t lune_mtd_List_refAt(
         lune_env_t * _pEnv, lune_any_t * pListAny, int index );
-    extern lune_stem_t lune_mtd_List_unpack(
+    extern lune_any_t * lune_mtd_List_unpack(
         lune_env_t * _pEnv, lune_any_t * pListAny );
     extern lune_stem_t lune_mtd_List_sort(
         lune_env_t * _pEnv, lune_any_t * pListAny, lune_stem_t pForm );
@@ -83,10 +83,10 @@ extern "C" {
     };
 
     
-    extern lune_stem_t lune_class_Set_new( lune_env_t * _pEnv );
-    extern lune_stem_t lune_Set_ctor( lune_env_t * _pEnv, lune_any_t * pDDDAny );
+    extern lune_any_t * lune_class_Set_new( lune_env_t * _pEnv );
+    extern lune_any_t * lune_Set_ctor( lune_env_t * _pEnv, lune_any_t * pDDDAny );
 
-    extern lune_stem_t lune_mtd_Set_createList( lune_env_t * _pEnv, lune_any_t * pObj );
+    extern lune_any_t * lune_mtd_Set_createList( lune_env_t * _pEnv, lune_any_t * pObj );
 
 
     extern lune_any_t * lune_itSet_new( lune_env_t * _pEnv, lune_any_t * pSet );
@@ -112,12 +112,12 @@ extern "C" {
     } lune_Map_entry_t;
 
     
-    extern lune_stem_t lune_class_Map_new( lune_env_t * _pEnv );
-    extern lune_stem_t lune_Map_ctor( lune_env_t * _pEnv, lune_any_t * pDDDAny );
-    extern lune_stem_t lune_mtd_Map_createKeyList(
+    extern lune_any_t * lune_class_Map_new( lune_env_t * _pEnv );
+    extern lune_any_t * lune_Map_ctor( lune_env_t * _pEnv, lune_any_t * pDDDAny );
+    extern lune_any_t * lune_mtd_Map_createKeyList(
         lune_env_t * _pEnv, lune_any_t * pObj );
     extern void lune_mtd_Map_add( lune_env_t * _pEnv, lune_any_t * pObj,
-                                           lune_stem_t pKey, lune_stem_t pVal );
+                                  lune_stem_t pKey, lune_stem_t pVal );
     extern lune_stem_t lune_mtd_Map_get( lune_env_t * _pEnv, lune_any_t * pObj,
                                            lune_stem_t pKey );
 

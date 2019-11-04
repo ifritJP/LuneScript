@@ -1,5 +1,1 @@
-fn func( val:bool ) {
-   print( val, not val, val or true );
-}
-func( true );
-func( false );
+print( "hoge" );

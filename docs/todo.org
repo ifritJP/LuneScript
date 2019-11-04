@@ -202,7 +202,14 @@ foreach obj in list {
 
 *  C へのトランスコード
 
-- [ ] processToIF() の処理が関数コール処理に入れる。
+- [ ] 次の処理が変換に失敗する
+  fn func( val:int ) {
+    let list = [ val, val ];
+  }
+  
+   
+
+- [ ] processToIF() の処理を関数コール処理に入れる。
 
 - [ ] when! や if! などで定義したシンボルをクロージャで使用する場合の対応。
 

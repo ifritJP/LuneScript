@@ -4439,11 +4439,11 @@ function TransUnit:analyzeForeach( token, sortFlag )
    do
       local _switchExp = expType:get_kind()
       if _switchExp == Ast.TypeInfoKind.Map then
-         self:addLocalVar( exp:get_pos(), true, true, mainSymbol.txt, itemTypeInfoList[2], Ast.MutMode.IMut )
+         self:addLocalVar( exp:get_pos(), false, true, mainSymbol.txt, itemTypeInfoList[2], Ast.MutMode.IMut )
          do
             local _exp = subSymbol
             if _exp ~= nil then
-               self:addLocalVar( _exp.pos, true, true, _exp.txt, itemTypeInfoList[1], Ast.MutMode.IMut )
+               self:addLocalVar( _exp.pos, false, true, _exp.txt, itemTypeInfoList[1], Ast.MutMode.IMut )
             end
          end
          
@@ -4454,20 +4454,20 @@ function TransUnit:analyzeForeach( token, sortFlag )
          
          valSymbol = nil
          subSymbol = mainSymbol
-         self.scope:addLocalVar( true, true, mainSymbol.txt, itemTypeInfoList[1], Ast.MutMode.IMut )
+         self.scope:addLocalVar( false, true, mainSymbol.txt, itemTypeInfoList[1], Ast.MutMode.IMut )
       elseif _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
          if sortFlag then
             self:addErrMess( exp:get_pos(), string.format( "'%s' doesn't support forsort.", Ast.TypeInfoKind:_getTxt( expType:get_kind())
             ) )
          end
          
-         self.scope:addLocalVar( true, true, mainSymbol.txt, itemTypeInfoList[1], Ast.MutMode.IMut )
+         self.scope:addLocalVar( false, true, mainSymbol.txt, itemTypeInfoList[1], Ast.MutMode.IMut )
          do
             local _exp = subSymbol
             if _exp ~= nil then
-               self:addLocalVar( _exp.pos, true, false, _exp.txt, Ast.builtinTypeInt, Ast.MutMode.IMut )
+               self:addLocalVar( _exp.pos, false, false, _exp.txt, Ast.builtinTypeInt, Ast.MutMode.IMut )
             else
-               self.scope:addLocalVar( true, false, "__index", Ast.builtinTypeInt, Ast.MutMode.IMut )
+               self.scope:addLocalVar( false, false, "__index", Ast.builtinTypeInt, Ast.MutMode.IMut )
             end
          end
          

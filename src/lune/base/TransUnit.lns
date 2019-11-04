@@ -3175,10 +3175,10 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
    switch expType.$kind {
       case .Map {
          self.addLocalVar(
-            exp.$pos, true, true, mainSymbol.txt, itemTypeInfoList[ 2 ], .IMut## );
+            exp.$pos, false, true, mainSymbol.txt, itemTypeInfoList[ 2 ], .IMut## );
          if! subSymbol {
             self.addLocalVar(
-               _exp.$pos, true, true, _exp.txt, itemTypeInfoList[ 1 ], .IMut## );
+               _exp.$pos, false, true, _exp.txt, itemTypeInfoList[ 1 ], .IMut## );
          }
       }
       case .Set {
@@ -3188,7 +3188,7 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
          valSymbol = nil;
          subSymbol = mainSymbol;
          self.scope.addLocalVar(
-            true, true, mainSymbol.txt, itemTypeInfoList[ 1 ], .IMut );
+            false, true, mainSymbol.txt, itemTypeInfoList[ 1 ], .IMut );
       }
       case .List, .Array {
          if sortFlag {
@@ -3196,13 +3196,13 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
                              (expType.$kind.$_txt) );
          }
          self.scope.addLocalVar(
-            true, true, mainSymbol.txt, itemTypeInfoList[ 1 ], .IMut );
+            false, true, mainSymbol.txt, itemTypeInfoList[ 1 ], .IMut );
          if! subSymbol {
             self.addLocalVar(
-               _exp.pos, true, false, _exp.txt, Ast.builtinTypeInt, .IMut## );
+               _exp.pos, false, false, _exp.txt, Ast.builtinTypeInt, .IMut## );
          }
          else {
-            self.scope.addLocalVar( true, false, "__index", Ast.builtinTypeInt, .IMut );
+            self.scope.addLocalVar( false, false, "__index", Ast.builtinTypeInt, .IMut );
          }
       }
       default {

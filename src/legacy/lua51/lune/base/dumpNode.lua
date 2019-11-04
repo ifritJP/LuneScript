@@ -1002,7 +1002,7 @@ end
 function dumpFilter:processGetField( node, opt )
 
    local prefix, depth = opt:get(  )
-   dump( prefix, depth, node, "get_" .. node:get_field(  ).txt )
+   dump( prefix, depth, node, string.format( "get_%s:%s", node:get_field(  ).txt, node:get_expType():getTxt(  )) )
    filter( node:get_prefix(  ), self, opt:nextOpt(  ) )
 end
 

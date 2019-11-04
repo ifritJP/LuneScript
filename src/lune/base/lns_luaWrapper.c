@@ -88,7 +88,8 @@ static void lune_lua_stack2str( lune_env_t * _pEnv, int index, lune_stem_t * pSt
 {
     size_t len;
     const char * pMess = lua_tolstring( _pEnv->pLua, index, &len );
-    *pStem = lune_cloneBin2stem( _pEnv, pMess, len );
+    pStem->type = lune_stem_type_any;
+    pStem->val.pAny = lune_cloneBin2stem( _pEnv, pMess, len );
 }
 
 /**
@@ -126,7 +127,7 @@ static void lune_setupFromStack( lune_env_t * _pEnv, int index, lune_stem_t * pS
         break;
     default:
         {
-            *pStem = lune_luaVal_new( _pEnv, lune_value_type_luaVal );
+            *pStem = LUNE_STEM_ANY( lune_luaVal_new( _pEnv, lune_value_type_luaVal ) );
             lua_pushvalue( pLua, index );
             lune_setAnyVal( _pEnv, pStem->val.pAny );
         }
@@ -169,30 +170,31 @@ static lune_stem_t lune_lua_loadedFunc( lune_env_t * _pEnv, lune_any_t * _pForm 
     return retObj;
 }
 
-lune_stem_t lune__load( lune_env_t * _pEnv, lune_stem_t code, lune_stem_t newEnv )
+lune_stem_t lune__load( lune_env_t * _pEnv, lune_any_t * code, lune_stem_t newEnv )
 {
     int top = lua_gettop( _pEnv->pLua );
 
-    int result = luaL_loadstring (_pEnv->pLua, code.val.pAny->val.str.pStr );
+    int result = luaL_loadstring (_pEnv->pLua, code->val.str.pStr );
 
     lune_stem_t retObj;
     
     if ( result == LUA_OK ) {
-        lune_stem_t formObj = lune_func2stem(
+        lune_any_t * formObj = lune_func2stem(
             _pEnv, (lune_closure_t * )lune_lua_loadedFunc, 0, false, 0 );
-        lune_setClosure( formObj.val.pAny );
+        lune_setClosure( formObj );
 
-        lune_setAnyVal( _pEnv, formObj.val.pAny );
+        lune_setAnyVal( _pEnv, formObj );
 
         if ( newEnv.type != lune_stem_type_nil ) {
             lune_abort( "not suport" );
         }
 
-        retObj = lune_createMRet( _pEnv, false, 1,  formObj );
+        retObj = lune_createMRet( _pEnv, false, 1,  LUNE_STEM_ANY( formObj ) );
     }
     else { 
-        retObj = lune_createMRet( _pEnv, false, 2, lune_global.nilStem,
-                                  lune_litStr2stem( _pEnv, "failed to load" ) );
+        retObj = lune_createMRet(
+            _pEnv, false, 2, lune_global.nilStem,
+            LUNE_STEM_ANY( lune_litStr2stem( _pEnv, "failed to load" ) ) );
     }
 
     lua_settop( _pEnv->pLua, top );
@@ -216,12 +218,12 @@ lune_any_t * lune_lua_itMap_new( lune_env_t * _pEnv, lune_any_t * _obj )
 
 
     // { map, nil } を保持
-    lune_stem_t itObj = lune_luaVal_new( _pEnv, lune_value_type_itMap );
-    lune_setAnyVal( _pEnv, itObj.val.pAny );
+    lune_any_t * itObj = lune_luaVal_new( _pEnv, lune_value_type_itMap );
+    lune_setAnyVal( _pEnv, itObj );
 
     lua_settop( pLua, top );
 
-    return itObj.val.pAny;
+    return itObj;
 }
 
 bool lune_lua_itMap_hasNext(

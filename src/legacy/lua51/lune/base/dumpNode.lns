@@ -657,7 +657,8 @@ pub override fn dumpFilter.processGetField(
    node: &Nodes.GetFieldNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
-   dump( prefix, depth, node, "get_" .. node.get_field().txt );
+   dump( prefix, depth, node,
+         "get_%s:%s" ( node.get_field().txt, node.$expType.getTxt(##)) );
    filter( node.get_prefix(), self, opt.nextOpt() );
 };
 

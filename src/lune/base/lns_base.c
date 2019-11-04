@@ -234,13 +234,16 @@ bool lune_decre_ref( lune_env_t * _pEnv, lune_any_t * pAny ) {
 }
 
 
+/**
+MRet の戻り値を設定し、先頭の値を返す。
+ */
 lune_stem_t lune_setMRet( lune_env_t * _pEnv, lune_any_t * pAny ) {
     _pEnv->pMRet = pAny;
     return lune_fromDDD( pAny, 0 );
 }
 
 
-lune_stem_t lune_getIF( lune_env_t * _pEnv, lune_any_t * pIFAny )
+lune_any_t * lune_getIF( lune_env_t * _pEnv, lune_any_t * pIFAny )
 {
     lune_lock(
         if ( pIFAny->refCount == 0 ) {
@@ -254,7 +257,7 @@ lune_stem_t lune_getIF( lune_env_t * _pEnv, lune_any_t * pIFAny )
             pIFAny->refCount++;
         }
     );
-    return LUNE_STEM_ANY( pIFAny );
+    return pIFAny;
 }
 
 /**
@@ -271,7 +274,7 @@ lune_stem_t lune_toIF(
         lune_any_t * pIFAny = (lune_any_t *)pAny->val.classVal->pIFdummy;
         for ( ; pIFAny->type != lune_value_type_none; pIFAny++ ) {
             if ( pIFAny->val.ifVal.pMeta == pMeta ) {
-                return lune_getIF( _pEnv, pIFAny );
+                return LUNE_STEM_ANY( lune_getIF( _pEnv, pIFAny ) );
             }
         }
     }
@@ -281,9 +284,11 @@ lune_stem_t lune_toIF(
 
 void lune_setQ_( lune_any_t * pAny )
 {
-    lune_lock( 
-        pAny->refCount++;
-    );
+    if ( pAny != NULL ) {
+        lune_lock( 
+            pAny->refCount++;
+        );
+    }
 }
 
 void lune_setRet( lune_env_t * _pEnv, lune_stem_t stem )
@@ -293,6 +298,7 @@ void lune_setRet( lune_env_t * _pEnv, lune_stem_t stem )
     }
 
     lune_any_t * pAny = stem.val.pAny;
+    
     lune_rmFromList( pAny );
 
     lune_block_t * pBlock = &_pEnv->blockQueue[ _pEnv->blockDepth - 1 ];
@@ -303,7 +309,8 @@ void lune_setRet( lune_env_t * _pEnv, lune_stem_t stem )
     {
         int index;
         for ( index = 0; index < pAny->val.ddd.len; index++ ) {
-            lune_setRet( _pEnv, lune_fromDDD( pAny, index ) );
+            lune_stem_t item = lune_fromDDD( pAny, index );
+            lune_setRet( _pEnv, item );
         }
     }
     return;
@@ -313,7 +320,7 @@ void lune_setRet( lune_env_t * _pEnv, lune_stem_t stem )
 
 
 void lune_setup_block(
-    lune_env_t * _pEnv, lune_block_t * pBlock, int anyNum, int varNum )
+    lune_env_t * _pEnv, lune_block_t * pBlock, int anyNum, int stemNum, int varNum )
 {
     int dummy;
 
@@ -326,18 +333,26 @@ void lune_setup_block(
     for ( index = 0; index < pBlock->varLen; index++ ) {
         pBlock->pVarList[ index ] = NULL;
     }
+    _pEnv->useVarPoolNum += varNum;
     
-    
+    pBlock->stemLen = stemNum;
     pBlock->pStemList = _pEnv->stemPPool + _pEnv->useStemPoolNum;
-    for ( index = 0; index < anyNum; index++ ) {
+    for ( index = 0; index < stemNum; index++ ) {
         pBlock->pStemList[ index ] = NULL;
     }
-    pBlock->stemLen = anyNum;
+    _pEnv->useStemPoolNum += stemNum;
+
+    pBlock->anyLen = anyNum;
+    pBlock->pAnyList = _pEnv->anyPPool + _pEnv->useAnyPoolNum;
+    for ( index = 0; index < anyNum; index++ ) {
+        pBlock->pAnyList[ index ] = NULL;
+    }
+    _pEnv->useAnyPoolNum += anyNum;
+
+    
     pBlock->blockDepth = _pEnv->blockDepth;
     pBlock->pStackAddr = &dummy;
     
-    _pEnv->useStemPoolNum += anyNum;
-    _pEnv->useVarPoolNum += varNum;
 }
 
 
@@ -347,12 +362,12 @@ void lune_setup_block(
  * @param anyVerNum ブロックで管理する any 型の値の数
  * @return ブロック情報
  */
-lune_block_t * lune_enter_module( int anyNum, int varNum )
+lune_block_t * lune_enter_module( int anyNum, int stemNum, int varNum )
 {
     lune_block_t * pBlock = &s_globalEnv.moduleInitBlockBuf[ s_globalEnv.moduleNum ];
     s_globalEnv.moduleNum++;
 
-    lune_setup_block( s_globalEnv.pEnv, pBlock, anyNum, varNum );
+    lune_setup_block( s_globalEnv.pEnv, pBlock, anyNum, stemNum, varNum );
 
     return pBlock;
 }
@@ -364,12 +379,13 @@ lune_block_t * lune_enter_module( int anyNum, int varNum )
  * @param anyVerNum ブロックで管理する any 型の値の数
  * @return ブロック情報
  */
-lune_block_t * lune_enter_block( lune_env_t * _pEnv, int anyNum, int varNum )
+lune_block_t * lune_enter_block(
+    lune_env_t * _pEnv, int anyNum, int stemNum, int varNum )
 {
     _pEnv->blockDepth++;
     
     lune_block_t * pBlock = &_pEnv->blockQueue[ _pEnv->blockDepth ];
-    lune_setup_block( _pEnv, pBlock, anyNum, varNum );
+    lune_setup_block( _pEnv, pBlock, anyNum, stemNum, varNum );
 
     return pBlock;
 }
@@ -416,9 +432,16 @@ static void lune_leave_blockSub( lune_env_t * _pEnv, lune_block_t * pBlock )
             }
         }
     }
+    for ( index = pBlock->anyLen - 1; index >= 0; index-- ) {
+        lune_any_t * pAny = pBlock->pAnyList[ index ];
+        if ( pAny != NULL ) {
+            lune_decre_ref( _pEnv, pAny );
+        }
+    }
 
     lune_reset_blockSub( _pEnv, pBlock );
     
+    _pEnv->useAnyPoolNum -= pBlock->anyLen;
     _pEnv->useStemPoolNum -= pBlock->stemLen;
     _pEnv->useVarPoolNum -= pBlock->varLen;
 }
@@ -462,6 +485,13 @@ void lune_reset_block( lune_env_t * _pEnv )
         
     }
 
+    for ( index = pBlock->anyLen - 1; index >= 0; index-- ) {
+        lune_any_t * pAny = pBlock->pAnyList[ index ];
+        if ( pAny != NULL ) {
+            lune_decre_ref( _pEnv, pAny );
+        }
+    }
+
     lune_reset_blockSub( _pEnv, pBlock );
 
     pBlock->managedAnyTop.pPrev = &pBlock->managedAnyTop;
@@ -498,9 +528,9 @@ void lune_leave_blockMulti( lune_env_t * _pEnv, int num )
  * @param ... 引数の any 型の値。
  */
 /* lune_block_t * lune_enter_func( */
-/*     lune_env_t * _pEnv, int anyNum, int varNum, int argNum, ... ) */
+/*     lune_env_t * _pEnv, int stemNum, int varNum, int argNum, ... ) */
 /* { */
-/*     lune_enter_block( _pEnv, anyNum, varNum ); */
+/*     lune_enter_block( _pEnv, stemNum, varNum ); */
 /*     lune_block_t * pBlock = &_pEnv->blockQueue[ _pEnv->blockDepth ]; */
 
 
@@ -665,21 +695,23 @@ lune_stem_t _lune_createDDD(
  * @return ... の値
  */
 lune_stem_t _lune_createSubDDD(
-    const char * pFile, int lineNo, lune_env_t * _pEnv, int offset, lune_any_t * pDDD )
+    const char * pFile, int lineNo, lune_env_t * _pEnv, int offset, lune_stem_t ddd )
 {
+    lune_any_t * pDDD = ddd.val.pAny;
+    
     int len;
     len = lune_lenDDD( pDDD ) - offset;
     if ( len < 0 ) {
-        return lune_global.nilStem;
+        return _lune_createDDDOnly( pFile, lineNo, _pEnv, 0 );
     }
 
-    lune_stem_t subDDD = _lune_createDDDOnly( pFile, lineNo, _pEnv, len );
+    lune_stem_t pSubDDD = _lune_createDDDOnly( pFile, lineNo, _pEnv, len );
         
     int index;
     for ( index = 0; index < len; index++ ) {
-        lune_set2DDDArg( subDDD.val.pAny, index, lune_fromDDD( pDDD, index + offset ) );
+        lune_set2DDDArg( pSubDDD.val.pAny, index, lune_fromDDD( pDDD, index + offset ) );
     }
-    return subDDD;
+    return pSubDDD;
 }
 
 
@@ -713,12 +745,12 @@ lune_stem_t _lune_createDDDOnly(
 }
 
 
-lune_stem_t _lune_luaVal_new(
+lune_any_t * _lune_luaVal_new(
     const char * pFile, int lineNo, lune_env_t * _pEnv, lune_value_type_t type )
 {
     lune_any_t * pAny = lune_alloc_any( _pEnv, lune_value_type_luaVal, pFile, lineNo );
     pAny->val.luaVal.type = type;
-    return LUNE_STEM_ANY( pAny );
+    return pAny;
 }
 
 
@@ -757,7 +789,7 @@ void lune_it_delete( lune_env_t * _pEnv, lune_any_t * pAny )
  * @param size クラスインスタンスのサイズ
  * @return any
  */
-lune_stem_t _lune_alge_new(
+lune_any_t * _lune_alge_new(
     const char * pFile, int lineNo, lune_env_t * _pEnv, int valType,
     int size, lune_algeVal_gc_t * gc )
 {
@@ -768,7 +800,7 @@ lune_stem_t _lune_alge_new(
     pAny->val.alge.type = valType;
     pAny->val.alge.pVal = pObj;
     pAny->val.alge.gc = gc;
-    return LUNE_STEM_ANY( pAny );
+    return pAny;
 }
 
 /**
@@ -788,7 +820,7 @@ static void lune_alge_del( lune_env_t * _pEnv, void * pObj )
  * @param size クラスインスタンスのサイズ
  * @return any
  */
-lune_stem_t _lune_class_new(
+lune_any_t * _lune_class_new(
     const char * pFile, int lineNo, lune_env_t * _pEnv, int size )
 {
     lune_any_t * pAny =
@@ -796,7 +828,7 @@ lune_stem_t _lune_class_new(
     void * pObj = lune_malloc( _pEnv->allocateor, size );
     s_globalEnv.allocNum++;
     pAny->val.classVal = pObj;
-    return LUNE_STEM_ANY( pAny );
+    return pAny;
 }
 
 /**
@@ -818,7 +850,7 @@ static void lune_class_del( lune_env_t * _pEnv, void * pObj )
  * @param ... フォーム内でアクセスする外部変数
  * @return any
  */
-lune_stem_t _lune_func2stem(
+lune_any_t * _lune_func2stem(
     const char * pFile, int lineNo, 
     lune_env_t * _pEnv, lune_closure_t * pFunc, int argNum, bool hasDDD, int num, ... )
 {
@@ -857,7 +889,7 @@ lune_stem_t _lune_func2stem(
     );
     va_end(ap);
 
-    return LUNE_STEM_ANY( pFormAny );
+    return pFormAny;
 }
 
 /**
@@ -880,16 +912,16 @@ lune_str_t lune_createLiteralStr( const char * pStr ) {
  * @param val 文字列型データ
  * @return any
  */
-lune_stem_t _lune_str2stem(
+lune_any_t * _lune_str2stem(
     const char * pFile, int lineNo, lune_env_t * _pEnv, lune_str_t val )
 {
     lune_any_t * pAny =
         lune_alloc_any( _pEnv, lune_value_type_str, pFile, lineNo );
     pAny->val.str = val;
-    return LUNE_STEM_ANY( pAny );
+    return pAny;
 }
 
-lune_stem_t _lune_litStr2stem(
+lune_any_t * _lune_litStr2stem(
     const char * pFile, int lineNo, lune_env_t * _pEnv, const char * pStr )
 {
     lune_any_t * pAny =
@@ -897,7 +929,7 @@ lune_stem_t _lune_litStr2stem(
     pAny->val.str.len = strlen( pStr );
     pAny->val.str.pStr = pStr;
     pAny->val.str.staticFlag = true;
-    return LUNE_STEM_ANY( pAny );
+    return pAny;
 }
 
 lune_int_t lune_stem2int( lune_stem_t stem )
@@ -928,8 +960,20 @@ lune_real_t lune_stem2real( lune_stem_t stem )
     return 0.0;
 }
 
+lune_bool_t lune_stem2bool( lune_stem_t stem )
+{
+    switch ( stem.type ) {
+    case lune_stem_type_bool:
+        return stem.val.boolVal;
+    default:
+        break;
+    }
+    lune_abort( "convert error stem2real" );
+    return 0.0;
+}
 
-lune_stem_t _lune_cloneBin2stem(
+
+lune_any_t * _lune_cloneBin2stem(
     const char * pFile, int lineNo, lune_env_t * _pEnv, const void * pBuf, int len )
 {
     lune_any_t * pAny = lune_alloc_any( _pEnv, lune_value_type_str, pFile, lineNo );
@@ -944,10 +988,56 @@ lune_stem_t _lune_cloneBin2stem(
     pAny->val.str.pStr = pAlloc;
     pAny->val.str.len = len;
     pAny->val.str.staticFlag = false;
-    return LUNE_STEM_ANY( pAny );
+    return pAny;
 }
 
-bool lune_equals( lune_stem_t stem1, lune_stem_t stem2 ) {
+bool lune_equals_any( const lune_any_t * pAny1, const lune_any_t * pAny2 )
+{
+    if ( pAny1->type == pAny2->type ) {
+        if ( pAny1 == pAny2 ) {
+            // 同じ any データなら equal
+            return true;
+        }
+        switch ( pAny1->type ) {
+        case lune_value_type_str:
+            {
+                // 文字列は同じデータなら equal
+                const lune_str_t * pStr1 = &pAny1->val.str;
+                const lune_str_t * pStr2 = &pAny2->val.str;
+                if ( pStr1->len != pStr2->len ) {
+                    // 長さが違えば false
+                    return false;
+                }
+                return memcmp( pStr1->pStr, pStr2->pStr, pStr1->len ) == 0;
+            }
+            break;
+        case lune_value_type_if:
+            // インタフェースは、同じインスタンスを指している場合は equal
+            return pAny1->val.ifVal.pObj == pAny2->val.ifVal.pObj;
+        default:
+            break;
+        }
+        return false;
+    }
+    // 異なる any タイプなら
+    switch ( pAny1->type ) {
+    case lune_value_type_if:
+        if ( pAny2->type == lune_value_type_class ) {
+            return pAny1->val.ifVal.pObj == pAny2;
+        }
+        break;
+    case lune_value_type_class:
+        if ( pAny2->type == lune_value_type_if ) {
+            return pAny2->val.ifVal.pObj == pAny1;
+        }
+        break;
+    default:
+        break;
+    }
+    return false;
+}
+
+bool lune_equals( const lune_stem_t stem1, const lune_stem_t stem2 ) {
     if ( stem1.type == stem2.type ) {
         switch ( stem1.type ) {
         case lune_stem_type_nil:
@@ -961,50 +1051,7 @@ bool lune_equals( lune_stem_t stem1, lune_stem_t stem2 ) {
         default:
             break;
         }
-        const lune_any_t * pAny1 = stem1.val.pAny;
-        const lune_any_t * pAny2 = stem2.val.pAny;
-        if ( pAny1->type == pAny2->type ) {
-            if ( pAny1 == pAny2 ) {
-                // 同じ any データなら equal
-                return true;
-            }
-            switch ( pAny1->type ) {
-            case lune_value_type_str:
-                {
-                    // 文字列は同じデータなら equal
-                    const lune_str_t * pStr1 = &pAny1->val.str;
-                    const lune_str_t * pStr2 = &pAny2->val.str;
-                    if ( pStr1->len != pStr2->len ) {
-                        // 長さが違えば false
-                        return false;
-                    }
-                    return memcmp( pStr1->pStr, pStr2->pStr, pStr1->len ) == 0;
-                }
-                break;
-            case lune_value_type_if:
-                // インタフェースは、同じインスタンスを指している場合は equal
-                return pAny1->val.ifVal.pObj == pAny2->val.ifVal.pObj;
-            default:
-                break;
-            }
-            return false;
-        }
-        // 異なる any タイプなら
-        switch ( pAny1->type ) {
-        case lune_value_type_if:
-            if ( pAny2->type == lune_value_type_class ) {
-                return pAny1->val.ifVal.pObj == pAny2;
-            }
-            break;
-        case lune_value_type_class:
-            if ( pAny2->type == lune_value_type_if ) {
-                return pAny2->val.ifVal.pObj == pAny1;
-            }
-            break;
-        default:
-            break;
-        }
-        return false;
+        return lune_equals_any( stem1.val.pAny, stem2.val.pAny );
     }
 
     // 異なる stem タイプなら
@@ -1045,17 +1092,18 @@ static lune_env_t * lune_createEnv( lua_State * pLua )
     
     _pEnv->allocateor = allocateor;
     _pEnv->pLua = pLua;
+    _pEnv->useAnyPoolNum = 0;
     _pEnv->useStemPoolNum = 0;
     _pEnv->useVarPoolNum = 0;
     _pEnv->blockDepth = 0;
     _pEnv->stackPos = 0;
 
-    lune_enter_block( _pEnv, 0, 0 );
+    lune_enter_block( _pEnv, 0, 0, 0 );
     _pEnv->pMRet = NULL;
 
     _pEnv->pSortCallback = lune_global.nilStem;
 
-    lune_enter_block( _pEnv, 0, 0 );
+    lune_enter_block( _pEnv, 0, 0, 0 );
 
     if ( pLua != NULL ) {
         lune_setLuaWapper( _pEnv );
@@ -1076,7 +1124,8 @@ static void lune_deleteEnv( lune_env_t * _pEnv ) {
 
     s_globalEnv.allocNum--;
 
-    printf( ":debug:useAnyPoolNum = %d\n", _pEnv->useStemPoolNum );
+    printf( ":debug:useAnyPoolNum = %d\n", _pEnv->useAnyPoolNum );
+    printf( ":debug:useStemPoolNum = %d\n", _pEnv->useStemPoolNum );
     printf( ":debug:useVarPoolNum = %d\n", _pEnv->useVarPoolNum );
     printf( ":debug:blockDepth = %d\n", _pEnv->blockDepth );
     
@@ -1121,21 +1170,18 @@ void lune_init_alge( lune_stem_t * pStem, lune_any_t * pAny, int valType )
 }
 
 lune_stem_t lune_call_form(
-    lune_env_t * _pEnv, lune_any_t * _pForm, lune_stem_t _pDDD )
+    lune_env_t * _pEnv, lune_any_t * _pForm, lune_stem_t ddd )
 {
     if ( lune_isClosure( _pForm ) ) {
-        return lune_closure( _pForm )( _pEnv, _pForm, _pDDD );
+        return lune_closure( _pForm )( _pEnv, _pForm, ddd );
     }
     else {
-        return lune_func( _pForm )( _pEnv, _pDDD );
+        return lune_func( _pForm )( _pEnv, ddd );
     }
 }
 
-lune_stem_t lune_op_not( lune_env_t * _pEnv, lune_stem_t stem ) {
-    if ( lune_isCondTrue( stem ) ) {
-        return lune_global.falseStem;
-    }
-    return lune_global.trueStem;
+bool lune_op_not( lune_env_t * _pEnv, lune_stem_t stem ) {
+    return !lune_isCondTrue( stem );
 }
 
 /**
@@ -1200,6 +1246,18 @@ lune_stem_t lune_unwrap_stem( lune_stem_t stem, lune_stem_t defVal )
     }
     lune_abort( __func__ );
     return lune_global.noneStem; // dummy
+}
+
+lune_any_t * lune_unwrap_any( lune_stem_t stem, lune_stem_t defVal )
+{
+    if ( stem.type != lune_stem_type_nil ) {
+        return stem.val.pAny;
+    }
+    if ( defVal.type != lune_stem_type_none ) {
+        return defVal.val.pAny;
+    }
+    lune_abort( __func__ );
+    return NULL; // dummy
 }
 
 

@@ -172,6 +172,16 @@ extern "C" {
     (BLOCK)->pStemList[ INDEX ] = &(VAR);           \
     VAR.type = lune_stem_type_nil;
 
+#define lune_set_block_any( BLOCK, INDEX, SYMBOL )     \
+    SYMBOL = &(BLOCK)->pAnyList[ INDEX ];
+
+    
+#define lune_initVal_any( SYMBOL, BLOCK, INDEX, ANY )       \
+    lune_set_block_any( BLOCK, INDEX, SYMBOL );             \
+    *SYMBOL = ANY;                                          \
+    lune_setQ_( *SYMBOL );                                  \
+    
+    
 
 #define lune_initVal_stem( SYMBOL, BLOCK, INDEX, VAL )                \
     SYMBOL = (BLOCK)->pVarList[ INDEX ];                              \
@@ -268,8 +278,8 @@ extern "C" {
 
 
 #define lune_class_new2_( ENV, CLASS, SCLASS, ANYVAL, CLASSVAL )      \
-    lune_stem_t ANYVAL = lune_class_new( ENV, sizeof( CLASS ) );      \
-    CLASS * CLASSVAL = lune_obj_##SCLASS( ANYVAL.val.pAny );          \
+    lune_any_t * ANYVAL = lune_class_new( ENV, sizeof( CLASS ) );      \
+    CLASS * CLASSVAL = lune_obj_##SCLASS( ANYVAL );          \
     CLASSVAL->pMtd = &lune_mtd_##SCLASS;                              \
     CLASSVAL->pMeta = &lune_type_meta_##SCLASS;
     
@@ -294,7 +304,7 @@ extern "C" {
         lune_init_any( __pAny, lune_value_type_if, ENV );         \
         __pAny->refCount = 0;                                     \
         __pAny->val.ifVal.pMeta = &lune_type_meta_##IF;           \
-        __pAny->val.ifVal.pObj = OBJ.val.pAny;                    \
+        __pAny->val.ifVal.pObj = OBJ;                    \
         __pAny->val.ifVal.pMtd = MTD;                             \
     }
 
@@ -357,6 +367,7 @@ extern "C" {
      * @return メソッドの戻り値
      */
     typedef lune_stem_t lune_method_t( lune_env_t * _pEnv, lune_any_t * pObj, ... );
+    typedef lune_any_t * lune_method_any_t( lune_env_t * _pEnv, lune_any_t * pObj, ... );
     typedef lune_int_t lune_method_int_t( lune_env_t * _pEnv, lune_any_t * pObj, ... );
     typedef lune_real_t lune_method_real_t( lune_env_t * _pEnv, lune_any_t * pObj, ... );
 
@@ -575,6 +586,10 @@ extern "C" {
         lune_var_t ** pVarList;
         /** このブロックで管理する stem 型を保持するバッファ */
         lune_stem_t ** pStemList;
+        /** このブロックで管理する stem 型を保持するバッファ */
+        lune_any_t ** pAnyList;
+        /** pAnyList で管理する値の数 */
+        int anyLen;
         /** pStemList で管理する値の数 */
         int stemLen;
         /** pVarBuf で管理する値の数 */
@@ -623,6 +638,13 @@ extern "C" {
         lune_stem_t * stemPPool[ LUNE_ANY_POOL_MAX_NUM ];
         /** anyPPool をどこまで使用しているか個数を示す */
         int useStemPoolNum;
+        /**
+         * ブロック情報で利用する pAnyList のバッファ。
+         * ブロック開始時に、ここから割り当てる。
+         */
+        lune_any_t * anyPPool[ LUNE_ANY_POOL_MAX_NUM ];
+        /** anyPPool をどこまで使用しているか個数を示す */
+        int useAnyPoolNum;
         /** ブロック情報の Queue。*/
         lune_block_t blockQueue[ LUNE_BLOCK_MAX_DEPTH ];
         /** 現在のブロックの深度 */
@@ -695,35 +717,36 @@ extern "C" {
 
     extern void _lune_abort( const char * pMessage, const char * pFile, int lineNo );
     
-    extern lune_stem_t _lune_str2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_str_t val );
-    extern lune_stem_t _lune_litStr2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, const char * pStr );
-    extern lune_stem_t _lune_func2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_closure_t * pFunc, int argNum, bool hasDDD, int num, ... );
+    extern lune_any_t * _lune_str2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_str_t val );
+    extern lune_any_t * _lune_litStr2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, const char * pStr );
+    extern lune_any_t * _lune_func2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_closure_t * pFunc, int argNum, bool hasDDD, int num, ... );
     extern lune_stem_t _lune_createDDD( LUNE_DEBUG_DECL, lune_env_t * _pEnv, bool hasDDD, int num, ... );
     extern lune_stem_t _lune_createDDDOnly( LUNE_DEBUG_DECL, lune_env_t * _pEnv, int num );
     extern lune_stem_t _lune_createSubDDD(
-        const char * pFile, int lineNo, lune_env_t * _pEnv, int offset, lune_any_t * pDDD );
+        const char * pFile, int lineNo, lune_env_t * _pEnv, int offset, lune_stem_t pDDD );
     extern lune_stem_t _lune_createMRet( LUNE_DEBUG_DECL, lune_env_t * _pEnv, bool hasDDD, int num, ... );
-    extern lune_stem_t _lune_class_new( LUNE_DEBUG_DECL, lune_env_t * _pEnv, int size );
-    extern lune_stem_t _lune_alge_new( LUNE_DEBUG_DECL, lune_env_t * _pEnv, int valType, int size, lune_algeVal_gc_t * gc );
+    extern lune_any_t * _lune_class_new( LUNE_DEBUG_DECL, lune_env_t * _pEnv, int size );
+    extern lune_any_t * _lune_alge_new( LUNE_DEBUG_DECL, lune_env_t * _pEnv, int valType, int size, lune_algeVal_gc_t * gc );
     extern lune_any_t * _lune_it_new(
         LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_value_type_t type, void * pVal );
-    extern lune_stem_t _lune_cloneBin2stem(
+    extern lune_any_t * _lune_cloneBin2stem(
         const char * pFile, int lineNo, lune_env_t * _pEnv, const void * pBuf, int len );
 
-    extern lune_stem_t _lune_luaVal_new(
+    extern lune_any_t * _lune_luaVal_new(
         const char * pFile, int lineNo, lune_env_t * _pEnv, lune_value_type_t type );
     
 
     extern lune_int_t lune_stem2int( lune_stem_t stem );
     extern lune_real_t lune_stem2real( lune_stem_t stem );
+    extern lune_bool_t lune_stem2bool( lune_stem_t stem );
 
     extern void lune_init_alge( lune_stem_t * pStem, lune_any_t * pAny, int valType );
 
     
-    extern lune_stem_t _lune_createList( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_imdVal_t * pList );
-    extern lune_stem_t _lune_createSet(
+    extern lune_any_t * _lune_createList( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_imdVal_t * pList );
+    extern lune_any_t * _lune_createSet(
         LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_imdVal_t * pSet );
-    extern lune_stem_t _lune_createMap(
+    extern lune_any_t * _lune_createMap(
         LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_imdEntry_t * pEntry );
 
     extern lune_stem_t _lune_createImmediateVal(
@@ -736,20 +759,20 @@ extern "C" {
     extern lune_var_t * lune_var_alloc(
         lune_env_t * _pEnv, lune_block_t * pBlock, int index, lune_stem_type_t type );
 
-    extern lune_block_t * lune_enter_module( int anyNum, int varNum );
+    extern lune_block_t * lune_enter_module( int anyNum, int stemNum, int varNum );
     extern void lune_reset_block( lune_env_t * _pEnv );
 
-    extern void lune_setRet( lune_env_t * _pEnv, lune_stem_t pAny );
+    extern void lune_setRet( lune_env_t * _pEnv, lune_stem_t stem );
     extern void lune_setQ_( lune_any_t * pAny );
     extern void lune_setOverwrite( lune_any_t * pAny );
-    extern lune_block_t * lune_enter_func( lune_env_t * _pEnv, int anyNum, int varNum, int argNum, ... );
+    extern lune_block_t * lune_enter_func( lune_env_t * _pEnv, int anyNum, int stemNum, int varNum, int argNum, ... );
     extern void lune_leave_block( lune_env_t * _pEnv );
     extern void lune_leave_blockMulti( lune_env_t * _pEnv, int num );
-    extern lune_block_t * lune_enter_block( lune_env_t * _pEnv, int anyNum, int varNum );
+    extern lune_block_t * lune_enter_block( lune_env_t * _pEnv, int anyNum,  int stemNum, int varNum );
     extern bool lune_decre_ref( lune_env_t * _pEnv, lune_any_t * pAny );
     extern void lune_it_delete( lune_env_t * _pEnv, lune_any_t * pAny );
-    extern lune_stem_t lune_call_form( lune_env_t * _pEnv, lune_any_t * _pForm, lune_stem_t _pDDD );
-    extern lune_stem_t lune_getIF( lune_env_t * _pEnv, lune_any_t * pIFAny );
+    extern lune_stem_t lune_call_form( lune_env_t * _pEnv, lune_any_t * _pForm, lune_stem_t ddd );
+    extern lune_any_t * lune_getIF( lune_env_t * _pEnv, lune_any_t * pIFAny );
     extern lune_stem_t lune_toIF( lune_env_t * _pEnv, lune_any_t * pAny, const lune_type_meta_t * pMeta );
     extern lune_stem_t lune_setMRet( lune_env_t * _pEnv, lune_any_t * pAny );
     extern lune_stem_t lune_getValFromDDD( lune_any_t * pAny, int index );
@@ -757,6 +780,7 @@ extern "C" {
 
 
     extern lune_stem_t lune_unwrap_stem( lune_stem_t pAny, lune_stem_t pDefVal );
+    extern lune_any_t * lune_unwrap_any( lune_stem_t pAny, lune_stem_t pDefVal );
     extern lune_int_t lune_unwrap_int( lune_stem_t pAny );
     extern lune_int_t lune_unwrap_intDefault( lune_stem_t pAny, lune_int_t val );
     extern lune_real_t lune_unwrap_real( lune_stem_t pAny );
@@ -768,8 +792,9 @@ extern "C" {
     extern bool lune_incStack( lune_env_t * _pEnv );
     extern bool lune_setStackVal( lune_env_t * _pEnv, lune_stem_t pVal );
     extern lune_stem_t lune_popVal( lune_env_t * _pEnv, bool dummy );
-    extern lune_stem_t lune_op_not( lune_env_t * _pEnv, lune_stem_t pAny );
+    extern bool lune_op_not( lune_env_t * _pEnv, lune_stem_t pAny );
     extern bool lune_equals( lune_stem_t stem1, lune_stem_t stem2 );
+    extern bool lune_equals_any( const lune_any_t * pAny1, const lune_any_t * pAny2 );
 
     extern void lune_run_module( lune_env_t * _pEnv );
 

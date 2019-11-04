@@ -678,6 +678,9 @@ return obj
       pub fn func(): &T {
          return self.val;
       }
+      pub fn func2(): &T, &T {
+         return self.val, self.val;
+      }
    }
 
    fn func( obj:&IF ) {
@@ -695,6 +698,11 @@ return obj
    foreach item in list {
       item.func();
    }
+   let val1, val2 = hoge.func2();
+   val1.func();
+   val2.func();
+
+   func( ( hoge.func() ) );
 }
 {
    _section();

@@ -10065,20 +10065,6 @@ function Node:getSymbolInfo(  )
                end
             end
             
-         elseif _switchExp == NodeKind.get_GetField() then
-            do
-               local getFieldNode = _lune.__Cast( node, 3, GetFieldNode )
-               if getFieldNode ~= nil then
-                  do
-                     local _exp = getFieldNode:get_symbolInfo()
-                     if _exp ~= nil then
-                        return {_exp}
-                     end
-                  end
-                  
-               end
-            end
-            
          elseif _switchExp == NodeKind.get_ExpList() then
             do
                local expListNode = _lune.__Cast( node, 3, ExpListNode )
