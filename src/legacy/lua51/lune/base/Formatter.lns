@@ -236,11 +236,11 @@ pub override fn FormatterFilter.processDeclMember(
    }
    self.write( "let " );
 
-   let sym = node.$symbolInfo;
-   if sym.$mutable {
+   let symbol = node.$symbolInfo;
+   if symbol.$mutable {
       self.write( "mut " );
    }
-   self.write( sym.$name );
+   self.write( symbol.$name );
    self.write( ":" );
 
    filter( node.$refType, self, opt.nextOpt( node ) );
@@ -259,7 +259,7 @@ pub override fn FormatterFilter.processDeclMember(
       if not node.$getterMutable {
          self.write( "&" );
       }
-      if node.$getterRetType ~= sym.$typeInfo {
+      if node.$getterRetType ~= symbol.$typeInfo {
          self.write( ":" );
          self.write( node.$getterRetType.getTxt(##) );
       }

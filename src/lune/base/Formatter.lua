@@ -487,12 +487,12 @@ function FormatterFilter:processDeclMember( node, opt )
    
    self:write( "let " )
    
-   local sym = node:get_symbolInfo()
-   if sym:get_mutable() then
+   local symbol = node:get_symbolInfo()
+   if symbol:get_mutable() then
       self:write( "mut " )
    end
    
-   self:write( sym:get_name() )
+   self:write( symbol:get_name() )
    self:write( ":" )
    
    filter( node:get_refType(), self, opt:nextOpt( node ) )
@@ -512,7 +512,7 @@ function FormatterFilter:processDeclMember( node, opt )
          self:write( "&" )
       end
       
-      if node:get_getterRetType() ~= sym:get_typeInfo() then
+      if node:get_getterRetType() ~= symbol:get_typeInfo() then
          self:write( ":" )
          self:write( node:get_getterRetType():getTxt(  ) )
       end

@@ -1324,18 +1324,42 @@ pub fn Scope.getSymbolInfo( name: str, fromScope:&Scope,
          }
       }
    }
+
    if not onlySameNsFlag or not self.ownerTypeInfo {
       if self.parent ~= self {
          return self.parent.getSymbolInfo( name, fromScope, onlySameNsFlag, access );
       }
    }
-   if onlySameNsFlag {
-      return nil;
+   else {
+      let mut workScope = self.parent;
+      while workScope.parent ~= workScope {
+         if workScope.ownerTypeInfo$.$kind ~= TypeInfoKind.Class {
+            return workScope.getSymbolInfo( name, fromScope, onlySameNsFlag, access );
+         }
+         workScope = workScope.parent;
+      }
    }
    if! sym2builtInTypeMap[ name ] {
       return _exp;
    }
    return nil;
+      
+   // if not onlySameNsFlag or not self.ownerTypeInfo or
+   //    self.ownerTypeInfo$.$kind == TypeInfoKind.Module
+   // {
+   //    if self.parent ~= self {
+   //       return self.parent.getSymbolInfo( name, fromScope, onlySameNsFlag, access );
+   //    }
+   // }
+   // if onlySameNsFlag and self.ownerTypeInfo and
+   //    self.ownerTypeInfo$.$kind ~= TypeInfoKind.Module
+   // {
+   //    return nil;
+   // }
+   // if! sym2builtInTypeMap[ name ] {
+   //    return _exp;
+   // }
+   // return nil;
 }
 
 pub fn Scope.getTypeInfo(

@@ -1211,18 +1211,18 @@ function Front:convertLuaToStreamFromScript( convMode, path, mod, byteCompile, s
             end
             
             
-            local oStream = stream
+            local outStream = stream
             local oMetaStream = metaStream
             
             local byteStream = Util.memStream.new()
             local byteMetaStream = Util.memStream.new()
             if byteCompile then
-               oStream = byteStream
+               outStream = byteStream
                oMetaStream = byteMetaStream
             end
             
             
-            self:convert( ast, path, oStream, oMetaStream, convMode, false )
+            self:convert( ast, path, outStream, oMetaStream, convMode, false )
             
             if byteCompile then
                stream:write( byteCompileFromLuaTxt( byteStream:get_txt(), stripDebugInfo ) )
@@ -1461,9 +1461,9 @@ function Front:saveToLua(  )
                
                
                local metaStream = stream
-               local convMode = convLua.ConvMode.Convert
+               local metaConvMode = convLua.ConvMode.Convert
                if self.option.mode == Option.ModeKind.SaveMeta then
-                  convMode = convLua.ConvMode.ConvMeta
+                  metaConvMode = convLua.ConvMode.ConvMeta
                   do
                      local _exp = io.open( tempMetaPath, "w+" )
                      if _exp ~= nil then

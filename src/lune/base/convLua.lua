@@ -912,11 +912,11 @@ function convFilter:outputMeta( node )
             if stmtBlock ~= nil then
                local memStream = Util.memStream.new()
                
-               local filter = convFilter.new(declInfo:get_name().txt, memStream, memStream, ConvMode.Convert, false, Ast.headTypeInfo, Ast.SymbolKind.Typ, self.useLuneRuntime, self.targetLuaVer, self.enableTest)
+               local workFilter = convFilter.new(declInfo:get_name().txt, memStream, memStream, ConvMode.Convert, false, Ast.headTypeInfo, Ast.SymbolKind.Typ, self.useLuneRuntime, self.targetLuaVer, self.enableTest)
                
-               filter.macroDepth = filter.macroDepth + 1
-               filter:processBlock( stmtBlock, Opt.new(node) )
-               filter.macroDepth = filter.macroDepth - 1
+               workFilter.macroDepth = workFilter.macroDepth + 1
+               workFilter:processBlock( stmtBlock, Opt.new(node) )
+               workFilter.macroDepth = workFilter.macroDepth - 1
                
                memStream:close(  )
                self:writeln( string.format( 'info.stmtBlock = %q', memStream:get_txt()) )
@@ -3919,8 +3919,8 @@ function MacroEvalImp:evalFromMacroCode( code )
 end
 function MacroEvalImp:evalFromCode( name, argNameList, code )
 
-   local oStream = Util.memStream.new()
-   local conv = convFilter.new("macro", oStream, oStream, ConvMode.Exec, true, Ast.headTypeInfo, Ast.SymbolKind.Typ, nil, LuaVer.curVer, false)
+   local stream = Util.memStream.new()
+   local conv = convFilter.new("macro", stream, stream, ConvMode.Exec, true, Ast.headTypeInfo, Ast.SymbolKind.Typ, nil, LuaVer.curVer, false)
    
    conv:outputDeclMacro( name, argNameList, function (  )
    
@@ -3930,16 +3930,16 @@ function MacroEvalImp:evalFromCode( name, argNameList, code )
       
    end )
    
-   return self:evalFromMacroCode( oStream:get_txt() )
+   return self:evalFromMacroCode( stream:get_txt() )
 end
 function MacroEvalImp:eval( node )
 
-   local oStream = Util.memStream.new()
-   local conv = convFilter.new("macro", oStream, oStream, ConvMode.Exec, true, Ast.headTypeInfo, Ast.SymbolKind.Typ, nil, LuaVer.curVer, false)
+   local stream = Util.memStream.new()
+   local conv = convFilter.new("macro", stream, stream, ConvMode.Exec, true, Ast.headTypeInfo, Ast.SymbolKind.Typ, nil, LuaVer.curVer, false)
    
    conv:processDeclMacro( node, Opt.new(node) )
    
-   return self:evalFromMacroCode( oStream:get_txt() )
+   return self:evalFromMacroCode( stream:get_txt() )
 end
 function MacroEvalImp.setmeta( obj )
   setmetatable( obj, { __index = MacroEvalImp  } )

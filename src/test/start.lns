@@ -87,7 +87,7 @@ macro _test2( val:int, funcxx:sym ) {
          return "mfunc%d" (val2);
       }
       let message = "hello %d %s" ( val, ,,,,funcxx );
-      let stat = `{ print( "macro stat" ); };
+      let stat1 = `{ print( "macro stat" ); };
       let stat2 = `{
          for index = 1, 10 {
             print( "hoge %d" ( index ) );
@@ -109,7 +109,7 @@ macro _test2( val:int, funcxx:sym ) {
    print( "--funcxx--" );
    ,,funcxx( "macro test2" );
    print( "--stat--" );
-   ,,stat;
+   ,,stat1;
    print( "--stat2--" );
    ,,stat2;
    print( "--stat3--" );

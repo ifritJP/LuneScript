@@ -8,15 +8,6 @@
 
 * バグ
 
-- [ ] 次の時、 val の shadowing が検知できない
-let val;
-
-fn func( hoge:int! ) {
-   if! hoge {
-      let mut val;
-   }
-}
-  
 
 - [ ] 型パラメータを持つクラスの proto 宣言が出来ない。
   
@@ -493,6 +484,12 @@ pub fn func( list:&List<Hoge> );
 form test();
 
 test(); // test は form の型名なので、コールできないから本来はコンパイルエラー。
+- [X] 次の時、 val の shadowing が検知できない
+let val;
+
+fn func() {
+   let mut val;
+}
 
 
 

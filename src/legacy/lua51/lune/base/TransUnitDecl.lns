@@ -1722,13 +1722,13 @@ fn TransUnit.analyzeClassBody(
       let mut initBlockScope = self.pushScope( false## );
       self.prepareTentativeSymbol( initBlockScope, false );
 
-      let name = "___init";
+      let ininame = "___init";
       let funcTypeInfo = Ast.NormalTypeInfo.createFunc(
          false, false, initBlockScope, .Func, classTypeInfo,
-         false, false, true, .Pri, name, nil, nil, nil, false );
+         false, false, true, .Pri, ininame, nil, nil, nil, false );
       
       let block = self.analyzeFuncBlock(
-         .InitBlock, token, classTypeInfo, name, initBlockScope, [] );
+         .InitBlock, token, classTypeInfo, ininame, initBlockScope, [] );
 
       let mut info = new Nodes.DeclFuncInfo(
          .InitBlock, classTypeInfo, token, [], true, .Pri, block, [], false );

@@ -6173,10 +6173,10 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
       local initBlockScope = self:pushScope( false )
       self:prepareTentativeSymbol( initBlockScope, false )
       
-      local name = "___init"
-      local funcTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, initBlockScope, Ast.TypeInfoKind.Func, classTypeInfo, false, false, true, Ast.AccessMode.Pri, name, nil, nil, nil, false )
+      local ininame = "___init"
+      local funcTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, initBlockScope, Ast.TypeInfoKind.Func, classTypeInfo, false, false, true, Ast.AccessMode.Pri, ininame, nil, nil, nil, false )
       
-      local block = self:analyzeFuncBlock( AnalyzingState.InitBlock, token, classTypeInfo, name, initBlockScope, {} )
+      local block = self:analyzeFuncBlock( AnalyzingState.InitBlock, token, classTypeInfo, ininame, initBlockScope, {} )
       
       local info = Nodes.DeclFuncInfo.new(Nodes.FuncKind.InitBlock, classTypeInfo, token, {}, true, Ast.AccessMode.Pri, block, {}, false)
       local initBlockNode = Nodes.DeclMethodNode.create( self.nodeManager, firstToken.pos, {funcTypeInfo}, info )
@@ -9256,8 +9256,7 @@ function TransUnit:dumpFieldComp( writer, isPrefixType, prefixTypeInfo, pattern,
       if symbol ~= "__init" and symbol ~= "__free" and symbol ~= "self" then
          if getterPattern ~= nil then
             if symbolInfo:get_kind() == Ast.SymbolKind.Mtd or symbolInfo:get_kind() == Ast.SymbolKind.Fun then
-               local typeInfo = symbolInfo:get_typeInfo()
-               local retList = typeInfo:get_retTypeInfoList()
+               local retList = symbolInfo:get_typeInfo():get_retTypeInfoList()
                if #retList == 1 then
                   return self:dumpComp( writer, getterPattern, symbolInfo, true )
                end

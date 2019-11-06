@@ -112,6 +112,48 @@ function _lune._toSet( val, toKeyInfo )
    return nil
 end
 
+function _lune.nilacc( val, fieldName, access, ... )
+   if not val then
+      return nil
+   end
+   if fieldName then
+      local field = val[ fieldName ]
+      if not field then
+         return nil
+      end
+      if access == "item" then
+         local typeId = type( field )
+         if typeId == "table" then
+            return field[ ... ]
+         elseif typeId == "string" then
+            return string.byte( field, ... )
+         end
+      elseif access == "call" then
+         return field( ... )
+      elseif access == "callmtd" then
+         return field( val, ... )
+      end
+      return field
+   end
+   if access == "item" then
+      local typeId = type( val )
+      if typeId == "table" then
+         return val[ ... ]
+      elseif typeId == "string" then
+         return string.byte( val, ... )
+      end
+   elseif access == "call" then
+      return val( ... )
+   elseif access == "list" then
+      local list, arg = ...
+      if not list then
+         return nil
+      end
+      return val( list, arg )
+   end
+   error( string.format( "illegal access -- %s", access ) )
+end
+
 function _lune.unwrap( val )
    if val == nil then
       __luneScript:error( 'unwrap val is nil' )
@@ -1976,15 +2018,23 @@ function Scope:getSymbolInfo( name, fromScope, onlySameNsFlag, access )
       
    end
    
+   
    if not onlySameNsFlag or not self.ownerTypeInfo then
       if self.parent ~= self then
          return self.parent:getSymbolInfo( name, fromScope, onlySameNsFlag, access )
       end
       
-   end
-   
-   if onlySameNsFlag then
-      return nil
+   else
+    
+      local workScope = self.parent
+      while workScope.parent ~= workScope do
+         if _lune.nilacc( workScope.ownerTypeInfo, 'get_kind', 'callmtd' ) ~= TypeInfoKind.Class then
+            return workScope:getSymbolInfo( name, fromScope, onlySameNsFlag, access )
+         end
+         
+         workScope = workScope.parent
+      end
+      
    end
    
    do

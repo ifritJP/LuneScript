@@ -510,31 +510,31 @@ fn StreamParser.parse() mut : Token[]! {
             let columnIndex = column + tokenIndex - 2;
             searchIndex = tokenEndIndex + 1;
             let token:str = val.sub( tokenIndex, tokenEndIndex );
-            let mut startIndex = 1;
+            let mut subIndex = 1;
             while true {
-               if token.find( '^[%d]', startIndex ## ) or
-                  token.find( '^-[%d]', startIndex ## )
+               if token.find( '^[%d]', subIndex ## ) or
+                  token.find( '^-[%d]', subIndex ## )
                {
                   // 数値の場合
-                  let mut checkIndex = startIndex;
+                  let mut checkIndex = subIndex;
                   if token[1] == ?- {
                      checkIndex = checkIndex + 1;
                   }
                   let endIndex, intFlag = analyzeNumber( token, checkIndex );
                   let mut info = createInfo(
                      intFlag and TokenKind.Int or TokenKind.Real,
-                     token.sub( startIndex, endIndex ), columnIndex + startIndex );
+                     token.sub( subIndex, endIndex ), columnIndex + subIndex );
                   list.insert( info );
-                  startIndex = endIndex + 1;
+                  subIndex = endIndex + 1;
                }
                else {
                   // 区切り文字を探す
-                  if! string.find( token, '[^%w_]', startIndex ## ) {
+                  if! string.find( token, '[^%w_]', subIndex ## ) {
                      let index = _exp;
-                     if index > startIndex {
+                     if index > subIndex {
                         let mut info = createInfo(
-                           .Symb, token.sub( startIndex, index - 1 ),
-                           columnIndex + startIndex );
+                           .Symb, token.sub( subIndex, index - 1 ),
+                           columnIndex + subIndex );
                         list.insert( info );
                      }
                      let mut delimit = token.sub( index, index );
@@ -555,7 +555,7 @@ fn StreamParser.parse() mut : Token[]! {
                            break;
                         }
                      }
-                     startIndex = index + #delimit;
+                     subIndex = index + #delimit;
 
                      let mut workKind = TokenKind.Dlmt;
                      if op2Set.has( delimit ) or op1Set.has( delimit ) {
@@ -565,10 +565,10 @@ fn StreamParser.parse() mut : Token[]! {
                         workKind = .Symb;
                      }
                      if delimit == "?" {
-                        let nextChar = token.sub( index, startIndex );
+                        let nextChar = token.sub( index, subIndex );
                         list.insert( createInfo(
-                           .Char, nextChar, columnIndex + startIndex ) );
-                        startIndex = startIndex + 1;
+                           .Char, nextChar, columnIndex + subIndex ) );
+                        subIndex = subIndex + 1;
                      }
                      else {
                         list.insert( createInfo(
@@ -576,11 +576,11 @@ fn StreamParser.parse() mut : Token[]! {
                      }
                   }
                   else {
-                     if startIndex <= #token {
+                     if subIndex <= #token {
                         list.insert(
                            createInfo(
-                              .Symb, token.sub( startIndex ##),
-                              columnIndex + startIndex ) );
+                              .Symb, token.sub( subIndex ##),
+                              columnIndex + subIndex ) );
                      }
                      break;
                   }

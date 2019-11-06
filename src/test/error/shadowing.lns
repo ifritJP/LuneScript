@@ -1,19 +1,30 @@
 fn test( val:int ) {
-   fn ( val:str ) {
-      let val = 1;
+   fn ( val:str ) { // error
+      let val = 1; // error
    };
 }
 
 let val2 = 1;
-let val2 = 1;
+let val2 = 1; // error
 
 let val3:int! = 1;
 
 if! val3 {
-   if! val3 {
+   if! val3 { // error
    }
-   let _exp = 1;
+   let _exp = 1; // error
 }
 
-if! let val2 = val3 {
+if! let val2 = val3 { // error
+}
+
+class Test {
+   let val2:int;
+   fn sub() {
+      fn func() {
+         let val2 = 1; // error
+         let print = 1; // error
+         let int = 1; // error
+      }
+   }
 }

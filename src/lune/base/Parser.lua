@@ -772,27 +772,27 @@ function StreamParser:parse(  )
             local columnIndex = column + tokenIndex - 2
             searchIndex = tokenEndIndex + 1
             local token = val:sub( tokenIndex, tokenEndIndex )
-            local startIndex = 1
+            local subIndex = 1
             while true do
-               if token:find( '^[%d]', startIndex ) or token:find( '^-[%d]', startIndex ) then
-                  local checkIndex = startIndex
+               if token:find( '^[%d]', subIndex ) or token:find( '^-[%d]', subIndex ) then
+                  local checkIndex = subIndex
                   if string.byte( token, 1 ) == 45 then
                      checkIndex = checkIndex + 1
                   end
                   
                   local endIndex, intFlag = analyzeNumber( token, checkIndex )
-                  local info = createInfo( intFlag and TokenKind.Int or TokenKind.Real, token:sub( startIndex, endIndex ), columnIndex + startIndex )
+                  local info = createInfo( intFlag and TokenKind.Int or TokenKind.Real, token:sub( subIndex, endIndex ), columnIndex + subIndex )
                   table.insert( list, info )
-                  startIndex = endIndex + 1
+                  subIndex = endIndex + 1
                else
                 
                   
                   do
-                     local _exp = string.find( token, '[^%w_]', startIndex )
+                     local _exp = string.find( token, '[^%w_]', subIndex )
                      if _exp ~= nil then
                         local index = _exp
-                        if index > startIndex then
-                           local info = createInfo( TokenKind.Symb, token:sub( startIndex, index - 1 ), columnIndex + startIndex )
+                        if index > subIndex then
+                           local info = createInfo( TokenKind.Symb, token:sub( subIndex, index - 1 ), columnIndex + subIndex )
                            table.insert( list, info )
                         end
                         
@@ -816,7 +816,7 @@ function StreamParser:parse(  )
                            
                         end
                         
-                        startIndex = index + #delimit
+                        subIndex = index + #delimit
                         
                         local workKind = TokenKind.Dlmt
                         if _lune._Set_has(op2Set, delimit ) or _lune._Set_has(op1Set, delimit ) then
@@ -828,17 +828,17 @@ function StreamParser:parse(  )
                         end
                         
                         if delimit == "?" then
-                           local nextChar = token:sub( index, startIndex )
-                           table.insert( list, createInfo( TokenKind.Char, nextChar, columnIndex + startIndex ) )
-                           startIndex = startIndex + 1
+                           local nextChar = token:sub( index, subIndex )
+                           table.insert( list, createInfo( TokenKind.Char, nextChar, columnIndex + subIndex ) )
+                           subIndex = subIndex + 1
                         else
                          
                            table.insert( list, createInfo( workKind, delimit, columnIndex + index ) )
                         end
                         
                      else
-                        if startIndex <= #token then
-                           table.insert( list, createInfo( TokenKind.Symb, token:sub( startIndex ), columnIndex + startIndex ) )
+                        if subIndex <= #token then
+                           table.insert( list, createInfo( TokenKind.Symb, token:sub( subIndex ), columnIndex + subIndex ) )
                         end
                         
                         break

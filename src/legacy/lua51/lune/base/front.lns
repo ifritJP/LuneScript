@@ -773,19 +773,19 @@ pub fn Front.convertLuaToStreamFromScript(
                ast.$node.processFilter( OutputDepend.createFilter( dependsStream ), 1 );
             }
 
-            let mut oStream = stream;
+            let mut outStream = stream;
             let mut oMetaStream = metaStream;
 
             let mut byteStream = new Util.memStream();
             let mut byteMetaStream = new Util.memStream();
             if byteCompile {
                // byteCompile 時は、出力先をメモリに切り替える
-               oStream = byteStream;
+               outStream = byteStream;
                oMetaStream = byteMetaStream;
             }
 
             self.convert(
-               ast, path, oStream, oMetaStream, convMode, false );
+               ast, path, outStream, oMetaStream, convMode, false );
 
             if byteCompile {
                // byteCompile 時は、
@@ -1019,9 +1019,9 @@ oldStream, newStream に格納されているモジュールのメタ情報が�
                      }
 
                      let mut metaStream = stream;
-                     let mut convMode = convLua.ConvMode.Convert;
+                     let mut metaConvMode = convLua.ConvMode.Convert;
                      if self.option.mode == .SaveMeta {
-                        convMode = .ConvMeta;
+                        metaConvMode = .ConvMeta;
                         if! io.open( tempMetaPath, "w+" ) {
                            metaFileObj = _exp;
 		           metaStream = _exp;

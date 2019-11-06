@@ -1724,8 +1724,7 @@ fn TransUnit.dumpFieldComp(
          {
             when! getterPattern {
                if symbolInfo.$kind == .Mtd or symbolInfo.$kind == .Fun {
-                  let typeInfo = symbolInfo.$typeInfo;
-                  let retList = typeInfo.$retTypeInfoList;
+                  let retList = symbolInfo.$typeInfo.$retTypeInfoList;
                   if #retList == 1 {
                      return self.dumpComp( writer, getterPattern, symbolInfo, true );
                   }
