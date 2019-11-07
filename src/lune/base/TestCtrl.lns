@@ -1,0 +1,20 @@
+import lune.base.TransUnit;
+
+pub class Ctrl {
+   fn runTestcase( testcase:form ) {
+      testcase();
+   }
+   
+   pub fn run( modObj:stem!, meta:&stem ) {
+      let metaInfo = meta@@=TransUnit._MetaInfo;
+
+      when! modObj {
+         if! let testMap = modObj.__testMap {
+            foreach testcase, name in testMap@@Map<str,stem> {
+               print( name );
+               self.runTestcase( testcase@@form );
+            }
+         }
+      }
+   }
+}

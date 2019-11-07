@@ -900,7 +900,7 @@ function TransUnit:pushModule( externalFlag, name, mutable )
          local scope = self:pushScope( true )
          typeInfo = Ast.NormalTypeInfo.createModule( scope, parentInfo, externalFlag, modName, mutable )
          
-         parentScope:addClass( modName, typeInfo )
+         parentScope:addClass( modName, nil, typeInfo )
       end
    end
    
@@ -1008,13 +1008,13 @@ function TransUnit:pushClass( errPos, classFlag, abstractFlag, baseInfo, interfa
          
          typeInfo = Ast.NormalTypeInfo.createClass( classFlag, abstractFlag, scope, baseInfo, interfaceList, workGenTypeList, parentInfo, externalFlag, accessMode, name )
          
-         parentScope:addClass( name, typeInfo )
+         parentScope:addClass( name, errPos, typeInfo )
       end
    end
    
    if genTypeList ~= nil then
       for __index, genType in pairs( genTypeList ) do
-         self.scope:addAlternate( accessMode, genType:get_txt(), genType )
+         self.scope:addAlternate( accessMode, genType:get_txt(), errPos, genType )
       end
       
    end
@@ -1034,6 +1034,20 @@ function TransUnit:popClass(  )
 
    self:popScope(  )
 end
+function TransUnit:checkShadowing( pos, name, scope )
+
+   local symbolInfo = self.scope:getSymbolTypeInfo( name, scope, self.moduleScope, self.scopeAccess )
+   
+   if symbolInfo ~= nil then
+      local symPos = symbolInfo:get_pos()
+      if symPos ~= nil then
+         self:addErrMess( symPos, string.format( "This symbol is shadowed from %d:%d -- %s", pos.lineNo, pos.column, name) )
+      end
+      
+      self:addErrMess( pos, string.format( "shadowing symbol of %s -- %s", symPos and string.format( "%s:%s", _lune.nilacc( symPos, "lineNo" ), _lune.nilacc( symPos, "column" )) or "external", name) )
+   end
+   
+end
 function TransUnit:addLocalVar( pos, argFlag, canBeLeft, name, typeInfo, mutable, allowShadow )
 
    if not allowShadow then
@@ -1043,7 +1057,7 @@ function TransUnit:addLocalVar( pos, argFlag, canBeLeft, name, typeInfo, mutable
       
    end
    
-   return self.scope:addLocalVar( argFlag, canBeLeft, name, typeInfo, mutable )
+   return self.scope:addLocalVar( argFlag, canBeLeft, name, pos, typeInfo, mutable )
 end
 function TransUnit.setmeta( obj )
   setmetatable( obj, { __index = TransUnit  } )
@@ -1126,17 +1140,18 @@ _moduleObj._MetaInfo = _MetaInfo
 function _MetaInfo.setmeta( obj )
   setmetatable( obj, { __index = _MetaInfo  } )
 end
-function _MetaInfo.new( __formatVersion, __buildId, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __funcName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap )
+function _MetaInfo.new( __formatVersion, __enableTest, __buildId, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __funcName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap )
    local obj = {}
    _MetaInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( __formatVersion, __buildId, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __funcName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap )
+      obj:__init( __formatVersion, __enableTest, __buildId, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __funcName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap )
    end
    return obj
 end
-function _MetaInfo:__init( __formatVersion, __buildId, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __funcName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap )
+function _MetaInfo:__init( __formatVersion, __enableTest, __buildId, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __funcName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap )
 
    self.__formatVersion = __formatVersion
+   self.__enableTest = __enableTest
    self.__buildId = __buildId
    self.__typeId2ClassInfoMap = __typeId2ClassInfoMap
    self.__typeInfoList = __typeInfoList
@@ -1319,7 +1334,7 @@ function _TypeInfoAlias:createTypeInfo( param )
       return nil, string.format( "not found parentScope %s %s", self.parentId, self.rawTxt)
    end
    
-   parentScope:addAliasForType( self.rawTxt, newTypeInfo )
+   parentScope:addAliasForType( self.rawTxt, nil, newTypeInfo )
    
    return newTypeInfo, nil
 end
@@ -1727,7 +1742,7 @@ function _TypeInfoModule:createTypeInfo( param )
          newTypeInfo = workTypeInfo
          param.typeId2Scope[self.typeId] = scope
          param.typeId2TypeInfo[self.typeId] = workTypeInfo
-         parentScope:addClass( self.txt, workTypeInfo )
+         parentScope:addClass( self.txt, nil, workTypeInfo )
       end
    end
    
@@ -1874,7 +1889,7 @@ function _TypeInfoNormal:createTypeInfo( param )
             
             
             local workTypeInfo = Ast.NormalTypeInfo.createClass( self.kind == Ast.TypeInfoKind.Class, self.abstractFlag, scope, baseInfo, interfaceList, altTypeList, parentInfo, true, Ast.AccessMode.Pub, self.txt )
-            parentScope:addClass( self.txt, workTypeInfo )
+            parentScope:addClass( self.txt, nil, workTypeInfo )
             
             newTypeInfo = workTypeInfo
             
@@ -1912,7 +1927,7 @@ function _TypeInfoNormal:createTypeInfo( param )
                   end
                   
                   local workParentScope = _lune.unwrap( param.typeId2Scope[self.parentId])
-                  workParentScope:add( symbolKind, false, self.kind == Ast.TypeInfoKind.Func, self.txt, workTypeInfo, accessMode, self.staticFlag, Ast.MutMode.IMut, true )
+                  workParentScope:add( symbolKind, false, self.kind == Ast.TypeInfoKind.Func, self.txt, nil, workTypeInfo, accessMode, self.staticFlag, Ast.MutMode.IMut, true )
                   param.typeId2Scope[self.typeId] = scope
                end
             end
@@ -2044,10 +2059,10 @@ function _TypeInfoEnum:createTypeInfo( param )
       end
       
       enumTypeInfo:addEnumValInfo( Ast.EnumValInfo.new(valName, val) )
-      scope:addEnumVal( valName, enumTypeInfo )
+      scope:addEnumVal( valName, nil, enumTypeInfo )
    end
    
-   parentScope:addEnum( accessMode, self.txt, enumTypeInfo )
+   parentScope:addEnum( accessMode, self.txt, nil, enumTypeInfo )
    return newTypeInfo, nil
 end
 function _TypeInfoEnum.setmeta( obj )
@@ -2168,11 +2183,11 @@ function _TypeInfoAlge:createTypeInfo( param )
       end
       
       local algeVal = Ast.AlgeValInfo.new(valInfo.name, typeInfoList)
-      scope:addAlgeVal( valInfo.name, algeTypeInfo )
+      scope:addAlgeVal( valInfo.name, nil, algeTypeInfo )
       algeTypeInfo:addValInfo( algeVal )
    end
    
-   parentScope:addAlge( accessMode, self.txt, algeTypeInfo )
+   parentScope:addAlge( accessMode, self.txt, nil, algeTypeInfo )
    return newTypeInfo, nil
 end
 function _TypeInfoAlge.setmeta( obj )
@@ -2786,7 +2801,7 @@ function TransUnit:registBuiltInScope(  )
    
       if self.targetLuaVer:isSupport( string.format( "%s.%s", name, fieldName) ) then
          if _lune.nilacc( info['type'], nil, 'item', 1) == "member" then
-            self.scope:addMember( fieldName, getTypeInfo( _lune.unwrap( _lune.nilacc( info['typeInfo'], nil, 'item', 1)) ), Ast.AccessMode.Pub, true, Ast.MutMode.Mut )
+            self.scope:addMember( fieldName, nil, getTypeInfo( _lune.unwrap( _lune.nilacc( info['typeInfo'], nil, 'item', 1)) ), Ast.AccessMode.Pub, true, Ast.MutMode.Mut )
          else
           
             local argTypeList = {}
@@ -2841,7 +2856,7 @@ function TransUnit:registBuiltInScope(  )
                Ast.builtInTypeIdSet[typeInfo:get_nilableTypeInfo():get_typeId()] = typeInfo:get_nilableTypeInfo()
             end
             
-            self.scope:add( symbolKind, false, kind == Ast.TypeInfoKind.Func, fieldName, typeInfo, Ast.AccessMode.Pub, staticFlag, mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true )
+            self.scope:add( symbolKind, false, kind == Ast.TypeInfoKind.Func, fieldName, nil, typeInfo, Ast.AccessMode.Pub, staticFlag, mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true )
             
             setupBuiltinTypeInfo( name, fieldName, typeInfo )
          end
@@ -2855,11 +2870,11 @@ function TransUnit:registBuiltInScope(  )
    local builtinModuleName2Scope = {}
    
    local mapType = Ast.NormalTypeInfo.createMap( Ast.AccessMode.Pub, Ast.headTypeInfo, Ast.builtinTypeString, Ast.builtinTypeStem, Ast.MutMode.Mut )
-   self.scope:addVar( Ast.AccessMode.Global, "_ENV", mapType, Ast.MutMode.IMutRe, true )
-   self.scope:addVar( Ast.AccessMode.Global, "_G", mapType, Ast.MutMode.IMutRe, true )
-   self.scope:addVar( Ast.AccessMode.Global, "_VERSION", Ast.builtinTypeString, Ast.MutMode.IMut, true )
-   self.scope:addVar( Ast.AccessMode.Global, "__mod__", Ast.builtinTypeString, Ast.MutMode.IMut, true )
-   self.scope:addVar( Ast.AccessMode.Global, "__line__", Ast.builtinTypeInt, Ast.MutMode.IMut, true )
+   self.scope:addVar( Ast.AccessMode.Global, "_ENV", nil, mapType, Ast.MutMode.IMutRe, true )
+   self.scope:addVar( Ast.AccessMode.Global, "_G", nil, mapType, Ast.MutMode.IMutRe, true )
+   self.scope:addVar( Ast.AccessMode.Global, "_VERSION", nil, Ast.builtinTypeString, Ast.MutMode.IMut, true )
+   self.scope:addVar( Ast.AccessMode.Global, "__mod__", nil, Ast.builtinTypeString, Ast.MutMode.IMut, true )
+   self.scope:addVar( Ast.AccessMode.Global, "__line__", nil, Ast.builtinTypeInt, Ast.MutMode.IMut, true )
    
    local function processCopyAlterList( alterList, typeList )
    
@@ -3540,7 +3555,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = '@lune.@base.@TransUnit.TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2334, function (  )
+   Log.log( Log.Level.Info, __func__, 2353, function (  )
    
       return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), modulePath)
    end )
@@ -3557,7 +3572,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2346, function (  )
+               Log.log( Log.Level.Info, __func__, 2365, function (  )
                
                   return string.format( "%s already", modulePath)
                end )
@@ -3590,7 +3605,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2366, function (  )
+   Log.log( Log.Level.Info, __func__, 2385, function (  )
    
       return string.format( "%s processing", modulePath)
    end )
@@ -3758,11 +3773,11 @@ function TransUnit:processImport( modulePath )
             do
                local _switchExp = newTypeInfo:get_kind()
                if _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Class then
-                  self.globalScope:addClass( newTypeInfo:get_rawTxt(), newTypeInfo )
+                  self.globalScope:addClass( newTypeInfo:get_rawTxt(), nil, newTypeInfo )
                elseif _switchExp == Ast.TypeInfoKind.Func then
-                  self.globalScope:addFunc( newTypeInfo, Ast.AccessMode.Global, newTypeInfo:get_staticFlag(), Ast.TypeInfo.isMut( newTypeInfo ) )
+                  self.globalScope:addFunc( nil, newTypeInfo, Ast.AccessMode.Global, newTypeInfo:get_staticFlag(), Ast.TypeInfo.isMut( newTypeInfo ) )
                elseif _switchExp == Ast.TypeInfoKind.Enum then
-                  self.globalScope:addEnum( Ast.AccessMode.Global, newTypeInfo:get_rawTxt(), newTypeInfo )
+                  self.globalScope:addEnum( Ast.AccessMode.Global, newTypeInfo:get_rawTxt(), nil, newTypeInfo )
                elseif _switchExp == Ast.TypeInfoKind.Nilable then
                   
                else 
@@ -3809,7 +3824,7 @@ function TransUnit:processImport( modulePath )
             
             
             if addFlag then
-               scope:add( symbolKind, false, typeInfo:get_kind() == Ast.TypeInfoKind.Func, typeInfo:getTxt(  ), typeInfo, typeInfo:get_accessMode(), typeInfo:get_staticFlag(), typeInfo:get_mutMode(), true )
+               scope:add( symbolKind, false, typeInfo:get_kind() == Ast.TypeInfoKind.Func, typeInfo:getTxt(  ), nil, typeInfo, typeInfo:get_accessMode(), typeInfo:get_staticFlag(), typeInfo:get_mutMode(), true )
             end
             
          end
@@ -3848,7 +3863,7 @@ function TransUnit:processImport( modulePath )
                         local typeId = fieldInfo['typeId']
                         if typeId ~= nil then
                            local fieldTypeInfo = _lune.unwrap( typeId2TypeInfo[math.floor(typeId)])
-                           local symbolInfo = self.scope:addMember( fieldName, fieldTypeInfo, _lune.unwrap( Ast.AccessMode._from( math.floor((_lune.unwrap( fieldInfo['accessMode']) )) )), fieldInfo['staticFlag'] and true or false, _lune.unwrap( Ast.MutMode._from( math.floor((_lune.unwrap( fieldInfo['mutMode']) )) )) )
+                           local symbolInfo = self.scope:addMember( fieldName, nil, fieldTypeInfo, _lune.unwrap( Ast.AccessMode._from( math.floor((_lune.unwrap( fieldInfo['accessMode']) )) )), fieldInfo['staticFlag'] and true or false, _lune.unwrap( Ast.MutMode._from( math.floor((_lune.unwrap( fieldInfo['mutMode']) )) )) )
                         else
                            self:error( "not found fieldInfo.typeId" )
                         end
@@ -3908,7 +3923,7 @@ function TransUnit:processImport( modulePath )
       do
          local typeId = varInfo['typeId']
          if typeId ~= nil then
-            self.scope:addStaticVar( false, true, varName, _lune.unwrap( typeId2TypeInfo[math.floor(typeId)]), varInfo['mutable'] and Ast.MutMode.Mut or Ast.MutMode.IMut )
+            self.scope:addStaticVar( false, true, varName, nil, _lune.unwrap( typeId2TypeInfo[math.floor(typeId)]), varInfo['mutable'] and Ast.MutMode.Mut or Ast.MutMode.IMut )
          else
             self:error( "illegal varInfo.typeId" )
          end
@@ -3933,7 +3948,7 @@ function TransUnit:processImport( modulePath )
    
    self.importModuleInfo:remove(  )
    
-   Log.log( Log.Level.Info, __func__, 2695, function (  )
+   Log.log( Log.Level.Info, __func__, 2715, function (  )
    
       return string.format( "%s complete", modulePath)
    end )
@@ -3986,7 +4001,7 @@ function TransUnit:analyzeImport( token )
    self.scope:addModule( moduleTypeInfo, moduleInfo:assign( assignName.txt ) )
    
    local moduleSymbolKind = _lune.unwrap( Ast.SymbolKind._from( metaInfo.__moduleSymbolKind ))
-   local moduleSymbolInfo = self.scope:add( moduleSymbolKind, false, false, assignName.txt, moduleTypeInfo, Ast.AccessMode.Local, true, metaInfo.__moduleMutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true )
+   local moduleSymbolInfo = self.scope:add( moduleSymbolKind, false, false, assignName.txt, assignName.pos, moduleTypeInfo, Ast.AccessMode.Local, true, metaInfo.__moduleMutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true )
    
    self:checkToken( nextToken, ";" )
    
@@ -4194,17 +4209,13 @@ function TransUnit:analyzeMatch( firstToken )
       if nextToken.txt == "(" then
          for __index, paramType in pairs( valInfo:get_typeList() ) do
             local paramName = self:getSymbolToken( SymbolMode.MustNot_ )
-            if self.scope:getTypeInfo( paramName.txt, self.scope, true, self.scopeAccess ) then
-               self:addErrMess( paramName.pos, string.format( "shadowing variable -- %s", paramName.txt) )
-            end
-            
-            
+            self:checkShadowing( paramName.pos, paramName.txt, self.scope )
             local workType = paramType
             if Ast.TypeInfo.isMut( paramType ) and not Ast.TypeInfo.isMut( exp:get_expType() ) then
                workType = self:createModifier( workType, Ast.MutMode.IMut )
             end
             
-            blockScope:addLocalVar( true, false, paramName.txt, workType, Ast.MutMode.IMut )
+            blockScope:addLocalVar( true, false, paramName.txt, paramName.pos, workType, Ast.MutMode.IMut )
             table.insert( valParamNameList, paramName.txt )
             nextToken = self:getToken(  )
             if nextToken.txt ~= "," then
@@ -4454,20 +4465,20 @@ function TransUnit:analyzeForeach( token, sortFlag )
          
          valSymbol = nil
          subSymbol = mainSymbol
-         self.scope:addLocalVar( false, true, mainSymbol.txt, itemTypeInfoList[1], Ast.MutMode.IMut )
+         self.scope:addLocalVar( false, true, mainSymbol.txt, mainSymbol.pos, itemTypeInfoList[1], Ast.MutMode.IMut )
       elseif _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
          if sortFlag then
             self:addErrMess( exp:get_pos(), string.format( "'%s' doesn't support forsort.", Ast.TypeInfoKind:_getTxt( expType:get_kind())
             ) )
          end
          
-         self.scope:addLocalVar( false, true, mainSymbol.txt, itemTypeInfoList[1], Ast.MutMode.IMut )
+         self.scope:addLocalVar( false, true, mainSymbol.txt, mainSymbol.pos, itemTypeInfoList[1], Ast.MutMode.IMut )
          do
             local _exp = subSymbol
             if _exp ~= nil then
                self:addLocalVar( _exp.pos, false, false, _exp.txt, Ast.builtinTypeInt, Ast.MutMode.IMut )
             else
-               self.scope:addLocalVar( false, false, "__index", Ast.builtinTypeInt, Ast.MutMode.IMut )
+               self.scope:addLocalVar( false, false, "__index", token.pos, Ast.builtinTypeInt, Ast.MutMode.IMut )
             end
          end
          
@@ -4493,7 +4504,7 @@ function TransUnit:analyzeForeach( token, sortFlag )
                typeInfo = seqSymbol:get_typeInfo()
             end
             
-            scope:addLocalVar( seqSymbol:get_kind() == Ast.SymbolKind.Arg, false, seqSymbol:get_name(), typeInfo, Ast.MutMode.IMut )
+            scope:addLocalVar( seqSymbol:get_kind() == Ast.SymbolKind.Arg, false, seqSymbol:get_name(), exp:get_pos(), typeInfo, Ast.MutMode.IMut )
             seqSym = seqSymbol:get_name()
          end
          
@@ -4756,19 +4767,16 @@ function TransUnit:analyzeDeclArgList( accessMode, scope, argList, parentPub )
          
          
          table.insert( argList, Nodes.DeclArgDDDNode.create( self.nodeManager, argName.pos, {dddTypeInfo} ) )
-         scope:addLocalVar( true, true, argName.txt, dddTypeInfo, Ast.MutMode.IMut )
+         scope:addLocalVar( true, true, argName.txt, argName.pos, dddTypeInfo, Ast.MutMode.IMut )
       else
        
          argName = self:checkSymbol( argName, SymbolMode.MustNot_ )
          
-         if scope:getSymbolTypeInfo( argName.txt, scope, self.moduleScope, self.scopeAccess ) then
-            self:addErrMess( argName.pos, string.format( "shadowing variable -- %s", argName.txt) )
-         end
-         
+         self:checkShadowing( argName.pos, argName.txt, scope )
          
          self:checkNextToken( ":" )
          local refType = self:analyzeRefType( accessMode, false, parentPub )
-         local symbolInfo = scope:addLocalVar( true, true, argName.txt, refType:get_expType(), mutable )
+         local symbolInfo = scope:addLocalVar( true, true, argName.txt, argName.pos, refType:get_expType(), mutable )
          
          local arg = Nodes.DeclArgNode.create( self.nodeManager, argName.pos, refType:get_expTypeList(), argName, symbolInfo, refType )
          
@@ -5100,7 +5108,7 @@ function TransUnit:analyzeDeclMacroSub( accessMode, firstToken, nameToken, scope
       self.macroScope = scope
       
       local funcType = Ast.NormalTypeInfo.createFunc( false, true, nil, Ast.TypeInfoKind.Func, Ast.headTypeInfo, false, true, true, Ast.AccessMode.Global, "_lnsLoad", nil, {Ast.builtinTypeString, Ast.builtinTypeString}, {Ast.builtinTypeStem}, false )
-      scope:addLocalVar( false, false, "_lnsLoad", funcType, Ast.MutMode.IMut )
+      scope:addLocalVar( false, false, "_lnsLoad", nil, funcType, Ast.MutMode.IMut )
       
       local bakParser = self.parser
       self.parser = parser
@@ -5172,7 +5180,7 @@ function TransUnit:analyzeDeclMacro( accessMode, firstToken )
    
    self.scope = backScope
    
-   self.scope:addMacro( node:get_expType(), accessMode )
+   self.scope:addMacro( nameToken.pos, node:get_expType(), accessMode )
    
    return node
 end
@@ -5287,7 +5295,7 @@ function TransUnit:analyzePushClass( classFlag, abstractFlag, firstToken, name, 
    
    local tempScope = self:pushScope( false )
    for __index, altType in pairs( altTypeList ) do
-      tempScope:addAlternate( accessMode, altType:get_rawTxt(), altType )
+      tempScope:addAlternate( accessMode, altType:get_rawTxt(), name.pos, altType )
    end
    
    
@@ -5517,7 +5525,7 @@ function TransUnit:analyzeDeclEnum( accessMode, firstToken )
       
       
       if enumTypeInfo ~= nil then
-         scope:addEnumVal( valName.txt, enumTypeInfo )
+         scope:addEnumVal( valName.txt, valName.pos, enumTypeInfo )
          local enumValInfo = Ast.EnumValInfo.new(valName.txt, enumVal)
          table.insert( valueList, valName )
          
@@ -5544,7 +5552,7 @@ function TransUnit:analyzeDeclEnum( accessMode, firstToken )
    
    self:popScope(  )
    
-   self.scope:addEnum( accessMode, name.txt, _lune.unwrap( enumTypeInfo) )
+   self.scope:addEnum( accessMode, name.txt, name.pos, _lune.unwrap( enumTypeInfo) )
    
    return Nodes.DeclEnumNode.create( self.nodeManager, firstToken.pos, {_lune.unwrap( enumTypeInfo)}, accessMode, name, valueList, scope )
 end
@@ -5562,7 +5570,7 @@ function TransUnit:analyzeDeclAlge( accessMode, firstToken )
    local algeScope = self:pushScope( true )
    
    local algeTypeInfo = Ast.NormalTypeInfo.createAlge( algeScope, self:getCurrentNamespaceTypeInfo(  ), false, accessMode, name.txt )
-   scope:addAlge( accessMode, name.txt, algeTypeInfo )
+   scope:addAlge( accessMode, name.txt, name.pos, algeTypeInfo )
    
    local nextToken = self:getToken(  )
    while nextToken.txt ~= "}" do
@@ -5600,7 +5608,7 @@ function TransUnit:analyzeDeclAlge( accessMode, firstToken )
       end
       
       
-      algeScope:addAlgeVal( valName.txt, algeTypeInfo )
+      algeScope:addAlgeVal( valName.txt, valName.pos, algeTypeInfo )
       local algeValInfo = Ast.AlgeValInfo.new(valName.txt, typeInfoList)
       algeTypeInfo:addValInfo( algeValInfo )
       
@@ -5645,7 +5653,7 @@ function TransUnit:analyzeAlias( accessMode, firstToken )
          do
             local _switchExp = symbolInfo:get_kind()
             if _switchExp == Ast.SymbolKind.Typ or _switchExp == Ast.SymbolKind.Fun then
-               local aliasSymbolInfo = self.scope:addAlias( newToken.txt, false, accessMode, self.moduleType, symbolInfo )
+               local aliasSymbolInfo = self.scope:addAlias( newToken.txt, newToken.pos, false, accessMode, self.moduleType, symbolInfo )
                newTypeInfo = aliasSymbolInfo:get_typeInfo()
             else 
                
@@ -5729,7 +5737,7 @@ function TransUnit:analyzeDeclForm( accessMode, firstToken )
    
    local formType = Ast.NormalTypeInfo.createFunc( false, false, nil, Ast.TypeInfoKind.FormFunc, self:getCurrentNamespaceTypeInfo(  ), false, false, true, accessMode, name.txt, nil, argTypeInfoList, retTypeList, false )
    
-   self.scope:addForm( formType, accessMode )
+   self.scope:addForm( name.pos, formType, accessMode )
    return Nodes.DeclFormNode.create( self.nodeManager, firstToken.pos, {formType}, argList )
 end
 
@@ -5936,7 +5944,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
    end
    
    
-   local symbolInfo = self.scope:addMember( varName.txt, typeInfo, accessMode, staticFlag, mutMode )
+   local symbolInfo = self.scope:addMember( varName.txt, varName.pos, typeInfo, accessMode, staticFlag, mutMode )
    
    return Nodes.DeclMemberNode.create( self.nodeManager, firstToken.pos, {typeInfo}, varName, refType, symbolInfo, classTypeInfo, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode )
 end
@@ -6002,11 +6010,11 @@ function TransUnit:addDefaultConstructor( pos, classTypeInfo, classScope, member
    local ctorScope = self:pushScope( false )
    local initTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, ctorScope, Ast.TypeInfoKind.Method, classTypeInfo, true, false, false, Ast.AccessMode.Pub, "__init", nil, argTypeList, {} )
    if oldFlag then
-      ctorScope:addVar( Ast.AccessMode.Pri, "", Ast.headTypeInfo, Ast.MutMode.IMut, true )
+      ctorScope:addVar( Ast.AccessMode.Pri, "", nil, Ast.headTypeInfo, Ast.MutMode.IMut, true )
    end
    
    self:popScope(  )
-   classScope:addMethod( initTypeInfo, Ast.AccessMode.Pub, false, false )
+   classScope:addMethod( pos, initTypeInfo, Ast.AccessMode.Pub, false, false )
    methodNameSet["__init"]= true
    
    for __index, memberNode in pairs( memberNodeList ) do
@@ -6026,7 +6034,7 @@ function TransUnit:analyzeFuncBlock( analyzingState, firstToken, classTypeInfo, 
          local overrideType = self.scope:get_parent():getTypeInfoField( funcName, false, funcBodyScope, self.scopeAccess )
          if overrideType ~= nil then
             if not overrideType:get_abstractFlag() then
-               funcBodyScope:addLocalVar( false, false, "super", overrideType, Ast.MutMode.IMut )
+               funcBodyScope:addLocalVar( false, false, "super", nil, overrideType, Ast.MutMode.IMut )
             end
             
          end
@@ -6204,7 +6212,7 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
          self:error( string.format( "not found member -- %s", memberToken.txt) )
       end
       
-      table.insert( advertiseList, Nodes.AdvertiseInfo.new(memberNode, prefix) )
+      table.insert( advertiseList, Nodes.AdvertiseInfo.new(memberNode, prefix, memberToken.pos) )
    end
    
    local function processEnum( token, accessMode )
@@ -6441,7 +6449,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
       end
       
       local toMapFuncTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, nil, Ast.TypeInfoKind.Method, classTypeInfo, true, false, false, Ast.AccessMode.Pub, "_toMap", nil, {}, {mapType}, false )
-      classScope:addMethod( toMapFuncTypeInfo, Ast.AccessMode.Pub, false, false )
+      classScope:addMethod( nil, toMapFuncTypeInfo, Ast.AccessMode.Pub, false, false )
    end
    
    
@@ -6466,7 +6474,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
          local retTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, self:pushScope( false ), Ast.TypeInfoKind.Method, parentInfo, true, false, memberNode:get_staticFlag(), accessMode, getterName, nil, {}, {getterMemberType} )
          self:popScope(  )
          
-         classScope:addMethod( retTypeInfo, accessMode, memberNode:get_staticFlag(), false )
+         classScope:addMethod( memberName.pos, retTypeInfo, accessMode, memberNode:get_staticFlag(), false )
          methodNameSet[getterName]= true
       end
       
@@ -6482,7 +6490,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
             mutable = false
          end
          
-         classScope:addMethod( Ast.NormalTypeInfo.createFunc( false, false, self:pushScope( false ), Ast.TypeInfoKind.Method, parentInfo, true, false, memberNode:get_staticFlag(), accessMode, setterName, nil, {memberType}, nil, mutable ), accessMode, memberNode:get_staticFlag(), true )
+         classScope:addMethod( memberName.pos, Ast.NormalTypeInfo.createFunc( false, false, self:pushScope( false ), Ast.TypeInfoKind.Method, parentInfo, true, false, memberNode:get_staticFlag(), accessMode, setterName, nil, {memberType}, nil, mutable ), accessMode, memberNode:get_staticFlag(), true )
          self:popScope(  )
          methodNameSet[setterName]= true
       end
@@ -6511,7 +6519,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
                   local childName = advertiseInfo:get_prefix() .. child:getTxt(  )
                   if not _lune._Set_has(methodNameSet, childName ) then
                      local impMtdType = Ast.NormalTypeInfo.createAdvertiseMethodFrom( classTypeInfo, child )
-                     classScope:addMethod( impMtdType, child:get_accessMode(), child:get_staticFlag(), false )
+                     classScope:addMethod( advertiseInfo:get_pos(), impMtdType, child:get_accessMode(), child:get_staticFlag(), false )
                   end
                   
                end
@@ -6540,10 +6548,10 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
       
       
       local fromMapFuncTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, nil, Ast.TypeInfoKind.Func, classTypeInfo, true, false, true, Ast.AccessMode.Pub, "_fromMap", nil, {mapType:get_nilableTypeInfo()}, {classTypeInfo:get_nilableTypeInfo(), Ast.builtinTypeString:get_nilableTypeInfo()}, true )
-      classScope:addMethod( fromMapFuncTypeInfo, ctorAccessMode, true, false )
+      classScope:addMethod( nil, fromMapFuncTypeInfo, ctorAccessMode, true, false )
       
       local fromStemFuncTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, nil, Ast.TypeInfoKind.Func, classTypeInfo, true, false, true, Ast.AccessMode.Pub, "_fromStem", nil, {Ast.builtinTypeStem_}, {classTypeInfo:get_nilableTypeInfo(), Ast.builtinTypeString:get_nilableTypeInfo()}, true )
-      classScope:addMethod( fromStemFuncTypeInfo, ctorAccessMode, true, false )
+      classScope:addMethod( nil, fromStemFuncTypeInfo, ctorAccessMode, true, false )
    end
    
    
@@ -6613,10 +6621,10 @@ function TransUnit:processAddFunc( isFunc, parentScope, name, typeInfo, alt2type
    local staticFlag = typeInfo:get_staticFlag()
    local mutable = Ast.TypeInfo.isMut( typeInfo )
    if isFunc then
-      parentScope:addFunc( typeInfo, accessMode, staticFlag, mutable )
+      parentScope:addFunc( name.pos, typeInfo, accessMode, staticFlag, mutable )
    else
     
-      parentScope:addMethod( typeInfo, accessMode, staticFlag, mutable )
+      parentScope:addMethod( name.pos, typeInfo, accessMode, staticFlag, mutable )
    end
    
 end
@@ -6746,7 +6754,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
    if token.txt == "<" then
       token, altTypeList = self:analyzeDeclAlternateType( false, token, accessMode )
       for __index, altType in pairs( altTypeList ) do
-         funcBodyScope:addAlternate( accessMode, altType:get_rawTxt(), altType )
+         funcBodyScope:addAlternate( accessMode, altType:get_rawTxt(), firstToken.pos, altType )
       end
       
    end
@@ -6806,7 +6814,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
          end
          
          if not staticFlag then
-            self.scope:add( Ast.SymbolKind.Arg, false, true, "self", workClass, Ast.AccessMode.Pri, false, mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true )
+            self.scope:add( Ast.SymbolKind.Arg, false, true, "self", nil, workClass, Ast.AccessMode.Pri, false, mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true )
          end
          
          
@@ -6951,7 +6959,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
       end
       
       
-      funcBodyScope:addLocalVar( false, false, "__func__", Ast.builtinTypeString, Ast.MutMode.IMut )
+      funcBodyScope:addLocalVar( false, false, "__func__", nil, Ast.builtinTypeString, Ast.MutMode.IMut )
       
       local workBody = self:analyzeFuncBlock( analyzingState, firstToken, classTypeInfo, funcName, funcBodyScope, retTypeInfoList )
       body = workBody
@@ -7424,11 +7432,9 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
       
       
       if mode == Nodes.DeclVarMode.Let or mode == Nodes.DeclVarMode.Sync then
+         
          if mode == Nodes.DeclVarMode.Let then
-            if self.scope:getTypeInfo( varName.txt, self.scope, true, self.scopeAccess ) then
-               self:addErrMess( varName.pos, string.format( "shadowing variable -- %s", varName.txt) )
-            end
-            
+            self:checkShadowing( varName.pos, varName.txt, self.scope )
          end
          
          local orgExpType = Ast.builtinTypeStem_
@@ -7446,7 +7452,7 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
             hasValue = true
          end
          
-         self.scope:addVar( accessMode, varName.txt, typeInfo, letVarInfo.mutable, hasValue )
+         self.scope:addVar( accessMode, varName.txt, varName.pos, typeInfo, letVarInfo.mutable, hasValue )
       end
       
       table.insert( symbolInfoList, _lune.unwrap( self.scope:getSymbolInfo( varName.txt, self.scope, true, self.scopeAccess )) )
@@ -7544,7 +7550,7 @@ function TransUnit:analyzeIfUnwrap( firstToken )
       end
       
       for __index, varInfo in pairs( letVarList ) do
-         table.insert( varNameList, varInfo.varName.txt )
+         table.insert( varNameList, varInfo.varName )
       end
       
    else
@@ -7559,7 +7565,7 @@ function TransUnit:analyzeIfUnwrap( firstToken )
          table.insert( typeInfoList, exp:get_expType() )
       end
       
-      table.insert( varNameList, "_exp" )
+      table.insert( varNameList, Parser.Token.new(Parser.TokenKind.Symb, "_exp", firstToken.pos, false, nil) )
    end
    
    
@@ -7571,7 +7577,7 @@ function TransUnit:analyzeIfUnwrap( firstToken )
       end
       
       local varName = varNameList[index]
-      table.insert( varList, self:addLocalVar( firstToken.pos, false, true, varName, expType, Ast.MutMode.IMut ) )
+      table.insert( varList, self:addLocalVar( varName.pos, false, true, varName.txt, expType, Ast.MutMode.IMut ) )
    end
    
    

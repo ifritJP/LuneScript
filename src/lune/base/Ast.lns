@@ -291,6 +291,11 @@ pub abstract class SymbolInfo extend (LowSymbol) {
    pub abstract fn get_staticFlag(): bool;
    /** シンボルの名前 */
    pub abstract fn get_name(): str;
+   /**
+シンボルの定義位置。実際の定義位置とズレることがある。参考程度にすること。
+外部シンボルや、ビルトインの場合は nil。
+ */
+   pub abstract fn get_pos(): &Parser.Position!;
    /** シンボルの型 */
    pub abstract fn get_typeInfo(): &TypeInfo;
    /** シンボルの型 */
@@ -905,6 +910,8 @@ pub class NormalSymbolInfo extend SymbolInfo {
    pri let staticFlag: bool { pub };
    /** シンボルの名前 */
    pri let name: str { pub };
+   /** シンボルの名前 */
+   pri let pos: &Parser.Position! { pub };
    /** シンボルの型 */
    pri let allmut typeInfo: &TypeInfo { pub, pub };
    /** このシンボルの種類 SymbolKind */
@@ -931,8 +938,8 @@ pub class NormalSymbolInfo extend SymbolInfo {
 
    pub fn __init(
       kind:SymbolKind, canBeLeft:bool, canBeRight:bool, scope: Scope,
-      accessMode: AccessMode, staticFlag: bool, name: str, typeInfo: &TypeInfo,
-      mutMode: MutMode!, hasValueFlag: bool )
+      accessMode: AccessMode, staticFlag: bool, name: str, pos:&Parser.Position!,
+      typeInfo: &TypeInfo, mutMode: MutMode!, hasValueFlag: bool )
    {
       super();
       self.convModuleParam = nil;
@@ -947,6 +954,7 @@ pub class NormalSymbolInfo extend SymbolInfo {
       self.accessMode = accessMode;
       self.staticFlag = staticFlag;
       self.name = name;
+      self.pos = pos;
       self.typeInfo = typeInfo;
       self.mutMode = unwrap mutMode default MutMode.IMut;
       self.hasValueFlag = hasValueFlag;
@@ -1444,109 +1452,118 @@ pub fn Scope.filterSymbolTypeInfo(
 
 
 pub fn Scope.add(
-   kind: SymbolKind, canBeLeft:bool, canBeRight:bool, name:str,
+   kind: SymbolKind, canBeLeft:bool, canBeRight:bool, name:str, pos:&Parser.Position!,
    typeInfo: &TypeInfo, accessMode:AccessMode, staticFlag:bool,
    mutMode:MutMode, hasValueFlag:bool ) mut : &SymbolInfo
 {
    let mut symbolInfo = new NormalSymbolInfo(
       kind, canBeLeft, canBeRight, self, accessMode, staticFlag,
-      name, typeInfo, mutMode, hasValueFlag );
+      name, pos, typeInfo, mutMode, hasValueFlag );
    self.symbol2SymbolInfoMap[ name ] = symbolInfo;
    return symbolInfo;
 }
 
 pub fn Scope.addLocalVar(
-   argFlag:bool, canBeLeft:bool, name:str, typeInfo: &TypeInfo, mutable:MutMode ) mut :
-   &SymbolInfo
+   argFlag:bool, canBeLeft:bool, name:str, pos:&Parser.Position!,
+   typeInfo: &TypeInfo, mutable:MutMode ) mut : &SymbolInfo
 {
    return self.add( argFlag and SymbolKind.Arg or SymbolKind.Var,
-                    canBeLeft, true, name, typeInfo, .Local, false, mutable, true );
+                    canBeLeft, true, name, pos, typeInfo, .Local, false, mutable, true );
 }
 
 pub fn Scope.addStaticVar(
-   argFlag:bool, canBeLeft:bool, name:str, typeInfo: &TypeInfo, mutable:MutMode ) mut
+   argFlag:bool, canBeLeft:bool, name:str, pos:&Parser.Position!,
+   typeInfo: &TypeInfo, mutable:MutMode ) mut
 {
    self.add( argFlag and SymbolKind.Arg or SymbolKind.Var,
-             canBeLeft, true, name, typeInfo, .Local, true, mutable, true );
+             canBeLeft, true, name, pos, typeInfo, .Local, true, mutable, true );
 }
 
 pub fn Scope.addVar(
-   accessMode:AccessMode, name:str,
+   accessMode:AccessMode, name:str, pos:&Parser.Position!,
    typeInfo: &TypeInfo, mutable:MutMode, hasValueFlag:bool ) mut
 {
-   self.add( SymbolKind.Var, true, true, name, typeInfo,
+   self.add( SymbolKind.Var, true, true, name, pos, typeInfo,
              accessMode, false, mutable, hasValueFlag );
 }
 
 
-pub fn Scope.addEnumVal( name:str, typeInfo: &TypeInfo ) mut
+pub fn Scope.addEnumVal( name:str, pos:&Parser.Position!, typeInfo: &TypeInfo ) mut
 {
    self.add( SymbolKind.Mbr, false, true,
-             name, typeInfo, .Pub, true, .Mut, true );
+             name, pos, typeInfo, .Pub, true, .Mut, true );
 }
 
-pub fn Scope.addEnum( accessMode:AccessMode, name:str, typeInfo: &TypeInfo ) mut
+pub fn Scope.addEnum(
+   accessMode:AccessMode, name:str, pos:&Parser.Position!, typeInfo: &TypeInfo ) mut
 {
    self.add( SymbolKind.Typ, false, false,
-             name, typeInfo, accessMode, true, .Mut, true );
+             name, pos, typeInfo, accessMode, true, .Mut, true );
 }
 
-pub fn Scope.addAlgeVal( name:str, typeInfo: &TypeInfo ) mut
+pub fn Scope.addAlgeVal( name:str, pos:&Parser.Position!, typeInfo: &TypeInfo ) mut
 {
    self.add( SymbolKind.Mbr, false, true,
-             name, typeInfo, .Pub, true, .Mut, true );
+             name, pos, typeInfo, .Pub, true, .Mut, true );
 }
 
-pub fn Scope.addAlge( accessMode:AccessMode, name:str, typeInfo: &TypeInfo ) mut
+pub fn Scope.addAlge(
+   accessMode:AccessMode, name:str, pos:&Parser.Position!, typeInfo: &TypeInfo ) mut
 {
    self.add( SymbolKind.Typ, false, false,
-             name, typeInfo, accessMode, true, .Mut, true );
+             name, pos, typeInfo, accessMode, true, .Mut, true );
 }
 
-pub fn Scope.addAlternate( accessMode:AccessMode, name:str, typeInfo: &TypeInfo ) mut
+pub fn Scope.addAlternate(
+   accessMode:AccessMode, name:str, pos:&Parser.Position!, typeInfo: &TypeInfo ) mut
 {
    self.add( SymbolKind.Typ, false, false,
-             name, typeInfo, accessMode, true, .Mut, true );
+             name, pos, typeInfo, accessMode, true, .Mut, true );
 }
 
-pub fn Scope.addMember( name:str, typeInfo: &TypeInfo, accessMode:AccessMode,
-                        staticFlag:bool, mutMode:MutMode ) mut : &SymbolInfo
+pub fn Scope.addMember(
+   name:str, pos:&Parser.Position!, typeInfo: &TypeInfo, accessMode:AccessMode,
+   staticFlag:bool, mutMode:MutMode ) mut : &SymbolInfo
 {
-   return self.add( SymbolKind.Mbr, true, true, name,
+   return self.add( SymbolKind.Mbr, true, true, name, pos,
                     typeInfo, accessMode, staticFlag, mutMode, true );
 }
 
 pub fn Scope.addMethod(
-   typeInfo: &TypeInfo, accessMode:AccessMode, staticFlag:bool, mutable:bool ) mut
+   pos:&Parser.Position!, typeInfo: &TypeInfo,
+   accessMode:AccessMode, staticFlag:bool, mutable:bool ) mut
 {
-   self.add( SymbolKind.Mtd, true, staticFlag, typeInfo.$rawTxt, typeInfo, accessMode,
+   self.add( SymbolKind.Mtd, true, staticFlag, typeInfo.$rawTxt, pos,
+             typeInfo, accessMode,
              staticFlag, mutable and MutMode.Mut or MutMode.IMut, true );
 }
 
 pub fn Scope.addFunc(
-   typeInfo: &TypeInfo, accessMode:AccessMode, staticFlag:bool, mutable:bool ) mut
+   pos:&Parser.Position!, typeInfo: &TypeInfo,
+   accessMode:AccessMode, staticFlag:bool, mutable:bool ) mut
 {
-   self.add( SymbolKind.Fun, true, true, typeInfo.$rawTxt, typeInfo, accessMode,
+   self.add( SymbolKind.Fun, true, true, typeInfo.$rawTxt, pos, typeInfo, accessMode,
              staticFlag, mutable and MutMode.Mut or MutMode.IMut, true );
 }
 
-pub fn Scope.addForm( typeInfo: &TypeInfo, accessMode:AccessMode ) mut
+pub fn Scope.addForm(
+   pos:&Parser.Position!, typeInfo: &TypeInfo, accessMode:AccessMode ) mut
 {
-   self.add( .Typ, false, false, typeInfo.$rawTxt, typeInfo, accessMode,
+   self.add( .Typ, false, false, typeInfo.$rawTxt, pos, typeInfo, accessMode,
              true, .IMut, false );
 }
 
 pub fn Scope.addMacro(
-   typeInfo: &TypeInfo, accessMode:AccessMode ) mut
+   pos:&Parser.Position!, typeInfo: &TypeInfo, accessMode:AccessMode ) mut
 {
-   self.add( SymbolKind.Mac, false, false, typeInfo.$rawTxt,
+   self.add( SymbolKind.Mac, false, false, typeInfo.$rawTxt, pos,
              typeInfo, accessMode, true, .IMut, true );
 }
 
 
-pub fn Scope.addClass( name:str, typeInfo: &TypeInfo ) mut
+pub fn Scope.addClass( name:str, pos:&Parser.Position!, typeInfo: &TypeInfo ) mut
 {
-   self.add( SymbolKind.Typ, false, false, name, typeInfo,
+   self.add( SymbolKind.Typ, false, false, name, pos, typeInfo,
              typeInfo.$accessMode, true, .Mut, true );
 }
 
@@ -3493,11 +3510,11 @@ fn registBuiltin( idName: str, typeTxt: str, kind: TypeInfoKind,
    //typeInfoKind[ idName ] = typeInfo;
    sym2builtInTypeMap[ typeTxt ] = new NormalSymbolInfo(
       SymbolKind.Typ, false, false,
-      rootScope, AccessMode.Pub, false, typeTxt, typeInfo, .IMut, true );
+      rootScope, AccessMode.Pub, false, typeTxt, nil, typeInfo, .IMut, true );
    if nilableTypeInfo ~= headTypeInfo {
       sym2builtInTypeMap[ typeTxt .. "!" ] = new NormalSymbolInfo(
          SymbolKind.Typ, false, kind == .Func, rootScope,
-         AccessMode.Pub, false, typeTxt, nilableTypeInfo, .IMut, true );
+         AccessMode.Pub, false, typeTxt, nil, nilableTypeInfo, .IMut, true );
    }
    addBuiltin( typeInfo );
    // builtIn は modifier も作成しておく
@@ -3511,7 +3528,7 @@ fn registBuiltin( idName: str, typeTxt: str, kind: TypeInfoKind,
 
 
    if registScope {
-      rootScope.addClass( typeTxt, typeInfo );
+      rootScope.addClass( typeTxt, nil, typeInfo );
    }
 }
 
@@ -3589,7 +3606,7 @@ pub let builtinTypeInt:TypeInfo =
 pub let builtinTypeReal:TypeInfo =
    NormalTypeInfo.createBuiltin( "Real", "real" , .Prim## );
 pub let builtinTypeChar:TypeInfo =
-   NormalTypeInfo.createBuiltin( "char", "char" , .Prim## );
+   NormalTypeInfo.createBuiltin( "char", "__char" , .Prim## );
 pub let builtinTypeMapping:TypeInfo =
    NormalTypeInfo.createBuiltin( "Mapping", "Mapping" , .IF## );
 pub let builtinTypeString:TypeInfo =
@@ -3853,17 +3870,19 @@ pub static fn NormalTypeInfo.createAlias(
       name, accessMode, parentInfo, typeInfo.$srcTypeInfo, externalFlag, idProv.$id );
 }
 
-pub fn Scope.addAlias( name:str, externalFlag:bool, accessMode:AccessMode,
-                       parentInfo: &TypeInfo, symbolInfo:&SymbolInfo ) mut : &SymbolInfo
+pub fn Scope.addAlias(
+   name:str, pos:&Parser.Position, externalFlag:bool, accessMode:AccessMode,
+   parentInfo: &TypeInfo, symbolInfo:&SymbolInfo ) mut : &SymbolInfo
 {
    let aliasType = NormalTypeInfo.createAlias(
       name, externalFlag, accessMode, parentInfo, symbolInfo.$typeInfo.$srcTypeInfo );
    return self.add(
       symbolInfo.$kind, false, symbolInfo.$canBeRight,
-      name, aliasType, accessMode, true, .IMut, true );
+      name, pos, aliasType, accessMode, true, .IMut, true );
 }
 
-pub fn Scope.addAliasForType( name:str, typeInfo:&TypeInfo ) mut : &SymbolInfo
+pub fn Scope.addAliasForType(
+   name:str, pos:&Parser.Position!, typeInfo:&TypeInfo ) mut : &SymbolInfo
 {
    let mut skind = SymbolKind.Typ;
    let mut canBeRight = false;
@@ -3881,7 +3900,8 @@ pub fn Scope.addAliasForType( name:str, typeInfo:&TypeInfo ) mut : &SymbolInfo
    }
 
    return self.add(
-      skind, false, canBeRight, name, typeInfo, typeInfo.$accessMode, true, .IMut, true );
+      skind, false, canBeRight, name, pos,
+      typeInfo, typeInfo.$accessMode, true, .IMut, true );
 }
 
 
@@ -4400,14 +4420,14 @@ pub static fn NormalTypeInfo.createEnum(
       false, true, nil, .Method, info,
       true, externalFlag, false, AccessMode.Pub,
       "get__txt", nil, nil, [ builtinTypeString ], false );
-   scope.addMethod( getEnumName, AccessMode.Pub, false, false );
+   scope.addMethod( nil, getEnumName, AccessMode.Pub, false, false );
 
    let mut fromVal = NormalTypeInfo.createFunc(
       false, true, nil, .Func, info,
       true, externalFlag, true, AccessMode.Pub,
       "_from", nil, [ NormalTypeInfo.createModifier( valTypeInfo, .IMut ) ],
       [ info.$nilableTypeInfo ], false );
-   scope.addMethod( fromVal, AccessMode.Pub, true, false );
+   scope.addMethod( nil, fromVal, AccessMode.Pub, true, false );
 
    let allListType = NormalTypeInfo.createList( .Pub, info, [ info ], .IMut );
    let mut allList = NormalTypeInfo.createFunc(
@@ -4415,7 +4435,7 @@ pub static fn NormalTypeInfo.createEnum(
       true, externalFlag, true, AccessMode.Pub,
       "get__allList", nil, nil,
       [ NormalTypeInfo.createModifier( allListType, .IMut ) ], false );
-   scope.addMethod( allList, AccessMode.Pub, true, false );
+   scope.addMethod( nil, allList, AccessMode.Pub, true, false );
 
    return info;
 }
@@ -4473,7 +4493,7 @@ pub static fn NormalTypeInfo.createAlge(
       false, true, nil, .Method, info,
       true, externalFlag, false, AccessMode.Pub,
       "get__txt", nil, nil, [ builtinTypeString ], false );
-   scope.addMethod( getAlgeName, AccessMode.Pub, false, false );
+   scope.addMethod( nil, getAlgeName, AccessMode.Pub, false, false );
 
    return info;
 }

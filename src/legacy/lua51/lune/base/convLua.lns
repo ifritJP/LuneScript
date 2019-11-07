@@ -282,6 +282,7 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
    self.writeln( "_moduleObj.__formatVersion = '%s'" (Ver.metaVersion ) );
    self.writeln( "_moduleObj.__buildId = %q"
                  ( node.$moduleId.getNextModuleId().$idStr) );
+   self.writeln( "_moduleObj.__enableTest = %s" (self.enableTest ) );
 
    let mut importModuleType2Index:Map<&Ast.TypeInfo,int> = {};
    let mut importNameMap:Map<str,&Ast.TypeInfo> = {};
@@ -841,6 +842,9 @@ pub override fn convFilter.processRoot(
 
    if self.needModuleObj {
       self.writeln( "local _moduleObj = {}" );
+   }
+   if self.enableTest {
+      self.writeln( "_moduleObj.__testMap = {}" );
    }
    self.writeln(
       "local __mod__ = '%s'"
@@ -3038,7 +3042,14 @@ pub override fn convFilter.processLuneKind( node: Nodes.LuneKindNode, opt: Opt )
 pub override fn convFilter.processTestBlock( node: Nodes.TestBlockNode, opt: Opt ) mut
 {
    if self.enableTest {
+      self.writeln( "_moduleObj.__testMap[ '%s' ] = function () " (node.$name.txt) );
+
+      self.pushIndent( ## );
+      
       filter( node.$block, self, node );
+
+      self.popIndent();
+      self.writeln( "end" );
    }
 }
 

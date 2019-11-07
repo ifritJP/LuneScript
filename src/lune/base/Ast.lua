@@ -1363,13 +1363,13 @@ function NormalSymbolInfo:getOrg(  )
 
    return self
 end
-function NormalSymbolInfo.new( kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutMode, hasValueFlag )
+function NormalSymbolInfo.new( kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, pos, typeInfo, mutMode, hasValueFlag )
    local obj = {}
    NormalSymbolInfo.setmeta( obj )
-   if obj.__init then obj:__init( kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutMode, hasValueFlag ); end
+   if obj.__init then obj:__init( kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, pos, typeInfo, mutMode, hasValueFlag ); end
    return obj
 end
-function NormalSymbolInfo:__init(kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutMode, hasValueFlag) 
+function NormalSymbolInfo:__init(kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, pos, typeInfo, mutMode, hasValueFlag) 
    SymbolInfo.__init( self)
    
    self.convModuleParam = nil
@@ -1383,6 +1383,7 @@ function NormalSymbolInfo:__init(kind, canBeLeft, canBeRight, scope, accessMode,
    self.accessMode = accessMode
    self.staticFlag = staticFlag
    self.name = name
+   self.pos = pos
    self.typeInfo = typeInfo
    self.mutMode = _lune.unwrapDefault( mutMode, MutMode.IMut)
    self.hasValueFlag = hasValueFlag
@@ -1410,6 +1411,9 @@ function NormalSymbolInfo:get_staticFlag()
 end
 function NormalSymbolInfo:get_name()
    return self.name
+end
+function NormalSymbolInfo:get_pos()
+   return self.pos
 end
 function NormalSymbolInfo:get_typeInfo()
    return self.typeInfo
@@ -2134,95 +2138,95 @@ function Scope:filterSymbolTypeInfo( fromScope, moduleScope, access, callback )
 end
 
 
-function Scope:add( kind, canBeLeft, canBeRight, name, typeInfo, accessMode, staticFlag, mutMode, hasValueFlag )
+function Scope:add( kind, canBeLeft, canBeRight, name, pos, typeInfo, accessMode, staticFlag, mutMode, hasValueFlag )
 
-   local symbolInfo = NormalSymbolInfo.new(kind, canBeLeft, canBeRight, self, accessMode, staticFlag, name, typeInfo, mutMode, hasValueFlag)
+   local symbolInfo = NormalSymbolInfo.new(kind, canBeLeft, canBeRight, self, accessMode, staticFlag, name, pos, typeInfo, mutMode, hasValueFlag)
    self.symbol2SymbolInfoMap[name] = symbolInfo
    return symbolInfo
 end
 
 
-function Scope:addLocalVar( argFlag, canBeLeft, name, typeInfo, mutable )
+function Scope:addLocalVar( argFlag, canBeLeft, name, pos, typeInfo, mutable )
 
-   return self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, typeInfo, AccessMode.Local, false, mutable, true )
+   return self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, pos, typeInfo, AccessMode.Local, false, mutable, true )
 end
 
 
-function Scope:addStaticVar( argFlag, canBeLeft, name, typeInfo, mutable )
+function Scope:addStaticVar( argFlag, canBeLeft, name, pos, typeInfo, mutable )
 
-   self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, typeInfo, AccessMode.Local, true, mutable, true )
+   self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, pos, typeInfo, AccessMode.Local, true, mutable, true )
 end
 
 
-function Scope:addVar( accessMode, name, typeInfo, mutable, hasValueFlag )
+function Scope:addVar( accessMode, name, pos, typeInfo, mutable, hasValueFlag )
 
-   self:add( SymbolKind.Var, true, true, name, typeInfo, accessMode, false, mutable, hasValueFlag )
+   self:add( SymbolKind.Var, true, true, name, pos, typeInfo, accessMode, false, mutable, hasValueFlag )
 end
 
 
-function Scope:addEnumVal( name, typeInfo )
+function Scope:addEnumVal( name, pos, typeInfo )
 
-   self:add( SymbolKind.Mbr, false, true, name, typeInfo, AccessMode.Pub, true, MutMode.Mut, true )
+   self:add( SymbolKind.Mbr, false, true, name, pos, typeInfo, AccessMode.Pub, true, MutMode.Mut, true )
 end
 
 
-function Scope:addEnum( accessMode, name, typeInfo )
+function Scope:addEnum( accessMode, name, pos, typeInfo )
 
-   self:add( SymbolKind.Typ, false, false, name, typeInfo, accessMode, true, MutMode.Mut, true )
+   self:add( SymbolKind.Typ, false, false, name, pos, typeInfo, accessMode, true, MutMode.Mut, true )
 end
 
 
-function Scope:addAlgeVal( name, typeInfo )
+function Scope:addAlgeVal( name, pos, typeInfo )
 
-   self:add( SymbolKind.Mbr, false, true, name, typeInfo, AccessMode.Pub, true, MutMode.Mut, true )
+   self:add( SymbolKind.Mbr, false, true, name, pos, typeInfo, AccessMode.Pub, true, MutMode.Mut, true )
 end
 
 
-function Scope:addAlge( accessMode, name, typeInfo )
+function Scope:addAlge( accessMode, name, pos, typeInfo )
 
-   self:add( SymbolKind.Typ, false, false, name, typeInfo, accessMode, true, MutMode.Mut, true )
+   self:add( SymbolKind.Typ, false, false, name, pos, typeInfo, accessMode, true, MutMode.Mut, true )
 end
 
 
-function Scope:addAlternate( accessMode, name, typeInfo )
+function Scope:addAlternate( accessMode, name, pos, typeInfo )
 
-   self:add( SymbolKind.Typ, false, false, name, typeInfo, accessMode, true, MutMode.Mut, true )
+   self:add( SymbolKind.Typ, false, false, name, pos, typeInfo, accessMode, true, MutMode.Mut, true )
 end
 
 
-function Scope:addMember( name, typeInfo, accessMode, staticFlag, mutMode )
+function Scope:addMember( name, pos, typeInfo, accessMode, staticFlag, mutMode )
 
-   return self:add( SymbolKind.Mbr, true, true, name, typeInfo, accessMode, staticFlag, mutMode, true )
+   return self:add( SymbolKind.Mbr, true, true, name, pos, typeInfo, accessMode, staticFlag, mutMode, true )
 end
 
 
-function Scope:addMethod( typeInfo, accessMode, staticFlag, mutable )
+function Scope:addMethod( pos, typeInfo, accessMode, staticFlag, mutable )
 
-   self:add( SymbolKind.Mtd, true, staticFlag, typeInfo:get_rawTxt(), typeInfo, accessMode, staticFlag, mutable and MutMode.Mut or MutMode.IMut, true )
+   self:add( SymbolKind.Mtd, true, staticFlag, typeInfo:get_rawTxt(), pos, typeInfo, accessMode, staticFlag, mutable and MutMode.Mut or MutMode.IMut, true )
 end
 
 
-function Scope:addFunc( typeInfo, accessMode, staticFlag, mutable )
+function Scope:addFunc( pos, typeInfo, accessMode, staticFlag, mutable )
 
-   self:add( SymbolKind.Fun, true, true, typeInfo:get_rawTxt(), typeInfo, accessMode, staticFlag, mutable and MutMode.Mut or MutMode.IMut, true )
+   self:add( SymbolKind.Fun, true, true, typeInfo:get_rawTxt(), pos, typeInfo, accessMode, staticFlag, mutable and MutMode.Mut or MutMode.IMut, true )
 end
 
 
-function Scope:addForm( typeInfo, accessMode )
+function Scope:addForm( pos, typeInfo, accessMode )
 
-   self:add( SymbolKind.Typ, false, false, typeInfo:get_rawTxt(), typeInfo, accessMode, true, MutMode.IMut, false )
+   self:add( SymbolKind.Typ, false, false, typeInfo:get_rawTxt(), pos, typeInfo, accessMode, true, MutMode.IMut, false )
 end
 
 
-function Scope:addMacro( typeInfo, accessMode )
+function Scope:addMacro( pos, typeInfo, accessMode )
 
-   self:add( SymbolKind.Mac, false, false, typeInfo:get_rawTxt(), typeInfo, accessMode, true, MutMode.IMut, true )
+   self:add( SymbolKind.Mac, false, false, typeInfo:get_rawTxt(), pos, typeInfo, accessMode, true, MutMode.IMut, true )
 end
 
 
-function Scope:addClass( name, typeInfo )
+function Scope:addClass( name, pos, typeInfo )
 
-   self:add( SymbolKind.Typ, false, false, name, typeInfo, typeInfo:get_accessMode(), true, MutMode.Mut, true )
+   self:add( SymbolKind.Typ, false, false, name, pos, typeInfo, typeInfo:get_accessMode(), true, MutMode.Mut, true )
 end
 
 
@@ -2568,6 +2572,10 @@ end
 
 function AccessSymbolInfo:get_name( ... )
    return self.symbolInfo:get_name( ... )
+end
+
+function AccessSymbolInfo:get_pos( ... )
+   return self.symbolInfo:get_pos( ... )
 end
 
 function AccessSymbolInfo:get_typeInfo( ... )
@@ -4782,9 +4790,9 @@ end
 
 local function registBuiltin( idName, typeTxt, kind, typeInfo, nilableTypeInfo, registScope )
 
-   _moduleObj.sym2builtInTypeMap[typeTxt] = NormalSymbolInfo.new(SymbolKind.Typ, false, false, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, typeInfo, MutMode.IMut, true)
+   _moduleObj.sym2builtInTypeMap[typeTxt] = NormalSymbolInfo.new(SymbolKind.Typ, false, false, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, nil, typeInfo, MutMode.IMut, true)
    if nilableTypeInfo ~= _moduleObj.headTypeInfo then
-      _moduleObj.sym2builtInTypeMap[typeTxt .. "!"] = NormalSymbolInfo.new(SymbolKind.Typ, false, kind == TypeInfoKind.Func, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, nilableTypeInfo, MutMode.IMut, true)
+      _moduleObj.sym2builtInTypeMap[typeTxt .. "!"] = NormalSymbolInfo.new(SymbolKind.Typ, false, kind == TypeInfoKind.Func, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, nil, nilableTypeInfo, MutMode.IMut, true)
    end
    
    addBuiltin( typeInfo )
@@ -4797,7 +4805,7 @@ local function registBuiltin( idName, typeTxt, kind, typeInfo, nilableTypeInfo, 
    
    
    if registScope then
-      _moduleObj.rootScope:addClass( typeTxt, typeInfo )
+      _moduleObj.rootScope:addClass( typeTxt, nil, typeInfo )
    end
    
 end
@@ -4878,7 +4886,7 @@ _moduleObj.builtinTypeInt = builtinTypeInt
 local builtinTypeReal = NormalTypeInfo.createBuiltin( "Real", "real", TypeInfoKind.Prim )
 _moduleObj.builtinTypeReal = builtinTypeReal
 
-local builtinTypeChar = NormalTypeInfo.createBuiltin( "char", "char", TypeInfoKind.Prim )
+local builtinTypeChar = NormalTypeInfo.createBuiltin( "char", "__char", TypeInfoKind.Prim )
 _moduleObj.builtinTypeChar = builtinTypeChar
 
 local builtinTypeMapping = NormalTypeInfo.createBuiltin( "Mapping", "Mapping", TypeInfoKind.IF )
@@ -5127,14 +5135,14 @@ function NormalTypeInfo.createAlias( name, externalFlag, accessMode, parentInfo,
 end
 
 
-function Scope:addAlias( name, externalFlag, accessMode, parentInfo, symbolInfo )
+function Scope:addAlias( name, pos, externalFlag, accessMode, parentInfo, symbolInfo )
 
    local aliasType = NormalTypeInfo.createAlias( name, externalFlag, accessMode, parentInfo, symbolInfo:get_typeInfo():get_srcTypeInfo() )
-   return self:add( symbolInfo:get_kind(), false, symbolInfo:get_canBeRight(), name, aliasType, accessMode, true, MutMode.IMut, true )
+   return self:add( symbolInfo:get_kind(), false, symbolInfo:get_canBeRight(), name, pos, aliasType, accessMode, true, MutMode.IMut, true )
 end
 
 
-function Scope:addAliasForType( name, typeInfo )
+function Scope:addAliasForType( name, pos, typeInfo )
 
    local skind = SymbolKind.Typ
    local canBeRight = false
@@ -5151,7 +5159,7 @@ function Scope:addAliasForType( name, typeInfo )
    end
    
    
-   return self:add( skind, false, canBeRight, name, typeInfo, typeInfo:get_accessMode(), true, MutMode.IMut, true )
+   return self:add( skind, false, canBeRight, name, pos, typeInfo, typeInfo:get_accessMode(), true, MutMode.IMut, true )
 end
 
 
@@ -5803,14 +5811,14 @@ function NormalTypeInfo.createEnum( scope, parentInfo, externalFlag, accessMode,
    local info = EnumTypeInfo.new(scope, externalFlag, accessMode, enumName, parentInfo, idProv:get_id(), valTypeInfo)
    
    local getEnumName = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Method, info, true, externalFlag, false, AccessMode.Pub, "get__txt", nil, nil, {_moduleObj.builtinTypeString}, false )
-   scope:addMethod( getEnumName, AccessMode.Pub, false, false )
+   scope:addMethod( nil, getEnumName, AccessMode.Pub, false, false )
    
    local fromVal = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Func, info, true, externalFlag, true, AccessMode.Pub, "_from", nil, {NormalTypeInfo.createModifier( valTypeInfo, MutMode.IMut )}, {info:get_nilableTypeInfo()}, false )
-   scope:addMethod( fromVal, AccessMode.Pub, true, false )
+   scope:addMethod( nil, fromVal, AccessMode.Pub, true, false )
    
    local allListType = NormalTypeInfo.createList( AccessMode.Pub, info, {info}, MutMode.IMut )
    local allList = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Func, info, true, externalFlag, true, AccessMode.Pub, "get__allList", nil, nil, {NormalTypeInfo.createModifier( allListType, MutMode.IMut )}, false )
-   scope:addMethod( allList, AccessMode.Pub, true, false )
+   scope:addMethod( nil, allList, AccessMode.Pub, true, false )
    
    return info
 end
@@ -5872,7 +5880,7 @@ function NormalTypeInfo.createAlge( scope, parentInfo, externalFlag, accessMode,
    local info = AlgeTypeInfo.new(scope, externalFlag, accessMode, algeName, parentInfo, idProv:get_id())
    
    local getAlgeName = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Method, info, true, externalFlag, false, AccessMode.Pub, "get__txt", nil, nil, {_moduleObj.builtinTypeString}, false )
-   scope:addMethod( getAlgeName, AccessMode.Pub, false, false )
+   scope:addMethod( nil, getAlgeName, AccessMode.Pub, false, false )
    
    return info
 end

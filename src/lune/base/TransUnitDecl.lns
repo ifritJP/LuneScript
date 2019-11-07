@@ -252,21 +252,23 @@ fn TransUnit.analyzeDeclArgList(
          argList.insert(
             Nodes.DeclArgDDDNode.create(
                self.nodeManager, argName.pos, [ dddTypeInfo ] ) );
-         scope.addLocalVar( true, true, argName.txt, dddTypeInfo, .IMut );
+         scope.addLocalVar( true, true, argName.txt, argName.pos, dddTypeInfo, .IMut );
       }
       else {
          argName = self.checkSymbol( argName, .MustNot_ );
 
-         if scope.getSymbolTypeInfo(
-            argName.txt, scope, self.moduleScope, self.scopeAccess ) {
-            self.addErrMess( argName.pos,
-                             "shadowing variable -- %s" (argName.txt) );
-         }
+         self.checkShadowing( argName.pos, argName.txt, scope );
+
+         // if scope.getSymbolTypeInfo(
+         //    argName.txt, scope, self.moduleScope, self.scopeAccess ) {
+         //    self.addErrMess( argName.pos,
+         //                     "shadowing variable -- %s" (argName.txt) );
+         // }
 
          self.checkNextToken( ":" );
          let refType = self.analyzeRefType( accessMode, false, parentPub );
          let symbolInfo = scope.addLocalVar(
-            true, true, argName.txt, refType.$expType, mutable );
+            true, true, argName.txt, argName.pos, refType.$expType, mutable );
          
          let arg = Nodes.DeclArgNode.create(
             self.nodeManager, argName.pos, refType.$expTypeList,
@@ -441,9 +443,8 @@ pub fn TransUnit.createAST(
 
 
       let mut rootNode = Nodes.RootNode.create(
-         self.nodeManager, new Parser.Position( 0, 0 ),
-         [ Ast.builtinTypeNone ], children, self.moduleScope,
-         self.macroCtrl.$useModuleMacroSet,
+         self.nodeManager, new Parser.Position( 0, 0 ), [ Ast.builtinTypeNone ],
+         children, self.moduleScope, self.macroCtrl.$useModuleMacroSet,
          self.moduleId, processInfo, moduleTypeInfo, nil, self.helperInfo,
          self.nodeManager, self.importModule2ModuleInfo,
          self.macroCtrl.$typeId2MacroInfo, self.typeId2ClassMap );
@@ -562,7 +563,7 @@ fn TransUnit.analyzeDeclMacroSub(
          true, .Global, "_lnsLoad",
          nil, [ Ast.builtinTypeString, Ast.builtinTypeString ],
          [ Ast.builtinTypeStem ], false );
-      scope.addLocalVar( false, false, "_lnsLoad", funcType, .IMut );
+      scope.addLocalVar( false, false, "_lnsLoad", nil, funcType, .IMut );
 
 
       let mut bakParser = self.parser;
@@ -659,7 +660,7 @@ fn TransUnit.analyzeDeclMacro(
    // スコープを元に戻す
    self.scope = backScope;
 
-   self.scope.addMacro( node.$expType, accessMode );
+   self.scope.addMacro( nameToken.pos, node.$expType, accessMode );
    
    return node;
 }
@@ -780,7 +781,7 @@ fn TransUnit.analyzePushClass(
    // altTypeList のシンボルにアクセスできるように、一時的にスコープを掘る
    let mut tempScope = self.pushScope( false## );
    foreach altType in altTypeList {
-      tempScope.addAlternate( accessMode, altType.$rawTxt, altType );
+      tempScope.addAlternate( accessMode, altType.$rawTxt, name.pos, altType );
    }
 
 
@@ -1003,7 +1004,7 @@ fn TransUnit.analyzeDeclEnum(
       }
 
       when! enumTypeInfo {
-         scope.addEnumVal( valName.txt, enumTypeInfo );
+         scope.addEnumVal( valName.txt, valName.pos, enumTypeInfo );
          let enumValInfo = new Ast.EnumValInfo( valName.txt, enumVal );
          valueList.insert( valName );
 
@@ -1028,7 +1029,7 @@ fn TransUnit.analyzeDeclEnum(
 
    self.popScope();
 
-   self.scope.addEnum( accessMode, name.txt, unwrap enumTypeInfo );
+   self.scope.addEnum( accessMode, name.txt, name.pos, unwrap enumTypeInfo );
 
 
    return Nodes.DeclEnumNode.create(
@@ -1052,7 +1053,7 @@ fn TransUnit.analyzeDeclAlge(
 
    let mut algeTypeInfo = Ast.NormalTypeInfo.createAlge(
       algeScope, self.getCurrentNamespaceTypeInfo(), false, accessMode, name.txt );
-   scope.addAlge( accessMode, name.txt, algeTypeInfo );
+   scope.addAlge( accessMode, name.txt, name.pos, algeTypeInfo );
 
    let mut nextToken = self.getToken(##);
    while nextToken.txt ~= "}" {
@@ -1088,7 +1089,7 @@ fn TransUnit.analyzeDeclAlge(
          }
       }
 
-      algeScope.addAlgeVal( valName.txt, algeTypeInfo );
+      algeScope.addAlgeVal( valName.txt, valName.pos, algeTypeInfo );
       let algeValInfo = new Ast.AlgeValInfo( valName.txt, typeInfoList );
       algeTypeInfo.addValInfo( algeValInfo );
 
@@ -1138,7 +1139,8 @@ fn TransUnit.analyzeAlias(
          switch symbolInfo.$kind {
             case .Typ, .Fun {
                let aliasSymbolInfo = self.scope.addAlias(
-                  newToken.txt, false, accessMode, self.moduleType, symbolInfo );
+                  newToken.txt, newToken.pos,
+                  false, accessMode, self.moduleType, symbolInfo );
                newTypeInfo = aliasSymbolInfo.$typeInfo;
             }
             default {
@@ -1229,7 +1231,7 @@ mut : Nodes.DeclFormNode
       self.getCurrentNamespaceTypeInfo(), false, false,
       true, accessMode, name.txt, nil, argTypeInfoList, retTypeList, false );
 
-   self.scope.addForm( formType, accessMode );
+   self.scope.addForm( name.pos, formType, accessMode );
    // self.scope.add(
    //    .Typ, false, false, name.txt, formType, accessMode, true, .IMut, false );
 
@@ -1450,7 +1452,7 @@ fn TransUnit.analyzeDeclMember(
       }
 
       let symbolInfo = self.scope.addMember(
-         varName.txt, typeInfo, accessMode, staticFlag, mutMode );
+         varName.txt, varName.pos, typeInfo, accessMode, staticFlag, mutMode );
 
       return Nodes.DeclMemberNode.create(
          self.nodeManager, firstToken.pos, [ typeInfo ],
@@ -1531,10 +1533,10 @@ fn TransUnit.addDefaultConstructor(
       true, false, false, .Pub, "__init", nil, argTypeList, [] ## );
    if oldFlag {
       // oldFlag の場合は スコープに "" のシンボルを追加する
-      ctorScope.addVar( .Pri, "", Ast.headTypeInfo, .IMut, true);
+      ctorScope.addVar( .Pri, "", nil, Ast.headTypeInfo, .IMut, true);
    }
    self.popScope();
-   classScope.addMethod( initTypeInfo, .Pub, false, false );
+   classScope.addMethod( pos, initTypeInfo, .Pub, false, false );
    methodNameSet.add( "__init" );
 
    // メンバーをセット済みにする
@@ -1564,7 +1566,7 @@ fn TransUnit.analyzeFuncBlock(
          funcName, false, funcBodyScope, self.scopeAccess )
       {
          if not overrideType.$abstractFlag {
-            funcBodyScope.addLocalVar( false, false, "super", overrideType, .IMut );
+            funcBodyScope.addLocalVar( false, false, "super", nil, overrideType, .IMut );
          }
       }
    }
@@ -1763,7 +1765,8 @@ fn TransUnit.analyzeClassBody(
       let! memberNode = memberName2Node[ memberToken.txt ] {
          self.error( "not found member -- %s" (memberToken.txt) );
       };
-      advertiseList.insert( new Nodes.AdvertiseInfo( memberNode, prefix ) );
+      advertiseList.insert(
+         new Nodes.AdvertiseInfo( memberNode, prefix, memberToken.pos ) );
    }
 
    fn processEnum( token:&Parser.Token, accessMode:Ast.AccessMode ) {
@@ -2015,7 +2018,7 @@ fn TransUnit.analyzeDeclClass(
       let toMapFuncTypeInfo = Ast.NormalTypeInfo.createFunc(
          false, false, nil, .Method, classTypeInfo,
          true, false, false, .Pub, "_toMap", nil, [], [ mapType ], false );
-      classScope.addMethod( toMapFuncTypeInfo, .Pub, false, false );
+      classScope.addMethod( nil, toMapFuncTypeInfo, .Pub, false, false );
    }
 
 
@@ -2051,7 +2054,7 @@ fn TransUnit.analyzeDeclClass(
          self.popScope();
 
          classScope.addMethod(
-            retTypeInfo, accessMode, memberNode.$staticFlag, false );
+            memberName.pos, retTypeInfo, accessMode, memberNode.$staticFlag, false );
          methodNameSet.add( getterName );
       }
       // setter
@@ -2068,6 +2071,7 @@ fn TransUnit.analyzeDeclClass(
             mutable = false;
          }
          classScope.addMethod(
+            memberName.pos,
             Ast.NormalTypeInfo.createFunc(
                false, false, self.pushScope( false ## ),
                .Method, parentInfo, true, false,
@@ -2106,7 +2110,8 @@ fn TransUnit.analyzeDeclClass(
                      let impMtdType = Ast.NormalTypeInfo.createAdvertiseMethodFrom(
                         classTypeInfo, child );
                      classScope.addMethod(
-                        impMtdType, child.$accessMode, child.$staticFlag, false );
+                        advertiseInfo.$pos, impMtdType,
+                        child.$accessMode, child.$staticFlag, false );
                   }
                }
             }
@@ -2139,7 +2144,7 @@ fn TransUnit.analyzeDeclClass(
          nil, [ mapType.$nilableTypeInfo ],
          [ classTypeInfo.$nilableTypeInfo, Ast.builtinTypeString.$nilableTypeInfo ],
          true );
-      classScope.addMethod( fromMapFuncTypeInfo, ctorAccessMode, true, false );
+      classScope.addMethod( nil, fromMapFuncTypeInfo, ctorAccessMode, true, false );
 
       // _fromStem の追加
       let fromStemFuncTypeInfo = Ast.NormalTypeInfo.createFunc(
@@ -2148,7 +2153,7 @@ fn TransUnit.analyzeDeclClass(
          nil, [ Ast.builtinTypeStem_ ],
          [ classTypeInfo.$nilableTypeInfo, Ast.builtinTypeString.$nilableTypeInfo ],
          true );
-      classScope.addMethod( fromStemFuncTypeInfo, ctorAccessMode, true, false );
+      classScope.addMethod( nil, fromStemFuncTypeInfo, ctorAccessMode, true, false );
    }
 
    // fn checkOverrideMethodSub( scope:&Ast.Scope ) {
@@ -2253,10 +2258,10 @@ fn TransUnit.processAddFunc(
    let staticFlag = typeInfo.$staticFlag;
    let mutable = Ast.TypeInfo.isMut( typeInfo );
    if isFunc {
-      parentScope.addFunc( typeInfo, accessMode, staticFlag, mutable );
+      parentScope.addFunc( name.pos, typeInfo, accessMode, staticFlag, mutable );
    }
    else {
-      parentScope.addMethod( typeInfo, accessMode, staticFlag, mutable );
+      parentScope.addMethod( name.pos, typeInfo, accessMode, staticFlag, mutable );
    }
 }
 
@@ -2384,7 +2389,8 @@ fn TransUnit.analyzeDeclFunc(
    if token.txt == "<" {
       token, altTypeList = self.analyzeDeclAlternateType( false, token, accessMode );
       foreach altType in altTypeList {
-         funcBodyScope.addAlternate( accessMode, altType.$rawTxt, altType );
+         funcBodyScope.addAlternate(
+            accessMode, altType.$rawTxt, firstToken.pos, altType );
       }
 
    }
@@ -2444,7 +2450,7 @@ fn TransUnit.analyzeDeclFunc(
          }
          if not staticFlag {
             self.scope.add(
-               .Arg, false, true, "self",
+               .Arg, false, true, "self", nil,
                workClass, .Pri, false,
                mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true );
          }
@@ -2584,7 +2590,7 @@ fn TransUnit.analyzeDeclFunc(
       }
 
       funcBodyScope.addLocalVar(
-         false, false, "__func__", Ast.builtinTypeString, .IMut );
+         false, false, "__func__", nil, Ast.builtinTypeString, .IMut );
 
       let mut workBody = self.analyzeFuncBlock(
          analyzingState, firstToken, classTypeInfo,
@@ -3097,10 +3103,11 @@ fn TransUnit.analyzeDeclVar(
       // スコープに変数を登録
       if mode == .Let or mode == .Sync {
          if mode == .Let {
-            if self.scope.getTypeInfo( varName.txt, self.scope, true, self.scopeAccess ) {
-               self.addErrMess( varName.pos,
-                                "shadowing variable -- %s" (varName.txt) );
-            }
+            self.checkShadowing( varName.pos, varName.txt, self.scope );
+            // if self.scope.getTypeInfo( varName.txt, self.scope, true, self.scopeAccess ) {
+            //    self.addErrMess( varName.pos,
+            //                     "shadowing variable -- %s" (varName.txt) );
+            // }
          }
          let mut orgExpType = Ast.builtinTypeStem_;
          if not unwrapFlag {
@@ -3116,8 +3123,8 @@ fn TransUnit.analyzeDeclVar(
          {
             hasValue = true;
          }
-         self.scope.addVar(
-            accessMode, varName.txt, typeInfo, letVarInfo.mutable, hasValue );
+         self.scope.addVar( accessMode, varName.txt, varName.pos,
+                            typeInfo, letVarInfo.mutable, hasValue );
       }
       symbolInfoList.insert(
          unwrap self.scope.getSymbolInfo( varName.txt, self.scope,
@@ -3136,8 +3143,8 @@ fn TransUnit.analyzeDeclVar(
       // unwrap ブロックに変数を登録
       foreach letVarInfo, index in letVarList {
          self.addLocalVar(
-            letVarInfo.varName.pos, false, true, "_" .. letVarInfo.varName.txt,
-            orgExpTypeList[ index ], .IMut ## );
+            letVarInfo.varName.pos, false, true,
+            "_" .. letVarInfo.varName.txt, orgExpTypeList[ index ], .IMut ## );
       }
 
       unwrapBlock = self.analyzeBlock( .LetUnwrap, .Start, scope );
@@ -3204,7 +3211,7 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
 {
    let mut nextToken = self.getToken(##);
    let mut typeInfoList:List<&Ast.TypeInfo> = [];
-   let mut varNameList:str[] = [];
+   let mut varNameList:List<&Parser.Token> = [];
    let mut expList:&Nodes.ExpListNode;
    let mut varList:List<&Ast.SymbolInfo> = [];
 
@@ -3220,7 +3227,7 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
          self.error( "system error" );
       }
       foreach varInfo in letVarList {
-         varNameList.insert( varInfo.varName.txt );
+         varNameList.insert( varInfo.varName );
       }
    }
    else {
@@ -3233,7 +3240,8 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
       else {
          typeInfoList.insert( exp.$expType );
       }
-      varNameList.insert( "_exp" );
+      varNameList.insert(
+         new Parser.Token( .Symb, "_exp", firstToken.pos, false, nil ) );
    }
 
    let mut scope = self.pushScope( false ## );
@@ -3244,7 +3252,7 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
       }
       let varName = varNameList[ index ];
       varList.insert(
-         self.addLocalVar( firstToken.pos, false, true, varName, expType, .IMut ## ) );
+         self.addLocalVar( varName.pos, false, true, varName.txt, expType, .IMut ## ) );
       
    }
 

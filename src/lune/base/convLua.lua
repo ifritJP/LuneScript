@@ -533,6 +533,7 @@ function convFilter:outputMeta( node )
    self:writeln( string.format( "_moduleObj.__version = '%s'", Ver.version) )
    self:writeln( string.format( "_moduleObj.__formatVersion = '%s'", Ver.metaVersion) )
    self:writeln( string.format( "_moduleObj.__buildId = %q", node:get_moduleId():getNextModuleId(  ):get_idStr()) )
+   self:writeln( string.format( "_moduleObj.__enableTest = %s", self.enableTest) )
    
    local importModuleType2Index = {}
    local importNameMap = {}
@@ -1227,6 +1228,10 @@ function convFilter:processRoot( node, opt )
    
    if self.needModuleObj then
       self:writeln( "local _moduleObj = {}" )
+   end
+   
+   if self.enableTest then
+      self:writeln( "_moduleObj.__testMap = {}" )
    end
    
    self:writeln( string.format( "local __mod__ = '%s'", node:get_moduleTypeInfo():getFullName( self:get_typeNameCtrl(), self:get_moduleInfoManager() )) )
@@ -3653,7 +3658,14 @@ end
 function convFilter:processTestBlock( node, opt )
 
    if self.enableTest then
+      self:writeln( string.format( "_moduleObj.__testMap[ '%s' ] = function () ", node:get_name().txt) )
+      
+      self:pushIndent(  )
+      
       filter( node:get_block(), self, node )
+      
+      self:popIndent(  )
+      self:writeln( "end" )
    end
    
 end
@@ -3895,7 +3907,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3256, function (  )
+   Log.log( Log.Level.Info, __func__, 3267, function (  )
    
       return string.format( "code: %s", code)
    end )

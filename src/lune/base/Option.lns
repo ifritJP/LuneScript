@@ -76,7 +76,9 @@ pub enum CheckingUptodateMode {
 }
 
 pub class TransCtrlInfo {
+   /** ## を明示していない時の warning を出力するかどうか。 trueの場合出力する。*/
    pub let mut checkingDefineAbbr:bool;
+   /** warning 発生した場合、 AST 解析を続けるかどうか。 true の場合止める。*/
    pub let mut stopByWarning:bool;
    pub let mut uptodateMode:CheckingUptodateMode;
 }

@@ -45,6 +45,17 @@ pub fn err( message:str ): __ {
    os.exit( errorCode );
 }
 
+/**
+txt 文字列から、 pattern で構成される文字列を抜き出してリストを返す。
+*/
+pub fn splitStr( txt:str, pattern:str ) : &List<str> {
+   let mut list:List<str> = [];
+   apply token of string.gmatch( txt, pattern ) {
+      list.insert( token );
+   }
+   return list;
+}
+
 
 pub class OrderedSet<T> {
    pri let mut set:Set<&T>;

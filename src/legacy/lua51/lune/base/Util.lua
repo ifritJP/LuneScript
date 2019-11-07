@@ -178,6 +178,17 @@ local function err( message )
 end
 _moduleObj.err = err
 
+local function splitStr( txt, pattern )
+
+   local list = {}
+   for token in string.gmatch( txt, pattern ) do
+      table.insert( list, token )
+   end
+   
+   return list
+end
+_moduleObj.splitStr = splitStr
+
 local OrderedSet = {}
 _moduleObj.OrderedSet = OrderedSet
 function OrderedSet.new(  )

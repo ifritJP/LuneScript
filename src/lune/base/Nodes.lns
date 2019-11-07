@@ -1509,6 +1509,7 @@ _declNodeClass( "DeclArgDDD", Node, false, false, false, [] );
 pub class AdvertiseInfo {
    pri let mut member: &DeclMemberNode { pub };
    pri let prefix: str {pub};
+   pri let pos: &Parser.Position {pub};
 };
 pub class ClassInitBlockInfo {
    pri let mut func: &DeclMethodNode! {pub,pub};

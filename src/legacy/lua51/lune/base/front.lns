@@ -37,6 +37,7 @@ import lune.base.Ver;
 import lune.base.Log;
 import lune.base.Formatter;
 import lune.base.Testing;
+import lune.base.TestCtrl;
 
 _lune_control ignore_symbol_;
 
@@ -81,7 +82,10 @@ class LoadInfo {
 
 class Front extend (frontInterface.frontInterface) {
    let mut option:Option.Option;
+   /** import 済みのモジュールと、その LoadInfoの紐付け。 */ 
    let mut loadedMap:Map<str,LoadInfo>;
+   /** import 済みの Test ビルド用モジュールと、その LoadInfoの紐付け。 */ 
+   let mut loadedMapTest:Map<str,LoadInfo>;
    let mut loadedMetaMap:Map<str,stem>;
    let mut convertedMap:Map<str,str>;
 
@@ -92,21 +96,39 @@ loadedMap で管理する前にシステムにロードされているため、
 多重ロードを防ぐため、 loadedMap で管理する前にロードされているモジュールを保持する。
 */
    let loadedModMap:&Map<str,stem>;
-   
+
    pub fn __init( option:Option.Option ) {
       self.option = option;
       self.loadedMap = {};
+      self.loadedMapTest = {};
       self.loadedMetaMap = {};
       self.convertedMap = {};
 
       frontInterface.setFront( self );
 
       let mut loadedMap:Map<str,stem> = {};
-      foreach modval, mod in Depend.getLoadedMod() {
-         loadedMap[ mod ] = modval;
+      if not option.testing {
+         foreach modval, mod in Depend.getLoadedMod() {
+            loadedMap[ mod ] = modval;
+         }
       }
       self.loadedModMap = loadedMap;
    }
+
+   fn getLoadInfo( mod:str ) : LoadInfo! {
+      if self.option.testing {
+         return self.loadedMapTest[ mod ];
+      }
+      return self.loadedMap[ mod ];
+   }
+
+   fn setLoadInfo( mod:str, info:LoadInfo ) mut {
+      if self.option.testing {
+         self.loadedMapTest[ mod ] = info;
+      }
+      self.loadedMap[ mod ] = info;
+   }
+   
 
    pub fn loadModule( mod:str ) mut: stem!, &stem;
    pub fn loadMeta( importModuleInfo:frontInterface.ImportModuleInfo, mod:str ) mut: &stem!;
@@ -431,8 +453,11 @@ metaTime
    return moduleId, uptodate;
 }
 
-fn Front.loadFile( importModuleInfo:frontInterface.ImportModuleInfo,
-                   path:str, mod:str, onlyMeta:bool ): stem, stem
+/**
+指定 path の LuneScript をロードし、 meta 情報と変換した Lua コードを取得する。
+*/
+fn Front.loadFileToLuaCode(
+   importModuleInfo:frontInterface.ImportModuleInfo, path:str, mod:str ): stem, str
 {
    let ast = self.createAst( importModuleInfo, createPaser( path, mod ),
                              mod, getModuleId( path, mod ## ), nil, .Compile, nil );
@@ -473,15 +498,27 @@ fn Front.loadFile( importModuleInfo:frontInterface.ImportModuleInfo,
    }
 
    let mut meta = unwrap loadFromLuaTxt( metaTxt );
-   if onlyMeta {
-      return meta, luaTxt;
-   }
- 
+   return meta, luaTxt;
+}
+
+
+/**
+指定 path の LuneScript をロードし、
+ meta 情報と変換した Lua コードをロードして実行した結果のオブジェクトを返す。
+
+*/
+fn Front.loadFile(
+   importModuleInfo:frontInterface.ImportModuleInfo, path:str, mod:str ): &stem, stem
+{
+   let meta, luaTxt = self.loadFileToLuaCode( importModuleInfo, path, mod );
+   
    if! self.loadedModMap[ mod ] {
       return meta, _exp;
    }
    return meta, unwrap loadFromLuaTxt( luaTxt );
 }
+
+
 
 fn Front.searchModule( mod:str ): str! {
    return self.searchModuleFile( mod, ".lns", nil );
@@ -511,7 +548,9 @@ fn Front.checkUptodateMeta( metaPath:str, addSearchPath:str! ): stem! {
       return nil;
    };
    let meta = metaObj@@=TransUnit._MetaInfo;
-   if meta.$__formatVersion ~= Ver.metaVersion {
+   if meta.$__formatVersion ~= Ver.metaVersion or
+      meta.$__enableTest ~= self.option.testing
+   {
       return nil;
    }
    foreach dependInfo, moduleFullName in meta.__dependModuleMap {
@@ -535,10 +574,11 @@ fn Front.checkUptodateMeta( metaPath:str, addSearchPath:str! ): stem! {
 
 
 fn Front.loadModule( mod:str ) mut : stem!, &stem {
-   if self.loadedMap[ mod ] == nil {
+   if not self.getLoadInfo( mod ) {
       if! let luaTxt = self.convertedMap[ mod ] {
          if! let meta = self.loadedMetaMap[ mod ] {
-	    self.loadedMap[ mod ] = new LoadInfo( unwrap loadFromLuaTxt( luaTxt ), meta );
+            self.setLoadInfo(
+               mod, new LoadInfo( unwrap loadFromLuaTxt( luaTxt ), meta ) );
          }
          else {
             error( "nothing meta -- %s" ( mod ) );
@@ -567,7 +607,7 @@ fn Front.loadModule( mod:str ) mut : stem!, &stem {
                         if! let meta =
                            self.checkUptodateMeta( metaPath, self.option.outputDir )
                         {
-	                   self.loadedMap[ mod ] = new LoadInfo( _exp, meta );
+	                   self.setLoadInfo( mod, new LoadInfo( _exp, meta ) );
                         }
                         else {
                            loadVal = nil;
@@ -578,13 +618,13 @@ fn Front.loadModule( mod:str ) mut : stem!, &stem {
             }
             if loadVal == nil {
 	       let meta, mut workVal = self.loadFile(
-                  new frontInterface.ImportModuleInfo(), lnsPath, mod, false );
-	       self.loadedMap[ mod ] = new LoadInfo( workVal, meta );
+                  new frontInterface.ImportModuleInfo(), lnsPath, mod );
+	       self.setLoadInfo( mod, new LoadInfo( workVal, meta ) );
             }
          }
       }
    }
-   if! self.loadedMap[ mod ] {
+   if! self.getLoadInfo( mod ) {
       return _exp.mod, _exp.meta;
    }
    error( "load error, %s" ( mod ) );
@@ -595,7 +635,7 @@ fn Front.loadMeta(
    importModuleInfo:frontInterface.ImportModuleInfo, mod:str ) mut : &stem!
 {
    if self.loadedMetaMap[ mod ] == nil {
-      if! self.loadedMap[ mod ] {
+      if! self.getLoadInfo( mod ) {
          self.loadedMetaMap[ mod ] = _exp.meta;
       }
       else {
@@ -622,9 +662,9 @@ fn Front.loadMeta(
             }
             if meta == nil {
 	       let metawork, luaTxt =
-                  self.loadFile( importModuleInfo, lnsPath, mod, true );
+                  self.loadFileToLuaCode( importModuleInfo, lnsPath, mod );
 	       self.loadedMetaMap[ mod ] = metawork;
-               self.convertedMap[ mod ] = luaTxt@@str;
+               self.convertedMap[ mod ] = luaTxt;
             }
          }
       }
@@ -1159,7 +1199,13 @@ pub fn Front.exec() mut
       case .Exec {
          //frontInterface.setFront( self );
 
-         self.loadModule( scriptPath2Module( self.option.scriptPath ) );
+         let modObj, meta = self.loadModule(
+            scriptPath2Module( self.option.scriptPath ) );
+
+         if self.option.testing {
+            let testCtrl = new TestCtrl.Ctrl();
+            testCtrl.run( modObj, meta );
+         }
       }
       case .BootC {
          self.outputBootC();

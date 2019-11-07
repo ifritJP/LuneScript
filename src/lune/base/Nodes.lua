@@ -7750,24 +7750,28 @@ _moduleObj.AdvertiseInfo = AdvertiseInfo
 function AdvertiseInfo.setmeta( obj )
   setmetatable( obj, { __index = AdvertiseInfo  } )
 end
-function AdvertiseInfo.new( member, prefix )
+function AdvertiseInfo.new( member, prefix, pos )
    local obj = {}
    AdvertiseInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( member, prefix )
+      obj:__init( member, prefix, pos )
    end
    return obj
 end
-function AdvertiseInfo:__init( member, prefix )
+function AdvertiseInfo:__init( member, prefix, pos )
 
    self.member = member
    self.prefix = prefix
+   self.pos = pos
 end
 function AdvertiseInfo:get_member()
    return self.member
 end
 function AdvertiseInfo:get_prefix()
    return self.prefix
+end
+function AdvertiseInfo:get_pos()
+   return self.pos
 end
 
 

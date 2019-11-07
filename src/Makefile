@@ -126,6 +126,7 @@ define buildLnsOp
 	$(call $4,$1,$2,$3,base/convLua)
 	$(call $4,$1,$2,$3,base/convCC)
 	$(call $4,$1,$2,$3,base/OutputDepend)
+	$(call $4,$1,$2,$3,base/TestCtrl)
 	$(call $4,$1,$2,$3,base/front)
 	$(call $4,$1,$2,$3,base/glueFilter)
 	$(call $4,$1,$2,$3,Util)

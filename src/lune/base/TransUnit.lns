@@ -583,7 +583,7 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
          typeInfo = Ast.NormalTypeInfo.createModule(
             scope, parentInfo, externalFlag, modName, mutable );
 
-         parentScope.addClass( modName, typeInfo );
+         parentScope.addClass( modName, nil, typeInfo );
       }
       if not self.typeId2ClassMap[ typeInfo.get_typeId() ] {
          let namespace = new Nodes.NamespaceInfo( modName, self.scope, typeInfo );
@@ -721,11 +721,11 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
             classFlag, abstractFlag, scope, baseInfo, interfaceList,
             workGenTypeList, parentInfo, externalFlag, accessMode, name );
          
-         parentScope.addClass( name, typeInfo );
+         parentScope.addClass( name, errPos, typeInfo );
       }
       when! genTypeList {
          foreach genType in genTypeList {
-            self.scope.addAlternate( accessMode, genType.$txt, genType );
+            self.scope.addAlternate( accessMode, genType.$txt, errPos, genType );
          }
       }
 
@@ -781,9 +781,27 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
       genericTypeList:&List<&Ast.TypeInfo>, genericsClass:&Ast.TypeInfo ) mut:
       Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!;
 
+   pri fn checkShadowing( pos:&Parser.Position, name:str, scope:&Ast.Scope ) mut {
+      let symbolInfo = self.scope.getSymbolTypeInfo(
+         name, scope, self.moduleScope, self.scopeAccess );
+
+      when! symbolInfo {
+         let symPos = symbolInfo.$pos;
+         when! symPos {
+            self.addErrMess(
+               symPos, "This symbol is shadowed from %d:%d -- %s"
+               (pos.lineNo, pos.column, name ) );
+         }
+         self.addErrMess(
+            pos, "shadowing symbol of %s -- %s"
+            (symPos and "%s:%s" (symPos$.lineNo, symPos$.column) or "external", name ) );
+      }
+   }
+
+   
    pri fn addLocalVar(
-      pos:&Parser.Position, argFlag:bool, canBeLeft:bool,
-      name:str, typeInfo: &Ast.TypeInfo, mutable:Ast.MutMode, allowShadow:bool! ) mut:
+      pos:&Parser.Position, argFlag:bool, canBeLeft:bool, name:str,
+      typeInfo: &Ast.TypeInfo, mutable:Ast.MutMode, allowShadow:bool! ) mut:
       &Ast.SymbolInfo
    {
       if not allowShadow {
@@ -792,7 +810,7 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
             self.addErrMess( pos, "shadowing variable -- %s" (name) );
          }
       }
-      return self.scope.addLocalVar( argFlag, canBeLeft, name, typeInfo, mutable );
+      return self.scope.addLocalVar( argFlag, canBeLeft, name, pos, typeInfo, mutable );
    }
 
 
@@ -866,6 +884,7 @@ pub fn TransUnit.createModifier(
 
 pub class _MetaInfo {
    pub let __formatVersion:str;
+   pub let __enableTest:bool;
    pub let __buildId:str;
    pub let __typeId2ClassInfoMap: Map<int,Map<str,stem>>;
    pub let __typeInfoList: Map<str,stem>[];
@@ -957,7 +976,7 @@ class _TypeInfoAlias extend _TypeInfo {
       let! mut parentScope = param.typeId2Scope[ self.parentId ] {
          return nil, "not found parentScope %s %s" ( self.parentId, self.rawTxt );
       };
-      parentScope.addAliasForType( self.rawTxt, newTypeInfo );
+      parentScope.addAliasForType( self.rawTxt, nil, newTypeInfo );
 
 
       return newTypeInfo,nil;
@@ -1092,7 +1111,7 @@ class _TypeInfoModule extend _TypeInfo {
          newTypeInfo = workTypeInfo;
          param.typeId2Scope[ self.typeId ] = scope;
          param.typeId2TypeInfo[ self.typeId ] = workTypeInfo;
-         parentScope.addClass( self.txt, workTypeInfo );
+         parentScope.addClass( self.txt, nil, workTypeInfo );
       }
       return newTypeInfo, nil;
    }
@@ -1206,7 +1225,7 @@ class _TypeInfoNormal extend _TypeInfo {
                   self.kind == Ast.TypeInfoKind.Class, self.abstractFlag,
                   scope, baseInfo, interfaceList, altTypeList,
                   parentInfo, true, .Pub, self.txt );
-               parentScope.addClass( self.txt, workTypeInfo );
+               parentScope.addClass( self.txt, nil, workTypeInfo );
                
                newTypeInfo = workTypeInfo;
 
@@ -1252,7 +1271,7 @@ class _TypeInfoNormal extend _TypeInfo {
                         unwrap param.typeId2Scope[ self.parentId ];
                      workParentScope.add(
                         symbolKind, false, self.kind == .Func,
-                        self.txt, workTypeInfo, accessMode,
+                        self.txt, nil, workTypeInfo, accessMode,
                         self.staticFlag, .IMut, true );
                      param.typeId2Scope[ self.typeId ] = scope;
                   }
@@ -1315,9 +1334,9 @@ class _TypeInfoEnum extend _TypeInfo {
             return nil, "unknown enum val type -- %s" (valTypeInfo.getTxt(##));
          };
          enumTypeInfo.addEnumValInfo( new Ast.EnumValInfo( valName, val ) );
-         scope.addEnumVal( valName, enumTypeInfo );
+         scope.addEnumVal( valName, nil, enumTypeInfo );
       }
-      parentScope.addEnum( accessMode, self.txt, enumTypeInfo );
+      parentScope.addEnum( accessMode, self.txt, nil, enumTypeInfo );
       return newTypeInfo, nil;
    }
 }
@@ -1353,10 +1372,10 @@ class _TypeInfoAlge extend _TypeInfo {
             typeInfoList.insert( unwrap param.getTypeInfo( orgTypeId ) );
          }
          let algeVal = new Ast.AlgeValInfo( valInfo.name, typeInfoList );
-         scope.addAlgeVal( valInfo.name, algeTypeInfo );
+         scope.addAlgeVal( valInfo.name, nil, algeTypeInfo );
          algeTypeInfo.addValInfo( algeVal );
       }
-      parentScope.addAlge( accessMode, self.txt, algeTypeInfo );
+      parentScope.addAlge( accessMode, self.txt, nil, algeTypeInfo );
       return newTypeInfo, nil;
    }
 }
@@ -1676,7 +1695,7 @@ fn TransUnit.registBuiltInScope() mut {
       if self.targetLuaVer.isSupport( "%s.%s" (name, fieldName) ) {
          if info.type$[1] == "member" {
             self.scope.addMember(
-               fieldName,
+               fieldName, nil,
                getTypeInfo( unwrap info.typeInfo$[1] ), .Pub, true, .Mut );
          }
          else {
@@ -1730,7 +1749,7 @@ fn TransUnit.registBuiltInScope() mut {
             }
             self.scope.add(
                symbolKind, false, kind == .Func,
-               fieldName, typeInfo, .Pub, staticFlag,
+               fieldName, nil, typeInfo, .Pub, staticFlag,
                mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true );
 
             setupBuiltinTypeInfo( name, fieldName, typeInfo );
@@ -1744,12 +1763,12 @@ fn TransUnit.registBuiltInScope() mut {
 
    let mapType = Ast.NormalTypeInfo.createMap(
       .Pub, Ast.headTypeInfo, Ast.builtinTypeString, Ast.builtinTypeStem, .Mut );
-   self.scope.addVar( .Global, "_ENV", mapType, .IMutRe, true );
-   self.scope.addVar( .Global, "_G", mapType, .IMutRe, true );
-   self.scope.addVar( .Global, "_VERSION", Ast.builtinTypeString, .IMut, true );
-   self.scope.addVar( .Global, "__mod__", Ast.builtinTypeString, .IMut, true );
-   self.scope.addVar( .Global, "__line__", Ast.builtinTypeInt, .IMut, true );
-   //self.scope.addVar( .Global, "__func__", Ast.builtinTypeString, false, true );
+   self.scope.addVar( .Global, "_ENV", nil, mapType, .IMutRe, true );
+   self.scope.addVar( .Global, "_G", nil, mapType, .IMutRe, true );
+   self.scope.addVar( .Global, "_VERSION", nil, Ast.builtinTypeString, .IMut, true );
+   self.scope.addVar( .Global, "__mod__", nil, Ast.builtinTypeString, .IMut, true );
+   self.scope.addVar( .Global, "__line__", nil, Ast.builtinTypeInt, .IMut, true );
+   //self.scope.addVar( .Global, "__func__", nil, Ast.builtinTypeString, false, true );
 
    fn processCopyAlterList( alterList:List<&Ast.AlternateTypeInfo>,
                             typeList:&List<&Ast.TypeInfo> )
@@ -2509,15 +2528,16 @@ fn TransUnit.processImport( modulePath:str ) mut :
          if newTypeInfo.$accessMode == .Global {
             switch newTypeInfo.$kind {
                case .IF, .Class {
-                  self.globalScope.addClass( newTypeInfo.$rawTxt, newTypeInfo );
+                  self.globalScope.addClass( newTypeInfo.$rawTxt, nil, newTypeInfo );
                }
                case .Func {
                   self.globalScope.addFunc(
-                     newTypeInfo, .Global, newTypeInfo.$staticFlag,
+                     nil, newTypeInfo, .Global, newTypeInfo.$staticFlag,
                      Ast.TypeInfo.isMut( newTypeInfo) );
                }
                case .Enum {
-                  self.globalScope.addEnum( .Global, newTypeInfo.$rawTxt, newTypeInfo );
+                  self.globalScope.addEnum(
+                     .Global, newTypeInfo.$rawTxt, nil, newTypeInfo );
                }
                case .Nilable {
                   ; // nop
@@ -2565,7 +2585,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
                scope.add(
                   symbolKind, false,
                   typeInfo.$kind == .Func,
-                  typeInfo.getTxt(##), typeInfo, typeInfo.$accessMode,
+                  typeInfo.getTxt(##), nil, typeInfo, typeInfo.$accessMode,
                   typeInfo.$staticFlag, typeInfo.$mutMode, true );
             }
          }
@@ -2598,7 +2618,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
                   if! let typeId = fieldInfo.typeId {
                      let fieldTypeInfo = unwrap typeId2TypeInfo[ typeId@@int ];
                      let symbolInfo = self.scope.addMember(
-                        fieldName, fieldTypeInfo,
+                        fieldName, nil, fieldTypeInfo,
                         unwrap Ast.AccessMode._from( (unwrap fieldInfo.accessMode)@@int ),
                         fieldInfo.staticFlag and true or false,
                         unwrap Ast.MutMode._from( (unwrap fieldInfo.mutMode)@@int ) );
@@ -2660,7 +2680,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
    foreach varInfo, varName in metaInfo.__varName2InfoMap {
       if! let typeId = varInfo.typeId {
          self.scope.addStaticVar(
-            false, true, varName, unwrap typeId2TypeInfo[ typeId@@int ],
+            false, true, varName, nil, unwrap typeId2TypeInfo[ typeId@@int ],
             varInfo.mutable and Ast.MutMode.Mut or Ast.MutMode.IMut );
       }
       else {
@@ -2747,7 +2767,7 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Nodes.Node {
 
    let moduleSymbolKind = unwrap Ast.SymbolKind._from( metaInfo.__moduleSymbolKind );
    let moduleSymbolInfo = self.scope.add(
-      moduleSymbolKind, false, false, assignName.txt,
+      moduleSymbolKind, false, false, assignName.txt, assignName.pos,
       moduleTypeInfo, .Local, true,
       metaInfo.__moduleMutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true );
 
@@ -2951,12 +2971,13 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
       if nextToken.txt == "(" {
          foreach paramType in valInfo.$typeList {
             let paramName = self.getSymbolToken( .MustNot_ );
-            if self.scope.getTypeInfo(
-               paramName.txt, self.scope, true, self.scopeAccess )
-            {
-               self.addErrMess( paramName.pos,
-                                "shadowing variable -- %s" (paramName.txt) );
-            }
+            self.checkShadowing( paramName.pos, paramName.txt, self.scope );
+            // if self.scope.getTypeInfo(
+            //    paramName.txt, self.scope, true, self.scopeAccess )
+            // {
+            //    self.addErrMess( paramName.pos,
+            //                     "shadowing variable -- %s" (paramName.txt) );
+            // }
 
             let mut workType = paramType;
             if Ast.TypeInfo.isMut( paramType ) and
@@ -2964,7 +2985,8 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
             {
                workType = self.createModifier( workType, .IMut );
             }
-            blockScope.addLocalVar( true, false, paramName.txt, workType, .IMut );
+            blockScope.addLocalVar(
+               true, false, paramName.txt, paramName.pos, workType, .IMut );
             valParamNameList.insert( paramName.txt );
             nextToken = self.getToken(##);
             if nextToken.txt ~= "," {
@@ -3188,7 +3210,7 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
          valSymbol = nil;
          subSymbol = mainSymbol;
          self.scope.addLocalVar(
-            false, true, mainSymbol.txt, itemTypeInfoList[ 1 ], .IMut );
+            false, true, mainSymbol.txt, mainSymbol.pos, itemTypeInfoList[ 1 ], .IMut );
       }
       case .List, .Array {
          if sortFlag {
@@ -3196,13 +3218,14 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
                              (expType.$kind.$_txt) );
          }
          self.scope.addLocalVar(
-            false, true, mainSymbol.txt, itemTypeInfoList[ 1 ], .IMut );
+            false, true, mainSymbol.txt, mainSymbol.pos, itemTypeInfoList[ 1 ], .IMut );
          if! subSymbol {
             self.addLocalVar(
                _exp.pos, false, false, _exp.txt, Ast.builtinTypeInt, .IMut## );
          }
          else {
-            self.scope.addLocalVar( false, false, "__index", Ast.builtinTypeInt, .IMut );
+            self.scope.addLocalVar(
+               false, false, "__index", token.pos, Ast.builtinTypeInt, .IMut );
          }
       }
       default {
@@ -3226,7 +3249,8 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
             typeInfo = seqSymbol.$typeInfo;
          }
          scope.addLocalVar(
-            seqSymbol.$kind == .Arg, false, seqSymbol.$name, typeInfo, .IMut );
+            seqSymbol.$kind == .Arg, false,
+            seqSymbol.$name, exp.$pos, typeInfo, .IMut );
          seqSym = seqSymbol.$name;
       }
    }
