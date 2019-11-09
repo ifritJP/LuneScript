@@ -355,18 +355,6 @@ pub fn MacroCtrl.regist( node:Nodes.DeclMacroNode ) mut {
    self.symbol2ValueMapForMacro = {};
 }
 
-pub fn MacroCtrl.registBuiltinMacro( scope:&Ast.Scope ) mut {
-   let name = "__eq";
-   let eqTypeInfo = unwrap scope.getTypeInfo( name, scope, true, .Normal );
-   // let macroObj = self.macroEval.evalFromCode(
-   //    name, [ "stat1", "stat2" ],
-   //    ```
-      
-   //    ```
-   // );
-}
-
-
 fn expandVal( tokenList:List<&Parser.Token>, val: stem!, pos: &Parser.Position ): str! {
    when! val {
       switch type( val ) {

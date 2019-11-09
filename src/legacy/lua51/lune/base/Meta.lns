@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2018, 2019 ifritJP
+Copyright (c) 2018,2019 ifritJP
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,23 +22,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-import lune.base.Meta;
+_lune_control ignore_symbol_;
 
-pub class Ctrl {
-   fn runTestcase( testcase:form ) {
-      testcase();
-   }
-   
-   pub fn run( modObj:stem!, meta:&stem ) {
-      let metaInfo = meta@@=Meta._MetaInfo;
-
-      when! modObj {
-         if! let testMap = modObj.__testMap {
-            foreach testcase, name in testMap@@Map<str,stem> {
-               print( name );
-               self.runTestcase( testcase@@form );
-            }
-         }
-      }
-   }
+pub class _MetaInfo {
+   pub let __formatVersion:str;
+   pub let __enableTest:bool;
+   pub let __buildId:str;
+   pub let __typeId2ClassInfoMap: Map<int,Map<str,stem>>;
+   pub let __typeInfoList: Map<str,stem>[];
+   pub let __varName2InfoMap: Map<str,Map<str,stem>>;
+   pub let __funcName2InfoMap: Map<str,stem>;
+   pub let __moduleTypeId: int;
+   pub let __moduleSymbolKind: int;
+   pub let __moduleMutable: bool;
+   pub let __dependModuleMap: Map<str,Map<str,stem>>;
+   pub let __dependIdMap: Map<int,int[]>;
+   pub let __macroName2InfoMap: Map<int,stem>;
 }

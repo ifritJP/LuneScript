@@ -688,13 +688,6 @@ function MacroCtrl:regist( node )
 end
 
 
-function MacroCtrl:registBuiltinMacro( scope )
-
-   local name = "__eq"
-   local eqTypeInfo = _lune.unwrap( scope:getTypeInfo( name, scope, true, Ast.ScopeAccess.Normal ))
-end
-
-
 local function expandVal( tokenList, val, pos )
 
    if val ~= nil then

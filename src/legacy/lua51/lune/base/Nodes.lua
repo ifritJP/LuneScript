@@ -7582,6 +7582,7 @@ end
 
 function NodeKind.get_DeclArg(  )
 
+   
    return _lune.unwrap( _moduleObj.nodeKind['DeclArg'])
 end
 
@@ -7619,49 +7620,30 @@ function DeclArgNode:canBeStatement(  )
 
    return false
 end
-function DeclArgNode.new( id, pos, typeList, name, symbolInfo, argType )
+function DeclArgNode.new( id, pos, typeList, name, symbolInfo )
    local obj = {}
    DeclArgNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, typeList, name, symbolInfo, argType ); end
+   if obj.__init then obj:__init( id, pos, typeList, name, symbolInfo ); end
    return obj
 end
-function DeclArgNode:__init(id, pos, typeList, name, symbolInfo, argType) 
+function DeclArgNode:__init(id, pos, typeList, name, symbolInfo) 
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['DeclArg']), pos, typeList)
    
    
    
    self.name = name
    self.symbolInfo = symbolInfo
-   self.argType = argType
    
    
 end
-function DeclArgNode.create( nodeMan, pos, typeList, name, symbolInfo, argType )
+function DeclArgNode.create( nodeMan, pos, typeList, name, symbolInfo )
 
-   local node = DeclArgNode.new(nodeMan:nextId(  ), pos, typeList, name, symbolInfo, argType)
+   local node = DeclArgNode.new(nodeMan:nextId(  ), pos, typeList, name, symbolInfo)
    nodeMan:addNode( node )
    return node
 end
 function DeclArgNode:visit( visitor, depth )
 
-   do
-      local child = self.argType
-      do
-         local _switchExp = visitor( child, self, 'argType', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1 ) then
-               return false
-            end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
-         end
-      end
-      
-      
-   end
-   
-   
    
    return true
 end
@@ -7673,9 +7655,6 @@ function DeclArgNode:get_name()
 end
 function DeclArgNode:get_symbolInfo()
    return self.symbolInfo
-end
-function DeclArgNode:get_argType()
-   return self.argType
 end
 
 
@@ -10884,7 +10863,7 @@ function DefMacroInfo:__init(func, declInfo, symbol2MacroValInfoMap)
    self.argList = {}
    for __index, argNode in pairs( declInfo:get_argList() ) do
       if argNode:get_kind(  ) == NodeKind.get_DeclArg() then
-         local argType = argNode:get_argType():get_expType()
+         local argType = argNode:get_expType()
          local argName = argNode:get_name().txt
          table.insert( self.argList, MacroArgInfo.new(argName, argType) )
       end

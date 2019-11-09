@@ -55,6 +55,7 @@ help:
 	@echo "  make test-miniC"
 	@echo "  make test-subC"
 	@echo "  make test-formatter"
+	@echo "  make test-mkbuiltin"
 
 exec:
 	$(LUA) lune/base/base.lua test/test.lns token
@@ -107,6 +108,7 @@ define buildLnsOp
 	$(call $4,$1,$2,$3,base/Ver)
 	$(call $4,$1,$2,$3,base/LuaMod)
 	$(call $4,$1,$2,$3,base/LuneControl)
+	$(call $4,$1,$2,$3,base/Meta)
 	$(call $4,$1,$2,$3,base/Testing)
 	$(call $4,$1,$2,$3,base/Code)
 	$(call $4,$1,$2,$3,base/Log)
@@ -774,9 +776,9 @@ clean-ccc:
 
 # C にトランスコンパイラしてビルド、実行、テストする
 #
-# $1: トランスコンパイラするモジュールファイルのリスト
+# $1: トランスコンパイラするモジュールファイルパスのリスト
 # $2: 実行結果のログファイル名
-# $3: 実行するメインモジュールファイルパス
+# $3: 実行するメインモジュールファイルパス (拡張子 .lns は付けないファイルパス)
 define test-convC-exe
 	@$(LUA) lune/base/base.lua $3.lns bootC -oc work/boot.c
 	LANG= $(MAKE) -f Makefile.ccc "SRCS=$1 work/boot.c" TEST_OUT=test.exe \
@@ -790,7 +792,7 @@ endef
 
 define test-convC
 	$(LUA) lune/base/base.lua $1.lns save -langC
-	$(call test-convC-exe,$1,$1,$1)
+	$(call test-convC-exe,$1,$(basename $1),$1)
 endef
 
 
@@ -822,3 +824,10 @@ test-formatter:
 	$(call transwork,.,.,,base/Formatter)
 	$(call exeLune,.,lune/base/Util.lns,format,)
 
+test-testC:
+	$(call transwork,.,.,,base/convCC)
+	$(call test-convC,lune/base/Testing)
+
+test-mkbuiltin:
+	$(call transwork,.,.,,base/convCC)
+	lua5.3 lune/base/base.lua --mkbuiltin

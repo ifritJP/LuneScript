@@ -63,6 +63,7 @@ pub enum ModeKind {
    Glue = "glue",
    BootC = "bootC",
    Format = "format",
+   Builtin = "builtin",
 }
 
 /** meta ファイルの更新必要性チェックモード */
@@ -281,6 +282,13 @@ usage:
                }
                os.exit( 0 );
             }
+            case "--mkbuiltin" {
+               let! path = getNextOp() {
+                  path = ".";
+               };
+               option.scriptPath = path .. "/lns_buintin.lns";
+               option.mode = .Builtin;
+            }
             case "-r" {
                option.useLuneModule = "lune.base._lune%d" (Ver.luaModVersion);
             }
@@ -394,8 +402,10 @@ usage:
       index = index + 1;
    }
 
-   if option.scriptPath == "" or option.mode == .Unknown {
-      printUsage( (#argList == 0 or argList[1] == "") and 0 or 1 );
+   if option.mode ~= .Builtin {
+      if option.scriptPath == "" or option.mode == .Unknown {
+         printUsage( (#argList == 0 or argList[1] == "") and 0 or 1 );
+      }
    }
 
    if useStdInFlag and option.analyzeModule {

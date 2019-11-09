@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2018 ifritJP
+Copyright (c) 2018, 2019 ifritJP
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -528,6 +528,29 @@ fn getAccessPrimValFromSymbolDirect(
 }
 
 
+fn createSymbolParam( symbol:&Ast.SymbolInfo,
+                      valKind:ValKind, cTypeTxt:str ) : SymbolParam
+{
+   switch valKind {
+      case .Stem {
+         return new SymbolParam( .Stem, 0, cTypeStem );
+      }
+      case .Any {
+         return new SymbolParam( .Any, 0, cTypeAnyP );
+      }
+      case .Prim {
+         return new SymbolParam( .Prim, 0, cTypeTxt );
+      }
+      case .Other {
+         return new SymbolParam( .Other, 0, "void" );
+      }
+      default {
+         Util.err( "not support %s:%s"
+                   ( symbol.$name, valKind.$_txt ) );
+      }
+   }
+}
+
 /**
 スコープとシンボルを管理する。
 */
@@ -557,29 +580,6 @@ class ScopeMgr {
             anyNum = anyNum + 1;
          }
 
-         fn process( symbol:&Ast.SymbolInfo,
-                     valKind:ValKind, cTypeTxt:str ) : SymbolParam
-         {
-            switch valKind {
-               case .Stem {
-                  return new SymbolParam( .Stem, 0, cTypeStem );
-               }
-               case .Any {
-                  return new SymbolParam( .Any, 0, cTypeAnyP );
-               }
-               case .Prim {
-                  return new SymbolParam( .Prim, 0, cTypeTxt );
-               }
-               case .Other {
-                  return new SymbolParam( .Other, 0, "void" );
-               }
-               default {
-                  Util.err( "not support %s:%s"
-                            ( symbol.$name, valKind.$_txt ) );
-               }
-            }
-         }
-         
          forsort symbol in scope.$symbol2SymbolInfoMap {
             let param;
             if symbol.$name ~= "__func__" {
@@ -622,12 +622,13 @@ class ScopeMgr {
                   }
                   case .Mtd {
                      let retTypeList = symbol.$typeInfo.$retTypeInfoList;
-                     param = process( symbol, getRetKind( retTypeList ),
-                                      getCRetType( retTypeList ) );
+                     param = createSymbolParam( symbol, getRetKind( retTypeList ),
+                                                     getCRetType( retTypeList ) );
                   }
                   case .Mbr {
-                     param = process( symbol, getValKind( symbol.$typeInfo ),
-                                      getCType( symbol.$typeInfo ) );
+                     param = createSymbolParam(
+                        symbol, getValKind( symbol.$typeInfo ),
+                        getCType( symbol.$typeInfo ) );
                   }
                   default {
                      param = new SymbolParam( .Other, 0, cTypeStem );
@@ -663,7 +664,7 @@ class ScopeMgr {
             return param@@=SymbolParam;
          };
       }
-      Util.err( "illegal symbol -- %s" (symbol.$name) );
+      Util.err( "illegal symbol -- %s %d" (symbol.$name, __line__ ) );
    }
 
    pub fn getSymbolValKind( symbol:&Ast.LowSymbol ) mut : ValKind
@@ -814,11 +815,14 @@ class convFilter extend Nodes.Filter<Opt> {
 
    pri let mut scopeMgr:ScopeMgr;
 
-   pub fn __init( streamName: str, stream: oStream,
+   pri let mut outputBuiltinFlag:bool;
+
+   pub fn __init( outputBuiltin:bool, streamName: str, stream: oStream,
                   headerStream: oStream, ast:&TransUnit.ASTInfo )
    {
       super(ast.$moduleTypeInfo, ast.$moduleTypeInfo.$scope);
 
+      self.outputBuiltinFlag = outputBuiltin;
       self.scopeMgr = new ScopeMgr();
       self.processingNode = nil;
       self.processedNodeSet = (@);
@@ -1057,9 +1061,162 @@ fn convFilter.processInitModule( node: Nodes.RootNode ) mut
    self.writeln( "}" );
 }
 
+/**
+builtin 関数の引数シンボル情報
+*/
+class BuiltinArgSymbolInfo extend Ast.SymbolInfo {
+   let scope:&Ast.Scope {pub};
+   let name:str {pub};
+   let mut typeInfo:&Ast.TypeInfo {pub,pub};
+   let allmut convModuleParam:stem! {pub,pub};
+   let namespaceTypeInfo:&Ast.TypeInfo {pub};
+   
+   /** 左辺値になれる場合 true */
+   pub override fn get_canBeLeft(): bool {
+      return false;
+   }
+   /** 右辺値になれる場合 true */
+   pub override fn get_canBeRight(): bool {
+      return true;
+   }
+   /** このシンボルの ID */
+   pub override fn get_symbolId(): int {
+      return 0;
+   }
+   /** シンボルのアクセス */
+   pub override fn get_accessMode(): Ast.AccessMode {
+      return .Pub;
+   }
+   pub override fn get_staticFlag() :bool {
+      return false;
+   }
+   pub override fn get_kind(): Ast.SymbolKind {
+      return .Arg;
+   }
+   pub override fn get_pos(): &Parser.Position! {
+      return nil;
+   }
+   /** このシンボルが mut かどうか */
+   pub override fn get_mutable(): bool {
+      return true;
+   }
+   pub override fn get_mutMode(): Ast.MutMode {
+      return .Mut;
+   }
+   /** このシンボルがデータを保持しているかどうか */
+   pub override fn get_hasValueFlag(): bool {
+      return true;
+   }
+   pub override fn set_hasValueFlag( arg:bool ) {
+   }
+   pub override fn get_hasAccessFromClosure(): bool {
+      return false;
+   }
+   pub override fn set_hasAccessFromClosure(flag:bool) {
+   }
+
+   pub override fn canAccess(
+      fromScope:&Ast.Scope, access:Ast.ScopeAccess ) : &Ast.SymbolInfo!
+   {
+      return self;
+   }
+
+   pub override fn getOrg(): &Ast.SymbolInfo {
+      return self;
+   }
+}
+
+fn convFilter.processBuiltin() : &Nodes.NodeManager {
+   let buintin = TransUnit.getBuiltinFunc();
+   foreach symbol in buintin.$allSymbol {
+      let param;
+      switch symbol.$kind {
+         case .Mtd, .Fun {
+            let retTypeList = symbol.$typeInfo.$retTypeInfoList;
+            param = createSymbolParam( symbol, getRetKind( retTypeList ),
+                                       getCRetType( retTypeList ) );
+         }
+         case .Mbr {
+            param = createSymbolParam(
+               symbol, getValKind( symbol.$typeInfo ),
+               getCType( symbol.$typeInfo ) );
+         }
+         default {
+            Util.err( "illeal symbol -- %s %d" (symbol.$name, __line__) );
+         }
+      }
+      symbol.set_convModuleParam( param );
+   }
+
+
+   let mut nodeManager = new Nodes.NodeManager();
+   let mut dummyPos = new Parser.Position( 0, 0 );
+   
+   foreach classInfo in buintin.$allClass {
+      switch classInfo.$kind {
+         case .List, .Array, .Set, .Map {
+         }
+         default {
+            if classInfo ~= Ast.builtinTypeString {
+               print( classInfo.getTxt( ## ) );
+
+               let classScope = unwrap classInfo.$scope;
+
+               let mut fieldList:List<&Nodes.Node> = [];
+               
+               let declClassNode = Nodes.DeclClassNode.create(
+                  nodeManager, dummyPos, [ classInfo ], .Pub,
+                  new Parser.Token( .Symb, classInfo.$rawTxt, dummyPos, false## ),
+                  classInfo.$rawTxt, [], fieldList, nil, [], classScope,
+                  new Nodes.ClassInitBlockInfo( nil ),
+                  [], [], (@));
+
+               forsort field in classScope.$symbol2SymbolInfoMap {
+                  let token = new Parser.Token( .Symb, field.$name, dummyPos, false## );
+                  switch field.$kind {
+                     case .Mtd, .Fun {
+                        let mut argList:List<&Nodes.Node> = [];
+                        foreach argType, index in field.$typeInfo.$argTypeInfoList {
+                           let argToken = new Parser.Token(
+                              .Symb, "arg%d" (index), dummyPos, false## );
+                           let dummyScope = new Ast.Scope( nil, false ## );
+                           let argSym = new BuiltinArgSymbolInfo(
+                              dummyScope, argToken.txt, argType, nil, field.$typeInfo );
+                           
+                           argList.insert(
+                              Nodes.DeclArgNode.create(
+                                 nodeManager, dummyPos, [ argType ],
+                                 argToken, argSym ) );
+                        }
+                        
+                        let declMethodNode = Nodes.DeclMethodNode.create(
+                           nodeManager, dummyPos, [ field.$typeInfo ],
+                           new Nodes.DeclFuncInfo(
+                              .Mtd, classInfo, token, argList, false, .Pub, nil,
+                              field.$typeInfo.$retTypeInfoList, false ) );
+                        fieldList.insert( declMethodNode );
+                     }
+                  }
+               }
+            }
+         }
+      }
+   }
+   return nodeManager;
+}
+
 pub override fn convFilter.processRoot(
    node: Nodes.RootNode, opt: Opt ) mut
 {
+   let nodeManager;
+
+   if self.outputBuiltinFlag {
+      nodeManager = self.processBuiltin();
+   }
+   else {
+      nodeManager = node.$nodeManager;
+   }
+
    // 最初にトップスコープのパラメータを確定させる
    self.scopeMgr.setupScopeParam( self.ast.$moduleScope );
 
@@ -1087,7 +1244,7 @@ pub override fn convFilter.processRoot(
    let children = node.get_children();
 
    self.processMode = .Include;
-   foreach importNode in node.$nodeManager.getImportNodeList() {
+   foreach importNode in nodeManager.getImportNodeList() {
       filter( importNode, self, node );
    }
 
@@ -1095,28 +1252,28 @@ pub override fn convFilter.processRoot(
    
 
    self.processMode = .Prototype;
-   foreach declEnumNode in node.$nodeManager.getDeclEnumNodeList() {
+   foreach declEnumNode in nodeManager.getDeclEnumNodeList() {
       filter( declEnumNode, self, node );
    }
-   foreach declFormNode in node.$nodeManager.getDeclFormNodeList() {
+   foreach declFormNode in nodeManager.getDeclFormNodeList() {
       filter( declFormNode, self, node );
    }
-   foreach declFuncNode in node.$nodeManager.getDeclFuncNodeList() {
+   foreach declFuncNode in nodeManager.getDeclFuncNodeList() {
       filter( declFuncNode, self, node );
    }
-   foreach declAlgeNode in node.$nodeManager.getDeclAlgeNodeList() {
+   foreach declAlgeNode in nodeManager.getDeclAlgeNodeList() {
       filter( declAlgeNode, self, node );
    }
-   foreach declClassNode in node.$nodeManager.getDeclClassNodeList() {
+   foreach declClassNode in nodeManager.getDeclClassNodeList() {
       filter( declClassNode, self, node );
    }
-   foreach declConstrNode in node.$nodeManager.getDeclConstrNodeList() {
+   foreach declConstrNode in nodeManager.getDeclConstrNodeList() {
       filter( declConstrNode, self, node );
    }
-   foreach declMethodNode in node.$nodeManager.getDeclMethodNodeList() {
+   foreach declMethodNode in nodeManager.getDeclMethodNodeList() {
       filter( declMethodNode, self, node );
    }
-   foreach dddNode in node.$nodeManager.getExpToDDDNodeList() {
+   foreach dddNode in nodeManager.getExpToDDDNodeList() {
       filter( dddNode, self, node );
    }
 
@@ -1126,10 +1283,10 @@ pub override fn convFilter.processRoot(
          filter( child, self, node );
       }
    }
-   foreach declAlgeNode in node.$nodeManager.getDeclAlgeNodeList() {
+   foreach declAlgeNode in nodeManager.getDeclAlgeNodeList() {
       filter( declAlgeNode, self, node );
    }
-   foreach declClassNode in node.$nodeManager.getDeclClassNodeList() {
+   foreach declClassNode in nodeManager.getDeclClassNodeList() {
       filter( declClassNode, self, node );
    }
 
@@ -1146,43 +1303,43 @@ pub override fn convFilter.processRoot(
          }
       }
    }
-   procssLiteralCtor( node.$nodeManager.getLiteralListNodeList() );
-   procssLiteralCtor( node.$nodeManager.getLiteralArrayNodeList() );
-   procssLiteralCtor( node.$nodeManager.getLiteralSetNodeList() );
-   procssLiteralCtor( node.$nodeManager.getLiteralMapNodeList() );
+   procssLiteralCtor( nodeManager.getLiteralListNodeList() );
+   procssLiteralCtor( nodeManager.getLiteralArrayNodeList() );
+   procssLiteralCtor( nodeManager.getLiteralSetNodeList() );
+   procssLiteralCtor( nodeManager.getLiteralMapNodeList() );
    self.processingNode = nil;
 
 
    self.processMode = .Intermediate;
-   foreach callNode in node.$nodeManager.getExpCallNodeList() {
+   foreach callNode in nodeManager.getExpCallNodeList() {
       filter( callNode, self, node );
    }
-   foreach dddNode in node.$nodeManager.getExpToDDDNodeList() {
+   foreach dddNode in nodeManager.getExpToDDDNodeList() {
       filter( dddNode, self, node );
    }
 
    self.processMode = .DefClass;
-   foreach declClassNode in node.$nodeManager.getDeclClassNodeList() {
+   foreach declClassNode in nodeManager.getDeclClassNodeList() {
       filter( declClassNode, self, node );
    }
    
    self.processMode = .Form;
-   foreach declEnumNode in node.$nodeManager.getDeclEnumNodeList() {
+   foreach declEnumNode in nodeManager.getDeclEnumNodeList() {
       filter( declEnumNode, self, node );
    }
-   foreach declAlgeNode in node.$nodeManager.getDeclAlgeNodeList() {
+   foreach declAlgeNode in nodeManager.getDeclAlgeNodeList() {
       filter( declAlgeNode, self, node );
    }
-   foreach declConstrNode in node.$nodeManager.getDeclConstrNodeList() {
+   foreach declConstrNode in nodeManager.getDeclConstrNodeList() {
       filter( declConstrNode, self, node );
    }
-   foreach declMethodNode in node.$nodeManager.getDeclMethodNodeList() {
+   foreach declMethodNode in nodeManager.getDeclMethodNodeList() {
       filter( declMethodNode, self, node );
    }
-   foreach declFormNode in node.$nodeManager.getDeclFormNodeList() {
+   foreach declFormNode in nodeManager.getDeclFormNodeList() {
       filter( declFormNode, self, node );
    }
-   foreach declFuncNode in node.$nodeManager.getDeclFuncNodeList() {
+   foreach declFuncNode in nodeManager.getDeclFuncNodeList() {
       self.duringDeclFunc = false;
       filter( declFuncNode, self, node );
    }
@@ -2280,7 +2437,7 @@ fn getMethodTypeTxt( retTypeList:&List<&Ast.TypeInfo> ) : str {
 
 fn processNewConstrProto(
    stream:Util.SourceStream, moduleCtrl:ModuleCtrl,
-   node:&Nodes.DeclClassNode, out2HMode:Out2HMode ) mut
+   node:&Nodes.DeclClassNode, out2HMode:Out2HMode, outputBuiltinFlag:bool ) mut
 {
    let className = moduleCtrl.getClassCName( node.$expType );
 
@@ -2289,10 +2446,13 @@ fn processNewConstrProto(
       (cTypeAnyP, className, cTypeEnvP ) );
 
 
-   let scope = unwrap node.$expType.$scope;
-   let initFuncType = unwrap scope.getTypeInfoField( "__init", true, scope, scopeAccess );
-   foreach argType, index in initFuncType.$argTypeInfoList {
-      stream.write( ", %s arg%d" ( getCType( argType ), index ) );
+   if not outputBuiltinFlag {
+      let scope = unwrap node.$expType.$scope;
+      let initFuncType = unwrap scope.getTypeInfoField(
+         "__init", true, scope, scopeAccess );
+      foreach argType, index in initFuncType.$argTypeInfoList {
+         stream.write( ", %s arg%d" ( getCType( argType ), index ) );
+      }
    }
    stream.write( ")" );
 }
@@ -2302,7 +2462,9 @@ fn processMethodDeclTxt(
    callFlag:bool, methodTypeInfo:&Ast.TypeInfo, argList:&List<&Nodes.Node>! )
 {
    if methodTypeInfo.$rawTxt ~= "__init" and not callFlag {
-      stream.write( "static " );
+      if not methodTypeInfo.$staticFlag {
+         stream.write( "static " );
+      }
    }
 
    stream.write(
@@ -2433,6 +2595,13 @@ fn processDeclClassPrototype(
          stream.writeln( ";" );
       }
    }
+}
+
+fn processDefaultCtor(
+   stream:Util.SourceStream, moduleCtrl:ModuleCtrl,
+   scopeMgr:ScopeMgr, node:&Nodes.DeclClassNode )
+{
+   let className = moduleCtrl.getClassCName( node.$expType );
 
    if not node.hasUserInit() {
       // デフォルトコンストラクタの処理
@@ -2584,9 +2753,12 @@ fn convFilter.processDeclClassNodePrototype( node:&Nodes.DeclClassNode ) mut
             self.writeln( "#define lune_if_%s( OBJ ) ((%s*)OBJ->val.classVal)->pImp"
                           (className,className) );
 
-            // コンストラクタのプロトタイプ
-            processNewConstrProto( self.stream, self.moduleCtrl, node, out2HMode );
-            self.stream.writeln( ";" );
+            //if not self.outputBuiltinFlag {
+               // コンストラクタのプロトタイプ
+            processNewConstrProto(
+               self.stream, self.moduleCtrl, node, out2HMode, self.outputBuiltinFlag );
+               self.stream.writeln( ";" );
+            //}
          }
          case .IF {
             self.writeln( ```#define lune_mtd_%s( OBJ )                     \
@@ -2608,6 +2780,10 @@ fn convFilter.processDeclClassNodePrototype( node:&Nodes.DeclClassNode ) mut
 
    if kind == .Class {
       processDeclClassPrototype( self.stream, self.moduleCtrl, self.scopeMgr, node );
+
+      if not self.outputBuiltinFlag {
+         processDefaultCtor( self.stream, self.moduleCtrl, self.scopeMgr, node );
+      }
    }
 }
 
@@ -2650,31 +2826,36 @@ fn convFilter.processDeclClassDef( node:&Nodes.DeclClassNode ) mut
 
    self.popIndent();
    self.writeln( "}" );
-   
-   // デフォルトコンストラクタの定義
-   processNewConstrProto( self.stream, self.moduleCtrl, node, .SourcePub );
-   self.writeln( "{" );
-   self.pushIndent(##);
-   
-   self.writeln( "lune_class_new_( _pEnv, %s, pAny, pObj );" (className) );
 
-   self.write( "u_mtd_%s___init( _pEnv, pAny" ( className ) );
+   // if not self.outputBuiltinFlag {
+      // デフォルトコンストラクタの定義
+      processNewConstrProto( self.stream, self.moduleCtrl, node, .SourcePub,
+                             self.outputBuiltinFlag );
+      self.writeln( "{" );
+      self.pushIndent(##);
+      
+      self.writeln( "lune_class_new_( _pEnv, %s, pAny, pObj );" (className) );
 
-   let scope = unwrap node.$expType.$scope;
-   let initFuncType = unwrap scope.getTypeInfoField( "__init", true, scope, scopeAccess );
-   foreach argType, index in initFuncType.$argTypeInfoList {
-      self.write( ", arg%d" ( index ) );
-   }
-   self.writeln( ");" );
+      self.write( "u_mtd_%s___init( _pEnv, pAny" ( className ) );
 
-   self.writeln( "pObj->pImp = &pObj->imp;" );
-   self.writeln( "pObj->imp.sentinel.type = lune_value_type_none;" );
-   
-   processIFObjInit( self.stream, self.moduleCtrl, node.$expType, node.$expType );
+      let scope = unwrap node.$expType.$scope;
+      if not self.outputBuiltinFlag {
+         let initFuncType = unwrap scope.getTypeInfoField( "__init", true, scope, scopeAccess );
+         foreach argType, index in initFuncType.$argTypeInfoList {
+            self.write( ", arg%d" ( index ) );
+         }
+      }
+      self.writeln( ");" );
+      
+      self.writeln( "pObj->pImp = &pObj->imp;" );
+      self.writeln( "pObj->imp.sentinel.type = lune_value_type_none;" );
+      
+      processIFObjInit( self.stream, self.moduleCtrl, node.$expType, node.$expType );
 
-   self.writeln( "return pAny;" );
-   self.popIndent();
-   self.writeln( "}" );
+      self.writeln( "return pAny;" );
+      self.popIndent();
+      self.writeln( "}" );
+   // }
 
    // アクセッサの定義
    foreach member in node.$memberList {
@@ -2832,10 +3013,7 @@ fn processIFMethodDataInit(
 fn processClassDataInit(
    stream:Util.SourceStream, moduleCtrl:&ModuleCtrl, classTypeInfo:&Ast.TypeInfo )
 {
-   // インタフェース情報設定
-   processIFMethodDataInit( stream, moduleCtrl, classTypeInfo, classTypeInfo );
-
-   
+  
    let className = moduleCtrl.getClassCName( classTypeInfo );
 
    // クラスメタ情報
@@ -2997,14 +3175,22 @@ fn convFilter.processDeclMethodInfo(
 {
    switch self.processMode {
       case .Prototype {
-         fn process() {
-            if funcTypeInfo.$parentInfo.$kind == .Class {
-               processMethodDeclTxt( self.stream, self.moduleCtrl, false,
+         fn processHeader( out2HMode:Out2HMode ) {
+            if out2HMode == .HeaderPub {
+               self.write( "extern " );
+            }
+            else {
+               self.write( "static " );
+            }
+            if not funcTypeInfo.$staticFlag {
+               // メソッドコール用ラッパー
+               processMethodDeclTxt( self.stream, self.moduleCtrl, true,
                                      funcTypeInfo, declInfo.$argList );
                self.writeln( ";" );
             }
-            if funcTypeInfo.$rawTxt ~= "__init" and not funcTypeInfo.$staticFlag {
-               processMethodDeclTxt( self.stream, self.moduleCtrl, true,
+            else {
+               // static メソッドの関数プロトタイプ
+               processMethodDeclTxt( self.stream, self.moduleCtrl, false,
                                      funcTypeInfo, declInfo.$argList );
                self.writeln( ";" );
             }
@@ -3024,8 +3210,18 @@ fn convFilter.processDeclMethodInfo(
                   Ast.isPubToExternal( funcTypeInfo.$accessMode ) },
                `{ 
                   switch out2HMode {
-                     case .HeaderPub, .SourcePri {
-                        process();
+                     case .SourcePri, .SourcePub {
+                        if funcTypeInfo.$parentInfo.$kind == .Class and
+                           not funcTypeInfo.$staticFlag
+                        {
+                           processMethodDeclTxt( self.stream, self.moduleCtrl, false,
+                                                 funcTypeInfo, declInfo.$argList );
+                           self.writeln( ";" );
+                        }
+                        processHeader( out2HMode );
+                     }
+                     case .HeaderPub {
+                        processHeader( out2HMode );
                      }
                   }
                });
@@ -5869,6 +6065,12 @@ pub override fn convFilter.processDeclClass(
       case .WideScopeVer {
          switch classType.$kind {
             case .Class {
+               // インタフェース情報設定
+               if not self.outputBuiltinFlag {
+                  processIFMethodDataInit(
+                     self.stream, self.moduleCtrl, classType, classType );
+               }
+               
                processClassDataInit( self.stream, self.moduleCtrl, classType );
             }
             case .IF {
@@ -7657,10 +7859,10 @@ pub override fn convFilter.processAbbr(
 
 
 pub fn createFilter(
-   streamName: str, stream: oStream,
+   outputBuiltin:bool, streamName: str, stream: oStream,
    headerStream: oStream, ast:&TransUnit.ASTInfo ) : Nodes.Filter<Opt>
 {
-   return new convFilter( streamName, stream, headerStream, ast );
+   return new convFilter( outputBuiltin, streamName, stream, headerStream, ast );
 }
 
 pub fn outputBootcode( stream: oStream, launchModuleName:str )

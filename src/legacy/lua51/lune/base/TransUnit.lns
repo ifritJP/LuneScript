@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2018 ifritJP
+Copyright (c) 2018, 2019 ifritJP
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,7 @@ subfile use lune.base.TransUnitDecl;
 subfile use lune.base.TransUnitExp;
 subfile use lune.base.TransUnitStatementList;
 
+import lune.base.Meta;
 import lune.base.Parser;
 import lune.base.Util;
 import lune.base.Ast;
@@ -882,22 +883,6 @@ pub fn TransUnit.createModifier(
    return Ast.NormalTypeInfo.createModifier( typeInfo, mutMode );
 }
 
-pub class _MetaInfo {
-   pub let __formatVersion:str;
-   pub let __enableTest:bool;
-   pub let __buildId:str;
-   pub let __typeId2ClassInfoMap: Map<int,Map<str,stem>>;
-   pub let __typeInfoList: Map<str,stem>[];
-   pub let __varName2InfoMap: Map<str,Map<str,stem>>;
-   pub let __funcName2InfoMap: Map<str,stem>;
-   pub let __moduleTypeId: int;
-   pub let __moduleSymbolKind: int;
-   pub let __moduleMutable: bool;
-   pub let __dependModuleMap: Map<str,Map<str,stem>>;
-   pub let __dependIdMap: Map<int,int[]>;
-   pub let __macroName2InfoMap: Map<int,stem>;
-}
-
 proto abstract class _TypeInfo extend (Mapping);
 
 class ImportParam {
@@ -905,7 +890,7 @@ class ImportParam {
    pub let mut transUnit:TransUnitIF;
    pub let mut typeId2Scope:Map<int,Ast.Scope>;
    pub let mut typeId2TypeInfo:Map<int,&Ast.TypeInfo>;
-   pub let metaInfo:_MetaInfo;
+   pub let metaInfo:Meta._MetaInfo;
    pub let scope:Ast.Scope;
    pub let moduleTypeInfo: &Ast.TypeInfo;
    pub let scopeAccess:Ast.ScopeAccess;
@@ -1394,18 +1379,22 @@ macro _DefBuiltinFuncType( class2symMapList:List<Map<str,Map<str,Map<str,List<st
             let mut subcaseList:List<stat> = [];
             
             forsort symbolInfo, funcName in symbolMap {
-               //let symbolName = (unwrap symbolInfo.field)[1];
-               let symbolName = "%s_%s" ( className ~= "" and className.lower() or "lune",
-                                          funcName );
+               let typeName = "%s_%s" ( className ~= "" and className.lower() or "lune",
+                                        funcName );
+               let symName = "%s_sym" (typeName);
                defMemberList.insert( `{
-                  pub let mut ,,,symbolName:&Ast.TypeInfo;
+                  pub let mut ,,,typeName:&Ast.TypeInfo;
+                  pub let mut ,,,symName:&Ast.SymbolInfo;
                } );
                initMemberList.insert( `{
-                  self.,,,symbolName = Ast.headTypeInfo;
+                  self.,,,typeName = Ast.headTypeInfo;
+                  self.,,,symName = Ast.dummySymbol;
                });
                subcaseList.insert( `{
                   case ,,funcName ~~{
-                     builtinFunc. ,,,symbolName = typeInfo;
+                     builtinFunc. ,,,typeName = typeInfo;
+                     builtinFunc. ,,,symName = symInfo;
+                     builtinFunc.register( symInfo );
                   }
                });
             }
@@ -1432,8 +1421,21 @@ builtin 関数の TypeInfo を保持するクラス。
    pub class BuiltinFuncType {
       ,,defMemberList;
 
+      let mut allSymbol:Set<&Ast.SymbolInfo> {pub};
+      let mut allClass:List<&Ast.TypeInfo> {pub};
+
       pub fn __init() {
          ,,initMemberList;
+
+         self.allSymbol = (@);
+         self.allClass = [];
+      }
+
+      pub fn register( symbolInfo:&Ast.SymbolInfo ) mut {
+         self.allSymbol.add( symbolInfo );
+      }
+      pub fn registerClass( classInfo:&Ast.TypeInfo ) mut {
+         self.allClass.insert( classInfo );
       }
    }
 
@@ -1443,7 +1445,9 @@ builtin 関数の TypeInfo を保持するクラス。
       return builtinFunc;
    }
    
-   fn setupBuiltinTypeInfo( name:str, fieldName:str, typeInfo:&Ast.TypeInfo ) {
+   fn setupBuiltinTypeInfo( name:str, fieldName:str, symInfo:&Ast.SymbolInfo ) {
+      let typeInfo = symInfo.$typeInfo;
+      
       ,,declProcessList;
 
       switch name {
@@ -1471,7 +1475,6 @@ _DefBuiltinFuncType( [
          "_fcall": { "arg": [ "form", "&..." ], "ret": [""] },
          "_load": { "arg": [ "str", "stem!" ], "ret": ["__loadedfunc!", "str!"] },
          "_kind": { "arg": [ "stem!" ], "ret":[ "int" ] },
-         "__eq": { "type": [ "macro" ], "arg": [ "__exp", "__exp" ], "ret":[ ] },
       },
    },
    {
@@ -1694,9 +1697,10 @@ fn TransUnit.registBuiltInScope() mut {
    {
       if self.targetLuaVer.isSupport( "%s.%s" (name, fieldName) ) {
          if info.type$[1] == "member" {
-            self.scope.addMember(
+            let symbol = self.scope.addMember(
                fieldName, nil,
                getTypeInfo( unwrap info.typeInfo$[1] ), .Pub, true, .Mut );
+            builtinFunc.register( symbol );
          }
          else {
             let mut argTypeList: List<&Ast.TypeInfo> = [];
@@ -1747,12 +1751,12 @@ fn TransUnit.registBuiltInScope() mut {
             if typeInfo.$nilableTypeInfo ~= Ast.headTypeInfo {
                Ast.builtInTypeIdSet[ typeInfo.$nilableTypeInfo.$typeId ] = typeInfo.$nilableTypeInfo;
             }
-            self.scope.add(
+            let symInfo = self.scope.add(
                symbolKind, false, kind == .Func,
                fieldName, nil, typeInfo, .Pub, staticFlag,
                mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true );
 
-            setupBuiltinTypeInfo( name, fieldName, typeInfo );
+            setupBuiltinTypeInfo( name, fieldName, symInfo );
          }
       }
    }
@@ -1840,6 +1844,7 @@ fn TransUnit.registBuiltInScope() mut {
             Ast.builtInTypeIdSet[ parentInfo.get_typeId() ] = parentInfo;
             Ast.builtInTypeIdSet[ parentInfo.$nilableTypeInfo.$typeId ] =
                parentInfo.$nilableTypeInfo;
+            builtinFunc.registerClass( parentInfo );
          }
          if not builtinModuleName2Scope[ name ]
          {
@@ -1864,8 +1869,6 @@ fn TransUnit.registBuiltInScope() mut {
       }
    }
 
-
-   self.macroCtrl.registBuiltinMacro( self.moduleScope );
 
    self.scope = self.topScope;
 }
@@ -2348,7 +2351,7 @@ class DependModuleInfo {
 
 
 fn TransUnit.processImport( modulePath:str ) mut :
-   &_MetaInfo, &Map<int,&Ast.TypeInfo>, &Nodes.ModuleInfo
+   &Meta._MetaInfo, &Map<int,&Ast.TypeInfo>, &Nodes.ModuleInfo
 {
    Log._log( .Info, `{ return "%s -> %s start"
                        ( self.moduleType.getTxt( self.typeNameCtrl## ), modulePath); } );
@@ -2364,7 +2367,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
       {
          Log._log( .Info, `{ return "%s already" (modulePath); } );
 
-         let metaInfo = metaInfoStem@@=_MetaInfo;
+         let metaInfo = metaInfoStem@@=Meta._MetaInfo;
          let typeId2TypeInfo = moduleInfo.$importId2localTypeInfoMap;
          let moduleTypeInfo = unwrap typeId2TypeInfo[ metaInfo.__moduleTypeId ];
          self.importModuleInfo.remove();
@@ -2381,7 +2384,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
    let! metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath ) {
       self.error( "failed to load meta -- " .. modulePath );
    };
-   let metaInfo = metaInfoStem@@=_MetaInfo;
+   let metaInfo = metaInfoStem@@=Meta._MetaInfo;
    Log._log( .Info, `{ return "%s processing" (modulePath); } );
 
 

@@ -1500,8 +1500,8 @@ _declNodeClass( "DeclMember", Node, false, false, true,
 
 _declNodeClass( "DeclArg", Node, false, false, false,
                 [ { "name": "&Parser.Token" },
-                  { "symbolInfo": "&Ast.SymbolInfo" },
-                  { "argType": "&RefTypeNode" } ]
+                  { "symbolInfo": "&Ast.SymbolInfo" } ]
+                  //{ "argType": "&RefTypeNode" } ]
 );
 
 _declNodeClass( "DeclArgDDD", Node, false, false, false, [] );
@@ -2257,7 +2257,8 @@ pub class DefMacroInfo extend MacroInfo {
       self.argList = [];
       foreach argNode in declInfo.$argList {
          if argNode.get_kind() == NodeKind.$DeclArg {
-            let argType = argNode.$argType.$expType;
+            //let argType = argNode.$argType.$expType;
+            let argType = argNode.$expType;
             let argName = argNode.$name.txt;
             self.argList.insert( new MacroArgInfo( argName, argType ) );
          }

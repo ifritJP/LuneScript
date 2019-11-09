@@ -311,6 +311,7 @@ end
 
 
 
+local Meta = _lune.loadModule( 'lune.base.Meta' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
@@ -1132,37 +1133,6 @@ function TransUnit:createModifier( typeInfo, mutMode )
    end
    
    return Ast.NormalTypeInfo.createModifier( typeInfo, mutMode )
-end
-
-
-local _MetaInfo = {}
-_moduleObj._MetaInfo = _MetaInfo
-function _MetaInfo.setmeta( obj )
-  setmetatable( obj, { __index = _MetaInfo  } )
-end
-function _MetaInfo.new( __formatVersion, __enableTest, __buildId, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __funcName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap )
-   local obj = {}
-   _MetaInfo.setmeta( obj )
-   if obj.__init then
-      obj:__init( __formatVersion, __enableTest, __buildId, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __funcName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap )
-   end
-   return obj
-end
-function _MetaInfo:__init( __formatVersion, __enableTest, __buildId, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __funcName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap )
-
-   self.__formatVersion = __formatVersion
-   self.__enableTest = __enableTest
-   self.__buildId = __buildId
-   self.__typeId2ClassInfoMap = __typeId2ClassInfoMap
-   self.__typeInfoList = __typeInfoList
-   self.__varName2InfoMap = __varName2InfoMap
-   self.__funcName2InfoMap = __funcName2InfoMap
-   self.__moduleTypeId = __moduleTypeId
-   self.__moduleSymbolKind = __moduleSymbolKind
-   self.__moduleMutable = __moduleMutable
-   self.__dependModuleMap = __dependModuleMap
-   self.__dependIdMap = __dependIdMap
-   self.__macroName2InfoMap = __macroName2InfoMap
 end
 
 
@@ -2251,94 +2221,192 @@ function BuiltinFuncType.new(  )
    return obj
 end
 function BuiltinFuncType:__init() 
-   self.lune___eq = Ast.headTypeInfo
    self.lune__fcall = Ast.headTypeInfo
+   self.lune__fcall_sym = Ast.dummySymbol
    self.lune__kind = Ast.headTypeInfo
+   self.lune__kind_sym = Ast.dummySymbol
    self.lune__load = Ast.headTypeInfo
+   self.lune__load_sym = Ast.dummySymbol
    self.lune_collectgarbage = Ast.headTypeInfo
+   self.lune_collectgarbage_sym = Ast.dummySymbol
    self.lune_error = Ast.headTypeInfo
+   self.lune_error_sym = Ast.dummySymbol
    self.lune_load = Ast.headTypeInfo
+   self.lune_load_sym = Ast.dummySymbol
    self.lune_loadfile = Ast.headTypeInfo
+   self.lune_loadfile_sym = Ast.dummySymbol
    self.lune_print = Ast.headTypeInfo
+   self.lune_print_sym = Ast.dummySymbol
    self.lune_require = Ast.headTypeInfo
+   self.lune_require_sym = Ast.dummySymbol
    self.lune_tonumber = Ast.headTypeInfo
+   self.lune_tonumber_sym = Ast.dummySymbol
    self.lune_tostring = Ast.headTypeInfo
+   self.lune_tostring_sym = Ast.dummySymbol
    self.lune_type = Ast.headTypeInfo
+   self.lune_type_sym = Ast.dummySymbol
    self.istream___attrib = Ast.headTypeInfo
+   self.istream___attrib_sym = Ast.dummySymbol
    self.istream_close = Ast.headTypeInfo
+   self.istream_close_sym = Ast.dummySymbol
    self.istream_read = Ast.headTypeInfo
+   self.istream_read_sym = Ast.dummySymbol
    self.ostream___attrib = Ast.headTypeInfo
+   self.ostream___attrib_sym = Ast.dummySymbol
    self.ostream_close = Ast.headTypeInfo
+   self.ostream_close_sym = Ast.dummySymbol
    self.ostream_flush = Ast.headTypeInfo
+   self.ostream_flush_sym = Ast.dummySymbol
    self.ostream_write = Ast.headTypeInfo
+   self.ostream_write_sym = Ast.dummySymbol
    self.luastream___attrib = Ast.headTypeInfo
+   self.luastream___attrib_sym = Ast.dummySymbol
    self.luastream_close = Ast.headTypeInfo
+   self.luastream_close_sym = Ast.dummySymbol
    self.luastream_flush = Ast.headTypeInfo
+   self.luastream_flush_sym = Ast.dummySymbol
    self.luastream_read = Ast.headTypeInfo
+   self.luastream_read_sym = Ast.dummySymbol
    self.luastream_seek = Ast.headTypeInfo
+   self.luastream_seek_sym = Ast.dummySymbol
    self.luastream_write = Ast.headTypeInfo
+   self.luastream_write_sym = Ast.dummySymbol
    self.mapping___attrib = Ast.headTypeInfo
+   self.mapping___attrib_sym = Ast.dummySymbol
    self.mapping__toMap = Ast.headTypeInfo
+   self.mapping__toMap_sym = Ast.dummySymbol
    self.io_open = Ast.headTypeInfo
+   self.io_open_sym = Ast.dummySymbol
    self.io_popen = Ast.headTypeInfo
+   self.io_popen_sym = Ast.dummySymbol
    self.io_stderr = Ast.headTypeInfo
+   self.io_stderr_sym = Ast.dummySymbol
    self.io_stdin = Ast.headTypeInfo
+   self.io_stdin_sym = Ast.dummySymbol
    self.io_stdout = Ast.headTypeInfo
+   self.io_stdout_sym = Ast.dummySymbol
    self.package_path = Ast.headTypeInfo
+   self.package_path_sym = Ast.dummySymbol
    self.package_searchpath = Ast.headTypeInfo
+   self.package_searchpath_sym = Ast.dummySymbol
    self.os_clock = Ast.headTypeInfo
+   self.os_clock_sym = Ast.dummySymbol
    self.os_date = Ast.headTypeInfo
+   self.os_date_sym = Ast.dummySymbol
    self.os_difftime = Ast.headTypeInfo
+   self.os_difftime_sym = Ast.dummySymbol
    self.os_exit = Ast.headTypeInfo
+   self.os_exit_sym = Ast.dummySymbol
    self.os_remove = Ast.headTypeInfo
+   self.os_remove_sym = Ast.dummySymbol
    self.os_rename = Ast.headTypeInfo
+   self.os_rename_sym = Ast.dummySymbol
    self.os_time = Ast.headTypeInfo
+   self.os_time_sym = Ast.dummySymbol
    self.string_byte = Ast.headTypeInfo
+   self.string_byte_sym = Ast.dummySymbol
    self.string_dump = Ast.headTypeInfo
+   self.string_dump_sym = Ast.dummySymbol
    self.string_find = Ast.headTypeInfo
+   self.string_find_sym = Ast.dummySymbol
    self.string_format = Ast.headTypeInfo
+   self.string_format_sym = Ast.dummySymbol
    self.string_gmatch = Ast.headTypeInfo
+   self.string_gmatch_sym = Ast.dummySymbol
    self.string_gsub = Ast.headTypeInfo
+   self.string_gsub_sym = Ast.dummySymbol
    self.string_lower = Ast.headTypeInfo
+   self.string_lower_sym = Ast.dummySymbol
    self.string_rep = Ast.headTypeInfo
+   self.string_rep_sym = Ast.dummySymbol
    self.string_reverse = Ast.headTypeInfo
+   self.string_reverse_sym = Ast.dummySymbol
    self.string_sub = Ast.headTypeInfo
+   self.string_sub_sym = Ast.dummySymbol
    self.string_upper = Ast.headTypeInfo
+   self.string_upper_sym = Ast.dummySymbol
    self.str___attrib = Ast.headTypeInfo
+   self.str___attrib_sym = Ast.dummySymbol
    self.str_byte = Ast.headTypeInfo
+   self.str_byte_sym = Ast.dummySymbol
    self.str_find = Ast.headTypeInfo
+   self.str_find_sym = Ast.dummySymbol
    self.str_format = Ast.headTypeInfo
+   self.str_format_sym = Ast.dummySymbol
    self.str_gmatch = Ast.headTypeInfo
+   self.str_gmatch_sym = Ast.dummySymbol
    self.str_gsub = Ast.headTypeInfo
+   self.str_gsub_sym = Ast.dummySymbol
    self.str_lower = Ast.headTypeInfo
+   self.str_lower_sym = Ast.dummySymbol
    self.str_rep = Ast.headTypeInfo
+   self.str_rep_sym = Ast.dummySymbol
    self.str_reverse = Ast.headTypeInfo
+   self.str_reverse_sym = Ast.dummySymbol
    self.str_sub = Ast.headTypeInfo
+   self.str_sub_sym = Ast.dummySymbol
    self.str_upper = Ast.headTypeInfo
+   self.str_upper_sym = Ast.dummySymbol
    self.list_insert = Ast.headTypeInfo
+   self.list_insert_sym = Ast.dummySymbol
    self.list_remove = Ast.headTypeInfo
+   self.list_remove_sym = Ast.dummySymbol
    self.list_sort = Ast.headTypeInfo
+   self.list_sort_sym = Ast.dummySymbol
    self.list_unpack = Ast.headTypeInfo
+   self.list_unpack_sym = Ast.dummySymbol
    self.array_sort = Ast.headTypeInfo
+   self.array_sort_sym = Ast.dummySymbol
    self.array_unpack = Ast.headTypeInfo
+   self.array_unpack_sym = Ast.dummySymbol
    self.set_add = Ast.headTypeInfo
+   self.set_add_sym = Ast.dummySymbol
    self.set_and = Ast.headTypeInfo
+   self.set_and_sym = Ast.dummySymbol
    self.set_clone = Ast.headTypeInfo
+   self.set_clone_sym = Ast.dummySymbol
    self.set_del = Ast.headTypeInfo
+   self.set_del_sym = Ast.dummySymbol
    self.set_has = Ast.headTypeInfo
+   self.set_has_sym = Ast.dummySymbol
    self.set_len = Ast.headTypeInfo
+   self.set_len_sym = Ast.dummySymbol
    self.set_or = Ast.headTypeInfo
+   self.set_or_sym = Ast.dummySymbol
    self.set_sub = Ast.headTypeInfo
+   self.set_sub_sym = Ast.dummySymbol
    self.math_random = Ast.headTypeInfo
+   self.math_random_sym = Ast.dummySymbol
    self.math_randomseed = Ast.headTypeInfo
+   self.math_randomseed_sym = Ast.dummySymbol
    self.debug_getinfo = Ast.headTypeInfo
+   self.debug_getinfo_sym = Ast.dummySymbol
    self.debug_getlocal = Ast.headTypeInfo
+   self.debug_getlocal_sym = Ast.dummySymbol
    self.nilable_val = Ast.headTypeInfo
+   self.nilable_val_sym = Ast.dummySymbol
    
    
+   
+   self.allSymbol = {}
+   self.allClass = {}
+end
+function BuiltinFuncType:register( symbolInfo )
+
+   self.allSymbol[symbolInfo]= true
+end
+function BuiltinFuncType:registerClass( classInfo )
+
+   table.insert( self.allClass, classInfo )
 end
 function BuiltinFuncType.setmeta( obj )
   setmetatable( obj, { __index = BuiltinFuncType  } )
+end
+function BuiltinFuncType:get_allSymbol()
+   return self.allSymbol
+end
+function BuiltinFuncType:get_allClass()
+   return self.allClass
 end
 
 
@@ -2350,38 +2418,61 @@ local function getBuiltinFunc(  )
 end
 _moduleObj.getBuiltinFunc = getBuiltinFunc
 
-local function setupBuiltinTypeInfo( name, fieldName, typeInfo )
+local function setupBuiltinTypeInfo( name, fieldName, symInfo )
 
+   local typeInfo = symInfo:get_typeInfo()
    local function process_(  )
    
       do
          local _switchExp = fieldName
-         if _switchExp == '__eq' then
-            builtinFunc.lune___eq = typeInfo
-         elseif _switchExp == '_fcall' then
+         if _switchExp == '_fcall' then
             builtinFunc.lune__fcall = typeInfo
+            builtinFunc.lune__fcall_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == '_kind' then
             builtinFunc.lune__kind = typeInfo
+            builtinFunc.lune__kind_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == '_load' then
             builtinFunc.lune__load = typeInfo
+            builtinFunc.lune__load_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'collectgarbage' then
             builtinFunc.lune_collectgarbage = typeInfo
+            builtinFunc.lune_collectgarbage_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'error' then
             builtinFunc.lune_error = typeInfo
+            builtinFunc.lune_error_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'load' then
             builtinFunc.lune_load = typeInfo
+            builtinFunc.lune_load_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'loadfile' then
             builtinFunc.lune_loadfile = typeInfo
+            builtinFunc.lune_loadfile_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'print' then
             builtinFunc.lune_print = typeInfo
+            builtinFunc.lune_print_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'require' then
             builtinFunc.lune_require = typeInfo
+            builtinFunc.lune_require_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'tonumber' then
             builtinFunc.lune_tonumber = typeInfo
+            builtinFunc.lune_tonumber_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'tostring' then
             builtinFunc.lune_tostring = typeInfo
+            builtinFunc.lune_tostring_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'type' then
             builtinFunc.lune_type = typeInfo
+            builtinFunc.lune_type_sym = symInfo
+            builtinFunc:register( symInfo )
          end
       end
       
@@ -2392,10 +2483,16 @@ local function setupBuiltinTypeInfo( name, fieldName, typeInfo )
          local _switchExp = fieldName
          if _switchExp == '__attrib' then
             builtinFunc.istream___attrib = typeInfo
+            builtinFunc.istream___attrib_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'close' then
             builtinFunc.istream_close = typeInfo
+            builtinFunc.istream_close_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'read' then
             builtinFunc.istream_read = typeInfo
+            builtinFunc.istream_read_sym = symInfo
+            builtinFunc:register( symInfo )
          end
       end
       
@@ -2406,12 +2503,20 @@ local function setupBuiltinTypeInfo( name, fieldName, typeInfo )
          local _switchExp = fieldName
          if _switchExp == '__attrib' then
             builtinFunc.ostream___attrib = typeInfo
+            builtinFunc.ostream___attrib_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'close' then
             builtinFunc.ostream_close = typeInfo
+            builtinFunc.ostream_close_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'flush' then
             builtinFunc.ostream_flush = typeInfo
+            builtinFunc.ostream_flush_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'write' then
             builtinFunc.ostream_write = typeInfo
+            builtinFunc.ostream_write_sym = symInfo
+            builtinFunc:register( symInfo )
          end
       end
       
@@ -2422,16 +2527,28 @@ local function setupBuiltinTypeInfo( name, fieldName, typeInfo )
          local _switchExp = fieldName
          if _switchExp == '__attrib' then
             builtinFunc.luastream___attrib = typeInfo
+            builtinFunc.luastream___attrib_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'close' then
             builtinFunc.luastream_close = typeInfo
+            builtinFunc.luastream_close_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'flush' then
             builtinFunc.luastream_flush = typeInfo
+            builtinFunc.luastream_flush_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'read' then
             builtinFunc.luastream_read = typeInfo
+            builtinFunc.luastream_read_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'seek' then
             builtinFunc.luastream_seek = typeInfo
+            builtinFunc.luastream_seek_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'write' then
             builtinFunc.luastream_write = typeInfo
+            builtinFunc.luastream_write_sym = symInfo
+            builtinFunc:register( symInfo )
          end
       end
       
@@ -2442,8 +2559,12 @@ local function setupBuiltinTypeInfo( name, fieldName, typeInfo )
          local _switchExp = fieldName
          if _switchExp == '__attrib' then
             builtinFunc.mapping___attrib = typeInfo
+            builtinFunc.mapping___attrib_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == '_toMap' then
             builtinFunc.mapping__toMap = typeInfo
+            builtinFunc.mapping__toMap_sym = symInfo
+            builtinFunc:register( symInfo )
          end
       end
       
@@ -2454,14 +2575,24 @@ local function setupBuiltinTypeInfo( name, fieldName, typeInfo )
          local _switchExp = fieldName
          if _switchExp == 'open' then
             builtinFunc.io_open = typeInfo
+            builtinFunc.io_open_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'popen' then
             builtinFunc.io_popen = typeInfo
+            builtinFunc.io_popen_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'stderr' then
             builtinFunc.io_stderr = typeInfo
+            builtinFunc.io_stderr_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'stdin' then
             builtinFunc.io_stdin = typeInfo
+            builtinFunc.io_stdin_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'stdout' then
             builtinFunc.io_stdout = typeInfo
+            builtinFunc.io_stdout_sym = symInfo
+            builtinFunc:register( symInfo )
          end
       end
       
@@ -2472,8 +2603,12 @@ local function setupBuiltinTypeInfo( name, fieldName, typeInfo )
          local _switchExp = fieldName
          if _switchExp == 'path' then
             builtinFunc.package_path = typeInfo
+            builtinFunc.package_path_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'searchpath' then
             builtinFunc.package_searchpath = typeInfo
+            builtinFunc.package_searchpath_sym = symInfo
+            builtinFunc:register( symInfo )
          end
       end
       
@@ -2484,18 +2619,32 @@ local function setupBuiltinTypeInfo( name, fieldName, typeInfo )
          local _switchExp = fieldName
          if _switchExp == 'clock' then
             builtinFunc.os_clock = typeInfo
+            builtinFunc.os_clock_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'date' then
             builtinFunc.os_date = typeInfo
+            builtinFunc.os_date_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'difftime' then
             builtinFunc.os_difftime = typeInfo
+            builtinFunc.os_difftime_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'exit' then
             builtinFunc.os_exit = typeInfo
+            builtinFunc.os_exit_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'remove' then
             builtinFunc.os_remove = typeInfo
+            builtinFunc.os_remove_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'rename' then
             builtinFunc.os_rename = typeInfo
+            builtinFunc.os_rename_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'time' then
             builtinFunc.os_time = typeInfo
+            builtinFunc.os_time_sym = symInfo
+            builtinFunc:register( symInfo )
          end
       end
       
@@ -2506,26 +2655,48 @@ local function setupBuiltinTypeInfo( name, fieldName, typeInfo )
          local _switchExp = fieldName
          if _switchExp == 'byte' then
             builtinFunc.string_byte = typeInfo
+            builtinFunc.string_byte_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'dump' then
             builtinFunc.string_dump = typeInfo
+            builtinFunc.string_dump_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'find' then
             builtinFunc.string_find = typeInfo
+            builtinFunc.string_find_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'format' then
             builtinFunc.string_format = typeInfo
+            builtinFunc.string_format_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'gmatch' then
             builtinFunc.string_gmatch = typeInfo
+            builtinFunc.string_gmatch_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'gsub' then
             builtinFunc.string_gsub = typeInfo
+            builtinFunc.string_gsub_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'lower' then
             builtinFunc.string_lower = typeInfo
+            builtinFunc.string_lower_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'rep' then
             builtinFunc.string_rep = typeInfo
+            builtinFunc.string_rep_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'reverse' then
             builtinFunc.string_reverse = typeInfo
+            builtinFunc.string_reverse_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'sub' then
             builtinFunc.string_sub = typeInfo
+            builtinFunc.string_sub_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'upper' then
             builtinFunc.string_upper = typeInfo
+            builtinFunc.string_upper_sym = symInfo
+            builtinFunc:register( symInfo )
          end
       end
       
@@ -2536,26 +2707,48 @@ local function setupBuiltinTypeInfo( name, fieldName, typeInfo )
          local _switchExp = fieldName
          if _switchExp == '__attrib' then
             builtinFunc.str___attrib = typeInfo
+            builtinFunc.str___attrib_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'byte' then
             builtinFunc.str_byte = typeInfo
+            builtinFunc.str_byte_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'find' then
             builtinFunc.str_find = typeInfo
+            builtinFunc.str_find_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'format' then
             builtinFunc.str_format = typeInfo
+            builtinFunc.str_format_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'gmatch' then
             builtinFunc.str_gmatch = typeInfo
+            builtinFunc.str_gmatch_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'gsub' then
             builtinFunc.str_gsub = typeInfo
+            builtinFunc.str_gsub_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'lower' then
             builtinFunc.str_lower = typeInfo
+            builtinFunc.str_lower_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'rep' then
             builtinFunc.str_rep = typeInfo
+            builtinFunc.str_rep_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'reverse' then
             builtinFunc.str_reverse = typeInfo
+            builtinFunc.str_reverse_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'sub' then
             builtinFunc.str_sub = typeInfo
+            builtinFunc.str_sub_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'upper' then
             builtinFunc.str_upper = typeInfo
+            builtinFunc.str_upper_sym = symInfo
+            builtinFunc:register( symInfo )
          end
       end
       
@@ -2566,12 +2759,20 @@ local function setupBuiltinTypeInfo( name, fieldName, typeInfo )
          local _switchExp = fieldName
          if _switchExp == 'insert' then
             builtinFunc.list_insert = typeInfo
+            builtinFunc.list_insert_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'remove' then
             builtinFunc.list_remove = typeInfo
+            builtinFunc.list_remove_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'sort' then
             builtinFunc.list_sort = typeInfo
+            builtinFunc.list_sort_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'unpack' then
             builtinFunc.list_unpack = typeInfo
+            builtinFunc.list_unpack_sym = symInfo
+            builtinFunc:register( symInfo )
          end
       end
       
@@ -2582,8 +2783,12 @@ local function setupBuiltinTypeInfo( name, fieldName, typeInfo )
          local _switchExp = fieldName
          if _switchExp == 'sort' then
             builtinFunc.array_sort = typeInfo
+            builtinFunc.array_sort_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'unpack' then
             builtinFunc.array_unpack = typeInfo
+            builtinFunc.array_unpack_sym = symInfo
+            builtinFunc:register( symInfo )
          end
       end
       
@@ -2594,20 +2799,36 @@ local function setupBuiltinTypeInfo( name, fieldName, typeInfo )
          local _switchExp = fieldName
          if _switchExp == 'add' then
             builtinFunc.set_add = typeInfo
+            builtinFunc.set_add_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'and' then
             builtinFunc.set_and = typeInfo
+            builtinFunc.set_and_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'clone' then
             builtinFunc.set_clone = typeInfo
+            builtinFunc.set_clone_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'del' then
             builtinFunc.set_del = typeInfo
+            builtinFunc.set_del_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'has' then
             builtinFunc.set_has = typeInfo
+            builtinFunc.set_has_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'len' then
             builtinFunc.set_len = typeInfo
+            builtinFunc.set_len_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'or' then
             builtinFunc.set_or = typeInfo
+            builtinFunc.set_or_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'sub' then
             builtinFunc.set_sub = typeInfo
+            builtinFunc.set_sub_sym = symInfo
+            builtinFunc:register( symInfo )
          end
       end
       
@@ -2618,8 +2839,12 @@ local function setupBuiltinTypeInfo( name, fieldName, typeInfo )
          local _switchExp = fieldName
          if _switchExp == 'random' then
             builtinFunc.math_random = typeInfo
+            builtinFunc.math_random_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'randomseed' then
             builtinFunc.math_randomseed = typeInfo
+            builtinFunc.math_randomseed_sym = symInfo
+            builtinFunc:register( symInfo )
          end
       end
       
@@ -2630,8 +2855,12 @@ local function setupBuiltinTypeInfo( name, fieldName, typeInfo )
          local _switchExp = fieldName
          if _switchExp == 'getinfo' then
             builtinFunc.debug_getinfo = typeInfo
+            builtinFunc.debug_getinfo_sym = symInfo
+            builtinFunc:register( symInfo )
          elseif _switchExp == 'getlocal' then
             builtinFunc.debug_getlocal = typeInfo
+            builtinFunc.debug_getlocal_sym = symInfo
+            builtinFunc:register( symInfo )
          end
       end
       
@@ -2642,6 +2871,8 @@ local function setupBuiltinTypeInfo( name, fieldName, typeInfo )
          local _switchExp = fieldName
          if _switchExp == 'val' then
             builtinFunc.nilable_val = typeInfo
+            builtinFunc.nilable_val_sym = symInfo
+            builtinFunc:register( symInfo )
          end
       end
       
@@ -2690,7 +2921,7 @@ end
 
 local function getBuiltInInfo(  )
 
-   return {{[""] = {["__eq"] = {["arg"] = {"__exp", "__exp"}, ["ret"] = {}, ["type"] = {"macro"}}, ["_fcall"] = {["arg"] = {"form", "&..."}, ["ret"] = {""}}, ["_kind"] = {["arg"] = {"stem!"}, ["ret"] = {"int"}}, ["_load"] = {["arg"] = {"str", "stem!"}, ["ret"] = {"__loadedfunc!", "str!"}}, ["collectgarbage"] = {["arg"] = {}, ["ret"] = {}}, ["error"] = {["arg"] = {"str"}, ["ret"] = {"__"}}, ["load"] = {["arg"] = {"str", "str!", "str!", "stem!"}, ["ret"] = {"form!", "str!"}}, ["loadfile"] = {["arg"] = {"str"}, ["ret"] = {"form!", "str!"}}, ["print"] = {["arg"] = {"&..."}, ["ret"] = {}}, ["require"] = {["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["tonumber"] = {["arg"] = {"str", "int!"}, ["ret"] = {"real!"}}, ["tostring"] = {["arg"] = {"&stem"}, ["ret"] = {"str"}}, ["type"] = {["arg"] = {"&stem!"}, ["ret"] = {"str"}}}}, {["iStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["close"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["read"] = {["arg"] = {"stem!"}, ["ret"] = {"str!"}, ["type"] = {"mut"}}}}, {["oStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["close"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["flush"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["write"] = {["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}, ["type"] = {"mut"}}}}, {["luaStream"] = {["__attrib"] = {["inplements"] = {"iStream", "oStream"}}, ["close"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["flush"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["read"] = {["arg"] = {"stem!"}, ["ret"] = {"str!"}, ["type"] = {"mut"}}, ["seek"] = {["arg"] = {"str", "int"}, ["ret"] = {"int!", "str!"}, ["type"] = {"mut"}}, ["write"] = {["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}, ["type"] = {"mut"}}}}, {["Mapping"] = {["__attrib"] = {["type"] = {"interface"}}, ["_toMap"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"method"}}}}, {["io"] = {["open"] = {["arg"] = {"str", "str!"}, ["ret"] = {"luaStream!"}}, ["popen"] = {["arg"] = {"str"}, ["ret"] = {"luaStream!"}}, ["stderr"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["stdin"] = {["type"] = {"member"}, ["typeInfo"] = {"iStream"}}, ["stdout"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}}}, {["package"] = {["path"] = {["type"] = {"member"}, ["typeInfo"] = {"str"}}, ["searchpath"] = {["arg"] = {"str", "str"}, ["ret"] = {"str!"}}}}, {["os"] = {["clock"] = {["arg"] = {}, ["ret"] = {"real"}}, ["date"] = {["arg"] = {"str!", "stem!"}, ["ret"] = {"stem!"}}, ["difftime"] = {["arg"] = {"stem", "stem"}, ["ret"] = {"int"}}, ["exit"] = {["arg"] = {"int!"}, ["ret"] = {"__"}}, ["remove"] = {["arg"] = {"str"}, ["ret"] = {"bool!", "str!"}}, ["rename"] = {["arg"] = {"str", "str"}, ["ret"] = {"stem!", "str!"}}, ["time"] = {["arg"] = {"stem!"}, ["ret"] = {"stem!"}}}}, {["string"] = {["byte"] = {["arg"] = {"str", "int!", "int!"}, ["ret"] = {"int!"}}, ["dump"] = {["arg"] = {"form", "bool!"}, ["ret"] = {"str"}}, ["find"] = {["arg"] = {"str", "str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["format"] = {["arg"] = {"str", "..."}, ["ret"] = {"str"}}, ["gmatch"] = {["arg"] = {"str", "str"}, ["ret"] = {"form", "stem!", "stem!"}}, ["gsub"] = {["arg"] = {"str", "str", "str"}, ["ret"] = {"str", "int"}}, ["lower"] = {["arg"] = {"str"}, ["ret"] = {"str"}}, ["rep"] = {["arg"] = {"str", "int"}, ["ret"] = {"str"}}, ["reverse"] = {["arg"] = {"str"}, ["ret"] = {"str"}}, ["sub"] = {["arg"] = {"str", "int", "int!"}, ["ret"] = {"str"}}, ["upper"] = {["arg"] = {"str"}, ["ret"] = {"str"}}}}, {["str"] = {["__attrib"] = {["inplements"] = {"Mapping"}}, ["byte"] = {["arg"] = {"int!", "int!"}, ["ret"] = {"int"}, ["type"] = {"method"}}, ["find"] = {["arg"] = {"str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}, ["type"] = {"method"}}, ["format"] = {["arg"] = {"&..."}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["gmatch"] = {["arg"] = {"str"}, ["ret"] = {"form", "stem!", "stem!"}, ["type"] = {"method"}}, ["gsub"] = {["arg"] = {"str", "str"}, ["ret"] = {"str", "int"}, ["type"] = {"method"}}, ["lower"] = {["arg"] = {}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["rep"] = {["arg"] = {"int"}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["reverse"] = {["arg"] = {}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["sub"] = {["arg"] = {"int", "int!"}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["upper"] = {["arg"] = {}, ["ret"] = {"str"}, ["type"] = {"method"}}}}, {["List<T>"] = {["insert"] = {["arg"] = {"&T"}, ["ret"] = {""}, ["type"] = {"mut"}}, ["remove"] = {["arg"] = {"int!"}, ["ret"] = {"T!"}, ["type"] = {"mut"}}, ["sort"] = {["arg"] = {"form!"}, ["ret"] = {}, ["type"] = {"mut"}}, ["unpack"] = {["arg"] = {}, ["ret"] = {"..."}, ["type"] = {"method"}}}}, {["Array<T>"] = {["sort"] = {["arg"] = {"form!"}, ["ret"] = {}, ["type"] = {"mut"}}, ["unpack"] = {["arg"] = {}, ["ret"] = {"..."}, ["type"] = {"method"}}}}, {["Set<T>"] = {["add"] = {["arg"] = {"T"}, ["ret"] = {}, ["type"] = {"mut"}}, ["and"] = {["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}, ["type"] = {"mut"}}, ["clone"] = {["arg"] = {}, ["ret"] = {"Set<T>"}, ["type"] = {"method"}}, ["del"] = {["arg"] = {"T"}, ["ret"] = {}, ["type"] = {"mut"}}, ["has"] = {["arg"] = {"T"}, ["ret"] = {"bool"}, ["type"] = {"method"}}, ["len"] = {["arg"] = {}, ["ret"] = {"int"}, ["type"] = {"method"}}, ["or"] = {["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}, ["type"] = {"mut"}}, ["sub"] = {["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}, ["type"] = {"mut"}}}}, {["math"] = {["random"] = {["arg"] = {"int!", "int!"}, ["ret"] = {"real"}}, ["randomseed"] = {["arg"] = {"int!"}, ["ret"] = {}}}}, {["debug"] = {["getinfo"] = {["arg"] = {"int"}, ["ret"] = {"stem!"}}, ["getlocal"] = {["arg"] = {"int", "int"}, ["ret"] = {"str!", "stem!"}}}}, {["Nilable<_T>"] = {["val"] = {["arg"] = {}, ["ret"] = {"_T!"}, ["type"] = {"method"}}}}}
+   return {{[""] = {["_fcall"] = {["arg"] = {"form", "&..."}, ["ret"] = {""}}, ["_kind"] = {["arg"] = {"stem!"}, ["ret"] = {"int"}}, ["_load"] = {["arg"] = {"str", "stem!"}, ["ret"] = {"__loadedfunc!", "str!"}}, ["collectgarbage"] = {["arg"] = {}, ["ret"] = {}}, ["error"] = {["arg"] = {"str"}, ["ret"] = {"__"}}, ["load"] = {["arg"] = {"str", "str!", "str!", "stem!"}, ["ret"] = {"form!", "str!"}}, ["loadfile"] = {["arg"] = {"str"}, ["ret"] = {"form!", "str!"}}, ["print"] = {["arg"] = {"&..."}, ["ret"] = {}}, ["require"] = {["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["tonumber"] = {["arg"] = {"str", "int!"}, ["ret"] = {"real!"}}, ["tostring"] = {["arg"] = {"&stem"}, ["ret"] = {"str"}}, ["type"] = {["arg"] = {"&stem!"}, ["ret"] = {"str"}}}}, {["iStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["close"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["read"] = {["arg"] = {"stem!"}, ["ret"] = {"str!"}, ["type"] = {"mut"}}}}, {["oStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["close"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["flush"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["write"] = {["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}, ["type"] = {"mut"}}}}, {["luaStream"] = {["__attrib"] = {["inplements"] = {"iStream", "oStream"}}, ["close"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["flush"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["read"] = {["arg"] = {"stem!"}, ["ret"] = {"str!"}, ["type"] = {"mut"}}, ["seek"] = {["arg"] = {"str", "int"}, ["ret"] = {"int!", "str!"}, ["type"] = {"mut"}}, ["write"] = {["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}, ["type"] = {"mut"}}}}, {["Mapping"] = {["__attrib"] = {["type"] = {"interface"}}, ["_toMap"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"method"}}}}, {["io"] = {["open"] = {["arg"] = {"str", "str!"}, ["ret"] = {"luaStream!"}}, ["popen"] = {["arg"] = {"str"}, ["ret"] = {"luaStream!"}}, ["stderr"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["stdin"] = {["type"] = {"member"}, ["typeInfo"] = {"iStream"}}, ["stdout"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}}}, {["package"] = {["path"] = {["type"] = {"member"}, ["typeInfo"] = {"str"}}, ["searchpath"] = {["arg"] = {"str", "str"}, ["ret"] = {"str!"}}}}, {["os"] = {["clock"] = {["arg"] = {}, ["ret"] = {"real"}}, ["date"] = {["arg"] = {"str!", "stem!"}, ["ret"] = {"stem!"}}, ["difftime"] = {["arg"] = {"stem", "stem"}, ["ret"] = {"int"}}, ["exit"] = {["arg"] = {"int!"}, ["ret"] = {"__"}}, ["remove"] = {["arg"] = {"str"}, ["ret"] = {"bool!", "str!"}}, ["rename"] = {["arg"] = {"str", "str"}, ["ret"] = {"stem!", "str!"}}, ["time"] = {["arg"] = {"stem!"}, ["ret"] = {"stem!"}}}}, {["string"] = {["byte"] = {["arg"] = {"str", "int!", "int!"}, ["ret"] = {"int!"}}, ["dump"] = {["arg"] = {"form", "bool!"}, ["ret"] = {"str"}}, ["find"] = {["arg"] = {"str", "str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["format"] = {["arg"] = {"str", "..."}, ["ret"] = {"str"}}, ["gmatch"] = {["arg"] = {"str", "str"}, ["ret"] = {"form", "stem!", "stem!"}}, ["gsub"] = {["arg"] = {"str", "str", "str"}, ["ret"] = {"str", "int"}}, ["lower"] = {["arg"] = {"str"}, ["ret"] = {"str"}}, ["rep"] = {["arg"] = {"str", "int"}, ["ret"] = {"str"}}, ["reverse"] = {["arg"] = {"str"}, ["ret"] = {"str"}}, ["sub"] = {["arg"] = {"str", "int", "int!"}, ["ret"] = {"str"}}, ["upper"] = {["arg"] = {"str"}, ["ret"] = {"str"}}}}, {["str"] = {["__attrib"] = {["inplements"] = {"Mapping"}}, ["byte"] = {["arg"] = {"int!", "int!"}, ["ret"] = {"int"}, ["type"] = {"method"}}, ["find"] = {["arg"] = {"str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}, ["type"] = {"method"}}, ["format"] = {["arg"] = {"&..."}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["gmatch"] = {["arg"] = {"str"}, ["ret"] = {"form", "stem!", "stem!"}, ["type"] = {"method"}}, ["gsub"] = {["arg"] = {"str", "str"}, ["ret"] = {"str", "int"}, ["type"] = {"method"}}, ["lower"] = {["arg"] = {}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["rep"] = {["arg"] = {"int"}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["reverse"] = {["arg"] = {}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["sub"] = {["arg"] = {"int", "int!"}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["upper"] = {["arg"] = {}, ["ret"] = {"str"}, ["type"] = {"method"}}}}, {["List<T>"] = {["insert"] = {["arg"] = {"&T"}, ["ret"] = {""}, ["type"] = {"mut"}}, ["remove"] = {["arg"] = {"int!"}, ["ret"] = {"T!"}, ["type"] = {"mut"}}, ["sort"] = {["arg"] = {"form!"}, ["ret"] = {}, ["type"] = {"mut"}}, ["unpack"] = {["arg"] = {}, ["ret"] = {"..."}, ["type"] = {"method"}}}}, {["Array<T>"] = {["sort"] = {["arg"] = {"form!"}, ["ret"] = {}, ["type"] = {"mut"}}, ["unpack"] = {["arg"] = {}, ["ret"] = {"..."}, ["type"] = {"method"}}}}, {["Set<T>"] = {["add"] = {["arg"] = {"T"}, ["ret"] = {}, ["type"] = {"mut"}}, ["and"] = {["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}, ["type"] = {"mut"}}, ["clone"] = {["arg"] = {}, ["ret"] = {"Set<T>"}, ["type"] = {"method"}}, ["del"] = {["arg"] = {"T"}, ["ret"] = {}, ["type"] = {"mut"}}, ["has"] = {["arg"] = {"T"}, ["ret"] = {"bool"}, ["type"] = {"method"}}, ["len"] = {["arg"] = {}, ["ret"] = {"int"}, ["type"] = {"method"}}, ["or"] = {["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}, ["type"] = {"mut"}}, ["sub"] = {["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}, ["type"] = {"mut"}}}}, {["math"] = {["random"] = {["arg"] = {"int!", "int!"}, ["ret"] = {"real"}}, ["randomseed"] = {["arg"] = {"int!"}, ["ret"] = {}}}}, {["debug"] = {["getinfo"] = {["arg"] = {"int"}, ["ret"] = {"stem!"}}, ["getlocal"] = {["arg"] = {"int", "int"}, ["ret"] = {"str!", "stem!"}}}}, {["Nilable<_T>"] = {["val"] = {["arg"] = {}, ["ret"] = {"_T!"}, ["type"] = {"method"}}}}}
 end
 
 
@@ -2801,7 +3032,8 @@ function TransUnit:registBuiltInScope(  )
    
       if self.targetLuaVer:isSupport( string.format( "%s.%s", name, fieldName) ) then
          if _lune.nilacc( info['type'], nil, 'item', 1) == "member" then
-            self.scope:addMember( fieldName, nil, getTypeInfo( _lune.unwrap( _lune.nilacc( info['typeInfo'], nil, 'item', 1)) ), Ast.AccessMode.Pub, true, Ast.MutMode.Mut )
+            local symbol = self.scope:addMember( fieldName, nil, getTypeInfo( _lune.unwrap( _lune.nilacc( info['typeInfo'], nil, 'item', 1)) ), Ast.AccessMode.Pub, true, Ast.MutMode.Mut )
+            builtinFunc:register( symbol )
          else
           
             local argTypeList = {}
@@ -2856,9 +3088,9 @@ function TransUnit:registBuiltInScope(  )
                Ast.builtInTypeIdSet[typeInfo:get_nilableTypeInfo():get_typeId()] = typeInfo:get_nilableTypeInfo()
             end
             
-            self.scope:add( symbolKind, false, kind == Ast.TypeInfoKind.Func, fieldName, nil, typeInfo, Ast.AccessMode.Pub, staticFlag, mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true )
+            local symInfo = self.scope:add( symbolKind, false, kind == Ast.TypeInfoKind.Func, fieldName, nil, typeInfo, Ast.AccessMode.Pub, staticFlag, mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true )
             
-            setupBuiltinTypeInfo( name, fieldName, typeInfo )
+            setupBuiltinTypeInfo( name, fieldName, symInfo )
          end
          
       end
@@ -2944,6 +3176,7 @@ function TransUnit:registBuiltInScope(  )
             parentInfo = self:pushClass( self.currentToken.pos, classFlag, false, nil, interfaceList, genTypeList, true, name, Ast.AccessMode.Pub )
             Ast.builtInTypeIdSet[parentInfo:get_typeId(  )] = parentInfo
             Ast.builtInTypeIdSet[parentInfo:get_nilableTypeInfo():get_typeId()] = parentInfo:get_nilableTypeInfo()
+            builtinFunc:registerClass( parentInfo )
          end
          
          if not builtinModuleName2Scope[name] then
@@ -2986,8 +3219,6 @@ function TransUnit:registBuiltInScope(  )
       
    end
    
-   
-   self.macroCtrl:registBuiltinMacro( self.moduleScope )
    
    self.scope = self.topScope
 end
@@ -3555,7 +3786,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = '@lune.@base.@TransUnit.TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2353, function (  )
+   Log.log( Log.Level.Info, __func__, 2356, function (  )
    
       return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), modulePath)
    end )
@@ -3572,7 +3803,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2365, function (  )
+               Log.log( Log.Level.Info, __func__, 2368, function (  )
                
                   return string.format( "%s already", modulePath)
                end )
@@ -3605,7 +3836,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2385, function (  )
+   Log.log( Log.Level.Info, __func__, 2388, function (  )
    
       return string.format( "%s processing", modulePath)
    end )
@@ -3948,7 +4179,7 @@ function TransUnit:processImport( modulePath )
    
    self.importModuleInfo:remove(  )
    
-   Log.log( Log.Level.Info, __func__, 2715, function (  )
+   Log.log( Log.Level.Info, __func__, 2718, function (  )
    
       return string.format( "%s complete", modulePath)
    end )
@@ -4778,7 +5009,7 @@ function TransUnit:analyzeDeclArgList( accessMode, scope, argList, parentPub )
          local refType = self:analyzeRefType( accessMode, false, parentPub )
          local symbolInfo = scope:addLocalVar( true, true, argName.txt, argName.pos, refType:get_expType(), mutable )
          
-         local arg = Nodes.DeclArgNode.create( self.nodeManager, argName.pos, refType:get_expTypeList(), argName, symbolInfo, refType )
+         local arg = Nodes.DeclArgNode.create( self.nodeManager, argName.pos, refType:get_expTypeList(), argName, symbolInfo )
          
          table.insert( argList, arg )
       end

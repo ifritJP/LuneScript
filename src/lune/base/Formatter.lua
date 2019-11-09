@@ -684,12 +684,13 @@ function FormatterFilter:processDeclVar( node, opt )
 end
 
 
+
 function FormatterFilter:processDeclArg( node, opt )
 
    self:write( node:get_symbolInfo():get_name() )
    self:write( ":" )
    
-   filter( node:get_argType(), self, opt:nextOpt( node ) )
+   self:write( node:get_expType():getTxt(  ) )
 end
 
 

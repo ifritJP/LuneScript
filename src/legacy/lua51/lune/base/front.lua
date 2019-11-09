@@ -289,6 +289,7 @@ local Log = _lune.loadModule( 'lune.base.Log' )
 local Formatter = _lune.loadModule( 'lune.base.Formatter' )
 local Testing = _lune.loadModule( 'lune.base.Testing' )
 local TestCtrl = _lune.loadModule( 'lune.base.TestCtrl' )
+local Meta = _lune.loadModule( 'lune.base.Meta' )
 
 
 
@@ -738,7 +739,7 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
             local _modMetaPath = modMetaPath
          
             
-            Log.log( Log.Level.Debug, __func__, 390, function (  )
+            Log.log( Log.Level.Debug, __func__, 391, function (  )
             
                
                return "NeedUpdate"
@@ -752,7 +753,7 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
             local _time = time
          
             
-            Log.log( Log.Level.Debug, __func__, 395, function (  )
+            Log.log( Log.Level.Debug, __func__, 396, function (  )
             
                
                return "NeedUpdate"
@@ -767,7 +768,7 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
             if  nil == dependMeta then
                local _dependMeta = dependMeta
             
-               Log.log( Log.Level.Debug, __func__, 403, function (  )
+               Log.log( Log.Level.Debug, __func__, 404, function (  )
                
                   
                   return "NeedUpdate"
@@ -780,7 +781,7 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
             local metaModuleId = dependMeta:createModuleId(  )
             if metaModuleId:get_buildCount() ~= 0 and metaModuleId:get_buildCount() ~= orgMetaModuleId:get_buildCount() then
                
-               Log.log( Log.Level.Debug, __func__, 413, function (  )
+               Log.log( Log.Level.Debug, __func__, 414, function (  )
                
                   
                   return string.format( "NeedUpdate: %s, %d, %d", modMetaPath, metaModuleId:get_buildCount(), orgMetaModuleId:get_buildCount())
@@ -817,7 +818,7 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
       end
       
    else
-      Log.log( Log.Level.Debug, __func__, 446, function (  )
+      Log.log( Log.Level.Debug, __func__, 447, function (  )
       
          return "not found meta"
       end )
@@ -1069,7 +1070,7 @@ function Front:loadMeta( importModuleInfo, mod )
          if _exp ~= nil then
             self.loadedMetaMap[mod] = _exp.meta
          else
-            Log.log( Log.Level.Info, __func__, 642, function (  )
+            Log.log( Log.Level.Info, __func__, 643, function (  )
             
                return string.format( "%s checking", mod)
             end )
@@ -1329,11 +1330,21 @@ function Front:saveToC( ast )
    end
    
    
-   local conv = convCC.createFilter( cPath, file, hFile, ast )
+   local conv = convCC.createFilter( self.option.mode == Option.ModeKind.Builtin, cPath, file, hFile, ast )
    ast:get_node():processFilter( conv, convCC.Opt.new(ast:get_node()) )
    
    file:close(  )
    hFile:close(  )
+end
+
+
+function Front:outputBuiltin(  )
+
+   local mod = scriptPath2Module( "builtin" )
+   
+   local ast = self:createAst( frontInterface.ImportModuleInfo.new(), Parser.DummyParser.new(), mod, frontInterface.ModuleId.createId( 0.0, 0 ), nil, TransUnit.AnalyzeMode.Compile )
+   
+   self:saveToC( ast )
 end
 
 
@@ -1398,7 +1409,7 @@ function Front:saveToLua(  )
             end
             
             if not cont then
-               Log.log( Log.Level.Debug, __func__, 977, function (  )
+               Log.log( Log.Level.Debug, __func__, 990, function (  )
                
                   return string.format( "<%s>, <%s>", tostring( oldLine), tostring( newLine))
                end )
@@ -1631,7 +1642,7 @@ end
 function Front:exec(  )
    local __func__ = '@lune.@base.@front.Front.exec'
 
-   Log.log( Log.Level.Trace, __func__, 1173, function (  )
+   Log.log( Log.Level.Trace, __func__, 1186, function (  )
    
       return Option.ModeKind:_getTxt( self.option.mode)
       
@@ -1665,6 +1676,8 @@ function Front:exec(  )
          
       elseif _switchExp == Option.ModeKind.BootC then
          self:outputBootC(  )
+      elseif _switchExp == Option.ModeKind.Builtin then
+         self:outputBuiltin(  )
       else 
          
             print( "illegal mode" )

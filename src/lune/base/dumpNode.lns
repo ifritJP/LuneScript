@@ -306,8 +306,8 @@ pub override fn dumpFilter.processDeclArg(
    node: &Nodes.DeclArgNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
-   dump( prefix, depth, node, node.get_name().txt );
-   filter( node.get_argType(), self, opt.nextOpt() );
+   dump( prefix, depth, node, "%s:%s" (node.get_name().txt, node.$expType.getTxt(##) ));
+   //filter( node.get_argType(), self, opt.nextOpt() );
 };
 pub override fn dumpFilter.processDeclArgDDD(
    node: &Nodes.DeclArgDDDNode, opt:Opt ) mut

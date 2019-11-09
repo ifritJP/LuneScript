@@ -398,8 +398,9 @@ pub override fn FormatterFilter.processDeclArg(
 {
    self.write( node.$symbolInfo.$name );
    self.write( ":" );
-   
-   filter( node.$argType, self, opt.nextOpt( node ) );
+
+   self.write( node.$expType.getTxt( ## ) );
+   //filter( node.$argType, self, opt.nextOpt( node ) );
 };
 pub override fn FormatterFilter.processDeclArgDDD(
    node: &Nodes.DeclArgDDDNode, opt:Opt ) mut

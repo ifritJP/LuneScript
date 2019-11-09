@@ -272,7 +272,7 @@ fn TransUnit.analyzeDeclArgList(
          
          let arg = Nodes.DeclArgNode.create(
             self.nodeManager, argName.pos, refType.$expTypeList,
-            argName, symbolInfo, refType );
+            argName, symbolInfo );
 
          argList.insert( arg );
       }

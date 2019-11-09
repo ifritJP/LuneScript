@@ -2152,6 +2152,10 @@ function Scope:addLocalVar( argFlag, canBeLeft, name, pos, typeInfo, mutable )
 end
 
 
+local dummySymbol = _moduleObj.rootScope:addLocalVar( false, false, "$$", nil, _moduleObj.headTypeInfo, MutMode.IMut )
+_moduleObj.dummySymbol = dummySymbol
+
+
 function Scope:addStaticVar( argFlag, canBeLeft, name, pos, typeInfo, mutable )
 
    self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, pos, typeInfo, AccessMode.Local, true, mutable, true )

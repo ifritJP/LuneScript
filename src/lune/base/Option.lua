@@ -195,7 +195,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 2341
+   return 2358
 end
 
 
@@ -260,6 +260,9 @@ ModeKind.__allList[12] = ModeKind.BootC
 ModeKind.Format = 'format'
 ModeKind._val2NameMap['format'] = 'Format'
 ModeKind.__allList[13] = ModeKind.Format
+ModeKind.Builtin = 'builtin'
+ModeKind._val2NameMap['builtin'] = 'Builtin'
+ModeKind.__allList[14] = ModeKind.Builtin
 
 
 local CheckingUptodateMode = {}
@@ -517,6 +520,16 @@ usage:
                end
                
                os.exit( 0 )
+            elseif _switchExp == "--mkbuiltin" then
+               local path = getNextOp(  )
+               if  nil == path then
+                  local _path = path
+               
+                  path = "."
+               end
+               
+               option.scriptPath = path .. "/lns_buintin.lns"
+               option.mode = ModeKind.Builtin
             elseif _switchExp == "-r" then
                option.useLuneModule = string.format( "lune.base._lune%d", Ver.luaModVersion)
             elseif _switchExp == "--runtime" then
@@ -642,8 +655,11 @@ usage:
    end
    
    
-   if option.scriptPath == "" or option.mode == ModeKind.Unknown then
-      printUsage( (#argList == 0 or argList[1] == "" ) and 0 or 1 )
+   if option.mode ~= ModeKind.Builtin then
+      if option.scriptPath == "" or option.mode == ModeKind.Unknown then
+         printUsage( (#argList == 0 or argList[1] == "" ) and 0 or 1 )
+      end
+      
    end
    
    

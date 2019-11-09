@@ -564,11 +564,11 @@ function dumpFilter:processDeclVar( node, opt )
 end
 
 
+
 function dumpFilter:processDeclArg( node, opt )
 
    local prefix, depth = opt:get(  )
-   dump( prefix, depth, node, node:get_name(  ).txt )
-   filter( node:get_argType(  ), self, opt:nextOpt(  ) )
+   dump( prefix, depth, node, string.format( "%s:%s", node:get_name(  ).txt, node:get_expType():getTxt(  )) )
 end
 
 

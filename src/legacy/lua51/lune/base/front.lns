@@ -38,6 +38,7 @@ import lune.base.Log;
 import lune.base.Formatter;
 import lune.base.Testing;
 import lune.base.TestCtrl;
+import lune.base.Meta;
 
 _lune_control ignore_symbol_;
 
@@ -547,7 +548,7 @@ fn Front.checkUptodateMeta( metaPath:str, addSearchPath:str! ): stem! {
    let! metaObj = self.loadLua( metaPath ) {
       return nil;
    };
-   let meta = metaObj@@=TransUnit._MetaInfo;
+   let meta = metaObj@@=Meta._MetaInfo;
    if meta.$__formatVersion ~= Ver.metaVersion or
       meta.$__enableTest ~= self.option.testing
    {
@@ -902,11 +903,23 @@ pub fn Front.saveToC( ast:&TransUnit.ASTInfo ) mut {
       return;
    };
 
-   let mut conv = convCC.createFilter( cPath, file, hFile, ast );
+   let mut conv = convCC.createFilter(
+      self.option.mode == .Builtin , cPath, file, hFile, ast );
    ast.$node.processFilter( conv, new convCC.Opt( ast.$node ) );
 
    file.close();
    hFile.close();
+}
+
+pub fn Front.outputBuiltin() mut {
+   let mod = scriptPath2Module( "builtin" );
+
+   let ast = self.createAst(
+      new frontInterface.ImportModuleInfo(),
+      new Parser.DummyParser(), mod,
+      frontInterface.ModuleId.createId( 0.0, 0 ), nil, .Compile ## );
+
+   self.saveToC( ast );
 }
 
 
@@ -1209,6 +1222,9 @@ pub fn Front.exec() mut
       }
       case .BootC {
          self.outputBootC();
+      }
+      case .Builtin {
+         self.outputBuiltin();
       }
       default {
          print( "illegal mode" );

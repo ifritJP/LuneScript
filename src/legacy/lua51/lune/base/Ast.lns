@@ -1471,6 +1471,9 @@ pub fn Scope.addLocalVar(
                     canBeLeft, true, name, pos, typeInfo, .Local, false, mutable, true );
 }
 
+pub let dummySymbol =
+   rootScope.addLocalVar( false, false, "$$", nil, headTypeInfo, .IMut );
+
 pub fn Scope.addStaticVar(
    argFlag:bool, canBeLeft:bool, name:str, pos:&Parser.Position!,
    typeInfo: &TypeInfo, mutable:MutMode ) mut
