@@ -2,12 +2,12 @@
 
 TEST_OUT=test.exe
 
-CORE_SRCS += lune/base/lns_main.c
-CORE_SRCS += lune/base/lns_base.c
-CORE_SRCS += lune/base/lns_builtin.c
-CORE_SRCS += lune/base/lns_collection.cxx
-CORE_SRCS += lune/base/lns_alloc.cxx
-CORE_SRCS += lune/base/lns_luaWrapper.cxx
+CORE_SRCS += lune/base/runtime_c/lns_main.c
+CORE_SRCS += lune/base/runtime_c/lns_base.c
+CORE_SRCS += lune/base/runtime_c/lns_builtin.c
+CORE_SRCS += lune/base/runtime_c/lns_collection.cxx
+CORE_SRCS += lune/base/runtime_c/lns_alloc.cxx
+CORE_SRCS += lune/base/runtime_c/lns_luaWrapper.cxx
 
 SRCS += lune/base/test.c
 
@@ -26,7 +26,7 @@ CFLAGS = -g3
 else
 CFLAGS = -O
 endif
-CFLAGS += -Wall -Wno-unused-variable -c -Ilune/base -I. -I$(LUA_INC_DIR)
+CFLAGS += -Wall -Wno-unused-variable -c -Ilune/base/runtime_c -I. -I$(LUA_INC_DIR)
 
 work/c/%.o: %.c
 	gcc $(CFLAGS) -o $@ $<
@@ -36,9 +36,9 @@ work/c/%.o: %.cxx
 all: build
 
 
-$(OBJS): lune/base/*.h
+$(OBJS): lune/base/runtime_c/*.h
 
-work/c/lns_builtin.o: lune/base/lns_builtin.c lune/base/lns_builtinInc.c
+work/c/lns_builtin.o: lune/base/runtime_c/lns_builtin.c lune/base/runtime_c/lns_builtinInc.c
 
 
 build: 

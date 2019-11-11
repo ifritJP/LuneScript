@@ -1,4 +1,4 @@
-// lune/base/lns_builtin.c
+// lune/base/runtime_c/lns_builtin.c
 #include <lunescript.h>
 #include <lns_builtin.h>
 static lune_any_t ** lune_module_globalStemList;
@@ -41,9 +41,9 @@ lune_mtd_io_t lune_mtd_io = {
    u_mtd_io__del,
    NULL,
 };
-lune_any_t * lune_var_io_stdin;
 lune_any_t * lune_var_io_stderr;
 lune_any_t * lune_var_io_stdout;
+lune_any_t * lune_var_io_stdin;
 lune_type_meta_t lune_type_meta_package = { "package" };
 lune_mtd_package_t lune_mtd_package = {
    u_mtd_package__del,

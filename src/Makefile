@@ -830,5 +830,5 @@ test-testC:
 
 test-mkbuiltin:
 	$(call transwork,.,.,,base/convCC)
-	lua5.3 lune/base/base.lua --mkbuiltin lune/base
+	lua5.3 lune/base/base.lua --mkbuiltin lune/base/runtime_c
 	$(MAKE) test-miniC

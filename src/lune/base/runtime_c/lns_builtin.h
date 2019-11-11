@@ -217,9 +217,9 @@ extern lune_real_t u_mtd_math_random( lune_env_t * _pEnv, lune_stem_t arg1, lune
 extern void u_mtd_math_randomseed( lune_env_t * _pEnv, lune_stem_t arg1);
 extern lune_stem_t u_mtd_debug_getinfo( lune_env_t * _pEnv, lune_int_t arg1);
 extern lune_stem_t u_mtd_debug_getlocal( lune_env_t * _pEnv, lune_int_t arg1, lune_int_t arg2);
-extern lune_any_t * lune_var_io_stdin;
 extern lune_any_t * lune_var_io_stderr;
 extern lune_any_t * lune_var_io_stdout;
+extern lune_any_t * lune_var_io_stdin;
 extern lune_any_t * lune_var_package_path;
 extern void lune_init_lns_builtin( lune_env_t * _pEnv );
 #endif
