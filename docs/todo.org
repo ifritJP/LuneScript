@@ -193,6 +193,9 @@ foreach obj in list {
 
 *  C へのトランスコード
 
+- [ ] block の stem 変数は、 lune_stem_t ではなく lune_stem_t * で管理すべき。
+      大域ジャンプに対応できない。
+  
 - [ ] 次の処理が変換に失敗する
   fn func( val:int ) {
     let list = [ val, val ];
@@ -203,8 +206,6 @@ foreach obj in list {
 - [ ] processToIF() の処理を関数コール処理に入れる。
 
 - [ ] when! や if! などで定義したシンボルをクロージャで使用する場合の対応。
-
-- [ ] lune_set_block_var のタイミングで var の確保を行なう。
 
 - [ ] any のメンバに確保に使用した allocateor を保持させ、
       gc の処理で free する際にそれを使用する。
@@ -508,6 +509,7 @@ fn func() {
 - [ ] 関数内クラス、クラス内クラスに対応する。
      現状は関数内でクラス宣言できるが、
      メソッド宣言をクラス宣言外部で行なった場合などのケアが出来ていない。
+- [ ] lune_set_block_var のタイミングで var の確保を行なう。
   
       
 

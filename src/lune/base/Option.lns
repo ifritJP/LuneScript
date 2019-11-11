@@ -286,7 +286,7 @@ usage:
                let! path = getNextOp() {
                   path = ".";
                };
-               option.scriptPath = path .. "/lns_buintin.lns";
+               option.scriptPath = path .. "/lns_builtin.lns";
                option.mode = .Builtin;
             }
             case "-r" {

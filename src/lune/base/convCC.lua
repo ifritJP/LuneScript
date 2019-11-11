@@ -1347,6 +1347,8 @@ function convFilter:processInitModule( node )
    
    self.processMode = ProcessMode.InitModule
    
+   self:writeln( "static void lune_init_builtinSub( lune_env_t * _pEnv );" )
+   
    local function process( out2HMode )
    
       self:write( string.format( "%svoid lune_init_%s( %s _pEnv )", getOut2HeaderPrefix( out2HMode ), self.moduleCtrl:getFullName( node:get_moduleTypeInfo() ), cTypeEnvP) )
@@ -1394,20 +1396,26 @@ function convFilter:processInitModule( node )
    
    self:writeln( "lune_enter_block( _pEnv, 0, 0, 0 );" )
    
-   for __index, declAlgeNode in pairs( node:get_nodeManager():getDeclAlgeNodeList(  ) ) do
-      filter( declAlgeNode, self, node )
-   end
-   
-   
-   for __index, child in pairs( node:get_children() ) do
-      do
-         local _switchExp = child:get_kind()
-         if _switchExp == Nodes.NodeKind.get_DeclAlge() or _switchExp == Nodes.NodeKind.get_DeclFunc() or _switchExp == Nodes.NodeKind.get_DeclMacro() then
-         else 
-            
-               filter( child, self, node )
-               self:writeln( "" )
+   if self.outputBuiltinFlag then
+      self:writeln( "lune_init_builtinSub( _pEnv );" )
+   else
+    
+      for __index, declAlgeNode in pairs( node:get_nodeManager():getDeclAlgeNodeList(  ) ) do
+         filter( declAlgeNode, self, node )
+      end
+      
+      
+      for __index, child in pairs( node:get_children() ) do
+         do
+            local _switchExp = child:get_kind()
+            if _switchExp == Nodes.NodeKind.get_DeclAlge() or _switchExp == Nodes.NodeKind.get_DeclFunc() or _switchExp == Nodes.NodeKind.get_DeclMacro() then
+            else 
+               
+                  filter( child, self, node )
+                  self:writeln( "" )
+            end
          end
+         
       end
       
    end
@@ -1524,10 +1532,10 @@ function BuiltinArgSymbolInfo:get_namespaceTypeInfo()
 end
 
 
-function convFilter:processBuiltin(  )
+local function registerBuiltin(  )
 
-   local buintin = TransUnit.getBuiltinFunc(  )
-   for symbol, __val in pairs( buintin:get_allSymbol() ) do
+   local builtin = TransUnit.getBuiltinFunc(  )
+   for symbol, __val in pairs( builtin:get_allSymbol() ) do
       local param
       
       do
@@ -1539,21 +1547,26 @@ function convFilter:processBuiltin(  )
             param = createSymbolParam( symbol, getValKind( symbol:get_typeInfo() ), getCType( symbol:get_typeInfo() ) )
          else 
             
-               Util.err( string.format( "illeal symbol -- %s %d", symbol:get_name(), 1145) )
+               Util.err( string.format( "illeal symbol -- %s %d", symbol:get_name(), 1152) )
          end
       end
       
       symbol:set_convModuleParam( param )
    end
    
-   
+end
+
+function convFilter:processBuiltin(  )
+
    local nodeManager = Nodes.NodeManager.new()
    local dummyPos = Parser.Position.new(0, 0)
    
-   for __index, classInfo in pairs( buintin:get_allClass() ) do
+   local builtin = TransUnit.getBuiltinFunc(  )
+   
+   for __index, classInfo in pairs( builtin:get_allClass() ) do
       do
          local _switchExp = classInfo:get_kind()
-         if _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Set or _switchExp == Ast.TypeInfoKind.Map then
+         if _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Set or _switchExp == Ast.TypeInfoKind.Map or _switchExp == Ast.TypeInfoKind.Box then
          else 
             
                if classInfo ~= Ast.builtinTypeString then
@@ -1614,6 +1627,7 @@ function convFilter:processRoot( node, opt )
    local nodeManager
    
    
+   registerBuiltin(  )
    if self.outputBuiltinFlag then
       nodeManager = self:processBuiltin(  )
    else
@@ -1766,6 +1780,11 @@ function convFilter:processRoot( node, opt )
    
    
    self:processInitModule( node )
+   
+   if self.outputBuiltinFlag then
+      self:writeln( '#include "lns_builtinInc.c"' )
+   end
+   
    
    self.stream:switchToHeader(  )
    self:writeln( "#endif" )
@@ -2710,7 +2729,7 @@ end
 local function processMethodDeclTxt( stream, moduleCtrl, callFlag, methodTypeInfo, argList )
 
    if methodTypeInfo:get_rawTxt() ~= "__init" and not callFlag then
-      if not methodTypeInfo:get_staticFlag() then
+      if not methodTypeInfo:get_staticFlag() or not Ast.isPubToExternal( methodTypeInfo:get_accessMode() ) or not Ast.isPubToExternal( methodTypeInfo:get_parentInfo():get_accessMode() ) then
          stream:write( "static " )
       end
       
@@ -2899,8 +2918,10 @@ local function processDefaultCtor( stream, moduleCtrl, scopeMgr, node )
    local className = moduleCtrl:getClassCName( node:get_expType() )
    
    if not node:hasUserInit(  ) then
-      local ctorType = _lune.unwrap( node:get_scope():getTypeInfoField( "__init", true, node:get_scope(), scopeAccess ))
       stream:write( string.format( "static void u_mtd_%s___init( lune_env_t * _pEnv, %s pAny", className, cTypeAnyP) )
+      
+      local ctorType = _lune.unwrap( node:get_scope():getTypeInfoField( "__init", true, node:get_scope(), scopeAccess ))
+      
       for index, argType in pairs( ctorType:get_argTypeInfoList() ) do
          stream:write( string.format( ", %s _arg%d", getCType( argType ), index) )
       end
@@ -2937,7 +2958,7 @@ local function processDefaultCtor( stream, moduleCtrl, scopeMgr, node )
                else 
                   
                      Util.err( string.format( "no support -- %s:%s:%d", member:get_name().txt, ValKind:_getTxt( valKind)
-                     , 2652) )
+                     , 2673) )
                end
             end
             
@@ -3143,18 +3164,21 @@ function convFilter:processDeclClassDef( node )
    
    self:writeln( string.format( "lune_class_new_( _pEnv, %s, pAny, pObj );", className) )
    
-   self:write( string.format( "u_mtd_%s___init( _pEnv, pAny", className) )
-   
-   local scope = _lune.unwrap( node:get_expType():get_scope())
    if not self.outputBuiltinFlag then
-      local initFuncType = _lune.unwrap( scope:getTypeInfoField( "__init", true, scope, scopeAccess ))
-      for index, argType in pairs( initFuncType:get_argTypeInfoList() ) do
-         self:write( string.format( ", arg%d", index) )
+      self:write( string.format( "u_mtd_%s___init( _pEnv, pAny", className) )
+      
+      local scope = _lune.unwrap( node:get_expType():get_scope())
+      if not self.outputBuiltinFlag then
+         local initFuncType = _lune.unwrap( scope:getTypeInfoField( "__init", true, scope, scopeAccess ))
+         for index, argType in pairs( initFuncType:get_argTypeInfoList() ) do
+            self:write( string.format( ", arg%d", index) )
+         end
+         
       end
       
+      self:writeln( ");" )
    end
    
-   self:writeln( ");" )
    
    self:writeln( "pObj->pImp = &pObj->imp;" )
    self:writeln( "pObj->imp.sentinel.type = lune_value_type_none;" )
@@ -3205,7 +3229,7 @@ function convFilter:processDeclClassDef( node )
                else 
                   
                      Util.err( string.format( "no support -- %s:%s:%d", member:get_symbolInfo():get_name(), ValKind:_getTxt( valKind)
-                     , 2916) )
+                     , 2938) )
                end
             end
             
@@ -3366,9 +3390,41 @@ local function processClassDataInit( stream, moduleCtrl, classTypeInfo )
    stream:popIndent(  )
    stream:writeln( "};" )
    
+   local function process( out2HMode, symbolInfo )
+   
+      do
+         local _switchExp = out2HMode
+         if _switchExp == Out2HMode.HeaderPub or _switchExp == Out2HMode.SourcePub or _switchExp == Out2HMode.SourcePri then
+            stream:writeln( string.format( "%s%s %s;", getOut2HeaderPrefix( out2HMode ), getCType( symbolInfo:get_typeInfo() ), moduleCtrl:getClassMemberName( symbolInfo )) )
+         end
+      end
+      
+   end
+   
    for __index, symbolInfo in pairs( (_lune.unwrap( classTypeInfo:get_scope()) ):get_symbol2SymbolInfoMap() ) do
       if symbolInfo:get_kind() == Ast.SymbolKind.Mbr and symbolInfo:get_staticFlag() then
-         stream:writeln( string.format( "%s %s;", getCType( symbolInfo:get_typeInfo() ), moduleCtrl:getClassMemberName( symbolInfo )) )
+         do
+            local function processwork( out2HMode )
+            
+               
+               process( out2HMode, symbolInfo )
+               
+               
+            end
+            if Ast.isPubToExternal( classTypeInfo:get_accessMode() ) and Ast.isPubToExternal( symbolInfo:get_accessMode() ) then
+               stream:switchToHeader(  )
+               processwork( Out2HMode.HeaderPub )
+               stream:returnToSource(  )
+               
+               processwork( Out2HMode.SourcePub )
+            else
+             
+               processwork( Out2HMode.SourcePri )
+            end
+            
+         end
+         
+         
       end
       
    end
@@ -3451,13 +3507,21 @@ function convFilter:processDeclMethodInfo( declInfo, funcTypeInfo, parent )
                
                   do
                      local _switchExp = out2HMode
-                     if _switchExp == Out2HMode.SourcePri or _switchExp == Out2HMode.SourcePub then
-                        if funcTypeInfo:get_parentInfo():get_kind() == Ast.TypeInfoKind.Class and not funcTypeInfo:get_staticFlag() then
+                     if _switchExp == Out2HMode.SourcePri then
+                        if funcTypeInfo:get_parentInfo():get_kind() == Ast.TypeInfoKind.Class then
                            processMethodDeclTxt( self.stream, self.moduleCtrl, false, funcTypeInfo, declInfo:get_argList() )
                            self:writeln( ";" )
                         end
                         
-                        processHeader( out2HMode )
+                     elseif _switchExp == Out2HMode.SourcePub then
+                        if funcTypeInfo:get_parentInfo():get_kind() == Ast.TypeInfoKind.Class then
+                           if not funcTypeInfo:get_staticFlag() then
+                              processMethodDeclTxt( self.stream, self.moduleCtrl, false, funcTypeInfo, declInfo:get_argList() )
+                              self:writeln( ";" )
+                           end
+                           
+                        end
+                        
                      elseif _switchExp == Out2HMode.HeaderPub then
                         processHeader( out2HMode )
                      end
@@ -3651,7 +3715,7 @@ function convFilter:processSym2Any( symbol )
       else 
          
             Util.err( string.format( "not suppport -- %s, %d", ValKind:_getTxt( valKind)
-            , 3485) )
+            , 3529) )
       end
    end
    
@@ -3747,7 +3811,7 @@ function convFilter:processVal2any( node, parent )
       else 
          
             Util.err( string.format( "not suppport -- %s, %d", ValKind:_getTxt( valKind)
-            , 3601) )
+            , 3645) )
       end
    end
    
@@ -3796,7 +3860,7 @@ function convFilter:processSetValSingleDirect( parent, node, var, initFlag, expV
       
       Util.err( string.format( "illegal %s %s -- %d", ValKind:_getTxt( valKind)
       , ValKind:_getTxt( expValKind)
-      , 3655) )
+      , 3699) )
    end
    
    
@@ -5460,7 +5524,7 @@ function convFilter:processExpUnwrap( node, opt )
                   self:write( "lune_unwrap_any( " )
                else 
                   
-                     Util.err( string.format( "no support -- %d", 5586) )
+                     Util.err( string.format( "no support -- %d", 5630) )
                end
             end
             
@@ -5957,11 +6021,7 @@ function convFilter:processDeclClass( node, opt )
          do
             local _switchExp = classType:get_kind()
             if _switchExp == Ast.TypeInfoKind.Class then
-               
-               if not self.outputBuiltinFlag then
-                  processIFMethodDataInit( self.stream, self.moduleCtrl, classType, classType )
-               end
-               
+               processIFMethodDataInit( self.stream, self.moduleCtrl, classType, classType )
                
                processClassDataInit( self.stream, self.moduleCtrl, classType )
             elseif _switchExp == Ast.TypeInfoKind.IF then
@@ -6771,7 +6831,7 @@ function convFilter:processReturn( node, opt )
                   filter( expList[1], self, node )
                else 
                   
-                     Util.err( string.format( "no support -- %d", 7407) )
+                     Util.err( string.format( "no support -- %d", 7449) )
                end
             end
             
@@ -6790,7 +6850,7 @@ function convFilter:processReturn( node, opt )
                elseif _switchExp == ValKind.Prim then
                else 
                   
-                     Util.err( string.format( "no support -- %d", 7426) )
+                     Util.err( string.format( "no support -- %d", 7468) )
                end
             end
             

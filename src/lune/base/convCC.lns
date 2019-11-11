@@ -992,6 +992,8 @@ fn convFilter.processInitModule( node: Nodes.RootNode ) mut
    
    self.processMode = .InitModule;
 
+   self.writeln( "static void lune_init_builtinSub( lune_env_t * _pEnv );" );
+   
    fn process( out2HMode:Out2HMode ) {
       self.write(
          "%svoid lune_init_%s( %s _pEnv )"
@@ -1032,23 +1034,28 @@ fn convFilter.processInitModule( node: Nodes.RootNode ) mut
    // init ブロック内の managedStemTop 用ブロック作成
    self.writeln( "lune_enter_block( _pEnv, 0, 0, 0 );" );
 
-   foreach declAlgeNode in node.$nodeManager.getDeclAlgeNodeList() {
-      filter( declAlgeNode, self, node );
+   if self.outputBuiltinFlag {
+      self.writeln( "lune_init_builtinSub( _pEnv );" );
    }
-   
-   foreach child in node.$children {
-      switch child.$kind {
-         case Nodes.NodeKind.$DeclAlge,
-              //Nodes.NodeKind.$DeclClass,
-              Nodes.NodeKind.$DeclFunc,
-              Nodes.NodeKind.$DeclMacro
-         {
-            //filter( child, self, node );
-            //self.writeln( "" );
-         }
-         default {
-            filter( child, self, node );
-            self.writeln( "" );
+   else {
+      foreach declAlgeNode in node.$nodeManager.getDeclAlgeNodeList() {
+         filter( declAlgeNode, self, node );
+      }
+      
+      foreach child in node.$children {
+         switch child.$kind {
+            case Nodes.NodeKind.$DeclAlge,
+                 //Nodes.NodeKind.$DeclClass,
+                 Nodes.NodeKind.$DeclFunc,
+                 Nodes.NodeKind.$DeclMacro
+            {
+               //filter( child, self, node );
+               //self.writeln( "" );
+            }
+            default {
+               filter( child, self, node );
+               self.writeln( "" );
+            }
          }
       }
    }
@@ -1126,9 +1133,9 @@ class BuiltinArgSymbolInfo extend Ast.SymbolInfo {
    }
 }
 
-fn convFilter.processBuiltin() : &Nodes.NodeManager {
-   let buintin = TransUnit.getBuiltinFunc();
-   foreach symbol in buintin.$allSymbol {
+fn registerBuiltin() {
+   let builtin = TransUnit.getBuiltinFunc();
+   foreach symbol in builtin.$allSymbol {
       let param;
       switch symbol.$kind {
          case .Mtd, .Fun {
@@ -1147,14 +1154,18 @@ fn convFilter.processBuiltin() : &Nodes.NodeManager {
       }
       symbol.set_convModuleParam( param );
    }
+}
 
-
+fn convFilter.processBuiltin() : &Nodes.NodeManager
+{
    let mut nodeManager = new Nodes.NodeManager();
    let mut dummyPos = new Parser.Position( 0, 0 );
+
+   let builtin = TransUnit.getBuiltinFunc();
    
-   foreach classInfo in buintin.$allClass {
+   foreach classInfo in builtin.$allClass {
       switch classInfo.$kind {
-         case .List, .Array, .Set, .Map {
+         case .List, .Array, .Set, .Map, .Box {
          }
          default {
             if classInfo ~= Ast.builtinTypeString {
@@ -1210,6 +1221,7 @@ pub override fn convFilter.processRoot(
 {
    let nodeManager;
 
+   registerBuiltin();
    if self.outputBuiltinFlag {
       nodeManager = self.processBuiltin();
    }
@@ -1346,6 +1358,10 @@ pub override fn convFilter.processRoot(
 
 
    self.processInitModule( node );
+
+   if self.outputBuiltinFlag {
+      self.writeln( '#include "lns_builtinInc.c"' );
+   }
    
 
    self.stream.switchToHeader();
@@ -2462,7 +2478,10 @@ fn processMethodDeclTxt(
    callFlag:bool, methodTypeInfo:&Ast.TypeInfo, argList:&List<&Nodes.Node>! )
 {
    if methodTypeInfo.$rawTxt ~= "__init" and not callFlag {
-      if not methodTypeInfo.$staticFlag {
+      if not methodTypeInfo.$staticFlag or
+         not Ast.isPubToExternal( methodTypeInfo.$accessMode ) or
+         not Ast.isPubToExternal( methodTypeInfo.$parentInfo.$accessMode )
+      {
          stream.write( "static " );
       }
    }
@@ -2605,11 +2624,13 @@ fn processDefaultCtor(
 
    if not node.hasUserInit() {
       // デフォルトコンストラクタの処理
-      let ctorType = unwrap node.$scope.getTypeInfoField(
-         "__init", true, node.$scope, scopeAccess );
       stream.write(
          "static void u_mtd_%s___init( lune_env_t * _pEnv, %s pAny"
          (className, cTypeAnyP ) );
+
+      let ctorType = unwrap node.$scope.getTypeInfoField(
+         "__init", true, node.$scope, scopeAccess );
+      
       foreach argType, index in ctorType.$argTypeInfoList {
          stream.write(
             ", %s _arg%d"
@@ -2827,15 +2848,15 @@ fn convFilter.processDeclClassDef( node:&Nodes.DeclClassNode ) mut
    self.popIndent();
    self.writeln( "}" );
 
-   // if not self.outputBuiltinFlag {
-      // デフォルトコンストラクタの定義
-      processNewConstrProto( self.stream, self.moduleCtrl, node, .SourcePub,
-                             self.outputBuiltinFlag );
-      self.writeln( "{" );
-      self.pushIndent(##);
-      
-      self.writeln( "lune_class_new_( _pEnv, %s, pAny, pObj );" (className) );
+   // デフォルトコンストラクタの定義
+   processNewConstrProto( self.stream, self.moduleCtrl, node, .SourcePub,
+                          self.outputBuiltinFlag );
+   self.writeln( "{" );
+   self.pushIndent(##);
+   
+   self.writeln( "lune_class_new_( _pEnv, %s, pAny, pObj );" (className) );
 
+   if not self.outputBuiltinFlag {
       self.write( "u_mtd_%s___init( _pEnv, pAny" ( className ) );
 
       let scope = unwrap node.$expType.$scope;
@@ -2846,16 +2867,17 @@ fn convFilter.processDeclClassDef( node:&Nodes.DeclClassNode ) mut
          }
       }
       self.writeln( ");" );
-      
-      self.writeln( "pObj->pImp = &pObj->imp;" );
-      self.writeln( "pObj->imp.sentinel.type = lune_value_type_none;" );
-      
-      processIFObjInit( self.stream, self.moduleCtrl, node.$expType, node.$expType );
+   }
+   
+   self.writeln( "pObj->pImp = &pObj->imp;" );
+   self.writeln( "pObj->imp.sentinel.type = lune_value_type_none;" );
+   
+   processIFObjInit( self.stream, self.moduleCtrl, node.$expType, node.$expType );
 
-      self.writeln( "return pAny;" );
-      self.popIndent();
-      self.writeln( "}" );
-   // }
+   self.writeln( "return pAny;" );
+   self.popIndent();
+   self.writeln( "}" );
+
 
    // アクセッサの定義
    foreach member in node.$memberList {
@@ -3044,13 +3066,29 @@ fn processClassDataInit(
    stream.popIndent();
    stream.writeln( "};" );
 
+   fn process( out2HMode:Out2HMode, symbolInfo:&Ast.SymbolInfo ) {
+      switch out2HMode {
+         case .HeaderPub, .SourcePub, .SourcePri {
+            stream.writeln( "%s%s %s;"
+               ( getOut2HeaderPrefix( out2HMode ),
+                 getCType( symbolInfo.$typeInfo ),
+                 moduleCtrl.getClassMemberName( symbolInfo ) ) );
+         }
+      }
+   }
+   
    // static メンバー用変数宣言
    foreach symbolInfo in (unwrap classTypeInfo.$scope).$symbol2SymbolInfoMap {
       if symbolInfo.$kind == .Mbr and symbolInfo.$staticFlag {
-         stream.writeln( "%s %s;" ( getCType( symbolInfo.$typeInfo ),
-                                    moduleCtrl.getClassMemberName( symbolInfo ) ) );
+         _out2Header(
+            stream,
+            `{ Ast.isPubToExternal( classTypeInfo.$accessMode ) and
+               Ast.isPubToExternal( symbolInfo.$accessMode ) },
+            `{ process( out2HMode, symbolInfo ); } );
       }
    }
+   
+   
 }
 
 pub override fn convFilter.processDeclMember(
@@ -3208,17 +3246,23 @@ fn convFilter.processDeclMethodInfo(
                self.stream,
                `{ Ast.isPubToExternal( funcTypeInfo.$parentInfo.$accessMode ) and
                   Ast.isPubToExternal( funcTypeInfo.$accessMode ) },
-               `{ 
+               `{
                   switch out2HMode {
-                     case .SourcePri, .SourcePub {
-                        if funcTypeInfo.$parentInfo.$kind == .Class and
-                           not funcTypeInfo.$staticFlag
-                        {
+                     case .SourcePri {
+                        if funcTypeInfo.$parentInfo.$kind == .Class {
                            processMethodDeclTxt( self.stream, self.moduleCtrl, false,
                                                  funcTypeInfo, declInfo.$argList );
                            self.writeln( ";" );
                         }
-                        processHeader( out2HMode );
+                     }
+                     case .SourcePub {
+                        if funcTypeInfo.$parentInfo.$kind == .Class {
+                           if not funcTypeInfo.$staticFlag {
+                              processMethodDeclTxt( self.stream, self.moduleCtrl, false,
+                                                    funcTypeInfo, declInfo.$argList );
+                              self.writeln( ";" );
+                           }
+                        }
                      }
                      case .HeaderPub {
                         processHeader( out2HMode );
@@ -6066,10 +6110,8 @@ pub override fn convFilter.processDeclClass(
          switch classType.$kind {
             case .Class {
                // インタフェース情報設定
-               if not self.outputBuiltinFlag {
-                  processIFMethodDataInit(
-                     self.stream, self.moduleCtrl, classType, classType );
-               }
+               processIFMethodDataInit(
+                  self.stream, self.moduleCtrl, classType, classType );
                
                processClassDataInit( self.stream, self.moduleCtrl, classType );
             }

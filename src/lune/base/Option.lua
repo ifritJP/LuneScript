@@ -195,7 +195,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 2358
+   return 2359
 end
 
 
@@ -528,7 +528,7 @@ usage:
                   path = "."
                end
                
-               option.scriptPath = path .. "/lns_buintin.lns"
+               option.scriptPath = path .. "/lns_builtin.lns"
                option.mode = ModeKind.Builtin
             elseif _switchExp == "-r" then
                option.useLuneModule = string.format( "lune.base._lune%d", Ver.luaModVersion)

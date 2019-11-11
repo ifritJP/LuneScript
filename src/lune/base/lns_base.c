@@ -1450,6 +1450,8 @@ int lua_main( lua_State * pLua ) {
     lune_createGlobalEnv();
     
     lune_env_t * _pEnv = lune_createEnv( pLua );
+
+    lune_init_lns_builtin( _pEnv );
     
     lune_run_module( _pEnv );
 

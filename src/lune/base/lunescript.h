@@ -808,6 +808,7 @@ extern "C" {
 
 #include <lns_collection.h>
 #include <lns_luaWrapper.h>
+#include <lns_builtin.h>
 
 #endif
 

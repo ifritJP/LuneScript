@@ -1,1 +1,4 @@
 print( "hoge" );
+io.stdout.write( "age\n" );
+
+
