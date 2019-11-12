@@ -9813,48 +9813,49 @@ function LiteralStringNode:canBeStatement(  )
 
    return false
 end
-function LiteralStringNode.new( id, pos, typeList, token, argList )
+function LiteralStringNode.new( id, pos, typeList, token, expList )
    local obj = {}
    LiteralStringNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, typeList, token, argList ); end
+   if obj.__init then obj:__init( id, pos, typeList, token, expList ); end
    return obj
 end
-function LiteralStringNode:__init(id, pos, typeList, token, argList) 
+function LiteralStringNode:__init(id, pos, typeList, token, expList) 
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['LiteralString']), pos, typeList)
    
    
    
    self.token = token
-   self.argList = argList
+   self.expList = expList
    
    
 end
-function LiteralStringNode.create( nodeMan, pos, typeList, token, argList )
+function LiteralStringNode.create( nodeMan, pos, typeList, token, expList )
 
-   local node = LiteralStringNode.new(nodeMan:nextId(  ), pos, typeList, token, argList)
+   local node = LiteralStringNode.new(nodeMan:nextId(  ), pos, typeList, token, expList)
    nodeMan:addNode( node )
    return node
 end
 function LiteralStringNode:visit( visitor, depth )
 
    do
-      local list = self.argList
-      for __index, child in pairs( list ) do
-         do
-            local _switchExp = visitor( child, self, 'argList', depth )
-            if _switchExp == NodeVisitMode.Child then
-               if not child:visit( visitor, depth + 1 ) then
+      do
+         local child = self.expList
+         if child ~= nil then
+            do
+               local _switchExp = visitor( child, self, 'expList', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1 ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
                   return false
                end
-               
-            elseif _switchExp == NodeVisitMode.End then
-               return false
             end
+            
+            
          end
-         
-         
       end
-      
       
    end
    
@@ -9868,8 +9869,8 @@ end
 function LiteralStringNode:get_token()
    return self.token
 end
-function LiteralStringNode:get_argList()
-   return self.argList
+function LiteralStringNode:get_expList()
+   return self.expList
 end
 
 
@@ -10493,21 +10494,25 @@ function LiteralStringNode:getLiteral(  )
       txt = txt:sub( 2, -2 )
    end
    
-   local argList = self:get_argList()
    
-   if #argList > 0 then
-      local paramList = {}
-      for __index, argNode in pairs( argList ) do
-         local arg, mess = argNode:getLiteral(  )
-         if arg ~= nil then
-            paramList[#paramList + 1] = getLiteralObj( arg )
-         else
-            return nil, mess
+   do
+      local expList = self:get_expList()
+      if expList ~= nil then
+         local argList = expList:get_expList()
+         
+         local paramList = {}
+         for __index, argNode in pairs( argList ) do
+            local arg, mess = argNode:getLiteral(  )
+            if arg ~= nil then
+               paramList[#paramList + 1] = getLiteralObj( arg )
+            else
+               return nil, mess
+            end
+            
          end
          
+         txt = string.format( txt, table.unpack( paramList ) )
       end
-      
-      txt = string.format( txt, table.unpack( paramList ) )
    end
    
    return _lune.newAlge( Literal.Str, {txt}), nil
@@ -10517,19 +10522,22 @@ end
 function LiteralStringNode:setupLiteralTokenList( list )
 
    self:addTokenList( list, Parser.TokenKind.Str, self.token.txt )
-   if #self:get_argList() > 0 then
-      self:addTokenList( list, Parser.TokenKind.Dlmt, self.token.txt )
-      for index, argNode in pairs( self:get_argList() ) do
-         if index > 1 then
-            self:addTokenList( list, Parser.TokenKind.Dlmt, "," )
-         end
-         
-         if not argNode:setupLiteralTokenList( list ) then
-            return false
+   do
+      local expList = self:get_expList()
+      if expList ~= nil then
+         self:addTokenList( list, Parser.TokenKind.Dlmt, self.token.txt )
+         for index, argNode in pairs( expList:get_expList() ) do
+            if index > 1 then
+               self:addTokenList( list, Parser.TokenKind.Dlmt, "," )
+            end
+            
+            if not argNode:setupLiteralTokenList( list ) then
+               return false
+            end
+            
          end
          
       end
-      
    end
    
    return true

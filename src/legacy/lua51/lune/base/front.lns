@@ -912,7 +912,7 @@ pub fn Front.saveToC( ast:&TransUnit.ASTInfo ) mut {
 }
 
 pub fn Front.outputBuiltin() mut {
-   let mod = scriptPath2Module( "builtin" );
+   let mod = scriptPath2Module( "lns_builtin" );
 
    let ast = self.createAst(
       new frontInterface.ImportModuleInfo(),

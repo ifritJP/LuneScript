@@ -5,9 +5,10 @@ TEST_OUT=test.exe
 CORE_SRCS += lune/base/runtime_c/lns_main.c
 CORE_SRCS += lune/base/runtime_c/lns_base.c
 CORE_SRCS += lune/base/runtime_c/lns_builtin.c
+CORE_SRCS += lune/base/runtime_c/lns_builtinSub.c
 CORE_SRCS += lune/base/runtime_c/lns_collection.cxx
 CORE_SRCS += lune/base/runtime_c/lns_alloc.cxx
-CORE_SRCS += lune/base/runtime_c/lns_luaWrapper.cxx
+CORE_SRCS += lune/base/runtime_c/lns_luaWrapper.c
 
 SRCS += lune/base/test.c
 
@@ -15,8 +16,8 @@ OBJS =
 OBJS += $(addprefix work/c/,$(addsuffix .o,$(notdir $(basename $(CORE_SRCS)))))
 OBJS += $(addprefix work/c/,$(addsuffix .o,$(notdir $(basename $(SRCS)))))
 
-vpath %.c lune/base work
-vpath %.cxx lune/base
+vpath %.c lune/base/runtime_c work
+vpath %.cxx lune/base/runtime_c
 
 LUA_INC_DIR=
 LUA_LIB=
@@ -33,7 +34,12 @@ work/c/%.o: %.c
 work/c/%.o: %.cxx
 	g++ $(CFLAGS) -o $@ $<
 
+%.lc: %
+	lctags build gcc $(CFLAGS) $<
+
 all: build
+
+lctags: $(addsuffix .lc,$(CORE_SRCS))
 
 
 $(OBJS): lune/base/runtime_c/*.h

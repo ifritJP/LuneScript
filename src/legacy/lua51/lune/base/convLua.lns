@@ -3177,10 +3177,11 @@ pub override fn convFilter.processLiteralString(
    }
    let opList = TransUnit.findForm( txt );
 
-   let argList = node.get_argList();
-   if #argList > 0 {
+   if! let expList = node.$expList {
+      let mRetIndex = expList.$mRetExp$.$index;
+      
       self.write( string.format( 'string.format( %s, ', txt ) );
-      foreach val, index in argList {
+      foreach val, index in expList.$expList {
          if index > 1 {
             self.write( ", " );
          }
@@ -3197,6 +3198,9 @@ pub override fn convFilter.processLiteralString(
          }
          else {
             filter( val, self, node );
+         }
+         if index == mRetIndex {
+            break;
          }
       }
       self.write( ")" );

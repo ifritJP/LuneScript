@@ -979,3 +979,11 @@ fn func3( val:int, val2:real, val3:bool ):int, real, bool {
    }
    func();
 }
+{
+   _section();
+   fn func():int,real,bool,str,int!,Map<int,int> {
+      return 1,2.5,false,"abc",nil,{};
+   }
+   print( "hoge:%d,%g,%s,%s,%s,%s" (func()) );
+   io.stdout.write( "age\n" );
+}

@@ -1300,3 +1300,10 @@ print( '\\""\"\'\\.\\' );
    Macro._section();
    print( SUB2._Test() );
 }
+{
+   Macro._section();
+   fn func():int,real,bool,str,int! {
+      return 1,2.5,false,"abc",nil;
+   }
+   print( "hoge:%d,%g,%s,%s,%s" (func()) ); // skip-lua51
+}

@@ -3814,35 +3814,42 @@ function convFilter:processLiteralString( node, opt )
    
    local opList = TransUnit.findForm( txt )
    
-   local argList = node:get_argList(  )
-   if #argList > 0 then
-      self:write( string.format( 'string.format( %s, ', txt ) )
-      for index, val in pairs( argList ) do
-         if index > 1 then
-            self:write( ", " )
+   do
+      local expList = node:get_expList()
+      if expList ~= nil then
+         local mRetIndex = _lune.nilacc( expList:get_mRetExp(), 'get_index', 'callmtd' )
+         
+         self:write( string.format( 'string.format( %s, ', txt ) )
+         for index, val in pairs( expList:get_expList() ) do
+            if index > 1 then
+               self:write( ", " )
+            end
+            
+            
+            local matchFlag = TransUnit.FormType.Match
+            if index <= #opList then
+               matchFlag = TransUnit.isMatchStringFormatType( opList[index], val:get_expType(), self.targetLuaVer )
+            end
+            
+            if matchFlag == TransUnit.FormType.NeedConv then
+               self:write( "tostring( " )
+               filter( val, self, node )
+               self:write( ")" )
+            else
+             
+               filter( val, self, node )
+            end
+            
+            if index == mRetIndex then
+               break
+            end
+            
          end
          
-         
-         local matchFlag = TransUnit.FormType.Match
-         if index <= #opList then
-            matchFlag = TransUnit.isMatchStringFormatType( opList[index], val:get_expType(), self.targetLuaVer )
-         end
-         
-         if matchFlag == TransUnit.FormType.NeedConv then
-            self:write( "tostring( " )
-            filter( val, self, node )
-            self:write( ")" )
-         else
-          
-            filter( val, self, node )
-         end
-         
+         self:write( ")" )
+      else
+         self:write( txt )
       end
-      
-      self:write( ")" )
-   else
-    
-      self:write( txt )
    end
    
 end
@@ -3907,7 +3914,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3267, function (  )
+   Log.log( Log.Level.Info, __func__, 3271, function (  )
    
       return string.format( "code: %s", code)
    end )

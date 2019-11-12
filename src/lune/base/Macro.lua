@@ -917,7 +917,7 @@ function MacroCtrl:expandSymbol( parser, prefixToken, exp, nodeManager, errMessL
    end
    
    local newToken = Parser.Token.new(Parser.TokenKind.Str, format, prefixToken.pos, prefixToken.consecutive)
-   local literalStr = Nodes.LiteralStringNode.create( nodeManager, prefixToken.pos, {Ast.builtinTypeString}, newToken, {exp} )
+   local literalStr = Nodes.LiteralStringNode.create( nodeManager, prefixToken.pos, {Ast.builtinTypeString}, newToken, Nodes.ExpListNode.create( nodeManager, exp:get_pos(), exp:get_expTypeList(), {exp}, nil, false ) )
    return literalStr
 end
 

@@ -297,6 +297,8 @@ enum ProcessMode {
    InitModule,
    /** 中間処理 */
    Intermediate,
+   /** string format */
+   StringFormat,
    /** クラス定義 */
    DefClass,
    /** 内部関数 */
@@ -992,7 +994,9 @@ fn convFilter.processInitModule( node: Nodes.RootNode ) mut
    
    self.processMode = .InitModule;
 
-   self.writeln( "static void lune_init_builtinSub( lune_env_t * _pEnv );" );
+   if self.outputBuiltinFlag {
+      self.writeln( "static void lune_init_builtinSub( lune_env_t * _pEnv );" );
+   }
    
    fn process( out2HMode:Out2HMode ) {
       self.write(
@@ -1288,6 +1292,9 @@ pub override fn convFilter.processRoot(
    foreach dddNode in nodeManager.getExpToDDDNodeList() {
       filter( dddNode, self, node );
    }
+   foreach litStr in nodeManager.getLiteralStringNodeList() {
+      filter( litStr, self, node );
+   }
 
    self.processMode = .WideScopeVer;
    foreach child in children {
@@ -1302,7 +1309,14 @@ pub override fn convFilter.processRoot(
       filter( declClassNode, self, node );
    }
 
+   self.processMode = .StringFormat;
+   foreach litStr in nodeManager.getLiteralStringNodeList() {
+      filter( litStr, self, node );
+   }
+   
    self.processMode = .Immediate;
+
+   
    self.processedNodeSet = (@);
 
    fn procssLiteralCtor( literalNodeList:&List<&Nodes.Node> ) {
@@ -5686,7 +5700,8 @@ alge MRetInfo {
    FormFunc( refNode:&Nodes.ExpRefNode),
    Method( methodType:&Ast.TypeInfo),
    Func( refNode:&Nodes.Node ),
-   DDD( exp2DDD:&Nodes.ExpToDDDNode),
+   DDD( expList:&Nodes.ExpListNode ),
+   Format( format:str, expList:&Nodes.ExpListNode ),
 }
 
 pub fn convFilter.processCallWithMRet(
@@ -5732,11 +5747,14 @@ pub fn convFilter.processCallWithMRet(
          case .Func(funcNode) {
             processArgs();
          }
+         case .Format(format,node) {
+            processArgs();
+         }
       }
    }
    
    switch self.processMode {
-      case .Intermediate {
+      case .Intermediate, .StringFormat {
          processDeclMRetProto();
          self.writeln( "// %d" (parent.$pos.lineNo) );
          self.writeln( "{" );
@@ -5838,7 +5856,13 @@ pub fn convFilter.processCallWithMRet(
                      self.write( "arg%d )" ( index ) );
                   }
                   default {
-                     self.write( "arg%d" ( index ) );
+                     if getValKind( argTypeList[ index ] ) == .Any {
+                        self.write( "LUNE_STEM_ANY(" );
+                        self.write( "arg%d )" ( index ) );
+                     }
+                     else {
+                        self.write( "arg%d" ( index ) );
+                     }
                   }
                }
                // if index >= mRetExp.$index {
@@ -5889,14 +5913,20 @@ pub fn convFilter.processCallWithMRet(
                }
                self.write( " _pEnv" );
             }
-            case .DDD(node) {
+            case .DDD( expListNode ) {
                processSetArg( true );
                wroteArgFlag = true;
-               // self.write( "lune_createDDD" );
-               // let expList = node.$expList.$expList;
-               // let lastExp = expList[ #expList ];
-               // self.write( "( _pEnv, %s, %d" ( Nodes.hasMultiValNode( lastExp ), #expList ) );
-               processCreateDDD( node.$expList.$expList );
+               processCreateDDD( expListNode.$expList );
+            }
+            case .Format( format, expListNode ) {
+               processSetArg( true );
+               wroteArgFlag = true;
+               self.write( "u_mtd_string_format( _pEnv, " );
+               self.write( "lune_litStr2any( _pEnv," );
+               self.write( format );
+               self.write( "), " );
+               processCreateDDD( expListNode.$expList );
+               self.write( ")" );
             }
          }
 
@@ -5931,7 +5961,7 @@ pub override fn convFilter.processExpToDDD( node: Nodes.ExpToDDDNode, opt: Opt )
                // ここでは index が 1 以上のものだけを処理する。
                self.processCallWithMRet(
                   node, getMRetFuncName( node ), cTypeStem,
-                  #node.$expList.$expList, MRetInfo.DDD( node ), node.$expList );
+                  #node.$expList.$expList, MRetInfo.DDD( node.$expList ), node.$expList );
             }
          }
          return;
@@ -5957,27 +5987,10 @@ pub override fn convFilter.processExpToDDD( node: Nodes.ExpToDDDNode, opt: Opt )
       let lastExp = expList[ #expList ];
       self.write( "( _pEnv, %s, %d" ( Nodes.hasMultiValNode( lastExp ), #expList ) );
 
-      // let mut processed = false;
-      // if #node.$expType.$itemTypeInfoList > 0 {
-      //    let itemType = node.$expType.$itemTypeInfoList[ 1 ].$srcTypeInfo.$nonnilableType;
-
-      //    if Ast.isNumberType( itemType ) {
-      //       // DDD が 数値に限定されている場合、
-      //       // ExpMultiTo1 の型が 数値の nilable になるので、
-      //       // any にしておく必要がある。
-      //       processed = true;
-      //       foreach exp in expList {
-      //          self.write( ", " );
-      //          self.processVal2stem( exp, node );
-      //       }
-      //    }
-      // }
-      // if not processed { 
-         foreach exp in expList {
-            self.write( ", " );
-            self.processVal2stem( exp, node );
-         }
-      // }
+      foreach exp in expList {
+         self.write( ", " );
+         self.processVal2stem( exp, node );
+      }
    }
    self.write( ")" );
 }
@@ -7564,7 +7577,7 @@ fn convFilter.processLiteralVal( exp:&Nodes.Node, parent:&Nodes.Node ) mut {
       }
       case Ast.builtinTypeString {
          if! let strNode = exp@@@Nodes.LiteralStringNode { 
-            if #strNode.$argList == 0 {
+            if not strNode.$expList {
                self.write( "lune_imdStr( %s )" (strNode.$token.txt ) );
                return;
             }
@@ -7836,32 +7849,108 @@ pub override fn convFilter.processLiteralReal(
 pub override fn convFilter.processLiteralString(
    node: Nodes.LiteralStringNode, opt: Opt ) mut
 {
-   
-   let mut txt = node.get_token().txt;
+   let mut txt = node.$token.txt;
    if string.find( txt, '^```' ## ) {
       txt = ('%q' ( txt.sub( 4, -4 ) )).gsub( "\\\n", "\\n" );
    }
-   let opList = TransUnit.findForm( txt );
 
-   self.write( "lune_litStr2any( _pEnv, " );
-   
-   let argList = node.get_argList();
-   if #argList > 0 {
-      self.write( string.format( 'string.format( %s, ', txt ) );
-      foreach val, index in argList {
-         if index > 1 {
-            self.write( ", " );
+   switch self.processMode {
+      case .Prototype {
+         if! let expListNode = node.$expList {
+            if! let mRetExp = expListNode.$mRetExp {
+               self.processCallWithMRet(
+                  node, getMRetFuncName( node ), cTypeAnyP, #expListNode.$expList,
+                  MRetInfo.Format( txt, expListNode ), expListNode );
+            }
+            else {
+               self.write( "static %s lune_litstr_%d( %s _pEnv"
+                             (cTypeAnyP, node.$id, cTypeEnvP ) );
+               foreach exp, index in expListNode.$expList {
+                  self.write( ", %s arg%d" ( cTypeStem, index ) );
+               }
+               self.writeln( ");" );
+            }
          }
-
-         filter( val, self, node );
+         return;
       }
-      self.write( ")" );
+      case .StringFormat {
+         if! let expListNode = node.$expList {
+            if! let mRetExp = expListNode.$mRetExp {
+               //self.write( "%s( _pEnv" ( getMRetFuncName( node ) ) );
+               // foreach exp, index in expListNode.$expList {
+               //    if index > mRetExp.$index {
+               //       break;   
+               //    }
+               //    self.write( ", " );
+               //    filter( exp, self, node );
+               // }
+               self.processCallWithMRet(
+                  node, getMRetFuncName( node ), cTypeAnyP, #expListNode.$expList,
+                  MRetInfo.Format( txt, expListNode ), expListNode );
+            }
+            else {
+               self.write( "static %s lune_litstr_%d( %s _pEnv"
+                  (cTypeAnyP, node.$id, cTypeEnvP ) );
+               foreach exp, index in expListNode.$expList {
+                  self.write( ", %s arg%d" ( cTypeStem, index ) );
+               }
+               self.writeln( ")" );
+               self.writeln( "{" );
+               self.pushIndent( ## );
+
+               self.write( "return u_mtd_string_format( _pEnv, " );
+               self.write( "lune_litStr2any( _pEnv, " );
+               self.write( txt );
+               self.write( "), " );
+
+               let expList = expListNode.$expList;
+               self.write( "lune_createDDD" );
+               let lastExp = expList[ #expList ];
+               self.write( "( _pEnv, %s, %d" ( Nodes.hasMultiValNode( lastExp ), #expList ) );
+
+               for index = 1, #expList {
+                  self.write( ", arg%d" (index));
+               }
+               self.writeln( ") );" );
+               
+               self.popIndent();
+               self.writeln( "}" );
+            }
+         }
+         return;
+      }
+   }
+
+  
+   if! let expListNode = node.$expList {
+      if! let mRetExp = expListNode.$mRetExp {
+         self.write( "%s( _pEnv" ( getMRetFuncName( node ) ) );
+         foreach exp, index in expListNode.$expList {
+            if index > mRetExp.$index {
+               break;   
+            }
+            self.write( ", " );
+            filter( exp, self, node );
+         }
+         self.write(")" );
+      }
+      else {
+         self.write( "lune_litstr_%d( _pEnv " ( node.$id ) );
+         foreach exp in expListNode.$expList {
+            self.write( ", " );
+            self.processVal2stem( exp, node );
+         }
+         self.write(")" );
+      }
    }
    else {
-      self.write( txt );
-   }
+      let opList = TransUnit.findForm( txt );
 
-   self.write( ")" );
+      self.write( "lune_litStr2any( _pEnv, " );
+      self.write( txt );
+
+      self.write( ")" );
+   }
 };
 
 pub override fn convFilter.processLiteralBool(

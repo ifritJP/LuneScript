@@ -1340,7 +1340,7 @@ end
 
 function Front:outputBuiltin(  )
 
-   local mod = scriptPath2Module( "builtin" )
+   local mod = scriptPath2Module( "lns_builtin" )
    
    local ast = self:createAst( frontInterface.ImportModuleInfo.new(), Parser.DummyParser.new(), mod, frontInterface.ModuleId.createId( 0.0, 0 ), nil, TransUnit.AnalyzeMode.Compile )
    

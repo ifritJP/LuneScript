@@ -832,3 +832,7 @@ test-mkbuiltin:
 	$(call transwork,.,.,,base/convCC)
 	lua5.3 lune/base/base.lua --mkbuiltin lune/base/runtime_c
 	$(MAKE) test-miniC
+
+lctags:
+	$(MAKE) -f Makefile.ccc lctags
+

@@ -1308,17 +1308,13 @@ function FormatterFilter:processLiteralString( node, opt )
 
    self:write( node:get_token().txt )
    
-   if #node:get_argList() > 0 then
-      self:write( " ( " )
-      for index, param in pairs( node:get_argList() ) do
-         if index > 1 then
-            self:write( ", " )
-         end
-         
-         filter( param, self, opt:nextOpt( node ) )
+   do
+      local expList = node:get_expList()
+      if expList ~= nil then
+         self:write( " ( " )
+         filter( expList, self, opt:nextOpt( node ) )
+         self:write( " )" )
       end
-      
-      self:write( " )" )
    end
    
 end

@@ -616,7 +616,9 @@ pub fn MacroCtrl.expandSymbol(
    let newToken = new Parser.Token(
       Parser.TokenKind.Str, format, prefixToken.pos, prefixToken.consecutive ## );
    let literalStr = Nodes.LiteralStringNode.create(
-      nodeManager, prefixToken.pos, [ Ast.builtinTypeString ], newToken, [ exp ] );
+      nodeManager, prefixToken.pos, [ Ast.builtinTypeString ], newToken,
+      Nodes.ExpListNode.create(
+         nodeManager, exp.$pos, exp.$expTypeList, [ exp ], nil, false ) );
    return literalStr;
 }
 

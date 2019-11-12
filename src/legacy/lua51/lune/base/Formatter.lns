@@ -907,14 +907,9 @@ pub override fn FormatterFilter.processLiteralString(
 {
    self.write( node.$token.txt );
 
-   if #node.$argList > 0 {
+   if! let expList = node.$expList {
       self.write( " ( " );
-      foreach param, index in node.$argList {
-         if index > 1 {
-            self.write( ", " );
-         }
-         filter( param, self, opt.nextOpt( node ) );
-      }
+      filter( expList, self, opt.nextOpt( node ) );
       self.write( " )" );
    }
 };

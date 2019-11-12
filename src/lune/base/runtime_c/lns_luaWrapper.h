@@ -34,5 +34,8 @@ extern bool lune_lua_itMap_hasNext(
 extern void lune_lua_itMap_getEntry(
     lune_env_t * _pEnv, lune_any_t * _itAny, lune_Map_entry_t * pEntry );
 
+extern void lune_pushAnyVal( lune_env_t * _pEnv, void * pKey );
+extern void lune_lua_stack2str( lune_env_t * _pEnv, int index, lune_stem_t * pStem );
+
 
 #endif

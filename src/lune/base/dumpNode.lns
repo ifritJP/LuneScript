@@ -776,8 +776,10 @@ pub override fn dumpFilter.processLiteralString(
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node, node.get_token().txt );
-   foreach param in node.$argList {
-      filter( param, self, opt.nextOpt() );
+   if! let expList = node.$expList {
+      foreach param in expList.$expList {
+         filter( param, self, opt.nextOpt() );
+      }
    }
 };
 pub override fn dumpFilter.processLiteralBool(

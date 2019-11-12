@@ -1653,7 +1653,7 @@ _declNodeClass( "LiteralMap", Node, false, true, false,
 
 _declNodeClass( "LiteralString", Node, false, true, false,
                 [ { "token": "&Parser.Token" },
-                  { "argList": "&List<&Node>" } ]
+                  { "expList": "&ExpListNode!" } ]
 );
 
 _declNodeClass( "LiteralBool", Node, false, true, false,
@@ -1971,9 +1971,10 @@ pub override fn LiteralStringNode.getLiteral(): Literal!, str! {
    else {
       txt = txt.sub( 2, -2 );
    }
-   let argList = self.$argList;
 
-   if #argList > 0 {
+   if! let expList = self.$expList {
+      let argList = expList.$expList;
+
       let mut paramList:List<stem!> = [];
       foreach argNode in argList {
          let arg, mess = argNode.getLiteral();
@@ -1992,9 +1993,9 @@ pub override fn LiteralStringNode.getLiteral(): Literal!, str! {
 pub override fn LiteralStringNode.setupLiteralTokenList( list: List<&Parser.Token> ): bool
 {
    self.addTokenList( list, .Str, self.token.txt );
-   if #self.$argList > 0 {
+   if! let expList = self.$expList {
       self.addTokenList( list, .Dlmt, self.token.txt );
-      foreach argNode, index in self.$argList {
+      foreach argNode, index in expList.$expList {
          if index > 1 {
             self.addTokenList( list, .Dlmt, "," );
          }

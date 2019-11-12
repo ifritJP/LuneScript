@@ -641,15 +641,18 @@ ProcessMode.__allList[4] = ProcessMode.InitModule
 ProcessMode.Intermediate = 4
 ProcessMode._val2NameMap[4] = 'Intermediate'
 ProcessMode.__allList[5] = ProcessMode.Intermediate
-ProcessMode.DefClass = 5
-ProcessMode._val2NameMap[5] = 'DefClass'
-ProcessMode.__allList[6] = ProcessMode.DefClass
-ProcessMode.Form = 6
-ProcessMode._val2NameMap[6] = 'Form'
-ProcessMode.__allList[7] = ProcessMode.Form
-ProcessMode.Immediate = 7
-ProcessMode._val2NameMap[7] = 'Immediate'
-ProcessMode.__allList[8] = ProcessMode.Immediate
+ProcessMode.StringFormat = 5
+ProcessMode._val2NameMap[5] = 'StringFormat'
+ProcessMode.__allList[6] = ProcessMode.StringFormat
+ProcessMode.DefClass = 6
+ProcessMode._val2NameMap[6] = 'DefClass'
+ProcessMode.__allList[7] = ProcessMode.DefClass
+ProcessMode.Form = 7
+ProcessMode._val2NameMap[7] = 'Form'
+ProcessMode.__allList[8] = ProcessMode.Form
+ProcessMode.Immediate = 8
+ProcessMode._val2NameMap[8] = 'Immediate'
+ProcessMode.__allList[9] = ProcessMode.Immediate
 
 
 local ModuleCtrl = {}
@@ -1077,7 +1080,7 @@ function ScopeMgr:getSymbolParam( symbol )
       
    end
    
-   Util.err( string.format( "illegal symbol -- %s %d", symbol:get_name(), 667) )
+   Util.err( string.format( "illegal symbol -- %s %d", symbol:get_name(), 669) )
 end
 function ScopeMgr:getSymbolValKind( symbol )
 
@@ -1347,7 +1350,10 @@ function convFilter:processInitModule( node )
    
    self.processMode = ProcessMode.InitModule
    
-   self:writeln( "static void lune_init_builtinSub( lune_env_t * _pEnv );" )
+   if self.outputBuiltinFlag then
+      self:writeln( "static void lune_init_builtinSub( lune_env_t * _pEnv );" )
+   end
+   
    
    local function process( out2HMode )
    
@@ -1547,7 +1553,7 @@ local function registerBuiltin(  )
             param = createSymbolParam( symbol, getValKind( symbol:get_typeInfo() ), getCType( symbol:get_typeInfo() ) )
          else 
             
-               Util.err( string.format( "illeal symbol -- %s %d", symbol:get_name(), 1152) )
+               Util.err( string.format( "illeal symbol -- %s %d", symbol:get_name(), 1156) )
          end
       end
       
@@ -1696,6 +1702,10 @@ function convFilter:processRoot( node, opt )
       filter( dddNode, self, node )
    end
    
+   for __index, litStr in pairs( nodeManager:getLiteralStringNodeList(  ) ) do
+      filter( litStr, self, node )
+   end
+   
    
    self.processMode = ProcessMode.WideScopeVer
    for __index, child in pairs( children ) do
@@ -1714,7 +1724,14 @@ function convFilter:processRoot( node, opt )
    end
    
    
+   self.processMode = ProcessMode.StringFormat
+   for __index, litStr in pairs( nodeManager:getLiteralStringNodeList(  ) ) do
+      filter( litStr, self, node )
+   end
+   
+   
    self.processMode = ProcessMode.Immediate
+   
    self.processedNodeSet = {}
    
    local function procssLiteralCtor( literalNodeList )
@@ -2958,7 +2975,7 @@ local function processDefaultCtor( stream, moduleCtrl, scopeMgr, node )
                else 
                   
                      Util.err( string.format( "no support -- %s:%s:%d", member:get_name().txt, ValKind:_getTxt( valKind)
-                     , 2673) )
+                     , 2687) )
                end
             end
             
@@ -3229,7 +3246,7 @@ function convFilter:processDeclClassDef( node )
                else 
                   
                      Util.err( string.format( "no support -- %s:%s:%d", member:get_symbolInfo():get_name(), ValKind:_getTxt( valKind)
-                     , 2938) )
+                     , 2952) )
                end
             end
             
@@ -3715,7 +3732,7 @@ function convFilter:processSym2Any( symbol )
       else 
          
             Util.err( string.format( "not suppport -- %s, %d", ValKind:_getTxt( valKind)
-            , 3529) )
+            , 3543) )
       end
    end
    
@@ -3811,7 +3828,7 @@ function convFilter:processVal2any( node, parent )
       else 
          
             Util.err( string.format( "not suppport -- %s, %d", ValKind:_getTxt( valKind)
-            , 3645) )
+            , 3659) )
       end
    end
    
@@ -3860,7 +3877,7 @@ function convFilter:processSetValSingleDirect( parent, node, var, initFlag, expV
       
       Util.err( string.format( "illegal %s %s -- %d", ValKind:_getTxt( valKind)
       , ValKind:_getTxt( expValKind)
-      , 3699) )
+      , 3713) )
    end
    
    
@@ -5524,7 +5541,7 @@ function convFilter:processExpUnwrap( node, opt )
                   self:write( "lune_unwrap_any( " )
                else 
                   
-                     Util.err( string.format( "no support -- %d", 5630) )
+                     Util.err( string.format( "no support -- %d", 5644) )
                end
             end
             
@@ -5583,12 +5600,14 @@ function MRetInfo._from( val )
    return _lune._AlgeFrom( MRetInfo, val )
 end
 
-MRetInfo.DDD = { "DDD", {{ func=Nodes.ExpToDDDNode._fromMap, nilable=false, child={} }}}
+MRetInfo.DDD = { "DDD", {{ func=Nodes.ExpListNode._fromMap, nilable=false, child={} }}}
 MRetInfo._name2Val["DDD"] = MRetInfo.DDD
 MRetInfo.Form = { "Form"}
 MRetInfo._name2Val["Form"] = MRetInfo.Form
 MRetInfo.FormFunc = { "FormFunc", {{ func=Nodes.ExpRefNode._fromMap, nilable=false, child={} }}}
 MRetInfo._name2Val["FormFunc"] = MRetInfo.FormFunc
+MRetInfo.Format = { "Format", {{ func=_lune._toStr, nilable=false, child={} },{ func=Nodes.ExpListNode._fromMap, nilable=false, child={} }}}
+MRetInfo._name2Val["Format"] = MRetInfo.Format
 MRetInfo.Func = { "Func", {{ func=Nodes.Node._fromMap, nilable=false, child={} }}}
 MRetInfo._name2Val["Func"] = MRetInfo.Func
 MRetInfo.Method = { "Method", {{ func=Ast.TypeInfo._fromMap, nilable=false, child={} }}}
@@ -5647,6 +5666,11 @@ function convFilter:processCallWithMRet( parent, mRetFuncName, retTypeName, func
             local funcNode = _matchExp[2][1]
          
             processArgs(  )
+         elseif _matchExp[1] == MRetInfo.Format[1] then
+            local format = _matchExp[2][1]
+            local node = _matchExp[2][2]
+         
+            processArgs(  )
          end
       end
       
@@ -5654,7 +5678,7 @@ function convFilter:processCallWithMRet( parent, mRetFuncName, retTypeName, func
    
    do
       local _switchExp = self.processMode
-      if _switchExp == ProcessMode.Intermediate then
+      if _switchExp == ProcessMode.Intermediate or _switchExp == ProcessMode.StringFormat then
          processDeclMRetProto(  )
          self:writeln( string.format( "// %d", parent:get_pos().lineNo) )
          self:writeln( "{" )
@@ -5767,7 +5791,14 @@ function convFilter:processCallWithMRet( parent, mRetFuncName, retTypeName, func
                      self:write( string.format( "arg%d )", index) )
                   else 
                      
-                        self:write( string.format( "arg%d", index) )
+                        if getValKind( argTypeList[index] ) == ValKind.Any then
+                           self:write( "LUNE_STEM_ANY(" )
+                           self:write( string.format( "arg%d )", index) )
+                        else
+                         
+                           self:write( string.format( "arg%d", index) )
+                        end
+                        
                   end
                end
                
@@ -5814,11 +5845,23 @@ function convFilter:processCallWithMRet( parent, mRetFuncName, retTypeName, func
                
                self:write( " _pEnv" )
             elseif _matchExp[1] == MRetInfo.DDD[1] then
-               local node = _matchExp[2][1]
+               local expListNode = _matchExp[2][1]
             
                processSetArg( true )
                wroteArgFlag = true
-               processCreateDDD( node:get_expList():get_expList() )
+               processCreateDDD( expListNode:get_expList() )
+            elseif _matchExp[1] == MRetInfo.Format[1] then
+               local format = _matchExp[2][1]
+               local expListNode = _matchExp[2][2]
+            
+               processSetArg( true )
+               wroteArgFlag = true
+               self:write( "u_mtd_string_format( _pEnv, " )
+               self:write( "lune_litStr2any( _pEnv," )
+               self:write( format )
+               self:write( "), " )
+               processCreateDDD( expListNode:get_expList() )
+               self:write( ")" )
             end
          end
          
@@ -5857,7 +5900,7 @@ function convFilter:processExpToDDD( node, opt )
             local mRetExp = node:get_expList():get_mRetExp()
             if mRetExp ~= nil then
                if mRetExp:get_index() > 0 then
-                  self:processCallWithMRet( node, getMRetFuncName( node ), cTypeStem, #node:get_expList():get_expList(), _lune.newAlge( MRetInfo.DDD, {node}), node:get_expList() )
+                  self:processCallWithMRet( node, getMRetFuncName( node ), cTypeStem, #node:get_expList():get_expList(), _lune.newAlge( MRetInfo.DDD, {node:get_expList()}), node:get_expList() )
                end
                
             end
@@ -6831,7 +6874,7 @@ function convFilter:processReturn( node, opt )
                   filter( expList[1], self, node )
                else 
                   
-                     Util.err( string.format( "no support -- %d", 7449) )
+                     Util.err( string.format( "no support -- %d", 7462) )
                end
             end
             
@@ -6850,7 +6893,7 @@ function convFilter:processReturn( node, opt )
                elseif _switchExp == ValKind.Prim then
                else 
                   
-                     Util.err( string.format( "no support -- %d", 7468) )
+                     Util.err( string.format( "no support -- %d", 7481) )
                end
             end
             
@@ -6949,7 +6992,7 @@ function convFilter:processLiteralVal( exp, parent )
          do
             local strNode = _lune.__Cast( exp, 3, Nodes.LiteralStringNode )
             if strNode ~= nil then
-               if #strNode:get_argList() == 0 then
+               if not strNode:get_expList() then
                   self:write( string.format( "lune_imdStr( %s )", strNode:get_token().txt) )
                   return 
                end
@@ -7260,36 +7303,121 @@ end
 
 function convFilter:processLiteralString( node, opt )
 
-   
-   local txt = node:get_token(  ).txt
+   local txt = node:get_token().txt
    if string.find( txt, '^```' ) then
       txt = (string.format( '%q', txt:sub( 4, -4 )) ):gsub( "\\\n", "\\n" )
    end
    
-   local opList = TransUnit.findForm( txt )
    
-   self:write( "lune_litStr2any( _pEnv, " )
-   
-   local argList = node:get_argList(  )
-   if #argList > 0 then
-      self:write( string.format( 'string.format( %s, ', txt ) )
-      for index, val in pairs( argList ) do
-         if index > 1 then
-            self:write( ", " )
+   do
+      local _switchExp = self.processMode
+      if _switchExp == ProcessMode.Prototype then
+         do
+            local expListNode = node:get_expList()
+            if expListNode ~= nil then
+               do
+                  local mRetExp = expListNode:get_mRetExp()
+                  if mRetExp ~= nil then
+                     self:processCallWithMRet( node, getMRetFuncName( node ), cTypeAnyP, #expListNode:get_expList(), _lune.newAlge( MRetInfo.Format, {txt,expListNode}), expListNode )
+                  else
+                     self:write( string.format( "static %s lune_litstr_%d( %s _pEnv", cTypeAnyP, node:get_id(), cTypeEnvP) )
+                     for index, exp in pairs( expListNode:get_expList() ) do
+                        self:write( string.format( ", %s arg%d", cTypeStem, index) )
+                     end
+                     
+                     self:writeln( ");" )
+                  end
+               end
+               
+            end
          end
          
+         return 
+      elseif _switchExp == ProcessMode.StringFormat then
+         do
+            local expListNode = node:get_expList()
+            if expListNode ~= nil then
+               do
+                  local mRetExp = expListNode:get_mRetExp()
+                  if mRetExp ~= nil then
+                     self:processCallWithMRet( node, getMRetFuncName( node ), cTypeAnyP, #expListNode:get_expList(), _lune.newAlge( MRetInfo.Format, {txt,expListNode}), expListNode )
+                  else
+                     self:write( string.format( "static %s lune_litstr_%d( %s _pEnv", cTypeAnyP, node:get_id(), cTypeEnvP) )
+                     for index, exp in pairs( expListNode:get_expList() ) do
+                        self:write( string.format( ", %s arg%d", cTypeStem, index) )
+                     end
+                     
+                     self:writeln( ")" )
+                     self:writeln( "{" )
+                     self:pushIndent(  )
+                     
+                     self:write( "return u_mtd_string_format( _pEnv, " )
+                     self:write( "lune_litStr2any( _pEnv, " )
+                     self:write( txt )
+                     self:write( "), " )
+                     
+                     local expList = expListNode:get_expList()
+                     self:write( "lune_createDDD" )
+                     local lastExp = expList[#expList]
+                     self:write( string.format( "( _pEnv, %s, %d", Nodes.hasMultiValNode( lastExp ), #expList) )
+                     
+                     for index = 1, #expList do
+                        self:write( string.format( ", arg%d", index) )
+                     end
+                     
+                     self:writeln( ") );" )
+                     
+                     self:popIndent(  )
+                     self:writeln( "}" )
+                  end
+               end
+               
+            end
+         end
          
-         filter( val, self, node )
+         return 
       end
-      
-      self:write( ")" )
-   else
-    
-      self:write( txt )
    end
    
    
-   self:write( ")" )
+   do
+      local expListNode = node:get_expList()
+      if expListNode ~= nil then
+         do
+            local mRetExp = expListNode:get_mRetExp()
+            if mRetExp ~= nil then
+               self:write( string.format( "%s( _pEnv", getMRetFuncName( node )) )
+               for index, exp in pairs( expListNode:get_expList() ) do
+                  if index > mRetExp:get_index() then
+                     break
+                  end
+                  
+                  self:write( ", " )
+                  filter( exp, self, node )
+               end
+               
+               self:write( ")" )
+            else
+               self:write( string.format( "lune_litstr_%d( _pEnv ", node:get_id()) )
+               for __index, exp in pairs( expListNode:get_expList() ) do
+                  self:write( ", " )
+                  self:processVal2stem( exp, node )
+               end
+               
+               self:write( ")" )
+            end
+         end
+         
+      else
+         local opList = TransUnit.findForm( txt )
+         
+         self:write( "lune_litStr2any( _pEnv, " )
+         self:write( txt )
+         
+         self:write( ")" )
+      end
+   end
+   
 end
 
 

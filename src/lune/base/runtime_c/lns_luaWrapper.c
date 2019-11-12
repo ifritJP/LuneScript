@@ -49,7 +49,7 @@ static void lune_getAccessName( const void * pKey, char * pBuf )
 /**
 pAny が保持する Lua モジュールを push する。
  */
-static void lune_pushAnyVal( lune_env_t * _pEnv, void * pKey )
+void lune_pushAnyVal( lune_env_t * _pEnv, void * pKey )
 {
     // __lune_vals[ name ] に保持している値を取り出す。
     // ただし、このままだと __lune_vals 自体がスタックに残るので、
@@ -84,7 +84,10 @@ static void lune_setAnyVal( lune_env_t * _pEnv, void * pKey )
     lua_pop( _pEnv->pLua, 2 );
 }
 
-static void lune_lua_stack2str( lune_env_t * _pEnv, int index, lune_stem_t * pStem )
+/**
+スタックの index の位置にある文字列を lune_stem_t にセットする。
+ */
+void lune_lua_stack2str( lune_env_t * _pEnv, int index, lune_stem_t * pStem )
 {
     size_t len;
     const char * pMess = lua_tolstring( _pEnv->pLua, index, &len );

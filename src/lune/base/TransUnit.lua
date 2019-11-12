@@ -10457,7 +10457,7 @@ function TransUnit:analyzeExpMacroStat( firstToken )
          end
          
          local newToken = Parser.Token.new(token.kind, string.format( format, token.txt ), token.pos, consecutive)
-         local literalStr = Nodes.LiteralStringNode.create( self.nodeManager, token.pos, {Ast.builtinTypeString}, newToken, {} )
+         local literalStr = Nodes.LiteralStringNode.create( self.nodeManager, token.pos, {Ast.builtinTypeString}, newToken, nil )
          table.insert( expStrList, literalStr )
       end
       
@@ -10923,19 +10923,22 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, prevOpLevel, expectTy
       exp = Nodes.LiteralCharNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeChar}, token, num )
    elseif token.kind == Parser.TokenKind.Str then
       local nextToken = self:getToken(  )
-      local formatArgList = {}
+      local expList
+      
       if nextToken.txt == "(" then
          local argNodeList = self:analyzeExpList( false, false, nil )
+         expList = argNodeList
          self:checkNextToken( ")" )
          nextToken = self:getToken(  )
          
-         formatArgList = argNodeList:get_expList()
-         
          self:checkStringFormat( token.pos, token.txt, argNodeList:get_expTypeList() )
+      else
+       
+         expList = nil
       end
       
       
-      exp = Nodes.LiteralStringNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeString}, token, formatArgList )
+      exp = Nodes.LiteralStringNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeString}, token, expList )
       token = nextToken
       if token.txt == "[" or token.txt == "$[" then
          exp = self:analyzeExpRefItem( token, exp, token.txt == "$[" )

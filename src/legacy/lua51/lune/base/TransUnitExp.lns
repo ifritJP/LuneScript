@@ -2734,7 +2734,7 @@ fn TransUnit.analyzeExpMacroStat( firstToken: &Parser.Token ) mut : Nodes.ExpMac
          let newToken = new Parser.Token(
             token.kind, string.format( format, token.txt ), token.pos, consecutive ## );
          let literalStr = Nodes.LiteralStringNode.create(
-            self.nodeManager, token.pos, [ Ast.builtinTypeString ], newToken, [] );
+            self.nodeManager, token.pos, [ Ast.builtinTypeString ], newToken, nil );
          expStrList.insert( literalStr );
       }
       prevToken = token;
@@ -3202,20 +3202,21 @@ fn TransUnit.analyzeExp(
    }  
    elseif token.kind == Parser.TokenKind.Str {
       let mut nextToken = self.getToken(##);
-      let mut formatArgList:&List<&Nodes.Node> = [];
+      let expList:&Nodes.ExpListNode!;
       if nextToken.txt == "(" {
          let argNodeList = self.analyzeExpList( false, false, nil ## );
+         expList = argNodeList;
          self.checkNextToken( ")" );
          nextToken = self.getToken(##);
 
-         formatArgList = argNodeList.$expList;
-
          self.checkStringFormat( token.pos, token.txt, argNodeList.$expTypeList );
-      }  
+      }
+      else {
+         expList = nil;
+      }
 
       exp = Nodes.LiteralStringNode.create(
-         self.nodeManager, firstToken.pos,
-         [ Ast.builtinTypeString ], token, formatArgList );
+         self.nodeManager, firstToken.pos, [ Ast.builtinTypeString ], token, expList );
       token = nextToken;
       if token.txt == "[" or token.txt == "$[" {
          exp = self.analyzeExpRefItem( token, exp, token.txt == "$[" );
