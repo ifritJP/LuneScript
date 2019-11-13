@@ -535,6 +535,7 @@ function convFilter:outputMeta( node )
    self:writeln( string.format( "_moduleObj.__formatVersion = '%s'", Ver.metaVersion) )
    self:writeln( string.format( "_moduleObj.__buildId = %q", node:get_moduleId():getNextModuleId(  ):get_idStr()) )
    self:writeln( string.format( "_moduleObj.__enableTest = %s", tostring( self.enableTest)) )
+   self:writeln( string.format( "_moduleObj.__hasTest = %s", tostring( #node:get_nodeManager():getTestBlockNodeList(  ) ~= 0)) )
    
    local importModuleType2Index = {}
    local importNameMap = {}
@@ -3915,7 +3916,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3271, function (  )
+   Log.log( Log.Level.Info, __func__, 3273, function (  )
    
       return string.format( "code: %s", code)
    end )

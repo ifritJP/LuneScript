@@ -1645,7 +1645,7 @@ fn TransUnit.dumpComp(
          let typeInfo = symbolInfo.$typeInfo;
          writer.write( "type", "%s" ( symbolInfo.$kind.$_txt ) );
          switch ( symbolInfo.$kind ) {
-            case .Mtd, .Fun {
+            case .Mtd, .Fun, .Mac {
                writer.write( "displayTxt", "$%s"
                              ( (typeInfo.$rawTxt.gsub( "^get_", "")) ) );
             }  
@@ -1660,7 +1660,7 @@ fn TransUnit.dumpComp(
          let typeInfo = symbolInfo.$typeInfo;
          writer.write( "type", "%s" ( symbolInfo.$kind.$_txt ) );
          switch ( symbolInfo.$kind ) {
-            case .Fun, .Mtd {
+            case .Fun, .Mtd, .Mac {
                writer.write( "displayTxt", "%s" ( typeInfo.$display_stirng ) );
             }  
             case .Mbr, .Var, .Arg {

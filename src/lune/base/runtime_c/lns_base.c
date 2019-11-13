@@ -1452,7 +1452,8 @@ int lua_main( lua_State * pLua ) {
     lune_env_t * _pEnv = lune_createEnv( pLua );
 
     lune_init_lns_builtin( _pEnv );
-    
+
+    // エントリモジュールを実行する
     lune_run_module( _pEnv );
 
     lune_deleteEnv( _pEnv );

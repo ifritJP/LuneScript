@@ -42,6 +42,7 @@ let cTypeAnyPP = "lune_any_t **";
 let cTypeEnvP = "lune_env_t *";
 let cTypeVarP = "lune_var_t *";
 let cValNil = "lune_global.nilStem";
+let cValNone = "lune_global.noneStem";
 
 let accessAny = ".val.pAny";
 
@@ -578,8 +579,11 @@ class ScopeMgr {
          let mut anyNum = 0;
 
          if scope.$ownerTypeInfo$.isModule$() {
-            // モジュールの場合、グローバルな値を保持するリスト分 + 1 する
-            anyNum = anyNum + 1;
+            // モジュールの場合、
+            // lune_module_globalStemList, lune_module_path の分 + 2 する
+            anyNum = anyNum + 2;
+            //
+            
          }
 
          forsort symbol in scope.$symbol2SymbolInfoMap {
@@ -788,21 +792,21 @@ class convFilter extend Nodes.Filter<Opt> {
    // pri let mut needIndent: bool;
 
    
-   // クラス TypeId → TypeInfo
-   pri let mut classId2TypeInfo: Map<int,&Ast.TypeInfo>;
-   // クラス TypeId → Member Node List
-   pri let mut classId2MemberList: Map<int,List<&Nodes.DeclMemberNode>>;
-   // enum TypeId -> EnumTypeInfo
-   pri let mut pubEnumId2EnumTypeInfo: Map<int,&Ast.EnumTypeInfo>;
-   // enum TypeId -> AlgeTypeInfo
-   pri let mut pubAlgeId2AlgeTypeInfo: Map<int,&Ast.AlgeTypeInfo>;
+   // // クラス TypeId → TypeInfo
+   // pri let mut classId2TypeInfo: Map<int,&Ast.TypeInfo>;
+   // // クラス TypeId → Member Node List
+   // pri let mut classId2MemberList: Map<int,List<&Nodes.DeclMemberNode>>;
+   // // enum TypeId -> EnumTypeInfo
+   // pri let mut pubEnumId2EnumTypeInfo: Map<int,&Ast.EnumTypeInfo>;
+   // // enum TypeId -> AlgeTypeInfo
+   // pri let mut pubAlgeId2AlgeTypeInfo: Map<int,&Ast.AlgeTypeInfo>;
    // public 変数名 → 変数情報
    pri let mut pubVarName2InfoMap: Map<str,PubVarInfo>;
    // public 関数名 → 関数情報
    pri let mut pubFuncName2InfoMap: Map<str,PubFuncInfo>;
-   pri let mut macroDepth: int;
+   // pri let mut macroDepth: int;
    pri let moduleTypeInfo: &Ast.TypeInfo;
-   pri let moduleSymbolKind: Ast.SymbolKind;
+   // pri let moduleSymbolKind: Ast.SymbolKind;
    pri let ast:Nodes.RootNode;
    pri let mut routineInfoQueue:List<RoutineInfo>;
    pri let mut currentRoutineInfo:RoutineInfo;
@@ -818,12 +822,14 @@ class convFilter extend Nodes.Filter<Opt> {
    pri let mut scopeMgr:ScopeMgr;
 
    pri let mut outputBuiltinFlag:bool;
+   pri let mut enableTest:bool;
 
-   pub fn __init( outputBuiltin:bool, streamName: str, stream: oStream,
+   pub fn __init( enableTest:bool, outputBuiltin:bool, streamName: str, stream: oStream,
                   headerStream: oStream, ast:&TransUnit.ASTInfo )
    {
       super(ast.$moduleTypeInfo, ast.$moduleTypeInfo.$scope);
 
+      self.enableTest = enableTest;
       self.outputBuiltinFlag = outputBuiltin;
       self.scopeMgr = new ScopeMgr();
       self.processingNode = nil;
@@ -839,22 +845,22 @@ class convFilter extend Nodes.Filter<Opt> {
       self.currentRoutineInfo = new RoutineInfo( Ast.builtinTypeNone );
 
       self.moduleTypeInfo = ast.$moduleTypeInfo;
-      self.moduleSymbolKind = ast.$moduleSymbolKind;
+      // self.moduleSymbolKind = ast.$moduleSymbolKind;
       
       //Util.errorLog( "__init: %s" (mode) );
       self.ast = unwrap ast.$node@@@Nodes.RootNode;
       //self.indentQueue = [ 0 ];
-      self.macroDepth = 0;
+      // self.macroDepth = 0;
       self.streamName = streamName;
       //self.stream = stream;
       self.streamQueue = [];
       //self.curLineNo = 1;
-      self.classId2TypeInfo = {};
-      self.classId2MemberList = {};
+      // self.classId2TypeInfo = {};
+      // self.classId2MemberList = {};
       self.pubVarName2InfoMap = {};
       self.pubFuncName2InfoMap = {};
-      self.pubEnumId2EnumTypeInfo = {};
-      self.pubAlgeId2AlgeTypeInfo = {};
+      // self.pubEnumId2EnumTypeInfo = {};
+      // self.pubAlgeId2AlgeTypeInfo = {};
       //self.needIndent = false;
 
       self.moduleCtrl = new ModuleCtrl( self.$typeNameCtrl, self.$moduleInfoManager );
@@ -968,7 +974,7 @@ pub override fn convFilter.processImport(
                return;
             }
          }
-         self.writeln( "#include<%s.h>" ((node.$modulePath.gsub("%s.", "/"))) );
+         self.writeln( "#include<%s.h>" ((node.$modulePath.gsub("%.", "/"))) );
       }
       _out2Header(
          self.stream,
@@ -1032,6 +1038,11 @@ fn convFilter.processInitModule( node: Nodes.RootNode ) mut
                  (moduneBlockName) );
    self.writeln(
       "lune_setQ_any( lune_module_globalStemList, lune_class_List_new( _pEnv ));" );
+
+   self.writeln( "lune_set_block_any( %s, 1, lune_module_path);" (moduneBlockName) );
+   self.writeln(
+      'lune_setQ_any( lune_module_path, lune_litStr2any( _pEnv, "%s"));'
+      (self.moduleCtrl.getFullName( node.$moduleTypeInfo) ) );
    
 
    
@@ -1265,6 +1276,7 @@ pub override fn convFilter.processRoot(
    }
 
    self.writeln( "static %s lune_module_globalStemList;" (cTypeAnyPP) );
+   self.writeln( "static %s lune_module_path = NULL;" (cTypeAnyPP));
    
 
    self.processMode = .Prototype;
@@ -2456,6 +2468,9 @@ fn getMethodTypeTxt( retTypeList:&List<&Ast.TypeInfo> ) : str {
          }
          case Ast.builtinTypeReal {
             return "lune_method_real_t";
+         }
+         case Ast.builtinTypeBool {
+            return "lune_method_bool_t";
          }
       }
       if getValKind( retTypeList[ 1 ] ) == .Any {
@@ -4826,11 +4841,17 @@ pub override fn convFilter.processDeclForm(
             case "void" {
                process( "lune_closure( _pForm )( _pEnv, _pForm");
             }
+            case cTypeAny {
+               process( "return lune_closure_any( _pForm )( _pEnv, _pForm" );
+            }
             case cTypeInt {
                process( "return lune_closure_int( _pForm )( _pEnv, _pForm" );
             }
             case cTypeReal {
                process( "return lune_closure_real( _pForm )( _pEnv, _pForm" );
+            }
+            case cTypeBool {
+               process( "return lune_closure_bool( _pForm )( _pEnv, _pForm" );
             }
             default {
                process( "return lune_closure( _pForm )( _pEnv, _pForm" );
@@ -4842,11 +4863,17 @@ pub override fn convFilter.processDeclForm(
             case "void" {
                process( "lune_func( _pForm )( _pEnv" );
             }
+            case cTypeAnyP {
+               process( "return lune_func_any( _pForm )( _pEnv" );
+            }
             case cTypeInt {
                process( "return lune_func_int( _pForm )( _pEnv" );
             }
             case cTypeReal {
                process( "return lune_func_real( _pForm )( _pEnv" );
+            }
+            case cTypeBool {
+               process( "return lune_func_bool( _pForm )( _pEnv" );
             }
             default {
                process( "return lune_func( _pForm )( _pEnv" );
@@ -6045,7 +6072,7 @@ pub fn convFilter.processCallArgList(
                self.write( "lune_global.ddd0" );
             }
             else {
-               self.write( cValNil );
+               self.write( cValNone );
             }
          }
       }
@@ -6618,7 +6645,16 @@ pub override fn convFilter.processExpCall(
                //    self.write( "[1]" );
                //    return false;
                // }
-               // case .Class {
+               case .Class {
+                  if prefixType.equals( Ast.builtinTypeString## ) {
+                     wroteFuncFlag = true;
+                     setArgFlag = true;
+                     self.write( "u_mtd_string_%s( _pEnv, " (fieldNode.$field.txt) );
+                     filter( prefixNode, self, fieldNode );
+                  }
+
+
+                  
                //    if prefixType.isInheritFrom( Ast.builtinTypeMapping, nil ) and
                //       isGenericType( prefixType ) and
                //       ( fieldNode.$field.txt == "_fromMap" or
@@ -6636,7 +6672,7 @@ pub override fn convFilter.processExpCall(
                //       self.write( ")" );
                //       return false;
                //    }
-               // }
+               }
             }
          }
          return true;
@@ -6648,10 +6684,12 @@ pub override fn convFilter.processExpCall(
 
       if! let refNode = node.$func@@@Nodes.ExpRefNode {
          let builtinFunc = TransUnit.getBuiltinFunc();
-         
-         if refNode.$expType == builtinFunc.lune_print {
-            wroteFuncFlag = true;
-            self.write( "lune_print(" );
+
+         switch refNode.$expType {
+            case builtinFunc.lune_print {
+               wroteFuncFlag = true;
+               self.write( "lune_print(" );
+            }
          }
          // elseif refNode.$token.txt == "super" {
          //    wroteFuncFlag = true;
@@ -6660,6 +6698,18 @@ pub override fn convFilter.processExpCall(
          //    self.write( "%s.%s( self " ( self.getFullName( funcType.$parentInfo ),
          //                                 funcType.$rawTxt ) );
          // }
+      }
+
+      if not wroteFuncFlag {
+         let funcSymList = node.$func.getSymbolInfo();
+         if #funcSymList > 0 {
+            let builtinFunc = TransUnit.getBuiltinFunc();
+            let funcSym = funcSymList[ 1 ].getOrg();
+            if funcSym == builtinFunc.string_format_sym {
+               wroteFuncFlag = true;
+               self.write( "u_mtd_string_format(" );
+            }
+         }
       }
       
       if not wroteFuncFlag {
@@ -7180,6 +7230,9 @@ pub override fn convFilter.processExpRef(
       self.write( "%s.%s" ( self.getFullName( funcType.$parentInfo ),
                             funcType.$rawTxt ) );
    }
+   elseif node.$token.txt == "__mod__" {
+      self.write( "*lune_module_path" );
+   }
    elseif node.$token.txt == "..." {
       self.write( "_pDDD" );
    }
@@ -7508,6 +7561,14 @@ pub override fn convFilter.processReturn(
       self.writeln( "}" );
    }
 };
+
+pub override fn convFilter.processTestBlock( node: Nodes.TestBlockNode, opt: Opt ) mut
+{
+   if self.enableTest {
+      self.writeln( 'printf( "%s:\\n" );' (node.$name.txt) );
+      filter( node.$block, self, node );
+   }
+}
 
 pub override fn convFilter.processProvide(
    node: Nodes.ProvideNode, opt: Opt ) mut
@@ -7851,7 +7912,10 @@ pub override fn convFilter.processLiteralString(
 {
    let mut txt = node.$token.txt;
    if string.find( txt, '^```' ## ) {
-      txt = ('%q' ( txt.sub( 4, -4 ) )).gsub( "\\\n", "\\n" );
+      txt = ("%q" ( txt.sub( 4, -4 ) )).gsub( "\\\n", "\\n" );
+   }
+   elseif string.find( txt, "^'" ## ) {
+      txt = '%q' ( txt.sub( 2, -2 ) );
    }
 
    switch self.processMode {
@@ -7985,15 +8049,16 @@ pub override fn convFilter.processLiteralSymbol(
 pub override fn convFilter.processAbbr(
    node: Nodes.AbbrNode, opt: Opt ) mut
 {
-   self.write( cValNil );
+   self.write( cValNone );
 };
 
 
 pub fn createFilter(
-   outputBuiltin:bool, streamName: str, stream: oStream,
+   enableTest:bool, outputBuiltin:bool, streamName: str, stream: oStream,
    headerStream: oStream, ast:&TransUnit.ASTInfo ) : Nodes.Filter<Opt>
 {
-   return new convFilter( outputBuiltin, streamName, stream, headerStream, ast );
+   return new convFilter( enableTest, outputBuiltin,
+                          streamName, stream, headerStream, ast );
 }
 
 pub fn outputBootcode( stream: oStream, launchModuleName:str )

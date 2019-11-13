@@ -38,4 +38,5 @@ pub class _MetaInfo {
    pub let __dependModuleMap: Map<str,Map<str,stem>>;
    pub let __dependIdMap: Map<int,int[]>;
    pub let __macroName2InfoMap: Map<int,stem>;
+   pub let __hasTest: bool;
 }

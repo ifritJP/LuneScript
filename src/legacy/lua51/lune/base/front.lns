@@ -96,7 +96,7 @@ loadedMap で管理する前にシステムにロードされているため、
 後で import すると多重ロードになってしまう。
 多重ロードを防ぐため、 loadedMap で管理する前にロードされているモジュールを保持する。
 */
-   let loadedModMap:&Map<str,stem>;
+   let preloadedModMap:&Map<str,stem>;
 
    pub fn __init( option:Option.Option ) {
       self.option = option;
@@ -108,12 +108,13 @@ loadedMap で管理する前にシステムにロードされているため、
       frontInterface.setFront( self );
 
       let mut loadedMap:Map<str,stem> = {};
-      if not option.testing {
-         foreach modval, mod in Depend.getLoadedMod() {
+      foreach modval, mod in Depend.getLoadedMod() {
+         // pending:
+         if mod == "lune.base.Testing" {
             loadedMap[ mod ] = modval;
          }
       }
-      self.loadedModMap = loadedMap;
+      self.preloadedModMap = loadedMap;
    }
 
    fn getLoadInfo( mod:str ) : LoadInfo! {
@@ -513,8 +514,8 @@ fn Front.loadFile(
 {
    let meta, luaTxt = self.loadFileToLuaCode( importModuleInfo, path, mod );
    
-   if! self.loadedModMap[ mod ] {
-      return meta, _exp;
+   if! let mut preLoadInfo = self.preloadedModMap[ mod ] {
+      return meta, preLoadInfo;
    }
    return meta, unwrap loadFromLuaTxt( luaTxt );
 }
@@ -549,11 +550,16 @@ fn Front.checkUptodateMeta( metaPath:str, addSearchPath:str! ): stem! {
       return nil;
    };
    let meta = metaObj@@=Meta._MetaInfo;
-   if meta.$__formatVersion ~= Ver.metaVersion or
-      meta.$__enableTest ~= self.option.testing
-   {
+   if meta.$__formatVersion ~= Ver.metaVersion {
       return nil;
    }
+   if meta.$__hasTest {
+      // テストコードを持つモジュールは、テストモードがあっていないものは更新が必要
+      if meta.$__enableTest ~= self.option.testing {
+         return nil;
+      }
+   }
+   
    foreach dependInfo, moduleFullName in meta.__dependModuleMap {
       if! let moduleLuaPath = self.searchLuaFile( moduleFullName, addSearchPath ) {
          let moduleLnsPath = moduleLuaPath.gsub( "%.lua$", ".lns" );
@@ -598,8 +604,8 @@ fn Front.loadModule( mod:str ) mut : stem!, &stem {
                if Util.getReadyCode( lnsPath, luaPath ) {
 	          let metaPath = string.gsub( luaPath, "%.lua$", ".meta" );
 	          if Util.getReadyCode( lnsPath, metaPath ) {
-                     if! let modval = self.loadedModMap[ mod ] {
-                        loadVal = modval;
+                     if! let preLoadInfo = self.preloadedModMap[ mod ] {
+                        loadVal = preLoadInfo;
                      }
                      else {
 	                loadVal = self.loadLua( luaPath );
@@ -904,7 +910,7 @@ pub fn Front.saveToC( ast:&TransUnit.ASTInfo ) mut {
    };
 
    let mut conv = convCC.createFilter(
-      self.option.mode == .Builtin , cPath, file, hFile, ast );
+      self.option.testing, self.option.mode == .Builtin , cPath, file, hFile, ast );
    ast.$node.processFilter( conv, new convCC.Opt( ast.$node ) );
 
    file.close();
@@ -1184,6 +1190,7 @@ fn Front.outputBootC()
 pub fn Front.exec() mut
 {
    Log._log( .Trace, `{ return self.option.mode.$_txt; } );
+
    switch self.option.mode {
       case .Token {
          self.dumpTokenize();
@@ -1249,8 +1256,7 @@ pub fn exec( args: str[] ) {
 
    if option.testing {
       foreach ctrl in Testing.getCtrlList() {
-         print( "test total: %d (OK:%d, NG:%d)"
-                (ctrl.$okNum + ctrl.$ngNum,ctrl.$okNum,ctrl.$ngNum));
+         ctrl.outputResult( io.stdout );
       }
    }
 }

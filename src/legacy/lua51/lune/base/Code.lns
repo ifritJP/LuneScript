@@ -37,3 +37,11 @@ pub fn isMessageOf( id:ID, mess:str ): bool {
    }
    return false;
 }
+
+__test case1 {
+   import lune.base.Testing;
+
+   let mut ctrl = new Testing.Ctrl();
+   let code = format( .nothing_define_abbr, "test" );
+   Testing._isT( ctrl, isMessageOf( ID.nothing_define_abbr, code ) );
+}

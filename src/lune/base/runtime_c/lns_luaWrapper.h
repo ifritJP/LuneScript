@@ -36,6 +36,8 @@ extern void lune_lua_itMap_getEntry(
 
 extern void lune_pushAnyVal( lune_env_t * _pEnv, void * pKey );
 extern void lune_lua_stack2str( lune_env_t * _pEnv, int index, lune_stem_t * pStem );
+extern void lune_setupFromStack( lune_env_t * _pEnv, int index, lune_stem_t * pStem );
+
 
 
 #endif

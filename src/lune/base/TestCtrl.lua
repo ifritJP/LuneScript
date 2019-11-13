@@ -80,7 +80,7 @@ function Ctrl:run( modObj, meta )
          local testMap = modObj['__testMap']
          if testMap ~= nil then
             for name, testcase in pairs( testMap ) do
-               print( name )
+               print( string.format( "%s:", name) )
                self:runTestcase( testcase )
             end
             

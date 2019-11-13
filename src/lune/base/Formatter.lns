@@ -405,12 +405,12 @@ pub override fn FormatterFilter.processDeclArg(
 pub override fn FormatterFilter.processDeclArgDDD(
    node: &Nodes.DeclArgDDDNode, opt:Opt ) mut
 {
-   
+   self.write( "..." );
 };
 pub override fn FormatterFilter.processExpDDD(
    node: &Nodes.ExpDDDNode, opt:Opt ) mut
 {
-   
+   self.write( "..." );
 };
 pub override fn FormatterFilter.processExpSubDDD(
    node: &Nodes.ExpSubDDDNode, opt:Opt ) mut
@@ -501,14 +501,20 @@ pub override fn FormatterFilter.processDeclConstr(
 pub override fn FormatterFilter.processDeclDestr(
    node: &Nodes.DeclDestrNode, opt:Opt ) mut
 {
-   
+   self.processDeclFuncInfo( node, node.$declInfo, opt );
 };
 
 pub override fn FormatterFilter.processExpCallSuper(
    node: &Nodes.ExpCallSuperNode, opt:Opt ) mut
 {
-   
-   let typeInfo:Ast.TypeInfo = node.$superType;
+   if! let expListNode = node.$expList {
+      self.write( "super(" );
+      filter( expListNode, self, opt.nextOpt( node ) );
+      self.write( ")" );
+   }
+   else {
+      self.write( "super()" );
+   }
 };
 pub override fn FormatterFilter.processRefType(
    node: &Nodes.RefTypeNode, opt:Opt ) mut
@@ -782,7 +788,8 @@ pub override fn FormatterFilter.processRefField(
 pub override fn FormatterFilter.processExpOmitEnum(
    node: &Nodes.ExpOmitEnumNode, opt:Opt ) mut
 {
-   
+   self.write( "." );
+   self.write( node.$valToken.txt );
 };
 
 pub override fn FormatterFilter.processGetField(

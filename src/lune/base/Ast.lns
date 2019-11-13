@@ -3210,7 +3210,7 @@ pub class NormalTypeInfo extend TypeInfo {
 
    pub override fn get_display_stirng_with( raw:str ): str {
       switch self.kind {
-         case .Func, .Form, .FormFunc, .Method {
+         case .Func, .Form, .FormFunc, .Method, .Macro {
             let mut txt = raw .. "(";
             foreach argType, index in self.argTypeInfoList {
                if index ~= 1 {
@@ -4744,9 +4744,9 @@ pub static fn TypeInfo.checkMatchType(
          let workDstType = dstTypeList[ dstIndex ];
          let mut matchResult = MatchType.Match;
          if not workDstType.canEvalWith( workExpType, .SetOp, alt2type ) {
-            let message = "exp(%d) type mismatch %s <- %s"
+            let message = "exp(%d) type mismatch %s <- %s: dst %d"
                 ( dstIndex, workDstType.getTxt( defaultTypeNameCtrl## ),
-                  workExpType.getTxt( defaultTypeNameCtrl## ) );
+                  workExpType.getTxt( defaultTypeNameCtrl## ), dstIndex );
             return .Error, message;
          }
          elseif workExpType == builtinTypeAbbrNone {
@@ -4781,9 +4781,9 @@ pub static fn TypeInfo.checkMatchType(
          }
             
          if not dstType.canEvalWith( checkType, .SetOp, alt2type ) {
-            return .Error, "exp(%d) type mismatch %s <- %s"
+            return .Error, "exp(%d) type mismatch %s <- %s: src: %d"
             ( srcIndex, dstType.getTxt( defaultTypeNameCtrl## ),
-              expType.getTxt( defaultTypeNameCtrl## ) );
+              expType.getTxt( defaultTypeNameCtrl## ), srcIndex );
          }
          // let genDstType = dstType.applyGeneric( alt2type );
          // if not checkType.canEvalWith( dstType, .SetOp, alt2type ) {
@@ -4806,9 +4806,9 @@ pub static fn TypeInfo.checkMatchType(
             // dst の最終引数
             if dstType.$srcTypeInfo.$kind ~= .DDD {
                if not dstType.canEvalWith( expType, .SetOp, alt2type ) {
-                  return .Error, "exp(%d) type mismatch %s <- %s"
+                  return .Error, "exp(%d) type mismatch %s <- %s: index %d"
                   ( index, dstType.getTxt( defaultTypeNameCtrl## ),
-                    expType.getTxt(defaultTypeNameCtrl## ));
+                    expType.getTxt(defaultTypeNameCtrl## ), index);
                }
                if not allowDstShort and #dstTypeList < #expTypeList {
                   return .Error, "over exp. expect: %d: actual: %d"
@@ -4891,7 +4891,7 @@ pub static fn TypeInfo.checkMatchType(
          }
          else {
             if not dstType.canEvalWith( builtinTypeNil, .SetOp, alt2type ) {
-               return .Error, "exp(%d) type mismatch %s <- nil"
+               return .Error, "exp(%d) type mismatch %s <- nil: short"
                ( index, dstType.getTxt( defaultTypeNameCtrl## ));
             }
             return .Warn, Code.format( .nothing_define_abbr,

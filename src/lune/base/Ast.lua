@@ -4471,7 +4471,7 @@ function NormalTypeInfo:get_display_stirng_with( raw )
 
    do
       local _switchExp = self.kind
-      if _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.Form or _switchExp == TypeInfoKind.FormFunc or _switchExp == TypeInfoKind.Method then
+      if _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.Form or _switchExp == TypeInfoKind.FormFunc or _switchExp == TypeInfoKind.Method or _switchExp == TypeInfoKind.Macro then
          local txt = raw .. "("
          for index, argType in pairs( self.argTypeInfoList ) do
             if index ~= 1 then
@@ -6117,7 +6117,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
          local workDstType = dstTypeList[dstIndex]
          local matchResult = MatchType.Match
          if not workDstType:canEvalWith( workExpType, CanEvalType.SetOp, alt2type ) then
-            local message = string.format( "exp(%d) type mismatch %s <- %s", dstIndex, workDstType:getTxt( _moduleObj.defaultTypeNameCtrl ), workExpType:getTxt( _moduleObj.defaultTypeNameCtrl ))
+            local message = string.format( "exp(%d) type mismatch %s <- %s: dst %d", dstIndex, workDstType:getTxt( _moduleObj.defaultTypeNameCtrl ), workExpType:getTxt( _moduleObj.defaultTypeNameCtrl ), dstIndex)
             return MatchType.Error, message
          elseif workExpType == _moduleObj.builtinTypeAbbrNone then
             return MatchType.Warn, Code.format( Code.ID.nothing_define_abbr, string.format( "use '##', instate of %s.", workDstType:getTxt( _moduleObj.defaultTypeNameCtrl )) )
@@ -6152,7 +6152,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
          
          
          if not dstType:canEvalWith( checkType, CanEvalType.SetOp, alt2type ) then
-            return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s", srcIndex, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:getTxt( _moduleObj.defaultTypeNameCtrl ))
+            return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s: src: %d", srcIndex, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:getTxt( _moduleObj.defaultTypeNameCtrl ), srcIndex)
          end
          
          
@@ -6184,7 +6184,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
             
             if dstType:get_srcTypeInfo():get_kind() ~= TypeInfoKind.DDD then
                if not dstType:canEvalWith( expType, CanEvalType.SetOp, alt2type ) then
-                  return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:getTxt( _moduleObj.defaultTypeNameCtrl ))
+                  return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s: index %d", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:getTxt( _moduleObj.defaultTypeNameCtrl ), index)
                end
                
                if not allowDstShort and #dstTypeList < #expTypeList then
@@ -6276,7 +6276,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
          else
           
             if not dstType:canEvalWith( _moduleObj.builtinTypeNil, CanEvalType.SetOp, alt2type ) then
-               return MatchType.Error, string.format( "exp(%d) type mismatch %s <- nil", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ))
+               return MatchType.Error, string.format( "exp(%d) type mismatch %s <- nil: short", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ))
             end
             
             return MatchType.Warn, Code.format( Code.ID.nothing_define_abbr, string.format( "use '##', instate of %s.", dstType:getTxt( _moduleObj.defaultTypeNameCtrl )) )

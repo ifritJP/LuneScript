@@ -9408,7 +9408,7 @@ function TransUnit:dumpComp( writer, pattern, symbolInfo, getterFlag )
          ) )
          do
             local _switchExp = (symbolInfo:get_kind() )
-            if _switchExp == Ast.SymbolKind.Mtd or _switchExp == Ast.SymbolKind.Fun then
+            if _switchExp == Ast.SymbolKind.Mtd or _switchExp == Ast.SymbolKind.Fun or _switchExp == Ast.SymbolKind.Mac then
                writer:write( "displayTxt", string.format( "$%s", (typeInfo:get_rawTxt():gsub( "^get_", "" ) )) )
             elseif _switchExp == Ast.SymbolKind.Mbr then
                writer:write( "displayTxt", string.format( "$%s: %s", symbolInfo:get_name(), typeInfo:getTxt(  )) )
@@ -9423,7 +9423,7 @@ function TransUnit:dumpComp( writer, pattern, symbolInfo, getterFlag )
          ) )
          do
             local _switchExp = (symbolInfo:get_kind() )
-            if _switchExp == Ast.SymbolKind.Fun or _switchExp == Ast.SymbolKind.Mtd then
+            if _switchExp == Ast.SymbolKind.Fun or _switchExp == Ast.SymbolKind.Mtd or _switchExp == Ast.SymbolKind.Mac then
                writer:write( "displayTxt", string.format( "%s", typeInfo:get_display_stirng()) )
             elseif _switchExp == Ast.SymbolKind.Mbr or _switchExp == Ast.SymbolKind.Var or _switchExp == Ast.SymbolKind.Arg then
                local name = symbolInfo:get_name()

@@ -99,7 +99,7 @@ void lune_lua_stack2str( lune_env_t * _pEnv, int index, lune_stem_t * pStem )
 スタックの top の値から pStem を設定する。
 スタック top の値は取り除かれる。
  */
-static void lune_setupFromStack( lune_env_t * _pEnv, int index, lune_stem_t * pStem )
+void lune_setupFromStack( lune_env_t * _pEnv, int index, lune_stem_t * pStem )
 {
     lua_State * pLua = _pEnv->pLua;
     switch ( lua_type( pLua, index ) ) {
@@ -188,7 +188,8 @@ lune_stem_t lune__load( lune_env_t * _pEnv, lune_any_t * code, lune_stem_t newEn
 
         lune_setAnyVal( _pEnv, formObj );
 
-        if ( newEnv.type != lune_stem_type_nil ) {
+        if ( newEnv.type != lune_stem_type_nil && newEnv.type != lune_stem_type_none )
+        {
             lune_abort( "not suport" );
         }
 

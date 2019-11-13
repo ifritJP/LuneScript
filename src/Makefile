@@ -456,6 +456,7 @@ COMP_TARGETS += test/comp5.lns@1_test/comp5.lns@2_7.7.comp
 COMP_TARGETS += test/comp6.lns@1_test/comp6.lns@2_3.2.comp
 COMP_TARGETS += test/comp7.lns@1_test/comp7.lns@2_6.7.comp
 COMP_TARGETS += test/comp8.lns@1_test/comp8.lns@2_4.15.comp
+COMP_TARGETS += test/comp9.lns@1_test/comp9.lns@2_4.3.comp
 
 
 
@@ -774,25 +775,34 @@ clean-ccc:
 	LANG= $(MAKE) -f Makefile.ccc clean
 
 
-# C にトランスコンパイラしてビルド、実行、テストする
+# トランスコンパイル済みの C ソースをビルド、実行、テストする
 #
-# $1: トランスコンパイラするモジュールファイルパスのリスト
+# $1: トランスコンパイラ済みの C ソースパスのリスト
 # $2: 実行結果のログファイル名
 # $3: 実行するメインモジュールファイルパス (拡張子 .lns は付けないファイルパス)
+# $4: 比較用に実行する Lns のオプション
 define test-convC-exe
-	@$(LUA) lune/base/base.lua $3.lns bootC -oc work/boot.c
+	$(call exeLune,.,$3.lns,bootC -oc work/boot.c)
 	LANG= $(MAKE) -f Makefile.ccc "SRCS=$1 work/boot.c" TEST_OUT=test.exe \
 		LUA_INC_DIR=$(LUA_INC_DIR) LUA_LIB=$(LUA_LIB)
 	@# C へのトランスコンパイラ結果と、
 	@# Lua へのトランスコンパイラ結果で出力が同じになることを確認
 	@./test.exe | grep -v -e '^:debug:' > work/$2.c.log
-	@$(LUA) lune/base/base.lua $3.lns exe > work/$2.lua.log
+	$(call exeLune,.,$3.lns,$4,exe > work/$2.lua.log)
 	diff work/$2.c.log work/$2.lua.log
 endef
 
+# lns ソースを C へトランスコンパイルする
+#
+# $1: 実行する作業ディレクトリ
+# $2: トランスコンパイルする lns ソースのパス
+define convC
+	$(call exeLune,$1,$2,save -langC,$3)
+endef
+
 define test-convC
-	$(LUA) lune/base/base.lua $1.lns save -langC
-	$(call test-convC-exe,$1,$(basename $1),$1)
+	$(call convC,.,$(basename $1).lns)
+	$(call test-convC-exe,$1,$(basename $1),$(basename $1))
 endef
 
 
@@ -807,32 +817,41 @@ test-miniC:
 
 test-subC:
 	$(call transwork,.,.,,base/convCC)
-	$(LUA) lune/base/base.lua miniC.lns save -langC
-	$(LUA) lune/base/base.lua subC.lns save -langC
+	$(call convC,.,miniC.lns)
+	$(call convC,.,subC.lns)
 	$(call test-convC-exe,miniC.lns subC.lns,subc,miniC)
-
-
 
 
 build-cc:
 	$(MAKE) test-miniC
-	$(LUA) lune/base/base.lua ccc.lns save -langC
-	$(LUA) lune/base/base.lua subC.lns save -langC
+	$(call convC,.,ccc.lns)
+	$(call convC,.,subC.lns)
 	$(call test-convC-exe,ccc.lns subC.lns,ccc,ccc)
 
 test-formatter:
 	$(call transwork,.,.,,base/Formatter)
 	$(call exeLune,.,lune/base/Util.lns,format,)
 
+define test-convC-test
+	$(call convC,.,$1.lns,--testing)
+	$(call test-convC-exe,$1.c lune/base/Testing.c,$(notdir $1),$1,--testing)
+
+endef
+
 test-testC:
 	$(call transwork,.,.,,base/convCC)
-	$(call test-convC,lune/base/Testing)
+	$(call convC,.,lune/base/Testing.lns)
+	$(call test-convC-test,lune/base/Ver)
+	$(call test-convC-test,lune/base/Code)
 
 test-mkbuiltin:
 	$(call transwork,.,.,,base/convCC)
-	lua5.3 lune/base/base.lua --mkbuiltin lune/base/runtime_c
+	$(LUA) lune/base/base.lua --mkbuiltin lune/base/runtime_c
 	$(MAKE) test-miniC
 
 lctags:
 	$(MAKE) -f Makefile.ccc lctags
 
+
+test-lns:
+	--testing

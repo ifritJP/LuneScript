@@ -696,11 +696,13 @@ end
 
 function FormatterFilter:processDeclArgDDD( node, opt )
 
+   self:write( "..." )
 end
 
 
 function FormatterFilter:processExpDDD( node, opt )
 
+   self:write( "..." )
 end
 
 
@@ -810,14 +812,24 @@ end
 
 function FormatterFilter:processDeclDestr( node, opt )
 
+   self:processDeclFuncInfo( node, node:get_declInfo(), opt )
 end
 
 
 
 function FormatterFilter:processExpCallSuper( node, opt )
 
+   do
+      local expListNode = node:get_expList()
+      if expListNode ~= nil then
+         self:write( "super(" )
+         filter( expListNode, self, opt:nextOpt( node ) )
+         self:write( ")" )
+      else
+         self:write( "super()" )
+      end
+   end
    
-   local typeInfo = node:get_superType()
 end
 
 
@@ -1163,6 +1175,8 @@ end
 
 function FormatterFilter:processExpOmitEnum( node, opt )
 
+   self:write( "." )
+   self:write( node:get_valToken().txt )
 end
 
 

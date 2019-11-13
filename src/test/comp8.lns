@@ -1,6 +1,6 @@
 macro _Test( val3:int ) {
    {
       let val4 = 1;
-      print( vallune
+      print( val
    }
 }

@@ -35,7 +35,7 @@ pub class Ctrl {
       when! modObj {
          if! let testMap = modObj.__testMap {
             foreach testcase, name in testMap@@Map<str,stem> {
-               print( name );
+               print( "%s:" (name) );
                self.runTestcase( testcase@@form );
             }
          }

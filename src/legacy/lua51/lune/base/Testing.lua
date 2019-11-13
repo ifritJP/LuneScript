@@ -57,6 +57,7 @@ if not _lune1 then
 end
 
 
+
 local ctrlList = {}
 
 local function getCtrlList(  )
@@ -77,6 +78,43 @@ function Ctrl:__init()
    self.okNum = 0
    self.ngNum = 0
    table.insert( ctrlList, self )
+end
+function Ctrl:outputResult( stream )
+
+   stream:write( string.format( "test total: %d (OK:%d, NG:%d)\n", self.okNum + self.ngNum, self.okNum, self.ngNum) )
+end
+function Ctrl:isTrue( val1, val1txt, mod, lineNo )
+
+   if val1 == true then
+      self.okNum = self.okNum + 1
+      return true
+   end
+   
+   self.ngNum = self.ngNum + 1
+   io.stderr:write( string.format( "error:%s:%d: not true -- %s:[%s]\n", mod, lineNo, val1txt, tostring( val1)) )
+   return false
+end
+function Ctrl:isNotTrue( val1, val1txt, mod, lineNo )
+
+   if not val1 then
+      self.okNum = self.okNum + 1
+      return true
+   end
+   
+   self.ngNum = self.ngNum + 1
+   io.stderr:write( string.format( "error:%s:%d: is true -- %s:[%s]\n", mod, lineNo, val1txt, tostring( val1)) )
+   return false
+end
+function Ctrl:isNil( val1, val1txt, mod, lineNo )
+
+   if val1 == nil then
+      self.okNum = self.okNum + 1
+      return true
+   end
+   
+   self.ngNum = self.ngNum + 1
+   io.stderr:write( string.format( "error:%s:%d: is not nil -- %s:[%s]\n", mod, lineNo, val1txt, tostring( val1)) )
+   return false
 end
 function Ctrl:checkEq( val1, val2, val1txt, val2txt, mod, lineNo )
 
@@ -109,6 +147,12 @@ end
 function Ctrl:get_ngNum()
    return self.ngNum
 end
+
+
+
+
+
+
 
 
 

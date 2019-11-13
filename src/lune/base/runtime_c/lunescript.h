@@ -351,12 +351,16 @@ extern "C" {
      * @return 関数の戻り値
      */
     typedef lune_stem_t lune_closure_t( lune_env_t * _pEnv, lune_any_t * pInfo, ... );
+    typedef lune_any_t * lune_closureAny_t( lune_env_t * _pEnv, lune_any_t * pInfo, ... );
     typedef lune_int_t lune_closureInt_t( lune_env_t * _pEnv, lune_any_t * pInfo, ... );
     typedef lune_real_t lune_closureReal_t( lune_env_t * _pEnv, lune_any_t * pInfo, ... );
+    typedef bool lune_closureBool_t( lune_env_t * _pEnv, lune_any_t * pInfo, ... );
     
     typedef lune_stem_t lune_func_t( lune_env_t * _pEnv, ... );
+    typedef lune_any_t * lune_funcAny_t( lune_env_t * _pEnv, ... );
     typedef lune_int_t lune_funcInt_t( lune_env_t * _pEnv, ... );
     typedef lune_real_t lune_funcReal_t( lune_env_t * _pEnv, ... );
+    typedef bool lune_funcBool_t( lune_env_t * _pEnv, ... );
 
     
     /**
@@ -370,6 +374,7 @@ extern "C" {
     typedef lune_any_t * lune_method_any_t( lune_env_t * _pEnv, lune_any_t * pObj, ... );
     typedef lune_int_t lune_method_int_t( lune_env_t * _pEnv, lune_any_t * pObj, ... );
     typedef lune_real_t lune_method_real_t( lune_env_t * _pEnv, lune_any_t * pObj, ... );
+    typedef bool lune_method_bool_t( lune_env_t * _pEnv, lune_any_t * pObj, ... );
 
 
 
@@ -473,17 +478,25 @@ extern "C" {
     
 #define lune_closure( FORM )                  \
     (FORM)->val.form.pFunc
+#define lune_closure_any( FORM )                  \
+    ((lune_closureAny_t *)(FORM)->val.form.pFunc)
 #define lune_closure_int( FORM )                  \
     ((lune_closureInt_t *)(FORM)->val.form.pFunc)
 #define lune_closure_real( FORM )                  \
     ((lune_closureReal_t *)(FORM)->val.form.pFunc)
+#define lune_closure_bool( FORM )                  \
+    ((lune_closureBool_t *)(FORM)->val.form.pFunc)
 
 #define lune_func( FORM )                  \
     ((lune_func_t *)(FORM)->val.form.pFunc)
+#define lune_func_any( FORM )                  \
+    ((lune_funcAny_t *)(FORM)->val.form.pFunc)
 #define lune_func_int( FORM )                  \
     ((lune_funcInt_t *)(FORM)->val.form.pFunc)
 #define lune_func_real( FORM )                  \
     ((lune_funcReal_t *)(FORM)->val.form.pFunc)
+#define lune_func_bool( FORM )                  \
+    ((lune_funcBool_t *)(FORM)->val.form.pFunc)
     
 #define lune_form_closure_var( FORM, INDEX )        \
     (FORM)->val.form.pClosureValList[ INDEX ].pVar
