@@ -1,1 +1,3 @@
-print( "hoge:%d" (10) );
+let map = { 1:1 };
+let val = map[ 1 ];
+print( val );

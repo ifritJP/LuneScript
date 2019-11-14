@@ -1092,27 +1092,25 @@ end
 
 local LuneHelperInfo = {}
 _moduleObj.LuneHelperInfo = LuneHelperInfo
-function LuneHelperInfo.setmeta( obj )
-  setmetatable( obj, { __index = LuneHelperInfo  } )
-end
-function LuneHelperInfo.new( useNilAccess, useUnwrapExp, hasMappingClassDef, useLoad, useUnpack, useAlge, useSet, callAnonymous )
+function LuneHelperInfo.new(  )
    local obj = {}
    LuneHelperInfo.setmeta( obj )
-   if obj.__init then
-      obj:__init( useNilAccess, useUnwrapExp, hasMappingClassDef, useLoad, useUnpack, useAlge, useSet, callAnonymous )
-   end
+   if obj.__init then obj:__init(  ); end
    return obj
 end
-function LuneHelperInfo:__init( useNilAccess, useUnwrapExp, hasMappingClassDef, useLoad, useUnpack, useAlge, useSet, callAnonymous )
-
-   self.useNilAccess = useNilAccess
-   self.useUnwrapExp = useUnwrapExp
-   self.hasMappingClassDef = hasMappingClassDef
-   self.useLoad = useLoad
-   self.useUnpack = useUnpack
-   self.useAlge = useAlge
-   self.useSet = useSet
-   self.callAnonymous = callAnonymous
+function LuneHelperInfo:__init() 
+   self.useNilAccess = false
+   self.useUnwrapExp = false
+   self.hasMappingClassDef = false
+   self.useLoad = false
+   self.useUnpack = false
+   self.useAlge = false
+   self.useSet = false
+   self.callAnonymous = false
+   self.pragmaSet = {}
+end
+function LuneHelperInfo.setmeta( obj )
+  setmetatable( obj, { __index = LuneHelperInfo  } )
 end
 
 
@@ -7818,13 +7816,13 @@ function DeclClassNode:canBeStatement(  )
 
    return true
 end
-function DeclClassNode.new( id, pos, typeList, accessMode, name, gluePrefix, declStmtList, fieldList, moduleName, memberList, scope, initBlock, advertiseList, trustList, outerMethodSet )
+function DeclClassNode.new( id, pos, typeList, accessMode, name, gluePrefix, moduleName, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, outerMethodSet )
    local obj = {}
    DeclClassNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, typeList, accessMode, name, gluePrefix, declStmtList, fieldList, moduleName, memberList, scope, initBlock, advertiseList, trustList, outerMethodSet ); end
+   if obj.__init then obj:__init( id, pos, typeList, accessMode, name, gluePrefix, moduleName, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, outerMethodSet ); end
    return obj
 end
-function DeclClassNode:__init(id, pos, typeList, accessMode, name, gluePrefix, declStmtList, fieldList, moduleName, memberList, scope, initBlock, advertiseList, trustList, outerMethodSet) 
+function DeclClassNode:__init(id, pos, typeList, accessMode, name, gluePrefix, moduleName, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, outerMethodSet) 
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['DeclClass']), pos, typeList)
    
    
@@ -7832,9 +7830,10 @@ function DeclClassNode:__init(id, pos, typeList, accessMode, name, gluePrefix, d
    self.accessMode = accessMode
    self.name = name
    self.gluePrefix = gluePrefix
+   self.moduleName = moduleName
+   self.allStmtList = allStmtList
    self.declStmtList = declStmtList
    self.fieldList = fieldList
-   self.moduleName = moduleName
    self.memberList = memberList
    self.scope = scope
    self.initBlock = initBlock
@@ -7844,14 +7843,35 @@ function DeclClassNode:__init(id, pos, typeList, accessMode, name, gluePrefix, d
    
    
 end
-function DeclClassNode.create( nodeMan, pos, typeList, accessMode, name, gluePrefix, declStmtList, fieldList, moduleName, memberList, scope, initBlock, advertiseList, trustList, outerMethodSet )
+function DeclClassNode.create( nodeMan, pos, typeList, accessMode, name, gluePrefix, moduleName, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, outerMethodSet )
 
-   local node = DeclClassNode.new(nodeMan:nextId(  ), pos, typeList, accessMode, name, gluePrefix, declStmtList, fieldList, moduleName, memberList, scope, initBlock, advertiseList, trustList, outerMethodSet)
+   local node = DeclClassNode.new(nodeMan:nextId(  ), pos, typeList, accessMode, name, gluePrefix, moduleName, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, outerMethodSet)
    nodeMan:addNode( node )
    return node
 end
 function DeclClassNode:visit( visitor, depth )
 
+   do
+      local list = self.allStmtList
+      for __index, child in pairs( list ) do
+         do
+            local _switchExp = visitor( child, self, 'allStmtList', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1 ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
+               return false
+            end
+         end
+         
+         
+      end
+      
+      
+   end
+   
    do
       local list = self.declStmtList
       for __index, child in pairs( list ) do
@@ -7931,14 +7951,17 @@ end
 function DeclClassNode:get_gluePrefix()
    return self.gluePrefix
 end
+function DeclClassNode:get_moduleName()
+   return self.moduleName
+end
+function DeclClassNode:get_allStmtList()
+   return self.allStmtList
+end
 function DeclClassNode:get_declStmtList()
    return self.declStmtList
 end
 function DeclClassNode:get_fieldList()
    return self.fieldList
-end
-function DeclClassNode:get_moduleName()
-   return self.moduleName
 end
 function DeclClassNode:get_memberList()
    return self.memberList

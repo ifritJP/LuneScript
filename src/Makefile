@@ -834,7 +834,7 @@ test-formatter:
 
 define test-convC-test
 	$(call convC,.,$1.lns,--testing)
-	$(call test-convC-exe,$1.c lune/base/Testing.c,$(notdir $1),$1,--testing)
+	$(call test-convC-exe,$1.c lune/base/Testing.c $2,$(notdir $1),$1,--testing)
 
 endef
 
@@ -843,6 +843,13 @@ test-testC:
 	$(call convC,.,lune/base/Testing.lns)
 	$(call test-convC-test,lune/base/Ver)
 	$(call test-convC-test,lune/base/Code)
+	$(call test-convC-test,lune/base/LuaMod)
+#	$(call test-convC-test,lune/base/LuaVer)
+	$(call convC,.,lune/base/LuneControl.lns,--testing)
+	$(call convC,.,lune/base/Depend.lns,--testing)
+	$(call test-convC-test,lune/base/Util, \
+		lune/base/Depend.sub.c lune/base/Depend.c \
+		lune/base/LuneControl.c lune/base/LuaMod.c )
 
 test-mkbuiltin:
 	$(call transwork,.,.,,base/convCC)
@@ -851,7 +858,3 @@ test-mkbuiltin:
 
 lctags:
 	$(MAKE) -f Makefile.ccc lctags
-
-
-test-lns:
-	--testing

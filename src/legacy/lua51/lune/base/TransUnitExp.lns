@@ -24,6 +24,22 @@ SOFTWARE.
 
 subfile owner lune.base.TransUnit;
 
+/**
+一つの値を持つ expression を期待する。
+
+多値の expression の場合、 ExpMultiTo1 ノードでラッピングする。
+*/
+fn TransUnit.analyzeExpOne(
+   allowNoneType:bool, skipOp2Flag: bool, opLevel: int!,        
+   expectType:&Ast.TypeInfo! ) mut : Nodes.Node
+{
+   let mut exp = self.analyzeExp( allowNoneType, skipOp2Flag, opLevel, expectType );
+   if #exp.$expTypeList == 1 {
+      return exp;
+   }
+   return Nodes.ExpMultiTo1Node.create(
+      self.nodeManager, exp.$pos, [ exp.$expType ], exp );
+}
 
 fn TransUnit.createExpList(
    pos:&Parser.Position,
@@ -351,12 +367,12 @@ fn TransUnit.analyzeMapConst( token: &Parser.Token ) mut : Nodes.LiteralMapNode 
       }
       self.pushback();
 
-      let key = self.analyzeExp( false, false ## );
+      let key = self.analyzeExpOne( false, false ## );
       keyTypeInfo = getMapKeyValType( key.$pos, true, keyTypeInfo, key.$expType );
 
       self.checkNextToken( ":" );
 
-      let val = self.analyzeExp( false, false ## );
+      let val = self.analyzeExpOne( false, false ## );
       valTypeInfo = getMapKeyValType( val.$pos, false, valTypeInfo, val.$expType );
 
       //pairList.insert( { "key": key, "val": val } );
@@ -459,7 +475,7 @@ fn TransUnit.analyzeExpRefItem(
       // }
    }
 
-   let indexExp = self.analyzeExp( false, false, nil, expectItemType );
+   let indexExp = self.analyzeExpOne( false, false, nil, expectItemType );
    if not indexExp.canBeRight() {
       self.addErrMess( indexExp.$pos, "This node can't use index" );
    }
@@ -2826,11 +2842,11 @@ fn TransUnit.analyzeUnwrap( firstToken: &Parser.Token ) mut : Nodes.Node {
 
 fn TransUnit.analyzeExpUnwrap( firstToken: &Parser.Token ) mut : Nodes.Node {
    //   let expNode = self.analyzeExp( false, opTopLevel ## );
-   let expNode = self.analyzeExp( false, true ## );
+   let expNode = self.analyzeExpOne( false, true ## );
    let nextToken = self.getToken(##);
    let mut insNode: Nodes.Node! = nil;
    if nextToken.txt == "default" {
-      insNode = self.analyzeExp( false, false ## );
+      insNode = self.analyzeExpOne( false, false ## );
    }
    else {
       self.pushback();
@@ -3027,7 +3043,7 @@ fn TransUnit.analyzeExp(
          return self.analyzeExpMacroStat( token ), false;
       }  
 
-      let mut exp = self.analyzeExp( false, true, unwrap op1levelMap[ token.txt] ##);
+      let mut exp = self.analyzeExpOne( false, true, unwrap op1levelMap[ token.txt] ##);
       let mut typeInfo = Ast.builtinTypeNone;
       let mut macroExpFlag = false;
       let expType = exp.$expType;

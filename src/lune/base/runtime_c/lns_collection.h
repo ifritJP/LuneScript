@@ -57,6 +57,7 @@ extern "C" {
         lune_env_t * _pEnv, lune_any_t * pListAny );
     extern lune_stem_t lune_mtd_List_sort(
         lune_env_t * _pEnv, lune_any_t * pListAny, lune_stem_t pForm );
+    extern lune_int_t lune_mtd_List_len( lune_env_t * _pEnv, lune_any_t * pListAny );
 
     
     extern lune_any_t * lune_itList_new( lune_env_t * _pEnv, lune_any_t * pList );

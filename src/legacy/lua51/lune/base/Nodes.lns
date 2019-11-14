@@ -622,6 +622,19 @@ pub class LuneHelperInfo {
    pub let mut useAlge:bool;
    pub let mut useSet:bool;
    pub let mut callAnonymous:bool;
+   pub let mut pragmaSet:Set<LuneControl.Pragma>;
+
+   pub fn __init() {
+      self.useNilAccess = false;
+      self.useUnwrapExp = false;
+      self.hasMappingClassDef = false;
+      self.useLoad = false;
+      self.useUnpack = false;
+      self.useAlge = false;
+      self.useSet = false;
+      self.callAnonymous = false;
+      self.pragmaSet = (@);
+   }
 }
 
 pub class ModuleInfo extend (Ast.ModuleInfoIF) {
@@ -1518,15 +1531,30 @@ _declNodeClass( "DeclClass", Node, false, false, true,
                 [ { "accessMode": "Ast.AccessMode" },
                   { "name": "&Parser.Token" },
                   { "gluePrefix": "str!" },
-                  { "declStmtList": "List<&Node>" },
-                  { "fieldList": "List<&Node>" },
                   { "moduleName": "&Parser.Token!" },
-                  { "memberList": "List<&DeclMemberNode>" },
+                  /**
+                  クラス宣言内の全 Statement のリスト。
+                  クラス宣言外で宣言しているメソッド等は含まない。
+                  */               
+                  { "allStmtList": "&List<&Node>" },
+                  /** クラス内で新しく型宣言している Node のリスト */
+                  { "declStmtList": "&List<&Node>" },
+                  /**
+                  メンバー、メソッド宣言の Node リスト。
+                  クラス宣言外部で宣言することもあるので mut。
+                  */               
+                  { "fieldList": "List<&Node>" },
+                  /** メンバー宣言の Node リスト */
+                  { "memberList": "&List<&DeclMemberNode>" },
                   { "scope": "&Ast.Scope" },
                   //{ "initStmtList": "List<&Node>" },
                   { "initBlock": "&ClassInitBlockInfo" },
-                  { "advertiseList": "List<&AdvertiseInfo>" },
-                  { "trustList": "List<&Ast.TypeInfo>" },
+                  { "advertiseList": "&List<&AdvertiseInfo>" },
+                  { "trustList": "&List<&Ast.TypeInfo>" },
+                  /**
+                  クラス宣言の外部で宣言しているメソッド名の Set。
+                  クラス宣言外部で宣言するので mut。
+                   */                 
                   { "outerMethodSet": "Set<str>" } ]
 );
 

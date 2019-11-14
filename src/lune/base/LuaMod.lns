@@ -410,3 +410,12 @@ return _lune
 pub fn getCode( kind:CodeKind ): str {
    return unwrap codeMap[ kind ];
 }
+
+__test case1 {
+   import lune.base.Testing;
+
+   let mut ctrl = new Testing.Ctrl();
+   foreach kind in CodeKind.$_allList {
+      Testing._isT( ctrl, getCode( kind ) ~= "" );
+   }
+}

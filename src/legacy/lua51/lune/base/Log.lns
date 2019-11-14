@@ -51,17 +51,23 @@ pub fn setLevel( level:Level ) {
 
 pub form CreateMessage(): str;
 
+let mut logStream:oStream = io.stderr;
+
 pub fn log( level:Level, funcName:str, lineNo:int, callback: CreateMessage ) {
    if level <= outputLevel {
       let nowClock = os.clock();
-      io.stderr.write(
+      logStream.write(
          "%6d:%s:%s:%d:" (( nowClock * 1000 )@@int,
                            level.$_txt, funcName, lineNo) );
-      io.stderr.write( callback() );
-      io.stderr.write( "\n" );
+      logStream.write( callback() );
+      logStream.write( "\n" );
    }
 }
 
 pub macro _log( level:Level, mess : stat ) {
    Log.log( ,,level, __func__, __line__, fn ():str { ,,mess } );
+}
+
+pub macro _log2( level:Level, mess : __exp ) {
+   Log.log( ,,level, __func__, __line__, fn ():str { return ,,mess; } );
 }

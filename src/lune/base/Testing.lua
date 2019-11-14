@@ -149,6 +149,15 @@ function Ctrl:get_ngNum()
 end
 
 
+local function outputAllResult( stream )
+
+   for __index, ctrl in pairs( ctrlList ) do
+      ctrl:outputResult( stream )
+   end
+   
+end
+_moduleObj.outputAllResult = outputAllResult
+
 
 
 

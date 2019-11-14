@@ -512,6 +512,8 @@ fn Front.loadFileToLuaCode(
 fn Front.loadFile(
    importModuleInfo:frontInterface.ImportModuleInfo, path:str, mod:str ): &stem, stem
 {
+   Log._log2( .Info, "start %s:%s" ( __func__, mod ) );
+   
    let meta, luaTxt = self.loadFileToLuaCode( importModuleInfo, path, mod );
    
    if! let mut preLoadInfo = self.preloadedModMap[ mod ] {
@@ -1219,12 +1221,13 @@ pub fn Front.exec() mut
       case .Exec {
          //frontInterface.setFront( self );
 
-         let modObj, meta = self.loadModule(
-            scriptPath2Module( self.option.scriptPath ) );
+         let modObj = self.loadModule( scriptPath2Module( self.option.scriptPath ) );
 
          if self.option.testing {
             let testCtrl = new TestCtrl.Ctrl();
-            testCtrl.run( modObj, meta );
+            testCtrl.run( modObj );
+
+            Testing.outputAllResult( io.stdout );
          }
       }
       case .BootC {
@@ -1253,10 +1256,4 @@ pub fn exec( args: str[] ) {
    let mut front = new Front( option );
 
    front.exec();
-
-   if option.testing {
-      foreach ctrl in Testing.getCtrlList() {
-         ctrl.outputResult( io.stdout );
-      }
-   }
 }

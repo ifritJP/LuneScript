@@ -29,9 +29,7 @@ pub class Ctrl {
       testcase();
    }
    
-   pub fn run( modObj:stem!, meta:&stem ) {
-      let metaInfo = meta@@=Meta._MetaInfo;
-
+   pub fn run( modObj:stem! ) {
       when! modObj {
          if! let testMap = modObj.__testMap {
             foreach testcase, name in testMap@@Map<str,stem> {

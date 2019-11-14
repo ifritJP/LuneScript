@@ -946,7 +946,7 @@ fn TransUnit.analyzeDeclEnum(
       }
 
       if nextToken.txt == "=" {
-         let exp = self.analyzeExp( false, false ## );
+         let exp = self.analyzeExpOne( false, false ## );
          let literal, mess = exp.getLiteral();
          when! literal {
             match literal {
@@ -1482,8 +1482,9 @@ fn TransUnit.analyzeDeclMethod(
 @param methodNameSet メソッド名の集合
 */
 fn TransUnit.addDefaultConstructor(
-   pos:&Parser.Position, classTypeInfo:&Ast.TypeInfo, classScope:Ast.Scope,
-   memberNodeList:&List<&Nodes.DeclMemberNode>, methodNameSet:Set<str>, oldFlag:bool ) mut
+   pos:&Parser.Position, classTypeInfo:&Ast.TypeInfo,
+   classScope:Ast.Scope, memberNodeList:&List<&Nodes.DeclMemberNode>,
+   methodNameSet:Set<str>, oldFlag:bool ) mut
 {
    if classScope.getTypeInfoChild( "__init" ) {
       self.addErrMess( pos, "already declare __init()." );
@@ -1623,6 +1624,7 @@ fn TransUnit.analyzeClassBody(
    Nodes.DeclClassNode, &Parser.Token, Set<str>
 {
    let mut memberName2Node: Map<str,&Nodes.DeclMemberNode> = {};
+   let mut allStmtList: List<&Nodes.Node> = [];
    let mut declStmtList: List<&Nodes.Node> = [];
    let mut fieldList:List<&Nodes.Node> = [];
    let mut memberList:List<&Nodes.DeclMemberNode> = [];
@@ -1633,10 +1635,10 @@ fn TransUnit.analyzeClassBody(
    let mut trustList:List<&Ast.TypeInfo> = [];
    let mut node = Nodes.DeclClassNode.create(
       self.nodeManager, firstToken.pos, [ classTypeInfo ],
-      classAccessMode, name, gluePrefix, declStmtList, fieldList, moduleName,
-      memberList, self.scope, initBlockInfo, advertiseList, trustList, (@) );
+      classAccessMode, name, gluePrefix, moduleName, allStmtList, declStmtList,
+      fieldList, memberList, self.scope, initBlockInfo, advertiseList, trustList, (@) );
    self.typeInfo2ClassNode[ classTypeInfo ] = node;
-   let mut declCtorNode:&Nodes.Node! = nil;
+   let mut alreadyCtorFlag = false;
    let mut hasInitBlock = false;
    let mut hasStaticMember = false;
 
@@ -1647,7 +1649,7 @@ fn TransUnit.analyzeClassBody(
       if mode == .Interface {
          self.addErrMess( token.pos, "interface can not have member" );
       }
-      if not staticFlag and declCtorNode {
+      if not staticFlag and alreadyCtorFlag {
          self.addErrMess(
             token.pos, "member can't declare after '__init' method." );
       }
@@ -1657,6 +1659,7 @@ fn TransUnit.analyzeClassBody(
       }
       let memberNode = self.analyzeDeclMember(
          classTypeInfo, accessMode, staticFlag, token );
+      allStmtList.insert( memberNode );
       fieldList.insert( memberNode );
       memberList.insert( memberNode );
       memberName2Node[ memberNode.$name.txt ] = memberNode;
@@ -1687,10 +1690,11 @@ fn TransUnit.analyzeClassBody(
       let methodNode = self.analyzeDeclMethod(
          classTypeInfo, declFuncMode, abstractFlag, overrideFlag,
          accessMode, staticFlag, token, nameToken );
+      allStmtList.insert( methodNode );
       fieldList.insert( methodNode );
       methodNameSet.add( nameToken.txt );
       if nameToken.txt == "__init" {
-         declCtorNode = methodNode;
+         alreadyCtorFlag = true;
 
          foreach memberNode, memberName in memberName2Node {
             if not memberNode.$staticFlag {
@@ -1737,6 +1741,8 @@ fn TransUnit.analyzeClassBody(
       let initBlockNode = Nodes.DeclMethodNode.create(
          self.nodeManager, firstToken.pos, [ funcTypeInfo ], info );
       initBlockInfo.set_func( initBlockNode );
+      allStmtList.insert( initBlockNode );
+      //fieldList.insert( initBlockNode );
 
       // foreach stmtNode in block.$stmtList {
       //    initStmtList.insert( stmtNode );
@@ -1777,20 +1783,30 @@ fn TransUnit.analyzeClassBody(
                           "unmatch access mode, class('%s') and enum('%s')"
                           (classAccessMode.$_txt, accessMode.$_txt ) );
       }
-      declStmtList.insert( self.analyzeDeclEnum( accessMode, token ) );
+      let enumNode = self.analyzeDeclEnum( accessMode, token );
+      allStmtList.insert( enumNode );
+      declStmtList.insert( enumNode );
+      
    }
 
    fn processLuneControl() {
       nextToken = self.getToken(##);
+
+      let pragma;
       switch nextToken.txt {
-         case LuneControl.Pragma.default__init {
-            declCtorNode = self.createNoneNode( nextToken.pos );
+         case "default__init" {
+            pragma = LuneControl.Pragma.default__init;
+
+            alreadyCtorFlag = true;
+            
             self.addDefaultConstructor(
                nextToken.pos, classTypeInfo,
                self.scope, memberList, methodNameSet, false );
          }
-         case LuneControl.Pragma.default__init_old {
-            declCtorNode = self.createNoneNode( nextToken.pos );
+         case "default__init_old" {
+            pragma = LuneControl.Pragma.default__init_old;
+
+            alreadyCtorFlag = true;
             self.addDefaultConstructor(
                nextToken.pos, classTypeInfo,
                self.scope, memberList, methodNameSet, true );
@@ -1800,6 +1816,11 @@ fn TransUnit.analyzeClassBody(
          }
       }
       self.checkNextToken( ";" );
+
+      let ctrlNode = Nodes.LuneControlNode.create(
+         self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ], pragma );
+      self.helperInfo.pragmaSet.add( pragma );
+      allStmtList.insert( ctrlNode );
    }
 
    fn processClassFields(inMacro:bool) {

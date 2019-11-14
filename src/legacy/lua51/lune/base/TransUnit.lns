@@ -408,8 +408,7 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
       self.ctrl_info = ctrl_info;
       self.ignoreToCheckSymbol_ = false;
       self.moduleId = moduleId;
-      self.helperInfo = new Nodes.LuneHelperInfo(
-         false, false, false, false, false, false, false, false );
+      self.helperInfo = new Nodes.LuneHelperInfo();
       self.targetLuaVer = targetLuaVer;
       self.importModuleInfo = importModuleInfo;
       self.protoFuncMap = {};
@@ -756,8 +755,10 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
    pri fn analyzeDeclClass(
       abstractFlag:bool, classAccessMode: Ast.AccessMode,
       classToken: &Parser.Token, mode:DeclClassMode ) mut : Nodes.DeclClassNode;
-   pri fn analyzeExp( allowNoneType:bool, skipOp2Flag: bool, opLevel: int!,
+   pri fn analyzeExp( allowNoneType:bool, skipOp2Flag: bool, opLevel: int!,        
                       expectType:&Ast.TypeInfo! ) mut : Nodes.Node;
+   pri fn analyzeExpOne( allowNoneType:bool, skipOp2Flag: bool, opLevel: int!,        
+                         expectType:&Ast.TypeInfo! ) mut : Nodes.Node;
    pri fn analyzeStatement( termTxt: str! ) mut : Nodes.Node!;
    pri fn analyzeExpSymbol(
       firstToken: &Parser.Token, token: &Parser.Token,
@@ -1599,7 +1600,7 @@ _DefBuiltinFuncType( [
    },
    {
       "debug": {
-         "getinfo": { "arg": ["int"], "ret": ["stem!"] },
+         "getinfo": { "arg": ["int"], "ret": ["Map<str,stem>!"] },
          "getlocal": { "arg": ["int", "int"], "ret": ["str!", "stem!"] },
       },
    },
@@ -1640,12 +1641,37 @@ fn TransUnit.registBuiltInScope() mut {
       }
 
       fn getTypeInfoFromScope(
-         scope:&Ast.Scope, symbol:str, genTyeList:List<&Ast.TypeInfo> ) :
+         scope:&Ast.Scope, symbol:str, genTypeList:List<&Ast.TypeInfo> ) :
          &Ast.TypeInfo!
       {
          let! typeInfo = scope.getTypeInfo( symbol, scope, false, self.scopeAccess ) {
             return nil;
          };
+         let mut validGenType = false;
+         foreach genType in genTypeList {
+            if genType.$kind ~= .Alternate {
+               validGenType = true;
+               break;
+            }
+         }
+         if validGenType {
+            switch typeInfo.$kind {
+               case .Map {
+                  if #genTypeList ~= 2 {
+                     Util.err( "illegal map param -- %d" (#genTypeList) );
+                  }
+                  let keyType = genTypeList[ 1 ];
+                  let valType = genTypeList[ 2 ];
+                  return Ast.NormalTypeInfo.createMap(
+                     .Pub, typeInfo.$parentInfo, keyType, valType, typeInfo.$mutMode );
+               }
+               default {
+                  Util.err( "not support type -- %s" (typeInfo.getTxt(##)) );
+               }
+            }
+         }
+
+         
          return typeInfo;
       }
 
@@ -1656,13 +1682,21 @@ fn TransUnit.registBuiltInScope() mut {
       }
       let mut genTypeList:List<&Ast.TypeInfo> = [];
       let index, endIndex = typeName.find( "[%w]+<" ## );
+      let mut suffix = "";
       when! index, endIndex {
-         let mut genTypeName = typeName.sub( endIndex ## );
-         if! let tailIndex = genTypeName.find( "[,>]" ## ) {
-            let genType = getTypeInfo( genTypeName.sub( 2, tailIndex - 1 ) );
-            genTypeList.insert( genType );
+         let mut genTypeName = typeName.sub( endIndex + 1## );
+         while true {
+            if! let tailIndex = genTypeName.find( "[,>]" ## ) {
+               let genType = getTypeInfo( genTypeName.sub( 1, tailIndex - 1 ) );
+               genTypeList.insert( genType );
+               genTypeName = genTypeName.sub( tailIndex + 1## );
+            }
+            else {
+               suffix = genTypeName.sub( 1## );
+               break;
+            }
          }
-         typeName = typeName.sub( 1, endIndex - 1 );
+         typeName = typeName.sub( 1, endIndex - 1 ) .. suffix;
       }
 
 
@@ -2219,22 +2253,48 @@ fn TransUnit.analyzeLuneControl(
 {
    let mut node:Nodes.LuneControlNode! = nil;
    let nextToken = self.getToken(##);
+
+   let pragma;
    switch ( nextToken.txt ) {
-      case LuneControl.Pragma.disable_mut_control {
+      case "disable_mut_control" {
          self.validMutControl = false;
+         pragma = LuneControl.Pragma.disable_mut_control;
       }
-      case LuneControl.Pragma.ignore_symbol_ {
+      case "ignore_symbol_" {
          self.ignoreToCheckSymbol_ = true;
+         pragma = LuneControl.Pragma.ignore_symbol_;
       }
-      case LuneControl.Pragma.load__lune_module {
-         node = Nodes.LuneControlNode.create(
-            self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ],
-            LuneControl.Pragma.load__lune_module );
+      case "load__lune_module" {
+         pragma = LuneControl.Pragma.load__lune_module;
+      }
+      case "can_not_conv_code" {
+         let mut codeSet:Set<LuneControl.Code> = (@);
+         while true {
+            let token = self.getToken(##);
+            if token.txt == ";" {
+               self.pushback();
+               break;
+            }
+            if! let code = LuneControl.Code._from( token.txt ) {
+               codeSet.add( code );
+            }
+            else {
+               self.addErrMess( token.pos, "illegal code -- '%s'" (token.txt ) );
+            }
+         }
+         pragma = LuneControl.Pragma.can_not_conv_code( codeSet );
       }
       default {
          self.addErrMess( nextToken.pos, "unknown option -- %s" (nextToken.txt) );
+         self.checkNextToken( ";" );
+         return nil;
       }
    }
+
+   node = Nodes.LuneControlNode.create(
+      self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ], pragma );
+   self.helperInfo.pragmaSet.add( pragma );
+
    self.checkNextToken( ";" );
    return node;
 }
@@ -2848,7 +2908,7 @@ fn TransUnit.analyzeIf( token: &Parser.Token ) mut : Nodes.Node {
    self.pushback();
 
    let mut list:Nodes.IfStmtInfo[] = [];
-   let ifExp = self.analyzeExp( false, false ## );
+   let ifExp = self.analyzeExpOne( false, false ## );
    list.insert( new Nodes.IfStmtInfo( .If, ifExp,
                                       self.analyzeBlock( .If, .Start ## ) ) );
 
@@ -2876,7 +2936,7 @@ fn TransUnit.analyzeIf( token: &Parser.Token ) mut : Nodes.Node {
    nextToken = self.getToken( true );
    if nextToken.txt == "elseif" {
       while nextToken.txt == "elseif" {
-         let condExp = self.analyzeExp( false, false ## );
+         let condExp = self.analyzeExpOne( false, false ## );
          list.insert( new Nodes.IfStmtInfo( .ElseIf, condExp,
                                             self.analyzeBlock( .Elseif, .Merge ## ) ));
          checkCond( condExp );
@@ -2900,7 +2960,7 @@ fn TransUnit.analyzeIf( token: &Parser.Token ) mut : Nodes.Node {
 
 
 fn TransUnit.analyzeSwitch( firstToken: &Parser.Token ) mut : Nodes.SwitchNode {
-   let exp = self.analyzeExp( false, false ## );
+   let exp = self.analyzeExpOne( false, false ## );
 
    self.checkNextToken( "{" );
 
@@ -2947,7 +3007,7 @@ fn TransUnit.analyzeSwitch( firstToken: &Parser.Token ) mut : Nodes.SwitchNode {
 
 
 fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
-   let exp = self.analyzeExp( false, false ## );
+   let exp = self.analyzeExpOne( false, false ## );
 
    let! algeTypeInfo = exp.$expType.$srcTypeInfo@@@Ast.AlgeTypeInfo {
       self.error( "match must have alge value" );
@@ -3038,14 +3098,14 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
 fn TransUnit.analyzeWhile( token: &Parser.Token ) mut : Nodes.WhileNode {
    return Nodes.WhileNode.create(
       self.nodeManager, token.pos, [ Ast.builtinTypeNone ],
-      self.analyzeExp( false, false## ), self.analyzeBlock( .While, .Loop ## ) );
+      self.analyzeExpOne( false, false## ), self.analyzeBlock( .While, .Loop ## ) );
 }
 
 fn TransUnit.analyzeRepeat( token: &Parser.Token ) mut : Nodes.RepeatNode {
    let mut scope = self.pushScope( false## );
    let mut node = Nodes.RepeatNode.create(
       self.nodeManager, token.pos, [ Ast.builtinTypeNone ],
-      self.analyzeBlock( .Repeat, .Simple, scope ), self.analyzeExp( false, false## ) );
+      self.analyzeBlock( .Repeat, .Simple, scope ), self.analyzeExpOne( false, false## ) );
    self.popScope();
 
    self.checkNextToken( ";" );
@@ -3061,7 +3121,7 @@ fn TransUnit.analyzeFor( firstToken: &Parser.Token ) mut : Nodes.ForNode {
       self.error( "not symbol" );
    }
    self.checkNextToken( "=" );
-   let exp1 = self.analyzeExp( false, false## );
+   let exp1 = self.analyzeExpOne( false, false## );
    if not Ast.isNumberType( exp1.$expType ) {
       self.addErrMess( exp1.$pos,
                        "exp1 is not number -- %s" (exp1.$expType.getTxt(##)) );
@@ -3069,7 +3129,7 @@ fn TransUnit.analyzeFor( firstToken: &Parser.Token ) mut : Nodes.ForNode {
    let symbolInfo = self.addLocalVar(
       exp1.$pos, false, true, val.txt, exp1.$expType, .IMut## );
    self.checkNextToken( "," );
-   let exp2 = self.analyzeExp( false, false## );
+   let exp2 = self.analyzeExpOne( false, false## );
    if not Ast.isNumberType( exp2.$expType ) {
       self.addErrMess( exp2.$pos,
                        "exp2 is not number -- %s" (exp2.$expType.getTxt(##)) );
@@ -3077,7 +3137,7 @@ fn TransUnit.analyzeFor( firstToken: &Parser.Token ) mut : Nodes.ForNode {
    let token = self.getToken(##);
    let mut exp3:Nodes.Node! = nil;
    if token.txt == "," {
-      exp3 = self.analyzeExp( false, false## );
+      exp3 = self.analyzeExpOne( false, false## );
       if! exp3 {
          if not Ast.isNumberType( _exp.$expType ) {
             self.addErrMess( _exp.$pos,
@@ -3186,7 +3246,7 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
    }
    self.checkToken( nextToken, "in" );
 
-   let exp = self.analyzeExp( false, false## );
+   let exp = self.analyzeExpOne( false, false## );
 
    let expType;
    if! let extType = exp.$expType.$srcTypeInfo@@@Ast.ExtTypeInfo {

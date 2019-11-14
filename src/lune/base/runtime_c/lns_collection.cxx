@@ -226,6 +226,12 @@ lune_any_t * lune_mtd_List_unpack( lune_env_t * _pEnv, lune_any_t * pObj )
     return pDDD;
 }
 
+lune_int_t lune_mtd_List_len( lune_env_t * _pEnv, lune_any_t * pListAny )
+{
+    return pListAny->val.str.len;
+}
+
+
 /**
    sort() 用のデフォルト比較関数 (昇順でソート)
 

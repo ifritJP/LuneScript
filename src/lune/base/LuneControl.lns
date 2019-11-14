@@ -22,10 +22,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-pub enum Pragma {
-   default__init = "default__init",
-   default__init_old = "default__init_old",
-   disable_mut_control = "disable_mut_control",
-   ignore_symbol_ = "ignore_symbol_",
-   load__lune_module = "load__lune_module",
+pub enum Code {
+   Lua = "lua",
+   C = "c",
+}
+
+pub alge Pragma {
+   default__init,
+   default__init_old,
+   disable_mut_control,
+   ignore_symbol_,
+   load__lune_module,
+   can_not_conv_code( codeSet:&Set<Code> ),
 }

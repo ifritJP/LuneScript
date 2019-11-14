@@ -748,7 +748,7 @@ function TransUnit:__init(moduleId, importModuleInfo, macroEval, analyzeModule, 
    self.ctrl_info = ctrl_info
    self.ignoreToCheckSymbol_ = false
    self.moduleId = moduleId
-   self.helperInfo = Nodes.LuneHelperInfo.new(false, false, false, false, false, false, false, false)
+   self.helperInfo = Nodes.LuneHelperInfo.new()
    self.targetLuaVer = targetLuaVer
    self.importModuleInfo = importModuleInfo
    self.protoFuncMap = {}
@@ -2921,7 +2921,7 @@ end
 
 local function getBuiltInInfo(  )
 
-   return {{[""] = {["_fcall"] = {["arg"] = {"form", "&..."}, ["ret"] = {""}}, ["_kind"] = {["arg"] = {"stem!"}, ["ret"] = {"int"}}, ["_load"] = {["arg"] = {"str", "stem!"}, ["ret"] = {"__loadedfunc!", "str!"}}, ["collectgarbage"] = {["arg"] = {}, ["ret"] = {}}, ["error"] = {["arg"] = {"str"}, ["ret"] = {"__"}}, ["load"] = {["arg"] = {"str", "str!", "str!", "stem!"}, ["ret"] = {"form!", "str!"}}, ["loadfile"] = {["arg"] = {"str"}, ["ret"] = {"form!", "str!"}}, ["print"] = {["arg"] = {"&..."}, ["ret"] = {}}, ["require"] = {["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["tonumber"] = {["arg"] = {"str", "int!"}, ["ret"] = {"real!"}}, ["tostring"] = {["arg"] = {"&stem"}, ["ret"] = {"str"}}, ["type"] = {["arg"] = {"&stem!"}, ["ret"] = {"str"}}}}, {["iStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["close"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["read"] = {["arg"] = {"stem!"}, ["ret"] = {"str!"}, ["type"] = {"mut"}}}}, {["oStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["close"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["flush"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["write"] = {["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}, ["type"] = {"mut"}}}}, {["luaStream"] = {["__attrib"] = {["inplements"] = {"iStream", "oStream"}}, ["close"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["flush"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["read"] = {["arg"] = {"stem!"}, ["ret"] = {"str!"}, ["type"] = {"mut"}}, ["seek"] = {["arg"] = {"str", "int"}, ["ret"] = {"int!", "str!"}, ["type"] = {"mut"}}, ["write"] = {["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}, ["type"] = {"mut"}}}}, {["Mapping"] = {["__attrib"] = {["type"] = {"interface"}}, ["_toMap"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"method"}}}}, {["io"] = {["open"] = {["arg"] = {"str", "str!"}, ["ret"] = {"luaStream!"}}, ["popen"] = {["arg"] = {"str"}, ["ret"] = {"luaStream!"}}, ["stderr"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["stdin"] = {["type"] = {"member"}, ["typeInfo"] = {"iStream"}}, ["stdout"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}}}, {["package"] = {["path"] = {["type"] = {"member"}, ["typeInfo"] = {"str"}}, ["searchpath"] = {["arg"] = {"str", "str"}, ["ret"] = {"str!"}}}}, {["os"] = {["clock"] = {["arg"] = {}, ["ret"] = {"real"}}, ["date"] = {["arg"] = {"str!", "stem!"}, ["ret"] = {"stem!"}}, ["difftime"] = {["arg"] = {"stem", "stem"}, ["ret"] = {"int"}}, ["exit"] = {["arg"] = {"int!"}, ["ret"] = {"__"}}, ["remove"] = {["arg"] = {"str"}, ["ret"] = {"bool!", "str!"}}, ["rename"] = {["arg"] = {"str", "str"}, ["ret"] = {"stem!", "str!"}}, ["time"] = {["arg"] = {"stem!"}, ["ret"] = {"stem!"}}}}, {["string"] = {["byte"] = {["arg"] = {"str", "int!", "int!"}, ["ret"] = {"int!"}}, ["dump"] = {["arg"] = {"form", "bool!"}, ["ret"] = {"str"}}, ["find"] = {["arg"] = {"str", "str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["format"] = {["arg"] = {"str", "..."}, ["ret"] = {"str"}}, ["gmatch"] = {["arg"] = {"str", "str"}, ["ret"] = {"form", "stem!", "stem!"}}, ["gsub"] = {["arg"] = {"str", "str", "str"}, ["ret"] = {"str", "int"}}, ["lower"] = {["arg"] = {"str"}, ["ret"] = {"str"}}, ["rep"] = {["arg"] = {"str", "int"}, ["ret"] = {"str"}}, ["reverse"] = {["arg"] = {"str"}, ["ret"] = {"str"}}, ["sub"] = {["arg"] = {"str", "int", "int!"}, ["ret"] = {"str"}}, ["upper"] = {["arg"] = {"str"}, ["ret"] = {"str"}}}}, {["str"] = {["__attrib"] = {["inplements"] = {"Mapping"}}, ["byte"] = {["arg"] = {"int!", "int!"}, ["ret"] = {"int"}, ["type"] = {"method"}}, ["find"] = {["arg"] = {"str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}, ["type"] = {"method"}}, ["format"] = {["arg"] = {"&..."}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["gmatch"] = {["arg"] = {"str"}, ["ret"] = {"form", "stem!", "stem!"}, ["type"] = {"method"}}, ["gsub"] = {["arg"] = {"str", "str"}, ["ret"] = {"str", "int"}, ["type"] = {"method"}}, ["lower"] = {["arg"] = {}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["rep"] = {["arg"] = {"int"}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["reverse"] = {["arg"] = {}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["sub"] = {["arg"] = {"int", "int!"}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["upper"] = {["arg"] = {}, ["ret"] = {"str"}, ["type"] = {"method"}}}}, {["List<T>"] = {["insert"] = {["arg"] = {"&T"}, ["ret"] = {""}, ["type"] = {"mut"}}, ["remove"] = {["arg"] = {"int!"}, ["ret"] = {"T!"}, ["type"] = {"mut"}}, ["sort"] = {["arg"] = {"form!"}, ["ret"] = {}, ["type"] = {"mut"}}, ["unpack"] = {["arg"] = {}, ["ret"] = {"..."}, ["type"] = {"method"}}}}, {["Array<T>"] = {["sort"] = {["arg"] = {"form!"}, ["ret"] = {}, ["type"] = {"mut"}}, ["unpack"] = {["arg"] = {}, ["ret"] = {"..."}, ["type"] = {"method"}}}}, {["Set<T>"] = {["add"] = {["arg"] = {"T"}, ["ret"] = {}, ["type"] = {"mut"}}, ["and"] = {["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}, ["type"] = {"mut"}}, ["clone"] = {["arg"] = {}, ["ret"] = {"Set<T>"}, ["type"] = {"method"}}, ["del"] = {["arg"] = {"T"}, ["ret"] = {}, ["type"] = {"mut"}}, ["has"] = {["arg"] = {"T"}, ["ret"] = {"bool"}, ["type"] = {"method"}}, ["len"] = {["arg"] = {}, ["ret"] = {"int"}, ["type"] = {"method"}}, ["or"] = {["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}, ["type"] = {"mut"}}, ["sub"] = {["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}, ["type"] = {"mut"}}}}, {["math"] = {["random"] = {["arg"] = {"int!", "int!"}, ["ret"] = {"real"}}, ["randomseed"] = {["arg"] = {"int!"}, ["ret"] = {}}}}, {["debug"] = {["getinfo"] = {["arg"] = {"int"}, ["ret"] = {"stem!"}}, ["getlocal"] = {["arg"] = {"int", "int"}, ["ret"] = {"str!", "stem!"}}}}, {["Nilable<_T>"] = {["val"] = {["arg"] = {}, ["ret"] = {"_T!"}, ["type"] = {"method"}}}}}
+   return {{[""] = {["_fcall"] = {["arg"] = {"form", "&..."}, ["ret"] = {""}}, ["_kind"] = {["arg"] = {"stem!"}, ["ret"] = {"int"}}, ["_load"] = {["arg"] = {"str", "stem!"}, ["ret"] = {"__loadedfunc!", "str!"}}, ["collectgarbage"] = {["arg"] = {}, ["ret"] = {}}, ["error"] = {["arg"] = {"str"}, ["ret"] = {"__"}}, ["load"] = {["arg"] = {"str", "str!", "str!", "stem!"}, ["ret"] = {"form!", "str!"}}, ["loadfile"] = {["arg"] = {"str"}, ["ret"] = {"form!", "str!"}}, ["print"] = {["arg"] = {"&..."}, ["ret"] = {}}, ["require"] = {["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["tonumber"] = {["arg"] = {"str", "int!"}, ["ret"] = {"real!"}}, ["tostring"] = {["arg"] = {"&stem"}, ["ret"] = {"str"}}, ["type"] = {["arg"] = {"&stem!"}, ["ret"] = {"str"}}}}, {["iStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["close"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["read"] = {["arg"] = {"stem!"}, ["ret"] = {"str!"}, ["type"] = {"mut"}}}}, {["oStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["close"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["flush"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["write"] = {["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}, ["type"] = {"mut"}}}}, {["luaStream"] = {["__attrib"] = {["inplements"] = {"iStream", "oStream"}}, ["close"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["flush"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["read"] = {["arg"] = {"stem!"}, ["ret"] = {"str!"}, ["type"] = {"mut"}}, ["seek"] = {["arg"] = {"str", "int"}, ["ret"] = {"int!", "str!"}, ["type"] = {"mut"}}, ["write"] = {["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}, ["type"] = {"mut"}}}}, {["Mapping"] = {["__attrib"] = {["type"] = {"interface"}}, ["_toMap"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"method"}}}}, {["io"] = {["open"] = {["arg"] = {"str", "str!"}, ["ret"] = {"luaStream!"}}, ["popen"] = {["arg"] = {"str"}, ["ret"] = {"luaStream!"}}, ["stderr"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["stdin"] = {["type"] = {"member"}, ["typeInfo"] = {"iStream"}}, ["stdout"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}}}, {["package"] = {["path"] = {["type"] = {"member"}, ["typeInfo"] = {"str"}}, ["searchpath"] = {["arg"] = {"str", "str"}, ["ret"] = {"str!"}}}}, {["os"] = {["clock"] = {["arg"] = {}, ["ret"] = {"real"}}, ["date"] = {["arg"] = {"str!", "stem!"}, ["ret"] = {"stem!"}}, ["difftime"] = {["arg"] = {"stem", "stem"}, ["ret"] = {"int"}}, ["exit"] = {["arg"] = {"int!"}, ["ret"] = {"__"}}, ["remove"] = {["arg"] = {"str"}, ["ret"] = {"bool!", "str!"}}, ["rename"] = {["arg"] = {"str", "str"}, ["ret"] = {"stem!", "str!"}}, ["time"] = {["arg"] = {"stem!"}, ["ret"] = {"stem!"}}}}, {["string"] = {["byte"] = {["arg"] = {"str", "int!", "int!"}, ["ret"] = {"int!"}}, ["dump"] = {["arg"] = {"form", "bool!"}, ["ret"] = {"str"}}, ["find"] = {["arg"] = {"str", "str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["format"] = {["arg"] = {"str", "..."}, ["ret"] = {"str"}}, ["gmatch"] = {["arg"] = {"str", "str"}, ["ret"] = {"form", "stem!", "stem!"}}, ["gsub"] = {["arg"] = {"str", "str", "str"}, ["ret"] = {"str", "int"}}, ["lower"] = {["arg"] = {"str"}, ["ret"] = {"str"}}, ["rep"] = {["arg"] = {"str", "int"}, ["ret"] = {"str"}}, ["reverse"] = {["arg"] = {"str"}, ["ret"] = {"str"}}, ["sub"] = {["arg"] = {"str", "int", "int!"}, ["ret"] = {"str"}}, ["upper"] = {["arg"] = {"str"}, ["ret"] = {"str"}}}}, {["str"] = {["__attrib"] = {["inplements"] = {"Mapping"}}, ["byte"] = {["arg"] = {"int!", "int!"}, ["ret"] = {"int"}, ["type"] = {"method"}}, ["find"] = {["arg"] = {"str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}, ["type"] = {"method"}}, ["format"] = {["arg"] = {"&..."}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["gmatch"] = {["arg"] = {"str"}, ["ret"] = {"form", "stem!", "stem!"}, ["type"] = {"method"}}, ["gsub"] = {["arg"] = {"str", "str"}, ["ret"] = {"str", "int"}, ["type"] = {"method"}}, ["lower"] = {["arg"] = {}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["rep"] = {["arg"] = {"int"}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["reverse"] = {["arg"] = {}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["sub"] = {["arg"] = {"int", "int!"}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["upper"] = {["arg"] = {}, ["ret"] = {"str"}, ["type"] = {"method"}}}}, {["List<T>"] = {["insert"] = {["arg"] = {"&T"}, ["ret"] = {""}, ["type"] = {"mut"}}, ["remove"] = {["arg"] = {"int!"}, ["ret"] = {"T!"}, ["type"] = {"mut"}}, ["sort"] = {["arg"] = {"form!"}, ["ret"] = {}, ["type"] = {"mut"}}, ["unpack"] = {["arg"] = {}, ["ret"] = {"..."}, ["type"] = {"method"}}}}, {["Array<T>"] = {["sort"] = {["arg"] = {"form!"}, ["ret"] = {}, ["type"] = {"mut"}}, ["unpack"] = {["arg"] = {}, ["ret"] = {"..."}, ["type"] = {"method"}}}}, {["Set<T>"] = {["add"] = {["arg"] = {"T"}, ["ret"] = {}, ["type"] = {"mut"}}, ["and"] = {["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}, ["type"] = {"mut"}}, ["clone"] = {["arg"] = {}, ["ret"] = {"Set<T>"}, ["type"] = {"method"}}, ["del"] = {["arg"] = {"T"}, ["ret"] = {}, ["type"] = {"mut"}}, ["has"] = {["arg"] = {"T"}, ["ret"] = {"bool"}, ["type"] = {"method"}}, ["len"] = {["arg"] = {}, ["ret"] = {"int"}, ["type"] = {"method"}}, ["or"] = {["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}, ["type"] = {"mut"}}, ["sub"] = {["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}, ["type"] = {"mut"}}}}, {["math"] = {["random"] = {["arg"] = {"int!", "int!"}, ["ret"] = {"real"}}, ["randomseed"] = {["arg"] = {"int!"}, ["ret"] = {}}}}, {["debug"] = {["getinfo"] = {["arg"] = {"int"}, ["ret"] = {"Map<str,stem>!"}}, ["getlocal"] = {["arg"] = {"int", "int"}, ["ret"] = {"str!", "stem!"}}}}, {["Nilable<_T>"] = {["val"] = {["arg"] = {}, ["ret"] = {"_T!"}, ["type"] = {"method"}}}}}
 end
 
 
@@ -2960,7 +2960,7 @@ function TransUnit:registBuiltInScope(  )
       end
       
       
-      local function getTypeInfoFromScope( scope, symbol, genTyeList )
+      local function getTypeInfoFromScope( scope, symbol, genTypeList )
       
          local typeInfo = scope:getTypeInfo( symbol, scope, false, self.scopeAccess )
          if  nil == typeInfo then
@@ -2968,6 +2968,35 @@ function TransUnit:registBuiltInScope(  )
          
             return nil
          end
+         
+         local validGenType = false
+         for __index, genType in pairs( genTypeList ) do
+            if genType:get_kind() ~= Ast.TypeInfoKind.Alternate then
+               validGenType = true
+               break
+            end
+            
+         end
+         
+         if validGenType then
+            do
+               local _switchExp = typeInfo:get_kind()
+               if _switchExp == Ast.TypeInfoKind.Map then
+                  if #genTypeList ~= 2 then
+                     Util.err( string.format( "illegal map param -- %d", #genTypeList) )
+                  end
+                  
+                  local keyType = genTypeList[1]
+                  local valType = genTypeList[2]
+                  return Ast.NormalTypeInfo.createMap( Ast.AccessMode.Pub, typeInfo:get_parentInfo(), keyType, valType, typeInfo:get_mutMode() )
+               else 
+                  
+                     Util.err( string.format( "not support type -- %s", typeInfo:getTxt(  )) )
+               end
+            end
+            
+         end
+         
          
          return typeInfo
       end
@@ -2980,17 +3009,25 @@ function TransUnit:registBuiltInScope(  )
       
       local genTypeList = {}
       local index, endIndex = typeName:find( "[%w]+<" )
+      local suffix = ""
       if index ~= nil and endIndex ~= nil then
-         local genTypeName = typeName:sub( endIndex )
-         do
-            local tailIndex = genTypeName:find( "[,>]" )
-            if tailIndex ~= nil then
-               local genType = getTypeInfo( genTypeName:sub( 2, tailIndex - 1 ) )
-               table.insert( genTypeList, genType )
+         local genTypeName = typeName:sub( endIndex + 1 )
+         while true do
+            do
+               local tailIndex = genTypeName:find( "[,>]" )
+               if tailIndex ~= nil then
+                  local genType = getTypeInfo( genTypeName:sub( 1, tailIndex - 1 ) )
+                  table.insert( genTypeList, genType )
+                  genTypeName = genTypeName:sub( tailIndex + 1 )
+               else
+                  suffix = genTypeName:sub( 1 )
+                  break
+               end
             end
+            
          end
          
-         typeName = typeName:sub( 1, endIndex - 1 )
+         typeName = typeName:sub( 1, endIndex - 1 ) .. suffix
       end
       
       
@@ -3620,19 +3657,51 @@ function TransUnit:analyzeLuneControl( firstToken )
 
    local node = nil
    local nextToken = self:getToken(  )
+   
+   local pragma
+   
    do
       local _switchExp = (nextToken.txt )
-      if _switchExp == LuneControl.Pragma.disable_mut_control then
+      if _switchExp == "disable_mut_control" then
          self.validMutControl = false
-      elseif _switchExp == LuneControl.Pragma.ignore_symbol_ then
+         pragma = _lune.newAlge( LuneControl.Pragma.disable_mut_control)
+      elseif _switchExp == "ignore_symbol_" then
          self.ignoreToCheckSymbol_ = true
-      elseif _switchExp == LuneControl.Pragma.load__lune_module then
-         node = Nodes.LuneControlNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeNone}, LuneControl.Pragma.load__lune_module )
+         pragma = _lune.newAlge( LuneControl.Pragma.ignore_symbol_)
+      elseif _switchExp == "load__lune_module" then
+         pragma = _lune.newAlge( LuneControl.Pragma.load__lune_module)
+      elseif _switchExp == "can_not_conv_code" then
+         local codeSet = {}
+         while true do
+            local token = self:getToken(  )
+            if token.txt == ";" then
+               self:pushback(  )
+               break
+            end
+            
+            do
+               local code = LuneControl.Code._from( token.txt )
+               if code ~= nil then
+                  codeSet[code]= true
+               else
+                  self:addErrMess( token.pos, string.format( "illegal code -- '%s'", token.txt) )
+               end
+            end
+            
+         end
+         
+         pragma = _lune.newAlge( LuneControl.Pragma.can_not_conv_code, {codeSet})
       else 
          
             self:addErrMess( nextToken.pos, string.format( "unknown option -- %s", nextToken.txt) )
+            self:checkNextToken( ";" )
+            return nil
       end
    end
+   
+   
+   node = Nodes.LuneControlNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeNone}, pragma )
+   self.helperInfo.pragmaSet[pragma]= true
    
    self:checkNextToken( ";" )
    return node
@@ -3786,7 +3855,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = '@lune.@base.@TransUnit.TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2356, function (  )
+   Log.log( Log.Level.Info, __func__, 2416, function (  )
    
       return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), modulePath)
    end )
@@ -3803,7 +3872,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2368, function (  )
+               Log.log( Log.Level.Info, __func__, 2428, function (  )
                
                   return string.format( "%s already", modulePath)
                end )
@@ -3836,7 +3905,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2388, function (  )
+   Log.log( Log.Level.Info, __func__, 2448, function (  )
    
       return string.format( "%s processing", modulePath)
    end )
@@ -4179,7 +4248,7 @@ function TransUnit:processImport( modulePath )
    
    self.importModuleInfo:remove(  )
    
-   Log.log( Log.Level.Info, __func__, 2718, function (  )
+   Log.log( Log.Level.Info, __func__, 2778, function (  )
    
       return string.format( "%s complete", modulePath)
    end )
@@ -4305,7 +4374,7 @@ function TransUnit:analyzeIf( token )
    self:pushback(  )
    
    local list = {}
-   local ifExp = self:analyzeExp( false, false )
+   local ifExp = self:analyzeExpOne( false, false )
    table.insert( list, Nodes.IfStmtInfo.new(Nodes.IfKind.If, ifExp, self:analyzeBlock( Nodes.BlockKind.If, TentativeMode.Start )) )
    
    local function checkCond( condExp )
@@ -4331,7 +4400,7 @@ function TransUnit:analyzeIf( token )
    nextToken = self:getToken( true )
    if nextToken.txt == "elseif" then
       while nextToken.txt == "elseif" do
-         local condExp = self:analyzeExp( false, false )
+         local condExp = self:analyzeExpOne( false, false )
          table.insert( list, Nodes.IfStmtInfo.new(Nodes.IfKind.ElseIf, condExp, self:analyzeBlock( Nodes.BlockKind.Elseif, TentativeMode.Merge )) )
          checkCond( condExp )
          nextToken = self:getToken( true )
@@ -4355,7 +4424,7 @@ end
 
 function TransUnit:analyzeSwitch( firstToken )
 
-   local exp = self:analyzeExp( false, false )
+   local exp = self:analyzeExpOne( false, false )
    
    self:checkNextToken( "{" )
    
@@ -4405,7 +4474,7 @@ end
 
 function TransUnit:analyzeMatch( firstToken )
 
-   local exp = self:analyzeExp( false, false )
+   local exp = self:analyzeExpOne( false, false )
    
    local algeTypeInfo = _lune.__Cast( exp:get_expType():get_srcTypeInfo(), 3, Ast.AlgeTypeInfo )
    if  nil == algeTypeInfo then
@@ -4494,14 +4563,14 @@ end
 
 function TransUnit:analyzeWhile( token )
 
-   return Nodes.WhileNode.create( self.nodeManager, token.pos, {Ast.builtinTypeNone}, self:analyzeExp( false, false ), self:analyzeBlock( Nodes.BlockKind.While, TentativeMode.Loop ) )
+   return Nodes.WhileNode.create( self.nodeManager, token.pos, {Ast.builtinTypeNone}, self:analyzeExpOne( false, false ), self:analyzeBlock( Nodes.BlockKind.While, TentativeMode.Loop ) )
 end
 
 
 function TransUnit:analyzeRepeat( token )
 
    local scope = self:pushScope( false )
-   local node = Nodes.RepeatNode.create( self.nodeManager, token.pos, {Ast.builtinTypeNone}, self:analyzeBlock( Nodes.BlockKind.Repeat, TentativeMode.Simple, scope ), self:analyzeExp( false, false ) )
+   local node = Nodes.RepeatNode.create( self.nodeManager, token.pos, {Ast.builtinTypeNone}, self:analyzeBlock( Nodes.BlockKind.Repeat, TentativeMode.Simple, scope ), self:analyzeExpOne( false, false ) )
    self:popScope(  )
    
    self:checkNextToken( ";" )
@@ -4520,14 +4589,14 @@ function TransUnit:analyzeFor( firstToken )
    end
    
    self:checkNextToken( "=" )
-   local exp1 = self:analyzeExp( false, false )
+   local exp1 = self:analyzeExpOne( false, false )
    if not Ast.isNumberType( exp1:get_expType() ) then
       self:addErrMess( exp1:get_pos(), string.format( "exp1 is not number -- %s", exp1:get_expType():getTxt(  )) )
    end
    
    local symbolInfo = self:addLocalVar( exp1:get_pos(), false, true, val.txt, exp1:get_expType(), Ast.MutMode.IMut )
    self:checkNextToken( "," )
-   local exp2 = self:analyzeExp( false, false )
+   local exp2 = self:analyzeExpOne( false, false )
    if not Ast.isNumberType( exp2:get_expType() ) then
       self:addErrMess( exp2:get_pos(), string.format( "exp2 is not number -- %s", exp2:get_expType():getTxt(  )) )
    end
@@ -4535,7 +4604,7 @@ function TransUnit:analyzeFor( firstToken )
    local token = self:getToken(  )
    local exp3 = nil
    if token.txt == "," then
-      exp3 = self:analyzeExp( false, false )
+      exp3 = self:analyzeExpOne( false, false )
       do
          local _exp = exp3
          if _exp ~= nil then
@@ -4663,7 +4732,7 @@ function TransUnit:analyzeForeach( token, sortFlag )
    
    self:checkToken( nextToken, "in" )
    
-   local exp = self:analyzeExp( false, false )
+   local exp = self:analyzeExpOne( false, false )
    
    local expType
    
@@ -5692,7 +5761,7 @@ function TransUnit:analyzeDeclEnum( accessMode, firstToken )
       
       
       if nextToken.txt == "=" then
-         local exp = self:analyzeExp( false, false )
+         local exp = self:analyzeExpOne( false, false )
          local literal, mess = exp:getLiteral(  )
          if literal ~= nil then
             do
@@ -6310,6 +6379,7 @@ end
 function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePrefix, classTypeInfo, name, moduleName, nextToken )
 
    local memberName2Node = {}
+   local allStmtList = {}
    local declStmtList = {}
    local fieldList = {}
    local memberList = {}
@@ -6317,9 +6387,9 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
    local initBlockInfo = Nodes.ClassInitBlockInfo.new()
    local advertiseList = {}
    local trustList = {}
-   local node = Nodes.DeclClassNode.create( self.nodeManager, firstToken.pos, {classTypeInfo}, classAccessMode, name, gluePrefix, declStmtList, fieldList, moduleName, memberList, self.scope, initBlockInfo, advertiseList, trustList, {} )
+   local node = Nodes.DeclClassNode.create( self.nodeManager, firstToken.pos, {classTypeInfo}, classAccessMode, name, gluePrefix, moduleName, allStmtList, declStmtList, fieldList, memberList, self.scope, initBlockInfo, advertiseList, trustList, {} )
    self.typeInfo2ClassNode[classTypeInfo] = node
-   local declCtorNode = nil
+   local alreadyCtorFlag = false
    local hasInitBlock = false
    local hasStaticMember = false
    
@@ -6333,13 +6403,14 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
          self:addErrMess( token.pos, "interface can not have member" )
       end
       
-      if not staticFlag and declCtorNode then
+      if not staticFlag and alreadyCtorFlag then
          self:addErrMess( token.pos, "member can't declare after '__init' method." )
       elseif staticFlag and hasInitBlock then
          self:addErrMess( token.pos, "static member can't declare after '__init' block." )
       end
       
       local memberNode = self:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, token )
+      table.insert( allStmtList, memberNode )
       table.insert( fieldList, memberNode )
       table.insert( memberList, memberNode )
       memberName2Node[memberNode:get_name().txt] = memberNode
@@ -6372,10 +6443,11 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
       
       
       local methodNode = self:analyzeDeclMethod( classTypeInfo, declFuncMode, abstractFlag, overrideFlag, accessMode, staticFlag, token, nameToken )
+      table.insert( allStmtList, methodNode )
       table.insert( fieldList, methodNode )
       methodNameSet[nameToken.txt]= true
       if nameToken.txt == "__init" then
-         declCtorNode = methodNode
+         alreadyCtorFlag = true
          
          for memberName, memberNode in pairs( memberName2Node ) do
             if not memberNode:get_staticFlag() then
@@ -6420,7 +6492,7 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
       local info = Nodes.DeclFuncInfo.new(Nodes.FuncKind.InitBlock, classTypeInfo, token, {}, true, Ast.AccessMode.Pri, block, {}, false)
       local initBlockNode = Nodes.DeclMethodNode.create( self.nodeManager, firstToken.pos, {funcTypeInfo}, info )
       initBlockInfo:set_func( initBlockNode )
-      
+      table.insert( allStmtList, initBlockNode )
       self:popScope(  )
       self:finishTentativeSymbol( false )
    end
@@ -6454,19 +6526,29 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
          ) )
       end
       
-      table.insert( declStmtList, self:analyzeDeclEnum( accessMode, token ) )
+      local enumNode = self:analyzeDeclEnum( accessMode, token )
+      table.insert( allStmtList, enumNode )
+      table.insert( declStmtList, enumNode )
    end
    
    local function processLuneControl(  )
    
       nextToken = self:getToken(  )
+      
+      local pragma
+      
       do
          local _switchExp = nextToken.txt
-         if _switchExp == LuneControl.Pragma.default__init then
-            declCtorNode = self:createNoneNode( nextToken.pos )
+         if _switchExp == "default__init" then
+            pragma = _lune.newAlge( LuneControl.Pragma.default__init)
+            
+            alreadyCtorFlag = true
+            
             self:addDefaultConstructor( nextToken.pos, classTypeInfo, self.scope, memberList, methodNameSet, false )
-         elseif _switchExp == LuneControl.Pragma.default__init_old then
-            declCtorNode = self:createNoneNode( nextToken.pos )
+         elseif _switchExp == "default__init_old" then
+            pragma = _lune.newAlge( LuneControl.Pragma.default__init_old)
+            
+            alreadyCtorFlag = true
             self:addDefaultConstructor( nextToken.pos, classTypeInfo, self.scope, memberList, methodNameSet, true )
          else 
             
@@ -6475,6 +6557,10 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
       end
       
       self:checkNextToken( ";" )
+      
+      local ctrlNode = Nodes.LuneControlNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeNone}, pragma )
+      self.helperInfo.pragmaSet[pragma]= true
+      table.insert( allStmtList, ctrlNode )
    end
    
    local function processClassFields( inMacro )
@@ -7915,6 +8001,17 @@ function TransUnit:analyzeWhen( firstToken )
 end
 
 
+function TransUnit:analyzeExpOne( allowNoneType, skipOp2Flag, opLevel, expectType )
+
+   local exp = self:analyzeExp( allowNoneType, skipOp2Flag, opLevel, expectType )
+   if #exp:get_expTypeList() == 1 then
+      return exp
+   end
+   
+   return Nodes.ExpMultiTo1Node.create( self.nodeManager, exp:get_pos(), {exp:get_expType()}, exp )
+end
+
+
 function TransUnit:createExpList( pos, expTypeList, expList, followOn, abbrNode )
 
    local workList = {}
@@ -8183,12 +8280,12 @@ function TransUnit:analyzeMapConst( token )
       
       self:pushback(  )
       
-      local key = self:analyzeExp( false, false )
+      local key = self:analyzeExpOne( false, false )
       keyTypeInfo = getMapKeyValType( key:get_pos(), true, keyTypeInfo, key:get_expType() )
       
       self:checkNextToken( ":" )
       
-      local val = self:analyzeExp( false, false )
+      local val = self:analyzeExpOne( false, false )
       valTypeInfo = getMapKeyValType( val:get_pos(), false, valTypeInfo, val:get_expType() )
       
       table.insert( pairList, Nodes.PairItem.new(key, val) )
@@ -8285,7 +8382,7 @@ function TransUnit:analyzeExpRefItem( token, exp, nilAccess )
    end
    
    
-   local indexExp = self:analyzeExp( false, false, nil, expectItemType )
+   local indexExp = self:analyzeExpOne( false, false, nil, expectItemType )
    if not indexExp:canBeRight(  ) then
       self:addErrMess( indexExp:get_pos(), "This node can't use index" )
    end
@@ -10563,11 +10660,11 @@ end
 
 function TransUnit:analyzeExpUnwrap( firstToken )
 
-   local expNode = self:analyzeExp( false, true )
+   local expNode = self:analyzeExpOne( false, true )
    local nextToken = self:getToken(  )
    local insNode = nil
    if nextToken.txt == "default" then
-      insNode = self:analyzeExp( false, false )
+      insNode = self:analyzeExpOne( false, false )
    else
     
       self:pushback(  )
@@ -10770,7 +10867,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, prevOpLevel, expectTy
       end
       
       
-      local exp = self:analyzeExp( false, true, _lune.unwrap( op1levelMap[token.txt]) )
+      local exp = self:analyzeExpOne( false, true, _lune.unwrap( op1levelMap[token.txt]) )
       local typeInfo = Ast.builtinTypeNone
       local macroExpFlag = false
       local expType = exp:get_expType()

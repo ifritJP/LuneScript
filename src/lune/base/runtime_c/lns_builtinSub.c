@@ -93,7 +93,7 @@ extern lune_stem_t u_mtd_string_find(
     lune_any_t * pPattern, lune_stem_t init, lune_stem_t plain)
 {
     lua_State * pLua = _pEnv->pLua;
-    int stackTop = lune_string_call_setup( pLua, "format", pTarget );
+    int stackTop = lune_string_call_setup( pLua, "find", pTarget );
 
     LUNE_PUSH_STR( pLua, pPattern );
     int argNum = 2;

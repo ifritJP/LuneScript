@@ -25,6 +25,7 @@ SOFTWARE.
 import lune.base.Ast;
 import lune.base.Nodes;
 import lune.base.Parser;
+import lune.base.LuneControl;
 
 pub class Opt {
    let prefix: str;
@@ -95,6 +96,12 @@ pub override fn dumpFilter.processNone(
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node, "" );
+};
+pub override fn dumpFilter.processLuneControl(
+   node: &Nodes.LuneControlNode, opt:Opt ) mut
+{
+   let prefix, depth = opt.get();
+   dump( prefix, depth, node, node.$pragma.$_txt );
 };
 pub override fn dumpFilter.processBlankLine(
    node: &Nodes.BlankLineNode, opt:Opt ) mut

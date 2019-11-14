@@ -71,10 +71,8 @@ function Ctrl:runTestcase( testcase )
 
    testcase(  )
 end
-function Ctrl:run( modObj, meta )
+function Ctrl:run( modObj )
 
-   local metaInfo = meta
-   
    if modObj ~= nil then
       do
          local testMap = modObj['__testMap']

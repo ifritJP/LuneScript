@@ -111,6 +111,12 @@ pub class Ctrl {
    }
 }
 
+pub fn outputAllResult( stream:oStream ) {
+   foreach ctrl in ctrlList {
+      ctrl.outputResult( stream );
+   }
+}
+
 pub macro _eq( ctrl:sym, val1:__exp, val2:__exp ): bool {
    ,,ctrl.checkEq( ,,val1, ,,val2, ,,,,val1, ,,,,val2, __mod__, __line__ )
 }

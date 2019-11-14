@@ -32,6 +32,7 @@ import lune.base.LuaMod;
 import lune.base.LuaVer;
 import lune.base.Parser;
 import lune.base.Log;
+import lune.base.LuneControl;
 
 class PubVerInfo {
    pub let staticFlag: bool;
@@ -76,7 +77,7 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
    // クラス TypeId → TypeInfo
    pri let mut classId2TypeInfo: Map<int,&Ast.TypeInfo>;
    // クラス TypeId → Member Node List
-   pri let mut classId2MemberList: Map<int,List<&Nodes.DeclMemberNode>>;
+   pri let mut classId2MemberList: Map<int,&List<&Nodes.DeclMemberNode>>;
    // enum TypeId -> EnumTypeInfo
    pri let mut pubEnumId2EnumTypeInfo: Map<int,&Ast.EnumTypeInfo>;
    // enum TypeId -> AlgeTypeInfo
@@ -3239,7 +3240,11 @@ pub override fn convFilter.processLiteralSymbol(
 pub override fn convFilter.processLuneControl(
    node: Nodes.LuneControlNode, opt: Opt ) mut
 {
-   self.processLoadRuntime();
+   match node.$pragma {
+      case .load__lune_module {
+         self.processLoadRuntime();
+      }
+   }
 }
 
 pub fn createFilter(

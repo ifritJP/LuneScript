@@ -122,18 +122,22 @@ _moduleObj.setLevel = setLevel
 
 
 
+local logStream = io.stderr
+
 local function log( level, funcName, lineNo, callback )
 
    if level <= outputLevel then
       local nowClock = os.clock(  )
-      io.stderr:write( string.format( "%6d:%s:%s:%d:", math.floor((nowClock * 1000 )), Level:_getTxt( level)
+      logStream:write( string.format( "%6d:%s:%s:%d:", math.floor((nowClock * 1000 )), Level:_getTxt( level)
       , funcName, lineNo) )
-      io.stderr:write( callback(  ) )
-      io.stderr:write( "\n" )
+      logStream:write( callback(  ) )
+      logStream:write( "\n" )
    end
    
 end
 _moduleObj.log = log
+
+
 
 
 

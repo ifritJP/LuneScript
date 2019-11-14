@@ -186,6 +186,7 @@ end
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
+local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
 
 local Opt = {}
 _moduleObj.Opt = Opt
@@ -291,6 +292,14 @@ function dumpFilter:processNone( node, opt )
 
    local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
+end
+
+
+function dumpFilter:processLuneControl( node, opt )
+
+   local prefix, depth = opt:get(  )
+   dump( prefix, depth, node, LuneControl.Pragma:_getTxt( node:get_pragma())
+    )
 end
 
 

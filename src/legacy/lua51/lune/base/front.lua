@@ -894,7 +894,16 @@ end
 
 
 function Front:loadFile( importModuleInfo, path, mod )
+   local __func__ = '@lune.@base.@front.Front.loadFile'
 
+   Log.log( Log.Level.Info, __func__, 515, function (  )
+      local __func__ = '@lune.@base.@front.Front.loadFile.<anonymous>'
+   
+      
+      return string.format( "start %s:%s", __func__, mod)
+   end )
+   
+   
    local meta, luaTxt = self:loadFileToLuaCode( importModuleInfo, path, mod )
    
    do
@@ -1080,7 +1089,7 @@ function Front:loadMeta( importModuleInfo, mod )
          if _exp ~= nil then
             self.loadedMetaMap[mod] = _exp.meta
          else
-            Log.log( Log.Level.Info, __func__, 649, function (  )
+            Log.log( Log.Level.Info, __func__, 651, function (  )
             
                return string.format( "%s checking", mod)
             end )
@@ -1419,7 +1428,7 @@ function Front:saveToLua(  )
             end
             
             if not cont then
-               Log.log( Log.Level.Debug, __func__, 996, function (  )
+               Log.log( Log.Level.Debug, __func__, 998, function (  )
                
                   return string.format( "<%s>, <%s>", tostring( oldLine), tostring( newLine))
                end )
@@ -1652,7 +1661,7 @@ end
 function Front:exec(  )
    local __func__ = '@lune.@base.@front.Front.exec'
 
-   Log.log( Log.Level.Trace, __func__, 1192, function (  )
+   Log.log( Log.Level.Trace, __func__, 1194, function (  )
    
       return Option.ModeKind:_getTxt( self.option.mode)
       
@@ -1678,11 +1687,13 @@ function Front:exec(  )
       elseif _switchExp == Option.ModeKind.Save or _switchExp == Option.ModeKind.SaveMeta then
          self:saveToLua(  )
       elseif _switchExp == Option.ModeKind.Exec then
-         local modObj, meta = self:loadModule( scriptPath2Module( self.option.scriptPath ) )
+         local modObj = self:loadModule( scriptPath2Module( self.option.scriptPath ) )
          
          if self.option.testing then
             local testCtrl = TestCtrl.Ctrl.new()
-            testCtrl:run( modObj, meta )
+            testCtrl:run( modObj )
+            
+            Testing.outputAllResult( io.stdout )
          end
          
       elseif _switchExp == Option.ModeKind.BootC then
@@ -1712,14 +1723,6 @@ local function exec( args )
    local front = Front.new(option)
    
    front:exec(  )
-   
-   if option.testing then
-      for __index, ctrl in pairs( Testing.getCtrlList(  ) ) do
-         ctrl:outputResult( io.stdout )
-      end
-      
-   end
-   
 end
 _moduleObj.exec = exec
 

@@ -43,5 +43,6 @@ __test case1 {
 
    let mut ctrl = new Testing.Ctrl();
    let code = format( .nothing_define_abbr, "test" );
-   Testing._isT( ctrl, isMessageOf( ID.nothing_define_abbr, code ) );
+   Testing._isT( ctrl, isMessageOf( .nothing_define_abbr, code ) );
+   Testing._isNotT( ctrl, isMessageOf( .nothing_define_abbr, "" ) );
 }

@@ -18,6 +18,13 @@ function _lune.unwrapDefault( val, defval )
    return val
 end
 
+function _lune.loadModule( mod )
+   if __luneScript then
+      return  __luneScript:loadModule( mod )
+   end
+   return require( mod )
+end
+
 function _lune.__isInstanceOf( obj, class )
    while obj do
       local meta = getmetatable( obj )
@@ -532,5 +539,7 @@ local function getCode( kind )
    return _lune.unwrap( codeMap[kind])
 end
 _moduleObj.getCode = getCode
+
+
 
 return _moduleObj

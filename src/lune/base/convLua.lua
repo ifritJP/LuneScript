@@ -242,6 +242,7 @@ local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
 local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Log = _lune.loadModule( 'lune.base.Log' )
+local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
 
 local PubVerInfo = {}
 function PubVerInfo.setmeta( obj )
@@ -3887,7 +3888,14 @@ end
 
 function convFilter:processLuneControl( node, opt )
 
-   self:processLoadRuntime(  )
+   do
+      local _matchExp = node:get_pragma()
+      if _matchExp[1] == LuneControl.Pragma.load__lune_module[1] then
+      
+         self:processLoadRuntime(  )
+      end
+   end
+   
 end
 
 
@@ -3915,7 +3923,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3273, function (  )
+   Log.log( Log.Level.Info, __func__, 3278, function (  )
    
       return string.format( "code: %s", code)
    end )
