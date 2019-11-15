@@ -3468,7 +3468,7 @@ function convFilter:processExpRef( node, opt )
    if node:get_token().txt == "super" then
       local funcType = node:get_expType()
       self:write( string.format( "%s.%s", self:getFullName( funcType:get_parentInfo() ), funcType:get_rawTxt()) )
-   elseif node:get_expType():equals( TransUnit.getBuiltinFunc(  ).lune__load ) then
+   elseif node:get_expType():equals( TransUnit.getBuiltinFunc(  ).lns__load ) then
       self:write( "_lune." .. self.targetLuaVer:get_loadStrFuncName() )
    else
     

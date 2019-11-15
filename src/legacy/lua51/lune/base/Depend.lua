@@ -272,4 +272,41 @@ local function getLoadedMod(  )
 end
 _moduleObj.getLoadedMod = getLoadedMod
 
+local function profile( validTest, func, path )
+
+   if not validTest then
+      return func(  )
+   end
+   
+   
+   local ProFi = require( 'ProFi' )
+   
+   ProFi:start(  )
+   
+   local result = func(  )
+   
+   ProFi:stop(  )
+   ProFi:writeReport( path )
+   
+   return result
+end
+_moduleObj.profile = profile
+
+local function getStackTrace(  )
+
+   local txt = ""
+   for level = 2, 8 do
+      do
+         local debugInfo = debug.getinfo( level )
+         if debugInfo ~= nil then
+            txt = txt .. string.format( "-- %s %s", tostring( debugInfo['short_src']), tostring( debugInfo['currentline']))
+         end
+      end
+      
+   end
+   
+   return txt
+end
+_moduleObj.getStackTrace = getStackTrace
+
 return _moduleObj

@@ -1380,7 +1380,7 @@ macro _DefBuiltinFuncType( class2symMapList:List<Map<str,Map<str,Map<str,List<st
             let mut subcaseList:List<stat> = [];
             
             forsort symbolInfo, funcName in symbolMap {
-               let typeName = "%s_%s" ( className ~= "" and className.lower() or "lune",
+               let typeName = "%s_%s" ( className ~= "" and className.lower() or "lns",
                                         funcName );
                let symName = "%s_sym" (typeName);
                defMemberList.insert( `{
@@ -1422,18 +1422,18 @@ builtin 関数の TypeInfo を保持するクラス。
    pub class BuiltinFuncType {
       ,,defMemberList;
 
-      let mut allSymbol:Set<&Ast.SymbolInfo> {pub};
+      let mut allSymbol:List<&Ast.SymbolInfo> {pub};
       let mut allClass:List<&Ast.TypeInfo> {pub};
 
       pub fn __init() {
          ,,initMemberList;
 
-         self.allSymbol = (@);
+         self.allSymbol = [];
          self.allClass = [];
       }
 
       pub fn register( symbolInfo:&Ast.SymbolInfo ) mut {
-         self.allSymbol.add( symbolInfo );
+         self.allSymbol.insert( symbolInfo );
       }
       pub fn registerClass( classInfo:&Ast.TypeInfo ) mut {
          self.allClass.insert( classInfo );

@@ -1,3 +1,8 @@
-let map = { 1:1 };
-let val = map[ 1 ];
-print( val );
+fn func( val:int! ) {
+   let! work = val {
+      work = 100;
+   };
+   print( work );
+}
+func( 10 );
+func( nil );

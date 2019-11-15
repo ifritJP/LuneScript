@@ -2881,7 +2881,7 @@ pub override fn convFilter.processExpRef(
       self.write( "%s.%s" ( self.getFullName( funcType.$parentInfo ),
                             funcType.$rawTxt ) );
    }
-   elseif node.$expType.equals( TransUnit.getBuiltinFunc().lune__load ##) {
+   elseif node.$expType.equals( TransUnit.getBuiltinFunc().lns__load ##) {
       self.write( "_lune." .. self.targetLuaVer.$loadStrFuncName );
    }
    else {

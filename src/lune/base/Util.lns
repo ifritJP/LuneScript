@@ -196,39 +196,11 @@ pub fn log( message:str ) {
 }
 
 pub fn printStackTrace() {
-   for level = 2, 8 {
-      if! let debugInfo = debug.getinfo( level ) {
-         errorLog( "-- %s %s" ( debugInfo.short_src,
-                                debugInfo.currentline ) );
-      }
-   }
+   errorLog( Depend.getStackTrace() );
 }
-
-pub fn profile( validTest:bool, func: form, path: str ): stem! {
-   if not validTest {
-      return func(##);
-   }
-
-   module ProFi require 'ProFi' {
-      pub fn start();
-      pub fn stop();
-      pub fn writeReport(arg:str);
-   }
-
-   ProFi.start();
-
-   let result = func(##);
-
-   ProFi.stop();
-   ProFi.writeReport( path );
-
-
-   return result;
-}
-
 
 /**
-path で指定した lns コードに対応した Lua コードが存在する場合、
+path で指定した lns コードに対応する Lua コードが存在する場合、
 その Lua コードのパスを返す。
 */
 pub fn getReadyCode( lnsPath:str, luaPath:str ): bool {

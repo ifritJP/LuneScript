@@ -25,19 +25,17 @@ SOFTWARE.
 #ifndef __LNS_LUAWRAPPER__
 #define __LNS_LUAWRAPPER__
 
-extern void lune_setLuaWapper( lune_env_t * _pEnv );
-extern lune_stem_t lune__load( lune_env_t * _pEnv, lune_any_t * code, lune_stem_t newEnv );
+extern void lns_setLuaWapper( lns_env_t * _pEnv );
+extern lns_stem_t lns_f__load( lns_env_t * _pEnv, lns_any_t * code, lns_stem_t newEnv );
 
-extern lune_any_t * lune_lua_itMap_new( lune_env_t * _pEnv, lune_any_t * _obj );
-extern bool lune_lua_itMap_hasNext(
-    lune_env_t * _pEnv, lune_any_t * _itAny );
-extern void lune_lua_itMap_getEntry(
-    lune_env_t * _pEnv, lune_any_t * _itAny, lune_Map_entry_t * pEntry );
+extern lns_any_t * lns_lua_itMap_new( lns_env_t * _pEnv, lns_any_t * _obj );
+extern bool lns_lua_itMap_hasNext(
+    lns_env_t * _pEnv, lns_any_t * _itAny );
+extern void lns_lua_itMap_getEntry(
+    lns_env_t * _pEnv, lns_any_t * _itAny, lns_Map_entry_t * pEntry );
 
-extern void lune_pushAnyVal( lune_env_t * _pEnv, void * pKey );
-extern void lune_lua_stack2str( lune_env_t * _pEnv, int index, lune_stem_t * pStem );
-extern void lune_setupFromStack( lune_env_t * _pEnv, int index, lune_stem_t * pStem );
-
-
+extern void lns_pushAnyVal( lns_env_t * _pEnv, void * pKey );
+extern void lns_lua_stack2str( lns_env_t * _pEnv, int index, lns_stem_t * pStem );
+extern void lns_setupFromStack( lns_env_t * _pEnv, int index, lns_stem_t * pStem );
 
 #endif

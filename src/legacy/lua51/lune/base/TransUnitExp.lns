@@ -1362,7 +1362,7 @@ fn TransUnit.analyzeExpCall(
          }
       }
 
-      if funcTypeInfo.equals( builtinFunc.lune__kind ##) {
+      if funcTypeInfo.equals( builtinFunc.lns__kind ##) {
          if! let expList = argList$.$expList {
             if #expList > 0 {
                return Nodes.LuneKindNode.create(
@@ -2263,7 +2263,7 @@ fn TransUnit.analyzeExpSymbol(
          if typeInfo.equals( Ast.builtinTypeSymbol ##) {
             skipFlag = true;
          }
-         if typeInfo.equals( builtinFunc.lune__load ##) {
+         if typeInfo.equals( builtinFunc.lns__load ##) {
             self.helperInfo.useLoad = true;
          }
          

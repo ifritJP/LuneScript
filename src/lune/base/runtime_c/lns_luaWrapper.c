@@ -28,20 +28,20 @@
 #include <lunescript.h>
 #include <math.h>
 
-#define LUNE_LUA_NAME_LEN 30
+#define LNS_LUA_NAME_LEN 30
 
-static const char * lune_valTableName = "__lune_vals";
-static const char * lune_swapWorkName = "__lune_swapwork";
+static const char * lns_valTableName = "__lns_vals";
+static const char * lns_swapWorkName = "__lns_swapwork";
 
-void lune_setLuaWapper( lune_env_t * _pEnv )
+void lns_setLuaWapper( lns_env_t * _pEnv )
 {
     luaL_openlibs( _pEnv->pLua );
     
     lua_newtable( _pEnv->pLua );
-    lua_setglobal( _pEnv->pLua, lune_valTableName );
+    lua_setglobal( _pEnv->pLua, lns_valTableName );
 }
 
-static void lune_getAccessName( const void * pKey, char * pBuf )
+static void lns_getAccessName( const void * pKey, char * pBuf )
 {
     sprintf( pBuf, "%p", pKey );
 }
@@ -49,123 +49,123 @@ static void lune_getAccessName( const void * pKey, char * pBuf )
 /**
 pAny が保持する Lua モジュールを push する。
  */
-void lune_pushAnyVal( lune_env_t * _pEnv, void * pKey )
+void lns_pushAnyVal( lns_env_t * _pEnv, void * pKey )
 {
-    // __lune_vals[ name ] に保持している値を取り出す。
-    // ただし、このままだと __lune_vals 自体がスタックに残るので、
-    // 一旦 __lune_swapwork に格納して、スタックをクリアしてから
-    // __lune_swapwork をスタックに戻すことで、スタックに値だけつむように処理している。
+    // __lns_vals[ name ] に保持している値を取り出す。
+    // ただし、このままだと __lns_vals 自体がスタックに残るので、
+    // 一旦 __lns_swapwork に格納して、スタックをクリアしてから
+    // __lns_swapwork をスタックに戻すことで、スタックに値だけつむように処理している。
 
     
-    // __lune_swapwork = __lune_vals[ name ]
-    char name[ LUNE_LUA_NAME_LEN ];
-    lune_getAccessName( pKey, name );
-    lua_getglobal( _pEnv->pLua, lune_valTableName );
+    // __lns_swapwork = __lns_vals[ name ]
+    char name[ LNS_LUA_NAME_LEN ];
+    lns_getAccessName( pKey, name );
+    lua_getglobal( _pEnv->pLua, lns_valTableName );
     lua_getfield( _pEnv->pLua, -1, name );
 
-    // push __lune_swapwork
-    lua_setglobal( _pEnv->pLua, lune_swapWorkName );
+    // push __lns_swapwork
+    lua_setglobal( _pEnv->pLua, lns_swapWorkName );
     lua_pop( _pEnv->pLua, 2 );
-    lua_getglobal( _pEnv->pLua, lune_swapWorkName );
+    lua_getglobal( _pEnv->pLua, lns_swapWorkName );
 }
 
 /**
-スタック top の値を __lune_vals[ name ] に保持する。
+スタック top の値を __lns_vals[ name ] に保持する。
 スタック top の値は取り除かれる。
  */
-static void lune_setAnyVal( lune_env_t * _pEnv, void * pKey )
+static void lns_setAnyVal( lns_env_t * _pEnv, void * pKey )
 {
-    // __lune_vals[ name ] = stack[ index ]
-    char name[ LUNE_LUA_NAME_LEN ];
-    lune_getAccessName( pKey, name );
-    lua_getglobal( _pEnv->pLua, lune_valTableName );
+    // __lns_vals[ name ] = stack[ index ]
+    char name[ LNS_LUA_NAME_LEN ];
+    lns_getAccessName( pKey, name );
+    lua_getglobal( _pEnv->pLua, lns_valTableName );
     lua_pushvalue( _pEnv->pLua, -2 );
     lua_setfield( _pEnv->pLua, -2, name );
     lua_pop( _pEnv->pLua, 2 );
 }
 
 /**
-スタックの index の位置にある文字列を lune_stem_t にセットする。
+スタックの index の位置にある文字列を lns_stem_t にセットする。
  */
-void lune_lua_stack2str( lune_env_t * _pEnv, int index, lune_stem_t * pStem )
+void lns_lua_stack2str( lns_env_t * _pEnv, int index, lns_stem_t * pStem )
 {
     size_t len;
     const char * pMess = lua_tolstring( _pEnv->pLua, index, &len );
-    pStem->type = lune_stem_type_any;
-    pStem->val.pAny = lune_cloneBin2any( _pEnv, pMess, len );
+    pStem->type = lns_stem_type_any;
+    pStem->val.pAny = lns_cloneBin2any( _pEnv, pMess, len );
 }
 
 /**
 スタックの top の値から pStem を設定する。
 スタック top の値は取り除かれる。
  */
-void lune_setupFromStack( lune_env_t * _pEnv, int index, lune_stem_t * pStem )
+void lns_setupFromStack( lns_env_t * _pEnv, int index, lns_stem_t * pStem )
 {
     lua_State * pLua = _pEnv->pLua;
     switch ( lua_type( pLua, index ) ) {
     case LUA_TNIL:
-        *pStem = lune_global.nilStem;
+        *pStem = lns_global.nilStem;
         lua_pop( pLua, 1 );
         break;
     case LUA_TNUMBER:
         {
             double work;
-            lune_real_t realVal = lua_tonumber( pLua, index );
+            lns_real_t realVal = lua_tonumber( pLua, index );
             if ( modf( realVal, &work ) == 0 ) {
-                *pStem = LUNE_STEM_INT( lua_tointeger( pLua, index ) );
+                *pStem = LNS_STEM_INT( lua_tointeger( pLua, index ) );
             }
             else {
-                *pStem = LUNE_STEM_REAL( realVal );
+                *pStem = LNS_STEM_REAL( realVal );
             }
             lua_pop( pLua, 1 );
         }
         break;
     case LUA_TBOOLEAN:
-        *pStem = LUNE_STEM_BOOL( lua_toboolean( pLua, index ) );
+        *pStem = LNS_STEM_BOOL( lua_toboolean( pLua, index ) );
         lua_pop( pLua, 1 );
         break;
     case LUA_TSTRING:
-        lune_lua_stack2str( _pEnv, index, pStem );
+        lns_lua_stack2str( _pEnv, index, pStem );
         lua_pop( pLua, 1 );
         break;
     default:
         {
-            *pStem = LUNE_STEM_ANY( lune_luaVal_new( _pEnv, lune_value_type_luaVal ) );
+            *pStem = LNS_STEM_ANY( lns_luaVal_new( _pEnv, lns_value_type_luaVal ) );
             lua_pushvalue( pLua, index );
-            lune_setAnyVal( _pEnv, pStem->val.pAny );
+            lns_setAnyVal( _pEnv, pStem->val.pAny );
         }
         break;
     }
 }
 
 
-static lune_stem_t lune_lua_loadedFunc( lune_env_t * _pEnv, lune_any_t * _pForm )
+static lns_stem_t lns_lua_loadedFunc( lns_env_t * _pEnv, lns_any_t * _pForm )
 {
     lua_State * pLua = _pEnv->pLua;
-    lune_stem_t retObj;
+    lns_stem_t retObj;
     
     int top = lua_gettop( pLua );
     
-    lune_pushAnyVal( _pEnv, _pForm );
+    lns_pushAnyVal( _pEnv, _pForm );
     int luaRet = lua_pcall( pLua, 0, LUA_MULTRET, 0 );
     if ( luaRet == LUA_OK ) {
         if ( lua_isnil( pLua, top ) ) {
             // ロード失敗
-            lune_stem_t mess;
-            lune_lua_stack2str( _pEnv, top + 1, &mess );
-            retObj = lune_createMRet( _pEnv, false, 2, lune_global.nilStem, mess );
+            lns_stem_t mess;
+            lns_lua_stack2str( _pEnv, top + 1, &mess );
+            retObj = lns_createMRet( _pEnv, false, 2, lns_global.nilStem, mess );
         }
         else {
             // ロード成功
-            lune_stem_t mapObj;
-            lune_setupFromStack( _pEnv, top, &mapObj );
-            retObj = lune_createMRet( _pEnv, false, 2, mapObj, lune_global.nilStem );
+            lns_stem_t mapObj;
+            lns_setupFromStack( _pEnv, top, &mapObj );
+            retObj = lns_createMRet( _pEnv, false, 2, mapObj, lns_global.nilStem );
         }
     }
     else {
-        lune_stem_t mess;
-        lune_lua_stack2str( _pEnv, top, &mess );
-        retObj = lune_createMRet( _pEnv, false, 2, lune_global.nilStem, mess );
+        lns_stem_t mess;
+        lns_lua_stack2str( _pEnv, top, &mess );
+        retObj = lns_createMRet( _pEnv, false, 2, lns_global.nilStem, mess );
     }
 
     lua_settop( pLua, top );
@@ -173,32 +173,32 @@ static lune_stem_t lune_lua_loadedFunc( lune_env_t * _pEnv, lune_any_t * _pForm 
     return retObj;
 }
 
-lune_stem_t lune__load( lune_env_t * _pEnv, lune_any_t * code, lune_stem_t newEnv )
+lns_stem_t lns_f__load( lns_env_t * _pEnv, lns_any_t * code, lns_stem_t newEnv )
 {
     int top = lua_gettop( _pEnv->pLua );
 
     int result = luaL_loadstring (_pEnv->pLua, code->val.str.pStr );
 
-    lune_stem_t retObj;
+    lns_stem_t retObj;
     
     if ( result == LUA_OK ) {
-        lune_any_t * formObj = lune_func2any(
-            _pEnv, (lune_closure_t * )lune_lua_loadedFunc, 0, false, 0 );
-        lune_setClosure( formObj );
+        lns_any_t * formObj = lns_func2any(
+            _pEnv, (lns_closure_t * )lns_lua_loadedFunc, 0, false, 0 );
+        lns_setClosure( formObj );
 
-        lune_setAnyVal( _pEnv, formObj );
+        lns_setAnyVal( _pEnv, formObj );
 
-        if ( newEnv.type != lune_stem_type_nil && newEnv.type != lune_stem_type_none )
+        if ( newEnv.type != lns_stem_type_nil && newEnv.type != lns_stem_type_none )
         {
-            lune_abort( "not suport" );
+            lns_abort( "not suport" );
         }
 
-        retObj = lune_createMRet( _pEnv, false, 1,  LUNE_STEM_ANY( formObj ) );
+        retObj = lns_createMRet( _pEnv, false, 1,  LNS_STEM_ANY( formObj ) );
     }
     else { 
-        retObj = lune_createMRet(
-            _pEnv, false, 2, lune_global.nilStem,
-            LUNE_STEM_ANY( lune_litStr2any( _pEnv, "failed to load" ) ) );
+        retObj = lns_createMRet(
+            _pEnv, false, 2, lns_global.nilStem,
+            LNS_STEM_ANY( lns_litStr2any( _pEnv, "failed to load" ) ) );
     }
 
     lua_settop( _pEnv->pLua, top );
@@ -209,7 +209,7 @@ lune_stem_t lune__load( lune_env_t * _pEnv, lune_any_t * code, lune_stem_t newEn
 /**
 
  */
-lune_any_t * lune_lua_itMap_new( lune_env_t * _pEnv, lune_any_t * _obj )
+lns_any_t * lns_lua_itMap_new( lns_env_t * _pEnv, lns_any_t * _obj )
 {
     lua_State * pLua = _pEnv->pLua;
     int top = lua_gettop( pLua );
@@ -217,27 +217,27 @@ lune_any_t * lune_lua_itMap_new( lune_env_t * _pEnv, lune_any_t * _obj )
     // { map, nil }
     lua_newtable( pLua );
     // map のオブジェクトをプッシュする
-    lune_pushAnyVal( _pEnv, _obj );
+    lns_pushAnyVal( _pEnv, _obj );
     lua_seti( pLua, -2, 1 );
 
 
     // { map, nil } を保持
-    lune_any_t * itObj = lune_luaVal_new( _pEnv, lune_value_type_itMap );
-    lune_setAnyVal( _pEnv, itObj );
+    lns_any_t * itObj = lns_luaVal_new( _pEnv, lns_value_type_itMap );
+    lns_setAnyVal( _pEnv, itObj );
 
     lua_settop( pLua, top );
 
     return itObj;
 }
 
-bool lune_lua_itMap_hasNext(
-    lune_env_t * _pEnv, lune_any_t * _itAny )
+bool lns_lua_itMap_hasNext(
+    lns_env_t * _pEnv, lns_any_t * _itAny )
 {
     lua_State * pLua = _pEnv->pLua;
     int top = lua_gettop( pLua );
 
     // { map, key, val } を push
-    lune_pushAnyVal( _pEnv, _itAny );
+    lns_pushAnyVal( _pEnv, _itAny );
     // map を push
     lua_geti( pLua, -1, 1 );
     // key を push
@@ -257,22 +257,22 @@ bool lune_lua_itMap_hasNext(
 }
 
 
-void lune_lua_itMap_getEntry(
-    lune_env_t * _pEnv, lune_any_t * _itAny, lune_Map_entry_t * pEntry )
+void lns_lua_itMap_getEntry(
+    lns_env_t * _pEnv, lns_any_t * _itAny, lns_Map_entry_t * pEntry )
 {
     lua_State * pLua = _pEnv->pLua;
     int top = lua_gettop( pLua );
 
     // { map, key } を push
-    lune_pushAnyVal( _pEnv, _itAny );
+    lns_pushAnyVal( _pEnv, _itAny );
     // key を push
     lua_geti( pLua, top, 2 );
     // key を取り出して登録
-    lune_setupFromStack( _pEnv, -1, &pEntry->key );
+    lns_setupFromStack( _pEnv, -1, &pEntry->key );
     // val を push
     lua_geti( pLua, top, 3 );
     // val を取り出して登録
-    lune_setupFromStack( _pEnv, -1, &pEntry->val );
+    lns_setupFromStack( _pEnv, -1, &pEntry->val );
 
     lua_settop( pLua, top );
 }

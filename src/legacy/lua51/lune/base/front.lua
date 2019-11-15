@@ -1162,7 +1162,7 @@ end
 function Front:dumpAst(  )
 
    local mod = scriptPath2Module( self.option.scriptPath )
-   Util.profile( self.option.validProf, function (  )
+   Depend.profile( self.option.validProf, function (  )
    
       local ast = self:createAst( frontInterface.ImportModuleInfo.new(), self:createPaser(  ), mod, getModuleId( self.option.scriptPath, mod ), nil, TransUnit.AnalyzeMode.Compile )
       ast:get_node():processFilter( dumpNode.createFilter( ast:get_moduleTypeInfo() ), dumpNode.Opt.new("", 0) )
@@ -1468,7 +1468,7 @@ function Front:saveToLua(  )
    local ast = nil
    
    local mod = scriptPath2Module( self.option.scriptPath )
-   Util.profile( self.option.validProf, function (  )
+   Depend.profile( self.option.validProf, function (  )
    
       local luaPath = self.option.scriptPath:gsub( "%.lns$", ".lua" )
       local metaPath = self.option.scriptPath:gsub( "%.lns$", ".meta" )

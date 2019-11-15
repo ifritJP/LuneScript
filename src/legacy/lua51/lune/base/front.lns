@@ -697,7 +697,7 @@ pub fn Front.dumpAst() mut {
    //frontInterface.setFront( self );
 
    let mod = scriptPath2Module( self.option.scriptPath );
-   Util.profile(
+   Depend.profile(
       self.option.validProf,
       fn() {
 	 let ast = self.createAst(
@@ -1029,7 +1029,7 @@ oldStream, newStream に格納されているモジュールのメタ情報が�
    let mut ast:&TransUnit.ASTInfo! = nil;
    
    let mod = scriptPath2Module( self.option.scriptPath );
-   Util.profile(
+   Depend.profile(
       self.option.validProf,
       fn () {
 	 let mut luaPath = self.option.scriptPath.gsub( "%.lns$", ".lua" );

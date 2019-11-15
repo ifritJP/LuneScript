@@ -29,14 +29,14 @@ SOFTWARE.
 extern "C" {
 #endif
 
-    typedef void * lune_allocator_t;
+    typedef void * lns_allocator_t;
 
-    extern lune_allocator_t lune_createAllocator( void );
-    extern void * _lune_malloc( lune_allocator_t allocateor,
+    extern lns_allocator_t lns_createAllocator( void );
+    extern void * _lns_malloc( lns_allocator_t allocateor,
                                 int size, const char * pName, int lineNo );
-    extern void _lune_free( lune_allocator_t allocateor,
+    extern void _lns_free( lns_allocator_t allocateor,
                             void * pAddr, const char * pName, int lineNo );
-    extern void lune_checkMem( void );
+    extern void lns_checkMem( void );
 
 #ifdef __cplusplus
 }

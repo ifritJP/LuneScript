@@ -1,225 +1,240 @@
 #ifndef __lns_builtin__
 #define __lns_builtin__
        
-typedef struct lune_mtd_iStream_t {
-   lune_method_t * close;
-   lune_method_t * read;
-} lune_mtd_iStream_t;
-typedef struct iStream {
-   lune_type_meta_t * pMeta;
-   lune_any_t * pObj;
-   lune_mtd_iStream_t * pMtd;
-} iStream;
-#define lune_mtd_iStream( OBJ )                     \
-          ((iStream*)&OBJ->val.ifVal)->pMtd
-typedef struct lune_mtd_oStream_t {
-   lune_method_t * close;
-   lune_method_t * flush;
-   lune_method_t * write;
-} lune_mtd_oStream_t;
-typedef struct oStream {
-   lune_type_meta_t * pMeta;
-   lune_any_t * pObj;
-   lune_mtd_oStream_t * pMtd;
-} oStream;
-#define lune_mtd_oStream( OBJ )                     \
-          ((oStream*)&OBJ->val.ifVal)->pMtd
-typedef struct lune_mtd_luaStream_t {
-   lune_del_t * _del;
-   lune_gc_t * _gc;
-   lune_method_t * close;
-   lune_method_t * flush;
-   lune_method_t * read;
-   lune_method_t * seek;
-   lune_method_t * write;
-} lune_mtd_luaStream_t;
-typedef struct u_if_imp_luaStream_t {
-   lune_any_t iStream;
-   lune_any_t oStream;
-   lune_any_t sentinel;
-} u_if_imp_luaStream_t;
-typedef struct luaStream {
-   lune_type_meta_t * pMeta;
-   u_if_imp_luaStream_t * pImp;
-   lune_mtd_luaStream_t * pMtd;
+extern lns_any_t * lns_f__fcall( lns_env_t * _pEnv, lns_any_t * arg1, lns_stem_t arg2 );
+extern lns_int_t lns_f__kind( lns_env_t * _pEnv, lns_stem_t arg1 );
+extern lns_stem_t lns_f__load( lns_env_t * _pEnv, lns_any_t * arg1, lns_stem_t arg2 );
+extern void lns_f_collectgarbage( lns_env_t * _pEnv );
+extern lns_any_t * lns_f_error( lns_env_t * _pEnv, lns_any_t * arg1 );
+extern lns_stem_t lns_f_load( lns_env_t * _pEnv, lns_any_t * arg1, lns_stem_t arg2, lns_stem_t arg3, lns_stem_t arg4 );
+extern lns_stem_t lns_f_loadfile( lns_env_t * _pEnv, lns_any_t * arg1 );
+extern void lns_f_print( lns_env_t * _pEnv, lns_stem_t arg1 );
+extern lns_stem_t lns_f_require( lns_env_t * _pEnv, lns_any_t * arg1 );
+extern lns_stem_t lns_f_tonumber( lns_env_t * _pEnv, lns_any_t * arg1, lns_stem_t arg2 );
+extern lns_any_t * lns_f_tostring( lns_env_t * _pEnv, lns_stem_t arg1 );
+extern lns_any_t * lns_f_type( lns_env_t * _pEnv, lns_stem_t arg1 );
+typedef struct lns_mtd_lns_iStream_t {
+   lns_method_t * close;
+   lns_method_t * read;
+} lns_mtd_lns_iStream_t;
+typedef struct lns_iStream {
+   lns_type_meta_t * pMeta;
+   lns_any_t * pObj;
+   lns_mtd_lns_iStream_t * pMtd;
+} lns_iStream;
+#define lns_mtd_lns_iStream( OBJ )                     \
+             ((lns_iStream*)&OBJ->val.ifVal)->pMtd
+extern lns_type_meta_t lns_type_meta_lns_iStream;
+typedef struct lns_mtd_lns_oStream_t {
+   lns_method_t * close;
+   lns_method_t * flush;
+   lns_method_t * write;
+} lns_mtd_lns_oStream_t;
+typedef struct lns_oStream {
+   lns_type_meta_t * pMeta;
+   lns_any_t * pObj;
+   lns_mtd_lns_oStream_t * pMtd;
+} lns_oStream;
+#define lns_mtd_lns_oStream( OBJ )                     \
+             ((lns_oStream*)&OBJ->val.ifVal)->pMtd
+extern lns_type_meta_t lns_type_meta_lns_oStream;
+typedef struct lns_mtd_lns_luaStream_t {
+   lns_del_t * _del;
+   lns_gc_t * _gc;
+   lns_method_t * close;
+   lns_method_t * flush;
+   lns_method_t * read;
+   lns_method_t * seek;
+   lns_method_t * write;
+} lns_mtd_lns_luaStream_t;
+typedef struct u_if_imp_lns_luaStream_t {
+   lns_any_t lns_iStream;
+   lns_any_t lns_oStream;
+   lns_any_t sentinel;
+} u_if_imp_lns_luaStream_t;
+typedef struct lns_luaStream {
+   lns_type_meta_t * pMeta;
+   u_if_imp_lns_luaStream_t * pImp;
+   lns_mtd_lns_luaStream_t * pMtd;
    // member
    // interface implements
-   u_if_imp_luaStream_t imp;
-} luaStream;
-#define lune_mtd_luaStream( OBJ )                     \
-                (((luaStream*)OBJ->val.classVal)->pMtd )
-#define lune_obj_luaStream( OBJ ) ((luaStream*)OBJ->val.classVal)
-#define lune_if_luaStream( OBJ ) ((luaStream*)OBJ->val.classVal)->pImp
-extern lune_any_t * lune_class_luaStream_new( lune_env_t * _pEnv);
-typedef struct lune_mtd_Mapping_t {
-   lune_method_t * _toMap;
-} lune_mtd_Mapping_t;
-typedef struct Mapping {
-   lune_type_meta_t * pMeta;
-   lune_any_t * pObj;
-   lune_mtd_Mapping_t * pMtd;
-} Mapping;
-#define lune_mtd_Mapping( OBJ )                     \
-          ((Mapping*)&OBJ->val.ifVal)->pMtd
-typedef struct lune_mtd_io_t {
-   lune_del_t * _del;
-   lune_gc_t * _gc;
-} lune_mtd_io_t;
-typedef struct u_if_imp_io_t {
-   lune_any_t sentinel;
-} u_if_imp_io_t;
-typedef struct io {
-   lune_type_meta_t * pMeta;
-   u_if_imp_io_t * pImp;
-   lune_mtd_io_t * pMtd;
+   u_if_imp_lns_luaStream_t imp;
+} lns_luaStream;
+#define lns_mtd_lns_luaStream( OBJ )                     \
+                (((lns_luaStream*)OBJ->val.classVal)->pMtd )
+#define lns_obj_lns_luaStream( OBJ ) ((lns_luaStream*)OBJ->val.classVal)
+#define lns_if_lns_luaStream( OBJ ) ((lns_luaStream*)OBJ->val.classVal)->pImp
+extern lns_any_t * lns_class_lns_luaStream_new( lns_env_t * _pEnv);
+typedef struct lns_mtd_lns_Mapping_t {
+   lns_method_t * _toMap;
+} lns_mtd_lns_Mapping_t;
+typedef struct lns_Mapping {
+   lns_type_meta_t * pMeta;
+   lns_any_t * pObj;
+   lns_mtd_lns_Mapping_t * pMtd;
+} lns_Mapping;
+#define lns_mtd_lns_Mapping( OBJ )                     \
+             ((lns_Mapping*)&OBJ->val.ifVal)->pMtd
+extern lns_type_meta_t lns_type_meta_lns_Mapping;
+typedef struct lns_mtd_lns_io_t {
+   lns_del_t * _del;
+   lns_gc_t * _gc;
+} lns_mtd_lns_io_t;
+typedef struct u_if_imp_lns_io_t {
+   lns_any_t sentinel;
+} u_if_imp_lns_io_t;
+typedef struct lns_io {
+   lns_type_meta_t * pMeta;
+   u_if_imp_lns_io_t * pImp;
+   lns_mtd_lns_io_t * pMtd;
    // member
    // interface implements
-   u_if_imp_io_t imp;
-} io;
-#define lune_mtd_io( OBJ )                     \
-                (((io*)OBJ->val.classVal)->pMtd )
-#define lune_obj_io( OBJ ) ((io*)OBJ->val.classVal)
-#define lune_if_io( OBJ ) ((io*)OBJ->val.classVal)->pImp
-extern lune_any_t * lune_class_io_new( lune_env_t * _pEnv);
-typedef struct lune_mtd_package_t {
-   lune_del_t * _del;
-   lune_gc_t * _gc;
-} lune_mtd_package_t;
-typedef struct u_if_imp_package_t {
-   lune_any_t sentinel;
-} u_if_imp_package_t;
-typedef struct package {
-   lune_type_meta_t * pMeta;
-   u_if_imp_package_t * pImp;
-   lune_mtd_package_t * pMtd;
+   u_if_imp_lns_io_t imp;
+} lns_io;
+#define lns_mtd_lns_io( OBJ )                     \
+                (((lns_io*)OBJ->val.classVal)->pMtd )
+#define lns_obj_lns_io( OBJ ) ((lns_io*)OBJ->val.classVal)
+#define lns_if_lns_io( OBJ ) ((lns_io*)OBJ->val.classVal)->pImp
+extern lns_any_t * lns_class_lns_io_new( lns_env_t * _pEnv);
+typedef struct lns_mtd_lns_package_t {
+   lns_del_t * _del;
+   lns_gc_t * _gc;
+} lns_mtd_lns_package_t;
+typedef struct u_if_imp_lns_package_t {
+   lns_any_t sentinel;
+} u_if_imp_lns_package_t;
+typedef struct lns_package {
+   lns_type_meta_t * pMeta;
+   u_if_imp_lns_package_t * pImp;
+   lns_mtd_lns_package_t * pMtd;
    // member
    // interface implements
-   u_if_imp_package_t imp;
-} package;
-#define lune_mtd_package( OBJ )                     \
-                (((package*)OBJ->val.classVal)->pMtd )
-#define lune_obj_package( OBJ ) ((package*)OBJ->val.classVal)
-#define lune_if_package( OBJ ) ((package*)OBJ->val.classVal)->pImp
-extern lune_any_t * lune_class_package_new( lune_env_t * _pEnv);
-typedef struct lune_mtd_os_t {
-   lune_del_t * _del;
-   lune_gc_t * _gc;
-} lune_mtd_os_t;
-typedef struct u_if_imp_os_t {
-   lune_any_t sentinel;
-} u_if_imp_os_t;
-typedef struct os {
-   lune_type_meta_t * pMeta;
-   u_if_imp_os_t * pImp;
-   lune_mtd_os_t * pMtd;
+   u_if_imp_lns_package_t imp;
+} lns_package;
+#define lns_mtd_lns_package( OBJ )                     \
+                (((lns_package*)OBJ->val.classVal)->pMtd )
+#define lns_obj_lns_package( OBJ ) ((lns_package*)OBJ->val.classVal)
+#define lns_if_lns_package( OBJ ) ((lns_package*)OBJ->val.classVal)->pImp
+extern lns_any_t * lns_class_lns_package_new( lns_env_t * _pEnv);
+typedef struct lns_mtd_lns_os_t {
+   lns_del_t * _del;
+   lns_gc_t * _gc;
+} lns_mtd_lns_os_t;
+typedef struct u_if_imp_lns_os_t {
+   lns_any_t sentinel;
+} u_if_imp_lns_os_t;
+typedef struct lns_os {
+   lns_type_meta_t * pMeta;
+   u_if_imp_lns_os_t * pImp;
+   lns_mtd_lns_os_t * pMtd;
    // member
    // interface implements
-   u_if_imp_os_t imp;
-} os;
-#define lune_mtd_os( OBJ )                     \
-                (((os*)OBJ->val.classVal)->pMtd )
-#define lune_obj_os( OBJ ) ((os*)OBJ->val.classVal)
-#define lune_if_os( OBJ ) ((os*)OBJ->val.classVal)->pImp
-extern lune_any_t * lune_class_os_new( lune_env_t * _pEnv);
-typedef struct lune_mtd_string_t {
-   lune_del_t * _del;
-   lune_gc_t * _gc;
-} lune_mtd_string_t;
-typedef struct u_if_imp_string_t {
-   lune_any_t sentinel;
-} u_if_imp_string_t;
-typedef struct string {
-   lune_type_meta_t * pMeta;
-   u_if_imp_string_t * pImp;
-   lune_mtd_string_t * pMtd;
+   u_if_imp_lns_os_t imp;
+} lns_os;
+#define lns_mtd_lns_os( OBJ )                     \
+                (((lns_os*)OBJ->val.classVal)->pMtd )
+#define lns_obj_lns_os( OBJ ) ((lns_os*)OBJ->val.classVal)
+#define lns_if_lns_os( OBJ ) ((lns_os*)OBJ->val.classVal)->pImp
+extern lns_any_t * lns_class_lns_os_new( lns_env_t * _pEnv);
+typedef struct lns_mtd_lns_string_t {
+   lns_del_t * _del;
+   lns_gc_t * _gc;
+} lns_mtd_lns_string_t;
+typedef struct u_if_imp_lns_string_t {
+   lns_any_t sentinel;
+} u_if_imp_lns_string_t;
+typedef struct lns_string {
+   lns_type_meta_t * pMeta;
+   u_if_imp_lns_string_t * pImp;
+   lns_mtd_lns_string_t * pMtd;
    // member
    // interface implements
-   u_if_imp_string_t imp;
-} string;
-#define lune_mtd_string( OBJ )                     \
-                (((string*)OBJ->val.classVal)->pMtd )
-#define lune_obj_string( OBJ ) ((string*)OBJ->val.classVal)
-#define lune_if_string( OBJ ) ((string*)OBJ->val.classVal)->pImp
-extern lune_any_t * lune_class_string_new( lune_env_t * _pEnv);
-typedef struct lune_mtd_math_t {
-   lune_del_t * _del;
-   lune_gc_t * _gc;
-} lune_mtd_math_t;
-typedef struct u_if_imp_math_t {
-   lune_any_t sentinel;
-} u_if_imp_math_t;
-typedef struct math {
-   lune_type_meta_t * pMeta;
-   u_if_imp_math_t * pImp;
-   lune_mtd_math_t * pMtd;
+   u_if_imp_lns_string_t imp;
+} lns_string;
+#define lns_mtd_lns_string( OBJ )                     \
+                (((lns_string*)OBJ->val.classVal)->pMtd )
+#define lns_obj_lns_string( OBJ ) ((lns_string*)OBJ->val.classVal)
+#define lns_if_lns_string( OBJ ) ((lns_string*)OBJ->val.classVal)->pImp
+extern lns_any_t * lns_class_lns_string_new( lns_env_t * _pEnv);
+typedef struct lns_mtd_lns_math_t {
+   lns_del_t * _del;
+   lns_gc_t * _gc;
+} lns_mtd_lns_math_t;
+typedef struct u_if_imp_lns_math_t {
+   lns_any_t sentinel;
+} u_if_imp_lns_math_t;
+typedef struct lns_math {
+   lns_type_meta_t * pMeta;
+   u_if_imp_lns_math_t * pImp;
+   lns_mtd_lns_math_t * pMtd;
    // member
    // interface implements
-   u_if_imp_math_t imp;
-} math;
-#define lune_mtd_math( OBJ )                     \
-                (((math*)OBJ->val.classVal)->pMtd )
-#define lune_obj_math( OBJ ) ((math*)OBJ->val.classVal)
-#define lune_if_math( OBJ ) ((math*)OBJ->val.classVal)->pImp
-extern lune_any_t * lune_class_math_new( lune_env_t * _pEnv);
-typedef struct lune_mtd_debug_t {
-   lune_del_t * _del;
-   lune_gc_t * _gc;
-} lune_mtd_debug_t;
-typedef struct u_if_imp_debug_t {
-   lune_any_t sentinel;
-} u_if_imp_debug_t;
-typedef struct debug {
-   lune_type_meta_t * pMeta;
-   u_if_imp_debug_t * pImp;
-   lune_mtd_debug_t * pMtd;
+   u_if_imp_lns_math_t imp;
+} lns_math;
+#define lns_mtd_lns_math( OBJ )                     \
+                (((lns_math*)OBJ->val.classVal)->pMtd )
+#define lns_obj_lns_math( OBJ ) ((lns_math*)OBJ->val.classVal)
+#define lns_if_lns_math( OBJ ) ((lns_math*)OBJ->val.classVal)->pImp
+extern lns_any_t * lns_class_lns_math_new( lns_env_t * _pEnv);
+typedef struct lns_mtd_lns_debug_t {
+   lns_del_t * _del;
+   lns_gc_t * _gc;
+} lns_mtd_lns_debug_t;
+typedef struct u_if_imp_lns_debug_t {
+   lns_any_t sentinel;
+} u_if_imp_lns_debug_t;
+typedef struct lns_debug {
+   lns_type_meta_t * pMeta;
+   u_if_imp_lns_debug_t * pImp;
+   lns_mtd_lns_debug_t * pMtd;
    // member
    // interface implements
-   u_if_imp_debug_t imp;
-} debug;
-#define lune_mtd_debug( OBJ )                     \
-                (((debug*)OBJ->val.classVal)->pMtd )
-#define lune_obj_debug( OBJ ) ((debug*)OBJ->val.classVal)
-#define lune_if_debug( OBJ ) ((debug*)OBJ->val.classVal)->pImp
-extern lune_any_t * lune_class_debug_new( lune_env_t * _pEnv);
-extern void u_call_mtd_iStream_close( lune_env_t * _pEnv, lune_any_t * pObj);
-extern lune_stem_t u_call_mtd_iStream_read( lune_env_t * _pEnv, lune_any_t * pObj, lune_stem_t arg1);
-extern void u_call_mtd_oStream_close( lune_env_t * _pEnv, lune_any_t * pObj);
-extern void u_call_mtd_oStream_flush( lune_env_t * _pEnv, lune_any_t * pObj);
-extern lune_stem_t u_call_mtd_oStream_write( lune_env_t * _pEnv, lune_any_t * pObj, lune_any_t * arg1);
-extern void u_call_mtd_luaStream_close( lune_env_t * _pEnv, lune_any_t * pObj);
-extern void u_call_mtd_luaStream_flush( lune_env_t * _pEnv, lune_any_t * pObj);
-extern lune_stem_t u_call_mtd_luaStream_read( lune_env_t * _pEnv, lune_any_t * pObj, lune_stem_t arg1);
-extern lune_stem_t u_call_mtd_luaStream_seek( lune_env_t * _pEnv, lune_any_t * pObj, lune_any_t * arg1, lune_int_t arg2);
-extern lune_stem_t u_call_mtd_luaStream_write( lune_env_t * _pEnv, lune_any_t * pObj, lune_any_t * arg1);
-extern void u_call_mtd_Mapping__toMap( lune_env_t * _pEnv, lune_any_t * pObj);
-extern lune_stem_t u_mtd_io_open( lune_env_t * _pEnv, lune_any_t * arg1, lune_stem_t arg2);
-extern lune_stem_t u_mtd_io_popen( lune_env_t * _pEnv, lune_any_t * arg1);
-extern lune_stem_t u_mtd_package_searchpath( lune_env_t * _pEnv, lune_any_t * arg1, lune_any_t * arg2);
-extern lune_real_t u_mtd_os_clock( lune_env_t * _pEnv);
-extern lune_stem_t u_mtd_os_date( lune_env_t * _pEnv, lune_stem_t arg1, lune_stem_t arg2);
-extern lune_int_t u_mtd_os_difftime( lune_env_t * _pEnv, lune_stem_t arg1, lune_stem_t arg2);
-extern lune_any_t * u_mtd_os_exit( lune_env_t * _pEnv, lune_stem_t arg1);
-extern lune_stem_t u_mtd_os_remove( lune_env_t * _pEnv, lune_any_t * arg1);
-extern lune_stem_t u_mtd_os_rename( lune_env_t * _pEnv, lune_any_t * arg1, lune_any_t * arg2);
-extern lune_stem_t u_mtd_os_time( lune_env_t * _pEnv, lune_stem_t arg1);
-extern lune_stem_t u_mtd_string_byte( lune_env_t * _pEnv, lune_any_t * arg1, lune_stem_t arg2, lune_stem_t arg3);
-extern lune_any_t * u_mtd_string_dump( lune_env_t * _pEnv, lune_any_t * arg1, lune_stem_t arg2);
-extern lune_stem_t u_mtd_string_find( lune_env_t * _pEnv, lune_any_t * arg1, lune_any_t * arg2, lune_stem_t arg3, lune_stem_t arg4);
-extern lune_any_t * u_mtd_string_format( lune_env_t * _pEnv, lune_any_t * arg1, lune_stem_t arg2);
-extern lune_stem_t u_mtd_string_gmatch( lune_env_t * _pEnv, lune_any_t * arg1, lune_any_t * arg2);
-extern lune_stem_t u_mtd_string_gsub( lune_env_t * _pEnv, lune_any_t * arg1, lune_any_t * arg2, lune_any_t * arg3);
-extern lune_any_t * u_mtd_string_lower( lune_env_t * _pEnv, lune_any_t * arg1);
-extern lune_any_t * u_mtd_string_rep( lune_env_t * _pEnv, lune_any_t * arg1, lune_int_t arg2);
-extern lune_any_t * u_mtd_string_reverse( lune_env_t * _pEnv, lune_any_t * arg1);
-extern lune_any_t * u_mtd_string_sub( lune_env_t * _pEnv, lune_any_t * arg1, lune_int_t arg2, lune_stem_t arg3);
-extern lune_any_t * u_mtd_string_upper( lune_env_t * _pEnv, lune_any_t * arg1);
-extern lune_real_t u_mtd_math_random( lune_env_t * _pEnv, lune_stem_t arg1, lune_stem_t arg2);
-extern void u_mtd_math_randomseed( lune_env_t * _pEnv, lune_stem_t arg1);
-extern lune_stem_t u_mtd_debug_getinfo( lune_env_t * _pEnv, lune_int_t arg1);
-extern lune_stem_t u_mtd_debug_getlocal( lune_env_t * _pEnv, lune_int_t arg1, lune_int_t arg2);
-extern lune_any_t * lune_var_io_stderr;
-extern lune_any_t * lune_var_io_stdout;
-extern lune_any_t * lune_var_io_stdin;
-extern lune_any_t * lune_var_package_path;
-extern void lune_init_lns_builtin( lune_env_t * _pEnv );
+   u_if_imp_lns_debug_t imp;
+} lns_debug;
+#define lns_mtd_lns_debug( OBJ )                     \
+                (((lns_debug*)OBJ->val.classVal)->pMtd )
+#define lns_obj_lns_debug( OBJ ) ((lns_debug*)OBJ->val.classVal)
+#define lns_if_lns_debug( OBJ ) ((lns_debug*)OBJ->val.classVal)->pImp
+extern lns_any_t * lns_class_lns_debug_new( lns_env_t * _pEnv);
+extern void l_call_mtd_lns_iStream_close( lns_env_t * _pEnv, lns_any_t * pObj);
+extern lns_stem_t l_call_mtd_lns_iStream_read( lns_env_t * _pEnv, lns_any_t * pObj, lns_stem_t arg1);
+extern void l_call_mtd_lns_oStream_close( lns_env_t * _pEnv, lns_any_t * pObj);
+extern void l_call_mtd_lns_oStream_flush( lns_env_t * _pEnv, lns_any_t * pObj);
+extern lns_stem_t l_call_mtd_lns_oStream_write( lns_env_t * _pEnv, lns_any_t * pObj, lns_any_t * arg1);
+extern void l_call_mtd_lns_luaStream_close( lns_env_t * _pEnv, lns_any_t * pObj);
+extern void l_call_mtd_lns_luaStream_flush( lns_env_t * _pEnv, lns_any_t * pObj);
+extern lns_stem_t l_call_mtd_lns_luaStream_read( lns_env_t * _pEnv, lns_any_t * pObj, lns_stem_t arg1);
+extern lns_stem_t l_call_mtd_lns_luaStream_seek( lns_env_t * _pEnv, lns_any_t * pObj, lns_any_t * arg1, lns_int_t arg2);
+extern lns_stem_t l_call_mtd_lns_luaStream_write( lns_env_t * _pEnv, lns_any_t * pObj, lns_any_t * arg1);
+extern void l_call_mtd_lns_Mapping__toMap( lns_env_t * _pEnv, lns_any_t * pObj);
+extern lns_stem_t mtd_lns_io_open( lns_env_t * _pEnv, lns_any_t * arg1, lns_stem_t arg2);
+extern lns_stem_t mtd_lns_io_popen( lns_env_t * _pEnv, lns_any_t * arg1);
+extern lns_stem_t mtd_lns_package_searchpath( lns_env_t * _pEnv, lns_any_t * arg1, lns_any_t * arg2);
+extern lns_real_t mtd_lns_os_clock( lns_env_t * _pEnv);
+extern lns_stem_t mtd_lns_os_date( lns_env_t * _pEnv, lns_stem_t arg1, lns_stem_t arg2);
+extern lns_int_t mtd_lns_os_difftime( lns_env_t * _pEnv, lns_stem_t arg1, lns_stem_t arg2);
+extern lns_any_t * mtd_lns_os_exit( lns_env_t * _pEnv, lns_stem_t arg1);
+extern lns_stem_t mtd_lns_os_remove( lns_env_t * _pEnv, lns_any_t * arg1);
+extern lns_stem_t mtd_lns_os_rename( lns_env_t * _pEnv, lns_any_t * arg1, lns_any_t * arg2);
+extern lns_stem_t mtd_lns_os_time( lns_env_t * _pEnv, lns_stem_t arg1);
+extern lns_stem_t mtd_lns_string_byte( lns_env_t * _pEnv, lns_any_t * arg1, lns_stem_t arg2, lns_stem_t arg3);
+extern lns_any_t * mtd_lns_string_dump( lns_env_t * _pEnv, lns_any_t * arg1, lns_stem_t arg2);
+extern lns_stem_t mtd_lns_string_find( lns_env_t * _pEnv, lns_any_t * arg1, lns_any_t * arg2, lns_stem_t arg3, lns_stem_t arg4);
+extern lns_any_t * mtd_lns_string_format( lns_env_t * _pEnv, lns_any_t * arg1, lns_stem_t arg2);
+extern lns_stem_t mtd_lns_string_gmatch( lns_env_t * _pEnv, lns_any_t * arg1, lns_any_t * arg2);
+extern lns_stem_t mtd_lns_string_gsub( lns_env_t * _pEnv, lns_any_t * arg1, lns_any_t * arg2, lns_any_t * arg3);
+extern lns_any_t * mtd_lns_string_lower( lns_env_t * _pEnv, lns_any_t * arg1);
+extern lns_any_t * mtd_lns_string_rep( lns_env_t * _pEnv, lns_any_t * arg1, lns_int_t arg2);
+extern lns_any_t * mtd_lns_string_reverse( lns_env_t * _pEnv, lns_any_t * arg1);
+extern lns_any_t * mtd_lns_string_sub( lns_env_t * _pEnv, lns_any_t * arg1, lns_int_t arg2, lns_stem_t arg3);
+extern lns_any_t * mtd_lns_string_upper( lns_env_t * _pEnv, lns_any_t * arg1);
+extern lns_real_t mtd_lns_math_random( lns_env_t * _pEnv, lns_stem_t arg1, lns_stem_t arg2);
+extern void mtd_lns_math_randomseed( lns_env_t * _pEnv, lns_stem_t arg1);
+extern lns_stem_t mtd_lns_debug_getinfo( lns_env_t * _pEnv, lns_int_t arg1);
+extern lns_stem_t mtd_lns_debug_getlocal( lns_env_t * _pEnv, lns_int_t arg1, lns_int_t arg2);
+extern lns_any_t * l_var_lns_io_stderr;
+extern lns_any_t * l_var_lns_io_stdin;
+extern lns_any_t * l_var_lns_io_stdout;
+extern lns_any_t * l_var_lns_package_path;
+extern void lns_init_lns_builtin( lns_env_t * _pEnv );
 #endif

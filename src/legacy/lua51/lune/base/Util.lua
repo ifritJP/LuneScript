@@ -381,38 +381,9 @@ _moduleObj.log = log
 
 local function printStackTrace(  )
 
-   for level = 2, 8 do
-      do
-         local debugInfo = debug.getinfo( level )
-         if debugInfo ~= nil then
-            errorLog( string.format( "-- %s %s", tostring( debugInfo['short_src']), tostring( debugInfo['currentline'])) )
-         end
-      end
-      
-   end
-   
+   errorLog( Depend.getStackTrace(  ) )
 end
 _moduleObj.printStackTrace = printStackTrace
-
-local function profile( validTest, func, path )
-
-   if not validTest then
-      return func(  )
-   end
-   
-   
-   local ProFi = require( 'ProFi' )
-   
-   ProFi:start(  )
-   
-   local result = func(  )
-   
-   ProFi:stop(  )
-   ProFi:writeReport( path )
-   
-   return result
-end
-_moduleObj.profile = profile
 
 local function getReadyCode( lnsPath, luaPath )
 

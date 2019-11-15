@@ -86,3 +86,35 @@ pub fn getLoadedMod() : &Map<str,stem>
    let loaded = _load( "return package.loaded"## )$();
    return (unwrap loaded)@@Map<str,stem>;
 }
+
+pub fn profile( validTest:bool, func: form, path: str ): stem! {
+   if not validTest {
+      return func(##);
+   }
+
+   module ProFi require 'ProFi' {
+      pub fn start();
+      pub fn stop();
+      pub fn writeReport(arg:str);
+   }
+
+   ProFi.start();
+
+   let result = func(##);
+
+   ProFi.stop();
+   ProFi.writeReport( path );
+
+
+   return result;
+}
+
+pub fn getStackTrace():str {
+   let mut txt = "";
+   for level = 2, 8 {
+      if! let debugInfo = debug.getinfo( level ) {
+         txt = txt .. "-- %s %s" ( debugInfo.short_src, debugInfo.currentline );
+      }
+   }
+   return txt;
+}

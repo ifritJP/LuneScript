@@ -844,7 +844,7 @@ test-testC:
 	$(call test-convC-test,lune/base/Ver)
 	$(call test-convC-test,lune/base/Code)
 	$(call test-convC-test,lune/base/LuaMod)
-#	$(call test-convC-test,lune/base/LuaVer)
+	$(call test-convC-test,lune/base/LuaVer)
 	$(call convC,.,lune/base/LuneControl.lns,--testing)
 	$(call convC,.,lune/base/Depend.lns,--testing)
 	$(call test-convC-test,lune/base/Util, \

@@ -38,12 +38,12 @@ public:
 
 static map<void*,AllocInfo *> s_map;
 
-lune_allocator_t lune_createAllocator( void ) {
+lns_allocator_t lns_createAllocator( void ) {
     //return new map<void*,AllocInfo *>();
     return &s_map;
 }
 
-void * _lune_malloc( lune_allocator_t allocateor,
+void * _lns_malloc( lns_allocator_t allocateor,
                      int size, const char * pName, int lineNo )
 {
     map<void*,AllocInfo *> * pMap = (map<void*,AllocInfo *> *)allocateor;
@@ -53,7 +53,7 @@ void * _lune_malloc( lune_allocator_t allocateor,
     return pAddr;
 }
 
-void _lune_free( lune_allocator_t allocateor,
+void _lns_free( lns_allocator_t allocateor,
                  void * pAddr, const char * pName, int lineNo )
 {
     map<void*,AllocInfo *> * pMap = (map<void*,AllocInfo *> *)allocateor;
@@ -69,7 +69,7 @@ void _lune_free( lune_allocator_t allocateor,
     }
 }
 
-void lune_checkMem( void )
+void lns_checkMem( void )
 {
     map<void*,AllocInfo *> * pMap = &s_map;
     map<void*,AllocInfo *>::iterator it = pMap->begin();

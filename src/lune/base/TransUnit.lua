@@ -2221,30 +2221,30 @@ function BuiltinFuncType.new(  )
    return obj
 end
 function BuiltinFuncType:__init() 
-   self.lune__fcall = Ast.headTypeInfo
-   self.lune__fcall_sym = Ast.dummySymbol
-   self.lune__kind = Ast.headTypeInfo
-   self.lune__kind_sym = Ast.dummySymbol
-   self.lune__load = Ast.headTypeInfo
-   self.lune__load_sym = Ast.dummySymbol
-   self.lune_collectgarbage = Ast.headTypeInfo
-   self.lune_collectgarbage_sym = Ast.dummySymbol
-   self.lune_error = Ast.headTypeInfo
-   self.lune_error_sym = Ast.dummySymbol
-   self.lune_load = Ast.headTypeInfo
-   self.lune_load_sym = Ast.dummySymbol
-   self.lune_loadfile = Ast.headTypeInfo
-   self.lune_loadfile_sym = Ast.dummySymbol
-   self.lune_print = Ast.headTypeInfo
-   self.lune_print_sym = Ast.dummySymbol
-   self.lune_require = Ast.headTypeInfo
-   self.lune_require_sym = Ast.dummySymbol
-   self.lune_tonumber = Ast.headTypeInfo
-   self.lune_tonumber_sym = Ast.dummySymbol
-   self.lune_tostring = Ast.headTypeInfo
-   self.lune_tostring_sym = Ast.dummySymbol
-   self.lune_type = Ast.headTypeInfo
-   self.lune_type_sym = Ast.dummySymbol
+   self.lns__fcall = Ast.headTypeInfo
+   self.lns__fcall_sym = Ast.dummySymbol
+   self.lns__kind = Ast.headTypeInfo
+   self.lns__kind_sym = Ast.dummySymbol
+   self.lns__load = Ast.headTypeInfo
+   self.lns__load_sym = Ast.dummySymbol
+   self.lns_collectgarbage = Ast.headTypeInfo
+   self.lns_collectgarbage_sym = Ast.dummySymbol
+   self.lns_error = Ast.headTypeInfo
+   self.lns_error_sym = Ast.dummySymbol
+   self.lns_load = Ast.headTypeInfo
+   self.lns_load_sym = Ast.dummySymbol
+   self.lns_loadfile = Ast.headTypeInfo
+   self.lns_loadfile_sym = Ast.dummySymbol
+   self.lns_print = Ast.headTypeInfo
+   self.lns_print_sym = Ast.dummySymbol
+   self.lns_require = Ast.headTypeInfo
+   self.lns_require_sym = Ast.dummySymbol
+   self.lns_tonumber = Ast.headTypeInfo
+   self.lns_tonumber_sym = Ast.dummySymbol
+   self.lns_tostring = Ast.headTypeInfo
+   self.lns_tostring_sym = Ast.dummySymbol
+   self.lns_type = Ast.headTypeInfo
+   self.lns_type_sym = Ast.dummySymbol
    self.istream___attrib = Ast.headTypeInfo
    self.istream___attrib_sym = Ast.dummySymbol
    self.istream_close = Ast.headTypeInfo
@@ -2393,7 +2393,7 @@ function BuiltinFuncType:__init()
 end
 function BuiltinFuncType:register( symbolInfo )
 
-   self.allSymbol[symbolInfo]= true
+   table.insert( self.allSymbol, symbolInfo )
 end
 function BuiltinFuncType:registerClass( classInfo )
 
@@ -2426,52 +2426,52 @@ local function setupBuiltinTypeInfo( name, fieldName, symInfo )
       do
          local _switchExp = fieldName
          if _switchExp == '_fcall' then
-            builtinFunc.lune__fcall = typeInfo
-            builtinFunc.lune__fcall_sym = symInfo
+            builtinFunc.lns__fcall = typeInfo
+            builtinFunc.lns__fcall_sym = symInfo
             builtinFunc:register( symInfo )
          elseif _switchExp == '_kind' then
-            builtinFunc.lune__kind = typeInfo
-            builtinFunc.lune__kind_sym = symInfo
+            builtinFunc.lns__kind = typeInfo
+            builtinFunc.lns__kind_sym = symInfo
             builtinFunc:register( symInfo )
          elseif _switchExp == '_load' then
-            builtinFunc.lune__load = typeInfo
-            builtinFunc.lune__load_sym = symInfo
+            builtinFunc.lns__load = typeInfo
+            builtinFunc.lns__load_sym = symInfo
             builtinFunc:register( symInfo )
          elseif _switchExp == 'collectgarbage' then
-            builtinFunc.lune_collectgarbage = typeInfo
-            builtinFunc.lune_collectgarbage_sym = symInfo
+            builtinFunc.lns_collectgarbage = typeInfo
+            builtinFunc.lns_collectgarbage_sym = symInfo
             builtinFunc:register( symInfo )
          elseif _switchExp == 'error' then
-            builtinFunc.lune_error = typeInfo
-            builtinFunc.lune_error_sym = symInfo
+            builtinFunc.lns_error = typeInfo
+            builtinFunc.lns_error_sym = symInfo
             builtinFunc:register( symInfo )
          elseif _switchExp == 'load' then
-            builtinFunc.lune_load = typeInfo
-            builtinFunc.lune_load_sym = symInfo
+            builtinFunc.lns_load = typeInfo
+            builtinFunc.lns_load_sym = symInfo
             builtinFunc:register( symInfo )
          elseif _switchExp == 'loadfile' then
-            builtinFunc.lune_loadfile = typeInfo
-            builtinFunc.lune_loadfile_sym = symInfo
+            builtinFunc.lns_loadfile = typeInfo
+            builtinFunc.lns_loadfile_sym = symInfo
             builtinFunc:register( symInfo )
          elseif _switchExp == 'print' then
-            builtinFunc.lune_print = typeInfo
-            builtinFunc.lune_print_sym = symInfo
+            builtinFunc.lns_print = typeInfo
+            builtinFunc.lns_print_sym = symInfo
             builtinFunc:register( symInfo )
          elseif _switchExp == 'require' then
-            builtinFunc.lune_require = typeInfo
-            builtinFunc.lune_require_sym = symInfo
+            builtinFunc.lns_require = typeInfo
+            builtinFunc.lns_require_sym = symInfo
             builtinFunc:register( symInfo )
          elseif _switchExp == 'tonumber' then
-            builtinFunc.lune_tonumber = typeInfo
-            builtinFunc.lune_tonumber_sym = symInfo
+            builtinFunc.lns_tonumber = typeInfo
+            builtinFunc.lns_tonumber_sym = symInfo
             builtinFunc:register( symInfo )
          elseif _switchExp == 'tostring' then
-            builtinFunc.lune_tostring = typeInfo
-            builtinFunc.lune_tostring_sym = symInfo
+            builtinFunc.lns_tostring = typeInfo
+            builtinFunc.lns_tostring_sym = symInfo
             builtinFunc:register( symInfo )
          elseif _switchExp == 'type' then
-            builtinFunc.lune_type = typeInfo
-            builtinFunc.lune_type_sym = symInfo
+            builtinFunc.lns_type = typeInfo
+            builtinFunc.lns_type_sym = symInfo
             builtinFunc:register( symInfo )
          end
       end
@@ -9210,7 +9210,7 @@ function TransUnit:analyzeExpCall( firstToken, funcExp, nextToken )
       end
       
       
-      if funcTypeInfo:equals( builtinFunc.lune__kind ) then
+      if funcTypeInfo:equals( builtinFunc.lns__kind ) then
          do
             local expList = _lune.nilacc( argList, 'get_expList', 'callmtd' )
             if expList ~= nil then
@@ -10122,7 +10122,7 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
             skipFlag = true
          end
          
-         if typeInfo:equals( builtinFunc.lune__load ) then
+         if typeInfo:equals( builtinFunc.lns__load ) then
             self.helperInfo.useLoad = true
          end
          

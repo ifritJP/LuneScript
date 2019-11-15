@@ -1,20 +1,28 @@
 #include <lunescript.h>
+#include <Depend.h>
 
-lune_stem_t lune_base_Depend_getFileLastModifiedTime( lune_env_t * _pEnv, lune_any_t * path )
+lns_stem_t lune_base_Depend_getFileLastModifiedTime( lns_env_t * _pEnv, lns_any_t * path )
 {
-    lune_abort( "not ready" );
+    lns_abort( "not ready" );
 }
 
-lune_stem_t lune_base_Depend_searchpath( lune_env_t * _pEnv, lune_any_t * mod, lune_any_t * pathPattern )
+lns_stem_t lune_base_Depend_searchpath( lns_env_t * _pEnv, lns_any_t * mod, lns_any_t * pathPattern )
 {
-    lune_abort( "not ready" );
+    lns_abort( "not ready" );
 }
 
-lune_any_t * lune_base_Depend_getLoadedMod( lune_env_t * _pEnv )
+lns_any_t * lune_base_Depend_getLoadedMod( lns_env_t * _pEnv )
 {
-    lune_abort( "not ready" );
+    lns_abort( "not ready" );
 }
 
-void lune_init_lune_base_Depend_Sub( lune_env_t * _pEnv )
+lns_stem_t lune_base_Depend_profile(
+    lns_env_t * _pEnv, lns_bool_t validTest, lns_any_t * func, lns_any_t * path )
+{
+    lns_abort( "not ready" );
+}
+
+void lns_init_lune_base_Depend_Sub( lns_env_t * _pEnv )
 {
 }
+
