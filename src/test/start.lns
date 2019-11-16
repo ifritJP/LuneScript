@@ -1,7 +1,7 @@
 subfile use test.startsub;
 import test.macro as Macro;
 import test.simple;
-import lune.base.Writer;
+import lune.base.Writer; // skip-cross
 //import test.Sub2;
 import test.Sub2 as SUB2;
 import test.Sub6;
@@ -438,11 +438,11 @@ _print( `{ SUB2.External.val } );
 }
 
 {
-   let mut jsonWriter = new Writer.JSON( io.stdout );
-   jsonWriter.startParent( "hoge", true );
-   jsonWriter.write( "foo", "bar" );
-   jsonWriter.endElement();
-   jsonWriter.fin();
+   let mut jsonWriter = new Writer.JSON( io.stdout ); // skip-cross
+   jsonWriter.startParent( "hoge", true ); // skip-cross
+   jsonWriter.write( "foo", "bar" ); // skip-cross
+   jsonWriter.endElement(); // skip-cross
+   jsonWriter.fin(); // skip-cross
 }
 
 {

@@ -571,7 +571,7 @@ fn Front.checkUptodateMeta( metaPath:str, addSearchPath:str! ): stem! {
             return nil;
          }
          let moduleMetaPath = moduleLuaPath.gsub( "%.lua$", ".meta" );
-         if Util.existFile( moduleMetaPath ) and
+         if Depend.existFile( moduleMetaPath ) and
             not Util.getReadyCode( moduleMetaPath, metaPath )
          {
             return nil;
@@ -1243,7 +1243,8 @@ pub fn Front.exec() mut
 }
 
 pub fn exec( args: str[] ) {
-   let version = unwrap tonumber( _VERSION.gsub( "^[^%d]+", "" ), nil ) default 0.0;
+   let version =
+      unwrap tonumber( Depend.getLuaVersion().gsub( "^[^%d]+", "" ), nil ) default 0.0;
 
    if version < 5.1 {
       io.stderr.write(

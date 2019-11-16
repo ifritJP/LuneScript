@@ -969,8 +969,8 @@ _declLoopGetBreakKind( ForNode, block );
 
 
 _declNodeClass( "Apply", Node, false, false, true,
-                [ { "varList": "List<&Parser.Token>" },
-                  { "exp": "&Node" },
+                [ { "varList": "&List<&Ast.SymbolInfo>" },
+                  { "expList": "&ExpListNode" },
                   { "block": "&BlockNode" } ]
 );
 

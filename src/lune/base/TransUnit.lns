@@ -1803,7 +1803,6 @@ fn TransUnit.registBuiltInScope() mut {
       .Pub, Ast.headTypeInfo, Ast.builtinTypeString, Ast.builtinTypeStem, .Mut );
    self.scope.addVar( .Global, "_ENV", nil, mapType, .IMutRe, true );
    self.scope.addVar( .Global, "_G", nil, mapType, .IMutRe, true );
-   self.scope.addVar( .Global, "_VERSION", nil, Ast.builtinTypeString, .IMut, true );
    self.scope.addVar( .Global, "__mod__", nil, Ast.builtinTypeString, .IMut, true );
    self.scope.addVar( .Global, "__line__", nil, Ast.builtinTypeInt, .IMut, true );
    //self.scope.addVar( .Global, "__func__", nil, Ast.builtinTypeString, false, true );
@@ -3172,53 +3171,102 @@ fn TransUnit.analyzeApply( token: &Parser.Token ) mut : Nodes.ApplyNode {
    } nextToken.txt ~= ",";
    self.checkToken( nextToken, "of" );
 
-   let exp = self.analyzeExp( false, false## );
+   let expListNode = self.analyzeExpList( false, false## );
 
-   let expTypeList = exp.$expTypeList;
+   let mut itFunc = Ast.builtinTypeNone;
+   let mut itParam = Ast.builtinTypeNone;
+   
+   let expTypeList = expListNode.$expTypeList;
    if #expTypeList < 3 {
-      self.addErrMess( exp.$pos, "apply must have 3 values -- %s" (#expTypeList) );
+      self.addErrMess( expListNode.$pos, "apply must have 3 values -- %s" (#expTypeList) );
    }
-
+   else {
+      itFunc = expTypeList[ 1 ];
+      itParam = expTypeList[ 2 ];
+   }
 
    let mut itemTypeList:List<&Ast.TypeInfo> = [];
    let mut defaultItemType = Ast.builtinTypeStem_;
-   if! let callNode = exp@@@Nodes.ExpCallNode {
+
+   let mut readyFlag = false;
+   if! let callNode = expListNode.$expList[ 1 ]@@@Nodes.ExpCallNode {
       let callFuncType = callNode.$func.$expType;
       if callFuncType.equals( builtinFunc.str_gmatch ## ) or
          callFuncType.equals( builtinFunc.string_gmatch ## )
       {
          itemTypeList.insert( Ast.builtinTypeString );
          defaultItemType = Ast.builtinTypeString.$nilableTypeInfo;
-      }
-      else {
-         if #callFuncType.$retTypeInfoList == 0 {
-            self.addErrMess( exp.$pos, "apply value must return iterator function." );
-         }
-         let iteFunc = callFuncType.$retTypeInfoList[ 1 ];
-         foreach itemType, index in iteFunc.$retTypeInfoList {
-            let mut workType = itemType;
-            if index == 1 {
-               if itemType.$nilable {
-                  workType = workType.$nonnilableType;
-               }
-            }
-            itemTypeList.insert( workType );
-         }
+         readyFlag = true;
       }
    }
+
+   if not readyFlag {
+      itFunc = expTypeList[ 1 ];
+      switch itFunc.$kind {
+         case .Func, .FormFunc, .Form {
+         }
+         default {
+            self.addErrMess(
+               expListNode.$pos,
+               "The 1st value must be iterator function. -- %s" (itFunc.getTxt(##)) );
+         }
+      }
+      
+      if #itFunc.$argTypeInfoList ~= 2 {
+         self.addErrMess(
+            expListNode.$pos,
+            "iterator function must has two arguments. -- %s" (itFunc.getTxt(##)) );
+      }
+      else {
+         let arg2Type = itFunc.$argTypeInfoList[ 2 ];
+         if not arg2Type.$nilable {
+            self.addErrMess(
+               expListNode.$pos,
+               "the 2nd argument of iterator function must be nilable. -- %s"
+               (itFunc.getTxt(##)) );
+         }
+      }
+      
+      if #itFunc.$retTypeInfoList == 0 {
+         self.addErrMess( expListNode.$pos, "iterator function must return value." );
+      }
+      else {
+         let iteRetType = itFunc.$retTypeInfoList[ 1 ];
+         if not iteRetType.$nilable {
+            self.addErrMess(
+               expListNode.$pos,
+               "iterator function must return nilable type at 1st." );
+         }
+      }
+      
+      foreach itemType, index in itFunc.$retTypeInfoList {
+         let mut workType = itemType;
+         if index == 1 {
+            if itemType.$nilable {
+               workType = workType.$nonnilableType;
+            }
+         }
+         itemTypeList.insert( workType );
+      }
+   }
+
+   let mut varSymList:List<&Ast.SymbolInfo> = [];
    foreach var, index in varList {
       let mut itemType = defaultItemType;
       if index <= #itemTypeList {
          itemType = itemTypeList[ index ];
       }
-      self.addLocalVar( var.pos, false, true, var.txt, itemType, .IMut## );
+      varSymList.insert(
+         self.addLocalVar( var.pos, false, true, var.txt, itemType, .IMut## ) );
    }
+   
 
    let block = self.analyzeBlock( .Apply, .Loop, scope );
    self.popScope();
 
    return Nodes.ApplyNode.create(
-      self.nodeManager, token.pos, [ Ast.builtinTypeNone ], varList, exp, block );
+      self.nodeManager, token.pos, [ Ast.builtinTypeNone ],
+      varSymList, expListNode, block );
 }
 
 fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.Node {

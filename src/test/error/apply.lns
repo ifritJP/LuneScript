@@ -1,0 +1,74 @@
+{
+   fn func( param:str, status:str! )
+   {
+      return;
+   }
+
+
+   form ApplyForm( param:str, status:str! );
+
+   fn sub( val:str ) : ApplyForm, str, str!  {
+      return func, val, nil;
+   }
+
+   apply val1, val2 of sub( "xyz" ) // error
+   {
+      print( val1, val2 );
+   }
+}
+
+{
+   fn func( param:str, status:str! ): str, str!
+   {
+      return "a", nil;
+   }
+
+
+   form ApplyForm( param:str, status:str! ): str, str!;
+
+   fn sub( val:str ) : ApplyForm, str, str!  {
+      return func, val, nil;
+   }
+
+   apply val1, val2 of sub( "xyz" ) // error
+   {
+      print( val1, val2 );
+   }
+}
+
+{
+   fn func(): str!, str!
+   {
+      return "a", nil;
+   }
+
+
+   form ApplyForm(): str!, str!;
+
+   fn sub( val:str ) : ApplyForm, str, str!  {
+      return func, val, nil;
+   }
+
+   apply val1, val2 of sub( "xyz" ) // error
+   {
+      print( val1, val2 );
+   }
+}
+{
+   fn func( param:str, status:str ): str!, str!
+   {
+      return "a", nil;
+   }
+
+
+   form ApplyForm( param:str, status:str ): str!, str!;
+
+   fn sub( val:str ) : ApplyForm, str, str!  {
+      return func, val, nil;
+   }
+
+   apply val1, val2 of sub( "xyz" ) // error
+   {
+      print( val1, val2 );
+   }
+}

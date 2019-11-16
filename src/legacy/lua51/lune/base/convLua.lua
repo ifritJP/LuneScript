@@ -241,6 +241,7 @@ local TransUnit = _lune.loadModule( 'lune.base.TransUnit' )
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
 local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
+local Depend = _lune.loadModule( 'lune.base.Depend' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Log = _lune.loadModule( 'lune.base.Log' )
 local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
@@ -2887,11 +2888,11 @@ function convFilter:processApply( node, opt )
          self:write( ", " )
       end
       
-      self:write( var.txt )
+      self:write( var:get_name() )
    end
    
    self:write( " in " )
-   filter( node:get_exp(), self, node )
+   filter( node:get_expList(), self, node )
    self:write( " " )
    filter( node:get_block(), self, node )
    self:writeln( "end" )
@@ -3465,27 +3466,34 @@ end
 
 function convFilter:processExpRef( node, opt )
 
-   if node:get_token().txt == "super" then
-      local funcType = node:get_expType()
-      self:write( string.format( "%s.%s", self:getFullName( funcType:get_parentInfo() ), funcType:get_rawTxt()) )
-   elseif node:get_expType():equals( TransUnit.getBuiltinFunc(  ).lns__load ) then
-      self:write( "_lune." .. self.targetLuaVer:get_loadStrFuncName() )
-   else
-    
-      if _lune._Set_has(self.macroVarSymSet, node:get_symbolInfo():getOrg(  ) ) then
-         self:write( "macroVar." )
-      else
-       
-         if node:get_symbolInfo():get_accessMode() == Ast.AccessMode.Pub and node:get_symbolInfo():get_kind() == Ast.SymbolKind.Var then
-            if self.needModuleObj then
-               self:write( "_moduleObj." )
+   do
+      local _switchExp = node:get_token().txt
+      if _switchExp == "super" then
+         local funcType = node:get_expType()
+         self:write( string.format( "%s.%s", self:getFullName( funcType:get_parentInfo() ), funcType:get_rawTxt()) )
+      else 
+         
+            if node:get_expType():equals( TransUnit.getBuiltinFunc(  ).lns__load ) then
+               self:write( "_lune." .. self.targetLuaVer:get_loadStrFuncName() )
+            else
+             
+               if _lune._Set_has(self.macroVarSymSet, node:get_symbolInfo():getOrg(  ) ) then
+                  self:write( "macroVar." )
+               else
+                
+                  if node:get_symbolInfo():get_accessMode() == Ast.AccessMode.Pub and node:get_symbolInfo():get_kind() == Ast.SymbolKind.Var then
+                     if self.needModuleObj then
+                        self:write( "_moduleObj." )
+                     end
+                     
+                  end
+                  
+               end
+               
+               self:write( node:get_token().txt )
             end
             
-         end
-         
       end
-      
-      self:write( node:get_token().txt )
    end
    
 end
@@ -3924,7 +3932,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3278, function (  )
+   Log.log( Log.Level.Info, __func__, 3283, function (  )
    
       return string.format( "code: %s", code)
    end )
@@ -3949,7 +3957,7 @@ end
 function MacroEvalImp:evalFromCode( name, argNameList, code )
 
    local stream = Util.memStream.new()
-   local conv = convFilter.new("macro", stream, stream, ConvMode.Exec, true, Ast.headTypeInfo, Ast.SymbolKind.Typ, nil, LuaVer.curVer, false)
+   local conv = convFilter.new("macro", stream, stream, ConvMode.Exec, true, Ast.headTypeInfo, Ast.SymbolKind.Typ, nil, Depend.curVer, false)
    
    conv:outputDeclMacro( name, argNameList, function (  )
    
@@ -3964,7 +3972,7 @@ end
 function MacroEvalImp:eval( node )
 
    local stream = Util.memStream.new()
-   local conv = convFilter.new("macro", stream, stream, ConvMode.Exec, true, Ast.headTypeInfo, Ast.SymbolKind.Typ, nil, LuaVer.curVer, false)
+   local conv = convFilter.new("macro", stream, stream, ConvMode.Exec, true, Ast.headTypeInfo, Ast.SymbolKind.Typ, nil, Depend.curVer, false)
    
    conv:processDeclMacro( node, Opt.new(node) )
    

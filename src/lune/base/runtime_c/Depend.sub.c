@@ -22,6 +22,17 @@ lns_stem_t lune_base_Depend_profile(
     lns_abort( "not ready" );
 }
 
+lns_any_t * lune_base_Depend_getStackTrace( lns_env_t * _pEnv )
+{
+    lns_abort( "not ready" );
+}
+
+lns_any_t * lune_base_Depend_getLuaVersion( lns_env_t * _pEnv )
+{
+    lns_abort( "not ready" );
+}
+
+
 void lns_init_lune_base_Depend_Sub( lns_env_t * _pEnv )
 {
 }

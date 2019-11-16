@@ -946,11 +946,11 @@ function FormatterFilter:processApply( node, opt )
          self:write( ", " )
       end
       
-      self:write( var.txt )
+      self:write( var:get_name() )
    end
    
    self:write( " of " )
-   filter( node:get_exp(), self, opt:nextOpt( node ) )
+   filter( node:get_expList(), self, opt:nextOpt( node ) )
    self:write( " " )
    filter( node:get_block(), self, opt:nextOpt( node ) )
 end

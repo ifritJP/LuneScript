@@ -781,12 +781,12 @@ function dumpFilter:processApply( node, opt )
    local varNames = ""
    local varList = node:get_varList(  )
    for index, var in pairs( varList ) do
-      varNames = varNames .. var.txt .. " "
+      varNames = varNames .. var:get_name() .. " "
    end
    
    dump( prefix, depth, node, varNames )
-   filter( node:get_exp(  ), self, opt:nextOpt(  ) )
-   filter( node:get_block(  ), self, opt:nextOpt(  ) )
+   filter( node:get_expList(), self, opt:nextOpt(  ) )
+   filter( node:get_block(), self, opt:nextOpt(  ) )
 end
 
 

@@ -3141,7 +3141,6 @@ function TransUnit:registBuiltInScope(  )
    local mapType = Ast.NormalTypeInfo.createMap( Ast.AccessMode.Pub, Ast.headTypeInfo, Ast.builtinTypeString, Ast.builtinTypeStem, Ast.MutMode.Mut )
    self.scope:addVar( Ast.AccessMode.Global, "_ENV", nil, mapType, Ast.MutMode.IMutRe, true )
    self.scope:addVar( Ast.AccessMode.Global, "_G", nil, mapType, Ast.MutMode.IMutRe, true )
-   self.scope:addVar( Ast.AccessMode.Global, "_VERSION", nil, Ast.builtinTypeString, Ast.MutMode.IMut, true )
    self.scope:addVar( Ast.AccessMode.Global, "__mod__", nil, Ast.builtinTypeString, Ast.MutMode.IMut, true )
    self.scope:addVar( Ast.AccessMode.Global, "__line__", nil, Ast.builtinTypeInt, Ast.MutMode.IMut, true )
    
@@ -3855,7 +3854,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = '@lune.@base.@TransUnit.TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2416, function (  )
+   Log.log( Log.Level.Info, __func__, 2415, function (  )
    
       return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), modulePath)
    end )
@@ -3872,7 +3871,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2428, function (  )
+               Log.log( Log.Level.Info, __func__, 2427, function (  )
                
                   return string.format( "%s already", modulePath)
                end )
@@ -3905,7 +3904,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2448, function (  )
+   Log.log( Log.Level.Info, __func__, 2447, function (  )
    
       return string.format( "%s processing", modulePath)
    end )
@@ -4248,7 +4247,7 @@ function TransUnit:processImport( modulePath )
    
    self.importModuleInfo:remove(  )
    
-   Log.log( Log.Level.Info, __func__, 2778, function (  )
+   Log.log( Log.Level.Info, __func__, 2777, function (  )
    
       return string.format( "%s complete", modulePath)
    end )
@@ -4644,61 +4643,105 @@ function TransUnit:analyzeApply( token )
    until nextToken.txt ~= ","
    self:checkToken( nextToken, "of" )
    
-   local exp = self:analyzeExp( false, false )
+   local expListNode = self:analyzeExpList( false, false )
    
-   local expTypeList = exp:get_expTypeList()
+   local itFunc = Ast.builtinTypeNone
+   local itParam = Ast.builtinTypeNone
+   
+   local expTypeList = expListNode:get_expTypeList()
    if #expTypeList < 3 then
-      self:addErrMess( exp:get_pos(), string.format( "apply must have 3 values -- %s", tostring( #expTypeList)) )
+      self:addErrMess( expListNode:get_pos(), string.format( "apply must have 3 values -- %s", tostring( #expTypeList)) )
+   else
+    
+      itFunc = expTypeList[1]
+      itParam = expTypeList[2]
    end
    
    
    local itemTypeList = {}
    local defaultItemType = Ast.builtinTypeStem_
+   
+   local readyFlag = false
    do
-      local callNode = _lune.__Cast( exp, 3, Nodes.ExpCallNode )
+      local callNode = _lune.__Cast( expListNode:get_expList()[1], 3, Nodes.ExpCallNode )
       if callNode ~= nil then
          local callFuncType = callNode:get_func():get_expType()
          if callFuncType:equals( builtinFunc.str_gmatch ) or callFuncType:equals( builtinFunc.string_gmatch ) then
             table.insert( itemTypeList, Ast.builtinTypeString )
             defaultItemType = Ast.builtinTypeString:get_nilableTypeInfo()
-         else
-          
-            if #callFuncType:get_retTypeInfoList() == 0 then
-               self:addErrMess( exp:get_pos(), "apply value must return iterator function." )
-            end
-            
-            local iteFunc = callFuncType:get_retTypeInfoList()[1]
-            for index, itemType in pairs( iteFunc:get_retTypeInfoList() ) do
-               local workType = itemType
-               if index == 1 then
-                  if itemType:get_nilable() then
-                     workType = workType:get_nonnilableType()
-                  end
-                  
-               end
-               
-               table.insert( itemTypeList, workType )
-            end
-            
+            readyFlag = true
          end
          
       end
    end
    
+   
+   if not readyFlag then
+      itFunc = expTypeList[1]
+      do
+         local _switchExp = itFunc:get_kind()
+         if _switchExp == Ast.TypeInfoKind.Func or _switchExp == Ast.TypeInfoKind.FormFunc or _switchExp == Ast.TypeInfoKind.Form then
+         else 
+            
+               self:addErrMess( expListNode:get_pos(), string.format( "The 1st value must be iterator function. -- %s", itFunc:getTxt(  )) )
+         end
+      end
+      
+      
+      if #itFunc:get_argTypeInfoList() ~= 2 then
+         self:addErrMess( expListNode:get_pos(), string.format( "iterator function must has two arguments. -- %s", itFunc:getTxt(  )) )
+      else
+       
+         local arg2Type = itFunc:get_argTypeInfoList()[2]
+         if not arg2Type:get_nilable() then
+            self:addErrMess( expListNode:get_pos(), string.format( "the 2nd argument of iterator function must be nilable. -- %s", itFunc:getTxt(  )) )
+         end
+         
+      end
+      
+      
+      if #itFunc:get_retTypeInfoList() == 0 then
+         self:addErrMess( expListNode:get_pos(), "iterator function must return value." )
+      else
+       
+         local iteRetType = itFunc:get_retTypeInfoList()[1]
+         if not iteRetType:get_nilable() then
+            self:addErrMess( expListNode:get_pos(), "iterator function must return nilable type at 1st." )
+         end
+         
+      end
+      
+      
+      for index, itemType in pairs( itFunc:get_retTypeInfoList() ) do
+         local workType = itemType
+         if index == 1 then
+            if itemType:get_nilable() then
+               workType = workType:get_nonnilableType()
+            end
+            
+         end
+         
+         table.insert( itemTypeList, workType )
+      end
+      
+   end
+   
+   
+   local varSymList = {}
    for index, var in pairs( varList ) do
       local itemType = defaultItemType
       if index <= #itemTypeList then
          itemType = itemTypeList[index]
       end
       
-      self:addLocalVar( var.pos, false, true, var.txt, itemType, Ast.MutMode.IMut )
+      table.insert( varSymList, self:addLocalVar( var.pos, false, true, var.txt, itemType, Ast.MutMode.IMut ) )
    end
    
    
    local block = self:analyzeBlock( Nodes.BlockKind.Apply, TentativeMode.Loop, scope )
    self:popScope(  )
    
-   return Nodes.ApplyNode.create( self.nodeManager, token.pos, {Ast.builtinTypeNone}, varList, exp, block )
+   return Nodes.ApplyNode.create( self.nodeManager, token.pos, {Ast.builtinTypeNone}, varSymList, expListNode, block )
 end
 
 

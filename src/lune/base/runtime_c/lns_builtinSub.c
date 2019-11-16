@@ -1,9 +1,29 @@
 #include <lunescript.h>
 #include <lauxlib.h>
 #include <lns_luaWrapper.h>
+#include <stdlib.h>
 
 #define LNS_PUSH_STR( LUA, STR )                               \
     lua_pushlstring( LUA, STR->val.str.pStr, STR->val.str.len )
+
+lns_any_t * lns_f_error( lns_env_t * _pEnv, lns_any_t * arg1 )
+{
+    lua_State * pLua = _pEnv->pLua;
+    LNS_PUSH_STR( pLua, arg1 );
+    lua_error( pLua );
+    return NULL;
+}
+
+lns_any_t * mtd_lns_os_exit( lns_env_t * _pEnv, lns_stem_t arg1)
+{
+    if ( arg1.type == lns_stem_type_int ) {
+        exit( arg1.val.intVal );
+    }
+    else {
+        exit( 0 );
+    }
+}
+
 
 static int lns_string_call_setup(
     lua_State * pLua, const char * pFuncName, lns_any_t * pStrAny ) {
@@ -119,10 +139,10 @@ extern lns_stem_t mtd_lns_string_find(
     // 関数を実行
     lua_call( pLua, argNum, LUA_MULTRET );
 
-    lns_stem_t findIndex;
-    lns_setupFromStack( _pEnv, stackTop + 2, &findIndex );
     lns_stem_t sIndex;
     lns_setupFromStack( _pEnv, stackTop + 3, &sIndex );
+    lns_stem_t findIndex;
+    lns_setupFromStack( _pEnv, stackTop + 2, &findIndex );
 
     lns_stem_t result = lns_createMRet( _pEnv, false, 2, findIndex, sIndex );
     lns_setMRet( _pEnv, result.val.pAny );
@@ -131,3 +151,24 @@ extern lns_stem_t mtd_lns_string_find(
 
     return result;
 }
+
+
+lns_any_t * mtd_lns_string_rep( lns_env_t * _pEnv, lns_any_t * pTxt, lns_int_t num)
+{
+    lua_State * pLua = _pEnv->pLua;
+    int stackTop = lns_string_call_setup( pLua, "find", pTxt );
+
+    lua_pushinteger( pLua, num );
+
+    lua_call( pLua, 2, LUA_MULTRET );
+
+    lns_stem_t result;
+    lns_setupFromStack( _pEnv, stackTop + 2, &result );
+
+    lns_setRet( _pEnv, result );
+
+    lua_settop( pLua, stackTop );
+
+    return result.val.pAny;
+}
+

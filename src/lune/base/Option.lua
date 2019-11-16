@@ -188,6 +188,7 @@ local Util = _lune.loadModule( 'lune.base.Util' )
 local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
 local Ver = _lune.loadModule( 'lune.base.Ver' )
 local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
+local Depend = _lune.loadModule( 'lune.base.Depend' )
 local Log = _lune.loadModule( 'lune.base.Log' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 
@@ -195,7 +196,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 2421
+   return 2473
 end
 
 
@@ -343,7 +344,7 @@ function Option:__init()
    self.updateOnLoad = false
    self.byteCompile = false
    self.stripDebugInfo = false
-   self.targetLuaVer = LuaVer.curVer
+   self.targetLuaVer = Depend.curVer
    self.transCtrlInfo = TransCtrlInfo.create_normal(  )
    self.bootPath = nil
 end
@@ -490,7 +491,7 @@ usage:
             elseif _switchExp == "--nodebug" then
                Util.setDebugFlag( false )
             elseif _switchExp == "--version" then
-               print( string.format( "LuneScript: version %s (%d:%s)", Ver.version, getBuildCount(  ), _VERSION) )
+               print( string.format( "LuneScript: version %s (%d:%s)", Ver.version, getBuildCount(  ), Depend.getLuaVersion(  )) )
                os.exit( 0 )
             elseif _switchExp == "--builtin" then
                do

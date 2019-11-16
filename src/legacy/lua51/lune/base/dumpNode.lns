@@ -479,11 +479,11 @@ pub override fn dumpFilter.processApply(
    let mut varNames = "";
    let varList = node.get_varList();
    foreach var, index in varList {
-      varNames = varNames .. var.txt .. " ";
+      varNames = varNames .. var.$name .. " ";
    }	
    dump( prefix, depth, node, varNames );
-   filter( node.get_exp(), self, opt.nextOpt() );
-   filter( node.get_block(), self, opt.nextOpt() );
+   filter( node.$expList, self, opt.nextOpt() );
+   filter( node.$block, self, opt.nextOpt() );
 };
 pub override fn dumpFilter.processForeach(
    node: &Nodes.ForeachNode, opt:Opt ) mut

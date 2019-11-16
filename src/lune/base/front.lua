@@ -978,7 +978,7 @@ function Front:checkUptodateMeta( metaPath, addSearchPath )
             end
             
             local moduleMetaPath = moduleLuaPath:gsub( "%.lua$", ".meta" )
-            if Util.existFile( moduleMetaPath ) and not Util.getReadyCode( moduleMetaPath, metaPath ) then
+            if Depend.existFile( moduleMetaPath ) and not Util.getReadyCode( moduleMetaPath, metaPath ) then
                return nil
             end
             
@@ -1710,7 +1710,7 @@ end
 
 local function exec( args )
 
-   local version = _lune.unwrapDefault( tonumber( _VERSION:gsub( "^[^%d]+", "" ), nil ), 0.0)
+   local version = _lune.unwrapDefault( tonumber( Depend.getLuaVersion(  ):gsub( "^[^%d]+", "" ), nil ), 0.0)
    
    if version < 5.1 then
       io.stderr:write( string.format( "LuneScript doesn't support this lua version(%s). %s\n", version, "please use the version >= 5.1." ) )

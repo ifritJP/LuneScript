@@ -2758,35 +2758,35 @@ function ApplyNode:canBeStatement(  )
 
    return true
 end
-function ApplyNode.new( id, pos, typeList, varList, exp, block )
+function ApplyNode.new( id, pos, typeList, varList, expList, block )
    local obj = {}
    ApplyNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, typeList, varList, exp, block ); end
+   if obj.__init then obj:__init( id, pos, typeList, varList, expList, block ); end
    return obj
 end
-function ApplyNode:__init(id, pos, typeList, varList, exp, block) 
+function ApplyNode:__init(id, pos, typeList, varList, expList, block) 
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Apply']), pos, typeList)
    
    
    
    self.varList = varList
-   self.exp = exp
+   self.expList = expList
    self.block = block
    
    
 end
-function ApplyNode.create( nodeMan, pos, typeList, varList, exp, block )
+function ApplyNode.create( nodeMan, pos, typeList, varList, expList, block )
 
-   local node = ApplyNode.new(nodeMan:nextId(  ), pos, typeList, varList, exp, block)
+   local node = ApplyNode.new(nodeMan:nextId(  ), pos, typeList, varList, expList, block)
    nodeMan:addNode( node )
    return node
 end
 function ApplyNode:visit( visitor, depth )
 
    do
-      local child = self.exp
+      local child = self.expList
       do
-         local _switchExp = visitor( child, self, 'exp', depth )
+         local _switchExp = visitor( child, self, 'expList', depth )
          if _switchExp == NodeVisitMode.Child then
             if not child:visit( visitor, depth + 1 ) then
                return false
@@ -2827,8 +2827,8 @@ end
 function ApplyNode:get_varList()
    return self.varList
 end
-function ApplyNode:get_exp()
-   return self.exp
+function ApplyNode:get_expList()
+   return self.expList
 end
 function ApplyNode:get_block()
    return self.block

@@ -6,6 +6,34 @@ let mut g_val = 100;
 
 {
    _section();
+   fn func( param:str, status:str! ): str!, str!
+   {
+      when! status {
+         if #status >= 20 {
+            return nil, nil;
+         }
+      }
+      return param .. "%s" (status or "hoge"), (status or "hoge") .. "_";
+   }
+
+
+   form ApplyForm( param:str, status:str! ): str!, str!;
+
+   fn sub( val:str ) : ApplyForm, str, str!  {
+      return func, val, nil;
+   }
+
+   apply val1, val2 of func, "abc", nil
+   {
+      print( val1, val2 );
+   }
+   apply val1, val2 of sub( "abc" )
+   {
+      print( val1, val2 );
+   }
+}
+{
+   _section();
    class Test<T> {
       pub static fn func(val:T): T {
          return val;

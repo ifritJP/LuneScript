@@ -230,20 +230,4 @@ local ver53 = LuaVerInfo.new(BitOp.HasOp, true, true, true, "loadstring52", true
 _moduleObj.ver53 = ver53
 
 
-local function getCurrentVer(  )
-
-   local luaVer = _VERSION:gsub( "^[^%d]+", "" )
-   if luaVer >= "5.3" then
-      return _moduleObj.ver53
-   elseif luaVer >= "5.2" then
-      return _moduleObj.ver52
-   end
-   
-   return _moduleObj.ver51
-end
-
-local curVer = getCurrentVer(  )
-_moduleObj.curVer = curVer
-
-
 return _moduleObj

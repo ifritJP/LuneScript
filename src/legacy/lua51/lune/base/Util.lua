@@ -399,18 +399,6 @@ local function getReadyCode( lnsPath, luaPath )
 end
 _moduleObj.getReadyCode = getReadyCode
 
-local function existFile( path )
 
-   local fileObj = io.open( path )
-   if  nil == fileObj then
-      local _fileObj = fileObj
-   
-      return false
-   end
-   
-   fileObj:close(  )
-   return true
-end
-_moduleObj.existFile = existFile
 
 return _moduleObj

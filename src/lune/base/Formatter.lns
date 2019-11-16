@@ -607,10 +607,10 @@ pub override fn FormatterFilter.processApply(
       if index > 1 {
          self.write( ", " );
       }
-      self.write( var.txt );
+      self.write( var.$name );
    }
    self.write( " of " );
-   filter( node.$exp, self, opt.nextOpt( node ) );
+   filter( node.$expList, self, opt.nextOpt( node ) );
    self.write( " " );
    filter( node.$block, self, opt.nextOpt( node ) );
 };

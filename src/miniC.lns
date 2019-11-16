@@ -1,8 +1,26 @@
-fn func( val:int! ) {
-   let! work = val {
-      work = 100;
-   };
-   print( work );
+fn func( param:str, status:str! ): str!, str!
+{
+   when! status {
+      if #status >= 20 {
+         return nil, nil;
+      }
+   }
+   return param .. "%s" (status or "hoge"), (status or "hoge") .. "_";
 }
-func( 10 );
-func( nil );
+
+
+form ApplyForm( param:str, status:str! ): str!, str!;
+
+fn sub( val:str ) : ApplyForm, str, str!  {
+   return func, val, nil;
+}
+
+apply val1, val2 of func, "abc", nil
+{
+   print( val1, val2 );
+}
+apply val1, val2 of sub( "abc" )
+{
+   print( val1, val2 );
+}
+// print( "hoge" );

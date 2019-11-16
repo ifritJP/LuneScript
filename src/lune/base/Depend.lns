@@ -70,17 +70,6 @@ fn searchpath51( mod:str, pathPattern:str ) : str! {
    return nil;
 }
 
-form SearchpathForm( mod:str, pathPattern:str ) : str!;
-
-let mut searchpathForm:SearchpathForm = searchpath51;
-if LuaVer.curVer.$hasSearchPath {
-   searchpathForm = (unwrap _G.package$.searchpath)@@SearchpathForm;
-}
-
-pub fn searchpath( mod:str, pathPattern:str ) : str! {
-   return searchpathForm( mod, pathPattern );
-}
-
 pub fn getLoadedMod() : &Map<str,stem>
 {
    let loaded = _load( "return package.loaded"## )$();
@@ -117,4 +106,48 @@ pub fn getStackTrace():str {
       }
    }
    return txt;
+}
+
+
+let mut lua_version:str! = nil;
+pub fn getLuaVersion():str {
+   when! lua_version {
+      return lua_version;
+   }
+   let loaded = _load( "return _VERSION"## )$();
+   let version = (unwrap loaded)@@str;
+   lua_version = version;
+   return version;
+}
+
+fn getCurrentVer(): &LuaVer.LuaVerInfo {
+   let luaVer = getLuaVersion().gsub( "^[^%d]+", "" );
+   if luaVer >= "5.3" {
+      return LuaVer.ver53;
+   }
+   elseif luaVer >= "5.2" {
+      return LuaVer.ver52;
+   }
+   return LuaVer.ver51;
+}
+
+pub let curVer = getCurrentVer();
+
+form SearchpathForm( mod:str, pathPattern:str ) : str!;
+
+let mut searchpathForm:SearchpathForm = searchpath51;
+if curVer.$hasSearchPath {
+   searchpathForm = (unwrap _G.package$.searchpath)@@SearchpathForm;
+}
+
+pub fn searchpath( mod:str, pathPattern:str ) : str! {
+   return searchpathForm( mod, pathPattern );
+}
+
+pub fn existFile( path:str ): bool {
+   let! mut fileObj = io.open( path## ) {
+      return false;
+   };
+   fileObj.close();
+   return true;
 }

@@ -216,10 +216,16 @@ pub fn getReadyCode( lnsPath:str, luaPath:str ): bool {
    return luaTime >= lnsTime;
 }
 
-pub fn existFile( path:str ): bool {
-   let! mut fileObj = io.open( path## ) {
-      return false;
-   };
-   fileObj.close();
-   return true;
+
+__test case1 {
+   import lune.base.Testing;
+   let mut ctrl = new Testing.Ctrl();
+
+   let splitList = splitStr( "123 456 789", "[0-9]+" );
+   Testing._eq( ctrl, #splitList, 3 );
+   Testing._eq( ctrl, splitList[ 1 ], "123" );
+   Testing._eq( ctrl, splitList[ 2 ], "456" );
+   Testing._eq( ctrl, splitList[ 3 ], "789" );
+   
+   
 }

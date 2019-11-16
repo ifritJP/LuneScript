@@ -27,6 +27,7 @@ import lune.base.Util;
 import lune.base.LuaMod;
 import lune.base.Ver;
 import lune.base.LuaVer;
+import lune.base.Depend;
 import lune.base.Log;
 import lune.base.Ast;
 
@@ -134,7 +135,7 @@ pub class Option {
       self.updateOnLoad = false;
       self.byteCompile = false;
       self.stripDebugInfo = false;
-      self.targetLuaVer = LuaVer.curVer;
+      self.targetLuaVer = Depend.curVer;
       self.transCtrlInfo = TransCtrlInfo.create_normal();
       self.bootPath = nil;
    }
@@ -265,7 +266,7 @@ usage:
             }
             case "--version" {
                print( "LuneScript: version %s (%d:%s)"
-                  (Ver.version, getBuildCount(), _VERSION) );
+                  (Ver.version, getBuildCount(), Depend.getLuaVersion()) );
                os.exit( 0 );
             }
             case "--builtin" {

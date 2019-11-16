@@ -250,20 +250,6 @@ local function searchpath51( mod, pathPattern )
    return nil
 end
 
-
-
-local searchpathForm = searchpath51
-if LuaVer.curVer:get_hasSearchPath() then
-   searchpathForm = (_lune.unwrap( _lune.nilacc( _G['package'], nil, 'item', 'searchpath')) )
-end
-
-
-local function searchpath( mod, pathPattern )
-
-   return searchpathForm( mod, pathPattern )
-end
-_moduleObj.searchpath = searchpath
-
 local function getLoadedMod(  )
 
    local loaded = _lune.nilacc( _lune.loadstring52( "return package.loaded" ), nil, 'call' )
@@ -307,5 +293,63 @@ local function getStackTrace(  )
    return txt
 end
 _moduleObj.getStackTrace = getStackTrace
+
+local lua_version = nil
+local function getLuaVersion(  )
+
+   if lua_version ~= nil then
+      return lua_version
+   end
+   
+   local loaded = _lune.nilacc( _lune.loadstring52( "return _VERSION" ), nil, 'call' )
+   local version = (_lune.unwrap( loaded) )
+   lua_version = version
+   return version
+end
+_moduleObj.getLuaVersion = getLuaVersion
+
+local function getCurrentVer(  )
+
+   local luaVer = getLuaVersion(  ):gsub( "^[^%d]+", "" )
+   if luaVer >= "5.3" then
+      return LuaVer.ver53
+   elseif luaVer >= "5.2" then
+      return LuaVer.ver52
+   end
+   
+   return LuaVer.ver51
+end
+
+local curVer = getCurrentVer(  )
+_moduleObj.curVer = curVer
+
+
+
+
+local searchpathForm = searchpath51
+if _moduleObj.curVer:get_hasSearchPath() then
+   searchpathForm = (_lune.unwrap( _lune.nilacc( _G['package'], nil, 'item', 'searchpath')) )
+end
+
+
+local function searchpath( mod, pathPattern )
+
+   return searchpathForm( mod, pathPattern )
+end
+_moduleObj.searchpath = searchpath
+
+local function existFile( path )
+
+   local fileObj = io.open( path )
+   if  nil == fileObj then
+      local _fileObj = fileObj
+   
+      return false
+   end
+   
+   fileObj:close(  )
+   return true
+end
+_moduleObj.existFile = existFile
 
 return _moduleObj

@@ -97,7 +97,6 @@ void lns_lua_stack2str( lns_env_t * _pEnv, int index, lns_stem_t * pStem )
 
 /**
 スタックの top の値から pStem を設定する。
-スタック top の値は取り除かれる。
  */
 void lns_setupFromStack( lns_env_t * _pEnv, int index, lns_stem_t * pStem )
 {
@@ -105,7 +104,7 @@ void lns_setupFromStack( lns_env_t * _pEnv, int index, lns_stem_t * pStem )
     switch ( lua_type( pLua, index ) ) {
     case LUA_TNIL:
         *pStem = lns_global.nilStem;
-        lua_pop( pLua, 1 );
+        //lua_pop( pLua, 1 );
         break;
     case LUA_TNUMBER:
         {
@@ -117,16 +116,16 @@ void lns_setupFromStack( lns_env_t * _pEnv, int index, lns_stem_t * pStem )
             else {
                 *pStem = LNS_STEM_REAL( realVal );
             }
-            lua_pop( pLua, 1 );
+            //lua_pop( pLua, 1 );
         }
         break;
     case LUA_TBOOLEAN:
         *pStem = LNS_STEM_BOOL( lua_toboolean( pLua, index ) );
-        lua_pop( pLua, 1 );
+        //lua_pop( pLua, 1 );
         break;
     case LUA_TSTRING:
         lns_lua_stack2str( _pEnv, index, pStem );
-        lua_pop( pLua, 1 );
+        // lua_pop( pLua, 1 );
         break;
     default:
         {
@@ -267,11 +266,11 @@ void lns_lua_itMap_getEntry(
     lns_pushAnyVal( _pEnv, _itAny );
     // key を push
     lua_geti( pLua, top, 2 );
-    // key を取り出して登録
+    // key を登録
     lns_setupFromStack( _pEnv, -1, &pEntry->key );
     // val を push
     lua_geti( pLua, top, 3 );
-    // val を取り出して登録
+    // val を登録
     lns_setupFromStack( _pEnv, -1, &pEntry->val );
 
     lua_settop( pLua, top );

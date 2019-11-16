@@ -378,6 +378,7 @@ TEST_CASE += immediate.lns
 TEST_CASE += macro.lns
 TEST_CASE += macro2.lns
 TEST_CASE += macro3.lns
+TEST_CASE += apply.lns
 TEST_CASE_SRCS := $(addprefix test/error/,$(TEST_CASE))
 TEST_CASE_LOGS := $(addprefix $(LOG_DIR)/,$(addsuffix .log,$(TEST_CASE)))
 
@@ -642,15 +643,23 @@ define setup-lua51-test
 	cp -a test $1
 	$(MAKE) build-glue GLUE_DIR=work/newglue LUA_INC_DIR=$(LUA51_INC) LUA_GLUE=51
 	mv $1/test/glueTest51.so $1/test/glueTest.so 
-	grep -v skip-lua51 test/start.lns > $1/test/start.lns
+	grep -v -e 'skip-lua51' $2 test/start.lns > $1/test/start.lns
 endef
+
+define setup-lua51-test-cross
+	$(call setup-lua51-test,$1,-e 'skip-cross')
+endef
+
+test-lua51-mkruntime:
+	$(call exeLune,work/5,-mklunemod,lune/base/_lune.lua)
 
 test-lua51:
 # LuneScript を Lua 5.1 にクロスコンパイルして実行
 	$(MAKE) -C work/5 build_from_d depend_on=y \
 			FROM_DIR=../3 TO_DIR=../5 LNS_OPT="-ol 51"
 #	$(call buildLns,work/3,../5,-ol 51)
-	$(call exeLune,work/5,-mklunemod,lune/base/_lune.lua)
+#	$(call exeLune,work/5,-mklunemod,lune/base/_lune.lua)
+	$(MAKE) test-lua51-mkruntime LUA=$(LUA51)
 	$(call setup-lua51-test,work/5)
 	(cd work/5; LUA_PATH=./?.lua $(LUA51) lune/base/base.lua test/start.lns -u exe ) > work/test6.result
 
@@ -662,14 +671,15 @@ test-lua51:
 # サンプルを lua5.1 にクロスコンパイルして実行テスト
 	$(call mk_lune_proj_dir,work/7)
 	cp -a work/3/lune work/7
-	$(call setup-lua51-test,work/7)
+	$(call setup-lua51-test-cross,work/7)
 	$(call exeLune,work/7,test/start.lns,-u -ol 51 SAVE,)
-	(cd work/7; $(LUA51) test/start.lua) | sed 's/\.0//g' > work/test7-2.result
+	(cd work/7; $(LUA51) test/start.lua) | sed 's/\.0//g' > work/test7-3.result
 
 	diff work/test6.result  work/test7.result 
-	diff work/test7.result  work/test7-2.result
+	diff work/test7_2.result  work/test7-3.result
 
 
+# lua5.1 用にクロスコンパイルしたものから、 Lua5.1 で自分自身をコンパイル
 test-lua51-sub:
 	$(call mk_lune_proj_dir,work/6)
 	$(call cp_src_set,work/6,work/1)
@@ -678,6 +688,14 @@ test-lua51-sub:
 	$(call setup-lua51-test,work/6)
 	$(call exeLune,work/6,-mklunemod,lune/base/_lune.lua)
 	$(call exeLune,work/6,test/start.lns,exe,) | sed 's/\.0//g' > work/test7.result
+
+	cp -a work/6 work/6_2
+	rm -rf work/6_2/test
+	$(call setup-lua51-test-cross,work/6_2)
+	$(call exeLune,work/6_2,test/start.lns,exe,) | sed 's/\.0//g' > work/test7_2.result
+
+
+
 
 
 
@@ -844,7 +862,7 @@ test-testC:
 	$(call test-convC-test,lune/base/Ver)
 	$(call test-convC-test,lune/base/Code)
 	$(call test-convC-test,lune/base/LuaMod)
-	$(call test-convC-test,lune/base/LuaVer)
+	$(call convC,.,lune/base/LuaVer.lns,--testing)
 	$(call convC,.,lune/base/LuneControl.lns,--testing)
 	$(call convC,.,lune/base/Depend.lns,--testing)
 	$(call test-convC-test,lune/base/Util, \
