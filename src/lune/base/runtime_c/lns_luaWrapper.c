@@ -335,11 +335,11 @@ lns_stem_t lns_lua_call( lns_env_t * _pEnv, int stackBase, int argNum, int retNu
             lns_setupFromStack( _pEnv, index, pStem );
         }
         result = LNS_STEM_ANY( pMRet );
-        lns_setRet( _pEnv, result );
+        lns_setRetInBlock( _pEnv, result );
     }
     else if ( stackNum == 1 ) {
         lns_setupFromStack( _pEnv, -1, &result );
-        lns_setRet( _pEnv, result );
+        lns_setRetInBlock( _pEnv, result );
     }
     else {
         result = lns_global.noneStem;

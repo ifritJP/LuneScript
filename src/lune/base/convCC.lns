@@ -1153,7 +1153,7 @@ fn convFilter.processInitModule( node: Nodes.RootNode ) mut
 
 
    let moduleBlockName = getBlockName( self.ast.$moduleScope );
-   self.writeln( "lns_block_t * %s = lns_enter_module( %d, %d, %d );"
+   self.writeln( "lns_block_t * %s = lns_enter_module( _pEnv, %d, %d, %d );"
                  (moduleBlockName, anyNum, stemNum, varNum ) );
    self.writeln( "s_module.pBlock = %s;" (moduleBlockName));
 

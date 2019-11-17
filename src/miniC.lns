@@ -1,10 +1,10 @@
-let txt = "a b c";
-let func:form, param, state = string.gmatch( txt, "[a-z]+" );
-print( func( param, state )** );
-print( func( param, state )** );
-print( func( param, state )** );
-
-// let txt = "a b c";
-// apply val of string.gmatch( txt, "[a-z]+" ) {
-//    print( val );
-// }
+{
+   let txt = "a b c";
+   let func:form, param, state = string.gmatch( txt, "[a-z]+" );
+   print( func( param, state )** );
+   print( func( param, state )** );
+   print( func( param, state )** );
+   apply val of string.gmatch( txt, "[a-z]+" ) {
+      print( val );
+   }
+}

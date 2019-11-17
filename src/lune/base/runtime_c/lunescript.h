@@ -796,11 +796,12 @@ extern "C" {
     extern lns_var_t * lns_var_alloc(
         lns_env_t * _pEnv, lns_block_t * pBlock, int index, lns_stem_type_t type );
 
-    extern lns_block_t * lns_enter_module( int anyNum, int stemNum, int varNum );
+    extern lns_block_t * lns_enter_module( lns_env_t * _pEnv, int anyNum, int stemNum, int varNum );
     
     extern void lns_reset_block( lns_env_t * _pEnv );
 
     extern void lns_setRet( lns_env_t * _pEnv, lns_stem_t stem );
+    extern void lns_setRetInBlock( lns_env_t * _pEnv, lns_stem_t stem );
     extern void lns_setQ_( lns_any_t * pAny );
     extern void lns_setOverwrite( lns_any_t * pAny );
     extern lns_block_t * lns_enter_func( lns_env_t * _pEnv, int anyNum, int stemNum, int varNum, int argNum, ... );

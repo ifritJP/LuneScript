@@ -1533,7 +1533,7 @@ function convFilter:processInitModule( node )
    self:writeln( "" )
    
    local moduleBlockName = getBlockName( self.ast:get_moduleScope() )
-   self:writeln( string.format( "lns_block_t * %s = lns_enter_module( %d, %d, %d );", moduleBlockName, anyNum, stemNum, varNum) )
+   self:writeln( string.format( "lns_block_t * %s = lns_enter_module( _pEnv, %d, %d, %d );", moduleBlockName, anyNum, stemNum, varNum) )
    self:writeln( string.format( "s_module.pBlock = %s;", moduleBlockName) )
    
    self:writeln( string.format( "lns_set_block_any( %s, 0, lns_module_globalStemList);", moduleBlockName) )

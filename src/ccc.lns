@@ -6,6 +6,17 @@ let mut g_val = 100;
 
 {
    _section();
+   let txt = "a b c";
+   let func:form, param, state = string.gmatch( txt, "[a-z]+" );
+   print( func( param, state )** );
+   print( func( param, state )** );
+   print( func( param, state )** );
+   apply val of string.gmatch( txt, "[a-z]+" ) {
+      print( val );
+   }
+}
+{
+   _section();
    fn func( param:str, status:str! ): str!, str!
    {
       when! status {

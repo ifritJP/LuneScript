@@ -1,7 +1,7 @@
 // lune/base/runtime_c/lns_builtin.c
 #include <lunescript.h>
 #include <lns_builtin.h>
-static bool lns_module_readyFlag = false;
+static lns_module_t s_module = {NULL,NULL,false};
 static lns_any_t ** lns_module_globalStemList;
 static lns_any_t ** lns_module_path = NULL;
 static void mtd_lns_luaStream__del( lns_env_t * _pEnv, lns_any_t * pObj );
@@ -43,9 +43,9 @@ lns_mtd_lns_io_t lns_mtd_lns_io = {
    mtd_lns_io__del,
    NULL,
 };
-lns_any_t * l_var_lns_io_stderr;
-lns_any_t * l_var_lns_io_stdin;
 lns_any_t * l_var_lns_io_stdout;
+lns_any_t * l_var_lns_io_stdin;
+lns_any_t * l_var_lns_io_stderr;
 lns_type_meta_t lns_type_meta_lns_package = { "lns_package" };
 lns_mtd_lns_package_t lns_mtd_lns_package = {
    mtd_lns_package__del,
@@ -165,17 +165,20 @@ lns_mtd_lns_Mapping( pObj )->_toMap( _pEnv, lns_getImpObj( pObj ) );
 }
 static void lns_init_lns_builtin_Sub( lns_env_t * _pEnv );
 void lns_init_lns_builtin( lns_env_t * _pEnv ){
-   if ( lns_module_readyFlag ) {
+   if ( s_module.readyFlag ) {
       return;
    }
-   lns_module_readyFlag = true;
+   s_module.readyFlag = true;
+   lns_add2list( &_pEnv->loadModuleTop, &s_module);
    
-   lns_block_t * pBlock_62 = lns_enter_module( 2, 0, 0 );
+   lns_block_t * pBlock_62 = lns_enter_module( _pEnv, 2, 0, 0 );
+   s_module.pBlock = pBlock_62;
    lns_set_block_any( pBlock_62, 0, lns_module_globalStemList);
    lns_setQ_any( lns_module_globalStemList, lns_class_List_new( _pEnv ));
    lns_set_block_any( pBlock_62, 1, lns_module_path);
    lns_setQ_any( lns_module_path, lns_litStr2any( _pEnv, "lns_builtin"));
    lns_enter_block( _pEnv, 0, 0, 0 );
+   
    lns_init_lns_builtin_Sub( _pEnv );
    
    lns_leave_block( _pEnv );

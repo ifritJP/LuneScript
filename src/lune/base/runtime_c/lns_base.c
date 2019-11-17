@@ -288,17 +288,16 @@ void lns_setQ_( lns_any_t * pAny )
     }
 }
 
-void lns_setRet( lns_env_t * _pEnv, lns_stem_t stem )
+static void lns_setRetAtBlock( lns_block_t * pBlock, lns_stem_t * pStem )
 {
-    if ( stem.type != lns_stem_type_any ) {
+    if ( pStem->type != lns_stem_type_any ) {
         return;
     }
 
-    lns_any_t * pAny = stem.val.pAny;
+    lns_any_t * pAny = pStem->val.pAny;
     
     lns_rmFromList( pAny );
 
-    lns_block_t * pBlock = &_pEnv->blockQueue[ _pEnv->blockDepth - 1 ];
     lns_add2list( &pBlock->managedAnyTop, pAny );
 
     if ( pAny->type == lns_value_type_ddd ||
@@ -307,13 +306,21 @@ void lns_setRet( lns_env_t * _pEnv, lns_stem_t stem )
         int index;
         for ( index = 0; index < pAny->val.ddd.len; index++ ) {
             lns_stem_t item = lns_fromDDD( pAny, index );
-            lns_setRet( _pEnv, item );
+            lns_setRetAtBlock( pBlock, &item );
         }
     }
     return;
 }
 
+void lns_setRet( lns_env_t * _pEnv, lns_stem_t stem )
+{
+    lns_setRetAtBlock( &_pEnv->blockQueue[ _pEnv->blockDepth - 1 ], &stem );
+}
 
+void lns_setRetInBlock( lns_env_t * _pEnv, lns_stem_t stem )
+{
+    lns_setRetAtBlock( &_pEnv->blockQueue[ _pEnv->blockDepth ], &stem );
+}
 
 
 void lns_setup_block(
@@ -359,12 +366,13 @@ void lns_setup_block(
  * @param anyVerNum ブロックで管理する any 型の値の数
  * @return ブロック情報
  */
-lns_block_t * lns_enter_module( int anyNum, int stemNum, int varNum )
+lns_block_t * lns_enter_module( lns_env_t * _pEnv, int anyNum, int stemNum, int varNum )
 {
     lns_block_t * pBlock = &s_globalEnv.moduleInitBlockBuf[ s_globalEnv.moduleNum ];
     s_globalEnv.moduleNum++;
-
-    lns_setup_block( s_globalEnv.pEnv, pBlock, anyNum, stemNum, varNum );
+    
+    //lns_setup_block( s_globalEnv.pEnv, pBlock, anyNum, stemNum, varNum );
+    lns_setup_block( _pEnv, pBlock, anyNum, stemNum, varNum );
 
     return pBlock;
 }
@@ -635,9 +643,14 @@ lns_any_t * lns_createMRetOnly( lns_env_t * _pEnv, int num )
 
     lns_ddd_t * pDDD = &pDDDAny->val.ddd;
     pDDD->len = num;
-    pDDD->stemList = (lns_stem_t *)lns_malloc(
-        _pEnv->allocateor, sizeof( lns_stem_t ) * num );
-    s_globalEnv.allocNum++;
+    if ( pDDD->len != 0 ) {
+        pDDD->stemList = (lns_stem_t *)lns_malloc(
+            _pEnv->allocateor, sizeof( lns_stem_t ) * num );
+        s_globalEnv.allocNum++;
+    }
+    else {
+        pDDD->stemList = NULL;
+    }
     
     return pDDDAny;
 }
@@ -1195,11 +1208,11 @@ static void lns_createGlobalEnv() {
 }
 
 static void lns_releaseGlobalEnv(void) {
-    int index;
-    for ( index = s_globalEnv.moduleNum - 1; index >= 0; index-- ) {
-        lns_leave_blockSub( s_globalEnv.pEnv,
-                             &s_globalEnv.moduleInitBlockBuf[ index ] );
-    }
+    /* int index; */
+    /* for ( index = s_globalEnv.moduleNum - 1; index >= 0; index-- ) { */
+    /*     lns_leave_blockSub( s_globalEnv.pEnv, */
+    /*                          &s_globalEnv.moduleInitBlockBuf[ index ] ); */
+    /* } */
     lns_decre_ref( s_globalEnv.pEnv, lns_global.ddd0.val.pAny );
     lns_deleteEnv( s_globalEnv.pEnv );
     printf( ":debug:allocNum = %d\n", s_globalEnv.allocNum );
