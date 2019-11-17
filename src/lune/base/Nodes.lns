@@ -259,7 +259,7 @@ pub abstract class Node {
       return .None;
    }
 
-   pub fn getSymbolInfo(): &List<&Ast.AccessSymbolInfo>;
+   pub fn getSymbolInfo(): &List<&Ast.SymbolInfo>;
    
 
    pub abstract fn visit( visitor:NodeVisitor, depth:int ): bool;
@@ -1027,8 +1027,8 @@ _declNodeClass( "ExpUnwrap", Node, false, true, false,
 );
 
 _declNodeClass( "ExpRef", Node, nil, nil, false,
-                [ { "token": "&Parser.Token" },
-                  { "symbolInfo": "&Ast.AccessSymbolInfo" } ]
+                //[ { "symbolInfo": "&Ast.SymbolInfo" } ]
+                [ { "symbolInfo": "&Ast.SymbolInfo" } ]
 );
 
 pub override fn ExpRefNode.canBeLeft():bool {
@@ -1217,7 +1217,7 @@ _declNodeClass( "ExpDDD", Node, false, true, false,
 _declNodeClass( "ExpParen", Node, false, true, false,
                 [ { "exp": "&Node" } ]
 );
-pub override fn ExpParenNode.getSymbolInfo(): &List<&Ast.AccessSymbolInfo> {
+pub override fn ExpParenNode.getSymbolInfo(): &List<&Ast.SymbolInfo> {
    return self.exp.getSymbolInfo();
 }
 
@@ -1287,7 +1287,7 @@ _declNodeClass( "ExpOmitEnum", Node, true, true, false,
 _declNodeClass( "RefField", Node, nil, nil, false,
                 [ { "field": "&Parser.Token" },
                   //{ "overrideCanBeLeft": "bool!" },
-                  { "symbolInfo": "&Ast.AccessSymbolInfo!" },
+                  { "symbolInfo": "&Ast.SymbolInfo!" },
                   { "nilAccess": "bool" },
                   { "prefix": "&Node" }] 
 );
@@ -1313,7 +1313,7 @@ pub override fn RefFieldNode.canBeRight():bool {
 _declNodeClass( "GetField", Node, nil, true, false,
                 [ { "field": "&Parser.Token" },
                   //{ "overrideCanBeLeft": "bool!" },
-                  { "symbolInfo": "&Ast.AccessSymbolInfo!" },
+                  { "symbolInfo": "&Ast.SymbolInfo!" },
                   { "nilAccess": "bool" },
                   { "prefix": "&Node" },
                   { "getterTypeInfo": "&Ast.TypeInfo" } ]               
@@ -1692,8 +1692,8 @@ _declNodeClass( "LiteralSymbol", Node, false, true, false,
                 [ { "token": "&Parser.Token" } ]
 );
 
-pub fn Node.getSymbolInfo(): &List<&Ast.AccessSymbolInfo> {
-   fn processExpNode( node: &Node ): &List<&Ast.AccessSymbolInfo> {
+pub fn Node.getSymbolInfo(): &List<&Ast.SymbolInfo> {
+   fn processExpNode( node: &Node ): &List<&Ast.SymbolInfo> {
       switch ( node.$kind ) {
          case NodeKind.$ExpRef {
             return [(unwrap (node@@@ExpRefNode)).$symbolInfo];
@@ -1714,7 +1714,7 @@ pub fn Node.getSymbolInfo(): &List<&Ast.AccessSymbolInfo> {
          // }
          case NodeKind.$ExpList {
             if! let expListNode = node@@@ExpListNode {
-               let mut list: List<&Ast.AccessSymbolInfo> = [];
+               let mut list: List<&Ast.SymbolInfo> = [];
                foreach expNode, index in expListNode.$expList {
                   if index == #expListNode.$expList {
                      foreach symbolInfo in processExpNode( expNode ) {

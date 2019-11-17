@@ -4305,17 +4305,17 @@ pub let builtinTypeAbbrNone:TypeInfo = new AbbrTypeInfo( idProv, "[##]" );
 
 pub class ExtTypeInfo extend TypeInfo {
    pri let typeId: int { pub };
-   pri let luneType: &TypeInfo { pub };
+   pri let extedType: &TypeInfo { pub };
    pri let nilableTypeInfo: &TypeInfo { pub };
 
-   pub fn __init( idProvider:IdProvider, luneType:&TypeInfo )
+   pub fn __init( idProvider:IdProvider, extedType:&TypeInfo )
    {
-      super( luneType.$scope );
+      super( extedType.$scope );
 
       let typeId = idProvider.$id + 1;
       idProvider.increment();
       self.typeId = typeId;
-      self.luneType = luneType;
+      self.extedType = extedType;
 
       self.nilableTypeInfo = new NilableTypeInfo( self, typeId + 1 );
       idProv.increment();
@@ -4334,7 +4334,7 @@ pub class ExtTypeInfo extend TypeInfo {
       rawTxt:str, typeNameCtrl:&TypeNameCtrl!,
       importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
    {
-      return "Luaval<%s>" ( self.luneType.getTxtWithRaw( rawTxt, typeNameCtrl,
+      return "Luaval<%s>" ( self.extedType.getTxtWithRaw( rawTxt, typeNameCtrl,
                                                          importInfo, localFlag ) );
    }
 
@@ -4342,7 +4342,7 @@ pub class ExtTypeInfo extend TypeInfo {
       other:&TypeInfo,
       canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool, str!
    {
-      return self.luneType.canEvalWith( other, canEvalType, alt2type )**;
+      return self.extedType.canEvalWith( other, canEvalType, alt2type )**;
    }
 
    pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
@@ -4368,9 +4368,18 @@ pub class ExtTypeInfo extend TypeInfo {
    pub override fn get_nilable(): bool {
       return false;
    }
+   pub override fn applyGeneric(
+      alt2typeMap:&Map<&TypeInfo,&TypeInfo>, moduleTypeInfo:&TypeInfo ): &TypeInfo!
+   {
+      let typeInfo = self.extedType.applyGeneric( alt2typeMap, moduleTypeInfo );
+      if typeInfo ~= self.extedType {
+         Util.err( "not support -- %s" (self.extedType.getTxt(##) ) );
+      }
+      return self;
+   }
    
 
-   advertise luneType;
+   advertise extedType;
 }
 
 pub static fn NormalTypeInfo.createLuaval( luneType:&TypeInfo ) : &TypeInfo
@@ -5046,7 +5055,7 @@ pub static fn TypeInfo.canEvalWithBase(
       return dest.canEvalWith( otherSrc, canEvalType, alt2type )**;
    }
    if! let extTypeInfo = otherSrc@@@ExtTypeInfo {
-      otherSrc = extTypeInfo.$luneType;
+      otherSrc = extTypeInfo.$extedType;
    }
 
    

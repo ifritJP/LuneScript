@@ -757,7 +757,7 @@ pub override fn FormatterFilter.processExpNew(
 pub override fn FormatterFilter.processExpRef(
    node: &Nodes.ExpRefNode, opt:Opt ) mut
 {
-   self.write( node.$token.txt );
+   self.write( node.$symbolInfo.$name );
 };
 pub override fn FormatterFilter.processExpRefItem(
    node: &Nodes.ExpRefItemNode, opt:Opt ) mut

@@ -41,15 +41,6 @@ typedef struct lns_globalEnv_t {
 
 
 /**
- * リストの末尾に ANY を追加。
- */
-#define lns_add2list( TOP, ANY )               \
-    ANY->pNext = TOP;                           \
-    ANY->pPrev = (TOP)->pPrev;                  \
-    (TOP)->pPrev->pNext = ANY;                  \
-    (TOP)->pPrev = ANY;
-
-/**
  * リストから ANY を除外。
  */
 #define lns_rmFromList( ANY )                  \
@@ -208,6 +199,12 @@ static void lns_gc_any( lns_env_t * _pEnv, lns_any_t * pAny, bool freeFlag ) {
         lns_decre_ref( _pEnv, pAny->val.ifVal.pObj );
         // if は class 内のメンバなので開放しないで return する。
         return;
+    case lns_value_type_luaVal:
+        lns_releaeAnyVal( _pEnv, pAny );
+        break;
+    case lns_value_type_luaForm:
+        lns_releaeAnyVal( _pEnv, pAny );
+        break;
     default:
         break;
     }
@@ -372,6 +369,22 @@ lns_block_t * lns_enter_module( int anyNum, int stemNum, int varNum )
     return pBlock;
 }
 
+static inline void lns_reset_blockSub( lns_env_t * _pEnv, lns_block_t * pBlock ) {
+    lns_any_t * pWork = pBlock->managedAnyTop.pPrev;
+    while ( pWork != &pBlock->managedAnyTop ) {
+        lns_any_t * pPrev = pWork->pPrev;
+
+        lns_lock( 
+            if ( pWork->refCount == 1 ) {
+                lns_gc_any( _pEnv, pWork, true );
+            }
+            else {
+                pWork->refCount--;
+            }
+        );
+        pWork = pPrev;
+    }
+}
 
 /**
  * 新しくブロックを開始する。
@@ -390,23 +403,6 @@ lns_block_t * lns_enter_block(
     return pBlock;
 }
 
-
-static inline void lns_reset_blockSub( lns_env_t * _pEnv, lns_block_t * pBlock ) {
-    lns_any_t * pWork = pBlock->managedAnyTop.pPrev;
-    while ( pWork != &pBlock->managedAnyTop ) {
-        lns_any_t * pPrev = pWork->pPrev;
-
-        lns_lock( 
-            if ( pWork->refCount == 1 ) {
-                lns_gc_any( _pEnv, pWork, true );
-            }
-            else {
-                pWork->refCount--;
-            }
-        );
-        pWork = pPrev;
-    }
-}
 
 /**
  * 現在のブロックを終了する。
@@ -624,10 +620,31 @@ static lns_any_t * lns_createDDDSub(
     return pDDDAny;
 }
 
+
 /**
- * ... の値を生成する
+ * 多値返却を生成する。
  *
- * ... に含める値は全て any に変換する必要がある。
+ * @param hasDDD ... の最後が ... 要素の場合 true。
+ * @param num 値の数
+ * @param ... 含める値
+ * @return ... の値
+ */
+lns_any_t * lns_createMRetOnly( lns_env_t * _pEnv, int num )
+{
+    lns_any_t * pDDDAny = _lns_alloc_any( _pEnv, lns_value_type_mRet, LNS_DEBUG_POS );
+
+    lns_ddd_t * pDDD = &pDDDAny->val.ddd;
+    pDDD->len = num;
+    pDDD->stemList = (lns_stem_t *)lns_malloc(
+        _pEnv->allocateor, sizeof( lns_stem_t ) * num );
+    s_globalEnv.allocNum++;
+    
+    return pDDDAny;
+}
+
+
+/**
+ * 多値返却を生成する。
  *
  * @param hasDDD ... の最後が ... 要素の場合 true。
  * @param num 値の数
@@ -638,7 +655,7 @@ lns_stem_t _lns_createMRet(
     const char * pFile, int lineNo, lns_env_t * _pEnv, bool hasDDD, int num, ... )
 {
     lns_any_t * pDDDAny =
-        lns_alloc_any( _pEnv, lns_value_type_mRet, pFile, lineNo );
+        _lns_alloc_any( _pEnv, lns_value_type_mRet, pFile, lineNo );
 
     va_list ap;
     va_start( ap, num );
@@ -680,7 +697,6 @@ lns_stem_t _lns_createDDD(
     else {
         return lns_createDDDOnly( _pEnv, 0 );
     }
-
 }
 
 
@@ -751,6 +767,11 @@ lns_any_t * _lns_luaVal_new(
     lns_any_t * pAny = lns_alloc_any( _pEnv, lns_value_type_luaVal, pFile, lineNo );
     pAny->val.luaVal.type = type;
     return pAny;
+}
+
+lns_any_t * lns_luaForm_new( lns_env_t * _pEnv )
+{
+    return _lns_alloc_any( _pEnv, lns_value_type_luaForm, LNS_DEBUG_POS );
 }
 
 
@@ -1115,6 +1136,8 @@ static lns_env_t * lns_createEnv( lua_State * pLua )
     _pEnv->useVarPoolNum = 0;
     _pEnv->blockDepth = 0;
     _pEnv->stackPos = 0;
+    _pEnv->loadModuleTop.pNext = &_pEnv->loadModuleTop;
+    _pEnv->loadModuleTop.pPrev = &_pEnv->loadModuleTop;
 
     lns_enter_block( _pEnv, 0, 0, 0 );
     _pEnv->pMRet = NULL;
@@ -1140,6 +1163,13 @@ static void lns_deleteEnv( lns_env_t * _pEnv ) {
     lns_leave_block( _pEnv );
     lns_leave_block( _pEnv );
 
+    lns_module_t * pModule = _pEnv->loadModuleTop.pNext;
+    for ( ; pModule != &_pEnv->loadModuleTop; pModule = pModule->pNext )
+    {
+        lns_leave_blockSub( _pEnv, pModule->pBlock );
+    }
+    
+    
     s_globalEnv.allocNum--;
 
     printf( ":debug:useAnyPoolNum = %d\n", _pEnv->useAnyPoolNum );
@@ -1187,8 +1217,7 @@ void lns_init_alge( lns_stem_t * pStem, lns_any_t * pAny, int valType )
     pAny->val.alge.gc = NULL;
 }
 
-lns_stem_t lns_call_form(
-    lns_env_t * _pEnv, lns_any_t * _pForm, lns_stem_t ddd )
+lns_stem_t lns_call_form( lns_env_t * _pEnv, lns_any_t * _pForm, lns_stem_t ddd )
 {
     if ( lns_isClosure( _pForm ) ) {
         return lns_closure( _pForm )( _pEnv, _pForm, ddd );

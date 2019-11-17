@@ -573,8 +573,8 @@ pub fn MacroCtrl.expandSymbol(
 
    if prefixToken.txt == ",," {
       if! let refNode = exp@@@Nodes.ExpRefNode {
-         let refToken = refNode.$token;
-         let macroInfo = self.symbol2ValueMapForMacro[ refToken.txt ];
+         let symbolInfo = refNode.$symbolInfo;
+         let macroInfo = self.symbol2ValueMapForMacro[ symbolInfo.$name ];
          when! macroInfo {
             let valType = macroInfo.typeInfo;
             if valType.equals( Ast.builtinTypeSymbol ##) or
@@ -595,8 +595,8 @@ pub fn MacroCtrl.expandSymbol(
             }
             else {
                errMessList.insert(
-                  new ErrorMess(    
-                     refToken.pos, "not support ,, -- %s" (valType.getTxt(##)) ) );
+                  new ErrorMess( unwrap symbolInfo.$pos,
+                                 "not support ,, -- %s" (valType.getTxt(##)) ) );
             }
          }
          else {

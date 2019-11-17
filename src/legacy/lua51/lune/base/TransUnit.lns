@@ -1542,7 +1542,7 @@ _DefBuiltinFuncType( [
          "byte": { "arg": [ "str", "int!", "int!" ], "ret": ["int!"] },
          "format": { "arg": [ "str", "..." ], "ret": ["str"] },
          "rep": { "arg": [ "str", "int" ], "ret": ["str"] },
-         "gmatch": { "arg": [ "str", "str" ], "ret": ["form", "stem!", "stem!"] },
+         "gmatch": { "arg": [ "str", "str" ], "ret": ["Luaval<form>", "stem!", "stem!"] },
          "gsub": { "arg": [ "str", "str", "str" ], "ret": ["str", "int"] },
          "sub": { "arg": [ "str", "int", "int!" ], "ret": ["str"] },
          "dump": { "arg": [ "form", "bool!" ], "ret": ["str"] },
@@ -1558,7 +1558,7 @@ _DefBuiltinFuncType( [
          "byte": { "type": [ "method" ], "arg": [ "int!","int!" ], "ret": ["int"] },
          "format": { "type": [ "method" ], "arg": [ "&..." ], "ret": ["str"] },
          "rep": { "type": [ "method" ], "arg": [ "int" ], "ret": ["str"] },
-         "gmatch": { "type": [ "method" ], "arg": [ "str" ], "ret": ["form", "stem!", "stem!"] },
+         "gmatch": { "type": [ "method" ], "arg": [ "str" ], "ret": ["Luaval<form>", "stem!", "stem!"] },
          "gsub": { "type": [ "method" ], "arg": [ "str", "str" ], "ret": ["str", "int"] },
          "sub": { "type": [ "method" ], "arg": [ "int", "int!" ], "ret": ["str"] },
          "lower": { "type": [ "method" ], "arg": [ ], "ret": ["str"] },
@@ -1664,6 +1664,12 @@ fn TransUnit.registBuiltInScope() mut {
                   let valType = genTypeList[ 2 ];
                   return Ast.NormalTypeInfo.createMap(
                      .Pub, typeInfo.$parentInfo, keyType, valType, typeInfo.$mutMode );
+               }
+               case .Ext {
+                  if #genTypeList ~= 1 {
+                     Util.err( "illegal map param -- %d" (#genTypeList) );
+                  }
+                  return Ast.NormalTypeInfo.createLuaval( genTypeList[ 1 ] );
                }
                default {
                   Util.err( "not support type -- %s" (typeInfo.getTxt(##)) );
@@ -3298,7 +3304,7 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
 
    let expType;
    if! let extType = exp.$expType.$srcTypeInfo@@@Ast.ExtTypeInfo {
-      expType = extType.$luneType;
+      expType = extType.$extedType;
    }
    else {
       expType = exp.$expType;

@@ -3340,7 +3340,7 @@ fn TransUnit.analyzeWhen( firstToken: &Parser.Token ) mut : Nodes.Node
             let symbolInfo = refNode.$symbolInfo;
             // varNameList.insert( refNode.$token.txt );
             let newSymbolInfo = self.addLocalVar(
-               firstToken.pos, false, expNode.canBeLeft(), refNode.$token.txt,
+               firstToken.pos, false, expNode.canBeLeft(), refNode.$symbolInfo.$name,
                expNode.$expType.$nonnilableType,
                symbolInfo.$mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true );
             symPairList.insert( new Nodes.UnwrapSymbolPair( symbolInfo, newSymbolInfo ) );

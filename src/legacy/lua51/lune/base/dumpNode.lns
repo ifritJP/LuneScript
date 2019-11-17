@@ -633,7 +633,7 @@ pub override fn dumpFilter.processExpRef(
    node: &Nodes.ExpRefNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
-   dump( prefix, depth, node, node.get_token().txt );
+   dump( prefix, depth, node, node.$symbolInfo.$name );
 };
 pub override fn dumpFilter.processExpRefItem(
    node: &Nodes.ExpRefItemNode, opt:Opt ) mut

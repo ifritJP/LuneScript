@@ -1300,6 +1300,10 @@ end
 
 local convFilter = {}
 setmetatable( convFilter, { __index = Nodes.Filter } )
+function convFilter:createRefNodeFromSym( symbol )
+
+   return Nodes.ExpRefNode.create( self.dummyNodeManager, _lune.unwrap( symbol:get_pos()), {symbol:get_typeInfo()}, symbol )
+end
 function convFilter.new( enableTest, outputBuiltin, streamName, stream, headerStream, ast )
    local obj = {}
    convFilter.setmeta( obj )
@@ -1310,6 +1314,7 @@ function convFilter:__init(enableTest, outputBuiltin, streamName, stream, header
    Nodes.Filter.__init( self,ast:get_moduleTypeInfo(), ast:get_moduleTypeInfo():get_scope())
    
    
+   self.dummyNodeManager = Nodes.NodeManager.new()
    self.canConv = true
    self.enableTest = enableTest
    self.outputBuiltinFlag = outputBuiltin
@@ -1518,24 +1523,27 @@ function convFilter:processInitModule( node )
    
    self:pushIndent(  )
    
-   self:writeln( "if ( lns_module_readyFlag ) {" )
+   self:writeln( "if ( s_module.readyFlag ) {" )
    self:pushIndent(  )
    self:writeln( "return;" )
    self:popIndent(  )
    self:writeln( "}" )
-   self:writeln( "lns_module_readyFlag = true;" )
+   self:writeln( "s_module.readyFlag = true;" )
+   self:writeln( "lns_add2list( &_pEnv->loadModuleTop, &s_module);" )
    self:writeln( "" )
    
-   local moduneBlockName = getBlockName( self.ast:get_moduleScope() )
-   self:writeln( string.format( "lns_block_t * %s = lns_enter_module( %d, %d, %d );", moduneBlockName, anyNum, stemNum, varNum) )
+   local moduleBlockName = getBlockName( self.ast:get_moduleScope() )
+   self:writeln( string.format( "lns_block_t * %s = lns_enter_module( %d, %d, %d );", moduleBlockName, anyNum, stemNum, varNum) )
+   self:writeln( string.format( "s_module.pBlock = %s;", moduleBlockName) )
    
-   self:writeln( string.format( "lns_set_block_any( %s, 0, lns_module_globalStemList);", moduneBlockName) )
+   self:writeln( string.format( "lns_set_block_any( %s, 0, lns_module_globalStemList);", moduleBlockName) )
    self:writeln( "lns_setQ_any( lns_module_globalStemList, lns_class_List_new( _pEnv ));" )
    
-   self:writeln( string.format( "lns_set_block_any( %s, 1, lns_module_path);", moduneBlockName) )
+   self:writeln( string.format( "lns_set_block_any( %s, 1, lns_module_path);", moduleBlockName) )
    self:writeln( string.format( 'lns_setQ_any( lns_module_path, lns_litStr2any( _pEnv, "%s"));', self.moduleCtrl:getFullName( node:get_moduleTypeInfo() )) )
    
    self:writeln( "lns_enter_block( _pEnv, 0, 0, 0 );" )
+   self:writeln( "" )
    
    if self.outputBuiltinFlag then
       self:writeln( "lns_init_lns_builtin_Sub( _pEnv );" )
@@ -1692,7 +1700,7 @@ local function registerBuiltin(  )
             param = createSymbolParam( symbol:get_name(), getValKind( symbol:get_typeInfo() ), getCType( symbol:get_typeInfo() ) )
          else 
             
-               Util.err( string.format( "illeal symbol -- %s %d", symbol:get_name(), 1285) )
+               Util.err( string.format( "illeal symbol -- %s %d", symbol:get_name(), 1295) )
          end
       end
       
@@ -1852,7 +1860,7 @@ function convFilter:processRoot( node, opt )
    end
    
    
-   self:writeln( "static bool lns_module_readyFlag = false;" )
+   self:writeln( "static lns_module_t s_module = {NULL,NULL,false};" )
    self:writeln( string.format( "static %s lns_module_globalStemList;", cTypeAnyPP) )
    self:writeln( string.format( "static %s lns_module_path = NULL;", cTypeAnyPP) )
    
@@ -3316,7 +3324,7 @@ local function processDefaultCtor( stream, moduleCtrl, scopeMgr, node )
                else 
                   
                      Util.err( string.format( "no support -- %s:%s:%d", member:get_name().txt, ValKind:_getTxt( valKind)
-                     , 2864) )
+                     , 2874) )
                end
             end
             
@@ -3591,7 +3599,7 @@ function convFilter:processDeclClassDef( node )
                else 
                   
                      Util.err( string.format( "no support -- %s:%s:%d", member:get_symbolInfo():get_name(), ValKind:_getTxt( valKind)
-                     , 3132) )
+                     , 3142) )
                end
             end
             
@@ -4077,7 +4085,7 @@ function convFilter:processSym2Any( symbol )
       else 
          
             Util.err( string.format( "not suppport -- %s, %d", ValKind:_getTxt( valKind)
-            , 3723) )
+            , 3733) )
       end
    end
    
@@ -4173,7 +4181,7 @@ function convFilter:processVal2any( node, parent )
       else 
          
             Util.err( string.format( "not suppport -- %d, %s, %s, %d", node:get_pos().lineNo, ValKind:_getTxt( valKind)
-            , Nodes.getNodeKindName( node:get_kind() ), 3841) )
+            , Nodes.getNodeKindName( node:get_kind() ), 3851) )
       end
    end
    
@@ -4222,7 +4230,7 @@ function convFilter:processSetValSingleDirect( parent, node, var, initFlag, expV
       
       Util.err( string.format( "illegal %s %s %s -- %d", var:get_name(), ValKind:_getTxt( valKind)
       , ValKind:_getTxt( expValKind)
-      , 3896) )
+      , 3906) )
    end
    
    
@@ -5534,6 +5542,21 @@ end
 
 
 
+function convFilter:processCreateDDD( parent, expList )
+
+   self:write( "lns_createDDD" )
+   local lastExp = expList[#expList]
+   self:write( string.format( "( _pEnv, %s, %d", tostring( Nodes.hasMultiValNode( lastExp )), #expList) )
+   
+   for __index, exp in pairs( expList ) do
+      self:write( ", " )
+      self:processVal2stem( exp, parent )
+   end
+   
+   self:write( ")" )
+end
+
+
 function convFilter:processApply( node, opt )
 
    self:writeln( "{" )
@@ -5574,18 +5597,31 @@ function convFilter:processApply( node, opt )
    
    local workSymName = string.format( "_workMret%d", dummyId)
    self:write( string.format( "%s %s = ", cTypeAnyP, workSymName) )
-   self:write( string.format( "lns_func( *%s )( _pEnv, ", self.moduleCtrl:getSymbolName( formSym )) )
-   if self.scopeMgr:getSymbolValKind( paramSym ) == ValKind.Any then
-      self:write( "*" )
+   
+   if formSym:get_typeInfo():get_kind() == Ast.TypeInfoKind.Ext then
+      self:write( string.format( "lns_lua_callForm( _pEnv, *%s, ", self.moduleCtrl:getSymbolName( formSym )) )
+      self:write( "" )
+      local expList = {}
+      table.insert( expList, self:createRefNodeFromSym( paramSym ) )
+      table.insert( expList, self:createRefNodeFromSym( stateSym ) )
+      self:processCreateDDD( node, expList )
+      self:writeln( string.format( ")%s;", accessAny) )
+   else
+    
+      self:write( string.format( "lns_func( *%s )( _pEnv, ", self.moduleCtrl:getSymbolName( formSym )) )
+      if self.scopeMgr:getSymbolValKind( paramSym ) == ValKind.Any then
+         self:write( "*" )
+      end
+      
+      self:writeln( string.format( "%s, %s)%s;", self.moduleCtrl:getSymbolName( paramSym ), self.moduleCtrl:getSymbolName( stateSym ), accessAny) )
    end
    
-   self:writeln( string.format( "%s, %s)%s;", self.moduleCtrl:getSymbolName( paramSym ), self.moduleCtrl:getSymbolName( stateSym ), accessAny) )
    
    self:writeln( string.format( "if ( lns_fromDDD( %s, 0 ).type == lns_stem_type_nil ) {", workSymName) )
    self:writeln( "   break;" )
    self:writeln( "}" )
    
-   local nodeManager = Nodes.NodeManager.new()
+   local nodeManager = self.dummyNodeManager
    for index, varSym in pairs( node:get_varList() ) do
       local valKind = self.scopeMgr:getSymbolValKind( varSym )
       local varName = self.moduleCtrl:getSymbolName( varSym )
@@ -5600,7 +5636,7 @@ function convFilter:processApply( node, opt )
          else 
             
                Util.err( string.format( "no support -- %s:%s:%d", varSym:get_name(), ValKind:_getTxt( valKind)
-               , 5575) )
+               , 5612) )
          end
       end
       
@@ -5737,17 +5773,17 @@ local function getCollectionKind( typeInfo )
          return _lune.newAlge( CollectionKind.Map)
       elseif _switchExp == Ast.TypeInfoKind.Ext then
          local extType = _lune.unwrap( _lune.__Cast( typeInfo:get_srcTypeInfo(), 3, Ast.ExtTypeInfo ))
-         local luneType = extType:get_luneType()
+         local extedType = extType:get_extedType()
          do
-            local _switchExp = luneType:get_kind()
+            local _switchExp = extedType:get_kind()
             if _switchExp == Ast.TypeInfoKind.List then
-               return _lune.newAlge( CollectionKind.ExtList, {luneType})
+               return _lune.newAlge( CollectionKind.ExtList, {extedType})
             elseif _switchExp == Ast.TypeInfoKind.Array then
-               return _lune.newAlge( CollectionKind.ExtArray, {luneType})
+               return _lune.newAlge( CollectionKind.ExtArray, {extedType})
             elseif _switchExp == Ast.TypeInfoKind.Set then
-               return _lune.newAlge( CollectionKind.ExtSet, {luneType})
+               return _lune.newAlge( CollectionKind.ExtSet, {extedType})
             elseif _switchExp == Ast.TypeInfoKind.Map then
-               return _lune.newAlge( CollectionKind.ExtMap, {luneType})
+               return _lune.newAlge( CollectionKind.ExtMap, {extedType})
             end
          end
          
@@ -5814,7 +5850,7 @@ function convFilter:processForeach( node, opt )
          do
             local _matchExp = collectionKind
             if _matchExp[1] == CollectionKind.ExtMap[1] then
-               local luneType = _matchExp[2][1]
+               local extedType = _matchExp[2][1]
             
                self:writeln( string.format( "%s _itAny = lns_lua_itMap_new( _pEnv, _obj );", cTypeAnyP) )
                self:writeln( "lns_Map_entry_t _entry;" )
@@ -5846,7 +5882,7 @@ function convFilter:processForeach( node, opt )
          do
             local _matchExp = collectionKind
             if _matchExp[1] == CollectionKind.ExtMap[1] then
-               local luneType = _matchExp[2][1]
+               local extedType = _matchExp[2][1]
             
                self:writeln( "while ( lns_lua_itMap_hasNext( _pEnv, _itAny ) )" )
             end
@@ -5887,10 +5923,10 @@ function convFilter:processForeach( node, opt )
             do
                local _matchExp = collectionKind
                if _matchExp[1] == CollectionKind.ExtMap[1] then
-                  local luneType = _matchExp[2][1]
+                  local extedType = _matchExp[2][1]
                
                   self:writeln( "lns_lua_itMap_getEntry( _pEnv, _itAny, &_entry );" )
-                  self:processMapForeachSetupVal( node, luneType, node:get_block():get_scope(), node:get_key(), node:get_val(), "_entry.key", "_entry.val" )
+                  self:processMapForeachSetupVal( node, extedType, node:get_block():get_scope(), node:get_key(), node:get_val(), "_entry.key", "_entry.val" )
                end
             end
             
@@ -6016,7 +6052,7 @@ function convFilter:processExpUnwrap( node, opt )
                   self:write( "lns_unwrap_any( " )
                else 
                   
-                     Util.err( string.format( "no support -- %d", 5990) )
+                     Util.err( string.format( "no support -- %d", 6027) )
                end
             end
             
@@ -6403,20 +6439,12 @@ function convFilter:processExpToDDD( node, opt )
             filter( exp, self, node )
          end
          
+         self:write( ")" )
       else
-         self:write( "lns_createDDD" )
-         local lastExp = expList[#expList]
-         self:write( string.format( "( _pEnv, %s, %d", tostring( Nodes.hasMultiValNode( lastExp )), #expList) )
-         
-         for __index, exp in pairs( expList ) do
-            self:write( ", " )
-            self:processVal2stem( exp, node )
-         end
-         
+         self:processCreateDDD( node, expList )
       end
    end
    
-   self:write( ")" )
 end
 
 
@@ -7200,12 +7228,12 @@ function convFilter:processExpRef( node, opt )
    end
    
    
-   if node:get_token().txt == "super" then
+   if node:get_symbolInfo():get_name() == "super" then
       local funcType = node:get_expType()
       self:write( string.format( "%s.%s", self:getFullName( funcType:get_parentInfo() ), funcType:get_rawTxt()) )
-   elseif node:get_token().txt == "__mod__" then
+   elseif node:get_symbolInfo():get_name() == "__mod__" then
       self:write( "*lns_module_path" )
-   elseif node:get_token().txt == "..." then
+   elseif node:get_symbolInfo():get_name() == "..." then
       self:write( "_pDDD" )
    else
     
@@ -7294,7 +7322,7 @@ function convFilter:processExpRefItem( node, opt )
                self:write( ")" )
             else 
                
-                  Util.err( string.format( "not support:%d:%d", 7683, node:get_pos().lineNo) )
+                  Util.err( string.format( "not support:%d:%d", 7714, node:get_pos().lineNo) )
             end
          end
          
@@ -7440,7 +7468,7 @@ function convFilter:processReturn( node, opt )
                   filter( expList[1], self, node )
                else 
                   
-                     Util.err( string.format( "no support -- %d", 7885) )
+                     Util.err( string.format( "no support -- %d", 7916) )
                end
             end
             
@@ -7459,7 +7487,7 @@ function convFilter:processReturn( node, opt )
                elseif _switchExp == ValKind.Prim then
                else 
                   
-                     Util.err( string.format( "no support -- %d", 7904) )
+                     Util.err( string.format( "no support -- %d", 7935) )
                end
             end
             

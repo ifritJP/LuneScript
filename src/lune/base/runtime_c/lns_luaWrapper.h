@@ -37,5 +37,9 @@ extern void lns_lua_itMap_getEntry(
 extern void lns_pushAnyVal( lns_env_t * _pEnv, void * pKey );
 extern void lns_lua_stack2str( lns_env_t * _pEnv, int index, lns_stem_t * pStem );
 extern void lns_setupFromStack( lns_env_t * _pEnv, int index, lns_stem_t * pStem );
+extern lns_stem_t lns_lua_call( lns_env_t * _pEnv, int stackBase, int argNum, int retNum );
+extern lns_stem_t lns_lua_callForm( lns_env_t * _pEnv, lns_any_t * _pForm, lns_stem_t ddd );
+extern lns_any_t * lns_createFormAny( lns_env_t * _pEnv );
+extern void lns_releaeAnyVal( lns_env_t * _pEnv, void * pKey );
 
 #endif

@@ -1133,7 +1133,7 @@ end
 
 function FormatterFilter:processExpRef( node, opt )
 
-   self:write( node:get_token().txt )
+   self:write( node:get_symbolInfo():get_name() )
 end
 
 

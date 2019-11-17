@@ -973,7 +973,7 @@ end
 function dumpFilter:processExpRef( node, opt )
 
    local prefix, depth = opt:get(  )
-   dump( prefix, depth, node, node:get_token(  ).txt )
+   dump( prefix, depth, node, node:get_symbolInfo():get_name() )
 end
 
 

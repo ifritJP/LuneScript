@@ -3611,6 +3611,7 @@ end
 
 function NodeKind.get_ExpRef(  )
 
+   
    return _lune.unwrap( _moduleObj.nodeKind['ExpRef'])
 end
 
@@ -3640,25 +3641,24 @@ function ExpRefNode:canBeStatement(  )
 
    return false
 end
-function ExpRefNode.new( id, pos, typeList, token, symbolInfo )
+function ExpRefNode.new( id, pos, typeList, symbolInfo )
    local obj = {}
    ExpRefNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, typeList, token, symbolInfo ); end
+   if obj.__init then obj:__init( id, pos, typeList, symbolInfo ); end
    return obj
 end
-function ExpRefNode:__init(id, pos, typeList, token, symbolInfo) 
+function ExpRefNode:__init(id, pos, typeList, symbolInfo) 
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpRef']), pos, typeList)
    
    
    
-   self.token = token
    self.symbolInfo = symbolInfo
    
    
 end
-function ExpRefNode.create( nodeMan, pos, typeList, token, symbolInfo )
+function ExpRefNode.create( nodeMan, pos, typeList, symbolInfo )
 
-   local node = ExpRefNode.new(nodeMan:nextId(  ), pos, typeList, token, symbolInfo)
+   local node = ExpRefNode.new(nodeMan:nextId(  ), pos, typeList, symbolInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -3669,9 +3669,6 @@ function ExpRefNode:visit( visitor, depth )
 end
 function ExpRefNode.setmeta( obj )
   setmetatable( obj, { __index = ExpRefNode  } )
-end
-function ExpRefNode:get_token()
-   return self.token
 end
 function ExpRefNode:get_symbolInfo()
    return self.symbolInfo

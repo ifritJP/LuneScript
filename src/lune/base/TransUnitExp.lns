@@ -2273,7 +2273,7 @@ fn TransUnit.analyzeExpSymbol(
          }
          
          exp = Nodes.ExpRefNode.create(
-            self.nodeManager, firstToken.pos, [ typeInfo ], token,
+            self.nodeManager, firstToken.pos, [ typeInfo ], 
             new Ast.AccessSymbolInfo( symbolInfo, nil, true ) );
       }
    }
@@ -3288,7 +3288,7 @@ fn TransUnit.analyzeExp(
          self.error( "unknown type -- %s" ( token.txt ) );
       }; 
       exp = Nodes.ExpRefNode.create(
-         self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ], token,
+         self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ], 
          new Ast.AccessSymbolInfo( symbolTypeInfo, nil, false ) );
    }  
    elseif token.kind == Parser.TokenKind.Kywd and

@@ -139,6 +139,15 @@ extern "C" {
     (lns_stem_t){ .type = lns_stem_type_any, .val = { .pAny = VAL } }
     
 
+/**
+ * リストの末尾に ANY を追加。
+ */
+#define lns_add2list( TOP, ANY )               \
+    (ANY)->pNext = TOP;                         \
+    (ANY)->pPrev = (TOP)->pPrev;               \
+    (TOP)->pPrev->pNext = ANY;                  \
+    (TOP)->pPrev = ANY;
+
     /**
      * ブロックの最大深度。
      * 深い関数の再帰呼び出しをすると消費するが、 1000 もあれば十分。
@@ -334,6 +343,7 @@ extern "C" {
         lns_value_type_itMap,
         lns_value_type_alge,
         lns_value_type_luaVal,
+        lns_value_type_luaForm,
     } lns_value_type_t;
     typedef struct lns_itList_t lns_itList_t;
     typedef struct lns_itSet_t lns_itSet_t;
@@ -631,6 +641,13 @@ extern "C" {
 
     extern lns_global_t lns_global;
 
+    typedef struct lns_module_t {
+        struct lns_module_t * pPrev;
+        struct lns_module_t * pNext;
+
+        bool readyFlag;
+        lns_block_t * pBlock;
+    } lns_module_t;
 
     struct lua_State;
     
@@ -673,6 +690,8 @@ extern "C" {
 
         /** 処理中の MRet */
         lns_any_t * pMRet;
+
+        lns_module_t loadModuleTop;
     };
 
 
@@ -747,7 +766,8 @@ extern "C" {
 
     extern lns_any_t * _lns_luaVal_new(
         const char * pFile, int lineNo, lns_env_t * _pEnv, lns_value_type_t type );
-    
+
+    extern lns_any_t * lns_createMRetOnly( lns_env_t * _pEnv, int num );
 
     extern lns_int_t lns_stem2int( lns_stem_t stem );
     extern lns_real_t lns_stem2real( lns_stem_t stem );
@@ -768,6 +788,7 @@ extern "C" {
 
     extern lns_any_t * lns_strconcat(
         lns_env_t * _pEnv, lns_any_t * pAny1, lns_any_t * pAny2 );
+    extern lns_any_t * lns_luaForm_new( lns_env_t * _pEnv );
     
 
     extern lns_str_t lns_createLiteralStr( const char * pStr );
@@ -776,6 +797,7 @@ extern "C" {
         lns_env_t * _pEnv, lns_block_t * pBlock, int index, lns_stem_type_t type );
 
     extern lns_block_t * lns_enter_module( int anyNum, int stemNum, int varNum );
+    
     extern void lns_reset_block( lns_env_t * _pEnv );
 
     extern void lns_setRet( lns_env_t * _pEnv, lns_stem_t stem );

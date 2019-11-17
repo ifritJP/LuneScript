@@ -5575,20 +5575,20 @@ _moduleObj.builtinTypeAbbrNone = builtinTypeAbbrNone
 local ExtTypeInfo = {}
 setmetatable( ExtTypeInfo, { __index = TypeInfo } )
 _moduleObj.ExtTypeInfo = ExtTypeInfo
-function ExtTypeInfo.new( idProvider, luneType )
+function ExtTypeInfo.new( idProvider, extedType )
    local obj = {}
    ExtTypeInfo.setmeta( obj )
-   if obj.__init then obj:__init( idProvider, luneType ); end
+   if obj.__init then obj:__init( idProvider, extedType ); end
    return obj
 end
-function ExtTypeInfo:__init(idProvider, luneType) 
-   TypeInfo.__init( self,luneType:get_scope())
+function ExtTypeInfo:__init(idProvider, extedType) 
+   TypeInfo.__init( self,extedType:get_scope())
    
    
    local typeId = idProvider:get_id() + 1
    idProvider:increment(  )
    self.typeId = typeId
-   self.luneType = luneType
+   self.extedType = extedType
    
    self.nilableTypeInfo = NilableTypeInfo.new(self, typeId + 1)
    idProv:increment(  )
@@ -5599,11 +5599,11 @@ function ExtTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
 end
 function ExtTypeInfo:getTxtWithRaw( rawTxt, typeNameCtrl, importInfo, localFlag )
 
-   return string.format( "Luaval<%s>", self.luneType:getTxtWithRaw( rawTxt, typeNameCtrl, importInfo, localFlag ))
+   return string.format( "Luaval<%s>", self.extedType:getTxtWithRaw( rawTxt, typeNameCtrl, importInfo, localFlag ))
 end
 function ExtTypeInfo:canEvalWith( other, canEvalType, alt2type )
 
-   return self.luneType:canEvalWith( other, canEvalType, alt2type )
+   return self.extedType:canEvalWith( other, canEvalType, alt2type )
 end
 function ExtTypeInfo:serialize( stream, validChildrenSet )
 
@@ -5633,140 +5633,145 @@ function ExtTypeInfo:get_nilable(  )
 
    return false
 end
+function ExtTypeInfo:applyGeneric( alt2typeMap, moduleTypeInfo )
+
+   local typeInfo = self.extedType:applyGeneric( alt2typeMap, moduleTypeInfo )
+   if typeInfo ~= self.extedType then
+      Util.err( string.format( "not support -- %s", self.extedType:getTxt(  )) )
+   end
+   
+   return self
+end
 function ExtTypeInfo.setmeta( obj )
   setmetatable( obj, { __index = ExtTypeInfo  } )
 end
 function ExtTypeInfo:get_typeId()
    return self.typeId
 end
-function ExtTypeInfo:get_luneType()
-   return self.luneType
+function ExtTypeInfo:get_extedType()
+   return self.extedType
 end
 function ExtTypeInfo:get_nilableTypeInfo()
    return self.nilableTypeInfo
 end
 function ExtTypeInfo:isModule( ... )
-   return self.luneType:isModule( ... )
+   return self.extedType:isModule( ... )
 end
 
 function ExtTypeInfo:getParentId( ... )
-   return self.luneType:getParentId( ... )
+   return self.extedType:getParentId( ... )
 end
 
 function ExtTypeInfo:get_baseId( ... )
-   return self.luneType:get_baseId( ... )
+   return self.extedType:get_baseId( ... )
 end
 
 function ExtTypeInfo:isInheritFrom( ... )
-   return self.luneType:isInheritFrom( ... )
+   return self.extedType:isInheritFrom( ... )
 end
 
 function ExtTypeInfo:get_rawTxt( ... )
-   return self.luneType:get_rawTxt( ... )
+   return self.extedType:get_rawTxt( ... )
 end
 
 function ExtTypeInfo:get_abstractFlag( ... )
-   return self.luneType:get_abstractFlag( ... )
+   return self.extedType:get_abstractFlag( ... )
 end
 
 function ExtTypeInfo:equals( ... )
-   return self.luneType:equals( ... )
+   return self.extedType:equals( ... )
 end
 
 function ExtTypeInfo:get_externalFlag( ... )
-   return self.luneType:get_externalFlag( ... )
+   return self.extedType:get_externalFlag( ... )
 end
 
 function ExtTypeInfo:get_interfaceList( ... )
-   return self.luneType:get_interfaceList( ... )
+   return self.extedType:get_interfaceList( ... )
 end
 
 function ExtTypeInfo:get_itemTypeInfoList( ... )
-   return self.luneType:get_itemTypeInfoList( ... )
+   return self.extedType:get_itemTypeInfoList( ... )
 end
 
 function ExtTypeInfo:get_argTypeInfoList( ... )
-   return self.luneType:get_argTypeInfoList( ... )
+   return self.extedType:get_argTypeInfoList( ... )
 end
 
 function ExtTypeInfo:get_retTypeInfoList( ... )
-   return self.luneType:get_retTypeInfoList( ... )
+   return self.extedType:get_retTypeInfoList( ... )
 end
 
 function ExtTypeInfo:get_parentInfo( ... )
-   return self.luneType:get_parentInfo( ... )
+   return self.extedType:get_parentInfo( ... )
 end
 
 function ExtTypeInfo:hasRouteNamespaceFrom( ... )
-   return self.luneType:hasRouteNamespaceFrom( ... )
+   return self.extedType:hasRouteNamespaceFrom( ... )
 end
 
 function ExtTypeInfo:get_staticFlag( ... )
-   return self.luneType:get_staticFlag( ... )
+   return self.extedType:get_staticFlag( ... )
 end
 
 function ExtTypeInfo:get_accessMode( ... )
-   return self.luneType:get_accessMode( ... )
+   return self.extedType:get_accessMode( ... )
 end
 
 function ExtTypeInfo:get_autoFlag( ... )
-   return self.luneType:get_autoFlag( ... )
+   return self.extedType:get_autoFlag( ... )
 end
 
 function ExtTypeInfo:get_nonnilableType( ... )
-   return self.luneType:get_nonnilableType( ... )
+   return self.extedType:get_nonnilableType( ... )
 end
 
 function ExtTypeInfo:get_baseTypeInfo( ... )
-   return self.luneType:get_baseTypeInfo( ... )
+   return self.extedType:get_baseTypeInfo( ... )
 end
 
 function ExtTypeInfo:get_children( ... )
-   return self.luneType:get_children( ... )
+   return self.extedType:get_children( ... )
 end
 
 function ExtTypeInfo:addChildren( ... )
-   return self.luneType:addChildren( ... )
+   return self.extedType:addChildren( ... )
 end
 
 function ExtTypeInfo:get_mutMode( ... )
-   return self.luneType:get_mutMode( ... )
+   return self.extedType:get_mutMode( ... )
 end
 
 function ExtTypeInfo:getParentFullName( ... )
-   return self.luneType:getParentFullName( ... )
-end
-
-function ExtTypeInfo:applyGeneric( ... )
-   return self.luneType:applyGeneric( ... )
+   return self.extedType:getParentFullName( ... )
 end
 
 function ExtTypeInfo:get_genSrcTypeInfo( ... )
-   return self.luneType:get_genSrcTypeInfo( ... )
+   return self.extedType:get_genSrcTypeInfo( ... )
 end
 
 function ExtTypeInfo:serializeTypeInfoList( ... )
-   return self.luneType:serializeTypeInfoList( ... )
+   return self.extedType:serializeTypeInfoList( ... )
 end
 
 function ExtTypeInfo:get_scope( ... )
-   return self.luneType:get_scope( ... )
+   return self.extedType:get_scope( ... )
 end
 
 function ExtTypeInfo:get_typeData( ... )
-   return self.luneType:get_typeData( ... )
+   return self.extedType:get_typeData( ... )
 end
 
 function ExtTypeInfo:hasBase( ... )
-   return self.luneType:hasBase( ... )
+   return self.extedType:hasBase( ... )
 end
 
 function ExtTypeInfo:createAlt2typeMap( ... )
-   return self.luneType:createAlt2typeMap( ... )
+   return self.extedType:createAlt2typeMap( ... )
 end
 
 function ExtTypeInfo:getFullName( ... )
-   return self.luneType:getFullName( ... )
+   return self.extedType:getFullName( ... )
 end
 
 
@@ -6429,7 +6434,7 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
    do
       local extTypeInfo = _lune.__Cast( otherSrc, 3, ExtTypeInfo )
       if extTypeInfo ~= nil then
-         otherSrc = extTypeInfo:get_luneType()
+         otherSrc = extTypeInfo:get_extedType()
       end
    end
    

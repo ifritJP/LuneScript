@@ -623,6 +623,10 @@ function convFilter:outputMeta( node )
          return 
       end
       
+      if Ast.isBuiltin( typeInfo:get_srcTypeInfo():get_typeId() ) then
+         return 
+      end
+      
       
       if Ast.isExtId( typeInfo ) and typeInfo:get_externalFlag() then
          return 
@@ -3147,7 +3151,7 @@ function convFilter:processExpCall( node, opt )
    do
       local refNode = _lune.__Cast( node:get_func(), 3, Nodes.ExpRefNode )
       if refNode ~= nil then
-         if refNode:get_token().txt == "super" then
+         if refNode:get_symbolInfo():get_name() == "super" then
             wroteFuncFlag = true
             setArgFlag = true
             local funcType = refNode:get_expType()
@@ -3467,7 +3471,7 @@ end
 function convFilter:processExpRef( node, opt )
 
    do
-      local _switchExp = node:get_token().txt
+      local _switchExp = node:get_symbolInfo():get_name()
       if _switchExp == "super" then
          local funcType = node:get_expType()
          self:write( string.format( "%s.%s", self:getFullName( funcType:get_parentInfo() ), funcType:get_rawTxt()) )
@@ -3490,7 +3494,7 @@ function convFilter:processExpRef( node, opt )
                   
                end
                
-               self:write( node:get_token().txt )
+               self:write( node:get_symbolInfo():get_name() )
             end
             
       end
@@ -3932,7 +3936,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3283, function (  )
+   Log.log( Log.Level.Info, __func__, 3286, function (  )
    
       return string.format( "code: %s", code)
    end )

@@ -96,15 +96,7 @@ lns_any_t * mtd_lns_string_format(
     }
 
     // 関数を実行
-    lua_call( pLua, 1 + lns_lenDDD( ddd.val.pAny ), LUA_MULTRET );
-
-    lns_stem_t result;
-    lns_lua_stack2str( _pEnv, stackTop + 2, &result );
-    lns_setRet( _pEnv, result );
-
-    lua_settop( pLua, stackTop );
-
-    return result.val.pAny;
+    return lns_lua_call( _pEnv, stackTop, 1 + lns_lenDDD( ddd.val.pAny ), 1 ).val.pAny;
 }
 
 
@@ -113,8 +105,11 @@ extern lns_stem_t mtd_lns_string_find(
     lns_any_t * pPattern, lns_stem_t init, lns_stem_t plain)
 {
     lua_State * pLua = _pEnv->pLua;
+
+    // string.find と pTarget を push
     int stackTop = lns_string_call_setup( pLua, "find", pTarget );
 
+    // 残りの引数を push
     LNS_PUSH_STR( pLua, pPattern );
     int argNum = 2;
     if ( init.type != lns_stem_type_none ) {
@@ -136,20 +131,9 @@ extern lns_stem_t mtd_lns_string_find(
         argNum++;
     }
     
-    // 関数を実行
-    lua_call( pLua, argNum, LUA_MULTRET );
-
-    lns_stem_t sIndex;
-    lns_setupFromStack( _pEnv, stackTop + 3, &sIndex );
-    lns_stem_t findIndex;
-    lns_setupFromStack( _pEnv, stackTop + 2, &findIndex );
-
-    lns_stem_t result = lns_createMRet( _pEnv, false, 2, findIndex, sIndex );
-    lns_setMRet( _pEnv, result.val.pAny );
-
-    lua_settop( pLua, stackTop );
-
-    return result;
+    // Lua 関数を実行
+    return lns_lua_call( _pEnv, stackTop, argNum, 2 );
+    
 }
 
 
@@ -160,15 +144,17 @@ lns_any_t * mtd_lns_string_rep( lns_env_t * _pEnv, lns_any_t * pTxt, lns_int_t n
 
     lua_pushinteger( pLua, num );
 
-    lua_call( pLua, 2, LUA_MULTRET );
-
-    lns_stem_t result;
-    lns_setupFromStack( _pEnv, stackTop + 2, &result );
-
-    lns_setRet( _pEnv, result );
-
-    lua_settop( pLua, stackTop );
-
-    return result.val.pAny;
+    return lns_lua_call( _pEnv, stackTop, 2, 1 ).val.pAny;
 }
 
+lns_stem_t mtd_lns_string_gmatch(
+    lns_env_t * _pEnv, lns_any_t * pTarget, lns_any_t * pPattern)
+{
+    lua_State * pLua = _pEnv->pLua;
+    int stackTop = lns_string_call_setup( pLua, "gmatch", pTarget );
+
+    LNS_PUSH_STR( pLua, pPattern );
+
+    // Lua 関数を実行
+    return lns_lua_call( _pEnv, stackTop, 2, 3 );
+}

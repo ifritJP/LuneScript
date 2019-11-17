@@ -887,8 +887,8 @@ function MacroCtrl:expandSymbol( parser, prefixToken, exp, nodeManager, errMessL
       do
          local refNode = _lune.__Cast( exp, 3, Nodes.ExpRefNode )
          if refNode ~= nil then
-            local refToken = refNode:get_token()
-            local macroInfo = self.symbol2ValueMapForMacro[refToken.txt]
+            local symbolInfo = refNode:get_symbolInfo()
+            local macroInfo = self.symbol2ValueMapForMacro[symbolInfo:get_name()]
             if macroInfo ~= nil then
                local valType = macroInfo.typeInfo
                if valType:equals( Ast.builtinTypeSymbol ) or valType:equals( Ast.builtinTypeExp ) or valType:equals( Ast.builtinTypeStat ) then
@@ -899,7 +899,7 @@ function MacroCtrl:expandSymbol( parser, prefixToken, exp, nodeManager, errMessL
                elseif Ast.builtinTypeString:equals( valType ) then
                else
                 
-                  table.insert( errMessList, ErrorMess.new(refToken.pos, string.format( "not support ,, -- %s", valType:getTxt(  ))) )
+                  table.insert( errMessList, ErrorMess.new(_lune.unwrap( symbolInfo:get_pos()), string.format( "not support ,, -- %s", valType:getTxt(  ))) )
                end
                
             else

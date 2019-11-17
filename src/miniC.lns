@@ -1,26 +1,10 @@
-fn func( param:str, status:str! ): str!, str!
-{
-   when! status {
-      if #status >= 20 {
-         return nil, nil;
-      }
-   }
-   return param .. "%s" (status or "hoge"), (status or "hoge") .. "_";
-}
+let txt = "a b c";
+let func:form, param, state = string.gmatch( txt, "[a-z]+" );
+print( func( param, state )** );
+print( func( param, state )** );
+print( func( param, state )** );
 
-
-form ApplyForm( param:str, status:str! ): str!, str!;
-
-fn sub( val:str ) : ApplyForm, str, str!  {
-   return func, val, nil;
-}
-
-apply val1, val2 of func, "abc", nil
-{
-   print( val1, val2 );
-}
-apply val1, val2 of sub( "abc" )
-{
-   print( val1, val2 );
-}
-// print( "hoge" );
+// let txt = "a b c";
+// apply val of string.gmatch( txt, "[a-z]+" ) {
+//    print( val );
+// }

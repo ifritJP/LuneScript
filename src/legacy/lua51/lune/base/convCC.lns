@@ -926,12 +926,19 @@ class convFilter extend Nodes.Filter<Opt> {
    pri let mut enableTest:bool;
    pri let mut canConv:bool;
 
+   pri let mut dummyNodeManager:Nodes.NodeManager;
+
+   fn createRefNodeFromSym( symbol:&Ast.SymbolInfo ) mut: &Nodes.ExpRefNode {
+      return Nodes.ExpRefNode.create(
+         self.dummyNodeManager, unwrap symbol.$pos, [ symbol.$typeInfo ], symbol );
+   }
 
    pub fn __init( enableTest:bool, outputBuiltin:bool, streamName: str, stream: oStream,
                   headerStream: oStream, ast:&TransUnit.ASTInfo )
    {
       super(ast.$moduleTypeInfo, ast.$moduleTypeInfo.$scope);
 
+      self.dummyNodeManager = new Nodes.NodeManager();
       self.canConv = true;
       self.enableTest = enableTest;
       self.outputBuiltinFlag = outputBuiltin;
@@ -1135,25 +1142,27 @@ fn convFilter.processInitModule( node: Nodes.RootNode ) mut
 
    self.pushIndent(##);
 
-   self.writeln( "if ( lns_module_readyFlag ) {" );
+   self.writeln( "if ( s_module.readyFlag ) {" );
    self.pushIndent(##);
    self.writeln( "return;" );
    self.popIndent();
    self.writeln( "}" );
-   self.writeln( "lns_module_readyFlag = true;" );
+   self.writeln( "s_module.readyFlag = true;" );
+   self.writeln( "lns_add2list( &_pEnv->loadModuleTop, &s_module);" );
    self.writeln( "" );
 
 
-   let moduneBlockName = getBlockName( self.ast.$moduleScope );
+   let moduleBlockName = getBlockName( self.ast.$moduleScope );
    self.writeln( "lns_block_t * %s = lns_enter_module( %d, %d, %d );"
-                 (moduneBlockName, anyNum, stemNum, varNum ) );
+                 (moduleBlockName, anyNum, stemNum, varNum ) );
+   self.writeln( "s_module.pBlock = %s;" (moduleBlockName));
 
    self.writeln( "lns_set_block_any( %s, 0, lns_module_globalStemList);"
-                 (moduneBlockName) );
+                 (moduleBlockName) );
    self.writeln(
       "lns_setQ_any( lns_module_globalStemList, lns_class_List_new( _pEnv ));" );
 
-   self.writeln( "lns_set_block_any( %s, 1, lns_module_path);" (moduneBlockName) );
+   self.writeln( "lns_set_block_any( %s, 1, lns_module_path);" (moduleBlockName) );
    self.writeln(
       'lns_setQ_any( lns_module_path, lns_litStr2any( _pEnv, "%s"));'
       (self.moduleCtrl.getFullName( node.$moduleTypeInfo) ) );
@@ -1162,6 +1171,7 @@ fn convFilter.processInitModule( node: Nodes.RootNode ) mut
    
    // init ブロック内の managedStemTop 用ブロック作成
    self.writeln( "lns_enter_block( _pEnv, 0, 0, 0 );" );
+   self.writeln( "" );
 
    if self.outputBuiltinFlag {
       self.writeln( "lns_init_lns_builtin_Sub( _pEnv );" );
@@ -1429,7 +1439,7 @@ pub override fn convFilter.processRoot(
       filter( importNode, self, node );
    }
 
-   self.writeln( "static bool lns_module_readyFlag = false;" );
+   self.writeln( "static lns_module_t s_module = {NULL,NULL,false};" );
    self.writeln( "static %s lns_module_globalStemList;" (cTypeAnyPP) );
    self.writeln( "static %s lns_module_path = NULL;" (cTypeAnyPP));
 
@@ -5491,6 +5501,20 @@ pub override fn convFilter.processFor(
    self.writeln( "}" );
 };
 
+fn convFilter.processCreateDDD(
+   parent:&Nodes.Node, expList:&List<&Nodes.Node> ) mut
+{
+   self.write( "lns_createDDD" );
+   let lastExp = expList[ #expList ];
+   self.write( "( _pEnv, %s, %d" ( Nodes.hasMultiValNode( lastExp ), #expList ) );
+
+   foreach exp in expList {
+      self.write( ", " );
+      self.processVal2stem( exp, parent );
+   }
+   self.write( ")" );
+}
+
 pub override fn convFilter.processApply(
    node: Nodes.ApplyNode, opt: Opt ) mut
 {
@@ -5535,14 +5559,27 @@ pub override fn convFilter.processApply(
    // イテレータ関数を実行し、開放されないように一旦 work にセットする
    let workSymName = "_workMret%d" (dummyId);
    self.write( "%s %s = " (cTypeAnyP, workSymName) );
-   self.write( "lns_func( *%s )( _pEnv, "
-               ( self.moduleCtrl.getSymbolName( formSym ) ) );
-   if self.scopeMgr.getSymbolValKind( paramSym ) == .Any {
-      self.write ( "*" );
+
+   if formSym.$typeInfo.$kind == .Ext {
+      self.write( "lns_lua_callForm( _pEnv, *%s, "
+                  ( self.moduleCtrl.getSymbolName( formSym ) ) );
+      self.write( "" );
+      let mut expList:List<&Nodes.Node> = [];
+      expList.insert( self.createRefNodeFromSym( paramSym ) );
+      expList.insert( self.createRefNodeFromSym( stateSym ) );
+      self.processCreateDDD( node, expList );
+      self.writeln( ")%s;" (accessAny) );
    }
-   self.writeln( "%s, %s)%s;"
-                 ( self.moduleCtrl.getSymbolName( paramSym ),
-                   self.moduleCtrl.getSymbolName( stateSym ), accessAny ) );
+   else {
+      self.write( "lns_func( *%s )( _pEnv, "
+                  ( self.moduleCtrl.getSymbolName( formSym ) ) );
+      if self.scopeMgr.getSymbolValKind( paramSym ) == .Any {
+         self.write ( "*" );
+      }
+      self.writeln( "%s, %s)%s;"
+         ( self.moduleCtrl.getSymbolName( paramSym ),
+           self.moduleCtrl.getSymbolName( stateSym ), accessAny ) );
+   }
    
    self.writeln(
       "if ( lns_fromDDD( %s, 0 ).type == lns_stem_type_nil ) {" (workSymName) );
@@ -5550,7 +5587,7 @@ pub override fn convFilter.processApply(
    self.writeln( "}" );
 
    // work から各変数にセットする
-   let mut nodeManager = new Nodes.NodeManager();
+   let mut nodeManager = self.dummyNodeManager;
    foreach varSym, index in node.$varList {
       let valKind = self.scopeMgr.getSymbolValKind( varSym );
       let varName = self.moduleCtrl.getSymbolName( varSym );
@@ -5696,10 +5733,10 @@ alge CollectionKind {
    Array,
    Set,
    Map,
-   ExtList(luneType:&Ast.TypeInfo),
-   ExtArray(luneType:&Ast.TypeInfo),
-   ExtSet(luneType:&Ast.TypeInfo),
-   ExtMap(luneType:&Ast.TypeInfo),
+   ExtList(extedType:&Ast.TypeInfo),
+   ExtArray(extedType:&Ast.TypeInfo),
+   ExtSet(extedType:&Ast.TypeInfo),
+   ExtMap(extedType:&Ast.TypeInfo),
 }
 
 fn getCollectionKind( typeInfo:&Ast.TypeInfo ) : CollectionKind {
@@ -5718,19 +5755,19 @@ fn getCollectionKind( typeInfo:&Ast.TypeInfo ) : CollectionKind {
       }
       case .Ext {
          let extType = unwrap typeInfo.$srcTypeInfo@@@Ast.ExtTypeInfo;
-         let luneType = extType.$luneType;
-         switch luneType.$kind {
+         let extedType = extType.$extedType;
+         switch extedType.$kind {
             case .List {
-               return .ExtList( luneType );
+               return .ExtList( extedType );
             }
             case .Array {
-               return .ExtArray( luneType );
+               return .ExtArray( extedType );
             }
             case .Set {
-               return .ExtSet( luneType );
+               return .ExtSet( extedType );
             }
             case .Map {
-               return .ExtMap( luneType );
+               return .ExtMap( extedType );
             }
          }
       }
@@ -5789,7 +5826,7 @@ pub override fn convFilter.processForeach(
       case .Ext {
          indexSymbol = nil;
          match collectionKind {
-            case .ExtMap( luneType ) {
+            case .ExtMap( extedType ) {
                self.writeln(
                   "%s _itAny = lns_lua_itMap_new( _pEnv, _obj );" (cTypeAnyP) );
                self.writeln( "lns_Map_entry_t _entry;" );
@@ -5821,7 +5858,7 @@ pub override fn convFilter.processForeach(
       }
       case .Ext {
          match collectionKind {
-            case .ExtMap( luneType ) {
+            case .ExtMap( extedType ) {
                self.writeln(
                   "while ( lns_lua_itMap_hasNext( _pEnv, _itAny ) )" );
             }
@@ -5860,10 +5897,10 @@ pub override fn convFilter.processForeach(
       }
       default {
          match collectionKind {
-            case .ExtMap( luneType ) {
+            case .ExtMap( extedType ) {
                self.writeln( "lns_lua_itMap_getEntry( _pEnv, _itAny, &_entry );" );
                self.processMapForeachSetupVal(
-                  node, luneType, node.$block.$scope, node.$key, node.$val,
+                  node, extedType, node.$block.$scope, node.$key, node.$val,
                   "_entry.key", "_entry.val" );
             }
          }
@@ -6298,6 +6335,7 @@ fn getMRetFuncName( node:&Nodes.Node ): str {
    return "l_call_mret_%d" ( node.$id );
 }
 
+
 pub override fn convFilter.processExpToDDD( node: Nodes.ExpToDDDNode, opt: Opt ) mut
 {
    switch self.processMode {
@@ -6328,18 +6366,11 @@ pub override fn convFilter.processExpToDDD( node: Nodes.ExpToDDDNode, opt: Opt )
          //self.processVal2stem( exp, node );
          filter( exp, self, node );
       }
+      self.write( ")" );
    }
    else {
-      self.write( "lns_createDDD" );
-      let lastExp = expList[ #expList ];
-      self.write( "( _pEnv, %s, %d" ( Nodes.hasMultiValNode( lastExp ), #expList ) );
-
-      foreach exp in expList {
-         self.write( ", " );
-         self.processVal2stem( exp, node );
-      }
+      self.processCreateDDD( node, expList );
    }
-   self.write( ")" );
 }
 
 /**
@@ -7576,15 +7607,15 @@ pub override fn convFilter.processExpRef(
       self.accessSymbolSet.add( node.$symbolInfo );
    }
    
-   if node.$token.txt == "super" {
+   if node.$symbolInfo.$name == "super" {
       let funcType = node.$expType;
       self.write( "%s.%s" ( self.getFullName( funcType.$parentInfo ),
                             funcType.$rawTxt ) );
    }
-   elseif node.$token.txt == "__mod__" {
+   elseif node.$symbolInfo.$name == "__mod__" {
       self.write( "*lns_module_path" );
    }
-   elseif node.$token.txt == "..." {
+   elseif node.$symbolInfo.$name == "..." {
       self.write( "_pDDD" );
    }
    else {
@@ -7610,7 +7641,7 @@ pub override fn convFilter.processExpRef(
                self.write( self.moduleCtrl.getFuncName( symbolInfo.$typeInfo ) );
             }
             else {
-               //self.write( node.$token.txt );
+               //self.write( node.$symbolInfo.$name );
                if valKind == .Any and symbolInfo.$kind == .Var {
                   self.write( "(*%s)" (self.moduleCtrl.getSymbolName( symbolInfo ) ) );
                }
@@ -8414,7 +8445,7 @@ pub override fn convFilter.processBreak(
 pub override fn convFilter.processLiteralSymbol(
    node: Nodes.LiteralSymbolNode, opt: Opt ) mut
 {
-   // self.write( '%s' ( node.$token.txt ) );
+   // self.write( '%s' ( node.$symbolInfo.$name ) );
 };
 
 pub override fn convFilter.processAbbr(
