@@ -1460,6 +1460,7 @@ pub class DeclFuncInfo {
    let body: &BlockNode! { pub };
    let retTypeInfoList: &List<&Ast.TypeInfo> { pub };
    let has__func__Symbol:bool { pub };
+   let overrideFlag: bool { pub };
 }
 
 pub static fn DeclFuncInfo.createFrom(
@@ -1467,7 +1468,8 @@ pub static fn DeclFuncInfo.createFrom(
 {
    return new DeclFuncInfo(
       info.$kind, info.classTypeInfo, name, info.argList, info.staticFlag,
-      info.accessMode, info.body, info.retTypeInfoList, info.has__func__Symbol );
+      info.accessMode, info.body, info.retTypeInfoList,
+      info.has__func__Symbol, info.overrideFlag );
 }
 
 _declNodeClass( "DeclFunc", Node, false, nil, true,

@@ -265,6 +265,7 @@ class MetaForBuildId extend (Mapping) {
    pub let __buildId:str;
    pub let __dependModuleMap: &Map<str,&DependMetaInfo>;
    pub let __subModuleMap: &List<str>;
+   pub let __enableTest:bool;
 
    pub fn createModuleId(): &frontInterface.ModuleId {
       return frontInterface.ModuleId.createIdFromTxt( self.__buildId );
@@ -432,16 +433,21 @@ metaTime
 
    when! metaInfo {
       // meta 情報があれば、 moduleId から更新済みかどうかを確認する
-      let buildId = frontInterface.ModuleId.createIdFromTxt( metaInfo.__buildId );
-      if buildId ~= frontInterface.ModuleId.tempId {
-         let lnsTime = Depend.getFileLastModifiedTime( lnsPath );
-         let metaTime = Depend.getFileLastModifiedTime( metaPath );
-         when! lnsTime, metaTime {
-            if lnsTime == buildId.$modTime {
-               // 更新済みならば、依存ファイルの状態を確認する
-               uptodate = checkDependUptodate( metaTime, metaInfo, metaCode );
+      if metaInfo.__enableTest == self.option.testing {
+         let buildId = frontInterface.ModuleId.createIdFromTxt( metaInfo.__buildId );
+         if buildId ~= frontInterface.ModuleId.tempId {
+            let lnsTime = Depend.getFileLastModifiedTime( lnsPath );
+            let metaTime = Depend.getFileLastModifiedTime( metaPath );
+            when! lnsTime, metaTime {
+               if lnsTime == buildId.$modTime {
+                  // 更新済みならば、依存ファイルの状態を確認する
+                  uptodate = checkDependUptodate( metaTime, metaInfo, metaCode );
+               }
             }
          }
+      }
+      else {
+         // テストコードを持つモジュールは、テストモードがあっていないものは更新が必要
       }
    }
    else {
@@ -853,11 +859,13 @@ pub fn Front.convertLuaToStreamFromScript(
          // Lns は解析せずにメタファイルの更新日時だけ更新する。
 
          Util.errorLog( "touch -- " .. path );
-         when! metaStream {
-            metaStream.write( metaCode );
-         }
-         else {
-            Util.err( "failed to open meta stream" );
+         if self.option.mode == .SaveMeta {
+            when! metaStream {
+               metaStream.write( metaCode );
+            }
+            else {
+               Util.err( "failed to open meta stream" );
+            }
          }
 
          outputDependInfo( dependsStream, metaInfo );

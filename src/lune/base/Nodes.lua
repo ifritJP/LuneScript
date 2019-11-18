@@ -6986,15 +6986,15 @@ _moduleObj.DeclFuncInfo = DeclFuncInfo
 function DeclFuncInfo.setmeta( obj )
   setmetatable( obj, { __index = DeclFuncInfo  } )
 end
-function DeclFuncInfo.new( kind, classTypeInfo, name, argList, staticFlag, accessMode, body, retTypeInfoList, has__func__Symbol )
+function DeclFuncInfo.new( kind, classTypeInfo, name, argList, staticFlag, accessMode, body, retTypeInfoList, has__func__Symbol, overrideFlag )
    local obj = {}
    DeclFuncInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( kind, classTypeInfo, name, argList, staticFlag, accessMode, body, retTypeInfoList, has__func__Symbol )
+      obj:__init( kind, classTypeInfo, name, argList, staticFlag, accessMode, body, retTypeInfoList, has__func__Symbol, overrideFlag )
    end
    return obj
 end
-function DeclFuncInfo:__init( kind, classTypeInfo, name, argList, staticFlag, accessMode, body, retTypeInfoList, has__func__Symbol )
+function DeclFuncInfo:__init( kind, classTypeInfo, name, argList, staticFlag, accessMode, body, retTypeInfoList, has__func__Symbol, overrideFlag )
 
    self.kind = kind
    self.classTypeInfo = classTypeInfo
@@ -7005,6 +7005,7 @@ function DeclFuncInfo:__init( kind, classTypeInfo, name, argList, staticFlag, ac
    self.body = body
    self.retTypeInfoList = retTypeInfoList
    self.has__func__Symbol = has__func__Symbol
+   self.overrideFlag = overrideFlag
 end
 function DeclFuncInfo:get_kind()
    return self.kind
@@ -7033,11 +7034,14 @@ end
 function DeclFuncInfo:get_has__func__Symbol()
    return self.has__func__Symbol
 end
+function DeclFuncInfo:get_overrideFlag()
+   return self.overrideFlag
+end
 
 
 function DeclFuncInfo.createFrom( info, name )
 
-   return DeclFuncInfo.new(info:get_kind(), info.classTypeInfo, name, info.argList, info.staticFlag, info.accessMode, info.body, info.retTypeInfoList, info.has__func__Symbol)
+   return DeclFuncInfo.new(info:get_kind(), info.classTypeInfo, name, info.argList, info.staticFlag, info.accessMode, info.body, info.retTypeInfoList, info.has__func__Symbol, info.overrideFlag)
 end
 
 

@@ -574,19 +574,20 @@ end
 function MetaForBuildId.setmeta( obj )
   setmetatable( obj, { __index = MetaForBuildId  } )
 end
-function MetaForBuildId.new( __buildId, __dependModuleMap, __subModuleMap )
+function MetaForBuildId.new( __buildId, __dependModuleMap, __subModuleMap, __enableTest )
    local obj = {}
    MetaForBuildId.setmeta( obj )
    if obj.__init then
-      obj:__init( __buildId, __dependModuleMap, __subModuleMap )
+      obj:__init( __buildId, __dependModuleMap, __subModuleMap, __enableTest )
    end
    return obj
 end
-function MetaForBuildId:__init( __buildId, __dependModuleMap, __subModuleMap )
+function MetaForBuildId:__init( __buildId, __dependModuleMap, __subModuleMap, __enableTest )
 
    self.__buildId = __buildId
    self.__dependModuleMap = __dependModuleMap
    self.__subModuleMap = __subModuleMap
+   self.__enableTest = __enableTest
 end
 function MetaForBuildId:_toMap()
   return self
@@ -608,6 +609,7 @@ function MetaForBuildId._fromMapSub( obj, val )
    table.insert( memInfo, { name = "__dependModuleMap", func = _lune._toMap, nilable = false, child = { { func = _lune._toStr, nilable = false, child = {} }, 
 { func = DependMetaInfo._fromMap, nilable = false, child = {} } } } )
    table.insert( memInfo, { name = "__subModuleMap", func = _lune._toList, nilable = false, child = { { func = _lune._toStr, nilable = false, child = {} } } } )
+   table.insert( memInfo, { name = "__enableTest", func = _lune._toBool, nilable = false, child = {} } )
    local result, mess = _lune._fromMap( obj, val, memInfo )
    if not result then
       return nil, mess
@@ -739,7 +741,7 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
             local _modMetaPath = modMetaPath
          
             
-            Log.log( Log.Level.Debug, __func__, 392, function (  )
+            Log.log( Log.Level.Debug, __func__, 393, function (  )
             
                
                return "NeedUpdate"
@@ -753,7 +755,7 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
             local _time = time
          
             
-            Log.log( Log.Level.Debug, __func__, 397, function (  )
+            Log.log( Log.Level.Debug, __func__, 398, function (  )
             
                
                return "NeedUpdate"
@@ -768,7 +770,7 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
             if  nil == dependMeta then
                local _dependMeta = dependMeta
             
-               Log.log( Log.Level.Debug, __func__, 405, function (  )
+               Log.log( Log.Level.Debug, __func__, 406, function (  )
                
                   
                   return "NeedUpdate"
@@ -781,7 +783,7 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
             local metaModuleId = dependMeta:createModuleId(  )
             if metaModuleId:get_buildCount() ~= 0 and metaModuleId:get_buildCount() ~= orgMetaModuleId:get_buildCount() then
                
-               Log.log( Log.Level.Debug, __func__, 415, function (  )
+               Log.log( Log.Level.Debug, __func__, 416, function (  )
                
                   
                   return string.format( "NeedUpdate: %s, %d, %d", modMetaPath, metaModuleId:get_buildCount(), orgMetaModuleId:get_buildCount())
@@ -804,21 +806,27 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
    local metaInfo, metaPath, metaCode = getMetaInfo( lnsPath, mod, self.option.outputDir )
    
    if metaInfo ~= nil then
-      local buildId = frontInterface.ModuleId.createIdFromTxt( metaInfo.__buildId )
-      if buildId ~= frontInterface.ModuleId.tempId then
-         local lnsTime = Depend.getFileLastModifiedTime( lnsPath )
-         local metaTime = Depend.getFileLastModifiedTime( metaPath )
-         if lnsTime ~= nil and metaTime ~= nil then
-            if lnsTime == buildId:get_modTime() then
-               uptodate = checkDependUptodate( metaTime, metaInfo, metaCode )
+      
+      if metaInfo.__enableTest == self.option.testing then
+         local buildId = frontInterface.ModuleId.createIdFromTxt( metaInfo.__buildId )
+         if buildId ~= frontInterface.ModuleId.tempId then
+            local lnsTime = Depend.getFileLastModifiedTime( lnsPath )
+            local metaTime = Depend.getFileLastModifiedTime( metaPath )
+            if lnsTime ~= nil and metaTime ~= nil then
+               if lnsTime == buildId:get_modTime() then
+                  uptodate = checkDependUptodate( metaTime, metaInfo, metaCode )
+               end
+               
             end
             
          end
          
+      else
+       
       end
       
    else
-      Log.log( Log.Level.Debug, __func__, 448, function (  )
+      Log.log( Log.Level.Debug, __func__, 454, function (  )
       
          return "not found meta"
       end )
@@ -895,7 +903,7 @@ end
 function Front:loadFile( importModuleInfo, path, mod )
    local __func__ = '@lune.@base.@front.Front.loadFile'
 
-   Log.log( Log.Level.Info, __func__, 515, function (  )
+   Log.log( Log.Level.Info, __func__, 521, function (  )
       local __func__ = '@lune.@base.@front.Front.loadFile.<anonymous>'
    
       
@@ -1088,7 +1096,7 @@ function Front:loadMeta( importModuleInfo, mod )
          if _exp ~= nil then
             self.loadedMetaMap[mod] = _exp.meta
          else
-            Log.log( Log.Level.Info, __func__, 651, function (  )
+            Log.log( Log.Level.Info, __func__, 657, function (  )
             
                return string.format( "%s checking", mod)
             end )
@@ -1284,10 +1292,13 @@ function Front:convertLuaToStreamFromScript( convMode, path, mod, byteCompile, s
          local metaInfo = _matchExp[2][2]
       
          Util.errorLog( "touch -- " .. path )
-         if metaStream ~= nil then
-            metaStream:write( metaCode )
-         else
-            Util.err( "failed to open meta stream" )
+         if self.option.mode == Option.ModeKind.SaveMeta then
+            if metaStream ~= nil then
+               metaStream:write( metaCode )
+            else
+               Util.err( "failed to open meta stream" )
+            end
+            
          end
          
          
@@ -1427,7 +1438,7 @@ function Front:saveToLua(  )
             end
             
             if not cont then
-               Log.log( Log.Level.Debug, __func__, 998, function (  )
+               Log.log( Log.Level.Debug, __func__, 1006, function (  )
                
                   return string.format( "<%s>, <%s>", oldLine, newLine)
                end )
@@ -1660,7 +1671,7 @@ end
 function Front:exec(  )
    local __func__ = '@lune.@base.@front.Front.exec'
 
-   Log.log( Log.Level.Trace, __func__, 1194, function (  )
+   Log.log( Log.Level.Trace, __func__, 1202, function (  )
    
       return Option.ModeKind:_getTxt( self.option.mode)
       

@@ -1737,7 +1737,7 @@ fn TransUnit.analyzeClassBody(
          .InitBlock, token, classTypeInfo, ininame, initBlockScope, [] );
 
       let mut info = new Nodes.DeclFuncInfo(
-         .InitBlock, classTypeInfo, token, [], true, .Pri, block, [], false );
+         .InitBlock, classTypeInfo, token, [], true, .Pri, block, [], false, false );
       let initBlockNode = Nodes.DeclMethodNode.create(
          self.nodeManager, firstToken.pos, [ funcTypeInfo ], info );
       initBlockInfo.set_func( initBlockNode );
@@ -2650,7 +2650,7 @@ fn TransUnit.analyzeDeclFunc(
       fn createDeclFuncInfo( funcKind:Nodes.FuncKind ): &Nodes.DeclFuncInfo {
          return new Nodes.DeclFuncInfo(
             funcKind, classTypeInfo, name, argList, orgStaticFlag, accessMode,
-            body, retTypeInfoList, self.has__func__Symbol.has( typeInfo ) );
+            body, retTypeInfoList, self.has__func__Symbol.has( typeInfo ), overrideFlag );
       }
 
       switch ( kind ) {

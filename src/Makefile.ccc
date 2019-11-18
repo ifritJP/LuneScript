@@ -27,7 +27,8 @@ CFLAGS = -g3
 else
 CFLAGS = -O
 endif
-CFLAGS += -Wall -Wno-unused-variable -c -Ilune/base/runtime_c -Ilune/base -I. -I$(LUA_INC_DIR)
+CFLAGS += -Wall -Wno-unused-variable -c -Ilune/base/runtime_c
+CFLAGS +=  -Iwork/0 -Ilune/base -I. -I$(LUA_INC_DIR)
 
 work/c/%.o: %.c
 	gcc $(CFLAGS) -o $@ $<

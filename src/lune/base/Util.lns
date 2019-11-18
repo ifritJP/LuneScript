@@ -221,11 +221,70 @@ __test case1 {
    import lune.base.Testing;
    let mut ctrl = new Testing.Ctrl();
 
-   let splitList = splitStr( "123 456 789", "[0-9]+" );
-   Testing._eq( ctrl, #splitList, 3 );
-   Testing._eq( ctrl, splitList[ 1 ], "123" );
-   Testing._eq( ctrl, splitList[ 2 ], "456" );
-   Testing._eq( ctrl, splitList[ 3 ], "789" );
-   
-   
+   {
+      // splitStr のテスト
+      let splitList = splitStr( "123 456 789", "[0-9]+" );
+      Testing._eq( ctrl, #splitList, 3 );
+      Testing._eq( ctrl, splitList[ 1 ], "123" );
+      Testing._eq( ctrl, splitList[ 2 ], "456" );
+      Testing._eq( ctrl, splitList[ 3 ], "789" );
+   }
+
+   {
+      // OrderedSet<T> のテスト
+      let mut orderdSet = new OrderedSet<str>();
+      orderdSet.add( "abc" );
+      orderdSet.add( "def" ); 
+      orderdSet.add( "ghi" );
+      orderdSet.add( "jkl" );
+      orderdSet.add( "nmo" );
+      orderdSet.add( "pqr" );
+      orderdSet.add( "stu" );
+      orderdSet.add( "vwx" );
+      orderdSet.add( "yz" );
+
+      // 同じものを追加して、登録されないことを確認する。
+      orderdSet.add( "jkl" ); 
+
+      // 順番通りにリストされることを確認する
+      let mut concat = "";
+      foreach val in orderdSet.$list {
+         concat = concat .. val;
+      }
+      Testing._eq( ctrl, "abcdefghijklnmopqrstuvwxyz", concat );
+   }
+
+   {
+      // memStream のテスト
+      let mut stream = new memStream();
+      stream.write( "12345" );
+      stream.write( "67890" );
+      Testing._eq( ctrl, stream.$txt, "1234567890" );
+   }
+
+   {
+      // SimpleSourceOStream のテスト
+      let mut stream = new memStream();
+      let mut sourceStream = new SimpleSourceOStream( stream, nil, 3 );
+
+      sourceStream.writeln( "{" );
+      sourceStream.pushIndent( ## );
+      sourceStream.writeln( "let val = 1;" );
+      sourceStream.writeln( "{" );
+      sourceStream.pushIndent( ## );
+      sourceStream.writeln( "let val2 = 2;" );
+      sourceStream.popIndent();
+      sourceStream.writeln( "}" );
+      sourceStream.popIndent();
+      sourceStream.write( "}" );
+      sourceStream.popIndent();
+
+      Testing._eq( ctrl, stream.$txt,
+```{
+   let val = 1;
+   {
+      let val2 = 2;
+   }
+}``` );
+   }   
 }

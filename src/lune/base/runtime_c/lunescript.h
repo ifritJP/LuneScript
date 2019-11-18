@@ -142,9 +142,9 @@ extern "C" {
 /**
  * リストの末尾に ANY を追加。
  */
-#define lns_add2list( TOP, ANY )               \
+#define lns_add2list( TOP, ANY )                \
     (ANY)->pNext = TOP;                         \
-    (ANY)->pPrev = (TOP)->pPrev;               \
+    (ANY)->pPrev = (TOP)->pPrev;                \
     (TOP)->pPrev->pNext = ANY;                  \
     (TOP)->pPrev = ANY;
 

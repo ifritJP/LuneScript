@@ -247,22 +247,33 @@ foreach obj in list {
      
 ** 高速化
 
+- [ ] 比較演算の結果が stem になっている。
+
+      if ( val1 > val2 ) {
+      }
+
+      上記が次のようになる
+
+      if ( lns_isCondTrue( LNS_STEM_BOOL( val1 > val2 ) ) {
+      }
+
+   
 - [ ] メソッド内で、 self にアクセスしていない場合、
       self のオブジェクトを宣言しない。
 
-- [ ] stem,any,prim の使いわけ
-     - [ ] bool を stem ではなく prim に変更。
 
-- [ ] stem と any の分離
+- [X] stem と any の分離
   - [X] collection を stem で扱う。
   - [X] int 系の closure を any で扱っているが、これを val にして、
         val に stem を保持する。
   - [X] nil を any で扱っているが、これを stem で扱うにする。
   - [X] any から int 系を削除する。
-  - [ ] enum の値のオブジェクトをグローバルで宣言しない。
+  - [X] enum の値のオブジェクトをグローバルで宣言しない。
         いまは any で扱っているため、毎回インスタンス生成しないように 、
 	グローバルで生成しているが、 any で扱わなくて大丈夫なので、変更する。
         
+- [X] stem,any,prim の使いわけ
+     - [X] bool を stem ではなく prim に変更。
       
       
    

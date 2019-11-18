@@ -140,7 +140,7 @@ extern lns_stem_t mtd_lns_string_find(
 lns_any_t * mtd_lns_string_rep( lns_env_t * _pEnv, lns_any_t * pTxt, lns_int_t num)
 {
     lua_State * pLua = _pEnv->pLua;
-    int stackTop = lns_string_call_setup( pLua, "find", pTxt );
+    int stackTop = lns_string_call_setup( pLua, "rep", pTxt );
 
     lua_pushinteger( pLua, num );
 

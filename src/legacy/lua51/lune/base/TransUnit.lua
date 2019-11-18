@@ -6538,7 +6538,7 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
       
       local block = self:analyzeFuncBlock( AnalyzingState.InitBlock, token, classTypeInfo, ininame, initBlockScope, {} )
       
-      local info = Nodes.DeclFuncInfo.new(Nodes.FuncKind.InitBlock, classTypeInfo, token, {}, true, Ast.AccessMode.Pri, block, {}, false)
+      local info = Nodes.DeclFuncInfo.new(Nodes.FuncKind.InitBlock, classTypeInfo, token, {}, true, Ast.AccessMode.Pri, block, {}, false, false)
       local initBlockNode = Nodes.DeclMethodNode.create( self.nodeManager, firstToken.pos, {funcTypeInfo}, info )
       initBlockInfo:set_func( initBlockNode )
       table.insert( allStmtList, initBlockNode )
@@ -7364,7 +7364,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
    if needNode then
       local function createDeclFuncInfo( funcKind )
       
-         return Nodes.DeclFuncInfo.new(funcKind, classTypeInfo, name, argList, orgStaticFlag, accessMode, body, retTypeInfoList, _lune._Set_has(self.has__func__Symbol, typeInfo ))
+         return Nodes.DeclFuncInfo.new(funcKind, classTypeInfo, name, argList, orgStaticFlag, accessMode, body, retTypeInfoList, _lune._Set_has(self.has__func__Symbol, typeInfo ), overrideFlag)
       end
       
       do

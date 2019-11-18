@@ -6,6 +6,34 @@ let mut g_val = 100;
 
 {
    _section();
+   class Test1 {
+      pub fn func() {
+         print( __func__ );
+      }
+   }
+
+   class Test2 extend Test1 {
+      pub override fn func() {
+         print( __func__ );
+      }
+   }
+
+   class Test3 extend Test2{
+      pub override fn func() {
+         print( __func__ );
+      }
+   }
+
+   fn func( test:Test1 ) {
+      test.func();
+   }
+
+   func( new Test1() );
+   func( new Test2() );
+   func( new Test3() );
+}
+{
+   _section();
    let txt = "a b c";
    let func:form, param, state = string.gmatch( txt, "[a-z]+" );
    print( func( param, state )** );

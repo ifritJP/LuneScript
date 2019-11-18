@@ -215,7 +215,7 @@ lns_stem_t lns_mtd_List_remove(
     else {
         // インデックス指定されていない場合は、末尾を削除
         if ( len > 0 ) {
-            it = lns_obj_List_obj( pObj )->begin() + len;
+            it = lns_obj_List_obj( pObj )->begin() + len - 1;
         }
         else {
             return lns_global.nilStem;

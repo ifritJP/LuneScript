@@ -835,7 +835,17 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
             nextToken = Parser.Token.new(Parser.TokenKind.Str, string.format( "'%s'", newToken), nextToken.pos, false)
             parser:pushbackToken( nextToken )
          elseif macroVal.typeInfo:equals( Ast.builtinTypeStat ) or macroVal.typeInfo:equals( Ast.builtinTypeExp ) then
-            nextToken = Parser.Token.new(Parser.TokenKind.Str, string.format( "'%s'", _lune.unwrap( macroVal.val)), nextToken.pos, false)
+            local txt = (_lune.unwrap( macroVal.val) )
+            local rawTxt
+            
+            if txt:find( "^```" ) then
+               rawTxt = string.format( "%q", txt)
+            else
+             
+               rawTxt = string.format( "%q", txt)
+            end
+            
+            nextToken = Parser.Token.new(Parser.TokenKind.Str, rawTxt, nextToken.pos, false)
             parser:pushbackToken( nextToken )
          else
           

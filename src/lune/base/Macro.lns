@@ -537,9 +537,17 @@ pub fn MacroCtrl.expandMacroVal(
          elseif macroVal.typeInfo.equals( Ast.builtinTypeStat ## ) or
             macroVal.typeInfo.equals( Ast.builtinTypeExp ## )
          {
+            let txt = (unwrap macroVal.val)@@str;
+            let rawTxt;
+            if txt.find( "^```"## ) {
+               //rawTxt = "[==[%s]==]" (txt);
+               rawTxt = "%q" (txt);
+            }
+            else {
+               rawTxt = "%q" (txt);
+            }
             nextToken = new Parser.Token(
-               Parser.TokenKind.Str,
-               "'%s'" (unwrap macroVal.val), nextToken.pos, false ##);
+               Parser.TokenKind.Str, rawTxt, nextToken.pos, false ##);
             parser.pushbackToken( nextToken );
          }
          else {

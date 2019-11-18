@@ -26,6 +26,10 @@ SOFTWARE.
 #include <map>
 using namespace std;
 
+
+//#define DEBUG_LOG
+
+
 class AllocInfo {
 public:
     const char * pName;
@@ -39,7 +43,6 @@ public:
 static map<void*,AllocInfo *> s_map;
 
 lns_allocator_t lns_createAllocator( void ) {
-    //return new map<void*,AllocInfo *>();
     return &s_map;
 }
 
@@ -49,7 +52,9 @@ void * _lns_malloc( lns_allocator_t allocateor,
     map<void*,AllocInfo *> * pMap = (map<void*,AllocInfo *> *)allocateor;
     void * pAddr = malloc( size );
     (*pMap)[ pAddr ] = new AllocInfo( pName, lineNo );
-    // printf( "alloc = %p, %p,%s,%d\n", pMap, pAddr, pName, lineNo );
+#ifdef DEBUG_LOG
+    printf( "alloc = %p, %p,%s,%d\n", pMap, pAddr, pName, lineNo );
+#endif
     return pAddr;
 }
 
@@ -59,13 +64,15 @@ void _lns_free( lns_allocator_t allocateor,
     map<void*,AllocInfo *> * pMap = (map<void*,AllocInfo *> *)allocateor;
     map<void*,AllocInfo *>::iterator it = pMap->find( pAddr );
     if ( it != pMap->end() ) {
-        // printf( "free = %p, %p,%s,%d\n",
-        //         pMap, pAddr, it->second->pName, it->second->lineNo );
+#ifdef DEBUG_LOG
+        printf( "free = %p, %p,%s,%d:%s:%d\n",
+                pMap, pAddr, it->second->pName, it->second->lineNo, pName, lineNo );
+#endif
         delete it->second;
         pMap->erase( pAddr );
     }
     else {
-        printf( "free error!! -- %p, %p\n", pMap, pAddr );
+        printf( "free error!! -- %p, %p:%s:%d\n", pMap, pAddr, pName, lineNo );
     }
 }
 

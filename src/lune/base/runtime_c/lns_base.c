@@ -295,7 +295,10 @@ static void lns_setRetAtBlock( lns_block_t * pBlock, lns_stem_t * pStem )
     }
 
     lns_any_t * pAny = pStem->val.pAny;
-    
+
+    if ( pAny->pNext == NULL ) {
+        return;
+    }
     lns_rmFromList( pAny );
 
     lns_add2list( &pBlock->managedAnyTop, pAny );
@@ -371,8 +374,8 @@ lns_block_t * lns_enter_module( lns_env_t * _pEnv, int anyNum, int stemNum, int 
     lns_block_t * pBlock = &s_globalEnv.moduleInitBlockBuf[ s_globalEnv.moduleNum ];
     s_globalEnv.moduleNum++;
     
-    //lns_setup_block( s_globalEnv.pEnv, pBlock, anyNum, stemNum, varNum );
-    lns_setup_block( _pEnv, pBlock, anyNum, stemNum, varNum );
+    lns_setup_block( s_globalEnv.pEnv, pBlock, anyNum, stemNum, varNum );
+    //lns_setup_block( _pEnv, pBlock, anyNum, stemNum, varNum );
 
     return pBlock;
 }
@@ -388,6 +391,8 @@ static inline void lns_reset_blockSub( lns_env_t * _pEnv, lns_block_t * pBlock )
             }
             else {
                 pWork->refCount--;
+                // オブジェクトが残る場合は、チェーンから除外する
+                pWork->pNext = NULL;
             }
         );
         pWork = pPrev;
@@ -433,6 +438,7 @@ static void lns_leave_blockSub( lns_env_t * _pEnv, lns_block_t * pBlock )
         if ( pStem != NULL && pStem->type == lns_stem_type_any ) {
             if ( lns_decre_ref( _pEnv, pStem->val.pAny ) ) {
                 pStem->type = lns_stem_type_none;
+                pBlock->pStemList[ index ] = NULL;
             }
         }
     }
@@ -440,6 +446,7 @@ static void lns_leave_blockSub( lns_env_t * _pEnv, lns_block_t * pBlock )
         lns_any_t * pAny = pBlock->pAnyList[ index ];
         if ( pAny != NULL ) {
             lns_decre_ref( _pEnv, pAny );
+            pBlock->pAnyList[ index ] = NULL;
         }
     }
 
@@ -485,6 +492,7 @@ void lns_reset_block( lns_env_t * _pEnv )
         lns_stem_t * pStem = pBlock->pStemList[ index ];
         if ( pStem != NULL && pStem->type == lns_stem_type_any ) {
             lns_decre_ref( _pEnv, pStem->val.pAny );
+            pBlock->pStemList[ index ] = NULL;
         }
         
     }
@@ -493,6 +501,7 @@ void lns_reset_block( lns_env_t * _pEnv )
         lns_any_t * pAny = pBlock->pAnyList[ index ];
         if ( pAny != NULL ) {
             lns_decre_ref( _pEnv, pAny );
+            pBlock->pAnyList[ index ] = NULL;
         }
     }
 
@@ -1166,12 +1175,19 @@ static lns_env_t * lns_createEnv( lua_State * pLua )
     return _pEnv;
 }
 
+#define DEBUG_MEM_LOG( SYM )                                            \
+    if ( _pEnv->SYM != 0 ) {                                            \
+        result = false;                                                 \
+    }                                                                   \
+    printf( ":debug:" #SYM "= %d\n", _pEnv->SYM );
+
+
 /**
  * 環境を開放する。
  *
  * @param _pEnv 環境
  */
-static void lns_deleteEnv( lns_env_t * _pEnv ) {
+static bool lns_deleteEnv( lns_env_t * _pEnv ) {
 
     lns_leave_block( _pEnv );
     lns_leave_block( _pEnv );
@@ -1179,18 +1195,22 @@ static void lns_deleteEnv( lns_env_t * _pEnv ) {
     lns_module_t * pModule = _pEnv->loadModuleTop.pNext;
     for ( ; pModule != &_pEnv->loadModuleTop; pModule = pModule->pNext )
     {
-        lns_leave_blockSub( _pEnv, pModule->pBlock );
+        //lns_leave_blockSub( _pEnv, pModule->pBlock );
+        lns_leave_blockSub( s_globalEnv.pEnv, pModule->pBlock );
     }
     
     
     s_globalEnv.allocNum--;
 
-    printf( ":debug:useAnyPoolNum = %d\n", _pEnv->useAnyPoolNum );
-    printf( ":debug:useStemPoolNum = %d\n", _pEnv->useStemPoolNum );
-    printf( ":debug:useVarPoolNum = %d\n", _pEnv->useVarPoolNum );
-    printf( ":debug:blockDepth = %d\n", _pEnv->blockDepth );
+    bool result = true;
+    DEBUG_MEM_LOG( useAnyPoolNum );
+    DEBUG_MEM_LOG( useStemPoolNum );
+    DEBUG_MEM_LOG( useVarPoolNum );
+    DEBUG_MEM_LOG( blockDepth );
     
     lns_free( _pEnv->allocateor, _pEnv );
+
+    return result;
 }
 
 static void lns_createGlobalEnv() {
@@ -1207,16 +1227,21 @@ static void lns_createGlobalEnv() {
     lns_setQ( lns_global.ddd0, lns_createDDD( s_globalEnv.pEnv, false, 0 ) );
 }
 
-static void lns_releaseGlobalEnv(void) {
+static bool lns_releaseGlobalEnv(void) {
     /* int index; */
     /* for ( index = s_globalEnv.moduleNum - 1; index >= 0; index-- ) { */
     /*     lns_leave_blockSub( s_globalEnv.pEnv, */
     /*                          &s_globalEnv.moduleInitBlockBuf[ index ] ); */
     /* } */
     lns_decre_ref( s_globalEnv.pEnv, lns_global.ddd0.val.pAny );
-    lns_deleteEnv( s_globalEnv.pEnv );
+    bool result = lns_deleteEnv( s_globalEnv.pEnv );
     printf( ":debug:allocNum = %d\n", s_globalEnv.allocNum );
+    if ( s_globalEnv.allocNum != 0 ) {
+        result = false;
+    }
     lns_checkMem();
+
+    return result;
 }
 
 void lns_init_alge( lns_stem_t * pStem, lns_any_t * pAny, int valType )
@@ -1518,9 +1543,12 @@ int lua_main( lua_State * pLua ) {
 
     lns_deleteEnv( _pEnv );
 
-    lns_releaseGlobalEnv();
+    if ( lns_releaseGlobalEnv() ) {
+        lua_pushboolean( pLua, 1);
+    }
+    else {
+        lua_pushboolean( pLua, 0);
+    }
   
-
-    lua_pushboolean( pLua, 1);
     return 1;
 }
