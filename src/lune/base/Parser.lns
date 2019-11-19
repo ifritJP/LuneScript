@@ -830,3 +830,46 @@ pub class CommentCtrl {
 
    advertise layer;
 }
+
+__test case1 {
+   import lune.base.Testing;
+
+   let mut ctrl = new Testing.Ctrl();
+
+   let mut stream = new TxtStream( ```
+let val = ?a;
+fn func():int {
+   return "%g" val + 1 + 2.0;
+}
+```);
+   let mut parser = new StreamParser( stream, "test" ## );
+
+   class LowToken {
+      pub let txt:str;
+      pub let kind:TokenKind;
+   }
+   let txtList = [
+      new LowToken( "let", .Kywd ), new LowToken( "val", .Symb ),
+      new LowToken( "=", .Ope ), new LowToken( "a", .Char ),
+      new LowToken( ";", .Dlmt ),
+      new LowToken( "fn", .Kywd ), new LowToken( "func", .Symb ),
+      new LowToken( "(", .Dlmt ), new LowToken( ")", .Dlmt ),
+      new LowToken( ":", .Dlmt ), new LowToken( "int", .Type ),
+      new LowToken( "{", .Dlmt ),
+      new LowToken( "return", .Kywd ), new LowToken( '"%g"', .Str ),
+      new LowToken( "val", .Symb ),
+      new LowToken( "+", .Ope ), new LowToken( "1", .Int ),
+      new LowToken( "+", .Ope ), new LowToken( "2.0", .Real ),
+      new LowToken( ";", .Dlmt ),
+      new LowToken( "}", .Dlmt )
+   ];
+   foreach lowToken in txtList {
+      if! let token = parser.getToken() {
+         Testing._eq( ctrl, lowToken.txt, token.txt );
+         Testing._eq( ctrl, lowToken.kind.$_txt, token.kind.$_txt );
+      }
+      else {
+         Testing._err( ctrl, "token is nil" );
+      }
+   }
+}

@@ -438,7 +438,6 @@ pub class Scope extend (ModuleInfoManager) {
    }
 }
 
-
 pub fn SymbolInfo.get_namespaceTypeInfo(): &TypeInfo {
    if! self.namespaceTypeInfo {
       return _exp;
@@ -802,6 +801,30 @@ static な型か。
       return new Scope( parent, classFlag, inheritScope, ifScopeList );
    }
 }
+
+pub fn getAllMethodName( classInfo:&TypeInfo ) : &Util.OrderedSet<str> {
+   let mut nameSet = new Util.OrderedSet<str>();
+   fn process( scope:&Scope ) {
+      if! let inherit = scope.$inherit {
+         process( inherit );
+      }
+      forsort symbolInfo in scope.$symbol2SymbolInfoMap {
+         switch symbolInfo.$kind {
+            case .Mtd {
+               if symbolInfo.$name ~= "__init" {
+                  nameSet.add( symbolInfo.$name );
+               }
+            }
+         }
+      }
+   }
+
+   if! let scope = classInfo.$scope {
+      process( scope );
+   }
+   return nameSet;
+}
+
 
 pub fn TypeNameCtrl.getModuleName(
    workTypeInfo:&TypeInfo, name:str, moduleInfoMan:&ModuleInfoManager ): str

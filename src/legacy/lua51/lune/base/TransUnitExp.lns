@@ -3206,9 +3206,9 @@ fn TransUnit.analyzeExp(
          token, (unwrap tonumber( token.txt ## ) default 0.0));
    }  
    elseif token.kind == Parser.TokenKind.Char {
-      let mut num = 0;
-      if #(token.txt) == 1 {
-         num = token.txt.byte( 1 ## );
+      let num;
+      if #token.txt == 1 {
+         num = unwrap string.byte( token.txt, 1 ## );
       }  
       else {
          num = unwrap quotedChar2Code[ token.txt.sub( 2, 2 ) ];

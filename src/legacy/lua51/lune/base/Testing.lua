@@ -83,6 +83,11 @@ function Ctrl:outputResult( stream )
 
    stream:write( string.format( "test total: %d (OK:%d, NG:%d)\n", self.okNum + self.ngNum, self.okNum, self.ngNum) )
 end
+function Ctrl:err( mess, mod, lineNo )
+
+   self.ngNum = self.ngNum + 1
+   io.stderr:write( string.format( "error: %s:%d: %s\n", mod, lineNo, mess) )
+end
 function Ctrl:isTrue( val1, val1txt, mod, lineNo )
 
    if val1 == true then
@@ -90,8 +95,7 @@ function Ctrl:isTrue( val1, val1txt, mod, lineNo )
       return true
    end
    
-   self.ngNum = self.ngNum + 1
-   io.stderr:write( string.format( "error:%s:%d: not true -- %s:[%s]\n", mod, lineNo, val1txt, tostring( val1)) )
+   self:err( string.format( "not true -- %s:[%s]\n", val1txt, tostring( val1)), mod, lineNo )
    return false
 end
 function Ctrl:isNotTrue( val1, val1txt, mod, lineNo )
@@ -101,8 +105,7 @@ function Ctrl:isNotTrue( val1, val1txt, mod, lineNo )
       return true
    end
    
-   self.ngNum = self.ngNum + 1
-   io.stderr:write( string.format( "error:%s:%d: is true -- %s:[%s]\n", mod, lineNo, val1txt, tostring( val1)) )
+   self:err( string.format( "is true -- %s:[%s]\n", val1txt, tostring( val1)), mod, lineNo )
    return false
 end
 function Ctrl:isNil( val1, val1txt, mod, lineNo )
@@ -112,8 +115,7 @@ function Ctrl:isNil( val1, val1txt, mod, lineNo )
       return true
    end
    
-   self.ngNum = self.ngNum + 1
-   io.stderr:write( string.format( "error:%s:%d: is not nil -- %s:[%s]\n", mod, lineNo, val1txt, tostring( val1)) )
+   self:err( string.format( "is not nil -- %s:[%s]\n", val1txt, tostring( val1)), mod, lineNo )
    return false
 end
 function Ctrl:checkEq( val1, val2, val1txt, val2txt, mod, lineNo )
@@ -123,8 +125,7 @@ function Ctrl:checkEq( val1, val2, val1txt, val2txt, mod, lineNo )
       return true
    end
    
-   self.ngNum = self.ngNum + 1
-   io.stderr:write( string.format( "error:%s:%d: not equal -- %s:[%s] != %s:[%s]\n", mod, lineNo, val1txt, tostring( val1), val2txt, tostring( val2)) )
+   self:err( string.format( "not equal -- %s:[%s] != %s:[%s]\n", val1txt, tostring( val1), val2txt, tostring( val2)), mod, lineNo )
    return false
 end
 function Ctrl:checkNotEq( val1, val2, val1txt, val2txt, mod, lineNo )
@@ -134,8 +135,7 @@ function Ctrl:checkNotEq( val1, val2, val1txt, val2txt, mod, lineNo )
       return true
    end
    
-   self.ngNum = self.ngNum + 1
-   io.stderr:write( string.format( "error:%s:%d: equal -- %s:[%s] == %s:[%s]\n", mod, lineNo, val1txt, tostring( val1), val2txt, tostring( val2)) )
+   self:err( string.format( "equal -- %s:[%s] == %s:[%s]\n", val1txt, tostring( val1), val2txt, tostring( val2)), mod, lineNo )
    return false
 end
 function Ctrl.setmeta( obj )
@@ -157,6 +157,8 @@ local function outputAllResult( stream )
    
 end
 _moduleObj.outputAllResult = outputAllResult
+
+
 
 
 

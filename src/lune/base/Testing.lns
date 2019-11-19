@@ -46,15 +46,18 @@ pub class Ctrl {
          (self.$okNum + self.$ngNum, self.$okNum, self.$ngNum ) );
    }
 
+   pub fn err( mess:str, mod:str, lineNo:int ) mut {
+      self.ngNum = self.ngNum + 1;
+      io.stderr.write( "error: %s:%d: %s\n" ( mod, lineNo, mess ) );
+   }
+   
    pub fn isTrue( val1:&stem!, val1txt:str, mod:str, lineNo:int ) mut : bool
    {
       if val1 == true {
          self.okNum = self.okNum + 1;
          return true;
       }
-      self.ngNum = self.ngNum + 1;
-      io.stderr.write(
-         "error:%s:%d: not true -- %s:[%s]\n" ( mod, lineNo, val1txt, val1 ) );
+      self.err( "not true -- %s:[%s]\n" ( val1txt, val1 ), mod, lineNo );
       return false;
    }
 
@@ -64,9 +67,7 @@ pub class Ctrl {
          self.okNum = self.okNum + 1;
          return true;
       }
-      self.ngNum = self.ngNum + 1;
-      io.stderr.write(
-         "error:%s:%d: is true -- %s:[%s]\n" ( mod, lineNo, val1txt, val1 ) );
+      self.err( "is true -- %s:[%s]\n" ( val1txt, val1 ), mod, lineNo );
       return false;
    }
 
@@ -76,9 +77,7 @@ pub class Ctrl {
          self.okNum = self.okNum + 1;
          return true;
       }
-      self.ngNum = self.ngNum + 1;
-      io.stderr.write(
-         "error:%s:%d: is not nil -- %s:[%s]\n" ( mod, lineNo, val1txt, val1 ) );
+      self.err( "is not nil -- %s:[%s]\n" ( val1txt, val1 ), mod, lineNo );
       return false;
    }
    
@@ -89,10 +88,8 @@ pub class Ctrl {
          self.okNum = self.okNum + 1;
          return true;
       }
-      self.ngNum = self.ngNum + 1;
-      io.stderr.write(
-         "error:%s:%d: not equal -- %s:[%s] != %s:[%s]\n"
-         ( mod, lineNo, val1txt, val1, val2txt, val2 ) );
+      self.err( "not equal -- %s:[%s] != %s:[%s]\n" ( val1txt, val1, val2txt, val2 ),
+                mod, lineNo );
       return false;
    }
 
@@ -103,10 +100,8 @@ pub class Ctrl {
          self.okNum = self.okNum + 1;
          return true;
       }
-      self.ngNum = self.ngNum + 1;
-      io.stderr.write(
-         "error:%s:%d: equal -- %s:[%s] == %s:[%s]\n"
-         ( mod, lineNo, val1txt, val1, val2txt, val2 ) );
+      self.err( "equal -- %s:[%s] == %s:[%s]\n" ( val1txt, val1, val2txt, val2 ),
+                mod, lineNo );
       return false;
    }
 }
@@ -135,4 +130,8 @@ pub macro _isNotT( ctrl:sym, val:__exp ): bool {
 
 pub macro _isNil( ctrl:sym, val:__exp ): bool {
    ,,ctrl.isNil( ,,val, ,,,,val, __mod__, __line__ )
+}
+
+pub macro _err( ctrl:sym, mes:str ) {
+   ,,ctrl.err( ,,mes, __mod__, __line__ );
 }

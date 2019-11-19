@@ -1251,6 +1251,55 @@ function TypeInfo:get_typeData()
 end
 
 
+local function getAllMethodName( classInfo )
+
+   local nameSet = Util.OrderedSet.new()
+   local function process( scope )
+   
+      do
+         local inherit = scope:get_inherit()
+         if inherit ~= nil then
+            process( inherit )
+         end
+      end
+      
+      do
+         local __sorted = {}
+         local __map = scope:get_symbol2SymbolInfoMap()
+         for __key in pairs( __map ) do
+            table.insert( __sorted, __key )
+         end
+         table.sort( __sorted )
+         for __index, __key in ipairs( __sorted ) do
+            local symbolInfo = __map[ __key ]
+            do
+               do
+                  local _switchExp = symbolInfo:get_kind()
+                  if _switchExp == SymbolKind.Mtd then
+                     if symbolInfo:get_name() ~= "__init" then
+                        nameSet:add( symbolInfo:get_name() )
+                     end
+                     
+                  end
+               end
+               
+            end
+         end
+      end
+      
+   end
+   
+   do
+      local scope = classInfo:get_scope()
+      if scope ~= nil then
+         process( scope )
+      end
+   end
+   
+   return nameSet
+end
+_moduleObj.getAllMethodName = getAllMethodName
+
 function TypeNameCtrl:getModuleName( workTypeInfo, name, moduleInfoMan )
 
    do

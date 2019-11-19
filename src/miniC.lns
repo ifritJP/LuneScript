@@ -1,1 +1,14 @@
-print( "hoge" );
+class Hoge {
+   let val:int;
+   pub fn func() {
+      print( self.val );
+   }
+}
+class Test {
+   let hoge:Hoge;
+   advertise hoge;
+}
+
+let test = new Test( new Hoge( 100 ) );
+test.func();
+

@@ -252,7 +252,7 @@ endef
 # $1: コピー先ディレクトリ
 # $2: コピー元ディレクトリ
 define cp_src_set
-	mkdir -p $1/
+	mkdir -p $1
 	cp $2/Makefile $1/
 	$(call mk_lune_proj_dir,$1)
 	$(call cp_src_set_sub,$2/lune/base,'base*.lua',$1/lune/base)
@@ -890,10 +890,10 @@ test-testC:
 	$(call test-convC-test,work/0,lune/base/Util, \
 		lune/base/Depend.sub.c lune/base/Depend.c \
 		lune/base/LuneControl.c lune/base/LuaMod.c )
-#	$(call test-convC-test,work/0,lune/base/Parser, \
-#		lune/base/Depend.sub.c lune/base/Depend.c \
-#		lune/base/LuneControl.c lune/base/LuaMod.c \
-#		lune/base/Util.c)
+	$(call test-convC-test,work/0,lune/base/Parser, \
+		lune/base/Depend.sub.c lune/base/Depend.c \
+		lune/base/LuneControl.c lune/base/LuaMod.c \
+		lune/base/Util.c)
 
 test-mkbuiltin:
 	$(call transwork,.,.,,base/convCC)

@@ -2867,6 +2867,15 @@ fn processDeclClassPrototype(
          stream.writeln( ";" );
       }
    }
+
+   foreach advInfo in node.$advertiseList {
+      let member = advInfo.$member;
+      let nameList = Ast.getAllMethodName( member.$expType );
+      // foreach symbol in unwrap member.$expType.$scope.filterTypeInfoField(
+      //    bool!, Scope, ScopeAccess, filterForm(SymbolInfo): bool): bool {
+         
+      // }
+   }
 }
 
 fn processDefaultCtor(
@@ -3213,37 +3222,43 @@ fn convFilter.processDeclClassDef( node:&Nodes.DeclClassNode ) mut
 
 
 fn processInitMethodTable(
-   stream:Util.SourceStream, moduleCtrl:&ModuleCtrl, classTypeInfo:&Ast.TypeInfo)
+   stream:Util.SourceStream, moduleCtrl:&ModuleCtrl, classTypeInfo:&Ast.TypeInfo )
 {
    fn outputField( name:str, retTypeList:&List<&Ast.TypeInfo> ) {
       let methodType = getMethodTypeTxt( retTypeList );
       stream.writeln( "(%s *)%s," (methodType, name ) );
    }
 
-   let mut nameSet = new Util.OrderedSet<str>();
-   fn outputVal( scope:&Ast.Scope ) {
-      if! let inherit = scope.$inherit {
-         outputVal( inherit );
-      }
-      forsort symbolInfo in scope.$symbol2SymbolInfoMap {
-         switch symbolInfo.$kind {
-            case .Mtd {
-               if symbolInfo.$name ~= "__init" {
-                  nameSet.add( symbolInfo.$name );
-               }
-            }
-         }
-      }
-   }
+   // let mut nameSet = new Util.OrderedSet<str>();
+   // fn outputVal( scope:&Ast.Scope ) {
+   //    if! let inherit = scope.$inherit {
+   //       outputVal( inherit );
+   //    }
+   //    forsort symbolInfo in scope.$symbol2SymbolInfoMap {
+   //       switch symbolInfo.$kind {
+   //          case .Mtd {
+   //             if symbolInfo.$name ~= "__init" {
+   //                nameSet.add( symbolInfo.$name );
+   //             }
+   //          }
+   //       }
+   //    }
+   // }
 
    let scope = unwrap classTypeInfo.$scope;
-   outputVal( scope );
+   // outputVal( scope );
+   let nameSet = Ast.getAllMethodName( classTypeInfo );
+   
    foreach name in nameSet.$list {
       let symbolInfo = unwrap scope.getSymbolInfoField( name, true, scope, .Normal );
-      outputField( moduleCtrl.getMethodCName( symbolInfo.$typeInfo ),
-                   symbolInfo.$typeInfo.$retTypeInfoList );
+      if not symbolInfo.$typeInfo.$abstractFlag {
+         outputField( moduleCtrl.getMethodCName( symbolInfo.$typeInfo ),
+                      symbolInfo.$typeInfo.$retTypeInfoList );
+      }
+      else {
+         stream.writeln( "NULL," );
+      }
    }
-   
 }
 
 fn processInitIFMethodTable(
@@ -3296,7 +3311,8 @@ fn processIFMethodDataInit(
 }
 
 fn processClassDataInit(
-   stream:Util.SourceStream, moduleCtrl:&ModuleCtrl, classTypeInfo:&Ast.TypeInfo )
+   stream:Util.SourceStream, moduleCtrl:&ModuleCtrl,
+   classTypeInfo:&Ast.TypeInfo, fieldList:&List<&Nodes.Node> )
 {
   
    let className = moduleCtrl.getClassCName( classTypeInfo );
@@ -6589,7 +6605,8 @@ pub override fn convFilter.processDeclClass(
                processIFMethodDataInit(
                   self.stream, self.moduleCtrl, classType, classType );
                
-               processClassDataInit( self.stream, self.moduleCtrl, classType );
+               processClassDataInit(
+                  self.stream, self.moduleCtrl, classType, node.$fieldList );
             }
             case .IF {
                self.writeln(

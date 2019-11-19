@@ -3368,6 +3368,12 @@ local function processDeclClassPrototype( stream, moduleCtrl, scopeMgr, node )
       
    end
    
+   
+   for __index, advInfo in pairs( node:get_advertiseList() ) do
+      local member = advInfo:get_member()
+      local nameList = Ast.getAllMethodName( member:get_expType() )
+   end
+   
 end
 
 local function processDefaultCtor( stream, moduleCtrl, scopeMgr, node )
@@ -3415,7 +3421,7 @@ local function processDefaultCtor( stream, moduleCtrl, scopeMgr, node )
                else 
                   
                      Util.err( string.format( "no support -- %s:%s:%d", member:get_name().txt, ValKind:_getTxt( valKind)
-                     , 2926) )
+                     , 2935) )
                end
             end
             
@@ -3690,7 +3696,7 @@ function convFilter:processDeclClassDef( node )
                else 
                   
                      Util.err( string.format( "no support -- %s:%s:%d", member:get_symbolInfo():get_name(), ValKind:_getTxt( valKind)
-                     , 3194) )
+                     , 3203) )
                end
             end
             
@@ -3720,47 +3726,18 @@ local function processInitMethodTable( stream, moduleCtrl, classTypeInfo )
       stream:writeln( string.format( "(%s *)%s,", methodType, name) )
    end
    
-   local nameSet = Util.OrderedSet.new()
-   local function outputVal( scope )
-   
-      do
-         local inherit = scope:get_inherit()
-         if inherit ~= nil then
-            outputVal( inherit )
-         end
-      end
-      
-      do
-         local __sorted = {}
-         local __map = scope:get_symbol2SymbolInfoMap()
-         for __key in pairs( __map ) do
-            table.insert( __sorted, __key )
-         end
-         table.sort( __sorted )
-         for __index, __key in ipairs( __sorted ) do
-            local symbolInfo = __map[ __key ]
-            do
-               do
-                  local _switchExp = symbolInfo:get_kind()
-                  if _switchExp == Ast.SymbolKind.Mtd then
-                     if symbolInfo:get_name() ~= "__init" then
-                        nameSet:add( symbolInfo:get_name() )
-                     end
-                     
-                  end
-               end
-               
-            end
-         end
-      end
-      
-   end
-   
    local scope = _lune.unwrap( classTypeInfo:get_scope())
-   outputVal( scope )
+   local nameSet = Ast.getAllMethodName( classTypeInfo )
+   
    for __index, name in pairs( nameSet:get_list() ) do
       local symbolInfo = _lune.unwrap( scope:getSymbolInfoField( name, true, scope, Ast.ScopeAccess.Normal ))
-      outputField( moduleCtrl:getMethodCName( symbolInfo:get_typeInfo() ), symbolInfo:get_typeInfo():get_retTypeInfoList() )
+      if not symbolInfo:get_typeInfo():get_abstractFlag() then
+         outputField( moduleCtrl:getMethodCName( symbolInfo:get_typeInfo() ), symbolInfo:get_typeInfo():get_retTypeInfoList() )
+      else
+       
+         stream:writeln( "NULL," )
+      end
+      
    end
    
 end
@@ -3827,7 +3804,7 @@ local function processIFMethodDataInit( stream, moduleCtrl, classType, orgClassT
    
 end
 
-local function processClassDataInit( stream, moduleCtrl, classTypeInfo )
+local function processClassDataInit( stream, moduleCtrl, classTypeInfo, fieldList )
 
    
    local className = moduleCtrl:getClassCName( classTypeInfo )
@@ -4281,7 +4258,7 @@ function convFilter:processSym2Any( symbol )
       else 
          
             Util.err( string.format( "not suppport -- %s, %d", ValKind:_getTxt( valKind)
-            , 3889) )
+            , 3905) )
       end
    end
    
@@ -4377,7 +4354,7 @@ function convFilter:processVal2any( node, parent )
       else 
          
             Util.err( string.format( "not suppport -- %d, %s, %s, %d", node:get_pos().lineNo, ValKind:_getTxt( valKind)
-            , Nodes.getNodeKindName( node:get_kind() ), 4007) )
+            , Nodes.getNodeKindName( node:get_kind() ), 4023) )
       end
    end
    
@@ -4426,7 +4403,7 @@ function convFilter:processSetValSingleDirect( parent, node, var, initFlag, expV
       
       Util.err( string.format( "illegal %s %s %s -- %d", var:get_name(), ValKind:_getTxt( valKind)
       , ValKind:_getTxt( expValKind)
-      , 4062) )
+      , 4078) )
    end
    
    
@@ -5758,7 +5735,7 @@ function convFilter:processApply( node, opt )
          else 
             
                Util.err( string.format( "no support -- %s:%s:%d", varSym:get_name(), ValKind:_getTxt( valKind)
-               , 5698) )
+               , 5714) )
          end
       end
       
@@ -6174,7 +6151,7 @@ function convFilter:processExpUnwrap( node, opt )
                   self:write( "lns_unwrap_any( " )
                else 
                   
-                     Util.err( string.format( "no support -- %d", 6113) )
+                     Util.err( string.format( "no support -- %d", 6129) )
                end
             end
             
@@ -6690,7 +6667,7 @@ function convFilter:processDeclClass( node, opt )
             if _switchExp == Ast.TypeInfoKind.Class then
                processIFMethodDataInit( self.stream, self.moduleCtrl, classType, classType )
                
-               processClassDataInit( self.stream, self.moduleCtrl, classType )
+               processClassDataInit( self.stream, self.moduleCtrl, classType, node:get_fieldList() )
             elseif _switchExp == Ast.TypeInfoKind.IF then
                self:writeln( string.format( 'lns_type_meta_t lns_type_meta_%s = { "%s" };', className, className) )
             end
@@ -7444,7 +7421,7 @@ function convFilter:processExpRefItem( node, opt )
                self:write( ")" )
             else 
                
-                  Util.err( string.format( "not support:%d:%d", 7800, node:get_pos().lineNo) )
+                  Util.err( string.format( "not support:%d:%d", 7817, node:get_pos().lineNo) )
             end
          end
          
@@ -7590,7 +7567,7 @@ function convFilter:processReturn( node, opt )
                   filter( expList[1], self, node )
                else 
                   
-                     Util.err( string.format( "no support -- %d", 8002) )
+                     Util.err( string.format( "no support -- %d", 8019) )
                end
             end
             
@@ -7609,7 +7586,7 @@ function convFilter:processReturn( node, opt )
                elseif _switchExp == ValKind.Prim then
                else 
                   
-                     Util.err( string.format( "no support -- %d", 8021) )
+                     Util.err( string.format( "no support -- %d", 8038) )
                end
             end
             

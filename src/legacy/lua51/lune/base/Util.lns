@@ -98,7 +98,6 @@ pub class memStream extend (oStream) {
    }
 }
 
-
 pub interface SourceStream {
    pub abstract fn write( txt: str ) mut;
    pub abstract fn writeln( txt: str ) mut;

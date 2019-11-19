@@ -203,6 +203,35 @@ foreach obj in list {
 
 *  C へのトランスコード
 
+- [X] Ver
+- [X] LuaMod
+- [X] LuneControl
+- [ ] Meta
+- [X] Testing
+- [X] Code
+- [ ] Log
+- [X] LuaVer
+- [X] Depend
+- [X] Util
+- [ ] frontInterface
+- [ ] Writer
+- [ ] Parser
+- [ ] Ast
+- [ ] Option
+- [ ] Nodes
+- [ ] Formatter
+- [ ] dumpNode
+- [ ] Macro
+- [ ] TransUnit
+- [ ] convLua
+- [ ] convCC
+- [ ] OutputDepend
+- [ ] TestCtrl
+- [ ] front
+- [ ] glueFilter
+  
+
+   
 - [ ] block の stem 変数は、 lune_stem_t ではなく lune_stem_t * で管理すべき。
       大域ジャンプに対応できない。
   
