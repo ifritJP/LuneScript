@@ -219,6 +219,10 @@ function OrderedSet:clone(  )
    
    return obj
 end
+function OrderedSet:has( val )
+
+   return _lune._Set_has(self.set, val )
+end
 function OrderedSet.setmeta( obj )
   setmetatable( obj, { __index = OrderedSet  } )
 end

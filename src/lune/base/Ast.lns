@@ -131,6 +131,8 @@ pub interface LowSymbol {
    pub fn get_symbolId(): int;
    /** シンボルの名前 */
    pub fn get_name(): str;
+   /** このシンボルが mut かどうか */
+   pub fn get_mutable(): bool;
    /** シンボルの型 */
    pub fn get_typeInfo(): &TypeInfo;
    /** このシンボルの種類 SymbolKind */
@@ -802,7 +804,22 @@ static な型か。
    }
 }
 
-pub fn getAllMethodName( classInfo:&TypeInfo ) : &Util.OrderedSet<str> {
+
+pub enum MethodKind {
+   /** 全メソッド */
+   All,
+   /** static メソッド */
+   Static,
+   /** 非 static メソッド */
+   Object,
+}
+
+/**
+指定のクラスが持つ全メソッド名を取得する。
+
+指定クラスが派生クラスだった場合、親クラスのメソッドも取得する。
+*/
+pub fn getAllMethodName( classInfo:&TypeInfo, kind:MethodKind ) : &Util.OrderedSet<str> {
    let mut nameSet = new Util.OrderedSet<str>();
    fn process( scope:&Scope ) {
       if! let inherit = scope.$inherit {
@@ -812,7 +829,13 @@ pub fn getAllMethodName( classInfo:&TypeInfo ) : &Util.OrderedSet<str> {
          switch symbolInfo.$kind {
             case .Mtd {
                if symbolInfo.$name ~= "__init" {
-                  nameSet.add( symbolInfo.$name );
+                  let staticFlag = symbolInfo.$typeInfo.$staticFlag;
+                  if kind == .All or
+                     kind == .Static and staticFlag or
+                     kind == .Object and not staticFlag
+                  {
+                     nameSet.add( symbolInfo.$name );
+                  }
                }
             }
          }

@@ -56,6 +56,7 @@ help:
 	@echo "  make test-subC"
 	@echo "  make test-formatter"
 	@echo "  make test-mkbuiltin"
+	@echo "  make build-testcase"
 
 exec:
 	$(LUA) lune/base/base.lua test/test.lns token
@@ -875,6 +876,7 @@ endef
 
 test-testC:
 	$(call transwork,.,.,,base/convCC)
+	$(LUA) lune/base/base.lua --mkbuiltin lune/base/runtime_c
 	mkdir -p work/0
 	rm -rf work/0/*
 	mkdir -p work/0/work/c

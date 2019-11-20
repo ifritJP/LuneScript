@@ -1486,6 +1486,10 @@ _declNodeClass( "DeclMethod", Node, false, false, true,
                 [ { "declInfo": "&DeclFuncInfo" } ]
 );
 
+_declNodeClass( "ProtoMethod", Node, false, false, true,
+                [ { "declInfo": "&DeclFuncInfo" } ]
+);
+
 _declNodeClass( "DeclConstr", Node, false, false, true,
                 [ { "declInfo": "&DeclFuncInfo" } ]
 );

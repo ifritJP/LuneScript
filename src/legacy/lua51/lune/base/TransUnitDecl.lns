@@ -2584,10 +2584,14 @@ fn TransUnit.analyzeDeclFunc(
          if not abstractFlag {
             self.protoFuncMap[ typeInfo ] = firstToken.pos;
          }
-      }
-
-      if classTypeInfo$.$kind == .IF {
-         needNode = true;
+         if classTypeInfo$.$kind == .IF {
+            needNode = true;
+         }
+         else {
+            if kind == Nodes.NodeKind.$DeclMethod {
+               kind = Nodes.NodeKind.$ProtoMethod;
+            }
+         }
       }
    }
    else {
@@ -2646,7 +2650,7 @@ fn TransUnit.analyzeDeclFunc(
       }
    }
 
-   if needNode {
+   // if needNode {
       fn createDeclFuncInfo( funcKind:Nodes.FuncKind ): &Nodes.DeclFuncInfo {
          return new Nodes.DeclFuncInfo(
             funcKind, classTypeInfo, name, argList, orgStaticFlag, accessMode,
@@ -2669,6 +2673,11 @@ fn TransUnit.analyzeDeclFunc(
             node = Nodes.DeclMethodNode.create(
                self.nodeManager, firstToken.pos, [ typeInfo ], info );
          }
+         case Nodes.NodeKind.$ProtoMethod {
+            let info = createDeclFuncInfo( .Mtd );
+            node = Nodes.ProtoMethodNode.create(
+               self.nodeManager, firstToken.pos, [ typeInfo ], info );
+         }
          case Nodes.NodeKind.$DeclFunc {
             let info = createDeclFuncInfo( .Func );
             node = Nodes.DeclFuncNode.create(
@@ -2678,7 +2687,7 @@ fn TransUnit.analyzeDeclFunc(
             self.error( "illegal kind -- %d" (kind) );
          }
       }
-   }
+   // }
    self.has__func__Symbol.del( typeInfo );
 
    self.popScope();

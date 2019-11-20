@@ -232,9 +232,9 @@ extern lns_real_t mtd_lns_math_random( lns_env_t * _pEnv, lns_stem_t arg1, lns_s
 extern void mtd_lns_math_randomseed( lns_env_t * _pEnv, lns_stem_t arg1);
 extern lns_stem_t mtd_lns_debug_getinfo( lns_env_t * _pEnv, lns_int_t arg1);
 extern lns_stem_t mtd_lns_debug_getlocal( lns_env_t * _pEnv, lns_int_t arg1, lns_int_t arg2);
-extern lns_any_t * l_var_lns_io_stdout;
-extern lns_any_t * l_var_lns_io_stdin;
 extern lns_any_t * l_var_lns_io_stderr;
+extern lns_any_t * l_var_lns_io_stdin;
+extern lns_any_t * l_var_lns_io_stdout;
 extern lns_any_t * l_var_lns_package_path;
 extern void lns_init_lns_builtin( lns_env_t * _pEnv );
 #endif

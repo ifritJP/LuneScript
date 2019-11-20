@@ -203,32 +203,40 @@ foreach obj in list {
 
 *  C へのトランスコード
 
-- [X] Ver
-- [X] LuaMod
-- [X] LuneControl
-- [ ] Meta
-- [X] Testing
-- [X] Code
-- [ ] Log
-- [X] LuaVer
-- [X] Depend
-- [X] Util
-- [ ] frontInterface
-- [ ] Writer
-- [ ] Parser
-- [ ] Ast
-- [ ] Option
-- [ ] Nodes
-- [ ] Formatter
-- [ ] dumpNode
-- [ ] Macro
-- [ ] TransUnit
-- [ ] convLua
-- [ ] convCC
-- [ ] OutputDepend
-- [ ] TestCtrl
-- [ ] front
-- [ ] glueFilter
+- [ ] Scope.accessSymbol() で、 Arg, Var のみ処理しているが、
+      Func も処理対象にする。ただし、 Closure でない関数は除外。
+      Func の ExpRef ノードを保持しておき、 
+      AST ノード解析後に改めて Closure の検出を行なう。
+      AST 解析後でないと Closure かどうかを正確に判断できない。
+  
+  
+- [ ] セルフホスティング
+   - [X] Ver
+   - [X] LuaMod
+   - [X] LuneControl
+   - [ ] Meta
+   - [X] Testing
+   - [X] Code
+   - [ ] Log
+   - [X] LuaVer
+   - [X] Depend
+   - [X] Util
+   - [ ] frontInterface
+   - [ ] Writer
+   - [ ] Parser
+   - [ ] Ast
+   - [ ] Option
+   - [ ] Nodes
+   - [ ] Formatter
+   - [ ] dumpNode
+   - [ ] Macro
+   - [ ] TransUnit
+   - [ ] convLua
+   - [ ] convCC
+   - [ ] OutputDepend
+   - [ ] TestCtrl
+   - [ ] front
+   - [ ] glueFilter
   
 
    
@@ -257,6 +265,8 @@ foreach obj in list {
       ビルドツールによって .meta ファイル等の出力に排他制御をいれて、
       マルチスレッドで処理できるようにする。
 
+- [X] メソッド内の関数定義が多重に定義される
+
 - [X] クロージャと普通の関数とで、関数の型を変える。
       今は普通の関数にも form 引数が付いているが、これを削除する。
 
@@ -276,6 +286,9 @@ foreach obj in list {
      
 ** 高速化
 
+- [ ] self でメソッドをコールする際も call ラッパを使用しているが、
+      ダイレクトでコールする方が効率が良い。
+      
 - [ ] 比較演算の結果が stem になっている。
 
       if ( val1 > val2 ) {

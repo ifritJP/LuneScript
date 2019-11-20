@@ -2327,6 +2327,8 @@ end
 function convFilter:processDeclMethod( node, opt )
 
    local declInfo = node:get_declInfo(  )
+   local classTypeInfo = _lune.unwrap( declInfo:get_classTypeInfo())
+   
    local delimit = ":"
    if declInfo:get_staticFlag(  ) then
       delimit = "."
@@ -2334,7 +2336,6 @@ function convFilter:processDeclMethod( node, opt )
    
    local methodNodeToken = _lune.unwrap( declInfo:get_name(  ))
    local methodName = methodNodeToken.txt
-   local classTypeInfo = _lune.unwrap( declInfo:get_classTypeInfo())
    self:write( string.format( "function %s%s%s( ", classTypeInfo:get_rawTxt(), delimit, methodName) )
    local argList = declInfo:get_argList(  )
    for index, arg in pairs( argList ) do
@@ -3935,7 +3936,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3286, function (  )
+   Log.log( Log.Level.Info, __func__, 3287, function (  )
    
       return string.format( "code: %s", code)
    end )

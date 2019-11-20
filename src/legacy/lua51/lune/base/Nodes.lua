@@ -7198,6 +7198,80 @@ end
 
 
 
+function NodeKind.get_ProtoMethod(  )
+
+   return _lune.unwrap( _moduleObj.nodeKind['ProtoMethod'])
+end
+
+
+
+regKind( "ProtoMethod" )
+function Filter:processProtoMethod( node, opt )
+
+end
+
+
+function NodeManager:getProtoMethodNodeList(  )
+
+   return self:getList( _lune.unwrap( _moduleObj.nodeKind['ProtoMethod']) )
+end
+
+
+
+local ProtoMethodNode = {}
+setmetatable( ProtoMethodNode, { __index = Node } )
+_moduleObj.ProtoMethodNode = ProtoMethodNode
+function ProtoMethodNode:processFilter( filter, opt )
+
+   filter:processProtoMethod( self, opt )
+end
+function ProtoMethodNode:canBeRight(  )
+
+   return false
+end
+function ProtoMethodNode:canBeLeft(  )
+
+   return false
+end
+function ProtoMethodNode:canBeStatement(  )
+
+   return true
+end
+function ProtoMethodNode.new( id, pos, typeList, declInfo )
+   local obj = {}
+   ProtoMethodNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, typeList, declInfo ); end
+   return obj
+end
+function ProtoMethodNode:__init(id, pos, typeList, declInfo) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ProtoMethod']), pos, typeList)
+   
+   
+   
+   self.declInfo = declInfo
+   
+   
+end
+function ProtoMethodNode.create( nodeMan, pos, typeList, declInfo )
+
+   local node = ProtoMethodNode.new(nodeMan:nextId(  ), pos, typeList, declInfo)
+   nodeMan:addNode( node )
+   return node
+end
+function ProtoMethodNode:visit( visitor, depth )
+
+   
+   return true
+end
+function ProtoMethodNode.setmeta( obj )
+  setmetatable( obj, { __index = ProtoMethodNode  } )
+end
+function ProtoMethodNode:get_declInfo()
+   return self.declInfo
+end
+
+
+
 function NodeKind.get_DeclConstr(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['DeclConstr'])

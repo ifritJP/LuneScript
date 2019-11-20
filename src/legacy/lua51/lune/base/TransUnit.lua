@@ -7295,11 +7295,16 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
             self.protoFuncMap[typeInfo] = firstToken.pos
          end
          
-      end
-      
-      
-      if _lune.nilacc( classTypeInfo, 'get_kind', 'callmtd' ) == Ast.TypeInfoKind.IF then
-         needNode = true
+         if _lune.nilacc( classTypeInfo, 'get_kind', 'callmtd' ) == Ast.TypeInfoKind.IF then
+            needNode = true
+         else
+          
+            if kind == Nodes.NodeKind.get_DeclMethod() then
+               kind = Nodes.NodeKind.get_ProtoMethod()
+            end
+            
+         end
+         
       end
       
    else
@@ -7361,32 +7366,32 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
    end
    
    
-   if needNode then
-      local function createDeclFuncInfo( funcKind )
-      
-         return Nodes.DeclFuncInfo.new(funcKind, classTypeInfo, name, argList, orgStaticFlag, accessMode, body, retTypeInfoList, _lune._Set_has(self.has__func__Symbol, typeInfo ), overrideFlag)
+   local function createDeclFuncInfo( funcKind )
+   
+      return Nodes.DeclFuncInfo.new(funcKind, classTypeInfo, name, argList, orgStaticFlag, accessMode, body, retTypeInfoList, _lune._Set_has(self.has__func__Symbol, typeInfo ), overrideFlag)
+   end
+   
+   do
+      local _switchExp = (kind )
+      if _switchExp == Nodes.NodeKind.get_DeclConstr() then
+         local info = createDeclFuncInfo( Nodes.FuncKind.Ctor )
+         node = Nodes.DeclConstrNode.create( self.nodeManager, firstToken.pos, {typeInfo}, info )
+      elseif _switchExp == Nodes.NodeKind.get_DeclDestr() then
+         local info = createDeclFuncInfo( Nodes.FuncKind.Dstr )
+         node = Nodes.DeclDestrNode.create( self.nodeManager, firstToken.pos, {typeInfo}, info )
+      elseif _switchExp == Nodes.NodeKind.get_DeclMethod() then
+         local info = createDeclFuncInfo( Nodes.FuncKind.Mtd )
+         node = Nodes.DeclMethodNode.create( self.nodeManager, firstToken.pos, {typeInfo}, info )
+      elseif _switchExp == Nodes.NodeKind.get_ProtoMethod() then
+         local info = createDeclFuncInfo( Nodes.FuncKind.Mtd )
+         node = Nodes.ProtoMethodNode.create( self.nodeManager, firstToken.pos, {typeInfo}, info )
+      elseif _switchExp == Nodes.NodeKind.get_DeclFunc() then
+         local info = createDeclFuncInfo( Nodes.FuncKind.Func )
+         node = Nodes.DeclFuncNode.create( self.nodeManager, firstToken.pos, {typeInfo}, info )
+      else 
+         
+            self:error( string.format( "illegal kind -- %d", kind) )
       end
-      
-      do
-         local _switchExp = (kind )
-         if _switchExp == Nodes.NodeKind.get_DeclConstr() then
-            local info = createDeclFuncInfo( Nodes.FuncKind.Ctor )
-            node = Nodes.DeclConstrNode.create( self.nodeManager, firstToken.pos, {typeInfo}, info )
-         elseif _switchExp == Nodes.NodeKind.get_DeclDestr() then
-            local info = createDeclFuncInfo( Nodes.FuncKind.Dstr )
-            node = Nodes.DeclDestrNode.create( self.nodeManager, firstToken.pos, {typeInfo}, info )
-         elseif _switchExp == Nodes.NodeKind.get_DeclMethod() then
-            local info = createDeclFuncInfo( Nodes.FuncKind.Mtd )
-            node = Nodes.DeclMethodNode.create( self.nodeManager, firstToken.pos, {typeInfo}, info )
-         elseif _switchExp == Nodes.NodeKind.get_DeclFunc() then
-            local info = createDeclFuncInfo( Nodes.FuncKind.Func )
-            node = Nodes.DeclFuncNode.create( self.nodeManager, firstToken.pos, {typeInfo}, info )
-         else 
-            
-               self:error( string.format( "illegal kind -- %d", kind) )
-         end
-      end
-      
    end
    
    self.has__func__Symbol[typeInfo]= nil

@@ -1,7 +1,7 @@
 // lune/base/runtime_c/lns_builtin.c
 #include <lunescript.h>
 #include <lns_builtin.h>
-static lns_module_t s_module = {NULL,NULL,false};
+static lns_module_t s_module_lns_builtin = {NULL,NULL,false};
 static lns_any_t ** lns_module_globalStemList;
 static lns_any_t ** lns_module_path = NULL;
 static void mtd_lns_luaStream__del( lns_env_t * _pEnv, lns_any_t * pObj );
@@ -43,9 +43,9 @@ lns_mtd_lns_io_t lns_mtd_lns_io = {
    mtd_lns_io__del,
    NULL,
 };
-lns_any_t * l_var_lns_io_stdout;
-lns_any_t * l_var_lns_io_stdin;
 lns_any_t * l_var_lns_io_stderr;
+lns_any_t * l_var_lns_io_stdin;
+lns_any_t * l_var_lns_io_stdout;
 lns_type_meta_t lns_type_meta_lns_package = { "lns_package" };
 lns_mtd_lns_package_t lns_mtd_lns_package = {
    mtd_lns_package__del,
@@ -130,6 +130,9 @@ lns_any_t * lns_class_lns_debug_new( lns_env_t * _pEnv){
    pObj->imp.sentinel.type = lns_value_type_none;
    return pAny;
 }
+static void initFuncSym( lns_env_t * _pEnv, lns_block_t * pBlock )
+{
+}
 void l_call_mtd_lns_iStream_close( lns_env_t * _pEnv, lns_any_t * pObj){
 lns_mtd_lns_iStream( pObj )->close( _pEnv, lns_getImpObj( pObj ) );
 }
@@ -165,19 +168,20 @@ lns_mtd_lns_Mapping( pObj )->_toMap( _pEnv, lns_getImpObj( pObj ) );
 }
 static void lns_init_lns_builtin_Sub( lns_env_t * _pEnv );
 void lns_init_lns_builtin( lns_env_t * _pEnv ){
-   if ( s_module.readyFlag ) {
+   if ( s_module_lns_builtin.readyFlag ) {
       return;
    }
-   s_module.readyFlag = true;
-   lns_add2list( &_pEnv->loadModuleTop, &s_module);
+   s_module_lns_builtin.readyFlag = true;
+   lns_add2list( &_pEnv->loadModuleTop, &s_module_lns_builtin);
    
    lns_block_t * pBlock_62 = lns_enter_module( _pEnv, 2, 0, 0 );
-   s_module.pBlock = pBlock_62;
+   s_module_lns_builtin.pBlock = pBlock_62;
    lns_set_block_any( pBlock_62, 0, lns_module_globalStemList);
    lns_setQ_any( lns_module_globalStemList, lns_class_List_new( _pEnv ));
    lns_set_block_any( pBlock_62, 1, lns_module_path);
    lns_setQ_any( lns_module_path, lns_litStr2any( _pEnv, "lns_builtin"));
    lns_enter_block( _pEnv, 0, 0, 0 );
+   initFuncSym( _pEnv, pBlock_62 );
    
    lns_init_lns_builtin_Sub( _pEnv );
    

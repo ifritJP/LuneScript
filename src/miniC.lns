@@ -1,14 +1,11 @@
-class Hoge {
+class Super {
    let val:int;
-   pub fn func() {
+   pub fn func() mut {
+      fn sub() {
+         print( "%s" (self.val) );
+      }
       print( self.val );
    }
 }
-class Test {
-   let hoge:Hoge;
-   advertise hoge;
-}
-
-let test = new Test( new Hoge( 100 ) );
+let mut test = new Super( 1 );
 test.func();
-

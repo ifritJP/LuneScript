@@ -1865,13 +1865,14 @@ pub override fn convFilter.processDeclMethod(
    node: Nodes.DeclMethodNode, opt: Opt ) mut
 {
    let declInfo = node.get_declInfo();
+   let classTypeInfo = unwrap declInfo.$classTypeInfo;
+
    let mut delimit = ":";
    if declInfo.get_staticFlag() {
       delimit = ".";
    }
    let methodNodeToken = unwrap declInfo.get_name();
    let methodName = methodNodeToken.txt;
-   let classTypeInfo = unwrap declInfo.$classTypeInfo;
    self.write( "function %s%s%s( "
                ( classTypeInfo.$rawTxt, delimit, methodName ) );
                //( self.getFullName( classTypeInfo ), delimit, methodName ) );

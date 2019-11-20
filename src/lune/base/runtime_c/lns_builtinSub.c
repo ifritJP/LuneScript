@@ -158,3 +158,44 @@ lns_stem_t mtd_lns_string_gmatch(
     // Lua 関数を実行
     return lns_lua_call( _pEnv, stackTop, 2, 3 );
 }
+
+static int fix_string_index( int index, int len, bool correctMinus ) {
+    int workIndex;
+    if ( index < 0 ) {
+        workIndex = len + index;
+    }
+    else if ( index > len ) {
+        workIndex = len;
+    }
+    else {
+        workIndex = index - 1;
+    }
+    if ( correctMinus && workIndex < 0 ) {
+        return 0;
+    }
+    return workIndex;
+}
+
+lns_any_t * mtd_lns_string_sub(
+    lns_env_t * _pEnv, lns_any_t * arg1, lns_int_t arg2, lns_stem_t arg3)
+{
+    const lns_str_t * pStr = &arg1->val.str;
+    int lastIndex;
+    if ( arg3.type == lns_stem_type_nil || arg3.type == lns_stem_type_none ) {
+        lastIndex = pStr->len - 1;
+    }
+    else {
+        lastIndex = fix_string_index( arg3.val.intVal, pStr->len, false );
+    }
+    int startIndex = fix_string_index( arg2, pStr->len, true );
+    if ( lastIndex < startIndex ) {
+        return lns_litStr2any( _pEnv, "" );
+    }
+    int len = lastIndex - startIndex + 1;
+    if ( len < 0 ) {
+        len = 0;
+    }
+    
+    lns_any_t * pResult = lns_cloneBin2any( _pEnv, pStr->pStr + startIndex, len );
+    return pResult;
+}

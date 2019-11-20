@@ -1251,7 +1251,40 @@ function TypeInfo:get_typeData()
 end
 
 
-local function getAllMethodName( classInfo )
+local MethodKind = {}
+_moduleObj.MethodKind = MethodKind
+MethodKind._val2NameMap = {}
+function MethodKind:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "MethodKind.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+function MethodKind._from( val )
+   if MethodKind._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+    
+MethodKind.__allList = {}
+function MethodKind.get__allList()
+   return MethodKind.__allList
+end
+
+MethodKind.All = 0
+MethodKind._val2NameMap[0] = 'All'
+MethodKind.__allList[1] = MethodKind.All
+MethodKind.Static = 1
+MethodKind._val2NameMap[1] = 'Static'
+MethodKind.__allList[2] = MethodKind.Static
+MethodKind.Object = 2
+MethodKind._val2NameMap[2] = 'Object'
+MethodKind.__allList[3] = MethodKind.Object
+
+
+local function getAllMethodName( classInfo, kind )
 
    local nameSet = Util.OrderedSet.new()
    local function process( scope )
@@ -1277,7 +1310,11 @@ local function getAllMethodName( classInfo )
                   local _switchExp = symbolInfo:get_kind()
                   if _switchExp == SymbolKind.Mtd then
                      if symbolInfo:get_name() ~= "__init" then
-                        nameSet:add( symbolInfo:get_name() )
+                        local staticFlag = symbolInfo:get_typeInfo():get_staticFlag()
+                        if kind == MethodKind.All or kind == MethodKind.Static and staticFlag or kind == MethodKind.Object and not staticFlag then
+                           nameSet:add( symbolInfo:get_name() )
+                        end
+                        
                      end
                      
                   end

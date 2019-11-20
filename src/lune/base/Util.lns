@@ -75,11 +75,15 @@ pub class OrderedSet<T> {
 
    pub fn clone(): OrderedSet<T> {
       let mut obj = new OrderedSet<T>();
-         foreach val in self.list {
-            obj.set.add( val );
-            obj.list.insert( val );
-         }
+      foreach val in self.list {
+         obj.set.add( val );
+         obj.list.insert( val );
+      }
       return obj;
+   }
+
+   pub fn has( val:&T ) : bool {
+      return self.set.has( val );
    }
 }
 
@@ -285,5 +289,5 @@ __test case1 {
       let val2 = 2;
    }
 }``` );
-   }   
+   }
 }

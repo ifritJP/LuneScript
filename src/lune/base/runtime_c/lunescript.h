@@ -174,8 +174,7 @@ extern "C" {
 #define LNS_ANY_POOL_MAX_NUM 100000
 
 #define lns_set_block_var( BLOCK, INDEX, TYPE, VAR )    \
-    VAR = lns_var_alloc( _pEnv, BLOCK, INDEX, TYPE );   \
-    VAR->stem.type = TYPE
+    VAR = lns_var_alloc( _pEnv, BLOCK, INDEX, TYPE );
     
 #define lns_set_block_stem( BLOCK, INDEX, VAR )     \
     (BLOCK)->pStemList[ INDEX ] = &(VAR);           \

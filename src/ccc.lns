@@ -6,6 +6,104 @@ let mut g_val = 100;
 
 {
    _section();
+   class Super {
+      let val:int;
+      pub fn func() mut {
+         fn sub() {
+            print( "%s" (self.val) );
+         }
+         print( self.val );
+      }
+   }
+   let mut test = new Super( 1 );
+   test.func();
+}
+{
+   _section();
+   class Test {
+      pub fn func( val:str, val2:str! ) {
+         fn sub():str, str {
+            return val .. "xyz", (unwrap val2) .. "123";
+         }
+         print( sub()** );
+      }
+      pub fn func2( mut val:str, mut val2:str!, mut val3:int ) {
+         print( val, val2, val3 );
+      }
+   }
+   fn func( val:str, val2:str! ) {
+      fn sub():str, str {
+         return val .. "xyz", (unwrap val2) .. "123";
+      }
+      print( sub()** );
+   }
+   fn func2( mut val:str, mut val2:str!, mut val3:int ) {
+      print( val, val2, val3 );
+   }
+   let test = new Test();
+   test.func( "ABC", "abc" );
+   test.func2( "ABC", "abc", 1 );
+   func( "abc", "ABC" );
+   func2( "abc", "ABC", 1 );
+}
+{
+   _section();
+   let mut test = "";
+   while true {
+      test = test .. "a";
+      if #test > 10 {
+         break;
+      }
+   }
+   print( test );
+}
+{
+   _section();
+   let txt = "123";
+   print( txt.sub( 0 ##) );
+   print( txt.sub( 1 ##) );
+   print( txt.sub( 2 ##) );
+   print( txt.sub( 3 ##) );
+   print( txt.sub( 4 ##) );
+   print( txt.sub( -1 ##) );
+   print( txt.sub( -2 ##) );
+   print( txt.sub( -3 ##) );
+   print( txt.sub( -4 ##) );
+   print( txt.sub( 1, 0) );
+   print( txt.sub( 1, 1) );
+   print( txt.sub( 1, 2) );
+   print( txt.sub( 1, 3) );
+   print( txt.sub( 1, 4) );
+   print( txt.sub( 1, -1) );
+   print( txt.sub( 1, -2) );
+   print( txt.sub( 1, -3) );
+   print( txt.sub( 1, -4) );
+}
+{
+   _section();
+   class Hoge {
+      let val:int;
+      pub fn func() {
+         print( self.val );
+      }
+      pro fn sub():int {
+         return self.val;      
+      }
+   }
+   class Test {
+      let hoge:Hoge;
+
+      advertise hoge;
+   }
+   pub fn Test.func2() {
+      print( self.sub() );
+   }
+   let test = new Test( new Hoge( 100 ) );
+   test.func();
+   test.func2();
+}
+{
+   _section();
    class Test1 {
       pub fn func() {
          print( __func__ );
@@ -203,6 +301,43 @@ return obj
 
    }
    func( 1, 2.0, new Test( 1000 ) );
+}
+{
+   _section();
+   {
+      fn func( flag:bool, index:int! )
+      {
+         if flag or index and true {
+            print( "true" );
+         }
+         else {
+            print( "false" );
+         }
+      }
+      func( false, nil );
+      func( false, 1 );
+      func( true, nil );
+      func( true, 1 );
+   }
+   {
+      fn func( val:bool, flag:bool, index:int! )
+      {
+         if flag and val or index and true {
+            print( "true" );
+         }
+         else {
+            print( "false" );
+         }
+      }
+      func( false, false, nil );
+      func( false, false, 1 );
+      func( false, true, nil );
+      func( false, true, 1 );
+      func( true, false, nil );
+      func( true, false, 1 );
+      func( true, true, nil );
+      func( true, true, 1 );
+   }
 }
 {
    _section();
