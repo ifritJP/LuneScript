@@ -247,7 +247,7 @@ lns_stem_t lns_mtd_List_refAt(
 /**
    List.unpack() 処理
 */
-lns_any_t * lns_mtd_List_unpack( lns_env_t * _pEnv, lns_any_t * pObj )
+lns_stem_t lns_mtd_List_unpack( lns_env_t * _pEnv, lns_any_t * pObj )
 {
     lns_stem_t ddd = lns_createDDDOnly( _pEnv, lns_obj_List_obj( pObj )->size() );
     lns_any_t * pDDD = ddd.val.pAny;
@@ -262,7 +262,7 @@ lns_any_t * lns_mtd_List_unpack( lns_env_t * _pEnv, lns_any_t * pObj )
         lns_set2DDDArg( pDDD, index, *it );
     }
 
-    return pDDD;
+    return LNS_STEM_ANY( pDDD );
 }
 
 lns_int_t lns_mtd_List_len( lns_env_t * _pEnv, lns_any_t * pListAny )
@@ -392,8 +392,20 @@ lns_any_t * _lns_createList(
     lns_any_t * pAny = lns_class_List_new( _pEnv );
 
     for ( ; pList->type != lns_imdType_sentinel; pList++ ) {
-        lns_mtd_List_insert(
-            _pEnv, pAny, _lns_createImmediateVal( LNS_DEBUG_POS, _pEnv, pList ) );
+        if ( (pList+1)->type == lns_imdType_sentinel &&
+             pList->type == lns_imdType_any &&
+             pList->val.any->type == lns_value_type_ddd )
+        {
+            // 最終が ... の処理
+            lns_any_t * pDDD = pList->val.any;
+            int index;
+            for ( index = 0; index < lns_lenDDD( pDDD ); index++ ) {
+                lns_mtd_List_insert( _pEnv, pAny, lns_getValFromDDD( pDDD, index ) );
+            }
+            break;
+        }
+        lns_stem_t val = _lns_createImmediateVal( LNS_DEBUG_POS, _pEnv, pList );
+        lns_mtd_List_insert( _pEnv, pAny, val );
     }
     return pAny;
 }

@@ -282,6 +282,53 @@ enum AnalyzingState {
 
 form checkImplicitCastCallback( dstType:&Ast.TypeInfo, expNode:&Nodes.Node ): &Nodes.Node!;
 
+class ClosureFun {
+   /** 関数シンボル */
+   let symbol:&Ast.SymbolInfo;
+   /** 関数シンボルにアクセスしているスコープ */
+   let mut fromScope:Ast.Scope;
+
+   /**
+   アクセスしている関数シンボルがクロージャかどうか判定し、
+   クロージャなら、このシンボルもクロージャとして登録する。
+
+   @return クロージャだったら true
+   */
+   pub fn check() mut : bool {
+      if! self.symbol.$typeInfo.$scope$.$closureSymList {
+         if #_exp > 0 {
+            self.fromScope.setClosure( self.symbol );
+            return true;
+         }
+      }
+      return false;
+   }
+
+   /**
+指定の ClosureFun のリストの関数シンボルアクセスがクロージャかどうかの判定処理を行なう。
+   */
+   pub static fn checkList( list:List<ClosureFun> ) {
+      let mut workList = list;
+      let mut remainList:List<ClosureFun> = [];
+      while true {
+         let mut update = false;
+         foreach closureFun in workList {
+            if closureFun.check() {
+               update = true;
+            }
+            else {
+               remainList.insert( closureFun );
+            }
+         }
+         if not update {
+            break;
+         }
+         workList = remainList;
+         remainList = [];
+      }
+   }
+   
+}
 
 pub interface TransUnitIF {
    pub fn createModifier( typeInfo:&Ast.TypeInfo, mutMode: Ast.MutMode ) : &Ast.TypeInfo;
@@ -389,8 +436,11 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
    
    pri let mut typeNameCtrl:&Ast.TypeNameCtrl;
 
-   /** __Test ブロック内を解析中の場合 true */
    pri let mut scopeAccess:Ast.ScopeAccess;
+
+   /** クロージャ候補の関数情報リスト */
+   let mut closureFunList:List<ClosureFun>;
+   
 
    pub fn __init( moduleId:&frontInterface.ModuleId,
                   importModuleInfo:frontInterface.ImportModuleInfo,
@@ -398,6 +448,7 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
                   pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
                   ctrl_info: &Option.TransCtrlInfo )
    {
+      self.closureFunList = [];
       self.scopeAccess = .Normal;
       self.macroCtrl = new Macro.MacroCtrl( macroEval );
       self.typeNameCtrl = Ast.defaultTypeNameCtrl;
@@ -1445,7 +1496,7 @@ builtin 関数の TypeInfo を保持するクラス。
    pub fn getBuiltinFunc() : &BuiltinFuncType {
       return builtinFunc;
    }
-   
+
    fn setupBuiltinTypeInfo( name:str, fieldName:str, symInfo:&Ast.SymbolInfo ) {
       let typeInfo = symInfo.$typeInfo;
       
@@ -1511,22 +1562,25 @@ _DefBuiltinFuncType( [
    },
    {
       "io": {
-         "stdin": { "type": [ "member" ], "typeInfo": [ "iStream" ] },
-         "stdout": { "type": [ "member" ], "typeInfo": [ "oStream" ] },
-         "stderr": { "type": [ "member" ], "typeInfo": [ "oStream" ] },
+         "__attrib": { "type": [ "module" ] },
+         "stdin": { "type": [ "var" ], "typeInfo": [ "iStream" ] },
+         "stdout": { "type": [ "var" ], "typeInfo": [ "oStream" ] },
+         "stderr": { "type": [ "var" ], "typeInfo": [ "oStream" ] },
          "open": { "arg": [ "str", "str!" ], "ret": ["luaStream!"] },
          "popen": { "arg": [ "str" ], "ret": ["luaStream!"] },
       },
    },
    {
       "package": {
-         "path": { "type": [ "member" ], "typeInfo": [ "str" ] },
+         "__attrib": { "type": [ "module" ] },
+         "path": { "type": [ "var" ], "typeInfo": [ "str" ] },
          "searchpath": { "arg": [ "str", "str" ], "ret": ["str!"] },
       },
    },
    {
 
       "os": {
+         "__attrib": { "type": [ "module" ] },
          "clock": { "arg": [], "ret": ["real"] },
          "exit": { "arg": [ "int!" ], "ret": [ "__" ] },
          "remove": {"arg": [ "str" ], "ret": [ "bool!", "str!"] },
@@ -1538,8 +1592,9 @@ _DefBuiltinFuncType( [
    },
    {
       "string": {
+         "__attrib": { "type": [ "module" ] },
          "find": { "arg": [ "str", "str", "int!", "bool!" ], "ret": ["int!", "int!"] },
-         "byte": { "arg": [ "str", "int!", "int!" ], "ret": ["int!"] },
+         "byte": { "arg": [ "str", "int!", "int!" ], "ret": ["...<int>"] },
          "format": { "arg": [ "str", "..." ], "ret": ["str"] },
          "rep": { "arg": [ "str", "int" ], "ret": ["str"] },
          "gmatch": { "arg": [ "str", "str" ], "ret": ["Luaval<form>", "stem!", "stem!"] },
@@ -1594,12 +1649,14 @@ _DefBuiltinFuncType( [
    },
    {
       "math": {
+         "__attrib": { "type": [ "module" ] },
          "random": { "arg": [ "int!", "int!" ], "ret": ["real"] },
          "randomseed": { "arg": [ "int!" ], "ret": [] },
       }
    },
    {
       "debug": {
+         "__attrib": { "type": [ "module" ] },
          "getinfo": { "arg": ["int"], "ret": ["Map<str,stem>!"] },
          "getlocal": { "arg": ["int", "int"], "ret": ["str!", "stem!"] },
       },
@@ -1671,6 +1728,12 @@ fn TransUnit.registBuiltInScope() mut {
                   }
                   return Ast.NormalTypeInfo.createLuaval( genTypeList[ 1 ] );
                }
+               case .DDD {
+                  if #genTypeList ~= 1 {
+                     Util.err( "illegal map param -- %d" (#genTypeList) );
+                  }
+                  return Ast.NormalTypeInfo.createDDD( genTypeList[ 1 ], true );
+               }
                default {
                   Util.err( "not support type -- %s" (typeInfo.getTxt(##)) );
                }
@@ -1687,7 +1750,7 @@ fn TransUnit.registBuiltInScope() mut {
          typeName = typeName.gsub( "^&", "" );
       }
       let mut genTypeList:List<&Ast.TypeInfo> = [];
-      let index, endIndex = typeName.find( "[%w]+<" ## );
+      let index, endIndex = typeName.find( "[%w%.]+<" ## );
       let mut suffix = "";
       when! index, endIndex {
          let mut genTypeName = typeName.sub( endIndex + 1## );
@@ -1736,10 +1799,11 @@ fn TransUnit.registBuiltInScope() mut {
                     parentInfo:&Ast.TypeInfo )
    {
       if self.targetLuaVer.isSupport( "%s.%s" (name, fieldName) ) {
-         if info.type$[1] == "member" {
-            let symbol = self.scope.addMember(
-               fieldName, nil,
-               getTypeInfo( unwrap info.typeInfo$[1] ), .Pub, true, .Mut );
+         if info.type$[1] == "var" {
+            let symbol = self.scope.add(
+               .Var, false, true, fieldName, nil,
+               getTypeInfo( unwrap info.typeInfo$[1] ), .Pub,
+               true, .Mut, true );
             builtinFunc.register( symbol );
          }
          else {
@@ -1866,9 +1930,18 @@ fn TransUnit.registBuiltInScope() mut {
          }
          let mut parentInfo:&Ast.TypeInfo = Ast.headTypeInfo;
          if name ~= "" {
-            let mut classFlag = true;
-            if name2FieldInfo.__attrib$.type$[1] == "interface" {
-               classFlag = false;
+            let mut classKind = DeclClassMode.Class;
+            if! let types = name2FieldInfo.__attrib$.type {
+               if #types > 0 {
+                  switch types[ 1 ] {
+                     case "interface" {
+                        classKind = .Interface;
+                     }
+                     case "module" {
+                        classKind = .Module;
+                     }
+                  }
+               }
             }
             let mut interfaceList:List<&Ast.TypeInfo> = [];
             if! name2FieldInfo.__attrib$.inplements {
@@ -1877,13 +1950,26 @@ fn TransUnit.registBuiltInScope() mut {
                   interfaceList.insert( ifType );
                }
             }
-            parentInfo = self.pushClass(
-               self.currentToken.pos, classFlag, false, nil, interfaceList,
-               genTypeList, true, name, .Pub ## );
+            switch classKind {
+               case .Class, .Interface {
+                  parentInfo = self.pushClass(
+                     self.currentToken.pos,
+                     classKind == .Class, false, nil, interfaceList,
+                     genTypeList, true, name, .Pub ## );
+                  builtinFunc.registerClass( parentInfo );
+               }
+               case .Module {
+                  parentInfo = self.pushModule( true, name, true );
+
+                  let moduleSymbolInfo = self.scope.$parent.add(
+                     .Typ , false, false, name, nil,
+                     parentInfo, .Local, true, Ast.MutMode.Mut, true );
+               }
+            }
+
             Ast.builtInTypeIdSet[ parentInfo.get_typeId() ] = parentInfo;
             Ast.builtInTypeIdSet[ parentInfo.$nilableTypeInfo.$typeId ] =
                parentInfo.$nilableTypeInfo;
-            builtinFunc.registerClass( parentInfo );
          }
          if not builtinModuleName2Scope[ name ]
          {
@@ -2113,7 +2199,7 @@ fn TransUnit.getSymbolToken(mode:SymbolMode) mut : &Parser.Token {
 
 fn TransUnit.checkToken( token: &Parser.Token, txt: str ) mut : &Parser.Token {
    if token.txt ~= txt {
-      self.error( "not found -- %s" ( txt ) );
+      self.error( "not found -- %s. expects %s" ( txt, token.txt ) );
    }
    return token;
 }

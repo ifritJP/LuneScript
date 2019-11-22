@@ -155,7 +155,7 @@ pub override fn dumpFilter.processDeclEnum(
    let enumTypeInfo = unwrap (node.$expType@@@Ast.EnumTypeInfo);
    foreach name in node.$valueNameList {
       let valInfo = unwrap enumTypeInfo.getEnumValInfo( name.txt );
-      print( "%s  %s: %s" ( prefix, name.txt, valInfo.$val ) );
+      print( "%s  %s: %s" ( prefix, name.txt, valInfo.$val.$_txt ) );
    }
 }
 
@@ -352,6 +352,11 @@ fn dumpFilter.processDeclFuncInfo(
    }
    if Ast.TypeInfo.isMut( node.$expType ) {
       name = name .. " mut";
+   }
+   if! node.$expType.$scope$.$closureSymList {
+      if #_exp > 0 {
+         name = name .. " closure";
+      }
    }
    dump( prefix, depth, node, name );
    let argList = declInfo.get_argList();

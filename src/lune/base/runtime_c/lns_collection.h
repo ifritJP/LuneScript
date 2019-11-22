@@ -55,7 +55,7 @@ extern "C" {
         lns_env_t * _pEnv, lns_any_t * pObj, lns_stem_t val );
     extern lns_stem_t lns_mtd_List_refAt(
         lns_env_t * _pEnv, lns_any_t * pListAny, int index );
-    extern lns_any_t * lns_mtd_List_unpack(
+    extern lns_stem_t lns_mtd_List_unpack(
         lns_env_t * _pEnv, lns_any_t * pListAny );
     extern lns_stem_t lns_mtd_List_sort(
         lns_env_t * _pEnv, lns_any_t * pListAny, lns_stem_t pForm );

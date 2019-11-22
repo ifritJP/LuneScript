@@ -1284,7 +1284,7 @@ MethodKind._val2NameMap[2] = 'Object'
 MethodKind.__allList[3] = MethodKind.Object
 
 
-local function getAllMethodName( classInfo, kind )
+local function getAllNameForKind( classInfo, kind, symbolKind )
 
    local nameSet = Util.OrderedSet.new()
    local function process( scope )
@@ -1308,9 +1308,11 @@ local function getAllMethodName( classInfo, kind )
             do
                do
                   local _switchExp = symbolInfo:get_kind()
-                  if _switchExp == SymbolKind.Mtd then
-                     if symbolInfo:get_name() ~= "__init" then
-                        local staticFlag = symbolInfo:get_typeInfo():get_staticFlag()
+                  if _switchExp == symbolKind then
+                     if symbolKind == SymbolKind.Mtd and symbolInfo:get_name() == "__init" then
+                     else
+                      
+                        local staticFlag = symbolInfo:get_staticFlag()
                         if kind == MethodKind.All or kind == MethodKind.Static and staticFlag or kind == MethodKind.Object and not staticFlag then
                            nameSet:add( symbolInfo:get_name() )
                         end
@@ -1334,6 +1336,12 @@ local function getAllMethodName( classInfo, kind )
    end
    
    return nameSet
+end
+_moduleObj.getAllNameForKind = getAllNameForKind
+
+local function getAllMethodName( classInfo, kind )
+
+   return getAllNameForKind( classInfo, kind, SymbolKind.Mtd )
 end
 _moduleObj.getAllMethodName = getAllMethodName
 
@@ -2244,13 +2252,13 @@ _moduleObj.dummySymbol = dummySymbol
 
 function Scope:addStaticVar( argFlag, canBeLeft, name, pos, typeInfo, mutable )
 
-   self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, pos, typeInfo, AccessMode.Local, true, mutable, true )
+   return self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, pos, typeInfo, AccessMode.Local, true, mutable, true )
 end
 
 
 function Scope:addVar( accessMode, name, pos, typeInfo, mutable, hasValueFlag )
 
-   self:add( SymbolKind.Var, true, true, name, pos, typeInfo, accessMode, false, mutable, hasValueFlag )
+   return self:add( SymbolKind.Var, true, true, name, pos, typeInfo, accessMode, false, mutable, hasValueFlag )
 end
 
 
@@ -2370,49 +2378,70 @@ local function dumpScope( workscope, workprefix )
 end
 _moduleObj.dumpScope = dumpScope
 
-function Scope:accessSymbol( moduleScope, symbol )
+function Scope:setClosure( symbol )
 
+   local targetFuncType = symbol:get_namespaceTypeInfo()
+   local funcType = self:getNamespaceTypeInfo(  )
    
-   local function setClosure( funcType )
-   
+   while true do
       local funcScope = _lune.unwrap( funcType:get_scope())
-      
       if not funcScope.closureSymMap[symbol:get_symbolId()] then
          funcScope.closureSymMap[symbol:get_symbolId()] = symbol
          funcScope.closureSym2NumMap[symbol] = #funcScope.closureSymList
          table.insert( funcScope.closureSymList, symbol )
-         if not funcScope:isRoot(  ) then
-            funcScope.parent:accessSymbol( moduleScope, symbol )
-         end
-         
-         if not symbol:get_hasAccessFromClosure() then
-            symbol:set_hasAccessFromClosure( true )
-         end
-         
+         funcType = funcScope.parent:getNamespaceTypeInfo(  )
+      else
+       
+         break
+      end
+      
+      if funcType == targetFuncType then
+         break
       end
       
    end
    
+   if not symbol:get_hasAccessFromClosure() then
+      symbol:set_hasAccessFromClosure( true )
+   end
+   
+end
+
+
+function Scope:isClosureAccess( moduleScope, symbol )
+
    do
       local _switchExp = symbol:get_kind()
-      if _switchExp == SymbolKind.Var or _switchExp == SymbolKind.Arg then
+      if _switchExp == SymbolKind.Var or _switchExp == SymbolKind.Arg or _switchExp == SymbolKind.Fun then
          if symbol:get_scope() == moduleScope or symbol:get_scope() == _moduleObj.rootScope then
          elseif symbol:get_name() == "self" then
             local funcType = self:getNamespaceTypeInfo(  )
-            if not funcType:get_parentInfo():isInheritFrom( symbol:get_namespaceTypeInfo():get_parentInfo() ) then
-               setClosure( funcType )
+            if funcType:get_parentInfo():isInheritFrom( symbol:get_namespaceTypeInfo():get_parentInfo() ) then
+            else
+             
+               return true
             end
             
          else
           
             local funcType = self:getNamespaceTypeInfo(  )
             if funcType ~= symbol:get_namespaceTypeInfo() then
-               setClosure( funcType )
+               return true
             end
             
          end
          
       end
+   end
+   
+   return false
+end
+
+
+function Scope:accessSymbol( moduleScope, symbol )
+
+   if self:isClosureAccess( moduleScope, symbol ) then
+      self:setClosure( symbol )
    end
    
 end
@@ -4752,6 +4781,9 @@ function NormalTypeInfo:get_nilableTypeInfo()
 end
 function NormalTypeInfo:get_mutMode()
    return self.mutMode
+end
+function NormalTypeInfo:set_mutMode( mutMode )
+   self.mutMode = mutMode
 end
 
 

@@ -50,10 +50,24 @@ fn TransUnit.analyzeRefType(
    // builtin の型名などは _ で始まることもあるので、シンボル名チェックしない
    // self.checkSymbol( token, .MustNot_ );
 
-   let name = self.analyzeExpSymbol( firstToken, token, .Symbol, nil, true );
+   let name:Nodes.Node;
+   if token.txt == "..." {
+      // ... は変数シンボルとしても使用するので
+      // analyzeExpSymbol で解析すると意図しないシンボルを取ってくる可能性があるため、
+      // ここで特別に処理する。
+      let dddSym = unwrap self.moduleScope.getSymbolInfo(
+         "...", self.moduleScope, true, .Normal );
+      name = Nodes.ExpRefNode.create(
+         self.nodeManager, token.pos, [ dddSym.$typeInfo ], 
+         new Ast.AccessSymbolInfo( dddSym, nil, true ) );
+   }
+   else {
+      name = self.analyzeExpSymbol( firstToken, token, .Symbol, nil, true );
+   }
    return self.analyzeRefTypeWithSymbol(
       accessMode, allowDDD, refFlag, mutFlag, name, parentPub );
 }
+
 
 fn TransUnit.analyzeRefTypeWithSymbol(
    accessMode: Ast.AccessMode, allowDDD:bool,
@@ -239,6 +253,7 @@ fn TransUnit.analyzeDeclArgList(
       let mut argName = nextToken;
       if argName.txt == "..." {
          hasDDDFlag = true;
+
          let workToken, flag = self.getContinueToken();
          self.pushback();
 
@@ -456,6 +471,8 @@ pub fn TransUnit.createAST(
          rootNode.set_provide( _exp );
          moduleSymbolKind = _exp.$symbol.$kind;
       }
+
+      ClosureFun.checkList( self.closureFunList );
    }
 
    when! moduleName {
@@ -1712,6 +1729,13 @@ fn TransUnit.analyzeClassBody(
 
    fn processInitBlock( token:&Parser.Token ) {
 
+      if classTypeInfo.$parentInfo.$scope ~= self.moduleScope {
+         // top level クラスでないと、
+         // static なメンバのライフタイム制御が難しいので現状はエラーとする。
+         self.addErrMess(
+            token.pos, "The '__init' block only support at the top level classes." );
+      }
+      
       // self.pushAnalyzingState( .InitBlock );
 
       if mode ~= .Class {
@@ -2405,6 +2429,7 @@ fn TransUnit.analyzeDeclFunc(
 
 
    let mut funcBodyScope = self.pushScope( false ## );
+   
    let mut altTypeList:List<&Ast.TypeInfo> = [];
    // generic 宣言
    if token.txt == "<" {
@@ -2428,7 +2453,7 @@ fn TransUnit.analyzeDeclFunc(
    }
    
    let mut argList:List<&Nodes.Node> = [];
-   token = self.analyzeDeclArgList( accessMode, self.scope, argList, parentPub );
+   token = self.analyzeDeclArgList( accessMode, funcBodyScope, argList, parentPub );
 
    self.checkToken( token, ")" );
    token = self.getToken(##);

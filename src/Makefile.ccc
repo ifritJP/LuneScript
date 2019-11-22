@@ -16,7 +16,7 @@ OBJS =
 OBJS += $(addprefix work/c/,$(addsuffix .o,$(notdir $(basename $(CORE_SRCS)))))
 OBJS += $(addprefix work/c/,$(addsuffix .o,$(notdir $(basename $(SRCS)))))
 
-vpath %.c lune/base lune/base/runtime_c work
+vpath %.c lune/base lune/base/runtime_c work test
 vpath %.cxx lune/base/runtime_c
 
 LUA_INC_DIR=
@@ -28,7 +28,7 @@ else
 CFLAGS = -O
 endif
 CFLAGS += -Wall -Wno-unused-variable -c -Ilune/base/runtime_c
-CFLAGS +=  -Iwork/0 -Ilune/base -I. -I$(LUA_INC_DIR)
+CFLAGS +=  -Iwork/0 -Itest -Ilune/base -I. -I$(LUA_INC_DIR)
 
 work/c/%.o: %.c
 	gcc $(CFLAGS) -o $@ $<

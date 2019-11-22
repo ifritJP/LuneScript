@@ -904,3 +904,19 @@ test-mkbuiltin:
 
 lctags:
 	$(MAKE) -f Makefile.ccc lctags
+
+
+test-start:
+	$(call transwork,.,.,,base/convCC)
+	$(LUA) lune/base/base.lua --mkbuiltin lune/base/runtime_c
+	mkdir -p work/0
+	rm -rf work/0/*
+	mkdir -p work/0/work/c
+	cp -a lune work/0
+	cp -a test work/0
+	cp Makefile.ccc work/0
+	$(call convC,work/0,test/Sub4.lns)
+	$(call convC,work/0,test/Sub2.lns)
+	$(call test-convC-exe,work/0,test/Sub2.lns,test/Sub2,test/Sub2)
+
+

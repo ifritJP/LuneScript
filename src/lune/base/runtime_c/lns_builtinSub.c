@@ -159,6 +159,37 @@ lns_stem_t mtd_lns_string_gmatch(
     return lns_lua_call( _pEnv, stackTop, 2, 3 );
 }
 
+lns_stem_t mtd_lns_string_byte(
+    lns_env_t * _pEnv, lns_any_t * str, lns_stem_t index1, lns_stem_t index2)
+{
+    int startIndex = 1;
+    if ( index1.type == lns_stem_type_int ) {
+        startIndex = index1.val.intVal;
+    }
+    int endIndex = startIndex;
+    if ( index2.type == lns_stem_type_int ) {
+        endIndex = index2.val.intVal;
+        if ( endIndex > str->val.str.len ) {
+            endIndex = str->val.str.len;
+        }
+    }
+    int len = endIndex - startIndex + 1;
+    if ( len <= 0 || startIndex > str->val.str.len ) {
+        return lns_global.ddd0;
+    }
+
+    lns_any_t * pRetObj = lns_createMRetOnly( _pEnv, len );
+
+    int index;
+    for ( index = startIndex; index <= endIndex; index++ ) {
+        lns_set2DDDArg(
+            pRetObj, index - startIndex,
+            LNS_STEM_INT( (unsigned char)str->val.str.pStr[ index - 1 ] ) );
+    }
+
+    return LNS_STEM_ANY( pRetObj );
+}
+
 static int fix_string_index( int index, int len, bool correctMinus ) {
     int workIndex;
     if ( index < 0 ) {

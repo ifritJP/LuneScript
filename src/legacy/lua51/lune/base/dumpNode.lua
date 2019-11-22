@@ -112,6 +112,48 @@ function _lune._toSet( val, toKeyInfo )
    return nil
 end
 
+function _lune.nilacc( val, fieldName, access, ... )
+   if not val then
+      return nil
+   end
+   if fieldName then
+      local field = val[ fieldName ]
+      if not field then
+         return nil
+      end
+      if access == "item" then
+         local typeId = type( field )
+         if typeId == "table" then
+            return field[ ... ]
+         elseif typeId == "string" then
+            return string.byte( field, ... )
+         end
+      elseif access == "call" then
+         return field( ... )
+      elseif access == "callmtd" then
+         return field( val, ... )
+      end
+      return field
+   end
+   if access == "item" then
+      local typeId = type( val )
+      if typeId == "table" then
+         return val[ ... ]
+      elseif typeId == "string" then
+         return string.byte( val, ... )
+      end
+   elseif access == "call" then
+      return val( ... )
+   elseif access == "list" then
+      local list, arg = ...
+      if not list then
+         return nil
+      end
+      return val( list, arg )
+   end
+   error( string.format( "illegal access -- %s", access ) )
+end
+
 function _lune.unwrap( val )
    if val == nil then
       __luneScript:error( 'unwrap val is nil' )
@@ -361,7 +403,8 @@ function dumpFilter:processDeclEnum( node, opt )
    local enumTypeInfo = _lune.unwrap( (_lune.__Cast( node:get_expType(), 3, Ast.EnumTypeInfo ) ))
    for __index, name in pairs( node:get_valueNameList() ) do
       local valInfo = _lune.unwrap( enumTypeInfo:getEnumValInfo( name.txt ))
-      print( string.format( "%s  %s: %s", prefix, name.txt, tostring( valInfo:get_val())) )
+      print( string.format( "%s  %s: %s", prefix, name.txt, Ast.EnumLiteral:_getTxt( valInfo:get_val())
+      ) )
    end
    
 end
@@ -623,6 +666,16 @@ function dumpFilter:processDeclFuncInfo( node, declInfo, opt )
    
    if Ast.TypeInfo.isMut( node:get_expType() ) then
       name = name .. " mut"
+   end
+   
+   do
+      local _exp = _lune.nilacc( node:get_expType():get_scope(), 'get_closureSymList', 'callmtd' )
+      if _exp ~= nil then
+         if #_exp > 0 then
+            name = name .. " closure"
+         end
+         
+      end
    end
    
    dump( prefix, depth, node, name )

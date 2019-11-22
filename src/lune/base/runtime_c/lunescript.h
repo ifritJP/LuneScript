@@ -648,6 +648,8 @@ extern "C" {
         lns_block_t * pBlock;
     } lns_module_t;
 
+#define LNS_BLOCK_AT( ENV, DEPTH ) (&ENV->blockQueue[ ENV->blockDepth - DEPTH ])
+    
     struct lua_State;
     
     struct lns_env_t {
@@ -801,6 +803,7 @@ extern "C" {
 
     extern void lns_setRet( lns_env_t * _pEnv, lns_stem_t stem );
     extern void lns_setRetInBlock( lns_env_t * _pEnv, lns_stem_t stem );
+    extern void lns_setRetAtBlock( lns_block_t * pBlock, lns_stem_t pStem );
     extern void lns_setQ_( lns_any_t * pAny );
     extern void lns_setOverwrite( lns_any_t * pAny );
     extern lns_block_t * lns_enter_func( lns_env_t * _pEnv, int anyNum, int stemNum, int varNum, int argNum, ... );

@@ -288,7 +288,7 @@ void lns_setQ_( lns_any_t * pAny )
     }
 }
 
-static void lns_setRetAtBlock( lns_block_t * pBlock, lns_stem_t * pStem )
+void lns_setRetAtBlockSub( lns_block_t * pBlock, lns_stem_t * pStem )
 {
     if ( pStem->type != lns_stem_type_any ) {
         return;
@@ -309,20 +309,25 @@ static void lns_setRetAtBlock( lns_block_t * pBlock, lns_stem_t * pStem )
         int index;
         for ( index = 0; index < pAny->val.ddd.len; index++ ) {
             lns_stem_t item = lns_fromDDD( pAny, index );
-            lns_setRetAtBlock( pBlock, &item );
+            lns_setRetAtBlockSub( pBlock, &item );
         }
     }
     return;
 }
 
+void lns_setRetAtBlock( lns_block_t * pBlock, lns_stem_t stem )
+{
+    lns_setRetAtBlockSub( pBlock, &stem );
+}
+
 void lns_setRet( lns_env_t * _pEnv, lns_stem_t stem )
 {
-    lns_setRetAtBlock( &_pEnv->blockQueue[ _pEnv->blockDepth - 1 ], &stem );
+    lns_setRetAtBlockSub( LNS_BLOCK_AT( _pEnv, 1 ), &stem );
 }
 
 void lns_setRetInBlock( lns_env_t * _pEnv, lns_stem_t stem )
 {
-    lns_setRetAtBlock( &_pEnv->blockQueue[ _pEnv->blockDepth ], &stem );
+    lns_setRetAtBlockSub( LNS_BLOCK_AT( _pEnv, 0 ), &stem );
 }
 
 

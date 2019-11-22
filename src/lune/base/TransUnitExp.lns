@@ -2173,6 +2173,20 @@ fn TransUnit.analyzeNewAlge(
    }
 }
 
+fn TransUnit.accessSymbol( symbolInfo:&Ast.SymbolInfo ) mut {
+   if symbolInfo.$kind == .Fun {
+      if self.scope.isClosureAccess( self.moduleScope, symbolInfo ) {
+         // 関数の場合、AST 解析中の時点ではクロージャ処理が必要かどうかが
+         // 判定できないので、リストに保持して AST 解析後に別途処理する。
+         self.closureFunList.insert( new ClosureFun( symbolInfo, self.scope ) );
+      }
+   }
+   else {
+      self.scope.accessSymbol( self.moduleScope, symbolInfo );
+   }
+}
+
+
 fn TransUnit.analyzeExpSymbol(
    firstToken: &Parser.Token, token: &Parser.Token,
    mode: ExpSymbolMode, prefixExp: &Nodes.Node!, mut skipFlag: bool ) mut : Nodes.Node
@@ -2231,7 +2245,7 @@ fn TransUnit.analyzeExpSymbol(
             self.error( "not found type -- " .. token.txt );
          };
 
-         self.scope.accessSymbol( self.moduleScope, symbolInfo );
+         self.accessSymbol( symbolInfo );
          
          let typeInfo = symbolInfo.$typeInfo;
 
@@ -2443,11 +2457,25 @@ fn TransUnit.analyzeExpOp2(
             let exp2Type = exp2.$expType;
 
             if opTxt ~= "=" {
+               // if exp1Type.$kind == .DDD {
+               //    self.addErrMess( exp.$pos, "... can't evaluate for %s" (opTxt) );
+               // }
+               // elseif exp2Type.$kind == .DDD {
+               //    self.addErrMess( exp2.$pos, "... can't evaluate for %s" (opTxt) );
+               // }
                if exp1Type.$kind == .DDD {
-                  self.addErrMess( exp.$pos, "... can't evaluate for %s" (opTxt) );
+                  if! let dddType = exp1Type@@@Ast.DDDTypeInfo {
+                     exp = Nodes.ExpMultiTo1Node.create(
+                        self.nodeManager, exp.$pos,
+                        [ dddType.$typeInfo.$nilableTypeInfo ], exp );
+                  }
                }
-               elseif exp2Type.$kind == .DDD {
-                  self.addErrMess( exp2.$pos, "... can't evaluate for %s" (opTxt) );
+               if exp2Type.$kind == .DDD {
+                  if! let dddType = exp2Type@@@Ast.DDDTypeInfo {
+                     exp2 = Nodes.ExpMultiTo1Node.create(
+                        self.nodeManager, exp2.$pos,
+                        [ dddType.$typeInfo.$nilableTypeInfo ], exp2 );
+                  }
                }
             }
             

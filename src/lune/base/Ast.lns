@@ -141,6 +141,8 @@ pub interface LowSymbol {
    pub fn get_hasAccessFromClosure(): bool;
    /** 変換モジュール用パラメータ */
    pub fn get_convModuleParam():stem!;
+   /** */
+   pub fn get_staticFlag(): bool;
 }
 
 pub proto abstract class SymbolInfo extend (LowSymbol) ;
@@ -819,7 +821,9 @@ pub enum MethodKind {
 
 指定クラスが派生クラスだった場合、親クラスのメソッドも取得する。
 */
-pub fn getAllMethodName( classInfo:&TypeInfo, kind:MethodKind ) : &Util.OrderedSet<str> {
+pub fn getAllNameForKind( classInfo:&TypeInfo, kind:MethodKind,
+                          symbolKind:SymbolKind ) : &Util.OrderedSet<str>
+{
    let mut nameSet = new Util.OrderedSet<str>();
    fn process( scope:&Scope ) {
       if! let inherit = scope.$inherit {
@@ -827,9 +831,12 @@ pub fn getAllMethodName( classInfo:&TypeInfo, kind:MethodKind ) : &Util.OrderedS
       }
       forsort symbolInfo in scope.$symbol2SymbolInfoMap {
          switch symbolInfo.$kind {
-            case .Mtd {
-               if symbolInfo.$name ~= "__init" {
-                  let staticFlag = symbolInfo.$typeInfo.$staticFlag;
+            case symbolKind {
+               if symbolKind == .Mtd and symbolInfo.$name == "__init" {
+                  // ピックアップ対象外
+               }
+               else {
+                  let staticFlag = symbolInfo.$staticFlag;
                   if kind == .All or
                      kind == .Static and staticFlag or
                      kind == .Object and not staticFlag
@@ -846,6 +853,10 @@ pub fn getAllMethodName( classInfo:&TypeInfo, kind:MethodKind ) : &Util.OrderedS
       process( scope );
    }
    return nameSet;
+}
+
+pub fn getAllMethodName( classInfo:&TypeInfo, kind:MethodKind ) : &Util.OrderedSet<str> {
+   return getAllNameForKind( classInfo, kind, .Mtd );
 }
 
 
@@ -1522,18 +1533,18 @@ pub let dummySymbol =
 
 pub fn Scope.addStaticVar(
    argFlag:bool, canBeLeft:bool, name:str, pos:&Parser.Position!,
-   typeInfo: &TypeInfo, mutable:MutMode ) mut
+   typeInfo: &TypeInfo, mutable:MutMode ) mut : &SymbolInfo
 {
-   self.add( argFlag and SymbolKind.Arg or SymbolKind.Var,
-             canBeLeft, true, name, pos, typeInfo, .Local, true, mutable, true );
+   return self.add( argFlag and SymbolKind.Arg or SymbolKind.Var,
+                    canBeLeft, true, name, pos, typeInfo, .Local, true, mutable, true );
 }
 
 pub fn Scope.addVar(
    accessMode:AccessMode, name:str, pos:&Parser.Position!,
-   typeInfo: &TypeInfo, mutable:MutMode, hasValueFlag:bool ) mut
+   typeInfo: &TypeInfo, mutable:MutMode, hasValueFlag:bool ) mut : &SymbolInfo
 {
-   self.add( SymbolKind.Var, true, true, name, pos, typeInfo,
-             accessMode, false, mutable, hasValueFlag );
+   return self.add( SymbolKind.Var, true, true, name, pos, typeInfo,
+                    accessMode, false, mutable, hasValueFlag );
 }
 
 
@@ -1648,63 +1659,55 @@ pub fn dumpScope( workscope: &Scope!, workprefix:str ) {
 }
 
 /**
-このスコープ内の処理から、 symbol シンボルにアクセスする際の処理。
+スコープを遡って、クロージャのシンボルを登録する。
 
-@param moduleScope このモジュールの最上位スコープ
-@param symbol シンボル
+事前に isClosureAccess() で、 symbol がクロージャであることを判定しておく必要がある。
 */
-pub fn Scope.accessSymbol( moduleScope:&Scope, symbol:&SymbolInfo) mut
-{
-   /**
-   関数スコープに、クロージャのシンボルを登録する。
-   */
-   fn setClosure( funcType:&TypeInfo ) {
+pub fn Scope.setClosure( symbol:&SymbolInfo ) mut {
+   let targetFuncType = symbol.$namespaceTypeInfo;
+   let mut funcType = self.getNamespaceTypeInfo();
+   
+   while true {
       let mut funcScope = unwrap funcType.$scope;
       if not funcScope.closureSymMap[ symbol.$symbolId ] {
          funcScope.closureSymMap[ symbol.$symbolId ] = symbol;
          funcScope.closureSym2NumMap[ symbol ] = #funcScope.closureSymList;
          funcScope.closureSymList.insert( symbol );
-         if not funcScope.isRoot() {
-            funcScope.parent.accessSymbol( moduleScope, symbol );
-         }
-         if not symbol.$hasAccessFromClosure {
-            symbol.set_hasAccessFromClosure( true );
-         }
+         funcType = funcScope.parent.getNamespaceTypeInfo();
       }
-      // switch symbol.$accessFromClosure {
-      //    case .None {
-      //       symbol.set_accessFromClosure( accessMode );
-      //       funcScope.parent.accessSymbol(
-      //          moduleScope, symbol, accessMode );
-      //    }
-      //    case .Read {
-      //       if accessMode == .Write {
-      //          symbol.set_accessFromClosure( accessMode );
-      //          funcScope.parent.accessSymbol(
-      //             moduleScope, symbol, accessMode );
-      //       }
-      //    }
-      // }
-      // if not funcScope.closureSymMap[ symbol.$symbolId ] {
-      //    funcScope.closureSymMap[ symbol.$symbolId ] = symbol;
-      //    funcScope.closureSym2NumMap[ symbol ] = #funcScope.closureSymList;
-      //    funcScope.closureSymList.insert( symbol );
-      // }
+      else {
+         break;
+      }
+      if funcType == targetFuncType {
+         break;
+      }
    }
+   if not symbol.$hasAccessFromClosure {
+      symbol.set_hasAccessFromClosure( true );
+   }
+}
 
+/**
+@param moduleScope このモジュールの最上位スコープ
+@param symbol シンボル
+*/
+pub fn Scope.isClosureAccess( moduleScope:&Scope, symbol:&SymbolInfo) : bool
+{
    switch symbol.$kind {
-      case .Var, .Arg {
+      case .Var, .Arg, .Fun {
          if symbol.$scope == moduleScope or symbol.$scope == rootScope {
             // symbol が、最上位スコープで定義されているなら、
             // 大域変数なのでクロージャではない
          }
          elseif symbol.$name == "self" {
-            // self の場合、メソッド内からのアクセスはクロージャではない
             let funcType = self.getNamespaceTypeInfo();
-            if not funcType.$parentInfo.isInheritFrom(
+            if funcType.$parentInfo.isInheritFrom(
                symbol.$namespaceTypeInfo.$parentInfo ## )
             {
-               setClosure( funcType );
+               // self の場合、メソッド内からのアクセスはクロージャではない
+            }
+            else {
+               return true;
             }
          }
          else {
@@ -1713,12 +1716,28 @@ pub fn Scope.accessSymbol( moduleScope:&Scope, symbol:&SymbolInfo) mut
             let funcType = self.getNamespaceTypeInfo();
             if funcType ~= symbol.$namespaceTypeInfo {
                // クロージャならシンボル情報を登録する。
-               setClosure( funcType );
+               return true;
             }
          }
       }
    }
+   return false;
 }
+
+
+/**
+@param moduleScope このモジュールの最上位スコープ
+@param symbol シンボル
+*/
+pub fn Scope.accessSymbol( moduleScope:&Scope, symbol:&SymbolInfo ) mut
+{
+   if self.isClosureAccess( moduleScope, symbol ) {
+      self.setClosure( symbol );
+   }
+}
+
+
+
 
 /**
 
@@ -3075,7 +3094,7 @@ pub class NormalTypeInfo extend TypeInfo {
    // この型の nilable 版の TypeInfo。 無効な場合は headTypeInfo。
    pri let mut nilableTypeInfo: &TypeInfo { pub };
    // このメソッドの mutMode。
-   pri let mutMode: MutMode {pub};
+   pri let mut mutMode: MutMode {pub,pub};
 
    pri let alt2typeMap:Map<&TypeInfo,&TypeInfo>;
 

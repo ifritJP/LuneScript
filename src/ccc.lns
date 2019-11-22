@@ -6,6 +6,87 @@ let mut g_val = 100;
 
 {
    _section();
+   class Hoge {
+   }
+
+   class Sub extend (Mapping)
+   {
+      let work1:real;
+      static let work1_2:int;
+      let work2:str;
+
+      __init {
+         Sub.work1_2 = 0;
+      }
+   }
+
+   class Sub2 extend Sub {
+      let work3:int;
+   }
+
+   class Test extend (Mapping)
+   {
+      let val1:int;
+      let val2:str;
+      let val3:Sub;
+   }
+
+   fn func( test:&Test ) {
+      forsort val, key in test._toMap() {
+         if key == "val3" {
+            forsort val2, key2 in val@@Map<str,stem> {
+               print( key, key2, val2 );
+            }
+         }
+         else {
+            print( key, val );
+         }
+      }
+   }
+
+   fn func2( sub:&Sub ) {
+      forsort val, key in sub._toMap() {
+         print( key, val );
+      }
+   }
+
+   func( new Test( 100, "abc", new Sub( 1.0, "xyz" ) ) );
+   func2( new Sub2( 1.5, "ABC", 10 ) );
+}
+{
+   _section();
+   class Test {
+      static fn func() {
+      }
+      pub fn sub() {
+         print( "hoge" );
+      }
+      
+   }
+   let test = new Test();
+   test.sub();
+}
+{
+   _section();
+   class Test {
+      fn bar() {
+         print( "hoge" );
+      }
+      pub fn func() {
+         fn sub() {
+            self.bar();
+         }
+         fn foo() {
+            sub();
+         }
+         foo();
+      }
+   }
+   let test = new Test();
+   test.func();   
+}
+{
+   _section();
    class Super {
       let val:int;
       pub fn func() mut {
@@ -763,20 +844,17 @@ return obj
          return Test1.val;
       }
    }
-   fn func() {
-      let val2 = 10000;
-      class Test2 {
-         static let val:int;
-         __init {
-            Test2.val = 200 + val2;
-         }
-         pub static fn func(): int {
-            return Test2.val + Test1.func();
-         }
+   let val2 = 10000;
+   class Test2 {
+      static let val:int;
+      __init {
+         Test2.val = 200 + val2;
       }
-      print( Test2.func(), val3 );
+      pub static fn func(): int {
+         return Test2.val + Test1.func();
+      }
    }
-   func();
+   print( Test2.func(), val3 );
 }
 {
    _section();

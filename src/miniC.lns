@@ -1,11 +1,12 @@
-class Super {
-   let val:int;
-   pub fn func() mut {
-      fn sub() {
-         print( "%s" (self.val) );
-      }
-      print( self.val );
+pub interface IF_test {
+   pub fn func();
+}
+
+pub abstract class Test_class extend (IF_test) {
+}
+
+pub class Sub_class extend Test_class {
+   pub fn func() {
+      print( __func__ );
    }
 }
-let mut test = new Super( 1 );
-test.func();
