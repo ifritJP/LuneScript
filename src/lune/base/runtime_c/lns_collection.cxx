@@ -243,6 +243,36 @@ lns_stem_t lns_mtd_List_refAt(
     return lns_global.nilStem;
 }
 
+void lns_mtd_List_setAt(
+    lns_env_t * _pEnv, lns_any_t * pListAny, int index, lns_stem_t val )
+{
+    if ( index <= 0 ) {
+        lns_abort( "illegal index" );
+    }
+    
+    SETQ( &val );
+
+    if ( (int)lns_obj_List_obj( pListAny )->size() >= index ) {
+        // リストの要素の間に一旦挿入する
+        lns_ListIterator it = lns_obj_List_obj( pListAny )->begin() + index - 1;
+        lns_obj_List_obj( pListAny )->insert( it, val );
+        it++;
+
+        // 挿入した後ろの要素を削除する
+        lns_stem_t item = *it;
+        lns_obj_List_obj( pListAny )->erase( it );
+        lns_decre_ref_alter( _pEnv, item );
+    }
+    else {
+        int count = index - lns_obj_List_obj( pListAny )->size() - 1;
+        for ( ; count > 0; count-- ) {
+            lns_obj_List_obj( pListAny )->push_back( lns_global.nilStem );
+        }
+        lns_obj_List_obj( pListAny )->push_back( val );
+    }
+}
+
+
 
 /**
    List.unpack() 処理
@@ -362,7 +392,7 @@ static bool lns_mtd__CmpLune( lns_stem_t val1, lns_stem_t val2 )
 lns_stem_t lns_mtd_List_sort(
     lns_env_t * _pEnv, lns_any_t * pObj, lns_stem_t pForm )
 {
-    if ( pForm.type == lns_stem_type_nil ) {
+    if ( pForm.type == lns_stem_type_nil || pForm.type == lns_stem_type_none ) {
         std::sort( lns_obj_List_obj( pObj )->begin(),
                    lns_obj_List_obj( pObj )->end(), lns_mtd__Cmp );
     }
@@ -474,8 +504,8 @@ lns_mtd_Set_t lns_mtd_Set = {
     (lns_method_t*)lns_mtd_Set_add,
     (lns_method_t*)lns_mtd_Set_del,
     (lns_method_t*)lns_mtd_Set_has,
-    (lns_method_t*)lns_mtd_Set_and_,
-    (lns_method_t*)lns_mtd_Set_or_,
+    (lns_method_t*)lns_mtd_Set_and,
+    (lns_method_t*)lns_mtd_Set_or,
     (lns_method_t*)lns_mtd_Set_sub,
     (lns_method_t*)lns_mtd_Set_clone,
     (lns_method_t*)lns_mtd_Set_len,
@@ -598,8 +628,8 @@ bool lns_mtd_Set_has(
     return contains;
 }
 
-lns_stem_t lns_mtd_Set_and_(
-    lns_env_t * _pEnv, lns_any_t * pObj, lns_stem_t pSet )
+lns_any_t * lns_mtd_Set_and(
+    lns_env_t * _pEnv, lns_any_t * pObj, lns_any_t * pSet )
 {
     lns_ListClass list;
     {
@@ -608,7 +638,7 @@ lns_stem_t lns_mtd_Set_and_(
         lns_SetIterator end = lns_obj_Set_obj( pObj )->end();
     
         for ( ; it != end; it++ ) {
-            if ( !lns_mtd_Set_has_( pSet.val.pAny, *it ) ) {
+            if ( !lns_mtd_Set_has_( pSet, *it ) ) {
                 list.push_back( *it );
             }
         }
@@ -616,8 +646,8 @@ lns_stem_t lns_mtd_Set_and_(
 
     {
         // 集合から list の要素を除外
-        lns_ListIterator it = lns_obj_List_obj( pObj )->begin();
-        lns_ListIterator end = lns_obj_List_obj( pObj )->end();
+        lns_ListIterator it = list.begin();
+        lns_ListIterator end = list.end();
         
         for ( ; it != end; it++ ) {
             lns_SetIterator setIt = lns_obj_Set_obj( pObj )->find( *it );
@@ -628,34 +658,34 @@ lns_stem_t lns_mtd_Set_and_(
         }
     }
     
-    return LNS_STEM_ANY( pObj );
+    return pObj;
 }
 
-lns_stem_t lns_mtd_Set_or_(
-    lns_env_t * _pEnv, lns_any_t * pObj, lns_stem_t pSet )
+lns_any_t * lns_mtd_Set_or(
+    lns_env_t * _pEnv, lns_any_t * pObj, lns_any_t * pSet )
 {
-    lns_SetIterator it = lns_obj_Set_obj( pSet.val.pAny )->begin();
-    lns_SetIterator end = lns_obj_Set_obj( pSet.val.pAny )->begin();
+    lns_SetIterator it = lns_obj_Set_obj( pSet )->begin();
+    lns_SetIterator end = lns_obj_Set_obj( pSet )->end();
     
     for ( ; it != end; it++ ) {
         lns_mtd_Set_add( _pEnv, pObj, *it );
     }
     
-    return LNS_STEM_ANY( pObj );
+    return pObj;
 }
 
-lns_stem_t lns_mtd_Set_sub(
-    lns_env_t * _pEnv, lns_any_t * pObj, lns_stem_t pSet )
+lns_any_t * lns_mtd_Set_sub(
+    lns_env_t * _pEnv, lns_any_t * pObj, lns_any_t * pSet )
 {
     lns_ListClass list;
 
     {
         // and 集合の要素を抽出
         lns_SetIterator it = lns_obj_Set_obj( pObj )->begin();
-        lns_SetIterator end = lns_obj_Set_obj( pObj )->begin();
+        lns_SetIterator end = lns_obj_Set_obj( pObj )->end();
     
         for ( ; it != end; it++ ) {
-            if ( lns_mtd_Set_has_( pSet.val.pAny, *it ) ) {
+            if ( lns_mtd_Set_has_( pSet, *it ) ) {
                 list.push_back( *it );
             }
         }
@@ -663,8 +693,8 @@ lns_stem_t lns_mtd_Set_sub(
 
     {
         // 抽出した要素を除外
-        lns_ListIterator it = lns_obj_List_obj( pObj )->begin();
-        lns_ListIterator end = lns_obj_List_obj( pObj )->end();
+        lns_ListIterator it = list.begin();
+        lns_ListIterator end = list.end();
         
         for ( ; it != end; it++ ) {
             lns_decre_ref_alter( _pEnv, *it );
@@ -674,7 +704,7 @@ lns_stem_t lns_mtd_Set_sub(
     }
     
     
-    return LNS_STEM_ANY( pObj );
+    return pObj;
 }
 
 lns_any_t * lns_mtd_Set_clone( lns_env_t * _pEnv, lns_any_t * pObj )
@@ -682,7 +712,7 @@ lns_any_t * lns_mtd_Set_clone( lns_env_t * _pEnv, lns_any_t * pObj )
     lns_any_t * pAny = lns_class_Set_new( _pEnv );
 
     lns_SetIterator it = lns_obj_Set_obj( pObj )->begin();
-    lns_SetIterator end = lns_obj_Set_obj( pObj )->begin();
+    lns_SetIterator end = lns_obj_Set_obj( pObj )->end();
     
     for ( ; it != end; it++ ) {
         lns_stem_t stem = *it;

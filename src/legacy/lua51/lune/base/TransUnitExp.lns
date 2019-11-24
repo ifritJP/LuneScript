@@ -2418,6 +2418,8 @@ fn TransUnit.analyzeExpOp2(
   
 
             if opTxt == "=" {
+               exp.setLValue();
+               
                // if! let refNode = exp@@@Nodes.ExpRefNode {
                //    let refSymbol = refNode.$symbolInfo;
                //    self.scope.accessSymbol( self.moduleScope, refSymbol, .Write );

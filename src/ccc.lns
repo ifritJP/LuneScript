@@ -6,6 +6,59 @@ let mut g_val = 100;
 
 {
    _section();
+   form Func( ... );
+
+   fn func( val:stem!, val2:stem!, ... )
+   {
+      print( val, val2, ... );
+   }
+
+   let sub:Func = func;
+   sub( 1, 2, 3, 4 );
+}
+
+{
+   _section();
+   form Func1( ...<stem!> );
+   form Func2( val:stem! );
+   fn sub0( func:form ) {
+      func( 1 );
+   }
+   fn sub1( func:Func1 ) {
+      func( 1 );
+   }
+   fn sub2( func:Func2 ) {
+      func( 1 );
+   }
+   let func:form = fn ( val:stem! ) { print( val ); };
+   sub0( func );  // 1
+   sub0( fn ( val:stem! ) { print( val ); } );  // 1
+   sub1( fn ( val:stem! ) { print( val ); } );  // 1
+   sub2( fn ( val:stem! ) { print( val ); } );  // 1
+}
+
+{
+   _section();
+   pub interface IF_test {
+      pub fn func();
+   }
+
+   abstract class Test_class extend (IF_test) {
+   }
+
+   class Sub_class extend Test_class {
+      pub fn func() {
+         print( "hoge" );
+      }
+   }
+
+   fn func( test:IF_test ) {
+      test.func();
+   }
+   func( new Sub_class() );
+}
+{
+   _section();
    class Hoge {
    }
 

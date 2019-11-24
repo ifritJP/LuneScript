@@ -212,7 +212,7 @@ lns_any_t * mtd_lns_string_sub(
 {
     const lns_str_t * pStr = &arg1->val.str;
     int lastIndex;
-    if ( arg3.type == lns_stem_type_nil || arg3.type == lns_stem_type_none ) {
+    if ( LNS_IS_NILNONE( arg3 ) ) {
         lastIndex = pStr->len - 1;
     }
     else {

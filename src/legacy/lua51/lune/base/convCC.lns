@@ -304,6 +304,22 @@ fn isClassMember( symbol:&Ast.LowSymbol ) mut : bool
    return false;
 }
 
+/**
+区切り記号で囲んでいる文字列を C の文字列に変換する。
+*/
+fn str2cstr( txt:str ) : str {
+   let mut work = txt;
+   if string.find( work, '^```' ## ) {
+      work = ("%q" ( work.sub( 4, -4 ) )).gsub( "\\\n", "\\n" );
+   }
+   elseif string.find( work, "^'" ## ) {
+      work = '%q' ( work.sub( 2, -2 ) );
+   }
+   work = work.gsub( "\\9", "\\t" );
+   return work;
+}
+
+
 class ModuleCtrl {
    pri let moduleInfoManager: &Ast.ModuleInfoManager;
    pri let typeNameCtrl: &Ast.TypeNameCtrl;
@@ -554,6 +570,10 @@ class ModuleCtrl {
    }
    pub fn getCallFormName( typeInfo:&Ast.TypeInfo ):str {
       return "lns_call_formFunc_%s" ( self.getFullName( typeInfo ) );
+   }
+
+   pub fn getFuncCastWrapName( orgFunc:&Ast.TypeInfo, castType:&Ast.TypeInfo ) : str {
+      return "wrap_%s_2_%s" ( self.getFuncName( orgFunc ), self.getFuncName( castType ) );
    }
 }
 
@@ -1574,6 +1594,7 @@ pub override fn convFilter.processRoot(
       if self.canConv {
          _processOnlyPub( nodeManager.getExpToDDDNodeList() );
          _processOnlyPub( nodeManager.getLiteralStringNodeList() );
+         _processOnlyPub( nodeManager.getExpCastNodeList() );
       }
 
       self.processMode = .WideScopeVer;
@@ -1638,6 +1659,10 @@ pub override fn convFilter.processRoot(
       foreach dddNode in nodeManager.getExpToDDDNodeList() {
          filter( dddNode, self, node );
       }
+      foreach castNode in nodeManager.getExpCastNodeList() {
+         filter( castNode, self, node );
+      }
+
 
       self.processMode = .InitFuncSym;
       self.writeln( "static void initFuncSym( %s _pEnv, %s pBlock )\n{"
@@ -3382,7 +3407,7 @@ fn convFilter.processMapping(
             let valKind = getValKind( memberSym.$typeInfo );
             let mut valTxt:str! = getAccessMember( className, "pObj", varName );
             switch valKind {
-               case .Prim {
+               case .Prim, .Stem {
                }
                case .Any {
                   if memberSym.$typeInfo.$srcTypeInfo == Ast.builtinTypeString {
@@ -3781,12 +3806,11 @@ fn processIFMethodDataInit(
    stream:Util.SourceStream,
    moduleCtrl:&ModuleCtrl, classType:&Ast.TypeInfo, orgClassType:&Ast.TypeInfo )
 {
-   if not classType.$abstractFlag {
-      if classType.hasBase() {
-         processIFMethodDataInit(
-            stream, moduleCtrl, classType.$baseTypeInfo, orgClassType );
-      }
-      
+   if classType.hasBase() {
+      processIFMethodDataInit(
+         stream, moduleCtrl, classType.$baseTypeInfo, orgClassType );
+   }
+   if not orgClassType.$abstractFlag {
       let className = moduleCtrl.getClassCName( orgClassType );
       foreach ifType in classType.$interfaceList {
          let ifName = moduleCtrl.getClassCName( ifType );
@@ -4730,6 +4754,49 @@ fn processGetMRet( stream:Util.SourceStream, moduleCtrl:ModuleCtrl,
    }
 }
 
+fn needsWrapper( orgFunc:&Ast.TypeInfo, castType:&Ast.TypeInfo ): bool {
+   if #orgFunc.$argTypeInfoList == #castType.$argTypeInfoList and
+      #orgFunc.$retTypeInfoList == #castType.$retTypeInfoList
+   {
+      fn check( typeList1:&List<&Ast.TypeInfo>, typeList2:&List<&Ast.TypeInfo> ) : bool
+      {
+         foreach type1, index in typeList1 {
+            if not type1.equals( typeList2[ index ] ## ) {
+               return false;
+            }
+         }
+         return true;
+      }
+      if check( orgFunc.$argTypeInfoList, castType.$argTypeInfoList ) and
+         check( orgFunc.$retTypeInfoList, castType.$retTypeInfoList )
+      {
+         // 引数、戻り値が等しい場合は wrapper は不要。
+         return false;
+      }
+   }
+   return true;
+}
+
+fn convFilter.processFuncCast2Form(
+   castType:&Ast.TypeInfo, orgFunc:&Ast.TypeInfo  ) mut
+{
+   if not needsWrapper( orgFunc, castType ) {
+      self.write( self.getFunc2any( orgFunc ) );
+      return;
+   }
+   
+   let closureSymList = unwrap orgFunc.$scope$.$closureSymList default [];
+   
+   let argList = castType.$argTypeInfoList;
+   let hasDDD =
+      #argList > 0 and argList[ #argList ].$kind == .DDD or false;
+
+   self.write( self.getPrepareClosure(
+      self.moduleCtrl.getFuncCastWrapName( orgFunc, castType ),
+      #argList, hasDDD, closureSymList ) );
+}
+
+
 
 /**
 Node の値を変数にセットする処理を出力する。
@@ -4753,7 +4820,8 @@ fn convFilter.processValForSetOp(
       }
       else {
          if exp.$expType.$kind == .Func {
-            self.write( self.getFunc2any( exp.$expType ) );
+            self.processFuncCast2Form( dstTypeInfo, exp.$expType );
+            // self.write( self.getFunc2any( exp.$expType ) );
          }
          else {
             filter( exp, self, parent );
@@ -4930,18 +4998,44 @@ fn convFilter.processSetValSingleNode(
       case Nodes.NodeKind.$ExpRefItem {
          if! let refItemNode = var@@@Nodes.ExpRefItemNode {
             let dstType = refItemNode.$val.$expType;
-            if dstType.$kind == .Map {
-               self.write( "lns_mtd_Map_add( _pEnv, " );
-               self.processVal2any( refItemNode.$val, var );
-               self.write( ", " );
-               if! let indexNode = refItemNode.$index {
-                  self.processVal2stem( indexNode, var );
+            switch dstType.$kind {
+               case .Map {     
+                  self.write( "lns_mtd_Map_add( _pEnv, " );
+                  self.processVal2any( refItemNode.$val, var );
+                  self.write( ", " );
+                  if! let indexNode = refItemNode.$index {
+                     self.processVal2stem( indexNode, var );
+                  }
+                  else {
+                     self.write(
+                        getLiteralStrStem( '"%s"' (unwrap refItemNode.$symbol) ) );
+                  }
+                  self.write( ", " );
+                  self.processValForSetOp(
+                     parent, .Stem, dstType.$itemTypeInfoList[ 2 ],
+                     exp, index, firstMRet );
+                  self.write( ")" );
                }
-               self.write( ", " );
-               self.processValForSetOp(
-                  parent, .Stem, dstType.$itemTypeInfoList[ 2 ],
-                  exp, index, firstMRet );
-               self.write( ")" );
+               case .List {
+                  self.write( "void lns_mtd_List_setAt( _pEnv, " );
+                  self.processVal2any( refItemNode.$val, var );
+                  self.write( ", " );
+                  if! let indexNode = refItemNode.$index {
+                     self.processVal2stem( indexNode, var );
+                  }
+                  else {
+                     self.write(
+                        getLiteralStrStem( '"%s"' (unwrap refItemNode.$symbol) ) );
+                  }
+                  self.write( ", " );
+                  self.processValForSetOp(
+                     parent, .Stem, dstType.$itemTypeInfoList[ 2 ],
+                     exp, index, firstMRet );
+                  self.write( ")" );
+               }
+               default {
+                  Util.err( "not support type -- %s" ( dstType.$kind.$_txt )  );
+               }
             }
          }
       }
@@ -6958,7 +7052,10 @@ pub override fn convFilter.processDeclClass(
       case .DefClass {
          if classType.$kind == .Class {
             self.processDeclClassDef( node );
-            self.processMapping( node, classType, .SourcePri );
+            self.processMapping(
+               node, classType,
+               Ast.isPubToExternal( classType.$accessMode ) and
+               Out2HMode.SourcePub or Out2HMode.SourcePri );
          }
       }
       case .Form, .InitModule {
@@ -7737,9 +7834,200 @@ pub override fn convFilter.processExpMultiTo1(
    }
 }
 
+
+
+fn convFilter.processStme2Val( dstType:&Ast.TypeInfo, srcStemTxt:str ) mut
+{
+   switch dstType {
+      case Ast.builtinTypeInt, Ast.builtinTypeChar {
+         self.write( "lns_stem2int( " );
+         self.write( srcStemTxt );
+         self.write( ")" );
+      }
+      case Ast.builtinTypeReal {
+         self.write( "lns_stem2real( " );
+         self.write( srcStemTxt );
+         self.write( ")" );
+      }
+      case Ast.builtinTypeBool {
+         self.write( "lns_stem2bool( " );
+         self.write( srcStemTxt );
+         self.write( ")" );
+      }
+      default {
+         self.write( srcStemTxt );
+         if getValKind( dstType ) == .Any {
+            self.write( accessAny );
+         }
+      }
+   }
+}
+
+fn convFilter.processFuncCast( node: Nodes.ExpCastNode ) mut
+{
+   
+   let castType = node.$castType;
+   switch castType.$kind {
+      case .Func, .Form, .FormFunc {
+      }
+      default {
+         return;
+      }
+   }
+
+   let orgFunc = node.$exp.$expType;
+   let closureSymList = unwrap orgFunc.$scope$.$closureSymList default [];
+
+   if not needsWrapper( orgFunc, castType ) {
+      return;      
+   }
+
+   
+   self.write( "static %s %s( %s _pEnv"
+               ( getCRetType( castType.$retTypeInfoList),
+                 self.moduleCtrl.getFuncCastWrapName( orgFunc, castType ),
+                 cTypeEnvP ) );
+   if #closureSymList > 0 {
+      self.write( ", %s _pForm" (cTypeAnyP) );
+   }
+   
+   foreach argType, index in castType.$argTypeInfoList {
+      self.write( ", " );
+      self.write( "%s arg%d" (getCType( argType ), index ) );
+   }
+
+   self.write( ")" );
+   if self.processMode == .Prototype {
+      self.writeln( ";" );
+      return;
+   }
+   
+   self.writeln( "// %d" (node.$pos.lineNo) );
+   self.writeln( "{" );
+   self.pushIndent( ## );
+
+   foreach typeInfo, index in orgFunc.$argTypeInfoList {
+      self.write( "%s var%d = " (getCType(typeInfo), index) );
+
+      let dstType = orgFunc.$argTypeInfoList[ index ];
+      let srcType = castType.$argTypeInfoList[ index ];
+      
+      if index == #castType.$argTypeInfoList and
+          ( #orgFunc.$argTypeInfoList ~= #castType.$argTypeInfoList or
+            not dstType.equals( srcType ## ) )
+      {
+         if srcType.$kind == .DDD and dstType.$kind ~= .DDD {
+            let dddSym = "arg%d%s" (index,accessAny);
+            self.processStme2Val( dstType, "lns_fromDDD( %s, 0 )" (dddSym) );
+            self.writeln( ";" );
+            for subIndex = index + 1, #orgFunc.$argTypeInfoList {
+               let dstTypeSub = orgFunc.$argTypeInfoList[ subIndex ];
+               self.write( "%s var%d = " (getCType(typeInfo), subIndex) );
+               if dstTypeSub.$kind == .DDD {
+                  self.write(
+                     "lns_createSubDDD( _pEnv, %d, arg%d )"
+                     (subIndex - index, index ) );
+               }
+               else {
+                  let dddSymSub = "arg%d%s" (index,accessAny);
+                  self.processStme2Val(
+                     dstTypeSub, "lns_fromDDD( %s, %d )" (dddSymSub, subIndex - index) );
+               }
+               self.writeln( ";" );
+            }
+            break;
+         }
+         else {
+            self.write( "arg%d" (index) );
+         }
+      }
+      else {
+         self.write( "arg%d" (index) );
+      }
+      
+      self.writeln( ";" );
+   }
+
+   // 関数コール
+   if #orgFunc.$retTypeInfoList > 0 {
+      self.write( "%s ret = " (getCRetType(orgFunc.$retTypeInfoList) ) );
+   }
+   self.write( "%s( _pEnv" (self.moduleCtrl.getFuncName( orgFunc ) ) );
+   if #closureSymList > 0 {
+      self.write( ", _pForm" );
+   }
+   foreach typeInfo, index in orgFunc.$argTypeInfoList {
+      self.write( ", var%s" (index) );
+   }
+   self.writeln( ");" );
+
+   // 戻り値処理
+   if #castType.$retTypeInfoList > 0 {
+      self.write( "return " );
+
+      if #orgFunc.$retTypeInfoList == 0 {
+         if #castType.$retTypeInfoList > 1 {
+            self.write( "lns_global.ddd0" );
+         }
+         else {
+            self.write( "lns_global.nilStem" );
+         }
+      }
+      elseif #orgFunc.$retTypeInfoList == 1 {
+         if #castType.$retTypeInfoList > 1 {
+            if orgFunc.$retTypeInfoList[ 1 ].$kind == .DDD {
+               self.write( "ret" );
+            }
+            else {
+               self.write( "lns_createMRet( _pEnv, false, 1, " );
+
+               self.process2stem(
+                  getValKind( orgFunc.$retTypeInfoList[ 1 ] ),
+                  orgFunc.$retTypeInfoList[ 1 ], node,             
+                  fn () {
+                     self.write( "ret" );
+                  });
+               self.write ( ")" );
+            }
+         }
+         else {
+            if getValKind( castType.$retTypeInfoList[ 1 ] ) == .Stem {
+               self.process2stem(
+                  getValKind( orgFunc.$retTypeInfoList[ 1 ] ),
+                  orgFunc.$retTypeInfoList[ 1 ], node,             
+                  fn () {
+                     self.write( "ret" );
+                  });
+            }
+            else {
+               self.write( "ret" );
+            }
+         }
+      }
+      else {
+         self.write( "ret" );
+      }
+      self.writeln( ";" );
+   }
+
+   
+   self.popIndent();
+   self.writeln( "}" );
+}
+
 pub override fn convFilter.processExpCast(
    node: Nodes.ExpCastNode, opt: Opt ) mut
 {
+   switch self.processMode {
+      case .Prototype, .Intermediate {
+         self.processFuncCast( node );
+         return;
+      }
+      default {
+      }
+   }
+
+   
    let exp = node.$exp;
    let expType = exp.$expType;
    let nodeExpType = node.$expType;
@@ -7758,11 +8046,12 @@ pub override fn convFilter.processExpCast(
                }
             }
             case .FormFunc {
-               self.write( self.getFunc2any( expType ) );
+               self.processFuncCast2Form( castType, expType );
+               //self.write( self.getFunc2any( expType ) );
             }
             case .Form {
-               // pending 本来は処理が異なる
-               self.write( self.getFunc2any( expType ) );
+               self.processFuncCast2Form( castType, expType );
+               //self.write( self.getFunc2any( expType ) );
             }
             default {
                filter( exp, self, node );
@@ -8131,8 +8420,11 @@ pub override fn convFilter.processExpRefItem(
 
    let val = node.$val;
    let valType = val.$expType;
+
+   let parent = opt.node;
    
    if valType.equals( Ast.builtinTypeString ##) {
+      // str のインデックスアクセスは、文字を返す
       self.accessPrimVal( val, node );
       self.write( "->val.str.pStr[" );
       if! let indexNode = node.$index {
@@ -8142,6 +8434,9 @@ pub override fn convFilter.processExpRefItem(
          error( "index is nil" );
       }
       self.write( "- 1 ]" );
+   }
+   elseif node.$isLValue {
+      Util.err( "not support -- L-Value" );
    }
    else {
       processToIF( self.stream, self.moduleCtrl, node.$expType,
@@ -8164,7 +8459,8 @@ pub override fn convFilter.processExpRefItem(
                                self.processVal2stem( index, node );
                             }
                             else {
-                               self.write( getLiteralStrAny( unwrap node.$symbol ) );
+                               self.write(
+                                  getLiteralStrStem( '"%s"' (unwrap node.$symbol) ) );
                             }
                             self.write( ")" );
                          }
@@ -8461,7 +8757,7 @@ pub override fn convFilter.processTestBlock( node: Nodes.TestBlockNode, opt: Opt
 
       // pending: 本来はテスト実行と、結果出力は TestCtrl で行なうが、暫定でここで行なう。
       self.writeln( "lns_init_lune_base_Testing( _pEnv );" );
-      self.writeln( "lune_base_Testing_outputAllResult( _pEnv, lns_io_stderr );" );
+      self.writeln( "lune_base_Testing_outputAllResult( _pEnv, lns_io_stdout );" );
    }
 }
 
@@ -8534,7 +8830,7 @@ fn convFilter.processLiteralVal( exp:&Nodes.Node, parent:&Nodes.Node ) mut {
       case Ast.builtinTypeString {
          if! let strNode = exp@@@Nodes.LiteralStringNode { 
             if not strNode.$expList {
-               self.write( "lns_imdStr( %s )" (strNode.$token.txt ) );
+               self.write( "lns_imdStr( %s )" (str2cstr( strNode.$token.txt ) ) );
                return;
             }
          }
@@ -8826,14 +9122,14 @@ pub override fn convFilter.processLiteralReal(
 pub override fn convFilter.processLiteralString(
    node: Nodes.LiteralStringNode, opt: Opt ) mut
 {
-   let mut txt = node.$token.txt;
-   if string.find( txt, '^```' ## ) {
-      txt = ("%q" ( txt.sub( 4, -4 ) )).gsub( "\\\n", "\\n" );
-   }
-   elseif string.find( txt, "^'" ## ) {
-      txt = '%q' ( txt.sub( 2, -2 ) );
-   }
-   txt = txt.gsub( "\\9", "\\t" );
+   let mut txt = str2cstr( node.$token.txt );
+   // if string.find( txt, '^```' ## ) {
+   //    txt = ("%q" ( txt.sub( 4, -4 ) )).gsub( "\\\n", "\\n" );
+   // }
+   // elseif string.find( txt, "^'" ## ) {
+   //    txt = '%q' ( txt.sub( 2, -2 ) );
+   // }
+   // txt = txt.gsub( "\\9", "\\t" );
 
    switch self.processMode {
       case .Prototype {

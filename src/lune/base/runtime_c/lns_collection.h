@@ -55,6 +55,8 @@ extern "C" {
         lns_env_t * _pEnv, lns_any_t * pObj, lns_stem_t val );
     extern lns_stem_t lns_mtd_List_refAt(
         lns_env_t * _pEnv, lns_any_t * pListAny, int index );
+    extern void lns_mtd_List_setAt(
+        lns_env_t * _pEnv, lns_any_t * pListAny, int index, lns_stem_t val );
     extern lns_stem_t lns_mtd_List_unpack(
         lns_env_t * _pEnv, lns_any_t * pListAny );
     extern lns_stem_t lns_mtd_List_sort(
@@ -97,12 +99,12 @@ extern "C" {
         lns_env_t * _pEnv, lns_any_t * pObj, lns_stem_t val );
     extern bool lns_mtd_Set_has(
         lns_env_t * _pEnv, lns_any_t * pObj, lns_stem_t val );
-    extern lns_stem_t lns_mtd_Set_and_(
-        lns_env_t * _pEnv, lns_any_t * pObj, lns_stem_t pSet );
-    extern lns_stem_t lns_mtd_Set_or_(
-        lns_env_t * _pEnv, lns_any_t * pObj, lns_stem_t pSet );
-    extern lns_stem_t lns_mtd_Set_sub(
-        lns_env_t * _pEnv, lns_any_t * pObj, lns_stem_t pSet );
+    extern lns_any_t *lns_mtd_Set_and(
+        lns_env_t * _pEnv, lns_any_t * pObj, lns_any_t * pSet );
+    extern lns_any_t *lns_mtd_Set_or(
+        lns_env_t * _pEnv, lns_any_t * pObj, lns_any_t * pSet );
+    extern lns_any_t * lns_mtd_Set_sub(
+        lns_env_t * _pEnv, lns_any_t * pObj, lns_any_t * pSet );
     extern lns_any_t * lns_mtd_Set_clone( lns_env_t * _pEnv, lns_any_t * pObj );
     extern lns_int_t lns_mtd_Set_len( lns_env_t * _pEnv, lns_any_t * pObj );
     

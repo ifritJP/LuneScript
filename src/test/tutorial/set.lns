@@ -1,0 +1,53 @@
+
+fn dumpSet( set:&Set<&stem> ) {
+   let mut list:List<&stem> = [];
+   foreach val in set {
+      list.insert( val );
+   }
+   list.sort(##);
+   foreach val in list {
+      io.stdout.write( "%s " ( val ) );
+   }
+   print( "" );
+}
+{
+   let obj = (@ 1, 2, 3, 4 ); // 1 2 3 4
+   dumpSet( obj );
+}
+{
+   let obj:Set<int> = (@);   
+   dumpSet( obj );
+}
+{
+   let mut obj = (@ 1, 2, 3, 4 );
+   obj.add( 0 );  // 0 1 2 3 4
+   obj.del( 2 );  // 0 1 3 4
+   dumpSet( obj );
+}
+{
+   let obj = (@ 1, 2, 3, 4 );
+   print( obj.has( 0 ) );  // false
+   print( obj.has( 1 ) );  // true
+   dumpSet( obj );
+}
+{
+   let mut obj = (@ 1, 2, 3, 4 );
+   print( obj.len() );
+}
+{
+   let obj = (@ 1, 2, 3, 4 );
+   let obj2 = obj.clone();
+   dumpSet( obj );
+}
+{
+   let set1 = (@  1, 2, 3 );
+   let set2 = (@  2, 3, 4 );
+   let set3 = set1.clone().or(set2);   // 1 2 3 4
+   let set4 = set1.clone().and(set2);  // 2 3 
+   let set5 = set1.clone().sub(set2);  // 1
+   dumpSet( set1 );
+   dumpSet( set2 );
+   dumpSet( set3 );
+   dumpSet( set4 );
+   dumpSet( set5 );
+}

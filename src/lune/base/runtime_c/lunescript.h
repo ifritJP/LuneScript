@@ -118,6 +118,9 @@ extern "C" {
         lns_stem_type_any,
     } lns_stem_type_t;
 
+#define LNS_IS_NILNONE( STEM ) \
+    ( STEM.type == lns_stem_type_nil || STEM.type == lns_stem_type_none )
+
     typedef struct {
         lns_stem_type_t type;
         union {

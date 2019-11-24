@@ -214,8 +214,7 @@ lns_stem_t lns_f__load( lns_env_t * _pEnv, lns_any_t * code, lns_stem_t newEnv )
 
         lns_setAnyVal( _pEnv, formObj );
 
-        if ( newEnv.type != lns_stem_type_nil && newEnv.type != lns_stem_type_none )
-        {
+        if ( !LNS_IS_NILNONE( newEnv ) ) {
             lns_abort( "not suport" );
         }
 

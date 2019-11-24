@@ -63,6 +63,18 @@ fn TransUnit.analyzeRefType(
    }
    else {
       name = self.analyzeExpSymbol( firstToken, token, .Symbol, nil, true );
+      let symbolList = name.getSymbolInfo();
+      if #symbolList > 0 {
+         let symbol = symbolList[ 1 ];
+         if symbol.$kind ~= .Typ {
+            self.addErrMess( name.$pos, "illegal type -- %s" ( symbol.$name ) );
+         }
+      }
+      else {
+         self.addErrMess( name.$pos,
+                          "illegal symbol node -- %s"
+                          ( Nodes.getNodeKindName( name.$kind ) ) );
+      }
    }
    return self.analyzeRefTypeWithSymbol(
       accessMode, allowDDD, refFlag, mutFlag, name, parentPub );

@@ -52,3 +52,7 @@
    let list4:List<int> = list or [];
    let list5:List<int> = list or list; // error
 }
+{
+   let val = 1;
+   let list:List<val> = []; // error
+}

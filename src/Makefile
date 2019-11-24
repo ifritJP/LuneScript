@@ -826,7 +826,7 @@ define test-convC-exe
 	@# Lua へのトランスコンパイラ結果で出力が同じになることを確認
 	@(cd $1; ./test.exe | grep -v -e '^:debug:' > work/$3.c.log)
 	$(call exeLune,$1,$4.lns,$5,exe > work/$3.lua.log)
-	-diff $1/work/$3.c.log $1/work/$3.lua.log
+	diff $1/work/$3.c.log $1/work/$3.lua.log
 endef
 
 # lns ソースを C へトランスコンパイルする
@@ -918,5 +918,26 @@ test-start:
 	$(call convC,work/0,test/Sub4.lns)
 	$(call convC,work/0,test/Sub2.lns)
 	$(call test-convC-exe,work/0,test/Sub2.lns,test/Sub2,test/Sub2)
+
+
+define test-tutorialC
+	$(call convC,$1,$(basename $2).lns)
+	$(call test-convC-exe,$1,$2,$(notdir $2),$(basename $2))
+endef
+
+
+test-tutorial:
+	$(call transwork,.,.,,base/convCC)
+	$(LUA) lune/base/base.lua --mkbuiltin lune/base/runtime_c
+	mkdir -p work/0
+	rm -rf work/0/*
+	mkdir -p work/0/work/c
+	cp -a lune work/0
+	cp -a test work/0
+	cp Makefile.ccc work/0
+	$(call test-tutorialC,work/0,test/tutorial/value.lns)
+	$(call test-tutorialC,work/0,test/tutorial/set.lns)
+	$(call test-tutorialC,work/0,test/tutorial/variable.lns)
+	$(call test-tutorialC,work/0,test/tutorial/func.lns)
 
 

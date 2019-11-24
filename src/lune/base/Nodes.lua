@@ -507,6 +507,10 @@ NodeVisitMode.__allList[3] = NodeVisitMode.End
 
 local Node = {}
 _moduleObj.Node = Node
+function Node:setLValue(  )
+
+   self.isLValue = true
+end
 function Node.new( id, kind, pos, expTypeList )
    local obj = {}
    Node.setmeta( obj )
@@ -514,6 +518,7 @@ function Node.new( id, kind, pos, expTypeList )
    return obj
 end
 function Node:__init(id, kind, pos, expTypeList) 
+   self.isLValue = false
    self.id = id
    self.kind = kind
    self.pos = pos
@@ -605,6 +610,9 @@ function Node:get_tailComment()
 end
 function Node:set_tailComment( tailComment )
    self.tailComment = tailComment
+end
+function Node:get_isLValue()
+   return self.isLValue
 end
 
 
@@ -2069,6 +2077,14 @@ function ExpListNode:canBeRight(  )
    end
    
    return true
+end
+
+function ExpListNode:setLValue(  )
+
+   for __index, expNode in pairs( self:get_expList() ) do
+      expNode.isLValue = true
+   end
+   
 end
 
 

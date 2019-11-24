@@ -209,7 +209,39 @@ foreach obj in list {
       AST ノード解析後に改めて Closure の検出を行なう。
       AST 解析後でないと Closure かどうかを正確に判断できない。
   
+- [ ] チュートリアル
+   - [X] value.org
+   - [X] set.org
+   - [X] variable.org     
+   - [ ] func.org
+   - [ ] arg.org
+   - [ ] multipleRetVal.org
+   - [ ] defaultArg.org
+   - [ ] nilable.org
+   - [ ] branch.org
+   - [ ] cast.org
+   - [ ] class1.org
+   - [ ] class2accessor.org
+   - [ ] classAdvertise.org
+   - [ ] classInherit.org
+   - [ ] classMapping.org
+   - [ ] classOverride.org
+   - [ ] crosscompile.org
+   - [ ] enum.org
+   - [ ] generics.org
+   - [ ] import.org
+   - [ ] interface.org
+   - [ ] loop.org
+   - [ ] macro.org
+   - [ ] match.org
+   - [ ] nilcond.org
+   - [ ] recommend.org
+   - [ ] require.org
+   - [ ] test.org
+
   
+
+
 - [ ] セルフホスティング
    - [X] Ver
    - [X] LuaMod
@@ -554,6 +586,10 @@ let val;
 fn func() {
    let mut val;
 }
+- [X] タイプ名を指定するところに、変数名を指定できる。
+let val = 1;
+let list:List<val> = [];
+  
 
 
 

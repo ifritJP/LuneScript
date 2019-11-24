@@ -1623,7 +1623,7 @@ _DefBuiltinFuncType( [
    },
    {
       "List<T>": {
-         "insert": { "type": [ "mut" ], "arg": [ "&T" ], "ret": [""] },
+         "insert": { "type": [ "mut" ], "arg": [ "T" ], "ret": [""] },
          "remove": { "type": [ "mut" ], "arg": [ "int!" ], "ret": ["T!"] },
          "unpack": { "type": [ "method" ], "arg": [ ], "ret": ["..."] },
          "sort": { "type": [ "mut" ], "arg": [ "form!" ], "ret": [] },

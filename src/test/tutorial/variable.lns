@@ -1,0 +1,30 @@
+{
+   fn func( flag:bool )
+   {
+      let val:stem; // stem 型を宣言
+      if flag {
+         val = 1;
+      }
+      else {
+         val = "a";
+      }
+      print( val );
+   }
+   func( true );
+   func( false );
+}
+
+pub let val1 = 1;
+global let val2 = 2;
+
+{
+   let mut val:stem = 1;
+   print( val );
+   val = 1.0;
+   print( val );
+   val = "abc";
+   print( val );
+   val = {};
+   val = [];
+   val = [@];
+}
