@@ -939,5 +939,10 @@ test-tutorial:
 	$(call test-tutorialC,work/0,test/tutorial/set.lns)
 	$(call test-tutorialC,work/0,test/tutorial/variable.lns)
 	$(call test-tutorialC,work/0,test/tutorial/func.lns)
+	$(call test-tutorialC,work/0,test/tutorial/arg.lns)
+	$(call test-tutorialC,work/0,test/tutorial/multipleRetVal.lns)
+	$(call test-tutorialC,work/0,test/tutorial/defaultArg.lns)
+	$(call test-tutorialC,work/0,test/tutorial/nilable.lns)
+	$(call test-tutorialC,work/0,test/tutorial/branch.lns)
 
 

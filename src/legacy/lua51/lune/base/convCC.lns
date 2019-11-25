@@ -5313,18 +5313,21 @@ pub override fn convFilter.processDeclVar(
 {
    switch self.processMode {
       case .WideScopeVer {
-         let varSymList = node.$symbolInfoList;
-         if varSymList[ 1 ].$scope == self.moduleTypeInfo.$scope or
-            self.outputBuiltinFlag
-         {
-            fn process( out2HMode:Out2HMode, var:&Ast.SymbolInfo ) {
-               let typeTxt = self.scopeMgr.getCTypeForSym( var );
-               self.write( getOut2HeaderPrefix( out2HMode ) );
-               self.writeln( "%s %s;" ( typeTxt, self.moduleCtrl.getSymbolName( var ) ) );
-            }
-            foreach var, index in varSymList  {
-               _out2Header( self.stream, Ast.isPubToExternal( var.$accessMode ),
-                            `{ process( out2HMode, var ); } );
+         if node.$mode == .Let {
+            let varSymList = node.$symbolInfoList;
+            if varSymList[ 1 ].$scope == self.moduleTypeInfo.$scope or
+               self.outputBuiltinFlag
+            {
+               fn process( out2HMode:Out2HMode, var:&Ast.SymbolInfo ) {
+                  let typeTxt = self.scopeMgr.getCTypeForSym( var );
+                  self.write( getOut2HeaderPrefix( out2HMode ) );
+                  self.writeln(
+                     "%s %s;" ( typeTxt, self.moduleCtrl.getSymbolName( var ) ) );
+               }
+               foreach var, index in varSymList  {
+                  _out2Header( self.stream, Ast.isPubToExternal( var.$accessMode ),
+                               `{ process( out2HMode, var ); } );
+               }
             }
          }
          return;
@@ -5355,7 +5358,9 @@ pub override fn convFilter.processDeclVar(
             varSym.$scope, varSym.$accessMode, "_" .. varSym.$name,
             varSym.$typeInfo.$nilableTypeInfo, .Var, varSym.$staticFlag,
             new SymbolParam( .Stem, invalidSymbolId, cTypeStem ) ) );
-         self.processDeclVarC( true, varSym, false ## );
+         if node.$mode == .Let {
+            self.processDeclVarC( true, varSym, false ## );
+         }
       }
       self.processDeclVarAndSet( workSymList, node.$expList );
 
@@ -5379,24 +5384,20 @@ pub override fn convFilter.processDeclVar(
 
          filter( unwrapBlock, self, node );
 
-         self.writeln( "}" );
-         self.writeln( "else {" );
-         
-         self.pushIndent(##);
-
-         foreach var, index in varSymList  {
-            self.processSetSymSingle(
-               node, nil, var, true, workSymList[ index ], false );
-            self.writeln( "" );
-         }
-         self.popIndent();
-
          if! let thenBlock = node.$thenBlock {
+
             self.writeln( "}" );
             self.writeln( "else {" );
+            
             self.pushIndent(##);
-            filter( thenBlock, self, node );
+
+            foreach var, index in varSymList {
+               self.processSetSymSingle(
+                  node, nil, var, true, workSymList[ index ], false );
+               self.writeln( "" );
+            }
             self.popIndent();
+            filter( thenBlock, self, node );
          };
 
          self.writeln( "}" );
@@ -5831,44 +5832,135 @@ pub override fn convFilter.processIf(
    }
 };
 
+
+form ProcessToValForm( kind:ValKind );
+
+fn convFilter.processEquals(
+   eqFlag:bool, type1:&Ast.TypeInfo, type2:&Ast.TypeInfo,
+   process1:ProcessToValForm, process2:ProcessToValForm )
+{
+   let valKind1 = getValKind( type1 );
+   let valKind2 = getValKind( type2 );
+   if valKind1 == .Stem or valKind2 == .Stem {
+      if not eqFlag {
+         self.write( "!" );
+      }
+      self.write( "lns_equals( " );
+      process1( .Stem );
+      self.write( "," );
+      process2( .Stem );
+      self.write( ")" );
+   }
+   elseif valKind1 == .Any and valKind2 == .Any {
+      if not eqFlag {
+         self.write( "!" );
+      }
+      self.write( "lns_equals_any( " );
+      process1( .Any );
+      self.write( "," );
+      process2( .Any );
+      self.write( ")" );
+   }
+   elseif valKind1 == .Prim and valKind2 == .Prim {
+      process1( .Prim );
+
+      if eqFlag {
+         self.write( " == " );
+      }
+      else {
+         self.write( " != " );
+      }
+      process2( .Prim );
+   }
+   else {
+      Util.err( "illegal kind %s -- %s" (valKind1.$_txt, valKind2.$_txt) );
+   }
+}
+
+
 pub override fn convFilter.processSwitch(
    node: Nodes.SwitchNode, opt: Opt ) mut
 {
-   // self.writeln( "do" );
-   // self.pushIndent(##);
-   // self.write( "local _switchExp = " );
-   // filter( node.get_exp(),  self, node );
-   // self.writeln( "" );
+   self.writeln( "{" );
+   self.pushIndent( ## );
 
-   // foreach caseInfo, index in node.get_caseList() {
-   //    if index == 1 {
-   //       self.write( "if " );
-   //    }
-   //    else {
-   //       self.write( "elseif " );
-   //    }
-   //    let expList = caseInfo.get_expList();
-   //    foreach expNode, listIndex in expList.get_expList() {
-   //       if listIndex ~= 1 {
-   //          self.write( " or " );
-   //       }
+   let expType = node.$exp.$expType;
+   let expSymName = "_switchExp%d" (node.$id);
+   self.write( "%s %s = " (getCType( expType ), expSymName ) );
+   filter( node.$exp, self, node );
+   self.writeln( ";" );
 
-   //       self.write( "_switchExp == " );
-   //       filter( expNode, self, node );
-   //    }
-   //    self.write( " then" );
-   //    filter( caseInfo.$block, self, node );
-   // }
-   // if! node.get_default() {
-   //    self.writeln( "else " );
-   //    self.pushIndent(##);
-   //    filter( _exp, self, node );
-   //    self.popIndent();
-   // }
-   // self.writeln( "end" );
-   // self.popIndent();
+   let expValKind = self.getValKindOfNode( node.$exp );
 
-   // self.writeln( "end" );
+   let expStemName;
+   if expValKind ~= .Stem {
+      expStemName = expSymName .. "Stem";
+      self.write( "%s %s = " (cTypeStem, expStemName) );
+
+      self.process2stem(
+         expValKind, expType, node,
+         fn () {
+            self.write( expSymName );
+         } );
+
+      self.writeln( ";" );
+   }
+   else {
+      expStemName = expSymName;
+   }
+   
+   foreach caseInfo, index in node.$caseList {
+      if index == 1 {
+         self.write( "if ( " );
+      }
+      else {
+         self.writeln( "}" );
+         self.write( "else if ( " );
+      }
+      let expList = caseInfo.$expList;
+      foreach expNode, listIndex in expList.$expList {
+         if listIndex ~= 1 {
+            self.write( " || " );
+         }
+
+
+         self.processEquals(
+            true, expType, expNode.$expType,
+            fn ( valKind:ValKind ) {
+               if valKind == .Stem {
+                  self.write( expStemName );
+               }
+               else {
+                  self.write( expSymName );
+               }
+            },
+            fn ( valKind:ValKind ) {
+               switch valKind {
+                  case .Stem {       
+                     self.processVal2stem( expNode, node );
+                  }
+                  case .Any {
+                     self.processVal2any( expNode, node );
+                  }
+                  case .Prim {
+                     self.accessPrimVal( expNode, node );
+                  }
+               }
+            } );
+      }
+      self.writeln( " ) {" );
+      filter( caseInfo.$block, self, node );
+   }
+   if! node.$default {
+      self.writeln( "}" );
+      self.writeln( "else {" );
+      filter( _exp, self, node );
+   }
+
+   self.writeln( "}" );
+
+   self.popIndent();
+   self.writeln( "}" );
 };
 
 
@@ -6605,22 +6697,27 @@ alge MRetInfo {
    /** デフォルト form */
    Form,
    /** 独自で定義した form */
-   FormFunc( refNode:&Nodes.ExpRefNode),
+   FormFunc( funcType:&Ast.TypeInfo ),
    Method( methodType:&Ast.TypeInfo),
    Func( refNode:&Nodes.Node ),
    DDD( expList:&Nodes.ExpListNode ),
    Format( format:str, expList:&Nodes.ExpListNode ),
 }
 
+/**
+関数コールの引数に、多値返却の関数をコールしている場合の処理。
+
+
+別関数を定義し、その関数内で引数の設定と関数コールを行なう。
+*/
 pub fn convFilter.processCallWithMRet(
    parent:&Nodes.Node, mRetFuncName:str, retTypeName:str,
-   funcArgNum:int, mRetInfo:MRetInfo,
-   argList:&Nodes.ExpListNode ) mut
+   mRetInfo:MRetInfo, argList:&Nodes.ExpListNode ) mut
 {
    let! mRetExp = argList.$mRetExp {
       return;
    };
-   
+
    fn processDeclMRetProto() {
       self.write( "static %s %s( %s _pEnv"
          ( retTypeName, mRetFuncName, cTypeEnvP ) );
@@ -6645,7 +6742,7 @@ pub fn convFilter.processCallWithMRet(
             self.write( ", %s _pForm" (cTypeAnyP ) );
             processArgs();
          }
-         case .FormFunc( funcNode ) {
+         case .FormFunc( funcType ) {
             self.write( ", %s _pForm" (cTypeAnyP ) );
             processArgs();
          }
@@ -6715,7 +6812,14 @@ pub fn convFilter.processCallWithMRet(
                         }
                         self.write( "%s arg%d = " (typeTxt, index ) );
                         if argType.$kind == .DDD {
-                           self.write( "pMRet" );
+                           if index == mRetExp.$index {
+                              self.write( "pMRet" );
+                           }
+                           else {
+                              self.write(
+                                 "lns_createSubDDD( _pEnv, %d, pMRet )"
+                                 (index - mRetExp.$index) );
+                           }
                         }
                         else {
                            self.write(
@@ -6740,72 +6844,93 @@ pub fn convFilter.processCallWithMRet(
             }
          }
 
-         let mut wroteArgFlag = false;
-
+         fn processArg2Stem(index:int) {
+            switch argTypeList[ index ] {
+               case Ast.builtinTypeInt, Ast.builtinTypeChar {
+                  self.write( "LNS_STEM_INT(" );
+                  self.write( "arg%d )" ( index ) );
+               }
+               case Ast.builtinTypeReal {
+                  self.write( "LNS_STEM_REAL(" );
+                  self.write( "arg%d )" ( index ) );
+               }
+               case Ast.builtinTypeBool {
+                  self.write( "LNS_STEM_BOOL(" );
+                  self.write( "arg%d )" ( index ) );
+               }
+               default {
+                  if getValKind( argTypeList[ index ] ) == .Any {
+                     self.write( "LNS_STEM_ANY(" );
+                     self.write( "arg%d )" ( index ) );
+                  }
+                  else {
+                     self.write( "arg%d" ( index ) );
+                  }
+               }
+            }
+         }
+         
          fn processCreateDDD( expList:&List<&Nodes.Node>) {
             self.write( "lns_createDDD" );
             let lastExp = expList[ #expList ];
             self.write( "( _pEnv, %s, %d" ( Nodes.hasMultiValNode( lastExp ), #expList ) );
 
             for index = 1, #expList {
-               let workExp = expList[ index ];
                self.write( ", " );
-               switch argTypeList[ index ] {
-                  case Ast.builtinTypeInt, Ast.builtinTypeChar {
-                     self.write( "LNS_STEM_INT(" );
-                     self.write( "arg%d )" ( index ) );
-                  }
-                  case Ast.builtinTypeReal {
-                     self.write( "LNS_STEM_REAL(" );
-                     self.write( "arg%d )" ( index ) );
-                  }
-                  case Ast.builtinTypeBool {
-                     self.write( "LNS_STEM_BOOL(" );
-                     self.write( "arg%d )" ( index ) );
-                  }
-                  default {
-                     if getValKind( argTypeList[ index ] ) == .Any {
-                        self.write( "LNS_STEM_ANY(" );
-                        self.write( "arg%d )" ( index ) );
-                     }
-                     else {
-                        self.write( "arg%d" ( index ) );
-                     }
-                  }
-               }
-               // if index >= mRetExp.$index {
-               //    self.write( "arg%d" ( index ) );
-               // }
-               // else {
-               //    self.write( getLiteral2Stem( "arg%d" ( index ), workExp.$expType ) );
+               processArg2Stem( index );
+               // switch argTypeList[ index ] {
+               //    case Ast.builtinTypeInt, Ast.builtinTypeChar {
+               //       self.write( "LNS_STEM_INT(" );
+               //       self.write( "arg%d )" ( index ) );
+               //    }
+               //    case Ast.builtinTypeReal {
+               //       self.write( "LNS_STEM_REAL(" );
+               //       self.write( "arg%d )" ( index ) );
+               //    }
+               //    case Ast.builtinTypeBool {
+               //       self.write( "LNS_STEM_BOOL(" );
+               //       self.write( "arg%d )" ( index ) );
+               //    }
+               //    default {
+               //       if getValKind( argTypeList[ index ] ) == .Any {
+               //          self.write( "LNS_STEM_ANY(" );
+               //          self.write( "arg%d )" ( index ) );
+               //       }
+               //       else {
+               //          self.write( "arg%d" ( index ) );
+               //       }
+               //    }
                // }
             }
          }
         
+
+         let mut funcTypeInfo:&Ast.TypeInfo! = nil;
+   
          match mRetInfo {
             case .Method( funcType ) {
+               funcTypeInfo = funcType;
+               
                processSetArg( true );
                self.write( "%s( _pEnv, _pObj"
                   ( self.moduleCtrl.getCallMethodCName( funcType )));
             }
             case .Form {
                processSetArg( true );
-               //self.write( 'lns_call_form( _pEnv, _pForm, %d' (funcArgNum) );
                self.write( "lns_closure( _pForm )( _pEnv, pForm" );
 
-               wroteArgFlag = true;
                processCreateDDD( argList.$expList );
-               // self.write( "lns_createDDD" );
-               // let expList = argList.$expList;
-               // let lastExp = expList[ #expList ];
-               // self.write( "( _pEnv, %s, %d" ( Nodes.hasMultiValNode( lastExp ), #expList ) );
             }
-            case .FormFunc( funcNode ) {
+            case .FormFunc( funcType ) {
+               funcTypeInfo = funcType;
+
                processSetArg( true );
                self.write( "%s( _pEnv, _pForm"
-                           (self.moduleCtrl.getCallFormName( funcNode.$expType ) ) );
+                           (self.moduleCtrl.getCallFormName( funcType ) ) );
             }
             case .Func( funcNode ) {
+               funcTypeInfo = funcNode.$expType;
+
                processSetArg( true );
                let mut wroteFuncFlag = false;
                let builtinFunc = TransUnit.getBuiltinFunc();
@@ -6825,12 +6950,10 @@ pub fn convFilter.processCallWithMRet(
             }
             case .DDD( expListNode ) {
                processSetArg( true );
-               wroteArgFlag = true;
                processCreateDDD( expListNode.$expList );
             }
             case .Format( format, expListNode ) {
                processSetArg( true );
-               wroteArgFlag = true;
                self.write( "mtd_lns_string_format( _pEnv, " );
                self.write( getLiteralStrAny( format ) );
                self.write( ", " );
@@ -6839,9 +6962,15 @@ pub fn convFilter.processCallWithMRet(
             }
          }
 
-         if not wroteArgFlag {
-            for index = 1, funcArgNum {
-               self.write( ", arg%d" ( index ) );
+         when! funcTypeInfo {
+            foreach argType, index in funcTypeInfo.$argTypeInfoList {
+               if getValKind( argType ) == .Stem {
+                  self.write( ", " );
+                  processArg2Stem( index );
+               }
+               else {
+                  self.write( ", arg%d" ( index ) );
+               }
             }
          }
 
@@ -6871,7 +7000,7 @@ pub override fn convFilter.processExpToDDD( node: Nodes.ExpToDDDNode, opt: Opt )
                // ここでは index が 1 以上のものだけを処理する。
                self.processCallWithMRet(
                   node, getMRetFuncName( node ), cTypeStem,
-                  #node.$expList.$expList, MRetInfo.DDD( node.$expList ), node.$expList );
+                  MRetInfo.DDD( node.$expList ), node.$expList );
             }
          }
          return;
@@ -7404,7 +7533,7 @@ pub override fn convFilter.processExpCall(
                   mRetInfo = MRetInfo.Form;
                }
                case .FormFunc {
-                  mRetInfo = MRetInfo.FormFunc( unwrap node.$func@@@Nodes.ExpRefNode );
+                  mRetInfo = MRetInfo.FormFunc( node.$func.$expType );
                }
                default {
                   mRetInfo = MRetInfo.Func( node.$func );
@@ -7413,7 +7542,7 @@ pub override fn convFilter.processExpCall(
             
             self.processCallWithMRet(
                node, getMRetFuncName( node ), getCRetType( node.$expTypeList ),
-               #funcType.$argTypeInfoList, mRetInfo, argList );
+               mRetInfo, argList );
          }
          return;
       }
@@ -8234,8 +8363,6 @@ fn convFilter.processConcat( node:&Nodes.ExpOp2Node, parent:&Nodes.Node ) mut
    self.write( ")" );
 }
 
-
-
 pub override fn convFilter.processExpOp2(
    node: Nodes.ExpOp2Node, opt: Opt ) mut
 {
@@ -8285,46 +8412,75 @@ pub override fn convFilter.processExpOp2(
          }
          else {
             if Ast.compOpSet.has( opTxt ) {
-               let valKind1 = getValKind( node.$exp1.$expType );
-               let valKind2 = getValKind( node.$exp2.$expType );
-               if valKind1 == .Stem or valKind2 == .Stem {
-                  if opTxt ~= "==" {
-                     self.write( "!" );
-                  }
-                  self.write( "lns_equals( " );
-                  self.processVal2stem( node.$exp1, node );
-                  self.write( "," );
-                  self.processVal2stem( node.$exp2, node );
-                  self.write( ")" );
-               }
-               elseif valKind1 == .Any and valKind2 == .Any {
-                  if opTxt ~= "==" {
-                     self.write( "!" );
-                  }
-                  self.write( "lns_equals_any( " );
-                  self.processVal2any( node.$exp1, node );
-                  self.write( "," );
-                  self.processVal2any( node.$exp2, node );
-                  self.write( ")" );
-               }
-               else {
-                  self.accessPrimVal( node.$exp1, node );
-                  // filter( node.$exp1, self, node );
+               self.processEquals(
+                  opTxt == "==", node.$exp1.$expType, node.$exp2.$expType,
+                  fn ( valKind:ValKind ) {
+                     switch valKind {
+                        case .Stem {
+                           self.processVal2stem( node.$exp1, node );
+                        }
+                        case .Any {
+                           self.processVal2any( node.$exp1, node );
+                        }
+                        case .Prim {
+                           self.accessPrimVal( node.$exp1, node );
+                        }
+                     }
+                  },
+                  fn ( valKind:ValKind ) {
+                     switch valKind {
+                        case .Stem {
+                           self.processVal2stem( node.$exp2, node );
+                        }
+                        case .Any {
+                           self.processVal2any( node.$exp2, node );
+                        }
+                        case .Prim {
+                           self.accessPrimVal( node.$exp2, node );
+                        }
+                     }
+                  } );
+               
+               // let valKind1 = getValKind( node.$exp1.$expType );
+               // let valKind2 = getValKind( node.$exp2.$expType );
+               // if valKind1 == .Stem or valKind2 == .Stem {
+               //    if opTxt ~= "==" {
+               //       self.write( "!" );
+               //    }
+               //    self.write( "lns_equals( " );
+               //    self.processVal2stem( node.$exp1, node );
+               //    self.write( "," );
+               //    self.processVal2stem( node.$exp2, node );
+               //    self.write( ")" );
+               // }
+               // elseif valKind1 == .Any and valKind2 == .Any {
+               //    if opTxt ~= "==" {
+               //       self.write( "!" );
+               //    }
+               //    self.write( "lns_equals_any( " );
+               //    self.processVal2any( node.$exp1, node );
+               //    self.write( "," );
+               //    self.processVal2any( node.$exp2, node );
+               //    self.write( ")" );
+               // }
+               // else {
+               //    self.accessPrimVal( node.$exp1, node );
+               //    // filter( node.$exp1, self, node );
 
-                  switch opTxt {
-                     case "==" {
-                        self.write( " == " );
-                     }
-                     case "~=" {
-                        self.write( " != " );
-                     }
-                     default {
-                        Util.err( "illegal" );
-                     }
-                  }
-                  self.accessPrimVal( node.$exp2, node );
-                  // filter( node.$exp2, self, node );
-               }
+               //    switch opTxt {
+               //       case "==" {
+               //          self.write( " == " );
+               //       }
+               //       case "~=" {
+               //          self.write( " != " );
+               //       }
+               //       default {
+               //          Util.err( "illegal" );
+               //       }
+               //    }
+               //    self.accessPrimVal( node.$exp2, node );
+               //    // filter( node.$exp2, self, node );
+               // }
             }
             elseif Ast.mathCompOpSet.has( opTxt ) {
                self.accessPrimVal( node.$exp1, node );
@@ -9136,7 +9292,7 @@ pub override fn convFilter.processLiteralString(
          if! let expListNode = node.$expList {
             if! let mRetExp = expListNode.$mRetExp {
                self.processCallWithMRet(
-                  node, getMRetFuncName( node ), cTypeAnyP, #expListNode.$expList,
+                  node, getMRetFuncName( node ), cTypeAnyP,
                   MRetInfo.Format( txt, expListNode ), expListNode );
             }
             else {
@@ -9162,7 +9318,7 @@ pub override fn convFilter.processLiteralString(
                //    filter( exp, self, node );
                // }
                self.processCallWithMRet(
-                  node, getMRetFuncName( node ), cTypeAnyP, #expListNode.$expList,
+                  node, getMRetFuncName( node ), cTypeAnyP, 
                   MRetInfo.Format( txt, expListNode ), expListNode );
             }
             else {

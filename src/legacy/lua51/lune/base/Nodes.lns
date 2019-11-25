@@ -883,7 +883,9 @@ pub override fn IfNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
 }
 
 pub class MRetExp {
+   /** 多値のノード */
    let exp:&Node {pub};
+   /** ExpListNode 中の exp のインデックス */
    let index:int {pub};
 }
 

@@ -6,6 +6,117 @@ let mut g_val = 100;
 
 {
    _section();
+   fn func( val:stem! ) {
+      switch val {
+         case 1, "abc" {
+            print( "hoge" );
+         }
+         case 2.0, nil {
+            print( "foo" );
+         }
+         default {
+            print( "bar" );
+         }
+      }
+   }
+   func( 1 );
+   func( "abc" );
+   func( 2.0 );
+   func( nil );
+   func( 3 );
+}
+{
+   _section();
+   {
+      fn func( val:int ) {
+         switch val {
+            case 1 {
+               print( "hoge" );
+            }
+            case 2 {
+               print( "foo" );
+            }
+            default {
+               print( "bar" );
+            }
+         }
+      }
+      func( 1 );
+      func( 2 );
+      func( 3 );
+   }
+   {
+      fn func( val:str ) {
+         switch val {
+            case "abc" {
+               print( "hoge" );
+            }
+            case "xyz" {
+               print( "foo" );
+            }
+            default {
+               print( "bar" );
+            }
+         }
+      }
+      func( "abc" );
+      func( "xyz" );
+      func( "aaa" );
+   }
+   {
+      fn func( val:int! ) {
+         switch val {
+            case 1 {
+               print( "hoge" );
+            }
+            case nil {
+               print( "foo" );
+            }
+            default {
+               print( "bar" );
+            }
+         }
+      }
+      func( 1 );
+      func( nil );
+      func( 2 );
+   }
+}
+{
+   _section();
+   {
+      fn func1(): int,int {
+         return 1, 2;
+      }
+      fn func2( val1:int, val2:int!) {
+         print( val1, val2 );
+      }
+
+      func2( func1()** );
+   }
+   {
+      fn func1(): int,str {
+         return 1, "abc";
+      }
+      fn func2( val1:int, val2:str!) {
+         print( val1, val2 );
+      }
+
+      func2( func1()** );
+   }
+   {
+      fn func1(): int,int! {
+         return 1, nil;
+      }
+      fn func2( val1:int, val2:int!) {
+         print( val1, val2 );
+      }
+
+      func2( func1()** );
+   }
+}
+{
+   _section();
    form Func( ... );
 
    fn func( val:stem!, val2:stem!, ... )

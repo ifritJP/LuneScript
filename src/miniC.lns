@@ -1,30 +1,20 @@
 {
-   form Func( ... );
-
-   fn func( val:stem!, val2:stem!, ... )
-   {
-      print( val, val2, ... );
+   fn func( val:stem! ) {
+      switch val {
+         case 1, "abc" {
+            print( "hoge" );
+         }
+         case 2.0, nil {
+            print( "foo" );
+         }
+         default {
+            print( "bar" );
+         }
+      }
    }
-
-   let sub:Func = func;
-   sub( 1, 2, 3, 4 );
-}
-
-{
-   form Func1( ...<stem!> );
-   form Func2( val:stem! );
-   fn sub0( func:form ) {
-      func( 1 );
-   }
-   fn sub1( func:Func1 ) {
-      func( 1 );
-   }
-   fn sub2( func:Func2 ) {
-      func( 1 );
-   }
-   let func:form = fn ( val:stem! ) { print( val ); };
-   sub0( func );  // 1
-   sub0( fn ( val:stem! ) { print( val ); } );  // 1
-   sub1( fn ( val:stem! ) { print( val ); } );  // 1
-   sub2( fn ( val:stem! ) { print( val ); } );  // 1
+   func( 1 );
+   func( "abc" );
+   func( 2.0 );
+   func( nil );
+   func( 3 );
 }

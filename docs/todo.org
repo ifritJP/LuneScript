@@ -8,6 +8,8 @@
 
 * バグ
 
+- [ ] 互換性のない値で switch - case が書けてしまう。
+  
 - [ ] リストのリテラルで、継承関係のある値を混在させた時に、
       共通のスーパークラスのリストにならない。
        
@@ -213,11 +215,11 @@ foreach obj in list {
    - [X] value.org
    - [X] set.org
    - [X] variable.org     
-   - [ ] func.org
-   - [ ] arg.org
-   - [ ] multipleRetVal.org
-   - [ ] defaultArg.org
-   - [ ] nilable.org
+   - [X] func.org
+   - [X] arg.org
+   - [X] multipleRetVal.org
+   - [X] defaultArg.org
+   - [X] nilable.org
    - [ ] branch.org
    - [ ] cast.org
    - [ ] class1.org
