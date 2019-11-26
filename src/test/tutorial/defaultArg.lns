@@ -1,0 +1,17 @@
+{
+   fn func( val1:int!, val2:int! ):int {
+      when! val1, val2 {
+         return val1 + val2;
+      }
+      when! val1 {
+         return val1;
+      }
+      when! val2 {
+         return val2;
+      }
+      return 0;
+   }
+   print( func(1,2) );  // 3
+   print( func(1##) );    // 1
+   print( func(##) );     // 0
+}

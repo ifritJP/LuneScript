@@ -1,0 +1,89 @@
+{
+   fn check( val:int! ) {
+      if val == 1 {
+         print( "ok" );
+      }
+      else {
+         print( "ng" );
+      }
+   }
+   check( 1 ); // ok
+   check( 2 ); // ng
+}
+{
+   fn func( val:int!, val2:int! ): int {
+      when! val, val2 {
+         return val + val2;
+      }
+      else {
+         return 0;
+      }
+   }
+   print( func( 1, 2 ) );      // 3
+   print( func( nil, 2 ) );    // 0
+   print( func( 1, nil ) );    // 0
+   print( func( nil, nil ) );  // 0
+}
+{
+   fn func( val:int! ): int! {
+      return val;
+   }
+   fn sub( val:int! ): int {
+      if! func( val ) {
+         return _exp + 10;
+      }  
+      else {
+         return 0;
+      }
+   }
+   print( sub( 1 ) ); // 11
+   print( sub( nil ) ); // 0
+}
+{
+   fn func( val1:int!, val2:int! ): int!, int! {
+      return val1, val2;
+   }
+   fn sub( val1:int!, val2:int! ): int {
+      if! let work1, work2 = func( val1, val2 ) {
+         return work1 + work2;
+      }  
+      else {
+         return 0;
+      }
+   }
+   print( sub( 1, 2 ) ); // 3
+   print( sub( nil, 2 ) ); // 0
+   print( sub( 1, nil ) ); // 0
+   print( sub( nil, nil ) ); // 0
+}
+{
+   fn func( val1:int!, val2:int! ): int!, int! {
+      return val1, val2;
+   }
+   fn sub( val1:int!, val2:int! ): int {
+      let mut work0 = 0;
+      let! work1, work2 = func( val1, val2 ) {
+         work1 = 0;
+         work2 = 0;
+      }
+      then {
+         work0 = 10;
+      };     
+      return work0 + work1 + work2;
+   }
+   print( sub( 1, 2 ) ); // 3
+   print( sub( nil, 2 ) ); // 0
+   print( sub( 1, nil ) ); // 0
+   print( sub( nil, nil ) ); // 0
+}
+{
+   fn test( arg:int! ) {
+      let mut val = 0;
+
+      unwrap! val = arg { print( 0 ); return; } then { val = val + 1; };
+      print( val );
+   }
+   test( 1 );  // print( 2 );
+   test( 2 );  // print( 3 );
+   test( nil );  // print( 0 );
+}

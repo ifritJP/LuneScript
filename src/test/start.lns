@@ -1307,3 +1307,35 @@ print( '\\""\"\'\\.\\' );
    }
    print( "hoge:%d,%g,%s,%s,%s" (func()) ); // skip-lua51
 }
+{
+   Macro._section();
+   interface IF {
+   }
+   class Super {
+   }
+   class Test extend Super (IF) {
+   }
+
+   fn func( val:stem ) {
+      if! val@@@int {
+         print( "int:%d" ( _exp ) );
+      }
+      if! val@@@real {
+         print( "real:%g" ( _exp ) );
+      }
+      if! val@@@str {
+         print( "str:%s" ( _exp ) );
+      }
+      if! val@@@Test {
+         print( "class" );
+      }
+      if! val@@@IF {
+         print( "IF" );
+      }
+   }
+   func( 1 );
+   func( 1.0 );
+   func( "abc" );
+   func( new Test() );
+   func( new Test() );
+}

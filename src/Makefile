@@ -944,5 +944,11 @@ test-tutorial:
 	$(call test-tutorialC,work/0,test/tutorial/defaultArg.lns)
 	$(call test-tutorialC,work/0,test/tutorial/nilable.lns)
 	$(call test-tutorialC,work/0,test/tutorial/branch.lns)
+	$(call test-tutorialC,work/0,test/tutorial/cast.lns)
+
+test-cAll:
+	$(MAKE) build-cc
+	$(MAKE) test-tutorialC
+	$(MAKE) test-testC
 
 

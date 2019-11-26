@@ -45,6 +45,7 @@ let cTypeVarP = "lns_var_t *";
 let cTypeBlockP = "lns_block_t *";
 let cValNil = "lns_global.nilStem";
 let cValNone = "lns_global.noneStem";
+let cValDDD0 = "lns_global.ddd0";
 
 let accessAny = ".val.pAny";
 
@@ -477,6 +478,14 @@ class ModuleCtrl {
    pub fn getClassCName( classType:&Ast.TypeInfo ) : str
    {
       return "lns_" .. self.getFullName( classType );
+   }
+
+   pub fn getClassMetaName( classType:&Ast.TypeInfo ) : str
+   {
+      if classType.$srcTypeInfo == Ast.headTypeInfo {
+         return "lns_type_meta_lns__root";
+      }
+      return "lns_type_meta_%s" ( self.getClassCName( classType ) );
    }
 
    pub fn getMethodCName( methodTypeInfo:&Ast.TypeInfo ) : str
@@ -3541,7 +3550,8 @@ fn convFilter.processDeclClassNodePrototype( node:&Nodes.DeclClassNode ) mut
             self.writeln( ```#define lns_mtd_%s( OBJ )                     \
              ((%s*)&OBJ->val.ifVal)->pMtd``` (className,className) );
             if out2HMode == .HeaderPub {
-               self.writeln( 'extern lns_type_meta_t lns_type_meta_%s;' (className) );
+               self.writeln( 'extern lns_type_meta_t %s;'
+                (self.moduleCtrl.getClassMetaName(node.$expType)) );
             }
          }
       }
@@ -3826,21 +3836,33 @@ fn processIFMethodDataInit(
    }
 }
 
+fn processClassMeta(
+   stream:Util.SourceStream, moduleCtrl:&ModuleCtrl, classTypeInfo:&Ast.TypeInfo )
+{
+   let className = moduleCtrl.getClassCName( classTypeInfo );
+   stream.write(
+      'lns_type_meta_t %s = { "%s", &%s, {'
+      ( moduleCtrl.getClassMetaName( classTypeInfo ), className,
+        moduleCtrl.getClassMetaName( classTypeInfo.$baseTypeInfo ) ) );
+   foreach ifType, index in classTypeInfo.$interfaceList {
+      stream.write( "&%s, " ( moduleCtrl.getClassMetaName( ifType ) ) );
+   }
+   stream.writeln( "NULL } };" );
+}
+
 fn processClassDataInit(
    stream:Util.SourceStream, moduleCtrl:&ModuleCtrl, scopeMgr:ScopeMgr,
    classTypeInfo:&Ast.TypeInfo, fieldList:&List<&Nodes.Node> )
 {
-  
    let className = moduleCtrl.getClassCName( classTypeInfo );
 
-   if not classTypeInfo.$abstractFlag {
-      // クラスメタ情報
-      if not Ast.isPubToExternal( classTypeInfo.$accessMode ) {
-         stream.write( "static " );
-      }
-      stream.writeln(
-         'lns_type_meta_t lns_type_meta_%s = { "%s" };' (className, className) );
+   // クラスメタ情報
+   if not Ast.isPubToExternal( classTypeInfo.$accessMode ) {
+      stream.write( "static " );
+   }
+   processClassMeta( stream, moduleCtrl, classTypeInfo );
 
+   if not classTypeInfo.$abstractFlag {
       // メソッド情報設定
       if not Ast.isPubToExternal( classTypeInfo.$accessMode ) {
          stream.write( "static " );
@@ -5398,9 +5420,16 @@ pub override fn convFilter.processDeclVar(
             }
             self.popIndent();
             filter( thenBlock, self, node );
-         };
-
-         self.writeln( "}" );
+            self.writeln( "}" );
+         }
+         else {
+            self.writeln( "}" );
+            foreach var, index in varSymList {
+               self.processSetSymSingle(
+                  node, nil, var, true, workSymList[ index ], false );
+               self.writeln( "" );
+            }
+         }
       }
    }
    else {
@@ -6652,7 +6681,7 @@ pub override fn convFilter.processExpUnwrap(
             self.write( ")" );
          }
          else {
-            self.write( ", lns_global.nilStem )" );
+            self.write( ", %s )" ( cValNil ) );
          }
       }
    }
@@ -6693,6 +6722,50 @@ fn convFilter.processCreateMRet(
 }
 
 
+/**
+関数コールの引数に、多値返却の関数をコールしている場合、
+その関数コールをラッパーで処理する必要があるかどうか調べる。
+
+以下の場合、 func( sub()**) はラッパーが必要。
+
+fn sub() : int, int {
+  return 1,2;
+}
+fn func( val1:int, val2:int ) {
+}
+func( sub()** );
+
+@param funcArgTypeList 呼び出す関数の仮引数の型リスト
+@param argTypeList 実引数の型リスト。
+    argTypeList の最後に多値があることを前提とする。
+*/
+fn needMRetWrap( funcArgTypeList:&List<&Ast.TypeInfo>,
+                 argNodeList:&Nodes.ExpListNode ):bool
+{
+   let! mRetExp = argNodeList.$mRetExp {
+      return false;
+   };
+   let argTypeList = argNodeList.$expTypeList;
+   foreach funcArgType, index in funcArgTypeList {
+      let argType = argTypeList[ index ];
+      if funcArgType.$kind == .DDD {
+         // 呼び出し先が ... で、引数が ... でない場合は wrapper が必要
+         return argType.$kind ~= .DDD;
+      }
+      if argType.$kind == .DDD or mRetExp.$index == index {
+         // 呼び出し先が ... でなく、次のいずれかの場合は wrapper が必要
+         // - 引数が ... の場合
+         // - 引数が多値の場合
+         return true;
+      }
+      if mRetExp.$index == index {
+         return true;
+      }
+   }
+   return true;
+}
+
+
 alge MRetInfo {
    /** デフォルト form */
    Form,
@@ -6700,7 +6773,9 @@ alge MRetInfo {
    FormFunc( funcType:&Ast.TypeInfo ),
    Method( methodType:&Ast.TypeInfo),
    Func( refNode:&Nodes.Node ),
+   /** 多値返却を含む値から ... を生成する */
    DDD( expList:&Nodes.ExpListNode ),
+   /** string.format の引数処理 */
    Format( format:str, expList:&Nodes.ExpListNode ),
 }
 
@@ -6718,6 +6793,33 @@ pub fn convFilter.processCallWithMRet(
       return;
    };
 
+   match mRetInfo {
+      case .Method( funcType ) {
+         if not needMRetWrap( funcType.$argTypeInfoList, argList ) {
+            return;
+         }
+      }
+      case .Form {
+         if not needMRetWrap( [ Ast.builtinTypeDDD ], argList ) {
+            return;
+         }
+      }
+      case .FormFunc( funcType ) {
+         if not needMRetWrap( funcType.$argTypeInfoList, argList ) {
+            return;
+         }
+      }
+      case .Func(funcNode) {
+         if not needMRetWrap( funcNode.$expType.$argTypeInfoList, argList ) {
+            return;
+         }
+      }
+      case .DDD(node) {
+      }
+      case .Format(format,node) {
+      }
+   }
+   
    fn processDeclMRetProto() {
       self.write( "static %s %s( %s _pEnv"
          ( retTypeName, mRetFuncName, cTypeEnvP ) );
@@ -6844,28 +6946,49 @@ pub fn convFilter.processCallWithMRet(
             }
          }
 
-         fn processArg2Stem(index:int) {
-            switch argTypeList[ index ] {
-               case Ast.builtinTypeInt, Ast.builtinTypeChar {
-                  self.write( "LNS_STEM_INT(" );
-                  self.write( "arg%d )" ( index ) );
-               }
-               case Ast.builtinTypeReal {
-                  self.write( "LNS_STEM_REAL(" );
-                  self.write( "arg%d )" ( index ) );
-               }
-               case Ast.builtinTypeBool {
-                  self.write( "LNS_STEM_BOOL(" );
-                  self.write( "arg%d )" ( index ) );
-               }
-               default {
-                  if getValKind( argTypeList[ index ] ) == .Any {
-                     self.write( "LNS_STEM_ANY(" );
+         fn processArg2Stem(index:int, typeInfo:&Ast.TypeInfo ) {
+            if #argTypeList >= index {
+               switch argTypeList[ index ] {
+                  case Ast.builtinTypeInt, Ast.builtinTypeChar {
+                     self.write( "LNS_STEM_INT(" );
                      self.write( "arg%d )" ( index ) );
                   }
-                  else {
-                     self.write( "arg%d" ( index ) );
+                  case Ast.builtinTypeReal {
+                     self.write( "LNS_STEM_REAL(" );
+                     self.write( "arg%d )" ( index ) );
                   }
+                  case Ast.builtinTypeBool {
+                     self.write( "LNS_STEM_BOOL(" );
+                     self.write( "arg%d )" ( index ) );
+                  }
+                  default {
+                     if getValKind( argTypeList[ index ] ) == .Any {
+                        self.write( "LNS_STEM_ANY(" );
+                        self.write( "arg%d )" ( index ) );
+                     }
+                     else {
+                        self.write( "arg%d" ( index ) );
+                     }
+                  }
+               }
+            }
+            else {
+               if typeInfo.$kind == .DDD {
+                  let offset = index - mRetExp.$index;
+                  if offset > 0 {
+                     self.write(
+                        "lns_createSubDDD( _pEnv, %d, pMRet )"
+                        ( index - mRetExp.$index ) );
+                  }
+                  elseif offset == 0 {
+                     self.write( "pMRet" );
+                  }
+                  else {
+                     self.write( cValDDD0 );
+                  }
+               }
+               else {
+                  self.write( cValNone );
                }
             }
          }
@@ -6877,30 +7000,7 @@ pub fn convFilter.processCallWithMRet(
 
             for index = 1, #expList {
                self.write( ", " );
-               processArg2Stem( index );
-               // switch argTypeList[ index ] {
-               //    case Ast.builtinTypeInt, Ast.builtinTypeChar {
-               //       self.write( "LNS_STEM_INT(" );
-               //       self.write( "arg%d )" ( index ) );
-               //    }
-               //    case Ast.builtinTypeReal {
-               //       self.write( "LNS_STEM_REAL(" );
-               //       self.write( "arg%d )" ( index ) );
-               //    }
-               //    case Ast.builtinTypeBool {
-               //       self.write( "LNS_STEM_BOOL(" );
-               //       self.write( "arg%d )" ( index ) );
-               //    }
-               //    default {
-               //       if getValKind( argTypeList[ index ] ) == .Any {
-               //          self.write( "LNS_STEM_ANY(" );
-               //          self.write( "arg%d )" ( index ) );
-               //       }
-               //       else {
-               //          self.write( "arg%d" ( index ) );
-               //       }
-               //    }
-               // }
+               processArg2Stem( index, Ast.builtinTypeNone );
             }
          }
         
@@ -6966,7 +7066,7 @@ pub fn convFilter.processCallWithMRet(
             foreach argType, index in funcTypeInfo.$argTypeInfoList {
                if getValKind( argType ) == .Stem {
                   self.write( ", " );
-                  processArg2Stem( index );
+                  processArg2Stem( index, argType );
                }
                else {
                   self.write( ", arg%d" ( index ) );
@@ -7047,7 +7147,7 @@ pub fn convFilter.processCallArgList(
          if #expList >= index {
             if funcArgType.$kind == .DDD {
                if expList[ index ].$kind == Nodes.NodeKind.$Abbr {
-                  self.write( "lns_global.ddd0" );
+                  self.write( cValDDD0 );
                }
                else {
                   filter( expList[ index ], self, expListNode );
@@ -7072,7 +7172,7 @@ pub fn convFilter.processCallArgList(
          }
          else {
             if funcArgType.$kind == .DDD {
-               self.write( "lns_global.ddd0" );
+               self.write( cValDDD0 );
             }
             else {
                self.write( cValNone );
@@ -7172,9 +7272,7 @@ pub override fn convFilter.processDeclClass(
                   classType, node.$fieldList );
             }
             case .IF {
-               self.writeln(
-                  'lns_type_meta_t lns_type_meta_%s = { "%s" };'
-                  (className, className) );
+               processClassMeta( self.stream, self.moduleCtrl, classType );
             }
          }
       }
@@ -7830,30 +7928,33 @@ pub override fn convFilter.processExpCall(
       let mut isMret = false;
       if! let argList = node.$argList {
          if! let mRetExp = argList.$mRetExp {
-            // 多値の引数を含む場合
-            isMret = true;
-            self.write( "%s( _pEnv" ( getMRetFuncName( node ) ) );
+            if needMRetWrap( node.$func.$expType.$argTypeInfoList, argList )
+            {
+               // 多値の引数を含む場合
+               isMret = true;
+               self.write( "%s( _pEnv" ( getMRetFuncName( node ) ) );
 
-            let funcNode = node.$func;
-            switch funcNode.$expType.$kind {
-               case .Method {
-                  if! let fieldNode = node.$func@@@Nodes.RefFieldNode {
+               let funcNode = node.$func;
+               switch funcNode.$expType.$kind {
+                  case .Method {
+                     if! let fieldNode = node.$func@@@Nodes.RefFieldNode {
+                        self.write( ", " );
+                        self.processVal2any( fieldNode.$prefix, fieldNode );
+                     }
+                  }
+                  case .Form, .FormFunc {
                      self.write( ", " );
-                     self.processVal2any( fieldNode.$prefix, fieldNode );
+                     self.processVal2any( node.$func, node );
                   }
                }
-               case .Form, .FormFunc {
-                  self.write( ", " );
-                  self.processVal2any( node.$func, node );
+               foreach argNode, index in argList.$expList {
+                  if index <= mRetExp.$index {
+                     self.write( ", " );
+                     filter( argNode, self, argList );
+                  }
                }
+               self.write( ")" );
             }
-            foreach argNode, index in argList.$expList {
-               if index <= mRetExp.$index {
-                  self.write( ", " );
-                  filter( argNode, self, argList );
-               }
-            }
-            self.write( ")" );
          }
       }
       if not isMret {
@@ -8096,10 +8197,10 @@ fn convFilter.processFuncCast( node: Nodes.ExpCastNode ) mut
 
       if #orgFunc.$retTypeInfoList == 0 {
          if #castType.$retTypeInfoList > 1 {
-            self.write( "lns_global.ddd0" );
+            self.write( cValDDD0 );
          }
          else {
-            self.write( "lns_global.nilStem" );
+            self.write( cValNil );
          }
       }
       elseif #orgFunc.$retTypeInfoList == 1 {
@@ -8188,75 +8289,141 @@ pub override fn convFilter.processExpCast(
          }
       }
       case .Force {
-         if isStemType( expType ) {
-            switch castType {
-               case Ast.builtinTypeInt, Ast.builtinTypeChar {
-                  self.write( "lns_stem2int( " );
-                  filter( exp, self, node );
-                  self.write( ")" );
-               }
-               case Ast.builtinTypeReal {
-                  self.write( "lns_stem2real( " );
-                  filter( exp, self, node );
-                  self.write( ")" );
-               }
-               case Ast.builtinTypeBool {
-                  self.write( "lns_stem2bool( " );
-                  filter( exp, self, node );
-                  self.write( ")" );
-               }
-               default {
-                  // 強制キャストは実行時の処理に任せる。
-                  // ランタイムエラーになってもしかたがない。
-                  if getValKind( castType ) == .Any {
-                     self.processVal2any( exp, node );
+         switch getValKind( castType ) {
+            case .Stem {
+               self.processVal2stem( exp, node );
+            }
+            case .Any {
+               self.processVal2any( exp, node );
+            }
+            case .Prim {
+               if isStemType( expType ) {
+                  switch castType.$srcTypeInfo {
+                     case Ast.builtinTypeInt, Ast.builtinTypeChar {
+                        self.write( "lns_stem2int( " );
+                        filter( exp, self, node );
+                        self.write( ")" );
+                     }
+                     case Ast.builtinTypeReal {
+                        self.write( "lns_stem2real( " );
+                        filter( exp, self, node );
+                        self.write( ")" );
+                     }
+                     case Ast.builtinTypeBool {
+                        self.write( "lns_stem2bool( " );
+                        filter( exp, self, node );
+                        self.write( ")" );
+                     }
+                     default {
+                        Util.err( "illegal cast -- %s" (castType.getTxt(##)));
+                     }
                   }
-                  else {
-                     filter( exp, self, node );
-                  }
+               }
+               else {
+                  filter( exp, self, node );
                }
             }
          }
-         else {
-            filter( exp, self, node );
-         }
       }
       case .Normal {
-            error( "not support cast" );
+         let nonNilCastType = castType.$nonnilableType;
+         if nonNilCastType.$kind == .Class and
+            not nonNilCastType.equals( Ast.builtinTypeString ## )
+         {
+            self.write( "lns_castClass( " );
+            self.processVal2stem( exp, node );
+            self.write( ", &%s )" (self.moduleCtrl.getClassMetaName(nonNilCastType) ) );
+         }
+         elseif nonNilCastType.$kind == .IF {
+            self.write( "lns_castIf( _pEnv, " );
+            self.processVal2stem( exp, node );
+            self.write( ", &%s )" (self.moduleCtrl.getClassMetaName(nonNilCastType) ) );
+         }
+         else {
+            if getValKind( nonNilCastType ) == .Any {
+               let kindTxt;
+               let workType;
+               if! let enumType = nonNilCastType@@@Ast.EnumTypeInfo {
+                  workType = enumType.$valTypeInfo;
+               }
+               else {
+                  workType = nonNilCastType;
+               }
+               switch workType.$kind {
+                  case .List {
+                     kindTxt = "lns_value_type_List";
+                  }
+                  case .Array {   
+                     kindTxt = "lns_value_type_Array";
+                  }
+                  case .Map {     
+                     kindTxt = "lns_value_type_Map";
+                  }
+                  case .Class {
+                     if workType.equals( Ast.builtinTypeString## ) { 
+                        kindTxt = "lns_value_type_str";
+                     }
+                     else {
+                        Util.err( "not support" );
+                     }
+                  }
+                  case .IF {      
+                     Util.err( "not support" );
+                  }
+                  case .Func {    
+                     kindTxt = "lns_value_type_form";
+                  }
+                  case .Alge {
+                     kindTxt = "lns_value_type_alge";
+                  }
+                  case .DDD {     
+                     kindTxt = "lns_value_type_ddd";
+                  }
+                  case .Set {     
+                     kindTxt = "lns_value_type_Set";
+                  }
+                  case .Form {    
+                     kindTxt = "lns_value_type_form";
+                  }
+                  case .FormFunc {
+                     kindTxt = "lns_value_type_form";
+                  }
+                  default {
+                     Util.err( "not support -- %s" ( castType.getTxt(##) ) );
+                  }
+               }
+               self.write( "lns_castAny( " );
+               self.processVal2stem( exp, node );
+               self.write( ", %s )" ( kindTxt ) );
+            }
+            else {
+               let kindTxt;
+               if nonNilCastType.$kind ~= .Stem {
+                  switch nonNilCastType.$srcTypeInfo {
+                     case Ast.builtinTypeInt, Ast.builtinTypeChar {
+                        kindTxt = "lns_stem_type_int";
+                     }
+                     case Ast.builtinTypeReal {
+                        kindTxt = "lns_stem_type_real";
+                     }
+                     case Ast.builtinTypeBool {
+                        kindTxt = "lns_stem_type_bool";
+                     }
+                     default {
+                        Util.err( "not support -- %s" (castType.getTxt(##)) );
+                     }
+                  }
+                  self.write( "lns_castStem( " );
+                  self.processVal2stem( exp, node );
+                  self.write( ", %s )" ( kindTxt ) );
+               }
+               else {
+                  filter( exp, self, node );
+               }
+            }
+         }
       }
    }
-   // if node.$force {
-   //    if node.$expType.equals( Ast.builtinTypeInt ##) {
-   //       self.write( "math.floor(" );
-   //       filter( node.$exp,  self, node );
-   //       self.write( ")" );
-   //    }
-   //    else {
-   //       filter( node.$exp,  self, node );
-   //    }
-   // }
-   // else {
-   //    self.write( "_lune.__Cast( " );
-   //    filter( node.$exp,  self, node );
-   //    let castKind;
-   //    let mut classObj = "nil";
-   //    switch node.$expType.$nonnilableType {
-   //       case Ast.builtinTypeInt {
-   //          castKind = LuaMod.CastKind.Int;
-   //       }
-   //       case Ast.builtinTypeReal {
-   //          castKind = LuaMod.CastKind.Real;
-   //       }
-   //       case Ast.builtinTypeString {
-   //          castKind = LuaMod.CastKind.Str;
-   //       }
-   //       default {
-   //          castKind = LuaMod.CastKind.Class;
-   //          classObj = self.getFullName( node.$expType.$nonnilableType );
-   //       }
-   //    }
-   //    self.write( ", %d, %s )" ( castKind, classObj) );
-   // }
 };
 
 

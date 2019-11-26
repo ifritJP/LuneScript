@@ -220,7 +220,7 @@ foreach obj in list {
    - [X] multipleRetVal.org
    - [X] defaultArg.org
    - [X] nilable.org
-   - [ ] branch.org
+   - [X] branch.org
    - [ ] cast.org
    - [ ] class1.org
    - [ ] class2accessor.org

@@ -75,6 +75,14 @@ static void lns_class_del( lns_env_t * _pEnv, void * pObj );
 static void lns_alge_del( lns_env_t * _pEnv, void * pObj );
 
 
+
+lns_type_meta_t lns_type_meta_lns__root = {
+    "_root",
+    &lns_type_meta_lns__root,
+    { NULL }
+};
+
+
 void _lns_abort( const char * pMessage, const char * pFile, int lineNo )
 {
     fprintf( stderr, "abort:%s:%d:%s\n", pFile, lineNo, pMessage );
@@ -1017,6 +1025,79 @@ lns_any_t * lns_strconcat(
     return pResult;
 }
 
+/**
+stem を pMeta のクラスにキャストする。   
+ */
+lns_stem_t lns_castClass( lns_stem_t stem, const lns_type_meta_t * pMeta )
+{
+    if ( stem.type == lns_stem_type_any ) {
+        const lns_any_t * pAny = stem.val.pAny;
+        if ( pAny->type == lns_value_type_class || pAny->type == lns_value_type_if )
+        {
+            const lns_type_meta_t * pWorkMeta = pAny->val.classVal->pMeta;
+            while ( pWorkMeta != &lns_type_meta_lns__root ) {
+                if ( pWorkMeta == pMeta ) {
+                    return stem;
+                }
+                pWorkMeta = pWorkMeta->pSuper;
+            }
+        }
+    }
+    return lns_global.nilStem;
+}
+
+/**
+stem を pMeta のインタフェースにキャストする。   
+   
+ */
+lns_stem_t lns_castIf(
+    lns_env_t * _pEnv, lns_stem_t stem, const lns_type_meta_t * pMeta )
+{
+    if ( stem.type == lns_stem_type_any ) {
+        lns_any_t * pAny = stem.val.pAny;
+        switch ( pAny->type ) {
+        case lns_value_type_if:
+            pAny = pAny->val.ifVal.pObj;
+            break;
+        case lns_value_type_class:
+            break;
+        default:
+            return lns_global.nilStem;
+        }
+        lns_any_t * pIFAny = (lns_any_t *)pAny->val.classVal->pIFdummy;
+        for ( ; pIFAny->type != lns_value_type_none; pIFAny++ ) {
+            if ( pIFAny->val.ifVal.pMeta == pMeta ) {
+                return LNS_STEM_ANY( lns_getIF( _pEnv, pIFAny ) );
+            }
+        }
+    }
+    return lns_global.nilStem;
+}
+
+lns_stem_t lns_castStem( lns_stem_t stem, lns_stem_type_t kind )
+{
+    if ( stem.type == kind ) {
+        return stem;
+    }
+    else if ( kind == lns_stem_type_int && stem.type == lns_stem_type_real ) {
+        if ( (lns_int_t)stem.val.realVal == stem.val.realVal ) {
+            return LNS_STEM_INT( stem.val.realVal );
+        }
+    }
+    else if ( kind == lns_stem_type_real && stem.type == lns_stem_type_int ) {
+        return LNS_STEM_REAL( stem.val.intVal );
+    }
+    return lns_global.nilStem;
+}
+
+lns_stem_t lns_castAny( lns_stem_t stem, lns_value_type_t kind )
+{
+    if ( stem.type == lns_stem_type_any && stem.val.pAny->type == kind ) {
+        return stem;
+    }
+    return lns_global.nilStem;
+}
+
 lns_int_t lns_stem2int( lns_stem_t stem )
 {
     switch ( stem.type ) {
@@ -1054,7 +1135,7 @@ lns_bool_t lns_stem2bool( lns_stem_t stem )
         break;
     }
     lns_abort( "convert error stem2real" );
-    return 0.0;
+    return false;
 }
 
 bool lns_equals_any( const lns_any_t * pAny1, const lns_any_t * pAny2 )

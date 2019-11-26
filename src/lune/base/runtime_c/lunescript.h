@@ -409,8 +409,18 @@ extern "C" {
      */
     typedef struct lns_type_meta_t {
         /** 型名 */
-        const char * pName;        
+        const char * pName;
+        /** 親クラスのメタ */
+        struct lns_type_meta_t * pSuper;
+        /**
+           impliment している interface の Meta のリスト。
+           NULL で終端する。
+         */
+        struct lns_type_meta_t * pIfList[];
     } lns_type_meta_t;
+
+    /** 全クラスの super */
+    extern lns_type_meta_t lns_type_meta_lns__root;
     
     /**
      * クラスのメソッドの最小構造。
@@ -839,6 +849,12 @@ extern "C" {
     extern bool lns_op_not( lns_env_t * _pEnv, lns_stem_t pAny );
     extern bool lns_equals( lns_stem_t stem1, lns_stem_t stem2 );
     extern bool lns_equals_any( const lns_any_t * pAny1, const lns_any_t * pAny2 );
+
+    extern lns_stem_t lns_castAny( lns_stem_t stem, lns_value_type_t kind );
+    extern lns_stem_t lns_castStem( lns_stem_t stem, lns_stem_type_t kind );
+    extern lns_stem_t lns_castIf( lns_env_t * _pEnv, lns_stem_t stem, const lns_type_meta_t * pMeta );
+    extern lns_stem_t lns_castClass( lns_stem_t stem, const lns_type_meta_t * pMeta );
+
 
     extern void lns_run_module( lns_env_t * _pEnv );
 

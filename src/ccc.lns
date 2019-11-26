@@ -6,6 +6,66 @@ let mut g_val = 100;
 
 {
    _section();
+   fn func(): ...<int> {
+      return 1, 2, 3;
+   }
+   fn sub2( val1:int!, ... ) {
+      print( val1, ... );
+   }
+   fn sub3( ... ) {
+      print( ... );
+   }
+   sub2( func()** );
+   sub3( func()** );
+}
+{
+   _section();
+   interface IF {
+      pub fn func():str;
+   }
+   class Super {
+   }
+   class Test extend Super (IF) {
+      pub fn func() : str {
+         return "hoge";
+      }
+   }
+
+   fn func( val:stem ) {
+      if! val@@@int {
+         print( "int:%d" ( _exp ) );
+      }
+      if! val@@@real {
+         print( "real:%g" ( _exp ) );
+      }
+      if! val@@@str {
+         print( "str:%s" ( _exp ) );
+      }
+      if! val@@@Test {
+         print( "class", _exp.func() );
+      }
+      if! val@@@IF {
+         print( "IF", _exp.func() );
+      }
+   }
+   func( 1 );
+   func( 1.0 );
+   func( "abc" );
+   func( new Test() );
+   func( new Test() );
+   func( new Super() );
+}
+{
+   _section();
+   fn func( val:int! ) {
+      let! mut work = val { return; };
+      print( work );
+   }
+   func( 1 );
+   func( nil );
+}
+{
+   _section();
    fn func( val:stem! ) {
       switch val {
          case 1, "abc" {

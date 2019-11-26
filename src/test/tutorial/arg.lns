@@ -1,0 +1,35 @@
+{
+   fn func( ... ) : int, ... {
+      let argList = [ ... ];
+      let mut total = 0;
+      foreach arg in argList {
+         when! arg {
+            total = total + arg@@int;
+         }
+      }
+      return total, ...;
+   }
+
+   print( func( 1, 2, 3, 4 )** ); // 10 1 2 3 4 
+}
+{
+   fn func( ...<int> ) : int, ...<int> {
+      let argList = [ ... ];
+      let mut total = 0;
+      foreach arg in argList {
+         total = total + arg;
+      }
+      return total, ...;
+   }
+   print( func( 1, 2, 3, 4 )** ); // 10 1 2 3 4 
+}
+{
+   fn func1( ...<stem!> ) {
+      print( ... );
+   }
+   fn func2( ... ) {
+      print( ... );
+   }
+   func1( 1, "abc" );
+   func2( 1, "abc" );
+}

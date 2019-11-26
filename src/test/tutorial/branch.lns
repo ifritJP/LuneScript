@@ -1,0 +1,89 @@
+{
+   fn func( val:int ) {
+      if val == 1 {
+         print( "hoge" );
+      }
+      elseif val == 2 {
+         print( "foo" );
+      }
+      else {
+         print( "bar" );
+      }
+   }
+   func( 1 );
+   func( 2 );
+   func( 3 );
+}
+{
+   fn func( exp:bool ) {
+      if exp {
+         print( "exp is true" );
+      }
+      else {
+         print( "exp is false" );
+      }
+      if not exp {
+         print( "exp is false" );
+      }
+   }
+   func( true );
+   func( false );
+}
+{
+   fn func( val:int ) {
+      switch val {
+         case 1 {
+            print( "hoge" );
+         }
+         case 2 {
+            print( "foo" );
+         }
+         default {
+            print( "bar" );
+         }
+      }
+   }
+   func( 1 );
+   func( 2 );
+   func( 3 );
+}
+{
+   fn func( val:int ) {
+      switch val {
+         case 10, 20, 30 {
+            print( "hoge" );
+         }
+         default {
+            print( "bar" );
+         }
+      }
+   }
+   func( 10 );
+   func( 20 );
+   func( 30 );
+   func( 40 );
+}
+{
+   fn func( val:int ) {
+      if val == 10 or val == 20 or val == 30 {
+         print( "hoge" );
+      }
+      else {
+         print( "bar" );
+      }
+   }
+   func( 10 );
+   func( 20 );
+   func( 30 );
+   func( 40 );
+}
+{
+   for count = 1, 10 {
+      print( count );
+      switch count {
+         case 5 {
+            break;
+         }
+      }
+   }
+}

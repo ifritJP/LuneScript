@@ -1,0 +1,17 @@
+{
+   fn func(): int,int {
+      return 1, 2;
+   }
+   print( func()** );  // 1 2
+}
+
+{
+   fn func1(): int,int {
+      return 1, 2;
+   }
+   fn func2( val1:int, val2:int!) {
+      print( val1, val2 );
+   }
+
+   func2( func1()** );
+}

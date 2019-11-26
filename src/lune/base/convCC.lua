@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@convCC'
 local _lune = {}
-if _lune1 then
-   _lune = _lune1
+if _lune2 then
+   _lune = _lune2
 end
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -186,6 +186,9 @@ function _lune.__isInstanceOf( obj, class )
       end
       if meta.ifList then
          for index, ifType in ipairs( meta.ifList ) do
+            if ifType == class then
+               return true
+            end
             if _lune.__isInstanceOf( ifType, class ) then
                return true
             end
@@ -221,8 +224,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune1 then
-   _lune1 = _lune
+if not _lune2 then
+   _lune2 = _lune
 end
 
 local Ver = _lune.loadModule( 'lune.base.Ver' )
@@ -248,6 +251,7 @@ local cTypeVarP = "lns_var_t *"
 local cTypeBlockP = "lns_block_t *"
 local cValNil = "lns_global.nilStem"
 local cValNone = "lns_global.noneStem"
+local cValDDD0 = "lns_global.ddd0"
 
 local accessAny = ".val.pAny"
 
@@ -833,6 +837,14 @@ function ModuleCtrl:getClassCName( classType )
 
    return "lns_" .. self:getFullName( classType )
 end
+function ModuleCtrl:getClassMetaName( classType )
+
+   if classType:get_srcTypeInfo() == Ast.headTypeInfo then
+      return "lns_type_meta_lns__root"
+   end
+   
+   return string.format( "lns_type_meta_%s", self:getClassCName( classType ))
+end
 function ModuleCtrl:getMethodCName( methodTypeInfo )
 
    return string.format( "mtd_%s_%s", self:getClassCName( methodTypeInfo:get_parentInfo() ), methodTypeInfo:get_rawTxt())
@@ -1300,7 +1312,7 @@ function ScopeMgr:getSymbolParam( symbol )
       
    end
    
-   Util.err( string.format( "illegal symbol -- %s %d", symbol:get_name(), 865) )
+   Util.err( string.format( "illegal symbol -- %s %d", symbol:get_name(), 874) )
 end
 function ScopeMgr:getSymbolValKind( symbol )
 
@@ -1817,7 +1829,7 @@ local function registerBuiltin(  )
             param = createSymbolParam( symbol:get_name(), getValKind( symbol:get_typeInfo() ), getCType( symbol:get_typeInfo() ) )
          else 
             
-               Util.err( string.format( "illeal symbol -- %s %d", symbol:get_name(), 1405) )
+               Util.err( string.format( "illeal symbol -- %s %d", symbol:get_name(), 1414) )
          end
       end
       
@@ -3710,7 +3722,7 @@ local function processDefaultCtor( stream, moduleCtrl, scopeMgr, node )
                else 
                   
                      Util.err( string.format( "no support -- %s:%s:%d", member:get_name().txt, ValKind:_getTxt( valKind)
-                     , 3254) )
+                     , 3263) )
                end
             end
             
@@ -4000,7 +4012,7 @@ function convFilter:processDeclClassNodePrototype( node )
             self:writeln( string.format( [==[#define lns_mtd_%s( OBJ )                     \
              ((%s*)&OBJ->val.ifVal)->pMtd]==], className, className) )
             if out2HMode == Out2HMode.HeaderPub then
-               self:writeln( string.format( 'extern lns_type_meta_t lns_type_meta_%s;', className) )
+               self:writeln( string.format( 'extern lns_type_meta_t %s;', self.moduleCtrl:getClassMetaName( node:get_expType() )) )
             end
             
          end
@@ -4178,7 +4190,7 @@ function convFilter:processDeclClassDef( node )
                else 
                   
                      Util.err( string.format( "no support -- %s:%s:%d", member:get_symbolInfo():get_name(), ValKind:_getTxt( valKind)
-                     , 3710) )
+                     , 3720) )
                end
             end
             
@@ -4296,18 +4308,28 @@ local function processIFMethodDataInit( stream, moduleCtrl, classType, orgClassT
    
 end
 
+local function processClassMeta( stream, moduleCtrl, classTypeInfo )
+
+   local className = moduleCtrl:getClassCName( classTypeInfo )
+   stream:write( string.format( 'lns_type_meta_t %s = { "%s", &%s, {', moduleCtrl:getClassMetaName( classTypeInfo ), className, moduleCtrl:getClassMetaName( classTypeInfo:get_baseTypeInfo() )) )
+   for index, ifType in pairs( classTypeInfo:get_interfaceList() ) do
+      stream:write( string.format( "&%s, ", moduleCtrl:getClassMetaName( ifType )) )
+   end
+   
+   stream:writeln( "NULL } };" )
+end
+
 local function processClassDataInit( stream, moduleCtrl, scopeMgr, classTypeInfo, fieldList )
 
-   
    local className = moduleCtrl:getClassCName( classTypeInfo )
    
+   if not Ast.isPubToExternal( classTypeInfo:get_accessMode() ) then
+      stream:write( "static " )
+   end
+   
+   processClassMeta( stream, moduleCtrl, classTypeInfo )
+   
    if not classTypeInfo:get_abstractFlag() then
-      
-      if not Ast.isPubToExternal( classTypeInfo:get_accessMode() ) then
-         stream:write( "static " )
-      end
-      
-      stream:writeln( string.format( 'lns_type_meta_t lns_type_meta_%s = { "%s" };', className, className) )
       
       if not Ast.isPubToExternal( classTypeInfo:get_accessMode() ) then
          stream:write( "static " )
@@ -4759,7 +4781,7 @@ function convFilter:processSym2Any( symbol )
       else 
          
             Util.err( string.format( "not suppport -- %s, %d", ValKind:_getTxt( valKind)
-            , 4453) )
+            , 4475) )
       end
    end
    
@@ -4781,7 +4803,7 @@ function convFilter:processVal2any( node, parent )
       else 
          
             Util.err( string.format( "not suppport -- %d, %s, %s, %d", node:get_pos().lineNo, ValKind:_getTxt( valKind)
-            , Nodes.getNodeKindName( node:get_kind() ), 4479) )
+            , Nodes.getNodeKindName( node:get_kind() ), 4501) )
       end
    end
    
@@ -4852,7 +4874,7 @@ function convFilter:processSetValSingleDirect( parent, node, var, initFlag, expV
       
       Util.err( string.format( "illegal %s %s %s -- %d", var:get_name(), ValKind:_getTxt( valKind)
       , ValKind:_getTxt( expValKind)
-      , 4560) )
+      , 4582) )
    end
    
    
@@ -5619,12 +5641,17 @@ function convFilter:processDeclVar( node, opt )
                   
                   self:popIndent(  )
                   filter( thenBlock, self, node )
+                  self:writeln( "}" )
+               else
+                  self:writeln( "}" )
+                  for index, var in pairs( varSymList ) do
+                     self:processSetSymSingle( node, nil, var, true, workSymList[index], false )
+                     self:writeln( "" )
+                  end
+                  
                end
             end
             
-            
-            
-            self:writeln( "}" )
          end
       end
       
@@ -6406,7 +6433,7 @@ function convFilter:processApply( node, opt )
          else 
             
                Util.err( string.format( "no support -- %s:%s:%d", varSym:get_name(), ValKind:_getTxt( valKind)
-               , 6229) )
+               , 6258) )
          end
       end
       
@@ -6822,7 +6849,7 @@ function convFilter:processExpUnwrap( node, opt )
                   self:write( "lns_unwrap_any( " )
                else 
                   
-                     Util.err( string.format( "no support -- %d", 6644) )
+                     Util.err( string.format( "no support -- %d", 6673) )
                end
             end
             
@@ -6835,7 +6862,7 @@ function convFilter:processExpUnwrap( node, opt )
                   self:processVal2stem( defVal, node )
                   self:write( ")" )
                else
-                  self:write( ", lns_global.nilStem )" )
+                  self:write( string.format( ", %s )", cValNil) )
                end
             end
             
@@ -6866,6 +6893,35 @@ function convFilter:processCreateMRet( retTypeList, expList, parent )
    self:write( ")" )
 end
 
+
+local function needMRetWrap( funcArgTypeList, argNodeList )
+
+   local mRetExp = argNodeList:get_mRetExp()
+   if  nil == mRetExp then
+      local _mRetExp = mRetExp
+   
+      return false
+   end
+   
+   local argTypeList = argNodeList:get_expTypeList()
+   for index, funcArgType in pairs( funcArgTypeList ) do
+      local argType = argTypeList[index]
+      if funcArgType:get_kind() == Ast.TypeInfoKind.DDD then
+         return argType:get_kind() ~= Ast.TypeInfoKind.DDD
+      end
+      
+      if argType:get_kind() == Ast.TypeInfoKind.DDD or mRetExp:get_index() == index then
+         return true
+      end
+      
+      if mRetExp:get_index() == index then
+         return true
+      end
+      
+   end
+   
+   return true
+end
 
 local MRetInfo = {}
 MRetInfo._name2Val = {}
@@ -6902,6 +6958,46 @@ function convFilter:processCallWithMRet( parent, mRetFuncName, retTypeName, mRet
       local _mRetExp = mRetExp
    
       return 
+   end
+   
+   
+   do
+      local _matchExp = mRetInfo
+      if _matchExp[1] == MRetInfo.Method[1] then
+         local funcType = _matchExp[2][1]
+      
+         if not needMRetWrap( funcType:get_argTypeInfoList(), argList ) then
+            return 
+         end
+         
+      elseif _matchExp[1] == MRetInfo.Form[1] then
+      
+         if not needMRetWrap( {Ast.builtinTypeDDD}, argList ) then
+            return 
+         end
+         
+      elseif _matchExp[1] == MRetInfo.FormFunc[1] then
+         local funcType = _matchExp[2][1]
+      
+         if not needMRetWrap( funcType:get_argTypeInfoList(), argList ) then
+            return 
+         end
+         
+      elseif _matchExp[1] == MRetInfo.Func[1] then
+         local funcNode = _matchExp[2][1]
+      
+         if not needMRetWrap( funcNode:get_expType():get_argTypeInfoList(), argList ) then
+            return 
+         end
+         
+      elseif _matchExp[1] == MRetInfo.DDD[1] then
+         local node = _matchExp[2][1]
+      
+      elseif _matchExp[1] == MRetInfo.Format[1] then
+         local format = _matchExp[2][1]
+         local node = _matchExp[2][2]
+      
+      end
    end
    
    
@@ -7054,30 +7150,51 @@ function convFilter:processCallWithMRet( parent, mRetFuncName, retTypeName, mRet
             
          end
          
-         local function processArg2Stem( index )
+         local function processArg2Stem( index, typeInfo )
          
-            do
-               local _switchExp = argTypeList[index]
-               if _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeChar then
-                  self:write( "LNS_STEM_INT(" )
-                  self:write( string.format( "arg%d )", index) )
-               elseif _switchExp == Ast.builtinTypeReal then
-                  self:write( "LNS_STEM_REAL(" )
-                  self:write( string.format( "arg%d )", index) )
-               elseif _switchExp == Ast.builtinTypeBool then
-                  self:write( "LNS_STEM_BOOL(" )
-                  self:write( string.format( "arg%d )", index) )
-               else 
-                  
-                     if getValKind( argTypeList[index] ) == ValKind.Any then
-                        self:write( "LNS_STEM_ANY(" )
-                        self:write( string.format( "arg%d )", index) )
-                     else
-                      
-                        self:write( string.format( "arg%d", index) )
-                     end
+            if #argTypeList >= index then
+               do
+                  local _switchExp = argTypeList[index]
+                  if _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeChar then
+                     self:write( "LNS_STEM_INT(" )
+                     self:write( string.format( "arg%d )", index) )
+                  elseif _switchExp == Ast.builtinTypeReal then
+                     self:write( "LNS_STEM_REAL(" )
+                     self:write( string.format( "arg%d )", index) )
+                  elseif _switchExp == Ast.builtinTypeBool then
+                     self:write( "LNS_STEM_BOOL(" )
+                     self:write( string.format( "arg%d )", index) )
+                  else 
                      
+                        if getValKind( argTypeList[index] ) == ValKind.Any then
+                           self:write( "LNS_STEM_ANY(" )
+                           self:write( string.format( "arg%d )", index) )
+                        else
+                         
+                           self:write( string.format( "arg%d", index) )
+                        end
+                        
+                  end
                end
+               
+            else
+             
+               if typeInfo:get_kind() == Ast.TypeInfoKind.DDD then
+                  local offset = index - mRetExp:get_index()
+                  if offset > 0 then
+                     self:write( string.format( "lns_createSubDDD( _pEnv, %d, pMRet )", index - mRetExp:get_index()) )
+                  elseif offset == 0 then
+                     self:write( "pMRet" )
+                  else
+                   
+                     self:write( cValDDD0 )
+                  end
+                  
+               else
+                
+                  self:write( cValNone )
+               end
+               
             end
             
          end
@@ -7090,7 +7207,7 @@ function convFilter:processCallWithMRet( parent, mRetFuncName, retTypeName, mRet
             
             for index = 1, #expList do
                self:write( ", " )
-               processArg2Stem( index )
+               processArg2Stem( index, Ast.builtinTypeNone )
             end
             
          end
@@ -7166,7 +7283,7 @@ function convFilter:processCallWithMRet( parent, mRetFuncName, retTypeName, mRet
             for index, argType in pairs( funcTypeInfo:get_argTypeInfoList() ) do
                if getValKind( argType ) == ValKind.Stem then
                   self:write( ", " )
-                  processArg2Stem( index )
+                  processArg2Stem( index, argType )
                else
                 
                   self:write( string.format( ", arg%d", index) )
@@ -7247,7 +7364,7 @@ function convFilter:processCallArgList( funcArgTypeList, expListNode )
          if #expList >= index then
             if funcArgType:get_kind() == Ast.TypeInfoKind.DDD then
                if expList[index]:get_kind() == Nodes.NodeKind.get_Abbr() then
-                  self:write( "lns_global.ddd0" )
+                  self:write( cValDDD0 )
                else
                 
                   filter( expList[index], self, expListNode )
@@ -7269,7 +7386,7 @@ function convFilter:processCallArgList( funcArgTypeList, expListNode )
          else
           
             if funcArgType:get_kind() == Ast.TypeInfoKind.DDD then
-               self:write( "lns_global.ddd0" )
+               self:write( cValDDD0 )
             else
              
                self:write( cValNone )
@@ -7379,7 +7496,7 @@ function convFilter:processDeclClass( node, opt )
                
                processClassDataInit( self.stream, self.moduleCtrl, self.scopeMgr, classType, node:get_fieldList() )
             elseif _switchExp == Ast.TypeInfoKind.IF then
-               self:writeln( string.format( 'lns_type_meta_t lns_type_meta_%s = { "%s" };', className, className) )
+               processClassMeta( self.stream, self.moduleCtrl, classType )
             end
          end
          
@@ -7608,36 +7725,39 @@ function convFilter:processExpCall( node, opt )
             do
                local mRetExp = argList:get_mRetExp()
                if mRetExp ~= nil then
-                  isMret = true
-                  self:write( string.format( "%s( _pEnv", getMRetFuncName( node )) )
-                  
-                  local funcNode = node:get_func()
-                  do
-                     local _switchExp = funcNode:get_expType():get_kind()
-                     if _switchExp == Ast.TypeInfoKind.Method then
-                        do
-                           local fieldNode = _lune.__Cast( node:get_func(), 3, Nodes.RefFieldNode )
-                           if fieldNode ~= nil then
-                              self:write( ", " )
-                              self:processVal2any( fieldNode:get_prefix(), fieldNode )
+                  if needMRetWrap( node:get_func():get_expType():get_argTypeInfoList(), argList ) then
+                     isMret = true
+                     self:write( string.format( "%s( _pEnv", getMRetFuncName( node )) )
+                     
+                     local funcNode = node:get_func()
+                     do
+                        local _switchExp = funcNode:get_expType():get_kind()
+                        if _switchExp == Ast.TypeInfoKind.Method then
+                           do
+                              local fieldNode = _lune.__Cast( node:get_func(), 3, Nodes.RefFieldNode )
+                              if fieldNode ~= nil then
+                                 self:write( ", " )
+                                 self:processVal2any( fieldNode:get_prefix(), fieldNode )
+                              end
                            end
+                           
+                        elseif _switchExp == Ast.TypeInfoKind.Form or _switchExp == Ast.TypeInfoKind.FormFunc then
+                           self:write( ", " )
+                           self:processVal2any( node:get_func(), node )
                         end
-                        
-                     elseif _switchExp == Ast.TypeInfoKind.Form or _switchExp == Ast.TypeInfoKind.FormFunc then
-                        self:write( ", " )
-                        self:processVal2any( node:get_func(), node )
-                     end
-                  end
-                  
-                  for index, argNode in pairs( argList:get_expList() ) do
-                     if index <= mRetExp:get_index() then
-                        self:write( ", " )
-                        filter( argNode, self, argList )
                      end
                      
+                     for index, argNode in pairs( argList:get_expList() ) do
+                        if index <= mRetExp:get_index() then
+                           self:write( ", " )
+                           filter( argNode, self, argList )
+                        end
+                        
+                     end
+                     
+                     self:write( ")" )
                   end
                   
-                  self:write( ")" )
                end
             end
             
@@ -7878,10 +7998,10 @@ function convFilter:processFuncCast( node )
       
       if #orgFunc:get_retTypeInfoList() == 0 then
          if #castType:get_retTypeInfoList() > 1 then
-            self:write( "lns_global.ddd0" )
+            self:write( cValDDD0 )
          else
           
-            self:write( "lns_global.nilStem" )
+            self:write( cValNil )
          end
          
       elseif #orgFunc:get_retTypeInfoList() == 1 then
@@ -7967,41 +8087,138 @@ function convFilter:processExpCast( node, opt )
          end
          
       elseif _switchExp == Nodes.CastKind.Force then
-         if isStemType( expType ) then
-            do
-               local _switchExp = castType
-               if _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeChar then
-                  self:write( "lns_stem2int( " )
-                  filter( exp, self, node )
-                  self:write( ")" )
-               elseif _switchExp == Ast.builtinTypeReal then
-                  self:write( "lns_stem2real( " )
-                  filter( exp, self, node )
-                  self:write( ")" )
-               elseif _switchExp == Ast.builtinTypeBool then
-                  self:write( "lns_stem2bool( " )
-                  filter( exp, self, node )
-                  self:write( ")" )
-               else 
-                  
-                     
-                     if getValKind( castType ) == ValKind.Any then
-                        self:processVal2any( exp, node )
-                     else
-                      
+         do
+            local _switchExp = getValKind( castType )
+            if _switchExp == ValKind.Stem then
+               self:processVal2stem( exp, node )
+            elseif _switchExp == ValKind.Any then
+               self:processVal2any( exp, node )
+            elseif _switchExp == ValKind.Prim then
+               if isStemType( expType ) then
+                  do
+                     local _switchExp = castType:get_srcTypeInfo()
+                     if _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeChar then
+                        self:write( "lns_stem2int( " )
                         filter( exp, self, node )
+                        self:write( ")" )
+                     elseif _switchExp == Ast.builtinTypeReal then
+                        self:write( "lns_stem2real( " )
+                        filter( exp, self, node )
+                        self:write( ")" )
+                     elseif _switchExp == Ast.builtinTypeBool then
+                        self:write( "lns_stem2bool( " )
+                        filter( exp, self, node )
+                        self:write( ")" )
+                     else 
+                        
+                           Util.err( string.format( "illegal cast -- %s", castType:getTxt(  )) )
                      end
-                     
+                  end
+                  
+               else
+                
+                  filter( exp, self, node )
                end
+               
             end
-            
-         else
-          
-            filter( exp, self, node )
          end
          
       elseif _switchExp == Nodes.CastKind.Normal then
-         error( "not support cast" )
+         local nonNilCastType = castType:get_nonnilableType()
+         if nonNilCastType:get_kind() == Ast.TypeInfoKind.Class and not nonNilCastType:equals( Ast.builtinTypeString ) then
+            self:write( "lns_castClass( " )
+            self:processVal2stem( exp, node )
+            self:write( string.format( ", &%s )", self.moduleCtrl:getClassMetaName( nonNilCastType )) )
+         elseif nonNilCastType:get_kind() == Ast.TypeInfoKind.IF then
+            self:write( "lns_castIf( _pEnv, " )
+            self:processVal2stem( exp, node )
+            self:write( string.format( ", &%s )", self.moduleCtrl:getClassMetaName( nonNilCastType )) )
+         else
+          
+            if getValKind( nonNilCastType ) == ValKind.Any then
+               local kindTxt
+               
+               local workType
+               
+               do
+                  local enumType = _lune.__Cast( nonNilCastType, 3, Ast.EnumTypeInfo )
+                  if enumType ~= nil then
+                     workType = enumType:get_valTypeInfo()
+                  else
+                     workType = nonNilCastType
+                  end
+               end
+               
+               do
+                  local _switchExp = workType:get_kind()
+                  if _switchExp == Ast.TypeInfoKind.List then
+                     kindTxt = "lns_value_type_List"
+                  elseif _switchExp == Ast.TypeInfoKind.Array then
+                     kindTxt = "lns_value_type_Array"
+                  elseif _switchExp == Ast.TypeInfoKind.Map then
+                     kindTxt = "lns_value_type_Map"
+                  elseif _switchExp == Ast.TypeInfoKind.Class then
+                     if workType:equals( Ast.builtinTypeString ) then
+                        kindTxt = "lns_value_type_str"
+                     else
+                      
+                        Util.err( "not support" )
+                     end
+                     
+                  elseif _switchExp == Ast.TypeInfoKind.IF then
+                     Util.err( "not support" )
+                  elseif _switchExp == Ast.TypeInfoKind.Func then
+                     kindTxt = "lns_value_type_form"
+                  elseif _switchExp == Ast.TypeInfoKind.Alge then
+                     kindTxt = "lns_value_type_alge"
+                  elseif _switchExp == Ast.TypeInfoKind.DDD then
+                     kindTxt = "lns_value_type_ddd"
+                  elseif _switchExp == Ast.TypeInfoKind.Set then
+                     kindTxt = "lns_value_type_Set"
+                  elseif _switchExp == Ast.TypeInfoKind.Form then
+                     kindTxt = "lns_value_type_form"
+                  elseif _switchExp == Ast.TypeInfoKind.FormFunc then
+                     kindTxt = "lns_value_type_form"
+                  else 
+                     
+                        Util.err( string.format( "not support -- %s", castType:getTxt(  )) )
+                  end
+               end
+               
+               self:write( "lns_castAny( " )
+               self:processVal2stem( exp, node )
+               self:write( string.format( ", %s )", kindTxt) )
+            else
+             
+               local kindTxt
+               
+               if nonNilCastType:get_kind() ~= Ast.TypeInfoKind.Stem then
+                  do
+                     local _switchExp = nonNilCastType:get_srcTypeInfo()
+                     if _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeChar then
+                        kindTxt = "lns_stem_type_int"
+                     elseif _switchExp == Ast.builtinTypeReal then
+                        kindTxt = "lns_stem_type_real"
+                     elseif _switchExp == Ast.builtinTypeBool then
+                        kindTxt = "lns_stem_type_bool"
+                     else 
+                        
+                           Util.err( string.format( "not support -- %s", castType:getTxt(  )) )
+                     end
+                  end
+                  
+                  self:write( "lns_castStem( " )
+                  self:processVal2stem( exp, node )
+                  self:write( string.format( ", %s )", kindTxt) )
+               else
+                
+                  filter( exp, self, node )
+               end
+               
+            end
+            
+         end
+         
       end
    end
    
@@ -8330,7 +8547,7 @@ function convFilter:processExpRefItem( node, opt )
                self:write( ")" )
             else 
                
-                  Util.err( string.format( "not support:%d:%d", 8624, node:get_pos().lineNo) )
+                  Util.err( string.format( "not support:%d:%d", 8791, node:get_pos().lineNo) )
             end
          end
          
@@ -8504,7 +8721,7 @@ function convFilter:processReturn( node, opt )
                   filter( expList[1], self, node )
                else 
                   
-                     Util.err( string.format( "no support -- %d", 8844) )
+                     Util.err( string.format( "no support -- %d", 9011) )
                end
             end
             
@@ -8535,7 +8752,7 @@ function convFilter:processReturn( node, opt )
                elseif _switchExp == ValKind.Prim then
                else 
                   
-                     Util.err( string.format( "no support -- %d", 8877) )
+                     Util.err( string.format( "no support -- %d", 9044) )
                end
             end
             

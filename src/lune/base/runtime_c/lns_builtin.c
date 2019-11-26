@@ -15,8 +15,8 @@ lns_any_t * lns_io_stderr;
 lns_any_t * lns_io_stdin;
 lns_any_t * lns_io_stdout;
 lns_any_t * lns_package_path;
-lns_type_meta_t lns_type_meta_lns_iStream = { "lns_iStream" };
-lns_type_meta_t lns_type_meta_lns_oStream = { "lns_oStream" };
+lns_type_meta_t lns_type_meta_lns_iStream = { "lns_iStream", &lns_type_meta_lns__root, {NULL } };
+lns_type_meta_t lns_type_meta_lns_oStream = { "lns_oStream", &lns_type_meta_lns__root, {NULL } };
 static lns_mtd_lns_iStream_t lns_if_lns_luaStream_imp_lns_iStream = {
    (lns_method_t *)mtd_lns_luaStream_close,
    (lns_method_t *)mtd_lns_luaStream_read,
@@ -26,7 +26,7 @@ static lns_mtd_lns_oStream_t lns_if_lns_luaStream_imp_lns_oStream = {
    (lns_method_t *)mtd_lns_luaStream_flush,
    (lns_method_t *)mtd_lns_luaStream_write,
 };
-lns_type_meta_t lns_type_meta_lns_luaStream = { "lns_luaStream" };
+lns_type_meta_t lns_type_meta_lns_luaStream = { "lns_luaStream", &lns_type_meta_lns__root, {&lns_type_meta_lns_iStream, &lns_type_meta_lns_oStream, NULL } };
 lns_mtd_lns_luaStream_t lns_mtd_lns_luaStream = {
    mtd_lns_luaStream__del,
    NULL,
@@ -36,7 +36,7 @@ lns_mtd_lns_luaStream_t lns_mtd_lns_luaStream = {
    (lns_method_t *)mtd_lns_luaStream_seek,
    (lns_method_t *)mtd_lns_luaStream_write,
 };
-lns_type_meta_t lns_type_meta_lns_Mapping = { "lns_Mapping" };
+lns_type_meta_t lns_type_meta_lns_Mapping = { "lns_Mapping", &lns_type_meta_lns__root, {NULL } };
 static void mtd_lns_luaStream__del( lns_env_t * _pEnv, lns_any_t * pObj ) {
    mtd_lns_luaStream__delExt( _pEnv, pObj );
 }

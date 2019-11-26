@@ -293,6 +293,9 @@ function _lune.__isInstanceOf( obj, class )
       end
       if meta.ifList then
          for index, ifType in ipairs( meta.ifList ) do
+            if ifType == class then
+               return true
+            end
             if _lune.__isInstanceOf( ifType, class ) then
                return true
             end
