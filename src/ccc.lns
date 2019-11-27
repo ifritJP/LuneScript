@@ -6,6 +6,25 @@ let mut g_val = 100;
 
 {
    _section();
+   class SuperSuper {
+      pub fn func( val:int ):int {
+         return 1 + val;
+      }
+   }
+
+   class Super extend SuperSuper {
+   }
+
+   class Test extend Super {
+      pub override fn func( val:int ): int {
+         return super( val );
+      }
+   }
+   let test = new Test();
+   print( test.func( 10 ) );
+}
+{
+   _section();
    fn func(): ...<int> {
       return 1, 2, 3;
    }

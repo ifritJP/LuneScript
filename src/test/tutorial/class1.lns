@@ -1,0 +1,180 @@
+{
+   class Test {
+   }
+   let test = new Test();
+}
+{
+   class Test {
+      pub fn func() {
+         print( "hoge", __line__ );
+      }
+   }
+   let test = new Test();
+   test.func();  // Test.func
+}
+{
+   class Test {
+      pub fn func() {
+         print( "hoge", __line__ );
+      }
+   }
+   fn sub( foo:form ) {
+      foo();
+   }
+
+   let test = new Test();
+   sub( fn() { test.func(); } );
+}
+{
+   class Test {
+      fn func() {
+         print( "hoge", __line__ );
+      }
+      pub fn sub() {
+         self.func();
+      }
+   }
+   let test = new Test();
+   test.sub();  // Test.func
+}
+{
+   class Test {
+   }
+   pub fn Test.func() {
+      print( "hoge", __line__ );
+   }
+   let test = new Test();
+   test.func();  // Test.func
+}
+{
+   class Test {
+      fn func();
+      pub fn sub() {
+         self.func();
+      }
+   }
+   pub fn Test.func() {
+      print( "hoge", __line__ );
+   }
+   let test = new Test();
+   test.sub();  // Test.func
+}
+{
+   class Test {
+      pub static fn sfunc() {
+         print( "hoge", __line__ );
+      }
+   }
+   Test.sfunc(); // Test.sfunc
+}
+{
+   class Test {
+      pri let val1:int;
+      pri let val2:int;
+      pri let val3:int;
+      pub fn func() {
+         print( self.val1, self.val2, self.val3 );
+      }
+
+   }
+   let test = new Test( 1, 2, 3 );
+   test.func(); // 1 2 3 
+}
+{
+   class Test {
+      pri let mut val1:int;
+      pri let val2:int;
+      pub fn func() {
+         print( self.val1, self.val2 );
+      }
+      pub fn add( val:int ) mut {
+         self.val1 = self.val1 + val;
+      }
+   }
+   let mut test = new Test( 1, 2 );
+   test.func(); // 1 2
+   test.add( 10 );
+   test.func(); // 11 2
+}
+{
+   class Test {
+      pri let allmut val:int;
+      pub fn func() {
+         self.val = self.val + 1;  // ok
+      }
+   }
+}
+{
+   class Test {
+      pri let val1:int;
+      pri let val2:int;
+      pub fn __init() {
+         self.val1 = 0;
+         self.val2 = 0;
+      }
+   }
+   let test = new Test();
+}
+{
+   class Test {
+      pri let val1:int;
+      pri let val2:int;
+      pub fn __init( val1:int, val2:int ) {
+         self.val1 = val1 + 10;
+         self.val2 = val2 + 10;
+      }
+      pub fn func() {
+         print( self.val1, self.val2 );
+      }
+   }
+   let test = new Test( 1, 2 );
+   test.func(); // 11 12
+}
+{
+   class Test {
+      pro let val:int;
+   }
+   class Sub extend Test {
+      let val2:int;
+      pub fn func() {
+         print( self.val, self.val2 );
+      }
+   }
+   let sub = new Sub( 1, 2 );
+   sub.func(); // 1, 2
+}
+{
+   class Test {
+      pro let val:int!;
+      
+   }
+   class Sub extend Test {
+      let val2:int;
+      _lune_control default__init_old;
+      pub fn func() {
+         print( self.val, self.val2 );
+      }
+   }
+   let sub = new Sub( 2 );
+   sub.func(); // nil, 2
+}
+{
+   class Test {
+      pri let mut val:int {pub};
+      _lune_control default__init;
+      pub static fn create(): Test {
+         return new Test( 1 );
+      }
+   }
+}
+{
+   class Test {
+      pri static let val1:int;
+      pri static let val2:int;
+
+      __init {
+         Test.val1 = 1;
+         Test.val2 = 1;
+      }
+   }
+}

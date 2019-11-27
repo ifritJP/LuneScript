@@ -176,6 +176,60 @@ extern "C" {
      */
 #define LNS_ANY_POOL_MAX_NUM 100000
 
+
+#define lns_check_err_from_map( ERR, ENV, MAP, MBR, ACC )               \
+    if ( ERR == NULL ) {                                                \
+        lns_stem_t _name = LNS_STEM_ANY( lns_litStr2any( ENV, #MBR ) ); \
+        lns_stem_t _work = lns_mtd_Map_get( _pEnv, MAP, _name );        \
+        if ( _work.type == lns_stem_type_nil ) {                        \
+            ERR = _name.val.pAny;                                       \
+        }                                                               \
+        else {                                                          \
+            MBR = _work ACC;                                            \
+        }                                                               \
+    }
+
+
+#define lns_check_err_from_map_class( ERR, ENV, MAP, MBR, FromMap, ACC ) \
+    if ( ERR == NULL ) {                                                \
+        lns_stem_t _name = LNS_STEM_ANY( lns_litStr2any( ENV, #MBR ) ); \
+        lns_stem_t _work = lns_mtd_Map_get( _pEnv, MAP, _name );        \
+        if ( _work.type != lns_stem_type_nil ) {                        \
+            lns_stem_t mret = FromMap( _pEnv, _work);                    \
+            _work = lns_fromDDD( mret.val.pAny, 0 );                    \
+            if ( _work.type == lns_stem_type_nil ) {                    \
+                ERR = _name.val.pAny;                                   \
+            }                                                           \
+            else {                                                      \
+                MBR = _work ACC;                                        \
+            }                                                           \
+        }                                                               \
+        else {                                                          \
+            ERR = _name.val.pAny;                                       \
+        }                                                               \
+    }
+
+#define lns_check_err_from_map_class_nilable( ERR, ENV, MAP, MBR, FromMap ) \
+    if ( ERR == NULL ) {                                                \
+        lns_stem_t _name = LNS_STEM_ANY( lns_litStr2any( ENV, #MBR ) ); \
+        lns_stem_t _work = lns_mtd_Map_get( _pEnv, MAP, _name );        \
+        if ( _work.type != lns_stem_type_nil ) {                        \
+            lns_stem_t mret = FromMap( _pEnv, _work);                    \
+            _work = lns_fromDDD( mret.val.pAny, 0 );                    \
+            if ( _work.type == lns_stem_type_nil ) {                    \
+                ERR = _name.val.pAny;                                   \
+            }                                                           \
+            else {                                                      \
+                MBR = _work;                                            \
+            }                                                           \
+        }                                                               \
+        else {                                                          \
+            MBR = lns_global.nilStem;                                   \
+        }                                                               \
+    }
+    
+    
+
 #define lns_set_block_var( BLOCK, INDEX, TYPE, VAR )    \
     VAR = lns_var_alloc( _pEnv, BLOCK, INDEX, TYPE );
     
@@ -202,7 +256,7 @@ extern "C" {
     lns_set_block_var( BLOCK, INDEX, lns_stem_type_any, SYMBOL );     \
     lns_setQ( SYMBOL->stem, (VAL) );
 
-#define lns_decre_ref_alter( ENV, STEM )               \
+#define lns_decre_ref_stem( ENV, STEM )               \
     {                                                   \
         lns_stem_t _work = STEM;                       \
         if ( _work.type == lns_stem_type_any ) {       \
@@ -336,10 +390,10 @@ extern "C" {
         lns_value_type_ddd,
         lns_value_type_mRet,
         lns_value_type_form,
-        lns_value_type_List,
-        lns_value_type_Array,
-        lns_value_type_Set,
-        lns_value_type_Map,
+        //lns_value_type_List,
+        //lns_value_type_Array,
+        //lns_value_type_Set,
+        //lns_value_type_Map,
         lns_value_type_itList,
         lns_value_type_itSet,
         lns_value_type_itMap,
@@ -354,6 +408,8 @@ extern "C" {
 
     typedef lns_any_t * lns_newfunc_t( lns_env_t * _pEnv, ... );
 
+
+    typedef lns_stem_t lns_fromMap_t( lns_env_t * _pEnv, lns_stem_t val);
 
     /**
      * 関数の型
@@ -561,6 +617,7 @@ extern "C" {
         lns_mtd_List_t * pMtd;
         lns_listObj_t * pObj;
     } lns_List_t;
+    extern lns_type_meta_t lns_type_meta_List;
 
 
     typedef void lns_setObj_t;
@@ -571,6 +628,7 @@ extern "C" {
         lns_mtd_Set_t * pMtd;
         lns_setObj_t * pObj;
     } lns_Set_t;
+    extern lns_type_meta_t lns_type_meta_Set;
 
     typedef void lns_mapObj_t;
     typedef struct lns_mtd_Map_t lns_mtd_Map_t;
@@ -580,6 +638,8 @@ extern "C" {
         lns_mtd_Map_t * pMtd;
         lns_mapObj_t * pObj;
     } lns_Map_t;
+    extern lns_type_meta_t lns_type_meta_Map;
+    
 
     typedef struct lns_if_t {
         lns_type_meta_t * pMeta;
@@ -854,6 +914,12 @@ extern "C" {
     extern lns_stem_t lns_castStem( lns_stem_t stem, lns_stem_type_t kind );
     extern lns_stem_t lns_castIf( lns_env_t * _pEnv, lns_stem_t stem, const lns_type_meta_t * pMeta );
     extern lns_stem_t lns_castClass( lns_stem_t stem, const lns_type_meta_t * pMeta );
+
+    extern lns_stem_t lns_stem_refAt( lns_env_t * _pEnv, lns_stem_t stem, lns_stem_t key );
+
+    extern lns_stem_t lns_fromMapToList(
+        lns_env_t * _pEnv, lns_fromMap_t * pFromMap, bool nilable, lns_stem_t stem );
+    
 
 
     extern void lns_run_module( lns_env_t * _pEnv );

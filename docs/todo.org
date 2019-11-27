@@ -8,6 +8,8 @@
 
 * バグ
 
+- [ ] Mapping を implement するクラスは、 abstract/interface のメンバは持てないようにする
+  
 - [ ] 互換性のない値で switch - case が書けてしまう。
   
 - [ ] リストのリテラルで、継承関係のある値を混在させた時に、
@@ -221,11 +223,11 @@ foreach obj in list {
    - [X] defaultArg.org
    - [X] nilable.org
    - [X] branch.org
-   - [ ] cast.org
-   - [ ] class1.org
-   - [ ] class2accessor.org
-   - [ ] classAdvertise.org
-   - [ ] classInherit.org
+   - [X] cast.org
+   - [X] class1.org
+   - [X] class2accessor.org
+   - [X] classAdvertise.org
+   - [X] classInherit.org
    - [ ] classMapping.org
    - [ ] classOverride.org
    - [ ] crosscompile.org
@@ -320,7 +322,7 @@ foreach obj in list {
      
 ** 高速化
 
-- [ ] self でメソッドをコールする際も call ラッパを使用しているが、
+- [ ] 単純な ExRef からのメソッド呼び出しでも call ラッパを使用しているが、
       ダイレクトでコールする方が効率が良い。
       
 - [ ] 比較演算の結果が stem になっている。

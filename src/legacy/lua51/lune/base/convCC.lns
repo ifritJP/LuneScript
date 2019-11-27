@@ -480,6 +480,14 @@ class ModuleCtrl {
       return "lns_" .. self.getFullName( classType );
    }
 
+   pub fn getNewName( classType:&Ast.TypeInfo ): str {
+      return "lns_class_%s_new" (self.getClassCName( classType ));
+   }
+   
+   pub fn getCtorName( classType:&Ast.TypeInfo ) : str {
+      return "mtd_%s___init" ( self.getClassCName( classType ) );
+   }
+
    pub fn getClassMetaName( classType:&Ast.TypeInfo ) : str
    {
       if classType.$srcTypeInfo == Ast.headTypeInfo {
@@ -1133,6 +1141,9 @@ pushStream() で切り替えた出力ストリームを元に戻す。
          "lns_mtd_List_insert( _pEnv, *lns_module_globalStemList, %s );"
          (valName ) );
    }
+
+   fn processDeclVarC(
+      declFlag:bool, var:&Ast.LowSymbol, init0:bool, manageScope:&Ast.Scope! ) mut;
    
    advertise stream;
 }
@@ -1277,7 +1288,8 @@ fn convFilter.processInitModule( node: Nodes.RootNode ) mut
    self.writeln( "lns_set_block_any( %s, 1, lns_module_path);" (moduleBlockName) );
    self.writeln(
       'lns_setQ_any( lns_module_path, lns_litStr2any( _pEnv, "%s"));'
-      ( moduleFullName ) );
+      ( node.$moduleTypeInfo.getFullName(
+         self.$typeNameCtrl, self.$moduleInfoManager ##)) );
    
 
    // init ブロック内の managedStemTop 用ブロック作成
@@ -2829,8 +2841,8 @@ fn processNewConstrProto(
    let className = moduleCtrl.getClassCName( node.$expType );
 
    stream.write( getOut2HeaderPrefix( out2HMode ) );
-   stream.write( "%s lns_class_%s_new( %s _pEnv"
-      (cTypeAnyP, className, cTypeEnvP ) );
+   stream.write( "%s %s( %s _pEnv"
+      (cTypeAnyP, moduleCtrl.getNewName( node.$expType ), cTypeEnvP ) );
 
 
    if not outputBuiltinFlag {
@@ -3208,10 +3220,11 @@ fn processDefaultCtor(
 
    if not node.hasUserInit() {
       // デフォルトコンストラクタの処理
-      stream.write(
-         "static void mtd_%s___init( lns_env_t * _pEnv, %s pAny"
-         (className, cTypeAnyP ) );
 
+      stream.write(
+         "static void %s( lns_env_t * _pEnv, %s pAny"
+         (moduleCtrl.getCtorName( node.$expType ), cTypeAnyP ) );
+      
       let ctorType = unwrap node.$scope.getTypeInfoField(
          "__init", true, node.$scope, scopeAccess );
       
@@ -3225,13 +3238,23 @@ fn processDefaultCtor(
 
       let superArgNum;
       if! let baseScope = node.$scope.$inherit {
+         // 親クラスのコンストラクタ呼び出し
          let superInitType =
             unwrap baseScope.getTypeInfoField( "__init", true, baseScope, scopeAccess );
-         superArgNum = #superInitType.$argTypeInfoList;         
-         stream.write( "mtd_%s___init( _pEnv, pAny"
-            (moduleCtrl.getClassCName( node.$expType.$baseTypeInfo ) ) );
-         foreach argType, index in superInitType.$argTypeInfoList {
-            stream.write( ", _arg%d" (index) );
+         stream.write( "%s( _pEnv, pAny"
+                       (moduleCtrl.getCtorName( node.$expType.$baseTypeInfo ) ) );
+
+         if #ctorType.$argTypeInfoList > #superInitType.$argTypeInfoList {
+            superArgNum = #superInitType.$argTypeInfoList;         
+            foreach argType, index in superInitType.$argTypeInfoList {
+               stream.write( ", _arg%d" (index) );
+            }
+         }
+         else {
+            superArgNum = 0;
+            foreach argType, index in superInitType.$argTypeInfoList {
+               stream.write( ", %s" (cValNil) );
+            }
          }
          stream.writeln( ");" );
       }
@@ -3367,6 +3390,35 @@ pub fn convFilter.process2stem(
 }
 
 
+fn convFilter.processNewInsance( classType:&Ast.TypeInfo, callInit:bool ) mut {
+   let className = self.moduleCtrl.getClassCName( classType );
+   
+   self.writeln( "lns_class_new_( _pEnv, %s, pAny, pObj );" (className) );
+
+   if callInit and not self.outputBuiltinFlag {
+      self.write( "%s( _pEnv, pAny" ( self.moduleCtrl.getCtorName( classType ) ) );
+
+      let scope = unwrap classType.$scope;
+      if not self.outputBuiltinFlag {
+         let initFuncType =
+            unwrap scope.getTypeInfoField( "__init", true, scope, scopeAccess );
+         foreach argType, index in initFuncType.$argTypeInfoList {
+            self.write( ", arg%d" ( index ) );
+         }
+      }
+      self.writeln( ");" );
+   }
+
+   if ( self.outputBuiltinFlag or not self.canConv ) {
+      self.writeln( "pObj->pExt = NULL;" );
+   }
+   self.writeln( "pObj->pImp = &pObj->imp;" );
+   self.writeln( "pObj->imp.sentinel.type = lns_value_type_none;" );
+   
+   processIFObjInit( self.stream, self.moduleCtrl, classType, classType );
+}
+
+
 fn convFilter.processMapping(
    node:&Nodes.DeclClassNode, classType:&Ast.TypeInfo, out2HMode:Out2HMode ) mut
 {
@@ -3376,8 +3428,9 @@ fn convFilter.processMapping(
 
    let classScope = unwrap classType.$scope;
    let toMapMtdSym = unwrap classScope.getSymbolInfoChild( "_toMap" );
+   let fromMapMtdSym = unwrap classScope.getSymbolInfoChild( "_fromMap" );
 
-   fn processDecl(callFlag:bool) {
+   fn processDeclToMap(callFlag:bool) {
       self.write( "%s%s " ( getOut2HeaderPrefix( out2HMode ), cTypeAnyP ));
       if callFlag {
          self.write(self.moduleCtrl.getMethodCName( toMapMtdSym.$typeInfo ) );
@@ -3385,88 +3438,204 @@ fn convFilter.processMapping(
       else {
          self.write( self.moduleCtrl.getCallMethodCName( toMapMtdSym.$typeInfo ) );
       }
-      self.writeln( "( %s _pEnv, %s pObj)"
+      self.write( "( %s _pEnv, %s pObj)"
                     ( cTypeEnvP,
                       getCRetType( toMapMtdSym.$typeInfo.$retTypeInfoList ) ) );
    }
+
+   fn processDeclFromMap() {
+      self.write( "%s%s " ( getOut2HeaderPrefix( out2HMode ), cTypeStem ));
+      self.write( self.moduleCtrl.getMethodCName( fromMapMtdSym.$typeInfo ) );
+      self.write( "( %s _pEnv, %s mapStem)"
+         ( cTypeEnvP, getCRetType( fromMapMtdSym.$typeInfo.$retTypeInfoList ) ) );
+   }
+
+   fn processToMapBody() {
+      // _toMap の定義
+      processDeclToMap( false );
+      self.writeln( "{" );
+      self.pushIndent( ## );
+
+      let className = self.moduleCtrl.getClassCName( classType );
+      
+      self.writeln( "%s pMap = lns_class_Map_new( _pEnv );" (cTypeAnyP) );
+      foreach varName in Ast.getAllNameForKind( classType, .Object, .Mbr ).$list {
+
+         self.write( "lns_mtd_Map_add( _pEnv, pMap, " );
+         self.write( 'LNS_STEM_ANY( lns_litStr2any( _pEnv, "%s" ) ), ' (varName) );
+
+         let memberSym = unwrap classScope.getSymbolInfoField(
+            varName, true, classScope, .Full );
+
+         let valKind = getValKind( memberSym.$typeInfo );
+         let mut valTxt:str! = getAccessMember( className, "pObj", varName );
+         switch valKind {
+            case .Prim, .Stem {
+            }
+            case .Any {
+               if memberSym.$typeInfo.$srcTypeInfo == Ast.builtinTypeString {
+               }
+               else {
+                  let mbrClassName =
+                     self.moduleCtrl.getClassCName( memberSym.$typeInfo );
+                  let memberTypeScope = unwrap memberSym.$typeInfo.$scope;
+                  let memberToMapSym = unwrap memberTypeScope.getSymbolInfoField(
+                     "_toMap", true, memberTypeScope, .Normal);
+
+                  self.writeln(
+                     "LNS_STEM_ANY( %s( _pEnv, %s ) ) );"
+                     ( self.moduleCtrl.getCallMethodCName( memberToMapSym.$typeInfo ),
+                       valTxt ));
+                  valTxt = nil;
+               }
+            }
+            default {
+               Util.err( "not support -- %s" (valKind.$_txt ) );
+            }
+         }
+         when! valTxt {
+            self.process2stem(
+               getValKind( memberSym.$typeInfo ), memberSym.$typeInfo, node,
+               fn () {     
+                  self.write( valTxt );
+               } );
+            self.writeln( ");" );
+         }
+      }
+
+      
+      self.writeln( "return pMap;" );
+      
+      self.popIndent();
+      self.writeln( "}" );
+
+
+      processDeclToMap( true );
+      self.writeln( "{" );
+      self.pushIndent( ## );
+
+      self.write( "return " );
+      self.write( getAccessMethod( className, "pObj", "_toMap" ) );
+      self.writeln( "( _pEnv, pObj );" );
+      
+      self.popIndent();
+      self.writeln( "}" );
+   }
+
+   fn processFromMapBody() {
+      // _toMap の定義
+      processDeclFromMap();
+      self.writeln( "{" );
+      self.pushIndent( ## );
+
+      self.writeln( "if ( mapStem.type == lns_stem_type_nil ) { return %s; }" (cValNil) );
+      self.writeln( "lns_any_t * pMap = mapStem%s;" (accessAny ) );
+      self.writeln( "lns_any_t * pErr = NULL;" );
+
+      let className = self.moduleCtrl.getClassCName( classType );
+      
+      foreach varName in Ast.getAllNameForKind( classType, .Object, .Mbr ).$list {
+         let memberSym = unwrap classScope.getSymbolInfoField(
+            varName, true, classScope, .Full );
+
+         let fromMapSym:&Ast.SymbolInfo!;
+         if! let memberClassScope = memberSym.$typeInfo.$scope {
+            fromMapSym = memberClassScope.getSymbolInfoField(
+               "_fromMap", true, memberClassScope, .Normal );
+         }
+         else {
+            fromMapSym = nil;
+         }
+              
+         
+         if not memberSym.$typeInfo.$nilable {
+            self.writeln( "%s %s;" (getCType( memberSym.$typeInfo ),
+                                     memberSym.$name ) );
+         
+            let defaultProc =
+               "lns_check_err_from_map( pErr, _pEnv, pMap, %s, %s );"
+                (memberSym.$name,
+                  getAccessPrimValFromStem( false, memberSym.$typeInfo, 0 ));
+
+            when! fromMapSym {
+               self.writeln(
+                  "lns_check_err_from_map_class( pErr, _pEnv, pMap, %s, %s, %s );"
+                  ( memberSym.$name,
+                    self.moduleCtrl.getMethodCName( fromMapSym.$typeInfo ),
+                    getAccessPrimValFromStem( false, memberSym.$typeInfo, 0 )) );
+            }
+            else {
+               self.writeln( defaultProc );
+            }
+         }
+         else {
+            let defaultProc =
+               "%s %s = lns_mtd_Map_get( _pEnv, pMap, %s );"
+                ( cTypeStem, memberSym.$name,
+                  getLiteralStrStem( '"%s"' ( memberSym.$name ) ) );
+            when! fromMapSym {
+               self.writeln( "%s %s;" (getCType( memberSym.$typeInfo ),
+                                        memberSym.$name ) );
+               self.writeln(
+                  "lns_check_err_from_map_class_nilable( pErr, _pEnv, pMap, %s, %s);"
+                  ( memberSym.$name,
+                    self.moduleCtrl.getMethodCName( fromMapSym.$typeInfo )) );
+            }
+            else {
+               self.writeln( defaultProc );
+            }
+         }
+      }
+
+      self.writeln( "if ( pErr != NULL ) {" );
+      self.pushIndent( ## );
+
+      self.write( "return lns_createMRet( _pEnv, false, 2, %s, " (cValNil) );
+      self.writeln( "LNS_STEM_ANY( pErr ) );" );
+      
+      self.popIndent();
+      self.writeln( "}" );
+
+      self.processNewInsance( classType, false );
+
+      foreach varName in Ast.getAllNameForKind( classType, .Object, .Mbr ).$list {
+         let memberSym = unwrap classScope.getSymbolInfoField(
+            varName, true, classScope, .Full );
+         
+         switch getValKind( memberSym.$typeInfo ) {
+            case .Stem {
+               self.writeln( "lns_setQ( pObj->%s, %s );" ( varName, varName ) );
+            }
+            case .Any {
+               self.writeln( "lns_setQ_any( &pObj->%s, %s );" ( varName, varName ) );
+            }
+            case .Prim {
+               self.writeln( "pObj->%s = %s;" ( varName, varName ) );
+            }
+         }
+      }
+      
+
+      self.writeln( "return lns_createMRet( _pEnv, false, 1, LNS_STEM_ANY( pAny ) );" );
+      
+      self.popIndent();
+      self.writeln( "}" );
+   }
+
+
    
    switch self.processMode {
       case .Prototype {
-         processDecl( false );
+         processDeclToMap( true );
          self.writeln( ";" );
-         processDecl( true );
+         processDeclToMap( false );
+         self.writeln( ";" );
+         processDeclFromMap();
          self.writeln( ";" );
       }
       case .DefClass {
-         processDecl( true );
-         self.writeln( "{" );
-         self.pushIndent( ## );
-
-         let className = self.moduleCtrl.getClassCName( classType );
-         
-         self.writeln( "%s pMap = lns_class_Map_new( _pEnv );" (cTypeAnyP) );
-         foreach varName in Ast.getAllNameForKind( classType, .Object, .Mbr ).$list {
-
-            self.write( "lns_mtd_Map_add( _pEnv, pMap, " );
-            self.write( 'LNS_STEM_ANY( lns_litStr2any( _pEnv, "%s" ) ), ' (varName) );
-
-            let memberSym = unwrap classScope.getSymbolInfoField(
-               varName, true, classScope, .Full );
-
-            let valKind = getValKind( memberSym.$typeInfo );
-            let mut valTxt:str! = getAccessMember( className, "pObj", varName );
-            switch valKind {
-               case .Prim, .Stem {
-               }
-               case .Any {
-                  if memberSym.$typeInfo.$srcTypeInfo == Ast.builtinTypeString {
-                  }
-                  else {
-                     let mbrClassName =
-                        self.moduleCtrl.getClassCName( memberSym.$typeInfo );
-                     let memberTypeScope = unwrap memberSym.$typeInfo.$scope;
-                     let memberToMapSym = unwrap memberTypeScope.getSymbolInfoField(
-                        "_toMap", true, memberTypeScope, .Normal);
-
-                     self.writeln(
-                        "LNS_STEM_ANY( %s( _pEnv, %s ) ) );"
-                        ( self.moduleCtrl.getCallMethodCName( memberToMapSym.$typeInfo ),
-                          valTxt ));
-                     valTxt = nil;
-                  }
-               }
-               default {
-                  Util.err( "not support -- %s" (valKind.$_txt ) );
-               }
-            }
-            when! valTxt {
-               self.process2stem(
-                  getValKind( memberSym.$typeInfo ), memberSym.$typeInfo, node,
-                  fn () {     
-                     self.write( valTxt );
-                  } );
-               self.writeln( ");" );
-            }
-         }
-
-         
-         self.writeln( "return pMap;" );
-         
-         self.popIndent();
-         self.writeln( "}" );
-
-
-         processDecl( false );
-         self.writeln( "{" );
-         self.pushIndent( ## );
-
-         self.write( "return " );
-         self.write( getAccessMethod( className, "pObj", "_toMap" ) );
-         self.writeln( "( _pEnv, pObj );" );
-         
-         self.popIndent();
-         self.writeln( "}" );
-
+         processToMapBody();
+         processFromMapBody();
       }
    }
 }
@@ -3580,6 +3749,7 @@ fn convFilter.processDeclClassNodePrototype( node:&Nodes.DeclClassNode ) mut
    }
 }
 
+
 fn convFilter.processDeclClassDef( node:&Nodes.DeclClassNode ) mut
 {
    let className = self.moduleCtrl.getClassCName( node.$expType );
@@ -3601,24 +3771,17 @@ fn convFilter.processDeclClassDef( node:&Nodes.DeclClassNode ) mut
       if not member.$staticFlag {
          let valKind = self.scopeMgr.getSymbolValKind( member.$symbolInfo );
          switch valKind {
-            case .Stem, .Any {
-               let access;
-               if member.$expType.$kind == .Alternate {
-                  self.writeln( "lns_decre_ref_alter" );
-                  access = "";
+            case .Stem {
+               let typeInfo = member.$symbolInfo.$typeInfo;
+               if typeInfo.$nilable and getValKind( typeInfo.$nonnilableType ) == .Any {
+                  self.writeln(
+                     "lns_decre_ref_stem( _pEnv, %s );"
+                     (getAccessMember(className, "pObj", member.$name.txt ) ) );
                }
-               else {
-                  self.writeln( "lns_decre_ref" );
-                  if valKind == .Stem {
-                     access = accessAny;
-                  }
-                  else {
-                     access = "";
-                  }
-               }
-               self.writeln(
-                  "( _pEnv, %s%s );"
-                  (getAccessMember(className, "pObj", member.$name.txt ), access ) );
+            }
+            case .Any {
+               self.writeln( "lns_decre_ref( _pEnv, %s );"
+                             (getAccessMember(className, "pObj", member.$name.txt ) ) );
             }
          }
       }
@@ -3633,29 +3796,8 @@ fn convFilter.processDeclClassDef( node:&Nodes.DeclClassNode ) mut
                              self.outputBuiltinFlag );
       self.writeln( "{" );
       self.pushIndent(##);
-      
-      self.writeln( "lns_class_new_( _pEnv, %s, pAny, pObj );" (className) );
 
-      if not self.outputBuiltinFlag {
-         self.write( "mtd_%s___init( _pEnv, pAny" ( className ) );
-
-         let scope = unwrap node.$expType.$scope;
-         if not self.outputBuiltinFlag {
-            let initFuncType = unwrap scope.getTypeInfoField( "__init", true, scope, scopeAccess );
-            foreach argType, index in initFuncType.$argTypeInfoList {
-               self.write( ", arg%d" ( index ) );
-            }
-         }
-         self.writeln( ");" );
-      }
-
-      if ( self.outputBuiltinFlag or not self.canConv ) {
-         self.writeln( "pObj->pExt = NULL;" );
-      }
-      self.writeln( "pObj->pImp = &pObj->imp;" );
-      self.writeln( "pObj->imp.sentinel.type = lns_value_type_none;" );
-      
-      processIFObjInit( self.stream, self.moduleCtrl, node.$expType, node.$expType );
+      self.processNewInsance( node.$expType, true );
 
       self.writeln( "return pAny;" );
       self.popIndent();
@@ -4016,7 +4158,7 @@ block から変数に領域割り当て処理を行なう。
 @param var 変数シンボル
 @param init0 プリミティブな変数を 0 で初期化する場合 true 
 */
-pub fn convFilter.processDeclVarC(
+fn convFilter.processDeclVarC(
    declFlag:bool, var:&Ast.LowSymbol, init0:bool, manageScope:&Ast.Scope! ) mut
 {
    if declFlag {
@@ -4273,21 +4415,18 @@ pub override fn convFilter.processDeclDestr(
 pub override fn convFilter.processExpCallSuper(
    node: Nodes.ExpCallSuperNode, opt: Opt ) mut
 {
-   // let typeInfo:Ast.TypeInfo = node.$superType;
-   // if node.$methodType.$rawTxt == "__init" {
-   //    self.write( "%s.%s( self"
-   //                ( self.getFullName( typeInfo ), node.$methodType.$rawTxt ) );
-   // }
-   // else {
-   //    self.write( "%s.%s( self"
-   //                ( self.getFullName( typeInfo ), node.$methodType.$rawTxt ) );
-   // }
+   if node.$methodType.$rawTxt == "__init" {
+      self.write( "%s( _pEnv, pObj" ( self.moduleCtrl.getCtorName( node.$superType ) ) );
+   }
+   else {
+      self.write( "%s( _pEnv, pObj" ( self.moduleCtrl.getMethodCName( node.$methodType ) ) );
+   }
 
-   // if! node.$expList {
-   //    self.write( "," );
-   //    filter( _exp, self, node );
-   // }
-   // self.writeln( ")" );
+   if! node.$expList {
+      self.write( ", " );
+      filter( _exp, self, node );
+   }
+   self.writeln( ");" );
 };
 
 pub override fn convFilter.processDeclMethod(
@@ -6681,7 +6820,7 @@ pub override fn convFilter.processExpUnwrap(
             self.write( ")" );
          }
          else {
-            self.write( ", %s )" ( cValNil ) );
+            self.write( ", %s )" ( cValNone ) );
          }
       }
    }
@@ -7190,8 +7329,7 @@ pub fn convFilter.processCallArgList(
 pub override fn convFilter.processExpNew(
    node: Nodes.ExpNewNode, opt: Opt ) mut
 {
-   let classFullName = self.moduleCtrl.getClassCName( node.$symbol.$expType );
-   self.write( "lns_class_%s_new( _pEnv" ( classFullName ) );
+   self.write( "%s( _pEnv" ( self.moduleCtrl.getNewName( node.$symbol.$expType ) ) );
    if! node.$argList {
       self.processCallArgList( node.$ctorTypeInfo.$argTypeInfoList, _exp );
       //filter( _exp,  self, node );
@@ -8787,8 +8925,22 @@ pub override fn convFilter.processExpRefItem(
                             }
                             self.write( ")" );
                          }
+                         case .Stem {
+                            self.write( "lns_stem_refAt( _pEnv, " );
+                            self.processVal2stem( val, node );
+                            self.write( ", " );
+                            if! let index = node.$index {
+                               self.processVal2stem( index, node );
+                            }
+                            else {
+                               self.write(
+                                  getLiteralStrStem( '"%s"' (unwrap node.$symbol) ) );
+                            }
+                            self.write( ")" );
+                         }
                          default {
-                            Util.err( "not support:%d:%d" (__line__, node.$pos.lineNo) );
+                            Util.err( "not support:%s -- %d:%d"
+                               (valType.$kind.$_txt, __line__, node.$pos.lineNo) );
                          }
                       }
                    } );

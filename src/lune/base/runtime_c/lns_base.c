@@ -83,6 +83,11 @@ lns_type_meta_t lns_type_meta_lns__root = {
 };
 
 
+lns_type_meta_t lns_type_meta_List = { "List", &lns_type_meta_lns__root, { NULL } };
+lns_type_meta_t lns_type_meta_Set = { "Set", &lns_type_meta_lns__root, { NULL } };
+lns_type_meta_t lns_type_meta_Map = { "Map", &lns_type_meta_lns__root, { NULL } };
+
+
 void _lns_abort( const char * pMessage, const char * pFile, int lineNo )
 {
     fprintf( stderr, "abort:%s:%d:%s\n", pFile, lineNo, pMessage );
@@ -948,6 +953,74 @@ lns_any_t * _lns_func2any(
     return pFormAny;
 }
 
+
+lns_stem_t lns_fromMapToClass(
+    lns_env_t * _pEnv, lns_fromMap_t * pFromMap, lns_stem_t stem )
+{
+    if ( stem.type != lns_stem_type_any ||
+         stem.val.pAny->type != lns_value_type_class ||
+         stem.val.pAny->val.classVal->pMeta != &lns_type_meta_List )
+    {
+        return lns_global.ddd0;
+    }
+    return pFromMap( _pEnv, stem );
+}
+
+
+lns_stem_t lns_fromMapToList(
+    lns_env_t * _pEnv, lns_fromMap_t * pFromMap, bool nilable, lns_stem_t stem )
+{
+    if ( stem.type != lns_stem_type_any ||
+         stem.val.pAny->type != lns_value_type_class ||
+         stem.val.pAny->val.classVal->pMeta != &lns_type_meta_List )
+    {
+        return lns_global.ddd0;
+    }
+    lns_any_t * pList = stem.val.pAny;
+
+    lns_any_t * pNewList = lns_class_List_new( _pEnv );
+
+    lns_any_t * pIt = lns_itList_new( _pEnv, pList );
+
+    lns_stem_t val;
+    bool success = true;
+    for ( ; lns_itList_hasNext( _pEnv, pIt, &val ); lns_itList_inc( _pEnv, pIt ) ) {
+        if ( val.type == lns_stem_type_nil ) {
+            if ( nilable ) {
+                lns_mtd_List_insert( _pEnv, pNewList, val );
+            }
+            else {
+                success = false;
+                break;
+            }
+        }
+        else {
+            lns_stem_t ddd = pFromMap( _pEnv, val );
+            lns_stem_t work = lns_fromDDD( ddd.val.pAny, 0 );
+            
+            if ( work.type != lns_stem_type_nil ) {
+                lns_mtd_List_insert( _pEnv, pNewList, work );
+            }
+            else {
+                success = false;
+                break;
+            }
+        }
+    }
+    lns_itList__del( _pEnv, pIt );
+
+    if ( !success ) {
+        lns_rmFromList( pNewList );
+        lns_gc_any( _pEnv, pNewList, true );
+        pNewList = NULL;
+        return lns_global.ddd0;
+    }
+    
+    return lns_createMRet( _pEnv, false, 1, LNS_STEM_ANY( pNewList ) );
+}
+
+
+
 /**
  * リテラルな文字列型を生成する
  *
@@ -1481,6 +1554,18 @@ lns_real_t lns_unwrap_realDefault( lns_stem_t stem, lns_real_t val )
 }
 
 
+lns_stem_t lns_stem_refAt( lns_env_t * _pEnv, lns_stem_t stem, lns_stem_t key )
+{
+    if ( stem.type == lns_stem_type_any &&
+         stem.val.pAny->type == lns_value_type_class &&
+         stem.val.pAny->val.classVal->pMeta == &lns_type_meta_Map )
+    {
+        return lns_mtd_Map_get( _pEnv, stem.val.pAny, key );
+    }
+    return lns_global.nilStem;
+}
+
+
 /**
  * lua の print() に相当する処理。
  *
@@ -1563,18 +1648,18 @@ void lns_f_print( lns_env_t * _pEnv, lns_stem_t ddd ) {
                     case lns_value_type_form:
                         printf( "lua: form %p", pAny );
                         break;
-                    case lns_value_type_List:
-                        printf( "lua: List %p", pAny );
-                        break;
-                    case lns_value_type_Array:
-                        printf( "lua: Array %p", pAny );
-                        break;
-                    case lns_value_type_Set:
-                        printf( "lua: Set %p", pAny );
-                        break;
-                    case lns_value_type_Map:
-                        printf( "lua: Map %p", pAny );
-                        break;
+                    /* case lns_value_type_List: */
+                    /*     printf( "lua: List %p", pAny ); */
+                    /*     break; */
+                    /* case lns_value_type_Array: */
+                    /*     printf( "lua: Array %p", pAny ); */
+                    /*     break; */
+                    /* case lns_value_type_Set: */
+                    /*     printf( "lua: Set %p", pAny ); */
+                    /*     break; */
+                    /* case lns_value_type_Map: */
+                    /*     printf( "lua: Map %p", pAny ); */
+                    /*     break; */
                     case lns_value_type_itList:
                         printf( "lua: itList %p", pAny );
                         break;

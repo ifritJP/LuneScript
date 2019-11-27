@@ -1,0 +1,11 @@
+{
+   class Test extend (Mapping){
+      let val1:int {pub};
+      let val2:str {pub};
+   }
+   let test = new Test(1, "abc" );
+   let map = test._toMap();
+   print( map.val1, map.val2 ); // 1 abc
+   let test2 = unwrap Test._fromMap( map );
+   print( test2.$val1, test2.$val2 ); // 1 abc
+}

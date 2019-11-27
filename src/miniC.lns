@@ -1,31 +1,34 @@
-form FF( val:int, ... );
-fn func( val:int, ... ) {
-  print( val, ... );
+{
+   class Sub extend (Mapping) {
+      let val1:int {pub};
+      let val2:str {pub};
+   }
+   class Test extend (Mapping){
+      let val3:Sub {pub};
+   }
+   let test = new Test( new Sub( 1, "abc" ) );
+   let map = test._toMap();
+   print( (unwrap map.val3).val1, (unwrap map.val3).val2 ); // 1 abc
+   let test_2;
+   {
+      test_2 = unwrap Test._fromMap( map );
+   }
+   print( test_2.$val3.$val1, test_2.$val3.$val2 ); // 1 abc
 }
-fn func2( ... ) {
-   print( ... );
+{
+   class Sub extend (Mapping) {
+      let val1:int {pub};
+      let val2:str! {pub};
+   }
+   class Test extend (Mapping){
+      let val3:Sub {pub};
+   }
+   let test = new Test( new Sub( 1, nil ) );
+   let map = test._toMap();
+   print( (unwrap map.val3).val1, (unwrap map.val3).val2 ); // 1 abc
+   let test_2;
+   {
+      test_2 = unwrap Test._fromMap( map );
+   }
+   print( test_2.$val3.$val1, test_2.$val3.$val2 ); // 1 abc
 }
-form FF3( ...<&stem!> );
-
-fn ret(): int, int, int {
-   return 1, 2, 3;
-}
-fn sub( ff:FF ) {
-   ff( ret()** );
-   ff( 0, ret()** );
-   ff( -1, 0, ret()** );
-}
-fn sub2( ff:form ) {
-   ff( 1 );
-   ff( ret()** );
-   ff( 0, ret()** );
-   ff( -1, 0, ret()** );
-}
-fn sub3( ff:FF3 ) {
-   ff( ret()** );
-   ff( 0, ret()** );
-   ff( -1, 0, ret()** );
-}
-sub( func );
-sub2( func2 );
-sub3( print );

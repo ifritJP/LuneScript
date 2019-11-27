@@ -98,7 +98,7 @@ void lns_init_lns_builtin( lns_env_t * _pEnv ){
    lns_set_block_any( pBlock_62, 0, lns_module_globalStemList);
    lns_setQ_any( lns_module_globalStemList, lns_class_List_new( _pEnv ));
    lns_set_block_any( pBlock_62, 1, lns_module_path);
-   lns_setQ_any( lns_module_path, lns_litStr2any( _pEnv, "lns_builtin"));
+   lns_setQ_any( lns_module_path, lns_litStr2any( _pEnv, "@lns_builtin"));
    lns_enter_block( _pEnv, 0, 0, 0 );
    initFuncSym( _pEnv, pBlock_62 );
    

@@ -1,0 +1,39 @@
+{
+   class Test {
+      pri let val1:int;
+      pri let mut val2:int {pub,pub};
+      pri let val3:int {pub};
+   }
+   let mut test = new Test( 1, 2, 3 );
+   print( test.$val2, test.$val3 );  // 2 3
+   test.set_val2( 10 );
+   print( test.$val2, test.$val3 );  // 10 3
+}
+{
+   class Test {
+      pri let mut val1:int {non,pub};
+   }
+}
+{
+   class Test {
+      pri let mut list:List<int> {pub};
+   }
+   let test = new Test( [] );
+   foreach val in test.$list { 
+      print( val );
+   }
+}
+{
+   class Val {
+   }
+   class ValSub extend Val {
+   }
+
+   class Test {
+      pri let val1:ValSub {pub};
+      pri let val2:ValSub {pub:Val};
+   }
+   let test = new Test( new ValSub(), new ValSub() );
+   let val1 = test.$val1;
+   let val2 = test.$val2;
+}

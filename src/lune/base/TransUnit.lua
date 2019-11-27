@@ -6530,17 +6530,20 @@ function TransUnit:addDefaultConstructor( pos, classTypeInfo, classScope, member
 end
 
 
-function TransUnit:analyzeFuncBlock( analyzingState, firstToken, classTypeInfo, funcName, funcBodyScope, retTypeInfoList )
+function TransUnit:analyzeFuncBlock( analyzingState, firstToken, classTypeInfo, funcTypeInfo, funcName, funcBodyScope, retTypeInfoList )
 
-   if classTypeInfo ~= nil then
-      do
-         local overrideType = self.scope:get_parent():getTypeInfoField( funcName, false, funcBodyScope, self.scopeAccess )
-         if overrideType ~= nil then
-            if not overrideType:get_abstractFlag() then
-               funcBodyScope:addLocalVar( false, false, "super", nil, overrideType, Ast.MutMode.IMut )
+   if not funcTypeInfo:get_staticFlag() then
+      if classTypeInfo ~= nil then
+         do
+            local overrideType = self.scope:get_parent():getTypeInfoField( funcName, false, funcBodyScope, self.scopeAccess )
+            if overrideType ~= nil then
+               if not overrideType:get_abstractFlag() then
+                  funcBodyScope:add( Ast.SymbolKind.Fun, false, false, "super", nil, overrideType, Ast.AccessMode.Local, false, Ast.MutMode.IMut, true )
+               end
+               
             end
-            
          end
+         
       end
       
    end
@@ -6695,7 +6698,7 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
       local ininame = "___init"
       local funcTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, initBlockScope, Ast.TypeInfoKind.Func, classTypeInfo, false, false, true, Ast.AccessMode.Pri, ininame, nil, nil, nil, false )
       
-      local block = self:analyzeFuncBlock( AnalyzingState.InitBlock, token, classTypeInfo, ininame, initBlockScope, {} )
+      local block = self:analyzeFuncBlock( AnalyzingState.InitBlock, token, classTypeInfo, funcTypeInfo, ininame, initBlockScope, funcTypeInfo:get_retTypeInfoList() )
       
       local info = Nodes.DeclFuncInfo.new(Nodes.FuncKind.InitBlock, classTypeInfo, token, {}, true, Ast.AccessMode.Pri, block, {}, false, false)
       local initBlockNode = Nodes.DeclMethodNode.create( self.nodeManager, firstToken.pos, {funcTypeInfo}, info )
@@ -7492,7 +7495,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
       
       funcBodyScope:addLocalVar( false, false, "__func__", nil, Ast.builtinTypeString, Ast.MutMode.IMut )
       
-      local workBody = self:analyzeFuncBlock( analyzingState, firstToken, classTypeInfo, funcName, funcBodyScope, retTypeInfoList )
+      local workBody = self:analyzeFuncBlock( analyzingState, firstToken, classTypeInfo, typeInfo, funcName, funcBodyScope, typeInfo:get_retTypeInfoList() )
       body = workBody
       
       if isCtorFlag then
@@ -9256,6 +9259,8 @@ function TransUnit:analyzeExpCall( firstToken, funcExp, nextToken )
       
    end
    
+   local funcSymbol
+   
    local symbolInfoList = funcExp:getSymbolInfo(  )
    if #symbolInfoList > 0 then
       local symbol = symbolInfoList[1]
@@ -9263,6 +9268,10 @@ function TransUnit:analyzeExpCall( firstToken, funcExp, nextToken )
          self:addErrMess( funcExp:get_pos(), string.format( "can't call any Type. -- %s", symbol:get_name()) )
       end
       
+      funcSymbol = symbol
+   else
+    
+      funcSymbol = nil
    end
    
    
@@ -9436,6 +9445,14 @@ function TransUnit:analyzeExpCall( firstToken, funcExp, nextToken )
          end
          
          return Nodes.LuneKindNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeInt}, self:createNoneNode( firstToken.pos ) )
+      end
+      
+      
+      if funcSymbol ~= nil then
+         if funcSymbol:get_name() == "super" then
+            return Nodes.ExpCallSuperNode.create( self.nodeManager, firstToken.pos, retTypeInfoList, funcSymbol:get_typeInfo():get_parentInfo(), funcSymbol:get_typeInfo(), argList )
+         end
+         
       end
       
       return Nodes.ExpCallNode.create( self.nodeManager, firstToken.pos, retTypeInfoList, funcExp, errorFuncFlag, nilAccess, argList )
@@ -9735,7 +9752,7 @@ function TransUnit:dumpComp( writer, pattern, symbolInfo, getterFlag )
          do
             local _switchExp = (symbolInfo:get_kind() )
             if _switchExp == Ast.SymbolKind.Fun or _switchExp == Ast.SymbolKind.Mtd or _switchExp == Ast.SymbolKind.Mac then
-               writer:write( "displayTxt", string.format( "%s", typeInfo:get_display_stirng()) )
+               writer:write( "displayTxt", string.format( "%s", typeInfo:get_display_stirng_with( symbolInfo:get_name() )) )
             elseif _switchExp == Ast.SymbolKind.Mbr or _switchExp == Ast.SymbolKind.Var or _switchExp == Ast.SymbolKind.Arg then
                local name = symbolInfo:get_name()
                do
@@ -10356,9 +10373,12 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
          end
          
          
-         if token.txt == "__func__" then
-            local funcTypeInfo = self:getCurrentNamespaceTypeInfo(  )
-            self.has__func__Symbol[funcTypeInfo]= true
+         do
+            local _switchExp = token.txt
+            if _switchExp == "__func__" then
+               local funcTypeInfo = self:getCurrentNamespaceTypeInfo(  )
+               self.has__func__Symbol[funcTypeInfo]= true
+            end
          end
          
          

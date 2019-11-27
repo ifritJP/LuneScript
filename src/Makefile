@@ -54,9 +54,11 @@ help:
 	@echo "  make build-cc"
 	@echo "  make test-miniC"
 	@echo "  make test-subC"
+	@echo "  make test-testC"
 	@echo "  make test-formatter"
 	@echo "  make test-mkbuiltin"
 	@echo "  make build-testcase"
+	@echo "  maek test-tutorial"
 
 exec:
 	$(LUA) lune/base/base.lua test/test.lns token
@@ -935,16 +937,20 @@ test-tutorial:
 	cp -a lune work/0
 	cp -a test work/0
 	cp Makefile.ccc work/0
-	$(call test-tutorialC,work/0,test/tutorial/value.lns)
-	$(call test-tutorialC,work/0,test/tutorial/set.lns)
-	$(call test-tutorialC,work/0,test/tutorial/variable.lns)
-	$(call test-tutorialC,work/0,test/tutorial/func.lns)
-	$(call test-tutorialC,work/0,test/tutorial/arg.lns)
-	$(call test-tutorialC,work/0,test/tutorial/multipleRetVal.lns)
-	$(call test-tutorialC,work/0,test/tutorial/defaultArg.lns)
-	$(call test-tutorialC,work/0,test/tutorial/nilable.lns)
-	$(call test-tutorialC,work/0,test/tutorial/branch.lns)
+	$(call test-tutorialC,work/0,test/tutorial/classMapping.lns)
+	$(call test-tutorialC,work/0,test/tutorial/classInherit.lns)
+	$(call test-tutorialC,work/0,test/tutorial/class2accessor.lns)
+	$(call test-tutorialC,work/0,test/tutorial/class1.lns)
 	$(call test-tutorialC,work/0,test/tutorial/cast.lns)
+	$(call test-tutorialC,work/0,test/tutorial/branch.lns)
+	$(call test-tutorialC,work/0,test/tutorial/nilable.lns)
+	$(call test-tutorialC,work/0,test/tutorial/defaultArg.lns)
+	$(call test-tutorialC,work/0,test/tutorial/multipleRetVal.lns)
+	$(call test-tutorialC,work/0,test/tutorial/arg.lns)
+	$(call test-tutorialC,work/0,test/tutorial/func.lns)
+	$(call test-tutorialC,work/0,test/tutorial/variable.lns)
+	$(call test-tutorialC,work/0,test/tutorial/set.lns)
+	$(call test-tutorialC,work/0,test/tutorial/value.lns)
 
 test-cAll:
 	$(MAKE) build-cc

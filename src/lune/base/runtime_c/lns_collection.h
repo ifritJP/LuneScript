@@ -44,7 +44,8 @@ extern "C" {
         lns_method_t * unpack;
         lns_method_t * sort;
     };
-    
+
+ 
     extern lns_any_t * lns_class_List_new( lns_env_t * _pEnv );
     extern lns_any_t * lns_List_ctor( lns_env_t * _pEnv, lns_any_t * pDDDAny );
 
@@ -87,6 +88,7 @@ extern "C" {
         lns_method_t * len;
     };
 
+    extern lns_type_meta_t lns_type_meta_Set;
     
     extern lns_any_t * lns_class_Set_new( lns_env_t * _pEnv );
     extern lns_any_t * lns_Set_ctor( lns_env_t * _pEnv, lns_any_t * pDDDAny );
@@ -132,6 +134,8 @@ extern "C" {
         lns_stem_t val;
     } lns_Map_entry_t;
 
+    extern lns_type_meta_t lns_type_meta_Map;
+    
     
     extern lns_any_t * lns_class_Map_new( lns_env_t * _pEnv );
     extern lns_any_t * lns_Map_ctor( lns_env_t * _pEnv, lns_any_t * pDDDAny );

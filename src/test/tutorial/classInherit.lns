@@ -1,0 +1,26 @@
+{
+   class Super {
+      pub fn func() {
+         print( __mod__, __line__ );
+      }
+   }
+   class Sub extend Super {
+   }
+   let sub = new Sub();
+   sub.func(); // Super.func
+}
+{
+   class Super {
+      pro let val:int;
+   }
+   class Sub extend Super {
+      pub fn __init( val:int ){
+         super( val );
+      }
+      pub fn func() {
+         print( self.val );
+      }
+   }
+   let sub = new Sub( 1 );
+   sub.func(); // 1
+}

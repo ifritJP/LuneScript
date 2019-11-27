@@ -3252,7 +3252,8 @@ function BoxTypeInfo:__init(typeId, accessMode, boxingType)
 end
 function BoxTypeInfo:get_scope(  )
 
-   return TypeInfo.get_scope( self  )
+   return TypeInfo.get_scope( self)
+   
 end
 function BoxTypeInfo:get_kind(  )
 

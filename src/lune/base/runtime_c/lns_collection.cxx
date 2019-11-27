@@ -98,8 +98,6 @@ lns_mtd_List_t lns_mtd_List = {
     (lns_method_t*)lns_mtd_List_sort,
 };
 
-lns_type_meta_t lns_type_meta_List = { "List" };
-
 
 lns_any_t * lns_itList_new( lns_env_t * _pEnv, lns_any_t * pList )
 {
@@ -172,7 +170,7 @@ static void lns_mtd_List__del( lns_env_t * _pEnv, lns_any_t * pObj )
     
     for ( it = lns_obj_List_obj( pObj )->begin(); it != end; it++ )
     {
-        lns_decre_ref_alter( _pEnv, *it );
+        lns_decre_ref_stem( _pEnv, *it );
     }
     
     delete lns_obj_List_obj( pObj );
@@ -226,7 +224,7 @@ lns_stem_t lns_mtd_List_remove(
     lns_obj_List_obj( pObj )->erase( it );
     
     lns_setRet( _pEnv, item );
-    lns_decre_ref_alter( _pEnv, item );
+    lns_decre_ref_stem( _pEnv, item );
     return item;
 }
 
@@ -261,7 +259,7 @@ void lns_mtd_List_setAt(
         // 挿入した後ろの要素を削除する
         lns_stem_t item = *it;
         lns_obj_List_obj( pListAny )->erase( it );
-        lns_decre_ref_alter( _pEnv, item );
+        lns_decre_ref_stem( _pEnv, item );
     }
     else {
         int count = index - lns_obj_List_obj( pListAny )->size() - 1;
@@ -511,7 +509,6 @@ lns_mtd_Set_t lns_mtd_Set = {
     (lns_method_t*)lns_mtd_Set_len,
 };
 
-lns_type_meta_t lns_type_meta_Set = { "Set" };
 
 
 
@@ -557,7 +554,7 @@ static void lns_mtd_Set__del( lns_env_t * _pEnv, lns_any_t * pObj )
     
     for ( it = lns_obj_Set_obj( pObj )->begin(); it != end; it++ )
     {
-        lns_decre_ref_alter( _pEnv, *it );
+        lns_decre_ref_stem( _pEnv, *it );
     }
     
     delete lns_obj_Set_obj( pObj );
@@ -615,7 +612,7 @@ void lns_mtd_Set_del(
     lns_SetIterator it = lns_obj_Set_obj( pObj )->find( val );
 
     if ( it != lns_obj_Set_obj( pObj )->end() ) {
-        lns_decre_ref_alter( _pEnv, *it );
+        lns_decre_ref_stem( _pEnv, *it );
         lns_obj_Set_obj( pObj )->erase( it );
     }
 }
@@ -652,7 +649,7 @@ lns_any_t * lns_mtd_Set_and(
         for ( ; it != end; it++ ) {
             lns_SetIterator setIt = lns_obj_Set_obj( pObj )->find( *it );
             if ( setIt != lns_obj_Set_obj( pObj )->end() ) {
-                lns_decre_ref_alter( _pEnv, *setIt );
+                lns_decre_ref_stem( _pEnv, *setIt );
                 lns_obj_Set_obj( pObj )->erase( setIt );
             }
         }
@@ -697,7 +694,7 @@ lns_any_t * lns_mtd_Set_sub(
         lns_ListIterator end = list.end();
         
         for ( ; it != end; it++ ) {
-            lns_decre_ref_alter( _pEnv, *it );
+            lns_decre_ref_stem( _pEnv, *it );
             
             lns_obj_Set_obj( pObj )->erase( *it );
         }
@@ -793,7 +790,6 @@ lns_mtd_Map_t lns_mtd_Map = {
     (lns_method_t*)lns_mtd_Map_get,
 };
 
-lns_type_meta_t lns_type_meta_Map = { "Map" };
 
 
 
@@ -844,8 +840,8 @@ static void lns_mtd_Map__del( lns_env_t * _pEnv, lns_any_t * pObj )
     lns_MapIterator end = pMap->end();
     
     for ( it = pMap->begin(); it != end; it++ ) {
-        lns_decre_ref_alter( _pEnv, it->first );
-        lns_decre_ref_alter( _pEnv, it->second );
+        lns_decre_ref_stem( _pEnv, it->first );
+        lns_decre_ref_stem( _pEnv, it->second );
     }
     
     delete pMap;
@@ -891,8 +887,8 @@ void lns_mtd_Map_add( lns_env_t * _pEnv, lns_any_t * pObj,
 
         lns_MapIterator it = pMap->find( key );
         if ( it != pMap->end() ) {
-            lns_decre_ref_alter( _pEnv, it->first );
-            lns_decre_ref_alter( _pEnv, it->second );
+            lns_decre_ref_stem( _pEnv, it->first );
+            lns_decre_ref_stem( _pEnv, it->second );
             
             pMap->erase( it );
         }

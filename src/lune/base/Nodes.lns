@@ -1514,11 +1514,16 @@ _declNodeClass( "DeclDestr", Node, false, false, true,
                 [ { "declInfo": "&DeclFuncInfo" } ]
 );
 
-_declNodeClass( "ExpCallSuper", Node, false, false, true,
+_declNodeClass( "ExpCallSuper", Node, false, nil, true,
                 [ { "superType": "&Ast.TypeInfo" },
                   { "methodType": "&Ast.TypeInfo" },
                   { "expList": "&ExpListNode!" } ]
 );
+
+pub override fn ExpCallSuperNode.canBeRight():bool {
+   return self.$expType ~= Ast.builtinTypeNone;
+}
+
 
 _declNodeClass( "DeclMember", Node, false, false, true,
                 [ { "name": "&Parser.Token" },

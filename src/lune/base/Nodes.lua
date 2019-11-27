@@ -7462,10 +7462,6 @@ function ExpCallSuperNode:processFilter( filter, opt )
 
    filter:processExpCallSuper( self, opt )
 end
-function ExpCallSuperNode:canBeRight(  )
-
-   return false
-end
 function ExpCallSuperNode:canBeLeft(  )
 
    return false
@@ -7538,6 +7534,12 @@ function ExpCallSuperNode:get_expList()
    return self.expList
 end
 
+
+
+function ExpCallSuperNode:canBeRight(  )
+
+   return self:get_expType() ~= Ast.builtinTypeNone
+end
 
 
 function NodeKind.get_DeclMember(  )

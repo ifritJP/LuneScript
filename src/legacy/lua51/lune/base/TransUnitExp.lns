@@ -1189,12 +1189,17 @@ fn TransUnit.analyzeExpCall(
       }
    }
 
+   let funcSymbol:&Ast.SymbolInfo!;
    let symbolInfoList = funcExp.getSymbolInfo();
    if #symbolInfoList > 0 {
       let symbol = symbolInfoList[ 1 ];
       if symbol.$kind == .Typ {
          self.addErrMess( funcExp.$pos, "can't call any Type. -- %s" (symbol.$name) );
       }
+      funcSymbol = symbol;
+   }
+   else {
+      funcSymbol = nil;
    }
 
    let mut funcTypeInfo = funcExp.$expType;
@@ -1373,6 +1378,14 @@ fn TransUnit.analyzeExpCall(
          return Nodes.LuneKindNode.create(
             self.nodeManager, firstToken.pos, [ Ast.builtinTypeInt ],
             self.createNoneNode( firstToken.pos ) );               
+      }
+
+      when! funcSymbol {
+         if funcSymbol.$name == "super" {
+            return Nodes.ExpCallSuperNode.create(
+               self.nodeManager, firstToken.pos, retTypeInfoList,
+               funcSymbol.$typeInfo.$parentInfo, funcSymbol.$typeInfo, argList );
+         }
       }
       return Nodes.ExpCallNode.create(
          self.nodeManager, firstToken.pos,
@@ -1677,7 +1690,8 @@ fn TransUnit.dumpComp(
          writer.write( "type", "%s" ( symbolInfo.$kind.$_txt ) );
          switch ( symbolInfo.$kind ) {
             case .Fun, .Mtd, .Mac {
-               writer.write( "displayTxt", "%s" ( typeInfo.$display_stirng ) );
+               writer.write( "displayTxt", "%s"
+                             ( typeInfo.get_display_stirng_with(symbolInfo.$name) ) );
             }  
             case .Mbr, .Var, .Arg {
                let mut name = symbolInfo.$name;
@@ -2280,10 +2294,12 @@ fn TransUnit.analyzeExpSymbol(
          if typeInfo.equals( builtinFunc.lns__load ##) {
             self.helperInfo.useLoad = true;
          }
-         
-         if token.txt == "__func__" {
-            let funcTypeInfo = self.getCurrentNamespaceTypeInfo();
-            self.has__func__Symbol.add( funcTypeInfo );
+
+         switch token.txt {
+            case "__func__" {
+               let funcTypeInfo = self.getCurrentNamespaceTypeInfo();
+               self.has__func__Symbol.add( funcTypeInfo );
+            }
          }
          
          exp = Nodes.ExpRefNode.create(
