@@ -29,6 +29,10 @@
   
 * 機能
 
+- [ ] stem を Mapping 可能としているが、本来は不使用にすべき。
+      現状 MacroMetaInfo.tokenList で stem を使用しているため、
+      これをタプルに切り替え、 stem の Mapping は Warning にする。
+  
 - [ ] 公開 macro の中から、自分のモジュール内の関数をコールするとき、
       モジュール名は import の as で決定するので指定ができない。
 

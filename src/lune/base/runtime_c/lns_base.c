@@ -954,8 +954,39 @@ lns_any_t * _lns_func2any(
 }
 
 
+bool lns_fromMapPrim(
+    lns_env_t * _pEnv, lns_any_t ** ppErr, lns_stem_t * pWork,
+    lns_any_t * pMap, bool nilable, lns_any_t * pMbr, lns_stem_type_t kind )
+{
+    lns_stem_t _name = LNS_STEM_ANY( pMbr );
+    *pWork = lns_mtd_Map_get( _pEnv, pMap, _name );
+    if ( pWork->type != kind ) {
+        if ( !nilable || pWork->type != lns_stem_type_nil ) {
+            *ppErr = pMbr;
+            return false;
+        }
+    }
+    return true;
+}
+
+bool lns_fromMapStr(
+    lns_env_t * _pEnv, lns_any_t ** ppErr, lns_stem_t * pWork,
+    lns_any_t * pMap, bool nilable, lns_any_t * pMbr )
+{
+    lns_stem_t _name = LNS_STEM_ANY( pMbr );
+    *pWork = lns_mtd_Map_get( _pEnv, pMap, _name );
+    if ( pWork->type == lns_stem_type_any &&
+         pWork->val.pAny->type == lns_value_type_str ) {
+    }
+    else if ( !nilable || pWork->type != lns_stem_type_nil ) {
+        *ppErr = pMbr;
+        return false;
+    }
+    return true;
+}
+
 lns_stem_t lns_fromMapToClass(
-    lns_env_t * _pEnv, lns_fromMap_t * pFromMap, lns_stem_t stem )
+    lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem )
 {
     if ( stem.type != lns_stem_type_any ||
          stem.val.pAny->type != lns_value_type_class ||
@@ -963,12 +994,12 @@ lns_stem_t lns_fromMapToClass(
     {
         return lns_global.ddd0;
     }
-    return pFromMap( _pEnv, stem );
+    return pInfoArray->pFromMap( _pEnv, pInfoArray->pInfoArray, stem );
 }
 
 
 lns_stem_t lns_fromMapToList(
-    lns_env_t * _pEnv, lns_fromMap_t * pFromMap, bool nilable, lns_stem_t stem )
+    lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem )
 {
     if ( stem.type != lns_stem_type_any ||
          stem.val.pAny->type != lns_value_type_class ||
@@ -986,7 +1017,7 @@ lns_stem_t lns_fromMapToList(
     bool success = true;
     for ( ; lns_itList_hasNext( _pEnv, pIt, &val ); lns_itList_inc( _pEnv, pIt ) ) {
         if ( val.type == lns_stem_type_nil ) {
-            if ( nilable ) {
+            if ( pInfoArray->nilable ) {
                 lns_mtd_List_insert( _pEnv, pNewList, val );
             }
             else {
@@ -995,7 +1026,7 @@ lns_stem_t lns_fromMapToList(
             }
         }
         else {
-            lns_stem_t ddd = pFromMap( _pEnv, val );
+            lns_stem_t ddd = pInfoArray->pFromMap( _pEnv, pInfoArray->pInfoArray, val );
             lns_stem_t work = lns_fromDDD( ddd.val.pAny, 0 );
             
             if ( work.type != lns_stem_type_nil ) {

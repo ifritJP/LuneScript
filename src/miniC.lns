@@ -14,6 +14,8 @@
       test_2 = unwrap Test._fromMap( map );
    }
    print( test_2.$val3.$val1, test_2.$val3.$val2 ); // 1 abc
+   print( Test._fromMap( {} )** );
+   print( Test._fromMap( { "val3": {} } )** );
 }
 {
    class Sub extend (Mapping) {
@@ -31,4 +33,15 @@
       test_2 = unwrap Test._fromMap( map );
    }
    print( test_2.$val3.$val1, test_2.$val3.$val2 ); // 1 abc
+   print( Test._fromMap( {} )** );
+   print( Test._fromMap( { "val3": {} } )** );
 }
+// {
+//    class Test extend (Mapping) {
+//       let val1:int {pub};
+//       let val2:real {pub};
+//       let val3:bool {pub};
+//       let val4:str {pub};
+//    }
+//    let test = new Test( 1, 2.0, true, "abc", "aaa" );
+// }

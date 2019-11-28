@@ -3912,11 +3912,20 @@ function convFilter:processMapping( node, classType, out2HMode )
       self:write( string.format( "( %s _pEnv, %s pObj)", cTypeEnvP, getCRetType( toMapMtdSym:get_typeInfo():get_retTypeInfoList() )) )
    end
    
-   local function processDeclFromMap(  )
+   local function processDeclFromMap( sub )
    
       self:write( string.format( "%s%s ", getOut2HeaderPrefix( out2HMode ), cTypeStem) )
       self:write( self.moduleCtrl:getMethodCName( fromMapMtdSym:get_typeInfo() ) )
-      self:write( string.format( "( %s _pEnv, %s mapStem)", cTypeEnvP, getCRetType( fromMapMtdSym:get_typeInfo():get_retTypeInfoList() )) )
+      if sub then
+         self:write( "Sub" )
+      end
+      
+      self:write( string.format( "( %s _pEnv", cTypeEnvP) )
+      if sub then
+         self:write( ", lns_fromVal_info_t * pInfoArray" )
+      end
+      
+      self:write( string.format( ", %s mapStem)", getCRetType( fromMapMtdSym:get_typeInfo():get_retTypeInfoList() )) )
    end
    
    local function processToMapBody(  )
@@ -3989,7 +3998,16 @@ function convFilter:processMapping( node, classType, out2HMode )
    
    local function processFromMapBody(  )
    
-      processDeclFromMap(  )
+      processDeclFromMap( false )
+      self:writeln( "{" )
+      self:pushIndent(  )
+      
+      self:writeln( string.format( "return %sSub( _pEnv, NULL, mapStem );", self.moduleCtrl:getMethodCName( fromMapMtdSym:get_typeInfo() )) )
+      
+      self:popIndent(  )
+      self:writeln( "}" )
+      
+      processDeclFromMap( true )
       self:writeln( "{" )
       self:pushIndent(  )
       
@@ -4014,25 +4032,43 @@ function convFilter:processMapping( node, classType, out2HMode )
          end
          
          
-         if not memberSym:get_typeInfo():get_nilable() then
-            self:writeln( string.format( "%s %s;", getCType( memberSym:get_typeInfo() ), memberSym:get_name()) )
+         local function process( nilable )
+         
+            local kind
             
-            local defaultProc = string.format( "lns_check_err_from_map( pErr, _pEnv, pMap, %s, %s );", memberSym:get_name(), getAccessPrimValFromStem( false, memberSym:get_typeInfo(), 0 ))
-            
-            if fromMapSym ~= nil then
-               self:writeln( string.format( "lns_check_err_from_map_class( pErr, _pEnv, pMap, %s, %s, %s );", memberSym:get_name(), self.moduleCtrl:getMethodCName( fromMapSym:get_typeInfo() ), getAccessPrimValFromStem( false, memberSym:get_typeInfo(), 0 )) )
-            else
-               self:writeln( defaultProc )
+            do
+               local _switchExp = memberSym:get_typeInfo():get_nonnilableType():get_srcTypeInfo()
+               if _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeChar then
+                  kind = "lns_stem_type_int"
+               elseif _switchExp == Ast.builtinTypeReal then
+                  kind = "lns_stem_type_real"
+               elseif _switchExp == Ast.builtinTypeBool then
+                  kind = "lns_stem_type_bool"
+               else 
+                  
+                     Util.err( string.format( "not support -- %s", memberSym:get_typeInfo():getTxt(  )) )
+               end
             end
             
+            self:writeln( string.format( "lns_check_err_from_map( pErr, _pEnv, pMap, %s, %s, %s, %s );", nilable and "true" or "false", memberSym:get_name(), kind, getAccessPrimValFromStem( false, memberSym:get_typeInfo(), 0 )) )
+         end
+         
+         self:writeln( string.format( "%s %s;", getCType( memberSym:get_typeInfo() ), memberSym:get_name()) )
+         local nilable = memberSym:get_typeInfo():get_nilable()
+         if nilable then
+            self:writeln( string.format( "%s = lns_global.nilStem;", memberSym:get_name()) )
+         end
+         
+         
+         if fromMapSym ~= nil then
+            self:write( "lns_check_err_from_map_class" )
+            self:writeln( string.format( "( pErr, _pEnv, pMap, %s, %s, %sSub, %s, %s );", tostring( nilable), memberSym:get_name(), self.moduleCtrl:getMethodCName( fromMapSym:get_typeInfo() ), "NULL", getAccessPrimValFromStem( false, memberSym:get_typeInfo(), 0 )) )
          else
-          
-            local defaultProc = string.format( "%s %s = lns_mtd_Map_get( _pEnv, pMap, %s );", cTypeStem, memberSym:get_name(), getLiteralStrStem( string.format( '"%s"', memberSym:get_name()) ))
-            if fromMapSym ~= nil then
-               self:writeln( string.format( "%s %s;", getCType( memberSym:get_typeInfo() ), memberSym:get_name()) )
-               self:writeln( string.format( "lns_check_err_from_map_class_nilable( pErr, _pEnv, pMap, %s, %s);", memberSym:get_name(), self.moduleCtrl:getMethodCName( fromMapSym:get_typeInfo() )) )
+            if memberSym:get_typeInfo():get_nonnilableType():equals( Ast.builtinTypeString ) then
+               self:writeln( string.format( "lns_check_err_from_map_str( pErr, _pEnv, pMap, %s, %s, %s );", tostring( nilable), memberSym:get_name(), getAccessPrimValFromStem( false, memberSym:get_typeInfo(), 0 )) )
             else
-               self:writeln( defaultProc )
+             
+               process( nilable )
             end
             
          end
@@ -4081,7 +4117,9 @@ function convFilter:processMapping( node, classType, out2HMode )
          self:writeln( ";" )
          processDeclToMap( false )
          self:writeln( ";" )
-         processDeclFromMap(  )
+         processDeclFromMap( false )
+         self:writeln( ";" )
+         processDeclFromMap( true )
          self:writeln( ";" )
       elseif _switchExp == ProcessMode.DefClass then
          processToMapBody(  )
@@ -4309,7 +4347,7 @@ function convFilter:processDeclClassDef( node )
                else 
                   
                      Util.err( string.format( "no support -- %s:%s:%d", member:get_symbolInfo():get_name(), ValKind:_getTxt( valKind)
-                     , 3862) )
+                     , 3894) )
                end
             end
             
@@ -4917,7 +4955,7 @@ function convFilter:processSym2Any( symbol )
       else 
          
             Util.err( string.format( "not suppport -- %s, %d", ValKind:_getTxt( valKind)
-            , 4614) )
+            , 4646) )
       end
    end
    
@@ -4939,7 +4977,7 @@ function convFilter:processVal2any( node, parent )
       else 
          
             Util.err( string.format( "not suppport -- %d, %s, %s, %d", node:get_pos().lineNo, ValKind:_getTxt( valKind)
-            , Nodes.getNodeKindName( node:get_kind() ), 4640) )
+            , Nodes.getNodeKindName( node:get_kind() ), 4672) )
       end
    end
    
@@ -5010,7 +5048,7 @@ function convFilter:processSetValSingleDirect( parent, node, var, initFlag, expV
       
       Util.err( string.format( "illegal %s %s %s -- %d", var:get_name(), ValKind:_getTxt( valKind)
       , ValKind:_getTxt( expValKind)
-      , 4721) )
+      , 4753) )
    end
    
    
@@ -6569,7 +6607,7 @@ function convFilter:processApply( node, opt )
          else 
             
                Util.err( string.format( "no support -- %s:%s:%d", varSym:get_name(), ValKind:_getTxt( valKind)
-               , 6397) )
+               , 6429) )
          end
       end
       
@@ -6985,7 +7023,7 @@ function convFilter:processExpUnwrap( node, opt )
                   self:write( "lns_unwrap_any( " )
                else 
                   
-                     Util.err( string.format( "no support -- %d", 6812) )
+                     Util.err( string.format( "no support -- %d", 6844) )
                end
             end
             
@@ -8697,7 +8735,7 @@ function convFilter:processExpRefItem( node, opt )
             else 
                
                   Util.err( string.format( "not support:%s -- %d:%d", Ast.TypeInfoKind:_getTxt( valType:get_kind())
-                  , 8943, node:get_pos().lineNo) )
+                  , 8975, node:get_pos().lineNo) )
             end
          end
          
@@ -8871,7 +8909,7 @@ function convFilter:processReturn( node, opt )
                   filter( expList[1], self, node )
                else 
                   
-                     Util.err( string.format( "no support -- %d", 9163) )
+                     Util.err( string.format( "no support -- %d", 9195) )
                end
             end
             
@@ -8902,7 +8940,7 @@ function convFilter:processReturn( node, opt )
                elseif _switchExp == ValKind.Prim then
                else 
                   
-                     Util.err( string.format( "no support -- %d", 9196) )
+                     Util.err( string.format( "no support -- %d", 9228) )
                end
             end
             

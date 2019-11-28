@@ -3443,11 +3443,18 @@ fn convFilter.processMapping(
                       getCRetType( toMapMtdSym.$typeInfo.$retTypeInfoList ) ) );
    }
 
-   fn processDeclFromMap() {
+   fn processDeclFromMap( sub:bool ) {
       self.write( "%s%s " ( getOut2HeaderPrefix( out2HMode ), cTypeStem ));
       self.write( self.moduleCtrl.getMethodCName( fromMapMtdSym.$typeInfo ) );
-      self.write( "( %s _pEnv, %s mapStem)"
-         ( cTypeEnvP, getCRetType( fromMapMtdSym.$typeInfo.$retTypeInfoList ) ) );
+      if sub {
+         self.write( "Sub" );
+      }
+      self.write( "( %s _pEnv" ( cTypeEnvP ) );
+      if sub {
+         self.write( ", lns_fromVal_info_t * pInfoArray" );
+      }
+      self.write( ", %s mapStem)"
+                  ( getCRetType( fromMapMtdSym.$typeInfo.$retTypeInfoList ) ) );
    }
 
    fn processToMapBody() {
@@ -3524,7 +3531,18 @@ fn convFilter.processMapping(
 
    fn processFromMapBody() {
       // _toMap の定義
-      processDeclFromMap();
+      processDeclFromMap( false );
+      self.writeln( "{" );
+      self.pushIndent( ## );
+
+      self.writeln( "return %sSub( _pEnv, NULL, mapStem );"
+                    (self.moduleCtrl.getMethodCName( fromMapMtdSym.$typeInfo )));
+      
+      self.popIndent();
+      self.writeln( "}" );
+
+      
+      processDeclFromMap( true );
       self.writeln( "{" );
       self.pushIndent( ## );
 
@@ -3547,42 +3565,54 @@ fn convFilter.processMapping(
             fromMapSym = nil;
          }
               
-         
-         if not memberSym.$typeInfo.$nilable {
-            self.writeln( "%s %s;" (getCType( memberSym.$typeInfo ),
-                                     memberSym.$name ) );
-         
-            let defaultProc =
-               "lns_check_err_from_map( pErr, _pEnv, pMap, %s, %s );"
-                (memberSym.$name,
-                  getAccessPrimValFromStem( false, memberSym.$typeInfo, 0 ));
 
-            when! fromMapSym {
-               self.writeln(
-                  "lns_check_err_from_map_class( pErr, _pEnv, pMap, %s, %s, %s );"
-                  ( memberSym.$name,
-                    self.moduleCtrl.getMethodCName( fromMapSym.$typeInfo ),
-                    getAccessPrimValFromStem( false, memberSym.$typeInfo, 0 )) );
+         fn process(nilable:bool) {
+            let kind;
+            switch memberSym.$typeInfo.$nonnilableType.$srcTypeInfo {
+               case Ast.builtinTypeInt, Ast.builtinTypeChar {
+                  kind = "lns_stem_type_int";
+               }
+               case Ast.builtinTypeReal {
+                  kind = "lns_stem_type_real";
+               }
+               case Ast.builtinTypeBool {
+                  kind = "lns_stem_type_bool";
+               }
+               default{
+                  Util.err( "not support -- %s" (memberSym.$typeInfo.getTxt(##)) );
+               }
             }
-            else {
-               self.writeln( defaultProc );
-            }
+            self.writeln(
+               "lns_check_err_from_map( pErr, _pEnv, pMap, %s, %s, %s, %s );"
+               ( nilable and "true" or "false",
+                 memberSym.$name, kind, 
+                 getAccessPrimValFromStem( false, memberSym.$typeInfo, 0 )) );
+         }
+
+         self.writeln( "%s %s;" (getCType( memberSym.$typeInfo ),
+                                  memberSym.$name ) );
+         let nilable = memberSym.$typeInfo.$nilable;
+         if nilable {
+            self.writeln( "%s = lns_global.nilStem;" (memberSym.$name) );
+         }
+
+         when! fromMapSym {
+            self.write( "lns_check_err_from_map_class" );
+            self.writeln(
+               "( pErr, _pEnv, pMap, %s, %s, %sSub, %s, %s );"
+               ( nilable, memberSym.$name,  
+                 self.moduleCtrl.getMethodCName( fromMapSym.$typeInfo ), "NULL",
+                 getAccessPrimValFromStem( false, memberSym.$typeInfo, 0 ) ) );
          }
          else {
-            let defaultProc =
-               "%s %s = lns_mtd_Map_get( _pEnv, pMap, %s );"
-                ( cTypeStem, memberSym.$name,
-                  getLiteralStrStem( '"%s"' ( memberSym.$name ) ) );
-            when! fromMapSym {
-               self.writeln( "%s %s;" (getCType( memberSym.$typeInfo ),
-                                        memberSym.$name ) );
-               self.writeln(
-                  "lns_check_err_from_map_class_nilable( pErr, _pEnv, pMap, %s, %s);"
-                  ( memberSym.$name,
-                    self.moduleCtrl.getMethodCName( fromMapSym.$typeInfo )) );
+            if memberSym.$typeInfo.$nonnilableType.equals( Ast.builtinTypeString## ) {
+               self.writeln( 
+                  "lns_check_err_from_map_str( pErr, _pEnv, pMap, %s, %s, %s );"
+                  ( nilable, memberSym.$name,
+                    getAccessPrimValFromStem( false, memberSym.$typeInfo, 0 ) ) );
             }
             else {
-               self.writeln( defaultProc );
+               process( nilable );
             }
          }
       }
@@ -3630,7 +3660,9 @@ fn convFilter.processMapping(
          self.writeln( ";" );
          processDeclToMap( false );
          self.writeln( ";" );
-         processDeclFromMap();
+         processDeclFromMap( false );
+         self.writeln( ";" );
+         processDeclFromMap( true );
          self.writeln( ";" );
       }
       case .DefClass {

@@ -177,57 +177,53 @@ extern "C" {
 #define LNS_ANY_POOL_MAX_NUM 100000
 
 
-#define lns_check_err_from_map( ERR, ENV, MAP, MBR, ACC )               \
+#define lns_check_err_from_map( ERR, ENV, MAP, NILABLE, MBR, KIND, ACC ) \
     if ( ERR == NULL ) {                                                \
-        lns_stem_t _name = LNS_STEM_ANY( lns_litStr2any( ENV, #MBR ) ); \
-        lns_stem_t _work = lns_mtd_Map_get( _pEnv, MAP, _name );        \
-        if ( _work.type == lns_stem_type_nil ) {                        \
-            ERR = _name.val.pAny;                                       \
-        }                                                               \
-        else {                                                          \
+        lns_stem_t _work;                                               \
+        if ( lns_fromMapPrim( _pEnv, &ERR, &_work, MAP, NILABLE,        \
+                              lns_litStr2any( ENV, #MBR ), KIND ) ) {   \
             MBR = _work ACC;                                            \
         }                                                               \
     }
 
+#define lns_check_err_from_map_str( ERR, ENV, MAP, NILABLE, MBR, ACC )  \
+    if ( ERR == NULL ) {                                                \
+        lns_stem_t _work;                                               \
+        if ( lns_fromMapStr( _pEnv, &ERR, &_work, MAP, NILABLE,        \
+                             lns_litStr2any( ENV, #MBR ) ) ) {          \
+            MBR = _work ACC;                                            \
+        }                                                               \
+    }
+    
 
-#define lns_check_err_from_map_class( ERR, ENV, MAP, MBR, FromMap, ACC ) \
+#define lns_check_err_from_map_class( ERR, ENV, MAP, NILABLE, MBR, FromMap, INFO, ACC ) \
     if ( ERR == NULL ) {                                                \
         lns_stem_t _name = LNS_STEM_ANY( lns_litStr2any( ENV, #MBR ) ); \
         lns_stem_t _work = lns_mtd_Map_get( _pEnv, MAP, _name );        \
         if ( _work.type != lns_stem_type_nil ) {                        \
-            lns_stem_t mret = FromMap( _pEnv, _work);                    \
+            lns_stem_t mret = FromMap( _pEnv, INFO, _work);             \
             _work = lns_fromDDD( mret.val.pAny, 0 );                    \
             if ( _work.type == lns_stem_type_nil ) {                    \
-                ERR = _name.val.pAny;                                   \
+                lns_stem_t err = lns_fromDDD( mret.val.pAny, 1 );       \
+                if ( err.type != lns_stem_type_nil ) {                  \
+                    ERR = lns_strconcat(                                \
+                        _pEnv, lns_litStr2any( _pEnv, #MBR "." ), err.val.pAny ); \
+                }                                                       \
+                else {                                                  \
+                    ERR = _name.val.pAny;                               \
+                }                                                       \
             }                                                           \
             else {                                                      \
                 MBR = _work ACC;                                        \
             }                                                           \
         }                                                               \
         else {                                                          \
-            ERR = _name.val.pAny;                                       \
+            if ( !NILABLE || _work.type != lns_stem_type_nil ) {        \
+                ERR = _name.val.pAny;                                   \
+            }                                                           \
         }                                                               \
     }
 
-#define lns_check_err_from_map_class_nilable( ERR, ENV, MAP, MBR, FromMap ) \
-    if ( ERR == NULL ) {                                                \
-        lns_stem_t _name = LNS_STEM_ANY( lns_litStr2any( ENV, #MBR ) ); \
-        lns_stem_t _work = lns_mtd_Map_get( _pEnv, MAP, _name );        \
-        if ( _work.type != lns_stem_type_nil ) {                        \
-            lns_stem_t mret = FromMap( _pEnv, _work);                    \
-            _work = lns_fromDDD( mret.val.pAny, 0 );                    \
-            if ( _work.type == lns_stem_type_nil ) {                    \
-                ERR = _name.val.pAny;                                   \
-            }                                                           \
-            else {                                                      \
-                MBR = _work;                                            \
-            }                                                           \
-        }                                                               \
-        else {                                                          \
-            MBR = lns_global.nilStem;                                   \
-        }                                                               \
-    }
-    
     
 
 #define lns_set_block_var( BLOCK, INDEX, TYPE, VAR )    \
@@ -409,7 +405,17 @@ extern "C" {
     typedef lns_any_t * lns_newfunc_t( lns_env_t * _pEnv, ... );
 
 
-    typedef lns_stem_t lns_fromMap_t( lns_env_t * _pEnv, lns_stem_t val);
+    struct lns_fromVal_info_t;
+        
+    typedef lns_stem_t lns_fromMap_t( lns_env_t * _pEnv, struct lns_fromVal_info_t * pInfoArray, lns_stem_t val);
+
+    typedef struct lns_fromVal_info_t {
+        bool nilable;
+        lns_fromMap_t * pFromMap;
+        struct lns_fromVal_info_t * pInfoArray;
+    } lns_fromVal_info_t;
+
+    
 
     /**
      * 関数の型
@@ -918,7 +924,7 @@ extern "C" {
     extern lns_stem_t lns_stem_refAt( lns_env_t * _pEnv, lns_stem_t stem, lns_stem_t key );
 
     extern lns_stem_t lns_fromMapToList(
-        lns_env_t * _pEnv, lns_fromMap_t * pFromMap, bool nilable, lns_stem_t stem );
+        lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem );
     
 
 
