@@ -292,6 +292,21 @@ lns_stem_t lns_toIF(
     return lns_global.nilStem;
 }
 
+static lns_any_t * lns_toIFDirectly(
+    lns_env_t * _pEnv, lns_any_t * pAny, const lns_type_meta_t * pMeta )
+{
+    if ( pAny->type == lns_value_type_class ) {
+        lns_any_t * pIFAny = (lns_any_t *)pAny->val.classVal->pIFdummy;
+        for ( ; pIFAny->type != lns_value_type_none; pIFAny++ ) {
+            if ( pIFAny->val.ifVal.pMeta == pMeta ) {
+                return pIFAny;
+            }
+        }
+    }
+    lns_abort( "not found interface" );
+    return NULL;
+}
+
 void lns_setQ_( lns_any_t * pAny )
 {
     if ( pAny != NULL ) {
@@ -997,8 +1012,150 @@ lns_stem_t lns_fromMapToClass(
     return pInfoArray->pFromMap( _pEnv, pInfoArray->pInfoArray, stem );
 }
 
+lns_stem_t lns_toMapFromStem( lns_env_t * _pEnv, lns_stem_t item )
+{
+    switch ( item.type )
+    {
+    case lns_stem_type_nil: // fall-through
+    case lns_stem_type_int: // fall-through
+    case lns_stem_type_real: // fall-through
+    case lns_stem_type_bool:
+        return item;
+    case lns_stem_type_any:
+        switch ( item.val.pAny->type )
+        {
+        case lns_value_type_class:
+            {
+                lns_Class_t * pClass = item.val.pAny->val.classVal;
+                if ( pClass->pMeta == &lns_type_meta_List ) {
+                    return lns_toMapFromList( _pEnv, item );
+                }
+                else if ( pClass->pMeta == &lns_type_meta_Set ) {
+                    return lns_toMapFromSet( _pEnv, item );
+                }
+                else if ( pClass->pMeta == &lns_type_meta_Map ) {
+                    return lns_toMapFromMap( _pEnv, item );
+                }
+                else {
+                    // Mapping IF を取得する
+                    lns_any_t * pMapping = lns_toIFDirectly(
+                        _pEnv, item.val.pAny, &lns_type_meta_lns_Mapping );
+                    lns_toMap_t * pToMap = (lns_toMap_t*)lns_mtd_lns_Mapping( pMapping )->_toMap;
+                    return LNS_STEM_ANY( pToMap( _pEnv, item.val.pAny ) );
+                }
+            }
+            break;
+        case lns_value_type_str:
+            return item;
+        }
+        break;
+    default:
+        break;
+    }
+    lns_abort( "illegal type" );
+    return lns_global.nilStem;
+}
 
-lns_stem_t lns_fromMapToList(
+
+lns_stem_t lns_toMapFromList( lns_env_t * _pEnv, lns_stem_t stem )
+{
+    if ( stem.type != lns_stem_type_any ) {
+        return lns_global.nilStem;
+    }
+    lns_any_t * pList = stem.val.pAny;
+
+    lns_any_t * pNewList = lns_class_List_new( _pEnv );
+    
+    lns_stem_t item;
+    lns_any_t * pIt = lns_itList_new( _pEnv, pList );
+    for ( ; lns_itList_hasNext( _pEnv, pIt, &item ); lns_itList_inc( _pEnv, pIt ) ) {
+        lns_mtd_List_insert( _pEnv, pNewList, lns_toMapFromStem( _pEnv, item ) );
+    }
+    lns_itList__del( _pEnv, pIt );
+
+    return LNS_STEM_ANY( pNewList );
+}
+
+lns_stem_t lns_toMapFromSet( lns_env_t * _pEnv, lns_stem_t stem )
+{
+    if ( stem.type != lns_stem_type_any ) {
+        return lns_global.nilStem;
+    }
+    lns_any_t * pSet = stem.val.pAny;
+
+    lns_any_t * pNewSet = lns_class_Set_new( _pEnv );
+    
+    lns_stem_t item;
+    lns_any_t * pIt = lns_itSet_new( _pEnv, pSet );
+    for ( ; lns_itSet_hasNext( _pEnv, pIt, &item ); lns_itSet_inc( _pEnv, pIt ) ) {
+        lns_mtd_Set_add( _pEnv, pNewSet, lns_toMapFromStem( _pEnv, item ) );
+    }
+    lns_itSet__del( _pEnv, pIt );
+
+    return LNS_STEM_ANY( pNewSet );
+}
+
+lns_stem_t lns_toMapFromMap( lns_env_t * _pEnv, lns_stem_t stem )
+{
+    if ( stem.type != lns_stem_type_any ) {
+        return lns_global.nilStem;
+    }
+    lns_any_t * pMap = stem.val.pAny;
+
+    lns_any_t * pNewMap = lns_class_Map_new( _pEnv );
+    
+    lns_Map_entry_t entry;
+    lns_any_t * pIt = lns_itMap_new( _pEnv, pMap );
+    for ( ; lns_itMap_hasNext( _pEnv, pIt, &entry ); lns_itMap_inc( _pEnv, pIt ) ) {
+        lns_mtd_Map_add( _pEnv, pNewMap,
+                         lns_toMapFromStem( _pEnv, entry.key ),
+                         lns_toMapFromStem( _pEnv, entry.val ) );
+    }
+    lns_itMap__del( _pEnv, pIt );
+
+    return LNS_STEM_ANY( pNewMap );
+}
+
+lns_stem_t lns_fromMapToStemSub(
+    lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem )
+{
+    return lns_createMRet(_pEnv, false, 1, stem );
+}
+lns_stem_t lns_fromMapToIntSub(
+    lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem )
+{
+    if ( stem.type != lns_stem_type_int ) {
+        return lns_global.ddd0;
+    }
+    return lns_createMRet(_pEnv, false, 1, stem );
+}
+lns_stem_t lns_fromMapToRealSub(
+    lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem )
+{
+    if ( stem.type != lns_stem_type_real ) {
+        return lns_global.ddd0;
+    }
+    return lns_createMRet(_pEnv, false, 1, stem );
+}
+lns_stem_t lns_fromMapToBoolSub(
+    lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem )
+{
+    if ( stem.type != lns_stem_type_bool ) {
+        return lns_global.ddd0;
+    }
+    return lns_createMRet(_pEnv, false, 1, stem );
+}
+lns_stem_t lns_fromMapToStrSub(
+    lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem )
+{
+    if ( stem.type != lns_stem_type_any ||
+         stem.val.pAny->type != lns_value_type_str ) {
+        return lns_global.ddd0;
+    }
+    return lns_createMRet( _pEnv, false, 1, stem );
+}
+
+lns_stem_t lns_fromMapToListSub(
     lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem )
 {
     if ( stem.type != lns_stem_type_any ||
@@ -1014,14 +1171,19 @@ lns_stem_t lns_fromMapToList(
     lns_any_t * pIt = lns_itList_new( _pEnv, pList );
 
     lns_stem_t val;
-    bool success = true;
-    for ( ; lns_itList_hasNext( _pEnv, pIt, &val ); lns_itList_inc( _pEnv, pIt ) ) {
+    lns_any_t * pErr = NULL;
+    int index = 0;
+    for ( ; lns_itList_hasNext( _pEnv, pIt, &val );
+          lns_itList_inc( _pEnv, pIt ), index++ )
+    {
         if ( val.type == lns_stem_type_nil ) {
             if ( pInfoArray->nilable ) {
                 lns_mtd_List_insert( _pEnv, pNewList, val );
             }
             else {
-                success = false;
+                pErr = lns_string_format(
+                    _pEnv, "%d", lns_createDDD( _pEnv, false, 1,
+                                                LNS_STEM_INT( index + 1 ) ) );
                 break;
             }
         }
@@ -1033,23 +1195,157 @@ lns_stem_t lns_fromMapToList(
                 lns_mtd_List_insert( _pEnv, pNewList, work );
             }
             else {
-                success = false;
+                lns_stem_t err = lns_fromDDD( ddd.val.pAny, 1 );
+                if ( err.type == lns_stem_type_any ) {
+                    pErr = lns_string_format(
+                        _pEnv, "%d.%s",
+                        lns_createDDD( _pEnv, false, 2,
+                                       LNS_STEM_INT( index + 1 ), err ) );
+                }
+                else {
+                    pErr = lns_string_format(
+                        _pEnv, "%d", lns_createDDD( _pEnv, false, 1,
+                                                    LNS_STEM_INT( index + 1 ) ) );
+                }
                 break;
             }
         }
     }
     lns_itList__del( _pEnv, pIt );
 
-    if ( !success ) {
+    if ( pErr != NULL ) {
         lns_rmFromList( pNewList );
         lns_gc_any( _pEnv, pNewList, true );
         pNewList = NULL;
-        return lns_global.ddd0;
+        return lns_createMRet( _pEnv, false, 2, lns_global.nilStem,
+                               LNS_STEM_ANY( pErr ) );
     }
     
     return lns_createMRet( _pEnv, false, 1, LNS_STEM_ANY( pNewList ) );
 }
 
+lns_stem_t lns_fromMapToSetSub(
+    lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem )
+{
+    if ( stem.type != lns_stem_type_any ||
+         stem.val.pAny->type != lns_value_type_class ||
+         stem.val.pAny->val.classVal->pMeta != &lns_type_meta_Set )
+    {
+        return lns_global.ddd0;
+    }
+    lns_any_t * pSet = stem.val.pAny;
+
+    lns_any_t * pNewSet = lns_class_Set_new( _pEnv );
+
+    lns_any_t * pIt = lns_itSet_new( _pEnv, pSet );
+
+    lns_stem_t val;
+    lns_stem_t errStem = lns_global.noneStem;
+    for ( ; lns_itSet_hasNext( _pEnv, pIt, &val ); lns_itSet_inc( _pEnv, pIt ) )
+    {
+        if ( val.type == lns_stem_type_nil ) {
+            if ( pInfoArray->nilable ) {
+                lns_mtd_Set_add( _pEnv, pNewSet, val );
+            }
+            else {
+                // set は順番が固定でないのでインデックス情報を付加しない
+                errStem = lns_global.nilStem;
+                break;
+            }
+        }
+        else {
+            lns_stem_t ddd = pInfoArray->pFromMap( _pEnv, pInfoArray->pInfoArray, val );
+            lns_stem_t work = lns_fromDDD( ddd.val.pAny, 0 );
+            
+            if ( work.type != lns_stem_type_nil ) {
+                lns_mtd_Set_add( _pEnv, pNewSet, work );
+            }
+            else {
+                lns_stem_t err = lns_fromDDD( ddd.val.pAny, 1 );
+                if ( err.type == lns_stem_type_any ) {
+                    errStem = LNS_STEM_ANY(
+                        lns_string_format(
+                            _pEnv, ".%s",
+                            lns_createDDD( _pEnv, false, 1, err ) ) );
+                }
+                else {
+                    errStem = lns_global.nilStem;
+                }
+                break;
+            }
+        }
+    }
+
+    if ( errStem.type != lns_stem_type_none ) {
+        lns_rmFromList( pNewSet );
+        lns_gc_any( _pEnv, pNewSet, true );
+        pNewSet = NULL;
+        return lns_createMRet( _pEnv, false, 2, lns_global.nilStem, errStem );
+    }
+    
+    return lns_createMRet( _pEnv, false, 1, LNS_STEM_ANY( pNewSet ) );
+}
+
+lns_stem_t lns_fromMapToMapSub(
+    lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem )
+{
+    if ( stem.type != lns_stem_type_any ||
+         stem.val.pAny->type != lns_value_type_class ||
+         stem.val.pAny->val.classVal->pMeta != &lns_type_meta_Map )
+    {
+        return lns_global.ddd0;
+    }
+    lns_any_t * pMap = stem.val.pAny;
+
+    lns_any_t * pNewMap = lns_class_Map_new( _pEnv );
+
+    lns_any_t * pIt = lns_itMap_new( _pEnv, pMap );
+
+    lns_Map_entry_t entry;
+    bool success = true;
+    for ( ; lns_itMap_hasNext( _pEnv, pIt, &entry ); lns_itMap_inc( _pEnv, pIt ) ) {
+        lns_stem_t keyStem;
+        if ( entry.key.type != lns_stem_type_nil ) {
+            lns_stem_t ddd = pInfoArray->pFromMap(
+                _pEnv, pInfoArray->pInfoArray, entry.key );
+            keyStem = lns_fromDDD( ddd.val.pAny, 0 );
+            if ( keyStem.type == lns_stem_type_nil ) {
+                success = false;
+                break;
+            }
+        }
+        lns_stem_t valStem;
+        if ( entry.val.type == lns_stem_type_nil ) {
+            if ( pInfoArray->nilable ) {
+                valStem = entry.val;
+            }
+            else {
+                success = false;
+                break;
+            }
+        }
+        else {
+            lns_stem_t ddd = pInfoArray->pFromMap(
+                _pEnv, pInfoArray->pInfoArray, entry.val );
+            valStem = lns_fromDDD( ddd.val.pAny, 0 );
+            
+            if ( valStem.type == lns_stem_type_nil ) {
+                success = false;
+                break;
+            }
+        }
+        lns_mtd_Map_add( _pEnv, pNewMap, keyStem, valStem );        
+    }
+
+    if ( !success ) {
+        lns_rmFromList( pNewMap );
+        lns_gc_any( _pEnv, pNewMap, true );
+        pNewMap = NULL;
+        return lns_global.ddd0;
+    }
+    
+    return lns_createMRet( _pEnv, false, 1, LNS_STEM_ANY( pNewMap ) );
+}
 
 
 /**

@@ -36,13 +36,22 @@ static int lns_string_call_setup(
     return top;
 }
 
+static int lns_string_call_setup_native(
+    lua_State * pLua, const char * pFuncName, const char * pStr ) {
+    int top = lua_gettop( pLua );
 
-lns_any_t * mtd_lns_string_format(
-    lns_env_t * _pEnv, lns_any_t * pFormat, lns_stem_t ddd)
+    lua_getglobal( pLua, "string" );
+    lua_getfield( pLua, -1, pFuncName );
+    lua_pushstring( pLua, pStr );
+    
+    return top;
+}
+
+
+
+static lns_any_t * lns_string_formatSub( lns_env_t * _pEnv, lns_stem_t ddd, int stackTop )
 {
     lua_State * pLua = _pEnv->pLua;
-    int stackTop = lns_string_call_setup( pLua, "format", pFormat );
-
     int index;
     // ... の値を push する
     for ( index = 0; index < lns_lenDDD( ddd.val.pAny ); index++ ) {
@@ -97,6 +106,22 @@ lns_any_t * mtd_lns_string_format(
 
     // 関数を実行
     return lns_lua_call( _pEnv, stackTop, 1 + lns_lenDDD( ddd.val.pAny ), 1 ).val.pAny;
+}
+
+lns_any_t * lns_string_format(
+    lns_env_t * _pEnv, const char * pFormat, lns_stem_t ddd)
+{
+    int stackTop = lns_string_call_setup_native( _pEnv->pLua, "format", pFormat );
+    
+    return lns_string_formatSub( _pEnv, ddd, stackTop );
+}
+
+lns_any_t * mtd_lns_string_format(
+    lns_env_t * _pEnv, lns_any_t * pFormat, lns_stem_t ddd)
+{
+    int stackTop = lns_string_call_setup( _pEnv->pLua, "format", pFormat );
+    
+    return lns_string_formatSub( _pEnv, ddd, stackTop );
 }
 
 

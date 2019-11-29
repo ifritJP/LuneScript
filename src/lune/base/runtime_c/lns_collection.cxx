@@ -44,6 +44,8 @@ lns_stem_t _lns_createImmediateVal(
         return LNS_STEM_INT( pVal->val.valInt );
     case lns_imdType_real:
         return LNS_STEM_REAL( pVal->val.valReal );
+    case lns_imdType_bool:
+        return LNS_STEM_BOOL( pVal->val.valBool );
     case lns_imdType_str:
         return LNS_STEM_ANY( _lns_litStr2any( LNS_DEBUG_POS, _pEnv, pVal->val.str ) );
     case lns_imdType_list:
@@ -330,11 +332,15 @@ static bool lns_mtd__Cmp( lns_stem_t val1, lns_stem_t val2 )
         }
     }
 
+    // val1, val2 が同じタイプの場合
+
     switch ( val1.type ) {
     case lns_stem_type_int:
         return val1.val.intVal < val2.val.intVal;
     case lns_stem_type_real:
         return val1.val.realVal < val2.val.realVal;
+    case lns_stem_type_bool:
+        return val1.val.boolVal < val2.val.boolVal;
     default:
         break;
     }

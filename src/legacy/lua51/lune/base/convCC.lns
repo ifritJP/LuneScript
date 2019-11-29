@@ -3429,14 +3429,15 @@ fn convFilter.processMapping(
    let classScope = unwrap classType.$scope;
    let toMapMtdSym = unwrap classScope.getSymbolInfoChild( "_toMap" );
    let fromMapMtdSym = unwrap classScope.getSymbolInfoChild( "_fromMap" );
+   let className = self.moduleCtrl.getClassCName( classType );
 
    fn processDeclToMap(callFlag:bool) {
       self.write( "%s%s " ( getOut2HeaderPrefix( out2HMode ), cTypeAnyP ));
       if callFlag {
-         self.write(self.moduleCtrl.getMethodCName( toMapMtdSym.$typeInfo ) );
+         self.write( self.moduleCtrl.getCallMethodCName( toMapMtdSym.$typeInfo ) );
       }
       else {
-         self.write( self.moduleCtrl.getCallMethodCName( toMapMtdSym.$typeInfo ) );
+         self.write(self.moduleCtrl.getMethodCName( toMapMtdSym.$typeInfo ) );
       }
       self.write( "( %s _pEnv, %s pObj)"
                     ( cTypeEnvP,
@@ -3463,8 +3464,7 @@ fn convFilter.processMapping(
       self.writeln( "{" );
       self.pushIndent( ## );
 
-      let className = self.moduleCtrl.getClassCName( classType );
-      
+     
       self.writeln( "%s pMap = lns_class_Map_new( _pEnv );" (cTypeAnyP) );
       foreach varName in Ast.getAllNameForKind( classType, .Object, .Mbr ).$list {
 
@@ -3483,17 +3483,27 @@ fn convFilter.processMapping(
                if memberSym.$typeInfo.$srcTypeInfo == Ast.builtinTypeString {
                }
                else {
-                  let mbrClassName =
-                     self.moduleCtrl.getClassCName( memberSym.$typeInfo );
-                  let memberTypeScope = unwrap memberSym.$typeInfo.$scope;
-                  let memberToMapSym = unwrap memberTypeScope.getSymbolInfoField(
-                     "_toMap", true, memberTypeScope, .Normal);
+                  switch memberSym.$typeInfo.$kind {
+                     case .List, .Array {
+                     }
+                     case .Set {
+                     }
+                     case .Map {
+                     }
+                     default {
+                        let mbrClassName =
+                           self.moduleCtrl.getClassCName( memberSym.$typeInfo );
+                        let memberTypeScope = unwrap memberSym.$typeInfo.$scope;
+                        let memberToMapSym = unwrap memberTypeScope.getSymbolInfoField(
+                           "_toMap", true, memberTypeScope, .Normal);
 
-                  self.writeln(
-                     "LNS_STEM_ANY( %s( _pEnv, %s ) ) );"
-                     ( self.moduleCtrl.getCallMethodCName( memberToMapSym.$typeInfo ),
-                       valTxt ));
-                  valTxt = nil;
+                        self.writeln(
+                           "LNS_STEM_ANY( %s( _pEnv, %s ) ) );"
+                           ( self.moduleCtrl.getCallMethodCName(
+                              memberToMapSym.$typeInfo ), valTxt ));
+                        valTxt = nil;
+                     }
+                  }
                }
             }
             default {
@@ -3550,16 +3560,36 @@ fn convFilter.processMapping(
       self.writeln( "lns_any_t * pMap = mapStem%s;" (accessAny ) );
       self.writeln( "lns_any_t * pErr = NULL;" );
 
-      let className = self.moduleCtrl.getClassCName( classType );
-      
       foreach varName in Ast.getAllNameForKind( classType, .Object, .Mbr ).$list {
          let memberSym = unwrap classScope.getSymbolInfoField(
             varName, true, classScope, .Full );
 
-         let fromMapSym:&Ast.SymbolInfo!;
+         let fromMapSym:str!;
          if! let memberClassScope = memberSym.$typeInfo.$scope {
-            fromMapSym = memberClassScope.getSymbolInfoField(
-               "_fromMap", true, memberClassScope, .Normal );
+            if! let symbol = memberClassScope.getSymbolInfoField(
+               "_fromMap", true, memberClassScope, .Normal )
+            {
+               fromMapSym = self.moduleCtrl.getMethodCName( symbol.$typeInfo );
+            }
+            else {
+               switch memberSym.$typeInfo.$nonnilableType.$kind {
+                  case .List {
+                     fromMapSym = "lns_fromMapToList";
+                  }
+                  case .Array {
+                     fromMapSym = "lns_fromMapToArray";
+                  }
+                  case .Set {
+                     fromMapSym = "lns_fromMapToSet";
+                  }
+                  case .Map {
+                     fromMapSym = "lns_fromMapToMap";
+                  }
+                  default {
+                     fromMapSym = nil;
+                  }
+               }
+            }
          }
          else {
             fromMapSym = nil;
@@ -3598,14 +3628,23 @@ fn convFilter.processMapping(
 
          when! fromMapSym {
             self.write( "lns_check_err_from_map_class" );
+            let infoValName;
+            if #memberSym.$typeInfo.$itemTypeInfoList > 0 {
+               infoValName = "&info_%s_%s" (className, memberSym.$name);
+            }
+            else {
+               infoValName = "NULL";
+            }
+
             self.writeln(
                "( pErr, _pEnv, pMap, %s, %s, %sSub, %s, %s );"
-               ( nilable, memberSym.$name,  
-                 self.moduleCtrl.getMethodCName( fromMapSym.$typeInfo ), "NULL",
+               ( nilable, memberSym.$name, fromMapSym, infoValName,          
                  getAccessPrimValFromStem( false, memberSym.$typeInfo, 0 ) ) );
          }
          else {
-            if memberSym.$typeInfo.$nonnilableType.equals( Ast.builtinTypeString## ) {
+            if memberSym.$typeInfo.$srcTypeInfo.$nonnilableType.equals(
+               Ast.builtinTypeString## )
+            {
                self.writeln( 
                   "lns_check_err_from_map_str( pErr, _pEnv, pMap, %s, %s, %s );"
                   ( nilable, memberSym.$name,
@@ -3653,6 +3692,48 @@ fn convFilter.processMapping(
    }
 
 
+   fn processFromMapInfo( memberSym:&Ast.SymbolInfo ) {
+      foreach genType in memberSym.$typeInfo.$itemTypeInfoList {
+         self.write( "lns_fromVal_info_t info_%s_%s = {" (className, memberSym.$name) );
+         self.write( "%s, " (genType.$nilable) );
+         switch genType.$nonnilableType.$srcTypeInfo {
+            case Ast.builtinTypeStem {
+               self.write( "lns_fromMapToStemSub" );
+            }
+            case Ast.builtinTypeInt, Ast.builtinTypeChar {
+               self.write( "lns_fromMapToIntSub" );
+            }
+            case Ast.builtinTypeReal {
+               self.write( "lns_fromMapToRealSub" );
+            }
+            case Ast.builtinTypeBool {
+               self.write( "lns_fromMapToBoolSub" );
+            }
+            case Ast.builtinTypeString {
+               self.write( "lns_fromMapToStrSub" );
+            }
+            default {
+               switch genType.$nonnilableType.$kind {
+                  case .List {
+                     self.write( "lns_fromMapToStrSub" );
+                  }
+                  default {
+                     if! let memberClassScope = genType.$scope {
+                        if! let symbol = memberClassScope.getSymbolInfoField(
+                           "_fromMap", true, memberClassScope, .Normal )
+                        {
+                           self.write(
+                              self.moduleCtrl.getMethodCName( symbol.$typeInfo ) );
+                        }
+                     }
+                  }
+               }
+            }
+         }
+         
+         self.writeln( "};" );
+      }
+   }
    
    switch self.processMode {
       case .Prototype {
@@ -3660,6 +3741,13 @@ fn convFilter.processMapping(
          self.writeln( ";" );
          processDeclToMap( false );
          self.writeln( ";" );
+
+         foreach varName in Ast.getAllNameForKind( classType, .Object, .Mbr ).$list {
+            let memberSym = unwrap classScope.getSymbolInfoField(
+               varName, true, classScope, .Full );
+            processFromMapInfo( memberSym );
+         }
+         
          processDeclFromMap( false );
          self.writeln( ";" );
          processDeclFromMap( true );

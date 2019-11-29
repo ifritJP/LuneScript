@@ -1,41 +1,192 @@
 {
+   class Hoge extend (Mapping) {
+      let val:str {pub};
+   }
+   class Test extend (Mapping) {
+      let list1:List<int> {pub};
+      let list2:List<real> {pub};
+      let list3:List<str> {pub};
+      let list4:List<bool> {pub};
+      let list5:List<stem> {pub};
+      let list6:List<Hoge> {pub};
+   }
    class Sub extend (Mapping) {
-      let val1:int {pub};
-      let val2:str {pub};
+      let test:Test {pub};
    }
-   class Test extend (Mapping){
-      let val3:Sub {pub};
+   let test = new Test( [ 1, 2, 3 ], [ 1.5, 2.5], [ "abc", "xyz" ],
+                        [ true, false ], [ 1, "abc" ],
+                        [ new Hoge( "hoge1" ), new Hoge( "hoge2" ) ] );
+   let sub = new Sub( test );
+   let map = sub._toMap();
+   let sub2 = unwrap Sub._fromMap( map );
+   let test2 = sub2.$test;
+
+   macro _dumpSeq( seq:__exp ) {
+      {}
+      {
+         let mut workMap:Map<str,&stem> = {};
+         foreach val in ,,seq {
+            workMap[ "%s" ( val ) ] = val;
+         }
+         forsort val in workMap {
+            print( val );
+         }
+      }
    }
-   let test = new Test( new Sub( 1, "abc" ) );
-   let map = test._toMap();
-   print( (unwrap map.val3).val1, (unwrap map.val3).val2 ); // 1 abc
-   let test_2;
-   {
-      test_2 = unwrap Test._fromMap( map );
+
+   macro _dumpSeq2( seq:__exp ) {
+      {}
+      {
+         let mut workMap:Map<str,&Hoge> = {};
+         foreach hoge in ,,seq {
+            workMap[ "%s" ( hoge.$val ) ] = hoge;
+         }
+         forsort hoge in workMap {
+            print( hoge.$val );
+         }
+      }
    }
-   print( test_2.$val3.$val1, test_2.$val3.$val2 ); // 1 abc
+   
+   
+   _dumpSeq( test2.$list1 );
+   _dumpSeq( test2.$list2 );
+   _dumpSeq( test2.$list3 );
+   _dumpSeq( test2.$list4 );
+   _dumpSeq( test2.$list5 );
+   _dumpSeq2( test2.$list6 );
+
    print( Test._fromMap( {} )** );
-   print( Test._fromMap( { "val3": {} } )** );
+   print( Test._fromMap( { "list1": [] } )** );
+   print( Test._fromMap( { "list1": [ "str" ] } )** );
+   print( Test._fromMap( { "list1": [], "list2": [], "list3": [],
+                           "list4": [], "list5": [] } )** );
 }
 {
+   class Hoge extend (Mapping) {
+      let val:str {pub};
+   }
+   class Test extend (Mapping) {
+      let set1:Set<int> {pub};
+      let set2:Set<real> {pub};
+      let set3:Set<str> {pub};
+      let set4:Set<bool> {pub};
+      let set5:Set<stem> {pub};
+      let set6:Set<Hoge> {pub};
+   }
    class Sub extend (Mapping) {
-      let val1:int {pub};
-      let val2:str! {pub};
+      let test:Test {pub};
    }
-   class Test extend (Mapping){
-      let val3:Sub {pub};
+   let test = new Test( (@ 1, 2, 3 ), (@ 1.5, 2.5), (@ "abc", "xyz" ),
+                        (@ true, false ), (@ 1, "abc" ),
+                        (@ new Hoge( "hoge1" ), new Hoge( "hoge2" ) ) );
+   let sub = new Sub( test );
+   let map = sub._toMap();
+   let sub2 = unwrap Sub._fromMap( map );
+   let test2 = sub2.$test;
+
+   macro _dumpSeq( seq:__exp ) {
+      {}
+      {
+         let mut workMap:Map<str,&stem> = {};
+         foreach val in ,,seq {
+            workMap[ "%s" ( val ) ] = val;
+         }
+         forsort val in workMap {
+            print( val );
+         }
+      }
    }
-   let test = new Test( new Sub( 1, nil ) );
-   let map = test._toMap();
-   print( (unwrap map.val3).val1, (unwrap map.val3).val2 ); // 1 abc
-   let test_2;
-   {
-      test_2 = unwrap Test._fromMap( map );
+
+   macro _dumpSeq2( seq:__exp ) {
+      {}
+      {
+         let mut workMap:Map<str,&Hoge> = {};
+         foreach hoge in ,,seq {
+            workMap[ "%s" ( hoge.$val ) ] = hoge;
+         }
+         forsort hoge in workMap {
+            print( hoge.$val );
+         }
+      }
    }
-   print( test_2.$val3.$val1, test_2.$val3.$val2 ); // 1 abc
+   
+   
+   _dumpSeq( test2.$set1 );
+   _dumpSeq( test2.$set2 );
+   _dumpSeq( test2.$set3 );
+   _dumpSeq( test2.$set4 );
+   _dumpSeq( test2.$set5 );
+   _dumpSeq2( test2.$set6 );
+
    print( Test._fromMap( {} )** );
-   print( Test._fromMap( { "val3": {} } )** );
+   print( Test._fromMap( { "set1": (@) } )** );
+   print( Test._fromMap( { "set1": (@ "str" ) } )** );
+   print( Test._fromMap( { "set1": (@), "set2": (@), "set3": (@),
+                           "set4": (@), "set5": (@) } )** );
 }
+
+
+
+// {
+//    class Test extend (Mapping) {
+//       let list:List<int>! {pub};
+//    }
+//    {
+//       let test = new Test( [ 1, 2, 3 ] );
+//       let map = test._toMap();
+//       let test2 = Test._fromMap( map );
+//       when! test2 {
+//          foreach val in unwrap test2.$list {
+//             print( val );
+//          }
+//       }
+//    }
+//    {
+//       let test = new Test( nil );
+//       let map = test._toMap();
+//       let test2 = unwrap Test._fromMap( map );
+//       print( test2.$list );
+//    }
+// }
+
+// {
+//    class Sub extend (Mapping) {
+//       let val1:int {pub};
+//       let val2:str {pub};
+//    }
+//    class Test extend (Mapping){
+//       let val3:Sub {pub};
+//    }
+//    let test = new Test( new Sub( 1, "abc" ) );
+//    let map = test._toMap();
+//    print( (unwrap map.val3).val1, (unwrap map.val3).val2 ); // 1 abc
+//    let test_2;
+//    {
+//       test_2 = unwrap Test._fromMap( map );
+//    }
+//    print( test_2.$val3.$val1, test_2.$val3.$val2 ); // 1 abc
+//    print( Test._fromMap( {} )** );
+//    print( Test._fromMap( { "val3": {} } )** );
+// }
+// {
+//    class Sub extend (Mapping) {
+//       let val1:int {pub};
+//       let val2:str! {pub};
+//    }
+//    class Test extend (Mapping){
+//       let val3:Sub {pub};
+//    }
+//    let test = new Test( new Sub( 1, nil ) );
+//    let map = test._toMap();
+//    print( (unwrap map.val3).val1, (unwrap map.val3).val2 ); // 1 abc
+//    let test_2;
+//    {
+//       test_2 = unwrap Test._fromMap( map );
+//    }
+//    print( test_2.$val3.$val1, test_2.$val3.$val2 ); // 1 abc
+//    print( Test._fromMap( {} )** );
+//    print( Test._fromMap( { "val3": {} } )** );
+// }
 // {
 //    class Test extend (Mapping) {
 //       let val1:int {pub};
@@ -43,5 +194,5 @@
 //       let val3:bool {pub};
 //       let val4:str {pub};
 //    }
-//    let test = new Test( 1, 2.0, true, "abc", "aaa" );
+//    let test = new Test( 1, 2.0, true, "abc" );
 // }

@@ -3898,15 +3898,16 @@ function convFilter:processMapping( node, classType, out2HMode )
    local classScope = _lune.unwrap( classType:get_scope())
    local toMapMtdSym = _lune.unwrap( classScope:getSymbolInfoChild( "_toMap" ))
    local fromMapMtdSym = _lune.unwrap( classScope:getSymbolInfoChild( "_fromMap" ))
+   local className = self.moduleCtrl:getClassCName( classType )
    
    local function processDeclToMap( callFlag )
    
       self:write( string.format( "%s%s ", getOut2HeaderPrefix( out2HMode ), cTypeAnyP) )
       if callFlag then
-         self:write( self.moduleCtrl:getMethodCName( toMapMtdSym:get_typeInfo() ) )
+         self:write( self.moduleCtrl:getCallMethodCName( toMapMtdSym:get_typeInfo() ) )
       else
        
-         self:write( self.moduleCtrl:getCallMethodCName( toMapMtdSym:get_typeInfo() ) )
+         self:write( self.moduleCtrl:getMethodCName( toMapMtdSym:get_typeInfo() ) )
       end
       
       self:write( string.format( "( %s _pEnv, %s pObj)", cTypeEnvP, getCRetType( toMapMtdSym:get_typeInfo():get_retTypeInfoList() )) )
@@ -3934,8 +3935,6 @@ function convFilter:processMapping( node, classType, out2HMode )
       self:writeln( "{" )
       self:pushIndent(  )
       
-      local className = self.moduleCtrl:getClassCName( classType )
-      
       self:writeln( string.format( "%s pMap = lns_class_Map_new( _pEnv );", cTypeAnyP) )
       for __index, varName in pairs( Ast.getAllNameForKind( classType, Ast.MethodKind.Object, Ast.SymbolKind.Mbr ):get_list() ) do
          
@@ -3953,12 +3952,22 @@ function convFilter:processMapping( node, classType, out2HMode )
                if memberSym:get_typeInfo():get_srcTypeInfo() == Ast.builtinTypeString then
                else
                 
-                  local mbrClassName = self.moduleCtrl:getClassCName( memberSym:get_typeInfo() )
-                  local memberTypeScope = _lune.unwrap( memberSym:get_typeInfo():get_scope())
-                  local memberToMapSym = _lune.unwrap( memberTypeScope:getSymbolInfoField( "_toMap", true, memberTypeScope, Ast.ScopeAccess.Normal ))
+                  do
+                     local _switchExp = memberSym:get_typeInfo():get_kind()
+                     if _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
+                     elseif _switchExp == Ast.TypeInfoKind.Set then
+                     elseif _switchExp == Ast.TypeInfoKind.Map then
+                     else 
+                        
+                           local mbrClassName = self.moduleCtrl:getClassCName( memberSym:get_typeInfo() )
+                           local memberTypeScope = _lune.unwrap( memberSym:get_typeInfo():get_scope())
+                           local memberToMapSym = _lune.unwrap( memberTypeScope:getSymbolInfoField( "_toMap", true, memberTypeScope, Ast.ScopeAccess.Normal ))
+                           
+                           self:writeln( string.format( "LNS_STEM_ANY( %s( _pEnv, %s ) ) );", self.moduleCtrl:getCallMethodCName( memberToMapSym:get_typeInfo() ), tostring( valTxt)) )
+                           valTxt = nil
+                     end
+                  end
                   
-                  self:writeln( string.format( "LNS_STEM_ANY( %s( _pEnv, %s ) ) );", self.moduleCtrl:getCallMethodCName( memberToMapSym:get_typeInfo() ), tostring( valTxt)) )
-                  valTxt = nil
                end
                
             else 
@@ -4015,8 +4024,6 @@ function convFilter:processMapping( node, classType, out2HMode )
       self:writeln( string.format( "lns_any_t * pMap = mapStem%s;", accessAny) )
       self:writeln( "lns_any_t * pErr = NULL;" )
       
-      local className = self.moduleCtrl:getClassCName( classType )
-      
       for __index, varName in pairs( Ast.getAllNameForKind( classType, Ast.MethodKind.Object, Ast.SymbolKind.Mbr ):get_list() ) do
          local memberSym = _lune.unwrap( classScope:getSymbolInfoField( varName, true, classScope, Ast.ScopeAccess.Full ))
          
@@ -4025,7 +4032,30 @@ function convFilter:processMapping( node, classType, out2HMode )
          do
             local memberClassScope = memberSym:get_typeInfo():get_scope()
             if memberClassScope ~= nil then
-               fromMapSym = memberClassScope:getSymbolInfoField( "_fromMap", true, memberClassScope, Ast.ScopeAccess.Normal )
+               do
+                  local symbol = memberClassScope:getSymbolInfoField( "_fromMap", true, memberClassScope, Ast.ScopeAccess.Normal )
+                  if symbol ~= nil then
+                     fromMapSym = self.moduleCtrl:getMethodCName( symbol:get_typeInfo() )
+                  else
+                     do
+                        local _switchExp = memberSym:get_typeInfo():get_nonnilableType():get_kind()
+                        if _switchExp == Ast.TypeInfoKind.List then
+                           fromMapSym = "lns_fromMapToList"
+                        elseif _switchExp == Ast.TypeInfoKind.Array then
+                           fromMapSym = "lns_fromMapToArray"
+                        elseif _switchExp == Ast.TypeInfoKind.Set then
+                           fromMapSym = "lns_fromMapToSet"
+                        elseif _switchExp == Ast.TypeInfoKind.Map then
+                           fromMapSym = "lns_fromMapToMap"
+                        else 
+                           
+                              fromMapSym = nil
+                        end
+                     end
+                     
+                  end
+               end
+               
             else
                fromMapSym = nil
             end
@@ -4062,9 +4092,19 @@ function convFilter:processMapping( node, classType, out2HMode )
          
          if fromMapSym ~= nil then
             self:write( "lns_check_err_from_map_class" )
-            self:writeln( string.format( "( pErr, _pEnv, pMap, %s, %s, %sSub, %s, %s );", tostring( nilable), memberSym:get_name(), self.moduleCtrl:getMethodCName( fromMapSym:get_typeInfo() ), "NULL", getAccessPrimValFromStem( false, memberSym:get_typeInfo(), 0 )) )
+            local infoValName
+            
+            if #memberSym:get_typeInfo():get_itemTypeInfoList() > 0 then
+               infoValName = string.format( "&info_%s_%s", className, memberSym:get_name())
+            else
+             
+               infoValName = "NULL"
+            end
+            
+            
+            self:writeln( string.format( "( pErr, _pEnv, pMap, %s, %s, %sSub, %s, %s );", tostring( nilable), memberSym:get_name(), fromMapSym, infoValName, getAccessPrimValFromStem( false, memberSym:get_typeInfo(), 0 )) )
          else
-            if memberSym:get_typeInfo():get_nonnilableType():equals( Ast.builtinTypeString ) then
+            if memberSym:get_typeInfo():get_srcTypeInfo():get_nonnilableType():equals( Ast.builtinTypeString ) then
                self:writeln( string.format( "lns_check_err_from_map_str( pErr, _pEnv, pMap, %s, %s, %s );", tostring( nilable), memberSym:get_name(), getAccessPrimValFromStem( false, memberSym:get_typeInfo(), 0 )) )
             else
              
@@ -4110,6 +4150,56 @@ function convFilter:processMapping( node, classType, out2HMode )
       self:writeln( "}" )
    end
    
+   local function processFromMapInfo( memberSym )
+   
+      for __index, genType in pairs( memberSym:get_typeInfo():get_itemTypeInfoList() ) do
+         self:write( string.format( "lns_fromVal_info_t info_%s_%s = {", className, memberSym:get_name()) )
+         self:write( string.format( "%s, ", tostring( genType:get_nilable())) )
+         do
+            local _switchExp = genType:get_nonnilableType():get_srcTypeInfo()
+            if _switchExp == Ast.builtinTypeStem then
+               self:write( "lns_fromMapToStemSub" )
+            elseif _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeChar then
+               self:write( "lns_fromMapToIntSub" )
+            elseif _switchExp == Ast.builtinTypeReal then
+               self:write( "lns_fromMapToRealSub" )
+            elseif _switchExp == Ast.builtinTypeBool then
+               self:write( "lns_fromMapToBoolSub" )
+            elseif _switchExp == Ast.builtinTypeString then
+               self:write( "lns_fromMapToStrSub" )
+            else 
+               
+                  do
+                     local _switchExp = genType:get_nonnilableType():get_kind()
+                     if _switchExp == Ast.TypeInfoKind.List then
+                        self:write( "lns_fromMapToStrSub" )
+                     else 
+                        
+                           do
+                              local memberClassScope = genType:get_scope()
+                              if memberClassScope ~= nil then
+                                 do
+                                    local symbol = memberClassScope:getSymbolInfoField( "_fromMap", true, memberClassScope, Ast.ScopeAccess.Normal )
+                                    if symbol ~= nil then
+                                       self:write( self.moduleCtrl:getMethodCName( symbol:get_typeInfo() ) )
+                                    end
+                                 end
+                                 
+                              end
+                           end
+                           
+                     end
+                  end
+                  
+            end
+         end
+         
+         
+         self:writeln( "};" )
+      end
+      
+   end
+   
    do
       local _switchExp = self.processMode
       if _switchExp == ProcessMode.Prototype then
@@ -4117,6 +4207,13 @@ function convFilter:processMapping( node, classType, out2HMode )
          self:writeln( ";" )
          processDeclToMap( false )
          self:writeln( ";" )
+         
+         for __index, varName in pairs( Ast.getAllNameForKind( classType, Ast.MethodKind.Object, Ast.SymbolKind.Mbr ):get_list() ) do
+            local memberSym = _lune.unwrap( classScope:getSymbolInfoField( varName, true, classScope, Ast.ScopeAccess.Full ))
+            processFromMapInfo( memberSym )
+         end
+         
+         
          processDeclFromMap( false )
          self:writeln( ";" )
          processDeclFromMap( true )
@@ -4347,7 +4444,7 @@ function convFilter:processDeclClassDef( node )
                else 
                   
                      Util.err( string.format( "no support -- %s:%s:%d", member:get_symbolInfo():get_name(), ValKind:_getTxt( valKind)
-                     , 3894) )
+                     , 3982) )
                end
             end
             
@@ -4955,7 +5052,7 @@ function convFilter:processSym2Any( symbol )
       else 
          
             Util.err( string.format( "not suppport -- %s, %d", ValKind:_getTxt( valKind)
-            , 4646) )
+            , 4734) )
       end
    end
    
@@ -4977,7 +5074,7 @@ function convFilter:processVal2any( node, parent )
       else 
          
             Util.err( string.format( "not suppport -- %d, %s, %s, %d", node:get_pos().lineNo, ValKind:_getTxt( valKind)
-            , Nodes.getNodeKindName( node:get_kind() ), 4672) )
+            , Nodes.getNodeKindName( node:get_kind() ), 4760) )
       end
    end
    
@@ -5048,7 +5145,7 @@ function convFilter:processSetValSingleDirect( parent, node, var, initFlag, expV
       
       Util.err( string.format( "illegal %s %s %s -- %d", var:get_name(), ValKind:_getTxt( valKind)
       , ValKind:_getTxt( expValKind)
-      , 4753) )
+      , 4841) )
    end
    
    
@@ -6607,7 +6704,7 @@ function convFilter:processApply( node, opt )
          else 
             
                Util.err( string.format( "no support -- %s:%s:%d", varSym:get_name(), ValKind:_getTxt( valKind)
-               , 6429) )
+               , 6517) )
          end
       end
       
@@ -7023,7 +7120,7 @@ function convFilter:processExpUnwrap( node, opt )
                   self:write( "lns_unwrap_any( " )
                else 
                   
-                     Util.err( string.format( "no support -- %d", 6844) )
+                     Util.err( string.format( "no support -- %d", 6932) )
                end
             end
             
@@ -8735,7 +8832,7 @@ function convFilter:processExpRefItem( node, opt )
             else 
                
                   Util.err( string.format( "not support:%s -- %d:%d", Ast.TypeInfoKind:_getTxt( valType:get_kind())
-                  , 8975, node:get_pos().lineNo) )
+                  , 9063, node:get_pos().lineNo) )
             end
          end
          
@@ -8909,7 +9006,7 @@ function convFilter:processReturn( node, opt )
                   filter( expList[1], self, node )
                else 
                   
-                     Util.err( string.format( "no support -- %d", 9195) )
+                     Util.err( string.format( "no support -- %d", 9283) )
                end
             end
             
@@ -8940,7 +9037,7 @@ function convFilter:processReturn( node, opt )
                elseif _switchExp == ValKind.Prim then
                else 
                   
-                     Util.err( string.format( "no support -- %d", 9228) )
+                     Util.err( string.format( "no support -- %d", 9316) )
                end
             end
             

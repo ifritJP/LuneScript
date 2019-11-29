@@ -46,7 +46,7 @@ extern "C" {
 #define LNS_DEBUG_CALL_LOG
 #endif
     
-    typedef int lns_bool_t;
+    typedef bool lns_bool_t;
     typedef int lns_int_t;
     typedef double lns_real_t;
 
@@ -61,6 +61,7 @@ extern "C" {
         lns_imdType_sentinel,
         lns_imdType_int,
         lns_imdType_real,
+        lns_imdType_bool,
         lns_imdType_str,
         lns_imdType_list,
         lns_imdType_map,
@@ -74,6 +75,7 @@ extern "C" {
 #define lns_imdSentinel { .type = lns_imdType_sentinel }
 #define lns_imdInt( VAL ) { .type = lns_imdType_int, .val.valInt = (VAL) }
 #define lns_imdReal( VAL ) { .type = lns_imdType_real, .val.valReal = (VAL) }
+#define lns_imdBool( VAL ) { .type = lns_imdType_bool, .val.valBool = (VAL) }
 #define lns_imdStr( VAL ) { .type = lns_imdType_str, .val.str = (VAL) }
 #define lns_imdAny( VAL ) { .type = lns_imdType_any, .val.any = (VAL) }
 #define lns_imdList( LIST, ... )                          \
@@ -95,6 +97,7 @@ extern "C" {
         union {
             lns_int_t valInt;
             lns_real_t valReal;
+            bool valBool;
             const char * str;
             struct lns_imdVal_t * list;
             struct lns_imdEntry_t * map;
@@ -923,10 +926,33 @@ extern "C" {
 
     extern lns_stem_t lns_stem_refAt( lns_env_t * _pEnv, lns_stem_t stem, lns_stem_t key );
 
-    extern lns_stem_t lns_fromMapToList(
+    typedef lns_any_t * lns_toMap_t( lns_env_t * _pEnv, lns_any_t * pAny );
+    
+    extern lns_stem_t lns_toMapFromStem( lns_env_t * _pEnv, lns_stem_t stem );
+    extern lns_stem_t lns_toMapFromList( lns_env_t * _pEnv, lns_stem_t stem );
+    extern lns_stem_t lns_toMapFromSet( lns_env_t * _pEnv, lns_stem_t stem );
+    extern lns_stem_t lns_toMapFromMap( lns_env_t * _pEnv, lns_stem_t stem );
+
+    extern lns_stem_t lns_fromMapToStemSub(
+        lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem );
+    extern lns_stem_t lns_fromMapToIntSub(
+        lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem );
+    extern lns_stem_t lns_fromMapToRealSub(
+        lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem );
+    extern lns_stem_t lns_fromMapToBoolSub(
+        lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem );
+    extern lns_stem_t lns_fromMapToStrSub(
+        lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem );
+    
+    extern lns_stem_t lns_fromMapToListSub(
+        lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem );
+    extern lns_stem_t lns_fromMapToSetSub(
+        lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem );
+    extern lns_stem_t lns_fromMapToMapSub(
         lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem );
     
 
+    extern lns_any_t * lns_string_format( lns_env_t * _pEnv, const char * pFormat, lns_stem_t ddd );
 
     extern void lns_run_module( lns_env_t * _pEnv );
 
