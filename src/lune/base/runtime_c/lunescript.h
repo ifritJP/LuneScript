@@ -265,15 +265,22 @@ extern "C" {
     
     
 
-#define lns_setq( ENV, STEM, VAL )                                     \
-    {                                                                   \
-        if ( STEM.type == lns_stem_type_any ) {                        \
-            if ( STEM.val.pAny != NULL ) {                              \
-                lns_decre_ref( ENV, STEM.val.pAny );                   \
-            }                                                           \
-        }                                                               \
-        STEM = VAL;                                                     \
-        lns_setQ_( STEM.val.pAny );                                    \
+
+    /**
+       STEM 型の値 VAL を、 変数 SYM に代入する。
+
+       変数 SYM に VAL をセットする前に、
+       変数 SYM が保持する値の参照カウントをデクリメント。
+    */
+#define lns_setq( ENV, STEM, VAL )                      \
+    {                                                   \
+        if ( STEM.type == lns_stem_type_any ) {         \
+            if ( STEM.val.pAny != NULL ) {              \
+                lns_decre_ref( ENV, STEM.val.pAny );    \
+            }                                           \
+        }                                               \
+        STEM = VAL;                                     \
+        lns_setQ_( STEM.val.pAny );                     \
     }
     
     /**
@@ -282,44 +289,48 @@ extern "C" {
        変数 SYM に VAL をセットする前に、
        変数 SYM が保持する値の参照カウントをデクリメント。
     */
-#define lns_setq_any( ENV, SYM, VAL )          \
+#define lns_setq_any( ENV, SYM, VAL )           \
     {                                           \
-        lns_any_t * __WORK = VAL;             \
+        lns_any_t * __WORK = VAL;               \
         if ( (*SYM) != __WORK ) {               \
             if ( (*SYM) != NULL ) {             \
-                lns_decre_ref( ENV, (*SYM) );  \
+                lns_decre_ref( ENV, (*SYM) );   \
             }                                   \
             (*SYM) = __WORK;                    \
-            lns_setQ_( (*SYM) );               \
+            lns_setQ_( (*SYM) );                \
         }                                       \
     }
 
 
 
-#define lns_setQ( STEM, VAL )                                  \
-    {                                                           \
-        lns_stem_t ___work = VAL;                              \
-        if ( ___work.type == lns_stem_type_any ) {             \
-            lns_setQ_any( &STEM.val.pAny, ___work.val.pAny );  \
-            STEM.type = lns_stem_type_any;                     \
-        }                                                       \
-        else {                                                  \
-            STEM = ___work;                                     \
-        }                                                       \
+    /**
+       変数 SYM を STEM 型の値 VAL で初期化する。
+
+       変数 SYM に値が事前にセットされている場合は、 lns_setq() を使用する。
+
+       - VAL の参照カウントインクリメント
+    */
+#define lns_setQ( STEM, VAL )                           \
+    {                                                   \
+        STEM = VAL;                                     \
+        if ( STEM.type == lns_stem_type_any ) {         \
+            lns_setQ_( STEM.val.pAny );                 \
+        }                                               \
     }
     
     /**
        ANY 型の値 VAL を、 変数 SYM に代入する。
 
+       変数 SYM に値が事前にセットされている場合は、 lns_setq_any() を使用する。
+       
        - VAL の参照カウントインクリメント
-       - VAL を managedAnyTop から除外
     */
-#define lns_setQ_any( SYM, VAL )               \
+#define lns_setQ_any( SYM, VAL )                \
     {                                           \
-        lns_any_t * __WORK = VAL;              \
+        lns_any_t * __WORK = VAL;               \
         if ( (*(SYM)) != __WORK ) {             \
             (*(SYM)) = __WORK;                  \
-            lns_setQ_( (*(SYM)) );             \
+            lns_setQ_( (*(SYM)) );              \
         }                                       \
     }
 
@@ -410,12 +421,12 @@ extern "C" {
 
     struct lns_fromVal_info_t;
         
-    typedef lns_stem_t lns_fromMap_t( lns_env_t * _pEnv, struct lns_fromVal_info_t * pInfoArray, lns_stem_t val);
+    typedef lns_stem_t lns_fromMap_t( lns_env_t * _pEnv, const struct lns_fromVal_info_t * pInfoArray, lns_stem_t val);
 
     typedef struct lns_fromVal_info_t {
         bool nilable;
         lns_fromMap_t * pFromMap;
-        struct lns_fromVal_info_t * pInfoArray;
+        const struct lns_fromVal_info_t * pInfoArray[];
     } lns_fromVal_info_t;
 
     
@@ -934,22 +945,22 @@ extern "C" {
     extern lns_stem_t lns_toMapFromMap( lns_env_t * _pEnv, lns_stem_t stem );
 
     extern lns_stem_t lns_fromMapToStemSub(
-        lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem );
+        lns_env_t * _pEnv, const lns_fromVal_info_t * pInfoArray, lns_stem_t stem );
     extern lns_stem_t lns_fromMapToIntSub(
-        lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem );
+        lns_env_t * _pEnv, const lns_fromVal_info_t * pInfoArray, lns_stem_t stem );
     extern lns_stem_t lns_fromMapToRealSub(
-        lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem );
+        lns_env_t * _pEnv, const lns_fromVal_info_t * pInfoArray, lns_stem_t stem );
     extern lns_stem_t lns_fromMapToBoolSub(
-        lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem );
+        lns_env_t * _pEnv, const lns_fromVal_info_t * pInfoArray, lns_stem_t stem );
     extern lns_stem_t lns_fromMapToStrSub(
-        lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem );
+        lns_env_t * _pEnv, const lns_fromVal_info_t * pInfoArray, lns_stem_t stem );
     
     extern lns_stem_t lns_fromMapToListSub(
-        lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem );
+        lns_env_t * _pEnv, const lns_fromVal_info_t * pInfoArray, lns_stem_t stem );
     extern lns_stem_t lns_fromMapToSetSub(
-        lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem );
+        lns_env_t * _pEnv, const lns_fromVal_info_t * pInfoArray, lns_stem_t stem );
     extern lns_stem_t lns_fromMapToMapSub(
-        lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem );
+        lns_env_t * _pEnv, const lns_fromVal_info_t * pInfoArray, lns_stem_t stem );
     
 
     extern lns_any_t * lns_string_format( lns_env_t * _pEnv, const char * pFormat, lns_stem_t ddd );

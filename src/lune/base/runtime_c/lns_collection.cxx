@@ -31,8 +31,17 @@
 
 using namespace std;
 
+static int s_collection_allocNum = 0;
+
+//#define DEBUG_LOG
+
+
 void lns_collection_init( void )
 {
+}
+
+int lns_collection_getAllocNum( void ) {
+    return s_collection_allocNum;
 }
 
 
@@ -103,8 +112,13 @@ lns_mtd_List_t lns_mtd_List = {
 
 lns_any_t * lns_itList_new( lns_env_t * _pEnv, lns_any_t * pList )
 {
+    lns_lock( s_collection_allocNum++; );
     lns_any_t * pAny = lns_it_new(
         _pEnv, lns_value_type_itList, new lns_itList_t );
+#ifdef DEBUG_LOG
+    printf( "new = %p, %s\n", pAny->val.itList, __func__ );
+#endif
+    
     pAny->val.itList->it = lns_obj_List_obj( pList )->begin();
     pAny->val.itList->end = lns_obj_List_obj( pList )->end();
     return pAny;
@@ -113,6 +127,10 @@ lns_any_t * lns_itList_new( lns_env_t * _pEnv, lns_any_t * pList )
 void lns_itList__del( lns_env_t * _pEnv, lns_any_t * it )
 {
     delete it->val.itList;
+#ifdef DEBUG_LOG
+    printf( "delete = %p, %s\n", it->val.itList, __func__ );
+#endif
+    lns_lock( s_collection_allocNum--; );    
 }
 
 void lns_itList_inc( lns_env_t * _pEnv, lns_any_t * it )
@@ -132,7 +150,11 @@ bool lns_itList_hasNext( lns_env_t * _pEnv, lns_any_t * it, lns_stem_t * pVal )
 
 void lns_class_List_init( lns_env_t * _pEnv, lns_List_t * pObj )
 {
+    lns_lock( s_collection_allocNum++; );
     pObj->pObj = new vector<lns_stem_t>();
+#ifdef DEBUG_LOG
+    printf( "new = %p, %s\n", pObj->pObj, __func__ );
+#endif
 }
 
 
@@ -176,6 +198,10 @@ static void lns_mtd_List__del( lns_env_t * _pEnv, lns_any_t * pObj )
     }
     
     delete lns_obj_List_obj( pObj );
+#ifdef DEBUG_LOG
+    printf( "delete = %p, %s\n", lns_obj_List_obj( pObj ), __func__ );
+#endif
+    lns_lock( s_collection_allocNum--; );    
 }
 
 /**
@@ -520,7 +546,11 @@ lns_mtd_Set_t lns_mtd_Set = {
 
 void lns_class_Set_init( lns_env_t * _pEnv, lns_Set_t * pObj )
 {
+    lns_lock( s_collection_allocNum++; );
     pObj->pObj = new lns_SetClass();
+#ifdef DEBUG_LOG
+    printf( "new = %p, %s\n", pObj->pObj, __func__ );
+#endif
 }
 
 
@@ -564,12 +594,20 @@ static void lns_mtd_Set__del( lns_env_t * _pEnv, lns_any_t * pObj )
     }
     
     delete lns_obj_Set_obj( pObj );
+#ifdef DEBUG_LOG
+    printf( "delete = %p, %s\n", lns_obj_Set_obj( pObj ), __func__ );
+#endif
+    lns_lock( s_collection_allocNum--; );    
 }
 
 lns_any_t * lns_itSet_new( lns_env_t * _pEnv, lns_any_t * pSet )
 {
+    lns_lock( s_collection_allocNum++; );
     lns_any_t * pAny = lns_it_new(
         _pEnv, lns_value_type_itSet, new lns_itSet_t );
+#ifdef DEBUG_LOG
+    printf( "new = %p, %s\n", pAny->val.itSet, __func__ );
+#endif
     pAny->val.itSet->it = lns_obj_Set_obj( pSet )->begin();
     pAny->val.itSet->end = lns_obj_Set_obj( pSet )->end();
     return pAny;
@@ -578,6 +616,10 @@ lns_any_t * lns_itSet_new( lns_env_t * _pEnv, lns_any_t * pSet )
 void lns_itSet__del( lns_env_t * _pEnv, lns_any_t * it )
 {
     delete it->val.itSet;
+#ifdef DEBUG_LOG
+    printf( "delete = %p, %s\n", it->val.itSet, __func__ );
+#endif
+    lns_lock( s_collection_allocNum--; );    
 }
 
 void lns_itSet_inc( lns_env_t * _pEnv, lns_any_t * it )
@@ -801,7 +843,11 @@ lns_mtd_Map_t lns_mtd_Map = {
 
 void lns_class_Map_init( lns_env_t * _pEnv, lns_Map_t * pObj )
 {
+    lns_lock( s_collection_allocNum++; );
     pObj->pObj = new lns_MapClass();
+#ifdef DEBUG_LOG
+    printf( "new = %p, %s\n", pObj->pObj, __func__ );
+#endif
 }
 
 
@@ -851,12 +897,20 @@ static void lns_mtd_Map__del( lns_env_t * _pEnv, lns_any_t * pObj )
     }
     
     delete pMap;
+#ifdef DEBUG_LOG
+    printf( "delete = %p, %s\n", pMap, __func__ );
+#endif
+    lns_lock( s_collection_allocNum--; );    
 }
 
 lns_any_t * lns_itMap_new( lns_env_t * _pEnv, lns_any_t * pMap )
 {
+    lns_lock( s_collection_allocNum++; );
     lns_any_t * pAny = lns_it_new(
         _pEnv, lns_value_type_itMap, new lns_itMap_t );
+#ifdef DEBUG_LOG
+    printf( "alloc = %p, %s\n", pAny->val.itMap, __func__ );
+#endif
     pAny->val.itMap->it = lns_obj_Map_obj( pMap )->begin();
     pAny->val.itMap->end = lns_obj_Map_obj( pMap )->end();
 
@@ -866,6 +920,10 @@ lns_any_t * lns_itMap_new( lns_env_t * _pEnv, lns_any_t * pMap )
 void lns_itMap__del( lns_env_t * _pEnv, lns_any_t * it )
 {
     delete it->val.itMap;
+#ifdef DEBUG_LOG
+    printf( "delete = %p, %s\n", it->val.itMap, __func__ );
+#endif
+    lns_lock( s_collection_allocNum--; );    
 }
 
 void lns_itMap_inc( lns_env_t * _pEnv, lns_any_t * it )

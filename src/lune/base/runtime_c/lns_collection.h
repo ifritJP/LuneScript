@@ -30,6 +30,7 @@ extern "C" {
 #endif
 
     extern void lns_collection_init();
+    extern int lns_collection_getAllocNum( void );
     
 
     // ========== List ==========

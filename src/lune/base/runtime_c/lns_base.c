@@ -205,8 +205,14 @@ static void lns_gc_any( lns_env_t * _pEnv, lns_any_t * pAny, bool freeFlag ) {
             s_globalEnv.allocNum--;
         }
         break;
+    case lns_value_type_itList:
+        lns_itList__del( _pEnv, pAny );
+        break;
     case lns_value_type_itSet:
         lns_itSet__del( _pEnv, pAny );
+        break;
+    case lns_value_type_itMap:
+        lns_itMap__del( _pEnv, pAny );
         break;
     case lns_value_type_if:
         lns_decre_ref( _pEnv, pAny->val.ifVal.pObj );
@@ -852,11 +858,11 @@ lns_any_t * _lns_it_new(
     return pAny;
 }
 
-void lns_it_delete( lns_env_t * _pEnv, lns_any_t * pAny )
-{
-    lns_rmFromList( pAny );
-    lns_gc_any( _pEnv, pAny, true );
-}
+/* void lns_it_delete( lns_env_t * _pEnv, lns_any_t * pAny ) */
+/* { */
+/*     lns_rmFromList( pAny ); */
+/*     lns_gc_any( _pEnv, pAny, true ); */
+/* } */
 
 
 /**
@@ -1001,7 +1007,7 @@ bool lns_fromMapStr(
 }
 
 lns_stem_t lns_fromMapToClass(
-    lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem )
+    lns_env_t * _pEnv, const lns_fromVal_info_t * pInfo, lns_stem_t stem )
 {
     if ( stem.type != lns_stem_type_any ||
          stem.val.pAny->type != lns_value_type_class ||
@@ -1009,7 +1015,7 @@ lns_stem_t lns_fromMapToClass(
     {
         return lns_global.ddd0;
     }
-    return pInfoArray->pFromMap( _pEnv, pInfoArray->pInfoArray, stem );
+    return pInfo->pFromMap( _pEnv, pInfo, stem );
 }
 
 lns_stem_t lns_toMapFromStem( lns_env_t * _pEnv, lns_stem_t item )
@@ -1047,6 +1053,8 @@ lns_stem_t lns_toMapFromStem( lns_env_t * _pEnv, lns_stem_t item )
             break;
         case lns_value_type_str:
             return item;
+        default:
+            break;
         }
         break;
     default:
@@ -1071,7 +1079,7 @@ lns_stem_t lns_toMapFromList( lns_env_t * _pEnv, lns_stem_t stem )
     for ( ; lns_itList_hasNext( _pEnv, pIt, &item ); lns_itList_inc( _pEnv, pIt ) ) {
         lns_mtd_List_insert( _pEnv, pNewList, lns_toMapFromStem( _pEnv, item ) );
     }
-    lns_itList__del( _pEnv, pIt );
+    // pIt は managedAnyTop で管理されているので、ここでは開放しない
 
     return LNS_STEM_ANY( pNewList );
 }
@@ -1090,7 +1098,7 @@ lns_stem_t lns_toMapFromSet( lns_env_t * _pEnv, lns_stem_t stem )
     for ( ; lns_itSet_hasNext( _pEnv, pIt, &item ); lns_itSet_inc( _pEnv, pIt ) ) {
         lns_mtd_Set_add( _pEnv, pNewSet, lns_toMapFromStem( _pEnv, item ) );
     }
-    lns_itSet__del( _pEnv, pIt );
+    // pIt は managedAnyTop で管理されているので、ここでは開放しない
 
     return LNS_STEM_ANY( pNewSet );
 }
@@ -1111,18 +1119,18 @@ lns_stem_t lns_toMapFromMap( lns_env_t * _pEnv, lns_stem_t stem )
                          lns_toMapFromStem( _pEnv, entry.key ),
                          lns_toMapFromStem( _pEnv, entry.val ) );
     }
-    lns_itMap__del( _pEnv, pIt );
+    // pIt は managedAnyTop で管理されているので、ここでは開放しない
 
     return LNS_STEM_ANY( pNewMap );
 }
 
 lns_stem_t lns_fromMapToStemSub(
-    lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem )
+    lns_env_t * _pEnv, const lns_fromVal_info_t * pInfo, lns_stem_t stem )
 {
     return lns_createMRet(_pEnv, false, 1, stem );
 }
 lns_stem_t lns_fromMapToIntSub(
-    lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem )
+    lns_env_t * _pEnv, const lns_fromVal_info_t * pInfo, lns_stem_t stem )
 {
     if ( stem.type != lns_stem_type_int ) {
         return lns_global.ddd0;
@@ -1130,7 +1138,7 @@ lns_stem_t lns_fromMapToIntSub(
     return lns_createMRet(_pEnv, false, 1, stem );
 }
 lns_stem_t lns_fromMapToRealSub(
-    lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem )
+    lns_env_t * _pEnv, const lns_fromVal_info_t * pInfo, lns_stem_t stem )
 {
     if ( stem.type != lns_stem_type_real ) {
         return lns_global.ddd0;
@@ -1138,7 +1146,7 @@ lns_stem_t lns_fromMapToRealSub(
     return lns_createMRet(_pEnv, false, 1, stem );
 }
 lns_stem_t lns_fromMapToBoolSub(
-    lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem )
+    lns_env_t * _pEnv, const lns_fromVal_info_t * pInfo, lns_stem_t stem )
 {
     if ( stem.type != lns_stem_type_bool ) {
         return lns_global.ddd0;
@@ -1146,7 +1154,7 @@ lns_stem_t lns_fromMapToBoolSub(
     return lns_createMRet(_pEnv, false, 1, stem );
 }
 lns_stem_t lns_fromMapToStrSub(
-    lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem )
+    lns_env_t * _pEnv, const lns_fromVal_info_t * pInfo, lns_stem_t stem )
 {
     if ( stem.type != lns_stem_type_any ||
          stem.val.pAny->type != lns_value_type_str ) {
@@ -1156,7 +1164,7 @@ lns_stem_t lns_fromMapToStrSub(
 }
 
 lns_stem_t lns_fromMapToListSub(
-    lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem )
+    lns_env_t * _pEnv, const lns_fromVal_info_t * pInfo, lns_stem_t stem )
 {
     if ( stem.type != lns_stem_type_any ||
          stem.val.pAny->type != lns_value_type_class ||
@@ -1170,6 +1178,7 @@ lns_stem_t lns_fromMapToListSub(
 
     lns_any_t * pIt = lns_itList_new( _pEnv, pList );
 
+    const struct lns_fromVal_info_t * pGenInfo = pInfo->pInfoArray[0];
     lns_stem_t val;
     lns_any_t * pErr = NULL;
     int index = 0;
@@ -1177,8 +1186,8 @@ lns_stem_t lns_fromMapToListSub(
           lns_itList_inc( _pEnv, pIt ), index++ )
     {
         if ( val.type == lns_stem_type_nil ) {
-            if ( pInfoArray->nilable ) {
-                lns_mtd_List_insert( _pEnv, pNewList, val );
+            if ( pInfo->nilable ) {
+                lns_mtd_List_insert( _pEnv, pNewList, lns_global.nilStem );
             }
             else {
                 pErr = lns_string_format(
@@ -1186,9 +1195,9 @@ lns_stem_t lns_fromMapToListSub(
                                                 LNS_STEM_INT( index + 1 ) ) );
                 break;
             }
-        }
+        }   
         else {
-            lns_stem_t ddd = pInfoArray->pFromMap( _pEnv, pInfoArray->pInfoArray, val );
+            lns_stem_t ddd = pGenInfo->pFromMap( _pEnv, pGenInfo, val );
             lns_stem_t work = lns_fromDDD( ddd.val.pAny, 0 );
             
             if ( work.type != lns_stem_type_nil ) {
@@ -1211,7 +1220,6 @@ lns_stem_t lns_fromMapToListSub(
             }
         }
     }
-    lns_itList__del( _pEnv, pIt );
 
     if ( pErr != NULL ) {
         lns_rmFromList( pNewList );
@@ -1225,7 +1233,7 @@ lns_stem_t lns_fromMapToListSub(
 }
 
 lns_stem_t lns_fromMapToSetSub(
-    lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem )
+    lns_env_t * _pEnv, const lns_fromVal_info_t * pInfo, lns_stem_t stem )
 {
     if ( stem.type != lns_stem_type_any ||
          stem.val.pAny->type != lns_value_type_class ||
@@ -1239,13 +1247,14 @@ lns_stem_t lns_fromMapToSetSub(
 
     lns_any_t * pIt = lns_itSet_new( _pEnv, pSet );
 
+    const struct lns_fromVal_info_t * pGenInfo = pInfo->pInfoArray[0];
     lns_stem_t val;
     lns_stem_t errStem = lns_global.noneStem;
     for ( ; lns_itSet_hasNext( _pEnv, pIt, &val ); lns_itSet_inc( _pEnv, pIt ) )
     {
         if ( val.type == lns_stem_type_nil ) {
-            if ( pInfoArray->nilable ) {
-                lns_mtd_Set_add( _pEnv, pNewSet, val );
+            if ( pInfo->nilable ) {
+                lns_mtd_Set_add( _pEnv, pNewSet, lns_global.nilStem );
             }
             else {
                 // set は順番が固定でないのでインデックス情報を付加しない
@@ -1254,7 +1263,7 @@ lns_stem_t lns_fromMapToSetSub(
             }
         }
         else {
-            lns_stem_t ddd = pInfoArray->pFromMap( _pEnv, pInfoArray->pInfoArray, val );
+            lns_stem_t ddd = pGenInfo->pFromMap( _pEnv, pGenInfo, val );
             lns_stem_t work = lns_fromDDD( ddd.val.pAny, 0 );
             
             if ( work.type != lns_stem_type_nil ) {
@@ -1287,7 +1296,7 @@ lns_stem_t lns_fromMapToSetSub(
 }
 
 lns_stem_t lns_fromMapToMapSub(
-    lns_env_t * _pEnv, lns_fromVal_info_t * pInfoArray, lns_stem_t stem )
+    lns_env_t * _pEnv, const lns_fromVal_info_t * pInfo, lns_stem_t stem )
 {
     if ( stem.type != lns_stem_type_any ||
          stem.val.pAny->type != lns_value_type_class ||
@@ -1301,13 +1310,15 @@ lns_stem_t lns_fromMapToMapSub(
 
     lns_any_t * pIt = lns_itMap_new( _pEnv, pMap );
 
+    const struct lns_fromVal_info_t * pKeyGenInfo = pInfo->pInfoArray[0];
+    const struct lns_fromVal_info_t * pValGenInfo = pInfo->pInfoArray[1];
+
     lns_Map_entry_t entry;
     bool success = true;
     for ( ; lns_itMap_hasNext( _pEnv, pIt, &entry ); lns_itMap_inc( _pEnv, pIt ) ) {
         lns_stem_t keyStem;
         if ( entry.key.type != lns_stem_type_nil ) {
-            lns_stem_t ddd = pInfoArray->pFromMap(
-                _pEnv, pInfoArray->pInfoArray, entry.key );
+            lns_stem_t ddd = pKeyGenInfo->pFromMap( _pEnv, pKeyGenInfo, entry.key );
             keyStem = lns_fromDDD( ddd.val.pAny, 0 );
             if ( keyStem.type == lns_stem_type_nil ) {
                 success = false;
@@ -1316,7 +1327,7 @@ lns_stem_t lns_fromMapToMapSub(
         }
         lns_stem_t valStem;
         if ( entry.val.type == lns_stem_type_nil ) {
-            if ( pInfoArray->nilable ) {
+            if ( pInfo->nilable ) {
                 valStem = entry.val;
             }
             else {
@@ -1325,8 +1336,7 @@ lns_stem_t lns_fromMapToMapSub(
             }
         }
         else {
-            lns_stem_t ddd = pInfoArray->pFromMap(
-                _pEnv, pInfoArray->pInfoArray, entry.val );
+            lns_stem_t ddd = pValGenInfo->pFromMap( _pEnv, pValGenInfo, entry.val );
             valStem = lns_fromDDD( ddd.val.pAny, 0 );
             
             if ( valStem.type == lns_stem_type_nil ) {
@@ -1723,6 +1733,10 @@ static bool lns_releaseGlobalEnv(void) {
     bool result = lns_deleteEnv( s_globalEnv.pEnv );
     printf( ":debug:allocNum = %d\n", s_globalEnv.allocNum );
     if ( s_globalEnv.allocNum != 0 ) {
+        result = false;
+    }
+    printf( ":debug:collection_allocNum = %d\n", lns_collection_getAllocNum() );
+    if ( lns_collection_getAllocNum() != 0 ) {
         result = false;
     }
     lns_checkMem();

@@ -3452,7 +3452,7 @@ fn convFilter.processMapping(
       }
       self.write( "( %s _pEnv" ( cTypeEnvP ) );
       if sub {
-         self.write( ", lns_fromVal_info_t * pInfoArray" );
+         self.write( ", const lns_fromVal_info_t * pInfoArray" );
       }
       self.write( ", %s mapStem)"
                   ( getCRetType( fromMapMtdSym.$typeInfo.$retTypeInfoList ) ) );
@@ -3473,37 +3473,24 @@ fn convFilter.processMapping(
 
          let memberSym = unwrap classScope.getSymbolInfoField(
             varName, true, classScope, .Full );
+         let nonNilMemberType = memberSym.$typeInfo.$nonnilableType.$srcTypeInfo;
 
          let valKind = getValKind( memberSym.$typeInfo );
          let mut valTxt:str! = getAccessMember( className, "pObj", varName );
          switch valKind {
-            case .Prim, .Stem {
+            case .Prim {
+            }
+            case .Stem {
+               self.writeln( "lns_toMapFromStem( _pEnv, %s ) );" ( valTxt ) );
+               valTxt = nil;
             }
             case .Any {
-               if memberSym.$typeInfo.$srcTypeInfo == Ast.builtinTypeString {
+               if nonNilMemberType == Ast.builtinTypeString {
                }
                else {
-                  switch memberSym.$typeInfo.$kind {
-                     case .List, .Array {
-                     }
-                     case .Set {
-                     }
-                     case .Map {
-                     }
-                     default {
-                        let mbrClassName =
-                           self.moduleCtrl.getClassCName( memberSym.$typeInfo );
-                        let memberTypeScope = unwrap memberSym.$typeInfo.$scope;
-                        let memberToMapSym = unwrap memberTypeScope.getSymbolInfoField(
-                           "_toMap", true, memberTypeScope, .Normal);
-
-                        self.writeln(
-                           "LNS_STEM_ANY( %s( _pEnv, %s ) ) );"
-                           ( self.moduleCtrl.getCallMethodCName(
-                              memberToMapSym.$typeInfo ), valTxt ));
-                        valTxt = nil;
-                     }
-                  }
+                  self.writeln( "lns_toMapFromStem( _pEnv, LNS_STEM_ANY( %s ) ) );"
+                                ( valTxt ) );
+                  valTxt = nil;
                }
             }
             default {
@@ -3540,7 +3527,7 @@ fn convFilter.processMapping(
    }
 
    fn processFromMapBody() {
-      // _toMap の定義
+      // _fromMap の定義
       processDeclFromMap( false );
       self.writeln( "{" );
       self.pushIndent( ## );
@@ -3563,42 +3550,44 @@ fn convFilter.processMapping(
       foreach varName in Ast.getAllNameForKind( classType, .Object, .Mbr ).$list {
          let memberSym = unwrap classScope.getSymbolInfoField(
             varName, true, classScope, .Full );
+         let nonNilMemberType = memberSym.$typeInfo.$nonnilableType.$srcTypeInfo;
 
          let fromMapSym:str!;
-         if! let memberClassScope = memberSym.$typeInfo.$scope {
-            if! let symbol = memberClassScope.getSymbolInfoField(
-               "_fromMap", true, memberClassScope, .Normal )
-            {
-               fromMapSym = self.moduleCtrl.getMethodCName( symbol.$typeInfo );
+         switch nonNilMemberType.$kind {
+            case .List {
+               fromMapSym = "lns_fromMapToList";
             }
-            else {
-               switch memberSym.$typeInfo.$nonnilableType.$kind {
-                  case .List {
-                     fromMapSym = "lns_fromMapToList";
+            case .Array {
+               fromMapSym = "lns_fromMapToArray";
+            }
+            case .Set {
+               fromMapSym = "lns_fromMapToSet";
+            }
+            case .Map {
+               fromMapSym = "lns_fromMapToMap";
+            }
+            default {
+               if! let memberClassScope = nonNilMemberType.$scope {
+                  if! let symbol = memberClassScope.getSymbolInfoField(
+                     "_fromMap", true, memberClassScope, .Normal )
+                  {
+                     fromMapSym = self.moduleCtrl.getMethodCName( symbol.$typeInfo );
                   }
-                  case .Array {
-                     fromMapSym = "lns_fromMapToArray";
-                  }
-                  case .Set {
-                     fromMapSym = "lns_fromMapToSet";
-                  }
-                  case .Map {
-                     fromMapSym = "lns_fromMapToMap";
-                  }
-                  default {
+                  else {
                      fromMapSym = nil;
                   }
                }
+               else {
+                  fromMapSym = nil;
+               }
             }
          }
-         else {
-            fromMapSym = nil;
-         }
+         
               
 
          fn process(nilable:bool) {
             let kind;
-            switch memberSym.$typeInfo.$nonnilableType.$srcTypeInfo {
+            switch nonNilMemberType {
                case Ast.builtinTypeInt, Ast.builtinTypeChar {
                   kind = "lns_stem_type_int";
                }
@@ -3630,7 +3619,7 @@ fn convFilter.processMapping(
             self.write( "lns_check_err_from_map_class" );
             let infoValName;
             if #memberSym.$typeInfo.$itemTypeInfoList > 0 {
-               infoValName = "&info_%s_%s" (className, memberSym.$name);
+               infoValName = "&info_0_1_%s_%s" (className, memberSym.$name);
             }
             else {
                infoValName = "NULL";
@@ -3642,8 +3631,7 @@ fn convFilter.processMapping(
                  getAccessPrimValFromStem( false, memberSym.$typeInfo, 0 ) ) );
          }
          else {
-            if memberSym.$typeInfo.$srcTypeInfo.$nonnilableType.equals(
-               Ast.builtinTypeString## )
+            if nonNilMemberType.equals( Ast.builtinTypeString## )
             {
                self.writeln( 
                   "lns_check_err_from_map_str( pErr, _pEnv, pMap, %s, %s, %s );"
@@ -3693,8 +3681,13 @@ fn convFilter.processMapping(
 
 
    fn processFromMapInfo( memberSym:&Ast.SymbolInfo ) {
-      foreach genType in memberSym.$typeInfo.$itemTypeInfoList {
-         self.write( "lns_fromVal_info_t info_%s_%s = {" (className, memberSym.$name) );
+      if #memberSym.$typeInfo.$nonnilableType.$itemTypeInfoList == 0 {
+         return;
+      }
+
+      fn processGenType(genType:&Ast.TypeInfo,name:str, depth:int, index:int )
+      {
+         self.write( "const lns_fromVal_info_t info_%d_%d_%s = { " (depth, index, name) );
          self.write( "%s, " (genType.$nilable) );
          switch genType.$nonnilableType.$srcTypeInfo {
             case Ast.builtinTypeStem {
@@ -3714,8 +3707,14 @@ fn convFilter.processMapping(
             }
             default {
                switch genType.$nonnilableType.$kind {
-                  case .List {
-                     self.write( "lns_fromMapToStrSub" );
+                  case .List, .Array {
+                     self.write( "lns_fromMapToListSub" );
+                  }
+                  case .Set {
+                     self.write( "lns_fromMapToSetSub" );
+                  }
+                  case .Map {
+                     self.write( "lns_fromMapToMapSub" );
                   }
                   default {
                      if! let memberClassScope = genType.$scope {
@@ -3723,16 +3722,43 @@ fn convFilter.processMapping(
                            "_fromMap", true, memberClassScope, .Normal )
                         {
                            self.write(
-                              self.moduleCtrl.getMethodCName( symbol.$typeInfo ) );
+                              "%sSub"
+                              ( self.moduleCtrl.getMethodCName( symbol.$typeInfo ) ) );
                         }
                      }
                   }
                }
             }
          }
-         
+         if #genType.$itemTypeInfoList > 0 {
+            self.write( ", { " );
+            foreach subGenType, subIndex in genType.$itemTypeInfoList {
+               if subIndex > 1 {
+                  self.write( ", " );
+               }
+               self.write( "&info_%d_%d_%s" (depth + 1, subIndex, name) );
+            }
+            self.write( "}" );
+         }
          self.writeln( "};" );
       }
+
+      fn process( typeInfo:&Ast.TypeInfo,  name:str, depth:int, index:int ) {
+         foreach genType, genIndex in typeInfo.$itemTypeInfoList {
+            if #genType.$itemTypeInfoList > 0 {
+               foreach subGenType in genType.$itemTypeInfoList {
+                  process( subGenType, name, depth + 2, genIndex );
+               }
+            }
+            processGenType( genType, name, depth + 1, genIndex );
+         }
+         processGenType( typeInfo, name, depth, index );
+      }
+      
+      process( memberSym.$typeInfo,
+               "%s_%s" (className, memberSym.$name), 0, 1 );
+
+
    }
    
    switch self.processMode {

@@ -847,8 +847,7 @@ endef
 
 
 build-miniC:
-	LANG= $(MAKE) -f Makefile.ccc SRCS=miniC.c TEST_OUT=test.exe \
-		LUA_INC_DIR=$(LUA_INC_DIR) LUA_LIB=$(LUA_LIB)
+	$(call test-convC-exe,.,miniC.lns,miniC,miniC)
 
 test-miniC:
 	$(call transwork,.,.,,base/convCC)
