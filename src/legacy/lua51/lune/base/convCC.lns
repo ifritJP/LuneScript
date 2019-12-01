@@ -3244,7 +3244,7 @@ fn processDefaultCtor(
          stream.write( "%s( _pEnv, pAny"
                        (moduleCtrl.getCtorName( node.$expType.$baseTypeInfo ) ) );
 
-         if #ctorType.$argTypeInfoList > #superInitType.$argTypeInfoList {
+         if #ctorType.$argTypeInfoList >= #superInitType.$argTypeInfoList {
             superArgNum = #superInitType.$argTypeInfoList;         
             foreach argType, index in superInitType.$argTypeInfoList {
                stream.write( ", _arg%d" (index) );
@@ -3919,7 +3919,9 @@ fn convFilter.processDeclClassDef( node:&Nodes.DeclClassNode ) mut
          switch valKind {
             case .Stem {
                let typeInfo = member.$symbolInfo.$typeInfo;
-               if typeInfo.$nilable and getValKind( typeInfo.$nonnilableType ) == .Any {
+               if typeInfo.$nilable and getValKind( typeInfo.$nonnilableType ) == .Prim {
+               }
+               else {
                   self.writeln(
                      "lns_decre_ref_stem( _pEnv, %s );"
                      (getAccessMember(className, "pObj", member.$name.txt ) ) );
