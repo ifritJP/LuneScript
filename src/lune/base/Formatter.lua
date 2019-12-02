@@ -1109,6 +1109,14 @@ function FormatterFilter:processExpParen( node, opt )
 end
 
 
+function FormatterFilter:processExpSetVal( node, opt )
+
+   filter( node:get_exp1(), self, opt:nextOpt( node ) )
+   self:write( " = " )
+   filter( node:get_exp2(), self, opt:nextOpt( node ) )
+end
+
+
 function FormatterFilter:processExpOp2( node, opt )
 
    filter( node:get_exp1(), self, opt:nextOpt( node ) )

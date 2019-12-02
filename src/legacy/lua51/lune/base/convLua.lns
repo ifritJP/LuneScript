@@ -2807,6 +2807,14 @@ pub override fn convFilter.processExpParen(
    self.write( " )" );
 };
 
+
+pub override fn convFilter.processExpSetVal( node: &Nodes.ExpSetValNode, opt:Opt ) mut
+{
+   filter( node.$exp1,  self, node );
+   self.write( " = " );
+   filter( node.$exp2,  self, node );
+};
+
 pub override fn convFilter.processExpOp2(
    node: Nodes.ExpOp2Node, opt: Opt ) mut
 {

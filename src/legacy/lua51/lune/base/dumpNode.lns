@@ -614,6 +614,14 @@ pub override fn dumpFilter.processExpParen(
    dump( prefix, depth, node, "()" );
    filter( node.get_exp(), self, opt.nextOpt() );
 };
+pub override fn dumpFilter.processExpSetVal(
+   node: Nodes.ExpSetValNode, opt: Opt ) mut
+{
+   let prefix, depth = opt.get();
+   dump( prefix, depth, node, "= %s" (node.$expType.getTxt( self.$typeNameCtrl## )) );
+   filter( node.get_exp1(), self, opt.nextOpt() );
+   filter( node.get_exp2(), self, opt.nextOpt() );
+};
 pub override fn dumpFilter.processExpOp2(
    node: &Nodes.ExpOp2Node, opt:Opt ) mut
 {

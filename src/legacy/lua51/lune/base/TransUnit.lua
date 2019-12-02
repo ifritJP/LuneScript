@@ -10397,14 +10397,25 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
 end
 
 
-function TransUnit:analyzeExpOpSet( exp, opeToken, expList )
+function TransUnit:analyzeExpOpSet( exp, opeToken, expectTypeList )
 
+   exp:setLValue(  )
+   
    if not exp:canBeLeft(  ) then
       self:addErrMess( exp:get_pos(), string.format( "this node can not be l-value. -- %s", Nodes.getNodeKindName( exp:get_kind() )) )
    end
    
    
+   local expList = self:analyzeExpList( false, false, nil, expectTypeList )
+   
+   if not expList:canBeRight(  ) then
+      self:addErrMess( expList:get_pos(), string.format( "this node can not be r-value. -- %s", Nodes.getNodeKindName( expList:get_kind() )) )
+   end
+   
+   
    local matchResult, alt2typeMap, newExpListNode, expTypeList = self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), expList, true, false, nil )
+   
+   local initSymSet = {}
    
    for index, symbolInfo in pairs( exp:getSymbolInfo(  ) ) do
       if not symbolInfo:get_mutable() and symbolInfo:get_hasValueFlag() then
@@ -10446,12 +10457,14 @@ function TransUnit:analyzeExpOpSet( exp, opeToken, expList )
             self:addErrMess( opeToken.pos, string.format( "can't access in this scope. -- %s", symbolInfo:get_name()) )
          end
          
+         initSymSet[symbolInfo]= true
       end
       
       symbolInfo:set_hasValueFlag( true )
    end
    
-   return newExpListNode
+   
+   return Nodes.ExpSetValNode.create( self.nodeManager, exp:get_pos(), {Ast.builtinTypeNone}, exp, expList, initSymSet )
 end
 
 
@@ -10519,21 +10532,15 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
             
             
             if opTxt == "=" then
-               exp:setLValue(  )
-               
-               local expListNode = self:analyzeExpList( false, false, nil, expectTypeList )
-               exp2 = expListNode
-            else
-             
-               exp2 = self:analyzeExp( false, false, opLevel, expectTypeList[1] )
-               if not exp2:canBeRight(  ) then
-                  self:addErrMess( exp2:get_pos(), string.format( "This can't evaluate for '%s' -- %s", opTxt, Nodes.getNodeKindName( exp2:get_kind() )) )
-               end
-               
+               return self:analyzeExpOpSet( exp, nextToken, expectTypeList )
             end
             
             
-            local info = {["op"] = nextToken, ["exp1"] = exp, ["exp2"] = exp2}
+            exp2 = self:analyzeExp( false, false, opLevel, expectTypeList[1] )
+            if not exp2:canBeRight(  ) then
+               self:addErrMess( exp2:get_pos(), string.format( "This can't evaluate for '%s' -- %s", opTxt, Nodes.getNodeKindName( exp2:get_kind() )) )
+            end
+            
             
             local retType = Ast.builtinTypeNone
             
@@ -10545,26 +10552,22 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
             local exp1Type = exp:get_expType()
             local exp2Type = exp2:get_expType()
             
-            if opTxt ~= "=" then
-               
-               if exp1Type:get_kind() == Ast.TypeInfoKind.DDD then
-                  do
-                     local dddType = _lune.__Cast( exp1Type, 3, Ast.DDDTypeInfo )
-                     if dddType ~= nil then
-                        exp = Nodes.ExpMultiTo1Node.create( self.nodeManager, exp:get_pos(), {dddType:get_typeInfo():get_nilableTypeInfo()}, exp )
-                     end
+            if exp1Type:get_kind() == Ast.TypeInfoKind.DDD then
+               do
+                  local dddType = _lune.__Cast( exp1Type, 3, Ast.DDDTypeInfo )
+                  if dddType ~= nil then
+                     exp = Nodes.ExpMultiTo1Node.create( self.nodeManager, exp:get_pos(), {dddType:get_typeInfo():get_nilableTypeInfo()}, exp )
                   end
-                  
                end
                
-               if exp2Type:get_kind() == Ast.TypeInfoKind.DDD then
-                  do
-                     local dddType = _lune.__Cast( exp2Type, 3, Ast.DDDTypeInfo )
-                     if dddType ~= nil then
-                        exp2 = Nodes.ExpMultiTo1Node.create( self.nodeManager, exp2:get_pos(), {dddType:get_typeInfo():get_nilableTypeInfo()}, exp2 )
-                     end
+            end
+            
+            if exp2Type:get_kind() == Ast.TypeInfoKind.DDD then
+               do
+                  local dddType = _lune.__Cast( exp2Type, 3, Ast.DDDTypeInfo )
+                  if dddType ~= nil then
+                     exp2 = Nodes.ExpMultiTo1Node.create( self.nodeManager, exp2:get_pos(), {dddType:get_typeInfo():get_nilableTypeInfo()}, exp2 )
                   end
-                  
                end
                
             end
@@ -10737,14 +10740,6 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
                   else
                    
                      retType = Ast.builtinTypeInt
-                  end
-                  
-               elseif _switchExp == "=" then
-                  do
-                     local _exp = self:analyzeExpOpSet( exp, nextToken, _lune.unwrap( _lune.__Cast( exp2, 3, Nodes.ExpListNode )) )
-                     if _exp ~= nil then
-                        exp2 = _exp
-                     end
                   end
                   
                else 

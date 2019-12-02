@@ -1826,7 +1826,7 @@ lns_stem_t lns_unwrap_stem( lns_stem_t stem, lns_stem_t defVal )
     if ( stem.type != lns_stem_type_nil ) {
         return stem;
     }
-    if ( defVal.type != lns_stem_type_none ) {
+    if ( defVal.type != lns_stem_type_none && defVal.type != lns_stem_type_nil ) {
         return defVal;
     }
     lns_abort( __func__ );
@@ -1838,7 +1838,7 @@ lns_any_t * lns_unwrap_any( lns_stem_t stem, lns_stem_t defVal )
     if ( stem.type != lns_stem_type_nil ) {
         return stem.val.pAny;
     }
-    if ( defVal.type != lns_stem_type_none ) {
+    if ( defVal.type != lns_stem_type_none && defVal.type != lns_stem_type_nil ) {
         return defVal.val.pAny;
     }
     lns_abort( __func__ );

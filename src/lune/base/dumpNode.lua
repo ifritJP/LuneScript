@@ -708,6 +708,12 @@ function dumpFilter:processDeclMethod( node, opt )
 end
 
 
+function dumpFilter:processProtoMethod( node, opt )
+
+   self:processDeclFuncInfo( node, node:get_declInfo(  ), opt )
+end
+
+
 function dumpFilter:processDeclConstr( node, opt )
 
    self:processDeclFuncInfo( node, node:get_declInfo(  ), opt )
@@ -999,6 +1005,15 @@ function dumpFilter:processExpParen( node, opt )
    local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "()" )
    filter( node:get_exp(  ), self, opt:nextOpt(  ) )
+end
+
+
+function dumpFilter:processExpSetVal( node, opt )
+
+   local prefix, depth = opt:get(  )
+   dump( prefix, depth, node, string.format( "= %s", node:get_expType():getTxt( self:get_typeNameCtrl() )) )
+   filter( node:get_exp1(  ), self, opt:nextOpt(  ) )
+   filter( node:get_exp2(  ), self, opt:nextOpt(  ) )
 end
 
 

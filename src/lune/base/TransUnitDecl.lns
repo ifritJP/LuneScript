@@ -2691,44 +2691,42 @@ fn TransUnit.analyzeDeclFunc(
       }
    }
 
-   // if needNode {
-      fn createDeclFuncInfo( funcKind:Nodes.FuncKind ): &Nodes.DeclFuncInfo {
-         return new Nodes.DeclFuncInfo(
-            funcKind, classTypeInfo, name, argList, orgStaticFlag, accessMode,
-            body, retTypeInfoList, self.has__func__Symbol.has( typeInfo ), overrideFlag );
-      }
+   fn createDeclFuncInfo( funcKind:Nodes.FuncKind ): &Nodes.DeclFuncInfo {
+      return new Nodes.DeclFuncInfo(
+         funcKind, classTypeInfo, name, argList, orgStaticFlag, accessMode,
+         body, retTypeInfoList, self.has__func__Symbol.has( typeInfo ), overrideFlag );
+   }
 
-      switch ( kind ) {
-         case Nodes.NodeKind.$DeclConstr {
-            let info = createDeclFuncInfo( .Ctor );
-            node = Nodes.DeclConstrNode.create(
-               self.nodeManager, firstToken.pos, [ typeInfo ], info );
-         }
-         case Nodes.NodeKind.$DeclDestr {
-            let info = createDeclFuncInfo( .Dstr );
-            node = Nodes.DeclDestrNode.create(
-               self.nodeManager, firstToken.pos, [ typeInfo ], info );
-         }
-         case Nodes.NodeKind.$DeclMethod {
-            let info = createDeclFuncInfo( .Mtd );
-            node = Nodes.DeclMethodNode.create(
-               self.nodeManager, firstToken.pos, [ typeInfo ], info );
-         }
-         case Nodes.NodeKind.$ProtoMethod {
-            let info = createDeclFuncInfo( .Mtd );
-            node = Nodes.ProtoMethodNode.create(
-               self.nodeManager, firstToken.pos, [ typeInfo ], info );
-         }
-         case Nodes.NodeKind.$DeclFunc {
-            let info = createDeclFuncInfo( .Func );
-            node = Nodes.DeclFuncNode.create(
-               self.nodeManager, firstToken.pos, [ typeInfo ], info );
-         }
-         default {
-            self.error( "illegal kind -- %d" (kind) );
-         }
+   switch ( kind ) {
+      case Nodes.NodeKind.$DeclConstr {
+         let info = createDeclFuncInfo( .Ctor );
+         node = Nodes.DeclConstrNode.create(
+            self.nodeManager, firstToken.pos, [ typeInfo ], info );
       }
-   // }
+      case Nodes.NodeKind.$DeclDestr {
+         let info = createDeclFuncInfo( .Dstr );
+         node = Nodes.DeclDestrNode.create(
+            self.nodeManager, firstToken.pos, [ typeInfo ], info );
+      }
+      case Nodes.NodeKind.$DeclMethod {
+         let info = createDeclFuncInfo( .Mtd );
+         node = Nodes.DeclMethodNode.create(
+            self.nodeManager, firstToken.pos, [ typeInfo ], info );
+      }
+      case Nodes.NodeKind.$ProtoMethod {
+         let info = createDeclFuncInfo( .Mtd );
+         node = Nodes.ProtoMethodNode.create(
+            self.nodeManager, firstToken.pos, [ typeInfo ], info );
+      }
+      case Nodes.NodeKind.$DeclFunc {
+         let info = createDeclFuncInfo( .Func );
+         node = Nodes.DeclFuncNode.create(
+            self.nodeManager, firstToken.pos, [ typeInfo ], info );
+      }
+      default {
+         self.error( "illegal kind -- %d" (kind) );
+      }
+   }
    self.has__func__Symbol.del( typeInfo );
 
    self.popScope();

@@ -1,0 +1,47 @@
+{
+   class Super {
+      pub fn func() {
+         print( __mod__, __line__ );
+      }
+   }
+   class Sub extend Super {
+      pub override fn func() {
+         print( __mod__, __line__ );
+      }
+   }
+   fn test( obj:Super ) {
+      obj.func();
+   }
+   test( new Super() ); // Super.func
+   test( new Sub() ); // Sub.func
+}
+{
+   class Super {
+      pub fn func(): int {
+         return 1;
+      }
+   }
+   class Sub extend Super {
+      pub override fn func(): int {
+         return 10 + super();
+      }
+   }
+   fn test( obj:Super ) {
+      print( obj.func() );
+   }
+   test( new Sub() ); // 11
+}
+{
+   abstract class Super {
+      pub abstract fn func(): int;
+   }
+   class Sub extend Super {
+      pub override fn func(): int {
+         return 10;
+      }
+   }
+   fn test( obj:Super ) {
+      print( obj.func() );
+   }
+   test( new Sub() );
+}

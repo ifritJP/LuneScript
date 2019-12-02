@@ -1,0 +1,79 @@
+{
+   enum TestEnum {
+      val0,
+      val1,
+      val2,
+   }
+   print( TestEnum.val0, TestEnum.val1, TestEnum.val2 );  // 0, 1, 2
+}
+{
+   enum TestEnum {
+      val0 = 10,
+      val1,
+      val2 = 20,
+   }
+   print( TestEnum.val0, TestEnum.val1, TestEnum.val2 ); // 10, 11, 20
+}
+{
+   enum TestEnum {
+      val0 = "abc",
+      val1 = "def",
+      val2 = "ghi",
+   }
+   print( TestEnum.val0, TestEnum.val1, TestEnum.val2 ); // abc def ghi
+}
+{
+   enum TestEnum {
+      val0,
+      val1,
+      val2,
+   }
+   fn func( val:TestEnum ): int {
+      return val + 100;
+   }
+   print( func( TestEnum.val1 ) ); // 101
+}
+{
+   enum TestEnum {
+      val0,
+      val1,
+      val2,
+   }
+   fn func( val:TestEnum ): int {
+      return val + 100;
+   }
+   print( func( .val1 ) ); // 101
+}
+{
+   enum TestEnum {
+      val0,
+      val1,
+      val2,
+   }
+   fn func( val:TestEnum ): int {
+      return val + 100;
+   }
+   let val = 1;
+   print( func( unwrap TestEnum._from( val ) ) );
+}
+{
+   enum TestEnum {
+      val0,
+      val1,
+      val2,
+   }
+   fn func( val:TestEnum ) {
+      print( val ); 
+   }
+   func( .val1 ); // TestEnum.val1
+}
+{
+   enum TestEnum {
+      val0,
+      val1,
+      val2,
+   }
+   foreach val in TestEnum.$_allList {
+      print( val );
+   }
+}

@@ -2319,19 +2319,31 @@ fn TransUnit.analyzeExpSymbol(
 }
 
 fn TransUnit.analyzeExpOpSet(
-   exp: &Nodes.Node, opeToken: &Parser.Token, expList: &Nodes.ExpListNode ) mut :
-   &Nodes.ExpListNode!
+   exp: Nodes.Node, opeToken: &Parser.Token,
+   expectTypeList:&List<&Ast.TypeInfo> ) mut : Nodes.ExpSetValNode
 {
+   exp.setLValue();
+
    if not exp.canBeLeft() {
       self.addErrMess( exp.$pos,
                        "this node can not be l-value. -- %s"
                        (Nodes.getNodeKindName( exp.$kind ) ) );
    }
 
+   let expList = self.analyzeExpList( false, false, nil, expectTypeList## );
+
+   if not expList.canBeRight() {
+      self.addErrMess( expList.$pos,
+                       "this node can not be r-value. -- %s"
+                       (Nodes.getNodeKindName( expList.$kind ) ) );
+   }
+
    let matchResult, alt2typeMap, newExpListNode, expTypeList =
       self.checkMatchType( "= operator", opeToken.pos, exp.$expTypeList,
                            expList, true, false, nil );
 
+   let mut initSymSet:Set<&Ast.SymbolInfo> = (@);
+   
    foreach symbolInfo, index in exp.getSymbolInfo() {
       if not symbolInfo.$mutable and symbolInfo.$hasValueFlag
       {
@@ -2374,10 +2386,13 @@ fn TransUnit.analyzeExpOpSet(
                              "can't access in this scope. -- %s"
                              ( symbolInfo.$name ) );
          }
+         initSymSet.add( symbolInfo );
       }
       symbolInfo.set_hasValueFlag( true );
    }
-   return newExpListNode;
+
+   return Nodes.ExpSetValNode.create(
+      self.nodeManager, exp.$pos, [ Ast.builtinTypeNone ], exp, expList, initSymSet );
 }
 
 
@@ -2426,43 +2441,18 @@ fn TransUnit.analyzeExpOp2(
             }
             
             let mut exp2:&Nodes.Node;
-            // let mut exp2:&Nodes.Node =
-            //    self.analyzeExp( false, false, opLevel, expectTypeList );
-            // let mut exp2NodeList:&List<&Nodes.Node> = [ exp2 ];
-            // let mut mretIndex:int! = nil;
-
-  
 
             if opTxt == "=" {
-               exp.setLValue();
-               
-               // if! let refNode = exp@@@Nodes.ExpRefNode {
-               //    let refSymbol = refNode.$symbolInfo;
-               //    self.scope.accessSymbol( self.moduleScope, refSymbol, .Write );
-               // }
-               
-               // let workToken = self.getToken(##);
-               // if workToken.txt == "," {
-               let mut expListNode = self.analyzeExpList(
-                  false, false, nil, expectTypeList## );
-                  exp2 = expListNode;
-                  //exp2NodeList = expListNode.$expList;
-               // }
-               // else {
-               //    self.pushback();
-               // }
+               return self.analyzeExpOpSet( exp, nextToken, expectTypeList );
             }
-            else {
-               exp2 = self.analyzeExp( false, false, opLevel, expectTypeList[ 1 ] );
-               if not exp2.canBeRight() {
-                  self.addErrMess(
-                     exp2.$pos, "This can't evaluate for '%s' -- %s"
-                     ( opTxt, Nodes.getNodeKindName( exp2.$kind ) ) );
-               }
+
+            exp2 = self.analyzeExp( false, false, opLevel, expectTypeList[ 1 ] );
+            if not exp2.canBeRight() {
+               self.addErrMess(
+                  exp2.$pos, "This can't evaluate for '%s' -- %s"
+                  ( opTxt, Nodes.getNodeKindName( exp2.$kind ) ) );
             }
             
-            let info = { "op": nextToken, "exp1": exp, "exp2": exp2 };
-
             let mut retType = Ast.builtinTypeNone;
 
             if not exp2.canBeRight() {
@@ -2474,26 +2464,18 @@ fn TransUnit.analyzeExpOp2(
             let exp1Type = exp.$expType;
             let exp2Type = exp2.$expType;
 
-            if opTxt ~= "=" {
-               // if exp1Type.$kind == .DDD {
-               //    self.addErrMess( exp.$pos, "... can't evaluate for %s" (opTxt) );
-               // }
-               // elseif exp2Type.$kind == .DDD {
-               //    self.addErrMess( exp2.$pos, "... can't evaluate for %s" (opTxt) );
-               // }
-               if exp1Type.$kind == .DDD {
-                  if! let dddType = exp1Type@@@Ast.DDDTypeInfo {
-                     exp = Nodes.ExpMultiTo1Node.create(
-                        self.nodeManager, exp.$pos,
-                        [ dddType.$typeInfo.$nilableTypeInfo ], exp );
-                  }
+            if exp1Type.$kind == .DDD {
+               if! let dddType = exp1Type@@@Ast.DDDTypeInfo {
+                  exp = Nodes.ExpMultiTo1Node.create(
+                     self.nodeManager, exp.$pos,
+                     [ dddType.$typeInfo.$nilableTypeInfo ], exp );
                }
-               if exp2Type.$kind == .DDD {
-                  if! let dddType = exp2Type@@@Ast.DDDTypeInfo {
-                     exp2 = Nodes.ExpMultiTo1Node.create(
-                        self.nodeManager, exp2.$pos,
-                        [ dddType.$typeInfo.$nilableTypeInfo ], exp2 );
-                  }
+            }
+            if exp2Type.$kind == .DDD {
+               if! let dddType = exp2Type@@@Ast.DDDTypeInfo {
+                  exp2 = Nodes.ExpMultiTo1Node.create(
+                     self.nodeManager, exp2.$pos,
+                     [ dddType.$typeInfo.$nilableTypeInfo ], exp2 );
                }
             }
             
@@ -2721,19 +2703,12 @@ fn TransUnit.analyzeExpOp2(
                      retType = Ast.builtinTypeInt;
                   }
                }
-               case "=" {
-                  if! self.analyzeExpOpSet(
-                     exp, nextToken, unwrap exp2@@@Nodes.ExpListNode )
-                  {
-                     exp2 = _exp;
-                  }
-               }
                default {
                   self.error( "unknown op " .. opTxt );
                }
             }
 
-            
+
             exp = Nodes.ExpOp2Node.create(
                self.nodeManager, firstToken.pos, [ retType ], nextToken,
                self.nodeManager.MultiTo1( exp ), self.nodeManager.MultiTo1( exp2 ) );

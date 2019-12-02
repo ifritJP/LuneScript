@@ -735,6 +735,13 @@ pub override fn FormatterFilter.processExpParen(
    
    filter( node.$exp, self, opt.nextOpt( node ) );
 };
+pub override fn FormatterFilter.processExpSetVal(
+   node: &Nodes.ExpSetValNode, opt:Opt ) mut
+{
+   filter( node.$exp1, self, opt.nextOpt( node ) );
+   self.write( " = " );
+   filter( node.$exp2, self, opt.nextOpt( node ) );
+};
 pub override fn FormatterFilter.processExpOp2(
    node: &Nodes.ExpOp2Node, opt:Opt ) mut
 {

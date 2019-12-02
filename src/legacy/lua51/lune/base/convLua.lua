@@ -3396,6 +3396,15 @@ end
 
 
 
+function convFilter:processExpSetVal( node, opt )
+
+   filter( node:get_exp1(), self, node )
+   self:write( " = " )
+   filter( node:get_exp2(), self, node )
+end
+
+
+
 function convFilter:processExpOp2( node, opt )
 
    local intCast = false
@@ -3940,7 +3949,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3287, function (  )
+   Log.log( Log.Level.Info, __func__, 3295, function (  )
    
       return string.format( "code: %s", code)
    end )

@@ -59,6 +59,7 @@ extern "C" {
 
     typedef enum {
         lns_imdType_sentinel,
+        lns_imdType_stem,
         lns_imdType_int,
         lns_imdType_real,
         lns_imdType_bool,
@@ -73,6 +74,7 @@ extern "C" {
 #define lns_imdSet_t lns_imdList_t
 
 #define lns_imdSentinel { .type = lns_imdType_sentinel }
+#define lns_imdStem( VAL ) { .type = lns_imdType_stem, .val.stem = (VAL) }
 #define lns_imdInt( VAL ) { .type = lns_imdType_int, .val.valInt = (VAL) }
 #define lns_imdReal( VAL ) { .type = lns_imdType_real, .val.valReal = (VAL) }
 #define lns_imdBool( VAL ) { .type = lns_imdType_bool, .val.valBool = (VAL) }
@@ -90,26 +92,6 @@ extern "C" {
        将来のマルチスレッド対応時の排他制御範囲。
      */
 #define lns_lock( ... )    __VA_ARGS__
-
-
-    typedef struct lns_imdVal_t {
-        lns_imdType_t type;
-        union {
-            lns_int_t valInt;
-            lns_real_t valReal;
-            bool valBool;
-            const char * str;
-            struct lns_imdVal_t * list;
-            struct lns_imdEntry_t * map;
-            struct lns_imdVal_t * set;
-            lns_any_t * any;
-        } val;
-    } lns_imdVal_t;
-
-    struct lns_imdEntry_t {
-        lns_imdVal_t key;
-        lns_imdVal_t val;
-    };
 
 
     typedef enum {
@@ -133,6 +115,27 @@ extern "C" {
             lns_any_t * pAny;
         } val;
     } lns_stem_t;
+
+    typedef struct lns_imdVal_t {
+        lns_imdType_t type;
+        union {
+            lns_int_t valInt;
+            lns_real_t valReal;
+            bool valBool;
+            const char * str;
+            struct lns_imdVal_t * list;
+            struct lns_imdEntry_t * map;
+            struct lns_imdVal_t * set;
+            lns_any_t * any;
+            lns_stem_t stem;
+        } val;
+    } lns_imdVal_t;
+
+    struct lns_imdEntry_t {
+        lns_imdVal_t key;
+        lns_imdVal_t val;
+    };
+
 
 #define LNS_STEM_BASE(TYPE) (lns_stem_t){ .type = TYPE }
 #define LNS_STEM_INT(VAL) \
@@ -195,6 +198,15 @@ extern "C" {
         if ( lns_fromMapStr( _pEnv, &ERR, &_work, MAP, NILABLE,        \
                              lns_litStr2any( ENV, #MBR ) ) ) {          \
             MBR = _work ACC;                                            \
+        }                                                               \
+    }
+
+#define lns_check_err_from_map_stem( ERR, ENV, MAP, NILABLE, MBR )      \
+    if ( ERR == NULL ) {                                                \
+        lns_stem_t _name = LNS_STEM_ANY( lns_litStr2any( ENV, #MBR ) ); \
+        MBR = lns_mtd_Map_get( _pEnv, MAP, _name );                     \
+        if ( !NILABLE && MBR.type == lns_stem_type_nil ) {              \
+            ERR = _name.val.pAny;                                       \
         }                                                               \
     }
     
@@ -280,7 +292,9 @@ extern "C" {
             }                                           \
         }                                               \
         STEM = VAL;                                     \
-        lns_setQ_( STEM.val.pAny );                     \
+        if ( STEM.type == lns_stem_type_any ) {         \
+            lns_setQ_( STEM.val.pAny );                 \
+        }                                               \
     }
     
     /**

@@ -1,0 +1,110 @@
+{
+   fn func1<T>( val:T! ) : T {
+      return unwrap val;
+   }
+   let val:int! = 1;
+   print( func1( val ) + 1 ); // ok
+}
+{
+   fn func<T>( val:T ) : Set<T> {
+      return (@ val);
+   }
+   foreach val in func( "foo" ) {
+      print( val .. "bar" );  // foobar
+   }
+   foreach val in func( 1 ) {
+      print( val + 100 );  // 101
+   }
+}
+{
+   fn func( val:stem ) : Set<stem> {
+      return (@ val);
+   }
+   foreach val in func( "foo" ) {
+      print( val@@str .. "bar" );
+   }
+   foreach val in func( 1 ) {
+      print( val@@int + 100 );
+   }
+}
+{
+   class Test<T> {
+      let val:T;
+      pub fn func<T2>(val:T2) : Map<T,T2> {
+         return { self.val: val };
+      }
+   }
+   let test = new Test( "abc");
+   foreach val, key in test.func( 1 ) {
+      print( key .. "xyz", val + 10 );
+   }
+   foreach val, key in test.func( "ABC" ) {
+      print( key .. "xyz", val .. "XYZ" );
+   }
+}
+{
+   abstract class Val {
+      pub abstract fn func(): str;
+   }
+   class Test<T:Val> {
+      let val:T;
+      pub fn sub() {
+         print( "this is " .. self.val.func() );
+      }
+   }
+}
+{
+   abstract class Val {
+      pub abstract fn func(): str;
+   }
+   class Test<T:Val> {
+      let val:T;
+      pub fn sub() {
+         print( "this is " .. self.val.func() );
+      }
+   }
+
+   class Val1 extend Val {
+      pub override fn func(): str {
+         return "val1";
+      }
+   }
+
+   class Val2 extend Val {
+      pub override fn func(): str {
+         return  "val2";
+      }
+   }
+
+   fn func( test:Test ) {
+      test.sub();
+   }
+
+   func( new Test( new Val1() ) );  // this is val1
+   func( new Test( new Val2() ) );  // this is val2
+}
+{
+   class Test<T> extend (Mapping) {
+      let txt:str;
+      pub fn func( val:T ) {
+         print( self.txt, val );
+      }
+   }
+
+   let test = new Test<int>( "hoge" );
+   let map = test._toMap();
+   if! let test2 = Test<int>._fromMap( map ) {
+      test2.func( 1 );
+   }
+}
+{
+   class Test<T:(Mapping)> extend (Mapping) {
+      let val:T {pub};
+   }
+
+   let test = new Test( "abc" );
+   let map = test._toMap();
+   if! let test2 = Test<str>._fromMap( map ) {
+      print( test2.$val .. "xyz" );
+   }
+}

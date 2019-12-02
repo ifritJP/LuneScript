@@ -3703,6 +3703,124 @@ function ExpRefNode:canBeRight(  )
 end
 
 
+function NodeKind.get_ExpSetVal(  )
+
+   
+   return _lune.unwrap( _moduleObj.nodeKind['ExpSetVal'])
+end
+
+
+
+regKind( "ExpSetVal" )
+function Filter:processExpSetVal( node, opt )
+
+end
+
+
+function NodeManager:getExpSetValNodeList(  )
+
+   return self:getList( _lune.unwrap( _moduleObj.nodeKind['ExpSetVal']) )
+end
+
+
+
+local ExpSetValNode = {}
+setmetatable( ExpSetValNode, { __index = Node } )
+_moduleObj.ExpSetValNode = ExpSetValNode
+function ExpSetValNode:processFilter( filter, opt )
+
+   filter:processExpSetVal( self, opt )
+end
+function ExpSetValNode:canBeRight(  )
+
+   return false
+end
+function ExpSetValNode:canBeLeft(  )
+
+   return false
+end
+function ExpSetValNode:canBeStatement(  )
+
+   return true
+end
+function ExpSetValNode.new( id, pos, typeList, exp1, exp2, initSymSet )
+   local obj = {}
+   ExpSetValNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, typeList, exp1, exp2, initSymSet ); end
+   return obj
+end
+function ExpSetValNode:__init(id, pos, typeList, exp1, exp2, initSymSet) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpSetVal']), pos, typeList)
+   
+   
+   
+   self.exp1 = exp1
+   self.exp2 = exp2
+   self.initSymSet = initSymSet
+   
+   
+end
+function ExpSetValNode.create( nodeMan, pos, typeList, exp1, exp2, initSymSet )
+
+   local node = ExpSetValNode.new(nodeMan:nextId(  ), pos, typeList, exp1, exp2, initSymSet)
+   nodeMan:addNode( node )
+   return node
+end
+function ExpSetValNode:visit( visitor, depth )
+
+   do
+      local child = self.exp1
+      do
+         local _switchExp = visitor( child, self, 'exp1', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   do
+      local child = self.exp2
+      do
+         local _switchExp = visitor( child, self, 'exp2', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   
+   
+   return true
+end
+function ExpSetValNode.setmeta( obj )
+  setmetatable( obj, { __index = ExpSetValNode  } )
+end
+function ExpSetValNode:get_exp1()
+   return self.exp1
+end
+function ExpSetValNode:get_exp2()
+   return self.exp2
+end
+function ExpSetValNode:get_initSymSet()
+   return self.initSymSet
+end
+
+
+
 function NodeKind.get_ExpOp2(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpOp2'])
@@ -3735,6 +3853,10 @@ function ExpOp2Node:canBeRight(  )
    return true
 end
 function ExpOp2Node:canBeLeft(  )
+
+   return false
+end
+function ExpOp2Node:canBeStatement(  )
 
    return false
 end
@@ -3814,12 +3936,6 @@ function ExpOp2Node:get_exp2()
    return self.exp2
 end
 
-
-
-function ExpOp2Node:canBeStatement(  )
-
-   return self:get_op().txt == '='
-end
 
 
 function NodeKind.get_UnwrapSet(  )

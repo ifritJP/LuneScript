@@ -232,10 +232,10 @@ foreach obj in list {
    - [X] class2accessor.org
    - [X] classAdvertise.org
    - [X] classInherit.org
-   - [ ] classMapping.org
-   - [ ] classOverride.org
-   - [ ] crosscompile.org
-   - [ ] enum.org
+   - [X] classMapping.org
+   - [X] classOverride.org
+   - [-] crosscompile.org
+   - [X] enum.org
    - [ ] generics.org
    - [ ] import.org
    - [ ] interface.org

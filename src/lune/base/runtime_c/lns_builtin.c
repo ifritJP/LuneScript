@@ -40,7 +40,7 @@ lns_type_meta_t lns_type_meta_lns_Mapping = { "lns_Mapping", &lns_type_meta_lns_
 static void mtd_lns_luaStream__del( lns_env_t * _pEnv, lns_any_t * pObj ) {
    mtd_lns_luaStream__delExt( _pEnv, pObj );
 }
-lns_any_t * lns_class_lns_luaStream_new( lns_env_t * _pEnv){
+lns_any_t * lns_class_lns_luaStream_new( lns_env_t * _pEnv){ // 0
    lns_class_new_( _pEnv, lns_luaStream, pAny, pObj );
    pObj->pExt = NULL;
    pObj->pImp = &pObj->imp;

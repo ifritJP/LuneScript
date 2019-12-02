@@ -464,7 +464,7 @@ class ModuleCtrl {
       if Ast.isPubToExternal( typeInfo.$accessMode ) {
          return fullName;
       }
-      return "e_%s_%d" (fullName, srcType.$typeId );
+      return "e_%s" (fullName );
    }
 
    pub fn getEnumValCName( typeInfo:&Ast.TypeInfo, valName:str ): str {
@@ -511,8 +511,10 @@ class ModuleCtrl {
             if! let cFuncName = self.getBuiltinFuncNameFromType( typeInfo ) {
                return cFuncName;
             }
-            if typeInfo.$parentInfo.$kind == .Class {
-               return self.getMethodCName( typeInfo );
+            switch typeInfo.$parentInfo.$kind {
+               case .Class, .Enum {   
+                  return self.getMethodCName( typeInfo );
+               }
             }
             return self.getFullName( typeInfo );
          }
@@ -591,6 +593,11 @@ class ModuleCtrl {
 
    pub fn getFuncCastWrapName( orgFunc:&Ast.TypeInfo, castType:&Ast.TypeInfo ) : str {
       return "wrap_%s_2_%s" ( self.getFuncName( orgFunc ), self.getFuncName( castType ) );
+   }
+
+   pub fn getEnumFuncName( enumType:&Ast.EnumTypeInfo, name:str ) : str {
+      let scope = unwrap enumType.$scope;
+      return self.getFuncName( (unwrap scope.getSymbolInfoChild( name )).$typeInfo );
    }
 }
 
@@ -2144,6 +2151,12 @@ pub override fn convFilter.processDeclEnum(
                   self.writeln( "%s%s %s_get__txt( %s _pEnv, %s val );"
                                 ( prefix, cTypeAnyP, enumFullName, cTypeEnvP,
                                   getCType( enumType.$valTypeInfo ) ) );
+                  
+                  self.writeln(
+                     "%s%s %s( %s _pEnv, %s val );"
+                     ( prefix, cTypeStem,
+                       self.moduleCtrl.getEnumFuncName( enumType, "_from" ),
+                       cTypeEnvP, getCType( enumType.$valTypeInfo ) ) );
                }
             }
          }
@@ -2158,6 +2171,7 @@ pub override fn convFilter.processDeclEnum(
          self.writeln( "static %s %s_allList;" (cTypeAnyP, enumFullName) );
       }
       case .Form {
+         // _allList() の宣言
          if not Ast.isPubToExternal( enumType.$accessMode ) {
             self.write( "static " );
          }
@@ -2178,36 +2192,70 @@ pub override fn convFilter.processDeclEnum(
             }
          }
 
-         if not Ast.isPubToExternal( enumType.$accessMode ) {
-            self.write( "static " );
-         }
-         self.writeln( "%s %s_get__txt( %s _pEnv, %s val ) {"
-            ( cTypeAnyP, enumFullName, cTypeEnvP,
-              getCType( enumType.$valTypeInfo ) ) );
-         self.pushIndent( ## );
+         {
+            // get__txt() の宣言
+            if not Ast.isPubToExternal( enumType.$accessMode ) {
+               self.write( "static " );
+            }
+            self.writeln( "%s %s_get__txt( %s _pEnv, %s val ) {"
+               ( cTypeAnyP, enumFullName, cTypeEnvP,
+                 getCType( enumType.$valTypeInfo ) ) );
+            self.pushIndent( ## );
 
-         self.write( "%s _work =  lns_mtd_Map_get( _pEnv, %s, "
-                     ( cTypeStem,
-                       self.moduleCtrl.getEnumVal2NameMapName( enumType ) ) );
-         // if isStemType( enumType.$valTypeInfo ) {
-         //    self.writeln( "val );" );
-         // }
-         // else {
+            self.write( "%s _work =  lns_mtd_Map_get( _pEnv, %s, "
+                        ( cTypeStem,
+                          self.moduleCtrl.getEnumVal2NameMapName( enumType ) ) );
             let workSym = new WorkSymbol(
                unwrap self.moduleTypeInfo.$scope,
                .Local, "val", enumType.$valTypeInfo, .Arg, false,
                new SymbolParam( getValKind( enumType.$valTypeInfo ),
                                 0, getCType( enumType.$valTypeInfo ) ) );
-               
+            
             self.processSym2stem( workSym );
             self.writeln( ");" );
-         // }
-         self.writeln( "return _work%s;" (accessAny)  );
-         
-         self.popIndent();
-         self.writeln( "}" );
-         
-         
+            self.writeln( "return _work%s;" (accessAny)  );
+            
+            self.popIndent();
+            self.writeln( "}" );
+         }
+
+
+         {
+            // __from() の宣言
+            if not Ast.isPubToExternal( enumType.$accessMode ) {
+               self.write( "static " );
+            }
+            self.writeln( "%s %s( %s _pEnv, %s val ) {"
+               ( cTypeStem, self.moduleCtrl.getEnumFuncName( enumType, "_from" ),
+                 cTypeEnvP, getCType( enumType.$valTypeInfo ) ) );
+            self.pushIndent( ## );
+
+            self.write( "%s key = " (cTypeStem) );
+            let workSym = new WorkSymbol(
+               unwrap self.moduleTypeInfo.$scope,
+               .Local, "val", enumType.$valTypeInfo, .Arg, false,
+               new SymbolParam( getValKind( enumType.$valTypeInfo ),
+                                0, getCType( enumType.$valTypeInfo ) ) );
+            self.processSym2stem( workSym );
+            self.writeln( ";" );
+
+            self.writeln( "%s _work = lns_mtd_Map_get( _pEnv, %s, key );"
+                          ( cTypeStem,
+                            self.moduleCtrl.getEnumVal2NameMapName( enumType ) ) );
+            
+            self.writeln( "if ( _work.type == lns_stem_type_nil ) {" );
+            self.pushIndent(##);
+            self.writeln( "return lns_global.nilStem;" );
+            self.popIndent();
+            self.writeln( "}" );
+            self.writeln( "return key;" );
+            
+            self.popIndent();
+            self.writeln( "}" );
+         }
+
+
+         // enum 情報の初期化関数の宣言
          self.writeln( "static void init_%s( lns_env_t * _pEnv )" ( enumFullName ) );
          self.writeln( "{" );
          self.pushIndent(##);
@@ -3236,6 +3284,13 @@ fn processDefaultCtor(
       stream.writeln( ") {" );
       stream.pushIndent(##);
 
+      let mut memberNum = 0;
+      foreach member in node.$memberList {
+         if not member.$staticFlag {
+            memberNum = memberNum + 1;
+         }
+      }
+
       let superArgNum;
       if! let baseScope = node.$scope.$inherit {
          // 親クラスのコンストラクタ呼び出し
@@ -3244,13 +3299,18 @@ fn processDefaultCtor(
          stream.write( "%s( _pEnv, pAny"
                        (moduleCtrl.getCtorName( node.$expType.$baseTypeInfo ) ) );
 
-         if #ctorType.$argTypeInfoList >= #superInitType.$argTypeInfoList {
+         if #ctorType.$argTypeInfoList >= #superInitType.$argTypeInfoList + memberNum
+         {
             superArgNum = #superInitType.$argTypeInfoList;         
             foreach argType, index in superInitType.$argTypeInfoList {
                stream.write( ", _arg%d" (index) );
             }
          }
          else {
+            // デフォルトコンストラクタで、
+            // 「親クラスのコンストラクタの引数 + このクラスのメンバ数」よりも、
+            // このコンストラクタの引数が少ない場合は、
+            // _lune_control default__init_old が宣言されている。
             superArgNum = 0;
             foreach argType, index in superInitType.$argTypeInfoList {
                stream.write( ", %s" (cValNil) );
@@ -3942,7 +4002,7 @@ fn convFilter.processDeclClassDef( node:&Nodes.DeclClassNode ) mut
       // デフォルトコンストラクタの定義
       processNewConstrProto( self.stream, self.moduleCtrl, node, .SourcePub,
                              self.outputBuiltinFlag );
-      self.writeln( "{" );
+      self.writeln( "{ // %d" (node.$pos.lineNo) );
       self.pushIndent(##);
 
       self.processNewInsance( node.$expType, true );
@@ -4908,7 +4968,7 @@ fn convFilter.processSetValSingleDirect(
       }
       case .Stem {
          switch expValKind {
-            case .Stem, .Any { 
+            case .Stem, .Any, .Prim { 
                if initFlag {
                   self.write( "lns_setQ( " );
                }
@@ -4936,15 +4996,16 @@ fn convFilter.processSetValSingleDirect(
             //    processVal();
             //    self.write( " );" );
             // }
-            case .Prim {
-               when! processPrefix {
-                  processPrefix();
-               }
-               self.write( self.scopeMgr.getAccessPrimValFromSymbol( var ) );
-               self.write( " = " );
-               processVal();
-               self.write( ";" );
-            }
+            // case .Prim {
+            //    when! processPrefix {
+            //       processPrefix();
+            //    }
+            //    //self.write( self.scopeMgr.getAccessPrimValFromSymbol( var ) );
+            //    self.write( var.$name );
+            //    self.write( " = " );
+            //    processVal();
+            //    self.write( ";" );
+            // }
          }
       }
       case .Any {
@@ -5356,8 +5417,8 @@ fn convFilter.processSetValSingleNode(
 
 /** 代入先情報 */
 alge DstInfo {
-   Symbol( &Ast.LowSymbol, node:&Nodes.Node! ),
-   Node( node:&Nodes.Node ),
+   Symbol( &Ast.LowSymbol, node:&Nodes.Node!, initFlag:bool ),
+   Node( node:&Nodes.Node, initFlag:bool ),
 }
 
 
@@ -5375,7 +5436,7 @@ val1, val2, val3 = exp1, exp2, exp3
 @param mRetExp expList の MRetExp 情報。
 */
 fn convFilter.processSetValToDst(
-   parent: &Nodes.Node, dstList:&List<&DstInfo>, initFlag:bool,
+   parent: &Nodes.Node, dstList:&List<&DstInfo>, 
    expList:&List<&Nodes.Node>, mRetExp:&Nodes.MRetExp! ) mut
 {
    let mut mRetIndex:int! = mRetExp$.$index;
@@ -5407,12 +5468,12 @@ fn convFilter.processSetValToDst(
                accessIndex = 0;
             }
             match dstList[ dstIndex ] {
-               case .Symbol( symbolInfo, dstNode ) {
+               case .Symbol( symbolInfo, dstNode, initFlag ) {
                   self.processSetValSingle(
                      parent, dstNode, symbolInfo,
                      initFlag, exp, accessIndex, is1stMRet and dstIndex == index );
                }
-               case .Node( dstNode ) {
+               case .Node( dstNode, initFlag ) {
                   self.processSetValSingleNode(
                      parent, dstNode, initFlag, exp, accessIndex,
                      is1stMRet and dstIndex == index );         
@@ -5430,12 +5491,12 @@ fn convFilter.processSetValToDst(
             accessIndex = 0;
          }
          match dstList[ index ] {
-            case .Symbol( symbolInfo, dstNode ) {
+            case .Symbol( symbolInfo, dstNode, initFlag ) {
                self.processSetValSingle(
                   parent, dstNode, symbolInfo,
                   initFlag, exp, accessIndex, is1stMRet );
             }
-            case .Node( dstNode ) {
+            case .Node( dstNode, initFlag ) {
                self.processSetValSingleNode(
                   parent, dstNode, initFlag, exp, accessIndex, is1stMRet );         
             }
@@ -5485,9 +5546,9 @@ fn convFilter.processSetValToSym(
       else {
          node = nil;
       }
-      dstList.insert( DstInfo.Symbol( symbol, node ) );
+      dstList.insert( DstInfo.Symbol( symbol, node, initFlag ) );
    }
-   self.processSetValToDst( parent, dstList, initFlag, expList, mRetExp);
+   self.processSetValToDst( parent, dstList, expList, mRetExp);
 }
 
 
@@ -5502,20 +5563,28 @@ val1, val2, val3 = exp1, exp2, exp3
 @param mRetExp expList の MRetExp 情報。
 */
 fn convFilter.processSetValToNode(
-   parent: &Nodes.Node, dstNode:&Nodes.Node,
+   parent: &Nodes.Node, dstNode:&Nodes.Node, initSymSet:&Set<&Ast.SymbolInfo>,
    expList:&List<&Nodes.Node>, mRetExp:&Nodes.MRetExp! ) mut
 {
+   fn isInitSym( node:&Nodes.Node ) : bool {
+      let symbolList = node.getSymbolInfo();
+      if #symbolList > 0 {
+         return initSymSet.has( symbolList[ 1 ] );
+      }
+      return false;
+   }
+   
    let mut dstList:List<&DstInfo> = [];
    if! let expListNode = dstNode@@@Nodes.ExpListNode {
       foreach node in expListNode.$expList {
-         dstList.insert( DstInfo.Node( node ) );
+         dstList.insert( DstInfo.Node( node, isInitSym( node ) ) );
       }
    }
    else {
-      dstList.insert( DstInfo.Node( dstNode ) );
+      dstList.insert( DstInfo.Node( dstNode, isInitSym( dstNode ) ) );
    }
    
-   self.processSetValToDst( parent, dstList, false, expList, mRetExp);
+   self.processSetValToDst( parent, dstList, expList, mRetExp);
 }
 
 
@@ -6940,8 +7009,10 @@ pub override fn convFilter.processExpUnwrap(
          self.write( ")" );
       }
    }
+
    
-   switch node.$expType.$srcTypeInfo {
+   
+   switch getOrgTypeInfo( node.$expType ) {
       case Ast.builtinTypeInt, Ast.builtinTypeChar {
          processUnwrap( "int" );
       }
@@ -6957,7 +7028,8 @@ pub override fn convFilter.processExpUnwrap(
                self.write( "lns_unwrap_any( " );
             }
             default {
-               Util.err( "no support -- %d" (__line__)  );
+               Util.err( "no support -- %s: %d"
+                         (self.getValKindOfNode( node ).$_txt, __line__)  );
             }
          }
          
@@ -8816,30 +8888,35 @@ fn convFilter.processConcat( node:&Nodes.ExpOp2Node, parent:&Nodes.Node ) mut
    self.write( ")" );
 }
 
+
+pub override fn convFilter.processExpSetVal(
+   node: Nodes.ExpSetValNode, opt: Opt ) mut
+{
+   let workParent:&Nodes.Node;
+   //let symbolList = node.$exp1.getSymbolInfo();
+   let expList;
+   let mRetExp:&Nodes.MRetExp!;
+   if! let expListNode = node.$exp2@@@Nodes.ExpListNode {
+      expList = expListNode.$expList;
+      mRetExp = expListNode.$mRetExp;
+      workParent = expListNode;
+   }
+   else {
+      expList = [ node.$exp2 ];
+      mRetExp = nil;
+      workParent = node;
+   }
+   
+   self.processSetValToNode( node, node.$exp1, node.$initSymSet, expList, mRetExp );
+};
+
+
 pub override fn convFilter.processExpOp2(
    node: Nodes.ExpOp2Node, opt: Opt ) mut
 {
    let mut opTxt = node.$op.txt;
 
    switch opTxt {
-      case "=" {
-         let workParent:&Nodes.Node;
-         //let symbolList = node.$exp1.getSymbolInfo();
-         let expList;
-         let mRetExp:&Nodes.MRetExp!;
-         if! let expListNode = node.$exp2@@@Nodes.ExpListNode {
-            expList = expListNode.$expList;
-            mRetExp = expListNode.$mRetExp;
-            workParent = expListNode;
-         }
-         else {
-            expList = [ node.$exp2 ];
-            mRetExp = nil;
-            workParent = node;
-         }
-         
-         self.processSetValToNode( node, node.$exp1, expList, mRetExp );
-      }
       case "and", "or" {
          self.processAndOr( node, opTxt, opt.node );
       }
@@ -9435,6 +9512,11 @@ fn convFilter.processLiteralVal( exp:&Nodes.Node, parent:&Nodes.Node ) mut {
    }
    
    switch valType {
+      case Ast.builtinTypeStem {
+         self.write( "lns_imdStem( " );
+         filter( exp, self, parent );
+         self.write( ")" );
+      }
       case Ast.builtinTypeInt, Ast.builtinTypeChar {
          self.write( "lns_imdInt( " );
          filter( exp, self, parent );

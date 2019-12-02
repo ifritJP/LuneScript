@@ -49,6 +49,8 @@ lns_stem_t _lns_createImmediateVal(
     LNS_DEBUG_DECL, lns_env_t * _pEnv, lns_imdVal_t * pVal )
 {
     switch ( pVal->type ) {
+    case lns_imdType_stem:
+        return pVal->val.stem;
     case lns_imdType_int:
         return LNS_STEM_INT( pVal->val.valInt );
     case lns_imdType_real:

@@ -1056,16 +1056,19 @@ pub override fn ExpRefNode.canBeRight():bool {
    //return self.$symbolInfo.$canBeRight;
 }
 
-_declNodeClass( "ExpOp2", Node, false, true, nil,
+_declNodeClass( "ExpSetVal", Node, false, false, true,
+                [ { "exp1": "&Node" },
+                  { "exp2": "&Node" },
+                  // この代入によって値を初期化されるシンボル
+                  { "initSymSet": "&Set<&Ast.SymbolInfo>" } ]
+);
+
+
+_declNodeClass( "ExpOp2", Node, false, true, false,
                 [ { "op": "&Parser.Token" },
                   { "exp1": "&Node" },
                   { "exp2": "&Node" } ]
 );
-
-pub override fn ExpOp2Node.canBeStatement():bool {
-   return self.$op.txt == '=';
-}
-
 
 _declNodeClass( "UnwrapSet", Node, false, false, true,
                 [ { "dstExpList": "&ExpListNode" },
