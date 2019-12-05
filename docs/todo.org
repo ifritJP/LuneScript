@@ -236,11 +236,11 @@ foreach obj in list {
    - [X] classOverride.org
    - [-] crosscompile.org
    - [X] enum.org
-   - [ ] generics.org
-   - [ ] import.org
-   - [ ] interface.org
-   - [ ] loop.org
-   - [ ] macro.org
+   - [X] generics.org
+   - [-] import.org
+   - [X] interface.org
+   - [X] loop.org
+   - [-] macro.org
    - [ ] match.org
    - [ ] nilcond.org
    - [ ] recommend.org

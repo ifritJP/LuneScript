@@ -936,6 +936,9 @@ test-tutorial:
 	cp -a lune work/0
 	cp -a test work/0
 	cp Makefile.ccc work/0
+	$(call test-tutorialC,work/0,test/tutorial/match.lns)
+	$(call test-tutorialC,work/0,test/tutorial/loop.lns)
+	$(call test-tutorialC,work/0,test/tutorial/interface.lns)
 	$(call test-tutorialC,work/0,test/tutorial/generics.lns)
 	$(call test-tutorialC,work/0,test/tutorial/enum.lns)
 	$(call test-tutorialC,work/0,test/tutorial/classOverride.lns)

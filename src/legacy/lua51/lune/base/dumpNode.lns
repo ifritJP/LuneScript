@@ -377,6 +377,11 @@ pub override fn dumpFilter.processDeclMethod(
 {
    self.processDeclFuncInfo( node, node.get_declInfo(), opt );
 };	
+pub override fn dumpFilter.processProtoMethod(
+   node: &Nodes.ProtoMethodNode, opt:Opt ) mut
+{
+   self.processDeclFuncInfo( node, node.get_declInfo(), opt );
+};	
 pub override fn dumpFilter.processDeclConstr(
    node: &Nodes.DeclConstrNode, opt:Opt ) mut
 {

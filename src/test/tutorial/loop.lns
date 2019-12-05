@@ -1,0 +1,53 @@
+{
+   let mut val = 1;
+   while val < 10 {
+      val = val + 1;
+   }
+   print( val ); // 10
+   repeat {
+      let mut endFlag = false;
+      val = val + 1;
+      if val >= 20 {
+         endFlag = true;
+      }
+   } endFlag;
+   print( val ); // 20
+}
+{
+   for count = 1, 10, 1 {
+      print( count );
+   }
+}
+{
+   let mut addVal = 1;
+   for count = 1, 10, addVal {
+      addVal = addVal + 1;
+      print( count );
+   }
+}
+{
+   foreach val, index in [ 1, 2, 3 ] {
+      print( index, val );
+   }
+   foreach val, index in [@ 10, 20, 30 ] {
+      print( index, val );
+   }
+   {
+      let mut work:Map<str,int> = {};
+      foreach val, key in { "a":100, "b":200, "c":300 } {
+         work[ key ] = val;
+      }
+      forsort val, key in work {
+         print( key, val );
+      }
+   }
+   {
+      let mut work:Map<int,int> = {};
+      foreach val in (@ 1, 2, 3 ) {
+         work[ val ] = val;
+      }
+      forsort val in work {
+         print( val );
+      }
+   }
+}

@@ -708,6 +708,12 @@ function dumpFilter:processDeclMethod( node, opt )
 end
 
 
+function dumpFilter:processProtoMethod( node, opt )
+
+   self:processDeclFuncInfo( node, node:get_declInfo(  ), opt )
+end
+
+
 function dumpFilter:processDeclConstr( node, opt )
 
    self:processDeclFuncInfo( node, node:get_declInfo(  ), opt )

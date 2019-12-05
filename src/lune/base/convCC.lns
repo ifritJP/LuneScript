@@ -1143,16 +1143,17 @@ pushStream() で切り替えた出力ストリームを元に戻す。
    fn outputAlter2MapFunc( stream:Util.SourceStream, alt2Map:&Map<&Ast.TypeInfo,&Ast.TypeInfo>);
 
 
-   fn processAddModuleGlobal( valName:str ) mut {
-      self.stream.writeln(
-         "lns_mtd_List_insert( _pEnv, *lns_module_globalStemList, %s );"
-         (valName ) );
-   }
-
    fn processDeclVarC(
       declFlag:bool, var:&Ast.LowSymbol, init0:bool, manageScope:&Ast.Scope! ) mut;
    
    advertise stream;
+}
+
+
+fn processAddModuleGlobal( stream:Util.SourceStream, valName:str ) {
+   stream.writeln(
+      "lns_mtd_List_insert( _pEnv, *lns_module_globalStemList, %s );"
+      (valName ) );
 }
 
 
@@ -2293,7 +2294,8 @@ pub override fn convFilter.processDeclEnum(
          let allListName = "%s_allList" (enumFullName);
          self.write( allListName );
          self.writeln( " = lns_class_List_new( _pEnv );" );
-         self.processAddModuleGlobal( "LNS_STEM_ANY( %s )" (allListName) );
+         processAddModuleGlobal(
+            self.stream, "LNS_STEM_ANY( %s )" (allListName) );
          
          foreach anyVar in anyVarList {
             self.writeln(
@@ -2305,7 +2307,8 @@ pub override fn convFilter.processDeclEnum(
          let val2NameMapName = "%s_val2NameMap" (enumFullName);
          self.write( val2NameMapName );
          self.writeln( " = lns_class_Map_new( _pEnv );"  );
-         self.processAddModuleGlobal( "LNS_STEM_ANY( %s )" (val2NameMapName) );
+         processAddModuleGlobal(
+            self.stream, "LNS_STEM_ANY( %s )" (val2NameMapName) );
          
          foreach anyVar, index in anyVarList {
             self.writeln(
@@ -2584,8 +2587,6 @@ fn processAlgeWideScope( stream:Util.SourceStream, moduleCtrl:ModuleCtrl,
       valList.insert( valInfo );
    }
 
-   let algeTypeName = moduleCtrl.getAlgeCName( node.$expType );
-
    fn process( out2HMode:Out2HMode ) {
       let prefix = getOut2HeaderPrefix( out2HMode );
 
@@ -2610,6 +2611,9 @@ fn processAlgeWideScope( stream:Util.SourceStream, moduleCtrl:ModuleCtrl,
             }
          }
       });
+
+   let algeTypeName = moduleCtrl.getAlgeCName( node.$expType );
+   stream.writeln( "static %s %s_type2NameMap;" (cTypeAnyP, algeTypeName) );
 }
 
 fn processAlgeForm( stream:Util.SourceStream, moduleCtrl:ModuleCtrl,
@@ -2622,13 +2626,48 @@ fn processAlgeForm( stream:Util.SourceStream, moduleCtrl:ModuleCtrl,
       valList.insert( valInfo );
    }
 
-   // パラメータの無い値の初期化関数
+   let algeName = moduleCtrl.getAlgeCName( algeType );
+   let type2NameMapName = "%s_type2NameMap" ( algeName );
+   
+   if not Ast.isPubToExternal( algeType.$accessMode ) {
+      stream.write( "static " );
+   }
+   stream.writeln( "%s %s_get__txt( %s _pEnv, %s pAny ) {"
+      ( cTypeAnyP, algeName, cTypeEnvP, cTypeAnyP ) );
+   stream.pushIndent( ## );
+   stream.writeln(
+      "return lns_mtd_Map_get( _pEnv, %s, LNS_STEM_INT( pAny->val.alge.type ) )%s;"
+      ( type2NameMapName, accessAny) );
+   stream.popIndent();
+   stream.writeln( "}" );
+
+
    stream.writeln(
       "static void %s( %s _pEnv ) {"
       (moduleCtrl.getAlgeInitCName(algeType), cTypeEnvP ) );
+
    stream.pushIndent(##);
 
+   // 名前のマップを定義
+   stream.writeln( type2NameMapName .. " = lns_class_Map_new( _pEnv );"  );
+   processAddModuleGlobal( stream, "LNS_STEM_ANY( %s )" (type2NameMapName) );
+
+   let fullName = moduleCtrl.getFullName( algeType );
    let enumName = moduleCtrl.getAlgeEnumCName( algeType );
+   
+   foreach valInfo, index in valList {
+      stream.write(
+         "lns_mtd_Map_add( _pEnv, %s, LNS_STEM_INT( %s_%s ), "
+         (type2NameMapName, enumName, valInfo.$name ));
+      
+      stream.writeln(
+         'LNS_STEM_ANY( lns_litStr2any( _pEnv, "%s.%s" ) ) );'
+         (fullName, valInfo.$name ));
+   }
+
+   
+   // パラメータの無い値の初期化関数
+
    foreach valInfo, index in valList {
       if #valInfo.$typeList == 0 {
          let varName = moduleCtrl.getAlgeValCName( algeType, valInfo.$name );
@@ -2641,7 +2680,6 @@ fn processAlgeForm( stream:Util.SourceStream, moduleCtrl:ModuleCtrl,
    stream.popIndent();
    stream.writeln( "}" );
 
-   let algeName = moduleCtrl.getAlgeCName( algeType );
 
    // パラメータを持つ値の生成関数
    foreach valInfo, index in valList {
@@ -6459,10 +6497,24 @@ pub override fn convFilter.processWhile(
 pub override fn convFilter.processRepeat(
    node: Nodes.RepeatNode, opt: Opt ) mut
 {
-   // self.write( "repeat " );
-   // filter( node.get_block(),  self, node );
-   // self.write( "until " );
-   // filter( node.get_exp(),  self, node );
+   self.writeln( "while ( true ) {" );
+   self.pushIndent( ## );
+   filter( node.get_block(),  self, node );
+
+   self.write( "if ( " );
+   if node.get_exp().$expType.$srcTypeInfo == Ast.builtinTypeBool {
+      filter( node.get_exp(),  self, node );
+   }
+   else {
+      self.write( "lns_isCondTrue(" );
+      self.processVal2stem( node.$exp, node );
+      self.write( ")" );
+   }
+   self.writeln( ") { break; }" );
+
+   
+   self.popIndent();
+   self.write( "}" );
 };
 
 pub override fn convFilter.processFor(
@@ -9292,45 +9344,66 @@ pub override fn convFilter.processGetField(
    let prefixType = prefixNode.$expType;
    let fieldTxt = node.get_field().txt;
 
-   if prefixType.$kind == .Enum {
-      let mut enumFullName = self.moduleCtrl.getEnumTypeName( prefixType );
-      switch fieldTxt {
-         case "_allList" {
-            self.write( "%s_get__allList( _pEnv )" (enumFullName) );
+   switch prefixType.$kind {
+      case .Enum {
+         let mut enumFullName = self.moduleCtrl.getEnumTypeName( prefixType );
+         switch fieldTxt {
+            case "_allList" {
+               self.write( "%s_get__allList( _pEnv )" (enumFullName) );
+            }
+            case "_txt" {
+               self.write( "%s_get__txt( _pEnv, " (enumFullName) );
+               filter( prefixNode, self, node );
+               self.write( ")" );
+            }
+            default {
+               Util.err( "not support -- %s" (fieldTxt) );
+            }
          }
-         case "_txt" {
-            self.write( "%s_get__txt( _pEnv, " (enumFullName) );
-            filter( prefixNode, self, node );
+      }
+      case .Alge {
+         let algeName = self.moduleCtrl.getAlgeCName( prefixType );
+         switch fieldTxt {
+            case "_txt" {
+               self.write( "%s_get__txt( _pEnv, " (algeName) );
+               self.processVal2any( prefixNode, node );
+               self.write( ")" );
+            }
+            default {
+               Util.err( "not support -- %s" (fieldTxt) );
+            }
+         }
+      }
+      case .Class, .IF {
+         let getterType = unwrap prefixType.$scope$.getTypeInfoField$(
+            "get_%s" (fieldTxt), true, unwrap prefixType.$scope, scopeAccess );
+
+         fn process() {
+            self.write(
+               "%s( _pEnv, " ( self.moduleCtrl.getCallMethodCName( getterType ) ) );
+            self.processVal2any( prefixNode, node );
             self.write( ")" );
+
+            processAlterAccessVal(
+               self.stream, getterType.$retTypeInfoList, node.$expTypeList );
+            // if #node.$expTypeList == 1 {
+            //    if getterType.$retTypeInfoList[1].$kind == .Alternate {
+            //       self.write( getAccessValFromStem( node.$expType ) );
+            //    }
+            // }
+         }
+
+         if #node.$expTypeList == 1 {
+            processAlterToActualType(
+               self.stream, self.moduleCtrl,
+               getterType.$retTypeInfoList[1], node.$expType, process );
+         }
+         else {
+            process();
          }
       }
-   }
-   elseif prefixType.$kind == .Class or prefixType.$kind == .IF {
-      let getterType = unwrap prefixType.$scope$.getTypeInfoField$(
-         "get_%s" (fieldTxt), true, unwrap prefixType.$scope, scopeAccess );
-
-      fn process() {
-         self.write(
-            "%s( _pEnv, " ( self.moduleCtrl.getCallMethodCName( getterType ) ) );
-         self.processVal2any( prefixNode, node );
-         self.write( ")" );
-
-         processAlterAccessVal(
-            self.stream, getterType.$retTypeInfoList, node.$expTypeList );
-         // if #node.$expTypeList == 1 {
-         //    if getterType.$retTypeInfoList[1].$kind == .Alternate {
-         //       self.write( getAccessValFromStem( node.$expType ) );
-         //    }
-         // }
-      }
-
-      if #node.$expTypeList == 1 {
-         processAlterToActualType(
-            self.stream, self.moduleCtrl,
-            getterType.$retTypeInfoList[1], node.$expType, process );
-      }
-      else {
-         process();
+      default {
+         Util.err( "not support -- %s" (prefixType.$kind.$_txt) );
       }
    }
 

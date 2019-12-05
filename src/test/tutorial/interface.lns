@@ -1,0 +1,43 @@
+{
+   interface IF {
+      pub fn func();
+   }
+   class Test extend (IF) {
+      pub fn func() {
+         print( __mod__, __line__ );
+      }
+   }
+   fn sub( obj:IF ) {
+      obj.func();
+   }
+   sub( new Test() ); // Test.func
+}
+{
+   interface IF1 {
+      pub fn func();
+      pub fn func1();
+   }
+   interface IF2 {
+      pub fn func2();
+      pub fn func();
+   }
+   class Test extend (IF1,IF2) {
+      pub fn func() {
+         print( __mod__, __line__ );
+      }
+      pub fn func1() {
+         print( __mod__, __line__ );
+      }
+      pub fn func2() {
+         print( __mod__, __line__ );
+      }
+   }
+   fn sub( obj1:IF1, obj2:IF2 ) {
+      obj1.func();
+      obj1.func1();
+      obj2.func();
+      obj2.func2();
+   }
+   let mut test = new Test();
+   sub( test, test ); // Test.func Test.func2
+}
