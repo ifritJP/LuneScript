@@ -26,7 +26,7 @@ import lune.base.Meta;
 
 pub class Ctrl {
    fn runTestcase( testcase:form ) {
-      testcase();
+      testcase(##);
    }
    
    pub fn run( modObj:stem! ) {

@@ -651,7 +651,8 @@ pub override fn dumpFilter.processExpRef(
    node: &Nodes.ExpRefNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
-   dump( prefix, depth, node, node.$symbolInfo.$name );
+   dump( prefix, depth, node, "%s:%s" (node.$symbolInfo.$name,
+                                        node.$expType.getTxt(##)));
 };
 pub override fn dumpFilter.processExpRefItem(
    node: &Nodes.ExpRefItemNode, opt:Opt ) mut
@@ -667,7 +668,10 @@ pub override fn dumpFilter.processRefField(
    node: &Nodes.RefFieldNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
-   dump( prefix, depth, node, node.get_field().txt );
+   dump( prefix, depth, node,
+         "%s:%s:%s" (node.$field.txt,
+                      node.$symbolInfo$.$mutable and "mut" or "imut",
+                      node.$expType.getTxt(##)));
    filter( node.get_prefix(), self, opt.nextOpt() );
 };
 pub override fn dumpFilter.processExpOmitEnum(

@@ -2305,7 +2305,7 @@ pub class AlternateTypeInfo extend TypeInfo {
    }
    /** mutable かどうか */
    pub override fn get_mutMode(): MutMode {
-      return .IMut;
+      return .Mut;
    }
 
    /** 親の完全限定名を取得する */
@@ -4620,6 +4620,12 @@ pub override fn BoxTypeInfo.canEvalWith(
       return true, nil;
    }
 
+   if! let otherBoxType = other@@@BoxTypeInfo {
+      return self.boxingType.canEvalWith(
+         otherBoxType.boxingType, canEvalType, alt2type )**;
+   }
+   
+
    if self.boxingType.canEvalWith( other, canEvalType, alt2type ) {
       CanEvalCtrlTypeInfo.updateNeedAutoBoxing( alt2type );
       return true, nil;
@@ -4649,6 +4655,11 @@ pub override fn NilableTypeInfo.canEvalWith(
       return true, nil;
    }
    if otherSrc.$nilable {
+      if otherSrc.$kind == .DDD {
+         return self.$nonnilableType.canEvalWith(
+            otherSrc.$itemTypeInfoList[ 1 ], canEvalType, alt2type )**;
+      }
+      
       return self.$nonnilableType.canEvalWith(
          otherSrc.$nonnilableType, canEvalType, alt2type )**;
    }
@@ -4961,9 +4972,9 @@ pub static fn TypeInfo.checkMatchType(
    }
    elseif not allowDstShort {
       foreach dstType, index in dstTypeList {
-         if dstType.$kind == .DDD {
-         }
-         else {
+         // if dstType.$kind == .DDD {
+         // }
+         // else {
             if not dstType.canEvalWith( builtinTypeNil, .SetOp, alt2type ) {
                return .Error, "exp(%d) type mismatch %s <- nil: short"
                ( index, dstType.getTxt( defaultTypeNameCtrl## ));
@@ -4972,7 +4983,7 @@ pub static fn TypeInfo.checkMatchType(
                                        "use '##', instate of %s."
                                        (dstType.getTxt( defaultTypeNameCtrl##) ) );
          }
-      }
+      // }
    }
    return .Match, "";
 }
@@ -5022,6 +5033,13 @@ pub static fn TypeInfo.canEvalWithBase(
          otherSrc = builtinTypeStem_;
       }
    }
+
+   if otherSrc.$kind == .Alternate {
+      if dest.$kind ~= .Alternate {
+         otherSrc = AlternateTypeInfo.getAssign( otherSrc, alt2type ).$srcTypeInfo;
+      }
+   }
+   
 
    if canEvalType == .SetEq or canEvalType == .SetOp {
       if dest == builtinTypeEmpty {
@@ -5126,11 +5144,16 @@ pub static fn TypeInfo.canEvalWithBase(
    
    if dest.$kind ~= otherSrc.$kind {
       if dest.$kind == .Nilable {
+         let dstNonNil = dest.$nonnilableType;
          if otherSrc.$nilable {
-            return dest.$nonnilableType.canEvalWith(
+            if otherSrc.$kind == .DDD {
+               return dstNonNil.canEvalWith(
+                  otherSrc.$itemTypeInfoList[ 1 ], canEvalType, alt2type )**;
+            }
+            return dstNonNil.canEvalWith(
                otherSrc.$nonnilableType, canEvalType, alt2type )**;
          }
-         return dest.$nonnilableType.canEvalWith( otherSrc, canEvalType, alt2type )**;
+         return dstNonNil.canEvalWith( otherSrc, canEvalType, alt2type )**;
       }
       elseif isGenericType( dest ) {
          return dest.canEvalWith( otherSrc, canEvalType, alt2type )**;

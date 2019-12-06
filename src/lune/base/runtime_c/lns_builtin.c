@@ -1,7 +1,7 @@
 // lune/base/runtime_c/lns_builtin.c
 #include <lunescript.h>
 #include <lns_builtin.h>
-static lns_module_t s_module_lns_builtin = {NULL,NULL,false};
+static lns_module_t s_module_lns_builtin = {NULL,NULL,false, NULL, "lns_builtin"};
 static lns_any_t ** lns_module_globalStemList;
 static lns_any_t ** lns_module_path = NULL;
 static void mtd_lns_luaStream__del( lns_env_t * _pEnv, lns_any_t * pObj );

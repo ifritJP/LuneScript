@@ -1,39 +1,4 @@
-{
-   class Hoge {
-      pri let val:int {pub};
-   }
+let hoge = "123";
+let mut nonNumChar = hoge.byte( 1## );
+print( nonNumChar );
 
-   alge Test {
-      Val1,
-      Val2( int ),
-      Val3( str ),
-      Val4( Hoge ),
-      Val5( int, str ),
-   }
-
-   fn func( test:Test ) {
-      match test {
-         case .Val1 {
-            print( test.$_txt );
-         }
-         case .Val2( x ) {
-            print( test.$_txt, x );
-         }
-         case .Val3( x ) {
-            print( test.$_txt, x );
-         }
-         case .Val4( x ) {
-            print( test.$_txt, x.$val );
-         }
-         case .Val5( x, y ) {
-            print( test.$_txt, x, y );
-         }
-      }
-   }
-
-   func( Test.Val1 ); // Test.Val1
-   func( Test.Val2( 1 ) ); // Test.Val2 1
-   func( Test.Val3( "abc" ) ); // Test.Val3 abc
-   func( Test.Val4( new Hoge( 100 ) ) ); // Test.Val4  100
-   func( Test.Val5( 10, "xyz" ) ); // Test.Val5 10 xyz
-}

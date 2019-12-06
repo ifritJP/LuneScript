@@ -1044,7 +1044,7 @@ end
 function dumpFilter:processExpRef( node, opt )
 
    local prefix, depth = opt:get(  )
-   dump( prefix, depth, node, node:get_symbolInfo():get_name() )
+   dump( prefix, depth, node, string.format( "%s:%s", node:get_symbolInfo():get_name(), node:get_expType():getTxt(  )) )
 end
 
 
@@ -1066,7 +1066,7 @@ end
 function dumpFilter:processRefField( node, opt )
 
    local prefix, depth = opt:get(  )
-   dump( prefix, depth, node, node:get_field(  ).txt )
+   dump( prefix, depth, node, string.format( "%s:%s:%s", node:get_field().txt, _lune.nilacc( node:get_symbolInfo(), 'get_mutable', 'callmtd' ) and "mut" or "imut", node:get_expType():getTxt(  )) )
    filter( node:get_prefix(  ), self, opt:nextOpt(  ) )
 end
 

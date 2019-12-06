@@ -1,3 +1,8 @@
+macro _getTxt( val:__exp ):str {
+   {}
+   (,,val.$_txt.gsub( ".*_", "" ))
+}
+
 {
    class Hoge {
       pri let val:int {pub};
@@ -14,19 +19,19 @@
    fn func( test:Test ) {
       match test {
          case .Val1 {
-            print( test.$_txt );
+            print( _getTxt( test ) );
          }
          case .Val2( x ) {
-            print( test.$_txt, x );
+            print( _getTxt( test ), x );
          }
          case .Val3( x ) {
-            print( test.$_txt, x );
+            print( _getTxt( test ), x );
          }
          case .Val4( x ) {
-            print( test.$_txt, x.$val );
+            print( _getTxt( test ), x.$val );
          }
          case .Val5( x, y ) {
-            print( test.$_txt, x, y );
+            print( _getTxt( test ), x, y );
          }
       }
    }
@@ -36,4 +41,99 @@
    func( Test.Val3( "abc" ) ); // Test.Val3 abc
    func( Test.Val4( new Hoge( 100 ) ) ); // Test.Val4  100
    func( Test.Val5( 10, "xyz" ) ); // Test.Val5 10 xyz
+}
+{
+   alge Test {
+      Val1,
+      Val2,
+      Val3( int ),
+   }
+   fn func( test:Test ) {
+      print( _getTxt( test ) );
+   }
+   func( .Val1 );
+   func( .Val2 );
+   func( .Val3( 10 ) );
+}
+{
+   alge Test {
+      Val1,
+      Val2,
+      Val3( int ),
+   }
+   fn func( test:Test ) {
+      if test == .Val1 {
+         print( "Val1" );
+      }
+      elseif test == .Val2 {
+         print( "Val2" );
+      }
+      // elseif test == .Val3(1) {  // error
+      //                           print( "Val3" );          
+      // }
+      else {
+         print( "no" );
+      }
+   }
+   func( .Val1 ); // Val1
+   func( .Val2 ); // Val2
+}
+{
+   alge JsonVal {
+      JNull,
+      JBool(bool),
+      JInt(int),
+      JReal(real),
+      JStr(str),
+      JArray(List<JsonVal>),
+      JObj(Map<str,JsonVal>),
+   }
+   fn dumpJson( stream:oStream, jval:JsonVal ) {
+      match jval {
+         case .JNull {
+            stream.write( "null" );
+         }
+         case .JBool( val ) {
+            stream.write( "%s" (val) );
+         }     
+         case .JInt( val ) {
+            stream.write( "%d" (val ) );
+         }        
+         case .JReal( val ) {
+            stream.write( "%g" (val ) );
+         }        
+         case .JStr( val ) {
+            stream.write( '"%s"' (val ) );
+         }        
+         case .JArray( list ) {
+            stream.write( "[" );
+            foreach val, index in list {
+               if index > 1 {
+                  stream.write( "," );
+               }
+               dumpJson( stream, val );
+            }
+            stream.write( "]" );
+         }        
+         case .JObj( map ) {
+            stream.write( "{" );
+            let mut cont = false;
+            forsort val, key in map {
+               if cont {
+                  stream.write( ',' );
+               }
+               else {
+                  cont = true;
+               }
+               stream.write( '"%s":' (key) );
+               dumpJson( stream, val );
+            }
+            stream.write( "}" );
+         }
+      }
+   }
+   dumpJson( io.stdout,
+             JsonVal.JObj( { "foo": JsonVal.JInt( 1 ),
+                             "bar": JsonVal.JStr( "abc" ) } ) );
+   print("");
 }

@@ -3186,7 +3186,7 @@ function AlternateTypeInfo:get_nilable(  )
 end
 function AlternateTypeInfo:get_mutMode(  )
 
-   return MutMode.IMut
+   return MutMode.Mut
 end
 function AlternateTypeInfo:getParentFullName( typeNameCtrl, importInfo, localFlag )
 
@@ -6073,6 +6073,14 @@ function BoxTypeInfo:canEvalWith( other, canEvalType, alt2type )
    end
    
    
+   do
+      local otherBoxType = _lune.__Cast( other, 3, BoxTypeInfo )
+      if otherBoxType ~= nil then
+         return self.boxingType:canEvalWith( otherBoxType.boxingType, canEvalType, alt2type )
+      end
+   end
+   
+   
    if self.boxingType:canEvalWith( other, canEvalType, alt2type ) then
       CanEvalCtrlTypeInfo.updateNeedAutoBoxing( alt2type )
       return true, nil
@@ -6103,6 +6111,11 @@ function NilableTypeInfo:canEvalWith( other, canEvalType, alt2type )
    end
    
    if otherSrc:get_nilable() then
+      if otherSrc:get_kind() == TypeInfoKind.DDD then
+         return self:get_nonnilableType():canEvalWith( otherSrc:get_itemTypeInfoList()[1], canEvalType, alt2type )
+      end
+      
+      
       return self:get_nonnilableType():canEvalWith( otherSrc:get_nonnilableType(), canEvalType, alt2type )
    end
    
@@ -6399,16 +6412,12 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
       
    elseif not allowDstShort then
       for index, dstType in pairs( dstTypeList ) do
-         if dstType:get_kind() == TypeInfoKind.DDD then
-         else
-          
-            if not dstType:canEvalWith( _moduleObj.builtinTypeNil, CanEvalType.SetOp, alt2type ) then
-               return MatchType.Error, string.format( "exp(%d) type mismatch %s <- nil: short", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ))
-            end
-            
-            return MatchType.Warn, Code.format( Code.ID.nothing_define_abbr, string.format( "use '##', instate of %s.", dstType:getTxt( _moduleObj.defaultTypeNameCtrl )) )
+         
+         if not dstType:canEvalWith( _moduleObj.builtinTypeNil, CanEvalType.SetOp, alt2type ) then
+            return MatchType.Error, string.format( "exp(%d) type mismatch %s <- nil: short", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ))
          end
          
+         return MatchType.Warn, Code.format( Code.ID.nothing_define_abbr, string.format( "use '##', instate of %s.", dstType:getTxt( _moduleObj.defaultTypeNameCtrl )) )
       end
       
    end
@@ -6458,6 +6467,14 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
       else
        
          otherSrc = _moduleObj.builtinTypeStem_
+      end
+      
+   end
+   
+   
+   if otherSrc:get_kind() == TypeInfoKind.Alternate then
+      if dest:get_kind() ~= TypeInfoKind.Alternate then
+         otherSrc = AlternateTypeInfo.getAssign( otherSrc, alt2type ):get_srcTypeInfo()
       end
       
    end
@@ -6563,11 +6580,16 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
    
    if dest:get_kind() ~= otherSrc:get_kind() then
       if dest:get_kind() == TypeInfoKind.Nilable then
+         local dstNonNil = dest:get_nonnilableType()
          if otherSrc:get_nilable() then
-            return dest:get_nonnilableType():canEvalWith( otherSrc:get_nonnilableType(), canEvalType, alt2type )
+            if otherSrc:get_kind() == TypeInfoKind.DDD then
+               return dstNonNil:canEvalWith( otherSrc:get_itemTypeInfoList()[1], canEvalType, alt2type )
+            end
+            
+            return dstNonNil:canEvalWith( otherSrc:get_nonnilableType(), canEvalType, alt2type )
          end
          
-         return dest:get_nonnilableType():canEvalWith( otherSrc, canEvalType, alt2type )
+         return dstNonNil:canEvalWith( otherSrc, canEvalType, alt2type )
       elseif isGenericType( dest ) then
          return dest:canEvalWith( otherSrc, canEvalType, alt2type )
       elseif (dest:get_kind() == TypeInfoKind.Class or dest:get_kind() == TypeInfoKind.IF ) and (otherSrc:get_kind() == TypeInfoKind.Class or otherSrc:get_kind() == TypeInfoKind.IF ) then

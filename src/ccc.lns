@@ -4,7 +4,39 @@ macro _section()
 }
 let mut g_val = 100;
 
-
+{
+   _section();
+   fn func1() {
+      let val = "str";
+      while true {
+         {
+            {
+               print( __line__ );
+               break;
+            }
+         }
+      }
+   }
+   fn func2() {
+      let val = "str";
+      while true {
+         {
+            print( __line__ );
+            break;
+         }
+      }
+   }
+   fn func3() {
+      let val = "str";
+      while true {
+         print( __line__ );
+         break;
+      }
+   }
+   func1();
+   func2();
+   func3();
+}
 {
    _section();
    class Test extend (Mapping) {
@@ -1767,4 +1799,37 @@ fn func3( val:int, val2:real, val3:bool ):int, real, bool {
    }
    print( "hoge:%d,%g,%s,%s,%s,%s" (func()) );
    io.stdout.write( "age\n" );
+}
+{
+   _section();
+   class Test {
+      pub let mut val:int;
+   }
+   class Hoge<T:Test> {
+      let mut test:T {pub};
+
+      pub fn __init( test:T ) {
+         self.test = test;
+      }
+      pri fn current() : T {
+         return self.test;
+      }
+      pub fn set(val:int) {
+         let mut info = self.current();
+         info.val = val;
+      }
+   }
+   let hoge = new Hoge( new Test( 1 ) );
+   print( hoge.$test.val );
+   hoge.set( 100 );
+   print( hoge.$test.val );
+}
+{
+   _section();
+   fn func( ...<int> ) {
+      let mut val:int!;
+      val = ...;
+      print( val );  
+   }
+   func( 1, 2 );
 }

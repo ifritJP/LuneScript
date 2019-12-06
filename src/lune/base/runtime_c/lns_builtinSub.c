@@ -255,3 +255,15 @@ lns_any_t * mtd_lns_string_sub(
     lns_any_t * pResult = lns_cloneBin2any( _pEnv, pStr->pStr + startIndex, len );
     return pResult;
 }
+
+lns_stem_t mtd_lns_string_gsub( lns_env_t * _pEnv, lns_any_t * pTarget, lns_any_t * pPattern, lns_any_t * pReplace )
+{
+    lua_State * pLua = _pEnv->pLua;
+    int stackTop = lns_string_call_setup( pLua, "gsub", pTarget );
+
+    LNS_PUSH_STR( pLua, pPattern );
+    LNS_PUSH_STR( pLua, pReplace );
+
+    // Lua 関数を実行
+    return lns_lua_call( _pEnv, stackTop, 3, 2 );
+}

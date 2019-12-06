@@ -1610,7 +1610,7 @@ _DefBuiltinFuncType( [
       "str": {
          "__attrib": { "inplements": [ "Mapping" ] },
          "find": { "type": [ "method" ], "arg": [ "str", "int!", "bool!" ], "ret": ["int!", "int!"] },
-         "byte": { "type": [ "method" ], "arg": [ "int!","int!" ], "ret": ["int!"] },
+         "byte": { "type": [ "method" ], "arg": [ "int!","int!" ], "ret": ["...<int>"] },
          "format": { "type": [ "method" ], "arg": [ "&..." ], "ret": ["str"] },
          "rep": { "type": [ "method" ], "arg": [ "int" ], "ret": ["str"] },
          "gmatch": { "type": [ "method" ], "arg": [ "str" ], "ret": ["Luaval<form>", "stem!", "stem!"] },

@@ -1500,55 +1500,59 @@ fn TransUnit.analyzeExpCast(
 
 
 fn TransUnit.analyzeExpCont(
-   firstToken: &Parser.Token, mut exp: Nodes.Node, skipFlag: bool ) mut : Nodes.Node {
-      let mut nextToken = self.getToken(##);
+   firstToken: &Parser.Token, mut exp: Nodes.Node, skipFlag: bool ) mut : Nodes.Node
+{
+   let mut nextToken = self.getToken( true );
+   if nextToken.kind == .Eof {
+      return exp;
+   }
 
-      if not skipFlag {
-         repeat {
-            let mut matchFlag = false;
-            if nextToken.txt == "[" or nextToken.txt == "$[" {
-               matchFlag = true;
-               exp = self.analyzeExpRefItem( nextToken, exp, nextToken.txt == "$[" );
-               nextToken = self.getToken(##);
-            }
-            if nextToken.txt == "(" or nextToken.txt == "$(" {
-               matchFlag = true;
-
-               exp, nextToken = self.analyzeExpCall( firstToken, exp, nextToken );
-            }
-         } not matchFlag;
-
-         switch nextToken.txt {
-            case "@@", "@@@", "@@=" {
-               exp = self.analyzeExpCast( firstToken, nextToken.txt, exp );
-               nextToken = self.getToken( ## );
-            }
+   if not skipFlag {
+      repeat {
+         let mut matchFlag = false;
+         if nextToken.txt == "[" or nextToken.txt == "$[" {
+            matchFlag = true;
+            exp = self.analyzeExpRefItem( nextToken, exp, nextToken.txt == "$[" );
+            nextToken = self.getToken(##);
          }
-      }
+         if nextToken.txt == "(" or nextToken.txt == "$(" {
+            matchFlag = true;
+
+            exp, nextToken = self.analyzeExpCall( firstToken, exp, nextToken );
+         }
+      } not matchFlag;
 
       switch nextToken.txt {
-         case "." {
-            return self.analyzeExpSymbol(
-               firstToken, self.getToken(##), .Field, exp, skipFlag );
-         }
-         case "$." {
-            return self.analyzeExpSymbol(
-               firstToken, self.getToken(##), .FieldNil, exp, skipFlag );
-         }
-         case ".$" {
-            return self.analyzeExpSymbol(
-               firstToken, self.getToken(##), .Get, exp, skipFlag );
-         }
-         case "$.$" {
-            return self.analyzeExpSymbol(
-               firstToken, self.getToken(##), .GetNil, exp, skipFlag );
+         case "@@", "@@@", "@@=" {
+            exp = self.analyzeExpCast( firstToken, nextToken.txt, exp );
+            nextToken = self.getToken( ## );
          }
       }
-
-      self.pushback();
-      return exp;
-
    }
+
+   switch nextToken.txt {
+      case "." {
+         return self.analyzeExpSymbol(
+            firstToken, self.getToken(##), .Field, exp, skipFlag );
+      }
+      case "$." {
+         return self.analyzeExpSymbol(
+            firstToken, self.getToken(##), .FieldNil, exp, skipFlag );
+      }
+      case ".$" {
+         return self.analyzeExpSymbol(
+            firstToken, self.getToken(##), .Get, exp, skipFlag );
+      }
+      case "$.$" {
+         return self.analyzeExpSymbol(
+            firstToken, self.getToken(##), .GetNil, exp, skipFlag );
+      }
+   }
+
+   self.pushback();
+   return exp;
+
+}
 
 
 fn TransUnit.analyzeAccessClassField(

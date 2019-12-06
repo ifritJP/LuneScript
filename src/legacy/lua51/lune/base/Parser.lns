@@ -837,6 +837,7 @@ __test case1 {
    let mut ctrl = new Testing.Ctrl();
 
    let mut stream = new TxtStream( ```
+let hoge:real = 2.0;
 let val = ?a;
 fn func():int {
    return "%g" val + 1 + 2.0;
@@ -849,6 +850,10 @@ fn func():int {
       pub let kind:TokenKind;
    }
    let txtList = [
+      new LowToken( "let", .Kywd ), new LowToken( "hoge", .Symb ),
+      new LowToken( ":", .Dlmt ), new LowToken( "real", .Type ),
+      new LowToken( "=", .Ope ), new LowToken( "2.0", .Real ),
+      new LowToken( ";", .Dlmt ), 
       new LowToken( "let", .Kywd ), new LowToken( "val", .Symb ),
       new LowToken( "=", .Ope ), new LowToken( "a", .Char ),
       new LowToken( ";", .Dlmt ),
@@ -863,14 +868,13 @@ fn func():int {
       new LowToken( ";", .Dlmt ),
       new LowToken( "}", .Dlmt )
    ];
-   parser.getToken();
-   // foreach lowToken in txtList {
-   //    if! let token = parser.getToken() {
-   //       Testing._eq( ctrl, lowToken.txt, token.txt );
-   //       Testing._eq( ctrl, lowToken.kind.$_txt, token.kind.$_txt );
-   //    }
-   //    else {
-   //       Testing._err( ctrl, "token is nil" );
-   //    }
-   // }
+   foreach lowToken in txtList {
+      if! let token = parser.getToken() {
+         Testing._eq( ctrl, lowToken.txt, token.txt );
+         Testing._eq( ctrl, lowToken.kind.$_txt, token.kind.$_txt );
+      }
+      else {
+         Testing._err( ctrl, "token is nil" );
+      }
+   }
 }

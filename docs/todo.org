@@ -241,7 +241,7 @@ foreach obj in list {
    - [X] interface.org
    - [X] loop.org
    - [-] macro.org
-   - [ ] match.org
+   - [X] match.org
    - [ ] nilcond.org
    - [ ] recommend.org
    - [ ] require.org

@@ -977,7 +977,7 @@ class TestGenSub2<T> extend Super<T> {
    }  
 }
 {
-   fn func3( val2:Nilable<int> ) {
+   fn func3( val2:&Nilable<int> ) {
       if! val2.val() {
          print( __func__, _exp + 1 );
       }  
@@ -1338,4 +1338,37 @@ print( '\\""\"\'\\.\\' );
    func( "abc" );
    func( new Test() );
    func( new Test() );
+}
+{
+   Macro._section();
+   macro _getTxt( val:__exp ):int {
+      {}
+      (,,val + 1)
+   }
+   print( _getTxt( 10 ) );
+   print();
+}
+{
+   Macro._section();
+   class Test {
+      pub let mut val:int;
+   }
+   class Hoge<T:Test> {
+      let mut test:T {pub};
+
+      pub fn __init( test:T ) {
+         self.test = test;
+      }
+      pri fn current() : T {
+         return self.test;
+      }
+      pub fn set(val:int) {
+         let mut info = self.current();
+         info.val = val;
+      }
+   }
+   let hoge2 = new Hoge( new Test( 1 ) );
+   print( hoge2.$test.val );
+   hoge2.set( 100 );
+   print( hoge2.$test.val );
 }

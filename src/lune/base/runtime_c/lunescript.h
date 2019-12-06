@@ -751,8 +751,12 @@ extern "C" {
         struct lns_module_t * pPrev;
         struct lns_module_t * pNext;
 
+        /** モジュールを初期化済みかどうか */
         bool readyFlag;
+        /** モジュールの init ブロック */
         lns_block_t * pBlock;
+        /** モジュール名 */
+        const char * pName;
     } lns_module_t;
 
 #define LNS_BLOCK_AT( ENV, DEPTH ) (&ENV->blockQueue[ ENV->blockDepth - DEPTH ])

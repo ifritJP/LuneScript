@@ -2960,7 +2960,7 @@ fn TransUnit.analyzeLetAndInitExp(
                        varType.getTxt( self.typeNameCtrl ## ),
                        expTypeInfo.getTxt( self.typeNameCtrl ## )));
                }
-               if varType == Ast.builtinTypeBox {
+               if varType.$kind == .Box {
                   typeInfoList[ index ] = Ast.NormalTypeInfo.createBox(
                      accessMode, expTypeInfo );
                }

@@ -408,7 +408,85 @@ function Opt:__init( node )
 end
 
 
+local DepthInfo = {}
+function DepthInfo.new(  )
+   local obj = {}
+   DepthInfo.setmeta( obj )
+   if obj.__init then obj:__init(  ); end
+   return obj
+end
+function DepthInfo:__init() 
+   self.blockDepth = 1
+end
+function DepthInfo:pushDepth(  )
+
+   self.blockDepth = self.blockDepth + 1
+end
+function DepthInfo:popDepth(  )
+
+   self.blockDepth = self.blockDepth - 1
+end
+function DepthInfo.setmeta( obj )
+  setmetatable( obj, { __index = DepthInfo  } )
+end
+function DepthInfo:get_blockDepth()
+   return self.blockDepth
+end
+
+
+local DepthStack = {}
+function DepthStack.new(  )
+   local obj = {}
+   DepthStack.setmeta( obj )
+   if obj.__init then obj:__init(  ); end
+   return obj
+end
+function DepthStack:__init() 
+   self.stack = {}
+end
+function DepthStack:newInfo( info )
+
+   table.insert( self.stack, info )
+end
+function DepthStack:delInfo(  )
+
+   table.remove( self.stack )
+end
+function DepthStack:current(  )
+
+   if #self.stack == 0 then
+      Util.err( "stack empty" )
+   end
+   
+   return self.stack[#self.stack]
+end
+function DepthStack:currentR(  )
+
+   if #self.stack == 0 then
+      Util.err( "stack empty" )
+   end
+   
+   return self.stack[#self.stack]
+end
+function DepthStack:pushDepth(  )
+
+   self:current(  ):pushDepth(  )
+end
+function DepthStack:popDepth(  )
+
+   self:current(  ):popDepth(  )
+end
+function DepthStack:get_blockDepth(  )
+
+   return self:currentR(  ):get_blockDepth()
+end
+function DepthStack.setmeta( obj )
+  setmetatable( obj, { __index = DepthStack  } )
+end
+
+
 local RoutineInfo = {}
+setmetatable( RoutineInfo, { __index = DepthInfo } )
 function RoutineInfo.new( funcInfo )
    local obj = {}
    RoutineInfo.setmeta( obj )
@@ -416,25 +494,15 @@ function RoutineInfo.new( funcInfo )
    return obj
 end
 function RoutineInfo:__init(funcInfo) 
+   DepthInfo.__init( self)
+   
    self.funcInfo = funcInfo
-   self.blockDepth = 1
-end
-function RoutineInfo:pushDepth(  )
-
-   self.blockDepth = self.blockDepth + 1
-end
-function RoutineInfo:popDepth(  )
-
-   self.blockDepth = self.blockDepth - 1
 end
 function RoutineInfo.setmeta( obj )
   setmetatable( obj, { __index = RoutineInfo  } )
 end
 function RoutineInfo:get_funcInfo()
    return self.funcInfo
-end
-function RoutineInfo:get_blockDepth()
-   return self.blockDepth
 end
 
 
@@ -1328,7 +1396,7 @@ function ScopeMgr:getSymbolParam( symbol )
       
    end
    
-   Util.err( string.format( "illegal symbol -- %s %d", symbol:get_name(), 889) )
+   Util.err( string.format( "illegal symbol -- %s %d", symbol:get_name(), 932) )
 end
 function ScopeMgr:getSymbolValKind( symbol )
 
@@ -1461,10 +1529,15 @@ function convFilter:__init(enableTest, outputBuiltin, streamName, stream, header
    
    self.processMode = ProcessMode.Prototype
    
-   self.routineInfoQueue = {}
-   self.currentRoutineInfo = RoutineInfo.new(Ast.builtinTypeNone)
-   
    self.moduleTypeInfo = ast:get_moduleTypeInfo()
+   self.routineInfoStack = DepthStack.new()
+   self.routineInfoStack:newInfo( RoutineInfo.new(Ast.builtinTypeNone) )
+   self.routineInfoStack:newInfo( RoutineInfo.new(ast:get_moduleTypeInfo()) )
+   
+   self.loopInfoStack = DepthStack.new()
+   self.loopInfoStack:newInfo( DepthInfo.new() )
+   self.loopInfoStack:newInfo( DepthInfo.new() )
+   
    self.ast = _lune.unwrap( _lune.__Cast( ast:get_node(), 3, Nodes.RootNode ))
    self.streamName = streamName
    self.streamQueue = {}
@@ -1472,9 +1545,6 @@ function convFilter:__init(enableTest, outputBuiltin, streamName, stream, header
    self.pubFuncName2InfoMap = {}
    self.moduleCtrl = ModuleCtrl.new(self:get_typeNameCtrl(), self:get_moduleInfoManager())
    self.scopeMgr = ScopeMgr.create( self.moduleCtrl, _lune.unwrap( ast:get_moduleTypeInfo():get_scope()) )
-   
-   self.currentRoutineInfo = RoutineInfo.new(ast:get_moduleTypeInfo())
-   table.insert( self.routineInfoQueue, self.currentRoutineInfo )
    
    self.stream = Util.SimpleSourceOStream.new(stream, headerStream, stepIndent)
 end
@@ -1846,7 +1916,7 @@ local function registerBuiltin(  )
             param = createSymbolParam( symbol:get_name(), getValKind( symbol:get_typeInfo() ), getCType( symbol:get_typeInfo() ) )
          else 
             
-               Util.err( string.format( "illeal symbol -- %s %d", symbol:get_name(), 1434) )
+               Util.err( string.format( "illeal symbol -- %s %d", symbol:get_name(), 1480) )
          end
       end
       
@@ -2010,7 +2080,8 @@ function convFilter:processRoot( node, opt )
    end
    
    
-   self:writeln( string.format( "static lns_module_t s_module_%s = {NULL,NULL,false};", self.moduleCtrl:getFullName( node:get_moduleTypeInfo() )) )
+   local moduleName = self.moduleCtrl:getFullName( node:get_moduleTypeInfo() )
+   self:writeln( string.format( 'static lns_module_t s_module_%s = {NULL,NULL,false, NULL, "%s"};', moduleName, moduleName) )
    self:writeln( string.format( "static %s lns_module_globalStemList;", cTypeAnyPP) )
    self:writeln( string.format( "static %s lns_module_path = NULL;", cTypeAnyPP) )
    
@@ -2477,13 +2548,15 @@ function convFilter:processBlockPreProcess( scope )
    self:pushIndent(  )
    local anyNum, stemNum, varNum = self.scopeMgr:setupScopeParam( scope )
    self:writeln( string.format( "lns_block_t * %s = lns_enter_block( _pEnv, %d, %d, %d );", getBlockName( scope ), anyNum, stemNum, varNum) )
-   self.currentRoutineInfo:pushDepth(  )
+   self.routineInfoStack:pushDepth(  )
+   self.loopInfoStack:pushDepth(  )
 end
 
 
 function convFilter:processBlockPostProcess(  )
 
-   self.currentRoutineInfo:popDepth(  )
+   self.loopInfoStack:popDepth(  )
+   self.routineInfoStack:popDepth(  )
    self:writeln( "lns_leave_block( _pEnv );" )
    self:popIndent(  )
 end
@@ -2492,15 +2565,13 @@ end
 function convFilter:pushRoutine( funcType, blockNode )
 
    self:processBlockPreProcess( blockNode:get_scope() )
-   self.currentRoutineInfo = RoutineInfo.new(funcType)
-   table.insert( self.routineInfoQueue, self.currentRoutineInfo )
+   self.routineInfoStack:newInfo( RoutineInfo.new(funcType) )
 end
 
 
 function convFilter:popRoutine(  )
 
-   self.currentRoutineInfo = self.routineInfoQueue[#self.routineInfoQueue - 1]
-   table.remove( self.routineInfoQueue )
+   self.routineInfoStack:delInfo(  )
    self:processBlockPostProcess(  )
 end
 
@@ -2508,11 +2579,13 @@ end
 function convFilter:processLoopPreProcess( blockNode )
 
    self:processBlockPreProcess( blockNode:get_scope() )
+   self.loopInfoStack:newInfo( DepthInfo.new() )
 end
 
 
 function convFilter:processLoopPostProcess(  )
 
+   self.loopInfoStack:delInfo(  )
    self:processBlockPostProcess(  )
 end
 
@@ -3817,7 +3890,7 @@ local function processDefaultCtor( stream, moduleCtrl, scopeMgr, node )
                else 
                   
                      Util.err( string.format( "no support -- %s:%s:%d", member:get_name().txt, ValKind:_getTxt( valKind)
-                     , 3382) )
+                     , 3431) )
                end
             end
             
@@ -3858,6 +3931,8 @@ local function processIFObjInit( stream, moduleCtrl, classType, impClassType )
    end
    
 end
+
+
 
 function convFilter:process2stem( valKind, typeInfo, parent, callback )
 
@@ -4554,7 +4629,7 @@ function convFilter:processDeclClassDef( node )
                else 
                   
                      Util.err( string.format( "no support -- %s:%s:%d", member:get_symbolInfo():get_name(), ValKind:_getTxt( valKind)
-                     , 4111) )
+                     , 4164) )
                end
             end
             
@@ -5162,7 +5237,7 @@ function convFilter:processSym2Any( symbol )
       else 
          
             Util.err( string.format( "not suppport -- %s, %d", ValKind:_getTxt( valKind)
-            , 4863) )
+            , 4916) )
       end
    end
    
@@ -5184,7 +5259,7 @@ function convFilter:processVal2any( node, parent )
       else 
          
             Util.err( string.format( "not suppport -- %d, %s, %s, %d", node:get_pos().lineNo, ValKind:_getTxt( valKind)
-            , Nodes.getNodeKindName( node:get_kind() ), 4889) )
+            , Nodes.getNodeKindName( node:get_kind() ), 4942) )
       end
    end
    
@@ -5213,6 +5288,8 @@ function convFilter:isManagedAnySymbol( symbol )
    
    return false
 end
+
+
 
 
 function convFilter:processSetValSingleDirect( parent, node, var, initFlag, expValKind, index, firstMRet, processVal )
@@ -5255,7 +5332,7 @@ function convFilter:processSetValSingleDirect( parent, node, var, initFlag, expV
       
       Util.err( string.format( "illegal %s %s %s -- %d", var:get_name(), ValKind:_getTxt( valKind)
       , ValKind:_getTxt( expValKind)
-      , 4970) )
+      , 5026) )
    end
    
    
@@ -5380,6 +5457,8 @@ function convFilter:processSymForSetOp( parent, dstKind, dstTypeInfo, symbol )
    
    self:write( self.moduleCtrl:getSymbolName( symbol ) )
 end
+
+
 
 
 local function processToIF( stream, moduleCtrl, expType, process )
@@ -5828,21 +5907,23 @@ end
 function convFilter:processDeclVarAndSet( varSymList, expListNode )
 
    for index, var in pairs( varSymList ) do
-      local typeTxt, valKind = self.scopeMgr:getCTypeForSym( var )
+      local symbolParam = self.scopeMgr:getSymbolParam( var )
+      local typeTxt, valKind = symbolParam.typeTxt, symbolParam.kind
+      local declVarFlag
+      
+      if varSymList[1]:get_scope() ~= self.ast:get_moduleScope() or symbolParam.index == invalidSymbolId then
+         declVarFlag = true
+      else
+       
+         declVarFlag = false
+      end
+      
+      
       if valKind ~= ValKind.Prim then
-         local declVarFlag
-         
-         if varSymList[1]:get_scope() ~= self.ast:get_moduleScope() then
-            declVarFlag = true
-         else
-          
-            declVarFlag = false
-         end
-         
          self:processDeclVarC( declVarFlag, var, valKind ~= ValKind.Var )
       else
        
-         if varSymList[1]:get_scope() ~= self.ast:get_moduleScope() then
+         if declVarFlag then
             self:writeln( string.format( "%s %s;", typeTxt, self.moduleCtrl:getSymbolName( var )) )
          end
          
@@ -5980,7 +6061,7 @@ function convFilter:processDeclVar( node, opt )
       local workSymList = {}
       for __index, varSym in pairs( varSymList ) do
          table.insert( workSymList, WorkSymbol.new(varSym:get_scope(), varSym:get_accessMode(), "_" .. varSym:get_name(), varSym:get_typeInfo():get_nilableTypeInfo(), Ast.SymbolKind.Var, varSym:get_staticFlag(), SymbolParam.new(ValKind.Stem, invalidSymbolId, cTypeStem)) )
-         if node:get_mode() == Nodes.DeclVarMode.Let then
+         if node:get_mode() == Nodes.DeclVarMode.Let and varSym:get_scope() ~= self.moduleTypeInfo:get_scope() then
             self:processDeclVarC( true, varSym, false )
          end
          
@@ -6838,7 +6919,7 @@ function convFilter:processApply( node, opt )
          else 
             
                Util.err( string.format( "no support -- %s:%s:%d", varSym:get_name(), ValKind:_getTxt( valKind)
-               , 6669) )
+               , 6731) )
          end
       end
       
@@ -6856,7 +6937,7 @@ function convFilter:processApply( node, opt )
    self:processLoopPostProcess(  )
    
    self:writeln( "}" )
-   self:processLoopPostProcess(  )
+   self:processBlockPostProcess(  )
    
    self:writeln( "}" )
 end
@@ -7103,7 +7184,7 @@ function convFilter:processForeach( node, opt )
          self:processDeclVarC( true, indexSymbol, true )
          self:processSetValSingleDirect( node, nil, indexSymbol, true, ValKind.Prim, 0, false, function (  )
          
-            self:write( string.format( "_%s;", self.moduleCtrl:getSymbolName( indexSymbol )) )
+            self:write( string.format( "_%s", self.moduleCtrl:getSymbolName( indexSymbol )) )
          end )
          self:writeln( "" )
       else
@@ -7255,7 +7336,7 @@ function convFilter:processExpUnwrap( node, opt )
                else 
                   
                      Util.err( string.format( "no support -- %s: %d", ValKind:_getTxt( self:getValKindOfNode( node ))
-                     , 7087) )
+                     , 7149) )
                end
             end
             
@@ -7761,50 +7842,77 @@ function convFilter:processExpToDDD( node, opt )
 end
 
 
-function convFilter:processCallArgList( funcArgTypeList, expListNode )
+function convFilter:processCallArgList( funcType, expListNode )
 
+   local funcArgTypeList = funcType:get_argTypeInfoList()
+   
+   local abbrValTxt
+   
+   if self.moduleCtrl:getBuiltinFuncNameFromType( funcType ) or (funcType:get_kind() == Ast.TypeInfoKind.Method and funcType:get_parentInfo():equals( Ast.builtinTypeString ) ) then
+      abbrValTxt = cValNone
+   else
+    
+      abbrValTxt = cValNil
+   end
+   
+   
+   local function processAbbr( funcArgType )
+   
+      if funcArgType:get_kind() == Ast.TypeInfoKind.DDD then
+         self:write( cValDDD0 )
+      else
+       
+         self:write( abbrValTxt )
+      end
+      
+   end
+   
    if expListNode ~= nil then
       local expList = expListNode:get_expList()
       for index, funcArgType in pairs( funcArgTypeList ) do
          self:write( ", " )
+         
          if #expList >= index then
-            if funcArgType:get_kind() == Ast.TypeInfoKind.DDD then
-               if expList[index]:get_kind() == Nodes.NodeKind.get_Abbr() then
-                  self:write( cValDDD0 )
-               else
-                
-                  filter( expList[index], self, expListNode )
-               end
-               
-               return 
+            local expNode = expList[index]
+            if expNode:get_expType():get_kind() == Ast.TypeInfoKind.Abbr then
+               processAbbr( funcArgType )
             else
              
-               
-               if isStemType( funcArgType ) then
-                  self:processVal2stem( expList[index], expListNode )
+               if funcArgType:get_kind() == Ast.TypeInfoKind.DDD then
+                  if expNode:get_kind() == Nodes.NodeKind.get_Abbr() then
+                     self:write( cValDDD0 )
+                  else
+                   
+                     filter( expNode, self, expListNode )
+                  end
+                  
+                  return 
                else
                 
-                  filter( expList[index], self, expListNode )
+                  
+                  if isStemType( funcArgType ) then
+                     self:processVal2stem( expNode, expListNode )
+                  else
+                   
+                     filter( expNode, self, expListNode )
+                  end
+                  
                end
                
             end
             
          else
           
-            if funcArgType:get_kind() == Ast.TypeInfoKind.DDD then
-               self:write( cValDDD0 )
-            else
-             
-               self:write( cValNone )
-            end
-            
+            processAbbr( funcArgType )
          end
          
       end
       
    else
-      for count = 1, #funcArgTypeList do
-         self:write( string.format( ", %s", cValNone) )
+      
+      for __index, funcArgType in pairs( funcArgTypeList ) do
+         self:write( ", " )
+         processAbbr( funcArgType )
       end
       
    end
@@ -7819,7 +7927,7 @@ function convFilter:processExpNew( node, opt )
    do
       local _exp = node:get_argList()
       if _exp ~= nil then
-         self:processCallArgList( node:get_ctorTypeInfo():get_argTypeInfoList(), _exp )
+         self:processCallArgList( node:get_ctorTypeInfo(), _exp )
       end
    end
    
@@ -7875,7 +7983,9 @@ function convFilter:processCall( funcSym, funcType, setArgFlag, argList )
          end
          
          
-         self:processCallArgList( funcType:get_argTypeInfoList(), argList )
+         self:processCallArgList( funcType, argList )
+      else
+         self:processCallArgList( funcType, nil )
       end
       
    end
@@ -7980,7 +8090,7 @@ function convFilter:processExpCall( node, opt )
             local argList = node:get_argList()
             if argList ~= nil then
                if #argList:get_expList() > 0 then
-                  self:processCallArgList( funcType:get_argTypeInfoList(), argList )
+                  self:processCallArgList( funcType, argList )
                end
                
             else
@@ -8972,7 +9082,7 @@ function convFilter:processExpRefItem( node, opt )
             else 
                
                   Util.err( string.format( "not support:%s -- %d:%d", Ast.TypeInfoKind:_getTxt( valType:get_kind())
-                  , 9223, node:get_pos().lineNo) )
+                  , 9327, node:get_pos().lineNo) )
             end
          end
          
@@ -9142,7 +9252,7 @@ end
 
 function convFilter:processReturn( node, opt )
 
-   local retTypeInfoList = self.currentRoutineInfo:get_funcInfo():get_retTypeInfoList()
+   local retTypeInfoList = self.routineInfoStack:current(  ):get_funcInfo():get_retTypeInfoList()
    
    local blockStart
    
@@ -9170,7 +9280,7 @@ function convFilter:processReturn( node, opt )
                   filter( expList[1], self, node )
                else 
                   
-                     Util.err( string.format( "no support -- %d", 9464) )
+                     Util.err( string.format( "no support -- %d", 9568) )
                end
             end
             
@@ -9183,25 +9293,25 @@ function convFilter:processReturn( node, opt )
             do
                local _switchExp = retKind
                if _switchExp == ValKind.Stem then
-                  if self.currentRoutineInfo:get_blockDepth() == 1 then
+                  if self.routineInfoStack:get_blockDepth() == 1 then
                      self:writeln( "lns_setRet( _pEnv, _ret );" )
                   else
                    
-                     self:writeln( string.format( "lns_setRetAtBlock( LNS_BLOCK_AT( _pEnv, %d ), _ret );", self.currentRoutineInfo:get_blockDepth()) )
+                     self:writeln( string.format( "lns_setRetAtBlock( LNS_BLOCK_AT( _pEnv, %d ), _ret );", self.routineInfoStack:get_blockDepth()) )
                   end
                   
                elseif _switchExp == ValKind.Any then
-                  if self.currentRoutineInfo:get_blockDepth() == 1 then
+                  if self.routineInfoStack:get_blockDepth() == 1 then
                      self:writeln( "lns_setRet( _pEnv, LNS_STEM_ANY( _ret ) );" )
                   else
                    
-                     self:writeln( string.format( "lns_setRetAtBlock( LNS_BLOCK_AT( _pEnv, %d ), LNS_STEM_ANY( _ret ) );", self.currentRoutineInfo:get_blockDepth()) )
+                     self:writeln( string.format( "lns_setRetAtBlock( LNS_BLOCK_AT( _pEnv, %d ), LNS_STEM_ANY( _ret ) );", self.routineInfoStack:get_blockDepth()) )
                   end
                   
                elseif _switchExp == ValKind.Prim then
                else 
                   
-                     Util.err( string.format( "no support -- %d", 9497) )
+                     Util.err( string.format( "no support -- %d", 9601) )
                end
             end
             
@@ -9213,11 +9323,11 @@ function convFilter:processReturn( node, opt )
    end
    
    
-   if self.currentRoutineInfo:get_blockDepth() == 1 then
+   if self.routineInfoStack:get_blockDepth() == 1 then
       self:writeln( "lns_leave_block( _pEnv );" )
    else
     
-      self:writeln( string.format( "lns_leave_blockMulti( _pEnv, %d );", self.currentRoutineInfo:get_blockDepth()) )
+      self:writeln( string.format( "lns_leave_blockMulti( _pEnv, %d );", self.routineInfoStack:get_blockDepth()) )
    end
    
    
@@ -9336,7 +9446,7 @@ function convFilter:processLiteralVal( exp, parent )
                   self:write( "lns_imdAny( " )
                   self:processVal2any( exp, parent )
                   self:write( ")" )
-               elseif _switchExp == Ast.TypeInfoKind.Alternate or _switchExp == Ast.TypeInfoKind.Stem then
+               elseif _switchExp == Ast.TypeInfoKind.Alternate or _switchExp == Ast.TypeInfoKind.Stem or _switchExp == Ast.TypeInfoKind.Alge then
                   self:write( "lns_imdStem( " )
                   filter( exp, self, parent )
                   self:write( ")" )
@@ -9795,7 +9905,16 @@ end
 
 function convFilter:processBreak( node, opt )
 
-   self:writeln( "lns_leave_block( _pEnv );" )
+   if self.loopInfoStack:get_blockDepth() > 1 then
+      if self.loopInfoStack:get_blockDepth() == 2 then
+         self:writeln( "lns_leave_block( _pEnv );" )
+      else
+       
+         self:writeln( string.format( "lns_leave_blockMulti( _pEnv, %d );", self.loopInfoStack:get_blockDepth() - 1) )
+      end
+      
+   end
+   
    self:write( "break;" )
 end
 
@@ -9809,7 +9928,7 @@ end
 
 function convFilter:processAbbr( node, opt )
 
-   self:write( cValNone )
+   Util.err( "illegal" )
 end
 
 
