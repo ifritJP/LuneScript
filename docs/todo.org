@@ -263,7 +263,7 @@ foreach obj in list {
    - [X] Util
    - [ ] frontInterface
    - [ ] Writer
-   - [ ] Parser
+   - [X] Parser
    - [ ] Ast
    - [ ] Option
    - [ ] Nodes

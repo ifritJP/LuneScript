@@ -42,6 +42,8 @@ let cTypeAnyP = "lns_any_t *";
 let cTypeAnyPP = "lns_any_t **";
 let cTypeEnvP = "lns_env_t *";
 let cTypeVarP = "lns_var_t *";
+let cTypeMod = "lns_module_t";
+let cTypeModP = "lns_module_t *";
 let cTypeBlockP = "lns_block_t *";
 let cValNil = "lns_global.nilStem";
 let cValNone = "lns_global.noneStem";
@@ -1286,21 +1288,22 @@ fn convFilter.processInitModule( node: Nodes.RootNode ) mut
    self.processMode = .InitModule;
 
    let moduleFullName = self.moduleCtrl.getFullName( node.$moduleTypeInfo );
-   let moduleInfoName = "s_module_%s" (moduleFullName);
+   let moduleInfoName = "lns_moduleInfo_%s" (moduleFullName);
    
    if self.outputBuiltinFlag {
       self.writeln( "static void lns_init_lns_builtin_Sub( lns_env_t * _pEnv );" );
    }
    elseif not self.canConv {
       self.writeln(
-         "extern void lns_init_%s_Sub( lns_env_t * _pEnv );" ( moduleFullName ) );
+         "extern void lns_init_%s_Sub( lns_env_t * _pEnv );"
+         ( moduleFullName ) );
    }
 
 
    fn process( out2HMode:Out2HMode ) {
       self.write(
-         "%svoid lns_init_%s( %s _pEnv )"
-         ( getOut2HeaderPrefix( out2HMode ), moduleFullName, cTypeEnvP) );
+         "%s%s lns_init_%s( %s _pEnv )"
+         ( getOut2HeaderPrefix( out2HMode ), cTypeModP, moduleFullName, cTypeEnvP) );
       
       
       switch out2HMode {
@@ -1320,7 +1323,7 @@ fn convFilter.processInitModule( node: Nodes.RootNode ) mut
 
    self.writeln( "if ( %s.readyFlag ) {" ( moduleInfoName ));
    self.pushIndent(##);
-   self.writeln( "return;" );
+   self.writeln( "return &%s;" (moduleInfoName));
    self.popIndent();
    self.writeln( "}" );
    self.writeln( "%s.readyFlag = true;" ( moduleInfoName ) );
@@ -1375,7 +1378,9 @@ fn convFilter.processInitModule( node: Nodes.RootNode ) mut
             case Nodes.NodeKind.$DeclAlge,
                  //Nodes.NodeKind.$DeclClass,
                  Nodes.NodeKind.$DeclFunc,
-                 Nodes.NodeKind.$DeclMacro
+                 Nodes.NodeKind.$DeclMacro,
+                 Nodes.NodeKind.$TestBlock
+
             {
                //filter( child, self, node );
                //self.writeln( "" );
@@ -1390,6 +1395,8 @@ fn convFilter.processInitModule( node: Nodes.RootNode ) mut
 
    // init ブロック内の managedStemTop 用ブロックの開放
    self.writeln( "lns_leave_block( _pEnv );" );
+
+   self.writeln( "return &%s;" (moduleInfoName));
    
    self.popIndent();
 
@@ -1636,10 +1643,20 @@ pub override fn convFilter.processRoot(
       filter( importNode, self, node );
    }
 
+   self.processMode = .Prototype;
+   foreach workNode in nodeManager.getTestBlockNodeList() {
+      filter( workNode, self, node );
+   }
+
+   
    let moduleName = self.moduleCtrl.getFullName( node.$moduleTypeInfo );
-   self.writeln(
-      'static lns_module_t s_module_%s = {NULL,NULL,false, NULL, "%s"};'
-      (moduleName, moduleName) );
+   self.write(
+      'static %s lns_moduleInfo_%s = {NULL,NULL,false, NULL, "%s", {'
+      (cTypeMod, moduleName, moduleName) );
+   foreach workNode in nodeManager.getTestBlockNodeList() {
+      self.write( "%s__test_%s, " ( moduleName, workNode.$name.txt ) );
+   }
+   self.writeln( "NULL } };" );
    self.writeln( "static %s lns_module_globalStemList;" (cTypeAnyPP) );
    self.writeln( "static %s lns_module_path = NULL;" (cTypeAnyPP));
 
@@ -1659,6 +1676,7 @@ pub override fn convFilter.processRoot(
       }
       
       self.processMode = .Prototype;
+      
       _processOnlyPub( nodeManager.getDeclEnumNodeList() );
       _processOnlyPub( nodeManager.getDeclFormNodeList() );
       _processOnlyPub( nodeManager.getDeclFuncNodeList() );
@@ -1790,6 +1808,10 @@ pub override fn convFilter.processRoot(
    
 
    self.processInitModule( node );
+
+   foreach testBlock in nodeManager.getTestBlockNodeList() {
+      filter( testBlock, self, node );
+   }
 
    if self.outputBuiltinFlag {
       self.writeln( '#include "lns_builtinInc.c"' );
@@ -9631,13 +9653,37 @@ pub override fn convFilter.processReturn(
 
 pub override fn convFilter.processTestBlock( node: Nodes.TestBlockNode, opt: Opt ) mut
 {
-   if self.enableTest {
-      self.writeln( 'printf( "%s:\\n" );' (node.$name.txt) );
-      filter( node.$block, self, node );
+   if not self.enableTest {
+      return;
+   }
 
-      // pending: 本来はテスト実行と、結果出力は TestCtrl で行なうが、暫定でここで行なう。
-      self.writeln( "lns_init_lune_base_Testing( _pEnv );" );
-      self.writeln( "lune_base_Testing_outputAllResult( _pEnv, lns_io_stdout );" );
+   let moduleName = self.moduleCtrl.getFullName( self.moduleTypeInfo );
+   fn processDecl() {
+      self.write(
+         "void %s__test_%s( %s _pEnv )"
+         ( moduleName, node.$name.txt, cTypeEnvP ) );
+   }
+   
+   switch self.processMode {
+      case .Prototype {
+         processDecl();
+         self.writeln( ";" );
+      }
+      default {
+         processDecl();
+         self.writeln( "{" );
+         self.pushIndent(##);
+         
+         self.writeln( 'printf( "%s:\\n" );' (node.$name.txt) );
+         filter( node.$block, self, node );
+
+         // pending: 本来はテスト実行と、結果出力は TestCtrl で行なうが、暫定でここで行なう。
+         self.writeln( "lns_init_lune_base_Testing( _pEnv );" );
+         self.writeln( "lune_base_Testing_outputAllResult( _pEnv, lns_io_stdout );" );
+
+         self.popIndent();
+         self.writeln( "}" );
+      }
    }
 }
 
@@ -10170,13 +10216,14 @@ pub fn outputBootcode( stream: oStream, launchModuleName:str )
    let mut srcStream = new Util.SimpleSourceOStream( stream, nil, stepIndent );
 
    let launchModulePath = launchModuleName.gsub( "%.", "/" );
-   let initFuncName = "lns_init_%s" ( (launchModuleName.gsub( "%.", "_" ) ));
+   let moduleName = launchModuleName.gsub( "%.", "_" );
    srcStream.writeln( ```
 #include <lunescript.h>
 #include <%s.h>
     
-void lns_run_module( lns_env_t * _pEnv ) {
-   %s( _pEnv );    
+void lns_run_module( %s _pEnv ) {
+   %s pInfo = lns_init_%s( _pEnv );
+   lns_test( _pEnv, pInfo );      
 }
-``` (launchModulePath, initFuncName) );
+``` (launchModulePath, cTypeEnvP, cTypeModP, moduleName) );
 }

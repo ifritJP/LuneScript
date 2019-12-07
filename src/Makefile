@@ -839,19 +839,15 @@ define convC
 	$(call exeLune,$1,$2,save -langC,$3)
 endef
 
-define test-convC
-	$(call convC,.,$(basename $1).lns)
-	$(call test-convC-exe,.,$1,$(basename $1),$(basename $1))
-endef
-
-
-
 build-miniC:
 	$(call test-convC-exe,.,miniC.lns,miniC,miniC)
 
 test-miniC:
+	mkdir -p work/0
 	$(call transwork,.,.,,base/convCC)
-	$(call test-convC,miniC)
+	$(call convC,work/0,lune/base/Testing.lns,--testing)
+	cp -a work/0/work/c/* work/c
+	$(call test-convC-test,.,miniC)
 
 test-subC:
 	$(call transwork,.,.,,base/convCC)

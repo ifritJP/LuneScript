@@ -747,6 +747,9 @@ extern "C" {
 
     extern lns_global_t lns_global;
 
+    typedef void * (lns_testFunc)( lns_env_t * _pEnv );
+    
+    
     typedef struct lns_module_t {
         struct lns_module_t * pPrev;
         struct lns_module_t * pNext;
@@ -757,6 +760,8 @@ extern "C" {
         lns_block_t * pBlock;
         /** モジュール名 */
         const char * pName;
+        /** pending */
+        lns_testFunc * pTestFunc[];
     } lns_module_t;
 
 #define LNS_BLOCK_AT( ENV, DEPTH ) (&ENV->blockQueue[ ENV->blockDepth - DEPTH ])

@@ -117,5 +117,5 @@ extern lns_any_t * lns_io_stderr;
 extern lns_any_t * lns_io_stdin;
 extern lns_any_t * lns_io_stdout;
 extern lns_any_t * lns_package_path;
-extern void lns_init_lns_builtin( lns_env_t * _pEnv );
+extern lns_module_t * lns_init_lns_builtin( lns_env_t * _pEnv );
 #endif

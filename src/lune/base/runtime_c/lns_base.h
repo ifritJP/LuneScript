@@ -24,4 +24,4 @@
 
 #include <lua.h>
 
-extern int lua_main( lua_State * pLua );
+extern int lns_main( lua_State * pLua );

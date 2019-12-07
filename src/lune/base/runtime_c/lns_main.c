@@ -26,14 +26,14 @@
 #include <lauxlib.h>
 
 
-int main (int argc, char * pArgv[] )  {
+int main(int argc, char * pArgv[] )  {
 
     lua_State * pLua = luaL_newstate();
     if ( pLua == NULL ) {
         printf( "failed to create a Lua VM.\n" );
         return 1;
     }
-    lua_pushcfunction( pLua, lua_main );
+    lua_pushcfunction( pLua, lns_main );
     lua_pushinteger( pLua, argc );
     lua_pushlightuserdata( pLua, pArgv );
     int status = lua_pcall( pLua, 2, 1, 0 );

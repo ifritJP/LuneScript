@@ -248,6 +248,8 @@ local cTypeAnyP = "lns_any_t *"
 local cTypeAnyPP = "lns_any_t **"
 local cTypeEnvP = "lns_env_t *"
 local cTypeVarP = "lns_var_t *"
+local cTypeMod = "lns_module_t"
+local cTypeModP = "lns_module_t *"
 local cTypeBlockP = "lns_block_t *"
 local cValNil = "lns_global.nilStem"
 local cValNone = "lns_global.noneStem"
@@ -1396,7 +1398,7 @@ function ScopeMgr:getSymbolParam( symbol )
       
    end
    
-   Util.err( string.format( "illegal symbol -- %s %d", symbol:get_name(), 932) )
+   Util.err( string.format( "illegal symbol -- %s %d", symbol:get_name(), 934) )
 end
 function ScopeMgr:getSymbolValKind( symbol )
 
@@ -1683,7 +1685,7 @@ function convFilter:processInitModule( node )
    self.processMode = ProcessMode.InitModule
    
    local moduleFullName = self.moduleCtrl:getFullName( node:get_moduleTypeInfo() )
-   local moduleInfoName = string.format( "s_module_%s", moduleFullName)
+   local moduleInfoName = string.format( "lns_moduleInfo_%s", moduleFullName)
    
    if self.outputBuiltinFlag then
       self:writeln( "static void lns_init_lns_builtin_Sub( lns_env_t * _pEnv );" )
@@ -1694,7 +1696,7 @@ function convFilter:processInitModule( node )
    
    local function process( out2HMode )
    
-      self:write( string.format( "%svoid lns_init_%s( %s _pEnv )", getOut2HeaderPrefix( out2HMode ), moduleFullName, cTypeEnvP) )
+      self:write( string.format( "%s%s lns_init_%s( %s _pEnv )", getOut2HeaderPrefix( out2HMode ), cTypeModP, moduleFullName, cTypeEnvP) )
       
       do
          local _switchExp = out2HMode
@@ -1733,7 +1735,7 @@ function convFilter:processInitModule( node )
    
    self:writeln( string.format( "if ( %s.readyFlag ) {", moduleInfoName) )
    self:pushIndent(  )
-   self:writeln( "return;" )
+   self:writeln( string.format( "return &%s;", moduleInfoName) )
    self:popIndent(  )
    self:writeln( "}" )
    self:writeln( string.format( "%s.readyFlag = true;", moduleInfoName) )
@@ -1777,7 +1779,7 @@ function convFilter:processInitModule( node )
       for __index, child in pairs( node:get_children() ) do
          do
             local _switchExp = child:get_kind()
-            if _switchExp == Nodes.NodeKind.get_DeclAlge() or _switchExp == Nodes.NodeKind.get_DeclFunc() or _switchExp == Nodes.NodeKind.get_DeclMacro() then
+            if _switchExp == Nodes.NodeKind.get_DeclAlge() or _switchExp == Nodes.NodeKind.get_DeclFunc() or _switchExp == Nodes.NodeKind.get_DeclMacro() or _switchExp == Nodes.NodeKind.get_TestBlock() then
             else 
                
                   filter( child, self, node )
@@ -1791,6 +1793,8 @@ function convFilter:processInitModule( node )
    
    
    self:writeln( "lns_leave_block( _pEnv );" )
+   
+   self:writeln( string.format( "return &%s;", moduleInfoName) )
    
    self:popIndent(  )
    
@@ -1916,7 +1920,7 @@ local function registerBuiltin(  )
             param = createSymbolParam( symbol:get_name(), getValKind( symbol:get_typeInfo() ), getCType( symbol:get_typeInfo() ) )
          else 
             
-               Util.err( string.format( "illeal symbol -- %s %d", symbol:get_name(), 1480) )
+               Util.err( string.format( "illeal symbol -- %s %d", symbol:get_name(), 1487) )
          end
       end
       
@@ -2080,8 +2084,19 @@ function convFilter:processRoot( node, opt )
    end
    
    
+   self.processMode = ProcessMode.Prototype
+   for __index, workNode in pairs( nodeManager:getTestBlockNodeList(  ) ) do
+      filter( workNode, self, node )
+   end
+   
+   
    local moduleName = self.moduleCtrl:getFullName( node:get_moduleTypeInfo() )
-   self:writeln( string.format( 'static lns_module_t s_module_%s = {NULL,NULL,false, NULL, "%s"};', moduleName, moduleName) )
+   self:write( string.format( 'static %s lns_moduleInfo_%s = {NULL,NULL,false, NULL, "%s", {', cTypeMod, moduleName, moduleName) )
+   for __index, workNode in pairs( nodeManager:getTestBlockNodeList(  ) ) do
+      self:write( string.format( "%s__test_%s, ", moduleName, workNode:get_name().txt) )
+   end
+   
+   self:writeln( "NULL } };" )
    self:writeln( string.format( "static %s lns_module_globalStemList;", cTypeAnyPP) )
    self:writeln( string.format( "static %s lns_module_path = NULL;", cTypeAnyPP) )
    
@@ -2090,6 +2105,7 @@ function convFilter:processRoot( node, opt )
       
       
       self.processMode = ProcessMode.Prototype
+      
       for __index, workNode in pairs( nodeManager:getDeclEnumNodeList(  ) ) do
          if onlyPub then
             if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
@@ -2443,6 +2459,11 @@ function convFilter:processRoot( node, opt )
    
    
    self:processInitModule( node )
+   
+   for __index, testBlock in pairs( nodeManager:getTestBlockNodeList(  ) ) do
+      filter( testBlock, self, node )
+   end
+   
    
    if self.outputBuiltinFlag then
       self:writeln( '#include "lns_builtinInc.c"' )
@@ -3890,7 +3911,7 @@ local function processDefaultCtor( stream, moduleCtrl, scopeMgr, node )
                else 
                   
                      Util.err( string.format( "no support -- %s:%s:%d", member:get_name().txt, ValKind:_getTxt( valKind)
-                     , 3431) )
+                     , 3453) )
                end
             end
             
@@ -4629,7 +4650,7 @@ function convFilter:processDeclClassDef( node )
                else 
                   
                      Util.err( string.format( "no support -- %s:%s:%d", member:get_symbolInfo():get_name(), ValKind:_getTxt( valKind)
-                     , 4164) )
+                     , 4186) )
                end
             end
             
@@ -5237,7 +5258,7 @@ function convFilter:processSym2Any( symbol )
       else 
          
             Util.err( string.format( "not suppport -- %s, %d", ValKind:_getTxt( valKind)
-            , 4916) )
+            , 4938) )
       end
    end
    
@@ -5259,7 +5280,7 @@ function convFilter:processVal2any( node, parent )
       else 
          
             Util.err( string.format( "not suppport -- %d, %s, %s, %d", node:get_pos().lineNo, ValKind:_getTxt( valKind)
-            , Nodes.getNodeKindName( node:get_kind() ), 4942) )
+            , Nodes.getNodeKindName( node:get_kind() ), 4964) )
       end
    end
    
@@ -5332,7 +5353,7 @@ function convFilter:processSetValSingleDirect( parent, node, var, initFlag, expV
       
       Util.err( string.format( "illegal %s %s %s -- %d", var:get_name(), ValKind:_getTxt( valKind)
       , ValKind:_getTxt( expValKind)
-      , 5026) )
+      , 5048) )
    end
    
    
@@ -6919,7 +6940,7 @@ function convFilter:processApply( node, opt )
          else 
             
                Util.err( string.format( "no support -- %s:%s:%d", varSym:get_name(), ValKind:_getTxt( valKind)
-               , 6731) )
+               , 6753) )
          end
       end
       
@@ -7336,7 +7357,7 @@ function convFilter:processExpUnwrap( node, opt )
                else 
                   
                      Util.err( string.format( "no support -- %s: %d", ValKind:_getTxt( self:getValKindOfNode( node ))
-                     , 7149) )
+                     , 7171) )
                end
             end
             
@@ -9082,7 +9103,7 @@ function convFilter:processExpRefItem( node, opt )
             else 
                
                   Util.err( string.format( "not support:%s -- %d:%d", Ast.TypeInfoKind:_getTxt( valType:get_kind())
-                  , 9327, node:get_pos().lineNo) )
+                  , 9349, node:get_pos().lineNo) )
             end
          end
          
@@ -9280,7 +9301,7 @@ function convFilter:processReturn( node, opt )
                   filter( expList[1], self, node )
                else 
                   
-                     Util.err( string.format( "no support -- %d", 9568) )
+                     Util.err( string.format( "no support -- %d", 9590) )
                end
             end
             
@@ -9311,7 +9332,7 @@ function convFilter:processReturn( node, opt )
                elseif _switchExp == ValKind.Prim then
                else 
                   
-                     Util.err( string.format( "no support -- %d", 9601) )
+                     Util.err( string.format( "no support -- %d", 9623) )
                end
             end
             
@@ -9350,12 +9371,37 @@ end
 
 function convFilter:processTestBlock( node, opt )
 
-   if self.enableTest then
-      self:writeln( string.format( 'printf( "%s:\\n" );', node:get_name().txt) )
-      filter( node:get_block(), self, node )
-      
-      self:writeln( "lns_init_lune_base_Testing( _pEnv );" )
-      self:writeln( "lune_base_Testing_outputAllResult( _pEnv, lns_io_stdout );" )
+   if not self.enableTest then
+      return 
+   end
+   
+   
+   local moduleName = self.moduleCtrl:getFullName( self.moduleTypeInfo )
+   local function processDecl(  )
+   
+      self:write( string.format( "void %s__test_%s( %s _pEnv )", moduleName, node:get_name().txt, cTypeEnvP) )
+   end
+   
+   do
+      local _switchExp = self.processMode
+      if _switchExp == ProcessMode.Prototype then
+         processDecl(  )
+         self:writeln( ";" )
+      else 
+         
+            processDecl(  )
+            self:writeln( "{" )
+            self:pushIndent(  )
+            
+            self:writeln( string.format( 'printf( "%s:\\n" );', node:get_name().txt) )
+            filter( node:get_block(), self, node )
+            
+            self:writeln( "lns_init_lune_base_Testing( _pEnv );" )
+            self:writeln( "lune_base_Testing_outputAllResult( _pEnv, lns_io_stdout );" )
+            
+            self:popIndent(  )
+            self:writeln( "}" )
+      end
    end
    
 end
@@ -9944,15 +9990,16 @@ local function outputBootcode( stream, launchModuleName )
    local srcStream = Util.SimpleSourceOStream.new(stream, nil, stepIndent)
    
    local launchModulePath = launchModuleName:gsub( "%.", "/" )
-   local initFuncName = string.format( "lns_init_%s", (launchModuleName:gsub( "%.", "_" ) ))
+   local moduleName = launchModuleName:gsub( "%.", "_" )
    srcStream:writeln( string.format( [==[
 #include <lunescript.h>
 #include <%s.h>
     
-void lns_run_module( lns_env_t * _pEnv ) {
-   %s( _pEnv );    
+void lns_run_module( %s _pEnv ) {
+   %s pInfo = lns_init_%s( _pEnv );
+   lns_test( _pEnv, pInfo );      
 }
-]==], launchModulePath, initFuncName) )
+]==], launchModulePath, cTypeEnvP, cTypeModP, moduleName) )
 end
 _moduleObj.outputBootcode = outputBootcode
 

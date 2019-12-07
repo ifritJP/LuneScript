@@ -2037,7 +2037,16 @@ void lns_f_print( lns_env_t * _pEnv, lns_stem_t ddd ) {
     //lns_leave_block( _pEnv );
 }
 
-int lua_main( lua_State * pLua ) {
+void lns_test( lns_env_t * _pEnv, const lns_module_t * pModule ) {
+    const lns_testFunc ** pTestFunc = pModule->pTestFunc;
+
+    void * pWork = NULL;
+    for ( ; *pTestFunc != NULL; pTestFunc++ ) {
+        pWork = (*pTestFunc)( _pEnv );
+    }
+}
+
+int lns_main( lua_State * pLua ) {
     int argc = lua_tointeger( pLua, 1);
     char ** pArgv = (char **)lua_touserdata( pLua, 2);
     int script;
