@@ -1730,6 +1730,12 @@ pub fn Node.getSymbolInfo(): &List<&Ast.SymbolInfo> {
          }
          case NodeKind.$RefField {
             if! let refFieldNode = node@@@RefFieldNode {
+               if refFieldNode.$nilAccess {
+                  // nilAccess の場合、シンボルの型情報が変るので
+                  // そのまま symbolInfo を返すと不整合が発生するので
+                  // ここでは暫定的に空を返す
+                  return [];
+               }
                if! refFieldNode.$symbolInfo {
                   return [_exp];
                }

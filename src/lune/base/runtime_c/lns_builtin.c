@@ -55,34 +55,89 @@ static void initFuncSym( lns_env_t * _pEnv, lns_block_t * pBlock )
 void l_call_mtd_lns_iStream_close( lns_env_t * _pEnv, lns_any_t * pObj){
 lns_mtd_lns_iStream( pObj )->close( _pEnv, lns_getImpObj( pObj ) );
 }
+lns_stem_t l_nil_mtd_lns_iStream_close( lns_env_t * _pEnv, lns_stem_t obj){
+if ( obj.type == lns_stem_type_nil ) { return lns_global.nilStem; }
+lns_any_t * pObj = obj.val.pAny;
+lns_mtd_lns_iStream( pObj )->close( _pEnv, lns_getImpObj( pObj ) );
+}
 lns_stem_t l_call_mtd_lns_iStream_read( lns_env_t * _pEnv, lns_any_t * pObj, lns_stem_t arg1){
+return lns_mtd_lns_iStream( pObj )->read( _pEnv, lns_getImpObj( pObj ) , arg1);
+}
+lns_stem_t l_nil_mtd_lns_iStream_read( lns_env_t * _pEnv, lns_stem_t obj, lns_stem_t arg1){
+if ( obj.type == lns_stem_type_nil ) { return lns_global.nilStem; }
+lns_any_t * pObj = obj.val.pAny;
 return lns_mtd_lns_iStream( pObj )->read( _pEnv, lns_getImpObj( pObj ) , arg1);
 }
 void l_call_mtd_lns_oStream_close( lns_env_t * _pEnv, lns_any_t * pObj){
 lns_mtd_lns_oStream( pObj )->close( _pEnv, lns_getImpObj( pObj ) );
 }
+lns_stem_t l_nil_mtd_lns_oStream_close( lns_env_t * _pEnv, lns_stem_t obj){
+if ( obj.type == lns_stem_type_nil ) { return lns_global.nilStem; }
+lns_any_t * pObj = obj.val.pAny;
+lns_mtd_lns_oStream( pObj )->close( _pEnv, lns_getImpObj( pObj ) );
+}
 void l_call_mtd_lns_oStream_flush( lns_env_t * _pEnv, lns_any_t * pObj){
+lns_mtd_lns_oStream( pObj )->flush( _pEnv, lns_getImpObj( pObj ) );
+}
+lns_stem_t l_nil_mtd_lns_oStream_flush( lns_env_t * _pEnv, lns_stem_t obj){
+if ( obj.type == lns_stem_type_nil ) { return lns_global.nilStem; }
+lns_any_t * pObj = obj.val.pAny;
 lns_mtd_lns_oStream( pObj )->flush( _pEnv, lns_getImpObj( pObj ) );
 }
 lns_stem_t l_call_mtd_lns_oStream_write( lns_env_t * _pEnv, lns_any_t * pObj, lns_any_t * arg1){
 return lns_mtd_lns_oStream( pObj )->write( _pEnv, lns_getImpObj( pObj ) , arg1);
 }
+lns_stem_t l_nil_mtd_lns_oStream_write( lns_env_t * _pEnv, lns_stem_t obj, lns_any_t * arg1){
+if ( obj.type == lns_stem_type_nil ) { return lns_global.ddd0; }
+lns_any_t * pObj = obj.val.pAny;
+return lns_mtd_lns_oStream( pObj )->write( _pEnv, lns_getImpObj( pObj ) , arg1);
+}
 void l_call_mtd_lns_luaStream_close( lns_env_t * _pEnv, lns_any_t * pObj){
+lns_mtd_lns_luaStream( pObj )->close( _pEnv, pObj );
+}
+lns_stem_t l_nil_mtd_lns_luaStream_close( lns_env_t * _pEnv, lns_stem_t obj){
+if ( obj.type == lns_stem_type_nil ) { return lns_global.nilStem; }
+lns_any_t * pObj = obj.val.pAny;
 lns_mtd_lns_luaStream( pObj )->close( _pEnv, pObj );
 }
 void l_call_mtd_lns_luaStream_flush( lns_env_t * _pEnv, lns_any_t * pObj){
 lns_mtd_lns_luaStream( pObj )->flush( _pEnv, pObj );
 }
+lns_stem_t l_nil_mtd_lns_luaStream_flush( lns_env_t * _pEnv, lns_stem_t obj){
+if ( obj.type == lns_stem_type_nil ) { return lns_global.nilStem; }
+lns_any_t * pObj = obj.val.pAny;
+lns_mtd_lns_luaStream( pObj )->flush( _pEnv, pObj );
+}
 lns_stem_t l_call_mtd_lns_luaStream_read( lns_env_t * _pEnv, lns_any_t * pObj, lns_stem_t arg1){
+return lns_mtd_lns_luaStream( pObj )->read( _pEnv, pObj , arg1);
+}
+lns_stem_t l_nil_mtd_lns_luaStream_read( lns_env_t * _pEnv, lns_stem_t obj, lns_stem_t arg1){
+if ( obj.type == lns_stem_type_nil ) { return lns_global.nilStem; }
+lns_any_t * pObj = obj.val.pAny;
 return lns_mtd_lns_luaStream( pObj )->read( _pEnv, pObj , arg1);
 }
 lns_stem_t l_call_mtd_lns_luaStream_seek( lns_env_t * _pEnv, lns_any_t * pObj, lns_any_t * arg1, lns_int_t arg2){
 return lns_mtd_lns_luaStream( pObj )->seek( _pEnv, pObj , arg1, arg2);
 }
+lns_stem_t l_nil_mtd_lns_luaStream_seek( lns_env_t * _pEnv, lns_stem_t obj, lns_any_t * arg1, lns_int_t arg2){
+if ( obj.type == lns_stem_type_nil ) { return lns_global.ddd0; }
+lns_any_t * pObj = obj.val.pAny;
+return lns_mtd_lns_luaStream( pObj )->seek( _pEnv, pObj , arg1, arg2);
+}
 lns_stem_t l_call_mtd_lns_luaStream_write( lns_env_t * _pEnv, lns_any_t * pObj, lns_any_t * arg1){
 return lns_mtd_lns_luaStream( pObj )->write( _pEnv, pObj , arg1);
 }
+lns_stem_t l_nil_mtd_lns_luaStream_write( lns_env_t * _pEnv, lns_stem_t obj, lns_any_t * arg1){
+if ( obj.type == lns_stem_type_nil ) { return lns_global.ddd0; }
+lns_any_t * pObj = obj.val.pAny;
+return lns_mtd_lns_luaStream( pObj )->write( _pEnv, pObj , arg1);
+}
 void l_call_mtd_lns_Mapping__toMap( lns_env_t * _pEnv, lns_any_t * pObj){
+lns_mtd_lns_Mapping( pObj )->_toMap( _pEnv, lns_getImpObj( pObj ) );
+}
+lns_stem_t l_nil_mtd_lns_Mapping__toMap( lns_env_t * _pEnv, lns_stem_t obj){
+if ( obj.type == lns_stem_type_nil ) { return lns_global.nilStem; }
+lns_any_t * pObj = obj.val.pAny;
 lns_mtd_lns_Mapping( pObj )->_toMap( _pEnv, lns_getImpObj( pObj ) );
 }
 static void lns_init_lns_builtin_Sub( lns_env_t * _pEnv );

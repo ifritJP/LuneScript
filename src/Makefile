@@ -843,10 +843,17 @@ build-miniC:
 	$(call test-convC-exe,.,miniC.lns,miniC,miniC)
 
 test-miniC:
-	mkdir -p work/0
 	$(call transwork,.,.,,base/convCC)
+	$(LUA) lune/base/base.lua --mkbuiltin lune/base/runtime_c
+	mkdir -p work/0
+	rm -rf work/0/*
+	mkdir -p work/0/work/c
+	cp -a lune work/0
+	cp Makefile.ccc work/0
 	$(call convC,work/0,lune/base/Testing.lns,--testing)
-	cp -a work/0/work/c/* work/c
+	-$(call test-convC-test,work/0,lune/base/Testing)
+#	cp -a work/c/* work/0/work/c
+	cp -a work/0/work/* work/
 	$(call test-convC-test,.,miniC)
 
 test-subC:
@@ -890,6 +897,10 @@ test-testC:
 		lune/base/Depend.sub.c lune/base/Depend.c \
 		lune/base/LuneControl.c lune/base/LuaMod.c )
 	$(call test-convC-test,work/0,lune/base/Parser, \
+		lune/base/Depend.sub.c lune/base/Depend.c \
+		lune/base/LuneControl.c lune/base/LuaMod.c \
+		lune/base/Util.c)
+	$(call test-convC-test,work/0,lune/base/Writer, \
 		lune/base/Depend.sub.c lune/base/Depend.c \
 		lune/base/LuneControl.c lune/base/LuaMod.c \
 		lune/base/Util.c)

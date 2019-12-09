@@ -359,7 +359,7 @@ fn str2cstr( txt:str ) : str {
       work = ("%q" ( work.sub( 4, -4 ) )).gsub( "\\\n", "\\n" );
    }
    elseif string.find( work, "^'" ## ) {
-      work = '%q' ( work.sub( 2, -2 ) );
+      work = '"%s"' ((("%s" ( work.sub( 2, -2 )) ).gsub( '"', '\\"' )));
    }
    work = work.gsub( "\\9", "\\t" );
    return work;
@@ -469,6 +469,11 @@ class ModuleCtrl {
 指定の型の関数名を取得する。
 */
    pub fn getFullName( mut typeInfo:&Ast.TypeInfo ): str {
+      if! let alterType = typeInfo.$srcTypeInfo@@@Ast.AlternateTypeInfo {
+         if alterType.hasBase() {
+            typeInfo = alterType.$baseTypeInfo;
+         }
+      }
       typeInfo = typeInfo.$srcTypeInfo.$genSrcTypeInfo;
       let workName = typeInfo.getFullName(
          self.$typeNameCtrl, self.moduleInfoManager, false );
@@ -572,6 +577,12 @@ class ModuleCtrl {
       return "lns_f_%d_%s" (typeInfo.$typeId, typeInfo.$rawTxt);
    }
 
+   pub fn getNilMethodCName( methodTypeInfo:&Ast.TypeInfo ) : str
+   {
+      return "l_nil_mtd_%s_%s" ( self.getClassCName( methodTypeInfo.$parentInfo ),
+                                 methodTypeInfo.$rawTxt );
+   }
+   
    pub fn getCallMethodCName( methodTypeInfo:&Ast.TypeInfo ) : str
    {
       switch methodTypeInfo.$parentInfo.$kind {
@@ -2054,6 +2065,9 @@ pub override fn convFilter.processStmtExp(
    self.write( "; // %d" (node.$pos.lineNo) );
 };
 
+/** 処理対象の式を出力する */
+form processExp();
+
 fn getLiteral2Stem( valTxt:str, typeInfo:&Ast.TypeInfo ) : str {
    switch typeInfo.$srcTypeInfo {
       case Ast.builtinTypeInt, Ast.builtinTypeChar {
@@ -2071,13 +2085,20 @@ fn getLiteral2Stem( valTxt:str, typeInfo:&Ast.TypeInfo ) : str {
    }
 }
 
+
 fn getStemTypeId( typeInfo:&Ast.TypeInfo ): str {
-   switch getOrgTypeInfo( typeInfo ) {
+   if typeInfo.$nilable {
+      return "lns_stem_type_none";
+   }
+   switch typeInfo {
       case Ast.builtinTypeInt, Ast.builtinTypeChar {
          return "lns_stem_type_int";
       }
       case Ast.builtinTypeInt, Ast.builtinTypeReal {
          return "lns_stem_type_real";
+      }
+      case Ast.builtinTypeBool {
+         return "lns_stem_type_bool";
       }
       default {
          return "lns_stem_type_any";
@@ -2085,8 +2106,9 @@ fn getStemTypeId( typeInfo:&Ast.TypeInfo ): str {
    }
 }
 
-fn convFilter.getPrepareClosure(
-   funcName:str, argNum:int, hasDDD:bool, symList:&List<&Ast.SymbolInfo> ) mut : str
+fn getPrepareClosure(
+   scopeMgr:ScopeMgr, funcName:str,
+   argNum:int, hasDDD:bool, symList:&List<&Ast.SymbolInfo> ) : str
 {
    let mut txt;
 
@@ -2094,22 +2116,23 @@ fn convFilter.getPrepareClosure(
        (funcName, argNum, hasDDD, #symList );
    foreach symbolInfo in symList {
       txt = txt .. ", ";
-      txt = txt .. self.scopeMgr.symbol2Any( symbolInfo );
+      txt = txt .. scopeMgr.symbol2Any( symbolInfo );
    }
    txt = txt .. ")";
    return txt;
 }
 
 
-fn convFilter.getFunc2any( funcType:&Ast.TypeInfo ) mut : str
+fn getFunc2any(
+   moduleCtrl:ModuleCtrl, scopeMgr:ScopeMgr, funcType:&Ast.TypeInfo ) : str
 {
    let argList = funcType.$argTypeInfoList;
    let hasDDD =
       #argList > 0 and argList[ #argList ].$kind == .DDD or false;
    
-   return self.getPrepareClosure(
-      self.moduleCtrl.getFuncName( funcType ), #funcType.$argTypeInfoList,
-      hasDDD, (unwrap funcType.$scope).$closureSymList );
+   return getPrepareClosure(
+      scopeMgr, moduleCtrl.getFuncName( funcType ),
+      #funcType.$argTypeInfoList, hasDDD, (unwrap funcType.$scope).$closureSymList );
 }
 
 
@@ -2170,7 +2193,7 @@ fn convFilter.processSym2stem( symbolInfo:&Ast.LowSymbol) mut
             case .Func {    
                if! let scope = expType.$scope {
                   self.write( "LNS_STEM_ANY(" );
-                  self.write( self.getFunc2any( expType ) );
+                  self.write( getFunc2any( self.moduleCtrl, self.scopeMgr, expType ) );
                   self.write( ")" );
                }
                else {   
@@ -3033,12 +3056,20 @@ fn processDeclAlgeSub( stream:Util.SourceStream, node: &Nodes.DeclArgNode )
    stream.write( node.get_name().txt );
 }
 
+enum FuncWrap {
+   /** 通常の関数定義 */
+   Normal,
+   /** 呼び出し様のラッパー */
+   CallWrap,
+   /** nil アクセス様のラッパー */
+   NilWrap
+}
 
 fn processMethodDeclTxt(
    stream:Util.SourceStream, moduleCtrl:&ModuleCtrl,
-   callFlag:bool, methodTypeInfo:&Ast.TypeInfo, argList:&List<&Nodes.Node>! )
+   wrapKind:FuncWrap, methodTypeInfo:&Ast.TypeInfo, argList:&List<&Nodes.Node>! )
 {
-   if methodTypeInfo.$rawTxt ~= "__init" and not callFlag {
+   if methodTypeInfo.$rawTxt ~= "__init" and wrapKind == .Normal {
       if not methodTypeInfo.$staticFlag or
          not Ast.isPubToExternal( methodTypeInfo.$accessMode ) or
          not Ast.isPubToExternal( methodTypeInfo.$parentInfo.$accessMode )
@@ -3047,18 +3078,37 @@ fn processMethodDeclTxt(
       }
    }
 
-   stream.write(
-      "%s %s( %s _pEnv"
-      ( getCRetType( methodTypeInfo.$retTypeInfoList ),
-        callFlag and moduleCtrl.getCallMethodCName( methodTypeInfo ) or
-        moduleCtrl.getMethodCName( methodTypeInfo ), cTypeEnvP ) );
+   let name;
+   let objDecl;
+   let retType;
+   switch wrapKind {
+      case .Normal {
+         name = moduleCtrl.getMethodCName( methodTypeInfo );
+         objDecl = ", %s pObj" (cTypeAnyP);
+         retType = getCRetType( methodTypeInfo.$retTypeInfoList );
+      }
+      case .CallWrap {
+         name = moduleCtrl.getCallMethodCName( methodTypeInfo );
+         objDecl = ", %s pObj" (cTypeAnyP);
+         retType = getCRetType( methodTypeInfo.$retTypeInfoList );
+      }
+      case .NilWrap {
+         name = moduleCtrl.getNilMethodCName( methodTypeInfo );
+         objDecl = ", %s obj" (cTypeStem);
+         retType = cTypeStem;
+      }
+      default {
+         Util.err( "not support -- %s" (wrapKind.$_txt) );
+      }
+   }
+   stream.write( "%s %s( %s _pEnv" ( retType, name, cTypeEnvP ) );
    if methodTypeInfo.$staticFlag {
       if isClosure( methodTypeInfo ) {
          stream.write( ", %s _pForm" ( cTypeAnyP ) );
       }
    }
    else {
-      stream.write( ", %s pObj" ( cTypeAnyP ) );
+      stream.write( objDecl );
    }
 
    if methodTypeInfo.$rawTxt == "___init" and
@@ -3186,13 +3236,16 @@ fn processPrototypeMethod(
       }
       if not funcTypeInfo.$staticFlag {
          // メソッドコール用ラッパー
-         processMethodDeclTxt( stream, moduleCtrl, true,
+         processMethodDeclTxt( stream, moduleCtrl, .CallWrap,
+                               funcTypeInfo, declArgNodeList );
+         stream.writeln( ";" );
+         processMethodDeclTxt( stream, moduleCtrl, .NilWrap,
                                funcTypeInfo, declArgNodeList );
          stream.writeln( ";" );
       }
       else {
          // static メソッドの関数プロトタイプ
-         processMethodDeclTxt( stream, moduleCtrl, false,
+         processMethodDeclTxt( stream, moduleCtrl, .Normal,
                                funcTypeInfo, declArgNodeList );
          stream.writeln( ";" );
       }
@@ -3201,7 +3254,7 @@ fn processPrototypeMethod(
    if funcTypeInfo.$parentInfo.$kind == .Class and
       funcTypeInfo.$rawTxt == "__init"
    {
-      processMethodDeclTxt( stream, moduleCtrl, false,
+      processMethodDeclTxt( stream, moduleCtrl, .Normal,
                             funcTypeInfo, declArgNodeList );
       stream.writeln( ";" );
    }
@@ -3215,7 +3268,7 @@ fn processPrototypeMethod(
                case .SourcePri {
                   if funcTypeInfo.$parentInfo.$kind == .Class {
                      processHeader( out2HMode );
-                     processMethodDeclTxt( stream, moduleCtrl, false,
+                     processMethodDeclTxt( stream, moduleCtrl, .Normal,
                                            funcTypeInfo, declArgNodeList );
                      stream.writeln( ";" );
                   }
@@ -3223,7 +3276,7 @@ fn processPrototypeMethod(
                case .SourcePub {
                   if funcTypeInfo.$parentInfo.$kind == .Class {
                      if not funcTypeInfo.$staticFlag {
-                        processMethodDeclTxt( stream, moduleCtrl, false,
+                        processMethodDeclTxt( stream, moduleCtrl, .Normal,
                                               funcTypeInfo, declArgNodeList );
                         stream.writeln( ";" );
                      }
@@ -3237,31 +3290,138 @@ fn processPrototypeMethod(
    }
 }
 
+
+/** stem 型に変換する対象を出力する処理 */
+form process2stemCallback();
+
+/**
+node が示す値を stem 型に変換する処理を出力する
+
+@param node Node
+@param parent このノードの親
+*/
+fn process2stem(
+   stream:Util.SourceStream, moduleCtrl:ModuleCtrl, scopeMgr:ScopeMgr,
+   valKind:ValKind, typeInfo:&Ast.TypeInfo,
+   parent: &Nodes.Node, callback:process2stemCallback )
+{
+   switch valKind {
+      case .Stem {
+         callback();
+      }
+      default {
+         let mut expType = typeInfo.$srcTypeInfo;
+         if! let enumType = expType@@@Ast.EnumTypeInfo {
+            expType = enumType.$valTypeInfo;
+         }
+         
+         switch expType {
+            case Ast.builtinTypeInt, Ast.builtinTypeChar {
+               stream.write( "LNS_STEM_INT( " );
+               callback();
+               stream.write( ")" );
+            }
+            case Ast.builtinTypeReal {
+               stream.write( "LNS_STEM_REAL( " );
+               callback();
+               stream.write( ")" );
+            }
+            case Ast.builtinTypeBool {
+               stream.write( "LNS_STEM_BOOL( " );
+               callback();
+               stream.write( ")" );
+            }
+            default {
+               switch expType.$kind {
+                  case .DDD {
+                     stream.write( "_pDDD" );
+                  }
+                  case .Func {    
+                     if! let scope = expType.$scope {
+                        stream.write( "LNS_STEM_ANY(" );
+                        stream.write( getFunc2any(
+                           moduleCtrl, scopeMgr, expType ) );
+                        stream.write( ")" );
+                     }
+                     else {   
+                        Util.err( "illegal func" );
+                     }
+                  }
+                  default {
+                     if valKind == .Var and getValKind( expType ) == .Stem {
+                        callback();
+                     }
+                     else {
+                        stream.write( "LNS_STEM_ANY( " );
+                        callback();
+                        stream.write( ")" );
+                     }
+                  }
+               }
+            }
+         }
+      }
+   }
+}
+
+
 fn processDeclCallMethodWrapper(
-   stream:Util.SourceStream, moduleCtrl:&ModuleCtrl, funcTypeInfo:&Ast.TypeInfo )
+   stream:Util.SourceStream, moduleCtrl:ModuleCtrl, scopeMgr:ScopeMgr,
+   parent:&Nodes.Node, funcTypeInfo:&Ast.TypeInfo, callFlag:bool )
 {
    if funcTypeInfo.$rawTxt ~= "__init" and not funcTypeInfo.$staticFlag {
-      
-      processMethodDeclTxt( stream, moduleCtrl, true, funcTypeInfo, nil );
+
+      processMethodDeclTxt(
+         stream, moduleCtrl,
+         callFlag and FuncWrap.CallWrap or FuncWrap.NilWrap, funcTypeInfo, nil );
       stream.writeln( "{" );
 
+      if not callFlag {
+         let retVal;
+         if #funcTypeInfo.$retTypeInfoList > 1 {
+            retVal = cValDDD0;
+         }
+         else {
+            retVal = cValNil;
+         }
+         stream.writeln(
+            "if ( obj.type == lns_stem_type_nil ) { return %s; }" (retVal) );
+         stream.writeln( "%s pObj = obj.val.pAny;" (cTypeAnyP ) );
+      }
+
+      
       if #funcTypeInfo.$retTypeInfoList ~= 0 {
          stream.write( "return " );
       }
-      let classTypeInfo = funcTypeInfo.$parentInfo;
-      let className = moduleCtrl.getClassCName( classTypeInfo );
-      stream.write( "lns_mtd_%s( pObj )->%s( _pEnv, "
-                  ( className, funcTypeInfo.$rawTxt ) );
-      if classTypeInfo.$kind == .IF {
-         stream.write( "lns_getImpObj( pObj ) " );
+
+      let retList = funcTypeInfo.$retTypeInfoList;
+      fn process() {
+         let classTypeInfo = funcTypeInfo.$parentInfo;
+         let className = moduleCtrl.getClassCName( classTypeInfo );
+         stream.write( "lns_mtd_%s( pObj )->%s( _pEnv, "
+                       ( className, funcTypeInfo.$rawTxt ) );
+         if classTypeInfo.$kind == .IF {
+            stream.write( "lns_getImpObj( pObj ) " );
+         }
+         else {
+            stream.write( "pObj " );
+         }
+         foreach argType, index in funcTypeInfo.$argTypeInfoList {
+            stream.write( ", arg%d" ( index ) );
+         }
+         stream.write( ")" );
+      }
+
+      if not callFlag and #retList > 0 {
+         process2stem(
+            stream, moduleCtrl, scopeMgr,
+            getRetKind( retList ), retList[ 1 ], parent, process );
       }
       else {
-         stream.write( "pObj " );
+         process();
       }
-      foreach argType, index in funcTypeInfo.$argTypeInfoList {
-         stream.write( ", arg%d" ( index ) );
-      }
-      stream.writeln( ");" );
+      stream.writeln( ";" );
+      
       
       stream.writeln( "}" );
    }
@@ -3278,7 +3438,7 @@ fn getAccessMethod(className:str,obj:str,method:str):str {
 
 
 fn processAdvertise(
-   stream:Util.SourceStream, moduleCtrl:ModuleCtrl,
+   stream:Util.SourceStream, moduleCtrl:ModuleCtrl, scopeMgr:ScopeMgr,
    processMode:ProcessMode, node:&Nodes.DeclClassNode )
 {
    foreach advInfo in node.$advertiseList {
@@ -3296,9 +3456,12 @@ fn processAdvertise(
                   processPrototypeMethod( stream, moduleCtrl, nil, methodType );
                }
                case .DefClass {
-                  processDeclCallMethodWrapper( stream, moduleCtrl, methodType );
+                  processDeclCallMethodWrapper(
+                     stream, moduleCtrl, scopeMgr, node, methodType, true );
+                  processDeclCallMethodWrapper(
+                     stream, moduleCtrl, scopeMgr, node, methodType, false );
 
-                  processMethodDeclTxt( stream, moduleCtrl, false, methodType, nil );
+                  processMethodDeclTxt( stream, moduleCtrl, .Normal, methodType, nil );
                   stream.writeln( "{" );
                   let className = moduleCtrl.getClassCName( node.$expType );
                   let memberClassName = moduleCtrl.getClassCName( member.$expType );
@@ -3355,13 +3518,13 @@ fn processDeclClassPrototype(
       if member.$getterMode ~= .None {
          let getterType = unwrap node.$scope.getTypeInfoField(
             "get_%s" (memberName), true, node.$scope, scopeAccess );
-         processMethodDeclTxt( stream, moduleCtrl, false, getterType## );
+         processMethodDeclTxt( stream, moduleCtrl, .Normal, getterType## );
          stream.writeln( ";" );
       }
       if member.$setterMode ~= .None {
          let setterType = unwrap node.$scope.getTypeInfoField(
             "set_%s" (memberName), true, node.$scope, scopeAccess );
-         processMethodDeclTxt( stream, moduleCtrl, false, setterType## );
+         processMethodDeclTxt( stream, moduleCtrl, .Normal, setterType## );
          stream.writeln( ";" );
       }
    }
@@ -3489,78 +3652,6 @@ fn processIFObjInit(
    }
 }
 
-/** stem 型に変換する対象を出力する処理 */
-form process2stemCallback();
-
-/**
-node が示す値を stem 型に変換する処理を出力する
-
-@param node Node
-@param parent このノードの親
-*/
-pub fn convFilter.process2stem(
-   valKind:ValKind, typeInfo:&Ast.TypeInfo,
-   parent: &Nodes.Node, callback:process2stemCallback ) mut
-{
-   switch valKind {
-      case .Stem {
-         callback();
-      }
-      default {
-         let mut expType = typeInfo.$srcTypeInfo;
-         if! let enumType = expType@@@Ast.EnumTypeInfo {
-            expType = enumType.$valTypeInfo;
-         }
-         
-         switch expType {
-            case Ast.builtinTypeInt, Ast.builtinTypeChar {
-               self.write( "LNS_STEM_INT( " );
-               callback();
-               self.write( ")" );
-            }
-            case Ast.builtinTypeReal {
-               self.write( "LNS_STEM_REAL( " );
-               callback();
-               self.write( ")" );
-            }
-            case Ast.builtinTypeBool {
-               self.write( "LNS_STEM_BOOL( " );
-               callback();
-               self.write( ")" );
-            }
-            default {
-               switch expType.$kind {
-                  case .DDD {
-                     self.write( "_pDDD" );
-                  }
-                  case .Func {    
-                     if! let scope = expType.$scope {
-                        self.write( "LNS_STEM_ANY(" );
-                        self.write( self.getFunc2any( expType ) );
-                        self.write( ")" );
-                     }
-                     else {   
-                        Util.err( "illegal func" );
-                     }
-                  }
-                  default {
-                     if valKind == .Var and getValKind( expType ) == .Stem {
-                        callback();
-                     }
-                     else {
-                        self.write( "LNS_STEM_ANY( " );
-                        callback();
-                        self.write( ")" );
-                     }
-                  }
-               }
-            }
-         }
-      }
-   }
-}
-
-
 fn convFilter.processNewInsance( classType:&Ast.TypeInfo, callInit:bool ) mut {
    let className = self.moduleCtrl.getClassCName( classType );
    
@@ -3669,7 +3760,8 @@ fn convFilter.processMapping(
             }
          }
          when! valTxt {
-            self.process2stem(
+            process2stem(
+               self.stream, self.moduleCtrl, self.scopeMgr,
                getValKind( memberSym.$typeInfo ), memberSym.$typeInfo, node,
                fn () {     
                   self.write( valTxt );
@@ -4063,7 +4155,8 @@ fn convFilter.processDeclClassNodePrototype( node:&Nodes.DeclClassNode ) mut
       processDeclClassPrototype(
          not self.outputBuiltinFlag and self.canConv,
          self.stream, self.moduleCtrl, node );
-      processAdvertise( self.stream, self.moduleCtrl, self.processMode, node );
+      processAdvertise(
+         self.stream, self.moduleCtrl, self.scopeMgr, self.processMode, node );
 
       if not self.outputBuiltinFlag {
          processDefaultCtor( self.stream, self.moduleCtrl, self.scopeMgr, node );
@@ -4137,7 +4230,7 @@ fn convFilter.processDeclClassDef( node:&Nodes.DeclClassNode ) mut
             "get_%s" (memberName), true, node.$scope, scopeAccess );
          if getterType.$autoFlag {
             processMethodDeclTxt(
-               self.stream, self.moduleCtrl, false, getterType## );
+               self.stream, self.moduleCtrl, .Normal, getterType## );
             self.writeln( "{" );
             self.pushIndent(##);
             self.writeln(
@@ -4146,7 +4239,7 @@ fn convFilter.processDeclClassDef( node:&Nodes.DeclClassNode ) mut
             self.writeln( "}" );
 
             processMethodDeclTxt(
-               self.stream, self.moduleCtrl, true, getterType## );
+               self.stream, self.moduleCtrl, .CallWrap, getterType## );
             self.writeln( "{" );
             self.pushIndent(##);
             self.writeln(
@@ -4164,7 +4257,7 @@ fn convFilter.processDeclClassDef( node:&Nodes.DeclClassNode ) mut
             //    "static void mtd_%s_set_%s( lns_env_t * _pEnv, %s pObj, %s arg );"
             //    ( className, memberName, cTypeStem, getCType( member.$expType, false ) ) );
             processMethodDeclTxt(
-               self.stream, self.moduleCtrl, false, setterType## );
+               self.stream, self.moduleCtrl, .Normal, setterType## );
             self.writeln( "{" );
             self.pushIndent(##);
             let valKind = self.scopeMgr.getSymbolValKind( member.$symbolInfo );
@@ -4190,7 +4283,7 @@ fn convFilter.processDeclClassDef( node:&Nodes.DeclClassNode ) mut
             self.writeln( "}" );
 
             processMethodDeclTxt(
-               self.stream, self.moduleCtrl, true, setterType## );
+               self.stream, self.moduleCtrl, .CallWrap, setterType## );
             self.writeln( "{" );
             self.pushIndent(##);
             self.writeln(
@@ -4202,7 +4295,8 @@ fn convFilter.processDeclClassDef( node:&Nodes.DeclClassNode ) mut
       }
    }
 
-   processAdvertise( self.stream, self.moduleCtrl, self.processMode, node );
+   processAdvertise( self.stream, self.moduleCtrl, self.scopeMgr,
+                     self.processMode, node );
 }
 
 
@@ -4518,7 +4612,7 @@ fn convFilter.processDeclVarC(
                                self.moduleCtrl.getSymbolName( var ) ) );
             }
             case .Var {
-               let typeTxt = getStemTypeId( var.$typeInfo );
+               let typeTxt = getStemTypeId( getOrgTypeInfo( var.$typeInfo ) );
                self.writeln( "lns_set_block_var( %s, %d, %s, %s );"
                              ( getBlockName( scope ), getSymbolIndex( symbolInfo ),
                                typeTxt, self.moduleCtrl.getSymbolName( var ) ) );
@@ -4651,7 +4745,7 @@ fn convFilter.processDeclMethodInfo(
          let className = self.moduleCtrl.getClassCName( classType );
          if! let body = declInfo.$body {
             let methodNodeToken = unwrap declInfo.get_name();
-            processMethodDeclTxt( self.stream, self.moduleCtrl, false,
+            processMethodDeclTxt( self.stream, self.moduleCtrl, .Normal,
                                   funcTypeInfo, declInfo.$argList );
             self.writeln( "{" );
 
@@ -4699,7 +4793,9 @@ fn convFilter.processDeclMethodInfo(
             self.writeln( "}" );
          }
          processDeclCallMethodWrapper(
-            self.stream, self.moduleCtrl, funcTypeInfo );
+            self.stream, self.moduleCtrl, self.scopeMgr, parent, funcTypeInfo, true );
+         processDeclCallMethodWrapper(
+            self.stream, self.moduleCtrl, self.scopeMgr, parent, funcTypeInfo, false );
       }
       case .InitFuncSym, .WideScopeVer {
          self.process__func__symbol(
@@ -4832,7 +4928,8 @@ node が示す値を stem 型に変換する処理を出力する
 */
 pub fn convFilter.processVal2stem( node:&Nodes.Node, parent: &Nodes.Node ) mut
 {
-   self.process2stem(
+   process2stem(
+      self.stream, self.moduleCtrl, self.scopeMgr,
       self.getValKindOfNode( node ), node.$expType, parent,
       fn () {
          filter( node, self, parent );
@@ -5197,9 +5294,6 @@ fn convFilter.processSymForSetOp(
    self.write( self.moduleCtrl.getSymbolName( symbol ) );
 }
 
-/** 処理対象の式を出力する */
-form processExp();
-
 /**
 インタフェース型の可能性のある値を、インタフェース型に変換する。
 
@@ -5219,7 +5313,6 @@ fn processToIF( stream:Util.SourceStream,
    if expType.$kind == .IF {
       stream.write( "lns_toIF( _pEnv, " );
       process();
-      // stream.write( accessAny );
       stream.write( ", &lns_type_meta_%s )" (moduleCtrl.getClassCName( expType )) );
       stream.write( accessAny );
    }
@@ -5272,7 +5365,7 @@ fn convFilter.processFuncCast2Form(
    castType:&Ast.TypeInfo, orgFunc:&Ast.TypeInfo  ) mut
 {
    if not needsWrapper( orgFunc, castType ) {
-      self.write( self.getFunc2any( orgFunc ) );
+      self.write( getFunc2any( self.moduleCtrl, self.scopeMgr, orgFunc ) );
       return;
    }
    
@@ -5282,8 +5375,8 @@ fn convFilter.processFuncCast2Form(
    let hasDDD =
       #argList > 0 and argList[ #argList ].$kind == .DDD or false;
 
-   self.write( self.getPrepareClosure(
-      self.moduleCtrl.getFuncCastWrapName( orgFunc, castType ),
+   self.write( getPrepareClosure(
+      self.scopeMgr, self.moduleCtrl.getFuncCastWrapName( orgFunc, castType ),
       #argList, hasDDD, closureSymList ) );
 }
 
@@ -6204,7 +6297,8 @@ fn convFilter.processClosureFunc(declInfo:&Nodes.DeclFuncInfo) mut {
    self.writeln( "%s %s;" (cTypeVarP, symbolName ) );
    self.write( "lns_initVal_var( %s, %s, %d, "
                ( symbolName, getBlockName( scope.$parent ), symbolParam.index ) );
-   self.writeln( "LNS_STEM_ANY( %s ) );" ( self.getFunc2any( funcSym.$typeInfo  ) ) );
+   self.writeln( "LNS_STEM_ANY( %s ) );"
+                 ( getFunc2any( self.moduleCtrl, self.scopeMgr, funcSym.$typeInfo  ) ) );
 }
 
 pub override fn convFilter.processDeclFunc(
@@ -6238,7 +6332,7 @@ pub override fn convFilter.processDeclFunc(
             case Nodes.NodeKind.$Block, Nodes.NodeKind.$ExpMacroExp {
             }
             default {
-               self.write( self.getFunc2any( node.$expType ) );
+               self.write( getFunc2any( self.moduleCtrl, self.scopeMgr, node.$expType ) );
             }
          }
          // else {
@@ -6407,7 +6501,8 @@ pub override fn convFilter.processSwitch(
       expStemName = expSymName .. "Stem";
       self.write( "%s %s = " (cTypeStem, expStemName) );
 
-      self.process2stem(
+      process2stem(
+         self.stream, self.moduleCtrl, self.scopeMgr,
          expValKind, expType, node,
          fn () {
             self.write( expSymName );
@@ -7158,6 +7253,9 @@ pub override fn convFilter.processExpUnwrap(
       case Ast.builtinTypeReal {
          processUnwrap( "real" );
       }
+      case Ast.builtinTypeBool {
+         processUnwrap( "bool" );
+      }
       default {
          switch self.getValKindOfNode( node ) {
             case .Stem {
@@ -7758,8 +7856,8 @@ fn convFilter.processCall(
                }
             }
             if not setFlag {
-               self.write( self.getPrepareClosure(
-                  "NULL", 0, false, scope.$closureSymList ) );
+               self.write( getPrepareClosure(
+                  self.scopeMgr, "NULL", 0, false, scope.$closureSymList ) );
             }
             //self.write( accessAny );
          }
@@ -8153,7 +8251,7 @@ pub override fn convFilter.processDeclClass(
 pub override fn convFilter.processExpCall(
    node: Nodes.ExpCallNode, opt: Opt ) mut
 {
-   let funcType = node.$func.$expType;
+   let funcType = node.$func.$expType.$nonnilableType;
    
    switch self.processMode {
       case .Intermediate, .Prototype {
@@ -8375,10 +8473,16 @@ pub override fn convFilter.processExpCall(
          switch funcType.$kind {
             case .Method {
                if! let fieldNode = node.$func@@@Nodes.RefFieldNode {
-                  //self.write( "l_call_method_0( _pEnv, " );
-                  self.write( "%s( _pEnv, "
-                              ( self.moduleCtrl.getCallMethodCName( funcType )));
-                  self.processVal2any( fieldNode.$prefix, fieldNode );
+                  if node.$nilAccess {
+                     self.write( self.moduleCtrl.getNilMethodCName( funcType ) );
+                     self.write( "( _pEnv, " );
+                     self.processVal2stem( fieldNode.$prefix, fieldNode );
+                  }
+                  else {
+                     self.write( self.moduleCtrl.getCallMethodCName( funcType ) );
+                     self.write( "( _pEnv, " );
+                     self.processVal2any( fieldNode.$prefix, fieldNode );
+                  }
                   //self.write( accessAny );
                   // self.write(
                   //    ",offsetof( lns_mtd_%s_t, %s )"
@@ -8750,7 +8854,8 @@ fn convFilter.processFuncCast( node: Nodes.ExpCastNode ) mut
             else {
                self.write( "lns_createMRet( _pEnv, false, 1, " );
 
-               self.process2stem(
+               process2stem(
+                  self.stream, self.moduleCtrl, self.scopeMgr,
                   getValKind( orgFunc.$retTypeInfoList[ 1 ] ),
                   orgFunc.$retTypeInfoList[ 1 ], node,             
                   fn () {
@@ -8761,7 +8866,8 @@ fn convFilter.processFuncCast( node: Nodes.ExpCastNode ) mut
          }
          else {
             if getValKind( castType.$retTypeInfoList[ 1 ] ) == .Stem {
-               self.process2stem(
+               process2stem(
+                  self.stream, self.moduleCtrl, self.scopeMgr,
                   getValKind( orgFunc.$retTypeInfoList[ 1 ] ),
                   orgFunc.$retTypeInfoList[ 1 ], node,             
                   fn () {
@@ -9271,20 +9377,26 @@ pub override fn convFilter.processExpRef(
 pub override fn convFilter.processExpRefItem(
    node: Nodes.ExpRefItemNode, opt: Opt ) mut
 {
-   // if node.$nilAccess {
-   //    self.write( "_lune.nilacc( " );
-   //    filter( node.$val, self, node );
-   //    self.write( ", nil, 'item', " );
-   //    if! node.$index {
-   //       filter( _exp, self, node );
-   //    }
-   //    else {
-   //       self.write( "'%s'" ( unwrap node.$symbol ) );
-   //    }
-   //    self.write( ")" );
-   // }
-   // else {
+   fn process() {
+      self.write( "lns_stem_refAt( _pEnv, " );
+      self.processVal2stem( node.$val, node );
+      self.write( ", " );
+      if! let index = node.$index {
+         self.processVal2stem( index, node );
+      }
+      else {
+         self.write(
+            getLiteralStrStem( '"%s"' (unwrap node.$symbol) ) );
+      }
+      self.write( ")" );
+   }
+   
+   if node.$nilAccess {
+      processToIF( self.stream, self.moduleCtrl, node.$expType, process );
+      return;
+   }
 
+   
    let val = node.$val;
    let valType = val.$expType;
 
@@ -9332,17 +9444,7 @@ pub override fn convFilter.processExpRefItem(
                             self.write( ")" );
                          }
                          case .Stem {
-                            self.write( "lns_stem_refAt( _pEnv, " );
-                            self.processVal2stem( val, node );
-                            self.write( ", " );
-                            if! let index = node.$index {
-                               self.processVal2stem( index, node );
-                            }
-                            else {
-                               self.write(
-                                  getLiteralStrStem( '"%s"' (unwrap node.$symbol) ) );
-                            }
-                            self.write( ")" );
+                            process();
                          }
                          default {
                             Util.err( "not support:%s -- %d:%d"
@@ -9351,12 +9453,40 @@ pub override fn convFilter.processExpRefItem(
                       }
                    } );
    }
-   // }
 };
 
 pub override fn convFilter.processRefField(
    node: Nodes.RefFieldNode, opt: Opt ) mut
 {
+   if node.$nilAccess {
+      if! let symbolInfo = node.$symbolInfo {
+         switch symbolInfo.$kind {
+            case .Mbr {
+               let prefixType = getOrgTypeInfo( node.$prefix.$expType );
+               if prefixType.$kind == .Class {
+                  self.write( "lns_refFieldNil( _pEnv, " );
+                  self.processVal2stem( node.$prefix, node );
+                  self.write( ", offsetof( %s, %s ), %s )"
+                     ( self.moduleCtrl.getClassCName( prefixType ),
+                       symbolInfo.$name,
+                       getStemTypeId( symbolInfo.$typeInfo.$srcTypeInfo ) ) );
+               }
+               else {
+                  Util.err( "not support -- " .. prefixType.getTxt(##) );
+               }
+            }
+            default {
+               Util.err( "not support -- " .. symbolInfo.$kind.$_txt );
+            }
+         }
+      }
+      else {
+         Util.err( "not support" );
+      }
+      return;
+   }
+
+   
    if! let symbolInfo = node.$symbolInfo {
       if symbolInfo.$typeInfo.$kind == .Enum {
          if symbolInfo.$kind == .Mbr {
@@ -10054,13 +10184,6 @@ pub override fn convFilter.processLiteralString(
    node: Nodes.LiteralStringNode, opt: Opt ) mut
 {
    let mut txt = str2cstr( node.$token.txt );
-   // if string.find( txt, '^```' ## ) {
-   //    txt = ("%q" ( txt.sub( 4, -4 ) )).gsub( "\\\n", "\\n" );
-   // }
-   // elseif string.find( txt, "^'" ## ) {
-   //    txt = '%q' ( txt.sub( 2, -2 ) );
-   // }
-   // txt = txt.gsub( "\\9", "\\t" );
 
    switch self.processMode {
       case .Prototype {

@@ -933,6 +933,7 @@ extern "C" {
     extern lns_stem_t lns_toIF( lns_env_t * _pEnv, lns_any_t * pAny, const lns_type_meta_t * pMeta );
     extern lns_stem_t lns_setMRet( lns_env_t * _pEnv, lns_any_t * pAny );
     extern lns_stem_t lns_getValFromDDD( lns_any_t * pAny, int index );
+    extern lns_stem_t lns_getValFromDDDStem( lns_stem_t stem, int index );
 
 
 
@@ -958,6 +959,9 @@ extern "C" {
     extern lns_stem_t lns_castIf( lns_env_t * _pEnv, lns_stem_t stem, const lns_type_meta_t * pMeta );
     extern lns_stem_t lns_castClass( lns_stem_t stem, const lns_type_meta_t * pMeta );
 
+    extern lns_stem_t lns_refFieldNil(
+        lns_env_t * _pEnv, lns_stem_t obj, int offset, lns_stem_type_t stemType );
+    extern lns_stem_t lns_refItemNil( lns_env_t * _pEnv, lns_stem_t prefix, lns_stem_t index );
     extern lns_stem_t lns_stem_refAt( lns_env_t * _pEnv, lns_stem_t stem, lns_stem_t key );
 
     typedef lns_any_t * lns_toMap_t( lns_env_t * _pEnv, lns_any_t * pAny );

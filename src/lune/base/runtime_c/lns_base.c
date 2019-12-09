@@ -567,45 +567,23 @@ void lns_leave_blockMulti( lns_env_t * _pEnv, int num )
     }
 }
 
-/**
- * 関数開始時の処理
- *
- * lns_enter_block() とほぼ同じ。
- * ただし、関数の引数の処理が追加。
- * 関数終了時は、 lns_leave_block() をコールする。
- *
- * @param num lns_enter_block() の anyVerNum と同じ。
- *   ブロック内の any 値の数と、 argNum を合せた数が num になる。
- * @param argNum 引数の any 型の値の数
- * @param ... 引数の any 型の値。
- */
-/* lns_block_t * lns_enter_func( */
-/*     lns_env_t * _pEnv, int stemNum, int varNum, int argNum, ... ) */
-/* { */
-/*     lns_enter_block( _pEnv, stemNum, varNum ); */
-/*     lns_block_t * pBlock = &_pEnv->blockQueue[ _pEnv->blockDepth ]; */
-
-
-/*     va_list ap; */
-/*     va_start( ap, argNum ); */
-
-/*     int index; */
-/*     for ( index = 0; index < argNum; index++ ) { */
-/*         lns_any_t * pAny = va_arg( ap, lns_any_t * ); */
-/*         lns_setq( _pEnv, &pBlock->pVarList[ index ]->stem.val.pAny, pAny ); */
-/*         pBlock->pVarList[ index ]->stem.type = lns_stem_type_any; */
-/*     } */
-/*     va_end(ap); */
-
-/*     return pBlock; */
-/* } */
-
 lns_stem_t lns_getValFromDDD( lns_any_t * pAny, int index )
 {
     if ( pAny->val.ddd.len <= index ) {
         return lns_global.nilStem;
     }
     return pAny->val.ddd.stemList[ index ];
+}
+
+lns_stem_t lns_getValFromDDDStem( lns_stem_t stem, int index )
+{
+    if ( stem.type != lns_stem_type_any ) {
+        if ( stem.type != lns_stem_type_none ) {
+            return lns_global.noneStem;
+        }
+        return lns_global.nilStem;
+    }
+    return lns_getValFromDDD( stem.val.pAny, index );
 }
 
 
@@ -963,7 +941,6 @@ lns_any_t * _lns_func2any(
     lns_lock( 
         int index;
         for ( index = 0; index < num; index++ ) {
-            lns_closureVal_t * pClosureVal = &pForm->pClosureValList[ index ];
             lns_var_t * pVar = va_arg( ap, lns_var_t * );
             pVar->refCount++;
             pForm->pClosureValList[ index ].pVar = pVar;
@@ -1895,14 +1872,86 @@ lns_real_t lns_unwrap_realDefault( lns_stem_t stem, lns_real_t val )
 }
 
 
+/**
+ * bool! の unwrap 処理
+ */
+bool lns_unwrap_bool( lns_stem_t stem )
+{
+    if ( stem.type == lns_stem_type_bool ) {
+        return stem.val.boolVal;
+    }
+    lns_abort( __func__ );
+    return 0.0;
+}
+
+/**
+ * bool! の unwrap 処理。 default 値付き。
+ */
+bool lns_unwrap_boolDefault( lns_stem_t stem, bool val )
+{
+    if ( stem.type == lns_stem_type_bool ) {
+        return stem.val.boolVal;
+    }
+    return val;
+}
+
+lns_stem_t lns_refFieldNil(
+    lns_env_t * _pEnv, lns_stem_t obj, int offset, lns_stem_type_t stemType )
+{
+    if ( obj.type == lns_stem_type_nil ) {
+        return lns_global.nilStem;
+    }
+    lns_any_t * pAny = obj.val.pAny;
+    uint8_t * offsetp = (uint8_t *)pAny->val.classVal;
+    offsetp += offset;
+    switch ( stemType ) {
+    case lns_stem_type_int:
+        return LNS_STEM_INT( *(lns_int_t*)offsetp );
+    case lns_stem_type_real:
+        return LNS_STEM_REAL( *(lns_real_t*)offsetp );
+    case lns_stem_type_bool:
+        return LNS_STEM_BOOL( *(bool*)offsetp );
+    case lns_stem_type_any:
+        return LNS_STEM_ANY( *(lns_any_t**)offsetp );
+    case lns_stem_type_none:
+        return *(lns_stem_t*)offsetp;
+    default:
+        break;
+    }
+    lns_abort( "illegal type" );
+    return lns_global.nilStem;
+}
+
+lns_stem_t lns_refItemNil( lns_env_t * _pEnv, lns_stem_t prefix, lns_stem_t index )
+{
+    if ( prefix.type == lns_stem_type_nil ) {
+        return lns_global.nilStem;
+    }
+    return lns_stem_refAt( _pEnv, prefix, index );
+}
+
+
 lns_stem_t lns_stem_refAt( lns_env_t * _pEnv, lns_stem_t stem, lns_stem_t key )
 {
-    if ( stem.type == lns_stem_type_any &&
-         stem.val.pAny->type == lns_value_type_class &&
-         stem.val.pAny->val.classVal->pMeta == &lns_type_meta_Map )
-    {
-        return lns_mtd_Map_get( _pEnv, stem.val.pAny, key );
+    if ( stem.type != lns_stem_type_any ) {
+        lns_abort( "illegal type with 'refAt'" );
     }
+
+    lns_any_t * pAny = stem.val.pAny;
+    if ( pAny->type == lns_value_type_str ) {
+        return LNS_STEM_INT( pAny->val.str.pStr[ key.val.intVal - 1 ] );
+    }
+    
+    if ( pAny->type == lns_value_type_class ) {
+        if ( pAny->val.classVal->pMeta == &lns_type_meta_List ) {
+            return lns_mtd_List_refAt( _pEnv, pAny, key.val.intVal );
+        }
+        if ( pAny->val.classVal->pMeta == &lns_type_meta_Map ) {
+            return lns_mtd_Map_get( _pEnv, pAny, key );
+        }
+    }
+
+    lns_abort( "illegal type with 'refAt'" );
     return lns_global.nilStem;
 }
 

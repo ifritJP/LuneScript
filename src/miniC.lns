@@ -1,7 +1,1 @@
-let hoge = "123";
-let mut nonNumChar = hoge.byte( 1## );
-print( nonNumChar );
-
-__test case1 {
-   print( nonNumChar );
-}
+print( "\n", '\n' );

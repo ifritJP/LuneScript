@@ -6,6 +6,60 @@ let mut g_val = 100;
 
 {
    _section();
+   let json = {
+      "lv1": {
+         "lv2": {
+            "lv3": [
+               1  
+            ]
+         }
+      }
+   };
+   print( unwrap json.lv1$.lv2$.lv3$[ 1 ] + 10 );
+}
+{
+   _section();
+   macro _declFunc(num:int, memType:str ) {
+      {
+         let funcName = "func%d" (num);
+         let valName = "val%d" (num);
+         let typeName = `{ ,,,memType };
+      }
+      pub fn ,,,funcName():,,typeName {
+         return self.,,,valName;
+      }
+   }
+   class Test {
+      pub let val1:int;
+      pub let val2:real;
+      pub let val3:bool;
+      pub let val4:str;
+      pub let val5:int!;
+      pub let val6:str!;
+      _declFunc( 1, "int" );
+      _declFunc( 2, "real" );
+      _declFunc( 3, "bool" );
+      _declFunc( 4, "str" );
+      _declFunc( 5, "int!" );
+      _declFunc( 6, "str!" );
+      pub fn func():int, real, bool, str, int!, str! {
+         return self.val1, self.val2, self.val3, self.val4, self.val5, self.val6;
+      }
+   }
+   fn func( test:Test! ) {
+      print( (unwrap test$.func1$() default 100) + 2 );
+      print( (unwrap test$.func2$() default 100.0) + 2.0 );
+      print( unwrap test$.func3$() default false );
+      print( (unwrap test$.func4$() default "yyy") .. "YY" );
+      print( (unwrap test$.func5$() default 1000) + 2 );
+      print( (unwrap test$.func6$() default "zzz") .. "ZZ" );
+      print( (unwrap test$.func$() default 100) + 2 );
+   }
+   func( nil );
+   func( new Test( 10, 20.5, true, "abc", 100, "xyz" ) );
+}
+{
+   _section();
    fn func1() {
       let val = "str";
       while true {

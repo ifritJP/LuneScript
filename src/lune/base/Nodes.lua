@@ -10270,6 +10270,10 @@ function Node:getSymbolInfo(  )
             do
                local refFieldNode = _lune.__Cast( node, 3, RefFieldNode )
                if refFieldNode ~= nil then
+                  if refFieldNode:get_nilAccess() then
+                     return {}
+                  end
+                  
                   do
                      local _exp = refFieldNode:get_symbolInfo()
                      if _exp ~= nil then

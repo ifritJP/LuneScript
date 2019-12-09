@@ -103,16 +103,27 @@ typedef struct lns_Mapping {
              ((lns_Mapping*)&OBJ->val.ifVal)->pMtd
 extern lns_type_meta_t lns_type_meta_lns_Mapping;
 extern void l_call_mtd_lns_iStream_close( lns_env_t * _pEnv, lns_any_t * pObj);
+lns_stem_t l_nil_mtd_lns_iStream_close( lns_env_t * _pEnv, lns_stem_t obj);
 extern lns_stem_t l_call_mtd_lns_iStream_read( lns_env_t * _pEnv, lns_any_t * pObj, lns_stem_t arg1);
+lns_stem_t l_nil_mtd_lns_iStream_read( lns_env_t * _pEnv, lns_stem_t obj, lns_stem_t arg1);
 extern void l_call_mtd_lns_oStream_close( lns_env_t * _pEnv, lns_any_t * pObj);
+lns_stem_t l_nil_mtd_lns_oStream_close( lns_env_t * _pEnv, lns_stem_t obj);
 extern void l_call_mtd_lns_oStream_flush( lns_env_t * _pEnv, lns_any_t * pObj);
+lns_stem_t l_nil_mtd_lns_oStream_flush( lns_env_t * _pEnv, lns_stem_t obj);
 extern lns_stem_t l_call_mtd_lns_oStream_write( lns_env_t * _pEnv, lns_any_t * pObj, lns_any_t * arg1);
+lns_stem_t l_nil_mtd_lns_oStream_write( lns_env_t * _pEnv, lns_stem_t obj, lns_any_t * arg1);
 extern void l_call_mtd_lns_luaStream_close( lns_env_t * _pEnv, lns_any_t * pObj);
+lns_stem_t l_nil_mtd_lns_luaStream_close( lns_env_t * _pEnv, lns_stem_t obj);
 extern void l_call_mtd_lns_luaStream_flush( lns_env_t * _pEnv, lns_any_t * pObj);
+lns_stem_t l_nil_mtd_lns_luaStream_flush( lns_env_t * _pEnv, lns_stem_t obj);
 extern lns_stem_t l_call_mtd_lns_luaStream_read( lns_env_t * _pEnv, lns_any_t * pObj, lns_stem_t arg1);
+lns_stem_t l_nil_mtd_lns_luaStream_read( lns_env_t * _pEnv, lns_stem_t obj, lns_stem_t arg1);
 extern lns_stem_t l_call_mtd_lns_luaStream_seek( lns_env_t * _pEnv, lns_any_t * pObj, lns_any_t * arg1, lns_int_t arg2);
+lns_stem_t l_nil_mtd_lns_luaStream_seek( lns_env_t * _pEnv, lns_stem_t obj, lns_any_t * arg1, lns_int_t arg2);
 extern lns_stem_t l_call_mtd_lns_luaStream_write( lns_env_t * _pEnv, lns_any_t * pObj, lns_any_t * arg1);
+lns_stem_t l_nil_mtd_lns_luaStream_write( lns_env_t * _pEnv, lns_stem_t obj, lns_any_t * arg1);
 extern void l_call_mtd_lns_Mapping__toMap( lns_env_t * _pEnv, lns_any_t * pObj);
+lns_stem_t l_nil_mtd_lns_Mapping__toMap( lns_env_t * _pEnv, lns_stem_t obj);
 extern lns_any_t * lns_io_stderr;
 extern lns_any_t * lns_io_stdin;
 extern lns_any_t * lns_io_stdout;

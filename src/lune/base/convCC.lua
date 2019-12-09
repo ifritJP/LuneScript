@@ -730,7 +730,7 @@ local function str2cstr( txt )
    if string.find( work, '^```' ) then
       work = (string.format( "%q", work:sub( 4, -4 )) ):gsub( "\\\n", "\\n" )
    elseif string.find( work, "^'" ) then
-      work = string.format( '%q', work:sub( 2, -2 ))
+      work = string.format( '"%s"', ((string.format( "%s", work:sub( 2, -2 )) ):gsub( '"', '\\"' ) ))
    end
    
    work = work:gsub( "\\9", "\\t" )
@@ -850,6 +850,16 @@ function ModuleCtrl:getFilePath( moduleTypeInfo )
 end
 function ModuleCtrl:getFullName( typeInfo )
 
+   do
+      local alterType = _lune.__Cast( typeInfo:get_srcTypeInfo(), 3, Ast.AlternateTypeInfo )
+      if alterType ~= nil then
+         if alterType:hasBase(  ) then
+            typeInfo = alterType:get_baseTypeInfo()
+         end
+         
+      end
+   end
+   
    typeInfo = typeInfo:get_srcTypeInfo():get_genSrcTypeInfo()
    local workName = typeInfo:getFullName( self.typeNameCtrl, self.moduleInfoManager, false )
    
@@ -961,6 +971,10 @@ function ModuleCtrl:getFuncName( typeInfo )
    
    
    return string.format( "lns_f_%d_%s", typeInfo:get_typeId(), typeInfo:get_rawTxt())
+end
+function ModuleCtrl:getNilMethodCName( methodTypeInfo )
+
+   return string.format( "l_nil_mtd_%s_%s", self:getClassCName( methodTypeInfo:get_parentInfo() ), methodTypeInfo:get_rawTxt())
 end
 function ModuleCtrl:getCallMethodCName( methodTypeInfo )
 
@@ -1398,7 +1412,7 @@ function ScopeMgr:getSymbolParam( symbol )
       
    end
    
-   Util.err( string.format( "illegal symbol -- %s %d", symbol:get_name(), 934) )
+   Util.err( string.format( "illegal symbol -- %s %d", symbol:get_name(), 945) )
 end
 function ScopeMgr:getSymbolValKind( symbol )
 
@@ -1920,7 +1934,7 @@ local function registerBuiltin(  )
             param = createSymbolParam( symbol:get_name(), getValKind( symbol:get_typeInfo() ), getCType( symbol:get_typeInfo() ) )
          else 
             
-               Util.err( string.format( "illeal symbol -- %s %d", symbol:get_name(), 1487) )
+               Util.err( string.format( "illeal symbol -- %s %d", symbol:get_name(), 1498) )
          end
       end
       
@@ -2719,6 +2733,8 @@ end
 
 
 
+
+
 local function getLiteral2Stem( valTxt, typeInfo )
 
    do
@@ -2739,12 +2755,18 @@ end
 
 local function getStemTypeId( typeInfo )
 
+   if typeInfo:get_nilable() then
+      return "lns_stem_type_none"
+   end
+   
    do
-      local _switchExp = getOrgTypeInfo( typeInfo )
+      local _switchExp = typeInfo
       if _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeChar then
          return "lns_stem_type_int"
       elseif _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeReal then
          return "lns_stem_type_real"
+      elseif _switchExp == Ast.builtinTypeBool then
+         return "lns_stem_type_bool"
       else 
          
             return "lns_stem_type_any"
@@ -2753,7 +2775,7 @@ local function getStemTypeId( typeInfo )
    
 end
 
-function convFilter:getPrepareClosure( funcName, argNum, hasDDD, symList )
+local function getPrepareClosure( scopeMgr, funcName, argNum, hasDDD, symList )
 
    local txt
    
@@ -2761,22 +2783,20 @@ function convFilter:getPrepareClosure( funcName, argNum, hasDDD, symList )
    txt = string.format( "lns_func2any( _pEnv, (lns_closure_t *)%s, %d, %s, %d", funcName, argNum, hasDDD, #symList)
    for __index, symbolInfo in pairs( symList ) do
       txt = txt .. ", "
-      txt = txt .. self.scopeMgr:symbol2Any( symbolInfo )
+      txt = txt .. scopeMgr:symbol2Any( symbolInfo )
    end
    
    txt = txt .. ")"
    return txt
 end
 
-
-function convFilter:getFunc2any( funcType )
+local function getFunc2any( moduleCtrl, scopeMgr, funcType )
 
    local argList = funcType:get_argTypeInfoList()
    local hasDDD = #argList > 0 and argList[#argList]:get_kind() == Ast.TypeInfoKind.DDD or false
    
-   return self:getPrepareClosure( self.moduleCtrl:getFuncName( funcType ), #funcType:get_argTypeInfoList(), hasDDD, (_lune.unwrap( funcType:get_scope()) ):get_closureSymList() )
+   return getPrepareClosure( scopeMgr, moduleCtrl:getFuncName( funcType ), #funcType:get_argTypeInfoList(), hasDDD, (_lune.unwrap( funcType:get_scope()) ):get_closureSymList() )
 end
-
 
 function convFilter:processSym2stem( symbolInfo )
 
@@ -2840,7 +2860,7 @@ function convFilter:processSym2stem( symbolInfo )
                      local scope = expType:get_scope()
                      if scope ~= nil then
                         self:write( "LNS_STEM_ANY(" )
-                        self:write( self:getFunc2any( expType ) )
+                        self:write( getFunc2any( self.moduleCtrl, self.scopeMgr, expType ) )
                         self:write( ")" )
                      else
                         Util.err( "illegal func" )
@@ -3496,9 +3516,41 @@ local function processDeclAlgeSub( stream, node )
    stream:write( node:get_name(  ).txt )
 end
 
-local function processMethodDeclTxt( stream, moduleCtrl, callFlag, methodTypeInfo, argList )
+local FuncWrap = {}
+FuncWrap._val2NameMap = {}
+function FuncWrap:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "FuncWrap.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+function FuncWrap._from( val )
+   if FuncWrap._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+    
+FuncWrap.__allList = {}
+function FuncWrap.get__allList()
+   return FuncWrap.__allList
+end
 
-   if methodTypeInfo:get_rawTxt() ~= "__init" and not callFlag then
+FuncWrap.Normal = 0
+FuncWrap._val2NameMap[0] = 'Normal'
+FuncWrap.__allList[1] = FuncWrap.Normal
+FuncWrap.CallWrap = 1
+FuncWrap._val2NameMap[1] = 'CallWrap'
+FuncWrap.__allList[2] = FuncWrap.CallWrap
+FuncWrap.NilWrap = 2
+FuncWrap._val2NameMap[2] = 'NilWrap'
+FuncWrap.__allList[3] = FuncWrap.NilWrap
+
+
+local function processMethodDeclTxt( stream, moduleCtrl, wrapKind, methodTypeInfo, argList )
+
+   if methodTypeInfo:get_rawTxt() ~= "__init" and wrapKind == FuncWrap.Normal then
       if not methodTypeInfo:get_staticFlag() or not Ast.isPubToExternal( methodTypeInfo:get_accessMode() ) or not Ast.isPubToExternal( methodTypeInfo:get_parentInfo():get_accessMode() ) then
          stream:write( "static " )
       end
@@ -3506,7 +3558,34 @@ local function processMethodDeclTxt( stream, moduleCtrl, callFlag, methodTypeInf
    end
    
    
-   stream:write( string.format( "%s %s( %s _pEnv", getCRetType( methodTypeInfo:get_retTypeInfoList() ), callFlag and moduleCtrl:getCallMethodCName( methodTypeInfo ) or moduleCtrl:getMethodCName( methodTypeInfo ), cTypeEnvP) )
+   local name
+   
+   local objDecl
+   
+   local retType
+   
+   do
+      local _switchExp = wrapKind
+      if _switchExp == FuncWrap.Normal then
+         name = moduleCtrl:getMethodCName( methodTypeInfo )
+         objDecl = string.format( ", %s pObj", cTypeAnyP)
+         retType = getCRetType( methodTypeInfo:get_retTypeInfoList() )
+      elseif _switchExp == FuncWrap.CallWrap then
+         name = moduleCtrl:getCallMethodCName( methodTypeInfo )
+         objDecl = string.format( ", %s pObj", cTypeAnyP)
+         retType = getCRetType( methodTypeInfo:get_retTypeInfoList() )
+      elseif _switchExp == FuncWrap.NilWrap then
+         name = moduleCtrl:getNilMethodCName( methodTypeInfo )
+         objDecl = string.format( ", %s obj", cTypeStem)
+         retType = cTypeStem
+      else 
+         
+            Util.err( string.format( "not support -- %s", FuncWrap:_getTxt( wrapKind)
+            ) )
+      end
+   end
+   
+   stream:write( string.format( "%s %s( %s _pEnv", retType, name, cTypeEnvP) )
    if methodTypeInfo:get_staticFlag() then
       if isClosure( methodTypeInfo ) then
          stream:write( string.format( ", %s _pForm", cTypeAnyP) )
@@ -3514,7 +3593,7 @@ local function processMethodDeclTxt( stream, moduleCtrl, callFlag, methodTypeInf
       
    else
     
-      stream:write( string.format( ", %s pObj", cTypeAnyP) )
+      stream:write( objDecl )
    end
    
    
@@ -3654,18 +3733,20 @@ local function processPrototypeMethod( stream, moduleCtrl, declArgNodeList, func
       end
       
       if not funcTypeInfo:get_staticFlag() then
-         processMethodDeclTxt( stream, moduleCtrl, true, funcTypeInfo, declArgNodeList )
+         processMethodDeclTxt( stream, moduleCtrl, FuncWrap.CallWrap, funcTypeInfo, declArgNodeList )
+         stream:writeln( ";" )
+         processMethodDeclTxt( stream, moduleCtrl, FuncWrap.NilWrap, funcTypeInfo, declArgNodeList )
          stream:writeln( ";" )
       else
        
-         processMethodDeclTxt( stream, moduleCtrl, false, funcTypeInfo, declArgNodeList )
+         processMethodDeclTxt( stream, moduleCtrl, FuncWrap.Normal, funcTypeInfo, declArgNodeList )
          stream:writeln( ";" )
       end
       
    end
    
    if funcTypeInfo:get_parentInfo():get_kind() == Ast.TypeInfoKind.Class and funcTypeInfo:get_rawTxt() == "__init" then
-      processMethodDeclTxt( stream, moduleCtrl, false, funcTypeInfo, declArgNodeList )
+      processMethodDeclTxt( stream, moduleCtrl, FuncWrap.Normal, funcTypeInfo, declArgNodeList )
       stream:writeln( ";" )
    else
     
@@ -3677,14 +3758,14 @@ local function processPrototypeMethod( stream, moduleCtrl, declArgNodeList, func
                if _switchExp == Out2HMode.SourcePri then
                   if funcTypeInfo:get_parentInfo():get_kind() == Ast.TypeInfoKind.Class then
                      processHeader( out2HMode )
-                     processMethodDeclTxt( stream, moduleCtrl, false, funcTypeInfo, declArgNodeList )
+                     processMethodDeclTxt( stream, moduleCtrl, FuncWrap.Normal, funcTypeInfo, declArgNodeList )
                      stream:writeln( ";" )
                   end
                   
                elseif _switchExp == Out2HMode.SourcePub then
                   if funcTypeInfo:get_parentInfo():get_kind() == Ast.TypeInfoKind.Class then
                      if not funcTypeInfo:get_staticFlag() then
-                        processMethodDeclTxt( stream, moduleCtrl, false, funcTypeInfo, declArgNodeList )
+                        processMethodDeclTxt( stream, moduleCtrl, FuncWrap.Normal, funcTypeInfo, declArgNodeList )
                         stream:writeln( ";" )
                      end
                      
@@ -3716,32 +3797,134 @@ local function processPrototypeMethod( stream, moduleCtrl, declArgNodeList, func
    
 end
 
-local function processDeclCallMethodWrapper( stream, moduleCtrl, funcTypeInfo )
+
+
+local function process2stem( stream, moduleCtrl, scopeMgr, valKind, typeInfo, parent, callback )
+
+   do
+      local _switchExp = valKind
+      if _switchExp == ValKind.Stem then
+         callback(  )
+      else 
+         
+            local expType = typeInfo:get_srcTypeInfo()
+            do
+               local enumType = _lune.__Cast( expType, 3, Ast.EnumTypeInfo )
+               if enumType ~= nil then
+                  expType = enumType:get_valTypeInfo()
+               end
+            end
+            
+            
+            do
+               local _switchExp = expType
+               if _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeChar then
+                  stream:write( "LNS_STEM_INT( " )
+                  callback(  )
+                  stream:write( ")" )
+               elseif _switchExp == Ast.builtinTypeReal then
+                  stream:write( "LNS_STEM_REAL( " )
+                  callback(  )
+                  stream:write( ")" )
+               elseif _switchExp == Ast.builtinTypeBool then
+                  stream:write( "LNS_STEM_BOOL( " )
+                  callback(  )
+                  stream:write( ")" )
+               else 
+                  
+                     do
+                        local _switchExp = expType:get_kind()
+                        if _switchExp == Ast.TypeInfoKind.DDD then
+                           stream:write( "_pDDD" )
+                        elseif _switchExp == Ast.TypeInfoKind.Func then
+                           do
+                              local scope = expType:get_scope()
+                              if scope ~= nil then
+                                 stream:write( "LNS_STEM_ANY(" )
+                                 stream:write( getFunc2any( moduleCtrl, scopeMgr, expType ) )
+                                 stream:write( ")" )
+                              else
+                                 Util.err( "illegal func" )
+                              end
+                           end
+                           
+                        else 
+                           
+                              if valKind == ValKind.Var and getValKind( expType ) == ValKind.Stem then
+                                 callback(  )
+                              else
+                               
+                                 stream:write( "LNS_STEM_ANY( " )
+                                 callback(  )
+                                 stream:write( ")" )
+                              end
+                              
+                        end
+                     end
+                     
+               end
+            end
+            
+      end
+   end
+   
+end
+
+local function processDeclCallMethodWrapper( stream, moduleCtrl, scopeMgr, parent, funcTypeInfo, callFlag )
 
    if funcTypeInfo:get_rawTxt() ~= "__init" and not funcTypeInfo:get_staticFlag() then
       
-      processMethodDeclTxt( stream, moduleCtrl, true, funcTypeInfo, nil )
+      processMethodDeclTxt( stream, moduleCtrl, callFlag and FuncWrap.CallWrap or FuncWrap.NilWrap, funcTypeInfo, nil )
       stream:writeln( "{" )
+      
+      if not callFlag then
+         local retVal
+         
+         if #funcTypeInfo:get_retTypeInfoList() > 1 then
+            retVal = cValDDD0
+         else
+          
+            retVal = cValNil
+         end
+         
+         stream:writeln( string.format( "if ( obj.type == lns_stem_type_nil ) { return %s; }", retVal) )
+         stream:writeln( string.format( "%s pObj = obj.val.pAny;", cTypeAnyP) )
+      end
+      
       
       if #funcTypeInfo:get_retTypeInfoList() ~= 0 then
          stream:write( "return " )
       end
       
-      local classTypeInfo = funcTypeInfo:get_parentInfo()
-      local className = moduleCtrl:getClassCName( classTypeInfo )
-      stream:write( string.format( "lns_mtd_%s( pObj )->%s( _pEnv, ", className, funcTypeInfo:get_rawTxt()) )
-      if classTypeInfo:get_kind() == Ast.TypeInfoKind.IF then
-         stream:write( "lns_getImpObj( pObj ) " )
+      
+      local retList = funcTypeInfo:get_retTypeInfoList()
+      local function process(  )
+      
+         local classTypeInfo = funcTypeInfo:get_parentInfo()
+         local className = moduleCtrl:getClassCName( classTypeInfo )
+         stream:write( string.format( "lns_mtd_%s( pObj )->%s( _pEnv, ", className, funcTypeInfo:get_rawTxt()) )
+         if classTypeInfo:get_kind() == Ast.TypeInfoKind.IF then
+            stream:write( "lns_getImpObj( pObj ) " )
+         else
+          
+            stream:write( "pObj " )
+         end
+         
+         for index, argType in pairs( funcTypeInfo:get_argTypeInfoList() ) do
+            stream:write( string.format( ", arg%d", index) )
+         end
+         
+         stream:write( ")" )
+      end
+      
+      if not callFlag and #retList > 0 then
+         process2stem( stream, moduleCtrl, scopeMgr, getRetKind( retList ), retList[1], parent, process )
       else
        
-         stream:write( "pObj " )
+         process(  )
       end
       
-      for index, argType in pairs( funcTypeInfo:get_argTypeInfoList() ) do
-         stream:write( string.format( ", arg%d", index) )
-      end
-      
-      stream:writeln( ");" )
+      stream:writeln( ";" )
       
       stream:writeln( "}" )
    end
@@ -3758,7 +3941,7 @@ local function getAccessMethod( className, obj, method )
    return string.format( "lns_mtd_%s( %s )->%s", className, obj, method)
 end
 
-local function processAdvertise( stream, moduleCtrl, processMode, node )
+local function processAdvertise( stream, moduleCtrl, scopeMgr, processMode, node )
 
    for __index, advInfo in pairs( node:get_advertiseList() ) do
       local member = advInfo:get_member()
@@ -3774,9 +3957,10 @@ local function processAdvertise( stream, moduleCtrl, processMode, node )
                if _switchExp == ProcessMode.Prototype then
                   processPrototypeMethod( stream, moduleCtrl, nil, methodType )
                elseif _switchExp == ProcessMode.DefClass then
-                  processDeclCallMethodWrapper( stream, moduleCtrl, methodType )
+                  processDeclCallMethodWrapper( stream, moduleCtrl, scopeMgr, node, methodType, true )
+                  processDeclCallMethodWrapper( stream, moduleCtrl, scopeMgr, node, methodType, false )
                   
-                  processMethodDeclTxt( stream, moduleCtrl, false, methodType, nil )
+                  processMethodDeclTxt( stream, moduleCtrl, FuncWrap.Normal, methodType, nil )
                   stream:writeln( "{" )
                   local className = moduleCtrl:getClassCName( node:get_expType() )
                   local memberClassName = moduleCtrl:getClassCName( member:get_expType() )
@@ -3825,13 +4009,13 @@ local function processDeclClassPrototype( normal, stream, moduleCtrl, node )
       local memberName = member:get_name().txt
       if member:get_getterMode() ~= Ast.AccessMode.None then
          local getterType = _lune.unwrap( node:get_scope():getTypeInfoField( string.format( "get_%s", memberName), true, node:get_scope(), scopeAccess ))
-         processMethodDeclTxt( stream, moduleCtrl, false, getterType )
+         processMethodDeclTxt( stream, moduleCtrl, FuncWrap.Normal, getterType )
          stream:writeln( ";" )
       end
       
       if member:get_setterMode() ~= Ast.AccessMode.None then
          local setterType = _lune.unwrap( node:get_scope():getTypeInfoField( string.format( "set_%s", memberName), true, node:get_scope(), scopeAccess ))
-         processMethodDeclTxt( stream, moduleCtrl, false, setterType )
+         processMethodDeclTxt( stream, moduleCtrl, FuncWrap.Normal, setterType )
          stream:writeln( ";" )
       end
       
@@ -3911,7 +4095,7 @@ local function processDefaultCtor( stream, moduleCtrl, scopeMgr, node )
                else 
                   
                      Util.err( string.format( "no support -- %s:%s:%d", member:get_name().txt, ValKind:_getTxt( valKind)
-                     , 3453) )
+                     , 3616) )
                end
             end
             
@@ -3952,80 +4136,6 @@ local function processIFObjInit( stream, moduleCtrl, classType, impClassType )
    end
    
 end
-
-
-
-function convFilter:process2stem( valKind, typeInfo, parent, callback )
-
-   do
-      local _switchExp = valKind
-      if _switchExp == ValKind.Stem then
-         callback(  )
-      else 
-         
-            local expType = typeInfo:get_srcTypeInfo()
-            do
-               local enumType = _lune.__Cast( expType, 3, Ast.EnumTypeInfo )
-               if enumType ~= nil then
-                  expType = enumType:get_valTypeInfo()
-               end
-            end
-            
-            
-            do
-               local _switchExp = expType
-               if _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeChar then
-                  self:write( "LNS_STEM_INT( " )
-                  callback(  )
-                  self:write( ")" )
-               elseif _switchExp == Ast.builtinTypeReal then
-                  self:write( "LNS_STEM_REAL( " )
-                  callback(  )
-                  self:write( ")" )
-               elseif _switchExp == Ast.builtinTypeBool then
-                  self:write( "LNS_STEM_BOOL( " )
-                  callback(  )
-                  self:write( ")" )
-               else 
-                  
-                     do
-                        local _switchExp = expType:get_kind()
-                        if _switchExp == Ast.TypeInfoKind.DDD then
-                           self:write( "_pDDD" )
-                        elseif _switchExp == Ast.TypeInfoKind.Func then
-                           do
-                              local scope = expType:get_scope()
-                              if scope ~= nil then
-                                 self:write( "LNS_STEM_ANY(" )
-                                 self:write( self:getFunc2any( expType ) )
-                                 self:write( ")" )
-                              else
-                                 Util.err( "illegal func" )
-                              end
-                           end
-                           
-                        else 
-                           
-                              if valKind == ValKind.Var and getValKind( expType ) == ValKind.Stem then
-                                 callback(  )
-                              else
-                               
-                                 self:write( "LNS_STEM_ANY( " )
-                                 callback(  )
-                                 self:write( ")" )
-                              end
-                              
-                        end
-                     end
-                     
-               end
-            end
-            
-      end
-   end
-   
-end
-
 
 function convFilter:processNewInsance( classType, callInit )
 
@@ -4140,7 +4250,7 @@ function convFilter:processMapping( node, classType, out2HMode )
          end
          
          if valTxt ~= nil then
-            self:process2stem( getValKind( memberSym:get_typeInfo() ), memberSym:get_typeInfo(), node, function (  )
+            process2stem( self.stream, self.moduleCtrl, self.scopeMgr, getValKind( memberSym:get_typeInfo() ), memberSym:get_typeInfo(), node, function (  )
             
                self:write( valTxt )
             end )
@@ -4544,7 +4654,7 @@ function convFilter:processDeclClassNodePrototype( node )
    
    if kind == Ast.TypeInfoKind.Class then
       processDeclClassPrototype( not self.outputBuiltinFlag and self.canConv, self.stream, self.moduleCtrl, node )
-      processAdvertise( self.stream, self.moduleCtrl, self.processMode, node )
+      processAdvertise( self.stream, self.moduleCtrl, self.scopeMgr, self.processMode, node )
       
       if not self.outputBuiltinFlag then
          processDefaultCtor( self.stream, self.moduleCtrl, self.scopeMgr, node )
@@ -4614,14 +4724,14 @@ function convFilter:processDeclClassDef( node )
       if member:get_getterMode() ~= Ast.AccessMode.None then
          local getterType = _lune.unwrap( node:get_scope():getTypeInfoField( string.format( "get_%s", memberName), true, node:get_scope(), scopeAccess ))
          if getterType:get_autoFlag() then
-            processMethodDeclTxt( self.stream, self.moduleCtrl, false, getterType )
+            processMethodDeclTxt( self.stream, self.moduleCtrl, FuncWrap.Normal, getterType )
             self:writeln( "{" )
             self:pushIndent(  )
             self:writeln( string.format( "return %s;", getAccessMember( className, "pObj", memberName )) )
             self:popIndent(  )
             self:writeln( "}" )
             
-            processMethodDeclTxt( self.stream, self.moduleCtrl, true, getterType )
+            processMethodDeclTxt( self.stream, self.moduleCtrl, FuncWrap.CallWrap, getterType )
             self:writeln( "{" )
             self:pushIndent(  )
             self:writeln( string.format( "return lns_mtd_%s( pObj )->get_%s( _pEnv, pObj );", className, memberName) )
@@ -4634,7 +4744,7 @@ function convFilter:processDeclClassDef( node )
       if member:get_setterMode() ~= Ast.AccessMode.None then
          local setterType = _lune.unwrap( node:get_scope():getTypeInfoField( string.format( "set_%s", memberName), true, node:get_scope(), scopeAccess ))
          if setterType:get_autoFlag() then
-            processMethodDeclTxt( self.stream, self.moduleCtrl, false, setterType )
+            processMethodDeclTxt( self.stream, self.moduleCtrl, FuncWrap.Normal, setterType )
             self:writeln( "{" )
             self:pushIndent(  )
             local valKind = self.scopeMgr:getSymbolValKind( member:get_symbolInfo() )
@@ -4650,14 +4760,14 @@ function convFilter:processDeclClassDef( node )
                else 
                   
                      Util.err( string.format( "no support -- %s:%s:%d", member:get_symbolInfo():get_name(), ValKind:_getTxt( valKind)
-                     , 4186) )
+                     , 4279) )
                end
             end
             
             self:popIndent(  )
             self:writeln( "}" )
             
-            processMethodDeclTxt( self.stream, self.moduleCtrl, true, setterType )
+            processMethodDeclTxt( self.stream, self.moduleCtrl, FuncWrap.CallWrap, setterType )
             self:writeln( "{" )
             self:pushIndent(  )
             self:writeln( string.format( "lns_mtd_%s( pObj )->set_%s( _pEnv, pObj, arg1 );", className, memberName) )
@@ -4670,7 +4780,7 @@ function convFilter:processDeclClassDef( node )
    end
    
    
-   processAdvertise( self.stream, self.moduleCtrl, self.processMode, node )
+   processAdvertise( self.stream, self.moduleCtrl, self.scopeMgr, self.processMode, node )
 end
 
 
@@ -4932,7 +5042,7 @@ function convFilter:processDeclVarC( declFlag, var, init0, manageScope )
                   self:write( "lns_set_block_stem" )
                   self:writeln( string.format( "( %s, %d, %s );", getBlockName( scope ), getSymbolIndex( symbolInfo ), self.moduleCtrl:getSymbolName( var )) )
                elseif _switchExp == ValKind.Var then
-                  local typeTxt = getStemTypeId( var:get_typeInfo() )
+                  local typeTxt = getStemTypeId( getOrgTypeInfo( var:get_typeInfo() ) )
                   self:writeln( string.format( "lns_set_block_var( %s, %d, %s, %s );", getBlockName( scope ), getSymbolIndex( symbolInfo ), typeTxt, self.moduleCtrl:getSymbolName( var )) )
                end
             end
@@ -5054,7 +5164,7 @@ function convFilter:processDeclMethodInfo( declInfo, funcTypeInfo, parent )
             local body = declInfo:get_body()
             if body ~= nil then
                local methodNodeToken = _lune.unwrap( declInfo:get_name(  ))
-               processMethodDeclTxt( self.stream, self.moduleCtrl, false, funcTypeInfo, declInfo:get_argList() )
+               processMethodDeclTxt( self.stream, self.moduleCtrl, FuncWrap.Normal, funcTypeInfo, declInfo:get_argList() )
                self:writeln( "{" )
                
                self:pushIndent(  )
@@ -5105,7 +5215,8 @@ function convFilter:processDeclMethodInfo( declInfo, funcTypeInfo, parent )
             end
          end
          
-         processDeclCallMethodWrapper( self.stream, self.moduleCtrl, funcTypeInfo )
+         processDeclCallMethodWrapper( self.stream, self.moduleCtrl, self.scopeMgr, parent, funcTypeInfo, true )
+         processDeclCallMethodWrapper( self.stream, self.moduleCtrl, self.scopeMgr, parent, funcTypeInfo, false )
       elseif _switchExp == ProcessMode.InitFuncSym or _switchExp == ProcessMode.WideScopeVer then
          self:process__func__symbol( funcTypeInfo, declInfo:get_has__func__Symbol(), self.moduleCtrl:getMethodCName( funcTypeInfo ) )
       end
@@ -5201,7 +5312,7 @@ end
 
 function convFilter:processVal2stem( node, parent )
 
-   self:process2stem( self:getValKindOfNode( node ), node:get_expType(), parent, function (  )
+   process2stem( self.stream, self.moduleCtrl, self.scopeMgr, self:getValKindOfNode( node ), node:get_expType(), parent, function (  )
    
       filter( node, self, parent )
    end )
@@ -5258,7 +5369,7 @@ function convFilter:processSym2Any( symbol )
       else 
          
             Util.err( string.format( "not suppport -- %s, %d", ValKind:_getTxt( valKind)
-            , 4938) )
+            , 5035) )
       end
    end
    
@@ -5280,7 +5391,7 @@ function convFilter:processVal2any( node, parent )
       else 
          
             Util.err( string.format( "not suppport -- %d, %s, %s, %d", node:get_pos().lineNo, ValKind:_getTxt( valKind)
-            , Nodes.getNodeKindName( node:get_kind() ), 4964) )
+            , Nodes.getNodeKindName( node:get_kind() ), 5061) )
       end
    end
    
@@ -5353,7 +5464,7 @@ function convFilter:processSetValSingleDirect( parent, node, var, initFlag, expV
       
       Util.err( string.format( "illegal %s %s %s -- %d", var:get_name(), ValKind:_getTxt( valKind)
       , ValKind:_getTxt( expValKind)
-      , 5048) )
+      , 5145) )
    end
    
    
@@ -5480,8 +5591,6 @@ function convFilter:processSymForSetOp( parent, dstKind, dstTypeInfo, symbol )
 end
 
 
-
-
 local function processToIF( stream, moduleCtrl, expType, process )
 
    if expType:get_kind() == Ast.TypeInfoKind.IF then
@@ -5538,7 +5647,7 @@ end
 function convFilter:processFuncCast2Form( castType, orgFunc )
 
    if not needsWrapper( orgFunc, castType ) then
-      self:write( self:getFunc2any( orgFunc ) )
+      self:write( getFunc2any( self.moduleCtrl, self.scopeMgr, orgFunc ) )
       return 
    end
    
@@ -5548,7 +5657,7 @@ function convFilter:processFuncCast2Form( castType, orgFunc )
    local argList = castType:get_argTypeInfoList()
    local hasDDD = #argList > 0 and argList[#argList]:get_kind() == Ast.TypeInfoKind.DDD or false
    
-   self:write( self:getPrepareClosure( self.moduleCtrl:getFuncCastWrapName( orgFunc, castType ), #argList, hasDDD, closureSymList ) )
+   self:write( getPrepareClosure( self.scopeMgr, self.moduleCtrl:getFuncCastWrapName( orgFunc, castType ), #argList, hasDDD, closureSymList ) )
 end
 
 
@@ -6439,7 +6548,7 @@ function convFilter:processClosureFunc( declInfo )
    local symbolName = self.moduleCtrl:getSymbolName( funcSym )
    self:writeln( string.format( "%s %s;", cTypeVarP, symbolName) )
    self:write( string.format( "lns_initVal_var( %s, %s, %d, ", symbolName, getBlockName( scope:get_parent() ), symbolParam.index) )
-   self:writeln( string.format( "LNS_STEM_ANY( %s ) );", self:getFunc2any( funcSym:get_typeInfo() )) )
+   self:writeln( string.format( "LNS_STEM_ANY( %s ) );", getFunc2any( self.moduleCtrl, self.scopeMgr, funcSym:get_typeInfo() )) )
 end
 
 
@@ -6469,7 +6578,7 @@ function convFilter:processDeclFunc( node, opt )
                if _switchExp == Nodes.NodeKind.get_Block() or _switchExp == Nodes.NodeKind.get_ExpMacroExp() then
                else 
                   
-                     self:write( self:getFunc2any( node:get_expType() ) )
+                     self:write( getFunc2any( self.moduleCtrl, self.scopeMgr, node:get_expType() ) )
                end
             end
             
@@ -6633,7 +6742,7 @@ function convFilter:processSwitch( node, opt )
       expStemName = expSymName .. "Stem"
       self:write( string.format( "%s %s = ", cTypeStem, expStemName) )
       
-      self:process2stem( expValKind, expType, node, function (  )
+      process2stem( self.stream, self.moduleCtrl, self.scopeMgr, expValKind, expType, node, function (  )
       
          self:write( expSymName )
       end )
@@ -6940,7 +7049,7 @@ function convFilter:processApply( node, opt )
          else 
             
                Util.err( string.format( "no support -- %s:%s:%d", varSym:get_name(), ValKind:_getTxt( valKind)
-               , 6753) )
+               , 6848) )
          end
       end
       
@@ -7346,6 +7455,8 @@ function convFilter:processExpUnwrap( node, opt )
          processUnwrap( "int" )
       elseif _switchExp == Ast.builtinTypeReal then
          processUnwrap( "real" )
+      elseif _switchExp == Ast.builtinTypeBool then
+         processUnwrap( "bool" )
       else 
          
             do
@@ -7357,7 +7468,7 @@ function convFilter:processExpUnwrap( node, opt )
                else 
                   
                      Util.err( string.format( "no support -- %s: %d", ValKind:_getTxt( self:getValKindOfNode( node ))
-                     , 7171) )
+                     , 7269) )
                end
             end
             
@@ -7979,7 +8090,7 @@ function convFilter:processCall( funcSym, funcType, setArgFlag, argList )
                
                
                if not setFlag then
-                  self:write( self:getPrepareClosure( "NULL", 0, false, scope:get_closureSymList() ) )
+                  self:write( getPrepareClosure( self.scopeMgr, "NULL", 0, false, scope:get_closureSymList() ) )
                end
                
             end
@@ -8063,7 +8174,7 @@ end
 
 function convFilter:processExpCall( node, opt )
 
-   local funcType = node:get_func():get_expType()
+   local funcType = node:get_func():get_expType():get_nonnilableType()
    
    do
       local _switchExp = self.processMode
@@ -8221,8 +8332,17 @@ function convFilter:processExpCall( node, opt )
                do
                   local fieldNode = _lune.__Cast( node:get_func(), 3, Nodes.RefFieldNode )
                   if fieldNode ~= nil then
-                     self:write( string.format( "%s( _pEnv, ", self.moduleCtrl:getCallMethodCName( funcType )) )
-                     self:processVal2any( fieldNode:get_prefix(), fieldNode )
+                     if node:get_nilAccess() then
+                        self:write( self.moduleCtrl:getNilMethodCName( funcType ) )
+                        self:write( "( _pEnv, " )
+                        self:processVal2stem( fieldNode:get_prefix(), fieldNode )
+                     else
+                      
+                        self:write( self.moduleCtrl:getCallMethodCName( funcType ) )
+                        self:write( "( _pEnv, " )
+                        self:processVal2any( fieldNode:get_prefix(), fieldNode )
+                     end
+                     
                   end
                end
                
@@ -8548,7 +8668,7 @@ function convFilter:processFuncCast( node )
              
                self:write( "lns_createMRet( _pEnv, false, 1, " )
                
-               self:process2stem( getValKind( orgFunc:get_retTypeInfoList()[1] ), orgFunc:get_retTypeInfoList()[1], node, function (  )
+               process2stem( self.stream, self.moduleCtrl, self.scopeMgr, getValKind( orgFunc:get_retTypeInfoList()[1] ), orgFunc:get_retTypeInfoList()[1], node, function (  )
                
                   self:write( "ret" )
                end )
@@ -8558,7 +8678,7 @@ function convFilter:processFuncCast( node )
          else
           
             if getValKind( castType:get_retTypeInfoList()[1] ) == ValKind.Stem then
-               self:process2stem( getValKind( orgFunc:get_retTypeInfoList()[1] ), orgFunc:get_retTypeInfoList()[1], node, function (  )
+               process2stem( self.stream, self.moduleCtrl, self.scopeMgr, getValKind( orgFunc:get_retTypeInfoList()[1] ), orgFunc:get_retTypeInfoList()[1], node, function (  )
                
                   self:write( "ret" )
                end )
@@ -9039,6 +9159,29 @@ end
 
 function convFilter:processExpRefItem( node, opt )
 
+   local function process(  )
+   
+      self:write( "lns_stem_refAt( _pEnv, " )
+      self:processVal2stem( node:get_val(), node )
+      self:write( ", " )
+      do
+         local index = node:get_index()
+         if index ~= nil then
+            self:processVal2stem( index, node )
+         else
+            self:write( getLiteralStrStem( string.format( '"%s"', _lune.unwrap( node:get_symbol())) ) )
+         end
+      end
+      
+      self:write( ")" )
+   end
+   
+   if node:get_nilAccess() then
+      processToIF( self.stream, self.moduleCtrl, node:get_expType(), process )
+      return 
+   end
+   
+   
    local val = node:get_val()
    local valType = val:get_expType()
    
@@ -9087,23 +9230,11 @@ function convFilter:processExpRefItem( node, opt )
                
                self:write( ")" )
             elseif _switchExp == Ast.TypeInfoKind.Stem then
-               self:write( "lns_stem_refAt( _pEnv, " )
-               self:processVal2stem( val, node )
-               self:write( ", " )
-               do
-                  local index = node:get_index()
-                  if index ~= nil then
-                     self:processVal2stem( index, node )
-                  else
-                     self:write( getLiteralStrStem( string.format( '"%s"', _lune.unwrap( node:get_symbol())) ) )
-                  end
-               end
-               
-               self:write( ")" )
+               process(  )
             else 
                
                   Util.err( string.format( "not support:%s -- %d:%d", Ast.TypeInfoKind:_getTxt( valType:get_kind())
-                  , 9349, node:get_pos().lineNo) )
+                  , 9451, node:get_pos().lineNo) )
             end
          end
          
@@ -9116,6 +9247,38 @@ end
 
 function convFilter:processRefField( node, opt )
 
+   if node:get_nilAccess() then
+      do
+         local symbolInfo = node:get_symbolInfo()
+         if symbolInfo ~= nil then
+            do
+               local _switchExp = symbolInfo:get_kind()
+               if _switchExp == Ast.SymbolKind.Mbr then
+                  local prefixType = getOrgTypeInfo( node:get_prefix():get_expType() )
+                  if prefixType:get_kind() == Ast.TypeInfoKind.Class then
+                     self:write( "lns_refFieldNil( _pEnv, " )
+                     self:processVal2stem( node:get_prefix(), node )
+                     self:write( string.format( ", offsetof( %s, %s ), %s )", self.moduleCtrl:getClassCName( prefixType ), symbolInfo:get_name(), getStemTypeId( symbolInfo:get_typeInfo():get_srcTypeInfo() )) )
+                  else
+                   
+                     Util.err( "not support -- " .. prefixType:getTxt(  ) )
+                  end
+                  
+               else 
+                  
+                     Util.err( "not support -- " .. Ast.SymbolKind:_getTxt( symbolInfo:get_kind())
+                      )
+               end
+            end
+            
+         else
+            Util.err( "not support" )
+         end
+      end
+      
+      return 
+   end
+   
    
    do
       local symbolInfo = node:get_symbolInfo()
@@ -9301,7 +9464,7 @@ function convFilter:processReturn( node, opt )
                   filter( expList[1], self, node )
                else 
                   
-                     Util.err( string.format( "no support -- %d", 9590) )
+                     Util.err( string.format( "no support -- %d", 9720) )
                end
             end
             
@@ -9332,7 +9495,7 @@ function convFilter:processReturn( node, opt )
                elseif _switchExp == ValKind.Prim then
                else 
                   
-                     Util.err( string.format( "no support -- %d", 9623) )
+                     Util.err( string.format( "no support -- %d", 9753) )
                end
             end
             

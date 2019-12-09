@@ -299,3 +299,46 @@ pub class JSON extend (Writer) {
       }
    }
 }
+
+__test case1 {
+   import lune.base.Testing;
+
+   let mut ctrl = new Testing.Ctrl();
+
+   {
+      let mut stream = new Util.memStream();
+      let mut xml = new XML( stream );
+      Testing._eq( ctrl, xml.depth, 0 );
+      xml.startParent( "1", false );
+      Testing._eq( ctrl, xml.depth, 1 );
+      xml.startElement( "2-1" );
+      Testing._eq( ctrl, xml.depth, 2 );
+      xml.writeValue( 21 );
+      xml.endElement();
+      Testing._eq( ctrl, xml.depth, 1 );
+      xml.write( "2-2", 22 );
+      xml.endElement();
+      xml.fin();
+      Testing._eq( ctrl, xml.depth, 0 );
+      Testing._eq( ctrl, stream.$txt, "<1><2-1>21</2-1><2-2>22</2-2></1>\n" );
+   }
+   {
+      let mut stream = new Util.memStream();
+      let mut xml = new JSON( stream );
+      xml.startParent( "1-1", false );
+      xml.startElement( "2-1" );
+      xml.writeValue( 21 );
+      xml.endElement();
+      xml.write( "2-2", 22 );
+      xml.endElement();
+      xml.startParent( "1-2", true );
+      xml.startElement( "2-3" );
+      xml.writeValue( 23 );
+      xml.endElement();
+      xml.write( "2-4", 24 );
+      xml.endElement();
+      xml.fin();
+      Testing._eq( ctrl, stream.$txt,
+                   '{"1-1": {"2-1": 21,"2-2": 22},"1-2": [{"2-3": 23},{"2-4": 24}]}\n' );
+   }
+}

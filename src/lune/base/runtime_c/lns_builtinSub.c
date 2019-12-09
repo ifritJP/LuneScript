@@ -14,6 +14,44 @@ lns_any_t * lns_f_error( lns_env_t * _pEnv, lns_any_t * arg1 )
     return NULL;
 }
 
+lns_any_t * lns_f_type( lns_env_t * _pEnv, lns_stem_t stem )
+{
+    switch ( stem.type ) {
+    case lns_stem_type_none: // fall-through
+    case lns_stem_type_nil:
+        return lns_litStr2any( _pEnv, "nil" );
+    case lns_stem_type_int: // fall-through
+    case lns_stem_type_real:
+        return lns_litStr2any( _pEnv, "number" );
+    case lns_stem_type_bool:
+        return lns_litStr2any( _pEnv, "boolean" );
+    case lns_stem_type_any:
+        {
+            lns_any_t * pAny = stem.val.pAny;
+            switch ( pAny->type ) {
+            case lns_value_type_str:
+                return lns_litStr2any( _pEnv, "string" );
+            case lns_value_type_form:
+                return lns_litStr2any( _pEnv, "function" );
+            case lns_value_type_class: // fall-through
+            case lns_value_type_if:
+                return lns_litStr2any( _pEnv, "table" );
+            case lns_value_type_luaVal:
+                return lns_litStr2any( _pEnv, "lua" );
+            default:
+                lns_abort( "illegal type" );
+                break;
+            }
+        }
+        break;
+    default:
+        lns_abort( "illegal type" );
+    }
+    
+    return NULL;
+}
+
+
 lns_any_t * mtd_lns_os_exit( lns_env_t * _pEnv, lns_stem_t arg1)
 {
     if ( arg1.type == lns_stem_type_int ) {
