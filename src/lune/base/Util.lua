@@ -209,8 +209,10 @@ function OrderedSet:add( val )
    if not _lune._Set_has(self.set, val ) then
       self.set[val]= true
       table.insert( self.list, val )
+      return true
    end
    
+   return false
 end
 function OrderedSet:clone(  )
 
@@ -225,6 +227,15 @@ end
 function OrderedSet:has( val )
 
    return _lune._Set_has(self.set, val )
+end
+function OrderedSet:removeLast(  )
+
+   if #self.list == 0 then
+      err( "empty" )
+   end
+   
+   self.set[self.list[#self.list]]= nil
+   table.remove( self.list )
 end
 function OrderedSet.setmeta( obj )
   setmetatable( obj, { __index = OrderedSet  } )

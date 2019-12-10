@@ -26,7 +26,6 @@ import lune.base.Nodes;
 import lune.base.Util;
 import lune.base.Ast;
 import lune.base.TransUnit;
-import lune.base.frontInterface;
 
 pub class DependInfo {
    let targetModule:str;

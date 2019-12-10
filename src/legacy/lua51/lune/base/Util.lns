@@ -66,11 +66,13 @@ pub class OrderedSet<T> {
       self.list = [];
    }
 
-   pub fn add( val:&T ) mut {
+   pub fn add( val:&T ) mut : bool {
       if not self.set.has( val ) {
          self.set.add( val );
          self.list.insert( val );
+         return true;
       }
+      return false;
    }
 
    pub fn clone(): OrderedSet<T> {
@@ -84,6 +86,14 @@ pub class OrderedSet<T> {
 
    pub fn has( val:&T ) : bool {
       return self.set.has( val );
+   }
+
+   pub fn removeLast() mut {
+      if #self.list == 0 {
+         err( "empty" );
+      }
+      self.set.del( self.list[ #self.list ] );
+      self.list.remove(##);
    }
 }
 

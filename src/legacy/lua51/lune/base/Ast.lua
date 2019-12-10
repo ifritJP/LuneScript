@@ -230,7 +230,6 @@ end
 
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Util = _lune.loadModule( 'lune.base.Util' )
-local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local Code = _lune.loadModule( 'lune.base.Code' )
 
 local IdProvider = {}
@@ -7043,6 +7042,8 @@ _moduleObj.compOpSet = compOpSet
 
 local mathCompOpSet = {["<"] = true, ["<="] = true, [">"] = true, [">="] = true}
 _moduleObj.mathCompOpSet = mathCompOpSet
+
+
 
 
 return _moduleObj

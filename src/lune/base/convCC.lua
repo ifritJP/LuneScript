@@ -233,7 +233,6 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local TransUnit = _lune.loadModule( 'lune.base.TransUnit' )
-local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
 local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
@@ -1412,7 +1411,7 @@ function ScopeMgr:getSymbolParam( symbol )
       
    end
    
-   Util.err( string.format( "illegal symbol -- %s %d", symbol:get_name(), 945) )
+   Util.err( string.format( "illegal symbol -- %s %d", symbol:get_name(), 944) )
 end
 function ScopeMgr:getSymbolValKind( symbol )
 
@@ -1934,7 +1933,7 @@ local function registerBuiltin(  )
             param = createSymbolParam( symbol:get_name(), getValKind( symbol:get_typeInfo() ), getCType( symbol:get_typeInfo() ) )
          else 
             
-               Util.err( string.format( "illeal symbol -- %s %d", symbol:get_name(), 1498) )
+               Util.err( string.format( "illeal symbol -- %s %d", symbol:get_name(), 1497) )
          end
       end
       
@@ -4095,7 +4094,7 @@ local function processDefaultCtor( stream, moduleCtrl, scopeMgr, node )
                else 
                   
                      Util.err( string.format( "no support -- %s:%s:%d", member:get_name().txt, ValKind:_getTxt( valKind)
-                     , 3616) )
+                     , 3615) )
                end
             end
             
@@ -4760,7 +4759,7 @@ function convFilter:processDeclClassDef( node )
                else 
                   
                      Util.err( string.format( "no support -- %s:%s:%d", member:get_symbolInfo():get_name(), ValKind:_getTxt( valKind)
-                     , 4279) )
+                     , 4278) )
                end
             end
             
@@ -5369,7 +5368,7 @@ function convFilter:processSym2Any( symbol )
       else 
          
             Util.err( string.format( "not suppport -- %s, %d", ValKind:_getTxt( valKind)
-            , 5035) )
+            , 5034) )
       end
    end
    
@@ -5391,7 +5390,7 @@ function convFilter:processVal2any( node, parent )
       else 
          
             Util.err( string.format( "not suppport -- %d, %s, %s, %d", node:get_pos().lineNo, ValKind:_getTxt( valKind)
-            , Nodes.getNodeKindName( node:get_kind() ), 5061) )
+            , Nodes.getNodeKindName( node:get_kind() ), 5060) )
       end
    end
    
@@ -5464,7 +5463,7 @@ function convFilter:processSetValSingleDirect( parent, node, var, initFlag, expV
       
       Util.err( string.format( "illegal %s %s %s -- %d", var:get_name(), ValKind:_getTxt( valKind)
       , ValKind:_getTxt( expValKind)
-      , 5145) )
+      , 5144) )
    end
    
    
@@ -7049,7 +7048,7 @@ function convFilter:processApply( node, opt )
          else 
             
                Util.err( string.format( "no support -- %s:%s:%d", varSym:get_name(), ValKind:_getTxt( valKind)
-               , 6848) )
+               , 6847) )
          end
       end
       
@@ -7468,7 +7467,7 @@ function convFilter:processExpUnwrap( node, opt )
                else 
                   
                      Util.err( string.format( "no support -- %s: %d", ValKind:_getTxt( self:getValKindOfNode( node ))
-                     , 7269) )
+                     , 7268) )
                end
             end
             
@@ -9234,7 +9233,7 @@ function convFilter:processExpRefItem( node, opt )
             else 
                
                   Util.err( string.format( "not support:%s -- %d:%d", Ast.TypeInfoKind:_getTxt( valType:get_kind())
-                  , 9451, node:get_pos().lineNo) )
+                  , 9450, node:get_pos().lineNo) )
             end
          end
          
@@ -9464,7 +9463,7 @@ function convFilter:processReturn( node, opt )
                   filter( expList[1], self, node )
                else 
                   
-                     Util.err( string.format( "no support -- %d", 9720) )
+                     Util.err( string.format( "no support -- %d", 9719) )
                end
             end
             
@@ -9495,7 +9494,7 @@ function convFilter:processReturn( node, opt )
                elseif _switchExp == ValKind.Prim then
                else 
                   
-                     Util.err( string.format( "no support -- %d", 9753) )
+                     Util.err( string.format( "no support -- %d", 9752) )
                end
             end
             

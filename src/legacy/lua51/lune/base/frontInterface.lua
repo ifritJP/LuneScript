@@ -5,76 +5,6 @@ local _lune = {}
 if _lune2 then
    _lune = _lune2
 end
-function _lune._Set_or( setObj, otherSet )
-   for val in pairs( otherSet ) do
-      setObj[ val ] = true
-   end
-   return setObj
-end
-function _lune._Set_and( setObj, otherSet )
-   local delValList = {}
-   for val in pairs( setObj ) do
-      if not otherSet[ val ] then
-         table.insert( delValList, val )
-      end
-   end
-   for index, val in ipairs( delValList ) do
-      setObj[ val ] = nil
-   end
-   return setObj
-end
-function _lune._Set_has( setObj, val )
-   return setObj[ val ] ~= nil
-end
-function _lune._Set_sub( setObj, otherSet )
-   local delValList = {}
-   for val in pairs( setObj ) do
-      if otherSet[ val ] then
-         table.insert( delValList, val )
-      end
-   end
-   for index, val in ipairs( delValList ) do
-      setObj[ val ] = nil
-   end
-   return setObj
-end
-function _lune._Set_len( setObj )
-   local total = 0
-   for val in pairs( setObj ) do
-      total = total + 1
-   end
-   return total
-end
-function _lune._Set_clone( setObj )
-   local obj = {}
-   for val in pairs( setObj ) do
-      obj[ val ] = true
-   end
-   return obj
-end
-
-function _lune._toSet( val, toKeyInfo )
-   if type( val ) == "table" then
-      local tbl = {}
-      for key, mem in pairs( val ) do
-         local mapKey, keySub = toKeyInfo.func( key, toKeyInfo.child )
-         local mapVal = _lune._toBool( mem )
-         if mapKey == nil or mapVal == nil then
-            if mapKey == nil then
-               return nil
-            end
-            if keySub == nil then
-               return nil, mapKey
-            end
-            return nil, string.format( "%s.%s", mapKey, keySub)
-         end
-         tbl[ mapKey ] = mapVal
-      end
-      return tbl
-   end
-   return nil
-end
-
 function _lune.unwrap( val )
    if val == nil then
       __luneScript:error( 'unwrap val is nil' )
@@ -208,32 +138,20 @@ function ImportModuleInfo.new(  )
    return obj
 end
 function ImportModuleInfo:__init() 
-   self.moduleSet = {}
-   self.moduleList = {}
+   self.orderedSet = Util.OrderedSet.new()
 end
 function ImportModuleInfo:add( modulePath )
 
-   if _lune._Set_has(self.moduleSet, modulePath ) then
-      return false
-   end
-   
-   self.moduleSet[modulePath]= true
-   table.insert( self.moduleList, modulePath )
-   return true
+   return self.orderedSet:add( modulePath )
 end
 function ImportModuleInfo:remove(  )
 
-   if #self.moduleList == 0 then
-      Util.err( "self.moduleList is 0" )
-   end
-   
-   self.moduleSet[self.moduleList[#self.moduleList]]= nil
-   table.remove( self.moduleList )
+   self.orderedSet:removeLast(  )
 end
 function ImportModuleInfo:getFull(  )
 
    local txt = ""
-   for __index, modulePath in pairs( self.moduleList ) do
+   for __index, modulePath in pairs( self.orderedSet:get_list() ) do
       txt = string.format( "%s -> %s", txt, modulePath)
    end
    
@@ -331,11 +249,5 @@ local function searchModule( mod )
    return __luneScript:searchModule( mod )
 end
 _moduleObj.searchModule = searchModule
-
-local function error( message )
-
-   __luneScript:error( message )
-end
-_moduleObj.error = error
 
 return _moduleObj

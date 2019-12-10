@@ -71,34 +71,23 @@ pub static fn ModuleId.createIdFromTxt( idStr:str ):ModuleId {
 インポートしたモジュールを管理する。
 */
 pub class ImportModuleInfo {
-   let mut moduleSet:Set<str>;
-   let mut moduleList:List<str>;
+   let mut orderedSet:Util.OrderedSet<str>;
 
    pub fn __init() {
-      self.moduleSet = (@);
-      self.moduleList = [];
+      self.orderedSet = new Util.OrderedSet<str>();
    }
 
    pub fn add( modulePath:str ) mut : bool {
-      if self.moduleSet.has( modulePath ) {
-         return false;
-      }
-      self.moduleSet.add( modulePath );
-      self.moduleList.insert( modulePath );
-      return true;
+      return self.orderedSet.add( modulePath );
    }
 
    pub fn remove() mut {
-      if #self.moduleList == 0 {
-         Util.err( "self.moduleList is 0" );
-      }
-      self.moduleSet.del( self.moduleList[ #self.moduleList ] );
-      self.moduleList.remove(##);
+      self.orderedSet.removeLast();
    }
 
    pub fn getFull() :str {
       let mut txt = "";
-      foreach modulePath in self.moduleList {
+      foreach modulePath in self.orderedSet.$list {
          txt = "%s -> %s" ( txt, modulePath );
       }
       return txt;
@@ -178,8 +167,4 @@ pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ): &stem! {
 
 pub fn searchModule( mod:str ): str! {
    return __luneScript.searchModule( mod );
-}
-
-pub fn error( message:str ) {
-   __luneScript.error( message );
 }

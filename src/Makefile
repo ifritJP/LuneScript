@@ -904,6 +904,7 @@ test-testC:
 		lune/base/Depend.sub.c lune/base/Depend.c \
 		lune/base/LuneControl.c lune/base/LuaMod.c \
 		lune/base/Util.c)
+	$(call convC,work/0,lune/base/frontInterface.lns,--testing)
 
 test-mkbuiltin:
 	$(call transwork,.,.,,base/convCC)
