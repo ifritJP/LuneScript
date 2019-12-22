@@ -313,7 +313,6 @@ setmetatable( JSON, { ifList = {Writer,} } )
 _moduleObj.JSON = JSON
 function JSON:startLayer( arrayFlag, madeByArrayFlag )
 
-   
    local info = JsonLayer.new('none', arrayFlag, self.prevName, madeByArrayFlag, {}, true, false)
    
    table.insert( self.layerQueue, info )

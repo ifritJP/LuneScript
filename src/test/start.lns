@@ -1372,3 +1372,17 @@ print( '\\""\"\'\\.\\' );
    hoge2.set( 100 );
    print( hoge2.$test.val );
 }
+{
+   macro _test1( val:sym ) {
+      print( "hoge", __line__, ,,val );
+   }
+
+   macro _test2() {
+      _test1( work );
+   }
+
+
+   let work = 1;
+   _test2();
+   _test1( work);
+}

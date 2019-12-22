@@ -1093,6 +1093,12 @@ fn TransUnit.prepareExpCall(
       self.error( "unmatch macro arguments. -- %s" (funcTypeInfo.getTxt(##) ) );
    }
 
+
+   if funcTypeInfo.$kind == .Macro {
+      self.macroCtrl.finishMacroMode();
+   }
+   
+
    return alt2typeMap, workArgList;
 }
 
@@ -1398,7 +1404,7 @@ fn TransUnit.analyzeExpCall(
 
    let mut exp:Nodes.Node;
    if funcTypeInfo.get_kind() == .Macro {
-      self.macroCtrl.finishMacroMode();
+      //self.macroCtrl.finishMacroMode();
       exp = self.evalMacro( firstToken, funcTypeInfo, argList );
    }
    else {
@@ -3144,7 +3150,7 @@ fn TransUnit.analyzeExp(
       }  
 
       if macroExpFlag {
-         let nextToken = self.getToken(##);
+         let nextToken = self.getToken( true );
          if nextToken.txt ~= "~~" {
             self.pushback();
          }  

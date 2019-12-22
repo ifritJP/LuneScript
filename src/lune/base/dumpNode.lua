@@ -619,7 +619,6 @@ function dumpFilter:processDeclVar( node, opt )
 end
 
 
-
 function dumpFilter:processDeclArg( node, opt )
 
    local prefix, depth = opt:get(  )

@@ -5516,6 +5516,255 @@ pub let bitBinOpMap = {
 pub let compOpSet = (@ "==", "~=" );
 pub let mathCompOpSet = (@ "<", "<=", ">", ">=" );
 
+pub class RefTypeInfo {
+   let pos:Parser.Position {pub};
+   let mut itemRefTypeList: List<&RefTypeInfo> {pub};
+   let typeInfo:&TypeInfo {pub};
+}
+
+class TypeAnalyzer {
+   let mut parser:Parser.PushbackParser;
+   let parentInfo:&TypeInfo;
+   let moduleType:&TypeInfo;
+   let moduleScope:&Scope;
+   let mut scope:&Scope;
+   let scopeAccess:ScopeAccess;
+   let mut accessMode: AccessMode;
+   let mut parentPub:bool;
+   let validMutControl:bool;
+
+   pub fn __init( parentInfo:&TypeInfo, moduleType:&TypeInfo, moduleScope:&Scope,
+                  scopeAccess:ScopeAccess, validMutControl:bool )
+   {
+      self.parentInfo = parentInfo;
+      self.moduleType = moduleType;
+      self.moduleScope = moduleScope;
+      self.scopeAccess = scopeAccess;
+      self.validMutControl = validMutControl;
+
+      self.scope = rootScope;
+      self.accessMode = .Local;
+      self.parentPub = false;
+      self.parser = new Parser.DefaultPushbackParser( new Parser.DummyParser() );
+   }
+   
+   pub fn analyzeTypeItemList(
+      allowDDD:bool, refFlag: bool, mutFlag: bool,
+      typeInfo:&TypeInfo, pos:&Parser.Position ) mut:
+      &RefTypeInfo!, &Parser.Position!, str!;
+
+   fn analyzeTypeSub( allowDDD:bool ) mut :
+      &RefTypeInfo!, &Parser.Position!, str!;
+
+   pub fn analyzeType(
+      parser:Parser.PushbackParser, accessMode: AccessMode,
+      allowDDD:bool, parentPub:bool ) mut : &RefTypeInfo!, &Parser.Position!, str!
+   {
+      self.parser = parser;
+      self.accessMode = accessMode;
+      self.parentPub = parentPub;
+      return self.analyzeTypeSub( allowDDD )**;
+   }
+
+   pub fn analyzeTypeFromTxt(
+      txt:str, accessMode: AccessMode, parentPub:bool ) mut :
+      &RefTypeInfo!, &Parser.Position!, str!
+   {
+      let mut stream = new Parser.TxtStream( txt );
+      let mut parser =
+         new Parser.DefaultPushbackParser( new Parser.StreamParser( stream, "test" ## ) );
+      return self.analyzeType( parser, accessMode, true, parentPub )**;
+   }
+}
+
+pub fn TypeAnalyzer.analyzeTypeSub( allowDDD:bool ) mut :
+   &RefTypeInfo!, &Parser.Position!, str!
+{
+   let firstToken = self.parser.getTokenNoErr();
+   let mut token = firstToken;
+   let mut refFlag = false;
+   if token.txt == "&" {
+      refFlag = true;
+      token = self.parser.getTokenNoErr();
+   }
+   let mut mutFlag = false;
+   if token.txt == "mut" {
+      mutFlag = true;
+      token = self.parser.getTokenNoErr();
+   }
+   // builtin の型名などは _ で始まることもあるので、シンボル名チェックしない
+   // self.checkSymbol( token, .MustNot_ );
+
+   let typeInfo:TypeInfo;
+   if token.txt == "..." {
+      // ... は変数シンボルとしても使用するので
+      // analyzeExpSymbol で解析すると意図しないシンボルを取ってくる可能性があるため、
+      // ここで特別に処理する。
+      typeInfo = builtinTypeDDD;
+   }
+   else {
+      let! symbol = self.scope.getSymbolTypeInfo(
+         token.txt, self.scope, self.moduleScope, self.scopeAccess )
+      {
+         return nil, token.pos, "not found type -- " .. token.txt;
+      };
+      if symbol.$kind ~= .Typ {
+         return nil, token.pos, "illegal type -- %s" ( symbol.$name );
+      }
+      typeInfo = symbol.$typeInfo;
+   }
+   return self.analyzeTypeItemList(
+      allowDDD, refFlag, mutFlag, typeInfo, token.pos )**;
+}
+
+pub fn TypeAnalyzer.analyzeTypeItemList(
+   allowDDD:bool, refFlag: bool, mutFlag: bool,
+   mut typeInfo:&TypeInfo, pos:&Parser.Position ) mut:
+   &RefTypeInfo!, &Parser.Position!, str!
+{
+   if self.parentPub and
+      isPubToExternal( self.accessMode ) and
+      not isPubToExternal( typeInfo.$accessMode )
+   {
+      // 公開する型の中で非公開な型を利用するのは NG
+      return nil, pos, "This type must be public. -- %s" (typeInfo.getTxt(##) );
+   }
+   
+
+   let mut token = self.parser.getTokenNoErr();
+   
+   if token.consecutive and token.txt == "!" {
+      typeInfo = typeInfo.$nilableTypeInfo;
+      token = self.parser.getTokenNoErr();
+   }
+
+   macro _checkToken( workToken:sym, oneChar:str ) {
+      {}
+      if ,,workToken.txt ~= ,,oneChar {
+         return nil, ,,workToken.pos, "not found -- ']'";
+      }
+   }
+   
+   let mut arrayMode = "no";
+   let mut genericRefList: List<&RefTypeInfo> = [];
+   while true {
+      if token.txt == '[' or token.txt == '[@' {
+         if token.txt == '[' {
+            arrayMode = "list";
+            typeInfo = NormalTypeInfo.createList(
+               self.accessMode, self.parentInfo, [ typeInfo ], .Mut );
+         }
+         else {
+            arrayMode = "array";
+            typeInfo = NormalTypeInfo.createArray(
+               self.accessMode, self.parentInfo, [ typeInfo ], .Mut );
+         }
+         token = self.parser.getTokenNoErr();
+         _checkToken( token, ']' );
+      }
+      elseif token.txt == "<" {
+         let mut genericList: List<&TypeInfo> = [];
+         let mut nextToken: &Parser.Token = Parser.getEofToken();
+         repeat {
+            let refType, refPos, mess = self.analyzeTypeSub( false );
+            when! refType {
+               genericRefList.insert( refType );
+               genericList.insert( refType.$typeInfo );
+            }
+            nextToken = self.parser.getTokenNoErr();
+         } nextToken.txt ~= ",";
+         _checkToken( nextToken, '>' );
+
+         macro _checkAlternateTypeCount( count:__exp ) {
+            if #genericList ~= ,,count {
+               return nil, pos, "generic type count is unmatch. -- %d" (#genericList);
+            }
+         }
+
+         switch typeInfo.$kind {
+            case .Map {
+               if #genericList ~= 2 {
+                  return nil, pos, "Key or value type is unknown";
+               }
+               else {
+                  typeInfo = NormalTypeInfo.createMap(
+                     self.accessMode, self.parentInfo,
+                     genericList[ 1 ], genericList[ 2 ], .Mut );
+               }
+            }
+            case .List {
+               _checkAlternateTypeCount( 1 );
+               typeInfo = NormalTypeInfo.createList(
+                  self.accessMode, self.parentInfo, genericList, .Mut );
+            }
+            case .Array {
+               _checkAlternateTypeCount( 1 );
+               typeInfo = NormalTypeInfo.createArray(
+                  self.accessMode, self.parentInfo, genericList, .Mut );
+            }
+            case .Set {
+               _checkAlternateTypeCount( 1 );
+               typeInfo = NormalTypeInfo.createSet(
+                  self.accessMode, self.parentInfo, genericList, .Mut );
+            }
+            case .DDD {
+               _checkAlternateTypeCount( 1 );
+               typeInfo = NormalTypeInfo.createDDD( genericList[1], false );
+            }
+            case .Class, .IF {
+               _checkAlternateTypeCount( #typeInfo.$itemTypeInfoList );
+               foreach itemType, index in genericList {
+                  let altType =
+                     unwrap typeInfo.$itemTypeInfoList[ index ]@@@AlternateTypeInfo;
+                  if itemType.$nilable {
+                     let mess = "can't use nilable type -- %s" (itemType.getTxt(##));
+                     return nil, pos, mess;
+                  }
+               }
+               typeInfo = NormalTypeInfo.createGeneric(
+                  typeInfo, genericList, self.moduleType );
+            }
+            case .Box {
+               _checkAlternateTypeCount( 1 );
+               typeInfo = NormalTypeInfo.createBox( self.accessMode, genericList[1] );
+            }
+            case .Ext {
+               _checkAlternateTypeCount( 1 );
+               typeInfo = NormalTypeInfo.createLuaval( genericList[1] );
+            }
+            default {
+               return nil , pos, "not support generic: %s" (typeInfo.getTxt(##));
+            }
+         }
+      }
+      else {
+         self.parser.pushback();
+         break;
+      }
+      token = self.parser.getTokenNoErr();
+   }
+   if token.txt == "!" {
+      typeInfo = typeInfo.get_nilableTypeInfo();
+      token = self.parser.getTokenNoErr();
+   }
+
+   if not allowDDD {
+      if typeInfo.$kind == .DDD {
+         return nil, pos, "invalid type. -- '%s'" (typeInfo.getTxt(##));
+      }
+   }
+
+   if refFlag {
+      if self.validMutControl {
+         typeInfo = NormalTypeInfo.createModifier( typeInfo, .IMut );
+      }
+   }
+
+   return new RefTypeInfo( pos, genericRefList, typeInfo ), nil, nil;
+}
+
+
+
 
 __test case1 {
    import lune.base.Testing;
@@ -5538,166 +5787,187 @@ __test case1 {
    }
    let mut alt2typeMap = CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
 
-   {
-      // int 同士の canEvalWith
-      
-      // int <- int : OK
-      Testing._isT(
-         ctrl, (builtinTypeInt.canEvalWith( builtinTypeInt, .SetOp, alt2typeMap )));
-      // int! <- int : OK
-      Testing._isT(
-         ctrl, (builtinTypeInt.$nilableTypeInfo.canEvalWith(
-            builtinTypeInt, .SetOp, alt2typeMap )));
-      // int <- int! : NG
-      Testing._isNotT(
-         ctrl, (builtinTypeInt.canEvalWith(
-            builtinTypeInt.$nilableTypeInfo, .SetOp, alt2typeMap )));
 
-      // &int <- int : OK
-      let imutInt = NormalTypeInfo.createModifier( builtinTypeInt, .IMut );
-      Testing._isT(
-         ctrl, (imutInt.canEvalWith( builtinTypeInt, .SetOp, alt2typeMap )));
-      // &int! <- int : OK
-      Testing._isT(
-         ctrl, (imutInt.$nilableTypeInfo.canEvalWith( builtinTypeInt, .SetOp, alt2typeMap )));
-      // int <- &int : OK
-      Testing._isT(
-         ctrl, (builtinTypeInt.canEvalWith( imutInt, .SetOp, alt2typeMap )));
-      // int <- &int! : NG
-      Testing._isNotT(
-         ctrl, (builtinTypeInt.canEvalWith( imutInt.$nilableTypeInfo,
-                                            .SetOp, alt2typeMap )));
-   }
-
-   {
-      // int と str の canEvalWith
-      
-      // int <- str : NG
-      Testing._isNotT(
-         ctrl, (builtinTypeInt.canEvalWith( builtinTypeString, .SetOp, alt2typeMap )));
-      // int! <- str : NG
-      Testing._isNotT(
-         ctrl, (builtinTypeInt.$nilableTypeInfo.canEvalWith(
-            builtinTypeString, .SetOp, alt2typeMap )));
-      // int <- str! : NG
-      Testing._isNotT(
-         ctrl, (builtinTypeInt.canEvalWith(
-            builtinTypeString.$nilableTypeInfo, .SetOp, alt2typeMap )));
-
-      // &int <- str : NG
-      let imutStr = NormalTypeInfo.createModifier( builtinTypeString, .IMut );
-      Testing._isNotT(
-         ctrl, (imutStr.canEvalWith( builtinTypeInt, .SetOp, alt2typeMap )));
-      // &int! <- str : NG
-      Testing._isNotT(
-         ctrl, (imutStr.$nilableTypeInfo.canEvalWith( builtinTypeInt, .SetOp, alt2typeMap )));
-      // int <- &str : NG
-      Testing._isNotT(
-         ctrl, (builtinTypeInt.canEvalWith( imutStr, .SetOp, alt2typeMap )));
-      // int <- &str! : NG
-      Testing._isNotT(
-         ctrl, (builtinTypeInt.canEvalWith( imutStr.$nilableTypeInfo,
-                                            .SetOp, alt2typeMap )));
-   }
-
-
-   {
-      // Super と Sub の canEvalWith
-
-      let superType = NormalTypeInfo.createClass(
-         true, false, nil, nil, nil, [], headTypeInfo, false, .Local, "Super" );
-      let subType = NormalTypeInfo.createClass(
-         true, false, nil, superType, nil, [], headTypeInfo, false, .Local, "Sub" );
-
-      // Super <- Sub : OK
-      Testing._isT(
-         ctrl, (superType.canEvalWith( subType, .SetOp, alt2typeMap )));
-      // Super! <- Sub : OK
-      Testing._isT(
-         ctrl, (superType.$nilableTypeInfo.canEvalWith(
-            subType, .SetOp, alt2typeMap )));
-      // Super <- Sub! : NG
-      Testing._isNotT(
-         ctrl, (superType.canEvalWith(
-            subType.$nilableTypeInfo, .SetOp, alt2typeMap )));
-
-      let imutSuper = NormalTypeInfo.createModifier( superType, .IMut );
-      let imutSub = NormalTypeInfo.createModifier( subType, .IMut );
-      // &Super <- Sub : OK
-      Testing._isT(
-         ctrl, (imutSuper.canEvalWith( subType, .SetOp, alt2typeMap )));
-      // &Super! <- Sub : OK
-      Testing._isT(
-         ctrl, (imutSuper.$nilableTypeInfo.canEvalWith( subType, .SetOp, alt2typeMap )));
-      // Super <- &Sub : NG
-      Testing._isNotT(
-         ctrl, (superType.canEvalWith( imutSub, .SetOp, alt2typeMap )));
-      // Super <- &Sub! : NG
-      Testing._isNotT(
-         ctrl, (superType.canEvalWith( imutSub.$nilableTypeInfo, .SetOp, alt2typeMap )));
-   }
    
 
-   {
-      // List<int> 同士の canEvalWith
-      
-      let list = NormalTypeInfo.createList(
-         .Local, headTypeInfo, [ builtinTypeInt ], .Mut );
-      
-      // list<int> <- list<int> : OK
-      Testing._isT( ctrl, (list.canEvalWith( list, .SetOp, alt2typeMap )));
-      // list<int>! <- list<int> : OK
-      Testing._isT(
-         ctrl, (list.$nilableTypeInfo.canEvalWith(
-            list, .SetOp, alt2typeMap )));
-      // list<int> <- list<int>! : NG
-      Testing._isNotT(
-         ctrl, (list.canEvalWith( list.$nilableTypeInfo, .SetOp, alt2typeMap )));
-
-      // &list<int> <- list<int> : OK
-      let imutList = NormalTypeInfo.createModifier( list, .IMut );
-      Testing._isT( ctrl, (imutList.canEvalWith( list, .SetOp, alt2typeMap )));
-      // &list<int>! <- list<int> : OK
-      Testing._isT(
-         ctrl, (imutList.$nilableTypeInfo.canEvalWith( list, .SetOp, alt2typeMap )));
-      // list<int> <- &list<int> : NG
-      Testing._isNotT( ctrl, (list.canEvalWith( imutList, .SetOp, alt2typeMap )));
-      // list<int> <- &list<int>! : NG
-      Testing._isNotT( ctrl, (list.canEvalWith( imutList.$nilableTypeInfo,
-                                                .SetOp, alt2typeMap )));
+   macro _checkTypeAnalyzer(typeTxt:str,typeInfo:sym ) {
+      {}
+      {
+         let mut analyzer = new TypeAnalyzer(
+            headTypeInfo, headTypeInfo, rootScope, .Normal, true );
+         let refType, pos, msg = analyzer.analyzeTypeFromTxt( ,,typeTxt, .Local, false );
+         when! refType {
+            Testing._eqM( ctrl, ,,typeTxt, refType.$typeInfo, ,,typeInfo );
+         }
+         else {
+            Testing._err( ctrl, "refType is nil -- " .. ,,typeTxt );
+         }
+      }
    }
+   //_checkTypeAnalyzer( "int", builtinTypeInt );
+   //_checkTypeAnalyzer( "int!", builtinTypeInt );
 
-   {
-      // List<int> と List<str> の canEvalWith
-      
-      let listInt = NormalTypeInfo.createList(
-         .Local, headTypeInfo, [ builtinTypeInt ], .Mut );
-      let listStr = NormalTypeInfo.createList(
-         .Local, headTypeInfo, [ builtinTypeString ], .Mut );
-      
-      // list<int> <- list<int> : NG
-      Testing._isNotT( ctrl, (listInt.canEvalWith( listStr, .SetOp, alt2typeMap )));
-      // list<int>! <- list<int> : NG
-      Testing._isNotT(
-         ctrl, (listInt.$nilableTypeInfo.canEvalWith(
-            listStr, .SetOp, alt2typeMap )));
-      // list<int> <- list<int>! : NG
-      Testing._isNotT(
-         ctrl, (listInt.canEvalWith( listStr.$nilableTypeInfo, .SetOp, alt2typeMap )));
 
-      // &list<int> <- list<int> : NG
-      let imutListInt = NormalTypeInfo.createModifier( listInt, .IMut );
-      let imutListStr = NormalTypeInfo.createModifier( listStr, .IMut );
-      Testing._isNotT( ctrl, (imutListInt.canEvalWith( listStr, .SetOp, alt2typeMap )));
-      // &list<int>! <- list<int> : NG
-      Testing._isNotT(
-         ctrl, (imutListInt.$nilableTypeInfo.canEvalWith( listStr, .SetOp, alt2typeMap )));
-      // list<int> <- &list<int> : NG
-      Testing._isNotT( ctrl, (listInt.canEvalWith( imutListStr, .SetOp, alt2typeMap )));
-      // list<int> <- &list<int>! : NG
-      Testing._isNotT( ctrl, (listInt.canEvalWith( imutListStr.$nilableTypeInfo,
-                                                   .SetOp, alt2typeMap )));
-   }
+   // {
+   //    // int 同士の canEvalWith
+      
+   //    // int <- int : OK
+   //    Testing._isT(
+   //       ctrl, (builtinTypeInt.canEvalWith( builtinTypeInt, .SetOp, alt2typeMap )));
+   //    // int! <- int : OK
+   //    Testing._isT(
+   //       ctrl, (builtinTypeInt.$nilableTypeInfo.canEvalWith(
+   //          builtinTypeInt, .SetOp, alt2typeMap )));
+   //    // int <- int! : NG
+   //    Testing._isNotT(
+   //       ctrl, (builtinTypeInt.canEvalWith(
+   //          builtinTypeInt.$nilableTypeInfo, .SetOp, alt2typeMap )));
+
+   //    // &int <- int : OK
+   //    let imutInt = NormalTypeInfo.createModifier( builtinTypeInt, .IMut );
+   //    Testing._isT(
+   //       ctrl, (imutInt.canEvalWith( builtinTypeInt, .SetOp, alt2typeMap )));
+   //    // &int! <- int : OK
+   //    Testing._isT(
+   //       ctrl, (imutInt.$nilableTypeInfo.canEvalWith( builtinTypeInt, .SetOp, alt2typeMap )));
+   //    // int <- &int : OK
+   //    Testing._isT(
+   //       ctrl, (builtinTypeInt.canEvalWith( imutInt, .SetOp, alt2typeMap )));
+   //    // int <- &int! : NG
+   //    Testing._isNotT(
+   //       ctrl, (builtinTypeInt.canEvalWith( imutInt.$nilableTypeInfo,
+   //                                          .SetOp, alt2typeMap )));
+   // }
+
+   // {
+   //    // int と str の canEvalWith
+      
+   //    // int <- str : NG
+   //    Testing._isNotT(
+   //       ctrl, (builtinTypeInt.canEvalWith( builtinTypeString, .SetOp, alt2typeMap )));
+   //    // int! <- str : NG
+   //    Testing._isNotT(
+   //       ctrl, (builtinTypeInt.$nilableTypeInfo.canEvalWith(
+   //          builtinTypeString, .SetOp, alt2typeMap )));
+   //    // int <- str! : NG
+   //    Testing._isNotT(
+   //       ctrl, (builtinTypeInt.canEvalWith(
+   //          builtinTypeString.$nilableTypeInfo, .SetOp, alt2typeMap )));
+
+   //    // &int <- str : NG
+   //    let imutStr = NormalTypeInfo.createModifier( builtinTypeString, .IMut );
+   //    Testing._isNotT(
+   //       ctrl, (imutStr.canEvalWith( builtinTypeInt, .SetOp, alt2typeMap )));
+   //    // &int! <- str : NG
+   //    Testing._isNotT(
+   //       ctrl, (imutStr.$nilableTypeInfo.canEvalWith( builtinTypeInt, .SetOp, alt2typeMap )));
+   //    // int <- &str : NG
+   //    Testing._isNotT(
+   //       ctrl, (builtinTypeInt.canEvalWith( imutStr, .SetOp, alt2typeMap )));
+   //    // int <- &str! : NG
+   //    Testing._isNotT(
+   //       ctrl, (builtinTypeInt.canEvalWith( imutStr.$nilableTypeInfo,
+   //                                          .SetOp, alt2typeMap )));
+   // }
+
+
+   // {
+   //    // Super と Sub の canEvalWith
+
+   //    let superType = NormalTypeInfo.createClass(
+   //       true, false, nil, nil, nil, [], headTypeInfo, false, .Local, "Super" );
+   //    let subType = NormalTypeInfo.createClass(
+   //       true, false, nil, superType, nil, [], headTypeInfo, false, .Local, "Sub" );
+
+   //    // Super <- Sub : OK
+   //    Testing._isT(
+   //       ctrl, (superType.canEvalWith( subType, .SetOp, alt2typeMap )));
+   //    // Super! <- Sub : OK
+   //    Testing._isT(
+   //       ctrl, (superType.$nilableTypeInfo.canEvalWith(
+   //          subType, .SetOp, alt2typeMap )));
+   //    // Super <- Sub! : NG
+   //    Testing._isNotT(
+   //       ctrl, (superType.canEvalWith(
+   //          subType.$nilableTypeInfo, .SetOp, alt2typeMap )));
+
+   //    let imutSuper = NormalTypeInfo.createModifier( superType, .IMut );
+   //    let imutSub = NormalTypeInfo.createModifier( subType, .IMut );
+   //    // &Super <- Sub : OK
+   //    Testing._isT(
+   //       ctrl, (imutSuper.canEvalWith( subType, .SetOp, alt2typeMap )));
+   //    // &Super! <- Sub : OK
+   //    Testing._isT(
+   //       ctrl, (imutSuper.$nilableTypeInfo.canEvalWith( subType, .SetOp, alt2typeMap )));
+   //    // Super <- &Sub : NG
+   //    Testing._isNotT(
+   //       ctrl, (superType.canEvalWith( imutSub, .SetOp, alt2typeMap )));
+   //    // Super <- &Sub! : NG
+   //    Testing._isNotT(
+   //       ctrl, (superType.canEvalWith( imutSub.$nilableTypeInfo, .SetOp, alt2typeMap )));
+   // }
+   
+
+   // {
+   //    // List<int> 同士の canEvalWith
+      
+   //    let list = NormalTypeInfo.createList(
+   //       .Local, headTypeInfo, [ builtinTypeInt ], .Mut );
+      
+   //    // list<int> <- list<int> : OK
+   //    Testing._isT( ctrl, (list.canEvalWith( list, .SetOp, alt2typeMap )));
+   //    // list<int>! <- list<int> : OK
+   //    Testing._isT(
+   //       ctrl, (list.$nilableTypeInfo.canEvalWith(
+   //          list, .SetOp, alt2typeMap )));
+   //    // list<int> <- list<int>! : NG
+   //    Testing._isNotT(
+   //       ctrl, (list.canEvalWith( list.$nilableTypeInfo, .SetOp, alt2typeMap )));
+
+   //    // &list<int> <- list<int> : OK
+   //    let imutList = NormalTypeInfo.createModifier( list, .IMut );
+   //    Testing._isT( ctrl, (imutList.canEvalWith( list, .SetOp, alt2typeMap )));
+   //    // &list<int>! <- list<int> : OK
+   //    Testing._isT(
+   //       ctrl, (imutList.$nilableTypeInfo.canEvalWith( list, .SetOp, alt2typeMap )));
+   //    // list<int> <- &list<int> : NG
+   //    Testing._isNotT( ctrl, (list.canEvalWith( imutList, .SetOp, alt2typeMap )));
+   //    // list<int> <- &list<int>! : NG
+   //    Testing._isNotT( ctrl, (list.canEvalWith( imutList.$nilableTypeInfo,
+   //                                              .SetOp, alt2typeMap )));
+   // }
+
+   // {
+   //    // List<int> と List<str> の canEvalWith
+      
+   //    let listInt = NormalTypeInfo.createList(
+   //       .Local, headTypeInfo, [ builtinTypeInt ], .Mut );
+   //    let listStr = NormalTypeInfo.createList(
+   //       .Local, headTypeInfo, [ builtinTypeString ], .Mut );
+      
+   //    // list<int> <- list<int> : NG
+   //    Testing._isNotT( ctrl, (listInt.canEvalWith( listStr, .SetOp, alt2typeMap )));
+   //    // list<int>! <- list<int> : NG
+   //    Testing._isNotT(
+   //       ctrl, (listInt.$nilableTypeInfo.canEvalWith(
+   //          listStr, .SetOp, alt2typeMap )));
+   //    // list<int> <- list<int>! : NG
+   //    Testing._isNotT(
+   //       ctrl, (listInt.canEvalWith( listStr.$nilableTypeInfo, .SetOp, alt2typeMap )));
+
+   //    // &list<int> <- list<int> : NG
+   //    let imutListInt = NormalTypeInfo.createModifier( listInt, .IMut );
+   //    let imutListStr = NormalTypeInfo.createModifier( listStr, .IMut );
+   //    Testing._isNotT( ctrl, (imutListInt.canEvalWith( listStr, .SetOp, alt2typeMap )));
+   //    // &list<int>! <- list<int> : NG
+   //    Testing._isNotT(
+   //       ctrl, (imutListInt.$nilableTypeInfo.canEvalWith( listStr, .SetOp, alt2typeMap )));
+   //    // list<int> <- &list<int> : NG
+   //    Testing._isNotT( ctrl, (listInt.canEvalWith( imutListStr, .SetOp, alt2typeMap )));
+   //    // list<int> <- &list<int>! : NG
+   //    Testing._isNotT( ctrl, (listInt.canEvalWith( imutListStr.$nilableTypeInfo,
+   //                                                 .SetOp, alt2typeMap )));
+   // }
 
    
 }

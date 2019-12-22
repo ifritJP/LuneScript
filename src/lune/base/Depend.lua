@@ -216,13 +216,13 @@ local function getFileLastModifiedTime( path )
    
    
    local stream = io.popen( string.format( "stat -c '%%Y' %s", path) )
-   
    do
       local _exp = _lune.nilacc( stream, 'read', 'callmtd' , '*a' )
       if _exp ~= nil then
          return tonumber( _exp )
       end
    end
+   
    
    return nil
 end

@@ -687,7 +687,6 @@ function FormatterFilter:processDeclVar( node, opt )
 end
 
 
-
 function FormatterFilter:processDeclArg( node, opt )
 
    self:write( node:get_symbolInfo():get_name() )

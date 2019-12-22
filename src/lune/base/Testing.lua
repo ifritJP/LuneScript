@@ -91,54 +91,54 @@ function Ctrl:err( mess, mod, lineNo )
    self.ngNum = self.ngNum + 1
    io.stderr:write( string.format( "error: %s:%d: %s\n", mod, lineNo, mess) )
 end
-function Ctrl:isTrue( val1, val1txt, mod, lineNo )
+function Ctrl:isTrue( val1, val1txt, msg, mod, lineNo )
 
    if val1 == true then
       self.okNum = self.okNum + 1
       return true
    end
    
-   self:err( string.format( "not true -- %s:[%s]\n", val1txt, val1), mod, lineNo )
+   self:err( string.format( "not true -- %s:%s:[%s]\n", msg or "", val1txt, val1), mod, lineNo )
    return false
 end
-function Ctrl:isNotTrue( val1, val1txt, mod, lineNo )
+function Ctrl:isNotTrue( val1, val1txt, msg, mod, lineNo )
 
    if not val1 then
       self.okNum = self.okNum + 1
       return true
    end
    
-   self:err( string.format( "is true -- %s:[%s]\n", val1txt, val1), mod, lineNo )
+   self:err( string.format( "is true -- %s:%s:[%s]\n", msg or "", val1txt, val1), mod, lineNo )
    return false
 end
-function Ctrl:isNil( val1, val1txt, mod, lineNo )
+function Ctrl:isNil( val1, val1txt, msg, mod, lineNo )
 
    if val1 == nil then
       self.okNum = self.okNum + 1
       return true
    end
    
-   self:err( string.format( "is not nil -- %s:[%s]\n", val1txt, val1), mod, lineNo )
+   self:err( string.format( "is not nil -- %s:%s:[%s]\n", msg or "", val1txt, val1), mod, lineNo )
    return false
 end
-function Ctrl:checkEq( val1, val2, val1txt, val2txt, mod, lineNo )
+function Ctrl:checkEq( val1, val2, val1txt, val2txt, msg, mod, lineNo )
 
    if val1 == val2 then
       self.okNum = self.okNum + 1
       return true
    end
    
-   self:err( string.format( "not equal -- %s:[%s] != %s:[%s]\n", val1txt, val1, val2txt, val2), mod, lineNo )
+   self:err( string.format( "not equal -- %s:%s:[%s] != %s:[%s]\n", msg or "", val1txt, val1, val2txt, val2), mod, lineNo )
    return false
 end
-function Ctrl:checkNotEq( val1, val2, val1txt, val2txt, mod, lineNo )
+function Ctrl:checkNotEq( val1, val2, val1txt, val2txt, msg, mod, lineNo )
 
    if val1 ~= val2 then
       self.okNum = self.okNum + 1
       return true
    end
    
-   self:err( string.format( "equal -- %s:[%s] == %s:[%s]\n", val1txt, val1, val2txt, val2), mod, lineNo )
+   self:err( string.format( "equal -- %s:%s:[%s] == %s:[%s]\n", msg or "", val1txt, val1, val2txt, val2), mod, lineNo )
    return false
 end
 function Ctrl.setmeta( obj )
@@ -160,6 +160,18 @@ local function outputAllResult( stream )
    
 end
 _moduleObj.outputAllResult = outputAllResult
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

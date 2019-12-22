@@ -51,57 +51,59 @@ pub class Ctrl {
       io.stderr.write( "error: %s:%d: %s\n" ( mod, lineNo, mess ) );
    }
    
-   pub fn isTrue( val1:&stem!, val1txt:str, mod:str, lineNo:int ) mut : bool
+   pub fn isTrue( val1:&stem!, val1txt:str, msg:str!, mod:str, lineNo:int ) mut : bool
    {
       if val1 == true {
          self.okNum = self.okNum + 1;
          return true;
       }
-      self.err( "not true -- %s:[%s]\n" ( val1txt, val1 ), mod, lineNo );
+      self.err( "not true -- %s:%s:[%s]\n" ( msg or "", val1txt, val1 ), mod, lineNo );
       return false;
    }
 
-   pub fn isNotTrue( val1:&stem!, val1txt:str, mod:str, lineNo:int ) mut : bool
+   pub fn isNotTrue( val1:&stem!, val1txt:str, msg:str!, mod:str, lineNo:int ) mut : bool
    {
       if not val1 {
          self.okNum = self.okNum + 1;
          return true;
       }
-      self.err( "is true -- %s:[%s]\n" ( val1txt, val1 ), mod, lineNo );
+      self.err( "is true -- %s:%s:[%s]\n" ( msg or "", val1txt, val1 ), mod, lineNo );
       return false;
    }
 
-   pub fn isNil( val1:&stem!, val1txt:str, mod:str, lineNo:int ) mut : bool
+   pub fn isNil( val1:&stem!, val1txt:str, msg:str!, mod:str, lineNo:int ) mut : bool
    {
       if val1 == nil {
          self.okNum = self.okNum + 1;
          return true;
       }
-      self.err( "is not nil -- %s:[%s]\n" ( val1txt, val1 ), mod, lineNo );
+      self.err( "is not nil -- %s:%s:[%s]\n" ( msg or "", val1txt, val1 ), mod, lineNo );
       return false;
    }
    
-   pub fn checkEq(
-      val1:&stem!, val2:&stem!, val1txt:str, val2txt:str, mod:str, lineNo:int ) mut : bool
+   pub fn checkEq( val1:&stem!, val2:&stem!, val1txt:str, val2txt:str,
+                   msg:str!, mod:str, lineNo:int ) mut : bool
    {
       if val1 == val2 {
          self.okNum = self.okNum + 1;
          return true;
       }
-      self.err( "not equal -- %s:[%s] != %s:[%s]\n" ( val1txt, val1, val2txt, val2 ),
-                mod, lineNo );
+      self.err(
+         "not equal -- %s:%s:[%s] != %s:[%s]\n"
+         ( msg or "", val1txt, val1, val2txt, val2 ), mod, lineNo );
       return false;
    }
 
-   pub fn checkNotEq(
-      val1:&stem!, val2:&stem!, val1txt:str, val2txt:str, mod:str, lineNo:int ) mut : bool
+   pub fn checkNotEq( val1:&stem!, val2:&stem!, val1txt:str, val2txt:str,
+                      msg:str!, mod:str, lineNo:int ) mut : bool
    {
       if val1 ~= val2 {
          self.okNum = self.okNum + 1;
          return true;
       }
-      self.err( "equal -- %s:[%s] == %s:[%s]\n" ( val1txt, val1, val2txt, val2 ),
-                mod, lineNo );
+      self.err(
+         "equal -- %s:%s:[%s] == %s:[%s]\n"
+         ( msg or "", val1txt, val1, val2txt, val2 ), mod, lineNo );
       return false;
    }
 }
@@ -113,23 +115,47 @@ pub fn outputAllResult( stream:oStream ) {
 }
 
 pub macro _eq( ctrl:sym, val1:__exp, val2:__exp ): bool {
-   ,,ctrl.checkEq( ,,val1, ,,val2, ,,,,val1, ,,,,val2, __mod__, __line__ )
+   ,,ctrl.checkEq( ,,val1, ,,val2, ,,,,val1, ,,,,val2, nil, __mod__, __line__ )
 }
 
 pub macro _neq( ctrl:sym, val1:__exp, val2:__exp ): bool {
-   ,,ctrl.checkEq( ,,val1, ,,val2, ,,,,val1, ,,,,val2, __mod__, __line__ )
+   ,,ctrl.checkEq( ,,val1, ,,val2, ,,,,val1, ,,,,val2, nil, __mod__, __line__ )
 }
 
 pub macro _isT( ctrl:sym, val:__exp ): bool {
-   ,,ctrl.isTrue( ,,val, ,,,,val, __mod__, __line__ )
+   ,,ctrl.isTrue( ,,val, ,,,,val, nil, __mod__, __line__ )
 }
 
 pub macro _isNotT( ctrl:sym, val:__exp ): bool {
-   ,,ctrl.isNotTrue( ,,val, ,,,,val, __mod__, __line__ )
+   ,,ctrl.isNotTrue( ,,val, ,,,,val, nil, __mod__, __line__ )
 }
 
 pub macro _isNil( ctrl:sym, val:__exp ): bool {
-   ,,ctrl.isNil( ,,val, ,,,,val, __mod__, __line__ )
+   ,,ctrl.isNil( ,,val, ,,,,val, nil, __mod__, __line__ )
+}
+
+pub macro _err( ctrl:sym, mes:str ) {
+   ,,ctrl.err( ,,mes, __mod__, __line__ );
+}
+
+pub macro _eqM( ctrl:sym, msg:str, val1:__exp, val2:__exp ): bool {
+   ,,ctrl.checkEq( ,,val1, ,,val2, ,,,,val1, ,,,,val2, ,,msg, __mod__, __line__ )
+}
+
+pub macro _neqM( ctrl:sym, msg:str, val1:__exp, val2:__exp ): bool {
+   ,,ctrl.checkEq( ,,val1, ,,val2, ,,,,val1, ,,,,val2, ,,msg, __mod__, __line__ )
+}
+
+pub macro _isTM( ctrl:sym, msg:str, val:__exp ): bool {
+   ,,ctrl.isTrue( ,,val, ,,,,val, ,,msg, __mod__, __line__ )
+}
+
+pub macro _isNotTM( ctrl:sym, msg:str, val:__exp ): bool {
+   ,,ctrl.isNotTrue( ,,val, ,,,,val, ,,msg, __mod__, __line__ )
+}
+
+pub macro _isNilM( ctrl:sym, msg:str, val:__exp ): bool {
+   ,,ctrl.isNil( ,,val, ,,,,val, ,,msg, __mod__, __line__ )
 }
 
 pub macro _err( ctrl:sym, mes:str ) {

@@ -2044,11 +2044,18 @@ fn TransUnit.createNoneNode( pos: &Parser.Position ) mut : Nodes.Node {
 }
 
 pub fn TransUnit.pushbackToken( token: &Parser.Token ) mut {
-   if token ~= Parser.getEofToken() {
+   if token.kind ~= .Eof {
       self.pushbackList.insert( token );
    }
-   self.currentToken = self.usedTokenList[ #self.usedTokenList ];
-   self.usedTokenList.remove(##);
+   if token == self.currentToken {
+      if #self.usedTokenList > 0 {
+         self.currentToken = self.usedTokenList[ #self.usedTokenList ];
+         self.usedTokenList.remove(##);
+      }
+      else {
+         self.currentToken = Parser.getEofToken();
+      }
+   }
 }
 
 
@@ -2060,46 +2067,56 @@ fn TransUnit.newPushback( tokenList: List<&Parser.Token> ) mut {
    self.usedTokenList.remove(##);
 }
 
-fn TransUnit.getTokenNoErr() mut : &Parser.Token {
-
+fn TransUnit.getTokenNoErr() mut : &Parser.Token
+{
+   let mut token;
+   
    if #self.pushbackList > 0 {
+      // pushbackList にトークンがある場合は、 pushbackList から取り出す
       if self.currentToken ~= Parser.getEofToken() {
          self.usedTokenList.insert( self.currentToken );
       }
-      self.currentToken = self.pushbackList[ #self.pushbackList ];
+      token = self.pushbackList[ #self.pushbackList ];
       self.pushbackList.remove(##);
+
+      if self.macroCtrl.$macroMode == .Expand {
+         token = self.macroCtrl.expandMacroVal(
+            self.typeNameCtrl, self.scope, self, token );
+      }
    }
    else {
+      // pushbackList にトークンがない場合は、パーサーから取得する
       let mut commentList:List<&Parser.Token> = [];
-      let mut token:&Parser.Token! = nil;
+      let mut workToken:&Parser.Token! = nil;
       while true {
-         token = self.parser.getToken();
-         if! token {
-            if _exp.kind ~= Parser.TokenKind.Cmnt {
+         workToken = self.parser.getToken();
+         when! workToken {
+            if workToken.kind ~= Parser.TokenKind.Cmnt {
                break;
             }
-            commentList.insert( _exp );
+            commentList.insert( workToken );
          }
          else {
             break;
          }
       }
-
-      if! token {
+      when! workToken {
+         token = workToken;
          if self.macroCtrl.$macroMode == .Expand {
             token = self.macroCtrl.expandMacroVal(
-               self.typeNameCtrl, self.scope, self, _exp );
+               self.typeNameCtrl, self.scope, self, token );
          }
-         _exp.set_commentList( commentList );
       }
       else {
+         token = Parser.getEofToken();
          self.commentCtrl.addDirect( commentList );
       }
-
-      self.usedTokenList.insert( self.currentToken );
-      self.currentToken = unwrap token default Parser.getEofToken();
+      if self.currentToken ~= Parser.getEofToken() {
+         self.usedTokenList.insert( self.currentToken );
+      }
    }
 
+   self.currentToken = token;
    if #self.currentToken.$commentList > 0 {
       self.commentCtrl.add( self.currentToken );
    }
@@ -2127,11 +2144,12 @@ fn TransUnit.getToken( allowEof:bool! ) mut : &Parser.Token {
 }
 
 fn TransUnit.pushback() mut {
-   if self.currentToken ~= Parser.getEofToken() {
-      self.pushbackList.insert( self.currentToken );
-   }
-   self.currentToken = self.usedTokenList[ #self.usedTokenList ];
-   self.usedTokenList.remove(##);
+   // if self.currentToken ~= Parser.getEofToken() {
+   //    self.pushbackList.insert( self.currentToken );
+   //    self.currentToken = self.usedTokenList[ #self.usedTokenList ];
+   //    self.usedTokenList.remove(##);
+   // }
+   self.pushbackToken( self.currentToken );
 }
 
 fn TransUnit.pushbackStr( name: str, statement: str ) mut {

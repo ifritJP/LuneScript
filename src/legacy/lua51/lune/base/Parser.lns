@@ -234,6 +234,7 @@ pub abstract class Parser {
 
 pub interface PushbackParser {
    pub fn getTokenNoErr() mut : &Token;
+   pub fn pushback() mut;
    pub fn pushbackToken( token: &Token ) mut;
    pub fn pushbackStr( name:str, statement: str ) mut;
    pub fn newPushback( tokenList: List<&Token> ) mut;
@@ -315,6 +316,82 @@ pub class StreamParser extend Parser {
    }
 
    pub override fn getToken() mut : &Token!;
+}
+
+pub class DefaultPushbackParser extend (PushbackParser) {
+   let mut parser:Parser;
+   let mut pushbackedList:List<&Token>;
+   let mut usedTokenList:List<&Token>;
+   let mut currentToken:&Token;
+
+   pub fn __init( parser:Parser ) {
+      self.parser = parser;
+      self.pushbackedList = [];
+      self.usedTokenList = [];
+      self.currentToken = noneToken;
+   }
+   
+   pub fn getTokenNoErr() mut : &Token {
+      if #self.pushbackedList > 0 {
+         self.currentToken = self.pushbackedList[ #self.pushbackedList ];
+         self.pushbackedList.remove(##);
+      }
+      else {
+         if! let token = self.parser.getToken() {
+            self.currentToken = token;
+         }
+         else {
+            self.currentToken = noneToken;
+         };
+      }
+      if self.currentToken.kind ~= .Eof {
+         self.usedTokenList.insert( self.currentToken );
+      }
+      return self.currentToken;
+   }
+   pub fn pushbackToken( token: &Token ) mut
+   {
+      if token.kind ~= .Eof {
+         self.pushbackedList.insert( token );
+      }
+      if token == self.currentToken {
+         self.usedTokenList.remove(##);
+         if #self.usedTokenList > 0 {
+            self.currentToken = self.usedTokenList[ #self.usedTokenList ];
+         }
+         else {
+            self.currentToken = noneToken;
+         }
+      }
+   }
+   pub fn pushback() mut {
+      self.pushbackToken( self.currentToken );
+   }
+   pub fn pushbackStr( name:str, statement: str ) mut {
+      let mut memStream = new TxtStream( statement );
+      let mut parser = new StreamParser( memStream, name, false );
+
+      let mut list:List<&Token> = [];
+      while true {
+         if! parser.getToken() {
+            list.insert( _exp );
+         }
+         else {
+            break;
+         }
+      }
+      for index = #list, 1, -1  {
+         self.pushbackToken( list[ index ] );
+      }
+   }
+   pub fn newPushback( tokenList: List<&Token> ) mut {
+      for index = #tokenList, 1, -1  {
+         self.pushbackToken( tokenList[ index ] );
+      }
+   }
+   pub fn error( message:str ) mut: __ {
+      Util.err( message );
+   }
 }
 
 let mut quotedCharSet:Set<str> = (@);
@@ -836,45 +913,85 @@ __test case1 {
 
    let mut ctrl = new Testing.Ctrl();
 
-   let mut stream = new TxtStream( ```
+   {
+      let mut stream = new TxtStream( ```
 let hoge:real = 2.0;
 let val = ?a;
 fn func():int {
    return "%g" val + 1 + 2.0;
 }
 ```);
-   let mut parser = new StreamParser( stream, "test" ## );
+      let mut parser = new StreamParser( stream, "test" ## );
 
-   class LowToken {
-      pub let txt:str;
-      pub let kind:TokenKind;
+      class LowToken {
+         pub let txt:str;
+         pub let kind:TokenKind;
+      }
+      let txtList = [
+         new LowToken( "let", .Kywd ), new LowToken( "hoge", .Symb ),
+         new LowToken( ":", .Dlmt ), new LowToken( "real", .Type ),
+         new LowToken( "=", .Ope ), new LowToken( "2.0", .Real ),
+         new LowToken( ";", .Dlmt ), 
+         new LowToken( "let", .Kywd ), new LowToken( "val", .Symb ),
+         new LowToken( "=", .Ope ), new LowToken( "a", .Char ),
+         new LowToken( ";", .Dlmt ),
+         new LowToken( "fn", .Kywd ), new LowToken( "func", .Symb ),
+         new LowToken( "(", .Dlmt ), new LowToken( ")", .Dlmt ),
+         new LowToken( ":", .Dlmt ), new LowToken( "int", .Type ),
+         new LowToken( "{", .Dlmt ),
+         new LowToken( "return", .Kywd ), new LowToken( '"%g"', .Str ),
+         new LowToken( "val", .Symb ),
+         new LowToken( "+", .Ope ), new LowToken( "1", .Int ),
+         new LowToken( "+", .Ope ), new LowToken( "2.0", .Real ),
+         new LowToken( ";", .Dlmt ),
+         new LowToken( "}", .Dlmt )
+      ];
+      foreach lowToken in txtList {
+         if! let token = parser.getToken() {
+            Testing._eq( ctrl, lowToken.txt, token.txt );
+            Testing._eq( ctrl, lowToken.kind.$_txt, token.kind.$_txt );
+         }
+         else {
+            Testing._err( ctrl, "token is nil" );
+         }
+      }
    }
-   let txtList = [
-      new LowToken( "let", .Kywd ), new LowToken( "hoge", .Symb ),
-      new LowToken( ":", .Dlmt ), new LowToken( "real", .Type ),
-      new LowToken( "=", .Ope ), new LowToken( "2.0", .Real ),
-      new LowToken( ";", .Dlmt ), 
-      new LowToken( "let", .Kywd ), new LowToken( "val", .Symb ),
-      new LowToken( "=", .Ope ), new LowToken( "a", .Char ),
-      new LowToken( ";", .Dlmt ),
-      new LowToken( "fn", .Kywd ), new LowToken( "func", .Symb ),
-      new LowToken( "(", .Dlmt ), new LowToken( ")", .Dlmt ),
-      new LowToken( ":", .Dlmt ), new LowToken( "int", .Type ),
-      new LowToken( "{", .Dlmt ),
-      new LowToken( "return", .Kywd ), new LowToken( '"%g"', .Str ),
-      new LowToken( "val", .Symb ),
-      new LowToken( "+", .Ope ), new LowToken( "1", .Int ),
-      new LowToken( "+", .Ope ), new LowToken( "2.0", .Real ),
-      new LowToken( ";", .Dlmt ),
-      new LowToken( "}", .Dlmt )
-   ];
-   foreach lowToken in txtList {
-      if! let token = parser.getToken() {
-         Testing._eq( ctrl, lowToken.txt, token.txt );
-         Testing._eq( ctrl, lowToken.kind.$_txt, token.kind.$_txt );
-      }
-      else {
-         Testing._err( ctrl, "token is nil" );
-      }
+
+   {
+      let mut stream = new TxtStream( "1 2 3 4 5" );
+      let mut parser = new DefaultPushbackParser( new StreamParser( stream, "test" ## ) );
+
+      Testing._eq( ctrl, parser.getTokenNoErr().txt, "1" );
+      Testing._eq( ctrl, parser.getTokenNoErr().txt, "2" );
+      Testing._eq( ctrl, parser.getTokenNoErr().txt, "3" );
+      parser.pushback(); // 3
+      parser.pushback(); // 2
+      Testing._eq( ctrl, parser.getTokenNoErr().txt, "2" );
+      Testing._eq( ctrl, parser.getTokenNoErr().txt, "3" );
+      Testing._eq( ctrl, parser.getTokenNoErr().txt, "4" );
+      parser.pushbackStr( "dummy", "a b" );
+      Testing._eq( ctrl, parser.getTokenNoErr().txt, "a" );
+      Testing._eq( ctrl, parser.getTokenNoErr().txt, "b" );
+      parser.pushback(); // b
+      parser.pushback(); // a
+      parser.pushback(); // 4
+      Testing._eq( ctrl, parser.getTokenNoErr().txt, "4" );
+      Testing._eq( ctrl, parser.getTokenNoErr().txt, "a" );
+      parser.newPushback(
+         [ new Token( .Symb, "z", new Position( 0, -1 ), false, [] ),
+           new Token( .Symb, "y", new Position( 0, -1 ), false, [] ) ] );
+      Testing._eq( ctrl, parser.getTokenNoErr().txt, "z" );
+      Testing._eq( ctrl, parser.getTokenNoErr().txt, "y" );
+      Testing._eq( ctrl, parser.getTokenNoErr().txt, "b" );
+      Testing._eq( ctrl, parser.getTokenNoErr().txt, "5" );
+      Testing._eq( ctrl, parser.getTokenNoErr().kind, TokenKind.Eof );
+      Testing._eq( ctrl, parser.getTokenNoErr().kind, TokenKind.Eof );
+   }
+   {
+      let mut stream = new TxtStream( "int" );
+      let mut parser = new DefaultPushbackParser( new StreamParser( stream, "test" ## ) );
+
+      Testing._eq( ctrl, parser.getTokenNoErr().txt, "int" );
+      Testing._eq( ctrl, parser.getTokenNoErr().kind, TokenKind.Eof );
    }
 }

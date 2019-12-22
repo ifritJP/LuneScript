@@ -1169,6 +1169,8 @@ pub enum MacroMode {
    None,
    /** マクロの展開モード */
    Expand,
+   /** マクロの展開中 */
+   Expanding,
    /** マクロ呼び出し時の引数解析モード */
    AnalyzeArg,
 }

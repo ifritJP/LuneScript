@@ -1964,7 +1964,6 @@ end
 
 function NodeKind.get_ExpList(  )
 
-   
    return _lune.unwrap( _moduleObj.nodeKind['ExpList'])
 end
 
@@ -3626,7 +3625,6 @@ end
 
 function NodeKind.get_ExpRef(  )
 
-   
    return _lune.unwrap( _moduleObj.nodeKind['ExpRef'])
 end
 
@@ -3705,7 +3703,6 @@ end
 
 function NodeKind.get_ExpSetVal(  )
 
-   
    return _lune.unwrap( _moduleObj.nodeKind['ExpSetVal'])
 end
 
@@ -4324,7 +4321,6 @@ end
 
 function NodeKind.get_When(  )
 
-   
    return _lune.unwrap( _moduleObj.nodeKind['When'])
 end
 
@@ -4556,7 +4552,6 @@ CastKind.__allList[3] = CastKind.Implicit
 
 function NodeKind.get_ExpCast(  )
 
-   
    return _lune.unwrap( _moduleObj.nodeKind['ExpCast'])
 end
 
@@ -4668,7 +4663,6 @@ end
 
 function NodeKind.get_ExpToDDD(  )
 
-   
    return _lune.unwrap( _moduleObj.nodeKind['ExpToDDD'])
 end
 
@@ -4883,9 +4877,12 @@ MacroMode.__allList[1] = MacroMode.None
 MacroMode.Expand = 1
 MacroMode._val2NameMap[1] = 'Expand'
 MacroMode.__allList[2] = MacroMode.Expand
-MacroMode.AnalyzeArg = 2
-MacroMode._val2NameMap[2] = 'AnalyzeArg'
-MacroMode.__allList[3] = MacroMode.AnalyzeArg
+MacroMode.Expanding = 2
+MacroMode._val2NameMap[2] = 'Expanding'
+MacroMode.__allList[3] = MacroMode.Expanding
+MacroMode.AnalyzeArg = 3
+MacroMode._val2NameMap[3] = 'AnalyzeArg'
+MacroMode.__allList[4] = MacroMode.AnalyzeArg
 
 
 function NodeKind.get_ExpOp1(  )
@@ -5111,10 +5108,10 @@ end
 
 function ExpRefItemNode:canBeLeft(  )
 
-   
    if self.val:get_expType() == Ast.builtinTypeStem then
       return false
    end
+   
    
    return Ast.TypeInfo.isMut( self:get_val():get_expType() ) and not self.nilAccess
 end
@@ -5264,7 +5261,6 @@ end
 
 function NodeKind.get_ExpAccessMRet(  )
 
-   
    return _lune.unwrap( _moduleObj.nodeKind['ExpAccessMRet'])
 end
 
@@ -5361,7 +5357,6 @@ end
 
 function NodeKind.get_ExpMultiTo1(  )
 
-   
    return _lune.unwrap( _moduleObj.nodeKind['ExpMultiTo1'])
 end
 
@@ -5625,7 +5620,6 @@ end
 
 function NodeKind.get_ExpMacroExp(  )
 
-   
    return _lune.unwrap( _moduleObj.nodeKind['ExpMacroExp'])
 end
 
@@ -6248,7 +6242,6 @@ end
 
 function NodeKind.get_RefField(  )
 
-   
    return _lune.unwrap( _moduleObj.nodeKind['RefField'])
 end
 
@@ -6344,7 +6337,6 @@ end
 
 function RefFieldNode:canBeLeft(  )
 
-   
    do
       local _exp = self:get_symbolInfo()
       if _exp ~= nil then
@@ -6352,12 +6344,12 @@ function RefFieldNode:canBeLeft(  )
       end
    end
    
+   
    return false
 end
 
 function RefFieldNode:canBeRight(  )
 
-   
    do
       local _exp = self:get_symbolInfo()
       if _exp ~= nil then
@@ -6365,13 +6357,13 @@ function RefFieldNode:canBeRight(  )
       end
    end
    
+   
    return true
 end
 
 
 function NodeKind.get_GetField(  )
 
-   
    return _lune.unwrap( _moduleObj.nodeKind['GetField'])
 end
 
@@ -6475,13 +6467,13 @@ end
 
 function GetFieldNode:canBeLeft(  )
 
-   
    do
       local _exp = self:get_symbolInfo()
       if _exp ~= nil then
          return _exp:get_canBeLeft()
       end
    end
+   
    
    return false
 end
@@ -6859,6 +6851,7 @@ end
 
 function DeclVarNode:getBreakKind( checkMode )
 
+   
    local kind = BreakKind.None
    local work = BreakKind.None
    do
@@ -7251,6 +7244,7 @@ end
 
 function DeclFuncNode:canBeRight(  )
 
+   
    return self.declInfo:get_name() == nil
 end
 
@@ -7788,7 +7782,6 @@ end
 
 function NodeKind.get_DeclArg(  )
 
-   
    return _lune.unwrap( _moduleObj.nodeKind['DeclArg'])
 end
 
@@ -7990,7 +7983,6 @@ end
 
 function NodeKind.get_DeclClass(  )
 
-   
    return _lune.unwrap( _moduleObj.nodeKind['DeclClass'])
 end
 
@@ -10271,6 +10263,7 @@ function Node:getSymbolInfo(  )
                local refFieldNode = _lune.__Cast( node, 3, RefFieldNode )
                if refFieldNode ~= nil then
                   if refFieldNode:get_nilAccess() then
+                     
                      return {}
                   end
                   
@@ -10376,7 +10369,6 @@ function WhileNode:getBreakKind( checkMode )
          return BreakKind.None
       end
       
-      
       if self.exp:get_expType():equals( Ast.builtinTypeBool ) then
          do
             local boolNode = _lune.__Cast( self.exp, 3, LiteralBoolNode )
@@ -10392,7 +10384,9 @@ function WhileNode:getBreakKind( checkMode )
          
       end
       
+      
       local mode = CheckBreakMode.IgnoreFlow
+      
       local kind = BreakKind.None
       for __index, stmt in pairs( self.block:get_stmtList() ) do
          local work = stmt:getBreakKind( mode )
@@ -11106,6 +11100,7 @@ function DefMacroInfo:__init(func, declInfo, symbol2MacroValInfoMap)
    self.argList = {}
    for __index, argNode in pairs( declInfo:get_argList() ) do
       if argNode:get_kind(  ) == NodeKind.get_DeclArg() then
+         
          local argType = argNode:get_expType()
          local argName = argNode:get_name().txt
          table.insert( self.argList, MacroArgInfo.new(argName, argType) )

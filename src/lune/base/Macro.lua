@@ -527,12 +527,14 @@ function MacroCtrl.new( macroEval )
    return obj
 end
 function MacroCtrl:__init(macroEval) 
+   self.tokenExpanding = false
    self.useModuleMacroSet = {}
    self.typeId2MacroInfo = {}
    self.symbol2ValueMapForMacro = {}
    self.macroEval = macroEval
    self.macroMode = Nodes.MacroMode.None
    self.macroCallLineNo = 0
+   self.macroModeStack = {self.macroMode}
 end
 function MacroCtrl.setmeta( obj )
   setmetatable( obj, { __index = MacroCtrl  } )
@@ -545,6 +547,9 @@ function MacroCtrl:get_typeId2MacroInfo()
 end
 function MacroCtrl:get_macroMode()
    return self.macroMode
+end
+function MacroCtrl:get_tokenExpanding()
+   return self.tokenExpanding
 end
 function MacroCtrl:get_macroCallLineNo()
    return self.macroCallLineNo
@@ -579,7 +584,6 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
    local macroArgValMap = {}
    local macroArgNodeList = macroInfo:getArgList(  )
    local macroArgName2ArgNode = {}
-   
    if expList ~= nil then
       for index, argNode in pairs( expList:get_expList() ) do
          local literal, mess = argNode:getLiteral(  )
@@ -624,6 +628,7 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
       if arg:get_typeInfo():get_kind() ~= Ast.TypeInfoKind.DDD then
          local argType = arg:get_typeInfo()
          local argName = arg:get_name()
+         
          self.symbol2ValueMapForMacro[argName] = Nodes.MacroValInfo.new(argValMap[index], argType, macroArgName2ArgNode[argName])
       else
        
@@ -644,7 +649,6 @@ function MacroCtrl:importMacro( macroInfoStem, macroTypeInfo, typeId2TypeInfo )
       local argList = {}
       local argNameList = {}
       local symbol2MacroValInfoMap = {}
-      
       for __index, argInfo in pairs( macroInfo.argList ) do
          local argTypeInfo = _lune.unwrap( typeId2TypeInfo[argInfo.typeId])
          table.insert( argList, Nodes.MacroArgInfo.new(argInfo.name, argTypeInfo) )
@@ -723,22 +727,36 @@ end
 
 function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
 
+   if self.tokenExpanding then
+      return token
+   end
+   
+   
+   local function getToken(  )
+   
+      self.tokenExpanding = true
+      local work = parser:getTokenNoErr(  )
+      self.tokenExpanding = false
+      return work
+   end
+   
    local tokenTxt = token.txt
    
-   local nextToken = parser:getTokenNoErr(  )
+   local nextToken = getToken(  )
+   
    if nextToken.txt ~= "~~" then
       parser:pushbackToken( nextToken )
    end
    
    
    if tokenTxt == ',,' or tokenTxt == ',,,' or tokenTxt == ',,,,' then
-      nextToken = parser:getTokenNoErr(  )
+      nextToken = getToken(  )
       
       local macroVal = self.symbol2ValueMapForMacro[nextToken.txt]
       if  nil == macroVal then
          local _macroVal = macroVal
       
-         parser:error( string.format( "unknown macro val %s", nextToken.txt) )
+         parser:error( string.format( "unknown macro val -- %s", nextToken.txt) )
       end
       
       
@@ -842,6 +860,7 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
             local rawTxt
             
             if txt:find( "^```" ) then
+               
                rawTxt = string.format( "%q", txt)
             else
              
@@ -857,10 +876,13 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
          
       end
       
-      nextToken = parser:getTokenNoErr(  )
+      nextToken = getToken(  )
       
       token = nextToken
    end
+   
+   
+   self.tokenExpanding = false
    
    return token
 end
@@ -948,31 +970,44 @@ function MacroCtrl:startExpandMode( lineNo )
 
    self.macroMode = Nodes.MacroMode.Expand
    self.macroCallLineNo = lineNo
+   table.insert( self.macroModeStack, self.macroMode )
 end
 
 
 function MacroCtrl:finishMacroMode(  )
 
-   self.macroMode = Nodes.MacroMode.None
+   table.remove( self.macroModeStack )
+   self.macroMode = self.macroModeStack[#self.macroModeStack]
+   self.symbol2ValueMapForMacro = {}
 end
 
 
 function MacroCtrl:startAnalyzeArgMode(  )
 
    self.macroMode = Nodes.MacroMode.AnalyzeArg
-   self.symbol2ValueMapForMacro = {}
+   table.insert( self.macroModeStack, self.macroMode )
+   local map = {}
+   for key, val in pairs( self.symbol2ValueMapForMacro ) do
+      map[key] = val
+   end
+   
+   self.symbol2ValueMapForMacro = map
 end
 
 
 function MacroCtrl:switchMacroMode(  )
 
-   self.macroMode = Nodes.MacroMode.None
+   
+   self.macroMode = self.macroModeStack[#self.macroModeStack - 1]
+   table.insert( self.macroModeStack, self.macroMode )
 end
 
 
 function MacroCtrl:restoreMacroMode(  )
 
-   self.macroMode = Nodes.MacroMode.AnalyzeArg
+   
+   table.remove( self.macroModeStack )
+   self.macroMode = self.macroModeStack[#self.macroModeStack]
 end
 
 

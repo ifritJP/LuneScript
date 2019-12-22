@@ -166,18 +166,23 @@ pub class MacroCtrl
    pri let mut symbol2ValueMapForMacro: Map<str,Nodes.MacroValInfo>;
    /** マクロのモード */
    pri let mut macroMode: Nodes.MacroMode {pub};
+   pri let mut macroModeStack: List<Nodes.MacroMode>;
+   /** true の場合、Token 展開中 */
+   pri let mut tokenExpanding:bool {pub};
    /** マクロをコールしている行番号 */
    pri let mut macroCallLineNo: int {pub};
    
 
    pub fn __init( macroEval: Nodes.MacroEval )
    {
+      self.tokenExpanding = false;
       self.useModuleMacroSet = (@);
       self.typeId2MacroInfo = {};
       self.symbol2ValueMapForMacro = {};
       self.macroEval = macroEval;
       self.macroMode = .None;
       self.macroCallLineNo = 0;
+      self.macroModeStack = [ self.macroMode ];
    }
 }
 
@@ -422,18 +427,31 @@ pub fn MacroCtrl.expandMacroVal(
    typeNameCtrl:&Ast.TypeNameCtrl, scope:&Ast.Scope,
    parser:Parser.PushbackParser, mut token:&Parser.Token ) mut : &Parser.Token
 {
+   if self.tokenExpanding {
+      return token;
+   }
+
+   fn getToken(): &Parser.Token {
+      self.tokenExpanding = true;
+      let work = parser.getTokenNoErr();
+      self.tokenExpanding = false;
+      return work;
+   }
+   
+
    let tokenTxt = token.txt;
 
-   let mut nextToken = parser.getTokenNoErr();
+   let mut nextToken = getToken();
+   
    if nextToken.txt ~= "~~" {
       parser.pushbackToken( nextToken );
    }
    
    if tokenTxt == ',,' or tokenTxt == ',,,' or tokenTxt == ',,,,' {
-      nextToken = parser.getTokenNoErr();
+      nextToken = getToken();
 
       let! macroVal = self.symbol2ValueMapForMacro[ nextToken.txt ] {
-         parser.error( "unknown macro val %s" (nextToken.txt) );
+         parser.error( "unknown macro val -- %s" (nextToken.txt) );
       };
 
       if tokenTxt == ',,' {
@@ -555,10 +573,13 @@ pub fn MacroCtrl.expandMacroVal(
                           (tokenTxt, nextToken.txt) );
          }
       }
-      nextToken = parser.getTokenNoErr();
+      nextToken = getToken();
 
       token = nextToken;
    }
+
+   self.tokenExpanding = false;
+
    return token;
 }
 
@@ -648,23 +669,35 @@ pub fn MacroCtrl.registVar( symbolList:&List<&Ast.SymbolInfo> ) mut {
 pub fn MacroCtrl.startExpandMode( lineNo:int ) mut {
    self.macroMode = .Expand;
    self.macroCallLineNo = lineNo;
+   self.macroModeStack.insert( self.macroMode );
 }
 
 pub fn MacroCtrl.finishMacroMode() mut {
-   self.macroMode = .None;
+   self.macroModeStack.remove(##);
+   self.macroMode = self.macroModeStack[ #self.macroModeStack ];
+   self.symbol2ValueMapForMacro = {};
 }
 
 pub fn MacroCtrl.startAnalyzeArgMode() mut {
    self.macroMode = .AnalyzeArg;
-   self.symbol2ValueMapForMacro = {};
+   self.macroModeStack.insert( self.macroMode );
+   let mut map:Map<str,Nodes.MacroValInfo> = {};
+   foreach val, key in self.symbol2ValueMapForMacro {
+      map[ key ] = val;
+   }
+   self.symbol2ValueMapForMacro = map;
 }
 
 pub fn MacroCtrl.switchMacroMode() mut {
-   self.macroMode = .None;
+   //   self.macroMode = .None;
+   self.macroMode = self.macroModeStack[ #self.macroModeStack - 1 ];
+   self.macroModeStack.insert( self.macroMode );
 }
 
 pub fn MacroCtrl.restoreMacroMode() mut {
-   self.macroMode = .AnalyzeArg;
+   //self.macroMode = .AnalyzeArg;
+   self.macroModeStack.remove(##);
+   self.macroMode = self.macroModeStack[ #self.macroModeStack ];
 }
 
 
