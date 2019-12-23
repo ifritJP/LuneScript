@@ -221,7 +221,6 @@ local function createReserveInfo( luaMode )
       typeSet["bool"]= true
    end
    
-   
    local multiCharDelimitMap = {}
    multiCharDelimitMap["="] = {"=="}
    multiCharDelimitMap["<"] = {"<="}
@@ -612,9 +611,19 @@ function DefaultPushbackParser:pushbackToken( token )
    end
    
    if token == self.currentToken then
-      table.remove( self.usedTokenList )
       if #self.usedTokenList > 0 then
-         self.currentToken = self.usedTokenList[#self.usedTokenList]
+         local used = self.usedTokenList[#self.usedTokenList]
+         if used == token then
+            table.remove( self.usedTokenList )
+         end
+         
+         if #self.usedTokenList > 0 then
+            self.currentToken = self.usedTokenList[#self.usedTokenList]
+         else
+          
+            self.currentToken = _moduleObj.noneToken
+         end
+         
       else
        
          self.currentToken = _moduleObj.noneToken
@@ -661,8 +670,46 @@ function DefaultPushbackParser:error( message )
 
    Util.err( message )
 end
+function DefaultPushbackParser:getLastPos(  )
+
+   local pos = Position.new(0, 0)
+   local txt = ""
+   if self.currentToken.kind ~= TokenKind.Eof then
+      pos = self.currentToken.pos
+      txt = self.currentToken.txt
+   else
+    
+      if #self.usedTokenList > 0 then
+         local token = self.usedTokenList[#self.usedTokenList]
+         pos = token.pos
+         txt = token.txt
+      end
+      
+   end
+   
+   return pos
+end
+function DefaultPushbackParser:getNearCode(  )
+
+   local code = ""
+   for index = #self.usedTokenList - 30, #self.usedTokenList do
+      if index > 1 then
+         code = string.format( "%s %s", code, self.usedTokenList[index].txt)
+      end
+      
+   end
+   
+   return string.format( "%s -- current '%s'", code, self.currentToken.txt)
+end
+function DefaultPushbackParser:getStreamName(  )
+
+   return self.parser:getStreamName(  )
+end
 function DefaultPushbackParser.setmeta( obj )
   setmetatable( obj, { __index = DefaultPushbackParser  } )
+end
+function DefaultPushbackParser:get_currentToken()
+   return self.currentToken
 end
 
 

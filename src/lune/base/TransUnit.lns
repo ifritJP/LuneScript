@@ -365,16 +365,16 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
    /** クラスの型情報 -> そのクラスを宣言しているノード */
    pri let mut typeInfo2ClassNode: Map<&Ast.TypeInfo,Nodes.DeclClassNode>;
    /** パーサー */
-   pri let mut parser: Parser.Parser;
-   /** push バックしたトークンリスト */
-   pri let mut pushbackList: List<&Parser.Token>;
-   /** 現在のトークン */
-   pri let mut currentToken: &Parser.Token;
+   pri let mut parser: Parser.DefaultPushbackParser;
+   // /** push バックしたトークンリスト */
+   // pri let mut pushbackList: List<&Parser.Token>;
+   // /** 現在のトークン */
+   // pri let mut currentToken: &Parser.Token;
    /** コメントリスト */
    pri let mut commentCtrl: Parser.CommentCtrl;
    
-   /** 解析済みトークンリスト */
-   pri let mut usedTokenList: List<&Parser.Token>;
+   // /** 解析済みトークンリスト */
+   // pri let mut usedTokenList: List<&Parser.Token>;
    /** 解析エラーメッセージ */
    pri let mut errMessList: str[] { pub };
    /** 解析警告ーメッセージ */
@@ -472,10 +472,10 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
       self.validMutControl = true;
       self.moduleName = "";
       self.moduleType = Ast.headTypeInfo;
-      self.parser = new Parser.DummyParser();
+      self.parser = new Parser.DefaultPushbackParser( new Parser.DummyParser() );
       self.subfileList = [];
-      self.pushbackList = [];
-      self.usedTokenList = [];
+      // self.pushbackList = [];
+      // self.usedTokenList = [];
 
       // self.scope = Ast.rootScope;
       // self.topScope = Ast.rootScope;
@@ -490,7 +490,7 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
 
       self.typeId2ClassMap = {};
       self.typeInfo2ClassNode = {};
-      self.currentToken = Parser.getEofToken();
+      // self.currentToken = Parser.getEofToken();
       self.commentCtrl = new Parser.CommentCtrl();
       self.errMessList = [];
       self.warnMessList = [];
@@ -1953,7 +1953,7 @@ fn TransUnit.registBuiltInScope() mut {
             switch classKind {
                case .Class, .Interface {
                   parentInfo = self.pushClass(
-                     self.currentToken.pos,
+                     self.parser.$currentToken.pos,
                      classKind == .Class, false, nil, interfaceList,
                      genTypeList, true, name, .Pub ## );
                   builtinFunc.registerClass( parentInfo );
@@ -1999,20 +1999,7 @@ fn TransUnit.registBuiltInScope() mut {
 }
 
 pub fn TransUnit.error( mess: str ) mut : __ {
-   let mut pos:&Parser.Position = new Parser.Position( 0, 0 );
-   let mut txt = "";
-   if self.currentToken ~= Parser.getEofToken() {
-      pos = self.currentToken.pos;
-      txt = self.currentToken.txt;
-   }
-   else {
-      if #self.usedTokenList > 0 {
-         let token = self.usedTokenList[ #self.usedTokenList ];
-         pos = token.pos;
-         txt = token.txt;
-      }
-   }
-   self.addErrMess(pos, mess);
+   self.addErrMess( self.parser.getLastPos(), mess);
    // Util.err( "%s:%d:%d: error:(%s) %s"
    //           ( self.parser.getStreamName(),
    //             pospos.lineNo, pos.column, txt, mess ) );
@@ -2025,13 +2012,7 @@ pub fn TransUnit.error( mess: str ) mut : __ {
    }
    if self.macroCtrl.$macroMode ~= .None {
       print( "------ near code -----", self.macroCtrl.$macroMode.$_txt );
-      let mut code = "";
-      for index = #self.usedTokenList - 30, #self.usedTokenList {
-         if index > 1 {
-            code = "%s %s" ( code, self.usedTokenList[ index ].txt );
-         }
-      }
-      print( code .. self.currentToken.txt );
+      print( self.parser.getNearCode() );
       print( "------" );
    }
    
@@ -2044,63 +2025,61 @@ fn TransUnit.createNoneNode( pos: &Parser.Position ) mut : Nodes.Node {
 }
 
 pub fn TransUnit.pushbackToken( token: &Parser.Token ) mut {
-   if token.kind ~= .Eof {
-      self.pushbackList.insert( token );
-   }
-   if token == self.currentToken {
-      if #self.usedTokenList > 0 {
-         self.currentToken = self.usedTokenList[ #self.usedTokenList ];
-         self.usedTokenList.remove(##);
-      }
-      else {
-         self.currentToken = Parser.getEofToken();
-      }
-   }
+   // if token.kind ~= .Eof {
+   //    self.pushbackList.insert( token );
+   // }
+   // if token == self.currentToken {
+   //    if #self.usedTokenList > 0 {
+   //       self.currentToken = self.usedTokenList[ #self.usedTokenList ];
+   //       self.usedTokenList.remove(##);
+   //    }
+   //    else {
+   //       self.currentToken = Parser.getEofToken();
+   //    }
+   // }
+   self.parser.pushbackToken( token );
 }
 
 
 fn TransUnit.newPushback( tokenList: List<&Parser.Token> ) mut {
-   for index = #tokenList, 1, -1  {
-      self.pushbackList.insert( tokenList[ index ] );
-   }
-   self.currentToken = self.usedTokenList[ #self.usedTokenList ];
-   self.usedTokenList.remove(##);
+   // for index = #tokenList, 1, -1  {
+   //    self.pushbackList.insert( tokenList[ index ] );
+   // }
+   // self.currentToken = self.usedTokenList[ #self.usedTokenList ];
+   // self.usedTokenList.remove(##);
+   self.parser.newPushback( tokenList );
+}
+
+pub fn TransUnit.getStreamName(): str {
+   return self.parser.getStreamName();
 }
 
 fn TransUnit.getTokenNoErr() mut : &Parser.Token
 {
    let mut token;
    
-   if #self.pushbackList > 0 {
-      // pushbackList にトークンがある場合は、 pushbackList から取り出す
-      if self.currentToken ~= Parser.getEofToken() {
-         self.usedTokenList.insert( self.currentToken );
-      }
-      token = self.pushbackList[ #self.pushbackList ];
-      self.pushbackList.remove(##);
+   // if #self.pushbackList > 0 {
+   //    // pushbackList にトークンがある場合は、 pushbackList から取り出す
+   //    if self.currentToken ~= Parser.getEofToken() {
+   //       self.usedTokenList.insert( self.currentToken );
+   //    }
+   //    token = self.pushbackList[ #self.pushbackList ];
+   //    self.pushbackList.remove(##);
 
-      if self.macroCtrl.$macroMode == .Expand {
-         token = self.macroCtrl.expandMacroVal(
-            self.typeNameCtrl, self.scope, self, token );
-      }
-   }
-   else {
+   //    if self.macroCtrl.$macroMode == .Expand {
+   //       token = self.macroCtrl.expandMacroVal(
+   //          self.typeNameCtrl, self.scope, self, token );
+   //    }
+   // }
+   // else {
       // pushbackList にトークンがない場合は、パーサーから取得する
       let mut commentList:List<&Parser.Token> = [];
-      let mut workToken:&Parser.Token! = nil;
-      while true {
-         workToken = self.parser.getToken();
-         when! workToken {
-            if workToken.kind ~= Parser.TokenKind.Cmnt {
-               break;
-            }
-            commentList.insert( workToken );
-         }
-         else {
-            break;
-         }
+      let mut workToken = self.parser.getTokenNoErr();
+      while workToken.kind == Parser.TokenKind.Cmnt {
+         commentList.insert( workToken );
+         workToken = self.parser.getTokenNoErr();
       }
-      when! workToken {
+      if workToken.$kind ~= .Eof {
          token = workToken;
          if self.macroCtrl.$macroMode == .Expand {
             token = self.macroCtrl.expandMacroVal(
@@ -2111,17 +2090,13 @@ fn TransUnit.getTokenNoErr() mut : &Parser.Token
          token = Parser.getEofToken();
          self.commentCtrl.addDirect( commentList );
       }
-      if self.currentToken ~= Parser.getEofToken() {
-         self.usedTokenList.insert( self.currentToken );
-      }
+   // }
+
+   if #token.$commentList > 0 {
+      self.commentCtrl.add( token );
    }
 
-   self.currentToken = token;
-   if #self.currentToken.$commentList > 0 {
-      self.commentCtrl.add( self.currentToken );
-   }
-
-   return self.currentToken;
+   return token;
 }
 
 
@@ -2139,7 +2114,6 @@ fn TransUnit.getToken( allowEof:bool! ) mut : &Parser.Token {
    //     Util.errorLog( "getToken %s" (token.txt) );
    // }
 
-   self.currentToken = token;
    return token;
 }
 
@@ -2149,25 +2123,27 @@ fn TransUnit.pushback() mut {
    //    self.currentToken = self.usedTokenList[ #self.usedTokenList ];
    //    self.usedTokenList.remove(##);
    // }
-   self.pushbackToken( self.currentToken );
+   //self.pushbackToken( self.currentToken );
+   self.parser.pushback();
 }
 
 fn TransUnit.pushbackStr( name: str, statement: str ) mut {
-   let mut memStream = new Parser.TxtStream( statement );
-   let mut parser = new Parser.StreamParser( memStream, name, false );
+   // let mut memStream = new Parser.TxtStream( statement );
+   // let mut parser = new Parser.StreamParser( memStream, name, false );
 
-   let mut list:List<&Parser.Token> = [];
-   while true {
-      if! parser.getToken() {
-         list.insert( _exp );
-      }
-      else {
-         break;
-      }
-   }
-   for index = #list, 1, -1  {
-      self.pushbackToken( list[ index ] );
-   }
+   // let mut list:List<&Parser.Token> = [];
+   // while true {
+   //    if! parser.getToken() {
+   //       list.insert( _exp );
+   //    }
+   //    else {
+   //       break;
+   //    }
+   // }
+   // for index = #list, 1, -1  {
+   //    self.pushbackToken( list[ index ] );
+   // }
+   self.parser.pushbackStr( name, statement );
 }
 
 enum SymbolMode {
@@ -2260,7 +2236,7 @@ fn TransUnit.analyzeStatementList(
    }
 
    let mut lastStatement:&Nodes.Node! = nil;
-   let mut lastLineNo = self.currentToken.pos.lineNo;
+   let mut lastLineNo = self.parser.getLastPos().lineNo;
 
    // コメントが、直前の文の末尾と同じ行にあるかどうか調べ、
    // 同じ行にある場合は、直前の文のコメントとしてセットする
@@ -2303,7 +2279,7 @@ fn TransUnit.analyzeStatementList(
             blank = statement.$pos.lineNo - lastLineNo;
          }
          else {
-            blank = self.currentToken.pos.lineNo - lastLineNo;
+            blank = self.parser.getLastPos().lineNo - lastLineNo;
          }
       }
       return blank;
@@ -2325,7 +2301,7 @@ fn TransUnit.analyzeStatementList(
                   self.nodeManager, new Parser.Position( lastLineNo + 1, 0 ),
                   [ Ast.builtinTypeNone ], blank - 1 ) );
          }
-         lastLineNo = self.currentToken.pos.lineNo;
+         lastLineNo = self.parser.getLastPos().lineNo;
 
          stmtList.insert( statement );
          lastStatement = statement;
@@ -2683,7 +2659,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
 
    // 初めに child 以外で TypeInfo を登録
    let mut importParam = new ImportParam(
-      self.currentToken.pos, self, typeId2Scope, typeId2TypeInfo,
+      self.parser.getLastPos(), self, typeId2Scope, typeId2TypeInfo,
       metaInfo, self.scope, moduleTypeInfo, self.scopeAccess, id2atomMap );
    foreach atomInfo in _typeInfoList {
       let newTypeInfo, errMess = atomInfo.createTypeInfo( importParam );
@@ -2782,7 +2758,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
          case .Class {
             // self.pushClass( self.currentToken.pos, true, classTypeInfo.$abstractFlag,
             //                 nil, nil, nil, true, classTypeInfo.getTxt(##), .Pub ## );
-            self.pushClassScope( self.currentToken.pos, classTypeInfo );
+            self.pushClassScope( self.parser.getLastPos(), classTypeInfo );
             
             if! metaInfo.__typeId2ClassInfoMap[ classTypeId ] {
                let classInfo = _exp;

@@ -238,7 +238,8 @@ pub interface PushbackParser {
    pub fn pushbackToken( token: &Token ) mut;
    pub fn pushbackStr( name:str, statement: str ) mut;
    pub fn newPushback( tokenList: List<&Token> ) mut;
-   pub fn error( message:str ) mut: __;
+   pub fn getStreamName(): str;
+   pub fn error( message:str ) mut :__;
 }
 
 pub class WrapParser extend Parser {
@@ -322,7 +323,7 @@ pub class DefaultPushbackParser extend (PushbackParser) {
    let mut parser:Parser;
    let mut pushbackedList:List<&Token>;
    let mut usedTokenList:List<&Token>;
-   let mut currentToken:&Token;
+   let mut currentToken:&Token {pub};
 
    pub fn __init( parser:Parser ) {
       self.parser = parser;
@@ -355,9 +356,17 @@ pub class DefaultPushbackParser extend (PushbackParser) {
          self.pushbackedList.insert( token );
       }
       if token == self.currentToken {
-         self.usedTokenList.remove(##);
          if #self.usedTokenList > 0 {
-            self.currentToken = self.usedTokenList[ #self.usedTokenList ];
+            let used = self.usedTokenList[ #self.usedTokenList ];
+            if used == token { 
+               self.usedTokenList.remove(##);
+            }
+            if #self.usedTokenList > 0 {
+               self.currentToken = self.usedTokenList[ #self.usedTokenList ];
+            }
+            else {
+               self.currentToken = noneToken;
+            }
          }
          else {
             self.currentToken = noneToken;
@@ -389,8 +398,41 @@ pub class DefaultPushbackParser extend (PushbackParser) {
          self.pushbackToken( tokenList[ index ] );
       }
    }
-   pub fn error( message:str ) mut: __ {
+   pub fn error( message:str ) mut :__
+   {
       Util.err( message );
+   }
+
+   pub fn getLastPos() : &Position {
+      let mut pos:&Position = new Position( 0, 0 );
+      let mut txt = "";
+      if self.$currentToken.$kind ~= .Eof {
+         pos = self.$currentToken.pos;
+         txt = self.$currentToken.txt;
+      }
+      else {
+         if #self.$usedTokenList > 0 {
+            let token = self.$usedTokenList[ #self.$usedTokenList ];
+            pos = token.pos;
+            txt = token.txt;
+         }
+      }
+      return pos;
+      // Util.err( "%s:%d:%d: error:(%s) %s"
+      //           ( self.getStreamName(),
+      //             pospos.lineNo, pos.column, txt, mess ) );
+   }
+   pub fn getNearCode():str {
+      let mut code = "";
+      for index = #self.usedTokenList - 30, #self.usedTokenList {
+         if index > 1 {
+            code = "%s %s" ( code, self.usedTokenList[ index ].txt );
+         }
+      }
+      return "%s -- current '%s'" (code, self.currentToken.txt );
+   }
+   pub fn getStreamName(): str {
+      return self.parser.getStreamName();
    }
 }
 
@@ -917,6 +959,7 @@ __test case1 {
       let mut stream = new TxtStream( ```
 let hoge:real = 2.0;
 let val = ?a;
+// hoge
 fn func():int {
    return "%g" val + 1 + 2.0;
 }
@@ -935,6 +978,7 @@ fn func():int {
          new LowToken( "let", .Kywd ), new LowToken( "val", .Symb ),
          new LowToken( "=", .Ope ), new LowToken( "a", .Char ),
          new LowToken( ";", .Dlmt ),
+         new LowToken( "// hoge", .Cmnt ),
          new LowToken( "fn", .Kywd ), new LowToken( "func", .Symb ),
          new LowToken( "(", .Dlmt ), new LowToken( ")", .Dlmt ),
          new LowToken( ":", .Dlmt ), new LowToken( "int", .Type ),

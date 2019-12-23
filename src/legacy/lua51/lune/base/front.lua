@@ -311,7 +311,6 @@ function __luneGetLocal( varName )
          break
       end
       
-      
       index = index + 1
    end
    
@@ -737,7 +736,6 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
       return frontInterface.ModuleId.tempId, uptodate
    end
    
-   
    local function checkDependUptodate( metaTime, metaInfo, metaCode )
       local __func__ = '@lune.@base.@front.Front.getModuleIdAndCheckUptodate.checkDependUptodate'
    
@@ -942,7 +940,6 @@ function Front:searchLuaFile( moduleFullName, addSearchPath )
          luaSearchPath = string.format( "%s/?.lua;%s", tostring( addSearchPath), package.path )
       end
    end
-   
    
    local foundPath = Depend.searchpath( moduleFullName, luaSearchPath )
    if  nil == foundPath then
@@ -1510,7 +1507,6 @@ function Front:saveToLua(  )
          if self.option.mode == Option.ModeKind.SaveMeta then
             convMode = convLua.ConvMode.ConvMeta
          end
-         
          
          local metaFileObj = nil
          local tempMetaPath = metaPath .. ".tmp"

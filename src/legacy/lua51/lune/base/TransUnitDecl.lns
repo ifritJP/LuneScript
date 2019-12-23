@@ -412,7 +412,7 @@ pub fn TransUnit.createAST(
    self.typeNameCtrl = new Ast.TypeNameCtrl( moduleTypeInfo );
 
 
-   self.parser = parser;
+   self.parser = new Parser.DefaultPushbackParser( parser );
 
    let ast:Nodes.Node;
 
@@ -454,7 +454,7 @@ pub fn TransUnit.createAST(
             self.error( "open error -- %s" (file) );
          };
 
-         self.parser = subParser;
+         self.parser = new Parser.DefaultPushbackParser( subParser );
 
          lastStatement = self.analyzeStatementListSubfile( children );
 
@@ -579,7 +579,7 @@ fn TransUnit.analyzeDeclMacroSub(
 
    let mut stmtNode : Nodes.BlockNode! = nil;
    if nextToken.txt == "{" {
-      let mut parser = new Parser.WrapParser( self.parser, self.parser.getStreamName() );
+      //let mut parser = new Parser.WrapParser( self.parser, self.parser.getStreamName() );
 
       // foreach symbolInfo, symbol in scope.$symbol2SymbolInfoMap {
       //    scope.add( symbol, symbolInfo.$typeInfo, "local", false );
@@ -595,8 +595,8 @@ fn TransUnit.analyzeDeclMacroSub(
       scope.addLocalVar( false, false, "_lnsLoad", nil, funcType, .IMut );
 
 
-      let mut bakParser = self.parser;
-      self.parser = parser;
+      // let mut bakParser = self.parser;
+      // self.parser = parser;
 
       let mut stmtList:List<&Nodes.Node> = [];
       self.prepareTentativeSymbol( self.scope, false );
@@ -609,7 +609,7 @@ fn TransUnit.analyzeDeclMacroSub(
       self.checkNextToken( "}" );
       self.finishTentativeSymbol( false );
 
-      self.parser = bakParser;
+      // self.parser = bakParser;
 
 
       

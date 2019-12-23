@@ -608,7 +608,6 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
       
    end
    
-   
    local func = macroInfo.func
    local macroVars = func( macroArgValMap )
    
@@ -742,15 +741,8 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
    
    local tokenTxt = token.txt
    
-   local nextToken = getToken(  )
-   
-   if nextToken.txt ~= "~~" then
-      parser:pushbackToken( nextToken )
-   end
-   
-   
    if tokenTxt == ',,' or tokenTxt == ',,,' or tokenTxt == ',,,,' then
-      nextToken = getToken(  )
+      local nextToken = getToken(  )
       
       local macroVal = self.symbol2ValueMapForMacro[nextToken.txt]
       if  nil == macroVal then

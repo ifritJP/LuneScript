@@ -180,7 +180,7 @@ fn TransUnit.analyzeExpList(
       
       expList.insert( exp );
       expTypeList.insert( exp.$expType );
-      let mut token = self.getToken(##);
+      let mut token = self.getToken( true );
 
       if token.txt == "**" {
          //if #exp.$expTypeList <= 1 {
@@ -191,7 +191,7 @@ fn TransUnit.analyzeExpList(
          }
          followOn = true;
          
-         token = self.getToken(##);
+         token = self.getToken( true );
       }
       
       if token.txt == "##" {
@@ -873,7 +873,7 @@ fn TransUnit.evalMacroOp(
    let mut bakParser = self.parser;
 
    when! parser {
-      self.parser = parser;
+      self.parser = new Parser.DefaultPushbackParser( parser );
    }
    else {
       self.error( unwrap mess );
@@ -886,12 +886,18 @@ fn TransUnit.evalMacroOp(
    self.macroCtrl.finishMacroMode();
 
    let nextToken = self.getTokenNoErr();
+
+   self.parser = bakParser;
+   
    if nextToken ~= Parser.getEofToken() {
       self.addErrMess( firstToken.pos,
-                       "remain macro expand-statement token -- %s" (nextToken.txt) );
+                       "remain macro expand-statement token -- '%s'(%d:%d)"
+                       (nextToken.txt, nextToken.pos.lineNo, nextToken.pos.column) );
+      if not macroTypeInfo.$externalFlag {
+         self.addErrMess( nextToken.pos,
+                          "remain macro expand-statement token -- '%s'" (nextToken.txt) );
+      }
    }
-   
-   self.parser = bakParser;
 }
 
 

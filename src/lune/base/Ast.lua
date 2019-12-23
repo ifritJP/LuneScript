@@ -2653,7 +2653,6 @@ function AccessSymbolInfo:get_canBeLeft(  )
       return false
    end
    
-   
    return self.symbolInfo:get_canBeLeft()
 end
 function AccessSymbolInfo.setmeta( obj )
@@ -3139,7 +3138,6 @@ function AlternateTypeInfo:canEvalWith( other, canEvalType, alt2type )
       
    end
    
-   
    return self:canSetFrom( other, canEvalType, alt2type ), nil
 end
 function AlternateTypeInfo:get_display_stirng_with( raw )
@@ -3496,7 +3494,6 @@ function GenericTypeInfo:isInheritFrom( other, alt2type )
       return false
    end
    
-   
    local genOther = _lune.__Cast( other, 3, GenericTypeInfo )
    if  nil == genOther then
       local _genOther = genOther
@@ -3546,7 +3543,6 @@ function GenericTypeInfo:canEvalWith( other, canEvalType, alt2type )
    if self == otherSrc then
       return true, nil
    end
-   
    
    local work = otherSrc
    while true do
@@ -4581,7 +4577,6 @@ function NormalTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag 
       parentTxt = self:getParentFullName( typeNameCtrl, importInfo, localFlag )
    end
    
-   
    if #self.itemTypeInfoList > 0 then
       local txt = raw .. "<"
       for index, typeInfo in pairs( self.itemTypeInfoList ) do
@@ -4674,7 +4669,6 @@ function NormalTypeInfo:equalsSub( typeInfo, alt2type, checkModifer )
    if typeInfo:get_kind() == TypeInfoKind.Alternate then
       return typeInfo:equals( self, alt2type, checkModifer )
    end
-   
    
    if self.kind ~= typeInfo:get_kind() or self.staticFlag ~= typeInfo:get_staticFlag() or self.autoFlag ~= typeInfo:get_autoFlag() or self:get_nilable() ~= typeInfo:get_nilable() or self.rawTxt ~= typeInfo:get_rawTxt() or self.parentInfo ~= typeInfo:get_parentInfo() or self.baseTypeInfo ~= typeInfo:get_baseTypeInfo() then
       
@@ -5160,7 +5154,6 @@ function NormalTypeInfo.createSet( accessMode, parentInfo, itemTypeInfo, mutMode
       Util.err( string.format( "illegal set type: %s", itemTypeInfo) )
    end
    
-   
    idProv:increment(  )
    return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeSet ), _moduleObj.builtinTypeSet, nil, false, false, false, AccessMode.Pub, "Set", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Set, itemTypeInfo, nil, nil, mutMode)
 end
@@ -5171,7 +5164,6 @@ function NormalTypeInfo.createList( accessMode, parentInfo, itemTypeInfo, mutMod
    if #itemTypeInfo == 0 then
       Util.err( string.format( "illegal list type: %s", itemTypeInfo) )
    end
-   
    
    idProv:increment(  )
    return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeList ), _moduleObj.builtinTypeList, nil, false, false, false, AccessMode.Pub, "List", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.List, itemTypeInfo, nil, nil, mutMode)
@@ -5208,7 +5200,6 @@ function NormalTypeInfo.createModule( scope, parentInfo, externalFlag, moduleNam
       Util.err( string.format( "This symbol can not use for a class or script file. -- %s", moduleName) )
    end
    
-   
    idProv:increment(  )
    local info = ModuleTypeInfo.new(scope, externalFlag, moduleName, parentInfo, idProv:get_id(), mutable)
    return info
@@ -5230,7 +5221,6 @@ function NormalTypeInfo.createClass( classFlag, abstractFlag, scope, baseInfo, i
       Util.err( string.format( "This symbol can not use for a class or script file. -- %s", className) )
    end
    
-   
    idProv:increment(  )
    local info = NormalTypeInfo.new(abstractFlag, scope, baseInfo, interfaceList, false, externalFlag, false, accessMode, className, parentInfo, idProv:get_id(), classFlag and TypeInfoKind.Class or TypeInfoKind.IF, genTypeList, nil, nil, MutMode.Mut)
    return info
@@ -5242,7 +5232,6 @@ function NormalTypeInfo.createFunc( abstractFlag, builtinFlag, scope, kind, pare
    if not builtinFlag and Parser.isLuaKeyword( funcName ) then
       Util.err( string.format( "This symbol can not use for a function. -- %s", funcName) )
    end
-   
    
    idProv:increment(  )
    local info = NormalTypeInfo.new(abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, idProv:get_id(), kind, _lune.unwrapDefault( altTypeList, {}), _lune.unwrapDefault( argTypeList, {}), _lune.unwrapDefault( retTypeInfoList, {}), mutable and MutMode.Mut or MutMode.IMut)
@@ -5420,7 +5409,6 @@ function NormalTypeInfo.createDDD( typeInfo, externalFlag )
          return _exp
       end
    end
-   
    
    idProv:increment(  )
    return DDDTypeInfo.new(idProv:get_id(), typeInfo, externalFlag)
@@ -5963,7 +5951,6 @@ function NormalTypeInfo.createEnum( scope, parentInfo, externalFlag, accessMode,
       Util.err( string.format( "This symbol can not use for a enum. -- %s", enumName) )
    end
    
-   
    idProv:increment(  )
    local info = EnumTypeInfo.new(scope, externalFlag, accessMode, enumName, parentInfo, idProv:get_id(), valTypeInfo)
    
@@ -6029,7 +6016,6 @@ function NormalTypeInfo.createAlge( scope, parentInfo, externalFlag, accessMode,
    if Parser.isLuaKeyword( algeName ) then
       Util.err( string.format( "This symbol can not use for a alge. -- %s", algeName) )
    end
-   
    
    idProv:increment(  )
    local info = AlgeTypeInfo.new(scope, externalFlag, accessMode, algeName, parentInfo, idProv:get_id())
@@ -6213,7 +6199,6 @@ function NormalTypeInfo.isAvailableMapping( typeInfo, checkedTypeMap )
       end
    end
    
-   
    checkedTypeMap[typeInfo] = true
    local result = isAvailableMappingSub(  )
    checkedTypeMap[typeInfo] = result
@@ -6323,6 +6308,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
          end
          
          
+         
          if warnForFollowSrcIndex ~= nil then
             
             if warnForFollowSrcIndex <= srcIndex then
@@ -6372,6 +6358,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
             end
             
             
+            
             if warnForFollowSrcIndex ~= nil then
                
                if warnForFollowSrcIndex <= index then
@@ -6407,6 +6394,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
                return result, mess
             end
             
+            
             if warnForFollowSrcIndex ~= nil then
                
                if warnForFollowSrcIndex <= index then
@@ -6424,6 +6412,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
             if not dstType:canEvalWith( expType, CanEvalType.SetOp, alt2type ) then
                return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:getTxt( _moduleObj.defaultTypeNameCtrl ))
             end
+            
             
             if warnForFollowSrcIndex ~= nil then
                
@@ -6664,7 +6653,6 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
       return false, nil
    end
    
-   
    do
       local _switchExp = dest:get_kind()
       if _switchExp == TypeInfoKind.Prim then
@@ -6672,13 +6660,13 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
             return true, nil
          end
          
-         
          return false, nil
       elseif _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.Set then
          if otherSrc:get_itemTypeInfoList()[1] == _moduleObj.builtinTypeNone then
             
             return true, nil
          end
+         
          
          local mess = nil
          if #dest:get_itemTypeInfoList() >= 1 and #otherSrc:get_itemTypeInfoList() >= 1 then
@@ -6705,6 +6693,7 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
          
          local function check1(  )
          
+            
             local mess = nil
             if #dest:get_itemTypeInfoList() >= 1 and #otherSrc:get_itemTypeInfoList() >= 1 then
                
@@ -6725,6 +6714,7 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
          end
          local function check2(  )
          
+            
             local mess = nil
             if #dest:get_itemTypeInfoList() >= 2 and #otherSrc:get_itemTypeInfoList() >= 2 then
                
@@ -7220,6 +7210,7 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
          end
          
          token = self.parser:getTokenNoErr(  )
+         
          if token.txt ~= ']' then
             return nil, token.pos, "not found -- ']'"
          end
@@ -7237,6 +7228,7 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
             
             nextToken = self.parser:getTokenNoErr(  )
          until nextToken.txt ~= ","
+         
          if nextToken.txt ~= '>' then
             return nil, nextToken.pos, "not found -- ']'"
          end
@@ -7256,6 +7248,7 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
                end
                
             elseif _switchExp == TypeInfoKind.List then
+               
                if #genericList ~= 1 then
                   return nil, pos, string.format( "generic type count is unmatch. -- %d", #genericList)
                end
@@ -7263,6 +7256,7 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
                
                typeInfo = NormalTypeInfo.createList( self.accessMode, self.parentInfo, genericList, MutMode.Mut )
             elseif _switchExp == TypeInfoKind.Array then
+               
                if #genericList ~= 1 then
                   return nil, pos, string.format( "generic type count is unmatch. -- %d", #genericList)
                end
@@ -7270,6 +7264,7 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
                
                typeInfo = NormalTypeInfo.createArray( self.accessMode, self.parentInfo, genericList, MutMode.Mut )
             elseif _switchExp == TypeInfoKind.Set then
+               
                if #genericList ~= 1 then
                   return nil, pos, string.format( "generic type count is unmatch. -- %d", #genericList)
                end
@@ -7277,6 +7272,7 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
                
                typeInfo = NormalTypeInfo.createSet( self.accessMode, self.parentInfo, genericList, MutMode.Mut )
             elseif _switchExp == TypeInfoKind.DDD then
+               
                if #genericList ~= 1 then
                   return nil, pos, string.format( "generic type count is unmatch. -- %d", #genericList)
                end
@@ -7284,6 +7280,7 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
                
                typeInfo = NormalTypeInfo.createDDD( genericList[1], false )
             elseif _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.IF then
+               
                if #genericList ~= #typeInfo:get_itemTypeInfoList() then
                   return nil, pos, string.format( "generic type count is unmatch. -- %d", #genericList)
                end
@@ -7300,6 +7297,7 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
                
                typeInfo = NormalTypeInfo.createGeneric( typeInfo, genericList, self.moduleType )
             elseif _switchExp == TypeInfoKind.Box then
+               
                if #genericList ~= 1 then
                   return nil, pos, string.format( "generic type count is unmatch. -- %d", #genericList)
                end
@@ -7307,6 +7305,7 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
                
                typeInfo = NormalTypeInfo.createBox( self.accessMode, genericList[1] )
             elseif _switchExp == TypeInfoKind.Ext then
+               
                if #genericList ~= 1 then
                   return nil, pos, string.format( "generic type count is unmatch. -- %d", #genericList)
                end

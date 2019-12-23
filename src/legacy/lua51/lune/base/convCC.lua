@@ -746,77 +746,114 @@ function ModuleCtrl.setupBuiltinSym(  )
    
    
    
+   
    typeMap[builtinFunc.lns_type] = "lns_f_" .. 'type'
+   
    
    typeMap[builtinFunc.lns_error] = "lns_f_" .. 'error'
    
+   
    typeMap[builtinFunc.lns_print] = "lns_f_" .. 'print'
+   
    
    typeMap[builtinFunc.lns_tonumber] = "lns_f_" .. 'tonumber'
    
+   
    typeMap[builtinFunc.lns_tostring] = "lns_f_" .. 'tostring'
+   
    
    typeMap[builtinFunc.lns_load] = "lns_f_" .. 'load'
    
+   
    typeMap[builtinFunc.lns_loadfile] = "lns_f_" .. 'loadfile'
+   
    
    typeMap[builtinFunc.lns_require] = "lns_f_" .. 'require'
    
+   
    typeMap[builtinFunc.lns_collectgarbage] = "lns_f_" .. 'collectgarbage'
+   
    
    typeMap[builtinFunc.lns__fcall] = "lns_f_" .. '_fcall'
    
+   
    typeMap[builtinFunc.lns__load] = "lns_f_" .. '_load'
+   
    
    typeMap[builtinFunc.lns__kind] = "lns_f_" .. '_kind'
    
+   
    typeMap[builtinFunc.io_open] = "mtd_lns_" .. 'io_open'
+   
    
    typeMap[builtinFunc.io_popen] = "mtd_lns_" .. 'io_popen'
    
+   
    typeMap[builtinFunc.package_searchpath] = "mtd_lns_" .. 'package_searchpath'
+   
    
    typeMap[builtinFunc.os_clock] = "mtd_lns_" .. 'os_clock'
    
+   
    typeMap[builtinFunc.os_date] = "mtd_lns_" .. 'os_date'
+   
    
    typeMap[builtinFunc.os_difftime] = "mtd_lns_" .. 'os_difftime'
    
+   
    typeMap[builtinFunc.os_exit] = "mtd_lns_" .. 'os_exit'
+   
    
    typeMap[builtinFunc.os_remove] = "mtd_lns_" .. 'os_remove'
    
+   
    typeMap[builtinFunc.os_rename] = "mtd_lns_" .. 'os_rename'
+   
    
    typeMap[builtinFunc.os_time] = "mtd_lns_" .. 'os_time'
    
+   
    typeMap[builtinFunc.string_byte] = "mtd_lns_" .. 'string_byte'
+   
    
    typeMap[builtinFunc.string_dump] = "mtd_lns_" .. 'string_dump'
    
+   
    typeMap[builtinFunc.string_find] = "mtd_lns_" .. 'string_find'
+   
    
    typeMap[builtinFunc.string_format] = "mtd_lns_" .. 'string_format'
    
+   
    typeMap[builtinFunc.string_gmatch] = "mtd_lns_" .. 'string_gmatch'
+   
    
    typeMap[builtinFunc.string_gsub] = "mtd_lns_" .. 'string_gsub'
    
+   
    typeMap[builtinFunc.string_lower] = "mtd_lns_" .. 'string_lower'
+   
    
    typeMap[builtinFunc.string_rep] = "mtd_lns_" .. 'string_rep'
    
+   
    typeMap[builtinFunc.string_reverse] = "mtd_lns_" .. 'string_reverse'
+   
    
    typeMap[builtinFunc.string_sub] = "mtd_lns_" .. 'string_sub'
    
+   
    typeMap[builtinFunc.string_upper] = "mtd_lns_" .. 'string_upper'
+   
    
    typeMap[builtinFunc.math_random] = "mtd_lns_" .. 'math_random'
    
+   
    typeMap[builtinFunc.math_randomseed] = "mtd_lns_" .. 'math_randomseed'
    
+   
    typeMap[builtinFunc.debug_getinfo] = "mtd_lns_" .. 'debug_getinfo'
+   
    
    typeMap[builtinFunc.debug_getlocal] = "mtd_lns_" .. 'debug_getlocal'
    
@@ -1658,6 +1695,7 @@ function convFilter:processImport( node, opt )
          
          self:writeln( string.format( "#include<%s.h>", (node:get_modulePath():gsub( "%.", "/" ) )) )
       end
+      
       do
          local function processwork( out2HMode )
          
@@ -1730,6 +1768,7 @@ function convFilter:processInitModule( node )
       end
       
    end
+   
    
    do
       local function processwork( out2HMode )
@@ -2128,6 +2167,7 @@ function convFilter:processRoot( node, opt )
       
       self.processMode = ProcessMode.Prototype
       
+      
       for __index, workNode in pairs( nodeManager:getDeclEnumNodeList(  ) ) do
          if onlyPub then
             if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
@@ -2140,6 +2180,7 @@ function convFilter:processRoot( node, opt )
          end
          
       end
+      
       
       
       for __index, workNode in pairs( nodeManager:getDeclFormNodeList(  ) ) do
@@ -2156,6 +2197,7 @@ function convFilter:processRoot( node, opt )
       end
       
       
+      
       for __index, workNode in pairs( nodeManager:getDeclFuncNodeList(  ) ) do
          if onlyPub then
             if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
@@ -2168,6 +2210,7 @@ function convFilter:processRoot( node, opt )
          end
          
       end
+      
       
       
       for __index, workNode in pairs( nodeManager:getDeclAlgeNodeList(  ) ) do
@@ -2184,6 +2227,7 @@ function convFilter:processRoot( node, opt )
       end
       
       
+      
       for __index, workNode in pairs( nodeManager:getDeclClassNodeList(  ) ) do
          if onlyPub then
             if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
@@ -2196,6 +2240,7 @@ function convFilter:processRoot( node, opt )
          end
          
       end
+      
       
       
       for __index, workNode in pairs( nodeManager:getDeclConstrNodeList(  ) ) do
@@ -2212,6 +2257,7 @@ function convFilter:processRoot( node, opt )
       end
       
       
+      
       for __index, workNode in pairs( nodeManager:getDeclMethodNodeList(  ) ) do
          if onlyPub then
             if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
@@ -2224,6 +2270,7 @@ function convFilter:processRoot( node, opt )
          end
          
       end
+      
       
       
       for __index, workNode in pairs( nodeManager:getProtoMethodNodeList(  ) ) do
@@ -2241,6 +2288,7 @@ function convFilter:processRoot( node, opt )
       
       
       if self.canConv then
+         
          for __index, workNode in pairs( nodeManager:getExpToDDDNodeList(  ) ) do
             if onlyPub then
                if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
@@ -2255,6 +2303,7 @@ function convFilter:processRoot( node, opt )
          end
          
          
+         
          for __index, workNode in pairs( nodeManager:getLiteralStringNodeList(  ) ) do
             if onlyPub then
                if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
@@ -2267,6 +2316,7 @@ function convFilter:processRoot( node, opt )
             end
             
          end
+         
          
          
          for __index, workNode in pairs( nodeManager:getExpCastNodeList(  ) ) do
@@ -2292,6 +2342,7 @@ function convFilter:processRoot( node, opt )
       end
       
       
+      
       for __index, workNode in pairs( nodeManager:getDeclAlgeNodeList(  ) ) do
          if onlyPub then
             if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
@@ -2304,6 +2355,7 @@ function convFilter:processRoot( node, opt )
          end
          
       end
+      
       
       
       for __index, workNode in pairs( nodeManager:getDeclClassNodeList(  ) ) do
@@ -2321,6 +2373,7 @@ function convFilter:processRoot( node, opt )
       
       
       
+      
       for __index, workNode in pairs( nodeManager:getDeclConstrNodeList(  ) ) do
          if onlyPub then
             if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
@@ -2335,6 +2388,7 @@ function convFilter:processRoot( node, opt )
       end
       
       
+      
       for __index, workNode in pairs( nodeManager:getDeclMethodNodeList(  ) ) do
          if onlyPub then
             if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
@@ -2347,6 +2401,7 @@ function convFilter:processRoot( node, opt )
          end
          
       end
+      
       
       
       for __index, workNode in pairs( nodeManager:getDeclFuncNodeList(  ) ) do
@@ -2365,6 +2420,7 @@ function convFilter:processRoot( node, opt )
       
       
       self.processMode = ProcessMode.DefClass
+      
       for __index, workNode in pairs( nodeManager:getDeclClassNodeList(  ) ) do
          if onlyPub then
             if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
@@ -2935,6 +2991,7 @@ function convFilter:processDeclEnum( node, opt )
             end
             
          end
+         
          do
             local function processwork( out2HMode )
             
@@ -3192,6 +3249,7 @@ local function processAlgePrototype( stream, moduleCtrl, node )
       
    end
    
+   
    do
       local function processwork( out2HMode )
       
@@ -3258,6 +3316,7 @@ local function processAlgeWideScope( stream, moduleCtrl, node )
       end
       
    end
+   
    
    do
       local function processwork( out2HMode )
@@ -3768,6 +3827,7 @@ local function processPrototypeMethod( stream, moduleCtrl, declArgNodeList, func
       stream:writeln( ";" )
    else
     
+      
       do
          local function processwork( out2HMode )
          
@@ -4021,7 +4081,6 @@ local function processDeclClassPrototype( normal, stream, moduleCtrl, node )
    if hasGC( node:get_expType() ) then
       stream:writeln( string.format( "static void mtd_%s__gc( lns_env_t * _pEnv, %s pObj );", className, cTypeAnyP) )
    end
-   
    
    for __index, member in pairs( node:get_memberList() ) do
       local memberName = member:get_name().txt
@@ -4598,7 +4657,6 @@ function convFilter:processDeclClassNodePrototype( node )
          self:writeln( string.format( "} u_if_imp_%s_t;", className) )
       end
       
-      
       self:writeln( string.format( "typedef struct %s {", className) )
       self:pushIndent(  )
       
@@ -4647,6 +4705,7 @@ function convFilter:processDeclClassNodePrototype( node )
       end
       
    end
+   
    
    do
       local function processwork( out2HMode )
@@ -4742,7 +4801,6 @@ function convFilter:processDeclClassDef( node )
       self:popIndent(  )
       self:writeln( "}" )
    end
-   
    
    for __index, member in pairs( node:get_memberList() ) do
       local memberName = member:get_name().txt
@@ -4964,6 +5022,7 @@ local function processClassDataInit( stream, moduleCtrl, scopeMgr, classTypeInfo
    
    for __index, symbolInfo in pairs( (_lune.unwrap( classTypeInfo:get_scope()) ):get_symbol2SymbolInfoMap() ) do
       if isClassMember( symbolInfo ) then
+         
          do
             local function processwork( out2HMode )
             
@@ -6173,6 +6232,7 @@ function convFilter:processDeclVar( node, opt )
                   self:writeln( string.format( "%s %s;", typeTxt, self.moduleCtrl:getSymbolName( var )) )
                end
                for index, var in pairs( varSymList ) do
+                  
                   do
                      local function processwork( out2HMode )
                      
@@ -6431,6 +6491,7 @@ function convFilter:processFuncPrototype( parent, accessMode, needFormVal, name,
    end
    
    if termFlag then
+      
       do
          local function processwork( out2HMode )
          

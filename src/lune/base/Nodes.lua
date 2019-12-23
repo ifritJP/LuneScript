@@ -799,6 +799,7 @@ end
 
 
 
+
 function NodeKind.get_None(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['None'])
@@ -865,6 +866,7 @@ end
 function NoneNode.setmeta( obj )
   setmetatable( obj, { __index = NoneNode  } )
 end
+
 
 
 function NodeKind.get_BlankLine(  )
@@ -940,6 +942,7 @@ function BlankLineNode:get_lineNum()
 end
 
 
+
 function NodeKind.get_Subfile(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['Subfile'])
@@ -1011,6 +1014,7 @@ end
 function SubfileNode:get_usePath()
    return self.usePath
 end
+
 
 
 function NodeKind.get_Import(  )
@@ -1242,6 +1246,7 @@ function MacroInfo:__init( func, symbol2MacroValInfoMap )
 end
 
 
+
 function NodeKind.get_Root(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['Root'])
@@ -1408,6 +1413,7 @@ function RootNode:set_provide( node )
 
    self.provideNode = node
 end
+
 
 
 function NodeKind.get_RefType(  )
@@ -1595,6 +1601,7 @@ BlockKind._val2NameMap[18] = 'Test'
 BlockKind.__allList[19] = BlockKind.Test
 
 
+
 function NodeKind.get_Block(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['Block'])
@@ -1703,6 +1710,7 @@ function BlockNode:getBreakKind( checkMode )
       local kind = BreakKind.None
       for __index, stmt in pairs( self.stmtList ) do
          local work = stmt:getBreakKind( checkMode )
+         
          if checkMode == CheckBreakMode.IgnoreFlowReturn then
             if work == BreakKind.Return then
                return BreakKind.Return
@@ -1811,6 +1819,7 @@ function IfStmtInfo:get_block()
    return self.block
 end
 
+
 function NodeKind.get_If(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['If'])
@@ -1891,6 +1900,7 @@ function IfNode:getBreakKind( checkMode )
    local kind = BreakKind.None
    for __index, stmtInfo in pairs( self.stmtList ) do
       local work = stmtInfo:get_block():getBreakKind( checkMode )
+      
       if checkMode == CheckBreakMode.IgnoreFlowReturn then
          if work == BreakKind.Return then
             return BreakKind.Return
@@ -1960,6 +1970,7 @@ end
 function MRetExp:get_index()
    return self.index
 end
+
 
 
 function NodeKind.get_ExpList(  )
@@ -2115,6 +2126,7 @@ function CaseInfo:get_block()
    return self.block
 end
 
+
 function NodeKind.get_Switch(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['Switch'])
@@ -2242,6 +2254,7 @@ function SwitchNode:getBreakKind( checkMode )
    local kind = BreakKind.None
    for __index, caseInfo in pairs( self.caseList ) do
       local work = caseInfo:get_block():getBreakKind( checkMode )
+      
       if checkMode == CheckBreakMode.IgnoreFlowReturn then
          if work == BreakKind.Return then
             return BreakKind.Return
@@ -2278,6 +2291,7 @@ function SwitchNode:getBreakKind( checkMode )
       local block = self.default
       if block ~= nil then
          local work = block:getBreakKind( checkMode )
+         
          if checkMode == CheckBreakMode.IgnoreFlowReturn then
             if work == BreakKind.Return then
                return BreakKind.Return
@@ -2315,6 +2329,7 @@ function SwitchNode:getBreakKind( checkMode )
    
    return BreakKind.None
 end
+
 
 
 
@@ -2432,6 +2447,7 @@ end
 
 
 
+
 function NodeKind.get_Repeat(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['Repeat'])
@@ -2545,6 +2561,7 @@ end
 
 
 
+
 function RepeatNode:getBreakKind( checkMode )
 
    local kind = BreakKind.None
@@ -2554,6 +2571,7 @@ function RepeatNode:getBreakKind( checkMode )
    
    return BreakKind.None
 end
+
 
 
 
@@ -2721,6 +2739,7 @@ end
 
 
 
+
 function ForNode:getBreakKind( checkMode )
 
    local kind = BreakKind.None
@@ -2730,6 +2749,7 @@ function ForNode:getBreakKind( checkMode )
    
    return BreakKind.None
 end
+
 
 
 
@@ -2850,6 +2870,7 @@ end
 
 
 
+
 function ApplyNode:getBreakKind( checkMode )
 
    local kind = BreakKind.None
@@ -2859,6 +2880,7 @@ function ApplyNode:getBreakKind( checkMode )
    
    return BreakKind.None
 end
+
 
 
 
@@ -2983,6 +3005,7 @@ end
 
 
 
+
 function ForeachNode:getBreakKind( checkMode )
 
    local kind = BreakKind.None
@@ -2992,6 +3015,7 @@ function ForeachNode:getBreakKind( checkMode )
    
    return BreakKind.None
 end
+
 
 
 
@@ -3120,6 +3144,7 @@ end
 
 
 
+
 function ForsortNode:getBreakKind( checkMode )
 
    local kind = BreakKind.None
@@ -3129,6 +3154,7 @@ function ForsortNode:getBreakKind( checkMode )
    
    return BreakKind.None
 end
+
 
 
 
@@ -3234,6 +3260,7 @@ function ReturnNode:getBreakKind( checkMode )
 end
 
 
+
 function NodeKind.get_Break(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['Break'])
@@ -3309,6 +3336,7 @@ function BreakNode:getBreakKind( checkMode )
 end
 
 
+
 function NodeKind.get_Provide(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['Provide'])
@@ -3380,6 +3408,7 @@ end
 function ProvideNode:get_symbol()
    return self.symbol
 end
+
 
 
 
@@ -3505,6 +3534,7 @@ end
 
 
 
+
 function NodeKind.get_ExpUnwrap(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpUnwrap'])
@@ -3623,6 +3653,7 @@ end
 
 
 
+
 function NodeKind.get_ExpRef(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpRef'])
@@ -3699,6 +3730,7 @@ function ExpRefNode:canBeRight(  )
 
    return self:get_symbolInfo():get_canBeRight() and self:get_symbolInfo():get_hasValueFlag()
 end
+
 
 
 function NodeKind.get_ExpSetVal(  )
@@ -3818,6 +3850,7 @@ end
 
 
 
+
 function NodeKind.get_ExpOp2(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpOp2'])
@@ -3932,6 +3965,7 @@ end
 function ExpOp2Node:get_exp2()
    return self.exp2
 end
+
 
 
 
@@ -4071,6 +4105,7 @@ end
 function UnwrapSetNode:get_unwrapBlock()
    return self.unwrapBlock
 end
+
 
 
 
@@ -4221,6 +4256,7 @@ function IfUnwrapNode:getBreakKind( checkMode )
 
    local kind = self.block:getBreakKind( checkMode )
    local work = kind
+   
    if checkMode == CheckBreakMode.IgnoreFlowReturn then
       if work == BreakKind.Return then
          return BreakKind.Return
@@ -4255,6 +4291,7 @@ function IfUnwrapNode:getBreakKind( checkMode )
       local block = self.nilBlock
       if block ~= nil then
          work = block:getBreakKind( checkMode )
+         
          if checkMode == CheckBreakMode.IgnoreFlowReturn then
             if work == BreakKind.Return then
                return BreakKind.Return
@@ -4317,6 +4354,7 @@ end
 function UnwrapSymbolPair:get_dst()
    return self.dst
 end
+
 
 
 function NodeKind.get_When(  )
@@ -4445,6 +4483,7 @@ function WhenNode:getBreakKind( checkMode )
 
    local kind = self.block:getBreakKind( checkMode )
    local work = kind
+   
    if checkMode == CheckBreakMode.IgnoreFlowReturn then
       if work == BreakKind.Return then
          return BreakKind.Return
@@ -4479,6 +4518,7 @@ function WhenNode:getBreakKind( checkMode )
       local block = self.elseBlock
       if block ~= nil then
          work = block:getBreakKind( checkMode )
+         
          if checkMode == CheckBreakMode.IgnoreFlowReturn then
             if work == BreakKind.Return then
                return BreakKind.Return
@@ -4548,6 +4588,7 @@ CastKind.__allList[2] = CastKind.Force
 CastKind.Implicit = 2
 CastKind._val2NameMap[2] = 'Implicit'
 CastKind.__allList[3] = CastKind.Implicit
+
 
 
 function NodeKind.get_ExpCast(  )
@@ -4661,6 +4702,7 @@ function ExpCastNode:setupLiteralTokenList( list )
 end
 
 
+
 function NodeKind.get_ExpToDDD(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpToDDD'])
@@ -4750,6 +4792,7 @@ end
 function ExpToDDDNode:get_expList()
    return self.expList
 end
+
 
 
 
@@ -4885,6 +4928,7 @@ MacroMode._val2NameMap[3] = 'AnalyzeArg'
 MacroMode.__allList[4] = MacroMode.AnalyzeArg
 
 
+
 function NodeKind.get_ExpOp1(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpOp1'])
@@ -4982,6 +5026,7 @@ end
 function ExpOp1Node:get_exp()
    return self.exp
 end
+
 
 
 
@@ -5112,9 +5157,9 @@ function ExpRefItemNode:canBeLeft(  )
       return false
    end
    
-   
    return Ast.TypeInfo.isMut( self:get_val():get_expType() ) and not self.nilAccess
 end
+
 
 
 function NodeKind.get_ExpCall(  )
@@ -5259,6 +5304,7 @@ function ExpCallNode:getBreakKind( checkMode )
 end
 
 
+
 function NodeKind.get_ExpAccessMRet(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpAccessMRet'])
@@ -5355,6 +5401,7 @@ end
 
 
 
+
 function NodeKind.get_ExpMultiTo1(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpMultiTo1'])
@@ -5447,6 +5494,7 @@ end
 
 
 
+
 function NodeKind.get_ExpDDD(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpDDD'])
@@ -5518,6 +5566,7 @@ end
 function ExpDDDNode:get_token()
    return self.token
 end
+
 
 
 
@@ -5616,6 +5665,7 @@ function ExpParenNode:getSymbolInfo(  )
 
    return self.exp:getSymbolInfo(  )
 end
+
 
 
 function NodeKind.get_ExpMacroExp(  )
@@ -5722,6 +5772,7 @@ function ExpMacroExpNode:getBreakKind( checkMode )
       local kind = BreakKind.None
       for __index, stmt in pairs( self.stmtList ) do
          local work = stmt:getBreakKind( checkMode )
+         
          if checkMode == CheckBreakMode.IgnoreFlowReturn then
             if work == BreakKind.Return then
                return BreakKind.Return
@@ -5795,6 +5846,7 @@ MacroStatKind.__allList[1] = MacroStatKind.Stat
 MacroStatKind.Exp = 1
 MacroStatKind._val2NameMap[1] = 'Exp'
 MacroStatKind.__allList[2] = MacroStatKind.Exp
+
 
 
 function NodeKind.get_ExpMacroStat(  )
@@ -5893,6 +5945,7 @@ end
 
 
 
+
 function NodeKind.get_ExpMacroArgExp(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpMacroArgExp'])
@@ -5964,6 +6017,7 @@ end
 function ExpMacroArgExpNode:get_codeTxt()
    return self.codeTxt
 end
+
 
 
 
@@ -6066,6 +6120,7 @@ function StmtExpNode:getBreakKind( checkMode )
 end
 
 
+
 function NodeKind.get_ExpMacroStatList(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpMacroStatList'])
@@ -6158,6 +6213,7 @@ end
 
 
 
+
 function NodeKind.get_ExpOmitEnum(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpOmitEnum'])
@@ -6237,6 +6293,7 @@ end
 function ExpOmitEnumNode:get_enumTypeInfo()
    return self.enumTypeInfo
 end
+
 
 
 
@@ -6344,7 +6401,6 @@ function RefFieldNode:canBeLeft(  )
       end
    end
    
-   
    return false
 end
 
@@ -6357,9 +6413,9 @@ function RefFieldNode:canBeRight(  )
       end
    end
    
-   
    return true
 end
+
 
 
 function NodeKind.get_GetField(  )
@@ -6474,9 +6530,9 @@ function GetFieldNode:canBeLeft(  )
       end
    end
    
-   
    return false
 end
+
 
 
 function NodeKind.get_Alias(  )
@@ -6640,6 +6696,7 @@ DeclVarMode.__allList[2] = DeclVarMode.Sync
 DeclVarMode.Unwrap = 2
 DeclVarMode._val2NameMap[2] = 'Unwrap'
 DeclVarMode.__allList[3] = DeclVarMode.Unwrap
+
 
 
 function NodeKind.get_DeclVar(  )
@@ -6858,6 +6915,7 @@ function DeclVarNode:getBreakKind( checkMode )
       local block = self.unwrapBlock
       if block ~= nil then
          work = block:getBreakKind( checkMode )
+         
          if checkMode == CheckBreakMode.IgnoreFlowReturn then
             if work == BreakKind.Return then
                return BreakKind.Return
@@ -6892,6 +6950,7 @@ function DeclVarNode:getBreakKind( checkMode )
             local thenBlock = self.thenBlock
             if thenBlock ~= nil then
                work = thenBlock:getBreakKind( checkMode )
+               
                if checkMode == CheckBreakMode.IgnoreFlowReturn then
                   if work == BreakKind.Return then
                      return BreakKind.Return
@@ -6926,6 +6985,7 @@ function DeclVarNode:getBreakKind( checkMode )
                   local syncBlock = self.syncBlock
                   if syncBlock ~= nil then
                      work = syncBlock:getBreakKind( checkMode )
+                     
                      if checkMode == CheckBreakMode.IgnoreFlowReturn then
                         if work == BreakKind.Return then
                            return BreakKind.Return
@@ -6972,6 +7032,7 @@ function DeclVarNode:getBreakKind( checkMode )
    
    return BreakKind.None
 end
+
 
 
 function NodeKind.get_DeclForm(  )
@@ -7173,6 +7234,7 @@ function DeclFuncInfo.createFrom( info, name )
 end
 
 
+
 function NodeKind.get_DeclFunc(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['DeclFunc'])
@@ -7249,6 +7311,7 @@ function DeclFuncNode:canBeRight(  )
 end
 
 
+
 function NodeKind.get_DeclMethod(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['DeclMethod'])
@@ -7320,6 +7383,7 @@ end
 function DeclMethodNode:get_declInfo()
    return self.declInfo
 end
+
 
 
 
@@ -7397,6 +7461,7 @@ end
 
 
 
+
 function NodeKind.get_DeclConstr(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['DeclConstr'])
@@ -7471,6 +7536,7 @@ end
 
 
 
+
 function NodeKind.get_DeclDestr(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['DeclDestr'])
@@ -7542,6 +7608,7 @@ end
 function DeclDestrNode:get_declInfo()
    return self.declInfo
 end
+
 
 
 
@@ -7650,6 +7717,7 @@ function ExpCallSuperNode:canBeRight(  )
 
    return self:get_expType() ~= Ast.builtinTypeNone
 end
+
 
 
 function NodeKind.get_DeclMember(  )
@@ -7780,6 +7848,7 @@ end
 
 
 
+
 function NodeKind.get_DeclArg(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['DeclArg'])
@@ -7855,6 +7924,7 @@ end
 function DeclArgNode:get_symbolInfo()
    return self.symbolInfo
 end
+
 
 
 
@@ -7980,6 +8050,7 @@ end
 function ClassInitBlockInfo:set_func( func )
    self.func = func
 end
+
 
 function NodeKind.get_DeclClass(  )
 
@@ -8196,6 +8267,7 @@ function DeclClassNode:hasUserInit(  )
 end
 
 
+
 function NodeKind.get_DeclEnum(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['DeclEnum'])
@@ -8282,6 +8354,7 @@ end
 
 
 
+
 function NodeKind.get_DeclAlge(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['DeclAlge'])
@@ -8361,6 +8434,7 @@ end
 function DeclAlgeNode:get_scope()
    return self.scope
 end
+
 
 
 
@@ -8498,6 +8572,7 @@ end
 
 
 
+
 function NodeKind.get_LuneControl(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['LuneControl'])
@@ -8600,6 +8675,7 @@ end
 function MatchCase:get_block()
    return self.block
 end
+
 
 
 function NodeKind.get_Match(  )
@@ -8728,6 +8804,7 @@ end
 
 
 
+
 function NodeKind.get_LuneKind(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['LuneKind'])
@@ -8817,6 +8894,7 @@ end
 function LuneKindNode:get_exp()
    return self.exp
 end
+
 
 
 
@@ -8910,6 +8988,7 @@ end
 function MacroEval:__init(  )
 
 end
+
 
 
 function NodeKind.get_TestBlock(  )
@@ -9008,6 +9087,7 @@ end
 
 
 
+
 function NodeKind.get_Abbr(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['Abbr'])
@@ -9074,6 +9154,7 @@ end
 function AbbrNode.setmeta( obj )
   setmetatable( obj, { __index = AbbrNode  } )
 end
+
 
 
 
@@ -9169,6 +9250,7 @@ end
 
 
 
+
 function NodeKind.get_Unboxing(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['Unboxing'])
@@ -9261,6 +9343,7 @@ end
 
 
 
+
 function NodeKind.get_LiteralNil(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['LiteralNil'])
@@ -9327,6 +9410,7 @@ end
 function LiteralNilNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralNilNode  } )
 end
+
 
 
 
@@ -9408,6 +9492,7 @@ end
 
 
 
+
 function NodeKind.get_LiteralInt(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['LiteralInt'])
@@ -9486,6 +9571,7 @@ end
 
 
 
+
 function NodeKind.get_LiteralReal(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['LiteralReal'])
@@ -9561,6 +9647,7 @@ end
 function LiteralRealNode:get_num()
    return self.num
 end
+
 
 
 
@@ -9661,6 +9748,7 @@ end
 
 
 
+
 function NodeKind.get_LiteralList(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['LiteralList'])
@@ -9755,6 +9843,7 @@ end
 function LiteralListNode:get_expList()
    return self.expList
 end
+
 
 
 
@@ -9880,6 +9969,7 @@ function PairItem:get_val()
    return self.val
 end
 
+
 function NodeKind.get_LiteralMap(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['LiteralMap'])
@@ -10001,6 +10091,7 @@ end
 
 
 
+
 function NodeKind.get_LiteralString(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['LiteralString'])
@@ -10102,6 +10193,7 @@ end
 
 
 
+
 function NodeKind.get_LiteralBool(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['LiteralBool'])
@@ -10173,6 +10265,7 @@ end
 function LiteralBoolNode:get_token()
    return self.token
 end
+
 
 
 
@@ -10326,6 +10419,7 @@ function WhileNode:getBreakKind( checkMode )
       local kind = BreakKind.None
       for __index, stmt in pairs( self.block:get_stmtList() ) do
          local work = stmt:getBreakKind( checkMode )
+         
          if checkMode == CheckBreakMode.IgnoreFlowReturn then
             if work == BreakKind.Return then
                return BreakKind.Return
@@ -10384,12 +10478,12 @@ function WhileNode:getBreakKind( checkMode )
          
       end
       
-      
       local mode = CheckBreakMode.IgnoreFlow
       
       local kind = BreakKind.None
       for __index, stmt in pairs( self.block:get_stmtList() ) do
          local work = stmt:getBreakKind( mode )
+         
          
          if mode == CheckBreakMode.IgnoreFlowReturn then
             if work == BreakKind.Return then

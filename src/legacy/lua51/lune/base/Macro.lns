@@ -441,14 +441,14 @@ pub fn MacroCtrl.expandMacroVal(
 
    let tokenTxt = token.txt;
 
-   let mut nextToken = getToken();
+   // let mut nextToken = getToken();
    
-   if nextToken.txt ~= "~~" {
-      parser.pushbackToken( nextToken );
-   }
+   // if nextToken.txt ~= "~~" {
+   //    parser.pushbackToken( nextToken );
+   // }
    
    if tokenTxt == ',,' or tokenTxt == ',,,' or tokenTxt == ',,,,' {
-      nextToken = getToken();
+      let mut nextToken = getToken();
 
       let! macroVal = self.symbol2ValueMapForMacro[ nextToken.txt ] {
          parser.error( "unknown macro val -- %s" (nextToken.txt) );

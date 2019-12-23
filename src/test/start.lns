@@ -1373,6 +1373,7 @@ print( '\\""\"\'\\.\\' );
    print( hoge2.$test.val );
 }
 {
+   Macro._section();
    macro _test1( val:sym ) {
       print( "hoge", __line__, ,,val );
    }
@@ -1385,4 +1386,16 @@ print( '\\""\"\'\\.\\' );
    let work = 1;
    _test2();
    _test1( work);
+}
+{
+   Macro._section();
+   macro _test1( val:__exp ) {
+      print( "hoge", __line__, ,,val );
+   }
+
+   macro _test2() {
+      _test1( 1 );
+   }
+
+   _test2();
 }

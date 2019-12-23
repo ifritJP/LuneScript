@@ -588,7 +588,6 @@ function convFilter:outputMeta( node )
          return 
       end
       
-      
       if not forceFlag and not Ast.isPubToExternal( typeInfo:get_accessMode() ) then
          return 
       end
@@ -1146,7 +1145,6 @@ function convFilter:outputMeta( node )
             if outputDepend( typeInfo, moduleTypeInfo ) then
                valid = true
             end
-            
             
             if not valid then
                outputTypeInfo( typeInfo )
@@ -1941,7 +1939,6 @@ function %s:__init( %s )
       self:writeln( 'end' )
    end
    
-   
    local scope = nodeInfo:get_scope(  )
    for __index, memberNode in pairs( nodeInfo:get_memberList() ) do
       local memberNameToken = memberNode:get_name(  )
@@ -2010,7 +2007,6 @@ end
          
       end
    end
-   
    
    if classTypeInfo:isInheritFrom( Ast.builtinTypeMapping, nil ) then
       local declArgTxt = "val"
@@ -2414,7 +2410,6 @@ function convFilter:processExpListSub( parent, expList, mRetExp )
       if exp:get_expType():get_kind() == Ast.TypeInfoKind.Abbr then
          break
       end
-      
       
       do
          local castNode = _lune.__Cast( exp, 3, Nodes.ExpCastNode )

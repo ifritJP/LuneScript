@@ -223,7 +223,6 @@ local function getFileLastModifiedTime( path )
       end
    end
    
-   
    return nil
 end
 _moduleObj.getFileLastModifiedTime = getFileLastModifiedTime

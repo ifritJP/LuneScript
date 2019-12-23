@@ -826,10 +826,8 @@ function TransUnit:__init(moduleId, importModuleInfo, macroEval, analyzeModule, 
    self.validMutControl = true
    self.moduleName = ""
    self.moduleType = Ast.headTypeInfo
-   self.parser = Parser.DummyParser.new()
+   self.parser = Parser.DefaultPushbackParser.new(Parser.DummyParser.new())
    self.subfileList = {}
-   self.pushbackList = {}
-   self.usedTokenList = {}
    
    self.globalScope = Ast.Scope.new(Ast.rootScope, false, nil)
    
@@ -841,7 +839,7 @@ function TransUnit:__init(moduleId, importModuleInfo, macroEval, analyzeModule, 
    
    self.typeId2ClassMap = {}
    self.typeInfo2ClassNode = {}
-   self.currentToken = Parser.getEofToken(  )
+   
    self.commentCtrl = Parser.CommentCtrl.new()
    self.errMessList = {}
    self.warnMessList = {}
@@ -2290,6 +2288,7 @@ end
 
 
 
+
 local BuiltinFuncType = {}
 _moduleObj.BuiltinFuncType = BuiltinFuncType
 function BuiltinFuncType.new(  )
@@ -3352,7 +3351,7 @@ function TransUnit:registBuiltInScope(  )
             do
                local _switchExp = classKind
                if _switchExp == DeclClassMode.Class or _switchExp == DeclClassMode.Interface then
-                  parentInfo = self:pushClass( self.currentToken.pos, classKind == DeclClassMode.Class, false, nil, interfaceList, genTypeList, true, name, Ast.AccessMode.Pub )
+                  parentInfo = self:pushClass( self.parser:get_currentToken().pos, classKind == DeclClassMode.Class, false, nil, interfaceList, genTypeList, true, name, Ast.AccessMode.Pub )
                   builtinFunc:registerClass( parentInfo )
                elseif _switchExp == DeclClassMode.Module then
                   parentInfo = self:pushModule( true, name, true )
@@ -3370,7 +3369,6 @@ function TransUnit:registBuiltInScope(  )
             if name ~= "" and getTypeInfo( name ) then
                builtinModuleName2Scope[name] = self.scope
             end
-            
             
             do
                local __sorted = {}
@@ -3412,22 +3410,7 @@ end
 
 function TransUnit:error( mess )
 
-   local pos = Parser.Position.new(0, 0)
-   local txt = ""
-   if self.currentToken ~= Parser.getEofToken(  ) then
-      pos = self.currentToken.pos
-      txt = self.currentToken.txt
-   else
-    
-      if #self.usedTokenList > 0 then
-         local token = self.usedTokenList[#self.usedTokenList]
-         pos = token.pos
-         txt = token.txt
-      end
-      
-   end
-   
-   self:addErrMess( pos, mess )
+   self:addErrMess( self.parser:getLastPos(  ), mess )
    
    for __index, mess in pairs( self.errMessList ) do
       Util.errorLog( mess )
@@ -3440,15 +3423,7 @@ function TransUnit:error( mess )
    if self.macroCtrl:get_macroMode() ~= Nodes.MacroMode.None then
       print( "------ near code -----", Nodes.MacroMode:_getTxt( self.macroCtrl:get_macroMode())
        )
-      local code = ""
-      for index = #self.usedTokenList - 30, #self.usedTokenList do
-         if index > 1 then
-            code = string.format( "%s %s", code, self.usedTokenList[index].txt)
-         end
-         
-      end
-      
-      print( code .. self.currentToken.txt )
+      print( self.parser:getNearCode(  ) )
       print( "------" )
    end
    
@@ -3466,32 +3441,21 @@ end
 
 function TransUnit:pushbackToken( token )
 
-   if token.kind ~= Parser.TokenKind.Eof then
-      table.insert( self.pushbackList, token )
-   end
    
-   if token == self.currentToken then
-      if #self.usedTokenList > 0 then
-         self.currentToken = self.usedTokenList[#self.usedTokenList]
-         table.remove( self.usedTokenList )
-      else
-       
-         self.currentToken = Parser.getEofToken(  )
-      end
-      
-   end
-   
+   self.parser:pushbackToken( token )
 end
 
 
 function TransUnit:newPushback( tokenList )
 
-   for index = #tokenList, 1, -1 do
-      table.insert( self.pushbackList, tokenList[index] )
-   end
    
-   self.currentToken = self.usedTokenList[#self.usedTokenList]
-   table.remove( self.usedTokenList )
+   self.parser:newPushback( tokenList )
+end
+
+
+function TransUnit:getStreamName(  )
+
+   return self.parser:getStreamName(  )
 end
 
 
@@ -3500,63 +3464,32 @@ function TransUnit:getTokenNoErr(  )
    local token
    
    
-   if #self.pushbackList > 0 then
-      
-      if self.currentToken ~= Parser.getEofToken(  ) then
-         table.insert( self.usedTokenList, self.currentToken )
-      end
-      
-      token = self.pushbackList[#self.pushbackList]
-      table.remove( self.pushbackList )
-      
+   local commentList = {}
+   local workToken = self.parser:getTokenNoErr(  )
+   while workToken.kind == Parser.TokenKind.Cmnt do
+      table.insert( commentList, workToken )
+      workToken = self.parser:getTokenNoErr(  )
+   end
+   
+   if workToken.kind ~= Parser.TokenKind.Eof then
+      token = workToken
       if self.macroCtrl:get_macroMode() == Nodes.MacroMode.Expand then
          token = self.macroCtrl:expandMacroVal( self.typeNameCtrl, self.scope, self, token )
       end
       
    else
     
-      
-      local commentList = {}
-      local workToken = nil
-      while true do
-         workToken = self.parser:getToken(  )
-         if workToken ~= nil then
-            if workToken.kind ~= Parser.TokenKind.Cmnt then
-               break
-            end
-            
-            table.insert( commentList, workToken )
-         else
-            break
-         end
-         
-      end
-      
-      if workToken ~= nil then
-         token = workToken
-         if self.macroCtrl:get_macroMode() == Nodes.MacroMode.Expand then
-            token = self.macroCtrl:expandMacroVal( self.typeNameCtrl, self.scope, self, token )
-         end
-         
-      else
-         token = Parser.getEofToken(  )
-         self.commentCtrl:addDirect( commentList )
-      end
-      
-      if self.currentToken ~= Parser.getEofToken(  ) then
-         table.insert( self.usedTokenList, self.currentToken )
-      end
-      
+      token = Parser.getEofToken(  )
+      self.commentCtrl:addDirect( commentList )
    end
    
    
-   self.currentToken = token
-   if #self.currentToken:get_commentList() > 0 then
-      self.commentCtrl:add( self.currentToken )
+   if #token:get_commentList() > 0 then
+      self.commentCtrl:add( token )
    end
    
    
-   return self.currentToken
+   return token
 end
 
 
@@ -3573,7 +3506,6 @@ function TransUnit:getToken( allowEof )
    
    
    
-   self.currentToken = token
    return token
 end
 
@@ -3581,32 +3513,14 @@ end
 function TransUnit:pushback(  )
 
    
-   self:pushbackToken( self.currentToken )
+   self.parser:pushback(  )
 end
 
 
 function TransUnit:pushbackStr( name, statement )
 
-   local memStream = Parser.TxtStream.new(statement)
-   local parser = Parser.StreamParser.new(memStream, name, false)
    
-   local list = {}
-   while true do
-      do
-         local _exp = parser:getToken(  )
-         if _exp ~= nil then
-            table.insert( list, _exp )
-         else
-            break
-         end
-      end
-      
-   end
-   
-   for index = #list, 1, -1 do
-      self:pushbackToken( list[index] )
-   end
-   
+   self.parser:pushbackStr( name, statement )
 end
 
 
@@ -3704,7 +3618,7 @@ function TransUnit:analyzeStatementList( stmtList, termTxt )
    
    
    local lastStatement = nil
-   local lastLineNo = self.currentToken.pos.lineNo
+   local lastLineNo = self.parser:getLastPos(  ).lineNo
    
    local function setTailComment( statement )
    
@@ -3748,7 +3662,7 @@ function TransUnit:analyzeStatementList( stmtList, termTxt )
          if statement ~= nil then
             blank = statement:get_pos().lineNo - lastLineNo
          else
-            blank = self.currentToken.pos.lineNo - lastLineNo
+            blank = self.parser:getLastPos(  ).lineNo - lastLineNo
          end
          
       end
@@ -3764,13 +3678,12 @@ function TransUnit:analyzeStatementList( stmtList, termTxt )
             ) )
          end
          
-         
          local blank = setTailComment( statement )
          if blank > 1 then
             table.insert( stmtList, Nodes.BlankLineNode.create( self.nodeManager, Parser.Position.new(lastLineNo + 1, 0), {Ast.builtinTypeNone}, blank - 1 ) )
          end
          
-         lastLineNo = self.currentToken.pos.lineNo
+         lastLineNo = self.parser:getLastPos(  ).lineNo
          
          table.insert( stmtList, statement )
          lastStatement = statement
@@ -3950,7 +3863,6 @@ function TransUnit:analyzeBlock( blockKind, tentativeMode, scope )
       self:popScope(  )
    end
    
-   
    local node = Nodes.BlockNode.create( self.nodeManager, token.pos, {Ast.builtinTypeNone}, blockKind, blockScope, stmtList )
    
    if node:getBreakKind( Nodes.CheckBreakMode.Normal ) ~= Nodes.BreakKind.None then
@@ -4012,7 +3924,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = '@lune.@base.@TransUnit.TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2525, function (  )
+   Log.log( Log.Level.Info, __func__, 2501, function (  )
    
       return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), modulePath)
    end )
@@ -4029,7 +3941,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2537, function (  )
+               Log.log( Log.Level.Info, __func__, 2513, function (  )
                
                   return string.format( "%s already", modulePath)
                end )
@@ -4062,7 +3974,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2557, function (  )
+   Log.log( Log.Level.Info, __func__, 2533, function (  )
    
       return string.format( "%s processing", modulePath)
    end )
@@ -4207,7 +4119,7 @@ function TransUnit:processImport( modulePath )
    
    local orgId2MacroTypeInfo = {}
    
-   local importParam = ImportParam.new(self.currentToken.pos, self, typeId2Scope, typeId2TypeInfo, metaInfo, self.scope, moduleTypeInfo, self.scopeAccess, id2atomMap)
+   local importParam = ImportParam.new(self.parser:getLastPos(  ), self, typeId2Scope, typeId2TypeInfo, metaInfo, self.scope, moduleTypeInfo, self.scopeAccess, id2atomMap)
    for __index, atomInfo in pairs( _typeInfoList ) do
       local newTypeInfo, errMess = atomInfo:createTypeInfo( importParam )
       do
@@ -4310,7 +4222,7 @@ function TransUnit:processImport( modulePath )
          local _switchExp = (classTypeInfo:get_kind() )
          if _switchExp == Ast.TypeInfoKind.Class then
             
-            self:pushClassScope( self.currentToken.pos, classTypeInfo )
+            self:pushClassScope( self.parser:getLastPos(  ), classTypeInfo )
             
             do
                local _exp = metaInfo.__typeId2ClassInfoMap[classTypeId]
@@ -4407,7 +4319,7 @@ function TransUnit:processImport( modulePath )
    
    self.importModuleInfo:remove(  )
    
-   Log.log( Log.Level.Info, __func__, 2887, function (  )
+   Log.log( Log.Level.Info, __func__, 2863, function (  )
    
       return string.format( "%s complete", modulePath)
    end )
@@ -4455,7 +4367,6 @@ function TransUnit:analyzeImport( token )
       assignName = self:getSymbolToken( SymbolMode.MustNot_ )
       nextToken = self:getToken(  )
    end
-   
    
    local moduleTypeInfo = _lune.unwrap( typeId2TypeInfo[metaInfo.__moduleTypeId])
    self.scope:addModule( moduleTypeInfo, moduleInfo:assign( assignName.txt ) )
@@ -5458,7 +5369,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
    
    self.typeNameCtrl = Ast.TypeNameCtrl.new(moduleTypeInfo)
    
-   self.parser = parser
+   self.parser = Parser.DefaultPushbackParser.new(parser)
    
    local ast
    
@@ -5507,7 +5418,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
          end
          
          
-         self.parser = subParser
+         self.parser = Parser.DefaultPushbackParser.new(subParser)
          
          lastStatement = self:analyzeStatementListSubfile( children )
          
@@ -5639,15 +5550,11 @@ function TransUnit:analyzeDeclMacroSub( accessMode, firstToken, nameToken, scope
    
    local stmtNode = nil
    if nextToken.txt == "{" then
-      local parser = Parser.WrapParser.new(self.parser, self.parser:getStreamName(  ))
       
       self.macroScope = scope
       
       local funcType = Ast.NormalTypeInfo.createFunc( false, true, nil, Ast.TypeInfoKind.Func, Ast.headTypeInfo, false, true, true, Ast.AccessMode.Global, "_lnsLoad", nil, {Ast.builtinTypeString, Ast.builtinTypeString}, {Ast.builtinTypeStem}, false )
       scope:addLocalVar( false, false, "_lnsLoad", nil, funcType, Ast.MutMode.IMut )
-      
-      local bakParser = self.parser
-      self.parser = parser
       
       local stmtList = {}
       self:prepareTentativeSymbol( self.scope, false )
@@ -5657,8 +5564,6 @@ function TransUnit:analyzeDeclMacroSub( accessMode, firstToken, nameToken, scope
       
       self:checkNextToken( "}" )
       self:finishTentativeSymbol( false )
-      
-      self.parser = bakParser
       
       self.macroScope = nil
    else
@@ -5789,7 +5694,6 @@ function TransUnit:analyzeExtend( accessMode, firstPos )
       nextToken = self:getToken(  )
    end
    
-   
    local symbol2TypeInfo = {}
    for __index, ifType in pairs( interfaceList ) do
       _lune.nilacc( ifType:get_scope(), 'filterTypeInfoField', 'callmtd' , true, self.scope, self.scopeAccess, function ( symbolInfo )
@@ -5827,7 +5731,6 @@ function TransUnit:analyzePushClass( classFlag, abstractFlag, firstToken, name, 
       self:addErrMess( firstToken.pos, "The public class must declare at top scope." )
    end
    
-   
    local tempScope = self:pushScope( false )
    for __index, altType in pairs( altTypeList ) do
       tempScope:addAlternate( accessMode, altType:get_rawTxt(), name.pos, altType )
@@ -5855,7 +5758,6 @@ function TransUnit:analyzePushClass( classFlag, abstractFlag, firstToken, name, 
       end
       
    end
-   
    
    self:popScope(  )
    
@@ -6501,7 +6403,6 @@ function TransUnit:addDefaultConstructor( pos, classTypeInfo, classScope, member
       self:addErrMess( pos, "already declare __init()." )
    end
    
-   
    local argTypeList = {}
    
    if classTypeInfo:get_baseTypeInfo() ~= Ast.headTypeInfo then
@@ -6543,7 +6444,6 @@ function TransUnit:addDefaultConstructor( pos, classTypeInfo, classScope, member
       end
       
    end
-   
    
    local ctorScope = self:pushScope( false )
    local initTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, ctorScope, Ast.TypeInfoKind.Method, classTypeInfo, true, false, false, Ast.AccessMode.Pub, "__init", nil, argTypeList, {} )
@@ -7018,7 +6918,6 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
          self:addErrMess( firstToken.pos, string.format( "must extend Mapping at %s", classTypeInfo:get_baseTypeInfo():getTxt(  )) )
       end
       
-      
       local toMapFuncTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, nil, Ast.TypeInfoKind.Method, classTypeInfo, true, false, false, Ast.AccessMode.Pub, "_toMap", nil, {}, {mapType}, false )
       classScope:addMethod( nil, toMapFuncTypeInfo, Ast.AccessMode.Pub, false, false )
    end
@@ -7048,7 +6947,6 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
          classScope:addMethod( memberName.pos, retTypeInfo, accessMode, memberNode:get_staticFlag(), false )
          methodNameSet[getterName]= true
       end
-      
       
       local setterName = "set_" .. memberName.txt
       accessMode = memberNode:get_setterMode()
@@ -7645,7 +7543,6 @@ function TransUnit:createExpListNode( orgExpList, newExpList )
       end
    end
    
-   
    return Nodes.ExpListNode.create( self.nodeManager, orgExpList:get_pos(), newExpTypeList, newExpList, orgExpList:get_mRetExp(), orgExpList:get_followOn() )
 end
 
@@ -7825,7 +7722,6 @@ function TransUnit:analyzeLetAndInitExp( firstPos, initMutable, accessMode, unwr
                   typeInfoList[index] = Ast.NormalTypeInfo.createBox( accessMode, expTypeInfo )
                end
                
-               
                if Ast.CanEvalCtrlTypeInfo.canAutoBoxing( varType, expTypeInfo ) then
                   
                   updateExpList = true
@@ -7973,7 +7869,6 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
                         self:addErrMess( letVaInfo.varName.pos, string.format( "Any function can't be mutable. -- %s", letVaInfo.varName.txt) )
                      end
                      
-                     
                      local letVarInfo = letVarList[1]
                      local newTypeInfo = Ast.NormalTypeInfo.createFunc( typeInfo:get_abstractFlag(), false, typeInfo:get_scope(), typeInfo:get_kind(), typeInfo:get_parentInfo(), false, false, typeInfo:get_staticFlag(), accessMode, letVarInfo.varName.txt, typeInfo:get_itemTypeInfoList(), typeInfo:get_argTypeInfoList(), typeInfo:get_retTypeInfoList(), Ast.TypeInfo.isMut( typeInfo ) )
                      self:processAddFunc( true, self.scope, letVarInfo.varName, newTypeInfo, Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) )
@@ -8025,7 +7920,6 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
          end
          
       end
-      
       
       if mode == Nodes.DeclVarMode.Let or mode == Nodes.DeclVarMode.Sync then
          if mode == Nodes.DeclVarMode.Let then
@@ -8408,7 +8302,7 @@ function TransUnit:analyzeExpList( allowNoneType, skipOp2Flag, expNode, expectTy
       
       table.insert( expList, exp )
       table.insert( expTypeList, exp:get_expType() )
-      local token = self:getToken(  )
+      local token = self:getToken( true )
       
       if token.txt == "**" then
          
@@ -8418,7 +8312,7 @@ function TransUnit:analyzeExpList( allowNoneType, skipOp2Flag, expNode, expectTy
          
          followOn = true
          
-         token = self:getToken(  )
+         token = self:getToken( true )
       end
       
       
@@ -8841,7 +8735,6 @@ function TransUnit:checkMatchType( message, pos, dstTypeList, expListNode, allow
       
    end
    
-   
    local realExpNum = -1
    
    for index, expNode in pairs( workExpNodeList ) do
@@ -8996,7 +8889,7 @@ function TransUnit:evalMacroOp( firstToken, macroTypeInfo, expList, evalMacroCal
    local bakParser = self.parser
    
    if parser ~= nil then
-      self.parser = parser
+      self.parser = Parser.DefaultPushbackParser.new(parser)
    else
       self:error( _lune.unwrap( mess) )
    end
@@ -9009,12 +8902,17 @@ function TransUnit:evalMacroOp( firstToken, macroTypeInfo, expList, evalMacroCal
    self.macroCtrl:finishMacroMode(  )
    
    local nextToken = self:getTokenNoErr(  )
-   if nextToken ~= Parser.getEofToken(  ) then
-      self:addErrMess( firstToken.pos, string.format( "remain macro expand-statement token -- %s", nextToken.txt) )
-   end
-   
    
    self.parser = bakParser
+   
+   if nextToken ~= Parser.getEofToken(  ) then
+      self:addErrMess( firstToken.pos, string.format( "remain macro expand-statement token -- '%s'(%d:%d)", nextToken.txt, nextToken.pos.lineNo, nextToken.pos.column) )
+      if not macroTypeInfo:get_externalFlag() then
+         self:addErrMess( nextToken.pos, string.format( "remain macro expand-statement token -- '%s'", nextToken.txt) )
+      end
+      
+   end
+   
 end
 
 
@@ -9227,7 +9125,6 @@ function TransUnit:prepareExpCall( position, funcTypeInfo, genericTypeList, gene
       
    end
    
-   
    local matchResult, alt2typeMap, workArgList = self:checkMatchValType( position, funcTypeInfo, argList, genericTypeList, genericsClass )
    
    if funcTypeInfo:get_kind() == Ast.TypeInfoKind.Macro and matchResult == Ast.MatchType.Error then
@@ -9289,7 +9186,6 @@ function TransUnit:analyzeExpCall( firstToken, funcExp, nextToken )
          end
          
       end
-      
       
       self:checkStringFormat( firstToken.pos, formatTxt, formArgTypeList )
    end
@@ -9764,7 +9660,6 @@ function TransUnit:analyzeAccessClassField( classTypeInfo, mode, token )
          if self.protoFuncMap[symbolInfo:get_typeInfo()] then
             errorMess = string.format( "It can't call prototype function from static -- %s", symbolInfo:get_name())
          end
-         
          
          if errorMess ~= nil then
             self:addErrMess( token.pos, errorMess )
