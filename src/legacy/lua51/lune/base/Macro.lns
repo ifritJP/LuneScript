@@ -186,6 +186,16 @@ pub class MacroCtrl
    }
 }
 
+/**
+指定マクロ macroTypeInfo を展開し、展開したマクロを Parse する Parser を返す。
+
+@param streamName 現在のストリーム名
+@param firstToken マクロを展開する場所
+@param macroTypeInfo 展開するマクロの型
+@param expList マクロに渡す引数
+@return Parser.Parser! 展開したマクロの Parser。 失敗した場合 nil
+@return str! マクロ展開に失敗した場合のエラーメッセージ
+*/
 pub fn MacroCtrl.evalMacroOp(
    streamName:str, firstToken: &Parser.Token, macroTypeInfo: &Ast.TypeInfo,
    expList: &Nodes.ExpListNode! ) mut: Parser.Parser!, str!
@@ -210,7 +220,8 @@ pub fn MacroCtrl.evalMacroOp(
                  Nodes.NodeKind.$ExpMacroStat,
                  Nodes.NodeKind.$ExpMacroArgExp,
                  Nodes.NodeKind.$ExpOmitEnum,
-                 Nodes.NodeKind.$ExpCast
+                 Nodes.NodeKind.$ExpCast,
+                 Nodes.NodeKind.$ExpOp2
             {
             }
             default {
@@ -666,26 +677,37 @@ pub fn MacroCtrl.registVar( symbolList:&List<&Ast.SymbolInfo> ) mut {
    }
 }
 
-pub fn MacroCtrl.startExpandMode( lineNo:int ) mut {
-   self.macroMode = .Expand;
-   self.macroCallLineNo = lineNo;
-   self.macroModeStack.insert( self.macroMode );
+pub fn MacroCtrl.startDecl() mut {
+   self.symbol2ValueMapForMacro = {};
 }
+
+pub form EvalMacroCallback();
 
 pub fn MacroCtrl.finishMacroMode() mut {
    self.macroModeStack.remove(##);
    self.macroMode = self.macroModeStack[ #self.macroModeStack ];
-   self.symbol2ValueMapForMacro = {};
+   // self.symbol2ValueMapForMacro = {};
+}
+
+
+pub fn MacroCtrl.startExpandMode( lineNo:int, callback:EvalMacroCallback ) mut {
+   self.macroMode = .Expand;
+   self.macroCallLineNo = lineNo;
+   self.macroModeStack.insert( self.macroMode );
+
+   callback();
+
+   self.finishMacroMode();
 }
 
 pub fn MacroCtrl.startAnalyzeArgMode() mut {
    self.macroMode = .AnalyzeArg;
    self.macroModeStack.insert( self.macroMode );
-   let mut map:Map<str,Nodes.MacroValInfo> = {};
-   foreach val, key in self.symbol2ValueMapForMacro {
-      map[ key ] = val;
-   }
-   self.symbol2ValueMapForMacro = map;
+   // let mut map:Map<str,Nodes.MacroValInfo> = {};
+   // foreach val, key in self.symbol2ValueMapForMacro {
+   //    map[ key ] = val;
+   // }
+   // self.symbol2ValueMapForMacro = map;
 }
 
 pub fn MacroCtrl.switchMacroMode() mut {

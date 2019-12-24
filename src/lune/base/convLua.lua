@@ -3290,7 +3290,7 @@ function convFilter:processExpOp1( node, opt )
    if op == ",,," then
       filter( node:get_exp(), self, node )
    elseif op == ",,,," then
-      if node:get_macroMode() == Nodes.MacroMode.Expand then
+      if node:get_macroMode() ~= Nodes.MacroMode.None then
          filter( node:get_exp(), self, node )
       else
        

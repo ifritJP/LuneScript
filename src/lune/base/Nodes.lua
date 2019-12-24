@@ -4920,12 +4920,9 @@ MacroMode.__allList[1] = MacroMode.None
 MacroMode.Expand = 1
 MacroMode._val2NameMap[1] = 'Expand'
 MacroMode.__allList[2] = MacroMode.Expand
-MacroMode.Expanding = 2
-MacroMode._val2NameMap[2] = 'Expanding'
-MacroMode.__allList[3] = MacroMode.Expanding
-MacroMode.AnalyzeArg = 3
-MacroMode._val2NameMap[3] = 'AnalyzeArg'
-MacroMode.__allList[4] = MacroMode.AnalyzeArg
+MacroMode.AnalyzeArg = 2
+MacroMode._val2NameMap[2] = 'AnalyzeArg'
+MacroMode.__allList[3] = MacroMode.AnalyzeArg
 
 
 
@@ -10852,7 +10849,7 @@ function LiteralStringNode:setupLiteralTokenList( list )
    do
       local expList = self:get_expList()
       if expList ~= nil then
-         self:addTokenList( list, Parser.TokenKind.Dlmt, self.token.txt )
+         self:addTokenList( list, Parser.TokenKind.Dlmt, "(" )
          for index, argNode in pairs( expList:get_expList() ) do
             if index > 1 then
                self:addTokenList( list, Parser.TokenKind.Dlmt, "," )
@@ -10864,6 +10861,7 @@ function LiteralStringNode:setupLiteralTokenList( list )
             
          end
          
+         self:addTokenList( list, Parser.TokenKind.Dlmt, ")" )
       end
    end
    
@@ -11030,83 +11028,117 @@ function ExpOmitEnumNode:setupLiteralTokenList( list )
 end
 
 
-function ExpOp2Node:getLiteral(  )
+function ExpOp2Node:getValType( node )
 
+   local literal = node:getLiteral(  )
+   if  nil == literal then
+      local _literal = literal
    
-   local function getValType( node )
+      return false, 0, 0.0, "", Ast.headTypeInfo
+   end
    
-      local literal = node:getLiteral(  )
-      if  nil == literal then
-         local _literal = literal
+   
+   local intVal, realVal, strVal = 0, 0.0, ""
+   local retTypeInfo = Ast.builtinTypeNone
+   
+   local function getEnum( txt, typeInfo )
+   
+      do
+         local enumTypeInfo = _lune.__Cast( typeInfo, 3, Ast.EnumTypeInfo )
+         if enumTypeInfo ~= nil then
+            local valInfo = _lune.unwrap( enumTypeInfo:getEnumValInfo( txt ))
+            do
+               local _matchExp = valInfo:get_val()
+               if _matchExp[1] == Ast.EnumLiteral.Int[1] then
+                  local val = _matchExp[2][1]
+               
+                  intVal = val
+                  realVal = val * 1.0
+               elseif _matchExp[1] == Ast.EnumLiteral.Real[1] then
+                  local val = _matchExp[2][1]
+               
+                  realVal = val
+               elseif _matchExp[1] == Ast.EnumLiteral.Str[1] then
+                  local val = _matchExp[2][1]
+               
+                  strVal = val
+               end
+            end
+            
+            retTypeInfo = enumTypeInfo:get_valTypeInfo()
+         end
+      end
       
+   end
+   
+   do
+      local _matchExp = literal
+      if _matchExp[1] == Literal.Int[1] then
+         local val = _matchExp[2][1]
+      
+         intVal = val
+         realVal = val * 1.0
+         retTypeInfo = Ast.builtinTypeInt
+      elseif _matchExp[1] == Literal.Real[1] then
+         local val = _matchExp[2][1]
+      
+         realVal = val
+         intVal = math.floor(val)
+         retTypeInfo = Ast.builtinTypeReal
+      elseif _matchExp[1] == Literal.Str[1] then
+         local val = _matchExp[2][1]
+      
+         strVal = val
+         retTypeInfo = Ast.builtinTypeString
+      else 
+      do
          return false, 0, 0.0, "", Ast.headTypeInfo
       end
-      
-      
-      local intVal, realVal, strVal = 0, 0.0, ""
-      local retTypeInfo = Ast.builtinTypeNone
-      
-      local function getEnum( txt, typeInfo )
-      
-         do
-            local enumTypeInfo = _lune.__Cast( typeInfo, 3, Ast.EnumTypeInfo )
-            if enumTypeInfo ~= nil then
-               local valInfo = _lune.unwrap( enumTypeInfo:getEnumValInfo( txt ))
-               do
-                  local _matchExp = valInfo:get_val()
-                  if _matchExp[1] == Ast.EnumLiteral.Int[1] then
-                     local val = _matchExp[2][1]
-                  
-                     intVal = val
-                     realVal = val * 1.0
-                  elseif _matchExp[1] == Ast.EnumLiteral.Real[1] then
-                     local val = _matchExp[2][1]
-                  
-                     realVal = val
-                  elseif _matchExp[1] == Ast.EnumLiteral.Str[1] then
-                     local val = _matchExp[2][1]
-                  
-                     strVal = val
-                  end
-               end
-               
-               retTypeInfo = enumTypeInfo:get_valTypeInfo()
-            end
-         end
-         
       end
-      
+   end
+   
+   return true, intVal, realVal, strVal, retTypeInfo
+end
+
+
+function ExpOp2Node:setupLiteralTokenList( list )
+
+   local literal, msg = self:getLiteral(  )
+   if literal ~= nil then
       do
          local _matchExp = literal
          if _matchExp[1] == Literal.Int[1] then
             local val = _matchExp[2][1]
          
-            intVal = val
-            realVal = val * 1.0
-            retTypeInfo = Ast.builtinTypeInt
+            self:addTokenList( list, Parser.TokenKind.Int, string.format( "%d", val) )
          elseif _matchExp[1] == Literal.Real[1] then
             local val = _matchExp[2][1]
          
-            realVal = val
-            intVal = math.floor(val)
-            retTypeInfo = Ast.builtinTypeReal
+            self:addTokenList( list, Parser.TokenKind.Real, string.format( "%g", val) )
          elseif _matchExp[1] == Literal.Str[1] then
             local val = _matchExp[2][1]
          
-            strVal = val
-            retTypeInfo = Ast.builtinTypeString
+            self:addTokenList( list, Parser.TokenKind.Str, string.format( "%q", val) )
          else 
          do
-            return false, 0, 0.0, "", Ast.headTypeInfo
+            return false
          end
          end
       end
       
-      return true, intVal, realVal, strVal, retTypeInfo
+      return true
+   else
+      return false
    end
    
-   local ret1, int1, real1, str1, type1 = getValType( self:get_exp1() )
-   local ret2, int2, real2, str2, type2 = getValType( self:get_exp2() )
+end
+
+
+function ExpOp2Node:getLiteral(  )
+
+   
+   local ret1, int1, real1, str1, type1 = self:getValType( self:get_exp1() )
+   local ret2, int2, real2, str2, type2 = self:getValType( self:get_exp2() )
    
    if not ret1 then
       return nil, string.format( "not support literal -- %s", getNodeKindName( self:get_exp1():get_kind() ))

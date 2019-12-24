@@ -53,6 +53,36 @@
    let list5:List<int> = list or list; // error
 }
 {
+   class Super {
+   }
+   class Sub extend Super {
+   }
+
+   let mut work:List<Sub> = [];
+
+   {
+      fn func( list:List<Super> ) {
+      }
+      func( work ); // error
+   }
+   {
+      fn func( list:List<&Super> ) {
+         list.insert( new Super() );
+      }
+      func( work ); // error
+   }
+   {
+      fn func( list:&List<Super> ) {
+      }
+      func( work );
+   }
+   {
+      fn func( list:List<Sub> ) {
+      }
+      func( work );
+   }
+}
+{
    let val = 1;
    let list:List<val> = []; // error
 }

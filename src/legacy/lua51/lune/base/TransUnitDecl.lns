@@ -534,6 +534,9 @@ fn TransUnit.analyzeDeclMacroSub(
    scope:Ast.Scope, parentType:&Ast.TypeInfo,
    workArgList: List<&Nodes.Node> ) mut : Nodes.DeclMacroNode
 {
+   self.macroCtrl.startDecl();
+
+   
    let mut pubFlag = false;
    switch accessMode {
       case .Pub {
@@ -2446,7 +2449,7 @@ fn TransUnit.analyzeDeclFunc(
 
    let mut funcBodyScope = self.pushScope( false ## );
    
-   let mut altTypeList:List<&Ast.TypeInfo> = [];
+   let mut altTypeList:&List<&Ast.TypeInfo> = [];
    // generic 宣言
    if token.txt == "<" {
       token, altTypeList = self.analyzeDeclAlternateType( false, token, accessMode );

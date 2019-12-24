@@ -2700,7 +2700,7 @@ pub override fn convFilter.processExpOp1(
       filter( node.$exp,  self, node );
    }
    elseif op == ",,,," {
-      if node.$macroMode == .Expand {
+      if node.$macroMode ~= .None {
          filter( node.$exp,  self, node );
       }
       else {

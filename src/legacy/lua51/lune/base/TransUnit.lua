@@ -674,8 +674,6 @@ function TentativeSymbol:get_accessSymList()
 end
 
 
-
-
 local AnalyzingState = {}
 AnalyzingState._val2NameMap = {}
 function AnalyzingState:_getTxt( val )
@@ -3473,7 +3471,7 @@ function TransUnit:getTokenNoErr(  )
    
    if workToken.kind ~= Parser.TokenKind.Eof then
       token = workToken
-      if self.macroCtrl:get_macroMode() == Nodes.MacroMode.Expand then
+      if self.macroCtrl:get_macroMode() ~= Nodes.MacroMode.None then
          token = self.macroCtrl:expandMacroVal( self.typeNameCtrl, self.scope, self, token )
       end
       
@@ -3924,7 +3922,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = '@lune.@base.@TransUnit.TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2501, function (  )
+   Log.log( Log.Level.Info, __func__, 2499, function (  )
    
       return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), modulePath)
    end )
@@ -3941,7 +3939,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2513, function (  )
+               Log.log( Log.Level.Info, __func__, 2511, function (  )
                
                   return string.format( "%s already", modulePath)
                end )
@@ -3974,7 +3972,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2533, function (  )
+   Log.log( Log.Level.Info, __func__, 2531, function (  )
    
       return string.format( "%s processing", modulePath)
    end )
@@ -4319,7 +4317,7 @@ function TransUnit:processImport( modulePath )
    
    self.importModuleInfo:remove(  )
    
-   Log.log( Log.Level.Info, __func__, 2863, function (  )
+   Log.log( Log.Level.Info, __func__, 2861, function (  )
    
       return string.format( "%s complete", modulePath)
    end )
@@ -5500,6 +5498,8 @@ end
 
 function TransUnit:analyzeDeclMacroSub( accessMode, firstToken, nameToken, scope, parentType, workArgList )
 
+   self.macroCtrl:startDecl(  )
+   
    local pubFlag = false
    do
       local _switchExp = accessMode
@@ -8895,11 +8895,7 @@ function TransUnit:evalMacroOp( firstToken, macroTypeInfo, expList, evalMacroCal
    end
    
    
-   self.macroCtrl:startExpandMode( firstToken.pos.lineNo )
-   
-   evalMacroCallback(  )
-   
-   self.macroCtrl:finishMacroMode(  )
+   self.macroCtrl:startExpandMode( firstToken.pos.lineNo, evalMacroCallback )
    
    local nextToken = self:getTokenNoErr(  )
    
@@ -9355,7 +9351,8 @@ function TransUnit:analyzeExpCall( firstToken, funcExp, nextToken )
             local prefixType = refFieldNode:get_prefix():get_expType()
             if #prefixType:get_itemTypeInfoList() > 0 then
                local dddType = Ast.NormalTypeInfo.createDDD( prefixType:get_itemTypeInfoList()[1], false )
-               retTypeInfoList = {dddType}
+               retTypeInfoList = {}
+               table.insert( retTypeInfoList, dddType )
             end
             
          end
@@ -11303,7 +11300,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, prevOpLevel, expectTy
       
    elseif token.kind == Parser.TokenKind.Symb and token.txt == "__line__" then
       local lineNo = token.pos.lineNo
-      if self.macroCtrl:get_macroMode() == Nodes.MacroMode.Expand then
+      if self.macroCtrl:get_macroMode() ~= Nodes.MacroMode.None then
          lineNo = self.macroCtrl:get_macroCallLineNo()
       end
       

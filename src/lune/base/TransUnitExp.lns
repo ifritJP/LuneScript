@@ -865,7 +865,7 @@ getToken() で取得したトークンを実際に処理するのは evalMacroCa
 */
 fn TransUnit.evalMacroOp(
    firstToken: &Parser.Token, macroTypeInfo: &Ast.TypeInfo,
-   expList: &Nodes.ExpListNode!, evalMacroCallback:EvalMacroCallback ) mut
+   expList: &Nodes.ExpListNode!, evalMacroCallback:Macro.EvalMacroCallback ) mut
 {
    let mut parser, mess = self.macroCtrl.evalMacroOp(
       self.parser.getStreamName(), firstToken, macroTypeInfo, expList );
@@ -879,11 +879,11 @@ fn TransUnit.evalMacroOp(
       self.error( unwrap mess );
    }
    
-   self.macroCtrl.startExpandMode( firstToken.pos.lineNo );
+   self.macroCtrl.startExpandMode( firstToken.pos.lineNo, evalMacroCallback );
 
-   evalMacroCallback();
+   // evalMacroCallback();
 
-   self.macroCtrl.finishMacroMode();
+   // self.macroCtrl.finishMacroMode();
 
    let nextToken = self.getTokenNoErr();
 
@@ -1340,7 +1340,8 @@ fn TransUnit.analyzeExpCall(
             if #prefixType.$itemTypeInfoList > 0 {
                let dddType = Ast.NormalTypeInfo.createDDD(
                   prefixType.$itemTypeInfoList[ 1 ], false );
-               retTypeInfoList = [ dddType ];
+               retTypeInfoList = [];
+               retTypeInfoList.insert( dddType );
             }
          }
       }
@@ -3118,10 +3119,10 @@ fn TransUnit.analyzeExp(
                not expType.equals( Ast.builtinTypeBool ##) and
                not expType.equals( Ast.builtinTypeStem ##) and
                expType.$kind ~= .DDD
-            {  
+            {
                self.addErrMess( token.pos, "this 'not' operand never be false" );
-            }  
-         }  
+            }
+         }
          case ",," {
             macroExpFlag = true;
          }  
@@ -3149,10 +3150,10 @@ fn TransUnit.analyzeExp(
                   'unmatch type for "~" -- %s' ( expType.getTxt(##) ) );
             }  
             typeInfo = Ast.builtinTypeInt;
-         }  
+         }
          default {
             self.error( "unknown op1" );
-         }  
+         }
       }  
 
       if macroExpFlag {
@@ -3280,7 +3281,7 @@ fn TransUnit.analyzeExp(
    }  
    elseif token.kind == Parser.TokenKind.Symb and token.txt == "__line__" {
       let mut lineNo = token.pos.lineNo;
-      if self.macroCtrl.$macroMode == .Expand {
+      if self.macroCtrl.$macroMode ~= .None {
          lineNo = self.macroCtrl.$macroCallLineNo;
       }
       exp = Nodes.LiteralIntNode.create(

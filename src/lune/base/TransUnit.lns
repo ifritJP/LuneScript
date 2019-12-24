@@ -266,8 +266,6 @@ complete は false を指定する。
    }
 }
 
-form EvalMacroCallback();
-
 enum AnalyzingState {
    Other,
    /** コンストラクタ */
@@ -828,7 +826,7 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
 
    fn evalMacroOp(
       firstToken: &Parser.Token, macroTypeInfo: &Ast.TypeInfo,
-      expList: &Nodes.ExpListNode!, evalMacroCallback:EvalMacroCallback ) mut;
+      expList: &Nodes.ExpListNode!, evalMacroCallback:Macro.EvalMacroCallback ) mut;
    fn prepareExpCall(
       position:&Parser.Position, funcTypeInfo:&Ast.TypeInfo,
       genericTypeList:&List<&Ast.TypeInfo>, genericsClass:&Ast.TypeInfo ) mut:
@@ -2081,7 +2079,7 @@ fn TransUnit.getTokenNoErr() mut : &Parser.Token
       }
       if workToken.$kind ~= .Eof {
          token = workToken;
-         if self.macroCtrl.$macroMode == .Expand {
+         if self.macroCtrl.$macroMode ~= .None {
             token = self.macroCtrl.expandMacroVal(
                self.typeNameCtrl, self.scope, self, token );
          }

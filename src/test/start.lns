@@ -1399,3 +1399,28 @@ print( '\\""\"\'\\.\\' );
 
    _test2();
 }
+{
+   Macro._section();
+   macro _test( msg:str ) {
+      print( "hoge:" .. ,,msg );
+   }
+
+   macro _hoge( msg2:str ) {
+      _test( "foo:" .. ,,msg2 );
+      _test( "foo:" .. ,,msg2 );
+   }
+
+   _hoge( "abc" );
+
+}
+{
+   Macro._section();
+   macro _test( msg:str ) {
+      print( "foo: %s" ( ,,msg ) );
+   }
+   macro _hoge( msg2:str ) {
+      _test( "hoge: %s" (,,msg2 ) );
+   }
+
+   _hoge( "abc" );
+}

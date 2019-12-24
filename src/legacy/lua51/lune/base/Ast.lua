@@ -1633,7 +1633,9 @@ end
 function CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( detectFlag )
 
    if detectFlag then
-      return {[CanEvalCtrlTypeInfo.detectAlt] = _moduleObj.headTypeInfo}
+      local map = {}
+      map[CanEvalCtrlTypeInfo.detectAlt] = _moduleObj.headTypeInfo
+      return map
    end
    
    return {}
@@ -2460,11 +2462,7 @@ end
 
 function TypeInfo:createAlt2typeMap( detectFlag )
 
-   if not detectFlag then
-      return {}
-   end
-   
-   return {[CanEvalCtrlTypeInfo.detectAlt] = _moduleObj.headTypeInfo}
+   return CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( detectFlag )
 end
 
 
@@ -3828,7 +3826,18 @@ end
 function ModifierTypeInfo:canEvalWith( other, canEvalType, alt2type )
 
    
-   return TypeInfo.canEvalWithBase( self.srcTypeInfo, TypeInfo.isMut( self ), other:get_srcTypeInfo(), canEvalType == CanEvalType.SetEq and CanEvalType.SetOp or canEvalType, alt2type )
+   local evalType
+   
+   if #self.srcTypeInfo:get_itemTypeInfoList() >= 1 and canEvalType == CanEvalType.SetEq then
+      
+      evalType = CanEvalType.SetOp
+   else
+    
+      evalType = canEvalType
+   end
+   
+   
+   return TypeInfo.canEvalWithBase( self.srcTypeInfo, TypeInfo.isMut( self ), other:get_srcTypeInfo(), evalType, alt2type )
 end
 function ModifierTypeInfo:equals( typeInfo, alt2type, checkModifer )
 
@@ -6334,8 +6343,9 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
          if #dstTypeList == index then
             
             if dstType:get_srcTypeInfo():get_kind() ~= TypeInfoKind.DDD then
-               if not dstType:canEvalWith( expType, CanEvalType.SetOp, alt2type ) then
-                  return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s: index %d", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:getTxt( _moduleObj.defaultTypeNameCtrl ), index)
+               local isMatch, msg = dstType:canEvalWith( expType, CanEvalType.SetOp, alt2type )
+               if not isMatch then
+                  return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s: index %d%s", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:getTxt( _moduleObj.defaultTypeNameCtrl ), index, msg and string.format( "-- %s", tostring( msg)) or "")
                end
                
                if not allowDstShort and #dstTypeList < #expTypeList then
@@ -6601,7 +6611,16 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
    
    if dest:get_kind() ~= otherSrc:get_kind() then
       if dest:get_kind() == TypeInfoKind.Nilable then
-         local dstNonNil = dest:get_nonnilableType()
+         local dstNonNil
+         
+         if destMut then
+            dstNonNil = dest:get_nonnilableType()
+         else
+          
+            dstNonNil = NormalTypeInfo.createModifier( dest:get_nonnilableType(), MutMode.IMut )
+         end
+         
+         
          if otherSrc:get_nilable() then
             if otherSrc:get_kind() == TypeInfoKind.DDD then
                return dstNonNil:canEvalWith( otherSrc:get_itemTypeInfoList()[1], canEvalType, alt2type )
@@ -6791,7 +6810,16 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
          
          return true, nil
       elseif _switchExp == TypeInfoKind.Nilable then
-         return dest:get_nonnilableType():canEvalWith( otherSrc:get_nonnilableType(), canEvalType, alt2type )
+         local dstNonNil
+         
+         if destMut then
+            dstNonNil = dest:get_nonnilableType()
+         else
+          
+            dstNonNil = NormalTypeInfo.createModifier( dest:get_nonnilableType(), MutMode.IMut )
+         end
+         
+         return dstNonNil:canEvalWith( otherSrc:get_nonnilableType(), canEvalType, alt2type )
       elseif _switchExp == TypeInfoKind.Alternate then
          return dest:canEvalWith( otherSrc, canEvalType, alt2type )
       elseif _switchExp == TypeInfoKind.Box then
@@ -7118,18 +7146,19 @@ function TypeAnalyzer:__init(parentInfo, moduleType, moduleScope, scopeAccess, v
    self.parentPub = false
    self.parser = Parser.DefaultPushbackParser.new(Parser.DummyParser.new())
 end
-function TypeAnalyzer:analyzeType( parser, accessMode, allowDDD, parentPub )
+function TypeAnalyzer:analyzeType( scope, parser, accessMode, allowDDD, parentPub )
 
+   self.scope = scope
    self.parser = parser
    self.accessMode = accessMode
    self.parentPub = parentPub
    return self:analyzeTypeSub( allowDDD )
 end
-function TypeAnalyzer:analyzeTypeFromTxt( txt, accessMode, parentPub )
+function TypeAnalyzer:analyzeTypeFromTxt( txt, scope, accessMode, parentPub )
 
    local stream = Parser.TxtStream.new(txt)
    local parser = Parser.DefaultPushbackParser.new(Parser.StreamParser.new(stream, "test"))
-   return self:analyzeType( parser, accessMode, true, parentPub )
+   return self:analyzeType( scope, parser, accessMode, true, parentPub )
 end
 function TypeAnalyzer.setmeta( obj )
   setmetatable( obj, { __index = TypeAnalyzer  } )

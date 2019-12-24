@@ -1169,8 +1169,6 @@ pub enum MacroMode {
    None,
    /** マクロの展開モード */
    Expand,
-   /** マクロの展開中 */
-   Expanding,
    /** マクロ呼び出し時の引数解析モード */
    AnalyzeArg,
 }
@@ -2060,7 +2058,7 @@ pub override fn LiteralStringNode.setupLiteralTokenList( list: List<&Parser.Toke
 {
    self.addTokenList( list, .Str, self.token.txt );
    if! let expList = self.$expList {
-      self.addTokenList( list, .Dlmt, self.token.txt );
+      self.addTokenList( list, .Dlmt, "(" );
       foreach argNode, index in expList.$expList {
          if index > 1 {
             self.addTokenList( list, .Dlmt, "," );
@@ -2069,6 +2067,7 @@ pub override fn LiteralStringNode.setupLiteralTokenList( list: List<&Parser.Toke
             return false;
          }
       }
+      self.addTokenList( list, .Dlmt, ")" );
    }
    return true;
 }
@@ -2193,59 +2192,85 @@ pub override fn ExpOmitEnumNode.setupLiteralTokenList( list: List<&Parser.Token>
    return true;
 }
 
-pub override fn ExpOp2Node.getLiteral(): Literal!, str! {
+fn ExpOp2Node.getValType( node:&Node ): bool, int, real, str, &Ast.TypeInfo {
+   let! literal = node.getLiteral() {
+      return false, 0, 0.0, "", Ast.headTypeInfo;
+   };
 
-   fn getValType( node:&Node ): bool, int, real, str, &Ast.TypeInfo {
-      let! literal = node.getLiteral() {
-         return false, 0, 0.0, "", Ast.headTypeInfo;
-      };
+   let mut intVal, mut realVal, mut strVal = 0, 0.0, "";
+   let mut retTypeInfo = Ast.builtinTypeNone;
 
-      let mut intVal, mut realVal, mut strVal = 0, 0.0, "";
-      let mut retTypeInfo = Ast.builtinTypeNone;
-
-      fn getEnum( txt:str, typeInfo:&Ast.TypeInfo ) {
-         if! let enumTypeInfo = typeInfo@@@Ast.EnumTypeInfo {
-            let valInfo = unwrap enumTypeInfo.getEnumValInfo( txt );
-            match valInfo.$val {
-               case .Int( val ) {
-                  intVal = val;
-                  realVal = val@@real;
-               }
-               case .Real( val ) {
-                  realVal = val;
-               }
-               case .Str( val ) {
-                  strVal = val;
-               }
+   fn getEnum( txt:str, typeInfo:&Ast.TypeInfo ) {
+      if! let enumTypeInfo = typeInfo@@@Ast.EnumTypeInfo {
+         let valInfo = unwrap enumTypeInfo.getEnumValInfo( txt );
+         match valInfo.$val {
+            case .Int( val ) {
+               intVal = val;
+               realVal = val@@real;
             }
-            retTypeInfo = enumTypeInfo.$valTypeInfo;
+            case .Real( val ) {
+               realVal = val;
+            }
+            case .Str( val ) {
+               strVal = val;
+            }
          }
+         retTypeInfo = enumTypeInfo.$valTypeInfo;
       }
-      
-      match literal {
-         case .Int( val ) {
-            intVal = val;
-            realVal = val@@real;
-            retTypeInfo = Ast.builtinTypeInt;
-         }
-         case .Real( val ) {
-            realVal = val;
-            intVal = val@@int;
-            retTypeInfo = Ast.builtinTypeReal;
-         }
-         case .Str( val ) {
-            strVal = val;
-            retTypeInfo = Ast.builtinTypeString;
-         }
-         default {
-            return false, 0, 0.0, "", Ast.headTypeInfo;
-         }
-      }
-      return true, intVal, realVal, strVal, retTypeInfo;
    }
    
-   let ret1, int1, real1, str1, type1 = getValType( self.$exp1 );
-   let ret2, int2, real2, str2, type2 = getValType( self.$exp2 );
+   match literal {
+      case .Int( val ) {
+         intVal = val;
+         realVal = val@@real;
+         retTypeInfo = Ast.builtinTypeInt;
+      }
+      case .Real( val ) {
+         realVal = val;
+         intVal = val@@int;
+         retTypeInfo = Ast.builtinTypeReal;
+      }
+      case .Str( val ) {
+         strVal = val;
+         retTypeInfo = Ast.builtinTypeString;
+      }
+      default {
+         return false, 0, 0.0, "", Ast.headTypeInfo;
+      }
+   }
+   return true, intVal, realVal, strVal, retTypeInfo;
+}
+
+
+pub override fn ExpOp2Node.setupLiteralTokenList( list: List<&Parser.Token> ): bool {
+   let literal, msg = self.getLiteral();
+   when! literal {
+      match literal {
+         case .Int( val ) {
+            self.addTokenList( list, .Int, "%d" (val) );
+         }
+         case .Real( val ) {
+            self.addTokenList( list, .Real, "%g" (val) );
+         }
+         case .Str( val ) {
+            self.addTokenList( list, .Str, "%q" (val) );
+         }
+         default {
+            return false;
+         }
+      }
+      return true;
+   }
+   else {
+      return false;
+   }
+}
+
+
+pub override fn ExpOp2Node.getLiteral(): Literal!, str! {
+
+   let ret1, int1, real1, str1, type1 = self.getValType( self.$exp1 );
+   let ret2, int2, real2, str2, type2 = self.getValType( self.$exp2 );
 
    if not ret1 {
       return nil, "not support literal -- %s" ( getNodeKindName( self.$exp1.$kind ) );

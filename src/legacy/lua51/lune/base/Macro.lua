@@ -565,7 +565,7 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
          local kind = exp:get_kind()
          do
             local _switchExp = kind
-            if _switchExp == Nodes.NodeKind.get_LiteralNil() or _switchExp == Nodes.NodeKind.get_LiteralChar() or _switchExp == Nodes.NodeKind.get_LiteralInt() or _switchExp == Nodes.NodeKind.get_LiteralReal() or _switchExp == Nodes.NodeKind.get_LiteralArray() or _switchExp == Nodes.NodeKind.get_LiteralList() or _switchExp == Nodes.NodeKind.get_LiteralMap() or _switchExp == Nodes.NodeKind.get_LiteralString() or _switchExp == Nodes.NodeKind.get_LiteralBool() or _switchExp == Nodes.NodeKind.get_LiteralSymbol() or _switchExp == Nodes.NodeKind.get_RefField() or _switchExp == Nodes.NodeKind.get_ExpMacroStat() or _switchExp == Nodes.NodeKind.get_ExpMacroArgExp() or _switchExp == Nodes.NodeKind.get_ExpOmitEnum() or _switchExp == Nodes.NodeKind.get_ExpCast() then
+            if _switchExp == Nodes.NodeKind.get_LiteralNil() or _switchExp == Nodes.NodeKind.get_LiteralChar() or _switchExp == Nodes.NodeKind.get_LiteralInt() or _switchExp == Nodes.NodeKind.get_LiteralReal() or _switchExp == Nodes.NodeKind.get_LiteralArray() or _switchExp == Nodes.NodeKind.get_LiteralList() or _switchExp == Nodes.NodeKind.get_LiteralMap() or _switchExp == Nodes.NodeKind.get_LiteralString() or _switchExp == Nodes.NodeKind.get_LiteralBool() or _switchExp == Nodes.NodeKind.get_LiteralSymbol() or _switchExp == Nodes.NodeKind.get_RefField() or _switchExp == Nodes.NodeKind.get_ExpMacroStat() or _switchExp == Nodes.NodeKind.get_ExpMacroArgExp() or _switchExp == Nodes.NodeKind.get_ExpOmitEnum() or _switchExp == Nodes.NodeKind.get_ExpCast() or _switchExp == Nodes.NodeKind.get_ExpOp2() then
             else 
                
                   local mess = string.format( "Macro arguments must be literal value. -- %d:%d:%s", exp:get_pos().lineNo, exp:get_pos().column, Nodes.getNodeKindName( kind ))
@@ -958,19 +958,30 @@ function MacroCtrl:registVar( symbolList )
 end
 
 
-function MacroCtrl:startExpandMode( lineNo )
+function MacroCtrl:startDecl(  )
 
-   self.macroMode = Nodes.MacroMode.Expand
-   self.macroCallLineNo = lineNo
-   table.insert( self.macroModeStack, self.macroMode )
+   self.symbol2ValueMapForMacro = {}
 end
+
+
 
 
 function MacroCtrl:finishMacroMode(  )
 
    table.remove( self.macroModeStack )
    self.macroMode = self.macroModeStack[#self.macroModeStack]
-   self.symbol2ValueMapForMacro = {}
+end
+
+
+function MacroCtrl:startExpandMode( lineNo, callback )
+
+   self.macroMode = Nodes.MacroMode.Expand
+   self.macroCallLineNo = lineNo
+   table.insert( self.macroModeStack, self.macroMode )
+   
+   callback(  )
+   
+   self:finishMacroMode(  )
 end
 
 
@@ -978,12 +989,6 @@ function MacroCtrl:startAnalyzeArgMode(  )
 
    self.macroMode = Nodes.MacroMode.AnalyzeArg
    table.insert( self.macroModeStack, self.macroMode )
-   local map = {}
-   for key, val in pairs( self.symbol2ValueMapForMacro ) do
-      map[key] = val
-   end
-   
-   self.symbol2ValueMapForMacro = map
 end
 
 
