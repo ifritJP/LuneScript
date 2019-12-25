@@ -134,7 +134,7 @@ pub macro _isNil( ctrl:sym, val:__exp ): bool {
    ,,ctrl.isNil( ,,val, ,,,,val, nil, __mod__, __line__ )
 }
 
-pub macro _err( ctrl:sym, mes:str ) {
+pub macro _err( ctrl:sym, mes:__exp ) {
    ,,ctrl.err( ,,mes, __mod__, __line__ );
 }
 

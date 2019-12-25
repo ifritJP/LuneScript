@@ -2371,39 +2371,44 @@ fn TransUnit.analyzeExpOpSet(
          }
       }
 
-      if index <= #expTypeList and
-         not symbolInfo.$hasValueFlag and symbolInfo.$kind == .Var
-      {
-         if symbolInfo.$typeInfo == Ast.builtinTypeEmpty {
-            // 未初期化変数に型が指定されていないので型推論を行なう
-            
-            let mut expType = expTypeList[ index ];
-            switch expType.$kind {
-               case .DDD {
-                  if #expType.$itemTypeInfoList > 0 {
-                     expType = expType.$itemTypeInfoList[ 1 ].$nilableTypeInfo;
+      if index <= #expTypeList and not symbolInfo.$hasValueFlag {
+         switch symbolInfo.$kind {
+            case .Var {
+               if symbolInfo.$typeInfo == Ast.builtinTypeEmpty {
+                  // 未初期化変数に型が指定されていないので型推論を行なう
+                  
+                  let mut expType = expTypeList[ index ];
+                  switch expType.$kind {
+                     case .DDD {
+                        if #expType.$itemTypeInfoList > 0 {
+                           expType = expType.$itemTypeInfoList[ 1 ].$nilableTypeInfo;
+                        }
+                     }
+                     case .List, .Array, .Set, .Map {
+                        let workPos;
+                        if index <= #expList.$expList {
+                           workPos = expList.$expList[ index ].$pos;
+                        }
+                        else {
+                           workPos = opeToken.$pos;
+                        }
+                        self.checkLiteralEmptyCollection(
+                           opeToken.pos, symbolInfo.$name, expType );
+                     }
                   }
+                  symbolInfo.set_typeInfo( expType );
                }
-               case .List, .Array, .Set, .Map {
-                  let workPos;
-                  if index <= #expList.$expList {
-                     workPos = expList.$expList[ index ].$pos;
-                  }
-                  else {
-                     workPos = opeToken.$pos;
-                  }
-                  self.checkLiteralEmptyCollection(
-                     opeToken.pos, symbolInfo.$name, expType );
+               if not self.tentativeSymbol.regist( symbolInfo ) {
+                  self.addErrMess( opeToken.pos,
+                                   "can't access in this scope. -- %s"
+                                   ( symbolInfo.$name ) );
                }
+               initSymSet.add( symbolInfo );
             }
-            symbolInfo.set_typeInfo( expType );
+            case .Mbr {
+               initSymSet.add( symbolInfo );
+            }
          }
-         if not self.tentativeSymbol.regist( symbolInfo ) {
-            self.addErrMess( opeToken.pos,
-                             "can't access in this scope. -- %s"
-                             ( symbolInfo.$name ) );
-         }
-         initSymSet.add( symbolInfo );
       }
       symbolInfo.set_hasValueFlag( true );
    }

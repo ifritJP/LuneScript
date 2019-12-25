@@ -10407,39 +10407,47 @@ function TransUnit:analyzeExpOpSet( exp, opeToken, expectTypeList )
       end
       
       
-      if index <= #expTypeList and not symbolInfo:get_hasValueFlag() and symbolInfo:get_kind() == Ast.SymbolKind.Var then
-         if symbolInfo:get_typeInfo() == Ast.builtinTypeEmpty then
-            
-            local expType = expTypeList[index]
-            do
-               local _switchExp = expType:get_kind()
-               if _switchExp == Ast.TypeInfoKind.DDD then
-                  if #expType:get_itemTypeInfoList() > 0 then
-                     expType = expType:get_itemTypeInfoList()[1]:get_nilableTypeInfo()
+      if index <= #expTypeList and not symbolInfo:get_hasValueFlag() then
+         do
+            local _switchExp = symbolInfo:get_kind()
+            if _switchExp == Ast.SymbolKind.Var then
+               if symbolInfo:get_typeInfo() == Ast.builtinTypeEmpty then
+                  
+                  local expType = expTypeList[index]
+                  do
+                     local _switchExp = expType:get_kind()
+                     if _switchExp == Ast.TypeInfoKind.DDD then
+                        if #expType:get_itemTypeInfoList() > 0 then
+                           expType = expType:get_itemTypeInfoList()[1]:get_nilableTypeInfo()
+                        end
+                        
+                     elseif _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Set or _switchExp == Ast.TypeInfoKind.Map then
+                        local workPos
+                        
+                        if index <= #expList:get_expList() then
+                           workPos = expList:get_expList()[index]:get_pos()
+                        else
+                         
+                           workPos = opeToken.pos
+                        end
+                        
+                        self:checkLiteralEmptyCollection( opeToken.pos, symbolInfo:get_name(), expType )
+                     end
                   end
                   
-               elseif _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Set or _switchExp == Ast.TypeInfoKind.Map then
-                  local workPos
-                  
-                  if index <= #expList:get_expList() then
-                     workPos = expList:get_expList()[index]:get_pos()
-                  else
-                   
-                     workPos = opeToken.pos
-                  end
-                  
-                  self:checkLiteralEmptyCollection( opeToken.pos, symbolInfo:get_name(), expType )
+                  symbolInfo:set_typeInfo( expType )
                end
+               
+               if not self.tentativeSymbol:regist( symbolInfo ) then
+                  self:addErrMess( opeToken.pos, string.format( "can't access in this scope. -- %s", symbolInfo:get_name()) )
+               end
+               
+               initSymSet[symbolInfo]= true
+            elseif _switchExp == Ast.SymbolKind.Mbr then
+               initSymSet[symbolInfo]= true
             end
-            
-            symbolInfo:set_typeInfo( expType )
          end
          
-         if not self.tentativeSymbol:regist( symbolInfo ) then
-            self:addErrMess( opeToken.pos, string.format( "can't access in this scope. -- %s", symbolInfo:get_name()) )
-         end
-         
-         initSymSet[symbolInfo]= true
       end
       
       symbolInfo:set_hasValueFlag( true )

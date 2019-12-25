@@ -1,1 +1,6 @@
-print( "\n", '\n' );
+for index = 1, 5 {
+   print( index );
+}
+for index = 5, 1, -1 {
+   print( index );
+}

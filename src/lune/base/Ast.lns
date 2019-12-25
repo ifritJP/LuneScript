@@ -4413,6 +4413,16 @@ pub class ExtTypeInfo extend TypeInfo {
                                                          importInfo, localFlag ) );
    }
 
+   pub override fn equals( typeInfo: &TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>!,
+                           checkModifer:bool! ): bool
+   {
+      if! let extTypeInfo = typeInfo@@@ExtTypeInfo {
+         return self.extedType.equals( extTypeInfo.extedType, alt2type, checkModifer );
+      }
+      return self.extedType.equals( typeInfo, alt2type, checkModifer );
+   }
+
+   
    pub override fn canEvalWith(
       other:&TypeInfo,
       canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool, str!
@@ -5827,7 +5837,11 @@ __test case1 {
          let refType, pos, msg =
             analyzer.analyzeTypeFromTxt( ,,typeTxt, testScope, .Local, false );
          when! refType {
-            Testing._isTM( ctrl, ,,typeTxt, refType.$typeInfo.equals( ,,typeInfo ## ) );
+            if not Testing._isTM( ctrl, ,,typeTxt,
+                                  refType.$typeInfo.equals( ,,typeInfo ## ) )
+            {
+               print( refType.$typeInfo.getTxt(##) );
+            }
          }
          else {
             Testing._err( ctrl, "refType is nil -- " .. ,,typeTxt );
@@ -5837,6 +5851,9 @@ __test case1 {
    _checkTypeAnalyzer( "int", builtinTypeInt );
    _checkTypeAnalyzer( "int!", builtinTypeInt.$nilableTypeInfo );
    _checkTypeAnalyzer( "&int", NormalTypeInfo.createModifier( builtinTypeInt, .IMut ) );
+   _checkTypeAnalyzer( "...", builtinTypeDDD );
+   _checkTypeAnalyzer( "...<int>", NormalTypeInfo.createDDD( builtinTypeInt, true ) );
+   _checkTypeAnalyzer( "Luaval<form>", NormalTypeInfo.createLuaval( builtinTypeForm ) );
 
    let intListType =
       NormalTypeInfo.createList( .Local, headTypeInfo, [ builtinTypeInt ], .Mut );
@@ -5897,10 +5914,12 @@ __test case1 {
 
    // Super と Sub の canEvalWith
    let superType = NormalTypeInfo.createClass(
-      true, false, nil, nil, nil, [], headTypeInfo, false, .Local, "Super" );
+      true, false, new Scope( rootScope, true ## ),
+      nil, nil, [], headTypeInfo, false, .Local, "Super" );
    testScope.addClass( "Super", nil, superType );   
    let subType = NormalTypeInfo.createClass(
-      true, false, nil, superType, nil, [], headTypeInfo, false, .Local, "Sub" );
+      true, false, new Scope( rootScope, true ## ),
+      superType, nil, [], headTypeInfo, false, .Local, "Sub" );
    testScope.addClass( "Sub", nil, subType );   
 
    _checkCanEvalWith( "Super", "Sub", "OK" );
@@ -5967,4 +5986,18 @@ __test case1 {
    _checkCanEvalWith( "&List<&Super>", "List<&Sub>!", "NG" );
    _checkCanEvalWith( "&List<&Super>!", "List<&Sub>", "OK" );
    _checkCanEvalWith( "&List<&Super>!", "List<&Sub>!", "OK" );
+
+
+   // Hoge<Super> と Hoge<Sub> の canEvalWith
+   let mut genTypeList:List<&AlternateTypeInfo> = [];
+   let alter = NormalTypeInfo.createAlternate( true, 1, "T", .Pri, headTypeInfo ## );
+   genTypeList.insert( alter );
+   let hogeType = NormalTypeInfo.createClass(
+      true, false, new Scope( rootScope, true ## ),
+      nil, nil, genTypeList, headTypeInfo, false, .Local, "Hoge" );
+   testScope.addClass( "Hoge", nil, hogeType );
+
+   _checkCanEvalWith( "Hoge<int>", "Hoge<int>", "OK" );
+   _checkCanEvalWith( "Hoge<int>", "&Hoge<int>", "NG" );
+   
 }

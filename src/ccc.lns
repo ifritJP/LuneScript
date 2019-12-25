@@ -6,6 +6,15 @@ let mut g_val = 100;
 
 {
    _section();
+   for index = 1, 5 {
+      print( index );
+   }
+   for index = 5, 1, -1 {
+      print( index );
+   }
+}
+{
+   _section();
    let json = {
       "lv1": {
          "lv2": {

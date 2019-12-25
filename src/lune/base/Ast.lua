@@ -5747,6 +5747,17 @@ function ExtTypeInfo:getTxtWithRaw( rawTxt, typeNameCtrl, importInfo, localFlag 
 
    return string.format( "Luaval<%s>", self.extedType:getTxtWithRaw( rawTxt, typeNameCtrl, importInfo, localFlag ))
 end
+function ExtTypeInfo:equals( typeInfo, alt2type, checkModifer )
+
+   do
+      local extTypeInfo = _lune.__Cast( typeInfo, 3, ExtTypeInfo )
+      if extTypeInfo ~= nil then
+         return self.extedType:equals( extTypeInfo.extedType, alt2type, checkModifer )
+      end
+   end
+   
+   return self.extedType:equals( typeInfo, alt2type, checkModifer )
+end
 function ExtTypeInfo:canEvalWith( other, canEvalType, alt2type )
 
    return self.extedType:canEvalWith( other, canEvalType, alt2type )
@@ -5822,10 +5833,6 @@ end
 
 function ExtTypeInfo:get_abstractFlag( ... )
    return self.extedType:get_abstractFlag( ... )
-end
-
-function ExtTypeInfo:equals( ... )
-   return self.extedType:equals( ... )
 end
 
 function ExtTypeInfo:get_externalFlag( ... )

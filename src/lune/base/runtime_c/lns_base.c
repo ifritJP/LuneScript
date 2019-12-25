@@ -149,6 +149,7 @@ lns_var_t * lns_var_alloc(
     pVar->stem.type = type;
     pBlock->pVarList[ index ] = pVar;
     pVar->refCount = 1;
+    pVar->stem.val.pAny = NULL;
     return pVar;
 }
 

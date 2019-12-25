@@ -6721,13 +6721,16 @@ pub override fn convFilter.processFor(
    self.writeln( "" );
 
    self.processLoopPreProcess( node.$block );
-   
+
+   let indexSym = self.moduleCtrl.getSymbolName( node.$val );
+   self.writeln( "for (; ; %s += _inc ) {" ( indexSym) );
+   self.pushIndent(##);
    self.writeln(
-      "for (; %s <= _to; %s += _inc ) {"
-      (self.moduleCtrl.getSymbolName( node.$val ),
-        self.moduleCtrl.getSymbolName( node.$val )) );
+      "if ( ( _inc >= 0 && %s > _to ) || ( _inc < 0 && %s < _to ) ) { break; }"
+      (indexSym, indexSym) );
    self.writeln( "lns_reset_block( _pEnv );" );
    filter( node.$block,  self, node );
+   self.popIndent();
    self.writeln( "}" );
 
    self.processLoopPostProcess();
