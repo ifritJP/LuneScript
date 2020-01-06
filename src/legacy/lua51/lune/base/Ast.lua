@@ -342,7 +342,7 @@ end
 function DummyModuleInfoManager.setmeta( obj )
   setmetatable( obj, { __index = DummyModuleInfoManager  } )
 end
-function DummyModuleInfoManager:get_instance()
+function DummyModuleInfoManager.get_instance()
    return DummyModuleInfoManager.instance
 end
 do
@@ -1002,21 +1002,24 @@ function CanEvalType.get__allList()
    return CanEvalType.__allList
 end
 
-CanEvalType.SetOp = 0
-CanEvalType._val2NameMap[0] = 'SetOp'
-CanEvalType.__allList[1] = CanEvalType.SetOp
-CanEvalType.SetEq = 1
-CanEvalType._val2NameMap[1] = 'SetEq'
-CanEvalType.__allList[2] = CanEvalType.SetEq
-CanEvalType.Math = 2
-CanEvalType._val2NameMap[2] = 'Math'
-CanEvalType.__allList[3] = CanEvalType.Math
-CanEvalType.Comp = 3
-CanEvalType._val2NameMap[3] = 'Comp'
-CanEvalType.__allList[4] = CanEvalType.Comp
-CanEvalType.Logical = 4
-CanEvalType._val2NameMap[4] = 'Logical'
-CanEvalType.__allList[5] = CanEvalType.Logical
+CanEvalType.SetOpIMut = 0
+CanEvalType._val2NameMap[0] = 'SetOpIMut'
+CanEvalType.__allList[1] = CanEvalType.SetOpIMut
+CanEvalType.SetOp = 1
+CanEvalType._val2NameMap[1] = 'SetOp'
+CanEvalType.__allList[2] = CanEvalType.SetOp
+CanEvalType.SetEq = 2
+CanEvalType._val2NameMap[2] = 'SetEq'
+CanEvalType.__allList[3] = CanEvalType.SetEq
+CanEvalType.Math = 3
+CanEvalType._val2NameMap[3] = 'Math'
+CanEvalType.__allList[4] = CanEvalType.Math
+CanEvalType.Comp = 4
+CanEvalType._val2NameMap[4] = 'Comp'
+CanEvalType.__allList[5] = CanEvalType.Comp
+CanEvalType.Logical = 5
+CanEvalType._val2NameMap[5] = 'Logical'
+CanEvalType.__allList[6] = CanEvalType.Logical
 
 
 local TypeInfo = {}
@@ -1379,7 +1382,7 @@ function TypeNameCtrl:getParentFullName( typeInfo, importInfo, localFlag )
    if  nil == moduleInfoMan then
       local _moduleInfoMan = moduleInfoMan
    
-      moduleInfoMan = DummyModuleInfoManager:get_instance()
+      moduleInfoMan = DummyModuleInfoManager.get_instance()
    end
    
    
@@ -3532,6 +3535,11 @@ function GenericTypeInfo:get_srcTypeInfo(  )
 end
 function GenericTypeInfo:canEvalWith( other, canEvalType, alt2type )
 
+   if other:get_nilable() then
+      return false, nil
+   end
+   
+   
    if TypeInfo.isMut( self ) and not TypeInfo.isMut( other ) then
       return false, nil
    end
@@ -3570,9 +3578,20 @@ function GenericTypeInfo:canEvalWith( other, canEvalType, alt2type )
    do
       local otherGen = _lune.__Cast( work, 3, GenericTypeInfo )
       if otherGen ~= nil then
+         
+         local evalType
+         
+         if canEvalType == CanEvalType.SetOp then
+            evalType = CanEvalType.SetEq
+         else
+          
+            evalType = canEvalType
+         end
+         
+         
          for key, val in pairs( self.alt2typeMap ) do
             local otherType = AlternateTypeInfo.getAssign( _lune.unwrap( otherGen.alt2typeMap[key]), alt2type )
-            local ret, mess = val:canEvalWith( otherType, canEvalType, alt2type )
+            local ret, mess = val:canEvalWith( otherType, evalType, alt2type )
             if not ret then
                return false, mess
             end
@@ -3828,9 +3847,18 @@ function ModifierTypeInfo:canEvalWith( other, canEvalType, alt2type )
    
    local evalType
    
-   if #self.srcTypeInfo:get_itemTypeInfoList() >= 1 and canEvalType == CanEvalType.SetEq then
+   if #self.srcTypeInfo:get_itemTypeInfoList() >= 1 then
+      do
+         local _switchExp = canEvalType
+         if _switchExp == CanEvalType.SetEq or _switchExp == CanEvalType.SetOp then
+            
+            evalType = CanEvalType.SetOpIMut
+         else 
+            
+               evalType = canEvalType
+         end
+      end
       
-      evalType = CanEvalType.SetOp
    else
     
       evalType = canEvalType
@@ -6085,7 +6113,7 @@ function BoxTypeInfo:canEvalWith( other, canEvalType, alt2type )
    
    do
       local _switchExp = canEvalType
-      if _switchExp == CanEvalType.SetOp or _switchExp == CanEvalType.SetEq then
+      if _switchExp == CanEvalType.SetOp or _switchExp == CanEvalType.SetOpIMut or _switchExp == CanEvalType.SetEq then
       else 
          
             return false, nil
@@ -6516,49 +6544,52 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
    end
    
    
-   if canEvalType == CanEvalType.SetEq or canEvalType == CanEvalType.SetOp then
-      if dest == _moduleObj.builtinTypeEmpty then
-         
-         do
-            local _switchExp = otherSrc
-            if _switchExp == _moduleObj.builtinTypeAbbr or _switchExp == _moduleObj.builtinTypeAbbrNone then
+   do
+      local _switchExp = canEvalType
+      if _switchExp == CanEvalType.SetEq or _switchExp == CanEvalType.SetOp or _switchExp == CanEvalType.SetOpIMut then
+         if dest == _moduleObj.builtinTypeEmpty then
+            
+            do
+               local _switchExp = otherSrc
+               if _switchExp == _moduleObj.builtinTypeAbbr or _switchExp == _moduleObj.builtinTypeAbbrNone then
+                  return false, nil
+               end
+            end
+            
+            if otherSrc:get_kind() == TypeInfoKind.Func then
+               
                return false, nil
             end
+            
+            return true, nil
+         elseif not otherMut and destMut then
+            
+            local nonNilOtherType = otherSrc:get_nonnilableType()
+            do
+               local _switchExp = nonNilOtherType:get_kind()
+               if _switchExp == TypeInfoKind.Set or _switchExp == TypeInfoKind.Map or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.IF then
+                  return false, nil
+               elseif _switchExp == TypeInfoKind.Class then
+                  if _moduleObj.builtinTypeString ~= nonNilOtherType then
+                     return false, nil
+                  end
+                  
+               elseif _switchExp == TypeInfoKind.Prim then
+                  if _moduleObj.builtinTypeStem == nonNilOtherType then
+                     return false, nil
+                  end
+                  
+               end
+            end
+            
          end
          
-         if otherSrc:get_kind() == TypeInfoKind.Func then
-            
+         
+         if otherSrc ~= _moduleObj.builtinTypeNil and otherSrc ~= _moduleObj.builtinTypeString and otherSrc:get_kind() ~= TypeInfoKind.Prim and otherSrc:get_kind() ~= TypeInfoKind.Func and otherSrc:get_kind() ~= TypeInfoKind.Method and otherSrc:get_kind() ~= TypeInfoKind.Form and otherSrc:get_kind() ~= TypeInfoKind.FormFunc and otherSrc:get_kind() ~= TypeInfoKind.Enum and otherSrc:get_kind() ~= TypeInfoKind.Abbr and otherSrc:get_kind() ~= TypeInfoKind.Alternate and otherSrc:get_kind() ~= TypeInfoKind.Box and not isGenericType( otherSrc ) and destMut and not otherMut then
             return false, nil
          end
          
-         return true, nil
-      elseif not otherMut and destMut then
-         
-         local nonNilOtherType = otherSrc:get_nonnilableType()
-         do
-            local _switchExp = nonNilOtherType:get_kind()
-            if _switchExp == TypeInfoKind.Set or _switchExp == TypeInfoKind.Map or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.IF then
-               return false, nil
-            elseif _switchExp == TypeInfoKind.Class then
-               if _moduleObj.builtinTypeString ~= nonNilOtherType then
-                  return false, nil
-               end
-               
-            elseif _switchExp == TypeInfoKind.Prim then
-               if _moduleObj.builtinTypeStem == nonNilOtherType then
-                  return false, nil
-               end
-               
-            end
-         end
-         
       end
-      
-   end
-   
-   
-   if (canEvalType == CanEvalType.SetOp or canEvalType == CanEvalType.SetEq ) and otherSrc ~= _moduleObj.builtinTypeNil and otherSrc ~= _moduleObj.builtinTypeString and otherSrc:get_kind() ~= TypeInfoKind.Prim and otherSrc:get_kind() ~= TypeInfoKind.Func and otherSrc:get_kind() ~= TypeInfoKind.Method and otherSrc:get_kind() ~= TypeInfoKind.Form and otherSrc:get_kind() ~= TypeInfoKind.FormFunc and otherSrc:get_kind() ~= TypeInfoKind.Enum and otherSrc:get_kind() ~= TypeInfoKind.Abbr and otherSrc:get_kind() ~= TypeInfoKind.Alternate and otherSrc:get_kind() ~= TypeInfoKind.Box and not isGenericType( otherSrc ) and destMut and not otherMut then
-      return false, nil
    end
    
    
@@ -6640,7 +6671,7 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
       elseif isGenericType( dest ) then
          return dest:canEvalWith( otherSrc, canEvalType, alt2type )
       elseif (dest:get_kind() == TypeInfoKind.Class or dest:get_kind() == TypeInfoKind.IF ) and (otherSrc:get_kind() == TypeInfoKind.Class or otherSrc:get_kind() == TypeInfoKind.IF ) then
-         if canEvalType == CanEvalType.SetOp then
+         if canEvalType == CanEvalType.SetOp or canEvalType == CanEvalType.SetOpIMut then
             return otherSrc:isInheritFrom( dest, alt2type ), nil
          end
          
@@ -6699,7 +6730,7 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
             
             local ret
             
-            ret, mess = (dest:get_itemTypeInfoList()[1] ):canEvalWith( otherSrc:get_itemTypeInfoList()[1], destMut and CanEvalType.SetEq or CanEvalType.SetOp, alt2type )
+            ret, mess = (dest:get_itemTypeInfoList()[1] ):canEvalWith( otherSrc:get_itemTypeInfoList()[1], destMut and CanEvalType.SetEq or CanEvalType.SetOpIMut, alt2type )
             if not ret then
                return false, mess
             end
@@ -6725,7 +6756,7 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
                
                local ret
                
-               ret, mess = (dest:get_itemTypeInfoList()[1] ):canEvalWith( otherSrc:get_itemTypeInfoList()[1], destMut and CanEvalType.SetEq or CanEvalType.SetOp, alt2type )
+               ret, mess = (dest:get_itemTypeInfoList()[1] ):canEvalWith( otherSrc:get_itemTypeInfoList()[1], destMut and CanEvalType.SetEq or CanEvalType.SetOpIMut, alt2type )
                if not ret then
                   return false
                end
@@ -6746,7 +6777,7 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
                
                local ret
                
-               ret, mess = (dest:get_itemTypeInfoList()[2] ):canEvalWith( otherSrc:get_itemTypeInfoList()[2], destMut and CanEvalType.SetEq or CanEvalType.SetOp, alt2type )
+               ret, mess = (dest:get_itemTypeInfoList()[2] ):canEvalWith( otherSrc:get_itemTypeInfoList()[2], destMut and CanEvalType.SetEq or CanEvalType.SetOpIMut, alt2type )
                if not ret then
                   return false
                end
@@ -6771,7 +6802,11 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
          
          return false, nil
       elseif _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.IF then
-         if canEvalType == CanEvalType.SetOp then
+         if isGenericType( dest ) then
+            return dest:canEvalWith( otherSrc, canEvalType, alt2type )
+         end
+         
+         if canEvalType == CanEvalType.SetOp or canEvalType == CanEvalType.SetOpIMut then
             return otherSrc:isInheritFrom( dest, alt2type ), nil
          end
          

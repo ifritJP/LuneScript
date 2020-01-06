@@ -1370,6 +1370,8 @@ function convFilter:processBlockSub( node, opt )
          word = ""
       elseif _switchExp == Nodes.BlockKind.LetUnwrap then
          word = ""
+      elseif _switchExp == Nodes.BlockKind.LetUnwrapThenDo then
+         word = ""
       elseif _switchExp == Nodes.BlockKind.IfUnwrap then
          word = ""
       elseif _switchExp == Nodes.BlockKind.While then
@@ -1947,12 +1949,24 @@ function %s:__init( %s )
       local getterName = "get_" .. memberName
       
       local autoFlag = not _lune._Set_has(methodNameSet, getterName )
-      local prefix = memberNode:get_staticFlag() and className or "self"
+      local prefix
+      
+      local delimit
+      
+      if memberNode:get_staticFlag() then
+         prefix = className
+         delimit = "."
+      else
+       
+         prefix = "self"
+         delimit = ":"
+      end
+      
       if memberNode:get_getterMode(  ) ~= Ast.AccessMode.None and autoFlag then
          self:writeln( string.format( [==[
-function %s:%s()
+function %s%s%s()
    return %s.%s
-end]==], className, getterName, prefix, memberName) )
+end]==], className, delimit, getterName, prefix, memberName) )
          methodNameSet[getterName]= true
       end
       
@@ -1961,9 +1975,9 @@ end]==], className, getterName, prefix, memberName) )
       autoFlag = not _lune._Set_has(methodNameSet, setterName )
       if memberNode:get_setterMode(  ) ~= Ast.AccessMode.None and autoFlag then
          self:writeln( string.format( [==[
-function %s:%s( %s )
+function %s%s%s( %s )
    %s.%s = %s
-end]==], className, setterName, memberName, prefix, memberName, memberName) )
+end]==], className, delimit, setterName, memberName, prefix, memberName, memberName) )
          methodNameSet[setterName]= true
       end
       
@@ -3956,7 +3970,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3295, function (  )
+   Log.log( Log.Level.Info, __func__, 3307, function (  )
    
       return string.format( "code: %s", code)
    end )

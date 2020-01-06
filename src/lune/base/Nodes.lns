@@ -786,6 +786,7 @@ pub enum BlockKind {
    Block,
    Macro,
    LetUnwrap,
+   LetUnwrapThenDo,
    IfUnwrap,
    When,
    Test,

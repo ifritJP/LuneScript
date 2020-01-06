@@ -45,15 +45,19 @@ class Sub2 extend GenTest {
    fn func2(test30:&Test<GenTest>): &GenTest {
       return test30.$val;
    }  
+   fn func3(test30:Test<GenTest>): &GenTest {
+      return test30.$val;
+   }  
 
    func2( test3 );  // error
    
-   let test5 = new Test<GenTest>(new GenTest());
+   let mut test5 = new Test<GenTest>(new GenTest());
    func2( test5 );
+   func3( test5 );
 
-   let test6 = new Test<Sub1>(new Sub1());
+   let mut test6 = new Test<Sub1>(new Sub1());
    func2( test6 );
-
+   func3( test6 ); // error
 }
 
 abstract class Super<T> {

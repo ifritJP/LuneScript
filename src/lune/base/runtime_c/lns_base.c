@@ -953,6 +953,37 @@ lns_any_t * _lns_func2any(
 }
 
 
+lns_stem_t l_nil_mtd_getter(
+    lns_env_t * _pEnv, lns_stem_t obj, lns_mtd_getter_t * pGetter )
+{
+    if ( obj.type == lns_stem_type_nil ) { return lns_global.nilStem; }
+    return pGetter( _pEnv, obj.val.pAny );
+}
+lns_stem_t l_nil_mtd_getter_any(
+    lns_env_t * _pEnv, lns_stem_t obj, lns_mtd_getter_any_t * pGetter )
+{
+    if ( obj.type == lns_stem_type_nil ) { return lns_global.nilStem; }
+    return LNS_STEM_ANY( pGetter( _pEnv, obj.val.pAny ) );
+}
+lns_stem_t l_nil_mtd_getter_int(
+    lns_env_t * _pEnv, lns_stem_t obj, lns_mtd_getter_int_t * pGetter )
+{
+    if ( obj.type == lns_stem_type_nil ) { return lns_global.nilStem; }
+    return LNS_STEM_INT( pGetter( _pEnv, obj.val.pAny ) );
+}
+lns_stem_t l_nil_mtd_getter_real(
+    lns_env_t * _pEnv, lns_stem_t obj, lns_mtd_getter_real_t * pGetter )
+{
+    if ( obj.type == lns_stem_type_nil ) { return lns_global.nilStem; }
+    return LNS_STEM_REAL( pGetter( _pEnv, obj.val.pAny ) );
+}
+lns_stem_t l_nil_mtd_getter_bool(
+    lns_env_t * _pEnv, lns_stem_t obj, lns_mtd_getter_bool_t * pGetter )
+{
+    if ( obj.type == lns_stem_type_nil ) { return lns_global.nilStem; }
+    return LNS_STEM_BOOL( pGetter( _pEnv, obj.val.pAny ) );
+}
+
 bool lns_fromMapPrim(
     lns_env_t * _pEnv, lns_any_t ** ppErr, lns_stem_t * pWork,
     lns_any_t * pMap, bool nilable, lns_any_t * pMbr, lns_stem_type_t kind )

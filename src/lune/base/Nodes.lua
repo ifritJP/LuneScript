@@ -246,7 +246,7 @@ function SimpleModuleInfoManager:__init(moduleInfoManager)
    if moduleInfoManager ~= nil then
       self.moduleInfoManager = moduleInfoManager
    else
-      self.moduleInfoManager = Ast.DummyModuleInfoManager:get_instance()
+      self.moduleInfoManager = Ast.DummyModuleInfoManager.get_instance()
    end
    
    self.moduleInfoManagerHist = {}
@@ -1590,15 +1590,18 @@ BlockKind.__allList[15] = BlockKind.Macro
 BlockKind.LetUnwrap = 15
 BlockKind._val2NameMap[15] = 'LetUnwrap'
 BlockKind.__allList[16] = BlockKind.LetUnwrap
-BlockKind.IfUnwrap = 16
-BlockKind._val2NameMap[16] = 'IfUnwrap'
-BlockKind.__allList[17] = BlockKind.IfUnwrap
-BlockKind.When = 17
-BlockKind._val2NameMap[17] = 'When'
-BlockKind.__allList[18] = BlockKind.When
-BlockKind.Test = 18
-BlockKind._val2NameMap[18] = 'Test'
-BlockKind.__allList[19] = BlockKind.Test
+BlockKind.LetUnwrapThenDo = 16
+BlockKind._val2NameMap[16] = 'LetUnwrapThenDo'
+BlockKind.__allList[17] = BlockKind.LetUnwrapThenDo
+BlockKind.IfUnwrap = 17
+BlockKind._val2NameMap[17] = 'IfUnwrap'
+BlockKind.__allList[18] = BlockKind.IfUnwrap
+BlockKind.When = 18
+BlockKind._val2NameMap[18] = 'When'
+BlockKind.__allList[19] = BlockKind.When
+BlockKind.Test = 19
+BlockKind._val2NameMap[19] = 'Test'
+BlockKind.__allList[20] = BlockKind.Test
 
 
 

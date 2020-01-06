@@ -2103,6 +2103,13 @@ fn TransUnit.analyzeDeclClass(
       // getter
       let getterName = "get_" .. memberName.txt;
       let mut accessMode = memberNode.$getterMode;
+      let typeKind:Ast.TypeInfoKind;
+      if memberNode.$staticFlag {
+         typeKind = .Func;
+      }
+      else {
+         typeKind = .Method;
+      }
       if accessMode ~= .None and not classScope.getTypeInfoChild( getterName )
       {
          let mutable = memberNode.$getterMutable;
@@ -2112,8 +2119,7 @@ fn TransUnit.analyzeDeclClass(
          }
          let retTypeInfo = Ast.NormalTypeInfo.createFunc(
             false, false, self.pushScope( false ## ),
-            .Method, parentInfo, true, false,
-            memberNode.$staticFlag, accessMode,
+            typeKind, parentInfo, true, false, memberNode.$staticFlag, accessMode,
             getterName, nil, [], [ getterMemberType ] ## );
          self.popScope();
 
@@ -2138,8 +2144,7 @@ fn TransUnit.analyzeDeclClass(
             memberName.pos,
             Ast.NormalTypeInfo.createFunc(
                false, false, self.pushScope( false ## ),
-               .Method, parentInfo, true, false,
-               memberNode.$staticFlag, accessMode,
+               typeKind, parentInfo, true, false, memberNode.$staticFlag, accessMode,
                setterName, nil, [ memberType ], nil, mutable ),
             accessMode, memberNode.$staticFlag, true );
          self.popScope();
@@ -3248,7 +3253,7 @@ fn TransUnit.analyzeDeclVar(
 
       token = self.getToken( true );
       if token.txt == "then" {
-         thenBlock = self.analyzeBlock( .LetUnwrap, .Finish, scope );
+         thenBlock = self.analyzeBlock( .LetUnwrapThenDo, .Finish, scope );
       }
       else {
          self.pushback();
@@ -3259,7 +3264,7 @@ fn TransUnit.analyzeDeclVar(
    let mut syncBlock: Nodes.BlockNode! = nil;
    if mode == .Sync {
       self.checkNextToken( "do" );
-      syncBlock = self.analyzeBlock( .LetUnwrap, .Simple, syncScope );
+      syncBlock = self.analyzeBlock( .LetUnwrapThenDo, .Simple, syncScope );
       self.popScope();
    }
 

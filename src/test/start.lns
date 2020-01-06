@@ -1424,3 +1424,28 @@ print( '\\""\"\'\\.\\' );
 
    _hoge( "abc" );
 }
+{
+   Macro._section();
+   class Test {
+      pri static let mut val:int {pub,pub};
+      pri static let mut val2:str {pub,pub};
+      pri let mut val3:int {pub,pub};
+      pri let mut val4:str {pub,pub};
+
+      __init {
+         Test.val = 0;
+         Test.val2 = "abc";
+      }
+   }
+   print( Test.$val, Test.$val2 );
+   Test.set_val( 100 );
+   Test.set_val2( "xyz" );
+   print( Test.$val, Test.$val2 );
+
+   let mut test = new Test( 10, "ABC" );
+   print( test.$val3, test.$val4 );
+   test.set_val3( 1000 );
+   test.set_val4( "XYZ" );
+   print( test.$val3, test.$val4 );
+
+}

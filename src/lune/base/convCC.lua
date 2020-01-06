@@ -2750,6 +2750,9 @@ function convFilter:processBlockSub( node, opt )
       elseif _switchExp == Nodes.BlockKind.Macro then
          word = ""
       elseif _switchExp == Nodes.BlockKind.LetUnwrap then
+         readyBlock = true
+         word = ""
+      elseif _switchExp == Nodes.BlockKind.LetUnwrapThenDo then
          word = ""
       elseif _switchExp == Nodes.BlockKind.IfUnwrap then
          readyBlock = true
@@ -4175,7 +4178,7 @@ local function processDefaultCtor( stream, moduleCtrl, scopeMgr, node )
                else 
                   
                      Util.err( string.format( "no support -- %s:%s:%d", member:get_name().txt, ValKind:_getTxt( valKind)
-                     , 3615) )
+                     , 3619) )
                end
             end
             
@@ -4748,6 +4751,30 @@ function convFilter:processDeclClassNodePrototype( node )
 end
 
 
+function convFilter:isManagedAnySymbol( symbol )
+
+   local scope = symbol:get_scope()
+   
+   if scope:getNamespaceTypeInfo(  ):getModule(  ) ~= self.moduleTypeInfo then
+      return false
+   end
+   
+   
+   local valKind = self.scopeMgr:getSymbolValKind( symbol )
+   
+   local varName = self.moduleCtrl:getSymbolName( symbol )
+   if valKind == ValKind.Any and (symbol:get_kind() == Ast.SymbolKind.Var or symbol:get_kind() == Ast.SymbolKind.Arg and symbol:get_mutable() or isClassMember( symbol ) ) then
+      if varName == "self" then
+         return false
+      end
+      
+      return true
+   end
+   
+   return false
+end
+
+
 function convFilter:processDeclClassDef( node )
 
    local className = self.moduleCtrl:getClassCName( node:get_expType() )
@@ -4807,32 +4834,48 @@ function convFilter:processDeclClassDef( node )
       if member:get_getterMode() ~= Ast.AccessMode.None then
          local getterType = _lune.unwrap( node:get_scope():getTypeInfoField( string.format( "get_%s", memberName), true, node:get_scope(), scopeAccess ))
          if getterType:get_autoFlag() then
-            processMethodDeclTxt( self.stream, self.moduleCtrl, FuncWrap.Normal, getterType )
-            self:writeln( "{" )
-            self:pushIndent(  )
-            self:writeln( string.format( "return %s;", getAccessMember( className, "pObj", memberName )) )
-            self:popIndent(  )
-            self:writeln( "}" )
+            if getterType:get_staticFlag() then
+               processMethodDeclTxt( self.stream, self.moduleCtrl, FuncWrap.CallWrap, getterType )
+               self:writeln( "{" )
+               self:pushIndent(  )
+               if self:isManagedAnySymbol( member:get_symbolInfo() ) then
+                  self:writeln( string.format( "return *%s;", self.moduleCtrl:getClassMemberName( member:get_symbolInfo() )) )
+               else
+                
+                  self:writeln( string.format( "return %s;", self.moduleCtrl:getClassMemberName( member:get_symbolInfo() )) )
+               end
+               
+               self:popIndent(  )
+               self:writeln( "}" )
+            else
+             
+               processMethodDeclTxt( self.stream, self.moduleCtrl, FuncWrap.Normal, getterType )
+               self:writeln( "{" )
+               self:pushIndent(  )
+               self:writeln( string.format( "return %s;", getAccessMember( className, "pObj", memberName )) )
+               self:popIndent(  )
+               self:writeln( "}" )
+               
+               processMethodDeclTxt( self.stream, self.moduleCtrl, FuncWrap.CallWrap, getterType )
+               self:writeln( "{" )
+               self:pushIndent(  )
+               self:writeln( string.format( "return lns_mtd_%s( pObj )->get_%s( _pEnv, pObj );", className, memberName) )
+               self:popIndent(  )
+               self:writeln( "}" )
+            end
             
-            processMethodDeclTxt( self.stream, self.moduleCtrl, FuncWrap.CallWrap, getterType )
-            self:writeln( "{" )
-            self:pushIndent(  )
-            self:writeln( string.format( "return lns_mtd_%s( pObj )->get_%s( _pEnv, pObj );", className, memberName) )
-            self:popIndent(  )
-            self:writeln( "}" )
          end
          
       end
       
       if member:get_setterMode() ~= Ast.AccessMode.None then
          local setterType = _lune.unwrap( node:get_scope():getTypeInfoField( string.format( "set_%s", memberName), true, node:get_scope(), scopeAccess ))
-         if setterType:get_autoFlag() then
-            
-            processMethodDeclTxt( self.stream, self.moduleCtrl, FuncWrap.Normal, setterType )
+         
+         local function process( accessMemberTxt )
+         
             self:writeln( "{" )
             self:pushIndent(  )
             local valKind = self.scopeMgr:getSymbolValKind( member:get_symbolInfo() )
-            local accessMemberTxt = getAccessMember( className, "pObj", memberName )
             do
                local _switchExp = valKind
                if _switchExp == ValKind.Stem then
@@ -4844,19 +4887,41 @@ function convFilter:processDeclClassDef( node )
                else 
                   
                      Util.err( string.format( "no support -- %s:%s:%d", member:get_symbolInfo():get_name(), ValKind:_getTxt( valKind)
-                     , 4278) )
+                     , 4324) )
                end
             end
             
             self:popIndent(  )
             self:writeln( "}" )
+         end
+         
+         if setterType:get_autoFlag() then
+            if setterType:get_staticFlag() then
+               processMethodDeclTxt( self.stream, self.moduleCtrl, FuncWrap.Normal, setterType )
+               local txt
+               
+               if self:isManagedAnySymbol( member:get_symbolInfo() ) then
+                  txt = string.format( "(*%s)", self.moduleCtrl:getClassMemberName( member:get_symbolInfo() ))
+               else
+                
+                  txt = self.moduleCtrl:getClassMemberName( member:get_symbolInfo() )
+               end
+               
+               
+               process( txt )
+            else
+             
+               processMethodDeclTxt( self.stream, self.moduleCtrl, FuncWrap.Normal, setterType )
+               process( getAccessMember( className, "pObj", memberName ) )
+               
+               processMethodDeclTxt( self.stream, self.moduleCtrl, FuncWrap.CallWrap, setterType )
+               self:writeln( "{" )
+               self:pushIndent(  )
+               self:writeln( string.format( "lns_mtd_%s( pObj )->set_%s( _pEnv, pObj, arg1 );", className, memberName) )
+               self:popIndent(  )
+               self:writeln( "}" )
+            end
             
-            processMethodDeclTxt( self.stream, self.moduleCtrl, FuncWrap.CallWrap, setterType )
-            self:writeln( "{" )
-            self:pushIndent(  )
-            self:writeln( string.format( "lns_mtd_%s( pObj )->set_%s( _pEnv, pObj, arg1 );", className, memberName) )
-            self:popIndent(  )
-            self:writeln( "}" )
          end
          
       end
@@ -5444,20 +5509,29 @@ end
 function convFilter:processSym2Any( symbol )
 
    local valKind = self.scopeMgr:getSymbolValKind( symbol )
+   local symName
+   
+   if self:isManagedAnySymbol( symbol ) then
+      symName = string.format( "(*%s)", self.moduleCtrl:getSymbolName( symbol ))
+   else
+    
+      symName = self.moduleCtrl:getSymbolName( symbol )
+   end
+   
    do
       local _switchExp = valKind
       if _switchExp == ValKind.Stem then
-         self:write( self.moduleCtrl:getSymbolName( symbol ) )
+         self:write( symName )
          self:write( accessAny )
       elseif _switchExp == ValKind.Any then
-         self:write( self.moduleCtrl:getSymbolName( symbol ) )
+         self:write( symName )
       elseif _switchExp == ValKind.Var then
-         self:write( self.moduleCtrl:getSymbolName( symbol ) )
+         self:write( symName )
          self:write( string.format( "->stem%s", accessAny) )
       else 
          
             Util.err( string.format( "not suppport -- %s, %d", ValKind:_getTxt( valKind)
-            , 5034) )
+            , 5131) )
       end
    end
    
@@ -5479,34 +5553,10 @@ function convFilter:processVal2any( node, parent )
       else 
          
             Util.err( string.format( "not suppport -- %d, %s, %s, %d", node:get_pos().lineNo, ValKind:_getTxt( valKind)
-            , Nodes.getNodeKindName( node:get_kind() ), 5060) )
+            , Nodes.getNodeKindName( node:get_kind() ), 5157) )
       end
    end
    
-end
-
-
-function convFilter:isManagedAnySymbol( symbol )
-
-   local scope = symbol:get_scope()
-   
-   if scope:getNamespaceTypeInfo(  ):getModule(  ) ~= self.moduleTypeInfo then
-      return false
-   end
-   
-   
-   local valKind = self.scopeMgr:getSymbolValKind( symbol )
-   
-   local varName = self.moduleCtrl:getSymbolName( symbol )
-   if valKind == ValKind.Any and (symbol:get_kind() == Ast.SymbolKind.Var or symbol:get_kind() == Ast.SymbolKind.Arg and symbol:get_mutable() or isClassMember( symbol ) ) then
-      if varName == "self" then
-         return false
-      end
-      
-      return true
-   end
-   
-   return false
 end
 
 
@@ -5553,7 +5603,7 @@ function convFilter:processSetValSingleDirect( parent, node, var, initFlag, expV
       
       Util.err( string.format( "illegal %s %s %s -- %d", var:get_name(), ValKind:_getTxt( valKind)
       , ValKind:_getTxt( expValKind)
-      , 5144) )
+      , 5214) )
    end
    
    
@@ -5677,7 +5727,16 @@ function convFilter:processSymForSetOp( parent, dstKind, dstTypeInfo, symbol )
       
    end
    
-   self:write( self.moduleCtrl:getSymbolName( symbol ) )
+   local symName
+   
+   if self:isManagedAnySymbol( symbol ) then
+      symName = string.format( "(*%s)", self.moduleCtrl:getSymbolName( symbol ))
+   else
+    
+      symName = self.moduleCtrl:getSymbolName( symbol )
+   end
+   
+   self:write( symName )
 end
 
 
@@ -6284,14 +6343,23 @@ function convFilter:processDeclVar( node, opt )
    local varSymList = node:get_symbolInfoList()
    
    if node:get_unwrapFlag() then
+      
+      local unwrapScope = _lune.unwrap( _lune.nilacc( node:get_unwrapBlock(), 'get_scope', 'callmtd' ))
+      
       local workSymList = {}
-      for __index, varSym in pairs( varSymList ) do
-         table.insert( workSymList, WorkSymbol.new(varSym:get_scope(), varSym:get_accessMode(), "_" .. varSym:get_name(), varSym:get_typeInfo():get_nilableTypeInfo(), Ast.SymbolKind.Var, varSym:get_staticFlag(), SymbolParam.new(ValKind.Stem, invalidSymbolId, cTypeStem)) )
+      for index, varSym in pairs( varSymList ) do
+         local tmpVarSym = _lune.unwrap( unwrapScope:getSymbolInfoChild( string.format( "_%s", varSym:get_name()) ))
+         
+         table.insert( workSymList, tmpVarSym )
          if node:get_mode() == Nodes.DeclVarMode.Let and varSym:get_scope() ~= self.moduleTypeInfo:get_scope() then
             self:processDeclVarC( true, varSym, false )
          end
          
       end
+      
+      
+      self:writeln( "{" )
+      self:processBlockPreProcess( unwrapScope )
       
       self:processDeclVarAndSet( workSymList, node:get_expList() )
       
@@ -6302,22 +6370,27 @@ function convFilter:processDeclVar( node, opt )
             self:write( "if ( " )
             local firstFlag = true
             for __index, var in pairs( workSymList ) do
-               if var:get_typeInfo():get_nilable() then
-                  if firstFlag then
-                     firstFlag = false
-                  else
-                   
-                     self:write( " || " )
+               if self.scopeMgr:getSymbolValKind( var ) == ValKind.Stem then
+                  if var:get_typeInfo():get_nilable() then
+                     if firstFlag then
+                        firstFlag = false
+                     else
+                      
+                        self:write( " || " )
+                     end
+                     
+                     self:write( string.format( "lns_stem_type_nil == %s.type", self.moduleCtrl:getSymbolName( var )) )
                   end
                   
-                  self:write( string.format( "lns_stem_type_nil == %s.type", self.moduleCtrl:getSymbolName( var )) )
                end
                
             end
             
             self:writeln( " ) {" )
             
+            self:pushIndent(  )
             filter( unwrapBlock, self, node )
+            self:popIndent(  )
             
             do
                local thenBlock = node:get_thenBlock()
@@ -6338,14 +6411,20 @@ function convFilter:processDeclVar( node, opt )
                   self:writeln( "}" )
                else
                   self:writeln( "}" )
+                  self:writeln( "else {" )
+                  self:pushIndent(  )
                   for index, var in pairs( varSymList ) do
                      self:processSetSymSingle( node, nil, var, true, workSymList[index], false )
                      self:writeln( "" )
                   end
                   
+                  self:popIndent(  )
+                  self:writeln( "}" )
                end
             end
             
+            self:processBlockPostProcess(  )
+            self:writeln( "}" )
          end
       end
       
@@ -7153,7 +7232,7 @@ function convFilter:processApply( node, opt )
          else 
             
                Util.err( string.format( "no support -- %s:%s:%d", varSym:get_name(), ValKind:_getTxt( valKind)
-               , 6850) )
+               , 6960) )
          end
       end
       
@@ -7578,7 +7657,7 @@ function convFilter:processExpUnwrap( node, opt )
                else 
                   
                      Util.err( string.format( "no support -- %s: %d", ValKind:_getTxt( self:getValKindOfNode( node ))
-                     , 7271) )
+                     , 7381) )
                end
             end
             
@@ -9356,7 +9435,7 @@ function convFilter:processExpRefItem( node, opt )
             else 
                
                   Util.err( string.format( "not support:%s -- %d:%d", Ast.TypeInfoKind:_getTxt( valType:get_kind())
-                  , 9453, node:get_pos().lineNo) )
+                  , 9563, node:get_pos().lineNo) )
             end
          end
          
@@ -9492,12 +9571,16 @@ end
 function convFilter:processGetField( node, opt )
 
    local prefixNode = node:get_prefix(  )
-   local prefixType = prefixNode:get_expType()
+   local prefixType = prefixNode:get_expType():get_nonnilableType()
    local fieldTxt = node:get_field(  ).txt
    
    do
       local _switchExp = prefixType:get_kind()
       if _switchExp == Ast.TypeInfoKind.Enum then
+         if node:get_nilAccess() then
+            Util.err( string.format( "not support -- %d:%d:%s", 9719, node:get_pos().lineNo, fieldTxt) )
+         end
+         
          local enumFullName = self.moduleCtrl:getEnumTypeName( prefixType )
          do
             local _switchExp = fieldTxt
@@ -9509,11 +9592,15 @@ function convFilter:processGetField( node, opt )
                self:write( ")" )
             else 
                
-                  Util.err( string.format( "not support -- %s", fieldTxt) )
+                  Util.err( string.format( "not support -- %d:%d:%s", 9733, node:get_pos().lineNo, fieldTxt) )
             end
          end
          
       elseif _switchExp == Ast.TypeInfoKind.Alge then
+         if node:get_nilAccess() then
+            Util.err( string.format( "not support -- %d:%d:%s", 9740, node:get_pos().lineNo, fieldTxt) )
+         end
+         
          local algeName = self.moduleCtrl:getAlgeCName( prefixType )
          do
             local _switchExp = fieldTxt
@@ -9523,7 +9610,7 @@ function convFilter:processGetField( node, opt )
                self:write( ")" )
             else 
                
-                  Util.err( string.format( "not support -- %s", fieldTxt) )
+                  Util.err( string.format( "not support -- %d:%d:%s", 9751, node:get_pos().lineNo, fieldTxt) )
             end
          end
          
@@ -9532,11 +9619,43 @@ function convFilter:processGetField( node, opt )
          
          local function process(  )
          
-            self:write( string.format( "%s( _pEnv, ", self.moduleCtrl:getCallMethodCName( getterType )) )
-            self:processVal2any( prefixNode, node )
-            self:write( ")" )
+            if node:get_nilAccess() then
+               local typeInfo = getCType( getterType:get_retTypeInfoList()[1] )
+               do
+                  local _switchExp = typeInfo
+                  if _switchExp == cTypeInt then
+                     self:write( "l_nil_mtd_getter_int( _pEnv, " )
+                  elseif _switchExp == cTypeReal then
+                     self:write( "l_nil_mtd_getter_real( _pEnv, " )
+                  elseif _switchExp == cTypeBool then
+                     self:write( "l_nil_mtd_getter_bool( _pEnv, " )
+                  elseif _switchExp == cTypeAnyP then
+                     self:write( "l_nil_mtd_getter_any( _pEnv, " )
+                  elseif _switchExp == cTypeStem then
+                     self:write( "l_nil_mtd_getter( _pEnv, " )
+                  else 
+                     
+                        Util.err( string.format( "not support -- %d:%d:%s", 9780, node:get_pos().lineNo, fieldTxt) )
+                  end
+               end
+               
+               self:processVal2stem( prefixNode, node )
+               self:write( ", " )
+               self:write( self.moduleCtrl:getMethodCName( getterType ) )
+               self:write( ")" )
+            else
+             
+               self:write( string.format( "%s( _pEnv", self.moduleCtrl:getCallMethodCName( getterType )) )
+               if not getterType:get_staticFlag() then
+                  self:write( ", " )
+                  self:processVal2any( prefixNode, node )
+               end
+               
+               self:write( ")" )
+               
+               processAlterAccessVal( self.stream, getterType:get_retTypeInfoList(), node:get_expTypeList() )
+            end
             
-            processAlterAccessVal( self.stream, getterType:get_retTypeInfoList(), node:get_expTypeList() )
          end
          
          if #node:get_expTypeList() == 1 then
@@ -9548,7 +9667,7 @@ function convFilter:processGetField( node, opt )
          
       else 
          
-            Util.err( string.format( "not support -- %s", Ast.TypeInfoKind:_getTxt( prefixType:get_kind())
+            Util.err( string.format( "not support -- %d:%d:%s", 9813, node:get_pos().lineNo, Ast.TypeInfoKind:_getTxt( prefixType:get_kind())
             ) )
       end
    end
@@ -9586,7 +9705,7 @@ function convFilter:processReturn( node, opt )
                   filter( expList[1], self, node )
                else 
                   
-                     Util.err( string.format( "no support -- %d", 9722) )
+                     Util.err( string.format( "no support -- %d", 9871) )
                end
             end
             
@@ -9617,7 +9736,7 @@ function convFilter:processReturn( node, opt )
                elseif _switchExp == ValKind.Prim then
                else 
                   
-                     Util.err( string.format( "no support -- %d", 9755) )
+                     Util.err( string.format( "no support -- %d", 9904) )
                end
             end
             

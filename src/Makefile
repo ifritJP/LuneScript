@@ -781,7 +781,7 @@ install: check_lua_mod_dir
 	@$(INSTALL) /tmp/lnsc /usr/bin
 	@echo installed -- /usr/bin/lnsc
 	@rm /tmp/lnsc
-	@$(INSTALL) $(LNSDIR)/lune/base/* $(LUA_MOD_DIR)/lune/base
+	@$(INSTALL) $(LNSDIR)/lune/base/*.* $(LUA_MOD_DIR)/lune/base
 	@$(INSTALL) $(LNSDIR)/lune/*.* $(LUA_MOD_DIR)/lune
 	@echo installed -- $(LUA_MOD_DIR)/lune
 
@@ -904,6 +904,10 @@ test-testC:
 		lune/base/Depend.sub.c lune/base/Depend.c \
 		lune/base/LuneControl.c lune/base/LuaMod.c \
 		lune/base/Util.c)
+	$(call test-convC-test,work/0,lune/base/Ast, \
+		lune/base/Depend.sub.c lune/base/Depend.c \
+		lune/base/LuneControl.c lune/base/LuaMod.c \
+		lune/base/Util.c lune/base/Writer.c )
 	$(call convC,work/0,lune/base/frontInterface.lns,--testing)
 
 test-mkbuiltin:

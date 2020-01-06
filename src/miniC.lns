@@ -1,6 +1,15 @@
-for index = 1, 5 {
-   print( index );
+fn func( val1:int ) : int!, str {
+   if val1 == 1 {
+      return nil, "abc";
+   }
+   return 1, "xyz";
 }
-for index = 5, 1, -1 {
-   print( index );
+fn sub(val:int) {
+   let! val1, val2 = func( val ) {
+      print( _val1, _val2 );
+      return;
+   };
+   print( val1, val2 );
 }
+sub(0);
+sub(1);

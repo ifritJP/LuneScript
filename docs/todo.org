@@ -29,6 +29,11 @@
   
 * 機能
 
+
+- [ ] let list:List<Super> = [ Sub ]; が出来ない。
+      List<Super> <- List<Sub> の代入になり、
+      Mutable なリストは型パラメータ完全一致でなければならないため。
+
 - [ ] stem を Mapping 可能としているが、本来は不使用にすべき。
       現状 MacroMetaInfo.tokenList で stem を使用しているため、
       これをタプルに切り替え、 stem の Mapping は Warning にする。

@@ -6934,6 +6934,15 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
       
       local getterName = "get_" .. memberName.txt
       local accessMode = memberNode:get_getterMode()
+      local typeKind
+      
+      if memberNode:get_staticFlag() then
+         typeKind = Ast.TypeInfoKind.Func
+      else
+       
+         typeKind = Ast.TypeInfoKind.Method
+      end
+      
       if accessMode ~= Ast.AccessMode.None and not classScope:getTypeInfoChild( getterName ) then
          local mutable = memberNode:get_getterMutable()
          local getterMemberType = memberNode:get_getterRetType()
@@ -6941,7 +6950,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
             getterMemberType = self:createModifier( getterMemberType, Ast.MutMode.IMut )
          end
          
-         local retTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, self:pushScope( false ), Ast.TypeInfoKind.Method, parentInfo, true, false, memberNode:get_staticFlag(), accessMode, getterName, nil, {}, {getterMemberType} )
+         local retTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, self:pushScope( false ), typeKind, parentInfo, true, false, memberNode:get_staticFlag(), accessMode, getterName, nil, {}, {getterMemberType} )
          self:popScope(  )
          
          classScope:addMethod( memberName.pos, retTypeInfo, accessMode, memberNode:get_staticFlag(), false )
@@ -6960,7 +6969,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
             mutable = false
          end
          
-         classScope:addMethod( memberName.pos, Ast.NormalTypeInfo.createFunc( false, false, self:pushScope( false ), Ast.TypeInfoKind.Method, parentInfo, true, false, memberNode:get_staticFlag(), accessMode, setterName, nil, {memberType}, nil, mutable ), accessMode, memberNode:get_staticFlag(), true )
+         classScope:addMethod( memberName.pos, Ast.NormalTypeInfo.createFunc( false, false, self:pushScope( false ), typeKind, parentInfo, true, false, memberNode:get_staticFlag(), accessMode, setterName, nil, {memberType}, nil, mutable ), accessMode, memberNode:get_staticFlag(), true )
          self:popScope(  )
          methodNameSet[setterName]= true
       end
@@ -7993,7 +8002,7 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
       
       token = self:getToken( true )
       if token.txt == "then" then
-         thenBlock = self:analyzeBlock( Nodes.BlockKind.LetUnwrap, TentativeMode.Finish, scope )
+         thenBlock = self:analyzeBlock( Nodes.BlockKind.LetUnwrapThenDo, TentativeMode.Finish, scope )
       else
        
          self:pushback(  )
@@ -8006,7 +8015,7 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
    local syncBlock = nil
    if mode == Nodes.DeclVarMode.Sync then
       self:checkNextToken( "do" )
-      syncBlock = self:analyzeBlock( Nodes.BlockKind.LetUnwrap, TentativeMode.Simple, syncScope )
+      syncBlock = self:analyzeBlock( Nodes.BlockKind.LetUnwrapThenDo, TentativeMode.Simple, syncScope )
       self:popScope(  )
    end
    

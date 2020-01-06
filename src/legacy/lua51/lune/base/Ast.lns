@@ -507,9 +507,11 @@ pub class TypeData {
 // }
 
 pub enum CanEvalType {
-   /** 代入(アップキャスト可能な型は代入 OK とする) */
+   /** 代入(アップキャスト可能な型は代入 OK とする)。 代入先は IMut で確定。 */
+   SetOpIMut,
+   /** 代入(アップキャスト可能な型は代入 OK とする)。 代入先は IMut かどうか不正。  */
    SetOp,
-   /** 代入(アップキャスト可能な型でも NG とする) */
+   /** 代入(アップキャスト可能な型でも、同一の型でない場合は NG とする) */
    SetEq,
    /** 算術演算 */
    Math,
@@ -2528,6 +2530,10 @@ pub class GenericTypeInfo extend TypeInfo {
       other:&TypeInfo,
       canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool, str!
    {
+      if other.$nilable {
+         return false, nil;
+      }
+      
       if TypeInfo.isMut( self ) and not TypeInfo.isMut( other ) {
          return false, nil;
       }
@@ -2559,10 +2565,19 @@ pub class GenericTypeInfo extend TypeInfo {
 
       // 一致する場合、汎化の型も同じか調べる
       if! let otherGen = work@@@GenericTypeInfo {
+
+         let evalType;
+         if canEvalType == .SetOp {
+            evalType = CanEvalType.SetEq;
+         }
+         else {
+            evalType = canEvalType;
+         }
+         
          foreach val, key in self.alt2typeMap {
             let otherType = AlternateTypeInfo.getAssign(
                unwrap otherGen.alt2typeMap[ key ], alt2type );
-            let ret, mess = val.canEvalWith( otherType, canEvalType, alt2type );
+            let ret, mess = val.canEvalWith( otherType, evalType, alt2type );
             if not ret {
                return false, mess;
             }
@@ -2696,9 +2711,16 @@ pub class ModifierTypeInfo extend TypeInfo {
       // }
 
       let evalType;
-      if #self.srcTypeInfo.$itemTypeInfoList >= 1 and canEvalType == .SetEq {
-         // &List<Super> <-- List<Sub> などで、 型パラメータの継承を代入可能にする
-         evalType = CanEvalType.SetOp;
+      if #self.srcTypeInfo.$itemTypeInfoList >= 1 {
+         switch canEvalType {
+            case .SetEq, .SetOp {
+               // &List<Super> <-- List<Sub> などで、 型パラメータの継承を代入可能にする
+               evalType = CanEvalType.SetOpIMut;
+            }
+            default {
+               evalType = canEvalType;
+            }
+         }
       }
       else {
          evalType = canEvalType;
@@ -2706,9 +2728,8 @@ pub class ModifierTypeInfo extend TypeInfo {
 
 
       return TypeInfo.canEvalWithBase(
-         self.srcTypeInfo, TypeInfo.isMut( self ), other.$srcTypeInfo,
-         //canEvalType == .SetEq and CanEvalType.SetOp or canEvalType, alt2type )**;
-         evalType, alt2type )**;
+         self.srcTypeInfo, TypeInfo.isMut( self ),
+         other.$srcTypeInfo, evalType, alt2type )**;
    }
 
    pub override fn equals(
@@ -4628,7 +4649,7 @@ pub override fn BoxTypeInfo.canEvalWith(
       return true, nil;
    }
    switch canEvalType {
-      case .SetOp, .SetEq {
+      case .SetOp, .SetOpIMut, .SetEq {
       }
       default {
          return false, nil;
@@ -4706,7 +4727,7 @@ macro _checkEqualsItemType(
       let ret;
       ret, mess = (,,type1.$itemTypeInfoList[ ,,index ]).canEvalWith(
          ,,type2.$itemTypeInfoList[ ,,index ],
-         ,,destMut and CanEvalType.SetEq or CanEvalType.SetOp, ,,alt2type );
+         ,,destMut and CanEvalType.SetEq or CanEvalType.SetOpIMut, ,,alt2type );
       if not ret {
          ,,retStat;
       }
@@ -5063,63 +5084,64 @@ pub static fn TypeInfo.canEvalWithBase(
    }
    
 
-   if canEvalType == .SetEq or canEvalType == .SetOp {
-      if dest == builtinTypeEmpty {
-         // 代入先の型が確定していない状態
-         switch otherSrc {
-            case builtinTypeAbbr, builtinTypeAbbrNone {
+   switch canEvalType {
+      case .SetEq, .SetOp, .SetOpIMut {
+         if dest == builtinTypeEmpty {
+            // 代入先の型が確定していない状態
+            switch otherSrc {
+               case builtinTypeAbbr, builtinTypeAbbrNone {
+                  return false, nil;
+               }
+            }
+            if otherSrc.$kind == .Func {
+               // 関数の型推定は未サポート。
+               // 関数の代入先は FormFunc あるいは Form であり、
+               // それを型推定できないため。
+               // 代入先の FormFunc を自動生成すれば対応できなくはないが、
+               // その場合は C-lang へのトランスコード対応が必要。
                return false, nil;
             }
+            return true, nil;
          }
-         if otherSrc.$kind == .Func {
-            // 関数の型推定は未サポート。
-            // 関数の代入先は FormFunc あるいは Form であり、
-            // それを型推定できないため。
-            // 代入先の FormFunc を自動生成すれば対応できなくはないが、
-            // その場合は C-lang へのトランスコード対応が必要。
+         elseif not otherMut and destMut {
+            // imut/mut が一致していないものはエラー
+            let nonNilOtherType = otherSrc.$nonnilableType;
+            switch nonNilOtherType.$kind {
+               case .Set, .Map, .List, .IF {
+                  return false, nil;
+               }
+               case .Class {
+                  if builtinTypeString ~= nonNilOtherType {
+                     return false, nil;
+                  }
+               }
+               case .Prim {
+                  if builtinTypeStem == nonNilOtherType {
+                     return false, nil;
+                  }
+               }
+            }
+         }
+
+         if otherSrc ~= builtinTypeNil and
+            otherSrc ~= builtinTypeString and
+            otherSrc.$kind ~= .Prim and
+            otherSrc.$kind ~= .Func and
+            otherSrc.$kind ~= .Method and
+            otherSrc.$kind ~= .Form and
+            otherSrc.$kind ~= .FormFunc and
+            otherSrc.$kind ~= .Enum and
+            otherSrc.$kind ~= .Abbr and
+            otherSrc.$kind ~= .Alternate and
+            otherSrc.$kind ~= .Box and
+            not isGenericType( otherSrc ) and
+            destMut and not otherMut
+         {
             return false, nil;
-         }
-         return true, nil;
-      }
-      elseif not otherMut and destMut {
-         // imut/mut が一致していないものはエラー
-         let nonNilOtherType = otherSrc.$nonnilableType;
-         switch nonNilOtherType.$kind {
-            case .Set, .Map, .List, .IF {
-               return false, nil;
-            }
-            case .Class {
-               if builtinTypeString ~= nonNilOtherType {
-                  return false, nil;
-               }
-            }
-            case .Prim {
-               if builtinTypeStem == nonNilOtherType {
-                  return false, nil;
-               }
-            }
          }
       }
    }
    
-
-   if ( canEvalType == .SetOp or canEvalType == .SetEq ) and
-      otherSrc ~= builtinTypeNil and
-      otherSrc ~= builtinTypeString and
-      otherSrc.$kind ~= .Prim and
-      otherSrc.$kind ~= .Func and
-      otherSrc.$kind ~= .Method and
-      otherSrc.$kind ~= .Form and
-      otherSrc.$kind ~= .FormFunc and
-      otherSrc.$kind ~= .Enum and
-      otherSrc.$kind ~= .Abbr and
-      otherSrc.$kind ~= .Alternate and
-      otherSrc.$kind ~= .Box and
-      not isGenericType( otherSrc ) and
-      destMut and not otherMut
-   {
-      return false, nil;
-   }
 
    if dest == builtinTypeStem_ {
       return true, nil;
@@ -5190,7 +5212,7 @@ pub static fn TypeInfo.canEvalWithBase(
       elseif ( dest.$kind == .Class or dest.$kind == .IF ) and
          ( otherSrc.$kind == .Class or otherSrc.$kind == .IF )
       {
-         if canEvalType == .SetOp {
+         if canEvalType == .SetOp or canEvalType == .SetOpIMut {
             return otherSrc.isInheritFrom( dest, alt2type ), nil;
          }
          return false, nil;
@@ -5294,7 +5316,10 @@ pub static fn TypeInfo.canEvalWithBase(
          return false, nil;
       }
       case .Class, .IF {
-         if canEvalType == .SetOp {
+         if isGenericType( dest ) {
+            return dest.canEvalWith( otherSrc, canEvalType, alt2type )**;
+         }
+         if canEvalType == .SetOp or canEvalType == .SetOpIMut {
             return otherSrc.isInheritFrom( dest, alt2type ), nil;
          }
          return false, nil;
@@ -5914,10 +5939,12 @@ __test case1 {
 
    // Super と Sub の canEvalWith
    let superType = NormalTypeInfo.createClass(
-      true, false, nil, nil, nil, [], headTypeInfo, false, .Local, "Super" );
+      true, false, new Scope( rootScope, true ## ),
+      nil, nil, [], headTypeInfo, false, .Local, "Super" );
    testScope.addClass( "Super", nil, superType );   
    let subType = NormalTypeInfo.createClass(
-      true, false, nil, superType, nil, [], headTypeInfo, false, .Local, "Sub" );
+      true, false, new Scope( rootScope, true ## ),
+      superType, nil, [], headTypeInfo, false, .Local, "Sub" );
    testScope.addClass( "Sub", nil, subType );   
 
    _checkCanEvalWith( "Super", "Sub", "OK" );
@@ -5955,6 +5982,8 @@ __test case1 {
    _checkCanEvalWith( "List<int>", "&List<str>!", "NG" );
 
    // List<Super> と List<Sub> の canEvalWith
+
+   // Mutable な generics は、継承関係のある型パラメータでもエラー
    _checkCanEvalWith( "List<Super>", "List<Sub>", "NG" );
    _checkCanEvalWith( "List<Super>", "List<Sub>!", "NG" );
    _checkCanEvalWith( "List<Super>!", "List<Sub>", "NG" );
@@ -5970,6 +5999,7 @@ __test case1 {
    _checkCanEvalWith( "List<&Super>!", "List<&Sub>", "NG" );
    _checkCanEvalWith( "List<&Super>!", "List<&Sub>!", "NG" );
 
+   // Imutable な generics は、継承関係のある型パラメータで OK
    _checkCanEvalWith( "&List<Super>", "List<Sub>", "OK" );
    _checkCanEvalWith( "&List<Super>", "List<Sub>!", "NG" );
    _checkCanEvalWith( "&List<Super>!", "List<Sub>", "OK" );
@@ -5986,13 +6016,63 @@ __test case1 {
    _checkCanEvalWith( "&List<&Super>!", "List<&Sub>!", "OK" );
 
 
-   // Hoge<Super> と Hoge<Sub> の canEvalWith
+   // Hoge<int> と Hoge<int> の canEvalWith
    let mut genTypeList:List<&AlternateTypeInfo> = [];
    let alter = NormalTypeInfo.createAlternate( true, 1, "T", .Pri, headTypeInfo ## );
    genTypeList.insert( alter );
    let hogeType = NormalTypeInfo.createClass(
-      true, false, nil, nil, nil, genTypeList, headTypeInfo, false, .Local, "Hoge" );
+      true, false, new Scope( rootScope, true ## ),
+      nil, nil, genTypeList, headTypeInfo, false, .Local, "Hoge" );
    testScope.addClass( "Hoge", nil, hogeType );
 
-   _checkCanEvalWith( "Hoge<int>", "Hoge<int>", "NG" );
+   _checkCanEvalWith( "Hoge<int>", "Hoge<int>", "OK" );
+   _checkCanEvalWith( "Hoge<int>!", "Hoge<int>", "OK" );
+   _checkCanEvalWith( "Hoge<int>", "Hoge<int>!", "NG" );
+   _checkCanEvalWith( "&Hoge<int>", "Hoge<int>", "OK" );
+   _checkCanEvalWith( "&Hoge<int>!", "Hoge<int>", "OK" );
+   _checkCanEvalWith( "Hoge<int>", "&Hoge<int>", "NG" );
+   _checkCanEvalWith( "Hoge<int>", "&Hoge<int>!", "NG" );
+
+   // // // Hoge<Super> と Hoge<Super> の canEvalWith
+   _checkCanEvalWith( "Hoge<Super>", "Hoge<Super>", "OK" );
+   _checkCanEvalWith( "Hoge<Super>!", "Hoge<Super>", "OK" );
+   _checkCanEvalWith( "Hoge<Super>", "Hoge<Super>!", "NG" );
+   _checkCanEvalWith( "&Hoge<Super>", "Hoge<Super>", "OK" );
+   _checkCanEvalWith( "&Hoge<Super>!", "Hoge<Super>", "OK" );
+   _checkCanEvalWith( "Hoge<Super>", "&Hoge<Super>", "NG" );
+   _checkCanEvalWith( "Hoge<Super>", "&Hoge<Super>!", "NG" );
+
+   // // Hoge<Super> と Hoge<Sub> の canEvalWith
+
+   // Mutable な generics は、継承関係のある型パラメータでもエラー
+   _checkCanEvalWith( "Hoge<Super>", "Hoge<Sub>", "NG" );
+   _checkCanEvalWith( "Hoge<Super>", "Hoge<Sub>!", "NG" );
+   _checkCanEvalWith( "Hoge<Super>!", "Hoge<Sub>", "NG" );
+   _checkCanEvalWith( "Hoge<Super>!", "Hoge<Sub>!", "NG" );
+   _checkCanEvalWith( "Hoge<&Super>", "Hoge<Sub>", "NG" );
+   _checkCanEvalWith( "Hoge<&Super>", "Hoge<Sub>!", "NG" );
+   _checkCanEvalWith( "Hoge<&Super>!", "Hoge<Sub>", "NG" );
+   _checkCanEvalWith( "Hoge<&Super>!", "Hoge<Sub>!", "NG" );
+   _checkCanEvalWith( "Hoge<Super>", "Hoge<&Sub>", "NG" );
+   _checkCanEvalWith( "Hoge<Super>", "Hoge<&Sub>!", "NG" );
+   _checkCanEvalWith( "Hoge<&Super>", "Hoge<&Sub>", "NG" );
+   _checkCanEvalWith( "Hoge<&Super>", "Hoge<&Sub>!", "NG" );
+   _checkCanEvalWith( "Hoge<&Super>!", "Hoge<&Sub>", "NG" );
+   _checkCanEvalWith( "Hoge<&Super>!", "Hoge<&Sub>!", "NG" );
+   
+   // Imutable な generics は、継承関係のある型パラメータで OK
+   _checkCanEvalWith( "&Hoge<Super>", "Hoge<Sub>", "OK" );
+   _checkCanEvalWith( "&Hoge<Super>", "Hoge<Sub>!", "NG" );
+   _checkCanEvalWith( "&Hoge<Super>!", "Hoge<Sub>", "OK" );
+   _checkCanEvalWith( "&Hoge<Super>!", "Hoge<Sub>!", "OK" );
+   _checkCanEvalWith( "&Hoge<&Super>", "Hoge<Sub>", "OK" );
+   _checkCanEvalWith( "&Hoge<&Super>", "Hoge<Sub>!", "NG" );
+   _checkCanEvalWith( "&Hoge<&Super>!", "Hoge<Sub>", "OK" );
+   _checkCanEvalWith( "&Hoge<&Super>!", "Hoge<Sub>!", "OK" );
+   _checkCanEvalWith( "&Hoge<Super>", "Hoge<&Sub>", "NG" );
+   _checkCanEvalWith( "&Hoge<Super>", "Hoge<&Sub>!", "NG" );
+   _checkCanEvalWith( "&Hoge<&Super>", "Hoge<&Sub>", "OK" );
+   _checkCanEvalWith( "&Hoge<&Super>", "Hoge<&Sub>!", "NG" );
+   _checkCanEvalWith( "&Hoge<&Super>!", "Hoge<&Sub>", "OK" );
+   _checkCanEvalWith( "&Hoge<&Super>!", "Hoge<&Sub>!", "OK" );
 }

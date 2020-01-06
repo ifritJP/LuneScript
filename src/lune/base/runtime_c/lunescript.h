@@ -862,6 +862,25 @@ extern "C" {
     
 
 #define lns_abort( MESS ) _lns_abort( MESS, LNS_DEBUG_POS )
+
+
+    typedef lns_stem_t (lns_mtd_getter_t)( lns_env_t * _pEnv, lns_any_t * pObj);
+    typedef lns_any_t * (lns_mtd_getter_any_t)( lns_env_t * _pEnv, lns_any_t * pObj);
+    typedef lns_int_t (lns_mtd_getter_int_t)( lns_env_t * _pEnv, lns_any_t * pObj);
+    typedef lns_real_t (lns_mtd_getter_real_t)( lns_env_t * _pEnv, lns_any_t * pObj);
+    typedef bool (lns_mtd_getter_bool_t)( lns_env_t * _pEnv, lns_any_t * pObj);
+
+    extern lns_stem_t l_nil_mtd_getter(
+        lns_env_t * _pEnv, lns_stem_t obj, lns_mtd_getter_t * pGetter );
+    extern lns_stem_t l_nil_mtd_getter_any(
+        lns_env_t * _pEnv, lns_stem_t obj, lns_mtd_getter_any_t * pGetter );
+    extern lns_stem_t l_nil_mtd_getter_int(
+        lns_env_t * _pEnv, lns_stem_t obj, lns_mtd_getter_int_t * pGetter );
+    extern lns_stem_t l_nil_mtd_getter_real(
+        lns_env_t * _pEnv, lns_stem_t obj, lns_mtd_getter_real_t * pGetter );
+    extern lns_stem_t l_nil_mtd_getter_bool(
+        lns_env_t * _pEnv, lns_stem_t obj, lns_mtd_getter_bool_t * pGetter );
+
     
 
     extern void _lns_abort( const char * pMessage, const char * pFile, int lineNo );

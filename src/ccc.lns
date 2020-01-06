@@ -5,6 +5,42 @@ macro _section()
 let mut g_val = 100;
 
 {
+   fn func( val1:int ) : int!, str {
+      if val1 == 1 {
+         return nil, "abc";
+      }
+      return 1, "xyz";
+   }
+   fn sub(val:int) {
+      let! val1, val2 = func( val ) {
+         print( _val1, _val2 );
+         return;
+      };
+      print( val1, val2 );
+   }
+   sub(0);
+   sub(1);
+}
+{
+   _section();
+   class Test {
+      let val:int {pub};
+      let val2:real {pub};
+      let val3:bool {pub};
+      let val4:str {pub};
+      let val5:int! {pub};
+      pub fn func() {
+         print( "hoge" );
+      }
+   }
+   fn func( test:Test! ) {
+      print( test$.$val, test$.$val2, test$.$val3, test$.$val4, test$.$val5 );
+      test$.func$();
+   }
+   func( new Test( 1, 2.5, true, "abc", 10 ) );
+   func( nil );
+}
+{
    _section();
    for index = 1, 5 {
       print( index );

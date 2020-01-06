@@ -980,6 +980,9 @@ pub override fn convFilter.processBlockSub(
       case .LetUnwrap {
          word = "";
       }
+      case .LetUnwrapThenDo {
+         word = "";
+      }
       case .IfUnwrap {
          word = "";
       }
@@ -1494,13 +1497,22 @@ function %s:__init( %s )
       // let typeInfo = scope.getTypeInfo( getterName, scope, false );
       // let autoFlag = not typeInfo or (unwrap typeInfo).get_autoFlag();
       let mut autoFlag = not methodNameSet.has( getterName );
-      let prefix = memberNode.$staticFlag and className or "self";
+      let prefix;
+      let delimit;
+      if memberNode.$staticFlag {
+         prefix = className;
+         delimit = ".";
+      }
+      else {
+         prefix = "self";
+         delimit = ":";
+      }
       if memberNode.get_getterMode() ~= .None and autoFlag
       {
          self.writeln( ```
-function %s:%s()
+function %s%s%s()
    return %s.%s
-end``` ( className, getterName, prefix, memberName ) );
+end``` ( className, delimit, getterName, prefix, memberName ) );
          methodNameSet.add( getterName );
       }
       let setterName = "set_" .. memberName;
@@ -1510,9 +1522,9 @@ end``` ( className, getterName, prefix, memberName ) );
       if memberNode.get_setterMode() ~= .None and autoFlag
       {
          self.writeln( ```
-function %s:%s( %s )
+function %s%s%s( %s )
    %s.%s = %s
-end``` ( className, setterName, memberName, prefix, memberName, memberName ) );
+end``` ( className, delimit, setterName, memberName, prefix, memberName, memberName ) );
          methodNameSet.add( setterName );
       }
    }
