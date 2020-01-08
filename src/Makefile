@@ -22,7 +22,9 @@ ifdef LNSC_ENABLE
 ifneq ($(LUA51),)
 ENABLE_LUA51:=$(shell which $(LUA51))
 endif
+ifndef NO_LUAROCKS
 LUAROCKS_VER:=$(shell luarocks | grep 'Lua version' | awk '//{print $$3}')
+endif
 endif
 
 ifneq ($(findstring $(MAKECMDGOALS),"install" "uninstall"),)
