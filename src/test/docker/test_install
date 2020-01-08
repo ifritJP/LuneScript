@@ -12,5 +12,5 @@ RUN apk --no-cache add \
 RUN git clone --depth 1 https://github.com/ifritJP/LuneScript.git
 WORKDIR LuneScript/src
 RUN lua5.3 setup.lua -d && \
-	make install && \
-	make test-installed-cmd NO_LUAROCKS=y
+ 	make install
+

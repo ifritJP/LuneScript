@@ -733,6 +733,8 @@ test-installed-cmd:
 
 test-on-docker:
 	sudo docker build -t testlns -f test/docker/test_install test/docker
+	sudo docker run --name test -it testlns \
+		/bin/ash -c "make test-installed-cmd NO_LUAROCKS=y"
 	sudo docker container rm testlns
 	sudo docker image rm testlns
 
