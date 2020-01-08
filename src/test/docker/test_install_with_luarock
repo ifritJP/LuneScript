@@ -1,0 +1,17 @@
+# sudo docker build -f test/docker/test_install_with_luarock test/docker
+
+FROM alpine:3.11.2
+
+RUN apk --no-cache add \
+      git \
+      make \
+      diffutils \
+      gcc \
+      libc-dev \
+      lua5.3-dev \
+      luarocks5.3 && \
+   git config --global url."https://".insteadOf git://  && \
+   luarocks-5.3 install lunescript && \
+   git clone --depth 1 https://github.com/ifritJP/LuneScript.git
+WORKDIR LuneScript/src
+RUN PATH=/usr/local/bin:${PATH} make test-installed-cmd

@@ -42,6 +42,7 @@ NDIR=$(shell pwd)
 .PHONY: test-lua51 test-lua51-sub accept-package check-runtime-format
 .PHONY: check-meta-format build-glue check_lua_mod_dir install uninstall
 .PHONY: test-ccc clean-ccc build-miniC test-miniC test-subC build-cc test-formatter
+.PHONY: test-installed-cmd test-on-docker
 
 
 help:
@@ -58,7 +59,9 @@ help:
 	@echo "  make test-formatter"
 	@echo "  make test-mkbuiltin"
 	@echo "  make build-testcase"
-	@echo "  maek test-tutorial"
+	@echo "  make test-tutorial"
+	@echo "  make test-installed-cmd"
+	@echo "  make test-on-docker"
 
 exec:
 	$(LUA) lune/base/base.lua test/test.lns token
@@ -88,14 +91,6 @@ define cutMeta
 	(cd work/$2/lune/base; cat $1.lua | awk '/^----- meta/{META++;}; //{if (META != 1) {print $$0}} ' > $1.cut.lua )
 endef
 
-define transwork
-	(cd $1; LUA_PATH=./?.lua $(LUA) lune/base/base.lua lune/$4.lns SAVE $2 $3 $(BYTECOMP) -Werror $(LOG_OPT) )
-endef
-
-define transwork_dep
-	(cd $1; LUA_PATH=./?.lua $(LUA) lune/base/base.lua lune/$4.lns SAVE $2 --depends $2/lune/$4.d $3 $(BYTECOMP) -Werror $(LOG_OPT) )
-endef
-
 
 ifndef LNSC_ENABLE
 define exeLune
@@ -106,6 +101,17 @@ define exeLune
 	(cd $1; $(LNSC) $2 $3 $4)
 endef
 endif
+
+
+
+define transwork
+	$(call exeLune,$1,lune/$4.lns SAVE $2 $3 $(BYTECOMP) -Werror $(LOG_OPT))
+endef
+
+define transwork_dep
+	$(call exeLune,$1,lune/$4.lns SAVE $2 --depends $2/lune/$4.d $3 $(BYTECOMP) -Werror $(LOG_OPT))
+endef
+
 
 define buildLnsOp
 	$(call $4,$1,$2,$3,base/Ver)
@@ -719,6 +725,14 @@ ifneq ($(ENABLE_LUA51),)
 	cp work/6/lune/*.* legacy/lua51/lune/
 endif
 
+
+test-installed-cmd:
+	$(MAKE) LNSC_ENABLE=y LNSC=lnsc test-comp
+
+test-on-docker:
+	sudo docker build -t testlns -f test/docker/install_via_proxy test/docker
+	sudo docker container rm testlns
+	sudo docker image rm testlns
 
 VER_PATH=lune/base/Ver.lua
 RUNTIME_VER_PICK=grep 'local luaModVersion' | sed 's/[^0-9]//g'

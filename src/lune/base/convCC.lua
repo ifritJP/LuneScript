@@ -884,6 +884,10 @@ function ModuleCtrl:getFilePath( moduleTypeInfo )
    local fullName = string.format( "%s", (workName:gsub( "[&@]", "" ):gsub( "%.", "/" ) ))
    return fullName
 end
+function ModuleCtrl:getCanonicalName( typeInfo )
+
+   return typeInfo:getFullName( self.typeNameCtrl, self.moduleInfoManager, false )
+end
 function ModuleCtrl:getFullName( typeInfo )
 
    do
@@ -1317,86 +1321,81 @@ function ScopeMgr:setupScopeParamSub( scope )
    
    local scopeInfo
    
-   if not _lune.nilacc( scope:get_ownerTypeInfo(), 'get_externalFlag', 'callmtd' ) then
+   
+   scopeInfo = ScopeInfo.new(0, 0, 0)
+   
+   if _lune.nilacc( scope:get_ownerTypeInfo(), 'isModule', 'callmtd'  ) then
       
-      scopeInfo = ScopeInfo.new(0, 0, 0)
-      
-      if _lune.nilacc( scope:get_ownerTypeInfo(), 'isModule', 'callmtd'  ) then
-         
-         scopeInfo.anyNum = 2
+      scopeInfo.anyNum = 2
+   end
+   
+   
+   do
+      local __sorted = {}
+      local __map = scope:get_symbol2SymbolInfoMap()
+      for __key in pairs( __map ) do
+         table.insert( __sorted, __key )
       end
-      
-      
-      do
-         local __sorted = {}
-         local __map = scope:get_symbol2SymbolInfoMap()
-         for __key in pairs( __map ) do
-            table.insert( __sorted, __key )
-         end
-         table.sort( __sorted )
-         for __index, __key in ipairs( __sorted ) do
-            local symbol = __map[ __key ]
-            do
-               if not symbol:get_convModuleParam() then
-                  local param
-                  
-                  if symbol:get_name() ~= "__func__" then
-                     do
-                        local _switchExp = symbol:get_kind()
-                        if _switchExp == Ast.SymbolKind.Var or _switchExp == Ast.SymbolKind.Arg then
-                           if symbol:get_hasAccessFromClosure() then
-                              
-                              param = SymbolParam.new(ValKind.Var, scopeInfo.varNum, cTypeVarP)
-                              scopeInfo.varNum = scopeInfo.varNum + 1
-                           else
-                            
-                              param = ScopeMgr.setSymbolParam( scopeInfo, symbol )
-                           end
+      table.sort( __sorted )
+      for __index, __key in ipairs( __sorted ) do
+         local symbol = __map[ __key ]
+         do
+            if not symbol:get_convModuleParam() then
+               local param
+               
+               if symbol:get_name() ~= "__func__" then
+                  do
+                     local _switchExp = symbol:get_kind()
+                     if _switchExp == Ast.SymbolKind.Var or _switchExp == Ast.SymbolKind.Arg then
+                        if symbol:get_hasAccessFromClosure() then
                            
-                        elseif _switchExp == Ast.SymbolKind.Fun then
-                           if symbol:get_hasAccessFromClosure() then
-                              
-                              param = SymbolParam.new(ValKind.Var, scopeInfo.varNum, cTypeVarP)
-                              scopeInfo.varNum = scopeInfo.varNum + 1
-                           else
-                            
-                              param = createSymbolParam( symbol:get_name(), getValKind( symbol:get_typeInfo() ), getCType( symbol:get_typeInfo() ) )
-                           end
-                           
-                        elseif _switchExp == Ast.SymbolKind.Mtd then
-                           local retTypeList = symbol:get_typeInfo():get_retTypeInfoList()
-                           param = createSymbolParam( symbol:get_name(), getRetKind( retTypeList ), getCRetType( retTypeList ) )
-                        elseif _switchExp == Ast.SymbolKind.Mbr then
-                           if isClassMember( symbol ) then
-                              param = (_lune.unwrap( symbol:get_convModuleParam()) )
-                           else
-                            
-                              param = createSymbolParam( symbol:get_name(), getValKind( symbol:get_typeInfo() ), getCType( symbol:get_typeInfo() ) )
-                           end
-                           
-                        else 
-                           
-                              param = SymbolParam.new(ValKind.Other, 0, cTypeStem)
+                           param = SymbolParam.new(ValKind.Var, scopeInfo.varNum, cTypeVarP)
+                           scopeInfo.varNum = scopeInfo.varNum + 1
+                        else
+                         
+                           param = ScopeMgr.setSymbolParam( scopeInfo, symbol )
                         end
+                        
+                     elseif _switchExp == Ast.SymbolKind.Fun then
+                        if symbol:get_hasAccessFromClosure() then
+                           
+                           param = SymbolParam.new(ValKind.Var, scopeInfo.varNum, cTypeVarP)
+                           scopeInfo.varNum = scopeInfo.varNum + 1
+                        else
+                         
+                           param = createSymbolParam( symbol:get_name(), getValKind( symbol:get_typeInfo() ), getCType( symbol:get_typeInfo() ) )
+                        end
+                        
+                     elseif _switchExp == Ast.SymbolKind.Mtd then
+                        local retTypeList = symbol:get_typeInfo():get_retTypeInfoList()
+                        param = createSymbolParam( symbol:get_name(), getRetKind( retTypeList ), getCRetType( retTypeList ) )
+                     elseif _switchExp == Ast.SymbolKind.Mbr then
+                        if isClassMember( symbol ) then
+                           param = (_lune.unwrap( symbol:get_convModuleParam()) )
+                        else
+                         
+                           param = createSymbolParam( symbol:get_name(), getValKind( symbol:get_typeInfo() ), getCType( symbol:get_typeInfo() ) )
+                        end
+                        
+                     else 
+                        
+                           param = SymbolParam.new(ValKind.Other, 0, cTypeStem)
                      end
-                     
-                  else
-                   
-                     param = SymbolParam.new(ValKind.Any, self.numOf__func__ + self.moduleBlockAnyNum, cTypeAnyP)
-                     self.numOf__func__ = self.numOf__func__ + 1
                   end
                   
-                  symbol:set_convModuleParam( param )
+               else
+                
+                  param = SymbolParam.new(ValKind.Any, self.numOf__func__ + self.moduleBlockAnyNum, cTypeAnyP)
+                  self.numOf__func__ = self.numOf__func__ + 1
                end
                
+               symbol:set_convModuleParam( param )
             end
+            
          end
       end
-      
-   else
-    
-      scopeInfo = ScopeInfo.new(0, 0, 0)
    end
+   
    
    self.scope2InfoMap[scope] = scopeInfo
    
@@ -1452,7 +1451,8 @@ function ScopeMgr:getSymbolParam( symbol )
       
    end
    
-   Util.err( string.format( "illegal symbol -- %s %d", symbol:get_name(), 944) )
+   Util.err( string.format( "illegal symbol -- %s %s %s %d", symbol:get_name(), Ast.SymbolKind:_getTxt( symbol:get_kind())
+   , self.moduleCtrl:getCanonicalName( symbol:get_scope():getNamespaceTypeInfo(  ) ), 950) )
 end
 function ScopeMgr:getSymbolValKind( symbol )
 
@@ -1981,7 +1981,7 @@ local function registerBuiltin(  )
             param = createSymbolParam( symbol:get_name(), getValKind( symbol:get_typeInfo() ), getCType( symbol:get_typeInfo() ) )
          else 
             
-               Util.err( string.format( "illeal symbol -- %s %d", symbol:get_name(), 1497) )
+               Util.err( string.format( "illeal symbol -- %s %d", symbol:get_name(), 1503) )
          end
       end
       
@@ -4024,43 +4024,77 @@ end
 
 local function processAdvertise( stream, moduleCtrl, scopeMgr, processMode, node )
 
+   
+   local declMethodNameSet = {}
+   for __index, field in pairs( node:get_fieldList() ) do
+      do
+         local declMethodNode = _lune.__Cast( field, 3, Nodes.DeclMethodNode )
+         if declMethodNode ~= nil then
+            do
+               local name = declMethodNode:get_declInfo():get_name()
+               if name ~= nil then
+                  declMethodNameSet[name.txt]= true
+               end
+            end
+            
+         end
+      end
+      
+   end
+   
+   
+   for __index, member in pairs( node:get_memberList() ) do
+      if member:get_getterMode() ~= Ast.AccessMode.None then
+         declMethodNameSet["get_" .. member:get_name().txt]= true
+      end
+      
+      if member:get_setterMode() ~= Ast.AccessMode.None then
+         declMethodNameSet["set_" .. member:get_name().txt]= true
+      end
+      
+   end
+   
+   
    for __index, advInfo in pairs( node:get_advertiseList() ) do
       local member = advInfo:get_member()
-      local nameList = Ast.getAllMethodName( member:get_expType(), Ast.MethodKind.Object )
       
-      for __index, name in pairs( nameList:get_list() ) do
-         local methodSym = _lune.unwrap( node:get_scope():getSymbolInfoField( name, true, node:get_scope(), Ast.ScopeAccess.Normal ))
-         
-         local methodType = methodSym:get_typeInfo()
-         if methodType:get_accessMode() ~= Ast.AccessMode.Pri then
-            do
-               local _switchExp = processMode
-               if _switchExp == ProcessMode.Prototype then
-                  processPrototypeMethod( stream, moduleCtrl, nil, methodType )
-               elseif _switchExp == ProcessMode.DefClass then
-                  processDeclCallMethodWrapper( stream, moduleCtrl, scopeMgr, node, methodType, true )
-                  processDeclCallMethodWrapper( stream, moduleCtrl, scopeMgr, node, methodType, false )
-                  
-                  processMethodDeclTxt( stream, moduleCtrl, FuncWrap.Normal, methodType, nil )
-                  stream:writeln( "{" )
-                  local className = moduleCtrl:getClassCName( node:get_expType() )
-                  local memberClassName = moduleCtrl:getClassCName( member:get_expType() )
-                  stream:pushIndent(  )
-                  stream:writeln( string.format( "%s pVal = %s;", cTypeAnyP, getAccessMember( className, "pObj", member:get_name().txt )) )
-                  if #methodType:get_retTypeInfoList() ~= 0 then
-                     stream:write( "return " )
+      for __index, name in pairs( Ast.getAllMethodName( member:get_expType(), Ast.MethodKind.Object ):get_list() ) do
+         if not _lune._Set_has(declMethodNameSet, name ) then
+            
+            local methodSym = _lune.unwrap( node:get_scope():getSymbolInfoField( name, true, node:get_scope(), Ast.ScopeAccess.Normal ))
+            
+            local methodType = methodSym:get_typeInfo()
+            if methodType:get_accessMode() ~= Ast.AccessMode.Pri then
+               do
+                  local _switchExp = processMode
+                  if _switchExp == ProcessMode.Prototype then
+                     processPrototypeMethod( stream, moduleCtrl, nil, methodType )
+                  elseif _switchExp == ProcessMode.DefClass then
+                     processDeclCallMethodWrapper( stream, moduleCtrl, scopeMgr, node, methodType, true )
+                     processDeclCallMethodWrapper( stream, moduleCtrl, scopeMgr, node, methodType, false )
+                     
+                     processMethodDeclTxt( stream, moduleCtrl, FuncWrap.Normal, methodType, nil )
+                     stream:writeln( "{" )
+                     local className = moduleCtrl:getClassCName( node:get_expType() )
+                     local memberClassName = moduleCtrl:getClassCName( member:get_expType() )
+                     stream:pushIndent(  )
+                     stream:writeln( string.format( "%s pVal = %s;", cTypeAnyP, getAccessMember( className, "pObj", member:get_name().txt )) )
+                     if #methodType:get_retTypeInfoList() ~= 0 then
+                        stream:write( "return " )
+                     end
+                     
+                     stream:write( string.format( "%s( _pEnv, pVal", getAccessMethod( memberClassName, "pVal", name )) )
+                     for index, argType in pairs( methodType:get_argTypeInfoList() ) do
+                        stream:write( string.format( ", arg%d", index) )
+                     end
+                     
+                     stream:writeln( ");" )
+                     
+                     stream:popIndent(  )
+                     stream:writeln( "}" )
                   end
-                  
-                  stream:write( string.format( "%s( _pEnv, pVal", getAccessMethod( memberClassName, "pVal", name )) )
-                  for index, argType in pairs( methodType:get_argTypeInfoList() ) do
-                     stream:write( string.format( ", arg%d", index) )
-                  end
-                  
-                  stream:writeln( ");" )
-                  
-                  stream:popIndent(  )
-                  stream:writeln( "}" )
                end
+               
             end
             
          end
@@ -4178,7 +4212,7 @@ local function processDefaultCtor( stream, moduleCtrl, scopeMgr, node )
                else 
                   
                      Util.err( string.format( "no support -- %s:%s:%d", member:get_name().txt, ValKind:_getTxt( valKind)
-                     , 3619) )
+                     , 3664) )
                end
             end
             
@@ -4887,7 +4921,7 @@ function convFilter:processDeclClassDef( node )
                else 
                   
                      Util.err( string.format( "no support -- %s:%s:%d", member:get_symbolInfo():get_name(), ValKind:_getTxt( valKind)
-                     , 4324) )
+                     , 4369) )
                end
             end
             
@@ -5531,7 +5565,7 @@ function convFilter:processSym2Any( symbol )
       else 
          
             Util.err( string.format( "not suppport -- %s, %d", ValKind:_getTxt( valKind)
-            , 5131) )
+            , 5176) )
       end
    end
    
@@ -5553,7 +5587,7 @@ function convFilter:processVal2any( node, parent )
       else 
          
             Util.err( string.format( "not suppport -- %d, %s, %s, %d", node:get_pos().lineNo, ValKind:_getTxt( valKind)
-            , Nodes.getNodeKindName( node:get_kind() ), 5157) )
+            , Nodes.getNodeKindName( node:get_kind() ), 5202) )
       end
    end
    
@@ -5603,7 +5637,7 @@ function convFilter:processSetValSingleDirect( parent, node, var, initFlag, expV
       
       Util.err( string.format( "illegal %s %s %s -- %d", var:get_name(), ValKind:_getTxt( valKind)
       , ValKind:_getTxt( expValKind)
-      , 5214) )
+      , 5259) )
    end
    
    
@@ -7232,7 +7266,7 @@ function convFilter:processApply( node, opt )
          else 
             
                Util.err( string.format( "no support -- %s:%s:%d", varSym:get_name(), ValKind:_getTxt( valKind)
-               , 6960) )
+               , 7005) )
          end
       end
       
@@ -7657,7 +7691,7 @@ function convFilter:processExpUnwrap( node, opt )
                else 
                   
                      Util.err( string.format( "no support -- %s: %d", ValKind:_getTxt( self:getValKindOfNode( node ))
-                     , 7381) )
+                     , 7426) )
                end
             end
             
@@ -9435,7 +9469,7 @@ function convFilter:processExpRefItem( node, opt )
             else 
                
                   Util.err( string.format( "not support:%s -- %d:%d", Ast.TypeInfoKind:_getTxt( valType:get_kind())
-                  , 9563, node:get_pos().lineNo) )
+                  , 9608, node:get_pos().lineNo) )
             end
          end
          
@@ -9578,7 +9612,7 @@ function convFilter:processGetField( node, opt )
       local _switchExp = prefixType:get_kind()
       if _switchExp == Ast.TypeInfoKind.Enum then
          if node:get_nilAccess() then
-            Util.err( string.format( "not support -- %d:%d:%s", 9719, node:get_pos().lineNo, fieldTxt) )
+            Util.err( string.format( "not support -- %d:%d:%s", 9764, node:get_pos().lineNo, fieldTxt) )
          end
          
          local enumFullName = self.moduleCtrl:getEnumTypeName( prefixType )
@@ -9592,13 +9626,13 @@ function convFilter:processGetField( node, opt )
                self:write( ")" )
             else 
                
-                  Util.err( string.format( "not support -- %d:%d:%s", 9733, node:get_pos().lineNo, fieldTxt) )
+                  Util.err( string.format( "not support -- %d:%d:%s", 9778, node:get_pos().lineNo, fieldTxt) )
             end
          end
          
       elseif _switchExp == Ast.TypeInfoKind.Alge then
          if node:get_nilAccess() then
-            Util.err( string.format( "not support -- %d:%d:%s", 9740, node:get_pos().lineNo, fieldTxt) )
+            Util.err( string.format( "not support -- %d:%d:%s", 9785, node:get_pos().lineNo, fieldTxt) )
          end
          
          local algeName = self.moduleCtrl:getAlgeCName( prefixType )
@@ -9610,7 +9644,7 @@ function convFilter:processGetField( node, opt )
                self:write( ")" )
             else 
                
-                  Util.err( string.format( "not support -- %d:%d:%s", 9751, node:get_pos().lineNo, fieldTxt) )
+                  Util.err( string.format( "not support -- %d:%d:%s", 9796, node:get_pos().lineNo, fieldTxt) )
             end
          end
          
@@ -9635,7 +9669,7 @@ function convFilter:processGetField( node, opt )
                      self:write( "l_nil_mtd_getter( _pEnv, " )
                   else 
                      
-                        Util.err( string.format( "not support -- %d:%d:%s", 9780, node:get_pos().lineNo, fieldTxt) )
+                        Util.err( string.format( "not support -- %d:%d:%s", 9825, node:get_pos().lineNo, fieldTxt) )
                   end
                end
                
@@ -9667,7 +9701,7 @@ function convFilter:processGetField( node, opt )
          
       else 
          
-            Util.err( string.format( "not support -- %d:%d:%s", 9813, node:get_pos().lineNo, Ast.TypeInfoKind:_getTxt( prefixType:get_kind())
+            Util.err( string.format( "not support -- %d:%d:%s", 9858, node:get_pos().lineNo, Ast.TypeInfoKind:_getTxt( prefixType:get_kind())
             ) )
       end
    end
@@ -9705,7 +9739,7 @@ function convFilter:processReturn( node, opt )
                   filter( expList[1], self, node )
                else 
                   
-                     Util.err( string.format( "no support -- %d", 9871) )
+                     Util.err( string.format( "no support -- %d", 9916) )
                end
             end
             
@@ -9736,7 +9770,7 @@ function convFilter:processReturn( node, opt )
                elseif _switchExp == ValKind.Prim then
                else 
                   
-                     Util.err( string.format( "no support -- %d", 9904) )
+                     Util.err( string.format( "no support -- %d", 9949) )
                end
             end
             

@@ -1,0 +1,22 @@
+# sudo docker build --build-arg proxy_host=proxy.host --build-arg proxy_port=8080 -t testlune -f test/docker/test_install_via_proxy test/docker
+
+FROM alpine:3.11.2
+
+ARG proxy_host
+ARG proxy_port
+
+ENV HTTP_PROXY http://${proxy_host}:${proxy_port}
+ENV HTTPS_PROXY ${HTTP_PROXY}
+
+RUN apk --no-cache add \
+      git \
+      make \
+      diffutils \
+      gcc \
+      libc-dev \
+      lua5.3-dev
+RUN git clone --depth 1 https://github.com/ifritJP/LuneScript.git
+WORKDIR LuneScript/src
+RUN lua5.3 setup.lua -d && \
+	make install && \
+	make test-installed-cmd

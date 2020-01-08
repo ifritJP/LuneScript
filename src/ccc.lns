@@ -5,6 +5,61 @@ macro _section()
 let mut g_val = 100;
 
 {
+   _section();
+   class Hoge {
+      let txt:str;
+      pub fn get_val(): int {
+         return 0;
+      }
+   }
+   pub fn Hoge.func(): str {
+      return self.txt;
+   }
+
+   class Sub extend Hoge {
+   }
+
+   class Test extend Hoge {
+      let sub:Sub;
+
+      advertise sub;
+   }
+
+   class Test2 extend Hoge {
+      let sub:Sub;
+
+      advertise sub;
+   }
+
+   {
+      let test = new Test( "xyz", new Sub( "abc" ) );
+      print( test.func() );
+   }
+   {
+      let test2 = new Test2( "XYZ", new Sub( "ABC" ) );
+      print( test2.func() );
+   }
+}
+{
+   _section();
+   class Hoge {
+      pub fn get_val(): int {
+         return 0;
+      }
+   }
+
+   class Test {
+      let val:int {pub};
+      let hoge:Hoge;
+
+      advertise hoge;
+   }
+
+   let test = new Test( 10, new Hoge() );
+   print( test.$val );
+}
+{
+   _section();
    fn func( val1:int ) : int!, str {
       if val1 == 1 {
          return nil, "abc";

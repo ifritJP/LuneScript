@@ -1,15 +1,37 @@
-fn func( val1:int ) : int!, str {
-   if val1 == 1 {
-      return nil, "abc";
+pub class Hoge {
+   let txt:str;
+   pub fn get_val(): int {
+      return 0;
    }
-   return 1, "xyz";
+   pub fn func2(): str {
+      return self.txt;
+   }
 }
-fn sub(val:int) {
-   let! val1, val2 = func( val ) {
-      print( _val1, _val2 );
-      return;
-   };
-   print( val1, val2 );
+pub fn Hoge.func(): str {
+   return self.txt;
 }
-sub(0);
-sub(1);
+
+pub class Sub extend Hoge {
+}
+
+class Test extend Hoge {
+   let sub:Sub;
+
+   advertise sub;
+}
+
+class Test2 extend Hoge {
+   let sub:Sub;
+
+   advertise sub;
+}
+
+{
+   let test = new Test( "xyz", new Sub( "abc" ) );
+   print( test.func() );
+}
+{
+   let test2 = new Test2( "XYZ", new Sub( "ABC" ) );
+   print( test2.func() );
+}
+

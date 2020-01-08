@@ -463,6 +463,9 @@ class ModuleCtrl {
    }
 
 
+   pub fn getCanonicalName( typeInfo:&Ast.TypeInfo ): str {
+      return typeInfo.getFullName( self.$typeNameCtrl, self.moduleInfoManager, false );
+   }
 
 /**
 指定の型の関数名を取得する。
@@ -827,7 +830,7 @@ class ScopeMgr {
       }
 
       let mut scopeInfo;
-      if not scope.$ownerTypeInfo$.$externalFlag {
+      //if not scope.$ownerTypeInfo$.$externalFlag {
          // ローカル変数のうち、stem, var として扱う変数を決定し、インデックスを紐付ける。
          scopeInfo = new ScopeInfo( 0, 0, 0 );
 
@@ -892,10 +895,10 @@ class ScopeMgr {
                symbol.set_convModuleParam( param );
             }
          }
-      }
-      else {
-         scopeInfo = new ScopeInfo( 0, 0, 0 );
-      }
+      // }
+      // else {
+      //    scopeInfo = new ScopeInfo( 0, 0, 0 );
+      // }
       self.scope2InfoMap[ scope ] = scopeInfo;
       
       return scopeInfo;
@@ -941,7 +944,10 @@ class ScopeMgr {
             return param@@=SymbolParam;
          };
       }
-      Util.err( "illegal symbol -- %s %d" (symbol.$name, __line__ ) );
+      Util.err( "illegal symbol -- %s %s %s %d"
+                (symbol.$name, symbol.$kind.$_txt,
+                  self.moduleCtrl.getCanonicalName(
+                     symbol.$scope.getNamespaceTypeInfo() ), __line__ ) );
    }
 
    pub fn getSymbolValKind( symbol:&Ast.LowSymbol ) mut : ValKind
@@ -3062,9 +3068,9 @@ fn processDeclAlgeSub( stream:Util.SourceStream, node: &Nodes.DeclArgNode )
 enum FuncWrap {
    /** 通常の関数定義 */
    Normal,
-   /** 呼び出し様のラッパー */
+   /** 呼び出し用のラッパー */
    CallWrap,
-   /** nil アクセス様のラッパー */
+   /** nil アクセス用のラッパー */
    NilWrap
 }
 
@@ -3440,52 +3446,91 @@ fn getAccessMethod(className:str,obj:str,method:str):str {
 }
 
 
+/**
+advertise 宣言の処理。
+*/
 fn processAdvertise(
    stream:Util.SourceStream, moduleCtrl:ModuleCtrl, scopeMgr:ScopeMgr,
    processMode:ProcessMode, node:&Nodes.DeclClassNode )
 {
+   // このクラスで宣言しているメソッド名の Set を作成
+   let mut declMethodNameSet:Set<str> = (@);
+   foreach field in node.$fieldList {
+      if! let declMethodNode = field@@@Nodes.DeclMethodNode {
+         if! let name = declMethodNode.$declInfo.$name {
+            declMethodNameSet.add( name.txt );
+         }
+      }
+   }
+   // このクラスのアクセッサ名を登録
+   foreach member in node.$memberList {
+      if member.$getterMode ~= .None {
+         declMethodNameSet.add( "get_" .. member.$name.txt );
+      }
+      if member.$setterMode ~= .None {
+         declMethodNameSet.add( "set_" .. member.$name.txt );
+      }
+   }
+   // if node.$expType.hasBase() {
+   //    // スーパークラスのメソッド名を登録
+   //    let! superScope = node.$expType.$baseTypeInfo.$scope {
+   //       return;
+   //    };        
+   //    foreach methodSym, methodName in superScope.$symbol2SymbolInfoMap {
+   //       if methodSym.$kind == .Mtd {
+   //          declMethodNameSet.add( methodName );
+   //       }
+   //    }
+   // }
+
+   // advertise 宣言の処理
    foreach advInfo in node.$advertiseList {
       let member = advInfo.$member;
-      let nameList = Ast.getAllMethodName( member.$expType, .Object );
+      
+      // advertise 宣言しているメンバの全 非 static メソッドをリストアップ
+      foreach name in Ast.getAllMethodName( member.$expType, .Object ).$list {
+         if not declMethodNameSet.has( name ) {
+            // このクラスで宣言していないメソッドを、
+            // advertise 宣言しているメンバのメソッドコールで宣言
+            
+            let methodSym = 
+               unwrap node.$scope.getSymbolInfoField( name, true, node.$scope, .Normal );
 
-      foreach name in nameList.$list {
-         let methodSym = 
-            unwrap node.$scope.getSymbolInfoField( name, true, node.$scope, .Normal );
-
-         let methodType = methodSym.$typeInfo;
-         if methodType.$accessMode ~= .Pri {
-            switch processMode {
-               case .Prototype {
-                  processPrototypeMethod( stream, moduleCtrl, nil, methodType );
-               }
-               case .DefClass {
-                  processDeclCallMethodWrapper(
-                     stream, moduleCtrl, scopeMgr, node, methodType, true );
-                  processDeclCallMethodWrapper(
-                     stream, moduleCtrl, scopeMgr, node, methodType, false );
-
-                  processMethodDeclTxt( stream, moduleCtrl, .Normal, methodType, nil );
-                  stream.writeln( "{" );
-                  let className = moduleCtrl.getClassCName( node.$expType );
-                  let memberClassName = moduleCtrl.getClassCName( member.$expType );
-                  stream.pushIndent( ## );
-                  stream.writeln(
-                     "%s pVal = %s;"
-                     (cTypeAnyP,
-                       getAccessMember(className, "pObj", member.$name.txt )) );
-                  if #methodType.$retTypeInfoList ~= 0 {
-                     stream.write( "return " );
+            let methodType = methodSym.$typeInfo;
+            if methodType.$accessMode ~= .Pri {
+               switch processMode {
+                  case .Prototype {
+                     processPrototypeMethod( stream, moduleCtrl, nil, methodType );
                   }
-                  stream.write(
-                     "%s( _pEnv, pVal"
-                     (getAccessMethod(memberClassName, "pVal", name) ) );
-                  foreach argType, index in methodType.$argTypeInfoList {
-                     stream.write( ", arg%d" (index ) );
+                  case .DefClass {
+                     processDeclCallMethodWrapper(
+                        stream, moduleCtrl, scopeMgr, node, methodType, true );
+                     processDeclCallMethodWrapper(
+                        stream, moduleCtrl, scopeMgr, node, methodType, false );
+
+                     processMethodDeclTxt( stream, moduleCtrl, .Normal, methodType, nil );
+                     stream.writeln( "{" );
+                     let className = moduleCtrl.getClassCName( node.$expType );
+                     let memberClassName = moduleCtrl.getClassCName( member.$expType );
+                     stream.pushIndent( ## );
+                     stream.writeln(
+                        "%s pVal = %s;"
+                        (cTypeAnyP,
+                          getAccessMember(className, "pObj", member.$name.txt )) );
+                     if #methodType.$retTypeInfoList ~= 0 {
+                        stream.write( "return " );
+                     }
+                     stream.write(
+                        "%s( _pEnv, pVal"
+                        (getAccessMethod(memberClassName, "pVal", name) ) );
+                     foreach argType, index in methodType.$argTypeInfoList {
+                        stream.write( ", arg%d" (index ) );
+                     }
+                     stream.writeln( ");" );
+                     
+                     stream.popIndent();
+                     stream.writeln( "}" );
                   }
-                  stream.writeln( ");" );
-                  
-                  stream.popIndent();
-                  stream.writeln( "}" );
                }
             }
          }
