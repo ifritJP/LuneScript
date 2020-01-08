@@ -727,10 +727,10 @@ endif
 
 
 test-installed-cmd:
-	$(MAKE) LNSC_ENABLE=y LNSC=lnsc test-comp
+	$(MAKE) LNSC_ENABLE=y LNSC=lnsc test-comp -j
 
 test-on-docker:
-	sudo docker build -t testlns -f test/docker/install_via_proxy test/docker
+	sudo docker build -t testlns -f test/docker/test_install test/docker
 	sudo docker container rm testlns
 	sudo docker image rm testlns
 
