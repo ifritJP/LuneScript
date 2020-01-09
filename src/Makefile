@@ -734,7 +734,14 @@ test-installed-cmd:
 test-on-docker:
 	sudo docker build -t testlns -f test/docker/test_install test/docker
 	sudo docker run --name test -it testlns \
-		/bin/ash -c "make test-installed-cmd NO_LUAROCKS=y"
+		/bin/ash -c "make test-installed-cmd NO_LUAROCKS=y SLEEP_TIME=2"
+	sudo docker container rm testlns
+	sudo docker image rm testlns
+
+test-on-docker_luarocks:
+	sudo docker build -t testlns -f test/docker/test_install_with_luarock test/docker
+	sudo docker run --name test -it testlns \
+		/bin/ash -c 'PATH=/usr/local/bin:${PATH} make test-installed-cmd SLEEP_TIME=2'
 	sudo docker container rm testlns
 	sudo docker image rm testlns
 

@@ -1808,40 +1808,68 @@ end
 function AliasTypeInfo:get_typeId()
    return self.typeId
 end
-function AliasTypeInfo:isModule( ... )
-   return self.aliasSrcTypeInfo:isModule( ... )
-end
-
-function AliasTypeInfo:get_baseId( ... )
-   return self.aliasSrcTypeInfo:get_baseId( ... )
-end
-
-function AliasTypeInfo:isInheritFrom( ... )
-   return self.aliasSrcTypeInfo:isInheritFrom( ... )
-end
-
-function AliasTypeInfo:getTxtWithRaw( ... )
-   return self.aliasSrcTypeInfo:getTxtWithRaw( ... )
+function AliasTypeInfo:addChildren( ... )
+   return self.aliasSrcTypeInfo:addChildren( ... )
 end
 
 function AliasTypeInfo:canEvalWith( ... )
    return self.aliasSrcTypeInfo:canEvalWith( ... )
 end
 
+function AliasTypeInfo:createAlt2typeMap( ... )
+   return self.aliasSrcTypeInfo:createAlt2typeMap( ... )
+end
+
+function AliasTypeInfo:equals( ... )
+   return self.aliasSrcTypeInfo:equals( ... )
+end
+
+function AliasTypeInfo:getFullName( ... )
+   return self.aliasSrcTypeInfo:getFullName( ... )
+end
+
+function AliasTypeInfo:getModule( ... )
+   return self.aliasSrcTypeInfo:getModule( ... )
+end
+
+function AliasTypeInfo:getParentFullName( ... )
+   return self.aliasSrcTypeInfo:getParentFullName( ... )
+end
+
+function AliasTypeInfo:getTxtWithRaw( ... )
+   return self.aliasSrcTypeInfo:getTxtWithRaw( ... )
+end
+
 function AliasTypeInfo:get_abstractFlag( ... )
    return self.aliasSrcTypeInfo:get_abstractFlag( ... )
+end
+
+function AliasTypeInfo:get_argTypeInfoList( ... )
+   return self.aliasSrcTypeInfo:get_argTypeInfoList( ... )
+end
+
+function AliasTypeInfo:get_autoFlag( ... )
+   return self.aliasSrcTypeInfo:get_autoFlag( ... )
+end
+
+function AliasTypeInfo:get_baseId( ... )
+   return self.aliasSrcTypeInfo:get_baseId( ... )
+end
+
+function AliasTypeInfo:get_baseTypeInfo( ... )
+   return self.aliasSrcTypeInfo:get_baseTypeInfo( ... )
+end
+
+function AliasTypeInfo:get_children( ... )
+   return self.aliasSrcTypeInfo:get_children( ... )
 end
 
 function AliasTypeInfo:get_display_stirng_with( ... )
    return self.aliasSrcTypeInfo:get_display_stirng_with( ... )
 end
 
-function AliasTypeInfo:get_srcTypeInfo( ... )
-   return self.aliasSrcTypeInfo:get_srcTypeInfo( ... )
-end
-
-function AliasTypeInfo:equals( ... )
-   return self.aliasSrcTypeInfo:equals( ... )
+function AliasTypeInfo:get_genSrcTypeInfo( ... )
+   return self.aliasSrcTypeInfo:get_genSrcTypeInfo( ... )
 end
 
 function AliasTypeInfo:get_interfaceList( ... )
@@ -1852,40 +1880,12 @@ function AliasTypeInfo:get_itemTypeInfoList( ... )
    return self.aliasSrcTypeInfo:get_itemTypeInfoList( ... )
 end
 
-function AliasTypeInfo:get_argTypeInfoList( ... )
-   return self.aliasSrcTypeInfo:get_argTypeInfoList( ... )
-end
-
-function AliasTypeInfo:get_retTypeInfoList( ... )
-   return self.aliasSrcTypeInfo:get_retTypeInfoList( ... )
-end
-
-function AliasTypeInfo:hasRouteNamespaceFrom( ... )
-   return self.aliasSrcTypeInfo:hasRouteNamespaceFrom( ... )
-end
-
-function AliasTypeInfo:getModule( ... )
-   return self.aliasSrcTypeInfo:getModule( ... )
-end
-
 function AliasTypeInfo:get_kind( ... )
    return self.aliasSrcTypeInfo:get_kind( ... )
 end
 
-function AliasTypeInfo:get_staticFlag( ... )
-   return self.aliasSrcTypeInfo:get_staticFlag( ... )
-end
-
-function AliasTypeInfo:get_autoFlag( ... )
-   return self.aliasSrcTypeInfo:get_autoFlag( ... )
-end
-
-function AliasTypeInfo:get_nonnilableType( ... )
-   return self.aliasSrcTypeInfo:get_nonnilableType( ... )
-end
-
-function AliasTypeInfo:get_baseTypeInfo( ... )
-   return self.aliasSrcTypeInfo:get_baseTypeInfo( ... )
+function AliasTypeInfo:get_mutMode( ... )
+   return self.aliasSrcTypeInfo:get_mutMode( ... )
 end
 
 function AliasTypeInfo:get_nilable( ... )
@@ -1896,32 +1896,24 @@ function AliasTypeInfo:get_nilableTypeInfo( ... )
    return self.aliasSrcTypeInfo:get_nilableTypeInfo( ... )
 end
 
-function AliasTypeInfo:get_children( ... )
-   return self.aliasSrcTypeInfo:get_children( ... )
+function AliasTypeInfo:get_nonnilableType( ... )
+   return self.aliasSrcTypeInfo:get_nonnilableType( ... )
 end
 
-function AliasTypeInfo:addChildren( ... )
-   return self.aliasSrcTypeInfo:addChildren( ... )
-end
-
-function AliasTypeInfo:get_mutMode( ... )
-   return self.aliasSrcTypeInfo:get_mutMode( ... )
-end
-
-function AliasTypeInfo:getParentFullName( ... )
-   return self.aliasSrcTypeInfo:getParentFullName( ... )
-end
-
-function AliasTypeInfo:get_genSrcTypeInfo( ... )
-   return self.aliasSrcTypeInfo:get_genSrcTypeInfo( ... )
-end
-
-function AliasTypeInfo:serializeTypeInfoList( ... )
-   return self.aliasSrcTypeInfo:serializeTypeInfoList( ... )
+function AliasTypeInfo:get_retTypeInfoList( ... )
+   return self.aliasSrcTypeInfo:get_retTypeInfoList( ... )
 end
 
 function AliasTypeInfo:get_scope( ... )
    return self.aliasSrcTypeInfo:get_scope( ... )
+end
+
+function AliasTypeInfo:get_srcTypeInfo( ... )
+   return self.aliasSrcTypeInfo:get_srcTypeInfo( ... )
+end
+
+function AliasTypeInfo:get_staticFlag( ... )
+   return self.aliasSrcTypeInfo:get_staticFlag( ... )
 end
 
 function AliasTypeInfo:get_typeData( ... )
@@ -1932,12 +1924,20 @@ function AliasTypeInfo:hasBase( ... )
    return self.aliasSrcTypeInfo:hasBase( ... )
 end
 
-function AliasTypeInfo:createAlt2typeMap( ... )
-   return self.aliasSrcTypeInfo:createAlt2typeMap( ... )
+function AliasTypeInfo:hasRouteNamespaceFrom( ... )
+   return self.aliasSrcTypeInfo:hasRouteNamespaceFrom( ... )
 end
 
-function AliasTypeInfo:getFullName( ... )
-   return self.aliasSrcTypeInfo:getFullName( ... )
+function AliasTypeInfo:isInheritFrom( ... )
+   return self.aliasSrcTypeInfo:isInheritFrom( ... )
+end
+
+function AliasTypeInfo:isModule( ... )
+   return self.aliasSrcTypeInfo:isModule( ... )
+end
+
+function AliasTypeInfo:serializeTypeInfoList( ... )
+   return self.aliasSrcTypeInfo:serializeTypeInfoList( ... )
 end
 
 
@@ -2680,84 +2680,80 @@ end
 function AccessSymbolInfo:get_prefixTypeInfo()
    return self.prefixTypeInfo
 end
-function AccessSymbolInfo:get_canBeRight( ... )
-   return self.symbolInfo:get_canBeRight( ... )
-end
-
-function AccessSymbolInfo:get_symbolId( ... )
-   return self.symbolInfo:get_symbolId( ... )
-end
-
-function AccessSymbolInfo:get_scope( ... )
-   return self.symbolInfo:get_scope( ... )
+function AccessSymbolInfo:canAccess( ... )
+   return self.symbolInfo:canAccess( ... )
 end
 
 function AccessSymbolInfo:get_accessMode( ... )
    return self.symbolInfo:get_accessMode( ... )
 end
 
-function AccessSymbolInfo:get_staticFlag( ... )
-   return self.symbolInfo:get_staticFlag( ... )
-end
-
-function AccessSymbolInfo:get_name( ... )
-   return self.symbolInfo:get_name( ... )
-end
-
-function AccessSymbolInfo:get_pos( ... )
-   return self.symbolInfo:get_pos( ... )
-end
-
-function AccessSymbolInfo:get_typeInfo( ... )
-   return self.symbolInfo:get_typeInfo( ... )
-end
-
-function AccessSymbolInfo:set_typeInfo( ... )
-   return self.symbolInfo:set_typeInfo( ... )
-end
-
-function AccessSymbolInfo:get_mutMode( ... )
-   return self.symbolInfo:get_mutMode( ... )
-end
-
-function AccessSymbolInfo:get_kind( ... )
-   return self.symbolInfo:get_kind( ... )
-end
-
-function AccessSymbolInfo:get_hasValueFlag( ... )
-   return self.symbolInfo:get_hasValueFlag( ... )
-end
-
-function AccessSymbolInfo:set_hasValueFlag( ... )
-   return self.symbolInfo:set_hasValueFlag( ... )
-end
-
-function AccessSymbolInfo:get_hasAccessFromClosure( ... )
-   return self.symbolInfo:get_hasAccessFromClosure( ... )
-end
-
-function AccessSymbolInfo:set_hasAccessFromClosure( ... )
-   return self.symbolInfo:set_hasAccessFromClosure( ... )
-end
-
-function AccessSymbolInfo:set_convModuleParam( ... )
-   return self.symbolInfo:set_convModuleParam( ... )
+function AccessSymbolInfo:get_canBeRight( ... )
+   return self.symbolInfo:get_canBeRight( ... )
 end
 
 function AccessSymbolInfo:get_convModuleParam( ... )
    return self.symbolInfo:get_convModuleParam( ... )
 end
 
-function AccessSymbolInfo:canAccess( ... )
-   return self.symbolInfo:canAccess( ... )
+function AccessSymbolInfo:get_hasAccessFromClosure( ... )
+   return self.symbolInfo:get_hasAccessFromClosure( ... )
+end
+
+function AccessSymbolInfo:get_hasValueFlag( ... )
+   return self.symbolInfo:get_hasValueFlag( ... )
+end
+
+function AccessSymbolInfo:get_kind( ... )
+   return self.symbolInfo:get_kind( ... )
+end
+
+function AccessSymbolInfo:get_mutMode( ... )
+   return self.symbolInfo:get_mutMode( ... )
+end
+
+function AccessSymbolInfo:get_name( ... )
+   return self.symbolInfo:get_name( ... )
 end
 
 function AccessSymbolInfo:get_namespaceTypeInfo( ... )
    return self.symbolInfo:get_namespaceTypeInfo( ... )
 end
 
-function AccessSymbolInfo:get_namespaceTypeInfo( ... )
-   return self.symbolInfo:get_namespaceTypeInfo( ... )
+function AccessSymbolInfo:get_pos( ... )
+   return self.symbolInfo:get_pos( ... )
+end
+
+function AccessSymbolInfo:get_scope( ... )
+   return self.symbolInfo:get_scope( ... )
+end
+
+function AccessSymbolInfo:get_staticFlag( ... )
+   return self.symbolInfo:get_staticFlag( ... )
+end
+
+function AccessSymbolInfo:get_symbolId( ... )
+   return self.symbolInfo:get_symbolId( ... )
+end
+
+function AccessSymbolInfo:get_typeInfo( ... )
+   return self.symbolInfo:get_typeInfo( ... )
+end
+
+function AccessSymbolInfo:set_convModuleParam( ... )
+   return self.symbolInfo:set_convModuleParam( ... )
+end
+
+function AccessSymbolInfo:set_hasAccessFromClosure( ... )
+   return self.symbolInfo:set_hasAccessFromClosure( ... )
+end
+
+function AccessSymbolInfo:set_hasValueFlag( ... )
+   return self.symbolInfo:set_hasValueFlag( ... )
+end
+
+function AccessSymbolInfo:set_typeInfo( ... )
+   return self.symbolInfo:set_typeInfo( ... )
 end
 
 
@@ -2842,32 +2838,64 @@ end
 function NilableTypeInfo:get_typeId()
    return self.typeId
 end
-function NilableTypeInfo:isModule( ... )
-   return self.nonnilableType:isModule( ... )
+function NilableTypeInfo:addChildren( ... )
+   return self.nonnilableType:addChildren( ... )
+end
+
+function NilableTypeInfo:createAlt2typeMap( ... )
+   return self.nonnilableType:createAlt2typeMap( ... )
+end
+
+function NilableTypeInfo:getFullName( ... )
+   return self.nonnilableType:getFullName( ... )
+end
+
+function NilableTypeInfo:getModule( ... )
+   return self.nonnilableType:getModule( ... )
+end
+
+function NilableTypeInfo:getParentFullName( ... )
+   return self.nonnilableType:getParentFullName( ... )
 end
 
 function NilableTypeInfo:getParentId( ... )
    return self.nonnilableType:getParentId( ... )
 end
 
-function NilableTypeInfo:get_baseId( ... )
-   return self.nonnilableType:get_baseId( ... )
-end
-
-function NilableTypeInfo:isInheritFrom( ... )
-   return self.nonnilableType:isInheritFrom( ... )
-end
-
-function NilableTypeInfo:get_rawTxt( ... )
-   return self.nonnilableType:get_rawTxt( ... )
-end
-
 function NilableTypeInfo:get_abstractFlag( ... )
    return self.nonnilableType:get_abstractFlag( ... )
 end
 
+function NilableTypeInfo:get_accessMode( ... )
+   return self.nonnilableType:get_accessMode( ... )
+end
+
+function NilableTypeInfo:get_argTypeInfoList( ... )
+   return self.nonnilableType:get_argTypeInfoList( ... )
+end
+
+function NilableTypeInfo:get_autoFlag( ... )
+   return self.nonnilableType:get_autoFlag( ... )
+end
+
+function NilableTypeInfo:get_baseId( ... )
+   return self.nonnilableType:get_baseId( ... )
+end
+
+function NilableTypeInfo:get_baseTypeInfo( ... )
+   return self.nonnilableType:get_baseTypeInfo( ... )
+end
+
+function NilableTypeInfo:get_children( ... )
+   return self.nonnilableType:get_children( ... )
+end
+
 function NilableTypeInfo:get_externalFlag( ... )
    return self.nonnilableType:get_externalFlag( ... )
+end
+
+function NilableTypeInfo:get_genSrcTypeInfo( ... )
+   return self.nonnilableType:get_genSrcTypeInfo( ... )
 end
 
 function NilableTypeInfo:get_interfaceList( ... )
@@ -2878,72 +2906,32 @@ function NilableTypeInfo:get_itemTypeInfoList( ... )
    return self.nonnilableType:get_itemTypeInfoList( ... )
 end
 
-function NilableTypeInfo:get_argTypeInfoList( ... )
-   return self.nonnilableType:get_argTypeInfoList( ... )
-end
-
-function NilableTypeInfo:get_retTypeInfoList( ... )
-   return self.nonnilableType:get_retTypeInfoList( ... )
-end
-
-function NilableTypeInfo:get_parentInfo( ... )
-   return self.nonnilableType:get_parentInfo( ... )
-end
-
-function NilableTypeInfo:hasRouteNamespaceFrom( ... )
-   return self.nonnilableType:hasRouteNamespaceFrom( ... )
-end
-
-function NilableTypeInfo:getModule( ... )
-   return self.nonnilableType:getModule( ... )
-end
-
-function NilableTypeInfo:get_staticFlag( ... )
-   return self.nonnilableType:get_staticFlag( ... )
-end
-
-function NilableTypeInfo:get_accessMode( ... )
-   return self.nonnilableType:get_accessMode( ... )
-end
-
-function NilableTypeInfo:get_autoFlag( ... )
-   return self.nonnilableType:get_autoFlag( ... )
-end
-
-function NilableTypeInfo:get_baseTypeInfo( ... )
-   return self.nonnilableType:get_baseTypeInfo( ... )
+function NilableTypeInfo:get_mutMode( ... )
+   return self.nonnilableType:get_mutMode( ... )
 end
 
 function NilableTypeInfo:get_nilableTypeInfo( ... )
    return self.nonnilableType:get_nilableTypeInfo( ... )
 end
 
-function NilableTypeInfo:get_children( ... )
-   return self.nonnilableType:get_children( ... )
+function NilableTypeInfo:get_parentInfo( ... )
+   return self.nonnilableType:get_parentInfo( ... )
 end
 
-function NilableTypeInfo:addChildren( ... )
-   return self.nonnilableType:addChildren( ... )
+function NilableTypeInfo:get_rawTxt( ... )
+   return self.nonnilableType:get_rawTxt( ... )
 end
 
-function NilableTypeInfo:get_mutMode( ... )
-   return self.nonnilableType:get_mutMode( ... )
-end
-
-function NilableTypeInfo:getParentFullName( ... )
-   return self.nonnilableType:getParentFullName( ... )
-end
-
-function NilableTypeInfo:get_genSrcTypeInfo( ... )
-   return self.nonnilableType:get_genSrcTypeInfo( ... )
-end
-
-function NilableTypeInfo:serializeTypeInfoList( ... )
-   return self.nonnilableType:serializeTypeInfoList( ... )
+function NilableTypeInfo:get_retTypeInfoList( ... )
+   return self.nonnilableType:get_retTypeInfoList( ... )
 end
 
 function NilableTypeInfo:get_scope( ... )
    return self.nonnilableType:get_scope( ... )
+end
+
+function NilableTypeInfo:get_staticFlag( ... )
+   return self.nonnilableType:get_staticFlag( ... )
 end
 
 function NilableTypeInfo:get_typeData( ... )
@@ -2954,12 +2942,20 @@ function NilableTypeInfo:hasBase( ... )
    return self.nonnilableType:hasBase( ... )
 end
 
-function NilableTypeInfo:createAlt2typeMap( ... )
-   return self.nonnilableType:createAlt2typeMap( ... )
+function NilableTypeInfo:hasRouteNamespaceFrom( ... )
+   return self.nonnilableType:hasRouteNamespaceFrom( ... )
 end
 
-function NilableTypeInfo:getFullName( ... )
-   return self.nonnilableType:getFullName( ... )
+function NilableTypeInfo:isInheritFrom( ... )
+   return self.nonnilableType:isInheritFrom( ... )
+end
+
+function NilableTypeInfo:isModule( ... )
+   return self.nonnilableType:isModule( ... )
+end
+
+function NilableTypeInfo:serializeTypeInfoList( ... )
+   return self.nonnilableType:serializeTypeInfoList( ... )
 end
 
 
@@ -3338,64 +3334,40 @@ end
 function BoxTypeInfo:get_nilableTypeInfo()
    return self.nilableTypeInfo
 end
-function BoxTypeInfo:isModule( ... )
-   return self.boxingType:isModule( ... )
+function BoxTypeInfo:addChildren( ... )
+   return self.boxingType:addChildren( ... )
 end
 
-function BoxTypeInfo:getParentId( ... )
-   return self.boxingType:getParentId( ... )
-end
-
-function BoxTypeInfo:get_baseId( ... )
-   return self.boxingType:get_baseId( ... )
-end
-
-function BoxTypeInfo:isInheritFrom( ... )
-   return self.boxingType:isInheritFrom( ... )
-end
-
-function BoxTypeInfo:get_rawTxt( ... )
-   return self.boxingType:get_rawTxt( ... )
-end
-
-function BoxTypeInfo:get_abstractFlag( ... )
-   return self.boxingType:get_abstractFlag( ... )
-end
-
-function BoxTypeInfo:get_externalFlag( ... )
-   return self.boxingType:get_externalFlag( ... )
-end
-
-function BoxTypeInfo:get_interfaceList( ... )
-   return self.boxingType:get_interfaceList( ... )
-end
-
-function BoxTypeInfo:get_argTypeInfoList( ... )
-   return self.boxingType:get_argTypeInfoList( ... )
-end
-
-function BoxTypeInfo:get_retTypeInfoList( ... )
-   return self.boxingType:get_retTypeInfoList( ... )
-end
-
-function BoxTypeInfo:get_parentInfo( ... )
-   return self.boxingType:get_parentInfo( ... )
-end
-
-function BoxTypeInfo:hasRouteNamespaceFrom( ... )
-   return self.boxingType:hasRouteNamespaceFrom( ... )
+function BoxTypeInfo:getFullName( ... )
+   return self.boxingType:getFullName( ... )
 end
 
 function BoxTypeInfo:getModule( ... )
    return self.boxingType:getModule( ... )
 end
 
-function BoxTypeInfo:get_staticFlag( ... )
-   return self.boxingType:get_staticFlag( ... )
+function BoxTypeInfo:getParentFullName( ... )
+   return self.boxingType:getParentFullName( ... )
+end
+
+function BoxTypeInfo:getParentId( ... )
+   return self.boxingType:getParentId( ... )
+end
+
+function BoxTypeInfo:get_abstractFlag( ... )
+   return self.boxingType:get_abstractFlag( ... )
+end
+
+function BoxTypeInfo:get_argTypeInfoList( ... )
+   return self.boxingType:get_argTypeInfoList( ... )
 end
 
 function BoxTypeInfo:get_autoFlag( ... )
    return self.boxingType:get_autoFlag( ... )
+end
+
+function BoxTypeInfo:get_baseId( ... )
+   return self.boxingType:get_baseId( ... )
 end
 
 function BoxTypeInfo:get_baseTypeInfo( ... )
@@ -3406,24 +3378,36 @@ function BoxTypeInfo:get_children( ... )
    return self.boxingType:get_children( ... )
 end
 
-function BoxTypeInfo:addChildren( ... )
-   return self.boxingType:addChildren( ... )
-end
-
-function BoxTypeInfo:get_mutMode( ... )
-   return self.boxingType:get_mutMode( ... )
-end
-
-function BoxTypeInfo:getParentFullName( ... )
-   return self.boxingType:getParentFullName( ... )
+function BoxTypeInfo:get_externalFlag( ... )
+   return self.boxingType:get_externalFlag( ... )
 end
 
 function BoxTypeInfo:get_genSrcTypeInfo( ... )
    return self.boxingType:get_genSrcTypeInfo( ... )
 end
 
-function BoxTypeInfo:serializeTypeInfoList( ... )
-   return self.boxingType:serializeTypeInfoList( ... )
+function BoxTypeInfo:get_interfaceList( ... )
+   return self.boxingType:get_interfaceList( ... )
+end
+
+function BoxTypeInfo:get_mutMode( ... )
+   return self.boxingType:get_mutMode( ... )
+end
+
+function BoxTypeInfo:get_parentInfo( ... )
+   return self.boxingType:get_parentInfo( ... )
+end
+
+function BoxTypeInfo:get_rawTxt( ... )
+   return self.boxingType:get_rawTxt( ... )
+end
+
+function BoxTypeInfo:get_retTypeInfoList( ... )
+   return self.boxingType:get_retTypeInfoList( ... )
+end
+
+function BoxTypeInfo:get_staticFlag( ... )
+   return self.boxingType:get_staticFlag( ... )
 end
 
 function BoxTypeInfo:get_typeData( ... )
@@ -3434,8 +3418,20 @@ function BoxTypeInfo:hasBase( ... )
    return self.boxingType:hasBase( ... )
 end
 
-function BoxTypeInfo:getFullName( ... )
-   return self.boxingType:getFullName( ... )
+function BoxTypeInfo:hasRouteNamespaceFrom( ... )
+   return self.boxingType:hasRouteNamespaceFrom( ... )
+end
+
+function BoxTypeInfo:isInheritFrom( ... )
+   return self.boxingType:isInheritFrom( ... )
+end
+
+function BoxTypeInfo:isModule( ... )
+   return self.boxingType:isModule( ... )
+end
+
+function BoxTypeInfo:serializeTypeInfoList( ... )
+   return self.boxingType:serializeTypeInfoList( ... )
 end
 
 
@@ -3672,40 +3668,64 @@ end
 function GenericTypeInfo:get_genSrcTypeInfo()
    return self.genSrcTypeInfo
 end
-function GenericTypeInfo:isModule( ... )
-   return self.genSrcTypeInfo:isModule( ... )
+function GenericTypeInfo:addChildren( ... )
+   return self.genSrcTypeInfo:addChildren( ... )
+end
+
+function GenericTypeInfo:getFullName( ... )
+   return self.genSrcTypeInfo:getFullName( ... )
+end
+
+function GenericTypeInfo:getParentFullName( ... )
+   return self.genSrcTypeInfo:getParentFullName( ... )
 end
 
 function GenericTypeInfo:getParentId( ... )
    return self.genSrcTypeInfo:getParentId( ... )
 end
 
-function GenericTypeInfo:get_baseId( ... )
-   return self.genSrcTypeInfo:get_baseId( ... )
-end
-
-function GenericTypeInfo:get_rawTxt( ... )
-   return self.genSrcTypeInfo:get_rawTxt( ... )
+function GenericTypeInfo:getTxt( ... )
+   return self.genSrcTypeInfo:getTxt( ... )
 end
 
 function GenericTypeInfo:getTxtWithRaw( ... )
    return self.genSrcTypeInfo:getTxtWithRaw( ... )
 end
 
-function GenericTypeInfo:getTxt( ... )
-   return self.genSrcTypeInfo:getTxt( ... )
-end
-
 function GenericTypeInfo:get_abstractFlag( ... )
    return self.genSrcTypeInfo:get_abstractFlag( ... )
 end
 
-function GenericTypeInfo:get_display_stirng_with( ... )
-   return self.genSrcTypeInfo:get_display_stirng_with( ... )
+function GenericTypeInfo:get_accessMode( ... )
+   return self.genSrcTypeInfo:get_accessMode( ... )
+end
+
+function GenericTypeInfo:get_argTypeInfoList( ... )
+   return self.genSrcTypeInfo:get_argTypeInfoList( ... )
+end
+
+function GenericTypeInfo:get_autoFlag( ... )
+   return self.genSrcTypeInfo:get_autoFlag( ... )
+end
+
+function GenericTypeInfo:get_baseId( ... )
+   return self.genSrcTypeInfo:get_baseId( ... )
+end
+
+function GenericTypeInfo:get_baseTypeInfo( ... )
+   return self.genSrcTypeInfo:get_baseTypeInfo( ... )
+end
+
+function GenericTypeInfo:get_children( ... )
+   return self.genSrcTypeInfo:get_children( ... )
 end
 
 function GenericTypeInfo:get_display_stirng( ... )
    return self.genSrcTypeInfo:get_display_stirng( ... )
+end
+
+function GenericTypeInfo:get_display_stirng_with( ... )
+   return self.genSrcTypeInfo:get_display_stirng_with( ... )
 end
 
 function GenericTypeInfo:get_externalFlag( ... )
@@ -3716,72 +3736,40 @@ function GenericTypeInfo:get_interfaceList( ... )
    return self.genSrcTypeInfo:get_interfaceList( ... )
 end
 
-function GenericTypeInfo:get_argTypeInfoList( ... )
-   return self.genSrcTypeInfo:get_argTypeInfoList( ... )
-end
-
-function GenericTypeInfo:get_retTypeInfoList( ... )
-   return self.genSrcTypeInfo:get_retTypeInfoList( ... )
-end
-
-function GenericTypeInfo:get_parentInfo( ... )
-   return self.genSrcTypeInfo:get_parentInfo( ... )
-end
-
-function GenericTypeInfo:hasRouteNamespaceFrom( ... )
-   return self.genSrcTypeInfo:hasRouteNamespaceFrom( ... )
-end
-
 function GenericTypeInfo:get_kind( ... )
    return self.genSrcTypeInfo:get_kind( ... )
-end
-
-function GenericTypeInfo:get_staticFlag( ... )
-   return self.genSrcTypeInfo:get_staticFlag( ... )
-end
-
-function GenericTypeInfo:get_accessMode( ... )
-   return self.genSrcTypeInfo:get_accessMode( ... )
-end
-
-function GenericTypeInfo:get_autoFlag( ... )
-   return self.genSrcTypeInfo:get_autoFlag( ... )
-end
-
-function GenericTypeInfo:get_nonnilableType( ... )
-   return self.genSrcTypeInfo:get_nonnilableType( ... )
-end
-
-function GenericTypeInfo:get_baseTypeInfo( ... )
-   return self.genSrcTypeInfo:get_baseTypeInfo( ... )
-end
-
-function GenericTypeInfo:get_nilable( ... )
-   return self.genSrcTypeInfo:get_nilable( ... )
-end
-
-function GenericTypeInfo:get_children( ... )
-   return self.genSrcTypeInfo:get_children( ... )
-end
-
-function GenericTypeInfo:addChildren( ... )
-   return self.genSrcTypeInfo:addChildren( ... )
 end
 
 function GenericTypeInfo:get_mutMode( ... )
    return self.genSrcTypeInfo:get_mutMode( ... )
 end
 
-function GenericTypeInfo:getParentFullName( ... )
-   return self.genSrcTypeInfo:getParentFullName( ... )
+function GenericTypeInfo:get_nilable( ... )
+   return self.genSrcTypeInfo:get_nilable( ... )
 end
 
-function GenericTypeInfo:serializeTypeInfoList( ... )
-   return self.genSrcTypeInfo:serializeTypeInfoList( ... )
+function GenericTypeInfo:get_nonnilableType( ... )
+   return self.genSrcTypeInfo:get_nonnilableType( ... )
+end
+
+function GenericTypeInfo:get_parentInfo( ... )
+   return self.genSrcTypeInfo:get_parentInfo( ... )
+end
+
+function GenericTypeInfo:get_rawTxt( ... )
+   return self.genSrcTypeInfo:get_rawTxt( ... )
+end
+
+function GenericTypeInfo:get_retTypeInfoList( ... )
+   return self.genSrcTypeInfo:get_retTypeInfoList( ... )
 end
 
 function GenericTypeInfo:get_scope( ... )
    return self.genSrcTypeInfo:get_scope( ... )
+end
+
+function GenericTypeInfo:get_staticFlag( ... )
+   return self.genSrcTypeInfo:get_staticFlag( ... )
 end
 
 function GenericTypeInfo:get_typeData( ... )
@@ -3792,8 +3780,16 @@ function GenericTypeInfo:hasBase( ... )
    return self.genSrcTypeInfo:hasBase( ... )
 end
 
-function GenericTypeInfo:getFullName( ... )
-   return self.genSrcTypeInfo:getFullName( ... )
+function GenericTypeInfo:hasRouteNamespaceFrom( ... )
+   return self.genSrcTypeInfo:hasRouteNamespaceFrom( ... )
+end
+
+function GenericTypeInfo:isModule( ... )
+   return self.genSrcTypeInfo:isModule( ... )
+end
+
+function GenericTypeInfo:serializeTypeInfoList( ... )
+   return self.genSrcTypeInfo:serializeTypeInfoList( ... )
 end
 
 
@@ -3905,32 +3901,64 @@ end
 function ModifierTypeInfo:get_mutMode()
    return self.mutMode
 end
-function ModifierTypeInfo:isModule( ... )
-   return self.srcTypeInfo:isModule( ... )
+function ModifierTypeInfo:addChildren( ... )
+   return self.srcTypeInfo:addChildren( ... )
+end
+
+function ModifierTypeInfo:createAlt2typeMap( ... )
+   return self.srcTypeInfo:createAlt2typeMap( ... )
+end
+
+function ModifierTypeInfo:getFullName( ... )
+   return self.srcTypeInfo:getFullName( ... )
+end
+
+function ModifierTypeInfo:getModule( ... )
+   return self.srcTypeInfo:getModule( ... )
+end
+
+function ModifierTypeInfo:getParentFullName( ... )
+   return self.srcTypeInfo:getParentFullName( ... )
 end
 
 function ModifierTypeInfo:getParentId( ... )
    return self.srcTypeInfo:getParentId( ... )
 end
 
-function ModifierTypeInfo:get_baseId( ... )
-   return self.srcTypeInfo:get_baseId( ... )
-end
-
-function ModifierTypeInfo:isInheritFrom( ... )
-   return self.srcTypeInfo:isInheritFrom( ... )
-end
-
-function ModifierTypeInfo:get_rawTxt( ... )
-   return self.srcTypeInfo:get_rawTxt( ... )
-end
-
 function ModifierTypeInfo:get_abstractFlag( ... )
    return self.srcTypeInfo:get_abstractFlag( ... )
 end
 
+function ModifierTypeInfo:get_accessMode( ... )
+   return self.srcTypeInfo:get_accessMode( ... )
+end
+
+function ModifierTypeInfo:get_argTypeInfoList( ... )
+   return self.srcTypeInfo:get_argTypeInfoList( ... )
+end
+
+function ModifierTypeInfo:get_autoFlag( ... )
+   return self.srcTypeInfo:get_autoFlag( ... )
+end
+
+function ModifierTypeInfo:get_baseId( ... )
+   return self.srcTypeInfo:get_baseId( ... )
+end
+
+function ModifierTypeInfo:get_baseTypeInfo( ... )
+   return self.srcTypeInfo:get_baseTypeInfo( ... )
+end
+
+function ModifierTypeInfo:get_children( ... )
+   return self.srcTypeInfo:get_children( ... )
+end
+
 function ModifierTypeInfo:get_externalFlag( ... )
    return self.srcTypeInfo:get_externalFlag( ... )
+end
+
+function ModifierTypeInfo:get_genSrcTypeInfo( ... )
+   return self.srcTypeInfo:get_genSrcTypeInfo( ... )
 end
 
 function ModifierTypeInfo:get_interfaceList( ... )
@@ -3941,72 +3969,32 @@ function ModifierTypeInfo:get_itemTypeInfoList( ... )
    return self.srcTypeInfo:get_itemTypeInfoList( ... )
 end
 
-function ModifierTypeInfo:get_argTypeInfoList( ... )
-   return self.srcTypeInfo:get_argTypeInfoList( ... )
-end
-
-function ModifierTypeInfo:get_retTypeInfoList( ... )
-   return self.srcTypeInfo:get_retTypeInfoList( ... )
-end
-
-function ModifierTypeInfo:get_parentInfo( ... )
-   return self.srcTypeInfo:get_parentInfo( ... )
-end
-
-function ModifierTypeInfo:hasRouteNamespaceFrom( ... )
-   return self.srcTypeInfo:hasRouteNamespaceFrom( ... )
-end
-
-function ModifierTypeInfo:getModule( ... )
-   return self.srcTypeInfo:getModule( ... )
-end
-
 function ModifierTypeInfo:get_kind( ... )
    return self.srcTypeInfo:get_kind( ... )
-end
-
-function ModifierTypeInfo:get_staticFlag( ... )
-   return self.srcTypeInfo:get_staticFlag( ... )
-end
-
-function ModifierTypeInfo:get_accessMode( ... )
-   return self.srcTypeInfo:get_accessMode( ... )
-end
-
-function ModifierTypeInfo:get_autoFlag( ... )
-   return self.srcTypeInfo:get_autoFlag( ... )
-end
-
-function ModifierTypeInfo:get_baseTypeInfo( ... )
-   return self.srcTypeInfo:get_baseTypeInfo( ... )
 end
 
 function ModifierTypeInfo:get_nilable( ... )
    return self.srcTypeInfo:get_nilable( ... )
 end
 
-function ModifierTypeInfo:get_children( ... )
-   return self.srcTypeInfo:get_children( ... )
+function ModifierTypeInfo:get_parentInfo( ... )
+   return self.srcTypeInfo:get_parentInfo( ... )
 end
 
-function ModifierTypeInfo:addChildren( ... )
-   return self.srcTypeInfo:addChildren( ... )
+function ModifierTypeInfo:get_rawTxt( ... )
+   return self.srcTypeInfo:get_rawTxt( ... )
 end
 
-function ModifierTypeInfo:getParentFullName( ... )
-   return self.srcTypeInfo:getParentFullName( ... )
-end
-
-function ModifierTypeInfo:get_genSrcTypeInfo( ... )
-   return self.srcTypeInfo:get_genSrcTypeInfo( ... )
-end
-
-function ModifierTypeInfo:serializeTypeInfoList( ... )
-   return self.srcTypeInfo:serializeTypeInfoList( ... )
+function ModifierTypeInfo:get_retTypeInfoList( ... )
+   return self.srcTypeInfo:get_retTypeInfoList( ... )
 end
 
 function ModifierTypeInfo:get_scope( ... )
    return self.srcTypeInfo:get_scope( ... )
+end
+
+function ModifierTypeInfo:get_staticFlag( ... )
+   return self.srcTypeInfo:get_staticFlag( ... )
 end
 
 function ModifierTypeInfo:get_typeData( ... )
@@ -4017,12 +4005,20 @@ function ModifierTypeInfo:hasBase( ... )
    return self.srcTypeInfo:hasBase( ... )
 end
 
-function ModifierTypeInfo:createAlt2typeMap( ... )
-   return self.srcTypeInfo:createAlt2typeMap( ... )
+function ModifierTypeInfo:hasRouteNamespaceFrom( ... )
+   return self.srcTypeInfo:hasRouteNamespaceFrom( ... )
 end
 
-function ModifierTypeInfo:getFullName( ... )
-   return self.srcTypeInfo:getFullName( ... )
+function ModifierTypeInfo:isInheritFrom( ... )
+   return self.srcTypeInfo:isInheritFrom( ... )
+end
+
+function ModifierTypeInfo:isModule( ... )
+   return self.srcTypeInfo:isModule( ... )
+end
+
+function ModifierTypeInfo:serializeTypeInfoList( ... )
+   return self.srcTypeInfo:serializeTypeInfoList( ... )
 end
 
 
@@ -5839,72 +5835,44 @@ end
 function ExtTypeInfo:get_nilableTypeInfo()
    return self.nilableTypeInfo
 end
-function ExtTypeInfo:isModule( ... )
-   return self.extedType:isModule( ... )
+function ExtTypeInfo:addChildren( ... )
+   return self.extedType:addChildren( ... )
+end
+
+function ExtTypeInfo:createAlt2typeMap( ... )
+   return self.extedType:createAlt2typeMap( ... )
+end
+
+function ExtTypeInfo:getFullName( ... )
+   return self.extedType:getFullName( ... )
+end
+
+function ExtTypeInfo:getParentFullName( ... )
+   return self.extedType:getParentFullName( ... )
 end
 
 function ExtTypeInfo:getParentId( ... )
    return self.extedType:getParentId( ... )
 end
 
-function ExtTypeInfo:get_baseId( ... )
-   return self.extedType:get_baseId( ... )
-end
-
-function ExtTypeInfo:isInheritFrom( ... )
-   return self.extedType:isInheritFrom( ... )
-end
-
-function ExtTypeInfo:get_rawTxt( ... )
-   return self.extedType:get_rawTxt( ... )
-end
-
 function ExtTypeInfo:get_abstractFlag( ... )
    return self.extedType:get_abstractFlag( ... )
-end
-
-function ExtTypeInfo:get_externalFlag( ... )
-   return self.extedType:get_externalFlag( ... )
-end
-
-function ExtTypeInfo:get_interfaceList( ... )
-   return self.extedType:get_interfaceList( ... )
-end
-
-function ExtTypeInfo:get_itemTypeInfoList( ... )
-   return self.extedType:get_itemTypeInfoList( ... )
-end
-
-function ExtTypeInfo:get_argTypeInfoList( ... )
-   return self.extedType:get_argTypeInfoList( ... )
-end
-
-function ExtTypeInfo:get_retTypeInfoList( ... )
-   return self.extedType:get_retTypeInfoList( ... )
-end
-
-function ExtTypeInfo:get_parentInfo( ... )
-   return self.extedType:get_parentInfo( ... )
-end
-
-function ExtTypeInfo:hasRouteNamespaceFrom( ... )
-   return self.extedType:hasRouteNamespaceFrom( ... )
-end
-
-function ExtTypeInfo:get_staticFlag( ... )
-   return self.extedType:get_staticFlag( ... )
 end
 
 function ExtTypeInfo:get_accessMode( ... )
    return self.extedType:get_accessMode( ... )
 end
 
+function ExtTypeInfo:get_argTypeInfoList( ... )
+   return self.extedType:get_argTypeInfoList( ... )
+end
+
 function ExtTypeInfo:get_autoFlag( ... )
    return self.extedType:get_autoFlag( ... )
 end
 
-function ExtTypeInfo:get_nonnilableType( ... )
-   return self.extedType:get_nonnilableType( ... )
+function ExtTypeInfo:get_baseId( ... )
+   return self.extedType:get_baseId( ... )
 end
 
 function ExtTypeInfo:get_baseTypeInfo( ... )
@@ -5915,28 +5883,48 @@ function ExtTypeInfo:get_children( ... )
    return self.extedType:get_children( ... )
 end
 
-function ExtTypeInfo:addChildren( ... )
-   return self.extedType:addChildren( ... )
-end
-
-function ExtTypeInfo:get_mutMode( ... )
-   return self.extedType:get_mutMode( ... )
-end
-
-function ExtTypeInfo:getParentFullName( ... )
-   return self.extedType:getParentFullName( ... )
+function ExtTypeInfo:get_externalFlag( ... )
+   return self.extedType:get_externalFlag( ... )
 end
 
 function ExtTypeInfo:get_genSrcTypeInfo( ... )
    return self.extedType:get_genSrcTypeInfo( ... )
 end
 
-function ExtTypeInfo:serializeTypeInfoList( ... )
-   return self.extedType:serializeTypeInfoList( ... )
+function ExtTypeInfo:get_interfaceList( ... )
+   return self.extedType:get_interfaceList( ... )
+end
+
+function ExtTypeInfo:get_itemTypeInfoList( ... )
+   return self.extedType:get_itemTypeInfoList( ... )
+end
+
+function ExtTypeInfo:get_mutMode( ... )
+   return self.extedType:get_mutMode( ... )
+end
+
+function ExtTypeInfo:get_nonnilableType( ... )
+   return self.extedType:get_nonnilableType( ... )
+end
+
+function ExtTypeInfo:get_parentInfo( ... )
+   return self.extedType:get_parentInfo( ... )
+end
+
+function ExtTypeInfo:get_rawTxt( ... )
+   return self.extedType:get_rawTxt( ... )
+end
+
+function ExtTypeInfo:get_retTypeInfoList( ... )
+   return self.extedType:get_retTypeInfoList( ... )
 end
 
 function ExtTypeInfo:get_scope( ... )
    return self.extedType:get_scope( ... )
+end
+
+function ExtTypeInfo:get_staticFlag( ... )
+   return self.extedType:get_staticFlag( ... )
 end
 
 function ExtTypeInfo:get_typeData( ... )
@@ -5947,12 +5935,20 @@ function ExtTypeInfo:hasBase( ... )
    return self.extedType:hasBase( ... )
 end
 
-function ExtTypeInfo:createAlt2typeMap( ... )
-   return self.extedType:createAlt2typeMap( ... )
+function ExtTypeInfo:hasRouteNamespaceFrom( ... )
+   return self.extedType:hasRouteNamespaceFrom( ... )
 end
 
-function ExtTypeInfo:getFullName( ... )
-   return self.extedType:getFullName( ... )
+function ExtTypeInfo:isInheritFrom( ... )
+   return self.extedType:isInheritFrom( ... )
+end
+
+function ExtTypeInfo:isModule( ... )
+   return self.extedType:isModule( ... )
+end
+
+function ExtTypeInfo:serializeTypeInfoList( ... )
+   return self.extedType:serializeTypeInfoList( ... )
 end
 
 
@@ -5977,6 +5973,241 @@ local builtinTypeLoadedFunc = NormalTypeInfo.createFunc( false, true, nil, TypeI
 _moduleObj.builtinTypeLoadedFunc = builtinTypeLoadedFunc
 
 registBuiltin( "__loadedfunc", "__loadedfunc", TypeInfoKind.Ext, _moduleObj.builtinTypeLoadedFunc, _moduleObj.headTypeInfo, false )
+
+local LogOpe = {}
+_moduleObj.LogOpe = LogOpe
+LogOpe._val2NameMap = {}
+function LogOpe:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "LogOpe.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+function LogOpe._from( val )
+   if LogOpe._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+    
+LogOpe.__allList = {}
+function LogOpe.get__allList()
+   return LogOpe.__allList
+end
+
+LogOpe.And = 0
+LogOpe._val2NameMap[0] = 'And'
+LogOpe.__allList[1] = LogOpe.And
+LogOpe.Or = 1
+LogOpe._val2NameMap[1] = 'Or'
+LogOpe.__allList[2] = LogOpe.Or
+
+local OpeTypeInfo = {}
+setmetatable( OpeTypeInfo, { __index = TypeInfo } )
+_moduleObj.OpeTypeInfo = OpeTypeInfo
+function OpeTypeInfo.new( ope, exp1, exp2, result )
+   local obj = {}
+   OpeTypeInfo.setmeta( obj )
+   if obj.__init then obj:__init( ope, exp1, exp2, result ); end
+   return obj
+end
+function OpeTypeInfo:__init(ope, exp1, exp2, result) 
+   TypeInfo.__init( self,result:get_scope())
+   
+   self.ope = ope
+   self.exp1 = exp1
+   self.exp2 = exp2
+   self.result = result
+end
+function OpeTypeInfo.setmeta( obj )
+  setmetatable( obj, { __index = OpeTypeInfo  } )
+end
+function OpeTypeInfo:get_ope()
+   return self.ope
+end
+function OpeTypeInfo:get_exp1()
+   return self.exp1
+end
+function OpeTypeInfo:get_exp2()
+   return self.exp2
+end
+function OpeTypeInfo:get_result()
+   return self.result
+end
+function OpeTypeInfo:addChildren( ... )
+   return self.result:addChildren( ... )
+end
+
+function OpeTypeInfo:applyGeneric( ... )
+   return self.result:applyGeneric( ... )
+end
+
+function OpeTypeInfo:canEvalWith( ... )
+   return self.result:canEvalWith( ... )
+end
+
+function OpeTypeInfo:createAlt2typeMap( ... )
+   return self.result:createAlt2typeMap( ... )
+end
+
+function OpeTypeInfo:equals( ... )
+   return self.result:equals( ... )
+end
+
+function OpeTypeInfo:getFullName( ... )
+   return self.result:getFullName( ... )
+end
+
+function OpeTypeInfo:getModule( ... )
+   return self.result:getModule( ... )
+end
+
+function OpeTypeInfo:getParentFullName( ... )
+   return self.result:getParentFullName( ... )
+end
+
+function OpeTypeInfo:getParentId( ... )
+   return self.result:getParentId( ... )
+end
+
+function OpeTypeInfo:getTxt( ... )
+   return self.result:getTxt( ... )
+end
+
+function OpeTypeInfo:getTxtWithRaw( ... )
+   return self.result:getTxtWithRaw( ... )
+end
+
+function OpeTypeInfo:get_abstractFlag( ... )
+   return self.result:get_abstractFlag( ... )
+end
+
+function OpeTypeInfo:get_accessMode( ... )
+   return self.result:get_accessMode( ... )
+end
+
+function OpeTypeInfo:get_argTypeInfoList( ... )
+   return self.result:get_argTypeInfoList( ... )
+end
+
+function OpeTypeInfo:get_autoFlag( ... )
+   return self.result:get_autoFlag( ... )
+end
+
+function OpeTypeInfo:get_baseId( ... )
+   return self.result:get_baseId( ... )
+end
+
+function OpeTypeInfo:get_baseTypeInfo( ... )
+   return self.result:get_baseTypeInfo( ... )
+end
+
+function OpeTypeInfo:get_children( ... )
+   return self.result:get_children( ... )
+end
+
+function OpeTypeInfo:get_display_stirng( ... )
+   return self.result:get_display_stirng( ... )
+end
+
+function OpeTypeInfo:get_display_stirng_with( ... )
+   return self.result:get_display_stirng_with( ... )
+end
+
+function OpeTypeInfo:get_externalFlag( ... )
+   return self.result:get_externalFlag( ... )
+end
+
+function OpeTypeInfo:get_genSrcTypeInfo( ... )
+   return self.result:get_genSrcTypeInfo( ... )
+end
+
+function OpeTypeInfo:get_interfaceList( ... )
+   return self.result:get_interfaceList( ... )
+end
+
+function OpeTypeInfo:get_itemTypeInfoList( ... )
+   return self.result:get_itemTypeInfoList( ... )
+end
+
+function OpeTypeInfo:get_kind( ... )
+   return self.result:get_kind( ... )
+end
+
+function OpeTypeInfo:get_mutMode( ... )
+   return self.result:get_mutMode( ... )
+end
+
+function OpeTypeInfo:get_nilable( ... )
+   return self.result:get_nilable( ... )
+end
+
+function OpeTypeInfo:get_nilableTypeInfo( ... )
+   return self.result:get_nilableTypeInfo( ... )
+end
+
+function OpeTypeInfo:get_nonnilableType( ... )
+   return self.result:get_nonnilableType( ... )
+end
+
+function OpeTypeInfo:get_parentInfo( ... )
+   return self.result:get_parentInfo( ... )
+end
+
+function OpeTypeInfo:get_rawTxt( ... )
+   return self.result:get_rawTxt( ... )
+end
+
+function OpeTypeInfo:get_retTypeInfoList( ... )
+   return self.result:get_retTypeInfoList( ... )
+end
+
+function OpeTypeInfo:get_scope( ... )
+   return self.result:get_scope( ... )
+end
+
+function OpeTypeInfo:get_srcTypeInfo( ... )
+   return self.result:get_srcTypeInfo( ... )
+end
+
+function OpeTypeInfo:get_staticFlag( ... )
+   return self.result:get_staticFlag( ... )
+end
+
+function OpeTypeInfo:get_typeData( ... )
+   return self.result:get_typeData( ... )
+end
+
+function OpeTypeInfo:get_typeId( ... )
+   return self.result:get_typeId( ... )
+end
+
+function OpeTypeInfo:hasBase( ... )
+   return self.result:hasBase( ... )
+end
+
+function OpeTypeInfo:hasRouteNamespaceFrom( ... )
+   return self.result:hasRouteNamespaceFrom( ... )
+end
+
+function OpeTypeInfo:isInheritFrom( ... )
+   return self.result:isInheritFrom( ... )
+end
+
+function OpeTypeInfo:isModule( ... )
+   return self.result:isModule( ... )
+end
+
+function OpeTypeInfo:serialize( ... )
+   return self.result:serialize( ... )
+end
+
+function OpeTypeInfo:serializeTypeInfoList( ... )
+   return self.result:serializeTypeInfoList( ... )
+end
+
+
 
 local numberTypeSet = {}
 numberTypeSet[_moduleObj.builtinTypeInt]= true

@@ -805,6 +805,12 @@ static な型か。
       }
       return new Scope( parent, classFlag, inheritScope, ifScopeList );
    }
+
+   // prototype
+   pub fn createAlt2typeMap( detectFlag:bool ): Map<&TypeInfo,&TypeInfo>;
+   pub fn getFullName(
+      typeNameCtrl:&TypeNameCtrl, importInfo:&ModuleInfoManager, localFlag:bool! ) : str;
+   
 }
 
 
@@ -4507,6 +4513,28 @@ pub let builtinTypeLoadedFunc = NormalTypeInfo.createFunc(
 registBuiltin( "__loadedfunc", "__loadedfunc", .Ext,
                builtinTypeLoadedFunc, headTypeInfo, false );
 
+
+pub enum LogOpe {
+   And,
+   Or,
+}
+pub class OpeTypeInfo extend TypeInfo {
+   let ope:LogOpe {pub};
+   let exp1:&TypeInfo {pub};
+   let exp2:&TypeInfo {pub};
+   let result:&TypeInfo {pub};
+
+   pub fn __init( ope:LogOpe, exp1:&TypeInfo, exp2:&TypeInfo, result:&TypeInfo )
+   {
+      super( result.$scope );
+      self.ope = ope;
+      self.exp1 = exp1;
+      self.exp2 = exp2;
+      self.result = result;
+   }
+      
+   advertise result;
+}
 
 
 let mut numberTypeSet:Set<&TypeInfo> = (@);

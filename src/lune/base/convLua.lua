@@ -1986,8 +1986,10 @@ end]==], className, delimit, setterName, memberName, prefix, memberName, memberN
    for __index, advertiseInfo in pairs( node:get_advertiseList() ) do
       local memberName = advertiseInfo:get_member():get_name().txt
       local memberType = advertiseInfo:get_member():get_expType()
-      for __index, child in pairs( memberType:get_children() ) do
-         if child:get_kind() == Ast.TypeInfoKind.Method and child:get_accessMode() ~= Ast.AccessMode.Pri and not child:get_staticFlag() then
+      for __index, mtdName in pairs( Ast.getAllMethodName( memberType, Ast.MethodKind.Object ):get_list() ) do
+         local mbrScope = _lune.unwrap( memberType:get_scope())
+         local child = _lune.unwrap( mbrScope:getTypeInfoField( mtdName, true, mbrScope, Ast.ScopeAccess.Normal ))
+         if child:get_accessMode() ~= Ast.AccessMode.Pri then
             local childName = advertiseInfo:get_prefix() .. child:getTxt(  )
             if not _lune._Set_has(methodNameSet, childName ) then
                self:writeln( string.format( [==[
@@ -3969,7 +3971,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3307, function (  )
+   Log.log( Log.Level.Info, __func__, 3306, function (  )
    
       return string.format( "code: %s", code)
    end )

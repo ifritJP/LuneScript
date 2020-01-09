@@ -4,8 +4,16 @@
 static lns_module_t lns_moduleInfo_lns_builtin = {NULL,NULL,false, NULL, "lns_builtin", {NULL } };
 static lns_any_t ** lns_module_globalStemList;
 static lns_any_t ** lns_module_path = NULL;
+// decl class iStream (ProcessMode.Prototype)-->
+// <--- decl class iStream (ProcessMode.Prototype)
+// decl class oStream (ProcessMode.Prototype)-->
+// <--- decl class oStream (ProcessMode.Prototype)
+// decl class luaStream (ProcessMode.Prototype)-->
 static void mtd_lns_luaStream__del( lns_env_t * _pEnv, lns_any_t * pObj );
 static void mtd_lns_luaStream__delExt( lns_env_t * _pEnv, lns_any_t * pObj );
+// <--- decl class luaStream (ProcessMode.Prototype)
+// decl class Mapping (ProcessMode.Prototype)-->
+// <--- decl class Mapping (ProcessMode.Prototype)
 static void mtd_lns_luaStream_close( lns_env_t * _pEnv, lns_any_t * pObj);
 static void mtd_lns_luaStream_flush( lns_env_t * _pEnv, lns_any_t * pObj);
 static lns_stem_t mtd_lns_luaStream_read( lns_env_t * _pEnv, lns_any_t * pObj, lns_stem_t arg1);
@@ -15,8 +23,13 @@ lns_any_t * lns_io_stderr;
 lns_any_t * lns_io_stdin;
 lns_any_t * lns_io_stdout;
 lns_any_t * lns_package_path;
+// decl class iStream (ProcessMode.WideScopeVer)-->
 lns_type_meta_t lns_type_meta_lns_iStream = { "lns_iStream", &lns_type_meta_lns__root, {NULL } };
+// <--- decl class iStream (ProcessMode.WideScopeVer)
+// decl class oStream (ProcessMode.WideScopeVer)-->
 lns_type_meta_t lns_type_meta_lns_oStream = { "lns_oStream", &lns_type_meta_lns__root, {NULL } };
+// <--- decl class oStream (ProcessMode.WideScopeVer)
+// decl class luaStream (ProcessMode.WideScopeVer)-->
 static lns_mtd_lns_iStream_t lns_if_lns_luaStream_imp_lns_iStream = {
    (lns_method_t *)mtd_lns_luaStream_close,
    (lns_method_t *)mtd_lns_luaStream_read,
@@ -36,7 +49,15 @@ lns_mtd_lns_luaStream_t lns_mtd_lns_luaStream = {
    (lns_method_t *)mtd_lns_luaStream_seek,
    (lns_method_t *)mtd_lns_luaStream_write,
 };
+// <--- decl class luaStream (ProcessMode.WideScopeVer)
+// decl class Mapping (ProcessMode.WideScopeVer)-->
 lns_type_meta_t lns_type_meta_lns_Mapping = { "lns_Mapping", &lns_type_meta_lns__root, {NULL } };
+// <--- decl class Mapping (ProcessMode.WideScopeVer)
+// decl class iStream (ProcessMode.DefClass)-->
+// <--- decl class iStream (ProcessMode.DefClass)
+// decl class oStream (ProcessMode.DefClass)-->
+// <--- decl class oStream (ProcessMode.DefClass)
+// decl class luaStream (ProcessMode.DefClass)-->
 static void mtd_lns_luaStream__del( lns_env_t * _pEnv, lns_any_t * pObj ) {
    mtd_lns_luaStream__delExt( _pEnv, pObj );
 }
@@ -49,6 +70,9 @@ lns_any_t * lns_class_lns_luaStream_new( lns_env_t * _pEnv){ // 0
    lns_init_if( &pObj->imp.lns_oStream, _pEnv, pAny, &lns_if_lns_luaStream_imp_lns_oStream, lns_oStream );
    return pAny;
 }
+// <--- decl class luaStream (ProcessMode.DefClass)
+// decl class Mapping (ProcessMode.DefClass)-->
+// <--- decl class Mapping (ProcessMode.DefClass)
 static void initFuncSym( lns_env_t * _pEnv, lns_block_t * pBlock )
 {
 }

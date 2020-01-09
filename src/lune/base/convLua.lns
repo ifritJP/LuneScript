@@ -1533,11 +1533,10 @@ end``` ( className, delimit, setterName, memberName, prefix, memberName, memberN
    foreach advertiseInfo in node.$advertiseList {
       let memberName = advertiseInfo.$member.$name.txt;
       let mut memberType = advertiseInfo.$member.$expType;
-      foreach child in memberType.$children {
-         if child.$kind == Ast.TypeInfoKind.Method and
-            child.$accessMode ~= .Pri and
-            not child.$staticFlag
-         {
+      foreach mtdName in Ast.getAllMethodName( memberType, .Object ).$list {
+         let mbrScope = unwrap memberType.$scope;
+         let child = unwrap mbrScope.getTypeInfoField( mtdName, true, mbrScope, .Normal );
+         if child.$accessMode ~= .Pri {
             let childName = advertiseInfo.$prefix .. child.getTxt(##);
             if not methodNameSet.has( childName ) {
                self.writeln( ```

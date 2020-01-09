@@ -1266,24 +1266,24 @@ end
 function CommentCtrl.setmeta( obj )
   setmetatable( obj, { __index = CommentCtrl  } )
 end
-function CommentCtrl:addDirect( ... )
-   return self.layer:addDirect( ... )
-end
-
 function CommentCtrl:add( ... )
    return self.layer:add( ... )
+end
+
+function CommentCtrl:addDirect( ... )
+   return self.layer:addDirect( ... )
 end
 
 function CommentCtrl:clear( ... )
    return self.layer:clear( ... )
 end
 
-function CommentCtrl:hasInvalidComment( ... )
-   return self.layer:hasInvalidComment( ... )
-end
-
 function CommentCtrl:get_commentList( ... )
    return self.layer:get_commentList( ... )
+end
+
+function CommentCtrl:hasInvalidComment( ... )
+   return self.layer:hasInvalidComment( ... )
 end
 
 

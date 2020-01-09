@@ -1816,6 +1816,8 @@ fn TransUnit.analyzeClassBody(
       };
       advertiseList.insert(
          new Nodes.AdvertiseInfo( memberNode, prefix, memberToken.pos ) );
+      self.advertisedTypeSet.add(
+         memberNode.$expType.$srcTypeInfo.$genSrcTypeInfo );
    }
 
    fn processEnum( token:&Parser.Token, accessMode:Ast.AccessMode ) {
@@ -2169,11 +2171,10 @@ fn TransUnit.analyzeDeclClass(
       let mut memberType = advertiseInfo.$member.$expType;
       switch memberType.$kind {
          case .Class, .IF {
-            foreach child in memberType.$children {
-               if child.$kind == .Method and
-                  child.$accessMode ~= .Pri and
-                  not child.$staticFlag
-               {
+            foreach mtdName in Ast.getAllMethodName( memberType, .Object ).$list {
+               let scope = unwrap memberType.$scope;
+               let child = unwrap scope.getTypeInfoField( mtdName, true, scope, .Normal );
+               if child.$accessMode ~= .Pri {
                   let childName = advertiseInfo.$prefix .. child.getTxt(##);
                   if not methodNameSet.has( childName ) {
                      let impMtdType = Ast.NormalTypeInfo.createAdvertiseMethodFrom(
@@ -2290,6 +2291,7 @@ fn TransUnit.processAddFunc(
       parentScope = self.globalScope;
    }
 
+   let hasPrototype;
    if! let prottype = parentScope.getTypeInfoChild( typeInfo.$rawTxt ) {
       let argTypeList = typeInfo.$argTypeInfoList;
       let retTypeInfoList = typeInfo.$retTypeInfoList;
@@ -2314,14 +2316,30 @@ fn TransUnit.processAddFunc(
       }
 
       if self.protoFuncMap[ prottype ] {
+         hasPrototype = true;
          self.protoFuncMap[ prottype ] = nil;
       }
       else {
+         hasPrototype = false;
          if not prottype.$autoFlag {
             self.addErrMess( name.pos, "multiple define -- %s" (name.txt) );
          }
       }
    }
+   else {
+      hasPrototype = false;
+   }
+
+   if typeInfo.$kind == .Method and typeInfo.$accessMode ~= .Pri {
+      let classType = typeInfo.$parentInfo;
+      if self.advertisedTypeSet.has( classType ) and not hasPrototype {
+         self.addErrMess(
+            name.pos,
+            "This class(%s) is used by advertise. You must declare the prototype of this method."
+            (classType.getTxt( ## )) );
+      }
+   }
+   
 
 
    let staticFlag = typeInfo.$staticFlag;
@@ -2392,7 +2410,7 @@ fn TransUnit.analyzeDeclFunc(
    let mut isCtorFlag = false;
    let mut kind = Nodes.NodeKind.$DeclConstr;
    let mut typeKind = Ast.TypeInfoKind.Func;
-   if classTypeInfo {
+   when! classTypeInfo {
       if not staticFlag {
          typeKind = .Method;
       }
@@ -2852,7 +2870,7 @@ fn TransUnit.analyzeLetAndInitExp(
       else {
          // 型を明示していない場合、 mut でなければ .IMutRe とする
          letVarList.insert(
-            new LetVarInfo( Ast.isMutable( mutable ) and mutable or .IMutRe,
+            new LetVarInfo( Ast.isMutable( mutable ) and mutable or Ast.MutMode.IMutRe,
                             varName, nil ) );
       }
       if not typeInfo.equals( Ast.builtinTypeEmpty ## ) and

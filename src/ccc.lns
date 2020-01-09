@@ -6,6 +6,103 @@ let mut g_val = 100;
 
 {
    _section();
+   fn func(txt:str!): str! {
+      let val = txt and "abc" or nil;
+      return val;
+   }
+   let mut work:str! = nil;
+   repeat {
+      let val = func( work );
+      work = val or "1";
+   } val;
+   print( work );
+}
+{
+   _section();
+   fn func( val:int! ) {
+      fn process() {
+         when! val {
+            print( "nonnil" );
+         }
+         else {
+            print( "nil" );
+         }
+      }
+      process();
+      print( val );
+   }
+   func( 1 );
+   func( nil );
+}
+{
+   _section();
+   enum Val {
+      Val1,
+      Val2,
+   }
+   fn func( val:Val ) {
+      fn process() {
+         if val == .Val1 {
+            print( "match" );
+         }
+         else {
+            print( "unmatch" );
+         }
+      }
+      process();
+      print( val );
+   }
+   func( .Val1 );
+   func( .Val2 );
+}
+{
+   _section();
+   class Hoge {
+      let val:str! {pub};
+   }
+   fn func(): str {
+      return "hoge";
+   }
+   class Sub extend Hoge {
+      pub fn __init() {
+         super( func() );
+      }
+   }
+   let sub = new Sub();
+   print( sub.$val );
+}
+{
+   _section();
+   class Hoge {
+      let val:str;
+      pub fn get_val(): str {
+         return self.val;
+      }
+   }
+   class Sub extend Hoge {
+   }
+   class Test extend Hoge {
+      let sub:Sub;
+
+      advertise sub;
+   }
+   class Test2 extend Sub {
+      let sub:Sub;
+
+      advertise sub;
+   }
+
+   {
+      let test = new Test( "xyz", new Sub( "abc" ) );
+      print( test.$val );
+   }
+   {
+      let test2 = new Test2( "XYZ", new Sub( "ABC" ) );
+      print( test2.$val );
+   }
+}
+{
+   _section();
    class Hoge {
       let txt:str;
       pub fn get_val(): int {

@@ -1,37 +1,10 @@
-pub class Hoge {
-   let txt:str;
-   pub fn get_val(): int {
-      return 0;
-   }
-   pub fn func2(): str {
-      return self.txt;
-   }
+fn func(txt:str!): str! {
+   let val = txt and "abc" or nil;
+   return val;
 }
-pub fn Hoge.func(): str {
-   return self.txt;
-}
-
-pub class Sub extend Hoge {
-}
-
-class Test extend Hoge {
-   let sub:Sub;
-
-   advertise sub;
-}
-
-class Test2 extend Hoge {
-   let sub:Sub;
-
-   advertise sub;
-}
-
-{
-   let test = new Test( "xyz", new Sub( "abc" ) );
-   print( test.func() );
-}
-{
-   let test2 = new Test2( "XYZ", new Sub( "ABC" ) );
-   print( test2.func() );
-}
-
+let mut work:str! = nil;
+repeat {
+   let val = func( work );
+   work = val or "1";
+} val;
+print( work );

@@ -801,6 +801,7 @@ function TransUnit.new( moduleId, importModuleInfo, macroEval, analyzeModule, mo
    return obj
 end
 function TransUnit:__init(moduleId, importModuleInfo, macroEval, analyzeModule, mode, pos, targetLuaVer, ctrl_info) 
+   self.advertisedTypeSet = {}
    self.closureFunList = {}
    self.scopeAccess = Ast.ScopeAccess.Normal
    self.macroCtrl = Macro.MacroCtrl.new(macroEval)
@@ -3922,7 +3923,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = '@lune.@base.@TransUnit.TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2499, function (  )
+   Log.log( Log.Level.Info, __func__, 2503, function (  )
    
       return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), modulePath)
    end )
@@ -3939,7 +3940,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2511, function (  )
+               Log.log( Log.Level.Info, __func__, 2515, function (  )
                
                   return string.format( "%s already", modulePath)
                end )
@@ -3972,7 +3973,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2531, function (  )
+   Log.log( Log.Level.Info, __func__, 2535, function (  )
    
       return string.format( "%s processing", modulePath)
    end )
@@ -4317,7 +4318,7 @@ function TransUnit:processImport( modulePath )
    
    self.importModuleInfo:remove(  )
    
-   Log.log( Log.Level.Info, __func__, 2861, function (  )
+   Log.log( Log.Level.Info, __func__, 2865, function (  )
    
       return string.format( "%s complete", modulePath)
    end )
@@ -6668,6 +6669,7 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
       end
       
       table.insert( advertiseList, Nodes.AdvertiseInfo.new(memberNode, prefix, memberToken.pos) )
+      self.advertisedTypeSet[memberNode:get_expType():get_srcTypeInfo():get_genSrcTypeInfo()]= true
    end
    
    local function processEnum( token, accessMode )
@@ -6993,8 +6995,10 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
       do
          local _switchExp = memberType:get_kind()
          if _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
-            for __index, child in pairs( memberType:get_children() ) do
-               if child:get_kind() == Ast.TypeInfoKind.Method and child:get_accessMode() ~= Ast.AccessMode.Pri and not child:get_staticFlag() then
+            for __index, mtdName in pairs( Ast.getAllMethodName( memberType, Ast.MethodKind.Object ):get_list() ) do
+               local scope = _lune.unwrap( memberType:get_scope())
+               local child = _lune.unwrap( scope:getTypeInfoField( mtdName, true, scope, Ast.ScopeAccess.Normal ))
+               if child:get_accessMode() ~= Ast.AccessMode.Pri then
                   local childName = advertiseInfo:get_prefix() .. child:getTxt(  )
                   if not _lune._Set_has(methodNameSet, childName ) then
                      local impMtdType = Ast.NormalTypeInfo.createAdvertiseMethodFrom( classTypeInfo, child )
@@ -7059,6 +7063,8 @@ function TransUnit:processAddFunc( isFunc, parentScope, name, typeInfo, alt2type
    end
    
    
+   local hasPrototype
+   
    do
       local prottype = parentScope:getTypeInfoChild( typeInfo:get_rawTxt() )
       if prottype ~= nil then
@@ -7086,16 +7092,29 @@ function TransUnit:processAddFunc( isFunc, parentScope, name, typeInfo, alt2type
          
          
          if self.protoFuncMap[prottype] then
+            hasPrototype = true
             self.protoFuncMap[prottype] = nil
          else
           
+            hasPrototype = false
             if not prottype:get_autoFlag() then
                self:addErrMess( name.pos, string.format( "multiple define -- %s", name.txt) )
             end
             
          end
          
+      else
+         hasPrototype = false
       end
+   end
+   
+   
+   if typeInfo:get_kind() == Ast.TypeInfoKind.Method and typeInfo:get_accessMode() ~= Ast.AccessMode.Pri then
+      local classType = typeInfo:get_parentInfo()
+      if _lune._Set_has(self.advertisedTypeSet, classType ) and not hasPrototype then
+         self:addErrMess( name.pos, string.format( "This class(%s) is used by advertise. You must declare the prototype of this method.", classType:getTxt(  )) )
+      end
+      
    end
    
    
@@ -7166,7 +7185,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
    local isCtorFlag = false
    local kind = Nodes.NodeKind.get_DeclConstr()
    local typeKind = Ast.TypeInfoKind.Func
-   if classTypeInfo then
+   if classTypeInfo ~= nil then
       if not staticFlag then
          typeKind = Ast.TypeInfoKind.Method
       end
@@ -7197,7 +7216,6 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
       end
       
    else
-    
       kind = Nodes.NodeKind.get_DeclFunc()
       if not staticFlag then
          staticFlag = true
@@ -10575,6 +10593,25 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
             do
                local _switchExp = opTxt
                if _switchExp == "or" then
+                  local is3op
+                  
+                  do
+                     local opExpType = _lune.__Cast( exp1Type, 3, Ast.OpeTypeInfo )
+                     if opExpType ~= nil then
+                        if opExpType:get_ope() == Ast.LogOpe.And then
+                           exp1Type = opExpType:get_exp2()
+                           is3op = true
+                        else
+                         
+                           is3op = false
+                        end
+                        
+                     else
+                        is3op = false
+                     end
+                  end
+                  
+                  
                   if not exp1Type:equals( Ast.builtinTypeBool ) and not exp1Type:equals( Ast.builtinTypeStem ) and not exp1Type:get_nilable() then
                      if _lune.nilacc( _lune.nilacc( (_lune.__Cast( exp, 3, Nodes.ExpOp2Node ) ), 'get_op', 'callmtd' ), "txt" ) == "and" then
                      else
@@ -10583,6 +10620,7 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
                      end
                      
                   end
+                  
                   
                   if exp1Type:equals( exp2Type ) then
                      retType = exp1Type
@@ -10594,7 +10632,13 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
                      retType = exp2Type
                   elseif exp2Type:equals( Ast.builtinTypeNil ) then
                      
-                     retType = exp1Type
+                     if is3op then
+                        retType = exp1Type:get_nilableTypeInfo()
+                     else
+                      
+                        retType = exp1Type
+                     end
+                     
                   elseif exp1Type:equals( Ast.builtinTypeNil ) then
                      
                      retType = exp2Type
@@ -10642,45 +10686,39 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
                      
                   end
                   
-                  
-                  if workToken.txt == "or" then
-                     
-                     retType = exp2Type
-                  else
-                   
-                     if exp1Type:get_nilable() then
-                        if exp2Type:get_nilable() then
-                           retType = exp2Type
-                        else
-                         
-                           retType = exp2Type:get_nilableTypeInfo()
-                        end
-                        
-                     elseif exp1Type:equals( Ast.builtinTypeBool ) or exp2Type:equals( Ast.builtinTypeBool ) then
-                        if exp1Type:canEvalWith( exp2Type, Ast.CanEvalType.SetOp, {} ) then
-                           retType = exp1Type
-                        elseif exp2Type:canEvalWith( exp1Type, Ast.CanEvalType.SetOp, {} ) then
-                           retType = exp2Type
-                        else
-                         
-                           if exp2Type:get_nilable() then
-                              retType = Ast.builtinTypeStem_
-                           else
-                            
-                              retType = Ast.builtinTypeStem
-                           end
-                           
-                        end
-                        
-                     elseif exp1Type:equals( Ast.builtinTypeStem ) then
-                        retType = Ast.builtinTypeStem
+                  if exp1Type:get_nilable() then
+                     if exp2Type:get_nilable() then
+                        retType = exp2Type
                      else
                       
-                        retType = exp2Type
+                        retType = exp2Type:get_nilableTypeInfo()
                      end
                      
+                  elseif exp1Type:equals( Ast.builtinTypeBool ) or exp2Type:equals( Ast.builtinTypeBool ) then
+                     if exp1Type:canEvalWith( exp2Type, Ast.CanEvalType.SetOp, {} ) then
+                        retType = exp1Type
+                     elseif exp2Type:canEvalWith( exp1Type, Ast.CanEvalType.SetOp, {} ) then
+                        retType = exp2Type
+                     else
+                      
+                        if exp2Type:get_nilable() then
+                           retType = Ast.builtinTypeStem_
+                        else
+                         
+                           retType = Ast.builtinTypeStem
+                        end
+                        
+                     end
+                     
+                  elseif exp1Type:equals( Ast.builtinTypeStem ) then
+                     retType = Ast.builtinTypeStem
+                  else
+                   
+                     retType = exp2Type
                   end
                   
+                  
+                  retType = Ast.OpeTypeInfo.new(Ast.LogOpe.And, exp1Type, exp2Type, retType)
                elseif _switchExp == "<" or _switchExp == ">" or _switchExp == "<=" or _switchExp == ">=" then
                   if Ast.builtinTypeString:canEvalWith( exp1Type, Ast.CanEvalType.SetOp, {} ) and Ast.builtinTypeString:canEvalWith( exp2Type, Ast.CanEvalType.SetOp, {} ) or (Ast.builtinTypeInt:canEvalWith( exp1Type, Ast.CanEvalType.Comp, {} ) or Ast.builtinTypeReal:canEvalWith( exp1Type, Ast.CanEvalType.Comp, {} ) ) and (Ast.builtinTypeInt:canEvalWith( exp2Type, Ast.CanEvalType.Comp, {} ) or Ast.builtinTypeReal:canEvalWith( exp2Type, Ast.CanEvalType.Comp, {} ) ) then
                      

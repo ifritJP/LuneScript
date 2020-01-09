@@ -1449,3 +1449,24 @@ print( '\\""\"\'\\.\\' );
    print( test.$val3, test.$val4 );
 
 }
+{
+   Macro._section();
+   class Hoge {
+      let val:str;
+      pub fn get_val(): str {
+         return self.val;
+      }
+   }
+   class Sub extend Hoge {
+   }
+   class Test extend Hoge {
+      let sub:Sub;
+
+      // この advertise で、 get_val は super.get_val() ではなく、sub.get_val() になる。
+      advertise sub; 
+   }
+   {
+      let test = new Test( "xyz", new Sub( "abc" ) );
+      print( test.$val );
+   }
+}

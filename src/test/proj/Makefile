@@ -1,3 +1,5 @@
+SLEEP_TIME=1
+
 PROJ_DIR=test/proj
 MKFILE=$(PROJ_DIR)/Makefile
 SRC_DIR=$(PROJ_DIR)/
@@ -70,18 +72,18 @@ test:
 	@$(MAKE) -f $(MKFILE) clean
 	@$(MAKE) -f $(MKFILE) build
 	@echo =======================
-	@sleep 1
+	@sleep $(SLEEP_TIME)
 	touch $(SRC_DIR)Mod4.lns
 	@$(MAKE) -f $(MKFILE) exe
 	@echo =======================
-	@sleep 1
+	@sleep $(SLEEP_TIME)
 	touch $(SRC_DIR)Mod3.lns
 	@$(MAKE) -f $(MKFILE) exe
 	@echo =======================
-	@sleep 1
+	@sleep $(SLEEP_TIME)
 	touch $(SRC_DIR)Mod2.lns
 	@$(MAKE) -f $(MKFILE) exe
 	@echo =======================
-	@sleep 1
+	@sleep $(SLEEP_TIME)
 	touch $(SRC_DIR)Mod1.lns
 	@$(MAKE) -f $(MKFILE) exe

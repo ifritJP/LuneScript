@@ -230,28 +230,28 @@ end
 function FormatterFilter.setmeta( obj )
   setmetatable( obj, { __index = FormatterFilter  } )
 end
-function FormatterFilter:write( ... )
-   return self.stream:write( ... )
-end
-
-function FormatterFilter:writeln( ... )
-   return self.stream:writeln( ... )
+function FormatterFilter:popIndent( ... )
+   return self.stream:popIndent( ... )
 end
 
 function FormatterFilter:pushIndent( ... )
    return self.stream:pushIndent( ... )
 end
 
-function FormatterFilter:popIndent( ... )
-   return self.stream:popIndent( ... )
+function FormatterFilter:returnToSource( ... )
+   return self.stream:returnToSource( ... )
 end
 
 function FormatterFilter:switchToHeader( ... )
    return self.stream:switchToHeader( ... )
 end
 
-function FormatterFilter:returnToSource( ... )
-   return self.stream:returnToSource( ... )
+function FormatterFilter:write( ... )
+   return self.stream:write( ... )
+end
+
+function FormatterFilter:writeln( ... )
+   return self.stream:writeln( ... )
 end
 
 

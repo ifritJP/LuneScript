@@ -3486,6 +3486,8 @@ fn processAdvertise(
    // advertise 宣言の処理
    foreach advInfo in node.$advertiseList {
       let member = advInfo.$member;
+      stream.writeln( "// for advertise %s.%s --->"
+                      (node.$name.txt, member.$name.txt) );
       
       // advertise 宣言しているメンバの全 非 static メソッドをリストアップ
       foreach name in Ast.getAllMethodName( member.$expType, .Object ).$list {
@@ -3535,6 +3537,8 @@ fn processAdvertise(
             }
          }
       }
+      stream.writeln( "// <-- for advertise %s.%s"
+                      (node.$name.txt, member.$name.txt) );
    }
 }
 
@@ -4965,21 +4969,152 @@ pub override fn convFilter.processDeclDestr(
    // self.writeln( "end" );
 }
 
+fn convFilter.getValKindOfNode( node:&Nodes.Node ) mut: ValKind {
+   if #node.$expTypeList > 1 {
+      return .Stem;
+   }
+
+   let symbolList = node.getSymbolInfo();
+   if #symbolList > 0 {
+      return self.scopeMgr.getSymbolValKind( symbolList[ 1 ] );
+   }
+   return getValKind( node.$expType );
+}
+
+/**
+node が示す値を stem 型に変換する処理を出力する
+
+@param node Node
+@param parent このノードの親
+*/
+pub fn convFilter.processVal2stem( node:&Nodes.Node, parent: &Nodes.Node ) mut
+{
+   process2stem(
+      self.stream, self.moduleCtrl, self.scopeMgr,
+      self.getValKindOfNode( node ), node.$expType, parent,
+      fn () {
+         filter( node, self, parent );
+      } );
+}
+
+
+
+/**
+関数呼び出しの引数処理。
+
+コールする関数の引数に合せて、引数を調整する。
+
+例えばコールする関数の引数が ... の場合、 lns_createDDD() する等。
+
+@param funcType コールする関数のタイプ
+@param expListNode 引数リストノード
+*/
+pub fn convFilter.processCallArgList(
+   funcType:&Ast.TypeInfo, expListNode: &Nodes.ExpListNode! ) mut
+{
+   let funcArgTypeList = funcType.$argTypeInfoList;
+
+   // 引数を省略した場合に与えるデフォルト値
+   let abbrValTxt;
+   if self.moduleCtrl.getBuiltinFuncNameFromType( funcType ) or
+       ( funcType.$kind == .Method and
+         funcType.$parentInfo.equals( Ast.builtinTypeString ## ) )
+   {
+      // 本来は、 Lua モジュールで、かつ C で定義しているもの
+      abbrValTxt = cValNone;
+   }
+   else {
+      abbrValTxt = cValNil;
+   }
+
+   fn processAbbr( funcArgType:&Ast.TypeInfo ) {
+      if funcArgType.$kind == .DDD {
+         self.write( cValDDD0 );
+      }
+      else {
+         self.write( abbrValTxt );
+      }
+   }
+
+   
+   when! expListNode {
+      let expList = expListNode.$expList;
+      foreach funcArgType, index in funcArgTypeList {
+         self.write( ", " );
+         if #expList >= index {
+            let expNode = expList[ index ];
+            if expNode.$expType.$kind == .Abbr {
+               processAbbr( funcArgType );
+            }
+            else {
+               if funcArgType.$kind == .DDD {
+                  if expNode.$kind == Nodes.NodeKind.$Abbr {
+                     self.write( cValDDD0 );
+                  }
+                  else {
+                     filter( expNode, self, expListNode );
+                  }
+                  // self.processCreateDDD( true, expList, index, parent );
+                  // for expIndex = index, #expList {
+                  //    self.write( ", " );
+                  //    self.processVal2stem( expList[ expIndex ], parent );
+                  // }
+                  // self.write( ")" );
+                  return;
+               }
+               else {
+                  // if funcArgType.$kind == .Form {
+                  if isStemType( funcArgType ) {
+                     self.processVal2stem( expNode, expListNode );
+                  }
+                  else {
+                     filter( expNode, self, expListNode );
+                  }
+               }
+            }
+         }
+         else {
+            processAbbr( funcArgType );
+            // if funcArgType.$kind == .DDD {
+            //    self.write( cValDDD0 );
+            // }
+            // else {
+            //    self.write( abbrValTxt );
+            // }
+         }
+      }
+   }
+   else {
+      foreach funcArgType in funcArgTypeList {
+         self.write( ", " );
+         processAbbr( funcArgType );
+         // if funcArgType.$kind == .DDD {
+         //    self.write( cValDDD0 );
+         // }
+         // else {
+         //    self.write( abbrValTxt );
+         // }
+      }
+   }
+}
+
 
 pub override fn convFilter.processExpCallSuper(
    node: Nodes.ExpCallSuperNode, opt: Opt ) mut
 {
+   let funcType;
    if node.$methodType.$rawTxt == "__init" {
       self.write( "%s( _pEnv, pObj" ( self.moduleCtrl.getCtorName( node.$superType ) ) );
+      let superScope = unwrap node.$superType.$scope;
+      funcType = unwrap superScope.getTypeInfoChild("__init");
    }
    else {
-      self.write( "%s( _pEnv, pObj" ( self.moduleCtrl.getMethodCName( node.$methodType ) ) );
+      self.write( "%s( _pEnv, pObj"
+                  ( self.moduleCtrl.getMethodCName( node.$methodType ) ) );
+      funcType = node.$methodType;
    }
 
-   if! node.$expList {
-      self.write( ", " );
-      filter( _exp, self, node );
-   }
+   self.processCallArgList( funcType, node.$expList );
    self.writeln( ");" );
 };
 
@@ -5042,36 +5177,6 @@ fn convFilter.isStemSym( symbolInfo:&Ast.LowSymbol ) mut : bool {
    return self.scopeMgr.getSymbolValKind( symbolInfo ) ~= .Prim;
 }
 
-fn convFilter.getValKindOfNode( node:&Nodes.Node ) mut: ValKind {
-   if #node.$expTypeList > 1 {
-      return .Stem;
-   }
-
-   let symbolList = node.getSymbolInfo();
-   if #symbolList > 0 {
-      return self.scopeMgr.getSymbolValKind( symbolList[ 1 ] );
-   }
-   return getValKind( node.$expType );
-}
-
-/**
-node が示す値を stem 型に変換する処理を出力する
-
-@param node Node
-@param parent このノードの親
-*/
-pub fn convFilter.processVal2stem( node:&Nodes.Node, parent: &Nodes.Node ) mut
-{
-   process2stem(
-      self.stream, self.moduleCtrl, self.scopeMgr,
-      self.getValKindOfNode( node ), node.$expType, parent,
-      fn () {
-         filter( node, self, parent );
-      } );
-}
-
-
-
 
 fn convFilter.isStemVal( node:&Nodes.Node ) mut : bool {
    if #node.$expTypeList > 1 {
@@ -5093,6 +5198,9 @@ pub fn convFilter.accessPrimVal( exp:&Nodes.Node, parent:&Nodes.Node ) mut {
    // if exp@@@Nodes.LiteralIntNode or exp@@@Nodes.LiteralCharNode
    //    or exp@@@Nodes.LiteralRealNode
    switch self.getValKindOfNode( exp ) {
+      case .Var {
+         filter( exp, self, parent );
+      }
       case .Prim {
          filter( exp, self, parent );
       }
@@ -6200,8 +6308,8 @@ pub override fn convFilter.processWhen(
 {
    self.write( "if ( " );
    foreach symPair, index in node.$symPairList {
-      self.write( "%s.type != lns_stem_type_nil"
-                  ( self.moduleCtrl.getSymbolName( symPair.$src )) );
+      self.processSym2stem( symPair.$src );
+      self.write( ".type != lns_stem_type_nil" );
       if index ~= #node.$symPairList {
          self.write( " && " );
       }
@@ -6830,8 +6938,14 @@ pub override fn convFilter.processWhile(
 pub override fn convFilter.processRepeat(
    node: Nodes.RepeatNode, opt: Opt ) mut
 {
+   self.writeln( "{" );
+   self.processLoopPreProcess( node.$block );
+
    self.writeln( "while ( true ) {" );
    self.pushIndent( ## );
+   self.writeln( "lns_reset_block( _pEnv );" );
+   
+   
    filter( node.get_block(),  self, node );
 
    self.write( "if ( " );
@@ -6847,7 +6961,9 @@ pub override fn convFilter.processRepeat(
 
    
    self.popIndent();
-   self.write( "}" );
+   self.writeln( "}" );
+   self.processLoopPostProcess();
+   self.writeln( "}" );
 };
 
 pub override fn convFilter.processFor(
@@ -7880,105 +7996,6 @@ pub override fn convFilter.processExpToDDD( node: Nodes.ExpToDDDNode, opt: Opt )
    }
 }
 
-/**
-関数呼び出しの引数処理。
-
-コールする関数の引数に合せて、引数を調整する。
-
-例えばコールする関数の引数が ... の場合、 lns_createDDD() する等。
-
-@param funcType コールする関数のタイプ
-@param expListNode 引数リストノード
-*/
-pub fn convFilter.processCallArgList(
-   funcType:&Ast.TypeInfo, expListNode: &Nodes.ExpListNode! ) mut
-{
-   let funcArgTypeList = funcType.$argTypeInfoList;
-
-   // 引数を省略した場合に与えるデフォルト値
-   let abbrValTxt;
-   if self.moduleCtrl.getBuiltinFuncNameFromType( funcType ) or
-       ( funcType.$kind == .Method and
-         funcType.$parentInfo.equals( Ast.builtinTypeString ## ) )
-   {
-      // 本来は、 Lua モジュールで、かつ C で定義しているもの
-      abbrValTxt = cValNone;
-   }
-   else {
-      abbrValTxt = cValNil;
-   }
-
-   fn processAbbr( funcArgType:&Ast.TypeInfo ) {
-      if funcArgType.$kind == .DDD {
-         self.write( cValDDD0 );
-      }
-      else {
-         self.write( abbrValTxt );
-      }
-   }
-
-   
-   when! expListNode {
-      let expList = expListNode.$expList;
-      foreach funcArgType, index in funcArgTypeList {
-         self.write( ", " );
-         if #expList >= index {
-            let expNode = expList[ index ];
-            if expNode.$expType.$kind == .Abbr {
-               processAbbr( funcArgType );
-            }
-            else {
-               if funcArgType.$kind == .DDD {
-                  if expNode.$kind == Nodes.NodeKind.$Abbr {
-                     self.write( cValDDD0 );
-                  }
-                  else {
-                     filter( expNode, self, expListNode );
-                  }
-                  // self.processCreateDDD( true, expList, index, parent );
-                  // for expIndex = index, #expList {
-                  //    self.write( ", " );
-                  //    self.processVal2stem( expList[ expIndex ], parent );
-                  // }
-                  // self.write( ")" );
-                  return;
-               }
-               else {
-                  // if funcArgType.$kind == .Form {
-                  if isStemType( funcArgType ) {
-                     self.processVal2stem( expNode, expListNode );
-                  }
-                  else {
-                     filter( expNode, self, expListNode );
-                  }
-               }
-            }
-         }
-         else {
-            processAbbr( funcArgType );
-            // if funcArgType.$kind == .DDD {
-            //    self.write( cValDDD0 );
-            // }
-            // else {
-            //    self.write( abbrValTxt );
-            // }
-         }
-      }
-   }
-   else {
-      foreach funcArgType in funcArgTypeList {
-         self.write( ", " );
-         processAbbr( funcArgType );
-         // if funcArgType.$kind == .DDD {
-         //    self.write( cValDDD0 );
-         // }
-         // else {
-         //    self.write( abbrValTxt );
-         // }
-      }
-   }
-}
-
 pub override fn convFilter.processExpNew(
    node: Nodes.ExpNewNode, opt: Opt ) mut
 {
@@ -8049,7 +8066,11 @@ pub override fn convFilter.processDeclClass(
 {
    let classType = node.$expType;
    let className = self.moduleCtrl.getClassCName( classType );
+   let classCanonicalName = self.moduleCtrl.getCanonicalName( classType );
 
+   self.writeln(
+      "// decl class %s (%s)-->" (classCanonicalName, self.processMode.$_txt) );
+   
    switch self.processMode {
       case .Prototype {
          self.processDeclClassNodePrototype( node );
@@ -8092,8 +8113,8 @@ pub override fn convFilter.processDeclClass(
       }
    }
    
-
-   
+   self.writeln(
+      "// <--- decl class %s (%s)" (classCanonicalName, self.processMode.$_txt) );
    
 
    

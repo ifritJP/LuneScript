@@ -2483,7 +2483,7 @@ fn TransUnit.analyzeExpOp2(
                                 (Nodes.getNodeKindName( exp2.$kind ) ) );
             }
             
-            let exp1Type = exp.$expType;
+            let mut exp1Type = exp.$expType;
             let exp2Type = exp2.$expType;
 
             if exp1Type.$kind == .DDD {
@@ -2503,6 +2503,20 @@ fn TransUnit.analyzeExpOp2(
             
             switch opTxt {
                case "or" {
+                  let is3op;
+                  if! let opExpType = exp1Type@@@Ast.OpeTypeInfo {
+                     if opExpType.$ope == .And {
+                        exp1Type = opExpType.$exp2;
+                        is3op = true;
+                     }
+                     else {
+                        is3op = false;
+                     }
+                  }
+                  else {
+                     is3op = false;
+                  }
+
                   if not exp1Type.equals( Ast.builtinTypeBool ##) and
                      not exp1Type.equals( Ast.builtinTypeStem ##) and
                      not exp1Type.$nilable
@@ -2526,6 +2540,7 @@ fn TransUnit.analyzeExpOp2(
                            (exp1Type.getTxt(##)) );
                      }
                   }
+                  
                   if exp1Type.equals( exp2Type ##) {
                      retType = exp1Type;
                   }
@@ -2539,7 +2554,12 @@ fn TransUnit.analyzeExpOp2(
                   }
                   elseif exp2Type.equals( Ast.builtinTypeNil ##) {
                      // 片方が nil の場合
-                     retType = exp1Type;
+                     if is3op {
+                        retType = exp1Type.$nilableTypeInfo;
+                     }
+                     else {
+                        retType = exp1Type;
+                     }
                   }
                   elseif exp1Type.equals( Ast.builtinTypeNil ##) {
                      // 片方が nil の場合
@@ -2568,6 +2588,7 @@ fn TransUnit.analyzeExpOp2(
                      // exp2 が nilable でなければ、必ず結果は not nilable になる
                      retType = retType.$nonnilableType;
                   }
+                  // retType = new Ast.OpeTypeInfo( .Or, exp1Type, exp2Type, retType );
                }
                case "and" {
                   let workToken = self.getToken(##);
@@ -2588,12 +2609,12 @@ fn TransUnit.analyzeExpOp2(
                      }
                   }
                   
-                  if workToken.txt == "or" {
-                     // A and B or C の場合、 A and B の演算結果は B の型とし、
-                     // B or C の演算結果に処理を廻す。
-                     retType = exp2Type;
-                  }
-                  else {
+                  // if workToken.txt == "or" {
+                  //    // A and B or C の場合、 A and B の演算結果は B の型とし、
+                  //    // B or C の演算結果に処理を廻す。
+                  //    retType = exp2Type;
+                  // }
+                  // else {
                      if exp1Type.$nilable {
                         if exp2Type.$nilable {
                            retType = exp2Type;
@@ -2626,7 +2647,8 @@ fn TransUnit.analyzeExpOp2(
                      else {
                         retType = exp2Type;
                      }
-                  }
+                  // }
+                  retType = new Ast.OpeTypeInfo( .And, exp1Type, exp2Type, retType );
                }
                case "<", ">", "<=", ">=" {
                   if Ast.builtinTypeString.canEvalWith( exp1Type, .SetOp, {} ) and

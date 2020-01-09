@@ -1632,28 +1632,28 @@ end
 function convFilter.setmeta( obj )
   setmetatable( obj, { __index = convFilter  } )
 end
-function convFilter:write( ... )
-   return self.stream:write( ... )
-end
-
-function convFilter:writeln( ... )
-   return self.stream:writeln( ... )
+function convFilter:popIndent( ... )
+   return self.stream:popIndent( ... )
 end
 
 function convFilter:pushIndent( ... )
    return self.stream:pushIndent( ... )
 end
 
-function convFilter:popIndent( ... )
-   return self.stream:popIndent( ... )
+function convFilter:returnToSource( ... )
+   return self.stream:returnToSource( ... )
 end
 
 function convFilter:switchToHeader( ... )
    return self.stream:switchToHeader( ... )
 end
 
-function convFilter:returnToSource( ... )
-   return self.stream:returnToSource( ... )
+function convFilter:write( ... )
+   return self.stream:write( ... )
+end
+
+function convFilter:writeln( ... )
+   return self.stream:writeln( ... )
 end
 
 
@@ -4057,6 +4057,7 @@ local function processAdvertise( stream, moduleCtrl, scopeMgr, processMode, node
    
    for __index, advInfo in pairs( node:get_advertiseList() ) do
       local member = advInfo:get_member()
+      stream:writeln( string.format( "// for advertise %s.%s --->", node:get_name().txt, member:get_name().txt) )
       
       for __index, name in pairs( Ast.getAllMethodName( member:get_expType(), Ast.MethodKind.Object ):get_list() ) do
          if not _lune._Set_has(declMethodNameSet, name ) then
@@ -4101,6 +4102,7 @@ local function processAdvertise( stream, moduleCtrl, scopeMgr, processMode, node
          
       end
       
+      stream:writeln( string.format( "// <-- for advertise %s.%s", node:get_name().txt, member:get_name().txt) )
    end
    
 end
@@ -4212,7 +4214,7 @@ local function processDefaultCtor( stream, moduleCtrl, scopeMgr, node )
                else 
                   
                      Util.err( string.format( "no support -- %s:%s:%d", member:get_name().txt, ValKind:_getTxt( valKind)
-                     , 3664) )
+                     , 3668) )
                end
             end
             
@@ -4921,7 +4923,7 @@ function convFilter:processDeclClassDef( node )
                else 
                   
                      Util.err( string.format( "no support -- %s:%s:%d", member:get_symbolInfo():get_name(), ValKind:_getTxt( valKind)
-                     , 4369) )
+                     , 4373) )
                end
             end
             
@@ -5423,24 +5425,125 @@ function convFilter:processDeclDestr( node, opt )
 end
 
 
+function convFilter:getValKindOfNode( node )
+
+   if #node:get_expTypeList() > 1 then
+      return ValKind.Stem
+   end
+   
+   
+   local symbolList = node:getSymbolInfo(  )
+   if #symbolList > 0 then
+      return self.scopeMgr:getSymbolValKind( symbolList[1] )
+   end
+   
+   return getValKind( node:get_expType() )
+end
+
+
+function convFilter:processVal2stem( node, parent )
+
+   process2stem( self.stream, self.moduleCtrl, self.scopeMgr, self:getValKindOfNode( node ), node:get_expType(), parent, function (  )
+   
+      filter( node, self, parent )
+   end )
+end
+
+
+function convFilter:processCallArgList( funcType, expListNode )
+
+   local funcArgTypeList = funcType:get_argTypeInfoList()
+   
+   local abbrValTxt
+   
+   if self.moduleCtrl:getBuiltinFuncNameFromType( funcType ) or (funcType:get_kind() == Ast.TypeInfoKind.Method and funcType:get_parentInfo():equals( Ast.builtinTypeString ) ) then
+      
+      abbrValTxt = cValNone
+   else
+    
+      abbrValTxt = cValNil
+   end
+   
+   
+   local function processAbbr( funcArgType )
+   
+      if funcArgType:get_kind() == Ast.TypeInfoKind.DDD then
+         self:write( cValDDD0 )
+      else
+       
+         self:write( abbrValTxt )
+      end
+      
+   end
+   
+   if expListNode ~= nil then
+      local expList = expListNode:get_expList()
+      for index, funcArgType in pairs( funcArgTypeList ) do
+         self:write( ", " )
+         if #expList >= index then
+            local expNode = expList[index]
+            if expNode:get_expType():get_kind() == Ast.TypeInfoKind.Abbr then
+               processAbbr( funcArgType )
+            else
+             
+               if funcArgType:get_kind() == Ast.TypeInfoKind.DDD then
+                  if expNode:get_kind() == Nodes.NodeKind.get_Abbr() then
+                     self:write( cValDDD0 )
+                  else
+                   
+                     filter( expNode, self, expListNode )
+                  end
+                  
+                  
+                  return 
+               else
+                
+                  
+                  if isStemType( funcArgType ) then
+                     self:processVal2stem( expNode, expListNode )
+                  else
+                   
+                     filter( expNode, self, expListNode )
+                  end
+                  
+               end
+               
+            end
+            
+         else
+          
+            processAbbr( funcArgType )
+         end
+         
+      end
+      
+   else
+      for __index, funcArgType in pairs( funcArgTypeList ) do
+         self:write( ", " )
+         processAbbr( funcArgType )
+      end
+      
+   end
+   
+end
+
+
 function convFilter:processExpCallSuper( node, opt )
 
+   local funcType
+   
    if node:get_methodType():get_rawTxt() == "__init" then
       self:write( string.format( "%s( _pEnv, pObj", self.moduleCtrl:getCtorName( node:get_superType() )) )
+      local superScope = _lune.unwrap( node:get_superType():get_scope())
+      funcType = _lune.unwrap( superScope:getTypeInfoChild( "__init" ))
    else
     
       self:write( string.format( "%s( _pEnv, pObj", self.moduleCtrl:getMethodCName( node:get_methodType() )) )
+      funcType = node:get_methodType()
    end
    
    
-   do
-      local _exp = node:get_expList()
-      if _exp ~= nil then
-         self:write( ", " )
-         filter( _exp, self, node )
-      end
-   end
-   
+   self:processCallArgList( funcType, node:get_expList() )
    self:writeln( ");" )
 end
 
@@ -5480,31 +5583,6 @@ function convFilter:isStemSym( symbolInfo )
 end
 
 
-function convFilter:getValKindOfNode( node )
-
-   if #node:get_expTypeList() > 1 then
-      return ValKind.Stem
-   end
-   
-   
-   local symbolList = node:getSymbolInfo(  )
-   if #symbolList > 0 then
-      return self.scopeMgr:getSymbolValKind( symbolList[1] )
-   end
-   
-   return getValKind( node:get_expType() )
-end
-
-
-function convFilter:processVal2stem( node, parent )
-
-   process2stem( self.stream, self.moduleCtrl, self.scopeMgr, self:getValKindOfNode( node ), node:get_expType(), parent, function (  )
-   
-      filter( node, self, parent )
-   end )
-end
-
-
 function convFilter:isStemVal( node )
 
    if #node:get_expTypeList() > 1 then
@@ -5527,7 +5605,9 @@ function convFilter:accessPrimVal( exp, parent )
    
    do
       local _switchExp = self:getValKindOfNode( exp )
-      if _switchExp == ValKind.Prim then
+      if _switchExp == ValKind.Var then
+         filter( exp, self, parent )
+      elseif _switchExp == ValKind.Prim then
          filter( exp, self, parent )
       elseif _switchExp == ValKind.Stem then
          filter( exp, self, parent )
@@ -5565,7 +5645,7 @@ function convFilter:processSym2Any( symbol )
       else 
          
             Util.err( string.format( "not suppport -- %s, %d", ValKind:_getTxt( valKind)
-            , 5176) )
+            , 5284) )
       end
    end
    
@@ -5587,7 +5667,7 @@ function convFilter:processVal2any( node, parent )
       else 
          
             Util.err( string.format( "not suppport -- %d, %s, %s, %d", node:get_pos().lineNo, ValKind:_getTxt( valKind)
-            , Nodes.getNodeKindName( node:get_kind() ), 5202) )
+            , Nodes.getNodeKindName( node:get_kind() ), 5310) )
       end
    end
    
@@ -5637,7 +5717,7 @@ function convFilter:processSetValSingleDirect( parent, node, var, initFlag, expV
       
       Util.err( string.format( "illegal %s %s %s -- %d", var:get_name(), ValKind:_getTxt( valKind)
       , ValKind:_getTxt( expValKind)
-      , 5259) )
+      , 5367) )
    end
    
    
@@ -6507,7 +6587,8 @@ function convFilter:processWhen( node, opt )
 
    self:write( "if ( " )
    for index, symPair in pairs( node:get_symPairList() ) do
-      self:write( string.format( "%s.type != lns_stem_type_nil", self.moduleCtrl:getSymbolName( symPair:get_src() )) )
+      self:processSym2stem( symPair:get_src() )
+      self:write( ".type != lns_stem_type_nil" )
       if index ~= #node:get_symPairList() then
          self:write( " && " )
       end
@@ -7107,8 +7188,13 @@ end
 
 function convFilter:processRepeat( node, opt )
 
+   self:writeln( "{" )
+   self:processLoopPreProcess( node:get_block() )
+   
    self:writeln( "while ( true ) {" )
    self:pushIndent(  )
+   self:writeln( "lns_reset_block( _pEnv );" )
+   
    filter( node:get_block(  ), self, node )
    
    self:write( "if ( " )
@@ -7124,7 +7210,9 @@ function convFilter:processRepeat( node, opt )
    self:writeln( ") { break; }" )
    
    self:popIndent(  )
-   self:write( "}" )
+   self:writeln( "}" )
+   self:processLoopPostProcess(  )
+   self:writeln( "}" )
 end
 
 
@@ -7266,7 +7354,7 @@ function convFilter:processApply( node, opt )
          else 
             
                Util.err( string.format( "no support -- %s:%s:%d", varSym:get_name(), ValKind:_getTxt( valKind)
-               , 7005) )
+               , 7121) )
          end
       end
       
@@ -7691,7 +7779,7 @@ function convFilter:processExpUnwrap( node, opt )
                else 
                   
                      Util.err( string.format( "no support -- %s: %d", ValKind:_getTxt( self:getValKindOfNode( node ))
-                     , 7426) )
+                     , 7542) )
                end
             end
             
@@ -8202,84 +8290,6 @@ function convFilter:processExpToDDD( node, opt )
 end
 
 
-function convFilter:processCallArgList( funcType, expListNode )
-
-   local funcArgTypeList = funcType:get_argTypeInfoList()
-   
-   local abbrValTxt
-   
-   if self.moduleCtrl:getBuiltinFuncNameFromType( funcType ) or (funcType:get_kind() == Ast.TypeInfoKind.Method and funcType:get_parentInfo():equals( Ast.builtinTypeString ) ) then
-      
-      abbrValTxt = cValNone
-   else
-    
-      abbrValTxt = cValNil
-   end
-   
-   
-   local function processAbbr( funcArgType )
-   
-      if funcArgType:get_kind() == Ast.TypeInfoKind.DDD then
-         self:write( cValDDD0 )
-      else
-       
-         self:write( abbrValTxt )
-      end
-      
-   end
-   
-   if expListNode ~= nil then
-      local expList = expListNode:get_expList()
-      for index, funcArgType in pairs( funcArgTypeList ) do
-         self:write( ", " )
-         if #expList >= index then
-            local expNode = expList[index]
-            if expNode:get_expType():get_kind() == Ast.TypeInfoKind.Abbr then
-               processAbbr( funcArgType )
-            else
-             
-               if funcArgType:get_kind() == Ast.TypeInfoKind.DDD then
-                  if expNode:get_kind() == Nodes.NodeKind.get_Abbr() then
-                     self:write( cValDDD0 )
-                  else
-                   
-                     filter( expNode, self, expListNode )
-                  end
-                  
-                  
-                  return 
-               else
-                
-                  
-                  if isStemType( funcArgType ) then
-                     self:processVal2stem( expNode, expListNode )
-                  else
-                   
-                     filter( expNode, self, expListNode )
-                  end
-                  
-               end
-               
-            end
-            
-         else
-          
-            processAbbr( funcArgType )
-         end
-         
-      end
-      
-   else
-      for __index, funcArgType in pairs( funcArgTypeList ) do
-         self:write( ", " )
-         processAbbr( funcArgType )
-      end
-      
-   end
-   
-end
-
-
 function convFilter:processExpNew( node, opt )
 
    self:write( string.format( "%s( _pEnv", self.moduleCtrl:getNewName( node:get_symbol():get_expType() )) )
@@ -8356,6 +8366,10 @@ function convFilter:processDeclClass( node, opt )
 
    local classType = node:get_expType()
    local className = self.moduleCtrl:getClassCName( classType )
+   local classCanonicalName = self.moduleCtrl:getCanonicalName( classType )
+   
+   self:writeln( string.format( "// decl class %s (%s)-->", classCanonicalName, ProcessMode:_getTxt( self.processMode)
+   ) )
    
    do
       local _switchExp = self.processMode
@@ -8395,6 +8409,9 @@ function convFilter:processDeclClass( node, opt )
       end
    end
    
+   
+   self:writeln( string.format( "// <--- decl class %s (%s)", classCanonicalName, ProcessMode:_getTxt( self.processMode)
+   ) )
 end
 
 
@@ -9469,7 +9486,7 @@ function convFilter:processExpRefItem( node, opt )
             else 
                
                   Util.err( string.format( "not support:%s -- %d:%d", Ast.TypeInfoKind:_getTxt( valType:get_kind())
-                  , 9608, node:get_pos().lineNo) )
+                  , 9629, node:get_pos().lineNo) )
             end
          end
          
@@ -9612,7 +9629,7 @@ function convFilter:processGetField( node, opt )
       local _switchExp = prefixType:get_kind()
       if _switchExp == Ast.TypeInfoKind.Enum then
          if node:get_nilAccess() then
-            Util.err( string.format( "not support -- %d:%d:%s", 9764, node:get_pos().lineNo, fieldTxt) )
+            Util.err( string.format( "not support -- %d:%d:%s", 9785, node:get_pos().lineNo, fieldTxt) )
          end
          
          local enumFullName = self.moduleCtrl:getEnumTypeName( prefixType )
@@ -9626,13 +9643,13 @@ function convFilter:processGetField( node, opt )
                self:write( ")" )
             else 
                
-                  Util.err( string.format( "not support -- %d:%d:%s", 9778, node:get_pos().lineNo, fieldTxt) )
+                  Util.err( string.format( "not support -- %d:%d:%s", 9799, node:get_pos().lineNo, fieldTxt) )
             end
          end
          
       elseif _switchExp == Ast.TypeInfoKind.Alge then
          if node:get_nilAccess() then
-            Util.err( string.format( "not support -- %d:%d:%s", 9785, node:get_pos().lineNo, fieldTxt) )
+            Util.err( string.format( "not support -- %d:%d:%s", 9806, node:get_pos().lineNo, fieldTxt) )
          end
          
          local algeName = self.moduleCtrl:getAlgeCName( prefixType )
@@ -9644,7 +9661,7 @@ function convFilter:processGetField( node, opt )
                self:write( ")" )
             else 
                
-                  Util.err( string.format( "not support -- %d:%d:%s", 9796, node:get_pos().lineNo, fieldTxt) )
+                  Util.err( string.format( "not support -- %d:%d:%s", 9817, node:get_pos().lineNo, fieldTxt) )
             end
          end
          
@@ -9669,7 +9686,7 @@ function convFilter:processGetField( node, opt )
                      self:write( "l_nil_mtd_getter( _pEnv, " )
                   else 
                      
-                        Util.err( string.format( "not support -- %d:%d:%s", 9825, node:get_pos().lineNo, fieldTxt) )
+                        Util.err( string.format( "not support -- %d:%d:%s", 9846, node:get_pos().lineNo, fieldTxt) )
                   end
                end
                
@@ -9701,7 +9718,7 @@ function convFilter:processGetField( node, opt )
          
       else 
          
-            Util.err( string.format( "not support -- %d:%d:%s", 9858, node:get_pos().lineNo, Ast.TypeInfoKind:_getTxt( prefixType:get_kind())
+            Util.err( string.format( "not support -- %d:%d:%s", 9879, node:get_pos().lineNo, Ast.TypeInfoKind:_getTxt( prefixType:get_kind())
             ) )
       end
    end
@@ -9739,7 +9756,7 @@ function convFilter:processReturn( node, opt )
                   filter( expList[1], self, node )
                else 
                   
-                     Util.err( string.format( "no support -- %d", 9916) )
+                     Util.err( string.format( "no support -- %d", 9937) )
                end
             end
             
@@ -9770,7 +9787,7 @@ function convFilter:processReturn( node, opt )
                elseif _switchExp == ValKind.Prim then
                else 
                   
-                     Util.err( string.format( "no support -- %d", 9949) )
+                     Util.err( string.format( "no support -- %d", 9970) )
                end
             end
             

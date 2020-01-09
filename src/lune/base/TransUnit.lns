@@ -438,6 +438,9 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
 
    /** クロージャ候補の関数情報リスト */
    let mut closureFunList:List<ClosureFun>;
+
+   /** advertise 宣言されているメンバの型の Set */
+   let mut advertisedTypeSet:Set<&Ast.TypeInfo>;
    
 
    pub fn __init( moduleId:&frontInterface.ModuleId,
@@ -446,6 +449,7 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
                   pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
                   ctrl_info: &Option.TransCtrlInfo )
    {
+      self.advertisedTypeSet = (@);
       self.closureFunList = [];
       self.scopeAccess = .Normal;
       self.macroCtrl = new Macro.MacroCtrl( macroEval );

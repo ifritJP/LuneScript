@@ -349,3 +349,14 @@ class Test9 extend Super7 {
       // };
    }
 }
+{
+   class Hoge {
+   }
+   class Test {
+      let hoge:&Hoge;
+
+      advertise hoge;
+   }
+   pub fn Hoge.func() { // error
+   }
+}
