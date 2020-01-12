@@ -190,13 +190,15 @@ pub abstract class Node {
    let mut tailComment: &Parser.Token! { pub&,pub };
    /** L-Value として扱われる Node の場合 true  */
    pro let allmut isLValue:bool {pub};
+   /** このノードがマクロの引数として使用される場合 */
+   let macroArgFlag:bool {pub};
 
    pub fn setLValue() mut {
       self.isLValue = true;
    }
 
-   pub fn __init( id: int, kind: int,
-                  pos: &Parser.Position, expTypeList: &List<&Ast.TypeInfo> )
+   pub fn __init( id: int, kind: int, pos: &Parser.Position,
+                  macroArgFlag:bool, expTypeList: &List<&Ast.TypeInfo> )
    {
       self.isLValue = false;
       self.id = id;
@@ -205,6 +207,7 @@ pub abstract class Node {
       self.expTypeList = expTypeList;
       self.commentList = nil;
       self.tailComment = nil;
+      self.macroArgFlag = macroArgFlag;
    }
 
    pub fn addComment( commentList: &List<&Parser.Token> ) mut {
@@ -285,6 +288,7 @@ pub proto abstract class MacroEval;
 pub proto class ExpListNode extend Node;
 pub proto class DeclArgNode extend Node;
 pub proto class BlockNode extend Node;
+pub proto class DeclClassNode extend Node;
 
 pub class DeclMacroInfo {
    pri let pubFlag: bool {pub};
@@ -419,7 +423,7 @@ pub class NodeKind {
 Node を定義するマクロ。
 
 @param baseName Node の名称。 実際には "%sNode" (baseName) になる。
-@param super 親クラス
+@param superClass 親クラス
 @param canBeLeftFlag canBeLeft() の戻り値。
    nil を指定すると、別途 canBeLeft() を定義する必要がある。
 @param canBeRightFlag canBeRight() の戻り値。   
@@ -435,7 +439,7 @@ Node を定義するマクロ。
    ただし、フィールド名の先頭に @ があるものは、除外する。
 */
 macro _declNodeClass(
-   baseName:str, super:sym, canBeLeftFlag:bool!, canBeRightFlag:bool!,
+   baseName:str, superClass:sym, canBeLeftFlag:bool!, canBeRightFlag:bool!,
    canBeStatementFlag:bool!, fieldInfoList:Map<str,str>[] )
 {
    {
@@ -552,7 +556,7 @@ macro _declNodeClass(
       }
       
       let superStat = `{
-         super( id, unwrap nodeKind. ,,nodeKindSym, pos, typeList );
+         super( id, unwrap nodeKind. ,,nodeKindSym, pos, macroArgFlag, typeList );
       };
 
       if baseName ~= "Block" {
@@ -580,19 +584,21 @@ macro _declNodeClass(
       return unwrap nodeKind. ,,nodeKindSym;
    }
    
-   pub proto class ,,className extend ,,super;
+   pub proto class ,,className extend ,,superClass;
    regKind( ,,baseName );
    ,,relateStat;
-   pub class ,,className extend ,,super {
+   pub class ,,className extend ,,superClass {
       ,,fieldStatList;
-      pro fn __init( id:int, pos: &Parser.Position, typeList: &List<&Ast.TypeInfo>, ,,argList ) {
+      pro fn __init( id:int, pos: &Parser.Position, macroArgFlag:bool,
+                     typeList: &List<&Ast.TypeInfo>, ,,argList ) {
          ,,superStat;
          ,,initStatList;
       }
-      pub static fn create( nodeMan:NodeManager, pos: &Parser.Position,
+      pub static fn create( nodeMan:NodeManager, pos: &Parser.Position, macroArgFlag:bool,
                             typeList: &List<&Ast.TypeInfo>, ,,argList ) : ,,className
       {
-         let mut node = new ,,className( nodeMan.nextId(), pos, typeList ,,argSymList );
+         let mut node = new ,,className(
+            nodeMan.nextId(), pos, macroArgFlag, typeList ,,argSymList );
          nodeMan.addNode( node );
          return node;
       }
@@ -1472,7 +1478,10 @@ pub enum FuncKind {
 
 pub class DeclFuncInfo {
    let kind:FuncKind { pub };
+   /** この関数がメソッドの場合、このメソッドを保持するクラスの型 */
    let classTypeInfo: &Ast.TypeInfo! { pub };
+   /** このメソッドを保持するクラスを定義するノード。 クラスが builtin の場合 nil。 */
+   let declClassNode: &DeclClassNode! {pub};
    let name: &Parser.Token! { pub };
    let argList: &List<&Node> { pub };
    let staticFlag: bool { pub };
@@ -1487,7 +1496,8 @@ pub static fn DeclFuncInfo.createFrom(
    info:&DeclFuncInfo, name:&Parser.Token ): DeclFuncInfo
 {
    return new DeclFuncInfo(
-      info.$kind, info.classTypeInfo, name, info.argList, info.staticFlag,
+      info.$kind, info.classTypeInfo, info.declClassNode,
+      name, info.argList, info.staticFlag,
       info.accessMode, info.body, info.retTypeInfoList,
       info.has__func__Symbol, info.overrideFlag );
 }
@@ -1582,6 +1592,10 @@ _declNodeClass( "DeclClass", Node, false, false, true,
                   { "initBlock": "&ClassInitBlockInfo" },
                   { "advertiseList": "&List<&AdvertiseInfo>" },
                   { "trustList": "&List<&Ast.TypeInfo>" },
+                  /**
+                  コンストラクタで初期化されていないメンバ。nil で初期化する必要がある。
+                  */                
+                  { "uninitMemberList": "&List<&Ast.SymbolInfo>" },
                   /**
                   クラス宣言の外部で宣言しているメソッド名の Set。
                   クラス宣言外部で宣言するので mut。
@@ -2362,10 +2376,12 @@ pub class DefMacroInfo extend MacroInfo {
 pub fn NodeManager.MultiTo1(node:&Node) mut : &Node {
    let expType = node.$expType;
    if #node.$expTypeList > 1 {
-      return ExpMultiTo1Node.create( self, node.$pos, [ expType ], node );
+      return ExpMultiTo1Node.create(
+         self, node.$pos, node.$macroArgFlag, [ expType ], node );
    }
    elseif expType.$kind == .DDD {
-      return ExpMultiTo1Node.create( self, node.$pos, expType.$itemTypeInfoList, node );
+      return ExpMultiTo1Node.create(
+         self, node.$pos, node.$macroArgFlag, expType.$itemTypeInfoList, node );
    }
    return node;
 }

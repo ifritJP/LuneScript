@@ -256,7 +256,7 @@ local cValDDD0 = "lns_global.ddd0"
 
 local accessAny = ".val.pAny"
 
-local stepIndent = 3
+local stepIndent = 4
 
 local scopeAccess = Ast.ScopeAccess.Full
 
@@ -1560,7 +1560,7 @@ local convFilter = {}
 setmetatable( convFilter, { __index = Nodes.Filter } )
 function convFilter:createRefNodeFromSym( symbol )
 
-   return Nodes.ExpRefNode.create( self.dummyNodeManager, _lune.unwrap( symbol:get_pos()), {symbol:get_typeInfo()}, symbol )
+   return Nodes.ExpRefNode.create( self.dummyNodeManager, _lune.unwrap( symbol:get_pos()), false, {symbol:get_typeInfo()}, symbol )
 end
 function convFilter.new( enableTest, outputBuiltin, streamName, stream, headerStream, ast )
    local obj = {}
@@ -2007,22 +2007,22 @@ function convFilter:processBuiltin(  )
                local dummyScope = Ast.Scope.new(nil, false)
                local argSym = BuiltinArgSymbolInfo.new(dummyScope, argToken.txt, argType, nil, symbol:get_typeInfo())
                
-               table.insert( argList, Nodes.DeclArgNode.create( nodeManager, dummyPos, {argType}, argToken, argSym ) )
+               table.insert( argList, Nodes.DeclArgNode.create( nodeManager, dummyPos, false, {argType}, argToken, argSym ) )
             end
             
             
             if classInfo ~= nil then
-               local declFuncInfo = Nodes.DeclFuncInfo.new(Nodes.FuncKind.Mtd, classInfo, token, argList, false, Ast.AccessMode.Pub, nil, symbol:get_typeInfo():get_retTypeInfoList(), false, false)
-               return Nodes.DeclMethodNode.create( nodeManager, dummyPos, {symbol:get_typeInfo()}, declFuncInfo )
+               local declFuncInfo = Nodes.DeclFuncInfo.new(Nodes.FuncKind.Mtd, classInfo, nil, token, argList, false, Ast.AccessMode.Pub, nil, symbol:get_typeInfo():get_retTypeInfoList(), false, false)
+               return Nodes.DeclMethodNode.create( nodeManager, dummyPos, false, {symbol:get_typeInfo()}, declFuncInfo )
             else
-               local declFuncInfo = Nodes.DeclFuncInfo.new(Nodes.FuncKind.Func, nil, token, argList, false, Ast.AccessMode.Pub, nil, symbol:get_typeInfo():get_retTypeInfoList(), false, false)
-               return Nodes.DeclFuncNode.create( nodeManager, dummyPos, {symbol:get_typeInfo()}, declFuncInfo )
+               local declFuncInfo = Nodes.DeclFuncInfo.new(Nodes.FuncKind.Func, nil, nil, token, argList, false, Ast.AccessMode.Pub, nil, symbol:get_typeInfo():get_retTypeInfoList(), false, false)
+               return Nodes.DeclFuncNode.create( nodeManager, dummyPos, false, {symbol:get_typeInfo()}, declFuncInfo )
             end
             
          elseif _switchExp == Ast.SymbolKind.Var then
             local varToken = Parser.Token.new(Parser.TokenKind.Symb, symbol:get_name(), dummyPos, false)
             
-            return Nodes.DeclVarNode.create( nodeManager, dummyPos, {symbol:get_typeInfo()}, Nodes.DeclVarMode.Let, Ast.AccessMode.Pub, true, {Nodes.VarInfo.new(varToken, nil, symbol:get_typeInfo())}, nil, {symbol}, {symbol:get_typeInfo()}, false, nil, nil, {}, nil )
+            return Nodes.DeclVarNode.create( nodeManager, dummyPos, false, {symbol:get_typeInfo()}, Nodes.DeclVarMode.Let, Ast.AccessMode.Pub, true, {Nodes.VarInfo.new(varToken, nil, symbol:get_typeInfo())}, nil, {symbol}, {symbol:get_typeInfo()}, false, nil, nil, {}, nil )
          elseif _switchExp == Ast.SymbolKind.Mbr then
             return nil
          else 
@@ -2048,7 +2048,7 @@ function convFilter:processBuiltin(  )
                   
                   local fieldList = {}
                   
-                  local declClassNode = Nodes.DeclClassNode.create( nodeManager, dummyPos, {classInfo}, Ast.AccessMode.Pub, Parser.Token.new(Parser.TokenKind.Symb, classInfo:get_rawTxt(), dummyPos, false), classInfo:get_rawTxt(), nil, fieldList, {}, fieldList, {}, classScope, Nodes.ClassInitBlockInfo.new(nil), {}, {}, {} )
+                  local declClassNode = Nodes.DeclClassNode.create( nodeManager, dummyPos, false, {classInfo}, Ast.AccessMode.Pub, Parser.Token.new(Parser.TokenKind.Symb, classInfo:get_rawTxt(), dummyPos, false), classInfo:get_rawTxt(), nil, fieldList, {}, fieldList, {}, classScope, Nodes.ClassInitBlockInfo.new(nil), {}, {}, {}, {} )
                   
                   do
                      local __sorted = {}
@@ -2169,14 +2169,17 @@ function convFilter:processRoot( node, opt )
       
       
       for __index, workNode in pairs( nodeManager:getDeclEnumNodeList(  ) ) do
-         if onlyPub then
-            if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+         if not workNode:get_macroArgFlag() then
+            if onlyPub then
+               if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+                  filter( workNode, self, node )
+               end
+               
+            else
+             
                filter( workNode, self, node )
             end
             
-         else
-          
-            filter( workNode, self, node )
          end
          
       end
@@ -2184,14 +2187,17 @@ function convFilter:processRoot( node, opt )
       
       
       for __index, workNode in pairs( nodeManager:getDeclFormNodeList(  ) ) do
-         if onlyPub then
-            if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+         if not workNode:get_macroArgFlag() then
+            if onlyPub then
+               if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+                  filter( workNode, self, node )
+               end
+               
+            else
+             
                filter( workNode, self, node )
             end
             
-         else
-          
-            filter( workNode, self, node )
          end
          
       end
@@ -2199,14 +2205,17 @@ function convFilter:processRoot( node, opt )
       
       
       for __index, workNode in pairs( nodeManager:getDeclFuncNodeList(  ) ) do
-         if onlyPub then
-            if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+         if not workNode:get_macroArgFlag() then
+            if onlyPub then
+               if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+                  filter( workNode, self, node )
+               end
+               
+            else
+             
                filter( workNode, self, node )
             end
             
-         else
-          
-            filter( workNode, self, node )
          end
          
       end
@@ -2214,14 +2223,17 @@ function convFilter:processRoot( node, opt )
       
       
       for __index, workNode in pairs( nodeManager:getDeclAlgeNodeList(  ) ) do
-         if onlyPub then
-            if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+         if not workNode:get_macroArgFlag() then
+            if onlyPub then
+               if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+                  filter( workNode, self, node )
+               end
+               
+            else
+             
                filter( workNode, self, node )
             end
             
-         else
-          
-            filter( workNode, self, node )
          end
          
       end
@@ -2229,14 +2241,17 @@ function convFilter:processRoot( node, opt )
       
       
       for __index, workNode in pairs( nodeManager:getDeclClassNodeList(  ) ) do
-         if onlyPub then
-            if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+         if not workNode:get_macroArgFlag() then
+            if onlyPub then
+               if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+                  filter( workNode, self, node )
+               end
+               
+            else
+             
                filter( workNode, self, node )
             end
             
-         else
-          
-            filter( workNode, self, node )
          end
          
       end
@@ -2244,14 +2259,17 @@ function convFilter:processRoot( node, opt )
       
       
       for __index, workNode in pairs( nodeManager:getDeclConstrNodeList(  ) ) do
-         if onlyPub then
-            if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+         if not workNode:get_macroArgFlag() then
+            if onlyPub then
+               if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+                  filter( workNode, self, node )
+               end
+               
+            else
+             
                filter( workNode, self, node )
             end
             
-         else
-          
-            filter( workNode, self, node )
          end
          
       end
@@ -2259,14 +2277,17 @@ function convFilter:processRoot( node, opt )
       
       
       for __index, workNode in pairs( nodeManager:getDeclMethodNodeList(  ) ) do
-         if onlyPub then
-            if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+         if not workNode:get_macroArgFlag() then
+            if onlyPub then
+               if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+                  filter( workNode, self, node )
+               end
+               
+            else
+             
                filter( workNode, self, node )
             end
             
-         else
-          
-            filter( workNode, self, node )
          end
          
       end
@@ -2274,14 +2295,17 @@ function convFilter:processRoot( node, opt )
       
       
       for __index, workNode in pairs( nodeManager:getProtoMethodNodeList(  ) ) do
-         if onlyPub then
-            if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+         if not workNode:get_macroArgFlag() then
+            if onlyPub then
+               if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+                  filter( workNode, self, node )
+               end
+               
+            else
+             
                filter( workNode, self, node )
             end
             
-         else
-          
-            filter( workNode, self, node )
          end
          
       end
@@ -2290,14 +2314,17 @@ function convFilter:processRoot( node, opt )
       if self.canConv then
          
          for __index, workNode in pairs( nodeManager:getExpToDDDNodeList(  ) ) do
-            if onlyPub then
-               if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+            if not workNode:get_macroArgFlag() then
+               if onlyPub then
+                  if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+                     filter( workNode, self, node )
+                  end
+                  
+               else
+                
                   filter( workNode, self, node )
                end
                
-            else
-             
-               filter( workNode, self, node )
             end
             
          end
@@ -2305,14 +2332,17 @@ function convFilter:processRoot( node, opt )
          
          
          for __index, workNode in pairs( nodeManager:getLiteralStringNodeList(  ) ) do
-            if onlyPub then
-               if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+            if not workNode:get_macroArgFlag() then
+               if onlyPub then
+                  if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+                     filter( workNode, self, node )
+                  end
+                  
+               else
+                
                   filter( workNode, self, node )
                end
                
-            else
-             
-               filter( workNode, self, node )
             end
             
          end
@@ -2320,14 +2350,17 @@ function convFilter:processRoot( node, opt )
          
          
          for __index, workNode in pairs( nodeManager:getExpCastNodeList(  ) ) do
-            if onlyPub then
-               if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+            if not workNode:get_macroArgFlag() then
+               if onlyPub then
+                  if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+                     filter( workNode, self, node )
+                  end
+                  
+               else
+                
                   filter( workNode, self, node )
                end
                
-            else
-             
-               filter( workNode, self, node )
             end
             
          end
@@ -2344,14 +2377,17 @@ function convFilter:processRoot( node, opt )
       
       
       for __index, workNode in pairs( nodeManager:getDeclAlgeNodeList(  ) ) do
-         if onlyPub then
-            if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+         if not workNode:get_macroArgFlag() then
+            if onlyPub then
+               if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+                  filter( workNode, self, node )
+               end
+               
+            else
+             
                filter( workNode, self, node )
             end
             
-         else
-          
-            filter( workNode, self, node )
          end
          
       end
@@ -2359,14 +2395,17 @@ function convFilter:processRoot( node, opt )
       
       
       for __index, workNode in pairs( nodeManager:getDeclClassNodeList(  ) ) do
-         if onlyPub then
-            if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+         if not workNode:get_macroArgFlag() then
+            if onlyPub then
+               if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+                  filter( workNode, self, node )
+               end
+               
+            else
+             
                filter( workNode, self, node )
             end
             
-         else
-          
-            filter( workNode, self, node )
          end
          
       end
@@ -2375,14 +2414,17 @@ function convFilter:processRoot( node, opt )
       
       
       for __index, workNode in pairs( nodeManager:getDeclConstrNodeList(  ) ) do
-         if onlyPub then
-            if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+         if not workNode:get_macroArgFlag() then
+            if onlyPub then
+               if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+                  filter( workNode, self, node )
+               end
+               
+            else
+             
                filter( workNode, self, node )
             end
             
-         else
-          
-            filter( workNode, self, node )
          end
          
       end
@@ -2390,14 +2432,17 @@ function convFilter:processRoot( node, opt )
       
       
       for __index, workNode in pairs( nodeManager:getDeclMethodNodeList(  ) ) do
-         if onlyPub then
-            if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+         if not workNode:get_macroArgFlag() then
+            if onlyPub then
+               if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+                  filter( workNode, self, node )
+               end
+               
+            else
+             
                filter( workNode, self, node )
             end
             
-         else
-          
-            filter( workNode, self, node )
          end
          
       end
@@ -2405,14 +2450,17 @@ function convFilter:processRoot( node, opt )
       
       
       for __index, workNode in pairs( nodeManager:getDeclFuncNodeList(  ) ) do
-         if onlyPub then
-            if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+         if not workNode:get_macroArgFlag() then
+            if onlyPub then
+               if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+                  filter( workNode, self, node )
+               end
+               
+            else
+             
                filter( workNode, self, node )
             end
             
-         else
-          
-            filter( workNode, self, node )
          end
          
       end
@@ -2422,14 +2470,17 @@ function convFilter:processRoot( node, opt )
       self.processMode = ProcessMode.DefClass
       
       for __index, workNode in pairs( nodeManager:getDeclClassNodeList(  ) ) do
-         if onlyPub then
-            if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+         if not workNode:get_macroArgFlag() then
+            if onlyPub then
+               if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+                  filter( workNode, self, node )
+               end
+               
+            else
+             
                filter( workNode, self, node )
             end
             
-         else
-          
-            filter( workNode, self, node )
          end
          
       end
@@ -2442,7 +2493,10 @@ function convFilter:processRoot( node, opt )
    if self.canConv then
       self.processMode = ProcessMode.StringFormat
       for __index, litStr in pairs( nodeManager:getLiteralStringNodeList(  ) ) do
-         filter( litStr, self, node )
+         if not litStr:get_macroArgFlag() then
+            filter( litStr, self, node )
+         end
+         
       end
       
       
@@ -2453,7 +2507,7 @@ function convFilter:processRoot( node, opt )
       
          for __index, literalNode in pairs( literalNodeList ) do
             self.processingNode = literalNode
-            if not _lune._Set_has(self.processedNodeSet, literalNode ) then
+            if not _lune._Set_has(self.processedNodeSet, literalNode ) and not literalNode:get_macroArgFlag() then
                self.accessSymbolSet = Util.OrderedSet.new()
                filter( literalNode, self, node )
                self.processedNodeSet[node]= true
@@ -3654,7 +3708,13 @@ local function processMethodDeclTxt( stream, moduleCtrl, wrapKind, methodTypeInf
       elseif _switchExp == FuncWrap.NilWrap then
          name = moduleCtrl:getNilMethodCName( methodTypeInfo )
          objDecl = string.format( ", %s obj", cTypeStem)
-         retType = cTypeStem
+         if #methodTypeInfo:get_retTypeInfoList() == 0 then
+            retType = "void"
+         else
+          
+            retType = cTypeStem
+         end
+         
       else 
          
             Util.err( string.format( "not support -- %s", FuncWrap:_getTxt( wrapKind)
@@ -3961,11 +4021,16 @@ local function processDeclCallMethodWrapper( stream, moduleCtrl, scopeMgr, paren
       if not callFlag then
          local retVal
          
-         if #funcTypeInfo:get_retTypeInfoList() > 1 then
-            retVal = cValDDD0
-         else
-          
-            retVal = cValNil
+         do
+            local _switchExp = #funcTypeInfo:get_retTypeInfoList()
+            if _switchExp == 0 then
+               retVal = ""
+            elseif _switchExp == 1 then
+               retVal = cValNil
+            else 
+               
+                  retVal = cValDDD0
+            end
          end
          
          stream:writeln( string.format( "if ( obj.type == lns_stem_type_nil ) { return %s; }", retVal) )
@@ -4214,7 +4279,7 @@ local function processDefaultCtor( stream, moduleCtrl, scopeMgr, node )
                else 
                   
                      Util.err( string.format( "no support -- %s:%s:%d", member:get_name().txt, ValKind:_getTxt( valKind)
-                     , 3668) )
+                     , 3689) )
                end
             end
             
@@ -4923,7 +4988,7 @@ function convFilter:processDeclClassDef( node )
                else 
                   
                      Util.err( string.format( "no support -- %s:%s:%d", member:get_symbolInfo():get_name(), ValKind:_getTxt( valKind)
-                     , 4373) )
+                     , 4394) )
                end
             end
             
@@ -5359,6 +5424,34 @@ function convFilter:processDeclMethodInfo( declInfo, funcTypeInfo, parent )
                
                self:pushRoutine( funcTypeInfo, body )
                
+               do
+                  local declClassNode = declInfo:get_declClassNode()
+                  if declClassNode ~= nil then
+                     if _lune.nilacc( declInfo:get_name(), "txt" ) == "__init" then
+                        
+                        for __index, memberSym in pairs( declClassNode:get_uninitMemberList() ) do
+                           if declInfo:get_staticFlag() == memberSym:get_staticFlag() then
+                              local memberAccess
+                              
+                              
+                              if declInfo:get_staticFlag() then
+                                 memberAccess = self.moduleCtrl:getClassMemberName( memberSym )
+                              else
+                               
+                                 memberAccess = getAccessMember( className, "pObj", memberSym:get_name() )
+                              end
+                              
+                              self:writeln( string.format( "%s = %s;", memberAccess, cValNil) )
+                           end
+                           
+                        end
+                        
+                     end
+                     
+                  end
+               end
+               
+               
                if funcTypeInfo:get_staticFlag() and funcTypeInfo:get_rawTxt() == "___init" then
                   for __index, symbol in pairs( (_lune.unwrap( classType:get_scope()) ):get_symbol2SymbolInfoMap() ) do
                      if isClassMember( symbol ) then
@@ -5614,6 +5707,9 @@ function convFilter:accessPrimVal( exp, parent )
          self:accessPrimValFromAny( #exp:get_expTypeList() > 1, exp:get_expType(), 0 )
       elseif _switchExp == ValKind.Any then
          filter( exp, self, parent )
+      else 
+         
+            Util.err( string.format( "not support -- %d", 5271) )
       end
    end
    
@@ -5645,7 +5741,7 @@ function convFilter:processSym2Any( symbol )
       else 
          
             Util.err( string.format( "not suppport -- %s, %d", ValKind:_getTxt( valKind)
-            , 5284) )
+            , 5328) )
       end
    end
    
@@ -5667,7 +5763,7 @@ function convFilter:processVal2any( node, parent )
       else 
          
             Util.err( string.format( "not suppport -- %d, %s, %s, %d", node:get_pos().lineNo, ValKind:_getTxt( valKind)
-            , Nodes.getNodeKindName( node:get_kind() ), 5310) )
+            , Nodes.getNodeKindName( node:get_kind() ), 5354) )
       end
    end
    
@@ -5717,7 +5813,7 @@ function convFilter:processSetValSingleDirect( parent, node, var, initFlag, expV
       
       Util.err( string.format( "illegal %s %s %s -- %d", var:get_name(), ValKind:_getTxt( valKind)
       , ValKind:_getTxt( expValKind)
-      , 5367) )
+      , 5411) )
    end
    
    
@@ -7354,7 +7450,7 @@ function convFilter:processApply( node, opt )
          else 
             
                Util.err( string.format( "no support -- %s:%s:%d", varSym:get_name(), ValKind:_getTxt( valKind)
-               , 7121) )
+               , 7165) )
          end
       end
       
@@ -7779,7 +7875,7 @@ function convFilter:processExpUnwrap( node, opt )
                else 
                   
                      Util.err( string.format( "no support -- %s: %d", ValKind:_getTxt( self:getValKindOfNode( node ))
-                     , 7542) )
+                     , 7586) )
                end
             end
             
@@ -9486,7 +9582,7 @@ function convFilter:processExpRefItem( node, opt )
             else 
                
                   Util.err( string.format( "not support:%s -- %d:%d", Ast.TypeInfoKind:_getTxt( valType:get_kind())
-                  , 9629, node:get_pos().lineNo) )
+                  , 9673, node:get_pos().lineNo) )
             end
          end
          
@@ -9629,7 +9725,7 @@ function convFilter:processGetField( node, opt )
       local _switchExp = prefixType:get_kind()
       if _switchExp == Ast.TypeInfoKind.Enum then
          if node:get_nilAccess() then
-            Util.err( string.format( "not support -- %d:%d:%s", 9785, node:get_pos().lineNo, fieldTxt) )
+            Util.err( string.format( "not support -- %d:%d:%s", 9829, node:get_pos().lineNo, fieldTxt) )
          end
          
          local enumFullName = self.moduleCtrl:getEnumTypeName( prefixType )
@@ -9643,13 +9739,13 @@ function convFilter:processGetField( node, opt )
                self:write( ")" )
             else 
                
-                  Util.err( string.format( "not support -- %d:%d:%s", 9799, node:get_pos().lineNo, fieldTxt) )
+                  Util.err( string.format( "not support -- %d:%d:%s", 9843, node:get_pos().lineNo, fieldTxt) )
             end
          end
          
       elseif _switchExp == Ast.TypeInfoKind.Alge then
          if node:get_nilAccess() then
-            Util.err( string.format( "not support -- %d:%d:%s", 9806, node:get_pos().lineNo, fieldTxt) )
+            Util.err( string.format( "not support -- %d:%d:%s", 9850, node:get_pos().lineNo, fieldTxt) )
          end
          
          local algeName = self.moduleCtrl:getAlgeCName( prefixType )
@@ -9661,7 +9757,7 @@ function convFilter:processGetField( node, opt )
                self:write( ")" )
             else 
                
-                  Util.err( string.format( "not support -- %d:%d:%s", 9817, node:get_pos().lineNo, fieldTxt) )
+                  Util.err( string.format( "not support -- %d:%d:%s", 9861, node:get_pos().lineNo, fieldTxt) )
             end
          end
          
@@ -9686,7 +9782,7 @@ function convFilter:processGetField( node, opt )
                      self:write( "l_nil_mtd_getter( _pEnv, " )
                   else 
                      
-                        Util.err( string.format( "not support -- %d:%d:%s", 9846, node:get_pos().lineNo, fieldTxt) )
+                        Util.err( string.format( "not support -- %d:%d:%s", 9890, node:get_pos().lineNo, fieldTxt) )
                   end
                end
                
@@ -9718,7 +9814,7 @@ function convFilter:processGetField( node, opt )
          
       else 
          
-            Util.err( string.format( "not support -- %d:%d:%s", 9879, node:get_pos().lineNo, Ast.TypeInfoKind:_getTxt( prefixType:get_kind())
+            Util.err( string.format( "not support -- %d:%d:%s", 9923, node:get_pos().lineNo, Ast.TypeInfoKind:_getTxt( prefixType:get_kind())
             ) )
       end
    end
@@ -9756,7 +9852,7 @@ function convFilter:processReturn( node, opt )
                   filter( expList[1], self, node )
                else 
                   
-                     Util.err( string.format( "no support -- %d", 9937) )
+                     Util.err( string.format( "no support -- %d", 9981) )
                end
             end
             
@@ -9787,7 +9883,7 @@ function convFilter:processReturn( node, opt )
                elseif _switchExp == ValKind.Prim then
                else 
                   
-                     Util.err( string.format( "no support -- %d", 9970) )
+                     Util.err( string.format( "no support -- %d", 10014) )
                end
             end
             
@@ -10319,7 +10415,7 @@ function convFilter:processLiteralString( node, opt )
                         self:write( string.format( ", %s arg%d", cTypeStem, index) )
                      end
                      
-                     self:writeln( ")" )
+                     self:writeln( string.format( ") // %d", node:get_pos().lineNo) )
                      self:writeln( "{" )
                      self:pushIndent(  )
                      

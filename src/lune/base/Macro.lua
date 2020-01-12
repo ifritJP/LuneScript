@@ -922,7 +922,7 @@ function MacroCtrl:expandSymbol( parser, prefixToken, exp, nodeManager, errMessL
                   format = "' %s '"
                elseif valType:get_kind() == Ast.TypeInfoKind.List and valType:get_itemTypeInfoList()[1]:equals( Ast.builtinTypeStat ) then
                   format = "' %s '"
-                  exp = Nodes.ExpMacroStatListNode.create( nodeManager, prefixToken.pos, {Ast.builtinTypeString}, exp )
+                  exp = Nodes.ExpMacroStatListNode.create( nodeManager, prefixToken.pos, self.macroMode == Nodes.MacroMode.AnalyzeArg, {Ast.builtinTypeString}, exp )
                elseif Ast.builtinTypeString:equals( valType ) then
                else
                 
@@ -944,7 +944,7 @@ function MacroCtrl:expandSymbol( parser, prefixToken, exp, nodeManager, errMessL
    end
    
    local newToken = Parser.Token.new(Parser.TokenKind.Str, format, prefixToken.pos, prefixToken.consecutive)
-   local literalStr = Nodes.LiteralStringNode.create( nodeManager, prefixToken.pos, {Ast.builtinTypeString}, newToken, Nodes.ExpListNode.create( nodeManager, exp:get_pos(), exp:get_expTypeList(), {exp}, nil, false ) )
+   local literalStr = Nodes.LiteralStringNode.create( nodeManager, prefixToken.pos, self.macroMode == Nodes.MacroMode.AnalyzeArg, {Ast.builtinTypeString}, newToken, Nodes.ExpListNode.create( nodeManager, exp:get_pos(), self.macroMode == Nodes.MacroMode.AnalyzeArg, exp:get_expTypeList(), {exp}, nil, false ) )
    return literalStr
 end
 
@@ -1005,6 +1005,23 @@ function MacroCtrl:restoreMacroMode(  )
    
    table.remove( self.macroModeStack )
    self.macroMode = self.macroModeStack[#self.macroModeStack]
+end
+
+
+function MacroCtrl:isInAnalyzeArgMode(  )
+
+   if #self.macroModeStack == 0 then
+      return false
+   end
+   
+   for __index, mode in pairs( self.macroModeStack ) do
+      if mode == Nodes.MacroMode.AnalyzeArg then
+         return true
+      end
+      
+   end
+   
+   return false
 end
 
 

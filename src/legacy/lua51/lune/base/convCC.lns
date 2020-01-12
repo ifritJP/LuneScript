@@ -50,7 +50,7 @@ let cValDDD0 = "lns_global.ddd0";
 
 let accessAny = ".val.pAny";
 
-let stepIndent = 3;
+let stepIndent = 4;
 
 /**
 構文解析済みで、全シンボルにアクセスしても問題ないので、
@@ -1115,7 +1115,7 @@ class convFilter extend Nodes.Filter<Opt> {
 
    fn createRefNodeFromSym( symbol:&Ast.SymbolInfo ) mut: &Nodes.ExpRefNode {
       return Nodes.ExpRefNode.create(
-         self.dummyNodeManager, unwrap symbol.$pos, [ symbol.$typeInfo ], symbol );
+         self.dummyNodeManager, unwrap symbol.$pos, false, [ symbol.$typeInfo ], symbol );
    }
 
    pub fn __init( enableTest:bool, outputBuiltin:bool, streamName: str, stream: oStream,
@@ -1528,23 +1528,23 @@ fn convFilter.processBuiltin() : &Nodes.NodeManager
                
                argList.insert(
                   Nodes.DeclArgNode.create(
-                     nodeManager, dummyPos, [ argType ],
+                     nodeManager, dummyPos, false, [ argType ],
                      argToken, argSym ) );
             }
 
             when! classInfo {
                let declFuncInfo = new Nodes.DeclFuncInfo(
-                  .Mtd, classInfo, token, argList, false, .Pub, nil,
+                  .Mtd, classInfo, nil, token, argList, false, .Pub, nil,
                   symbol.$typeInfo.$retTypeInfoList, false, false );
                return Nodes.DeclMethodNode.create(
-                  nodeManager, dummyPos, [ symbol.$typeInfo ], declFuncInfo );
+                  nodeManager, dummyPos, false, [ symbol.$typeInfo ], declFuncInfo );
             }
             else {
                let declFuncInfo = new Nodes.DeclFuncInfo(
-                  .Func, nil, token, argList, false, .Pub, nil,
+                  .Func, nil, nil, token, argList, false, .Pub, nil,
                   symbol.$typeInfo.$retTypeInfoList, false, false );
                return Nodes.DeclFuncNode.create(
-                  nodeManager, dummyPos, [ symbol.$typeInfo ], declFuncInfo );
+                  nodeManager, dummyPos, false, [ symbol.$typeInfo ], declFuncInfo );
             }
          }
          case .Var {
@@ -1552,7 +1552,7 @@ fn convFilter.processBuiltin() : &Nodes.NodeManager
                   .Symb, symbol.$name, dummyPos, false## );
 
             return Nodes.DeclVarNode.create(
-               nodeManager, dummyPos, [ symbol.$typeInfo ], .Let, .Pub,
+               nodeManager, dummyPos, false, [ symbol.$typeInfo ], .Let, .Pub,
                true, [ new Nodes.VarInfo( varToken, nil, symbol.$typeInfo ) ],
                nil, [ symbol ], [ symbol.$typeInfo ], false, nil, nil, [], nil);
          }
@@ -1580,10 +1580,10 @@ fn convFilter.processBuiltin() : &Nodes.NodeManager
                let mut fieldList:List<&Nodes.Node> = [];
                
                let declClassNode = Nodes.DeclClassNode.create(
-                  nodeManager, dummyPos, [ classInfo ], .Pub,
+                  nodeManager, dummyPos, false, [ classInfo ], .Pub,
                   new Parser.Token( .Symb, classInfo.$rawTxt, dummyPos, false## ),
                   classInfo.$rawTxt, nil, fieldList, [], fieldList, [], classScope,
-                  new Nodes.ClassInitBlockInfo( nil ), [], [], (@));
+                  new Nodes.ClassInitBlockInfo( nil ), [], [], [], (@));
 
                forsort field in classScope.$symbol2SymbolInfoMap {
                   if! let node = createNodeFromSymbol( classInfo, field ) {
@@ -1680,13 +1680,15 @@ pub override fn convFilter.processRoot(
    fn process( onlyPub:bool ) {
       macro _processOnlyPub( list:__exp ) {
          foreach workNode in ,,list {
-            if onlyPub {
-               if Ast.isPubToExternal( workNode.$expType.$accessMode ) {
+            if not workNode.$macroArgFlag {
+               if onlyPub {
+                  if Ast.isPubToExternal( workNode.$expType.$accessMode ) {
+                     filter( workNode, self, node );
+                  }
+               }
+               else {
                   filter( workNode, self, node );
                }
-            }
-            else {
-               filter( workNode, self, node );
             }
          }
       }
@@ -1738,7 +1740,9 @@ pub override fn convFilter.processRoot(
    if self.canConv {
       self.processMode = .StringFormat;
       foreach litStr in nodeManager.getLiteralStringNodeList() {
-         filter( litStr, self, node );
+         if not litStr.$macroArgFlag {
+            filter( litStr, self, node );
+         }
       }
       
       
@@ -1748,7 +1752,9 @@ pub override fn convFilter.processRoot(
       fn procssLiteralCtor( literalNodeList:&List<&Nodes.Node> ) {
          foreach literalNode in literalNodeList {
             self.processingNode = literalNode;
-            if not self.processedNodeSet.has( literalNode ) {
+            if not self.processedNodeSet.has( literalNode ) and
+               not literalNode.$macroArgFlag
+            {
                self.accessSymbolSet = new Util.OrderedSet<&Ast.SymbolInfo>();
                filter( literalNode, self, node );
                self.processedNodeSet.add( node );
@@ -3104,7 +3110,12 @@ fn processMethodDeclTxt(
       case .NilWrap {
          name = moduleCtrl.getNilMethodCName( methodTypeInfo );
          objDecl = ", %s obj" (cTypeStem);
-         retType = cTypeStem;
+         if #methodTypeInfo.$retTypeInfoList == 0 {
+            retType = "void";
+         }
+         else {
+            retType = cTypeStem;
+         }
       }
       default {
          Util.err( "not support -- %s" (wrapKind.$_txt) );
@@ -3374,6 +3385,11 @@ fn process2stem(
 }
 
 
+/**
+メソッド呼び出しのラッパー (call/nilaccess) を作成。
+
+@param callFlag true の場合 call。 false の場合 nilaccess。
+*/
 fn processDeclCallMethodWrapper(
    stream:Util.SourceStream, moduleCtrl:ModuleCtrl, scopeMgr:ScopeMgr,
    parent:&Nodes.Node, funcTypeInfo:&Ast.TypeInfo, callFlag:bool )
@@ -3387,11 +3403,16 @@ fn processDeclCallMethodWrapper(
 
       if not callFlag {
          let retVal;
-         if #funcTypeInfo.$retTypeInfoList > 1 {
-            retVal = cValDDD0;
-         }
-         else {
-            retVal = cValNil;
+         switch #funcTypeInfo.$retTypeInfoList {
+            case 0 {
+               retVal = "";
+            }
+            case 1 {
+               retVal = cValNil;
+            }
+            default {
+               retVal = cValDDD0;
+            }
          }
          stream.writeln(
             "if ( obj.type == lns_stem_type_nil ) { return %s; }" (retVal) );
@@ -4891,6 +4912,26 @@ fn convFilter.processDeclMethodInfo(
 
             self.pushRoutine( funcTypeInfo, body );
 
+            if! let declClassNode = declInfo.$declClassNode {
+               if declInfo.$name$.txt == "__init" {
+                  // コンストラクタで、未初期化メンバを nil で初期化する。
+                  foreach memberSym in declClassNode.$uninitMemberList {
+                     if declInfo.$staticFlag == memberSym.$staticFlag {
+                        let memberAccess;
+
+                        if declInfo.$staticFlag {
+                           memberAccess = self.moduleCtrl.getClassMemberName(memberSym );
+                        }
+                        else {
+                           memberAccess = getAccessMember( className,
+                                                           "pObj", memberSym.$name );
+                        }
+                        self.writeln( "%s = %s;" ( memberAccess, cValNil ));
+                     }
+                  }
+               }
+            }
+
 
             if funcTypeInfo.$staticFlag and funcTypeInfo.$rawTxt == "___init" {
                foreach symbol in (unwrap classType.$scope).$symbol2SymbolInfoMap {
@@ -5225,6 +5266,9 @@ pub fn convFilter.accessPrimVal( exp:&Nodes.Node, parent:&Nodes.Node ) mut {
       }
       case .Any {
          filter( exp, self, parent );
+      }
+      default {
+         Util.err( "not support -- %d" (__line__) );
       }
    }
 
@@ -10442,7 +10486,7 @@ pub override fn convFilter.processLiteralString(
                foreach exp, index in expListNode.$expList {
                   self.write( ", %s arg%d" ( cTypeStem, index ) );
                }
-               self.writeln( ")" );
+               self.writeln( ") // %d" (node.$pos.lineNo) );
                self.writeln( "{" );
                self.pushIndent( ## );
 

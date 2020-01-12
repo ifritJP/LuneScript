@@ -14,6 +14,8 @@ endif
 
 LNSC=~/.luarocks/bin/lnsc
 
+LUAROCKS=luarocks
+
 ifdef LOG
 LOG_OPT=--log info
 endif
@@ -23,7 +25,7 @@ ifneq ($(LUA51),)
 ENABLE_LUA51:=$(shell which $(LUA51))
 endif
 ifndef NO_LUAROCKS
-LUAROCKS_VER:=$(shell luarocks | grep 'Lua version' | awk '//{print $$3}')
+LUAROCKS_VER:=$(shell $(LUAROCKS) | grep 'Lua version' | awk '//{print $$3}')
 endif
 endif
 
@@ -196,17 +198,17 @@ luarocks-check:
 # - 実行
 # - アンインストール
 define test-inst-from-luarocks
-	-(luarocks remove $1 --local)
+	-($(LUAROCKS) remove $1 --local)
 	cat ../$1-main-1.rockspec | sed 's@"src.*/lune/@"lune/@g' \
 			| sed 's@src/lnsc.lua@lnsc.lua@g' > work/8/$1-main-1.rockspec
 	cp -a lnsc.lua work/8
 	cp -a ../docs work/8
-	(cd work/8; luarocks make $1-main-1.rockspec --local)
+	(cd work/8; $(LUAROCKS) make $1-main-1.rockspec --local)
 
 	$(LNSC)
 	(cd work/8; $(LNSC) test/start.lns exe) > work/test8.result
 
-	(luarocks remove $1 --local)
+	($(LUAROCKS) remove $1 --local)
 endef
 
 luarocks-check-sub:
@@ -497,10 +499,13 @@ test-org:
 	$(MAKE) TEST_DIR=. test-etc >> work/test1.result
 
 test-org-proj:
+ifndef SKIP_PROJ_TEST
 	$(MAKE) -C test/proj/ test MKFILE=Makefile SRC_DIR= 2>&1 | \
 		grep -v /test/proj > work/0/log/proj
+else
+	@echo skip
+endif
 
-#		sed 's/.*error:/error:/' >> work/test1.result
 
 
 
@@ -523,9 +528,12 @@ test-new:
 	$(MAKE) TEST_DIR=work/3 test-etc >> work/test2.result
 
 test-new-proj:
+ifndef SKIP_PROJ_TEST
 	$(MAKE) -C work/3/test/proj/ test MKFILE=Makefile SRC_DIR= 2>&1 | \
 		grep -v /test/proj > work/3/log/proj
-#sed 's/.*error:/error:/' | tee -a work/test2.result
+else
+	@echo skip
+endif
 
 
 
@@ -591,8 +599,11 @@ test-comp2:
 	mkdir -p work/3/log
 
 	$(MAKE) test-parallel
+ifndef SKIP_PROJ_TEST
 	cat work/0/log/proj >> work/test1.result
 	cat work/3/log/proj >> work/test2.result
+endif
+
 
 
 
@@ -734,14 +745,14 @@ test-installed-cmd:
 test-on-docker:
 	sudo docker build -t testlns -f test/docker/test_install test/docker
 	sudo docker run --name test -it testlns \
-		/bin/ash -c "make test-installed-cmd NO_LUAROCKS=y SLEEP_TIME=2"
+		/bin/ash -c "make test-installed-cmd NO_LUAROCKS=y SKIP_PROJ_TEST=y"
 	sudo docker container rm testlns
 	sudo docker image rm testlns
 
 test-on-docker_luarocks:
 	sudo docker build -t testlns -f test/docker/test_install_with_luarock test/docker
 	sudo docker run --name test -it testlns \
-		/bin/ash -c 'PATH=/usr/local/bin:${PATH} make test-installed-cmd SLEEP_TIME=2'
+		/bin/ash -c 'PATH=/usr/local/bin:${PATH} make test-installed-cmd SKIP_PROJ_TEST=y'
 	sudo docker container rm testlns
 	sudo docker image rm testlns
 
@@ -876,10 +887,14 @@ test-miniC:
 	cp -a lune work/0
 	cp Makefile.ccc work/0
 	$(call convC,work/0,lune/base/Testing.lns,--testing)
-	-$(call test-convC-test,work/0,lune/base/Testing)
+#	-$(call test-convC-test,work/0,lune/base/Testing)
 #	cp -a work/c/* work/0/work/c
-	cp -a work/0/work/* work/
-	$(call test-convC-test,.,miniC)
+#	cp -a work/0/work/* work/
+	cp miniC.lns work/0
+#	$(call test-convC-test,.,miniC)
+	$(call test-convC-test,work/0,miniC)
+	cp work/0/test.exe .
+
 
 test-subC:
 	$(call transwork,.,.,,base/convCC)
@@ -932,7 +947,8 @@ test-testC:
 	$(call test-convC-test,work/0,lune/base/Ast, \
 		lune/base/Depend.sub.c lune/base/Depend.c \
 		lune/base/LuneControl.c lune/base/LuaMod.c \
-		lune/base/Util.c lune/base/Writer.c )
+		lune/base/Util.c lune/base/Writer.c \
+		lune/base/Parser.c lune/base/Code.c )
 	$(call convC,work/0,lune/base/frontInterface.lns,--testing)
 
 test-mkbuiltin:

@@ -39,52 +39,52 @@ extern void mtd_lns_math_randomseed( lns_env_t * _pEnv, lns_stem_t arg1 );
 extern lns_stem_t mtd_lns_debug_getinfo( lns_env_t * _pEnv, lns_int_t arg1 );
 extern lns_stem_t mtd_lns_debug_getlocal( lns_env_t * _pEnv, lns_int_t arg1, lns_int_t arg2 );
 typedef struct lns_mtd_lns_iStream_t {
-   lns_method_t * close;
-   lns_method_t * read;
+    lns_method_t * close;
+    lns_method_t * read;
 } lns_mtd_lns_iStream_t;
 typedef struct lns_iStream {
-   lns_type_meta_t * pMeta;
-   lns_any_t * pObj;
-   lns_mtd_lns_iStream_t * pMtd;
+    lns_type_meta_t * pMeta;
+    lns_any_t * pObj;
+    lns_mtd_lns_iStream_t * pMtd;
 } lns_iStream;
 #define lns_mtd_lns_iStream( OBJ )                     \
              ((lns_iStream*)&OBJ->val.ifVal)->pMtd
 extern lns_type_meta_t lns_type_meta_lns_iStream;
 typedef struct lns_mtd_lns_oStream_t {
-   lns_method_t * close;
-   lns_method_t * flush;
-   lns_method_t * write;
+    lns_method_t * close;
+    lns_method_t * flush;
+    lns_method_t * write;
 } lns_mtd_lns_oStream_t;
 typedef struct lns_oStream {
-   lns_type_meta_t * pMeta;
-   lns_any_t * pObj;
-   lns_mtd_lns_oStream_t * pMtd;
+    lns_type_meta_t * pMeta;
+    lns_any_t * pObj;
+    lns_mtd_lns_oStream_t * pMtd;
 } lns_oStream;
 #define lns_mtd_lns_oStream( OBJ )                     \
              ((lns_oStream*)&OBJ->val.ifVal)->pMtd
 extern lns_type_meta_t lns_type_meta_lns_oStream;
 typedef struct lns_mtd_lns_luaStream_t {
-   lns_del_t * _del;
-   lns_gc_t * _gc;
-   lns_method_t * close;
-   lns_method_t * flush;
-   lns_method_t * read;
-   lns_method_t * seek;
-   lns_method_t * write;
+    lns_del_t * _del;
+    lns_gc_t * _gc;
+    lns_method_t * close;
+    lns_method_t * flush;
+    lns_method_t * read;
+    lns_method_t * seek;
+    lns_method_t * write;
 } lns_mtd_lns_luaStream_t;
 typedef struct u_if_imp_lns_luaStream_t {
-   lns_any_t lns_iStream;
-   lns_any_t lns_oStream;
-   lns_any_t sentinel;
+    lns_any_t lns_iStream;
+    lns_any_t lns_oStream;
+    lns_any_t sentinel;
 } u_if_imp_lns_luaStream_t;
 typedef struct lns_luaStream {
-   lns_type_meta_t * pMeta;
-   u_if_imp_lns_luaStream_t * pImp;
-   lns_mtd_lns_luaStream_t * pMtd;
-   // member
-   void * pExt;
-   // interface implements
-   u_if_imp_lns_luaStream_t imp;
+    lns_type_meta_t * pMeta;
+    u_if_imp_lns_luaStream_t * pImp;
+    lns_mtd_lns_luaStream_t * pMtd;
+    // member
+    void * pExt;
+    // interface implements
+    u_if_imp_lns_luaStream_t imp;
 } lns_luaStream;
 #define lns_mtd_lns_luaStream( OBJ )                     \
                 (((lns_luaStream*)OBJ->val.classVal)->pMtd )
@@ -92,30 +92,30 @@ typedef struct lns_luaStream {
 #define lns_if_lns_luaStream( OBJ ) ((lns_luaStream*)OBJ->val.classVal)->pImp
 extern lns_any_t * lns_class_lns_luaStream_new( lns_env_t * _pEnv);
 typedef struct lns_mtd_lns_Mapping_t {
-   lns_method_t * _toMap;
+    lns_method_t * _toMap;
 } lns_mtd_lns_Mapping_t;
 typedef struct lns_Mapping {
-   lns_type_meta_t * pMeta;
-   lns_any_t * pObj;
-   lns_mtd_lns_Mapping_t * pMtd;
+    lns_type_meta_t * pMeta;
+    lns_any_t * pObj;
+    lns_mtd_lns_Mapping_t * pMtd;
 } lns_Mapping;
 #define lns_mtd_lns_Mapping( OBJ )                     \
              ((lns_Mapping*)&OBJ->val.ifVal)->pMtd
 extern lns_type_meta_t lns_type_meta_lns_Mapping;
 extern void l_call_mtd_lns_iStream_close( lns_env_t * _pEnv, lns_any_t * pObj);
-lns_stem_t l_nil_mtd_lns_iStream_close( lns_env_t * _pEnv, lns_stem_t obj);
+void l_nil_mtd_lns_iStream_close( lns_env_t * _pEnv, lns_stem_t obj);
 extern lns_stem_t l_call_mtd_lns_iStream_read( lns_env_t * _pEnv, lns_any_t * pObj, lns_stem_t arg1);
 lns_stem_t l_nil_mtd_lns_iStream_read( lns_env_t * _pEnv, lns_stem_t obj, lns_stem_t arg1);
 extern void l_call_mtd_lns_oStream_close( lns_env_t * _pEnv, lns_any_t * pObj);
-lns_stem_t l_nil_mtd_lns_oStream_close( lns_env_t * _pEnv, lns_stem_t obj);
+void l_nil_mtd_lns_oStream_close( lns_env_t * _pEnv, lns_stem_t obj);
 extern void l_call_mtd_lns_oStream_flush( lns_env_t * _pEnv, lns_any_t * pObj);
-lns_stem_t l_nil_mtd_lns_oStream_flush( lns_env_t * _pEnv, lns_stem_t obj);
+void l_nil_mtd_lns_oStream_flush( lns_env_t * _pEnv, lns_stem_t obj);
 extern lns_stem_t l_call_mtd_lns_oStream_write( lns_env_t * _pEnv, lns_any_t * pObj, lns_any_t * arg1);
 lns_stem_t l_nil_mtd_lns_oStream_write( lns_env_t * _pEnv, lns_stem_t obj, lns_any_t * arg1);
 extern void l_call_mtd_lns_luaStream_close( lns_env_t * _pEnv, lns_any_t * pObj);
-lns_stem_t l_nil_mtd_lns_luaStream_close( lns_env_t * _pEnv, lns_stem_t obj);
+void l_nil_mtd_lns_luaStream_close( lns_env_t * _pEnv, lns_stem_t obj);
 extern void l_call_mtd_lns_luaStream_flush( lns_env_t * _pEnv, lns_any_t * pObj);
-lns_stem_t l_nil_mtd_lns_luaStream_flush( lns_env_t * _pEnv, lns_stem_t obj);
+void l_nil_mtd_lns_luaStream_flush( lns_env_t * _pEnv, lns_stem_t obj);
 extern lns_stem_t l_call_mtd_lns_luaStream_read( lns_env_t * _pEnv, lns_any_t * pObj, lns_stem_t arg1);
 lns_stem_t l_nil_mtd_lns_luaStream_read( lns_env_t * _pEnv, lns_stem_t obj, lns_stem_t arg1);
 extern lns_stem_t l_call_mtd_lns_luaStream_seek( lns_env_t * _pEnv, lns_any_t * pObj, lns_any_t * arg1, lns_int_t arg2);
@@ -123,7 +123,7 @@ lns_stem_t l_nil_mtd_lns_luaStream_seek( lns_env_t * _pEnv, lns_stem_t obj, lns_
 extern lns_stem_t l_call_mtd_lns_luaStream_write( lns_env_t * _pEnv, lns_any_t * pObj, lns_any_t * arg1);
 lns_stem_t l_nil_mtd_lns_luaStream_write( lns_env_t * _pEnv, lns_stem_t obj, lns_any_t * arg1);
 extern void l_call_mtd_lns_Mapping__toMap( lns_env_t * _pEnv, lns_any_t * pObj);
-lns_stem_t l_nil_mtd_lns_Mapping__toMap( lns_env_t * _pEnv, lns_stem_t obj);
+void l_nil_mtd_lns_Mapping__toMap( lns_env_t * _pEnv, lns_stem_t obj);
 extern lns_any_t * lns_io_stderr;
 extern lns_any_t * lns_io_stdin;
 extern lns_any_t * lns_io_stdout;

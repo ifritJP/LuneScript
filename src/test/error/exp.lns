@@ -36,5 +36,9 @@
    let val2 = val[1][1]; // error
 }
 {
+   fn func(txt:str!,flag:bool) {
+      let val:bool = txt and flag or nil;  // error
+   }
+}{
    print( (1, 2) ); // error
 }

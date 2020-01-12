@@ -837,7 +837,10 @@ function Scope:isRoot(  )
 end
 function Scope:set_ownerTypeInfo( owner )
 
-   self.ownerTypeInfo = owner
+   if not self.ownerTypeInfo then
+      self.ownerTypeInfo = owner
+   end
+   
 end
 function Scope:getTypeInfoChild( name )
 
@@ -5974,236 +5977,203 @@ _moduleObj.builtinTypeLoadedFunc = builtinTypeLoadedFunc
 
 registBuiltin( "__loadedfunc", "__loadedfunc", TypeInfoKind.Ext, _moduleObj.builtinTypeLoadedFunc, _moduleObj.headTypeInfo, false )
 
-local LogOpe = {}
-_moduleObj.LogOpe = LogOpe
-LogOpe._val2NameMap = {}
-function LogOpe:_getTxt( val )
-   local name = self._val2NameMap[ val ]
-   if name then
-      return string.format( "LogOpe.%s", name )
-   end
-   return string.format( "illegal val -- %s", val )
-end
-function LogOpe._from( val )
-   if LogOpe._val2NameMap[ val ] then
-      return val
-   end
-   return nil
-end
-    
-LogOpe.__allList = {}
-function LogOpe.get__allList()
-   return LogOpe.__allList
-end
-
-LogOpe.And = 0
-LogOpe._val2NameMap[0] = 'And'
-LogOpe.__allList[1] = LogOpe.And
-LogOpe.Or = 1
-LogOpe._val2NameMap[1] = 'Or'
-LogOpe.__allList[2] = LogOpe.Or
-
-local OpeTypeInfo = {}
-setmetatable( OpeTypeInfo, { __index = TypeInfo } )
-_moduleObj.OpeTypeInfo = OpeTypeInfo
-function OpeTypeInfo.new( ope, exp1, exp2, result )
+local AndExpTypeInfo = {}
+setmetatable( AndExpTypeInfo, { __index = TypeInfo } )
+_moduleObj.AndExpTypeInfo = AndExpTypeInfo
+function AndExpTypeInfo.new( exp1, exp2, result )
    local obj = {}
-   OpeTypeInfo.setmeta( obj )
-   if obj.__init then obj:__init( ope, exp1, exp2, result ); end
+   AndExpTypeInfo.setmeta( obj )
+   if obj.__init then obj:__init( exp1, exp2, result ); end
    return obj
 end
-function OpeTypeInfo:__init(ope, exp1, exp2, result) 
+function AndExpTypeInfo:__init(exp1, exp2, result) 
    TypeInfo.__init( self,result:get_scope())
    
-   self.ope = ope
    self.exp1 = exp1
    self.exp2 = exp2
    self.result = result
 end
-function OpeTypeInfo.setmeta( obj )
-  setmetatable( obj, { __index = OpeTypeInfo  } )
+function AndExpTypeInfo.setmeta( obj )
+  setmetatable( obj, { __index = AndExpTypeInfo  } )
 end
-function OpeTypeInfo:get_ope()
-   return self.ope
-end
-function OpeTypeInfo:get_exp1()
+function AndExpTypeInfo:get_exp1()
    return self.exp1
 end
-function OpeTypeInfo:get_exp2()
+function AndExpTypeInfo:get_exp2()
    return self.exp2
 end
-function OpeTypeInfo:get_result()
+function AndExpTypeInfo:get_result()
    return self.result
 end
-function OpeTypeInfo:addChildren( ... )
+function AndExpTypeInfo:addChildren( ... )
    return self.result:addChildren( ... )
 end
 
-function OpeTypeInfo:applyGeneric( ... )
+function AndExpTypeInfo:applyGeneric( ... )
    return self.result:applyGeneric( ... )
 end
 
-function OpeTypeInfo:canEvalWith( ... )
+function AndExpTypeInfo:canEvalWith( ... )
    return self.result:canEvalWith( ... )
 end
 
-function OpeTypeInfo:createAlt2typeMap( ... )
+function AndExpTypeInfo:createAlt2typeMap( ... )
    return self.result:createAlt2typeMap( ... )
 end
 
-function OpeTypeInfo:equals( ... )
+function AndExpTypeInfo:equals( ... )
    return self.result:equals( ... )
 end
 
-function OpeTypeInfo:getFullName( ... )
+function AndExpTypeInfo:getFullName( ... )
    return self.result:getFullName( ... )
 end
 
-function OpeTypeInfo:getModule( ... )
+function AndExpTypeInfo:getModule( ... )
    return self.result:getModule( ... )
 end
 
-function OpeTypeInfo:getParentFullName( ... )
+function AndExpTypeInfo:getParentFullName( ... )
    return self.result:getParentFullName( ... )
 end
 
-function OpeTypeInfo:getParentId( ... )
+function AndExpTypeInfo:getParentId( ... )
    return self.result:getParentId( ... )
 end
 
-function OpeTypeInfo:getTxt( ... )
+function AndExpTypeInfo:getTxt( ... )
    return self.result:getTxt( ... )
 end
 
-function OpeTypeInfo:getTxtWithRaw( ... )
+function AndExpTypeInfo:getTxtWithRaw( ... )
    return self.result:getTxtWithRaw( ... )
 end
 
-function OpeTypeInfo:get_abstractFlag( ... )
+function AndExpTypeInfo:get_abstractFlag( ... )
    return self.result:get_abstractFlag( ... )
 end
 
-function OpeTypeInfo:get_accessMode( ... )
+function AndExpTypeInfo:get_accessMode( ... )
    return self.result:get_accessMode( ... )
 end
 
-function OpeTypeInfo:get_argTypeInfoList( ... )
+function AndExpTypeInfo:get_argTypeInfoList( ... )
    return self.result:get_argTypeInfoList( ... )
 end
 
-function OpeTypeInfo:get_autoFlag( ... )
+function AndExpTypeInfo:get_autoFlag( ... )
    return self.result:get_autoFlag( ... )
 end
 
-function OpeTypeInfo:get_baseId( ... )
+function AndExpTypeInfo:get_baseId( ... )
    return self.result:get_baseId( ... )
 end
 
-function OpeTypeInfo:get_baseTypeInfo( ... )
+function AndExpTypeInfo:get_baseTypeInfo( ... )
    return self.result:get_baseTypeInfo( ... )
 end
 
-function OpeTypeInfo:get_children( ... )
+function AndExpTypeInfo:get_children( ... )
    return self.result:get_children( ... )
 end
 
-function OpeTypeInfo:get_display_stirng( ... )
+function AndExpTypeInfo:get_display_stirng( ... )
    return self.result:get_display_stirng( ... )
 end
 
-function OpeTypeInfo:get_display_stirng_with( ... )
+function AndExpTypeInfo:get_display_stirng_with( ... )
    return self.result:get_display_stirng_with( ... )
 end
 
-function OpeTypeInfo:get_externalFlag( ... )
+function AndExpTypeInfo:get_externalFlag( ... )
    return self.result:get_externalFlag( ... )
 end
 
-function OpeTypeInfo:get_genSrcTypeInfo( ... )
+function AndExpTypeInfo:get_genSrcTypeInfo( ... )
    return self.result:get_genSrcTypeInfo( ... )
 end
 
-function OpeTypeInfo:get_interfaceList( ... )
+function AndExpTypeInfo:get_interfaceList( ... )
    return self.result:get_interfaceList( ... )
 end
 
-function OpeTypeInfo:get_itemTypeInfoList( ... )
+function AndExpTypeInfo:get_itemTypeInfoList( ... )
    return self.result:get_itemTypeInfoList( ... )
 end
 
-function OpeTypeInfo:get_kind( ... )
+function AndExpTypeInfo:get_kind( ... )
    return self.result:get_kind( ... )
 end
 
-function OpeTypeInfo:get_mutMode( ... )
+function AndExpTypeInfo:get_mutMode( ... )
    return self.result:get_mutMode( ... )
 end
 
-function OpeTypeInfo:get_nilable( ... )
+function AndExpTypeInfo:get_nilable( ... )
    return self.result:get_nilable( ... )
 end
 
-function OpeTypeInfo:get_nilableTypeInfo( ... )
+function AndExpTypeInfo:get_nilableTypeInfo( ... )
    return self.result:get_nilableTypeInfo( ... )
 end
 
-function OpeTypeInfo:get_nonnilableType( ... )
+function AndExpTypeInfo:get_nonnilableType( ... )
    return self.result:get_nonnilableType( ... )
 end
 
-function OpeTypeInfo:get_parentInfo( ... )
+function AndExpTypeInfo:get_parentInfo( ... )
    return self.result:get_parentInfo( ... )
 end
 
-function OpeTypeInfo:get_rawTxt( ... )
+function AndExpTypeInfo:get_rawTxt( ... )
    return self.result:get_rawTxt( ... )
 end
 
-function OpeTypeInfo:get_retTypeInfoList( ... )
+function AndExpTypeInfo:get_retTypeInfoList( ... )
    return self.result:get_retTypeInfoList( ... )
 end
 
-function OpeTypeInfo:get_scope( ... )
+function AndExpTypeInfo:get_scope( ... )
    return self.result:get_scope( ... )
 end
 
-function OpeTypeInfo:get_srcTypeInfo( ... )
+function AndExpTypeInfo:get_srcTypeInfo( ... )
    return self.result:get_srcTypeInfo( ... )
 end
 
-function OpeTypeInfo:get_staticFlag( ... )
+function AndExpTypeInfo:get_staticFlag( ... )
    return self.result:get_staticFlag( ... )
 end
 
-function OpeTypeInfo:get_typeData( ... )
+function AndExpTypeInfo:get_typeData( ... )
    return self.result:get_typeData( ... )
 end
 
-function OpeTypeInfo:get_typeId( ... )
+function AndExpTypeInfo:get_typeId( ... )
    return self.result:get_typeId( ... )
 end
 
-function OpeTypeInfo:hasBase( ... )
+function AndExpTypeInfo:hasBase( ... )
    return self.result:hasBase( ... )
 end
 
-function OpeTypeInfo:hasRouteNamespaceFrom( ... )
+function AndExpTypeInfo:hasRouteNamespaceFrom( ... )
    return self.result:hasRouteNamespaceFrom( ... )
 end
 
-function OpeTypeInfo:isInheritFrom( ... )
+function AndExpTypeInfo:isInheritFrom( ... )
    return self.result:isInheritFrom( ... )
 end
 
-function OpeTypeInfo:isModule( ... )
+function AndExpTypeInfo:isModule( ... )
    return self.result:isModule( ... )
 end
 
-function OpeTypeInfo:serialize( ... )
+function AndExpTypeInfo:serialize( ... )
    return self.result:serialize( ... )
 end
 
-function OpeTypeInfo:serializeTypeInfoList( ... )
+function AndExpTypeInfo:serializeTypeInfoList( ... )
    return self.result:serializeTypeInfoList( ... )
 end
 

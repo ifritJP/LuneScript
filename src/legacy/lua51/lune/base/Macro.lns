@@ -628,7 +628,8 @@ pub fn MacroCtrl.expandSymbol(
             {
                format = "' %s '";
                exp = Nodes.ExpMacroStatListNode.create(
-                  nodeManager, prefixToken.pos, [ Ast.builtinTypeString ], exp );
+                  nodeManager, prefixToken.pos,
+                  self.macroMode == .AnalyzeArg, [ Ast.builtinTypeString ], exp );
             }
             elseif Ast.builtinTypeString.equals( valType ##) {
                //
@@ -656,9 +657,11 @@ pub fn MacroCtrl.expandSymbol(
    let newToken = new Parser.Token(
       Parser.TokenKind.Str, format, prefixToken.pos, prefixToken.consecutive ## );
    let literalStr = Nodes.LiteralStringNode.create(
-      nodeManager, prefixToken.pos, [ Ast.builtinTypeString ], newToken,
+      nodeManager, prefixToken.pos, self.macroMode == .AnalyzeArg,
+      [ Ast.builtinTypeString ], newToken,
       Nodes.ExpListNode.create(
-         nodeManager, exp.$pos, exp.$expTypeList, [ exp ], nil, false ) );
+         nodeManager, exp.$pos, self.macroMode == .AnalyzeArg,
+         exp.$expTypeList, [ exp ], nil, false ) );
    return literalStr;
 }
 
@@ -722,6 +725,22 @@ pub fn MacroCtrl.restoreMacroMode() mut {
    self.macroMode = self.macroModeStack[ #self.macroModeStack ];
 }
 
+/**
+現在の Macroモード が AnalyzeArg か調べる。
+Macroモード がネストされている場合、ネストを辿って調べる。
+*/
+pub fn MacroCtrl.isInAnalyzeArgMode(): bool {
+   if #self.macroModeStack == 0 {
+      return false;
+   }
+   foreach mode in self.macroModeStack {
+      if mode == .AnalyzeArg {
+         return true;
+      }
+   }
+   return false;
+}
+
 
 pub fn nodeToCodeTxt(node:&Nodes.Node, moduleTypeInfo:&Ast.TypeInfo ):str
 {
@@ -732,3 +751,4 @@ pub fn nodeToCodeTxt(node:&Nodes.Node, moduleTypeInfo:&Ast.TypeInfo ):str
    
    return memStream.$txt;
 }
+

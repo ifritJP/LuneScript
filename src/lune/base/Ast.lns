@@ -399,7 +399,9 @@ pub class Scope extend (ModuleInfoManager) {
    }
 
    pub fn set_ownerTypeInfo( owner: &TypeInfo! ) mut {
-      self.ownerTypeInfo = owner;
+      if not self.ownerTypeInfo {
+         self.ownerTypeInfo = owner;
+      }
    }
 
    pub fn getTypeInfoChild( name: str ) : &TypeInfo! {
@@ -4514,20 +4516,18 @@ registBuiltin( "__loadedfunc", "__loadedfunc", .Ext,
                builtinTypeLoadedFunc, headTypeInfo, false );
 
 
-pub enum LogOpe {
-   And,
-   Or,
-}
-pub class OpeTypeInfo extend TypeInfo {
-   let ope:LogOpe {pub};
+/**
+and 演算結果の TypeInfo。
+hoge and foo or bar の 3 項演算結果の演算結果を得るために使用する。
+*/
+pub class AndExpTypeInfo extend TypeInfo {
    let exp1:&TypeInfo {pub};
    let exp2:&TypeInfo {pub};
    let result:&TypeInfo {pub};
 
-   pub fn __init( ope:LogOpe, exp1:&TypeInfo, exp2:&TypeInfo, result:&TypeInfo )
+   pub fn __init( exp1:&TypeInfo, exp2:&TypeInfo, result:&TypeInfo )
    {
       super( result.$scope );
-      self.ope = ope;
       self.exp1 = exp1;
       self.exp2 = exp2;
       self.result = result;

@@ -20,6 +20,7 @@ static void mtd_lns_luaStream__delExt( lns_env_t * _pEnv, lns_any_t * pObj )
 {
 }
 
+#if 0
 static void mtd_lns_io__delExt( lns_env_t * _pEnv, lns_any_t * pObj )
 {
 }
@@ -43,6 +44,7 @@ static void mtd_lns_math__delExt( lns_env_t * _pEnv, lns_any_t * pObj )
 static void mtd_lns_debug__delExt( lns_env_t * _pEnv, lns_any_t * pObj )
 {
 }
+#endif
 
 static void mtd_lns_luaStream_close( lns_env_t * _pEnv, lns_any_t * pObj)
 {

@@ -67,7 +67,8 @@ fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Nodes.ReturnNode {
    }
 
    return Nodes.ReturnNode.create(
-      self.nodeManager, token.pos, [ Ast.builtinTypeNone ], expList );
+      self.nodeManager, token.pos,
+      self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], expList );
 }
 
 fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node! {
@@ -145,7 +146,8 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node! {
          // statement = self.createNode(
          //     nodeKindBreak, token.pos, [ builtinTypeNone ], nil );}
          statement = Nodes.BreakNode.create(
-            self.nodeManager, token.pos, [ Ast.builtinTypeNone ] );
+            self.nodeManager, token.pos,
+            self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ] );
          if #self.loopScopeQueue == 0 {
             self.addErrMess( token.pos, "no loop syntax." );
          }
@@ -192,7 +194,8 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node! {
          // statement = self.createNode(
          //     nodeKindStmtExp, self.currentToken.pos, [ builtinTypeNone ], exp );
          statement = Nodes.StmtExpNode.create(
-            self.nodeManager, exp.$pos, [ Ast.builtinTypeNone ], exp );
+            self.nodeManager, exp.$pos,
+            self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], exp );
       }
    }
 
