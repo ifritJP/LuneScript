@@ -216,6 +216,53 @@ foreach obj in list {
 
 *  C へのトランスコード
 
+- [ ] 相互参照すると開放されない
+  
+#+BEGIN_SRC lns
+let mut val:Map<int,stem> = {};
+let mut val2:Map<int,stem> = { 0:val };
+val[ 0 ] = val2;
+class Test {
+   let mut val:stem! {non,pub};
+}
+let mut test = new Test( nil );
+test.set_val( test );
+#+END_SRC
+  
+- [ ] メソッド内でのクロージャアクセスに対応できていない。
+      コンパイルエラーになる。
+
+#+BEGIN_SRC lns
+let test;
+{
+   let work = 1;
+   class Test {
+      pub fn func() {
+         print( work );
+      }
+   }
+   test = new Test();
+}
+test.func();
+#+END_SRC
+
+- [ ] anonymous 関数から、クロージャをコールするとコンパイルエラー
+
+#+BEGIN_SRC lns
+let func2:form;
+{
+   let val = 1;
+   fn func( work:int ) {
+      print( work + val );
+   }
+   func2 = fn () {
+      func( 10 );
+   };
+}
+func2(##);
+#+END_SRC
+  
+  
 - [ ] Scope.accessSymbol() で、 Arg, Var のみ処理しているが、
       Func も処理対象にする。ただし、 Closure でない関数は除外。
       Func の ExpRef ノードを保持しておき、 

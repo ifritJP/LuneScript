@@ -24,17 +24,19 @@ SOFTWARE.
 
 import lune.base.Meta;
 
+form TestcaseFunc();
+
 pub class Ctrl {
-   fn runTestcase( testcase:form ) {
-      testcase(##);
+   fn runTestcase( testcase:TestcaseFunc ) {
+      testcase();
    }
    
    pub fn run( modObj:stem! ) {
       when! modObj {
          if! let testMap = modObj.__testMap {
-            foreach testcase, name in testMap@@Map<str,stem> {
+            foreach testcase, name in testMap@@Map<str,TestcaseFunc> {
                print( "%s:" (name) );
-               self.runTestcase( testcase@@form );
+               self.runTestcase( testcase );
             }
          }
       }

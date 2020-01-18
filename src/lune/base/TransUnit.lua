@@ -9497,6 +9497,12 @@ function TransUnit:analyzeExpCast( firstToken, opTxt, exp )
    local castTypeNode = self:analyzeRefType( Ast.AccessMode.Local, false, false )
    local castType = castTypeNode:get_expType()
    
+   if castType:get_kind() == Ast.TypeInfoKind.Form and exp:get_expType():get_nonnilableType():get_kind() == Ast.TypeInfoKind.Stem then
+      
+      self:addWarnMess( castTypeNode:get_pos(), "not support cast from stem to form for transcompiling to c-lang." )
+   end
+   
+   
    local expType = exp:get_expType()
    
    if opTxt == "@@@" or opTxt == "@@=" then

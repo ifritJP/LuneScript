@@ -3189,6 +3189,7 @@ function convFilter:processExpCall( node, opt )
          filter( node:get_func(), self, node )
          self:write( ", nil, 'call'" )
          wroteFuncFlag = true
+         setArgFlag = true
       else
        
          filter( node:get_func(), self, node )
@@ -3971,7 +3972,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3306, function (  )
+   Log.log( Log.Level.Info, __func__, 3307, function (  )
    
       return string.format( "code: %s", code)
    end )

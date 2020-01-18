@@ -2604,6 +2604,7 @@ pub override fn convFilter.processExpCall(
          filter( node.$func, self, node );
          self.write( ", nil, 'call'" );
          wroteFuncFlag = true;
+         setArgFlag = true;
       }
       else {
          filter( node.$func, self, node );

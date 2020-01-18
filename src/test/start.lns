@@ -385,10 +385,10 @@ _print( `{ SUB2.External.val } );
    _print( `{ test$.func$() } );
    let test2:Test! = nil;
    _print( `{ test2$.func$() } );
-   let mut funcnil:form! = fn():int { return 1; };
-   _print( `{ funcnil$() } );
+   let mut funcnil:form! = fn( param:stem! ):int { print( param ); return 1; };
+   _print( `{ funcnil$( nil ) } );
    funcnil = nil;
-   _print( `{ funcnil$() } );
+   _print( `{ funcnil$( 1 ) } );
 }
 
 

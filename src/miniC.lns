@@ -1,25 +1,15 @@
-class Super {
-   let val:int! {pub};
-   pub fn __init() {
-   }
-   
-   static let val2:int! {pub};
-   static let val3:int {pub};
-   __init {
-      Super.val3 = 1;
-   }
-}
-let hoge = new Super();
-if! let val = hoge.$val {
-   print( val + 10 );
-}
-else {
-   print( "OK" );
-}
-if! let val = Super.$val2 {
-   print( val + 100 );
-}
-else {
-   print( "OK" );
-}
+form funcType( val:stem! );
 
+{
+   let mut work:funcType! = nil;
+   {
+      let func = fn ( val:stem! ) {
+         when! val {
+            work = val@@funcType;
+         }
+         print( work and "has" );
+      };
+      func( func );
+   }
+   work$(nil);
+}

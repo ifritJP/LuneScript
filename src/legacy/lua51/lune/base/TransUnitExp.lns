@@ -41,6 +41,11 @@ fn TransUnit.analyzeExpOne(
       self.nodeManager, exp.$pos, exp.$macroArgFlag, [ exp.$expType ], exp );
 }
 
+/**
+ExpNode のリスト expList を、 expTypeList 
+
+
+*/
 fn TransUnit.createExpList(
    pos:&Parser.Position,
    expTypeList:List<&Ast.TypeInfo>, expList:&List<&Nodes.Node>,
@@ -791,13 +796,14 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!, &List<&Ast
 @param genericTypeList generics に与えられている型
 @param genericsClass funcTypeInfo がメソッドだったときの、
     そのメソッドが定義されているクラス
-@return AlternateTypeInfo → 実型パラメータのマップ
-@return 
+@return Ast.MatchType マッチ結果
+@return Map<&Ast.TypeInfo,&Ast.TypeInfo> AlternateTypeInfo → 実型パラメータのマップ
+@return &Nodes.ExpListNode! 暗黙キャストなどを解決した引数 
 */
 fn TransUnit.checkMatchValType(
    pos: &Parser.Position, funcTypeInfo:&Ast.TypeInfo, expList:&Nodes.ExpListNode!,
    genericTypeList: &List<&Ast.TypeInfo>, genericsClass:&Ast.TypeInfo! ) mut :
-   Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
+Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
 {
    let mut argTypeList = funcTypeInfo.$argTypeInfoList;
    switch funcTypeInfo {
@@ -1416,6 +1422,15 @@ fn TransUnit.analyzeExpCast(
 {
    let castTypeNode = self.analyzeRefType( .Local, false, false );
    let mut castType = castTypeNode.$expType;
+
+   if castType.$kind == .Form and
+      exp.$expType.$nonnilableType.$kind == .Stem
+   {
+      // Stem から form へのキャストは、C のトランスコンパイルではサポートしない
+      self.addWarnMess(
+         castTypeNode.$pos,
+         "not support cast from stem to form for transcompiling to c-lang." );
+   }
 
    let expType = exp.$expType;
 
