@@ -1016,3 +1016,5 @@ test-cAll:
 	$(MAKE) test-testC
 
 
+test-gc:
+	$(MAKE) -f Makefile.ccc test-gc

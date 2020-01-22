@@ -40,7 +40,7 @@ let cTypeAny = "lns_any_t";
 let cTypeAnyP = "lns_any_t *";
 let cTypeAnyPP = "lns_any_t **";
 let cTypeEnvP = "lns_env_t *";
-let cTypeVarP = "lns_var_t *";
+let cTypeVarP = "lns_closureVar_t *";
 let cTypeMod = "lns_module_t";
 let cTypeModP = "lns_module_t *";
 let cTypeBlockP = "lns_block_t *";
@@ -337,6 +337,8 @@ enum ProcessMode {
    Immediate,
    /** __func__ の初期化 */
    InitFuncSym,
+   /** wrapper 関数定義 */
+   DefWrap,
 }
 
 fn isClassMember( symbol:&Ast.LowSymbol ) mut : bool
@@ -1766,6 +1768,12 @@ pub override fn convFilter.processRoot(
       foreach castNode in nodeManager.getExpCastNodeList() {
          filter( castNode, self, node );
       }
+
+      self.processMode = .DefWrap;
+      foreach callNode in nodeManager.getExpCallNodeList() {
+         filter( callNode, self, node );
+      }
+      
 
 
       self.processMode = .InitFuncSym;
@@ -5350,8 +5358,7 @@ pub fn convFilter.processVal2any( node:&Nodes.Node, parent: &Nodes.Node ) mut
       }
       case .Var {
          filter( node, self, parent );
-         // self.write( "->stem" );
-         // self.write( accessAny );
+         //self.write( accessAny );
       }
       default {
          Util.err( "not suppport -- %d, %s, %s, %d"
@@ -5372,14 +5379,16 @@ form processRValue();
    var シンボルがメンバの時に指定する。
 @param var 代入先のシンボル
 @param initFlag 変数に対する初期値設定の場合 true
-@param isStemExp 値が any 型かどうか
+@param expValKind 代入元の kind
+@param expValType w代入元の TypeInfo
 @param index exp が ... の場合の index
 @param firstMRet index が多値要素の最初のインデックスの場合 true
 @param processVal 代入する値にアクセスするコードを出力するコールバック
 */
 fn convFilter.processSetValSingleDirect(
    parent:&Nodes.Node, node:&Nodes.Node!, var:&Ast.LowSymbol, initFlag:bool,
-   expValKind:ValKind, index:int, firstMRet:bool, processVal:processRValue ) mut
+   expValKind:ValKind, expValType:&Ast.TypeInfo,
+   index:int, firstMRet:bool, processVal:processRValue ) mut
 {
    let valKind = self.scopeMgr.getSymbolValKind( var );
 
@@ -5420,38 +5429,49 @@ fn convFilter.processSetValSingleDirect(
    
    switch valKind {
       case .Var {
-         switch expValKind {
-            case .Stem {
-               if initFlag {
-                  self.write( "lns_setQ( %s->stem, " ( varName ) );
-               }
-               else {
-                  self.write( "lns_setq( _pEnv, %s->stem, " ( varName ) );
-               }
-               processVal();
-               self.writeln( " );" );
-            }
-            case .Any {
-               if initFlag {
-                  self.write( "lns_setQ_any( &%s->stem.val.pAny, " ( varName ) );
-               }
-               else {
-                  self.write( "lns_setq_any( _pEnv, &%s->stem.val.pAny, " ( varName ) );
-               }
-               when! processPrefix {
-                  processPrefix(##);
-               }
-               processVal();
-               self.write( " );" );
-            }
-            case .Prim {
-               self.write( "%s->stem" (varName) );
-               self.write( getAccessValFromStem( var.$typeInfo) );
-               self.write( " = " );
-               processVal();
-               self.write( ";" );
-            }
+         // switch expValKind {
+            // case .Stem {
+            //    if initFlag {
+            //       self.write( "lns_setQ( %s->stem, " ( varName ) );
+            //    }
+            //    else {
+            //       self.write( "lns_setq( _pEnv, %s->stem, " ( varName ) );
+            //    }
+            //    processVal();
+            //    self.writeln( " );" );
+            // }
+            // case .Any {
+            //    if initFlag {
+            //       self.write( "lns_setQ( &%s->stem, LNS_STEM_ANY( " ( varName ) );
+            //    }
+            //    else {
+            //       self.write( "lns_setq( _pEnv, &%s->stem, LNS_STEM_ANY( " ( varName ) );
+            //    }
+            //    when! processPrefix {
+            //       processPrefix(##);
+            //    }
+            //    processVal();
+            //    self.write( " ) );" );
+            // }
+            // case .Prim {
+            //    self.write( "%s->stem" (varName) );
+            //    self.write( getAccessValFromStem( var.$typeInfo) );
+            //    self.write( " = " );
+            //    processVal();
+            //    self.write( ";" );
+            // }
+         // }
+         if initFlag {
+            self.write( "lns_setQ( %s->stem, " ( varName ) );
          }
+         else {
+            self.write( "lns_setq( _pEnv, %s->stem, " ( varName ) );
+         }
+         
+         process2stem(
+            self.stream, self.moduleCtrl, self.scopeMgr,
+            expValKind, expValType, parent, processVal );
+         self.write( " );" );
       }
       case .Stem {
          switch expValKind {
@@ -5796,7 +5816,7 @@ fn convFilter.processSetValSingle(
    }
    
    self.processSetValSingleDirect(
-      parent, node, var, initFlag, expValKind, index, firstMRet,
+      parent, node, var, initFlag, expValKind, exp.$expType, index, firstMRet,
       fn () {
          self.processValForSetOp(
             parent, self.scopeMgr.getSymbolValKind( var ),
@@ -5823,7 +5843,8 @@ fn convFilter.processSetSymSingle(
    }
    
    self.processSetValSingleDirect(
-      parent, node, var, initFlag, self.scopeMgr.getSymbolValKind( symbol ), 1, false,
+      parent, node, var, initFlag, self.scopeMgr.getSymbolValKind( symbol ),
+      symbol.$typeInfo, 1, false,
       fn () {
          if toIF {
             processToIF( self.stream, self.moduleCtrl, symbol.$typeInfo, process );
@@ -6493,7 +6514,65 @@ fn convFilter.processFuncPrototype(
    }
 }
 
-
+fn convFilter.processCallUserForm(
+   formName:str, formType:&Ast.TypeInfo, argNameList:&List<str> ) mut
+{
+   fn process( prefix:str ) {
+      self.pushIndent( ## );
+      self.write( prefix );
+      foreach argName, index in argNameList {
+         self.write( ", " );
+         self.write( argName );
+      }
+      self.writeln( ");" );
+      self.popIndent();
+   }
+   
+   self.writeln( "if lns_isClosure( %s ) {" (formName) );
+   switch getCRetType( formType.$retTypeInfoList ) {
+      case "void" {
+         process( "lns_closure( %s )( _pEnv, %s" (formName, formName));
+      }
+      case cTypeAny {
+         process( "return lns_closure_any( %s )( _pEnv, %s" (formName, formName));
+      }
+      case cTypeInt {
+         process( "return lns_closure_int( %s )( _pEnv, %s" (formName, formName));
+      }
+      case cTypeReal {
+         process( "return lns_closure_real( %s )( _pEnv, %s" (formName, formName));
+      }
+      case cTypeBool {
+         process( "return lns_closure_bool( %s )( _pEnv, %s" (formName, formName));
+      }
+      default {
+         process( "return lns_closure( %s )( _pEnv, %s" (formName, formName));
+      }
+   }
+   self.writeln( "}" );
+   self.writeln( "else {" );
+   switch getCRetType( formType.$retTypeInfoList ) {
+      case "void" {
+         process( "lns_func( %s )( _pEnv" (formName));
+      }
+      case cTypeAnyP {
+         process( "return lns_func_any( %s )( _pEnv" (formName));
+      }
+      case cTypeInt {
+         process( "return lns_func_int( %s )( _pEnv" (formName));
+      }
+      case cTypeReal {
+         process( "return lns_func_real( %s )( _pEnv" (formName));
+      }
+      case cTypeBool {
+         process( "return lns_func_bool( %s )( _pEnv" (formName));
+      }
+      default {
+         process( "return lns_func( %s )( _pEnv" (formName));
+      }
+   }
+   self.writeln( "}" );
+}
 
 pub override fn convFilter.processDeclForm(
    node: Nodes.DeclFormNode, opt: Opt ) mut
@@ -6513,71 +6592,87 @@ pub override fn convFilter.processDeclForm(
             self.moduleCtrl.getCallFormName( formType ),
             getCRetType( formType.$retTypeInfoList ), node.$argList, false );
 
-         fn process( prefix:str ) {
-            self.pushIndent( ## );
-            self.write( prefix );
-            foreach arg, index in node.$argList {
-               self.write( ", " );
-               if! let workArg = arg@@@Nodes.DeclArgNode {
-                  self.write( workArg.$name.txt );
-               }
-               else {
-                  if! let workArg = arg@@@Nodes.DeclArgDDDNode {
-                     self.write( "_pDDD" );
-                  }
-               }
-            }
-            self.writeln( ");" );
-            self.popIndent();
-         }
+
+         
          
          self.writeln( "{" );
          self.pushIndent( ## );
 
-         self.writeln( "if lns_isClosure( _pForm ) {" );
-         switch getCRetType( formType.$retTypeInfoList ) {
-            case "void" {
-               process( "lns_closure( _pForm )( _pEnv, _pForm");
+         
+         let mut argNameList:List<str> = [];
+         foreach arg, index in node.$argList {
+            if! let workArg = arg@@@Nodes.DeclArgNode {
+               argNameList.insert( workArg.$name.txt );
             }
-            case cTypeAny {
-               process( "return lns_closure_any( _pForm )( _pEnv, _pForm" );
-            }
-            case cTypeInt {
-               process( "return lns_closure_int( _pForm )( _pEnv, _pForm" );
-            }
-            case cTypeReal {
-               process( "return lns_closure_real( _pForm )( _pEnv, _pForm" );
-            }
-            case cTypeBool {
-               process( "return lns_closure_bool( _pForm )( _pEnv, _pForm" );
-            }
-            default {
-               process( "return lns_closure( _pForm )( _pEnv, _pForm" );
+            else {
+               if! let workArg = arg@@@Nodes.DeclArgDDDNode {
+                  argNameList.insert( "_pDDD" );
+               }
             }
          }
-         self.writeln( "}" );
-         self.writeln( "else {" );
-         switch getCRetType( formType.$retTypeInfoList ) {
-            case "void" {
-               process( "lns_func( _pForm )( _pEnv" );
-            }
-            case cTypeAnyP {
-               process( "return lns_func_any( _pForm )( _pEnv" );
-            }
-            case cTypeInt {
-               process( "return lns_func_int( _pForm )( _pEnv" );
-            }
-            case cTypeReal {
-               process( "return lns_func_real( _pForm )( _pEnv" );
-            }
-            case cTypeBool {
-               process( "return lns_func_bool( _pForm )( _pEnv" );
-            }
-            default {
-               process( "return lns_func( _pForm )( _pEnv" );
-            }
-         }
-         self.writeln( "}" );
+         self.processCallUserForm( "_pForm", formType, argNameList );
+
+         // fn process( prefix:str ) {
+         //    self.pushIndent( ## );
+         //    self.write( prefix );
+         //    foreach arg, index in node.$argList {
+         //       self.write( ", " );
+         //       if! let workArg = arg@@@Nodes.DeclArgNode {
+         //          self.write( workArg.$name.txt );
+         //       }
+         //       else {
+         //          if! let workArg = arg@@@Nodes.DeclArgDDDNode {
+         //             self.write( "_pDDD" );
+         //          }
+         //       }
+         //    }
+         //    self.writeln( ");" );
+         //    self.popIndent();
+         // }
+         // self.writeln( "if lns_isClosure( _pForm ) {" );
+         // switch getCRetType( formType.$retTypeInfoList ) {
+         //    case "void" {
+         //       process( "lns_closure( _pForm )( _pEnv, _pForm");
+         //    }
+         //    case cTypeAny {
+         //       process( "return lns_closure_any( _pForm )( _pEnv, _pForm" );
+         //    }
+         //    case cTypeInt {
+         //       process( "return lns_closure_int( _pForm )( _pEnv, _pForm" );
+         //    }
+         //    case cTypeReal {
+         //       process( "return lns_closure_real( _pForm )( _pEnv, _pForm" );
+         //    }
+         //    case cTypeBool {
+         //       process( "return lns_closure_bool( _pForm )( _pEnv, _pForm" );
+         //    }
+         //    default {
+         //       process( "return lns_closure( _pForm )( _pEnv, _pForm" );
+         //    }
+         // }
+         // self.writeln( "}" );
+         // self.writeln( "else {" );
+         // switch getCRetType( formType.$retTypeInfoList ) {
+         //    case "void" {
+         //       process( "lns_func( _pForm )( _pEnv" );
+         //    }
+         //    case cTypeAnyP {
+         //       process( "return lns_func_any( _pForm )( _pEnv" );
+         //    }
+         //    case cTypeInt {
+         //       process( "return lns_func_int( _pForm )( _pEnv" );
+         //    }
+         //    case cTypeReal {
+         //       process( "return lns_func_real( _pForm )( _pEnv" );
+         //    }
+         //    case cTypeBool {
+         //       process( "return lns_func_bool( _pForm )( _pEnv" );
+         //    }
+         //    default {
+         //       process( "return lns_func( _pForm )( _pEnv" );
+         //    }
+         // }
+         // self.writeln( "}" );
 
          
          self.popIndent();
@@ -7432,7 +7527,7 @@ pub override fn convFilter.processForeach(
          self.writeln( "_%s++;" ( self.moduleCtrl.getSymbolName( indexSymbol ) ) );
          self.processDeclVarC( true, indexSymbol, true ##);
          self.processSetValSingleDirect(
-            node, nil, indexSymbol, true, .Prim, 0, false,
+            node, nil, indexSymbol, true, .Prim, Ast.builtinTypeInt, 0, false,
             fn () {
                self.write( "_%s" ( self.moduleCtrl.getSymbolName( indexSymbol ) ) );
             });
@@ -8474,6 +8569,60 @@ pub override fn convFilter.processDeclClass(
 //    }
 };
 
+fn getFormNilWrapper(node:&Nodes.Node) : str
+{
+   return "l_nil_form_%d" (node.$id);
+}
+
+fn convFilter.processExpCallDefWrap( node: Nodes.ExpCallNode, opt: Opt ) mut {
+   let funcType;
+   if node.$nilAccess {
+      funcType = node.$func.$expType.$nonnilableType;
+   }
+   else {
+      return;
+   }
+   
+   if funcType.$kind ~= .FormFunc {
+      return;
+   }
+   
+   let retCode;
+   let retType;
+   if getCRetType( funcType.$retTypeInfoList ) == "void" {
+      retType = "void";
+      retCode = "";
+   }
+   else {
+      retType = cTypeStem;
+      retCode = cValNil;
+   }
+
+   let mut argNameList:List<str> = [];
+   self.write( "static %s %s( %s * _pEnv, %s form"
+               ( retType, getFormNilWrapper(node), cTypeEnvP, cTypeStem ));
+   foreach argType, index in funcType.$argTypeInfoList {
+      let name = "arg%d" (index);
+      self.write( ", %s %s" (getCType( argType ), name) );
+      argNameList.insert( name );
+   }
+   self.writeln( ")" );
+   self.writeln( "{" );
+   self.pushIndent( ## );
+
+   
+   self.write( ```
+if ( form.type == lns_stem_type_nil ) {
+   return %s;
+}
+``` (retCode) );
+
+   self.processCallUserForm( "form%s" (accessAny), funcType, argNameList );            
+   
+   self.popIndent();
+   self.writeln( "}" );
+}
+
 
 pub override fn convFilter.processExpCall(
    node: Nodes.ExpCallNode, opt: Opt ) mut
@@ -8506,6 +8655,10 @@ pub override fn convFilter.processExpCall(
                node, getMRetFuncName( node ), getCRetType( node.$expTypeList ),
                mRetInfo, argList );
          }
+         return;
+      }
+      case .DefWrap {
+         self.processExpCallDefWrap( node, opt );
          return;
       }
    }
@@ -8723,8 +8876,13 @@ pub override fn convFilter.processExpCall(
                wroteFuncFlag = true;
             }
             case .FormFunc {
-               self.write( "%s( _pEnv, "
-                           ( self.moduleCtrl.getCallFormName( funcType ) ));
+               if node.$nilAccess {
+                  self.write( "%s( _pEnv, " ( getFormNilWrapper(node) ));
+               }
+               else {
+                  self.write( "%s( _pEnv, "
+                              ( self.moduleCtrl.getCallFormName( funcType ) ));
+               }
                self.processVal2any( node.$func, node );
                wroteFuncFlag = true;
                setArgFlag = true;

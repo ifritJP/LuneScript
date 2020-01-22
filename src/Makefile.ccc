@@ -40,7 +40,7 @@ work/c/%.o: %.cxx
 
 all: build
 
-lctags: $(addsuffix .lc,$(CORE_SRCS))
+lctags: $(addsuffix .lc,$(CORE_SRCS)) lune/base/runtime_c/lns_gc.c
 
 
 $(OBJS): lune/base/runtime_c/*.h
@@ -62,4 +62,8 @@ build-objs: $(OBJS)
 clean:
 	rm -f $(OBJS)
 
+
+test-gc: work/c/lns_gc.o work/c/lns_alloc.o
+	g++ -ldl -o $(TEST_OUT) work/c/lns_gc.o work/c/lns_alloc.o $(LUA_LIB)
+	./$(TEST_OUT)
 

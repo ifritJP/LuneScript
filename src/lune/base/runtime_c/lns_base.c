@@ -139,11 +139,11 @@ static void lns_release_any( lns_env_t * _pEnv, lns_any_t * pAny ) {
     s_globalEnv.allocNum--;
 }
 
-lns_var_t * lns_var_alloc(
+lns_closureVar_t * lns_var_alloc(
     lns_env_t * _pEnv, lns_block_t * pBlock, int index, lns_stem_type_t type )
 {
-    lns_var_t * pVar =
-        (lns_var_t *)lns_malloc( _pEnv->allocateor, sizeof( lns_var_t ) );
+    lns_closureVar_t * pVar =
+        (lns_closureVar_t *)lns_malloc( _pEnv->allocateor, sizeof( lns_closureVar_t ) );
     s_globalEnv.allocNum++;
     
     pVar->stem.type = type;
@@ -153,7 +153,7 @@ lns_var_t * lns_var_alloc(
     return pVar;
 }
 
-static void lns_var_decre( lns_env_t * _pEnv, lns_var_t * pVar )
+static void lns_var_decre( lns_env_t * _pEnv, lns_closureVar_t * pVar )
 {
     lns_lock(
         pVar->refCount--;
@@ -199,7 +199,7 @@ static void lns_gc_any( lns_env_t * _pEnv, lns_any_t * pAny, bool freeFlag ) {
         {
             int index;
             for ( index = 0; index < pAny->val.form.len; index++ ) {
-                lns_closureVal_t * pVal = l_form_closure( pAny, index );
+                lns_closureRef_t * pVal = l_form_closure( pAny, index );
                 lns_var_decre( _pEnv, pVal->pVar );
             }
             lns_free( _pEnv->allocateor, pAny->val.form.pClosureValList );
@@ -468,7 +468,7 @@ static void lns_leave_blockSub( lns_env_t * _pEnv, lns_block_t * pBlock )
 {
     int index;
     for ( index = pBlock->varLen - 1; index >= 0; index-- ) {
-        lns_var_t * pVar = pBlock->pVarList[ index ];
+        lns_closureVar_t * pVar = pBlock->pVarList[ index ];
         if ( pVar != NULL ) {
             lns_var_decre( _pEnv, pVar );
         }
@@ -522,7 +522,7 @@ void lns_reset_block( lns_env_t * _pEnv )
     int index;
 
     for ( index = pBlock->varLen - 1; index >= 0; index-- ) {
-        lns_var_t * pVar = pBlock->pVarList[ index ];
+        lns_closureVar_t * pVar = pBlock->pVarList[ index ];
         if ( pVar != NULL ) {
             lns_var_decre( _pEnv, pVar );
         }
@@ -925,8 +925,8 @@ lns_any_t * _lns_func2any(
     else {
         pForm->needFormParam = true;
     }
-    pForm->pClosureValList = (lns_closureVal_t*)lns_malloc(
-        _pEnv->allocateor, sizeof( lns_closureVal_t ) * num );
+    pForm->pClosureValList = (lns_closureRef_t*)lns_malloc(
+        _pEnv->allocateor, sizeof( lns_closureRef_t ) * num );
     s_globalEnv.allocNum++;
     /* pForm->pOrgClosureValList = (lns_any_t **)lns_malloc( */
     /*     _pEnv->allocateor, sizeof( lns_any_t * ) * num ); */
@@ -942,7 +942,7 @@ lns_any_t * _lns_func2any(
     lns_lock( 
         int index;
         for ( index = 0; index < num; index++ ) {
-            lns_var_t * pVar = va_arg( ap, lns_var_t * );
+            lns_closureVar_t * pVar = va_arg( ap, lns_closureVar_t * );
             pVar->refCount++;
             pForm->pClosureValList[ index ].pVar = pVar;
         }
@@ -1773,6 +1773,15 @@ lns_stem_t lns_call_form( lns_env_t * _pEnv, lns_any_t * _pForm, lns_stem_t ddd 
         return lns_func( _pForm )( _pEnv, ddd );
     }
 }
+
+lns_stem_t lns_nil_call_form( lns_env_t * _pEnv, lns_stem_t form, lns_stem_t ddd )
+{
+    if ( form.type == lns_stem_type_nil ) {
+        return lns_global.nilStem;
+    }
+    return lns_call_form( _pEnv, form.val.pAny, ddd );
+}
+
 
 bool lns_op_not( lns_env_t * _pEnv, lns_stem_t stem ) {
     return !lns_isCondTrue( stem );

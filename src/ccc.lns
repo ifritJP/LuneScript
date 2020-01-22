@@ -4,22 +4,41 @@ macro _section()
 }
 let mut g_val = 100;
 
-{
-   _section();
-   form funcType( val:stem! );
+// {
+//    _section();
+//    class Test {
+//       fn bar() {
+//          print( "hoge" );
+//       }
+//       pub fn func() {
+//          fn sub() {
+//             self.bar();
+//          }
+//          fn foo() {
+//             sub();
+//          }
+//          foo();
+//       }
+//    }
+//    let test = new Test();
+//    test.func();   
+// }
+// {
+//    _section();
+//    form funcType( val:stem! );
 
-   let mut work:funcType! = nil;
-   {
-      let func = fn ( val:stem! ) {
-         when! val {
-            work = val@@funcType;
-         }
-         print( work and "has" );
-      };
-      func( func );
-   }
-   work$(nil);
-}
+//    let mut work:funcType! = nil;
+//    {
+//       let func = fn ( val:stem! ) {
+//          when! val {
+//             work = val@@funcType;
+//          }
+//          print( work and "has" );
+//       };
+//       func( func );
+//    }
+//    work$(nil);
+// }
 {
    _section();
    class Super {
@@ -892,25 +911,6 @@ let mut g_val = 100;
    }
    let test = new Test();
    test.sub();
-}
-{
-   _section();
-   class Test {
-      fn bar() {
-         print( "hoge" );
-      }
-      pub fn func() {
-         fn sub() {
-            self.bar();
-         }
-         fn foo() {
-            sub();
-         }
-         foo();
-      }
-   }
-   let test = new Test();
-   test.func();   
 }
 {
    _section();

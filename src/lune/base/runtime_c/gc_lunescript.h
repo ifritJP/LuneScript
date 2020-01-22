@@ -26,6 +26,7 @@ SOFTWARE.
 #define __LUNESCRIPT__
 
 #include <stdio.h>
+#include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
@@ -51,6 +52,7 @@ extern "C" {
     typedef double lns_real_t;
 
 
+    typedef struct lns_var_t lns_var_t;
     typedef struct lns_any_t lns_any_t;
     typedef struct lns_block_t lns_block_t;
     typedef struct lns_env_t lns_env_t;
@@ -615,12 +617,14 @@ extern "C" {
 #define l_form_closure( FORM, INDEX )                        \
     &((FORM)->val.form.pClosureValList[ INDEX ])
 
+    /** クロージャアクセスされる変数 */
     typedef struct lns_closureVar_t {
         //lns_any_t * pAny;
         lns_stem_t stem;
         int refCount;
     } lns_closureVar_t;
 
+    /** クロージャ変数参照情報 */
     typedef struct lns_closureRef_t {
         lns_closureVar_t * pVar;
     } lns_closureRef_t;
@@ -680,9 +684,17 @@ extern "C" {
         lns_any_t * pObj;
         void * pMtd;
     } lns_if_t;
+
+#define LNS_GC_STATE_REFED 0x1
+#define LNS_GC_STATE_MINOR 0x2
+
+#define LNS_IS_GC_REFED( STATE ) ( STATE & LNS_GC_STATE_REFED )
+#define LNS_IS_GC_MINOR( STATE ) ( STATE & LNS_GC_STATE_MINOR )
+
     
     /** any 型データ */
     struct lns_any_t {
+        uint8_t state;
         /** 保持しているデータの型 */
         lns_value_type_t type;
         /** このデータを参照している数 */
@@ -700,11 +712,38 @@ extern "C" {
             lns_Alge_t alge;
             lns_luaVal_t luaVal;
         } val;
-        /** 変数にアサインされる前の値を管理する双方向リスト構造。アサイン済みの場合 NULL。 */
+        /** major オブジェクト同士をリンクする。 minor の時は無効。 */
         struct lns_any_t * pNext;
-        /** 変数にアサインされる前の値を管理する双方向リスト構造。  */
         struct lns_any_t * pPrev;
     };
+
+/** minor で管理するオブジェクト数 */
+#define LNS_GC_MINOR_MAX 1000
+    
+    typedef struct {
+        /** 確保したオブジェクトのポインタを保持する */
+        lns_any_t * pPool[ LNS_GC_MINOR_MAX ];
+        /** pPool に格納しているオブジェクトの数 */
+        int count;
+    } lns_newpool_t;
+
+    typedef struct lns_varLink_t {
+        /** gc で開放されなかった回数 */
+        int age;
+        /** newvar 同士をリンクする双方向リスト。 */
+        struct lns_varLink_t * pNext;
+        struct lns_varLink_t * pPrev;
+        /** この newvar のオリジナル var */
+        struct lns_var_t * pVar;
+    } lns_varLink_t;
+    typedef struct lns_var_t {
+        lns_stem_t stem;
+
+        /** この変数が newvar 変数の場合、セットされる。*/
+        lns_varLink_t * pLink;
+    } lns_var_t;
+    
+    
 
     struct lns_block_t {
         /** このブロックの深度を判定するための目安 */
@@ -809,6 +848,10 @@ extern "C" {
         lns_any_t * pMRet;
 
         lns_module_t loadModuleTop;
+
+
+        lns_var_t stackVarBuf[ LNS_GC_MINOR_MAX ];
+        int useStackVarNum;
     };
 
 

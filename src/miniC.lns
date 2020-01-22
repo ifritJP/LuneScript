@@ -1,15 +1,1 @@
-form funcType( val:stem! );
-
-{
-   let mut work:funcType! = nil;
-   {
-      let func = fn ( val:stem! ) {
-         when! val {
-            work = val@@funcType;
-         }
-         print( work and "has" );
-      };
-      func( func );
-   }
-   work$(nil);
-}
+print( 'hoge' );
