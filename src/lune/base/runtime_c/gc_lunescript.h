@@ -38,6 +38,17 @@ SOFTWARE.
 extern "C" {
 #endif
 
+/** minor で管理するオブジェクト数 */
+#define LNS_GC_MINOR_MAX 1000
+
+#define LNS_GC_STATE_REFED 0x1
+#define LNS_GC_STATE_MINOR 0x2
+
+#define LNS_IS_GC_REFED( ANY ) ( ANY->state & LNS_GC_STATE_REFED )
+#define LNS_IS_GC_MINOR( ANY ) ( ANY->state & LNS_GC_STATE_MINOR )
+    
+
+    
 #define LNS_DEBUG_POS __FILE__, __LINE__
 #define LNS_DEBUG_DECL const char * pFile, int lineNo
 
@@ -98,6 +109,8 @@ extern "C" {
 
     typedef enum {
         lns_stem_type_none,
+        /** スタックの区切り。 */
+        lns_stem_type_stack,
         lns_stem_type_nil,
         lns_stem_type_int,
         lns_stem_type_real,
@@ -173,7 +186,7 @@ extern "C" {
     /**
      * and or 演算子の評価中に利用するスタック数
      */
-#define LNS_VAL_STACK_MAX 10000
+#define LNS_VAL_STACK_MAX 1000
     
     
 
@@ -410,6 +423,7 @@ extern "C" {
 
     typedef enum {
         lns_value_type_none,
+        lns_value_type_block,
         lns_value_type_str,
         lns_value_type_class,
         lns_value_type_if,
@@ -636,7 +650,7 @@ extern "C" {
         /** 関数 */
         lns_closure_t * pFunc;
         /** form 内でアクセスする外部変数を管理するバッファ */
-        lns_closureRef_t * pClosureValList;
+        lns_var_t * pClosureValList;
         /** pClosureValList で管理している any の数 */
         int len;
         /** 関数コール時に、この構造体を必要とする場合 true*/
@@ -685,12 +699,6 @@ extern "C" {
         void * pMtd;
     } lns_if_t;
 
-#define LNS_GC_STATE_REFED 0x1
-#define LNS_GC_STATE_MINOR 0x2
-
-#define LNS_IS_GC_REFED( STATE ) ( STATE & LNS_GC_STATE_REFED )
-#define LNS_IS_GC_MINOR( STATE ) ( STATE & LNS_GC_STATE_MINOR )
-
     
     /** any 型データ */
     struct lns_any_t {
@@ -712,20 +720,15 @@ extern "C" {
             lns_Alge_t alge;
             lns_luaVal_t luaVal;
         } val;
-        /** major オブジェクト同士をリンクする。 minor の時は無効。 */
+        /**
+         * オブジェクト同士をリンクする。
+         *
+         * major の場合、双方向リンク。 s_majorObjTop で使用。
+         * minor の場合、片方向リンク。 retObjTop で使用。
+         */
         struct lns_any_t * pNext;
         struct lns_any_t * pPrev;
     };
-
-/** minor で管理するオブジェクト数 */
-#define LNS_GC_MINOR_MAX 1000
-    
-    typedef struct {
-        /** 確保したオブジェクトのポインタを保持する */
-        lns_any_t * pPool[ LNS_GC_MINOR_MAX ];
-        /** pPool に格納しているオブジェクトの数 */
-        int count;
-    } lns_newpool_t;
 
     typedef struct lns_varLink_t {
         /** gc で開放されなかった回数 */
@@ -739,7 +742,12 @@ extern "C" {
     typedef struct lns_var_t {
         lns_stem_t stem;
 
-        /** この変数が newvar 変数の場合、セットされる。*/
+        /**
+         * newvar のリスト。
+         *
+         * pLink が NULL の場合、 stem は major。
+         * pLink が NULL 以外の場合、 stem は minor。
+         */
         lns_varLink_t * pLink;
     } lns_var_t;
     
@@ -781,6 +789,9 @@ extern "C" {
 
         /** 要素 0 個の DDD*/
         lns_stem_t ddd0;
+
+        /** nil の var */
+        lns_var_t nilVar;
         
     } lns_global_t;
 
@@ -852,6 +863,13 @@ extern "C" {
 
         lns_var_t stackVarBuf[ LNS_GC_MINOR_MAX ];
         int useStackVarNum;
+
+        /** block の stack 区切り用 */
+        lns_any_t blockAnyBuf[ LNS_BLOCK_MAX_DEPTH ];
+        /**
+         * 戻り値を管理するオブジェクト
+         */
+        lns_any_t retObjTop;
     };
 
 
@@ -985,9 +1003,9 @@ extern "C" {
     extern void lns_setQ_( lns_any_t * pAny );
     extern void lns_setOverwrite( lns_any_t * pAny );
     extern lns_block_t * lns_enter_func( lns_env_t * _pEnv, int anyNum, int stemNum, int varNum, int argNum, ... );
-    extern void lns_leave_block( lns_env_t * _pEnv );
+    extern void lns_leave_block( lns_env_t * _pEnv, int block );
     extern void lns_leave_blockMulti( lns_env_t * _pEnv, int num );
-    extern lns_block_t * lns_enter_block( lns_env_t * _pEnv, int anyNum,  int stemNum, int varNum );
+    extern int lns_enter_block( lns_env_t * _pEnv );
     extern bool lns_decre_ref( lns_env_t * _pEnv, lns_any_t * pAny );
     extern void lns_it_delete( lns_env_t * _pEnv, lns_any_t * pAny );
     extern lns_stem_t lns_call_form( lns_env_t * _pEnv, lns_any_t * _pForm, lns_stem_t ddd );
@@ -998,6 +1016,10 @@ extern "C" {
     extern lns_stem_t lns_setMRet( lns_env_t * _pEnv, lns_any_t * pAny );
     extern lns_stem_t lns_getValFromDDD( lns_any_t * pAny, int index );
     extern lns_stem_t lns_getValFromDDDStem( lns_stem_t stem, int index );
+
+    extern lns_varLink_t * lns_newVarLink( lns_var_t * pVar );
+    extern void lns_initVar( lns_var_t * pVar, lns_stem_t stem );
+    extern void lns_unuseVar( lns_var_t * pVar );
 
 
 

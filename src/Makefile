@@ -1017,4 +1017,5 @@ test-cAll:
 
 
 test-gc:
+	mkdir -p work/c
 	$(MAKE) -f Makefile.ccc test-gc

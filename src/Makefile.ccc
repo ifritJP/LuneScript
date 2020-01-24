@@ -63,7 +63,7 @@ clean:
 	rm -f $(OBJS)
 
 
-test-gc: work/c/lns_gc.o work/c/lns_alloc.o
-	g++ -ldl -o $(TEST_OUT) work/c/lns_gc.o work/c/lns_alloc.o $(LUA_LIB)
+test-gc: work/c/lns_gc.o work/c/lns_alloc.o work/c/lns_gc_collection.o
+	g++ -ldl -o $(TEST_OUT) work/c/lns_gc.o work/c/lns_alloc.o work/c/lns_gc_collection.o $(LUA_LIB)
 	./$(TEST_OUT)
 
