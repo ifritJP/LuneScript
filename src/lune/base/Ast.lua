@@ -2251,9 +2251,41 @@ end
 
 function Scope:add( kind, canBeLeft, canBeRight, name, pos, typeInfo, accessMode, staticFlag, mutMode, hasValueFlag )
 
+   do
+      local _switchExp = kind
+      if _switchExp == SymbolKind.Typ or _switchExp == SymbolKind.Fun then
+         local existSymbol
+         
+         do
+            local _switchExp = typeInfo:get_kind()
+            if _switchExp == TypeInfoKind.Enum then
+               if _lune.nilacc( self.ownerTypeInfo, 'get_kind', 'callmtd' ) == TypeInfoKind.Class then
+                  existSymbol = self:getSymbolInfoField( name, true, self, ScopeAccess.Full )
+               else
+                
+                  existSymbol = self:getSymbolInfo( name, self, true, ScopeAccess.Full )
+               end
+               
+            else 
+               
+                  existSymbol = self:getSymbolInfo( name, self, true, ScopeAccess.Full )
+            end
+         end
+         
+         if existSymbol ~= nil then
+            if typeInfo:get_kind() ~= existSymbol:get_typeInfo():get_kind() or not isBuiltin( existSymbol:get_typeInfo():get_typeId() ) then
+               return nil, existSymbol
+            end
+            
+         end
+         
+      end
+   end
+   
+   
    local symbolInfo = NormalSymbolInfo.new(kind, canBeLeft, canBeRight, self, accessMode, staticFlag, name, pos, typeInfo, mutMode, hasValueFlag)
    self.symbol2SymbolInfoMap[name] = symbolInfo
-   return symbolInfo
+   return symbolInfo, nil
 end
 
 
@@ -2263,7 +2295,7 @@ function Scope:addLocalVar( argFlag, canBeLeft, name, pos, typeInfo, mutable )
 end
 
 
-local dummySymbol = _moduleObj.rootScope:addLocalVar( false, false, "$$", nil, _moduleObj.headTypeInfo, MutMode.IMut )
+local dummySymbol = _lune.unwrap( _moduleObj.rootScope:addLocalVar( false, false, "$$", nil, _moduleObj.headTypeInfo, MutMode.IMut ))
 _moduleObj.dummySymbol = dummySymbol
 
 
@@ -2281,25 +2313,25 @@ end
 
 function Scope:addEnumVal( name, pos, typeInfo )
 
-   self:add( SymbolKind.Mbr, false, true, name, pos, typeInfo, AccessMode.Pub, true, MutMode.Mut, true )
+   return self:add( SymbolKind.Mbr, false, true, name, pos, typeInfo, AccessMode.Pub, true, MutMode.Mut, true )
 end
 
 
 function Scope:addEnum( accessMode, name, pos, typeInfo )
 
-   self:add( SymbolKind.Typ, false, false, name, pos, typeInfo, accessMode, true, MutMode.Mut, true )
+   return self:add( SymbolKind.Typ, false, false, name, pos, typeInfo, accessMode, true, MutMode.Mut, true )
 end
 
 
 function Scope:addAlgeVal( name, pos, typeInfo )
 
-   self:add( SymbolKind.Mbr, false, true, name, pos, typeInfo, AccessMode.Pub, true, MutMode.Mut, true )
+   return self:add( SymbolKind.Mbr, false, true, name, pos, typeInfo, AccessMode.Pub, true, MutMode.Mut, true )
 end
 
 
 function Scope:addAlge( accessMode, name, pos, typeInfo )
 
-   self:add( SymbolKind.Typ, false, false, name, pos, typeInfo, accessMode, true, MutMode.Mut, true )
+   return self:add( SymbolKind.Typ, false, false, name, pos, typeInfo, accessMode, true, MutMode.Mut, true )
 end
 
 
@@ -2323,7 +2355,7 @@ end
 
 function Scope:addFunc( pos, typeInfo, accessMode, staticFlag, mutable )
 
-   self:add( SymbolKind.Fun, true, true, typeInfo:get_rawTxt(), pos, typeInfo, accessMode, staticFlag, mutable and MutMode.Mut or MutMode.IMut, true )
+   return self:add( SymbolKind.Fun, true, true, typeInfo:get_rawTxt(), pos, typeInfo, accessMode, staticFlag, mutable and MutMode.Mut or MutMode.IMut, true )
 end
 
 

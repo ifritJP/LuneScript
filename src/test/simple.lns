@@ -30,15 +30,15 @@ func( data );
 
 
 pub class ClassA {
-    let mut val: int;
-    pub fn __init() {
-	self.val = 10;
-    }
-    pub fn func( data1: int ) mut : int {
-	self.val = self.val + 1;
-	return data1 + self.val;
-    }
- }
+   let mut val: int;
+   pub fn __init() {
+      self.val = 10;
+   }
+   pub fn func( data1: int ) mut : int {
+      self.val = self.val + 1;
+      return data1 + self.val;
+   }
+}
 
 pub fn ClassA.sub() : int {
     return self.val;

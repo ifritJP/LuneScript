@@ -1,0 +1,30 @@
+{
+   enum Same {
+   }
+   {
+      enum Same {
+      }
+   }
+}
+{
+   alge Same {
+   }
+   {
+      alge Same {
+      }
+   }
+}
+{
+   let Same;
+   {
+      let Same;
+   }
+}
+{
+   fn func( val2:int) {
+      fn func( val2:int) {
+      }
+   }
+   fn func( val2:int) {
+   }
+}

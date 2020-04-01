@@ -988,94 +988,107 @@ function TransUnit:pushClassScope( errPos, classTypeInfo )
    
    self.scope = _lune.unwrap( Ast.getScope( classTypeInfo ))
 end
-function TransUnit:pushClass( errPos, classFlag, abstractFlag, baseInfo, interfaceList, genTypeList, externalFlag, name, accessMode, defNamespace )
+function TransUnit:pushClass( errPos, classFlag, abstractFlag, baseInfo, interfaceList, genTypeList, externalFlag, name, allowMultiple, accessMode, defNamespace )
 
    local typeInfo = Ast.headTypeInfo
    do
-      local _exp = self.scope:getTypeInfoChild( name )
+      local _exp = self.scope:getTypeInfo( name, self.scope, true, Ast.ScopeAccess.Normal )
       if _exp ~= nil then
-         
          typeInfo = _exp
+      end
+   end
+   
+   
+   if typeInfo ~= Ast.headTypeInfo then
+      if _lune.nilacc( typeInfo:get_scope(), 'get_parent', 'callmtd' ) ~= self.scope then
+         self:addErrMess( errPos, string.format( "multiple class(%s)", typeInfo:getTxt( self.typeNameCtrl )) )
          
-         if typeInfo:get_abstractFlag() ~= abstractFlag then
-            self:addErrMess( errPos, string.format( "mismatch class(%s) abstract for prototpye", typeInfo:getTxt( self.typeNameCtrl )) )
-         end
-         
-         if typeInfo:get_accessMode() ~= accessMode then
-            self:addErrMess( errPos, string.format( "mismatch class(%s) accessmode(%s) for prototpye accessmode(%s)", typeInfo:getTxt( self.typeNameCtrl ), Ast.AccessMode:_getTxt( accessMode)
-            , Ast.AccessMode:_getTxt( typeInfo:get_accessMode())
-            ) )
-         end
-         
-         if baseInfo ~= nil then
-            if typeInfo:get_baseTypeInfo() ~= baseInfo then
-               self:addErrMess( errPos, string.format( "mismatch class(%s) base class(%s) for prototpye base class(%s)", typeInfo:getTxt( self.typeNameCtrl ), baseInfo:getTxt(  ), typeInfo:get_baseTypeInfo():getTxt(  )) )
-            end
-            
-         else
-            if typeInfo:hasBase(  ) then
-               self:addErrMess( errPos, string.format( "mismatch class(%s) base class(None) for prototpye base class(%s)", typeInfo:getTxt( self.typeNameCtrl ), typeInfo:get_baseTypeInfo():getTxt(  )) )
-            end
-            
-         end
-         
-         
-         local function compareList( protoList, typeList, message )
-         
-            if #protoList == #typeList then
-               for index, protoType in pairs( protoList ) do
-                  if protoType ~= typeList[index] then
-                     self:addErrMess( errPos, string.format( "mismatch class(%s) %s(%s) for prototpye %s(%s)", typeInfo:getTxt( self.typeNameCtrl ), message, typeList[index]:getTxt( self.typeNameCtrl ), message, protoType:getTxt(  )) )
-                  end
-                  
-               end
-               
-            else
-             
-               self:addErrMess( errPos, string.format( "mismatch class(%s) %s(%d) for prototpye %s(%d)", typeInfo:getTxt( self.typeNameCtrl ), message, #typeList, message, #protoList) )
-            end
-            
-         end
-         
-         compareList( typeInfo:get_interfaceList(), _lune.unwrapDefault( interfaceList, {}), "interface" )
-         
-         compareList( typeInfo:get_itemTypeInfoList(), _lune.unwrapDefault( genTypeList, {}), "generics" )
-         
-         self.scope = _lune.unwrap( Ast.getScope( typeInfo ))
-         do
-            local _switchExp = (typeInfo:get_kind() )
-            if _switchExp == Ast.TypeInfoKind.Class then
-               if not classFlag then
-                  self:addErrMess( errPos, string.format( "define interface already -- %s", name) )
-                  Util.printStackTrace(  )
-               end
-               
-            elseif _switchExp == Ast.TypeInfoKind.IF then
-               if classFlag then
-                  self:addErrMess( errPos, string.format( "define class already -- %s", name) )
-                  Util.printStackTrace(  )
-               end
-               
-            end
+         self:error( "stop by error" )
+      end
+      
+   end
+   
+   if typeInfo ~= Ast.headTypeInfo then
+      
+      if typeInfo:get_abstractFlag() ~= abstractFlag then
+         self:addErrMess( errPos, string.format( "mismatch class(%s) abstract for prototpye", typeInfo:getTxt( self.typeNameCtrl )) )
+      end
+      
+      if typeInfo:get_accessMode() ~= accessMode then
+         self:addErrMess( errPos, string.format( "mismatch class(%s) accessmode(%s) for prototpye accessmode(%s)", typeInfo:getTxt( self.typeNameCtrl ), Ast.AccessMode:_getTxt( accessMode)
+         , Ast.AccessMode:_getTxt( typeInfo:get_accessMode())
+         ) )
+      end
+      
+      if baseInfo ~= nil then
+         if typeInfo:get_baseTypeInfo() ~= baseInfo then
+            self:addErrMess( errPos, string.format( "mismatch class(%s) base class(%s) for prototpye base class(%s)", typeInfo:getTxt( self.typeNameCtrl ), baseInfo:getTxt(  ), typeInfo:get_baseTypeInfo():getTxt(  )) )
          end
          
       else
-         local parentInfo = self:getCurrentNamespaceTypeInfo(  )
-         
-         local parentScope = self.scope
-         local scope = self:pushScope( true, baseInfo, interfaceList )
-         local workGenTypeList
-         
-         if genTypeList ~= nil then
-            workGenTypeList = genTypeList
-         else
-            workGenTypeList = {}
+         if typeInfo:hasBase(  ) then
+            self:addErrMess( errPos, string.format( "mismatch class(%s) base class(None) for prototpye base class(%s)", typeInfo:getTxt( self.typeNameCtrl ), typeInfo:get_baseTypeInfo():getTxt(  )) )
          end
          
-         typeInfo = Ast.NormalTypeInfo.createClass( classFlag, abstractFlag, scope, baseInfo, interfaceList, workGenTypeList, parentInfo, externalFlag, accessMode, name )
-         
-         parentScope:addClass( name, errPos, typeInfo )
       end
+      
+      
+      local function compareList( protoList, typeList, message )
+      
+         if #protoList == #typeList then
+            for index, protoType in pairs( protoList ) do
+               if protoType ~= typeList[index] then
+                  self:addErrMess( errPos, string.format( "mismatch class(%s) %s(%s) for prototpye %s(%s)", typeInfo:getTxt( self.typeNameCtrl ), message, typeList[index]:getTxt( self.typeNameCtrl ), message, protoType:getTxt(  )) )
+               end
+               
+            end
+            
+         else
+          
+            self:addErrMess( errPos, string.format( "mismatch class(%s) %s(%d) for prototpye %s(%d)", typeInfo:getTxt( self.typeNameCtrl ), message, #typeList, message, #protoList) )
+         end
+         
+      end
+      
+      compareList( typeInfo:get_interfaceList(), _lune.unwrapDefault( interfaceList, {}), "interface" )
+      
+      compareList( typeInfo:get_itemTypeInfoList(), _lune.unwrapDefault( genTypeList, {}), "generics" )
+      
+      self.scope = _lune.unwrap( Ast.getScope( typeInfo ))
+      do
+         local _switchExp = (typeInfo:get_kind() )
+         if _switchExp == Ast.TypeInfoKind.Class then
+            if not classFlag then
+               self:addErrMess( errPos, string.format( "define interface already -- %s", name) )
+               Util.printStackTrace(  )
+            end
+            
+         elseif _switchExp == Ast.TypeInfoKind.IF then
+            if classFlag then
+               self:addErrMess( errPos, string.format( "define class already -- %s", name) )
+               Util.printStackTrace(  )
+            end
+            
+         end
+      end
+      
+   else
+    
+      local parentInfo = self:getCurrentNamespaceTypeInfo(  )
+      
+      local parentScope = self.scope
+      local scope = self:pushScope( true, baseInfo, interfaceList )
+      local workGenTypeList
+      
+      if genTypeList ~= nil then
+         workGenTypeList = genTypeList
+      else
+         workGenTypeList = {}
+      end
+      
+      typeInfo = Ast.NormalTypeInfo.createClass( classFlag, abstractFlag, scope, baseInfo, interfaceList, workGenTypeList, parentInfo, externalFlag, accessMode, name )
+      
+      parentScope:addClass( name, errPos, typeInfo )
    end
    
    if genTypeList ~= nil then
@@ -1100,19 +1113,23 @@ function TransUnit:popClass(  )
 
    self:popScope(  )
 end
+function TransUnit:errorShadowing( pos, symbolInfo )
+
+   if symbolInfo ~= nil then
+      local symPos = symbolInfo:get_pos()
+      if symPos ~= nil then
+         self:addErrMess( symPos, string.format( "This symbol is shadowed from %d:%d -- %s", pos.lineNo, pos.column, symbolInfo:get_name()) )
+      end
+      
+      self:addErrMess( pos, string.format( "shadowing symbol of %s -- %s", symPos and string.format( "%s:%s", tostring( _lune.nilacc( symPos, "lineNo" )), tostring( _lune.nilacc( symPos, "column" ))) or "external", symbolInfo:get_name()) )
+   end
+   
+end
 function TransUnit:checkShadowing( pos, name, scope )
 
    local symbolInfo = self.scope:getSymbolTypeInfo( name, scope, self.moduleScope, self.scopeAccess )
    
-   if symbolInfo ~= nil then
-      local symPos = symbolInfo:get_pos()
-      if symPos ~= nil then
-         self:addErrMess( symPos, string.format( "This symbol is shadowed from %d:%d -- %s", pos.lineNo, pos.column, name) )
-      end
-      
-      self:addErrMess( pos, string.format( "shadowing symbol of %s -- %s", symPos and string.format( "%s:%s", tostring( _lune.nilacc( symPos, "lineNo" )), tostring( _lune.nilacc( symPos, "column" ))) or "external", name) )
-   end
-   
+   self:errorShadowing( pos, symbolInfo )
 end
 function TransUnit:addLocalVar( pos, argFlag, canBeLeft, name, typeInfo, mutable, allowShadow )
 
@@ -1123,7 +1140,7 @@ function TransUnit:addLocalVar( pos, argFlag, canBeLeft, name, typeInfo, mutable
       
    end
    
-   return self.scope:addLocalVar( argFlag, canBeLeft, name, pos, typeInfo, mutable )
+   return _lune.unwrap( self.scope:addLocalVar( argFlag, canBeLeft, name, pos, typeInfo, mutable ))
 end
 function TransUnit.setmeta( obj )
   setmetatable( obj, { __index = TransUnit  } )
@@ -3193,7 +3210,7 @@ function TransUnit:registBuiltInScope(  )
    
       if self.targetLuaVer:isSupport( string.format( "%s.%s", name, fieldName) ) then
          if _lune.nilacc( info['type'], nil, 'item', 1) == "var" then
-            local symbol = self.scope:add( Ast.SymbolKind.Var, false, true, fieldName, nil, getTypeInfo( _lune.unwrap( _lune.nilacc( info['typeInfo'], nil, 'item', 1)) ), Ast.AccessMode.Pub, true, Ast.MutMode.Mut, true )
+            local symbol = _lune.unwrap( self.scope:add( Ast.SymbolKind.Var, false, true, fieldName, nil, getTypeInfo( _lune.unwrap( _lune.nilacc( info['typeInfo'], nil, 'item', 1)) ), Ast.AccessMode.Pub, true, Ast.MutMode.Mut, true ))
             builtinFunc:register( symbol )
          else
           
@@ -3249,7 +3266,7 @@ function TransUnit:registBuiltInScope(  )
                Ast.builtInTypeIdSet[typeInfo:get_nilableTypeInfo():get_typeId()] = typeInfo:get_nilableTypeInfo()
             end
             
-            local symInfo = self.scope:add( symbolKind, false, kind == Ast.TypeInfoKind.Func, fieldName, nil, typeInfo, Ast.AccessMode.Pub, staticFlag, mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true )
+            local symInfo = _lune.unwrap( self.scope:add( symbolKind, false, kind == Ast.TypeInfoKind.Func, fieldName, nil, typeInfo, Ast.AccessMode.Pub, staticFlag, mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true ))
             
             setupBuiltinTypeInfo( name, fieldName, symInfo )
          end
@@ -3350,7 +3367,7 @@ function TransUnit:registBuiltInScope(  )
             do
                local _switchExp = classKind
                if _switchExp == DeclClassMode.Class or _switchExp == DeclClassMode.Interface then
-                  parentInfo = self:pushClass( self.parser:get_currentToken().pos, classKind == DeclClassMode.Class, false, nil, interfaceList, genTypeList, true, name, Ast.AccessMode.Pub )
+                  parentInfo = self:pushClass( self.parser:get_currentToken().pos, classKind == DeclClassMode.Class, false, nil, interfaceList, genTypeList, true, name, true, Ast.AccessMode.Pub )
                   builtinFunc:registerClass( parentInfo )
                elseif _switchExp == DeclClassMode.Module then
                   parentInfo = self:pushModule( true, name, true )
@@ -3925,7 +3942,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = '@lune.@base.@TransUnit.TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2513, function (  )
+   Log.log( Log.Level.Info, __func__, 2534, function (  )
    
       return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), modulePath)
    end )
@@ -3942,7 +3959,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2525, function (  )
+               Log.log( Log.Level.Info, __func__, 2546, function (  )
                
                   return string.format( "%s already", modulePath)
                end )
@@ -3975,7 +3992,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2545, function (  )
+   Log.log( Log.Level.Info, __func__, 2566, function (  )
    
       return string.format( "%s processing", modulePath)
    end )
@@ -4320,7 +4337,7 @@ function TransUnit:processImport( modulePath )
    
    self.importModuleInfo:remove(  )
    
-   Log.log( Log.Level.Info, __func__, 2875, function (  )
+   Log.log( Log.Level.Info, __func__, 2896, function (  )
    
       return string.format( "%s complete", modulePath)
    end )
@@ -4373,11 +4390,16 @@ function TransUnit:analyzeImport( token )
    self.scope:addModule( moduleTypeInfo, moduleInfo:assign( assignName.txt ) )
    
    local moduleSymbolKind = _lune.unwrap( Ast.SymbolKind._from( metaInfo.__moduleSymbolKind ))
-   local moduleSymbolInfo = self.scope:add( moduleSymbolKind, false, false, assignName.txt, assignName.pos, moduleTypeInfo, Ast.AccessMode.Local, true, metaInfo.__moduleMutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true )
+   local moduleSymbolInfo, shadowing = self.scope:add( moduleSymbolKind, false, false, assignName.txt, assignName.pos, moduleTypeInfo, Ast.AccessMode.Local, true, metaInfo.__moduleMutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true )
+   if moduleSymbolInfo ~= nil then
+      self:checkToken( nextToken, ";" )
+      
+      return Nodes.ImportNode.create( self.nodeManager, token.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, modulePath, assignName.txt, moduleSymbolInfo, moduleTypeInfo )
+   end
    
-   self:checkToken( nextToken, ";" )
    
-   return Nodes.ImportNode.create( self.nodeManager, token.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, modulePath, assignName.txt, moduleSymbolInfo, moduleTypeInfo )
+   self:errorShadowing( token.pos, shadowing )
+   return self:createNoneNode( token.pos )
 end
 
 
@@ -5218,11 +5240,15 @@ function TransUnit:analyzeDeclArgList( accessMode, scope, argList, parentPub )
          
          self:checkNextToken( ":" )
          local refType = self:analyzeRefType( accessMode, false, parentPub )
-         local symbolInfo = scope:addLocalVar( true, true, argName.txt, argName.pos, refType:get_expType(), mutable )
+         do
+            local symbolInfo = scope:addLocalVar( true, true, argName.txt, argName.pos, refType:get_expType(), mutable )
+            if symbolInfo ~= nil then
+               local arg = Nodes.DeclArgNode.create( self.nodeManager, argName.pos, self.macroCtrl:isInAnalyzeArgMode(  ), refType:get_expTypeList(), argName, symbolInfo )
+               
+               table.insert( argList, arg )
+            end
+         end
          
-         local arg = Nodes.DeclArgNode.create( self.nodeManager, argName.pos, self.macroCtrl:isInAnalyzeArgMode(  ), refType:get_expTypeList(), argName, symbolInfo )
-         
-         table.insert( argList, arg )
       end
       
       nextToken = self:getToken(  )
@@ -5263,7 +5289,7 @@ function TransUnit:checkOverriededMethod(  )
             end
             
             if noImp then
-               self:addErrMess( pos, "not implements method -- " .. symbolInfo:get_name() )
+               self:addErrMess( pos, string.format( "not implements method -- %s.%s", tostring( _lune.nilacc( classScope:get_ownerTypeInfo(), 'getTxt', 'callmtd'  )), symbolInfo:get_name()) )
             end
             
          end
@@ -5728,7 +5754,7 @@ function TransUnit:analyzeExtend( accessMode, firstPos )
 end
 
 
-function TransUnit:analyzePushClass( classFlag, abstractFlag, firstToken, name, accessMode, altTypeList )
+function TransUnit:analyzePushClass( classFlag, abstractFlag, firstToken, name, allowMultiple, accessMode, altTypeList )
 
    if classFlag and Ast.isPubToExternal( accessMode ) and self.moduleScope ~= self.scope then
       self:addErrMess( firstToken.pos, "The public class must declare at top scope." )
@@ -5764,7 +5790,7 @@ function TransUnit:analyzePushClass( classFlag, abstractFlag, firstToken, name, 
    
    self:popScope(  )
    
-   local classTypeInfo = self:pushClass( firstToken.pos, classFlag, abstractFlag, baseTypeInfo, interfaceList, altTypeList, false, name.txt, accessMode )
+   local classTypeInfo = self:pushClass( firstToken.pos, classFlag, abstractFlag, baseTypeInfo, interfaceList, altTypeList, false, name.txt, allowMultiple, accessMode )
    
    return nextToken, classTypeInfo
 end
@@ -5851,7 +5877,7 @@ function TransUnit:analyzeDeclProto( accessMode, firstToken )
       
       local classTypeInfo
       
-      nextToken, classTypeInfo = self:analyzePushClass( nextToken.txt ~= "interface", abstractFlag, firstToken, name, accessMode, altTypeList )
+      nextToken, classTypeInfo = self:analyzePushClass( nextToken.txt ~= "interface", abstractFlag, firstToken, name, false, accessMode, altTypeList )
       
       self.protoClassMap[classTypeInfo] = firstToken.pos
       
@@ -5965,6 +5991,7 @@ function TransUnit:analyzeDeclEnum( accessMode, firstToken )
       
       if enumTypeInfo ~= nil then
          scope:addEnumVal( valName.txt, valName.pos, enumTypeInfo )
+         
          local enumValInfo = Ast.EnumValInfo.new(valName.txt, enumVal)
          table.insert( valueList, valName )
          
@@ -5991,7 +6018,8 @@ function TransUnit:analyzeDeclEnum( accessMode, firstToken )
    
    self:popScope(  )
    
-   self.scope:addEnum( accessMode, name.txt, name.pos, _lune.unwrap( enumTypeInfo) )
+   local enumSym, shadowing = self.scope:addEnum( accessMode, name.txt, name.pos, _lune.unwrap( enumTypeInfo) )
+   self:errorShadowing( name.pos, shadowing )
    
    return Nodes.DeclEnumNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {_lune.unwrap( enumTypeInfo)}, accessMode, name, valueList, scope )
 end
@@ -6009,7 +6037,8 @@ function TransUnit:analyzeDeclAlge( accessMode, firstToken )
    local algeScope = self:pushScope( true )
    
    local algeTypeInfo = Ast.NormalTypeInfo.createAlge( algeScope, self:getCurrentNamespaceTypeInfo(  ), false, accessMode, name.txt )
-   scope:addAlge( accessMode, name.txt, name.pos, algeTypeInfo )
+   local algeSym, shadowing = scope:addAlge( accessMode, name.txt, name.pos, algeTypeInfo )
+   self:errorShadowing( name.pos, shadowing )
    
    local nextToken = self:getToken(  )
    while nextToken.txt ~= "}" do
@@ -6094,8 +6123,13 @@ function TransUnit:analyzeAlias( accessMode, firstToken )
          do
             local _switchExp = symbolInfo:get_kind()
             if _switchExp == Ast.SymbolKind.Typ or _switchExp == Ast.SymbolKind.Fun then
-               local aliasSymbolInfo = self.scope:addAlias( newToken.txt, newToken.pos, false, accessMode, self.moduleType, symbolInfo )
-               newTypeInfo = aliasSymbolInfo:get_typeInfo()
+               local aliasSymbolInfo, shadowing = self.scope:addAlias( newToken.txt, newToken.pos, false, accessMode, self.moduleType, symbolInfo )
+               if aliasSymbolInfo ~= nil then
+                  newTypeInfo = aliasSymbolInfo:get_typeInfo()
+               else
+                  self:errorShadowing( newToken.pos, shadowing )
+               end
+               
             else 
                
                   self:addErrMess( firstToken.pos, string.format( "can alias symbol -- %s. (%s)", srcToken.txt, Ast.SymbolKind:_getTxt( symbolInfo:get_kind())
@@ -6387,9 +6421,15 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
    end
    
    
-   local symbolInfo = self.scope:addMember( varName.txt, varName.pos, typeInfo, accessMode, staticFlag, mutMode )
+   local symbolInfo, shadowing = self.scope:addMember( varName.txt, varName.pos, typeInfo, accessMode, staticFlag, mutMode )
    
-   return Nodes.DeclMemberNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, varName, refType, symbolInfo, classTypeInfo, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode )
+   local workSym = _lune.unwrap( (symbolInfo or shadowing ))
+   if shadowing ~= nil then
+      self:errorShadowing( varName.pos, shadowing )
+   end
+   
+   
+   return Nodes.DeclMemberNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, varName, refType, workSym, classTypeInfo, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode )
 end
 
 
@@ -6907,7 +6947,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
    
    local existSymbolInfo = self.scope:getSymbolTypeInfo( name.txt, self.scope, self.scope, self.scopeAccess )
    
-   local nextToken, classTypeInfo = self:analyzePushClass( mode ~= DeclClassMode.Interface, classAbstructFlag, firstToken, name, classAccessMode, altTypeList )
+   local nextToken, classTypeInfo = self:analyzePushClass( mode ~= DeclClassMode.Interface, classAbstructFlag, firstToken, name, true, classAccessMode, altTypeList )
    
    if self.protoClassMap[classTypeInfo] then
       self.protoClassMap[classTypeInfo] = nil
@@ -7133,7 +7173,8 @@ function TransUnit:processAddFunc( isFunc, parentScope, name, typeInfo, alt2type
    local staticFlag = typeInfo:get_staticFlag()
    local mutable = Ast.TypeInfo.isMut( typeInfo )
    if isFunc then
-      parentScope:addFunc( name.pos, typeInfo, accessMode, staticFlag, mutable )
+      local funcSym, shadowing = parentScope:addFunc( name.pos, typeInfo, accessMode, staticFlag, mutable )
+      self:errorShadowing( name.pos, shadowing )
    else
     
       parentScope:addMethod( name.pos, typeInfo, accessMode, staticFlag, mutable )

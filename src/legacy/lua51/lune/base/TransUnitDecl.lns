@@ -297,15 +297,16 @@ fn TransUnit.analyzeDeclArgList(
 
          self.checkNextToken( ":" );
          let refType = self.analyzeRefType( accessMode, false, parentPub );
-         let symbolInfo = scope.addLocalVar(
-            true, true, argName.txt, argName.pos, refType.$expType, mutable );
-         
-         let arg = Nodes.DeclArgNode.create(
-            self.nodeManager, argName.pos,
-            self.macroCtrl.isInAnalyzeArgMode(), refType.$expTypeList,
-            argName, symbolInfo );
+         if! let symbolInfo = scope.addLocalVar(
+            true, true, argName.txt, argName.pos, refType.$expType, mutable )
+         {
+            let arg = Nodes.DeclArgNode.create(
+               self.nodeManager, argName.pos,
+               self.macroCtrl.isInAnalyzeArgMode(), refType.$expTypeList,
+               argName, symbolInfo );
 
-         argList.insert( arg );
+            argList.insert( arg );
+         }
       }
       nextToken = self.getToken(##);
    } nextToken.txt ~= ",";
@@ -347,7 +348,9 @@ fn TransUnit.checkOverriededMethod() mut
                   noImp = true;
                }
                if noImp {
-                  self.addErrMess( pos, "not implements method -- " .. symbolInfo.$name );
+                  self.addErrMess( pos, "not implements method -- %s.%s"
+                                   ( classScope.$ownerTypeInfo$.getTxt$(##),
+                                     symbolInfo.$name) );
                }
             }
             return true;
@@ -806,6 +809,7 @@ fn TransUnit.analyzeExtend( accessMode:Ast.AccessMode, firstPos: &Parser.Positio
 
 fn TransUnit.analyzePushClass(
    classFlag: bool, abstractFlag: bool, firstToken:&Parser.Token, name:&Parser.Token,
+   allowMultiple:bool,
    accessMode:Ast.AccessMode, altTypeList:&List<&Ast.AlternateTypeInfo> ) mut :
    &Parser.Token, &Ast.TypeInfo
 {
@@ -847,7 +851,7 @@ fn TransUnit.analyzePushClass(
 
    let classTypeInfo = self.pushClass(
       firstToken.pos, classFlag, abstractFlag, baseTypeInfo,
-      interfaceList, altTypeList, false, name.txt, accessMode ## );
+      interfaceList, altTypeList, false, name.txt, allowMultiple, accessMode ## );
 
    return nextToken, classTypeInfo;
 }
@@ -936,7 +940,7 @@ fn TransUnit.analyzeDeclProto(
       let classTypeInfo:&Ast.TypeInfo;
       nextToken, classTypeInfo = self.analyzePushClass(
          nextToken.txt ~= "interface", abstractFlag,
-         firstToken, name, accessMode, altTypeList );
+         firstToken, name, false, accessMode, altTypeList );
 
       self.protoClassMap[ classTypeInfo ] = firstToken.pos;
 
@@ -1043,6 +1047,7 @@ fn TransUnit.analyzeDeclEnum(
 
       when! enumTypeInfo {
          scope.addEnumVal( valName.txt, valName.pos, enumTypeInfo );
+
          let enumValInfo = new Ast.EnumValInfo( valName.txt, enumVal );
          valueList.insert( valName );
 
@@ -1067,7 +1072,9 @@ fn TransUnit.analyzeDeclEnum(
 
    self.popScope();
 
-   self.scope.addEnum( accessMode, name.txt, name.pos, unwrap enumTypeInfo );
+   let enumSym, shadowing =
+      self.scope.addEnum( accessMode, name.txt, name.pos, unwrap enumTypeInfo );
+   self.errorShadowing( name.pos, shadowing );
 
 
    return Nodes.DeclEnumNode.create(
@@ -1091,7 +1098,9 @@ fn TransUnit.analyzeDeclAlge(
 
    let mut algeTypeInfo = Ast.NormalTypeInfo.createAlge(
       algeScope, self.getCurrentNamespaceTypeInfo(), false, accessMode, name.txt );
-   scope.addAlge( accessMode, name.txt, name.pos, algeTypeInfo );
+   let algeSym, shadowing =
+      scope.addAlge( accessMode, name.txt, name.pos, algeTypeInfo );
+   self.errorShadowing( name.pos, shadowing );
 
    let mut nextToken = self.getToken(##);
    while nextToken.txt ~= "}" {
@@ -1176,10 +1185,15 @@ fn TransUnit.analyzeAlias(
       else {
          switch symbolInfo.$kind {
             case .Typ, .Fun {
-               let aliasSymbolInfo = self.scope.addAlias(
+               let aliasSymbolInfo, shadowing = self.scope.addAlias(
                   newToken.txt, newToken.pos,
                   false, accessMode, self.moduleType, symbolInfo );
-               newTypeInfo = aliasSymbolInfo.$typeInfo;
+               when! aliasSymbolInfo {
+                  newTypeInfo = aliasSymbolInfo.$typeInfo;
+               }
+               else {
+                  self.errorShadowing( newToken.pos, shadowing );
+               }
             }
             default {
                self.addErrMess(
@@ -1490,13 +1504,18 @@ fn TransUnit.analyzeDeclMember(
          }
       }
 
-      let symbolInfo = self.scope.addMember(
+      let symbolInfo, shadowing = self.scope.addMember(
          varName.txt, varName.pos, typeInfo, accessMode, staticFlag, mutMode );
 
+      let workSym = unwrap (symbolInfo or shadowing);
+      when! shadowing {
+         self.errorShadowing( varName.pos, shadowing );
+      }
+      
       return Nodes.DeclMemberNode.create(
          self.nodeManager, firstToken.pos,
          self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ],
-         varName, refType, symbolInfo, classTypeInfo, 
+         varName, refType, workSym, classTypeInfo, 
          staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode );
    }
 
@@ -2077,7 +2096,7 @@ fn TransUnit.analyzeDeclClass(
 
    let mut nextToken, classTypeInfo = self.analyzePushClass(
       mode ~= .Interface, classAbstructFlag,
-      firstToken, name, classAccessMode, altTypeList );
+      firstToken, name, true, classAccessMode, altTypeList );
 
    if self.protoClassMap[ classTypeInfo ] {
       self.protoClassMap[ classTypeInfo ] = nil;
@@ -2371,7 +2390,9 @@ fn TransUnit.processAddFunc(
    let staticFlag = typeInfo.$staticFlag;
    let mutable = Ast.TypeInfo.isMut( typeInfo );
    if isFunc {
-      parentScope.addFunc( name.pos, typeInfo, accessMode, staticFlag, mutable );
+      let funcSym, shadowing = parentScope.addFunc(
+         name.pos, typeInfo, accessMode, staticFlag, mutable );
+      self.errorShadowing( name.pos, shadowing );
    }
    else {
       parentScope.addMethod( name.pos, typeInfo, accessMode, staticFlag, mutable );

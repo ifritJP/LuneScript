@@ -137,6 +137,14 @@ pub fn () {} // error
    fn (): int { return 1; } (); // error
 }
 
+{
+   fn func() {
+   }
+   func() and func(); // error
+   if func() { // error
+   }
+   print( func() + 1 ); // error
+}
 
 abstract class Super {
    pub abstract fn func2();

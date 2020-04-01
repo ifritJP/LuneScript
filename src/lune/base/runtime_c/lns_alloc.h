@@ -29,6 +29,10 @@ SOFTWARE.
 extern "C" {
 #endif
 
+#define lns_malloc( ALLOCATOR, SIZE ) _lns_malloc( ALLOCATOR, SIZE, __FILE__, __LINE__ )
+#define lns_free( ALLOCATOR, ADDR ) _lns_free( ALLOCATOR, ADDR, __FILE__, __LINE__ )
+
+    
     typedef void * lns_allocator_t;
 
     extern lns_allocator_t lns_createAllocator( void );

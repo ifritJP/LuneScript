@@ -7183,11 +7183,11 @@ pub override fn convFilter.processApply(
 
    let mut dummyScope = new Ast.Scope( self.moduleTypeInfo.$scope , false## );
    
-   let formSym = dummyScope.addLocalVar(
+   let formSym = unwrap dummyScope.addLocalVar(
       false, false, "_form%d" (dummyId), node.$pos, iteFuncType, .IMut);
-   let paramSym = dummyScope.addLocalVar(
+   let paramSym = unwrap dummyScope.addLocalVar(
       false, false, "_param%d" (dummyId), node.$pos, iteExpTypeList[ 2 ], .IMut);
-   let stateSym = dummyScope.addLocalVar(
+   let stateSym = unwrap dummyScope.addLocalVar(
       false, false, "_state%d" (dummyId), node.$pos, iteExpTypeList[ 3 ], .IMut);
    self.scopeMgr.setupScopeParam( dummyScope );
 

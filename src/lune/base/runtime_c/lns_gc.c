@@ -20,14 +20,11 @@
 /**
  * リストの初期化
  */
-#define lns_initList( LIST )                    \
-    (LIST)->pNext = LIST;                       \
-    (LIST)->pPrev = LIST;
+#define lns_initList( ITEM, TOP )              \
+    (ITEM)->pNext = TOP;                       \
+    (ITEM)->pPrev = TOP;
 
 
-
-#define lns_malloc( ALLOCATOR, SIZE ) _lns_malloc( ALLOCATOR, SIZE, __FILE__, __LINE__ )
-#define lns_free( ALLOCATOR, ADDR ) _lns_free( ALLOCATOR, ADDR, __FILE__, __LINE__ )
 
 #define lns_alloc_any( ENV, TYPE, FILE, LINE ) \
     _lns_alloc_any( ENV, TYPE, FILE, LINE )
@@ -104,9 +101,9 @@ void init( void ) {
     s_pNewPool->count = 0;
     s_pWorkPool->count = 0;
 
-    lns_initList( &s_freeVarLinkTop );
-    lns_initList( &s_minorVarLinkTop );
-    lns_initList( &s_majorObjTop );
+    lns_initList( &s_freeVarLinkTop, &s_freeVarLinkTop );
+    lns_initList( &s_minorVarLinkTop, &s_freeVarLinkTop );
+    lns_initList( &s_majorObjTop.major, &s_majorObjTop );
     
     for ( index = 0; index < LNS_GC_MINOR_MAX; index++ ) {
         lns_varLink_t * pVarLink = &s_varLinkBuf[ index ];
@@ -149,10 +146,6 @@ static lns_any_t * _lns_alloc_any(
     s_pNewPool->pPool[ s_pNewPool->count ] = pAny;
     s_pNewPool->count++;
 
-    //lns_add2list( &_pEnv->retObjTop, pAny );
-    pAny->pNext = _pEnv->retObjTop.pNext;
-    _pEnv->retObjTop.pNext = pAny;
-    
 
     
     /* // 現在のブロックに登録 */
@@ -313,7 +306,7 @@ static void lns_gc_any( lns_env_t * _pEnv, lns_any_t * pAny, bool freeFlag ) {
             for ( index = 0; index < pAny->val.form.len; index++ ) {
                 lns_var_t * pVar = l_form_closure( pAny, index );
                 if ( pVar->pLink ) {
-                    lns_rmFromList( pVar->pLink );
+                    lns_unuseVar( pVar );
                 }
             }
             lns_free( _pEnv->allocateor, pAny->val.form.pClosureValList );
@@ -356,6 +349,9 @@ lns_any_t * _lns_litStr2any(
     pAny->val.str.len = strlen( pStr );
     pAny->val.str.pStr = pStr;
     pAny->val.str.staticFlag = true;
+
+    lns_pushRetAny( _pEnv, pAny );
+    
     return pAny;
 }
 
@@ -418,6 +414,8 @@ void lns_unuseVar( lns_var_t * pVar )
     lns_varLink_t * pLink = pVar->pLink;
     if ( pLink != NULL ) {
         lns_rmFromList( pLink );
+        // 空き varlink に追加
+        lns_add2list( &s_freeVarLinkTop, pLink );
     }
 }
 
@@ -431,19 +429,6 @@ void lns_initVar( lns_var_t * pVar, lns_stem_t stem )
     }
 }
 
-lns_var_t * lns_allocVar( lns_env_t * _pEnv, lns_stem_type_t type )
-{
-    lns_var_t * pVar = &_pEnv->stackVarBuf[ _pEnv->useStackVarNum ];
-    _pEnv->useStackVarNum++;
-    pVar->stem.type = type;
-    if ( type == lns_stem_type_any ) {
-        lns_varLink_t * pVarLink = lns_newVarLink( pVar );
-    }
-    else {
-        pVar->pLink = NULL;
-    }
-    return pVar;
-}
 
 
 /**
@@ -471,13 +456,13 @@ static lns_env_t * lns_createEnv( lua_State * pLua )
     _pEnv->blockDepth = 0;
     _pEnv->stackPos = 0;
 
-    lns_initList( &_pEnv->loadModuleTop );
+    lns_initList( &_pEnv->loadModuleTop, &_pEnv->loadModuleTop );
 
     _pEnv->pMRet = NULL;
 
     _pEnv->pSortCallback = lns_global.nilStem;
 
-    lns_initList( &_pEnv->retObjTop );
+    lns_initList( &_pEnv->retObjTop, &_pEnv->retObjTop );
     
     if ( pLua != NULL ) {
         //lns_setLuaWapper( _pEnv );
@@ -524,13 +509,7 @@ void lns_leave_block( lns_env_t * _pEnv, int32_t blockIndex )
     
     _pEnv->useStackVarNum--;
     for ( ; _pEnv->useStackVarNum >= blockIndex; _pEnv->useStackVarNum-- ) {
-        lns_var_t * pVar = &_pEnv->stackVarBuf[ _pEnv->useStackVarNum ];
-        if ( pVar->pLink != NULL ) {
-            // varlink から除去
-            lns_rmFromList( pVar->pLink );
-            // 空き varlink に追加
-            lns_add2list( &s_freeVarLinkTop, pVar->pLink );
-        }
+        lns_unuseVar( &_pEnv->stackVarBuf[ _pEnv->useStackVarNum ] );
     }
     _pEnv->useStackVarNum++;
 }
@@ -579,7 +558,7 @@ void lns_setup_block(
 {
     int dummy;
 
-    lns_initList( &pBlock->managedAnyTop );
+    lns_initList( &pBlock->managedAnyTop, &pBlock->managedAnyTop );
 
     pBlock->pVarList = _pEnv->varPPool + _pEnv->useVarPoolNum;
     pBlock->varLen = varNum;
@@ -675,10 +654,18 @@ static void lns_gc_collect_minor( lns_env_t * _pEnv )
 
     // newvar で参照している全オブジェクトについて以下を実行
     lns_varLink_t * pLink = s_minorVarLinkTop.pNext;
-    for ( ; pLink != &s_minorVarLinkTop; pLink = pLink->pNext ) {
+    lns_varLink_t * pNext;
+    for ( ; pLink != &s_minorVarLinkTop; pLink = pNext ) {
+        // リンク情報が変わる可能性があるので、ここで次を取っておく
+        pNext = pLink->pNext;
+        
         lns_var_t * pVar = pLink->pVar;
-        if ( pVar->pLink == NULL ) {
-            // オブジェクトが MAJOR だった場合、何もしない。
+        lns_any_t * pAny = pVar->stem.val.pAny;
+        if ( !LNS_IS_GC_MINOR( pAny ) ) {
+            // オブジェクトが MAJOR だった場合、 newvar から除外する
+            lns_rmFromList( pLink );
+            // 空き varlink に追加
+            lns_add2list( &s_freeVarLinkTop, pLink );
             continue;
         }
         pLink->age++;
@@ -688,7 +675,6 @@ static void lns_gc_collect_minor( lns_env_t * _pEnv )
         }
         else {
             // 所定の値以下の場合、 REFED をセット
-            lns_any_t * pAny = pVar->stem.val.pAny;
             LNS_GC_SET_BIT( pAny, LNS_GC_STATE_REFED );
 
             if ( pAny->type == lns_value_type_if ) {
@@ -700,6 +686,15 @@ static void lns_gc_collect_minor( lns_env_t * _pEnv )
             }
         }
     }
+    // ret に登録されているオブジェクトについて実行
+    lns_any_t * pRet = _pEnv->retObjTop.pNext;
+    while ( pRet != NULL ) {
+        if ( LNS_IS_GC_MINOR( pObjForIF ) ) {
+            LNS_GC_SET_BIT( pObjForIF, LNS_GC_STATE_REFED );
+        }
+    }
+
+    
     // newpool のオブジェクトで REFED がセットされていないオブジェクトを破棄。
     // REFED がセットされている場合 workpool にコピー
     for ( index = 0; index < s_pNewPool->count; index++ ) {
@@ -712,6 +707,11 @@ static void lns_gc_collect_minor( lns_env_t * _pEnv )
             s_pWorkPool->count++;
         }
     }
+    if ( s_pWorkPool->count == LNS_GC_MINOR_MAX ) {
+        // 全 minor オブジェクトが参照されている場合、
+        
+    }
+    
     // newpool を workpool で置き換え
     lns_newpool_t * pTemp = s_pNewPool;
     s_pNewPool = s_pWorkPool;

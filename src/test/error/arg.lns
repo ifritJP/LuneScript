@@ -106,7 +106,7 @@ func7( func5() ); // warn
 }
 
 {
-   fn func( val:int, val2:int!, val3:int! ): int {
+   fn func1( val:int, val2:int!, val3:int! ): int {
       return 0;
    }  
    fn func2( ...<int> ) {
@@ -114,7 +114,7 @@ func7( func5() ); // warn
    }
    fn func3( ... ) {
    }
-   func( 1 ); // warn
+   func1( 1 ); // warn
    func2( 1 ## ); // error
    func3( 2 ## ); // error
    func3( ## );

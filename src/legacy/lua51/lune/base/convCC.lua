@@ -7386,9 +7386,9 @@ function convFilter:processApply( node, opt )
    
    local dummyScope = Ast.Scope.new(self.moduleTypeInfo:get_scope(), false)
    
-   local formSym = dummyScope:addLocalVar( false, false, string.format( "_form%d", dummyId), node:get_pos(), iteFuncType, Ast.MutMode.IMut )
-   local paramSym = dummyScope:addLocalVar( false, false, string.format( "_param%d", dummyId), node:get_pos(), iteExpTypeList[2], Ast.MutMode.IMut )
-   local stateSym = dummyScope:addLocalVar( false, false, string.format( "_state%d", dummyId), node:get_pos(), iteExpTypeList[3], Ast.MutMode.IMut )
+   local formSym = _lune.unwrap( dummyScope:addLocalVar( false, false, string.format( "_form%d", dummyId), node:get_pos(), iteFuncType, Ast.MutMode.IMut ))
+   local paramSym = _lune.unwrap( dummyScope:addLocalVar( false, false, string.format( "_param%d", dummyId), node:get_pos(), iteExpTypeList[2], Ast.MutMode.IMut ))
+   local stateSym = _lune.unwrap( dummyScope:addLocalVar( false, false, string.format( "_state%d", dummyId), node:get_pos(), iteExpTypeList[3], Ast.MutMode.IMut ))
    self.scopeMgr:setupScopeParam( dummyScope )
    
    self:processBlockPreProcess( dummyScope )

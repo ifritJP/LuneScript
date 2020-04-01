@@ -1,7 +1,7 @@
-class Test {
+class Test__a {
    pri static let val:int {pub};
    __init {
-      Test.val = 0;
+      Test__a.val = 0;
    }
    pri let mut val1:int {pub};
    pub fn __init( val:int ) {
@@ -21,14 +21,14 @@ class Test {
    }
 }
 
-Test.func( 1 ); // error
+Test__a.func( 1 ); // error
 
 {
-   let test = new Test(1,2); // error
+   let test = new Test__a(1,2); // error
    test.func( 1, 1.0, 2.0 ); // error
-   let test2 = Test; // error
-   Test = test; // error
-   Test = int; // error
+   let test2 = Test__a; // error
+   Test__a = test; // error
+   Test__a = int; // error
    let val = int + 1; // error
    let mut val2 = 1;
    val2 = 1 + int; //error
@@ -80,7 +80,7 @@ interface Test6 {
    }
 }
 
-class Test extend Test6 { // error
+class Test__a extend Test6 { // error
 }
 
 class Test7 { // error
@@ -119,7 +119,7 @@ abstract class Super2 {
    }
 }
 
-class Sub2 extend Super2 { // error
+class Sub2__a extend Super2 { // error
    pub override fn func1() mut { // error
    }
    pub override fn func2(arg:int) mut { // error

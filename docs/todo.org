@@ -8,6 +8,10 @@
 
 * バグ
 
+- [ ] 次の式で val をセット出来ない。
+      let! val = func() {
+         val = 1;
+      };
 - [ ] Mapping を implement するクラスは、 abstract/interface のメンバは持てないようにする
   
 - [ ] 互換性のない値で switch - case が書けてしまう。

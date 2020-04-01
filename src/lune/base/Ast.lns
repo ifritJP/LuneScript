@@ -1382,6 +1382,7 @@ pub fn Scope.getTypeInfoField(
 @param name シンボル名
 @param fromScope シンボルを参照する位置のスコープ
 @param onlySameNsFlag true の場合、検索対象を同一名前空間内に限定する。
+  ここで、「同一名前空間内」とは、このスコープから辿れる名前空間という意味である。
 */
 pub fn Scope.getSymbolInfo( name: str, fromScope:&Scope,
                             onlySameNsFlag:bool, access:ScopeAccess ) : &SymbolInfo!
@@ -1522,67 +1523,100 @@ pub fn Scope.filterSymbolTypeInfo(
 pub fn Scope.add(
    kind: SymbolKind, canBeLeft:bool, canBeRight:bool, name:str, pos:&Parser.Position!,
    typeInfo: &TypeInfo, accessMode:AccessMode, staticFlag:bool,
-   mutMode:MutMode, hasValueFlag:bool ) mut : &SymbolInfo
+   mutMode:MutMode, hasValueFlag:bool ) mut : &SymbolInfo!, &SymbolInfo!
 {
+   switch kind {
+      case .Typ, .Fun {
+         let existSymbol;
+         switch typeInfo.$kind {
+            case .Enum {
+               if self.ownerTypeInfo$.$kind == .Class {
+                  existSymbol = self.getSymbolInfoField(name, true, self, .Full);
+               }
+               else {
+                  existSymbol = self.getSymbolInfo( name, self, true, .Full );
+               }
+            }
+            default {
+               existSymbol = self.getSymbolInfo( name, self, true, .Full );
+            }
+         }
+         when! existSymbol {
+            if typeInfo.$kind ~= existSymbol.$typeInfo.$kind or
+               not isBuiltin( existSymbol.$typeInfo.$typeId )
+            {
+               return nil, existSymbol;
+            }
+         }
+      }
+   }
+   
    let mut symbolInfo = new NormalSymbolInfo(
       kind, canBeLeft, canBeRight, self, accessMode, staticFlag,
       name, pos, typeInfo, mutMode, hasValueFlag );
    self.symbol2SymbolInfoMap[ name ] = symbolInfo;
-   return symbolInfo;
+   return symbolInfo, nil;
 }
 
 pub fn Scope.addLocalVar(
    argFlag:bool, canBeLeft:bool, name:str, pos:&Parser.Position!,
-   typeInfo: &TypeInfo, mutable:MutMode ) mut : &SymbolInfo
+   typeInfo: &TypeInfo, mutable:MutMode ) mut : &SymbolInfo!, &SymbolInfo!
 {
-   return self.add( argFlag and SymbolKind.Arg or SymbolKind.Var,
-                    canBeLeft, true, name, pos, typeInfo, .Local, false, mutable, true );
+   return self.add(
+      argFlag and SymbolKind.Arg or SymbolKind.Var,
+      canBeLeft, true, name, pos, typeInfo, .Local, false, mutable, true )**;
 }
 
 pub let dummySymbol =
-   rootScope.addLocalVar( false, false, "$$", nil, headTypeInfo, .IMut );
+   unwrap rootScope.addLocalVar( false, false, "$$", nil, headTypeInfo, .IMut );
 
 pub fn Scope.addStaticVar(
    argFlag:bool, canBeLeft:bool, name:str, pos:&Parser.Position!,
-   typeInfo: &TypeInfo, mutable:MutMode ) mut : &SymbolInfo
+   typeInfo: &TypeInfo, mutable:MutMode ) mut : &SymbolInfo!, &SymbolInfo!
 {
-   return self.add( argFlag and SymbolKind.Arg or SymbolKind.Var,
-                    canBeLeft, true, name, pos, typeInfo, .Local, true, mutable, true );
+   return self.add(
+      argFlag and SymbolKind.Arg or SymbolKind.Var,
+      canBeLeft, true, name, pos, typeInfo, .Local, true, mutable, true )**;
 }
 
 pub fn Scope.addVar(
    accessMode:AccessMode, name:str, pos:&Parser.Position!,
-   typeInfo: &TypeInfo, mutable:MutMode, hasValueFlag:bool ) mut : &SymbolInfo
+   typeInfo: &TypeInfo, mutable:MutMode, hasValueFlag:bool ) mut :
+   &SymbolInfo!, &SymbolInfo!
 {
    return self.add( SymbolKind.Var, true, true, name, pos, typeInfo,
-                    accessMode, false, mutable, hasValueFlag );
+                    accessMode, false, mutable, hasValueFlag )**;
 }
 
 
-pub fn Scope.addEnumVal( name:str, pos:&Parser.Position!, typeInfo: &TypeInfo ) mut
+pub fn Scope.addEnumVal( name:str, pos:&Parser.Position!, typeInfo: &TypeInfo ) mut :
+   &SymbolInfo!, &SymbolInfo!
 {
-   self.add( SymbolKind.Mbr, false, true,
-             name, pos, typeInfo, .Pub, true, .Mut, true );
+   return self.add( SymbolKind.Mbr, false, true,
+                    name, pos, typeInfo, .Pub, true, .Mut, true )**;
 }
 
 pub fn Scope.addEnum(
-   accessMode:AccessMode, name:str, pos:&Parser.Position!, typeInfo: &TypeInfo ) mut
+   accessMode:AccessMode, name:str, pos:&Parser.Position!, typeInfo: &TypeInfo ) mut :
+   &SymbolInfo!, &SymbolInfo!
 {
-   self.add( SymbolKind.Typ, false, false,
-             name, pos, typeInfo, accessMode, true, .Mut, true );
+   return self.add( SymbolKind.Typ, false, false,
+                    name, pos, typeInfo, accessMode, true, .Mut, true )**;
 }
 
-pub fn Scope.addAlgeVal( name:str, pos:&Parser.Position!, typeInfo: &TypeInfo ) mut
+pub fn Scope.addAlgeVal( name:str, pos:&Parser.Position!, typeInfo: &TypeInfo ) mut :
+   &SymbolInfo!, &SymbolInfo!
 {
-   self.add( SymbolKind.Mbr, false, true,
-             name, pos, typeInfo, .Pub, true, .Mut, true );
+   return self.add( SymbolKind.Mbr, false, true,
+                    name, pos, typeInfo, .Pub, true, .Mut, true )**;
 }
 
 pub fn Scope.addAlge(
-   accessMode:AccessMode, name:str, pos:&Parser.Position!, typeInfo: &TypeInfo ) mut
+   accessMode:AccessMode, name:str, pos:&Parser.Position!, typeInfo: &TypeInfo ) mut :
+   &SymbolInfo!, &SymbolInfo!
 {
-   self.add( SymbolKind.Typ, false, false,
-             name, pos, typeInfo, accessMode, true, .Mut, true );
+   return self.add( SymbolKind.Typ, false, false,
+                    name, pos, typeInfo, accessMode, true, .Mut, true )**;
 }
 
 pub fn Scope.addAlternate(
@@ -1594,10 +1628,10 @@ pub fn Scope.addAlternate(
 
 pub fn Scope.addMember(
    name:str, pos:&Parser.Position!, typeInfo: &TypeInfo, accessMode:AccessMode,
-   staticFlag:bool, mutMode:MutMode ) mut : &SymbolInfo
+   staticFlag:bool, mutMode:MutMode ) mut : &SymbolInfo!, &SymbolInfo!
 {
    return self.add( SymbolKind.Mbr, true, true, name, pos,
-                    typeInfo, accessMode, staticFlag, mutMode, true );
+                    typeInfo, accessMode, staticFlag, mutMode, true )**;
 }
 
 pub fn Scope.addMethod(
@@ -1611,10 +1645,12 @@ pub fn Scope.addMethod(
 
 pub fn Scope.addFunc(
    pos:&Parser.Position!, typeInfo: &TypeInfo,
-   accessMode:AccessMode, staticFlag:bool, mutable:bool ) mut
+   accessMode:AccessMode, staticFlag:bool, mutable:bool ) mut :
+   &SymbolInfo!, &SymbolInfo!
 {
-   self.add( SymbolKind.Fun, true, true, typeInfo.$rawTxt, pos, typeInfo, accessMode,
-             staticFlag, mutable and MutMode.Mut or MutMode.IMut, true );
+   return self.add(
+      SymbolKind.Fun, true, true, typeInfo.$rawTxt, pos, typeInfo, accessMode,
+      staticFlag, mutable and MutMode.Mut or MutMode.IMut, true )**;
 }
 
 pub fn Scope.addForm(
@@ -3979,17 +4015,18 @@ pub static fn NormalTypeInfo.createAlias(
 
 pub fn Scope.addAlias(
    name:str, pos:&Parser.Position, externalFlag:bool, accessMode:AccessMode,
-   parentInfo: &TypeInfo, symbolInfo:&SymbolInfo ) mut : &SymbolInfo
+   parentInfo: &TypeInfo, symbolInfo:&SymbolInfo ) mut : &SymbolInfo!, &SymbolInfo!
 {
    let aliasType = NormalTypeInfo.createAlias(
       name, externalFlag, accessMode, parentInfo, symbolInfo.$typeInfo.$srcTypeInfo );
    return self.add(
       symbolInfo.$kind, false, symbolInfo.$canBeRight,
-      name, pos, aliasType, accessMode, true, .IMut, true );
+      name, pos, aliasType, accessMode, true, .IMut, true )**;
 }
 
 pub fn Scope.addAliasForType(
-   name:str, pos:&Parser.Position!, typeInfo:&TypeInfo ) mut : &SymbolInfo
+   name:str, pos:&Parser.Position!, typeInfo:&TypeInfo ) mut :
+   &SymbolInfo!, &SymbolInfo!
 {
    let mut skind = SymbolKind.Typ;
    let mut canBeRight = false;
@@ -4008,7 +4045,7 @@ pub fn Scope.addAliasForType(
 
    return self.add(
       skind, false, canBeRight, name, pos,
-      typeInfo, typeInfo.$accessMode, true, .IMut, true );
+      typeInfo, typeInfo.$accessMode, true, .IMut, true )**;
 }
 
 

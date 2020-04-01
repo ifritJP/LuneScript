@@ -62,8 +62,11 @@ extern "C" {
     typedef int lns_int_t;
     typedef double lns_real_t;
 
-
+    typedef struct lns_envAlloc_t lns_envAlloc_t;
+    
+    typedef struct lns_varLink_t lns_varLink_t;
     typedef struct lns_var_t lns_var_t;
+    typedef struct lns_retObj_t  lns_retObj_t;
     typedef struct lns_any_t lns_any_t;
     typedef struct lns_block_t lns_block_t;
     typedef struct lns_env_t lns_env_t;
@@ -723,14 +726,26 @@ extern "C" {
         /**
          * オブジェクト同士をリンクする。
          *
-         * major の場合、双方向リンク。 s_majorObjTop で使用。
-         * minor の場合、片方向リンク。 retObjTop で使用。
+         * major の場合
+         *  - 全 major オブジェクトと繋ぐ双方向リンク。
+         *  - s_majorObjTop からアクセスする。
+         * minor の場合
+         *  - 全 minor オブジェクトへの片方向リンク。 retObjTop で使用。
+         *  - このオブジェクトを参照している var への varLink。
          */
-        struct lns_any_t * pNext;
-        struct lns_any_t * pPrev;
+        union {
+            struct {
+                struct lns_any_t * pNext;
+                struct lns_any_t * pPrev;
+            } major;
+            struct {
+                struct lns_any_t * pNext;
+                struct lns_varLink_t * pLink;
+            } minor;
+        };
     };
 
-    typedef struct lns_varLink_t {
+    struct lns_varLink_t {
         /** gc で開放されなかった回数 */
         int age;
         /** newvar 同士をリンクする双方向リスト。 */
@@ -738,7 +753,8 @@ extern "C" {
         struct lns_varLink_t * pPrev;
         /** この newvar のオリジナル var */
         struct lns_var_t * pVar;
-    } lns_varLink_t;
+    };
+    /** 任意の値を管理する変数 */
     typedef struct lns_var_t {
         lns_stem_t stem;
 
@@ -750,6 +766,12 @@ extern "C" {
          */
         lns_varLink_t * pLink;
     } lns_var_t;
+    /** 戻り値を管理する */
+    typedef struct lns_retObj_t {
+        lns_var_t var;
+
+        struct lns_retObj_t * pNext;
+    } lns_retObj_t;
     
     
 
@@ -775,6 +797,11 @@ extern "C" {
          * 実際の先頭要素は managedAnyTop.pNext。
          */
         lns_any_t managedAnyTop;
+
+
+        /** ブロック開始時の useStackVarNum */
+        int useStackVarNum;
+        
    };
 
     typedef struct {
@@ -861,15 +888,12 @@ extern "C" {
         lns_module_t loadModuleTop;
 
 
-        lns_var_t stackVarBuf[ LNS_GC_MINOR_MAX ];
-        int useStackVarNum;
+        /** 戻り値 Queue の先頭 */
+        lns_retObj_t retObjQueue;
 
-        /** block の stack 区切り用 */
-        lns_any_t blockAnyBuf[ LNS_BLOCK_MAX_DEPTH ];
-        /**
-         * 戻り値を管理するオブジェクト
-         */
-        lns_any_t retObjTop;
+
+        ///// 動的に alloc するデータ
+        lns_envAlloc_t * pEnvAlloc;
     };
 
 
@@ -1091,6 +1115,7 @@ extern "C" {
 #include <lns_collection.h>
 #include <lns_luaWrapper.h>
 #include <lns_builtin.h>
+#include <lns_envAlloc.h>
 
 #endif
 

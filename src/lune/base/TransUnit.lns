@@ -669,12 +669,27 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
       errPos:&Parser.Position, classFlag:bool, abstractFlag: bool,
       baseInfo: &Ast.TypeInfo!, interfaceList: &List<&Ast.TypeInfo>!,
       genTypeList: &List<&Ast.AlternateTypeInfo>!, externalFlag: bool, name:str,
+      allowMultiple:bool,
       accessMode:Ast.AccessMode, defNamespace: Nodes.NamespaceInfo! ) mut : &Ast.TypeInfo
    {
       let mut typeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
-      if! self.scope.getTypeInfoChild( name ) {
-         // 宣言済み
+      if! self.scope.getTypeInfo( name, self.scope, true, .Normal ) {
          typeInfo = _exp;
+      }
+      //if! self.scope.getTypeInfoChild( name ) {
+
+      if typeInfo ~= Ast.headTypeInfo {
+         if typeInfo.$scope$.$parent ~= self.scope {
+            self.addErrMess(
+               errPos,     
+               "multiple class(%s)" (typeInfo.getTxt( self.typeNameCtrl ##)));
+            // クラスの複数定義は、その後の解析すると、
+            self.error( "stop by error" );
+         }
+      }
+      if typeInfo ~= Ast.headTypeInfo
+      {
+         // 宣言済み
 
          if typeInfo.$abstractFlag ~= abstractFlag {
             self.addErrMess( errPos,
@@ -836,21 +851,26 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
       genericTypeList:&List<&Ast.TypeInfo>, genericsClass:&Ast.TypeInfo ) mut:
       Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!;
 
-   pri fn checkShadowing( pos:&Parser.Position, name:str, scope:&Ast.Scope ) mut {
-      let symbolInfo = self.scope.getSymbolTypeInfo(
-         name, scope, self.moduleScope, self.scopeAccess );
-
+   fn errorShadowing( pos:&Parser.Position, symbolInfo:&Ast.SymbolInfo! ) mut {
       when! symbolInfo {
          let symPos = symbolInfo.$pos;
          when! symPos {
             self.addErrMess(
                symPos, "This symbol is shadowed from %d:%d -- %s"
-               (pos.lineNo, pos.column, name ) );
+               (pos.lineNo, pos.column, symbolInfo.$name ) );
          }
          self.addErrMess(
             pos, "shadowing symbol of %s -- %s"
-            (symPos and "%s:%s" (symPos$.lineNo, symPos$.column) or "external", name ) );
+            (symPos and "%s:%s" (symPos$.lineNo, symPos$.column) or "external",
+              symbolInfo.$name ) );     
       }
+   }
+   
+   pri fn checkShadowing( pos:&Parser.Position, name:str, scope:&Ast.Scope ) mut {
+      let symbolInfo = self.scope.getSymbolTypeInfo(
+         name, scope, self.moduleScope, self.scopeAccess );
+
+      self.errorShadowing( pos, symbolInfo );
    }
 
    
@@ -865,7 +885,8 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
             self.addErrMess( pos, "shadowing variable -- %s" (name) );
          }
       }
-      return self.scope.addLocalVar( argFlag, canBeLeft, name, pos, typeInfo, mutable );
+      return unwrap self.scope.addLocalVar(
+         argFlag, canBeLeft, name, pos, typeInfo, mutable );
    }
 
 
@@ -1802,7 +1823,7 @@ fn TransUnit.registBuiltInScope() mut {
    {
       if self.targetLuaVer.isSupport( "%s.%s" (name, fieldName) ) {
          if info.type$[1] == "var" {
-            let symbol = self.scope.add(
+            let symbol = unwrap self.scope.add(
                .Var, false, true, fieldName, nil,
                getTypeInfo( unwrap info.typeInfo$[1] ), .Pub,
                true, .Mut, true );
@@ -1857,7 +1878,7 @@ fn TransUnit.registBuiltInScope() mut {
             if typeInfo.$nilableTypeInfo ~= Ast.headTypeInfo {
                Ast.builtInTypeIdSet[ typeInfo.$nilableTypeInfo.$typeId ] = typeInfo.$nilableTypeInfo;
             }
-            let symInfo = self.scope.add(
+            let symInfo = unwrap self.scope.add(
                symbolKind, false, kind == .Func,
                fieldName, nil, typeInfo, .Pub, staticFlag,
                mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true );
@@ -1957,7 +1978,7 @@ fn TransUnit.registBuiltInScope() mut {
                   parentInfo = self.pushClass(
                      self.parser.$currentToken.pos,
                      classKind == .Class, false, nil, interfaceList,
-                     genTypeList, true, name, .Pub ## );
+                     genTypeList, true, name, true, .Pub ## );
                   builtinFunc.registerClass( parentInfo );
                }
                case .Module {
@@ -2926,23 +2947,27 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Nodes.Node {
    self.scope.addModule( moduleTypeInfo, moduleInfo.assign( assignName.txt ) );
 
    let moduleSymbolKind = unwrap Ast.SymbolKind._from( metaInfo.__moduleSymbolKind );
-   let moduleSymbolInfo = self.scope.add(
+   let moduleSymbolInfo, shadowing = self.scope.add(
       moduleSymbolKind, false, false, assignName.txt, assignName.pos,
       moduleTypeInfo, .Local, true,
       metaInfo.__moduleMutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true );
-
-   self.checkToken( nextToken, ";" );
-
-
-   // if self.moduleScope ~= self.scope {
-   //    self.error( "illegal top scope." );
-   // }
+   when! moduleSymbolInfo {
+      self.checkToken( nextToken, ";" );
 
 
-   return Nodes.ImportNode.create(
-      self.nodeManager, token.pos,
-      self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
-      modulePath, assignName.txt, moduleSymbolInfo, moduleTypeInfo );
+      // if self.moduleScope ~= self.scope {
+      //    self.error( "illegal top scope." );
+      // }
+
+
+      return Nodes.ImportNode.create(
+         self.nodeManager, token.pos,
+         self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
+         modulePath, assignName.txt, moduleSymbolInfo, moduleTypeInfo );
+   }
+
+   self.errorShadowing( token.pos, shadowing );
+   return self.createNoneNode( token.pos );
 }
 
 

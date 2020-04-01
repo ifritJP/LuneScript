@@ -66,14 +66,14 @@ for index = 1, 4 {
    }   
 }
 
-fn func( val: int! ): int {
+fn func__0( val: int! ): int {
    let! val2 = val { return 0; };
    
    return val2 + 2;
 }
 
-print( 3, func( 1 ) );
-print( 0, func( nil ) );
+print( 3, func__0( 1 ) );
+print( 0, func__0( nil ) );
 
 macro _test() {
    print( "macro hoge" );
@@ -646,16 +646,16 @@ pub let val = 100;
    fn sub():int! {
       return 0;
    }  
-   fn func( val:int!, val2:int! ): int {
+   fn func__c( val:int!, val2:int! ): int {
       let val3 = 1;
       when! val, val2 {
          return val + val2;
       }
       return 0;
    }
-   _print( `{ func( 1, 2 ) } );
-   _print( `{ func( nil, 2 ) } );
-   _print( `{ func( 1, nil ) } );
+   _print( `{ func__c( 1, 2 ) } );
+   _print( `{ func__c( nil, 2 ) } );
+   _print( `{ func__c( 1, nil ) } );
 }
 
 {
@@ -1000,13 +1000,13 @@ class TestGenSub2<T> extend Super<T> {
 }
 
 {
-   fn func<T>( val:Nilable<T> ): Nilable<T> {
+   fn func__c<T>( val:Nilable<T> ): Nilable<T> {
       return val;
    }  
 
-   print( func( 1 ).val() );
-   print( func( 1.0 ).val() );
-   print( func( "str" ).val() );
+   print( func__c( 1 ).val() );
+   print( func__c( 1.0 ).val() );
+   print( func__c( "str" ).val() );
 }
 
 macro _dump( symbol:stat ) {
@@ -1181,17 +1181,17 @@ class Test4 {
 {
    fn func() {
       fn func2() {
-         class Test {
+         class Test_1 {
             let val:int;
             pub fn func2( val2:int ) {
                print( __func__, val2 );
             }
          }
-         pub fn Test.func( val2:int ) {
+         pub fn Test_1.func( val2:int ) {
             print( self.val, val2 );
          }
          
-         let test = new Test( 1 );
+         let test = new Test_1( 1 );
          test.func( 1 );
          test.func2( 2 );
       }
@@ -1202,19 +1202,19 @@ class Test4 {
    func();
 }
 {
-   enum Test {
+   enum Test_enum {
       Foo,
       Bar,
       Baz,
    }
-   let val:Test = .Bar;
+   let val:Test_enum = .Bar;
    print( val.$_txt );
 }
 {
-   class Test {
+   class Test_c {
       let val:int;
    }
-   class Sub extend Test {
+   class Sub extend Test_c {
       // 親クラスのコンストラクタに引数があり、
       // 継承しているクラスにメンバがない場合に、エラーする不具合があった。
    }
@@ -1282,11 +1282,11 @@ print( '\\""\"\'\\.\\' );
 {
    Macro._section();
 
-   class Test<T> {
+   class Test_c<T> {
       let list:List<T> {pub};
    }
 
-   let test = new Test( [ 1, 2, 3, "abc" ] );
+   let test = new Test_c( [ 1, 2, 3, "abc" ] );
    foreach val in test.$list {
       print( val );
    }
@@ -1311,9 +1311,9 @@ print( '\\""\"\'\\.\\' );
    Macro._section();
    interface IF {
    }
-   class Super {
+   class Super_c {
    }
-   class Test extend Super (IF) {
+   class Test_c extend Super_c (IF) {
    }
 
    fn func( val:stem ) {
@@ -1326,7 +1326,7 @@ print( '\\""\"\'\\.\\' );
       if! val@@@str {
          print( "str:%s" ( _exp ) );
       }
-      if! val@@@Test {
+      if! val@@@Test_c {
          print( "class" );
       }
       if! val@@@IF {
@@ -1336,8 +1336,8 @@ print( '\\""\"\'\\.\\' );
    func( 1 );
    func( 1.0 );
    func( "abc" );
-   func( new Test() );
-   func( new Test() );
+   func( new Test_c() );
+   func( new Test_c() );
 }
 {
    Macro._section();
@@ -1350,10 +1350,10 @@ print( '\\""\"\'\\.\\' );
 }
 {
    Macro._section();
-   class Test {
+   class Test_c {
       pub let mut val:int;
    }
-   class Hoge<T:Test> {
+   class Hoge<T:Test_c> {
       let mut test:T {pub};
 
       pub fn __init( test:T ) {
@@ -1367,7 +1367,7 @@ print( '\\""\"\'\\.\\' );
          info.val = val;
       }
    }
-   let hoge2 = new Hoge( new Test( 1 ) );
+   let hoge2 = new Hoge( new Test_c( 1 ) );
    print( hoge2.$test.val );
    hoge2.set( 100 );
    print( hoge2.$test.val );
@@ -1426,23 +1426,23 @@ print( '\\""\"\'\\.\\' );
 }
 {
    Macro._section();
-   class Test {
+   class Test_c {
       pri static let mut val:int {pub,pub};
       pri static let mut val2:str {pub,pub};
       pri let mut val3:int {pub,pub};
       pri let mut val4:str {pub,pub};
 
       __init {
-         Test.val = 0;
-         Test.val2 = "abc";
+         Test_c.val = 0;
+         Test_c.val2 = "abc";
       }
    }
-   print( Test.$val, Test.$val2 );
-   Test.set_val( 100 );
-   Test.set_val2( "xyz" );
-   print( Test.$val, Test.$val2 );
+   print( Test_c.$val, Test_c.$val2 );
+   Test_c.set_val( 100 );
+   Test_c.set_val2( "xyz" );
+   print( Test_c.$val, Test_c.$val2 );
 
-   let mut test = new Test( 10, "ABC" );
+   let mut test = new Test_c( 10, "ABC" );
    print( test.$val3, test.$val4 );
    test.set_val3( 1000 );
    test.set_val4( "XYZ" );
@@ -1459,14 +1459,14 @@ print( '\\""\"\'\\.\\' );
    }
    class Sub extend Hoge {
    }
-   class Test extend Hoge {
+   class Test_c extend Hoge {
       let sub:Sub;
 
       // この advertise で、 get_val は super.get_val() ではなく、sub.get_val() になる。
       advertise sub; 
    }
    {
-      let test = new Test( "xyz", new Sub( "abc" ) );
+      let test = new Test_c( "xyz", new Sub( "abc" ) );
       print( test.$val );
    }
 }
