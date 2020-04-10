@@ -5063,9 +5063,10 @@ pub static fn TypeInfo.checkMatchType(
          }
          else {
             if not dstType.canEvalWith( expType, .SetOp, alt2type ) {
-               return .Error, "exp(%d) type mismatch %s <- %s"
-               ( index, dstType.getTxt( defaultTypeNameCtrl## ),
-                 expType.getTxt( defaultTypeNameCtrl## ));
+               return .Error, "exp(%d) type mismatch %s(%d) <- %s(%d)"
+               ( index,
+                 dstType.getTxt( defaultTypeNameCtrl## ), dstType.$typeId,
+                 expType.getTxt( defaultTypeNameCtrl## ), expType.$typeId);
             }
             _checkWarnForFollow( index, dstType, expType );
             // when! warnForFollowSrcIndex {

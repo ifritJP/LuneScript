@@ -6688,7 +6688,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
          else
           
             if not dstType:canEvalWith( expType, CanEvalType.SetOp, alt2type ) then
-               return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:getTxt( _moduleObj.defaultTypeNameCtrl ))
+               return MatchType.Error, string.format( "exp(%d) type mismatch %s(%d) <- %s(%d)", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), dstType:get_typeId(), expType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:get_typeId())
             end
             
             

@@ -328,6 +328,8 @@ local Log = _lune.loadModule( 'lune.base.Log' )
 local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
 local Macro = _lune.loadModule( 'lune.base.Macro' )
 
+local Depend = _lune.loadModule( 'lune.base.Depend' )
+
 
 
 local DeclClassMode = {}
@@ -1259,6 +1261,22 @@ function _TypeInfo:__init()
    self.typeId = Ast.rootTypeId
    self.skind = Ast.SerializeKind.Normal
 end
+function _TypeInfo:createTypeInfoCache( param )
+
+   do
+      local typeInfo = param.typeId2TypeInfo[self.typeId]
+      if typeInfo ~= nil then
+         return typeInfo, nil
+      end
+   end
+   
+   local typeInfo, mess = self:createTypeInfo( param )
+   if typeInfo ~= nil then
+      param.typeId2TypeInfo[self.typeId] = typeInfo
+   end
+   
+   return typeInfo, mess
+end
 function _TypeInfo.setmeta( obj )
   setmetatable( obj, { __index = _TypeInfo  } )
 end
@@ -1301,7 +1319,7 @@ function ImportParam:getTypeInfo( typeId )
    do
       local atom = self.typeId2AtomMap[typeId]
       if atom ~= nil then
-         local typeInfo, mess = atom:createTypeInfo( self )
+         local typeInfo, mess = atom:createTypeInfoCache( self )
          if typeInfo ~= nil then
             self.typeId2TypeInfo[typeId] = typeInfo
          end
@@ -3942,7 +3960,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = '@lune.@base.@TransUnit.TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2534, function (  )
+   Log.log( Log.Level.Info, __func__, 2547, function (  )
    
       return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), modulePath)
    end )
@@ -3959,7 +3977,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2546, function (  )
+               Log.log( Log.Level.Info, __func__, 2559, function (  )
                
                   return string.format( "%s already", modulePath)
                end )
@@ -3992,7 +4010,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2566, function (  )
+   Log.log( Log.Level.Info, __func__, 2579, function (  )
    
       return string.format( "%s processing", modulePath)
    end )
@@ -4139,7 +4157,7 @@ function TransUnit:processImport( modulePath )
    
    local importParam = ImportParam.new(self.parser:getLastPos(  ), self, typeId2Scope, typeId2TypeInfo, metaInfo, self.scope, moduleTypeInfo, self.scopeAccess, id2atomMap)
    for __index, atomInfo in pairs( _typeInfoList ) do
-      local newTypeInfo, errMess = atomInfo:createTypeInfo( importParam )
+      local newTypeInfo, errMess = atomInfo:createTypeInfoCache( importParam )
       do
          local _exp = errMess
          if _exp ~= nil then
@@ -4337,7 +4355,7 @@ function TransUnit:processImport( modulePath )
    
    self.importModuleInfo:remove(  )
    
-   Log.log( Log.Level.Info, __func__, 2896, function (  )
+   Log.log( Log.Level.Info, __func__, 2909, function (  )
    
       return string.format( "%s complete", modulePath)
    end )

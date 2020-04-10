@@ -40,6 +40,8 @@ import lune.base.Log;
 import lune.base.LuneControl;
 import lune.base.Macro;
 
+import lune.base.Depend;
+
 _lune_control ignore_symbol_;
 
 
@@ -990,7 +992,18 @@ abstract class _TypeInfo extend (Mapping) {
 @return Ast.TypeInfo! 生成した型情報。 失敗した場合は nil。
 @return str! エラー情報。成功した場合は nil。
    */
-   pub abstract fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!;
+   pro abstract fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!;
+
+   pub fn createTypeInfoCache( param:ImportParam ) : &Ast.TypeInfo!, str! {
+      if! let typeInfo = param.typeId2TypeInfo[ self.typeId ] {
+         return typeInfo, nil;
+      }
+      let typeInfo, mess = self.createTypeInfo( param );
+      when! typeInfo {
+         param.typeId2TypeInfo[ self.typeId ] = typeInfo;
+      }
+      return typeInfo, mess;
+   }
 }
 
 pub fn ImportParam.getTypeInfo(typeId:int) mut :&Ast.TypeInfo!, str! {
@@ -998,7 +1011,7 @@ pub fn ImportParam.getTypeInfo(typeId:int) mut :&Ast.TypeInfo!, str! {
       return typeInfo, nil;
    }
    if! let atom = self.typeId2AtomMap[ typeId ] {
-      let typeInfo, mess = atom.createTypeInfo( self );
+      let typeInfo, mess = atom.createTypeInfoCache( self );
       when! typeInfo {
          self.typeId2TypeInfo[ typeId ] = typeInfo;
       }
@@ -1011,7 +1024,7 @@ class _TypeInfoNilable extend _TypeInfo {
    pub let nilable:bool;
    pub let orgTypeId:int;
 
-   pub override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
+   pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
       //let orgTypeInfo = unwrap param.typeId2TypeInfo[ self.orgTypeId ];
       let orgTypeInfo = unwrap param.getTypeInfo( self.orgTypeId );
@@ -1026,7 +1039,7 @@ class _TypeInfoAlias extend _TypeInfo {
    pri let rawTxt:str;
    pri let srcTypeId:int;
 
-   pub override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
+   pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
       let srcTypeInfo = unwrap param.getTypeInfo( self.srcTypeId );
       let newTypeInfo = Ast.NormalTypeInfo.createAlias(
@@ -1047,7 +1060,7 @@ class _TypeInfoAlias extend _TypeInfo {
 class _TypeInfoDDD extend _TypeInfo {
    pub let itemTypeId:int;
 
-   pub override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
+   pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
       //let itemTypeInfo = unwrap param.typeId2TypeInfo[ self.itemTypeId ];
       let itemTypeInfo = unwrap param.getTypeInfo( self.itemTypeId );
@@ -1066,7 +1079,7 @@ class _TypeInfoAlternate extend _TypeInfo {
    pub let belongClassFlag:bool;
    pub let altIndex:int;
 
-   pub override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
+   pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
       let baseInfo = unwrap param.getTypeInfo( self.baseId );
       let mut interfaceList:List<&Ast.TypeInfo> = [];
@@ -1086,7 +1099,7 @@ class _TypeInfoGeneric extend _TypeInfo {
    pub let genSrcTypeId:int;
    pub let genTypeList:&List<int>;
 
-   pub override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
+   pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
       let genSrcTypeInfo = unwrap param.getTypeInfo( self.genSrcTypeId );
       let mut genTypeList:List<&Ast.TypeInfo> = [];
@@ -1104,7 +1117,7 @@ class _TypeInfoBox extend _TypeInfo {
    pub let accessMode:Ast.AccessMode;
    pub let boxingType:int;
 
-   pub override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
+   pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
       let boxingType = unwrap param.getTypeInfo( self.boxingType );
       let newTypeInfo = Ast.NormalTypeInfo.createBox( self.accessMode, boxingType );
@@ -1118,7 +1131,7 @@ class _TypeInfoModifier extend _TypeInfo {
    pub let srcTypeId:int;
    pub let mutMode:Ast.MutMode;
 
-   pub override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
+   pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
       //let! srcTypeInfo = param.typeId2TypeInfo[ self.srcTypeId ] {
       let! srcTypeInfo = param.getTypeInfo( self.srcTypeId ) {
@@ -1133,7 +1146,7 @@ class _TypeInfoModifier extend _TypeInfo {
 class _TypeInfoModule extend _TypeInfo {
    pub let txt:str;
 
-   pub override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
+   pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
       let mut parentInfo:&Ast.TypeInfo = Ast.headTypeInfo;
       if self.parentId ~= Ast.rootTypeId {
@@ -1191,7 +1204,7 @@ class _TypeInfoNormal extend _TypeInfo {
    pub let retTypeId: int[];
    pub let children: int[];
 
-   pub override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
+   pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
       let mut newTypeInfo:&Ast.TypeInfo! = nil;
       if self.parentId ~= Ast.rootTypeId or
@@ -1359,7 +1372,7 @@ class _TypeInfoEnum extend _TypeInfo {
    pub let valTypeId:int;
    pub let enumValList: Map<str,stem>;
 
-   pub override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
+   pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
       let accessMode = unwrap Ast.AccessMode._from( self.accessMode );
       //let parentInfo = unwrap param.typeId2TypeInfo[ self.parentId ];
@@ -1411,7 +1424,7 @@ class _TypeInfoAlge extend _TypeInfo {
    pub let accessMode:Ast.AccessMode;
    pub let algeValList: &List<&_TypeInfoAlgeVal>;
 
-   pub override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
+   pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
       let accessMode = unwrap Ast.AccessMode._from( self.accessMode );
       //let parentInfo = unwrap param.typeId2TypeInfo[ self.parentId ];
@@ -2695,7 +2708,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
       self.parser.getLastPos(), self, typeId2Scope, typeId2TypeInfo,
       metaInfo, self.scope, moduleTypeInfo, self.scopeAccess, id2atomMap );
    foreach atomInfo in _typeInfoList {
-      let newTypeInfo, errMess = atomInfo.createTypeInfo( importParam );
+      let newTypeInfo, errMess = atomInfo.createTypeInfoCache( importParam );
       if! errMess {
          Util.err( "%s: %s" ( modulePath, _exp ) );
       }
