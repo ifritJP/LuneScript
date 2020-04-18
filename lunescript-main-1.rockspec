@@ -55,6 +55,7 @@ build = {
       [ "lune.base.TransUnit" ] = "src/lune/base/TransUnit.lua",
       [ "lune.base.convLua" ] = "src/lune/base/convLua.lua",
       [ "lune.base.convCC" ] = "src/lune/base/convCC.lua",
+      [ "lune.base.convGo" ] = "src/lune/base/convGo.lua",
       [ "lune.base.dumpNode" ] = "src/lune/base/dumpNode.lua",
       [ "lune.base.Formatter" ] = "src/lune/base/Formatter.lua",
       [ "lune.base.OutputDepend" ] = "src/lune/base/OutputDepend.lua",

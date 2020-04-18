@@ -280,6 +280,7 @@ local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local convLua = _lune.loadModule( 'lune.base.convLua' )
 local convCC = _lune.loadModule( 'lune.base.convCC' )
+local convGo = _lune.loadModule( 'lune.base.convGo' )
 local TransUnit = _lune.loadModule( 'lune.base.TransUnit' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Option = _lune.loadModule( 'lune.base.Option' )
@@ -745,7 +746,7 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
             local _modMetaPath = modMetaPath
          
             
-            Log.log( Log.Level.Debug, __func__, 393, function (  )
+            Log.log( Log.Level.Debug, __func__, 394, function (  )
             
                return "NeedUpdate"
             end )
@@ -758,7 +759,7 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
             local _time = time
          
             
-            Log.log( Log.Level.Debug, __func__, 398, function (  )
+            Log.log( Log.Level.Debug, __func__, 399, function (  )
             
                return "NeedUpdate"
             end )
@@ -772,7 +773,7 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
             if  nil == dependMeta then
                local _dependMeta = dependMeta
             
-               Log.log( Log.Level.Debug, __func__, 406, function (  )
+               Log.log( Log.Level.Debug, __func__, 407, function (  )
                
                   return "NeedUpdate"
                end )
@@ -784,7 +785,7 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
             local metaModuleId = dependMeta:createModuleId(  )
             if metaModuleId:get_buildCount() ~= 0 and metaModuleId:get_buildCount() ~= orgMetaModuleId:get_buildCount() then
                
-               Log.log( Log.Level.Debug, __func__, 416, function (  )
+               Log.log( Log.Level.Debug, __func__, 417, function (  )
                
                   return string.format( "NeedUpdate: %s, %d, %d", modMetaPath, metaModuleId:get_buildCount(), orgMetaModuleId:get_buildCount())
                end )
@@ -827,7 +828,7 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
       end
       
    else
-      Log.log( Log.Level.Debug, __func__, 454, function (  )
+      Log.log( Log.Level.Debug, __func__, 455, function (  )
       
          return "not found meta"
       end )
@@ -905,7 +906,7 @@ end
 function Front:loadFile( importModuleInfo, path, mod )
    local __func__ = '@lune.@base.@front.Front.loadFile'
 
-   Log.log( Log.Level.Info, __func__, 521, function (  )
+   Log.log( Log.Level.Info, __func__, 522, function (  )
       local __func__ = '@lune.@base.@front.Front.loadFile.<anonymous>'
    
       return string.format( "start %s:%s", __func__, mod)
@@ -1096,7 +1097,7 @@ function Front:loadMeta( importModuleInfo, mod )
          if _exp ~= nil then
             self.loadedMetaMap[mod] = _exp.meta
          else
-            Log.log( Log.Level.Info, __func__, 657, function (  )
+            Log.log( Log.Level.Info, __func__, 658, function (  )
             
                return string.format( "%s checking", mod)
             end )
@@ -1335,7 +1336,7 @@ function Front:convertToLua(  )
    end
    
    
-   self:convertLuaToStreamFromScript( convMode, self.option.scriptPath, mod, self.option.byteCompile, self.option.stripDebugInfo, function ( mode )
+   local ast = self:convertLuaToStreamFromScript( convMode, self.option.scriptPath, mod, self.option.byteCompile, self.option.stripDebugInfo, function ( mode )
    
       return io.stdout, io.stdout, self.option:openDepend(  )
    end, function ( stream, metaStream, dependStream )
@@ -1345,6 +1346,37 @@ function Front:convertToLua(  )
       end
       
    end )
+   
+   if ast ~= nil then
+      do
+         local _switchExp = self.option.convTo
+         if _switchExp == Option.Conv.Go then
+            local conv = convGo.createFilter( self.option.testing, "stdout", io.stdout, ast )
+            ast:get_node():processFilter( conv, convGo.Opt.new(ast:get_node()) )
+         end
+      end
+      
+   end
+   
+end
+
+
+function Front:saveToGo( ast )
+
+   local path = self.option.scriptPath:gsub( "%.lns$", ".go" )
+   
+   local file = io.open( path, "w" )
+   if  nil == file then
+      local _file = file
+   
+      return 
+   end
+   
+   
+   local conv = convGo.createFilter( self.option.testing, path, file, ast )
+   ast:get_node():processFilter( conv, convGo.Opt.new(ast:get_node()) )
+   
+   file:close(  )
 end
 
 
@@ -1448,7 +1480,7 @@ function Front:saveToLua(  )
             end
             
             if not cont then
-               Log.log( Log.Level.Debug, __func__, 1006, function (  )
+               Log.log( Log.Level.Debug, __func__, 1033, function (  )
                
                   return string.format( "<%s>, <%s>", tostring( oldLine), tostring( newLine))
                end )
@@ -1639,8 +1671,13 @@ function Front:saveToLua(  )
    
    
    if ast ~= nil then
-      if self.option.convertC then
-         self:saveToC( ast )
+      do
+         local _switchExp = self.option.convTo
+         if _switchExp == Option.Conv.C then
+            self:saveToC( ast )
+         elseif _switchExp == Option.Conv.Go then
+            self:saveToGo( ast )
+         end
       end
       
    end
@@ -1680,7 +1717,7 @@ end
 function Front:exec(  )
    local __func__ = '@lune.@base.@front.Front.exec'
 
-   Log.log( Log.Level.Trace, __func__, 1202, function (  )
+   Log.log( Log.Level.Trace, __func__, 1234, function (  )
    
       return Option.ModeKind:_getTxt( self.option.mode)
       

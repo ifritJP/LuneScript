@@ -1,0 +1,467 @@
+/*
+MIT License
+
+Copyright (c) 2018,2020 ifritJP
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+import lune.base.Ver;
+import lune.base.Ast;
+import lune.base.Nodes;
+import lune.base.Util;
+import lune.base.TransUnit;
+import lune.base.LuaMod;
+import lune.base.LuaVer;
+import lune.base.Parser;
+import lune.base.LuneControl;
+
+pub class Opt {
+   pub let node:&Nodes.Node;
+}
+
+class convFilter extend Nodes.Filter<Opt> {
+   pri let mut stream:Util.SimpleSourceOStream;
+
+   pub fn __init( enableTest:bool, streamName: str, stream: oStream,
+                  ast:&TransUnit.ASTInfo )
+   {
+      super(ast.$moduleTypeInfo, ast.$moduleTypeInfo.$scope);
+
+      self.stream = new Util.SimpleSourceOStream( stream, nil, 4 );
+   }
+
+   advertise stream;
+}
+
+
+fn filter( node: &Nodes.Node, filter: convFilter,
+           parent: &Nodes.Node )
+{
+   node.processFilter( filter, new Opt( parent ) );
+}
+
+pub override fn convFilter.processNone(
+   node: Nodes.NoneNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processImport(
+   node: Nodes.ImportNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processRoot(
+   node: Nodes.RootNode, opt: Opt ) mut
+{
+   self.writeln( "package main" );
+
+   self.writeln( "func Lns_init() {" );
+   self.writeln( '    Lns_print( 1, 2.0, 2.5, true, "abc" )' );
+   self.writeln( "}" );
+};
+
+pub override fn convFilter.processSubfile(
+   node: Nodes.SubfileNode, opt: Opt ) mut
+{
+}
+
+pub override fn convFilter.processBlockSub(
+   node: Nodes.BlockNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processStmtExp(
+   node: Nodes.StmtExpNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processDeclEnum(
+   node: Nodes.DeclEnumNode, opt: Opt ) mut
+{
+}
+
+pub override fn convFilter.processDeclAlge(
+   node: Nodes.DeclAlgeNode, opt: Opt ) mut
+{
+}
+
+pub override fn convFilter.processNewAlgeVal(
+   node: Nodes.NewAlgeValNode, opt: Opt ) mut
+{
+}
+
+pub override fn convFilter.processDeclMember(
+   node: Nodes.DeclMemberNode, opt: Opt ) mut
+{
+   // dump( baseIndent, node, node.info.name.txt )
+   // node.info.refType.filter( self, prefix .. "  ", depth + 1 )
+};
+
+pub override fn convFilter.processExpMacroExp(
+   node: Nodes.ExpMacroExpNode, opt: Opt ) mut
+{
+   foreach stmt in node.$stmtList {
+      filter( stmt, self, node );
+      self.writeln( "" );
+   }
+};
+
+pub override fn convFilter.processDeclMacro(
+   node: Nodes.DeclMacroNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processExpMacroStat(
+   node: Nodes.ExpMacroStatNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processDeclConstr(
+   node: Nodes.DeclConstrNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processDeclDestr(
+   node: Nodes.DeclDestrNode, opt: Opt ) mut
+{
+}
+
+pub override fn convFilter.processExpCallSuper(
+   node: Nodes.ExpCallSuperNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processDeclMethod(
+   node: Nodes.DeclMethodNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processProtoMethod(
+   node: Nodes.ProtoMethodNode, opt: Opt ) mut
+{
+};
+
+
+pub override fn convFilter.processUnwrapSet(
+   node: Nodes.UnwrapSetNode, opt: Opt ) mut
+{
+}
+
+pub override fn convFilter.processIfUnwrap(
+   node: Nodes.IfUnwrapNode, opt: Opt ) mut
+{
+}
+
+pub override fn convFilter.processDeclVar(
+   node: Nodes.DeclVarNode, opt: Opt ) mut
+{
+};
+
+
+pub override fn convFilter.processWhen(
+   node: Nodes.WhenNode, opt: Opt ) mut
+{
+}
+
+pub override fn convFilter.processDeclArg(
+   node: Nodes.DeclArgNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processDeclArgDDD(
+   node: Nodes.DeclArgDDDNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processExpDDD(
+   node: Nodes.ExpDDDNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processExpSubDDD(
+   node: Nodes.ExpSubDDDNode, opt:Opt ) mut
+{
+};
+
+
+pub override fn convFilter.processDeclForm(
+   node: Nodes.DeclFormNode, opt: Opt ) mut
+{
+}
+
+pub override fn convFilter.processDeclFunc(
+   node: Nodes.DeclFuncNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processRefType(
+   node: Nodes.RefTypeNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processIf(
+   node: Nodes.IfNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processSwitch(
+   node: Nodes.SwitchNode, opt: Opt ) mut
+{
+};
+
+
+pub override fn convFilter.processMatch(
+   node: Nodes.MatchNode, opt: Opt ) mut
+{
+};
+
+
+pub override fn convFilter.processWhile(
+   node: Nodes.WhileNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processRepeat(
+   node: Nodes.RepeatNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processFor(
+   node: Nodes.ForNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processApply(
+   node: Nodes.ApplyNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processForeach(
+   node: Nodes.ForeachNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processForsort(
+   node: Nodes.ForsortNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processExpUnwrap(
+   node: Nodes.ExpUnwrapNode, opt: Opt ) mut
+{
+}
+
+pub override fn convFilter.processExpToDDD( node: Nodes.ExpToDDDNode, opt: Opt ) mut
+{
+}
+
+pub override fn convFilter.processExpNew(
+   node: Nodes.ExpNewNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processDeclClass(
+   node: Nodes.DeclClassNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processExpCall(
+   node: Nodes.ExpCallNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processExpAccessMRet(
+   node: Nodes.ExpAccessMRetNode, opt:Opt ) mut
+
+{
+};
+
+
+pub override fn convFilter.processExpList(
+   node: Nodes.ExpListNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processExpOp1(
+   node: Nodes.ExpOp1Node, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processExpMultiTo1(
+   node: Nodes.ExpMultiTo1Node, opt: Opt ) mut
+{
+}
+
+pub override fn convFilter.processExpCast(
+   node: Nodes.ExpCastNode, opt: Opt ) mut
+{
+};
+
+
+pub override fn convFilter.processExpParen(
+   node: Nodes.ExpParenNode, opt: Opt ) mut
+{
+};
+
+
+pub override fn convFilter.processExpSetVal(
+   node: Nodes.ExpSetValNode, opt: Opt ) mut
+{
+};
+
+
+pub override fn convFilter.processExpOp2(
+   node: Nodes.ExpOp2Node, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processExpRef(
+   node: Nodes.ExpRefNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processExpRefItem(
+   node: Nodes.ExpRefItemNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processRefField(
+   node: Nodes.RefFieldNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processExpOmitEnum(
+   node: &Nodes.ExpOmitEnumNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processGetField(
+   node: Nodes.GetFieldNode, opt: Opt ) mut
+{
+};
+
+
+pub override fn convFilter.processReturn(
+   node: Nodes.ReturnNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processTestBlock( node: Nodes.TestBlockNode, opt: Opt ) mut
+{
+}
+
+pub override fn convFilter.processProvide(
+   node: Nodes.ProvideNode, opt: Opt ) mut
+{
+}
+
+pub override fn convFilter.processAlias(
+   node: &Nodes.AliasNode, opt: Opt ) mut
+{
+}
+
+pub override fn convFilter.processBoxing(
+   node: Nodes.BoxingNode, opt: Opt ) mut
+{
+}
+
+pub override fn convFilter.processUnboxing(
+   node: Nodes.UnboxingNode, opt: Opt ) mut
+{
+}
+
+pub override fn convFilter.processLiteralList(
+   node: Nodes.LiteralListNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processLiteralSet(
+   node: Nodes.LiteralSetNode, opt: Opt ) mut
+{
+};
+
+
+pub override fn convFilter.processLiteralMap(
+   node: Nodes.LiteralMapNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processLiteralArray(
+   node: Nodes.LiteralArrayNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processLiteralChar(
+   node: Nodes.LiteralCharNode, opt: Opt ) mut
+{
+   self.write( string.format( "%d", node.$num ) );
+};
+
+pub override fn convFilter.processLiteralInt(
+   node: Nodes.LiteralIntNode, opt: Opt ) mut
+{
+   self.write( node.$token.txt );
+};
+
+pub override fn convFilter.processLiteralReal(
+   node: Nodes.LiteralRealNode, opt: Opt ) mut
+{
+   self.write( node.$token.txt );
+};
+
+pub override fn convFilter.processLiteralString(
+   node: Nodes.LiteralStringNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processLiteralBool(
+   node: Nodes.LiteralBoolNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processLiteralNil(
+   node: Nodes.LiteralNilNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processBreak(
+   node: Nodes.BreakNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processLiteralSymbol(
+   node: Nodes.LiteralSymbolNode, opt: Opt ) mut
+{
+};
+
+pub override fn convFilter.processAbbr(
+   node: Nodes.AbbrNode, opt: Opt ) mut
+{
+   // self.write( cValNone );
+   Util.err( "illegal" );
+};
+
+
+pub fn createFilter(
+   enableTest:bool, streamName: str,
+   stream: oStream, ast:&TransUnit.ASTInfo ) : Nodes.Filter<Opt>
+{
+   return new convFilter( enableTest, streamName, stream, ast );
+}

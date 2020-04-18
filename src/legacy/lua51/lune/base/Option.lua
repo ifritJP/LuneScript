@@ -200,7 +200,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 2821
+   return 2842
 end
 
 
@@ -330,6 +330,36 @@ function TransCtrlInfo.create_normal(  )
 end
 
 
+local Conv = {}
+_moduleObj.Conv = Conv
+Conv._val2NameMap = {}
+function Conv:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "Conv.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+function Conv._from( val )
+   if Conv._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+    
+Conv.__allList = {}
+function Conv.get__allList()
+   return Conv.__allList
+end
+
+Conv.C = 0
+Conv._val2NameMap[0] = 'C'
+Conv.__allList[1] = Conv.C
+Conv.Go = 1
+Conv._val2NameMap[1] = 'Go'
+Conv.__allList[2] = Conv.Go
+
+
 local Option = {}
 _moduleObj.Option = Option
 function Option.new(  )
@@ -340,7 +370,7 @@ function Option.new(  )
 end
 function Option:__init() 
    self.testing = false
-   self.convertC = false
+   self.convTo = nil
    self.validProf = false
    self.mode = ModeKind.Unknown
    self.scriptPath = ""
@@ -445,6 +475,8 @@ usage:
   -ob: output bytecompiled-code.
       -ob0 is without debug information.
       -ob1 is with debug information.
+  -langC: transcompile to c-lang.
+  -langGo: transcompile to golang.
   -oc: output path of the source code transcompiled to c-lang .
   --depends: output dependfile
 
@@ -584,7 +616,9 @@ usage:
                end
                
             elseif _switchExp == "-langC" then
-               option.convertC = true
+               option.convTo = Conv.C
+            elseif _switchExp == "-langGo" then
+               option.convTo = Conv.Go
             elseif _switchExp == "-ol" then
                do
                   local txt = getNextOp(  )

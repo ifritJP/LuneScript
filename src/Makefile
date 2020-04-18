@@ -66,6 +66,7 @@ help:
 	@echo "  make test-tutorial"
 	@echo "  make test-installed-cmd"
 	@echo "  make test-on-docker"
+	@echo "  make test-go"
 
 exec:
 	$(LUA) lune/base/base.lua test/test.lns token
@@ -140,6 +141,7 @@ define buildLnsOp
 	$(call $4,$1,$2,$3,base/TransUnit)
 	$(call $4,$1,$2,$3,base/convLua)
 	$(call $4,$1,$2,$3,base/convCC)
+	$(call $4,$1,$2,$3,base/convGo)
 	$(call $4,$1,$2,$3,base/OutputDepend)
 	$(call $4,$1,$2,$3,base/TestCtrl)
 	$(call $4,$1,$2,$3,base/front)
@@ -1022,3 +1024,25 @@ test-cAll:
 test-gc:
 	mkdir -p work/c
 	$(MAKE) -f Makefile.ccc test-gc
+
+GO_SRC += runtime_main.go
+GO_SRC += runtime_lib.go
+GO_SRC := $(addprefix lune/base/runtime_go/,$(GO_SRC))
+
+test-go:
+	go run $(GO_SRC)
+
+
+# lns ソースを Golang へトランスコンパイルする
+#
+# $1: 実行する作業ディレクトリ
+# $2: トランスコンパイルする lns ソースのパス
+define convGo
+	$(call exeLune,$1,$2,save -langGo,$3)
+endef
+
+test-miniGo:
+	$(call transwork,.,.,,base/convGo)
+	$(call convGo,.,lune/base/runtime_go/miniGo.lns)
+	go run lune/base/runtime_go/miniGo.go lune/base/runtime_go/runtime_lib.go lune/base/runtime_go/runtime_main.go
+

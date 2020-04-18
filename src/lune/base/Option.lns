@@ -89,6 +89,11 @@ pub static fn TransCtrlInfo.create_normal(): TransCtrlInfo {
    return new TransCtrlInfo( true, false, .Touch );
 }
 
+pub enum Conv {
+   C,
+   Go,
+}
+
 pub class Option {
    pub let mut mode:ModeKind;
    /** 解析対象のモジール名。 comp モードの時に使用。 */
@@ -120,14 +125,14 @@ pub class Option {
    pub let mut transCtrlInfo:TransCtrlInfo;
 
    /** true の場合 C への変換を行なう */
-   pub let mut convertC:bool;
+   pub let mut convTo:Conv!;
 
    /** テストする時 true */
    pub let mut testing:bool;
 
    pub fn __init() {
       self.testing = false;
-      self.convertC = false;
+      self.convTo = nil;
       self.validProf = false;
       self.mode = .Unknown;
       self.scriptPath = "";
@@ -214,6 +219,8 @@ usage:
   -ob: output bytecompiled-code.
       -ob0 is without debug information.
       -ob1 is with debug information.
+  -langC: transcompile to c-lang.
+  -langGo: transcompile to golang.
   -oc: output path of the source code transcompiled to c-lang .
   --depends: output dependfile
 
@@ -335,7 +342,10 @@ usage:
                }
             }
             case "-langC" {
-               option.convertC = true;
+               option.convTo = .C;
+            }
+            case "-langGo" {
+               option.convTo = .Go;
             }
             case "-ol" {
                if! let txt = getNextOp() {

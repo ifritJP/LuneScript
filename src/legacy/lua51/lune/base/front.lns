@@ -26,6 +26,7 @@ import lune.base.frontInterface;
 import lune.base.Parser;
 import lune.base.convLua;
 import lune.base.convCC;
+import lune.base.convGo;
 import lune.base.TransUnit;
 import lune.base.Util;
 import lune.base.Option;
@@ -888,7 +889,7 @@ pub fn Front.convertToLua() mut {
       convMode = .ConvMeta;
    }
 
-   self.convertLuaToStreamFromScript(
+   let ast = self.convertLuaToStreamFromScript(
       convMode, self.option.scriptPath, mod,
       self.option.byteCompile, self.option.stripDebugInfo,
       fn ( mode:ModuleUptodate ): oStream!, oStream!, oStream! {
@@ -899,8 +900,34 @@ pub fn Front.convertToLua() mut {
                dependStream.close();
             }
          }
+      );
 
-   );
+   when! ast {
+      switch self.option.convTo {
+         case .Go {
+            let mut conv = convGo.createFilter(
+               self.option.testing, "stdout", io.stdout, ast );
+            ast.$node.processFilter( conv, new convGo.Opt( ast.$node ) );
+         }
+      }
+   }
+}
+
+/**
+Go に変換しファイルに書き込む
+*/
+pub fn Front.saveToGo( ast:&TransUnit.ASTInfo ) mut {
+   let mut path = self.option.scriptPath.gsub( "%.lns$", ".go" );
+
+   let! mut file = io.open( path, "w" ) {
+      return;
+   };
+
+   let mut conv = convGo.createFilter(
+      self.option.testing, path, file, ast );
+   ast.$node.processFilter( conv, new convGo.Opt( ast.$node ) );
+
+   file.close();
 }
 
 
@@ -1170,8 +1197,13 @@ oldStream, newStream に格納されているモジュールのメタ情報が�
    }
 
    when! ast {
-      if self.option.convertC {
-         self.saveToC( ast );
+      switch self.option.convTo {
+         case .C {
+            self.saveToC( ast );
+         }
+         case .Go {
+            self.saveToGo( ast );
+         }
       }
    }
 

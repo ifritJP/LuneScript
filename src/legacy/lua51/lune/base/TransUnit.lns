@@ -1622,7 +1622,7 @@ _DefBuiltinFuncType( [
          "remove": {"arg": [ "str" ], "ret": [ "bool!", "str!"] },
          "date": {"arg": [ "str!", "stem!" ], "ret": [ "stem!"] },
          "time": {"arg": [ "stem!" ], "ret": [ "stem!"] },
-         "difftime": {"arg": [ "stem", "stem" ], "ret": [ "int"] },
+         "difftime": {"arg": [ "&stem", "&stem" ], "ret": [ "int"] },
          "rename": {"arg": [ "str", "str" ], "ret": [ "stem!", "str!"] },
       },
    },
