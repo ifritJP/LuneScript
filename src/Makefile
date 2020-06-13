@@ -67,6 +67,7 @@ help:
 	@echo "  make test-installed-cmd"
 	@echo "  make test-on-docker"
 	@echo "  make test-go"
+	@echo "  make test-miniGo"
 
 exec:
 	$(LUA) lune/base/base.lua test/test.lns token
@@ -226,6 +227,7 @@ else
 endif
 else
 	cp -a work/3/lune work/8
+	cp -a work/3/test work/8
 	$(call test-inst-from-luarocks,lunescript)
 	diff work/test.result work/test8.result
 endif
@@ -1030,7 +1032,7 @@ GO_SRC += runtime_lib.go
 GO_SRC := $(addprefix lune/base/runtime_go/,$(GO_SRC))
 
 test-go:
-	go run $(GO_SRC)
+	go run $(GO_SRC) lune/base/runtime_go/miniGo.go
 
 
 # lns ソースを Golang へトランスコンパイルする
@@ -1043,6 +1045,7 @@ endef
 
 test-miniGo:
 	$(call transwork,.,.,,base/convGo)
+	$(call exeLune,.,lune/base/runtime_go/miniGo.lns,lua -langGo,)
 	$(call convGo,.,lune/base/runtime_go/miniGo.lns)
-	go run lune/base/runtime_go/miniGo.go lune/base/runtime_go/runtime_lib.go lune/base/runtime_go/runtime_main.go
+	go run lune/base/runtime_go/miniGo.go $(GO_SRC)
 

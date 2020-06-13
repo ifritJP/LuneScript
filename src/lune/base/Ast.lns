@@ -4163,8 +4163,6 @@ pub let builtinTypeExp:TypeInfo =
    NormalTypeInfo.createBuiltin( "Exp", "__exp" , .Prim## );
 
 
-
-
 /**
 typeInfo と other 両方の型を受けられる共通の型を返す。
 

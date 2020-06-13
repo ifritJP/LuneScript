@@ -1,1 +1,12 @@
-print( "hello world" );
+fn sub() {
+   print( "hello world", "abc", "xyz", 1, 1.5, 10 + 100 );
+}
+fn sub2() : int {
+   return 1;
+}
+fn sub3() : int, str {
+   return 100, "abc";
+}
+sub();
+print( sub2(), sub3()** );
+

@@ -5543,7 +5543,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
 end
 
 
-function TransUnit:analyzeDeclMacroSub( accessMode, firstToken, nameToken, scope, parentType, workArgList )
+function TransUnit:analyzeDeclMacroSub( accessMode, firstToken, nameToken, macroScope, parentType, workArgList )
 
    self.macroCtrl:startDecl(  )
    
@@ -5598,19 +5598,20 @@ function TransUnit:analyzeDeclMacroSub( accessMode, firstToken, nameToken, scope
    local stmtNode = nil
    if nextToken.txt == "{" then
       
-      self.macroScope = scope
+      self.macroScope = macroScope
       
       local funcType = Ast.NormalTypeInfo.createFunc( false, true, nil, Ast.TypeInfoKind.Func, Ast.headTypeInfo, false, true, true, Ast.AccessMode.Global, "_lnsLoad", nil, {Ast.builtinTypeString, Ast.builtinTypeString}, {Ast.builtinTypeStem}, false )
-      scope:addLocalVar( false, false, "_lnsLoad", nil, funcType, Ast.MutMode.IMut )
+      macroScope:addLocalVar( false, false, "_lnsLoad", nil, funcType, Ast.MutMode.IMut )
       
       local stmtList = {}
       self:prepareTentativeSymbol( self.scope, false )
       self:analyzeStatementList( stmtList, "}" )
       
-      stmtNode = Nodes.BlockNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, Nodes.BlockKind.Macro, scope, stmtList )
+      stmtNode = Nodes.BlockNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, Nodes.BlockKind.Macro, macroScope, stmtList )
       
       self:checkNextToken( "}" )
-      self:finishTentativeSymbol( false )
+      
+      self:finishTentativeSymbol( true )
       
       self.macroScope = nil
    else
@@ -5638,12 +5639,12 @@ function TransUnit:analyzeDeclMacroSub( accessMode, firstToken, nameToken, scope
    end
    
    
-   local typeInfo = Ast.NormalTypeInfo.createFunc( false, false, scope, Ast.TypeInfoKind.Macro, parentType, false, false, true, accessMode, nameToken.txt, nil, argTypeList, retTypeList )
+   local typeInfo = Ast.NormalTypeInfo.createFunc( false, false, macroScope, Ast.TypeInfoKind.Macro, parentType, false, false, true, accessMode, nameToken.txt, nil, argTypeList, retTypeList )
    
    local declMacroInfo = Nodes.DeclMacroInfo.new(pubFlag, nameToken, argList, stmtNode, tokenList)
    local node = Nodes.DeclMacroNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, declMacroInfo )
    
-   self.macroCtrl:regist( node )
+   self.macroCtrl:regist( node, macroScope )
    
    return node
 end
@@ -11288,6 +11289,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, prevOpLevel, expectTy
             
          elseif _switchExp == ",," then
             macroExpFlag = true
+            typeInfo = expType
          elseif _switchExp == ",,," then
             macroExpFlag = true
             if not expType:equals( Ast.builtinTypeString ) then

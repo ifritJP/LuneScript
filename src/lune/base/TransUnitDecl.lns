@@ -33,7 +33,7 @@ subfile owner lune.base.TransUnit;
 */
 fn TransUnit.analyzeRefType(
    accessMode: Ast.AccessMode, allowDDD:bool, parentPub:bool ) mut:
-   Nodes.RefTypeNode
+Nodes.RefTypeNode
 {
    let firstToken = self.getToken(##);
    let mut token = firstToken;
@@ -539,7 +539,7 @@ pub fn TransUnit.createAST(
 fn TransUnit.analyzeDeclMacroSub(
    accessMode: Ast.AccessMode,
    firstToken: &Parser.Token, nameToken: &Parser.Token,
-   scope:Ast.Scope, parentType:&Ast.TypeInfo,
+   macroScope:Ast.Scope, parentType:&Ast.TypeInfo,
    workArgList: List<&Nodes.Node> ) mut : Nodes.DeclMacroNode
 {
    self.macroCtrl.startDecl();
@@ -590,20 +590,23 @@ fn TransUnit.analyzeDeclMacroSub(
 
    let mut stmtNode : Nodes.BlockNode! = nil;
    if nextToken.txt == "{" {
+      // macro-statement の解析
+      
+      
       //let mut parser = new Parser.WrapParser( self.parser, self.parser.getStreamName() );
 
-      // foreach symbolInfo, symbol in scope.$symbol2SymbolInfoMap {
-      //    scope.add( symbol, symbolInfo.$typeInfo, "local", false );
+      // foreach symbolInfo, symbol in macroScope.$symbol2SymbolInfoMap {
+      //    macroScope.add( symbol, symbolInfo.$typeInfo, "local", false );
       // }
 
-      self.macroScope = scope;
+      self.macroScope = macroScope;
 
       let funcType = Ast.NormalTypeInfo.createFunc(
          false, true, nil, .Func, Ast.headTypeInfo, false, true,
          true, .Global, "_lnsLoad",
          nil, [ Ast.builtinTypeString, Ast.builtinTypeString ],
          [ Ast.builtinTypeStem ], false );
-      scope.addLocalVar( false, false, "_lnsLoad", nil, funcType, .IMut );
+      macroScope.addLocalVar( false, false, "_lnsLoad", nil, funcType, .IMut );
 
 
       // let mut bakParser = self.parser;
@@ -615,10 +618,13 @@ fn TransUnit.analyzeDeclMacroSub(
 
       stmtNode = Nodes.BlockNode.create(
          self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
-         [ Ast.builtinTypeNone ], .Macro, scope, stmtList );
+         [ Ast.builtinTypeNone ], .Macro, macroScope, stmtList );
 
       self.checkNextToken( "}" );
-      self.finishTentativeSymbol( false );
+      //self.finishTentativeSymbol( false );
+      self.finishTentativeSymbol( true );
+
+      
 
       // self.parser = bakParser;
 
@@ -632,6 +638,10 @@ fn TransUnit.analyzeDeclMacroSub(
 
    // self.popScope();
 
+   
+   // expand-statemnt の解析。
+   // ここではトークン切り出しだけ行なう。
+   /// 実際の解析処理は、マクロ展開時(TransUnit.evalMacroOp)に行なう。
 
    let mut tokenList: List<&Parser.Token> = [];
    let mut braceCount = 0;
@@ -651,7 +661,7 @@ fn TransUnit.analyzeDeclMacroSub(
    }
 
    let typeInfo = Ast.NormalTypeInfo.createFunc(
-      false, false, scope, .Macro, parentType, false, false, true,
+      false, false, macroScope, .Macro, parentType, false, false, true,
       accessMode, nameToken.txt, nil, argTypeList, retTypeList## );
    //self.scope.addLocalVar( false, false, nameToken.txt, typeInfo, false );
    // self.scope.addMacro( typeInfo, accessMode );
@@ -663,7 +673,7 @@ fn TransUnit.analyzeDeclMacroSub(
       self.nodeManager, firstToken.pos,
       self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ], declMacroInfo );
 
-   self.macroCtrl.regist( node );
+   self.macroCtrl.regist( node, macroScope );
 
 
    return node;

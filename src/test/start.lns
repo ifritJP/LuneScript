@@ -1470,3 +1470,27 @@ print( '\\""\"\'\\.\\' );
       print( test.$val );
    }
 }
+{
+   macro _DefOption( mode:str ) {
+      {
+         let name;
+         name = ,,,mode;
+      }
+      class ,,name {
+      }
+   }
+
+   _DefOption( "HogeAA" );
+   let hogeAA = new HogeAA();
+}
+{
+   class Hoge {
+   }
+   macro _DefOption2( work:str ) {
+      class HogeA {
+         let val:,,,work;
+      }
+   }
+   _DefOption2( "&Hoge" );
+   let hogeAA = new HogeA( new Hoge() );
+}

@@ -7,7 +7,21 @@
 #+TITLE: TODO
 
 * バグ
-  
+
+
+- [ ] 次のマクロが失敗する。
+pub macro _DefOption( work:str ) {
+   class hoge {
+     let val:,,,work;
+   }
+}
+_DefOption( "&int" );
+
+次のように let name を型宣言すると成功する。
+   let name:sym;
+
+
+
 - [ ] 次の式で val をセット出来ない。
       let! val = func() {
          val = 1;
@@ -658,6 +672,19 @@ fn func() {
 - [X] タイプ名を指定するところに、変数名を指定できる。
 let val = 1;
 let list:List<val> = [];
+- [X] 次のマクロが失敗する。
+pub macro _DefOption( mode:str ) {
+   {
+      let name;
+      name = ,,,mode;
+   }
+   class ,,name {
+   }
+}   
+
+次のように let name を型宣言すると成功する。
+   let name:sym;
+
   
 
 

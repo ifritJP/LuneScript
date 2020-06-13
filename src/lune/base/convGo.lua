@@ -250,6 +250,46 @@ local function filter( node, filter, parent )
    node:processFilter( filter, Opt.new(parent) )
 end
 
+local function str2gostr( txt )
+
+   local work = txt
+   if string.find( work, '^```' ) then
+      work = (string.format( "%q", work:sub( 4, -4 )) ):gsub( "\\\n", "\\n" )
+   elseif string.find( work, "^'" ) then
+      work = string.format( '"%s"', ((string.format( "%s", work:sub( 2, -2 )) ):gsub( '"', '\\"' ) ))
+   end
+   
+   work = work:gsub( "\\9", "\\t" )
+   return work
+end
+
+local type2gotypeMap = {[Ast.builtinTypeInt] = "LnsInt", [Ast.builtinTypeReal] = "LnsReal", [Ast.builtinTypeStem] = "LnsSfem", [Ast.builtinTypeString] = "string"}
+
+local function getOrgTypeInfo( typeInfo )
+
+   do
+      local enumType = _lune.__Cast( typeInfo:get_srcTypeInfo():get_nonnilableType(), 3, Ast.EnumTypeInfo )
+      if enumType ~= nil then
+         return enumType:get_valTypeInfo()
+      end
+   end
+   
+   return typeInfo:get_srcTypeInfo():get_nonnilableType()
+end
+
+local function type2gotype( typeInfo )
+
+   local orgType = getOrgTypeInfo( typeInfo )
+   do
+      local goType = type2gotypeMap[orgType]
+      if goType ~= nil then
+         return goType
+      end
+   end
+   
+   Util.err( string.format( "not support yet -- %s", typeInfo:getTxt(  )) )
+end
+
 function convFilter:processNone( node, opt )
 
 end
@@ -266,8 +306,26 @@ function convFilter:processRoot( node, opt )
 
    self:writeln( "package main" )
    
+   for __index, declFuncNode in pairs( node:get_nodeManager():getDeclFuncNodeList(  ) ) do
+      filter( declFuncNode, self, node )
+      self:writeln( "" )
+   end
+   
+   
    self:writeln( "func Lns_init() {" )
-   self:writeln( '    Lns_print( 1, 2.0, 2.5, true, "abc" )' )
+   for __index, child in pairs( node:get_children() ) do
+      do
+         local _switchExp = child:get_kind()
+         if _switchExp == Nodes.NodeKind.get_DeclAlge() or _switchExp == Nodes.NodeKind.get_DeclFunc() or _switchExp == Nodes.NodeKind.get_DeclMacro() or _switchExp == Nodes.NodeKind.get_TestBlock() then
+         else 
+            
+               filter( child, self, node )
+               self:writeln( "" )
+         end
+      end
+      
+   end
+   
    self:writeln( "}" )
 end
 
@@ -280,12 +338,28 @@ end
 
 function convFilter:processBlockSub( node, opt )
 
+   self:pushIndent(  )
+   for __index, child in pairs( node:get_stmtList() ) do
+      do
+         local _switchExp = child:get_kind()
+         if _switchExp == Nodes.NodeKind.get_DeclAlge() or _switchExp == Nodes.NodeKind.get_DeclFunc() or _switchExp == Nodes.NodeKind.get_DeclMacro() or _switchExp == Nodes.NodeKind.get_TestBlock() then
+         else 
+            
+               filter( child, self, node )
+               self:writeln( "" )
+         end
+      end
+      
+   end
+   
+   self:popIndent(  )
 end
 
 
 
 function convFilter:processStmtExp( node, opt )
 
+   filter( node:get_exp(), self, node )
 end
 
 
@@ -415,6 +489,59 @@ end
 
 function convFilter:processDeclFunc( node, opt )
 
+   self:write( "func " )
+   do
+      local name = node:get_declInfo():get_name()
+      if name ~= nil then
+         self:write( name.txt )
+      end
+   end
+   
+   self:write( "(" )
+   
+   for index, arg in pairs( node:get_declInfo():get_argList() ) do
+      if index ~= 1 then
+         self:write( "," )
+      end
+      
+      filter( arg, self, node )
+   end
+   
+   self:write( ") " )
+   
+   local retTypeList = node:get_declInfo():get_retTypeInfoList()
+   do
+      local _switchExp = #retTypeList
+      if _switchExp == 0 then
+         self:write( "" )
+      elseif _switchExp == 1 then
+         self:write( type2gotype( retTypeList[1] ) )
+      else 
+         
+            
+            self:write( "(" )
+            for index, retType in pairs( retTypeList ) do
+               if index ~= 1 then
+                  self:write( ", " )
+               end
+               
+               self:write( type2gotype( retType ) )
+            end
+            
+            self:write( ")" )
+      end
+   end
+   
+   self:writeln( " {" )
+   
+   do
+      local body = node:get_declInfo():get_body()
+      if body ~= nil then
+         filter( body, self, node )
+      end
+   end
+   
+   self:write( "}" )
 end
 
 
@@ -486,6 +613,7 @@ end
 
 function convFilter:processExpToDDD( node, opt )
 
+   filter( node:get_expList(), self, node )
 end
 
 
@@ -503,6 +631,35 @@ end
 
 function convFilter:processExpCall( node, opt )
 
+   local funcType = node:get_func():get_expType()
+   if Ast.isBuiltin( funcType:get_typeId() ) then
+      if funcType:get_rawTxt() == "print" then
+         self:write( "Lns_print" )
+      end
+      
+   else
+    
+      self:write( funcType:get_rawTxt() )
+   end
+   
+   self:write( "(" )
+   
+   do
+      local argList = node:get_argList()
+      if argList ~= nil then
+         for index, exp in pairs( argList:get_expList() ) do
+            if index ~= 1 then
+               self:write( ', ' )
+            end
+            
+            filter( exp, self, node )
+         end
+         
+      end
+   end
+   
+   
+   self:write( ")" )
 end
 
 
@@ -515,6 +672,24 @@ end
 
 function convFilter:processExpList( node, opt )
 
+   for index, exp in pairs( node:get_expList() ) do
+      if index ~= 1 then
+         self:write( ", " )
+      end
+      
+      filter( exp, self, node )
+      do
+         local mRetExp = node:get_mRetExp()
+         if mRetExp ~= nil then
+            if mRetExp:get_index() == index then
+               break
+            end
+            
+         end
+      end
+      
+   end
+   
 end
 
 
@@ -550,6 +725,45 @@ end
 
 function convFilter:processExpOp2( node, opt )
 
+   local opTxt = node:get_op().txt
+   
+   do
+      local _switchExp = opTxt
+      if _switchExp == "and" or _switchExp == "or" then
+         Util.err( "not support yet" )
+      elseif _switchExp == ".." then
+         Util.err( "not support yet" )
+      else 
+         
+            do
+               local _exp = Ast.bitBinOpMap[opTxt]
+               if _exp ~= nil then
+                  
+                  do
+                     local _switchExp = _exp
+                     if _switchExp == Ast.BitOpKind.LShift then
+                        opTxt = "<<"
+                     elseif _switchExp == Ast.BitOpKind.RShift then
+                        opTxt = ">>"
+                     end
+                  end
+                  
+                  
+                  filter( node:get_exp1(), self, node )
+                  self:write( " " .. opTxt .. " " )
+                  
+                  filter( node:get_exp2(), self, node )
+               else
+                  filter( node:get_exp1(), self, node )
+                  self:write( " " .. opTxt .. " " )
+                  
+                  filter( node:get_exp2(), self, node )
+               end
+            end
+            
+      end
+   end
+   
 end
 
 
@@ -586,6 +800,14 @@ end
 
 function convFilter:processReturn( node, opt )
 
+   self:write( "return " )
+   do
+      local expList = node:get_expList()
+      if expList ~= nil then
+         filter( expList, self, node )
+      end
+   end
+   
 end
 
 
@@ -662,6 +884,8 @@ end
 
 function convFilter:processLiteralString( node, opt )
 
+   local txt = node:get_token().txt
+   self:write( string.format( '%s', str2gostr( txt )) )
 end
 
 
