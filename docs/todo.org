@@ -47,6 +47,9 @@ _DefOption( "&int" );
   
 * 機能
 
+- [ ] nilable から 非 nilable へのキャストは出来ないが、
+      stem! を int! へのキャストはサポートするべき。
+- [ ] accessor のアクセス制限に local を指定できない。
 - [ ] class/method の final 対応。
   
 - [ ] let の変数名に _ を対応する。
