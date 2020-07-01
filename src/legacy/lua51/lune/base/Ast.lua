@@ -2142,7 +2142,7 @@ function Scope:getSymbolInfo( name, fromScope, onlySameNsFlag, access )
     
       local workScope = self.parent
       while workScope.parent ~= workScope do
-         if _lune.nilacc( workScope.ownerTypeInfo, 'get_kind', 'callmtd' ) ~= TypeInfoKind.Class then
+         if _lune.nilacc( workScope.ownerTypeInfo, 'get_kind', 'callmtd' ) ~= TypeInfoKind.Class and _lune.nilacc( workScope.ownerTypeInfo, 'get_kind', 'callmtd' ) ~= TypeInfoKind.Module then
             return workScope:getSymbolInfo( name, fromScope, onlySameNsFlag, access )
          end
          
@@ -2373,7 +2373,7 @@ end
 
 function Scope:addClass( name, pos, typeInfo )
 
-   self:add( SymbolKind.Typ, false, false, name, pos, typeInfo, typeInfo:get_accessMode(), true, MutMode.Mut, true )
+   return self:add( SymbolKind.Typ, false, false, name, pos, typeInfo, typeInfo:get_accessMode(), true, MutMode.Mut, true )
 end
 
 

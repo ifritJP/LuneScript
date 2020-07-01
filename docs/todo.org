@@ -8,7 +8,10 @@
 
 * バグ
 
-
+- [ ] Mapping でメンバ名と異なるシンボルを Mapping できるようにする。 Go のようなもの。
+  
+- [ ] lua の keyword、 例えば end や function をシンボル名にしていると、実行時エラーになる
+  
 - [ ] 次のマクロが失敗する。
 pub macro _DefOption( work:str ) {
    class hoge {
@@ -688,10 +691,8 @@ pub macro _DefOption( mode:str ) {
 次のように let name を型宣言すると成功する。
    let name:sym;
 
-  
-
-
-
+- [X] import するモジュールパスに同名の名前が複数入っているとエラーする。
+      import hoge.hoge.foo; // <--- hoge が 2 つ入っている。
   
   
 

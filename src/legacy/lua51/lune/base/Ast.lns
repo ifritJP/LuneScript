@@ -1410,7 +1410,9 @@ pub fn Scope.getSymbolInfo( name: str, fromScope:&Scope,
    else {
       let mut workScope = self.parent;
       while workScope.parent ~= workScope {
-         if workScope.ownerTypeInfo$.$kind ~= TypeInfoKind.Class {
+         if workScope.ownerTypeInfo$.$kind ~= TypeInfoKind.Class and
+            workScope.ownerTypeInfo$.$kind ~= TypeInfoKind.Module
+         {
             return workScope.getSymbolInfo( name, fromScope, onlySameNsFlag, access );
          }
          workScope = workScope.parent;
@@ -1668,10 +1670,11 @@ pub fn Scope.addMacro(
 }
 
 
-pub fn Scope.addClass( name:str, pos:&Parser.Position!, typeInfo: &TypeInfo ) mut
+pub fn Scope.addClass( name:str, pos:&Parser.Position!,
+                       typeInfo: &TypeInfo ) mut : &SymbolInfo!, &SymbolInfo!
 {
-   self.add( SymbolKind.Typ, false, false, name, pos, typeInfo,
-             typeInfo.$accessMode, true, .Mut, true );
+   return self.add( SymbolKind.Typ, false, false, name, pos, typeInfo,
+                    typeInfo.$accessMode, true, .Mut, true )**;
 }
 
 
@@ -4161,8 +4164,6 @@ pub let builtinTypeStat:TypeInfo =
    NormalTypeInfo.createBuiltin( "Stat", "stat" , .Prim## );
 pub let builtinTypeExp:TypeInfo =
    NormalTypeInfo.createBuiltin( "Exp", "__exp" , .Prim## );
-
-
 
 
 /**

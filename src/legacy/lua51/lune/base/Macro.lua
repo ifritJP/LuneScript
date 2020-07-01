@@ -685,11 +685,25 @@ function MacroCtrl:importMacro( macroInfoStem, macroTypeInfo, typeId2TypeInfo )
 end
 
 
-function MacroCtrl:regist( node )
+function MacroCtrl:regist( node, macroScope )
 
    local macroObj = self.macroEval:eval( node )
    
+   local remap = {}
+   for name, macroValInfo in pairs( self.symbol2ValueMapForMacro ) do
+      if macroValInfo.typeInfo:equals( Ast.builtinTypeEmpty ) then
+         remap[name] = Nodes.MacroValInfo.new(macroValInfo.val, _lune.unwrap( macroScope:getTypeInfoChild( name )), macroValInfo.argNode)
+      else
+       
+         remap[name] = macroValInfo
+      end
+      
+   end
+   
+   self.symbol2ValueMapForMacro = remap
+   
    self.typeId2MacroInfo[node:get_expType():get_typeId(  )] = Nodes.DefMacroInfo.new(macroObj, node:get_declInfo(), self.symbol2ValueMapForMacro)
+   
    self.symbol2ValueMapForMacro = {}
 end
 
@@ -724,6 +738,30 @@ local function expandVal( tokenList, val, pos )
    return nil
 end
 
+local function pushbackTxt( pushbackParser, txtList, streamName, pos )
+
+   local tokenList = {}
+   for __index, txt in pairs( txtList ) do
+      local stream = Parser.TxtStream.new(txt)
+      local parser = Parser.StreamParser.new(stream, string.format( "macro symbol -- %s", streamName))
+      local workParser = Parser.DefaultPushbackParser.new(parser)
+      while true do
+         local worktoken = workParser:getTokenNoErr(  )
+         if worktoken.kind == Parser.TokenKind.Eof then
+            break
+         end
+         
+         table.insert( tokenList, Parser.Token.new(worktoken.kind, worktoken.txt, pos, false) )
+      end
+      
+   end
+   
+   for index = #tokenList, 1, -1 do
+      pushbackParser:pushbackToken( tokenList[index] )
+   end
+   
+end
+
 function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
 
    if self.tokenExpanding then
@@ -756,11 +794,7 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
          
          if macroVal.typeInfo:equals( Ast.builtinTypeSymbol ) then
             local txtList = (_lune.unwrap( macroVal.val) )
-            for index = #txtList, 1, -1 do
-               nextToken = Parser.Token.new(nextToken.kind, txtList[index], nextToken.pos, false)
-               parser:pushbackToken( nextToken )
-            end
-            
+            pushbackTxt( parser, txtList, nextToken.txt, nextToken.pos )
          elseif macroVal.typeInfo:equals( Ast.builtinTypeStat ) or macroVal.typeInfo:equals( Ast.builtinTypeExp ) then
             parser:pushbackStr( string.format( "macroVal %s", nextToken.txt), (_lune.unwrap( macroVal.val) ) )
          elseif macroVal.typeInfo:get_kind() == Ast.TypeInfoKind.Array or macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKind.List then
@@ -830,8 +864,7 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
          
       elseif tokenTxt == ',,,' then
          if macroVal.typeInfo:equals( Ast.builtinTypeString ) then
-            nextToken = Parser.Token.new(nextToken.kind, (_lune.unwrap( macroVal.val) ), nextToken.pos, false)
-            parser:pushbackToken( nextToken )
+            pushbackTxt( parser, {(_lune.unwrap( macroVal.val) )}, nextToken.txt, nextToken.pos )
          else
           
             parser:error( string.format( "',,,' does not support this type -- %s", macroVal.typeInfo:getTxt(  )) )

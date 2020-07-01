@@ -967,13 +967,17 @@ function TransUnit:pushModule( externalFlag, name, mutable )
          local scope = self:pushScope( true )
          typeInfo = Ast.NormalTypeInfo.createModule( scope, parentInfo, externalFlag, modName, mutable )
          
-         parentScope:addClass( modName, nil, typeInfo )
+         local symInfo, existSym = parentScope:addClass( modName, nil, typeInfo )
+         if existSym ~= nil then
+            self:addErrMess( self.parser:getLastPos(  ), string.format( "module symbols is exist -- %s.%s", existSym:get_namespaceTypeInfo():getFullName( self.typeNameCtrl, parentScope, false ), existSym:get_name()) )
+         end
+         
       end
    end
    
-   if not self.typeId2ClassMap[typeInfo:get_typeId(  )] then
+   if not self.typeId2ClassMap[typeInfo:get_typeId()] then
       local namespace = Nodes.NamespaceInfo.new(modName, self.scope, typeInfo)
-      self.typeId2ClassMap[typeInfo:get_typeId(  )] = namespace
+      self.typeId2ClassMap[typeInfo:get_typeId()] = namespace
    end
    
    return typeInfo
@@ -985,7 +989,22 @@ end
 function TransUnit:pushClassScope( errPos, classTypeInfo )
 
    if self.scope ~= _lune.nilacc( classTypeInfo:get_scope(), 'get_parent', 'callmtd' ) then
-      self:addErrMess( errPos, string.format( "This class does not exist in this scope. -- %s", classTypeInfo:getTxt(  )) )
+      local classParentName
+      
+      local classParentTypeId
+      
+      do
+         local parentType = _lune.nilacc( _lune.nilacc( classTypeInfo:get_scope(), 'get_parent', 'callmtd' ), 'get_ownerTypeInfo', 'callmtd' )
+         if parentType ~= nil then
+            classParentName = parentType:getFullName( self.typeNameCtrl, _lune.unwrap( parentType:get_scope()), false )
+            classParentTypeId = parentType:get_typeId()
+         else
+            classParentName = "nil"
+            classParentTypeId = -1
+         end
+      end
+      
+      self:addErrMess( errPos, string.format( "This class does not exist in this scope. -- %s -- %s(%d), %s(%d)", classTypeInfo:getTxt(  ), tostring( _lune.nilacc( self.scope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , self.typeNameCtrl, self.scope, false )), _lune.nilacc( self.scope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ) or -1, classParentName, classParentTypeId) )
    end
    
    self.scope = _lune.unwrap( Ast.getScope( classTypeInfo ))
@@ -1770,6 +1789,7 @@ end
 local _TypeInfoModule = {}
 setmetatable( _TypeInfoModule, { __index = _TypeInfo } )
 function _TypeInfoModule:createTypeInfo( param )
+   local __func__ = '@lune.@base.@TransUnit._TypeInfoModule.createTypeInfo'
 
    local parentInfo = Ast.headTypeInfo
    if self.parentId ~= Ast.rootTypeId then
@@ -1816,6 +1836,12 @@ function _TypeInfoModule:createTypeInfo( param )
          param.typeId2Scope[self.typeId] = scope
          param.typeId2TypeInfo[self.typeId] = workTypeInfo
          parentScope:addClass( self.txt, nil, workTypeInfo )
+         
+         Log.log( Log.Level.Info, __func__, 1214, function (  )
+         
+            return string.format( "new module -- %s, %s, %d, %d", self.txt, workTypeInfo:getFullName( Ast.defaultTypeNameCtrl, parentScope, false ), workTypeInfo:get_typeId(), parentScope:get_scopeId())
+         end )
+         
       end
    end
    
@@ -1870,6 +1896,7 @@ end
 local _TypeInfoNormal = {}
 setmetatable( _TypeInfoNormal, { __index = _TypeInfo } )
 function _TypeInfoNormal:createTypeInfo( param )
+   local __func__ = '@lune.@base.@TransUnit._TypeInfoNormal.createTypeInfo'
 
    local newTypeInfo = nil
    if self.parentId ~= Ast.rootTypeId or not Ast.builtInTypeIdSet[self.typeId] or self.kind == Ast.TypeInfoKind.List or self.kind == Ast.TypeInfoKind.Array or self.kind == Ast.TypeInfoKind.Map or self.kind == Ast.TypeInfoKind.Set then
@@ -1950,6 +1977,12 @@ function _TypeInfoNormal:createTypeInfo( param )
       else
        
          if self.kind == Ast.TypeInfoKind.Class or self.kind == Ast.TypeInfoKind.IF then
+            Log.log( Log.Level.Info, __func__, 1316, function (  )
+            
+               return string.format( "new type -- %d, %s -- %s, %d", self.parentId, self.txt, _lune.nilacc( parentScope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, parentScope, false ) or "nil", _lune.nilacc( parentScope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ) or -1)
+            end )
+            
+            
             local baseScope = _lune.unwrap( param.typeId2Scope[self.baseId])
             local ifScopeList = {}
             for __index, ifType in pairs( interfaceList ) do
@@ -3960,7 +3993,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = '@lune.@base.@TransUnit.TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2547, function (  )
+   Log.log( Log.Level.Info, __func__, 2588, function (  )
    
       return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), modulePath)
    end )
@@ -3977,7 +4010,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2559, function (  )
+               Log.log( Log.Level.Info, __func__, 2600, function (  )
                
                   return string.format( "%s already", modulePath)
                end )
@@ -4010,7 +4043,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2579, function (  )
+   Log.log( Log.Level.Info, __func__, 2620, function (  )
    
       return string.format( "%s processing", modulePath)
    end )
@@ -4245,6 +4278,7 @@ function TransUnit:processImport( modulePath )
    
    
    local function registMember( classTypeId )
+      local __func__ = '@lune.@base.@TransUnit.TransUnit.processImport.registMember'
    
       if metaInfo.__dependIdMap[classTypeId] then
          return 
@@ -4284,6 +4318,11 @@ function TransUnit:processImport( modulePath )
             
          elseif _switchExp == Ast.TypeInfoKind.Module then
             self:pushModule( true, classTypeInfo:getTxt(  ), Ast.TypeInfo.isMut( classTypeInfo ) )
+            Log.log( Log.Level.Info, __func__, 2874, function (  )
+            
+               return string.format( "push module -- %s, %s, %d, %d, %d", classTypeInfo:getTxt(  ), _lune.nilacc( self.scope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, self.scope, false ) or "nil", _lune.nilacc( self.scope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ) or -1, classTypeInfo:get_typeId(), self.scope:get_parent():get_scopeId())
+            end )
+            
          end
       end
       
@@ -4355,7 +4394,7 @@ function TransUnit:processImport( modulePath )
    
    self.importModuleInfo:remove(  )
    
-   Log.log( Log.Level.Info, __func__, 2909, function (  )
+   Log.log( Log.Level.Info, __func__, 2959, function (  )
    
       return string.format( "%s complete", modulePath)
    end )
@@ -5543,7 +5582,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
 end
 
 
-function TransUnit:analyzeDeclMacroSub( accessMode, firstToken, nameToken, scope, parentType, workArgList )
+function TransUnit:analyzeDeclMacroSub( accessMode, firstToken, nameToken, macroScope, parentType, workArgList )
 
    self.macroCtrl:startDecl(  )
    
@@ -5598,19 +5637,20 @@ function TransUnit:analyzeDeclMacroSub( accessMode, firstToken, nameToken, scope
    local stmtNode = nil
    if nextToken.txt == "{" then
       
-      self.macroScope = scope
+      self.macroScope = macroScope
       
       local funcType = Ast.NormalTypeInfo.createFunc( false, true, nil, Ast.TypeInfoKind.Func, Ast.headTypeInfo, false, true, true, Ast.AccessMode.Global, "_lnsLoad", nil, {Ast.builtinTypeString, Ast.builtinTypeString}, {Ast.builtinTypeStem}, false )
-      scope:addLocalVar( false, false, "_lnsLoad", nil, funcType, Ast.MutMode.IMut )
+      macroScope:addLocalVar( false, false, "_lnsLoad", nil, funcType, Ast.MutMode.IMut )
       
       local stmtList = {}
       self:prepareTentativeSymbol( self.scope, false )
       self:analyzeStatementList( stmtList, "}" )
       
-      stmtNode = Nodes.BlockNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, Nodes.BlockKind.Macro, scope, stmtList )
+      stmtNode = Nodes.BlockNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, Nodes.BlockKind.Macro, macroScope, stmtList )
       
       self:checkNextToken( "}" )
-      self:finishTentativeSymbol( false )
+      
+      self:finishTentativeSymbol( true )
       
       self.macroScope = nil
    else
@@ -5638,12 +5678,12 @@ function TransUnit:analyzeDeclMacroSub( accessMode, firstToken, nameToken, scope
    end
    
    
-   local typeInfo = Ast.NormalTypeInfo.createFunc( false, false, scope, Ast.TypeInfoKind.Macro, parentType, false, false, true, accessMode, nameToken.txt, nil, argTypeList, retTypeList )
+   local typeInfo = Ast.NormalTypeInfo.createFunc( false, false, macroScope, Ast.TypeInfoKind.Macro, parentType, false, false, true, accessMode, nameToken.txt, nil, argTypeList, retTypeList )
    
    local declMacroInfo = Nodes.DeclMacroInfo.new(pubFlag, nameToken, argList, stmtNode, tokenList)
    local node = Nodes.DeclMacroNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, declMacroInfo )
    
-   self.macroCtrl:regist( node )
+   self.macroCtrl:regist( node, macroScope )
    
    return node
 end
@@ -11288,6 +11328,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, prevOpLevel, expectTy
             
          elseif _switchExp == ",," then
             macroExpFlag = true
+            typeInfo = expType
          elseif _switchExp == ",,," then
             macroExpFlag = true
             if not expType:equals( Ast.builtinTypeString ) then

@@ -57,6 +57,44 @@ fn filter( node: &Nodes.Node, filter: convFilter,
    node.processFilter( filter, new Opt( parent ) );
 }
 
+/**
+区切り記号で囲んでいる文字列を C の文字列に変換する。
+*/
+fn str2gostr( txt:str ) : str {
+   let mut work = txt;
+   if string.find( work, '^```' ## ) {
+      work = ("%q" ( work.sub( 4, -4 ) )).gsub( "\\\n", "\\n" );
+   }
+   elseif string.find( work, "^'" ## ) {
+      work = '"%s"' ((("%s" ( work.sub( 2, -2 )) ).gsub( '"', '\\"' )));
+   }
+   work = work.gsub( "\\9", "\\t" );
+   return work;
+}
+
+let type2gotypeMap:&Map<&Ast.TypeInfo,str> = {
+   Ast.builtinTypeInt : "LnsInt",
+   Ast.builtinTypeReal : "LnsReal",
+   Ast.builtinTypeStem : "LnsSfem",
+   Ast.builtinTypeString : "string",
+};
+
+fn getOrgTypeInfo( typeInfo:&Ast.TypeInfo ) : &Ast.TypeInfo {
+   if! let enumType = typeInfo.$srcTypeInfo.$nonnilableType@@@Ast.EnumTypeInfo {
+      return enumType.$valTypeInfo;
+   }
+   return typeInfo.$srcTypeInfo.$nonnilableType;
+}
+
+fn type2gotype( typeInfo:&Ast.TypeInfo ) : str {
+   let orgType = getOrgTypeInfo( typeInfo );
+   if! let goType = type2gotypeMap[ orgType ] {
+      return goType;
+   }
+   Util.err( "not support yet -- %s" (typeInfo.getTxt(##) ) );
+}
+
+
 pub override fn convFilter.processNone(
    node: Nodes.NoneNode, opt: Opt ) mut
 {
@@ -72,8 +110,31 @@ pub override fn convFilter.processRoot(
 {
    self.writeln( "package main" );
 
+
+   foreach declFuncNode in node.$nodeManager.getDeclFuncNodeList() {
+      filter( declFuncNode, self, node );
+      self.writeln( "" );
+   }
+   
    self.writeln( "func Lns_init() {" );
-   self.writeln( '    Lns_print( 1, 2.0, 2.5, true, "abc" )' );
+   foreach child in node.$children {
+      switch child.$kind {
+         case Nodes.NodeKind.$DeclAlge,
+              //Nodes.NodeKind.$DeclClass,
+              Nodes.NodeKind.$DeclFunc,
+              Nodes.NodeKind.$DeclMacro,
+              Nodes.NodeKind.$TestBlock
+
+         {
+            //filter( child, self, node );
+            //self.writeln( "" );
+         }
+         default {
+            filter( child, self, node );
+            self.writeln( "" );
+         }
+      }
+   }
    self.writeln( "}" );
 };
 
@@ -85,11 +146,32 @@ pub override fn convFilter.processSubfile(
 pub override fn convFilter.processBlockSub(
    node: Nodes.BlockNode, opt: Opt ) mut
 {
+   self.pushIndent(##);
+   foreach child in node.$stmtList {
+      switch child.$kind {
+         case Nodes.NodeKind.$DeclAlge,
+              //Nodes.NodeKind.$DeclClass,
+              Nodes.NodeKind.$DeclFunc,
+              Nodes.NodeKind.$DeclMacro,
+              Nodes.NodeKind.$TestBlock
+
+         {
+            //filter( child, self, node );
+            //self.writeln( "" );
+         }
+         default {
+            filter( child, self, node );
+            self.writeln( "" );
+         }
+      }
+   }
+   self.popIndent();
 };
 
 pub override fn convFilter.processStmtExp(
    node: Nodes.StmtExpNode, opt: Opt ) mut
 {
+   filter( node.$exp, self, node );
 };
 
 pub override fn convFilter.processDeclEnum(
@@ -209,6 +291,46 @@ pub override fn convFilter.processDeclForm(
 pub override fn convFilter.processDeclFunc(
    node: Nodes.DeclFuncNode, opt: Opt ) mut
 {
+   self.write( "func " );
+   if! let name = node.$declInfo.$name {
+      self.write( name.txt );
+   }
+   self.write( "(" );
+
+   foreach arg, index in node.$declInfo.$argList {
+      if index ~= 1 {
+         self.write( "," );
+      }
+      filter( arg, self, node );
+   }
+   self.write( ") " );
+
+   let retTypeList = node.$declInfo.$retTypeInfoList;
+   switch #retTypeList {
+      case 0 {
+         self.write( "" );
+      }
+      case 1 {
+         self.write( type2gotype( retTypeList[1] ) );
+      }
+      default {
+         // 多値返却
+         self.write( "(" );
+         foreach retType, index in retTypeList {
+            if index ~= 1 {
+               self.write( ", " );
+            }
+            self.write( type2gotype( retType ) );
+         }
+         self.write( ")" );
+      }
+   }
+   self.writeln( " {" );
+
+   if! let body = node.$declInfo.$body {
+      filter( body, self, node );
+   }
+   self.write( "}" );
 };
 
 pub override fn convFilter.processRefType(
@@ -270,6 +392,7 @@ pub override fn convFilter.processExpUnwrap(
 
 pub override fn convFilter.processExpToDDD( node: Nodes.ExpToDDDNode, opt: Opt ) mut
 {
+   filter( node.$expList, self, node );
 }
 
 pub override fn convFilter.processExpNew(
@@ -285,6 +408,28 @@ pub override fn convFilter.processDeclClass(
 pub override fn convFilter.processExpCall(
    node: Nodes.ExpCallNode, opt: Opt ) mut
 {
+   let funcType = node.$func.$expType;
+   if Ast.isBuiltin( funcType.$typeId ) {
+      if funcType.$rawTxt == "print" {
+         self.write( "Lns_print" );
+      }
+   }
+   else {
+      self.write( funcType.$rawTxt );
+   }
+   self.write( "(" );
+   
+   
+   if! let argList = node.$argList {
+      foreach exp, index in argList.$expList {
+         if index ~= 1 {
+            self.write( ', ' );
+         }
+         filter( exp, self, node );
+      }
+   }
+   
+   self.write( ")" );
 };
 
 pub override fn convFilter.processExpAccessMRet(
@@ -297,6 +442,17 @@ pub override fn convFilter.processExpAccessMRet(
 pub override fn convFilter.processExpList(
    node: Nodes.ExpListNode, opt: Opt ) mut
 {
+   foreach exp, index in node.$expList {
+      if index ~= 1 {
+         self.write( ", " );
+      }
+      filter( exp, self, node );
+      if! let mRetExp = node.$mRetExp {
+         if mRetExp.$index == index {
+            break;
+         }
+      }
+   }
 };
 
 pub override fn convFilter.processExpOp1(
@@ -330,6 +486,40 @@ pub override fn convFilter.processExpSetVal(
 pub override fn convFilter.processExpOp2(
    node: Nodes.ExpOp2Node, opt: Opt ) mut
 {
+   let mut opTxt = node.$op.txt;
+
+   switch opTxt {
+      case "and", "or" {
+         Util.err( "not support yet" );
+      }
+      case ".." {
+         Util.err( "not support yet" );
+      }
+      default {
+         if! Ast.bitBinOpMap[ opTxt ] {
+            // ビット演算の処理
+            switch _exp {
+               case .LShift {
+                  opTxt = "<<";
+               }
+               case .RShift {
+                  opTxt = ">>";
+               }
+            }
+            //self.accessPrimVal( node.$exp1, node );
+            filter( node.$exp1, self, node );
+            self.write( " " .. opTxt .. " " );
+            //self.accessPrimVal( node.$exp2, node );
+            filter( node.$exp2, self, node );
+         }
+         else {
+            filter( node.$exp1, self, node );
+            self.write( " " .. opTxt .. " " );
+            //self.accessPrimVal( node.$exp2, node );
+            filter( node.$exp2, self, node );
+         }
+      }
+   }
 };
 
 pub override fn convFilter.processExpRef(
@@ -361,6 +551,10 @@ pub override fn convFilter.processGetField(
 pub override fn convFilter.processReturn(
    node: Nodes.ReturnNode, opt: Opt ) mut
 {
+   self.write( "return " );
+   if! let expList = node.$expList {
+      filter( expList, self, node );
+   }
 };
 
 pub override fn convFilter.processTestBlock( node: Nodes.TestBlockNode, opt: Opt ) mut
@@ -429,6 +623,8 @@ pub override fn convFilter.processLiteralReal(
 pub override fn convFilter.processLiteralString(
    node: Nodes.LiteralStringNode, opt: Opt ) mut
 {
+   let txt = node.$token.txt;
+   self.write( '%s' (str2gostr(txt)) );
 };
 
 pub override fn convFilter.processLiteralBool(

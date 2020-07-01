@@ -720,7 +720,7 @@ let workList:List<stat> = [ stat ];
    */
    pub let val: stem!;
    /** マクロ内での変数の型 */
-   pub let typeInfo: Ast.TypeInfo;
+   pub let typeInfo: &Ast.TypeInfo;
    /** 実引数のノード。 この変数がマクロの引数の場合に有効。 */
    pub let argNode: &Node!;
 }

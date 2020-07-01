@@ -638,11 +638,19 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
          typeInfo = Ast.NormalTypeInfo.createModule(
             scope, parentInfo, externalFlag, modName, mutable );
 
-         parentScope.addClass( modName, nil, typeInfo );
+         let symInfo, existSym = parentScope.addClass( modName, nil, typeInfo );
+         when! existSym {
+            self.addErrMess(
+               self.parser.getLastPos(),
+               "module symbols is exist -- %s.%s"
+               ( existSym.$namespaceTypeInfo.getFullName(
+                  self.typeNameCtrl, parentScope, false ),
+                 existSym.$name ) );
+         }
       }
-      if not self.typeId2ClassMap[ typeInfo.get_typeId() ] {
+      if not self.typeId2ClassMap[ typeInfo.$typeId ] {
          let namespace = new Nodes.NamespaceInfo( modName, self.scope, typeInfo );
-         self.typeId2ClassMap[ typeInfo.get_typeId() ] = namespace;
+         self.typeId2ClassMap[ typeInfo.$typeId ] = namespace;
       }
       return typeInfo;
    }
@@ -656,8 +664,24 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
    */
    pri fn pushClassScope( errPos:&Parser.Position, classTypeInfo:&Ast.TypeInfo ) mut {
       if self.scope ~= classTypeInfo.$scope$.$parent {
-         self.addErrMess( errPos, "This class does not exist in this scope. -- %s"
-                          (classTypeInfo.getTxt( ## )) );
+         let classParentName;
+         let classParentTypeId;
+         if! let parentType = classTypeInfo.$scope$.$parent$.$ownerTypeInfo {
+            classParentName = parentType.getFullName(
+               self.typeNameCtrl, unwrap parentType.$scope, false );
+            classParentTypeId = parentType.$typeId;
+         }
+         else {
+            classParentName = "nil";
+            classParentTypeId = -1;
+         }
+         self.addErrMess(
+            errPos, "This class does not exist in this scope. -- %s -- %s(%d), %s(%d)"
+            ( classTypeInfo.getTxt( ## ),
+              self.scope.$ownerTypeInfo$.getFullName$(
+                 self.typeNameCtrl, self.scope, false ),
+              self.scope.$ownerTypeInfo$.$typeId or -1,
+              classParentName, classParentTypeId ) );
       }
       self.scope = unwrap Ast.getScope( classTypeInfo );
    }
@@ -1185,6 +1209,14 @@ class _TypeInfoModule extend _TypeInfo {
          param.typeId2Scope[ self.typeId ] = scope;
          param.typeId2TypeInfo[ self.typeId ] = workTypeInfo;
          parentScope.addClass( self.txt, nil, workTypeInfo );
+
+         
+         Log._log(
+            .Info,
+            `{ return "new module -- %s, %s, %d, %d"
+               ( self.txt,
+                 workTypeInfo.getFullName( Ast.defaultTypeNameCtrl, parentScope, false ),
+                 workTypeInfo.$typeId, parentScope.$scopeId ); } );
       }
       return newTypeInfo, nil;
    }
@@ -1281,6 +1313,15 @@ class _TypeInfoNormal extend _TypeInfo {
             if self.kind == Ast.TypeInfoKind.Class or
                self.kind == Ast.TypeInfoKind.IF
             {
+               Log._log(
+                  .Info,         
+                  `{ return "new type -- %d, %s -- %s, %d"
+                     (self.parentId, self.txt, 
+                       parentScope.$ownerTypeInfo$.getFullName$(
+                          Ast.defaultTypeNameCtrl, parentScope, false ) or "nil",
+                       parentScope.$ownerTypeInfo$.$typeId or -1 ); } );
+            
+               
                let baseScope = unwrap param.typeId2Scope[ self.baseId ];
                let mut ifScopeList:List<Ast.Scope> = [];
                foreach ifType in interfaceList {
@@ -2830,6 +2871,15 @@ fn TransUnit.processImport( modulePath:str ) mut :
          case .Module {
             self.pushModule( true, classTypeInfo.getTxt(##),
                              Ast.TypeInfo.isMut( classTypeInfo ) );
+            Log._log(
+               .Info,         
+               `{ return "push module -- %s, %s, %d, %d, %d"
+                  ( classTypeInfo.getTxt(##),
+                    self.scope.$ownerTypeInfo$.getFullName$(
+                     Ast.defaultTypeNameCtrl, self.scope, false ) or "nil",
+                    self.scope.$ownerTypeInfo$.$typeId or -1,
+                    classTypeInfo.$typeId,
+                    self.scope.$parent.$scopeId ); } );
          }
       }
 

@@ -362,12 +362,28 @@ pub fn MacroCtrl.importMacro(
 }
 
 
-pub fn MacroCtrl.regist( node:Nodes.DeclMacroNode ) mut {
+pub fn MacroCtrl.regist( node:Nodes.DeclMacroNode, macroScope:&Ast.Scope ) mut {
    let macroObj = self.macroEval.eval( node );
 
+   // registVar() した時に確定していない変数の型を、ここで確定する。
+   let mut remap:Map<str,Nodes.MacroValInfo> = {};
+   foreach macroValInfo, name in self.symbol2ValueMapForMacro {
+      if macroValInfo.typeInfo.equals( Ast.builtinTypeEmpty## ) {
+         remap[ name ] = new Nodes.MacroValInfo(
+            macroValInfo.val, unwrap macroScope.getTypeInfoChild( name ),
+            macroValInfo.argNode );
+      }
+      else {
+         remap[ name ] = macroValInfo;
+      }
+   }
+   self.symbol2ValueMapForMacro = remap;
+
+   // マクロ情報を登録
    self.typeId2MacroInfo[ node.$expType.get_typeId() ] =
       new Nodes.DefMacroInfo( macroObj, node.$declInfo,
-                              self.symbol2ValueMapForMacro );  
+                              self.symbol2ValueMapForMacro );
+
    self.symbol2ValueMapForMacro = {};
 }
 
@@ -429,6 +445,39 @@ fn expandVal( tokenList:List<&Parser.Token>, val: stem!, pos: &Parser.Position )
 }
 
 /**
+txtList の文字列リストを parse して、
+pushbackParser に pushback する。
+
+@param pushbackParser PushbackParser
+@param txtList 文字列リスト
+@param streamName ストリーム名
+@param pos parse したトークンの位置情報に置き換える値
+*/
+fn pushbackTxt( pushbackParser:Parser.PushbackParser,
+                txtList:&List<str>, streamName:str, pos:&Parser.Position )
+{
+   let mut tokenList:List<&Parser.Token> = [];
+   foreach txt in txtList {
+      let mut stream = new Parser.TxtStream( txt );
+      let mut parser = new Parser.StreamParser(
+         stream, "macro symbol -- %s" (streamName) ## );
+      let mut workParser = new Parser.DefaultPushbackParser( parser );
+      while true {
+         let worktoken = workParser.getTokenNoErr();
+         if worktoken.kind == .Eof {
+            break;
+         }
+         tokenList.insert( new Parser.Token(
+            worktoken.kind, worktoken.txt, pos, false ## ) );
+      }
+   }
+   for index = #tokenList, 1, -1 {
+      pushbackParser.pushbackToken( tokenList[ index ] );
+   }
+}
+
+
+/**
 macro-expand 内のトークン処理。
 
 ,, や ,,,の展開を行なう。
@@ -469,11 +518,7 @@ pub fn MacroCtrl.expandMacroVal(
          //Util.errorLog( "nextToken: %s" ( nextToken.txt ) );
          if macroVal.typeInfo.equals( Ast.builtinTypeSymbol ## ) {
             let txtList = (unwrap macroVal.val)@@str[];
-            for index = #txtList, 1, -1 {
-               nextToken = new Parser.Token(
-                  nextToken.kind, txtList[ index ], nextToken.pos, false ## );
-               parser.pushbackToken( nextToken );
-            }
+            pushbackTxt( parser, txtList, nextToken.txt, nextToken.pos );
          }
          elseif macroVal.typeInfo.equals( Ast.builtinTypeStat ## ) or
             macroVal.typeInfo.equals( Ast.builtinTypeExp ## )
@@ -543,9 +588,8 @@ pub fn MacroCtrl.expandMacroVal(
       }
       elseif tokenTxt == ',,,' {
          if macroVal.typeInfo.equals( Ast.builtinTypeString ## ) {
-            nextToken = new Parser.Token(
-               nextToken.kind, (unwrap macroVal.val)@@str, nextToken.pos, false ## );
-            parser.pushbackToken( nextToken );
+            pushbackTxt( parser, [ (unwrap macroVal.val)@@str ],
+                         nextToken.txt, nextToken.pos );
          }
          else {
             parser.error( "',,,' does not support this type -- %s"
@@ -670,6 +714,8 @@ macro-statment 内で定義している変数を登録する。
 
 このときはまだ変数宣言しているだけなので、
 実際の値はマクロ展開時にセットする。
+
+変数の型
 
 @param symbolList 変数一覧
 */

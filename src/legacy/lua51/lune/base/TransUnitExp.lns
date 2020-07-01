@@ -2347,6 +2347,14 @@ fn TransUnit.analyzeExpSymbol(
    return self.analyzeExpCont( firstToken, exp, skipFlag );
 }
 
+/**
+代入演算。
+
+@param exp 左辺
+@param opeToken 演算子のトークン
+@param expTypeList 右辺に期待される型のリスト。
+*      左辺の変数の数だけ要素がある。
+*/
 fn TransUnit.analyzeExpOpSet(
    exp: Nodes.Node, opeToken: &Parser.Token,
    expectTypeList:&List<&Ast.TypeInfo> ) mut : Nodes.ExpSetValNode
@@ -3172,6 +3180,7 @@ fn TransUnit.analyzeExp(
          }
          case ",," {
             macroExpFlag = true;
+            typeInfo = expType;
          }  
          case ",,," {
             macroExpFlag = true;
@@ -3179,7 +3188,7 @@ fn TransUnit.analyzeExp(
                self.error( "unmatch ,,, type, need string type" );
             }  
             typeInfo = Ast.builtinTypeSymbol;
-         }  
+         }
          case ",,,," {
             macroExpFlag = true;
             if not expType.equals( Ast.builtinTypeSymbol ##) {
