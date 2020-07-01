@@ -23,7 +23,7 @@ SOFTWARE.
 */
 
 /** lns バージョン */
-pub let version = "1.1.7";
+pub let version = "1.1.8";
 /** meta フォーマットバージョン */
 pub let metaVersion = "1.0.63";
 /** _lune モジュールバージョン */
