@@ -8,10 +8,7 @@
 
 * バグ
 
-- [ ] Mapping でメンバ名と異なるシンボルを Mapping できるようにする。 Go のようなもの。
-  
-- [ ] lua の keyword、 例えば end や function をシンボル名にしていると、実行時エラーになる
-  
+ 
 - [ ] 次のマクロが失敗する。
 pub macro _DefOption( work:str ) {
    class hoge {
@@ -50,9 +47,11 @@ _DefOption( "&int" );
   
 * 機能
 
+- [ ] Mapping でメンバ名と異なるシンボルを Mapping できるようにする。 Go のようなもの。
+
 - [ ] nilable から 非 nilable へのキャストは出来ないが、
       stem! を int! へのキャストはサポートするべき。
-- [ ] accessor のアクセス制限に local を指定できない。
+- [ ] accessor/method のアクセス制限に local を指定できない。
 - [ ] class/method の final 対応。
   
 - [ ] let の変数名に _ を対応する。
@@ -693,6 +692,16 @@ pub macro _DefOption( mode:str ) {
 
 - [X] import するモジュールパスに同名の名前が複数入っているとエラーする。
       import hoge.hoge.foo; // <--- hoge が 2 つ入っている。
+- [X] match で case を書かないと解析ランタイムエラー
+alge Hoge {
+   Val1,
+   Val2,
+}
+fn func( hoge:Hoge ) {
+   match hoge {
+   }
+}
+- [X] lua の keyword、 例えば end や function をシンボル名にしていると、実行時エラーになる
   
   
 

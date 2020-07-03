@@ -10788,9 +10788,9 @@ function LiteralMapNode:setupLiteralTokenList( list )
             
                lit2valNode[param] = key
             else 
-            do
-               return false
-            end
+               do
+                  return false
+               end
             end
          end
          
@@ -10934,10 +10934,10 @@ function RefFieldNode:getLiteral(  )
             end
             
          else 
-         do
-            return nil, string.format( "not support -- %s", Literal:_getTxt( literal)
-            )
-         end
+            do
+               return nil, string.format( "not support -- %s", Literal:_getTxt( literal)
+               )
+            end
          end
       end
       
@@ -11111,9 +11111,9 @@ function ExpOp2Node:getValType( node )
          strVal = val
          retTypeInfo = Ast.builtinTypeString
       else 
-      do
-         return false, 0, 0.0, "", Ast.headTypeInfo
-      end
+         do
+            return false, 0, 0.0, "", Ast.headTypeInfo
+         end
       end
    end
    
@@ -11140,9 +11140,9 @@ function ExpOp2Node:setupLiteralTokenList( list )
          
             self:addTokenList( list, Parser.TokenKind.Str, string.format( "%q", val) )
          else 
-         do
-            return false
-         end
+            do
+               return false
+            end
          end
       end
       

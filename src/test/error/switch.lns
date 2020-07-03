@@ -1,0 +1,23 @@
+{
+   fn func( val:int ) {
+      switch val { // error
+      }
+      switch val { // error
+         default {
+         }
+      }
+   }
+}
+{
+   alge Hoge {
+      Val,
+   }
+   fn func( val:Hoge ) {
+      match val { // error
+      }
+      match val { // error
+         default {
+         }
+      }
+   }
+}

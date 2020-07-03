@@ -2294,26 +2294,30 @@ pub override fn convFilter.processMatch(
    filter( node.$val,  self, node );
    self.writeln( "" );
 
-   let fullName = self.getFullName( node.$algeTypeInfo );
-   foreach caseInfo, index in node.$caseList {
-      if index == 1 {
-         self.write( "if " );
+   if #node.$caseList > 0 {
+      let fullName = self.getFullName( node.$algeTypeInfo );
+      foreach caseInfo, index in node.$caseList {
+         if index == 1 {
+            self.write( "if " );
+         }
+         else {
+            self.write( "elseif " );
+         }
+         self.writeln( "_matchExp[1] == %s.%s[1] then"
+                       (fullName, caseInfo.$valInfo.$name ) );
+         foreach paramName, paramNum in caseInfo.$valParamNameList {
+            self.writeln( "   local %s = _matchExp[2][%d]" (paramName, paramNum ) );
+         }
+         filter( caseInfo.$block, self, node );
       }
-      else {
-         self.write( "elseif " );
+      if! node.$defaultBlock {
+         self.writeln( "else " );
+         self.pushIndent(##);
+         filter( _exp, self, node );
+         self.popIndent();
       }
-      self.writeln( "_matchExp[1] == %s.%s[1] then"
-                    (fullName, caseInfo.$valInfo.$name ) );
-      foreach paramName, paramNum in caseInfo.$valParamNameList {
-         self.writeln( "   local %s = _matchExp[2][%d]" (paramName, paramNum ) );
-      }
-      filter( caseInfo.$block, self, node );
+      self.writeln( "end" );
    }
-   if! node.$defaultBlock {
-      self.writeln( "else " );
-      filter( _exp, self, node );
-   }
-   self.writeln( "end" );
    self.popIndent();
 
    self.writeln( "end" );

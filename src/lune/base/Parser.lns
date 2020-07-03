@@ -25,7 +25,6 @@ SOFTWARE.
 import lune.base.Util;
 
 let mut luaKeywordSet:Set<str> = (@);
-luaKeywordSet.add( "let" );
 luaKeywordSet.add( "if" );
 luaKeywordSet.add( "else" );
 luaKeywordSet.add( "elseif" );
@@ -43,7 +42,11 @@ luaKeywordSet.add( "do" );
 luaKeywordSet.add( "require" );
 luaKeywordSet.add( "function" );
 luaKeywordSet.add( "then" );
+luaKeywordSet.add( "end" );
+luaKeywordSet.add( "repeat" );
 luaKeywordSet.add( "until" );
+luaKeywordSet.add( "goto" );
+luaKeywordSet.add( "local" );
 
 pub fn isLuaKeyword( txt:str ) : bool {
    return luaKeywordSet.has( txt );

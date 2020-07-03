@@ -152,7 +152,6 @@ end
 local Util = _lune.loadModule( 'lune.base.Util' )
 
 local luaKeywordSet = {}
-luaKeywordSet["let"]= true
 luaKeywordSet["if"]= true
 luaKeywordSet["else"]= true
 luaKeywordSet["elseif"]= true
@@ -170,7 +169,11 @@ luaKeywordSet["do"]= true
 luaKeywordSet["require"]= true
 luaKeywordSet["function"]= true
 luaKeywordSet["then"]= true
+luaKeywordSet["end"]= true
+luaKeywordSet["repeat"]= true
 luaKeywordSet["until"]= true
+luaKeywordSet["goto"]= true
+luaKeywordSet["local"]= true
 
 local function isLuaKeyword( txt )
 

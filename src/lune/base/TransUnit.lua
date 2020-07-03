@@ -3643,6 +3643,8 @@ function TransUnit:checkSymbol( token, mode )
       
    elseif _lune._Set_has(builtinKeywordSet, token.txt ) then
       self:addErrMess( token.pos, string.format( "this symbol is special keyword -- %s", token.txt) )
+   elseif Parser.isLuaKeyword( token.txt ) or Parser.isOp2( token.txt ) or Parser.isOp1( token.txt ) then
+      self:addErrMess( token.pos, string.format( "this symbol is lua keyword -- %s", token.txt) )
    end
    
    return token
@@ -3993,7 +3995,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = '@lune.@base.@TransUnit.TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2588, function (  )
+   Log.log( Log.Level.Info, __func__, 2597, function (  )
    
       return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), modulePath)
    end )
@@ -4010,7 +4012,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2600, function (  )
+               Log.log( Log.Level.Info, __func__, 2609, function (  )
                
                   return string.format( "%s already", modulePath)
                end )
@@ -4043,7 +4045,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2620, function (  )
+   Log.log( Log.Level.Info, __func__, 2629, function (  )
    
       return string.format( "%s processing", modulePath)
    end )
@@ -4318,7 +4320,7 @@ function TransUnit:processImport( modulePath )
             
          elseif _switchExp == Ast.TypeInfoKind.Module then
             self:pushModule( true, classTypeInfo:getTxt(  ), Ast.TypeInfo.isMut( classTypeInfo ) )
-            Log.log( Log.Level.Info, __func__, 2874, function (  )
+            Log.log( Log.Level.Info, __func__, 2883, function (  )
             
                return string.format( "push module -- %s, %s, %d, %d, %d", classTypeInfo:getTxt(  ), _lune.nilacc( self.scope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, self.scope, false ) or "nil", _lune.nilacc( self.scope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ) or -1, classTypeInfo:get_typeId(), self.scope:get_parent():get_scopeId())
             end )
@@ -4394,7 +4396,7 @@ function TransUnit:processImport( modulePath )
    
    self.importModuleInfo:remove(  )
    
-   Log.log( Log.Level.Info, __func__, 2959, function (  )
+   Log.log( Log.Level.Info, __func__, 2968, function (  )
    
       return string.format( "%s complete", modulePath)
    end )
@@ -4704,10 +4706,22 @@ function TransUnit:analyzeMatch( firstToken )
       nextToken = self:getToken(  )
    else
     
-      self:finishTentativeSymbol( false )
+      if not firstFlag then
+         self:finishTentativeSymbol( false )
+      end
+      
    end
    
    self:checkToken( nextToken, "}" )
+   
+   if #caseList == 0 then
+      self:addWarnMess( firstToken.pos, "'match' should have 'case' blocks." )
+      if defaultBlock then
+         self:addErrMess( firstToken.pos, "'match' must have 'case' blocks when have 'default' block." )
+      end
+      
+   end
+   
    
    return Nodes.MatchNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, exp, algeTypeInfo, caseList, defaultBlock )
 end
@@ -6007,10 +6021,10 @@ function TransUnit:analyzeDeclEnum( accessMode, firstToken )
                   enumVal = _lune.newAlge( Ast.EnumLiteral.Str, {val})
                   valTypeInfo = Ast.builtinTypeString
                else 
-               do
-                  self:error( string.format( "illegal enum val -- %s", Nodes.Literal:_getTxt( literal)
-                  ) )
-               end
+                  do
+                     self:error( string.format( "illegal enum val -- %s", Nodes.Literal:_getTxt( literal)
+                     ) )
+                  end
                end
             end
             

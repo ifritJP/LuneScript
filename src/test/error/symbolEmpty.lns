@@ -111,7 +111,7 @@ class Test {
 {
    fn func(op:int) {
       let mut val;
-      switch op {
+      switch op { // error
       }
       print( val + 1 ); // error
    }

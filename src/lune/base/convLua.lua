@@ -2827,32 +2827,37 @@ function convFilter:processMatch( node, opt )
    filter( node:get_val(), self, node )
    self:writeln( "" )
    
-   local fullName = self:getFullName( node:get_algeTypeInfo() )
-   for index, caseInfo in pairs( node:get_caseList() ) do
-      if index == 1 then
-         self:write( "if " )
-      else
-       
-         self:write( "elseif " )
+   if #node:get_caseList() > 0 then
+      local fullName = self:getFullName( node:get_algeTypeInfo() )
+      for index, caseInfo in pairs( node:get_caseList() ) do
+         if index == 1 then
+            self:write( "if " )
+         else
+          
+            self:write( "elseif " )
+         end
+         
+         self:writeln( string.format( "_matchExp[1] == %s.%s[1] then", fullName, caseInfo:get_valInfo():get_name()) )
+         for paramNum, paramName in pairs( caseInfo:get_valParamNameList() ) do
+            self:writeln( string.format( "   local %s = _matchExp[2][%d]", paramName, paramNum) )
+         end
+         
+         filter( caseInfo:get_block(), self, node )
       end
       
-      self:writeln( string.format( "_matchExp[1] == %s.%s[1] then", fullName, caseInfo:get_valInfo():get_name()) )
-      for paramNum, paramName in pairs( caseInfo:get_valParamNameList() ) do
-         self:writeln( string.format( "   local %s = _matchExp[2][%d]", paramName, paramNum) )
+      do
+         local _exp = node:get_defaultBlock()
+         if _exp ~= nil then
+            self:writeln( "else " )
+            self:pushIndent(  )
+            filter( _exp, self, node )
+            self:popIndent(  )
+         end
       end
       
-      filter( caseInfo:get_block(), self, node )
+      self:writeln( "end" )
    end
    
-   do
-      local _exp = node:get_defaultBlock()
-      if _exp ~= nil then
-         self:writeln( "else " )
-         filter( _exp, self, node )
-      end
-   end
-   
-   self:writeln( "end" )
    self:popIndent(  )
    
    self:writeln( "end" )
@@ -3972,7 +3977,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3307, function (  )
+   Log.log( Log.Level.Info, __func__, 3311, function (  )
    
       return string.format( "code: %s", code)
    end )

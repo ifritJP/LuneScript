@@ -400,6 +400,7 @@ TEST_CASE += apply.lns
 TEST_CASE += multiple-class.lns
 TEST_CASE += multiple-if.lns
 TEST_CASE += multiple.lns
+TEST_CASE += switch.lns
 TEST_CASE_SRCS := $(addprefix test/error/,$(TEST_CASE))
 TEST_CASE_LOGS := $(addprefix $(LOG_DIR)/,$(addsuffix .log,$(TEST_CASE)))
 

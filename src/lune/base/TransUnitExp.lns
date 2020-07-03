@@ -3414,6 +3414,17 @@ fn TransUnit.analyzeExp(
       self.error( "illegal exp" );
    }
 
+   // when! expectType {
+   //    if Ast.isBuiltin( expectType.$typeId ) and
+   //       not expectType.canEvalWith( exp.$expType, .SetEq, {} )
+   //    {
+   //       self.addErrMess(
+   //          firstToken.pos,
+   //          "mismatch type -- %s <-- %s"
+   //          ( expectType.getTxt(##), exp.$expType.getTxt(##) ) );
+   //    }
+   // }
+   
    if skipOp2Flag {
       return exp;
    }

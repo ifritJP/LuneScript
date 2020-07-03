@@ -2242,6 +2242,9 @@ let specialSymbolMap = {
 /** ユーザ定義のシンボルとして許可しないキーワード */
 let builtinKeywordSet = (@ "self", "super" );
 
+/**
+指定 token をシンボルとして利用可能かチェックする。
+*/
 fn TransUnit.checkSymbol( token: &Parser.Token, mode:SymbolMode ) mut : &Parser.Token {
    if token.kind ~= Parser.TokenKind.Symb and
       token.kind ~= Parser.TokenKind.Kywd and
@@ -2265,6 +2268,12 @@ fn TransUnit.checkSymbol( token: &Parser.Token, mode:SymbolMode ) mut : &Parser.
    elseif builtinKeywordSet.has( token.txt ) {
       self.addErrMess(
          token.pos, "this symbol is special keyword -- %s" (token.txt) );
+   }
+   elseif Parser.isLuaKeyword( token.txt ) or
+      Parser.isOp2( token.txt ) or Parser.isOp1( token.txt )
+   {
+      self.addErrMess(
+         token.pos, "this symbol is lua keyword -- %s" (token.txt) );
    }
    return token;
 }
@@ -3272,9 +3281,18 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
       nextToken = self.getToken(##);
    }
    else {
-      self.finishTentativeSymbol( false );
+      if not firstFlag {
+         self.finishTentativeSymbol( false );
+      }
    }
    self.checkToken( nextToken, "}" );
+
+   if #caseList == 0 {
+      self.addWarnMess( firstToken.pos, "'match' should have 'case' blocks." );
+      if defaultBlock {
+         self.addErrMess( firstToken.pos, "'match' must have 'case' blocks when have 'default' block." );
+      }
+   }
 
    return Nodes.MatchNode.create(
       self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),

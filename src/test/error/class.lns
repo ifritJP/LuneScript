@@ -71,6 +71,7 @@ interface Test4 { // error
 
 proto interface Test5;
 class Test5 { // error
+   let function:int; // error
 }
 
 interface Test6 {

@@ -1,7 +1,7 @@
 {
    fn func(val:int):int {
       while true {
-         switch val {
+         switch val { // error
             default {
                return 1;
             }  
@@ -14,7 +14,7 @@
 {
    fn func(val:int):int {
       while 1 {
-         switch val {
+         switch val { // error
             default {
                return 1;
             }  
@@ -27,7 +27,7 @@
 {
    fn func(val:int):int {
       while true {
-         switch val {
+         switch val { // error
             default {
                break;
             }  
