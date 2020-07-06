@@ -418,7 +418,7 @@ pub override fn dumpFilter.processIf(
    dump( prefix, depth, node, "");
    let stmtList = node.get_stmtList();
    foreach stmt, index in stmtList {
-      if stmt.$exp.$kind ~= Nodes.nodeKind.None {
+      if stmt.$exp.$kind ~= Nodes.nodeKindEnum.None {
 	 filter( stmt.$exp, self, opt.nextOpt() );
       }   	
       filter( stmt.$block, self, opt.nextOpt() );

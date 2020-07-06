@@ -608,6 +608,11 @@ fn TransUnit.analyzeDeclMacroSub(
          [ Ast.builtinTypeStem ], false );
       macroScope.addLocalVar( false, false, "_lnsLoad", nil, funcType, .IMut );
 
+      let macroLocalVarType = Ast.NormalTypeInfo.createMap(
+         .Local, self.moduleType, Ast.builtinTypeString, Ast.builtinTypeStem, .Mut );
+      macroScope.addLocalVar( false, true, "__var", nil, macroLocalVarType, .IMut );
+
+      
 
       // let mut bakParser = self.parser;
       // self.parser = parser;
@@ -2754,10 +2759,10 @@ fn TransUnit.analyzeDeclFunc(
                let mut needCall = true;
                foreach stmt in workBody.$stmtList {
                   switch stmt.$kind {
-                     case Nodes.nodeKind.ExpCallSuper {
+                     case Nodes.nodeKindEnum.ExpCallSuper {
                         needCall = false;
                      }
-                     case Nodes.nodeKind.BlankLine {
+                     case Nodes.nodeKindEnum.BlankLine {
                      }
                      default {
                         break;

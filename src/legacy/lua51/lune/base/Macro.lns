@@ -155,6 +155,8 @@ class ExtMacroInfo extend Nodes.MacroInfo {
    }
 }
 
+
+
 pub class MacroCtrl
 {
    let mut useModuleMacroSet:Set<&Ast.TypeInfo> {pub&};
@@ -171,7 +173,12 @@ pub class MacroCtrl
    pri let mut tokenExpanding:bool {pub};
    /** マクロをコールしている行番号 */
    pri let mut macroCallLineNo: int {pub};
-   
+
+   /**
+   * マクロ内で利用可能な、マクロ共通ローカルマップ。
+   * マクロ横断で共通。
+   */
+   pri let mut macroLocalVarMap:Map<str,stem>;
 
    pub fn __init( macroEval: Nodes.MacroEval )
    {
@@ -183,6 +190,7 @@ pub class MacroCtrl
       self.macroMode = .None;
       self.macroCallLineNo = 0;
       self.macroModeStack = [ self.macroMode ];
+      self.macroLocalVarMap = {};
    }
 }
 
@@ -238,7 +246,7 @@ pub fn MacroCtrl.evalMacroOp(
 
    // マクロに渡す引数をセットする
    let mut argValMap:Map<int,stem> = {};
-   let mut macroArgValMap:Map<str,stem> = {};
+   let mut macroArgValMap:Map<str,stem> = { "__var": self.macroLocalVarMap };
    let macroArgNodeList = macroInfo.getArgList();
    let mut macroArgName2ArgNode:Map<str,&Nodes.Node> = {};
    when! expList {
@@ -677,6 +685,11 @@ pub fn MacroCtrl.expandSymbol(
             }
             elseif Ast.builtinTypeString.equals( valType ##) {
                //
+            }
+            elseif valType.equals( Ast.builtinTypeInt ##) or
+               valType.equals( Ast.builtinTypeReal ##)
+            {
+               format = "'%s' ";
             }
             else {
                errMessList.insert(

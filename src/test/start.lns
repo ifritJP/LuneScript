@@ -1495,3 +1495,26 @@ print( '\\""\"\'\\.\\' );
    _DefOption2( "&Hoge" );
    let hogeAA = new HogeA( new Hoge() );
 }
+{
+   macro _test0( name:str, val:int ) {
+      {
+         __var[ name ] = val;
+      }
+   }
+   macro _test1() {
+      {
+         let val;
+         if! let work = __var[ "hoge" ] {
+            val = work@@int;
+         }
+         else {
+            val = 10;
+         }
+      }
+      print( "%s" (,,val) );
+   }
+   _test0( "hogea", 1 );
+   _test1();
+   _test0( "hoge", 1 );
+   _test1();
+}

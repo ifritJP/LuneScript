@@ -2021,9 +2021,6 @@ pub override fn convFilter.processBlockSub(
       case .Block {
          word = "{";
       }
-      case .Macro {
-         word = "";
-      }
       case .LetUnwrap {
          readyBlock = true;
          word = "";

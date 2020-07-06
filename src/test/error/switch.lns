@@ -21,3 +21,71 @@
       }
    }
 }
+{
+   enum Hoge {
+      Val,
+   }
+
+   fn func( val:int ) {
+      switch val {
+         case 1.0 { // error
+         }
+         case "ab" { // error
+         }
+         case Hoge.Val {
+         }
+      }
+   }
+
+   fn func2( val:int! ) {
+      switch val {
+         case 1.0 { // error
+         }
+         case "ab" { // error
+         }
+         case Hoge.Val {
+         }
+      }
+   }
+
+   
+   fn func3( val:Hoge ){
+      switch val {
+         case 1 { // error
+         }
+      }
+   }   
+}
+{
+   enum Hoge {
+      Val0,
+      Val1,
+   }
+
+   fn func( val:int ) {
+      switch val {
+         case 1 {
+         }
+         case 1 { // error
+         }
+         case 2, 2 { // error
+         }
+         case Hoge.Val1 { // error
+         }
+      }
+   }
+
+   fn func2( val:int! ) {
+      let val2:int! = nil;
+      switch val {
+         case nil {
+         }
+         case nil { // error
+         }
+         case 1 {
+         }
+         case val2 { // error
+         }
+      }
+   }
+}

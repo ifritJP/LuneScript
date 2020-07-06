@@ -511,10 +511,12 @@ pub class TypeData {
 pub enum CanEvalType {
    /** 代入(アップキャスト可能な型は代入 OK とする)。 代入先は IMut で確定。 */
    SetOpIMut,
-   /** 代入(アップキャスト可能な型は代入 OK とする)。 代入先は IMut かどうか不正。  */
+   /** 代入(アップキャスト可能な型は代入 OK とする)。 代入先は IMut かどうか無視。  */
    SetOp,
    /** 代入(アップキャスト可能な型でも、同一の型でない場合は NG とする) */
    SetEq,
+   /** 値の等号を見る */
+   Equal,
    /** 算術演算 */
    Math,
    /** 大小比較演算 */
@@ -5221,10 +5223,15 @@ pub static fn TypeInfo.canEvalWithBase(
       return true, nil;
    }
    if not dest.$nilable and otherSrc.$nilable {
-      if dest.$kind == .Box {
-         return dest.canEvalWith( otherSrc, canEvalType, alt2type )**;
+      if canEvalType ~= .Equal {
+         if dest.$kind == .Box {
+            return dest.canEvalWith( otherSrc, canEvalType, alt2type )**;
+         }
+         return false, nil;
       }
-      return false, nil;
+      else {
+         otherSrc = otherSrc.$nonnilableType;
+      }
    }
    if dest == builtinTypeStem and not otherSrc.$nilable {
       return true, nil;

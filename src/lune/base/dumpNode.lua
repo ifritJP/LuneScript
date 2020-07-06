@@ -750,7 +750,7 @@ function dumpFilter:processIf( node, opt )
    dump( prefix, depth, node, "" )
    local stmtList = node:get_stmtList(  )
    for index, stmt in pairs( stmtList ) do
-      if stmt:get_exp():get_kind() ~= Nodes.nodeKind['None'] then
+      if stmt:get_exp():get_kind() ~= Nodes.nodeKindEnum.None then
          filter( stmt:get_exp(), self, opt:nextOpt(  ) )
       end
       

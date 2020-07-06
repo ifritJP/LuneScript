@@ -3163,6 +3163,10 @@ fn TransUnit.analyzeSwitch( firstToken: &Parser.Token ) mut : Nodes.SwitchNode {
 
    let mut caseList: Nodes.CaseInfo[] = [];
 
+   let mut condObjSet:Set<&stem> = (@);
+   let mut condSymIdSet:Set<int> = (@);
+   let mut hasNilCond = false;
+   
    let mut nextToken = self.getToken(##);
    let mut firstFlag = true;
    while ( nextToken.txt == "case" ) {
@@ -3173,6 +3177,49 @@ fn TransUnit.analyzeSwitch( firstToken: &Parser.Token ) mut : Nodes.SwitchNode {
       if firstFlag {
          firstFlag = false;
       }
+
+      foreach condExp, index in condexpList.$expList {
+         // 同じ case 条件が無いかチェック
+         if condExp.$expType.$nilable {
+            if hasNilCond {
+               self.addWarnMess( condExp.$pos, "multiple case with nil or nilable" );
+            } else {
+               hasNilCond = true;
+            }
+         }
+         if! let condLiteral = condExp.getLiteral() {
+            let literalObj = Nodes.getLiteralObj( condLiteral );
+            when! literalObj {
+               if condObjSet.has( literalObj ) {
+                  self.addErrMess( condExp.$pos, "multiple case exp -- %s" (literalObj) );
+               }
+               else {
+                  condObjSet.add( literalObj );
+               }
+            }
+         } else {
+            if! let expRef = condExp@@@Nodes.ExpRefNode {
+               let symInfo = expRef.$symbolInfo;
+               if condSymIdSet.has( symInfo.$symbolId ) {
+                  self.addErrMess(
+                     condExp.$pos, "multiple case exp -- %s" (symInfo.$name));
+               }
+               else {
+                  condSymIdSet.add( symInfo.$symbolId );
+               }
+            }
+         }
+         
+         // switch の式と case の条件の型の不一致チェック
+         if not exp.$expType.canEvalWith( condExp.$expType, .Equal, {} ) {
+            self.addErrMess(
+               condExp.$pos,
+               "case exp unmatch type -- %s <- %s"
+               (exp.$expType.getTxt(##), condExp.$expType.getTxt(##)) );
+         }
+      }
+
+      
       caseList.insert( new Nodes.CaseInfo( condexpList, condBock ) );
       nextToken = self.getToken(##);
    }

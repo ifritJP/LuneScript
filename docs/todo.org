@@ -8,7 +8,8 @@
 
 * バグ
 
- 
+
+- [ ] 同名のマクロが定義できる。
 - [ ] 次のマクロが失敗する。
 pub macro _DefOption( work:str ) {
    class hoge {

@@ -1366,15 +1366,11 @@ function convFilter:processBlockSub( node, opt )
          word = ""
       elseif _switchExp == Nodes.BlockKind.Block then
          word = "do"
-      elseif _switchExp == Nodes.BlockKind.Macro then
-         word = ""
       elseif _switchExp == Nodes.BlockKind.LetUnwrap then
          word = ""
       elseif _switchExp == Nodes.BlockKind.LetUnwrapThenDo then
          word = ""
       elseif _switchExp == Nodes.BlockKind.IfUnwrap then
-         word = ""
-      elseif _switchExp == Nodes.BlockKind.While then
          word = ""
       end
    end
@@ -2125,6 +2121,7 @@ function convFilter:outputDeclMacro( name, argNameList, callback )
    
    self:writeln( string.format( 'local _lune = require( "lune.base._lune%d" )', Ver.luaModVersion) )
    
+   self:writeln( "local __var = __macroArgs.__var" )
    for __index, argName in pairs( argNameList ) do
       self:writeln( string.format( "local %s = __macroArgs.%s", argName, argName) )
    end
@@ -3978,7 +3975,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3311, function (  )
+   Log.log( Log.Level.Info, __func__, 3307, function (  )
    
       return string.format( "code: %s", code)
    end )

@@ -4583,6 +4583,10 @@ function TransUnit:analyzeSwitch( firstToken )
    
    local caseList = {}
    
+   local condObjSet = {}
+   local condSymIdSet = {}
+   local hasNilCond = false
+   
    local nextToken = self:getToken(  )
    local firstFlag = true
    while (nextToken.txt == "case" ) do
@@ -4592,6 +4596,59 @@ function TransUnit:analyzeSwitch( firstToken )
       if firstFlag then
          firstFlag = false
       end
+      
+      
+      for index, condExp in pairs( condexpList:get_expList() ) do
+         
+         if condExp:get_expType():get_nilable() then
+            if hasNilCond then
+               self:addWarnMess( condExp:get_pos(), "multiple case with nil or nilable" )
+            else
+             
+               hasNilCond = true
+            end
+            
+         end
+         
+         do
+            local condLiteral = condExp:getLiteral(  )
+            if condLiteral ~= nil then
+               local literalObj = Nodes.getLiteralObj( condLiteral )
+               if literalObj ~= nil then
+                  if _lune._Set_has(condObjSet, literalObj ) then
+                     self:addErrMess( condExp:get_pos(), string.format( "multiple case exp -- %s", literalObj) )
+                  else
+                   
+                     condObjSet[literalObj]= true
+                  end
+                  
+               end
+               
+            else
+               do
+                  local expRef = _lune.__Cast( condExp, 3, Nodes.ExpRefNode )
+                  if expRef ~= nil then
+                     local symInfo = expRef:get_symbolInfo()
+                     if _lune._Set_has(condSymIdSet, symInfo:get_symbolId() ) then
+                        self:addErrMess( condExp:get_pos(), string.format( "multiple case exp -- %s", symInfo:get_name()) )
+                     else
+                      
+                        condSymIdSet[symInfo:get_symbolId()]= true
+                     end
+                     
+                  end
+               end
+               
+            end
+         end
+         
+         
+         if not exp:get_expType():canEvalWith( condExp:get_expType(), Ast.CanEvalType.Equal, {} ) then
+            self:addErrMess( condExp:get_pos(), string.format( "case exp unmatch type -- %s <- %s", exp:get_expType():getTxt(  ), condExp:get_expType():getTxt(  )) )
+         end
+         
+      end
+      
       
       table.insert( caseList, Nodes.CaseInfo.new(condexpList, condBock) )
       nextToken = self:getToken(  )
@@ -5655,6 +5712,9 @@ function TransUnit:analyzeDeclMacroSub( accessMode, firstToken, nameToken, macro
       
       local funcType = Ast.NormalTypeInfo.createFunc( false, true, nil, Ast.TypeInfoKind.Func, Ast.headTypeInfo, false, true, true, Ast.AccessMode.Global, "_lnsLoad", nil, {Ast.builtinTypeString, Ast.builtinTypeString}, {Ast.builtinTypeStem}, false )
       macroScope:addLocalVar( false, false, "_lnsLoad", nil, funcType, Ast.MutMode.IMut )
+      
+      local macroLocalVarType = Ast.NormalTypeInfo.createMap( Ast.AccessMode.Local, self.moduleType, Ast.builtinTypeString, Ast.builtinTypeStem, Ast.MutMode.Mut )
+      macroScope:addLocalVar( false, true, "__var", nil, macroLocalVarType, Ast.MutMode.IMut )
       
       local stmtList = {}
       self:prepareTentativeSymbol( self.scope, false )
@@ -7607,9 +7667,9 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
                for __index, stmt in pairs( workBody:get_stmtList() ) do
                   do
                      local _switchExp = stmt:get_kind()
-                     if _switchExp == Nodes.nodeKind['ExpCallSuper'] then
+                     if _switchExp == Nodes.nodeKindEnum.ExpCallSuper then
                         needCall = false
-                     elseif _switchExp == Nodes.nodeKind['BlankLine'] then
+                     elseif _switchExp == Nodes.nodeKindEnum.BlankLine then
                      else 
                         
                            break

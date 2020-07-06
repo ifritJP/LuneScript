@@ -301,14 +301,12 @@ pub class DeclMacroInfo {
 }
 
 let mut nodeKind2NameMap: Map<int,str> = {};
-let mut nodeKindSeed = 1;
-pub let mut nodeKind: Map<str,int> = {};
+let mut nodeKindSeed = 0;
 
 fn regKind( name:str ): int {
    let kind = nodeKindSeed;
    nodeKindSeed = nodeKindSeed + 1;
    nodeKind2NameMap[ kind ] = name;
-   nodeKind[ name ] = kind;
    return kind;
 }
 
@@ -373,7 +371,7 @@ pub class NodeManager {
    pub fn __init() {
       self.idSeed = 0;
       self.nodeKind2NodeList = {};
-      foreach kind in nodeKind {
+      foreach name, kind in nodeKind2NameMap {
          if not self.nodeKind2NodeList[ kind ] {
             self.nodeKind2NodeList[ kind ] = [];
          }
@@ -446,6 +444,17 @@ macro _declNodeClass(
       let className = ,,,"%sNode" (baseName);
       let nodeKindSym = ,,,"%s" (baseName);
       let nodeKindGetter = ,,,"get_%s" (baseName);
+
+      let mut nodeKindList:List<str>;
+      if! let mut workNodeKindList = __var.nodeKindList {
+         nodeKindList = workNodeKindList@@List<str>;
+      }
+      else {
+         nodeKindList = [];
+         __var.nodeKindList = nodeKindList;
+      };
+      let nodeId = #nodeKindList;
+      nodeKindList.insert( baseName );
 
       let mut fieldStatList:stat[] = [];
       let mut argList:stat[] = [];
@@ -556,7 +565,7 @@ macro _declNodeClass(
       }
       
       let superStat = `{
-         super( id, unwrap nodeKind. ,,nodeKindSym, pos, macroArgFlag, typeList );
+         super( id, ,,nodeId, pos, macroArgFlag, typeList );
       };
 
       if baseName ~= "Block" {
@@ -573,7 +582,7 @@ macro _declNodeClass(
       
       relateStat.insert( `{
          pub fn NodeManager. ,,,"get%sList" (,,,,className) () : &List<&,,className> {
-            return self.getList( unwrap nodeKind. ,,nodeKindSym )@@List<&,,className>;
+            return self.getList( ,,nodeId )@@List<&,,className>;
          }
       } );
 
@@ -581,7 +590,7 @@ macro _declNodeClass(
    }
 
    pub static fn NodeKind.,,nodeKindGetter (): int {
-      return unwrap nodeKind. ,,nodeKindSym;
+      return ,,nodeId;
    }
    
    pub proto class ,,className extend ,,superClass;
@@ -2109,7 +2118,31 @@ pub override fn LiteralSymbolNode.setupLiteralTokenList( list: List<&Parser.Toke
 }
 
 
+fn enumLiteral2Literal( obj:&Ast.EnumLiteral ) : Literal!, str! {
+   match obj {
+      case .Int( val ) {
+         return Literal.Int( val ), nil;
+      }
+      case .Real( val ) {
+         return Literal.Real( val ), nil;
+      }
+      case .Str( val ) {
+         return Literal.Str( val ), nil;
+      }
+   }
+   return nil, "illegal enum: " .. obj.$_txt;
+}
+
+
 pub override fn RefFieldNode.getLiteral(): Literal!, str! {
+   let typeInfo = self.$expType;
+   if! let enumTypeInfo = typeInfo@@@Ast.EnumTypeInfo {
+      if self.prefix.$expType@@@Ast.EnumTypeInfo {
+         let enumval = unwrap enumTypeInfo.getEnumValInfo( self.field.txt );
+         return enumLiteral2Literal( enumval.$val )**;
+      }
+   }
+   
    let mut tokenList:List<str> = [];
    let literal, mess = self.prefix.getLiteral();
    when! literal {
@@ -2163,26 +2196,20 @@ pub override fn ExpMacroArgExpNode.getLiteral(): Literal!, str!
 }
 
 
-fn enumLiteral2Literal( obj:&Ast.EnumLiteral ) : Literal!, str! {
-   match obj {
-      case .Int( val ) {
-         return Literal.Int( val ), nil;
-      }
-      case .Real( val ) {
-         return Literal.Real( val ), nil;
-      }
-      case .Str( val ) {
-         return Literal.Str( val ), nil;
-      }
-   }
-   return nil, "illegal enum: " .. obj.$_txt;
-}
-
 pub override fn ExpRefNode.getLiteral(): Literal!, str! {
    let typeInfo = self.symbolInfo.$typeInfo;
    if! let enumTypeInfo = typeInfo@@@Ast.EnumTypeInfo {
-      let enumval = unwrap enumTypeInfo.getEnumValInfo( self.symbolInfo.$name );
-      return enumLiteral2Literal( enumval.$val )**;
+      // この getLiteral() 処理は、次のケースのみ有効。
+      // enum Hoge {
+      //   Val0,
+      //   Val1 = Val0 + 1, // <<--- この Val0 が ExpRefNode になる。
+      // }
+      if self.symbolInfo.$kind == .Mbr and
+         self.symbolInfo.$namespaceTypeInfo.$kind == .Enum
+      {
+         let enumval = unwrap enumTypeInfo.getEnumValInfo( self.symbolInfo.$name );
+         return enumLiteral2Literal( enumval.$val )**;
+      }
    }
 
    return nil, "unsupport refnode -- %s" (typeInfo.getTxt(##));
@@ -2406,3 +2433,19 @@ pub fn Filter.processBlock( node: &BlockNode, opt:T ) mut {
 pub fn hasMultiValNode( node:&Node ): bool {
    return #node.$expTypeList > 1 or node.$expType.$kind == .DDD;
 }
+
+
+macro _declNodeKindEnum() {
+   {
+      let mut statList:List<stat> = [];
+      if! let workNodeKindList = __var.nodeKindList {
+         foreach kind in workNodeKindList@@List<str> {
+            statList.insert( `{ ,,,kind, } );
+         }
+      };
+   }
+   pub enum nodeKindEnum {
+      ,,statList
+   }
+}
+_declNodeKindEnum();

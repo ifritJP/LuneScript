@@ -1014,15 +1014,18 @@ CanEvalType.__allList[2] = CanEvalType.SetOp
 CanEvalType.SetEq = 2
 CanEvalType._val2NameMap[2] = 'SetEq'
 CanEvalType.__allList[3] = CanEvalType.SetEq
-CanEvalType.Math = 3
-CanEvalType._val2NameMap[3] = 'Math'
-CanEvalType.__allList[4] = CanEvalType.Math
-CanEvalType.Comp = 4
-CanEvalType._val2NameMap[4] = 'Comp'
-CanEvalType.__allList[5] = CanEvalType.Comp
-CanEvalType.Logical = 5
-CanEvalType._val2NameMap[5] = 'Logical'
-CanEvalType.__allList[6] = CanEvalType.Logical
+CanEvalType.Equal = 3
+CanEvalType._val2NameMap[3] = 'Equal'
+CanEvalType.__allList[4] = CanEvalType.Equal
+CanEvalType.Math = 4
+CanEvalType._val2NameMap[4] = 'Math'
+CanEvalType.__allList[5] = CanEvalType.Math
+CanEvalType.Comp = 5
+CanEvalType._val2NameMap[5] = 'Comp'
+CanEvalType.__allList[6] = CanEvalType.Comp
+CanEvalType.Logical = 6
+CanEvalType._val2NameMap[6] = 'Logical'
+CanEvalType.__allList[7] = CanEvalType.Logical
 
 
 local TypeInfo = {}
@@ -6840,11 +6843,17 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
    end
    
    if not dest:get_nilable() and otherSrc:get_nilable() then
-      if dest:get_kind() == TypeInfoKind.Box then
-         return dest:canEvalWith( otherSrc, canEvalType, alt2type )
+      if canEvalType ~= CanEvalType.Equal then
+         if dest:get_kind() == TypeInfoKind.Box then
+            return dest:canEvalWith( otherSrc, canEvalType, alt2type )
+         end
+         
+         return false, nil
+      else
+       
+         otherSrc = otherSrc:get_nonnilableType()
       end
       
-      return false, nil
    end
    
    if dest == _moduleObj.builtinTypeStem and not otherSrc:get_nilable() then

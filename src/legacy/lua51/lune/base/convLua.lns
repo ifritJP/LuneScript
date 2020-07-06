@@ -974,9 +974,6 @@ pub override fn convFilter.processBlockSub(
       case .Block {
          word = "do";
       }
-      case .Macro {
-         word = "";
-      }
       case .LetUnwrap {
          word = "";
       }
@@ -984,9 +981,6 @@ pub override fn convFilter.processBlockSub(
          word = "";
       }
       case .IfUnwrap {
-         word = "";
-      }
-      case .While {
          word = "";
       }
    }
@@ -1677,6 +1671,7 @@ pub fn convFilter.outputDeclMacro(
    // マクロのランタイムは、動作中の LuneScript のものを使う必要がある
    self.writeln( 'local _lune = require( "lune.base._lune%d" )' (Ver.luaModVersion) );
    
+   self.writeln( "local __var = __macroArgs.__var" );
    foreach argName in argNameList {
       self.writeln( "local %s = __macroArgs.%s" (argName, argName ) );
    }
@@ -3307,6 +3302,7 @@ pub class MacroEvalImp extend Nodes.MacroEval {
          let mut val = frontInterface.loadFromLnsTxt( importModuleInfo, name, txt );
          return val;
       };
+      //newEnv[ "__var" ] = {};
 
       Log._log( .Info, `{ return "code: %s" (code); } );
       

@@ -535,6 +535,7 @@ function MacroCtrl:__init(macroEval)
    self.macroMode = Nodes.MacroMode.None
    self.macroCallLineNo = 0
    self.macroModeStack = {self.macroMode}
+   self.macroLocalVarMap = {}
 end
 function MacroCtrl.setmeta( obj )
   setmetatable( obj, { __index = MacroCtrl  } )
@@ -581,7 +582,7 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
    local macroInfo = _lune.unwrap( self.typeId2MacroInfo[macroTypeInfo:get_typeId(  )])
    
    local argValMap = {}
-   local macroArgValMap = {}
+   local macroArgValMap = {["__var"] = self.macroLocalVarMap}
    local macroArgNodeList = macroInfo:getArgList(  )
    local macroArgName2ArgNode = {}
    if expList ~= nil then
@@ -957,6 +958,8 @@ function MacroCtrl:expandSymbol( parser, prefixToken, exp, nodeManager, errMessL
                   format = "' %s '"
                   exp = Nodes.ExpMacroStatListNode.create( nodeManager, prefixToken.pos, self.macroMode == Nodes.MacroMode.AnalyzeArg, {Ast.builtinTypeString}, exp )
                elseif Ast.builtinTypeString:equals( valType ) then
+               elseif valType:equals( Ast.builtinTypeInt ) or valType:equals( Ast.builtinTypeReal ) then
+                  format = "'%s' "
                else
                 
                   table.insert( errMessList, ErrorMess.new(_lune.unwrap( symbolInfo:get_pos()), string.format( "not support ,, -- %s", valType:getTxt(  ))) )
