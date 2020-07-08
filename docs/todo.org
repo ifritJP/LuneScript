@@ -8,7 +8,6 @@
 
 * バグ
 
-
 - [ ] 同名のマクロが定義できる。
 - [ ] 次のマクロが失敗する。
 pub macro _DefOption( work:str ) {
@@ -28,8 +27,6 @@ _DefOption( "&int" );
          val = 1;
       };
 - [ ] Mapping を implement するクラスは、 abstract/interface のメンバは持てないようにする
-  
-- [ ] 互換性のない値で switch - case が書けてしまう。
   
 - [ ] リストのリテラルで、継承関係のある値を混在させた時に、
       共通のスーパークラスのリストにならない。
@@ -703,6 +700,13 @@ fn func( hoge:Hoge ) {
    }
 }
 - [X] lua の keyword、 例えば end や function をシンボル名にしていると、実行時エラーになる
+- [X] import したモジュールを型として使用したときのコンパイルエラーが想定外。
+import SubC;
+
+fn func( val:SubC ) {
+}  
+  
+    
   
   
 
@@ -776,6 +780,7 @@ fn func( hoge:Hoge ) {
       また、モジュールのパスを変更できるようにする。
       これは、モジュールを生成した LuneScript のバージョンが異なる場合に、
       正常動作するように対応するため。
+      
 
 - [ ] 値を扱えるマクロを定義できるようにする。
 

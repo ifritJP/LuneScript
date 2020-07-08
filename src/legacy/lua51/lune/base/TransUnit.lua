@@ -969,7 +969,7 @@ function TransUnit:pushModule( externalFlag, name, mutable )
          
          local symInfo, existSym = parentScope:addClass( modName, nil, typeInfo )
          if existSym ~= nil then
-            self:addErrMess( self.parser:getLastPos(  ), string.format( "module symbols is exist -- %s.%s", existSym:get_namespaceTypeInfo():getFullName( self.typeNameCtrl, parentScope, false ), existSym:get_name()) )
+            self:addErrMess( self.parser:getLastPos(  ), string.format( "module symbols exist -- %s.%s -- %s.%s", existSym:get_namespaceTypeInfo():getFullName( self.typeNameCtrl, parentScope, false ), existSym:get_name(), parentInfo:getFullName( self.typeNameCtrl, parentScope, false ), modName) )
          end
          
       end
@@ -1837,7 +1837,7 @@ function _TypeInfoModule:createTypeInfo( param )
          param.typeId2TypeInfo[self.typeId] = workTypeInfo
          parentScope:addClass( self.txt, nil, workTypeInfo )
          
-         Log.log( Log.Level.Info, __func__, 1214, function (  )
+         Log.log( Log.Level.Info, __func__, 1216, function (  )
          
             return string.format( "new module -- %s, %s, %d, %d", self.txt, workTypeInfo:getFullName( Ast.defaultTypeNameCtrl, parentScope, false ), workTypeInfo:get_typeId(), parentScope:get_scopeId())
          end )
@@ -1977,7 +1977,7 @@ function _TypeInfoNormal:createTypeInfo( param )
       else
        
          if self.kind == Ast.TypeInfoKind.Class or self.kind == Ast.TypeInfoKind.IF then
-            Log.log( Log.Level.Info, __func__, 1316, function (  )
+            Log.log( Log.Level.Info, __func__, 1318, function (  )
             
                return string.format( "new type -- %d, %s -- %s, %d", self.parentId, self.txt, _lune.nilacc( parentScope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, parentScope, false ) or "nil", _lune.nilacc( parentScope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ) or -1)
             end )
@@ -3995,7 +3995,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = '@lune.@base.@TransUnit.TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2597, function (  )
+   Log.log( Log.Level.Info, __func__, 2599, function (  )
    
       return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), modulePath)
    end )
@@ -4012,7 +4012,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2609, function (  )
+               Log.log( Log.Level.Info, __func__, 2611, function (  )
                
                   return string.format( "%s already", modulePath)
                end )
@@ -4045,7 +4045,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2629, function (  )
+   Log.log( Log.Level.Info, __func__, 2631, function (  )
    
       return string.format( "%s processing", modulePath)
    end )
@@ -4320,7 +4320,7 @@ function TransUnit:processImport( modulePath )
             
          elseif _switchExp == Ast.TypeInfoKind.Module then
             self:pushModule( true, classTypeInfo:getTxt(  ), Ast.TypeInfo.isMut( classTypeInfo ) )
-            Log.log( Log.Level.Info, __func__, 2883, function (  )
+            Log.log( Log.Level.Info, __func__, 2885, function (  )
             
                return string.format( "push module -- %s, %s, %d, %d, %d", classTypeInfo:getTxt(  ), _lune.nilacc( self.scope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, self.scope, false ) or "nil", _lune.nilacc( self.scope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ) or -1, classTypeInfo:get_typeId(), self.scope:get_parent():get_scopeId())
             end )
@@ -4396,7 +4396,7 @@ function TransUnit:processImport( modulePath )
    
    self.importModuleInfo:remove(  )
    
-   Log.log( Log.Level.Info, __func__, 2968, function (  )
+   Log.log( Log.Level.Info, __func__, 2970, function (  )
    
       return string.format( "%s complete", modulePath)
    end )
@@ -5314,6 +5314,11 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, refFlag, mutF
    
    if refFlag then
       typeInfo = self:createModifier( typeInfo, Ast.MutMode.IMut )
+   end
+   
+   
+   if typeInfo:get_kind() == Ast.TypeInfoKind.Module then
+      self:addErrMess( symbolNode:get_pos(), string.format( "module can't use as Type. -- %s", typeInfo:getTxt(  )) )
    end
    
    

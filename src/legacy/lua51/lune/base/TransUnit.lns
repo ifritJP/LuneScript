@@ -642,10 +642,12 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
          when! existSym {
             self.addErrMess(
                self.parser.getLastPos(),
-               "module symbols is exist -- %s.%s"
+               "module symbols exist -- %s.%s -- %s.%s"
                ( existSym.$namespaceTypeInfo.getFullName(
                   self.typeNameCtrl, parentScope, false ),
-                 existSym.$name ) );
+                 existSym.$name,
+                 parentInfo.getFullName( self.typeNameCtrl, parentScope, false ),
+                 modName ) );
          }
       }
       if not self.typeId2ClassMap[ typeInfo.$typeId ] {

@@ -1,5 +1,8 @@
 import test.error.Sub5;
 
+fn func(val:Sub5) { // error
+}
+
 Sub5.test.func();
 Sub5.test.func2(); // error
 

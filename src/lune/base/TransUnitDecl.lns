@@ -237,6 +237,11 @@ fn TransUnit.analyzeRefTypeWithSymbol(
       typeInfo = self.createModifier( typeInfo, .IMut );
    }
 
+   if typeInfo.$kind == .Module {
+      self.addErrMess( symbolNode.$pos,
+                       "module can't use as Type. -- %s" ( typeInfo.getTxt(##) ) );
+   }
+
    return Nodes.RefTypeNode.create(
       self.nodeManager, symbolNode.$pos,
       self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ],

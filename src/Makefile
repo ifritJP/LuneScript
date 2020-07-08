@@ -180,7 +180,7 @@ define build-testcode
 	$(call exeLune,$1,test/start.lns,$2 save,) > /dev/null
 	$(call exeLune,$1,test/mapping.lns,$2 save,) > /dev/null
 	$(call exeLune,$1,test/funcSym.lns,$2 save,) > /dev/null
-	$(call exeLune,$1,test/test2/test2/Sub.lns,$2 save,) > /dev/null
+	$(call exeLune,$1,test/test2/test2/test.lns,$2 save,) > /dev/null
 endef
 
 # meta 情報の更新時に正常に解析できるかテスト。

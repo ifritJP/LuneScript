@@ -2269,6 +2269,8 @@ function Scope:add( kind, canBeLeft, canBeRight, name, pos, typeInfo, accessMode
                   existSymbol = self:getSymbolInfo( name, self, true, ScopeAccess.Full )
                end
                
+            elseif _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.Module then
+               existSymbol = self:getSymbolInfoChild( name )
             else 
                
                   existSymbol = self:getSymbolInfo( name, self, true, ScopeAccess.Full )

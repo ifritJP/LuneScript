@@ -1541,6 +1541,9 @@ pub fn Scope.add(
                   existSymbol = self.getSymbolInfo( name, self, true, .Full );
                }
             }
+            case .Class, .Module {
+               existSymbol = self.getSymbolInfoChild(name );
+            }
             default {
                existSymbol = self.getSymbolInfo( name, self, true, .Full );
             }
