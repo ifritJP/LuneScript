@@ -243,7 +243,7 @@ fn TransUnit.analyzeExpList(
 fn TransUnit.analyzeListConst( token: &Parser.Token ) mut : Nodes.Node {
    let nextToken = self.getToken(##);
    let mut expList:Nodes.ExpListNode! = nil;
-   let mut itemTypeInfo = Ast.builtinTypeNone;
+   let mut itemCommonType = Ast.CommonType.Normal( Ast.builtinTypeNone );
 
    if nextToken.txt ~= "]" {
       self.pushback();
@@ -251,11 +251,22 @@ fn TransUnit.analyzeListConst( token: &Parser.Token ) mut : Nodes.Node {
       self.checkNextToken( "]" );
       let nodeList: List<&Nodes.Node> = (unwrap expList).$expList;
       foreach exp in nodeList {
-         itemTypeInfo = Ast.TypeInfo.getCommonType(
-            itemTypeInfo, exp.$expType,
+         itemCommonType = Ast.TypeInfo.getCommonTypeCombo(
+            itemCommonType, Ast.CommonType.Normal( exp.$expType ),
             Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) );
       }
    }
+
+   let mut itemTypeInfo;
+   match itemCommonType {
+      case .Normal( info ) {
+         itemTypeInfo = info;
+      }
+      case .Combine( info ) {
+         itemTypeInfo = info.$typeInfo;
+      }
+   }
+
    if itemTypeInfo.$kind == .DDD {
       if #itemTypeInfo.$itemTypeInfoList > 0 {
          itemTypeInfo = itemTypeInfo.$itemTypeInfoList[ 1 ];
@@ -288,7 +299,7 @@ fn TransUnit.analyzeSetConst( token: &Parser.Token ) mut : Nodes.Node {
    
    let nextToken = self.getToken(##);
    let mut expList:Nodes.ExpListNode! = nil;
-   let mut itemTypeInfo = Ast.builtinTypeNone;
+   let mut itemCommonType = Ast.CommonType.Normal( Ast.builtinTypeNone );
    if nextToken.txt ~= ")" {
       self.pushback();
       expList = self.analyzeExpList( false, false ## );
@@ -302,12 +313,23 @@ fn TransUnit.analyzeSetConst( token: &Parser.Token ) mut : Nodes.Node {
                "'Set' object can't store nilable. -- %s" (expType.getTxt(##)));
          }
          else {
-            itemTypeInfo = Ast.TypeInfo.getCommonType(
-               itemTypeInfo, exp.$expType,
+            itemCommonType = Ast.TypeInfo.getCommonTypeCombo(
+               itemCommonType, Ast.CommonType.Normal( exp.$expType ),
                Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) );
          }
       }
    }
+
+   let itemTypeInfo;
+   match itemCommonType {
+      case .Normal( info ) {
+         itemTypeInfo = info;
+      }
+      case .Combine( info ) {
+         itemTypeInfo = info.$typeInfo;
+      }
+   }
+   
    let mut typeInfoList = [ Ast.builtinTypeNone ];
    typeInfoList = [ Ast.NormalTypeInfo.createSet( .Local, self.getCurrentClass(),
                                                   [ itemTypeInfo ], .Mut ) ];
@@ -1643,11 +1665,12 @@ fn TransUnit.analyzeAccessClassField(
    let typeInfo = unwrap fieldTypeInfo default Ast.builtinTypeNone;
 
    when! symbolInfo {
-      if self.inAnalyzingState( .InitBlock ) or
-         self.inAnalyzingState( .ClassMethod ) 
+      if self.inAnalyzingState( .InitBlock ) or self.inAnalyzingState( .ClassMethod ) 
       {     
          let mut errorMess:str! = nil;
          if self.protoFuncMap[ symbolInfo.$typeInfo ] {
+
+            // __init ブロックの制御
             errorMess = "It can't call prototype function from static -- %s" (symbolInfo.$name);
          }
          // elseif symbolInfo.$scope == classTypeInfo.$scope and symbolInfo.$kind == .Mtd {

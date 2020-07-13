@@ -102,10 +102,12 @@ if のブロックを解析終了時に symbolSet を oldSymbolSet にセット�
 
    /** 親ブロックを管理する TentativeSymbol */
    pri let mut parent:TentativeSymbol!;
-   pri let mut scope:&Ast.Scope;
+   pri let mut scope:&Ast.Scope {pub};
    pri let mut skipFlag:bool;
    pri let loopFlag:bool;
    pri let mut accessSymList:List<&AccessSymPos> {pub&};
+   /** 初期値をセットした変数の集合 */
+   pri let mut initSymSet:Set<&Ast.SymbolInfo> {pub&};
 
    pub fn __init( parent:TentativeSymbol!, scope:&Ast.Scope, loopFlag:bool ) {
       self.symbolSet = (@);
@@ -115,6 +117,7 @@ if のブロックを解析終了時に symbolSet を oldSymbolSet にセット�
       self.skipFlag = false;
       self.loopFlag = loopFlag;
       self.accessSymList = [];
+      self.initSymSet = (@);
    }
 
    /**
@@ -154,6 +157,7 @@ if のブロックを解析終了時に symbolSet を oldSymbolSet にセット�
    */
    pub fn regist( symbolInfo:&Ast.SymbolInfo ) mut : bool {
       self.symbolSet.add( symbolInfo.getOrg() );
+      self.initSymSet.add( symbolInfo.getOrg() );
       symbolInfo.set_hasValueFlag( true );
 
       if self.$scope.isInnerOf( symbolInfo.$scope ) {
@@ -181,7 +185,7 @@ if のブロックを解析終了時に symbolSet を oldSymbolSet にセット�
    }
 
    /**
-return や break などでそのブロック自体を抜ける場合、
+break でそのブロック自体を抜ける場合、
 そこまで解析した情報は無意味になる。
 よって解析情報を捨てることを通知する。
    */
@@ -195,8 +199,10 @@ return や break などでそのブロック自体を抜ける場合、
    /**
    oldSymbolSet と symbolSet に共通するシンボルを確定し、
    確定した情報を symbolSet にセットする。
+
+@return bool self.symbolSet が有効な場合 true
      */   
-   fn merge( finishFlag:bool ) mut {
+   fn merge( finishFlag:bool ) mut : bool {
       if self.skipFlag {
          self.skipFlag = false;
          if! let other = self.oldSymbolSet {
@@ -207,7 +213,7 @@ return や break などでそのブロック自体を抜ける場合、
                symbolInfo.set_hasValueFlag( true );
             }
          }
-         return;
+         return self.oldSymbolSet ~= nil;
       }
       if! let other = self.oldSymbolSet {
          let mut mergedSet = self.symbolSet.clone().and( other );
@@ -230,6 +236,7 @@ return や break などでそのブロック自体を抜ける場合、
             }
          }
       }
+      return true;
    }
 
    /*
@@ -255,14 +262,20 @@ complete は false を指定する。
                symbolInfo.set_hasValueFlag( false );
             }
          }
+         foreach symbolInfo in self.initSymSet {
+            if symbolInfo.$scope ~= self.scope {
+               parent.initSymSet.add( symbolInfo );
+            }
+         }
          return parent;
       }
       return nil;
    }
 
    pub fn newSet( scope:&Ast.Scope ) mut {
-      self.merge( false );
-      self.oldSymbolSet = self.symbolSet;
+      if self.merge( false ) {
+         self.oldSymbolSet = self.symbolSet;
+      }
       self.symbolSet = (@);
       self.scope = scope;
    }
@@ -574,7 +587,18 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
    
    pri fn finishTentativeSymbol( complete:bool ) mut {
       self.checkAccesSym();
-      self.tentativeSymbol = unwrap self.tentativeSymbol.finish( complete );
+      let mut tentativeSymbol = self.tentativeSymbol;
+      self.tentativeSymbol = unwrap tentativeSymbol.finish( complete );
+      
+      foreach symbolInfo in tentativeSymbol.$initSymSet {
+         if tentativeSymbol.$scope.$parent == symbolInfo.$scope {
+            if not symbolInfo.$hasValueFlag {
+               self.addWarnMess(
+                  self.parser.getLastPos(),
+                  "It exists the case no initialized value for '%s'" (symbolInfo.$name) );
+            }
+         }
+      }
    }
 
    pri fn mergeTentativeSymbol( scope:&Ast.Scope ) mut {
@@ -3256,12 +3280,13 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
    let exp = self.analyzeExpOne( false, false ## );
 
    let! algeTypeInfo = exp.$expType.$srcTypeInfo@@@Ast.AlgeTypeInfo {
-      self.error( "match must have alge value" );
+      self.error( "match must have alge value -- %s" (exp.$expType.getTxt(##)) );
    };
 
    self.checkNextToken( "{" );
 
    let mut caseList: List<&Nodes.MatchCase> = [];
+   let mut algeValNameSet: Set<str> = (@);
 
    let mut nextToken = self.getToken(##);
    let mut firstFlag = true;
@@ -3274,6 +3299,11 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
       let! valInfo = algeTypeInfo.getValInfo( valNameToken.txt ) {
          self.error( "not found val -- %s" (valNameToken.txt) );
       };
+      if algeValNameSet.has( valNameToken.txt ) {
+         self.addErrMess( valNameToken.pos, "multiple val -- %s" (valNameToken.txt) );
+      }
+      algeValNameSet.add( valNameToken.txt );
+      
       let mut valParamNameList:List<str> = [];
       nextToken = self.getToken(##);
       let mut blockScope = self.pushScope( false ## );
@@ -3312,8 +3342,9 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
                           "unmatch param -- %d != %d"
                           (#valParamNameList, #valInfo.$typeList ) );
       }
-      let block = self.analyzeBlock(
-         .Match, firstFlag and TentativeMode.Start or TentativeMode.Merge, blockScope );
+      let mode = firstFlag and TentativeMode.Start or TentativeMode.Merge;
+         
+      let block = self.analyzeBlock( .Match, mode, blockScope );
       if firstFlag {
          firstFlag = false;
       }
@@ -3325,13 +3356,16 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
    }
    let mut defaultBlock:&Nodes.Node! = nil;
    if nextToken.txt == "default" {
+      if algeValNameSet.len() == algeTypeInfo.$valInfoNum {
+         self.addWarnMess( nextToken.pos, "defalut is not reach" );
+      }
       defaultBlock = self.analyzeBlock(
          .Block, firstFlag and TentativeMode.Simple or TentativeMode.Finish ## );
       nextToken = self.getToken(##);
    }
    else {
       if not firstFlag {
-         self.finishTentativeSymbol( false );
+         self.finishTentativeSymbol( algeValNameSet.len() == algeTypeInfo.$valInfoNum );
       }
    }
    self.checkToken( nextToken, "}" );

@@ -601,7 +601,7 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
             end
             
          else
-            local errmess = string.format( "not support node -- %s:%s", Nodes.getNodeKindName( argNode:get_kind() ), mess)
+            local errmess = string.format( "not support node at arg(%d) -- %s:%s", index, Nodes.getNodeKindName( argNode:get_kind() ), mess)
             return nil, errmess
          end
          

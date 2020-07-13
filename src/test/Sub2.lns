@@ -75,7 +75,7 @@ fn check( mess:str, test1:AlgeTest ) {
          print( mess, test1.$_txt );
          check( mess, x );
       }
-      default {
+      default { // warning
          print( mess, "default" );
       }
    }

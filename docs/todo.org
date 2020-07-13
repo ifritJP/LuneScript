@@ -8,32 +8,30 @@
 
 * バグ
 
-- [ ] 同名のマクロが定義できる。
-- [ ] 次のマクロが失敗する。
-pub macro _DefOption( work:str ) {
-   class hoge {
-     let val:,,,work;
+- [ ] 次の flow 解析が NG。
+fn func(val:int) {
+   let test;
+   if val == 0 {
+      test = 1;
    }
+   test = 2; // test は imut なのに、ここで代入が出来てしまう。 
+   print( test );
 }
-_DefOption( "&int" );
+  
+  
+- [ ] 次のマクロの呼び出しが出来ない。
+  __exp に指定する引数が多値返却の場合エラーになる。
 
-次のように let name を型宣言すると成功する。
-   let name:sym;
+macro _hoge( func:__exp ) {
+  ,,func;
+}
+fn func() : int, int {
+  return 1, 2;
+}
+_hoge( func() );
 
-
-
-- [ ] 次の式で val をセット出来ない。
-      let! val = func() {
-         val = 1;
-      };
+  
 - [ ] Mapping を implement するクラスは、 abstract/interface のメンバは持てないようにする
-  
-- [ ] リストのリテラルで、継承関係のある値を混在させた時に、
-      共通のスーパークラスのリストにならない。
-       
-       [ Super, Sub ] としたとき、 List<Super> となるべきだが、 List<stem> になる。  
-  
-
 - [ ] 型パラメータを持つクラスの proto 宣言が出来ない。
   
 - [ ] 文字列中の . を編集すると company-mode がエラーする
@@ -705,10 +703,21 @@ import SubC;
 
 fn func( val:SubC ) {
 }  
-  
-    
-  
-  
+- [X] list コンストラクタで mut/imut 混合すると mut になっていたのを imut に修正
+- [X] list コンストラクタで、共通の IF を持つ item は List<IF> となるように修正
+- [X] switch/match の先頭の case で return などを使用している場合、
+      フロー解析できていなかった
+- [X] proto type 宣言だけのクラスを alge のパラメータにすると実行時エラー
+
+  proto class Hoge;
+  alge Test {
+     Val( Hoge ),
+  }
+  class Hoge {
+  }
+- [X] match の case で、全ての型の case がある場合は default を不要に修正。
+  - [X] flow チェックも対応
+- [X] 同名のマクロが定義できる。
 
   
 - [ ] macro に与えられたリテラルな List/Array/Map/Set を、そのまま展開して変数に格納する。

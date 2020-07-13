@@ -4764,7 +4764,6 @@ fn convFilter.processDeclVarC(
       scope = var.$scope;
    };
 
-   let initVal;
    if not init0 or isStemType( var.$typeInfo ) {
       if! let symbolInfo = var@@@Ast.SymbolInfo {
          switch valKind {
@@ -4793,7 +4792,7 @@ fn convFilter.processDeclVarC(
       // }
    }
    else {
-      initVal = getLiteral2Stem( "0", var.$typeInfo );
+      let initVal = getLiteral2Stem( "0", var.$typeInfo );
 
       if! let symbolInfo = var@@@Ast.SymbolInfo {
          switch valKind {
@@ -9437,8 +9436,8 @@ pub override fn convFilter.processExpCast(
                self.write( ", %s )" ( kindTxt ) );
             }
             else {
-               let kindTxt;
                if nonNilCastType.$kind ~= .Stem {
+                  let kindTxt;
                   switch nonNilCastType.$srcTypeInfo {
                      case Ast.builtinTypeInt, Ast.builtinTypeChar {
                         kindTxt = "lns_stem_type_int";

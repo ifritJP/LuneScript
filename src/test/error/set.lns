@@ -48,6 +48,85 @@
    set2.sub( set ); // error
 }
 {
+   interface Imp {
+      pub fn func() mut;
+   }
+   class Hoge extend (Imp) {
+      pub fn func() mut{
+      }
+   }
+   class Foo extend (Imp) {
+      pub fn func() mut{
+      }
+   }
+   let hoge = new Hoge();
+   let foo = new Foo();
+   foreach item in (@ hoge, foo ) {
+      item.func(); // error
+   }
+   foreach item in (@ new Hoge(), foo ) {
+      item.func(); // error
+   }
+   foreach item in (@ hoge, new Foo() ) {
+      item.func(); // error
+   }
+   foreach item in (@ new Hoge(), new Foo() ) {
+      item.func();
+   }
+}
+{
+   abstract class Imp {
+      pub abstract fn func() mut;
+   }
+   class Hoge extend Imp {
+      pub override fn func() mut{
+      }
+   }
+   class Foo extend Imp {
+      pub override fn func() mut{
+      }
+   }
+   let hoge = new Hoge();
+   let foo = new Foo();
+   foreach item in (@ hoge, foo ) {
+      item.func(); // error
+   }
+   foreach item in (@ new Hoge(), foo ) {
+      item.func(); // error
+   }
+   foreach item in (@ hoge, new Foo() ) {
+      item.func(); // error
+   }
+   foreach item in (@ new Hoge(), new Foo() ) {
+      item.func();
+   }
+}
+{
+   interface IF1 {
+      pub fn func();
+   }
+   interface IF2 {
+      pub fn func();
+   }
+
+   class Hoge1 extend (IF1,IF2) {
+      pub fn func() {
+      }
+   }
+   class Hoge2 extend (IF1,IF2) {
+      pub fn func() {
+      }
+   }
+   class Hoge3 extend (IF1) {
+      pub fn func() {
+      }
+   }
+   let list = (@ new Hoge1(), new Hoge2(), new Hoge3() );
+   foreach item in list {
+      item.func();
+   }
+}
+{
    let set:Set<int>! = nil;
    if set$.has( 1 ) { // error
       print( "" );

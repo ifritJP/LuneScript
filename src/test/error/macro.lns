@@ -1,3 +1,8 @@
+macro _test() {
+}
+macro _test() { // error
+}
+
 macro _Test( val:int ) {
 }
 

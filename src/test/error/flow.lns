@@ -159,3 +159,87 @@
       return 0; // error
    }  
 }
+{
+   fn func1( hoge:int ) {
+      let val;
+      switch hoge {
+         case 1 {
+            return;
+         }
+         case 2 {
+            val = hoge;
+         }
+      } // warning
+      print( val + 1 ); // error
+   }
+   fn func2( hoge:int ) {
+      let val;
+      switch hoge {
+         case 1 {
+            return;
+         }
+         case 2 {
+            val = hoge;
+         }
+         default {
+            error( "" );
+         }
+      }
+      print( val + 1 );
+   }
+   fn func3( hoge:int ) {
+      let val;
+      switch hoge {
+         case 1 {
+            return;
+         }
+         default {
+            error( "" );
+         }
+      }
+      print( val + 1 ); // error
+   }
+}
+{
+   alge Common {
+      Val1( int ),
+      Val2( str ),
+   }
+
+   fn func1( common:Common ) {
+      let val;
+      match common {
+         case .Val1( x ) {
+            val = x;
+         }
+      } // warning
+      print( val + 1 ); // error
+   }
+   fn func2( common:Common ) {
+      let val;
+      match common {
+         case .Val2( x ) {
+            return;
+         }
+         case .Val1( x ) {
+            val = x;
+         }
+      }
+      print( val + 1 );
+   }
+   fn func3( common:Common ) {
+      let val;
+      match common {
+         case .Val2( x ) {
+            return;
+         }
+         case .Val1( x ) {
+            val = x;
+         }
+         default { // warning
+            error( "" );
+         }
+      }
+      print( val + 1 );
+   }
+}

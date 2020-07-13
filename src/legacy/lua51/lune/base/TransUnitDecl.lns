@@ -721,7 +721,12 @@ fn TransUnit.analyzeDeclMacro(
    // スコープを元に戻す
    self.scope = backScope;
 
-   self.scope.addMacro( nameToken.pos, node.$expType, accessMode );
+   let macroSym, existSym =
+      self.scope.addMacro( nameToken.pos, node.$expType, accessMode );
+   when! existSym {
+      self.addErrMess(
+         nameToken.pos, "multiple define symbol -- %s" (nameToken.txt) );
+   }
    
    return node;
 }
@@ -1146,6 +1151,11 @@ fn TransUnit.analyzeDeclAlge(
             
             let typeNode = self.analyzeRefType(
                .Pub, false, Ast.isPubToExternal( accessMode ) );
+            if self.protoClassMap[ typeNode.$expType ] {
+               self.addErrMess(
+                  typeNode.$pos,
+                  "can't use the prototype class -- %s" ( typeNode.$expType.getTxt(##)) );
+            }
             typeInfoList.insert( typeNode.$expType );
             nextToken = self.getToken(##);
             if nextToken.txt ~= "," {

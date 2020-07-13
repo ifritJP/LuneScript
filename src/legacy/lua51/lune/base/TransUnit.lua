@@ -513,6 +513,7 @@ function TentativeSymbol:__init(parent, scope, loopFlag)
    self.skipFlag = false
    self.loopFlag = loopFlag
    self.accessSymList = {}
+   self.initSymSet = {}
 end
 function TentativeSymbol:addAccessSym( accessSym )
 
@@ -538,6 +539,7 @@ end
 function TentativeSymbol:regist( symbolInfo )
 
    self.symbolSet[symbolInfo:getOrg(  )]= true
+   self.initSymSet[symbolInfo:getOrg(  )]= true
    symbolInfo:set_hasValueFlag( true )
    
    if self.scope:isInnerOf( symbolInfo:get_scope() ) then
@@ -597,7 +599,7 @@ function TentativeSymbol:merge( finishFlag )
          
       end
       
-      return 
+      return self.oldSymbolSet ~= nil
    end
    
    do
@@ -629,6 +631,7 @@ function TentativeSymbol:merge( finishFlag )
       end
    end
    
+   return true
 end
 function TentativeSymbol:finish( complete )
 
@@ -655,6 +658,13 @@ function TentativeSymbol:finish( complete )
             
          end
          
+         for symbolInfo, __val in pairs( self.initSymSet ) do
+            if symbolInfo:get_scope() ~= self.scope then
+               parent.initSymSet[symbolInfo]= true
+            end
+            
+         end
+         
          return parent
       end
    end
@@ -663,16 +673,24 @@ function TentativeSymbol:finish( complete )
 end
 function TentativeSymbol:newSet( scope )
 
-   self:merge( false )
-   self.oldSymbolSet = self.symbolSet
+   if self:merge( false ) then
+      self.oldSymbolSet = self.symbolSet
+   end
+   
    self.symbolSet = {}
    self.scope = scope
 end
 function TentativeSymbol.setmeta( obj )
   setmetatable( obj, { __index = TentativeSymbol  } )
 end
+function TentativeSymbol:get_scope()
+   return self.scope
+end
 function TentativeSymbol:get_accessSymList()
    return self.accessSymList
+end
+function TentativeSymbol:get_initSymSet()
+   return self.initSymSet
 end
 
 
@@ -907,7 +925,19 @@ end
 function TransUnit:finishTentativeSymbol( complete )
 
    self:checkAccesSym(  )
-   self.tentativeSymbol = _lune.unwrap( self.tentativeSymbol:finish( complete ))
+   local tentativeSymbol = self.tentativeSymbol
+   self.tentativeSymbol = _lune.unwrap( tentativeSymbol:finish( complete ))
+   
+   for symbolInfo, __val in pairs( tentativeSymbol:get_initSymSet() ) do
+      if tentativeSymbol:get_scope():get_parent() == symbolInfo:get_scope() then
+         if not symbolInfo:get_hasValueFlag() then
+            self:addWarnMess( self.parser:getLastPos(  ), string.format( "It exists the case no initialized value for '%s'", symbolInfo:get_name()) )
+         end
+         
+      end
+      
+   end
+   
 end
 function TransUnit:mergeTentativeSymbol( scope )
 
@@ -1837,7 +1867,7 @@ function _TypeInfoModule:createTypeInfo( param )
          param.typeId2TypeInfo[self.typeId] = workTypeInfo
          parentScope:addClass( self.txt, nil, workTypeInfo )
          
-         Log.log( Log.Level.Info, __func__, 1216, function (  )
+         Log.log( Log.Level.Info, __func__, 1240, function (  )
          
             return string.format( "new module -- %s, %s, %d, %d", self.txt, workTypeInfo:getFullName( Ast.defaultTypeNameCtrl, parentScope, false ), workTypeInfo:get_typeId(), parentScope:get_scopeId())
          end )
@@ -1977,7 +2007,7 @@ function _TypeInfoNormal:createTypeInfo( param )
       else
        
          if self.kind == Ast.TypeInfoKind.Class or self.kind == Ast.TypeInfoKind.IF then
-            Log.log( Log.Level.Info, __func__, 1318, function (  )
+            Log.log( Log.Level.Info, __func__, 1342, function (  )
             
                return string.format( "new type -- %d, %s -- %s, %d", self.parentId, self.txt, _lune.nilacc( parentScope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, parentScope, false ) or "nil", _lune.nilacc( parentScope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ) or -1)
             end )
@@ -3995,7 +4025,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = '@lune.@base.@TransUnit.TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2599, function (  )
+   Log.log( Log.Level.Info, __func__, 2623, function (  )
    
       return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), modulePath)
    end )
@@ -4012,7 +4042,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2611, function (  )
+               Log.log( Log.Level.Info, __func__, 2635, function (  )
                
                   return string.format( "%s already", modulePath)
                end )
@@ -4045,7 +4075,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2631, function (  )
+   Log.log( Log.Level.Info, __func__, 2655, function (  )
    
       return string.format( "%s processing", modulePath)
    end )
@@ -4320,7 +4350,7 @@ function TransUnit:processImport( modulePath )
             
          elseif _switchExp == Ast.TypeInfoKind.Module then
             self:pushModule( true, classTypeInfo:getTxt(  ), Ast.TypeInfo.isMut( classTypeInfo ) )
-            Log.log( Log.Level.Info, __func__, 2885, function (  )
+            Log.log( Log.Level.Info, __func__, 2909, function (  )
             
                return string.format( "push module -- %s, %s, %d, %d, %d", classTypeInfo:getTxt(  ), _lune.nilacc( self.scope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, self.scope, false ) or "nil", _lune.nilacc( self.scope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ) or -1, classTypeInfo:get_typeId(), self.scope:get_parent():get_scopeId())
             end )
@@ -4396,7 +4426,7 @@ function TransUnit:processImport( modulePath )
    
    self.importModuleInfo:remove(  )
    
-   Log.log( Log.Level.Info, __func__, 2970, function (  )
+   Log.log( Log.Level.Info, __func__, 2994, function (  )
    
       return string.format( "%s complete", modulePath)
    end )
@@ -4690,13 +4720,14 @@ function TransUnit:analyzeMatch( firstToken )
    if  nil == algeTypeInfo then
       local _algeTypeInfo = algeTypeInfo
    
-      self:error( "match must have alge value" )
+      self:error( string.format( "match must have alge value -- %s", exp:get_expType():getTxt(  )) )
    end
    
    
    self:checkNextToken( "{" )
    
    local caseList = {}
+   local algeValNameSet = {}
    
    local nextToken = self:getToken(  )
    local firstFlag = true
@@ -4712,6 +4743,12 @@ function TransUnit:analyzeMatch( firstToken )
       
          self:error( string.format( "not found val -- %s", valNameToken.txt) )
       end
+      
+      if _lune._Set_has(algeValNameSet, valNameToken.txt ) then
+         self:addErrMess( valNameToken.pos, string.format( "multiple val -- %s", valNameToken.txt) )
+      end
+      
+      algeValNameSet[valNameToken.txt]= true
       
       local valParamNameList = {}
       nextToken = self:getToken(  )
@@ -4745,7 +4782,9 @@ function TransUnit:analyzeMatch( firstToken )
          self:addErrMess( valNameToken.pos, string.format( "unmatch param -- %d != %d", #valParamNameList, #valInfo:get_typeList()) )
       end
       
-      local block = self:analyzeBlock( Nodes.BlockKind.Match, firstFlag and TentativeMode.Start or TentativeMode.Merge, blockScope )
+      local mode = firstFlag and TentativeMode.Start or TentativeMode.Merge
+      
+      local block = self:analyzeBlock( Nodes.BlockKind.Match, mode, blockScope )
       if firstFlag then
          firstFlag = false
       end
@@ -4759,12 +4798,16 @@ function TransUnit:analyzeMatch( firstToken )
    
    local defaultBlock = nil
    if nextToken.txt == "default" then
+      if _lune._Set_len(algeValNameSet ) == algeTypeInfo:get_valInfoNum() then
+         self:addWarnMess( nextToken.pos, "defalut is not reach" )
+      end
+      
       defaultBlock = self:analyzeBlock( Nodes.BlockKind.Block, firstFlag and TentativeMode.Simple or TentativeMode.Finish )
       nextToken = self:getToken(  )
    else
     
       if not firstFlag then
-         self:finishTentativeSymbol( false )
+         self:finishTentativeSymbol( _lune._Set_len(algeValNameSet ) == algeTypeInfo:get_valInfoNum() )
       end
       
    end
@@ -5788,7 +5831,11 @@ function TransUnit:analyzeDeclMacro( accessMode, firstToken )
    
    self.scope = backScope
    
-   self.scope:addMacro( nameToken.pos, node:get_expType(), accessMode )
+   local macroSym, existSym = self.scope:addMacro( nameToken.pos, node:get_expType(), accessMode )
+   if existSym ~= nil then
+      self:addErrMess( nameToken.pos, string.format( "multiple define symbol -- %s", nameToken.txt) )
+   end
+   
    
    return node
 end
@@ -6202,6 +6249,10 @@ function TransUnit:analyzeDeclAlge( accessMode, firstToken )
             
             
             local typeNode = self:analyzeRefType( Ast.AccessMode.Pub, false, Ast.isPubToExternal( accessMode ) )
+            if self.protoClassMap[typeNode:get_expType()] then
+               self:addErrMess( typeNode:get_pos(), string.format( "can't use the prototype class -- %s", typeNode:get_expType():getTxt(  )) )
+            end
+            
             table.insert( typeInfoList, typeNode:get_expType() )
             nextToken = self:getToken(  )
             if nextToken.txt ~= "," then
@@ -8579,7 +8630,7 @@ function TransUnit:analyzeListConst( token )
 
    local nextToken = self:getToken(  )
    local expList = nil
-   local itemTypeInfo = Ast.builtinTypeNone
+   local itemCommonType = _lune.newAlge( Ast.CommonType.Normal, {Ast.builtinTypeNone})
    
    if nextToken.txt ~= "]" then
       self:pushback(  )
@@ -8587,10 +8638,27 @@ function TransUnit:analyzeListConst( token )
       self:checkNextToken( "]" )
       local nodeList = (_lune.unwrap( expList) ):get_expList()
       for __index, exp in pairs( nodeList ) do
-         itemTypeInfo = Ast.TypeInfo.getCommonType( itemTypeInfo, exp:get_expType(), Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) )
+         itemCommonType = Ast.TypeInfo.getCommonTypeCombo( itemCommonType, _lune.newAlge( Ast.CommonType.Normal, {exp:get_expType()}), Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) )
       end
       
    end
+   
+   
+   local itemTypeInfo
+   
+   do
+      local _matchExp = itemCommonType
+      if _matchExp[1] == Ast.CommonType.Normal[1] then
+         local info = _matchExp[2][1]
+      
+         itemTypeInfo = info
+      elseif _matchExp[1] == Ast.CommonType.Combine[1] then
+         local info = _matchExp[2][1]
+      
+         itemTypeInfo = info:get_typeInfo()
+      end
+   end
+   
    
    if itemTypeInfo:get_kind() == Ast.TypeInfoKind.DDD then
       if #itemTypeInfo:get_itemTypeInfoList() > 0 then
@@ -8622,7 +8690,7 @@ function TransUnit:analyzeSetConst( token )
    
    local nextToken = self:getToken(  )
    local expList = nil
-   local itemTypeInfo = Ast.builtinTypeNone
+   local itemCommonType = _lune.newAlge( Ast.CommonType.Normal, {Ast.builtinTypeNone})
    if nextToken.txt ~= ")" then
       self:pushback(  )
       expList = self:analyzeExpList( false, false )
@@ -8634,12 +8702,29 @@ function TransUnit:analyzeSetConst( token )
             self:addErrMess( exp:get_pos(), string.format( "'Set' object can't store nilable. -- %s", expType:getTxt(  )) )
          else
           
-            itemTypeInfo = Ast.TypeInfo.getCommonType( itemTypeInfo, exp:get_expType(), Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) )
+            itemCommonType = Ast.TypeInfo.getCommonTypeCombo( itemCommonType, _lune.newAlge( Ast.CommonType.Normal, {exp:get_expType()}), Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) )
          end
          
       end
       
    end
+   
+   
+   local itemTypeInfo
+   
+   do
+      local _matchExp = itemCommonType
+      if _matchExp[1] == Ast.CommonType.Normal[1] then
+         local info = _matchExp[2][1]
+      
+         itemTypeInfo = info
+      elseif _matchExp[1] == Ast.CommonType.Combine[1] then
+         local info = _matchExp[2][1]
+      
+         itemTypeInfo = info:get_typeInfo()
+      end
+   end
+   
    
    local typeInfoList = {Ast.builtinTypeNone}
    typeInfoList = {Ast.NormalTypeInfo.createSet( Ast.AccessMode.Local, self:getCurrentClass(  ), {itemTypeInfo}, Ast.MutMode.Mut )}
@@ -9886,6 +9971,7 @@ function TransUnit:analyzeAccessClassField( classTypeInfo, mode, token )
       if self:inAnalyzingState( AnalyzingState.InitBlock ) or self:inAnalyzingState( AnalyzingState.ClassMethod ) then
          local errorMess = nil
          if self.protoFuncMap[symbolInfo:get_typeInfo()] then
+            
             errorMess = string.format( "It can't call prototype function from static -- %s", symbolInfo:get_name())
          end
          

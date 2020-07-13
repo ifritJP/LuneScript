@@ -5,7 +5,7 @@
       print( val, val2 ); // error
       val2 = val; // error
       print( val, val2 ); // error
-   }
+   } // warning
    print( val ); // error
 }
 class Test {
@@ -45,7 +45,7 @@ class Test {
    let val;
    fn func() {
       val = 1;
-   }
+   } // warning
    func();
    print( val + 1 ); // error
 }
@@ -90,7 +90,7 @@ class Test {
          case 0 {
             val = 1;
          }
-      }
+      } // warning
       print( val + 1 ); // error
    }
 }
@@ -121,7 +121,7 @@ class Test {
       let mut val;
       for count = 1, 10 {
          val = 1;
-      }
+      } // warning
       print( val + 1 ); // error
    }
 }
@@ -130,7 +130,7 @@ class Test {
       let mut val;
       while op {
          val = 1;
-      }
+      } // warning
       print( val + 1 ); // error
    }
 }

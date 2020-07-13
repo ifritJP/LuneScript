@@ -262,8 +262,8 @@ pub fn MacroCtrl.evalMacroOp(
             }
          }
          else {
-            let errmess = "not support node -- %s:%s"
-                ( Nodes.getNodeKindName( argNode.$kind ), mess );
+            let errmess = "not support node at arg(%d) -- %s:%s"
+                ( index, Nodes.getNodeKindName( argNode.$kind ), mess );
             return nil, errmess;
          }
       }

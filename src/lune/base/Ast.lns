@@ -186,13 +186,21 @@ pub enum TypeInfoKind {
    /** 省略 ## */
    Abbr,
    Set,
+   /** generics の型パラメータ */
    Alternate,
    Box,
    CanEvalCtrl,
    Etc,
    Form,
    FormFunc,
+   /** Lua などの外部モジュール */
    Ext,
+   /**
+   * リストなどの型を複合する場合の型。共通ののインタフェースを持つ。
+   * この型は export 対象外。
+   * getCommonType() のためだけで使用。他の処理で使用したときは動作を保証しない。
+   */ 
+   CombineIF,
 }
 
 pub fn isBuiltin( typeId: int ) : bool {
@@ -1530,7 +1538,7 @@ pub fn Scope.add(
    mutMode:MutMode, hasValueFlag:bool ) mut : &SymbolInfo!, &SymbolInfo!
 {
    switch kind {
-      case .Typ, .Fun {
+      case .Typ, .Fun, .Mac {
          let existSymbol;
          switch typeInfo.$kind {
             case .Enum {
@@ -1668,10 +1676,11 @@ pub fn Scope.addForm(
 }
 
 pub fn Scope.addMacro(
-   pos:&Parser.Position!, typeInfo: &TypeInfo, accessMode:AccessMode ) mut
+   pos:&Parser.Position!, typeInfo: &TypeInfo, accessMode:AccessMode ) mut :
+   &SymbolInfo!, &SymbolInfo!
 {
-   self.add( SymbolKind.Mac, false, false, typeInfo.$rawTxt, pos,
-             typeInfo, accessMode, true, .IMut, true );
+   return self.add( SymbolKind.Mac, false, false, typeInfo.$rawTxt, pos,
+                    typeInfo, accessMode, true, .IMut, true )**;
 }
 
 
@@ -3062,6 +3071,7 @@ pub class AlgeTypeInfo extend TypeInfo {
    pri let nilableTypeInfo: &TypeInfo { pub };
 
    pri let mut valInfoMap:Map<str,&AlgeValInfo> {pub};
+   pri let mut valInfoNum:int {pub};
 
 
    pub fn __init( scope: Scope, externalFlag: bool, accessMode: AccessMode,
@@ -3075,6 +3085,7 @@ pub class AlgeTypeInfo extend TypeInfo {
       self.parentInfo = unwrap parentInfo default headTypeInfo;
       self.typeId = typeId;
       self.valInfoMap = {};
+      self.valInfoNum = 0;
 
       if! parentInfo {
          _exp.addChildren( self );
@@ -3090,6 +3101,7 @@ pub class AlgeTypeInfo extend TypeInfo {
 
    pub fn addValInfo( valInfo:&AlgeValInfo ) mut {
       self.valInfoMap[ valInfo.$name ] = valInfo;
+      self.valInfoNum = self.valInfoNum + 1;
    }
 
    pub fn getValInfo( name:str ) : &AlgeValInfo! {
@@ -4171,16 +4183,159 @@ pub let builtinTypeExp:TypeInfo =
    NormalTypeInfo.createBuiltin( "Exp", "__exp" , .Prim## );
 
 
+pub class CombineType {
+   let mut ifSet:Set<&TypeInfo>;
+   let mut nilable:bool;
+   let mut mutMode:MutMode;
+
+   pub fn __init( typeInfo:&TypeInfo ) {
+      self.ifSet = (@);
+      foreach iftype in typeInfo.$interfaceList {
+         self.ifSet.add( iftype );
+      }
+      self.nilable = typeInfo.$nilable;
+      self.mutMode = typeInfo.$mutMode;
+   }
+
+   pub fn isInheritFrom( other:&TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>! ) : bool
+   {
+      foreach ifType in self.ifSet {
+         if ifType.isInheritFrom( other, alt2type ) {
+            return true;
+         }
+      }
+      return false;
+   }
+   
+   pri fn andIfSet( ifSet:&Set<&TypeInfo>, alt2type:Map<&TypeInfo,&TypeInfo> ) mut {
+      let mut workSet:Set<&TypeInfo> = (@);
+      foreach other in ifSet {
+         if self.isInheritFrom( other, alt2type ) {
+            workSet.add( other );
+         }
+         else {
+            foreach ifType in self.ifSet {
+               if other.isInheritFrom( ifType, alt2type ) {
+                  workSet.add( ifType );
+               }
+            }
+         }
+      }
+      self.ifSet = workSet;
+   }
+
+   pub fn createStem(): &TypeInfo {
+      let retType;
+      if self.nilable {
+         retType = builtinTypeStem_;
+      }
+      else {
+         retType = builtinTypeStem;
+      }
+      if isMutable( self.mutMode ) {
+         return retType;
+      }
+      return NormalTypeInfo.createModifier( retType, self.mutMode );
+   }
+
+   pub fn get_typeInfo() : &TypeInfo {
+      if self.ifSet.len() ~= 1 {
+         return self.createStem();
+      }
+      foreach ifType in self.ifSet {
+         let mut work = ifType;
+         if self.nilable {
+            work = work.$nilableTypeInfo;
+         }
+         if isMutable( self.mutMode ) {
+            return work;
+         }
+         return NormalTypeInfo.createModifier( work, self.mutMode );
+      }
+      error( "illegal" );
+   }
+}
+
+
+pub alge CommonType {
+   Normal( &TypeInfo ),
+   Combine( CombineType ),
+}
+
+
+   /**
+other と共通する IF の集合をセットする。
+
+@return other と共通の IF に調整した CombineIFTypeInfo を返す。
+共通の IF がない場合、 builtinTypeStem を返す。 
+   */
+pub fn CombineType.andType(
+   other:CommonType, alt2type:Map<&TypeInfo,&TypeInfo> ) mut : CommonType
+{
+   match other {
+      case .Combine( comboInfo ) {
+         self.andIfSet( comboInfo.ifSet, alt2type );
+         if not isMutable( comboInfo.mutMode ) {
+            self.mutMode = comboInfo.mutMode;
+         }
+         return CommonType.Combine( self );
+      }
+      case .Normal( typeInfo ) {
+         if not isMutable( typeInfo.$mutMode ) {
+            self.mutMode = typeInfo.$mutMode;
+         }
+         let mut ifSet:Set<&TypeInfo> = (@);
+         if typeInfo.$kind == .IF {
+            ifSet.add( typeInfo );
+         }
+         else {
+            foreach iftype in typeInfo.$interfaceList {
+               ifSet.add( iftype );
+            }
+         }
+         self.andIfSet( ifSet, alt2type );
+
+         if self.ifSet.len() ~= 0 {
+            return CommonType.Combine( self );
+         }
+         return CommonType.Normal( self.createStem() );
+      }
+   }
+   error( "not support" );
+}
+
+
 /**
 typeInfo と other 両方の型を受けられる共通の型を返す。
 
 typeInfo と other に互換性がない場合は stem あるいは stem! の型を返す。
 */
-pub static fn TypeInfo.getCommonType(
-   typeInfo:&TypeInfo, other:&TypeInfo,
-   alt2type:Map<&TypeInfo,&TypeInfo> ): &TypeInfo
+pub static fn TypeInfo.getCommonTypeCombo(
+   commonType:CommonType, otherType:CommonType,
+   alt2type:Map<&TypeInfo,&TypeInfo> ): CommonType
 {
-   fn getType( mut workType:&TypeInfo ): &TypeInfo {
+   let mut typeInfo = builtinTypeNone;
+   
+   match commonType {
+      case .Combine( comb ) {
+         return comb.andType( otherType, alt2type );
+      }
+      case .Normal( workTypeInfo ) {
+         typeInfo = workTypeInfo;
+      }
+   }
+   
+   let mut other = builtinTypeNone;
+   match otherType {
+      case .Combine( comb ) {
+         return comb.andType( commonType, alt2type );
+      }
+      case .Normal( workTypeInfo ) {
+         other = workTypeInfo;
+      }
+   }
+
+   fn getType( mut workType:&TypeInfo ): CommonType {
       if typeInfo.$nilable or other.$nilable {
          workType = workType.$nilableTypeInfo;
       }
@@ -4191,24 +4346,24 @@ pub static fn TypeInfo.getCommonType(
          // 扱い難いので。。
          workType = workType.$srcTypeInfo;
       }
-      return workType;
+      return CommonType.Normal( workType );
    }
-
+   
    let type1 = typeInfo.$nonnilableType.$srcTypeInfo;
    let type2 = other.$nonnilableType.$srcTypeInfo;
 
    if type1 == builtinTypeNone {
-      return other;
+      return otherType;
    }
    if type2 == builtinTypeNone {
-      return typeInfo;
+      return commonType;
    }
    
    if type1 == builtinTypeNil {
-      return other.$nilableTypeInfo;
+      return CommonType.Normal( other.$nilableTypeInfo );
    }
    if type2 == builtinTypeNil {
-      return typeInfo.$nilableTypeInfo;
+      return CommonType.Normal( typeInfo.$nilableTypeInfo );
    }
    
    
@@ -4221,7 +4376,7 @@ pub static fn TypeInfo.getCommonType(
 
 
    let mut mutMode;
-   if TypeInfo.isMut( typeInfo ) or TypeInfo.isMut( other ) {
+   if TypeInfo.isMut( typeInfo ) and TypeInfo.isMut( other ) {
       mutMode = MutMode.Mut;
    }
    else {
@@ -4229,36 +4384,53 @@ pub static fn TypeInfo.getCommonType(
    }
    
    if type1.$kind == type2.$kind {
+
+      fn getCommon( workTypeInfo:&TypeInfo, workOther:&TypeInfo,
+                    workAlt2type:Map<&TypeInfo,&TypeInfo> ): &TypeInfo
+      {
+         match TypeInfo.getCommonTypeCombo(
+            CommonType.Normal( workTypeInfo ),
+            CommonType.Normal( workOther ), workAlt2type )
+         {
+            case .Normal( info ) {
+               return info;
+            }
+            case .Combine( combine ) {
+               return combine.$typeInfo;
+            }
+         }
+         error( "not support" );
+      }
       
       switch type1.$kind {
          case .List {
             return getType( NormalTypeInfo.createList(
                .Local, headTypeInfo,
-               [ TypeInfo.getCommonType(
+               [ getCommon(
                   type1.$itemTypeInfoList[ 1 ],
                   type2.$itemTypeInfoList[ 1 ], alt2type ) ], mutMode ) );
          }
          case .Array {
             return getType( NormalTypeInfo.createArray(
                .Local, headTypeInfo,
-               [ TypeInfo.getCommonType(
+               [ getCommon(
                   type1.$itemTypeInfoList[ 1 ],
                   type2.$itemTypeInfoList[ 1 ], alt2type ) ], mutMode ) );
          }
          case .Set {
             return getType( NormalTypeInfo.createSet(
                .Local, headTypeInfo,
-               [ TypeInfo.getCommonType(
+               [ getCommon(
                   type1.$itemTypeInfoList[ 1 ],
                   type2.$itemTypeInfoList[ 1 ], alt2type ) ], mutMode ) );
          }
          case .Map {
             return getType( NormalTypeInfo.createMap(
                .Local, headTypeInfo,
-               TypeInfo.getCommonType(
+               getCommon(
                   type1.$itemTypeInfoList[ 1 ],
                   type2.$itemTypeInfoList[ 1 ], alt2type ),
-               TypeInfo.getCommonType(
+               getCommon(
                   type1.$itemTypeInfoList[ 2 ],
                   type2.$itemTypeInfoList[ 2 ], alt2type ), mutMode ) );
          }
@@ -4269,23 +4441,38 @@ pub static fn TypeInfo.getCommonType(
 
    while work ~= headTypeInfo {
       if work.canEvalWith( type2, .SetOp, alt2type ) {
-         return work;
+         // 共通している場合はここで返す。
+         if typeInfo.$nilable or other.$nilable {
+            work = work.$nilableTypeInfo;
+         }
+         if not isMutable( mutMode ) {
+            work = NormalTypeInfo.createModifier( work, mutMode );
+         }
+         return CommonType.Normal( work );
       }
       work = work.$baseTypeInfo;
    }
 
-   if typeInfo.$nilable or other.$nilable {
-      work = builtinTypeStem_;
-   }
-   else {
-      work = builtinTypeStem;
-   }
+   // 以降は共通していない場合
+   let mut combine = new CombineType( typeInfo );
+   return combine.andType( CommonType.Normal( other ), alt2type );
+}
 
-   if not isMutable( mutMode ) {
-      return NormalTypeInfo.createModifier( work, mutMode );
+
+pub static fn TypeInfo.getCommonType(
+   typeInfo:&TypeInfo, other:&TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo> ): &TypeInfo
+{
+   match TypeInfo.getCommonTypeCombo(
+      CommonType.Normal( typeInfo ), CommonType.Normal( other ), alt2type )
+   {
+      case .Normal( info ) {
+         return info;
+      }
+      case .Combine( combine ) {
+         return combine.$typeInfo;
+      }
    }
-   
-   return work;
+   error( "illegal" );
 }
 
 
@@ -5902,8 +6089,6 @@ pub fn TypeAnalyzer.analyzeTypeItemList(
 
    return new RefTypeInfo( pos, genericRefList, typeInfo ), nil, nil;
 }
-
-
 
 
 __test case1 {

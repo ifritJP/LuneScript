@@ -620,6 +620,9 @@ TypeInfoKind.__allList[24] = TypeInfoKind.FormFunc
 TypeInfoKind.Ext = 24
 TypeInfoKind._val2NameMap[24] = 'Ext'
 TypeInfoKind.__allList[25] = TypeInfoKind.Ext
+TypeInfoKind.CombineIF = 25
+TypeInfoKind._val2NameMap[25] = 'CombineIF'
+TypeInfoKind.__allList[26] = TypeInfoKind.CombineIF
 
 
 local function isBuiltin( typeId )
@@ -2256,7 +2259,7 @@ function Scope:add( kind, canBeLeft, canBeRight, name, pos, typeInfo, accessMode
 
    do
       local _switchExp = kind
-      if _switchExp == SymbolKind.Typ or _switchExp == SymbolKind.Fun then
+      if _switchExp == SymbolKind.Typ or _switchExp == SymbolKind.Fun or _switchExp == SymbolKind.Mac then
          local existSymbol
          
          do
@@ -2372,7 +2375,7 @@ end
 
 function Scope:addMacro( pos, typeInfo, accessMode )
 
-   self:add( SymbolKind.Mac, false, false, typeInfo:get_rawTxt(), pos, typeInfo, accessMode, true, MutMode.IMut, true )
+   return self:add( SymbolKind.Mac, false, false, typeInfo:get_rawTxt(), pos, typeInfo, accessMode, true, MutMode.IMut, true )
 end
 
 
@@ -4422,6 +4425,7 @@ function AlgeTypeInfo:__init(scope, externalFlag, accessMode, txt, parentInfo, t
    self.parentInfo = _lune.unwrapDefault( parentInfo, _moduleObj.headTypeInfo)
    self.typeId = typeId
    self.valInfoMap = {}
+   self.valInfoNum = 0
    
    do
       local _exp = parentInfo
@@ -4439,6 +4443,7 @@ end
 function AlgeTypeInfo:addValInfo( valInfo )
 
    self.valInfoMap[valInfo:get_name()] = valInfo
+   self.valInfoNum = self.valInfoNum + 1
 end
 function AlgeTypeInfo:getValInfo( name )
 
@@ -4503,6 +4508,9 @@ function AlgeTypeInfo:get_nilableTypeInfo()
 end
 function AlgeTypeInfo:get_valInfoMap()
    return self.valInfoMap
+end
+function AlgeTypeInfo:get_valInfoNum()
+   return self.valInfoNum
 end
 
 
@@ -5511,8 +5519,197 @@ local builtinTypeExp = NormalTypeInfo.createBuiltin( "Exp", "__exp", TypeInfoKin
 _moduleObj.builtinTypeExp = builtinTypeExp
 
 
-function TypeInfo.getCommonType( typeInfo, other, alt2type )
+local CombineType = {}
+_moduleObj.CombineType = CombineType
+function CombineType.new( typeInfo )
+   local obj = {}
+   CombineType.setmeta( obj )
+   if obj.__init then obj:__init( typeInfo ); end
+   return obj
+end
+function CombineType:__init(typeInfo) 
+   self.ifSet = {}
+   for __index, iftype in pairs( typeInfo:get_interfaceList() ) do
+      self.ifSet[iftype]= true
+   end
+   
+   self.nilable = typeInfo:get_nilable()
+   self.mutMode = typeInfo:get_mutMode()
+end
+function CombineType:isInheritFrom( other, alt2type )
 
+   for ifType, __val in pairs( self.ifSet ) do
+      if ifType:isInheritFrom( other, alt2type ) then
+         return true
+      end
+      
+   end
+   
+   return false
+end
+function CombineType:andIfSet( ifSet, alt2type )
+
+   local workSet = {}
+   for other, __val in pairs( ifSet ) do
+      if self:isInheritFrom( other, alt2type ) then
+         workSet[other]= true
+      else
+       
+         for ifType, __val in pairs( self.ifSet ) do
+            if other:isInheritFrom( ifType, alt2type ) then
+               workSet[ifType]= true
+            end
+            
+         end
+         
+      end
+      
+   end
+   
+   self.ifSet = workSet
+end
+function CombineType:createStem(  )
+
+   local retType
+   
+   if self.nilable then
+      retType = _moduleObj.builtinTypeStem_
+   else
+    
+      retType = _moduleObj.builtinTypeStem
+   end
+   
+   if isMutable( self.mutMode ) then
+      return retType
+   end
+   
+   return NormalTypeInfo.createModifier( retType, self.mutMode )
+end
+function CombineType:get_typeInfo(  )
+
+   if _lune._Set_len(self.ifSet ) ~= 1 then
+      return self:createStem(  )
+   end
+   
+   for ifType, __val in pairs( self.ifSet ) do
+      local work = ifType
+      if self.nilable then
+         work = work:get_nilableTypeInfo()
+      end
+      
+      if isMutable( self.mutMode ) then
+         return work
+      end
+      
+      return NormalTypeInfo.createModifier( work, self.mutMode )
+   end
+   
+   error( "illegal" )
+end
+function CombineType.setmeta( obj )
+  setmetatable( obj, { __index = CombineType  } )
+end
+
+
+local CommonType = {}
+CommonType._name2Val = {}
+_moduleObj.CommonType = CommonType
+function CommonType:_getTxt( val )
+   local name = val[ 1 ]
+   if name then
+      return string.format( "CommonType.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+
+function CommonType._from( val )
+   return _lune._AlgeFrom( CommonType, val )
+end
+
+CommonType.Combine = { "Combine", {{ func=CombineType._fromMap, nilable=false, child={} }}}
+CommonType._name2Val["Combine"] = CommonType.Combine
+CommonType.Normal = { "Normal", {{ func=TypeInfo._fromMap, nilable=false, child={} }}}
+CommonType._name2Val["Normal"] = CommonType.Normal
+
+
+function CombineType:andType( other, alt2type )
+
+   do
+      local _matchExp = other
+      if _matchExp[1] == CommonType.Combine[1] then
+         local comboInfo = _matchExp[2][1]
+      
+         self:andIfSet( comboInfo.ifSet, alt2type )
+         if not isMutable( comboInfo.mutMode ) then
+            self.mutMode = comboInfo.mutMode
+         end
+         
+         return _lune.newAlge( CommonType.Combine, {self})
+      elseif _matchExp[1] == CommonType.Normal[1] then
+         local typeInfo = _matchExp[2][1]
+      
+         if not isMutable( typeInfo:get_mutMode() ) then
+            self.mutMode = typeInfo:get_mutMode()
+         end
+         
+         local ifSet = {}
+         if typeInfo:get_kind() == TypeInfoKind.IF then
+            ifSet[typeInfo]= true
+         else
+          
+            for __index, iftype in pairs( typeInfo:get_interfaceList() ) do
+               ifSet[iftype]= true
+            end
+            
+         end
+         
+         self:andIfSet( ifSet, alt2type )
+         
+         if _lune._Set_len(self.ifSet ) ~= 0 then
+            return _lune.newAlge( CommonType.Combine, {self})
+         end
+         
+         return _lune.newAlge( CommonType.Normal, {self:createStem(  )})
+      end
+   end
+   
+   error( "not support" )
+end
+
+
+function TypeInfo.getCommonTypeCombo( commonType, otherType, alt2type )
+
+   local typeInfo = _moduleObj.builtinTypeNone
+   
+   do
+      local _matchExp = commonType
+      if _matchExp[1] == CommonType.Combine[1] then
+         local comb = _matchExp[2][1]
+      
+         return comb:andType( otherType, alt2type )
+      elseif _matchExp[1] == CommonType.Normal[1] then
+         local workTypeInfo = _matchExp[2][1]
+      
+         typeInfo = workTypeInfo
+      end
+   end
+   
+   
+   local other = _moduleObj.builtinTypeNone
+   do
+      local _matchExp = otherType
+      if _matchExp[1] == CommonType.Combine[1] then
+         local comb = _matchExp[2][1]
+      
+         return comb:andType( commonType, alt2type )
+      elseif _matchExp[1] == CommonType.Normal[1] then
+         local workTypeInfo = _matchExp[2][1]
+      
+         other = workTypeInfo
+      end
+   end
+   
+   
    local function getType( workType )
    
       if typeInfo:get_nilable() or other:get_nilable() then
@@ -5524,27 +5721,27 @@ function TypeInfo.getCommonType( typeInfo, other, alt2type )
          workType = workType:get_srcTypeInfo()
       end
       
-      return workType
+      return _lune.newAlge( CommonType.Normal, {workType})
    end
    
    local type1 = typeInfo:get_nonnilableType():get_srcTypeInfo()
    local type2 = other:get_nonnilableType():get_srcTypeInfo()
    
    if type1 == _moduleObj.builtinTypeNone then
-      return other
+      return otherType
    end
    
    if type2 == _moduleObj.builtinTypeNone then
-      return typeInfo
+      return commonType
    end
    
    
    if type1 == _moduleObj.builtinTypeNil then
-      return other:get_nilableTypeInfo()
+      return _lune.newAlge( CommonType.Normal, {other:get_nilableTypeInfo()})
    end
    
    if type2 == _moduleObj.builtinTypeNil then
-      return typeInfo:get_nilableTypeInfo()
+      return _lune.newAlge( CommonType.Normal, {typeInfo:get_nilableTypeInfo()})
    end
    
    
@@ -5559,7 +5756,7 @@ function TypeInfo.getCommonType( typeInfo, other, alt2type )
    
    local mutMode
    
-   if TypeInfo.isMut( typeInfo ) or TypeInfo.isMut( other ) then
+   if TypeInfo.isMut( typeInfo ) and TypeInfo.isMut( other ) then
       mutMode = MutMode.Mut
    else
     
@@ -5569,16 +5766,34 @@ function TypeInfo.getCommonType( typeInfo, other, alt2type )
    
    if type1:get_kind() == type2:get_kind() then
       
+      local function getCommon( workTypeInfo, workOther, workAlt2type )
+      
+         do
+            local _matchExp = TypeInfo.getCommonTypeCombo( _lune.newAlge( CommonType.Normal, {workTypeInfo}), _lune.newAlge( CommonType.Normal, {workOther}), workAlt2type )
+            if _matchExp[1] == CommonType.Normal[1] then
+               local info = _matchExp[2][1]
+            
+               return info
+            elseif _matchExp[1] == CommonType.Combine[1] then
+               local combine = _matchExp[2][1]
+            
+               return combine:get_typeInfo()
+            end
+         end
+         
+         error( "not support" )
+      end
+      
       do
          local _switchExp = type1:get_kind()
          if _switchExp == TypeInfoKind.List then
-            return getType( NormalTypeInfo.createList( AccessMode.Local, _moduleObj.headTypeInfo, {TypeInfo.getCommonType( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
+            return getType( NormalTypeInfo.createList( AccessMode.Local, _moduleObj.headTypeInfo, {getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
          elseif _switchExp == TypeInfoKind.Array then
-            return getType( NormalTypeInfo.createArray( AccessMode.Local, _moduleObj.headTypeInfo, {TypeInfo.getCommonType( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
+            return getType( NormalTypeInfo.createArray( AccessMode.Local, _moduleObj.headTypeInfo, {getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
          elseif _switchExp == TypeInfoKind.Set then
-            return getType( NormalTypeInfo.createSet( AccessMode.Local, _moduleObj.headTypeInfo, {TypeInfo.getCommonType( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
+            return getType( NormalTypeInfo.createSet( AccessMode.Local, _moduleObj.headTypeInfo, {getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
          elseif _switchExp == TypeInfoKind.Map then
-            return getType( NormalTypeInfo.createMap( AccessMode.Local, _moduleObj.headTypeInfo, TypeInfo.getCommonType( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type ), TypeInfo.getCommonType( type1:get_itemTypeInfoList()[2], type2:get_itemTypeInfoList()[2], alt2type ), mutMode ) )
+            return getType( NormalTypeInfo.createMap( AccessMode.Local, _moduleObj.headTypeInfo, getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type ), getCommon( type1:get_itemTypeInfoList()[2], type2:get_itemTypeInfoList()[2], alt2type ), mutMode ) )
          end
       end
       
@@ -5589,27 +5804,43 @@ function TypeInfo.getCommonType( typeInfo, other, alt2type )
    
    while work ~= _moduleObj.headTypeInfo do
       if work:canEvalWith( type2, CanEvalType.SetOp, alt2type ) then
-         return work
+         
+         if typeInfo:get_nilable() or other:get_nilable() then
+            work = work:get_nilableTypeInfo()
+         end
+         
+         if not isMutable( mutMode ) then
+            work = NormalTypeInfo.createModifier( work, mutMode )
+         end
+         
+         return _lune.newAlge( CommonType.Normal, {work})
       end
       
       work = work:get_baseTypeInfo()
    end
    
    
-   if typeInfo:get_nilable() or other:get_nilable() then
-      work = _moduleObj.builtinTypeStem_
-   else
-    
-      work = _moduleObj.builtinTypeStem
+   local combine = CombineType.new(typeInfo)
+   return combine:andType( _lune.newAlge( CommonType.Normal, {other}), alt2type )
+end
+
+
+function TypeInfo.getCommonType( typeInfo, other, alt2type )
+
+   do
+      local _matchExp = TypeInfo.getCommonTypeCombo( _lune.newAlge( CommonType.Normal, {typeInfo}), _lune.newAlge( CommonType.Normal, {other}), alt2type )
+      if _matchExp[1] == CommonType.Normal[1] then
+         local info = _matchExp[2][1]
+      
+         return info
+      elseif _matchExp[1] == CommonType.Combine[1] then
+         local combine = _matchExp[2][1]
+      
+         return combine:get_typeInfo()
+      end
    end
    
-   
-   if not isMutable( mutMode ) then
-      return NormalTypeInfo.createModifier( work, mutMode )
-   end
-   
-   
-   return work
+   error( "illegal" )
 end
 
 

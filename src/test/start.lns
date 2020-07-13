@@ -612,7 +612,7 @@ class SubIF extend SUB2.IF {
 }
 
 Macro._section();
-macro _test() {
+macro _test3() {
    {
       let mut fileObj = unwrap io.open( "test/data.lua" );
       let txt = unwrap fileObj.read( "*a" );
@@ -627,18 +627,18 @@ macro _test() {
       ,,val3
    }
 }
-_test();
+_test3();
 print( MacroTest.A234, MacroTest.B234 );
 
 
-macro _test( txt:str ) {
+macro _test4( txt:str ) {
    {
       let val = _lnsLoad( "aa", txt ).val;
    }
    print( ,,val, type( ,,val ) );
 }
 
-_test( ```
+_test4( ```
 pub let val = 100;
 ``` );
 
@@ -660,14 +660,14 @@ pub let val = 100;
 }
 
 {
-   macro _test() {
+   macro _test5() {
       {  
          let mut val = `{};
          val = `{ print( "test" ); };
       }  
       ,,val;
    }  
-   _test();
+   _test5();
 }
 
 {
@@ -1092,15 +1092,15 @@ class MapTest<T:(Mapping)> extend (Mapping) {
    func( "abc" );
  }
 
-macro _Test( name:sym ) {
+macro _Test6( name:sym ) {
    pub fn ,,name () {
       print( __line__, __func__ );
    }
 }
 
 class Test {
-   _Test( func1 );
-   _Test( func2 );
+   _Test6( func1 );
+   _Test6( func2 );
 }  
 {
    let test = new Test();
@@ -1379,13 +1379,13 @@ print( '\\""\"\'\\.\\' );
       print( "hoge", __line__, ,,val );
    }
 
-   macro _test2() {
+   macro _test_2() {
       _test1( work );
    }
 
 
    let work = 1;
-   _test2();
+   _test_2();
    _test1( work);
 }
 {
@@ -1394,21 +1394,21 @@ print( '\\""\"\'\\.\\' );
       print( "hoge", __line__, ,,val );
    }
 
-   macro _test2() {
+   macro _test1_2() {
       _test1( 1 );
    }
 
-   _test2();
+   _test1_2();
 }
 {
    Macro._section();
-   macro _test( msg:str ) {
+   macro _test1( msg:str ) {
       print( "hoge:" .. ,,msg );
    }
 
    macro _hoge( msg2:str ) {
-      _test( "foo:" .. ,,msg2 );
-      _test( "foo:" .. ,,msg2 );
+      _test1( "foo:" .. ,,msg2 );
+      _test1( "foo:" .. ,,msg2 );
    }
 
    _hoge( "abc" );
@@ -1416,11 +1416,11 @@ print( '\\""\"\'\\.\\' );
 }
 {
    Macro._section();
-   macro _test( msg:str ) {
+   macro _test1( msg:str ) {
       print( "foo: %s" ( ,,msg ) );
    }
    macro _hoge( msg2:str ) {
-      _test( "hoge: %s" (,,msg2 ) );
+      _test1( "hoge: %s" (,,msg2 ) );
    }
 
    _hoge( "abc" );
@@ -1517,4 +1517,23 @@ print( '\\""\"\'\\.\\' );
    _test1();
    _test0( "hoge", 1 );
    _test1();
+}
+{
+   interface Imp {
+      pub fn func();
+   }
+   class Super2 extend (Imp) {
+      pub fn func() {
+         print( __func__ );
+      }
+   }
+   class Sub extend (Imp) {
+      pub fn func() {
+         print( __func__ );
+      }
+   }
+   let list = [ new Super2(), new Sub() ];
+   foreach item in list {
+      item.func();
+   }
 }
