@@ -97,11 +97,11 @@ pub enum Conv {
 pub class Option {
    pub let mut mode:ModeKind;
    /** 解析対象のモジール名。 comp モードの時に使用。 */
-   pub let analyzeModule:str!;
+   pub let mut analyzeModule:str!;
    /** 解析位置。comp モードの時に使用。 */
-   pub let analyzePos: Parser.Position!;
+   pub let mut analyzePos: Parser.Position!;
    /** 出力ディレクトリ。 save, SAVE モードの時に使用*/
-   pub let outputDir:str!;
+   pub let mut outputDir:str!;
    /** 処理対象のスクリプトファイルパス */
    pub let mut scriptPath: str;
    /** プロファイルする場合 true */
@@ -198,7 +198,7 @@ SOFTWARE.
    return nil;
 }
 
-pub fn analyze( argList: str[] ) : Option {
+pub fn analyze( argList: &List<str> ) : Option {
 
    fn printUsage(code:int) {
       print( ```
@@ -419,8 +419,16 @@ usage:
       }
    }
 
-   if useStdInFlag and option.analyzeModule {
-      Parser.StreamParser.setStdinStream( unwrap option.analyzeModule );
+   if useStdInFlag {
+      if option.analyzeModule {
+         Parser.StreamParser.setStdinStream( unwrap option.analyzeModule );
+      }
+      else {
+         if option.scriptPath ~= "" {
+            Parser.StreamParser.setStdinStream(
+               Util.scriptPath2Module( option.scriptPath ) );
+         }
+      }
    }
 
    return option;

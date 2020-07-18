@@ -7,7 +7,21 @@
 #+TITLE: TODO
 
 * バグ
+- [ ] imuttable のメンバに代入できてしまう。
+class Hoge {
+   pub let val:int!;
+   pub fn __init() {
+   }
+}
 
+let mut hoge = new Hoge();
+
+while true {
+   hoge.val = 1; // ここで代入できてしまう。
+   break;
+}
+
+  
 - [ ] 次の flow 解析が NG。
 fn func(val:int) {
    let test;

@@ -200,7 +200,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 3118
+   return 3129
 end
 
 
@@ -702,8 +702,17 @@ usage:
    end
    
    
-   if useStdInFlag and option.analyzeModule then
-      Parser.StreamParser.setStdinStream( _lune.unwrap( option.analyzeModule) )
+   if useStdInFlag then
+      if option.analyzeModule then
+         Parser.StreamParser.setStdinStream( _lune.unwrap( option.analyzeModule) )
+      else
+       
+         if option.scriptPath ~= "" then
+            Parser.StreamParser.setStdinStream( Util.scriptPath2Module( option.scriptPath ) )
+         end
+         
+      end
+      
    end
    
    

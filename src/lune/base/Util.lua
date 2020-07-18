@@ -419,6 +419,17 @@ local function getReadyCode( lnsPath, luaPath )
 end
 _moduleObj.getReadyCode = getReadyCode
 
+local function scriptPath2Module( path )
+
+   if path:find( "^/" ) then
+      err( "script must be relative-path -- " .. path )
+   end
+   
+   local mod = string.gsub( path, "/", "." )
+   return (string.gsub( mod, "%.lns$", "" ) )
+end
+_moduleObj.scriptPath2Module = scriptPath2Module
+
 
 
 return _moduleObj

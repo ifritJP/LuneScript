@@ -229,6 +229,14 @@ pub fn getReadyCode( lnsPath:str, luaPath:str ): bool {
    return luaTime >= lnsTime;
 }
 
+pub fn scriptPath2Module( path:str ):str {
+   if path.find( "^/" ## ) {
+      err( "script must be relative-path -- " .. path );
+   }
+   let mod = string.gsub( path, "/", "." );
+   return ( string.gsub( mod, "%.lns$", "" ) );
+}
+
 
 __test case1 {
    import lune.base.Testing;
