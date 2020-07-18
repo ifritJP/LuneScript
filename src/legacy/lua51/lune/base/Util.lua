@@ -217,7 +217,7 @@ end
 function OrderedSet:clone(  )
 
    local obj = OrderedSet.new()
-   for __index, val in pairs( self.list ) do
+   for __index, val in ipairs( self.list ) do
       obj.set[val]= true
       table.insert( obj.list, val )
    end
@@ -418,6 +418,17 @@ local function getReadyCode( lnsPath, luaPath )
    return luaTime >= lnsTime
 end
 _moduleObj.getReadyCode = getReadyCode
+
+local function scriptPath2Module( path )
+
+   if path:find( "^/" ) then
+      err( "script must be relative-path -- " .. path )
+   end
+   
+   local mod = string.gsub( path, "/", "." )
+   return (string.gsub( mod, "%.lns$", "" ) )
+end
+_moduleObj.scriptPath2Module = scriptPath2Module
 
 
 

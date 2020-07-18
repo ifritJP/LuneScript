@@ -549,7 +549,7 @@ function Node:addComment( commentList )
          end
       end
       
-      for __index, comment in pairs( commentList ) do
+      for __index, comment in ipairs( commentList ) do
          table.insert( workList, comment )
       end
       
@@ -766,7 +766,7 @@ function NodeManager:delNode( node )
    end
    
    local findIndex = -1
-   for index, item in pairs( list ) do
+   for index, item in ipairs( list ) do
       if item == node then
          findIndex = index
          break
@@ -1327,7 +1327,7 @@ function RootNode:visit( visitor, depth )
 
    do
       local list = self.children
-      for __index, child in pairs( list ) do
+      for __index, child in ipairs( list ) do
          do
             local _switchExp = visitor( child, self, 'children', depth )
             if _switchExp == NodeVisitMode.Child then
@@ -1672,7 +1672,7 @@ function BlockNode:visit( visitor, depth )
 
    do
       local list = self.stmtList
-      for __index, child in pairs( list ) do
+      for __index, child in ipairs( list ) do
          do
             local _switchExp = visitor( child, self, 'stmtList', depth )
             if _switchExp == NodeVisitMode.Child then
@@ -1716,7 +1716,7 @@ function BlockNode:getBreakKind( checkMode )
 
    if checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return then
       local kind = BreakKind.None
-      for __index, stmt in pairs( self.stmtList ) do
+      for __index, stmt in ipairs( self.stmtList ) do
          local work = stmt:getBreakKind( checkMode )
          
          if checkMode == CheckBreakMode.IgnoreFlowReturn then
@@ -1906,7 +1906,7 @@ function IfNode:getBreakKind( checkMode )
 
    local hasElseFlag = false
    local kind = BreakKind.None
-   for __index, stmtInfo in pairs( self.stmtList ) do
+   for __index, stmtInfo in ipairs( self.stmtList ) do
       local work = stmtInfo:get_block():getBreakKind( checkMode )
       
       if checkMode == CheckBreakMode.IgnoreFlowReturn then
@@ -2039,7 +2039,7 @@ function ExpListNode:visit( visitor, depth )
 
    do
       local list = self.expList
-      for __index, child in pairs( list ) do
+      for __index, child in ipairs( list ) do
          do
             local _switchExp = visitor( child, self, 'expList', depth )
             if _switchExp == NodeVisitMode.Child then
@@ -2078,7 +2078,7 @@ end
 
 function ExpListNode:canBeLeft(  )
 
-   for __index, expNode in pairs( self:get_expList() ) do
+   for __index, expNode in ipairs( self:get_expList() ) do
       if not expNode:canBeLeft(  ) then
          return false
       end
@@ -2090,7 +2090,7 @@ end
 
 function ExpListNode:canBeRight(  )
 
-   for __index, expNode in pairs( self:get_expList() ) do
+   for __index, expNode in ipairs( self:get_expList() ) do
       if not expNode:canBeRight(  ) then
          return false
       end
@@ -2102,7 +2102,7 @@ end
 
 function ExpListNode:setLValue(  )
 
-   for __index, expNode in pairs( self:get_expList() ) do
+   for __index, expNode in ipairs( self:get_expList() ) do
       expNode.isLValue = true
    end
    
@@ -2260,7 +2260,7 @@ end
 function SwitchNode:getBreakKind( checkMode )
 
    local kind = BreakKind.None
-   for __index, caseInfo in pairs( self.caseList ) do
+   for __index, caseInfo in ipairs( self.caseList ) do
       local work = caseInfo:get_block():getBreakKind( checkMode )
       
       if checkMode == CheckBreakMode.IgnoreFlowReturn then
@@ -5733,7 +5733,7 @@ function ExpMacroExpNode:visit( visitor, depth )
 
    do
       local list = self.stmtList
-      for __index, child in pairs( list ) do
+      for __index, child in ipairs( list ) do
          do
             local _switchExp = visitor( child, self, 'stmtList', depth )
             if _switchExp == NodeVisitMode.Child then
@@ -5775,7 +5775,7 @@ function ExpMacroExpNode:getBreakKind( checkMode )
 
    if checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return then
       local kind = BreakKind.None
-      for __index, stmt in pairs( self.stmtList ) do
+      for __index, stmt in ipairs( self.stmtList ) do
          local work = stmt:getBreakKind( checkMode )
          
          if checkMode == CheckBreakMode.IgnoreFlowReturn then
@@ -5918,7 +5918,7 @@ function ExpMacroStatNode:visit( visitor, depth )
 
    do
       local list = self.expStrList
-      for __index, child in pairs( list ) do
+      for __index, child in ipairs( list ) do
          do
             local _switchExp = visitor( child, self, 'expStrList', depth )
             if _switchExp == NodeVisitMode.Child then
@@ -7104,7 +7104,7 @@ function DeclFormNode:visit( visitor, depth )
 
    do
       local list = self.argList
-      for __index, child in pairs( list ) do
+      for __index, child in ipairs( list ) do
          do
             local _switchExp = visitor( child, self, 'argList', depth )
             if _switchExp == NodeVisitMode.Child then
@@ -8138,7 +8138,7 @@ function DeclClassNode:visit( visitor, depth )
 
    do
       local list = self.allStmtList
-      for __index, child in pairs( list ) do
+      for __index, child in ipairs( list ) do
          do
             local _switchExp = visitor( child, self, 'allStmtList', depth )
             if _switchExp == NodeVisitMode.Child then
@@ -8159,7 +8159,7 @@ function DeclClassNode:visit( visitor, depth )
    
    do
       local list = self.declStmtList
-      for __index, child in pairs( list ) do
+      for __index, child in ipairs( list ) do
          do
             local _switchExp = visitor( child, self, 'declStmtList', depth )
             if _switchExp == NodeVisitMode.Child then
@@ -8180,7 +8180,7 @@ function DeclClassNode:visit( visitor, depth )
    
    do
       local list = self.fieldList
-      for __index, child in pairs( list ) do
+      for __index, child in ipairs( list ) do
          do
             local _switchExp = visitor( child, self, 'fieldList', depth )
             if _switchExp == NodeVisitMode.Child then
@@ -8201,7 +8201,7 @@ function DeclClassNode:visit( visitor, depth )
    
    do
       local list = self.memberList
-      for __index, child in pairs( list ) do
+      for __index, child in ipairs( list ) do
          do
             local _switchExp = visitor( child, self, 'memberList', depth )
             if _switchExp == NodeVisitMode.Child then
@@ -8541,7 +8541,7 @@ function NewAlgeValNode:visit( visitor, depth )
    
    do
       local list = self.paramList
-      for __index, child in pairs( list ) do
+      for __index, child in ipairs( list ) do
          do
             local _switchExp = visitor( child, self, 'paramList', depth )
             if _switchExp == NodeVisitMode.Child then
@@ -10388,15 +10388,15 @@ function Node:getSymbolInfo(  )
                local expListNode = _lune.__Cast( node, 3, ExpListNode )
                if expListNode ~= nil then
                   local list = {}
-                  for index, expNode in pairs( expListNode:get_expList() ) do
+                  for index, expNode in ipairs( expListNode:get_expList() ) do
                      if index == #expListNode:get_expList() then
-                        for __index, symbolInfo in pairs( processExpNode( expNode ) ) do
+                        for __index, symbolInfo in ipairs( processExpNode( expNode ) ) do
                            table.insert( list, symbolInfo )
                         end
                         
                      else
                       
-                        for __index, symbolInfo in pairs( processExpNode( expNode ) ) do
+                        for __index, symbolInfo in ipairs( processExpNode( expNode ) ) do
                            table.insert( list, symbolInfo )
                            break
                         end
@@ -10430,7 +10430,7 @@ function WhileNode:getBreakKind( checkMode )
 
    if checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return then
       local kind = BreakKind.None
-      for __index, stmt in pairs( self.block:get_stmtList() ) do
+      for __index, stmt in ipairs( self.block:get_stmtList() ) do
          local work = stmt:getBreakKind( checkMode )
          
          if checkMode == CheckBreakMode.IgnoreFlowReturn then
@@ -10494,7 +10494,7 @@ function WhileNode:getBreakKind( checkMode )
       local mode = CheckBreakMode.IgnoreFlow
       
       local kind = BreakKind.None
-      for __index, stmt in pairs( self.block:get_stmtList() ) do
+      for __index, stmt in ipairs( self.block:get_stmtList() ) do
          local work = stmt:getBreakKind( mode )
          
          
@@ -10598,7 +10598,7 @@ function LiteralArrayNode:getLiteral(  )
    do
       local _exp = self.expList
       if _exp ~= nil then
-         for __index, node in pairs( _exp:get_expList(  ) ) do
+         for __index, node in ipairs( _exp:get_expList(  ) ) do
             local literal, mess = node:getLiteral(  )
             if literal ~= nil then
                table.insert( literalList, literal )
@@ -10621,7 +10621,7 @@ function LiteralArrayNode:setupLiteralTokenList( list )
    do
       local _exp = self.expList
       if _exp ~= nil then
-         for index, node in pairs( _exp:get_expList(  ) ) do
+         for index, node in ipairs( _exp:get_expList(  ) ) do
             if index > 1 then
                self:addTokenList( list, Parser.TokenKind.Dlmt, "," )
             end
@@ -10646,7 +10646,7 @@ function LiteralListNode:getLiteral(  )
    do
       local _exp = self.expList
       if _exp ~= nil then
-         for __index, node in pairs( _exp:get_expList(  ) ) do
+         for __index, node in ipairs( _exp:get_expList(  ) ) do
             local literal, mess = node:getLiteral(  )
             if literal ~= nil then
                table.insert( literalList, literal )
@@ -10669,7 +10669,7 @@ function LiteralListNode:setupLiteralTokenList( list )
    do
       local _exp = self.expList
       if _exp ~= nil then
-         for index, node in pairs( _exp:get_expList(  ) ) do
+         for index, node in ipairs( _exp:get_expList(  ) ) do
             if index > 1 then
                self:addTokenList( list, Parser.TokenKind.Dlmt, "," )
             end
@@ -10694,7 +10694,7 @@ function LiteralSetNode:getLiteral(  )
    do
       local _exp = self.expList
       if _exp ~= nil then
-         for __index, node in pairs( _exp:get_expList(  ) ) do
+         for __index, node in ipairs( _exp:get_expList(  ) ) do
             local literal, mess = node:getLiteral(  )
             if literal ~= nil then
                table.insert( literalList, literal )
@@ -10717,7 +10717,7 @@ function LiteralSetNode:setupLiteralTokenList( list )
    do
       local _exp = self.expList
       if _exp ~= nil then
-         for index, node in pairs( _exp:get_expList(  ) ) do
+         for index, node in ipairs( _exp:get_expList(  ) ) do
             if index > 1 then
                self:addTokenList( list, Parser.TokenKind.Dlmt, "," )
             end
@@ -10841,7 +10841,7 @@ function LiteralStringNode:getLiteral(  )
          local argList = expList:get_expList()
          
          local paramList = {}
-         for __index, argNode in pairs( argList ) do
+         for __index, argNode in ipairs( argList ) do
             local arg, mess = argNode:getLiteral(  )
             if arg ~= nil then
                paramList[#paramList + 1] = getLiteralObj( arg )
@@ -10866,7 +10866,7 @@ function LiteralStringNode:setupLiteralTokenList( list )
       local expList = self:get_expList()
       if expList ~= nil then
          self:addTokenList( list, Parser.TokenKind.Dlmt, "(" )
-         for index, argNode in pairs( expList:get_expList() ) do
+         for index, argNode in ipairs( expList:get_expList() ) do
             if index > 1 then
                self:addTokenList( list, Parser.TokenKind.Dlmt, "," )
             end
@@ -10961,7 +10961,7 @@ function RefFieldNode:getLiteral(  )
          elseif _matchExp[1] == Literal.Field[1] then
             local symList = _matchExp[2][1]
          
-            for __index, symbol in pairs( symList ) do
+            for __index, symbol in ipairs( symList ) do
                table.insert( tokenList, symbol )
             end
             
@@ -10991,7 +10991,7 @@ end
 function ExpMacroStatNode:getLiteral(  )
 
    local txt = ""
-   for __index, token in pairs( self.expStrList ) do
+   for __index, token in ipairs( self.expStrList ) do
       local literal, mess = token:getLiteral(  )
       if literal ~= nil then
          do
@@ -11257,7 +11257,7 @@ function DefMacroInfo:__init(func, declInfo, symbol2MacroValInfoMap)
    
    self.declInfo = declInfo
    self.argList = {}
-   for __index, argNode in pairs( declInfo:get_argList() ) do
+   for __index, argNode in ipairs( declInfo:get_argList() ) do
       if argNode:get_kind(  ) == NodeKind.get_DeclArg() then
          
          local argType = argNode:get_expType()

@@ -154,7 +154,7 @@ end
 
 local function outputAllResult( stream )
 
-   for __index, ctrl in pairs( ctrlList ) do
+   for __index, ctrl in ipairs( ctrlList ) do
       ctrl:outputResult( stream )
    end
    

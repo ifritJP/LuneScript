@@ -302,7 +302,7 @@ end
 function FormatterFilter:processRoot( node, opt )
 
    
-   for index, child in pairs( node:get_children() ) do
+   for index, child in ipairs( node:get_children() ) do
       filter( child, self, opt:nextOpt( node ) )
    end
    
@@ -318,7 +318,7 @@ function FormatterFilter:processBlockSub( node, opt )
    self:writeln( "{" )
    self:pushIndent(  )
    
-   for index, statement in pairs( node:get_stmtList() ) do
+   for index, statement in ipairs( node:get_stmtList() ) do
       filter( statement, self, opt:nextOpt( node ) )
    end
    
@@ -350,7 +350,7 @@ function FormatterFilter:processDeclEnum( node, opt )
 
    
    local enumTypeInfo = _lune.unwrap( (_lune.__Cast( node:get_expType(), 3, Ast.EnumTypeInfo ) ))
-   for __index, name in pairs( node:get_valueNameList() ) do
+   for __index, name in ipairs( node:get_valueNameList() ) do
       local valInfo = _lune.unwrap( enumTypeInfo:getEnumValInfo( name.txt ))
    end
    
@@ -381,7 +381,7 @@ end
 function FormatterFilter:processNewAlgeVal( node, opt )
 
    
-   for __index, exp in pairs( node:get_paramList() ) do
+   for __index, exp in ipairs( node:get_paramList() ) do
       filter( exp, self, opt:nextOpt( node ) )
    end
    
@@ -414,7 +414,7 @@ function FormatterFilter:processDeclClass( node, opt )
    local classType = node:get_expType()
    if #classType:get_itemTypeInfoList() > 0 then
       self:write( "<" )
-      for index, genType in pairs( classType:get_itemTypeInfoList() ) do
+      for index, genType in ipairs( classType:get_itemTypeInfoList() ) do
          if index > 1 then
             self:write( "," )
          end
@@ -451,7 +451,7 @@ function FormatterFilter:processDeclClass( node, opt )
       
       if #classType:get_interfaceList() > 0 then
          self:write( "(" )
-         for index, ifType in pairs( classType:get_interfaceList() ) do
+         for index, ifType in ipairs( classType:get_interfaceList() ) do
             if index > 1 then
                self:write( "," )
             end
@@ -468,7 +468,7 @@ function FormatterFilter:processDeclClass( node, opt )
    self:writeln( "{" )
    self:pushIndent(  )
    
-   for index, field in pairs( node:get_fieldList() ) do
+   for index, field in ipairs( node:get_fieldList() ) do
       filter( field, self, opt:nextOpt( node ) )
    end
    
@@ -536,7 +536,7 @@ function FormatterFilter:processExpMacroExp( node, opt )
 
    
    local stmtList = node:get_stmtList()
-   for __index, stmt in pairs( stmtList ) do
+   for __index, stmt in ipairs( stmtList ) do
       filter( stmt, self, opt:nextOpt( node ) )
    end
    
@@ -551,7 +551,7 @@ end
 function FormatterFilter:processExpMacroStat( node, opt )
 
    
-   for __index, node in pairs( node:get_expStrList() ) do
+   for __index, node in ipairs( node:get_expStrList() ) do
       filter( node, self, opt:nextOpt( node ) )
    end
    
@@ -577,7 +577,7 @@ function FormatterFilter:processIfUnwrap( node, opt )
    self:write( "if! " )
    if #node:get_varSymList() ~= 0 then
       self:write( "let " )
-      for index, varSym in pairs( node:get_varSymList() ) do
+      for index, varSym in ipairs( node:get_varSymList() ) do
          if index > 1 then
             self:write( "," )
          end
@@ -602,7 +602,7 @@ function FormatterFilter:processWhen( node, opt )
 
    
    local symTxt = ""
-   for index, symPair in pairs( node:get_symPairList() ) do
+   for index, symPair in ipairs( node:get_symPairList() ) do
       symTxt = string.format( "%s %s", symTxt, tostring( symPair:get_src()))
    end
    
@@ -638,7 +638,7 @@ function FormatterFilter:processDeclVar( node, opt )
    end
    
    
-   for index, sym in pairs( node:get_symbolInfoList() ) do
+   for index, sym in ipairs( node:get_symbolInfoList() ) do
       if index > 1 then
          self:write( ", " )
       end
@@ -749,7 +749,7 @@ function FormatterFilter:processDeclFuncInfo( node, declInfo, opt )
       self:write( " " )
    end
    
-   for index, arg in pairs( argList ) do
+   for index, arg in ipairs( argList ) do
       if index > 1 then
          self:write( ", " )
       end
@@ -770,7 +770,7 @@ function FormatterFilter:processDeclFuncInfo( node, declInfo, opt )
    
    if #funcType:get_retTypeInfoList() ~= 0 then
       self:write( " : " )
-      for index, retType in pairs( funcType:get_retTypeInfoList() ) do
+      for index, retType in ipairs( funcType:get_retTypeInfoList() ) do
          if index > 1 then
             self:write( ", " )
          end
@@ -844,7 +844,7 @@ end
 function FormatterFilter:processIf( node, opt )
 
    local stmtList = node:get_stmtList()
-   for index, stmt in pairs( stmtList ) do
+   for index, stmt in ipairs( stmtList ) do
       do
          local _switchExp = stmt:get_kind()
          if _switchExp == Nodes.IfKind.If then
@@ -869,7 +869,7 @@ function FormatterFilter:processSwitch( node, opt )
    
    filter( node:get_exp(), self, opt:nextOpt( node ) )
    local caseList = node:get_caseList()
-   for __index, caseInfo in pairs( caseList ) do
+   for __index, caseInfo in ipairs( caseList ) do
       filter( caseInfo:get_expList(), self, opt:nextOpt( node ) )
       filter( caseInfo:get_block(), self, opt:nextOpt( node ) )
    end
@@ -889,7 +889,7 @@ function FormatterFilter:processMatch( node, opt )
    
    filter( node:get_val(), self, opt:nextOpt( node ) )
    local caseList = node:get_caseList()
-   for __index, caseInfo in pairs( caseList ) do
+   for __index, caseInfo in ipairs( caseList ) do
       filter( caseInfo:get_block(), self, opt:nextOpt( node ) )
    end
    
@@ -943,7 +943,7 @@ function FormatterFilter:processApply( node, opt )
 
    self:write( "apply " )
    
-   for index, var in pairs( node:get_varList() ) do
+   for index, var in ipairs( node:get_varList() ) do
       if index > 1 then
          self:write( ", " )
       end
@@ -1012,7 +1012,7 @@ end
 local function getTypeListTxt( typeList )
 
    local txt = ""
-   for index, typeInfo in pairs( typeList ) do
+   for index, typeInfo in ipairs( typeList ) do
       if index > 1 then
          txt = txt .. ", "
       end
@@ -1043,7 +1043,7 @@ end
 function FormatterFilter:processExpList( node, opt )
 
    local expList = node:get_expList()
-   for index, exp in pairs( expList ) do
+   for index, exp in ipairs( expList ) do
       if index > 1 then
          if exp:get_expType():get_kind() ~= Ast.TypeInfoKind.Abbr then
             self:write( ", " )
@@ -1291,7 +1291,7 @@ function FormatterFilter:processLiteralMap( node, opt )
 
    
    local pairList = node:get_pairList()
-   for __index, pair in pairs( pairList ) do
+   for __index, pair in ipairs( pairList ) do
       filter( pair:get_key(), self, opt:nextOpt( node ) )
       filter( pair:get_val(), self, opt:nextOpt( node ) )
    end

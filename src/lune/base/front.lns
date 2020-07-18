@@ -195,7 +195,8 @@ fn Front.convert(
    let mut conv = convLua.createFilter(
       streamName, stream, metaStream, convMode, inMacro,
       ast.$moduleTypeInfo, ast.$moduleSymbolKind,
-      self.option.useLuneModule, self.option.targetLuaVer, self.option.testing );
+      self.option.useLuneModule, self.option.targetLuaVer,
+      self.option.testing, self.option.useIpairs );
    ast.$node.processFilter( conv, new convLua.Opt( ast.$node ) );
 }
 
@@ -467,8 +468,9 @@ pub fn Front.convertLns2LuaCode(
 {
    let mod = scriptPath2Module( streamName );
    let ast = self.createAst(
-      importModuleInfo, new Parser.StreamParser( stream, streamName, false ),
-      mod, getModuleId( streamName, mod ## ), nil, .Compile, nil );
+      importModuleInfo,
+      new Parser.StreamParser( stream, streamName, false ), mod,
+      frontInterface.ModuleId.createId( 0.0, 0 ), nil, .Compile ## );
 
    let metaTxt, luaTxt =
       self.convertFromAst( ast, streamName, convLua.ConvMode.Exec );
@@ -1248,6 +1250,8 @@ pub fn convertLnsCode2LuaCode( lnsCode:str, path:str ) : str
 {
    let mut option = new Option.Option();
    option.scriptPath = path;
+   option.useLuneModule = Option.getRuntimeModule();
+   option.useIpairs = true;
    let mut front = new Front( option );
    
    return front.convertLns2LuaCode(

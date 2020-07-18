@@ -96,12 +96,13 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
    pri let useLuneRuntime: str!;
    pri let targetLuaVer:&LuaVer.LuaVerInfo;
    pri let enableTest:bool;
+   pri let useIpairs:bool;
 
 
    pub fn __init( streamName: str, stream: oStream, metaStream: oStream,
                   convMode: ConvMode, inMacro: bool, moduleTypeInfo: &Ast.TypeInfo,
                   moduleSymbolKind: Ast.SymbolKind, useLuneRuntime: str!,
-                  targetLuaVer:&LuaVer.LuaVerInfo, enableTest:bool  )
+                  targetLuaVer:&LuaVer.LuaVerInfo, enableTest:bool, useIpairs:bool )
    {
       super(moduleTypeInfo, moduleTypeInfo.$scope);
       self.enableTest = enableTest;
@@ -127,6 +128,7 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
       self.moduleTypeInfo = moduleTypeInfo;
       self.useLuneRuntime = useLuneRuntime;
       self.targetLuaVer = targetLuaVer;
+      self.useIpairs = useIpairs;
    }
 
    fn get_indent(): int {
@@ -600,7 +602,7 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
             let mut workFilter = new convFilter(
                declInfo.$name.txt, memStream, memStream, .Convert, false,
                Ast.headTypeInfo, .Typ, self.useLuneRuntime,
-               self.targetLuaVer, self.enableTest );
+               self.targetLuaVer, self.enableTest, self.useIpairs );
 
             workFilter.macroDepth = workFilter.macroDepth + 1;
             workFilter.processBlock( stmtBlock, new Opt( node ) );
@@ -2391,7 +2393,21 @@ pub override fn convFilter.processForeach(
       self.write( "__val" );
    }
 
-   self.write( " in pairs( " );
+   
+   if self.useIpairs and node.$exp.$expType.$kind == .List {
+      if node.$exp.$expType.$itemTypeInfoList[ 1 ].$nilable {
+         // nil が入っていると ipairs では列挙できないので nilable は pairs で列挙する
+         self.write( " in pairs( " );
+      }
+      else {
+         // fengari はシーケンスの table に対して pairs() すると、
+         // 順番が保証されないので ipairs にする。
+         self.write( " in ipairs( " );
+      }
+   }
+   else {
+      self.write( " in pairs( " );
+   }
    filter( node.$exp,  self, node );
    self.write( " ) " );
    filter( node.$block,  self, node );
@@ -3279,11 +3295,11 @@ pub fn createFilter(
    streamName: str, stream: oStream, metaStream: oStream,
    convMode: ConvMode, inMacro: bool, moduleTypeInfo: &Ast.TypeInfo,
    moduleSymbolKind: &Ast.SymbolKind, useLuneRuntime:str!,
-   targetLuaVer:&LuaVer.LuaVerInfo, enableTest:bool ) : Nodes.Filter<Opt>
+   targetLuaVer:&LuaVer.LuaVerInfo, enableTest:bool, useIpairs:bool ) : Nodes.Filter<Opt>
 {
    return new convFilter(
       streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo,
-      moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest );
+      moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest, useIpairs );
 }
 
 
@@ -3326,7 +3342,7 @@ pub class MacroEvalImp extend Nodes.MacroEval {
       let mut stream = new Util.memStream();
       let mut conv = new convFilter(
          "macro", stream, stream, .Exec, true,
-         Ast.headTypeInfo, .Typ, nil, Depend.curVer, false );
+         Ast.headTypeInfo, .Typ, nil, Depend.curVer, false, true );
 
       conv.outputDeclMacro(
          name, argNameList,
@@ -3345,7 +3361,7 @@ pub class MacroEvalImp extend Nodes.MacroEval {
       let mut stream = new Util.memStream();
       let mut conv = new convFilter(
          "macro", stream, stream, .Exec, true,
-         Ast.headTypeInfo, .Typ, nil, Depend.curVer, false );
+         Ast.headTypeInfo, .Typ, nil, Depend.curVer, false, true );
 
       conv.processDeclMacro( node, new Opt( node ) );
 

@@ -151,7 +151,7 @@ end
 function ImportModuleInfo:getFull(  )
 
    local txt = ""
-   for __index, modulePath in pairs( self.orderedSet:get_list() ) do
+   for __index, modulePath in ipairs( self.orderedSet:get_list() ) do
       txt = string.format( "%s -> %s", txt, modulePath)
    end
    

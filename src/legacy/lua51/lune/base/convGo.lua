@@ -306,14 +306,14 @@ function convFilter:processRoot( node, opt )
 
    self:writeln( "package main" )
    
-   for __index, declFuncNode in pairs( node:get_nodeManager():getDeclFuncNodeList(  ) ) do
+   for __index, declFuncNode in ipairs( node:get_nodeManager():getDeclFuncNodeList(  ) ) do
       filter( declFuncNode, self, node )
       self:writeln( "" )
    end
    
    
    self:writeln( "func Lns_init() {" )
-   for __index, child in pairs( node:get_children() ) do
+   for __index, child in ipairs( node:get_children() ) do
       do
          local _switchExp = child:get_kind()
          if _switchExp == Nodes.NodeKind.get_DeclAlge() or _switchExp == Nodes.NodeKind.get_DeclFunc() or _switchExp == Nodes.NodeKind.get_DeclMacro() or _switchExp == Nodes.NodeKind.get_TestBlock() then
@@ -339,7 +339,7 @@ end
 function convFilter:processBlockSub( node, opt )
 
    self:pushIndent(  )
-   for __index, child in pairs( node:get_stmtList() ) do
+   for __index, child in ipairs( node:get_stmtList() ) do
       do
          local _switchExp = child:get_kind()
          if _switchExp == Nodes.NodeKind.get_DeclAlge() or _switchExp == Nodes.NodeKind.get_DeclFunc() or _switchExp == Nodes.NodeKind.get_DeclMacro() or _switchExp == Nodes.NodeKind.get_TestBlock() then
@@ -387,7 +387,7 @@ end
 
 function convFilter:processExpMacroExp( node, opt )
 
-   for __index, stmt in pairs( node:get_stmtList() ) do
+   for __index, stmt in ipairs( node:get_stmtList() ) do
       filter( stmt, self, node )
       self:writeln( "" )
    end
@@ -499,7 +499,7 @@ function convFilter:processDeclFunc( node, opt )
    
    self:write( "(" )
    
-   for index, arg in pairs( node:get_declInfo():get_argList() ) do
+   for index, arg in ipairs( node:get_declInfo():get_argList() ) do
       if index ~= 1 then
          self:write( "," )
       end
@@ -520,7 +520,7 @@ function convFilter:processDeclFunc( node, opt )
          
             
             self:write( "(" )
-            for index, retType in pairs( retTypeList ) do
+            for index, retType in ipairs( retTypeList ) do
                if index ~= 1 then
                   self:write( ", " )
                end
@@ -647,7 +647,7 @@ function convFilter:processExpCall( node, opt )
    do
       local argList = node:get_argList()
       if argList ~= nil then
-         for index, exp in pairs( argList:get_expList() ) do
+         for index, exp in ipairs( argList:get_expList() ) do
             if index ~= 1 then
                self:write( ', ' )
             end
@@ -672,7 +672,7 @@ end
 
 function convFilter:processExpList( node, opt )
 
-   for index, exp in pairs( node:get_expList() ) do
+   for index, exp in ipairs( node:get_expList() ) do
       if index ~= 1 then
          self:write( ", " )
       end

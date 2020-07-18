@@ -679,6 +679,7 @@ pub let val = 100;
    }  
    func( sub1, 3 );
 }
+Macro._section();
 
 {
    fn ite( param:int, prev:stem! ) : int!, str {
@@ -706,6 +707,7 @@ pub let val = 100;
       print( string.format( '%d "%s"',  value1 + 0, value2.sub( 1 ) ) );
    }
 }
+Macro._section();
 
 {
    fn func( val:int, ... ) : int, int, ... {
@@ -761,6 +763,7 @@ pub let val = 100;
    sub( .Val5( .Val5( .Val3( 5 ) ) ) );
 }
 
+Macro._section();
 
 class Test3 {
    pri let mut val:int {pub};
@@ -789,6 +792,8 @@ SUB2._test( .val2 );
       }
    }
 }
+
+Macro._section();
 
 {
    fn func( val:int ):int!, int! {
@@ -839,6 +844,7 @@ SUB2._test( .val2 );
       print( val + 1 );
    }
 }
+Macro._section();
 {
    let mut set1 = (@  1, 2, 3 );
    let set2 = (@  2, 3, 4 );
@@ -893,6 +899,7 @@ class SetTest extend (Mapping) {
    }
 }
 
+Macro._section();
 {
    fn func<T>( val:Map<int,T> ): T! {
       return val[ 1 ];
@@ -923,6 +930,7 @@ class GenSub1 extend GenTest {
 }
 class GenSub2 extend GenTest {
 }
+Macro._section();
 
 {
    fn func(test3:&SUB2.TestGen<GenTest>): &GenTest {
@@ -971,6 +979,7 @@ class TestGenSub2<T> extend Super<T> {
    testsub.func( "abc" );
 }
 
+Macro._section();
 {
    let val:stem = { 1:"OK" };
    if! let val2 = val[1] {
@@ -1028,6 +1037,7 @@ class MapTest<T:(Mapping)> extend (Mapping) {
       print( "NG" );
    }  
 }
+Macro._section();
 
 {
    let test = new MapTest( [ 1, 2, 3 ] );
@@ -1075,6 +1085,7 @@ class MapTest<T:(Mapping)> extend (Mapping) {
    }  
 }
 
+Macro._section();
 {
    fn func( val:stem ) {
       if! val@@@int {
@@ -1202,6 +1213,7 @@ class Test4 {
 
    func();
 }
+Macro._section();
 {
    enum Test_enum {
       Foo,

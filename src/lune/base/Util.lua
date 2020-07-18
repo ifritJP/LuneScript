@@ -217,7 +217,7 @@ end
 function OrderedSet:clone(  )
 
    local obj = OrderedSet.new()
-   for __index, val in pairs( self.list ) do
+   for __index, val in ipairs( self.list ) do
       obj.set[val]= true
       table.insert( obj.list, val )
    end

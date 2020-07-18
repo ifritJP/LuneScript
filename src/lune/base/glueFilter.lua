@@ -309,7 +309,7 @@ function glueGenerator:outputUserPrototype( node, gluePrefix )
    self:writeHeader( string.format( "extern int %s%s( lua_State * pLua", gluePrefix, getFuncName( expType:get_rawTxt() )) )
    
    local declInfo = getDeclFuncInfo( node )
-   for __index, argNode in pairs( declInfo:get_argList() ) do
+   for __index, argNode in ipairs( declInfo:get_argList() ) do
       local typeTxt, argTypeTxt, argType, argName = self:getArgInfo( argNode )
       if typeTxt ~= "" then
          self:writeHeader( string.format( ", %s %s", argTypeTxt, argName) )
@@ -328,7 +328,7 @@ end
 
 function glueGenerator:outputPrototypeList( methodNodeList )
 
-   for __index, node in pairs( methodNodeList ) do
+   for __index, node in ipairs( methodNodeList ) do
       self:outputPrototype( node )
       self:write( ";\n" )
    end
@@ -338,7 +338,7 @@ end
 
 function glueGenerator:outputUserPrototypeList( methodNodeList, gluePrefix )
 
-   for __index, node in pairs( methodNodeList ) do
+   for __index, node in ipairs( methodNodeList ) do
       self:outputUserPrototype( node, gluePrefix )
       self:writeHeader( ";\n" )
    end
@@ -349,7 +349,7 @@ end
 function glueGenerator:outputFuncReg( symbolName, methodNodeList )
 
    self:write( string.format( "static const luaL_Reg %s[] = {\n", symbolName) )
-   for __index, node in pairs( methodNodeList ) do
+   for __index, node in ipairs( methodNodeList ) do
       do
          local nameToken = getDeclFuncInfo( node ):get_name()
          if nameToken ~= nil then
@@ -490,7 +490,7 @@ function glueGenerator:outputMethod( node, gluePrefix )
    self:write( "{\n" )
    
    local glueArgInfoList = {}
-   for index, argNode in pairs( declInfo:get_argList() ) do
+   for index, argNode in ipairs( declInfo:get_argList() ) do
       local typeTxt, argTypeTxt, argType, argName = self:getArgInfo( argNode )
       if typeTxt ~= "" then
          local addVal = declInfo:get_staticFlag() and 0 or 1
@@ -544,7 +544,7 @@ function glueGenerator:outputMethod( node, gluePrefix )
    end
    
    
-   for __index, glueArgInfo in pairs( glueArgInfoList ) do
+   for __index, glueArgInfo in ipairs( glueArgInfoList ) do
       if glueArgInfo:get_typeInfo():get_nilable() then
          self:write( string.format( '  if ( !lua_isnoneornil( pLua, %d ) ) {\n', glueArgInfo:get_index()) )
          self:write( '  ' )
@@ -563,7 +563,7 @@ function glueGenerator:outputMethod( node, gluePrefix )
    
    
    self:write( string.format( "  return %s( pLua", name) )
-   for __index, glueArgInfo in pairs( glueArgInfoList ) do
+   for __index, glueArgInfo in ipairs( glueArgInfoList ) do
       self:write( ", " )
       self:write( glueArgInfo:get_callTxt() )
    end
@@ -580,7 +580,7 @@ function glueGenerator:outputClass( moduleFullName, node, gluePrefix )
    
    local staticMethodNodeList = {}
    local methodNodeList = {}
-   for __index, fieldNode in pairs( node:get_fieldList() ) do
+   for __index, fieldNode in ipairs( node:get_fieldList() ) do
       do
          local methodNode = _lune.__Cast( fieldNode, 3, Nodes.DeclMethodNode )
          if methodNode ~= nil then
@@ -622,11 +622,11 @@ function glueGenerator:outputClass( moduleFullName, node, gluePrefix )
    local classSymbolFull = moduleSymbolFull .. "_" .. node:get_name().txt
    self:outputCommonFunc( moduleSymbolFull )
    
-   for __index, methodNode in pairs( methodNodeList ) do
+   for __index, methodNode in ipairs( methodNodeList ) do
       self:outputMethod( methodNode, gluePrefix )
    end
    
-   for __index, methodNode in pairs( staticMethodNodeList ) do
+   for __index, methodNode in ipairs( staticMethodNodeList ) do
       self:outputMethod( methodNode, gluePrefix )
    end
    
@@ -674,7 +674,7 @@ function glueFilter:processRoot( node, dummy )
       error( string.format( "open error -- %s ", filePath) )
    end
    
-   for __index, node in pairs( node:get_nodeManager():getDeclClassNodeList(  ) ) do
+   for __index, node in ipairs( node:get_nodeManager():getDeclClassNodeList(  ) ) do
       do
          local moduleName = node:get_moduleName()
          if moduleName ~= nil then

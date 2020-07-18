@@ -1208,7 +1208,7 @@ function CommentLayer:__init()
 end
 function CommentLayer:addDirect( commentList )
 
-   for __index, comment in pairs( commentList ) do
+   for __index, comment in ipairs( commentList ) do
       table.insert( self.commentList, comment )
    end
    

@@ -437,7 +437,7 @@ local function getLiteralMacroVal( obj )
          local list = _matchExp[2][1]
       
          local newList = {}
-         for index, item in pairs( list ) do
+         for index, item in ipairs( list ) do
             newList[index] = getLiteralMacroVal( item )
          end
          
@@ -446,7 +446,7 @@ local function getLiteralMacroVal( obj )
          local list = _matchExp[2][1]
       
          local newList = {}
-         for index, item in pairs( list ) do
+         for index, item in ipairs( list ) do
             newList[index] = getLiteralMacroVal( item )
          end
          
@@ -455,7 +455,7 @@ local function getLiteralMacroVal( obj )
          local list = _matchExp[2][1]
       
          local newSet = {}
-         for __index, item in pairs( list ) do
+         for __index, item in ipairs( list ) do
             do
                local _exp = getLiteralMacroVal( item )
                if _exp ~= nil then
@@ -562,7 +562,7 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
    self.useModuleMacroSet[macroTypeInfo:getModule(  )]= true
    
    if expList ~= nil then
-      for __index, exp in pairs( expList:get_expList() ) do
+      for __index, exp in ipairs( expList:get_expList() ) do
          local kind = exp:get_kind()
          do
             local _switchExp = kind
@@ -586,7 +586,7 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
    local macroArgNodeList = macroInfo:getArgList(  )
    local macroArgName2ArgNode = {}
    if expList ~= nil then
-      for index, argNode in pairs( expList:get_expList() ) do
+      for index, argNode in ipairs( expList:get_expList() ) do
          local literal, mess = argNode:getLiteral(  )
          if literal ~= nil then
             do
@@ -612,7 +612,7 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
    local func = macroInfo.func
    local macroVars = func( macroArgValMap )
    
-   for __index, name in pairs( (_lune.unwrap( macroVars['__names']) ) ) do
+   for __index, name in ipairs( (_lune.unwrap( macroVars['__names']) ) ) do
       local valInfo = _lune.unwrap( macroInfo.symbol2MacroValInfoMap[name])
       local typeInfo = valInfo.typeInfo
       local val = macroVars[name]
@@ -624,7 +624,7 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
    end
    
    
-   for index, arg in pairs( macroInfo:getArgList(  ) ) do
+   for index, arg in ipairs( macroInfo:getArgList(  ) ) do
       if arg:get_typeInfo():get_kind() ~= Ast.TypeInfoKind.DDD then
          local argType = arg:get_typeInfo()
          local argName = arg:get_name()
@@ -649,13 +649,13 @@ function MacroCtrl:importMacro( macroInfoStem, macroTypeInfo, typeId2TypeInfo )
       local argList = {}
       local argNameList = {}
       local symbol2MacroValInfoMap = {}
-      for __index, argInfo in pairs( macroInfo.argList ) do
+      for __index, argInfo in ipairs( macroInfo.argList ) do
          local argTypeInfo = _lune.unwrap( typeId2TypeInfo[argInfo.typeId])
          table.insert( argList, Nodes.MacroArgInfo.new(argInfo.name, argTypeInfo) )
          table.insert( argNameList, argInfo.name )
       end
       
-      for __index, symInfo in pairs( macroInfo.symList ) do
+      for __index, symInfo in ipairs( macroInfo.symList ) do
          local symTypeInfo = _lune.unwrap( typeId2TypeInfo[symInfo.typeId])
          symbol2MacroValInfoMap[symInfo.name] = Nodes.MacroValInfo.new(nil, symTypeInfo, nil)
       end
@@ -664,7 +664,7 @@ function MacroCtrl:importMacro( macroInfoStem, macroTypeInfo, typeId2TypeInfo )
       local tokenList = {}
       local lineNo = 0
       local column = 1
-      for __index, tokenInfo in pairs( macroInfo.tokenList ) do
+      for __index, tokenInfo in ipairs( macroInfo.tokenList ) do
          local txt = tokenInfo[2]
          if txt == "\n" then
             lineNo = lineNo + 1
@@ -742,7 +742,7 @@ end
 local function pushbackTxt( pushbackParser, txtList, streamName, pos )
 
    local tokenList = {}
-   for __index, txt in pairs( txtList ) do
+   for __index, txt in ipairs( txtList ) do
       local stream = Parser.TxtStream.new(txt)
       local parser = Parser.StreamParser.new(stream, string.format( "macro symbol -- %s", streamName))
       local workParser = Parser.DefaultPushbackParser.new(parser)
@@ -875,7 +875,7 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
          if macroVal.typeInfo:equals( Ast.builtinTypeSymbol ) then
             local txtList = (_lune.unwrap( macroVal.val) )
             local newToken = ""
-            for __index, txt in pairs( txtList ) do
+            for __index, txt in ipairs( txtList ) do
                newToken = string.format( "%s%s", newToken, txt)
             end
             
@@ -987,7 +987,7 @@ end
 
 function MacroCtrl:registVar( symbolList )
 
-   for __index, symbolInfo in pairs( symbolList ) do
+   for __index, symbolInfo in ipairs( symbolList ) do
       self.symbol2ValueMapForMacro[symbolInfo:get_name()] = Nodes.MacroValInfo.new(nil, symbolInfo:get_typeInfo(), nil)
    end
    
@@ -1050,7 +1050,7 @@ function MacroCtrl:isInAnalyzeArgMode(  )
       return false
    end
    
-   for __index, mode in pairs( self.macroModeStack ) do
+   for __index, mode in ipairs( self.macroModeStack ) do
       if mode == Nodes.MacroMode.AnalyzeArg then
          return true
       end

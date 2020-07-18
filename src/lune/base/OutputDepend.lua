@@ -203,11 +203,11 @@ function DependInfo:output( stream )
 
    stream:write( string.format( "%s.meta: \\\n", (self.targetModule:gsub( "%.", "/" ) )) )
    stream:write( string.format( "  %s.lns \\\n", (self.targetModule:gsub( "%.", "/" ) )) )
-   for __index, mod in pairs( self.importModuleList ) do
+   for __index, mod in ipairs( self.importModuleList ) do
       stream:write( string.format( "  %s.meta \\\n", (mod:gsub( "%.", "/" ) )) )
    end
    
-   for __index, path in pairs( self.subModList ) do
+   for __index, path in ipairs( self.subModList ) do
       stream:write( string.format( "  %s.lns \\\n", (path:gsub( "%.", "/" ) )) )
    end
    
@@ -240,11 +240,11 @@ function convFilter:processRoot( node, dummy )
    local moduleFull = node:get_moduleTypeInfo():getFullName( self:get_typeNameCtrl(), Ast.DummyModuleInfoManager.get_instance() )
    local dependInfo = DependInfo.new(moduleFull)
    
-   for __index, impNode in pairs( node:get_nodeManager():getImportNodeList(  ) ) do
+   for __index, impNode in ipairs( node:get_nodeManager():getImportNodeList(  ) ) do
       dependInfo:addImpotModule( impNode:get_modulePath() )
    end
    
-   for __index, subfileNode in pairs( node:get_nodeManager():getSubfileNodeList(  ) ) do
+   for __index, subfileNode in ipairs( node:get_nodeManager():getSubfileNodeList(  ) ) do
       do
          local usePath = subfileNode:get_usePath()
          if usePath ~= nil then

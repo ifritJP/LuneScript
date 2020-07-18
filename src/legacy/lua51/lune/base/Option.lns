@@ -94,14 +94,18 @@ pub enum Conv {
    Go,
 }
 
+pub fn getRuntimeModule(): str {
+   return "lune.base._lune%d" (Ver.luaModVersion);
+}
+
 pub class Option {
    pub let mut mode:ModeKind;
    /** 解析対象のモジール名。 comp モードの時に使用。 */
-   pub let analyzeModule:str!;
+   pub let mut analyzeModule:str!;
    /** 解析位置。comp モードの時に使用。 */
-   pub let analyzePos: Parser.Position!;
+   pub let mut analyzePos: Parser.Position!;
    /** 出力ディレクトリ。 save, SAVE モードの時に使用*/
-   pub let outputDir:str!;
+   pub let mut outputDir:str!;
    /** 処理対象のスクリプトファイルパス */
    pub let mut scriptPath: str;
    /** プロファイルする場合 true */
@@ -121,6 +125,8 @@ pub class Option {
    /** 変換先の Lua バージョン*/
    pub let mut targetLuaVer:&LuaVer.LuaVerInfo;
    pub let mut bootPath:str!;
+   /** List の foreach に ipairs を使う。 */
+   pub let mut useIpairs:bool;
 
    pub let mut transCtrlInfo:TransCtrlInfo;
 
@@ -143,6 +149,7 @@ pub class Option {
       self.targetLuaVer = Depend.curVer;
       self.transCtrlInfo = TransCtrlInfo.create_normal();
       self.bootPath = nil;
+      self.useIpairs = false;
    }
 
    pub fn openDepend(): mut oStream! {
@@ -198,7 +205,7 @@ SOFTWARE.
    return nil;
 }
 
-pub fn analyze( argList: str[] ) : Option {
+pub fn analyze( argList: &List<str> ) : Option {
 
    fn printUsage(code:int) {
       print( ```
@@ -234,6 +241,8 @@ usage:
             mode: skip check.
             none: skip process when file is uptodate.
             touch: touch meta file when file is uptodate.  (default)
+    --use-ipairs: use ipairs for foreach with List value.
+    
 
 * type2
   dir: output directory.
@@ -298,7 +307,7 @@ usage:
                option.mode = .Builtin;
             }
             case "-r" {
-               option.useLuneModule = "lune.base._lune%d" (Ver.luaModVersion);
+               option.useLuneModule = getRuntimeModule();
             }
             case "--runtime" {
                option.useLuneModule = getNextOp();
@@ -330,6 +339,9 @@ usage:
             }
             case "--depends" {
                option.dependsPath = getNextOp();
+            }
+            case "--use-ipairs" {
+               option.useIpairs = true;
             }
             case "--uptodate" {
                if! let txt = getNextOp() {
@@ -419,8 +431,16 @@ usage:
       }
    }
 
-   if useStdInFlag and option.analyzeModule {
-      Parser.StreamParser.setStdinStream( unwrap option.analyzeModule );
+   if useStdInFlag {
+      if option.analyzeModule {
+         Parser.StreamParser.setStdinStream( unwrap option.analyzeModule );
+      }
+      else {
+         if option.scriptPath ~= "" {
+            Parser.StreamParser.setStdinStream(
+               Util.scriptPath2Module( option.scriptPath ) );
+         }
+      }
    }
 
    return option;

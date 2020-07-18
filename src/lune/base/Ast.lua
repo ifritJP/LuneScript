@@ -1227,7 +1227,7 @@ end
 function TypeInfo:serializeTypeInfoList( name, list, onlyPub )
 
    local work = name
-   for __index, typeInfo in pairs( list ) do
+   for __index, typeInfo in ipairs( list ) do
       if not onlyPub or typeInfo:get_accessMode() == AccessMode.Pub then
          if #work ~= #name then
             work = work .. ", "
@@ -1250,7 +1250,7 @@ function TypeInfo.createScope( parent, classFlag, baseInfo, interfaceList )
    
    local ifScopeList = {}
    if interfaceList ~= nil then
-      for __index, ifType in pairs( interfaceList ) do
+      for __index, ifType in ipairs( interfaceList ) do
          table.insert( ifScopeList, _lune.unwrap( ifType.scope) )
       end
       
@@ -1581,7 +1581,7 @@ function TypeInfo.isInherit( typeInfo, other, alt2type )
    end
    
    
-   for __index, ifType in pairs( typeInfo:get_interfaceList() ) do
+   for __index, ifType in ipairs( typeInfo:get_interfaceList() ) do
       if ifType:isInheritFrom( other, alt2type ) then
          return true
       end
@@ -2038,7 +2038,7 @@ end
 function Scope:getSymbolInfoIfField( name, fromScope, access )
 
    if self.classFlag then
-      for __index, scope in pairs( self.ifScopeList ) do
+      for __index, scope in ipairs( self.ifScopeList ) do
          do
             local symbolInfo = scope:getSymbolInfoField( name, true, fromScope, access )
             if symbolInfo ~= nil then
@@ -2071,7 +2071,7 @@ end
 
 function Scope:filterSymbolInfoIfField( fromScope, access, callback )
 
-   for __index, scope in pairs( self.ifScopeList ) do
+   for __index, scope in ipairs( self.ifScopeList ) do
       if not scope:filterTypeInfoField( true, fromScope, access, callback ) then
          return false
       end
@@ -3086,7 +3086,7 @@ function AlternateTypeInfo:canSetFrom( other, canEvalType, alt2type )
    end
    
    
-   for __index, ifType in pairs( self.interfaceList ) do
+   for __index, ifType in ipairs( self.interfaceList ) do
       if not other:isInheritFrom( ifType, alt2type ) then
          return false
       end
@@ -3134,7 +3134,7 @@ function AlternateTypeInfo:isInheritFrom( other, alt2type )
       end
       
       
-      for __index, ifType in pairs( self.interfaceList ) do
+      for __index, ifType in ipairs( self.interfaceList ) do
          if ifType:isInheritFrom( other, alt2type ) then
             return true
          end
@@ -3506,7 +3506,7 @@ function GenericTypeInfo:__init(genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo
    local alt2typeMap = {}
    local workAlt2typeMap = CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false )
    local hasAlter = false
-   for index, altTypeInfo in pairs( genSrcTypeInfo:get_itemTypeInfoList() ) do
+   for index, altTypeInfo in ipairs( genSrcTypeInfo:get_itemTypeInfoList() ) do
       local itemType = itemTypeInfoList[index]
       alt2typeMap[altTypeInfo] = itemType
       if itemType:applyGeneric( workAlt2typeMap, moduleTypeInfo ) ~= itemType then
@@ -3549,7 +3549,7 @@ function GenericTypeInfo:isInheritFrom( other, alt2type )
       workAlt2type = CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false )
    end
    
-   for __index, altType in pairs( otherSrc:get_itemTypeInfoList() ) do
+   for __index, altType in ipairs( otherSrc:get_itemTypeInfoList() ) do
       
       local genType = self.alt2typeMap[altType]
       if  nil == genType then
@@ -3603,7 +3603,7 @@ function GenericTypeInfo:canEvalWith( other, canEvalType, alt2type )
          break
       end
       
-      for __index, ifType in pairs( work:get_interfaceList() ) do
+      for __index, ifType in ipairs( work:get_interfaceList() ) do
          if self:canEvalWith( ifType, canEvalType, alt2type ) then
             return true, nil
          end
@@ -3662,7 +3662,7 @@ function GenericTypeInfo:equals( other, alt2type, checkModifer )
    end
    
    
-   for index, otherItem in pairs( other:get_itemTypeInfoList() ) do
+   for index, otherItem in ipairs( other:get_itemTypeInfoList() ) do
       local typeInfo = self.itemTypeInfoList[index]
       if not typeInfo:equals( otherItem, alt2type, checkModifer ) then
          return false
@@ -4150,7 +4150,7 @@ function ModuleTypeInfo:serialize( stream, validChildrenSet )
    do
       local _exp = validChildrenSet
       if _exp ~= nil then
-         for __index, child in pairs( self:get_children() ) do
+         for __index, child in ipairs( self:get_children() ) do
             if set[child:get_typeId()] and (child:get_accessMode() == AccessMode.Pub or child:get_accessMode() == AccessMode.Global ) then
                stream:write( string.format( "%d, ", child:get_typeId()) )
             end
@@ -4372,7 +4372,7 @@ _moduleObj.AlgeValInfo = AlgeValInfo
 function AlgeValInfo:serialize( stream )
 
    stream:write( string.format( "{ name = '%s', typeList = {", self.name) )
-   for index, typeInfo in pairs( self.typeList ) do
+   for index, typeInfo in ipairs( self.typeList ) do
       if index > 1 then
          stream:write( ", " )
       end
@@ -4562,14 +4562,14 @@ function NormalTypeInfo:__init(abstractFlag, scope, baseTypeInfo, interfaceList,
                Util.err( string.format( "unmatch generic type number -- %d, %d", #self.itemTypeInfoList, #self.baseTypeInfo:get_itemTypeInfoList()) )
             end
             
-            for index, appyType in pairs( self.itemTypeInfoList ) do
+            for index, appyType in ipairs( self.itemTypeInfoList ) do
                local genType = self.baseTypeInfo:get_itemTypeInfoList()[index]
                alt2typeMap[genType] = appyType
             end
             
          elseif _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.IF then
             
-            for __index, ifType in pairs( self.interfaceList ) do
+            for __index, ifType in ipairs( self.interfaceList ) do
                do
                   local genericType = _lune.__Cast( ifType, 3, GenericTypeInfo )
                   if genericType ~= nil then
@@ -4660,7 +4660,7 @@ function NormalTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag 
    
    if #self.itemTypeInfoList > 0 then
       local txt = raw .. "<"
-      for index, typeInfo in pairs( self.itemTypeInfoList ) do
+      for index, typeInfo in ipairs( self.itemTypeInfoList ) do
          if index ~= 1 then
             txt = txt .. ","
          end
@@ -4680,7 +4680,7 @@ function NormalTypeInfo:get_display_stirng_with( raw )
       local _switchExp = self.kind
       if _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.Form or _switchExp == TypeInfoKind.FormFunc or _switchExp == TypeInfoKind.Method or _switchExp == TypeInfoKind.Macro then
          local txt = raw .. "("
-         for index, argType in pairs( self.argTypeInfoList ) do
+         for index, argType in ipairs( self.argTypeInfoList ) do
             if index ~= 1 then
                txt = txt .. ", "
             end
@@ -4689,7 +4689,7 @@ function NormalTypeInfo:get_display_stirng_with( raw )
          end
          
          txt = txt .. ")"
-         for index, retType in pairs( self.retTypeInfoList ) do
+         for index, retType in ipairs( self.retTypeInfoList ) do
             if index == 1 then
                txt = txt .. ": "
             else
@@ -4730,7 +4730,7 @@ function NormalTypeInfo:serialize( stream, validChildrenSet )
       set = {}
    end
    
-   for __index, child in pairs( self:get_children() ) do
+   for __index, child in ipairs( self:get_children() ) do
       if set[child:get_typeId()] then
          table.insert( children, child )
       end
@@ -4775,7 +4775,7 @@ function NormalTypeInfo:equalsSub( typeInfo, alt2type, checkModifer )
          return false
       end
       
-      for index, item in pairs( self.itemTypeInfoList ) do
+      for index, item in ipairs( self.itemTypeInfoList ) do
          if not item:equals( typeInfo:get_itemTypeInfoList()[index], alt2type, checkModifer ) then
             
             return false
@@ -4792,7 +4792,7 @@ function NormalTypeInfo:equalsSub( typeInfo, alt2type, checkModifer )
          return false
       end
       
-      for index, item in pairs( self.retTypeInfoList ) do
+      for index, item in ipairs( self.retTypeInfoList ) do
          if not item:equals( typeInfo:get_retTypeInfoList()[index], alt2type, checkModifer ) then
             
             return false
@@ -5529,7 +5529,7 @@ function CombineType.new( typeInfo )
 end
 function CombineType:__init(typeInfo) 
    self.ifSet = {}
-   for __index, iftype in pairs( typeInfo:get_interfaceList() ) do
+   for __index, iftype in ipairs( typeInfo:get_interfaceList() ) do
       self.ifSet[iftype]= true
    end
    
@@ -5657,7 +5657,7 @@ function CombineType:andType( other, alt2type )
             ifSet[typeInfo]= true
          else
           
-            for __index, iftype in pairs( typeInfo:get_interfaceList() ) do
+            for __index, iftype in ipairs( typeInfo:get_interfaceList() ) do
                ifSet[iftype]= true
             end
             
@@ -5872,7 +5872,7 @@ local function applyGenericList( typeList, alt2typeMap, moduleTypeInfo )
 
    local typeInfoList = {}
    local needNew = false
-   for __index, srcType in pairs( typeList ) do
+   for __index, srcType in ipairs( typeList ) do
       do
          local typeInfo = srcType:applyGeneric( alt2typeMap, moduleTypeInfo )
          if typeInfo ~= nil then
@@ -6661,7 +6661,7 @@ function NormalTypeInfo.isAvailableMapping( typeInfo, checkedTypeMap )
          elseif _switchExp == TypeInfoKind.Alge then
             local algeTypeInfo = _lune.unwrap( (_lune.__Cast( typeInfo, 3, AlgeTypeInfo ) ))
             for __index, valInfo in pairs( algeTypeInfo:get_valInfoMap() ) do
-               for __index, paramType in pairs( valInfo:get_typeList() ) do
+               for __index, paramType in ipairs( valInfo:get_typeList() ) do
                   if not NormalTypeInfo.isAvailableMapping( paramType, checkedTypeMap ) then
                      return false
                   end
@@ -6838,7 +6838,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
    end
    
    if #expTypeList > 0 then
-      for index, expType in pairs( expTypeList ) do
+      for index, expType in ipairs( expTypeList ) do
          if #dstTypeList == 0 then
             return MatchType.Error, string.format( "over exp. expect:0, actual:%d", #expTypeList)
          end
@@ -6943,7 +6943,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
       end
       
    elseif not allowDstShort then
-      for index, dstType in pairs( dstTypeList ) do
+      for index, dstType in ipairs( dstTypeList ) do
          
          if not dstType:canEvalWith( _moduleObj.builtinTypeNil, CanEvalType.SetOp, alt2type ) then
             return MatchType.Error, string.format( "exp(%d) type mismatch %s <- nil: short", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ))
@@ -6961,7 +6961,7 @@ end
 local function isSettableToForm( typeInfo )
 
    if #typeInfo:get_argTypeInfoList() > 0 then
-      for __index, argType in pairs( typeInfo:get_argTypeInfoList() ) do
+      for __index, argType in ipairs( typeInfo:get_argTypeInfoList() ) do
          do
             local dddType = _lune.__Cast( argType, 3, DDDTypeInfo )
             if dddType ~= nil then
@@ -7300,7 +7300,7 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
             return false, nil
          end
          
-         for index, argType in pairs( dest:get_argTypeInfoList() ) do
+         for index, argType in ipairs( dest:get_argTypeInfoList() ) do
             local otherArgType = otherSrc:get_argTypeInfoList()[index]
             if not argType:equals( otherArgType, alt2type ) then
                local mess = string.format( "unmatch arg(%d) type -- %s, %s", index, argType:getTxt(  ), otherArgType:getTxt(  ))
@@ -7309,7 +7309,7 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
             
          end
          
-         for index, retType in pairs( dest:get_retTypeInfoList() ) do
+         for index, retType in ipairs( dest:get_retTypeInfoList() ) do
             local otherRetType = otherSrc:get_retTypeInfoList()[index]
             if not retType:equals( otherRetType, alt2type ) then
                local mess = string.format( "unmatch ret(%d) type -- %s, %s, %s", index, retType:getTxt(  ), otherRetType:getTxt(  ), dest:getTxt(  ))
@@ -7832,7 +7832,7 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
                end
                
                
-               for index, itemType in pairs( genericList ) do
+               for index, itemType in ipairs( genericList ) do
                   local altType = _lune.unwrap( _lune.__Cast( typeInfo:get_itemTypeInfoList()[index], 3, AlternateTypeInfo ))
                   if itemType:get_nilable() then
                      local mess = string.format( "can't use nilable type -- %s", itemType:getTxt(  ))

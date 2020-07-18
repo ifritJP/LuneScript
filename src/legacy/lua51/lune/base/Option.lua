@@ -200,7 +200,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 3118
+   return 3152
 end
 
 
@@ -360,6 +360,12 @@ Conv._val2NameMap[1] = 'Go'
 Conv.__allList[2] = Conv.Go
 
 
+local function getRuntimeModule(  )
+
+   return string.format( "lune.base._lune%d", Ver.luaModVersion)
+end
+_moduleObj.getRuntimeModule = getRuntimeModule
+
 local Option = {}
 _moduleObj.Option = Option
 function Option.new(  )
@@ -381,6 +387,7 @@ function Option:__init()
    self.targetLuaVer = Depend.curVer
    self.transCtrlInfo = TransCtrlInfo.create_normal(  )
    self.bootPath = nil
+   self.useIpairs = false
 end
 function Option:openDepend(  )
 
@@ -442,7 +449,7 @@ SOFTWARE.
 ]]
 ]==] )
    
-   for __index, kind in pairs( LuaMod.CodeKind.get__allList() ) do
+   for __index, kind in ipairs( LuaMod.CodeKind.get__allList() ) do
       fileObj:write( LuaMod.getCode( kind ) )
    end
    
@@ -490,6 +497,8 @@ usage:
             mode: skip check.
             none: skip process when file is uptodate.
             touch: touch meta file when file is uptodate.  (default)
+    --use-ipairs: use ipairs for foreach with List value.
+    
 
 * type2
   dir: output directory.
@@ -568,7 +577,7 @@ usage:
                option.scriptPath = path .. "/lns_builtin.lns"
                option.mode = ModeKind.Builtin
             elseif _switchExp == "-r" then
-               option.useLuneModule = string.format( "lune.base._lune%d", Ver.luaModVersion)
+               option.useLuneModule = getRuntimeModule(  )
             elseif _switchExp == "--runtime" then
                option.useLuneModule = getNextOp(  )
             elseif _switchExp == "-oc" then
@@ -599,6 +608,8 @@ usage:
                option.testing = true
             elseif _switchExp == "--depends" then
                option.dependsPath = getNextOp(  )
+            elseif _switchExp == "--use-ipairs" then
+               option.useIpairs = true
             elseif _switchExp == "--uptodate" then
                do
                   local txt = getNextOp(  )
@@ -702,8 +713,17 @@ usage:
    end
    
    
-   if useStdInFlag and option.analyzeModule then
-      Parser.StreamParser.setStdinStream( _lune.unwrap( option.analyzeModule) )
+   if useStdInFlag then
+      if option.analyzeModule then
+         Parser.StreamParser.setStdinStream( _lune.unwrap( option.analyzeModule) )
+      else
+       
+         if option.scriptPath ~= "" then
+            Parser.StreamParser.setStdinStream( Util.scriptPath2Module( option.scriptPath ) )
+         end
+         
+      end
+      
    end
    
    

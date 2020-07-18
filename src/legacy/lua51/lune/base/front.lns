@@ -83,7 +83,7 @@ class LoadInfo {
 }
 
 class Front extend (frontInterface.frontInterface) {
-   let mut option:Option.Option;
+   let mut option:&Option.Option;
    /** import 済みのモジュールと、その LoadInfoの紐付け。 */ 
    let mut loadedMap:Map<str,LoadInfo>;
    /** import 済みの Test ビルド用モジュールと、その LoadInfoの紐付け。 */ 
@@ -99,7 +99,7 @@ loadedMap で管理する前にシステムにロードされているため、
 */
    let preloadedModMap:&Map<str,stem>;
 
-   pub fn __init( option:Option.Option ) {
+   pub fn __init( option:&Option.Option ) {
       self.option = option;
       self.loadedMap = {};
       self.loadedMapTest = {};
@@ -166,11 +166,7 @@ fn createPaser( path:str, mod:str ): Parser.Parser
 }
 
 pub fn scriptPath2Module( path:str ):str {
-   if path.find( "^/" ## ) {
-      Util.err( "script must be relative-path -- " .. path );
-   }
-   let mod = string.gsub( path, "/", "." );
-   return ( string.gsub( mod, "%.lns$", "" ) );
+   return Util.scriptPath2Module( path );
 }
 
 fn Front.createPaser(): Parser.Parser
@@ -199,7 +195,8 @@ fn Front.convert(
    let mut conv = convLua.createFilter(
       streamName, stream, metaStream, convMode, inMacro,
       ast.$moduleTypeInfo, ast.$moduleSymbolKind,
-      self.option.useLuneModule, self.option.targetLuaVer, self.option.testing );
+      self.option.useLuneModule, self.option.targetLuaVer,
+      self.option.testing, self.option.useIpairs );
    ast.$node.processFilter( conv, new convLua.Opt( ast.$node ) );
 }
 
@@ -461,6 +458,26 @@ metaTime
    }
    return moduleId, uptodate;
 }
+
+/**
+指定 stream 内の LuneScript をコンパイルし、 Lua コードを取得する。
+*/
+pub fn Front.convertLns2LuaCode(
+   importModuleInfo:frontInterface.ImportModuleInfo,
+   stream:iStream, streamName:str ): str
+{
+   let mod = scriptPath2Module( streamName );
+   let ast = self.createAst(
+      importModuleInfo,
+      new Parser.StreamParser( stream, streamName, false ), mod,
+      frontInterface.ModuleId.createId( 0.0, 0 ), nil, .Compile ## );
+
+   let metaTxt, luaTxt =
+      self.convertFromAst( ast, streamName, convLua.ConvMode.Exec );
+
+   return luaTxt;
+}
+
 
 /**
 指定 path の LuneScript をロードし、 meta 情報と変換した Lua コードを取得する。
@@ -1229,6 +1246,19 @@ fn Front.outputBootC()
    convCC.outputBootcode( stream, initModule );
 }
 
+pub fn convertLnsCode2LuaCode( lnsCode:str, path:str ) : str
+{
+   let mut option = new Option.Option();
+   option.scriptPath = path;
+   option.useLuneModule = Option.getRuntimeModule();
+   option.useIpairs = true;
+   let mut front = new Front( option );
+   
+   return front.convertLns2LuaCode(
+      new frontInterface.ImportModuleInfo(),
+      new Parser.TxtStream( lnsCode ), path );
+}
+
 pub fn Front.exec() mut
 {
    Log._log( .Trace, `{ return self.option.mode.$_txt; } );
@@ -1282,7 +1312,7 @@ pub fn Front.exec() mut
    }
 }
 
-pub fn exec( args: str[] ) {
+pub fn exec( args: &List<str> ) {
    let version =
       unwrap tonumber( Depend.getLuaVersion().gsub( "^[^%d]+", "" ), nil ) default 0.0;
 

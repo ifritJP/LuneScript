@@ -82,10 +82,12 @@ include $(DEPENDS)
 
 $(DEPENDS_META):
 
+COM_OPT := --use-ipairs -Werror
+
 %.meta: %.lns
 	(cd $(FROM_DIR); \
 		LUA_PATH=./?.lua $(LUA) lune/base/base.lua $< SAVE $(TO_DIR) \
-			$(BYTECOMP) -Werror $(LOG_OPT) $(LNS_OPT))
+			$(BYTECOMP) $(COM_OPT) $(LOG_OPT) $(LNS_OPT))
 
 build_from_d: $(DEPENDS_META)
 
@@ -108,14 +110,18 @@ define exeLune
 endef
 endif
 
+define exeFront
+	(cd $1; LUA_PATH=./?.lua $(LUA) -e 'print( require( "lune.base.front" ).convertLnsCode2LuaCode( "print( 1 + 10 );", "lua" ) )')
+endef
+
 
 
 define transwork
-	$(call exeLune,$1,lune/$4.lns SAVE $2 $3 $(BYTECOMP) -Werror $(LOG_OPT))
+	$(call exeLune,$1,lune/$4.lns SAVE $2 $3 $(BYTECOMP) $(COM_OPT) $(LOG_OPT))
 endef
 
 define transwork_dep
-	$(call exeLune,$1,lune/$4.lns SAVE $2 --depends $2/lune/$4.d $3 $(BYTECOMP) -Werror $(LOG_OPT))
+	$(call exeLune,$1,lune/$4.lns SAVE $2 --depends $2/lune/$4.d $3 $(BYTECOMP) $(COM_OPT) $(LOG_OPT))
 endef
 
 
@@ -230,6 +236,7 @@ else
 	cp -a work/3/lune work/8
 	cp -a work/3/test work/8
 	$(call test-inst-from-luarocks,lunescript)
+
 	diff work/test.result work/test8.result
 endif
 
@@ -326,7 +333,7 @@ test-comp:
 
 test-registered-rockspec:
 	curl https://luarocks.org/manifests/ifritjp/lunescript-main-1.rockspec -o work/rockspec
-	diff ../lunescript-main-1.rockspec work/rockspec || echo "====== need upload rockspec ======"
+	@diff ../lunescript-main-1.rockspec work/rockspec || echo "====== need upload rockspec ======" && echo "ok"
 
 
 test-etc:
@@ -423,7 +430,7 @@ test-error:
 	$(call test-error-all-case,$(LOG_DIR),$(TEST_DIR))
 
 	-$(call exeLune,$(TEST_DIR),test/error/noexist.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/abbr.lns,exe -Werror,2>&1) && echo error:NG
+	-$(call exeLune,$(TEST_DIR),test/error/abbr.lns,exe $(COM_OPT),2>&1) && echo error:NG
 
 	cat test/error/mutable.lns | sed 's@//_lune@_lune@' > $(TEST_DIR)/test/error/dis_mutable.lns
 	-$(call exeLune,$(TEST_DIR),test/error/dis_mutable.lns,exe,2>&1)
@@ -506,6 +513,7 @@ test-org:
 	$(MAKE) -s TEST_DIR=. LOG_DIR=work/0/log test-error | \
 		grep -e 'error:' -e 'warning:' >> work/test1.result
 	$(MAKE) TEST_DIR=. test-etc >> work/test1.result
+	$(call exeFront,.) >> work/test1.result
 
 test-org-proj:
 ifndef SKIP_PROJ_TEST
@@ -535,6 +543,7 @@ test-new:
 	$(MAKE) -s TEST_DIR=work/3 LOG_DIR=work/3/log  test-error | \
 		grep -e 'error:' -e 'warning:' >> work/test2.result
 	$(MAKE) TEST_DIR=work/3 test-etc >> work/test2.result
+	$(call exeFront,work/3) >> work/test2.result
 
 test-new-proj:
 ifndef SKIP_PROJ_TEST
