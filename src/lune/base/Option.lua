@@ -200,7 +200,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 3152
+   return 3165
 end
 
 
@@ -362,7 +362,7 @@ Conv.__allList[2] = Conv.Go
 
 local function getRuntimeModule(  )
 
-   return string.format( "lune.base._lune%d", Ver.luaModVersion)
+   return string.format( "lune.base.runtime%d", Ver.luaModVersion)
 end
 _moduleObj.getRuntimeModule = getRuntimeModule
 
@@ -407,7 +407,7 @@ end
 
 local function outputLuneMod( path )
 
-   local lune_path = "_lune.lua"
+   local lune_path = "runtime.lua"
    if path ~= nil then
       if path ~= "" then
          lune_path = path
@@ -477,7 +477,7 @@ usage:
   - src.lns [common_op] [-ol ver] [-ob<0|1>] [-dmr] [--depends dependfile] <save|SAVE> output-dir
   - src.lns [common_op] exe
 
-  -r: use 'require( "lune.base._lune" )'
+  -r: use 'require( "lune.base.runtime" )'
   -ol: output lua version. ver = 51 or 52 or 53.
   -ob: output bytecompiled-code.
       -ob0 is without debug information.

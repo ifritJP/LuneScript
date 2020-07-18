@@ -34,6 +34,7 @@ import lune.base.Depend;
 import lune.base.Parser;
 import lune.base.Log;
 import lune.base.LuneControl;
+import lune.base.Option;
 
 class PubVerInfo {
    pub let staticFlag: bool;
@@ -1639,7 +1640,7 @@ fn convFilter.processLoadRuntime() mut
       self.writeln( 'local _lune = require( "%s" )' (_exp) );
    }
    else {
-      self.writeln( 'local _lune = require( "lune.base._lune%d" )' (Ver.luaModVersion) );
+      self.writeln( 'local _lune = require( "%s" )' (Option.getRuntimeModule()) );
    }
 }
 
@@ -1671,7 +1672,7 @@ pub fn convFilter.outputDeclMacro(
    self.pushIndent(##);
 
    // マクロのランタイムは、動作中の LuneScript のものを使う必要がある
-   self.writeln( 'local _lune = require( "lune.base._lune%d" )' (Ver.luaModVersion) );
+   self.writeln( 'local _lune = require( "%s" )' (Option.getRuntimeModule()) );
    
    self.writeln( "local __var = __macroArgs.__var" );
    foreach argName in argNameList {

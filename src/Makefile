@@ -154,10 +154,10 @@ define buildLnsOp
 	$(call $4,$1,$2,$3,base/front)
 	$(call $4,$1,$2,$3,base/glueFilter)
 	$(call $4,$1,$2,$3,Util)
-	$(call exeLune,$1/$2,-mklunemod,lune/base/_lune.lua) > /dev/null
+	$(call exeLune,$1/$2,-mklunemod,lune/base/runtime.lua) > /dev/null
 	cat $1/$2/$(VER_PATH) | $(RUNTIME_VER_PICK) | \
-		awk '//{printf( "$1/$2/lune/base/_lune%s.lua",$$0);}' | \
-		xargs cp $1/$2/lune/base/_lune.lua 
+		awk '//{printf( "$1/$2/lune/base/runtime%s.lua",$$0);}' | \
+		xargs cp $1/$2/lune/base/runtime.lua 
 endef
 
 define buildLns
@@ -281,7 +281,7 @@ define cp_src_set
 	cp $2/Makefile $1/
 	$(call mk_lune_proj_dir,$1)
 	$(call cp_src_set_sub,$2/lune/base,'base*.lua',$1/lune/base)
-	$(call cp_src_set_sub,$2/lune/base,'_lune*.lua',$1/lune/base)
+	$(call cp_src_set_sub,$2/lune/base,'runtime*.lua',$1/lune/base)
 	$(call cp_src_set_sub,$2/lune/base,'*.lns',$1/lune/base)
 	$(call cp_src_set_sub,$2/lune/base,'*.d',$1/lune/base)
 #	@cp lune/base/base*.lua lune/base/*.lns lune/base/*.d $1/lune/base
@@ -560,20 +560,20 @@ test-new2:
 	$(call build-testcode,work/3_2)
 	(cd work/3_2; $(LUA) test/start.lua) > work/test3.result
 
-# テストスクリプトを lua 化して、 _lune をロードしてテスト。
+# テストスクリプトを lua 化して、 runtime をロードしてテスト。
 	$(call build-testcode,work/3_2,-r)
 	(cd work/3_2; $(LUA) test/start.lua) > work/test4.result
 
 # 使用するランタイム名指定してテスト
 	$(call exeLune,work/3_2,-mklunemod,runtime.lua) > /dev/null
 	$(call build-testcode,work/3_2,--runtime runtime )
-# ランタイムを使用していることを確認するため _lune.lua を移動しておく
-	mkdir backup
-	mv work/3_2/lune/base/_lune*.lua backup
+# ランタイムを使用していることを確認するため runtime.lua を移動しておく
+	mkdir -p work/backup
+	mv work/3_2/lune/base/runtime*.lua work/backup
 	(cd work/3_2; $(LUA) test/start.lua) > work/test4-2.result
-# _lune.lua を戻す
-	mv backup/* work/3_2/lune/base/
-	rmdir backup
+# runtime.lua を戻す
+	mv work/backup/* work/3_2/lune/base/
+	rmdir work/backup
 
 	$(call exeLune,work/3_2,test/start.lns,save,--depends start.dep)
 
@@ -691,14 +691,12 @@ define setup-lua51-test-cross
 endef
 
 test-lua51-mkruntime:
-	$(call exeLune,work/5,-mklunemod,lune/base/_lune.lua)
+	$(call exeLune,work/5,-mklunemod,lune/base/runtime.lua)
 
 test-lua51:
 # LuneScript を Lua 5.1 にクロスコンパイルして実行
 	$(MAKE) -C work/5 build_from_d depend_on=y \
 			FROM_DIR=../3 TO_DIR=../5 LNS_OPT="-ol 51"
-#	$(call buildLns,work/3,../5,-ol 51)
-#	$(call exeLune,work/5,-mklunemod,lune/base/_lune.lua)
 	$(MAKE) test-lua51-mkruntime LUA=$(LUA51)
 	$(call setup-lua51-test,work/5)
 	(cd work/5; LUA_PATH=./?.lua $(LUA51) lune/base/base.lua test/start.lns -u exe ) > work/test6.result
@@ -726,7 +724,7 @@ test-lua51-sub:
 	$(MAKE) -C work/6 build_from_d depend_on=y FROM_DIR=../5 TO_DIR=../6
 #	$(call buildLns,work/5,../6)
 	$(call setup-lua51-test,work/6)
-	$(call exeLune,work/6,-mklunemod,lune/base/_lune.lua)
+	$(call exeLune,work/6,-mklunemod,lune/base/runtime.lua)
 	$(call exeLune,work/6,test/start.lns,exe,) | sed 's/\.0//g' > work/test7.result
 
 	cp -a work/6 work/6_2
@@ -784,7 +782,7 @@ endif
 check-runtime-format:
 # ランタイムバージョンが同じ場合は、ランタイムが一致しているかどうか比較
 ifeq ($(RUNTIME_ORG_VER),$(RUNTIME_NEW_VER))
-	@diff lune/base/_lune.lua work/1/lune/base/_lune.lua > /dev/null || \
+	@diff lune/base/runtime.lua work/1/lune/base/runtime.lua > /dev/null || \
 	(echo need to change the runtime version.; exit 1;)
 else
 	@echo runtime version ok.

@@ -248,6 +248,7 @@ local Depend = _lune.loadModule( 'lune.base.Depend' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Log = _lune.loadModule( 'lune.base.Log' )
 local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
+local Option = _lune.loadModule( 'lune.base.Option' )
 
 local PubVerInfo = {}
 function PubVerInfo.setmeta( obj )
@@ -2104,7 +2105,7 @@ function convFilter:processLoadRuntime(  )
       if _exp ~= nil then
          self:writeln( string.format( 'local _lune = require( "%s" )', _exp) )
       else
-         self:writeln( string.format( 'local _lune = require( "lune.base._lune%d" )', Ver.luaModVersion) )
+         self:writeln( string.format( 'local _lune = require( "%s" )', Option.getRuntimeModule(  )) )
       end
    end
    
@@ -2120,7 +2121,7 @@ function convFilter:outputDeclMacro( name, argNameList, callback )
    self:writeln( "__macroArgs )" )
    self:pushIndent(  )
    
-   self:writeln( string.format( 'local _lune = require( "lune.base._lune%d" )', Ver.luaModVersion) )
+   self:writeln( string.format( 'local _lune = require( "%s" )', Option.getRuntimeModule(  )) )
    
    self:writeln( "local __var = __macroArgs.__var" )
    for __index, argName in ipairs( argNameList ) do
@@ -3990,7 +3991,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3323, function (  )
+   Log.log( Log.Level.Info, __func__, 3324, function (  )
    
       return string.format( "code: %s", code)
    end )
