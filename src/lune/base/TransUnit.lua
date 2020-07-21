@@ -3517,8 +3517,8 @@ function TransUnit:error( mess )
       Util.errorLog( mess )
    end
    
-   if self.macroCtrl:get_macroMode() ~= Nodes.MacroMode.None then
-      print( "------ near code -----", Nodes.MacroMode:_getTxt( self.macroCtrl:get_macroMode())
+   if self.macroCtrl:get_analyzeInfo():get_mode() ~= Nodes.MacroMode.None then
+      print( "------ near code -----", Nodes.MacroMode:_getTxt( self.macroCtrl:get_analyzeInfo():get_mode())
        )
       print( self.parser:getNearCode(  ) )
       print( "------" )
@@ -3570,7 +3570,7 @@ function TransUnit:getTokenNoErr(  )
    
    if workToken.kind ~= Parser.TokenKind.Eof then
       token = workToken
-      if self.macroCtrl:get_macroMode() ~= Nodes.MacroMode.None then
+      if self.macroCtrl:get_analyzeInfo():get_mode() ~= Nodes.MacroMode.None then
          token = self.macroCtrl:expandMacroVal( self.typeNameCtrl, self.scope, self, token )
       end
       
@@ -5234,6 +5234,7 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, refFlag, mutF
    end
    
    
+   local itemNodeList = {}
    local arrayMode = "no"
    while true do
       if token.txt == '[' or token.txt == '[@' then
@@ -5252,11 +5253,13 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, refFlag, mutF
             self:checkNextToken( ']' )
          end
          
+         table.insert( itemNodeList, symbolNode )
       elseif token.txt == "<" then
          local genericList = {}
          local nextToken = Parser.getEofToken(  )
          repeat 
             local typeExp = self:analyzeRefType( accessMode, false, parentPub )
+            table.insert( itemNodeList, typeExp )
             table.insert( genericList, typeExp:get_expType() )
             nextToken = self:getToken(  )
          until nextToken.txt ~= ","
@@ -5365,7 +5368,7 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, refFlag, mutF
    end
    
    
-   return Nodes.RefTypeNode.create( self.nodeManager, symbolNode:get_pos(), self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, symbolNode, refFlag, mutFlag, arrayMode )
+   return Nodes.RefTypeNode.create( self.nodeManager, symbolNode:get_pos(), self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, symbolNode, itemNodeList, refFlag, mutFlag, arrayMode )
 end
 
 
@@ -5419,7 +5422,7 @@ function TransUnit:analyzeDeclArgList( accessMode, scope, argList, parentPub )
          do
             local symbolInfo = scope:addLocalVar( true, true, argName.txt, argName.pos, refType:get_expType(), mutable )
             if symbolInfo ~= nil then
-               local arg = Nodes.DeclArgNode.create( self.nodeManager, argName.pos, self.macroCtrl:isInAnalyzeArgMode(  ), refType:get_expTypeList(), argName, symbolInfo )
+               local arg = Nodes.DeclArgNode.create( self.nodeManager, argName.pos, self.macroCtrl:isInAnalyzeArgMode(  ), refType:get_expTypeList(), argName, symbolInfo, refType )
                
                table.insert( argList, arg )
             end
@@ -7948,7 +7951,7 @@ function TransUnit:analyzeLetAndInitExp( firstPos, initMutable, accessMode, unwr
                end
                
                if not argType:equals( Ast.builtinTypeEmpty ) and not argType:canEvalWith( checkType, Ast.CanEvalType.SetOp, {} ) then
-                  self:addErrMess( firstPos, string.format( "unmatch value type (index = %d) %s) <- %s", subIndex, argType:getTxt( self.typeNameCtrl ), dddItemType:getTxt(  )) )
+                  self:addErrMess( firstPos, string.format( "unmatch value type (index = %d) %s <- %s", subIndex, argType:getTxt( self.typeNameCtrl ), dddItemType:getTxt(  )) )
                end
                
                table.insert( expTypeList, checkType )
@@ -7990,8 +7993,12 @@ function TransUnit:analyzeLetAndInitExp( firstPos, initMutable, accessMode, unwr
                
                Ast.CanEvalCtrlTypeInfo.setupNeedAutoBoxing( alt2typeMap )
                
-               if not varType:equals( Ast.builtinTypeEmpty ) and not varType:canEvalWith( expTypeInfo, Ast.CanEvalType.SetOp, alt2typeMap ) and not (unwrapFlag and expTypeInfo:equals( Ast.builtinTypeNil ) ) then
-                  self:addErrMess( firstPos, string.format( "unmatch value type (index:%d) %s <- %s", index, varType:getTxt( self.typeNameCtrl ), expTypeInfo:getTxt( self.typeNameCtrl )) )
+               if not varType:equals( Ast.builtinTypeEmpty ) and not (unwrapFlag and expTypeInfo:equals( Ast.builtinTypeNil ) ) then
+                  local canEval, mess = varType:canEvalWith( expTypeInfo, Ast.CanEvalType.SetOp, alt2typeMap )
+                  if not canEval then
+                     self:addErrMess( firstPos, string.format( "unmatch value type (index:%d) %s <- %s%s", index, varType:getTxt( self.typeNameCtrl ), expTypeInfo:getTxt( self.typeNameCtrl ), mess and " -- " .. mess or "") )
+                  end
+                  
                end
                
                if varType:get_kind() == Ast.TypeInfoKind.Box then
@@ -8553,7 +8560,7 @@ function TransUnit:analyzeExpList( allowNoneType, skipOp2Flag, expNode, expectTy
       local exp
       
       
-      if self.macroCtrl:get_macroMode() == Nodes.MacroMode.AnalyzeArg and expectType == Ast.builtinTypeExp then
+      if self.macroCtrl:get_analyzeInfo():get_mode() == Nodes.MacroMode.AnalyzeArg and expectType == Ast.builtinTypeExp then
          self.macroCtrl:switchMacroMode(  )
          exp = self:analyzeExp( allowNoneType, skipOp2Flag, 0, expectType )
          self.macroCtrl:restoreMacroMode(  )
@@ -8605,6 +8612,10 @@ function TransUnit:analyzeExpList( allowNoneType, skipOp2Flag, expNode, expectTy
       
       
       index = index + 1
+      if self.macroCtrl:get_analyzeInfo():equalsArgTypeList( expectTypeList ) then
+         self.macroCtrl:get_analyzeInfo():nextArg(  )
+      end
+      
    until token.txt ~= ","
    
    local expListNode = self:createExpList( _lune.unwrapDefault( pos, Parser.Position.new(0, 0)), expTypeList, expList, followOn, abbrNode )
@@ -9205,7 +9216,7 @@ function TransUnit:evalMacroOp( firstToken, macroTypeInfo, expList, evalMacroCal
    end
    
    
-   self.macroCtrl:startExpandMode( firstToken.pos.lineNo, evalMacroCallback )
+   self.macroCtrl:startExpandMode( firstToken.pos.lineNo, macroTypeInfo, evalMacroCallback )
    
    local nextToken = self:getTokenNoErr(  )
    
@@ -9408,7 +9419,7 @@ function TransUnit:prepareExpCall( position, funcTypeInfo, genericTypeList, gene
 
    
    if funcTypeInfo:get_kind() == Ast.TypeInfoKind.Macro then
-      self.macroCtrl:startAnalyzeArgMode(  )
+      self.macroCtrl:startAnalyzeArgMode( funcTypeInfo )
    end
    
    
@@ -10262,7 +10273,7 @@ function TransUnit:analyzeExpField( firstToken, token, mode, prefixExp )
       
    end
    
-   if self.macroCtrl:get_macroMode() == Nodes.MacroMode.AnalyzeArg then
+   if self.macroCtrl:get_analyzeInfo():isAnalyzingArg(  ) then
       if accessNil then
          self.helperInfo.useNilAccess = true
       end
@@ -10597,7 +10608,7 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
       end
       
    elseif mode == ExpSymbolMode.Symbol then
-      if self.macroCtrl:get_macroMode() == Nodes.MacroMode.AnalyzeArg then
+      if self.macroCtrl:get_analyzeInfo():isAnalyzingArg(  ) then
          exp = Nodes.LiteralSymbolNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeSymbol}, token )
       else
        
@@ -11532,7 +11543,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, prevOpLevel, expectTy
       end
       
       
-      exp = Nodes.ExpOp1Node.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, token, self.macroCtrl:get_macroMode(), self.nodeManager:MultiTo1( exp ) )
+      exp = Nodes.ExpOp1Node.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, token, self.macroCtrl:get_analyzeInfo():get_mode(), self.nodeManager:MultiTo1( exp ) )
       return self:analyzeExpOp2( firstToken, exp, prevOpLevel ), true
    end
    
@@ -11641,7 +11652,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, prevOpLevel, expectTy
       
    elseif token.kind == Parser.TokenKind.Symb and token.txt == "__line__" then
       local lineNo = token.pos.lineNo
-      if self.macroCtrl:get_macroMode() ~= Nodes.MacroMode.None then
+      if self.macroCtrl:get_analyzeInfo():get_mode() ~= Nodes.MacroMode.None then
          lineNo = self.macroCtrl:get_macroCallLineNo()
       end
       

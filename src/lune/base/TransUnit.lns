@@ -2113,8 +2113,8 @@ pub fn TransUnit.error( mess: str ) mut : __ {
    foreach mess in self.warnMessList {
       Util.errorLog( mess );
    }
-   if self.macroCtrl.$macroMode ~= .None {
-      print( "------ near code -----", self.macroCtrl.$macroMode.$_txt );
+   if self.macroCtrl.$analyzeInfo.$mode ~= .None {
+      print( "------ near code -----", self.macroCtrl.$analyzeInfo.$mode.$_txt );
       print( self.parser.getNearCode() );
       print( "------" );
    }
@@ -2171,7 +2171,7 @@ fn TransUnit.getTokenNoErr() mut : &Parser.Token
    //    token = self.pushbackList[ #self.pushbackList ];
    //    self.pushbackList.remove(##);
 
-   //    if self.macroCtrl.$macroMode == .Expand {
+   //    if self.macroCtrl.$analyzeInfo.$mode == .Expand {
    //       token = self.macroCtrl.expandMacroVal(
    //          self.typeNameCtrl, self.scope, self, token );
    //    }
@@ -2186,7 +2186,7 @@ fn TransUnit.getTokenNoErr() mut : &Parser.Token
       }
       if workToken.$kind ~= .Eof {
          token = workToken;
-         if self.macroCtrl.$macroMode ~= .None {
+         if self.macroCtrl.$analyzeInfo.$mode ~= .None {
             token = self.macroCtrl.expandMacroVal(
                self.typeNameCtrl, self.scope, self, token );
          }

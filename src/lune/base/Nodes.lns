@@ -779,6 +779,7 @@ pub fn RootNode.set_provide( node: ProvideNode ) mut {
 
 _declNodeClass( "RefType", Node, false, false, false,
                 [ { "name": "&Node" },
+                  { "itemNodeList": "&List<&Node>" },
                   { "refFlag": "bool" },
                   { "mutFlag": "bool" },
                   { "array": "str" } ]
@@ -1563,8 +1564,8 @@ _declNodeClass( "DeclMember", Node, false, false, true,
 
 _declNodeClass( "DeclArg", Node, false, false, false,
                 [ { "name": "&Parser.Token" },
-                  { "symbolInfo": "&Ast.SymbolInfo" } ]
-                  //{ "argType": "&RefTypeNode" } ]
+                  { "symbolInfo": "&Ast.SymbolInfo" },
+                  { "argType": "&RefTypeNode!" } ]
 );
 
 _declNodeClass( "DeclArgDDD", Node, false, false, false, [] );

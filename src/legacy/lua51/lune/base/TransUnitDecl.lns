@@ -106,6 +106,7 @@ fn TransUnit.analyzeRefTypeWithSymbol(
       token = self.getToken(##);
    }
 
+   let mut itemNodeList:List<&Nodes.Node> = [];
    let mut arrayMode = "no";
    while true {
       if token.txt == '[' or token.txt == '[@' {
@@ -124,12 +125,14 @@ fn TransUnit.analyzeRefTypeWithSymbol(
             self.pushback();
             self.checkNextToken( ']' );
          }
+         itemNodeList.insert( symbolNode );
       }
       elseif token.txt == "<" {
          let mut genericList: List<&Ast.TypeInfo> = [];
          let mut nextToken: &Parser.Token = Parser.getEofToken();
          repeat {
             let typeExp = self.analyzeRefType( accessMode, false, parentPub );
+            itemNodeList.insert( typeExp );
             genericList.insert( typeExp.$expType );
             nextToken = self.getToken(##);
          } nextToken.txt ~= ",";
@@ -245,7 +248,7 @@ fn TransUnit.analyzeRefTypeWithSymbol(
    return Nodes.RefTypeNode.create(
       self.nodeManager, symbolNode.$pos,
       self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ],
-      symbolNode, refFlag, mutFlag, arrayMode );
+      symbolNode, itemNodeList, refFlag, mutFlag, arrayMode );
 }
 
 fn TransUnit.analyzeDeclArgList(
@@ -308,7 +311,7 @@ fn TransUnit.analyzeDeclArgList(
             let arg = Nodes.DeclArgNode.create(
                self.nodeManager, argName.pos,
                self.macroCtrl.isInAnalyzeArgMode(), refType.$expTypeList,
-               argName, symbolInfo );
+               argName, symbolInfo, refType );
 
             argList.insert( arg );
          }
@@ -3027,7 +3030,7 @@ fn TransUnit.analyzeLetAndInitExp(
                {
                   self.addErrMess(
                      firstPos,
-                     "unmatch value type (index = %d) %s) <- %s"
+                     "unmatch value type (index = %d) %s <- %s"
                      ( subIndex, argType.getTxt( self.typeNameCtrl## ),
                        dddItemType.getTxt(##) ));
                }
@@ -3066,15 +3069,19 @@ fn TransUnit.analyzeLetAndInitExp(
                Ast.CanEvalCtrlTypeInfo.setupNeedAutoBoxing( alt2typeMap );
 
                if not varType.equals( Ast.builtinTypeEmpty ## ) and
-                  not varType.canEvalWith( expTypeInfo, .SetOp, alt2typeMap ) and
                   not (unwrapFlag and expTypeInfo.equals( Ast.builtinTypeNil ## ))
                {
-                  self.addErrMess(
-                     firstPos,
-                     "unmatch value type (index:%d) %s <- %s"
-                     (index,
-                       varType.getTxt( self.typeNameCtrl ## ),
-                       expTypeInfo.getTxt( self.typeNameCtrl ## )));
+                  let canEval, mess = varType.canEvalWith(
+                     expTypeInfo, .SetOp, alt2typeMap );
+                  if not canEval {
+                     self.addErrMess(
+                        firstPos,
+                        "unmatch value type (index:%d) %s <- %s%s"
+                        ( index,
+                          varType.getTxt( self.typeNameCtrl ## ),
+                          expTypeInfo.getTxt( self.typeNameCtrl ## ),
+                          mess and " -- " .. mess or "" ) );
+                  }
                }
                if varType.$kind == .Box {
                   typeInfoList[ index ] = Ast.NormalTypeInfo.createBox(

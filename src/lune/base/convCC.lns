@@ -1519,7 +1519,7 @@ fn convFilter.processBuiltin() : &Nodes.NodeManager
                argList.insert(
                   Nodes.DeclArgNode.create(
                      nodeManager, dummyPos, false, [ argType ],
-                     argToken, argSym ) );
+                     argToken, argSym, nil ) );
             }
 
             when! classInfo {

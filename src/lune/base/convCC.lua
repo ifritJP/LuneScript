@@ -1995,7 +1995,7 @@ function convFilter:processBuiltin(  )
                local dummyScope = Ast.Scope.new(nil, false)
                local argSym = BuiltinArgSymbolInfo.new(dummyScope, argToken.txt, argType, nil, symbol:get_typeInfo())
                
-               table.insert( argList, Nodes.DeclArgNode.create( nodeManager, dummyPos, false, {argType}, argToken, argSym ) )
+               table.insert( argList, Nodes.DeclArgNode.create( nodeManager, dummyPos, false, {argType}, argToken, argSym, nil ) )
             end
             
             

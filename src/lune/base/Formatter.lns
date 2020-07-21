@@ -399,8 +399,12 @@ pub override fn FormatterFilter.processDeclArg(
    self.write( node.$symbolInfo.$name );
    self.write( ":" );
 
-   self.write( node.$expType.getTxt( ## ) );
-   //filter( node.$argType, self, opt.nextOpt( node ) );
+   if! let refType = node.$argType {
+      filter( refType, self, opt.nextOpt( node ) );
+   }
+   else {
+      self.write( node.$expType.getTxt( ## ) );
+   }
 };
 pub override fn FormatterFilter.processDeclArgDDD(
    node: &Nodes.DeclArgDDDNode, opt:Opt ) mut
@@ -519,7 +523,32 @@ pub override fn FormatterFilter.processExpCallSuper(
 pub override fn FormatterFilter.processRefType(
    node: &Nodes.RefTypeNode, opt:Opt ) mut
 {
-   self.write( node.$expType.getTxt( ## ) );
+   //self.write( node.$expType.getTxt( ## ) );
+   if not Ast.TypeInfo.isMut( node.$expType ) {
+      self.write( "&" );
+   }
+   filter( node.$name, self, opt.nextOpt( node ) );
+
+   let expType = node.$expType.$nonnilableType;
+
+   switch expType.$kind {
+      case .List, .Set {
+         self.write( "<" );
+         filter( node.$itemNodeList[ 1 ], self, opt.nextOpt( node ) );
+         self.write( ">" );
+      }
+      case .Map {
+         self.write( "<" );
+         filter( node.$itemNodeList[ 1 ], self, opt.nextOpt( node ) );
+         self.write( "," );
+         filter( node.$itemNodeList[ 2 ], self, opt.nextOpt( node ) );
+         self.write( ">" );
+      }
+   }
+
+   if node.$expType.$nilable {
+      self.write( "!" );
+   }
 };
 pub override fn FormatterFilter.processIf(
    node: &Nodes.IfNode, opt:Opt ) mut

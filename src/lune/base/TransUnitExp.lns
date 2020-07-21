@@ -161,7 +161,7 @@ fn TransUnit.analyzeExpList(
 
       let mut exp;
       
-      if self.macroCtrl.$macroMode == .AnalyzeArg and expectType == Ast.builtinTypeExp {
+      if self.macroCtrl.$analyzeInfo.$mode == .AnalyzeArg and expectType == Ast.builtinTypeExp {
          self.macroCtrl.switchMacroMode();
          exp = self.analyzeExp( allowNoneType, skipOp2Flag, 0, expectType );
          self.macroCtrl.restoreMacroMode();
@@ -215,8 +215,9 @@ fn TransUnit.analyzeExpList(
       }
 
       index = index + 1;
-      
-      
+      if self.macroCtrl.$analyzeInfo.equalsArgTypeList( expectTypeList ) {
+         self.macroCtrl.$analyzeInfo.nextArg();
+      }
    } token.txt ~= ",";
 
    let mut expListNode = self.createExpList(
@@ -893,7 +894,8 @@ fn TransUnit.evalMacroOp(
       self.error( unwrap mess );
    }
    
-   self.macroCtrl.startExpandMode( firstToken.pos.lineNo, evalMacroCallback );
+   self.macroCtrl.startExpandMode(
+      firstToken.pos.lineNo, macroTypeInfo, evalMacroCallback );
 
    // evalMacroCallback();
 
@@ -1084,7 +1086,7 @@ fn TransUnit.prepareExpCall(
 {
 
    if funcTypeInfo.$kind == .Macro {
-      self.macroCtrl.startAnalyzeArgMode();
+      self.macroCtrl.startAnalyzeArgMode( funcTypeInfo );
    }
 
    let work = self.getToken(##);
@@ -1947,7 +1949,7 @@ fn TransUnit.analyzeExpField(
             "This is not nilable. -- %s" (prefixExp.$expType.getTxt(##)) ); 
       }
    }
-   if self.macroCtrl.$macroMode == .AnalyzeArg {
+   if self.macroCtrl.$analyzeInfo.isAnalyzingArg() {
       if accessNil {
          self.helperInfo.useNilAccess = true;
       }
@@ -2279,7 +2281,7 @@ fn TransUnit.analyzeExpSymbol(
       }
    }
    elseif mode == .Symbol {
-      if self.macroCtrl.$macroMode == .AnalyzeArg {
+      if self.macroCtrl.$analyzeInfo.isAnalyzingArg() {
          exp = Nodes.LiteralSymbolNode.create(
             self.nodeManager, firstToken.pos,
             self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeSymbol ], token );
@@ -3245,7 +3247,7 @@ fn TransUnit.analyzeExp(
       exp = Nodes.ExpOp1Node.create(
          self.nodeManager, firstToken.pos,
          self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ], token,
-         self.macroCtrl.$macroMode, self.nodeManager.MultiTo1( exp ) );   
+         self.macroCtrl.$analyzeInfo.$mode, self.nodeManager.MultiTo1( exp ) );   
       return self.analyzeExpOp2( firstToken, exp, prevOpLevel ), true;
    }
 
@@ -3368,7 +3370,7 @@ fn TransUnit.analyzeExp(
    }  
    elseif token.kind == Parser.TokenKind.Symb and token.txt == "__line__" {
       let mut lineNo = token.pos.lineNo;
-      if self.macroCtrl.$macroMode ~= .None {
+      if self.macroCtrl.$analyzeInfo.$mode ~= .None {
          lineNo = self.macroCtrl.$macroCallLineNo;
       }
       exp = Nodes.LiteralIntNode.create(

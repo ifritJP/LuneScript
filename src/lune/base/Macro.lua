@@ -518,6 +518,57 @@ function ExtMacroInfo:get_name()
 end
 
 
+local MacroAnalyzeInfo = {}
+_moduleObj.MacroAnalyzeInfo = MacroAnalyzeInfo
+function MacroAnalyzeInfo.new( typeInfo, mode )
+   local obj = {}
+   MacroAnalyzeInfo.setmeta( obj )
+   if obj.__init then obj:__init( typeInfo, mode ); end
+   return obj
+end
+function MacroAnalyzeInfo:__init(typeInfo, mode) 
+   self.typeInfo = typeInfo
+   self.mode = mode
+   self.argIndex = 1
+end
+function MacroAnalyzeInfo:equalsArgTypeList( argTypeList )
+
+   return self.typeInfo:get_argTypeInfoList() == argTypeList
+end
+function MacroAnalyzeInfo:getCurArgType(  )
+
+   if #self.typeInfo:get_argTypeInfoList() < self.argIndex then
+      return Ast.builtinTypeNone
+   end
+   
+   return self.typeInfo:get_argTypeInfoList()[self.argIndex]
+end
+function MacroAnalyzeInfo:nextArg(  )
+
+   self.argIndex = self.argIndex + 1
+end
+function MacroAnalyzeInfo:isAnalyzingArg(  )
+
+   return self.mode == Nodes.MacroMode.AnalyzeArg and self:getCurArgType(  ) ~= Ast.builtinTypeExp
+end
+function MacroAnalyzeInfo:isAnalyzingExpArg(  )
+
+   return self.mode == Nodes.MacroMode.AnalyzeArg and self:getCurArgType(  ) == Ast.builtinTypeExp
+end
+function MacroAnalyzeInfo.setmeta( obj )
+  setmetatable( obj, { __index = MacroAnalyzeInfo  } )
+end
+function MacroAnalyzeInfo:get_typeInfo()
+   return self.typeInfo
+end
+function MacroAnalyzeInfo:get_mode()
+   return self.mode
+end
+function MacroAnalyzeInfo:get_argIndex()
+   return self.argIndex
+end
+
+
 local MacroCtrl = {}
 _moduleObj.MacroCtrl = MacroCtrl
 function MacroCtrl.new( macroEval )
@@ -532,9 +583,9 @@ function MacroCtrl:__init(macroEval)
    self.typeId2MacroInfo = {}
    self.symbol2ValueMapForMacro = {}
    self.macroEval = macroEval
-   self.macroMode = Nodes.MacroMode.None
+   self.analyzeInfo = MacroAnalyzeInfo.new(Ast.builtinTypeNone, Nodes.MacroMode.None)
    self.macroCallLineNo = 0
-   self.macroModeStack = {self.macroMode}
+   self.macroAnalyzeInfoStack = {self.analyzeInfo}
    self.macroLocalVarMap = {}
 end
 function MacroCtrl.setmeta( obj )
@@ -546,8 +597,8 @@ end
 function MacroCtrl:get_typeId2MacroInfo()
    return self.typeId2MacroInfo
 end
-function MacroCtrl:get_macroMode()
-   return self.macroMode
+function MacroCtrl:get_analyzeInfo()
+   return self.analyzeInfo
 end
 function MacroCtrl:get_tokenExpanding()
    return self.tokenExpanding
@@ -956,10 +1007,10 @@ function MacroCtrl:expandSymbol( parser, prefixToken, exp, nodeManager, errMessL
                   format = "' %s '"
                elseif valType:get_kind() == Ast.TypeInfoKind.List and valType:get_itemTypeInfoList()[1]:equals( Ast.builtinTypeStat ) then
                   format = "' %s '"
-                  exp = Nodes.ExpMacroStatListNode.create( nodeManager, prefixToken.pos, self.macroMode == Nodes.MacroMode.AnalyzeArg, {Ast.builtinTypeString}, exp )
+                  exp = Nodes.ExpMacroStatListNode.create( nodeManager, prefixToken.pos, self.analyzeInfo:get_mode() == Nodes.MacroMode.AnalyzeArg, {Ast.builtinTypeString}, exp )
                elseif Ast.builtinTypeString:equals( valType ) then
                elseif valType:equals( Ast.builtinTypeInt ) or valType:equals( Ast.builtinTypeReal ) then
-                  format = "'%s' "
+                  format = "' %s' "
                else
                 
                   table.insert( errMessList, ErrorMess.new(_lune.unwrap( symbolInfo:get_pos()), string.format( "not support ,, -- %s", valType:getTxt(  ))) )
@@ -967,7 +1018,7 @@ function MacroCtrl:expandSymbol( parser, prefixToken, exp, nodeManager, errMessL
                
             else
                if exp:get_expType():equals( Ast.builtinTypeInt ) or exp:get_expType():equals( Ast.builtinTypeReal ) then
-                  format = "'%s' "
+                  format = "' %s' "
                elseif exp:get_expType():equals( Ast.builtinTypeStat ) or exp:get_expType():equals( Ast.builtinTypeExp ) then
                   format = "' %s '"
                end
@@ -980,7 +1031,7 @@ function MacroCtrl:expandSymbol( parser, prefixToken, exp, nodeManager, errMessL
    end
    
    local newToken = Parser.Token.new(Parser.TokenKind.Str, format, prefixToken.pos, prefixToken.consecutive)
-   local literalStr = Nodes.LiteralStringNode.create( nodeManager, prefixToken.pos, self.macroMode == Nodes.MacroMode.AnalyzeArg, {Ast.builtinTypeString}, newToken, Nodes.ExpListNode.create( nodeManager, exp:get_pos(), self.macroMode == Nodes.MacroMode.AnalyzeArg, exp:get_expTypeList(), {exp}, nil, false ) )
+   local literalStr = Nodes.LiteralStringNode.create( nodeManager, prefixToken.pos, self.analyzeInfo:get_mode() == Nodes.MacroMode.AnalyzeArg, {Ast.builtinTypeString}, newToken, Nodes.ExpListNode.create( nodeManager, exp:get_pos(), self.analyzeInfo:get_mode() == Nodes.MacroMode.AnalyzeArg, exp:get_expTypeList(), {exp}, nil, false ) )
    return literalStr
 end
 
@@ -1004,16 +1055,16 @@ end
 
 function MacroCtrl:finishMacroMode(  )
 
-   table.remove( self.macroModeStack )
-   self.macroMode = self.macroModeStack[#self.macroModeStack]
+   table.remove( self.macroAnalyzeInfoStack )
+   self.analyzeInfo = self.macroAnalyzeInfoStack[#self.macroAnalyzeInfoStack]
 end
 
 
-function MacroCtrl:startExpandMode( lineNo, callback )
+function MacroCtrl:startExpandMode( lineNo, typeInfo, callback )
 
-   self.macroMode = Nodes.MacroMode.Expand
+   self.analyzeInfo = MacroAnalyzeInfo.new(typeInfo, Nodes.MacroMode.Expand)
    self.macroCallLineNo = lineNo
-   table.insert( self.macroModeStack, self.macroMode )
+   table.insert( self.macroAnalyzeInfoStack, self.analyzeInfo )
    
    callback(  )
    
@@ -1021,37 +1072,37 @@ function MacroCtrl:startExpandMode( lineNo, callback )
 end
 
 
-function MacroCtrl:startAnalyzeArgMode(  )
+function MacroCtrl:startAnalyzeArgMode( macroFuncType )
 
-   self.macroMode = Nodes.MacroMode.AnalyzeArg
-   table.insert( self.macroModeStack, self.macroMode )
+   self.analyzeInfo = MacroAnalyzeInfo.new(macroFuncType, Nodes.MacroMode.AnalyzeArg)
+   table.insert( self.macroAnalyzeInfoStack, self.analyzeInfo )
 end
 
 
 function MacroCtrl:switchMacroMode(  )
 
    
-   self.macroMode = self.macroModeStack[#self.macroModeStack - 1]
-   table.insert( self.macroModeStack, self.macroMode )
+   self.analyzeInfo = self.macroAnalyzeInfoStack[#self.macroAnalyzeInfoStack - 1]
+   table.insert( self.macroAnalyzeInfoStack, self.analyzeInfo )
 end
 
 
 function MacroCtrl:restoreMacroMode(  )
 
    
-   table.remove( self.macroModeStack )
-   self.macroMode = self.macroModeStack[#self.macroModeStack]
+   table.remove( self.macroAnalyzeInfoStack )
+   self.analyzeInfo = self.macroAnalyzeInfoStack[#self.macroAnalyzeInfoStack]
 end
 
 
 function MacroCtrl:isInAnalyzeArgMode(  )
 
-   if #self.macroModeStack == 0 then
+   if #self.macroAnalyzeInfoStack == 0 then
       return false
    end
    
-   for __index, mode in ipairs( self.macroModeStack ) do
-      if mode == Nodes.MacroMode.AnalyzeArg then
+   for __index, info in ipairs( self.macroAnalyzeInfoStack ) do
+      if info:get_mode() == Nodes.MacroMode.AnalyzeArg then
          return true
       end
       

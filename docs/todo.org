@@ -7,6 +7,24 @@
 #+TITLE: TODO
 
 * バグ
+- [ ] 次の match の unreach が認識できていない
+alge Hoge {
+   Val1,
+   Val2,
+}
+
+fn func( val:Hoge ) {
+   match val {
+      case .Val1 {
+         return;
+      }
+      case .Val2 {
+         return;
+      }
+   }
+   print( "hoge" ); // ここは unreach
+}
+  
 - [ ] imuttable のメンバに代入できてしまう。
 class Hoge {
    pub let val:int!;
@@ -56,6 +74,10 @@ _hoge( func() );
 - [ ] provide しているファイルで __test はエラーにする。
   
 * 機能
+
+- [ ] List コンストラクタで、最後に , があるとエラーになる。
+
+      [ 1, 2, 3, ]  ← エラー
 
 - [ ] Mapping でメンバ名と異なるシンボルを Mapping できるようにする。 Go のようなもの。
 

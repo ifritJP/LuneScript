@@ -3353,6 +3353,7 @@ pub class NormalTypeInfo extend TypeInfo {
       //    };
       //    return _exp.getTxt() .. "[]";
       // }
+      let mut name;
       if #self.itemTypeInfoList > 0 {
          let mut txt = raw .. "<";
          foreach typeInfo, index in self.itemTypeInfoList {
@@ -3362,9 +3363,12 @@ pub class NormalTypeInfo extend TypeInfo {
             txt = txt .. typeInfo.getTxt( typeNameCtrl, importInfo, localFlag );
          }
 
-         return parentTxt .. txt .. ">";
+         name = parentTxt .. txt .. ">";
       }
-      return parentTxt .. raw;
+      else {
+         name = parentTxt .. raw;
+      }
+      return name;
    }
 
 
@@ -5194,7 +5198,7 @@ pub static fn TypeInfo.checkMatchType(
                   return .Error, "exp(%d) type mismatch %s <- %s: index %d%s"
                   ( index, dstType.getTxt( defaultTypeNameCtrl## ),
                     expType.getTxt(defaultTypeNameCtrl## ), index,
-                    msg and "-- %s" (msg) or "");               
+                    msg and " -- %s" (msg) or "");               
                }
                if not allowDstShort and #dstTypeList < #expTypeList {
                   return .Error, "over exp. expect: %d: actual: %d"
@@ -5504,22 +5508,43 @@ pub static fn TypeInfo.canEvalWithBase(
       elseif dest.$kind == .FormFunc {
          switch otherSrc.$kind {
             case .FormFunc, .Func {
-               if TypeInfo.checkMatchType( dest.$argTypeInfoList,
-                                           otherSrc.$argTypeInfoList,
-                                           false, nil, alt2type ) == .Error or
-                  TypeInfo.checkMatchType( otherSrc.$argTypeInfoList,
-                                           dest.$argTypeInfoList,
-                                           false, nil, alt2type ) == .Error or
-                  TypeInfo.checkMatchType( dest.$retTypeInfoList,
-                                           otherSrc.$retTypeInfoList,
-                                           false, nil, alt2type ) == .Error or
-                  TypeInfo.checkMatchType( otherSrc.$retTypeInfoList,
-                                           dest.$retTypeInfoList,
-                                           false, nil, alt2type ) == .Error or
-                  #dest.$retTypeInfoList ~= #otherSrc.$retTypeInfoList
                {
-                  return false, nil;
+                  let result, mess = TypeInfo.checkMatchType(
+                     dest.$argTypeInfoList, otherSrc.$argTypeInfoList,
+                     false, nil, alt2type );
+                  if result == .Error {
+                     return false, mess;
+                  }
                }
+               {
+                  let result, mess = TypeInfo.checkMatchType(
+                     otherSrc.$argTypeInfoList, dest.$argTypeInfoList,
+                     false, nil, alt2type );
+                  if result == .Error {
+                     return false, mess;
+                  }
+               }
+               {
+                  let result, mess = TypeInfo.checkMatchType(
+                     dest.$retTypeInfoList, otherSrc.$retTypeInfoList,
+                     false, nil, alt2type );
+                  if result == .Error {
+                     return false, mess;
+                  }
+               }
+               {
+                  let result, mess = TypeInfo.checkMatchType(
+                     otherSrc.$retTypeInfoList, dest.$retTypeInfoList,
+                     false, nil, alt2type );
+                  if result == .Error {
+                     return false, mess;
+                  }
+               }
+               if #dest.$retTypeInfoList ~= #otherSrc.$retTypeInfoList {
+                  return false, "argNum %d != %d" ( #dest.$retTypeInfoList,
+                                                    #otherSrc.$retTypeInfoList );
+               }
+               
                return true, nil;
             }
          }
@@ -5593,13 +5618,19 @@ pub static fn TypeInfo.canEvalWithBase(
          return isSettableToForm( otherSrc ), nil;
       }
       case .Func, .FormFunc {
-         if TypeInfo.checkMatchType( dest.$argTypeInfoList, otherSrc.$argTypeInfoList,
-                                     false, nil, alt2type ) == .Error or
-            TypeInfo.checkMatchType( dest.$retTypeInfoList, otherSrc.$retTypeInfoList,
-                                     false, nil, alt2type ) == .Error or
-            #dest.$retTypeInfoList ~= #otherSrc.$retTypeInfoList
-         {
-            return false, nil;
+         if #dest.$retTypeInfoList ~= #otherSrc.$retTypeInfoList {
+            return false, "argNum %d != %d" ( #dest.$retTypeInfoList,
+                                              #otherSrc.$retTypeInfoList );
+         }
+         let argCheck, argMess = TypeInfo.checkMatchType(
+            dest.$argTypeInfoList, otherSrc.$argTypeInfoList, false, nil, alt2type );
+         if argCheck == .Error {
+            return false, argMess;
+         }
+         let retCheck, retMess = TypeInfo.checkMatchType(
+            dest.$retTypeInfoList, otherSrc.$retTypeInfoList, false, nil, alt2type );
+         if retCheck == .Error {
+            return false, retMess;
          }
          return true, nil;
       }

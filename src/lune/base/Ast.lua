@@ -4658,6 +4658,8 @@ function NormalTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag 
       parentTxt = self:getParentFullName( typeNameCtrl, importInfo, localFlag )
    end
    
+   local name
+   
    if #self.itemTypeInfoList > 0 then
       local txt = raw .. "<"
       for index, typeInfo in ipairs( self.itemTypeInfoList ) do
@@ -4669,10 +4671,13 @@ function NormalTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag 
       end
       
       
-      return parentTxt .. txt .. ">"
+      name = parentTxt .. txt .. ">"
+   else
+    
+      name = parentTxt .. raw
    end
    
-   return parentTxt .. raw
+   return name
 end
 function NormalTypeInfo:get_display_stirng_with( raw )
 
@@ -6849,7 +6854,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
             if dstType:get_srcTypeInfo():get_kind() ~= TypeInfoKind.DDD then
                local isMatch, msg = dstType:canEvalWith( expType, CanEvalType.SetOp, alt2type )
                if not isMatch then
-                  return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s: index %d%s", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:getTxt( _moduleObj.defaultTypeNameCtrl ), index, msg and string.format( "-- %s", msg) or "")
+                  return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s: index %d%s", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:getTxt( _moduleObj.defaultTypeNameCtrl ), index, msg and string.format( " -- %s", msg) or "")
                end
                
                if not allowDstShort and #dstTypeList < #expTypeList then
@@ -7172,9 +7177,42 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
          do
             local _switchExp = otherSrc:get_kind()
             if _switchExp == TypeInfoKind.FormFunc or _switchExp == TypeInfoKind.Func then
-               if TypeInfo.checkMatchType( dest:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false, nil, alt2type ) == MatchType.Error or TypeInfo.checkMatchType( otherSrc:get_argTypeInfoList(), dest:get_argTypeInfoList(), false, nil, alt2type ) == MatchType.Error or TypeInfo.checkMatchType( dest:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false, nil, alt2type ) == MatchType.Error or TypeInfo.checkMatchType( otherSrc:get_retTypeInfoList(), dest:get_retTypeInfoList(), false, nil, alt2type ) == MatchType.Error or #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
-                  return false, nil
+               do
+                  local result, mess = TypeInfo.checkMatchType( dest:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false, nil, alt2type )
+                  if result == MatchType.Error then
+                     return false, mess
+                  end
+                  
                end
+               
+               do
+                  local result, mess = TypeInfo.checkMatchType( otherSrc:get_argTypeInfoList(), dest:get_argTypeInfoList(), false, nil, alt2type )
+                  if result == MatchType.Error then
+                     return false, mess
+                  end
+                  
+               end
+               
+               do
+                  local result, mess = TypeInfo.checkMatchType( dest:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false, nil, alt2type )
+                  if result == MatchType.Error then
+                     return false, mess
+                  end
+                  
+               end
+               
+               do
+                  local result, mess = TypeInfo.checkMatchType( otherSrc:get_retTypeInfoList(), dest:get_retTypeInfoList(), false, nil, alt2type )
+                  if result == MatchType.Error then
+                     return false, mess
+                  end
+                  
+               end
+               
+               if #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
+                  return false, string.format( "argNum %d != %d", #dest:get_retTypeInfoList(), #otherSrc:get_retTypeInfoList())
+               end
+               
                
                return true, nil
             end
@@ -7289,8 +7327,18 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
       elseif _switchExp == TypeInfoKind.Form then
          return isSettableToForm( otherSrc ), nil
       elseif _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.FormFunc then
-         if TypeInfo.checkMatchType( dest:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false, nil, alt2type ) == MatchType.Error or TypeInfo.checkMatchType( dest:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false, nil, alt2type ) == MatchType.Error or #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
-            return false, nil
+         if #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
+            return false, string.format( "argNum %d != %d", #dest:get_retTypeInfoList(), #otherSrc:get_retTypeInfoList())
+         end
+         
+         local argCheck, argMess = TypeInfo.checkMatchType( dest:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false, nil, alt2type )
+         if argCheck == MatchType.Error then
+            return false, argMess
+         end
+         
+         local retCheck, retMess = TypeInfo.checkMatchType( dest:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false, nil, alt2type )
+         if retCheck == MatchType.Error then
+            return false, retMess
          end
          
          return true, nil

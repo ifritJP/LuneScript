@@ -1456,27 +1456,28 @@ function RefTypeNode:canBeStatement(  )
 
    return false
 end
-function RefTypeNode.new( id, pos, macroArgFlag, typeList, name, refFlag, mutFlag, array )
+function RefTypeNode.new( id, pos, macroArgFlag, typeList, name, itemNodeList, refFlag, mutFlag, array )
    local obj = {}
    RefTypeNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, name, refFlag, mutFlag, array ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, name, itemNodeList, refFlag, mutFlag, array ); end
    return obj
 end
-function RefTypeNode:__init(id, pos, macroArgFlag, typeList, name, refFlag, mutFlag, array) 
+function RefTypeNode:__init(id, pos, macroArgFlag, typeList, name, itemNodeList, refFlag, mutFlag, array) 
    Node.__init( self,id, 5, pos, macroArgFlag, typeList)
    
    
    
    self.name = name
+   self.itemNodeList = itemNodeList
    self.refFlag = refFlag
    self.mutFlag = mutFlag
    self.array = array
    
    
 end
-function RefTypeNode.create( nodeMan, pos, macroArgFlag, typeList, name, refFlag, mutFlag, array )
+function RefTypeNode.create( nodeMan, pos, macroArgFlag, typeList, name, itemNodeList, refFlag, mutFlag, array )
 
-   local node = RefTypeNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, name, refFlag, mutFlag, array)
+   local node = RefTypeNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, name, itemNodeList, refFlag, mutFlag, array)
    nodeMan:addNode( node )
    return node
 end
@@ -1499,6 +1500,27 @@ function RefTypeNode:visit( visitor, depth )
       
    end
    
+   do
+      local list = self.itemNodeList
+      for __index, child in ipairs( list ) do
+         do
+            local _switchExp = visitor( child, self, 'itemNodeList', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1 ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
+               return false
+            end
+         end
+         
+         
+      end
+      
+      
+   end
+   
    
    
    return true
@@ -1508,6 +1530,9 @@ function RefTypeNode.setmeta( obj )
 end
 function RefTypeNode:get_name()
    return self.name
+end
+function RefTypeNode:get_itemNodeList()
+   return self.itemNodeList
 end
 function RefTypeNode:get_refFlag()
    return self.refFlag
@@ -7893,30 +7918,54 @@ function DeclArgNode:canBeStatement(  )
 
    return false
 end
-function DeclArgNode.new( id, pos, macroArgFlag, typeList, name, symbolInfo )
+function DeclArgNode.new( id, pos, macroArgFlag, typeList, name, symbolInfo, argType )
    local obj = {}
    DeclArgNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, name, symbolInfo ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, name, symbolInfo, argType ); end
    return obj
 end
-function DeclArgNode:__init(id, pos, macroArgFlag, typeList, name, symbolInfo) 
+function DeclArgNode:__init(id, pos, macroArgFlag, typeList, name, symbolInfo, argType) 
    Node.__init( self,id, 55, pos, macroArgFlag, typeList)
    
    
    
    self.name = name
    self.symbolInfo = symbolInfo
+   self.argType = argType
    
    
 end
-function DeclArgNode.create( nodeMan, pos, macroArgFlag, typeList, name, symbolInfo )
+function DeclArgNode.create( nodeMan, pos, macroArgFlag, typeList, name, symbolInfo, argType )
 
-   local node = DeclArgNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, name, symbolInfo)
+   local node = DeclArgNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, name, symbolInfo, argType)
    nodeMan:addNode( node )
    return node
 end
 function DeclArgNode:visit( visitor, depth )
 
+   do
+      do
+         local child = self.argType
+         if child ~= nil then
+            do
+               local _switchExp = visitor( child, self, 'argType', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1 ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
+                  return false
+               end
+            end
+            
+            
+         end
+      end
+      
+   end
+   
+   
    
    return true
 end
@@ -7928,6 +7977,9 @@ function DeclArgNode:get_name()
 end
 function DeclArgNode:get_symbolInfo()
    return self.symbolInfo
+end
+function DeclArgNode:get_argType()
+   return self.argType
 end
 
 

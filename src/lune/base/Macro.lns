@@ -155,7 +155,37 @@ class ExtMacroInfo extend Nodes.MacroInfo {
    }
 }
 
+pub class MacroAnalyzeInfo {
+   let typeInfo:&Ast.TypeInfo {pub};
+   let mode:Nodes.MacroMode {pub};
+   let mut argIndex:int {pub};
 
+   pub fn __init( typeInfo:&Ast.TypeInfo, mode:Nodes.MacroMode ) {
+      self.typeInfo = typeInfo;
+      self.mode = mode;
+      self.argIndex = 1;
+   }
+
+   pub fn equalsArgTypeList( argTypeList: &List<&Ast.TypeInfo>! ) : bool {
+      return self.typeInfo.$argTypeInfoList == argTypeList;
+   }
+   pub fn getCurArgType():&Ast.TypeInfo {
+      if #self.typeInfo.$argTypeInfoList < self.argIndex {
+         return Ast.builtinTypeNone;
+      }
+      return self.typeInfo.$argTypeInfoList[ self.argIndex ];
+   }
+   pub fn nextArg() mut {
+      self.argIndex = self.argIndex + 1;
+   }
+
+   pub fn isAnalyzingArg(): bool {
+      return self.mode == .AnalyzeArg and self.getCurArgType() ~= Ast.builtinTypeExp;
+   }
+   pub fn isAnalyzingExpArg(): bool {
+      return self.mode == .AnalyzeArg and self.getCurArgType() == Ast.builtinTypeExp;
+   }
+}
 
 pub class MacroCtrl
 {
@@ -167,8 +197,8 @@ pub class MacroCtrl
    /** 現在展開中の macro-expand 内で利用できるシンボルと値の紐付けマップ */
    pri let mut symbol2ValueMapForMacro: Map<str,Nodes.MacroValInfo>;
    /** マクロのモード */
-   pri let mut macroMode: Nodes.MacroMode {pub};
-   pri let mut macroModeStack: List<Nodes.MacroMode>;
+   pri let mut analyzeInfo: MacroAnalyzeInfo {pub};
+   pri let mut macroAnalyzeInfoStack: List<MacroAnalyzeInfo>;
    /** true の場合、Token 展開中 */
    pri let mut tokenExpanding:bool {pub};
    /** マクロをコールしている行番号 */
@@ -187,9 +217,9 @@ pub class MacroCtrl
       self.typeId2MacroInfo = {};
       self.symbol2ValueMapForMacro = {};
       self.macroEval = macroEval;
-      self.macroMode = .None;
+      self.analyzeInfo = new MacroAnalyzeInfo( Ast.builtinTypeNone, .None );
       self.macroCallLineNo = 0;
-      self.macroModeStack = [ self.macroMode ];
+      self.macroAnalyzeInfoStack = [ self.analyzeInfo ];
       self.macroLocalVarMap = {};
    }
 }
@@ -681,7 +711,7 @@ pub fn MacroCtrl.expandSymbol(
                format = "' %s '";
                exp = Nodes.ExpMacroStatListNode.create(
                   nodeManager, prefixToken.pos,
-                  self.macroMode == .AnalyzeArg, [ Ast.builtinTypeString ], exp );
+                  self.analyzeInfo.$mode == .AnalyzeArg, [ Ast.builtinTypeString ], exp );
             }
             elseif Ast.builtinTypeString.equals( valType ##) {
                //
@@ -689,7 +719,7 @@ pub fn MacroCtrl.expandSymbol(
             elseif valType.equals( Ast.builtinTypeInt ##) or
                valType.equals( Ast.builtinTypeReal ##)
             {
-               format = "'%s' ";
+               format = "' %s' ";
             }
             else {
                errMessList.insert(
@@ -701,7 +731,7 @@ pub fn MacroCtrl.expandSymbol(
             if exp.$expType.equals( Ast.builtinTypeInt ##) or
                exp.$expType.equals( Ast.builtinTypeReal ##)
             {
-               format = "'%s' ";
+               format = "' %s' ";
             }
             elseif exp.$expType.equals( Ast.builtinTypeStat ##) or
                exp.$expType.equals( Ast.builtinTypeExp ##)
@@ -714,10 +744,10 @@ pub fn MacroCtrl.expandSymbol(
    let newToken = new Parser.Token(
       Parser.TokenKind.Str, format, prefixToken.pos, prefixToken.consecutive ## );
    let literalStr = Nodes.LiteralStringNode.create(
-      nodeManager, prefixToken.pos, self.macroMode == .AnalyzeArg,
+      nodeManager, prefixToken.pos, self.analyzeInfo.$mode == .AnalyzeArg,
       [ Ast.builtinTypeString ], newToken,
       Nodes.ExpListNode.create(
-         nodeManager, exp.$pos, self.macroMode == .AnalyzeArg,
+         nodeManager, exp.$pos, self.analyzeInfo.$mode == .AnalyzeArg,
          exp.$expTypeList, [ exp ], nil, false ) );
    return literalStr;
 }
@@ -746,25 +776,27 @@ pub fn MacroCtrl.startDecl() mut {
 pub form EvalMacroCallback();
 
 pub fn MacroCtrl.finishMacroMode() mut {
-   self.macroModeStack.remove(##);
-   self.macroMode = self.macroModeStack[ #self.macroModeStack ];
+   self.macroAnalyzeInfoStack.remove(##);
+   self.analyzeInfo = self.macroAnalyzeInfoStack[ #self.macroAnalyzeInfoStack ];
    // self.symbol2ValueMapForMacro = {};
 }
 
 
-pub fn MacroCtrl.startExpandMode( lineNo:int, callback:EvalMacroCallback ) mut {
-   self.macroMode = .Expand;
+pub fn MacroCtrl.startExpandMode(
+   lineNo:int, typeInfo:&Ast.TypeInfo, callback:EvalMacroCallback ) mut
+{
+   self.analyzeInfo = new MacroAnalyzeInfo( typeInfo, .Expand );
    self.macroCallLineNo = lineNo;
-   self.macroModeStack.insert( self.macroMode );
+   self.macroAnalyzeInfoStack.insert( self.analyzeInfo );
 
    callback();
 
    self.finishMacroMode();
 }
 
-pub fn MacroCtrl.startAnalyzeArgMode() mut {
-   self.macroMode = .AnalyzeArg;
-   self.macroModeStack.insert( self.macroMode );
+pub fn MacroCtrl.startAnalyzeArgMode( macroFuncType:&Ast.TypeInfo ) mut {
+   self.analyzeInfo = new MacroAnalyzeInfo( macroFuncType, .AnalyzeArg );
+   self.macroAnalyzeInfoStack.insert( self.analyzeInfo );
    // let mut map:Map<str,Nodes.MacroValInfo> = {};
    // foreach val, key in self.symbol2ValueMapForMacro {
    //    map[ key ] = val;
@@ -773,15 +805,15 @@ pub fn MacroCtrl.startAnalyzeArgMode() mut {
 }
 
 pub fn MacroCtrl.switchMacroMode() mut {
-   //   self.macroMode = .None;
-   self.macroMode = self.macroModeStack[ #self.macroModeStack - 1 ];
-   self.macroModeStack.insert( self.macroMode );
+   //   self.analyzeInfo.$mode = .None;
+   self.analyzeInfo = self.macroAnalyzeInfoStack[ #self.macroAnalyzeInfoStack - 1 ];
+   self.macroAnalyzeInfoStack.insert( self.analyzeInfo );
 }
 
 pub fn MacroCtrl.restoreMacroMode() mut {
-   //self.macroMode = .AnalyzeArg;
-   self.macroModeStack.remove(##);
-   self.macroMode = self.macroModeStack[ #self.macroModeStack ];
+   //self.analyzeInfo.$mode = .AnalyzeArg;
+   self.macroAnalyzeInfoStack.remove(##);
+   self.analyzeInfo = self.macroAnalyzeInfoStack[ #self.macroAnalyzeInfoStack ];
 }
 
 /**
@@ -789,11 +821,11 @@ pub fn MacroCtrl.restoreMacroMode() mut {
 Macroモード がネストされている場合、ネストを辿って調べる。
 */
 pub fn MacroCtrl.isInAnalyzeArgMode(): bool {
-   if #self.macroModeStack == 0 {
+   if #self.macroAnalyzeInfoStack == 0 {
       return false;
    }
-   foreach mode in self.macroModeStack {
-      if mode == .AnalyzeArg {
+   foreach info in self.macroAnalyzeInfoStack {
+      if info.$mode == .AnalyzeArg {
          return true;
       }
    }

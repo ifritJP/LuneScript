@@ -1484,6 +1484,7 @@ print( '\\""\"\'\\.\\' );
    }
 }
 {
+   Macro._section();
    macro _DefOption( mode:str ) {
       {
          let name;
@@ -1497,6 +1498,7 @@ print( '\\""\"\'\\.\\' );
    let hogeAA = new HogeAA();
 }
 {
+   Macro._section();
    class Hoge {
    }
    macro _DefOption2( work:str ) {
@@ -1508,6 +1510,7 @@ print( '\\""\"\'\\.\\' );
    let hogeAA = new HogeA( new Hoge() );
 }
 {
+   Macro._section();
    macro _test0( name:str, val:int ) {
       {
          __var[ name ] = val;
@@ -1531,6 +1534,7 @@ print( '\\""\"\'\\.\\' );
    _test1();
 }
 {
+   Macro._section();
    interface Imp {
       pub fn func();
    }
@@ -1548,4 +1552,48 @@ print( '\\""\"\'\\.\\' );
    foreach item in list {
       item.func();
    }
+}
+{
+   Macro._section();
+   macro _test5( val:__exp ) {
+      let test = ,,val;
+   }
+
+   _test5( new SUB2.Test() );
+
+   macro _hoge( val:__exp ) {
+      let foo = ,,val;
+   }
+
+   _hoge( fn ( aa:SUB2.Test ) {} );
+}
+{
+   Macro._section();
+   form TestForm( map:Map<int,str>! );
+   fn func( test:TestForm ) {
+      print( __func__ );
+   }
+
+   macro _hoge( val:__exp ) {
+      func( ,,val );
+   }
+   _hoge( fn( map:Map<int,str>! ){} );
+
+}
+{
+   macro _Test( val:int ) {
+      {
+         let defstat = `{
+            fn ,,,"func%d"(val)~~():int {
+               return ,,val;
+            }
+         };
+      }
+      ,,defstat;
+   }
+
+   _Test( 1 );
+   _Test( 10 );
+
+   print( func1(), func10() ); // 1  10
 }

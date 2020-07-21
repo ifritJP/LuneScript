@@ -692,7 +692,15 @@ function FormatterFilter:processDeclArg( node, opt )
    self:write( node:get_symbolInfo():get_name() )
    self:write( ":" )
    
-   self:write( node:get_expType():getTxt(  ) )
+   do
+      local refType = node:get_argType()
+      if refType ~= nil then
+         filter( refType, self, opt:nextOpt( node ) )
+      else
+         self:write( node:get_expType():getTxt(  ) )
+      end
+   end
+   
 end
 
 
@@ -837,7 +845,35 @@ end
 
 function FormatterFilter:processRefType( node, opt )
 
-   self:write( node:get_expType():getTxt(  ) )
+   
+   if not Ast.TypeInfo.isMut( node:get_expType() ) then
+      self:write( "&" )
+   end
+   
+   filter( node:get_name(), self, opt:nextOpt( node ) )
+   
+   local expType = node:get_expType():get_nonnilableType()
+   
+   do
+      local _switchExp = expType:get_kind()
+      if _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Set then
+         self:write( "<" )
+         filter( node:get_itemNodeList()[1], self, opt:nextOpt( node ) )
+         self:write( ">" )
+      elseif _switchExp == Ast.TypeInfoKind.Map then
+         self:write( "<" )
+         filter( node:get_itemNodeList()[1], self, opt:nextOpt( node ) )
+         self:write( "," )
+         filter( node:get_itemNodeList()[2], self, opt:nextOpt( node ) )
+         self:write( ">" )
+      end
+   end
+   
+   
+   if node:get_expType():get_nilable() then
+      self:write( "!" )
+   end
+   
 end
 
 
