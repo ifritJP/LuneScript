@@ -3227,7 +3227,13 @@ fn TransUnit.analyzeDeclVar(
          let typeInfo = typeInfoList[ 1 ];
          let letVaInfo = letVarList[ 1 ];
          if #expList.$expList == 1 and typeInfo.$kind == .Func {
-            if! let declNode = expList.$expList[ 1 ]@@@Nodes.DeclFuncNode {
+            let mut valExp = expList.$expList[ 1 ];
+            if! let macroExp = valExp@@@Nodes.ExpMacroExpNode {
+               if macroExp.$expType.$kind == .Func and #macroExp.$stmtList == 1 {
+                  valExp = macroExp.$stmtList[1];
+               }
+            }
+            if! let declNode = valExp@@@Nodes.DeclFuncNode {
                if not declNode.$declInfo.$name {
                   if Ast.isMutable( letVaInfo.mutable ) {
                      self.addErrMess(

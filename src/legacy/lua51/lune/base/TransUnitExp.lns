@@ -936,17 +936,25 @@ fn TransUnit.evalMacro(
    // return self.createNode(
    //     nodeKindExpMacroExp, firstToken.pos, builtinTypeNone, stmtList );
 
-   let expTypeList;
-   if #macroTypeInfo.$retTypeInfoList ~= 0 {
-      expTypeList = macroTypeInfo.$retTypeInfoList;
+   let mut expTypeList = macroTypeInfo.$retTypeInfoList;
+   if #macroTypeInfo.$retTypeInfoList > 0 {
+      // マクロに戻り値が指定されている場合
+      let macroRetTypeList = macroTypeInfo.$retTypeInfoList;
       if #stmtList == 1 {
          let node = stmtList[ 1 ];
-         if #node.$expTypeList == 1 {
-            if not expTypeList[ 1 ].equals( node.$expType ## ) {
-               self.addErrMess( firstToken.pos,
-                                "mismatch type -- %s != %s"
-                                (expTypeList[ 1 ].getTxt(##),
-                                  node.$expType.getTxt(##)) );
+         let retType = macroRetTypeList[ 1 ];
+         if retType.equals( Ast.builtinTypeExp ## ) {
+            expTypeList = node.$expTypeList;
+         }
+         elseif #node.$expTypeList == 1 {
+            if retType.equals( node.$expType ## ) {
+               expTypeList = node.$expTypeList;
+            }
+            else {
+               self.addErrMess(
+                  firstToken.pos,   
+                  "mismatch type -- %s != %s"
+                  (macroRetTypeList[ 1 ].getTxt(##), node.$expType.getTxt(##)) );
             }
          }
          else {
@@ -955,7 +963,7 @@ fn TransUnit.evalMacro(
          }
       }
       else {
-         self.addErrMess( firstToken.pos, "nothing exp" );
+         self.addErrMess( firstToken.pos, "macro to return value must be one statemnt." );
       }
    }
    else {
@@ -3019,6 +3027,52 @@ fn TransUnit.analyzeExpUnwrap( firstToken: &Parser.Token ) mut : Nodes.Node {
       self.macroCtrl.isInAnalyzeArgMode(), [ unwrapType ], expNode, insNode );
 }
 
+/**
+リテラル文字列処理
+
+@param token リテラル文字列トークン
+@return LiteralStringNode
+*/
+fn TransUnit.analyzeStrConst(
+   firstToken:&Parser.Token, token:&Parser.Token ) mut : Nodes.Node
+{
+   let exp;
+   
+   let mut nextToken = self.getToken( true );
+   if nextToken.kind ~= .Eof {
+      let expList:&Nodes.ExpListNode!;
+      if nextToken.txt == "(" {
+         let argNodeList = self.analyzeExpList( false, false, nil ## );
+         expList = argNodeList;
+         self.checkNextToken( ")" );
+         nextToken = self.getToken( true );
+
+         self.checkStringFormat( token.pos, token.txt, argNodeList.$expTypeList );
+      }
+      else {
+         expList = nil;
+      }
+
+      let mut workExp:Nodes.Node = Nodes.LiteralStringNode.create(
+         self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
+         [ Ast.builtinTypeString ], token, expList );
+      if nextToken.txt == "[" or nextToken.txt == "$[" {
+         exp = self.analyzeExpRefItem( nextToken, workExp, nextToken.txt == "$[" );
+      }
+      else {
+         exp = workExp;
+         if nextToken.kind ~= .Eof {
+            self.pushback();
+         }
+      }
+   }
+   else {
+      exp = Nodes.LiteralStringNode.create(
+         self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
+         [ Ast.builtinTypeString ], token, nil );
+   }
+   return exp;
+}
 
 fn TransUnit.analyzeExp(
    allowNoneType: bool, skipOp2Flag: bool,
@@ -3343,31 +3397,8 @@ fn TransUnit.analyzeExp(
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeChar ], token, num );
    }  
    elseif token.kind == Parser.TokenKind.Str {
-      let mut nextToken = self.getToken(##);
-      let expList:&Nodes.ExpListNode!;
-      if nextToken.txt == "(" {
-         let argNodeList = self.analyzeExpList( false, false, nil ## );
-         expList = argNodeList;
-         self.checkNextToken( ")" );
-         nextToken = self.getToken(##);
-
-         self.checkStringFormat( token.pos, token.txt, argNodeList.$expTypeList );
-      }
-      else {
-         expList = nil;
-      }
-
-      exp = Nodes.LiteralStringNode.create(
-         self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
-         [ Ast.builtinTypeString ], token, expList );
-      token = nextToken;
-      if token.txt == "[" or token.txt == "$[" {
-         exp = self.analyzeExpRefItem( token, exp, token.txt == "$[" );
-      }  
-      else {
-         self.pushback();
-      }  
-   }  
+      exp = self.analyzeStrConst( firstToken, token );
+   }
    elseif token.kind == Parser.TokenKind.Symb and token.txt == "__line__" {
       let mut lineNo = token.pos.lineNo;
       if self.macroCtrl.$analyzeInfo.$mode ~= .None {

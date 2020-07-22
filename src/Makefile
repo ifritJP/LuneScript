@@ -1058,3 +1058,13 @@ test-miniGo:
 	$(call convGo,.,lune/base/runtime_go/miniGo.lns)
 	go run lune/base/runtime_go/miniGo.go $(GO_SRC)
 
+test-reference:
+	if [ -d work/ifritJP.github.io ]; then						\
+		(cd work/ifritJP.github.io; git pull);					\
+	else										\
+		(cd work; git clone https://github.com/ifritJP/ifritJP.github.io.git);	\
+	fi
+
+
+test-reference-sample:
+	lua5.3 lune/base/base.lua test/checkReference.lns exe

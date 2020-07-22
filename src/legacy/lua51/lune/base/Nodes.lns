@@ -1512,12 +1512,16 @@ pub static fn DeclFuncInfo.createFrom(
       info.has__func__Symbol, info.overrideFlag );
 }
 
-_declNodeClass( "DeclFunc", Node, false, nil, true,
+_declNodeClass( "DeclFunc", Node, false, nil, nil,
                 [ { "declInfo": "&DeclFuncInfo" } ]
 );
 pub override fn DeclFuncNode.canBeRight():bool {
    // anonymous 関数なら r-value に成れる
    return self.declInfo.$name == nil;
+}
+pub override fn DeclFuncNode.canBeStatement():bool {
+   // anonymous 関数以外なら statement に成れる
+   return not (self.declInfo.$name == nil);
 }
 
 

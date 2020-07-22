@@ -1581,6 +1581,7 @@ print( '\\""\"\'\\.\\' );
 
 }
 {
+   Macro._section();
    macro _Test( val:int ) {
       {
          let defstat = `{
@@ -1596,4 +1597,47 @@ print( '\\""\"\'\\.\\' );
    _Test( 10 );
 
    print( func1(), func10() ); // 1  10
+}
+{
+   Macro._section();
+   macro _hoge( val:__exp ) : __exp {
+      "%d" (,,val)
+   }
+
+   print( _hoge( 1 ) );
+   
+}
+{
+   Macro._section();
+   macro _hoge(arg:__exp) {
+      let foo = ,,arg;
+   }
+   _hoge(
+      fn ( val:int! ) {
+         let! val2 = val {
+            return;
+         };
+         print( val2 );
+      }
+   );
+   foo( nil );
+   foo( 1 );
+}
+{
+   Macro._section();
+   macro _hoge( val:__exp ) : __exp {
+      ,,val
+   }
+
+   fn sub() : int, int! {
+      return 1, nil;
+   }
+   let bar = _hoge(
+      fn ( arg1:int! ) {
+         let! foo = sub() {
+            return;
+         };
+         print( arg1, foo );
+      });
+   bar( nil );
 }

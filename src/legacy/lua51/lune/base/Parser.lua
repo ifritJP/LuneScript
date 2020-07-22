@@ -697,7 +697,14 @@ function DefaultPushbackParser:getNearCode(  )
    local code = ""
    for index = #self.usedTokenList - 30, #self.usedTokenList do
       if index > 1 then
-         code = string.format( "%s %s", code, self.usedTokenList[index].txt)
+         local token = self.usedTokenList[index]
+         if token.consecutive then
+            code = string.format( "%s%s", code, self.usedTokenList[index].txt)
+         else
+          
+            code = string.format( "%s %s", code, self.usedTokenList[index].txt)
+         end
+         
       end
       
    end

@@ -631,9 +631,15 @@ function FormatterFilter:processDeclVar( node, opt )
    do
       local _switchExp = node:get_mode()
       if _switchExp == Nodes.DeclVarMode.Let then
-         self:write( "let " )
+         if node:get_unwrapFlag() then
+            self:write( "let! " )
+         else
+          
+            self:write( "let " )
+         end
+         
       elseif _switchExp == Nodes.DeclVarMode.Unwrap then
-         self:write( "let! " )
+         self:write( "unwrap! " )
       end
    end
    
@@ -1081,6 +1087,10 @@ function FormatterFilter:processExpList( node, opt )
    local expList = node:get_expList()
    for index, exp in ipairs( expList ) do
       if index > 1 then
+         if exp:get_kind() == Nodes.NodeKind.get_ExpAccessMRet() then
+            break
+         end
+         
          if exp:get_expType():get_kind() ~= Ast.TypeInfoKind.Abbr then
             self:write( ", " )
          else

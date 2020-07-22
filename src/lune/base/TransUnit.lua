@@ -8144,8 +8144,19 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
          local typeInfo = typeInfoList[1]
          local letVaInfo = letVarList[1]
          if #expList:get_expList() == 1 and typeInfo:get_kind() == Ast.TypeInfoKind.Func then
+            local valExp = expList:get_expList()[1]
             do
-               local declNode = _lune.__Cast( expList:get_expList()[1], 3, Nodes.DeclFuncNode )
+               local macroExp = _lune.__Cast( valExp, 3, Nodes.ExpMacroExpNode )
+               if macroExp ~= nil then
+                  if macroExp:get_expType():get_kind() == Ast.TypeInfoKind.Func and #macroExp:get_stmtList() == 1 then
+                     valExp = macroExp:get_stmtList()[1]
+                  end
+                  
+               end
+            end
+            
+            do
+               local declNode = _lune.__Cast( valExp, 3, Nodes.DeclFuncNode )
                if declNode ~= nil then
                   if not declNode:get_declInfo():get_name() then
                      if Ast.isMutable( letVaInfo.mutable ) then
@@ -9248,15 +9259,21 @@ function TransUnit:evalMacro( firstToken, macroTypeInfo, expList )
       
    end )
    
-   local expTypeList
-   
-   if #macroTypeInfo:get_retTypeInfoList() ~= 0 then
-      expTypeList = macroTypeInfo:get_retTypeInfoList()
+   local expTypeList = macroTypeInfo:get_retTypeInfoList()
+   if #macroTypeInfo:get_retTypeInfoList() > 0 then
+      
+      local macroRetTypeList = macroTypeInfo:get_retTypeInfoList()
       if #stmtList == 1 then
          local node = stmtList[1]
-         if #node:get_expTypeList() == 1 then
-            if not expTypeList[1]:equals( node:get_expType() ) then
-               self:addErrMess( firstToken.pos, string.format( "mismatch type -- %s != %s", expTypeList[1]:getTxt(  ), node:get_expType():getTxt(  )) )
+         local retType = macroRetTypeList[1]
+         if retType:equals( Ast.builtinTypeExp ) then
+            expTypeList = node:get_expTypeList()
+         elseif #node:get_expTypeList() == 1 then
+            if retType:equals( node:get_expType() ) then
+               expTypeList = node:get_expTypeList()
+            else
+             
+               self:addErrMess( firstToken.pos, string.format( "mismatch type -- %s != %s", macroRetTypeList[1]:getTxt(  ), node:get_expType():getTxt(  )) )
             end
             
          else
@@ -9266,7 +9283,7 @@ function TransUnit:evalMacro( firstToken, macroTypeInfo, expList )
          
       else
        
-         self:addErrMess( firstToken.pos, "nothing exp" )
+         self:addErrMess( firstToken.pos, "macro to return value must be one statemnt." )
       end
       
    else
@@ -11324,6 +11341,49 @@ function TransUnit:analyzeExpUnwrap( firstToken )
 end
 
 
+function TransUnit:analyzeStrConst( firstToken, token )
+
+   local exp
+   
+   
+   local nextToken = self:getToken( true )
+   if nextToken.kind ~= Parser.TokenKind.Eof then
+      local expList
+      
+      if nextToken.txt == "(" then
+         local argNodeList = self:analyzeExpList( false, false, nil )
+         expList = argNodeList
+         self:checkNextToken( ")" )
+         nextToken = self:getToken( true )
+         
+         self:checkStringFormat( token.pos, token.txt, argNodeList:get_expTypeList() )
+      else
+       
+         expList = nil
+      end
+      
+      
+      local workExp = Nodes.LiteralStringNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeString}, token, expList )
+      if nextToken.txt == "[" or nextToken.txt == "$[" then
+         exp = self:analyzeExpRefItem( nextToken, workExp, nextToken.txt == "$[" )
+      else
+       
+         exp = workExp
+         if nextToken.kind ~= Parser.TokenKind.Eof then
+            self:pushback(  )
+         end
+         
+      end
+      
+   else
+    
+      exp = Nodes.LiteralStringNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeString}, token, nil )
+   end
+   
+   return exp
+end
+
+
 function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, prevOpLevel, expectType )
 
    local firstToken = self:getToken(  )
@@ -11625,31 +11685,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, prevOpLevel, expectTy
       
       exp = Nodes.LiteralCharNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeChar}, token, num )
    elseif token.kind == Parser.TokenKind.Str then
-      local nextToken = self:getToken(  )
-      local expList
-      
-      if nextToken.txt == "(" then
-         local argNodeList = self:analyzeExpList( false, false, nil )
-         expList = argNodeList
-         self:checkNextToken( ")" )
-         nextToken = self:getToken(  )
-         
-         self:checkStringFormat( token.pos, token.txt, argNodeList:get_expTypeList() )
-      else
-       
-         expList = nil
-      end
-      
-      
-      exp = Nodes.LiteralStringNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeString}, token, expList )
-      token = nextToken
-      if token.txt == "[" or token.txt == "$[" then
-         exp = self:analyzeExpRefItem( token, exp, token.txt == "$[" )
-      else
-       
-         self:pushback(  )
-      end
-      
+      exp = self:analyzeStrConst( firstToken, token )
    elseif token.kind == Parser.TokenKind.Symb and token.txt == "__line__" then
       local lineNo = token.pos.lineNo
       if self.macroCtrl:get_analyzeInfo():get_mode() ~= Nodes.MacroMode.None then

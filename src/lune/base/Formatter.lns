@@ -358,10 +358,15 @@ pub override fn FormatterFilter.processDeclVar(
    
    switch node.$mode {
       case .Let {
-         self.write( "let " );
+         if node.$unwrapFlag {
+            self.write( "let! " );
+         }
+         else {
+            self.write( "let " );
+         }
       }
       case .Unwrap {
-         self.write( "let! " );
+         self.write( "unwrap! " );
       }
    }
    
@@ -710,6 +715,9 @@ pub override fn FormatterFilter.processExpList(
    let expList = node.$expList;
    foreach exp, index in expList {
       if index > 1 {
+         if exp.$kind == Nodes.NodeKind.$ExpAccessMRet {
+            break;
+         }
          if exp.$expType.$kind ~= .Abbr { 
             self.write( ", " );
          }

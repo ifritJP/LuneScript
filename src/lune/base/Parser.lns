@@ -429,7 +429,13 @@ pub class DefaultPushbackParser extend (PushbackParser) {
       let mut code = "";
       for index = #self.usedTokenList - 30, #self.usedTokenList {
          if index > 1 {
-            code = "%s %s" ( code, self.usedTokenList[ index ].txt );
+            let token = self.usedTokenList[ index ];
+            if token.consecutive {
+               code = "%s%s" ( code, self.usedTokenList[ index ].txt );
+            }
+            else {
+               code = "%s %s" ( code, self.usedTokenList[ index ].txt );
+            }
          }
       }
       return "%s -- current '%s'" (code, self.currentToken.txt );

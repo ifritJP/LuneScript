@@ -7300,10 +7300,6 @@ function DeclFuncNode:canBeLeft(  )
 
    return false
 end
-function DeclFuncNode:canBeStatement(  )
-
-   return true
-end
 function DeclFuncNode.new( id, pos, macroArgFlag, typeList, declInfo )
    local obj = {}
    DeclFuncNode.setmeta( obj )
@@ -7342,6 +7338,12 @@ function DeclFuncNode:canBeRight(  )
 
    
    return self.declInfo:get_name() == nil
+end
+
+function DeclFuncNode:canBeStatement(  )
+
+   
+   return not (self.declInfo:get_name() == nil )
 end
 
 
