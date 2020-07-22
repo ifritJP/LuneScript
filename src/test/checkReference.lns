@@ -1,0 +1,141 @@
+import lune.base.Parser;
+import lune.base.front;
+import lune.base.Depend;
+
+module Wrap require 'test.checkReferenceSub' {
+   pub static fn pcall( func:form ): bool, str!;
+}
+
+class Test {
+   let mut lineNo:int;
+
+   pub fn __init() {
+      self.lineNo = 0;
+   }
+
+   fn openFile( path:str ) : Parser.TxtStream! {
+      let! mut fileObj = io.open( path ##) {
+         return nil;
+      };
+      let! docTxt = fileObj.read( "*a" ) {
+         return nil;
+      };
+      return new Parser.TxtStream( docTxt );
+   }
+
+   fn getLnsSrcBlock( stream:iStream ) mut: str! {
+      let mut inBlockFlag = false;
+      let mut srcBlock = "";
+      while true {
+         let! line = stream.read( '*l' ) {
+            if inBlockFlag {
+               return srcBlock;
+            }
+            return nil;
+         };
+         self.lineNo = self.lineNo + 1;
+         let upper = line.upper();
+         if inBlockFlag {
+            if upper.find( '^#%+END_SRC' ## ) {
+               return srcBlock;
+            }
+            else {
+               srcBlock = "%s\n%s" (srcBlock, line);
+            }
+         }
+         else {
+            if upper.find( '^#%+BEGIN_SRC LNS' ## ) {
+               inBlockFlag = true;
+            }
+         }
+      }
+   }
+}
+
+alge TestResult {
+   OK,
+   NG( lineNo:int, mess:str ),
+}
+
+enum Expect {
+   OK,
+   NG,
+   Skip,
+}
+
+pub fn Test.exeBlock( block:str, expect:Expect ): TestResult {
+   let mut luaCode = "";
+   let! ret, mess = Wrap.pcall( fn() {
+      luaCode = front.convertLnsCode2LuaCode( block, "sample.lns" );
+   })
+   {
+      mess = "";
+   };     
+   if not ret {
+      // 失敗した場合
+      if mess.find( "has error" ## ) {
+         switch expect {
+            case .OK {
+               return .NG( self.lineNo, mess );
+            }
+         }
+      }
+      else {
+         return .NG( self.lineNo, mess );
+      }
+   }
+   else {
+      // 成功した場合
+      switch expect {
+         case .NG {
+            return .NG( self.lineNo, mess );
+         }
+      }
+   }
+   return .OK;
+}
+
+pub fn Test.check( path:str ) mut: bool {
+   let! mut stream = self.openFile( path .. "all.org" ) {
+      return false;
+   };
+
+   let mut total = 0;
+   while true {
+      let! block = self.getLnsSrcBlock( stream ) {
+         print( "total = %d" (total) );
+         return true;
+      };
+      total = total + 1;
+
+      let expect:Expect;
+      if block.find( "@lnsFront: error" ## ) {
+         expect = .NG;
+      }
+      elseif block.find( "@lnsFront: ok" ## ) {
+         expect = .OK;
+      }
+      elseif block.find( "@lnsFront: skip" ## ) {
+         expect = .Skip;
+      }
+      else {
+         print( "%d: not found @lnsFront" (self.lineNo));
+         return false;
+      }
+
+      if expect ~= .Skip {
+         match self.exeBlock( block, expect ) {
+            case .NG(lineNo,mess) {
+               print( "error:%d:%s" (lineNo, mess ) );
+               return false;
+            }
+         }
+      }
+   }
+}
+
+   
+let mut test = new Test();
+if not test.check( "work/ifritJP.github.io/hugo/content/LuneScript/" ) {
+   os.exit( 1 );
+}

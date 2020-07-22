@@ -1064,7 +1064,8 @@ test-reference:
 	else										\
 		(cd work; git clone https://github.com/ifritJP/ifritJP.github.io.git);	\
 	fi
+	$(MAKE) test-reference-sample
 
 
 test-reference-sample:
-	lua5.3 lune/base/base.lua test/checkReference.lns exe
+	$(call exeLune,.,test/checkReference.lns exe)
