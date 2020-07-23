@@ -1641,3 +1641,16 @@ print( '\\""\"\'\\.\\' );
       });
    bar( nil );
 }
+{
+   Macro._section();
+   macro _hoge() : __exp {
+      sub()
+   }
+
+   fn sub() : int, int! {
+      return 1, 2;
+   }
+   let val1, val2 = _hoge();
+   print( val1, val2 );
+
+}
