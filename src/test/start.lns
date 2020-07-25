@@ -1608,6 +1608,16 @@ print( '\\""\"\'\\.\\' );
    
 }
 {
+   macro _hoge() : __exps {
+      sub()
+   }
+   fn sub(): int, int {
+      return 1, 2;
+   }
+
+   print( _hoge()** );
+}
+{
    Macro._section();
    macro _hoge(arg:__exp) {
       let foo = ,,arg;
@@ -1643,14 +1653,23 @@ print( '\\""\"\'\\.\\' );
 }
 {
    Macro._section();
-   macro _hoge() : __exp {
+   macro _hoge() : __exps {
       sub()
    }
-
    fn sub() : int, int! {
       return 1, 2;
    }
    let val1, val2 = _hoge();
    print( val1, val2 );
 
+}
+{
+   Macro._section();
+   macro _hoge( val:__exps ) {
+      print( ,,val** );
+   }
+   fn sub() : int, int {
+      return 1, 2;
+   }
+   _hoge( sub() );
 }

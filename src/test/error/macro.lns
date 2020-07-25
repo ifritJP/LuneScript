@@ -6,6 +6,16 @@ macro _test() { // error
 macro _Test( val:int ) {
 }
 
+{
+   macro _hoge() : __exp {
+      sub()
+   }
+   fn sub(): int, int {
+      return 1, 2;
+   }
+
+   print( _hoge() ); // error
+}
 _Test( 1, 2 ); // error
 
 

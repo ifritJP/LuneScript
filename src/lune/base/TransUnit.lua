@@ -8485,7 +8485,7 @@ function TransUnit:createExpList( pos, expTypeList, expList, followOn, abbrNode 
    local mRetExp = nil
    if #expList > 0 then
       for index, exp in ipairs( expList ) do
-         if Nodes.hasMultiValNode( exp ) then
+         if expTypeList[index] ~= Ast.builtinTypeMultiExp and Nodes.hasMultiValNode( exp ) then
             
             if index ~= #expList then
                
@@ -8548,9 +8548,9 @@ function TransUnit:analyzeExpList( allowNoneType, skipOp2Flag, expNode, expectTy
    
    local index = 1
    local abbrNode = nil
-   local mRetExp = nil
    local followOn = false
    repeat 
+      
       local expectType = nil
       if expectTypeList ~= nil then
          if #expectTypeList > 0 then
@@ -8571,7 +8571,7 @@ function TransUnit:analyzeExpList( allowNoneType, skipOp2Flag, expNode, expectTy
       local exp
       
       
-      if self.macroCtrl:get_analyzeInfo():get_mode() == Nodes.MacroMode.AnalyzeArg and expectType == Ast.builtinTypeExp then
+      if self.macroCtrl:get_analyzeInfo():get_mode() == Nodes.MacroMode.AnalyzeArg and (expectType == Ast.builtinTypeExp or expectType == Ast.builtinTypeMultiExp ) then
          self.macroCtrl:switchMacroMode(  )
          exp = self:analyzeExp( allowNoneType, skipOp2Flag, 0, expectType )
          self.macroCtrl:restoreMacroMode(  )
@@ -8589,13 +8589,15 @@ function TransUnit:analyzeExpList( allowNoneType, skipOp2Flag, expNode, expectTy
          pos = exp:get_pos()
       end
       
-      if expectType == Ast.builtinTypeExp then
+      if expectType == Ast.builtinTypeExp or expectType == Ast.builtinTypeMultiExp then
          exp = Nodes.ExpMacroArgExpNode.create( self.nodeManager, exp:get_pos(), self.macroCtrl:isInAnalyzeArgMode(  ), exp:get_expTypeList(), Macro.nodeToCodeTxt( exp, self.moduleType ) )
+         table.insert( expTypeList, _lune.unwrap( expectType) )
+      else
+       
+         table.insert( expTypeList, exp:get_expType() )
       end
       
-      
       table.insert( expList, exp )
-      table.insert( expTypeList, exp:get_expType() )
       local token = self:getToken( true )
       
       if token.txt == "**" then
@@ -8616,7 +8618,6 @@ function TransUnit:analyzeExpList( allowNoneType, skipOp2Flag, expNode, expectTy
          end
          
          abbrNode = Nodes.AbbrNode.create( self.nodeManager, token.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeAbbr} )
-         
          self:getToken(  )
          break
       end
@@ -9074,7 +9075,7 @@ function TransUnit:checkMatchType( message, pos, dstTypeList, expListNode, allow
          realExpNum = index - 1
       end
       
-      if index == #workExpNodeList then
+      if index == #workExpNodeList and _lune.__Cast( expNode, 3, Nodes.ExpMacroArgExpNode ) == nil then
          for __index, expType in ipairs( expNode:get_expTypeList() ) do
             table.insert( expTypeList, expType )
          end
@@ -9266,8 +9267,16 @@ function TransUnit:evalMacro( firstToken, macroTypeInfo, expList )
       if #stmtList == 1 then
          local node = stmtList[1]
          local retType = macroRetTypeList[1]
-         if retType:equals( Ast.builtinTypeExp ) then
+         if retType:equals( Ast.builtinTypeMultiExp ) then
             expTypeList = node:get_expTypeList()
+         elseif retType:equals( Ast.builtinTypeExp ) then
+            if #node:get_expTypeList() == 1 then
+               expTypeList = node:get_expTypeList()
+            else
+             
+               self:addErrMess( firstToken.pos, "__exp can't return multipul values. use __exps." )
+            end
+            
          elseif #node:get_expTypeList() == 1 then
             if retType:equals( node:get_expType() ) then
                expTypeList = node:get_expTypeList()

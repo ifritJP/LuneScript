@@ -4185,6 +4185,8 @@ pub let builtinTypeStat:TypeInfo =
    NormalTypeInfo.createBuiltin( "Stat", "stat" , .Prim## );
 pub let builtinTypeExp:TypeInfo =
    NormalTypeInfo.createBuiltin( "Exp", "__exp" , .Prim## );
+pub let builtinTypeMultiExp:TypeInfo =
+   NormalTypeInfo.createBuiltin( "Exps", "__exps" , .Prim## );
 
 
 pub class CombineType {
@@ -5324,7 +5326,10 @@ pub static fn TypeInfo.canEvalWithBase(
    dest:&TypeInfo, destMut:bool, other:&TypeInfo, canEvalType:CanEvalType,
    alt2type:Map<&TypeInfo,&TypeInfo> ) : bool, str!
 {
-   if dest == builtinTypeExp {
+   if dest == builtinTypeExp or dest == builtinTypeMultiExp {
+      if other == builtinTypeMultiExp and dest ~= builtinTypeMultiExp {
+         return false, "can't eval from '__exp' to '__exps'.";
+      }
       // とりあえず全て OK とする
       return true, nil;
    }

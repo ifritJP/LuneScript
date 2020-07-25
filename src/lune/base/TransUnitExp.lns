@@ -55,7 +55,9 @@ fn TransUnit.createExpList(
    let mut mRetExp:Nodes.MRetExp! = nil;
    if #expList > 0 {
       foreach exp, index in expList {
-         if Nodes.hasMultiValNode( exp ) {
+         if expTypeList[ index ] ~= Ast.builtinTypeMultiExp and
+            Nodes.hasMultiValNode( exp )
+         {
             // 複数の結果を持つ場合
             if index ~= #expList {
                // 最終ノード以外
@@ -141,9 +143,9 @@ fn TransUnit.analyzeExpList(
 
    let mut index = 1;
    let mut abbrNode:&Nodes.AbbrNode! = nil;
-   let mut mRetExp:Nodes.MRetExp! = nil;
    let mut followOn = false;
    repeat {
+      // 期待値の確定
       let mut expectType:&Ast.TypeInfo! = nil;
       when! expectTypeList {
          if #expectTypeList > 0 {
@@ -161,7 +163,9 @@ fn TransUnit.analyzeExpList(
 
       let mut exp;
       
-      if self.macroCtrl.$analyzeInfo.$mode == .AnalyzeArg and expectType == Ast.builtinTypeExp {
+      if self.macroCtrl.$analyzeInfo.$mode == .AnalyzeArg and
+         ( expectType == Ast.builtinTypeExp or expectType == Ast.builtinTypeMultiExp )
+      {
          self.macroCtrl.switchMacroMode();
          exp = self.analyzeExp( allowNoneType, skipOp2Flag, 0, expectType );
          self.macroCtrl.restoreMacroMode();
@@ -179,15 +183,17 @@ fn TransUnit.analyzeExpList(
       if not pos {
          pos = exp.$pos;
       }
-      if expectType == Ast.builtinTypeExp {
+      if expectType == Ast.builtinTypeExp or expectType == Ast.builtinTypeMultiExp {
          exp = Nodes.ExpMacroArgExpNode.create(
             self.nodeManager, exp.$pos,
             self.macroCtrl.isInAnalyzeArgMode(), exp.$expTypeList,
             Macro.nodeToCodeTxt( exp, self.moduleType ) );
+         expTypeList.insert( unwrap expectType );
       }
-      
+      else {
+         expTypeList.insert( exp.$expType );
+      }
       expList.insert( exp );
-      expTypeList.insert( exp.$expType );
       let mut token = self.getToken( true );
 
       if token.txt == "**" {
@@ -209,7 +215,6 @@ fn TransUnit.analyzeExpList(
          abbrNode = Nodes.AbbrNode.create(
             self.nodeManager, token.pos,
             self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeAbbr ] );
-                                         
          self.getToken(##);
          break;
       }
@@ -235,9 +240,6 @@ fn TransUnit.analyzeExpList(
 
    self.pushback();
 
-   // return Nodes.ExpListNode.create(
-   //    self.nodeManager, unwrap pos default new Parser.Position( 0, 0 ),
-   //    expTypeList, expList, mRetExp, followOn );
    return expListNode;
 }
 
@@ -710,7 +712,7 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!, &List<&Ast
       if realExpNum == -1 and expNode.$kind == Nodes.NodeKind.$ExpAccessMRet {
          realExpNum = index - 1;
       }
-      if index == #workExpNodeList {
+      if index == #workExpNodeList and expNode@@@Nodes.ExpMacroArgExpNode == nil {
          foreach expType in expNode.$expTypeList {
             expTypeList.insert( expType );
          }
@@ -943,8 +945,17 @@ fn TransUnit.evalMacro(
       if #stmtList == 1 {
          let node = stmtList[ 1 ];
          let retType = macroRetTypeList[ 1 ];
-         if retType.equals( Ast.builtinTypeExp ## ) {
+         if retType.equals( Ast.builtinTypeMultiExp ## ) {
             expTypeList = node.$expTypeList;
+         }
+         elseif retType.equals( Ast.builtinTypeExp ## ) {
+            if #node.$expTypeList == 1 {
+               expTypeList = node.$expTypeList;
+            }
+            else {
+               self.addErrMess( firstToken.pos,
+                                "__exp can't return multipul values. use __exps." );
+            }
          }
          elseif #node.$expTypeList == 1 {
             if retType.equals( node.$expType ## ) {
