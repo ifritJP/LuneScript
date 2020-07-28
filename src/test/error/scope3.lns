@@ -1,0 +1,9 @@
+{
+   fn functest() {
+      print( __func__ );
+   }
+   __scope root () {
+      functest(); // error
+      print( "hoge" );
+   }
+}

@@ -5171,6 +5171,73 @@ function TransUnit:analyzeProvide( firstToken )
 end
 
 
+function TransUnit:analyzeScope( firstToken )
+
+   
+   local nextToken = self:getToken(  )
+   local scopeKind
+   
+   do
+      local _switchExp = nextToken.txt
+      if _switchExp == "root" then
+         scopeKind = Nodes.ScopeKind.Root
+      else 
+         
+            self:error( string.format( "illegal scope kind. -- %s", nextToken.txt) )
+      end
+   end
+   
+   
+   local symList = {}
+   nextToken = self:getToken(  )
+   if nextToken.txt == "(" then
+      nextToken = self:getToken(  )
+      while nextToken.txt ~= ")" do
+         local symbolNode = self:analyzeExpSymbol( nextToken, nextToken, ExpSymbolMode.Symbol, nil, true )
+         local workSymList = symbolNode:getSymbolInfo(  )
+         if #workSymList > 0 then
+            local symbol = workSymList[1]
+            table.insert( symList, workSymList[1] )
+         end
+         
+         nextToken = self:getToken(  )
+         do
+            local _switchExp = nextToken.txt
+            if _switchExp == ")" then
+            elseif _switchExp == "," then
+               nextToken = self:getToken(  )
+            else 
+               
+                  self:error( string.format( "illegal token: expects ')' or ',' but -- %s", nextToken.txt) )
+            end
+         end
+         
+      end
+      
+   else
+    
+      self:pushback(  )
+   end
+   
+   
+   local bakScope = self.scope
+   self.scope = self.topScope
+   self:pushScope( false )
+   
+   for __index, symInfo in ipairs( symList ) do
+      self.scope:addAlias( symInfo:get_name(), nextToken.pos, false, symInfo:get_accessMode(), symInfo:get_typeInfo():get_parentInfo(), symInfo )
+   end
+   
+   
+   local block = self:analyzeBlock( Nodes.BlockKind.Block, TentativeMode.Simple )
+   local node = Nodes.ScopeNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, scopeKind, self.scope, symList, block )
+   
+   self.scope = bakScope
+   
+   return node
+end
+
+
 
 function TransUnit:analyzeRefType( accessMode, allowDDD, parentPub )
 
@@ -8485,7 +8552,7 @@ function TransUnit:createExpList( pos, expTypeList, expList, followOn, abbrNode 
    local mRetExp = nil
    if #expList > 0 then
       for index, exp in ipairs( expList ) do
-         if Nodes.hasMultiValNode( exp ) then
+         if expTypeList[index] ~= Ast.builtinTypeMultiExp and Nodes.hasMultiValNode( exp ) then
             
             if index ~= #expList then
                
@@ -8548,9 +8615,9 @@ function TransUnit:analyzeExpList( allowNoneType, skipOp2Flag, expNode, expectTy
    
    local index = 1
    local abbrNode = nil
-   local mRetExp = nil
    local followOn = false
    repeat 
+      
       local expectType = nil
       if expectTypeList ~= nil then
          if #expectTypeList > 0 then
@@ -8571,7 +8638,7 @@ function TransUnit:analyzeExpList( allowNoneType, skipOp2Flag, expNode, expectTy
       local exp
       
       
-      if self.macroCtrl:get_analyzeInfo():get_mode() == Nodes.MacroMode.AnalyzeArg and expectType == Ast.builtinTypeExp then
+      if self.macroCtrl:get_analyzeInfo():get_mode() == Nodes.MacroMode.AnalyzeArg and (expectType == Ast.builtinTypeExp or expectType == Ast.builtinTypeMultiExp ) then
          self.macroCtrl:switchMacroMode(  )
          exp = self:analyzeExp( allowNoneType, skipOp2Flag, 0, expectType )
          self.macroCtrl:restoreMacroMode(  )
@@ -8589,13 +8656,15 @@ function TransUnit:analyzeExpList( allowNoneType, skipOp2Flag, expNode, expectTy
          pos = exp:get_pos()
       end
       
-      if expectType == Ast.builtinTypeExp then
+      if expectType == Ast.builtinTypeExp or expectType == Ast.builtinTypeMultiExp then
          exp = Nodes.ExpMacroArgExpNode.create( self.nodeManager, exp:get_pos(), self.macroCtrl:isInAnalyzeArgMode(  ), exp:get_expTypeList(), Macro.nodeToCodeTxt( exp, self.moduleType ) )
+         table.insert( expTypeList, _lune.unwrap( expectType) )
+      else
+       
+         table.insert( expTypeList, exp:get_expType() )
       end
       
-      
       table.insert( expList, exp )
-      table.insert( expTypeList, exp:get_expType() )
       local token = self:getToken( true )
       
       if token.txt == "**" then
@@ -8616,7 +8685,6 @@ function TransUnit:analyzeExpList( allowNoneType, skipOp2Flag, expNode, expectTy
          end
          
          abbrNode = Nodes.AbbrNode.create( self.nodeManager, token.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeAbbr} )
-         
          self:getToken(  )
          break
       end
@@ -9074,7 +9142,7 @@ function TransUnit:checkMatchType( message, pos, dstTypeList, expListNode, allow
          realExpNum = index - 1
       end
       
-      if index == #workExpNodeList then
+      if index == #workExpNodeList and _lune.__Cast( expNode, 3, Nodes.ExpMacroArgExpNode ) == nil then
          for __index, expType in ipairs( expNode:get_expTypeList() ) do
             table.insert( expTypeList, expType )
          end
@@ -9266,8 +9334,16 @@ function TransUnit:evalMacro( firstToken, macroTypeInfo, expList )
       if #stmtList == 1 then
          local node = stmtList[1]
          local retType = macroRetTypeList[1]
-         if retType:equals( Ast.builtinTypeExp ) then
+         if retType:equals( Ast.builtinTypeMultiExp ) then
             expTypeList = node:get_expTypeList()
+         elseif retType:equals( Ast.builtinTypeExp ) then
+            if #node:get_expTypeList() == 1 then
+               expTypeList = node:get_expTypeList()
+            else
+             
+               self:addErrMess( firstToken.pos, "__exp can't return multipul values. use __exps." )
+            end
+            
          elseif #node:get_expTypeList() == 1 then
             if retType:equals( node:get_expType() ) then
                expTypeList = node:get_expTypeList()
@@ -11867,6 +11943,8 @@ function TransUnit:analyzeStatement( termTxt )
          statement = self:analyzeUnwrap( token )
       elseif token.txt == "sync" then
          statement = self:analyzeDeclVar( Nodes.DeclVarMode.Sync, Ast.AccessMode.Local, token )
+      elseif token.txt == "__scope" then
+         statement = self:analyzeScope( token )
       elseif token.txt == "import" then
          statement = self:analyzeImport( token )
       elseif token.txt == "subfile" then

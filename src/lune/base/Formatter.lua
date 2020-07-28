@@ -1335,13 +1335,17 @@ end
 
 function FormatterFilter:processLiteralMap( node, opt )
 
+   self:write( "{" )
    
    local pairList = node:get_pairList()
    for __index, pair in ipairs( pairList ) do
       filter( pair:get_key(), self, opt:nextOpt( node ) )
+      self:write( ":" )
       filter( pair:get_val(), self, opt:nextOpt( node ) )
    end
    
+   
+   self:write( "}" )
 end
 
 

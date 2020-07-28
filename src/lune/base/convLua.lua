@@ -1394,6 +1394,30 @@ end
 
 
 
+function convFilter:processLoadRuntime(  )
+
+   do
+      local _exp = self.useLuneRuntime
+      if _exp ~= nil then
+         self:writeln( string.format( 'local _lune = require( "%s" )', _exp) )
+      else
+         self:writeln( string.format( 'local _lune = require( "%s" )', Option.getRuntimeModule(  )) )
+      end
+   end
+   
+end
+
+
+function convFilter:processScope( node, opt )
+
+   if node:get_scopeKind() == Nodes.ScopeKind.Root then
+      self:processLoadRuntime(  )
+   end
+   
+   filter( node:get_block(), self, node )
+end
+
+
 function convFilter:processStmtExp( node, opt )
 
    filter( node:get_exp(  ), self, node )
@@ -2095,20 +2119,6 @@ function convFilter:processExpMacroExp( node, opt )
    
 end
 
-
-
-function convFilter:processLoadRuntime(  )
-
-   do
-      local _exp = self.useLuneRuntime
-      if _exp ~= nil then
-         self:writeln( string.format( 'local _lune = require( "%s" )', _exp) )
-      else
-         self:writeln( string.format( 'local _lune = require( "%s" )', Option.getRuntimeModule(  )) )
-      end
-   end
-   
-end
 
 
 
@@ -3990,7 +4000,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3324, function (  )
+   Log.log( Log.Level.Info, __func__, 3334, function (  )
    
       return string.format( "code: %s", code)
    end )

@@ -390,6 +390,16 @@ function dumpFilter:processBlockSub( node, opt )
 end
 
 
+
+function dumpFilter:processScope( node, opt )
+
+   local prefix, depth = opt:get(  )
+   dump( prefix, depth, node, Nodes.ScopeKind:_getTxt( node:get_scopeKind())
+    )
+   filter( node:get_block(), self, opt:nextOpt(  ) )
+end
+
+
 function dumpFilter:processStmtExp( node, opt )
 
    local prefix, depth = opt:get(  )

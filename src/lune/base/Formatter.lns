@@ -922,12 +922,16 @@ pub override fn FormatterFilter.processLiteralMap(
    node: &Nodes.LiteralMapNode, opt:Opt ) mut
 
 {
+   self.write( "{" );
    
    let pairList = node.$pairList;
    foreach pair in pairList {
       filter( pair.$key, self, opt.nextOpt( node ) );
+      self.write( ":" );
       filter( pair.$val, self, opt.nextOpt( node ) );
    }
+
+   self.write( "}" );
 };
 pub override fn FormatterFilter.processLiteralArray(
    node: &Nodes.LiteralArrayNode, opt:Opt ) mut

@@ -1673,3 +1673,17 @@ print( '\\""\"\'\\.\\' );
    }
    _hoge( sub() );
 }
+{
+   Macro._section();
+   fn functest() {
+      print( __func__ );
+   }
+   fn functest2() {
+      print( __func__ );
+   }
+   __scope root ( functest, functest2 ) {
+      functest();
+      functest2();
+      print( "hoge" );
+   }
+}

@@ -139,6 +139,15 @@ pub override fn dumpFilter.processBlockSub(
       filter( statement, self, opt.nextOpt() );
    }	
 };
+
+pub override fn dumpFilter.processScope(
+   node: &Nodes.ScopeNode, opt:Opt ) mut
+{
+   let prefix, depth = opt.get();
+   dump( prefix, depth, node, node.$scopeKind.$_txt );
+   filter( node.$block, self, opt.nextOpt() );
+}
+
 pub override fn dumpFilter.processStmtExp(
    node: &Nodes.StmtExpNode, opt:Opt ) mut
 {

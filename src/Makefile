@@ -354,6 +354,7 @@ TEST_CASE += map.lns
 TEST_CASE += set.lns
 TEST_CASE += scope1.lns
 TEST_CASE += scope2.lns
+TEST_CASE += scope3.lns
 TEST_CASE += func.lns
 TEST_CASE += class.lns
 TEST_CASE += class2.lns

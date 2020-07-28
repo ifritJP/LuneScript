@@ -1001,6 +1001,26 @@ pub override fn convFilter.processBlockSub(
    }
 };
 
+fn convFilter.processLoadRuntime() mut 
+{
+   if! self.useLuneRuntime {
+      self.writeln( 'local _lune = require( "%s" )' (_exp) );
+   }
+   else {
+      self.writeln( 'local _lune = require( "%s" )' (Option.getRuntimeModule()) );
+   }
+}
+
+pub override fn convFilter.processScope(
+   node: &Nodes.ScopeNode, opt:Opt ) mut
+{
+   if node.$scopeKind == .Root {
+      self.processLoadRuntime();
+   }
+   filter( node.$block, self, node );
+}
+
+
 pub override fn convFilter.processStmtExp(
    node: Nodes.StmtExpNode, opt: Opt ) mut
 {
@@ -1633,16 +1653,6 @@ pub override fn convFilter.processExpMacroExp(
    }
 };
 
-
-fn convFilter.processLoadRuntime() mut 
-{
-   if! self.useLuneRuntime {
-      self.writeln( 'local _lune = require( "%s" )' (_exp) );
-   }
-   else {
-      self.writeln( 'local _lune = require( "%s" )' (Option.getRuntimeModule()) );
-   }
-}
 
 form outputMacroStmtBlock();
 

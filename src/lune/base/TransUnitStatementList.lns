@@ -158,6 +158,9 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node! {
       elseif token.txt == "sync" {
          statement = self.analyzeDeclVar( .Sync, .Local, token );
       }
+      elseif token.txt == "__scope" {
+         statement = self.analyzeScope( token );
+      }
       elseif token.txt == "import" {
          statement = self.analyzeImport( token );
       }

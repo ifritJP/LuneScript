@@ -814,6 +814,16 @@ _declNodeClass( "Block", Node, false, false, true,
                   { "stmtList": "List<&Node>" } ]
 );
 
+pub enum ScopeKind {
+   Root,
+}
+_declNodeClass( "Scope", Node, false, false, true,
+                [ { "scopeKind": "ScopeKind" },
+                  { "scope": "&Ast.Scope" },
+                  { "symbolList": "&List<&Ast.SymbolInfo>" },
+                  { "block": "BlockNode" } ]
+);
+
 
 macro _setBreakKind(work:sym, kind:sym, returnNoneStat:bool, checkMode:sym ) {
    {
@@ -1258,7 +1268,7 @@ pub override fn ExpParenNode.getSymbolInfo(): &List<&Ast.SymbolInfo> {
 }
 
 
-/** マクロ展開 */
+/** マクロ展開後のノード */
 _declNodeClass( "ExpMacroExp", Node, false, nil, true,
                 [ { "stmtList": "List<&Node>" } ]
 );

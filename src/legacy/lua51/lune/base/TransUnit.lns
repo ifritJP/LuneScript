@@ -3711,3 +3711,70 @@ fn TransUnit.analyzeProvide( firstToken: &Parser.Token ) mut : Nodes.ProvideNode
 
    return node;
 }
+
+fn TransUnit.analyzeScope( firstToken: &Parser.Token ) mut : Nodes.ScopeNode {
+
+   let mut nextToken = self.getToken(##);
+   let scopeKind:Nodes.ScopeKind;
+   switch nextToken.txt {
+      case "root" {
+         scopeKind = .Root;
+      }
+      default {
+         self.error( "illegal scope kind. -- %s" (nextToken.txt) );
+      }
+   }
+
+   let mut symList:List<&Ast.SymbolInfo> = [];
+   nextToken = self.getToken( ## );
+   if nextToken.txt == "(" {
+      nextToken = self.getToken( ## );
+      while nextToken.txt ~= ")" {
+         let symbolNode = self.analyzeExpSymbol(
+            nextToken, nextToken, .Symbol, nil, true );
+         let workSymList = symbolNode.getSymbolInfo();
+         if #workSymList > 0 {
+            let symbol = workSymList[ 1 ];
+            symList.insert( workSymList[ 1 ] );
+         }
+         nextToken = self.getToken( ## );
+         switch nextToken.txt {
+            case ")" {
+            }
+            case "," {
+               nextToken = self.getToken( ## );
+            }
+            default {
+               self.error(
+                  "illegal token: expects ')' or ',' but -- %s" (nextToken.txt) );
+            }
+         }
+      }
+   }
+   else {
+      self.pushback();
+   }
+
+   // スコープを切り替え
+   let mut bakScope = self.scope;
+   self.scope = self.topScope;
+   self.pushScope( false ## );
+
+   // 継承するシンボル情報をスコープに設定設定
+   foreach symInfo in symList {
+      self.scope.addAlias(
+         symInfo.$name, nextToken.pos, false, symInfo.$accessMode,
+         symInfo.$typeInfo.$parentInfo, symInfo );
+   }
+   
+
+   let mut block = self.analyzeBlock( .Block, TentativeMode.Simple ## );
+   let mut node = Nodes.ScopeNode.create(
+      self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
+      [ Ast.builtinTypeNone ], scopeKind, self.scope, symList, block );
+
+   // スコープを戻す
+   self.scope = bakScope;
+   
+   return node;
+}

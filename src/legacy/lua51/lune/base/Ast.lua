@@ -5523,6 +5523,9 @@ _moduleObj.builtinTypeStat = builtinTypeStat
 local builtinTypeExp = NormalTypeInfo.createBuiltin( "Exp", "__exp", TypeInfoKind.Prim )
 _moduleObj.builtinTypeExp = builtinTypeExp
 
+local builtinTypeMultiExp = NormalTypeInfo.createBuiltin( "Exps", "__exps", TypeInfoKind.Prim )
+_moduleObj.builtinTypeMultiExp = builtinTypeMultiExp
+
 
 local CombineType = {}
 _moduleObj.CombineType = CombineType
@@ -6991,7 +6994,10 @@ end
 
 function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
 
-   if dest == _moduleObj.builtinTypeExp then
+   if dest == _moduleObj.builtinTypeExp or dest == _moduleObj.builtinTypeMultiExp then
+      if other == _moduleObj.builtinTypeMultiExp and dest ~= _moduleObj.builtinTypeMultiExp then
+         return false, "can't eval from '__exp' to '__exps'."
+      end
       
       return true, nil
    end

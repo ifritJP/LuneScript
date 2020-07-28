@@ -1,0 +1,9 @@
+{
+   macro _hoge( val:__exp ) {
+      print( ,,val );
+   }
+   fn sub() : int, int {
+      return 1, 2;
+   }
+   _hoge( sub() ); // error
+}

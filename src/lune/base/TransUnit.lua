@@ -5171,6 +5171,73 @@ function TransUnit:analyzeProvide( firstToken )
 end
 
 
+function TransUnit:analyzeScope( firstToken )
+
+   
+   local nextToken = self:getToken(  )
+   local scopeKind
+   
+   do
+      local _switchExp = nextToken.txt
+      if _switchExp == "root" then
+         scopeKind = Nodes.ScopeKind.Root
+      else 
+         
+            self:error( string.format( "illegal scope kind. -- %s", nextToken.txt) )
+      end
+   end
+   
+   
+   local symList = {}
+   nextToken = self:getToken(  )
+   if nextToken.txt == "(" then
+      nextToken = self:getToken(  )
+      while nextToken.txt ~= ")" do
+         local symbolNode = self:analyzeExpSymbol( nextToken, nextToken, ExpSymbolMode.Symbol, nil, true )
+         local workSymList = symbolNode:getSymbolInfo(  )
+         if #workSymList > 0 then
+            local symbol = workSymList[1]
+            table.insert( symList, workSymList[1] )
+         end
+         
+         nextToken = self:getToken(  )
+         do
+            local _switchExp = nextToken.txt
+            if _switchExp == ")" then
+            elseif _switchExp == "," then
+               nextToken = self:getToken(  )
+            else 
+               
+                  self:error( string.format( "illegal token: expects ')' or ',' but -- %s", nextToken.txt) )
+            end
+         end
+         
+      end
+      
+   else
+    
+      self:pushback(  )
+   end
+   
+   
+   local bakScope = self.scope
+   self.scope = self.topScope
+   self:pushScope( false )
+   
+   for __index, symInfo in ipairs( symList ) do
+      self.scope:addAlias( symInfo:get_name(), nextToken.pos, false, symInfo:get_accessMode(), symInfo:get_typeInfo():get_parentInfo(), symInfo )
+   end
+   
+   
+   local block = self:analyzeBlock( Nodes.BlockKind.Block, TentativeMode.Simple )
+   local node = Nodes.ScopeNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, scopeKind, self.scope, symList, block )
+   
+   self.scope = bakScope
+   
+   return node
+end
+
+
 
 function TransUnit:analyzeRefType( accessMode, allowDDD, parentPub )
 
@@ -11876,6 +11943,8 @@ function TransUnit:analyzeStatement( termTxt )
          statement = self:analyzeUnwrap( token )
       elseif token.txt == "sync" then
          statement = self:analyzeDeclVar( Nodes.DeclVarMode.Sync, Ast.AccessMode.Local, token )
+      elseif token.txt == "__scope" then
+         statement = self:analyzeScope( token )
       elseif token.txt == "import" then
          statement = self:analyzeImport( token )
       elseif token.txt == "subfile" then
