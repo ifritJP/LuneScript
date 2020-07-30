@@ -272,13 +272,14 @@ end
 
 local Filter = {}
 _moduleObj.Filter = Filter
-function Filter.new( moduleTypeInfo, moduleInfoManager )
+function Filter.new( errorOnDefault, moduleTypeInfo, moduleInfoManager )
    local obj = {}
    Filter.setmeta( obj )
-   if obj.__init then obj:__init( moduleTypeInfo, moduleInfoManager ); end
+   if obj.__init then obj:__init( errorOnDefault, moduleTypeInfo, moduleInfoManager ); end
    return obj
 end
-function Filter:__init(moduleTypeInfo, moduleInfoManager) 
+function Filter:__init(errorOnDefault, moduleTypeInfo, moduleInfoManager) 
+   self.errorOnDefault = errorOnDefault
    self.moduleInfoManager = SimpleModuleInfoManager.new(moduleInfoManager)
    local function process(  )
    
@@ -705,6 +706,15 @@ local function getNodeKindName( kind )
 end
 _moduleObj.getNodeKindName = getNodeKindName
 
+function Filter:defaultProcess( node, opt )
+
+   if self.errorOnDefault then
+      Util.err( string.format( "not implement yet -- %s", getNodeKindName( node:get_kind() )) )
+   end
+   
+end
+
+
 local NodeManager = {}
 _moduleObj.NodeManager = NodeManager
 function NodeManager.new(  )
@@ -811,6 +821,7 @@ end
 regKind( "None" )
 function Filter:processNone( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -880,6 +891,7 @@ end
 regKind( "BlankLine" )
 function Filter:processBlankLine( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -954,6 +966,7 @@ end
 regKind( "Subfile" )
 function Filter:processSubfile( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -1028,6 +1041,7 @@ end
 regKind( "Import" )
 function Filter:processImport( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -1258,6 +1272,7 @@ end
 regKind( "Root" )
 function Filter:processRoot( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -1427,6 +1442,7 @@ end
 regKind( "RefType" )
 function Filter:processRefType( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -1768,6 +1784,7 @@ end
 regKind( "Scope" )
 function Filter:processScope( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -1990,6 +2007,7 @@ end
 regKind( "If" )
 function Filter:processIf( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -2143,6 +2161,7 @@ end
 regKind( "ExpList" )
 function Filter:processExpList( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -2297,6 +2316,7 @@ end
 regKind( "Switch" )
 function Filter:processSwitch( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -2504,6 +2524,7 @@ end
 regKind( "While" )
 function Filter:processWhile( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -2618,6 +2639,7 @@ end
 regKind( "Repeat" )
 function Filter:processRepeat( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -2745,6 +2767,7 @@ end
 regKind( "For" )
 function Filter:processFor( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -2923,6 +2946,7 @@ end
 regKind( "Apply" )
 function Filter:processApply( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -3054,6 +3078,7 @@ end
 regKind( "Foreach" )
 function Filter:processForeach( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -3189,6 +3214,7 @@ end
 regKind( "Forsort" )
 function Filter:processForsort( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -3328,6 +3354,7 @@ end
 regKind( "Return" )
 function Filter:processReturn( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -3431,6 +3458,7 @@ end
 regKind( "Break" )
 function Filter:processBreak( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -3507,6 +3535,7 @@ end
 regKind( "Provide" )
 function Filter:processProvide( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -3582,6 +3611,7 @@ end
 regKind( "ExpNew" )
 function Filter:processExpNew( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -3705,6 +3735,7 @@ end
 regKind( "ExpUnwrap" )
 function Filter:processExpUnwrap( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -3824,6 +3855,7 @@ end
 regKind( "ExpRef" )
 function Filter:processExpRef( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -3903,6 +3935,7 @@ end
 regKind( "ExpSetVal" )
 function Filter:processExpSetVal( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -4021,6 +4054,7 @@ end
 regKind( "ExpOp2" )
 function Filter:processExpOp2( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -4139,6 +4173,7 @@ end
 regKind( "UnwrapSet" )
 function Filter:processUnwrapSet( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -4279,6 +4314,7 @@ end
 regKind( "IfUnwrap" )
 function Filter:processIfUnwrap( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -4527,6 +4563,7 @@ end
 regKind( "When" )
 function Filter:processWhen( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -4761,6 +4798,7 @@ end
 regKind( "ExpCast" )
 function Filter:processExpCast( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -4873,6 +4911,7 @@ end
 regKind( "ExpToDDD" )
 function Filter:processExpToDDD( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -4966,6 +5005,7 @@ end
 regKind( "ExpSubDDD" )
 function Filter:processExpSubDDD( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -5096,6 +5136,7 @@ end
 regKind( "ExpOp1" )
 function Filter:processExpOp1( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -5197,6 +5238,7 @@ end
 regKind( "ExpRefItem" )
 function Filter:processExpRefItem( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -5329,6 +5371,7 @@ end
 regKind( "ExpCall" )
 function Filter:processExpCall( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -5472,6 +5515,7 @@ end
 regKind( "ExpAccessMRet" )
 function Filter:processExpAccessMRet( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -5569,6 +5613,7 @@ end
 regKind( "ExpMultiTo1" )
 function Filter:processExpMultiTo1( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -5662,6 +5707,7 @@ end
 regKind( "ExpDDD" )
 function Filter:processExpDDD( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -5737,6 +5783,7 @@ end
 regKind( "ExpParen" )
 function Filter:processExpParen( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -5835,6 +5882,7 @@ end
 regKind( "ExpMacroExp" )
 function Filter:processExpMacroExp( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -6016,6 +6064,7 @@ end
 regKind( "ExpMacroStat" )
 function Filter:processExpMacroStat( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -6113,6 +6162,7 @@ end
 regKind( "ExpMacroArgExp" )
 function Filter:processExpMacroArgExp( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -6188,6 +6238,7 @@ end
 regKind( "StmtExp" )
 function Filter:processStmtExp( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -6288,6 +6339,7 @@ end
 regKind( "ExpMacroStatList" )
 function Filter:processExpMacroStatList( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -6381,6 +6433,7 @@ end
 regKind( "ExpOmitEnum" )
 function Filter:processExpOmitEnum( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -6464,6 +6517,7 @@ end
 regKind( "RefField" )
 function Filter:processRefField( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -6585,6 +6639,7 @@ end
 regKind( "GetField" )
 function Filter:processGetField( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -6702,6 +6757,7 @@ end
 regKind( "Alias" )
 function Filter:processAlias( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -6866,6 +6922,7 @@ end
 regKind( "DeclVar" )
 function Filter:processDeclVar( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -7202,6 +7259,7 @@ end
 regKind( "DeclForm" )
 function Filter:processDeclForm( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -7406,6 +7464,7 @@ end
 regKind( "DeclFunc" )
 function Filter:processDeclFunc( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -7485,6 +7544,7 @@ end
 regKind( "DeclMethod" )
 function Filter:processDeclMethod( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -7560,6 +7620,7 @@ end
 regKind( "ProtoMethod" )
 function Filter:processProtoMethod( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -7635,6 +7696,7 @@ end
 regKind( "DeclConstr" )
 function Filter:processDeclConstr( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -7710,6 +7772,7 @@ end
 regKind( "DeclDestr" )
 function Filter:processDeclDestr( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -7785,6 +7848,7 @@ end
 regKind( "ExpCallSuper" )
 function Filter:processExpCallSuper( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -7893,6 +7957,7 @@ end
 regKind( "DeclMember" )
 function Filter:processDeclMember( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -8022,6 +8087,7 @@ end
 regKind( "DeclArg" )
 function Filter:processDeclArg( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -8128,6 +8194,7 @@ end
 regKind( "DeclArgDDD" )
 function Filter:processDeclArgDDD( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -8252,6 +8319,7 @@ end
 regKind( "DeclClass" )
 function Filter:processDeclClass( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -8472,6 +8540,7 @@ end
 regKind( "DeclEnum" )
 function Filter:processDeclEnum( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -8559,6 +8628,7 @@ end
 regKind( "DeclAlge" )
 function Filter:processDeclAlge( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -8642,6 +8712,7 @@ end
 regKind( "NewAlgeVal" )
 function Filter:processNewAlgeVal( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -8777,6 +8848,7 @@ end
 regKind( "LuneControl" )
 function Filter:processLuneControl( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -8882,6 +8954,7 @@ end
 regKind( "Match" )
 function Filter:processMatch( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -9009,6 +9082,7 @@ end
 regKind( "LuneKind" )
 function Filter:processLuneKind( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -9102,6 +9176,7 @@ end
 regKind( "DeclMacro" )
 function Filter:processDeclMacro( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -9195,6 +9270,7 @@ end
 regKind( "TestBlock" )
 function Filter:processTestBlock( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -9292,6 +9368,7 @@ end
 regKind( "Abbr" )
 function Filter:processAbbr( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -9362,6 +9439,7 @@ end
 regKind( "Boxing" )
 function Filter:processBoxing( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -9455,6 +9533,7 @@ end
 regKind( "Unboxing" )
 function Filter:processUnboxing( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -9548,6 +9627,7 @@ end
 regKind( "LiteralNil" )
 function Filter:processLiteralNil( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -9618,6 +9698,7 @@ end
 regKind( "LiteralChar" )
 function Filter:processLiteralChar( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -9697,6 +9778,7 @@ end
 regKind( "LiteralInt" )
 function Filter:processLiteralInt( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -9776,6 +9858,7 @@ end
 regKind( "LiteralReal" )
 function Filter:processLiteralReal( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -9855,6 +9938,7 @@ end
 regKind( "LiteralArray" )
 function Filter:processLiteralArray( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -9953,6 +10037,7 @@ end
 regKind( "LiteralList" )
 function Filter:processLiteralList( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -10051,6 +10136,7 @@ end
 regKind( "LiteralSet" )
 function Filter:processLiteralSet( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -10174,6 +10260,7 @@ end
 regKind( "LiteralMap" )
 function Filter:processLiteralMap( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -10296,6 +10383,7 @@ end
 regKind( "LiteralString" )
 function Filter:processLiteralString( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -10398,6 +10486,7 @@ end
 regKind( "LiteralBool" )
 function Filter:processLiteralBool( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 
@@ -10473,6 +10562,7 @@ end
 regKind( "LiteralSymbol" )
 function Filter:processLiteralSymbol( node, opt )
 
+   self:defaultProcess( node, opt )
 end
 
 

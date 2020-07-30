@@ -638,24 +638,24 @@ setmetatable( glueFilter, { __index = Nodes.Filter } )
 function glueFilter.setmeta( obj )
   setmetatable( obj, { __index = glueFilter  } )
 end
-function glueFilter.new( __superarg1, __superarg2,outputDir )
+function glueFilter.new( __superarg1, __superarg2, __superarg3,outputDir )
    local obj = {}
    glueFilter.setmeta( obj )
    if obj.__init then
-      obj:__init( __superarg1, __superarg2,outputDir )
+      obj:__init( __superarg1, __superarg2, __superarg3,outputDir )
    end
    return obj
 end
-function glueFilter:__init( __superarg1, __superarg2,outputDir )
+function glueFilter:__init( __superarg1, __superarg2, __superarg3,outputDir )
 
-   Nodes.Filter.__init( self, __superarg1, __superarg2 )
+   Nodes.Filter.__init( self, __superarg1, __superarg2, __superarg3 )
    self.outputDir = outputDir
 end
 
 
 local function createFilter( outputDir )
 
-   return glueFilter.new(nil, nil, outputDir)
+   return glueFilter.new(false, nil, nil, outputDir)
 end
 _moduleObj.createFilter = createFilter
 

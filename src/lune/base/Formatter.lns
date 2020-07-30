@@ -44,7 +44,7 @@ class FormatterFilter extend Nodes.Filter<Opt> {
    pub fn __init( moduleTypeInfo:&Ast.TypeInfo,
                   moduleInfoManager:&Ast.ModuleInfoManager!, stream:oStream )
    {
-      super( moduleTypeInfo, moduleInfoManager );
+      super( true, moduleTypeInfo, moduleInfoManager );
       self.stream = new Util.SimpleSourceOStream( stream, nil, 3 );
    }
 

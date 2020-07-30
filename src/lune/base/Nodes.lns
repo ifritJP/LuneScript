@@ -59,10 +59,13 @@ class SimpleModuleInfoManager extend (Ast.ModuleInfoManager)
 pub class Filter<T>  {
    pri let mut moduleInfoManager:SimpleModuleInfoManager;
    pri let typeNameCtrl:&Ast.TypeNameCtrl {pub};
+   pri let errorOnDefault:bool;
 
-   pro fn __init( moduleTypeInfo:&Ast.TypeInfo!,
+   pro fn __init( errorOnDefault:bool,
+                  moduleTypeInfo:&Ast.TypeInfo!,
                   moduleInfoManager:&Ast.ModuleInfoManager! )
    {
+      self.errorOnDefault = errorOnDefault;
       self.moduleInfoManager = new SimpleModuleInfoManager( moduleInfoManager );
       fn process ():&Ast.TypeNameCtrl {
          when! moduleTypeInfo {
@@ -312,6 +315,12 @@ fn regKind( name:str ): int {
 
 pub fn getNodeKindName( kind: int ): str {
    return unwrap nodeKind2NameMap[ kind ];
+}
+
+pro fn Filter.defaultProcess( node: &Node, opt:T ) mut {
+   if self.errorOnDefault {
+      Util.err( "not implement yet -- %s" ( getNodeKindName( node.$kind ) ) );
+   }
 }
 
 // let nodeKindNone = regKind( 'None' );
@@ -571,6 +580,7 @@ macro _declNodeClass(
       if baseName ~= "Block" {
          relateStat.insert( `{
             pub fn Filter. ,,,"process%s" (baseName) ( node: &,,className, opt:T ) mut {
+               self.defaultProcess( node, opt );
             };
          } );
       }
