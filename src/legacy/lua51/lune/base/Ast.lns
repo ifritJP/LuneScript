@@ -46,6 +46,21 @@ pub class IdProvider {
       return newId;
    }
 }
+pub proto class TypeInfo2Map;
+
+pub class ProcessInfo {
+   let mut idProvier:IdProvider {pub};
+   let mut idProvierExt:IdProvider {pub};
+   let mut typeInfo2Map:TypeInfo2Map {pub};
+}
+let mut processInfoQueue:List<ProcessInfo> = [];
+fn getCurProcessInfo() : ProcessInfo! {
+   if #processInfoQueue == 0 {
+      return nil;
+   }
+   return processInfoQueue[ #processInfoQueue ];
+}
+
 
 let extStartId = 100000;
 let extMaxId = 10000000;
@@ -539,20 +554,22 @@ pub class TypeInfo {
    // この TypeInfo のスコープ。
    // class, func など名前空間を持つ TypeInfo は有効。
    pri let allmut scope: Scope! {pub};
-
    pri let allmut typeData: TypeData {pub};
+   // この TypeInfo の typeId を生成した processInfo
+   pri let processInfo:&ProcessInfo! {pub};
 
    // pub fn get_scope(): Scope! {
    //    return typeInfo2ScopeMap[ self ];
    // }
 
-   pub fn __init( scope: Scope! ) {
+   pub fn __init( scope: Scope!, processInfo:&ProcessInfo! ) {
       //typeInfo2ScopeMap[ self ] = scope;
       self.scope = scope;
       if! scope {
          _exp.set_ownerTypeInfo( self );
       }
       self.typeData = new TypeData( [] );
+      self.processInfo = processInfo;
       //TypeManager.add( self );
    }
 
@@ -942,7 +959,7 @@ pub fn isExtId(typeInfo:&TypeInfo): bool {
 
 
 /** TypeInfo の head。 */
-pub let headTypeInfo:TypeInfo = new TypeInfo( rootScope );
+pub let headTypeInfo:TypeInfo = new TypeInfo( rootScope, getCurProcessInfo() );
 //let rootTypeInfo:TypeInfo = new TypeInfo( rootScope );
 
 pub let defaultTypeNameCtrl = new TypeNameCtrl( headTypeInfo );
@@ -1074,7 +1091,7 @@ pub class AutoBoxingInfo extend TypeInfo {
    let mut count:int{pub};
 
    pub fn __init() {
-      super( nil );
+      super( nil, getCurProcessInfo() );
       self.count = 0;
       AutoBoxingInfo.allObj[ self ] = self;
    }
@@ -1815,7 +1832,7 @@ pub class NilTypeInfo extend TypeInfo {
    pri let typeId:int {pub};
 
    pub fn __init() {
-      super( nil );
+      super( nil, getCurProcessInfo() );
 
       idProv.increment();
       self.typeId = idProv.$id;
@@ -2135,7 +2152,8 @@ pub class AlternateTypeInfo extend TypeInfo {
                   txt:str, accessMode:AccessMode, moduleTypeInfo:&TypeInfo,
                   baseTypeInfo: &TypeInfo!, interfaceList: &List<&TypeInfo>! )
    {
-      super( TypeInfo.createScope( nil, true, baseTypeInfo, interfaceList ) );
+      super( TypeInfo.createScope( nil, true, baseTypeInfo, interfaceList ),
+             getCurProcessInfo() );
 
       idProv.increment();
       self.typeId = idProv.$id;
@@ -2407,7 +2425,7 @@ pub class BoxTypeInfo extend TypeInfo {
    pri let nilableTypeInfo: NilableTypeInfo {pub:&TypeInfo};
 
    pub fn __init( typeId: int, accessMode:AccessMode, boxingType: &TypeInfo ) {
-      super( boxRootScope );
+      super( boxRootScope, getCurProcessInfo() );
       self.boxingType = boxingType;
       self.typeId = typeId;
       self.itemTypeInfoList = [ boxingType ];
@@ -2506,7 +2524,8 @@ pub class GenericTypeInfo extend TypeInfo {
                   itemTypeInfoList:&List<&TypeInfo>, moduleTypeInfo:&TypeInfo )
    {
       super( TypeInfo.createScope( (unwrap genSrcTypeInfo.$scope).$parent,
-                                   true, genSrcTypeInfo, nil ) );
+                                   true, genSrcTypeInfo, nil ),
+             getCurProcessInfo() );
 
       idProv.increment();
       self.typeId = idProv.$id;
@@ -2824,7 +2843,7 @@ pub class ModuleTypeInfo extend TypeInfo {
    pub fn __init( scope: Scope, externalFlag: bool,
                   txt: str, mut parentInfo: &TypeInfo!, typeId: int, mutable:bool )
    {
-      super( scope );
+      super( scope, getCurProcessInfo() );
 
       self.externalFlag = externalFlag;
       self.rawTxt = txt;
@@ -2961,7 +2980,7 @@ pub class EnumTypeInfo extend TypeInfo {
    pub fn __init( scope: Scope, externalFlag: bool, accessMode: AccessMode,
                   txt: str, parentInfo: &TypeInfo!, typeId: int, valTypeInfo:&TypeInfo )
    {
-      super( scope );
+      super( scope, getCurProcessInfo() );
 
       self.externalFlag = externalFlag;
       self.accessMode = accessMode;
@@ -3077,7 +3096,7 @@ pub class AlgeTypeInfo extend TypeInfo {
    pub fn __init( scope: Scope, externalFlag: bool, accessMode: AccessMode,
                   txt: str, parentInfo: &TypeInfo!, typeId: int )
    {
-      super( scope );
+      super( scope, getCurProcessInfo() );
 
       self.externalFlag = externalFlag;
       self.accessMode = accessMode;
@@ -3201,7 +3220,7 @@ pub class NormalTypeInfo extend TypeInfo {
               itemTypeInfoList: &List<&TypeInfo>!, argTypeInfoList:&List<&TypeInfo>!,
               retTypeInfoList: &List<&TypeInfo>!, mutMode: MutMode! )
    {
-      super( scope );
+      super( scope, getCurProcessInfo() );
 
       if type(kind) ~= "number" {
          Util.printStackTrace();
@@ -4084,9 +4103,10 @@ pub class DDDTypeInfo extend TypeInfo {
       return nil;
    }
 
-   pub fn __init( typeId:int, typeInfo:&TypeInfo, externalFlag:bool )
+   pub fn __init( processInfo:&ProcessInfo!,
+                  typeId:int, typeInfo:&TypeInfo, externalFlag:bool )
    {
-      super( nil );
+      super( nil, processInfo );
       self.typeId = typeId;
       //self.typeInfo = typeInfo.$nilableTypeInfo;
       self.typeInfo = typeInfo;
@@ -4164,7 +4184,7 @@ pub static fn NormalTypeInfo.createDDD(
 
    //typeIdSeed = typeIdSeed + 1;
    idProv.increment();
-   return new DDDTypeInfo( idProv.$id, typeInfo, externalFlag );
+   return new DDDTypeInfo( getCurProcessInfo(), idProv.$id, typeInfo, externalFlag );
 }
 
 
@@ -4567,9 +4587,9 @@ pub class AbbrTypeInfo extend TypeInfo {
       return nil;
    }
 
-   pub fn __init( idProvider:IdProvider, rawTxt:str )
+   pub fn __init( processInfo:&ProcessInfo!, idProvider:IdProvider, rawTxt:str )
    {
-      super( nil );
+      super( nil, processInfo );
 
       let typeId = idProvider.$id + 1;
       idProvider.increment();
@@ -4639,8 +4659,10 @@ pub class AbbrTypeInfo extend TypeInfo {
 // pub let builtinTypeAbbrNone:TypeInfo =
 //    NormalTypeInfo.createBuiltin( "AbbrNone", "#_" , .Abbr );
 
-pub let builtinTypeAbbr:TypeInfo = new AbbrTypeInfo( idProv, "##" );
-pub let builtinTypeAbbrNone:TypeInfo = new AbbrTypeInfo( idProv, "[##]" );
+pub let builtinTypeAbbr:TypeInfo =
+   new AbbrTypeInfo( getCurProcessInfo(), idProv, "##" );
+pub let builtinTypeAbbrNone:TypeInfo =
+   new AbbrTypeInfo( getCurProcessInfo(), idProv, "[##]" );
 
 
 pub class ExtTypeInfo extend TypeInfo {
@@ -4648,9 +4670,9 @@ pub class ExtTypeInfo extend TypeInfo {
    pri let extedType: &TypeInfo { pub };
    pri let nilableTypeInfo: &TypeInfo { pub };
 
-   pub fn __init( idProvider:IdProvider, extedType:&TypeInfo )
+   pub fn __init( processInfo:ProcessInfo!, idProvider:IdProvider, extedType:&TypeInfo )
    {
-      super( extedType.$scope );
+      super( extedType.$scope, processInfo );
 
       let typeId = idProvider.$id + 1;
       idProvider.increment();
@@ -4735,7 +4757,7 @@ pub class ExtTypeInfo extend TypeInfo {
 pub static fn NormalTypeInfo.createLuaval( luneType:&TypeInfo ) : &TypeInfo
 {
    idProv.increment();
-   return new ExtTypeInfo( idProv, luneType );
+   return new ExtTypeInfo( getCurProcessInfo(), idProv, luneType );
 }
 
 pub let builtinTypeLua:TypeInfo =
@@ -4763,7 +4785,7 @@ pub class AndExpTypeInfo extend TypeInfo {
 
    pub fn __init( exp1:&TypeInfo, exp2:&TypeInfo, result:&TypeInfo )
    {
-      super( result.$scope );
+      super( result.$scope, getCurProcessInfo() );
       self.exp1 = exp1;
       self.exp2 = exp2;
       self.result = result;
@@ -5802,14 +5824,6 @@ pub fn TypeInfo.getFullName(
    }
    return self.getParentFullName( typeNameCtrl, importInfo, localFlag ) .. self.$rawTxt;
 }
-
-pub class ProcessInfo {
-   let mut idProvier:IdProvider {pub};
-   let mut idProvierExt:IdProvider {pub};
-   let mut typeInfo2Map:TypeInfo2Map {pub};
-}
-
-let mut processInfoQueue:List<ProcessInfo> = [];
 
 pub enum IdType {
    Base,

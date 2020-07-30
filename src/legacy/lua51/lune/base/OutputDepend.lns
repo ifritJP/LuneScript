@@ -65,7 +65,7 @@ class convFilter extend Nodes.Filter<int> {
 
    pub fn __init( stream:oStream )
    {
-      super(nil,nil);
+      super(false, nil,nil);
       self.stream = stream;
    }
 }

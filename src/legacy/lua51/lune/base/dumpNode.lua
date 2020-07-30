@@ -232,6 +232,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
+local Util = _lune.loadModule( 'lune.base.Util' )
 
 local Opt = {}
 _moduleObj.Opt = Opt
@@ -273,23 +274,23 @@ setmetatable( dumpFilter, { __index = Nodes.Filter } )
 function dumpFilter.setmeta( obj )
   setmetatable( obj, { __index = dumpFilter  } )
 end
-function dumpFilter.new( __superarg1, __superarg2 )
+function dumpFilter.new( __superarg1, __superarg2, __superarg3 )
    local obj = {}
    dumpFilter.setmeta( obj )
    if obj.__init then
-      obj:__init( __superarg1, __superarg2 )
+      obj:__init( __superarg1, __superarg2, __superarg3 )
    end
    return obj
 end
-function dumpFilter:__init( __superarg1, __superarg2 )
+function dumpFilter:__init( __superarg1, __superarg2, __superarg3 )
 
-   Nodes.Filter.__init( self, __superarg1, __superarg2 )
+   Nodes.Filter.__init( self, __superarg1, __superarg2, __superarg3 )
 end
 
 
 local function createFilter( moduleTypeInfo )
 
-   return dumpFilter.new(moduleTypeInfo, moduleTypeInfo:get_scope())
+   return dumpFilter.new(true, moduleTypeInfo, moduleTypeInfo:get_scope())
 end
 _moduleObj.createFilter = createFilter
 
@@ -352,6 +353,14 @@ function dumpFilter:processBlankLine( node, opt )
 
    local prefix, depth = opt:get(  )
    dump( prefix, depth, node, string.format( "%d", node:get_lineNum()) )
+end
+
+
+function dumpFilter:processLuneKind( node, opt )
+
+   local prefix, depth = opt:get(  )
+   dump( prefix, depth, node, "" )
+   filter( node:get_exp(), self, opt:nextOpt(  ) )
 end
 
 

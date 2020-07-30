@@ -226,7 +226,7 @@ function convFilter.new( stream )
    return obj
 end
 function convFilter:__init(stream) 
-   Nodes.Filter.__init( self,nil, nil)
+   Nodes.Filter.__init( self,false, nil, nil)
    
    self.stream = stream
 end

@@ -105,7 +105,7 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
                   moduleSymbolKind: Ast.SymbolKind, useLuneRuntime: str!,
                   targetLuaVer:&LuaVer.LuaVerInfo, enableTest:bool, useIpairs:bool )
    {
-      super(moduleTypeInfo, moduleTypeInfo.$scope);
+      super(true, moduleTypeInfo, moduleTypeInfo.$scope);
       self.enableTest = enableTest;
       self.macroVarSymSet = (@);
       self.needModuleObj = true;
@@ -196,6 +196,23 @@ fn filter( node: &Nodes.Node, filter: convFilter,
 }
 
 let stepIndent = 3;
+
+
+macro _declIgnoreNode( name:sym )
+{
+   {
+      let methodName = "process%s" (,,,,name);
+      let nodeName = "%sNode" (,,,,name);
+   }
+   pub override fn convFilter.,,,methodName (
+      node: Nodes.,,,nodeName, opt: Opt ) mut
+   {
+   }
+}
+
+_declIgnoreNode( BlankLine );
+_declIgnoreNode( DeclForm );
+_declIgnoreNode( ProtoMethod );
 
 // let mut builtInModuleSet:Set<str> = (@);
 // builtInModuleSet.add( "io" );

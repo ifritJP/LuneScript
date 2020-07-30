@@ -378,7 +378,7 @@ function convFilter.new( streamName, stream, metaStream, convMode, inMacro, modu
    return obj
 end
 function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest, useIpairs) 
-   Nodes.Filter.__init( self,moduleTypeInfo, moduleTypeInfo:get_scope())
+   Nodes.Filter.__init( self,true, moduleTypeInfo, moduleTypeInfo:get_scope())
    
    self.enableTest = enableTest
    self.macroVarSymSet = {}
@@ -480,6 +480,27 @@ local function filter( node, filter, parent )
 end
 
 local stepIndent = 3
+
+
+
+
+function convFilter:processBlankLine( node, opt )
+
+end
+
+
+
+function convFilter:processDeclForm( node, opt )
+
+end
+
+
+
+function convFilter:processProtoMethod( node, opt )
+
+end
+
+
 
 function convFilter:pushIndent( newIndent )
 
@@ -4001,7 +4022,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3334, function (  )
+   Log.log( Log.Level.Info, __func__, 3351, function (  )
    
       return string.format( "code: %s", code)
    end )

@@ -6,7 +6,7 @@ module Wrap require 'test.checkReferenceSub' {
    pub static fn pcall( func:form ): bool, str!;
 }
 
-class Test {
+pub class Test {
    let mut lineNo:int;
 
    pub fn __init() {
@@ -63,7 +63,7 @@ enum Expect {
    Skip,
 }
 
-pub fn Test.exeBlock( block:str, expect:Expect ): TestResult {
+fn Test.exeBlock( block:str, expect:Expect ): TestResult {
    let mut luaCode = "";
    let! ret, mess = Wrap.pcall( fn() {
       luaCode = front.convertLnsCode2LuaCode( block, "sample.lns" );
@@ -107,6 +107,7 @@ pub fn Test.check( path:str ) mut: bool {
          return true;
       };
       total = total + 1;
+      print( "test -- %d" ( total ) );
 
       let expect:Expect;
       if block.find( "@lnsFront: error" ## ) {
@@ -139,3 +140,4 @@ let mut test = new Test();
 if not test.check( "work/ifritJP.github.io/hugo/content/LuneScript/" ) {
    os.exit( 1 );
 }
+

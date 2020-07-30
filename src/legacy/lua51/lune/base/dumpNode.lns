@@ -26,6 +26,7 @@ import lune.base.Ast;
 import lune.base.Nodes;
 import lune.base.Parser;
 import lune.base.LuneControl;
+import lune.base.Util;
 
 pub class Opt {
    let prefix: str;
@@ -54,7 +55,7 @@ class dumpFilter extend Nodes.Filter<Opt> {
 }
 
 pub fn createFilter( moduleTypeInfo:&Ast.TypeInfo ): Nodes.Filter<Opt> {
-   return new dumpFilter(moduleTypeInfo, moduleTypeInfo.$scope);
+   return new dumpFilter(true, moduleTypeInfo, moduleTypeInfo.$scope);
 }
 
 fn dump( prefix:str, depth:int, node: &Nodes.Node, txt: str ) {
@@ -108,6 +109,13 @@ pub override fn dumpFilter.processBlankLine(
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node, "%d" (node.$lineNum) );
+};
+pub override fn dumpFilter.processLuneKind(
+   node: &Nodes.LuneKindNode, opt:Opt ) mut
+{
+   let prefix, depth = opt.get();
+   dump( prefix, depth, node, "" );
+   filter( node.$exp, self, opt.nextOpt() );
 };
 pub override fn dumpFilter.processImport(
    node: &Nodes.ImportNode, opt:Opt ) mut

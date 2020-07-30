@@ -273,6 +273,46 @@ function IdProvider:get_id()
 end
 
 
+
+local ProcessInfo = {}
+_moduleObj.ProcessInfo = ProcessInfo
+function ProcessInfo.setmeta( obj )
+  setmetatable( obj, { __index = ProcessInfo  } )
+end
+function ProcessInfo.new( idProvier, idProvierExt, typeInfo2Map )
+   local obj = {}
+   ProcessInfo.setmeta( obj )
+   if obj.__init then
+      obj:__init( idProvier, idProvierExt, typeInfo2Map )
+   end
+   return obj
+end
+function ProcessInfo:__init( idProvier, idProvierExt, typeInfo2Map )
+
+   self.idProvier = idProvier
+   self.idProvierExt = idProvierExt
+   self.typeInfo2Map = typeInfo2Map
+end
+function ProcessInfo:get_idProvier()
+   return self.idProvier
+end
+function ProcessInfo:get_idProvierExt()
+   return self.idProvierExt
+end
+function ProcessInfo:get_typeInfo2Map()
+   return self.typeInfo2Map
+end
+
+local processInfoQueue = {}
+local function getCurProcessInfo(  )
+
+   if #processInfoQueue == 0 then
+      return nil
+   end
+   
+   return processInfoQueue[#processInfoQueue]
+end
+
 local extStartId = 100000
 local extMaxId = 10000000
 
@@ -1033,13 +1073,13 @@ CanEvalType.__allList[7] = CanEvalType.Logical
 
 local TypeInfo = {}
 _moduleObj.TypeInfo = TypeInfo
-function TypeInfo.new( scope )
+function TypeInfo.new( scope, processInfo )
    local obj = {}
    TypeInfo.setmeta( obj )
-   if obj.__init then obj:__init( scope ); end
+   if obj.__init then obj:__init( scope, processInfo ); end
    return obj
 end
-function TypeInfo:__init(scope) 
+function TypeInfo:__init(scope, processInfo) 
    
    self.scope = scope
    do
@@ -1050,6 +1090,7 @@ function TypeInfo:__init(scope)
    end
    
    self.typeData = TypeData.new({})
+   self.processInfo = processInfo
 end
 function TypeInfo.getModulePath( fullname )
 
@@ -1267,6 +1308,9 @@ end
 function TypeInfo:get_typeData()
    return self.typeData
 end
+function TypeInfo:get_processInfo()
+   return self.processInfo
+end
 
 
 local MethodKind = {}
@@ -1433,7 +1477,7 @@ local function isExtId( typeInfo )
 end
 _moduleObj.isExtId = isExtId
 
-local headTypeInfo = TypeInfo.new(_moduleObj.rootScope)
+local headTypeInfo = TypeInfo.new(_moduleObj.rootScope, getCurProcessInfo(  ))
 _moduleObj.headTypeInfo = headTypeInfo
 
 
@@ -1602,7 +1646,7 @@ function AutoBoxingInfo.new(  )
    return obj
 end
 function AutoBoxingInfo:__init() 
-   TypeInfo.__init( self,nil)
+   TypeInfo.__init( self,nil, getCurProcessInfo(  ))
    
    self.count = 0
    AutoBoxingInfo.allObj[self] = self
@@ -1907,6 +1951,10 @@ end
 
 function AliasTypeInfo:get_nonnilableType( ... )
    return self.aliasSrcTypeInfo:get_nonnilableType( ... )
+end
+
+function AliasTypeInfo:get_processInfo( ... )
+   return self.aliasSrcTypeInfo:get_processInfo( ... )
 end
 
 function AliasTypeInfo:get_retTypeInfoList( ... )
@@ -2522,7 +2570,7 @@ function NilTypeInfo.new(  )
    return obj
 end
 function NilTypeInfo:__init() 
-   TypeInfo.__init( self,nil)
+   TypeInfo.__init( self,nil, getCurProcessInfo(  ))
    
    
    idProv:increment(  )
@@ -2961,6 +3009,10 @@ function NilableTypeInfo:get_parentInfo( ... )
    return self.nonnilableType:get_parentInfo( ... )
 end
 
+function NilableTypeInfo:get_processInfo( ... )
+   return self.nonnilableType:get_processInfo( ... )
+end
+
 function NilableTypeInfo:get_rawTxt( ... )
    return self.nonnilableType:get_rawTxt( ... )
 end
@@ -3013,7 +3065,7 @@ function AlternateTypeInfo.new( belongClassFlag, altIndex, txt, accessMode, modu
    return obj
 end
 function AlternateTypeInfo:__init(belongClassFlag, altIndex, txt, accessMode, moduleTypeInfo, baseTypeInfo, interfaceList) 
-   TypeInfo.__init( self,TypeInfo.createScope( nil, true, baseTypeInfo, interfaceList ))
+   TypeInfo.__init( self,TypeInfo.createScope( nil, true, baseTypeInfo, interfaceList ), getCurProcessInfo(  ))
    
    
    idProv:increment(  )
@@ -3287,7 +3339,7 @@ function BoxTypeInfo.new( typeId, accessMode, boxingType )
    return obj
 end
 function BoxTypeInfo:__init(typeId, accessMode, boxingType) 
-   TypeInfo.__init( self,boxRootScope)
+   TypeInfo.__init( self,boxRootScope, getCurProcessInfo(  ))
    
    self.boxingType = boxingType
    self.typeId = typeId
@@ -3441,6 +3493,10 @@ function BoxTypeInfo:get_parentInfo( ... )
    return self.boxingType:get_parentInfo( ... )
 end
 
+function BoxTypeInfo:get_processInfo( ... )
+   return self.boxingType:get_processInfo( ... )
+end
+
 function BoxTypeInfo:get_rawTxt( ... )
    return self.boxingType:get_rawTxt( ... )
 end
@@ -3489,7 +3545,7 @@ function GenericTypeInfo.new( genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo )
    return obj
 end
 function GenericTypeInfo:__init(genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo) 
-   TypeInfo.__init( self,TypeInfo.createScope( (_lune.unwrap( genSrcTypeInfo:get_scope()) ):get_parent(), true, genSrcTypeInfo, nil ))
+   TypeInfo.__init( self,TypeInfo.createScope( (_lune.unwrap( genSrcTypeInfo:get_scope()) ):get_parent(), true, genSrcTypeInfo, nil ), getCurProcessInfo(  ))
    
    
    idProv:increment(  )
@@ -3799,6 +3855,10 @@ function GenericTypeInfo:get_parentInfo( ... )
    return self.genSrcTypeInfo:get_parentInfo( ... )
 end
 
+function GenericTypeInfo:get_processInfo( ... )
+   return self.genSrcTypeInfo:get_processInfo( ... )
+end
+
 function GenericTypeInfo:get_rawTxt( ... )
    return self.genSrcTypeInfo:get_rawTxt( ... )
 end
@@ -4024,6 +4084,10 @@ function ModifierTypeInfo:get_parentInfo( ... )
    return self.srcTypeInfo:get_parentInfo( ... )
 end
 
+function ModifierTypeInfo:get_processInfo( ... )
+   return self.srcTypeInfo:get_processInfo( ... )
+end
+
 function ModifierTypeInfo:get_rawTxt( ... )
    return self.srcTypeInfo:get_rawTxt( ... )
 end
@@ -4076,7 +4140,7 @@ function ModuleTypeInfo.new( scope, externalFlag, txt, parentInfo, typeId, mutab
    return obj
 end
 function ModuleTypeInfo:__init(scope, externalFlag, txt, parentInfo, typeId, mutable) 
-   TypeInfo.__init( self,scope)
+   TypeInfo.__init( self,scope, getCurProcessInfo(  ))
    
    
    self.externalFlag = externalFlag
@@ -4264,7 +4328,7 @@ function EnumTypeInfo.new( scope, externalFlag, accessMode, txt, parentInfo, typ
    return obj
 end
 function EnumTypeInfo:__init(scope, externalFlag, accessMode, txt, parentInfo, typeId, valTypeInfo) 
-   TypeInfo.__init( self,scope)
+   TypeInfo.__init( self,scope, getCurProcessInfo(  ))
    
    
    self.externalFlag = externalFlag
@@ -4416,7 +4480,7 @@ function AlgeTypeInfo.new( scope, externalFlag, accessMode, txt, parentInfo, typ
    return obj
 end
 function AlgeTypeInfo:__init(scope, externalFlag, accessMode, txt, parentInfo, typeId) 
-   TypeInfo.__init( self,scope)
+   TypeInfo.__init( self,scope, getCurProcessInfo(  ))
    
    
    self.externalFlag = externalFlag
@@ -4524,7 +4588,7 @@ function NormalTypeInfo.new( abstractFlag, scope, baseTypeInfo, interfaceList, a
    return obj
 end
 function NormalTypeInfo:__init(abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode) 
-   TypeInfo.__init( self,scope)
+   TypeInfo.__init( self,scope, getCurProcessInfo(  ))
    
    
    if type( kind ) ~= "number" then
@@ -5395,14 +5459,14 @@ function DDDTypeInfo:get_scope(  )
 
    return nil
 end
-function DDDTypeInfo.new( typeId, typeInfo, externalFlag )
+function DDDTypeInfo.new( processInfo, typeId, typeInfo, externalFlag )
    local obj = {}
    DDDTypeInfo.setmeta( obj )
-   if obj.__init then obj:__init( typeId, typeInfo, externalFlag ); end
+   if obj.__init then obj:__init( processInfo, typeId, typeInfo, externalFlag ); end
    return obj
 end
-function DDDTypeInfo:__init(typeId, typeInfo, externalFlag) 
-   TypeInfo.__init( self,nil)
+function DDDTypeInfo:__init(processInfo, typeId, typeInfo, externalFlag) 
+   TypeInfo.__init( self,nil, processInfo)
    
    self.typeId = typeId
    
@@ -5497,7 +5561,7 @@ function NormalTypeInfo.createDDD( typeInfo, externalFlag )
    end
    
    idProv:increment(  )
-   return DDDTypeInfo.new(idProv:get_id(), typeInfo, externalFlag)
+   return DDDTypeInfo.new(getCurProcessInfo(  ), idProv:get_id(), typeInfo, externalFlag)
 end
 
 
@@ -5935,14 +5999,14 @@ function AbbrTypeInfo:get_scope(  )
 
    return nil
 end
-function AbbrTypeInfo.new( idProvider, rawTxt )
+function AbbrTypeInfo.new( processInfo, idProvider, rawTxt )
    local obj = {}
    AbbrTypeInfo.setmeta( obj )
-   if obj.__init then obj:__init( idProvider, rawTxt ); end
+   if obj.__init then obj:__init( processInfo, idProvider, rawTxt ); end
    return obj
 end
-function AbbrTypeInfo:__init(idProvider, rawTxt) 
-   TypeInfo.__init( self,nil)
+function AbbrTypeInfo:__init(processInfo, idProvider, rawTxt) 
+   TypeInfo.__init( self,nil, processInfo)
    
    
    local typeId = idProvider:get_id() + 1
@@ -6014,24 +6078,24 @@ function AbbrTypeInfo:get_rawTxt()
 end
 
 
-local builtinTypeAbbr = AbbrTypeInfo.new(idProv, "##")
+local builtinTypeAbbr = AbbrTypeInfo.new(getCurProcessInfo(  ), idProv, "##")
 _moduleObj.builtinTypeAbbr = builtinTypeAbbr
 
-local builtinTypeAbbrNone = AbbrTypeInfo.new(idProv, "[##]")
+local builtinTypeAbbrNone = AbbrTypeInfo.new(getCurProcessInfo(  ), idProv, "[##]")
 _moduleObj.builtinTypeAbbrNone = builtinTypeAbbrNone
 
 
 local ExtTypeInfo = {}
 setmetatable( ExtTypeInfo, { __index = TypeInfo } )
 _moduleObj.ExtTypeInfo = ExtTypeInfo
-function ExtTypeInfo.new( idProvider, extedType )
+function ExtTypeInfo.new( processInfo, idProvider, extedType )
    local obj = {}
    ExtTypeInfo.setmeta( obj )
-   if obj.__init then obj:__init( idProvider, extedType ); end
+   if obj.__init then obj:__init( processInfo, idProvider, extedType ); end
    return obj
 end
-function ExtTypeInfo:__init(idProvider, extedType) 
-   TypeInfo.__init( self,extedType:get_scope())
+function ExtTypeInfo:__init(processInfo, idProvider, extedType) 
+   TypeInfo.__init( self,extedType:get_scope(), processInfo)
    
    
    local typeId = idProvider:get_id() + 1
@@ -6190,6 +6254,10 @@ function ExtTypeInfo:get_parentInfo( ... )
    return self.extedType:get_parentInfo( ... )
 end
 
+function ExtTypeInfo:get_processInfo( ... )
+   return self.extedType:get_processInfo( ... )
+end
+
 function ExtTypeInfo:get_rawTxt( ... )
    return self.extedType:get_rawTxt( ... )
 end
@@ -6235,7 +6303,7 @@ end
 function NormalTypeInfo.createLuaval( luneType )
 
    idProv:increment(  )
-   return ExtTypeInfo.new(idProv, luneType)
+   return ExtTypeInfo.new(getCurProcessInfo(  ), idProv, luneType)
 end
 
 
@@ -6263,7 +6331,7 @@ function AndExpTypeInfo.new( exp1, exp2, result )
    return obj
 end
 function AndExpTypeInfo:__init(exp1, exp2, result) 
-   TypeInfo.__init( self,result:get_scope())
+   TypeInfo.__init( self,result:get_scope(), getCurProcessInfo(  ))
    
    self.exp1 = exp1
    self.exp2 = exp2
@@ -6399,6 +6467,10 @@ end
 
 function AndExpTypeInfo:get_parentInfo( ... )
    return self.result:get_parentInfo( ... )
+end
+
+function AndExpTypeInfo:get_processInfo( ... )
+   return self.result:get_processInfo( ... )
 end
 
 function AndExpTypeInfo:get_rawTxt( ... )
@@ -7505,38 +7577,6 @@ function TypeInfo:getFullName( typeNameCtrl, importInfo, localFlag )
    return self:getParentFullName( typeNameCtrl, importInfo, localFlag ) .. self:get_rawTxt()
 end
 
-
-local ProcessInfo = {}
-_moduleObj.ProcessInfo = ProcessInfo
-function ProcessInfo.setmeta( obj )
-  setmetatable( obj, { __index = ProcessInfo  } )
-end
-function ProcessInfo.new( idProvier, idProvierExt, typeInfo2Map )
-   local obj = {}
-   ProcessInfo.setmeta( obj )
-   if obj.__init then
-      obj:__init( idProvier, idProvierExt, typeInfo2Map )
-   end
-   return obj
-end
-function ProcessInfo:__init( idProvier, idProvierExt, typeInfo2Map )
-
-   self.idProvier = idProvier
-   self.idProvierExt = idProvierExt
-   self.typeInfo2Map = typeInfo2Map
-end
-function ProcessInfo:get_idProvier()
-   return self.idProvier
-end
-function ProcessInfo:get_idProvierExt()
-   return self.idProvierExt
-end
-function ProcessInfo:get_typeInfo2Map()
-   return self.typeInfo2Map
-end
-
-
-local processInfoQueue = {}
 
 local IdType = {}
 _moduleObj.IdType = IdType
