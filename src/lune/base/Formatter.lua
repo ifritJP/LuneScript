@@ -223,7 +223,7 @@ function FormatterFilter.new( moduleTypeInfo, moduleInfoManager, stream )
    return obj
 end
 function FormatterFilter:__init(moduleTypeInfo, moduleInfoManager, stream) 
-   Nodes.Filter.__init( self,moduleTypeInfo, moduleInfoManager)
+   Nodes.Filter.__init( self,true, moduleTypeInfo, moduleInfoManager)
    
    self.stream = Util.SimpleSourceOStream.new(stream, nil, 3)
 end

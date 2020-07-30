@@ -1442,6 +1442,7 @@ end
 local _TypeInfoAlias = {}
 setmetatable( _TypeInfoAlias, { __index = _TypeInfo } )
 function _TypeInfoAlias:createTypeInfo( param )
+   local __func__ = '@lune.@base.@TransUnit._TypeInfoAlias.createTypeInfo'
 
    local srcTypeInfo = _lune.unwrap( param:getTypeInfo( self.srcTypeId ))
    local newTypeInfo = Ast.NormalTypeInfo.createAlias( self.rawTxt, true, Ast.AccessMode.Pub, param.moduleTypeInfo, srcTypeInfo )
@@ -1451,7 +1452,7 @@ function _TypeInfoAlias:createTypeInfo( param )
    if  nil == parentScope then
       local _parentScope = parentScope
    
-      return nil, string.format( "not found parentScope %s %s", self.parentId, self.rawTxt)
+      return nil, string.format( "%s: not found parentScope %s %s", __func__, self.parentId, self.rawTxt)
    end
    
    parentScope:addAliasForType( self.rawTxt, nil, newTypeInfo )
@@ -1838,7 +1839,7 @@ function _TypeInfoModule:createTypeInfo( param )
    if  nil == parentScope then
       local _parentScope = parentScope
    
-      return nil, string.format( "not found parentScope %s %s", self.parentId, self.txt)
+      return nil, string.format( "%s: not found parentScope %s %s", __func__, self.parentId, self.txt)
    end
    
    
@@ -1867,7 +1868,7 @@ function _TypeInfoModule:createTypeInfo( param )
          param.typeId2TypeInfo[self.typeId] = workTypeInfo
          parentScope:addClass( self.txt, nil, workTypeInfo )
          
-         Log.log( Log.Level.Info, __func__, 1240, function (  )
+         Log.log( Log.Level.Info, __func__, 1242, function (  )
          
             return string.format( "new module -- %s, %s, %d, %d", self.txt, workTypeInfo:getFullName( Ast.defaultTypeNameCtrl, parentScope, false ), workTypeInfo:get_typeId(), parentScope:get_scopeId())
          end )
@@ -1982,7 +1983,7 @@ function _TypeInfoNormal:createTypeInfo( param )
       if  nil == parentScope then
          local _parentScope = parentScope
       
-         return nil, string.format( "not found parentScope %s %s", self.parentId, self.txt)
+         return nil, string.format( "%s: not found parentScope %s %s", __func__, self.parentId, self.txt)
       end
       
       
@@ -2007,7 +2008,7 @@ function _TypeInfoNormal:createTypeInfo( param )
       else
        
          if self.kind == Ast.TypeInfoKind.Class or self.kind == Ast.TypeInfoKind.IF then
-            Log.log( Log.Level.Info, __func__, 1342, function (  )
+            Log.log( Log.Level.Info, __func__, 1345, function (  )
             
                return string.format( "new type -- %d, %s -- %s, %d", self.parentId, self.txt, _lune.nilacc( parentScope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, parentScope, false ) or "nil", _lune.nilacc( parentScope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ) or -1)
             end )
@@ -4025,7 +4026,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = '@lune.@base.@TransUnit.TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2623, function (  )
+   Log.log( Log.Level.Info, __func__, 2626, function (  )
    
       return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), modulePath)
    end )
@@ -4042,7 +4043,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2635, function (  )
+               Log.log( Log.Level.Info, __func__, 2638, function (  )
                
                   return string.format( "%s already", modulePath)
                end )
@@ -4075,7 +4076,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2655, function (  )
+   Log.log( Log.Level.Info, __func__, 2658, function (  )
    
       return string.format( "%s processing", modulePath)
    end )
@@ -4226,7 +4227,8 @@ function TransUnit:processImport( modulePath )
       do
          local _exp = errMess
          if _exp ~= nil then
-            Util.err( string.format( "%s: %s", modulePath, _exp) )
+            Util.err( string.format( "Failed to createType -- %s: %s(%d): %s", modulePath, Ast.SerializeKind:_getTxt( atomInfo.skind)
+            , atomInfo.typeId, _exp) )
          end
       end
       
@@ -4350,7 +4352,7 @@ function TransUnit:processImport( modulePath )
             
          elseif _switchExp == Ast.TypeInfoKind.Module then
             self:pushModule( true, classTypeInfo:getTxt(  ), Ast.TypeInfo.isMut( classTypeInfo ) )
-            Log.log( Log.Level.Info, __func__, 2909, function (  )
+            Log.log( Log.Level.Info, __func__, 2913, function (  )
             
                return string.format( "push module -- %s, %s, %d, %d, %d", classTypeInfo:getTxt(  ), _lune.nilacc( self.scope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, self.scope, false ) or "nil", _lune.nilacc( self.scope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ) or -1, classTypeInfo:get_typeId(), self.scope:get_parent():get_scopeId())
             end )
@@ -4426,7 +4428,7 @@ function TransUnit:processImport( modulePath )
    
    self.importModuleInfo:remove(  )
    
-   Log.log( Log.Level.Info, __func__, 2994, function (  )
+   Log.log( Log.Level.Info, __func__, 2998, function (  )
    
       return string.format( "%s complete", modulePath)
    end )

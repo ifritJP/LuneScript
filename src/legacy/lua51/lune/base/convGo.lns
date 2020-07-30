@@ -42,7 +42,7 @@ class convFilter extend Nodes.Filter<Opt> {
    pub fn __init( enableTest:bool, streamName: str, stream: oStream,
                   ast:&TransUnit.ASTInfo )
    {
-      super(ast.$moduleTypeInfo, ast.$moduleTypeInfo.$scope);
+      super(true, ast.$moduleTypeInfo, ast.$moduleTypeInfo.$scope);
 
       self.stream = new Util.SimpleSourceOStream( stream, nil, 4 );
    }

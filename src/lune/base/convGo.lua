@@ -211,7 +211,7 @@ function convFilter.new( enableTest, streamName, stream, ast )
    return obj
 end
 function convFilter:__init(enableTest, streamName, stream, ast) 
-   Nodes.Filter.__init( self,ast:get_moduleTypeInfo(), ast:get_moduleTypeInfo():get_scope())
+   Nodes.Filter.__init( self,true, ast:get_moduleTypeInfo(), ast:get_moduleTypeInfo():get_scope())
    
    
    self.stream = Util.SimpleSourceOStream.new(stream, nil, 4)

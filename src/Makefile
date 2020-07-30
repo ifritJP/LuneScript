@@ -1061,10 +1061,16 @@ test-miniGo:
 	go run lune/base/runtime_go/miniGo.go $(GO_SRC)
 
 test-reference:
-	if [ -d work/ifritJP.github.io ]; then						\
-		(cd work/ifritJP.github.io; git pull);					\
+	if [ -d ~/work/ifritJP.github.io ]; then					\
+		if [ ! -d work/ifritJP.github.io ]; then				\
+			ln -s ~/work/ifritJP.github.io work/ifritJP.github.io;		\
+		fi									\
 	else										\
-		(cd work; git clone https://github.com/ifritJP/ifritJP.github.io.git);	\
+		if [ -d work/ifritJP.github.io ]; then					\
+			(cd work/ifritJP.github.io; git pull);				\
+		else									\
+			(cd work; git clone https://github.com/ifritJP/ifritJP.github.io.git);	\
+		fi									\
 	fi
 	$(MAKE) test-reference-sample
 

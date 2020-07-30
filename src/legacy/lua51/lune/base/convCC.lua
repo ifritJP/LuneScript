@@ -1557,7 +1557,7 @@ function convFilter.new( enableTest, outputBuiltin, streamName, stream, headerSt
    return obj
 end
 function convFilter:__init(enableTest, outputBuiltin, streamName, stream, headerStream, ast) 
-   Nodes.Filter.__init( self,ast:get_moduleTypeInfo(), ast:get_moduleTypeInfo():get_scope())
+   Nodes.Filter.__init( self,true, ast:get_moduleTypeInfo(), ast:get_moduleTypeInfo():get_scope())
    
    
    self.dummyNodeManager = Nodes.NodeManager.new()

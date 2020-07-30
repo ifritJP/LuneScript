@@ -3,6 +3,11 @@
 #+STARTUP: nofold
 #+OPTIONS: ^:{}
 
+Latest document (for Japanese)
+
+https://ifritjp.github.io/documents/lunescript/
+
+
 #+TITLE: What's LuneScript
 
 LuneScript is a transcompiler for Lua.
