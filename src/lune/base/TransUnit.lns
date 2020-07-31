@@ -1097,7 +1097,8 @@ class _TypeInfoAlias extend _TypeInfo {
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
 
       let! mut parentScope = param.typeId2Scope[ self.parentId ] {
-         return nil, "not found parentScope %s %s" ( self.parentId, self.rawTxt );
+         return nil, "%s: not found parentScope %s %s" ( __func__,
+                                                     self.parentId, self.rawTxt );
       };
       parentScope.addAliasForType( self.rawTxt, nil, newTypeInfo );
 
@@ -1208,7 +1209,8 @@ class _TypeInfoModule extend _TypeInfo {
          parentInfo = workTypeInfo;
       }
       let! mut parentScope = param.typeId2Scope[ self.parentId ] {
-         return nil, "not found parentScope %s %s" ( self.parentId, self.txt );
+         return nil, "%s: not found parentScope %s %s" ( __func__, self.parentId,
+                                                         self.txt );
       };
 
       let mut newTypeInfo = parentScope.getTypeInfoChild( self.txt );
@@ -1315,7 +1317,8 @@ class _TypeInfoNormal extend _TypeInfo {
          }
 
          let! mut parentScope = param.typeId2Scope[ self.parentId ] {
-            return nil, "not found parentScope %s %s" ( self.parentId, self.txt );
+            return nil, "%s: not found parentScope %s %s" ( __func__,
+                                                            self.parentId, self.txt );
          };
 
          if self.txt ~= "" {
@@ -2786,7 +2789,8 @@ fn TransUnit.processImport( modulePath:str ) mut :
    foreach atomInfo in _typeInfoList {
       let newTypeInfo, errMess = atomInfo.createTypeInfoCache( importParam );
       if! errMess {
-         Util.err( "%s: %s" ( modulePath, _exp ) );
+         Util.err( "Failed to createType -- %s: %s(%d): %s"
+                   ( modulePath, atomInfo.skind.$_txt, atomInfo.typeId, _exp ) );
       }
       when! newTypeInfo {
          if newTypeInfo.$kind == .Macro {

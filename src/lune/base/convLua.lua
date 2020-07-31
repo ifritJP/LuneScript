@@ -604,6 +604,15 @@ function convFilter:outputMeta( node )
       return typeId2TypeInfo[typeId] and not Ast.isBuiltin( typeId ) and (moduleTypeInfo:hasRouteNamespaceFrom( node:get_moduleTypeInfo() ) or typeInfo:get_srcTypeInfo() ~= typeInfo or moduleTypeInfo:equals( Ast.headTypeInfo ) )
    end
    
+   local function isDependOnExt( typeInfo )
+   
+      if Ast.isExtId( typeInfo ) then
+         return true
+      end
+      
+      return self.moduleTypeInfo:get_processInfo() ~= typeInfo:get_processInfo()
+   end
+   
    local function pickupTypeId( typeInfo, forceFlag, pickupChildFlag )
    
       
@@ -617,7 +626,8 @@ function convFilter:outputMeta( node )
       
       
       if typeId2TypeInfo[typeInfo:get_typeId(  )] then
-         if Ast.isExtId( typeInfo ) and typeInfo:get_externalFlag() then
+         
+         if isDependOnExt( typeInfo ) then
             
             return 
          end
@@ -653,20 +663,18 @@ function convFilter:outputMeta( node )
       end
       
       
-      if Ast.isExtId( typeInfo ) and typeInfo:get_externalFlag() then
-         
-         return 
-      end
-      
-      
-      if typeInfo:get_nilable() then
+      if typeInfo ~= typeInfo:get_srcTypeInfo() then
+         pickupTypeId( typeInfo:get_srcTypeInfo(), true, false )
+      elseif typeInfo:get_nilable() then
          pickupTypeId( typeInfo:get_nonnilableType(), true, false )
-         if typeInfo ~= typeInfo:get_srcTypeInfo() then
-            pickupTypeId( typeInfo:get_srcTypeInfo(), true, false )
-         end
-         
       else
        
+         if isDependOnExt( typeInfo ) then
+            
+            return 
+         end
+         
+         
          if typeInfo:get_kind() == Ast.TypeInfoKind.Class or typeInfo:get_kind() == Ast.TypeInfoKind.IF then
             pickupClassMap[typeInfo:get_typeId()] = typeInfo
          end
@@ -727,11 +735,6 @@ function convFilter:outputMeta( node )
                
             end
             
-         end
-         
-         
-         if typeInfo ~= typeInfo:get_srcTypeInfo() then
-            pickupTypeId( typeInfo:get_srcTypeInfo(), true, false )
          end
          
       end
@@ -2500,7 +2503,6 @@ function convFilter:processIfUnwrap( node, opt )
    self:write( " = " )
    
    self:processExpListSub( node, node:get_expList():get_expList(), node:get_expList():get_mRetExp() )
-   
    self:writeln( "" )
    
    self:write( "if " )
@@ -3352,7 +3354,6 @@ end
 function convFilter:processExpOp1( node, opt )
 
    local op = node:get_op().txt
-   
    if op == ",,," then
       filter( node:get_exp(), self, node )
    elseif op == ",,,," then
@@ -3396,7 +3397,6 @@ end
 
 function convFilter:processExpToDDD( node, opt )
 
-   
    self:processExpListSub( node, node:get_expList():get_expList(), node:get_expList():get_mRetExp() )
 end
 
@@ -3736,7 +3736,6 @@ end
 
 function convFilter:processLuneKind( node, opt )
 
-   
    do
       local workNode = _lune.__Cast( node:get_exp(), 3, Nodes.ExpCastNode )
       if workNode ~= nil then
@@ -4021,7 +4020,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3351, function (  )
+   Log.log( Log.Level.Info, __func__, 3268, function (  )
    
       return string.format( "code: %s", code)
    end )

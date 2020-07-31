@@ -7637,12 +7637,14 @@ local function pushProcessInfo( processInfo )
       idProvBase = processInfo:get_idProvier()
       idProvExt = processInfo:get_idProvierExt()
       typeInfo2Map = processInfo:get_typeInfo2Map()
-   else
-      idProvBase = IdProvider.new(userStartId, extStartId)
-      idProvExt = IdProvider.new(extStartId, extMaxId)
-      typeInfo2Map = builtinTypeInfo2Map:clone(  )
+      idProv = idProvBase
+      return processInfo
    end
    
+   
+   idProvBase = IdProvider.new(userStartId, extStartId)
+   idProvExt = IdProvider.new(extStartId, extMaxId)
+   typeInfo2Map = builtinTypeInfo2Map:clone(  )
    idProv = idProvBase
    return ProcessInfo.new(idProvBase, idProvExt, typeInfo2Map)
 end
@@ -7651,6 +7653,7 @@ _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
 
    local info = processInfoQueue[#processInfoQueue]
+   table.remove( processInfoQueue )
    idProvBase = info:get_idProvier()
    idProvExt = info:get_idProvierExt()
    idProv = idProvBase

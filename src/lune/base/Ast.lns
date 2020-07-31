@@ -5849,24 +5849,25 @@ pub fn pushProcessInfo( processInfo:ProcessInfo! ): ProcessInfo {
    }
 
 
-   processInfoQueue.insert(
-      new ProcessInfo( idProvBase, idProvExt, typeInfo2Map ) );
+   processInfoQueue.insert( new ProcessInfo( idProvBase, idProvExt, typeInfo2Map ) );
    when! processInfo {
       idProvBase = processInfo.$idProvier;
       idProvExt = processInfo.$idProvierExt;
       typeInfo2Map = processInfo.$typeInfo2Map;
+      idProv = idProvBase;
+      return processInfo;
    }
-   else {
-      idProvBase = new IdProvider( userStartId, extStartId );
-      idProvExt = new IdProvider( extStartId, extMaxId );
-      typeInfo2Map = builtinTypeInfo2Map.clone();
-   }
+
+   idProvBase = new IdProvider( userStartId, extStartId );
+   idProvExt = new IdProvider( extStartId, extMaxId );
+   typeInfo2Map = builtinTypeInfo2Map.clone();
    idProv = idProvBase;
    return new ProcessInfo( idProvBase, idProvExt, typeInfo2Map );
 }
 
 pub fn popProcessInfo() {
    let mut info = processInfoQueue[ #processInfoQueue ];
+   processInfoQueue.remove(##);
    idProvBase = info.$idProvier;
    idProvExt = info.$idProvierExt;
    idProv = idProvBase;

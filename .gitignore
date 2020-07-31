@@ -11,3 +11,4 @@ src/legacy/lua51/lune/*.meta
 src/legacy/lua51/lune/base/*.meta
 *main-1.src.rock
 src/mini*
+*~

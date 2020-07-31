@@ -13,7 +13,7 @@ local version = "1.1.8"
 _moduleObj.version = version
 
 
-local metaVersion = "1.0.64"
+local metaVersion = "1.0.67"
 _moduleObj.metaVersion = metaVersion
 
 
