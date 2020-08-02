@@ -757,13 +757,19 @@ pub fn Front.checkDiag() mut {
 }
 
 pub fn Front.complete() mut {
-   //frontInterface.setFront( self );
-
    let mod = scriptPath2Module( self.option.scriptPath );
    self.createAst( new frontInterface.ImportModuleInfo(), self.createPaser(), mod,
                    getModuleId( self.option.scriptPath, mod ## ),
                    self.option.analyzeModule, .Complete, self.option.analyzePos );
 }
+
+pub fn Front.inquire() mut {
+   let mod = scriptPath2Module( self.option.scriptPath );
+   self.createAst( new frontInterface.ImportModuleInfo(), self.createPaser(), mod,
+                   getModuleId( self.option.scriptPath, mod ## ),
+                   self.option.analyzeModule, .Inquire, self.option.analyzePos );
+}
+
 
 pub fn Front.createGlue() mut {
    //frontInterface.setFront( self );
@@ -1278,6 +1284,9 @@ pub fn Front.exec() mut
       }
       case .Complete {
          self.complete();
+      }
+      case .Inquire {
+         self.inquire();
       }
       case .Glue {
          self.createGlue();

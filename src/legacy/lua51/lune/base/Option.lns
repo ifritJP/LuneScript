@@ -65,6 +65,7 @@ pub enum ModeKind {
    BootC = "bootC",
    Format = "format",
    Builtin = "builtin",
+   Inquire = "inq",
 }
 
 /** meta ファイルの更新必要性チェックモード */
@@ -400,7 +401,7 @@ usage:
          }
          else {
             switch( option.mode ) {
-               case .Complete {
+               case .Complete, .Inquire {
                   if not option.analyzeModule {
                      option.analyzeModule = arg;
                   }

@@ -71,6 +71,7 @@ pub enum AnalyzeMode {
    Compile,
    Diag,
    Complete,
+   Inquire,
 }
 
 class AccessSymPos {

@@ -1207,9 +1207,15 @@ end
 
 function Front:complete(  )
 
-   
    local mod = scriptPath2Module( self.option.scriptPath )
    self:createAst( frontInterface.ImportModuleInfo.new(), self:createPaser(  ), mod, getModuleId( self.option.scriptPath, mod ), self.option.analyzeModule, TransUnit.AnalyzeMode.Complete, self.option.analyzePos )
+end
+
+
+function Front:inquire(  )
+
+   local mod = scriptPath2Module( self.option.scriptPath )
+   self:createAst( frontInterface.ImportModuleInfo.new(), self:createPaser(  ), mod, getModuleId( self.option.scriptPath, mod ), self.option.analyzeModule, TransUnit.AnalyzeMode.Inquire, self.option.analyzePos )
 end
 
 
@@ -1486,7 +1492,7 @@ function Front:saveToLua(  )
             end
             
             if not cont then
-               Log.log( Log.Level.Debug, __func__, 1050, function (  )
+               Log.log( Log.Level.Debug, __func__, 1056, function (  )
                
                   return string.format( "<%s>, <%s>", tostring( oldLine), tostring( newLine))
                end )
@@ -1735,7 +1741,7 @@ _moduleObj.convertLnsCode2LuaCode = convertLnsCode2LuaCode
 function Front:exec(  )
    local __func__ = '@lune.@base.@front.Front.exec'
 
-   Log.log( Log.Level.Trace, __func__, 1264, function (  )
+   Log.log( Log.Level.Trace, __func__, 1270, function (  )
    
       return Option.ModeKind:_getTxt( self.option.mode)
       
@@ -1754,6 +1760,8 @@ function Front:exec(  )
          self:checkDiag(  )
       elseif _switchExp == Option.ModeKind.Complete then
          self:complete(  )
+      elseif _switchExp == Option.ModeKind.Inquire then
+         self:inquire(  )
       elseif _switchExp == Option.ModeKind.Glue then
          self:createGlue(  )
       elseif _switchExp == Option.ModeKind.Lua or _switchExp == Option.ModeKind.LuaMeta then

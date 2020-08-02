@@ -200,7 +200,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 3410
+   return 3432
 end
 
 
@@ -268,6 +268,9 @@ ModeKind.__allList[13] = ModeKind.Format
 ModeKind.Builtin = 'builtin'
 ModeKind._val2NameMap['builtin'] = 'Builtin'
 ModeKind.__allList[14] = ModeKind.Builtin
+ModeKind.Inquire = 'inq'
+ModeKind._val2NameMap['inq'] = 'Inquire'
+ModeKind.__allList[15] = ModeKind.Inquire
 
 
 local CheckingUptodateMode = {}
@@ -679,7 +682,7 @@ usage:
           
             do
                local _switchExp = (option.mode )
-               if _switchExp == ModeKind.Complete then
+               if _switchExp == ModeKind.Complete or _switchExp == ModeKind.Inquire then
                   if not option.analyzeModule then
                      option.analyzeModule = arg
                   elseif not lineNo then

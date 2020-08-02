@@ -471,6 +471,9 @@ AnalyzeMode.__allList[2] = AnalyzeMode.Diag
 AnalyzeMode.Complete = 2
 AnalyzeMode._val2NameMap[2] = 'Complete'
 AnalyzeMode.__allList[3] = AnalyzeMode.Complete
+AnalyzeMode.Inquire = 3
+AnalyzeMode._val2NameMap[3] = 'Inquire'
+AnalyzeMode.__allList[4] = AnalyzeMode.Inquire
 
 
 local AccessSymPos = {}
@@ -1868,7 +1871,7 @@ function _TypeInfoModule:createTypeInfo( param )
          param.typeId2TypeInfo[self.typeId] = workTypeInfo
          parentScope:addClass( self.txt, nil, workTypeInfo )
          
-         Log.log( Log.Level.Info, __func__, 1242, function (  )
+         Log.log( Log.Level.Info, __func__, 1243, function (  )
          
             return string.format( "new module -- %s, %s, %d, %d", self.txt, workTypeInfo:getFullName( Ast.defaultTypeNameCtrl, parentScope, false ), workTypeInfo:get_typeId(), parentScope:get_scopeId())
          end )
@@ -2008,7 +2011,7 @@ function _TypeInfoNormal:createTypeInfo( param )
       else
        
          if self.kind == Ast.TypeInfoKind.Class or self.kind == Ast.TypeInfoKind.IF then
-            Log.log( Log.Level.Info, __func__, 1345, function (  )
+            Log.log( Log.Level.Info, __func__, 1346, function (  )
             
                return string.format( "new type -- %d, %s -- %s, %d", self.parentId, self.txt, _lune.nilacc( parentScope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, parentScope, false ) or "nil", _lune.nilacc( parentScope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ) or -1)
             end )
@@ -4026,7 +4029,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = '@lune.@base.@TransUnit.TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2626, function (  )
+   Log.log( Log.Level.Info, __func__, 2627, function (  )
    
       return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), modulePath)
    end )
@@ -4043,7 +4046,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2638, function (  )
+               Log.log( Log.Level.Info, __func__, 2639, function (  )
                
                   return string.format( "%s already", modulePath)
                end )
@@ -4076,7 +4079,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2658, function (  )
+   Log.log( Log.Level.Info, __func__, 2659, function (  )
    
       return string.format( "%s processing", modulePath)
    end )
@@ -4352,7 +4355,7 @@ function TransUnit:processImport( modulePath )
             
          elseif _switchExp == Ast.TypeInfoKind.Module then
             self:pushModule( true, classTypeInfo:getTxt(  ), Ast.TypeInfo.isMut( classTypeInfo ) )
-            Log.log( Log.Level.Info, __func__, 2913, function (  )
+            Log.log( Log.Level.Info, __func__, 2914, function (  )
             
                return string.format( "push module -- %s, %s, %d, %d, %d", classTypeInfo:getTxt(  ), _lune.nilacc( self.scope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, self.scope, false ) or "nil", _lune.nilacc( self.scope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ) or -1, classTypeInfo:get_typeId(), self.scope:get_parent():get_scopeId())
             end )
@@ -4428,7 +4431,7 @@ function TransUnit:processImport( modulePath )
    
    self.importModuleInfo:remove(  )
    
-   Log.log( Log.Level.Info, __func__, 2998, function (  )
+   Log.log( Log.Level.Info, __func__, 2999, function (  )
    
       return string.format( "%s complete", modulePath)
    end )
@@ -5764,8 +5767,11 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
    end
    
    
-   if self.analyzeMode == AnalyzeMode.Diag or self.analyzeMode == AnalyzeMode.Complete then
-      os.exit( 0 )
+   do
+      local _switchExp = self.analyzeMode
+      if _switchExp == AnalyzeMode.Diag or _switchExp == AnalyzeMode.Complete or _switchExp == AnalyzeMode.Inquire then
+         os.exit( 0 )
+      end
    end
    
    
@@ -7909,6 +7915,30 @@ function TransUnit:checkLiteralEmptyCollection( pos, symbolName, expType )
 end
 
 
+function TransUnit:isTargetToken( token )
+
+   if self.analyzePos.lineNo == token.pos.lineNo and self.analyzePos.column >= token.pos.column and self.analyzePos.column <= token.pos.column + #token.txt then
+      return true
+   end
+   
+   return false
+end
+
+function TransUnit:dumpSymbolType( token, typeInfo )
+
+   local writer = Writer.JSON.new(io.stdout)
+   writer:startParent( "lunescript", false )
+   writer:startParent( "inquire", false )
+   writer:write( "name", token.txt )
+   writer:write( "type", typeInfo:getTxt( self.typeNameCtrl ) )
+   writer:write( "display", typeInfo:get_display_stirng() )
+   writer:endElement(  )
+   writer:endElement(  )
+   writer:fin(  )
+   os.exit( 0 )
+end
+
+
 local LetVarInfo = {}
 function LetVarInfo.setmeta( obj )
   setmetatable( obj, { __index = LetVarInfo  } )
@@ -8140,13 +8170,19 @@ function TransUnit:analyzeLetAndInitExp( firstPos, initMutable, accessMode, unwr
             local workName
             
             if index <= #letVarList then
-               workPos = letVarList[index].varName.pos
-               workName = letVarList[index].varName.txt
-               if Ast.TypeInfo.isMut( typeInfo ) and not Ast.isMutable( letVarList[index].mutable ) then
+               local letVar = letVarList[index]
+               workPos = letVar.varName.pos
+               workName = letVar.varName.txt
+               if Ast.TypeInfo.isMut( typeInfo ) and not Ast.isMutable( letVar.mutable ) then
                   workType = self:createModifier( typeInfo, Ast.MutMode.IMutRe )
                else
                 
                   workType = typeInfo
+               end
+               
+               
+               if self.analyzeMode == AnalyzeMode.Inquire and self:isTargetToken( letVar.varName ) then
+                  self:dumpSymbolType( letVar.varName, workType )
                end
                
             else
@@ -10249,7 +10285,7 @@ end
 
 function TransUnit:checkComp( token, callback )
 
-   if self.analyzeMode == AnalyzeMode.Complete and self.analyzePos.lineNo == token.pos.lineNo and self.analyzePos.column >= token.pos.column and self.analyzePos.column <= token.pos.column + #token.txt then
+   if self.analyzeMode == AnalyzeMode.Complete and self:isTargetToken( token ) then
       local currentModule = self.parser:getStreamName(  ):gsub( "%.lns", "" )
       currentModule = currentModule:gsub( ".*/", "" )
       local target = self.analyzeModule:gsub( "[^%.]+%.", "" )
@@ -10673,14 +10709,14 @@ function TransUnit:accessSymbol( symbolInfo )
 end
 
 
-function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFlag )
+function TransUnit:analyzeExpSymbol( firstToken, symbolToken, mode, prefixExp, skipFlag )
 
    local exp
    
    
    if mode == ExpSymbolMode.Field or mode == ExpSymbolMode.Get or mode == ExpSymbolMode.FieldNil or mode == ExpSymbolMode.GetNil then
       if prefixExp ~= nil then
-         exp = self:analyzeExpField( firstToken, token, mode, prefixExp )
+         exp = self:analyzeExpField( firstToken, symbolToken, mode, prefixExp )
          
          local expType = exp:get_expType()
          if prefixExp:get_expType():isModule(  ) then
@@ -10704,12 +10740,12 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
       
    elseif mode == ExpSymbolMode.Symbol then
       if self.macroCtrl:get_analyzeInfo():isAnalyzingArg(  ) then
-         exp = Nodes.LiteralSymbolNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeSymbol}, token )
+         exp = Nodes.LiteralSymbolNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeSymbol}, symbolToken )
       else
        
-         self:checkSymbolComp( token )
+         self:checkSymbolComp( symbolToken )
          
-         local symbolInfo = self.scope:getSymbolTypeInfo( token.txt, self.scope, self.moduleScope, self.scopeAccess )
+         local symbolInfo = self.scope:getSymbolTypeInfo( symbolToken.txt, self.scope, self.moduleScope, self.scopeAccess )
          if  nil == symbolInfo then
             local _symbolInfo = symbolInfo
          
@@ -10732,7 +10768,7 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
                end )
             end
             
-            self:error( "not found type -- " .. token.txt )
+            self:error( "not found type -- " .. symbolToken.txt )
          end
          
          
@@ -10778,7 +10814,7 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
          
          
          do
-            local _switchExp = token.txt
+            local _switchExp = symbolToken.txt
             if _switchExp == "__func__" then
                local funcTypeInfo = self:getCurrentNamespaceTypeInfo(  )
                self.has__func__Symbol[funcTypeInfo]= true
@@ -10790,10 +10826,15 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
       end
       
    elseif mode == ExpSymbolMode.Fn then
-      exp = self:analyzeDeclFunc( DeclFuncMode.Func, false, false, Ast.AccessMode.Local, false, nil, token, nil )
+      exp = self:analyzeDeclFunc( DeclFuncMode.Func, false, false, Ast.AccessMode.Local, false, nil, symbolToken, nil )
    else
     
       self:error( string.format( "illegal mode -- %s", tostring( mode)) )
+   end
+   
+   
+   if self.analyzeMode == AnalyzeMode.Inquire and self:isTargetToken( symbolToken ) then
+      self:dumpSymbolType( symbolToken, exp:get_expType() )
    end
    
    

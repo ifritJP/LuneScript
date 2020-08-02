@@ -1845,11 +1845,7 @@ form checkCompForm( jsonWriter: Writer.JSON, prefix:str  );
 
 fn TransUnit.checkComp( token:&Parser.Token, callback:checkCompForm ) 
 {
-   if self.analyzeMode == .Complete and
-      self.analyzePos.lineNo == token.pos.lineNo and
-      self.analyzePos.column >= token.pos.column and
-      self.analyzePos.column <= token.pos.column + #token.txt 
-   {
+   if self.analyzeMode == .Complete and self.isTargetToken ( token ) {
       let mut currentModule = self.parser.getStreamName().gsub( "%.lns", "" );
       currentModule = currentModule.gsub( ".*/", "" );
       let target = self.analyzeModule.gsub( "[^%.]+%.", "" );
@@ -2271,9 +2267,8 @@ fn TransUnit.accessSymbol( symbolInfo:&Ast.SymbolInfo ) mut {
    }
 }
 
-
 fn TransUnit.analyzeExpSymbol(
-   firstToken: &Parser.Token, token: &Parser.Token,
+   firstToken: &Parser.Token, symbolToken: &Parser.Token,
    mode: ExpSymbolMode, prefixExp: &Nodes.Node!, mut skipFlag: bool ) mut : Nodes.Node
 {
    let mut exp:Nodes.Node;
@@ -2282,7 +2277,7 @@ fn TransUnit.analyzeExpSymbol(
       mode == .FieldNil or mode == .GetNil
    {
       when! prefixExp {
-         exp = self.analyzeExpField( firstToken, token, mode, prefixExp );
+         exp = self.analyzeExpField( firstToken, symbolToken, mode, prefixExp );
 
          let expType = exp.$expType;
          if prefixExp.$expType.isModule() {
@@ -2303,13 +2298,13 @@ fn TransUnit.analyzeExpSymbol(
       if self.macroCtrl.$analyzeInfo.isAnalyzingArg() {
          exp = Nodes.LiteralSymbolNode.create(
             self.nodeManager, firstToken.pos,
-            self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeSymbol ], token );
+            self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeSymbol ], symbolToken );
       }
       else {
-         self.checkSymbolComp( token );
+         self.checkSymbolComp( symbolToken );
 
          let! symbolInfo = self.scope.getSymbolTypeInfo(
-            token.txt, self.scope, self.moduleScope, self.scopeAccess )
+            symbolToken.txt, self.scope, self.moduleScope, self.scopeAccess )
          {
             if self.analyzeMode ~= .Diag {
                let mut work = self.scope;
@@ -2328,7 +2323,7 @@ fn TransUnit.analyzeExpSymbol(
                      return true;
                   } );
             }
-            self.error( "not found type -- " .. token.txt );
+            self.error( "not found type -- " .. symbolToken.txt );
          };
 
          self.accessSymbol( symbolInfo );
@@ -2367,7 +2362,7 @@ fn TransUnit.analyzeExpSymbol(
             self.helperInfo.useLoad = true;
          }
 
-         switch token.txt {
+         switch symbolToken.txt {
             case "__func__" {
                let funcTypeInfo = self.getCurrentNamespaceTypeInfo();
                self.has__func__Symbol.add( funcTypeInfo );
@@ -2382,12 +2377,16 @@ fn TransUnit.analyzeExpSymbol(
    }
    elseif mode == .Fn {
       exp = self.analyzeDeclFunc(
-         .Func, false, false, .Local, false, nil, token, nil );
+         .Func, false, false, .Local, false, nil, symbolToken, nil );
    }
    else {
       self.error( "illegal mode -- %s" ( mode ) );
    }
 
+   if self.analyzeMode == .Inquire and self.isTargetToken ( symbolToken ) {
+      self.dumpSymbolType( symbolToken, exp.$expType );
+   }
+   
    return self.analyzeExpCont( firstToken, exp, skipFlag );
 }
 

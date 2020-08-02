@@ -27,6 +27,7 @@
 
 
 (require 'lns-dispatch)
+(require 'lns-inq)
 
 (defalias 'lns--prog-mode
   (if (fboundp 'prog-mode) 'prog-mode 'fundamental-mode))
@@ -239,6 +240,7 @@
 
 
   (local-set-key (kbd "C-c C-e") 'lns-dispatch-mode)
+  (local-set-key (kbd "C-c I") 'lns-show-inq)
   )
 
 

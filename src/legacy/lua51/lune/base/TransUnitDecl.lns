@@ -536,8 +536,10 @@ pub fn TransUnit.createAST(
       Util.err( "has error" );
    }
 
-   if self.analyzeMode == .Diag or self.analyzeMode == .Complete {
-      os.exit( 0 );
+   switch self.analyzeMode {
+      case .Diag, .Complete, .Inquire {
+         os.exit( 0 );
+      }
    }
 
    return new ASTInfo( ast, moduleTypeInfo, moduleSymbolKind );
@@ -2906,6 +2908,28 @@ fn TransUnit.checkLiteralEmptyCollection(
    }
 }
 
+fn TransUnit.isTargetToken( token:&Parser.Token ) : bool {
+   if self.analyzePos.lineNo == token.pos.lineNo and
+      self.analyzePos.column >= token.pos.column and
+      self.analyzePos.column <= token.pos.column + #token.txt
+   {
+      return true;
+   }
+   return false;
+}
+fn TransUnit.dumpSymbolType( token:&Parser.Token, typeInfo:&Ast.TypeInfo ) {
+   let mut writer = new Writer.JSON( io.stdout );
+   writer.startParent( "lunescript", false );
+   writer.startParent( "inquire", false );
+   writer.write( "name", token.txt );
+   writer.write( "type", typeInfo.getTxt( self.typeNameCtrl## ) );
+   writer.write( "display", typeInfo.$display_stirng );
+   writer.endElement();
+   writer.endElement();
+   writer.fin();
+   os.exit( 0 );
+}
+
 
 class LetVarInfo {
    pub let mutable:Ast.MutMode;
@@ -3153,16 +3177,21 @@ fn TransUnit.analyzeLetAndInitExp(
             let workPos;
             let workType;
             let workName;
-            if index <= #letVarList { 
-               workPos = letVarList[ index ].varName.pos;
-               workName = letVarList[ index ].varName.txt;
+            if index <= #letVarList {
+               let letVar = letVarList[ index ];
+               workPos = letVar.varName.pos;
+               workName = letVar.varName.txt;
                if Ast.TypeInfo.isMut( typeInfo ) and
-                  not Ast.isMutable( letVarList[ index ].mutable )
+                  not Ast.isMutable( letVar.mutable )
                {
                   workType = self.createModifier( typeInfo, .IMutRe );
                }
                else {
                   workType = typeInfo;
+               }
+
+               if self.analyzeMode == .Inquire and self.isTargetToken( letVar.varName ) {
+                  self.dumpSymbolType( letVar.varName, workType );
                }
             }
             else {
@@ -3190,6 +3219,7 @@ fn TransUnit.analyzeLetAndInitExp(
             }
          }
       }
+
    }
 
    return typeInfoList, letVarList, orgExpTypeList, expList;
