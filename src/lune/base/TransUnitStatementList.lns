@@ -73,6 +73,8 @@ fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Nodes.ReturnNode {
 
 fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
 {
+   self.commentCtrl.push();
+   
    let token = self.getTokenNoErr();
    if token == Parser.getEofToken() {
       return nil;
@@ -84,6 +86,7 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
    if not statement {
       if token.txt == termTxt {
          self.pushback();
+         self.commentCtrl.pop();
          return nil;
       }
       elseif token.txt == "pub" or token.txt == "pro" or
@@ -210,6 +213,7 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
                           (Nodes.getNodeKindName( statement.$kind ) ) );
       }
    }
+   self.commentCtrl.pop();
 
    return statement;
 }

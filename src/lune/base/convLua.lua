@@ -567,7 +567,6 @@ function convFilter:outputMeta( node )
    local importModuleType2Index = {}
    local importNameMap = {}
    do
-      
       for typeInfo, moduleInfo in pairs( node:get_importModule2moduleInfo() ) do
          importNameMap[moduleInfo:get_fullName()] = typeInfo
       end
@@ -626,9 +625,7 @@ function convFilter:outputMeta( node )
       
       
       if typeId2TypeInfo[typeInfo:get_typeId(  )] then
-         
          if isDependOnExt( typeInfo ) then
-            
             return 
          end
          
@@ -670,7 +667,6 @@ function convFilter:outputMeta( node )
       else
        
          if isDependOnExt( typeInfo ) then
-            
             return 
          end
          
@@ -685,7 +681,6 @@ function convFilter:outputMeta( node )
                local _switchExp = typeInfo:get_kind()
                if _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.Form or _switchExp == Ast.TypeInfoKind.FormFunc or _switchExp == Ast.TypeInfoKind.Alge or _switchExp == Ast.TypeInfoKind.Enum or _switchExp == Ast.TypeInfoKind.Map or _switchExp == Ast.TypeInfoKind.Set or _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Alternate or _switchExp == Ast.TypeInfoKind.Box then
                   pickupTypeId( typeInfo:get_nilableTypeInfo(), true, false )
-                  
                   local imutType = Ast.NormalTypeInfo.createModifier( typeInfo, Ast.MutMode.IMut )
                   pickupTypeId( imutType, true, false )
                end
@@ -867,6 +862,7 @@ function convFilter:outputMeta( node )
                            local symbolInfo = __map[ fieldName ]
                            do
                               local typeInfo = symbolInfo:get_typeInfo()
+                              
                               if symbolInfo:get_kind() == Ast.SymbolKind.Mbr or symbolInfo:get_kind() == Ast.SymbolKind.Var then
                                  if symbolInfo:get_accessMode() == Ast.AccessMode.Pub then
                                     self:writeln( string.format( "__classInfo%d.%s = {", classTypeId, fieldName) )
@@ -1346,7 +1342,6 @@ end]==], luneSymbol, luneSymbol) )
       if _exp ~= nil then
          self:write( "return " )
          self:write( _exp:get_symbol():get_name() )
-         
          self:writeln( "" )
       else
          self:writeln( "return _moduleObj" )
@@ -1895,7 +1890,6 @@ function %s.setmeta( obj )
 end]==], className, className, destTxt) )
    
    if not hasConstrFlag then
-      
       methodNameSet["__init"]= true
       
       local oldFlag
@@ -1960,7 +1954,6 @@ function %s:__init( %s )
       self:pushIndent(  )
       
       if baseInfo ~= Ast.headTypeInfo then
-         
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
@@ -1992,7 +1985,6 @@ function %s:__init( %s )
       local memberNameToken = memberNode:get_name(  )
       local memberName = memberNameToken.txt
       local getterName = "get_" .. memberName
-      
       local autoFlag = not _lune._Set_has(methodNameSet, getterName )
       local prefix
       
@@ -2016,7 +2008,6 @@ end]==], className, delimit, getterName, prefix, memberName) )
       end
       
       local setterName = "set_" .. memberName
-      
       autoFlag = not _lune._Set_has(methodNameSet, setterName )
       if memberNode:get_setterMode(  ) ~= Ast.AccessMode.None and autoFlag then
          self:writeln( string.format( [==[
@@ -2390,7 +2381,6 @@ function convFilter:processDeclMethod( node, opt )
    local methodNodeToken = _lune.unwrap( declInfo:get_name(  ))
    local methodName = methodNodeToken.txt
    self:write( string.format( "function %s%s%s( ", classTypeInfo:get_rawTxt(), delimit, methodName) )
-   
    local argList = declInfo:get_argList(  )
    for index, arg in ipairs( argList ) do
       if index > 1 then
@@ -2986,11 +2976,9 @@ function convFilter:processForeach( node, opt )
    
    if self.useIpairs and node:get_exp():get_expType():get_kind() == Ast.TypeInfoKind.List then
       if node:get_exp():get_expType():get_itemTypeInfoList()[1]:get_nilable() then
-         
          self:write( " in pairs( " )
       else
        
-         
          self:write( " in ipairs( " )
       end
       
@@ -3040,7 +3028,6 @@ function convFilter:processForsort( node, opt )
    end
    
    filter( node:get_block(), self, node )
-   
    self:writeln( "end" )
    self:popIndent(  )
    self:writeln( "end" )
@@ -3487,9 +3474,7 @@ function convFilter:processExpOp2( node, opt )
    do
       local _exp = Ast.bitBinOpMap[opTxt]
       if _exp ~= nil then
-         
          if self.targetLuaVer:get_hasBitOp() == LuaVer.BitOp.HasOp then
-            
             do
                local _switchExp = _exp
                if _switchExp == Ast.BitOpKind.LShift then
@@ -3504,7 +3489,6 @@ function convFilter:processExpOp2( node, opt )
             filter( node:get_exp2(), self, node )
          else
           
-            
             local binfunc = ""
             local exp2Mod = ""
             do
@@ -3889,7 +3873,6 @@ end
 
 function convFilter:processLiteralInt( node, opt )
 
-   
    self:write( node:get_token().txt )
 end
 
@@ -3897,7 +3880,6 @@ end
 
 function convFilter:processLiteralReal( node, opt )
 
-   
    self:write( node:get_token().txt )
 end
 
@@ -4007,7 +3989,6 @@ _moduleObj.MacroEvalImp = MacroEvalImp
 function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
-   
    local newEnv = {}
    for key, val in pairs( _G ) do
       newEnv[key] = val

@@ -2194,7 +2194,9 @@ fn TransUnit.getTokenNoErr() mut : &Parser.Token
             token = self.macroCtrl.expandMacroVal(
                self.typeNameCtrl, self.scope, self, token );
          }
-         //self.commentCtrl.addDirect( commentList );
+         if not self.ctrl_info.compatComment {
+            self.commentCtrl.addDirect( commentList );
+         }
       }
       else {
          token = Parser.getEofToken();

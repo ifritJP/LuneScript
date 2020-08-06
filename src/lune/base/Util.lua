@@ -410,10 +410,8 @@ local function getReadyCode( lnsPath, luaPath )
       local _luaTime = luaTime
       local _lnsTime = lnsTime
    
-      
       return false
    end
-   
    
    return luaTime >= lnsTime
 end

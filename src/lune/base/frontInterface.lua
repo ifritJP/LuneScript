@@ -184,7 +184,6 @@ local dummyFront = {}
 setmetatable( dummyFront, { ifList = {frontInterface,} } )
 function dummyFront:loadModule( mod )
 
-   
    return require( mod ), {}
 end
 function dummyFront:loadMeta( importModuleInfo, mod )

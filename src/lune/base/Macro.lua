@@ -679,7 +679,6 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
       if arg:get_typeInfo():get_kind() ~= Ast.TypeInfoKind.DDD then
          local argType = arg:get_typeInfo()
          local argName = arg:get_name()
-         
          self.symbol2ValueMapForMacro[argName] = Nodes.MacroValInfo.new(argValMap[index], argType, macroArgName2ArgNode[argName])
       else
        
@@ -843,7 +842,6 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
       
       
       if tokenTxt == ',,' then
-         
          if macroVal.typeInfo:equals( Ast.builtinTypeSymbol ) then
             local txtList = (_lune.unwrap( macroVal.val) )
             pushbackTxt( parser, txtList, nextToken.txt, nextToken.pos )
@@ -937,7 +935,6 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
             local rawTxt
             
             if txt:find( "^```" ) then
-               
                rawTxt = string.format( "%q", txt)
             else
              
@@ -1081,7 +1078,6 @@ end
 
 function MacroCtrl:switchMacroMode(  )
 
-   
    self.analyzeInfo = self.macroAnalyzeInfoStack[#self.macroAnalyzeInfoStack - 1]
    table.insert( self.macroAnalyzeInfoStack, self.analyzeInfo )
 end
@@ -1089,7 +1085,6 @@ end
 
 function MacroCtrl:restoreMacroMode(  )
 
-   
    table.remove( self.macroAnalyzeInfoStack )
    self.analyzeInfo = self.macroAnalyzeInfoStack[#self.macroAnalyzeInfoStack]
 end

@@ -7122,7 +7122,6 @@ end
 
 function DeclVarNode:getBreakKind( checkMode )
 
-   
    local kind = BreakKind.None
    local work = BreakKind.None
    do
@@ -7522,13 +7521,11 @@ end
 
 function DeclFuncNode:canBeRight(  )
 
-   
    return self.declInfo:get_name() == nil
 end
 
 function DeclFuncNode:canBeStatement(  )
 
-   
    return not (self.declInfo:get_name() == nil )
 end
 
@@ -10716,7 +10713,6 @@ function Node:getSymbolInfo(  )
                local refFieldNode = _lune.__Cast( node, 3, RefFieldNode )
                if refFieldNode ~= nil then
                   if refFieldNode:get_nilAccess() then
-                     
                      return {}
                   end
                   
@@ -10839,7 +10835,6 @@ function WhileNode:getBreakKind( checkMode )
       end
       
       local mode = CheckBreakMode.IgnoreFlow
-      
       local kind = BreakKind.None
       for __index, stmt in ipairs( self.block:get_stmtList() ) do
          local work = stmt:getBreakKind( mode )
@@ -11372,7 +11367,6 @@ function ExpRefNode:getLiteral(  )
    do
       local enumTypeInfo = _lune.__Cast( typeInfo, 3, Ast.EnumTypeInfo )
       if enumTypeInfo ~= nil then
-         
          if self.symbolInfo:get_kind() == Ast.SymbolKind.Mbr and self.symbolInfo:get_namespaceTypeInfo():get_kind() == Ast.TypeInfoKind.Enum then
             local enumval = _lune.unwrap( enumTypeInfo:getEnumValInfo( self.symbolInfo:get_name() ))
             return enumLiteral2Literal( enumval:get_val() )
@@ -11606,7 +11600,6 @@ function DefMacroInfo:__init(func, declInfo, symbol2MacroValInfoMap)
    self.argList = {}
    for __index, argNode in ipairs( declInfo:get_argList() ) do
       if argNode:get_kind(  ) == NodeKind.get_DeclArg() then
-         
          local argType = argNode:get_expType()
          local argName = argNode:get_name().txt
          table.insert( self.argList, MacroArgInfo.new(argName, argType) )

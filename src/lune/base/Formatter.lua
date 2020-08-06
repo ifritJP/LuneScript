@@ -836,7 +836,6 @@ function FormatterFilter:processDeclFuncInfo( node, declInfo, opt )
    end
    
    if declInfo:get_staticFlag() and _lune.nilacc( declInfo:get_name(), "txt" ) == "__init" then
-      
       self:write( "__init" )
    else
     
@@ -953,7 +952,6 @@ end
 
 function FormatterFilter:processRefType( node, opt )
 
-   
    if not Ast.TypeInfo.isMut( node:get_expType() ) then
       self:write( "&" )
    end

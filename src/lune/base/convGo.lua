@@ -314,6 +314,7 @@ function convFilter:processRoot( node, opt )
    
    self:writeln( "func Lns_init() {" )
    for __index, child in ipairs( node:get_children() ) do
+      
       do
          local _switchExp = child:get_kind()
          if _switchExp == Nodes.NodeKind.get_DeclAlge() or _switchExp == Nodes.NodeKind.get_DeclFunc() or _switchExp == Nodes.NodeKind.get_DeclMacro() or _switchExp == Nodes.NodeKind.get_TestBlock() then
@@ -340,6 +341,7 @@ function convFilter:processBlockSub( node, opt )
 
    self:pushIndent(  )
    for __index, child in ipairs( node:get_stmtList() ) do
+      
       do
          local _switchExp = child:get_kind()
          if _switchExp == Nodes.NodeKind.get_DeclAlge() or _switchExp == Nodes.NodeKind.get_DeclFunc() or _switchExp == Nodes.NodeKind.get_DeclMacro() or _switchExp == Nodes.NodeKind.get_TestBlock() then
@@ -518,7 +520,6 @@ function convFilter:processDeclFunc( node, opt )
          self:write( type2gotype( retTypeList[1] ) )
       else 
          
-            
             self:write( "(" )
             for index, retType in ipairs( retTypeList ) do
                if index ~= 1 then
@@ -738,7 +739,6 @@ function convFilter:processExpOp2( node, opt )
             do
                local _exp = Ast.bitBinOpMap[opTxt]
                if _exp ~= nil then
-                  
                   do
                      local _switchExp = _exp
                      if _switchExp == Ast.BitOpKind.LShift then
@@ -748,15 +748,12 @@ function convFilter:processExpOp2( node, opt )
                      end
                   end
                   
-                  
                   filter( node:get_exp1(), self, node )
                   self:write( " " .. opTxt .. " " )
-                  
                   filter( node:get_exp2(), self, node )
                else
                   filter( node:get_exp1(), self, node )
                   self:write( " " .. opTxt .. " " )
-                  
                   filter( node:get_exp2(), self, node )
                end
             end
@@ -916,7 +913,6 @@ end
 
 function convFilter:processAbbr( node, opt )
 
-   
    Util.err( "illegal" )
 end
 
