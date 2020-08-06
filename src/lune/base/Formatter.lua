@@ -112,6 +112,48 @@ function _lune._toSet( val, toKeyInfo )
    return nil
 end
 
+function _lune.nilacc( val, fieldName, access, ... )
+   if not val then
+      return nil
+   end
+   if fieldName then
+      local field = val[ fieldName ]
+      if not field then
+         return nil
+      end
+      if access == "item" then
+         local typeId = type( field )
+         if typeId == "table" then
+            return field[ ... ]
+         elseif typeId == "string" then
+            return string.byte( field, ... )
+         end
+      elseif access == "call" then
+         return field( ... )
+      elseif access == "callmtd" then
+         return field( val, ... )
+      end
+      return field
+   end
+   if access == "item" then
+      local typeId = type( val )
+      if typeId == "table" then
+         return val[ ... ]
+      elseif typeId == "string" then
+         return string.byte( val, ... )
+      end
+   elseif access == "call" then
+      return val( ... )
+   elseif access == "list" then
+      local list, arg = ...
+      if not list then
+         return nil
+      end
+      return val( list, arg )
+   end
+   error( string.format( "illegal access -- %s", access ) )
+end
+
 function _lune.unwrap( val )
    if val == nil then
       __luneScript:error( 'unwrap val is nil' )
@@ -262,8 +304,18 @@ local function createFilter( moduleTypeInfo, stream )
 end
 _moduleObj.createFilter = createFilter
 
+function FormatterFilter:outputHeadComment( node )
+
+   for __index, commentNode in ipairs( _lune.unwrapDefault( node:get_commentList(), {}) ) do
+      self:writeln( commentNode.txt )
+   end
+   
+end
+
+
 local function filter( node, filter, opt )
 
+   filter:outputHeadComment( node )
    node:processFilter( filter, opt )
 end
 
@@ -301,11 +353,14 @@ end
 
 function FormatterFilter:processRoot( node, opt )
 
+   Ast.pushProcessInfo(  )
    
    for index, child in ipairs( node:get_children() ) do
       filter( child, self, opt:nextOpt( node ) )
    end
    
+   
+   Ast.popProcessInfo(  )
 end
 
 
@@ -327,7 +382,7 @@ function FormatterFilter:processBlockSub( node, opt )
    
    do
       local _switchExp = node:get_blockKind()
-      if _switchExp == Nodes.BlockKind.LetUnwrap then
+      if _switchExp == Nodes.BlockKind.LetUnwrap or _switchExp == Nodes.BlockKind.Repeat then
          self:write( "}" )
       else 
          
@@ -341,19 +396,34 @@ end
 function FormatterFilter:processStmtExp( node, opt )
 
    filter( node:get_exp(), self, opt:nextOpt( node ) )
-   self:writeln( ";" )
+   
+   do
+      local tailComment = node:get_tailComment()
+      if tailComment ~= nil then
+         self:write( "; " )
+         self:writeln( tailComment.txt )
+      else
+         self:writeln( ";" )
+      end
+   end
+   
 end
 
 
 
 function FormatterFilter:processDeclEnum( node, opt )
 
-   
+   self:writeln( string.format( "enum %s {", node:get_name().txt) )
+   self:pushIndent(  )
    local enumTypeInfo = _lune.unwrap( (_lune.__Cast( node:get_expType(), 3, Ast.EnumTypeInfo ) ))
    for __index, name in ipairs( node:get_valueNameList() ) do
       local valInfo = _lune.unwrap( enumTypeInfo:getEnumValInfo( name.txt ))
+      self:write( string.format( "%s", name.txt) )
+      self:writeln( "," )
    end
    
+   self:popIndent(  )
+   self:writeln( "}" )
 end
 
 
@@ -468,13 +538,19 @@ function FormatterFilter:processDeclClass( node, opt )
    self:writeln( "{" )
    self:pushIndent(  )
    
-   for index, field in ipairs( node:get_fieldList() ) do
-      filter( field, self, opt:nextOpt( node ) )
+   for index, stmt in ipairs( node:get_allStmtList() ) do
+      filter( stmt, self, opt:nextOpt( node ) )
    end
    
    
    self:popIndent(  )
    self:writeln( "}" )
+end
+
+
+function FormatterFilter:processDeclAdvertise( node, opt )
+
+   self:writeln( string.format( "advertise %s;", node:get_advInfo():get_member():get_name().txt) )
 end
 
 
@@ -486,6 +562,10 @@ function FormatterFilter:processDeclMember( node, opt )
          self:write( Ast.accessMode2txt( node:get_accessMode() ) )
          self:write( " " )
       end
+   end
+   
+   if node:get_staticFlag() then
+      self:write( "static " )
    end
    
    self:write( "let " )
@@ -601,16 +681,19 @@ end
 function FormatterFilter:processWhen( node, opt )
 
    
-   local symTxt = ""
+   self:write( "when!" )
+   local symTxt = " "
    for index, symPair in ipairs( node:get_symPairList() ) do
-      symTxt = string.format( "%s %s", symTxt, symPair:get_src())
+      symTxt = string.format( "%s%s ", symTxt, symPair:get_src():get_name())
    end
    
+   self:write( symTxt )
    
    filter( node:get_block(), self, opt:nextOpt( node ) )
    do
       local _exp = node:get_elseBlock()
       if _exp ~= nil then
+         self:write( "else " )
          filter( _exp, self, opt:nextOpt( node ) )
       end
    end
@@ -654,6 +737,18 @@ function FormatterFilter:processDeclVar( node, opt )
       end
       
       self:write( sym:get_name() )
+      if #node:get_varList() >= index then
+         local varInfo = node:get_varList()[index]
+         do
+            local varType = varInfo:get_refType()
+            if varType ~= nil then
+               self:write( ":" )
+               filter( varType, self, opt:nextOpt( node ) )
+            end
+         end
+         
+      end
+      
    end
    
    
@@ -740,42 +835,49 @@ function FormatterFilter:processDeclFuncInfo( node, declInfo, opt )
       self:write( "pub " )
    end
    
-   self:write( "fn " )
-   
-   if opt:get_parent():get_kind() ~= Nodes.NodeKind.get_DeclClass() and funcType:get_kind() == Ast.TypeInfoKind.Method then
-      local classType = funcType:get_parentInfo()
-      self:write( classType:get_rawTxt() )
-      self:write( "." )
-   end
-   
-   
-   do
-      local nameToken = declInfo:get_name()
-      if nameToken ~= nil then
-         self:write( nameToken.txt )
-      end
-   end
-   
-   self:write( "(" )
-   
-   local argList = declInfo:get_argList()
-   if #argList ~= 0 then
-      self:write( " " )
-   end
-   
-   for index, arg in ipairs( argList ) do
-      if index > 1 then
-         self:write( ", " )
+   if declInfo:get_staticFlag() and _lune.nilacc( declInfo:get_name(), "txt" ) == "__init" then
+      
+      self:write( "__init" )
+   else
+    
+      self:write( "fn " )
+      
+      if opt:get_parent():get_kind() ~= Nodes.NodeKind.get_DeclClass() and funcType:get_kind() == Ast.TypeInfoKind.Method then
+         local classType = funcType:get_parentInfo()
+         self:write( classType:get_rawTxt() )
+         self:write( "." )
       end
       
-      filter( arg, self, opt:nextOpt( node ) )
+      
+      do
+         local nameToken = declInfo:get_name()
+         if nameToken ~= nil then
+            self:write( nameToken.txt )
+         end
+      end
+      
+      self:write( "(" )
+      
+      local argList = declInfo:get_argList()
+      if #argList ~= 0 then
+         self:write( " " )
+      end
+      
+      for index, arg in ipairs( argList ) do
+         if index > 1 then
+            self:write( ", " )
+         end
+         
+         filter( arg, self, opt:nextOpt( node ) )
+      end
+      
+      if #argList ~= 0 then
+         self:write( " " )
+      end
+      
+      self:write( ")" )
    end
    
-   if #argList ~= 0 then
-      self:write( " " )
-   end
-   
-   self:write( ")" )
    
    if Ast.TypeInfo.isMut( funcType ) and declInfo:get_kind() == Nodes.FuncKind.Mtd then
       self:write( " mut" )
@@ -840,9 +942,9 @@ function FormatterFilter:processExpCallSuper( node, opt )
       if expListNode ~= nil then
          self:write( "super(" )
          filter( expListNode, self, opt:nextOpt( node ) )
-         self:write( ")" )
+         self:writeln( ");" )
       else
-         self:write( "super()" )
+         self:writeln( "super();" )
       end
    end
    
@@ -956,9 +1058,11 @@ end
 
 function FormatterFilter:processRepeat( node, opt )
 
-   
+   self:write( "repeat " )
    filter( node:get_block(), self, opt:nextOpt( node ) )
+   self:write( " " )
    filter( node:get_exp(), self, opt:nextOpt( node ) )
+   self:writeln( ";" )
 end
 
 
@@ -1003,11 +1107,20 @@ end
 function FormatterFilter:processForeach( node, opt )
 
    self:write( "foreach " )
-   self:write( (_lune.unwrap( node:get_val()) ).txt )
+   do
+      local val = node:get_val()
+      if val ~= nil then
+         self:write( val.txt )
+      end
+   end
+   
    do
       local key = node:get_key()
       if key ~= nil then
-         self:write( ", " )
+         if node:get_val() then
+            self:write( ", " )
+         end
+         
          self:write( key.txt )
       end
    end
@@ -1021,16 +1134,19 @@ end
 
 function FormatterFilter:processForsort( node, opt )
 
-   
-   local index = ""
+   self:write( "forsort " )
+   self:write( node:get_val().txt )
    do
-      local _exp = node:get_key()
-      if _exp ~= nil then
-         index = _exp.txt
+      local key = node:get_key()
+      if key ~= nil then
+         self:write( ", " )
+         self:write( key.txt )
       end
    end
    
+   self:write( " in " )
    filter( node:get_exp(), self, opt:nextOpt( node ) )
+   self:writeln( "" )
    filter( node:get_block(), self, opt:nextOpt( node ) )
 end
 
@@ -1068,7 +1184,13 @@ end
 function FormatterFilter:processExpCall( node, opt )
 
    filter( node:get_func(), self, opt:nextOpt( node ) )
-   self:write( "(" )
+   if node:get_nilAccess() then
+      self:write( "$(" )
+   else
+    
+      self:write( "(" )
+   end
+   
    do
       local _exp = node:get_argList()
       if _exp ~= nil then
@@ -1149,8 +1271,9 @@ end
 
 function FormatterFilter:processExpParen( node, opt )
 
-   
+   self:write( "(" )
    filter( node:get_exp(), self, opt:nextOpt( node ) )
+   self:write( ")" )
 end
 
 
@@ -1224,7 +1347,13 @@ end
 function FormatterFilter:processRefField( node, opt )
 
    filter( node:get_prefix(), self, opt:nextOpt( node ) )
-   self:write( "." )
+   if node:get_nilAccess() then
+      self:write( "$." )
+   else
+    
+      self:write( "." )
+   end
+   
    self:write( node:get_field().txt )
 end
 
@@ -1338,7 +1467,11 @@ function FormatterFilter:processLiteralMap( node, opt )
    self:write( "{" )
    
    local pairList = node:get_pairList()
-   for __index, pair in ipairs( pairList ) do
+   for index, pair in ipairs( pairList ) do
+      if index > 1 then
+         self:write( ", " )
+      end
+      
       filter( pair:get_key(), self, opt:nextOpt( node ) )
       self:write( ":" )
       filter( pair:get_val(), self, opt:nextOpt( node ) )
@@ -1364,6 +1497,7 @@ end
 
 function FormatterFilter:processLiteralChar( node, opt )
 
+   self:write( string.format( "?%s", node:get_token().txt) )
 end
 
 
@@ -1375,6 +1509,7 @@ end
 
 function FormatterFilter:processLiteralReal( node, opt )
 
+   self:write( node:get_token().txt )
 end
 
 

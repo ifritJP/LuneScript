@@ -71,11 +71,13 @@ fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Nodes.ReturnNode {
       self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], expList );
 }
 
-fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node! {
+fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
+{
    let token = self.getTokenNoErr();
    if token == Parser.getEofToken() {
       return nil;
    };
+
 
    let mut statement = self.analyzeDecl( .Local, false, token, token );
 

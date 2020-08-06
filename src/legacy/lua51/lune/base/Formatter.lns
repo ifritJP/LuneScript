@@ -55,6 +55,12 @@ pub fn createFilter( moduleTypeInfo:&Ast.TypeInfo, stream:oStream ): Nodes.Filte
    return new FormatterFilter(moduleTypeInfo, moduleTypeInfo.$scope, stream );
 }
 
+fn FormatterFilter.outputHeadComment( node:&Nodes.Node ) mut {
+   foreach commentNode in unwrap node.$commentList default [] {
+      self.writeln( commentNode.txt );
+   }
+}
+
 fn filter( node: &Nodes.Node, filter: FormatterFilter, opt:Opt ) {
    node.processFilter( filter, opt );
 }
@@ -72,6 +78,7 @@ pub override fn FormatterFilter.processNone(
 pub override fn FormatterFilter.processBlankLine(
    node: &Nodes.BlankLineNode, opt:Opt ) mut
 {
+   self.outputHeadComment( node );
    for index = 1, node.$lineNum {
       self.writeln( "" );
    }
@@ -89,10 +96,13 @@ pub override fn FormatterFilter.processImport(
 pub override fn FormatterFilter.processRoot(
    node: &Nodes.RootNode, opt:Opt ) mut
 {
+   Ast.pushProcessInfo(##);
    
    foreach child, index in node.$children {
       filter( child, self, opt.nextOpt( node ) );
-   }	
+   }
+
+   Ast.popProcessInfo();
 };
 pub override fn FormatterFilter.processSubfile(
    node: &Nodes.SubfileNode, opt:Opt ) mut
@@ -112,7 +122,7 @@ pub override fn FormatterFilter.processBlockSub(
    self.popIndent();
 
    switch node.$blockKind {
-      case .LetUnwrap {
+      case .LetUnwrap, .Repeat {
          self.write( "}" );
       }
       default {
@@ -123,18 +133,31 @@ pub override fn FormatterFilter.processBlockSub(
 pub override fn FormatterFilter.processStmtExp(
    node: &Nodes.StmtExpNode, opt:Opt ) mut
 {
+   self.outputHeadComment( node );
    filter( node.$exp, self, opt.nextOpt( node ) );
-   self.writeln( ";" );
+
+   if! let tailComment = node.$tailComment {
+      self.write( "; " );
+      self.writeln( tailComment.txt );
+   }
+   else {
+      self.writeln( ";" );
+   }
 };
 
 pub override fn FormatterFilter.processDeclEnum(
    node: &Nodes.DeclEnumNode, opt:Opt ) mut
 {
-   
+   self.writeln( "enum %s {" (node.$name.txt ));
+   self.pushIndent(##);
    let enumTypeInfo = unwrap (node.$expType@@@Ast.EnumTypeInfo);
    foreach name in node.$valueNameList {
       let valInfo = unwrap enumTypeInfo.getEnumValInfo( name.txt );
+      self.write( "%s" (name.txt ) );
+      self.writeln( "," );
    }
+   self.popIndent();
+   self.writeln( "}" );
 }
 
 pub override fn FormatterFilter.processDeclAlge(
@@ -218,13 +241,22 @@ pub override fn FormatterFilter.processDeclClass(
    self.writeln( "{" );
    self.pushIndent( ## );
    
-   foreach field, index in node.$fieldList {
-      filter( field, self, opt.nextOpt( node ) );
+   // foreach field, index in node.$fieldList {
+   //    filter( field, self, opt.nextOpt( node ) );
+   // }
+   foreach stmt, index in node.$allStmtList {
+      filter( stmt, self, opt.nextOpt( node ) );
    }
 
    self.popIndent();
    self.writeln( "}" );
 };
+pub override fn FormatterFilter.processDeclAdvertise(
+   node: &Nodes.DeclAdvertiseNode, opt:Opt ) mut
+{
+   self.writeln( "advertise %s;" (node.$advInfo.$member.$name.txt ) );
+}
+
 pub override fn FormatterFilter.processDeclMember(
    node: &Nodes.DeclMemberNode, opt:Opt ) mut
 {
@@ -233,6 +265,9 @@ pub override fn FormatterFilter.processDeclMember(
          self.write( Ast.accessMode2txt( node.$accessMode ) );
          self.write( " " );
       }
+   }
+   if node.$staticFlag {
+      self.write( "static " );
    }
    self.write( "let " );
 
@@ -333,15 +368,17 @@ pub override fn FormatterFilter.processIfUnwrap(
 pub override fn FormatterFilter.processWhen(
    node: &Nodes.WhenNode, opt:Opt ) mut
 {
-   
 
-   let mut symTxt = "";
+   self.write( "when!" );
+   let mut symTxt = " ";
    foreach symPair, index in node.$symPairList {
-      symTxt = "%s %s" (symTxt, symPair.$src);
+      symTxt = "%s%s " (symTxt, symPair.$src.$name );
    }
+   self.write( symTxt );
    
    filter( node.$block, self, opt.nextOpt( node ) );
    if! node.$elseBlock {
+      self.write( "else " );
       filter( _exp, self, opt.nextOpt( node ) );
    }
 }
@@ -378,6 +415,13 @@ pub override fn FormatterFilter.processDeclVar(
          self.write( "mut " );
       }
       self.write( sym.$name );
+      if #node.$varList >= index {
+         let varInfo = node.$varList[ index ];
+         if! let varType = varInfo.$refType {
+            self.write( ":" );
+            filter( varType, self, opt.nextOpt( node ) );
+         }
+      }
    }
 
    if! node.$expList {
@@ -440,34 +484,40 @@ fn FormatterFilter.processDeclFuncInfo(
    if funcType.$accessMode == .Pub {
       self.write( "pub " );
    }
-   self.write( "fn " );
+   if declInfo.$staticFlag and declInfo.$name$.$txt == "__init" {
+      // __init block 
+      self.write( "__init" );
+   }
+   else {
+      self.write( "fn " );
 
-   if opt.$parent.$kind ~= Nodes.NodeKind.$DeclClass and funcType.$kind == .Method
-   {
-      let classType = funcType.$parentInfo;
-      self.write( classType.$rawTxt );
-      self.write( "." );
-   }
-   
-   if! let nameToken = declInfo.$name {
-      self.write( nameToken.txt );
-   }
-   self.write( "(" );
-   
-   let argList = declInfo.$argList;
-   if #argList ~= 0 {
-      self.write( " " );
-   }
-   foreach arg, index in argList {
-      if index > 1 {
-         self.write( ", " );
+      if opt.$parent.$kind ~= Nodes.NodeKind.$DeclClass and funcType.$kind == .Method
+      {
+         let classType = funcType.$parentInfo;
+         self.write( classType.$rawTxt );
+         self.write( "." );
       }
-      filter( arg, self, opt.nextOpt( node ) );
+      
+      if! let nameToken = declInfo.$name {
+         self.write( nameToken.txt );
+      }
+      self.write( "(" );
+      
+      let argList = declInfo.$argList;
+      if #argList ~= 0 {
+         self.write( " " );
+      }
+      foreach arg, index in argList {
+         if index > 1 {
+            self.write( ", " );
+         }
+         filter( arg, self, opt.nextOpt( node ) );
+      }
+      if #argList ~= 0 {
+         self.write( " " );
+      }
+      self.write( ")" );
    }
-   if #argList ~= 0 {
-      self.write( " " );
-   }
-   self.write( ")" );
       
    if Ast.TypeInfo.isMut( funcType ) and declInfo.$kind == .Mtd {
       self.write( " mut" );
@@ -519,10 +569,10 @@ pub override fn FormatterFilter.processExpCallSuper(
    if! let expListNode = node.$expList {
       self.write( "super(" );
       filter( expListNode, self, opt.nextOpt( node ) );
-      self.write( ")" );
+      self.writeln( ");" );
    }
    else {
-      self.write( "super()" );
+      self.writeln( "super();" );
    }
 };
 pub override fn FormatterFilter.processRefType(
@@ -614,9 +664,11 @@ pub override fn FormatterFilter.processWhile(
 pub override fn FormatterFilter.processRepeat(
    node: &Nodes.RepeatNode, opt:Opt ) mut
 {
-   
+   self.write( "repeat " );
    filter( node.$block, self, opt.nextOpt( node ) );
+   self.write( " " );
    filter( node.$exp, self, opt.nextOpt( node ) );
+   self.writeln( ";" );
 };
 pub override fn FormatterFilter.processFor(
    node: &Nodes.ForNode, opt:Opt ) mut
@@ -652,9 +704,13 @@ pub override fn FormatterFilter.processForeach(
    node: &Nodes.ForeachNode, opt:Opt ) mut
 {
    self.write( "foreach " );
-   self.write( (unwrap node.$val).txt );
+   if! let val = node.$val {
+      self.write( val.txt );
+   }
    if! let key = node.$key {
-      self.write( ", " );
+      if node.$val {
+         self.write( ", " );
+      }
       self.write( key.txt );
    }
    self.write( " in " );
@@ -665,12 +721,15 @@ pub override fn FormatterFilter.processForeach(
 pub override fn FormatterFilter.processForsort(
    node: &Nodes.ForsortNode, opt:Opt ) mut
 {
-   
-   let mut index = "";
-   if! node.$key {
-      index = _exp.txt;
+   self.write( "forsort " );
+   self.write( node.$val.txt );
+   if! let key = node.$key {
+      self.write( ", " );
+      self.write( key.txt );
    }
+   self.write( " in " );
    filter( node.$exp, self, opt.nextOpt( node ) );
+   self.writeln( "" );
    filter( node.$block, self, opt.nextOpt( node ) );
 };
 
@@ -700,7 +759,12 @@ pub override fn FormatterFilter.processExpCall(
    node: &Nodes.ExpCallNode, opt:Opt ) mut
 {
    filter( node.$func, self, opt.nextOpt( node ) );
-   self.write( "(" );
+   if node.$nilAccess {
+      self.write( "$(" );
+   }
+   else {
+      self.write( "(" );
+   }
    if! node.$argList {
       self.write( " " );
       filter( _exp, self, opt.nextOpt( node ) );
@@ -769,8 +833,9 @@ pub override fn FormatterFilter.processExpCast(
 pub override fn FormatterFilter.processExpParen(
    node: &Nodes.ExpParenNode, opt:Opt ) mut
 {
-   
+   self.write( "(" );
    filter( node.$exp, self, opt.nextOpt( node ) );
+   self.write( ")" );
 };
 pub override fn FormatterFilter.processExpSetVal(
    node: &Nodes.ExpSetValNode, opt:Opt ) mut
@@ -826,7 +891,12 @@ pub override fn FormatterFilter.processRefField(
    node: &Nodes.RefFieldNode, opt:Opt ) mut
 {
    filter( node.$prefix, self, opt.nextOpt( node ) );
-   self.write( "." );
+   if node.$nilAccess {
+      self.write( "$." );
+   }
+   else {
+      self.write( "." );
+   }
    self.write( node.$field.txt );
 };
 pub override fn FormatterFilter.processExpOmitEnum(
@@ -925,7 +995,10 @@ pub override fn FormatterFilter.processLiteralMap(
    self.write( "{" );
    
    let pairList = node.$pairList;
-   foreach pair in pairList {
+   foreach pair, index in pairList {
+      if index > 1 {
+         self.write( ", " );
+      }
       filter( pair.$key, self, opt.nextOpt( node ) );
       self.write( ":" );
       filter( pair.$val, self, opt.nextOpt( node ) );
@@ -944,18 +1017,17 @@ pub override fn FormatterFilter.processLiteralArray(
 pub override fn FormatterFilter.processLiteralChar(
    node: &Nodes.LiteralCharNode, opt:Opt ) mut
 {
-   
+   self.write( "?%s" (node.$token.txt) );
 };
 pub override fn FormatterFilter.processLiteralInt(
    node: &Nodes.LiteralIntNode, opt:Opt ) mut
 {
    self.write( node.$token.txt );
-   
 };
 pub override fn FormatterFilter.processLiteralReal(
    node: &Nodes.LiteralRealNode, opt:Opt ) mut
 {
-   
+   self.write( node.$token.txt );
 };
 pub override fn FormatterFilter.processLiteralString(
    node: &Nodes.LiteralStringNode, opt:Opt ) mut

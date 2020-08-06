@@ -3722,8 +3722,25 @@ function TransUnit:analyzeStatementList( stmtList, termTxt )
    end
    
    
+   local parser2lastLineMap = {}
+   local function getLastLineNo(  )
+   
+      do
+         local lastLineNo = parser2lastLineMap[self.parser]
+         if lastLineNo ~= nil then
+            return lastLineNo
+         end
+      end
+      
+      return self.parser:getLastPos(  ).lineNo
+   end
+   local function setLastLineNo( lineNo )
+   
+      parser2lastLineMap[self.parser] = lineNo
+   end
+   
    local lastStatement = nil
-   local lastLineNo = self.parser:getLastPos(  ).lineNo
+   local lastLineNo = getLastLineNo(  )
    
    local function setTailComment( statement )
    
@@ -3776,6 +3793,7 @@ function TransUnit:analyzeStatementList( stmtList, termTxt )
    end
    
    while true do
+      lastLineNo = getLastLineNo(  )
       local statement = self:analyzeStatement( termTxt )
       if statement ~= nil then
          if breakKind ~= Nodes.BreakKind.None then
@@ -3788,7 +3806,7 @@ function TransUnit:analyzeStatementList( stmtList, termTxt )
             table.insert( stmtList, Nodes.BlankLineNode.create( self.nodeManager, Parser.Position.new(lastLineNo + 1, 0), self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, blank - 1 ) )
          end
          
-         lastLineNo = self.parser:getLastPos(  ).lineNo
+         setLastLineNo( self.parser:getLastPos(  ).lineNo )
          
          table.insert( stmtList, statement )
          lastStatement = statement
@@ -4029,7 +4047,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = '@lune.@base.@TransUnit.TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2627, function (  )
+   Log.log( Log.Level.Info, __func__, 2641, function (  )
    
       return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), modulePath)
    end )
@@ -4046,7 +4064,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2639, function (  )
+               Log.log( Log.Level.Info, __func__, 2653, function (  )
                
                   return string.format( "%s already", modulePath)
                end )
@@ -4079,7 +4097,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2659, function (  )
+   Log.log( Log.Level.Info, __func__, 2673, function (  )
    
       return string.format( "%s processing", modulePath)
    end )
@@ -4355,7 +4373,7 @@ function TransUnit:processImport( modulePath )
             
          elseif _switchExp == Ast.TypeInfoKind.Module then
             self:pushModule( true, classTypeInfo:getTxt(  ), Ast.TypeInfo.isMut( classTypeInfo ) )
-            Log.log( Log.Level.Info, __func__, 2914, function (  )
+            Log.log( Log.Level.Info, __func__, 2928, function (  )
             
                return string.format( "push module -- %s, %s, %d, %d, %d", classTypeInfo:getTxt(  ), _lune.nilacc( self.scope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, self.scope, false ) or "nil", _lune.nilacc( self.scope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ) or -1, classTypeInfo:get_typeId(), self.scope:get_parent():get_scopeId())
             end )
@@ -4431,7 +4449,7 @@ function TransUnit:processImport( modulePath )
    
    self.importModuleInfo:remove(  )
    
-   Log.log( Log.Level.Info, __func__, 2999, function (  )
+   Log.log( Log.Level.Info, __func__, 3013, function (  )
    
       return string.format( "%s complete", modulePath)
    end )
@@ -6159,7 +6177,6 @@ function TransUnit:analyzeDeclEnum( accessMode, firstToken )
    local name = self:getSymbolToken( SymbolMode.MustNot_ )
    
    self:checkNextToken( "{" )
-   self.commentCtrl:push(  )
    
    local valueList = {}
    local valueName2Info = {}
@@ -6270,8 +6287,6 @@ function TransUnit:analyzeDeclEnum( accessMode, firstToken )
       number = number + 1
    end
    
-   
-   self.commentCtrl:pop(  )
    
    if not enumTypeInfo then
       enumTypeInfo = Ast.NormalTypeInfo.createEnum( scope, self:getCurrentNamespaceTypeInfo(  ), false, accessMode, name.txt, Ast.builtinTypeNone )
@@ -6997,7 +7012,10 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
          self:error( string.format( "not found member -- %s", memberToken.txt) )
       end
       
-      table.insert( advertiseList, Nodes.AdvertiseInfo.new(memberNode, prefix, memberToken.pos) )
+      local advInfo = Nodes.AdvertiseInfo.new(memberNode, prefix, memberToken.pos)
+      table.insert( advertiseList, advInfo )
+      table.insert( allStmtList, Nodes.DeclAdvertiseNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, advInfo ) )
+      
       self.advertisedTypeSet[memberNode:get_expType():get_srcTypeInfo():get_genSrcTypeInfo()]= true
    end
    

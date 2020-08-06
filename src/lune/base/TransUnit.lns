@@ -2194,6 +2194,7 @@ fn TransUnit.getTokenNoErr() mut : &Parser.Token
             token = self.macroCtrl.expandMacroVal(
                self.typeNameCtrl, self.scope, self, token );
          }
+         //self.commentCtrl.addDirect( commentList );
       }
       else {
          token = Parser.getEofToken();
@@ -2357,12 +2358,24 @@ fn TransUnit.analyzeStatementList(
       breakKind = stmtList[ #stmtList ].getBreakKind( .Normal );
    }
 
+   let mut parser2lastLineMap:Map<&Parser.PushbackParser,int> = {};
+   fn getLastLineNo(): int {
+      if! let lastLineNo = parser2lastLineMap[ self.parser ] {
+         return lastLineNo;
+      }
+      return self.parser.getLastPos().lineNo;
+   }
+   fn setLastLineNo( lineNo:int ) {
+      parser2lastLineMap[ self.parser ] = lineNo;
+   }
+   
    let mut lastStatement:&Nodes.Node! = nil;
-   let mut lastLineNo = self.parser.getLastPos().lineNo;
+   let mut lastLineNo = getLastLineNo();
 
    // コメントが、直前の文の末尾と同じ行にあるかどうか調べ、
    // 同じ行にある場合は、直前の文のコメントとしてセットする
-   fn setTailComment( statement:Nodes.Node! ): int {
+   fn setTailComment( statement:Nodes.Node! ): int
+   {
       let blank;
       let mut commentList = self.commentCtrl.$commentList;
       if #commentList > 0 {
@@ -2408,6 +2421,7 @@ fn TransUnit.analyzeStatementList(
    }
    
    while true {
+      lastLineNo = getLastLineNo();
       let mut statement = self.analyzeStatement( termTxt );
       when! statement {
          if breakKind ~= .None {
@@ -2424,7 +2438,7 @@ fn TransUnit.analyzeStatementList(
                   self.macroCtrl.isInAnalyzeArgMode(),
                   [ Ast.builtinTypeNone ], blank - 1 ) );
          }
-         lastLineNo = self.parser.getLastPos().lineNo;
+         setLastLineNo( self.parser.getLastPos().lineNo );
 
          stmtList.insert( statement );
          lastStatement = statement;

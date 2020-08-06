@@ -1599,6 +1599,9 @@ pub class AdvertiseInfo {
    pri let prefix: str {pub};
    pri let pos: &Parser.Position {pub};
 };
+_declNodeClass( "DeclAdvertise", Node, false, false, false,
+                [ { "advInfo" : "&AdvertiseInfo" } ] );
+
 pub class ClassInitBlockInfo {
    pri let mut func: &DeclMethodNode! {pub,pub};
 }

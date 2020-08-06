@@ -5061,7 +5061,7 @@ function NormalTypeInfo.createModifier( srcTypeInfo, mutMode )
    
    if modifier:get_typeId() < userStartId and srcTypeInfo:get_typeId() >= userStartId then
       Util.printStackTrace(  )
-      Util.err( string.format( "off cache: %s %s %s", srcTypeInfo:getTxt(  ), modifier:get_typeId(), srcTypeInfo:get_typeId()) )
+      Util.err( string.format( "off cache: %s(%d) %s(%d)", modifier:getTxt(  ), modifier:get_typeId(), srcTypeInfo:getTxt(  ), srcTypeInfo:get_typeId()) )
    end
    
    return modifier

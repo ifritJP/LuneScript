@@ -3674,8 +3674,9 @@ pub static fn NormalTypeInfo.createModifier(
 
    if modifier.$typeId < userStartId and srcTypeInfo.$typeId >= userStartId {
       Util.printStackTrace();
-      Util.err( "off cache: %s %s %s"
-                (srcTypeInfo.getTxt(##), modifier.$typeId, srcTypeInfo.$typeId));
+      Util.err( "off cache: %s(%d) %s(%d)"
+                ( modifier.getTxt(##), modifier.$typeId,
+                  srcTypeInfo.getTxt(##), srcTypeInfo.$typeId ));
    }
    return modifier;
 }

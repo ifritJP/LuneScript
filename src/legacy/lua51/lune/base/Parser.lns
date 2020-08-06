@@ -1012,7 +1012,8 @@ fn func():int {
 
    {
       let mut stream = new TxtStream( "1 2 3 4 5" );
-      let mut parser = new DefaultPushbackParser( new StreamParser( stream, "test" ## ) );
+      let mut parser = new DefaultPushbackParser(
+         new StreamParser( stream, "test" ## ) );
 
       Testing._eq( ctrl, parser.getTokenNoErr().txt, "1" );
       Testing._eq( ctrl, parser.getTokenNoErr().txt, "2" );
@@ -1042,7 +1043,8 @@ fn func():int {
    }
    {
       let mut stream = new TxtStream( "int" );
-      let mut parser = new DefaultPushbackParser( new StreamParser( stream, "test" ## ) );
+      let mut parser = new DefaultPushbackParser(
+         new StreamParser( stream, "test" ## ) );
 
       Testing._eq( ctrl, parser.getTokenNoErr().txt, "int" );
       Testing._eq( ctrl, parser.getTokenNoErr().kind, TokenKind.Eof );

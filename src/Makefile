@@ -929,7 +929,7 @@ build-cc:
 
 test-formatter:
 	$(call transwork,.,.,,base/Formatter)
-	$(call exeLune,.,lune/base/Util.lns,format,)
+	$(call exeLune,.,ccc.lns,format,) > work/format.lns
 
 define test-convC-test
 	$(call convC,$1,$2.lns,--testing)

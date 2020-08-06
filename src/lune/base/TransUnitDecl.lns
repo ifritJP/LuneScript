@@ -989,7 +989,6 @@ fn TransUnit.analyzeDeclEnum(
    let name = self.getSymbolToken( .MustNot_ );
 
    self.checkNextToken( "{" );
-   self.commentCtrl.push();
 
    let mut valueList:List<&Parser.Token> = [];
    let mut valueName2Info:Map<str,Ast.EnumValInfo> = {};
@@ -1092,7 +1091,6 @@ fn TransUnit.analyzeDeclEnum(
       number = number + 1;
    }
 
-   self.commentCtrl.pop();
    
    if not enumTypeInfo {
       enumTypeInfo = Ast.NormalTypeInfo.createEnum(
@@ -1902,8 +1900,13 @@ nil の場合、メンバの宣言位置。
       let! memberNode = memberName2Node[ memberToken.txt ] {
          self.error( "not found member -- %s" (memberToken.txt) );
       };
-      advertiseList.insert(
-         new Nodes.AdvertiseInfo( memberNode, prefix, memberToken.pos ) );
+      let mut advInfo = new Nodes.AdvertiseInfo( memberNode, prefix, memberToken.pos );
+      advertiseList.insert( advInfo );
+      allStmtList.insert(
+         Nodes.DeclAdvertiseNode.create(
+            self.nodeManager, firstToken.pos,
+            self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], advInfo ) );
+      
       self.advertisedTypeSet.add(
          memberNode.$expType.$srcTypeInfo.$genSrcTypeInfo );
    }
