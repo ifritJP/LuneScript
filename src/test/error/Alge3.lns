@@ -17,7 +17,7 @@ pub alge AlgeTest {
    let test3 = AlgeTest.Val3( 1.0 ); // error
    let test4 = AlgeTest.Val4( 1, "abc", 1 ); // error
    let test5 = AlgeTest.Val5( 1 ); // error
-   let x = 1;
+   let x = 1; // error
    match test4 {
       case .Val4( x, y, z ) { // error
          print( z.$val );

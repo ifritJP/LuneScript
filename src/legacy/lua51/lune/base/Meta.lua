@@ -10,7 +10,6 @@ if not _lune2 then
 end
 
 
-
 local _MetaInfo = {}
 _moduleObj._MetaInfo = _MetaInfo
 function _MetaInfo.setmeta( obj )

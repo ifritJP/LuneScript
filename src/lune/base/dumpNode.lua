@@ -227,7 +227,6 @@ end
 if not _lune2 then
    _lune2 = _lune
 end
-
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
@@ -508,8 +507,8 @@ function dumpFilter:processExpMacroStat( node, opt )
 
    local prefix, depth = opt:get(  )
    dump( prefix, depth, node, node:get_expType(  ):getTxt(  ) )
-   for __index, node in ipairs( node:get_expStrList(  ) ) do
-      filter( node, self, opt:nextOpt(  ) )
+   for __index, expStr in ipairs( node:get_expStrList(  ) ) do
+      filter( expStr, self, opt:nextOpt(  ) )
    end
    
 end
@@ -642,6 +641,7 @@ function dumpFilter:processDeclArg( node, opt )
 
    local prefix, depth = opt:get(  )
    dump( prefix, depth, node, string.format( "%s:%s", node:get_name(  ).txt, node:get_expType():getTxt(  )) )
+   
 end
 
 

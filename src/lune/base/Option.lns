@@ -79,6 +79,8 @@ pub enum CheckingUptodateMode {
 }
 
 pub class TransCtrlInfo {
+   /** shadowing をワーニングにする */
+   pub let mut warningShadowing:bool;
    /** コメントを従来互換の処理する */
    pub let mut compatComment:bool;
    /** ## を明示していない時の warning を出力するかどうか。 trueの場合出力する。*/
@@ -89,7 +91,7 @@ pub class TransCtrlInfo {
 }
 
 pub static fn TransCtrlInfo.create_normal(): TransCtrlInfo {
-   return new TransCtrlInfo( false, true, false, .Touch );
+   return new TransCtrlInfo( false, false, true, false, .Touch );
 }
 
 pub enum Conv {
@@ -239,6 +241,7 @@ usage:
     -Werror: error by warrning.
     --log <mode>: set log level.
          mode: fatal, error, warn, info, debug, trace
+    --warning-shadowing: shadowing error convert to warning.
     --compat-comment: backward compatibility to process the comment.
     --disable-checking-define-abbr: disable checking for ##.
     --uptodate <mode>: checking uptodate mode.
@@ -330,6 +333,9 @@ usage:
             }
             case "--compat-comment" {
                option.transCtrlInfo.compatComment = true;
+            }
+            case "--warning-shadowing" {
+               option.transCtrlInfo.warningShadowing = true;
             }
             case "--log" {
                if! let txt = getNextOp() {

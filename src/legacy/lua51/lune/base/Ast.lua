@@ -227,7 +227,6 @@ end
 if not _lune2 then
    _lune2 = _lune
 end
-
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Code = _lune.loadModule( 'lune.base.Code' )
@@ -315,17 +314,13 @@ end
 
 local extStartId = 100000
 local extMaxId = 10000000
-
 local idProvBase = IdProvider.new(1, extStartId)
-
 local idProvExt = IdProvider.new(extStartId, extMaxId)
 local idProv = idProvBase
-
 local userStartId = 1000
 
 local rootTypeId = idProv:getNewId(  )
 _moduleObj.rootTypeId = rootTypeId
-
 
 
 local ModuleInfoIF = {}
@@ -344,7 +339,6 @@ end
 function ModuleInfoIF:__init(  )
 
 end
-
 
 local ModuleInfoManager = {}
 _moduleObj.ModuleInfoManager = ModuleInfoManager
@@ -757,7 +751,6 @@ local function isMutable( mode )
    return false
 end
 _moduleObj.isMutable = isMutable
-
 local TypeNameCtrl = {}
 _moduleObj.TypeNameCtrl = TypeNameCtrl
 function TypeNameCtrl.setmeta( obj )
@@ -811,7 +804,6 @@ ScopeAccess.__allList[1] = ScopeAccess.Normal
 ScopeAccess.Full = 1
 ScopeAccess._val2NameMap[1] = 'Full'
 ScopeAccess.__allList[2] = ScopeAccess.Full
-
 
 local SymbolInfo = {}
 setmetatable( SymbolInfo, { ifList = {LowSymbol,} } )
@@ -977,10 +969,8 @@ function SymbolInfo:get_namespaceTypeInfo(  )
    return work
 end
 
-
 local rootScope = Scope.new(nil, false, nil)
 _moduleObj.rootScope = rootScope
-
 
 function Scope:isInnerOf( scope )
 
@@ -999,7 +989,6 @@ end
 
 local dummyList = {}
 local rootChildren = {}
-
 local TypeData = {}
 _moduleObj.TypeData = TypeData
 function TypeData:addChildren( child )
@@ -1024,7 +1013,6 @@ end
 function TypeData:get_children()
    return self.children
 end
-
 
 local CanEvalType = {}
 _moduleObj.CanEvalType = CanEvalType
@@ -1080,7 +1068,6 @@ function TypeInfo.new( scope, processInfo )
    return obj
 end
 function TypeInfo:__init(scope, processInfo) 
-   
    self.scope = scope
    do
       local _exp = scope
@@ -1091,6 +1078,7 @@ function TypeInfo:__init(scope, processInfo)
    
    self.typeData = TypeData.new({})
    self.processInfo = processInfo
+   
 end
 function TypeInfo.getModulePath( fullname )
 
@@ -1242,7 +1230,6 @@ function TypeInfo:get_children(  )
 end
 function TypeInfo:addChildren( child )
 
-   
    self.typeData:addChildren( child )
 end
 function TypeInfo:get_mutMode(  )
@@ -1285,7 +1272,6 @@ function TypeInfo.createScope( parent, classFlag, baseInfo, interfaceList )
 
    local inheritScope = nil
    if baseInfo ~= nil then
-      
       inheritScope = _lune.unwrap( baseInfo.scope)
    end
    
@@ -1345,7 +1331,6 @@ MethodKind.Object = 2
 MethodKind._val2NameMap[2] = 'Object'
 MethodKind.__allList[3] = MethodKind.Object
 
-
 local function getAllNameForKind( classInfo, kind, symbolKind )
 
    local nameSet = Util.OrderedSet.new()
@@ -1372,6 +1357,7 @@ local function getAllNameForKind( classInfo, kind, symbolKind )
                   local _switchExp = symbolInfo:get_kind()
                   if _switchExp == symbolKind then
                      if symbolKind == SymbolKind.Mtd and symbolInfo:get_name() == "__init" then
+                        
                      else
                       
                         local staticFlag = symbolInfo:get_staticFlag()
@@ -1430,14 +1416,12 @@ function TypeNameCtrl:getParentFullName( typeInfo, importInfo, localFlag )
 
    local workTypeInfo = typeInfo
    local name = ""
-   
    local moduleInfoMan = importInfo
    if  nil == moduleInfoMan then
       local _moduleInfoMan = moduleInfoMan
    
       moduleInfoMan = DummyModuleInfoManager.get_instance()
    end
-   
    
    while true do
       workTypeInfo = workTypeInfo:get_parentInfo()
@@ -1464,6 +1448,7 @@ end
 local function getScope( typeInfo )
 
    return typeInfo:get_scope()
+   
 end
 _moduleObj.getScope = getScope
 
@@ -1479,7 +1464,6 @@ _moduleObj.isExtId = isExtId
 
 local headTypeInfo = TypeInfo.new(_moduleObj.rootScope, getCurProcessInfo(  ))
 _moduleObj.headTypeInfo = headTypeInfo
-
 
 local defaultTypeNameCtrl = TypeNameCtrl.new(_moduleObj.headTypeInfo)
 _moduleObj.defaultTypeNameCtrl = defaultTypeNameCtrl
@@ -1530,7 +1514,6 @@ function NormalSymbolInfo:__init(kind, canBeLeft, canBeRight, scope, accessMode,
    SymbolInfo.__init( self)
    
    self.convModuleParam = nil
-   
    self.hasAccessFromClosure = false
    NormalSymbolInfo.symbolIdSeed = NormalSymbolInfo.symbolIdSeed + 1
    self.kind = kind
@@ -2000,7 +1983,6 @@ end
 
 
 
-
 function Scope:filterTypeInfoField( includeSelfFlag, fromScope, access, callback )
 
    if self.classFlag then
@@ -2044,7 +2026,6 @@ function Scope:filterTypeInfoField( includeSelfFlag, fromScope, access, callback
    return true
 end
 
-
 function Scope:getSymbolInfoField( name, includeSelfFlag, fromScope, access )
 
    if self.classFlag then
@@ -2082,7 +2063,6 @@ function Scope:getSymbolInfoField( name, includeSelfFlag, fromScope, access )
    return nil
 end
 
-
 function Scope:getSymbolInfoIfField( name, fromScope, access )
 
    if self.classFlag then
@@ -2115,7 +2095,6 @@ function Scope:getSymbolInfoIfField( name, fromScope, access )
    
    return nil
 end
-
 
 function Scope:filterSymbolInfoIfField( fromScope, access, callback )
 
@@ -2213,6 +2192,7 @@ function Scope:getSymbolInfo( name, fromScope, onlySameNsFlag, access )
    end
    
    return nil
+   
 end
 
 
@@ -2240,7 +2220,6 @@ function Scope:getSymbolTypeInfo( name, fromScope, moduleScope, access )
          if _exp:get_kind() == TypeInfoKind.Func or _exp:get_kind() == TypeInfoKind.Method or self == moduleScope or self == _moduleObj.rootScope then
             validThisScope = true
          elseif _exp:get_kind() == TypeInfoKind.IF or _exp:get_kind() == TypeInfoKind.Class or _exp:get_kind() == TypeInfoKind.Module then
-            
             limitSymbol = true
             validThisScope = true
          elseif _exp:get_kind() == TypeInfoKind.Enum or _exp:get_kind() == TypeInfoKind.Alge then
@@ -2435,7 +2414,6 @@ end
 
 local function dumpScope( workscope, workprefix )
 
-   
    local function dumpScopeSub( scope, prefix, readyIdSet )
    
       do
@@ -2482,7 +2460,6 @@ local function dumpScope( workscope, workprefix )
    dumpScopeSub( workscope, workprefix, {} )
 end
 _moduleObj.dumpScope = dumpScope
-
 function Scope:setClosure( symbol )
 
    local targetFuncType = symbol:get_namespaceTypeInfo()
@@ -2512,16 +2489,17 @@ function Scope:setClosure( symbol )
    
 end
 
-
 function Scope:isClosureAccess( moduleScope, symbol )
 
    do
       local _switchExp = symbol:get_kind()
       if _switchExp == SymbolKind.Var or _switchExp == SymbolKind.Arg or _switchExp == SymbolKind.Fun then
          if symbol:get_scope() == moduleScope or symbol:get_scope() == _moduleObj.rootScope then
+            
          elseif symbol:get_name() == "self" then
             local funcType = self:getNamespaceTypeInfo(  )
             if funcType:get_parentInfo():isInheritFrom( symbol:get_namespaceTypeInfo():get_parentInfo() ) then
+               
             else
              
                return true
@@ -2529,10 +2507,8 @@ function Scope:isClosureAccess( moduleScope, symbol )
             
          else
           
-            
             local funcType = self:getNamespaceTypeInfo(  )
             if funcType ~= symbol:get_namespaceTypeInfo() then
-               
                return true
             end
             
@@ -2699,7 +2675,6 @@ function NormalSymbolInfo:canAccess( fromScope, access )
       elseif _switchExp == AccessMode.Local then
          return self
       elseif _switchExp == AccessMode.Pri then
-         
          if fromScope:isInnerOf( self.scope ) then
             return self
          end
@@ -3221,7 +3196,6 @@ function AlternateTypeInfo:canEvalWith( other, canEvalType, alt2type )
          local altType = _lune.__Cast( other, 3, AlternateTypeInfo )
          if altType ~= nil then
             if not altType.belongClassFlag and altType.altIndex == self.altIndex then
-               
                return true, nil
             end
             
@@ -3231,6 +3205,7 @@ function AlternateTypeInfo:canEvalWith( other, canEvalType, alt2type )
    end
    
    return self:canSetFrom( other, canEvalType, alt2type ), nil
+   
 end
 function AlternateTypeInfo:get_display_stirng_with( raw )
 
@@ -3251,7 +3226,6 @@ function AlternateTypeInfo:equals( typeInfo, alt2type, checkModifer )
          local altType = _lune.__Cast( typeInfo, 3, AlternateTypeInfo )
          if altType ~= nil then
             if not altType.belongClassFlag and altType.altIndex == self.altIndex then
-               
                return true
             end
             
@@ -3263,6 +3237,7 @@ function AlternateTypeInfo:equals( typeInfo, alt2type, checkModifer )
    
    if alt2type ~= nil then
       return self:canSetFrom( typeInfo, nil, alt2type )
+      
    end
    
    return false
@@ -3586,7 +3561,6 @@ function GenericTypeInfo:isInheritFrom( other, alt2type )
    local otherSrc = other:get_genSrcTypeInfo()
    
    if not self.genSrcTypeInfo:isInheritFrom( otherSrc, alt2type ) then
-      
       return false
    end
    
@@ -3594,7 +3568,6 @@ function GenericTypeInfo:isInheritFrom( other, alt2type )
    if  nil == genOther then
       local _genOther = genOther
    
-      
       return true
    end
    
@@ -3606,7 +3579,6 @@ function GenericTypeInfo:isInheritFrom( other, alt2type )
    end
    
    for __index, altType in ipairs( otherSrc:get_itemTypeInfoList() ) do
-      
       local genType = self.alt2typeMap[altType]
       if  nil == genType then
          local _genType = genType
@@ -3615,7 +3587,6 @@ function GenericTypeInfo:isInheritFrom( other, alt2type )
       end
       
       local otherGenType = _lune.unwrap( genOther.alt2typeMap[altType])
-      
       if not otherGenType:canEvalWith( genType, CanEvalType.SetEq, workAlt2type ) then
          return false
       end
@@ -3668,7 +3639,6 @@ function GenericTypeInfo:canEvalWith( other, canEvalType, alt2type )
       
       work = work:get_baseTypeInfo()
    end
-   
    
    do
       local otherGen = _lune.__Cast( work, 3, GenericTypeInfo )
@@ -3943,14 +3913,12 @@ function ModifierTypeInfo:serialize( stream, validChildrenSet )
 end
 function ModifierTypeInfo:canEvalWith( other, canEvalType, alt2type )
 
-   
    local evalType
    
    if #self.srcTypeInfo:get_itemTypeInfoList() >= 1 then
       do
          local _switchExp = canEvalType
          if _switchExp == CanEvalType.SetEq or _switchExp == CanEvalType.SetOp then
-            
             evalType = CanEvalType.SetOpIMut
          else 
             
@@ -4158,7 +4126,6 @@ function ModuleTypeInfo:__init(scope, externalFlag, txt, parentInfo, typeId, mut
    
    
    idProv:increment(  )
-   
    scope:set_ownerTypeInfo( self )
 end
 function ModuleTypeInfo:isModule(  )
@@ -4351,7 +4318,6 @@ function EnumTypeInfo:__init(scope, externalFlag, accessMode, txt, parentInfo, t
    
    self.nilableTypeInfo = NilableTypeInfo.new(self, typeId + 1)
    idProv:increment(  )
-   
    scope:set_ownerTypeInfo( self )
 end
 function EnumTypeInfo:isModule(  )
@@ -4501,7 +4467,6 @@ function AlgeTypeInfo:__init(scope, externalFlag, accessMode, txt, parentInfo, t
    
    self.nilableTypeInfo = NilableTypeInfo.new(self, typeId + 1)
    idProv:increment(  )
-   
    scope:set_ownerTypeInfo( self )
 end
 function AlgeTypeInfo:addValInfo( valInfo )
@@ -4632,7 +4597,6 @@ function NormalTypeInfo:__init(abstractFlag, scope, baseTypeInfo, interfaceList,
             end
             
          elseif _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.IF then
-            
             for __index, ifType in ipairs( self.interfaceList ) do
                do
                   local genericType = _lune.__Cast( ifType, 3, GenericTypeInfo )
@@ -4656,6 +4620,7 @@ function NormalTypeInfo:__init(abstractFlag, scope, baseTypeInfo, interfaceList,
    
    self.typeId = typeId
    if kind == TypeInfoKind.Root then
+      
    else
     
       if parentInfo ~= nil then
@@ -4820,8 +4785,8 @@ function NormalTypeInfo:equalsSub( typeInfo, alt2type, checkModifer )
       return typeInfo:equals( self, alt2type, checkModifer )
    end
    
+   
    if self.kind ~= typeInfo:get_kind() or self.staticFlag ~= typeInfo:get_staticFlag() or self.autoFlag ~= typeInfo:get_autoFlag() or self:get_nilable() ~= typeInfo:get_nilable() or self.rawTxt ~= typeInfo:get_rawTxt() or self.parentInfo ~= typeInfo:get_parentInfo() or self.baseTypeInfo ~= typeInfo:get_baseTypeInfo() then
-      
       return false
    end
    
@@ -4830,6 +4795,7 @@ function NormalTypeInfo:equalsSub( typeInfo, alt2type, checkModifer )
       do
          local _switchExp = self.kind
          if _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Map or _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.Set then
+            
          else 
             
                return false
@@ -4846,7 +4812,6 @@ function NormalTypeInfo:equalsSub( typeInfo, alt2type, checkModifer )
       
       for index, item in ipairs( self.itemTypeInfoList ) do
          if not item:equals( typeInfo:get_itemTypeInfoList()[index], alt2type, checkModifer ) then
-            
             return false
          end
          
@@ -4857,20 +4822,17 @@ function NormalTypeInfo:equalsSub( typeInfo, alt2type, checkModifer )
    
    do
       if #self.retTypeInfoList ~= #typeInfo:get_retTypeInfoList() then
-         
          return false
       end
       
       for index, item in ipairs( self.retTypeInfoList ) do
          if not item:equals( typeInfo:get_retTypeInfoList()[index], alt2type, checkModifer ) then
-            
             return false
          end
          
       end
       
    end
-   
    
    return true
 end
@@ -4892,7 +4854,6 @@ function NormalTypeInfo.create( accessMode, abstractFlag, scope, baseInfo, inter
    end
    
    idProv:increment(  )
-   
    local info = NormalTypeInfo.new(abstractFlag, scope, baseInfo, interfaceList, false, true, staticFlag, accessMode, txt, parentInfo, idProv:get_id(), kind, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode)
    return info
 end
@@ -5046,7 +5007,6 @@ function NormalTypeInfo.createModifier( srcTypeInfo, mutMode )
       end
    end
    
-   
    idProv:increment(  )
    local modifier = ModifierTypeInfo.new(srcTypeInfo, idProv:get_id(), mutMode)
    do
@@ -5069,7 +5029,6 @@ end
 
 
 idProv:increment(  )
-
 local function addBuiltin( typeInfo )
 
    _moduleObj.builtInTypeIdSet[typeInfo:get_typeId()] = typeInfo
@@ -5077,19 +5036,16 @@ end
 
 local function registBuiltin( idName, typeTxt, kind, typeInfo, nilableTypeInfo, registScope )
 
-   
    _moduleObj.sym2builtInTypeMap[typeTxt] = NormalSymbolInfo.new(SymbolKind.Typ, false, false, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, nil, typeInfo, MutMode.IMut, true)
    if nilableTypeInfo ~= _moduleObj.headTypeInfo then
       _moduleObj.sym2builtInTypeMap[typeTxt .. "!"] = NormalSymbolInfo.new(SymbolKind.Typ, false, kind == TypeInfoKind.Func, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, nil, nilableTypeInfo, MutMode.IMut, true)
    end
    
    addBuiltin( typeInfo )
-   
    addBuiltin( NormalTypeInfo.createModifier( typeInfo, MutMode.IMut ) )
    
    if typeInfo:get_nilableTypeInfo() ~= _moduleObj.headTypeInfo then
       addBuiltin( typeInfo:get_nilableTypeInfo() )
-      
       addBuiltin( NormalTypeInfo.createModifier( typeInfo:get_nilableTypeInfo(), MutMode.IMut ) )
    end
    
@@ -5102,13 +5058,11 @@ end
 
 function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD, ifList )
 
-   
    local typeId = idProv:get_id() + 1
    if kind == TypeInfoKind.Root then
       typeId = _moduleObj.rootTypeId
    else
     
-      
       idProv:increment(  )
    end
    
@@ -5155,7 +5109,6 @@ end
 
 local builtinTypeNone = NormalTypeInfo.createBuiltin( "__None", "", TypeInfoKind.Prim )
 _moduleObj.builtinTypeNone = builtinTypeNone
-
 
 local builtinTypeEmpty = NormalTypeInfo.createBuiltin( "__Empty", "::", TypeInfoKind.Prim )
 _moduleObj.builtinTypeEmpty = builtinTypeEmpty
@@ -5237,6 +5190,7 @@ local function isStruct( typeInfo )
          if typeInfo == _moduleObj.builtinTypeString then
             return false
          end
+         
          
          if typeInfo:get_baseTypeInfo() ~= _moduleObj.headTypeInfo or #typeInfo:get_interfaceList() ~= 0 or #typeInfo:get_children() ~= 1 then
             return false
@@ -5322,7 +5276,6 @@ end
 
 function NormalTypeInfo.createArray( accessMode, parentInfo, itemTypeInfo, mutMode )
 
-   
    idProv:increment(  )
    return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeArray ), _moduleObj.builtinTypeArray, nil, false, false, false, AccessMode.Pub, "Array", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Array, itemTypeInfo, nil, nil, mutMode)
 end
@@ -5330,7 +5283,6 @@ end
 
 function NormalTypeInfo.createMap( accessMode, parentInfo, keyTypeInfo, valTypeInfo, mutMode )
 
-   
    idProv:increment(  )
    return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeMap ), _moduleObj.builtinTypeMap, nil, false, false, false, AccessMode.Pub, "Map", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, mutMode)
 end
@@ -5358,11 +5310,11 @@ end
 
 function NormalTypeInfo.createClass( classFlag, abstractFlag, scope, baseInfo, interfaceList, genTypeList, parentInfo, externalFlag, accessMode, className )
 
-   
    do
       local _exp = _moduleObj.sym2builtInTypeMap[className]
       if _exp ~= nil then
          return _exp:get_typeInfo()
+         
       end
    end
    
@@ -5469,7 +5421,6 @@ function DDDTypeInfo:__init(processInfo, typeId, typeInfo, externalFlag)
    TypeInfo.__init( self,nil, processInfo)
    
    self.typeId = typeId
-   
    self.typeInfo = typeInfo
    self.externalFlag = externalFlag
    self.itemTypeInfoList = {self.typeInfo}
@@ -5510,7 +5461,6 @@ function DDDTypeInfo:get_kind(  )
 end
 function DDDTypeInfo:get_nilable(  )
 
-   
    return true
 end
 function DDDTypeInfo:get_nilableTypeInfo(  )
@@ -5527,7 +5477,6 @@ function DDDTypeInfo:get_srcTypeInfo(  )
 end
 function DDDTypeInfo:get_accessMode(  )
 
-   
    return AccessMode.Pub
 end
 function DDDTypeInfo.setmeta( obj )
@@ -5789,7 +5738,6 @@ function TypeInfo.getCommonTypeCombo( commonType, otherType, alt2type )
       end
       
       if TypeInfo.isMut( typeInfo ) or TypeInfo.isMut( other ) then
-         
          workType = workType:get_srcTypeInfo()
       end
       
@@ -5876,7 +5824,6 @@ function TypeInfo.getCommonTypeCombo( commonType, otherType, alt2type )
    
    while work ~= _moduleObj.headTypeInfo do
       if work:canEvalWith( type2, CanEvalType.SetOp, alt2type ) then
-         
          if typeInfo:get_nilable() or other:get_nilable() then
             work = work:get_nilableTypeInfo()
          end
@@ -5890,7 +5837,6 @@ function TypeInfo.getCommonTypeCombo( commonType, otherType, alt2type )
       
       work = work:get_baseTypeInfo()
    end
-   
    
    local combine = CombineType.new(typeInfo)
    return combine:andType( _lune.newAlge( CommonType.Normal, {other}), alt2type )
@@ -6076,7 +6022,6 @@ end
 function AbbrTypeInfo:get_rawTxt()
    return self.rawTxt
 end
-
 
 local builtinTypeAbbr = AbbrTypeInfo.new(getCurProcessInfo(  ), idProv, "##")
 _moduleObj.builtinTypeAbbr = builtinTypeAbbr
@@ -6596,6 +6541,7 @@ accessMode = %d, kind = %d, valTypeId = %d, ]==], SerializeKind.Enum, self:getPa
                end
             end
             
+            
          end
       end
    end
@@ -6695,7 +6641,6 @@ end
 
 function NilableTypeInfo:canEvalWith( other, canEvalType, alt2type )
 
-   
    local otherSrc = other
    
    if self == _moduleObj.builtinTypeStem_ then
@@ -6752,7 +6697,6 @@ function NormalTypeInfo.isAvailableMapping( typeInfo, checkedTypeMap )
             
             return true
          elseif _switchExp == TypeInfoKind.Stem then
-            
             return true
          elseif _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.IF then
             if typeInfo:equals( _moduleObj.builtinTypeString ) then
@@ -6797,7 +6741,6 @@ function NormalTypeInfo.isAvailableMapping( typeInfo, checkedTypeMap )
    checkedTypeMap[typeInfo] = result
    return result
 end
-
 
 function NormalTypeInfo:isInheritFrom( other, alt2type )
 
@@ -6891,7 +6834,6 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
             end
             
          elseif srcIndex > index and expType:get_kind() == TypeInfoKind.Abbr then
-            
             return MatchType.Error, "must not use '##'"
          end
          
@@ -6925,7 +6867,6 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
          
          local dstType = dstTypeList[index]
          if #dstTypeList == index then
-            
             if dstType:get_srcTypeInfo():get_kind() ~= TypeInfoKind.DDD then
                local isMatch, msg = dstType:canEvalWith( expType, CanEvalType.SetOp, alt2type )
                if not isMatch then
@@ -6938,7 +6879,6 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
                
             else
              
-               
                local dddItemType = _moduleObj.builtinTypeStem_
                if #dstType:get_itemTypeInfoList() > 0 then
                   dddItemType = dstType:get_itemTypeInfoList()[1]
@@ -6963,13 +6903,10 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
             end
             
             
-            
             break
          elseif #expTypeList == index then
-            
             local srcType = expType
             local srcType2nd = _moduleObj.builtinTypeAbbrNone
-            
             if expType:get_kind() == TypeInfoKind.DDD then
                srcType = _moduleObj.builtinTypeStem_
                srcType2nd = _moduleObj.builtinTypeStem_
@@ -6999,7 +6936,6 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
             end
             
             
-            
             break
          else
           
@@ -7018,13 +6954,13 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
             end
             
             
+            
          end
          
       end
       
    elseif not allowDstShort then
       for index, dstType in ipairs( dstTypeList ) do
-         
          if not dstType:canEvalWith( _moduleObj.builtinTypeNil, CanEvalType.SetOp, alt2type ) then
             return MatchType.Error, string.format( "exp(%d) type mismatch %s <- nil: short", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ))
          end
@@ -7032,11 +6968,11 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
          return MatchType.Warn, Code.format( Code.ID.nothing_define_abbr, string.format( "use '##', instate of %s.", dstType:getTxt( _moduleObj.defaultTypeNameCtrl )) )
       end
       
+      
    end
    
    return MatchType.Match, ""
 end
-
 
 local function isSettableToForm( typeInfo )
 
@@ -7100,7 +7036,6 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
       local _switchExp = canEvalType
       if _switchExp == CanEvalType.SetEq or _switchExp == CanEvalType.SetOp or _switchExp == CanEvalType.SetOpIMut then
          if dest == _moduleObj.builtinTypeEmpty then
-            
             do
                local _switchExp = otherSrc
                if _switchExp == _moduleObj.builtinTypeAbbr or _switchExp == _moduleObj.builtinTypeAbbrNone then
@@ -7109,13 +7044,11 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
             end
             
             if otherSrc:get_kind() == TypeInfoKind.Func then
-               
                return false, nil
             end
             
             return true, nil
          elseif not otherMut and destMut then
-            
             local nonNilOtherType = otherSrc:get_nonnilableType()
             do
                local _switchExp = nonNilOtherType:get_kind()
@@ -7311,7 +7244,6 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
          return false, nil
       elseif _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.Set then
          if otherSrc:get_itemTypeInfoList()[1] == _moduleObj.builtinTypeNone then
-            
             return true, nil
          end
          
@@ -7335,7 +7267,6 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
          return true, nil
       elseif _switchExp == TypeInfoKind.Map then
          if otherSrc:get_itemTypeInfoList()[1] == _moduleObj.builtinTypeNone and otherSrc:get_itemTypeInfoList()[2] == _moduleObj.builtinTypeNone then
-            
             return true, nil
          end
          
@@ -7402,6 +7333,7 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
          end
          
          return false, nil
+         
       elseif _switchExp == TypeInfoKind.Form then
          return isSettableToForm( otherSrc ), nil
       elseif _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.FormFunc then
@@ -7421,7 +7353,6 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
          
          return true, nil
       elseif _switchExp == TypeInfoKind.Method then
-         
          if #dest:get_argTypeInfoList() ~= #otherSrc:get_argTypeInfoList() or #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
             return false, nil
          end
@@ -7799,7 +7730,6 @@ function TypeAnalyzer:analyzeTypeSub( allowDDD )
    local typeInfo
    
    if token.txt == "..." then
-      
       typeInfo = _moduleObj.builtinTypeDDD
    else
     
@@ -7824,7 +7754,6 @@ end
 function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo, pos )
 
    if self.parentPub and isPubToExternal( self.accessMode ) and not isPubToExternal( typeInfo:get_accessMode() ) then
-      
       return nil, pos, string.format( "This type must be public. -- %s", typeInfo:getTxt(  ))
    end
    

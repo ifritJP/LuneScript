@@ -79,6 +79,7 @@ _hoge( func() );
   
 * 機能
 
+- [ ] リストのインデックスに 0 などの immediate で指定した場合、 warning とする。  
 - [ ] =__line__=, =__func__=, =__mode__= 等の特殊シンボル Node を作る。
 
 - [ ] コンストラクタで nilable のメンバが初期化していない場合、 warning にする。

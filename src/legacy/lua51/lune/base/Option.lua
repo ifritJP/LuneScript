@@ -185,7 +185,6 @@ end
 if not _lune2 then
    _lune2 = _lune
 end
-
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
@@ -200,7 +199,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 3449
+   return 3498
 end
 
 
@@ -272,7 +271,6 @@ ModeKind.Inquire = 'inq'
 ModeKind._val2NameMap['inq'] = 'Inquire'
 ModeKind.__allList[15] = ModeKind.Inquire
 
-
 local CheckingUptodateMode = {}
 _moduleObj.CheckingUptodateMode = CheckingUptodateMode
 CheckingUptodateMode._val2NameMap = {}
@@ -311,16 +309,18 @@ _moduleObj.TransCtrlInfo = TransCtrlInfo
 function TransCtrlInfo.setmeta( obj )
   setmetatable( obj, { __index = TransCtrlInfo  } )
 end
-function TransCtrlInfo.new( checkingDefineAbbr, stopByWarning, uptodateMode )
+function TransCtrlInfo.new( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode )
    local obj = {}
    TransCtrlInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( checkingDefineAbbr, stopByWarning, uptodateMode )
+      obj:__init( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode )
    end
    return obj
 end
-function TransCtrlInfo:__init( checkingDefineAbbr, stopByWarning, uptodateMode )
+function TransCtrlInfo:__init( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode )
 
+   self.warningShadowing = warningShadowing
+   self.compatComment = compatComment
    self.checkingDefineAbbr = checkingDefineAbbr
    self.stopByWarning = stopByWarning
    self.uptodateMode = uptodateMode
@@ -329,7 +329,7 @@ end
 
 function TransCtrlInfo.create_normal(  )
 
-   return TransCtrlInfo.new(true, false, CheckingUptodateMode.Touch)
+   return TransCtrlInfo.new(false, false, true, false, CheckingUptodateMode.Touch)
 end
 
 
@@ -495,6 +495,8 @@ usage:
     -Werror: error by warrning.
     --log <mode>: set log level.
          mode: fatal, error, warn, info, debug, trace
+    --warning-shadowing: shadowing error convert to warning.
+    --compat-comment: backward compatibility to process the comment.
     --disable-checking-define-abbr: disable checking for ##.
     --uptodate <mode>: checking uptodate mode.
             mode: skip check.
@@ -591,6 +593,10 @@ usage:
                option.transCtrlInfo.stopByWarning = true
             elseif _switchExp == "--disable-checking-define-abbr" then
                option.transCtrlInfo.checkingDefineAbbr = false
+            elseif _switchExp == "--compat-comment" then
+               option.transCtrlInfo.compatComment = true
+            elseif _switchExp == "--warning-shadowing" then
+               option.transCtrlInfo.warningShadowing = true
             elseif _switchExp == "--log" then
                do
                   local txt = getNextOp(  )

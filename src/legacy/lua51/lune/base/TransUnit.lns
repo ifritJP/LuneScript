@@ -555,6 +555,17 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
                                    pos.lineNo, pos.column, mess ) );
    }
 
+   pri fn addWarnErrMess( pos:&Parser.Position, err:bool, mess: str ) mut {
+      if err {
+         self.addErrMess( pos, mess );
+      }
+      else {
+         self.addWarnMess( pos, mess );
+      }
+   }
+   
+   
+
    // pri fn pushScope( classFlag: bool, inheritScope: Ast.Scope!,
    //                   ifScopeList:List<Ast.Scope>! ) mut : Ast.Scope
    pri fn pushScope( classFlag: bool, baseInfo: &Ast.TypeInfo!,
@@ -908,20 +919,25 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
       when! symbolInfo {
          let symPos = symbolInfo.$pos;
          when! symPos {
-            self.addErrMess(
-               symPos, "This symbol is shadowed from %d:%d -- %s"
-               (pos.lineNo, pos.column, symbolInfo.$name ) );
+            let mess = "This symbol is shadowed from %d:%d -- %s"
+                (pos.lineNo, pos.column, symbolInfo.$name );
+            self.addWarnErrMess(
+               symPos, not self.ctrl_info.warningShadowing, mess );
          }
-         self.addErrMess(
-            pos, "shadowing symbol of %s -- %s"
+         let mess = "shadowing symbol of %s -- %s"
             (symPos and "%s:%s" (symPos$.lineNo, symPos$.column) or "external",
-              symbolInfo.$name ) );     
+              symbolInfo.$name );
+         self.addWarnErrMess(
+            pos, not self.ctrl_info.warningShadowing, mess );
       }
    }
    
    pri fn checkShadowing( pos:&Parser.Position, name:str, scope:&Ast.Scope ) mut {
-      let symbolInfo = self.scope.getSymbolTypeInfo(
-         name, scope, self.moduleScope, self.scopeAccess );
+      let! symbolInfo = self.scope.getSymbolTypeInfo(
+         name, scope, self.moduleScope, self.scopeAccess )
+      {
+         return;
+      };
 
       self.errorShadowing( pos, symbolInfo );
    }
@@ -933,10 +949,12 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
       &Ast.SymbolInfo
    {
       if not allowShadow {
-         if self.scope.getSymbolTypeInfo(
-            name, self.scope, self.moduleScope, self.scopeAccess ) {
-            self.addErrMess( pos, "shadowing variable -- %s" (name) );
-         }
+         self.checkShadowing( pos, name, self.scope );
+         // if self.scope.getSymbolTypeInfo(
+         //    name, self.scope, self.moduleScope, self.scopeAccess )
+         // {
+         //    self.addErrMess( pos, "shadowing variable -- %s" (name) );
+         // }
       }
       return unwrap self.scope.addLocalVar(
          argFlag, canBeLeft, name, pos, typeInfo, mutable );
@@ -2111,11 +2129,11 @@ pub fn TransUnit.error( mess: str ) mut : __ {
    //           ( self.parser.getStreamName(),
    //             pospos.lineNo, pos.column, txt, mess ) );
 
-   foreach mess in self.errMessList {
-      Util.errorLog( mess );
+   foreach errmess in self.errMessList {
+      Util.errorLog( errmess );
    }
-   foreach mess in self.warnMessList {
-      Util.errorLog( mess );
+   foreach warnmess in self.warnMessList {
+      Util.errorLog( warnmess );
    }
    if self.macroCtrl.$analyzeInfo.$mode ~= .None {
       print( "------ near code -----", self.macroCtrl.$analyzeInfo.$mode.$_txt );
@@ -2193,6 +2211,9 @@ fn TransUnit.getTokenNoErr() mut : &Parser.Token
          if self.macroCtrl.$analyzeInfo.$mode ~= .None {
             token = self.macroCtrl.expandMacroVal(
                self.typeNameCtrl, self.scope, self, token );
+         }
+         if not self.ctrl_info.compatComment {
+            self.commentCtrl.addDirect( commentList );
          }
       }
       else {
@@ -2373,7 +2394,8 @@ fn TransUnit.analyzeStatementList(
 
    // コメントが、直前の文の末尾と同じ行にあるかどうか調べ、
    // 同じ行にある場合は、直前の文のコメントとしてセットする
-   fn setTailComment( statement:Nodes.Node! ): int {
+   fn setTailComment( statement:Nodes.Node! ): int
+   {
       let blank;
       let mut commentList = self.commentCtrl.$commentList;
       if #commentList > 0 {
@@ -2405,7 +2427,7 @@ fn TransUnit.analyzeStatementList(
          }
       }
       if #commentList > 0 {
-         blank = commentList[ 1 ].pos.lineNo - lastLineNo;
+         blank = commentList[ 1 ].pos.lineNo - commentList[ 1 ].getLineCount() - lastLineNo;
       }
       else {
          when! statement {
@@ -2417,14 +2439,17 @@ fn TransUnit.analyzeStatementList(
       }
       return blank;
    }
-   
+
    while true {
       lastLineNo = getLastLineNo();
       let mut statement = self.analyzeStatement( termTxt );
       when! statement {
          if breakKind ~= .None {
-            self.addErrMess( statement.$pos,
-                             "This statement is not reached -- %s" (breakKind.$_txt) );
+            if statement.$kind ~= Nodes.NodeKind.$BlankLine {
+               self.addErrMess(
+                  statement.$pos,
+                  "This statement is not reached -- %s" (breakKind.$_txt) );
+            }
          }
 
          // 空白行と、コメントの処理
@@ -2440,7 +2465,9 @@ fn TransUnit.analyzeStatementList(
 
          stmtList.insert( statement );
          lastStatement = statement;
-         breakKind = statement.getBreakKind( .Normal );
+         if statement.$kind ~= Nodes.NodeKind.$BlankLine {
+            breakKind = statement.getBreakKind( .Normal );
+         }
          
          statement.addComment( self.commentCtrl.$commentList );
          self.commentCtrl.clear();
@@ -3328,12 +3355,6 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
          foreach paramType in valInfo.$typeList {
             let paramName = self.getSymbolToken( .MustNot_ );
             self.checkShadowing( paramName.pos, paramName.txt, self.scope );
-            // if self.scope.getTypeInfo(
-            //    paramName.txt, self.scope, true, self.scopeAccess )
-            // {
-            //    self.addErrMess( paramName.pos,
-            //                     "shadowing variable -- %s" (paramName.txt) );
-            // }
 
             let mut workType = paramType;
             if Ast.TypeInfo.isMut( paramType ) and
@@ -3341,8 +3362,8 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
             {
                workType = self.createModifier( workType, .IMut );
             }
-            blockScope.addLocalVar(
-               true, false, paramName.txt, paramName.pos, workType, .IMut );
+            self.addLocalVar(
+               paramName.pos, true, false, paramName.txt, workType, .IMut ## );
             valParamNameList.insert( paramName.txt );
             nextToken = self.getToken(##);
             if nextToken.txt ~= "," {
@@ -3435,7 +3456,7 @@ fn TransUnit.analyzeFor( firstToken: &Parser.Token ) mut : Nodes.ForNode {
                        "exp1 is not number -- %s" (exp1.$expType.getTxt(##)) );
    }
    let symbolInfo = self.addLocalVar(
-      exp1.$pos, false, true, val.txt, exp1.$expType, .IMut## );
+      val.pos, false, true, val.txt, exp1.$expType, .IMut## );
    self.checkNextToken( "," );
    let exp2 = self.analyzeExpOne( false, false## );
    if not Ast.isNumberType( exp2.$expType ) {
@@ -3631,23 +3652,25 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
          }
          valSymbol = nil;
          subSymbol = mainSymbol;
-         self.scope.addLocalVar(
-            false, true, mainSymbol.txt, mainSymbol.pos, itemTypeInfoList[ 1 ], .IMut );
+         self.addLocalVar(
+            mainSymbol.pos, false, true,
+            mainSymbol.txt, itemTypeInfoList[ 1 ], .IMut## );
       }
       case .List, .Array {
          if sortFlag {
             self.addErrMess( exp.$pos, "'%s' doesn't support forsort."
                              (expType.$kind.$_txt) );
          }
-         self.scope.addLocalVar(
-            false, true, mainSymbol.txt, mainSymbol.pos, itemTypeInfoList[ 1 ], .IMut );
+         self.addLocalVar(
+            mainSymbol.pos, false, true,
+            mainSymbol.txt, itemTypeInfoList[ 1 ], .IMut## );
          if! subSymbol {
             self.addLocalVar(
                _exp.pos, false, false, _exp.txt, Ast.builtinTypeInt, .IMut## );
          }
          else {
-            self.scope.addLocalVar(
-               false, false, "__index", token.pos, Ast.builtinTypeInt, .IMut );
+            self.addLocalVar(
+               token.pos, false, false, "__index", Ast.builtinTypeInt, .IMut, true );
          }
       }
       default {

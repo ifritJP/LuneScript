@@ -199,9 +199,7 @@ if not _lune2 then
 end
 
 
-
 local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
-
 local function getFileLastModifiedTime( path )
 
    local file = io.open( path )

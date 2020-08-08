@@ -85,9 +85,15 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
 
    if not statement {
       if token.txt == termTxt {
+         if #self.commentCtrl.$commentList > 0 {
+            let commentToken = self.commentCtrl.$commentList[ 1 ];
+            statement = Nodes.BlankLineNode.create(
+               self.nodeManager, commentToken.pos,
+               self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], 0 );
+         }
          self.pushback();
          self.commentCtrl.pop();
-         return nil;
+         return statement;
       }
       elseif token.txt == "pub" or token.txt == "pro" or
          token.txt == "pri" or token.txt == "global" or token.txt == "static"

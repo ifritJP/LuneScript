@@ -324,8 +324,8 @@ pub override fn FormatterFilter.processExpMacroStat(
    node: &Nodes.ExpMacroStatNode, opt:Opt ) mut
 {
    
-   foreach node in node.$expStrList {
-      filter( node, self, opt.nextOpt( node ) );
+   foreach strNode in node.$expStrList {
+      filter( strNode, self, opt.nextOpt( strNode ) );
    }
 };
 
@@ -406,14 +406,14 @@ pub override fn FormatterFilter.processDeclVar(
       }
    }
    
-   foreach sym, index in node.$symbolInfoList {
+   foreach symInfo, index in node.$symbolInfoList {
       if index > 1 {
 	 self.write( ", " );
       }
-      if sym.$mutable {
+      if symInfo.$mutable {
          self.write( "mut " );
       }
-      self.write( sym.$name );
+      self.write( symInfo.$name );
       if #node.$varList >= index {
          let varInfo = node.$varList[ index ];
          if! let varType = varInfo.$refType {

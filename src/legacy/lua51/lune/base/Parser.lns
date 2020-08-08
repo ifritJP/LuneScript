@@ -228,6 +228,14 @@ pub class Token {
    pub fn set_commentList( commentList: &List<&Token> ) {
       self.commentList = commentList;
    }
+
+   pub fn getLineCount():int {
+      let mut count = 1;
+      apply cr of self.txt.gmatch( "\n" ) {
+         count = count + 1;
+      }
+      return count;
+   }
 }
 
 pub abstract class Parser {

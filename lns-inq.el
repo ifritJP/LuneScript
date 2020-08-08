@@ -25,8 +25,8 @@
 (require 'lns-completion)
 
 (defun lns-get-inq (&optional file-path analyze-module buf-name)
-  (let ((out-buf (lns-get-buffer (or buf-name "*lns-process*") t))
-	process txt)
+  (let ((out-buf (lns-get-buffer (or buf-name "*lns-inq-process*") t))
+	process txt output-txt)
     (when (not file-path)
       (setq file-path buffer-file-name))
     (setq txt (buffer-substring-no-properties (point-min) (point-max)) )
@@ -39,7 +39,12 @@
 	   (or analyze-module (lns-convert-path-2-module file-path))
 	   (number-to-string (lns-get-line))
 	   (number-to-string (lns-get-column)) "-i"))
-    (lns-json-get out-buf :inquire)
+    (with-current-buffer out-buf
+      (setq output-txt (buffer-string)))
+    (condition-case err
+	(lns-json-get out-buf :inquire)
+      (error
+       nil))
     ))
 
 (defun lns-show-inq ()
@@ -50,9 +55,11 @@
       (split-window-vertically)
       (other-window 1)
       (switch-to-buffer (lns-get-buffer "*lns-inq*" t))
-      (insert (format "name: %s\n" (lns-json-val info :name)))
-      (insert (format "type: %s\n" (lns-json-val info :type)))
-      (insert (format "display: %s" (lns-json-val info :display)))
+      (if (not info)
+	  (insert "not support")
+	(insert (format "name: %s\n" (lns-json-val info :name)))
+	(insert (format "type: %s\n" (lns-json-val info :type)))
+	(insert (format "display: %s" (lns-json-val info :display))))
       (beginning-of-buffer)
       (fit-window-to-buffer)
       )

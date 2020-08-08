@@ -867,23 +867,33 @@ macro _setBreakKind(work:sym, kind:sym, returnNoneStat:bool, checkMode:sym ) {
    }
 }
 
-
-pub override fn BlockNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
+fn getBreakKindForStmtList( checkMode:CheckBreakMode, stmtList:&List<&Node> ): BreakKind {
    if checkMode ~= .Normal and checkMode ~= .Return {
       let mut kind = BreakKind.None;
-      foreach stmt in self.stmtList {
-         let work = stmt.getBreakKind( checkMode );
-         _setBreakKind(work, kind, false, checkMode );
+      foreach stmt in stmtList {
+         if stmt.$kind ~= NodeKind.$BlankLine {
+            let work = stmt.getBreakKind( checkMode );
+            _setBreakKind(work, kind, false, checkMode );
+         }
       }
       return kind;
    }
-   else {
-      if #self.stmtList > 0 {
-         let node = self.stmtList[ #self.stmtList ];
-         return node.getBreakKind( checkMode );
+
+   if #stmtList > 0 {
+      for index = #stmtList, 1, -1 {
+         let stmt = stmtList[ index ];
+         if stmt.$kind ~= NodeKind.$BlankLine {
+            return stmt.getBreakKind( checkMode );
+         }
       }
    }
    return .None;
+   
+}
+
+
+pub override fn BlockNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
+   return getBreakKindForStmtList( checkMode, self.stmtList );
 }
 
 pub enum IfKind {
@@ -1288,20 +1298,7 @@ pub override fn ExpMacroExpNode.canBeRight():bool {
 }
 
 pub override fn ExpMacroExpNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
-   if checkMode ~= .Normal and checkMode ~= .Return {
-      let mut kind = BreakKind.None;
-      foreach stmt in self.stmtList {
-         let work = stmt.getBreakKind( checkMode );
-         _setBreakKind(work, kind, false, checkMode );
-      }
-      return kind;
-   }
-   else {
-      if #self.stmtList > 0 {
-         return self.stmtList[ #self.stmtList ].getBreakKind( checkMode );
-      }
-   }
-   return .None;
+   return getBreakKindForStmtList( checkMode, self.stmtList );
 }
 
 pub enum MacroStatKind {
@@ -1836,8 +1833,10 @@ pub override fn WhileNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
    if checkMode ~= .Normal and checkMode ~= .Return {
       let mut kind = BreakKind.None;
       foreach stmt in self.block.$stmtList {
-         let work = stmt.getBreakKind( checkMode );
-         _setBreakKind(work, kind, false, checkMode );
+         if stmt.$kind ~= NodeKind.$BlankLine {
+            let work = stmt.getBreakKind( checkMode );
+            _setBreakKind(work, kind, false, checkMode );
+         }
       }
       if kind == .Break {
          return .None;
@@ -1871,9 +1870,10 @@ pub override fn WhileNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
       // }
       let mut kind = BreakKind.None;
       foreach stmt in self.block.$stmtList {
-         let work = stmt.getBreakKind( mode );
-         
-         _setBreakKind(work, kind, false, mode );
+         if stmt.$kind ~= NodeKind.$BlankLine {
+            let work = stmt.getBreakKind( mode );
+            _setBreakKind(work, kind, false, mode );
+         }
       }
       if kind == .Break {
          return .None;

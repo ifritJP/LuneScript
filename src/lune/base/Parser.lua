@@ -148,7 +148,6 @@ end
 if not _lune2 then
    _lune2 = _lune
 end
-
 local Util = _lune.loadModule( 'lune.base.Util' )
 
 local luaKeywordSet = {}
@@ -256,7 +255,6 @@ local function createReserveInfo( luaMode )
    
    return keywordSet, typeSet, builtInSet, multiCharDelimitMap
 end
-
 local TxtStream = {}
 setmetatable( TxtStream, { ifList = {iStream,} } )
 _moduleObj.TxtStream = TxtStream
@@ -425,6 +423,15 @@ end
 function Token:set_commentList( commentList )
 
    self.commentList = commentList
+end
+function Token:getLineCount(  )
+
+   local count = 1
+   for cr in self.txt:gmatch( "\n" ) do
+      count = count + 1
+   end
+   
+   return count
 end
 function Token.setmeta( obj )
   setmetatable( obj, { __index = Token  } )
@@ -690,6 +697,7 @@ function DefaultPushbackParser:getLastPos(  )
    end
    
    return pos
+   
 end
 function DefaultPushbackParser:getNearCode(  )
 
@@ -809,7 +817,6 @@ function StreamParser:parse(  )
    
    local list = {}
    local startIndex = 1
-   
    local function multiComment( comIndex, termStr )
    
       local searchIndex = comIndex
@@ -829,7 +836,6 @@ function StreamParser:parse(  )
       end
       
    end
-   
    
    local function addVal( kind, val, column )
    
@@ -855,7 +861,6 @@ function StreamParser:parse(  )
          self.prevToken = newToken
          return newToken
       end
-      
       local function analyzeNumber( token, beginIndex )
       
          local nonNumIndex = token:find( '[^%d]', beginIndex )
@@ -1016,9 +1021,7 @@ function StreamParser:parse(  )
       
    end
    
-   
    local searchIndex = startIndex
-   
    while true do
       local syncIndexFlag = true
       local pattern = [==[[/%-%?"%'%`].]==]

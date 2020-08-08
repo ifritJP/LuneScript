@@ -396,15 +396,15 @@ pub override fn glueFilter.processRoot( node: &Nodes.RootNode, dummy:int ) mut
       error( "open error -- %s " (filePath) );
    }
 
-   foreach node in node.$nodeManager.getDeclClassNodeList() {
-      if! let moduleName = node.$moduleName {
+   foreach declClassNode in node.$nodeManager.getDeclClassNodeList() {
+      if! let moduleName = declClassNode.$moduleName {
          let moduleSymbolName = moduleName.getExcludedDelimitTxt().gsub( "%.", "_" );
-         if! node.$gluePrefix {
+         if! declClassNode.$gluePrefix {
             let mut glue = new glueGenerator(
                createFile( moduleSymbolName .. "_glue.c" ),
                createFile( moduleSymbolName .. "_glue.h" ) );
 
-            glue.outputClass( moduleSymbolName, node, _exp );
+            glue.outputClass( moduleSymbolName, declClassNode, _exp );
          }
       }
    }

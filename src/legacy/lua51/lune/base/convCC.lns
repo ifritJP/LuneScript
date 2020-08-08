@@ -2620,8 +2620,8 @@ fn processAlgeNewProto( stream:Util.SourceStream, moduleCtrl:ModuleCtrl,
       ( cTypeStem,
         moduleCtrl.getNewAlgeCName( typeInfo, valInfo.$name ), cTypeEnvP ) );
 
-   foreach typeInfo, index in valInfo.$typeList {
-      stream.write( ", %s _val%d" (getCType( typeInfo ), index) );
+   foreach valTypeInfo, index in valInfo.$typeList {
+      stream.write( ", %s _val%d" (getCType( valTypeInfo ), index) );
    }
    stream.write( ")" );
 }

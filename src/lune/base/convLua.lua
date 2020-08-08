@@ -234,7 +234,6 @@ end
 if not _lune2 then
    _lune2 = _lune
 end
-
 local Ver = _lune.loadModule( 'lune.base.Ver' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
@@ -500,7 +499,6 @@ function convFilter:processProtoMethod( node, opt )
 end
 
 
-
 function convFilter:pushIndent( newIndent )
 
    local indent = _lune.unwrapDefault( newIndent, self:get_indent() + stepIndent)
@@ -528,6 +526,7 @@ end
 
 function convFilter:processNone( node, opt )
 
+   
 end
 
 
@@ -538,6 +537,7 @@ function convFilter:processImport( node, opt )
    local moduleName = module:gsub( ".*%.", "" )
    moduleName = node:get_assignName()
    self:write( string.format( "local %s = _lune.loadModule( '%s' )", moduleName, module) )
+   
 end
 
 
@@ -611,7 +611,6 @@ function convFilter:outputMeta( node )
       
       return self.moduleTypeInfo:get_processInfo() ~= typeInfo:get_processInfo()
    end
-   
    local function pickupTypeId( typeInfo, forceFlag, pickupChildFlag )
    
       
@@ -760,7 +759,6 @@ function convFilter:outputMeta( node )
    end
    
    classId2TypeInfo = self.classId2TypeInfo
-   
    self:writeln( "local __typeId2ClassInfoMap = {}" )
    self:writeln( "_moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap" )
    
@@ -862,7 +860,6 @@ function convFilter:outputMeta( node )
                            local symbolInfo = __map[ fieldName ]
                            do
                               local typeInfo = symbolInfo:get_typeInfo()
-                              
                               if symbolInfo:get_kind() == Ast.SymbolKind.Mbr or symbolInfo:get_kind() == Ast.SymbolKind.Var then
                                  if symbolInfo:get_accessMode() == Ast.AccessMode.Pub then
                                     self:writeln( string.format( "__classInfo%d.%s = {", classTypeId, fieldName) )
@@ -1003,7 +1000,6 @@ function convFilter:outputMeta( node )
       end
    end
    
-   
    do
       local __sorted = {}
       local __map = self.pubFuncName2InfoMap
@@ -1018,7 +1014,6 @@ function convFilter:outputMeta( node )
          end
       end
    end
-   
    
    for __index, aliasNode in ipairs( node:get_nodeManager():getAliasNodeList(  ) ) do
       pickupTypeId( aliasNode:get_expType(), false )
@@ -1106,6 +1101,7 @@ function convFilter:outputMeta( node )
          end
          
          typeInfo:serialize( self, validChildren )
+         
       end
       
    end
@@ -1147,7 +1143,6 @@ function convFilter:outputMeta( node )
       end
    end
    
-   
    self:writeln( "local __dependIdMap = {}" )
    self:writeln( "_moduleObj.__dependIdMap = __dependIdMap" )
    local exportNeedModuleTypeInfo = {}
@@ -1181,7 +1176,6 @@ function convFilter:outputMeta( node )
       exportNeedModuleTypeInfo[moduleTypeInfo]= true
    end
    
-   
    self:writeln( "local __dependModuleMap = {}" )
    self:writeln( "_moduleObj.__dependModuleMap = __dependModuleMap" )
    do
@@ -1198,7 +1192,6 @@ function convFilter:outputMeta( node )
          end
       end
    end
-   
    
    self:write( "_moduleObj.__subModuleMap = {" )
    do
@@ -2019,7 +2012,6 @@ end]==], className, delimit, setterName, memberName, prefix, memberName, memberN
       
    end
    
-   
    for __index, advertiseInfo in ipairs( node:get_advertiseList() ) do
       local memberName = advertiseInfo:get_member():get_name().txt
       local memberType = advertiseInfo:get_member():get_expType()
@@ -2041,7 +2033,6 @@ end
       end
       
    end
-   
    
    do
       local initBlock = _lune.nilacc( _lune.nilacc( nodeInfo:get_initBlock():get_func(), 'get_declInfo', 'callmtd' ), 'get_body', 'callmtd' )
@@ -2121,6 +2112,7 @@ end
 
 function convFilter:processDeclMember( node, opt )
 
+   
 end
 
 
@@ -2144,7 +2136,6 @@ function convFilter:outputDeclMacro( name, argNameList, callback )
    
    self:writeln( "__macroArgs )" )
    self:pushIndent(  )
-   
    self:writeln( string.format( 'local _lune = require( "%s" )', Option.getRuntimeModule(  )) )
    
    self:writeln( "local __var = __macroArgs.__var" )
@@ -2684,6 +2675,7 @@ end
 function convFilter:processDeclArg( node, opt )
 
    self:write( string.format( "%s", node:get_name(  ).txt ) )
+   
 end
 
 
@@ -2735,7 +2727,6 @@ function convFilter:processDeclFunc( node, opt )
    end
    
    self:write( "end" )
-   
    local expType = node:get_expType(  )
    if expType:get_accessMode(  ) == Ast.AccessMode.Pub then
       if self.needModuleObj then

@@ -172,7 +172,6 @@ end
 if not _lune2 then
    _lune2 = _lune
 end
-
 local Ver = _lune.loadModule( 'lune.base.Ver' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
@@ -249,7 +248,6 @@ local function filter( node, filter, parent )
 
    node:processFilter( filter, Opt.new(parent) )
 end
-
 local function str2gostr( txt )
 
    local work = txt
@@ -314,9 +312,11 @@ function convFilter:processRoot( node, opt )
    
    self:writeln( "func Lns_init() {" )
    for __index, child in ipairs( node:get_children() ) do
+      
       do
          local _switchExp = child:get_kind()
          if _switchExp == Nodes.NodeKind.get_DeclAlge() or _switchExp == Nodes.NodeKind.get_DeclFunc() or _switchExp == Nodes.NodeKind.get_DeclMacro() or _switchExp == Nodes.NodeKind.get_TestBlock() then
+            
          else 
             
                filter( child, self, node )
@@ -340,9 +340,11 @@ function convFilter:processBlockSub( node, opt )
 
    self:pushIndent(  )
    for __index, child in ipairs( node:get_stmtList() ) do
+      
       do
          local _switchExp = child:get_kind()
          if _switchExp == Nodes.NodeKind.get_DeclAlge() or _switchExp == Nodes.NodeKind.get_DeclFunc() or _switchExp == Nodes.NodeKind.get_DeclMacro() or _switchExp == Nodes.NodeKind.get_TestBlock() then
+            
          else 
             
                filter( child, self, node )
@@ -381,6 +383,7 @@ end
 
 function convFilter:processDeclMember( node, opt )
 
+   
 end
 
 
@@ -518,7 +521,6 @@ function convFilter:processDeclFunc( node, opt )
          self:write( type2gotype( retTypeList[1] ) )
       else 
          
-            
             self:write( "(" )
             for index, retType in ipairs( retTypeList ) do
                if index ~= 1 then
@@ -738,7 +740,6 @@ function convFilter:processExpOp2( node, opt )
             do
                local _exp = Ast.bitBinOpMap[opTxt]
                if _exp ~= nil then
-                  
                   do
                      local _switchExp = _exp
                      if _switchExp == Ast.BitOpKind.LShift then
@@ -748,15 +749,12 @@ function convFilter:processExpOp2( node, opt )
                      end
                   end
                   
-                  
                   filter( node:get_exp1(), self, node )
                   self:write( " " .. opTxt .. " " )
-                  
                   filter( node:get_exp2(), self, node )
                else
                   filter( node:get_exp1(), self, node )
                   self:write( " " .. opTxt .. " " )
-                  
                   filter( node:get_exp2(), self, node )
                end
             end
@@ -916,7 +914,6 @@ end
 
 function convFilter:processAbbr( node, opt )
 
-   
    Util.err( "illegal" )
 end
 

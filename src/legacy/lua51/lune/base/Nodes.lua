@@ -231,7 +231,6 @@ end
 if not _lune2 then
    _lune2 = _lune
 end
-
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
@@ -306,7 +305,6 @@ end
 function Filter:get_typeNameCtrl()
    return self.typeNameCtrl
 end
-
 
 local BreakKind = {}
 _moduleObj.BreakKind = BreakKind
@@ -509,7 +507,6 @@ NodeVisitMode.__allList[2] = NodeVisitMode.Next
 NodeVisitMode.End = 2
 NodeVisitMode._val2NameMap[2] = 'End'
 NodeVisitMode.__allList[3] = NodeVisitMode.End
-
 
 
 
@@ -717,7 +714,6 @@ function Filter:defaultProcess( node, opt )
    end
    
 end
-
 
 local NodeManager = {}
 _moduleObj.NodeManager = NodeManager
@@ -1195,7 +1191,6 @@ function ModuleInfo:get_moduleId()
    return self.moduleId
 end
 
-
 local MacroValInfo = {}
 _moduleObj.MacroValInfo = MacroValInfo
 function MacroValInfo.setmeta( obj )
@@ -1241,7 +1236,6 @@ end
 function MacroArgInfo:get_typeInfo()
    return self.typeInfo
 end
-
 
 
 
@@ -1885,56 +1879,69 @@ end
 
 
 
-function BlockNode:getBreakKind( checkMode )
+local function getBreakKindForStmtList( checkMode, stmtList )
 
    if checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return then
       local kind = BreakKind.None
-      for __index, stmt in ipairs( self.stmtList ) do
-         local work = stmt:getBreakKind( checkMode )
-         
-         if checkMode == CheckBreakMode.IgnoreFlowReturn then
-            if work == BreakKind.Return then
-               return BreakKind.Return
-            end
+      for __index, stmt in ipairs( stmtList ) do
+         if stmt:get_kind() ~= NodeKind.get_BlankLine() then
+            local work = stmt:getBreakKind( checkMode )
             
-            if work == BreakKind.NeverRet then
-               return BreakKind.NeverRet
-            end
-            
-         else
-          
-            do
-               local _switchExp = work
-               if _switchExp == BreakKind.None then
-                  if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
-                     
-                  end
-                  
-               else 
-                  
-                     if kind == BreakKind.None or kind > work then
-                        kind = work
+            if checkMode == CheckBreakMode.IgnoreFlowReturn then
+               if work == BreakKind.Return then
+                  return BreakKind.Return
+               end
+               
+               if work == BreakKind.NeverRet then
+                  return BreakKind.NeverRet
+               end
+               
+            else
+             
+               do
+                  local _switchExp = work
+                  if _switchExp == BreakKind.None then
+                     if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
+                        
                      end
                      
+                  else 
+                     
+                        if kind == BreakKind.None or kind > work then
+                           kind = work
+                        end
+                        
+                  end
                end
+               
             end
             
+            
          end
-         
          
       end
       
       return kind
-   else
-    
-      if #self.stmtList > 0 then
-         local node = self.stmtList[#self.stmtList]
-         return node:getBreakKind( checkMode )
+   end
+   
+   
+   if #stmtList > 0 then
+      for index = #stmtList, 1, -1 do
+         local stmt = stmtList[index]
+         if stmt:get_kind() ~= NodeKind.get_BlankLine() then
+            return stmt:getBreakKind( checkMode )
+         end
+         
       end
       
    end
    
    return BreakKind.None
+end
+
+function BlockNode:getBreakKind( checkMode )
+
+   return getBreakKindForStmtList( checkMode, self.stmtList )
 end
 
 
@@ -3925,6 +3932,7 @@ end
 function ExpRefNode:canBeRight(  )
 
    return self:get_symbolInfo():get_canBeRight() and self:get_symbolInfo():get_hasValueFlag()
+   
 end
 
 
@@ -5977,53 +5985,7 @@ end
 
 function ExpMacroExpNode:getBreakKind( checkMode )
 
-   if checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return then
-      local kind = BreakKind.None
-      for __index, stmt in ipairs( self.stmtList ) do
-         local work = stmt:getBreakKind( checkMode )
-         
-         if checkMode == CheckBreakMode.IgnoreFlowReturn then
-            if work == BreakKind.Return then
-               return BreakKind.Return
-            end
-            
-            if work == BreakKind.NeverRet then
-               return BreakKind.NeverRet
-            end
-            
-         else
-          
-            do
-               local _switchExp = work
-               if _switchExp == BreakKind.None then
-                  if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
-                     
-                  end
-                  
-               else 
-                  
-                     if kind == BreakKind.None or kind > work then
-                        kind = work
-                     end
-                     
-               end
-            end
-            
-         end
-         
-         
-      end
-      
-      return kind
-   else
-    
-      if #self.stmtList > 0 then
-         return self.stmtList[#self.stmtList]:getBreakKind( checkMode )
-      end
-      
-   end
-   
-   return BreakKind.None
+   return getBreakKindForStmtList( checkMode, self.stmtList )
 end
 
 
@@ -7126,7 +7088,6 @@ end
 
 function DeclVarNode:getBreakKind( checkMode )
 
-   
    local kind = BreakKind.None
    local work = BreakKind.None
    do
@@ -7526,13 +7487,11 @@ end
 
 function DeclFuncNode:canBeRight(  )
 
-   
    return self.declInfo:get_name() == nil
 end
 
 function DeclFuncNode:canBeStatement(  )
 
-   
    return not (self.declInfo:get_name() == nil )
 end
 
@@ -10720,7 +10679,6 @@ function Node:getSymbolInfo(  )
                local refFieldNode = _lune.__Cast( node, 3, RefFieldNode )
                if refFieldNode ~= nil then
                   if refFieldNode:get_nilAccess() then
-                     
                      return {}
                   end
                   
@@ -10782,37 +10740,40 @@ function WhileNode:getBreakKind( checkMode )
    if checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return then
       local kind = BreakKind.None
       for __index, stmt in ipairs( self.block:get_stmtList() ) do
-         local work = stmt:getBreakKind( checkMode )
-         
-         if checkMode == CheckBreakMode.IgnoreFlowReturn then
-            if work == BreakKind.Return then
-               return BreakKind.Return
-            end
+         if stmt:get_kind() ~= NodeKind.get_BlankLine() then
+            local work = stmt:getBreakKind( checkMode )
             
-            if work == BreakKind.NeverRet then
-               return BreakKind.NeverRet
-            end
-            
-         else
-          
-            do
-               local _switchExp = work
-               if _switchExp == BreakKind.None then
-                  if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
-                     
-                  end
-                  
-               else 
-                  
-                     if kind == BreakKind.None or kind > work then
-                        kind = work
+            if checkMode == CheckBreakMode.IgnoreFlowReturn then
+               if work == BreakKind.Return then
+                  return BreakKind.Return
+               end
+               
+               if work == BreakKind.NeverRet then
+                  return BreakKind.NeverRet
+               end
+               
+            else
+             
+               do
+                  local _switchExp = work
+                  if _switchExp == BreakKind.None then
+                     if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
+                        
                      end
                      
+                  else 
+                     
+                        if kind == BreakKind.None or kind > work then
+                           kind = work
+                        end
+                        
+                  end
                end
+               
             end
             
+            
          end
-         
          
       end
       
@@ -10843,41 +10804,42 @@ function WhileNode:getBreakKind( checkMode )
       end
       
       local mode = CheckBreakMode.IgnoreFlow
-      
       local kind = BreakKind.None
       for __index, stmt in ipairs( self.block:get_stmtList() ) do
-         local work = stmt:getBreakKind( mode )
-         
-         
-         if mode == CheckBreakMode.IgnoreFlowReturn then
-            if work == BreakKind.Return then
-               return BreakKind.Return
-            end
+         if stmt:get_kind() ~= NodeKind.get_BlankLine() then
+            local work = stmt:getBreakKind( mode )
             
-            if work == BreakKind.NeverRet then
-               return BreakKind.NeverRet
-            end
-            
-         else
-          
-            do
-               local _switchExp = work
-               if _switchExp == BreakKind.None then
-                  if mode == CheckBreakMode.Normal or mode == CheckBreakMode.Return then
-                     
-                  end
-                  
-               else 
-                  
-                     if kind == BreakKind.None or kind > work then
-                        kind = work
+            if mode == CheckBreakMode.IgnoreFlowReturn then
+               if work == BreakKind.Return then
+                  return BreakKind.Return
+               end
+               
+               if work == BreakKind.NeverRet then
+                  return BreakKind.NeverRet
+               end
+               
+            else
+             
+               do
+                  local _switchExp = work
+                  if _switchExp == BreakKind.None then
+                     if mode == CheckBreakMode.Normal or mode == CheckBreakMode.Return then
+                        
                      end
                      
+                  else 
+                     
+                        if kind == BreakKind.None or kind > work then
+                           kind = work
+                        end
+                        
+                  end
                end
+               
             end
             
+            
          end
-         
          
       end
       
@@ -11376,7 +11338,6 @@ function ExpRefNode:getLiteral(  )
    do
       local enumTypeInfo = _lune.__Cast( typeInfo, 3, Ast.EnumTypeInfo )
       if enumTypeInfo ~= nil then
-         
          if self.symbolInfo:get_kind() == Ast.SymbolKind.Mbr and self.symbolInfo:get_namespaceTypeInfo():get_kind() == Ast.TypeInfoKind.Enum then
             local enumval = _lune.unwrap( enumTypeInfo:getEnumValInfo( self.symbolInfo:get_name() ))
             return enumLiteral2Literal( enumval:get_val() )
@@ -11610,7 +11571,6 @@ function DefMacroInfo:__init(func, declInfo, symbol2MacroValInfoMap)
    self.argList = {}
    for __index, argNode in ipairs( declInfo:get_argList() ) do
       if argNode:get_kind(  ) == NodeKind.get_DeclArg() then
-         
          local argType = argNode:get_expType()
          local argName = argNode:get_name().txt
          table.insert( self.argList, MacroArgInfo.new(argName, argType) )
@@ -11650,7 +11610,6 @@ function Filter:processBlock( node, opt )
    
    self.moduleInfoManager:pop(  )
 end
-
 
 local function hasMultiValNode( node )
 

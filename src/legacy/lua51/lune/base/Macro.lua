@@ -267,7 +267,6 @@ end
 if not _lune2 then
    _lune2 = _lune
 end
-
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
@@ -390,7 +389,6 @@ function MacroPaser:getToken(  )
    
    local token = self.tokenList[self.pos]
    self.pos = self.pos + 1
-   
    return token
 end
 function MacroPaser:getStreamName(  )
@@ -607,7 +605,6 @@ function MacroCtrl:get_macroCallLineNo()
    return self.macroCallLineNo
 end
 
-
 function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
 
    self.useModuleMacroSet[macroTypeInfo:getModule(  )]= true
@@ -631,7 +628,6 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
    
    
    local macroInfo = _lune.unwrap( self.typeId2MacroInfo[macroTypeInfo:get_typeId(  )])
-   
    local argValMap = {}
    local macroArgValMap = {["__var"] = self.macroLocalVarMap}
    local macroArgNodeList = macroInfo:getArgList(  )
@@ -662,7 +658,6 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
    
    local func = macroInfo.func
    local macroVars = func( macroArgValMap )
-   
    for __index, name in ipairs( (_lune.unwrap( macroVars['__names']) ) ) do
       local valInfo = _lune.unwrap( macroInfo.symbol2MacroValInfoMap[name])
       local typeInfo = valInfo.typeInfo
@@ -674,12 +669,10 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
       self.symbol2ValueMapForMacro[name] = Nodes.MacroValInfo.new(val, typeInfo, macroArgName2ArgNode[name])
    end
    
-   
    for index, arg in ipairs( macroInfo:getArgList(  ) ) do
       if arg:get_typeInfo():get_kind() ~= Ast.TypeInfoKind.DDD then
          local argType = arg:get_typeInfo()
          local argName = arg:get_name()
-         
          self.symbol2ValueMapForMacro[argName] = Nodes.MacroValInfo.new(argValMap[index], argType, macroArgName2ArgNode[argName])
       else
        
@@ -687,7 +680,6 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
       end
       
    end
-   
    
    return MacroPaser.new(macroInfo:getTokenList(  ), string.format( "%s:%d:%d: (macro %s)", streamName, firstToken.pos.lineNo, firstToken.pos.column, macroTypeInfo:getTxt(  ))), nil
 end
@@ -704,6 +696,7 @@ function MacroCtrl:importMacro( macroInfoStem, macroTypeInfo, typeId2TypeInfo )
          local argTypeInfo = _lune.unwrap( typeId2TypeInfo[argInfo.typeId])
          table.insert( argList, Nodes.MacroArgInfo.new(argInfo.name, argTypeInfo) )
          table.insert( argNameList, argInfo.name )
+         
       end
       
       for __index, symInfo in ipairs( macroInfo.symList ) do
@@ -740,7 +733,6 @@ end
 function MacroCtrl:regist( node, macroScope )
 
    local macroObj = self.macroEval:eval( node )
-   
    local remap = {}
    for name, macroValInfo in pairs( self.symbol2ValueMapForMacro ) do
       if macroValInfo.typeInfo:equals( Ast.builtinTypeEmpty ) then
@@ -753,7 +745,6 @@ function MacroCtrl:regist( node, macroScope )
    end
    
    self.symbol2ValueMapForMacro = remap
-   
    self.typeId2MacroInfo[node:get_expType():get_typeId(  )] = Nodes.DefMacroInfo.new(macroObj, node:get_declInfo(), self.symbol2ValueMapForMacro)
    
    self.symbol2ValueMapForMacro = {}
@@ -779,6 +770,7 @@ local function expandVal( tokenList, val, pos )
             table.insert( tokenList, Parser.Token.new(kind, num, pos, false) )
          elseif _switchExp == "string" then
             table.insert( tokenList, Parser.Token.new(Parser.TokenKind.Str, string.format( '[[%s]]', tostring( val)), pos, false) )
+            
          else 
             
                return string.format( "not support ,, List -- %s", type( val ))
@@ -789,7 +781,6 @@ local function expandVal( tokenList, val, pos )
    
    return nil
 end
-
 local function pushbackTxt( pushbackParser, txtList, streamName, pos )
 
    local tokenList = {}
@@ -830,7 +821,6 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
    end
    
    local tokenTxt = token.txt
-   
    if tokenTxt == ',,' or tokenTxt == ',,,' or tokenTxt == ',,,,' then
       local nextToken = getToken(  )
       
@@ -843,7 +833,6 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
       
       
       if tokenTxt == ',,' then
-         
          if macroVal.typeInfo:equals( Ast.builtinTypeSymbol ) then
             local txtList = (_lune.unwrap( macroVal.val) )
             pushbackTxt( parser, txtList, nextToken.txt, nextToken.pos )
@@ -937,7 +926,6 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
             local rawTxt
             
             if txt:find( "^```" ) then
-               
                rawTxt = string.format( "%q", txt)
             else
              
@@ -1009,6 +997,7 @@ function MacroCtrl:expandSymbol( parser, prefixToken, exp, nodeManager, errMessL
                   format = "' %s '"
                   exp = Nodes.ExpMacroStatListNode.create( nodeManager, prefixToken.pos, self.analyzeInfo:get_mode() == Nodes.MacroMode.AnalyzeArg, {Ast.builtinTypeString}, exp )
                elseif Ast.builtinTypeString:equals( valType ) then
+                  
                elseif valType:equals( Ast.builtinTypeInt ) or valType:equals( Ast.builtinTypeReal ) then
                   format = "' %s' "
                else
@@ -1035,7 +1024,6 @@ function MacroCtrl:expandSymbol( parser, prefixToken, exp, nodeManager, errMessL
    return literalStr
 end
 
-
 function MacroCtrl:registVar( symbolList )
 
    for __index, symbolInfo in ipairs( symbolList ) do
@@ -1057,6 +1045,7 @@ function MacroCtrl:finishMacroMode(  )
 
    table.remove( self.macroAnalyzeInfoStack )
    self.analyzeInfo = self.macroAnalyzeInfoStack[#self.macroAnalyzeInfoStack]
+   
 end
 
 
@@ -1076,12 +1065,12 @@ function MacroCtrl:startAnalyzeArgMode( macroFuncType )
 
    self.analyzeInfo = MacroAnalyzeInfo.new(macroFuncType, Nodes.MacroMode.AnalyzeArg)
    table.insert( self.macroAnalyzeInfoStack, self.analyzeInfo )
+   
 end
 
 
 function MacroCtrl:switchMacroMode(  )
 
-   
    self.analyzeInfo = self.macroAnalyzeInfoStack[#self.macroAnalyzeInfoStack - 1]
    table.insert( self.macroAnalyzeInfoStack, self.analyzeInfo )
 end
@@ -1089,11 +1078,9 @@ end
 
 function MacroCtrl:restoreMacroMode(  )
 
-   
    table.remove( self.macroAnalyzeInfoStack )
    self.analyzeInfo = self.macroAnalyzeInfoStack[#self.macroAnalyzeInfoStack]
 end
-
 
 function MacroCtrl:isInAnalyzeArgMode(  )
 

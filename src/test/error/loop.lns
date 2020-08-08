@@ -208,4 +208,15 @@ return 1;  // error
    func( 1 );
    print( 1 );  // error
 }
+{
+   let val = 1; // error
+   foreach val in [ 1, 2 ] { // error
+   }
+   foreach val1, val in [ 1, 2 ] { // error
+   }
+   for val = 1, 2 { // error
+   }
+   apply val of string.gmatch( "aaa", "a" ) { // error
+   }
+}
 

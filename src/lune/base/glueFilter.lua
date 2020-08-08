@@ -185,7 +185,6 @@ end
 if not _lune2 then
    _lune2 = _lune
 end
-
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
@@ -674,17 +673,17 @@ function glueFilter:processRoot( node, dummy )
       error( string.format( "open error -- %s ", filePath) )
    end
    
-   for __index, node in ipairs( node:get_nodeManager():getDeclClassNodeList(  ) ) do
+   for __index, declClassNode in ipairs( node:get_nodeManager():getDeclClassNodeList(  ) ) do
       do
-         local moduleName = node:get_moduleName()
+         local moduleName = declClassNode:get_moduleName()
          if moduleName ~= nil then
             local moduleSymbolName = moduleName:getExcludedDelimitTxt(  ):gsub( "%.", "_" )
             do
-               local _exp = node:get_gluePrefix()
+               local _exp = declClassNode:get_gluePrefix()
                if _exp ~= nil then
                   local glue = glueGenerator.new(createFile( moduleSymbolName .. "_glue.c" ), createFile( moduleSymbolName .. "_glue.h" ))
                   
-                  glue:outputClass( moduleSymbolName, node, _exp )
+                  glue:outputClass( moduleSymbolName, declClassNode, _exp )
                end
             end
             

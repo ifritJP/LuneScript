@@ -58,7 +58,6 @@ end
 if not _lune2 then
    _lune2 = _lune
 end
-
 local Level = {}
 _moduleObj.Level = Level
 Level._val2NameMap = {}

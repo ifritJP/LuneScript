@@ -190,7 +190,6 @@ end
 if not _lune2 then
    _lune2 = _lune
 end
-
 local Util = _lune.loadModule( 'lune.base.Util' )
 
 local Writer = {}

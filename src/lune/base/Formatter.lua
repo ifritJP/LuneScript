@@ -227,7 +227,6 @@ end
 if not _lune2 then
    _lune2 = _lune
 end
-
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
@@ -537,7 +536,6 @@ function FormatterFilter:processDeclClass( node, opt )
    self:writeln( "" )
    self:writeln( "{" )
    self:pushIndent(  )
-   
    for index, stmt in ipairs( node:get_allStmtList() ) do
       filter( stmt, self, opt:nextOpt( node ) )
    end
@@ -631,8 +629,8 @@ end
 function FormatterFilter:processExpMacroStat( node, opt )
 
    
-   for __index, node in ipairs( node:get_expStrList() ) do
-      filter( node, self, opt:nextOpt( node ) )
+   for __index, strNode in ipairs( node:get_expStrList() ) do
+      filter( strNode, self, opt:nextOpt( strNode ) )
    end
    
 end
@@ -727,16 +725,16 @@ function FormatterFilter:processDeclVar( node, opt )
    end
    
    
-   for index, sym in ipairs( node:get_symbolInfoList() ) do
+   for index, symInfo in ipairs( node:get_symbolInfoList() ) do
       if index > 1 then
          self:write( ", " )
       end
       
-      if sym:get_mutable() then
+      if symInfo:get_mutable() then
          self:write( "mut " )
       end
       
-      self:write( sym:get_name() )
+      self:write( symInfo:get_name() )
       if #node:get_varList() >= index then
          local varInfo = node:get_varList()[index]
          do

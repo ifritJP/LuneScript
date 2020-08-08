@@ -172,7 +172,6 @@ end
 if not _lune2 then
    _lune2 = _lune
 end
-
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )

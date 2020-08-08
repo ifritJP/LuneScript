@@ -78,9 +78,7 @@ end
 if not _lune2 then
    _lune2 = _lune
 end
-
 local Util = _lune.loadModule( 'lune.base.Util' )
-
 
 
 local ModuleId = {}
@@ -184,7 +182,6 @@ local dummyFront = {}
 setmetatable( dummyFront, { ifList = {frontInterface,} } )
 function dummyFront:loadModule( mod )
 
-   
    return require( mod ), {}
 end
 function dummyFront:loadMeta( importModuleInfo, mod )

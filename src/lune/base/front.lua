@@ -274,7 +274,6 @@ end
 if not _lune2 then
    _lune2 = _lune
 end
-
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local convLua = _lune.loadModule( 'lune.base.convLua' )
@@ -504,7 +503,6 @@ function Front:convertFromAst( ast, streamName, mode )
    return metaStream:get_txt(), stream:get_txt()
 end
 
-
 function Front:loadFromLnsTxt( importModuleInfo, name, txt )
 
    local transUnit = TransUnit.TransUnit.new(frontInterface.ModuleId.tempId, importModuleInfo, convLua.MacroEvalImp.new(self.option.mode), nil, nil, nil, self.option.targetLuaVer, self.option.transCtrlInfo)
@@ -662,7 +660,6 @@ function Front:searchModuleFile( mod, suffix, addPath )
    
    lnsSearchPath = lnsSearchPath:gsub( "%.lua$", suffix )
    lnsSearchPath = lnsSearchPath:gsub( "%.lua;", suffix .. ";" )
-   
    local foundPath = Depend.searchpath( mod, lnsSearchPath )
    if  nil == foundPath then
       local _foundPath = foundPath
@@ -672,7 +669,6 @@ function Front:searchModuleFile( mod, suffix, addPath )
    
    return (foundPath:gsub( "^./", "" ) )
 end
-
 
 local function getModuleId( lnsPath, mod, outdir, metaInfo )
 
@@ -746,7 +742,6 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
             return _lune.newAlge( ModuleUptodate.NeedUpdate)
          end
          
-         
          local time = Depend.getFileLastModifiedTime( modMetaPath )
          if  nil == time then
             local _time = time
@@ -817,6 +812,7 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
          
       else
        
+         
       end
       
    else
@@ -835,7 +831,6 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
    
    return moduleId, uptodate
 end
-
 
 function Front:convertLns2LuaCode( importModuleInfo, stream, streamName )
 
@@ -941,6 +936,7 @@ function Front:searchLuaFile( moduleFullName, addSearchPath )
       local _exp = addSearchPath
       if _exp ~= nil then
          luaSearchPath = string.format( "%s/?.lua;%s", addSearchPath, package.path )
+         
       end
    end
    
@@ -953,7 +949,6 @@ function Front:searchLuaFile( moduleFullName, addSearchPath )
    
    return (foundPath:gsub( "^./", "" ) )
 end
-
 
 function Front:checkUptodateMeta( metaPath, addSearchPath )
 
@@ -1219,8 +1214,6 @@ end
 
 
 
-
-
 function Front:convertLuaToStreamFromScript( convMode, path, mod, byteCompile, stripDebugInfo, openOStream, closeOStream )
 
    local function outputDependInfo( stream, metaInfo )
@@ -1355,7 +1348,6 @@ function Front:convertToLua(  )
    end
    
 end
-
 
 function Front:saveToGo( ast )
 

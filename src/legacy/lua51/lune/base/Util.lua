@@ -148,7 +148,6 @@ end
 if not _lune2 then
    _lune2 = _lune
 end
-
 local Depend = _lune.loadModule( 'lune.base.Depend' )
 
 local debugFlag = true
@@ -180,7 +179,6 @@ local function err( message )
    os.exit( errorCode )
 end
 _moduleObj.err = err
-
 local function splitStr( txt, pattern )
 
    local list = {}
@@ -402,7 +400,6 @@ local function printStackTrace(  )
    errorLog( Depend.getStackTrace(  ) )
 end
 _moduleObj.printStackTrace = printStackTrace
-
 local function getReadyCode( lnsPath, luaPath )
 
    local luaTime, lnsTime = Depend.getFileLastModifiedTime( luaPath ), Depend.getFileLastModifiedTime( lnsPath )
@@ -410,10 +407,8 @@ local function getReadyCode( lnsPath, luaPath )
       local _luaTime = luaTime
       local _lnsTime = lnsTime
    
-      
       return false
    end
-   
    
    return luaTime >= lnsTime
 end

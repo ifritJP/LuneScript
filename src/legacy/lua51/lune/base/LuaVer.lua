@@ -135,7 +135,6 @@ end
 if not _lune2 then
    _lune2 = _lune
 end
-
 local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
 
 local BitOp = {}

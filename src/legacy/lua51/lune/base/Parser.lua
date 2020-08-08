@@ -148,7 +148,6 @@ end
 if not _lune2 then
    _lune2 = _lune
 end
-
 local Util = _lune.loadModule( 'lune.base.Util' )
 
 local luaKeywordSet = {}
@@ -256,7 +255,6 @@ local function createReserveInfo( luaMode )
    
    return keywordSet, typeSet, builtInSet, multiCharDelimitMap
 end
-
 local TxtStream = {}
 setmetatable( TxtStream, { ifList = {iStream,} } )
 _moduleObj.TxtStream = TxtStream
@@ -277,7 +275,6 @@ function TxtStream:get_pos(  )
 end
 function TxtStream:read( mode )
 
-   
    if self.eof then
       return nil
    end
@@ -426,6 +423,15 @@ end
 function Token:set_commentList( commentList )
 
    self.commentList = commentList
+end
+function Token:getLineCount(  )
+
+   local count = 1
+   for cr in self.txt:gmatch( "\n" ) do
+      count = count + 1
+   end
+   
+   return count
 end
 function Token.setmeta( obj )
   setmetatable( obj, { __index = Token  } )
@@ -691,6 +697,7 @@ function DefaultPushbackParser:getLastPos(  )
    end
    
    return pos
+   
 end
 function DefaultPushbackParser:getNearCode(  )
 
@@ -810,7 +817,6 @@ function StreamParser:parse(  )
    
    local list = {}
    local startIndex = 1
-   
    local function multiComment( comIndex, termStr )
    
       local searchIndex = comIndex
@@ -830,7 +836,6 @@ function StreamParser:parse(  )
       end
       
    end
-   
    
    local function addVal( kind, val, column )
    
@@ -856,7 +861,6 @@ function StreamParser:parse(  )
          self.prevToken = newToken
          return newToken
       end
-      
       local function analyzeNumber( token, beginIndex )
       
          local nonNumIndex = token:find( '[^%d]', beginIndex )
@@ -921,7 +925,6 @@ function StreamParser:parse(  )
       if kind == TokenKind.Symb then
          local searchIndex = 1
          while true do
-            
             local tokenIndex, tokenEndIndex = string.find( val, "[%p%w]+", searchIndex )
             if  nil == tokenIndex or  nil == tokenEndIndex then
                local _tokenIndex = tokenIndex
@@ -936,7 +939,6 @@ function StreamParser:parse(  )
             local subIndex = 1
             while true do
                if token:find( '^[%d]', subIndex ) or token:find( '^-[%d]', subIndex ) then
-                  
                   local checkIndex = subIndex
                   if string.byte( token, 1 ) == 45 then
                      checkIndex = checkIndex + 1
@@ -948,7 +950,6 @@ function StreamParser:parse(  )
                   subIndex = endIndex + 1
                else
                 
-                  
                   do
                      local _exp = string.find( token, '[^%w_]', subIndex )
                      if _exp ~= nil then
@@ -1020,12 +1021,9 @@ function StreamParser:parse(  )
       
    end
    
-   
    local searchIndex = startIndex
-   
    while true do
       local syncIndexFlag = true
-      
       local pattern = [==[[/%-%?"%'%`].]==]
       local index = string.find( rawLine, pattern, searchIndex )
       if  nil == index then
@@ -1049,14 +1047,11 @@ function StreamParser:parse(  )
          end
          
          if findChar == 47 then
-            
             if nextChar == 42 then
-               
                local comment, nextIndex = multiComment( index + 2, "*/" )
                addVal( TokenKind.Cmnt, "/*" .. comment, index )
                searchIndex = nextIndex
             elseif nextChar == 47 then
-               
                addVal( TokenKind.Cmnt, rawLine:sub( index ), index )
                searchIndex = #rawLine + 1
             else
@@ -1066,7 +1061,6 @@ function StreamParser:parse(  )
             end
             
          elseif findChar == 39 or findChar == 34 then
-            
             local workIndex = index + 1
             local workPattern = '["\'\\]'
             while true do
@@ -1074,18 +1068,15 @@ function StreamParser:parse(  )
                if  nil == endIndex then
                   local _endIndex = endIndex
                
-                  
                   Util.err( string.format( "%s:%d:%d: error: illegal string -- %s", self:getStreamName(  ), self.lineNo, index, rawLine) )
                end
                
                local workChar = string.byte( rawLine, endIndex )
                if workChar == findChar then
-                  
                   addVal( TokenKind.Str, rawLine:sub( index, endIndex ), index )
                   searchIndex = endIndex + 1
                   break
                elseif workChar == 92 then
-                  
                   workIndex = endIndex + 2
                else
                 
@@ -1096,7 +1087,6 @@ function StreamParser:parse(  )
             
          elseif findChar == 96 then
             if (nextChar == findChar and string.byte( rawLine, index + 2 ) == 96 ) then
-               
                local txt, nextIndex = multiComment( index + 3, '```' )
                addVal( TokenKind.Str, '```' .. txt, index )
                searchIndex = nextIndex

@@ -71,18 +71,29 @@ fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Nodes.ReturnNode {
       self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], expList );
 }
 
-fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node! {
+fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
+{
+   self.commentCtrl.push();
+   
    let token = self.getTokenNoErr();
    if token == Parser.getEofToken() {
       return nil;
    };
 
+
    let mut statement = self.analyzeDecl( .Local, false, token, token );
 
    if not statement {
       if token.txt == termTxt {
+         if #self.commentCtrl.$commentList > 0 {
+            let commentToken = self.commentCtrl.$commentList[ 1 ];
+            statement = Nodes.BlankLineNode.create(
+               self.nodeManager, commentToken.pos,
+               self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], 0 );
+         }
          self.pushback();
-         return nil;
+         self.commentCtrl.pop();
+         return statement;
       }
       elseif token.txt == "pub" or token.txt == "pro" or
          token.txt == "pri" or token.txt == "global" or token.txt == "static"
@@ -208,6 +219,7 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node! {
                           (Nodes.getNodeKindName( statement.$kind ) ) );
       }
    }
+   self.commentCtrl.pop();
 
    return statement;
 }
