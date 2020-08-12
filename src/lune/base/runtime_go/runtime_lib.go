@@ -6,21 +6,23 @@ import "math"
 
 type LnsInt = int
 type LnsReal = float64
-type LnsStem = interface{}
+type LnsAny = interface{}
+
+var LnsNone interface{} = nil
 
 
 type LnsEnv struct {
 }
 
 type LnsList struct {
-    items []LnsStem
+    items []LnsAny
 }
-func (lnsList *LnsList) Insert( val LnsStem ) {
+func (lnsList *LnsList) Insert( val LnsAny ) {
     if val != nil {
         lnsList.items = append( lnsList.items, val )
     }
 }
-func (lnsList *LnsList) Remove( index LnsStem ) {
+func (lnsList *LnsList) Remove( index LnsAny ) {
     if index == nil {
         lnsList.items = lnsList.items[ : len(lnsList.items) - 1 ]
     } else {
@@ -31,7 +33,7 @@ func (lnsList *LnsList) Remove( index LnsStem ) {
 }
 
 
-func Lns_IsCondTrue( stem LnsStem ) bool {
+func Lns_IsCondTrue( stem LnsAny ) bool {
     if stem == nil {
         return false;
     }
@@ -46,7 +48,7 @@ func Lns_IsCondTrue( stem LnsStem ) bool {
 /**
  多値返却の先頭 int を返す
 */
-func Lns_CarInt( multi ...LnsStem ) LnsInt {
+func Lns_CarInt( multi ...LnsAny ) LnsInt {
     if len( multi ) == 0 {
         panic( "nothing" )
     }
@@ -55,7 +57,7 @@ func Lns_CarInt( multi ...LnsStem ) LnsInt {
 
 /** 多値返却の先頭 int! を返す
 */
-func Lns_CarIntN( multi ...LnsStem ) LnsStem {
+func Lns_CarIntN( multi ...LnsAny ) LnsAny {
     if len( multi ) == 0 {
         return nil
     }
@@ -65,7 +67,11 @@ func Lns_CarIntN( multi ...LnsStem ) LnsStem {
     return multi[0].(LnsInt)
 }
 
-func Lns_print( multi ...LnsStem ) {
+func Lns_2DDD( multi ...LnsAny ) []LnsAny {
+    return multi
+}
+
+func Lns_print( multi []LnsAny ) {
     for index, val := range( multi ) {
         if index != 0 {
             print( "\t" )
@@ -76,7 +82,7 @@ func Lns_print( multi ...LnsStem ) {
 }
 
 
-func Lns_ToString( val LnsStem ) string {
+func Lns_ToString( val LnsAny ) string {
     if val == nil {
         return "nil"
     }
@@ -113,7 +119,7 @@ func test() {
         }
         fmt.Println( lst2 )
 
-        lnsList := LnsList{ []LnsStem{} }
+        lnsList := LnsList{ []LnsAny{} }
         for count:=0; count < 10; count++ {
             lnsList.Insert( count )
         }
@@ -131,10 +137,10 @@ func test() {
             fmt.Println( val )
         }
 
-        hoge := func () [] LnsStem {
-            return []LnsStem{ 1 }
+        hoge := func () [] LnsAny {
+            return []LnsAny{ 1 }
         }
-        foo := []LnsStem{1, 2, hoge() }
+        foo := []LnsAny{1, 2, hoge() }
         fmt.Println( foo )
 
          
