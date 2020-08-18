@@ -57,6 +57,30 @@ fn filter( node: &Nodes.Node, filter: convFilter,
    node.processFilter( filter, new Opt( parent ) );
 }
 
+fn isAnyType( typeInfo:&Ast.TypeInfo ): bool {
+   let work = typeInfo.$srcTypeInfo;
+   return typeInfo.$nilable or work.$kind == .IF or work == Ast.builtinTypeStem;
+}
+
+let golanKeywordSet =
+    (@
+      "func", "select",
+      "defer", "go",
+      "chan", "package",
+      "const", "fallthrough",
+      "range", "continue",
+      "var"
+    );
+
+fn convFilter.outputSymbol( name:str ) {
+   if golanKeywordSet.has( name ) {
+      self.write( "%s_" (name) );
+   }
+   else {
+      self.write( name );
+   }
+}
+
 /**
 区切り記号で囲んでいる文字列を C の文字列に変換する。
 */
@@ -75,7 +99,7 @@ fn str2gostr( txt:str ) : str {
 let type2gotypeMap:&Map<&Ast.TypeInfo,str> = {
    Ast.builtinTypeInt : "LnsInt",
    Ast.builtinTypeReal : "LnsReal",
-   Ast.builtinTypeStem : "LnsSfem",
+   Ast.builtinTypeStem : "LnsAny",
    Ast.builtinTypeString : "string",
 };
 
@@ -87,23 +111,187 @@ fn getOrgTypeInfo( typeInfo:&Ast.TypeInfo ) : &Ast.TypeInfo {
 }
 
 fn type2gotype( typeInfo:&Ast.TypeInfo ) : str {
+   if isAnyType( typeInfo ) {
+      return "LnsAny";
+   }
    let orgType = getOrgTypeInfo( typeInfo );
    if! let goType = type2gotypeMap[ orgType ] {
       return goType;
    }
+   if typeInfo.$kind == .DDD {
+      return "[]LnsAny";
+   }
    Util.err( "not support yet -- %s" (typeInfo.getTxt(##) ) );
 }
 
-
-pub override fn convFilter.processNone(
-   node: Nodes.NoneNode, opt: Opt ) mut
+macro _declIgnoreNode( name:sym )
 {
-};
+   {
+      let methodName = "process%s" (,,,,name);
+      let nodeName = "%sNode" (,,,,name);
+   }
+   pub override fn convFilter.,,,methodName (
+      node: Nodes.,,,nodeName, opt: Opt ) mut
+   {
+   }
+}
+
+_declIgnoreNode( BlankLine );
+_declIgnoreNode( None );
 
 pub override fn convFilter.processImport(
    node: Nodes.ImportNode, opt: Opt ) mut
 {
-};
+   Util.err( "not support -- %s" (__func__) );
+}
+
+// ExpList を Go に展開する時のパターン
+enum ExpListKind {
+   // ExpList をそのまま展開する
+   Direct,
+   // []LnsAny として展開する
+   Slice,
+   // 変換関数が必要
+   Conv,
+}
+
+fn getExpListKind( dstTypeList:&List<&Ast.TypeInfo>,
+                   node:&Nodes.ExpListNode ): ExpListKind
+{
+   let mut lastExp = node.$expList[ #node.$expList ];
+   let hasAbbr;
+   if lastExp.$expType.$kind == .Abbr {
+      hasAbbr = true;
+      if #node.$expList < 2 {
+         return .Direct;
+      }
+      lastExp = node.$expList[ #node.$expList - 1 ];
+   }
+   else {
+      hasAbbr = false;
+   }
+   if! let exp2ddd = lastExp@@@Nodes.ExpToDDDNode {
+      // 仮引数に ... がある場合
+      let! mRetExp = node.$mRetExp {
+         return .Slice;
+      };
+      if mRetExp.$index == 1 and dstTypeList[ mRetExp.$index ].$kind == .DDD {
+         return .Slice;
+      }
+      return .Conv;
+   }
+
+   // 仮引数に ... がない場合
+   if lastExp.$expType.$kind == .DDD {
+      // 実引数に ... がある場合
+      let! mRetExp = node.$mRetExp {
+         return .Slice;
+      };
+      if mRetExp.$index == 1 and dstTypeList[ mRetExp.$index ].$kind == .DDD {
+         return .Direct;
+      }
+   }
+   else {
+      // 実引数に ... がない場合
+      let! mRetExp = node.$mRetExp {
+         // 実引数に多値がない場合
+         return .Direct;
+      };
+      // 実引数に多値がある場合
+      if not hasAbbr and mRetExp.$index == 1 {
+         // 引数に省略がなく、実引数が多値だけの場合
+         return .Direct;
+      }
+   }
+   return .Conv;
+}
+
+fn convFilter.processConvArg( nodeId:int, dstTypeList:&List<&Ast.TypeInfo>,
+                              argListNode:&Nodes.ExpListNode! ) mut
+{
+   let! argList = argListNode {
+      return;
+   };
+   
+   if getExpListKind( dstTypeList, argList ) ~= .Conv {
+      return;
+   };
+   
+   self.write( "func _convArg%d_%d(" (nodeId, argList.$id) );
+   let! mRetIndex = argList.$mRetExp$.$index {
+      return;
+   };
+   foreach argExp, index in argList.$expList {
+      if! let exp2ddd = argExp@@@Nodes.ExpToDDDNode {
+         foreach exp in exp2ddd.$expList.$expList {
+            if index ~= 1 {
+               self.write( ", " );
+            }
+            self.write( "arg%d " (index) );
+            self.write( type2gotype( exp.$expType ) );
+         }
+      }
+      else {
+         if index ~= 1 {
+            self.write( ", " );
+         }
+         if mRetIndex == index {
+            self.write( "arg%d []LnsAny" (index) );
+            break;
+         }
+         else {
+            self.write( "arg%d " (index) );
+            self.write( type2gotype( argExp.$expType ) );
+         }
+      }
+   }
+   self.write( ") (" );
+   // 関数戻り値の型宣言
+   foreach argType, index in dstTypeList {
+      if index ~= 1 {
+         self.write( ", " );
+      }
+      self.write( type2gotype( argType ) );
+   }
+   self.writeln( ") {" );
+
+   // 変換コード
+   self.write( "return " );
+
+   let mut restIndex:int! = nil;
+   foreach dstType, index in dstTypeList {
+      if index ~= 1 {
+         self.write( ", " );
+      }
+      if dstType.$kind == .DDD {
+         restIndex = index;
+         break;
+      }
+      if index >= mRetIndex {
+         self.write( "arg%d[%d].(%s)"
+            (mRetIndex, index - mRetIndex, type2gotype(dstType)) );
+      }
+      else {
+         self.write( "arg%d" (index ) );
+      }
+   }
+   when! restIndex {
+      self.write( "[]LnsAny{ " );
+      foreach argExp, index in argList.$expList {
+         if index >= #dstTypeList {
+            self.write( "arg%d" (index));
+         }
+      }
+      self.writeln( "}" );
+   }
+   else {
+      self.writeln( "" );
+   }
+
+   
+   self.writeln( "}" );
+}
+
 
 pub override fn convFilter.processRoot(
    node: Nodes.RootNode, opt: Opt ) mut
@@ -111,12 +299,24 @@ pub override fn convFilter.processRoot(
    self.writeln( "package main" );
 
 
+   foreach workNode in node.$nodeManager.getExpCallNodeList() {
+      self.processConvArg( workNode.$id, workNode.$func.$expType.$argTypeInfoList,
+                           workNode.$argList );
+   }
+   foreach workNode in node.$nodeManager.getDeclVarNodeList() {
+      self.processConvArg( workNode.$id, workNode.$typeInfoList,
+                           workNode.$expList );
+   }
+   
+   
    foreach declFuncNode in node.$nodeManager.getDeclFuncNodeList() {
       filter( declFuncNode, self, node );
       self.writeln( "" );
    }
    
    self.writeln( "func Lns_init() {" );
+   self.pushIndent( ## );
+   
    foreach child in node.$children {
       switch child.$kind {
          case Nodes.NodeKind.$DeclAlge,
@@ -135,17 +335,24 @@ pub override fn convFilter.processRoot(
          }
       }
    }
+
+   self.popIndent();
    self.writeln( "}" );
-};
+}
 
 pub override fn convFilter.processSubfile(
    node: Nodes.SubfileNode, opt: Opt ) mut
 {
+   Util.err( "not support -- %s" (__func__) );
 }
 
 pub override fn convFilter.processBlockSub(
    node: Nodes.BlockNode, opt: Opt ) mut
 {
+   if node.$blockKind == .Block {
+      self.writeln( "{" );
+   }
+   
    self.pushIndent(##);
    foreach child in node.$stmtList {
       switch child.$kind {
@@ -166,27 +373,34 @@ pub override fn convFilter.processBlockSub(
       }
    }
    self.popIndent();
-};
+
+   if node.$blockKind == .Block {
+      self.write( "}" );
+   }
+}
 
 pub override fn convFilter.processStmtExp(
    node: Nodes.StmtExpNode, opt: Opt ) mut
 {
    filter( node.$exp, self, node );
-};
+}
 
 pub override fn convFilter.processDeclEnum(
    node: Nodes.DeclEnumNode, opt: Opt ) mut
 {
+   Util.err( "not support -- %s" (__func__) );
 }
 
 pub override fn convFilter.processDeclAlge(
    node: Nodes.DeclAlgeNode, opt: Opt ) mut
 {
+   Util.err( "not support -- %s" (__func__) );
 }
 
 pub override fn convFilter.processNewAlgeVal(
    node: Nodes.NewAlgeValNode, opt: Opt ) mut
 {
+   Util.err( "not support -- %s" (__func__) );
 }
 
 pub override fn convFilter.processDeclMember(
@@ -194,7 +408,7 @@ pub override fn convFilter.processDeclMember(
 {
    // dump( baseIndent, node, node.info.name.txt )
    // node.info.refType.filter( self, prefix .. "  ", depth + 1 )
-};
+}
 
 pub override fn convFilter.processExpMacroExp(
    node: Nodes.ExpMacroExpNode, opt: Opt ) mut
@@ -203,89 +417,292 @@ pub override fn convFilter.processExpMacroExp(
       filter( stmt, self, node );
       self.writeln( "" );
    }
-};
+}
 
 pub override fn convFilter.processDeclMacro(
    node: Nodes.DeclMacroNode, opt: Opt ) mut
 {
-};
+   Util.err( "not support -- %s" (__func__) );
+}
 
 pub override fn convFilter.processExpMacroStat(
    node: Nodes.ExpMacroStatNode, opt: Opt ) mut
 {
-};
+   Util.err( "not support -- %s" (__func__) );
+}
 
 pub override fn convFilter.processDeclConstr(
    node: Nodes.DeclConstrNode, opt: Opt ) mut
 {
-};
+   Util.err( "not support -- %s" (__func__) );
+}
 
 pub override fn convFilter.processDeclDestr(
    node: Nodes.DeclDestrNode, opt: Opt ) mut
 {
+   Util.err( "not support -- %s" (__func__) );
 }
 
 pub override fn convFilter.processExpCallSuper(
    node: Nodes.ExpCallSuperNode, opt: Opt ) mut
 {
-};
+   Util.err( "not support -- %s" (__func__) );
+}
 
 pub override fn convFilter.processDeclMethod(
    node: Nodes.DeclMethodNode, opt: Opt ) mut
 {
-};
+   Util.err( "not support -- %s" (__func__) );
+}
 
 pub override fn convFilter.processProtoMethod(
    node: Nodes.ProtoMethodNode, opt: Opt ) mut
 {
-};
+   Util.err( "not support -- %s" (__func__) );
+}
 
 
 pub override fn convFilter.processUnwrapSet(
    node: Nodes.UnwrapSetNode, opt: Opt ) mut
 {
+   Util.err( "not support -- %s" (__func__) );
 }
 
 pub override fn convFilter.processIfUnwrap(
    node: Nodes.IfUnwrapNode, opt: Opt ) mut
 {
+   Util.err( "not support -- %s" (__func__) );
 }
+
+fn convFilter.processSetFromExpList(
+   convArgFuncName:str,
+   dstTypeList:&List<&Ast.TypeInfo>, expListNode:&Nodes.ExpListNode ) mut
+{
+   switch getExpListKind( dstTypeList, expListNode ) {
+      case .Conv {
+         self.write( "%s(" ( convArgFuncName ) );
+         let mRetIndex = expListNode.$mRetExp$.$index;
+
+         foreach exp, index in expListNode.$expList {
+            if index ~= 1 {
+               self.write( ', ' );
+            }
+            if mRetIndex == index {
+               self.write( "Lns_2DDD(" );
+               filter( exp, self, expListNode );
+               self.write( ")" );
+               break;
+            }
+            filter( exp, self, expListNode );
+            if expListNode.$mRetExp$.$index == index {
+               break;
+            }
+         }
+         self.write( ")" );
+      }
+      case .Slice {
+         foreach argType, index in dstTypeList {
+            if index ~= 1 {
+               self.write( ', ' );
+            }
+            if #expListNode.$expList >= index {
+               let argExp = expListNode.$expList[ index ];
+
+               if! let exp2ddd = argExp@@@Nodes.ExpToDDDNode {
+                  let subList = exp2ddd.$expList;
+                  let mRetIndex = subList.$mRetExp$.$index;
+                  if mRetIndex and mRetIndex == 1 {
+                     let subExp = subList.$expList[ 1 ];
+                     if subExp.$expType.$kind ~= .DDD {
+                        self.write( "Lns_2DDD(" );
+                        filter( subExp, self, expListNode );
+                        self.write( ")" );
+                     }
+                     else {
+                        filter( subExp, self, expListNode );
+                     }
+                  }
+                  else {
+                     if mRetIndex and mRetIndex ~= 1 {
+                        self.write( "append( " );
+                     }
+                     self.write( "[]LnsAny{" );
+                     foreach subExp, subIndex in subList.$expList {
+                        if mRetIndex == subIndex {
+                           if mRetIndex ~= 1 {
+                              self.write( "}, " );
+                           }
+                           if subExp.$expType.$kind ~= .DDD {
+                              self.write( "Lns_2DDD(" );
+                              filter( subExp, self, expListNode );
+                              self.write( ")" );
+                           }
+                           else {
+                              filter( subExp, self, expListNode );
+                           }
+                           self.write( "..." );
+                           break;
+                        }
+                        if subIndex ~= 1 {
+                           self.write( ', ' );
+                        }
+                        filter( subExp, self, expListNode );
+                     }
+                     if mRetIndex and mRetIndex ~= 1 {
+                        self.write( ")" );
+                     }
+                     else {
+                        self.write( "}" );
+                     }
+                  }
+               }
+               else {
+                  if argExp.$expType.$kind == .Abbr {
+                     if argType.$kind == .DDD {
+                        self.write( "[]LnsAny{}" );
+                     }
+                     else {
+                        self.write( "nil" );
+                     }
+                  }
+                  else {
+                     filter( argExp, self, expListNode );
+                  }
+               }
+            }
+            else {
+               self.write( "[]LnsAny{}" );
+            }
+         }
+      }
+      case .Direct {
+         let mRetIndex = expListNode.$mRetExp$.$index;
+         foreach funcArgType, index in dstTypeList {
+            if mRetIndex == index - 1 {
+               break;
+            }
+            if index ~= 1 {
+               self.write( ', ' );
+            }
+            if index == #dstTypeList and
+               funcArgType.$kind == .DDD 
+            {
+               // 関数の最終仮引数が DDD の場合、
+               // []LnsAny に変換する
+               if #expListNode.$expList < index or
+                  expListNode.$expList[ index ].$expType.$kind == .Abbr
+               {
+                  self.write( "[]LnsAny{}" );
+               }
+               else {
+                  filter( expListNode.$expList[ index ], self, expListNode );
+               }
+            }
+            else {
+               // 最終仮引数より前
+               if #expListNode.$expList < index {
+                  // 最終実引数より後は、引数を省略している
+                  self.write( "nil" );
+               }
+               else {
+                  filter( expListNode.$expList[ index ], self, expListNode );
+               }
+            }
+         }
+      }
+   }
+}
+
 
 pub override fn convFilter.processDeclVar(
    node: Nodes.DeclVarNode, opt: Opt ) mut
 {
-};
+   self.write( "var" );
+
+   let mut prevType = "";
+   
+   if! let expList = node.$expList {
+      foreach exp, index in expList.$expList {
+         let goType;
+         let varName;
+         if #node.$varList >= index {
+            let varInfo = node.$varList[ index ];
+            goType = type2gotype( varInfo.$actualType );
+            varName = varInfo.$name.txt;
+         }
+         else {
+            goType = type2gotype( exp.$expType );
+            varName = "_";
+         }
+         if goType ~= prevType {
+            self.write( " %s" ( prevType ) );
+         }
+         if index ~= 1 {
+            self.write( ", " );
+         }
+         self.write( varName );
+         prevType = goType;
+      }
+      self.write( " %s" ( prevType ) );
+      
+      self.write( " = " );
+      self.processSetFromExpList(
+         "_convArg%d_%d" (node.$id, expList.$id), 
+         node.$typeInfoList, expList );
+   }
+   else {
+      foreach varInfo, index in node.$varList {
+         let goType = type2gotype( varInfo.$actualType );
+         if goType ~= prevType {
+            self.write( " %s" ( prevType ) );
+         }
+         if index ~= 1 {
+            self.write( ", " );
+         }
+         self.write( "%s" ( varInfo.$name.txt ) );
+         prevType = goType;
+      }
+      self.write( " %s" ( prevType ) );
+   }
+}
 
 
 pub override fn convFilter.processWhen(
    node: Nodes.WhenNode, opt: Opt ) mut
 {
+   Util.err( "not support -- %s" (__func__) );
 }
 
 pub override fn convFilter.processDeclArg(
    node: Nodes.DeclArgNode, opt: Opt ) mut
 {
-};
+   self.write( "%s " (node.$name.txt) );
+   filter( unwrap node.$argType, self, node );
+}
 
 pub override fn convFilter.processDeclArgDDD(
    node: Nodes.DeclArgDDDNode, opt: Opt ) mut
 {
-};
+   self.write( "ddd []LnsAny" );
+}
 
 pub override fn convFilter.processExpDDD(
    node: Nodes.ExpDDDNode, opt: Opt ) mut
 {
-};
+   Util.err( "not support -- %s" (__func__) );
+}
 
 pub override fn convFilter.processExpSubDDD(
    node: Nodes.ExpSubDDDNode, opt:Opt ) mut
 {
-};
+   Util.err( "not support -- %s" (__func__) );
+}
 
 
 pub override fn convFilter.processDeclForm(
    node: Nodes.DeclFormNode, opt: Opt ) mut
 {
+   Util.err( "not support -- %s" (__func__) );
 }
 
 pub override fn convFilter.processDeclFunc(
@@ -293,7 +710,7 @@ pub override fn convFilter.processDeclFunc(
 {
    self.write( "func " );
    if! let name = node.$declInfo.$name {
-      self.write( name.txt );
+      self.outputSymbol( name.txt );
    }
    self.write( "(" );
 
@@ -331,79 +748,129 @@ pub override fn convFilter.processDeclFunc(
       filter( body, self, node );
    }
    self.write( "}" );
-};
+}
 
 pub override fn convFilter.processRefType(
    node: Nodes.RefTypeNode, opt: Opt ) mut
 {
-};
+   if isAnyType( node.$expType ) {
+      self.write( "LnsAny" );
+   }
+   else {
+      if! let goType = type2gotypeMap[ getOrgTypeInfo( node.$expType ) ] {
+         self.write( goType );
+      }
+      else {
+         filter( node.$name, self, node );
+      }
+   }
+}
 
 pub override fn convFilter.processIf(
    node: Nodes.IfNode, opt: Opt ) mut
 {
-};
+   foreach stmt in node.$stmtList {
+      switch stmt.$kind {
+         case .If {
+            self.write( "if " );
+            filter( stmt.$exp, self, node );
+            self.writeln( "{" );
+            filter( stmt.$block, self, node );
+         }
+         case .ElseIf {
+            self.write( "} else if " );
+            filter( stmt.$exp, self, node );
+            self.writeln( "{" );
+            filter( stmt.$block, self, node );
+         }
+         case .Else {
+            self.writeln( "} else { " );
+            filter( stmt.$block, self, node );
+         }
+      }
+   }
+   self.write( "}" );
+}
 
 pub override fn convFilter.processSwitch(
    node: Nodes.SwitchNode, opt: Opt ) mut
 {
-};
+   Util.err( "not support -- %s" (__func__) );
+}
 
 
 pub override fn convFilter.processMatch(
    node: Nodes.MatchNode, opt: Opt ) mut
 {
-};
+   Util.err( "not support -- %s" (__func__) );
+}
 
 
 pub override fn convFilter.processWhile(
    node: Nodes.WhileNode, opt: Opt ) mut
 {
-};
+   Util.err( "not support -- %s" (__func__) );
+}
 
 pub override fn convFilter.processRepeat(
    node: Nodes.RepeatNode, opt: Opt ) mut
 {
-};
+   Util.err( "not support -- %s" (__func__) );
+}
 
 pub override fn convFilter.processFor(
    node: Nodes.ForNode, opt: Opt ) mut
 {
-};
+   Util.err( "not support -- %s" (__func__) );
+}
 
 pub override fn convFilter.processApply(
    node: Nodes.ApplyNode, opt: Opt ) mut
 {
-};
+   Util.err( "not support -- %s" (__func__) );
+}
 
 pub override fn convFilter.processForeach(
    node: Nodes.ForeachNode, opt: Opt ) mut
 {
-};
+   Util.err( "not support -- %s" (__func__) );
+}
 
 pub override fn convFilter.processForsort(
    node: Nodes.ForsortNode, opt: Opt ) mut
 {
-};
+   Util.err( "not support -- %s" (__func__) );
+}
 
 pub override fn convFilter.processExpUnwrap(
    node: Nodes.ExpUnwrapNode, opt: Opt ) mut
 {
+   Util.err( "not support -- %s" (__func__) );
 }
 
 pub override fn convFilter.processExpToDDD( node: Nodes.ExpToDDDNode, opt: Opt ) mut
 {
-   filter( node.$expList, self, node );
+   if! let mRetExp = node.$expList.$mRetExp {
+      filter( node.$expList, self, node );
+   }
+   else {
+      self.write ( "[]LnsAny{ " );
+      filter( node.$expList, self, node );
+      self.write ( "}" );
+   }
 }
 
 pub override fn convFilter.processExpNew(
    node: Nodes.ExpNewNode, opt: Opt ) mut
 {
-};
+   Util.err( "not support -- %s" (__func__) );
+}
 
 pub override fn convFilter.processDeclClass(
    node: Nodes.DeclClassNode, opt: Opt ) mut
 {
-};
+   Util.err( "not support -- %s" (__func__) );
+}
 
 pub override fn convFilter.processExpCall(
    node: Nodes.ExpCallNode, opt: Opt ) mut
@@ -415,28 +882,26 @@ pub override fn convFilter.processExpCall(
       }
    }
    else {
-      self.write( funcType.$rawTxt );
+      self.outputSymbol( funcType.$rawTxt );
    }
    self.write( "(" );
    
-   
+
    if! let argList = node.$argList {
-      foreach exp, index in argList.$expList {
-         if index ~= 1 {
-            self.write( ', ' );
-         }
-         filter( exp, self, node );
-      }
+      self.processSetFromExpList(
+         "_convArg%d_%d( " (node.$id, argList.$id), 
+         funcType.$argTypeInfoList, argList );
    }
    
    self.write( ")" );
-};
+}
 
 pub override fn convFilter.processExpAccessMRet(
    node: Nodes.ExpAccessMRetNode, opt:Opt ) mut
 
 {
-};
+   //Util.err( "not support -- %s" (__func__) );
+}
 
 
 pub override fn convFilter.processExpList(
@@ -446,41 +911,150 @@ pub override fn convFilter.processExpList(
       if index ~= 1 {
          self.write( ", " );
       }
-      filter( exp, self, node );
       if! let mRetExp = node.$mRetExp {
          if mRetExp.$index == index {
+            self.write( "Lns_2DDD(" );
+            filter( exp, self, node );
+            self.write( ")" );
             break;
          }
       }
+      filter( exp, self, node );
    }
-};
+}
 
 pub override fn convFilter.processExpOp1(
    node: Nodes.ExpOp1Node, opt: Opt ) mut
 {
-};
+   switch node.$op.txt {
+      case "~" {
+         self.write( "^" );
+         filter( node.$exp, self, node );
+      }
+      case "+", "-" {
+         self.write( node.$op.txt );
+         filter( node.$exp, self, node );
+      }
+      case "not" {
+         self.write( "Lns_op_not(" );
+         filter( node.$exp, self, node );
+         self.write( ")" );
+      }
+      default {
+         Util.err( "%s: not support -- %s" (__func__, node.$op.txt) );
+      }
+   }
+}
 
 pub override fn convFilter.processExpMultiTo1(
    node: Nodes.ExpMultiTo1Node, opt: Opt ) mut
 {
+   self.write( "Lns_car(" );
+   filter( node.$exp, self, node );
+   self.write( ")" );
+   if not isAnyType( node.$expType ) {
+      self.write( ".(%s)" (type2gotype(node.$expType)) );
+   }
 }
 
 pub override fn convFilter.processExpCast(
    node: Nodes.ExpCastNode, opt: Opt ) mut
 {
-};
+   switch node.$castKind {
+      case .Force {
+         filter( node.$exp, self, node );
+      }
+      case .Implicit {
+         filter( node.$exp, self, node );
+      }
+      case .Normal {
+         filter( node.$exp, self, node );
+      }
+   }
+}
 
 
 pub override fn convFilter.processExpParen(
    node: Nodes.ExpParenNode, opt: Opt ) mut
 {
-};
+   if #node.$exp.$expTypeList >= 2 {
+      self.write( "Lns_car(" );
+      filter( node.$exp, self, node );
+      self.write( ")" );
+      if not isAnyType( node.$expType ) {
+         self.write( ".(%s)" (type2gotype(node.$expType)) );
+      }
+   }
+   else {
+      self.write( "(" );
+      filter( node.$exp, self, node );
+      self.write( ")" );
+   }
+}
 
 
 pub override fn convFilter.processExpSetVal(
    node: Nodes.ExpSetValNode, opt: Opt ) mut
 {
-};
+   Util.err( "not support -- %s" (__func__) );
+}
+
+
+fn convFilter.processAndOr( node: Nodes.ExpOp2Node,
+                            opTxt: str, parent: &Nodes.Node ) mut
+{
+   fn isAndOr( exp:&Nodes.Node ) : bool {
+      if! let parentNode = exp@@@Nodes.ExpOp2Node {
+         switch parentNode.$op.txt {
+            case "and", "or" {
+               return true;
+            }
+         }
+      }
+      return false;
+   }
+   
+   let mut firstFlag = not isAndOr( parent );
+   if firstFlag {
+      self.writeln( "Lns_popVal( Lns_incStack() ||" );
+      self.pushIndent( ## );
+   }
+
+   let opCC;
+   if opTxt == "and" {
+      opCC = "&&";
+   }
+   else {
+      opCC = "||";
+   }
+   
+   if isAndOr( node.$exp1 ) {
+      filter( node.$exp1, self, node );
+   }
+   else {
+      self.write( "Lns_setStackVal( " );
+      filter( node.$exp1, self, node );
+      self.write( ") " );
+   }
+   self.writeln( opCC );
+   if isAndOr( node.$exp2 ) {
+      filter( node.$exp2, self, node );
+   }
+   else {
+      self.write( "Lns_setStackVal( " );
+      filter( node.$exp2, self, node );
+      self.write( ") " );
+   }
+
+   if firstFlag {
+      self.write( ")" );
+
+      if not isAnyType( node.$expType ) {
+         self.write( ".(%s)" (type2gotype( node.$expType) ) );
+      }
+      self.popIndent();
+   }
+}
 
 
 pub override fn convFilter.processExpOp2(
@@ -490,10 +1064,12 @@ pub override fn convFilter.processExpOp2(
 
    switch opTxt {
       case "and", "or" {
-         Util.err( "not support yet" );
+         self.processAndOr( node, opTxt, opt.node );
       }
       case ".." {
-         Util.err( "not support yet" );
+         filter( node.$exp1, self, node );
+         self.write( " + " );
+         filter( node.$exp2, self, node );
       }
       default {
          if! Ast.bitBinOpMap[ opTxt ] {
@@ -520,32 +1096,42 @@ pub override fn convFilter.processExpOp2(
          }
       }
    }
-};
+}
 
 pub override fn convFilter.processExpRef(
    node: Nodes.ExpRefNode, opt: Opt ) mut
 {
-};
+   if node.$expType.$kind == .DDD {
+      self.write( "ddd" );
+   }
+   else {
+      self.write( node.$symbolInfo.$name );
+   }
+}
 
 pub override fn convFilter.processExpRefItem(
    node: Nodes.ExpRefItemNode, opt: Opt ) mut
 {
-};
+   Util.err( "not support -- %s" (__func__) );
+}
 
 pub override fn convFilter.processRefField(
    node: Nodes.RefFieldNode, opt: Opt ) mut
 {
-};
+   Util.err( "not support -- %s" (__func__) );
+}
 
 pub override fn convFilter.processExpOmitEnum(
    node: &Nodes.ExpOmitEnumNode, opt: Opt ) mut
 {
-};
+   Util.err( "not support -- %s" (__func__) );
+}
 
 pub override fn convFilter.processGetField(
    node: Nodes.GetFieldNode, opt: Opt ) mut
 {
-};
+   Util.err( "not support -- %s" (__func__) );
+}
 
 
 pub override fn convFilter.processReturn(
@@ -555,104 +1141,116 @@ pub override fn convFilter.processReturn(
    if! let expList = node.$expList {
       filter( expList, self, node );
    }
-};
+}
 
 pub override fn convFilter.processTestBlock( node: Nodes.TestBlockNode, opt: Opt ) mut
 {
+   Util.err( "not support -- %s" (__func__) );
 }
 
 pub override fn convFilter.processProvide(
    node: Nodes.ProvideNode, opt: Opt ) mut
 {
+   Util.err( "not support -- %s" (__func__) );
 }
 
 pub override fn convFilter.processAlias(
    node: &Nodes.AliasNode, opt: Opt ) mut
 {
+   Util.err( "not support -- %s" (__func__) );
 }
 
 pub override fn convFilter.processBoxing(
    node: Nodes.BoxingNode, opt: Opt ) mut
 {
+   Util.err( "not support -- %s" (__func__) );
 }
 
 pub override fn convFilter.processUnboxing(
    node: Nodes.UnboxingNode, opt: Opt ) mut
 {
+   Util.err( "not support -- %s" (__func__) );
 }
 
 pub override fn convFilter.processLiteralList(
    node: Nodes.LiteralListNode, opt: Opt ) mut
 {
-};
+   Util.err( "not support -- %s" (__func__) );
+}
 
 pub override fn convFilter.processLiteralSet(
    node: Nodes.LiteralSetNode, opt: Opt ) mut
 {
-};
+   Util.err( "not support -- %s" (__func__) );
+}
 
 
 pub override fn convFilter.processLiteralMap(
    node: Nodes.LiteralMapNode, opt: Opt ) mut
 {
-};
+   Util.err( "not support -- %s" (__func__) );
+}
 
 pub override fn convFilter.processLiteralArray(
    node: Nodes.LiteralArrayNode, opt: Opt ) mut
 {
-};
+   Util.err( "not support -- %s" (__func__) );
+}
 
 pub override fn convFilter.processLiteralChar(
    node: Nodes.LiteralCharNode, opt: Opt ) mut
 {
    self.write( string.format( "%d", node.$num ) );
-};
+}
 
 pub override fn convFilter.processLiteralInt(
    node: Nodes.LiteralIntNode, opt: Opt ) mut
 {
    self.write( node.$token.txt );
-};
+}
 
 pub override fn convFilter.processLiteralReal(
    node: Nodes.LiteralRealNode, opt: Opt ) mut
 {
    self.write( node.$token.txt );
-};
+}
 
 pub override fn convFilter.processLiteralString(
    node: Nodes.LiteralStringNode, opt: Opt ) mut
 {
    let txt = node.$token.txt;
    self.write( '%s' (str2gostr(txt)) );
-};
+}
 
 pub override fn convFilter.processLiteralBool(
    node: Nodes.LiteralBoolNode, opt: Opt ) mut
 {
-};
+   self.write( node.$token.txt );
+}
 
 pub override fn convFilter.processLiteralNil(
    node: Nodes.LiteralNilNode, opt: Opt ) mut
 {
-};
+   self.write( "nil" );
+}
 
 pub override fn convFilter.processBreak(
    node: Nodes.BreakNode, opt: Opt ) mut
 {
-};
+   self.write( "break" );
+}
 
 pub override fn convFilter.processLiteralSymbol(
    node: Nodes.LiteralSymbolNode, opt: Opt ) mut
 {
-};
+   Util.err( "not support -- %s" (__func__) );
+}
 
 pub override fn convFilter.processAbbr(
    node: Nodes.AbbrNode, opt: Opt ) mut
 {
-   // self.write( cValNone );
-   Util.err( "illegal" );
-};
+   Util.err( "not support -- %s" (__func__) );
+}
 
 
 pub fn createFilter(

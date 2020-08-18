@@ -940,7 +940,7 @@ function StreamParser:parse(  )
             while true do
                if token:find( '^[%d]', subIndex ) or token:find( '^-[%d]', subIndex ) then
                   local checkIndex = subIndex
-                  if string.byte( token, 1 ) == 45 then
+                  if string.byte( token, checkIndex ) == 45 then
                      checkIndex = checkIndex + 1
                   end
                   

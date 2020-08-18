@@ -1,22 +1,24 @@
-fn sub() {
-   print( "hello world", "abc", "xyz", 1, 1.5, 10 + 100 );
+fn func() : int, int {
+   return 1, 2;
 }
-fn sub2() : int {
-   return 1;
-}
-fn sub3() : int, str {
-   return 100, "abc";
-}
-fn func1( ... ) {
-   print( ... );
-}
-fn func2( val:int, ... ) {
-   print( val, ... );
-}
-sub();
-func1( sub2() );
-func1( sub3()** );
-func2( sub2()## );
-func2( sub3()** );
-//print( sub2(), sub3()** );
 
+{
+   let val0 = func();
+   print( val0 );
+}
+{
+   let val0, val1 = func();
+   print( val0, val1 );
+}
+{
+   let val0, val1, val2 = 0, func();
+   print( val0, val1, val2 );
+}
+{
+   let val0, val1 = func(), 10;
+   print( val0, val1 );
+}
+{
+   let val0, val1, val2 = func(), func();
+   print( val0, val1, val2 );
+}

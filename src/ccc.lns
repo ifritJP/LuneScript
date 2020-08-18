@@ -1284,6 +1284,24 @@ return obj
 }
 {
    _section();
+   fn func( val1:int!, val2:stem!, val3:stem! ) {
+      print( "-----", val1, val2, val3 );
+      print( "or or", val1 or val2 or val3 );
+      print( "or and", val1 or val2 and val3 );
+      print( "and or", val1 and val2 or val3 );
+      print( "and and", val1 and val2 and val3 );
+   }
+   func( nil, nil, nil );
+   func( nil, nil, "a" );
+   func( nil, 1.5, nil );
+   func( nil, 1.5, "a" );
+   func( 1, nil, nil );
+   func( 1, nil, "a" );
+   func( 1, 1.5, nil );
+   func( 1, 1.5, "a" );
+}
+{
+   _section();
    let mut work1:form = fn() {};
    let mut work2:form = fn() {};
    fn func() {
@@ -2127,3 +2145,4 @@ fn func3( val:int, val2:real, val3:bool ):int, real, bool {
    }
    func( 1, 2 );
 }
+z

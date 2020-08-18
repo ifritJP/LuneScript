@@ -12,7 +12,11 @@ var LnsNone interface{} = nil
 
 
 type LnsEnv struct {
+    valStack []LnsAny
+    stackPos int
 }
+
+var cur_LnsEnv = LnsEnv{ []LnsAny{}, -1 }
 
 type LnsList struct {
     items []LnsAny
@@ -33,7 +37,7 @@ func (lnsList *LnsList) Remove( index LnsAny ) {
 }
 
 
-func Lns_IsCondTrue( stem LnsAny ) bool {
+func Lns_isCondTrue( stem LnsAny ) bool {
     if stem == nil {
         return false;
     }
@@ -45,26 +49,20 @@ func Lns_IsCondTrue( stem LnsAny ) bool {
     }
 }
 
-/**
- 多値返却の先頭 int を返す
-*/
-func Lns_CarInt( multi ...LnsAny ) LnsInt {
-    if len( multi ) == 0 {
-        panic( "nothing" )
-    }
-    return multi[0].(LnsInt)
+func Lns_op_not( stem LnsAny ) bool {
+    return !Lns_isCondTrue( stem );
 }
 
-/** 多値返却の先頭 int! を返す
+/** 多値返却の先頭を返す
 */
-func Lns_CarIntN( multi ...LnsAny ) LnsAny {
+func Lns_car( multi ...LnsAny ) LnsAny {
     if len( multi ) == 0 {
         return nil
     }
     if multi[0] == nil {
         return nil
     }
-    return multi[0].(LnsInt)
+    return multi[0]
 }
 
 func Lns_2DDD( multi ...LnsAny ) []LnsAny {
@@ -103,11 +101,45 @@ func Lns_ToString( val LnsAny ) string {
     }
 }
 
+/**
+ * スタックを一段上げる
+ */
+func Lns_incStack() bool {
+    cur_LnsEnv.valStack = append( cur_LnsEnv.valStack, nil )
+    cur_LnsEnv.stackPos++;
+    return false;
+}
+
+/**
+ * 値 pVal をスタックの top にセットし、値 pVal の条件判定結果を返す
+ *
+ * スタックに lns_ddd_t は詰めない。
+ * 呼び出し側で lns_ddd_t の先頭要素を指定すること。
+ *
+ * @param pVal スタックに詰む値
+ * @return pVal の条件判定結果。 lns_isCondTrue()。
+ */
+func Lns_setStackVal( val LnsAny ) bool {
+    cur_LnsEnv.valStack[ cur_LnsEnv.stackPos ] = val
+    return Lns_isCondTrue( val )
+}
+
+/**
+ * スタックから値を pop する。
+ *
+ * @return pop した値。
+ */
+func Lns_popVal( dummy bool ) LnsAny {
+    val := cur_LnsEnv.valStack[ cur_LnsEnv.stackPos ]
+    cur_LnsEnv.stackPos--
+    cur_LnsEnv.valStack = cur_LnsEnv.valStack[:cur_LnsEnv.stackPos+1]
+    return val;
+}
+
 func test() {
 
-    fmt.Println( Lns_CarInt( 1 ), Lns_CarIntN( nil ), Lns_CarIntN( 2 ) )
-    fmt.Println( Lns_IsCondTrue( 1 ), Lns_IsCondTrue( nil ),
-        Lns_IsCondTrue( true ), Lns_IsCondTrue( false ) )
+    fmt.Println( Lns_isCondTrue( 1 ), Lns_isCondTrue( nil ),
+        Lns_isCondTrue( true ), Lns_isCondTrue( false ) )
 
 
     {

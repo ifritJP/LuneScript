@@ -79,7 +79,8 @@ _hoge( func() );
   
 * 機能
 
-- [ ] リストのインデックスに 0 などの immediate で指定した場合、 warning とする。  
+- [ ] SymbolInfo に未参照かどうかを示す情報を追加
+- [ ] リストのインデックスに 0 などの immediate の異常値で指定した場合、 warning とする。  
 - [ ] =__line__=, =__func__=, =__mode__= 等の特殊シンボル Node を作る。
 
 - [ ] コンストラクタで nilable のメンバが初期化していない場合、 warning にする。
@@ -765,6 +766,7 @@ fn func( val:SubC ) {
 - [X] match の case で、全ての型の case がある場合は default を不要に修正。
   - [X] flow チェックも対応
 - [X] 同名のマクロが定義できる。
+- [X] (-1) のパースが無限ループする。
 
   
 - [ ] macro に与えられたリテラルな List/Array/Map/Set を、そのまま展開して変数に格納する。

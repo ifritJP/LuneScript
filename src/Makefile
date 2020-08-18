@@ -1058,7 +1058,8 @@ test-miniGo:
 	$(call transwork,.,.,,base/convGo)
 	$(call exeLune,.,lune/base/runtime_go/miniGo.lns,lua -langGo,)
 	$(call convGo,.,lune/base/runtime_go/miniGo.lns)
-	go run lune/base/runtime_go/miniGo.go $(GO_SRC)
+	go build lune/base/runtime_go/miniGo.go $(GO_SRC)
+	./miniGo
 
 test-reference:
 	if [ -d ~/work/ifritJP.github.io ]; then					\

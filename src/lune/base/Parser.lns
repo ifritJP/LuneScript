@@ -653,7 +653,7 @@ fn StreamParser.parse() mut : Token[]! {
                {
                   // 数値の場合
                   let mut checkIndex = subIndex;
-                  if token[1] == ?- {
+                  if token[checkIndex] == ?- {
                      checkIndex = checkIndex + 1;
                   }
                   let endIndex, intFlag = analyzeNumber( token, checkIndex );
