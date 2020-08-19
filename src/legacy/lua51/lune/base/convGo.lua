@@ -255,6 +255,34 @@ function Opt:__init( node )
    self.node = node
 end
 
+local ProcessMode = {}
+ProcessMode._val2NameMap = {}
+function ProcessMode:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "ProcessMode.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+function ProcessMode._from( val )
+   if ProcessMode._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+    
+ProcessMode.__allList = {}
+function ProcessMode.get__allList()
+   return ProcessMode.__allList
+end
+
+ProcessMode.NonClosureInnerFunc = 0
+ProcessMode._val2NameMap[0] = 'NonClosureInnerFunc'
+ProcessMode.__allList[1] = ProcessMode.NonClosureInnerFunc
+ProcessMode.Main = 1
+ProcessMode._val2NameMap[1] = 'Main'
+ProcessMode.__allList[2] = ProcessMode.Main
+
 
 local convFilter = {}
 setmetatable( convFilter, { __index = Nodes.Filter } )
@@ -312,15 +340,58 @@ end
 
 local golanKeywordSet = {["func"] = true, ["select"] = true, ["defer"] = true, ["go"] = true, ["chan"] = true, ["package"] = true, ["const"] = true, ["fallthrough"] = true, ["range"] = true, ["continue"] = true, ["var"] = true}
 
-function convFilter:outputSymbol( name )
+local SymbolKind = {}
+SymbolKind._name2Val = {}
+function SymbolKind:_getTxt( val )
+   local name = val[ 1 ]
+   if name then
+      return string.format( "SymbolKind.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
 
+function SymbolKind._from( val )
+   return _lune._AlgeFrom( SymbolKind, val )
+end
+
+SymbolKind.Func = { "Func", {{ func=Ast.TypeInfo._fromMap, nilable=false, child={} }}}
+SymbolKind._name2Val["Func"] = SymbolKind.Func
+SymbolKind.Normal = { "Normal"}
+SymbolKind._name2Val["Normal"] = SymbolKind.Normal
+
+
+function convFilter:outputSymbol( kind, name )
+
+   local symbolName
+   
    if _lune._Set_has(golanKeywordSet, name ) then
-      self:write( string.format( "%s_", name) )
+      symbolName = string.format( "%s_", name)
    else
     
-      self:write( name )
+      symbolName = name
    end
    
+   do
+      local _matchExp = kind
+      if _matchExp[1] == SymbolKind.Func[1] then
+         local typeInfo = _matchExp[2][1]
+      
+         if typeInfo:get_parentInfo():get_kind() ~= Ast.TypeInfoKind.Module then
+            do
+               local scope = typeInfo:get_scope()
+               if scope ~= nil then
+               else
+                  local parentName = typeInfo:getParentFullName( self:get_typeNameCtrl(), self:get_moduleInfoManager(), true )
+                  symbolName = string.format( "%s_%s_%d_", parentName:gsub( "[%.@]", "_" ), symbolName, typeInfo:get_typeId())
+               end
+            end
+            
+         end
+         
+      end
+   end
+   
+   self:write( symbolName )
 end
 
 local function str2gostr( txt )
@@ -1050,7 +1121,7 @@ function convFilter:processDeclFunc( node, opt )
    do
       local name = node:get_declInfo():get_name()
       if name ~= nil then
-         self:outputSymbol( name.txt )
+         self:outputSymbol( _lune.newAlge( SymbolKind.Func, {node:get_expType()}), name.txt )
       end
    end
    
@@ -1251,7 +1322,7 @@ function convFilter:processExpCall( node, opt )
       
    else
     
-      self:outputSymbol( funcType:get_rawTxt() )
+      self:outputSymbol( _lune.newAlge( SymbolKind.Func, {funcType}), funcType:get_rawTxt() )
    end
    
    self:write( "(" )

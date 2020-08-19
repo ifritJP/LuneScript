@@ -8907,6 +8907,28 @@ function TransUnit:analyzeExpRefItem( token, exp, nilAccess )
    
    self:checkNextToken( "]" )
    
+   if expType:get_kind() == Ast.TypeInfoKind.Array or expType:get_kind() == Ast.TypeInfoKind.List then
+      do
+         local indexLit = indexExp:getLiteral(  )
+         if indexLit ~= nil then
+            do
+               local _matchExp = indexLit
+               if _matchExp[1] == Nodes.Literal.Int[1] then
+                  local val = _matchExp[2][1]
+               
+                  if val <= 0 then
+                     self:addWarnMess( indexExp:get_pos(), string.format( "index <= -1 (%d)", val) )
+                  end
+                  
+               end
+            end
+            
+         end
+      end
+      
+   end
+   
+   
    return Nodes.ExpRefItemNode.create( self.nodeManager, token.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, exp, nilAccess, nil, indexExp )
 end
 

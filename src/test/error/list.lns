@@ -165,3 +165,13 @@
       item.func();
    }
 }
+{
+   let list = [ 1, 2 ];
+   print( list[ -1 ], list[ 0 ] ); // error
+   enum Val {
+      Val_1 = -1,
+      Val0 = 0,
+      Val1 = 1,
+   }
+   print( list[ Val.Val_1 ], list[ Val.Val0 ], list[ Val.Val1 ] ); // error
+}

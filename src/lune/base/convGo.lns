@@ -36,6 +36,14 @@ pub class Opt {
    pub let node:&Nodes.Node;
 }
 
+/** 変換プロセス */
+enum ProcessMode {
+   /** クロージャではない内部関数定義 */
+   NonClosureInnerFunc,
+   /** 通常処理 */
+   Main,
+}
+
 class convFilter extend Nodes.Filter<Opt> {
    pri let mut stream:Util.SimpleSourceOStream;
 
@@ -72,13 +80,34 @@ let golanKeywordSet =
       "var"
     );
 
-fn convFilter.outputSymbol( name:str ) {
+alge SymbolKind {
+   Normal,
+   Func( &Ast.TypeInfo ),
+}
+
+fn convFilter.outputSymbol( kind:SymbolKind, name:str ) {
+   let mut symbolName;
    if golanKeywordSet.has( name ) {
-      self.write( "%s_" (name) );
+      symbolName = "%s_" (name);
    }
    else {
-      self.write( name );
+      symbolName = name;
    }
+   match kind {
+      case .Func( typeInfo ) {
+         if typeInfo.$parentInfo.$kind ~= .Module {
+            if! let scope = typeInfo.$scope {
+            }
+            else {
+               let parentName = typeInfo.getParentFullName(
+                  self.$typeNameCtrl, self.$moduleInfoManager, true );
+               symbolName = "%s_%s_%d_" (parentName.gsub( "[%.@]", "_" ), symbolName,
+                                          typeInfo.$typeId );
+            }
+         }
+      }
+   }
+   self.write( symbolName );
 }
 
 /**
@@ -710,7 +739,7 @@ pub override fn convFilter.processDeclFunc(
 {
    self.write( "func " );
    if! let name = node.$declInfo.$name {
-      self.outputSymbol( name.txt );
+      self.outputSymbol( .Func( node.$expType ), name.txt );
    }
    self.write( "(" );
 
@@ -882,7 +911,7 @@ pub override fn convFilter.processExpCall(
       }
    }
    else {
-      self.outputSymbol( funcType.$rawTxt );
+      self.outputSymbol( .Func( funcType ), funcType.$rawTxt );
    }
    self.write( "(" );
    

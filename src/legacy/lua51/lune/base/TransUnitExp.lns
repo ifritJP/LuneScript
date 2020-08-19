@@ -494,6 +494,18 @@ fn TransUnit.analyzeExpRefItem(
    }
    
    self.checkNextToken( "]" );
+
+   if expType.$kind == .Array or expType.$kind == .List {
+      if! let indexLit = indexExp.getLiteral() {
+         match indexLit {
+            case .Int( val ) {
+               if val <= 0 {
+                  self.addWarnMess( indexExp.$pos, "index <= -1 (%d)" (val) );
+               }
+            }
+         }
+      }
+   }
    
    
    return Nodes.ExpRefItemNode.create(

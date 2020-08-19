@@ -1,24 +1,15 @@
-fn func() : int, int {
-   return 1, 2;
+fn func(val:int) {
+   {
+      fn sub() {
+         print( "hoge1", val );
+      }
+      sub();
+   }
+   {
+      fn sub() {
+         print( "hoge2", val );
+      }
+      sub();
+   }
 }
-
-{
-   let val0 = func();
-   print( val0 );
-}
-{
-   let val0, val1 = func();
-   print( val0, val1 );
-}
-{
-   let val0, val1, val2 = 0, func();
-   print( val0, val1, val2 );
-}
-{
-   let val0, val1 = func(), 10;
-   print( val0, val1 );
-}
-{
-   let val0, val1, val2 = func(), func();
-   print( val0, val1, val2 );
-}
+func( 100 );
