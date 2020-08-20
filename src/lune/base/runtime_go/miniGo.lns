@@ -1,15 +1,6 @@
-fn func(val:int) {
-   {
-      fn sub() {
-         print( "hoge1", val );
-      }
-      sub();
-   }
-   {
-      fn sub() {
-         print( "hoge2", val );
-      }
-      sub();
+let work = [{ "ab":1 }, { "xyz":2 }];
+foreach list in work {
+   foreach val, key in list {
+      print( key, val );
    }
 }
-func( 100 );
