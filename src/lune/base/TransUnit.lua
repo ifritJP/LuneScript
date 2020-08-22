@@ -4613,7 +4613,7 @@ function TransUnit:processCaseDefault( firstToken, caseKind, nextToken, hasCase 
    local keyword = firstToken.txt:gsub( "_", "" )
    local fullKeyword = string.format( "_%s", keyword)
    if firstToken.txt == fullKeyword and caseKind ~= Nodes.CaseKind.MustFull then
-      self:addErrMess( firstToken.pos, string.format( "This %s lacks case.", keyword) )
+      self:addErrMess( firstToken.pos, string.format( "This '%s' hasn't enough 'case' condition.", keyword) )
    end
    
    

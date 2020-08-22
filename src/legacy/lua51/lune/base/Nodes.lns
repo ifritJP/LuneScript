@@ -125,7 +125,7 @@ pub alge Literal {
 }
 
 pub fn getLiteralObj( obj:&Literal ):stem! {
-   match obj {
+   _match obj {
       case .Nil {
          return nil;
       }     
@@ -158,10 +158,6 @@ pub fn getLiteralObj( obj:&Literal ):stem! {
       }     
       case .MAP( val ) {
          return val;
-      }
-      _default {
-         Util.errorLog( "unknown literal obj -- " .. obj.$_txt );
-         return nil;
       }
    }
 }
@@ -979,12 +975,20 @@ pub class CaseInfo {
    pri let expList: ExpListNode { pub };
    pri let block: BlockNode { pub };
 }
+pub enum CaseKind {
+   /** 全ての条件を網羅していない */
+   Lack,
+   /** 全ての条件を網羅している */
+   Full,
+   /** 全ての条件を網羅している必要がある */
+   MustFull,
+}
 _declNodeClass( "Switch", Node, false, false, true,
                 [ { "exp": "&Node" },
                   { "caseList": "List<&CaseInfo>" },
                   { "default": "&BlockNode!" },
                   // case で全ての条件が網羅されているかどうか
-                  { "fullCase": "bool"},
+                  { "caseKind": "CaseKind"},
                   // default ブロックがある場合、 default_ で宣言している。
                   { "failSafeDefault": "bool" }
                 ]
@@ -993,9 +997,10 @@ _declNodeClass( "Switch", Node, false, false, true,
 pub override fn SwitchNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
 {
    let mut kind = BreakKind.None;
+   let fullCase = self.caseKind ~= .Lack;
    foreach caseInfo in self.caseList {
       let work = caseInfo.$block.getBreakKind( checkMode );
-      let goNext = (work == .None) or not self.fullCase;
+      let goNext = (work == .None) or not fullCase;
       _setBreakKind( work, kind, goNext, checkMode );
    }
    if! let block = self.default {
@@ -1004,7 +1009,7 @@ pub override fn SwitchNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
       return kind;
    }
 
-   if self.fullCase {
+   if fullCase {
       return kind;
    }
    return .None;
@@ -1697,7 +1702,7 @@ _declNodeClass( "Match", Node, false, false, true,
                   { "caseList": "&List<&MatchCase>" },
                   { "defaultBlock": "&Node!" },
                   // case で全ての条件が網羅されているかどうか
-                  { "fullCase": "bool"},
+                  { "caseKind": "CaseKind"},
                   // default ブロックがある場合、 default_ で宣言している。
                   { "failSafeDefault": "bool" }
                 ]              
@@ -1705,9 +1710,10 @@ _declNodeClass( "Match", Node, false, false, true,
 pub override fn MatchNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
 {
    let mut kind = BreakKind.None;
+   let fullCase = self.caseKind ~= .Lack;
    foreach caseInfo in self.caseList {
       let work = caseInfo.$block.getBreakKind( checkMode );
-      let goNext = (work == .None) or not self.fullCase;
+      let goNext = (work == .None) or not fullCase;
       _setBreakKind( work, kind, goNext, checkMode );
    }
    if! let block = self.defaultBlock {
@@ -1716,7 +1722,7 @@ pub override fn MatchNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
       return kind;
    }
 
-   if self.fullCase {
+   if fullCase {
       return kind;
    }
    return .None;
@@ -2187,7 +2193,7 @@ pub override fn LiteralSymbolNode.setupLiteralTokenList( list: List<&Parser.Toke
 
 
 fn enumLiteral2Literal( obj:&Ast.EnumLiteral ) : Literal!, str! {
-   match obj {
+   _match obj {
       case .Int( val ) {
          return Literal.Int( val ), nil;
       }
@@ -2196,9 +2202,6 @@ fn enumLiteral2Literal( obj:&Ast.EnumLiteral ) : Literal!, str! {
       }
       case .Str( val ) {
          return Literal.Str( val ), nil;
-      }
-      _default {
-         return nil, "illegal enum: " .. obj.$_txt;
       }
    }
 }

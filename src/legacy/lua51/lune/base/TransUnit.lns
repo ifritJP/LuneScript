@@ -3224,6 +3224,60 @@ fn TransUnit.analyzeIf( token: &Parser.Token ) mut : Nodes.Node {
       [ Ast.builtinTypeNone ], list );
 }
 
+/**
+default 部分の処理を行なう。
+*/
+fn TransUnit.processCaseDefault(
+   firstToken:&Parser.Token, mut caseKind:Nodes.CaseKind,
+   nextToken:&Parser.Token, hasCase:bool ) mut :
+Nodes.BlockNode!, bool
+{
+   let keyword = firstToken.txt.gsub( "_", "" );
+   let fullKeyword = "_%s" (keyword);
+   if firstToken.txt == fullKeyword and caseKind ~= .MustFull {
+      self.addErrMess( firstToken.pos,
+                       "This '%s' hasn't enough 'case' condition." (keyword));
+   }
+   
+   let mut defaultBlock: Nodes.BlockNode! = nil;
+   let mut failSafeDefault = false;
+   if nextToken.txt == "default" or nextToken.txt == "_default" {
+      if firstToken.txt == fullKeyword {
+         self.addErrMess(
+            nextToken.pos, "'_%s' can't have default." (keyword));
+      }
+   
+      if nextToken.txt == "_default" {
+         failSafeDefault = true;
+      }
+      elseif caseKind == .Full {
+         self.addWarnMess(
+            nextToken.pos,
+            "This '%s' has full case. This 'default' is no reach." (keyword) );
+      }
+      defaultBlock = self.analyzeBlock(
+         .Default, not hasCase and TentativeMode.Simple or TentativeMode.Finish ## );
+   }
+   else {
+      if hasCase {
+         self.finishTentativeSymbol( caseKind ~= .Lack );
+      }
+      self.pushback();
+   }
+   self.checkNextToken( "}" );
+
+   if not hasCase {
+      self.addWarnMess( firstToken.pos,
+                        "'%s' should have 'case' blocks." (keyword));
+      if defaultBlock {
+         self.addErrMess(
+            firstToken.pos,
+            "'%s' must have 'case' blocks when have 'default' block." (keyword) );
+      }
+   }
+
+   return defaultBlock, failSafeDefault;
+}
 
 fn TransUnit.analyzeSwitch( firstToken: &Parser.Token ) mut : Nodes.SwitchNode {
    let exp = self.analyzeExpOne( false, false ## );
@@ -3293,7 +3347,7 @@ fn TransUnit.analyzeSwitch( firstToken: &Parser.Token ) mut : Nodes.SwitchNode {
       nextToken = self.getToken(##);
    }
 
-   let fullCase;
+   let mut caseKind:Nodes.CaseKind;
    if! let enumType = exp.$expType@@@Ast.EnumTypeInfo {
       // enum 値の switch の場合、全ての case をチェックしているかどうかを調べる
       let mut count = 0;
@@ -3301,48 +3355,30 @@ fn TransUnit.analyzeSwitch( firstToken: &Parser.Token ) mut : Nodes.SwitchNode {
          count = count + 1;
       }
       if #caseList == count {
-         fullCase = true;
+         if firstToken.txt == "_switch" {
+            caseKind = .MustFull;
+         }
+         else {
+            caseKind = .Full;
+         }
       }
       else {
-         fullCase = false;
+         caseKind = .Lack;
       }
    }
    else {
-      fullCase = false;
+      caseKind = .Lack;
+      if firstToken.txt == "_switch" {
+         self.addErrMess( exp.$pos, "The condition of '_switch' must be enum." );
+      }
    }
+
+   let defaultBlock, failSafeDefault = self.processCaseDefault(
+      firstToken, caseKind, nextToken, #caseList ~= 0 );
    
-   let mut defaultBlock: Nodes.BlockNode! = nil;
-   let mut failSafeDefault = false;
-   if nextToken.txt == "default" or nextToken.txt == "_default" {
-      if nextToken.txt == "_default" {
-         failSafeDefault = true;
-      }
-      elseif fullCase {
-         self.addWarnMess(
-            nextToken.pos,
-            "This 'switch' has full case. This 'default' is no reach." );
-      }
-      defaultBlock = self.analyzeBlock(
-         .Default, firstFlag and TentativeMode.Simple or TentativeMode.Finish ## );
-   }
-   else {
-      if not firstFlag {
-         self.finishTentativeSymbol( fullCase );
-      }
-      self.pushback();
-   }
-   self.checkNextToken( "}" );
-
-   if #caseList == 0 {
-      self.addWarnMess( firstToken.pos, "'switch' should have 'case' blocks." );
-      if defaultBlock {
-         self.addErrMess( firstToken.pos, "'switch' must have 'case' blocks when have 'default' block." );
-      }
-   }
-
    return Nodes.SwitchNode.create(
       self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
-      [ Ast.builtinTypeNone ], exp, caseList, defaultBlock, fullCase, failSafeDefault );
+      [ Ast.builtinTypeNone ], exp, caseList, defaultBlock, caseKind, failSafeDefault );
 }
 
 
@@ -3419,39 +3455,24 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
       nextToken = self.getToken(##);
    }
 
-   let fullCase = algeValNameSet.len() == algeTypeInfo.$valInfoNum;
-
-   let mut failSafeDefault = false;
-   let mut defaultBlock:&Nodes.Node! = nil;
-   if nextToken.txt == "default" or nextToken.txt == "_default" {
-      if nextToken.txt == "_default" {
-         failSafeDefault = true;
+   let mut caseKind:Nodes.CaseKind;
+   if algeValNameSet.len() == algeTypeInfo.$valInfoNum {
+      if firstToken.txt == "_match" { 
+         caseKind = .MustFull;
+      } else {
+         caseKind = .Full;
       }
-      elseif fullCase {
-         self.addWarnMess( nextToken.pos, "defalut is not reach" );
-      }
-      defaultBlock = self.analyzeBlock(
-         .Block, firstFlag and TentativeMode.Simple or TentativeMode.Finish ## );
-      nextToken = self.getToken(##);
-   }
-   else {
-      if not firstFlag {
-         self.finishTentativeSymbol( fullCase );
-      }
-   }
-   self.checkToken( nextToken, "}" );
-
-   if #caseList == 0 {
-      self.addWarnMess( firstToken.pos, "'match' should have 'case' blocks." );
-      if defaultBlock {
-         self.addErrMess( firstToken.pos, "'match' must have 'case' blocks when have 'default' block." );
-      }
+   } else {
+      caseKind = .Lack;
    }
 
+   let defaultBlock, failSafeDefault = self.processCaseDefault(
+      firstToken, caseKind, nextToken, #caseList ~= 0 );
+   
    return Nodes.MatchNode.create(
       self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
       [ Ast.builtinTypeNone ], exp, algeTypeInfo, caseList, defaultBlock,
-      fullCase, failSafeDefault );
+      caseKind, failSafeDefault );
 }
 
 

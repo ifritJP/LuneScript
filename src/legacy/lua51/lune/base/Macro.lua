@@ -478,11 +478,6 @@ local function getLiteralMacroVal( obj )
          end
          
          return newMap
-      else 
-         do
-            Util.err( "unknown literal obj -- " .. Nodes.Literal:_getTxt( obj)
-             )
-         end
       end
    end
    

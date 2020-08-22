@@ -1582,9 +1582,8 @@ function Front:saveToLua(  )
                
                   stream, metaStream = openStreams( false )
                else 
-                  do
+                  
                      stream, metaStream = openStreams( true )
-                  end
                end
             end
             

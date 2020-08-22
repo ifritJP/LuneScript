@@ -71,7 +71,7 @@ class MacroPaser extend Parser.Parser {
 
 
 fn getLiteralMacroVal( obj:Nodes.Literal ) : stem! {
-   match obj {
+   _match obj {
       case .Nil {
          return nil;
       }
@@ -126,9 +126,6 @@ fn getLiteralMacroVal( obj:Nodes.Literal ) : stem! {
             }
          }
          return newMap;
-      }
-      _default {
-         Util.err( "unknown literal obj -- " .. obj.$_txt );
       }
    }
 }

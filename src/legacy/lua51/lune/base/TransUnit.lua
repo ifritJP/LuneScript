@@ -4608,6 +4608,53 @@ function TransUnit:analyzeIf( token )
    return Nodes.IfNode.create( self.nodeManager, token.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, list )
 end
 
+function TransUnit:processCaseDefault( firstToken, caseKind, nextToken, hasCase )
+
+   local keyword = firstToken.txt:gsub( "_", "" )
+   local fullKeyword = string.format( "_%s", keyword)
+   if firstToken.txt == fullKeyword and caseKind ~= Nodes.CaseKind.MustFull then
+      self:addErrMess( firstToken.pos, string.format( "This '%s' hasn't enough 'case' condition.", keyword) )
+   end
+   
+   
+   local defaultBlock = nil
+   local failSafeDefault = false
+   if nextToken.txt == "default" or nextToken.txt == "_default" then
+      if firstToken.txt == fullKeyword then
+         self:addErrMess( nextToken.pos, string.format( "'_%s' can't have default.", keyword) )
+      end
+      
+      
+      if nextToken.txt == "_default" then
+         failSafeDefault = true
+      elseif caseKind == Nodes.CaseKind.Full then
+         self:addWarnMess( nextToken.pos, string.format( "This '%s' has full case. This 'default' is no reach.", keyword) )
+      end
+      
+      defaultBlock = self:analyzeBlock( Nodes.BlockKind.Default, not hasCase and TentativeMode.Simple or TentativeMode.Finish )
+   else
+    
+      if hasCase then
+         self:finishTentativeSymbol( caseKind ~= Nodes.CaseKind.Lack )
+      end
+      
+      self:pushback(  )
+   end
+   
+   self:checkNextToken( "}" )
+   
+   if not hasCase then
+      self:addWarnMess( firstToken.pos, string.format( "'%s' should have 'case' blocks.", keyword) )
+      if defaultBlock then
+         self:addErrMess( firstToken.pos, string.format( "'%s' must have 'case' blocks when have 'default' block.", keyword) )
+      end
+      
+   end
+   
+   
+   return defaultBlock, failSafeDefault
+end
+
 
 function TransUnit:analyzeSwitch( firstToken )
 
@@ -4687,7 +4734,7 @@ function TransUnit:analyzeSwitch( firstToken )
    end
    
    
-   local fullCase
+   local caseKind
    
    do
       local enumType = _lune.__Cast( exp:get_expType(), 3, Ast.EnumTypeInfo )
@@ -4698,49 +4745,31 @@ function TransUnit:analyzeSwitch( firstToken )
          end
          
          if #caseList == count then
-            fullCase = true
+            if firstToken.txt == "_switch" then
+               caseKind = Nodes.CaseKind.MustFull
+            else
+             
+               caseKind = Nodes.CaseKind.Full
+            end
+            
          else
           
-            fullCase = false
+            caseKind = Nodes.CaseKind.Lack
          end
          
       else
-         fullCase = false
+         caseKind = Nodes.CaseKind.Lack
+         if firstToken.txt == "_switch" then
+            self:addErrMess( exp:get_pos(), "The condition of '_switch' must be enum." )
+         end
+         
       end
    end
    
    
-   local defaultBlock = nil
-   local failSafeDefault = false
-   if nextToken.txt == "default" or nextToken.txt == "_default" then
-      if nextToken.txt == "_default" then
-         failSafeDefault = true
-      elseif fullCase then
-         self:addWarnMess( nextToken.pos, "This 'switch' has full case. This 'default' is no reach." )
-      end
-      
-      defaultBlock = self:analyzeBlock( Nodes.BlockKind.Default, firstFlag and TentativeMode.Simple or TentativeMode.Finish )
-   else
-    
-      if not firstFlag then
-         self:finishTentativeSymbol( fullCase )
-      end
-      
-      self:pushback(  )
-   end
+   local defaultBlock, failSafeDefault = self:processCaseDefault( firstToken, caseKind, nextToken, #caseList ~= 0 )
    
-   self:checkNextToken( "}" )
-   
-   if #caseList == 0 then
-      self:addWarnMess( firstToken.pos, "'switch' should have 'case' blocks." )
-      if defaultBlock then
-         self:addErrMess( firstToken.pos, "'switch' must have 'case' blocks when have 'default' block." )
-      end
-      
-   end
-   
-   
-   return Nodes.SwitchNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, exp, caseList, defaultBlock, fullCase, failSafeDefault )
+   return Nodes.SwitchNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, exp, caseList, defaultBlock, caseKind, failSafeDefault )
 end
 
 
@@ -4829,39 +4858,25 @@ function TransUnit:analyzeMatch( firstToken )
    end
    
    
-   local fullCase = _lune._Set_len(algeValNameSet ) == algeTypeInfo:get_valInfoNum()
+   local caseKind
    
-   local failSafeDefault = false
-   local defaultBlock = nil
-   if nextToken.txt == "default" or nextToken.txt == "_default" then
-      if nextToken.txt == "_default" then
-         failSafeDefault = true
-      elseif fullCase then
-         self:addWarnMess( nextToken.pos, "defalut is not reach" )
+   if _lune._Set_len(algeValNameSet ) == algeTypeInfo:get_valInfoNum() then
+      if firstToken.txt == "_match" then
+         caseKind = Nodes.CaseKind.MustFull
+      else
+       
+         caseKind = Nodes.CaseKind.Full
       end
       
-      defaultBlock = self:analyzeBlock( Nodes.BlockKind.Block, firstFlag and TentativeMode.Simple or TentativeMode.Finish )
-      nextToken = self:getToken(  )
    else
     
-      if not firstFlag then
-         self:finishTentativeSymbol( fullCase )
-      end
-      
-   end
-   
-   self:checkToken( nextToken, "}" )
-   
-   if #caseList == 0 then
-      self:addWarnMess( firstToken.pos, "'match' should have 'case' blocks." )
-      if defaultBlock then
-         self:addErrMess( firstToken.pos, "'match' must have 'case' blocks when have 'default' block." )
-      end
-      
+      caseKind = Nodes.CaseKind.Lack
    end
    
    
-   return Nodes.MatchNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, exp, algeTypeInfo, caseList, defaultBlock, fullCase, failSafeDefault )
+   local defaultBlock, failSafeDefault = self:processCaseDefault( firstToken, caseKind, nextToken, #caseList ~= 0 )
+   
+   return Nodes.MatchNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, exp, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault )
 end
 
 
@@ -6221,10 +6236,9 @@ function TransUnit:analyzeDeclEnum( accessMode, firstToken )
                   enumVal = _lune.newAlge( Ast.EnumLiteral.Str, {val})
                   valTypeInfo = Ast.builtinTypeString
                else 
-                  do
+                  
                      self:error( string.format( "illegal enum val -- %s", Nodes.Literal:_getTxt( literal)
                      ) )
-                  end
                end
             end
             
@@ -11872,9 +11886,9 @@ function TransUnit:analyzeStatement( termTxt )
          statement = self:analyzeIf( token )
       elseif token.txt == "when" then
          statement = self:analyzeWhen( token )
-      elseif token.txt == "switch" then
+      elseif token.txt == "switch" or token.txt == "_switch" then
          statement = self:analyzeSwitch( token )
-      elseif token.txt == "match" then
+      elseif token.txt == "match" or token.txt == "_match" then
          statement = self:analyzeMatch( token )
       elseif token.txt == "while" then
          statement = self:analyzeWhile( token )

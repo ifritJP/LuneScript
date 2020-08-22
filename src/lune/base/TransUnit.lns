@@ -3235,7 +3235,8 @@ Nodes.BlockNode!, bool
    let keyword = firstToken.txt.gsub( "_", "" );
    let fullKeyword = "_%s" (keyword);
    if firstToken.txt == fullKeyword and caseKind ~= .MustFull {
-      self.addErrMess( firstToken.pos, "This %s lacks case." (keyword));
+      self.addErrMess( firstToken.pos,
+                       "This '%s' hasn't enough 'case' condition." (keyword));
    }
    
    let mut defaultBlock: Nodes.BlockNode! = nil;
