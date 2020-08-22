@@ -4257,11 +4257,6 @@ local function getEnumLiteralVal( obj )
          local val = _matchExp[2][1]
       
          return val
-      else 
-         do
-            Util.err( "illegal enum " .. EnumLiteral:_getTxt( obj)
-             )
-         end
       end
    end
    
@@ -5701,10 +5696,6 @@ function CombineType:andType( other, alt2type )
          end
          
          return _lune.newAlge( CommonType.Normal, {self:createStem(  )})
-      else 
-         do
-            error( "not support" )
-         end
       end
    end
    
@@ -5811,10 +5802,6 @@ function TypeInfo.getCommonTypeCombo( commonType, otherType, alt2type )
                local combine = _matchExp[2][1]
             
                return combine:get_typeInfo()
-            else 
-               do
-                  error( "not support" )
-               end
             end
          end
          
@@ -5871,10 +5858,6 @@ function TypeInfo.getCommonType( typeInfo, other, alt2type )
          local combine = _matchExp[2][1]
       
          return combine:get_typeInfo()
-      else 
-         do
-            error( "illegal" )
-         end
       end
    end
    

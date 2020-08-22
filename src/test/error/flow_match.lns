@@ -1,0 +1,162 @@
+{
+   alge Val {
+      Val1,
+      Val2,
+   }
+
+   {
+      fn func( val:Val ) {
+         for count = 1, 1 {
+            let mut work = 0;
+            match val {
+               case .Val1 {
+                  work = 1;
+                  return;
+               }
+               case .Val2 {
+                  work = 2;
+                  break;
+               }
+            }
+            print( work ); // error : 全ての enum 値の case があり、 return or break している
+         }
+      }
+   }
+   {
+      fn func( val:Val ) {
+         let work;
+         match val {
+            case .Val1 {
+               work = 1;
+               return;
+            }
+            case .Val2 {
+               work = 2;
+               return;
+            }
+         }
+         print( work ); // error : 全ての enum 値の case があり、 return している
+      }
+   }
+   {
+      fn func( val:Val ) {
+         let work;
+         match val {
+            case .Val1 {
+               work = 1;
+               return;
+            }
+            case .Val2 {
+               work = 2;
+               return;
+            }
+            default { // error : 全ての enum 値の case があるのに default がある
+               work = 3;
+               return;
+            }
+         }
+         print( work ); // error : 全てで return している
+      }
+   }
+   {
+      fn func( val:Val ) {
+         let work;
+         match val {
+            case .Val1 {
+               work = 1;
+               return;
+            }
+            case .Val2 {
+               work = 2;
+               return;
+            }
+            _default {
+               work = 3;
+               return;
+            }
+         }
+         print( work ); // error : 全てで return している
+      }
+   }
+   {
+      fn func( val:Val ) {
+         let work;
+         match val {
+            case .Val1 {
+               work = 1;
+               return;
+            }
+            _default {
+               work = 3;
+               return;
+            }
+         }
+         print( work ); // error
+      }
+   }
+   {
+      fn func( val:Val ) {
+         let work;
+         match val {
+            case .Val1 {
+               work = 1;
+            }
+            _default {
+               work = 3;
+               return;
+            }
+         }
+         print( work );
+      }
+   }
+   {
+      fn func( val:Val ) {
+         let work;
+         match val {
+            case .Val1 {
+            }
+            _default {
+               work = 3;
+               return;
+            } // error : work の初期化がない
+         }
+         print( work ); // error : work の初期化がない
+      }
+   }
+   {
+      fn func( val:Val ) {
+         let work;
+         match val {
+            case .Val1 {
+               work = 1;
+            }
+            case .Val2 {
+            }
+         } // error : work の初期化がない
+         print( work ); // error : work の初期化がない
+      }
+   }
+   {
+      fn func( val:Val ) {
+         _match val {
+            case .Val1 {
+               return;
+            }
+            case .Val2 {
+               return;
+            }
+         }
+      }
+   }
+   {
+      fn func( val:Val ) {
+         _match val { // error
+            case .Val1 {
+               return;
+            }
+            default { // error
+            }
+         }
+      }
+   }
+}

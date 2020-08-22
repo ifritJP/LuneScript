@@ -125,10 +125,10 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
       elseif token.txt == "when" {
          statement = self.analyzeWhen( token );
       }
-      elseif token.txt == "switch" {
+      elseif token.txt == "switch" or token.txt == "_switch" {
          statement = self.analyzeSwitch( token );
       }
-      elseif token.txt == "match" {
+      elseif token.txt == "match" or token.txt == "_match" {
          statement = self.analyzeMatch( token );
       }
       elseif token.txt == "while" {

@@ -461,12 +461,6 @@ local function getLiteralObj( obj )
          local val = _matchExp[2][1]
       
          return val
-      else 
-         do
-            Util.errorLog( "unknown literal obj -- " .. Literal:_getTxt( obj)
-             )
-            return nil
-         end
       end
    end
    
@@ -2321,6 +2315,38 @@ function CaseInfo:get_block()
    return self.block
 end
 
+local CaseKind = {}
+_moduleObj.CaseKind = CaseKind
+CaseKind._val2NameMap = {}
+function CaseKind:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "CaseKind.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+function CaseKind._from( val )
+   if CaseKind._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+    
+CaseKind.__allList = {}
+function CaseKind.get__allList()
+   return CaseKind.__allList
+end
+
+CaseKind.Lack = 0
+CaseKind._val2NameMap[0] = 'Lack'
+CaseKind.__allList[1] = CaseKind.Lack
+CaseKind.Full = 1
+CaseKind._val2NameMap[1] = 'Full'
+CaseKind.__allList[2] = CaseKind.Full
+CaseKind.MustFull = 2
+CaseKind._val2NameMap[2] = 'MustFull'
+CaseKind.__allList[3] = CaseKind.MustFull
+
 
 function NodeKind.get_Switch(  )
 
@@ -2362,13 +2388,13 @@ function SwitchNode:canBeStatement(  )
 
    return true
 end
-function SwitchNode.new( id, pos, macroArgFlag, typeList, exp, caseList, default, fullCase, failSafeDefault )
+function SwitchNode.new( id, pos, macroArgFlag, typeList, exp, caseList, default, caseKind, failSafeDefault )
    local obj = {}
    SwitchNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, exp, caseList, default, fullCase, failSafeDefault ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, exp, caseList, default, caseKind, failSafeDefault ); end
    return obj
 end
-function SwitchNode:__init(id, pos, macroArgFlag, typeList, exp, caseList, default, fullCase, failSafeDefault) 
+function SwitchNode:__init(id, pos, macroArgFlag, typeList, exp, caseList, default, caseKind, failSafeDefault) 
    Node.__init( self,id, 10, pos, macroArgFlag, typeList)
    
    
@@ -2376,14 +2402,14 @@ function SwitchNode:__init(id, pos, macroArgFlag, typeList, exp, caseList, defau
    self.exp = exp
    self.caseList = caseList
    self.default = default
-   self.fullCase = fullCase
+   self.caseKind = caseKind
    self.failSafeDefault = failSafeDefault
    
    
 end
-function SwitchNode.create( nodeMan, pos, macroArgFlag, typeList, exp, caseList, default, fullCase, failSafeDefault )
+function SwitchNode.create( nodeMan, pos, macroArgFlag, typeList, exp, caseList, default, caseKind, failSafeDefault )
 
-   local node = SwitchNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, exp, caseList, default, fullCase, failSafeDefault)
+   local node = SwitchNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, exp, caseList, default, caseKind, failSafeDefault)
    nodeMan:addNode( node )
    return node
 end
@@ -2444,8 +2470,8 @@ end
 function SwitchNode:get_default()
    return self.default
 end
-function SwitchNode:get_fullCase()
-   return self.fullCase
+function SwitchNode:get_caseKind()
+   return self.caseKind
 end
 function SwitchNode:get_failSafeDefault()
    return self.failSafeDefault
@@ -2456,9 +2482,10 @@ end
 function SwitchNode:getBreakKind( checkMode )
 
    local kind = BreakKind.None
+   local fullCase = self.caseKind ~= CaseKind.Lack
    for __index, caseInfo in ipairs( self.caseList ) do
       local work = caseInfo:get_block():getBreakKind( checkMode )
-      local goNext = (work == BreakKind.None ) or not self.fullCase
+      local goNext = (work == BreakKind.None ) or not fullCase
       
       if checkMode == CheckBreakMode.IgnoreFlowReturn then
          if work == BreakKind.Return then
@@ -2538,7 +2565,7 @@ function SwitchNode:getBreakKind( checkMode )
    end
    
    
-   if self.fullCase then
+   if fullCase then
       return kind
    end
    
@@ -9068,13 +9095,13 @@ function MatchNode:canBeStatement(  )
 
    return true
 end
-function MatchNode.new( id, pos, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, fullCase, failSafeDefault )
+function MatchNode.new( id, pos, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault )
    local obj = {}
    MatchNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, fullCase, failSafeDefault ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault ); end
    return obj
 end
-function MatchNode:__init(id, pos, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, fullCase, failSafeDefault) 
+function MatchNode:__init(id, pos, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault) 
    Node.__init( self,id, 64, pos, macroArgFlag, typeList)
    
    
@@ -9083,14 +9110,14 @@ function MatchNode:__init(id, pos, macroArgFlag, typeList, val, algeTypeInfo, ca
    self.algeTypeInfo = algeTypeInfo
    self.caseList = caseList
    self.defaultBlock = defaultBlock
-   self.fullCase = fullCase
+   self.caseKind = caseKind
    self.failSafeDefault = failSafeDefault
    
    
 end
-function MatchNode.create( nodeMan, pos, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, fullCase, failSafeDefault )
+function MatchNode.create( nodeMan, pos, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault )
 
-   local node = MatchNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, fullCase, failSafeDefault)
+   local node = MatchNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault)
    nodeMan:addNode( node )
    return node
 end
@@ -9154,8 +9181,8 @@ end
 function MatchNode:get_defaultBlock()
    return self.defaultBlock
 end
-function MatchNode:get_fullCase()
-   return self.fullCase
+function MatchNode:get_caseKind()
+   return self.caseKind
 end
 function MatchNode:get_failSafeDefault()
    return self.failSafeDefault
@@ -9165,9 +9192,10 @@ end
 function MatchNode:getBreakKind( checkMode )
 
    local kind = BreakKind.None
+   local fullCase = self.caseKind ~= CaseKind.Lack
    for __index, caseInfo in ipairs( self.caseList ) do
       local work = caseInfo:get_block():getBreakKind( checkMode )
-      local goNext = (work == BreakKind.None ) or not self.fullCase
+      local goNext = (work == BreakKind.None ) or not fullCase
       
       if checkMode == CheckBreakMode.IgnoreFlowReturn then
          if work == BreakKind.Return then
@@ -9247,7 +9275,7 @@ function MatchNode:getBreakKind( checkMode )
    end
    
    
-   if self.fullCase then
+   if fullCase then
       return kind
    end
    
@@ -11248,9 +11276,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
             
                lit2valNode[param] = key
             else 
-               do
+               
                   return false
-               end
             end
          end
          
@@ -11391,11 +11418,6 @@ local function enumLiteral2Literal( obj )
          local val = _matchExp[2][1]
       
          return _lune.newAlge( Literal.Str, {val}), nil
-      else 
-         do
-            return nil, "illegal enum: " .. Ast.EnumLiteral:_getTxt( obj)
-            
-         end
       end
    end
    
@@ -11433,10 +11455,9 @@ function RefFieldNode:getLiteral(  )
             end
             
          else 
-            do
+            
                return nil, string.format( "not support -- %s", Literal:_getTxt( literal)
                )
-            end
          end
       end
       
@@ -11590,9 +11611,8 @@ function ExpOp2Node:getValType( node )
          strVal = val
          retTypeInfo = Ast.builtinTypeString
       else 
-         do
+         
             return false, 0, 0.0, "", Ast.headTypeInfo
-         end
       end
    end
    
@@ -11619,9 +11639,8 @@ function ExpOp2Node:setupLiteralTokenList( list )
          
             self:addTokenList( list, Parser.TokenKind.Str, string.format( "%q", val) )
          else 
-            do
+            
                return false
-            end
          end
       end
       

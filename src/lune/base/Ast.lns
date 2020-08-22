@@ -2943,7 +2943,7 @@ pub alge EnumLiteral {
    Str( val:str ),
 }
 pub fn getEnumLiteralVal( obj:EnumLiteral ) : stem {
-   match obj {
+   _match obj {
       case .Int( val ) {
          return val;
       }
@@ -2952,9 +2952,6 @@ pub fn getEnumLiteralVal( obj:EnumLiteral ) : stem {
       }
       case .Str( val ) {
          return val;
-      }
-      _default {
-         Util.err( "illegal enum " .. obj.$_txt );
       }
    }
 }
@@ -4308,7 +4305,7 @@ other と共通する IF の集合をセットする。
 pub fn CombineType.andType(
    other:CommonType, alt2type:Map<&TypeInfo,&TypeInfo> ) mut : CommonType
 {
-   match other {
+   _match other {
       case .Combine( comboInfo ) {
          self.andIfSet( comboInfo.ifSet, alt2type );
          if not isMutable( comboInfo.mutMode ) {
@@ -4335,9 +4332,6 @@ pub fn CombineType.andType(
             return CommonType.Combine( self );
          }
          return CommonType.Normal( self.createStem() );
-      }
-      _default {
-         error( "not support" );
       }
    }
 }
@@ -4426,7 +4420,7 @@ pub static fn TypeInfo.getCommonTypeCombo(
       fn getCommon( workTypeInfo:&TypeInfo, workOther:&TypeInfo,
                     workAlt2type:Map<&TypeInfo,&TypeInfo> ): &TypeInfo
       {
-         match TypeInfo.getCommonTypeCombo(
+         _match TypeInfo.getCommonTypeCombo(
             CommonType.Normal( workTypeInfo ),
             CommonType.Normal( workOther ), workAlt2type )
          {
@@ -4435,9 +4429,6 @@ pub static fn TypeInfo.getCommonTypeCombo(
             }
             case .Combine( combine ) {
                return combine.$typeInfo;
-            }
-            _default {
-               error( "not support" );
             }
          }
       }
@@ -4502,7 +4493,7 @@ pub static fn TypeInfo.getCommonTypeCombo(
 pub static fn TypeInfo.getCommonType(
    typeInfo:&TypeInfo, other:&TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo> ): &TypeInfo
 {
-   match TypeInfo.getCommonTypeCombo(
+   _match TypeInfo.getCommonTypeCombo(
       CommonType.Normal( typeInfo ), CommonType.Normal( other ), alt2type )
    {
       case .Normal( info ) {
@@ -4510,9 +4501,6 @@ pub static fn TypeInfo.getCommonType(
       }
       case .Combine( combine ) {
          return combine.$typeInfo;
-      }
-      _default {
-         error( "illegal" );
       }
    }
 }

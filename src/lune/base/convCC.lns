@@ -3106,7 +3106,7 @@ fn processMethodDeclTxt(
    let name;
    let objDecl;
    let retType;
-   switch wrapKind {
+   _switch wrapKind {
       case .Normal {
          name = moduleCtrl.getMethodCName( methodTypeInfo );
          objDecl = ", %s pObj" (cTypeAnyP);
@@ -3126,9 +3126,6 @@ fn processMethodDeclTxt(
          else {
             retType = cTypeStem;
          }
-      }
-      _default {
-         Util.err( "not support -- %s" (wrapKind.$_txt) );
       }
    }
    stream.write( "%s %s( %s _pEnv" ( retType, name, cTypeEnvP ) );
