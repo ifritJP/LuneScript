@@ -1,0 +1,57 @@
+{
+   fn func( work:&List<Map<str,int>> ) {
+      foreach list in work {
+         foreach val, key in list {
+            print( key, val );
+         }
+      }
+   }
+   let mut work = [{ "ab":1 }, { "xyz":2 }];
+   work.remove(##);
+   work.insert( {"eee":10} );
+   func( work );
+}
+{
+   fn func( val1:int!, val2:int! ) {
+      when! val1, val2 {
+         print( val1 + val2 );
+      }
+      else {
+         print( val1, val2 );
+      }
+   }
+   func( 1, 10 );
+   func( nil, 10 );
+   func( 10, nil );
+   func( nil, nil );
+}
+{
+   fn func( val1:int!, val2:int! ) {
+      if! let val10, val20 = val1, val2 {
+         print( val10 + val20 );
+      }
+      else {
+         print( val1, val2 );
+      }
+   }
+   func( 1, 10 );
+   func( nil, 10 );
+   func( 10, nil );
+   func( nil, nil );
+}
+{
+   fn func( val1:int!, val2:int! ) {
+      let! val10, val20 = val1, val2 {
+         print( val1, val2 );
+         return;
+      }
+      then {
+         print( val10 + val20 );
+      };
+      print( val10 - val20 );
+   }
+   func( 1, 10 );
+   func( nil, 10 );
+   func( 10, nil );
+   func( nil, nil );
+}

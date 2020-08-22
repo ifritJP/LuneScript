@@ -66,8 +66,10 @@ help:
 	@echo "  make test-tutorial"
 	@echo "  make test-installed-cmd"
 	@echo "  make test-on-docker"
+	@echo "  make test-reference"
 	@echo "  make test-go"
 	@echo "  make test-miniGo"
+
 
 exec:
 	$(LUA) lune/base/base.lua test/test.lns token
@@ -379,6 +381,8 @@ TEST_CASE += cast.lns
 TEST_CASE += prototype.lns
 TEST_CASE += statement.lns
 TEST_CASE += flow.lns
+TEST_CASE += flow_switch.lns
+TEST_CASE += flow_match.lns
 TEST_CASE += import.lns
 TEST_CASE += import2.lns
 TEST_CASE += import3.lns
@@ -1043,7 +1047,13 @@ GO_SRC += runtime_lib.go
 GO_SRC := $(addprefix lune/base/runtime_go/,$(GO_SRC))
 
 test-go:
-	go run $(GO_SRC) lune/base/runtime_go/miniGo.go
+	$(call transwork,.,.,,base/convGo)
+	$(call exeLune,.,lune/base/runtime_go/testGo.lns,lua -langGo,) > /dev/null
+	$(call convGo,.,lune/base/runtime_go/testGo.lns)
+	go build lune/base/runtime_go/testGo.go $(GO_SRC)
+	./testGo > work/result-testGo.txt
+	$(call exeLune,.,lune/base/runtime_go/testGo.lns,exe,) > work/result-testGo2.txt
+	diff work/result-testGo.txt work/result-testGo2.txt
 
 
 # lns ソースを Golang へトランスコンパイルする
@@ -1056,10 +1066,11 @@ endef
 
 test-miniGo:
 	$(call transwork,.,.,,base/convGo)
-	$(call exeLune,.,lune/base/runtime_go/miniGo.lns,lua -langGo,)
+	$(call exeLune,.,lune/base/runtime_go/miniGo.lns,lua -langGo,) > /dev/null
 	$(call convGo,.,lune/base/runtime_go/miniGo.lns)
 	go build lune/base/runtime_go/miniGo.go $(GO_SRC)
 	./miniGo
+	$(MAKE) test-go
 
 test-reference:
 	if [ -d ~/work/ifritJP.github.io ]; then					\

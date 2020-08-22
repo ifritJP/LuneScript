@@ -159,9 +159,11 @@ pub fn getLiteralObj( obj:&Literal ):stem! {
       case .MAP( val ) {
          return val;
       }
+      _default {
+         Util.errorLog( "unknown literal obj -- " .. obj.$_txt );
+         return nil;
+      }
    }
-   Util.errorLog( "unknown literal obj -- " .. obj.$_txt );
-   return nil;
 }
 
 pub proto abstract class Node;
@@ -835,14 +837,16 @@ _declNodeClass( "Scope", Node, false, false, true,
 );
 
 
-macro _setBreakKind(work:sym, kind:sym, returnNoneStat:bool, checkMode:sym ) {
-   {
-      let mut noneStat:stat[] = [];
-      if returnNoneStat {
-         noneStat.insert( `{ return .None } );
-      }
-   }
-
+macro _setBreakKind(work:sym, kind:sym, returnNoneStat:__exp, checkMode:sym ) {
+   // {
+   //    let noneStat:stat;
+   //    if returnNoneStat {
+   //       noneStat = `{ return .None };
+   //    }
+   //    else {
+   //       noneStat = `{};
+   //    }
+   // }
    if ,,checkMode == .IgnoreFlowReturn {
       if ,, work == .Return {
          return .Return;
@@ -855,7 +859,9 @@ macro _setBreakKind(work:sym, kind:sym, returnNoneStat:bool, checkMode:sym ) {
       switch ,,work {
          case .None {
             if ,,checkMode == .Normal or ,,checkMode == .Return {
-               ,,noneStat;
+               if ,,returnNoneStat {
+                  return .None;
+               }
             }
          }
          default {
@@ -976,7 +982,12 @@ pub class CaseInfo {
 _declNodeClass( "Switch", Node, false, false, true,
                 [ { "exp": "&Node" },
                   { "caseList": "List<&CaseInfo>" },
-                  { "default": "&BlockNode!" } ]
+                  { "default": "&BlockNode!" },
+                  // case で全ての条件が網羅されているかどうか
+                  { "fullCase": "bool"},
+                  // default ブロックがある場合、 default_ で宣言している。
+                  { "failSafeDefault": "bool" }
+                ]
 );
 
 pub override fn SwitchNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
@@ -984,7 +995,8 @@ pub override fn SwitchNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
    let mut kind = BreakKind.None;
    foreach caseInfo in self.caseList {
       let work = caseInfo.$block.getBreakKind( checkMode );
-      _setBreakKind( work, kind, true, checkMode );
+      let goNext = (work == .None) or not self.fullCase;
+      _setBreakKind( work, kind, goNext, checkMode );
    }
    if! let block = self.default {
       let work = block.getBreakKind( checkMode );
@@ -992,6 +1004,9 @@ pub override fn SwitchNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
       return kind;
    }
 
+   if self.fullCase {
+      return kind;
+   }
    return .None;
 }
 
@@ -1680,9 +1695,34 @@ _declNodeClass( "Match", Node, false, false, true,
                 [ { "val": "&Node" },
                   { "algeTypeInfo": "&Ast.AlgeTypeInfo" },
                   { "caseList": "&List<&MatchCase>" },
-                  { "defaultBlock": "&Node!" }
+                  { "defaultBlock": "&Node!" },
+                  // case で全ての条件が網羅されているかどうか
+                  { "fullCase": "bool"},
+                  // default ブロックがある場合、 default_ で宣言している。
+                  { "failSafeDefault": "bool" }
                 ]              
 );
+pub override fn MatchNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
+{
+   let mut kind = BreakKind.None;
+   foreach caseInfo in self.caseList {
+      let work = caseInfo.$block.getBreakKind( checkMode );
+      let goNext = (work == .None) or not self.fullCase;
+      _setBreakKind( work, kind, goNext, checkMode );
+   }
+   if! let block = self.defaultBlock {
+      let work = block.getBreakKind( checkMode );
+      _setBreakKind( work, kind, true, checkMode );
+      return kind;
+   }
+
+   if self.fullCase {
+      return kind;
+   }
+   return .None;
+}
+
+
 
 _declNodeClass( "LuneKind", Node, false, true, false,
                 [ { "exp": "&Node" } ]
@@ -2157,8 +2197,10 @@ fn enumLiteral2Literal( obj:&Ast.EnumLiteral ) : Literal!, str! {
       case .Str( val ) {
          return Literal.Str( val ), nil;
       }
+      _default {
+         return nil, "illegal enum: " .. obj.$_txt;
+      }
    }
-   return nil, "illegal enum: " .. obj.$_txt;
 }
 
 

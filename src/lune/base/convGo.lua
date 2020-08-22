@@ -400,7 +400,7 @@ function convFilter:outputSymbol( kind, name )
       if _matchExp[1] == SymbolKind.Func[1] then
          local typeInfo = _matchExp[2][1]
       
-         if typeInfo:get_parentInfo():get_kind() ~= Ast.TypeInfoKind.Module then
+         if typeInfo:get_parentInfo():get_kind() ~= Ast.TypeInfoKind.Module or _lune.nilacc( _lune.nilacc( typeInfo:get_scope(), 'get_parent', 'callmtd' ), 'get_ownerTypeInfo', 'callmtd' ) == nil then
             if not isClosure( typeInfo ) then
                local parentName = typeInfo:getParentFullName( self:get_typeNameCtrl(), self:get_moduleInfoManager(), true )
                symbolName = string.format( "%s_%s_%d_", parentName:gsub( "[%.@]", "_" ), symbolName, typeInfo:get_typeId())
@@ -462,7 +462,7 @@ local function type2gotype( typeInfo )
    do
       local _switchExp = orgType:get_kind()
       if _switchExp == Ast.TypeInfoKind.List then
-         return "[]LnsAny"
+         return "*LnsList"
       elseif _switchExp == Ast.TypeInfoKind.Map then
          return "map[LnsAny]LnsAny"
       end
@@ -805,6 +805,167 @@ function convFilter:processBlockSub( node, opt )
 end
 
 
+function convFilter:expList2Slice( subList )
+
+   local mRetIndex = _lune.nilacc( subList:get_mRetExp(), 'get_index', 'callmtd' )
+   if mRetIndex and mRetIndex == 1 then
+      local subExp = subList:get_expList()[1]
+      if subExp:get_expType():get_kind() ~= Ast.TypeInfoKind.DDD then
+         self:write( "Lns_2DDD(" )
+         filter( subExp, self, subList )
+         self:write( ")" )
+      else
+       
+         filter( subExp, self, subList )
+      end
+      
+   else
+    
+      if mRetIndex and mRetIndex ~= 1 then
+         self:write( "append( " )
+      end
+      
+      self:write( "[]LnsAny{" )
+      for subIndex, subExp in ipairs( subList:get_expList() ) do
+         if mRetIndex == subIndex then
+            if mRetIndex ~= 1 then
+               self:write( "}, " )
+            end
+            
+            if subExp:get_expType():get_kind() ~= Ast.TypeInfoKind.DDD then
+               self:write( "Lns_2DDD(" )
+               filter( subExp, self, subList )
+               self:write( ")" )
+            else
+             
+               filter( subExp, self, subList )
+            end
+            
+            self:write( "..." )
+            break
+         end
+         
+         if subIndex ~= 1 then
+            self:write( ', ' )
+         end
+         
+         filter( subExp, self, subList )
+      end
+      
+      if mRetIndex and mRetIndex ~= 1 then
+         self:write( ")" )
+      else
+       
+         self:write( "}" )
+      end
+      
+   end
+   
+end
+
+function convFilter:processSetFromExpList( convArgFuncName, dstTypeList, expListNode )
+
+   do
+      local _switchExp = getExpListKind( dstTypeList, expListNode )
+      if _switchExp == ExpListKind.Conv then
+         self:write( string.format( "%s(", convArgFuncName) )
+         local mRetIndex = _lune.nilacc( expListNode:get_mRetExp(), 'get_index', 'callmtd' )
+         
+         for index, exp in ipairs( expListNode:get_expList() ) do
+            if index ~= 1 then
+               self:write( ', ' )
+            end
+            
+            if mRetIndex == index then
+               self:write( "Lns_2DDD(" )
+               filter( exp, self, expListNode )
+               self:write( ")" )
+               break
+            end
+            
+            filter( exp, self, expListNode )
+            if _lune.nilacc( expListNode:get_mRetExp(), 'get_index', 'callmtd' ) == index then
+               break
+            end
+            
+         end
+         
+         self:write( ")" )
+      elseif _switchExp == ExpListKind.Slice then
+         for index, argType in ipairs( dstTypeList ) do
+            if index ~= 1 then
+               self:write( ', ' )
+            end
+            
+            if #expListNode:get_expList() >= index then
+               local argExp = expListNode:get_expList()[index]
+               
+               do
+                  local exp2ddd = _lune.__Cast( argExp, 3, Nodes.ExpToDDDNode )
+                  if exp2ddd ~= nil then
+                     self:expList2Slice( exp2ddd:get_expList() )
+                  else
+                     if argExp:get_expType():get_kind() == Ast.TypeInfoKind.Abbr then
+                        if argType:get_kind() == Ast.TypeInfoKind.DDD then
+                           self:write( "[]LnsAny{}" )
+                        else
+                         
+                           self:write( "nil" )
+                        end
+                        
+                     else
+                      
+                        filter( argExp, self, expListNode )
+                     end
+                     
+                  end
+               end
+               
+            else
+             
+               self:write( "[]LnsAny{}" )
+            end
+            
+         end
+         
+      elseif _switchExp == ExpListKind.Direct then
+         local mRetIndex = _lune.nilacc( expListNode:get_mRetExp(), 'get_index', 'callmtd' )
+         for index, funcArgType in ipairs( dstTypeList ) do
+            if mRetIndex == index - 1 then
+               break
+            end
+            
+            if index ~= 1 then
+               self:write( ', ' )
+            end
+            
+            if index == #dstTypeList and funcArgType:get_kind() == Ast.TypeInfoKind.DDD then
+               if #expListNode:get_expList() < index or expListNode:get_expList()[index]:get_expType():get_kind() == Ast.TypeInfoKind.Abbr then
+                  self:write( "[]LnsAny{}" )
+               else
+                
+                  filter( expListNode:get_expList()[index], self, expListNode )
+               end
+               
+            else
+             
+               if #expListNode:get_expList() < index or expListNode:get_expList()[index]:get_expType():get_kind() == Ast.TypeInfoKind.Abbr then
+                  self:write( "nil" )
+               else
+                
+                  filter( expListNode:get_expList()[index], self, expListNode )
+               end
+               
+            end
+            
+         end
+         
+      end
+   end
+   
+end
+
+
 function convFilter:processStmtExp( node, opt )
 
    filter( node:get_exp(), self, node )
@@ -905,171 +1066,58 @@ end
 
 
 function convFilter:processIfUnwrap( node, opt )
-   local __func__ = '@lune.@base.@convGo.convFilter.processIfUnwrap'
 
-   Util.err( string.format( "not support -- %s", __func__) )
-end
-
-
-function convFilter:expList2Slice( subList )
-
-   local mRetIndex = _lune.nilacc( subList:get_mRetExp(), 'get_index', 'callmtd' )
-   if mRetIndex and mRetIndex == 1 then
-      local subExp = subList:get_expList()[1]
-      if subExp:get_expType():get_kind() ~= Ast.TypeInfoKind.DDD then
-         self:write( "Lns_2DDD(" )
-         filter( subExp, self, subList )
-         self:write( ")" )
-      else
-       
-         filter( subExp, self, subList )
+   self:writeln( "{" )
+   self:pushIndent(  )
+   for index, varSym in ipairs( node:get_varSymList() ) do
+      if index > 1 then
+         self:write( ", " )
       end
       
-   else
-    
-      if mRetIndex and mRetIndex ~= 1 then
-         self:write( "append( " )
-      end
-      
-      self:write( "[]LnsAny{" )
-      for subIndex, subExp in ipairs( subList:get_expList() ) do
-         if mRetIndex == subIndex then
-            if mRetIndex ~= 1 then
-               self:write( "}, " )
-            end
-            
-            if subExp:get_expType():get_kind() ~= Ast.TypeInfoKind.DDD then
-               self:write( "Lns_2DDD(" )
-               filter( subExp, self, subList )
-               self:write( ")" )
-            else
-             
-               filter( subExp, self, subList )
-            end
-            
-            self:write( "..." )
-            break
-         end
-         
-         if subIndex ~= 1 then
-            self:write( ', ' )
-         end
-         
-         filter( subExp, self, subList )
-      end
-      
-      if mRetIndex and mRetIndex ~= 1 then
-         self:write( ")" )
-      else
-       
-         self:write( "}" )
-      end
-      
+      self:write( "_" .. varSym:get_name() )
    end
    
-end
-
-
-function convFilter:processSetFromExpList( convArgFuncName, dstTypeList, expListNode )
-
+   self:write( " := " )
+   self:processSetFromExpList( getConvExpName( node:get_id(), node:get_expList() ), node:get_expList():get_expTypeList(), node:get_expList() )
+   self:writeln( "" )
+   self:write( "if " )
+   for index, varSym in ipairs( node:get_varSymList() ) do
+      if index > 1 then
+         self:write( " && " )
+      end
+      
+      self:write( string.format( "_%s != nil", varSym:get_name()) )
+   end
+   
+   self:writeln( " {" )
+   self:pushIndent(  )
+   for index, varSym in ipairs( node:get_varSymList() ) do
+      self:write( string.format( "%s := _%s", varSym:get_name(), varSym:get_name()) )
+      self:outputConv( varSym:get_typeInfo() )
+      self:writeln( "" )
+   end
+   
+   self:popIndent(  )
+   
+   filter( node:get_block(), self, node )
+   
    do
-      local _switchExp = getExpListKind( dstTypeList, expListNode )
-      if _switchExp == ExpListKind.Conv then
-         self:write( string.format( "%s(", convArgFuncName) )
-         local mRetIndex = _lune.nilacc( expListNode:get_mRetExp(), 'get_index', 'callmtd' )
+      local nilBlock = node:get_nilBlock()
+      if nilBlock ~= nil then
+         self:writeln( "} else {" )
          
-         for index, exp in ipairs( expListNode:get_expList() ) do
-            if index ~= 1 then
-               self:write( ', ' )
-            end
-            
-            if mRetIndex == index then
-               self:write( "Lns_2DDD(" )
-               filter( exp, self, expListNode )
-               self:write( ")" )
-               break
-            end
-            
-            filter( exp, self, expListNode )
-            if _lune.nilacc( expListNode:get_mRetExp(), 'get_index', 'callmtd' ) == index then
-               break
-            end
-            
-         end
+         filter( nilBlock, self, node )
          
-         self:write( ")" )
-      elseif _switchExp == ExpListKind.Slice then
-         for index, argType in ipairs( dstTypeList ) do
-            if index ~= 1 then
-               self:write( ', ' )
-            end
-            
-            if #expListNode:get_expList() >= index then
-               local argExp = expListNode:get_expList()[index]
-               
-               do
-                  local exp2ddd = _lune.__Cast( argExp, 3, Nodes.ExpToDDDNode )
-                  if exp2ddd ~= nil then
-                     self:expList2Slice( exp2ddd:get_expList() )
-                  else
-                     if argExp:get_expType():get_kind() == Ast.TypeInfoKind.Abbr then
-                        if argType:get_kind() == Ast.TypeInfoKind.DDD then
-                           self:write( "[]LnsAny{}" )
-                        else
-                         
-                           self:write( "nil" )
-                        end
-                        
-                     else
-                      
-                        filter( argExp, self, expListNode )
-                     end
-                     
-                  end
-               end
-               
-            else
-             
-               self:write( "[]LnsAny{}" )
-            end
-            
-         end
-         
-      elseif _switchExp == ExpListKind.Direct then
-         local mRetIndex = _lune.nilacc( expListNode:get_mRetExp(), 'get_index', 'callmtd' )
-         for index, funcArgType in ipairs( dstTypeList ) do
-            if mRetIndex == index - 1 then
-               break
-            end
-            
-            if index ~= 1 then
-               self:write( ', ' )
-            end
-            
-            if index == #dstTypeList and funcArgType:get_kind() == Ast.TypeInfoKind.DDD then
-               if #expListNode:get_expList() < index or expListNode:get_expList()[index]:get_expType():get_kind() == Ast.TypeInfoKind.Abbr then
-                  self:write( "[]LnsAny{}" )
-               else
-                
-                  filter( expListNode:get_expList()[index], self, expListNode )
-               end
-               
-            else
-             
-               if #expListNode:get_expList() < index then
-                  self:write( "nil" )
-               else
-                
-                  filter( expListNode:get_expList()[index], self, expListNode )
-               end
-               
-            end
-            
-         end
-         
+         self:writeln( "}" )
+      else
+         self:popIndent(  )
+         self:writeln( "}" )
       end
    end
    
+   
+   self:popIndent(  )
+   self:write( "}" )
 end
 
 
@@ -1079,66 +1127,164 @@ function convFilter:processDeclVar( node, opt )
    
    local prevType = ""
    
-   do
-      local expList = node:get_expList()
-      if expList ~= nil then
-         for index, exp in ipairs( expList:get_expList() ) do
-            local goType
-            
-            local varName
-            
-            if #node:get_varList() >= index then
-               local varInfo = node:get_varList()[index]
-               goType = type2gotype( varInfo:get_actualType() )
-               varName = varInfo:get_name().txt
-            else
-             
-               goType = type2gotype( exp:get_expType() )
-               varName = "_"
-            end
-            
-            if goType ~= prevType then
-               self:write( string.format( " %s", prevType) )
-            end
-            
-            if index ~= 1 then
-               self:write( ", " )
-            end
-            
-            self:write( varName )
-            prevType = goType
+   local function declVar(  )
+   
+      for index, varInfo in ipairs( node:get_varList() ) do
+         local goType = type2gotype( varInfo:get_actualType() )
+         if goType ~= prevType then
+            self:write( string.format( " %s", prevType) )
          end
          
-         self:write( string.format( " %s", prevType) )
-         
-         self:write( " = " )
-         self:processSetFromExpList( getConvExpName( node:get_id(), expList ), node:get_typeInfoList(), expList )
-      else
-         for index, varInfo in ipairs( node:get_varList() ) do
-            local goType = type2gotype( varInfo:get_actualType() )
-            if goType ~= prevType then
-               self:write( string.format( " %s", prevType) )
-            end
-            
-            if index ~= 1 then
-               self:write( ", " )
-            end
-            
-            self:write( string.format( "%s", varInfo:get_name().txt) )
-            prevType = goType
+         if index ~= 1 then
+            self:write( ", " )
          end
          
-         self:write( string.format( " %s", prevType) )
+         self:write( string.format( "%s", varInfo:get_name().txt) )
+         prevType = goType
       end
+      
+      self:write( string.format( " %s", prevType) )
+   end
+   
+   if node:get_unwrapFlag() then
+      do
+         local expList, unwrapBlock = node:get_expList(), node:get_unwrapBlock()
+         if expList ~= nil and unwrapBlock ~= nil then
+            declVar(  )
+            self:writeln( "" )
+            self:writeln( "{" )
+            self:pushIndent(  )
+            for index, varInfo in ipairs( node:get_varList() ) do
+               if index ~= 1 then
+                  self:write( ", " )
+               end
+               
+               self:write( string.format( "_%s", varInfo:get_name().txt) )
+            end
+            
+            self:write( " := " )
+            self:processSetFromExpList( getConvExpName( node:get_id(), expList ), node:get_typeInfoList(), expList )
+            self:writeln( "" )
+            self:write( "if " )
+            for index, varInfo in ipairs( node:get_varList() ) do
+               if index ~= 1 then
+                  self:write( " || " )
+               end
+               
+               self:write( string.format( "_%s == nil", varInfo:get_name().txt) )
+            end
+            
+            self:writeln( "{" )
+            
+            filter( unwrapBlock, self, node )
+            
+            do
+               local thenBlock = node:get_thenBlock()
+               if thenBlock ~= nil then
+                  self:writeln( "} else {" )
+                  self:pushIndent(  )
+                  for index, varInfo in ipairs( node:get_varList() ) do
+                     self:write( string.format( "%s = _%s", varInfo:get_name().txt, varInfo:get_name().txt) )
+                     self:outputConv( varInfo:get_actualType() )
+                     self:writeln( "" )
+                  end
+                  
+                  self:popIndent(  )
+                  filter( thenBlock, self, node )
+                  self:writeln( "}" )
+               else
+                  self:writeln( "}" )
+               end
+            end
+            
+            
+            self:popIndent(  )
+            self:write( "}" )
+         end
+      end
+      
+   else
+    
+      do
+         local expList = node:get_expList()
+         if expList ~= nil then
+            for index, exp in ipairs( expList:get_expList() ) do
+               local goType
+               
+               local varName
+               
+               if #node:get_varList() >= index then
+                  local varInfo = node:get_varList()[index]
+                  goType = type2gotype( varInfo:get_actualType() )
+                  varName = varInfo:get_name().txt
+               else
+                
+                  goType = type2gotype( exp:get_expType() )
+                  varName = "_"
+               end
+               
+               if goType ~= prevType then
+                  self:write( string.format( " %s", prevType) )
+               end
+               
+               if index ~= 1 then
+                  self:write( ", " )
+               end
+               
+               self:write( varName )
+               prevType = goType
+            end
+            
+            self:write( string.format( " %s", prevType) )
+            
+            self:write( " = " )
+            self:processSetFromExpList( getConvExpName( node:get_id(), expList ), node:get_typeInfoList(), expList )
+         else
+            declVar(  )
+         end
+      end
+      
    end
    
 end
 
 
 function convFilter:processWhen( node, opt )
-   local __func__ = '@lune.@base.@convGo.convFilter.processWhen'
 
-   Util.err( string.format( "not support -- %s", __func__) )
+   self:write( "if " )
+   for index, symPair in ipairs( node:get_symPairList() ) do
+      if index > 1 then
+         self:write( " && " )
+      end
+      
+      self:write( string.format( "%s != nil", symPair:get_src():get_name()) )
+      symPair:get_dst():set_convModuleParam( true )
+   end
+   
+   self:writeln( "{" )
+   self:pushIndent(  )
+   for index, symPair in ipairs( node:get_symPairList() ) do
+      self:write( string.format( "%s_%d := %s", symPair:get_dst():get_name(), symPair:get_dst():get_symbolId(), symPair:get_src():get_name()) )
+      self:outputConv( symPair:get_dst():get_typeInfo() )
+      self:writeln( "" )
+      symPair:get_dst():set_convModuleParam( true )
+   end
+   
+   self:popIndent(  )
+   
+   filter( node:get_block(), self, node )
+   
+   do
+      local elseBlock = node:get_elseBlock()
+      if elseBlock ~= nil then
+         self:writeln( "} else {" )
+         filter( elseBlock, self, node )
+         self:write( "}" )
+      else
+         self:write( "}" )
+      end
+   end
+   
 end
 
 
@@ -1254,30 +1400,7 @@ end
 
 function convFilter:processRefType( node, opt )
 
-   if isAnyType( node:get_expType() ) then
-      self:write( "LnsAny" )
-   else
-    
-      do
-         local goType = type2gotypeMap[getOrgTypeInfo( node:get_expType() )]
-         if goType ~= nil then
-            self:write( goType )
-         else
-            do
-               local _switchExp = getOrgTypeInfo( node:get_expType() ):get_kind()
-               if _switchExp == Ast.TypeInfoKind.List then
-                  self:write( "[]LnsAny" )
-               else 
-                  
-                     filter( node:get_name(), self, node )
-               end
-            end
-            
-         end
-      end
-      
-   end
-   
+   self:write( type2gotype( node:get_expType() ) )
 end
 
 
@@ -1384,7 +1507,7 @@ function convFilter:processForeach( node, opt )
          
          self:write( " := range( " )
          filter( node:get_exp(), self, node )
-         self:writeln( ") {" )
+         self:writeln( ".Items ) {" )
          self:pushIndent(  )
          do
             local key = node:get_key()
@@ -1520,8 +1643,15 @@ function convFilter:processExpCall( node, opt )
 
    local funcType = node:get_func():get_expType()
    if Ast.isBuiltin( funcType:get_typeId() ) then
-      if funcType:get_rawTxt() == "print" then
-         self:write( "Lns_print" )
+      local builtinFuncs = TransUnit.getBuiltinFunc(  )
+      do
+         local _switchExp = funcType
+         if _switchExp == builtinFuncs.lns_print then
+            self:write( "Lns_print" )
+         else 
+            
+               filter( node:get_func(), self, node )
+         end
       end
       
    else
@@ -1763,7 +1893,15 @@ function convFilter:processExpRef( node, opt )
       self:write( "ddd" )
    else
     
-      self:write( node:get_symbolInfo():get_name() )
+      do
+         local param = node:get_symbolInfo():get_convModuleParam()
+         if param ~= nil then
+            self:write( string.format( "%s_%d", node:get_symbolInfo():get_name(), node:get_symbolInfo():get_symbolId()) )
+         else
+            self:write( node:get_symbolInfo():get_name() )
+         end
+      end
+      
    end
    
 end
@@ -1779,7 +1917,27 @@ end
 function convFilter:processRefField( node, opt )
    local __func__ = '@lune.@base.@convGo.convFilter.processRefField'
 
-   Util.err( string.format( "not support -- %s", __func__) )
+   filter( node:get_prefix(), self, node )
+   
+   if Ast.isBuiltin( node:get_expType():get_typeId() ) then
+      local builtinFuncs = TransUnit.getBuiltinFunc(  )
+      do
+         local _switchExp = node:get_expType()
+         if _switchExp == builtinFuncs.list_insert then
+            self:write( ".Insert" )
+         elseif _switchExp == builtinFuncs.list_remove then
+            self:write( ".Remove" )
+         else 
+            
+               Util.err( string.format( "%s: not support -- %s", __func__, node:get_expType():getTxt(  )) )
+         end
+      end
+      
+   else
+    
+      self:write( string.format( ".%s", node:get_field().txt) )
+   end
+   
 end
 
 
@@ -1847,6 +2005,7 @@ end
 
 function convFilter:processLiteralList( node, opt )
 
+   self:write( "NewLnsList(" )
    do
       local expList = node:get_expList()
       if expList ~= nil then
@@ -1856,6 +2015,7 @@ function convFilter:processLiteralList( node, opt )
       end
    end
    
+   self:write( ")" )
 end
 
 

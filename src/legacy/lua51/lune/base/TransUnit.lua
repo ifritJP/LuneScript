@@ -1932,7 +1932,7 @@ function _TypeInfoNormal:createTypeInfo( param )
    local __func__ = '@lune.@base.@TransUnit._TypeInfoNormal.createTypeInfo'
 
    local newTypeInfo = nil
-   if self.parentId ~= Ast.rootTypeId or not Ast.builtInTypeIdSet[self.typeId] or self.kind == Ast.TypeInfoKind.List or self.kind == Ast.TypeInfoKind.Array or self.kind == Ast.TypeInfoKind.Map or self.kind == Ast.TypeInfoKind.Set then
+   if self.parentId ~= Ast.rootTypeId or not Ast.getBuiltInTypeIdMap(  )[self.typeId] or self.kind == Ast.TypeInfoKind.List or self.kind == Ast.TypeInfoKind.Array or self.kind == Ast.TypeInfoKind.Map or self.kind == Ast.TypeInfoKind.Set then
       local parentInfo = Ast.headTypeInfo
       if self.parentId ~= Ast.rootTypeId then
          local workTypeInfo = param:getTypeInfo( self.parentId )
@@ -3336,9 +3336,9 @@ function TransUnit:registBuiltInScope(  )
             
             self:popScope(  )
             
-            Ast.builtInTypeIdSet[typeInfo:get_typeId(  )] = typeInfo
+            Ast.addBuiltin( typeInfo )
             if typeInfo:get_nilableTypeInfo() ~= Ast.headTypeInfo then
-               Ast.builtInTypeIdSet[typeInfo:get_nilableTypeInfo():get_typeId()] = typeInfo:get_nilableTypeInfo()
+               Ast.addBuiltin( typeInfo:get_nilableTypeInfo() )
             end
             
             local symInfo = _lune.unwrap( self.scope:add( symbolKind, false, kind == Ast.TypeInfoKind.Func, fieldName, nil, typeInfo, Ast.AccessMode.Pub, staticFlag, mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true ))
@@ -3451,8 +3451,8 @@ function TransUnit:registBuiltInScope(  )
             end
             
             
-            Ast.builtInTypeIdSet[parentInfo:get_typeId(  )] = parentInfo
-            Ast.builtInTypeIdSet[parentInfo:get_nilableTypeInfo():get_typeId()] = parentInfo:get_nilableTypeInfo()
+            Ast.addBuiltin( parentInfo )
+            Ast.addBuiltin( parentInfo:get_nilableTypeInfo() )
          end
          
          if not builtinModuleName2Scope[name] then
@@ -4036,7 +4036,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = '@lune.@base.@TransUnit.TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2666, function (  )
+   Log.log( Log.Level.Info, __func__, 2665, function (  )
    
       return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), modulePath)
    end )
@@ -4053,7 +4053,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2678, function (  )
+               Log.log( Log.Level.Info, __func__, 2677, function (  )
                
                   return string.format( "%s already", modulePath)
                end )
@@ -4086,7 +4086,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2698, function (  )
+   Log.log( Log.Level.Info, __func__, 2697, function (  )
    
       return string.format( "%s processing", modulePath)
    end )
@@ -4146,11 +4146,11 @@ function TransUnit:processImport( modulePath )
       self:popModule(  )
    end
    
-   for __index, symbolInfo in pairs( Ast.sym2builtInTypeMap ) do
+   for __index, symbolInfo in pairs( Ast.getSym2builtInTypeMap(  ) ) do
       typeId2TypeInfo[symbolInfo:get_typeInfo():get_typeId(  )] = symbolInfo:get_typeInfo()
    end
    
-   for __index, builtinTypeInfo in pairs( Ast.builtInTypeIdSet ) do
+   for __index, builtinTypeInfo in pairs( Ast.getBuiltInTypeIdMap(  ) ) do
       typeId2TypeInfo[builtinTypeInfo:get_typeId()] = builtinTypeInfo
    end
    
@@ -4357,7 +4357,7 @@ function TransUnit:processImport( modulePath )
             
          elseif _switchExp == Ast.TypeInfoKind.Module then
             self:pushModule( true, classTypeInfo:getTxt(  ), Ast.TypeInfo.isMut( classTypeInfo ) )
-            Log.log( Log.Level.Info, __func__, 2953, function (  )
+            Log.log( Log.Level.Info, __func__, 2952, function (  )
             
                return string.format( "push module -- %s, %s, %d, %d, %d", classTypeInfo:getTxt(  ), _lune.nilacc( self.scope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, self.scope, false ) or "nil", _lune.nilacc( self.scope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ) or -1, classTypeInfo:get_typeId(), self.scope:get_parent():get_scopeId())
             end )
@@ -4432,7 +4432,7 @@ function TransUnit:processImport( modulePath )
    
    self.importModuleInfo:remove(  )
    
-   Log.log( Log.Level.Info, __func__, 3038, function (  )
+   Log.log( Log.Level.Info, __func__, 3037, function (  )
    
       return string.format( "%s complete", modulePath)
    end )
@@ -4687,13 +4687,43 @@ function TransUnit:analyzeSwitch( firstToken )
    end
    
    
+   local fullCase
+   
+   do
+      local enumType = _lune.__Cast( exp:get_expType(), 3, Ast.EnumTypeInfo )
+      if enumType ~= nil then
+         local count = 0
+         for __index, enumVal in pairs( enumType:get_name2EnumValInfo() ) do
+            count = count + 1
+         end
+         
+         if #caseList == count then
+            fullCase = true
+         else
+          
+            fullCase = false
+         end
+         
+      else
+         fullCase = false
+      end
+   end
+   
+   
    local defaultBlock = nil
-   if nextToken.txt == "default" then
+   local failSafeDefault = false
+   if nextToken.txt == "default" or nextToken.txt == "_default" then
+      if nextToken.txt == "_default" then
+         failSafeDefault = true
+      elseif fullCase then
+         self:addWarnMess( nextToken.pos, "This 'switch' has full case. This 'default' is no reach." )
+      end
+      
       defaultBlock = self:analyzeBlock( Nodes.BlockKind.Default, firstFlag and TentativeMode.Simple or TentativeMode.Finish )
    else
     
       if not firstFlag then
-         self:finishTentativeSymbol( false )
+         self:finishTentativeSymbol( fullCase )
       end
       
       self:pushback(  )
@@ -4710,7 +4740,7 @@ function TransUnit:analyzeSwitch( firstToken )
    end
    
    
-   return Nodes.SwitchNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, exp, caseList, defaultBlock )
+   return Nodes.SwitchNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, exp, caseList, defaultBlock, fullCase, failSafeDefault )
 end
 
 
@@ -4798,9 +4828,15 @@ function TransUnit:analyzeMatch( firstToken )
       nextToken = self:getToken(  )
    end
    
+   
+   local fullCase = _lune._Set_len(algeValNameSet ) == algeTypeInfo:get_valInfoNum()
+   
+   local failSafeDefault = false
    local defaultBlock = nil
-   if nextToken.txt == "default" then
-      if _lune._Set_len(algeValNameSet ) == algeTypeInfo:get_valInfoNum() then
+   if nextToken.txt == "default" or nextToken.txt == "_default" then
+      if nextToken.txt == "_default" then
+         failSafeDefault = true
+      elseif fullCase then
          self:addWarnMess( nextToken.pos, "defalut is not reach" )
       end
       
@@ -4809,7 +4845,7 @@ function TransUnit:analyzeMatch( firstToken )
    else
     
       if not firstFlag then
-         self:finishTentativeSymbol( _lune._Set_len(algeValNameSet ) == algeTypeInfo:get_valInfoNum() )
+         self:finishTentativeSymbol( fullCase )
       end
       
    end
@@ -4825,7 +4861,7 @@ function TransUnit:analyzeMatch( firstToken )
    end
    
    
-   return Nodes.MatchNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, exp, algeTypeInfo, caseList, defaultBlock )
+   return Nodes.MatchNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, exp, algeTypeInfo, caseList, defaultBlock, fullCase, failSafeDefault )
 end
 
 
@@ -11709,7 +11745,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, prevOpLevel, expectTy
       end
       
    elseif token.kind == Parser.TokenKind.Type then
-      local symbolTypeInfo = Ast.sym2builtInTypeMap[token.txt]
+      local symbolTypeInfo = Ast.getSym2builtInTypeMap(  )[token.txt]
       if  nil == symbolTypeInfo then
          local _symbolTypeInfo = symbolTypeInfo
       

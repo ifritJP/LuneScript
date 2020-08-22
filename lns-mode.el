@@ -65,7 +65,8 @@
     lns-keyword (lns-make-regex-or
 		 '("self" "fn" "elseif" "else" "while" "repeat" "for"
 		   "apply" "of" "foreach" "forsort" "in" "return" "class" "false"
-		   "nil" "null" "true" "switch" "match" "case" "default" "extend" "proto"
+		   "nil" "null" "true" "switch" "match" "case" "default" "_default"
+		   "extend" "proto"
 		   "override" "macro" "let" "unwrap" "if" "module" "subfile" "allmut"
 		   "mut" "__init" "local" "pub" "pro" "pri" "form" "advertise" "provide" 
 		   "wrap" "static" "global" "sync" "then" "do" "interface" "enum"

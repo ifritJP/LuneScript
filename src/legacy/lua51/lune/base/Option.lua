@@ -199,7 +199,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 3608
+   return 3648
 end
 
 
@@ -546,7 +546,7 @@ usage:
             elseif _switchExp == "--builtin" then
                do
                   local __sorted = {}
-                  local __map = Ast.builtInTypeIdSet
+                  local __map = Ast.getBuiltInTypeIdMap(  )
                   for __key in pairs( __map ) do
                      table.insert( __sorted, __key )
                   end

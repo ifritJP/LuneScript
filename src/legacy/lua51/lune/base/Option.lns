@@ -293,7 +293,7 @@ usage:
                os.exit( 0 );
             }
             case "--builtin" {
-               forsort typeInfo, typeId in Ast.builtInTypeIdSet {
+               forsort typeInfo, typeId in Ast.getBuiltInTypeIdMap() {
                   print( typeId, typeInfo.getTxt( ## ) );
                }
                os.exit( 0 );

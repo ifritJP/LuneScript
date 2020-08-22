@@ -3465,7 +3465,7 @@ fn TransUnit.analyzeExp(
       }
    }  
    elseif token.kind == Parser.TokenKind.Type {
-      let! symbolTypeInfo = Ast.sym2builtInTypeMap[ token.txt ] {
+      let! symbolTypeInfo = Ast.getSym2builtInTypeMap()[ token.txt ] {
          self.error( "unknown type -- %s" ( token.txt ) );
       }; 
       exp = Nodes.ExpRefNode.create(

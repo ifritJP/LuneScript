@@ -115,7 +115,9 @@ fn convFilter.outputSymbol( kind:SymbolKind, name:str ) {
    }
    match kind {
       case .Func( typeInfo ) {
-         if typeInfo.$parentInfo.$kind ~= .Module {
+         if typeInfo.$parentInfo.$kind ~= .Module or
+            typeInfo.$scope$.$parent$.$ownerTypeInfo == nil
+         {
             // inner 関数定義の場合、クロージャかどうか判定し、
             // クロージャでない場合は、関数として定義する。
             if not isClosure( typeInfo ) {
@@ -172,7 +174,7 @@ fn type2gotype( typeInfo:&Ast.TypeInfo ) : str {
    }
    switch orgType.$kind {
       case .List {
-         return "[]LnsAny";
+         return "*LnsList";
       }
       case .Map {
          return "map[LnsAny]LnsAny";
@@ -459,6 +461,156 @@ pub override fn convFilter.processBlockSub(
    }
 }
 
+fn convFilter.expList2Slice( subList:&Nodes.ExpListNode ) mut {
+   let mRetIndex = subList.$mRetExp$.$index;
+   if mRetIndex and mRetIndex == 1 {
+      let subExp = subList.$expList[ 1 ];
+      if subExp.$expType.$kind ~= .DDD {
+         self.write( "Lns_2DDD(" );
+         filter( subExp, self, subList );
+         self.write( ")" );
+      }
+      else {
+         filter( subExp, self, subList );
+      }
+   }
+   else {
+      if mRetIndex and mRetIndex ~= 1 {
+         self.write( "append( " );
+      }
+      self.write( "[]LnsAny{" );
+      foreach subExp, subIndex in subList.$expList {
+         if mRetIndex == subIndex {
+            if mRetIndex ~= 1 {
+               self.write( "}, " );
+            }
+            if subExp.$expType.$kind ~= .DDD {
+               self.write( "Lns_2DDD(" );
+               filter( subExp, self, subList );
+               self.write( ")" );
+            }
+            else {
+               filter( subExp, self, subList );
+            }
+            self.write( "..." );
+            break;
+         }
+         if subIndex ~= 1 {
+            self.write( ', ' );
+         }
+         filter( subExp, self, subList );
+      }
+      if mRetIndex and mRetIndex ~= 1 {
+         self.write( ")" );
+      }
+      else {
+         self.write( "}" );
+      }
+   }
+}
+
+/**
+expListNode の式を go で扱える型に変換する。
+
+
+processRoot() で、processConvExp() を実行しておく。
+*/
+fn convFilter.processSetFromExpList(
+   convArgFuncName:str,
+   dstTypeList:&List<&Ast.TypeInfo>, expListNode:&Nodes.ExpListNode ) mut
+{
+   switch getExpListKind( dstTypeList, expListNode ) {
+      case .Conv {
+         self.write( "%s(" ( convArgFuncName ) );
+         let mRetIndex = expListNode.$mRetExp$.$index;
+
+         foreach exp, index in expListNode.$expList {
+            if index ~= 1 {
+               self.write( ', ' );
+            }
+            if mRetIndex == index {
+               self.write( "Lns_2DDD(" );
+               filter( exp, self, expListNode );
+               self.write( ")" );
+               break;
+            }
+            filter( exp, self, expListNode );
+            if expListNode.$mRetExp$.$index == index {
+               break;
+            }
+         }
+         self.write( ")" );
+      }
+      case .Slice {
+         foreach argType, index in dstTypeList {
+            if index ~= 1 {
+               self.write( ', ' );
+            }
+            if #expListNode.$expList >= index {
+               let argExp = expListNode.$expList[ index ];
+
+               if! let exp2ddd = argExp@@@Nodes.ExpToDDDNode {
+                  self.expList2Slice( exp2ddd.$expList );
+               }
+               else {
+                  if argExp.$expType.$kind == .Abbr {
+                     if argType.$kind == .DDD {
+                        self.write( "[]LnsAny{}" );
+                     }
+                     else {
+                        self.write( "nil" );
+                     }
+                  }
+                  else {
+                     filter( argExp, self, expListNode );
+                  }
+               }
+            }
+            else {
+               self.write( "[]LnsAny{}" );
+            }
+         }
+      }
+      case .Direct {
+         let mRetIndex = expListNode.$mRetExp$.$index;
+         foreach funcArgType, index in dstTypeList {
+            if mRetIndex == index - 1 {
+               break;
+            }
+            if index ~= 1 {
+               self.write( ', ' );
+            }
+            if index == #dstTypeList and
+               funcArgType.$kind == .DDD 
+            {
+               // 関数の最終仮引数が DDD の場合、
+               // []LnsAny に変換する
+               if #expListNode.$expList < index or
+                  expListNode.$expList[ index ].$expType.$kind == .Abbr
+               {
+                  self.write( "[]LnsAny{}" );
+               }
+               else {
+                  filter( expListNode.$expList[ index ], self, expListNode );
+               }
+            }
+            else {
+               // 最終仮引数より前
+               if #expListNode.$expList < index or
+                  expListNode.$expList[ index ].$expType.$kind == .Abbr
+               {
+                  // 最終実引数より後は、引数を省略している
+                  self.write( "nil" );
+               }
+               else {
+                  filter( expListNode.$expList[ index ], self, expListNode );
+               }
+            }
+         }
+      }
+   }
+}
+
 pub override fn convFilter.processStmtExp(
    node: Nodes.StmtExpNode, opt: Opt ) mut
 {
@@ -551,156 +703,57 @@ pub override fn convFilter.processUnwrapSet(
 pub override fn convFilter.processIfUnwrap(
    node: Nodes.IfUnwrapNode, opt: Opt ) mut
 {
-   Util.err( "not support -- %s" (__func__) );
-}
+   self.writeln( "{" );
+   self.pushIndent( ## );
 
-fn convFilter.expList2Slice( subList:&Nodes.ExpListNode ) mut {
-   let mRetIndex = subList.$mRetExp$.$index;
-   if mRetIndex and mRetIndex == 1 {
-      let subExp = subList.$expList[ 1 ];
-      if subExp.$expType.$kind ~= .DDD {
-         self.write( "Lns_2DDD(" );
-         filter( subExp, self, subList );
-         self.write( ")" );
+   // 一旦 nil かどうかを確認するために、テンポラリ変数にセット
+   foreach varSym, index in node.$varSymList {
+      if index > 1 {
+         self.write( ", " );
       }
-      else {
-         filter( subExp, self, subList );
+      self.write( "_" .. varSym.$name );
+   }
+   self.write( " := " );
+   self.processSetFromExpList(
+      getConvExpName( node.$id, node.$expList ),
+      node.$expList.$expTypeList, node.$expList );
+   self.writeln( "" );
+
+   // テンポラリ変数が nil かどうかを確認
+   self.write( "if " );
+   foreach varSym, index in node.$varSymList {
+      if index > 1 {
+         self.write( " && " );
       }
+      self.write( "_%s != nil" ( varSym.$name ) );
+   }
+   self.writeln( " {" );
+
+   // nil でなければ値を入れなおす
+   self.pushIndent( ## );
+   foreach varSym, index in node.$varSymList {
+      self.write( "%s := _%s" (varSym.$name, varSym.$name) );
+      self.outputConv( varSym.$typeInfo );
+      self.writeln( "" );
+   }
+   self.popIndent();
+   
+   filter( node.$block, self, node );
+
+   if! let nilBlock = node.$nilBlock {
+      self.writeln( "} else {" );
+
+      filter( nilBlock, self, node );
+      
+      self.writeln("}" );
    }
    else {
-      if mRetIndex and mRetIndex ~= 1 {
-         self.write( "append( " );
-      }
-      self.write( "[]LnsAny{" );
-      foreach subExp, subIndex in subList.$expList {
-         if mRetIndex == subIndex {
-            if mRetIndex ~= 1 {
-               self.write( "}, " );
-            }
-            if subExp.$expType.$kind ~= .DDD {
-               self.write( "Lns_2DDD(" );
-               filter( subExp, self, subList );
-               self.write( ")" );
-            }
-            else {
-               filter( subExp, self, subList );
-            }
-            self.write( "..." );
-            break;
-         }
-         if subIndex ~= 1 {
-            self.write( ', ' );
-         }
-         filter( subExp, self, subList );
-      }
-      if mRetIndex and mRetIndex ~= 1 {
-         self.write( ")" );
-      }
-      else {
-         self.write( "}" );
-      }
+      self.popIndent();
+      self.writeln("}" );
    }
-}
-
-
-/**
-expListNode の式を go で扱える型に変換する。
-
-
-processRoot() で、processConvExp() を実行しておく。
-*/
-fn convFilter.processSetFromExpList(
-   convArgFuncName:str,
-   dstTypeList:&List<&Ast.TypeInfo>, expListNode:&Nodes.ExpListNode ) mut
-{
-   switch getExpListKind( dstTypeList, expListNode ) {
-      case .Conv {
-         self.write( "%s(" ( convArgFuncName ) );
-         let mRetIndex = expListNode.$mRetExp$.$index;
-
-         foreach exp, index in expListNode.$expList {
-            if index ~= 1 {
-               self.write( ', ' );
-            }
-            if mRetIndex == index {
-               self.write( "Lns_2DDD(" );
-               filter( exp, self, expListNode );
-               self.write( ")" );
-               break;
-            }
-            filter( exp, self, expListNode );
-            if expListNode.$mRetExp$.$index == index {
-               break;
-            }
-         }
-         self.write( ")" );
-      }
-      case .Slice {
-         foreach argType, index in dstTypeList {
-            if index ~= 1 {
-               self.write( ', ' );
-            }
-            if #expListNode.$expList >= index {
-               let argExp = expListNode.$expList[ index ];
-
-               if! let exp2ddd = argExp@@@Nodes.ExpToDDDNode {
-                  self.expList2Slice( exp2ddd.$expList );
-               }
-               else {
-                  if argExp.$expType.$kind == .Abbr {
-                     if argType.$kind == .DDD {
-                        self.write( "[]LnsAny{}" );
-                     }
-                     else {
-                        self.write( "nil" );
-                     }
-                  }
-                  else {
-                     filter( argExp, self, expListNode );
-                  }
-               }
-            }
-            else {
-               self.write( "[]LnsAny{}" );
-            }
-         }
-      }
-      case .Direct {
-         let mRetIndex = expListNode.$mRetExp$.$index;
-         foreach funcArgType, index in dstTypeList {
-            if mRetIndex == index - 1 {
-               break;
-            }
-            if index ~= 1 {
-               self.write( ', ' );
-            }
-            if index == #dstTypeList and
-               funcArgType.$kind == .DDD 
-            {
-               // 関数の最終仮引数が DDD の場合、
-               // []LnsAny に変換する
-               if #expListNode.$expList < index or
-                  expListNode.$expList[ index ].$expType.$kind == .Abbr
-               {
-                  self.write( "[]LnsAny{}" );
-               }
-               else {
-                  filter( expListNode.$expList[ index ], self, expListNode );
-               }
-            }
-            else {
-               // 最終仮引数より前
-               if #expListNode.$expList < index {
-                  // 最終実引数より後は、引数を省略している
-                  self.write( "nil" );
-               }
-               else {
-                  filter( expListNode.$expList[ index ], self, expListNode );
-               }
-            }
-         }
-      }
-   }
+   
+   self.popIndent();
+   self.write( "}" );
 }
 
 
@@ -710,37 +763,8 @@ pub override fn convFilter.processDeclVar(
    self.write( "var" );
 
    let mut prevType = "";
-   
-   if! let expList = node.$expList {
-      foreach exp, index in expList.$expList {
-         let goType;
-         let varName;
-         if #node.$varList >= index {
-            let varInfo = node.$varList[ index ];
-            goType = type2gotype( varInfo.$actualType );
-            varName = varInfo.$name.txt;
-         }
-         else {
-            goType = type2gotype( exp.$expType );
-            varName = "_";
-         }
-         if goType ~= prevType {
-            self.write( " %s" ( prevType ) );
-         }
-         if index ~= 1 {
-            self.write( ", " );
-         }
-         self.write( varName );
-         prevType = goType;
-      }
-      self.write( " %s" ( prevType ) );
-      
-      self.write( " = " );
-      self.processSetFromExpList(
-         getConvExpName( node.$id, expList ), 
-         node.$typeInfoList, expList );
-   }
-   else {
+
+   fn declVar() {
       foreach varInfo, index in node.$varList {
          let goType = type2gotype( varInfo.$actualType );
          if goType ~= prevType {
@@ -754,13 +778,130 @@ pub override fn convFilter.processDeclVar(
       }
       self.write( " %s" ( prevType ) );
    }
+   
+   if node.$unwrapFlag {
+      if! let expList, unwrapBlock = node.$expList, node.$unwrapBlock {
+         declVar();
+
+         // 一旦テンポラリに入れる
+         self.writeln( "" );
+         self.writeln( "{" );
+         self.pushIndent(##);
+         foreach varInfo, index in node.$varList {
+            if index ~= 1 {
+               self.write( ", " );
+            }
+            self.write( "_%s" ( varInfo.$name.txt ) );
+         }
+         self.write( " := " );
+         self.processSetFromExpList(
+            getConvExpName( node.$id, expList ), 
+            node.$typeInfoList, expList );
+         self.writeln( "" );
+
+         // テンポラリに nil が含まれるか確認する
+         self.write( "if " );
+         foreach varInfo, index in node.$varList {
+            if index ~= 1 {
+               self.write( " || " );
+            }
+            self.write( "_%s == nil" ( varInfo.$name.txt ) );
+         }
+         self.writeln( "{" );
+         
+         filter( unwrapBlock, self, node );
+
+         if! let thenBlock = node.$thenBlock {
+            self.writeln( "} else {" );
+            self.pushIndent(##);
+            foreach varInfo, index in node.$varList {
+               self.write( "%s = _%s" (varInfo.$name.txt, varInfo.$name.txt) );
+               self.outputConv( varInfo.$actualType );
+               self.writeln( "" );
+            }
+            self.popIndent();
+            filter( thenBlock, self, node );
+            self.writeln( "}" );
+         }
+         else {
+            self.writeln( "}" );
+         }
+         
+         
+         self.popIndent();
+         self.write( "}" );
+      }
+   }
+   else {
+      if! let expList = node.$expList {
+         foreach exp, index in expList.$expList {
+            let goType;
+            let varName;
+            if #node.$varList >= index {
+               let varInfo = node.$varList[ index ];
+               goType = type2gotype( varInfo.$actualType );
+               varName = varInfo.$name.txt;
+            }
+            else {
+               goType = type2gotype( exp.$expType );
+               varName = "_";
+            }
+            if goType ~= prevType {
+               self.write( " %s" ( prevType ) );
+            }
+            if index ~= 1 {
+               self.write( ", " );
+            }
+            self.write( varName );
+            prevType = goType;
+         }
+         self.write( " %s" ( prevType ) );
+         
+         self.write( " = " );
+         self.processSetFromExpList(
+            getConvExpName( node.$id, expList ), 
+            node.$typeInfoList, expList );
+      }
+      else {
+         declVar();
+      }
+   }
 }
 
 
 pub override fn convFilter.processWhen(
    node: Nodes.WhenNode, opt: Opt ) mut
 {
-   Util.err( "not support -- %s" (__func__) );
+   self.write( "if " );
+   foreach symPair, index in node.$symPairList {
+      if index > 1 {
+         self.write( " && " );
+      }
+      self.write( "%s != nil" (symPair.$src.$name) );
+      symPair.$dst.set_convModuleParam( true );
+   }
+   self.writeln( "{" );
+   self.pushIndent(##);
+   foreach symPair, index in node.$symPairList {
+      self.write( "%s_%d := %s" (symPair.$dst.$name, symPair.$dst.$symbolId,
+                                  symPair.$src.$name) );
+      self.outputConv( symPair.$dst.$typeInfo );
+      self.writeln( "" );
+      symPair.$dst.set_convModuleParam( true );
+   }
+   self.popIndent();
+
+   
+   filter( node.$block, self, node );
+
+   if! let elseBlock = node.$elseBlock {
+      self.writeln( "} else {" );
+      filter( elseBlock, self, node );
+      self.write( "}" );
+   }
+   else {
+      self.write( "}" );
+   }
 }
 
 pub override fn convFilter.processDeclArg(
@@ -856,24 +997,7 @@ pub override fn convFilter.processDeclFunc(
 pub override fn convFilter.processRefType(
    node: Nodes.RefTypeNode, opt: Opt ) mut
 {
-   if isAnyType( node.$expType ) {
-      self.write( "LnsAny" );
-   }
-   else {
-      if! let goType = type2gotypeMap[ getOrgTypeInfo( node.$expType ) ] {
-         self.write( goType );
-      }
-      else {
-         switch getOrgTypeInfo( node.$expType ).$kind {
-            case .List {
-               self.write( "[]LnsAny" );
-            }
-            default {
-               filter( node.$name, self, node );
-            }
-         }
-      }
-   }
+   self.write( type2gotype( node.$expType ) );
 }
 
 pub override fn convFilter.processIf(
@@ -975,7 +1099,7 @@ pub override fn convFilter.processForeach(
          _keyItemDecl( itemType, valName );
          self.write( " := range( " );
          filter( node.$exp, self, node );
-         self.writeln( ") {" );
+         self.writeln( ".Items ) {" );
          self.pushIndent( ## );
          if! let key = node.$key {
             self.writeln( "%s := _%s + 1" (key.txt, key.txt) );
@@ -1055,8 +1179,14 @@ pub override fn convFilter.processExpCall(
 {
    let funcType = node.$func.$expType;
    if Ast.isBuiltin( funcType.$typeId ) {
-      if funcType.$rawTxt == "print" {
-         self.write( "Lns_print" );
+      let builtinFuncs = TransUnit.getBuiltinFunc();
+      switch funcType {
+         case builtinFuncs.lns_print {
+            self.write( "Lns_print" );
+         }
+         default {
+            filter( node.$func, self, node );
+         }
       }
    }
    else {
@@ -1277,7 +1407,12 @@ pub override fn convFilter.processExpRef(
       self.write( "ddd" );
    }
    else {
-      self.write( node.$symbolInfo.$name );
+      if! let param = node.$symbolInfo.$convModuleParam {
+         self.write( "%s_%d" (node.$symbolInfo.$name, node.$symbolInfo.$symbolId ) );
+      }
+      else {
+         self.write( node.$symbolInfo.$name );
+      }
    }
 }
 
@@ -1290,7 +1425,25 @@ pub override fn convFilter.processExpRefItem(
 pub override fn convFilter.processRefField(
    node: Nodes.RefFieldNode, opt: Opt ) mut
 {
-   Util.err( "not support -- %s" (__func__) );
+   filter( node.$prefix, self, node );
+
+   if Ast.isBuiltin( node.$expType.$typeId ) {
+      let builtinFuncs = TransUnit.getBuiltinFunc();
+      switch node.$expType {
+         case builtinFuncs.list_insert {
+            self.write( ".Insert" );
+         }
+         case builtinFuncs.list_remove {
+            self.write( ".Remove" );
+         }
+         default {
+            Util.err( "%s: not support -- %s" (__func__, node.$expType.getTxt(##)) );
+         }
+      }
+   }
+   else {
+      self.write( ".%s" (node.$field.txt) );
+   }
 }
 
 pub override fn convFilter.processExpOmitEnum(
@@ -1347,12 +1500,14 @@ pub override fn convFilter.processUnboxing(
 pub override fn convFilter.processLiteralList(
    node: Nodes.LiteralListNode, opt: Opt ) mut
 {
+   self.write( "NewLnsList(" );
    if! let expList = node.$expList {
       self.expList2Slice( expList );
    }
    else {
       self.write( "[]LnsAny{}" );
    }
+   self.write( ")" );
 }
 
 pub override fn convFilter.processLiteralSet(

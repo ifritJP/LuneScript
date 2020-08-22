@@ -19,20 +19,28 @@ type LnsEnv struct {
 var cur_LnsEnv = LnsEnv{ []LnsAny{}, -1 }
 
 type LnsList struct {
-    items []LnsAny
+    Items []LnsAny
+}
+
+func NewLnsList( list []LnsAny ) *LnsList {
+    return &LnsList{ list }
 }
 func (lnsList *LnsList) Insert( val LnsAny ) {
     if val != nil {
-        lnsList.items = append( lnsList.items, val )
+        lnsList.Items = append( lnsList.Items, val )
     }
 }
-func (lnsList *LnsList) Remove( index LnsAny ) {
+func (lnsList *LnsList) Remove( index LnsAny ) LnsAny {
     if index == nil {
-        lnsList.items = lnsList.items[ : len(lnsList.items) - 1 ]
+        ret := lnsList.Items[ len(lnsList.Items) - 1 ]
+        lnsList.Items = lnsList.Items[ : len(lnsList.Items) - 1 ]
+        return ret
     } else {
         work := index.(LnsInt)
-        lnsList.items =
-            append( lnsList.items[ : work ], lnsList.items[ work+1: ]... )
+        ret := lnsList.Items[ work ]
+        lnsList.Items =
+            append( lnsList.Items[ : work ], lnsList.Items[ work+1: ]... )
+        return ret
     }
 }
 
@@ -72,11 +80,11 @@ func Lns_2DDD( multi ...LnsAny ) []LnsAny {
 func Lns_print( multi []LnsAny ) {
     for index, val := range( multi ) {
         if index != 0 {
-            print( "\t" )
+            fmt.Print( "\t" )
         }
-        print( Lns_ToString( val ) )
+        fmt.Print( Lns_ToString( val ) )
     }
-    print( "\n" )
+    fmt.Print( "\n" )
 }
 
 
@@ -165,7 +173,7 @@ func test() {
         lnsList.Insert( 100 )
         fmt.Println( lnsList )
 
-        for _, val := range( lnsList.items ) {
+        for _, val := range( lnsList.Items ) {
             fmt.Println( val )
         }
 

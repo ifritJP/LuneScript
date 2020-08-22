@@ -1,6 +1,0 @@
-let work = [{ "ab":1 }, { "xyz":2 }];
-foreach list in work {
-   foreach val, key in list {
-      print( key, val );
-   }
-}

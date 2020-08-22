@@ -127,8 +127,10 @@ fn getLiteralMacroVal( obj:Nodes.Literal ) : stem! {
          }
          return newMap;
       }
+      _default {
+         Util.err( "unknown literal obj -- " .. obj.$_txt );
+      }
    }
-   Util.err( "unknown literal obj -- " .. obj.$_txt );
 }
 
 class ExtMacroInfo extend Nodes.MacroInfo {

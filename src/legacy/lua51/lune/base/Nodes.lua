@@ -465,12 +465,15 @@ local function getLiteralObj( obj )
          local val = _matchExp[2][1]
       
          return val
+      else 
+         do
+            Util.errorLog( "unknown literal obj -- " .. Literal:_getTxt( obj)
+             )
+            return nil
+         end
       end
    end
    
-   Util.errorLog( "unknown literal obj -- " .. Literal:_getTxt( obj)
-    )
-   return nil
 end
 _moduleObj.getLiteralObj = getLiteralObj
 
@@ -1902,6 +1905,9 @@ local function getBreakKindForStmtList( checkMode, stmtList )
                   local _switchExp = work
                   if _switchExp == BreakKind.None then
                      if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
+                        if false then
+                           return BreakKind.None
+                        end
                         
                      end
                      
@@ -2105,7 +2111,10 @@ function IfNode:getBreakKind( checkMode )
             local _switchExp = work
             if _switchExp == BreakKind.None then
                if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
-                  return BreakKind.None
+                  if true then
+                     return BreakKind.None
+                  end
+                  
                end
                
             else 
@@ -2357,13 +2366,13 @@ function SwitchNode:canBeStatement(  )
 
    return true
 end
-function SwitchNode.new( id, pos, macroArgFlag, typeList, exp, caseList, default )
+function SwitchNode.new( id, pos, macroArgFlag, typeList, exp, caseList, default, fullCase, failSafeDefault )
    local obj = {}
    SwitchNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, exp, caseList, default ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, exp, caseList, default, fullCase, failSafeDefault ); end
    return obj
 end
-function SwitchNode:__init(id, pos, macroArgFlag, typeList, exp, caseList, default) 
+function SwitchNode:__init(id, pos, macroArgFlag, typeList, exp, caseList, default, fullCase, failSafeDefault) 
    Node.__init( self,id, 10, pos, macroArgFlag, typeList)
    
    
@@ -2371,12 +2380,14 @@ function SwitchNode:__init(id, pos, macroArgFlag, typeList, exp, caseList, defau
    self.exp = exp
    self.caseList = caseList
    self.default = default
+   self.fullCase = fullCase
+   self.failSafeDefault = failSafeDefault
    
    
 end
-function SwitchNode.create( nodeMan, pos, macroArgFlag, typeList, exp, caseList, default )
+function SwitchNode.create( nodeMan, pos, macroArgFlag, typeList, exp, caseList, default, fullCase, failSafeDefault )
 
-   local node = SwitchNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, exp, caseList, default)
+   local node = SwitchNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, exp, caseList, default, fullCase, failSafeDefault)
    nodeMan:addNode( node )
    return node
 end
@@ -2437,6 +2448,12 @@ end
 function SwitchNode:get_default()
    return self.default
 end
+function SwitchNode:get_fullCase()
+   return self.fullCase
+end
+function SwitchNode:get_failSafeDefault()
+   return self.failSafeDefault
+end
 
 
 
@@ -2445,6 +2462,7 @@ function SwitchNode:getBreakKind( checkMode )
    local kind = BreakKind.None
    for __index, caseInfo in ipairs( self.caseList ) do
       local work = caseInfo:get_block():getBreakKind( checkMode )
+      local goNext = (work == BreakKind.None ) or not self.fullCase
       
       if checkMode == CheckBreakMode.IgnoreFlowReturn then
          if work == BreakKind.Return then
@@ -2461,7 +2479,10 @@ function SwitchNode:getBreakKind( checkMode )
             local _switchExp = work
             if _switchExp == BreakKind.None then
                if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
-                  return BreakKind.None
+                  if goNext then
+                     return BreakKind.None
+                  end
+                  
                end
                
             else 
@@ -2498,7 +2519,10 @@ function SwitchNode:getBreakKind( checkMode )
                local _switchExp = work
                if _switchExp == BreakKind.None then
                   if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
-                     return BreakKind.None
+                     if true then
+                        return BreakKind.None
+                     end
+                     
                   end
                   
                else 
@@ -2517,6 +2541,10 @@ function SwitchNode:getBreakKind( checkMode )
       end
    end
    
+   
+   if self.fullCase then
+      return kind
+   end
    
    return BreakKind.None
 end
@@ -4480,7 +4508,10 @@ function IfUnwrapNode:getBreakKind( checkMode )
          local _switchExp = work
          if _switchExp == BreakKind.None then
             if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
-               return BreakKind.None
+               if true then
+                  return BreakKind.None
+               end
+               
             end
             
          else 
@@ -4515,7 +4546,10 @@ function IfUnwrapNode:getBreakKind( checkMode )
                local _switchExp = work
                if _switchExp == BreakKind.None then
                   if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
-                     return BreakKind.None
+                     if true then
+                        return BreakKind.None
+                     end
+                     
                   end
                   
                else 
@@ -4708,7 +4742,10 @@ function WhenNode:getBreakKind( checkMode )
          local _switchExp = work
          if _switchExp == BreakKind.None then
             if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
-               return BreakKind.None
+               if true then
+                  return BreakKind.None
+               end
+               
             end
             
          else 
@@ -4743,7 +4780,10 @@ function WhenNode:getBreakKind( checkMode )
                local _switchExp = work
                if _switchExp == BreakKind.None then
                   if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
-                     return BreakKind.None
+                     if true then
+                        return BreakKind.None
+                     end
+                     
                   end
                   
                else 
@@ -7110,7 +7150,10 @@ function DeclVarNode:getBreakKind( checkMode )
                local _switchExp = work
                if _switchExp == BreakKind.None then
                   if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
-                     return BreakKind.None
+                     if true then
+                        return BreakKind.None
+                     end
+                     
                   end
                   
                else 
@@ -7145,7 +7188,10 @@ function DeclVarNode:getBreakKind( checkMode )
                      local _switchExp = work
                      if _switchExp == BreakKind.None then
                         if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
-                           return BreakKind.None
+                           if true then
+                              return BreakKind.None
+                           end
+                           
                         end
                         
                      else 
@@ -7180,7 +7226,10 @@ function DeclVarNode:getBreakKind( checkMode )
                            local _switchExp = work
                            if _switchExp == BreakKind.None then
                               if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
-                                 return BreakKind.None
+                                 if true then
+                                    return BreakKind.None
+                                 end
+                                 
                               end
                               
                            else 
@@ -9023,13 +9072,13 @@ function MatchNode:canBeStatement(  )
 
    return true
 end
-function MatchNode.new( id, pos, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock )
+function MatchNode.new( id, pos, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, fullCase, failSafeDefault )
    local obj = {}
    MatchNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, fullCase, failSafeDefault ); end
    return obj
 end
-function MatchNode:__init(id, pos, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock) 
+function MatchNode:__init(id, pos, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, fullCase, failSafeDefault) 
    Node.__init( self,id, 64, pos, macroArgFlag, typeList)
    
    
@@ -9038,12 +9087,14 @@ function MatchNode:__init(id, pos, macroArgFlag, typeList, val, algeTypeInfo, ca
    self.algeTypeInfo = algeTypeInfo
    self.caseList = caseList
    self.defaultBlock = defaultBlock
+   self.fullCase = fullCase
+   self.failSafeDefault = failSafeDefault
    
    
 end
-function MatchNode.create( nodeMan, pos, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock )
+function MatchNode.create( nodeMan, pos, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, fullCase, failSafeDefault )
 
-   local node = MatchNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock)
+   local node = MatchNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, fullCase, failSafeDefault)
    nodeMan:addNode( node )
    return node
 end
@@ -9107,7 +9158,105 @@ end
 function MatchNode:get_defaultBlock()
    return self.defaultBlock
 end
+function MatchNode:get_fullCase()
+   return self.fullCase
+end
+function MatchNode:get_failSafeDefault()
+   return self.failSafeDefault
+end
 
+
+function MatchNode:getBreakKind( checkMode )
+
+   local kind = BreakKind.None
+   for __index, caseInfo in ipairs( self.caseList ) do
+      local work = caseInfo:get_block():getBreakKind( checkMode )
+      local goNext = (work == BreakKind.None ) or not self.fullCase
+      
+      if checkMode == CheckBreakMode.IgnoreFlowReturn then
+         if work == BreakKind.Return then
+            return BreakKind.Return
+         end
+         
+         if work == BreakKind.NeverRet then
+            return BreakKind.NeverRet
+         end
+         
+      else
+       
+         do
+            local _switchExp = work
+            if _switchExp == BreakKind.None then
+               if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
+                  if goNext then
+                     return BreakKind.None
+                  end
+                  
+               end
+               
+            else 
+               
+                  if kind == BreakKind.None or kind > work then
+                     kind = work
+                  end
+                  
+            end
+         end
+         
+      end
+      
+      
+   end
+   
+   do
+      local block = self.defaultBlock
+      if block ~= nil then
+         local work = block:getBreakKind( checkMode )
+         
+         if checkMode == CheckBreakMode.IgnoreFlowReturn then
+            if work == BreakKind.Return then
+               return BreakKind.Return
+            end
+            
+            if work == BreakKind.NeverRet then
+               return BreakKind.NeverRet
+            end
+            
+         else
+          
+            do
+               local _switchExp = work
+               if _switchExp == BreakKind.None then
+                  if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
+                     if true then
+                        return BreakKind.None
+                     end
+                     
+                  end
+                  
+               else 
+                  
+                     if kind == BreakKind.None or kind > work then
+                        kind = work
+                     end
+                     
+               end
+            end
+            
+         end
+         
+         
+         return kind
+      end
+   end
+   
+   
+   if self.fullCase then
+      return kind
+   end
+   
+   return BreakKind.None
+end
 
 
 
@@ -10758,6 +10907,9 @@ function WhileNode:getBreakKind( checkMode )
                   local _switchExp = work
                   if _switchExp == BreakKind.None then
                      if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
+                        if false then
+                           return BreakKind.None
+                        end
                         
                      end
                      
@@ -10824,6 +10976,9 @@ function WhileNode:getBreakKind( checkMode )
                   local _switchExp = work
                   if _switchExp == BreakKind.None then
                      if mode == CheckBreakMode.Normal or mode == CheckBreakMode.Return then
+                        if false then
+                           return BreakKind.None
+                        end
                         
                      end
                      
@@ -11240,10 +11395,13 @@ local function enumLiteral2Literal( obj )
          local val = _matchExp[2][1]
       
          return _lune.newAlge( Literal.Str, {val}), nil
+      else 
+         do
+            return nil, "illegal enum: " .. Ast.EnumLiteral:_getTxt( obj)
+            
+         end
       end
    end
-   
-   return nil, "illegal enum: " .. Ast.EnumLiteral:_getTxt( obj)
    
 end
 

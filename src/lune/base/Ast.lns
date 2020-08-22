@@ -163,8 +163,15 @@ pub proto abstract class SymbolInfo extend (LowSymbol) ;
 
 
 //pub let mut typeInfoKind:Map<str,TypeInfo> = {};
-pub let mut sym2builtInTypeMap:Map<str,SymbolInfo> = {};
-pub let mut builtInTypeIdSet:Map<int,&TypeInfo> = {};
+let mut sym2builtInTypeMap:Map<str,SymbolInfo> = {};
+pub fn getSym2builtInTypeMap(): &Map<str,SymbolInfo> {
+   return sym2builtInTypeMap;
+}
+let mut builtInTypeIdSet:Map<int,&TypeInfo> = {};
+pub fn getBuiltInTypeIdMap():&Map<int,&TypeInfo> {
+   return builtInTypeIdSet;
+}
+
 
 pub enum SerializeKind {
    Nilable,
@@ -2946,8 +2953,10 @@ pub fn getEnumLiteralVal( obj:EnumLiteral ) : stem {
       case .Str( val ) {
          return val;
       }
+      _default {
+         Util.err( "illegal enum " .. obj.$_txt );
+      }
    }
-   Util.err( "illegal enum " .. obj.$_txt );
 }
 
 
@@ -3687,7 +3696,7 @@ pub static fn NormalTypeInfo.createModifier(
 idProv.increment();
 //typeIdSeed = typeIdSeed + 1;
 
-fn addBuiltin( typeInfo:&TypeInfo ) {
+pub fn addBuiltin( typeInfo:&TypeInfo ) {
    builtInTypeIdSet[ typeInfo.$typeId ] = typeInfo;
 }
 
@@ -4327,8 +4336,10 @@ pub fn CombineType.andType(
          }
          return CommonType.Normal( self.createStem() );
       }
+      _default {
+         error( "not support" );
+      }
    }
-   error( "not support" );
 }
 
 
@@ -4425,8 +4436,10 @@ pub static fn TypeInfo.getCommonTypeCombo(
             case .Combine( combine ) {
                return combine.$typeInfo;
             }
+            _default {
+               error( "not support" );
+            }
          }
-         error( "not support" );
       }
       
       switch type1.$kind {
@@ -4498,8 +4511,10 @@ pub static fn TypeInfo.getCommonType(
       case .Combine( combine ) {
          return combine.$typeInfo;
       }
+      _default {
+         error( "illegal" );
+      }
    }
-   error( "illegal" );
 }
 
 

@@ -1287,7 +1287,7 @@ class _TypeInfoNormal extend _TypeInfo {
    {
       let mut newTypeInfo:&Ast.TypeInfo! = nil;
       if self.parentId ~= Ast.rootTypeId or
-         not Ast.builtInTypeIdSet[ self.typeId ] or
+         not Ast.getBuiltInTypeIdMap()[ self.typeId ] or
          self.kind == Ast.TypeInfoKind.List or
          self.kind == Ast.TypeInfoKind.Array or
          self.kind == Ast.TypeInfoKind.Map or
@@ -1976,9 +1976,9 @@ fn TransUnit.registBuiltInScope() mut {
 
             self.popScope();
 
-            Ast.builtInTypeIdSet[ typeInfo.get_typeId() ] = typeInfo;
+            Ast.addBuiltin( typeInfo );
             if typeInfo.$nilableTypeInfo ~= Ast.headTypeInfo {
-               Ast.builtInTypeIdSet[ typeInfo.$nilableTypeInfo.$typeId ] = typeInfo.$nilableTypeInfo;
+               Ast.addBuiltin( typeInfo.$nilableTypeInfo );
             }
             let symInfo = unwrap self.scope.add(
                symbolKind, false, kind == .Func,
@@ -2092,9 +2092,8 @@ fn TransUnit.registBuiltInScope() mut {
                }
             }
 
-            Ast.builtInTypeIdSet[ parentInfo.get_typeId() ] = parentInfo;
-            Ast.builtInTypeIdSet[ parentInfo.$nilableTypeInfo.$typeId ] =
-               parentInfo.$nilableTypeInfo;
+            Ast.addBuiltin( parentInfo );
+            Ast.addBuiltin( parentInfo.$nilableTypeInfo );
          }
          if not builtinModuleName2Scope[ name ]
          {
@@ -2743,10 +2742,10 @@ fn TransUnit.processImport( modulePath:str ) mut :
 
    //self.moduleName2Info[ modulePath ] = metaInfo;
 
-   foreach symbolInfo in Ast.sym2builtInTypeMap {
+   foreach symbolInfo in Ast.getSym2builtInTypeMap() {
       typeId2TypeInfo[ symbolInfo.$typeInfo.get_typeId() ] = symbolInfo.$typeInfo;
    }
-   foreach builtinTypeInfo in Ast.builtInTypeIdSet {
+   foreach builtinTypeInfo in Ast.getBuiltInTypeIdMap() {
       typeId2TypeInfo[ builtinTypeInfo.$typeId ] = builtinTypeInfo;
    }
 
@@ -3294,14 +3293,41 @@ fn TransUnit.analyzeSwitch( firstToken: &Parser.Token ) mut : Nodes.SwitchNode {
       nextToken = self.getToken(##);
    }
 
+   let fullCase;
+   if! let enumType = exp.$expType@@@Ast.EnumTypeInfo {
+      // enum 値の switch の場合、全ての case をチェックしているかどうかを調べる
+      let mut count = 0;
+      foreach enumVal in enumType.$name2EnumValInfo {
+         count = count + 1;
+      }
+      if #caseList == count {
+         fullCase = true;
+      }
+      else {
+         fullCase = false;
+      }
+   }
+   else {
+      fullCase = false;
+   }
+   
    let mut defaultBlock: Nodes.BlockNode! = nil;
-   if nextToken.txt == "default" {
+   let mut failSafeDefault = false;
+   if nextToken.txt == "default" or nextToken.txt == "_default" {
+      if nextToken.txt == "_default" {
+         failSafeDefault = true;
+      }
+      elseif fullCase {
+         self.addWarnMess(
+            nextToken.pos,
+            "This 'switch' has full case. This 'default' is no reach." );
+      }
       defaultBlock = self.analyzeBlock(
          .Default, firstFlag and TentativeMode.Simple or TentativeMode.Finish ## );
    }
    else {
       if not firstFlag {
-         self.finishTentativeSymbol( false );
+         self.finishTentativeSymbol( fullCase );
       }
       self.pushback();
    }
@@ -3316,7 +3342,7 @@ fn TransUnit.analyzeSwitch( firstToken: &Parser.Token ) mut : Nodes.SwitchNode {
 
    return Nodes.SwitchNode.create(
       self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
-      [ Ast.builtinTypeNone ], exp, caseList, defaultBlock );
+      [ Ast.builtinTypeNone ], exp, caseList, defaultBlock, fullCase, failSafeDefault );
 }
 
 
@@ -3392,9 +3418,16 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
       caseList.insert( matchCase );
       nextToken = self.getToken(##);
    }
+
+   let fullCase = algeValNameSet.len() == algeTypeInfo.$valInfoNum;
+
+   let mut failSafeDefault = false;
    let mut defaultBlock:&Nodes.Node! = nil;
-   if nextToken.txt == "default" {
-      if algeValNameSet.len() == algeTypeInfo.$valInfoNum {
+   if nextToken.txt == "default" or nextToken.txt == "_default" {
+      if nextToken.txt == "_default" {
+         failSafeDefault = true;
+      }
+      elseif fullCase {
          self.addWarnMess( nextToken.pos, "defalut is not reach" );
       }
       defaultBlock = self.analyzeBlock(
@@ -3403,7 +3436,7 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
    }
    else {
       if not firstFlag {
-         self.finishTentativeSymbol( algeValNameSet.len() == algeTypeInfo.$valInfoNum );
+         self.finishTentativeSymbol( fullCase );
       }
    }
    self.checkToken( nextToken, "}" );
@@ -3417,7 +3450,8 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
 
    return Nodes.MatchNode.create(
       self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
-      [ Ast.builtinTypeNone ], exp, algeTypeInfo, caseList, defaultBlock );
+      [ Ast.builtinTypeNone ], exp, algeTypeInfo, caseList, defaultBlock,
+      fullCase, failSafeDefault );
 }
 
 

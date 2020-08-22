@@ -494,11 +494,17 @@ end
 
 
 local sym2builtInTypeMap = {}
-_moduleObj.sym2builtInTypeMap = sym2builtInTypeMap
+local function getSym2builtInTypeMap(  )
 
+   return sym2builtInTypeMap
+end
+_moduleObj.getSym2builtInTypeMap = getSym2builtInTypeMap
 local builtInTypeIdSet = {}
-_moduleObj.builtInTypeIdSet = builtInTypeIdSet
+local function getBuiltInTypeIdMap(  )
 
+   return builtInTypeIdSet
+end
+_moduleObj.getBuiltInTypeIdMap = getBuiltInTypeIdMap
 
 local SerializeKind = {}
 _moduleObj.SerializeKind = SerializeKind
@@ -661,7 +667,7 @@ TypeInfoKind.__allList[26] = TypeInfoKind.CombineIF
 
 local function isBuiltin( typeId )
 
-   return _moduleObj.builtInTypeIdSet[typeId] ~= nil
+   return builtInTypeIdSet[typeId] ~= nil
 end
 _moduleObj.isBuiltin = isBuiltin
 
@@ -2185,7 +2191,7 @@ function Scope:getSymbolInfo( name, fromScope, onlySameNsFlag, access )
    end
    
    do
-      local _exp = _moduleObj.sym2builtInTypeMap[name]
+      local _exp = sym2builtInTypeMap[name]
       if _exp ~= nil then
          return _exp
       end
@@ -2248,7 +2254,7 @@ function Scope:getSymbolTypeInfo( name, fromScope, moduleScope, access )
       return self.parent:getSymbolTypeInfo( name, fromScope, moduleScope, access )
    end
    
-   return _moduleObj.sym2builtInTypeMap[name]
+   return sym2builtInTypeMap[name]
 end
 
 
@@ -4251,11 +4257,14 @@ local function getEnumLiteralVal( obj )
          local val = _matchExp[2][1]
       
          return val
+      else 
+         do
+            Util.err( "illegal enum " .. EnumLiteral:_getTxt( obj)
+             )
+         end
       end
    end
    
-   Util.err( "illegal enum " .. EnumLiteral:_getTxt( obj)
-    )
 end
 _moduleObj.getEnumLiteralVal = getEnumLiteralVal
 
@@ -4844,7 +4853,7 @@ function NormalTypeInfo.create( accessMode, abstractFlag, scope, baseInfo, inter
 
    if kind == TypeInfoKind.Prim then
       do
-         local _exp = _moduleObj.sym2builtInTypeMap[txt]
+         local _exp = sym2builtInTypeMap[txt]
          if _exp ~= nil then
             return _exp:get_typeInfo()
          end
@@ -5031,14 +5040,15 @@ end
 idProv:increment(  )
 local function addBuiltin( typeInfo )
 
-   _moduleObj.builtInTypeIdSet[typeInfo:get_typeId()] = typeInfo
+   builtInTypeIdSet[typeInfo:get_typeId()] = typeInfo
 end
+_moduleObj.addBuiltin = addBuiltin
 
 local function registBuiltin( idName, typeTxt, kind, typeInfo, nilableTypeInfo, registScope )
 
-   _moduleObj.sym2builtInTypeMap[typeTxt] = NormalSymbolInfo.new(SymbolKind.Typ, false, false, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, nil, typeInfo, MutMode.IMut, true)
+   sym2builtInTypeMap[typeTxt] = NormalSymbolInfo.new(SymbolKind.Typ, false, false, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, nil, typeInfo, MutMode.IMut, true)
    if nilableTypeInfo ~= _moduleObj.headTypeInfo then
-      _moduleObj.sym2builtInTypeMap[typeTxt .. "!"] = NormalSymbolInfo.new(SymbolKind.Typ, false, kind == TypeInfoKind.Func, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, nil, nilableTypeInfo, MutMode.IMut, true)
+      sym2builtInTypeMap[typeTxt .. "!"] = NormalSymbolInfo.new(SymbolKind.Typ, false, kind == TypeInfoKind.Func, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, nil, nilableTypeInfo, MutMode.IMut, true)
    end
    
    addBuiltin( typeInfo )
@@ -5291,7 +5301,7 @@ end
 function NormalTypeInfo.createModule( scope, parentInfo, externalFlag, moduleName, mutable )
 
    do
-      local _exp = _moduleObj.sym2builtInTypeMap[moduleName]
+      local _exp = sym2builtInTypeMap[moduleName]
       if _exp ~= nil then
          return _exp:get_typeInfo()
       end
@@ -5311,7 +5321,7 @@ end
 function NormalTypeInfo.createClass( classFlag, abstractFlag, scope, baseInfo, interfaceList, genTypeList, parentInfo, externalFlag, accessMode, className )
 
    do
-      local _exp = _moduleObj.sym2builtInTypeMap[className]
+      local _exp = sym2builtInTypeMap[className]
       if _exp ~= nil then
          return _exp:get_typeInfo()
          
@@ -5691,10 +5701,13 @@ function CombineType:andType( other, alt2type )
          end
          
          return _lune.newAlge( CommonType.Normal, {self:createStem(  )})
+      else 
+         do
+            error( "not support" )
+         end
       end
    end
    
-   error( "not support" )
 end
 
 
@@ -5798,10 +5811,13 @@ function TypeInfo.getCommonTypeCombo( commonType, otherType, alt2type )
                local combine = _matchExp[2][1]
             
                return combine:get_typeInfo()
+            else 
+               do
+                  error( "not support" )
+               end
             end
          end
          
-         error( "not support" )
       end
       
       do
@@ -5855,10 +5871,13 @@ function TypeInfo.getCommonType( typeInfo, other, alt2type )
          local combine = _matchExp[2][1]
       
          return combine:get_typeInfo()
+      else 
+         do
+            error( "illegal" )
+         end
       end
    end
    
-   error( "illegal" )
 end
 
 

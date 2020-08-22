@@ -3127,7 +3127,7 @@ fn processMethodDeclTxt(
             retType = cTypeStem;
          }
       }
-      default {
+      _default {
          Util.err( "not support -- %s" (wrapKind.$_txt) );
       }
    }
