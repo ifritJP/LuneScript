@@ -159,4 +159,22 @@
          }
       }
    }
+   {
+      fn func( val:Val ) {
+         _switch val {
+            case .Val1, .Val2 {
+            }
+         }
+      }      
+   }
+   {
+      fn func( val:Val ) {
+         switch val {
+            case .Val1, .Val2 {
+            }
+            default {// error
+            }
+         }
+      }      
+   }
 }

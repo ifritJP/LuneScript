@@ -5356,6 +5356,9 @@ pub static fn TypeInfo.canEvalWithBase(
       if other == builtinTypeMultiExp and dest ~= builtinTypeMultiExp {
          return false, "can't eval from '__exp' to '__exps'.";
       }
+      if other.equals( builtinTypeAbbr## ) {
+         return false, nil;
+      }
       // とりあえず全て OK とする
       return true, nil;
    }

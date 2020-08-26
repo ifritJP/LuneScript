@@ -3350,11 +3350,14 @@ fn TransUnit.analyzeSwitch( firstToken: &Parser.Token ) mut : Nodes.SwitchNode {
    let mut caseKind:Nodes.CaseKind;
    if! let enumType = exp.$expType@@@Ast.EnumTypeInfo {
       // enum 値の switch の場合、全ての case をチェックしているかどうかを調べる
-      let mut count = 0;
+      let mut miss = false;
       foreach enumVal in enumType.$name2EnumValInfo {
-         count = count + 1;
+         if not condObjSet.has( Ast.getEnumLiteralVal( enumVal.$val ) ) {
+            miss = true;
+            break;
+         }
       }
-      if #caseList == count {
+      if not miss {
          if firstToken.txt == "_switch" {
             caseKind = .MustFull;
          }

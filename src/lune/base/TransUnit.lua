@@ -4739,12 +4739,16 @@ function TransUnit:analyzeSwitch( firstToken )
    do
       local enumType = _lune.__Cast( exp:get_expType(), 3, Ast.EnumTypeInfo )
       if enumType ~= nil then
-         local count = 0
+         local miss = false
          for __index, enumVal in pairs( enumType:get_name2EnumValInfo() ) do
-            count = count + 1
+            if not _lune._Set_has(condObjSet, Ast.getEnumLiteralVal( enumVal:get_val() ) ) then
+               miss = true
+               break
+            end
+            
          end
          
-         if #caseList == count then
+         if not miss then
             if firstToken.txt == "_switch" then
                caseKind = Nodes.CaseKind.MustFull
             else

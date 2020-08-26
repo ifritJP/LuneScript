@@ -7009,6 +7009,10 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
          return false, "can't eval from '__exp' to '__exps'."
       end
       
+      if other:equals( _moduleObj.builtinTypeAbbr ) then
+         return false, nil
+      end
+      
       return true, nil
    end
    
