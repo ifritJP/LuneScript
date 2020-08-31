@@ -168,7 +168,7 @@
       }      
    }
    {
-      fn func( val:Val ) {
+      fn func( val:&Val ) {
          switch val {
             case .Val1, .Val2 {
             }

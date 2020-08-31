@@ -2820,7 +2820,7 @@ pub override fn convFilter.processExpOp2(
          // ビット演算子を持っていない場合、ビット演算モジュールに置き換え
          let mut binfunc = "";
          let mut exp2Mod = "";
-         switch _exp {
+         _switch _exp {
             case .And {
                binfunc = "band";
             }
@@ -2836,9 +2836,6 @@ pub override fn convFilter.processExpOp2(
             case .RShift {
                binfunc = "lshift";
                exp2Mod = "-";
-            }
-            default {
-               Util.err( "illegal op -- %s" (opTxt) );
             }
          }
          self.write( "bit32.%s(" (binfunc) );

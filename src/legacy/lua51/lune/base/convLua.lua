@@ -3496,9 +3496,6 @@ function convFilter:processExpOp2( node, opt )
                elseif _switchExp == Ast.BitOpKind.RShift then
                   binfunc = "lshift"
                   exp2Mod = "-"
-               else 
-                  
-                     Util.err( string.format( "illegal op -- %s", opTxt) )
                end
             end
             
@@ -3993,7 +3990,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3268, function (  )
+   Log.log( Log.Level.Info, __func__, 3265, function (  )
    
       return string.format( "code: %s", code)
    end )

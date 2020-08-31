@@ -2760,7 +2760,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
          let mut actInfo:_TypeInfo! = nil;
          let mut mess:str! = nil;
          let kind = unwrap Ast.SerializeKind._from( skind@@int );
-         switch kind {
+         _switch kind {
             case .Enum {
                actInfo = _TypeInfoEnum._fromMap( atomInfo );
             }
@@ -2797,9 +2797,6 @@ fn TransUnit.processImport( modulePath:str ) mut :
             }
             case .Box {
                actInfo = _TypeInfoBox._fromMap( atomInfo );
-            }
-            default {
-               Util.err( "unknown skind -- %d" (skind@@int) );
             }
          }
          when! actInfo {
@@ -3348,7 +3345,7 @@ fn TransUnit.analyzeSwitch( firstToken: &Parser.Token ) mut : Nodes.SwitchNode {
    }
 
    let mut caseKind:Nodes.CaseKind;
-   if! let enumType = exp.$expType@@@Ast.EnumTypeInfo {
+   if! let enumType = exp.$expType.$srcTypeInfo@@@Ast.EnumTypeInfo {
       // enum 値の switch の場合、全ての case をチェックしているかどうかを調べる
       let mut miss = false;
       foreach enumVal in enumType.$name2EnumValInfo {

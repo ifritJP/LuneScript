@@ -4199,9 +4199,6 @@ function TransUnit:processImport( modulePath )
                   actInfo = _TypeInfoModifier._fromMap( atomInfo )
                elseif _switchExp == Ast.SerializeKind.Box then
                   actInfo = _TypeInfoBox._fromMap( atomInfo )
-               else 
-                  
-                     Util.err( string.format( "unknown skind -- %d", math.floor(skind)) )
                end
             end
             
@@ -4357,7 +4354,7 @@ function TransUnit:processImport( modulePath )
             
          elseif _switchExp == Ast.TypeInfoKind.Module then
             self:pushModule( true, classTypeInfo:getTxt(  ), Ast.TypeInfo.isMut( classTypeInfo ) )
-            Log.log( Log.Level.Info, __func__, 2952, function (  )
+            Log.log( Log.Level.Info, __func__, 2949, function (  )
             
                return string.format( "push module -- %s, %s, %d, %d, %d", classTypeInfo:getTxt(  ), _lune.nilacc( self.scope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, self.scope, false ) or "nil", _lune.nilacc( self.scope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ) or -1, classTypeInfo:get_typeId(), self.scope:get_parent():get_scopeId())
             end )
@@ -4432,7 +4429,7 @@ function TransUnit:processImport( modulePath )
    
    self.importModuleInfo:remove(  )
    
-   Log.log( Log.Level.Info, __func__, 3037, function (  )
+   Log.log( Log.Level.Info, __func__, 3034, function (  )
    
       return string.format( "%s complete", modulePath)
    end )
@@ -4737,7 +4734,7 @@ function TransUnit:analyzeSwitch( firstToken )
    local caseKind
    
    do
-      local enumType = _lune.__Cast( exp:get_expType(), 3, Ast.EnumTypeInfo )
+      local enumType = _lune.__Cast( exp:get_expType():get_srcTypeInfo(), 3, Ast.EnumTypeInfo )
       if enumType ~= nil then
          local miss = false
          for __index, enumVal in pairs( enumType:get_name2EnumValInfo() ) do
