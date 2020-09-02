@@ -1365,6 +1365,12 @@ _declNodeClass( "RefField", Node, nil, nil, false,
                   { "prefix": "&Node" }] 
 );
 pub override fn RefFieldNode.canBeLeft():bool {
+   // if not Ast.isMutable( self.prefix.$expType.$mutMode ) {
+   //    if self.$symbolInfo$.$mutMode == .AllMut {
+   //       return true;
+   //    }
+   //    return false;
+   // }
    if! self.$symbolInfo {
       return _exp.$canBeLeft;
    }

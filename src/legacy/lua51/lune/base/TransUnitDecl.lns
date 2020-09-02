@@ -1776,18 +1776,20 @@ nil の場合、メンバの宣言位置。
             let symbolInfo = unwrap self.scope.getSymbolInfoChild( memberName );
             let typeInfo = symbolInfo.$typeInfo;
             if not symbolInfo.$hasValueFlag {
+               let msg;
+               if staticFlag {
+                  msg = "Set member -- %s" ( memberName );
+               }
+               else {
+                  msg = "Set member -- %s.%s" ( name.txt, memberName );
+               }
                if not typeInfo.$nilable {
-                  let msg;
-                  if staticFlag {
-                     msg = "Set member -- %s" ( memberName );
-                  }
-                  else {
-                     msg = "Set member -- %s.%s" ( name.txt, memberName );
-                  }
                   self.addErrMess( unwrap pos default memberNode.$pos, msg );
                }
                else {
                   uninitMemberList.insert( symbolInfo );
+                  // nilable は、ここで初期化済みとする。
+                  self.addWarnMess( unwrap pos default memberNode.$pos, msg );
                }
             }
          }

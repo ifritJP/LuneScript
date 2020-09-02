@@ -11,27 +11,6 @@
 - [ ] サイズ 0 の lua ファイルがあると、 uptodate になっている？
       uptodate になって生成しなおさずに import してしまい、バグっているっぽい。
   
-- [ ] string.gsub などのパターン指定で quote する際に "%." のように % を使用するべき
-      ところを、 "\." を使用するとランタイムエラーになる。 
-  
-- [ ] 次の match の unreach が認識できていない
-alge Hoge {
-   Val1,
-   Val2,
-}
-
-fn func( val:Hoge ) {
-   match val {
-      case .Val1 {
-         return;
-      }
-      case .Val2 {
-         return;
-      }
-   }
-   print( "hoge" ); // ここは unreach
-}
-  
 - [ ] imuttable のメンバに代入できてしまう。
 class Hoge {
    pub let val:int!;
@@ -82,6 +61,11 @@ _hoge( func() );
   
 * 機能
 
+- [ ] string.gsub などのパターン指定で quote する際に "%." のように % を使用するべき
+      ところを、 "\." を使用するとランタイムエラーになる。
+      コンパイル時にチェックしてエラーを出す。
+  
+  
 - [ ] SymbolInfo に未参照かどうかを示す情報を追加
 - [ ] =__line__=, =__func__=, =__mode__= 等の特殊シンボル Node を作る。
 

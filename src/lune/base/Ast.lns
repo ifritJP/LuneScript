@@ -419,6 +419,7 @@ pub class Scope extend (ModuleInfoManager) {
       self.classFlag = classFlag;
       self.symbolId2DataOwnerInfo = {};
       self.ifScopeList = unwrap ifScopeList default [];
+      self.ownerTypeInfo = nil;
    }
 
    pub fn getNamespaceTypeInfo() : &TypeInfo;

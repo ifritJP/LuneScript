@@ -199,7 +199,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 3692
+   return 3706
 end
 
 
@@ -391,6 +391,10 @@ function Option:__init()
    self.transCtrlInfo = TransCtrlInfo.create_normal(  )
    self.bootPath = nil
    self.useIpairs = false
+   self.analyzeModule = nil
+   self.outputDir = nil
+   self.analyzePos = nil
+   self.dependsPath = nil
 end
 function Option:openDepend(  )
 

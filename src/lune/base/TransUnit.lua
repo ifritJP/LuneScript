@@ -6884,20 +6884,21 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
             local symbolInfo = _lune.unwrap( self.scope:getSymbolInfoChild( memberName ))
             local typeInfo = symbolInfo:get_typeInfo()
             if not symbolInfo:get_hasValueFlag() then
+               local msg
+               
+               if staticFlag then
+                  msg = string.format( "Set member -- %s", memberName)
+               else
+                
+                  msg = string.format( "Set member -- %s.%s", name.txt, memberName)
+               end
+               
                if not typeInfo:get_nilable() then
-                  local msg
-                  
-                  if staticFlag then
-                     msg = string.format( "Set member -- %s", memberName)
-                  else
-                   
-                     msg = string.format( "Set member -- %s.%s", name.txt, memberName)
-                  end
-                  
                   self:addErrMess( _lune.unwrapDefault( pos, memberNode:get_pos()), msg )
                else
                 
                   table.insert( uninitMemberList, symbolInfo )
+                  self:addWarnMess( _lune.unwrapDefault( pos, memberNode:get_pos()), msg )
                end
                
             end

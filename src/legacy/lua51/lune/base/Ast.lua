@@ -871,6 +871,7 @@ function Scope:__init(parent, classFlag, inherit, ifScopeList)
    self.classFlag = classFlag
    self.symbolId2DataOwnerInfo = {}
    self.ifScopeList = _lune.unwrapDefault( ifScopeList, {})
+   self.ownerTypeInfo = nil
 end
 function Scope:isRoot(  )
 

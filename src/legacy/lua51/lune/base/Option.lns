@@ -155,6 +155,10 @@ pub class Option {
       self.transCtrlInfo = TransCtrlInfo.create_normal();
       self.bootPath = nil;
       self.useIpairs = false;
+      self.analyzeModule = nil;
+      self.outputDir = nil;
+      self.analyzePos = nil;
+      self.dependsPath = nil;
    }
 
    pub fn openDepend(): mut oStream! {
