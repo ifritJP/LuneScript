@@ -1,0 +1,12 @@
+class Test {
+   let val1:int;
+   let val2:int;
+   pub fn sub1(): int {
+      return self.val1 + 100;
+   }
+   pub fn sub2(): int {
+      return self.val2 + 100;
+   }
+}
+let test = new Test( 1, 2 );
+print( test.sub1(), test.sub2()  );

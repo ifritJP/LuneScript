@@ -69,6 +69,7 @@ help:
 	@echo "  make test-reference"
 	@echo "  make test-go"
 	@echo "  make test-miniGo"
+	@echo "  make scratch-go"
 
 
 exec:
@@ -1071,6 +1072,10 @@ test-miniGo:
 	go build lune/base/runtime_go/miniGo.go $(GO_SRC)
 	./miniGo
 	$(MAKE) test-go
+
+scratch-go:
+	go run lune/base/runtime_go/scratch.go $(GO_SRC)
+
 
 test-reference:
 	if [ -d ~/work/ifritJP.github.io ]; then					\
