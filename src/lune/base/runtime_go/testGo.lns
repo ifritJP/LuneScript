@@ -55,3 +55,63 @@
    func( 10, nil );
    func( nil, nil );
 }
+{
+   class Test {
+      pro let val1:int;
+      pro let val2:int;
+      pub fn sub1(): int {
+         return self.val1 + 100;
+      }
+      pub fn sub2(): int {
+         return self.val2 + 100;
+      }
+   }
+   class Sub extend Test {
+      let val3:int;
+      pub override fn sub1(): int {
+         return self.val1 + 200;
+      }
+      pub fn sub3(): int {
+         return self.val3 + 200;
+      }
+   }
+   class SubSub extend Sub {
+      pub override fn sub1(): int {
+         return self.val1 + 300;
+      }
+      pub override fn sub2(): int {
+         return self.val2 + 300;
+      }
+   }
+
+   fn func1( test:&Test ): int, int {
+      if! let sub = test@@@Sub {
+         print( "OK", sub.sub2() );
+      }
+      else {
+         print( "CAN'T CAST" );
+      }
+      return test.sub1(), test.sub2();
+   }
+
+   fn func2( test:&stem ) {
+      if! let sub = test@@@Sub {
+         print( "OK", sub.sub2() );
+      }
+      else {
+         print( "CAN'T CAST" );
+      }
+   }
+
+   let test = new Test( 1, 2 );
+   print( func1( test )** );
+   func2( test );
+
+   let sub = new Sub( 1, 2, 3 );
+   print( sub.sub3(), func1( sub )** );
+   func2( sub );
+
+   let subsub = new SubSub( 1, 2, 3 );
+   print( subsub.sub3(), func1( subsub )** );
+   func2( subsub );
+}

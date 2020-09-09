@@ -1,12 +1,29 @@
 class Test {
-   let val1:int;
-   let val2:int;
-   pub fn sub1(): int {
-      return self.val1 + 100;
-   }
-   pub fn sub2(): int {
-      return self.val2 + 100;
+   pub fn func() : int {
+      return 1;
    }
 }
-let test = new Test( 1, 2 );
-print( test.sub1(), test.sub2()  );
+class Sub extend Test {
+   pub override fn func() : int {
+      return 10;
+   }
+}
+fn func1( sub:&Sub ) : int {
+   return sub.func();
+}
+fn func2( test:&stem ) : int {
+   if! let sub = test@@@Sub {
+      return sub.func();
+   }
+   else {
+      return 0;
+   }
+}
+
+let test = new Sub();
+
+let mut total = 0;
+for index = 1, 50000000 {
+   total = total + func1( test );
+}
+print( total );

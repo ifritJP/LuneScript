@@ -25,6 +25,7 @@ SOFTWARE.
 import lune.base.Parser;
 import lune.base.Util;
 import lune.base.Code;
+import lune.base.Log;
 
 pub class IdProvider {
    let mut id:int {pub};
@@ -5838,6 +5839,7 @@ pub enum IdType {
    Ext,
 }
 pub fn switchIdProvier( idType:IdType ) {
+   Log._log2( .Trace, "start" );
    if idType == .Base {
       idProv = idProvBase;
    }
@@ -5849,6 +5851,7 @@ pub fn switchIdProvier( idType:IdType ) {
 let builtinTypeInfo2Map = typeInfo2Map.clone();
 
 pub fn pushProcessInfo( processInfo:ProcessInfo! ): ProcessInfo {
+   Log._log2( .Trace, "start" );
 
    if #processInfoQueue == 0 {
       if idProv.$id >= userStartId {
@@ -5874,6 +5877,7 @@ pub fn pushProcessInfo( processInfo:ProcessInfo! ): ProcessInfo {
 }
 
 pub fn popProcessInfo() {
+   Log._log2( .Trace, "start" );
    let mut info = processInfoQueue[ #processInfoQueue ];
    processInfoQueue.remove(##);
    idProvBase = info.$idProvier;
@@ -6148,7 +6152,6 @@ pub fn TypeAnalyzer.analyzeTypeItemList(
 
    return new RefTypeInfo( pos, genericRefList, typeInfo ), nil, nil;
 }
-
 
 __test case1 {
    import lune.base.Testing;

@@ -230,6 +230,7 @@ end
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Code = _lune.loadModule( 'lune.base.Code' )
+local Log = _lune.loadModule( 'lune.base.Log' )
 
 local IdProvider = {}
 _moduleObj.IdProvider = IdProvider
@@ -7546,7 +7547,13 @@ IdType._val2NameMap[1] = 'Ext'
 IdType.__allList[2] = IdType.Ext
 
 local function switchIdProvier( idType )
+   local __func__ = '@lune.@base.@Ast.switchIdProvier'
 
+   Log.log( Log.Level.Trace, __func__, 5842, function (  )
+   
+      return "start"
+   end )
+   
    if idType == IdType.Base then
       idProv = idProvBase
    else
@@ -7560,7 +7567,13 @@ _moduleObj.switchIdProvier = switchIdProvier
 local builtinTypeInfo2Map = typeInfo2Map:clone(  )
 
 local function pushProcessInfo( processInfo )
+   local __func__ = '@lune.@base.@Ast.pushProcessInfo'
 
+   Log.log( Log.Level.Trace, __func__, 5854, function (  )
+   
+      return "start"
+   end )
+   
    
    if #processInfoQueue == 0 then
       if idProv:get_id() >= userStartId then
@@ -7589,7 +7602,13 @@ end
 _moduleObj.pushProcessInfo = pushProcessInfo
 
 local function popProcessInfo(  )
+   local __func__ = '@lune.@base.@Ast.popProcessInfo'
 
+   Log.log( Log.Level.Trace, __func__, 5880, function (  )
+   
+      return "start"
+   end )
+   
    local info = processInfoQueue[#processInfoQueue]
    table.remove( processInfoQueue )
    idProvBase = info:get_idProvier()

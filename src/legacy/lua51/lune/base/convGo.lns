@@ -40,8 +40,6 @@ pub class Opt {
 enum ProcessMode {
    /** クロージャではない関数定義 */
    NonClosureFuncDecl,
-   /** クラスメソッドの IF 定義 */
-   ClassMethodIF,
    /** 通常処理 */
    Main,
 }
@@ -82,7 +80,7 @@ fn filter( node: &Nodes.Node, filter: convFilter,
 
 fn isAnyType( typeInfo:&Ast.TypeInfo ): bool {
    let work = typeInfo.$srcTypeInfo;
-   return typeInfo.$nilable or work.$kind == .IF or work == Ast.builtinTypeStem;
+   return typeInfo.$nilable or work == Ast.builtinTypeStem;
 }
 
 fn isClosure( typeInfo:&Ast.TypeInfo ): bool {
@@ -229,9 +227,17 @@ fn convFilter.type2gotype( typeInfo:&Ast.TypeInfo ) : str {
    Util.err( "not support yet -- %s" (typeInfo.getTxt(##) ) );
 }
 
-fn convFilter.outputConv( typeInfo:&Ast.TypeInfo ) {
-   if not isAnyType( typeInfo ) {
-      self.write( ".(%s)" (self.type2gotype( typeInfo )) );
+fn getExpType( expListNode:&Nodes.ExpListNode, index:int ) : &Ast.TypeInfo {
+   let list = expListNode.$expTypeList;
+   if #list >= index {
+      return list[ index ];
+   }
+   Util.err( "not support yet -- %s, %d: %d" (__func__, expListNode.$pos.lineNo, index ) );
+}
+
+fn convFilter.outputConv( srcType:&Ast.TypeInfo, dstType:&Ast.TypeInfo ) {
+   if not isAnyType( dstType ) {
+      self.write( ".(%s)" (self.type2gotype( dstType )) );
    }
 }
 
@@ -420,8 +426,10 @@ fn convFilter.processConvExp( nodeId:int, dstTypeList:&List<&Ast.TypeInfo>,
 pub override fn convFilter.processRoot(
    node: Nodes.RootNode, opt: Opt ) mut
 {
-   self.writeln( "package main" );
+   Ast.pushProcessInfo( node.$processInfo );
 
+   
+   self.writeln( "package main" );
 
    foreach workNode in node.$nodeManager.getExpCallNodeList() {
       self.processConvExp( workNode.$id, workNode.$func.$expType.$argTypeInfoList,
@@ -471,6 +479,9 @@ pub override fn convFilter.processRoot(
 
    self.popIndent();
    self.writeln( "}" );
+
+
+   Ast.popProcessInfo();
 }
 
 pub override fn convFilter.processSubfile(
@@ -491,7 +502,7 @@ pub override fn convFilter.processBlockSub(
    foreach child in node.$stmtList {
       switch child.$kind {
          case Nodes.NodeKind.$DeclAlge,
-              //Nodes.NodeKind.$DeclClass,
+              Nodes.NodeKind.$DeclClass,
               //Nodes.NodeKind.$DeclFunc,
               Nodes.NodeKind.$DeclMacro,
               Nodes.NodeKind.$TestBlock
@@ -735,6 +746,29 @@ pub override fn convFilter.processExpCallSuper(
    Util.err( "not support -- %s" (__func__) );
 }
 
+fn convFilter.outputRetType(retTypeList:&List<&Ast.TypeInfo>) mut {
+   switch #retTypeList {
+      case 0 {
+         self.write( "" );
+      }
+      case 1 {
+         self.write( " " .. self.type2gotype( retTypeList[1] ) );
+      }
+      default {
+         // 多値返却
+         self.write( "(" );
+         foreach retType, index in retTypeList {
+            if index ~= 1 {
+               self.write( ", " );
+            }
+            self.write( self.type2gotype( retType ) );
+         }
+         self.write( ")" );
+      }
+   }
+   
+}
+
 pub fn convFilter.outputDeclFuncInfo(
    node: Nodes.Node, declInfo:&Nodes.DeclFuncInfo ) mut
 {
@@ -748,13 +782,11 @@ pub fn convFilter.outputDeclFuncInfo(
    }
    else {
       if declInfo.$kind == .Mtd {
-         if self.processMode ~= .ClassMethodIF {
-            self.write( "func " );
-            self.write( "(self *" );
-            self.outputSymbol( .Class( unwrap declInfo.$classTypeInfo ),
-                               unwrap declInfo.$classTypeInfo$.$rawTxt );  
-            self.write( ") " );
-         }
+         self.write( "func " );
+         self.write( "(self *" );
+         self.outputSymbol( .Class( unwrap declInfo.$classTypeInfo ),
+                            unwrap declInfo.$classTypeInfo$.$rawTxt );  
+         self.write( ") " );
       }
       else {
          self.write( "func " );
@@ -775,35 +807,14 @@ pub fn convFilter.outputDeclFuncInfo(
    }
    self.write( ")" );
 
-   let retTypeList = declInfo.$retTypeInfoList;
-   switch #retTypeList {
-      case 0 {
-         self.write( "" );
-      }
-      case 1 {
-         self.write( " " .. self.type2gotype( retTypeList[1] ) );
-      }
-      default {
-         // 多値返却
-         self.write( "(" );
-         foreach retType, index in retTypeList {
-            if index ~= 1 {
-               self.write( ", " );
-            }
-            self.write( self.type2gotype( retType ) );
-         }
-         self.write( ")" );
-      }
-   }
+   self.outputRetType( declInfo.$retTypeInfoList );
 
-   if self.processMode ~= .ClassMethodIF {
-      self.writeln( " {" );
+   self.writeln( " {" );
 
-      if! let body = declInfo.$body {
-         filter( body, self, node );
-      }
-      self.write( "}" );
+   if! let body = declInfo.$body {
+      filter( body, self, node );
    }
+   self.write( "}" );
 }
 
 
@@ -859,7 +870,7 @@ pub override fn convFilter.processIfUnwrap(
    self.pushIndent( ## );
    foreach varSym, index in node.$varSymList {
       self.write( "%s := _%s" (varSym.$name, varSym.$name) );
-      self.outputConv( varSym.$typeInfo );
+      self.outputConv( getExpType( node.$expList, index ), varSym.$typeInfo );
       self.writeln( "" );
    }
    self.popIndent();
@@ -874,7 +885,6 @@ pub override fn convFilter.processIfUnwrap(
       self.writeln("}" );
    }
    else {
-      self.popIndent();
       self.writeln("}" );
    }
    
@@ -942,7 +952,7 @@ pub override fn convFilter.processDeclVar(
             self.pushIndent(##);
             foreach varInfo, index in node.$varList {
                self.write( "%s = _%s" (varInfo.$name.txt, varInfo.$name.txt) );
-               self.outputConv( varInfo.$actualType );
+               self.outputConv( getExpType( expList, index ), varInfo.$actualType );
                self.writeln( "" );
             }
             self.popIndent();
@@ -1011,7 +1021,7 @@ pub override fn convFilter.processWhen(
    foreach symPair, index in node.$symPairList {
       self.write( "%s_%d := %s" (symPair.$dst.$name, symPair.$dst.$symbolId,
                                   symPair.$src.$name) );
-      self.outputConv( symPair.$dst.$typeInfo );
+      self.outputConv( symPair.$src.$typeInfo, symPair.$dst.$typeInfo );
       self.writeln( "" );
       symPair.$dst.set_convModuleParam( true );
    }
@@ -1133,7 +1143,36 @@ pub override fn convFilter.processRepeat(
 pub override fn convFilter.processFor(
    node: Nodes.ForNode, opt: Opt ) mut
 {
-   Util.err( "not support -- %s" (__func__) );
+   self.writeln( "{" );
+   self.pushIndent( ## );
+   self.write( "_from := " );
+   filter( node.$init, self, node );
+   self.writeln( "" );
+
+   self.write( "_to := " );
+   filter( node.$to, self, node );
+   self.writeln( "" );
+
+   if! let delta = node.$delta {
+      self.write( "_delta := " );
+      filter( delta, self, node );
+      self.writeln( "" );
+   }
+   else {
+      self.writeln( "_delta := 1" );
+   }
+
+   self.writeln( "%s := _from" ( node.$val.$name ) );
+   
+   self.writeln( "for ;%s <= _to; %s += _delta {" (node.$val.$name, node.$val.$name ) );
+
+   filter( node.$block, self, node );
+
+   self.writeln( "}" );
+
+
+   self.popIndent();
+   self.writeln( "}" );
 }
 
 pub override fn convFilter.processApply(
@@ -1156,7 +1195,7 @@ pub override fn convFilter.processForeach(
    macro _keyItemSet( typeSym:sym, typeName:sym ) {
       if not isAnyType( ,,typeSym ) {
          self.write( "%s := _%s" (,,typeName, ,,typeName) );
-         self.outputConv( ,,typeSym );
+         self.outputConv( Ast.builtinTypeStem_, ,,typeSym );
          self.writeln( "" );
       }
    }
@@ -1262,14 +1301,29 @@ fn convFilter.outputMethodIF( node: Nodes.DeclClassNode ) mut {
    self.writeln( "Mtd interface {" );
 
    self.pushIndent(##);
-   self.pushProcessMode( .ClassMethodIF );
-   foreach fieldNode in node.$fieldList {
-      if fieldNode.$kind == Nodes.NodeKind.$DeclMethod {
-         filter( fieldNode, self, node );
-         self.writeln( "" );
+
+   let mut name2MtdType:Map<str,&Ast.TypeInfo> = {};
+   let scope = unwrap node.$expType.$scope;
+   scope.filterTypeInfoField(
+      true, scope, .Normal, fn ( symbolInfo:&Ast.SymbolInfo ): bool {
+         if symbolInfo.$kind == .Mtd and symbolInfo.$name ~= "__init" {
+            name2MtdType[ symbolInfo.$name ] = symbolInfo.$typeInfo;
+         }
+         return true;
+      });
+   forsort typeInfo, name in name2MtdType {
+      self.write( "%s(" (self.getSymbol( .Func( typeInfo ), name) ));
+      foreach argType, index in typeInfo.$argTypeInfoList {
+         if index ~= 1 {
+            self.write( ", " );
+         }
+         self.write( "arg%d %s" (index, self.type2gotype(argType) ) );
       }
+      self.write( ")" );
+      self.outputRetType( typeInfo.$retTypeInfoList );
+      self.writeln( "" );
    }
-   self.popProcessMode();
+   
    self.popIndent();
 
    self.writeln( "}" );
@@ -1286,6 +1340,12 @@ fn convFilter.outputClassType( node: Nodes.DeclClassNode ) mut {
    self.writeln( " struct {" );
 
    self.pushIndent(##);
+
+   if node.$expType.hasBase() {
+      let superClassType = node.$expType.$baseTypeInfo;
+      self.writeln( self.getSymbol( .Class( superClassType ), superClassType.$rawTxt ) );
+   }
+   
    foreach memberNode in node.$memberList {
       filter( memberNode, self, node );
       self.writeln( "" );
@@ -1300,6 +1360,7 @@ fn convFilter.outputClassType( node: Nodes.DeclClassNode ) mut {
 }
 
 fn convFilter.outputDownCast( node: Nodes.DeclClassNode ) mut {
+   let symbol = self.getSymbol( .Class( node.$expType ), node.$name.txt );
    self.write( "type " );
    self.outputSymbol( .Class( node.$expType ), node.$name.txt );
    self.writeln( "DownCast interface {" );
@@ -1309,6 +1370,14 @@ fn convFilter.outputDownCast( node: Nodes.DeclClassNode ) mut {
    self.write( "() *" );
    self.outputSymbol( .Class( node.$expType ), node.$name.txt );
    self.writeln( "" );
+   self.popIndent();
+   self.writeln( "}" );
+
+   self.writeln( "func %sDownCastF( obj LnsAny ) LnsAny {" (symbol ));
+   self.pushIndent( ## );
+   self.writeln( "work, ok := obj.(%sDownCast)" (symbol) );
+   self.writeln( "if ok { return work.To%s() }" (symbol) );
+   self.writeln( "return nil" );
    self.popIndent();
    self.writeln( "}" );
 }
@@ -1349,6 +1418,16 @@ fn convFilter.outputConstructor( node: Nodes.DeclClassNode ) mut
    self.pushIndent(##);
    self.writeln( "obj := &%s{}" (className) );
    self.writeln( "obj.FP = obj" );
+
+   {
+      let mut workType = node.$expType;
+      while workType.hasBase() {
+         workType = workType.$baseTypeInfo;
+         
+         let superName = self.getSymbol( .Class( workType ), workType.$rawTxt );
+         self.writeln( "obj.%s.FP = obj" (superName) );
+      }
+   }
    self.write( "obj.Init%s(" (className));
    foreach argType, index in initFuncType.$argTypeInfoList {
       if index ~= 1 {
@@ -1374,14 +1453,26 @@ fn convFilter.outputConstructor( node: Nodes.DeclClassNode ) mut
 
       let superArgNum;
       if node.$expType.hasBase() {
-         let baseScope = unwrap node.$expType.$baseTypeInfo.$scope;
+         let superType = node.$expType.$baseTypeInfo;
+         let baseScope = unwrap superType.$scope;
          let baseInitFuncType = unwrap baseScope.getTypeInfoField(
             "__init", true, baseScope, .Normal );
          superArgNum = #baseInitFuncType.$argTypeInfoList;
+         let superName = self.getSymbol( .Class( superType ), superType.$rawTxt );
+         self.write( "self.%s.Init%s( " (superName, superName) );
+         for index = 1, superArgNum {
+            if index ~= 1 {
+               self.write( "," );
+            }
+            self.write( "arg%d" (index) );
+         }
+         self.writeln( ")" );
       }
       else {
          superArgNum = 0;
       }
+
+
       foreach argType, index in initFuncType.$argTypeInfoList {
          if superArgNum < index {
             let sIndex = index - superArgNum;
@@ -1505,7 +1596,7 @@ pub override fn convFilter.processExpMultiTo1(
    self.write( "Lns_car(" );
    filter( node.$exp, self, node );
    self.write( ")" );
-   self.outputConv( node.$expType );
+   self.outputConv( Ast.builtinTypeStem_, node.$expType );
 }
 
 pub override fn convFilter.processExpCast(
@@ -1516,10 +1607,30 @@ pub override fn convFilter.processExpCast(
          filter( node.$exp, self, node );
       }
       case .Implicit {
-         filter( node.$exp, self, node );
+         switch node.$castType.$kind {
+            case .Class, .IF {
+               self.write( "&" );
+               filter( node.$exp, self, node );
+               self.write( ".%s" (self.getSymbol( .Class( node.$castType ),
+                                                  node.$castType.$rawTxt ) ) );
+            }
+            default {
+               filter( node.$exp, self, node );
+               if node.$exp.$expType.$kind == .Class {
+                  self.write( ".FP" );
+               }
+            }
+         }
       }
       case .Normal {
+         let typeName = self.getSymbol( .Class( node.$castType ),
+                                        node.$castType.$rawTxt );
+         self.write( "%sDownCastF(" (typeName) );
          filter( node.$exp, self, node );
+         if node.$exp.$expType.$kind == .Class {
+            self.write( ".FP" );
+         }
+         self.write( ")" );
       }
    }
 }
@@ -1532,7 +1643,7 @@ pub override fn convFilter.processExpParen(
       self.write( "Lns_car(" );
       filter( node.$exp, self, node );
       self.write( ")" );
-      self.outputConv( node.$expType );
+      self.outputConv( Ast.builtinTypeStem_, node.$expType );
    }
    else {
       self.write( "(" );
@@ -1545,7 +1656,9 @@ pub override fn convFilter.processExpParen(
 pub override fn convFilter.processExpSetVal(
    node: Nodes.ExpSetValNode, opt: Opt ) mut
 {
-   Util.err( "not support -- %s" (__func__) );
+   filter( node.$exp1, self, node );
+   self.write( " = " );
+   filter( node.$exp2, self, node );
 }
 
 
@@ -1598,7 +1711,7 @@ fn convFilter.processAndOr( node: Nodes.ExpOp2Node,
    if firstFlag {
       self.write( ")" );
 
-      self.outputConv( node.$expType );
+      self.outputConv( Ast.builtinTypeStem_, node.$expType );
       self.popIndent();
    }
 }
