@@ -250,7 +250,7 @@ fn Front.loadFromLnsTxt(
 
    let ast = transUnit.createAST( parser, false, nil );
 
-   let mut metaTxt, luaTxt = self.convertFromAst( ast, name, .Exec );
+   let _, luaTxt = self.convertFromAst( ast, name, .Exec );
    return unwrap loadFromLuaTxt( luaTxt );
 }
 
@@ -472,8 +472,7 @@ pub fn Front.convertLns2LuaCode(
       new Parser.StreamParser( stream, streamName, false ), mod,
       frontInterface.ModuleId.createId( 0.0, 0 ), nil, .Compile ## );
 
-   let metaTxt, luaTxt =
-      self.convertFromAst( ast, streamName, convLua.ConvMode.Exec );
+   let _, luaTxt = self.convertFromAst( ast, streamName, convLua.ConvMode.Exec );
 
    return luaTxt;
 }
@@ -586,7 +585,7 @@ fn Front.checkUptodateMeta( metaPath:str, addSearchPath:str! ): stem! {
       }
    }
    
-   foreach dependInfo, moduleFullName in meta.__dependModuleMap {
+   foreach _, moduleFullName in meta.__dependModuleMap {
       if! let moduleLuaPath = self.searchLuaFile( moduleFullName, addSearchPath ) {
          let moduleLnsPath = moduleLuaPath.gsub( "%.lua$", ".lns" );
          if not Util.getReadyCode( moduleLnsPath, metaPath ) {
@@ -814,7 +813,7 @@ pub fn Front.convertLuaToStreamFromScript(
       when! stream {
          when! metaInfo {
             let mut dependInfo = new OutputDepend.DependInfo( mod );
-            foreach moduleInfo, dependMod in metaInfo.__dependModuleMap {
+            foreach _, dependMod in metaInfo.__dependModuleMap {
                dependInfo.addImpotModule( dependMod );
             }
             foreach subMod in metaInfo.__subModuleMap {

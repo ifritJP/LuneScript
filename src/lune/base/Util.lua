@@ -328,7 +328,7 @@ function SimpleSourceOStream:writeRaw( txt )
    end
    
    
-   for cr in string.gmatch( txt, "\n" ) do
+   for _344 in string.gmatch( txt, "\n" ) do
       self.curLineNo = self.curLineNo + 1
    end
    

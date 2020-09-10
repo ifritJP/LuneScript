@@ -20,6 +20,10 @@
    let val4;
    val4 = {};  // error
 }
+{
+   let _, val = 0, 1;
+   print( _, val );   // error
+}
 
 
 

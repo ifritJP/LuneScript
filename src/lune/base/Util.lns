@@ -155,7 +155,7 @@ pub class SimpleSourceOStream extend (SourceStream) {
          self.needIndent = false;
       }
 
-      apply cr of string.gmatch( txt, "\n" ) {
+      apply _ of string.gmatch( txt, "\n" ) {
          self.curLineNo = self.curLineNo + 1;
       }
       stream.write( txt );

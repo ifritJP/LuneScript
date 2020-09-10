@@ -1462,6 +1462,11 @@ class BuiltinArgSymbolInfo extend Ast.SymbolInfo {
    }
    pub override fn set_hasAccessFromClosure(flag:bool) {
    }
+   pub override fn get_hasAccessFromAny(): bool {
+      return false;
+   }
+   pub override fn set_hasAccessFromAny(flag:bool) {
+   }
 
    pub override fn canAccess(
       fromScope:&Ast.Scope, access:Ast.ScopeAccess ) : &Ast.SymbolInfo!
@@ -1569,7 +1574,7 @@ fn convFilter.processBuiltin() : &Nodes.NodeManager
 
                let mut fieldList:List<&Nodes.Node> = [];
                
-               let declClassNode = Nodes.DeclClassNode.create(
+               Nodes.DeclClassNode.create(
                   nodeManager, dummyPos, false, [ classInfo ], .Pub,
                   new Parser.Token( .Symb, classInfo.$rawTxt, dummyPos, false## ),
                   classInfo.$rawTxt, nil, fieldList, [], fieldList, [], classScope,
@@ -1642,7 +1647,7 @@ pub override fn convFilter.processRoot(
       "#include <%s.h>"
       ( self.moduleCtrl.getFilePath( node.$moduleTypeInfo ) ) );
 
-   let children = node.get_children();
+   //let children = node.get_children();
 
    self.processMode = .Include;
    foreach importNode in nodeManager.getImportNodeList() {
@@ -1967,7 +1972,7 @@ pub override fn convFilter.processBlockSub(
       // else {
       //    self.write( cTypeStem );
       // }
-      let typeTxt, valKind = self.scopeMgr.getCTypeForSym( symbol );
+      let typeTxt = self.scopeMgr.getCTypeForSym( symbol );
       self.write(
          "%s %s = l_form_closure_var( _pForm, %d )"
          ( typeTxt, self.moduleCtrl.getSymbolName( symbol ),
@@ -2247,7 +2252,7 @@ pub override fn convFilter.processDeclEnum(
       case .Prototype {
          fn process(out2HMode:Out2HMode) {
             let prefix = getOut2HeaderPrefix( out2HMode );
-            foreach valName, index in node.$valueNameList {
+            foreach valName in node.$valueNameList {
                let valInfo = unwrap enumType.getEnumValInfo( valName.txt );
                let enumValName =
                   self.moduleCtrl.getEnumValCName( enumType, valName.txt );
@@ -2385,7 +2390,7 @@ pub override fn convFilter.processDeclEnum(
          let mut anyVarList:List<str> = [];
          // enum 値のセット
          if isStrEnum {
-            foreach valName, index in node.$valueNameList {
+            foreach valName in node.$valueNameList {
                let valInfo = unwrap enumType.getEnumValInfo( valName.txt );
                // pending: C の文字列リテラル表現できないものを対応できていない
                let valTxt = '"%s"' (Ast.getEnumLiteralVal(valInfo.$val));
@@ -2398,7 +2403,7 @@ pub override fn convFilter.processDeclEnum(
             }
          }
          else {
-            foreach valName, index in node.$valueNameList {
+            foreach valName in node.$valueNameList {
                let valInfo = unwrap enumType.getEnumValInfo( valName.txt );
                let valTxt = '%s' (Ast.getEnumLiteralVal(valInfo.$val));
                let anyVar = "_%s" (valName.txt);
@@ -2640,7 +2645,7 @@ fn processAlgePrototype( stream:Util.SourceStream, moduleCtrl:ModuleCtrl,
       // 各値を識別する enum を宣言
       stream.writeln( "typedef enum {" );
       stream.pushIndent( ## );
-      let algeTypeName = moduleCtrl.getAlgeCName( node.$expType );
+      //let algeTypeName = moduleCtrl.getAlgeCName( node.$expType );
       let enumName = moduleCtrl.getAlgeEnumCName( node.$expType );
 
       
@@ -2709,7 +2714,7 @@ fn processAlgeWideScope( stream:Util.SourceStream, moduleCtrl:ModuleCtrl,
    fn process( out2HMode:Out2HMode ) {
       let prefix = getOut2HeaderPrefix( out2HMode );
 
-      foreach valInfo, index in valList {
+      foreach valInfo in valList {
          if #valInfo.$typeList == 0 {
             let varName = moduleCtrl.getAlgeValCName( node.$expType, valInfo.$name );
             stream.writeln(
@@ -2774,7 +2779,7 @@ fn processAlgeForm( stream:Util.SourceStream, moduleCtrl:ModuleCtrl,
    let fullName = moduleCtrl.getFullName( algeType );
    let enumName = moduleCtrl.getAlgeEnumCName( algeType );
    
-   foreach valInfo, index in valList {
+   foreach valInfo in valList {
       stream.write(
          "lns_mtd_Map_add( _pEnv, %s, LNS_STEM_INT( %s_%s ), "
          (type2NameMapName, enumName, valInfo.$name ));
@@ -2787,7 +2792,7 @@ fn processAlgeForm( stream:Util.SourceStream, moduleCtrl:ModuleCtrl,
    
    // パラメータの無い値の初期化関数
 
-   foreach valInfo, index in valList {
+   foreach valInfo in valList {
       if #valInfo.$typeList == 0 {
          let varName = moduleCtrl.getAlgeValCName( algeType, valInfo.$name );
          stream.writeln(
@@ -2801,10 +2806,10 @@ fn processAlgeForm( stream:Util.SourceStream, moduleCtrl:ModuleCtrl,
 
 
    // パラメータを持つ値の生成関数
-   foreach valInfo, index in valList {
+   foreach valInfo in valList {
       if #valInfo.$typeList > 0 {
          let mut hasAnyFlag = false;
-         foreach valType, paramIndex in valInfo.$typeList {
+         foreach valType in valInfo.$typeList {
             if isStemType( valType ) {
                hasAnyFlag = true;
                break;
@@ -3043,7 +3048,7 @@ fn processNewConstrProto(
    stream:Util.SourceStream, moduleCtrl:ModuleCtrl,
    node:&Nodes.DeclClassNode, out2HMode:Out2HMode, outputBuiltinFlag:bool ) mut
 {
-   let className = moduleCtrl.getClassCName( node.$expType );
+   //let className = moduleCtrl.getClassCName( node.$expType );
 
    stream.write( getOut2HeaderPrefix( out2HMode ) );
    stream.write( "%s %s( %s _pEnv"
@@ -3148,7 +3153,7 @@ fn processMethodDeclTxt(
    }
    else {
       when! argList {
-         foreach argNode, index in argList {
+         foreach argNode in argList {
             stream.write( ", " );
             if! let declArgNode = argNode@@@Nodes.DeclArgNode {
                processDeclAlgeSub( stream, declArgNode );
@@ -3443,7 +3448,7 @@ fn processDeclCallMethodWrapper(
          else {
             stream.write( "pObj " );
          }
-         foreach argType, index in funcTypeInfo.$argTypeInfoList {
+         foreach _, index in funcTypeInfo.$argTypeInfoList {
             stream.write( ", arg%d" ( index ) );
          }
          stream.write( ")" );
@@ -3553,7 +3558,7 @@ fn processAdvertise(
                      stream.write(
                         "%s( _pEnv, pVal"
                         (getAccessMethod(memberClassName, "pVal", name) ) );
-                     foreach argType, index in methodType.$argTypeInfoList {
+                     foreach _, index in methodType.$argTypeInfoList {
                         stream.write( ", arg%d" (index ) );
                      }
                      stream.writeln( ");" );
@@ -3652,7 +3657,7 @@ fn processDefaultCtor(
          if #ctorType.$argTypeInfoList >= #superInitType.$argTypeInfoList + memberNum
          {
             superArgNum = #superInitType.$argTypeInfoList;         
-            foreach argType, index in superInitType.$argTypeInfoList {
+            foreach _, index in superInitType.$argTypeInfoList {
                stream.write( ", _arg%d" (index) );
             }
          }
@@ -3662,7 +3667,7 @@ fn processDefaultCtor(
             // このコンストラクタの引数が少ない場合は、
             // _lune_control default__init_old が宣言されている。
             superArgNum = 0;
-            foreach argType, index in superInitType.$argTypeInfoList {
+            foreach _, _ in superInitType.$argTypeInfoList {
                stream.write( ", %s" (cValNil) );
             }
          }
@@ -3674,7 +3679,7 @@ fn processDefaultCtor(
 
       stream.writeln( "%s * pObj = lns_obj_%s( pAny );" (className, className) );
       let mut argIndex = superArgNum;
-      foreach member, index in node.$memberList {
+      foreach member in node.$memberList {
          if not member.$staticFlag {
             argIndex = argIndex + 1;
             let valKind = scopeMgr.getSymbolValKind( member.$symbolInfo );
@@ -3744,7 +3749,7 @@ fn convFilter.processNewInsance( classType:&Ast.TypeInfo, callInit:bool ) mut {
       if not self.outputBuiltinFlag {
          let initFuncType =
             unwrap scope.getTypeInfoField( "__init", true, scope, scopeAccess );
-         foreach argType, index in initFuncType.$argTypeInfoList {
+         foreach _, index in initFuncType.$argTypeInfoList {
             self.write( ", arg%d" ( index ) );
          }
       }
@@ -4080,7 +4085,7 @@ fn convFilter.processMapping(
          }
          if #genType.$itemTypeInfoList > 0 {
             self.write( ", { " );
-            foreach subGenType, subIndex in genType.$itemTypeInfoList {
+            foreach _, subIndex in genType.$itemTypeInfoList {
                if subIndex > 1 {
                   self.write( ", " );
                }
@@ -4570,7 +4575,7 @@ fn processClassMeta(
       'lns_type_meta_t %s = { "%s", &%s, {'
       ( moduleCtrl.getClassMetaName( classTypeInfo ), className,
         moduleCtrl.getClassMetaName( classTypeInfo.$baseTypeInfo ) ) );
-   foreach ifType, index in classTypeInfo.$interfaceList {
+   foreach ifType in classTypeInfo.$interfaceList {
       stream.write( "&%s, " ( moduleCtrl.getClassMetaName( ifType ) ) );
    }
    stream.writeln( "NULL } };" );
@@ -4876,7 +4881,7 @@ fn convFilter.processArgClosure( declInfo:&Nodes.DeclFuncInfo ) mut
          }
          elseif symbolInfo.$mutable {
             // 引数が mutable の場合は変数を定義しなおす。
-            let symbolParam = self.scopeMgr.getSymbolParam( symbolInfo );
+            //let symbolParam = self.scopeMgr.getSymbolParam( symbolInfo );
             self.processDeclVarC( true, symbolInfo, false## );
             switch getValKind( symbolInfo.$typeInfo ) {
                case .Stem {
@@ -4909,7 +4914,7 @@ fn convFilter.processDeclMethodInfo(
          let classType = funcTypeInfo.$parentInfo;
          let className = self.moduleCtrl.getClassCName( classType );
          if! let body = declInfo.$body {
-            let methodNodeToken = unwrap declInfo.get_name();
+            //let methodNodeToken = unwrap declInfo.get_name();
             processMethodDeclTxt( self.stream, self.moduleCtrl, .Normal,
                                   funcTypeInfo, declInfo.$argList );
             self.writeln( "{" );
@@ -5548,7 +5553,7 @@ fn convFilter.processSymForSetOp(
    dstTypeInfo:&Ast.TypeInfo, symbol:&Ast.LowSymbol ) mut
 {
    let srcKind = self.scopeMgr.getSymbolValKind( symbol );
-   let isStemExp = srcKind ~= .Prim;
+   //let isStemExp = srcKind ~= .Prim;
 
    if dstKind ~= srcKind {
       switch dstKind {
@@ -5706,7 +5711,7 @@ fn convFilter.processValForSetOp(
 
    fn processVal() {
       // シンボルに代入する値にアクセスするコード出力
-      let mut setValTxt = "";
+      //let mut setValTxt = "";
       if firstMRet {
          accessVal();
       }
@@ -6101,7 +6106,7 @@ fn convFilter.processSetValToNode(
 fn convFilter.processDeclVarAndSet(
    varSymList:&List<&Ast.LowSymbol>, expListNode:&Nodes.ExpListNode! ) mut
 {
-   foreach var, index in varSymList  {
+   foreach var in varSymList  {
       let symbolParam = self.scopeMgr.getSymbolParam( var );
       let typeTxt, valKind = symbolParam.typeTxt, symbolParam.kind;
       let declVarFlag;
@@ -6140,7 +6145,7 @@ pub override fn convFilter.processIfUnwrap(
    let expListNode = node.$expList;
    // 一旦 work 変数に代入する
    let mut workSymList:List<&WorkSymbol> = [];
-   foreach varSym, index in node.$varSymList {
+   foreach varSym in node.$varSymList {
       let workSymbol = new WorkSymbol(
          varSym.$scope, varSym.$accessMode, "_%s" (varSym.$name), 
          varSym.$typeInfo.$nilableTypeInfo, varSym.$kind, varSym.$staticFlag,
@@ -6212,7 +6217,7 @@ pub override fn convFilter.processDeclVar(
                   self.writeln(
                      "%s %s;" ( typeTxt, self.moduleCtrl.getSymbolName( var ) ) );
                }
-               foreach var, index in varSymList  {
+               foreach var in varSymList  {
                   _out2Header( self.stream, Ast.isPubToExternal( var.$accessMode ),
                                `{ process( out2HMode, var ); } );
                }
@@ -6244,7 +6249,7 @@ pub override fn convFilter.processDeclVar(
       let unwrapScope = unwrap node.$unwrapBlock$.$scope;
 
       let mut workSymList:List<&Ast.LowSymbol> = [];
-      foreach varSym, index in varSymList {
+      foreach varSym in varSymList {
          let tmpVarSym = unwrap unwrapScope.getSymbolInfoChild( "_%s" (varSym.$name) );
          // let symId = tmpVarSym.$symbolId;
          
@@ -6483,7 +6488,7 @@ fn convFilter.processFuncPrototype(
          self.write( string.format( ", %s _pForm", cTypeAnyP ) );
       }
       
-      foreach arg, index in argList {
+      foreach arg in argList {
          self.write( ", " );
          filter( arg, self, parent );
       }
@@ -6513,7 +6518,7 @@ fn convFilter.processCallUserForm(
    fn process( prefix:str ) {
       self.pushIndent( ## );
       self.write( prefix );
-      foreach argName, index in argNameList {
+      foreach argName in argNameList {
          self.write( ", " );
          self.write( argName );
       }
@@ -6593,12 +6598,12 @@ pub override fn convFilter.processDeclForm(
 
          
          let mut argNameList:List<str> = [];
-         foreach arg, index in node.$argList {
+         foreach arg in node.$argList {
             if! let workArg = arg@@@Nodes.DeclArgNode {
                argNameList.insert( workArg.$name.txt );
             }
             else {
-               if! let workArg = arg@@@Nodes.DeclArgDDDNode {
+               if arg@@@Nodes.DeclArgDDDNode {
                   argNameList.insert( "_pDDD" );
                }
             }
@@ -6981,7 +6986,7 @@ pub override fn convFilter.processMatch(
    self.writeln( "switch( _matchExp->val.alge.type ) {" );
    let algeType = node.$algeTypeInfo;
    let enumName = self.moduleCtrl.getAlgeEnumCName( algeType );
-   foreach caseInfo, index in node.$caseList {
+   foreach caseInfo in node.$caseList {
       let valInfo = caseInfo.$valInfo;
       self.writeln( "case %s_%s:" (enumName, valInfo.$name ) );
       self.pushIndent(##);
@@ -7167,7 +7172,7 @@ pub override fn convFilter.processApply(
    self.writeln( "{" );
    let varList = node.$varList;
 
-   let scope = node.$block.$scope;
+   //let scope = node.$block.$scope;
 
    let iteExpTypeList = node.$expList.$expTypeList;
    let iteFuncType = iteExpTypeList[ 1 ];
@@ -7233,7 +7238,7 @@ pub override fn convFilter.processApply(
    self.writeln( "}" );
 
    // work から各変数にセットする
-   let mut nodeManager = self.dummyNodeManager;
+   //let mut nodeManager = self.dummyNodeManager;
    foreach varSym, index in node.$varList {
       let valKind = self.scopeMgr.getSymbolValKind( varSym );
       let varName = self.moduleCtrl.getSymbolName( varSym );
@@ -7720,7 +7725,7 @@ fn convFilter.processCreateMRet(
    let lastExp = expList[ #expList ];
    self.write( "( _pEnv, %s, %d" ( Nodes.hasMultiValNode( lastExp ), #expList ) );
    
-   foreach exp, expIndex in expList {
+   foreach exp in expList {
       self.write( ", " );
       self.processVal2stem( exp, parent );
    }
@@ -7891,7 +7896,7 @@ pub fn convFilter.processCallWithMRet(
                         let expList = toDDDNode.$expList.$expList;
                         let lastExp = expList[ #expList ];
                         self.write( "( _pEnv, %s, %d" ( Nodes.hasMultiValNode( lastExp ), #expList ) );
-                        foreach exp, workIndex in expList {
+                        foreach _, workIndex in expList {
                            // self.write(
                            //    ", LNS_STEM_ANY( lns_getMRet( _pEnv, %d ) )" (workIndex + index - 2) );
                            self.write(
@@ -8202,7 +8207,7 @@ pub override fn convFilter.processDeclClass(
    node: Nodes.DeclClassNode, opt: Opt ) mut
 {
    let classType = node.$expType;
-   let className = self.moduleCtrl.getClassCName( classType );
+   //let className = self.moduleCtrl.getClassCName( classType );
    let classCanonicalName = self.moduleCtrl.getCanonicalName( classType );
 
    self.writeln(
@@ -8657,7 +8662,7 @@ pub override fn convFilter.processExpCall(
    }
 
 
-   let mut classTypeInfo:&Ast.TypeInfo! = getBelongClassType( node.$func );
+   //let mut classTypeInfo:&Ast.TypeInfo! = getBelongClassType( node.$func );
   
    fn process() {
       if funcType.$kind == .Form {
@@ -8811,7 +8816,7 @@ pub override fn convFilter.processExpCall(
       }
 
       if! let refNode = node.$func@@@Nodes.ExpRefNode {
-         let builtinFunc = TransUnit.getBuiltinFunc();
+         //let builtinFunc = TransUnit.getBuiltinFunc();
 
          if! let cFuncTxt = self.moduleCtrl.getBuiltinFuncNameFromType( refNode.$expType )
          {
@@ -9220,7 +9225,7 @@ fn convFilter.processFuncCast( node: Nodes.ExpCastNode ) mut
    if #closureSymList > 0 {
       self.write( ", _pForm" );
    }
-   foreach typeInfo, index in orgFunc.$argTypeInfoList {
+   foreach _, index in orgFunc.$argTypeInfoList {
       self.write( ", var%s" (index) );
    }
    self.writeln( ");" );
@@ -9296,7 +9301,7 @@ pub override fn convFilter.processExpCast(
    
    let exp = node.$exp;
    let expType = exp.$expType;
-   let nodeExpType = node.$expType;
+   //let nodeExpType = node.$expType;
    let castType = node.$castType;
    switch node.$castKind {
       case .Implicit {
@@ -9494,9 +9499,9 @@ fn convFilter.processWrapForm2Func( funcType:&Ast.TypeInfo ) mut
    self.writeln( ")" );
    self.writeln( "{" );
    self.writeln( 'return %s( _pEnv, _pForm' );
-   foreach argType, index in funcType.$argTypeInfoList {
+   // foreach argType, index in funcType.$argTypeInfoList {
       
-   }
+   // }
    self.writeln( "}" );
 }
 
@@ -9791,7 +9796,7 @@ pub override fn convFilter.processExpRefItem(
    let val = node.$val;
    let valType = val.$expType;
 
-   let parent = opt.node;
+   //let parent = opt.node;
    
    if valType.equals( Ast.builtinTypeString ##) {
       // str のインデックスアクセスは、文字を返す
@@ -10284,7 +10289,7 @@ fn convFilter.processLiteralVal( exp:&Nodes.Node, parent:&Nodes.Node ) mut {
    if self.processMode ~= .Immediate {
       let symbolList = exp.getSymbolInfo();
       if #symbolList > 0 {
-         let work, valKind = self.scopeMgr.getCTypeForSym( symbolList[ 1 ] );
+         let _, valKind = self.scopeMgr.getCTypeForSym( symbolList[ 1 ] );
          if valKind ~= .Prim {
             // filter( exp, self, parent );
             self.processVal2stem( exp, parent );
@@ -10401,7 +10406,7 @@ fn convFilter.processLiteralListSub(
    self.write(
       "static %s %s( %s _pEnv" (cTypeAnyP, literalFuncName, cTypeEnvP ) );
    foreach symbol in self.accessSymbolSet.$list {
-      let valKind = self.scopeMgr.getSymbolValKind( symbol );
+      //let valKind = self.scopeMgr.getSymbolValKind( symbol );
       let ctype;
       // if valKind == .Any {
       //    ctype = cTypeAnyP;
@@ -10626,7 +10631,7 @@ pub override fn convFilter.processLiteralString(
             else {
                self.write( "static %s lns_litstr_%d( %s _pEnv"
                              (cTypeAnyP, node.$id, cTypeEnvP ) );
-               foreach exp, index in expListNode.$expList {
+               foreach _, index in expListNode.$expList {
                   self.write( ", %s arg%d" ( cTypeStem, index ) );
                }
                self.writeln( ");" );
@@ -10652,7 +10657,7 @@ pub override fn convFilter.processLiteralString(
             else {
                self.write( "static %s lns_litstr_%d( %s _pEnv"
                   (cTypeAnyP, node.$id, cTypeEnvP ) );
-               foreach exp, index in expListNode.$expList {
+               foreach _, index in expListNode.$expList {
                   self.write( ", %s arg%d" ( cTypeStem, index ) );
                }
                self.writeln( ") // %d" (node.$pos.lineNo) );
@@ -10704,7 +10709,7 @@ pub override fn convFilter.processLiteralString(
       }
    }
    else {
-      let opList = TransUnit.findForm( txt );
+      //let opList = TransUnit.findForm( txt );
 
       self.write( getLiteralStrAny( txt ) );
    }

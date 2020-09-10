@@ -345,6 +345,9 @@ pub abstract class SymbolInfo extend (LowSymbol) {
    /** このシンボルが、 closuer 内からセットされているかどうか */
    pub abstract fn get_hasAccessFromClosure(): bool;
    pub abstract fn set_hasAccessFromClosure(flag:bool);
+   /** このシンボルが、どこからかアクセスされている場合 true */
+   pub abstract fn get_hasAccessFromAny():bool;
+   pub abstract fn set_hasAccessFromAny(flag:bool);
    // pub abstract fn get_accessFromClosure(): AccessFromClosuer;
    // pub abstract fn set_accessFromClosure( mode: AccessFromClosuer );
    /** 変換モジュール用パラメータ */
@@ -402,6 +405,7 @@ pub class Scope extend (ModuleInfoManager) {
    pri let mut closureSymList: List<&SymbolInfo> {pub};
    pri let mut closureSym2NumMap: Map<&SymbolInfo,int> {pub};
    pri let mut typeInfo2ModuleInfoMap: Map<&TypeInfo,&ModuleInfoIF>;
+   pri let mut validCheckingUnaccess:bool {pub,pub};
    
 
    pub fn __init( parent: Scope!, classFlag: bool,
@@ -421,6 +425,7 @@ pub class Scope extend (ModuleInfoManager) {
       self.symbolId2DataOwnerInfo = {};
       self.ifScopeList = unwrap ifScopeList default [];
       self.ownerTypeInfo = nil;
+      self.validCheckingUnaccess = true;
    }
 
    pub fn getNamespaceTypeInfo() : &TypeInfo;
@@ -1023,6 +1028,7 @@ pub class NormalSymbolInfo extend SymbolInfo {
    pri let mutMode: MutMode {pub};
    // pri let allmut accessFromClosure: AccessFromClosuer { pub, pub };
    pri let allmut hasAccessFromClosure: bool {pub,pub};
+   pri let allmut hasAccessFromAny: bool {pub,pub};
    /** 変換モジュール用パラメータ */
    pri let allmut convModuleParam:stem! {pub,pub}; 
    
@@ -1047,6 +1053,7 @@ pub class NormalSymbolInfo extend SymbolInfo {
       self.convModuleParam = nil;
       //self.accessFromClosure = .None;
       self.hasAccessFromClosure = false;
+      self.hasAccessFromAny = false;
       NormalSymbolInfo.symbolIdSeed = NormalSymbolInfo.symbolIdSeed + 1;
       self.kind = kind;
       self.canBeLeft = canBeLeft;
@@ -1074,7 +1081,7 @@ pro static fn TypeInfo.isInherit(
    typeInfo:&TypeInfo, other:&TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>! ): bool
 {
    let baseTypeInfo = typeInfo.$baseTypeInfo;
-   let interfaceList = typeInfo.$interfaceList;
+   //let interfaceList = typeInfo.$interfaceList;
    let otherTypeId = other.$typeId;
    if typeInfo.$typeId == otherTypeId {
       return true;
@@ -1753,7 +1760,8 @@ pub fn dumpScope( workscope: &Scope!, workprefix:str ) {
 
 事前に isClosureAccess() で、 symbol がクロージャであることを判定しておく必要がある。
 */
-pub fn Scope.setClosure( symbol:&SymbolInfo ) mut {
+pub fn Scope.setClosure( workSymbol:&SymbolInfo ) mut {
+   let symbol = workSymbol.getOrg();
    let targetFuncType = symbol.$namespaceTypeInfo;
    let mut funcType = self.getNamespaceTypeInfo();
    
@@ -1821,6 +1829,9 @@ pub fn Scope.isClosureAccess( moduleScope:&Scope, symbol:&SymbolInfo) : bool
 */
 pub fn Scope.accessSymbol( moduleScope:&Scope, symbol:&SymbolInfo ) mut
 {
+   if not symbol.$hasAccessFromAny {
+      symbol.set_hasAccessFromAny( true );
+   }
    if self.isClosureAccess( moduleScope, symbol ) {
       self.setClosure( symbol );
    }
@@ -1964,7 +1975,7 @@ pub override fn NormalSymbolInfo.canAccess(
       return self;
    }
    
-   let typeInfo = self.$typeInfo;
+   //let typeInfo = self.$typeInfo;
    if self.scope == fromScope {
       return self;
    }
@@ -2000,29 +2011,75 @@ pub override fn NormalSymbolInfo.canAccess(
              (self.$accessMode, self.$name) );
 }
 
+pub alge OverrideMut {
+   None,
+   Prefix( &TypeInfo ),
+   IMut( &TypeInfo ),
+}
+
 
 pub class AccessSymbolInfo extend SymbolInfo {
    pri let symbolInfo: SymbolInfo {pub};
-   pri let prefixTypeInfo: TypeInfo! {pub};
+   pri let overrideMut:OverrideMut;
    pri let overrideCanBeLeft: bool;
 
    pub override fn getOrg(): &SymbolInfo {
       return self.symbolInfo.getOrg();
    }
 
-   pub override fn get_mutable(): bool {
-      if! self.prefixTypeInfo {
-         switch self.symbolInfo.$mutMode {
-            case .AllMut {
-               return true;
-            }
-            case .IMut, .IMutRe {
-               return false;
+   pub override fn canAccess( fromScope:&Scope, access:ScopeAccess ) : &SymbolInfo!
+   {
+      if self.symbolInfo.canAccess( fromScope, access ) {
+         return self;
+      }
+      return nil;
+   }
+   
+
+   pub override fn get_typeInfo() : &TypeInfo {
+      _match self.overrideMut {
+         case .None {
+         }
+         case .Prefix( prefixTypeInfo ) {
+         }
+         case .IMut( typeInfo ) {
+            return typeInfo;
+         }
+      }
+      return self.symbolInfo.$typeInfo;
+   }
+   
+   pub override fn get_mutMode(): MutMode {
+      _match self.overrideMut {
+         case .None {
+            // 
+         }
+         case .Prefix( prefixTypeInfo ) {
+            _switch self.symbolInfo.$mutMode {
+               case .AllMut, .IMut, .IMutRe {
+                  return self.symbolInfo.$mutMode;
+               }
+               case .Mut {
+                  _switch prefixTypeInfo.$mutMode {
+                     case .AllMut {
+                        return .Mut;
+                     }
+                     case .Mut, .IMut, .IMutRe {
+                        return prefixTypeInfo.$mutMode;
+                     }
+                  }
+               }
             }
          }
-         return TypeInfo.isMut( _exp );
+         case .IMut( typeInfo ) {
+            return .IMut;
+         }
       }
-      return self.symbolInfo.$mutable;
+      return self.symbolInfo.$mutMode;
+   }
+   
+   pub override fn get_mutable(): bool {
+      return isMutable( self.get_mutMode() );
    };
 
    pub override fn get_canBeLeft(): bool {
@@ -3598,7 +3655,6 @@ pub class NormalTypeInfo extend TypeInfo {
 
 }
 
-
 pub static fn NormalTypeInfo.createAlternate(
    belongClassFlag:bool, altIndex:int,
    txt:str, accessMode:AccessMode, moduleTypeInfo:&TypeInfo,
@@ -3688,6 +3744,21 @@ pub static fn NormalTypeInfo.createModifier(
    }
    return modifier;
 }
+
+pub fn Scope.addOverrideImut( symbolInfo:&SymbolInfo ) mut {
+   let typeInfo;
+   if TypeInfo.isMut( symbolInfo.$typeInfo ) {
+      typeInfo = NormalTypeInfo.createModifier( symbolInfo.$typeInfo, .IMut );
+   }
+   else {
+      typeInfo = symbolInfo.$typeInfo;
+   }
+
+   
+   self.symbol2SymbolInfoMap[ symbolInfo.$name ] =
+      new AccessSymbolInfo( symbolInfo, .IMut( typeInfo ), false );
+}
+
 
 
 //pub let typeInfoRoot = rootTypeInfo;
@@ -6056,7 +6127,7 @@ pub fn TypeAnalyzer.analyzeTypeItemList(
          let mut genericList: List<&TypeInfo> = [];
          let mut nextToken: &Parser.Token = Parser.getEofToken();
          repeat {
-            let refType, refPos, mess = self.analyzeTypeSub( false );
+            let refType = self.analyzeTypeSub( false );
             when! refType {
                genericRefList.insert( refType );
                genericList.insert( refType.$typeInfo );
@@ -6103,9 +6174,9 @@ pub fn TypeAnalyzer.analyzeTypeItemList(
             }
             case .Class, .IF {
                _checkAlternateTypeCount( #typeInfo.$itemTypeInfoList );
-               foreach itemType, index in genericList {
-                  let altType =
-                     unwrap typeInfo.$itemTypeInfoList[ index ]@@@AlternateTypeInfo;
+               foreach itemType in genericList {
+                  // let altType =
+                  //    unwrap typeInfo.$itemTypeInfoList[ index ]@@@AlternateTypeInfo;
                   if itemType.$nilable {
                      let mess = "can't use nilable type -- %s" (itemType.getTxt(##));
                      return nil, pos, mess;
@@ -6183,7 +6254,7 @@ __test case1 {
       {
          let mut analyzer = new TypeAnalyzer(
             headTypeInfo, headTypeInfo, testScope, .Normal, true );
-         let refType, pos, msg =
+         let refType =
             analyzer.analyzeTypeFromTxt( ,,typeTxt, testScope, .Local, false );
          when! refType {
             if not Testing._isTM( ctrl, ,,typeTxt,
@@ -6212,8 +6283,7 @@ __test case1 {
    fn getType( typeTxt:str ):&TypeInfo! {
       let mut analyzer = new TypeAnalyzer(
          headTypeInfo, headTypeInfo, testScope, .Normal, true );
-      let refType, pos, msg =
-         analyzer.analyzeTypeFromTxt( typeTxt, testScope, .Local, false );
+      let refType = analyzer.analyzeTypeFromTxt( typeTxt, testScope, .Local, false );
       return refType$.$typeInfo;
    }
 

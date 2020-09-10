@@ -617,8 +617,6 @@ function glueGenerator:outputClass( moduleFullName, node, gluePrefix )
    
    self:outputFuncReg( "s_lua_func_info", staticMethodNodeList )
    self:outputFuncReg( "s_lua_method_info", methodNodeList )
-   
-   local classSymbolFull = moduleSymbolFull .. "_" .. node:get_name().txt
    self:outputCommonFunc( moduleSymbolFull )
    
    for __index, methodNode in ipairs( methodNodeList ) do

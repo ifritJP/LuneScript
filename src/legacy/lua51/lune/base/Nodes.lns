@@ -378,7 +378,7 @@ pub class NodeManager {
    pub fn __init() {
       self.idSeed = 0;
       self.nodeKind2NodeList = {};
-      foreach name, kind in nodeKind2NameMap {
+      foreach _, kind in nodeKind2NameMap {
          if not self.nodeKind2NodeList[ kind ] {
             self.nodeKind2NodeList[ kind ] = [];
          }
@@ -1020,7 +1020,7 @@ macro _declLoopGetBreakKind( node:sym, blockMem:sym ) {
 
    pub override fn ,,node.getBreakKind( checkMode:CheckBreakMode ): BreakKind
    {  
-      let mut kind = BreakKind.None;
+      //let mut kind = BreakKind.None;
       if checkMode ~= .Normal and checkMode ~= .Return {
          return self. ,,blockMem .getBreakKind( checkMode );
       }
@@ -2096,7 +2096,7 @@ pub override fn LiteralMapNode.setupLiteralTokenList( list: List<&Parser.Token> 
    self.addTokenList( list, .Dlmt, "{" );
 
    let mut lit2valNode:Map<stem,&Node> = {};
-   foreach val, key in self.map {
+   foreach _, key in self.map {
       let literal = key.getLiteral();
       when! literal {
          match literal {
@@ -2116,7 +2116,7 @@ pub override fn LiteralMapNode.setupLiteralTokenList( list: List<&Parser.Token> 
       }
    }
    
-   forsort key, literal in lit2valNode {
+   forsort key, _ in lit2valNode {
       if not key.setupLiteralTokenList( list ) {
          return false;
       }
@@ -2254,7 +2254,7 @@ pub override fn ExpMacroStatNode.getLiteral(): Literal!, str!
 {
    let mut txt = "";
    foreach token in self.expStrList {
-      let literal, mess = token.getLiteral();
+      let literal = token.getLiteral();
       when! literal {
          match literal {
             case .Str( work ) {
@@ -2295,7 +2295,7 @@ pub override fn ExpRefNode.getLiteral(): Literal!, str! {
 }
 
 pub override fn ExpOmitEnumNode.getLiteral(): Literal!, str! {
-   let enumTypeInfo = self.enumTypeInfo;
+   //let enumTypeInfo = self.enumTypeInfo;
 
    let enumval = self.valInfo;
    return enumLiteral2Literal( enumval.$val )**;
@@ -2304,7 +2304,7 @@ pub override fn ExpOmitEnumNode.getLiteral(): Literal!, str! {
 
 pub override fn ExpOmitEnumNode.setupLiteralTokenList( list: List<&Parser.Token> ): bool
 {
-   let enumTypeInfo = self.enumTypeInfo;
+   //let enumTypeInfo = self.enumTypeInfo;
 
    let enumval = self.valInfo;
    self.addTokenList( list, .Dlmt, "." );
@@ -2364,7 +2364,7 @@ fn ExpOp2Node.getValType( node:&Node ): bool, int, real, str, &Ast.TypeInfo {
 
 
 pub override fn ExpOp2Node.setupLiteralTokenList( list: List<&Parser.Token> ): bool {
-   let literal, msg = self.getLiteral();
+   let literal = self.getLiteral();
    when! literal {
       match literal {
          case .Int( val ) {

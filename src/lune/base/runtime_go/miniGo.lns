@@ -1,14 +1,12 @@
-class Test {
-   pub fn func() : int {
-      return 1;
-   }
+interface Test {
+   pub fn func() : int;
 }
-class Sub extend Test {
-   pub override fn func() : int {
+class Sub extend (Test) {
+   pub fn func() : int {
       return 10;
    }
 }
-fn func1( sub:&Sub ) : int {
+fn func1( sub:&Test ) : int {
    return sub.func();
 }
 fn func2( test:&stem ) : int {
@@ -20,10 +18,12 @@ fn func2( test:&stem ) : int {
    }
 }
 
-let test = new Sub();
+let test:Test = new Sub();
 
 let mut total = 0;
-for index = 1, 50000000 {
-   total = total + func1( test );
+for index = 1, 10 {
+   if (index % 2) == 0 {
+      total = total + func1( test );
+   }
 }
 print( total );

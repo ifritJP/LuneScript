@@ -354,7 +354,7 @@ function FormatterFilter:processRoot( node, opt )
 
    Ast.pushProcessInfo(  )
    
-   for index, child in ipairs( node:get_children() ) do
+   for __index, child in ipairs( node:get_children() ) do
       filter( child, self, opt:nextOpt( node ) )
    end
    
@@ -372,7 +372,7 @@ function FormatterFilter:processBlockSub( node, opt )
    self:writeln( "{" )
    self:pushIndent(  )
    
-   for index, statement in ipairs( node:get_stmtList() ) do
+   for __index, statement in ipairs( node:get_stmtList() ) do
       filter( statement, self, opt:nextOpt( node ) )
    end
    
@@ -414,9 +414,7 @@ function FormatterFilter:processDeclEnum( node, opt )
 
    self:writeln( string.format( "enum %s {", node:get_name().txt) )
    self:pushIndent(  )
-   local enumTypeInfo = _lune.unwrap( (_lune.__Cast( node:get_expType(), 3, Ast.EnumTypeInfo ) ))
    for __index, name in ipairs( node:get_valueNameList() ) do
-      local valInfo = _lune.unwrap( enumTypeInfo:getEnumValInfo( name.txt ))
       self:write( string.format( "%s", name.txt) )
       self:writeln( "," )
    end
@@ -428,21 +426,6 @@ end
 
 function FormatterFilter:processDeclAlge( node, opt )
 
-   
-   local algeTypeInfo = node:get_algeType()
-   do
-      local __sorted = {}
-      local __map = algeTypeInfo:get_valInfoMap()
-      for __key in pairs( __map ) do
-         table.insert( __sorted, __key )
-      end
-      table.sort( __sorted )
-      for __index, __key in ipairs( __sorted ) do
-         local valInfo = __map[ __key ]
-         do
-         end
-      end
-   end
    
 end
 
@@ -536,7 +519,7 @@ function FormatterFilter:processDeclClass( node, opt )
    self:writeln( "" )
    self:writeln( "{" )
    self:pushIndent(  )
-   for index, stmt in ipairs( node:get_allStmtList() ) do
+   for __index, stmt in ipairs( node:get_allStmtList() ) do
       filter( stmt, self, opt:nextOpt( node ) )
    end
    
@@ -681,7 +664,7 @@ function FormatterFilter:processWhen( node, opt )
    
    self:write( "when!" )
    local symTxt = " "
-   for index, symPair in ipairs( node:get_symPairList() ) do
+   for __index, symPair in ipairs( node:get_symPairList() ) do
       symTxt = string.format( "%s%s ", symTxt, symPair:get_src():get_name())
    end
    
@@ -984,7 +967,7 @@ end
 function FormatterFilter:processIf( node, opt )
 
    local stmtList = node:get_stmtList()
-   for index, stmt in ipairs( stmtList ) do
+   for __index, stmt in ipairs( stmtList ) do
       do
          local _switchExp = stmt:get_kind()
          if _switchExp == Nodes.IfKind.If then

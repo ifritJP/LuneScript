@@ -66,6 +66,12 @@ pub class Opt {
    pub let node:&Nodes.Node;
 }
 
+fn getSymTxt( name:str, id:str ) : str {
+   if name == "_" {
+      return "_%s" (id);
+   }
+   return name;
+}
 
 class convFilter extend Nodes.Filter<Opt> (oStream) {
    pri let streamName: str;
@@ -164,7 +170,7 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
          self.needIndent = false;
       }
 
-      apply cr of string.gmatch( txt, "\n" ) {
+      apply _ of string.gmatch( txt, "\n" ) {
          self.curLineNo = self.curLineNo + 1;
       }
       stream.write( txt );
@@ -320,7 +326,7 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
       }
 
       let mut index = 0;
-      forsort typeInfo, importName in importNameMap {
+      forsort typeInfo in importNameMap {
          index = index + 1;
          importModuleType2Index[ typeInfo ] = index;
       }
@@ -547,7 +553,7 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
                           not classTypeInfo.$externalFlag );
 
             if checkExportTypeInfo( classTypeInfo ) {
-               let className = classTypeInfo.getTxt(##);
+               //let className = classTypeInfo.getTxt(##);
                self.writeln( "do" );
                self.pushIndent(##);
                self.writeln( "local __classInfo%s = {}" (classTypeId) );
@@ -670,7 +676,7 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
    }
 
    // 公開関数情報の処理
-   forsort funcInfo, funcName in self.pubFuncName2InfoMap {
+   forsort funcInfo in self.pubFuncName2InfoMap {
       pickupTypeId( funcInfo.$typeInfo, true ## );
    }
 
@@ -766,7 +772,7 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
    self.writeln( "local __dependIdMap = {}" );
    self.writeln( "_moduleObj.__dependIdMap = __dependIdMap" );
    let mut exportNeedModuleTypeInfo:Set<&Ast.TypeInfo> = (@);
-   forsort typeInfo, typeId in typeId2TypeInfo {
+   forsort typeInfo in typeId2TypeInfo {
       let mut valid = false;
       let moduleTypeInfo = typeInfo.getModule();
       exportNeedModuleTypeInfo.add( moduleTypeInfo );
@@ -1225,7 +1231,7 @@ end
 ``` (algeFullName, algeFullName) );
    forsort valInfo in node.$algeType.$valInfoMap {
       self.write( '%s.%s = { "%s"' (algeFullName, valInfo.$name, valInfo.$name ) );
-      let mut memInfoTxt = "";
+      //let mut memInfoTxt = "";
       if #valInfo.$typeList > 0 {
          self.write( ", {" );
          foreach paramType, index in valInfo.$typeList {
@@ -1310,7 +1316,7 @@ pub override fn convFilter.processDeclClass(
    let className = classNameToken.txt;
    let classTypeInfo = node.get_expType();
    let classTypeId = classTypeInfo.$typeId;
-   let isGenericClass = isGenericType( classTypeInfo );
+   //let isGenericClass = isGenericType( classTypeInfo );
 
 
    if nodeInfo.get_accessMode() == .Pub {
@@ -1434,7 +1440,7 @@ end```
 
       if not oldFlag and baseInfo ~= Ast.headTypeInfo {
          if! let superInit = (unwrap baseInfo.$scope).getSymbolInfoChild( "__init" ) {
-            foreach argType, index in superInit.$typeInfo.$argTypeInfoList {
+            foreach _, index in superInit.$typeInfo.$argTypeInfoList {
                if #superArgTxt > 0 {
                   superArgTxt = superArgTxt .. ", ";
                }
@@ -1475,7 +1481,7 @@ function %s:__init( %s )
 
       if baseInfo ~= Ast.headTypeInfo {
          // Super クラスを持つ場合、その Super クラスの __init をコールする。
-         if! let superInit = (unwrap baseInfo.$scope).getSymbolInfoChild( "__init" ) {
+         if(unwrap baseInfo.$scope).getSymbolInfoChild( "__init" ) {
             self.write( "%s.__init( self" ( self.getFullName( baseInfo ) ) );
             if #superArgTxt > 0 {
                self.writeln( ", %s )" ( superArgTxt ) );
@@ -1495,7 +1501,7 @@ function %s:__init( %s )
    }
 
    // accessor
-   let scope = nodeInfo.get_scope();
+   //let scope = nodeInfo.get_scope();
    foreach memberNode in nodeInfo.$memberList {
       let memberNameToken = memberNode.get_name();
       let memberName = memberNameToken.txt;
@@ -1765,13 +1771,13 @@ pub override fn convFilter.processDeclConstr(
    let className = self.getFullName( classTypeInfo );
    self.write( string.format( "function %s.new( ", className ) );
 
-   let isGenericClass = isGenericType( classTypeInfo );
+   //let isGenericClass = isGenericType( classTypeInfo );
 
    let mut argTxt = "";
 
    self.write( argTxt );
    let argList = declInfo.get_argList();
-   foreach arg, index in argList {
+   foreach arg in argList {
       if #argTxt > 0 {
          self.write( ", " );
          argTxt = argTxt .. ", ";
@@ -2029,7 +2035,7 @@ pub override fn convFilter.processDeclVar(
       if index > 1 {
          self.write( ", " );
       }
-      self.write( var.$name.txt );
+      self.write( getSymTxt( var.$name.txt, "n%d_%d" (node.$id, index) ) );
    }
 
    if! node.get_expList() {
@@ -2052,7 +2058,7 @@ pub override fn convFilter.processDeclVar(
       self.writeln( " then" );
       self.pushIndent(##);
 
-      foreach var, index in varList  {
+      foreach var in varList  {
          self.writeln( "local _%s = %s" (var.$name.txt, var.$name.txt ) );
       }
       self.popIndent();
@@ -2101,7 +2107,7 @@ pub override fn convFilter.processDeclVar(
 
    if self.macroDepth > 0 {
       self.writeln( "" );
-      foreach symbolInfo, index in node.$symbolInfoList {
+      foreach symbolInfo in node.$symbolInfoList {
          let varName = symbolInfo.$name;
          self.writeln( "table.insert( macroVar.__names, '%s' )" ( varName ) );
          self.writeln( "macroVar.%s = %s" ( varName, varName ) );
@@ -2334,7 +2340,7 @@ pub override fn convFilter.processApply(
       if index > 1 {
          self.write( ", " );
       }
-      self.write( var.$name );
+      self.write( getSymTxt( var.$name, "%d" (var.$symbolId) ) );
    }
    self.write( " in " );
    filter( node.$expList,  self, node );
@@ -2348,14 +2354,14 @@ pub override fn convFilter.processForeach(
 {
    self.write( "for " );
    if! node.$key {
-      self.write( _exp.txt );
+      self.write( getSymTxt( _exp.txt, "%dk" (node.$id) ) );
    }
    else {
       self.write( "__index" );
    }
    self.write( ", " );
    if! node.$val {
-      self.write( _exp.txt );
+      self.write( getSymTxt( _exp.txt, "%dv" (node.$id) ) );
    }
    else {
       self.write( "__val" );

@@ -873,6 +873,7 @@ function Scope:__init(parent, classFlag, inherit, ifScopeList)
    self.symbolId2DataOwnerInfo = {}
    self.ifScopeList = _lune.unwrapDefault( ifScopeList, {})
    self.ownerTypeInfo = nil
+   self.validCheckingUnaccess = true
 end
 function Scope:isRoot(  )
 
@@ -957,6 +958,12 @@ function Scope:get_closureSymList()
 end
 function Scope:get_closureSym2NumMap()
    return self.closureSym2NumMap
+end
+function Scope:get_validCheckingUnaccess()
+   return self.validCheckingUnaccess
+end
+function Scope:set_validCheckingUnaccess( validCheckingUnaccess )
+   self.validCheckingUnaccess = validCheckingUnaccess
 end
 do
    Scope.seedId = 0
@@ -1523,6 +1530,7 @@ function NormalSymbolInfo:__init(kind, canBeLeft, canBeRight, scope, accessMode,
    
    self.convModuleParam = nil
    self.hasAccessFromClosure = false
+   self.hasAccessFromAny = false
    NormalSymbolInfo.symbolIdSeed = NormalSymbolInfo.symbolIdSeed + 1
    self.kind = kind
    self.canBeLeft = canBeLeft
@@ -1588,6 +1596,12 @@ end
 function NormalSymbolInfo:set_hasAccessFromClosure( hasAccessFromClosure )
    self.hasAccessFromClosure = hasAccessFromClosure
 end
+function NormalSymbolInfo:get_hasAccessFromAny()
+   return self.hasAccessFromAny
+end
+function NormalSymbolInfo:set_hasAccessFromAny( hasAccessFromAny )
+   self.hasAccessFromAny = hasAccessFromAny
+end
 function NormalSymbolInfo:get_convModuleParam()
    return self.convModuleParam
 end
@@ -1602,7 +1616,6 @@ end
 function TypeInfo.isInherit( typeInfo, other, alt2type )
 
    local baseTypeInfo = typeInfo:get_baseTypeInfo()
-   local interfaceList = typeInfo:get_interfaceList()
    local otherTypeId = other:get_typeId()
    if typeInfo:get_typeId() == otherTypeId then
       return true
@@ -2468,8 +2481,9 @@ local function dumpScope( workscope, workprefix )
    dumpScopeSub( workscope, workprefix, {} )
 end
 _moduleObj.dumpScope = dumpScope
-function Scope:setClosure( symbol )
+function Scope:setClosure( workSymbol )
 
+   local symbol = workSymbol:getOrg(  )
    local targetFuncType = symbol:get_namespaceTypeInfo()
    local funcType = self:getNamespaceTypeInfo(  )
    
@@ -2531,6 +2545,10 @@ end
 
 function Scope:accessSymbol( moduleScope, symbol )
 
+   if not symbol:get_hasAccessFromAny() then
+      symbol:set_hasAccessFromAny( true )
+   end
+   
    if self:isClosureAccess( moduleScope, symbol ) then
       self:setClosure( symbol )
    end
@@ -2662,8 +2680,6 @@ function NormalSymbolInfo:canAccess( fromScope, access )
       return self
    end
    
-   
-   local typeInfo = self:get_typeInfo()
    if self.scope == fromScope then
       return self
    end
@@ -2695,6 +2711,29 @@ function NormalSymbolInfo:canAccess( fromScope, access )
 end
 
 
+local OverrideMut = {}
+OverrideMut._name2Val = {}
+_moduleObj.OverrideMut = OverrideMut
+function OverrideMut:_getTxt( val )
+   local name = val[ 1 ]
+   if name then
+      return string.format( "OverrideMut.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+
+function OverrideMut._from( val )
+   return _lune._AlgeFrom( OverrideMut, val )
+end
+
+OverrideMut.IMut = { "IMut", {{ func=TypeInfo._fromMap, nilable=false, child={} }}}
+OverrideMut._name2Val["IMut"] = OverrideMut.IMut
+OverrideMut.None = { "None"}
+OverrideMut._name2Val["None"] = OverrideMut.None
+OverrideMut.Prefix = { "Prefix", {{ func=TypeInfo._fromMap, nilable=false, child={} }}}
+OverrideMut._name2Val["Prefix"] = OverrideMut.Prefix
+
+
 local AccessSymbolInfo = {}
 setmetatable( AccessSymbolInfo, { __index = SymbolInfo } )
 _moduleObj.AccessSymbolInfo = AccessSymbolInfo
@@ -2702,25 +2741,71 @@ function AccessSymbolInfo:getOrg(  )
 
    return self.symbolInfo:getOrg(  )
 end
-function AccessSymbolInfo:get_mutable(  )
+function AccessSymbolInfo:canAccess( fromScope, access )
+
+   if self.symbolInfo:canAccess( fromScope, access ) then
+      return self
+   end
+   
+   return nil
+end
+function AccessSymbolInfo:get_typeInfo(  )
 
    do
-      local _exp = self.prefixTypeInfo
-      if _exp ~= nil then
-         do
-            local _switchExp = self.symbolInfo:get_mutMode()
-            if _switchExp == MutMode.AllMut then
-               return true
-            elseif _switchExp == MutMode.IMut or _switchExp == MutMode.IMutRe then
-               return false
-            end
-         end
-         
-         return TypeInfo.isMut( _exp )
+      local _matchExp = self.overrideMut
+      if _matchExp[1] == OverrideMut.None[1] then
+      
+      elseif _matchExp[1] == OverrideMut.Prefix[1] then
+         local prefixTypeInfo = _matchExp[2][1]
+      
+      elseif _matchExp[1] == OverrideMut.IMut[1] then
+         local typeInfo = _matchExp[2][1]
+      
+         return typeInfo
       end
    end
    
-   return self.symbolInfo:get_mutable()
+   return self.symbolInfo:get_typeInfo()
+end
+function AccessSymbolInfo:get_mutMode(  )
+
+   do
+      local _matchExp = self.overrideMut
+      if _matchExp[1] == OverrideMut.None[1] then
+      
+         
+      elseif _matchExp[1] == OverrideMut.Prefix[1] then
+         local prefixTypeInfo = _matchExp[2][1]
+      
+         do
+            local _switchExp = self.symbolInfo:get_mutMode()
+            if _switchExp == MutMode.AllMut or _switchExp == MutMode.IMut or _switchExp == MutMode.IMutRe then
+               return self.symbolInfo:get_mutMode()
+            elseif _switchExp == MutMode.Mut then
+               do
+                  local _switchExp = prefixTypeInfo:get_mutMode()
+                  if _switchExp == MutMode.AllMut then
+                     return MutMode.Mut
+                  elseif _switchExp == MutMode.Mut or _switchExp == MutMode.IMut or _switchExp == MutMode.IMutRe then
+                     return prefixTypeInfo:get_mutMode()
+                  end
+               end
+               
+            end
+         end
+         
+      elseif _matchExp[1] == OverrideMut.IMut[1] then
+         local typeInfo = _matchExp[2][1]
+      
+         return MutMode.IMut
+      end
+   end
+   
+   return self.symbolInfo:get_mutMode()
+end
+function AccessSymbolInfo:get_mutable(  )
+
+   return isMutable( self:get_mutMode(  ) )
 end
 function AccessSymbolInfo:get_canBeLeft(  )
 
@@ -2733,31 +2818,24 @@ end
 function AccessSymbolInfo.setmeta( obj )
   setmetatable( obj, { __index = AccessSymbolInfo  } )
 end
-function AccessSymbolInfo.new( symbolInfo, prefixTypeInfo, overrideCanBeLeft )
+function AccessSymbolInfo.new( symbolInfo, overrideMut, overrideCanBeLeft )
    local obj = {}
    AccessSymbolInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( symbolInfo, prefixTypeInfo, overrideCanBeLeft )
+      obj:__init( symbolInfo, overrideMut, overrideCanBeLeft )
    end
    return obj
 end
-function AccessSymbolInfo:__init( symbolInfo, prefixTypeInfo, overrideCanBeLeft )
+function AccessSymbolInfo:__init( symbolInfo, overrideMut, overrideCanBeLeft )
 
    SymbolInfo.__init( self)
    self.symbolInfo = symbolInfo
-   self.prefixTypeInfo = prefixTypeInfo
+   self.overrideMut = overrideMut
    self.overrideCanBeLeft = overrideCanBeLeft
 end
 function AccessSymbolInfo:get_symbolInfo()
    return self.symbolInfo
 end
-function AccessSymbolInfo:get_prefixTypeInfo()
-   return self.prefixTypeInfo
-end
-function AccessSymbolInfo:canAccess( ... )
-   return self.symbolInfo:canAccess( ... )
-end
-
 function AccessSymbolInfo:get_accessMode( ... )
    return self.symbolInfo:get_accessMode( ... )
 end
@@ -2770,6 +2848,10 @@ function AccessSymbolInfo:get_convModuleParam( ... )
    return self.symbolInfo:get_convModuleParam( ... )
 end
 
+function AccessSymbolInfo:get_hasAccessFromAny( ... )
+   return self.symbolInfo:get_hasAccessFromAny( ... )
+end
+
 function AccessSymbolInfo:get_hasAccessFromClosure( ... )
    return self.symbolInfo:get_hasAccessFromClosure( ... )
 end
@@ -2780,10 +2862,6 @@ end
 
 function AccessSymbolInfo:get_kind( ... )
    return self.symbolInfo:get_kind( ... )
-end
-
-function AccessSymbolInfo:get_mutMode( ... )
-   return self.symbolInfo:get_mutMode( ... )
 end
 
 function AccessSymbolInfo:get_name( ... )
@@ -2810,12 +2888,12 @@ function AccessSymbolInfo:get_symbolId( ... )
    return self.symbolInfo:get_symbolId( ... )
 end
 
-function AccessSymbolInfo:get_typeInfo( ... )
-   return self.symbolInfo:get_typeInfo( ... )
-end
-
 function AccessSymbolInfo:set_convModuleParam( ... )
    return self.symbolInfo:set_convModuleParam( ... )
+end
+
+function AccessSymbolInfo:set_hasAccessFromAny( ... )
+   return self.symbolInfo:set_hasAccessFromAny( ... )
 end
 
 function AccessSymbolInfo:set_hasAccessFromClosure( ... )
@@ -5031,6 +5109,22 @@ function NormalTypeInfo.createModifier( srcTypeInfo, mutMode )
    end
    
    return modifier
+end
+
+
+function Scope:addOverrideImut( symbolInfo )
+
+   local typeInfo
+   
+   if TypeInfo.isMut( symbolInfo:get_typeInfo() ) then
+      typeInfo = NormalTypeInfo.createModifier( symbolInfo:get_typeInfo(), MutMode.IMut )
+   else
+    
+      typeInfo = symbolInfo:get_typeInfo()
+   end
+   
+   
+   self.symbol2SymbolInfoMap[symbolInfo:get_name()] = AccessSymbolInfo.new(symbolInfo, _lune.newAlge( OverrideMut.IMut, {typeInfo}), false)
 end
 
 
@@ -7549,7 +7643,7 @@ IdType.__allList[2] = IdType.Ext
 local function switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 5842, function (  )
+   Log.log( Log.Level.Trace, __func__, 5913, function (  )
    
       return "start"
    end )
@@ -7569,7 +7663,7 @@ local builtinTypeInfo2Map = typeInfo2Map:clone(  )
 local function pushProcessInfo( processInfo )
    local __func__ = '@lune.@base.@Ast.pushProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 5854, function (  )
+   Log.log( Log.Level.Trace, __func__, 5925, function (  )
    
       return "start"
    end )
@@ -7604,7 +7698,7 @@ _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
    local __func__ = '@lune.@base.@Ast.popProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 5880, function (  )
+   Log.log( Log.Level.Trace, __func__, 5951, function (  )
    
       return "start"
    end )
@@ -7818,7 +7912,7 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
          local genericList = {}
          local nextToken = Parser.getEofToken(  )
          repeat 
-            local refType, refPos, mess = self:analyzeTypeSub( false )
+            local refType = self:analyzeTypeSub( false )
             if refType ~= nil then
                table.insert( genericRefList, refType )
                table.insert( genericList, refType:get_typeInfo() )
@@ -7884,8 +7978,7 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
                end
                
                
-               for index, itemType in ipairs( genericList ) do
-                  local altType = _lune.unwrap( _lune.__Cast( typeInfo:get_itemTypeInfoList()[index], 3, AlternateTypeInfo ))
+               for __index, itemType in ipairs( genericList ) do
                   if itemType:get_nilable() then
                      local mess = string.format( "can't use nilable type -- %s", itemType:getTxt(  ))
                      return nil, pos, mess

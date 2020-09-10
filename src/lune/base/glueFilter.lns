@@ -366,7 +366,7 @@ pub fn glueGenerator.outputClass(
    self.outputFuncReg( "s_lua_func_info", staticMethodNodeList );
    self.outputFuncReg( "s_lua_method_info", methodNodeList );
 
-   let classSymbolFull = moduleSymbolFull .. "_" .. node.$name.txt;
+   //let classSymbolFull = moduleSymbolFull .. "_" .. node.$name.txt;
    self.outputCommonFunc( moduleSymbolFull );
 
 

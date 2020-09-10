@@ -98,7 +98,7 @@ pub override fn FormatterFilter.processRoot(
 {
    Ast.pushProcessInfo(##);
    
-   foreach child, index in node.$children {
+   foreach child in node.$children {
       filter( child, self, opt.nextOpt( node ) );
    }
 
@@ -115,7 +115,7 @@ pub override fn FormatterFilter.processBlockSub(
    self.writeln( "{" );
    self.pushIndent(##);
    
-   foreach statement, index in node.$stmtList {
+   foreach statement in node.$stmtList {
       filter( statement, self, opt.nextOpt( node ) );
    }
 
@@ -149,9 +149,9 @@ pub override fn FormatterFilter.processDeclEnum(
 {
    self.writeln( "enum %s {" (node.$name.txt ));
    self.pushIndent(##);
-   let enumTypeInfo = unwrap (node.$expType@@@Ast.EnumTypeInfo);
+   //let enumTypeInfo = unwrap (node.$expType@@@Ast.EnumTypeInfo);
    foreach name in node.$valueNameList {
-      let valInfo = unwrap enumTypeInfo.getEnumValInfo( name.txt );
+      //let valInfo = unwrap enumTypeInfo.getEnumValInfo( name.txt );
       self.write( "%s" (name.txt ) );
       self.writeln( "," );
    }
@@ -162,10 +162,9 @@ pub override fn FormatterFilter.processDeclEnum(
 pub override fn FormatterFilter.processDeclAlge(
    node: &Nodes.DeclAlgeNode, opt:Opt ) mut
 {
-   
-   let algeTypeInfo = node.$algeType;
-   forsort valInfo in algeTypeInfo.$valInfoMap {
-   }
+   // let algeTypeInfo = node.$algeType;
+   // forsort valInfo in algeTypeInfo.$valInfoMap {
+   // }
 }
 
 pub override fn FormatterFilter.processNewAlgeVal(
@@ -243,7 +242,7 @@ pub override fn FormatterFilter.processDeclClass(
    // foreach field, index in node.$fieldList {
    //    filter( field, self, opt.nextOpt( node ) );
    // }
-   foreach stmt, index in node.$allStmtList {
+   foreach stmt in node.$allStmtList {
       filter( stmt, self, opt.nextOpt( node ) );
    }
 
@@ -370,7 +369,7 @@ pub override fn FormatterFilter.processWhen(
 
    self.write( "when!" );
    let mut symTxt = " ";
-   foreach symPair, index in node.$symPairList {
+   foreach symPair in node.$symPairList {
       symTxt = "%s%s " (symTxt, symPair.$src.$name );
    }
    self.write( symTxt );
@@ -608,7 +607,7 @@ pub override fn FormatterFilter.processIf(
    node: &Nodes.IfNode, opt:Opt ) mut
 {
    let stmtList = node.$stmtList;
-   foreach stmt, index in stmtList {
+   foreach stmt in stmtList {
       switch stmt.$kind {
          case .If {
             self.write( "if " );

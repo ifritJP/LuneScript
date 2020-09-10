@@ -128,7 +128,7 @@ pub override fn dumpFilter.processRoot(
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node, "" );
-   foreach child, index in node.get_children() {
+   foreach child in node.get_children() {
       filter( child, self, opt.nextOpt() );
    }	
 };
@@ -143,7 +143,7 @@ pub override fn dumpFilter.processBlockSub(
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node, "" );
-   foreach statement, index in node.get_stmtList() {
+   foreach statement in node.get_stmtList() {
       filter( statement, self, opt.nextOpt() );
    }	
 };
@@ -203,7 +203,7 @@ pub override fn dumpFilter.processDeclClass(
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node, node.get_name().txt );
-   foreach field, index in node.get_fieldList() {
+   foreach field in node.get_fieldList() {
       filter( field, self, opt.nextOpt() );
    }	
 };
@@ -259,7 +259,7 @@ pub override fn dumpFilter.processIfUnwrap(
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node, "" );
-   foreach expNode, index in node.$expList.$expList {
+   foreach expNode in node.$expList.$expList {
       filter( expNode, self, opt.nextOpt() );
    }
    filter( node.$block, self, opt.nextOpt() );
@@ -274,7 +274,7 @@ pub override fn dumpFilter.processWhen(
    let prefix, depth = opt.get();
 
    let mut symTxt = "";
-   foreach symPair, index in node.$symPairList {
+   foreach symPair in node.$symPairList {
       symTxt = "%s %s" (symTxt, symPair.$src);
    }
    
@@ -303,7 +303,7 @@ pub override fn dumpFilter.processDeclVar(
    varName = "%s %s" ( node.$mode, varName );
 
    dump( prefix, depth, node, varName );
-   foreach var, index in node.get_varList() {
+   foreach var in node.get_varList() {
       if! var.$refType {
          filter( _exp, self, opt.nextOpt() );
       }
@@ -377,7 +377,7 @@ fn dumpFilter.processDeclFuncInfo(
    }
    dump( prefix, depth, node, name );
    let argList = declInfo.get_argList();
-   foreach arg, index in argList {
+   foreach arg in argList {
       filter( arg, self, opt.nextOpt() );
    }
    if! declInfo.get_body() {
@@ -434,7 +434,7 @@ pub override fn dumpFilter.processIf(
    let prefix, depth = opt.get();
    dump( prefix, depth, node, "");
    let stmtList = node.get_stmtList();
-   foreach stmt, index in stmtList {
+   foreach stmt in stmtList {
       if stmt.$exp.$kind ~= Nodes.nodeKindEnum.None {
 	 filter( stmt.$exp, self, opt.nextOpt() );
       }   	
@@ -505,7 +505,7 @@ pub override fn dumpFilter.processApply(
    let prefix, depth = opt.get();
    let mut varNames = "";
    let varList = node.get_varList();
-   foreach var, index in varList {
+   foreach var in varList {
       varNames = varNames .. var.$name .. " ";
    }	
    dump( prefix, depth, node, varNames );
@@ -585,7 +585,7 @@ pub override fn dumpFilter.processExpList(
    }
    dump( prefix, depth, node, mess );
    let expList = node.get_expList();
-   foreach exp, index in expList {
+   foreach exp in expList {
       filter( exp, self, opt.nextOpt() );
    }	
 };

@@ -231,7 +231,7 @@ pub class Token {
 
    pub fn getLineCount():int {
       let mut count = 1;
-      apply cr of self.txt.gmatch( "\n" ) {
+      apply _ of self.txt.gmatch( "\n" ) {
          count = count + 1;
       }
       return count;
@@ -543,7 +543,7 @@ fn StreamParser.parse() mut : Token[]! {
       let mut searchIndex = comIndex;
       let mut comment = "";
       while true {
-         if! let termIndex, termEndIndex = string.find(
+         if! let _, termEndIndex = string.find(
             rawLine, termStr, searchIndex, true )
          {
             comment = comment .. rawLine.sub( searchIndex, termEndIndex );

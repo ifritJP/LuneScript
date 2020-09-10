@@ -1025,7 +1025,8 @@ end
 function MacroCtrl:registVar( symbolList )
 
    for __index, symbolInfo in ipairs( symbolList ) do
-      self.symbol2ValueMapForMacro[symbolInfo:get_name()] = Nodes.MacroValInfo.new(nil, symbolInfo:get_typeInfo(), nil)
+      local info = Nodes.MacroValInfo.new(nil, symbolInfo:get_typeInfo(), nil)
+      self.symbol2ValueMapForMacro[symbolInfo:get_name()] = info
    end
    
 end

@@ -60,7 +60,7 @@ Nodes.RefTypeNode
       name = Nodes.ExpRefNode.create(
          self.nodeManager, token.pos,
          self.macroCtrl.isInAnalyzeArgMode(), [ dddSym.$typeInfo ], 
-         new Ast.AccessSymbolInfo( dddSym, nil, true ) );
+         new Ast.AccessSymbolInfo( dddSym, .None, true ) );
    }
    else {
       name = self.analyzeExpSymbol( firstToken, token, .Symbol, nil, true );
@@ -190,8 +190,8 @@ fn TransUnit.analyzeRefTypeWithSymbol(
             }
             case .Class, .IF {
                if checkAlternateTypeCount( #typeInfo.$itemTypeInfoList ) {
-                  foreach itemType, index in genericList {
-                     let altType = unwrap typeInfo.$itemTypeInfoList[ index ]@@@Ast.AlternateTypeInfo;
+                  foreach itemType in genericList {
+                     //let altType = unwrap typeInfo.$itemTypeInfoList[ index ]@@@Ast.AlternateTypeInfo;
                      if itemType.$nilable {
                         self.addErrMess(
                            symbolNode.$pos,
@@ -504,7 +504,7 @@ pub fn TransUnit.createAST(
    }
 
    when! moduleName {
-      apply txt of string.gmatch( moduleName, '[^%.]+' ) {
+      apply _ of string.gmatch( moduleName, '[^%.]+' ) {
          //self.popClass();
          self.popModule();
       }
@@ -573,7 +573,7 @@ fn TransUnit.analyzeDeclMacroSub(
    let mut argList: List<&Nodes.DeclArgNode> = [];
    // let mut nextToken = self.analyzeDeclArgList( accessMode, workArgList, false );
    let mut argTypeList: List<&Ast.TypeInfo> = [];
-   foreach argNode, index in workArgList {
+   foreach argNode in workArgList {
       if! argNode@@@Nodes.DeclArgNode {
          argList.insert( _exp );
       }
@@ -610,6 +610,11 @@ fn TransUnit.analyzeDeclMacroSub(
       // }
 
       self.macroScope = macroScope;
+
+      // macro-statement のトップの変数のアクセス有無は確認しない。
+      macroScope.set_validCheckingUnaccess( false );
+  
+      
 
       let funcType = Ast.NormalTypeInfo.createFunc(
          false, true, nil, .Func, Ast.headTypeInfo, false, true,
@@ -711,24 +716,24 @@ fn TransUnit.analyzeDeclMacro(
    // このとき、マクロの型名や引数名などは現在のスコープをスコープを利用し、
    // 引数シンボルはマクロ用スコープに登録する。
    let mut workArgList: List<&Nodes.Node> = [];
-   let mut nextToken = self.analyzeDeclArgList( accessMode, scope, workArgList, false );
+   self.analyzeDeclArgList( accessMode, scope, workArgList, false );
 
    // マクロ解析用スコープに変更する前に、登録する namespace を取っおく
    let parentInfo = self.getCurrentNamespaceTypeInfo();
    
    // スコープをマクロ用スコープに変更
    let mut backScope = self.scope;
-   self.scope = scope;   
-  
+   self.scope = scope;
+
    let mut node = self.analyzeDeclMacroSub(
       accessMode, firstToken, nameToken, scope, parentInfo, workArgList );
 
    // スコープを元に戻す
    self.scope = backScope;
 
-   let macroSym, existSym =
+   let _, existSym =
       self.scope.addMacro( nameToken.pos, node.$expType, accessMode );
-   when! existSym {
+   if existSym {
       self.addErrMess(
          nameToken.pos, "multiple define symbol -- %s" (nameToken.txt) );
    }
@@ -991,7 +996,7 @@ fn TransUnit.analyzeDeclEnum(
    self.checkNextToken( "{" );
 
    let mut valueList:List<&Parser.Token> = [];
-   let mut valueName2Info:Map<str,Ast.EnumValInfo> = {};
+   //let mut valueName2Info:Map<str,Ast.EnumValInfo> = {};
 
 
    let mut scope = self.pushScope( true ## );
@@ -1100,7 +1105,7 @@ fn TransUnit.analyzeDeclEnum(
 
    self.popScope();
 
-   let enumSym, shadowing =
+   let _, shadowing =
       self.scope.addEnum( accessMode, name.txt, name.pos, unwrap enumTypeInfo );
    self.errorShadowing( name.pos, shadowing );
 
@@ -1126,7 +1131,7 @@ fn TransUnit.analyzeDeclAlge(
 
    let mut algeTypeInfo = Ast.NormalTypeInfo.createAlge(
       algeScope, self.getCurrentNamespaceTypeInfo(), false, accessMode, name.txt );
-   let algeSym, shadowing =
+   let _, shadowing =
       scope.addAlge( accessMode, name.txt, name.pos, algeTypeInfo );
    self.errorShadowing( name.pos, shadowing );
 
@@ -1144,7 +1149,7 @@ fn TransUnit.analyzeDeclAlge(
          // パラメータの宣言
          while true {
             // パラメータ名の確認
-            let workToken1 = self.getToken(##);
+            let _ = self.getToken(##);
             let workToken2 = self.getToken(##);
             if workToken2.txt ~= ":" {
                // パラメータ名を省略している場合は戻す
@@ -1292,7 +1297,7 @@ mut : Nodes.DeclFormNode
    let mut funcBodyScope = self.pushScope( false ## );
 
    let mut nextToken = self.analyzeDeclArgList(
-      accessMode, self.scope, argList, Ast.isPubToExternal( accessMode ) );
+      accessMode, funcBodyScope, argList, Ast.isPubToExternal( accessMode ) );
 
    self.checkToken( nextToken, ")" );
 
@@ -1655,7 +1660,7 @@ fn TransUnit.analyzeFuncBlock(
    funcBodyScope:Ast.Scope, retTypeInfoList:&List<&Ast.TypeInfo> ) mut : Nodes.BlockNode
 {
    if not funcTypeInfo.$staticFlag {
-      when! classTypeInfo {
+      if classTypeInfo {
          if! let overrideType = self.scope.$parent.getTypeInfoField(
             funcName, false, funcBodyScope, self.scopeAccess )
          {
@@ -1810,7 +1815,7 @@ nil の場合、メンバの宣言位置。
       }
 
       if nameToken.txt == "__init" {
-         foreach symbolInfo, symbolName in self.scope.$symbol2SymbolInfoMap {
+         foreach symbolInfo in self.scope.$symbol2SymbolInfoMap {
             if not symbolInfo.$staticFlag {
                // 一旦全てのメンバを値なし状態にセットする
                symbolInfo.set_hasValueFlag( false );
@@ -1846,7 +1851,7 @@ nil の場合、メンバの宣言位置。
          self.error( "%s can not have __init block." (mode) );
       }
       hasInitBlock = true;
-      foreach symbolInfo, symbolName in self.scope.$symbol2SymbolInfoMap {
+      foreach symbolInfo in self.scope.$symbol2SymbolInfoMap {
          if symbolInfo.$staticFlag {
             // 一旦全てのメンバを値なし状態にセットする
             symbolInfo.set_hasValueFlag( false );
@@ -2505,7 +2510,7 @@ fn TransUnit.analyzeDeclFunc(
          case "__init" {
             isCtorFlag = true;
             kind = Nodes.NodeKind.$DeclConstr;
-            foreach symbolInfo, symbolName in self.scope.$symbol2SymbolInfoMap {
+            foreach symbolInfo in self.scope.$symbol2SymbolInfoMap {
                if not symbolInfo.$staticFlag {
                   // 一旦全てのメンバを値なし状態にセットする
                   symbolInfo.set_hasValueFlag( false );
@@ -2869,7 +2874,7 @@ fn TransUnit.createExpListNode(
 {
    // 引数リストを更新する
    let mut newExpTypeList:List<&Ast.TypeInfo> = [];
-   foreach expNode, listIndex in newExpList {
+   foreach expNode in newExpList {
       newExpTypeList.insert( expNode.$expType );
    }
    if #newExpList[ #newExpList ].$expTypeList > 1 {
@@ -2978,7 +2983,7 @@ fn TransUnit.analyzeLetAndInitExp(
          mutable = .Mut;
          nextToken = self.getToken(##);
       }
-      let varName = self.checkSymbol( nextToken, .MustNot_ );
+      let varName = self.checkSymbol( nextToken, .MustNot_Or_ );
       nextToken = self.getToken(##);
       let mut typeInfo = Ast.builtinTypeEmpty;
       if nextToken.txt == ":" {
@@ -3040,7 +3045,6 @@ fn TransUnit.analyzeLetAndInitExp(
       //  初期化値の型を反映する
       let mut expTypeList: List<&Ast.TypeInfo> = [];
       foreach expType, index in expList.$expTypeList {
-         let processedFlag = false;
          if index == #expList.$expTypeList and expType.$kind == .DDD
          {
             // 最終要素が ... の場合、残りの変数宣言の分 stem をセットする
@@ -3546,7 +3550,7 @@ fn TransUnit.analyzeWhen( firstToken: &Parser.Token ) mut : Nodes.Node
 
    let mut scope = self.pushScope( false ## );
 
-   let mut expNodeList:List<&Nodes.Node> = [];
+   //let mut expNodeList:List<&Nodes.Node> = [];
    let mut symPairList:List<&Nodes.UnwrapSymbolPair> = [];
 
    foreach expNode in symListNode.$expList {

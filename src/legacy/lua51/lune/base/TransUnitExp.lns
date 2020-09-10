@@ -707,7 +707,7 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!, &List<&Ast
       if expNodeList[ #expNodeList ].$kind == Nodes.NodeKind.$Abbr {
          hasAbbr = true;
          let mut workList:List<&Nodes.Node> = [];
-         foreach node, index in expNodeList {
+         foreach node in expNodeList {
             workList.insert( node );
          }
          workList.remove(##);
@@ -872,7 +872,7 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
       funcTypeInfo.getTxt(##), pos,
       argTypeList, expList, false, warnForFollow, genericsClass );
    
-   when! expList, newExpNodeList {
+   if expList and newExpNodeList {
       return matchResult, alt2typeMap, newExpNodeList;
    }
    return matchResult, alt2typeMap, expList;
@@ -1075,7 +1075,7 @@ fn TransUnit.checkStringFormat(
    pos:&Parser.Position, formatTxt:str, argTypeList:&List<&Ast.TypeInfo> ) mut
 {
    let opList = findForm( formatTxt );
-   let mut dstTypeList:List<&Ast.TypeInfo> = [];
+   //let mut dstTypeList:List<&Ast.TypeInfo> = [];
 
    if #opList ~= #argTypeList {
       self.addErrMess( pos,
@@ -1191,7 +1191,7 @@ fn TransUnit.analyzeExpCall(
       }
       if #argList.$expList > 1 {
          if! let toDDDNode = argList.$expList[ 2 ]@@@Nodes.ExpToDDDNode {
-            foreach workNode, index in toDDDNode.$expList.$expList {
+            foreach workNode in toDDDNode.$expList.$expList {
                formArgTypeList.insert( workNode.$expType );
             }
          }
@@ -1721,7 +1721,7 @@ fn TransUnit.analyzeAccessClassField(
          else {
             if symbolInfo.$typeInfo.$kind == .Method and symbolInfo.$scope == classScope
             {           
-               foreach val, name in classScope.$symbol2SymbolInfoMap {
+               foreach val in classScope.$symbol2SymbolInfoMap {
                   if val.$kind == .Mbr and not val.$staticFlag {
                      if not val.$hasValueFlag and not val.$typeInfo.$nilable {
                         errorMess = "Set member(%s) before to access the method-- %s"
@@ -2180,7 +2180,7 @@ fn TransUnit.analyzeExpField(
    when! symbolInfo {
       //canBeLeft = _exp.canBeLeft();
       accessSymbolInfo = new Ast.AccessSymbolInfo(
-         symbolInfo, prefixExpType, not accessNil );
+         symbolInfo, .Prefix( prefixExpType ), not accessNil );
       switch mode {
          case .Field, .FieldNil {
             symbolMutMode = symbolInfo.$mutMode;
@@ -2237,7 +2237,7 @@ fn TransUnit.analyzeNewAlge(
          argListNode = nil;
       }
 
-      if! let matchResult, alt2typeMap, mut newExpNodeList = self.checkMatchType(
+      if! let _, _, newExpNodeList = self.checkMatchType(
          "call", symbolToken.pos, valInfo.$typeList, argListNode, false, true, nil )
       {
          argList = newExpNodeList.$expList;
@@ -2315,6 +2315,10 @@ fn TransUnit.analyzeExpSymbol(
       else {
          self.checkSymbolComp( symbolToken );
 
+         if symbolToken.txt == "_" {
+            self.addErrMess( symbolToken.pos, "can't access '_' symbol." );
+         }
+         
          let! symbolInfo = self.scope.getSymbolTypeInfo(
             symbolToken.txt, self.scope, self.moduleScope, self.scopeAccess )
          {
@@ -2384,7 +2388,7 @@ fn TransUnit.analyzeExpSymbol(
          exp = Nodes.ExpRefNode.create(
             self.nodeManager, firstToken.pos,
             self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ], 
-            new Ast.AccessSymbolInfo( symbolInfo, nil, true ) );
+            new Ast.AccessSymbolInfo( symbolInfo, .None, true ) );
       }
    }
    elseif mode == .Fn {
@@ -2430,7 +2434,7 @@ fn TransUnit.analyzeExpOpSet(
                        (Nodes.getNodeKindName( expList.$kind ) ) );
    }
 
-   let matchResult, alt2typeMap, newExpListNode, expTypeList =
+   let _, _, _, expTypeList =
       self.checkMatchType( "= operator", opeToken.pos, exp.$expTypeList,
                            expList, true, false, nil );
 
@@ -3195,7 +3199,7 @@ fn TransUnit.analyzeExp(
             "can't access to __init of %s" (classTypeInfo.getTxt(##)));
       }
 
-      let matchResult, alt2type, newArgList = self.checkMatchValType(
+      let _, alt2type, newArgList = self.checkMatchValType(
          exp.$pos, initTypeInfo, argList,
          classTypeInfo.$itemTypeInfoList, classTypeInfo );
 
@@ -3471,7 +3475,7 @@ fn TransUnit.analyzeExp(
       exp = Nodes.ExpRefNode.create(
          self.nodeManager, firstToken.pos,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], 
-         new Ast.AccessSymbolInfo( symbolTypeInfo, nil, false ) );
+         new Ast.AccessSymbolInfo( symbolTypeInfo, .None, false ) );
    }  
    elseif token.kind == Parser.TokenKind.Kywd and
        ( token.txt == "true" or token.txt == "false" )

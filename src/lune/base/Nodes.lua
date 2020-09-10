@@ -719,7 +719,7 @@ end
 function NodeManager:__init() 
    self.idSeed = 0
    self.nodeKind2NodeList = {}
-   for kind, name in pairs( nodeKind2NameMap ) do
+   for kind, _931v in pairs( nodeKind2NameMap ) do
       if not self.nodeKind2NodeList[kind] then
          self.nodeKind2NodeList[kind] = {}
       end
@@ -2808,7 +2808,7 @@ end
 
 function RepeatNode:getBreakKind( checkMode )
 
-   local kind = BreakKind.None
+   
    if checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return then
       return self.block:getBreakKind( checkMode )
    end
@@ -2987,7 +2987,7 @@ end
 
 function ForNode:getBreakKind( checkMode )
 
-   local kind = BreakKind.None
+   
    if checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return then
       return self.block:getBreakKind( checkMode )
    end
@@ -3119,7 +3119,7 @@ end
 
 function ApplyNode:getBreakKind( checkMode )
 
-   local kind = BreakKind.None
+   
    if checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return then
       return self.block:getBreakKind( checkMode )
    end
@@ -3255,7 +3255,7 @@ end
 
 function ForeachNode:getBreakKind( checkMode )
 
-   local kind = BreakKind.None
+   
    if checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return then
       return self.block:getBreakKind( checkMode )
    end
@@ -3395,7 +3395,7 @@ end
 
 function ForsortNode:getBreakKind( checkMode )
 
-   local kind = BreakKind.None
+   
    if checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return then
       return self.block:getBreakKind( checkMode )
    end
@@ -11258,7 +11258,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, val in pairs( self.map ) do
+   for key, _36829v in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -11293,8 +11293,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, literal in ipairs( __sorted ) do
-         local key = __map[ literal ]
+      for __index, _ in ipairs( __sorted ) do
+         local key = __map[ _ ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false
@@ -11480,7 +11480,7 @@ function ExpMacroStatNode:getLiteral(  )
 
    local txt = ""
    for __index, token in ipairs( self.expStrList ) do
-      local literal, mess = token:getLiteral(  )
+      local literal = token:getLiteral(  )
       if literal ~= nil then
          do
             local _matchExp = literal
@@ -11528,8 +11528,6 @@ end
 
 function ExpOmitEnumNode:getLiteral(  )
 
-   local enumTypeInfo = self.enumTypeInfo
-   
    local enumval = self.valInfo
    return enumLiteral2Literal( enumval:get_val() )
 end
@@ -11537,8 +11535,6 @@ end
 
 function ExpOmitEnumNode:setupLiteralTokenList( list )
 
-   local enumTypeInfo = self.enumTypeInfo
-   
    local enumval = self.valInfo
    self:addTokenList( list, Parser.TokenKind.Dlmt, "." )
    
@@ -11622,7 +11618,7 @@ end
 
 function ExpOp2Node:setupLiteralTokenList( list )
 
-   local literal, msg = self:getLiteral(  )
+   local literal = self:getLiteral(  )
    if literal ~= nil then
       do
          local _matchExp = literal

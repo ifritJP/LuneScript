@@ -367,6 +367,15 @@ function Opt:__init( node )
 end
 
 
+local function getSymTxt( name, id )
+
+   if name == "_" then
+      return string.format( "_%s", id)
+   end
+   
+   return name
+end
+
 local convFilter = {}
 setmetatable( convFilter, { __index = Nodes.Filter,ifList = {oStream,} } )
 function convFilter.new( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest, useIpairs )
@@ -440,7 +449,7 @@ function convFilter:writeRaw( txt )
    end
    
    
-   for cr in string.gmatch( txt, "\n" ) do
+   for _5211 in string.gmatch( txt, "\n" ) do
       self.curLineNo = self.curLineNo + 1
    end
    
@@ -580,8 +589,8 @@ function convFilter:outputMeta( node )
             table.insert( __sorted, __key )
          end
          table.sort( __sorted )
-         for __index, importName in ipairs( __sorted ) do
-            local typeInfo = __map[ importName ]
+         for __index, __key in ipairs( __sorted ) do
+            local typeInfo = __map[ __key ]
             do
                index = index + 1
                importModuleType2Index[typeInfo] = index
@@ -843,7 +852,6 @@ function convFilter:outputMeta( node )
                   pickupTypeId( classTypeInfo, true, validChildrenSet[classTypeInfo] == nil and not classTypeInfo:get_externalFlag() )
                   
                   if checkExportTypeInfo( classTypeInfo ) then
-                     local className = classTypeInfo:getTxt(  )
                      self:writeln( "do" )
                      self:pushIndent(  )
                      self:writeln( string.format( "local __classInfo%s = {}", classTypeId) )
@@ -1007,8 +1015,8 @@ function convFilter:outputMeta( node )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, funcName in ipairs( __sorted ) do
-         local funcInfo = __map[ funcName ]
+      for __index, __key in ipairs( __sorted ) do
+         local funcInfo = __map[ __key ]
          do
             pickupTypeId( funcInfo.typeInfo, true )
          end
@@ -1153,8 +1161,8 @@ function convFilter:outputMeta( node )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, typeId in ipairs( __sorted ) do
-         local typeInfo = __map[ typeId ]
+      for __index, __key in ipairs( __sorted ) do
+         local typeInfo = __map[ __key ]
          do
             local valid = false
             local moduleTypeInfo = typeInfo:getModule(  )
@@ -1650,7 +1658,6 @@ end
          local valInfo = __map[ __key ]
          do
             self:write( string.format( '%s.%s = { "%s"', algeFullName, valInfo:get_name(), valInfo:get_name()) )
-            local memInfoTxt = ""
             if #valInfo:get_typeList() > 0 then
                self:write( ", {" )
                for index, paramType in ipairs( valInfo:get_typeList() ) do
@@ -1744,8 +1751,6 @@ function convFilter:processDeclClass( node, opt )
    local className = classNameToken.txt
    local classTypeInfo = node:get_expType(  )
    local classTypeId = classTypeInfo:get_typeId()
-   local isGenericClass = isGenericType( classTypeInfo )
-   
    if nodeInfo:get_accessMode(  ) == Ast.AccessMode.Pub then
       self.classId2TypeInfo[classTypeId] = classTypeInfo
    end
@@ -1900,7 +1905,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, argType in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _6679v in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -1947,18 +1952,15 @@ function %s:__init( %s )
       self:pushIndent(  )
       
       if baseInfo ~= Ast.headTypeInfo then
-         do
-            local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
-            if superInit ~= nil then
-               self:write( string.format( "%s.__init( self", self:getFullName( baseInfo )) )
-               if #superArgTxt > 0 then
-                  self:writeln( string.format( ", %s )", superArgTxt) )
-               else
-                
-                  self:writeln( ")" )
-               end
-               
+         if (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" ) then
+            self:write( string.format( "%s.__init( self", self:getFullName( baseInfo )) )
+            if #superArgTxt > 0 then
+               self:writeln( string.format( ", %s )", superArgTxt) )
+            else
+             
+               self:writeln( ")" )
             end
+            
          end
          
       end
@@ -1973,7 +1975,6 @@ function %s:__init( %s )
       self:writeln( 'end' )
    end
    
-   local scope = nodeInfo:get_scope(  )
    for __index, memberNode in ipairs( nodeInfo:get_memberList() ) do
       local memberNameToken = memberNode:get_name(  )
       local memberName = memberNameToken.txt
@@ -2263,14 +2264,11 @@ function convFilter:processDeclConstr( node, opt )
    local classTypeInfo = _lune.unwrap( declInfo:get_classTypeInfo())
    local className = self:getFullName( classTypeInfo )
    self:write( string.format( "function %s.new( ", className ) )
-   
-   local isGenericClass = isGenericType( classTypeInfo )
-   
    local argTxt = ""
    
    self:write( argTxt )
    local argList = declInfo:get_argList(  )
-   for index, arg in ipairs( argList ) do
+   for __index, arg in ipairs( argList ) do
       if #argTxt > 0 then
          self:write( ", " )
          argTxt = argTxt .. ", "
@@ -2565,7 +2563,7 @@ function convFilter:processDeclVar( node, opt )
          self:write( ", " )
       end
       
-      self:write( var:get_name().txt )
+      self:write( getSymTxt( var:get_name().txt, string.format( "n%d_%d", node:get_id(), index) ) )
    end
    
    
@@ -2596,7 +2594,7 @@ function convFilter:processDeclVar( node, opt )
          self:writeln( " then" )
          self:pushIndent(  )
          
-         for index, var in ipairs( varList ) do
+         for __index, var in ipairs( varList ) do
             self:writeln( string.format( "local _%s = %s", var:get_name().txt, var:get_name().txt) )
          end
          
@@ -2659,7 +2657,7 @@ function convFilter:processDeclVar( node, opt )
    
    if self.macroDepth > 0 then
       self:writeln( "" )
-      for index, symbolInfo in ipairs( node:get_symbolInfoList() ) do
+      for __index, symbolInfo in ipairs( node:get_symbolInfoList() ) do
          local varName = symbolInfo:get_name()
          self:writeln( string.format( "table.insert( macroVar.__names, '%s' )", varName) )
          self:writeln( string.format( "macroVar.%s = %s", varName, varName) )
@@ -2930,7 +2928,7 @@ function convFilter:processApply( node, opt )
          self:write( ", " )
       end
       
-      self:write( var:get_name() )
+      self:write( getSymTxt( var:get_name(), string.format( "%d", var:get_symbolId()) ) )
    end
    
    self:write( " in " )
@@ -2948,7 +2946,7 @@ function convFilter:processForeach( node, opt )
    do
       local _exp = node:get_key()
       if _exp ~= nil then
-         self:write( _exp.txt )
+         self:write( getSymTxt( _exp.txt, string.format( "%dk", node:get_id()) ) )
       else
          self:write( "__index" )
       end
@@ -2958,7 +2956,7 @@ function convFilter:processForeach( node, opt )
    do
       local _exp = node:get_val()
       if _exp ~= nil then
-         self:write( _exp.txt )
+         self:write( getSymTxt( _exp.txt, string.format( "%dv", node:get_id()) ) )
       else
          self:write( "__val" )
       end
@@ -3989,7 +3987,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3265, function (  )
+   Log.log( Log.Level.Info, __func__, 3271, function (  )
    
       return string.format( "code: %s", code)
    end )

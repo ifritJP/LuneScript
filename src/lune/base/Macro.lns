@@ -767,8 +767,8 @@ macro-statment 内で定義している変数を登録する。
 */
 pub fn MacroCtrl.registVar( symbolList:&List<&Ast.SymbolInfo> ) mut {
    foreach symbolInfo in symbolList {
-      self.symbol2ValueMapForMacro[ symbolInfo.$name ] =
-         new Nodes.MacroValInfo( nil, symbolInfo.$typeInfo, nil);
+      let mut info = new Nodes.MacroValInfo( nil, symbolInfo.$typeInfo, nil);
+      self.symbol2ValueMapForMacro[ symbolInfo.$name ] = info;
    }
 }
 

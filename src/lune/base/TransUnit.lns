@@ -611,6 +611,18 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
             }
          }
       }
+
+      if tentativeSymbol.$scope.$validCheckingUnaccess {
+         forsort symbolInfo in tentativeSymbol.$scope.$symbol2SymbolInfoMap {
+            if not symbolInfo.$hasAccessFromAny and
+               symbolInfo.$kind == .Var and not symbolInfo.$name.find( "^_"## )
+            {
+               if! let pos = symbolInfo.$pos {
+                  self.addWarnMess( pos, "'%s' var isn't accessed" (symbolInfo.$name) );
+               }
+            }
+         }
+      }
    }
 
    pri fn mergeTentativeSymbol( scope:&Ast.Scope ) mut {
@@ -674,7 +686,7 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
          typeInfo = Ast.NormalTypeInfo.createModule(
             scope, parentInfo, externalFlag, modName, mutable );
 
-         let symInfo, existSym = parentScope.addClass( modName, nil, typeInfo );
+         let _, existSym = parentScope.addClass( modName, nil, typeInfo );
          when! existSym {
             self.addErrMess(
                self.parser.getLastPos(),
@@ -933,6 +945,9 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
    }
    
    pri fn checkShadowing( pos:&Parser.Position, name:str, scope:&Ast.Scope ) mut {
+      if name == "_" {
+         return;
+      }
       let! symbolInfo = self.scope.getSymbolTypeInfo(
          name, scope, self.moduleScope, self.scopeAccess )
       {
@@ -1466,7 +1481,7 @@ class _TypeInfoEnum extend _TypeInfo {
       let accessMode = unwrap Ast.AccessMode._from( self.accessMode );
       //let parentInfo = unwrap param.typeId2TypeInfo[ self.parentId ];
       let parentInfo = unwrap param.getTypeInfo( self.parentId );
-      let mut name2EnumValInfo:Map<str,Ast.EnumValInfo> = {};
+      //let mut name2EnumValInfo:Map<str,Ast.EnumValInfo> = {};
       let mut parentScope = unwrap Ast.getScope( parentInfo );
       let mut scope = new Ast.Scope( parentScope, true, nil ## );
 
@@ -1518,7 +1533,7 @@ class _TypeInfoAlge extend _TypeInfo {
       let accessMode = unwrap Ast.AccessMode._from( self.accessMode );
       //let parentInfo = unwrap param.typeId2TypeInfo[ self.parentId ];
       let parentInfo = unwrap param.getTypeInfo( self.parentId );
-      let mut name2AlgeValInfo:Map<str,Ast.AlgeValInfo> = {};
+      //let mut name2AlgeValInfo:Map<str,Ast.AlgeValInfo> = {};
       let mut parentScope = unwrap Ast.getScope( parentInfo );
       let mut scope = new Ast.Scope( parentScope, true, nil ## );
 
@@ -1555,7 +1570,7 @@ macro _DefBuiltinFuncType( class2symMapList:List<Map<str,Map<str,Map<str,List<st
             let className = genClassName.gsub( "<.*", "" );
             let mut subcaseList:List<stat> = [];
             
-            forsort symbolInfo, funcName in symbolMap {
+            forsort _, funcName in symbolMap {
                let typeName = "%s_%s" ( className ~= "" and className.lower() or "lns",
                                         funcName );
                let symName = "%s_sym" (typeName);
@@ -1875,9 +1890,9 @@ fn TransUnit.registBuiltInScope() mut {
          typeName = typeName.gsub( "^&", "" );
       }
       let mut genTypeList:List<&Ast.TypeInfo> = [];
-      let index, endIndex = typeName.find( "[%w%.]+<" ## );
+      let _, endIndex = typeName.find( "[%w%.]+<" ## );
       let mut suffix = "";
-      when! index, endIndex {
+      when! endIndex {
          let mut genTypeName = typeName.sub( endIndex + 1## );
          while true {
             if! let tailIndex = genTypeName.find( "[,>]" ## ) {
@@ -2086,7 +2101,7 @@ fn TransUnit.registBuiltInScope() mut {
                case .Module {
                   parentInfo = self.pushModule( true, name, true );
 
-                  let moduleSymbolInfo = self.scope.$parent.add(
+                  self.scope.$parent.add(
                      .Typ , false, false, name, nil,
                      parentInfo, .Local, true, Ast.MutMode.Mut, true );
                }
@@ -2280,14 +2295,16 @@ enum SymbolMode {
    Must_,
    /** _ で始まってはいけないシンボル */
    MustNot_,
+   /** _ で始まってはいけないシンボル。ただし _ は許可 */
+   MustNot_Or_,
 }
 
-let specialSymbolMap = {
-   "__init":true,
-   "__free":true,
-   "__":true,
-   "_exp":true,
-};
+let specialSymbolSet = (@
+   "__init",
+   "__free",
+   "__",
+   "_exp"
+);
 
 /** ユーザ定義のシンボルとして許可しないキーワード */
 let builtinKeywordSet = (@ "self", "super" );
@@ -2307,9 +2324,12 @@ fn TransUnit.checkSymbol( token: &Parser.Token, mode:SymbolMode ) mut : &Parser.
       self.addErrMess(
          token.pos, "macro name must begin with '_' -- '%s'" ( token.txt ) );
    }
-   elseif mode == .MustNot_ and frontChar == ?_ {
+   elseif mode ~= .Must_ and frontChar == ?_ {
       if not self.ignoreToCheckSymbol_ {
-         if not specialSymbolMap[ token.txt ] {
+         if mode == .MustNot_Or_ and token.txt == "_" {
+            //
+         }
+         elseif not specialSymbolSet.has( token.txt ) {
             self.addErrMess(
                token.pos, "symbol must not begin with '_' -- '%s'" ( token.txt ) );
          }
@@ -2413,12 +2433,12 @@ fn TransUnit.analyzeStatementList(
                      //    "there are multi comment per line. -- %s" (comment.txt) );
                   }
                }
-               if! let invalidComment = self.commentCtrl.hasInvalidComment() {
-                  // 1行に複数のコメントがあるのはエラー
-                  // self.addErrMess(
-                  //    invalidComment.pos,
-                  //    "there are multi comment per line. -- %s" (invalidComment.txt) );
-               }
+               // if! let invalidComment = self.commentCtrl.hasInvalidComment() {
+               //    // 1行に複数のコメントがあるのはエラー
+               //    // self.addErrMess(
+               //    //    invalidComment.pos,
+               //    //    "there are multi comment per line. -- %s" (invalidComment.txt) );
+               // }
             }
             if tailComment {
                commentList.remove( 1 );
@@ -2678,7 +2698,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
 
          let metaInfo = metaInfoStem@@=Meta._MetaInfo;
          let typeId2TypeInfo = moduleInfo.$importId2localTypeInfoMap;
-         let moduleTypeInfo = unwrap typeId2TypeInfo[ metaInfo.__moduleTypeId ];
+         //let moduleTypeInfo = unwrap typeId2TypeInfo[ metaInfo.__moduleTypeId ];
          self.importModuleInfo.remove();
          return metaInfo, typeId2TypeInfo, moduleInfo;
       }
@@ -2701,7 +2721,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
    let mut dependLibId2DependInfo:Map<int,DependModuleInfo> = {};
    forsort dependInfo, dependName in metaInfo.__dependModuleMap {
       if dependInfo.use {
-         let workModuleInfo, metaTypeId2TypeInfoMap =
+         let _, metaTypeId2TypeInfoMap =
             self.processImport( dependName );
          let typeId = (unwrap dependInfo.typeId)@@int;
          dependLibId2DependInfo[ typeId ] =
@@ -2736,7 +2756,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
       }
       moduleTypeInfo = self.pushModule( true, moduleName, mutable );
    }
-   foreach moduleName in nameList {
+   foreach _ in nameList {
       self.popModule();
    }
 
@@ -2914,7 +2934,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
       }
       let mut classTypeInfo = unwrap typeId2TypeInfo[ classTypeId ];
 
-      let mut backupScope = self.scope;
+      //let mut backupScope = self.scope;
       
       switch ( classTypeInfo.$kind ) {
          case .Class {
@@ -3016,7 +3036,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
    }
 
 
-   foreach moduleName in nameList {
+   foreach _ in nameList {
       self.popModule();
    }
 
@@ -3298,7 +3318,7 @@ fn TransUnit.analyzeSwitch( firstToken: &Parser.Token ) mut : Nodes.SwitchNode {
          firstFlag = false;
       }
 
-      foreach condExp, index in condexpList.$expList {
+      foreach condExp in condexpList.$expList {
          // 同じ case 条件が無いかチェック
          if condExp.$expType.$nilable {
             if hasNilCond {
@@ -3415,7 +3435,7 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
       let mut blockScope = self.pushScope( false ## );
       if nextToken.txt == "(" {
          foreach paramType in valInfo.$typeList {
-            let paramName = self.getSymbolToken( .MustNot_ );
+            let paramName = self.getSymbolToken( .MustNot_Or_ );
             self.checkShadowing( paramName.pos, paramName.txt, self.scope );
 
             let mut workType = paramType;
@@ -3512,6 +3532,8 @@ fn TransUnit.analyzeFor( firstToken: &Parser.Token ) mut : Nodes.ForNode {
    }
    let symbolInfo = self.addLocalVar(
       val.pos, false, true, val.txt, exp1.$expType, .IMut## );
+   // for ループ用のカウントシンボルは、 アクセスありにセットしておく
+   symbolInfo.set_hasAccessFromAny( true );
    self.checkNextToken( "," );
    let exp2 = self.analyzeExpOne( false, false## );
    if not Ast.isNumberType( exp2.$expType ) {
@@ -3548,7 +3570,7 @@ fn TransUnit.analyzeApply( token: &Parser.Token ) mut : Nodes.ApplyNode {
    let mut varList:List<&Parser.Token> = [];
    let mut nextToken:&Parser.Token = Parser.getEofToken();
    repeat {
-      let var = self.getSymbolToken( .MustNot_ );
+      let var = self.getSymbolToken( .MustNot_Or_ );
       if var.kind ~= Parser.TokenKind.Symb {
          self.error( "illegal symbol" );
       }
@@ -3741,16 +3763,17 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
       // foreach の sequential データを保持する変数は imut にする。
       let seqSymbol = refNode.$symbolInfo;
       if seqSymbol.$mutable or Ast.TypeInfo.isMut( seqSymbol.$typeInfo ) {
-         let typeInfo;
-         if Ast.TypeInfo.isMut( seqSymbol.$typeInfo ) {
-            typeInfo = self.createModifier( seqSymbol.$typeInfo, .IMut );
-         }
-         else {
-            typeInfo = seqSymbol.$typeInfo;
-         }
-         scope.addLocalVar(
-            seqSymbol.$kind == .Arg, false,
-            seqSymbol.$name, exp.$pos, typeInfo, .IMut );
+         // let typeInfo;
+         // if Ast.TypeInfo.isMut( seqSymbol.$typeInfo ) {
+         //    typeInfo = self.createModifier( seqSymbol.$typeInfo, .IMut );
+         // }
+         // else {
+         //    typeInfo = seqSymbol.$typeInfo;
+         // }
+         // scope.addLocalVar(
+         //    seqSymbol.$kind == .Arg, false,
+         //    seqSymbol.$name, exp.$pos, typeInfo, .IMut );
+         scope.addOverrideImut( seqSymbol );
          seqSym = seqSymbol.$name;
       }
    }
@@ -3829,7 +3852,7 @@ fn TransUnit.analyzeScope( firstToken: &Parser.Token ) mut : Nodes.ScopeNode {
             nextToken, nextToken, .Symbol, nil, true );
          let workSymList = symbolNode.getSymbolInfo();
          if #workSymList > 0 {
-            let symbol = workSymList[ 1 ];
+            //let symbol = workSymList[ 1 ];
             symList.insert( workSymList[ 1 ] );
          }
          nextToken = self.getToken( ## );
