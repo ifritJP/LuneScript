@@ -3317,7 +3317,7 @@ fn TransUnit.analyzeDeclVar(
    let mut symbolInfoList: List<&Ast.SymbolInfo> = [];
 
    let mut varList:List<&Nodes.VarInfo> = [];
-   let mut syncSymbolList:List<&Nodes.VarInfo> = [];
+   let mut syncSymbolList:List<&Ast.SymbolInfo> = [];
    foreach letVarInfo, index in letVarList {
       let varName = letVarInfo.varName;
       let typeInfo = typeInfoList[ index ];
@@ -3335,8 +3335,13 @@ fn TransUnit.analyzeDeclVar(
       }
       if mode == .Sync {
          // スコープに登録する前に、シンボルを検索
-         if self.scope.getTypeInfo( varName.txt, self.scope, true, self.scopeAccess ) {
-            syncSymbolList.insert( varInfo );
+         // if self.scope.getTypeInfo( varName.txt, self.scope, true, self.scopeAccess ) {
+         //    syncSymbolList.insert( varInfo );
+         // }
+         if! let symInfo = self.scope.getSymbolInfo(
+            varName.txt, self.scope, true, self.scopeAccess )
+         {
+            syncSymbolList.insert( symInfo );
          }
       }
       // スコープに変数を登録

@@ -317,11 +317,11 @@ pub override fn dumpFilter.processDeclVar(
    if! node.$thenBlock {
       filter( _exp, self, opt.nextOpt() );
    }
-   foreach var in node.$syncVarList {
-      if! var.$refType {
-         filter( _exp, self, opt.nextOpt() );
-      }
-   }
+   // foreach var in node.$syncVarList {
+   //    if! var.$refType {
+   //       filter( _exp, self, opt.nextOpt() );
+   //    }
+   // }
    if! node.$syncBlock {
       filter( _exp, self, opt.nextOpt() );
    }

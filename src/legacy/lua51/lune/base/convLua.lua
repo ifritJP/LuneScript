@@ -367,7 +367,6 @@ function Opt:__init( node )
    self.node = node
 end
 
-
 local function getSymTxt( name, id )
 
    if name == "_" then
@@ -1906,7 +1905,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _6679v in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _v6678 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -2473,7 +2472,7 @@ function convFilter:processIfUnwrap( node, opt )
    self:pushIndent(  )
    self:write( "local " )
    for index, varSym in ipairs( node:get_varSymList() ) do
-      self:write( varSym:get_name() )
+      self:write( getSymTxt( varSym:get_name(), string.format( "%d", varSym:get_symbolId()) ) )
       if index ~= #node:get_varSymList() then
          self:write( ", " )
       end
@@ -2487,7 +2486,7 @@ function convFilter:processIfUnwrap( node, opt )
    
    self:write( "if " )
    for index, varSym in ipairs( node:get_varSymList() ) do
-      self:write( string.format( "%s ~= nil", varSym:get_name()) )
+      self:write( string.format( "%s ~= nil", getSymTxt( varSym:get_name(), string.format( "%d", varSym:get_symbolId()) )) )
       if index ~= #node:get_varSymList() then
          self:write( " and " )
       end
@@ -2545,7 +2544,7 @@ function convFilter:processDeclVar( node, opt )
       self:writeln( "do" )
       self:pushIndent(  )
       for __index, varInfo in ipairs( node:get_syncVarList() ) do
-         self:writeln( string.format( "local _sync_%s", varInfo:get_name().txt) )
+         self:writeln( string.format( "local _sync_%s", getSymTxt( varInfo:get_name(), string.format( "%d", varInfo:get_symbolId()) )) )
       end
       
       self:writeln( "do" )
@@ -2558,13 +2557,16 @@ function convFilter:processDeclVar( node, opt )
    end
    
    
-   local varList = node:get_varList(  )
+   local varList = node:get_symbolInfoList()
+   local varNameList = {}
    for index, var in ipairs( varList ) do
       if index > 1 then
          self:write( ", " )
       end
       
-      self:write( getSymTxt( var:get_name().txt, string.format( "n%d_%d", node:get_id(), index) ) )
+      local name = getSymTxt( var:get_name(), string.format( "%d", var:get_symbolId()) )
+      self:write( name )
+      table.insert( varNameList, name )
    end
    
    
@@ -2584,19 +2586,19 @@ function convFilter:processDeclVar( node, opt )
       if _exp ~= nil then
          self:writeln( "" )
          self:write( "if " )
-         for index, var in ipairs( varList ) do
+         for index, varName in ipairs( varNameList ) do
             if index > 1 then
                self:write( " or " )
             end
             
-            self:write( " nil == " .. var:get_name().txt )
+            self:write( " nil == " .. varName )
          end
          
          self:writeln( " then" )
          self:pushIndent(  )
          
-         for __index, var in ipairs( varList ) do
-            self:writeln( string.format( "local _%s = %s", var:get_name().txt, var:get_name().txt) )
+         for __index, varName in ipairs( varNameList ) do
+            self:writeln( string.format( "local _%s = %s", varName, varName) )
          end
          
          self:popIndent(  )
@@ -2625,15 +2627,19 @@ function convFilter:processDeclVar( node, opt )
       if _exp ~= nil then
          filter( _exp, self, node )
          
+         local syncVarNameList = {}
+         
          for __index, varInfo in ipairs( node:get_syncVarList() ) do
-            self:writeln( string.format( "_sync_%s = %s", varInfo:get_name().txt, varInfo:get_name().txt) )
+            local name = getSymTxt( varInfo:get_name(), string.format( "%d", varInfo:get_symbolId()) )
+            table.insert( syncVarNameList, name )
+            self:writeln( string.format( "_sync_%s = %s", name, name) )
          end
          
          self:popIndent(  )
          self:writeln( "end" )
          
-         for __index, varInfo in ipairs( node:get_syncVarList() ) do
-            self:writeln( string.format( "%s = _sync_%s", varInfo:get_name().txt, varInfo:get_name().txt) )
+         for __index, name in ipairs( syncVarNameList ) do
+            self:writeln( string.format( "%s = _sync_%s", name, name) )
          end
          
          self:popIndent(  )
@@ -2644,8 +2650,8 @@ function convFilter:processDeclVar( node, opt )
    
    if node:get_accessMode(  ) == Ast.AccessMode.Pub then
       self:writeln( "" )
-      for index, var in ipairs( varList ) do
-         local name = var:get_name().txt
+      for index, varName in ipairs( varNameList ) do
+         local name = varName
          if self.needModuleObj then
             self:writeln( string.format( "_moduleObj.%s = %s", name, name) )
          end
@@ -2659,7 +2665,7 @@ function convFilter:processDeclVar( node, opt )
    if self.macroDepth > 0 then
       self:writeln( "" )
       for __index, symbolInfo in ipairs( node:get_symbolInfoList() ) do
-         local varName = symbolInfo:get_name()
+         local varName = getSymTxt( symbolInfo:get_name(), string.format( "%d", symbolInfo:get_symbolId()) )
          self:writeln( string.format( "table.insert( macroVar.__names, '%s' )", varName) )
          self:writeln( string.format( "macroVar.%s = %s", varName, varName) )
          self.macroVarSymSet[symbolInfo]= true
@@ -2901,7 +2907,7 @@ end
 
 function convFilter:processFor( node, opt )
 
-   self:write( string.format( "for %s = ", node:get_val(  ):get_name() ) )
+   self:write( string.format( "for %s = ", getSymTxt( node:get_val():get_name(), string.format( "%d", node:get_val():get_symbolId()) )) )
    filter( node:get_init(  ), self, node )
    self:write( ", " )
    filter( node:get_to(  ), self, node )
@@ -2947,7 +2953,7 @@ function convFilter:processForeach( node, opt )
    do
       local _exp = node:get_key()
       if _exp ~= nil then
-         self:write( getSymTxt( _exp.txt, string.format( "%dk", node:get_id()) ) )
+         self:write( getSymTxt( _exp.txt, string.format( "k%d", node:get_id()) ) )
       else
          self:write( "__index" )
       end
@@ -2957,7 +2963,7 @@ function convFilter:processForeach( node, opt )
    do
       local _exp = node:get_val()
       if _exp ~= nil then
-         self:write( getSymTxt( _exp.txt, string.format( "%dv", node:get_id()) ) )
+         self:write( getSymTxt( _exp.txt, string.format( "v%d", node:get_id()) ) )
       else
          self:write( "__val" )
       end
@@ -3006,7 +3012,7 @@ function convFilter:processForsort( node, opt )
    do
       local _exp = node:get_key()
       if _exp ~= nil then
-         key = _exp.txt
+         key = getSymTxt( _exp.txt, string.format( "k%d", node:get_id()) )
       end
    end
    
@@ -3014,7 +3020,7 @@ function convFilter:processForsort( node, opt )
    self:writeln( " in ipairs( __sorted ) do" )
    self:pushIndent(  )
    if node:get_exp():get_expType():get_kind() == Ast.TypeInfoKind.Map then
-      self:writeln( string.format( "local %s = __map[ %s ]", node:get_val().txt, key ) )
+      self:writeln( string.format( "local %s = __map[ %s ]", getSymTxt( node:get_val().txt, string.format( "v%d", node:get_id()) ), key ) )
    end
    
    filter( node:get_block(), self, node )
@@ -3988,7 +3994,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3271, function (  )
+   Log.log( Log.Level.Info, __func__, 3286, function (  )
    
       return string.format( "code: %s", code)
    end )

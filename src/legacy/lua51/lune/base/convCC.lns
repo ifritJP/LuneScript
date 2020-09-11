@@ -6236,7 +6236,7 @@ pub override fn convFilter.processDeclVar(
       self.writeln( "{" );
       self.pushIndent(##);
       foreach varInfo in node.$syncVarList {
-         self.writeln( "_sync_%s" (varInfo.$name.txt) );
+         self.writeln( "_sync_%s" (varInfo.$name) );
       }
       self.writeln( "{" );
       self.pushIndent(##);
@@ -6346,13 +6346,13 @@ pub override fn convFilter.processDeclVar(
       filter( _exp, self, node);
 
       foreach varInfo in node.$syncVarList {
-         self.writeln( "_sync_%s = %s" (varInfo.$name.txt, varInfo.$name.txt) );
+         self.writeln( "_sync_%s = %s" (varInfo.$name, varInfo.$name) );
       }
       self.popIndent();
       self.writeln( "}" );
 
       foreach varInfo in node.$syncVarList {
-         self.writeln( "%s = _sync_%s" (varInfo.$name.txt, varInfo.$name.txt) );
+         self.writeln( "%s = _sync_%s" (varInfo.$name, varInfo.$name) );
       }
       self.popIndent();
       self.writeln( "}" );

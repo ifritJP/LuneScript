@@ -3532,8 +3532,8 @@ fn TransUnit.analyzeFor( firstToken: &Parser.Token ) mut : Nodes.ForNode {
    }
    let symbolInfo = self.addLocalVar(
       val.pos, false, true, val.txt, exp1.$expType, .IMut## );
-   // for ループ用のカウントシンボルは、 アクセスありにセットしておく
-   symbolInfo.set_hasAccessFromAny( true );
+   // // for ループ用のカウントシンボルは、 アクセスありにセットしておく
+   // symbolInfo.set_hasAccessFromAny( true );
    self.checkNextToken( "," );
    let exp2 = self.analyzeExpOne( false, false## );
    if not Ast.isNumberType( exp2.$expType ) {

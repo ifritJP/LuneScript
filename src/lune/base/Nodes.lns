@@ -1438,7 +1438,7 @@ _declNodeClass( "DeclVar", Node, false, false, true,
                   { "unwrapFlag": "bool" },
                   { "unwrapBlock": "&BlockNode!" },
                   { "thenBlock": "&BlockNode!" },
-                  { "syncVarList": "&List<&VarInfo>" },
+                  { "syncVarList": "&List<&Ast.SymbolInfo>" },
                   { "syncBlock": "&BlockNode!" } ]
 );
 

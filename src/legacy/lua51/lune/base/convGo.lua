@@ -758,7 +758,7 @@ function convFilter:processConvExp( nodeId, dstTypeList, argListNode )
    
    if restIndex ~= nil then
       self:write( "[]LnsAny{ " )
-      for index, _1717v in ipairs( argList:get_expList() ) do
+      for index, _v1717 in ipairs( argList:get_expList() ) do
          if index >= #dstTypeList then
             self:write( string.format( "arg%d", index) )
          end
@@ -1949,7 +1949,7 @@ function convFilter:outputConstructor( node )
    end
    
    self:write( string.format( "obj.Init%s(", className) )
-   for index, _7117v in ipairs( initFuncType:get_argTypeInfoList() ) do
+   for index, _v7117 in ipairs( initFuncType:get_argTypeInfoList() ) do
       if index ~= 1 then
          self:write( ", " )
       end
@@ -1994,7 +1994,7 @@ function convFilter:outputConstructor( node )
       end
       
       
-      for index, _7377v in ipairs( initFuncType:get_argTypeInfoList() ) do
+      for index, _v7377 in ipairs( initFuncType:get_argTypeInfoList() ) do
          if superArgNum < index then
             local sIndex = index - superArgNum
             local memberNode = node:get_memberList()[sIndex]
