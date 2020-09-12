@@ -448,7 +448,7 @@ function convFilter:writeRaw( txt )
    end
    
    
-   for _5211 in string.gmatch( txt, "\n" ) do
+   for _5233 in string.gmatch( txt, "\n" ) do
       self.curLineNo = self.curLineNo + 1
    end
    
@@ -1904,7 +1904,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _v6678 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _5574 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -2948,24 +2948,32 @@ end
 
 function convFilter:processForeach( node, opt )
 
+   local keySym
+   
+   local valSym
+   
+   if node:get_exp():get_expType():get_kind() == Ast.TypeInfoKind.Set then
+      keySym = node:get_val()
+      valSym = node:get_key()
+   else
+    
+      keySym = node:get_key()
+      valSym = node:get_val()
+   end
+   
+   
    self:write( "for " )
-   do
-      local _exp = node:get_key()
-      if _exp ~= nil then
-         self:write( getSymTxt( _exp.txt, string.format( "k%d", node:get_id()) ) )
-      else
-         self:write( "__index" )
-      end
+   if keySym ~= nil then
+      self:write( getSymTxt( keySym:get_name(), string.format( "%d", keySym:get_symbolId()) ) )
+   else
+      self:write( "__index" )
    end
    
    self:write( ", " )
-   do
-      local _exp = node:get_val()
-      if _exp ~= nil then
-         self:write( getSymTxt( _exp.txt, string.format( "v%d", node:get_id()) ) )
-      else
-         self:write( "__val" )
-      end
+   if valSym ~= nil then
+      self:write( getSymTxt( valSym:get_name(), string.format( "%d", valSym:get_symbolId()) ) )
+   else
+      self:write( "__val" )
    end
    
    
@@ -2992,6 +3000,20 @@ end
 
 function convFilter:processForsort( node, opt )
 
+   local keySym
+   
+   local valSym
+   
+   if node:get_exp():get_expType():get_kind() == Ast.TypeInfoKind.Set then
+      keySym = node:get_val()
+      valSym = node:get_key()
+   else
+    
+      keySym = node:get_key()
+      valSym = node:get_val()
+   end
+   
+   
    self:writeln( "do" )
    self:pushIndent(  )
    self:writeln( "local __sorted = {}" )
@@ -3008,18 +3030,15 @@ function convFilter:processForsort( node, opt )
    
    self:write( "for __index, " )
    local key = "__key"
-   do
-      local _exp = node:get_key()
-      if _exp ~= nil then
-         key = getSymTxt( _exp.txt, string.format( "k%d", node:get_id()) )
-      end
+   if keySym ~= nil then
+      key = getSymTxt( keySym:get_name(), string.format( "%d", keySym:get_symbolId()) )
    end
    
    self:write( key )
    self:writeln( " in ipairs( __sorted ) do" )
    self:pushIndent(  )
-   if node:get_exp():get_expType():get_kind() == Ast.TypeInfoKind.Map then
-      self:writeln( string.format( "local %s = __map[ %s ]", getSymTxt( node:get_val().txt, string.format( "v%d", node:get_id()) ), key ) )
+   if valSym ~= nil then
+      self:writeln( string.format( "local %s = __map[ %s ]", getSymTxt( valSym:get_name(), string.format( "%d", valSym:get_symbolId()) ), key ) )
    end
    
    filter( node:get_block(), self, node )
@@ -3993,7 +4012,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3286, function (  )
+   Log.log( Log.Level.Info, __func__, 3309, function (  )
    
       return string.format( "code: %s", code)
    end )

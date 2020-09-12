@@ -24,6 +24,33 @@
    let _, val = 0, 1;
    print( _, val );   // error
 }
+{
+   let mut val = 1; // warn
+}
+{
+   let mut val = 1;
+   {
+      print( val );
+   }
+}
+{
+   let mut val = 1;
+   {
+      print( val );
+      val = 2; // warn
+   }
+}
+{
+   let mut val = 1;
+   fn func() {
+      print( val );
+   }
+   {
+      print( val );
+      val = 2;
+      func();
+   }
+}
 
 
 

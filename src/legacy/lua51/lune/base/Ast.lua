@@ -824,6 +824,15 @@ end
 function SymbolInfo:__init() 
    self.namespaceTypeInfo = nil
 end
+function SymbolInfo:updateValue( pos )
+
+   self:set_hasValueFlag( true )
+   self:set_posForLatestMod( pos )
+end
+function SymbolInfo:clearValue(  )
+
+   self:set_hasValueFlag( false )
+end
 function SymbolInfo.setmeta( obj )
   setmetatable( obj, { __index = SymbolInfo  } )
 end
@@ -1530,7 +1539,15 @@ function NormalSymbolInfo:__init(kind, canBeLeft, canBeRight, scope, accessMode,
    
    self.convModuleParam = nil
    self.hasAccessFromClosure = false
-   self.hasAccessFromAny = false
+   if hasValueFlag then
+      self.posForLatestMod = pos
+   else
+    
+      self.posForLatestMod = nil
+   end
+   
+   self.posForModToRef = nil
+   
    NormalSymbolInfo.symbolIdSeed = NormalSymbolInfo.symbolIdSeed + 1
    self.kind = kind
    self.canBeLeft = canBeLeft
@@ -1596,11 +1613,17 @@ end
 function NormalSymbolInfo:set_hasAccessFromClosure( hasAccessFromClosure )
    self.hasAccessFromClosure = hasAccessFromClosure
 end
-function NormalSymbolInfo:get_hasAccessFromAny()
-   return self.hasAccessFromAny
+function NormalSymbolInfo:get_posForLatestMod()
+   return self.posForLatestMod
 end
-function NormalSymbolInfo:set_hasAccessFromAny( hasAccessFromAny )
-   self.hasAccessFromAny = hasAccessFromAny
+function NormalSymbolInfo:set_posForLatestMod( posForLatestMod )
+   self.posForLatestMod = posForLatestMod
+end
+function NormalSymbolInfo:get_posForModToRef()
+   return self.posForModToRef
+end
+function NormalSymbolInfo:set_posForModToRef( posForModToRef )
+   self.posForModToRef = posForModToRef
 end
 function NormalSymbolInfo:get_convModuleParam()
    return self.convModuleParam
@@ -2351,6 +2374,12 @@ function Scope:addLocalVar( argFlag, canBeLeft, name, pos, typeInfo, mutable )
 end
 
 
+function Scope:addUnwrapedVar( argFlag, canBeLeft, name, pos, typeInfo, mutable )
+
+   return self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, pos, typeInfo, AccessMode.Local, false, mutable, true )
+end
+
+
 local dummySymbol = _lune.unwrap( _moduleObj.rootScope:addLocalVar( false, false, "$$", nil, _moduleObj.headTypeInfo, MutMode.IMut ))
 _moduleObj.dummySymbol = dummySymbol
 
@@ -2545,9 +2574,7 @@ end
 
 function Scope:accessSymbol( moduleScope, symbol )
 
-   if not symbol:get_hasAccessFromAny() then
-      symbol:set_hasAccessFromAny( true )
-   end
+   symbol:set_posForModToRef( symbol:get_posForLatestMod() )
    
    if self:isClosureAccess( moduleScope, symbol ) then
       self:setClosure( symbol )
@@ -2836,6 +2863,10 @@ end
 function AccessSymbolInfo:get_symbolInfo()
    return self.symbolInfo
 end
+function AccessSymbolInfo:clearValue( ... )
+   return self.symbolInfo:clearValue( ... )
+end
+
 function AccessSymbolInfo:get_accessMode( ... )
    return self.symbolInfo:get_accessMode( ... )
 end
@@ -2846,10 +2877,6 @@ end
 
 function AccessSymbolInfo:get_convModuleParam( ... )
    return self.symbolInfo:get_convModuleParam( ... )
-end
-
-function AccessSymbolInfo:get_hasAccessFromAny( ... )
-   return self.symbolInfo:get_hasAccessFromAny( ... )
 end
 
 function AccessSymbolInfo:get_hasAccessFromClosure( ... )
@@ -2876,6 +2903,14 @@ function AccessSymbolInfo:get_pos( ... )
    return self.symbolInfo:get_pos( ... )
 end
 
+function AccessSymbolInfo:get_posForLatestMod( ... )
+   return self.symbolInfo:get_posForLatestMod( ... )
+end
+
+function AccessSymbolInfo:get_posForModToRef( ... )
+   return self.symbolInfo:get_posForModToRef( ... )
+end
+
 function AccessSymbolInfo:get_scope( ... )
    return self.symbolInfo:get_scope( ... )
 end
@@ -2892,10 +2927,6 @@ function AccessSymbolInfo:set_convModuleParam( ... )
    return self.symbolInfo:set_convModuleParam( ... )
 end
 
-function AccessSymbolInfo:set_hasAccessFromAny( ... )
-   return self.symbolInfo:set_hasAccessFromAny( ... )
-end
-
 function AccessSymbolInfo:set_hasAccessFromClosure( ... )
    return self.symbolInfo:set_hasAccessFromClosure( ... )
 end
@@ -2904,8 +2935,20 @@ function AccessSymbolInfo:set_hasValueFlag( ... )
    return self.symbolInfo:set_hasValueFlag( ... )
 end
 
+function AccessSymbolInfo:set_posForLatestMod( ... )
+   return self.symbolInfo:set_posForLatestMod( ... )
+end
+
+function AccessSymbolInfo:set_posForModToRef( ... )
+   return self.symbolInfo:set_posForModToRef( ... )
+end
+
 function AccessSymbolInfo:set_typeInfo( ... )
    return self.symbolInfo:set_typeInfo( ... )
+end
+
+function AccessSymbolInfo:updateValue( ... )
+   return self.symbolInfo:updateValue( ... )
 end
 
 
@@ -7350,19 +7393,16 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
          end
          
          
-         local mess = nil
          if #dest:get_itemTypeInfoList() >= 1 and #otherSrc:get_itemTypeInfoList() >= 1 then
             
-            local ret
-            
-            ret, mess = (dest:get_itemTypeInfoList()[1] ):canEvalWith( otherSrc:get_itemTypeInfoList()[1], destMut and CanEvalType.SetEq or CanEvalType.SetOpIMut, alt2type )
+            local ret, mess = (dest:get_itemTypeInfoList()[1] ):canEvalWith( otherSrc:get_itemTypeInfoList()[1], destMut and CanEvalType.SetEq or CanEvalType.SetOpIMut, alt2type )
             if not ret then
                return false, mess
             end
             
          else
           
-            return false, mess
+            return false, nil
          end
          
          
@@ -7375,12 +7415,9 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
          local function check1(  )
          
             
-            local mess = nil
             if #dest:get_itemTypeInfoList() >= 1 and #otherSrc:get_itemTypeInfoList() >= 1 then
                
-               local ret
-               
-               ret, mess = (dest:get_itemTypeInfoList()[1] ):canEvalWith( otherSrc:get_itemTypeInfoList()[1], destMut and CanEvalType.SetEq or CanEvalType.SetOpIMut, alt2type )
+               local ret, mess = (dest:get_itemTypeInfoList()[1] ):canEvalWith( otherSrc:get_itemTypeInfoList()[1], destMut and CanEvalType.SetEq or CanEvalType.SetOpIMut, alt2type )
                if not ret then
                   return false
                end
@@ -7396,12 +7433,9 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
          local function check2(  )
          
             
-            local mess = nil
             if #dest:get_itemTypeInfoList() >= 2 and #otherSrc:get_itemTypeInfoList() >= 2 then
                
-               local ret
-               
-               ret, mess = (dest:get_itemTypeInfoList()[2] ):canEvalWith( otherSrc:get_itemTypeInfoList()[2], destMut and CanEvalType.SetEq or CanEvalType.SetOpIMut, alt2type )
+               local ret, mess = (dest:get_itemTypeInfoList()[2] ):canEvalWith( otherSrc:get_itemTypeInfoList()[2], destMut and CanEvalType.SetEq or CanEvalType.SetOpIMut, alt2type )
                if not ret then
                   return false
                end
@@ -7643,7 +7677,7 @@ IdType.__allList[2] = IdType.Ext
 local function switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 5913, function (  )
+   Log.log( Log.Level.Trace, __func__, 5945, function (  )
    
       return "start"
    end )
@@ -7663,7 +7697,7 @@ local builtinTypeInfo2Map = typeInfo2Map:clone(  )
 local function pushProcessInfo( processInfo )
    local __func__ = '@lune.@base.@Ast.pushProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 5925, function (  )
+   Log.log( Log.Level.Trace, __func__, 5957, function (  )
    
       return "start"
    end )
@@ -7698,7 +7732,7 @@ _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
    local __func__ = '@lune.@base.@Ast.popProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 5951, function (  )
+   Log.log( Log.Level.Trace, __func__, 5983, function (  )
    
       return "start"
    end )
@@ -8020,7 +8054,7 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
    
    if token.txt == "!" then
       typeInfo = typeInfo:get_nilableTypeInfo(  )
-      token = self.parser:getTokenNoErr(  )
+      self.parser:getTokenNoErr(  )
    end
    
    

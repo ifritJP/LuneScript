@@ -518,11 +518,9 @@ pub override fn dumpFilter.processForeach(
    let prefix, depth = opt.get();
    let mut index = "";
    if! node.$key {
-      index = _exp.txt;
+      index = _exp.$name;
    }
-   if! node.$val {
-      dump( prefix, depth, node, _exp.txt .. " " .. index );
-   }
+   dump( prefix, depth, node, node.$val.$name .. " " .. index );
    filter( node.get_exp(), self, opt.nextOpt() );
    filter( node.get_block(), self, opt.nextOpt() );
 };
@@ -532,9 +530,9 @@ pub override fn dumpFilter.processForsort(
    let prefix, depth = opt.get();
    let mut index = "";
    if! node.get_key() {
-      index = _exp.txt;
+      index = _exp.$name;
    }
-   dump( prefix, depth, node, node.get_val().txt .. " " .. index );
+   dump( prefix, depth, node, node.get_val().$name .. " " .. index );
    filter( node.get_exp(), self, opt.nextOpt() );
    filter( node.get_block(), self, opt.nextOpt() );
 };

@@ -88,10 +88,15 @@ class AccessSymPos {
 ブロック毎にこのインスタンスを生成し、ブロック終了時にシンボルの型を確定する。
 */
 class TentativeSymbol {
-   /** ブロックで値をセットしたシンボルの集合。 */
+   /** ブロックで初期値をセットしたシンボルの集合。 */
    pri let mut symbolSet:Set<&Ast.SymbolInfo>;
    /**
-以前のブロックで値をセットしたシンボルの集合。
+初期値をセットした変数の集合。
+symbolSet は、 merge でクリアされるが、 initSymSet は保持される。
+ */
+   pri let mut initSymSet:Set<&Ast.SymbolInfo> {pub&};
+   /**
+以前のブロックで初期値をセットしたシンボルの集合。
  
 例えば、 if {} else {} などの条件分岐するブロックで、
 if のブロックを解析中の情報は symbolSet で管理し、
@@ -101,14 +106,19 @@ if のブロックを解析終了時に symbolSet を oldSymbolSet にセット�
     */  
    pri let mut oldSymbolSet:Set<&Ast.SymbolInfo>!;
 
+   
+
    /** 親ブロックを管理する TentativeSymbol */
    pri let mut parent:TentativeSymbol!;
    pri let mut scope:&Ast.Scope {pub};
    pri let mut skipFlag:bool;
    pri let loopFlag:bool;
    pri let mut accessSymList:List<&AccessSymPos> {pub&};
-   /** 初期値をセットした変数の集合 */
-   pri let mut initSymSet:Set<&Ast.SymbolInfo> {pub&};
+
+   /** ブロックで値をセットしたシンボルの集合。 */
+   pri let mut modSymbolSet:Set<&Ast.SymbolInfo>;
+   /** アクセスしたシンボルのセット */
+   pri let mut accessSymSet:Set<&Ast.SymbolInfo>;
 
    pub fn __init( parent:TentativeSymbol!, scope:&Ast.Scope, loopFlag:bool ) {
       self.symbolSet = (@);
@@ -119,14 +129,24 @@ if のブロックを解析終了時に symbolSet を oldSymbolSet にセット�
       self.loopFlag = loopFlag;
       self.accessSymList = [];
       self.initSymSet = (@);
+
+      self.accessSymSet = (@);
+      self.modSymbolSet = (@);
    }
 
+   pub fn modSym( accessSym:&Ast.SymbolInfo ) mut {
+      self.modSymbolSet.add( accessSym.getOrg() );
+   }
+   pub fn addAccessSym( accessSym:&Ast.SymbolInfo ) mut {
+      self.accessSymSet.add( accessSym.getOrg() );
+   }
+   
    /**
-このブロック内でアクセスしているシンボルを登録する。
+このブロック内でアクセスしている未初期化シンボルを登録する。
 
 未初期化シンボルへのアクセスがないかを検出するために利用する。
    */
-   pub fn addAccessSym( accessSym:&AccessSymPos ) mut {
+   pub fn addAccessSymPos( accessSym:&AccessSymPos ) mut {
       self.accessSymList.insert( accessSym );
    }
    /**
@@ -156,7 +176,7 @@ if のブロックを解析終了時に symbolSet を oldSymbolSet にセット�
    /**
 値をセットしたシンボルを登録する。   
    */
-   pub fn regist( symbolInfo:&Ast.SymbolInfo ) mut : bool {
+   pub fn regist( symbolInfo:&Ast.SymbolInfo, pos:&Parser.Position ) mut : bool {
       self.symbolSet.add( symbolInfo.getOrg() );
       self.initSymSet.add( symbolInfo.getOrg() );
       symbolInfo.set_hasValueFlag( true );
@@ -192,7 +212,7 @@ break でそのブロック自体を抜ける場合、
    */
    pub fn skip() mut {
       foreach symbolInfo in self.symbolSet {
-         symbolInfo.set_hasValueFlag( false );
+         symbolInfo.clearValue();
       }
       self.skipFlag = true;
    }
@@ -211,7 +231,7 @@ break でそのブロック自体を抜ける場合、
          }
          if finishFlag {
             foreach symbolInfo in self.symbolSet {
-               symbolInfo.set_hasValueFlag( true );
+               symbolInfo.updateValue( symbolInfo.$posForLatestMod );
             }
          }
          return self.oldSymbolSet ~= nil;
@@ -220,12 +240,12 @@ break でそのブロック自体を抜ける場合、
          let mut mergedSet = self.symbolSet.clone().and( other );
          if finishFlag {
             foreach symbolInfo in self.symbolSet.clone().or( other ).sub( mergedSet ) {
-               symbolInfo.set_hasValueFlag( false );
+               symbolInfo.clearValue();
             }
          }
          else {
             foreach symbolInfo in self.symbolSet.clone().or( other ) {
-               symbolInfo.set_hasValueFlag( false );
+               symbolInfo.clearValue();
             }
          }
          self.symbolSet = mergedSet;
@@ -233,20 +253,34 @@ break でそのブロック自体を抜ける場合、
       else {
          if not finishFlag {
             foreach symbolInfo in self.symbolSet {
-               symbolInfo.set_hasValueFlag( false );
+               symbolInfo.clearValue();
             }
          }
       }
       return true;
    }
 
+   pub fn syncPos() mut {
+      if self.loopFlag {
+         // loop を抜けた後の変数アクセス判定を行なうために、
+         // アクセスとセット両方している変数は、
+         // セット位置とアクセス位置を一緒にする。
+         foreach symbol in self.accessSymSet {
+            if self.modSymbolSet.has( symbol ) {
+               symbol.set_posForModToRef( symbol.$posForLatestMod );
+            }
+         }
+      }
+   }
+   
    /*
 ブロックの解析処理を終了する。
-
+ 
 if {} else {} の if のブロック終了時は、 else のブロックが残っているので、
 complete は false を指定する。
    */
    pub fn finish( complete:bool ) mut : TentativeSymbol! {
+      self.syncPos();
       self.merge( true );
       if! let mut parent = self.parent {
          if complete {
@@ -260,16 +294,24 @@ complete は false を指定する。
          }
          else {
             foreach symbolInfo in self.symbolSet {
-               symbolInfo.set_hasValueFlag( false );
+               symbolInfo.clearValue();
             }
          }
-         foreach symbolInfo in self.initSymSet {
-            if symbolInfo.$scope ~= self.scope {
-               parent.initSymSet.add( symbolInfo );
+
+         macro _syncToParent( set:sym ) {
+            foreach symbolInfo in self.,,set {
+               if symbolInfo.$scope ~= self.scope {
+                  parent.,,set.add( symbolInfo );
+               }
             }
          }
+
+         _syncToParent( initSymSet );
+         _syncToParent( accessSymSet );
+         _syncToParent( modSymbolSet );
          return parent;
       }
+
       return nil;
    }
 
@@ -594,6 +636,7 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
                "This can't access variable have no value -- %s" (symbolInfo.$name) );
          }
       }
+
       self.tentativeSymbol.clearAccessSym();
    }
    
@@ -614,10 +657,11 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
 
       if tentativeSymbol.$scope.$validCheckingUnaccess {
          forsort symbolInfo in tentativeSymbol.$scope.$symbol2SymbolInfoMap {
-            if not symbolInfo.$hasAccessFromAny and
+            if ( not symbolInfo.$posForModToRef or
+                 symbolInfo.$posForModToRef ~= symbolInfo.$posForLatestMod ) and
                symbolInfo.$kind == .Var and not symbolInfo.$name.find( "^_"## )
             {
-               if! let pos = symbolInfo.$pos {
+               if! let pos = symbolInfo.$posForLatestMod or symbolInfo.$pos {
                   self.addWarnMess( pos, "'%s' var isn't accessed" (symbolInfo.$name) );
                }
             }
@@ -2587,10 +2631,15 @@ fn TransUnit.analyzeBlock(
 {
    let token = self.checkNextToken( "{" );
 
-   if not scope {
+   let mut backScope = self.scope;
+   when! scope {
+      self.scope = scope;
+   }
+   else {
       self.pushScope( false ## );
    }
    let blockScope = self.scope;
+
 
    switch tentativeMode {
       case .Simple, .Start, .Ignore, .Loop {
@@ -2618,7 +2667,10 @@ fn TransUnit.analyzeBlock(
       self.loopScopeQueue.remove(##);
    }
 
-   if not scope {
+   when! scope {
+      self.scope = backScope;
+   }
+   else {
       self.popScope();
    }
 
@@ -3509,7 +3561,7 @@ fn TransUnit.analyzeRepeat( token: &Parser.Token ) mut : Nodes.RepeatNode {
    let mut node = Nodes.RepeatNode.create(
       self.nodeManager, token.pos,
       self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
-      self.analyzeBlock( .Repeat, .Simple, scope ), self.analyzeExpOne( false, false## ) );
+      self.analyzeBlock( .Repeat, .Loop, scope ), self.analyzeExpOne( false, false## ) );
    self.popScope();
 
    self.checkNextToken( ";" );
@@ -3582,7 +3634,6 @@ fn TransUnit.analyzeApply( token: &Parser.Token ) mut : Nodes.ApplyNode {
    let expListNode = self.analyzeExpList( false, false## );
 
    let mut itFunc = Ast.builtinTypeNone;
-   let mut itParam = Ast.builtinTypeNone;
    
    let expTypeList = expListNode.$expTypeList;
    if #expTypeList < 3 {
@@ -3590,7 +3641,6 @@ fn TransUnit.analyzeApply( token: &Parser.Token ) mut : Nodes.ApplyNode {
    }
    else {
       itFunc = expTypeList[ 1 ];
-      itParam = expTypeList[ 2 ];
    }
 
    let mut itemTypeList:List<&Ast.TypeInfo> = [];
@@ -3680,9 +3730,10 @@ fn TransUnit.analyzeApply( token: &Parser.Token ) mut : Nodes.ApplyNode {
 
 fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.Node {
    let mut scope = self.pushScope( false## );
-   let mut mainSymbol:&Parser.Token = Parser.getEofToken();
-   let mut valSymbol:&Parser.Token! = nil;
-   let mut subSymbol:&Parser.Token! = nil;
+   let mut mainSymToken:&Parser.Token = Parser.getEofToken();
+   let mut subSymToken:&Parser.Token! = nil;
+   let mut mainSym:&Ast.SymbolInfo;
+   let mut subSym:&Ast.SymbolInfo! = nil;
    let mut nextToken:&Parser.Token = Parser.getEofToken();
    for index = 1, 2 {
       let symbol = self.getToken(##);
@@ -3690,11 +3741,10 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
          self.error( "illegal symbol" );
       }
       if index == 1 {
-         mainSymbol = symbol;
-         valSymbol = symbol;
+         mainSymToken = symbol;
       }
       else {
-         subSymbol = symbol;
+         subSymToken = symbol;
       }
       nextToken = self.getToken(##);
       if nextToken.txt ~= "," {
@@ -3716,39 +3766,38 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
    let itemTypeInfoList = expType.$itemTypeInfoList;
    switch expType.$kind {
       case .Map {
-         self.addLocalVar(
-            exp.$pos, false, true, mainSymbol.txt, itemTypeInfoList[ 2 ], .IMut## );
-         if! subSymbol {
-            self.addLocalVar(
+         mainSym = self.addLocalVar(
+            mainSymToken.pos, false, true,
+            mainSymToken.txt, itemTypeInfoList[ 2 ], .IMut## );
+         if! subSymToken {
+            subSym = self.addLocalVar(
                _exp.$pos, false, true, _exp.txt, itemTypeInfoList[ 1 ], .IMut## );
          }
       }
       case .Set {
-         when! subSymbol {
-            self.addErrMess( subSymbol.pos, "Set can't use index" );
+         when! subSymToken {
+            self.addErrMess( subSymToken.pos, "Set can't use index" );
          }
-         valSymbol = nil;
-         subSymbol = mainSymbol;
-         self.addLocalVar(
-            mainSymbol.pos, false, true,
-            mainSymbol.txt, itemTypeInfoList[ 1 ], .IMut## );
+         mainSym = self.addLocalVar(
+            mainSymToken.pos, false, true,
+            mainSymToken.txt, itemTypeInfoList[ 1 ], .IMut## );
       }
       case .List, .Array {
          if sortFlag {
             self.addErrMess( exp.$pos, "'%s' doesn't support forsort."
                              (expType.$kind.$_txt) );
          }
-         self.addLocalVar(
-            mainSymbol.pos, false, true,
-            mainSymbol.txt, itemTypeInfoList[ 1 ], .IMut## );
-         if! subSymbol {
-            self.addLocalVar(
+         mainSym = self.addLocalVar(
+            mainSymToken.pos, false, true,
+            mainSymToken.txt, itemTypeInfoList[ 1 ], .IMut## );
+         if! subSymToken {
+            subSym = self.addLocalVar(
                _exp.pos, false, false, _exp.txt, Ast.builtinTypeInt, .IMut## );
          }
-         else {
-            self.addLocalVar(
-               token.pos, false, false, "__index", Ast.builtinTypeInt, .IMut, true );
-         }
+//          else {
+//             self.addLocalVar(
+//                token.pos, false, false, "__index", Ast.builtinTypeInt, .IMut, true );
+//          }
       }
       default {
          self.error(
@@ -3756,7 +3805,6 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
             (expType.getTxt(##), exp.$pos.lineNo, exp.$pos.column) );
       }
    }
-
 
    let mut seqSym:str! = nil;
    if! let refNode = exp@@@Nodes.ExpRefNode {
@@ -3790,13 +3838,13 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
       return Nodes.ForsortNode.create(
          self.nodeManager, token.pos,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
-         mainSymbol, subSymbol, exp, block, sortFlag );
+         mainSym, subSym, exp, block, sortFlag );
    }
    else {
       return Nodes.ForeachNode.create(
          self.nodeManager, token.pos,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
-         valSymbol, subSymbol, exp, block );
+         mainSym, subSym, exp, block );
    }
 }
 

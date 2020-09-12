@@ -331,7 +331,7 @@ end
 
 function FormatterFilter:processBlankLine( node, opt )
 
-   for _4772 = 1, node:get_lineNum() do
+   for _4793 = 1, node:get_lineNum() do
       self:writeln( "" )
    end
    
@@ -1086,21 +1086,12 @@ end
 function FormatterFilter:processForeach( node, opt )
 
    self:write( "foreach " )
-   do
-      local val = node:get_val()
-      if val ~= nil then
-         self:write( val.txt )
-      end
-   end
-   
+   self:write( node:get_val():get_name() )
    do
       local key = node:get_key()
       if key ~= nil then
-         if node:get_val() then
-            self:write( ", " )
-         end
-         
-         self:write( key.txt )
+         self:write( ", " )
+         self:write( key:get_name() )
       end
    end
    
@@ -1114,12 +1105,12 @@ end
 function FormatterFilter:processForsort( node, opt )
 
    self:write( "forsort " )
-   self:write( node:get_val().txt )
+   self:write( node:get_val():get_name() )
    do
       local key = node:get_key()
       if key ~= nil then
          self:write( ", " )
-         self:write( key.txt )
+         self:write( key:get_name() )
       end
    end
    

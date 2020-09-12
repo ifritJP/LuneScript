@@ -702,14 +702,10 @@ pub override fn FormatterFilter.processForeach(
    node: &Nodes.ForeachNode, opt:Opt ) mut
 {
    self.write( "foreach " );
-   if! let val = node.$val {
-      self.write( val.txt );
-   }
+   self.write( node.$val.$name );
    if! let key = node.$key {
-      if node.$val {
-         self.write( ", " );
-      }
-      self.write( key.txt );
+      self.write( ", " );
+      self.write( key.$name );
    }
    self.write( " in " );
    filter( node.$exp, self, opt.nextOpt( node ) );
@@ -720,10 +716,10 @@ pub override fn FormatterFilter.processForsort(
    node: &Nodes.ForsortNode, opt:Opt ) mut
 {
    self.write( "forsort " );
-   self.write( node.$val.txt );
+   self.write( node.$val.$name );
    if! let key = node.$key {
       self.write( ", " );
-      self.write( key.txt );
+      self.write( key.$name );
    }
    self.write( " in " );
    filter( node.$exp, self, opt.nextOpt( node ) );

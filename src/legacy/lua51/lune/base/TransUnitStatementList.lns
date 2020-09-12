@@ -49,10 +49,10 @@ fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Nodes.ReturnNode {
       self.addErrMess( token.pos, "__init method can't return" );
    }
 
-   when! expList {
+   if! let workList = expList {
       if! let _, _, newExpNodeList = self.checkMatchType(
-         "return", token.pos, retTypeList, expList, false,
-         not expList.$followOn, nil )
+         "return", token.pos, retTypeList, workList, false,
+         not workList.$followOn, nil )
       {
          expList = newExpNodeList;
       }

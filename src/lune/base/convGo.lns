@@ -1198,7 +1198,7 @@ pub override fn convFilter.processApply(
 pub override fn convFilter.processForeach(
    node: Nodes.ForeachNode, opt: Opt ) mut
 {
-   macro _keyItemDecl( typeSym:sym, typeName:sym ) {
+   macro _keyItemDecl( typeSym:sym, typeName:__exp ) {
       if not isAnyType( ,,typeSym ) {
          self.write( "_%s" (,,typeName) );
       }
@@ -1206,7 +1206,7 @@ pub override fn convFilter.processForeach(
          self.write( "%s" (,,typeName) );
       }
    }
-   macro _keyItemSet( typeSym:sym, typeName:sym ) {
+   macro _keyItemSet( typeSym:sym, typeName:__exp ) {
       if not isAnyType( ,,typeSym ) {
          self.write( "%s := _%s" (,,typeName, ,,typeName) );
          self.outputConv( Ast.builtinTypeStem_, ,,typeSym );
@@ -1219,13 +1219,13 @@ pub override fn convFilter.processForeach(
    switch loopExpType.$kind {
       case .List {
          if! let key = node.$key {
-            self.write( "_%s, " (key.txt) );
+            self.write( "_%s, " (key.$name) );
          }
          else {
             self.write( "_, " );
          }
          
-         let valName = node.$val$.txt;
+         let valName = node.$val.$name;
          let itemType = loopExpType.$itemTypeInfoList[ 1 ];
          _keyItemDecl( itemType, valName );
          self.write( " := range( " );
@@ -1233,7 +1233,7 @@ pub override fn convFilter.processForeach(
          self.writeln( ".Items ) {" );
          self.pushIndent( ## );
          if! let key = node.$key {
-            self.writeln( "%s := _%s + 1" (key.txt, key.txt) );
+            self.writeln( "%s := _%s + 1" (key.$name, key.$name) );
          }
          _keyItemSet( itemType, valName );
          self.popIndent();
@@ -1241,14 +1241,14 @@ pub override fn convFilter.processForeach(
       case .Map {
          let keyType = loopExpType.$itemTypeInfoList[ 1 ];
          if! let key = node.$key {
-            _keyItemDecl( keyType, key.txt );
+            _keyItemDecl( keyType, key.$name );
             self.write( ", " );
          }
          else {
             self.write( "_, " );
          }
          
-         let valName = node.$val$.txt;
+         let valName = node.$val.$name;
          let itemType = loopExpType.$itemTypeInfoList[ 2 ];
          _keyItemDecl( itemType, valName );
          self.write( " := range( " );
@@ -1256,7 +1256,7 @@ pub override fn convFilter.processForeach(
          self.writeln( ") {" );
          self.pushIndent( ## );
          if! let key = node.$key {
-            _keyItemSet( keyType, key.txt );
+            _keyItemSet( keyType, key.$name );
          }
          _keyItemSet( itemType, valName );
          self.popIndent();

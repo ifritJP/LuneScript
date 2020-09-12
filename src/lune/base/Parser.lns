@@ -416,16 +416,13 @@ pub class DefaultPushbackParser extend (PushbackParser) {
 
    pub fn getLastPos() : &Position {
       let mut pos:&Position = new Position( 0, 0 );
-      let mut txt = "";
       if self.$currentToken.$kind ~= .Eof {
          pos = self.$currentToken.pos;
-         txt = self.$currentToken.txt;
       }
       else {
          if #self.$usedTokenList > 0 {
             let token = self.$usedTokenList[ #self.$usedTokenList ];
             pos = token.pos;
-            txt = token.txt;
          }
       }
       return pos;

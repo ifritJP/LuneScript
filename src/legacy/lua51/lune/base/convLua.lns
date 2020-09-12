@@ -2365,16 +2365,27 @@ pub override fn convFilter.processApply(
 pub override fn convFilter.processForeach(
    node: Nodes.ForeachNode, opt: Opt ) mut
 {
+   let keySym:&Ast.SymbolInfo!;
+   let valSym:&Ast.SymbolInfo!;
+   if node.$exp.$expType.$kind == .Set {
+      keySym = node.$val;
+      valSym = node.$key;
+   }
+   else {
+      keySym = node.$key;
+      valSym = node.$val;
+   }
+   
    self.write( "for " );
-   if! node.$key {
-      self.write( getSymTxt( _exp.txt, "k%d" (node.$id) ) );
+   when! keySym {
+      self.write( getSymTxt( keySym.$name, "%d" (keySym.$symbolId) ) );
    }
    else {
       self.write( "__index" );
    }
    self.write( ", " );
-   if! node.$val {
-      self.write( getSymTxt( _exp.txt, "v%d" (node.$id) ) );
+   when! valSym {
+      self.write( getSymTxt( valSym.$name, "%d" (valSym.$symbolId) ) );
    }
    else {
       self.write( "__val" );
@@ -2404,6 +2415,18 @@ pub override fn convFilter.processForeach(
 pub override fn convFilter.processForsort(
    node: Nodes.ForsortNode, opt: Opt ) mut
 {
+   let keySym:&Ast.SymbolInfo!;
+   let valSym:&Ast.SymbolInfo!;
+   if node.$exp.$expType.$kind == .Set {
+      keySym = node.$val;
+      valSym = node.$key;
+   }
+   else {
+      keySym = node.$key;
+      valSym = node.$val;
+   }
+
+   
    self.writeln( "do" );
    self.pushIndent(##);
    self.writeln( "local __sorted = {}" );
@@ -2421,16 +2444,16 @@ pub override fn convFilter.processForsort(
 
    self.write( "for __index, " );
    let mut key = "__key";
-   if! node.$key {
-      key = getSymTxt( _exp.txt, "k%d" (node.$id) );
+   when! keySym {
+      key = getSymTxt( keySym.$name, "%d" (keySym.$symbolId) );
    }
    self.write( key );
    self.writeln( " in ipairs( __sorted ) do" );
    self.pushIndent(##);
-   if node.$exp.$expType.$kind == .Map {
+   when! valSym {
       self.writeln(
          string.format( "local %s = __map[ %s ]",
-                        getSymTxt( node.$val.txt, "v%d" (node.$id) ), key ) );
+                        getSymTxt( valSym.$name, "%d" (valSym.$symbolId) ), key ) );
    }
    filter( node.$block, self, node );
    //self.popIndent();

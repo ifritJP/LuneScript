@@ -342,12 +342,25 @@ pub abstract class SymbolInfo extend (LowSymbol) {
    /** このシンボルがデータを保持しているかどうか */
    pub abstract fn get_hasValueFlag(): bool;
    pub abstract fn set_hasValueFlag( arg:bool );
-   /** このシンボルが、 closuer 内からセットされているかどうか */
+   //pub abstract fn set_hasValueFlag( arg:bool );
+   /** このシンボルが、 closuer 内からセットされているかどうか。 変数の時に有効。 */
    pub abstract fn get_hasAccessFromClosure(): bool;
    pub abstract fn set_hasAccessFromClosure(flag:bool);
-   /** このシンボルが、どこからかアクセスされている場合 true */
-   pub abstract fn get_hasAccessFromAny():bool;
-   pub abstract fn set_hasAccessFromAny(flag:bool);
+   /** このシンボルに値をセットした最後の位置。 変数の時に有効。 */
+   pub abstract fn get_posForLatestMod():&Parser.Position!;
+   pub abstract fn set_posForLatestMod(pos:&Parser.Position!);
+   /** このシンボルを最後に参照した値をセットした位置。 変数の時に有効。 */
+   pub abstract fn get_posForModToRef():&Parser.Position!;
+   pub abstract fn set_posForModToRef(pos:&Parser.Position!);
+
+   pub fn updateValue( pos:&Parser.Position! ) {
+      self.set_hasValueFlag( true );
+      self.set_posForLatestMod( pos );
+   }
+   pub fn clearValue() {
+      self.set_hasValueFlag( false );
+   }
+   
    // pub abstract fn get_accessFromClosure(): AccessFromClosuer;
    // pub abstract fn set_accessFromClosure( mode: AccessFromClosuer );
    /** 変換モジュール用パラメータ */
@@ -1028,7 +1041,9 @@ pub class NormalSymbolInfo extend SymbolInfo {
    pri let mutMode: MutMode {pub};
    // pri let allmut accessFromClosure: AccessFromClosuer { pub, pub };
    pri let allmut hasAccessFromClosure: bool {pub,pub};
-   pri let allmut hasAccessFromAny: bool {pub,pub};
+   pri let allmut posForLatestMod: &Parser.Position! {pub,pub};
+   pri let allmut posForModToRef:&Parser.Position! {pub,pub};
+   
    /** 変換モジュール用パラメータ */
    pri let allmut convModuleParam:stem! {pub,pub}; 
    
@@ -1053,7 +1068,14 @@ pub class NormalSymbolInfo extend SymbolInfo {
       self.convModuleParam = nil;
       //self.accessFromClosure = .None;
       self.hasAccessFromClosure = false;
-      self.hasAccessFromAny = false;
+      if hasValueFlag {
+         self.posForLatestMod = pos;
+      }
+      else {
+         self.posForLatestMod = nil;
+      }
+      self.posForModToRef = nil;
+      
       NormalSymbolInfo.symbolIdSeed = NormalSymbolInfo.symbolIdSeed + 1;
       self.kind = kind;
       self.canBeLeft = canBeLeft;
@@ -1568,7 +1590,7 @@ pub fn Scope.filterSymbolTypeInfo(
 pub fn Scope.add(
    kind: SymbolKind, canBeLeft:bool, canBeRight:bool, name:str, pos:&Parser.Position!,
    typeInfo: &TypeInfo, accessMode:AccessMode, staticFlag:bool,
-   mutMode:MutMode, hasValueFlag:bool ) mut : &SymbolInfo!, &SymbolInfo!
+   mutMode:MutMode, hasValueFlag:bool ) mut : SymbolInfo!, &SymbolInfo!
 {
    switch kind {
       case .Typ, .Fun, .Mac {
@@ -1608,7 +1630,16 @@ pub fn Scope.add(
 
 pub fn Scope.addLocalVar(
    argFlag:bool, canBeLeft:bool, name:str, pos:&Parser.Position!,
-   typeInfo: &TypeInfo, mutable:MutMode ) mut : &SymbolInfo!, &SymbolInfo!
+   typeInfo: &TypeInfo, mutable:MutMode ) mut : SymbolInfo!, &SymbolInfo!
+{
+   return self.add(
+      argFlag and SymbolKind.Arg or SymbolKind.Var,
+      canBeLeft, true, name, pos, typeInfo, .Local, false, mutable, true )**;
+}
+
+pub fn Scope.addUnwrapedVar(
+   argFlag:bool, canBeLeft:bool, name:str, pos:&Parser.Position!,
+   typeInfo: &TypeInfo, mutable:MutMode ) mut : SymbolInfo!, &SymbolInfo!
 {
    return self.add(
       argFlag and SymbolKind.Arg or SymbolKind.Var,
@@ -1829,9 +1860,8 @@ pub fn Scope.isClosureAccess( moduleScope:&Scope, symbol:&SymbolInfo) : bool
 */
 pub fn Scope.accessSymbol( moduleScope:&Scope, symbol:&SymbolInfo ) mut
 {
-   if not symbol.$hasAccessFromAny {
-      symbol.set_hasAccessFromAny( true );
-   }
+   symbol.set_posForModToRef( symbol.$posForLatestMod );
+
    if self.isClosureAccess( moduleScope, symbol ) {
       self.setClosure( symbol );
    }
@@ -5074,29 +5104,31 @@ macro _checkEqualsItemType(
    type1:sym, type2:sym, index:int, alt2type:sym, destMut:sym, multiFlag:bool )
 {
    {
-      let retStat:stat;
+      let retStat1:stat;
+      let retStat2:stat;
+      
       if multiFlag {
-         retStat = `{ return false, mess };
+         retStat1 = `{ return false, mess };
+         retStat2 = `{ return false, nil };
       }
       else {
-         retStat = `{ return false };
+         retStat1 = `{ return false };
+         retStat2 = `{ return false };
       }
    }
-   let mut mess:str! = nil;
    if #,,type1.$itemTypeInfoList >= ,,index and
       #,,type2.$itemTypeInfoList >= ,,index
    {
       // ここの .SetEq を制御する
-      let ret;
-      ret, mess = (,,type1.$itemTypeInfoList[ ,,index ]).canEvalWith(
+      let ret, mess = (,,type1.$itemTypeInfoList[ ,,index ]).canEvalWith(
          ,,type2.$itemTypeInfoList[ ,,index ],
          ,,destMut and CanEvalType.SetEq or CanEvalType.SetOpIMut, ,,alt2type );
       if not ret {
-         ,,retStat;
+         ,,retStat1;
       }
    }
    else {
-      ,,retStat;
+      ,,retStat2;
    }
 };
 
@@ -6206,7 +6238,7 @@ pub fn TypeAnalyzer.analyzeTypeItemList(
    }
    if token.txt == "!" {
       typeInfo = typeInfo.get_nilableTypeInfo();
-      token = self.parser.getTokenNoErr();
+      self.parser.getTokenNoErr();
    }
 
    if not allowDDD {

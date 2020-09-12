@@ -194,7 +194,7 @@ endef
 
 # meta 情報の更新時に正常に解析できるかテスト。
 define test-meta-update
-	-(cd $1; rm test/ext/*.lua test/ext/*.meta )
+	-(cd $1; rm -f test/ext/*.lua test/ext/*.meta )
 	$(call exeLune,$1,test/ext/sub3.lns,SAVE,)
 	$(call exeLune,$1,test/ext/sub2.lns,SAVE,)
 	(cd $1; rm test/ext/sub3.lua test/ext/sub3.meta )

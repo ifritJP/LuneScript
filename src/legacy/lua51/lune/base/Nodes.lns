@@ -1061,8 +1061,8 @@ _declLoopGetBreakKind( ApplyNode, block );
 
 
 _declNodeClass( "Foreach", Node, false, false, true,
-                [ { "val": "&Parser.Token!" },
-                  { "key": "&Parser.Token!" },
+                [ { "val": "&Ast.SymbolInfo" },
+                  { "key": "&Ast.SymbolInfo!" },
                   { "exp": "&Node" },
                   { "block": "&BlockNode" } ]
 );
@@ -1071,8 +1071,8 @@ _declLoopGetBreakKind( ForeachNode, block );
 
 
 _declNodeClass( "Forsort", Node, false, false, true,
-                [ { "val": "&Parser.Token" },
-                  { "key": "&Parser.Token!" },
+                [ { "val": "&Ast.SymbolInfo" },
+                  { "key": "&Ast.SymbolInfo!" },
                   { "exp": "&Node" },
                   { "block": "&BlockNode" },
                   { "sort": "bool" } ]

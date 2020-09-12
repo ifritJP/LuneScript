@@ -1137,9 +1137,9 @@ oldStream, newStream に格納されているモジュールのメタ情報が�
                      }
 
                      let mut metaStream = stream;
-                     let mut metaConvMode = convLua.ConvMode.Convert;
+                     //let mut metaConvMode = convLua.ConvMode.Convert;
                      if self.option.mode == .SaveMeta {
-                        metaConvMode = .ConvMeta;
+                        //metaConvMode = .ConvMeta;
                         if! io.open( tempMetaPath, "w+" ) {
                            metaFileObj = _exp;
 		           metaStream = _exp;

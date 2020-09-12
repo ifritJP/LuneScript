@@ -682,16 +682,13 @@ end
 function DefaultPushbackParser:getLastPos(  )
 
    local pos = Position.new(0, 0)
-   local txt = ""
    if self.currentToken.kind ~= TokenKind.Eof then
       pos = self.currentToken.pos
-      txt = self.currentToken.txt
    else
     
       if #self.usedTokenList > 0 then
          local token = self.usedTokenList[#self.usedTokenList]
          pos = token.pos
-         txt = token.txt
       end
       
    end
@@ -823,8 +820,8 @@ function StreamParser:parse(  )
       local comment = ""
       while true do
          do
-            local _482, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
-            if _482 ~= nil and termEndIndex ~= nil then
+            local _481, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
+            if _481 ~= nil and termEndIndex ~= nil then
                comment = comment .. rawLine:sub( searchIndex, termEndIndex )
                return comment, termEndIndex + 1
             end

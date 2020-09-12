@@ -867,17 +867,11 @@ function dumpFilter:processForeach( node, opt )
    do
       local _exp = node:get_key()
       if _exp ~= nil then
-         index = _exp.txt
+         index = _exp:get_name()
       end
    end
    
-   do
-      local _exp = node:get_val()
-      if _exp ~= nil then
-         dump( prefix, depth, node, _exp.txt .. " " .. index )
-      end
-   end
-   
+   dump( prefix, depth, node, node:get_val():get_name() .. " " .. index )
    filter( node:get_exp(  ), self, opt:nextOpt(  ) )
    filter( node:get_block(  ), self, opt:nextOpt(  ) )
 end
@@ -890,11 +884,11 @@ function dumpFilter:processForsort( node, opt )
    do
       local _exp = node:get_key(  )
       if _exp ~= nil then
-         index = _exp.txt
+         index = _exp:get_name()
       end
    end
    
-   dump( prefix, depth, node, node:get_val(  ).txt .. " " .. index )
+   dump( prefix, depth, node, node:get_val(  ):get_name() .. " " .. index )
    filter( node:get_exp(  ), self, opt:nextOpt(  ) )
    filter( node:get_block(  ), self, opt:nextOpt(  ) )
 end

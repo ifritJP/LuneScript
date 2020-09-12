@@ -226,7 +226,7 @@ fn TransUnit.analyzeRefTypeWithSymbol(
    }
    if token.txt == "!" {
       typeInfo = typeInfo.get_nilableTypeInfo();
-      token = self.getToken(##);
+      self.getToken(##);
    }
 
    if not allowDDD {
@@ -1334,26 +1334,22 @@ fn TransUnit.analyzeDecl(
    accessMode: Ast.AccessMode, mut staticFlag: bool,
    firstToken: &Parser.Token, mut token: &Parser.Token ) mut : Nodes.Node!
 {
-   let mut count = 0;
    if not staticFlag {
       if token.txt == "static" {
          staticFlag = true;
          token = self.getToken(##);
-         count = count + 1;
       }
    }
    let mut overrideFlag = false;
    if token.txt == "override" {
       overrideFlag = true;
       token = self.getToken(##);
-      count = count + 1;
    }
 
    let mut abstractFlag = false;
    if token.txt == "abstract" {
       abstractFlag = true;
       token = self.getToken(##);
-      count = count + 1;
    }
 
    if token.txt == "let" {
@@ -1515,6 +1511,8 @@ fn TransUnit.analyzeDeclMember(
                   "This member can't have setter, this member is immutable. -- %s"
                   (varName.txt) );
             }
+            // pending
+            Log._log2( .Debug, "%s" (dummyRetType) );
          }
          self.checkToken( nextToken, "}" );
          token = self.getToken(##);
@@ -1640,7 +1638,7 @@ fn TransUnit.addDefaultConstructor(
    // メンバーをセット済みにする
    foreach memberNode in memberNodeList {
       if not memberNode.$staticFlag {
-         memberNode.$symbolInfo.set_hasValueFlag( true );
+         memberNode.$symbolInfo.updateValue( memberNode.$symbolInfo.$posForLatestMod );
       }
    }
 }
@@ -1745,14 +1743,16 @@ fn TransUnit.analyzeClassBody(
    let mut hasInitBlock = false;
    let mut hasStaticMember = false;
 
-   fn processLet( token:&Parser.Token, staticFlag:bool, accessMode:Ast.AccessMode ) {
+   fn processLet( token:&Parser.Token, staticFlag:bool,
+                  accessMode:Ast.AccessMode, alreadyFlag:bool )
+   {
       if staticFlag {
          hasStaticMember = true;
       }
       if mode == .Interface {
          self.addErrMess( token.pos, "interface can not have member" );
       }
-      if not staticFlag and alreadyCtorFlag {
+      if not staticFlag and alreadyFlag {
          self.addErrMess(
             token.pos, "member can't declare after '__init' method." );
       }
@@ -1818,7 +1818,7 @@ nil の場合、メンバの宣言位置。
          foreach symbolInfo in self.scope.$symbol2SymbolInfoMap {
             if not symbolInfo.$staticFlag {
                // 一旦全てのメンバを値なし状態にセットする
-               symbolInfo.set_hasValueFlag( false );
+               symbolInfo.clearValue();
             }
          }
       }
@@ -1854,7 +1854,7 @@ nil の場合、メンバの宣言位置。
       foreach symbolInfo in self.scope.$symbol2SymbolInfoMap {
          if symbolInfo.$staticFlag {
             // 一旦全てのメンバを値なし状態にセットする
-            symbolInfo.set_hasValueFlag( false );
+            symbolInfo.clearValue();
          }
       }
 
@@ -2005,7 +2005,7 @@ nil の場合、メンバの宣言位置。
 
 
          if token.txt == "let" {
-            processLet( token, staticFlag, accessMode );
+            processLet( token, staticFlag, accessMode, alreadyCtorFlag );
          }
          elseif token.txt == "fn" {
             processFn( token, staticFlag, accessMode, abstractFlag, overrideFlag );
@@ -2180,10 +2180,10 @@ fn TransUnit.analyzeDeclClass(
 
 
 
-   let mut node, workNextToken, mut methodNameSet = self.analyzeClassBody(
+   let mut node, _, mut methodNameSet = self.analyzeClassBody(
       classAccessMode, firstToken, mode, gluePrefix,
       classTypeInfo, name, moduleName, nextToken );
-   nextToken = workNextToken;
+   //nextToken = workNextToken;
 
 
    let parentInfo = classTypeInfo;
@@ -2513,7 +2513,7 @@ fn TransUnit.analyzeDeclFunc(
             foreach symbolInfo in self.scope.$symbol2SymbolInfoMap {
                if not symbolInfo.$staticFlag {
                   // 一旦全てのメンバを値なし状態にセットする
-                  symbolInfo.set_hasValueFlag( false );
+                  symbolInfo.clearValue();
                }
             }
          }
@@ -2730,21 +2730,21 @@ fn TransUnit.analyzeDeclFunc(
    }
 
    let mut node = self.createNoneNode( firstToken.pos );
-   let mut needNode = false;
+   //let mut needNode = false;
 
    // 関数 Body の解析
    let mut body:Nodes.BlockNode! = nil;
    if token.txt == ";" {
       // プロトタイプ宣言
       if declFuncMode == .Module or declFuncMode == .Glue {
-         needNode = true;
+         //needNode = true;
       }
       else {
          if not abstractFlag {
             self.protoFuncMap[ typeInfo ] = firstToken.pos;
          }
          if classTypeInfo$.$kind == .IF {
-            needNode = true;
+            //needNode = true;
          }
          else {
             if kind == Nodes.NodeKind.$DeclMethod {
@@ -2754,7 +2754,7 @@ fn TransUnit.analyzeDeclFunc(
       }
    }
    else {
-      needNode = true;
+      //needNode = true;
 
       if abstractFlag {
          self.addErrMess( token.pos, "abstract method can't have body." );
@@ -3031,9 +3031,10 @@ fn TransUnit.analyzeLetAndInitExp(
 
    // 型推論の解決と、宣言されている型と初期値との整合性を確認
    when! expList {
+      let mut workList = expList;
       let mut updateExpList = false;
       let mut newExpList:List<&Nodes.Node> = [];
-      foreach exp, index in expList.$expList {
+      foreach exp, index in workList.$expList {
          newExpList.insert( exp ) ;
          if not exp.canBeRight() {
             self.addErrMess( exp.$pos,
@@ -3044,8 +3045,8 @@ fn TransUnit.analyzeLetAndInitExp(
 
       //  初期化値の型を反映する
       let mut expTypeList: List<&Ast.TypeInfo> = [];
-      foreach expType, index in expList.$expTypeList {
-         if index == #expList.$expTypeList and expType.$kind == .DDD
+      foreach expType, index in workList.$expTypeList {
+         if index == #workList.$expTypeList and expType.$kind == .DDD
          {
             // 最終要素が ... の場合、残りの変数宣言の分 stem をセットする
             let mut dddItemType = Ast.builtinTypeStem_;
@@ -3148,20 +3149,20 @@ fn TransUnit.analyzeLetAndInitExp(
       }
       if updateExpList {
          // 引数リストを更新する
-         expList = self.createExpListNode( expList, newExpList );
+         workList = self.createExpListNode( workList, newExpList );
       }
 
       {
          let mut alt2typeMap =
             Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap(false);
 
-         if! let mut workList = self.checkImplicitCast(
-            alt2typeMap, typeInfoList, expList,
+         if! self.checkImplicitCast(
+            alt2typeMap, typeInfoList, workList,
             fn ( dstType:&Ast.TypeInfo, expNode:&Nodes.Node ): &Nodes.Node! {
                return nil;
             } )
          {
-            expList = workList;
+            workList = _exp;
          }
       }
 
@@ -3228,10 +3229,10 @@ fn TransUnit.analyzeLetAndInitExp(
             }
          }
       }
-
+      return typeInfoList, letVarList, orgExpTypeList, workList;
    }
 
-   return typeInfoList, letVarList, orgExpTypeList, expList;
+   return typeInfoList, letVarList, orgExpTypeList, nil;
 }
 
 fn TransUnit.analyzeDeclVar(
@@ -3403,7 +3404,7 @@ fn TransUnit.analyzeDeclVar(
                   unwrap self.scope.getSymbolInfoChild( letVarInfo.varName.txt );
                if breakKind ~= .None {
                   self.tentativeSymbol.checkAndExclude( symbolInfo );
-                  symbolInfo.set_hasValueFlag( true );
+                  symbolInfo.updateValue( symbolInfo.$pos );
                }
                else {
                   if not self.tentativeSymbol.checkAndExclude( symbolInfo ) {
@@ -3566,7 +3567,8 @@ fn TransUnit.analyzeWhen( firstToken: &Parser.Token ) mut : Nodes.Node
             let newSymbolInfo = self.addLocalVar(
                firstToken.pos, false, expNode.canBeLeft(), refNode.$symbolInfo.$name,
                expNode.$expType.$nonnilableType,
-               symbolInfo.$mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true );
+               //symbolInfo.$mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true );
+               Ast.MutMode.IMut, true );
             symPairList.insert( new Nodes.UnwrapSymbolPair( symbolInfo, newSymbolInfo ) );
          }
          else {

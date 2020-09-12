@@ -1462,10 +1462,15 @@ class BuiltinArgSymbolInfo extend Ast.SymbolInfo {
    }
    pub override fn set_hasAccessFromClosure(flag:bool) {
    }
-   pub override fn get_hasAccessFromAny(): bool {
-      return false;
+   pub override fn get_posForLatestMod():&Parser.Position! {
+      return nil;
    }
-   pub override fn set_hasAccessFromAny(flag:bool) {
+   pub override fn set_posForLatestMod(pos:&Parser.Position!) {
+   }
+   pub override fn get_posForModToRef():&Parser.Position! {
+      return nil;
+   }
+   pub override fn set_posForModToRef(pos:&Parser.Position!) {
    }
 
    pub override fn canAccess(
@@ -2307,15 +2312,15 @@ pub override fn convFilter.processDeclEnum(
          self.writeln( "    return %s_allList;" (enumFullName) );
          self.writeln( "}" );
 
-         if not isStrEnum {
-            let typeTxt;
-            if enumType.$valTypeInfo.$srcTypeInfo == Ast.builtinTypeReal {
-               typeTxt = "real";
-            }
-            else {
-               typeTxt = "int";
-            }
-         }
+         // if not isStrEnum {
+         //    let typeTxt;
+         //    if enumType.$valTypeInfo.$srcTypeInfo == Ast.builtinTypeReal {
+         //       typeTxt = "real";
+         //    }
+         //    else {
+         //       typeTxt = "int";
+         //    }
+         // }
 
          {
             // get__txt() の宣言
@@ -7337,14 +7342,14 @@ fn convFilter.processForeachSetupVal(
 
 fn convFilter.processPoolForeachSetupVal(
    parent:&Nodes.Node, loopType:&Ast.TypeInfo, scope:&Ast.Scope,
-   keyToken:&Parser.Token!, valToken:&Parser.Token! ) mut
+   keyToken:&Ast.SymbolInfo!, valToken:&Ast.SymbolInfo! ) mut
 {
   
    let valType = loopType.$itemTypeInfoList[ 1 ];
    let valSymTxt;
    if loopType.$kind == .Set {
       if! keyToken {
-         valSymTxt = _exp.txt;
+         valSymTxt = _exp.$name;
       }
       else {   
          //valSymTxt = "__val";
@@ -7353,7 +7358,7 @@ fn convFilter.processPoolForeachSetupVal(
    }
    else {
       if! valToken {
-         valSymTxt = _exp.txt;
+         valSymTxt = _exp.$name;
       }
       else {   
          //valSymTxt = "__val";
@@ -7366,15 +7371,15 @@ fn convFilter.processPoolForeachSetupVal(
 
 fn convFilter.processMapForeachSetupVal(
    parent:&Nodes.Node, loopType:&Ast.TypeInfo, scope:&Ast.Scope,
-   keyToken:&Parser.Token!, valToken:&Parser.Token!, keyTxt:str, valTxt:str ) mut
+   keyToken:&Ast.SymbolInfo!, valToken:&Ast.SymbolInfo!, keyTxt:str, valTxt:str ) mut
 {
    when! keyToken {
-      self.processForeachSetupVal( parent, scope, keyTxt, keyToken.txt,
+      self.processForeachSetupVal( parent, scope, keyTxt, keyToken.$name,
                                    loopType.$itemTypeInfoList[ 1 ] );
    }
    self.writeln( "" );
    when! valToken {
-      self.processForeachSetupVal( parent, scope, valTxt, valToken.txt,
+      self.processForeachSetupVal( parent, scope, valTxt, valToken.$name,
                                    loopType.$itemTypeInfoList[ 2 ] );
    }
 }
@@ -7446,14 +7451,14 @@ pub override fn convFilter.processForeach(
       case .List, .Array {
          self.writeln( "%s _itAny = lns_itList_new( _pEnv, _obj );" (cTypeAnyP) );
          if! let keyToken = node.$key {
-            let! workSymbol = node.$block.$scope.getSymbolInfoChild( keyToken.txt ) {
-               Util.err( "not found symbol -- %s" ( keyToken.txt ) );
+            let! workSymbol = node.$block.$scope.getSymbolInfoChild( keyToken.$name ) {
+               Util.err( "not found symbol -- %s" ( keyToken.$name ) );
             };
             indexSymbol = workSymbol;
             
             //self.writeln( "int %s = 0;" (keyToken.txt) );
             if self.scopeMgr.getSymbolValKind( workSymbol ) ~= .Prim {
-               self.writeln( "int _%s = 0;" (keyToken.txt) );
+               self.writeln( "int _%s = 0;" (keyToken.$name) );
             }
             else {
                self.processDeclVarC( true, workSymbol, true ## );
@@ -9575,19 +9580,16 @@ fn convFilter.processConcat( node:&Nodes.ExpOp2Node, parent:&Nodes.Node ) mut
 pub override fn convFilter.processExpSetVal(
    node: Nodes.ExpSetValNode, opt: Opt ) mut
 {
-   let workParent:&Nodes.Node;
    //let symbolList = node.$exp1.getSymbolInfo();
    let expList;
    let mRetExp:&Nodes.MRetExp!;
    if! let expListNode = node.$exp2@@@Nodes.ExpListNode {
       expList = expListNode.$expList;
       mRetExp = expListNode.$mRetExp;
-      workParent = expListNode;
    }
    else {
       expList = [ node.$exp2 ];
       mRetExp = nil;
-      workParent = node;
    }
    
    self.processSetValToNode( node, node.$exp1, node.$initSymSet, expList, mRetExp );

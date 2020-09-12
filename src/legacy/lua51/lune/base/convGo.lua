@@ -758,7 +758,7 @@ function convFilter:processConvExp( nodeId, dstTypeList, argListNode )
    
    if restIndex ~= nil then
       self:write( "[]LnsAny{ " )
-      for index, _v1717 in ipairs( argList:get_expList() ) do
+      for index, _5296 in ipairs( argList:get_expList() ) do
          if index >= #dstTypeList then
             self:write( string.format( "arg%d", index) )
          end
@@ -1613,21 +1613,21 @@ function convFilter:processForeach( node, opt )
          do
             local key = node:get_key()
             if key ~= nil then
-               self:write( string.format( "_%s, ", key.txt) )
+               self:write( string.format( "_%s, ", key:get_name()) )
             else
                self:write( "_, " )
             end
          end
          
          
-         local valName = _lune.nilacc( node:get_val(), "txt" )
+         local valName = node:get_val():get_name()
          local itemType = loopExpType:get_itemTypeInfoList()[1]
          
          if not isAnyType( itemType ) then
-            self:write( string.format( "_%s", tostring( valName)) )
+            self:write( string.format( "_%s", valName) )
          else
           
-            self:write( string.format( "%s", tostring( valName)) )
+            self:write( string.format( "%s", valName) )
          end
          
          
@@ -1638,13 +1638,13 @@ function convFilter:processForeach( node, opt )
          do
             local key = node:get_key()
             if key ~= nil then
-               self:writeln( string.format( "%s := _%s + 1", key.txt, key.txt) )
+               self:writeln( string.format( "%s := _%s + 1", key:get_name(), key:get_name()) )
             end
          end
          
          
          if not isAnyType( itemType ) then
-            self:write( string.format( "%s := _%s", tostring( valName), tostring( valName)) )
+            self:write( string.format( "%s := _%s", valName, valName) )
             self:outputConv( Ast.builtinTypeStem_, itemType )
             self:writeln( "" )
          end
@@ -1658,10 +1658,10 @@ function convFilter:processForeach( node, opt )
             if key ~= nil then
                
                if not isAnyType( keyType ) then
-                  self:write( string.format( "_%s", key.txt) )
+                  self:write( string.format( "_%s", key:get_name()) )
                else
                 
-                  self:write( string.format( "%s", key.txt) )
+                  self:write( string.format( "%s", key:get_name()) )
                end
                
                
@@ -1672,14 +1672,14 @@ function convFilter:processForeach( node, opt )
          end
          
          
-         local valName = _lune.nilacc( node:get_val(), "txt" )
+         local valName = node:get_val():get_name()
          local itemType = loopExpType:get_itemTypeInfoList()[2]
          
          if not isAnyType( itemType ) then
-            self:write( string.format( "_%s", tostring( valName)) )
+            self:write( string.format( "_%s", valName) )
          else
           
-            self:write( string.format( "%s", tostring( valName)) )
+            self:write( string.format( "%s", valName) )
          end
          
          
@@ -1692,7 +1692,7 @@ function convFilter:processForeach( node, opt )
             if key ~= nil then
                
                if not isAnyType( keyType ) then
-                  self:write( string.format( "%s := _%s", key.txt, key.txt) )
+                  self:write( string.format( "%s := _%s", key:get_name(), key:get_name()) )
                   self:outputConv( Ast.builtinTypeStem_, keyType )
                   self:writeln( "" )
                end
@@ -1703,7 +1703,7 @@ function convFilter:processForeach( node, opt )
          
          
          if not isAnyType( itemType ) then
-            self:write( string.format( "%s := _%s", tostring( valName), tostring( valName)) )
+            self:write( string.format( "%s := _%s", valName, valName) )
             self:outputConv( Ast.builtinTypeStem_, itemType )
             self:writeln( "" )
          end
@@ -1949,7 +1949,7 @@ function convFilter:outputConstructor( node )
    end
    
    self:write( string.format( "obj.Init%s(", className) )
-   for index, _v7117 in ipairs( initFuncType:get_argTypeInfoList() ) do
+   for index, _5688 in ipairs( initFuncType:get_argTypeInfoList() ) do
       if index ~= 1 then
          self:write( ", " )
       end
@@ -1994,7 +1994,7 @@ function convFilter:outputConstructor( node )
       end
       
       
-      for index, _v7377 in ipairs( initFuncType:get_argTypeInfoList() ) do
+      for index, _5696 in ipairs( initFuncType:get_argTypeInfoList() ) do
          if superArgNum < index then
             local sIndex = index - superArgNum
             local memberNode = node:get_memberList()[sIndex]

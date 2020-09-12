@@ -1344,6 +1344,16 @@ fn TransUnit.analyzeExpCall(
 
 
    fn processFunc(): Nodes.Node {
+      if funcTypeInfo.$kind == .Func {
+         // クロージャの変数をアクセスありにする
+         if! let scope = funcTypeInfo.$scope {
+            foreach symInfo in scope.$closureSymList {
+               symInfo.set_posForModToRef( symInfo.$posForLatestMod );
+            }
+         }
+      }
+
+      
       switch( funcTypeInfo.$kind ) {
          case .Method, .Func, .Form, .FormFunc {
          }
@@ -1661,13 +1671,13 @@ fn TransUnit.analyzeAccessClassField(
             let retTypeList = fieldSymbolInfo.$typeInfo.get_retTypeInfoList();
             symbolInfo = fieldSymbolInfo;
             if #retTypeList > 0 {
-               fieldTypeInfo = retTypeList[ 1 ];
-               when! fieldTypeInfo {
-                  if! fieldTypeInfo.applyGeneric(
-                     classTypeInfo.createAlt2typeMap(false), self.moduleType )
-                  {                 
-                     fieldTypeInfo = _exp;
-                  }
+               if! let applyedType = retTypeList[ 1 ].applyGeneric(
+                  classTypeInfo.createAlt2typeMap(false), self.moduleType )
+               {                 
+                  fieldTypeInfo = applyedType;
+               }
+               else {
+                  fieldTypeInfo = retTypeList[ 1 ];
                }
             }
             getterFlag = true;
@@ -2357,10 +2367,11 @@ fn TransUnit.analyzeExpSymbol(
                }
             }
             case .Var {
+               self.tentativeSymbol.addAccessSym( symbolInfo );
                if not symbolInfo.$hasValueFlag {
                   let nsTypeInfo = self.getCurrentNamespaceTypeInfo();
                   if not symbolInfo.$scope.isInnerOf( unwrap nsTypeInfo.$scope ) {
-                     self.tentativeSymbol.addAccessSym(
+                     self.tentativeSymbol.addAccessSymPos(
                         new AccessSymPos( symbolInfo, firstToken.pos ) );
                      // self.addErrMess(
                      //    firstToken.pos,         
@@ -2449,7 +2460,7 @@ fn TransUnit.analyzeExpOpSet(
                              ( symbolInfo.$name ) );
          }
       }
-
+      self.tentativeSymbol.modSym( symbolInfo );
       if index <= #expTypeList and not symbolInfo.$hasValueFlag {
          switch symbolInfo.$kind {
             case .Var {
@@ -2472,12 +2483,12 @@ fn TransUnit.analyzeExpOpSet(
                            workPos = opeToken.$pos;
                         }
                         self.checkLiteralEmptyCollection(
-                           opeToken.pos, symbolInfo.$name, expType );
+                           workPos, symbolInfo.$name, expType );
                      }
                   }
                   symbolInfo.set_typeInfo( expType );
                }
-               if not self.tentativeSymbol.regist( symbolInfo ) {
+               if not self.tentativeSymbol.regist( symbolInfo, exp.$pos ) {
                   self.addErrMess( opeToken.pos,
                                    "can't access in this scope. -- %s"
                                    ( symbolInfo.$name ) );
@@ -2489,7 +2500,12 @@ fn TransUnit.analyzeExpOpSet(
             }
          }
       }
-      symbolInfo.set_hasValueFlag( true );
+      //symbolInfo.set_hasValueFlag( true );
+      if symbolInfo.$kind ~= .Var or
+         self.scope.getNamespaceTypeInfo() == symbolInfo.$scope.getNamespaceTypeInfo()
+      {
+         symbolInfo.updateValue( exp.$pos );
+      }
    }
 
    return Nodes.ExpSetValNode.create(
