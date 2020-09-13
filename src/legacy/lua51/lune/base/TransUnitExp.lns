@@ -1344,16 +1344,6 @@ fn TransUnit.analyzeExpCall(
 
 
    fn processFunc(): Nodes.Node {
-      if funcTypeInfo.$kind == .Func {
-         // クロージャの変数をアクセスありにする
-         if! let scope = funcTypeInfo.$scope {
-            foreach symInfo in scope.$closureSymList {
-               symInfo.set_posForModToRef( symInfo.$posForLatestMod );
-            }
-         }
-      }
-
-      
       switch( funcTypeInfo.$kind ) {
          case .Method, .Func, .Form, .FormFunc {
          }
@@ -2282,6 +2272,14 @@ fn TransUnit.accessSymbol( symbolInfo:&Ast.SymbolInfo ) mut {
          // 関数の場合、AST 解析中の時点ではクロージャ処理が必要かどうかが
          // 判定できないので、リストに保持して AST 解析後に別途処理する。
          self.closureFunList.insert( new ClosureFun( symbolInfo, self.scope ) );
+      }
+
+      
+      // クロージャの変数をアクセスありにする
+      if! let scope = symbolInfo.$typeInfo.$scope {
+         foreach symInfo in scope.$closureSymList {
+            symInfo.set_posForModToRef( symInfo.$posForLatestMod );
+         }
       }
    }
    else {

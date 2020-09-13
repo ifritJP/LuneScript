@@ -9779,20 +9779,6 @@ function TransUnit:analyzeExpCall( firstToken, funcExp, nextToken )
    
    local function processFunc(  )
    
-      if funcTypeInfo:get_kind() == Ast.TypeInfoKind.Func then
-         do
-            local scope = funcTypeInfo:get_scope()
-            if scope ~= nil then
-               for __index, symInfo in ipairs( scope:get_closureSymList() ) do
-                  symInfo:set_posForModToRef( symInfo:get_posForLatestMod() )
-               end
-               
-            end
-         end
-         
-      end
-      
-      
       do
          local _switchExp = (funcTypeInfo:get_kind() )
          if _switchExp == Ast.TypeInfoKind.Method or _switchExp == Ast.TypeInfoKind.Func or _switchExp == Ast.TypeInfoKind.Form or _switchExp == Ast.TypeInfoKind.FormFunc then
@@ -10682,8 +10668,8 @@ function TransUnit:analyzeNewAlge( firstToken, algeTypeInfo, prefix )
          
          
          do
-            local _7870, _7871, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, nil )
-            if _7870 ~= nil and _7871 ~= nil and newExpNodeList ~= nil then
+            local _7868, _7869, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, nil )
+            if _7868 ~= nil and _7869 ~= nil and newExpNodeList ~= nil then
                argList = newExpNodeList:get_expList()
             end
          end
@@ -10710,6 +10696,16 @@ function TransUnit:accessSymbol( symbolInfo )
    if symbolInfo:get_kind() == Ast.SymbolKind.Fun then
       if self.scope:isClosureAccess( self.moduleScope, symbolInfo ) then
          table.insert( self.closureFunList, ClosureFun.new(symbolInfo, self.scope) )
+      end
+      
+      do
+         local scope = symbolInfo:get_typeInfo():get_scope()
+         if scope ~= nil then
+            for __index, symInfo in ipairs( scope:get_closureSymList() ) do
+               symInfo:set_posForModToRef( symInfo:get_posForLatestMod() )
+            end
+            
+         end
       end
       
    else
