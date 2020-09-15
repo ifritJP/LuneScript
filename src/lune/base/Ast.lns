@@ -3731,10 +3731,16 @@ pub class TypeInfo2Map {
 let mut typeInfo2Map = new TypeInfo2Map();
 
 
+let mut immutableTypeSet:Set<&TypeInfo> = (@);
+   
 pub static fn NormalTypeInfo.createModifier(
    mut srcTypeInfo: &TypeInfo, mutMode:MutMode): &TypeInfo
 {
    srcTypeInfo = srcTypeInfo.$srcTypeInfo;
+   if immutableTypeSet.has( srcTypeInfo ) {
+      return srcTypeInfo;
+   }
+   
    switch mutMode {
       case .IMut, .IMutRe {
          if! typeInfo2Map.ImutModifierMap[ srcTypeInfo ] {
@@ -3915,6 +3921,12 @@ pub let builtinTypeList:TypeInfo =
    NormalTypeInfo.createBuiltin( "List", "List" , .List## );
 pub let builtinTypeArray:TypeInfo =
    NormalTypeInfo.createBuiltin( "Array", "Array" , .Array## );
+
+immutableTypeSet.add( builtinTypeBool );
+immutableTypeSet.add( builtinTypeInt );
+immutableTypeSet.add( builtinTypeReal );
+immutableTypeSet.add( builtinTypeChar );
+immutableTypeSet.add( builtinTypeString );
 
 
 pub static fn AlternateTypeInfo.getAssign(
@@ -4474,12 +4486,16 @@ pub static fn TypeInfo.getCommonTypeCombo(
       if typeInfo.$nilable or other.$nilable {
          workType = workType.$nilableTypeInfo;
       }
-      if TypeInfo.isMut( typeInfo ) or TypeInfo.isMut( other ) {
-         // どちらかが mutable なら、結果を mutable とする。
-         // いまのところ、 immutable を mutable とするキャストはサポートしていないので、
-         // immutable と mutable の共通の型を immutable としてしまうと、
-         // 扱い難いので。。
-         workType = workType.$srcTypeInfo;
+      // if TypeInfo.isMut( typeInfo ) or TypeInfo.isMut( other ) {
+      //    // どちらかが mutable なら、結果を mutable とする。
+      //    // いまのところ、 immutable を mutable とするキャストはサポートしていないので、
+      //    // immutable と mutable の共通の型を immutable としてしまうと、
+      //    // 扱い難いので。。
+      //    workType = workType.$srcTypeInfo;
+      // }
+      if not TypeInfo.isMut( typeInfo ) or not TypeInfo.isMut( other ) {
+         // どちらかが immutable なら、結果も immutable にする
+         workType = NormalTypeInfo.createModifier( workType, .IMut);
       }
       return CommonType.Normal( workType );
    }

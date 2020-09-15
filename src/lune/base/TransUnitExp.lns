@@ -34,11 +34,27 @@ fn TransUnit.analyzeExpOne(
    expectType:&Ast.TypeInfo! ) mut : Nodes.Node
 {
    let mut exp = self.analyzeExp( allowNoneType, skipOp2Flag, opLevel, expectType );
-   if #exp.$expTypeList == 1 {
-      return exp;
+   if #exp.$expTypeList ~= 1 {
+      exp = Nodes.ExpMultiTo1Node.create(
+         self.nodeManager, exp.$pos, exp.$macroArgFlag, [ exp.$expType ], exp );
    }
-   return Nodes.ExpMultiTo1Node.create(
-      self.nodeManager, exp.$pos, exp.$macroArgFlag, [ exp.$expType ], exp );
+
+   when! expectType {
+      switch expectType.$kind {
+         case .IF, .Class {
+            let expOrgType = exp.$expType.$nonnilableType.$srcTypeInfo;
+            let exceptOrgType = expectType.$nonnilableType.$srcTypeInfo;
+            if expOrgType.isInheritFrom( exceptOrgType ##) {
+               exp = Nodes.ExpCastNode.create(
+                  self.nodeManager, exp.$pos,
+                  self.macroCtrl.isInAnalyzeArgMode(), [ expectType ],
+                  exp, expectType, .Implicit );   
+            }
+         }
+      }
+   }
+   
+   return exp;
 }
 
 /**
@@ -241,166 +257,6 @@ fn TransUnit.analyzeExpList(
    self.pushback();
 
    return expListNode;
-}
-
-fn TransUnit.analyzeListConst( token: &Parser.Token ) mut : Nodes.Node {
-   let nextToken = self.getToken(##);
-   let mut expList:Nodes.ExpListNode! = nil;
-   let mut itemCommonType = Ast.CommonType.Normal( Ast.builtinTypeNone );
-
-   if nextToken.txt ~= "]" {
-      self.pushback();
-      expList = self.analyzeExpList( false, false ## );
-      self.checkNextToken( "]" );
-      let nodeList: List<&Nodes.Node> = (unwrap expList).$expList;
-      foreach exp in nodeList {
-         itemCommonType = Ast.TypeInfo.getCommonTypeCombo(
-            itemCommonType, Ast.CommonType.Normal( exp.$expType ),
-            Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) );
-      }
-   }
-
-   let mut itemTypeInfo;
-   match itemCommonType {
-      case .Normal( info ) {
-         itemTypeInfo = info;
-      }
-      case .Combine( info ) {
-         itemTypeInfo = info.$typeInfo;
-      }
-   }
-
-   if itemTypeInfo.$kind == .DDD {
-      if #itemTypeInfo.$itemTypeInfoList > 0 {
-         itemTypeInfo = itemTypeInfo.$itemTypeInfoList[ 1 ];
-      }
-      else {
-         itemTypeInfo = Ast.builtinTypeStem_;
-      }
-   }
-   let mut typeInfoList = [ Ast.builtinTypeNone ];
-   if token.txt == '[' {
-      typeInfoList = [ Ast.NormalTypeInfo.createList( .Local, self.getCurrentClass(),
-                                                      [ itemTypeInfo ], .Mut ) ];
-      return Nodes.LiteralListNode.create(
-         self.nodeManager, token.pos,
-         self.macroCtrl.isInAnalyzeArgMode(), typeInfoList, expList );
-   }
-   else {
-      typeInfoList = [ Ast.NormalTypeInfo.createArray( .Local, self.getCurrentClass(),
-                                                       [ itemTypeInfo ], .Mut ) ];
-      return Nodes.LiteralArrayNode.create(
-         self.nodeManager, token.pos,
-         self.macroCtrl.isInAnalyzeArgMode(), typeInfoList, expList );
-   }
-}
-
-fn TransUnit.analyzeSetConst( token: &Parser.Token ) mut : Nodes.Node {
-
-   self.helperInfo.useSet = true;
-
-   
-   let nextToken = self.getToken(##);
-   let mut expList:Nodes.ExpListNode! = nil;
-   let mut itemCommonType = Ast.CommonType.Normal( Ast.builtinTypeNone );
-   if nextToken.txt ~= ")" {
-      self.pushback();
-      expList = self.analyzeExpList( false, false ## );
-      self.checkNextToken( ")" );
-      let nodeList: List<&Nodes.Node> = (unwrap expList).$expList;
-      foreach exp in nodeList {
-         let expType = exp.$expType;
-         if expType.$nilable {
-            self.addErrMess(
-               exp.$pos,
-               "'Set' object can't store nilable. -- %s" (expType.getTxt(##)));
-         }
-         else {
-            itemCommonType = Ast.TypeInfo.getCommonTypeCombo(
-               itemCommonType, Ast.CommonType.Normal( exp.$expType ),
-               Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) );
-         }
-      }
-   }
-
-   let itemTypeInfo;
-   match itemCommonType {
-      case .Normal( info ) {
-         itemTypeInfo = info;
-      }
-      case .Combine( info ) {
-         itemTypeInfo = info.$typeInfo;
-      }
-   }
-   
-   let mut typeInfoList = [ Ast.builtinTypeNone ];
-   typeInfoList = [ Ast.NormalTypeInfo.createSet( .Local, self.getCurrentClass(),
-                                                  [ itemTypeInfo ], .Mut ) ];
-   return Nodes.LiteralSetNode.create(
-      self.nodeManager, token.pos,
-      self.macroCtrl.isInAnalyzeArgMode(), typeInfoList, expList );
-}
-
-fn TransUnit.analyzeMapConst( token: &Parser.Token ) mut : Nodes.LiteralMapNode {
-   let mut nextToken = self.getToken(##);
-   let mut map:Map<&Nodes.Node,&Nodes.Node> = {};
-   let mut pairList:Nodes.PairItem[] = [];
-   let mut keyTypeInfo = Ast.builtinTypeNone;
-   let mut valTypeInfo = Ast.builtinTypeNone;
-
-
-   fn getMapKeyValType(
-      pos: &Parser.Position, keyFlag: bool,
-      mut typeInfo:&Ast.TypeInfo, mut expType:&Ast.TypeInfo ): &Ast.TypeInfo
-   {
-      if expType.$nilable {
-         if keyFlag {
-            self.addErrMess(
-               pos, "map key can't set a nilable -- %s" (expType.getTxt(##)) );
-         }
-         if expType.equals( Ast.builtinTypeNil ## ) {
-            return typeInfo;
-         }
-         expType = expType.$nonnilableType;
-      }
-      return Ast.TypeInfo.getCommonType(
-         typeInfo, expType,
-         Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) );
-   }
-
-   while true {
-      if nextToken.txt == "}" {
-         break;
-      }
-      self.pushback();
-
-      let key = self.analyzeExpOne( false, false ## );
-      keyTypeInfo = getMapKeyValType( key.$pos, true, keyTypeInfo, key.$expType );
-
-      self.checkNextToken( ":" );
-
-      let val = self.analyzeExpOne( false, false ## );
-      valTypeInfo = getMapKeyValType( val.$pos, false, valTypeInfo, val.$expType );
-
-      //pairList.insert( { "key": key, "val": val } );
-      pairList.insert( new Nodes.PairItem( key, val ) );
-      map[ key ] = val;
-      nextToken = self.getToken(##);
-      if nextToken.txt ~= "," {
-         break;
-      }
-      nextToken = self.getToken(##);
-   }
-
-   let typeInfo = Ast.NormalTypeInfo.createMap(
-      .Local, self.getCurrentClass(), keyTypeInfo, valTypeInfo, .Mut );
-
-   self.checkToken( nextToken, "}" );
-   // return self.createNode( nodeKindLiteralMap, token.pos,[ typeInfo ],
-   //                      { "map": map, "pairList": pairList } );
-   return Nodes.LiteralMapNode.create(
-      self.nodeManager, token.pos,
-      self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ], map, pairList );
 }
 
 fn TransUnit.checkSymbolHavingValue(
@@ -877,6 +733,222 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
    }
    return matchResult, alt2typeMap, expList;
 }
+
+fn TransUnit.analyzeListItems(
+   firstPos:&Parser.Position, nextToken:&Parser.Token, termTxt:str,
+   expectTypeList:List<&Ast.TypeInfo>! ) mut : &Nodes.ExpListNode!, &Ast.TypeInfo
+{
+   let mut expList:&Nodes.ExpListNode! = nil;
+   let mut itemCommonType = Ast.CommonType.Normal( Ast.builtinTypeNone );
+   
+   if nextToken.txt ~= termTxt {
+      self.pushback();
+      expList = self.analyzeExpList(
+         false, false, nil, expectTypeList, expectTypeList ~= nil );
+      self.checkNextToken( termTxt );
+      let nodeList: List<&Nodes.Node> = (unwrap expList).$expList;
+      foreach exp in nodeList {
+         itemCommonType = Ast.TypeInfo.getCommonTypeCombo(
+            itemCommonType, Ast.CommonType.Normal( exp.$expType ),
+            Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) );
+      }
+   }
+
+   let mut itemTypeInfo;
+   match itemCommonType {
+      case .Normal( info ) {
+         itemTypeInfo = info;
+      }
+      case .Combine( info ) {
+         itemTypeInfo = info.$typeInfo;
+      }
+   }
+
+   if itemTypeInfo.$kind == .DDD {
+      if #itemTypeInfo.$itemTypeInfoList > 0 {
+         itemTypeInfo = itemTypeInfo.$itemTypeInfoList[ 1 ];
+      }
+      else {
+         itemTypeInfo = Ast.builtinTypeStem_;
+      }
+   }
+
+   if not expectTypeList {
+      // expList の itemTypeInfo への暗黙キャストを解決する
+      let mut expTypeList:List<&Ast.TypeInfo> = [];
+      when! expList {
+         foreach expNode, index in expList.$expList {
+            if index == #expList.$expList {
+               if expNode.$expType.$kind == .DDD {
+                  expTypeList.insert( expNode.$expType );
+               }
+               else {
+                  for _ = 1, #expNode.$expTypeList {
+                     expTypeList.insert( itemTypeInfo );
+                  }
+               }
+            }
+            else {
+               expTypeList.insert( itemTypeInfo );
+            }
+         }
+      }
+      let _, _, mut workExpList = self.checkMatchType(
+         "List constructor", firstPos, expTypeList, expList, false, false, nil );
+      when! workExpList {
+         expList = workExpList;
+      }
+   }
+   return expList, itemTypeInfo;
+}
+
+
+fn TransUnit.analyzeListConst(
+   token: &Parser.Token, expectType:&Ast.TypeInfo! ) mut : Nodes.Node
+{
+   let nextToken = self.getToken(##);
+
+   let mut expectTypeList:List<&Ast.TypeInfo>! = nil;
+   if expectType$.$kind == .List {
+      if! let itemTypeInfoList = expectType$.$itemTypeInfoList {
+         expectTypeList = [ itemTypeInfoList[ 1 ] ];
+      }
+   }
+
+   let mut expList, itemTypeInfo = self.analyzeListItems(
+      token.$pos, nextToken, "]", expectTypeList );
+   
+   
+   let mut typeInfoList = [ Ast.builtinTypeNone ];
+   if token.txt == '[' {
+      typeInfoList = [ Ast.NormalTypeInfo.createList( .Local, self.getCurrentClass(),
+                                                      [ itemTypeInfo ], .Mut ) ];
+      return Nodes.LiteralListNode.create(
+         self.nodeManager, token.pos,
+         self.macroCtrl.isInAnalyzeArgMode(), typeInfoList, expList );
+   }
+   else {
+      typeInfoList = [ Ast.NormalTypeInfo.createArray( .Local, self.getCurrentClass(),
+                                                       [ itemTypeInfo ], .Mut ) ];
+      return Nodes.LiteralArrayNode.create(
+         self.nodeManager, token.pos,
+         self.macroCtrl.isInAnalyzeArgMode(), typeInfoList, expList );
+   }
+}
+
+fn TransUnit.analyzeSetConst(
+   token: &Parser.Token, expectType:&Ast.TypeInfo! ) mut : Nodes.Node {
+
+   self.helperInfo.useSet = true;
+
+   
+   let nextToken = self.getToken(##);
+
+   let mut expectTypeList:List<&Ast.TypeInfo>! = nil;
+   if expectType$.$kind == .Set {
+      if! let itemTypeInfoList = expectType$.$itemTypeInfoList {
+         expectTypeList = [ itemTypeInfoList[ 1 ] ];
+      }
+   }
+
+   let mut expList, itemTypeInfo = self.analyzeListItems(
+      token.$pos, nextToken, ")", expectTypeList );
+
+   if itemTypeInfo.$nilable {
+      when! expList {
+         foreach exp in expList.$expList {
+            let expType = exp.$expType;
+            if expType.$nilable {
+               self.addErrMess(
+                  exp.$pos,
+                  "'Set' object can't store nilable. -- %s" (expType.getTxt(##)));
+            }
+         }
+      }
+   }
+   
+   
+   let mut typeInfoList = [ Ast.builtinTypeNone ];
+   typeInfoList = [ Ast.NormalTypeInfo.createSet( .Local, self.getCurrentClass(),
+                                                  [ itemTypeInfo ], .Mut ) ];
+   return Nodes.LiteralSetNode.create(
+      self.nodeManager, token.pos,
+      self.macroCtrl.isInAnalyzeArgMode(), typeInfoList, expList );
+}
+
+fn TransUnit.analyzeMapConst(
+   token: &Parser.Token, expectType:&Ast.TypeInfo! ) mut : Nodes.LiteralMapNode
+{
+   let mut nextToken = self.getToken(##);
+   let mut map:Map<&Nodes.Node,&Nodes.Node> = {};
+   let mut pairList:Nodes.PairItem[] = [];
+   let mut keyTypeInfo = Ast.builtinTypeNone;
+   let mut valTypeInfo = Ast.builtinTypeNone;
+
+
+   fn getMapKeyValType(
+      pos: &Parser.Position, keyFlag: bool,
+      mut typeInfo:&Ast.TypeInfo, mut expType:&Ast.TypeInfo ): &Ast.TypeInfo
+   {
+      if expType.$nilable {
+         if keyFlag {
+            self.addErrMess(
+               pos, "map key can't set a nilable -- %s" (expType.getTxt(##)) );
+         }
+         if expType.equals( Ast.builtinTypeNil ## ) {
+            return typeInfo;
+         }
+         expType = expType.$nonnilableType;
+      }
+      return Ast.TypeInfo.getCommonType(
+         typeInfo, expType,
+         Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) );
+   }
+
+   let mut expectKeyType:&Ast.TypeInfo! = nil;
+   let mut expectValType:&Ast.TypeInfo! = nil;
+   if expectType$.$kind == .Map {
+      if! let itemTypeInfoList = expectType$.$itemTypeInfoList {
+         expectKeyType = itemTypeInfoList[ 1 ];
+         expectValType = itemTypeInfoList[ 2 ];
+      }
+   }
+   
+   while true {
+      if nextToken.txt == "}" {
+         break;
+      }
+      self.pushback();
+
+      let key = self.analyzeExpOne( false, false, nil, expectKeyType );
+      keyTypeInfo = getMapKeyValType( key.$pos, true, keyTypeInfo, key.$expType );
+
+      self.checkNextToken( ":" );
+
+      let val = self.analyzeExpOne( false, false, nil, expectValType);
+      valTypeInfo = getMapKeyValType( val.$pos, false, valTypeInfo, val.$expType );
+
+      //pairList.insert( { "key": key, "val": val } );
+      pairList.insert( new Nodes.PairItem( key, val ) );
+      map[ key ] = val;
+      nextToken = self.getToken(##);
+      if nextToken.txt ~= "," {
+         break;
+      }
+      nextToken = self.getToken(##);
+   }
+
+   let typeInfo = Ast.NormalTypeInfo.createMap(
+      .Local, self.getCurrentClass(), keyTypeInfo, valTypeInfo, .Mut );
+
+   self.checkToken( nextToken, "}" );
+   // return self.createNode( nodeKindLiteralMap, token.pos,[ typeInfo ],
+   //                      { "map": map, "pairList": pairList } );
+   return Nodes.LiteralMapNode.create(
+      self.nodeManager, token.pos,
+      self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ], map, pairList );
+}
+
 
 
 /**
@@ -3377,13 +3449,13 @@ fn TransUnit.analyzeExp(
             self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], token );
       }
       elseif token.txt == '[' or token.txt == '[@' {
-         exp = self.analyzeListConst( token );
+         exp = self.analyzeListConst( token, expectType );
       }
       elseif token.txt == '(@' {
-         exp = self.analyzeSetConst( token );
+         exp = self.analyzeSetConst( token, expectType );
       }  
       elseif token.txt == '{' {
-         exp = self.analyzeMapConst( token );
+         exp = self.analyzeMapConst( token, expectType );
       }  
       elseif token.txt == "(" {
          exp = self.analyzeExp( false, false ## );

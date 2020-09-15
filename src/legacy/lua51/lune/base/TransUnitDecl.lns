@@ -341,12 +341,16 @@ fn TransUnit.checkOverriededMethod() mut
                if! let impMethodType = classScope.getTypeInfoField(
                   symbolInfo.$name, true, classScope, self.scopeAccess )
                {
-                  if not impMethodType.canEvalWith(
-                     symbolInfo.$typeInfo, .SetOp, alt2typeMap )
-                  {
+                  let isMatch, mess = impMethodType.canEvalWith(
+                     symbolInfo.$typeInfo, .SetOp, alt2typeMap );
+                  if not isMatch {
+                     
                      self.addErrMess(
-                        pos, "mismatch method -- %s %s" (symbolInfo.$typeInfo.$display_stirng,
-                                                          impMethodType.$display_stirng ) );
+                        pos,
+                        "mismatch method -- %s %s: %s"
+                        (symbolInfo.$typeInfo.$display_stirng,
+                          impMethodType.$display_stirng,
+                          unwrap mess default "") );
                   }
                   if impMethodType.$abstractFlag {
                      noImp = true;
@@ -2226,7 +2230,8 @@ fn TransUnit.analyzeDeclClass(
          not classScope.getTypeInfoChild( setterName )
       {
          let mutable;
-         if memberType.$mutMode == .Mut {
+         //if memberType.$mutMode == .Mut {
+         if memberNode.$symbolInfo.$mutMode ~= .AllMut {
             mutable = true;
          }
          else {

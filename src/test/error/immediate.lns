@@ -114,7 +114,8 @@ class SubSub extend Test {
 }
 {
    let mut val = [
-      [ { "test1": new Test() }, { "test2": new Sub() }, { "test3": new Test() } ]
+      [ { "test1": new Test() },
+        { "test2": new Sub() }, { "test3": new Test() } ] // error
    ];
 
    print( val[1][1].test1, val[1][2].test2 );
@@ -122,8 +123,15 @@ class SubSub extend Test {
    let val2:Test = unwrap val[1][1].test1;
 }
 {
+   let mut val:List<Map<str,Test>> =
+       [ { "test1": new Test() },
+         { "test2": new Sub() },
+         { "test3": new Test() } ]; // error
+   print( val );
+}
+{
    let mut val = [
-      [ { "test1": new SubSub() }, { "test2": new Sub() } ]
+      [ { "test1": new SubSub() }, { "test2": new Sub() } ] // error
    ];
 
    print( val[1][1].test1, val[1][2].test2 );

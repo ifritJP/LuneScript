@@ -5632,8 +5632,10 @@ function TransUnit:checkOverriededMethod(  )
             do
                local impMethodType = classScope:getTypeInfoField( symbolInfo:get_name(), true, classScope, self.scopeAccess )
                if impMethodType ~= nil then
-                  if not impMethodType:canEvalWith( symbolInfo:get_typeInfo(), Ast.CanEvalType.SetOp, alt2typeMap ) then
-                     self:addErrMess( pos, string.format( "mismatch method -- %s %s", symbolInfo:get_typeInfo():get_display_stirng(), impMethodType:get_display_stirng()) )
+                  local isMatch, mess = impMethodType:canEvalWith( symbolInfo:get_typeInfo(), Ast.CanEvalType.SetOp, alt2typeMap )
+                  if not isMatch then
+                     
+                     self:addErrMess( pos, string.format( "mismatch method -- %s %s: %s", symbolInfo:get_typeInfo():get_display_stirng(), impMethodType:get_display_stirng(), _lune.unwrapDefault( mess, "")) )
                   end
                   
                   if impMethodType:get_abstractFlag() then
@@ -5835,7 +5837,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
    
    
    if moduleName ~= nil then
-      for _6671 in string.gmatch( moduleName, '[^%.]+' ) do
+      for _6673 in string.gmatch( moduleName, '[^%.]+' ) do
          self:popModule(  )
       end
       
@@ -6003,7 +6005,7 @@ function TransUnit:analyzeDeclMacro( accessMode, firstToken )
    local node = self:analyzeDeclMacroSub( accessMode, firstToken, nameToken, scope, parentInfo, workArgList )
    self.scope = backScope
    
-   local _6715, existSym = self.scope:addMacro( nameToken.pos, node:get_expType(), accessMode )
+   local _6717, existSym = self.scope:addMacro( nameToken.pos, node:get_expType(), accessMode )
    if existSym then
       self:addErrMess( nameToken.pos, string.format( "multiple define symbol -- %s", nameToken.txt) )
    end
@@ -6367,7 +6369,7 @@ function TransUnit:analyzeDeclEnum( accessMode, firstToken )
    
    self:popScope(  )
    
-   local _6809, shadowing = self.scope:addEnum( accessMode, name.txt, name.pos, _lune.unwrap( enumTypeInfo) )
+   local _6811, shadowing = self.scope:addEnum( accessMode, name.txt, name.pos, _lune.unwrap( enumTypeInfo) )
    self:errorShadowing( name.pos, shadowing )
    
    return Nodes.DeclEnumNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {_lune.unwrap( enumTypeInfo)}, accessMode, name, valueList, scope )
@@ -6386,7 +6388,7 @@ function TransUnit:analyzeDeclAlge( accessMode, firstToken )
    local algeScope = self:pushScope( true )
    
    local algeTypeInfo = Ast.NormalTypeInfo.createAlge( algeScope, self:getCurrentNamespaceTypeInfo(  ), false, accessMode, name.txt )
-   local _6820, shadowing = scope:addAlge( accessMode, name.txt, name.pos, algeTypeInfo )
+   local _6822, shadowing = scope:addAlge( accessMode, name.txt, name.pos, algeTypeInfo )
    self:errorShadowing( name.pos, shadowing )
    
    local nextToken = self:getToken(  )
@@ -6402,7 +6404,7 @@ function TransUnit:analyzeDeclAlge( accessMode, firstToken )
       local typeInfoList = {}
       if nextToken.txt == "(" then
          while true do
-            local _6825 = self:getToken(  )
+            local _6827 = self:getToken(  )
             local workToken2 = self:getToken(  )
             if workToken2.txt ~= ":" then
                self:pushback(  )
@@ -6732,7 +6734,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
             self:addErrMess( varName.pos, string.format( "This member can't have setter, this member is immutable. -- %s", varName.txt) )
          end
          
-         Log.log( Log.Level.Debug, __func__, 1515, function (  )
+         Log.log( Log.Level.Debug, __func__, 1519, function (  )
          
             return string.format( "%s", tostring( dummyRetType))
          end )
@@ -7315,7 +7317,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
    end
    
    
-   local node, _7071, methodNameSet = self:analyzeClassBody( classAccessMode, firstToken, mode, gluePrefix, classTypeInfo, name, moduleName, nextToken )
+   local node, _7073, methodNameSet = self:analyzeClassBody( classAccessMode, firstToken, mode, gluePrefix, classTypeInfo, name, moduleName, nextToken )
    local parentInfo = classTypeInfo
    for __index, memberNode in ipairs( node:get_memberList() ) do
       local memberType = memberNode:get_expType()
@@ -7350,7 +7352,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
       if memberNode:get_setterMode() ~= Ast.AccessMode.None and not classScope:getTypeInfoChild( setterName ) then
          local mutable
          
-         if memberType:get_mutMode() == Ast.MutMode.Mut then
+         if memberNode:get_symbolInfo():get_mutMode() ~= Ast.MutMode.AllMut then
             mutable = true
          else
           
@@ -8602,11 +8604,28 @@ end
 function TransUnit:analyzeExpOne( allowNoneType, skipOp2Flag, opLevel, expectType )
 
    local exp = self:analyzeExp( allowNoneType, skipOp2Flag, opLevel, expectType )
-   if #exp:get_expTypeList() == 1 then
-      return exp
+   if #exp:get_expTypeList() ~= 1 then
+      exp = Nodes.ExpMultiTo1Node.create( self.nodeManager, exp:get_pos(), exp:get_macroArgFlag(), {exp:get_expType()}, exp )
    end
    
-   return Nodes.ExpMultiTo1Node.create( self.nodeManager, exp:get_pos(), exp:get_macroArgFlag(), {exp:get_expType()}, exp )
+   
+   if expectType ~= nil then
+      do
+         local _switchExp = expectType:get_kind()
+         if _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Class then
+            local expOrgType = exp:get_expType():get_nonnilableType():get_srcTypeInfo()
+            local exceptOrgType = expectType:get_nonnilableType():get_srcTypeInfo()
+            if expOrgType:isInheritFrom( exceptOrgType ) then
+               exp = Nodes.ExpCastNode.create( self.nodeManager, exp:get_pos(), self.macroCtrl:isInAnalyzeArgMode(  ), {expectType}, exp, expectType, Nodes.CastKind.Implicit )
+            end
+            
+         end
+      end
+      
+   end
+   
+   
+   return exp
 end
 
 function TransUnit:createExpList( pos, expTypeList, expList, followOn, abbrNode )
@@ -8769,169 +8788,6 @@ function TransUnit:analyzeExpList( allowNoneType, skipOp2Flag, expNode, expectTy
    self:pushback(  )
    
    return expListNode
-end
-
-
-function TransUnit:analyzeListConst( token )
-
-   local nextToken = self:getToken(  )
-   local expList = nil
-   local itemCommonType = _lune.newAlge( Ast.CommonType.Normal, {Ast.builtinTypeNone})
-   
-   if nextToken.txt ~= "]" then
-      self:pushback(  )
-      expList = self:analyzeExpList( false, false )
-      self:checkNextToken( "]" )
-      local nodeList = (_lune.unwrap( expList) ):get_expList()
-      for __index, exp in ipairs( nodeList ) do
-         itemCommonType = Ast.TypeInfo.getCommonTypeCombo( itemCommonType, _lune.newAlge( Ast.CommonType.Normal, {exp:get_expType()}), Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) )
-      end
-      
-   end
-   
-   
-   local itemTypeInfo
-   
-   do
-      local _matchExp = itemCommonType
-      if _matchExp[1] == Ast.CommonType.Normal[1] then
-         local info = _matchExp[2][1]
-      
-         itemTypeInfo = info
-      elseif _matchExp[1] == Ast.CommonType.Combine[1] then
-         local info = _matchExp[2][1]
-      
-         itemTypeInfo = info:get_typeInfo()
-      end
-   end
-   
-   
-   if itemTypeInfo:get_kind() == Ast.TypeInfoKind.DDD then
-      if #itemTypeInfo:get_itemTypeInfoList() > 0 then
-         itemTypeInfo = itemTypeInfo:get_itemTypeInfoList()[1]
-      else
-       
-         itemTypeInfo = Ast.builtinTypeStem_
-      end
-      
-   end
-   
-   local typeInfoList = {Ast.builtinTypeNone}
-   if token.txt == '[' then
-      typeInfoList = {Ast.NormalTypeInfo.createList( Ast.AccessMode.Local, self:getCurrentClass(  ), {itemTypeInfo}, Ast.MutMode.Mut )}
-      return Nodes.LiteralListNode.create( self.nodeManager, token.pos, self.macroCtrl:isInAnalyzeArgMode(  ), typeInfoList, expList )
-   else
-    
-      typeInfoList = {Ast.NormalTypeInfo.createArray( Ast.AccessMode.Local, self:getCurrentClass(  ), {itemTypeInfo}, Ast.MutMode.Mut )}
-      return Nodes.LiteralArrayNode.create( self.nodeManager, token.pos, self.macroCtrl:isInAnalyzeArgMode(  ), typeInfoList, expList )
-   end
-   
-end
-
-
-function TransUnit:analyzeSetConst( token )
-
-   
-   self.helperInfo.useSet = true
-   
-   local nextToken = self:getToken(  )
-   local expList = nil
-   local itemCommonType = _lune.newAlge( Ast.CommonType.Normal, {Ast.builtinTypeNone})
-   if nextToken.txt ~= ")" then
-      self:pushback(  )
-      expList = self:analyzeExpList( false, false )
-      self:checkNextToken( ")" )
-      local nodeList = (_lune.unwrap( expList) ):get_expList()
-      for __index, exp in ipairs( nodeList ) do
-         local expType = exp:get_expType()
-         if expType:get_nilable() then
-            self:addErrMess( exp:get_pos(), string.format( "'Set' object can't store nilable. -- %s", expType:getTxt(  )) )
-         else
-          
-            itemCommonType = Ast.TypeInfo.getCommonTypeCombo( itemCommonType, _lune.newAlge( Ast.CommonType.Normal, {exp:get_expType()}), Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) )
-         end
-         
-      end
-      
-   end
-   
-   
-   local itemTypeInfo
-   
-   do
-      local _matchExp = itemCommonType
-      if _matchExp[1] == Ast.CommonType.Normal[1] then
-         local info = _matchExp[2][1]
-      
-         itemTypeInfo = info
-      elseif _matchExp[1] == Ast.CommonType.Combine[1] then
-         local info = _matchExp[2][1]
-      
-         itemTypeInfo = info:get_typeInfo()
-      end
-   end
-   
-   
-   local typeInfoList = {Ast.builtinTypeNone}
-   typeInfoList = {Ast.NormalTypeInfo.createSet( Ast.AccessMode.Local, self:getCurrentClass(  ), {itemTypeInfo}, Ast.MutMode.Mut )}
-   return Nodes.LiteralSetNode.create( self.nodeManager, token.pos, self.macroCtrl:isInAnalyzeArgMode(  ), typeInfoList, expList )
-end
-
-
-function TransUnit:analyzeMapConst( token )
-
-   local nextToken = self:getToken(  )
-   local map = {}
-   local pairList = {}
-   local keyTypeInfo = Ast.builtinTypeNone
-   local valTypeInfo = Ast.builtinTypeNone
-   
-   local function getMapKeyValType( pos, keyFlag, typeInfo, expType )
-   
-      if expType:get_nilable() then
-         if keyFlag then
-            self:addErrMess( pos, string.format( "map key can't set a nilable -- %s", expType:getTxt(  )) )
-         end
-         
-         if expType:equals( Ast.builtinTypeNil ) then
-            return typeInfo
-         end
-         
-         expType = expType:get_nonnilableType()
-      end
-      
-      return Ast.TypeInfo.getCommonType( typeInfo, expType, Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) )
-   end
-   
-   while true do
-      if nextToken.txt == "}" then
-         break
-      end
-      
-      self:pushback(  )
-      
-      local key = self:analyzeExpOne( false, false )
-      keyTypeInfo = getMapKeyValType( key:get_pos(), true, keyTypeInfo, key:get_expType() )
-      
-      self:checkNextToken( ":" )
-      
-      local val = self:analyzeExpOne( false, false )
-      valTypeInfo = getMapKeyValType( val:get_pos(), false, valTypeInfo, val:get_expType() )
-      table.insert( pairList, Nodes.PairItem.new(key, val) )
-      map[key] = val
-      nextToken = self:getToken(  )
-      if nextToken.txt ~= "," then
-         break
-      end
-      
-      nextToken = self:getToken(  )
-   end
-   
-   
-   local typeInfo = Ast.NormalTypeInfo.createMap( Ast.AccessMode.Local, self:getCurrentClass(  ), keyTypeInfo, valTypeInfo, Ast.MutMode.Mut )
-   
-   self:checkToken( nextToken, "}" )
-   return Nodes.LiteralMapNode.create( self.nodeManager, token.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, map, pairList )
 end
 
 
@@ -9347,6 +9203,229 @@ function TransUnit:checkMatchValType( pos, funcTypeInfo, expList, genericTypeLis
    end
    
    return matchResult, alt2typeMap, expList
+end
+
+
+function TransUnit:analyzeListItems( firstPos, nextToken, termTxt, expectTypeList )
+
+   local expList = nil
+   local itemCommonType = _lune.newAlge( Ast.CommonType.Normal, {Ast.builtinTypeNone})
+   
+   if nextToken.txt ~= termTxt then
+      self:pushback(  )
+      expList = self:analyzeExpList( false, false, nil, expectTypeList, expectTypeList ~= nil )
+      self:checkNextToken( termTxt )
+      local nodeList = (_lune.unwrap( expList) ):get_expList()
+      for __index, exp in ipairs( nodeList ) do
+         itemCommonType = Ast.TypeInfo.getCommonTypeCombo( itemCommonType, _lune.newAlge( Ast.CommonType.Normal, {exp:get_expType()}), Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) )
+      end
+      
+   end
+   
+   
+   local itemTypeInfo
+   
+   do
+      local _matchExp = itemCommonType
+      if _matchExp[1] == Ast.CommonType.Normal[1] then
+         local info = _matchExp[2][1]
+      
+         itemTypeInfo = info
+      elseif _matchExp[1] == Ast.CommonType.Combine[1] then
+         local info = _matchExp[2][1]
+      
+         itemTypeInfo = info:get_typeInfo()
+      end
+   end
+   
+   
+   if itemTypeInfo:get_kind() == Ast.TypeInfoKind.DDD then
+      if #itemTypeInfo:get_itemTypeInfoList() > 0 then
+         itemTypeInfo = itemTypeInfo:get_itemTypeInfoList()[1]
+      else
+       
+         itemTypeInfo = Ast.builtinTypeStem_
+      end
+      
+   end
+   
+   
+   if not expectTypeList then
+      local expTypeList = {}
+      if expList ~= nil then
+         for index, expNode in ipairs( expList:get_expList() ) do
+            if index == #expList:get_expList() then
+               if expNode:get_expType():get_kind() == Ast.TypeInfoKind.DDD then
+                  table.insert( expTypeList, expNode:get_expType() )
+               else
+                
+                  for _7536 = 1, #expNode:get_expTypeList() do
+                     table.insert( expTypeList, itemTypeInfo )
+                  end
+                  
+               end
+               
+            else
+             
+               table.insert( expTypeList, itemTypeInfo )
+            end
+            
+         end
+         
+      end
+      
+      local _7537, _7538, workExpList = self:checkMatchType( "List constructor", firstPos, expTypeList, expList, false, false, nil )
+      if workExpList ~= nil then
+         expList = workExpList
+      end
+      
+   end
+   
+   return expList, itemTypeInfo
+end
+
+
+function TransUnit:analyzeListConst( token, expectType )
+
+   local nextToken = self:getToken(  )
+   
+   local expectTypeList = nil
+   if _lune.nilacc( expectType, 'get_kind', 'callmtd' ) == Ast.TypeInfoKind.List then
+      do
+         local itemTypeInfoList = _lune.nilacc( expectType, 'get_itemTypeInfoList', 'callmtd' )
+         if itemTypeInfoList ~= nil then
+            expectTypeList = {itemTypeInfoList[1]}
+         end
+      end
+      
+   end
+   
+   
+   local expList, itemTypeInfo = self:analyzeListItems( token.pos, nextToken, "]", expectTypeList )
+   
+   local typeInfoList = {Ast.builtinTypeNone}
+   if token.txt == '[' then
+      typeInfoList = {Ast.NormalTypeInfo.createList( Ast.AccessMode.Local, self:getCurrentClass(  ), {itemTypeInfo}, Ast.MutMode.Mut )}
+      return Nodes.LiteralListNode.create( self.nodeManager, token.pos, self.macroCtrl:isInAnalyzeArgMode(  ), typeInfoList, expList )
+   else
+    
+      typeInfoList = {Ast.NormalTypeInfo.createArray( Ast.AccessMode.Local, self:getCurrentClass(  ), {itemTypeInfo}, Ast.MutMode.Mut )}
+      return Nodes.LiteralArrayNode.create( self.nodeManager, token.pos, self.macroCtrl:isInAnalyzeArgMode(  ), typeInfoList, expList )
+   end
+   
+end
+
+
+function TransUnit:analyzeSetConst( token, expectType )
+
+   
+   self.helperInfo.useSet = true
+   
+   local nextToken = self:getToken(  )
+   
+   local expectTypeList = nil
+   if _lune.nilacc( expectType, 'get_kind', 'callmtd' ) == Ast.TypeInfoKind.Set then
+      do
+         local itemTypeInfoList = _lune.nilacc( expectType, 'get_itemTypeInfoList', 'callmtd' )
+         if itemTypeInfoList ~= nil then
+            expectTypeList = {itemTypeInfoList[1]}
+         end
+      end
+      
+   end
+   
+   
+   local expList, itemTypeInfo = self:analyzeListItems( token.pos, nextToken, ")", expectTypeList )
+   
+   if itemTypeInfo:get_nilable() then
+      if expList ~= nil then
+         for __index, exp in ipairs( expList:get_expList() ) do
+            local expType = exp:get_expType()
+            if expType:get_nilable() then
+               self:addErrMess( exp:get_pos(), string.format( "'Set' object can't store nilable. -- %s", expType:getTxt(  )) )
+            end
+            
+         end
+         
+      end
+      
+   end
+   
+   
+   local typeInfoList = {Ast.builtinTypeNone}
+   typeInfoList = {Ast.NormalTypeInfo.createSet( Ast.AccessMode.Local, self:getCurrentClass(  ), {itemTypeInfo}, Ast.MutMode.Mut )}
+   return Nodes.LiteralSetNode.create( self.nodeManager, token.pos, self.macroCtrl:isInAnalyzeArgMode(  ), typeInfoList, expList )
+end
+
+
+function TransUnit:analyzeMapConst( token, expectType )
+
+   local nextToken = self:getToken(  )
+   local map = {}
+   local pairList = {}
+   local keyTypeInfo = Ast.builtinTypeNone
+   local valTypeInfo = Ast.builtinTypeNone
+   
+   local function getMapKeyValType( pos, keyFlag, typeInfo, expType )
+   
+      if expType:get_nilable() then
+         if keyFlag then
+            self:addErrMess( pos, string.format( "map key can't set a nilable -- %s", expType:getTxt(  )) )
+         end
+         
+         if expType:equals( Ast.builtinTypeNil ) then
+            return typeInfo
+         end
+         
+         expType = expType:get_nonnilableType()
+      end
+      
+      return Ast.TypeInfo.getCommonType( typeInfo, expType, Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) )
+   end
+   
+   local expectKeyType = nil
+   local expectValType = nil
+   if _lune.nilacc( expectType, 'get_kind', 'callmtd' ) == Ast.TypeInfoKind.Map then
+      do
+         local itemTypeInfoList = _lune.nilacc( expectType, 'get_itemTypeInfoList', 'callmtd' )
+         if itemTypeInfoList ~= nil then
+            expectKeyType = itemTypeInfoList[1]
+            expectValType = itemTypeInfoList[2]
+         end
+      end
+      
+   end
+   
+   
+   while true do
+      if nextToken.txt == "}" then
+         break
+      end
+      
+      self:pushback(  )
+      
+      local key = self:analyzeExpOne( false, false, nil, expectKeyType )
+      keyTypeInfo = getMapKeyValType( key:get_pos(), true, keyTypeInfo, key:get_expType() )
+      
+      self:checkNextToken( ":" )
+      
+      local val = self:analyzeExpOne( false, false, nil, expectValType )
+      valTypeInfo = getMapKeyValType( val:get_pos(), false, valTypeInfo, val:get_expType() )
+      table.insert( pairList, Nodes.PairItem.new(key, val) )
+      map[key] = val
+      nextToken = self:getToken(  )
+      if nextToken.txt ~= "," then
+         break
+      end
+      
+      nextToken = self:getToken(  )
+   end
+   
+   
+   local typeInfo = Ast.NormalTypeInfo.createMap( Ast.AccessMode.Local, self:getCurrentClass(  ), keyTypeInfo, valTypeInfo, Ast.MutMode.Mut )
+   
+   self:checkToken( nextToken, "}" )
+   return Nodes.LiteralMapNode.create( self.nodeManager, token.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, map, pairList )
 end
 
 
@@ -10668,8 +10747,8 @@ function TransUnit:analyzeNewAlge( firstToken, algeTypeInfo, prefix )
          
          
          do
-            local _7868, _7869, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, nil )
-            if _7868 ~= nil and _7869 ~= nil and newExpNodeList ~= nil then
+            local _7898, _7899, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, nil )
+            if _7898 ~= nil and _7899 ~= nil and newExpNodeList ~= nil then
                argList = newExpNodeList:get_expList()
             end
          end
@@ -10871,7 +10950,7 @@ function TransUnit:analyzeExpOpSet( exp, opeToken, expectTypeList )
    end
    
    
-   local _7908, _7909, _7910, expTypeList = self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), expList, true, false, nil )
+   local _7938, _7939, _7940, expTypeList = self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), expList, true, false, nil )
    
    local initSymSet = {}
    
@@ -11610,7 +11689,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, prevOpLevel, expectTy
       end
       
       
-      local _8033, alt2type, newArgList = self:checkMatchValType( exp:get_pos(), initTypeInfo, argList, classTypeInfo:get_itemTypeInfoList(), classTypeInfo )
+      local _8063, alt2type, newArgList = self:checkMatchValType( exp:get_pos(), initTypeInfo, argList, classTypeInfo:get_itemTypeInfoList(), classTypeInfo )
       
       if #classTypeInfo:get_itemTypeInfoList() > 0 then
          if classTypeInfo:get_itemTypeInfoList()[1]:get_kind() == Ast.TypeInfoKind.Alternate then
@@ -11757,11 +11836,11 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, prevOpLevel, expectTy
       elseif token.txt == "..." then
          return Nodes.ExpDDDNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, token )
       elseif token.txt == '[' or token.txt == '[@' then
-         exp = self:analyzeListConst( token )
+         exp = self:analyzeListConst( token, expectType )
       elseif token.txt == '(@' then
-         exp = self:analyzeSetConst( token )
+         exp = self:analyzeSetConst( token, expectType )
       elseif token.txt == '{' then
-         exp = self:analyzeMapConst( token )
+         exp = self:analyzeMapConst( token, expectType )
       elseif token.txt == "(" then
          exp = self:analyzeExp( false, false )
          self:checkNextToken( ")" )
@@ -11896,8 +11975,8 @@ function TransUnit:analyzeReturn( token )
       local workList = expList
       if workList ~= nil then
          do
-            local _8070, _8071, newExpNodeList = self:checkMatchType( "return", token.pos, retTypeList, workList, false, not workList:get_followOn(), nil )
-            if _8070 ~= nil and _8071 ~= nil and newExpNodeList ~= nil then
+            local _8100, _8101, newExpNodeList = self:checkMatchType( "return", token.pos, retTypeList, workList, false, not workList:get_followOn(), nil )
+            if _8100 ~= nil and _8101 ~= nil and newExpNodeList ~= nil then
                expList = newExpNodeList
             end
          end

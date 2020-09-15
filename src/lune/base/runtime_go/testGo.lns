@@ -115,3 +115,38 @@
    print( subsub.sub3(), func1( subsub )** );
    func2( subsub );
 }
+{
+   class Test {
+      let val1:int;
+      let val2:int;
+      pub fn __init(val1:int, val2:int) {
+         self.val1 = val1;
+         self.val2 = val2;
+      }
+      pub fn func() {
+         print( self.val1, self.val2 );
+      }
+   }
+
+   fn func():int,int {
+      return 1, 2;
+   }
+
+   class Sub extend Test {
+   }
+
+   class SubSub extend Sub {
+      let val3:int;
+      pub fn __init() {
+         super( 0, (func()));
+         self.val3 = 3;
+      }
+      pub override fn func() {
+         super();
+         print( self.val3 );
+      }
+   }
+
+   let test = new SubSub();
+   test.func();
+}

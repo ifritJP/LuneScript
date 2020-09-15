@@ -43,6 +43,9 @@ func (lnsList *LnsList) Remove( index LnsAny ) LnsAny {
         return ret
     }
 }
+func (lnsList *LnsList) GetAt( index int ) LnsAny {
+    return lnsList.Items[ index - 1 ]
+}
 
 
 func Lns_isCondTrue( stem LnsAny ) bool {

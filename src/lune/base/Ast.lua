@@ -5102,9 +5102,16 @@ end
 
 local typeInfo2Map = TypeInfo2Map.new()
 
+local immutableTypeSet = {}
+
 function NormalTypeInfo.createModifier( srcTypeInfo, mutMode )
 
    srcTypeInfo = srcTypeInfo:get_srcTypeInfo()
+   if _lune._Set_has(immutableTypeSet, srcTypeInfo ) then
+      return srcTypeInfo
+   end
+   
+   
    do
       local _switchExp = mutMode
       if _switchExp == MutMode.IMut or _switchExp == MutMode.IMutRe then
@@ -5297,6 +5304,12 @@ _moduleObj.builtinTypeList = builtinTypeList
 local builtinTypeArray = NormalTypeInfo.createBuiltin( "Array", "Array", TypeInfoKind.Array )
 _moduleObj.builtinTypeArray = builtinTypeArray
 
+
+immutableTypeSet[_moduleObj.builtinTypeBool]= true
+immutableTypeSet[_moduleObj.builtinTypeInt]= true
+immutableTypeSet[_moduleObj.builtinTypeReal]= true
+immutableTypeSet[_moduleObj.builtinTypeChar]= true
+immutableTypeSet[_moduleObj.builtinTypeString]= true
 
 function AlternateTypeInfo.getAssign( typeInfo, alt2type )
 
@@ -5880,8 +5893,8 @@ function TypeInfo.getCommonTypeCombo( commonType, otherType, alt2type )
          workType = workType:get_nilableTypeInfo()
       end
       
-      if TypeInfo.isMut( typeInfo ) or TypeInfo.isMut( other ) then
-         workType = workType:get_srcTypeInfo()
+      if not TypeInfo.isMut( typeInfo ) or not TypeInfo.isMut( other ) then
+         workType = NormalTypeInfo.createModifier( workType, MutMode.IMut )
       end
       
       return _lune.newAlge( CommonType.Normal, {workType})
@@ -7677,7 +7690,7 @@ IdType.__allList[2] = IdType.Ext
 local function switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 5945, function (  )
+   Log.log( Log.Level.Trace, __func__, 5961, function (  )
    
       return "start"
    end )
@@ -7697,7 +7710,7 @@ local builtinTypeInfo2Map = typeInfo2Map:clone(  )
 local function pushProcessInfo( processInfo )
    local __func__ = '@lune.@base.@Ast.pushProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 5957, function (  )
+   Log.log( Log.Level.Trace, __func__, 5973, function (  )
    
       return "start"
    end )
@@ -7732,7 +7745,7 @@ _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
    local __func__ = '@lune.@base.@Ast.popProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 5983, function (  )
+   Log.log( Log.Level.Trace, __func__, 5999, function (  )
    
       return "start"
    end )

@@ -1,29 +1,15 @@
-interface Test {
-   pub fn func() : int;
-}
-class Sub extend (Test) {
-   pub fn func() : int {
-      return 10;
+class Test {
+   let val:int;
+   pub fn func():int {
+      return self.val;
    }
 }
-fn func1( sub:&Test ) : int {
-   return sub.func();
-}
-fn func2( test:&stem ) : int {
-   if! let sub = test@@@Sub {
-      return sub.func();
-   }
-   else {
-      return 0;
+class Sub extend Test {
+   pub override fn func():int {
+      return super() + 100;
    }
 }
-
-let test:Test = new Sub();
-
-let mut total = 0;
-for index = 1, 10 {
-   if (index % 2) == 0 {
-      total = total + func1( test );
-   }
+let list = [ new Sub( 1 ), new Test( 10 ) ];
+foreach val in list {
+   print( val.func() );
 }
-print( total );

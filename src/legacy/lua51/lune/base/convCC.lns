@@ -1415,7 +1415,7 @@ builtin 関数の引数シンボル情報
 class BuiltinArgSymbolInfo extend Ast.SymbolInfo {
    let scope:&Ast.Scope {pub};
    let name:str {pub};
-   let mut typeInfo:&Ast.TypeInfo {pub,pub};
+   let allmut typeInfo:&Ast.TypeInfo {pub,pub};
    let allmut convModuleParam:stem! {pub,pub};
    let namespaceTypeInfo:&Ast.TypeInfo {pub};
    

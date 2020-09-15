@@ -2434,7 +2434,7 @@ fn TransUnit.getContinueToken() mut : &Parser.Token, bool {
 
 
 fn TransUnit.analyzeStatementList(
-   stmtList: List<&Nodes.Node>, termTxt: str! ) mut : &Nodes.Node!, int
+   stmtList: List<&Nodes.Node>, termTxt: str! ) mut : Nodes.Node!, int
 {
    let mut breakKind = Nodes.BreakKind.None;
    if #stmtList > 0 {
@@ -2452,7 +2452,7 @@ fn TransUnit.analyzeStatementList(
       parser2lastLineMap[ self.parser ] = lineNo;
    }
    
-   let mut lastStatement:&Nodes.Node! = nil;
+   let mut lastStatement:Nodes.Node! = nil;
    let mut lastLineNo = getLastLineNo();
 
    // コメントが、直前の文の末尾と同じ行にあるかどうか調べ、
