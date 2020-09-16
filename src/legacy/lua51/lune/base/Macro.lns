@@ -746,12 +746,21 @@ pub fn MacroCtrl.expandSymbol(
    }
    let newToken = new Parser.Token(
       Parser.TokenKind.Str, format, prefixToken.pos, prefixToken.consecutive ## );
+
+   let expListNode = Nodes.ExpListNode.create(
+      nodeManager, exp.$pos, self.analyzeInfo.$mode == .AnalyzeArg,
+      exp.$expTypeList, [ exp ], nil, false );
+   let dddNode = Nodes.ExpToDDDNode.create(
+         nodeManager, exp.$pos, self.analyzeInfo.$mode == .AnalyzeArg,
+         exp.$expTypeList, expListNode );
+   
    let literalStr = Nodes.LiteralStringNode.create(
       nodeManager, prefixToken.pos, self.analyzeInfo.$mode == .AnalyzeArg,
       [ Ast.builtinTypeString ], newToken,
+      expListNode,
       Nodes.ExpListNode.create(
          nodeManager, exp.$pos, self.analyzeInfo.$mode == .AnalyzeArg,
-         exp.$expTypeList, [ exp ], nil, false ) );
+         exp.$expTypeList, [ dddNode ], nil, false ));
    return literalStr;
 }
 

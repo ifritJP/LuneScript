@@ -1812,7 +1812,10 @@ _declNodeClass( "LiteralMap", Node, false, true, false,
 
 _declNodeClass( "LiteralString", Node, false, true, false,
                 [ { "token": "&Parser.Token" },
-                  { "expList": "&ExpListNode!" } ]
+                  // 文字列リテラルの %s に対する各パラメータ
+                  { "orgParam": "&ExpListNode!" },
+                  // 上記 orgParam を ... に変換した時のパラメータ
+                  { "dddParam": "&ExpListNode!" } ]
 );
 
 _declNodeClass( "LiteralBool", Node, false, true, false,
@@ -2140,8 +2143,8 @@ pub override fn LiteralStringNode.getLiteral(): Literal!, str! {
       txt = txt.sub( 2, -2 );
    }
 
-   if! let expList = self.$expList {
-      let argList = expList.$expList;
+   if! let param = self.$orgParam {
+      let argList = param.$expList;
 
       let mut paramList:List<stem!> = [];
       foreach argNode in argList {
@@ -2161,9 +2164,9 @@ pub override fn LiteralStringNode.getLiteral(): Literal!, str! {
 pub override fn LiteralStringNode.setupLiteralTokenList( list: List<&Parser.Token> ): bool
 {
    self.addTokenList( list, .Str, self.token.txt );
-   if! let expList = self.$expList {
+   if! let param = self.$orgParam {
       self.addTokenList( list, .Dlmt, "(" );
-      foreach argNode, index in expList.$expList {
+      foreach argNode, index in param.$expList {
          if index > 1 {
             self.addTokenList( list, .Dlmt, "," );
          }

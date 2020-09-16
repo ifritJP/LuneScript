@@ -10322,7 +10322,7 @@ fn convFilter.processLiteralVal( exp:&Nodes.Node, parent:&Nodes.Node ) mut {
       }
       case Ast.builtinTypeString {
          if! let strNode = exp@@@Nodes.LiteralStringNode { 
-            if not strNode.$expList {
+            if not strNode.$orgParam {
                self.write( "lns_imdStr( %s )" (str2cstr( strNode.$token.txt ) ) );
                return;
             }
@@ -10624,7 +10624,7 @@ pub override fn convFilter.processLiteralString(
 
    switch self.processMode {
       case .Prototype {
-         if! let expListNode = node.$expList {
+         if! let expListNode = node.$orgParam {
             if! let mRetExp = expListNode.$mRetExp {
                self.processCallWithMRet(
                   node, getMRetFuncName( node ), cTypeAnyP,
@@ -10642,7 +10642,7 @@ pub override fn convFilter.processLiteralString(
          return;
       }
       case .StringFormat {
-         if! let expListNode = node.$expList {
+         if! let expListNode = node.$orgParam {
             if! let mRetExp = expListNode.$mRetExp {
                //self.write( "%s( _pEnv" ( getMRetFuncName( node ) ) );
                // foreach exp, index in expListNode.$expList {
@@ -10689,7 +10689,7 @@ pub override fn convFilter.processLiteralString(
    }
 
   
-   if! let expListNode = node.$expList {
+   if! let expListNode = node.$orgParam {
       if! let mRetExp = expListNode.$mRetExp {
          self.write( "%s( _pEnv" ( getMRetFuncName( node ) ) );
          foreach exp, index in expListNode.$expList {

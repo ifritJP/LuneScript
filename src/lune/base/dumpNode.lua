@@ -1224,7 +1224,7 @@ function dumpFilter:processLiteralString( node, opt )
    local prefix, depth = opt:get(  )
    dump( prefix, depth, node, node:get_token(  ).txt )
    do
-      local expList = node:get_expList()
+      local expList = node:get_orgParam()
       if expList ~= nil then
          for __index, param in ipairs( expList:get_expList() ) do
             filter( param, self, opt:nextOpt(  ) )

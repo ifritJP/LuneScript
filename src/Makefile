@@ -1043,17 +1043,28 @@ test-gc:
 	mkdir -p work/c
 	$(MAKE) -f Makefile.ccc test-gc
 
+
+GO_RUNTIME = lune/base/runtime_go
+GO_LUA_LINK = $(GO_RUNTIME)/lua_link
+
 GO_SRC += runtime_main.go
 GO_SRC += runtime_lib.go
-GO_SRC := $(addprefix lune/base/runtime_go/,$(GO_SRC))
+GO_SRC += runtime_lua.go
+GO_SRC := $(addprefix $(GO_RUNTIME)/,$(GO_SRC))
+
+define buildGo
+	mkdir -p $(GO_LUA_LINK)
+	if [ ! -d $(GO_LUA_LINK)/inc ]; then ln -s $(LUA_INC_DIR) $(GO_LUA_LINK)/inc; fi
+	go build $1 $(GO_SRC)
+endef
 
 test-go:
 	$(call transwork,.,.,,base/convGo)
-	$(call exeLune,.,lune/base/runtime_go/testGo.lns,lua -langGo,) > /dev/null
-	$(call convGo,.,lune/base/runtime_go/testGo.lns)
-	go build lune/base/runtime_go/testGo.go $(GO_SRC)
+	$(call exeLune,.,$(GO_RUNTIME)/testGo.lns,lua -langGo,) > /dev/null
+	$(call convGo,.,$(GO_RUNTIME)/testGo.lns)
+	$(call buildGo,$(GO_RUNTIME)/testGo.go)
 	./testGo > work/result-testGo.txt
-	$(call exeLune,.,lune/base/runtime_go/testGo.lns,exe,) > work/result-testGo2.txt
+	$(call exeLune,.,$(GO_RUNTIME)/testGo.lns,exe,) > work/result-testGo2.txt
 	diff work/result-testGo.txt work/result-testGo2.txt
 
 
@@ -1067,14 +1078,14 @@ endef
 
 test-miniGo:
 	$(call transwork,.,.,,base/convGo)
-	$(call exeLune,.,lune/base/runtime_go/miniGo.lns,lua -langGo,) > /dev/null
-	$(call convGo,.,lune/base/runtime_go/miniGo.lns)
-	go build lune/base/runtime_go/miniGo.go $(GO_SRC)
+	$(call exeLune,.,$(GO_RUNTIME)/miniGo.lns,lua -langGo,) > /dev/null
+	$(call convGo,.,$(GO_RUNTIME)/miniGo.lns)
+	$(call buildGo,$(GO_RUNTIME)/miniGo.go)
 	./miniGo
 	$(MAKE) test-go
 
 scratch-go:
-	go run lune/base/runtime_go/scratch.go $(GO_SRC)
+	go run $(GO_RUNTIME)/scratch.go $(GO_SRC)
 
 
 test-reference:

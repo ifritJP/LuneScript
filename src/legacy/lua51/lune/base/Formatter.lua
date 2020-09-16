@@ -331,7 +331,7 @@ end
 
 function FormatterFilter:processBlankLine( node, opt )
 
-   for _4792 = 1, node:get_lineNum() do
+   for _4794 = 1, node:get_lineNum() do
       self:writeln( "" )
    end
    
@@ -1488,7 +1488,7 @@ function FormatterFilter:processLiteralString( node, opt )
    self:write( node:get_token().txt )
    
    do
-      local expList = node:get_expList()
+      local expList = node:get_orgParam()
       if expList ~= nil then
          self:write( " ( " )
          filter( expList, self, opt:nextOpt( node ) )

@@ -1,15 +1,11 @@
-class Test {
-   let val:int;
-   pub fn func():int {
-      return self.val;
+fn fib(n:int):int {
+   if n == 0 {
+      return 0;
    }
-}
-class Sub extend Test {
-   pub override fn func():int {
-      return super() + 100;
+   elseif n == 1 {
+      return 1;
    }
+   return fib(n-1) + fib(n-2);
 }
-let list = [ new Sub( 1 ), new Test( 10 ) ];
-foreach val in list {
-   print( val.func() );
-}
+
+print( fib( 35 ) );

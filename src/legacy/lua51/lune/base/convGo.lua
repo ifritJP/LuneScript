@@ -794,7 +794,7 @@ function convFilter:processConvExp( nodeId, dstTypeList, argListNode )
    
    if restIndex ~= nil then
       self:write( "[]LnsAny{ " )
-      for index, _5313 in ipairs( argList:get_expList() ) do
+      for index, _5315 in ipairs( argList:get_expList() ) do
          if index >= #dstTypeList then
             self:write( string.format( "arg%d", index) )
          end
@@ -1596,9 +1596,42 @@ end
 
 
 function convFilter:processSwitch( node, opt )
-   local __func__ = '@lune.@base.@convGo.convFilter.processSwitch'
 
-   Util.err( string.format( "not support -- %s", __func__) )
+   local valName = string.format( "_switch%d", node:get_id())
+   self:write( string.format( "if %s := ", valName) )
+   filter( node:get_exp(), self, node )
+   self:write( "; " )
+   
+   for caseIndex, caseNode in ipairs( node:get_caseList() ) do
+      if caseIndex ~= 1 then
+         self:write( "} else if " )
+      end
+      
+      for index, exp in ipairs( caseNode:get_expList():get_expList() ) do
+         if index ~= 1 then
+            self:write( " || " )
+         end
+         
+         self:write( string.format( "%s == ", valName) )
+         filter( exp, self, caseNode:get_expList() )
+      end
+      
+      self:writeln( " {" )
+      
+      filter( caseNode:get_block(), self, node )
+   end
+   
+   
+   do
+      local defaultBlock = node:get_default()
+      if defaultBlock ~= nil then
+         self:writeln( "} else {" )
+         filter( defaultBlock, self, node )
+      end
+   end
+   
+   
+   self:writeln( "}" )
 end
 
 
@@ -2016,7 +2049,7 @@ function convFilter:outputConstructor( node )
    
    local ctorName = self:getConstrSymbol( node:get_expType() )
    self:write( string.format( "obj.%s(", ctorName) )
-   for index, _5711 in ipairs( initFuncType:get_argTypeInfoList() ) do
+   for index, _5719 in ipairs( initFuncType:get_argTypeInfoList() ) do
       if index ~= 1 then
          self:write( ", " )
       end
@@ -2060,7 +2093,7 @@ function convFilter:outputConstructor( node )
          superArgNum = 0
       end
       
-      for index, _5719 in ipairs( initFuncType:get_argTypeInfoList() ) do
+      for index, _5727 in ipairs( initFuncType:get_argTypeInfoList() ) do
          if superArgNum < index then
             local sIndex = index - superArgNum
             local memberNode = node:get_memberList()[sIndex]
@@ -2624,7 +2657,17 @@ end
 function convFilter:processLiteralString( node, opt )
 
    local txt = node:get_token().txt
-   self:write( string.format( '%s', str2gostr( txt )) )
+   do
+      local expList = node:get_dddParam()
+      if expList ~= nil then
+         self:write( string.format( 'Lns_getVM().string_format(%s, ', str2gostr( txt )) )
+         self:processSetFromExpList( getConvExpName( node:get_id(), expList ), {Ast.builtinTypeDDD}, expList )
+         self:write( ")" )
+      else
+         self:write( string.format( '%s', str2gostr( txt )) )
+      end
+   end
+   
 end
 
 

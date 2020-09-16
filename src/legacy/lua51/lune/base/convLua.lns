@@ -3210,7 +3210,7 @@ pub override fn convFilter.processLiteralString(
    }
    let opList = TransUnit.findForm( txt );
 
-   if! let expList = node.$expList {
+   if! let expList = node.$orgParam {
       let mRetIndex = expList.$mRetExp$.$index;
       
       self.write( string.format( 'string.format( %s, ', txt ) );

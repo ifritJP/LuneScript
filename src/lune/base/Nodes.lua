@@ -10625,25 +10625,26 @@ function LiteralStringNode:canBeStatement(  )
 
    return false
 end
-function LiteralStringNode.new( id, pos, macroArgFlag, typeList, token, expList )
+function LiteralStringNode.new( id, pos, macroArgFlag, typeList, token, orgParam, dddParam )
    local obj = {}
    LiteralStringNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, token, expList ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, token, orgParam, dddParam ); end
    return obj
 end
-function LiteralStringNode:__init(id, pos, macroArgFlag, typeList, token, expList) 
+function LiteralStringNode:__init(id, pos, macroArgFlag, typeList, token, orgParam, dddParam) 
    Node.__init( self,id, 79, pos, macroArgFlag, typeList)
    
    
    
    self.token = token
-   self.expList = expList
+   self.orgParam = orgParam
+   self.dddParam = dddParam
    
    
 end
-function LiteralStringNode.create( nodeMan, pos, macroArgFlag, typeList, token, expList )
+function LiteralStringNode.create( nodeMan, pos, macroArgFlag, typeList, token, orgParam, dddParam )
 
-   local node = LiteralStringNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, token, expList)
+   local node = LiteralStringNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, token, orgParam, dddParam)
    nodeMan:addNode( node )
    return node
 end
@@ -10651,10 +10652,32 @@ function LiteralStringNode:visit( visitor, depth )
 
    do
       do
-         local child = self.expList
+         local child = self.orgParam
          if child ~= nil then
             do
-               local _switchExp = visitor( child, self, 'expList', depth )
+               local _switchExp = visitor( child, self, 'orgParam', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1 ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
+                  return false
+               end
+            end
+            
+            
+         end
+      end
+      
+   end
+   
+   do
+      do
+         local child = self.dddParam
+         if child ~= nil then
+            do
+               local _switchExp = visitor( child, self, 'dddParam', depth )
                if _switchExp == NodeVisitMode.Child then
                   if not child:visit( visitor, depth + 1 ) then
                      return false
@@ -10681,8 +10704,11 @@ end
 function LiteralStringNode:get_token()
    return self.token
 end
-function LiteralStringNode:get_expList()
-   return self.expList
+function LiteralStringNode:get_orgParam()
+   return self.orgParam
+end
+function LiteralStringNode:get_dddParam()
+   return self.dddParam
 end
 
 
@@ -11258,7 +11284,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, _8113 in pairs( self.map ) do
+   for key, _8118 in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -11293,8 +11319,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, _8121 in ipairs( __sorted ) do
-         local key = __map[ _8121 ]
+      for __index, _8126 in ipairs( __sorted ) do
+         local key = __map[ _8126 ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false
@@ -11327,9 +11353,9 @@ function LiteralStringNode:getLiteral(  )
    
    
    do
-      local expList = self:get_expList()
-      if expList ~= nil then
-         local argList = expList:get_expList()
+      local param = self:get_orgParam()
+      if param ~= nil then
+         local argList = param:get_expList()
          
          local paramList = {}
          for __index, argNode in ipairs( argList ) do
@@ -11354,10 +11380,10 @@ function LiteralStringNode:setupLiteralTokenList( list )
 
    self:addTokenList( list, Parser.TokenKind.Str, self.token.txt )
    do
-      local expList = self:get_expList()
-      if expList ~= nil then
+      local param = self:get_orgParam()
+      if param ~= nil then
          self:addTokenList( list, Parser.TokenKind.Dlmt, "(" )
-         for index, argNode in ipairs( expList:get_expList() ) do
+         for index, argNode in ipairs( param:get_expList() ) do
             if index > 1 then
                self:addTokenList( list, Parser.TokenKind.Dlmt, "," )
             end

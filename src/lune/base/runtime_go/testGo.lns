@@ -150,3 +150,39 @@
    let test = new SubSub();
    test.func();
 }
+{
+   class Test {
+      let val:int;
+      pub fn func():int {
+         return self.val;
+      }
+   }
+   class Sub extend Test {
+      pub override fn func():int {
+         return super() + 100;
+      }
+   }
+   let list = [ new Sub( 1 ), new Test( 10 ) ];
+   foreach val in list {
+      print( val.func() );
+   }
+}
+{
+   fn func( val:str ) {
+      switch val {
+         case "1", "2" {
+            print( "A" );
+         }
+         case "3", "4" {
+            print( "B" );
+         }
+         default {
+            print( "C" );
+         }
+      }
+   }
+
+   foreach val in [ "1", "2", "3", "4", "5" ] {
+      func( val );
+   }
+}

@@ -820,7 +820,7 @@ pub override fn dumpFilter.processLiteralString(
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node, node.get_token().txt );
-   if! let expList = node.$expList {
+   if! let expList = node.$orgParam {
       foreach param in expList.$expList {
          filter( param, self, opt.nextOpt() );
       }

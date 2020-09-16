@@ -1028,7 +1028,7 @@ pub override fn FormatterFilter.processLiteralString(
 {
    self.write( node.$token.txt );
 
-   if! let expList = node.$expList {
+   if! let expList = node.$orgParam {
       self.write( " ( " );
       filter( expList, self, opt.nextOpt( node ) );
       self.write( " )" );

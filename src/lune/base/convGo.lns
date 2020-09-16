@@ -610,7 +610,6 @@ fn convFilter.expList2Slice( subList:&Nodes.ExpListNode ) mut {
 /**
 expListNode の式を go で扱える型に変換する。
 
-
 processRoot() で、processConvExp() を実行しておく。
 */
 fn convFilter.processSetFromExpList(
@@ -1186,7 +1185,33 @@ pub override fn convFilter.processIf(
 pub override fn convFilter.processSwitch(
    node: Nodes.SwitchNode, opt: Opt ) mut
 {
-   Util.err( "not support -- %s" (__func__) );
+   let valName = "_switch%d" (node.$id);
+   self.write( "if %s := " (valName) );
+   filter( node.$exp, self, node );
+   self.write( "; " );
+
+   foreach caseNode, caseIndex in node.$caseList {
+      if caseIndex ~= 1 {
+         self.write( "} else if " );
+      }
+      foreach exp, index in caseNode.$expList.$expList {
+         if index ~= 1 {
+            self.write( " || " );
+         }
+         self.write( "%s == " (valName) );
+         filter( exp, self, caseNode.$expList );
+      }
+      self.writeln( " {" );
+
+      filter( caseNode.$block, self, node );
+   }
+
+   if! let defaultBlock = node.$default {
+      self.writeln( "} else {" );
+      filter( defaultBlock, self, node );
+   }
+
+   self.writeln( "}" );
 }
 
 
@@ -2073,7 +2098,14 @@ pub override fn convFilter.processLiteralString(
    node: Nodes.LiteralStringNode, opt: Opt ) mut
 {
    let txt = node.$token.txt;
-   self.write( '%s' (str2gostr(txt)) );
+   if! let expList = node.$dddParam {
+      self.write( 'Lns_getVM().string_format(%s, ' (str2gostr(txt)));
+      self.processSetFromExpList(
+         getConvExpName( node.$id, expList ),  [ Ast.builtinTypeDDD ], expList );
+      self.write( ")" );
+   } else {
+      self.write( '%s' (str2gostr(txt)) );
+   }
 }
 
 pub override fn convFilter.processLiteralBool(
