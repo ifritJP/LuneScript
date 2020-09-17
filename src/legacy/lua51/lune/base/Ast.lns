@@ -399,7 +399,7 @@ pub class Scope extend (ModuleInfoManager) {
    
    // このスコープのオーナーの TypeInfo。
    // 名前空間に関連する class, function の TypeInfo。
-   pri let mut ownerTypeInfo: &TypeInfo! { pub, pub };
+   pri let mut ownerTypeInfo: &TypeInfo! { pub };
    // 親のスコープ。 これが self と等しい場合は root。
    pri let mut parent: Scope { pub };
    // このスコープに登録されているシンボル情報。

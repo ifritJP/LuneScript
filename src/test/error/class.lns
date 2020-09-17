@@ -352,6 +352,25 @@ class Test9 extend Super7 {
    }
 }
 {
+   class Test {
+      let val:int {pub}; // error
+      pub fn get_val():int {
+         return 1;
+      }
+   }
+   class Sub extend Test {
+      let val:int {pub};
+   }
+}
+{
+   class Test {
+      let val:int {pub};
+   }
+   fn Test.get_val():int {  // error
+      return 1;
+   }
+}
+{
    class Hoge {
    }
    class Test {

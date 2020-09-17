@@ -276,12 +276,15 @@ function ProcessMode.get__allList()
    return ProcessMode.__allList
 end
 
-ProcessMode.NonClosureFuncDecl = 0
-ProcessMode._val2NameMap[0] = 'NonClosureFuncDecl'
-ProcessMode.__allList[1] = ProcessMode.NonClosureFuncDecl
-ProcessMode.Main = 1
-ProcessMode._val2NameMap[1] = 'Main'
-ProcessMode.__allList[2] = ProcessMode.Main
+ProcessMode.DeclTopScopeVar = 0
+ProcessMode._val2NameMap[0] = 'DeclTopScopeVar'
+ProcessMode.__allList[1] = ProcessMode.DeclTopScopeVar
+ProcessMode.NonClosureFuncDecl = 1
+ProcessMode._val2NameMap[1] = 'NonClosureFuncDecl'
+ProcessMode.__allList[2] = ProcessMode.NonClosureFuncDecl
+ProcessMode.Main = 2
+ProcessMode._val2NameMap[2] = 'Main'
+ProcessMode.__allList[3] = ProcessMode.Main
 
 
 local convFilter = {}
@@ -299,6 +302,8 @@ function convFilter:__init(enableTest, streamName, stream, ast)
    self.stream = Util.SimpleSourceOStream.new(stream, nil, 4)
    self.processMode = ProcessMode.Main
    self.processModeStack = {}
+   self.moduleTypeInfo = ast:get_moduleTypeInfo()
+   self.moduleScope = _lune.unwrap( ast:get_moduleTypeInfo():get_scope())
 end
 function convFilter:pushProcessMode( mode )
 
@@ -362,7 +367,7 @@ local function isClosure( typeInfo )
    return #scope:get_closureSymList() > 0
 end
 
-local golanKeywordSet = {["func"] = true, ["select"] = true, ["defer"] = true, ["go"] = true, ["chan"] = true, ["package"] = true, ["const"] = true, ["fallthrough"] = true, ["range"] = true, ["continue"] = true, ["var"] = true}
+local golanKeywordSet = {["func"] = true, ["select"] = true, ["defer"] = true, ["go"] = true, ["chan"] = true, ["package"] = true, ["const"] = true, ["fallthrough"] = true, ["range"] = true, ["continue"] = true, ["var"] = true, ["map"] = true}
 
 local SymbolKind = {}
 SymbolKind._name2Val = {}
@@ -386,8 +391,8 @@ SymbolKind.Member = { "Member", {{ func=_lune._toBool, nilable=false, child={} }
 SymbolKind._name2Val["Member"] = SymbolKind.Member
 SymbolKind.Normal = { "Normal"}
 SymbolKind._name2Val["Normal"] = SymbolKind.Normal
-SymbolKind.PubVar = { "PubVar"}
-SymbolKind._name2Val["PubVar"] = SymbolKind.PubVar
+SymbolKind.Var = { "Var", {{ func=Ast.SymbolInfo._fromMap, nilable=false, child={} }}}
+SymbolKind._name2Val["Var"] = SymbolKind.Var
 
 
 local function concatGLSym( name, external )
@@ -413,7 +418,7 @@ function convFilter:getSymbol( kind, name )
    local symbolName
    
    if _lune._Set_has(golanKeywordSet, name ) then
-      symbolName = string.format( "%s_", name)
+      symbolName = string.format( "_%s", name)
    else
     
       symbolName = name
@@ -422,9 +427,13 @@ function convFilter:getSymbol( kind, name )
    
    do
       local _matchExp = kind
-      if _matchExp[1] == SymbolKind.PubVar[1] then
+      if _matchExp[1] == SymbolKind.Var[1] then
+         local symbolInfo = _matchExp[2][1]
       
-         symbolName = concatGLSym( symbolName, true )
+         if symbolInfo:get_scope() == self.moduleScope then
+            symbolName = concatGLSym( string.format( "%s_", (self.moduleTypeInfo:get_rawTxt():gsub( "@", "" ) )) .. symbolName, Ast.isPubToExternal( symbolInfo:get_accessMode() ) )
+         end
+         
       elseif _matchExp[1] == SymbolKind.Member[1] then
          local external = _matchExp[2][1]
       
@@ -485,6 +494,24 @@ end
 function convFilter:getMethodSymbol( typeInfo )
 
    return self:getSymbol( _lune.newAlge( SymbolKind.Func, {typeInfo}), typeInfo:get_rawTxt() )
+end
+
+
+function convFilter:getSymbolSym( symbolInfo )
+
+   do
+      local _switchExp = symbolInfo:get_kind()
+      if _switchExp == Ast.SymbolKind.Var then
+         return self:getSymbol( _lune.newAlge( SymbolKind.Var, {symbolInfo}), symbolInfo:get_name() )
+      elseif _switchExp == Ast.SymbolKind.Mbr then
+         return self:getSymbol( _lune.newAlge( SymbolKind.Member, {Ast.isPubToExternal( symbolInfo:get_accessMode() )}), symbolInfo:get_name() )
+      else 
+         
+            Util.err( string.format( "not support -- %s", Ast.SymbolKind:_getTxt( symbolInfo:get_kind())
+            ) )
+      end
+   end
+   
 end
 
 
@@ -794,7 +821,7 @@ function convFilter:processConvExp( nodeId, dstTypeList, argListNode )
    
    if restIndex ~= nil then
       self:write( "[]LnsAny{ " )
-      for index, _5315 in ipairs( argList:get_expList() ) do
+      for index, _5323 in ipairs( argList:get_expList() ) do
          if index >= #dstTypeList then
             self:write( string.format( "arg%d", index) )
          end
@@ -816,6 +843,16 @@ function convFilter:processRoot( node, opt )
    Ast.pushProcessInfo( node:get_processInfo() )
    
    self:writeln( "package main" )
+   
+   self:pushProcessMode( ProcessMode.DeclTopScopeVar )
+   for __index, child in ipairs( node:get_children() ) do
+      if child:get_kind() == Nodes.NodeKind.get_DeclVar() then
+         filter( child, self, node )
+      end
+      
+   end
+   
+   self:popProcessMode(  )
    
    for __index, workNode in ipairs( node:get_nodeManager():getExpCallNodeList(  ) ) do
       self:processConvExp( workNode:get_id(), workNode:get_func():get_expType():get_argTypeInfoList(), workNode:get_argList() )
@@ -1213,25 +1250,63 @@ function convFilter:outputRetType( retTypeList )
 end
 
 
-function convFilter:outputDeclFuncInfo( node, declInfo )
+local FuncInfo = {}
+FuncInfo._name2Val = {}
+function FuncInfo:_getTxt( val )
+   local name = val[ 1 ]
+   if name then
+      return string.format( "FuncInfo.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+
+function FuncInfo._from( val )
+   return _lune._AlgeFrom( FuncInfo, val )
+end
+
+FuncInfo.DeclInfo = { "DeclInfo", {{ func=Nodes.Node._fromMap, nilable=false, child={} },{ func=Nodes.DeclFuncInfo._fromMap, nilable=false, child={} }}}
+FuncInfo._name2Val["DeclInfo"] = FuncInfo.DeclInfo
+FuncInfo.Type = { "Type", {{ func=Ast.TypeInfo._fromMap, nilable=false, child={} }}}
+FuncInfo._name2Val["Type"] = FuncInfo.Type
+
+
+function convFilter:outputDeclFunc( funcInfo )
 
    
-   if isClosure( node:get_expType() ) then
-      do
-         local name = declInfo:get_name()
-         if name ~= nil then
-            self:outputSymbol( _lune.newAlge( SymbolKind.Func, {node:get_expType()}), name.txt )
-            self:write( " := " )
-         end
+   local typeInfo
+   
+   local name
+   
+   do
+      local _matchExp = funcInfo
+      if _matchExp[1] == FuncInfo.DeclInfo[1] then
+         local node = _matchExp[2][1]
+         local workDeclInfo = _matchExp[2][2]
+      
+         typeInfo = node:get_expType()
+         name = _lune.nilacc( workDeclInfo:get_name(), "txt" )
+      elseif _matchExp[1] == FuncInfo.Type[1] then
+         local workTypeInfo = _matchExp[2][1]
+      
+         typeInfo = workTypeInfo
+         name = typeInfo:get_rawTxt()
+      end
+   end
+   
+   
+   if isClosure( typeInfo ) then
+      if name ~= nil then
+         self:outputSymbol( _lune.newAlge( SymbolKind.Func, {typeInfo}), name )
+         self:write( " := " )
       end
       
       self:write( "func" )
    else
     
-      if declInfo:get_kind() == Nodes.FuncKind.Mtd then
+      if typeInfo:get_kind() == Ast.TypeInfoKind.Method then
          self:write( "func " )
          self:write( "(self *" )
-         self:write( self:getClassSymbol( _lune.unwrap( declInfo:get_classTypeInfo()) ) )
+         self:write( self:getClassSymbol( typeInfo:get_parentInfo() ) )
          self:write( ") " )
       else
        
@@ -1239,11 +1314,8 @@ function convFilter:outputDeclFuncInfo( node, declInfo )
       end
       
       
-      do
-         local name = declInfo:get_name()
-         if name ~= nil then
-            self:outputSymbol( _lune.newAlge( SymbolKind.Func, {node:get_expType()}), name.txt )
-         end
+      if name ~= nil then
+         self:outputSymbol( _lune.newAlge( SymbolKind.Func, {typeInfo}), name )
       end
       
    end
@@ -1251,17 +1323,43 @@ function convFilter:outputDeclFuncInfo( node, declInfo )
    
    self:write( "(" )
    
-   for index, arg in ipairs( declInfo:get_argList() ) do
-      if index ~= 1 then
-         self:write( "," )
-      end
+   do
+      local _matchExp = funcInfo
+      if _matchExp[1] == FuncInfo.DeclInfo[1] then
+         local node = _matchExp[2][1]
+         local declInfo = _matchExp[2][2]
       
-      filter( arg, self, node )
+         for index, arg in ipairs( declInfo:get_argList() ) do
+            if index ~= 1 then
+               self:write( "," )
+            end
+            
+            filter( arg, self, node )
+         end
+         
+      elseif _matchExp[1] == FuncInfo.Type[1] then
+         local _ = _matchExp[2][1]
+      
+         for index, argType in ipairs( typeInfo:get_argTypeInfoList() ) do
+            if index ~= 1 then
+               self:write( "," )
+            end
+            
+            self:write( string.format( "arg%d %s", index, self:type2gotype( argType )) )
+         end
+         
+      end
    end
    
    self:write( ")" )
    
-   self:outputRetType( declInfo:get_retTypeInfoList() )
+   self:outputRetType( typeInfo:get_retTypeInfoList() )
+end
+
+
+function convFilter:outputDeclFuncInfo( node, declInfo )
+
+   self:outputDeclFunc( _lune.newAlge( FuncInfo.DeclInfo, {node,declInfo}) )
    
    self:writeln( " {" )
    
@@ -1352,15 +1450,29 @@ end
 
 function convFilter:processDeclVar( node, opt )
 
-   self:write( "var" )
+   local needType
    
-   local prevType = ""
+   if node:get_symbolInfoList()[1]:get_scope() ~= self.moduleScope then
+      needType = true
+      self:write( "var" )
+   else
+    
+      if self.processMode == ProcessMode.DeclTopScopeVar then
+         needType = true
+      else
+       
+         needType = false
+      end
+      
+   end
+   
    
    local function declVar(  )
    
-      for index, varInfo in ipairs( node:get_varList() ) do
-         local goType = self:type2gotype( varInfo:get_actualType() )
-         if goType ~= prevType then
+      local prevType = ""
+      for index, symbolInfo in ipairs( node:get_symbolInfoList() ) do
+         local goType = self:type2gotype( symbolInfo:get_typeInfo() )
+         if needType and goType ~= prevType then
             self:write( string.format( " %s", prevType) )
          end
          
@@ -1368,12 +1480,23 @@ function convFilter:processDeclVar( node, opt )
             self:write( ", " )
          end
          
-         self:write( string.format( "%s", varInfo:get_name().txt) )
+         self:write( self:getSymbolSym( symbolInfo ) )
          prevType = goType
       end
       
-      self:write( string.format( " %s", prevType) )
+      if needType then
+         self:write( string.format( " %s", prevType) )
+      end
+      
    end
+   
+   if self.processMode == ProcessMode.DeclTopScopeVar then
+      self:write( "var" )
+      declVar(  )
+      self:writeln( "" )
+      return 
+   end
+   
    
    if node:get_unwrapFlag() then
       do
@@ -1434,42 +1557,12 @@ function convFilter:processDeclVar( node, opt )
       
    else
     
+      declVar(  )
       do
          local expList = node:get_expList()
          if expList ~= nil then
-            for index, exp in ipairs( expList:get_expList() ) do
-               local goType
-               
-               local varName
-               
-               if #node:get_varList() >= index then
-                  local varInfo = node:get_varList()[index]
-                  goType = self:type2gotype( varInfo:get_actualType() )
-                  varName = varInfo:get_name().txt
-               else
-                
-                  goType = self:type2gotype( exp:get_expType() )
-                  varName = "_"
-               end
-               
-               if goType ~= prevType then
-                  self:write( string.format( " %s", prevType) )
-               end
-               
-               if index ~= 1 then
-                  self:write( ", " )
-               end
-               
-               self:write( varName )
-               prevType = goType
-            end
-            
-            self:write( string.format( " %s", prevType) )
-            
             self:write( " = " )
             self:processSetFromExpList( getConvExpName( node:get_id(), expList ), node:get_typeInfoList(), expList )
-         else
-            declVar(  )
          end
       end
       
@@ -1643,16 +1736,32 @@ end
 
 
 function convFilter:processWhile( node, opt )
-   local __func__ = '@lune.@base.@convGo.convFilter.processWhile'
 
-   Util.err( string.format( "not support -- %s", __func__) )
+   self:write( "for " )
+   filter( node:get_exp(), self, node )
+   self:writeln( " {" )
+   
+   filter( node:get_block(), self, node )
+   
+   self:writeln( "}" )
 end
 
 
 function convFilter:processRepeat( node, opt )
-   local __func__ = '@lune.@base.@convGo.convFilter.processRepeat'
 
-   Util.err( string.format( "not support -- %s", __func__) )
+   self:writeln( "for {" )
+   
+   filter( node:get_block(), self, node )
+   
+   self:pushIndent(  )
+   
+   self:write( "if " )
+   filter( node:get_exp(), self, node )
+   self:writeln( "{ break }" )
+   
+   self:popIndent(  )
+   
+   self:writeln( "}" )
 end
 
 
@@ -2049,7 +2158,7 @@ function convFilter:outputConstructor( node )
    
    local ctorName = self:getConstrSymbol( node:get_expType() )
    self:write( string.format( "obj.%s(", ctorName) )
-   for index, _5719 in ipairs( initFuncType:get_argTypeInfoList() ) do
+   for index, _5742 in ipairs( initFuncType:get_argTypeInfoList() ) do
       if index ~= 1 then
          self:write( ", " )
       end
@@ -2093,7 +2202,7 @@ function convFilter:outputConstructor( node )
          superArgNum = 0
       end
       
-      for index, _5727 in ipairs( initFuncType:get_argTypeInfoList() ) do
+      for index, _5750 in ipairs( initFuncType:get_argTypeInfoList() ) do
          if superArgNum < index then
             local sIndex = index - superArgNum
             local memberNode = node:get_memberList()[sIndex]
@@ -2105,6 +2214,32 @@ function convFilter:outputConstructor( node )
       
       self:popIndent(  )
       self:writeln( "}" )
+   end
+   
+end
+
+
+function convFilter:outputAccessor( node )
+
+   local classType = node:get_expType()
+   if classType:get_kind() == Ast.TypeInfoKind.IF then
+      return 
+   end
+   
+   
+   for __index, memberNode in ipairs( node:get_memberList() ) do
+      local memberNameToken = memberNode:get_name(  )
+      local memberName = memberNameToken.txt
+      local getterName = string.format( "get_%s", memberName)
+      local memberSym = memberNode:get_symbolInfo()
+      
+      if memberNode:get_getterMode(  ) ~= Ast.AccessMode.None then
+         local getterSym = _lune.unwrap( _lune.nilacc( classType:get_scope(), 'getSymbolInfoChild', 'callmtd' , getterName ))
+         self:outputDeclFunc( _lune.newAlge( FuncInfo.Type, {getterSym:get_typeInfo()}) )
+         self:writeln( string.format( "{ return self.%s", self:getSymbolSym( memberSym )) )
+         self:writeln( "}" )
+      end
+      
    end
    
 end
@@ -2122,6 +2257,7 @@ function convFilter:processDeclClass( node, opt )
          self:outputDownCast( node )
          self:outputCastReceiver( node )
          self:outputConstructor( node )
+         self:outputAccessor( node )
          
          for __index, fieldNode in ipairs( node:get_fieldList() ) do
             do
@@ -2435,13 +2571,7 @@ function convFilter:processExpRef( node, opt )
             do
                local _switchExp = node:get_symbolInfo():get_kind()
                if _switchExp == Ast.SymbolKind.Var then
-                  if Ast.isPubToExternal( node:get_symbolInfo():get_accessMode() ) then
-                     self:write( self:getSymbol( _lune.newAlge( SymbolKind.PubVar), node:get_symbolInfo():get_name() ) )
-                  else
-                   
-                     self:write( self:getSymbol( _lune.newAlge( SymbolKind.Normal), node:get_symbolInfo():get_name() ) )
-                  end
-                  
+                  self:write( self:getSymbolSym( node:get_symbolInfo() ) )
                elseif _switchExp == Ast.SymbolKind.Fun then
                   self:write( self:getSymbol( _lune.newAlge( SymbolKind.Func, {node:get_expType()}), node:get_symbolInfo():get_name() ) )
                elseif _switchExp == Ast.SymbolKind.Typ then
@@ -2474,6 +2604,19 @@ function convFilter:processExpRefItem( node, opt )
             self:write( string.format( ".(%s)", self:type2gotype( node:get_expType() )) )
          end
          
+      elseif _switchExp == Ast.TypeInfoKind.Map then
+         filter( node:get_val(), self, node )
+         self:write( "[" )
+         do
+            local index = node:get_index()
+            if index ~= nil then
+               filter( index, self, node )
+            else
+               self:write( string.format( '"%s"', _lune.unwrap( node:get_symbol())) )
+            end
+         end
+         
+         self:write( "]" )
       else 
          
             Util.err( string.format( "not support -- %s", __func__) )

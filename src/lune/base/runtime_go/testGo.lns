@@ -186,3 +186,20 @@
       func( val );
    }
 }
+{
+   let mut val = 1;
+   while true {
+      if val > 10 {
+         break;
+      }
+      print( val );
+      val = val + 1;
+   }
+}
+{
+   let mut val = 1;
+   repeat {
+      print( val );
+      val = val + 1;
+   } val > 10;
+}

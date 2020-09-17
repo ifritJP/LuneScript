@@ -1551,7 +1551,7 @@ fn TransUnit.analyzeDeclMember(
       when! shadowing {
          self.errorShadowing( varName.pos, shadowing );
       }
-      
+
       return Nodes.DeclMemberNode.create(
          self.nodeManager, firstToken.pos,
          self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ],
@@ -2206,46 +2206,53 @@ fn TransUnit.analyzeDeclClass(
       else {
          typeKind = .Method;
       }
-      if accessMode ~= .None and not classScope.getTypeInfoChild( getterName )
-      {
-         let mutable = memberNode.$getterMutable;
-         let mut getterMemberType = memberNode.$getterRetType;
-         if Ast.TypeInfo.isMut( getterMemberType ) and not mutable {
-            getterMemberType = self.createModifier( getterMemberType, .IMut );
-         }
-         let retTypeInfo = Ast.NormalTypeInfo.createFunc(
-            false, false, self.pushScope( false ## ),
-            typeKind, parentInfo, true, false, memberNode.$staticFlag, accessMode,
-            getterName, nil, [], [ getterMemberType ] ## );
-         self.popScope();
+      if accessMode ~= .None {
+         if classScope.getTypeInfoChild( getterName ) {
+            self.addErrMess( memberName.$pos,
+                             "exist -- %s.%s" (classTypeInfo.$rawTxt, getterName) );
+         } else {
+            let mutable = memberNode.$getterMutable;
+            let mut getterMemberType = memberNode.$getterRetType;
+            if Ast.TypeInfo.isMut( getterMemberType ) and not mutable {
+               getterMemberType = self.createModifier( getterMemberType, .IMut );
+            }
+            let retTypeInfo = Ast.NormalTypeInfo.createFunc(
+               false, false, self.pushScope( false ## ),
+               typeKind, parentInfo, false, false, memberNode.$staticFlag, accessMode,
+               getterName, nil, [], [ getterMemberType ] ## );
+            self.popScope();
 
-         classScope.addMethod(
-            memberName.pos, retTypeInfo, accessMode, memberNode.$staticFlag, false );
-         methodNameSet.add( getterName );
+            classScope.addMethod(
+               memberName.pos, retTypeInfo, accessMode, memberNode.$staticFlag, false );
+            methodNameSet.add( getterName );
+         }
       }
       // setter
       let setterName = "set_" .. memberName.txt;
       accessMode = memberNode.$setterMode;
-      if memberNode.$setterMode ~= .None and
-         not classScope.getTypeInfoChild( setterName )
-      {
-         let mutable;
-         //if memberType.$mutMode == .Mut {
-         if memberNode.$symbolInfo.$mutMode ~= .AllMut {
-            mutable = true;
+      if memberNode.$setterMode ~= .None {
+         if classScope.getTypeInfoChild( setterName ) {
+            self.addErrMess( memberName.$pos,
+                             "exist -- %s.%s" (classTypeInfo.$rawTxt, setterName) );
+         } else {
+            let mutable;
+            //if memberType.$mutMode == .Mut {
+            if memberNode.$symbolInfo.$mutMode ~= .AllMut {
+               mutable = true;
+            }
+            else {
+               mutable = false;
+            }
+            classScope.addMethod(
+               memberName.pos,
+               Ast.NormalTypeInfo.createFunc(
+                  false, false, self.pushScope( false ## ),
+                  typeKind, parentInfo, false, false, memberNode.$staticFlag, accessMode,
+                  setterName, nil, [ memberType ], nil, mutable ),
+               accessMode, memberNode.$staticFlag, true );
+            self.popScope();
+            methodNameSet.add( setterName );
          }
-         else {
-            mutable = false;
-         }
-         classScope.addMethod(
-            memberName.pos,
-            Ast.NormalTypeInfo.createFunc(
-               false, false, self.pushScope( false ## ),
-               typeKind, parentInfo, true, false, memberNode.$staticFlag, accessMode,
-               setterName, nil, [ memberType ], nil, mutable ),
-            accessMode, memberNode.$staticFlag, true );
-         self.popScope();
-         methodNameSet.add( setterName );
       }
    }
 

@@ -7333,35 +7333,47 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
          typeKind = Ast.TypeInfoKind.Method
       end
       
-      if accessMode ~= Ast.AccessMode.None and not classScope:getTypeInfoChild( getterName ) then
-         local mutable = memberNode:get_getterMutable()
-         local getterMemberType = memberNode:get_getterRetType()
-         if Ast.TypeInfo.isMut( getterMemberType ) and not mutable then
-            getterMemberType = self:createModifier( getterMemberType, Ast.MutMode.IMut )
+      if accessMode ~= Ast.AccessMode.None then
+         if classScope:getTypeInfoChild( getterName ) then
+            self:addErrMess( memberName.pos, string.format( "exist -- %s.%s", classTypeInfo:get_rawTxt(), getterName) )
+         else
+          
+            local mutable = memberNode:get_getterMutable()
+            local getterMemberType = memberNode:get_getterRetType()
+            if Ast.TypeInfo.isMut( getterMemberType ) and not mutable then
+               getterMemberType = self:createModifier( getterMemberType, Ast.MutMode.IMut )
+            end
+            
+            local retTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, self:pushScope( false ), typeKind, parentInfo, false, false, memberNode:get_staticFlag(), accessMode, getterName, nil, {}, {getterMemberType} )
+            self:popScope(  )
+            
+            classScope:addMethod( memberName.pos, retTypeInfo, accessMode, memberNode:get_staticFlag(), false )
+            methodNameSet[getterName]= true
          end
          
-         local retTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, self:pushScope( false ), typeKind, parentInfo, true, false, memberNode:get_staticFlag(), accessMode, getterName, nil, {}, {getterMemberType} )
-         self:popScope(  )
-         
-         classScope:addMethod( memberName.pos, retTypeInfo, accessMode, memberNode:get_staticFlag(), false )
-         methodNameSet[getterName]= true
       end
       
       local setterName = "set_" .. memberName.txt
       accessMode = memberNode:get_setterMode()
-      if memberNode:get_setterMode() ~= Ast.AccessMode.None and not classScope:getTypeInfoChild( setterName ) then
-         local mutable
-         
-         if memberNode:get_symbolInfo():get_mutMode() ~= Ast.MutMode.AllMut then
-            mutable = true
+      if memberNode:get_setterMode() ~= Ast.AccessMode.None then
+         if classScope:getTypeInfoChild( setterName ) then
+            self:addErrMess( memberName.pos, string.format( "exist -- %s.%s", classTypeInfo:get_rawTxt(), setterName) )
          else
           
-            mutable = false
+            local mutable
+            
+            if memberNode:get_symbolInfo():get_mutMode() ~= Ast.MutMode.AllMut then
+               mutable = true
+            else
+             
+               mutable = false
+            end
+            
+            classScope:addMethod( memberName.pos, Ast.NormalTypeInfo.createFunc( false, false, self:pushScope( false ), typeKind, parentInfo, false, false, memberNode:get_staticFlag(), accessMode, setterName, nil, {memberType}, nil, mutable ), accessMode, memberNode:get_staticFlag(), true )
+            self:popScope(  )
+            methodNameSet[setterName]= true
          end
          
-         classScope:addMethod( memberName.pos, Ast.NormalTypeInfo.createFunc( false, false, self:pushScope( false ), typeKind, parentInfo, true, false, memberNode:get_staticFlag(), accessMode, setterName, nil, {memberType}, nil, mutable ), accessMode, memberNode:get_staticFlag(), true )
-         self:popScope(  )
-         methodNameSet[setterName]= true
       end
       
    end
