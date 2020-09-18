@@ -2142,8 +2142,9 @@ fn TransUnit.analyzeExpField(
                                    ( prefixExpType.getModule().getTxt(##) ) );
                }
             fieldName = "get_" .. fieldName;
-            if! let funcType = scope.getTypeInfoChild( fieldName ) {
-
+            if! let funcSymbol = scope.getSymbolInfoChild( fieldName ) {
+               symbolInfo = funcSymbol;
+               let funcType = funcSymbol.$typeInfo;
                if funcType.$staticFlag ~= isTypeSymbol {
                   self.addErrMess(
                      prefixExp.$pos, "Can't access -- %s, %s" ( fieldName, isTypeSymbol) );

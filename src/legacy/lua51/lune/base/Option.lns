@@ -292,8 +292,9 @@ usage:
                Util.setDebugFlag( false );
             }
             case "--version" {
-               print( "LuneScript: version %s (%d:%s)"
-                  (Ver.version, getBuildCount(), Depend.getLuaVersion()) );
+               print( "LuneScript: version %s (%d:%s) [%s]"
+                  ( Ver.version, getBuildCount(),
+                    Depend.getLuaVersion(), Ver.metaVersion) );
                os.exit( 0 );
             }
             case "--builtin" {

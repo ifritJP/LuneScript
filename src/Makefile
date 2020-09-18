@@ -1078,7 +1078,7 @@ endef
 
 test-miniGo:
 	$(call transwork,.,.,,base/convGo)
-	$(call exeLune,.,$(GO_RUNTIME)/miniGo.lns,lua -langGo,) > /dev/null
+#	$(call exeLune,.,$(GO_RUNTIME)/miniGo.lns,lua -langGo,) > /dev/null
 	$(call convGo,.,$(GO_RUNTIME)/miniGo.lns)
 	$(call buildGo,$(GO_RUNTIME)/miniGo.go)
 	./miniGo

@@ -1437,30 +1437,30 @@ print( '\\""\"\'\\.\\' );
 
    _hoge( "abc" );
 }
-{
-   Macro._section();
-   class Test_c {
-      pri static let mut val:int {pub,pub};
-      pri static let mut val2:str {pub,pub};
-      pri let mut val3:int {pub,pub};
-      pri let mut val4:str {pub,pub};
 
-      __init {
-         Test_c.val = 0;
-         Test_c.val2 = "abc";
-      }
+Macro._section();
+class Test_ccc {
+   pri static let mut val:int {pub,pub};
+   pri static let mut val2:str {pub,pub};
+   pri let mut val3:int {pub,pub};
+   pri let mut val4:str {pub,pub};
+
+   __init {
+      Test_ccc.val = 0;
+      Test_ccc.val2 = "abc";
    }
-   print( Test_c.$val, Test_c.$val2 );
-   Test_c.set_val( 100 );
-   Test_c.set_val2( "xyz" );
-   print( Test_c.$val, Test_c.$val2 );
+}
+{
+   print( Test_ccc.$val, Test_ccc.$val2 );
+   Test_ccc.set_val( 100 );
+   Test_ccc.set_val2( "xyz" );
+   print( Test_ccc.$val, Test_ccc.$val2 );
 
-   let mut test = new Test_c( 10, "ABC" );
+   let mut test = new Test_ccc( 10, "ABC" );
    print( test.$val3, test.$val4 );
    test.set_val3( 1000 );
    test.set_val4( "XYZ" );
    print( test.$val3, test.$val4 );
-
 }
 {
    Macro._section();

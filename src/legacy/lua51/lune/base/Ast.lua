@@ -4833,6 +4833,7 @@ function NormalTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag 
       name = parentTxt .. raw
    end
    
+   
    return name
 end
 function NormalTypeInfo:get_display_stirng_with( raw )
@@ -5409,39 +5410,129 @@ function BoxTypeInfo:applyGeneric( alt2typeMap, moduleTypeInfo )
 end
 
 
+
+
 function NormalTypeInfo.createSet( accessMode, parentInfo, itemTypeInfo, mutMode )
 
-   if #itemTypeInfo == 0 then
-      Util.err( string.format( "illegal set type: %s", tostring( itemTypeInfo)) )
+   
+   local tmpMutMode
+   
+   if isMutable( mutMode ) then
+      tmpMutMode = mutMode
+   else
+    
+      tmpMutMode = MutMode.Mut
    end
    
+   
    idProv:increment(  )
-   return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeSet ), _moduleObj.builtinTypeSet, nil, false, false, false, AccessMode.Pub, "Set", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Set, itemTypeInfo, nil, nil, mutMode)
+   local function newTypeFunc( workMutMode )
+   
+      return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeSet ), _moduleObj.builtinTypeSet, nil, false, false, false, AccessMode.Pub, "Set", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Set, itemTypeInfo, nil, nil, workMutMode)
+   end
+   
+   
+   local typeInfo = newTypeFunc( tmpMutMode )
+   
+   if isMutable( mutMode ) then
+      return typeInfo
+   end
+   
+   return NormalTypeInfo.createModifier( typeInfo, mutMode )
+   
 end
 
 
 function NormalTypeInfo.createList( accessMode, parentInfo, itemTypeInfo, mutMode )
 
-   if #itemTypeInfo == 0 then
-      Util.err( string.format( "illegal list type: %s", tostring( itemTypeInfo)) )
+   
+   local tmpMutMode
+   
+   if isMutable( mutMode ) then
+      tmpMutMode = mutMode
+   else
+    
+      tmpMutMode = MutMode.Mut
    end
    
+   
    idProv:increment(  )
-   return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeList ), _moduleObj.builtinTypeList, nil, false, false, false, AccessMode.Pub, "List", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.List, itemTypeInfo, nil, nil, mutMode)
+   local function newTypeFunc( workMutMode )
+   
+      return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeList ), _moduleObj.builtinTypeList, nil, false, false, false, AccessMode.Pub, "List", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.List, itemTypeInfo, nil, nil, workMutMode)
+   end
+   
+   
+   local typeInfo = newTypeFunc( tmpMutMode )
+   
+   if isMutable( mutMode ) then
+      return typeInfo
+   end
+   
+   return NormalTypeInfo.createModifier( typeInfo, mutMode )
+   
 end
 
 
 function NormalTypeInfo.createArray( accessMode, parentInfo, itemTypeInfo, mutMode )
 
+   
+   local tmpMutMode
+   
+   if isMutable( mutMode ) then
+      tmpMutMode = mutMode
+   else
+    
+      tmpMutMode = MutMode.Mut
+   end
+   
+   
    idProv:increment(  )
-   return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeArray ), _moduleObj.builtinTypeArray, nil, false, false, false, AccessMode.Pub, "Array", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Array, itemTypeInfo, nil, nil, mutMode)
+   local function newTypeFunc( workMutMode )
+   
+      return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeArray ), _moduleObj.builtinTypeArray, nil, false, false, false, AccessMode.Pub, "Array", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Array, itemTypeInfo, nil, nil, workMutMode)
+   end
+   
+   
+   local typeInfo = newTypeFunc( tmpMutMode )
+   
+   if isMutable( mutMode ) then
+      return typeInfo
+   end
+   
+   return NormalTypeInfo.createModifier( typeInfo, mutMode )
+   
 end
 
 
 function NormalTypeInfo.createMap( accessMode, parentInfo, keyTypeInfo, valTypeInfo, mutMode )
 
+   
+   local tmpMutMode
+   
+   if isMutable( mutMode ) then
+      tmpMutMode = mutMode
+   else
+    
+      tmpMutMode = MutMode.Mut
+   end
+   
+   
    idProv:increment(  )
-   return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeMap ), _moduleObj.builtinTypeMap, nil, false, false, false, AccessMode.Pub, "Map", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, mutMode)
+   local function newTypeFunc( workMutMode )
+   
+      return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeMap ), _moduleObj.builtinTypeMap, nil, false, false, false, AccessMode.Pub, "Map", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, workMutMode)
+   end
+   
+   
+   local typeInfo = newTypeFunc( tmpMutMode )
+   
+   if isMutable( mutMode ) then
+      return typeInfo
+   end
+   
+   return NormalTypeInfo.createModifier( typeInfo, mutMode )
+   
 end
 
 
@@ -7690,7 +7781,7 @@ IdType.__allList[2] = IdType.Ext
 local function switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 5961, function (  )
+   Log.log( Log.Level.Trace, __func__, 5974, function (  )
    
       return "start"
    end )
@@ -7710,7 +7801,7 @@ local builtinTypeInfo2Map = typeInfo2Map:clone(  )
 local function pushProcessInfo( processInfo )
    local __func__ = '@lune.@base.@Ast.pushProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 5973, function (  )
+   Log.log( Log.Level.Trace, __func__, 5986, function (  )
    
       return "start"
    end )
@@ -7745,7 +7836,7 @@ _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
    local __func__ = '@lune.@base.@Ast.popProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 5999, function (  )
+   Log.log( Log.Level.Trace, __func__, 6012, function (  )
    
       return "start"
    end )

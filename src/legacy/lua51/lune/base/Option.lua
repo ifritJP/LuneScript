@@ -199,7 +199,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 3958
+   return 3982
 end
 
 
@@ -545,7 +545,7 @@ usage:
             elseif _switchExp == "--nodebug" then
                Util.setDebugFlag( false )
             elseif _switchExp == "--version" then
-               print( string.format( "LuneScript: version %s (%d:%s)", Ver.version, getBuildCount(  ), Depend.getLuaVersion(  )) )
+               print( string.format( "LuneScript: version %s (%d:%s) [%s]", Ver.version, getBuildCount(  ), Depend.getLuaVersion(  ), Ver.metaVersion) )
                os.exit( 0 )
             elseif _switchExp == "--builtin" then
                do

@@ -1,3 +1,16 @@
-class Test {
-   let val:int {pub};
+{
+   enum Test {
+      Val1,
+      Val2,
+   }
+   foreach val in Test.$_allList {
+      print( val + 10 );
+   }
+   enum Test2 {
+      Val1 = "a",
+      Val2 = "b",
+   }
+   foreach val, index in Test2.$_allList {
+      print( index, val, Test2._from( val ), val.get__txt(), val.$_txt );
+   }
 }

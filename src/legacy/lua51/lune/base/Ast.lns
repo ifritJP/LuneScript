@@ -3482,6 +3482,7 @@ pub class NormalTypeInfo extend TypeInfo {
       else {
          name = parentTxt .. raw;
       }
+
       return name;
    }
 
@@ -4011,62 +4012,74 @@ pub override fn BoxTypeInfo.applyGeneric(
    return nil;
 }
 
+macro _createType( newType:__exp ) {
+   let tmpMutMode;
+   if isMutable( mutMode ) {
+      tmpMutMode = mutMode;
+   } else {
+      tmpMutMode = .Mut;
+   }
+   
+   idProv.increment();
+   let newTypeFunc = ,,newType;
+   let typeInfo = newTypeFunc( tmpMutMode );
+
+   if isMutable( mutMode ) {
+      return typeInfo;
+   }
+   return NormalTypeInfo.createModifier( typeInfo, mutMode );
+}
 
 
 pub static fn NormalTypeInfo.createSet(
    accessMode: AccessMode, parentInfo: &TypeInfo,
    itemTypeInfo: &List<&TypeInfo>, mutMode:MutMode ): &TypeInfo
 {
-   if #itemTypeInfo == 0 {
-      Util.err( "illegal set type: %s" (itemTypeInfo) );
-   }
-   //typeIdSeed = typeIdSeed + 1;
-   idProv.increment();
-   return new NormalTypeInfo(
-      false, getScope( builtinTypeSet ), builtinTypeSet,
-      nil, false, false, false, AccessMode.Pub,
-      "Set", headTypeInfo, idProv.$id, .Set, itemTypeInfo, nil, nil, mutMode );
+   _createType( fn (workMutMode:MutMode) : &TypeInfo {
+      return new NormalTypeInfo(
+         false, getScope( builtinTypeSet ), builtinTypeSet,
+         nil, false, false, false, AccessMode.Pub,
+         "Set", headTypeInfo, idProv.$id, .Set, itemTypeInfo,
+         nil, nil, workMutMode ); } );
 }
 
 pub static fn NormalTypeInfo.createList(
    accessMode: AccessMode, parentInfo: &TypeInfo,
    itemTypeInfo: &List<&TypeInfo>, mutMode:MutMode ): &TypeInfo
 {
-   if #itemTypeInfo == 0 {
-      Util.err( "illegal list type: %s" (itemTypeInfo) );
-   }
-   //typeIdSeed = typeIdSeed + 1;
-   idProv.increment();
-   return new NormalTypeInfo(
-      false, getScope( builtinTypeList ), builtinTypeList,
-      nil, false, false, false, AccessMode.Pub,
-      "List", headTypeInfo, idProv.$id, .List, itemTypeInfo, nil, nil, mutMode);
+   _createType( fn (workMutMode:MutMode) : &TypeInfo {
+      return new NormalTypeInfo(
+         false, getScope( builtinTypeList ), builtinTypeList,
+         nil, false, false, false, AccessMode.Pub,
+         "List", headTypeInfo, idProv.$id, .List, itemTypeInfo,
+         nil, nil, workMutMode ); } );
 }
 
 pub static fn NormalTypeInfo.createArray(
    accessMode: AccessMode,
    parentInfo: &TypeInfo, itemTypeInfo: &List<&TypeInfo>, mutMode:MutMode ): &TypeInfo
 {
-   //   typeIdSeed = typeIdSeed + 1;
-   idProv.increment();
-   return new NormalTypeInfo(
-      false, getScope( builtinTypeArray ), builtinTypeArray,
-      nil, false, false, false, AccessMode.Pub,
-      "Array", headTypeInfo, idProv.$id, .Array, itemTypeInfo, nil, nil, mutMode );
+   _createType( fn (workMutMode:MutMode) : &TypeInfo {
+      return new NormalTypeInfo(
+         false, getScope( builtinTypeArray ), builtinTypeArray,
+         nil, false, false, false, AccessMode.Pub,
+         "Array", headTypeInfo, idProv.$id, .Array, itemTypeInfo,
+         nil, nil, workMutMode ); } );
 }
 
 pub static fn NormalTypeInfo.createMap(
    accessMode: AccessMode, parentInfo: &TypeInfo,
    keyTypeInfo: &TypeInfo, valTypeInfo: &TypeInfo, mutMode:MutMode ): &TypeInfo
 {
-   //typeIdSeed = typeIdSeed + 1;
-   idProv.increment();
-   return new NormalTypeInfo(
-      false, getScope( builtinTypeMap ), builtinTypeMap,
-      nil, false, false, false, AccessMode.Pub,
-      "Map", headTypeInfo, idProv.$id, .Map,
-      [ keyTypeInfo, valTypeInfo ], nil, nil, mutMode );
+   _createType( fn (workMutMode:MutMode) : &TypeInfo {
+      return new NormalTypeInfo(
+         false, getScope( builtinTypeMap ), builtinTypeMap,
+         nil, false, false, false, AccessMode.Pub,
+         "Map", headTypeInfo, idProv.$id, .Map,
+         [ keyTypeInfo, valTypeInfo ], nil, nil, workMutMode );
+   });
 }
+
 
 pub static fn NormalTypeInfo.createModule(
    scope: Scope, parentInfo: &TypeInfo, externalFlag: bool,

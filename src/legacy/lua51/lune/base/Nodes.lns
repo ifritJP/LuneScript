@@ -1670,7 +1670,8 @@ pub fn DeclClassNode.hasUserInit() : bool {
 }
 
 _declNodeClass( "DeclEnum", Node, false, false, true,
-                [ { "accessMode": "Ast.AccessMode" },
+                [ { "enumType": "&Ast.EnumTypeInfo" },
+                  { "accessMode": "Ast.AccessMode" },
                   { "name": "&Parser.Token" },
                   { "valueNameList": "List<&Parser.Token>" },
                   { "scope": "&Ast.Scope" } ]

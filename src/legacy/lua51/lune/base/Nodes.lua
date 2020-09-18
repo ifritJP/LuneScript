@@ -8685,17 +8685,18 @@ function DeclEnumNode:canBeStatement(  )
 
    return true
 end
-function DeclEnumNode.new( id, pos, macroArgFlag, typeList, accessMode, name, valueNameList, scope )
+function DeclEnumNode.new( id, pos, macroArgFlag, typeList, enumType, accessMode, name, valueNameList, scope )
    local obj = {}
    DeclEnumNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, accessMode, name, valueNameList, scope ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, enumType, accessMode, name, valueNameList, scope ); end
    return obj
 end
-function DeclEnumNode:__init(id, pos, macroArgFlag, typeList, accessMode, name, valueNameList, scope) 
+function DeclEnumNode:__init(id, pos, macroArgFlag, typeList, enumType, accessMode, name, valueNameList, scope) 
    Node.__init( self,id, 60, pos, macroArgFlag, typeList)
    
    
    
+   self.enumType = enumType
    self.accessMode = accessMode
    self.name = name
    self.valueNameList = valueNameList
@@ -8703,9 +8704,9 @@ function DeclEnumNode:__init(id, pos, macroArgFlag, typeList, accessMode, name, 
    
    
 end
-function DeclEnumNode.create( nodeMan, pos, macroArgFlag, typeList, accessMode, name, valueNameList, scope )
+function DeclEnumNode.create( nodeMan, pos, macroArgFlag, typeList, enumType, accessMode, name, valueNameList, scope )
 
-   local node = DeclEnumNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, accessMode, name, valueNameList, scope)
+   local node = DeclEnumNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, enumType, accessMode, name, valueNameList, scope)
    nodeMan:addNode( node )
    return node
 end
@@ -8716,6 +8717,9 @@ function DeclEnumNode:visit( visitor, depth )
 end
 function DeclEnumNode.setmeta( obj )
   setmetatable( obj, { __index = DeclEnumNode  } )
+end
+function DeclEnumNode:get_enumType()
+   return self.enumType
 end
 function DeclEnumNode:get_accessMode()
    return self.accessMode
@@ -11288,7 +11292,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, _8117 in pairs( self.map ) do
+   for key, _8121 in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -11323,8 +11327,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, _8125 in ipairs( __sorted ) do
-         local key = __map[ _8125 ]
+      for __index, _8129 in ipairs( __sorted ) do
+         local key = __map[ _8129 ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false

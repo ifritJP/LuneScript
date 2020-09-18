@@ -203,3 +203,45 @@
       val = val + 1;
    } val > 10;
 }
+{
+   class Test {
+      let mut val:int {pub,pub};
+   }
+
+   let mut test = new Test( 10 );
+   test.set_val( test.$val + 100 );
+   print( test.$val );   
+}
+class Testggg {
+   static let val:int;
+
+   __init {
+      Testggg.val = 1;
+   }
+   pub fn func():int {
+      return Testggg.val + 10;
+   }
+   pub static fn sfunc():int {
+      return 10;
+   }
+}
+{
+   let test = new Testggg();
+   print( test.func(), Testggg.sfunc() );
+}
+{
+   enum Test {
+      Val1,
+      Val2,
+   }
+   foreach val in Test.$_allList {
+      print( val + 10 );
+   }
+   enum Test2 {
+      Val1 = "a",
+      Val2 = "b",
+   }
+   foreach val, index in Test2.$_allList {
+      print( index, val, Test2._from( val ), val.get__txt(), val.$_txt );
+   }
+}

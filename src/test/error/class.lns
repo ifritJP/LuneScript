@@ -314,7 +314,7 @@ class Test9 extend Super7 {
          Test.s_val = 1;
       }
 
-      __init {
+      __init { // error
       }
 
       

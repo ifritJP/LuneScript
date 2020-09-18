@@ -1005,7 +1005,7 @@ fn TransUnit.analyzeDeclEnum(
 
    let mut scope = self.pushScope( true ## );
 
-   let mut enumTypeInfo:Ast.EnumTypeInfo! = nil;
+   let mut workEnumTypeInfo:Ast.EnumTypeInfo! = nil;
 
    let mut nextToken = self.getToken(##);
    let mut number = 0.0;
@@ -1077,19 +1077,19 @@ fn TransUnit.analyzeDeclEnum(
       }
       prevValTypeInfo = valTypeInfo;
 
-      if not enumTypeInfo {
-         enumTypeInfo = Ast.NormalTypeInfo.createEnum(
+      if not workEnumTypeInfo {
+         workEnumTypeInfo = Ast.NormalTypeInfo.createEnum(
             scope, self.getCurrentNamespaceTypeInfo(),
             false, accessMode, name.txt, valTypeInfo );
       }
 
-      when! enumTypeInfo {
-         scope.addEnumVal( valName.txt, valName.pos, enumTypeInfo );
+      when! workEnumTypeInfo {
+         scope.addEnumVal( valName.txt, valName.pos, workEnumTypeInfo );
 
          let enumValInfo = new Ast.EnumValInfo( valName.txt, enumVal );
          valueList.insert( valName );
 
-         enumTypeInfo.addEnumValInfo( enumValInfo );
+         workEnumTypeInfo.addEnumValInfo( enumValInfo );
       }
 
       if nextToken.txt == "}" {
@@ -1100,23 +1100,23 @@ fn TransUnit.analyzeDeclEnum(
       number = number + 1;
    }
 
-   
-   if not enumTypeInfo {
+
+   let! enumTypeInfo = workEnumTypeInfo {
       enumTypeInfo = Ast.NormalTypeInfo.createEnum(
          scope, self.getCurrentNamespaceTypeInfo(),
          false, accessMode, name.txt, Ast.builtinTypeNone );
-   }
+   };
 
    self.popScope();
 
    let _, shadowing =
-      self.scope.addEnum( accessMode, name.txt, name.pos, unwrap enumTypeInfo );
+      self.scope.addEnum( accessMode, name.txt, name.pos, enumTypeInfo );
    self.errorShadowing( name.pos, shadowing );
 
 
    return Nodes.DeclEnumNode.create(
       self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(), 
-      [ unwrap enumTypeInfo ], accessMode, name, valueList, scope );
+      [ enumTypeInfo ], enumTypeInfo, accessMode, name, valueList, scope );
 }
 
 
@@ -1842,7 +1842,7 @@ nil の場合、メンバの宣言位置。
 
    fn processInitBlock( token:&Parser.Token ) {
 
-      if classTypeInfo.$parentInfo.$scope ~= self.moduleScope {
+      if classTypeInfo.$scope$.$parent ~= self.moduleScope {
          // top level クラスでないと、
          // static なメンバのライフタイム制御が難しいので現状はエラーとする。
          self.addErrMess(
