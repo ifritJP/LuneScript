@@ -1179,7 +1179,7 @@ fn TransUnit.analyzeDeclAlge(
       }
 
       algeScope.addAlgeVal( valName.txt, valName.pos, algeTypeInfo );
-      let algeValInfo = new Ast.AlgeValInfo( valName.txt, typeInfoList );
+      let algeValInfo = new Ast.AlgeValInfo( valName.txt, typeInfoList, algeTypeInfo );
       algeTypeInfo.addValInfo( algeValInfo );
 
       if nextToken.txt == "}" {

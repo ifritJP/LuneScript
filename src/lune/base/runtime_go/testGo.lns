@@ -245,3 +245,38 @@ class Testggg {
       print( index, val, Test2._from( val ), val.get__txt(), val.$_txt );
    }
 }
+{
+   enum Test {
+      Val1,
+      Val2,
+   }
+
+   fn func( val:Test ) {
+      print( val + 1 );
+   }
+
+   func( .Val1 );
+}
+{
+   alge Val {
+      val1,
+      val2( int, str ),
+   }
+
+   fn sub( val:Val ) {
+      match val {
+         case .val2( val1, val2 ) {
+            print( "val2 %s" (val2) );
+         }
+         default {
+            print( "other" );
+         }
+      }
+      if val == .val1 {
+         print( "equal" );
+      }
+      print( val.$_txt );
+   }
+   sub( Val.val1 );
+   sub( Val.val2( 100, "xyz" ) );
+}

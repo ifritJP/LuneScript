@@ -10,11 +10,17 @@ type LnsAny = interface{}
 
 var LnsNone interface{} = nil
 
+type LnsAlgeVal interface {
+    getTxt() string
+}
+
 
 type LnsEnv struct {
     valStack []LnsAny
     stackPos int
 }
+
+
 
 var cur_LnsEnv = LnsEnv{ []LnsAny{}, -1 }
 

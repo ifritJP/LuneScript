@@ -2822,7 +2822,7 @@ function AccessSymbolInfo:get_mutMode(  )
          end
          
       elseif _matchExp[1] == OverrideMut.IMut[1] then
-         local typeInfo = _matchExp[2][1]
+         local _ = _matchExp[2][1]
       
          return MutMode.IMut
       end
@@ -4524,43 +4524,6 @@ function EnumTypeInfo:get_val2EnumValInfo()
 end
 
 
-local AlgeValInfo = {}
-_moduleObj.AlgeValInfo = AlgeValInfo
-function AlgeValInfo:serialize( stream )
-
-   stream:write( string.format( "{ name = '%s', typeList = {", self.name) )
-   for index, typeInfo in ipairs( self.typeList ) do
-      if index > 1 then
-         stream:write( ", " )
-      end
-      
-      stream:write( string.format( "%d", typeInfo:get_typeId()) )
-   end
-   
-   stream:write( "} }" )
-end
-function AlgeValInfo.setmeta( obj )
-  setmetatable( obj, { __index = AlgeValInfo  } )
-end
-function AlgeValInfo.new( name, typeList )
-   local obj = {}
-   AlgeValInfo.setmeta( obj )
-   if obj.__init then
-      obj:__init( name, typeList )
-   end
-   return obj
-end
-function AlgeValInfo:__init( name, typeList )
-
-   self.name = name
-   self.typeList = typeList
-end
-function AlgeValInfo:get_name()
-   return self.name
-end
-function AlgeValInfo:get_typeList()
-   return self.typeList
-end
 
 
 local AlgeTypeInfo = {}
@@ -4595,11 +4558,6 @@ function AlgeTypeInfo:__init(scope, externalFlag, accessMode, txt, parentInfo, t
    self.nilableTypeInfo = NilableTypeInfo.new(self, typeId + 1)
    idProv:increment(  )
    scope:set_ownerTypeInfo( self )
-end
-function AlgeTypeInfo:addValInfo( valInfo )
-
-   self.valInfoMap[valInfo:get_name()] = valInfo
-   self.valInfoNum = self.valInfoNum + 1
 end
 function AlgeTypeInfo:getValInfo( name )
 
@@ -4667,6 +4625,56 @@ function AlgeTypeInfo:get_valInfoMap()
 end
 function AlgeTypeInfo:get_valInfoNum()
    return self.valInfoNum
+end
+
+
+local AlgeValInfo = {}
+_moduleObj.AlgeValInfo = AlgeValInfo
+function AlgeValInfo:serialize( stream )
+
+   stream:write( string.format( "{ name = '%s', typeList = {", self.name) )
+   for index, typeInfo in ipairs( self.typeList ) do
+      if index > 1 then
+         stream:write( ", " )
+      end
+      
+      stream:write( string.format( "%d", typeInfo:get_typeId()) )
+   end
+   
+   stream:write( "} }" )
+end
+function AlgeValInfo.setmeta( obj )
+  setmetatable( obj, { __index = AlgeValInfo  } )
+end
+function AlgeValInfo.new( name, typeList, algeTpye )
+   local obj = {}
+   AlgeValInfo.setmeta( obj )
+   if obj.__init then
+      obj:__init( name, typeList, algeTpye )
+   end
+   return obj
+end
+function AlgeValInfo:__init( name, typeList, algeTpye )
+
+   self.name = name
+   self.typeList = typeList
+   self.algeTpye = algeTpye
+end
+function AlgeValInfo:get_name()
+   return self.name
+end
+function AlgeValInfo:get_typeList()
+   return self.typeList
+end
+function AlgeValInfo:get_algeTpye()
+   return self.algeTpye
+end
+
+
+function AlgeTypeInfo:addValInfo( valInfo )
+
+   self.valInfoMap[valInfo:get_name()] = valInfo
+   self.valInfoNum = self.valInfoNum + 1
 end
 
 
@@ -7781,7 +7789,7 @@ IdType.__allList[2] = IdType.Ext
 local function switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 5974, function (  )
+   Log.log( Log.Level.Trace, __func__, 5979, function (  )
    
       return "start"
    end )
@@ -7801,7 +7809,7 @@ local builtinTypeInfo2Map = typeInfo2Map:clone(  )
 local function pushProcessInfo( processInfo )
    local __func__ = '@lune.@base.@Ast.pushProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 5986, function (  )
+   Log.log( Log.Level.Trace, __func__, 5991, function (  )
    
       return "start"
    end )
@@ -7836,7 +7844,7 @@ _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
    local __func__ = '@lune.@base.@Ast.popProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6012, function (  )
+   Log.log( Log.Level.Trace, __func__, 6017, function (  )
    
       return "start"
    end )

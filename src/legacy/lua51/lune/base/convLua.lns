@@ -2289,8 +2289,8 @@ pub override fn convFilter.processMatch(
          }
          self.writeln( "_matchExp[1] == %s.%s[1] then"
                        (fullName, caseInfo.$valInfo.$name ) );
-         foreach paramName, paramNum in caseInfo.$valParamNameList {
-            self.writeln( "   local %s = _matchExp[2][%d]" (paramName, paramNum ) );
+         foreach paramSym, paramNum in caseInfo.$valParamNameList {
+            self.writeln( "   local %s = _matchExp[2][%d]" (paramSym.$name, paramNum ) );
          }
          filter( caseInfo.$block, self, node );
       }

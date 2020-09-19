@@ -1592,7 +1592,7 @@ class _TypeInfoAlge extend _TypeInfo {
             //typeInfoList.insert( unwrap param.typeId2TypeInfo[ orgTypeId ] );
             typeInfoList.insert( unwrap param.getTypeInfo( orgTypeId ) );
          }
-         let algeVal = new Ast.AlgeValInfo( valInfo.name, typeInfoList );
+         let algeVal = new Ast.AlgeValInfo( valInfo.name, typeInfoList, algeTypeInfo );
          scope.addAlgeVal( valInfo.name, nil, algeTypeInfo );
          algeTypeInfo.addValInfo( algeVal );
       }
@@ -3482,7 +3482,7 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
       }
       algeValNameSet.add( valNameToken.txt );
       
-      let mut valParamNameList:List<str> = [];
+      let mut valParamNameList:List<&Ast.SymbolInfo> = [];
       nextToken = self.getToken(##);
       let mut blockScope = self.pushScope( false ## );
       if nextToken.txt == "(" {
@@ -3496,9 +3496,9 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
             {
                workType = self.createModifier( workType, .IMut );
             }
-            self.addLocalVar(
-               paramName.pos, true, false, paramName.txt, workType, .IMut ## );
-            valParamNameList.insert( paramName.txt );
+            valParamNameList.insert(
+               self.addLocalVar(
+                  paramName.pos, false, false, paramName.txt, workType, .IMut ## ));
             nextToken = self.getToken(##);
             if nextToken.txt ~= "," {
                break;

@@ -7006,7 +7006,7 @@ pub override fn convFilter.processMatch(
             let paramName = caseInfo.$valParamNameList[ paramIndex ];
             self.writeln(
                "%s %s = _pVal->_val%d;"
-               (getCType( paramType ), paramName, paramIndex )); 
+               (getCType( paramType ), paramName.$name, paramIndex )); 
          }
       }
       self.popIndent();
@@ -7482,7 +7482,7 @@ pub override fn convFilter.processForeach(
       case .Ext {
          indexSymbol = nil;
          match collectionKind {
-            case .ExtMap( extedType ) {
+            case .ExtMap( _ ) {
                self.writeln(
                   "%s _itAny = lns_lua_itMap_new( _pEnv, _obj );" (cTypeAnyP) );
                self.writeln( "lns_Map_entry_t _entry;" );
@@ -7514,7 +7514,7 @@ pub override fn convFilter.processForeach(
       }
       case .Ext {
          match collectionKind {
-            case .ExtMap( extedType ) {
+            case .ExtMap( _ ) {
                self.writeln(
                   "while ( lns_lua_itMap_hasNext( _pEnv, _itAny ) )" );
             }
@@ -7830,9 +7830,9 @@ pub fn convFilter.processCallWithMRet(
             return;
          }
       }
-      case .DDD(node) {
+      case .DDD(_) {
       }
-      case .Format(format,node) {
+      case .Format(_,_) {
       }
    }
    
@@ -7864,13 +7864,13 @@ pub fn convFilter.processCallWithMRet(
             self.write( ", %s _pForm" (cTypeAnyP ) );
             processArgs();
          }
-         case .DDD(node) {
+         case .DDD(_) {
             processArgs();
          }
-         case .Func(funcNode) {
+         case .Func(_) {
             processArgs();
          }
-         case .Format(format,node) {
+         case .Format(_,_) {
             processArgs();
          }
       }

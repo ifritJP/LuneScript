@@ -355,7 +355,7 @@ end
 local function isAnyType( typeInfo )
 
    local work = typeInfo:get_srcTypeInfo()
-   return typeInfo:get_nilable() or work == Ast.builtinTypeStem
+   return typeInfo:get_nilable() or work == Ast.builtinTypeStem or typeInfo:get_kind() == Ast.TypeInfoKind.Alge
 end
 
 local function isClosure( typeInfo )
@@ -508,6 +508,12 @@ function convFilter:getFuncSymbol( typeInfo )
    end
    
    return self:getSymbol( _lune.newAlge( SymbolKind.Func, {typeInfo}), typeInfo:get_rawTxt() )
+end
+
+
+function convFilter:getAlgeSymbol( valInfo )
+
+   return self:getSymbol( _lune.newAlge( SymbolKind.Static, {valInfo:get_algeTpye()}), valInfo:get_name() )
 end
 
 
@@ -847,7 +853,7 @@ function convFilter:processConvExp( nodeId, dstTypeList, argListNode )
    
    if restIndex ~= nil then
       self:write( "[]LnsAny{ " )
-      for index, _5335 in ipairs( argList:get_expList() ) do
+      for index, _5341 in ipairs( argList:get_expList() ) do
          if index >= #dstTypeList then
             self:write( string.format( "arg%d", index) )
          end
@@ -883,6 +889,11 @@ function convFilter:processRoot( node, opt )
    end
    
    self:popProcessMode(  )
+   
+   for __index, workNode in ipairs( node:get_nodeManager():getDeclAlgeNodeList(  ) ) do
+      filter( workNode, self, node )
+   end
+   
    
    for __index, workNode in ipairs( node:get_nodeManager():getExpCallNodeList(  ) ) do
       self:processConvExp( workNode:get_id(), workNode:get_func():get_expType():get_argTypeInfoList(), workNode:get_argList() )
@@ -1143,16 +1154,57 @@ end
 
 
 function convFilter:processDeclAlge( node, opt )
-   local __func__ = '@lune.@base.@convGo.convFilter.processDeclAlge'
 
-   Util.err( string.format( "not support -- %s", __func__) )
+   do
+      local __sorted = {}
+      local __map = node:get_algeType():get_valInfoMap()
+      for __key in pairs( __map ) do
+         table.insert( __sorted, __key )
+      end
+      table.sort( __sorted )
+      for __index, __key in ipairs( __sorted ) do
+         local valInfo = __map[ __key ]
+         do
+            local algeSym = self:getAlgeSymbol( valInfo )
+            self:writeln( string.format( "type %s struct{", algeSym) )
+            for index, paramType in ipairs( valInfo:get_typeList() ) do
+               self:writeln( string.format( "Val%d %s", index, self:type2gotype( paramType )) )
+            end
+            
+            self:writeln( "}" )
+            if #valInfo:get_typeList() == 0 then
+               self:writeln( string.format( "var %s_Obj = &%s{}", algeSym, algeSym) )
+            end
+            
+            self:writeln( string.format( "func (self *%s) getTxt() string {", algeSym) )
+            self:writeln( string.format( 'return "%s.%s"', node:get_algeType():get_rawTxt(), valInfo:get_name()) )
+            self:writeln( "}" )
+         end
+      end
+   end
+   
 end
 
 
 function convFilter:processNewAlgeVal( node, opt )
-   local __func__ = '@lune.@base.@convGo.convFilter.processNewAlgeVal'
 
-   Util.err( string.format( "not support -- %s", __func__) )
+   local algeSym = self:getAlgeSymbol( node:get_valInfo() )
+   if #node:get_valInfo():get_typeList() == 0 then
+      self:write( string.format( "%s_Obj", algeSym) )
+   else
+    
+      self:write( string.format( "&%s{", algeSym) )
+      for index, param in ipairs( node:get_paramList() ) do
+         if index > 1 then
+            self:write( ", " )
+         end
+         
+         filter( param, self, node )
+      end
+      
+      self:write( "}" )
+   end
+   
 end
 
 
@@ -1871,9 +1923,32 @@ end
 
 
 function convFilter:processMatch( node, opt )
-   local __func__ = '@lune.@base.@convGo.convFilter.processMatch'
 
-   Util.err( string.format( "not support -- %s", __func__) )
+   local val = string.format( "_exp%d", node:get_id())
+   self:write( string.format( "switch %s := ", val) )
+   filter( node:get_val(), self, node )
+   self:writeln( ".(type) {" )
+   for __index, caseInfo in ipairs( node:get_caseList() ) do
+      self:writeln( string.format( "case *%s:", self:getAlgeSymbol( caseInfo:get_valInfo() )) )
+      for index, symbol in ipairs( caseInfo:get_valParamNameList() ) do
+         if symbol:get_posForModToRef() then
+            self:writeln( string.format( "%s := %s.Val%d", symbol:get_name(), val, index) )
+         end
+         
+      end
+      
+      filter( caseInfo:get_block(), self, node )
+   end
+   
+   do
+      local defaultBlock = node:get_defaultBlock()
+      if defaultBlock ~= nil then
+         self:writeln( "default:" )
+         filter( defaultBlock, self, node )
+      end
+   end
+   
+   self:writeln( "}" )
 end
 
 
@@ -2300,7 +2375,7 @@ function convFilter:outputConstructor( node )
    
    local ctorName = self:getConstrSymbol( node:get_expType() )
    self:write( string.format( "obj.%s(", ctorName) )
-   for index, _5768 in ipairs( initFuncType:get_argTypeInfoList() ) do
+   for index, _5787 in ipairs( initFuncType:get_argTypeInfoList() ) do
       if index ~= 1 then
          self:write( ", " )
       end
@@ -2344,7 +2419,7 @@ function convFilter:outputConstructor( node )
          superArgNum = 0
       end
       
-      for index, _5776 in ipairs( initFuncType:get_argTypeInfoList() ) do
+      for index, _5795 in ipairs( initFuncType:get_argTypeInfoList() ) do
          if superArgNum < index then
             local sIndex = index - superArgNum
             local memberNode = node:get_memberList()[sIndex]
@@ -2916,9 +2991,8 @@ end
 
 
 function convFilter:processExpOmitEnum( node, opt )
-   local __func__ = '@lune.@base.@convGo.convFilter.processExpOmitEnum'
 
-   Util.err( string.format( "not support -- %s", __func__) )
+   self:write( self:getSymbol( _lune.newAlge( SymbolKind.Static, {node:get_expType()}), node:get_valInfo():get_name() ) )
 end
 
 
@@ -2937,6 +3011,12 @@ function convFilter:processGetField( node, opt )
                   self:write( ")" )
                   return 
                end
+            end
+            
+            if _lune.__Cast( symbolInfo:get_namespaceTypeInfo(), 3, Ast.AlgeTypeInfo ) then
+               filter( node:get_prefix(), self, node )
+               self:write( ".(LnsAlgeVal).getTxt()" )
+               return 
             end
             
          end

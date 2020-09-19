@@ -4013,7 +4013,7 @@ local function processDeclCallMethodWrapper( stream, moduleCtrl, scopeMgr, paren
             stream:write( "pObj " )
          end
          
-         for index, _6210 in ipairs( funcTypeInfo:get_argTypeInfoList() ) do
+         for index, _6212 in ipairs( funcTypeInfo:get_argTypeInfoList() ) do
             stream:write( string.format( ", arg%d", index) )
          end
          
@@ -4102,7 +4102,7 @@ local function processAdvertise( stream, moduleCtrl, scopeMgr, processMode, node
                      end
                      
                      stream:write( string.format( "%s( _pEnv, pVal", getAccessMethod( memberClassName, "pVal", name )) )
-                     for index, _6241 in ipairs( methodType:get_argTypeInfoList() ) do
+                     for index, _6243 in ipairs( methodType:get_argTypeInfoList() ) do
                         stream:write( string.format( ", arg%d", index) )
                      end
                      
@@ -4190,14 +4190,14 @@ local function processDefaultCtor( stream, moduleCtrl, scopeMgr, node )
             
             if #ctorType:get_argTypeInfoList() >= #superInitType:get_argTypeInfoList() + memberNum then
                superArgNum = #superInitType:get_argTypeInfoList()
-               for index, _6269 in ipairs( superInitType:get_argTypeInfoList() ) do
+               for index, _6271 in ipairs( superInitType:get_argTypeInfoList() ) do
                   stream:write( string.format( ", _arg%d", index) )
                end
                
             else
              
                superArgNum = 0
-               for _6272, _6271 in ipairs( superInitType:get_argTypeInfoList() ) do
+               for _6274, _6273 in ipairs( superInitType:get_argTypeInfoList() ) do
                   stream:write( string.format( ", %s", cValNil) )
                end
                
@@ -4281,7 +4281,7 @@ function convFilter:processNewInsance( classType, callInit )
       local scope = _lune.unwrap( classType:get_scope())
       if not self.outputBuiltinFlag then
          local initFuncType = _lune.unwrap( scope:getTypeInfoField( "__init", true, scope, scopeAccess ))
-         for index, _6299 in ipairs( initFuncType:get_argTypeInfoList() ) do
+         for index, _6301 in ipairs( initFuncType:get_argTypeInfoList() ) do
             self:write( string.format( ", arg%d", index) )
          end
          
@@ -4613,7 +4613,7 @@ function convFilter:processMapping( node, classType, out2HMode )
          
          if #genType:get_itemTypeInfoList() > 0 then
             self:write( ", { " )
-            for subIndex, _6354 in ipairs( genType:get_itemTypeInfoList() ) do
+            for subIndex, _6356 in ipairs( genType:get_itemTypeInfoList() ) do
                if subIndex > 1 then
                   self:write( ", " )
                end
@@ -7119,7 +7119,7 @@ function convFilter:processMatch( node, opt )
          self:writeln( string.format( "%s * _pVal = (%s *)_matchExp->val.alge.pVal;", structTxt, structTxt) )
          for paramIndex, paramType in ipairs( valInfo:get_typeList() ) do
             local paramName = caseInfo:get_valParamNameList()[paramIndex]
-            self:writeln( string.format( "%s %s = _pVal->_val%d;", getCType( paramType ), paramName, paramIndex) )
+            self:writeln( string.format( "%s %s = _pVal->_val%d;", getCType( paramType ), paramName:get_name(), paramIndex) )
          end
          
       end
@@ -7548,7 +7548,7 @@ function convFilter:processForeach( node, opt )
          do
             local _matchExp = collectionKind
             if _matchExp[1] == CollectionKind.ExtMap[1] then
-               local extedType = _matchExp[2][1]
+               local _ = _matchExp[2][1]
             
                self:writeln( string.format( "%s _itAny = lns_lua_itMap_new( _pEnv, _obj );", cTypeAnyP) )
                self:writeln( "lns_Map_entry_t _entry;" )
@@ -7580,7 +7580,7 @@ function convFilter:processForeach( node, opt )
          do
             local _matchExp = collectionKind
             if _matchExp[1] == CollectionKind.ExtMap[1] then
-               local extedType = _matchExp[2][1]
+               local _ = _matchExp[2][1]
             
                self:writeln( "while ( lns_lua_itMap_hasNext( _pEnv, _itAny ) )" )
             end
@@ -7895,11 +7895,11 @@ function convFilter:processCallWithMRet( parent, mRetFuncName, retTypeName, mRet
          end
          
       elseif _matchExp[1] == MRetInfo.DDD[1] then
-         local node = _matchExp[2][1]
+         local _ = _matchExp[2][1]
       
       elseif _matchExp[1] == MRetInfo.Format[1] then
-         local format = _matchExp[2][1]
-         local node = _matchExp[2][2]
+         local _ = _matchExp[2][1]
+         local _ = _matchExp[2][2]
       
       end
    end
@@ -7940,16 +7940,16 @@ function convFilter:processCallWithMRet( parent, mRetFuncName, retTypeName, mRet
             self:write( string.format( ", %s _pForm", cTypeAnyP) )
             processArgs(  )
          elseif _matchExp[1] == MRetInfo.DDD[1] then
-            local node = _matchExp[2][1]
+            local _ = _matchExp[2][1]
          
             processArgs(  )
          elseif _matchExp[1] == MRetInfo.Func[1] then
-            local funcNode = _matchExp[2][1]
+            local _ = _matchExp[2][1]
          
             processArgs(  )
          elseif _matchExp[1] == MRetInfo.Format[1] then
-            local format = _matchExp[2][1]
-            local node = _matchExp[2][2]
+            local _ = _matchExp[2][1]
+            local _ = _matchExp[2][2]
          
             processArgs(  )
          end
@@ -7986,7 +7986,7 @@ function convFilter:processCallWithMRet( parent, mRetFuncName, retTypeName, mRet
                         local expList = toDDDNode:get_expList():get_expList()
                         local lastExp = expList[#expList]
                         self:write( string.format( "( _pEnv, %s, %d", Nodes.hasMultiValNode( lastExp ), #expList) )
-                        for workIndex, _7266 in ipairs( expList ) do
+                        for workIndex, _7268 in ipairs( expList ) do
                            self:write( string.format( ", lns_getMRet( _pEnv, %d )", workIndex + index - 2) )
                         end
                         
@@ -8932,7 +8932,7 @@ function convFilter:processFuncCast( node )
       self:write( ", _pForm" )
    end
    
-   for index, _7442 in ipairs( orgFunc:get_argTypeInfoList() ) do
+   for index, _7444 in ipairs( orgFunc:get_argTypeInfoList() ) do
       self:write( string.format( ", var%s", index) )
    end
    
@@ -9918,7 +9918,7 @@ function convFilter:processLiteralVal( exp, parent )
    if self.processMode ~= ProcessMode.Immediate then
       local symbolList = exp:getSymbolInfo(  )
       if #symbolList > 0 then
-         local _7620, valKind = self.scopeMgr:getCTypeForSym( symbolList[1] )
+         local _7622, valKind = self.scopeMgr:getCTypeForSym( symbolList[1] )
          if valKind ~= ValKind.Prim then
             self:processVal2stem( exp, parent )
             return 
@@ -10317,7 +10317,7 @@ function convFilter:processLiteralString( node, opt )
                      self:processCallWithMRet( node, getMRetFuncName( node ), cTypeAnyP, _lune.newAlge( MRetInfo.Format, {txt,expListNode}), expListNode )
                   else
                      self:write( string.format( "static %s lns_litstr_%d( %s _pEnv", cTypeAnyP, node:get_id(), cTypeEnvP) )
-                     for index, _7730 in ipairs( expListNode:get_expList() ) do
+                     for index, _7732 in ipairs( expListNode:get_expList() ) do
                         self:write( string.format( ", %s arg%d", cTypeStem, index) )
                      end
                      
@@ -10339,7 +10339,7 @@ function convFilter:processLiteralString( node, opt )
                      self:processCallWithMRet( node, getMRetFuncName( node ), cTypeAnyP, _lune.newAlge( MRetInfo.Format, {txt,expListNode}), expListNode )
                   else
                      self:write( string.format( "static %s lns_litstr_%d( %s _pEnv", cTypeAnyP, node:get_id(), cTypeEnvP) )
-                     for index, _7734 in ipairs( expListNode:get_expList() ) do
+                     for index, _7736 in ipairs( expListNode:get_expList() ) do
                         self:write( string.format( ", %s arg%d", cTypeStem, index) )
                      end
                      

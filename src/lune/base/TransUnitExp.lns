@@ -2346,7 +2346,8 @@ fn TransUnit.analyzeNewAlge(
       return Nodes.NewAlgeValNode.create(
          self.nodeManager, firstToken.pos,
          self.macroCtrl.isInAnalyzeArgMode(), [ algeTypeInfo ],
-         symbolToken, prefix, algeTypeInfo, new Ast.AlgeValInfo("", []), [] );
+         symbolToken, prefix, algeTypeInfo,
+         new Ast.AlgeValInfo("", [], algeTypeInfo), [] );
    }
 }
 

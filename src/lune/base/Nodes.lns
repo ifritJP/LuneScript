@@ -1699,7 +1699,7 @@ _declNodeClass( "LuneControl", Node, false, false, true,
 
 pub class MatchCase {
    pri let valInfo: &Ast.AlgeValInfo {pub};
-   pri let valParamNameList: &List<str> {pub};
+   pri let valParamNameList: &List<&Ast.SymbolInfo> {pub};
    pri let block: &BlockNode {pub};
 }
 

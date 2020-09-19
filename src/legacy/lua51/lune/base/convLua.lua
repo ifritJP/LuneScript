@@ -449,7 +449,7 @@ function convFilter:writeRaw( txt )
    end
    
    
-   for _5236 in string.gmatch( txt, "\n" ) do
+   for _5238 in string.gmatch( txt, "\n" ) do
       self.curLineNo = self.curLineNo + 1
    end
    
@@ -1905,7 +1905,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _5577 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _5579 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -2856,8 +2856,8 @@ function convFilter:processMatch( node, opt )
          end
          
          self:writeln( string.format( "_matchExp[1] == %s.%s[1] then", fullName, caseInfo:get_valInfo():get_name()) )
-         for paramNum, paramName in ipairs( caseInfo:get_valParamNameList() ) do
-            self:writeln( string.format( "   local %s = _matchExp[2][%d]", paramName, paramNum) )
+         for paramNum, paramSym in ipairs( caseInfo:get_valParamNameList() ) do
+            self:writeln( string.format( "   local %s = _matchExp[2][%d]", paramSym:get_name(), paramNum) )
          end
          
          filter( caseInfo:get_block(), self, node )

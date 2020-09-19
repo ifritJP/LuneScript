@@ -2101,7 +2101,7 @@ pub class AccessSymbolInfo extend SymbolInfo {
                }
             }
          }
-         case .IMut( typeInfo ) {
+         case .IMut( _ ) {
             return .IMut;
          }
       }
@@ -3155,21 +3155,7 @@ pub class EnumTypeInfo extend TypeInfo {
 
 
 
-pub class AlgeValInfo {
-   pri let name: str {pub};
-   pri let typeList:&List<&TypeInfo> {pub};
-
-   pub fn serialize( stream: oStream ) {
-      stream.write( "{ name = '%s', typeList = {" (self.name) );
-      foreach typeInfo, index in self.typeList {
-         if index > 1 {
-            stream.write( ", " );
-         }
-         stream.write( "%d" ( typeInfo.$typeId ) );
-      }
-      stream.write( "} }" );
-   }
-}
+pub proto class AlgeValInfo;
 
 pub class AlgeTypeInfo extend TypeInfo {
    // 外部モジュールで定義した TypeInfo かどうか
@@ -3211,11 +3197,6 @@ pub class AlgeTypeInfo extend TypeInfo {
 
 
       scope.set_ownerTypeInfo( self );
-   }
-
-   pub fn addValInfo( valInfo:&AlgeValInfo ) mut {
-      self.valInfoMap[ valInfo.$name ] = valInfo;
-      self.valInfoNum = self.valInfoNum + 1;
    }
 
    pub fn getValInfo( name:str ) : &AlgeValInfo! {
@@ -3266,6 +3247,30 @@ pub class AlgeTypeInfo extend TypeInfo {
       return .Mut;
    };
 }
+
+pub class AlgeValInfo {
+   pri let name: str {pub};
+   pri let typeList:&List<&TypeInfo> {pub};
+   pri let algeTpye:&AlgeTypeInfo {pub};
+
+   pub fn serialize( stream: oStream ) {
+      stream.write( "{ name = '%s', typeList = {" (self.name) );
+      foreach typeInfo, index in self.typeList {
+         if index > 1 {
+            stream.write( ", " );
+         }
+         stream.write( "%d" ( typeInfo.$typeId ) );
+      }
+      stream.write( "} }" );
+   }
+}
+
+pub fn AlgeTypeInfo.addValInfo( valInfo:&AlgeValInfo ) mut {
+   self.valInfoMap[ valInfo.$name ] = valInfo;
+   self.valInfoNum = self.valInfoNum + 1;
+}
+
+
 
 
 

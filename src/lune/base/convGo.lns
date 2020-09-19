@@ -88,7 +88,9 @@ fn filter( node: &Nodes.Node, filter: convFilter,
 
 fn isAnyType( typeInfo:&Ast.TypeInfo ): bool {
    let work = typeInfo.$srcTypeInfo;
-   return typeInfo.$nilable or work == Ast.builtinTypeStem;
+   return typeInfo.$nilable or
+      work == Ast.builtinTypeStem or
+      typeInfo.$kind == .Alge;
 }
 
 fn isClosure( typeInfo:&Ast.TypeInfo ): bool {
@@ -218,6 +220,10 @@ fn convFilter.getFuncSymbol( typeInfo:&Ast.TypeInfo ) : str {
       return self.getSymbol( .Static( typeInfo.$parentInfo ), typeInfo.$rawTxt );
    }
    return self.getSymbol( .Func( typeInfo ), typeInfo.$rawTxt );
+}
+
+fn convFilter.getAlgeSymbol( valInfo:&Ast.AlgeValInfo ): str {
+   return self.getSymbol( .Static( valInfo.$algeTpye ), valInfo.$name );
 }
 
 fn convFilter.getSymbolSym( symbolInfo:&Ast.SymbolInfo ) : str {
@@ -523,6 +529,10 @@ pub override fn convFilter.processRoot(
    self.popProcessMode();
    
 
+   foreach workNode in node.$nodeManager.getDeclAlgeNodeList() {
+      filter( workNode, self, node );
+   }
+   
    foreach workNode in node.$nodeManager.getExpCallNodeList() {
       self.processConvExp( workNode.$id, workNode.$func.$expType.$argTypeInfoList,
                            workNode.$argList );
@@ -777,13 +787,39 @@ pub override fn convFilter.processStmtExp(
 pub override fn convFilter.processDeclAlge(
    node: Nodes.DeclAlgeNode, opt: Opt ) mut
 {
-   Util.err( "not support -- %s" (__func__) );
+   forsort valInfo in node.$algeType.$valInfoMap {
+      let algeSym = self.getAlgeSymbol( valInfo );
+      self.writeln( "type %s struct{" (algeSym) );
+      foreach paramType, index in valInfo.$typeList {
+         self.writeln( "Val%d %s" (index, self.type2gotype(paramType) ) );
+      }
+      self.writeln( "}" );
+      if #valInfo.$typeList == 0 {
+         self.writeln( "var %s_Obj = &%s{}" (algeSym,algeSym) );
+      }
+      self.writeln( "func (self *%s) getTxt() string {" (algeSym) );
+      self.writeln( 'return "%s.%s"' (node.$algeType.$rawTxt, valInfo.$name) );
+      self.writeln( "}" );
+   }
 }
 
 pub override fn convFilter.processNewAlgeVal(
    node: Nodes.NewAlgeValNode, opt: Opt ) mut
 {
-   Util.err( "not support -- %s" (__func__) );
+   let algeSym = self.getAlgeSymbol( node.$valInfo );
+   if #node.$valInfo.$typeList == 0 {
+      self.write( "%s_Obj" (algeSym) );
+   }
+   else {
+      self.write( "&%s{" (algeSym) );
+      foreach param, index in node.$paramList {
+         if index > 1 {
+            self.write( ", " );
+         }
+         filter( param, self, node );
+      }
+      self.write( "}" );
+   }
 }
 
 pub override fn convFilter.processDeclMember(
@@ -1385,7 +1421,24 @@ pub override fn convFilter.processSwitch(
 pub override fn convFilter.processMatch(
    node: Nodes.MatchNode, opt: Opt ) mut
 {
-   Util.err( "not support -- %s" (__func__) );
+   let val = "_exp%d" (node.$id);
+   self.write( "switch %s := " (val) );
+   filter( node.$val, self, node );
+   self.writeln( ".(type) {" );
+   foreach caseInfo in node.$caseList {
+      self.writeln( "case *%s:" (self.getAlgeSymbol( caseInfo.$valInfo) ) );
+      foreach symbol, index in caseInfo.$valParamNameList {
+         if symbol.$posForModToRef {
+            self.writeln( "%s := %s.Val%d" (symbol.$name,val,index) );
+         }
+      }
+      filter( caseInfo.$block, self, node );
+   }
+   if! let defaultBlock = node.$defaultBlock {
+      self.writeln ( "default:" );
+      filter( defaultBlock, self, node );
+   }
+   self.writeln( "}" );
 }
 
 
@@ -2283,7 +2336,7 @@ pub override fn convFilter.processRefField(
 pub override fn convFilter.processExpOmitEnum(
    node: &Nodes.ExpOmitEnumNode, opt: Opt ) mut
 {
-   Util.err( "not support -- %s" (__func__) );
+   self.write( self.getSymbol( .Static( node.$expType ), node.$valInfo.$name ) );
 }
 
 pub override fn convFilter.processGetField(
@@ -2295,6 +2348,11 @@ pub override fn convFilter.processGetField(
             self.write( "%s( " (self.getEnumGetTxtSym( enumType ) ) );
             filter( node.$prefix, self, node );
             self.write( ")" );
+            return;
+         }
+         if symbolInfo.$namespaceTypeInfo@@@Ast.AlgeTypeInfo {
+            filter( node.$prefix, self, node );
+            self.write( ".(LnsAlgeVal).getTxt()" );
             return;
          }
       }
