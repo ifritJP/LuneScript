@@ -1,13 +1,4 @@
-class Test {
-   let val:int;
-   pub fn func():int {
-      return self.val;
-   }
-}
-fn func( test:Test! ) {
-   when! test {
-      print( test.func() );
-   }
-}
-func( new Test(10) );
+let mut work = [{ "ab":1 }, { "xyz":2 }];
+work.remove(##);
+work.insert( {"eee":10} );
 

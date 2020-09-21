@@ -2010,18 +2010,75 @@ pub override fn convFilter.processExpCall(
 
    if Ast.isBuiltin( funcType.$typeId ) {
       let builtinFuncs = TransUnit.getBuiltinFunc();
-      switch funcType {
-         case builtinFuncs.lns_print {
-            self.write( "Lns_print" );
+
+      if funcType.$kind == .Method {
+         let fieldNode = unwrap node.$func@@@Nodes.RefFieldNode;
+
+         filter( fieldNode.$prefix, self, fieldNode );
+         
+         switch funcType {
+            case builtinFuncs.list_insert {
+               self.write( ".Insert" );
+            }
+            case builtinFuncs.list_remove {
+               self.write( ".Remove" );
+            }
+            default {
+               Util.err( "%s: not support -- %s" (__func__, funcType.getTxt(##)) );
+            }
          }
-         default {
-            filter( node.$func, self, node );
+      }
+      else {
+         switch funcType {
+            case builtinFuncs.lns_print {
+               self.write( "Lns_print" );
+            }
+            default {
+               Util.err( "%s: not support -- %s" (__func__, funcType.getTxt(##)) );
+            }
          }
       }
    }
    else {
-      //self.outputSymbol( .Func( funcType ), funcType.$rawTxt );
-      filter( node.$func, self, node );
+      if funcType.$kind == .Method {
+         let fieldNode = unwrap node.$func@@@Nodes.RefFieldNode;
+
+         filter( fieldNode.$prefix, self, fieldNode );
+         
+         if Ast.isBuiltin( funcType.$typeId )
+         {
+            let builtinFuncs = TransUnit.getBuiltinFunc();
+            switch funcType {
+               case builtinFuncs.list_insert {
+                  self.write( ".Insert" );
+               }
+               case builtinFuncs.list_remove {
+                  self.write( ".Remove" );
+               }
+               default {
+                  Util.err( "%s: not support -- %s" (__func__, funcType.getTxt(##)) );
+               }
+            }
+         }
+         else {
+            self.write( "." );
+            if! let symbol = fieldNode.$symbolInfo {
+               switch funcType.$kind {
+                  case .Method {
+                     self.write( "FP." );
+                     self.write( self.getFuncSymbol( funcType ) );
+                  }
+                  default {
+                     self.outputSymbol(
+                        .Member( Ast.isPubToExternal( symbol.$accessMode ) ),
+                        fieldNode.$field.txt );      
+                  }
+               }
+            }
+         }
+      } else {
+         filter( node.$func, self, node );
+      }
    }
    self.write( "(" );
    
@@ -2359,42 +2416,52 @@ pub override fn convFilter.processRefField(
       }
    }
 
-   
-   filter( node.$prefix, self, node );
-
-   if node.$expType.$kind == .Method and Ast.isBuiltin( node.$expType.$typeId )
-   {
-      let builtinFuncs = TransUnit.getBuiltinFunc();
-      switch node.$expType {
-         case builtinFuncs.list_insert {
-            self.write( ".Insert" );
-         }
-         case builtinFuncs.list_remove {
-            self.write( ".Remove" );
-         }
-         default {
-            Util.err( "%s: not support -- %s" (__func__, node.$expType.getTxt(##)) );
-         }
+   let openParenNum;
+   let andOp;
+   if not node.hasNilAccess() {
+      openParenNum = 0;
+      andOp = false;
+      if not node.$prefix.hasNilAccess() {
+         filter( node.$prefix, self, node );
+      } else {
+         Util.err( "%s: not support" ( __func__ ) );
       }
+   } else {
+      if not node.$prefix.hasNilAccess() {
+         self.write( "Lns_NilAccFin(" );
+         self.write( "Lns_NilAccPush(" );
+         filter( node.$prefix, self, node );
+         self.writeln( ") && " );
+      } else {
+         filter( node.$prefix, self, node );
+      }
+      self.write( "Lns_NilAccPush(" );
+      if opt.node.hasNilAccess() {
+         andOp = true;
+         openParenNum = 1;
+      } else {
+         andOp = false;
+         openParenNum = 2;
+      }
+      self.write( "Lns_NilAccPop().(%s)"
+         (self.type2gotype( node.$prefix.$expType.$nonnilableType ) ));
    }
-   else {
-      self.write( "." );
-      if! let symbol = node.$symbolInfo {
-         switch node.$expType.$kind {
-            case .Method {
-               self.write( "FP." );
-               self.write( self.getFuncSymbol( node.$expType ) );
-            }
-            case .Class {
-               self.write( "FP." );
-               self.write( self.getTypeSymbol( node.$expType ) );
-            }
-            default {
-               self.outputSymbol(
-                  .Member( Ast.isPubToExternal( symbol.$accessMode ) ), node.$field.txt );
-            }
-         }
-      }
+
+   
+   self.write( "." );
+   if! let symbol = node.$symbolInfo {
+      self.outputSymbol(
+         .Member( Ast.isPubToExternal( symbol.$accessMode ) ), node.$field.txt );
+   } else {
+      Util.err( "not support -- %s" (__func__) );
+   }
+   
+
+   for _ = 1, openParenNum {
+      self.write( ")" );
+   }
+   if andOp {
+      self.writeln( "&&" );
    }
 }
 

@@ -855,7 +855,7 @@ function convFilter:processConvExp( nodeId, dstTypeList, argListNode )
    
    if restIndex ~= nil then
       self:write( "[]LnsAny{ " )
-      for index, _5341 in ipairs( argList:get_expList() ) do
+      for index, _5351 in ipairs( argList:get_expList() ) do
          if index >= #dstTypeList then
             self:write( string.format( "arg%d", index) )
          end
@@ -2413,7 +2413,7 @@ function convFilter:outputConstructor( node )
    
    local ctorName = self:getConstrSymbol( node:get_expType() )
    self:write( string.format( "obj.%s(", ctorName) )
-   for index, _5789 in ipairs( initFuncType:get_argTypeInfoList() ) do
+   for index, _5799 in ipairs( initFuncType:get_argTypeInfoList() ) do
       if index ~= 1 then
          self:write( ", " )
       end
@@ -2457,7 +2457,7 @@ function convFilter:outputConstructor( node )
          superArgNum = 0
       end
       
-      for index, _5797 in ipairs( initFuncType:get_argTypeInfoList() ) do
+      for index, _5807 in ipairs( initFuncType:get_argTypeInfoList() ) do
          if superArgNum < index then
             local sIndex = index - superArgNum
             local memberNode = node:get_memberList()[sIndex]
@@ -2600,6 +2600,7 @@ end
 
 
 function convFilter:processExpCall( node, opt )
+   local __func__ = '@lune.@base.@convGo.convFilter.processExpCall'
 
    local funcType = node:get_func():get_expType()
    
@@ -2621,19 +2622,86 @@ function convFilter:processExpCall( node, opt )
    
    if Ast.isBuiltin( funcType:get_typeId() ) then
       local builtinFuncs = TransUnit.getBuiltinFunc(  )
-      do
-         local _switchExp = funcType
-         if _switchExp == builtinFuncs.lns_print then
-            self:write( "Lns_print" )
-         else 
-            
-               filter( node:get_func(), self, node )
+      
+      if funcType:get_kind() == Ast.TypeInfoKind.Method then
+         local fieldNode = _lune.unwrap( _lune.__Cast( node:get_func(), 3, Nodes.RefFieldNode ))
+         
+         filter( fieldNode:get_prefix(), self, fieldNode )
+         
+         do
+            local _switchExp = funcType
+            if _switchExp == builtinFuncs.list_insert then
+               self:write( ".Insert" )
+            elseif _switchExp == builtinFuncs.list_remove then
+               self:write( ".Remove" )
+            else 
+               
+                  Util.err( string.format( "%s: not support -- %s", __func__, funcType:getTxt(  )) )
+            end
          end
+         
+      else
+       
+         do
+            local _switchExp = funcType
+            if _switchExp == builtinFuncs.lns_print then
+               self:write( "Lns_print" )
+            else 
+               
+                  Util.err( string.format( "%s: not support -- %s", __func__, funcType:getTxt(  )) )
+            end
+         end
+         
       end
       
    else
     
-      filter( node:get_func(), self, node )
+      if funcType:get_kind() == Ast.TypeInfoKind.Method then
+         local fieldNode = _lune.unwrap( _lune.__Cast( node:get_func(), 3, Nodes.RefFieldNode ))
+         
+         filter( fieldNode:get_prefix(), self, fieldNode )
+         
+         if Ast.isBuiltin( funcType:get_typeId() ) then
+            local builtinFuncs = TransUnit.getBuiltinFunc(  )
+            do
+               local _switchExp = funcType
+               if _switchExp == builtinFuncs.list_insert then
+                  self:write( ".Insert" )
+               elseif _switchExp == builtinFuncs.list_remove then
+                  self:write( ".Remove" )
+               else 
+                  
+                     Util.err( string.format( "%s: not support -- %s", __func__, funcType:getTxt(  )) )
+               end
+            end
+            
+         else
+          
+            self:write( "." )
+            do
+               local symbol = fieldNode:get_symbolInfo()
+               if symbol ~= nil then
+                  do
+                     local _switchExp = funcType:get_kind()
+                     if _switchExp == Ast.TypeInfoKind.Method then
+                        self:write( "FP." )
+                        self:write( self:getFuncSymbol( funcType ) )
+                     else 
+                        
+                           self:outputSymbol( _lune.newAlge( SymbolKind.Member, {Ast.isPubToExternal( symbol:get_accessMode() )}), fieldNode:get_field().txt )
+                     end
+                  end
+                  
+               end
+            end
+            
+         end
+         
+      else
+       
+         filter( node:get_func(), self, node )
+      end
+      
    end
    
    self:write( "(" )
@@ -3014,45 +3082,63 @@ function convFilter:processRefField( node, opt )
    end
    
    
-   filter( node:get_prefix(), self, node )
+   local openParenNum
    
-   if node:get_expType():get_kind() == Ast.TypeInfoKind.Method and Ast.isBuiltin( node:get_expType():get_typeId() ) then
-      local builtinFuncs = TransUnit.getBuiltinFunc(  )
-      do
-         local _switchExp = node:get_expType()
-         if _switchExp == builtinFuncs.list_insert then
-            self:write( ".Insert" )
-         elseif _switchExp == builtinFuncs.list_remove then
-            self:write( ".Remove" )
-         else 
-            
-               Util.err( string.format( "%s: not support -- %s", __func__, node:get_expType():getTxt(  )) )
-         end
+   local andOp
+   
+   if not node:hasNilAccess(  ) then
+      openParenNum = 0
+      andOp = false
+      if not node:get_prefix():hasNilAccess(  ) then
+         filter( node:get_prefix(), self, node )
+      else
+       
+         Util.err( string.format( "%s: not support", __func__) )
       end
       
    else
     
-      self:write( "." )
-      do
-         local symbol = node:get_symbolInfo()
-         if symbol ~= nil then
-            do
-               local _switchExp = node:get_expType():get_kind()
-               if _switchExp == Ast.TypeInfoKind.Method then
-                  self:write( "FP." )
-                  self:write( self:getFuncSymbol( node:get_expType() ) )
-               elseif _switchExp == Ast.TypeInfoKind.Class then
-                  self:write( "FP." )
-                  self:write( self:getTypeSymbol( node:get_expType() ) )
-               else 
-                  
-                     self:outputSymbol( _lune.newAlge( SymbolKind.Member, {Ast.isPubToExternal( symbol:get_accessMode() )}), node:get_field().txt )
-               end
-            end
-            
-         end
+      if not node:get_prefix():hasNilAccess(  ) then
+         self:write( "Lns_NilAccFin(" )
+         self:write( "Lns_NilAccPush(" )
+         filter( node:get_prefix(), self, node )
+         self:writeln( ") && " )
+      else
+       
+         filter( node:get_prefix(), self, node )
       end
       
+      self:write( "Lns_NilAccPush(" )
+      if opt.node:hasNilAccess(  ) then
+         andOp = true
+         openParenNum = 1
+      else
+       
+         andOp = false
+         openParenNum = 2
+      end
+      
+      self:write( string.format( "Lns_NilAccPop().(%s)", self:type2gotype( node:get_prefix():get_expType():get_nonnilableType() )) )
+   end
+   
+   
+   self:write( "." )
+   do
+      local symbol = node:get_symbolInfo()
+      if symbol ~= nil then
+         self:outputSymbol( _lune.newAlge( SymbolKind.Member, {Ast.isPubToExternal( symbol:get_accessMode() )}), node:get_field().txt )
+      else
+         Util.err( string.format( "not support -- %s", __func__) )
+      end
+   end
+   
+   
+   for _5950 = 1, openParenNum do
+      self:write( ")" )
+   end
+   
+   if andOp then
+      self:writeln( "&&" )
    end
    
 end

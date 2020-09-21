@@ -271,6 +271,11 @@ pub abstract class Node {
    }
 
    pub fn getSymbolInfo(): &List<&Ast.SymbolInfo>;
+
+   /** このコードで nil 条件演算子を使用しているか。 */
+   pub fn hasNilAccess(): bool {
+      return false;
+   }
    
 
    pub abstract fn visit( visitor:NodeVisitor, depth:int ): bool;
@@ -480,6 +485,14 @@ macro _declNodeClass(
             argList.insert( `{ ,,,fieldName: ,,,typeName, } );
             argSymList.insert( `{, ,,,fieldName } );
             initStatList.insert( `{ self.,,,fieldName = ,,,fieldName; } );
+
+            if fieldName == "nilAccess" {
+               fieldStatList.insert( `{
+                  pub override fn hasNilAccess():bool {
+                     return self.nilAccess;
+                  }
+               });
+            }
 
             // 子 Node を列挙する処理
             if typeName.find( "Node" ## ) and not workName.find( "^@"## ) {

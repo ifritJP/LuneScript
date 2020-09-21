@@ -313,3 +313,23 @@ class Testggg {
       print( sub( "hoge" )** );
    }
 }
+{
+   class Test0 {
+      pub let val:int {pub};
+   }
+   class Test1 {
+      pub let val0:Test0 {pub};
+   }
+   class Test2 {
+      pub let val1:Test1! {pub};
+   }
+   class Test3 {
+      pub let val2:Test2! {pub};
+   }
+   fn func(test:Test3) {
+      print( test.val2$.val1$.val0$.val );
+   }
+   func( new Test3(##) );
+   func( new Test3( new Test2(##)) );
+   func( new Test3( new Test2( new Test1( new Test0( 10 )  ))) );
+}

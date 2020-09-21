@@ -3,12 +3,32 @@ package main
 import "fmt"
 import "time"
 import "math"
+import "reflect"
 
 type LnsInt = int
 type LnsReal = float64
 type LnsAny = interface{}
 
 var LnsNone interface{} = nil
+
+
+func Lns_IsNil( val LnsAny ) bool {
+    if val == nil {
+        return true;
+    }
+    switch val.(type) {
+    case LnsInt:
+        return false;
+    case LnsReal:
+        return false;
+    case bool:
+        return false;
+    case string:
+        return false;
+    default:
+        return reflect.ValueOf(val).IsNil()
+    }    
+}
 
 type LnsAlgeVal interface {
     getTxt() string
@@ -18,11 +38,38 @@ type LnsAlgeVal interface {
 type LnsEnv struct {
     valStack []LnsAny
     stackPos int
+    nilAccStack []LnsAny
+}
+
+var cur_LnsEnv = LnsEnv{ []LnsAny{}, -1, []LnsAny{} }
+
+func Lns_NilAccPush( obj interface{} ) bool {
+    if Lns_IsNil( obj )  {
+        return false
+    }
+    cur_LnsEnv.nilAccStack = append( cur_LnsEnv.nilAccStack, obj )
+    return true
+}
+
+func Lns_NilAccLast( obj interface{} ) bool {
+    cur_LnsEnv.nilAccStack = append( cur_LnsEnv.nilAccStack, obj )
+    return true
+}
+
+func Lns_NilAccPop() LnsAny {
+    obj := cur_LnsEnv.nilAccStack[ len( cur_LnsEnv.nilAccStack ) - 1 ]
+    cur_LnsEnv.nilAccStack = cur_LnsEnv.nilAccStack[ : len( cur_LnsEnv.nilAccStack ) - 1 ]
+    return obj
+}
+
+func Lns_NilAccFin( ret bool) LnsAny {
+    if ret {
+        return Lns_NilAccPop()
+    }
+    return nil
 }
 
 
-
-var cur_LnsEnv = LnsEnv{ []LnsAny{}, -1 }
 
 type LnsList struct {
     Items []LnsAny
@@ -32,12 +79,12 @@ func NewLnsList( list []LnsAny ) *LnsList {
     return &LnsList{ list }
 }
 func (lnsList *LnsList) Insert( val LnsAny ) {
-    if val != nil {
+    if !Lns_IsNil( val ) {
         lnsList.Items = append( lnsList.Items, val )
     }
 }
 func (lnsList *LnsList) Remove( index LnsAny ) LnsAny {
-    if index == nil {
+    if Lns_IsNil( index ) {
         ret := lnsList.Items[ len(lnsList.Items) - 1 ]
         lnsList.Items = lnsList.Items[ : len(lnsList.Items) - 1 ]
         return ret
@@ -58,7 +105,7 @@ func (lnsList *LnsList) Len() LnsInt {
 
 
 func Lns_isCondTrue( stem LnsAny ) bool {
-    if stem == nil {
+    if Lns_IsNil( stem ) {
         return false;
     }
     switch stem.(type) {
@@ -79,7 +126,7 @@ func Lns_car( multi ...LnsAny ) LnsAny {
     if len( multi ) == 0 {
         return nil
     }
-    if multi[0] == nil {
+    if Lns_IsNil( multi[0] ) {
         return nil
     }
     return multi[0]
@@ -101,7 +148,7 @@ func Lns_print( multi []LnsAny ) {
 
 
 func Lns_ToString( val LnsAny ) string {
-    if val == nil {
+    if Lns_IsNil( val ) {
         return "nil"
     }
     switch val.(type) {

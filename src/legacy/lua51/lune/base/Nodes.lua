@@ -590,6 +590,10 @@ function Node:getBreakKind( checkMode )
 
    return BreakKind.None
 end
+function Node:hasNilAccess(  )
+
+   return false
+end
 function Node.setmeta( obj )
   setmetatable( obj, { __index = Node  } )
 end
@@ -723,7 +727,7 @@ end
 function NodeManager:__init() 
    self.idSeed = 0
    self.nodeKind2NodeList = {}
-   for kind, _2455 in pairs( nodeKind2NameMap ) do
+   for kind, _2458 in pairs( nodeKind2NameMap ) do
       if not self.nodeKind2NodeList[kind] then
          self.nodeKind2NodeList[kind] = {}
       end
@@ -5331,6 +5335,10 @@ end
 local ExpRefItemNode = {}
 setmetatable( ExpRefItemNode, { __index = Node } )
 _moduleObj.ExpRefItemNode = ExpRefItemNode
+function ExpRefItemNode:hasNilAccess(  )
+
+   return self.nilAccess
+end
 function ExpRefItemNode:processFilter( filter, opt )
 
    filter:processExpRefItem( self, opt )
@@ -5464,6 +5472,10 @@ end
 local ExpCallNode = {}
 setmetatable( ExpCallNode, { __index = Node } )
 _moduleObj.ExpCallNode = ExpCallNode
+function ExpCallNode:hasNilAccess(  )
+
+   return self.nilAccess
+end
 function ExpCallNode:processFilter( filter, opt )
 
    filter:processExpCall( self, opt )
@@ -6564,6 +6576,10 @@ end
 local RefFieldNode = {}
 setmetatable( RefFieldNode, { __index = Node } )
 _moduleObj.RefFieldNode = RefFieldNode
+function RefFieldNode:hasNilAccess(  )
+
+   return self.nilAccess
+end
 function RefFieldNode:processFilter( filter, opt )
 
    filter:processRefField( self, opt )
@@ -6686,6 +6702,10 @@ end
 local GetFieldNode = {}
 setmetatable( GetFieldNode, { __index = Node } )
 _moduleObj.GetFieldNode = GetFieldNode
+function GetFieldNode:hasNilAccess(  )
+
+   return self.nilAccess
+end
 function GetFieldNode:processFilter( filter, opt )
 
    filter:processGetField( self, opt )
@@ -11292,7 +11312,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, _8123 in pairs( self.map ) do
+   for key, _8142 in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -11327,8 +11347,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, _8131 in ipairs( __sorted ) do
-         local key = __map[ _8131 ]
+      for __index, _8150 in ipairs( __sorted ) do
+         local key = __map[ _8150 ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false
