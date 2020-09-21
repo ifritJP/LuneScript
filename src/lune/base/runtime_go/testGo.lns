@@ -280,3 +280,36 @@ class Testggg {
    sub( Val.val1 );
    sub( Val.val2( 100, "xyz" ) );
 }
+{
+   fn func( val:int, ... ) {
+      print( ..., val );
+   }
+
+   func( 1, 2, "abc" );
+}
+{
+   fn func( val:int, ... ) {
+      let list = [ ... ];
+      foreach item in list {
+         print( item );
+      }
+   }
+
+   func( 1, 2, "abc" );
+}
+{
+   let val = -1.5;
+   for index = 10,1, val {
+      print( index );
+   }
+}
+{
+   form TestForm( val:str ):int, int;
+   fn func( txt:str ) : TestForm! {
+      return fn ( val:str ):int,int { print( val .. txt ); return 1, 2; };
+   }
+   let sub = func( "xyz" );
+   when! sub {
+      print( sub( "hoge" )** );
+   }
+}

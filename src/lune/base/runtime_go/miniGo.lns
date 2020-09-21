@@ -1,21 +1,13 @@
-alge Val {
-   val1,
-   val2( int, str ),
+class Test {
+   let val:int;
+   pub fn func():int {
+      return self.val;
+   }
 }
+fn func( test:Test! ) {
+   when! test {
+      print( test.func() );
+   }
+}
+func( new Test(10) );
 
-fn sub( val:Val ) {
-   match val {
-      case .val2( val1, val2 ) {
-         print( "val2 %s" (val2) );
-      }
-      default {
-         print( "other" );
-      }
-   }
-   if val == .val1 {
-      print( "equal" );
-   }
-   print( val.$_txt );
-}
-sub( Val.val1 );
-sub( Val.val2( 100, "xyz" ) );

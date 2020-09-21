@@ -1083,6 +1083,9 @@ test-miniGo:
 	$(call buildGo,$(GO_RUNTIME)/miniGo.go)
 	./miniGo
 	$(MAKE) test-go
+miniGo-go:
+	$(call buildGo,$(GO_RUNTIME)/miniGo.go)
+	./miniGo
 
 scratch-go:
 	go run $(GO_RUNTIME)/scratch.go $(GO_SRC)

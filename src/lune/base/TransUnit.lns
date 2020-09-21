@@ -3577,15 +3577,11 @@ fn TransUnit.analyzeFor( firstToken: &Parser.Token ) mut : Nodes.ForNode {
       self.error( "not symbol" );
    }
    self.checkNextToken( "=" );
-   let exp1 = self.analyzeExpOne( false, false## );
+   let mut exp1 = self.analyzeExpOne( false, false## );
    if not Ast.isNumberType( exp1.$expType ) {
       self.addErrMess( exp1.$pos,
                        "exp1 is not number -- %s" (exp1.$expType.getTxt(##)) );
    }
-   let symbolInfo = self.addLocalVar(
-      val.pos, false, true, val.txt, exp1.$expType, .IMut## );
-   // // for ループ用のカウントシンボルは、 アクセスありにセットしておく
-   // symbolInfo.set_hasAccessFromAny( true );
    self.checkNextToken( "," );
    let exp2 = self.analyzeExpOne( false, false## );
    if not Ast.isNumberType( exp2.$expType ) {
@@ -3607,6 +3603,20 @@ fn TransUnit.analyzeFor( firstToken: &Parser.Token ) mut : Nodes.ForNode {
    else {
       self.pushback();
    }
+
+   if exp1.$expType == Ast.builtinTypeInt and
+      exp2.$expType == Ast.builtinTypeReal or
+      exp3$.$expType == Ast.builtinTypeReal
+   {
+      // いずれかが real の場合、 exp1 を real にキャストする
+      exp1 = Nodes.ExpCastNode.create(
+         self.nodeManager, exp1.$pos,
+         self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeReal ],
+         exp1, Ast.builtinTypeReal, .Force );
+   }
+   
+   let symbolInfo = self.addLocalVar(
+      val.pos, false, true, val.txt, exp1.$expType, .IMut## );
 
    let mut node = Nodes.ForNode.create(
       self.nodeManager, firstToken.pos,

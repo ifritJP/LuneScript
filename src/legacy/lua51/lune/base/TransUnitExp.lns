@@ -77,29 +77,34 @@ fn TransUnit.createExpList(
             // 複数の結果を持つ場合
             if index ~= #expList {
                // 最終ノード以外
+               let firstType;
+               if! let dddType = exp.$expType@@@Ast.DDDTypeInfo {
+                  firstType = dddType.$typeInfo.$nilableTypeInfo;
+               }
+               else {
+                  firstType = exp.$expType;
+               }
                workList.insert(
                   Nodes.ExpMultiTo1Node.create(
                      self.nodeManager, exp.$pos,
-                     exp.$macroArgFlag, [ exp.$expType ], exp ) );
+                     exp.$macroArgFlag, [ firstType ], exp ) );
             }
             else {
                workList.insert( exp );
-               if Nodes.hasMultiValNode( exp ) {
-                  // 最終ノードが複数の値を持つ場合は、その複数の型を追加する。
-                  mRetExp = new Nodes.MRetExp( exp, index );
-                  foreach expType, listIndex in exp.$expTypeList {
-                     if listIndex ~= 1 {
-                        expTypeList.insert( expType );
-                     }
+               // 最終ノードが複数の値を持つ場合は、その複数の型を追加する。
+               mRetExp = new Nodes.MRetExp( exp, index );
+               foreach expType, listIndex in exp.$expTypeList {
+                  if listIndex ~= 1 {
+                     expTypeList.insert( expType );
                   }
-                  // 多値返却の場合、 ExpAccessMRet を追加する。
-                  foreach retType, retIndex in exp.$expTypeList {
-                     if retIndex ~= 1 {
-                        workList.insert( 
-                           Nodes.ExpAccessMRetNode.create(
-                              self.nodeManager, exp.$pos,
-                              exp.$macroArgFlag, [ retType ], exp, retIndex ) );
-                     }
+               }
+               // 多値返却の場合、 ExpAccessMRet を追加する。
+               foreach retType, retIndex in exp.$expTypeList {
+                  if retIndex ~= 1 {
+                     workList.insert( 
+                        Nodes.ExpAccessMRetNode.create(
+                           self.nodeManager, exp.$pos,
+                           exp.$macroArgFlag, [ retType ], exp, retIndex ) );
                   }
                }
             }
