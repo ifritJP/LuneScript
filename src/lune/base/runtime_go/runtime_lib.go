@@ -69,6 +69,39 @@ func Lns_NilAccFin( ret bool) LnsAny {
     return nil
 }
 
+func Lns_NilAccCall0( call func () ) bool {
+    call()
+    Lns_NilAccLast( nil )
+    return true
+}
+func Lns_NilAccCall1( call func () LnsAny ) bool {
+    Lns_NilAccLast( call() )
+    return true
+}
+func Lns_NilAccCall2( call func () (LnsAny,LnsAny) ) bool {
+    Lns_NilAccLast( Lns_2DDD( call() ) )
+    return true
+}
+func Lns_NilAccFinCall2( ret LnsAny ) (LnsAny,LnsAny) {
+    if Lns_IsNil( ret ) {
+        return nil, nil
+    }
+    list := ret.([]LnsAny)
+    return list[0], list[1]
+}
+func Lns_NilAccCall3( call func () (LnsAny,LnsAny,LnsAny) ) bool {
+    Lns_NilAccLast( Lns_2DDD( call() ) )
+    return true
+}
+func Lns_NilAccFinCall3( ret LnsAny ) (LnsAny,LnsAny,LnsAny) {
+    if Lns_IsNil( ret ) {
+        return nil, nil, nil
+    }
+    list := ret.([]LnsAny)
+    return list[0], list[1],list[2]
+}
+
+
 
 
 type LnsList struct {

@@ -1,4 +1,35 @@
-let mut work = [{ "ab":1 }, { "xyz":2 }];
-work.remove(##);
-work.insert( {"eee":10} );
-
+class Test {
+   pub fn func1():int {
+      return 1;
+   }
+   pub fn func2():int, int {
+      return 1, 2;
+   }
+   pub fn func5():int, int, int, int, int {
+      return 1, 2, 3, 4, 5;
+   }
+}
+fn func( test:Test! ) {
+   {
+      let! val1 = test$.func1$() {
+         print( "NG" );
+         return;
+      };
+      print( val1 );
+   }
+   {
+      let! val1, val2 = test$.func2$() {
+         print( "NG" );
+         return;
+      };
+      print( val1 + val2 );
+   }
+   {
+      let! val1, val2, val3, val4, val5 = test$.func5$() {
+         print( "NG" );
+         return;
+      };
+      print( val1 + val2 + val3 + val4 + val5  );
+   }
+}
+func( new Test() );

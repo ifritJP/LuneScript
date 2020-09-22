@@ -32,6 +32,8 @@ import lune.base.LuaVer;
 import lune.base.Parser;
 import lune.base.LuneControl;
 
+let MaxNilAccNum = 3;
+
 pub class Opt {
    pub let node:&Nodes.Node;
 }
@@ -513,6 +515,37 @@ fn convFilter.processConvExp( nodeId:int, dstTypeList:&List<&Ast.TypeInfo>,
    self.writeln( "}" );
 }
 
+fn convFilter.outputNilAccCall( node: &Nodes.ExpCallNode ) mut {
+   if not node.hasNilAccess() {
+      return;
+   }
+   if #node.$expTypeList > MaxNilAccNum {
+      let mut anys = "LnsAny";
+      let mut nils = "nil";
+      let mut lists = "list[0]";
+      for count = 2, #node.$expTypeList {
+         anys = "%s,LnsAny" (anys);
+         nils = "%s,nil" (nils);
+         lists = "%s,list[%d]" (lists, count - 1);
+      }
+      let name = "%s_%d" (self.moduleTypeInfo.$rawTxt.gsub( "@", "" ), node.$id);
+      self.write(
+      ```
+func lns_NilAccCall_%s( call func () (%s) ) bool {
+    Lns_NilAccLast( Lns_2DDD( call() ) )
+    return true
+}
+func lns_NilAccFinCall_%s( ret LnsAny ) (%s) {
+    if Lns_IsNil( ret ) {
+        return %s
+    }
+    list := ret.([]LnsAny)
+    return %s
+}
+``` ( name, anys, name, anys, nils, lists) );
+   }
+}
+
 
 pub override fn convFilter.processRoot(
    node: Nodes.RootNode, opt: Opt ) mut
@@ -539,6 +572,9 @@ pub override fn convFilter.processRoot(
    }
    foreach workNode in node.$nodeManager.getDeclFormNodeList() {
       filter( workNode, self, node );
+   }
+   foreach workNode in node.$nodeManager.getExpCallNodeList() {
+      self.outputNilAccCall( workNode );
    }
 
    foreach workNode in node.$nodeManager.getExpCallNodeList() {
@@ -1226,7 +1262,9 @@ pub override fn convFilter.processDeclVar(
    
    if node.$unwrapFlag {
       if! let expList, unwrapBlock = node.$expList, node.$unwrapBlock {
-         declVar();
+         if node.$symbolInfoList[ 1 ].$scope ~= self.moduleScope {
+            declVar();
+         }
 
          // 一旦テンポラリに入れる
          self.writeln( "" );
@@ -1259,9 +1297,9 @@ pub override fn convFilter.processDeclVar(
          if! let thenBlock = node.$thenBlock {
             self.writeln( "} else {" );
             self.pushIndent(##);
-            foreach varInfo, index in node.$varList {
-               self.write( "%s = _%s" (varInfo.$name.txt, varInfo.$name.txt) );
-               self.outputConv( getExpType( expList, index ), varInfo.$actualType );
+            foreach varInfo, index in node.$symbolInfoList {
+               self.write( "%s = _%s" (self.getSymbolSym( varInfo ), varInfo.$name) );
+               self.outputConv( getExpType( expList, index ), varInfo.$typeInfo );
                self.writeln( "" );
             }
             self.popIndent();
@@ -1269,6 +1307,14 @@ pub override fn convFilter.processDeclVar(
             self.writeln( "}" );
          }
          else {
+            self.writeln( "} else {" );
+            self.pushIndent(##);
+            foreach varInfo, index in node.$symbolInfoList {
+               self.write( "%s = _%s" (self.getSymbolSym( varInfo ), varInfo.$name) );
+               self.outputConv( getExpType( expList, index ), varInfo.$typeInfo );
+               self.writeln( "" );
+            }
+            self.popIndent();
             self.writeln( "}" );
          }
          
@@ -2006,15 +2052,74 @@ pub override fn convFilter.processExpCall(
       self.write( ")" );
       return;
    }
-   
 
-   if Ast.isBuiltin( funcType.$typeId ) {
-      let builtinFuncs = TransUnit.getBuiltinFunc();
 
-      if funcType.$kind == .Method {
-         let fieldNode = unwrap node.$func@@@Nodes.RefFieldNode;
+   let nilAccName = "%s_%d" (self.moduleTypeInfo.$rawTxt.gsub( "@", "" ), node.$id);
+   fn processNilAcc( fieldNode :&Nodes.RefFieldNode ) {
+      if not node.hasNilAccess() {
+         return;
+      }
+      let retNum = #node.$expTypeList;
+      switch retNum {
+         case 0 {
+            self.write( "Lns_NilAccCall0( func () {" );
+         }
+         case 1 {
+            self.write( "Lns_NilAccCall1( func () LnsAny { return " );
+         }
+         default {
+            if retNum <= MaxNilAccNum {
+               let mut anys = "LnsAny";
+               for _ = 2, retNum {
+                  anys = "%s,LnsAny" (anys);
+               }
+               self.write(
+                  "Lns_NilAccCall%d( func () (%s) { return "
+                  (retNum, anys) );
+            }
+            else {
+               let mut args = "LnsAny";
+               for _ = 2, retNum {
+                  args = "%s,LnsAny" (args);
+               }
+               self.write(
+                  "lns_NilAccCall_%s( func () (%s) { return " (nilAccName, args) );
+            }
+         }
+      }
+      self.write( "Lns_NilAccPop().(%s)."
+         (self.type2gotype( fieldNode.$prefix.$expType.$nonnilableType ) ) );
+   }
 
-         filter( fieldNode.$prefix, self, fieldNode );
+   let mut closeParen = false;
+   if! let fieldNode = node.$func@@@Nodes.RefFieldNode {
+      if node.hasNilAccess() {
+         if #funcType.$retTypeInfoList >= 2 {
+            if #funcType.$retTypeInfoList <= MaxNilAccNum {
+               self.write( "Lns_NilAccFinCall%d(" (#funcType.$retTypeInfoList) );
+            }
+            else {
+               self.write( "lns_NilAccFinCall_%s(" (nilAccName) );
+            }
+            closeParen = true;
+         }
+      }
+      if not funcType.$staticFlag {
+         if fieldNode.hasNilAccess() and not fieldNode.$prefix.hasNilAccess() {
+            self.write( "Lns_NilAccFin(" );
+            self.write( "Lns_NilAccPush(" );
+            filter( fieldNode.$prefix, self, fieldNode );
+            self.write( ") && " );
+         } else {
+            filter( fieldNode.$prefix, self, fieldNode );
+         }
+      }
+
+      processNilAcc( fieldNode );
+      
+      if Ast.isBuiltin( funcType.$typeId ) {
+         let builtinFuncs = TransUnit.getBuiltinFunc();
+
          
          switch funcType {
             case builtinFuncs.list_insert {
@@ -2027,24 +2132,7 @@ pub override fn convFilter.processExpCall(
                Util.err( "%s: not support -- %s" (__func__, funcType.getTxt(##)) );
             }
          }
-      }
-      else {
-         switch funcType {
-            case builtinFuncs.lns_print {
-               self.write( "Lns_print" );
-            }
-            default {
-               Util.err( "%s: not support -- %s" (__func__, funcType.getTxt(##)) );
-            }
-         }
-      }
-   }
-   else {
-      if funcType.$kind == .Method {
-         let fieldNode = unwrap node.$func@@@Nodes.RefFieldNode;
-
-         filter( fieldNode.$prefix, self, fieldNode );
-         
+      } else {
          if Ast.isBuiltin( funcType.$typeId )
          {
             let builtinFuncs = TransUnit.getBuiltinFunc();
@@ -2059,27 +2147,39 @@ pub override fn convFilter.processExpCall(
                   Util.err( "%s: not support -- %s" (__func__, funcType.getTxt(##)) );
                }
             }
-         }
-         else {
-            self.write( "." );
+         } else {
             if! let symbol = fieldNode.$symbolInfo {
                switch funcType.$kind {
                   case .Method {
-                     self.write( "FP." );
+                     self.write( ".FP." );
                      self.write( self.getFuncSymbol( funcType ) );
                   }
                   default {
-                     self.outputSymbol(
-                        .Member( Ast.isPubToExternal( symbol.$accessMode ) ),
-                        fieldNode.$field.txt );      
+                     self.write( self.getSymbolSym( symbol ) );
                   }
                }
+            } else {
+               Util.err( "%s: not support -- %s" (__func__, funcType.getTxt(##)) );
+            }
+         }
+      }
+   } else {
+      if Ast.isBuiltin( funcType.$typeId ) {
+         let builtinFuncs = TransUnit.getBuiltinFunc();
+      
+         switch funcType {
+            case builtinFuncs.lns_print {
+               self.write( "Lns_print" );
+            }
+            default {
+               Util.err( "%s: not support -- %s" (__func__, funcType.getTxt(##)) );
             }
          }
       } else {
          filter( node.$func, self, node );
       }
    }
+
    self.write( "(" );
    
 
@@ -2090,6 +2190,13 @@ pub override fn convFilter.processExpCall(
    }
    
    self.write( ")" );
+
+   if node.hasNilAccess() {
+      self.write( "}))" );
+      if closeParen {
+         self.write( ")" );
+      }
+   }
 }
 
 pub override fn convFilter.processExpAccessMRet(
@@ -2450,8 +2557,9 @@ pub override fn convFilter.processRefField(
    
    self.write( "." );
    if! let symbol = node.$symbolInfo {
-      self.outputSymbol(
-         .Member( Ast.isPubToExternal( symbol.$accessMode ) ), node.$field.txt );
+      self.write( self.getSymbolSym( symbol ) );
+      // self.outputSymbol(
+      //    .Member( Ast.isPubToExternal( symbol.$accessMode ) ), node.$field.txt );
    } else {
       Util.err( "not support -- %s" (__func__) );
    }

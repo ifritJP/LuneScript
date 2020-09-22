@@ -40,6 +40,15 @@
    func( nil, nil );
 }
 {
+   fn func() : int! {
+      return 1;
+   }
+   let! val = func() {
+      val = 2;
+   };
+   print( val );
+}
+{
    fn func( val1:int!, val2:int! ) {
       let! val10, val20 = val1, val2 {
          print( val1, val2 );
@@ -316,9 +325,15 @@ class Testggg {
 {
    class Test0 {
       pub let val:int {pub};
+      pub fn func( val:int ):int {
+         return self.val + val;
+      }
    }
    class Test1 {
       pub let val0:Test0 {pub};
+      pub fn func( val:int ):int {
+         return self.val0.$val + val;
+      }
    }
    class Test2 {
       pub let val1:Test1! {pub};
@@ -327,9 +342,46 @@ class Testggg {
       pub let val2:Test2! {pub};
    }
    fn func(test:Test3) {
-      print( test.val2$.val1$.val0$.val );
+      print( test.val2$.val1$.func$( 1 ), test.val2$.val1$.val0$.func$( 10 ) );
    }
    func( new Test3(##) );
    func( new Test3( new Test2(##)) );
    func( new Test3( new Test2( new Test1( new Test0( 10 )  ))) );
+}
+{
+   class Test {
+      pub fn func1():int {
+         return 1;
+      }
+      pub fn func2():int, int {
+         return 1, 2;
+      }
+      pub fn func5():int, int, int, int, int {
+         return 1, 2, 3, 4, 5;
+      }
+   }
+   fn func( test:Test! ) {
+      {
+         let! val1 = test$.func1$() {
+            print( "NG" );
+            return;
+         };
+         print( val1 );
+      }
+      {
+         let! val1, val2 = test$.func2$() {
+            print( "NG" );
+            return;
+         };
+         print( val1 + val2 );
+      }
+      {
+         let! val1, val2, val3, val4, val5 = test$.func5$() {
+            print( "NG" );
+            return;
+         };
+         print( val1 + val2 + val3 + val4 + val5  );
+      }
+   }
+   func( new Test() );
 }
