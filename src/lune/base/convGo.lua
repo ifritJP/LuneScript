@@ -2652,6 +2652,136 @@ function convFilter:processDeclClass( node, opt )
 end
 
 
+function convFilter:outputCallPrefix( callId, node, prefixNode, funcSymbol )
+   local __func__ = '@lune.@base.@convGo.convFilter.outputCallPrefix'
+
+   local funcType = funcSymbol:get_typeInfo()
+   local nilAccName = string.format( "%s_%d", self.moduleTypeInfo:get_rawTxt():gsub( "@", "" ), callId)
+   local function processNilAcc( workPrefixNode )
+   
+      if not node:hasNilAccess(  ) then
+         return 
+      end
+      
+      local retNum = #funcType:get_retTypeInfoList()
+      do
+         local _switchExp = retNum
+         if _switchExp == 0 then
+            self:write( "Lns_NilAccCall0( func () {" )
+         elseif _switchExp == 1 then
+            self:write( "Lns_NilAccCall1( func () LnsAny { return " )
+         else 
+            
+               if retNum <= MaxNilAccNum then
+                  local anys = "LnsAny"
+                  for _5867 = 2, retNum do
+                     anys = string.format( "%s,LnsAny", anys)
+                  end
+                  
+                  self:write( string.format( "Lns_NilAccCall%d( func () (%s) { return ", retNum, anys) )
+               else
+                
+                  local args = "LnsAny"
+                  for _5869 = 2, retNum do
+                     args = string.format( "%s,LnsAny", args)
+                  end
+                  
+                  self:write( string.format( "lns_NilAccCall_%s( func () (%s) { return ", nilAccName, args) )
+               end
+               
+         end
+      end
+      
+      self:write( string.format( "Lns_NilAccPop().(%s)", self:type2gotype( workPrefixNode:get_expType():get_nonnilableType() )) )
+   end
+   
+   local closeParen = false
+   if prefixNode ~= nil then
+      if node:hasNilAccess(  ) then
+         if #funcType:get_retTypeInfoList() >= 2 then
+            if #funcType:get_retTypeInfoList() <= MaxNilAccNum then
+               self:write( string.format( "Lns_NilAccFinCall%d(", #funcType:get_retTypeInfoList()) )
+            else
+             
+               self:write( string.format( "lns_NilAccFinCall_%s(", nilAccName) )
+            end
+            
+            closeParen = true
+         end
+         
+      end
+      
+      if not funcType:get_staticFlag() then
+         if node:hasNilAccess(  ) and not prefixNode:hasNilAccess(  ) then
+            self:write( "Lns_NilAccFin(" )
+            self:write( "Lns_NilAccPush(" )
+            filter( prefixNode, self, node )
+            self:writeln( ") && " )
+         else
+          
+            filter( prefixNode, self, node )
+         end
+         
+      end
+      
+      
+      processNilAcc( prefixNode )
+      
+      if Ast.isBuiltin( funcType:get_typeId() ) then
+         local builtinFuncs = TransUnit.getBuiltinFunc(  )
+         
+         do
+            local _switchExp = funcType
+            if _switchExp == builtinFuncs.list_insert then
+               self:write( ".Insert" )
+            elseif _switchExp == builtinFuncs.list_remove then
+               self:write( ".Remove" )
+            else 
+               
+                  Util.err( string.format( "%s: not support -- %s", __func__, funcType:getTxt(  )) )
+            end
+         end
+         
+      else
+       
+         if Ast.isBuiltin( funcType:get_typeId() ) then
+            local builtinFuncs = TransUnit.getBuiltinFunc(  )
+            do
+               local _switchExp = funcType
+               if _switchExp == builtinFuncs.list_insert then
+                  self:write( ".Insert" )
+               elseif _switchExp == builtinFuncs.list_remove then
+                  self:write( ".Remove" )
+               else 
+                  
+                     Util.err( string.format( "%s: not support -- %s", __func__, funcType:getTxt(  )) )
+               end
+            end
+            
+         else
+          
+            do
+               local _switchExp = funcType:get_kind()
+               if _switchExp == Ast.TypeInfoKind.Method then
+                  self:write( ".FP." )
+                  self:write( self:getFuncSymbol( funcType ) )
+               else 
+                  
+                     self:write( self:getSymbolSym( funcSymbol ) )
+               end
+            end
+            
+         end
+         
+      end
+      
+   end
+   
+   
+   return closeParen
+end
+
+
 function convFilter:processExpCall( node, opt )
    local __func__ = '@lune.@base.@convGo.convFilter.processExpCall'
 
@@ -2673,135 +2803,11 @@ function convFilter:processExpCall( node, opt )
    end
    
    
-   local nilAccName = string.format( "%s_%d", self.moduleTypeInfo:get_rawTxt():gsub( "@", "" ), node:get_id())
-   local function processNilAcc( fieldNode )
-   
-      if not node:hasNilAccess(  ) then
-         return 
-      end
-      
-      local retNum = #node:get_expTypeList()
-      do
-         local _switchExp = retNum
-         if _switchExp == 0 then
-            self:write( "Lns_NilAccCall0( func () {" )
-         elseif _switchExp == 1 then
-            self:write( "Lns_NilAccCall1( func () LnsAny { return " )
-         else 
-            
-               if retNum <= MaxNilAccNum then
-                  local anys = "LnsAny"
-                  for _5868 = 2, retNum do
-                     anys = string.format( "%s,LnsAny", anys)
-                  end
-                  
-                  self:write( string.format( "Lns_NilAccCall%d( func () (%s) { return ", retNum, anys) )
-               else
-                
-                  local args = "LnsAny"
-                  for _5870 = 2, retNum do
-                     args = string.format( "%s,LnsAny", args)
-                  end
-                  
-                  self:write( string.format( "lns_NilAccCall_%s( func () (%s) { return ", nilAccName, args) )
-               end
-               
-         end
-      end
-      
-      self:write( string.format( "Lns_NilAccPop().(%s).", self:type2gotype( fieldNode:get_prefix():get_expType():get_nonnilableType() )) )
-   end
-   
    local closeParen = false
    do
       local fieldNode = _lune.__Cast( node:get_func(), 3, Nodes.RefFieldNode )
       if fieldNode ~= nil then
-         if node:hasNilAccess(  ) then
-            if #funcType:get_retTypeInfoList() >= 2 then
-               if #funcType:get_retTypeInfoList() <= MaxNilAccNum then
-                  self:write( string.format( "Lns_NilAccFinCall%d(", #funcType:get_retTypeInfoList()) )
-               else
-                
-                  self:write( string.format( "lns_NilAccFinCall_%s(", nilAccName) )
-               end
-               
-               closeParen = true
-            end
-            
-         end
-         
-         if not funcType:get_staticFlag() then
-            if fieldNode:hasNilAccess(  ) and not fieldNode:get_prefix():hasNilAccess(  ) then
-               self:write( "Lns_NilAccFin(" )
-               self:write( "Lns_NilAccPush(" )
-               filter( fieldNode:get_prefix(), self, fieldNode )
-               self:write( ") && " )
-            else
-             
-               filter( fieldNode:get_prefix(), self, fieldNode )
-            end
-            
-         end
-         
-         
-         processNilAcc( fieldNode )
-         
-         if Ast.isBuiltin( funcType:get_typeId() ) then
-            local builtinFuncs = TransUnit.getBuiltinFunc(  )
-            
-            do
-               local _switchExp = funcType
-               if _switchExp == builtinFuncs.list_insert then
-                  self:write( ".Insert" )
-               elseif _switchExp == builtinFuncs.list_remove then
-                  self:write( ".Remove" )
-               else 
-                  
-                     Util.err( string.format( "%s: not support -- %s", __func__, funcType:getTxt(  )) )
-               end
-            end
-            
-         else
-          
-            if Ast.isBuiltin( funcType:get_typeId() ) then
-               local builtinFuncs = TransUnit.getBuiltinFunc(  )
-               do
-                  local _switchExp = funcType
-                  if _switchExp == builtinFuncs.list_insert then
-                     self:write( ".Insert" )
-                  elseif _switchExp == builtinFuncs.list_remove then
-                     self:write( ".Remove" )
-                  else 
-                     
-                        Util.err( string.format( "%s: not support -- %s", __func__, funcType:getTxt(  )) )
-                  end
-               end
-               
-            else
-             
-               do
-                  local symbol = fieldNode:get_symbolInfo()
-                  if symbol ~= nil then
-                     do
-                        local _switchExp = funcType:get_kind()
-                        if _switchExp == Ast.TypeInfoKind.Method then
-                           self:write( ".FP." )
-                           self:write( self:getFuncSymbol( funcType ) )
-                        else 
-                           
-                              self:write( self:getSymbolSym( symbol ) )
-                        end
-                     end
-                     
-                  else
-                     Util.err( string.format( "%s: not support -- %s", __func__, funcType:getTxt(  )) )
-                  end
-               end
-               
-            end
-            
-         end
-         
+         closeParen = self:outputCallPrefix( node:get_id(), fieldNode, fieldNode:get_prefix(), _lune.unwrap( fieldNode:get_symbolInfo()) )
       else
          if Ast.isBuiltin( funcType:get_typeId() ) then
             local builtinFuncs = TransUnit.getBuiltinFunc(  )
@@ -2838,7 +2844,14 @@ function convFilter:processExpCall( node, opt )
    self:write( ")" )
    
    if node:hasNilAccess(  ) then
-      self:write( "}))" )
+      self:write( "})" )
+      if opt.node:hasNilAccess(  ) then
+         self:writeln( " &&" )
+      else
+       
+         self:write( ")" )
+      end
+      
       if closeParen then
          self:write( ")" )
       end
@@ -3264,7 +3277,7 @@ function convFilter:processRefField( node, opt )
    end
    
    
-   for _5973 = 1, openParenNum do
+   for _5982 = 1, openParenNum do
       self:write( ")" )
    end
    
@@ -3306,13 +3319,27 @@ function convFilter:processGetField( node, opt )
             
          end
          
-         if not symbolInfo:get_staticFlag() then
-            filter( node:get_prefix(), self, node )
-            self:write( ".FP." )
+         
+         if symbolInfo:get_staticFlag() then
+            self:write( self:getSymbolSym( symbolInfo ) )
+            self:write( "()" )
+         else
+          
+            self:outputCallPrefix( node:get_id(), node, node:get_prefix(), symbolInfo )
+            self:write( "()" )
+            if node:hasNilAccess(  ) then
+               self:write( "} )" )
+               if opt.node:hasNilAccess(  ) then
+                  self:writeln( " &&" )
+               else
+                
+                  self:write( ")" )
+               end
+               
+            end
+            
          end
          
-         self:write( self:getSymbolSym( symbolInfo ) )
-         self:write( "()" )
          
       else
          Util.err( string.format( "not support -- %s", __func__) )

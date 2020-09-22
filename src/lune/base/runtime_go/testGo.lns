@@ -1,3 +1,7 @@
+macro _section() {
+   print( "----%s-----" (__line__) );
+}
+_section();
 {
    fn func( work:&List<Map<str,int>> ) {
       foreach list in work {
@@ -11,6 +15,7 @@
    work.insert( {"eee":10} );
    func( work );
 }
+_section();
 {
    fn func( val1:int!, val2:int! ) {
       when! val1, val2 {
@@ -25,6 +30,7 @@
    func( 10, nil );
    func( nil, nil );
 }
+_section();
 {
    fn func( val1:int!, val2:int! ) {
       if! let val10, val20 = val1, val2 {
@@ -39,6 +45,7 @@
    func( 10, nil );
    func( nil, nil );
 }
+_section();
 {
    fn func() : int! {
       return 1;
@@ -48,6 +55,7 @@
    };
    print( val );
 }
+_section();
 {
    fn func( val1:int!, val2:int! ) {
       let! val10, val20 = val1, val2 {
@@ -64,6 +72,7 @@
    func( 10, nil );
    func( nil, nil );
 }
+_section();
 {
    class Test {
       pro let val1:int;
@@ -124,6 +133,7 @@
    print( subsub.sub3(), func1( subsub )** );
    func2( subsub );
 }
+_section();
 {
    class Test {
       let val1:int;
@@ -159,6 +169,7 @@
    let test = new SubSub();
    test.func();
 }
+_section();
 {
    class Test {
       let val:int;
@@ -176,6 +187,7 @@
       print( val.func() );
    }
 }
+_section();
 {
    fn func( val:str ) {
       switch val {
@@ -195,6 +207,7 @@
       func( val );
    }
 }
+_section();
 {
    let mut val = 1;
    while true {
@@ -205,6 +218,7 @@
       val = val + 1;
    }
 }
+_section();
 {
    let mut val = 1;
    repeat {
@@ -212,6 +226,7 @@
       val = val + 1;
    } val > 10;
 }
+_section();
 {
    class Test {
       let mut val:int {pub,pub};
@@ -221,6 +236,7 @@
    test.set_val( test.$val + 100 );
    print( test.$val );   
 }
+_section();
 class Testggg {
    static let val:int;
 
@@ -234,10 +250,12 @@ class Testggg {
       return 10;
    }
 }
+_section();
 {
    let test = new Testggg();
    print( test.func(), Testggg.sfunc() );
 }
+_section();
 {
    enum Test {
       Val1,
@@ -254,6 +272,7 @@ class Testggg {
       print( index, val, Test2._from( val ), val.get__txt(), val.$_txt );
    }
 }
+_section();
 {
    enum Test {
       Val1,
@@ -266,6 +285,7 @@ class Testggg {
 
    func( .Val1 );
 }
+_section();
 {
    alge Val {
       val1,
@@ -289,6 +309,7 @@ class Testggg {
    sub( Val.val1 );
    sub( Val.val2( 100, "xyz" ) );
 }
+_section();
 {
    fn func( val:int, ... ) {
       print( ..., val );
@@ -296,6 +317,7 @@ class Testggg {
 
    func( 1, 2, "abc" );
 }
+_section();
 {
    fn func( val:int, ... ) {
       let list = [ ... ];
@@ -306,12 +328,14 @@ class Testggg {
 
    func( 1, 2, "abc" );
 }
+_section();
 {
    let val = -1.5;
    for index = 10,1, val {
       print( index );
    }
 }
+_section();
 {
    form TestForm( val:str ):int, int;
    fn func( txt:str ) : TestForm! {
@@ -322,6 +346,7 @@ class Testggg {
       print( sub( "hoge" )** );
    }
 }
+_section();
 {
    class Test0 {
       pub let val:int {pub};
@@ -348,6 +373,7 @@ class Testggg {
    func( new Test3( new Test2(##)) );
    func( new Test3( new Test2( new Test1( new Test0( 10 )  ))) );
 }
+_section();
 {
    class Test {
       pub fn func1():int {
@@ -384,4 +410,18 @@ class Testggg {
       }
    }
    func( new Test() );
+}
+_section();
+{
+   class Test {
+      let val:int {pub};
+   }
+   class Sub {
+      let val:Test {pub};
+   }
+   let test:&Sub! = new Sub( new Test( 1 ) );
+   print( test$.get_val$()$.get_val$() );
+   print( test$.$val$.$val );
+   print( test$.get_val$()$.$val );
+   print( test$.$val$.get_val$() );
 }

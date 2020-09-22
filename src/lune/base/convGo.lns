@@ -2032,34 +2032,17 @@ pub override fn convFilter.processDeclClass(
    }
 }
 
-pub override fn convFilter.processExpCall(
-   node: Nodes.ExpCallNode, opt: Opt ) mut
+pub fn convFilter.outputCallPrefix(
+   callId:int, node:&Nodes.Node,
+   prefixNode:&Nodes.Node!, funcSymbol:&Ast.SymbolInfo ) mut : bool
 {
-   let funcType = node.$func.$expType;
-
-   if funcType.$kind == .Method and
-      funcType.$parentInfo.$kind == .Enum and
-      funcType.$rawTxt == "get__txt"
-   {
-      self.write( "%s("
-                  (self.getEnumGetTxtSym(
-                     unwrap funcType.$parentInfo@@@Ast.EnumTypeInfo ) ));
-      let! fieldNode = node.$func@@@Nodes.RefFieldNode {
-         Util.err( "not support -- __func__" );
-      };
-      
-      filter( fieldNode.$prefix, self, node );
-      self.write( ")" );
-      return;
-   }
-
-
-   let nilAccName = "%s_%d" (self.moduleTypeInfo.$rawTxt.gsub( "@", "" ), node.$id);
-   fn processNilAcc( fieldNode :&Nodes.RefFieldNode ) {
+   let funcType = funcSymbol.$typeInfo;
+   let nilAccName = "%s_%d" (self.moduleTypeInfo.$rawTxt.gsub( "@", "" ), callId );
+   fn processNilAcc( workPrefixNode:&Nodes.Node ) {
       if not node.hasNilAccess() {
          return;
       }
-      let retNum = #node.$expTypeList;
+      let retNum = #funcType.$retTypeInfoList;
       switch retNum {
          case 0 {
             self.write( "Lns_NilAccCall0( func () {" );
@@ -2087,12 +2070,12 @@ pub override fn convFilter.processExpCall(
             }
          }
       }
-      self.write( "Lns_NilAccPop().(%s)."
-         (self.type2gotype( fieldNode.$prefix.$expType.$nonnilableType ) ) );
+      self.write( "Lns_NilAccPop().(%s)"
+         (self.type2gotype( workPrefixNode.$expType.$nonnilableType ) ) );
    }
 
    let mut closeParen = false;
-   if! let fieldNode = node.$func@@@Nodes.RefFieldNode {
+   when! prefixNode {
       if node.hasNilAccess() {
          if #funcType.$retTypeInfoList >= 2 {
             if #funcType.$retTypeInfoList <= MaxNilAccNum {
@@ -2105,17 +2088,17 @@ pub override fn convFilter.processExpCall(
          }
       }
       if not funcType.$staticFlag {
-         if fieldNode.hasNilAccess() and not fieldNode.$prefix.hasNilAccess() {
+         if node.hasNilAccess() and not prefixNode.hasNilAccess() {
             self.write( "Lns_NilAccFin(" );
             self.write( "Lns_NilAccPush(" );
-            filter( fieldNode.$prefix, self, fieldNode );
-            self.write( ") && " );
+            filter( prefixNode, self, node );
+            self.writeln( ") && " );
          } else {
-            filter( fieldNode.$prefix, self, fieldNode );
+            filter( prefixNode, self, node );
          }
       }
 
-      processNilAcc( fieldNode );
+      processNilAcc( prefixNode );
       
       if Ast.isBuiltin( funcType.$typeId ) {
          let builtinFuncs = TransUnit.getBuiltinFunc();
@@ -2148,21 +2131,48 @@ pub override fn convFilter.processExpCall(
                }
             }
          } else {
-            if! let symbol = fieldNode.$symbolInfo {
-               switch funcType.$kind {
-                  case .Method {
-                     self.write( ".FP." );
-                     self.write( self.getFuncSymbol( funcType ) );
-                  }
-                  default {
-                     self.write( self.getSymbolSym( symbol ) );
-                  }
+            switch funcType.$kind {
+               case .Method {
+                  self.write( ".FP." );
+                  self.write( self.getFuncSymbol( funcType ) );
                }
-            } else {
-               Util.err( "%s: not support -- %s" (__func__, funcType.getTxt(##)) );
+               default {
+                  self.write( self.getSymbolSym( funcSymbol ) );
+               }
             }
          }
       }
+   }
+
+   return closeParen;
+}
+
+
+pub override fn convFilter.processExpCall(
+   node: Nodes.ExpCallNode, opt: Opt ) mut
+{
+   let funcType = node.$func.$expType;
+
+   if funcType.$kind == .Method and
+      funcType.$parentInfo.$kind == .Enum and
+      funcType.$rawTxt == "get__txt"
+   {
+      self.write( "%s("
+                  (self.getEnumGetTxtSym(
+                     unwrap funcType.$parentInfo@@@Ast.EnumTypeInfo ) ));
+      let! fieldNode = node.$func@@@Nodes.RefFieldNode {
+         Util.err( "not support -- __func__" );
+      };
+      
+      filter( fieldNode.$prefix, self, node );
+      self.write( ")" );
+      return;
+   }
+
+   let mut closeParen = false;
+   if! let fieldNode = node.$func@@@Nodes.RefFieldNode {
+      closeParen = self.outputCallPrefix(
+         node.$id, fieldNode, fieldNode.$prefix, unwrap fieldNode.$symbolInfo );
    } else {
       if Ast.isBuiltin( funcType.$typeId ) {
          let builtinFuncs = TransUnit.getBuiltinFunc();
@@ -2192,7 +2202,12 @@ pub override fn convFilter.processExpCall(
    self.write( ")" );
 
    if node.hasNilAccess() {
-      self.write( "}))" );
+      self.write( "})" );
+      if opt.node.hasNilAccess() {
+         self.writeln(" &&" );
+      } else {
+         self.write( ")" );
+      }
       if closeParen {
          self.write( ")" );
       }
@@ -2596,12 +2611,30 @@ pub override fn convFilter.processGetField(
             return;
          }
       }
-      if not symbolInfo.$staticFlag {
-         filter( node.$prefix, self, node );
-         self.write( ".FP." );
+
+      if symbolInfo.$staticFlag {
+         self.write( self.getSymbolSym( symbolInfo ) );
+         self.write( "()" );
+      } else {
+         self.outputCallPrefix(
+            node.$id, node, node.$prefix, symbolInfo );
+         self.write( "()" );
+         if node.hasNilAccess() {
+            self.write("} )" );
+            if opt.node.hasNilAccess() {
+               self.writeln(" &&" );
+            } else {
+               self.write( ")" );
+            }
+         }
       }
-      self.write( self.getSymbolSym( symbolInfo ) );
-      self.write( "()" );
+      
+      // if not symbolInfo.$staticFlag {
+      //    filter( node.$prefix, self, node );
+      //    self.write( ".FP." );
+      // }
+      // self.write( self.getSymbolSym( symbolInfo ) );
+      // self.write( "()" );
       
       // self.write( self.getAccessorSym( symbolInfo.$accessMode, symbolInfo.$name ) );
       // self.write( "()" );
