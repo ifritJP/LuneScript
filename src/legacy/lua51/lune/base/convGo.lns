@@ -334,13 +334,9 @@ fn getExpType( expListNode:&Nodes.ExpListNode, index:int ) : &Ast.TypeInfo {
    Util.err( "not support yet -- %s, %d: %d" (__func__, expListNode.$pos.lineNo, index ) );
 }
 
-fn convFilter.getAny2Type( typeInfo:&Ast.TypeInfo ) : str {
-   return ".(%s)" (self.type2gotype( typeInfo ));
-}
-
-fn convFilter.outputConv( srcType:&Ast.TypeInfo, dstType:&Ast.TypeInfo ) {
+fn convFilter.outputConv( dstType:&Ast.TypeInfo ) {
    if not isAnyType( dstType ) {
-      self.write( self.getAny2Type( dstType ) );
+      self.write( ".(%s)" (self.type2gotype( dstType )) );
    }
 }
 
@@ -504,7 +500,7 @@ fn convFilter.processConvExp( nodeId:int, dstTypeList:&List<&Ast.TypeInfo>,
       if index >= mRetIndex {
          self.write( "Lns_getFromMulti( arg%d, %d )" (mRetIndex, index - mRetIndex) );
          if not isAnyType( dstType ) {
-            self.write( self.getAny2Type( dstType));
+            self.outputConv( dstType);
          }
       }
       else {
@@ -598,7 +594,7 @@ fn convFilter.processGenericsCall( node:&Nodes.ExpCallNode ) mut {
          self.write( "arg%d" (index) );
          let srcType = srcTypeList[ index ];
          if srcType.$kind == .Alternate {
-            self.write( self.getAny2Type( dstType ) );
+            self.outputConv( dstType );
          }
       }
    }
@@ -1256,9 +1252,9 @@ pub override fn convFilter.processIfUnwrap(
 
    // nil でなければ値を入れなおす
    self.pushIndent( ## );
-   foreach varSym, index in node.$varSymList {
+   foreach varSym in node.$varSymList {
       self.write( "%s := _%s" (varSym.$name, varSym.$name) );
-      self.outputConv( getExpType( node.$expList, index ), varSym.$typeInfo );
+      self.outputConv( varSym.$typeInfo );
       self.writeln( "" );
    }
    self.popIndent();
@@ -1360,9 +1356,9 @@ pub override fn convFilter.processDeclVar(
          if! let thenBlock = node.$thenBlock {
             self.writeln( "} else {" );
             self.pushIndent(##);
-            foreach varInfo, index in node.$symbolInfoList {
+            foreach varInfo in node.$symbolInfoList {
                self.write( "%s = _%s" (self.getSymbolSym( varInfo ), varInfo.$name) );
-               self.outputConv( getExpType( expList, index ), varInfo.$typeInfo );
+               self.outputConv( varInfo.$typeInfo );
                self.writeln( "" );
             }
             self.popIndent();
@@ -1372,9 +1368,9 @@ pub override fn convFilter.processDeclVar(
          else {
             self.writeln( "} else {" );
             self.pushIndent(##);
-            foreach varInfo, index in node.$symbolInfoList {
+            foreach varInfo in node.$symbolInfoList {
                self.write( "%s = _%s" (self.getSymbolSym( varInfo ), varInfo.$name) );
-               self.outputConv( getExpType( expList, index ), varInfo.$typeInfo );
+               self.outputConv( varInfo.$typeInfo );
                self.writeln( "" );
             }
             self.popIndent();
@@ -1417,7 +1413,7 @@ pub override fn convFilter.processWhen(
    foreach symPair in node.$symPairList {
       self.write( "%s_%d := %s" (symPair.$dst.$name, symPair.$dst.$symbolId,
                                   self.getSymbolSym( symPair.$src ) ) );
-      self.outputConv( symPair.$src.$typeInfo, symPair.$dst.$typeInfo );
+      self.outputConv( symPair.$dst.$typeInfo );
       self.writeln( "" );
       symPair.$dst.set_convModuleParam( true );
    }
@@ -1683,7 +1679,7 @@ pub override fn convFilter.processForeach(
    macro _keyItemSet( typeSym:sym, typeName:__exp ) {
       if ,,typeName ~= "_" {
          self.write( "%s := _%s" (,,typeName, ,,typeName) );
-         self.outputConv( Ast.builtinTypeStem_, ,,typeSym );
+         self.outputConv( ,,typeSym );
          self.writeln( "" );
       }
    }
@@ -2274,7 +2270,7 @@ pub override fn convFilter.processExpCall(
    if retGenerics {
       // generics の解決
       if #funcType.$retTypeInfoList == 1 {
-         self.write( self.getAny2Type( node.$expType ) );
+         self.outputConv( node.$expType );
       } else {
          self.write( ")" );
       }
@@ -2365,7 +2361,7 @@ pub override fn convFilter.processExpMultiTo1(
       self.write( "..." );
    }
    self.write( ")" );
-   self.outputConv( Ast.builtinTypeStem_, node.$expType );
+   self.outputConv( node.$expType );
 }
 
 fn convFilter.outputImplicitCast( castType:&Ast.TypeInfo, node: Nodes.ExpCastNode ) mut {
@@ -2433,7 +2429,7 @@ pub override fn convFilter.processExpParen(
       self.write( "Lns_car(" );
       filter( node.$exp, self, node );
       self.write( ")" );
-      self.outputConv( Ast.builtinTypeStem_, node.$expType );
+      self.outputConv( node.$expType );
    }
    else {
       self.write( "(" );
@@ -2501,7 +2497,7 @@ fn convFilter.processAndOr( node: Nodes.ExpOp2Node,
    if firstFlag {
       self.write( ")" );
 
-      self.outputConv( Ast.builtinTypeStem_, node.$expType );
+      self.outputConv( node.$expType );
       self.popIndent();
    }
 }
@@ -2588,7 +2584,7 @@ pub override fn convFilter.processExpRefItem(
          filter( unwrap node.$index, self, node );
          self.write( ")" );
          if not isAnyType( node.$expType ) {
-            self.write( self.getAny2Type( node.$expType ) );
+            self.outputConv( node.$expType );
          }
       }
       case .Map {
@@ -2663,7 +2659,7 @@ pub override fn convFilter.processRefField(
       if orgSym.$kind == .Mbr and orgSym.$typeInfo.$kind == .Alternate and
          not isAnyType( symbol.$typeInfo )
       {
-         self.write( self.getAny2Type( symbol.$typeInfo ) );
+         self.outputConv( symbol.$typeInfo );
       }
    } else {
       Util.err( "not support -- %s" (__func__) );
@@ -2712,7 +2708,7 @@ pub override fn convFilter.processGetField(
          if symbolInfo.$typeInfo.$retTypeInfoList[1].$kind == .Alternate and
             not isAnyType( node.$expType )
          {
-            self.write( self.getAny2Type( node.$expType ) );
+            self.outputConv( node.$expType );
          }
          
          
