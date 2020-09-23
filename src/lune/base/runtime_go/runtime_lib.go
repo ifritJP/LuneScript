@@ -35,12 +35,18 @@ type LnsAlgeVal interface {
 }
 
 
+func Lns_getFromMulti( multi []LnsAny, index LnsInt ) LnsAny {
+    if len( multi ) > index {
+        return multi[ index ];
+    }
+    return nil;
+}
+
 type LnsEnv struct {
     valStack []LnsAny
     stackPos int
     nilAccStack []LnsAny
 }
-
 var cur_LnsEnv = LnsEnv{ []LnsAny{}, -1, []LnsAny{} }
 
 func Lns_NilAccPush( obj interface{} ) bool {

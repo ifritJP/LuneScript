@@ -152,7 +152,7 @@ class Test8<T:(IF3)> {
 }
 
 {
-   fn func( test2:&Test8 ) {
+   fn func( test2:&Test8<SubSub> ) {
       test2.func();
    }  
 
@@ -167,7 +167,7 @@ class Test9<T:Sub2> {
 }
 
 {
-   fn func( test2:&Test9 ) {
+   fn func( test2:&Test9<Sub2> ) {
       test2.func();
    }  
 

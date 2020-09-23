@@ -25,7 +25,7 @@ class Test<T:(IF)> {
 }
 
 {
-   fn func( test1:&Test ) {
+   fn func( test1:&Test ) { // error
       test1.func();
    }  
 
@@ -43,7 +43,7 @@ class Test2<T:Sub2> {
 }
 
 {
-   fn func2( test2:&Test2 ) {
+   fn func2( test2:&Test2 ) { // error
       test2.func();
    }  
 

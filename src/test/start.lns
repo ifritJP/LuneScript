@@ -1691,3 +1691,11 @@ class Test_ccc {
    Macro._section();
    print(-1); // (-1) の parse が無限ループになっていた不具合があったので、その再発防止用
 }
+{
+   Macro._section();
+   class Testaaa<T> {
+      pub let val:T;
+   }
+   let test = new Testaaa( 1 );
+   print( test.val + 1); // generic のメンバを、直接アクセスした場合のテスト
+}

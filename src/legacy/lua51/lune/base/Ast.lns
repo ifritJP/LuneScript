@@ -2049,9 +2049,49 @@ pub alge OverrideMut {
 
 
 pub class AccessSymbolInfo extend SymbolInfo {
-   pri let symbolInfo: SymbolInfo {pub};
+   pri let symbolInfo: &SymbolInfo {pub};
    pri let overrideMut:OverrideMut;
    pri let overrideCanBeLeft: bool;
+   pri let overrideTypeInfo:&TypeInfo;
+
+   pub fn __init(
+      symbolInfo: &SymbolInfo, overrideMut:OverrideMut, overrideCanBeLeft: bool )
+   {
+      super();
+      self.symbolInfo = symbolInfo;
+      self.overrideMut = overrideMut;
+      self.overrideCanBeLeft = overrideCanBeLeft;
+      let symType = symbolInfo.$typeInfo;
+      let work;
+      _match self.overrideMut {
+         case .None {
+            work = symType;
+         }
+         case .Prefix( prefixTypeInfo ) {
+            if self.symbolInfo.$kind == .Mbr and
+               symType.$kind == .Alternate and
+               prefixTypeInfo.$kind == .Class and
+               #prefixTypeInfo.$itemTypeInfoList > 0
+            {
+               let mut alt2TypeMap = prefixTypeInfo.createAlt2typeMap( false );
+               let typeInfo = symType.applyGeneric( alt2TypeMap, symType.getModule() );
+               when! typeInfo {
+                  work = typeInfo;
+               } else {
+                  work = symType;
+               }
+            }
+            else {
+               work = symType;
+            }
+         }
+         case .IMut( typeInfo ) {
+            work = typeInfo;
+         }
+      }
+      self.overrideTypeInfo = work;
+   }
+
 
    pub override fn getOrg(): &SymbolInfo {
       return self.symbolInfo.getOrg();
@@ -2067,16 +2107,29 @@ pub class AccessSymbolInfo extend SymbolInfo {
    
 
    pub override fn get_typeInfo() : &TypeInfo {
-      _match self.overrideMut {
-         case .None {
-         }
-         case .Prefix( prefixTypeInfo ) {
-         }
-         case .IMut( typeInfo ) {
-            return typeInfo;
-         }
-      }
-      return self.symbolInfo.$typeInfo;
+      // _match self.overrideMut {
+      //    case .None {
+      //    }
+      //    case .Prefix( prefixTypeInfo ) {
+      //       let symType = self.symbolInfo.$typeInfo;
+      //       if self.symbolInfo.$kind == .Mbr and
+      //          symType.$kind == .Alternate and
+      //          prefixTypeInfo.$kind == .Class and
+      //          #prefixTypeInfo.$itemTypeInfoList > 0
+      //       {
+      //          let mut alt2TypeMap = prefixTypeInfo.createAlt2typeMap( false );
+      //          let! typeInfo = symType.applyGeneric( alt2TypeMap, symType.getModule() ) {
+      //             return symType;
+      //          };
+      //          return typeInfo;
+      //       }
+      //    }
+      //    case .IMut( typeInfo ) {
+      //       return typeInfo;
+      //    }
+      // }
+      // return self.symbolInfo.$typeInfo;
+      return self.overrideTypeInfo;
    }
    
    pub override fn get_mutMode(): MutMode {

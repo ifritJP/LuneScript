@@ -2764,6 +2764,52 @@ OverrideMut._name2Val["Prefix"] = OverrideMut.Prefix
 local AccessSymbolInfo = {}
 setmetatable( AccessSymbolInfo, { __index = SymbolInfo } )
 _moduleObj.AccessSymbolInfo = AccessSymbolInfo
+function AccessSymbolInfo.new( symbolInfo, overrideMut, overrideCanBeLeft )
+   local obj = {}
+   AccessSymbolInfo.setmeta( obj )
+   if obj.__init then obj:__init( symbolInfo, overrideMut, overrideCanBeLeft ); end
+   return obj
+end
+function AccessSymbolInfo:__init(symbolInfo, overrideMut, overrideCanBeLeft) 
+   SymbolInfo.__init( self)
+   
+   self.symbolInfo = symbolInfo
+   self.overrideMut = overrideMut
+   self.overrideCanBeLeft = overrideCanBeLeft
+   local symType = symbolInfo:get_typeInfo()
+   local work
+   
+   do
+      local _matchExp = self.overrideMut
+      if _matchExp[1] == OverrideMut.None[1] then
+      
+         work = symType
+      elseif _matchExp[1] == OverrideMut.Prefix[1] then
+         local prefixTypeInfo = _matchExp[2][1]
+      
+         if self.symbolInfo:get_kind() == SymbolKind.Mbr and symType:get_kind() == TypeInfoKind.Alternate and prefixTypeInfo:get_kind() == TypeInfoKind.Class and #prefixTypeInfo:get_itemTypeInfoList() > 0 then
+            local alt2TypeMap = prefixTypeInfo:createAlt2typeMap( false )
+            local typeInfo = symType:applyGeneric( alt2TypeMap, symType:getModule(  ) )
+            if typeInfo ~= nil then
+               work = typeInfo
+            else
+               work = symType
+            end
+            
+         else
+          
+            work = symType
+         end
+         
+      elseif _matchExp[1] == OverrideMut.IMut[1] then
+         local typeInfo = _matchExp[2][1]
+      
+         work = typeInfo
+      end
+   end
+   
+   self.overrideTypeInfo = work
+end
 function AccessSymbolInfo:getOrg(  )
 
    return self.symbolInfo:getOrg(  )
@@ -2778,21 +2824,7 @@ function AccessSymbolInfo:canAccess( fromScope, access )
 end
 function AccessSymbolInfo:get_typeInfo(  )
 
-   do
-      local _matchExp = self.overrideMut
-      if _matchExp[1] == OverrideMut.None[1] then
-      
-      elseif _matchExp[1] == OverrideMut.Prefix[1] then
-         local prefixTypeInfo = _matchExp[2][1]
-      
-      elseif _matchExp[1] == OverrideMut.IMut[1] then
-         local typeInfo = _matchExp[2][1]
-      
-         return typeInfo
-      end
-   end
-   
-   return self.symbolInfo:get_typeInfo()
+   return self.overrideTypeInfo
 end
 function AccessSymbolInfo:get_mutMode(  )
 
@@ -2844,21 +2876,6 @@ function AccessSymbolInfo:get_canBeLeft(  )
 end
 function AccessSymbolInfo.setmeta( obj )
   setmetatable( obj, { __index = AccessSymbolInfo  } )
-end
-function AccessSymbolInfo.new( symbolInfo, overrideMut, overrideCanBeLeft )
-   local obj = {}
-   AccessSymbolInfo.setmeta( obj )
-   if obj.__init then
-      obj:__init( symbolInfo, overrideMut, overrideCanBeLeft )
-   end
-   return obj
-end
-function AccessSymbolInfo:__init( symbolInfo, overrideMut, overrideCanBeLeft )
-
-   SymbolInfo.__init( self)
-   self.symbolInfo = symbolInfo
-   self.overrideMut = overrideMut
-   self.overrideCanBeLeft = overrideCanBeLeft
 end
 function AccessSymbolInfo:get_symbolInfo()
    return self.symbolInfo
@@ -7789,7 +7806,7 @@ IdType.__allList[2] = IdType.Ext
 local function switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 5979, function (  )
+   Log.log( Log.Level.Trace, __func__, 6032, function (  )
    
       return "start"
    end )
@@ -7809,7 +7826,7 @@ local builtinTypeInfo2Map = typeInfo2Map:clone(  )
 local function pushProcessInfo( processInfo )
    local __func__ = '@lune.@base.@Ast.pushProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 5991, function (  )
+   Log.log( Log.Level.Trace, __func__, 6044, function (  )
    
       return "start"
    end )
@@ -7844,7 +7861,7 @@ _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
    local __func__ = '@lune.@base.@Ast.popProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6017, function (  )
+   Log.log( Log.Level.Trace, __func__, 6070, function (  )
    
       return "start"
    end )

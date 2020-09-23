@@ -272,7 +272,7 @@ pub abstract class Node {
 
    pub fn getSymbolInfo(): &List<&Ast.SymbolInfo>;
 
-   /** このコードで nil 条件演算子を使用しているか。 */
+   /** このノードで nil 条件演算子を使用しているか。 */
    pub fn hasNilAccess(): bool {
       return false;
    }

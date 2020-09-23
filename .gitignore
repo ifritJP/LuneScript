@@ -12,3 +12,4 @@ src/legacy/lua51/lune/base/*.meta
 *main-1.src.rock
 src/mini*
 *~
+src/lune/base/runtime_go/lua_link

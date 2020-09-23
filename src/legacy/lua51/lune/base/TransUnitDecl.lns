@@ -305,6 +305,17 @@ fn TransUnit.analyzeDeclArgList(
 
          self.checkNextToken( ":" );
          let refType = self.analyzeRefType( accessMode, false, parentPub );
+         if refType.$expType.$kind == .Class and #refType.$expType.$itemTypeInfoList > 0
+         {
+            let argType = refType.$expType.$srcTypeInfo;
+            if not Ast.isGenericType( argType ) {
+               self.addErrMess(
+                  refType.$pos,
+                  "can't use this type without <T>. please use %s."
+                  ( argType.getTxt( ## )));
+            }
+         }
+         
          if! let symbolInfo = scope.addLocalVar(
             true, true, argName.txt, argName.pos, refType.$expType, mutable )
          {

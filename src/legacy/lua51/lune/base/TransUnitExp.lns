@@ -2256,25 +2256,28 @@ fn TransUnit.analyzeExpField(
       }  
    }
 
-   if accessNil {
-      if not typeInfo.$nilable {
-         typeInfo = typeInfo.$nilableTypeInfo;
-      }
-      self.helperInfo.useNilAccess = true;
-   }
-
    let mut accessSymbolInfo:Ast.AccessSymbolInfo! = nil;
    //let mut canBeLeft:bool! = nil;
    let mut symbolMutMode = typeInfo.$mutMode;
    when! symbolInfo {
-      //canBeLeft = _exp.canBeLeft();
-      accessSymbolInfo = new Ast.AccessSymbolInfo(
+      let mut workSymInfo = new Ast.AccessSymbolInfo(
          symbolInfo, .Prefix( prefixExpType ), not accessNil );
+      if not getterTypeInfo {
+         typeInfo = workSymInfo.$typeInfo;
+      }
+      accessSymbolInfo = workSymInfo;
       switch mode {
          case .Field, .FieldNil {
             symbolMutMode = symbolInfo.$mutMode;
          }
       }
+   }
+
+   if accessNil {
+      if not typeInfo.$nilable {
+         typeInfo = typeInfo.$nilableTypeInfo;
+      }
+      self.helperInfo.useNilAccess = true;
    }
 
    if not Ast.TypeInfo.isMut( prefixExpType ) and symbolMutMode == .Mut {           
@@ -2300,7 +2303,6 @@ fn TransUnit.analyzeExpField(
          self.nodeManager, firstToken.pos,
          self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ],
          token, accessSymbolInfo, accessNil, prefixExp );
-         //token, canBeLeft, accessNil, prefixExp );
    }
 }
 
