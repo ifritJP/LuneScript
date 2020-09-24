@@ -172,6 +172,18 @@ func Lns_car( multi ...LnsAny ) LnsAny {
 }
 
 func Lns_2DDD( multi ...LnsAny ) []LnsAny {
+    if len( multi ) == 0 {
+        return multi;
+    }
+    switch multi[ len( multi ) - 1 ].(type) {
+    case []LnsAny:
+        ddd := multi[ len( multi ) - 1 ].([]LnsAny)
+        newMulti := multi[ :len( multi ) - 1 ];
+        for _, val := range( ddd ) {
+            newMulti = append( newMulti, val )
+        }
+        return newMulti
+    }
     return multi
 }
 

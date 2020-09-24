@@ -9,6 +9,7 @@ import "C"
 
 import "unsafe"
 import "log"
+//import "runtime"
 
 
 type Lns_luaVM struct {
@@ -33,6 +34,21 @@ func Lns_runLuaScript( script string ) {
     defer C.free( unsafe.Pointer( block ) )
     C.luaL_loadstring( vm, block )
     C.lua_pcallk( vm, 0, C.LUA_MULTRET, 0, 0, nil )
+}
+
+type lns_pushedString struct {
+    str *C.char
+}
+func (self *lns_pushedString) free() {
+    C.free( unsafe.Pointer( self.str ) )
+}
+
+func (luaVM *Lns_luaVM) pushStr( txt string ) *lns_pushedString {
+    pStr := C.CString( txt )
+    C.lua_pushstring( luaVM.vm, pStr )
+    ret := &lns_pushedString{ pStr }    
+    //runtime.SetFinalizer( ret, func (obj *lns_pushedString) { obj.free() } )
+    return ret
 }
 
 /**
@@ -104,79 +120,7 @@ func (luaVM *Lns_luaVM) lua_call( stackBase int , argNum int, retNum int ) []Lns
     return result
 }
 
-
-
-var lns_c_ptr_string *C.char
-
-type lns_callInfoString struct {
-    top int
-    funcname *C.char
-    string *C.char
-}
-
-func (self *lns_callInfoString) end() {
-    C.free( unsafe.Pointer( self.funcname ) )
-    C.free( unsafe.Pointer( self.string ) )
-}
-
-func (luaVM *Lns_luaVM) string_call_setup(
-    funcName string, txt string ) *lns_callInfoString {
-
-    callInfo := lns_callInfoString{}
-
-    vm := luaVM.vm
-    callInfo.top = int(C.lua_gettop( vm ));
-
-    C.lua_getglobal( vm, lns_c_ptr_string );
-
-    callInfo.funcname = C.CString( funcName )
-    C.lua_getfield( vm, -1, callInfo.funcname )
-
-    callInfo.string = C.CString( txt )
-    C.lua_pushstring( vm, callInfo.string )
-    
-    return &callInfo
-}
-
-
-func (luaVM *Lns_luaVM) string_format( format string, ddd []LnsAny ) string {
-    vm := luaVM.vm
-
-    callInfo := luaVM.string_call_setup( "format", format )
-    
-    // ... の値を push する
-    for _, val := range( ddd ) {
-        switch v := val.(type) {
-        case LnsInt:
-            C.lua_pushinteger( vm, C.longlong( val.(LnsInt)) )
-        case LnsReal:
-            C.lua_pushnumber( vm, C.double(val.(LnsReal)) )
-        case bool:
-            if val.(bool) {
-                C.lua_pushboolean( vm, C.int(1) )
-            } else {
-                C.lua_pushboolean( vm, C.int(0) )
-            }
-        case string:
-            C.lua_pushstring( vm, C.CString( val.(string)) )
-        default:
-            log.Fatal( "not support default ", v )
-        }
-    }
-
-    // 関数を実行
-    return luaVM.lua_call( callInfo.top, len( ddd ) + 1, 1 )[0].(string)
-}
-
-
 func init() {
     defaultVM.vm = C.luaL_newstate()
     C.luaL_openlibs( defaultVM.vm )
-
-    lns_c_ptr_string = C.CString( "string" )
-
 }
-
-// func main() {
-//     lns_runLuaScript( "print( 'hello world' )" )
-// }

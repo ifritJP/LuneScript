@@ -289,6 +289,7 @@ let type2gotypeMap:&Map<&Ast.TypeInfo,str> = {
    Ast.builtinTypeReal : "LnsReal",
    Ast.builtinTypeStem : "LnsAny",
    Ast.builtinTypeString : "string",
+   Ast.builtinTypeBool : "bool",
 };
 
 fn getOrgTypeInfo( typeInfo:&Ast.TypeInfo ) : &Ast.TypeInfo {
@@ -2090,9 +2091,30 @@ pub override fn convFilter.processDeclClass(
    }
 }
 
+alge CallKind {
+   /** 通常処理 */
+   Normal,
+   /** ランタイム呼び出し */
+   RuntimeCall(prefixNode:&Nodes.Node),
+}
+
+/**
+関数呼び出し処理。
+
+以下も処理する。
+- nilAccess の解決。
+- ビルトイン関数の解決
+
+@param callId 関数呼び出しノードの ID
+@param node 関数呼び出しのノード
+@param prefixNode メソッド呼び出し時のオブジェクトノード
+@param funcSymbol 呼び出し関数シンボル
+@return bool true の時、関数呼び出し処理に追加の ")" が必要
+@return bool true の時、
+*/
 pub fn convFilter.outputCallPrefix(
    callId:int, node:&Nodes.Node,
-   prefixNode:&Nodes.Node!, funcSymbol:&Ast.SymbolInfo ) mut : bool
+   prefixNode:&Nodes.Node!, funcSymbol:&Ast.SymbolInfo ) mut : bool, CallKind
 {
    let funcType = funcSymbol.$typeInfo;
    let nilAccName = "%s_%d" (self.moduleTypeInfo.$rawTxt.gsub( "@", "" ), callId );
@@ -2132,6 +2154,7 @@ pub fn convFilter.outputCallPrefix(
          (self.type2gotype( workPrefixNode.$expType.$nonnilableType ) ) );
    }
 
+   let mut callKind:CallKind = .Normal;
    let mut closeParen = false;
    when! prefixNode {
       if node.hasNilAccess() {
@@ -2145,38 +2168,39 @@ pub fn convFilter.outputCallPrefix(
             closeParen = true;
          }
       }
-      if not funcType.$staticFlag {
-         if node.hasNilAccess() and not prefixNode.hasNilAccess() {
-            self.write( "Lns_NilAccFin(" );
-            self.write( "Lns_NilAccPush(" );
-            filter( prefixNode, self, node );
-            self.writeln( ") && " );
-         } else {
-            filter( prefixNode, self, node );
+
+      let builtinFuncs = TransUnit.getBuiltinFunc();
+      if Ast.isBuiltin( funcType.$typeId ) and
+         prefixNode.$expType.$nonnilableType.$kind ~= .List
+      {
+         if node.hasNilAccess() {
+            Util.err( "not support nilAccName" );
          }
-      }
-
-      processNilAcc( prefixNode );
-      
-      if Ast.isBuiltin( funcType.$typeId ) {
-         let builtinFuncs = TransUnit.getBuiltinFunc();
-
-         
+         callKind = .RuntimeCall( prefixNode );
          switch funcType {
-            case builtinFuncs.list_insert {
-               self.write( ".Insert" );
-            }
-            case builtinFuncs.list_remove {
-               self.write( ".Remove" );
+            case builtinFuncs.str_gsub {
+               self.write( "Lns_getVM().string_gsub" );
             }
             default {
-               Util.err( "%s: not support -- %s" (__func__, funcType.getTxt(##)) );
+               Util.err( "%s:%d: not support -- %s"
+                         (__func__, __line__, funcType.getTxt(##)) );
             }
          }
       } else {
-         if Ast.isBuiltin( funcType.$typeId )
-         {
-            let builtinFuncs = TransUnit.getBuiltinFunc();
+         if not funcType.$staticFlag {
+            if node.hasNilAccess() and not prefixNode.hasNilAccess() {
+               self.write( "Lns_NilAccFin(" );
+               self.write( "Lns_NilAccPush(" );
+               filter( prefixNode, self, node );
+               self.writeln( ") && " );
+            } else {
+               filter( prefixNode, self, node );
+            }
+         }
+
+         processNilAcc( prefixNode );
+         
+         if Ast.isBuiltin( funcType.$typeId ) {
             switch funcType {
                case builtinFuncs.list_insert {
                   self.write( ".Insert" );
@@ -2202,7 +2226,7 @@ pub fn convFilter.outputCallPrefix(
       }
    }
 
-   return closeParen;
+   return closeParen, callKind;
 }
 
 pub override fn convFilter.processExpCall(
@@ -2234,8 +2258,9 @@ pub override fn convFilter.processExpCall(
 
 
    let mut closeParen = false;
+   let mut callKind:CallKind = .Normal;
    if! let fieldNode = node.$func@@@Nodes.RefFieldNode {
-      closeParen = self.outputCallPrefix(
+      closeParen, callKind = self.outputCallPrefix(
          node.$id, fieldNode, fieldNode.$prefix, unwrap fieldNode.$symbolInfo );
    } else {
       if Ast.isBuiltin( funcType.$typeId ) {
@@ -2255,7 +2280,13 @@ pub override fn convFilter.processExpCall(
    }
 
    self.write( "(" );
-   
+
+   match callKind {
+      case .RuntimeCall(prefixNode) {
+         filter( prefixNode, self, node.$func );
+         self.write( "," );
+      }
+   }
 
    if! let argList = node.$argList {
       self.processSetFromExpList(
@@ -2305,9 +2336,14 @@ pub override fn convFilter.processExpList(
       }
       if! let mRetExp = node.$mRetExp {
          if mRetExp.$index == index {
-            self.write( "Lns_2DDD(" );
-            filter( exp, self, node );
-            self.write( ")" );
+            if exp.$expType.$kind == .DDD {
+               filter( exp, self, node );
+            }
+            else {
+               self.write( "Lns_2DDD(" );
+               filter( exp, self, node );
+               self.write( ")" );
+            }
             break;
          }
       }
@@ -2402,6 +2438,9 @@ pub override fn convFilter.processExpCast(
    switch node.$castKind {
       case .Force {
          filter( node.$exp, self, node );
+         if isAnyType( node.$exp.$expType ) {
+            self.outputAny2Type( node.$castType );
+         }
       }
       case .Implicit {
          self.outputImplicitCast( node.$castType, node );

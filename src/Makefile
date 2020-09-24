@@ -1050,13 +1050,65 @@ GO_LUA_LINK = $(GO_RUNTIME)/lua_link
 GO_SRC += runtime_main.go
 GO_SRC += runtime_lib.go
 GO_SRC += runtime_lua.go
-GO_SRC := $(addprefix $(GO_RUNTIME)/,$(GO_SRC))
+GO_SRC += runtime_string.go
+GO_SRCS := $(addprefix $(GO_RUNTIME)/,$(GO_SRC))
 
 define buildGo
 	mkdir -p $(GO_LUA_LINK)
 	if [ ! -d $(GO_LUA_LINK)/inc ]; then ln -s $(LUA_INC_DIR) $(GO_LUA_LINK)/inc; fi
-	go build $1 $(GO_SRC)
+	go build $1 $(GO_SRCS)
 endef
+
+GO_WORK_DIR = work/go
+
+define test-tutorialGo
+	cp -u test/tutorial/$1.lns $(GO_WORK_DIR)
+	$(call convGo,.,$(GO_WORK_DIR)/$1.lns)
+	$(call buildGo,$(GO_WORK_DIR)/$1.go)
+	mv $1 $(GO_WORK_DIR)
+	./$(GO_WORK_DIR)/$1 > $(GO_WORK_DIR)/result.go
+	rm ./$(GO_WORK_DIR)/$1
+	$(call exeLune,.,$(GO_WORK_DIR)/$1.lns,exe) > $(GO_WORK_DIR)/result.lua
+	diff $(GO_WORK_DIR)/result.lua $(GO_WORK_DIR)/result.go
+endef
+
+test-tutorial-go-one:
+	$(call test-tutorialGo,$(TUTORIAL_SRC))
+
+define test-tutorialGo-one
+	$(MAKE) test-tutorial-go-one GO_RUNTIME=$(GO_WORK_DIR) TUTORIAL_SRC=$1
+endef
+
+test-tutorial-go:
+	mkdir -p $(GO_WORK_DIR)
+	for file in $(GO_SRC); do					\
+		if [ ! -f $(GO_WORK_DIR)/$${file} ]; then		\
+			ln -s $(PWD)/$(GO_RUNTIME)/$${file} $(GO_WORK_DIR);	\
+		fi							\
+	done
+	$(call transwork,.,.,,base/convGo)
+
+	$(call test-tutorialGo-one,match)
+	$(call test-tutorialGo-one,loop)
+	$(call test-tutorialGo-one,interface)
+	$(call test-tutorialGo-one,generics)
+	$(call test-tutorialGo-one,enum)
+	$(call test-tutorialGo-one,classOverride)
+	$(call test-tutorialGo-one,classMapping)
+	$(call test-tutorialGo-one,classInherit)
+	$(call test-tutorialGo-one,class2accessor)
+	$(call test-tutorialGo-one,class1)
+	$(call test-tutorialGo-one,cast)
+	$(call test-tutorialGo-one,branch)
+	$(call test-tutorialGo-one,nilable)
+	$(call test-tutorialGo-one,defaultArg)
+	$(call test-tutorialGo-one,multipleRetVal)
+	$(call test-tutorialGo-one,arg)
+	$(call test-tutorialGo-one,func)
+	$(call test-tutorialGo-one,variable)
+	$(call test-tutorialGo-one,set)
+	$(call test-tutorialGo-one,value)
+
 
 test-go:
 	$(call transwork,.,.,,base/convGo)

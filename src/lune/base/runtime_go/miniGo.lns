@@ -1,36 +1,6 @@
-class Test<T> {
-   pub let val:T {pub};
-   pub fn func():T {
-      return self.val;
-   }
-   pub fn func2():T, T {
-      return self.val, self.val;
-   }
-}
-fn func1( test:&Test<int> ) {
-   print( test.func() + 10 );
-}
-fn func2( test:&Test<str> ) {
-   print( test.func() .. "xyz" );
+fn func( txt:str ) {
+   print( txt.gsub( "ab", "AB")** );
 }
 
-
-let test = new Test( 1 );
-func1( test );
-let test2 = new Test( "a" );
-func2( test2 );
-
-print( test.func2() + 1 );
-print( test2.func2() .. "xyz" );
-fn sub( val1:int, val2:int, val3:int! ) {
-   print( val1, val2 );
-}
-sub( test.func2()** ## );
-print( test.$val + 1);
-print( test.val + 1, test.val + 2);
-{
-   let val1, val2 = test.val + 1, test.val + 2;
-   print( val1 + val2 );
-}
-
-
+func( "abcd" );
+func( "" );
