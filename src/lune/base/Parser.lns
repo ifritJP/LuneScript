@@ -601,23 +601,24 @@ fn StreamParser.parse() mut : Token[]! {
             return #token, true;
          };
          let mut intFlag = true;
-         let mut nonNumChar = token.byte( nonNumIndex## );
+         let mut nonNumChar = token[nonNumIndex];
          if nonNumChar == ?. { // .
             intFlag = false;
             unwrap! nonNumIndex = token.find( '[^%d]', nonNumIndex + 1 ## ) {
                return #token, intFlag;
             };
-            nonNumChar = token.byte( nonNumIndex## );
+            //nonNumChar = token[nonNumIndex## );
+            nonNumChar = token[ nonNumIndex ];
          }
          if nonNumChar == ?X or nonNumChar == ?x { // X or x
             unwrap! nonNumIndex = token.find( '[^%da-fA-F]', nonNumIndex + 1 ## ) {
                return #token, intFlag;
             };
-            nonNumChar = token.byte( nonNumIndex## );
+            nonNumChar = token[nonNumIndex];
          }
          if nonNumChar == ?E or nonNumChar == ?e { // E or e
             intFlag = false;
-            let nextChar = token.byte( nonNumIndex + 1 ## );
+            let nextChar = token[nonNumIndex + 1 ];
             if nextChar == ?- or nextChar == ?+ { // '-' or '+'
                unwrap! nonNumIndex = token.find( '[^%d]', nonNumIndex + 2 ## ) {
                   return #token, intFlag;
@@ -741,8 +742,8 @@ fn StreamParser.parse() mut : Token[]! {
          return list;
       };
 
-      let findChar = string.byte( rawLine, index ## );
-      let nextChar = string.byte( rawLine, index + 1 ## );
+      let findChar = rawLine[ index];
+      let nextChar = rawLine[ index + 1];
 
       if findChar == ?- and nextChar ~= ?- {
          searchIndex = index + 1;
@@ -771,7 +772,7 @@ fn StreamParser.parse() mut : Token[]! {
             }
          }
          // elseif findChar == ?\' and nextChar == ?\' { // コメント処理
-         //     if string.byte( rawLine, index + 2 ) == ?\' {
+         //     if string[rawLine, index + 2 ) == ?\' {
          //         // 複数行コメントの場合
          //         let comment, nextIndex = multiComment( index + 3, "'''" );
          //         addVal( kindCmnt, "'''" .. comment, index );
@@ -803,7 +804,7 @@ fn StreamParser.parse() mut : Token[]! {
                   Util.err( "%s:%d:%d: error: illegal string -- %s"
                             ( self.getStreamName(), self.lineNo, index, rawLine ) );
                };
-               let workChar = string.byte( rawLine, endIndex ## );
+               let workChar = rawLine[ endIndex];
                if workChar == findChar {
                   // 対になる区切り文字だった場合は文字列として登録
                   addVal( .Str, rawLine.sub( index, endIndex ), index );
@@ -821,7 +822,7 @@ fn StreamParser.parse() mut : Token[]! {
          }
          elseif findChar == ?` {
             if ( nextChar == findChar and
-                 string.byte( rawLine, index + 2 ## ) == ?` )
+                 rawLine[ index + 2 ] == ?` )
             { // '```'
                // 複数行文字列の場合
                let txt, nextIndex = multiComment( index + 3, '```' );

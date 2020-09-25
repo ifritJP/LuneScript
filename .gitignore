@@ -13,3 +13,11 @@ src/legacy/lua51/lune/base/*.meta
 src/mini*
 *~
 src/lune/base/runtime_go/lua_link
+src/*.meta
+src/*.lua
+src/lune/base/*.lua
+src/test/tutorial/*.c
+src/test/tutorial/*.h
+src/test/tutorial/*.lua
+hoge.*
+src/lune/base/runtime_go/*.lua

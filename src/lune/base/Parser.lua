@@ -427,7 +427,7 @@ end
 function Token:getLineCount(  )
 
    local count = 1
-   for _321 in self.txt:gmatch( "\n" ) do
+   for _320 in self.txt:gmatch( "\n" ) do
       count = count + 1
    end
    
@@ -820,8 +820,8 @@ function StreamParser:parse(  )
       local comment = ""
       while true do
          do
-            local _482, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
-            if _482 ~= nil and termEndIndex ~= nil then
+            local _481, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
+            if _481 ~= nil and termEndIndex ~= nil then
                comment = comment .. rawLine:sub( searchIndex, termEndIndex )
                return comment, termEndIndex + 1
             end
@@ -868,7 +868,7 @@ function StreamParser:parse(  )
          end
          
          local intFlag = true
-         local nonNumChar = token:byte( nonNumIndex )
+         local nonNumChar = string.byte( token, nonNumIndex )
          if nonNumChar == 46 then
             intFlag = false
             nonNumIndex = token:find( '[^%d]', nonNumIndex + 1 )
@@ -878,7 +878,7 @@ function StreamParser:parse(  )
                return #token, intFlag
             end
             
-            nonNumChar = token:byte( nonNumIndex )
+            nonNumChar = string.byte( token, nonNumIndex )
          end
          
          if nonNumChar == 88 or nonNumChar == 120 then
@@ -889,12 +889,12 @@ function StreamParser:parse(  )
                return #token, intFlag
             end
             
-            nonNumChar = token:byte( nonNumIndex )
+            nonNumChar = string.byte( token, nonNumIndex )
          end
          
          if nonNumChar == 69 or nonNumChar == 101 then
             intFlag = false
-            local nextChar = token:byte( nonNumIndex + 1 )
+            local nextChar = string.byte( token, nonNumIndex + 1 )
             if nextChar == 45 or nextChar == 43 then
                nonNumIndex = token:find( '[^%d]', nonNumIndex + 2 )
                if  nil == nonNumIndex then

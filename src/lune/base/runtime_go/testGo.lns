@@ -462,3 +462,80 @@ _section();
       print( val1 + val2 );
    }
 }
+_section();
+{
+   fn func( txt:str ) {
+      print( "gsub:", txt, txt.gsub( "ai", "AI")** );
+      print( "find:", txt, txt.find( "op" ## )** );
+      print( "byte:", txt, txt.byte( 2, 3 )** );
+      print( "rep:", txt, txt.rep( 3 ) );
+      print( "sub:", txt, txt.sub( 2, 3 ) );
+      print( "lower:", txt, txt.lower() );
+      print( "upper:", txt, txt.upper() );
+      print( "reverse:", txt, txt.reverse() );
+      apply token of txt.gmatch( "[^a]+" ) {
+         print( token );
+      }
+   }
+   func( "fieoapfjaiopjfeop" );
+}
+_section();
+{
+   fn ite( param:int, prev:stem! ) : int!, str {
+      let mut prevInt:int = 0;
+      if prev == param {
+         return nil, "";
+      }  
+      when! prev {
+         prevInt = prev@@int;
+      }  
+      else {
+         prevInt = 0;
+      }  
+      let next = prevInt + 1;
+      return next, "@%d@" ( next );
+   }  
+
+   form iteForm( param:int, prev:stem! ) : int!, str;
+
+   fn testIte( max:int ): iteForm, int, int! {
+      return ite, max, nil;
+   }  
+
+   apply value1, value2 of testIte( 10 ) {
+      print( value1, value2 );
+   }
+}
+_section();
+{
+   fn func() : ...<int> {
+      return 1, 2, 3;
+   }
+
+   {
+      let val1, val2, val3 = func();
+      print( val1, val2, val3 );
+   }
+   {
+      let val1, val2 = func();
+      print( val1, val2 );
+   }
+   print( func() );
+}
+_section();
+{
+   fn func() : ...<int> {
+      return 1, 2, 3;
+   }
+
+   {
+      if! let val1, val2, val3 = func() {
+         print( val1 + 10, val2 + 10, val3 + 10 );
+      }
+   }
+   {
+      let val1, val2 = func();
+      print( val1, val2 );
+   }
+   print( func() );
+}

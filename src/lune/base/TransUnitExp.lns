@@ -3534,7 +3534,7 @@ fn TransUnit.analyzeExp(
    elseif token.kind == Parser.TokenKind.Char {
       let num;
       if #token.txt == 1 {
-         num = unwrap string.byte( token.txt, 1 ## );
+         num = token.txt[ 1 ];
       }  
       else {
          num = unwrap quotedChar2Code[ token.txt.sub( 2, 2 ) ];

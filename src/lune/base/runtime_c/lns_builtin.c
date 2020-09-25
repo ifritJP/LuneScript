@@ -182,8 +182,3 @@ lns_module_t * lns_init_lns_builtin( lns_env_t * _pEnv ){
     initFuncSym( _pEnv, pBlock_62 );
     
     lns_init_lns_builtin_Sub( _pEnv );
-    
-    lns_leave_block( _pEnv );
-    return &lns_moduleInfo_lns_builtin;
-}
-#include "lns_builtinInc.c"

@@ -1050,7 +1050,9 @@ GO_LUA_LINK = $(GO_RUNTIME)/lua_link
 GO_SRC += runtime_main.go
 GO_SRC += runtime_lib.go
 GO_SRC += runtime_lua.go
+GO_SRC += runtime_luaCore.go
 GO_SRC += runtime_string.go
+GO_SRC += runtime_stream.go
 GO_SRCS := $(addprefix $(GO_RUNTIME)/,$(GO_SRC))
 
 define buildGo
@@ -1140,7 +1142,7 @@ miniGo-go:
 	./miniGo
 
 scratch-go:
-	go run $(GO_RUNTIME)/scratch.go $(GO_SRC)
+	go run $(GO_RUNTIME)/scratch.go $(GO_SRCS)
 
 
 test-reference:

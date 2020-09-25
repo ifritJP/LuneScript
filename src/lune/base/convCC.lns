@@ -401,7 +401,7 @@ class ModuleCtrl {
       _setBuiltinFnc( print );
       _setBuiltinFnc( tonumber );
       _setBuiltinFnc( tostring );
-      _setBuiltinFnc( load );
+      //_setBuiltinFnc( load );
       _setBuiltinFnc( loadfile );
       _setBuiltinFnc( require );
       _setBuiltinFnc( collectgarbage );

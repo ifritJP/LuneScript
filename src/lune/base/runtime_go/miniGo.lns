@@ -1,6 +1,2 @@
-fn func( txt:str ) {
-   print( txt.gsub( "ab", "AB")** );
-}
+print( io.stdout.write( "abcdef\n" )** );
 
-func( "abcd" );
-func( "" );

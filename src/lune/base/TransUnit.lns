@@ -1660,15 +1660,19 @@ builtin 関数の TypeInfo を保持するクラス。
       let mut allSymbol:List<&Ast.SymbolInfo> {pub};
       let mut allClass:List<&Ast.TypeInfo> {pub};
 
+      let mut allSymbolSet:Set<&Ast.SymbolInfo> {pub};
+      
       pub fn __init() {
          ,,initMemberList;
 
          self.allSymbol = [];
          self.allClass = [];
+         self.allSymbolSet = (@);
       }
 
       pub fn register( symbolInfo:&Ast.SymbolInfo ) mut {
          self.allSymbol.insert( symbolInfo );
+         self.allSymbolSet.add( symbolInfo );
       }
       pub fn registerClass( classInfo:&Ast.TypeInfo ) mut {
          self.allClass.insert( classInfo );
@@ -1704,7 +1708,7 @@ _DefBuiltinFuncType( [
          "print": { "arg": [ "&..." ], "ret": [] },
          "tonumber": { "arg": [ "str", "int!" ], "ret": ["real!"] },
          "tostring": { "arg": [ "&stem" ], "ret": ["str"] },
-         "load": { "arg": [ "str", "str!", "str!", "stem!" ], "ret": ["form!", "str!"] },
+         //"load": { "arg": [ "str", "str!", "str!", "stem!" ], "ret": ["form!", "str!"] },
          "loadfile": { "arg": [ "str" ], "ret": ["form!", "str!"] },
          "require": { "arg": [ "str" ], "ret": ["stem!"] },
          "collectgarbage": { "arg": [ ], "ret": [] },
@@ -1794,7 +1798,7 @@ _DefBuiltinFuncType( [
       "str": {
          "__attrib": { "inplements": [ "Mapping" ] },
          "find": { "type": [ "method" ], "arg": [ "str", "int!", "bool!" ], "ret": ["int!", "int!"] },
-         "byte": { "type": [ "method" ], "arg": [ "int!","int!" ], "ret": ["...<int>"] },
+         "byte": { "type": [ "method" ], "arg": [ "int!","int!" ], "ret": ["...<int!>"] },
          "format": { "type": [ "method" ], "arg": [ "&..." ], "ret": ["str"] },
          "rep": { "type": [ "method" ], "arg": [ "int" ], "ret": ["str"] },
          "gmatch": { "type": [ "method" ], "arg": [ "str" ], "ret": ["Luaval<form>", "stem!", "stem!"] },
@@ -1988,7 +1992,8 @@ fn TransUnit.registBuiltInScope() mut {
                .Var, false, true, fieldName, nil,
                getTypeInfo( unwrap info.typeInfo$[1] ), .Pub,
                true, .Mut, true );
-            builtinFunc.register( symbol );
+            //builtinFunc.register( symbol );
+            setupBuiltinTypeInfo( name, fieldName, symbol );
          }
          else {
             let mut argTypeList: List<&Ast.TypeInfo> = [];

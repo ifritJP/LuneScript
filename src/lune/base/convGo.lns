@@ -56,6 +56,7 @@ class convFilter extend Nodes.Filter<Opt> {
    let mut processModeStack:List<ProcessMode>;
    pri let moduleTypeInfo:&Ast.TypeInfo;
    pri let moduleScope:&Ast.Scope;
+   pri let mut builtin2runtime:Map<&Ast.TypeInfo,str>;
 
    pub fn __init( enableTest:bool, streamName: str, stream: oStream,
                   ast:&TransUnit.ASTInfo )
@@ -67,6 +68,7 @@ class convFilter extend Nodes.Filter<Opt> {
       self.processModeStack = [];
       self.moduleTypeInfo = ast.$moduleTypeInfo;
       self.moduleScope = unwrap ast.$moduleTypeInfo.$scope;
+      self.builtin2runtime = {};
    }
 
    fn pushProcessMode( mode:ProcessMode ) mut {
@@ -609,6 +611,32 @@ fn convFilter.processGenericsCall( node:&Nodes.ExpCallNode ) mut {
 pub override fn convFilter.processRoot(
    node: Nodes.RootNode, opt: Opt ) mut
 {
+   let builtinFuncs = TransUnit.getBuiltinFunc();
+   macro _makemap( nameMap:Map<str,List<str>> ) {
+      {
+         let mut itemStatList:List<stat> = [];
+         foreach nameList, key in nameMap {
+            switch key {
+               case "str" {
+                  foreach name in nameList {
+                     let fieldName = "str_%s" (name);
+                     let runtime = "Lns_getVM().String_%s" (name);
+                     itemStatList.insert( `{ builtinFuncs.,,,fieldName: ,,runtime, } );
+                  }
+               }
+            }
+         }
+      }
+      self.builtin2runtime = {
+         ,,itemStatList
+         Ast.builtinTypeNone: ""
+      };
+   }
+   _makemap( { "str": [ "gsub", "find", "byte", "format", "rep", "gmatch",
+                        "sub", "lower", "upper", "reverse" ] } );
+   
+
+   
    Ast.pushProcessInfo( node.$processInfo );
 
    
@@ -636,6 +664,15 @@ pub override fn convFilter.processRoot(
       self.outputNilAccCall( workNode );
    }
 
+   foreach workNode in node.$nodeManager.getIfUnwrapNodeList() {
+      let mut symTypeList:List<&Ast.TypeInfo> = [];
+      for _ = 1, #workNode.$varSymList {
+         symTypeList.insert( Ast.builtinTypeStem_ );
+      }
+      self.processConvExp( workNode.$id, symTypeList, workNode.$expList );
+   }
+
+   
    foreach workNode in node.$nodeManager.getExpCallNodeList() {
       self.processConvExp( workNode.$id, workNode.$func.$expType.$argTypeInfoList,
                            workNode.$argList );
@@ -1227,17 +1264,19 @@ pub override fn convFilter.processIfUnwrap(
    self.writeln( "{" );
    self.pushIndent( ## );
 
+   let mut tempTypeList:List<&Ast.TypeInfo> = [];
    // 一旦 nil かどうかを確認するために、テンポラリ変数にセット
    foreach varSym, index in node.$varSymList {
       if index > 1 {
          self.write( ", " );
       }
       self.write( "_" .. varSym.$name );
+      tempTypeList.insert( Ast.builtinTypeStem_ );
    }
    self.write( " := " );
    self.processSetFromExpList(
       getConvExpName( node.$id, node.$expList ),
-      node.$expList.$expTypeList, node.$expList );
+      tempTypeList, node.$expList );
    self.writeln( "" );
 
    // テンポラリ変数が nil かどうかを確認
@@ -1663,7 +1702,61 @@ pub override fn convFilter.processFor(
 pub override fn convFilter.processApply(
    node: Nodes.ApplyNode, opt: Opt ) mut
 {
-   Util.err( "not support -- %s" (__func__) );
+   self.writeln( "{" );
+   self.pushIndent( ## );
+
+   
+   let formSym = "_form%d" (node.$id);
+   let paramSym = "_param%d" (node.$id);
+   let prevSym = "_prev%d" (node.$id);
+
+   self.write( "%s, %s, %s := " (formSym, paramSym, prevSym) );
+   filter( node.$expList, self, node );
+   self.writeln( "" );
+   
+
+   self.writeln( "for {" );
+   self.pushIndent(##);
+
+   let mut setTxt = prevSym;
+   for index = 2, #node.$varList {
+      let symInfo = node.$varList[ index ];
+      self.writeln( "var %s %s" ( self.getSymbolSym( symInfo ),
+                                  self.type2gotype( symInfo.$typeInfo ) ) );
+      setTxt = "%s, %s" ( setTxt, self.getSymbolSym( symInfo ) );
+   }
+   if node.$expList.$expType.$kind == .Ext {
+      let workSym = "_work%d" (node.$id);
+      self.writeln(
+         "%s := %s.(*Lns_luaValue).call( Lns_2DDD( %s, %s ) )"
+         (workSym, formSym, paramSym, prevSym ) );
+      self.write( "%s = " (setTxt));
+      foreach _, index in node.$varList {
+         if index > 1 {
+            self.write( "," );
+         }
+         self.write( "Lns_getFromMulti(%s,%d)" (workSym, index - 1 ) );
+      }
+      self.writeln( "" );
+   } else {
+      self.writeln( "%s = %s( %s, %s )" (setTxt, formSym, paramSym, prevSym) );
+   }
+   self.writeln(
+      "if Lns_IsNil( %s ) { break }" (prevSym) );
+   let topSymInfo = node.$varList[1];
+   self.writeln(
+      "%s := %s.(%s)"
+      ( self.getSymbolSym( topSymInfo), prevSym,
+        self.type2gotype( topSymInfo.$typeInfo )) );
+   self.popIndent();
+   
+   filter( node.$block, self, node );
+
+   self.writeln( "}" );
+
+
+   self.popIndent();
+   self.writeln( "}" );
 }
 
 pub override fn convFilter.processForeach(
@@ -2169,22 +2262,15 @@ pub fn convFilter.outputCallPrefix(
          }
       }
 
-      let builtinFuncs = TransUnit.getBuiltinFunc();
       if Ast.isBuiltin( funcType.$typeId ) and
-         prefixNode.$expType.$nonnilableType.$kind ~= .List
+         prefixNode.$expType.$nonnilableType == Ast.builtinTypeString
       {
          if node.hasNilAccess() {
             Util.err( "not support nilAccName" );
          }
-         callKind = .RuntimeCall( prefixNode );
-         switch funcType {
-            case builtinFuncs.str_gsub {
-               self.write( "Lns_getVM().string_gsub" );
-            }
-            default {
-               Util.err( "%s:%d: not support -- %s"
-                         (__func__, __line__, funcType.getTxt(##)) );
-            }
+         if! let runtime = self.builtin2runtime[ funcType ] {
+            callKind = .RuntimeCall( prefixNode );
+            self.write( runtime );
          }
       } else {
          if not funcType.$staticFlag {
@@ -2201,15 +2287,13 @@ pub fn convFilter.outputCallPrefix(
          processNilAcc( prefixNode );
          
          if Ast.isBuiltin( funcType.$typeId ) {
-            switch funcType {
-               case builtinFuncs.list_insert {
-                  self.write( ".Insert" );
-               }
-               case builtinFuncs.list_remove {
-                  self.write( ".Remove" );
+            switch prefixNode.$expType.$kind {
+               case .Class, .IF {
+                  // class/interface は継承があるので FP 経由で実行する
+                  self.write( ".FP.%s"( self.getSymbolSym( funcSymbol ) ) );
                }
                default {
-                  Util.err( "%s: not support -- %s" (__func__, funcType.getTxt(##)) );
+                  self.write( ".%s"( self.getSymbolSym( funcSymbol ) ) );
                }
             }
          } else {
@@ -2336,7 +2420,7 @@ pub override fn convFilter.processExpList(
       }
       if! let mRetExp = node.$mRetExp {
          if mRetExp.$index == index {
-            if exp.$expType.$kind == .DDD {
+            if index == 1 or exp.$expType.$kind == .DDD {
                filter( exp, self, node );
             }
             else {
@@ -2647,6 +2731,14 @@ pub override fn convFilter.processRefField(
       return;
    }
    if! let symbol = node.$symbolInfo {
+      let orgSym = symbol.getOrg();
+      let builtinFuncs = TransUnit.getBuiltinFunc();
+      if builtinFuncs.$allSymbolSet.has( orgSym ) {
+         self.write( "Lns_%s_%s" ( node.$prefix.$expType.$rawTxt.gsub( "@", "" ),
+                                   orgSym.$name ) );                  
+         return;
+      }
+
       if symbol.$staticFlag {
          self.write( self.getSymbolSym( symbol ) );
          return;
@@ -2859,7 +2951,7 @@ pub override fn convFilter.processLiteralString(
 {
    let txt = node.$token.txt;
    if! let expList = node.$dddParam {
-      self.write( 'Lns_getVM().string_format(%s, ' (str2gostr(txt)));
+      self.write( 'Lns_getVM().String_format(%s, ' (str2gostr(txt)));
       self.processSetFromExpList(
          getConvExpName( node.$id, expList ),  [ Ast.builtinTypeDDD ], expList );
       self.write( ")" );
