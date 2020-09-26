@@ -178,8 +178,18 @@ pub class MacroAnalyzeInfo {
       self.argIndex = self.argIndex + 1;
    }
 
-   pub fn isAnalyzingArg(): bool {
-      return self.mode == .AnalyzeArg and self.getCurArgType() ~= Ast.builtinTypeExp;
+   pub fn isAnalyzingSymArg(): bool {
+      return self.mode == .AnalyzeArg and self.getCurArgType() == Ast.builtinTypeSymbol;
+      // if self.mode == .AnalyzeArg {
+      //    switch self.getCurArgType() {
+      //       case Ast.builtinTypeExp {
+      //       }
+      //       default {
+      //          return true;
+      //       }
+      //    }
+      // }
+      // return false;
    }
    pub fn isAnalyzingExpArg(): bool {
       return self.mode == .AnalyzeArg and self.getCurArgType() == Ast.builtinTypeExp;
@@ -285,8 +295,13 @@ pub fn MacroCtrl.evalMacroOp(
             if! let val = getLiteralMacroVal( literal ) {
                argValMap[ index ] = val;
                let declArgNode = macroArgNodeList[ index ];
-               
-               macroArgValMap[ declArgNode.$name ] = val;
+
+               if argNode.$expType == Ast.builtinTypeSymbol {
+                  macroArgValMap[ declArgNode.$name ] = val[ 1 ];
+               }
+               else {
+                  macroArgValMap[ declArgNode.$name ] = val;
+               }
                macroArgName2ArgNode[ declArgNode.$name ] = argNode;
             }
          }
@@ -735,9 +750,10 @@ pub fn MacroCtrl.expandSymbol(
             {
                format = "' %s' ";
             }
-            elseif exp.$expType.equals( Ast.builtinTypeStat ##) or
+            elseif exp.$expType.equals( Ast.builtinTypeSymbol ##) or
+               exp.$expType.equals( Ast.builtinTypeExp ##) or
                exp.$expType.equals( Ast.builtinTypeMultiExp ##) or
-               exp.$expType.equals( Ast.builtinTypeExp ##)
+               exp.$expType.equals( Ast.builtinTypeStat ##)
             {
                format = "' %s '";
             }

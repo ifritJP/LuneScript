@@ -539,3 +539,17 @@ _section();
    }
    print( func() );
 }
+_section();
+{
+   fn func( stream:oStream ) {
+      stream.write( "abcd\n" );
+   }
+   func( io.stdout );
+}
+_section();
+{
+   let set = (@ "10", "9", "1", "2", "3", "4" );
+   forsort val in set {
+      print( val );
+   }  
+}

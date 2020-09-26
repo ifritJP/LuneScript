@@ -1164,8 +1164,8 @@ fn TransUnit.checkStringFormat(
 
    if #opList ~= #argTypeList {
       self.addErrMess( pos,
-                       "argument number is mismatch -- %d != %d"
-                       ( #opList, #argTypeList ) );   
+                       "argument number is mismatch -- %d != %d (%s)"
+                       ( #opList, #argTypeList, formatTxt.sub( 1, 20 ) ) );
       return;
    }
    
@@ -2064,7 +2064,7 @@ fn TransUnit.analyzeExpField(
             "This is not nilable. -- %s" (prefixExp.$expType.getTxt(##)) ); 
       }
    }
-   if self.macroCtrl.$analyzeInfo.isAnalyzingArg() {
+   if self.macroCtrl.$analyzeInfo.isAnalyzingSymArg() {
       if accessNil {
          self.helperInfo.useNilAccess = true;
       }
@@ -2407,7 +2407,7 @@ fn TransUnit.analyzeExpSymbol(
       }
    }
    elseif mode == .Symbol {
-      if self.macroCtrl.$analyzeInfo.isAnalyzingArg() {
+      if self.macroCtrl.$analyzeInfo.isAnalyzingSymArg() {
          exp = Nodes.LiteralSymbolNode.create(
             self.nodeManager, firstToken.pos,
             self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeSymbol ], symbolToken );
@@ -3597,7 +3597,7 @@ fn TransUnit.analyzeExp(
          self.nodeManager, firstToken.pos,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], 
          new Ast.AccessSymbolInfo( symbolTypeInfo, .None, false ) );
-   }  
+   }
    elseif token.kind == Parser.TokenKind.Kywd and
        ( token.txt == "true" or token.txt == "false" )
    {  

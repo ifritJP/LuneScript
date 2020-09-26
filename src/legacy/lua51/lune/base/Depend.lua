@@ -281,7 +281,7 @@ _moduleObj.profile = profile
 local function getStackTrace(  )
 
    local txt = ""
-   for level = 2, 8 do
+   for level = 2, 10 do
       do
          local debugInfo = debug.getinfo( level )
          if debugInfo ~= nil then

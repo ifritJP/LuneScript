@@ -2199,7 +2199,7 @@ pub override fn LiteralBoolNode.getLiteral(): Literal!, str! {
 
 pub override fn LiteralBoolNode.setupLiteralTokenList( list: List<&Parser.Token> ): bool
 {
-   self.addTokenList( list, .Symb, self.token.txt );
+   self.addTokenList( list, .Kywd, self.token.txt );
    return true;
 }
 

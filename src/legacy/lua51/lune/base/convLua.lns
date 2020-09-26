@@ -2734,9 +2734,16 @@ pub override fn convFilter.processExpOp1(
       }
    }
    elseif op == ",," {
-      self.write( "__luneGetLocal( " );
-      filter( node.$exp,  self, node );
-      self.write( " )" );
+      switch node.$exp.$expType {
+         case Ast.builtinTypeInt, Ast.builtinTypeReal, Ast.builtinTypeBool {
+            filter( node.$exp,  self, node );
+         }
+         default {
+            self.write( "__luneGetLocal( " );
+            filter( node.$exp,  self, node );
+            self.write( " )" );
+         }
+      }
    }
    elseif op == "~" {
       if self.targetLuaVer.$hasBitOp == .HasOp {

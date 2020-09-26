@@ -1609,10 +1609,25 @@ macro _DefBuiltinFuncType( class2symMapList:List<Map<str,Map<str,Map<str,List<st
       let mut initMemberList:List<stat> = [];
       let mut declProcessList:List<stat> = [];
       let mut caseList:List<stat> = [];
+      let mut classCaseList:List<stat> = [];
       foreach class2symMap in class2symMapList {
          forsort symbolMap, genClassName in class2symMap {
             let className = genClassName.gsub( "<.*", "" );
             let mut subcaseList:List<stat> = [];
+
+            let classTypeName = "%s_" ( className ~= "" and className.lower() or "lns" );
+            defMemberList.insert( `{
+               pub let mut ,,,classTypeName:&Ast.TypeInfo;
+            } );
+            initMemberList.insert( `{
+               self.,,,classTypeName = Ast.headTypeInfo;
+            });
+            classCaseList.insert( `{
+               case ,,className ~~{
+                  self. ,,,classTypeName = classInfo;
+               }
+            });
+            
             
             forsort _, funcName in symbolMap {
                let typeName = "%s_%s" ( className ~= "" and className.lower() or "lns",
@@ -1676,6 +1691,9 @@ builtin 関数の TypeInfo を保持するクラス。
       }
       pub fn registerClass( classInfo:&Ast.TypeInfo ) mut {
          self.allClass.insert( classInfo );
+         switch classInfo.$rawTxt {
+            ,,classCaseList
+         }
       }
    }
 

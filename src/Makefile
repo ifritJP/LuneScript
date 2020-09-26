@@ -70,6 +70,7 @@ help:
 	@echo "  make test-go"
 	@echo "  make test-miniGo"
 	@echo "  make scratch-go"
+	@echo "  make test-tutorial-go"
 
 
 exec:
@@ -1049,6 +1050,7 @@ GO_LUA_LINK = $(GO_RUNTIME)/lua_link
 
 GO_SRC += runtime_main.go
 GO_SRC += runtime_lib.go
+GO_SRC += runtime_collection.go
 GO_SRC += runtime_lua.go
 GO_SRC += runtime_luaCore.go
 GO_SRC += runtime_string.go

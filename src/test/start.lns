@@ -1699,3 +1699,72 @@ class Test_ccc {
    let test = new Testaaa( 1 );
    print( test.val + 1); // generic のメンバを、直接アクセスした場合のテスト
 }
+{
+   Macro._section();
+   fn func() : int!, int! {
+      return nil, nil;
+   }
+
+   let! _, val2 = func() { // _ は unwrap ブロックでセットしなくて良い
+      val2 = 10;
+   };
+   print( val2 );
+}
+{
+   Macro._section();
+   macro _hoge1( var:int, var2:sym ) {
+      {
+         let line;
+         if ,,var == 0 {
+            line = `{ ,,var2( "hoge" ) };
+         } else {
+            line = `{ print( "hoge2" ) };
+         }
+      }
+      ,,line;
+   }
+
+   macro _hoge2( var:int, var2:sym ) {
+      _hoge1( ,,var, ,,var2 );
+   }
+   _hoge2( 0, print );
+   _hoge2( 1, print );
+}
+{
+   Macro._section();
+   macro _hoge1( var:bool, var2:sym ) {
+      {
+         let line;
+         if ,,var {
+            line = `{ ,,var2( "hoge" ) };
+         } else {
+            line = `{ print( "hoge2" ) };
+         }
+      }
+      ,,line;
+   }
+
+   macro _hoge2( var:bool, var2:sym ) {
+      _hoge1( ,,var, ,,var2 );
+   }
+   _hoge2( false, print );
+}
+{
+   Macro._section();
+   macro _hoge1( var:sym, var2:sym ) {
+      {
+         let line;
+         if ,,,,var == "print" {
+            line = `{ ,,var2( "hoge" ) };
+         } else {
+            line = `{ print( "hoge2" ) };
+         }
+      }
+      ,,line;
+   }
+
+   macro _hoge2( var:sym, var2:sym ) {
+      _hoge1( ,,var, ,,var2 );
+   }
+   _hoge2( print, print );
+}

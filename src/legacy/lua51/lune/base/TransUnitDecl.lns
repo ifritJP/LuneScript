@@ -3410,9 +3410,11 @@ fn TransUnit.analyzeDeclVar(
 
       // unwrap ブロックに変数を登録
       foreach letVarInfo, index in letVarList {
-         self.addLocalVar(
-            letVarInfo.varName.pos, false, true,
-            "_" .. letVarInfo.varName.txt, orgExpTypeList[ index ], .IMut ## );
+         if letVarInfo.varName.txt ~= "_" {
+            self.addLocalVar(
+               letVarInfo.varName.pos, false, true,
+               "_" .. letVarInfo.varName.txt, orgExpTypeList[ index ], .IMut ## );
+         }
       }
 
       unwrapBlock = self.analyzeBlock( .LetUnwrap, .Start, scope );
@@ -3430,7 +3432,9 @@ fn TransUnit.analyzeDeclVar(
                   symbolInfo.updateValue( symbolInfo.$pos );
                }
                else {
-                  if not self.tentativeSymbol.checkAndExclude( symbolInfo ) {
+                  if symbolInfo.$name ~= "_" and
+                     not self.tentativeSymbol.checkAndExclude( symbolInfo )
+                  {
                      if not symbolInfo.$hasValueFlag {
                         self.addErrMess(
                            unwrapBlock.$pos,

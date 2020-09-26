@@ -25,7 +25,6 @@ SOFTWARE.
 package main
 
 import "fmt"
-import "time"
 import "math"
 import "reflect"
 
@@ -131,40 +130,6 @@ func Lns_NilAccFinCall3( ret LnsAny ) (LnsAny,LnsAny,LnsAny) {
     return list[0], list[1],list[2]
 }
 
-
-
-
-type LnsList struct {
-    Items []LnsAny
-}
-
-func NewLnsList( list []LnsAny ) *LnsList {
-    return &LnsList{ list }
-}
-func (lnsList *LnsList) Ginsert( val LnsAny ) {
-    if !Lns_IsNil( val ) {
-        lnsList.Items = append( lnsList.Items, val )
-    }
-}
-func (lnsList *LnsList) Gremove( index LnsAny ) LnsAny {
-    if Lns_IsNil( index ) {
-        ret := lnsList.Items[ len(lnsList.Items) - 1 ]
-        lnsList.Items = lnsList.Items[ : len(lnsList.Items) - 1 ]
-        return ret
-    } else {
-        work := index.(LnsInt)
-        ret := lnsList.Items[ work ]
-        lnsList.Items =
-            append( lnsList.Items[ : work ], lnsList.Items[ work+1: ]... )
-        return ret
-    }
-}
-func (lnsList *LnsList) GetAt( index int ) LnsAny {
-    return lnsList.Items[ index - 1 ]
-}
-func (lnsList *LnsList) Len() LnsInt {
-    return len( lnsList.Items )
-}
 
 
 func Lns_isCondTrue( stem LnsAny ) bool {
@@ -279,32 +244,22 @@ func Lns_popVal( dummy bool ) LnsAny {
 }
 
 func test() {
-
     fmt.Println( Lns_isCondTrue( 1 ), Lns_isCondTrue( nil ),
         Lns_isCondTrue( true ), Lns_isCondTrue( false ) )
 
-
     {
-        prev := time.Now()
-        lst := [] int { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }
-        var lst2 [] int
-        for count:=1; count< 1000000; count++ {
-            lst2 = append( lst, lst... )
-        }
-        fmt.Println( lst2 )
-
-        lnsList := LnsList{ []LnsAny{} }
+        lnsList := LnsList{ []LnsAny{}, 0 }
         for count:=0; count < 10; count++ {
-            lnsList.Ginsert( count )
+            lnsList.Insert( count )
         }
         fmt.Println( lnsList )
-        lnsList.Gremove(nil)
+        lnsList.Remove(nil)
         fmt.Println( lnsList )
-        lnsList.Gremove(2)
+        lnsList.Remove(2)
         fmt.Println( lnsList )
-        lnsList.Gremove(4)
+        lnsList.Remove(4)
         fmt.Println( lnsList )
-        lnsList.Ginsert( 100 )
+        lnsList.Insert( 100 )
         fmt.Println( lnsList )
 
         for _, val := range( lnsList.Items ) {
@@ -316,10 +271,6 @@ func test() {
         }
         foo := []LnsAny{1, 2, hoge() }
         fmt.Println( foo )
-
-         
-        now := time.Now()
-        fmt.Println( (now.Sub( prev )).Milliseconds() )
     }
 }
 

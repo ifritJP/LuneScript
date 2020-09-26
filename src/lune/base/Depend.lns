@@ -100,7 +100,7 @@ pub fn profile( validTest:bool, func: form, path: str ): stem! {
 
 pub fn getStackTrace():str {
    let mut txt = "";
-   for level = 2, 8 {
+   for level = 2, 10 {
       if! let debugInfo = debug.getinfo( level ) {
          txt = txt .. "-- %s %s" ( debugInfo.short_src, debugInfo.currentline );
       }

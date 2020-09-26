@@ -1,2 +1,11 @@
-print( io.stdout.write( "abcdef\n" )** );
+fn func( stream:oStream ) {
+   stream.write( "abcd\n" );
+}
+func( io.stdout );
+
+//let set = (@ 10, 9, 1, 2, 3, 4 );
+let set = (@ "10", "9", "1", "2", "3", "4" );
+forsort val in set {
+   print( val );
+}  
 

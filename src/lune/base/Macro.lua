@@ -543,9 +543,10 @@ function MacroAnalyzeInfo:nextArg(  )
 
    self.argIndex = self.argIndex + 1
 end
-function MacroAnalyzeInfo:isAnalyzingArg(  )
+function MacroAnalyzeInfo:isAnalyzingSymArg(  )
 
-   return self.mode == Nodes.MacroMode.AnalyzeArg and self:getCurArgType(  ) ~= Ast.builtinTypeExp
+   return self.mode == Nodes.MacroMode.AnalyzeArg and self:getCurArgType(  ) == Ast.builtinTypeSymbol
+   
 end
 function MacroAnalyzeInfo:isAnalyzingExpArg(  )
 
@@ -640,7 +641,13 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
                   argValMap[index] = val
                   local declArgNode = macroArgNodeList[index]
                   
-                  macroArgValMap[declArgNode:get_name()] = val
+                  if argNode:get_expType() == Ast.builtinTypeSymbol then
+                     macroArgValMap[declArgNode:get_name()] = val[1]
+                  else
+                   
+                     macroArgValMap[declArgNode:get_name()] = val
+                  end
+                  
                   macroArgName2ArgNode[declArgNode:get_name()] = argNode
                end
             end
@@ -1006,7 +1013,7 @@ function MacroCtrl:expandSymbol( parser, prefixToken, exp, nodeManager, errMessL
             else
                if exp:get_expType():equals( Ast.builtinTypeInt ) or exp:get_expType():equals( Ast.builtinTypeReal ) then
                   format = "' %s' "
-               elseif exp:get_expType():equals( Ast.builtinTypeStat ) or exp:get_expType():equals( Ast.builtinTypeMultiExp ) or exp:get_expType():equals( Ast.builtinTypeExp ) then
+               elseif exp:get_expType():equals( Ast.builtinTypeSymbol ) or exp:get_expType():equals( Ast.builtinTypeExp ) or exp:get_expType():equals( Ast.builtinTypeMultiExp ) or exp:get_expType():equals( Ast.builtinTypeStat ) then
                   format = "' %s '"
                end
                

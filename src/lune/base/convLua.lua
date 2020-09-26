@@ -448,7 +448,7 @@ function convFilter:writeRaw( txt )
    end
    
    
-   for _5248 in string.gmatch( txt, "\n" ) do
+   for _5264 in string.gmatch( txt, "\n" ) do
       self.curLineNo = self.curLineNo + 1
    end
    
@@ -1904,7 +1904,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _5589 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _5605 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -3368,9 +3368,18 @@ function convFilter:processExpOp1( node, opt )
       end
       
    elseif op == ",," then
-      self:write( "__luneGetLocal( " )
-      filter( node:get_exp(), self, node )
-      self:write( " )" )
+      do
+         local _switchExp = node:get_exp():get_expType()
+         if _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeReal or _switchExp == Ast.builtinTypeBool then
+            filter( node:get_exp(), self, node )
+         else 
+            
+               self:write( "__luneGetLocal( " )
+               filter( node:get_exp(), self, node )
+               self:write( " )" )
+         end
+      end
+      
    elseif op == "~" then
       if self.targetLuaVer:get_hasBitOp() == LuaVer.BitOp.HasOp then
          self:write( op )
@@ -4012,7 +4021,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3309, function (  )
+   Log.log( Log.Level.Info, __func__, 3316, function (  )
    
       return string.format( "code: %s", code)
    end )

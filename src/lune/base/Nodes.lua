@@ -11434,7 +11434,7 @@ end
 
 function LiteralBoolNode:setupLiteralTokenList( list )
 
-   self:addTokenList( list, Parser.TokenKind.Symb, self.token.txt )
+   self:addTokenList( list, Parser.TokenKind.Kywd, self.token.txt )
    return true
 end
 

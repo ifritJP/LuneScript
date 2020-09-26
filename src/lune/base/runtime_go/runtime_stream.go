@@ -5,15 +5,15 @@ import "io"
 import "bytes"
 
 type Lns_iStream interface {
-    Gread( arg LnsAny ) LnsAny
-    Gclose()
+    Read( arg LnsAny ) LnsAny
+    Close()
 }
 type Lns_stdin_t struct {
     FP Lns_iStream
 }
 var Lns_io_stdin *Lns_stdin_t
 
-func (self *Lns_stdin_t) Gread( arg LnsAny) LnsAny {
+func (self *Lns_stdin_t) Read( arg LnsAny) LnsAny {
     buffer := bytes.Buffer{}
     buffer.Reset()
 
@@ -29,26 +29,26 @@ func (self *Lns_stdin_t) Gread( arg LnsAny) LnsAny {
     
     return string(buffer.Bytes())
 }
-func (self *Lns_stdin_t) Gclose() {
+func (self *Lns_stdin_t) Close() {
 }
 
 type Lns_oStream interface {
-    Gwrite( arg string ) (LnsAny, LnsAny)
-    Gflush()
-    Gclose()
+    Write( arg string ) (LnsAny, LnsAny)
+    Flush()
+    Close()
 }
 type Lns_stdout_t struct {
     FP Lns_oStream
 }
 var Lns_io_stdout *Lns_stdout_t
 
-func (self *Lns_stdout_t) Gwrite( arg string ) (LnsAny, LnsAny) {
+func (self *Lns_stdout_t) Write( arg string ) (LnsAny, LnsAny) {
     _, err := os.Stdout.Write( []byte(arg) )
     return self, err
 }
-func (self *Lns_stdout_t) Gflush() {
+func (self *Lns_stdout_t) Flush() {
 }
-func (self *Lns_stdout_t) Gclose() {
+func (self *Lns_stdout_t) Close() {
 }
 
 
