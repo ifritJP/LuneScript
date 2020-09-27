@@ -2080,7 +2080,7 @@ fn TransUnit.registBuiltInScope() mut {
       .Pub, Ast.headTypeInfo, Ast.builtinTypeString, Ast.builtinTypeStem, .Mut );
    self.scope.addVar( .Global, "_ENV", nil, mapType, .IMutRe, true );
    self.scope.addVar( .Global, "_G", nil, mapType, .IMutRe, true );
-   self.scope.addVar( .Global, "__mod__", nil, Ast.builtinTypeString, .IMut, true );
+   //self.scope.addVar( .Global, "__mod__", nil, Ast.builtinTypeString, .IMut, true );
    self.scope.addVar( .Global, "__line__", nil, Ast.builtinTypeInt, .IMut, true );
    //self.scope.addVar( .Global, "__func__", nil, Ast.builtinTypeString, false, true );
 

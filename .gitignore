@@ -20,4 +20,6 @@ src/test/tutorial/*.c
 src/test/tutorial/*.h
 src/test/tutorial/*.lua
 hoge.*
+*.exe
+*.so
 src/lune/base/runtime_go/*.lua

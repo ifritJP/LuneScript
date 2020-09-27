@@ -3490,7 +3490,6 @@ function TransUnit:registBuiltInScope(  )
    local mapType = Ast.NormalTypeInfo.createMap( Ast.AccessMode.Pub, Ast.headTypeInfo, Ast.builtinTypeString, Ast.builtinTypeStem, Ast.MutMode.Mut )
    self.scope:addVar( Ast.AccessMode.Global, "_ENV", nil, mapType, Ast.MutMode.IMutRe, true )
    self.scope:addVar( Ast.AccessMode.Global, "_G", nil, mapType, Ast.MutMode.IMutRe, true )
-   self.scope:addVar( Ast.AccessMode.Global, "__mod__", nil, Ast.builtinTypeString, Ast.MutMode.IMut, true )
    self.scope:addVar( Ast.AccessMode.Global, "__line__", nil, Ast.builtinTypeInt, Ast.MutMode.IMut, true )
    local function processCopyAlterList( alterList, typeList )
    
@@ -5816,6 +5815,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
    
    self.moduleScope = self.scope
    self.moduleType = moduleTypeInfo
+   self.moduleScope:addVar( Ast.AccessMode.Global, "__mod__", nil, Ast.builtinTypeString, Ast.MutMode.IMut, true )
    
    self.typeNameCtrl = Ast.TypeNameCtrl.new(moduleTypeInfo)
    
@@ -6803,7 +6803,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
             self:addErrMess( varName.pos, string.format( "This member can't have setter, this member is immutable. -- %s", varName.txt) )
          end
          
-         Log.log( Log.Level.Debug, __func__, 1530, function (  )
+         Log.log( Log.Level.Debug, __func__, 1531, function (  )
          
             return string.format( "%s", tostring( dummyRetType))
          end )

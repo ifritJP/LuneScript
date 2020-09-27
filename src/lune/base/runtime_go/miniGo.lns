@@ -1,11 +1,5 @@
-fn func( stream:oStream ) {
-   stream.write( "abcd\n" );
+fn func() {
+   print( __mod__, __func__, __line__ );
 }
-func( io.stdout );
-
-//let set = (@ 10, 9, 1, 2, 3, 4 );
-let set = (@ "10", "9", "1", "2", "3", "4" );
-forsort val in set {
-   print( val );
-}  
+func();
 

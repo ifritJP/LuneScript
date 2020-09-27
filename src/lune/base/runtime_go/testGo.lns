@@ -550,6 +550,30 @@ _section();
 {
    let set = (@ "10", "9", "1", "2", "3", "4" );
    forsort val in set {
-      print( val );
+      print( val .. "aa" );
    }  
+}
+_section();
+{
+   let map = {"X":1, "O":2, "A":3, "B":4, "C":5, "D":6 };
+   forsort val, key in map {
+      print( key .. "aa", val + 10 );
+   }  
+}
+_section();
+{
+   let nilable:int! = nil;
+   let mut map = {"X":1, "O":2, "A":3, "B":4, "C":5, "D":6, "Z":nil, "ZZ":nilable };
+   map[ "xyz" ] = 10;
+   map[ "A" ] = nil;
+   forsort val, key in map {
+      print( key .. "aa", val + 10 );
+   }  
+}
+_section();
+{
+   fn func() {
+      print( __mod__, __func__, __line__ );
+   }
+   func();
 }

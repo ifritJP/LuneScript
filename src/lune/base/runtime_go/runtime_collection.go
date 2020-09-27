@@ -102,7 +102,7 @@ type LnsSet struct {
     Items map[LnsAny]bool
 }
 
-func (self *LnsSet) createKeyListStem() *LnsList {
+func (self *LnsSet) CreateKeyListStem() *LnsList {
     list := make([]LnsAny, len(self.Items))
     index := 0
     for key := range self.Items {
@@ -111,19 +111,19 @@ func (self *LnsSet) createKeyListStem() *LnsList {
     }    
     return NewLnsList( list )
 }
-func (self *LnsSet) createKeyListInt() *LnsList {
-    list := self.createKeyListStem()
+func (self *LnsSet) CreateKeyListInt() *LnsList {
+    list := self.CreateKeyListStem()
     list.lnsItemKind = LnsItemKindInt
     return list
 }
 
-func (self *LnsSet) createKeyListReal() *LnsList {
-    list := self.createKeyListStem()
+func (self *LnsSet) CreateKeyListReal() *LnsList {
+    list := self.CreateKeyListStem()
     list.lnsItemKind = LnsItemKindReal
     return list
 }
-func (self *LnsSet) createKeyListStr() *LnsList {
-    list := self.createKeyListStem()
+func (self *LnsSet) CreateKeyListStr() *LnsList {
+    list := self.CreateKeyListStem()
     list.lnsItemKind = LnsItemKindStr
     return list
 }
@@ -187,4 +187,58 @@ func (self *LnsSet) Clone() *LnsSet {
 }
 func (self *LnsSet) Len() LnsInt {
     return len( self.Items )
+}
+
+// ======== map ========
+
+type LnsMap map[LnsAny]LnsAny
+
+func (self LnsMap) Correct() LnsMap {
+    delete( self, nil )
+    list := make([]LnsAny, len(self))
+    index := 0
+    for key, val := range self {
+        if Lns_IsNil( val ) {
+            list[index] = key
+            index++
+        }
+    }
+    for _, key := range list[:index] {
+        delete( self, key )
+    }
+    return self
+}
+
+func (self LnsMap) CreateKeyListStem() *LnsList {
+    list := make([]LnsAny, len(self))
+    index := 0
+    for key := range self {
+        list[index] = key
+        index++
+    }    
+    return NewLnsList( list )
+}
+func (self LnsMap) CreateKeyListInt() *LnsList {
+    list := self.CreateKeyListStem()
+    list.lnsItemKind = LnsItemKindInt
+    return list
+}
+
+func (self LnsMap) CreateKeyListReal() *LnsList {
+    list := self.CreateKeyListStem()
+    list.lnsItemKind = LnsItemKindReal
+    return list
+}
+func (self LnsMap) CreateKeyListStr() *LnsList {
+    list := self.CreateKeyListStem()
+    list.lnsItemKind = LnsItemKindStr
+    return list
+}
+
+func (self LnsMap) Set( key, val LnsAny ) {
+    if Lns_IsNil( val ) {
+        delete( self, key );
+    } else {
+        self[ key ] = val
+    }
 }
