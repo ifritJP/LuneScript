@@ -194,8 +194,15 @@ fn convFilter.getSymbol( kind:SymbolKind, name:str ) : str {
       }
       case .Func( typeInfo ) {
          if typeInfo.$kind == .Method {
-            symbolName = concatGLSym(
-               symbolName, Ast.isPubToExternal( typeInfo.$accessMode ) );
+            switch symbolName {
+               case "_toMap" {
+                  return "ToMap";
+               }
+               default {
+                  symbolName = concatGLSym(
+                     symbolName, Ast.isPubToExternal( typeInfo.$accessMode ) );
+               }
+            }
          }
          else {
             if isInnerDeclType( typeInfo ) {
@@ -1973,7 +1980,17 @@ pub override fn convFilter.processForsort(
 pub override fn convFilter.processExpUnwrap(
    node: Nodes.ExpUnwrapNode, opt: Opt ) mut
 {
-   Util.err( "not support -- %s" (__func__) );
+   if! let def = node.$default {
+      self.write( "Lns_unwrapDefault( " );
+      filter( node.$exp, self, node );
+      self.write( ", " );
+      filter( def, self, node );
+   } else {
+      self.write( "Lns_unwrap( " );
+      filter( node.$exp, self, node );
+   }
+   self.write( ")" );
+   self.outputAny2Type( node.$expType );
 }
 
 pub override fn convFilter.processExpToDDD( node: Nodes.ExpToDDDNode, opt: Opt ) mut
@@ -2263,6 +2280,30 @@ fn convFilter.outputStaticMember( node: Nodes.DeclClassNode ) mut {
    }
 }
 
+fn convFilter.outputMapping( node: Nodes.DeclClassNode ) mut {
+   let className = self.getTypeSymbol( node.$expType );
+   self.writeln( "func (self *%s) ToMapSetup( obj LnsMap ) LnsMap {" (className) );
+   self.pushIndent( ## );
+   foreach memberNode in node.$memberList {
+      self.writeln(
+         'obj["%s"] = Lns_ToCollection( self.%s )'
+         ( self.getSymbolSym( memberNode.$symbolInfo ),
+           self.getSymbolSym( memberNode.$symbolInfo ) ) );
+   }
+   if node.$expType.hasBase() {
+      self.writeln( "return self.%s.ToMapSetup( obj )"
+         (self.getTypeSymbol( node.$expType.$baseTypeInfo) ) );
+   } else {
+      self.writeln( "return obj" );
+   }
+   self.popIndent();
+   self.writeln( "}" );
+   self.writeln( "func (self *%s) ToMap() LnsMap {" (className) );
+   self.writeln( "    return self.ToMapSetup( LnsMap{} )" );
+   self.writeln( "}" );
+}
+
+
 pub override fn convFilter.processDeclClass(
    node: Nodes.DeclClassNode, opt: Opt ) mut
 {
@@ -2282,12 +2323,9 @@ pub override fn convFilter.processDeclClass(
                Util.err( "%s: not support advertise" (__func__) );
             }
 
-            foreach ifType in node.$expType.$interfaceList {
-               if ifType == Ast.builtinTypeMapping {
-                  Util.err( "%s: not support mapping." (__func__ ) );
-               }
+            if node.$expType.isInheritFrom( Ast.builtinTypeMapping, nil ) {
+               self.outputMapping( node );
             }
-
             
             foreach fieldNode in node.$fieldList {
                if! let methodNode = fieldNode@@@Nodes.DeclMemberNode {

@@ -53,10 +53,22 @@ func Lns_IsNil( val LnsAny ) bool {
     }    
 }
 
+func Lns_unwrap( val LnsAny ) LnsAny {
+    if Lns_IsNil( val ) {
+        panic( "unwrap nil" );
+    }
+    return val
+}
+func Lns_unwrapDefault( val, def LnsAny ) LnsAny {
+    if Lns_IsNil( val ) {
+        return def
+    }
+    return val
+}
+
 type LnsAlgeVal interface {
     getTxt() string
 }
-
 
 func Lns_getFromMulti( multi []LnsAny, index LnsInt ) LnsAny {
     if len( multi ) > index {

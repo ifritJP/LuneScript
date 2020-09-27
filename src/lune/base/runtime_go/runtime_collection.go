@@ -29,6 +29,34 @@ package main
 import "log"
 import "sort"
 
+type Lns_ToMap interface {
+    ToMap() LnsMap
+}
+
+type Lns_ToCollectionIF interface {
+    ToCollection() LnsAny
+}
+
+func Lns_ToCollection( val LnsAny ) LnsAny {
+    if Lns_IsNil( val ) {
+        return nil
+    }
+    switch val.(type) {
+    case LnsInt:
+        return val
+    case LnsReal:
+        return val
+    case bool:
+        return val
+    case string:
+        return val
+    case Lns_ToCollectionIF:
+        return val.(Lns_ToCollectionIF).ToCollection()
+    default:
+        return val.(Lns_ToMap).ToMap()
+    }
+}
+
 // ======== list ========
 
 const (
@@ -41,6 +69,14 @@ const (
 type LnsList struct {
     Items []LnsAny
     lnsItemKind int
+}
+
+func (self *LnsList) ToCollection() LnsAny {
+    list := make([]LnsAny, len(self.Items))
+    for index, val := range (self.Items) {
+        list[ index ] = Lns_ToCollection( val )
+    }
+    return NewLnsList( list )
 }
 
 func (self *LnsList) Sort() {
@@ -101,6 +137,15 @@ func (lnsList *LnsList) GetAt( index int ) LnsAny {
 type LnsSet struct {
     Items map[LnsAny]bool
 }
+
+func (self *LnsSet) ToCollection() LnsAny {
+    ret := NewLnsSet([]LnsAny{})
+    for key := range (self.Items) {
+        ret.Add( Lns_ToCollection( key ) )
+    }
+    return ret
+}
+
 
 func (self *LnsSet) CreateKeyListStem() *LnsList {
     list := make([]LnsAny, len(self.Items))
@@ -192,6 +237,15 @@ func (self *LnsSet) Len() LnsInt {
 // ======== map ========
 
 type LnsMap map[LnsAny]LnsAny
+
+func (self LnsMap) ToCollection() LnsAny {
+    ret := LnsMap{}
+    for key, val := range (self) {
+        ret[ key ] = Lns_ToCollection( val )
+    }
+    return ret
+}
+
 
 func (self LnsMap) Correct() LnsMap {
     delete( self, nil )
