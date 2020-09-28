@@ -678,13 +678,13 @@ pub class TypeInfo {
 
 
    /** 表示用文字列取得 */
-   pub fn get_display_stirng_with( raw:str ): str {
+   pub fn get_display_stirng_with( raw:str, alt2type:&Map<&TypeInfo,&TypeInfo>! ): str {
       return "";
    }
 
    /** 表示用文字列取得 */
    pub fn get_display_stirng(): str {
-      return self.get_display_stirng_with( "" );
+      return self.get_display_stirng_with( "", nil );
    }
 
 
@@ -1287,7 +1287,7 @@ pub class AliasTypeInfo extend TypeInfo {
    }
 
    pub override fn get_display_stirng(): str {
-      return self.get_display_stirng_with( self.rawTxt );
+      return self.get_display_stirng_with( self.rawTxt, nil );
    }
 
    /** 親の typeId  */
@@ -1917,11 +1917,12 @@ pub class NilTypeInfo extend TypeInfo {
    }
 
    /** 表示用文字列取得 */
-   pub override fn get_display_stirng_with( raw:str ): str {
+   pub override fn get_display_stirng_with(
+      raw:str, alt2type:&Map<&TypeInfo,&TypeInfo>! ): str {
       return self.getTxtWithRaw( raw ##);
    }
    pub override fn get_display_stirng(): str {
-      return self.get_display_stirng_with( "nil" );
+      return self.get_display_stirng_with( "nil", nil );
    }
 
 
@@ -2233,11 +2234,12 @@ pub class NilableTypeInfo extend TypeInfo {
    }
 
 
-   pub override fn get_display_stirng_with( raw:str ): str {
-      return self.nonnilableType.get_display_stirng_with( raw ) .. "!";
+   pub override fn get_display_stirng_with(
+      raw:str, alt2type:&Map<&TypeInfo,&TypeInfo>!  ): str {
+      return self.nonnilableType.get_display_stirng_with( raw, alt2type ) .. "!";
    }
    pub override fn get_display_stirng(): str {
-      return self.get_display_stirng_with( self.$rawTxt );
+      return self.get_display_stirng_with( self.$rawTxt, nil );
    }
 
    pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
@@ -2469,11 +2471,18 @@ pub class AlternateTypeInfo extend TypeInfo {
    }
 
    /** 表示用文字列取得 */
-   pub override fn get_display_stirng_with( raw:str ): str {
+   pub override fn get_display_stirng_with(
+      raw:str, alt2type:&Map<&TypeInfo,&TypeInfo>! ): str
+   {
+      when! alt2type {
+         if! let genType = alt2type[ self ] {
+            return genType.get_display_stirng_with( genType.$rawTxt, alt2type );
+         }
+      }
       return self.getTxtWithRaw( raw ##);
    }
    pub override fn get_display_stirng(): str {
-      return self.get_display_stirng_with( self.txt );
+      return self.get_display_stirng_with( self.txt, nil );
    }
 
 
@@ -2616,11 +2625,12 @@ pub class BoxTypeInfo extend TypeInfo {
    }
 
    pub override fn get_display_stirng(): str {
-      return self.get_display_stirng_with( self.$rawTxt );
+      return self.get_display_stirng_with( self.$rawTxt, nil );
    }
 
-   pub override fn get_display_stirng_with( raw:str ): str {
-      return "Nilable<%s>" (self.boxingType.get_display_stirng_with( raw ) );
+   pub override fn get_display_stirng_with(
+      raw:str, alt2type:&Map<&TypeInfo,&TypeInfo>! ): str {
+      return "Nilable<%s>" (self.boxingType.get_display_stirng_with( raw, alt2type ) );
    }
 
    pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
@@ -2667,7 +2677,11 @@ pub class GenericTypeInfo extend TypeInfo {
    pri let alt2typeMap:&Map<&TypeInfo,&TypeInfo>;
    pri let hasAlter:bool;
 
-
+   pub override fn get_display_stirng_with(
+      raw:str, alt2type:&Map<&TypeInfo,&TypeInfo>! ): str
+   {
+      return self.genSrcTypeInfo.get_display_stirng_with( raw, self.alt2typeMap );
+   }
 
    pub fn __init( genSrcTypeInfo:&TypeInfo,
                   itemTypeInfoList:&List<&TypeInfo>, moduleTypeInfo:&TypeInfo )
@@ -2912,15 +2926,16 @@ pub class ModifierTypeInfo extend TypeInfo {
       return txt;
    }
 
-   pub override fn get_display_stirng_with( raw:str ): str {
-      let mut txt = self.srcTypeInfo.get_display_stirng_with( raw );
+   pub override fn get_display_stirng_with(
+      raw:str, alt2type:&Map<&TypeInfo,&TypeInfo>! ): str {
+      let mut txt = self.srcTypeInfo.get_display_stirng_with( raw, alt2type );
       if isMutable( self.mutMode ) {
          txt = "mut " .. txt;
       }
       return txt;
    }
    pub override fn get_display_stirng(): str {
-      return self.get_display_stirng_with( self.$rawTxt );
+      return self.get_display_stirng_with( self.$rawTxt, nil );
    }
 
    pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
@@ -3041,11 +3056,12 @@ pub class ModuleTypeInfo extend TypeInfo {
       return rawTxt;
    }
 
-   pub override fn get_display_stirng_with( raw:str ): str {
+   pub override fn get_display_stirng_with(
+      raw:str, alt2type:&Map<&TypeInfo,&TypeInfo>! ): str {
       return self.getTxtWithRaw( raw ##);
    }
    pub override fn get_display_stirng(): str {
-      return self.get_display_stirng_with( self.$rawTxt );
+      return self.get_display_stirng_with( self.$rawTxt, nil );
    }
    pub override fn canEvalWith(
       other:&TypeInfo,
@@ -3178,11 +3194,12 @@ pub class EnumTypeInfo extend TypeInfo {
       return rawTxt;
    }
 
-   pub override fn get_display_stirng_with( raw:str ): str {
+   pub override fn get_display_stirng_with(
+      raw:str, alt2type:&Map<&TypeInfo,&TypeInfo>!  ): str {
       return self.getTxtWithRaw( raw ##);
    }
    pub override fn get_display_stirng(): str {
-      return self.get_display_stirng_with( self.$rawTxt );
+      return self.get_display_stirng_with( self.$rawTxt, nil );
    }
 
    pub override fn canEvalWith(
@@ -3282,11 +3299,12 @@ pub class AlgeTypeInfo extend TypeInfo {
       return rawTxt;
    }
 
-   pub override fn get_display_stirng_with( raw:str ): str {
+   pub override fn get_display_stirng_with(
+      raw:str, alt2type:&Map<&TypeInfo,&TypeInfo>! ): str {
       return self.getTxtWithRaw( raw ##);
    }
    pub override fn get_display_stirng(): str {
-      return self.get_display_stirng_with( self.$rawTxt );
+      return self.get_display_stirng_with( self.$rawTxt, nil );
    }
 
    pub override fn canEvalWith(
@@ -3513,18 +3531,6 @@ pub class NormalTypeInfo extend TypeInfo {
       when! typeNameCtrl {
          parentTxt = self.getParentFullName( typeNameCtrl, importInfo, localFlag );
       }
-      // if self.kind == .Array {
-      //    let! _exp = self.itemTypeInfoList[1] {
-      //       return "[@]";
-      //    };
-      //    return _exp.getTxt() .. "[@]";
-      // }
-      // if self.kind == .List {
-      //    let! _exp = self.itemTypeInfoList[1] {
-      //       return "[]";
-      //    };
-      //    return _exp.getTxt() .. "[]";
-      // }
       let mut name;
       if #self.itemTypeInfoList > 0 {
          let mut txt = raw .. "<";
@@ -3545,7 +3551,8 @@ pub class NormalTypeInfo extend TypeInfo {
    }
 
 
-   pub override fn get_display_stirng_with( raw:str ): str {
+   pub override fn get_display_stirng_with(
+      raw:str, alt2type:&Map<&TypeInfo,&TypeInfo>!  ): str {
       switch self.kind {
          case .Func, .Form, .FormFunc, .Method, .Macro {
             let mut txt = raw .. "(";
@@ -3568,11 +3575,29 @@ pub class NormalTypeInfo extend TypeInfo {
             return txt;
          }
       }
-      return self.getTxtWithRaw( raw ##);
+
+      let mut parentTxt = "";
+      let mut name;
+      if #self.itemTypeInfoList > 0 {
+         let mut txt = raw .. "<";
+         foreach typeInfo, index in self.itemTypeInfoList {
+            if index ~= 1 {
+               txt = txt .. ",";
+            }
+            txt = txt .. typeInfo.get_display_stirng_with( typeInfo.$rawTxt, alt2type );
+         }
+
+         name = parentTxt .. txt .. ">";
+      }
+      else {
+         name = parentTxt .. raw;
+      }
+
+      return name;
    }
 
    pub override fn get_display_stirng(): str {
-      return self.get_display_stirng_with( self.$rawTxt );
+      return self.get_display_stirng_with( self.$rawTxt, nil );
    }
 
 
@@ -4327,11 +4352,12 @@ pub class DDDTypeInfo extend TypeInfo {
            self.typeInfo.$typeId, headTypeInfo.$typeId ) );
    }
 
-   pub override fn get_display_stirng_with( raw:str ): str {
+   pub override fn get_display_stirng_with(
+      raw:str, alt2type:&Map<&TypeInfo,&TypeInfo>! ): str {
       return self.getTxtWithRaw( raw ##);
    }
    pub override fn get_display_stirng(): str {
-      return self.get_display_stirng_with( self.$rawTxt );
+      return self.get_display_stirng_with( self.$rawTxt, nil );
    }
 
    pub override fn getModule(): &TypeInfo {
@@ -4821,11 +4847,12 @@ pub class AbbrTypeInfo extend TypeInfo {
       Util.err( "illegal call" );
    }
 
-   pub override fn get_display_stirng_with( raw:str ): str {
+   pub override fn get_display_stirng_with(
+      raw:str, alt2type:&Map<&TypeInfo,&TypeInfo>! ): str {
       return self.getTxtWithRaw( raw ##);
    }
    pub override fn get_display_stirng(): str {
-      return self.get_display_stirng_with( self.$rawTxt );
+      return self.get_display_stirng_with( self.$rawTxt, nil );
    }
 
    pub override fn getModule(): &TypeInfo {
@@ -4915,11 +4942,12 @@ pub class ExtTypeInfo extend TypeInfo {
       Util.err( "illegal call" );
    }
 
-   pub override fn get_display_stirng_with( raw:str ): str {
+   pub override fn get_display_stirng_with(
+      raw:str, alt2type:&Map<&TypeInfo,&TypeInfo>! ): str {
       return self.getTxtWithRaw( raw ##);
    }
    pub override fn get_display_stirng(): str {
-      return self.get_display_stirng_with( self.$rawTxt );
+      return self.get_display_stirng_with( self.$rawTxt, nil );
    }
 
    pub override fn getModule(): &TypeInfo {

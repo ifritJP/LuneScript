@@ -1,37 +1,34 @@
-class Test extend (Mapping) {
-   let val:List<int>;
-   let val2:Map<int,str>;
-}
-class Sub extend Test {
-   let val3:Set<real>;
-}
-class Hoge extend (Mapping) {
-   let list:List<Sub>;
-}
-let hoge = new Hoge(
-   [ new Sub( [100, 200, 300], {10:"aa", 20:"bb"}, (@ 1.5, 10.5 ) ),
-     new Sub( [1000, 2000, 3000], {100:"aaa", 200:"bbb"}, (@ 10.5, 100.5 ) ) ]);
+// {
+//    class Test extend (Mapping) {
+//       let val:List<Set<str>> {pub};
+//    }
 
-foreach val0, key0 in hoge._toMap() {
-   foreach test, index in val0@@List<Map<str,stem>> {
-      forsort val, key in test {
-         switch key {
-            case "val" {
-               foreach val2, key2 in val@@List<int> {
-                  print( key0, index, key, key2, val2 );
-               }
-            }
-            case "val2" {
-               foreach val2, key2 in val@@Map<int,str> {
-                  print( key0, index, key, key2, val2 );
-               }
-            }
-            case "val3" {
-               foreach val2 in val@@Set<real> {
-                  print( key0, index, key, val2 );
-               }
-            }
-         }
-      }
+//    let test = new Test( [(@"abc")] );
+//    let map = test._toMap();
+//    let test2 = Test._fromMap( map );
+//    print( test2 );
+// }
+{
+   class Sub<X:(Mapping)> extend (Mapping) {
+      let val:X {pub};
    }
+   class Test<T:(Mapping)> extend (Mapping) {
+      let val:Sub<T> {pub};
+   }
+
+   let test = new Test( new Sub( "abc" ) );
+   print( test.$val.$val );
+   let map = test._toMap();
+   let test2 = unwrap Test<Sub<str>>._fromMap( map );
+   print( test2.$val.$val );
 }
+
+// class Test<T:(Mapping)> extend (Mapping) {
+//    let val:T {pub};
+// }
+
+// let test = new Test( "abc" );
+// let map = test._toMap();
+// if! let test2 = Test<str>._fromMap( map ) {
+//    print( test2.$val .. "xyz" );
+// }

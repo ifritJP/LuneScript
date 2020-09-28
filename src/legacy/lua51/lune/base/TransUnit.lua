@@ -8060,7 +8060,7 @@ function TransUnit:dumpSymbolType( token, typeInfo )
    writer:startParent( "inquire", false )
    writer:write( "name", token.txt )
    writer:write( "type", typeInfo:getTxt( self.typeNameCtrl ) )
-   writer:write( "display", typeInfo:get_display_stirng() )
+   writer:write( "display", typeInfo:get_display_stirng_with( typeInfo:get_rawTxt(), nil ) )
    writer:endElement(  )
    writer:endElement(  )
    writer:fin(  )
@@ -10372,7 +10372,7 @@ function TransUnit:dumpComp( writer, pattern, symbolInfo, getterFlag )
          do
             local _switchExp = (symbolInfo:get_kind() )
             if _switchExp == Ast.SymbolKind.Fun or _switchExp == Ast.SymbolKind.Mtd or _switchExp == Ast.SymbolKind.Mac then
-               writer:write( "displayTxt", string.format( "%s", typeInfo:get_display_stirng_with( symbolInfo:get_name() )) )
+               writer:write( "displayTxt", typeInfo:get_display_stirng_with( symbolInfo:get_name(), nil ) )
             elseif _switchExp == Ast.SymbolKind.Mbr or _switchExp == Ast.SymbolKind.Var or _switchExp == Ast.SymbolKind.Arg then
                local name = symbolInfo:get_name()
                do

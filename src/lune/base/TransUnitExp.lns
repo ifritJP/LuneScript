@@ -1856,8 +1856,9 @@ fn TransUnit.dumpComp(
          writer.write( "type", "%s" ( symbolInfo.$kind.$_txt ) );
          switch ( symbolInfo.$kind ) {
             case .Fun, .Mtd, .Mac {
-               writer.write( "displayTxt", "%s"
-                             ( typeInfo.get_display_stirng_with(symbolInfo.$name) ) );
+               writer.write(
+                  "displayTxt",
+                  typeInfo.get_display_stirng_with(symbolInfo.$name, nil) );
             }  
             case .Mbr, .Var, .Arg {
                let mut name = symbolInfo.$name;

@@ -1148,13 +1148,13 @@ function TypeInfo:serialize( stream, validChildrenSet )
 
    return 
 end
-function TypeInfo:get_display_stirng_with( raw )
+function TypeInfo:get_display_stirng_with( raw, alt2type )
 
    return ""
 end
 function TypeInfo:get_display_stirng(  )
 
-   return self:get_display_stirng_with( "" )
+   return self:get_display_stirng_with( "", nil )
 end
 function TypeInfo:get_srcTypeInfo(  )
 
@@ -1834,7 +1834,7 @@ function AliasTypeInfo:serialize( stream, validChildrenSet )
 end
 function AliasTypeInfo:get_display_stirng(  )
 
-   return self:get_display_stirng_with( self.rawTxt )
+   return self:get_display_stirng_with( self.rawTxt, nil )
 end
 function AliasTypeInfo:getParentId(  )
 
@@ -2621,13 +2621,13 @@ function NilTypeInfo:canEvalWith( other, canEvalType, alt2type )
 
    return other:get_nilable(), nil
 end
-function NilTypeInfo:get_display_stirng_with( raw )
+function NilTypeInfo:get_display_stirng_with( raw, alt2type )
 
    return self:getTxtWithRaw( raw )
 end
 function NilTypeInfo:get_display_stirng(  )
 
-   return self:get_display_stirng_with( "nil" )
+   return self:get_display_stirng_with( "nil", nil )
 end
 function NilTypeInfo:equals( typeInfo, alt2type, checkModifer )
 
@@ -2993,13 +2993,13 @@ function NilableTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag
 
    return self.nonnilableType:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag ) .. "!"
 end
-function NilableTypeInfo:get_display_stirng_with( raw )
+function NilableTypeInfo:get_display_stirng_with( raw, alt2type )
 
-   return self.nonnilableType:get_display_stirng_with( raw ) .. "!"
+   return self.nonnilableType:get_display_stirng_with( raw, alt2type ) .. "!"
 end
 function NilableTypeInfo:get_display_stirng(  )
 
-   return self:get_display_stirng_with( self:get_rawTxt() )
+   return self:get_display_stirng_with( self:get_rawTxt(), nil )
 end
 function NilableTypeInfo:serialize( stream, validChildrenSet )
 
@@ -3353,13 +3353,23 @@ function AlternateTypeInfo:canEvalWith( other, canEvalType, alt2type )
    return self:canSetFrom( other, canEvalType, alt2type ), nil
    
 end
-function AlternateTypeInfo:get_display_stirng_with( raw )
+function AlternateTypeInfo:get_display_stirng_with( raw, alt2type )
 
+   if alt2type ~= nil then
+      do
+         local genType = alt2type[self]
+         if genType ~= nil then
+            return genType:get_display_stirng_with( genType:get_rawTxt(), alt2type )
+         end
+      end
+      
+   end
+   
    return self:getTxtWithRaw( raw )
 end
 function AlternateTypeInfo:get_display_stirng(  )
 
-   return self:get_display_stirng_with( self.txt )
+   return self:get_display_stirng_with( self.txt, nil )
 end
 function AlternateTypeInfo:equals( typeInfo, alt2type, checkModifer )
 
@@ -3501,11 +3511,11 @@ function BoxTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag )
 end
 function BoxTypeInfo:get_display_stirng(  )
 
-   return self:get_display_stirng_with( self:get_rawTxt() )
+   return self:get_display_stirng_with( self:get_rawTxt(), nil )
 end
-function BoxTypeInfo:get_display_stirng_with( raw )
+function BoxTypeInfo:get_display_stirng_with( raw, alt2type )
 
-   return string.format( "Nilable<%s>", self.boxingType:get_display_stirng_with( raw ))
+   return string.format( "Nilable<%s>", self.boxingType:get_display_stirng_with( raw, alt2type ))
 end
 function BoxTypeInfo:serialize( stream, validChildrenSet )
 
@@ -3659,6 +3669,10 @@ end
 local GenericTypeInfo = {}
 setmetatable( GenericTypeInfo, { __index = TypeInfo } )
 _moduleObj.GenericTypeInfo = GenericTypeInfo
+function GenericTypeInfo:get_display_stirng_with( raw, alt2type )
+
+   return self.genSrcTypeInfo:get_display_stirng_with( raw, self.alt2typeMap )
+end
 function GenericTypeInfo.new( genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo )
    local obj = {}
    GenericTypeInfo.setmeta( obj )
@@ -3939,10 +3953,6 @@ function GenericTypeInfo:get_display_stirng( ... )
    return self.genSrcTypeInfo:get_display_stirng( ... )
 end
 
-function GenericTypeInfo:get_display_stirng_with( ... )
-   return self.genSrcTypeInfo:get_display_stirng_with( ... )
-end
-
 function GenericTypeInfo:get_externalFlag( ... )
    return self.genSrcTypeInfo:get_externalFlag( ... )
 end
@@ -4039,9 +4049,9 @@ function ModifierTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFla
    
    return txt
 end
-function ModifierTypeInfo:get_display_stirng_with( raw )
+function ModifierTypeInfo:get_display_stirng_with( raw, alt2type )
 
-   local txt = self.srcTypeInfo:get_display_stirng_with( raw )
+   local txt = self.srcTypeInfo:get_display_stirng_with( raw, alt2type )
    if isMutable( self.mutMode ) then
       txt = "mut " .. txt
    end
@@ -4050,7 +4060,7 @@ function ModifierTypeInfo:get_display_stirng_with( raw )
 end
 function ModifierTypeInfo:get_display_stirng(  )
 
-   return self:get_display_stirng_with( self:get_rawTxt() )
+   return self:get_display_stirng_with( self:get_rawTxt(), nil )
 end
 function ModifierTypeInfo:serialize( stream, validChildrenSet )
 
@@ -4298,13 +4308,13 @@ function ModuleTypeInfo:getTxtWithRaw( rawTxt, typeNameCtrl, importInfo, localFl
 
    return rawTxt
 end
-function ModuleTypeInfo:get_display_stirng_with( raw )
+function ModuleTypeInfo:get_display_stirng_with( raw, alt2type )
 
    return self:getTxtWithRaw( raw )
 end
 function ModuleTypeInfo:get_display_stirng(  )
 
-   return self:get_display_stirng_with( self:get_rawTxt() )
+   return self:get_display_stirng_with( self:get_rawTxt(), nil )
 end
 function ModuleTypeInfo:canEvalWith( other, canEvalType, alt2type )
 
@@ -4484,13 +4494,13 @@ function EnumTypeInfo:getTxtWithRaw( rawTxt, typeNameCtrl, importInfo, localFlag
 
    return rawTxt
 end
-function EnumTypeInfo:get_display_stirng_with( raw )
+function EnumTypeInfo:get_display_stirng_with( raw, alt2type )
 
    return self:getTxtWithRaw( raw )
 end
 function EnumTypeInfo:get_display_stirng(  )
 
-   return self:get_display_stirng_with( self:get_rawTxt() )
+   return self:get_display_stirng_with( self:get_rawTxt(), nil )
 end
 function EnumTypeInfo:canEvalWith( other, canEvalType, alt2type )
 
@@ -4600,13 +4610,13 @@ function AlgeTypeInfo:getTxtWithRaw( rawTxt, typeNameCtrl, importInfo, localFlag
 
    return rawTxt
 end
-function AlgeTypeInfo:get_display_stirng_with( raw )
+function AlgeTypeInfo:get_display_stirng_with( raw, alt2type )
 
    return self:getTxtWithRaw( raw )
 end
 function AlgeTypeInfo:get_display_stirng(  )
 
-   return self:get_display_stirng_with( self:get_rawTxt() )
+   return self:get_display_stirng_with( self:get_rawTxt(), nil )
 end
 function AlgeTypeInfo:canEvalWith( other, canEvalType, alt2type )
 
@@ -4861,7 +4871,7 @@ function NormalTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag 
    
    return name
 end
-function NormalTypeInfo:get_display_stirng_with( raw )
+function NormalTypeInfo:get_display_stirng_with( raw, alt2type )
 
    do
       local _switchExp = self.kind
@@ -4891,11 +4901,33 @@ function NormalTypeInfo:get_display_stirng_with( raw )
       end
    end
    
-   return self:getTxtWithRaw( raw )
+   
+   local parentTxt = ""
+   local name
+   
+   if #self.itemTypeInfoList > 0 then
+      local txt = raw .. "<"
+      for index, typeInfo in ipairs( self.itemTypeInfoList ) do
+         if index ~= 1 then
+            txt = txt .. ","
+         end
+         
+         txt = txt .. typeInfo:get_display_stirng_with( typeInfo:get_rawTxt(), alt2type )
+      end
+      
+      
+      name = parentTxt .. txt .. ">"
+   else
+    
+      name = parentTxt .. raw
+   end
+   
+   
+   return name
 end
 function NormalTypeInfo:get_display_stirng(  )
 
-   return self:get_display_stirng_with( self:get_rawTxt() )
+   return self:get_display_stirng_with( self:get_rawTxt(), nil )
 end
 function NormalTypeInfo:serialize( stream, validChildrenSet )
 
@@ -5712,13 +5744,13 @@ function DDDTypeInfo:serialize( stream, validChildrenSet )
 
    stream:write( string.format( '{ skind=%d, typeId = %d, itemTypeId = %d, parentId = %d }\n', SerializeKind.DDD, self.typeId, self.typeInfo:get_typeId(), _moduleObj.headTypeInfo:get_typeId()) )
 end
-function DDDTypeInfo:get_display_stirng_with( raw )
+function DDDTypeInfo:get_display_stirng_with( raw, alt2type )
 
    return self:getTxtWithRaw( raw )
 end
 function DDDTypeInfo:get_display_stirng(  )
 
-   return self:get_display_stirng_with( self:get_rawTxt() )
+   return self:get_display_stirng_with( self:get_rawTxt(), nil )
 end
 function DDDTypeInfo:getModule(  )
 
@@ -6251,13 +6283,13 @@ function AbbrTypeInfo:serialize( stream, validChildrenSet )
 
    Util.err( "illegal call" )
 end
-function AbbrTypeInfo:get_display_stirng_with( raw )
+function AbbrTypeInfo:get_display_stirng_with( raw, alt2type )
 
    return self:getTxtWithRaw( raw )
 end
 function AbbrTypeInfo:get_display_stirng(  )
 
-   return self:get_display_stirng_with( self:get_rawTxt() )
+   return self:get_display_stirng_with( self:get_rawTxt(), nil )
 end
 function AbbrTypeInfo:getModule(  )
 
@@ -6348,13 +6380,13 @@ function ExtTypeInfo:serialize( stream, validChildrenSet )
 
    Util.err( "illegal call" )
 end
-function ExtTypeInfo:get_display_stirng_with( raw )
+function ExtTypeInfo:get_display_stirng_with( raw, alt2type )
 
    return self:getTxtWithRaw( raw )
 end
 function ExtTypeInfo:get_display_stirng(  )
 
-   return self:get_display_stirng_with( self:get_rawTxt() )
+   return self:get_display_stirng_with( self:get_rawTxt(), nil )
 end
 function ExtTypeInfo:getModule(  )
 
@@ -7806,7 +7838,7 @@ IdType.__allList[2] = IdType.Ext
 local function switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 6032, function (  )
+   Log.log( Log.Level.Trace, __func__, 6060, function (  )
    
       return "start"
    end )
@@ -7826,7 +7858,7 @@ local builtinTypeInfo2Map = typeInfo2Map:clone(  )
 local function pushProcessInfo( processInfo )
    local __func__ = '@lune.@base.@Ast.pushProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6044, function (  )
+   Log.log( Log.Level.Trace, __func__, 6072, function (  )
    
       return "start"
    end )
@@ -7861,7 +7893,7 @@ _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
    local __func__ = '@lune.@base.@Ast.popProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6070, function (  )
+   Log.log( Log.Level.Trace, __func__, 6098, function (  )
    
       return "start"
    end )

@@ -1296,8 +1296,8 @@ fn convFilter.outputAlter2MapFunc(
       if altType.$kind == .Alternate {
          if assinType.$kind == .Alternate {
             stream.write(
-               "%s = self.__alt2mapFunc[ %q ],"
-               (assinType.$rawTxt, assinType.$rawTxt ) );
+               "%s = obj.__alt2mapFunc.%s.child.%s,"
+               (altType.$rawTxt, assinType.$rawTxt, altType.$rawTxt ) );
          }
          else {
             let funcTxt, nilable, child = self.getMapInfo( assinType );

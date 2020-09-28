@@ -66,6 +66,64 @@ func Lns_unwrapDefault( val, def LnsAny ) LnsAny {
     return val
 }
 
+type Lns_ToObjParam struct {
+    Func func ( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny)
+    Nilable bool
+    Child []Lns_ToObjParam
+}
+type Lns_ToObj func ( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny)
+
+func Lns_ToIntSub(
+    obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
+    if Lns_IsNil( obj ) {
+        if nilable {
+            return true, nil, nil 
+        }
+        return false, nil, "nil"
+    }
+    if _, ok := obj.(LnsInt); ok {
+        return true, obj, nil
+    }
+    return false, nil, "no int"
+}
+func Lns_ToRealSub( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
+    if Lns_IsNil( obj ) {
+        if nilable {
+            return true, nil, nil 
+        }
+        return false, nil, "nil"
+    }
+    if _, ok := obj.(LnsReal); ok {
+        return true, obj, nil
+    }
+    return false, nil, "no real"
+}
+func Lns_ToBoolSub( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
+    if Lns_IsNil( obj ) {
+        if nilable {
+            return true, nil, nil 
+        }
+        return false, nil, "nil"
+    }
+    if _, ok := obj.(bool); ok {
+        return true, obj, nil
+    }
+    return false, nil, "no bool"
+}
+func Lns_ToStrSub( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
+    if Lns_IsNil( obj ) {
+        if nilable {
+            return true, nil, nil 
+        }
+        return false, nil, "nil"
+    }
+    if _, ok := obj.(string); ok {
+        return true, obj, nil
+    }
+    return false, nil, "no str"
+}
+
+
 type LnsAlgeVal interface {
     getTxt() string
 }

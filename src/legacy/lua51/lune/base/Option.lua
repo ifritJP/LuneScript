@@ -199,7 +199,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 4091
+   return 4108
 end
 
 
@@ -480,6 +480,7 @@ usage:
 * type1
   - src.lns [common_op] ast
   - src.lns [common_op] comp [-i] module line column
+  - src.lns [common_op] inq [-i] module line column
   - src.lns [common_op] [-ol ver] [-ob<0|1>] [-dmr] <lua|LUA>
   - src.lns [common_op] [-ol ver] [-ob<0|1>] [-dmr] [--depends dependfile] <save|SAVE> output-dir
   - src.lns [common_op] exe

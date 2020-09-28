@@ -256,6 +256,23 @@
 	    (eq (get-char-property pos 'face) 'font-lock-string-face)
 	    (eq (char-after) ?')
 	    )))))
+(defun lns-is-in-comment( pos )
+  (save-excursion
+    (if (>= (point-min) pos)
+	nil
+      (let ((syntax (syntax-ppss pos)))
+	(or (elt syntax 4)
+	    (eq (get-char-property pos 'face) 'font-lock-comment-face)
+	    )))))
+(defun lns-is-in-string( pos )
+  (save-excursion
+    (if (>= (point-min) pos)
+	nil
+      (let ((syntax (syntax-ppss pos)))
+	(or (elt syntax 3)
+	    (eq (get-char-property pos 'face) 'font-lock-string-face)
+	    )))))
+
 
 (defun lns-indent-prev-eol ()
   "前の行の行末に移動する。
@@ -537,84 +554,94 @@ pattern は  {, }, {{, }} のいずれか。
 	pos end-block-flag start-block-flag start-pos column)
     (save-excursion
       (beginning-of-line)
-      (if (and (lns-is-in-comment-string (point))
-	       (lns-is-in-comment-string (1- (point))))
-	  ;; 行頭がコメント、文字列の場合は直前の行の先頭に合せる
-	  (if (or lns-indent-region-running
-		  (eq (lns-get-line) 1))
-	      (setq column -1)
-	    (previous-line)
-	    (re-search-forward "[^\\s \t]" nil t)
-	    (setq column (1- (current-column))))
-	(re-search-forward "[^\\s \t]" nil t)
-	(cond 
-	 ((eq (char-before) ?})
-	  (if (eq (char-after) ?})
-	      (setq end-block-flag "{{")
-	    (setq end-block-flag "{")))
-	 ((eq (char-before) ?{)
-	  (if (eq (char-after) ?{)
-	      (setq start-block-flag "}}")
-	    (setq start-block-flag "}")))
-	 ((eq (char-before) ?\))
-	  (setq end-block-flag ")"))
-	 ((eq (char-before) ?\()
-	  (setq start-block-flag ")"))
-	 ((eq (char-before) ?\])
-	  (setq end-block-flag "["))
-	 ((eq (char-before) ?\[)
-	  (setq start-block-flag "]"))
-	 )
-	(when (not (lns-indent-prev-eol))
-	  (setq column 0))
-	(cond
-	 (column
-	  nil)
-	 (end-block-flag
-	  ;; ブロック終了の場合、ブロック開始を見つける。
-	  (when (lns-indent-search-open-pair)
-	    (if (or (eq (char-after) ?{)
-		    (eq (char-after) ?\()
-		    (eq (char-after) ?\[))
-		(progn
-		  ;; 括弧
-		  (lns-indent-goto-no-space-bol)
-		  (setq column (current-column)))
-	      ;; 行の先頭が見つかった
-	      (setq column (- (current-column) lns-indent-level))
-	      )))
-	 (start-block-flag
-	  ;; ブロック開始の場合
-	  (save-excursion
-	    (lns-indent-search-open-pair)
-	    (setq column (current-column))
-	    (setq pos (point)))
-	  (save-excursion
-	    (when (lns-indent-search-open-pair)
-	      (if (or (eq (char-after) ?{)
-		      (eq (char-after) ?\()
-		      (eq (char-after) ?\[))
-		  (progn
-		    (setq pos (point))
-		    (forward-char)
-		    (if (lns-re-search-forward-eol "[^\\s \t]")
-			(progn
-			  (goto-char pos)
-			  (setq column (+ (current-column) 2)))
-		      (lns-indent-goto-no-space-bol)
-		      (setq column (+ (current-column) lns-indent-level))))
-		(if (equal start-block-flag "}")
-		    (setq column (current-column))
-		  (setq column (+ 4 (current-column))))
-		))))
-	 (t
-	  ;; ブロック開始、終了でない場合、
-	  (if (and (not (lns-is-in-comment-string (1- (point))))
-		   (lns-indent-is-line-no-term))
-	      (lns-indent-to lns-indent-level)
-	    (lns-indent-to 0)
-	    ))
-	 )))
+      (cond ((and (lns-is-in-comment (point))
+		  (lns-is-in-comment (1- (point))))
+	     (if (or lns-indent-region-running
+		     (eq (lns-get-line) 1))
+		 (setq column -1)
+	       ;;行頭がコメント、文字列の場合は直前の行の先頭に合せる
+	       (previous-line)
+	       (beginning-of-line)
+	       (when (looking-at "[ \t]")
+		 (re-search-forward "[^ \t]" nil t)
+		 (backward-char))
+	       (if (lns-is-in-comment (point))
+		   (setq column (current-column))
+		 (setq column 0))))
+	    ((and (lns-is-in-string (point))
+		  (lns-is-in-string (1- (point))))
+	     ;; 文字列の場合は、インデント調整しない。
+	     (setq column -1))
+	    (t
+	     (re-search-forward "[^ \t]" nil t)
+	     (cond 
+	      ((eq (char-before) ?})
+	       (if (eq (char-after) ?})
+		   (setq end-block-flag "{{")
+		 (setq end-block-flag "{")))
+	      ((eq (char-before) ?{)
+	       (if (eq (char-after) ?{)
+		   (setq start-block-flag "}}")
+		 (setq start-block-flag "}")))
+	      ((eq (char-before) ?\))
+	       (setq end-block-flag ")"))
+	      ((eq (char-before) ?\()
+	       (setq start-block-flag ")"))
+	      ((eq (char-before) ?\])
+	       (setq end-block-flag "["))
+	      ((eq (char-before) ?\[)
+	       (setq start-block-flag "]"))
+	      )
+	     (when (not (lns-indent-prev-eol))
+	       (setq column 0))
+	     (cond
+	      (column
+	       nil)
+	      (end-block-flag
+	       ;; ブロック終了の場合、ブロック開始を見つける。
+	       (when (lns-indent-search-open-pair)
+		 (if (or (eq (char-after) ?{)
+			 (eq (char-after) ?\()
+			 (eq (char-after) ?\[))
+		     (progn
+		       ;; 括弧
+		       (lns-indent-goto-no-space-bol)
+		       (setq column (current-column)))
+		   ;; 行の先頭が見つかった
+		   (setq column (- (current-column) lns-indent-level))
+		   )))
+	      (start-block-flag
+	       ;; ブロック開始の場合
+	       (save-excursion
+		 (lns-indent-search-open-pair)
+		 (setq column (current-column))
+		 (setq pos (point)))
+	       (save-excursion
+		 (when (lns-indent-search-open-pair)
+		   (if (or (eq (char-after) ?{)
+			   (eq (char-after) ?\()
+			   (eq (char-after) ?\[))
+		       (progn
+			 (setq pos (point))
+			 (forward-char)
+			 (if (lns-re-search-forward-eol "[^\\s \t]")
+			     (progn
+			       (goto-char pos)
+			       (setq column (+ (current-column) 2)))
+			   (lns-indent-goto-no-space-bol)
+			   (setq column (+ (current-column) lns-indent-level))))
+		     (if (equal start-block-flag "}")
+			 (setq column (current-column))
+		       (setq column (+ 4 (current-column))))
+		     ))))
+	      (t
+	       ;; ブロック開始、終了でない場合、
+	       (if (and (not (lns-is-in-comment-string (1- (point))))
+			(lns-indent-is-line-no-term))
+		   (lns-indent-to lns-indent-level)
+		 (lns-indent-to 0)
+		 ))
+	      ))))
     (let ((marker (point-marker)))
       (when (>= column 0)
 	(when (and (not start-block-flag) (not end-block-flag))

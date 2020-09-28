@@ -2957,7 +2957,7 @@ fn TransUnit.dumpSymbolType( token:&Parser.Token, typeInfo:&Ast.TypeInfo ) {
    writer.startParent( "inquire", false );
    writer.write( "name", token.txt );
    writer.write( "type", typeInfo.getTxt( self.typeNameCtrl## ) );
-   writer.write( "display", typeInfo.$display_stirng );
+   writer.write( "display", typeInfo.$get_display_stirng_with( typeInfo.$rawTxt, nil ) );
    writer.endElement();
    writer.endElement();
    writer.fin();

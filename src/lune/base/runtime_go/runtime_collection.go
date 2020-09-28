@@ -25,7 +25,7 @@ SOFTWARE.
 package main
 
 
-//import "fmt"
+import "fmt"
 import "log"
 import "sort"
 
@@ -69,6 +69,30 @@ const (
 type LnsList struct {
     Items []LnsAny
     lnsItemKind int
+}
+
+func Lns_ToListSub(
+    obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
+    if Lns_IsNil( obj ) {
+        if nilable {
+            return true, nil, nil 
+        }
+        return false, nil, "nil"
+    }
+    itemParam := paramList[0]
+    if val, ok := obj.(*LnsList); ok {
+        list := make([]LnsAny, len(val.Items))
+        for index, val := range( val.Items ) {
+            success, conved, mess :=
+                itemParam.Func( val, itemParam.Nilable, itemParam.Child )
+            if !success {
+                return false, nil, fmt.Sprintf( "%d:%s", index + 1, mess )
+            }
+            list[ index ] = conved
+        }
+        return true, NewLnsList( list ), nil
+    }
+    return false, nil, "no list"
 }
 
 func (self *LnsList) ToCollection() LnsAny {
@@ -136,6 +160,32 @@ func (lnsList *LnsList) GetAt( index int ) LnsAny {
 
 type LnsSet struct {
     Items map[LnsAny]bool
+}
+
+func Lns_ToSetSub(
+    obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
+    if Lns_IsNil( obj ) {
+        if nilable {
+            return true, nil, nil 
+        }
+        return false, nil, "nil"
+    }
+    itemParam := paramList[0]
+    if val, ok := obj.(*LnsSet); ok {
+        list := make([]LnsAny, len(val.Items))
+        index := 0
+        for key := range( val.Items ) {
+            success, conved, mess :=
+                itemParam.Func( key, itemParam.Nilable, itemParam.Child )
+            if !success {
+                return false, nil, fmt.Sprintf( "%s:%s", key, mess )
+            }
+            list[ index ] = conved
+            index++
+        }
+        return true, NewLnsSet( list ), nil
+    }
+    return false, nil, "no set"
 }
 
 func (self *LnsSet) ToCollection() LnsAny {
@@ -237,6 +287,36 @@ func (self *LnsSet) Len() LnsInt {
 // ======== map ========
 
 type LnsMap map[LnsAny]LnsAny
+
+func Lns_ToLnsMapSub(
+    obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
+    if Lns_IsNil( obj ) {
+        if nilable {
+            return true, nil, nil 
+        }
+        return false, nil, "nil"
+    }
+    keyParam := paramList[0]
+    itemParam := paramList[1]
+    if lnsMap, ok := obj.(LnsMap); ok {
+        newMap := LnsMap{}
+        for key, val := range( lnsMap ) {
+            successKey, convedKey, messKey :=
+                keyParam.Func( key, keyParam.Nilable, keyParam.Child )
+            if !successKey {
+                return false, nil, fmt.Sprintf( ".%s:%s", key,messKey)
+            }
+            successVal, convedVal, messVal :=
+                itemParam.Func( val, itemParam.Nilable, itemParam.Child )
+            if !successVal {
+                return false, nil, fmt.Sprintf( ".%s:%s", val,messVal)
+            }
+            newMap[ convedKey ] = convedVal
+        }
+        return true, newMap, nil
+    }
+    return false, nil, "no map"
+}
 
 func (self LnsMap) ToCollection() LnsAny {
     ret := LnsMap{}

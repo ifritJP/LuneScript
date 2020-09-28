@@ -1728,7 +1728,7 @@ function convFilter:outputAlter2MapFunc( stream, alt2Map )
    for altType, assinType in pairs( alt2Map ) do
       if altType:get_kind() == Ast.TypeInfoKind.Alternate then
          if assinType:get_kind() == Ast.TypeInfoKind.Alternate then
-            stream:write( string.format( "%s = self.__alt2mapFunc[ %q ],", assinType:get_rawTxt(), assinType:get_rawTxt()) )
+            stream:write( string.format( "%s = obj.__alt2mapFunc.%s.child.%s,", altType:get_rawTxt(), assinType:get_rawTxt(), altType:get_rawTxt()) )
          else
           
             local funcTxt, nilable, child = self:getMapInfo( assinType )
