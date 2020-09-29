@@ -1768,3 +1768,22 @@ class Test_ccc {
    }
    _hoge2( print, print );
 }
+{
+   Macro._section();
+   class Sub<X:(Mapping)> extend (Mapping) {
+      let val:X {pub};
+   }
+   class Test222<T:(Mapping)> extend (Mapping) {
+      let val:Sub<T> {pub}; // [X] = T
+   }
+
+   {
+      let test = new Test222( new Sub( "abc" ) );
+      print( test.$val.$val );
+      let map = test._toMap();
+      let test2 = unwrap Test222<str>._fromMap( map );
+      print( test2.$val.$val );
+      let _, mess = Test222<Sub<str>>._fromMap( map );
+      print( mess );
+   }
+}

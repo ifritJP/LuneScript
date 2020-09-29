@@ -1,34 +1,7 @@
-// {
-//    class Test extend (Mapping) {
-//       let val:List<Set<str>> {pub};
-//    }
-
-//    let test = new Test( [(@"abc")] );
-//    let map = test._toMap();
-//    let test2 = Test._fromMap( map );
-//    print( test2 );
-// }
-{
-   class Sub<X:(Mapping)> extend (Mapping) {
-      let val:X {pub};
-   }
-   class Test<T:(Mapping)> extend (Mapping) {
-      let val:Sub<T> {pub};
-   }
-
-   let test = new Test( new Sub( "abc" ) );
-   print( test.$val.$val );
-   let map = test._toMap();
-   let test2 = unwrap Test<Sub<str>>._fromMap( map );
-   print( test2.$val.$val );
+fn sub( foo:form ) {
+   foo( 10, 20 );
+   foo( 10 );
+   foo(##);
 }
 
-// class Test<T:(Mapping)> extend (Mapping) {
-//    let val:T {pub};
-// }
-
-// let test = new Test( "abc" );
-// let map = test._toMap();
-// if! let test2 = Test<str>._fromMap( map ) {
-//    print( test2.$val .. "xyz" );
-// }
+sub( fn(val1:stem!,val2:stem!) { print( "hoge", val1, val2 ); } );

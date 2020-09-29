@@ -36,24 +36,34 @@
       return val1, val2; // error
    }
 }
-class Test<T,T> { // error
-   pub fn func<T>(val:T ) { // error
-      print( val );
-   }
-   pub fn func2<T1,T1>(val:T1 ) { //error
-      print( val );
-   }
-}
-class Test2<T> {
-}
-
 {
-   let test = new Test2<int>();
-   let test2 = new Test2<int!>();
+   class Test<T:(Mapping)> extend (Mapping) {
+      let val:T {pub};
+   }
+   let test = new Test(100);
+   let map = test._toMap();
+   let test2 = Test._fromStem( map ); // error
+   print( test2$.$val );
 }
 {
-   fn sub<T>( val:T ):TT { // error
-      return val;
+   class Test<T,T> { // error
+      pub fn func<T>(val:T ) { // error
+         print( val );
+      }
+      pub fn func2<T1,T1>(val:T1 ) { //error
+         print( val );
+      }
+   }
+   class Test2<T> {
+   }
+
+   {
+      let test = new Test2<int>();
+      let test2 = new Test2<int!>(); // error
+   }
+   {
+      fn sub<T>( val:T ):TT { // error
+         return val;
+      }
    }
 }
-

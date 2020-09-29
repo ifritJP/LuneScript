@@ -448,7 +448,7 @@ function convFilter:writeRaw( txt )
    end
    
    
-   for _5264 in string.gmatch( txt, "\n" ) do
+   for _5266 in string.gmatch( txt, "\n" ) do
       self.curLineNo = self.curLineNo + 1
    end
    
@@ -1727,7 +1727,7 @@ function convFilter:outputAlter2MapFunc( stream, alt2Map )
    for altType, assinType in pairs( alt2Map ) do
       if altType:get_kind() == Ast.TypeInfoKind.Alternate then
          if assinType:get_kind() == Ast.TypeInfoKind.Alternate then
-            stream:write( string.format( "%s = obj.__alt2mapFunc.%s.child.%s,", altType:get_rawTxt(), assinType:get_rawTxt(), altType:get_rawTxt()) )
+            stream:write( string.format( "%s = obj.__alt2mapFunc.%s,", altType:get_rawTxt(), assinType:get_rawTxt()) )
          else
           
             local funcTxt, nilable, child = self:getMapInfo( assinType )
@@ -1904,7 +1904,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _5605 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _5607 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end

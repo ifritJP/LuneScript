@@ -2296,7 +2296,7 @@ pub class AlternateTypeInfo extend TypeInfo {
    /** クラスの型パラメータとして使う場合 true */
    pri let belongClassFlag: bool;
    /** 何番目の型パラメータか */
-   pri let altIndex:int;
+   pri let altIndex:int {pub};
 
 
    pub fn __init( belongClassFlag:bool, altIndex:int,
@@ -4739,6 +4739,10 @@ pro override fn DDDTypeInfo.getTxtWithRaw(
    return "...<" .. txt .. ">";
 }
 
+/**
+genTypeList で示す仮パラメータ型を持つクラス型から、
+実パラメータ型を itemTypeInfoList とする GenericTypeInfo を生成する。
+*/
 pub static fn NormalTypeInfo.createGeneric(
    genSrcTypeInfo:&TypeInfo,
    itemTypeInfoList:&List<&TypeInfo>, moduleTypeInfo:&TypeInfo ): GenericTypeInfo

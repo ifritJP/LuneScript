@@ -3455,6 +3455,9 @@ end
 function AlternateTypeInfo:get_interfaceList()
    return self.interfaceList
 end
+function AlternateTypeInfo:get_altIndex()
+   return self.altIndex
+end
 
 
 local boxRootAltType = AlternateTypeInfo.new(true, 1, "_T", AccessMode.Pub, _moduleObj.headTypeInfo)
@@ -6180,7 +6183,6 @@ function DDDTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag )
    return "...<" .. txt .. ">"
 end
 
-
 function NormalTypeInfo.createGeneric( genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo )
 
    idProv:increment(  )
@@ -7838,7 +7840,7 @@ IdType.__allList[2] = IdType.Ext
 local function switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 6060, function (  )
+   Log.log( Log.Level.Trace, __func__, 6064, function (  )
    
       return "start"
    end )
@@ -7858,7 +7860,7 @@ local builtinTypeInfo2Map = typeInfo2Map:clone(  )
 local function pushProcessInfo( processInfo )
    local __func__ = '@lune.@base.@Ast.pushProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6072, function (  )
+   Log.log( Log.Level.Trace, __func__, 6076, function (  )
    
       return "start"
    end )
@@ -7893,7 +7895,7 @@ _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
    local __func__ = '@lune.@base.@Ast.popProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6098, function (  )
+   Log.log( Log.Level.Trace, __func__, 6102, function (  )
    
       return "start"
    end )

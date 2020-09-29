@@ -32,6 +32,8 @@ type LnsInt = int
 type LnsReal = float64
 type LnsAny = interface{}
 
+type LnsForm func( []LnsAny ) []LnsAny
+
 var LnsNone interface{} = nil
 
 

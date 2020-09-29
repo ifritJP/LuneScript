@@ -1,3 +1,12 @@
+class TestG {
+   pri static let val1:int;
+   pri static let val2:int;
+
+   __init {
+      TestG.val1 = 1;
+      TestG.val2 = 1;
+   }
+}
 {
    class Test {
    }
@@ -164,17 +173,6 @@
       _lune_control default__init;
       pub static fn create(): Test {
          return new Test( 1 );
-      }
-   }
-}
-{
-   class Test {
-      pri static let val1:int;
-      pri static let val2:int;
-
-      __init {
-         Test.val1 = 1;
-         Test.val2 = 1;
       }
    }
 }
