@@ -1751,7 +1751,7 @@ fn TransUnit.analyzeClassBody(
    let mut node = Nodes.DeclClassNode.create(
       self.nodeManager, firstToken.pos,
       self.macroCtrl.isInAnalyzeArgMode(), [ classTypeInfo ],
-      classAccessMode, name, gluePrefix, moduleName, allStmtList,
+      classAccessMode, name, gluePrefix, moduleName, false, allStmtList,
       declStmtList, fieldList, memberList, self.scope, initBlockInfo,
       advertiseList, trustList, uninitMemberList, (@) );
    self.typeInfo2ClassNode[ classTypeInfo ] = node;
@@ -1969,6 +1969,7 @@ nil の場合、メンバの宣言位置。
             self.addDefaultConstructor(
                nextToken.pos, classTypeInfo,
                self.scope, memberList, methodNameSet, true );
+            node.setHasOldCtor();
          }
          default {
             self.error( "unknown option -- %s" (nextToken.txt) );

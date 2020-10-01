@@ -1059,7 +1059,7 @@ GO_SRCS := $(addprefix $(GO_RUNTIME)/,$(GO_SRC))
 
 define buildGo
 	mkdir -p $(GO_LUA_LINK)
-	if [ ! -d $(GO_LUA_LINK)/inc ]; then ln -s $(LUA_INC_DIR) $(GO_LUA_LINK)/inc; fi
+	if [ ! -h $(GO_LUA_LINK)/inc ]; then ln -s $(LUA_INC_DIR) $(GO_LUA_LINK)/inc; fi
 	go build $1 $(GO_SRCS)
 endef
 
@@ -1073,7 +1073,7 @@ define test-tutorialGo
 	./$(GO_WORK_DIR)/$1 > $(GO_WORK_DIR)/result.go
 	rm ./$(GO_WORK_DIR)/$1
 	$(call exeLune,.,$(GO_WORK_DIR)/$1.lns,exe) > $(GO_WORK_DIR)/result.lua
-	diff $(GO_WORK_DIR)/result.lua $(GO_WORK_DIR)/result.go
+	diff -C 2 -I 'ONLY_LUA' $(GO_WORK_DIR)/result.lua $(GO_WORK_DIR)/result.go
 endef
 
 test-tutorial-go-one:
@@ -1121,7 +1121,7 @@ test-go:
 	$(call buildGo,$(GO_RUNTIME)/testGo.go)
 	./testGo > work/result-testGo.txt
 	$(call exeLune,.,$(GO_RUNTIME)/testGo.lns,exe,) > work/result-testGo2.txt
-	diff work/result-testGo.txt work/result-testGo2.txt
+	diff -C 2 -I 'ONLY_LUA' work/result-testGo.txt work/result-testGo2.txt
 
 
 # lns ソースを Golang へトランスコンパイルする

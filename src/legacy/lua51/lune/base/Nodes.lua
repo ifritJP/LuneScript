@@ -727,7 +727,7 @@ end
 function NodeManager:__init() 
    self.idSeed = 0
    self.nodeKind2NodeList = {}
-   for kind, _2457 in pairs( nodeKind2NameMap ) do
+   for kind, _2459 in pairs( nodeKind2NameMap ) do
       if not self.nodeKind2NodeList[kind] then
          self.nodeKind2NodeList[kind] = {}
       end
@@ -8484,13 +8484,13 @@ function DeclClassNode:canBeStatement(  )
 
    return true
 end
-function DeclClassNode.new( id, pos, macroArgFlag, typeList, accessMode, name, gluePrefix, moduleName, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet )
+function DeclClassNode.new( id, pos, macroArgFlag, typeList, accessMode, name, gluePrefix, moduleName, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet )
    local obj = {}
    DeclClassNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, accessMode, name, gluePrefix, moduleName, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, accessMode, name, gluePrefix, moduleName, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet ); end
    return obj
 end
-function DeclClassNode:__init(id, pos, macroArgFlag, typeList, accessMode, name, gluePrefix, moduleName, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet) 
+function DeclClassNode:__init(id, pos, macroArgFlag, typeList, accessMode, name, gluePrefix, moduleName, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet) 
    Node.__init( self,id, 59, pos, macroArgFlag, typeList)
    
    
@@ -8499,6 +8499,7 @@ function DeclClassNode:__init(id, pos, macroArgFlag, typeList, accessMode, name,
    self.name = name
    self.gluePrefix = gluePrefix
    self.moduleName = moduleName
+   self.hasOldCtor = hasOldCtor
    self.allStmtList = allStmtList
    self.declStmtList = declStmtList
    self.fieldList = fieldList
@@ -8512,9 +8513,9 @@ function DeclClassNode:__init(id, pos, macroArgFlag, typeList, accessMode, name,
    
    
 end
-function DeclClassNode.create( nodeMan, pos, macroArgFlag, typeList, accessMode, name, gluePrefix, moduleName, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet )
+function DeclClassNode.create( nodeMan, pos, macroArgFlag, typeList, accessMode, name, gluePrefix, moduleName, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet )
 
-   local node = DeclClassNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, accessMode, name, gluePrefix, moduleName, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet)
+   local node = DeclClassNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, accessMode, name, gluePrefix, moduleName, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet)
    nodeMan:addNode( node )
    return node
 end
@@ -8623,6 +8624,9 @@ end
 function DeclClassNode:get_moduleName()
    return self.moduleName
 end
+function DeclClassNode:get_hasOldCtor()
+   return self.hasOldCtor
+end
 function DeclClassNode:get_allStmtList()
    return self.allStmtList
 end
@@ -8654,6 +8658,12 @@ function DeclClassNode:get_outerMethodSet()
    return self.outerMethodSet
 end
 
+
+
+function DeclClassNode:setHasOldCtor(  )
+
+   self.hasOldCtor = true
+end
 
 
 function DeclClassNode:hasUserInit(  )
@@ -11312,7 +11322,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, _8141 in pairs( self.map ) do
+   for key, _8150 in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -11347,8 +11357,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, _8149 in ipairs( __sorted ) do
-         local key = __map[ _8149 ]
+      for __index, _8158 in ipairs( __sorted ) do
+         local key = __map[ _8158 ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false

@@ -30,7 +30,7 @@ import "log"
 import "sort"
 
 type Lns_ToMap interface {
-    ToMap() LnsMap
+    ToMap() *LnsMap
 }
 
 type Lns_ToCollectionIF interface {
@@ -60,10 +60,11 @@ func Lns_ToCollection( val LnsAny ) LnsAny {
 // ======== list ========
 
 const (
-    LnsItemKindStem = 0
-    LnsItemKindInt = 1
-    LnsItemKindReal = 2
-    LnsItemKindStr = 3
+    LnsItemKindUnknown = 0
+    LnsItemKindStem = 1
+    LnsItemKindInt = 2
+    LnsItemKindReal = 3
+    LnsItemKindStr = 4
 )
 
 type LnsList struct {
@@ -103,8 +104,49 @@ func (self *LnsList) ToCollection() LnsAny {
     return NewLnsList( list )
 }
 
-func (self *LnsList) Sort() {
-    sort.Sort( self )
+type LnsComp func( val1, val2 LnsAny ) bool;
+
+func (self *LnsList) Sort( kind int, comp LnsAny ) {
+    if self.lnsItemKind == LnsItemKindUnknown || self.lnsItemKind == LnsItemKindStem {
+        self.lnsItemKind = kind
+    }
+    if Lns_IsNil( comp ) {
+        if self.lnsItemKind == LnsItemKindStem {
+            hasInt := 0
+            hasReal := 0
+            hasStr := 0
+            hasStem := false
+            for _, val := range( self.Items ) {
+                switch val.(type) {
+                case LnsInt:
+                    hasInt = 1
+                case LnsReal:
+                    hasReal = 1
+                case string:
+                    hasStr = 1
+                default:
+                    break
+                }
+            }
+            if !hasStem && (hasInt + hasReal + hasStr) == 1 {
+                if hasInt == 1 {
+                    self.lnsItemKind = LnsItemKindInt
+                } else if hasReal == 1 {
+                    self.lnsItemKind = LnsItemKindReal
+                } else if hasStr == 1 {
+                    self.lnsItemKind = LnsItemKindStr
+                }
+            }
+        }
+        sort.Sort( self )
+    } else {
+        callback := comp.(LnsComp)
+        sort.Slice(
+            self.Items,
+            func (idx1, idx2 int ) bool {
+                return callback( self.Items[ idx1 ], self.Items[ idx2 ] )
+            } )
+    }
 }
 
 func (self *LnsList) Len() int {
@@ -130,7 +172,7 @@ func (self *LnsList) Swap(idx1, idx2 int) {
 
 
 func NewLnsList( list []LnsAny ) *LnsList {
-    return &LnsList{ list, LnsItemKindStem }
+    return &LnsList{ list, LnsItemKindUnknown }
 }
 func (lnsList *LnsList) Insert( val LnsAny ) {
     if !Lns_IsNil( val ) {
@@ -275,7 +317,7 @@ func (self *LnsSet) Sub( set *LnsSet ) *LnsSet {
 }
 func (self *LnsSet) Clone() *LnsSet {
     set := NewLnsSet( []LnsAny{} )
-    for val := range( set.Items ) {
+    for val := range( self.Items ) {
         set.Items[ val ] = true
     }
     return set
@@ -286,7 +328,9 @@ func (self *LnsSet) Len() LnsInt {
 
 // ======== map ========
 
-type LnsMap map[LnsAny]LnsAny
+type LnsMap struct {
+    Items map[LnsAny]LnsAny
+}
 
 func Lns_ToLnsMapSub(
     obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
@@ -298,9 +342,9 @@ func Lns_ToLnsMapSub(
     }
     keyParam := paramList[0]
     itemParam := paramList[1]
-    if lnsMap, ok := obj.(LnsMap); ok {
-        newMap := LnsMap{}
-        for key, val := range( lnsMap ) {
+    if lnsMap, ok := obj.(*LnsMap); ok {
+        newMap := NewLnsMap( map[LnsAny]LnsAny{} )
+        for key, val := range( lnsMap.Items ) {
             successKey, convedKey, messKey :=
                 keyParam.Func( key, keyParam.Nilable, keyParam.Child )
             if !successKey {
@@ -311,68 +355,73 @@ func Lns_ToLnsMapSub(
             if !successVal {
                 return false, nil, fmt.Sprintf( ".%s:%s", val,messVal)
             }
-            newMap[ convedKey ] = convedVal
+            newMap.Items[ convedKey ] = convedVal
         }
         return true, newMap, nil
     }
     return false, nil, "no map"
 }
 
-func (self LnsMap) ToCollection() LnsAny {
-    ret := LnsMap{}
-    for key, val := range (self) {
-        ret[ key ] = Lns_ToCollection( val )
+func (self *LnsMap) ToCollection() LnsAny {
+    ret := NewLnsMap( map[LnsAny]LnsAny{} )
+    for key, val := range (self.Items) {
+        ret.Items[ key ] = Lns_ToCollection( val )
     }
     return ret
 }
 
 
-func (self LnsMap) Correct() LnsMap {
-    delete( self, nil )
-    list := make([]LnsAny, len(self))
+func (self *LnsMap) Correct() *LnsMap {
+    delete( self.Items, nil )
+    list := make([]LnsAny, len(self.Items))
     index := 0
-    for key, val := range self {
+    for key, val := range self.Items {
         if Lns_IsNil( val ) {
             list[index] = key
             index++
         }
     }
     for _, key := range list[:index] {
-        delete( self, key )
+        delete( self.Items, key )
     }
     return self
 }
 
-func (self LnsMap) CreateKeyListStem() *LnsList {
-    list := make([]LnsAny, len(self))
+func (self *LnsMap) CreateKeyListStem() *LnsList {
+    list := make([]LnsAny, len(self.Items))
     index := 0
-    for key := range self {
+    for key := range self.Items {
         list[index] = key
         index++
     }    
     return NewLnsList( list )
 }
-func (self LnsMap) CreateKeyListInt() *LnsList {
+func (self *LnsMap) CreateKeyListInt() *LnsList {
     list := self.CreateKeyListStem()
     list.lnsItemKind = LnsItemKindInt
     return list
 }
 
-func (self LnsMap) CreateKeyListReal() *LnsList {
+func (self *LnsMap) CreateKeyListReal() *LnsList {
     list := self.CreateKeyListStem()
     list.lnsItemKind = LnsItemKindReal
     return list
 }
-func (self LnsMap) CreateKeyListStr() *LnsList {
+func (self *LnsMap) CreateKeyListStr() *LnsList {
     list := self.CreateKeyListStem()
     list.lnsItemKind = LnsItemKindStr
     return list
 }
 
-func (self LnsMap) Set( key, val LnsAny ) {
+func NewLnsMap( arg map[LnsAny]LnsAny ) *LnsMap {
+    return &LnsMap{ arg }
+}
+
+
+func (self *LnsMap) Set( key, val LnsAny ) {
     if Lns_IsNil( val ) {
-        delete( self, key );
+        delete( self.Items, key );
     } else {
-        self[ key ] = val
+        self.Items[ key ] = val
     }
 }

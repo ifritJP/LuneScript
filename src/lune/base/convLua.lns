@@ -1432,12 +1432,12 @@ end```
       // デフォルトコンストラクタ生成
       methodNameSet.add( "__init" );
 
-      let oldFlag;
-      {
-         let initSymbol =
-            unwrap (unwrap classTypeInfo.$scope).getSymbolInfoChild( "__init" );
-         oldFlag = (unwrap initSymbol.$typeInfo.$scope).getSymbolInfoChild( "" ) ~= nil;
-      }
+      let oldFlag = node.$hasOldCtor;
+      // {
+      //    let initSymbol =
+      //       unwrap (unwrap classTypeInfo.$scope).getSymbolInfoChild( "__init" );
+      //    oldFlag = (unwrap initSymbol.$typeInfo.$scope).getSymbolInfoChild( "" ) ~= nil;
+      // }
 
       let mut superArgTxt = "";
       let mut thisArgTxt = "";

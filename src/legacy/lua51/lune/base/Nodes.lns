@@ -1646,6 +1646,8 @@ _declNodeClass( "DeclClass", Node, false, false, true,
                   { "name": "&Parser.Token" },
                   { "gluePrefix": "str!" },
                   { "moduleName": "&Parser.Token!" },
+                  // default__init_old で、旧形式のコンストラクタが使用されている場合 true
+                  { "hasOldCtor": "bool" },
                   /**
                   クラス宣言内の全 Statement のリスト。
                   クラス宣言外で宣言しているメソッド等は含まない。
@@ -1675,6 +1677,10 @@ _declNodeClass( "DeclClass", Node, false, false, true,
                    */                 
                   { "outerMethodSet": "Set<str>" } ]
 );
+
+pub fn DeclClassNode.setHasOldCtor() mut {
+   self.hasOldCtor = true;
+}
 
 pub fn DeclClassNode.hasUserInit() : bool {
    let scope = unwrap self.$expType.$scope;

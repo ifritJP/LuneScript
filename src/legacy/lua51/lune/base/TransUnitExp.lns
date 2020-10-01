@@ -2291,6 +2291,21 @@ fn TransUnit.analyzeExpField(
       self.helperInfo.useUnpack = true;
    }
 
+   if! let expRef = prefixExp@@@Nodes.ExpRefNode {
+      let prefixSym = expRef.$symbolInfo;
+      let prefixType = prefixSym.$typeInfo;
+      if prefixSym.$kind == .Typ and prefixType.$kind == .Class and
+         #prefixType.$itemTypeInfoList > 0 and
+         not Ast.isGenericType( prefixType ) and
+         not self.scope.isInnerOf( unwrap prefixType.$scope )
+      {
+         // 型パラメータを指定しないで generics クラスへのアクセスはエラー。
+         self.addErrMess(
+            prefixExp.$pos,
+            "can't access this class(%s) without '<>'." (prefixType.getTxt(##)) );
+      }
+   }
+   
    
    if! getterTypeInfo {
       return Nodes.GetFieldNode.create(

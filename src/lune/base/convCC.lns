@@ -1582,7 +1582,7 @@ fn convFilter.processBuiltin() : &Nodes.NodeManager
                Nodes.DeclClassNode.create(
                   nodeManager, dummyPos, false, [ classInfo ], .Pub,
                   new Parser.Token( .Symb, classInfo.$rawTxt, dummyPos, false## ),
-                  classInfo.$rawTxt, nil, fieldList, [], fieldList, [], classScope,
+                  classInfo.$rawTxt, nil, false, fieldList, [], fieldList, [], classScope,
                   new Nodes.ClassInitBlockInfo( nil ), [], [], [], (@));
 
                forsort field in classScope.$symbol2SymbolInfoMap {

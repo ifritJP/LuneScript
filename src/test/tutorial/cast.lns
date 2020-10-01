@@ -22,14 +22,14 @@
    func( "abc" ); // str:abc
 }
 {
-   fn func( val:stem ) {
+   fn func( val:stem, mess:str ) {
       if! val@@@int {
-         print( "int:%d" ( _exp ) );
+         print( "int:%d" ( _exp ), mess );
       }
       if! val@@@real {
          print( "real:%g" ( _exp ) );
       }
    }
-   func( 1.0 );
-   func( 2.5 );
+   func( 1.0, "ONLY_LUA" ); // 1.0 の int への @@@ キャストは lua では成功し、 go では失敗する。
+   func( 2.5, "" );
 }

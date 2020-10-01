@@ -448,7 +448,7 @@ function convFilter:writeRaw( txt )
    end
    
    
-   for _5266 in string.gmatch( txt, "\n" ) do
+   for _5270 in string.gmatch( txt, "\n" ) do
       self.curLineNo = self.curLineNo + 1
    end
    
@@ -1889,14 +1889,7 @@ end]==], className, className, destTxt) )
    if not hasConstrFlag then
       methodNameSet["__init"]= true
       
-      local oldFlag
-      
-      do
-         local initSymbol = _lune.unwrap( (_lune.unwrap( classTypeInfo:get_scope()) ):getSymbolInfoChild( "__init" ))
-         oldFlag = (_lune.unwrap( initSymbol:get_typeInfo():get_scope()) ):getSymbolInfoChild( "" ) ~= nil
-      end
-      
-      
+      local oldFlag = node:get_hasOldCtor()
       local superArgTxt = ""
       local thisArgTxt = ""
       
@@ -1904,7 +1897,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _5607 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _5610 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end

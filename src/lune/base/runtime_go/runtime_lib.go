@@ -68,6 +68,32 @@ func Lns_unwrapDefault( val, def LnsAny ) LnsAny {
     return val
 }
 
+func Lns_cast2LnsInt( val LnsAny ) LnsAny {
+    if _, ok := val.(LnsInt); ok {
+        return val
+    }
+    return nil
+}
+func Lns_cast2LnsReal( val LnsAny ) LnsAny {
+    if _, ok := val.(LnsReal); ok {
+        return val
+    }
+    return nil
+}
+func Lns_cast2bool( val LnsAny ) LnsAny {
+    if _, ok := val.(bool); ok {
+        return val
+    }
+    return nil
+}
+func Lns_cast2string( val LnsAny ) LnsAny {
+    if _, ok := val.(string); ok {
+        return val
+    }
+    return nil
+}
+
+
 type Lns_ToObjParam struct {
     Func func ( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny)
     Nilable bool

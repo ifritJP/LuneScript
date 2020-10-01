@@ -449,7 +449,7 @@ function convFilter:writeRaw( txt )
    end
    
    
-   for _5263 in string.gmatch( txt, "\n" ) do
+   for _5269 in string.gmatch( txt, "\n" ) do
       self.curLineNo = self.curLineNo + 1
    end
    
@@ -1728,7 +1728,7 @@ function convFilter:outputAlter2MapFunc( stream, alt2Map )
    for altType, assinType in pairs( alt2Map ) do
       if altType:get_kind() == Ast.TypeInfoKind.Alternate then
          if assinType:get_kind() == Ast.TypeInfoKind.Alternate then
-            stream:write( string.format( "%s = obj.__alt2mapFunc.%s.child.%s,", altType:get_rawTxt(), assinType:get_rawTxt(), altType:get_rawTxt()) )
+            stream:write( string.format( "%s = obj.__alt2mapFunc.%s,", altType:get_rawTxt(), assinType:get_rawTxt()) )
          else
           
             local funcTxt, nilable, child = self:getMapInfo( assinType )
@@ -1890,14 +1890,7 @@ end]==], className, className, destTxt) )
    if not hasConstrFlag then
       methodNameSet["__init"]= true
       
-      local oldFlag
-      
-      do
-         local initSymbol = _lune.unwrap( (_lune.unwrap( classTypeInfo:get_scope()) ):getSymbolInfoChild( "__init" ))
-         oldFlag = (_lune.unwrap( initSymbol:get_typeInfo():get_scope()) ):getSymbolInfoChild( "" ) ~= nil
-      end
-      
-      
+      local oldFlag = node:get_hasOldCtor()
       local superArgTxt = ""
       local thisArgTxt = ""
       
@@ -1905,7 +1898,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _5604 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _5609 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
