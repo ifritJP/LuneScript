@@ -122,6 +122,14 @@ func (luaVM *Lns_luaVM) pushAny( val LnsAny ) *lns_pushedVal {
     return lns_defaultPushedVal
 }
 
+func (luaVM *Lns_luaVM) newLuaValue( index int ) *Lns_luaValue {
+    val := &Lns_luaValue{ luaVM: luaVM }
+    val.sym = C.CString( fmt.Sprintf( "%p", &val ) )
+    runtime.SetFinalizer( val, func (obj *Lns_luaValue) { obj.free() } )
+    val.setValToGlobalValMap( index )
+    return val
+}
+
 /**
 スタックの指定 index の値を取得する
  */
@@ -142,11 +150,7 @@ func (luaVM *Lns_luaVM) setupFromStack( index int ) LnsAny {
     case cLUA_TSTRING:
         return lua_tolstring( vm, index )
     default:
-        val := &Lns_luaValue{ luaVM: luaVM }
-        val.sym = C.CString( fmt.Sprintf( "%p", &val ) )
-        runtime.SetFinalizer( val, func (obj *Lns_luaValue) { obj.free() } )
-        val.setValToGlobalValMap( -1 )
-        return val
+        return luaVM.newLuaValue( -1 )
     }
 }
 

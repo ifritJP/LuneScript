@@ -101,6 +101,16 @@ type Lns_ToObjParam struct {
 }
 type Lns_ToObj func ( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny)
 
+func Lns_ToStemSub(
+    obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
+    if Lns_IsNil( obj ) {
+        if nilable {
+            return true, nil, nil 
+        }
+        return false, nil, "nil"
+    }
+    return true, obj, nil
+}
 func Lns_ToIntSub(
     obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
     if Lns_IsNil( obj ) {

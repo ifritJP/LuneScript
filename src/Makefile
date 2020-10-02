@@ -1053,6 +1053,7 @@ GO_SRC += runtime_lib.go
 GO_SRC += runtime_collection.go
 GO_SRC += runtime_lua.go
 GO_SRC += runtime_luaCore.go
+GO_SRC += runtime_luaMisc.go
 GO_SRC += runtime_string.go
 GO_SRC += runtime_stream.go
 GO_SRCS := $(addprefix $(GO_RUNTIME)/,$(GO_SRC))
@@ -1065,8 +1066,7 @@ endef
 
 GO_WORK_DIR = work/go
 
-define test-tutorialGo
-	cp -u test/tutorial/$1.lns $(GO_WORK_DIR)
+define test-Go
 	$(call convGo,.,$(GO_WORK_DIR)/$1.lns)
 	$(call buildGo,$(GO_WORK_DIR)/$1.go)
 	mv $1 $(GO_WORK_DIR)
@@ -1076,11 +1076,11 @@ define test-tutorialGo
 	diff -C 2 -I 'ONLY_LUA' $(GO_WORK_DIR)/result.lua $(GO_WORK_DIR)/result.go
 endef
 
-test-tutorial-go-one:
-	$(call test-tutorialGo,$(TUTORIAL_SRC))
+test-go-one:
+	$(call test-Go,$(GO_TEST_SRC))
 
-define test-tutorialGo-one
-	$(MAKE) test-tutorial-go-one GO_RUNTIME=$(GO_WORK_DIR) TUTORIAL_SRC=$1
+define test-Go-one
+	$(MAKE) test-go-one GO_RUNTIME=$(GO_WORK_DIR) GO_TEST_SRC=$1
 endef
 
 test-tutorial-go:
@@ -1090,31 +1090,38 @@ test-tutorial-go:
 			ln -s $(PWD)/$(GO_RUNTIME)/$${file} $(GO_WORK_DIR);	\
 		fi							\
 	done
+	cp -u test/tutorial/*.lns $(GO_WORK_DIR)
+	cp -u ccc.lns $(GO_WORK_DIR)
+
 	$(call transwork,.,.,,base/convGo)
 
-	$(call test-tutorialGo-one,match)
-	$(call test-tutorialGo-one,loop)
-	$(call test-tutorialGo-one,interface)
-	$(call test-tutorialGo-one,generics)
-	$(call test-tutorialGo-one,enum)
-	$(call test-tutorialGo-one,classOverride)
-	$(call test-tutorialGo-one,classMapping)
-	$(call test-tutorialGo-one,classInherit)
-	$(call test-tutorialGo-one,class2accessor)
-	$(call test-tutorialGo-one,class1)
-	$(call test-tutorialGo-one,cast)
-	$(call test-tutorialGo-one,branch)
-	$(call test-tutorialGo-one,nilable)
-	$(call test-tutorialGo-one,defaultArg)
-	$(call test-tutorialGo-one,multipleRetVal)
-	$(call test-tutorialGo-one,arg)
-	$(call test-tutorialGo-one,func)
-	$(call test-tutorialGo-one,variable)
-	$(call test-tutorialGo-one,set)
-	$(call test-tutorialGo-one,value)
+	$(call test-Go-one,ccc)
+
+	$(call test-Go-one,match)
+	$(call test-Go-one,loop)
+	$(call test-Go-one,interface)
+	$(call test-Go-one,generics)
+	$(call test-Go-one,enum)
+	$(call test-Go-one,classOverride)
+	$(call test-Go-one,classMapping)
+	$(call test-Go-one,classInherit)
+	$(call test-Go-one,class2accessor)
+	$(call test-Go-one,class1)
+	$(call test-Go-one,cast)
+	$(call test-Go-one,branch)
+	$(call test-Go-one,nilable)
+	$(call test-Go-one,defaultArg)
+	$(call test-Go-one,multipleRetVal)
+	$(call test-Go-one,arg)
+	$(call test-Go-one,func)
+	$(call test-Go-one,variable)
+	$(call test-Go-one,set)
+	$(call test-Go-one,value)
 
 
 test-go:
+	mkdir -p $(GO_WORK_DIR)
+	cp -u $(GO_RUNTIME)/testGo.lns $(GO_WORK_DIR)
 	$(call transwork,.,.,,base/convGo)
 	$(call exeLune,.,$(GO_RUNTIME)/testGo.lns,lua -langGo,) > /dev/null
 	$(call convGo,.,$(GO_RUNTIME)/testGo.lns)

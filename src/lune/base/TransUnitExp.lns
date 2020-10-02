@@ -2299,10 +2299,33 @@ fn TransUnit.analyzeExpField(
          not Ast.isGenericType( prefixType ) and
          not self.scope.isInnerOf( unwrap prefixType.$scope )
       {
-         // 型パラメータを指定しないで generics クラスへのアクセスはエラー。
-         self.addErrMess(
-            prefixExp.$pos,
-            "can't access this class(%s) without '<>'." (prefixType.getTxt(##)) );
+         let mut accessErr = false;
+         if typeInfo.$kind == .Func {
+            // static method 呼び出しで、
+            // 引数から全ての型パラメータを推論できるものに関しては、
+            // エラーしないので、引数のチェックを行なう。
+            let mut altSet:Set<&Ast.TypeInfo> = (@);
+            foreach argType in typeInfo.$argTypeInfoList {
+               let orgType = argType.$nonnilableType.$srcTypeInfo;
+               if orgType.$kind == .Alternate {
+                  altSet.add( orgType );
+               }
+            }
+            foreach itemType in prefixType.$itemTypeInfoList {
+               if not altSet.has( itemType.$nonnilableType.$srcTypeInfo ) {
+                  accessErr = true;
+                  break;
+               }
+            }
+         } else {
+            accessErr = true;
+         }
+         if accessErr {
+            // 型パラメータを指定しないで generics クラスへのアクセスはエラー。
+            self.addErrMess(
+               prefixExp.$pos,
+               "can't access this class(%s) without '<>'." (prefixType.getTxt(##)) );
+         }
       }
    }
    

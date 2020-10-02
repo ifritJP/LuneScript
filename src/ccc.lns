@@ -39,27 +39,28 @@ let mut g_val = 100;
 //    }
 //    work$(nil);
 // }
+
+class SuperS {
+   let val:int! {pub};
+   pub fn __init() {
+   }
+   
+   static let val2:int! {pub};
+   static let val3:int {pub};
+   __init {
+      SuperS.val3 = 1;
+   }
+}
 {
    _section();
-   class Super {
-      let val:int! {pub};
-      pub fn __init() {
-      }
-      
-      static let val2:int! {pub};
-      static let val3:int {pub};
-      __init {
-         Super.val3 = 1;
-      }
-   }
-   let hoge = new Super();
+   let hoge = new SuperS();
    if! let val = hoge.$val {
       print( val + 10 );
    }
    else {
       print( "OK" );
    }
-   if! let val = Super.$val2 {
+   if! let val = SuperS.$val2 {
       print( val + 100 );
    }
    else {
@@ -850,23 +851,22 @@ let mut g_val = 100;
    }
    func( new Sub_class() );
 }
+class SubG extend (Mapping)
+{
+   let work1:real;
+   static let work1_2:int;
+   let work2:str;
+
+   __init {
+      SubG.work1_2 = 0;
+   }
+}
 {
    _section();
    class Hoge {
    }
 
-   class Sub extend (Mapping)
-   {
-      let work1:real;
-      static let work1_2:int;
-      let work2:str;
-
-      __init {
-         Sub.work1_2 = 0;
-      }
-   }
-
-   class Sub2 extend Sub {
+   class Sub2 extend SubG {
       let work3:int;
    }
 
@@ -874,7 +874,7 @@ let mut g_val = 100;
    {
       let val1:int;
       let val2:str;
-      let val3:Sub;
+      let val3:SubG;
    }
 
    fn func( test:&Test ) {
@@ -890,13 +890,13 @@ let mut g_val = 100;
       }
    }
 
-   fn func2( sub:&Sub ) {
+   fn func2( sub:&SubG ) {
       forsort val, key in sub._toMap() {
          print( key, val );
       }
    }
 
-   func( new Test( 100, "abc", new Sub( 1.0, "xyz" ) ) );
+   func( new Test( 100, "abc", new SubG( 1.0, "xyz" ) ) );
    func2( new Sub2( 1.5, "ABC", 10 ) );
 }
 {
@@ -1140,19 +1140,29 @@ local obj = {}
 obj.val1 = 1
 obj.val2 = "abc"
 obj.val3 = 3.5
-obj.val4 = {}
+obj.val4 = { "a", "b", "c" }
 return obj
 ```## );
    when! func {
       let map, err = func();
       when! map {
+         print( map );
          let mut workmap:Map<stem,stem> = {};
          foreach val, key in map@@Luaval<Map<stem,stem>> {
             workmap[ key ] = val;
          }
          forsort val, key in workmap {
-            print( key, val );
+            if key == "val4" {
+               foreach val2, index in val@@Luaval<List<stem>> {
+                  print( key, index, val2 );
+               }
+            }
+            else {
+               print( key, val );
+            }
          }
+      } else {
+         print( err );
       }
    }
 }
@@ -1537,46 +1547,46 @@ return obj
    func2();
    func();
 }
+
+class Testzz {
+   static let val:int;
+   __init {
+      Testzz.val = 1;
+   }
+   pub static fn funcS(): int, int {
+      return Testzz.val, 2;
+   }
+   pub fn func(): int, int {
+      return 1, 2;
+   }
+}
 {
    _section();
    fn funcL(): int, int {
       return 1, 2;
    }
-
-   class Test {
-      static let val:int;
-      __init {
-         Test.val = 1;
-      }
-      pub static fn funcS(): int, int {
-         return Test.val, 2;
-      }
-      pub fn func(): int, int {
-         return 1, 2;
-      }
-   }
    fn sub( val1:int, val2:int ) {
       print( val1, val2 );
    }
    print( "---" );
-   sub( Test.funcS()** );
-   sub( Test.funcS() + 1, 0 );
-   sub( Test.funcS(), 0 );
-   sub( ( Test.funcS() ), 0 );
-   sub( ( Test.funcS() ) + 1, 0 );
+   sub( Testzz.funcS()** );
+   sub( Testzz.funcS() + 1, 0 );
+   sub( Testzz.funcS(), 0 );
+   sub( ( Testzz.funcS() ), 0 );
+   sub( ( Testzz.funcS() ) + 1, 0 );
 
 
    print( "---" );
-   print( Test.funcS()** );
-   print( Test.funcS() + 1, 0 );
-   print( Test.funcS(), 0 );
-   print( ( Test.funcS() ), 0 );
-   print( ( Test.funcS() ) + 1, 0 );
-   print( 0, Test.funcS()** );
+   print( Testzz.funcS()** );
+   print( Testzz.funcS() + 1, 0 );
+   print( Testzz.funcS(), 0 );
+   print( ( Testzz.funcS() ), 0 );
+   print( ( Testzz.funcS() ) + 1, 0 );
+   print( 0, Testzz.funcS()** );
 
 
    print( "---" );
-   let test = new Test();
+   let test = new Testzz();
    sub( test.func()** );
    sub( test.func() + 1, 0 );
    sub( test.func(), 0 );
@@ -1675,31 +1685,31 @@ return obj
    sub2( func2 );
    sub3( print );
 }
+let valxx = 1000;
+let mut val3xx = 0;
+class Test1 {
+   static let val:int;
+   __init {
+      Test1.val = 100 + valxx;
+      val3xx = 10;
+   }
+   pub static fn func(): int {
+      return Test1.val;
+   }
+}
+let val2xx = 10000;
+class Test2 {
+   static let val:int;
+   __init {
+      Test2.val = 200 + val2xx;
+   }
+   pub static fn func(): int {
+      return Test2.val + Test1.func();
+   }
+}
 {
    _section();
-   let val = 1000;
-   let mut val3 = 0;
-   class Test1 {
-      static let val:int;
-      __init {
-         Test1.val = 100 + val;
-         val3 = 10;
-      }
-      pub static fn func(): int {
-         return Test1.val;
-      }
-   }
-   let val2 = 10000;
-   class Test2 {
-      static let val:int;
-      __init {
-         Test2.val = 200 + val2;
-      }
-      pub static fn func(): int {
-         return Test2.val + Test1.func();
-      }
-   }
-   print( Test2.func(), val3 );
+   print( Test2.func(), val3xx );
 }
 {
    _section();
@@ -2145,4 +2155,4 @@ fn func3( val:int, val2:real, val3:bool ):int, real, bool {
    }
    func( 1, 2 );
 }
-z
+

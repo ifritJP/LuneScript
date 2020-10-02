@@ -56,7 +56,7 @@ class convFilter extend Nodes.Filter<Opt> {
    let mut processModeStack:List<ProcessMode>;
    pri let moduleTypeInfo:&Ast.TypeInfo;
    pri let moduleScope:&Ast.Scope;
-   pri let mut builtin2runtime:Map<&Ast.TypeInfo,str>;
+   pri let mut builtin2runtime:&Map<&Ast.TypeInfo,str>;
    pri let mut type2gotypeMap:&Map<&Ast.TypeInfo,str>;
 
    pub fn __init( enableTest:bool, streamName: str, stream: oStream,
@@ -346,7 +346,11 @@ fn convFilter.type2gotype( typeInfo:&Ast.TypeInfo ) : str {
    if! let goType = self.type2gotypeMap[ orgType ] {
       return goType;
    }
+
    switch orgType.$kind {
+      case .Ext {
+         return "*Lns_luaValue";
+      }
       case .List, .Array {
          return "*LnsList";
       }
@@ -357,6 +361,9 @@ fn convFilter.type2gotype( typeInfo:&Ast.TypeInfo ) : str {
          return "*LnsMap";
       }
       case .Form {
+         if orgType == Ast.builtinTypeLoadedFunc {
+            return "*Lns_luaValue";
+         }
          return "LnsForm";
       }
       case .Class {
@@ -405,7 +412,7 @@ _declIgnoreNode( None );
 pub override fn convFilter.processImport(
    node: Nodes.ImportNode, opt: Opt ) mut
 {
-   Util.err( "not support -- %s" (__func__) );
+   //Util.err( "not support -- %s" (__func__) );
 }
 
 // ExpList を Go に展開する時のパターン
@@ -740,13 +747,19 @@ pub override fn convFilter.processRoot(
             }
          }
       }
-      self.builtin2runtime = {
+      let mut builtin2runtime = {
          ,,itemStatList
          Ast.builtinTypeNone: ""
       };
    }
    _makemap( { "str": [ "gsub", "find", "byte", "format", "rep", "gmatch",
                         "sub", "lower", "upper", "reverse" ] } );
+
+
+   builtin2runtime[ builtinFuncs.lns_print ] = "Lns_print";
+   builtin2runtime[ builtinFuncs.lns__load ] = "Lns_getVM().Load";
+   
+   self.builtin2runtime = builtin2runtime;
 
 
    self.type2gotypeMap = {
@@ -1157,15 +1170,18 @@ pub override fn convFilter.processExpCallSuper(
 
 alge FuncInfo {
    DeclInfo( node:&Nodes.Node, &Nodes.DeclFuncInfo ),
-   Type( &Ast.TypeInfo )
+   Type( &Ast.TypeInfo ),
+   Advertise( classType:&Ast.TypeInfo, methodType:&Ast.TypeInfo )
 }
 
 pub fn convFilter.outputDeclFunc( funcInfo:FuncInfo ) mut {
    let typeInfo;
    let name:str!;
+   let prefixType;
    _match funcInfo {
       case .DeclInfo( node, workDeclInfo ) {
          typeInfo = node.$expType;
+         prefixType = typeInfo.$parentInfo;
          if not workDeclInfo.$name {
             if self.processMode == .NonClosureFuncDecl {
                name = "_anonymous";
@@ -1179,6 +1195,12 @@ pub fn convFilter.outputDeclFunc( funcInfo:FuncInfo ) mut {
       }
       case .Type( workTypeInfo ) {
          typeInfo = workTypeInfo;
+         prefixType = typeInfo.$parentInfo;
+         name = typeInfo.$rawTxt;
+      }
+      case .Advertise( classType, methodType ) {
+         typeInfo = methodType;
+         prefixType = classType;
          name = typeInfo.$rawTxt;
       }
    }
@@ -1194,7 +1216,7 @@ pub fn convFilter.outputDeclFunc( funcInfo:FuncInfo ) mut {
       if typeInfo.$kind == .Method {
          self.write( "func " );
          self.write( "(self *" );
-         self.write( self.getTypeSymbol( typeInfo.$parentInfo ) );
+         self.write( self.getTypeSymbol( prefixType ) );
          self.write( ") " );
       }
       else {
@@ -1220,6 +1242,14 @@ pub fn convFilter.outputDeclFunc( funcInfo:FuncInfo ) mut {
          }
       }
       case .Type( _ ) {
+         foreach argType, index in typeInfo.$argTypeInfoList {
+            if index ~= 1 {
+               self.write( "," );
+            }
+            self.write( "arg%d %s" (index, self.type2gotype( argType ) ) );
+         }
+      }
+      case .Advertise( _, _ ) {
          foreach argType, index in typeInfo.$argTypeInfoList {
             if index ~= 1 {
                self.write( "," );
@@ -1953,9 +1983,85 @@ pub override fn convFilter.processApply(
    self.writeln( "}" );
 }
 
+fn convFilter.outputForeachLua( node: Nodes.ForeachNode, extType:&Ast.ExtTypeInfo ) mut {
+   switch extType.$extedType.$kind {
+      case .List {
+         self.writeln( "{" );
+         self.pushIndent( ## );
+         self.write( "_index, _val := " );
+         filter( node.$exp, self, node );
+         self.writeln( ".Get1stFromMap()" );
+         self.writeln( "for _index != nil {" );
+         self.pushIndent( ## );
+         if! let keySym = node.$key {
+            self.write( "%s := _index" ( self.getSymbolSym( keySym ) ) );
+            self.outputAny2Type( keySym.$typeInfo );
+            self.writeln( "" );
+         }
+         self.write( "%s := _val" ( self.getSymbolSym( node.$val ) ) );
+         self.outputAny2Type( node.$val.$typeInfo );
+         self.writeln( "" );
+         self.popIndent();
+
+         filter( node.$block, self, node );
+
+         self.pushIndent( ## );
+         self.write( "_index, _val = " );
+         filter( node.$exp, self, node );
+         self.writeln( ".NextFromMap( _index )" );
+
+         self.popIndent();
+         
+         self.writeln( "}" );
+         self.popIndent();
+         self.writeln( "}" );
+      }
+      case .Map {
+         self.writeln( "{" );
+         self.pushIndent( ## );
+         self.write( "_key, _val := " );
+         filter( node.$exp, self, node );
+         self.writeln( ".Get1stFromMap()" );
+         self.writeln( "for _key != nil {" );
+         self.pushIndent( ## );
+         if! let keySym = node.$key {
+            self.write( "%s := _key" ( self.getSymbolSym( keySym ) ) );
+            self.outputAny2Type( keySym.$typeInfo );
+            self.writeln( "" );
+         }
+         self.write( "%s := _val" ( self.getSymbolSym( node.$val ) ) );
+         self.outputAny2Type( node.$val.$typeInfo );
+         self.writeln( "" );
+         self.popIndent();
+
+         filter( node.$block, self, node );
+
+         self.pushIndent( ## );
+         self.write( "_key, _val = " );
+         filter( node.$exp, self, node );
+         self.writeln( ".NextFromMap( _key )" );
+
+         self.popIndent();
+         
+         self.writeln( "}" );
+         self.popIndent();
+         self.writeln( "}" );
+      }
+      default {  
+         Util.err( "not support -- %s" (__func__) );
+      }
+   }
+}
+
 pub override fn convFilter.processForeach(
    node: Nodes.ForeachNode, opt: Opt ) mut
 {
+
+   if! let extType = node.$exp.$expType.$srcTypeInfo@@@Ast.ExtTypeInfo {
+      self.outputForeachLua( node, unwrap extType.$srcTypeInfo@@@Ast.ExtTypeInfo );
+      return;
+   }
+   
    macro _keyItemDecl( typeSym:sym, typeName:__exp ) {
       if ,,typeName ~= "_" {
          self.write( "_%s" (,,typeName) );
@@ -2460,7 +2566,8 @@ let type2FromStemNameMap = {
    Ast.builtinTypeInt:"Lns_ToInt",
    Ast.builtinTypeReal:"Lns_ToReal",
    Ast.builtinTypeBool:"Lns_ToBool",
-   Ast.builtinTypeString:"Lns_ToStr"
+   Ast.builtinTypeString:"Lns_ToStr",
+   Ast.builtinTypeStem:"Lns_ToStem"
 };
 fn convFilter.getFromStemName(typeInfo:&Ast.TypeInfo) : str {
    let workTypeInfo = typeInfo.$srcTypeInfo.$nonnilableType;
@@ -2541,9 +2648,7 @@ fn convFilter.outputAlter2MapFunc( alt2Map:&Map<&Ast.TypeInfo,&Ast.TypeInfo>) mu
    foreach assinType, altType in alt2Map {
       if altType.$kind == .Alternate {
          if assinType.$kind == .Alternate {
-            self.write(
-               "%q:self.__alt2mapFunc[ %q ],"
-               (assinType.$rawTxt, assinType.$rawTxt ) );
+            Util.err( "not support: %s" (__func__) );
          }
          else {
             self.outputConvItemType( assinType, alt2Map );
@@ -2673,6 +2778,40 @@ fn convFilter.outputMapping( node: Nodes.DeclClassNode ) mut {
    self.writeln( "}" );
 }
 
+fn convFilter.outputAdvertise( node: Nodes.DeclClassNode ) mut
+{
+   foreach adv in node.$advertiseList {
+      if adv.$prefix ~= "" {
+         Util.err( "%s: not support advertise with prefix" (__func__) );
+      }
+      if! let scope = adv.$member.$expType.$scope {
+         scope.filterTypeInfoField(
+            true, scope, .Normal,
+            fn ( symbol:&Ast.SymbolInfo ): bool {
+               if symbol.$kind == .Mtd and symbol.$name ~= "__init" {
+                  let funcType = symbol.$typeInfo;
+                  self.outputDeclFunc( .Advertise( node.$expType, funcType ) );
+                  self.writeln( " {" );
+                  if #funcType.$retTypeInfoList > 0 {
+                     self.write( "    return " );
+                  }
+                  self.write( "self.%s.%s( "
+                              ( self.getSymbolSym( adv.$member.$symbolInfo ),
+                                self.getSymbolSym( symbol )) );
+                  foreach _, index in funcType.$argTypeInfoList {
+                     if index > 1 {
+                        self.write( "," );
+                     }
+                     self.write( "arg%d" (index) );
+                  }
+                  self.writeln( ")" );
+                  self.writeln( "}" );
+               }
+               return true;
+            });
+      }
+   }
+}
 
 pub override fn convFilter.processDeclClass(
    node: Nodes.DeclClassNode, opt: Opt ) mut
@@ -2688,10 +2827,7 @@ pub override fn convFilter.processDeclClass(
             self.outputCastReceiver( node );
             self.outputConstructor( node );
             self.outputAccessor( node );
-
-            if #node.$advertiseList ~= 0 {
-               Util.err( "%s: not support advertise" (__func__) );
-            }
+            self.outputAdvertise( node );
 
             if node.$expType.isInheritFrom( Ast.builtinTypeMapping, nil ) {
                self.outputMapping( node );
@@ -2731,6 +2867,8 @@ alge CallKind {
    FormCall,
    /** Sort 呼び出し */
    SortCall( itemType:&Ast.TypeInfo ),
+   /** */
+   RunLoaded,
 }
 
 /**
@@ -2914,18 +3052,23 @@ pub override fn convFilter.processExpCall(
    } else {
       if Ast.isBuiltin( funcType.$typeId ) {
          let builtinFuncs = TransUnit.getBuiltinFunc();
-      
-         switch funcType {
-            case builtinFuncs.lns_print {
-               self.write( "Lns_print" );
-            }
-            case Ast.builtinTypeForm {
-               filter( node.$func, self, node );
-               callKind = .FormCall;
-            }
-            default {
-               Util.err( "%s: not support -- %s:%d"
-                  (__func__, funcType.getTxt(##), node.$pos.lineNo) );
+
+         if! let runtime = self.builtin2runtime[ funcType ] {
+            self.write( runtime );
+         } else {
+            switch funcType.$srcTypeInfo {
+               case Ast.builtinTypeForm {
+                  filter( node.$func, self, node );
+                  callKind = .FormCall;
+               }
+               case Ast.builtinTypeLoadedFunc {
+                  self.write( "Lns_getVM().RunLoadedfunc" );
+                  callKind = .RunLoaded;
+               }
+               default {
+                  Util.err( "%s: not support -- %s:%d"
+                     (__func__, funcType.getTxt(##), node.$pos.lineNo) );
+               }
             }
          }
       } else {
@@ -2938,10 +3081,20 @@ pub override fn convFilter.processExpCall(
    match callKind {
       case .RuntimeCall(prefixNode) {
          filter( prefixNode, self, node.$func );
-         self.write( "," );
+         if node.$argList {
+            self.write( "," );
+         }
       }
       case .FormCall {
          self.write( "Lns_2DDD(" );
+      }
+      case .RunLoaded {
+         filter( node.$func, self, node );
+         self.write( "," );
+         if not node.$argList {
+            self.write( "[]LnsAny{}" );
+         }
+         
       }
       case .SortCall( typeInfo ) {
          self.write( "%s, " (getLnsItemKind( typeInfo )) );
@@ -3334,16 +3487,22 @@ pub override fn convFilter.processExpRef(
 pub override fn convFilter.processExpRefItem(
    node: Nodes.ExpRefItemNode, opt: Opt ) mut
 {
-   switch node.$val.$expType.$kind {
-      case .List {
+   let prefixTpe = node.$val.$expType.$nonnilableType;
+   switch prefixTpe.$kind {
+      case .List, .Array {
+         self.write( "Lns_NilAccFin( Lns_NilAccPush( " );
          filter( node.$val, self, node );
+         self.write( ") && Lns_NilAccLast( Lns_NilAccPop().(*LnsList)" );
          self.write( ".GetAt(" );
          filter( unwrap node.$index, self, node );
          self.write( ")" );
          self.outputAny2Type( node.$expType );
+         self.write( "))" );
       }
-      case .Map {
+      case .Map, .Stem {
+         self.write( "Lns_NilAccFin( Lns_NilAccPush( " );
          filter( node.$val, self, node );
+         self.write( ") && Lns_NilAccLast( Lns_NilAccPop().(*LnsMap)" );
          self.write( ".Items[" );
          if! let index = node.$index {
             filter( index, self, node );
@@ -3351,9 +3510,11 @@ pub override fn convFilter.processExpRefItem(
             self.write( '"%s"' (str2gostr( unwrap node.$symbol)) );
          }
          self.write( "]" );
+         self.write( "))" );
       }
       default {
-         Util.err( "not support -- %s" (__func__) );
+         Util.err( "not support -- %s, %s"
+                   (__func__, prefixTpe.$kind.$_txt) );
       }
    }
 }

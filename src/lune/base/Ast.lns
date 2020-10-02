@@ -4963,6 +4963,9 @@ pub class ExtTypeInfo extend TypeInfo {
    pub override fn get_srcTypeInfo(): &TypeInfo {
       return self;
    }
+   pub override fn get_nonnilableType(): &TypeInfo {
+      return self;
+   }
    pub override fn get_nilable(): bool {
       return false;
    }

@@ -1787,3 +1787,12 @@ class Test_ccc {
       print( mess );
    }
 }
+{
+   Macro._section();
+   class Test22<T> {
+      pub static fn func(val:T) : T {
+         return val;
+      }
+   }
+   print( Test22.func(1) );
+}

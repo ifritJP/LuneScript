@@ -41,6 +41,7 @@ var cLUA_TFUNCTION int
 var cLUA_TNIL int
 var cLUA_TNUMBER int
 var cLUA_TSTRING int
+var cLUA_OK int
 
 func init() {
     cLUA_MULTRET = int(C.LUA_MULTRET)
@@ -49,6 +50,7 @@ func init() {
     cLUA_TNIL = int(C.LUA_TNIL)
     cLUA_TNUMBER = int(C.LUA_TNUMBER)
     cLUA_TSTRING = int(C.LUA_TSTRING)
+    cLUA_OK = int(C.LUA_OK)
 }
 
 type Lns_luaVM struct {
@@ -56,8 +58,8 @@ type Lns_luaVM struct {
 }
 
 // luaL api ======================
-func luaL_loadstring( vm *C.lua_State, txt *C.char ) {
-    C.luaL_loadstring( vm, txt )
+func luaL_loadstring( vm *C.lua_State, txt *C.char ) int {
+    return int(C.luaL_loadstring( vm, txt ))
 }
 func luaL_newstate() *C.lua_State {
     return C.luaL_newstate()
@@ -140,4 +142,7 @@ func lua_tonumberx(vm *C.lua_State, index int) LnsReal {
 }
 func lua_type(vm *C.lua_State, index int) int {
     return int(C.lua_type(vm, C.int( index )))
+}
+func lua_next(vm *C.lua_State, index int) int {
+    return int(C.lua_next(vm, C.int( index )))
 }

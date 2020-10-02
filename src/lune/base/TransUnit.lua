@@ -10826,7 +10826,34 @@ function TransUnit:analyzeExpField( firstToken, token, mode, prefixExp )
          local prefixSym = expRef:get_symbolInfo()
          local prefixType = prefixSym:get_typeInfo()
          if prefixSym:get_kind() == Ast.SymbolKind.Typ and prefixType:get_kind() == Ast.TypeInfoKind.Class and #prefixType:get_itemTypeInfoList() > 0 and not Ast.isGenericType( prefixType ) and not self.scope:isInnerOf( _lune.unwrap( prefixType:get_scope()) ) then
-            self:addErrMess( prefixExp:get_pos(), string.format( "can't access this class(%s) without '<>'.", prefixType:getTxt(  )) )
+            local accessErr = false
+            if typeInfo:get_kind() == Ast.TypeInfoKind.Func then
+               local altSet = {}
+               for __index, argType in ipairs( typeInfo:get_argTypeInfoList() ) do
+                  local orgType = argType:get_nonnilableType():get_srcTypeInfo()
+                  if orgType:get_kind() == Ast.TypeInfoKind.Alternate then
+                     altSet[orgType]= true
+                  end
+                  
+               end
+               
+               for __index, itemType in ipairs( prefixType:get_itemTypeInfoList() ) do
+                  if not _lune._Set_has(altSet, itemType:get_nonnilableType():get_srcTypeInfo() ) then
+                     accessErr = true
+                     break
+                  end
+                  
+               end
+               
+            else
+             
+               accessErr = true
+            end
+            
+            if accessErr then
+               self:addErrMess( prefixExp:get_pos(), string.format( "can't access this class(%s) without '<>'.", prefixType:getTxt(  )) )
+            end
+            
          end
          
       end
@@ -10870,8 +10897,8 @@ function TransUnit:analyzeNewAlge( firstToken, algeTypeInfo, prefix )
          
          
          do
-            local _7949, _7950, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, nil )
-            if _7949 ~= nil and _7950 ~= nil and newExpNodeList ~= nil then
+            local _7954, _7955, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, nil )
+            if _7954 ~= nil and _7955 ~= nil and newExpNodeList ~= nil then
                argList = newExpNodeList:get_expList()
             end
          end
@@ -11073,7 +11100,7 @@ function TransUnit:analyzeExpOpSet( exp, opeToken, expectTypeList )
    end
    
    
-   local _7989, _7990, _7991, expTypeList = self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), expList, true, false, nil )
+   local _7994, _7995, _7996, expTypeList = self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), expList, true, false, nil )
    
    local initSymSet = {}
    
@@ -11680,7 +11707,7 @@ function TransUnit:analyzeStrConst( firstToken, token )
          local argNodeList = self:analyzeExpList( false, false )
          param = argNodeList
          
-         local _8086, _8087, workExpList = self:checkMatchType( "str constructor", firstToken.pos, {Ast.builtinTypeDDD}, argNodeList, false, false, nil )
+         local _8091, _8092, workExpList = self:checkMatchType( "str constructor", firstToken.pos, {Ast.builtinTypeDDD}, argNodeList, false, false, nil )
          if workExpList ~= nil then
             dddParam = workExpList
          else
@@ -11827,7 +11854,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, prevOpLevel, expectTy
       end
       
       
-      local _8120, alt2type, newArgList = self:checkMatchValType( exp:get_pos(), initTypeInfo, argList, classTypeInfo:get_itemTypeInfoList(), classTypeInfo )
+      local _8125, alt2type, newArgList = self:checkMatchValType( exp:get_pos(), initTypeInfo, argList, classTypeInfo:get_itemTypeInfoList(), classTypeInfo )
       
       if #classTypeInfo:get_itemTypeInfoList() > 0 then
          if classTypeInfo:get_itemTypeInfoList()[1]:get_kind() == Ast.TypeInfoKind.Alternate then
@@ -12113,8 +12140,8 @@ function TransUnit:analyzeReturn( token )
       local workList = expList
       if workList ~= nil then
          do
-            local _8157, _8158, newExpNodeList = self:checkMatchType( "return", token.pos, retTypeList, workList, false, not workList:get_followOn(), nil )
-            if _8157 ~= nil and _8158 ~= nil and newExpNodeList ~= nil then
+            local _8162, _8163, newExpNodeList = self:checkMatchType( "return", token.pos, retTypeList, workList, false, not workList:get_followOn(), nil )
+            if _8162 ~= nil and _8163 ~= nil and newExpNodeList ~= nil then
                expList = newExpNodeList
             end
          end

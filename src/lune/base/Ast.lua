@@ -6402,6 +6402,10 @@ function ExtTypeInfo:get_srcTypeInfo(  )
 
    return self
 end
+function ExtTypeInfo:get_nonnilableType(  )
+
+   return self
+end
 function ExtTypeInfo:get_nilable(  )
 
    return false
@@ -6493,10 +6497,6 @@ end
 
 function ExtTypeInfo:get_mutMode( ... )
    return self.extedType:get_mutMode( ... )
-end
-
-function ExtTypeInfo:get_nonnilableType( ... )
-   return self.extedType:get_nonnilableType( ... )
 end
 
 function ExtTypeInfo:get_parentInfo( ... )
@@ -7840,7 +7840,7 @@ IdType.__allList[2] = IdType.Ext
 local function switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 6064, function (  )
+   Log.log( Log.Level.Trace, __func__, 6067, function (  )
    
       return "start"
    end )
@@ -7860,7 +7860,7 @@ local builtinTypeInfo2Map = typeInfo2Map:clone(  )
 local function pushProcessInfo( processInfo )
    local __func__ = '@lune.@base.@Ast.pushProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6076, function (  )
+   Log.log( Log.Level.Trace, __func__, 6079, function (  )
    
       return "start"
    end )
@@ -7895,7 +7895,7 @@ _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
    local __func__ = '@lune.@base.@Ast.popProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6102, function (  )
+   Log.log( Log.Level.Trace, __func__, 6105, function (  )
    
       return "start"
    end )
