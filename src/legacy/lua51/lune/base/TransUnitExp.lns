@@ -1241,102 +1241,98 @@ fn TransUnit.prepareExpCall(
    return alt2typeMap, workArgList;
 }
 
-/**
-関数コール処理。
+// string.format() の引数チェック
+fn TransUnit.checkArgForStringForm(
+   firstToken:&Parser.Token, argList:&Nodes.ExpListNode ) mut {
+   let mut formArgTypeList:List<&Ast.TypeInfo> = [];
+   let mut formatTxt = "";
+   if #argList.$expList > 0 {
+      let argNode = argList.$expList[ 1 ];
+      if argNode.$kind ~= Nodes.NodeKind.$LiteralString {
+         // literal 文字列でない場合は無視
+         return;
+      }
+      if! let literal = argNode.getLiteral() {
+         match literal {
+            case .Str( val ) {
+               formatTxt = val;
+            }
+         }
+      }
+   }
+   if #argList.$expList > 1 {
+      if! let toDDDNode = argList.$expList[ 2 ]@@@Nodes.ExpToDDDNode {
+         foreach workNode in toDDDNode.$expList.$expList {
+            formArgTypeList.insert( workNode.$expType );
+         }
+      } else {
+         self.error( "illegal node -- %s"
+                     (Nodes.getNodeKindName( argList.$expList[ 2 ].$kind) ));
+      }
+   }
+   // foreach argType, index in argList.$expTypeList {
+   //    if index ~= 1 {
+   //       formArgTypeList.insert( argType );
+   //    }
+   // }
+   self.checkStringFormat( firstToken.pos, formatTxt, formArgTypeList );
+}
 
-関数コールの "(" を読み込み済みの状態。
+// List.sort() の引数チェック 
+fn TransUnit.checkArgForSort(
+   firstToken:&Parser.Token,
+   genericTypeList:&List<&Ast.TypeInfo>, argList:&Nodes.ExpListNode ) mut
+{  
+   if #argList.$expTypeList > 0 {
+      let callback = argList.$expTypeList[ 1 ];
+      if callback == Ast.builtinTypeAbbr {
+         return;
+      }
+      if #callback.$retTypeInfoList ~= 1 {
+         self.addErrMess(
+            firstToken.$pos,
+            "The callback's to return value of sort() must have a value. -- %d"
+            (#callback.$retTypeInfoList) );
+         return;
+      }
+      if not Ast.builtinTypeBool.equals( callback.$retTypeInfoList[ 1 ] ##) {
+         self.addErrMess(
+            firstToken.$pos,
+            "The callback's return type of sort() must be bool. -- '%s'"
+            ( callback.$retTypeInfoList[ 1 ].getTxt(##) ) );
+      }
+      if #callback.$argTypeInfoList ~= 2 {
+         self.addErrMess(
+            firstToken.$pos,
+            "The callback's argument must have 2 arguments. -- '%s'"
+            (callback.$display_stirng) );
+      }
+      if #genericTypeList == 1 {
+         foreach argType, index in callback.$argTypeInfoList {
+            if not genericTypeList[ 1 ].equals( argType ##) {
+               self.addErrMess(
+                  firstToken.$pos,
+                  "The callback's argument(%d) type must be -- '%s'"
+                  ( index, genericTypeList[ 1 ].getTxt(##)) );
+            }
+         }
+      }
+      else {
+         self.addErrMess(
+            firstToken.$pos, "The generics of the list is illegal" );
+      }
+   }
+}
 
-@param firstToken 関数コールの最初のトークン
-@param exp 関数
 
-*/
-fn TransUnit.analyzeExpCall(
-   firstToken:&Parser.Token, funcExp: Nodes.Node, nextToken:&Parser.Token ) mut :
-   Nodes.Node, &Parser.Token
+
+fn TransUnit.processFunc(
+   firstToken:&Parser.Token, nextToken:&Parser.Token,
+   refFieldNode:&Nodes.RefFieldNode!, funcExp: Nodes.Node,
+   funcType:&Ast.TypeInfo, alt2typeMap:Map<&Ast.TypeInfo,&Ast.TypeInfo>,
+   genericTypeList:&List<&Ast.TypeInfo>, genericsClass:&Ast.TypeInfo,
+   argList:&Nodes.ExpListNode! ) mut : Nodes.Node
 {
-   self.checkSymbolHavingValue( funcExp.$pos, funcExp.getSymbolInfo() );
-   
-   // string.format() の引数チェック
-   fn checkArgForStringForm( argList:&Nodes.ExpListNode ) {
-      let mut formArgTypeList:List<&Ast.TypeInfo> = [];
-      let mut formatTxt = "";
-      if #argList.$expList > 0 {
-         let argNode = argList.$expList[ 1 ];
-         if argNode.$kind ~= Nodes.NodeKind.$LiteralString {
-            // literal 文字列でない場合は無視
-            return;
-         }
-         if! let literal = argNode.getLiteral() {
-            match literal {
-               case .Str( val ) {
-                  formatTxt = val;
-               }
-            }
-         }
-      }
-      if #argList.$expList > 1 {
-         if! let toDDDNode = argList.$expList[ 2 ]@@@Nodes.ExpToDDDNode {
-            foreach workNode in toDDDNode.$expList.$expList {
-               formArgTypeList.insert( workNode.$expType );
-            }
-         } else {
-            self.error( "illegal node -- %s"
-                        (Nodes.getNodeKindName( argList.$expList[ 2 ].$kind) ));
-         }
-      }
-      // foreach argType, index in argList.$expTypeList {
-      //    if index ~= 1 {
-      //       formArgTypeList.insert( argType );
-      //    }
-      // }
-      self.checkStringFormat( firstToken.pos, formatTxt, formArgTypeList );
-   }
-
-   // List.sort() の引数チェック 
-   fn checkArgForSort(
-      genericTypeList:&List<&Ast.TypeInfo>, argList:&Nodes.ExpListNode )
-   {  
-      if #argList.$expTypeList > 0 {
-         let callback = argList.$expTypeList[ 1 ];
-         if callback == Ast.builtinTypeAbbr {
-            return;
-         }
-         if #callback.$retTypeInfoList ~= 1 {
-            self.addErrMess(
-               firstToken.$pos,
-               "The callback's to return value of sort() must have a value. -- %d"
-               (#callback.$retTypeInfoList) );
-            return;
-         }
-         if not Ast.builtinTypeBool.equals( callback.$retTypeInfoList[ 1 ] ##) {
-            self.addErrMess(
-               firstToken.$pos,
-               "The callback's return type of sort() must be bool. -- '%s'"
-               ( callback.$retTypeInfoList[ 1 ].getTxt(##) ) );
-         }
-         if #callback.$argTypeInfoList ~= 2 {
-            self.addErrMess(
-               firstToken.$pos,
-               "The callback's argument must have 2 arguments. -- '%s'"
-               (callback.$display_stirng) );
-         }
-         if #genericTypeList == 1 {
-            foreach argType, index in callback.$argTypeInfoList {
-               if not genericTypeList[ 1 ].equals( argType ##) {
-                  self.addErrMess(
-                     firstToken.$pos,
-                     "The callback's argument(%d) type must be -- '%s'"
-                     ( index, genericTypeList[ 1 ].getTxt(##)) );
-               }
-            }
-         }
-         else {
-            self.addErrMess(
-               firstToken.$pos, "The generics of the list is illegal" );
-         }
-      }
-   }
-
    let funcSymbol:&Ast.SymbolInfo!;
    let symbolInfoList = funcExp.getSymbolInfo();
    if #symbolInfoList > 0 {
@@ -1350,7 +1346,7 @@ fn TransUnit.analyzeExpCall(
       funcSymbol = nil;
    }
 
-   let mut funcTypeInfo = funcExp.$expType;
+   let mut funcTypeInfo = funcExp.$expType.$srcTypeInfo;
    let nilAccess;
 
    if nextToken.txt == "$(" {
@@ -1368,23 +1364,150 @@ fn TransUnit.analyzeExpCall(
       nilAccess = false;
    }
 
-   // let work = self.getToken(##);
-   // let mut argList: &Nodes.ExpListNode! = nil;
-   // if work.txt ~= ")" {
-   //    self.pushback();
-   //    argList = self.analyzeExpList(
-   //       false, false, nil, funcTypeInfo.$argTypeInfoList ## );
-   //    self.checkNextToken( ")" );
+   
+   switch( funcTypeInfo.$kind ) {
+      case .Method, .Func, .Form, .FormFunc {
+      }
+      default {
+         if! let extType = funcTypeInfo@@@Ast.ExtTypeInfo {
+            switch( extType.$extedType.$kind ) {
+               case .Method, .Func, .Form, .FormFunc {
+               }
+               default {
+                  self.error( "can't call the type -- %s, %s"
+                              ( funcTypeInfo.getTxt(##),
+                                funcTypeInfo.$kind.$_txt ) );
+               }
+            }
+         }
+         else {
+            self.error( "can't call the type -- %s, %s"
+                        ( funcTypeInfo.getTxt(##),
+                          funcTypeInfo.$kind.$_txt ) );
+         }
+      }
+   }
+   let mut retTypeInfoList:List<&Ast.TypeInfo> = [];
+   foreach retType, index in funcTypeInfo.$retTypeInfoList {
+      retTypeInfoList.insert( retType );
+      if! let applyType = retType.applyGeneric( alt2typeMap, self.moduleType ) {
+         retTypeInfoList[ index ] = applyType;
+      }
+      else {
+         if funcTypeInfo == builtinFunc.list_remove {
+            // pending: List.remove の戻り値設定を暫定対応
+            retTypeInfoList[ index ] = genericTypeList[ 1 ].$nilableTypeInfo;
+         }
+         elseif funcTypeInfo.$kind == .Func and
+             ( funcTypeInfo.$rawTxt == "_fromMap" or
+               funcTypeInfo.$rawTxt == "_fromStem" ) and
+            genericsClass.isInheritFrom( Ast.builtinTypeMapping, alt2typeMap )
+         {
+            retTypeInfoList[ index ] = genericsClass.$nilableTypeInfo;
+         }
+         else {
+            self.addErrMess(
+               firstToken.pos,
+               "not support generics yet. -- %s" (retType.getTxt(##)) );
+         }
+      }
+   }
+   
+   when! refFieldNode {
+      if funcTypeInfo.equals( builtinFunc.list_unpack ##) or
+         funcTypeInfo.equals( builtinFunc.array_unpack ##)
+      {
+         // unpack の型を list の要素の DDD 型にする
+         let prefixType = refFieldNode.$prefix.$expType;
+         if #prefixType.$itemTypeInfoList > 0 {
+            let dddType = Ast.NormalTypeInfo.createDDD(
+               prefixType.$itemTypeInfoList[ 1 ], false );
+            retTypeInfoList = [];
+            retTypeInfoList.insert( dddType );
+         }
+      }
+   }
+   
+   
+   if nilAccess {
+      let mut retList:List<&Ast.TypeInfo> = [];
+      foreach retType in retTypeInfoList {
+         if retType.$nilable {
+            retList.insert( retType );
+         }
+         else {
+            retList.insert( retType.$nilableTypeInfo );
+         }
+      }
+      retTypeInfoList = retList;
+      self.helperInfo.useNilAccess = true;
+   }
 
-   //    when! argList {
-   //       foreach argNode in argList.$expList {
-   //          if not argNode.canBeRight() and argNode.$kind ~= Nodes.NodeKind.$Abbr {
-   //             self.addErrMess( argNode.$pos, "this node can't be r-value. -- %s"
-   //                              (Nodes.getNodeKindName( argNode.$kind )));
-   //          }
-   //       }
-   //    }
-   // }
+   let mut errorFuncFlag = false;
+   if #retTypeInfoList > 0 {
+      let retType = retTypeInfoList[1];
+      if retType == Ast.builtinTypeNeverRet {
+         errorFuncFlag = true;
+      }
+   }
+
+   when! argList {
+      switch funcTypeInfo {
+         case builtinFunc.string_format {
+            self.checkArgForStringForm( firstToken, argList );
+         }
+         case builtinFunc.list_sort, builtinFunc.array_sort {
+            self.checkArgForSort( firstToken, genericTypeList, argList );
+         }
+      }
+   }
+
+   if funcTypeInfo.equals( builtinFunc.lns__kind ##) {
+      if! let expList = argList$.$expList {
+         if #expList > 0 {
+            return Nodes.LuneKindNode.create(
+               self.nodeManager, firstToken.pos,
+               self.macroCtrl.isInAnalyzeArgMode(),
+               [ Ast.builtinTypeInt ], expList[ 1 ] );
+         }
+      }
+      return Nodes.LuneKindNode.create(
+         self.nodeManager, firstToken.pos,
+         self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeInt ],
+         self.createNoneNode( firstToken.pos ) );               
+   }
+
+   when! funcSymbol {
+      if funcSymbol.$name == "super" {
+         return Nodes.ExpCallSuperNode.create(
+            self.nodeManager, firstToken.pos,
+            self.macroCtrl.isInAnalyzeArgMode(), retTypeInfoList,
+            funcSymbol.$typeInfo.$parentInfo, funcSymbol.$typeInfo, argList );
+      }
+   }
+   return Nodes.ExpCallNode.create(
+      self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
+      retTypeInfoList, funcExp, errorFuncFlag, nilAccess, argList );
+}
+
+
+/**
+関数コール処理。
+
+関数コールの "(" を読み込み済みの状態。
+
+@param firstToken 関数コールの最初のトークン
+@param exp 関数
+
+*/
+fn TransUnit.analyzeExpCall(
+   firstToken:&Parser.Token, funcExp: Nodes.Node, nextToken:&Parser.Token ) mut :
+   Nodes.Node, &Parser.Token
+{
+   self.checkSymbolHavingValue( funcExp.$pos, funcExp.getSymbolInfo() );
+   
+
+   let funcTypeInfo = funcExp.$expType.$nonnilableType;
 
    // 引数の型チェック
    let mut genericTypeList = funcTypeInfo.$itemTypeInfoList;
@@ -1430,120 +1553,6 @@ fn TransUnit.analyzeExpCall(
       }
    }
 
-
-   fn processFunc(): Nodes.Node {
-      switch( funcTypeInfo.$kind ) {
-         case .Method, .Func, .Form, .FormFunc {
-         }
-         default {
-            self.error( "can't call the type -- %s, %s"
-                        ( funcTypeInfo.getTxt(##),
-                          funcTypeInfo.$kind.$_txt ) );
-         }
-      }
-      let mut retTypeInfoList:List<&Ast.TypeInfo> = [];
-      foreach retType, index in funcTypeInfo.$retTypeInfoList {
-         retTypeInfoList.insert( retType );
-         if! let applyType = retType.applyGeneric( alt2typeMap, self.moduleType ) {
-            retTypeInfoList[ index ] = applyType;
-         }
-         else {
-            if funcTypeInfo == builtinFunc.list_remove {
-               // pending: List.remove の戻り値設定を暫定対応
-               retTypeInfoList[ index ] = genericTypeList[ 1 ].$nilableTypeInfo;
-            }
-            elseif funcTypeInfo.$kind == .Func and
-                ( funcTypeInfo.$rawTxt == "_fromMap" or
-                  funcTypeInfo.$rawTxt == "_fromStem" ) and
-               genericsClass.isInheritFrom( Ast.builtinTypeMapping, alt2typeMap )
-            {
-               retTypeInfoList[ index ] = genericsClass.$nilableTypeInfo;
-            }
-            else {
-               self.addErrMess(
-                  firstToken.pos,
-                  "not support generics yet. -- %s" (retType.getTxt(##)) );
-            }
-         }
-      }
-      
-      when! refFieldNode {
-         if funcTypeInfo.equals( builtinFunc.list_unpack ##) or
-            funcTypeInfo.equals( builtinFunc.array_unpack ##)
-         {
-            // unpack の型を list の要素の DDD 型にする
-            let prefixType = refFieldNode.$prefix.$expType;
-            if #prefixType.$itemTypeInfoList > 0 {
-               let dddType = Ast.NormalTypeInfo.createDDD(
-                  prefixType.$itemTypeInfoList[ 1 ], false );
-               retTypeInfoList = [];
-               retTypeInfoList.insert( dddType );
-            }
-         }
-      }
-         
-      
-      if nilAccess {
-         let mut retList:List<&Ast.TypeInfo> = [];
-         foreach retType in retTypeInfoList {
-            if retType.$nilable {
-               retList.insert( retType );
-            }
-            else {
-               retList.insert( retType.$nilableTypeInfo );
-            }
-         }
-         retTypeInfoList = retList;
-         self.helperInfo.useNilAccess = true;
-      }
-
-      let mut errorFuncFlag = false;
-      if #retTypeInfoList > 0 {
-         let retType = retTypeInfoList[1];
-         if retType == Ast.builtinTypeNeverRet {
-            errorFuncFlag = true;
-         }
-      }
-
-      when! argList {
-         switch funcTypeInfo {
-            case builtinFunc.string_format {
-               checkArgForStringForm( argList );
-            }
-            case builtinFunc.list_sort, builtinFunc.array_sort {
-               checkArgForSort( genericTypeList, argList );
-            }
-         }
-      }
-
-      if funcTypeInfo.equals( builtinFunc.lns__kind ##) {
-         if! let expList = argList$.$expList {
-            if #expList > 0 {
-               return Nodes.LuneKindNode.create(
-                  self.nodeManager, firstToken.pos,
-                  self.macroCtrl.isInAnalyzeArgMode(),
-                  [ Ast.builtinTypeInt ], expList[ 1 ] );
-            }
-         }
-         return Nodes.LuneKindNode.create(
-            self.nodeManager, firstToken.pos,
-            self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeInt ],
-            self.createNoneNode( firstToken.pos ) );               
-      }
-
-      when! funcSymbol {
-         if funcSymbol.$name == "super" {
-            return Nodes.ExpCallSuperNode.create(
-               self.nodeManager, firstToken.pos,
-               self.macroCtrl.isInAnalyzeArgMode(), retTypeInfoList,
-               funcSymbol.$typeInfo.$parentInfo, funcSymbol.$typeInfo, argList );
-         }
-      }
-      return Nodes.ExpCallNode.create(
-         self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
-         retTypeInfoList, funcExp, errorFuncFlag, nilAccess, argList );
-   }
-
    if funcTypeInfo.$rawTxt == "" {
       self.addErrMess( funcExp.$pos, "can't directly call the declared function." );
    }
@@ -1554,7 +1563,10 @@ fn TransUnit.analyzeExpCall(
       exp = self.evalMacro( firstToken, funcTypeInfo, argList );
    }
    else {
-      exp = processFunc();
+      // processFunc
+      exp = self.processFunc(
+         firstToken, nextToken, refFieldNode, funcExp, funcTypeInfo,
+         alt2typeMap, genericTypeList, genericsClass, argList );
    }
 
    return exp, self.getTokenNoErr();
@@ -2299,10 +2311,33 @@ fn TransUnit.analyzeExpField(
          not Ast.isGenericType( prefixType ) and
          not self.scope.isInnerOf( unwrap prefixType.$scope )
       {
-         // 型パラメータを指定しないで generics クラスへのアクセスはエラー。
-         self.addErrMess(
-            prefixExp.$pos,
-            "can't access this class(%s) without '<>'." (prefixType.getTxt(##)) );
+         let mut accessErr = false;
+         if typeInfo.$kind == .Func {
+            // static method 呼び出しで、
+            // 引数から全ての型パラメータを推論できるものに関しては、
+            // エラーしないので、引数のチェックを行なう。
+            let mut altSet:Set<&Ast.TypeInfo> = (@);
+            foreach argType in typeInfo.$argTypeInfoList {
+               let orgType = argType.$nonnilableType.$srcTypeInfo;
+               if orgType.$kind == .Alternate {
+                  altSet.add( orgType );
+               }
+            }
+            foreach itemType in prefixType.$itemTypeInfoList {
+               if not altSet.has( itemType.$nonnilableType.$srcTypeInfo ) {
+                  accessErr = true;
+                  break;
+               }
+            }
+         } else {
+            accessErr = true;
+         }
+         if accessErr {
+            // 型パラメータを指定しないで generics クラスへのアクセスはエラー。
+            self.addErrMess(
+               prefixExp.$pos,
+               "can't access this class(%s) without '<>'." (prefixType.getTxt(##)) );
+         }
       }
    }
    
@@ -3133,7 +3168,7 @@ fn TransUnit.analyzeExpUnwrap( firstToken: &Parser.Token ) mut : Nodes.Node {
    }
    elseif expType.$kind == .DDD {
       if #expType.$itemTypeInfoList > 0 {
-         unwrapType = expType.$itemTypeInfoList[ 1 ];
+         unwrapType = expType.$itemTypeInfoList[ 1 ].$nonnilableType;
       }
       else {
          unwrapType = Ast.builtinTypeStem;

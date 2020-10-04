@@ -24,12 +24,14 @@ SOFTWARE.
 
 package main
 
+// #include <string.h>
 // #include <stdlib.h>
 // #cgo CFLAGS: -Ilua_link/inc
 // #cgo LDFLAGS: -ldl -lm -llua5.3
 // #include <lauxlib.h>
 // #include <lualib.h>
 import "C"
+import "unsafe"
 
 type lua_int = C.longlong
 type lua_num = C.double
@@ -58,8 +60,10 @@ type Lns_luaVM struct {
 }
 
 // luaL api ======================
-func luaL_loadstring( vm *C.lua_State, txt *C.char ) int {
-    return int(C.luaL_loadstring( vm, txt ))
+func luaL_loadstring( vm *C.lua_State, txt string ) int {
+    pTxt := C.CString( txt )
+    defer C.free( unsafe.Pointer( pTxt ) )
+    return int(C.luaL_loadstring( vm, pTxt ))
 }
 func luaL_newstate() *C.lua_State {
     return C.luaL_newstate()
@@ -110,8 +114,8 @@ func lua_pushnil(vm *C.lua_State) {
 func lua_pushnumber(vm *C.lua_State, val LnsReal ) {
     C.lua_pushnumber(vm, lua_num( val ) )
 }
-func lua_pushstring(vm *C.lua_State, pSym *C.char ) {
-    C.lua_pushstring(vm, pSym )
+func lua_pushlstring(vm *C.lua_State, pSym *C.char, len int ) {
+    C.lua_pushlstring(vm, pSym, C.ulong( len ) )
 }
 func lua_pushvalue(vm *C.lua_State, index int ) {
     C.lua_pushvalue(vm, C.int( index ))
@@ -135,7 +139,10 @@ func lua_tointegerx(vm *C.lua_State, index int) LnsInt {
     return LnsInt( C.lua_tointegerx(vm, C.int( index ), nil ) )
 }
 func lua_tolstring(vm *C.lua_State, index int ) string {
-    return C.GoString( C.lua_tolstring(vm, C.int( index ), nil ) )
+    var len C.ulong
+    pstr := C.lua_tolstring(vm, C.int( index ), &len )
+    str := C.GoStringN( pstr, C.int( len ) )
+    return str
 }
 func lua_tonumberx(vm *C.lua_State, index int) LnsReal {
     return LnsReal( C.lua_tonumberx(vm, C.int( index ), nil ) )

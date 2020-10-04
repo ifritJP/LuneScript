@@ -361,9 +361,9 @@ fn convFilter.type2gotype( typeInfo:&Ast.TypeInfo ) : str {
          return "*LnsMap";
       }
       case .Form {
-         if orgType == Ast.builtinTypeLoadedFunc {
-            return "*Lns_luaValue";
-         }
+         // if orgType == Ast.builtinTypeLoadedFunc {
+         //    return "*Lns_luaValue";
+         // }
          return "LnsForm";
       }
       case .Class {
@@ -728,6 +728,7 @@ fn convFilter.outputConvToForm( node:&Nodes.ExpCastNode ) mut {
 }
 
 
+
 pub override fn convFilter.processRoot(
    node: Nodes.RootNode, opt: Opt ) mut
 {
@@ -739,9 +740,16 @@ pub override fn convFilter.processRoot(
             switch key {
                case "str" {
                   foreach name in nameList {
-                     let fieldName = "str_%s" (name);
-                     let runtime = "Lns_getVM().String_%s" (name);
-                     itemStatList.insert( `{ builtinFuncs.,,,fieldName: ,,runtime, } );
+                     {
+                        let fieldName = "str_%s" (name);
+                        let runtime = "Lns_getVM().String_%s" (name);
+                        itemStatList.insert( `{ builtinFuncs.,,,fieldName: ,,runtime, } );
+                     }
+                     {
+                        let fieldName = "string_%s" (name);
+                        let runtime = "Lns_getVM().String_%s" (name);
+                        itemStatList.insert( `{ builtinFuncs.,,,fieldName: ,,runtime, } );
+                     }
                   }
                }
             }
@@ -755,9 +763,24 @@ pub override fn convFilter.processRoot(
    _makemap( { "str": [ "gsub", "find", "byte", "format", "rep", "gmatch",
                         "sub", "lower", "upper", "reverse" ] } );
 
-
    builtin2runtime[ builtinFuncs.lns_print ] = "Lns_print";
    builtin2runtime[ builtinFuncs.lns__load ] = "Lns_getVM().Load";
+
+   builtin2runtime[ builtinFuncs.string_dump ] = "Lns_getVM().String_dump";
+   
+   builtin2runtime[ builtinFuncs.io_open ] = "Lns_getVM().IO_open";
+   builtin2runtime[ builtinFuncs.io_popen ] = "Lns_getVM().IO_popen";
+   builtin2runtime[ builtinFuncs.package_searchpath ] = "Lns_getVM().Package_searchpath";
+   builtin2runtime[ builtinFuncs.os_clock ] = "Lns_getVM().OS_clock";
+   builtin2runtime[ builtinFuncs.os_exit ] = "Lns_getVM().OS_exit";
+   builtin2runtime[ builtinFuncs.os_remove ] = "Lns_getVM().OS_remove";
+   builtin2runtime[ builtinFuncs.os_date ] = "Lns_getVM().OS_date";
+   builtin2runtime[ builtinFuncs.os_time ] = "Lns_getVM().OS_time";
+   builtin2runtime[ builtinFuncs.os_difftime ] = "Lns_getVM().OS_difftime";
+   builtin2runtime[ builtinFuncs.os_rename ]= "Lns_getVM().OS_rename";
+   builtin2runtime[ builtinFuncs.math_random ] = "Lns_getVM().Math_random";
+   builtin2runtime[ builtinFuncs.math_randomseed ] = "Lns_getVM().Math_randomseed";
+   
    
    self.builtin2runtime = builtin2runtime;
 
@@ -2869,6 +2892,8 @@ alge CallKind {
    SortCall( itemType:&Ast.TypeInfo ),
    /** */
    RunLoaded,
+   /** */
+   BuiltinCall( packName:str, funcName:str ),
 }
 
 /**
@@ -2983,13 +3008,18 @@ pub fn convFilter.outputCallPrefix(
                }
                default {
                   let builtinFuncs = TransUnit.getBuiltinFunc();
-                  switch funcType {
-                     case builtinFuncs.list_sort, builtinFuncs.array_sort {
-                        callKind = .SortCall(
-                           prefixNode.$expType.$itemTypeInfoList[ 1 ] );
-                     }
+                  if! let runtime = self.builtin2runtime[ funcType ] {
+                     self.write ( runtime );
                   }
-                  self.write( ".%s"( self.getSymbolSym( funcSymbol ) ) );
+                  else {
+                     switch funcType {
+                        case builtinFuncs.list_sort, builtinFuncs.array_sort {
+                           callKind = .SortCall(
+                              prefixNode.$expType.$itemTypeInfoList[ 1 ] );
+                        }
+                     }
+                     self.write( ".%s"( self.getSymbolSym( funcSymbol ) ) );
+                  }
                }
             }
          } else {
@@ -3061,10 +3091,10 @@ pub override fn convFilter.processExpCall(
                   filter( node.$func, self, node );
                   callKind = .FormCall;
                }
-               case Ast.builtinTypeLoadedFunc {
-                  self.write( "Lns_getVM().RunLoadedfunc" );
-                  callKind = .RunLoaded;
-               }
+               // case Ast.builtinTypeLoadedFunc {
+               //    self.write( "Lns_getVM().RunLoadedfunc" );
+               //    callKind = .RunLoaded;
+               // }
                default {
                   Util.err( "%s: not support -- %s:%d"
                      (__func__, funcType.getTxt(##), node.$pos.lineNo) );
@@ -3072,12 +3102,18 @@ pub override fn convFilter.processExpCall(
             }
          }
       } else {
-         filter( node.$func, self, node );
+         if funcType.$kind == .Ext {
+            self.write( "Lns_getVM().RunLoadedfunc" );
+            callKind = .RunLoaded;
+         } else {
+            filter( node.$func, self, node );
+         }
       }
    }
 
    self.write( "(" );
 
+   let mut closeFlag = false;
    match callKind {
       case .RuntimeCall(prefixNode) {
          filter( prefixNode, self, node.$func );
@@ -3094,10 +3130,16 @@ pub override fn convFilter.processExpCall(
          if not node.$argList {
             self.write( "[]LnsAny{}" );
          }
-         
       }
       case .SortCall( typeInfo ) {
          self.write( "%s, " (getLnsItemKind( typeInfo )) );
+      }
+      case .BuiltinCall( packName, funcname ) {
+         closeFlag = true;
+         self.write( '"%s", "%s"' (packName, funcname) );
+         if node.$argList {
+            self.write( ", []LnsAny{" );
+         }
       }
    }
 
@@ -3121,7 +3163,10 @@ pub override fn convFilter.processExpCall(
          funcType.$parentInfo.$itemTypeInfoList,
          fieldNode.$prefix.$expType.createAlt2typeMap( false ));
    }
-   
+
+   if closeFlag {
+      self.write( "}" );
+   }
    self.write( ")" );
 
 

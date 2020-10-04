@@ -1,8 +1,15 @@
-let txt = "a b c";
-let func:form, param, state = string.gmatch( txt, "[a-z]+" );
-print( func( param, state )** );
-print( func( param, state )** );
-print( func( param, state )** );
-apply val of string.gmatch( txt, "[a-z]+" ) {
-   print( val );
+// print( os.date(##) );
+// print( os.time(##) );
+// print( math.random(##) );
+// print( string.format( "%s = %s", "abcd", 123 ) );
+if! let luafn = _load( 'print( "hoge:" )' ## ) {
+   luafn(##);
+   let bin = string.dump( luafn ## );
+   print( bin );
+   let fn2, mess =  _load( bin ## );
+   when! fn2 {
+      fn2(##);
+   } else {
+      print( mess );
+   }
 }

@@ -6402,6 +6402,10 @@ function ExtTypeInfo:get_srcTypeInfo(  )
 
    return self
 end
+function ExtTypeInfo:get_nonnilableType(  )
+
+   return self
+end
 function ExtTypeInfo:get_nilable(  )
 
    return false
@@ -6495,10 +6499,6 @@ function ExtTypeInfo:get_mutMode( ... )
    return self.extedType:get_mutMode( ... )
 end
 
-function ExtTypeInfo:get_nonnilableType( ... )
-   return self.extedType:get_nonnilableType( ... )
-end
-
 function ExtTypeInfo:get_parentInfo( ... )
    return self.extedType:get_parentInfo( ... )
 end
@@ -6564,12 +6564,6 @@ local builtinTypeDDDLua = NormalTypeInfo.createDDD( _moduleObj.builtinTypeLua, t
 _moduleObj.builtinTypeDDDLua = builtinTypeDDDLua
 
 registBuiltin( "__LuaDDD", "__LuaDDD", TypeInfoKind.Ext, _moduleObj.builtinTypeDDDLua, _moduleObj.headTypeInfo, false )
-
-local builtinTypeLoadedFunc = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Form, _moduleObj.headTypeInfo, true, true, true, AccessMode.Pub, "__loadedfunc", nil, nil, {_moduleObj.builtinTypeDDDLua}, false )
-_moduleObj.builtinTypeLoadedFunc = builtinTypeLoadedFunc
-
-registBuiltin( "__loadedfunc", "__loadedfunc", TypeInfoKind.Ext, _moduleObj.builtinTypeLoadedFunc, _moduleObj.headTypeInfo, false )
-
 local AndExpTypeInfo = {}
 setmetatable( AndExpTypeInfo, { __index = TypeInfo } )
 _moduleObj.AndExpTypeInfo = AndExpTypeInfo
@@ -7840,7 +7834,7 @@ IdType.__allList[2] = IdType.Ext
 local function switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 6064, function (  )
+   Log.log( Log.Level.Trace, __func__, 6067, function (  )
    
       return "start"
    end )
@@ -7860,7 +7854,7 @@ local builtinTypeInfo2Map = typeInfo2Map:clone(  )
 local function pushProcessInfo( processInfo )
    local __func__ = '@lune.@base.@Ast.pushProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6076, function (  )
+   Log.log( Log.Level.Trace, __func__, 6079, function (  )
    
       return "start"
    end )
@@ -7895,7 +7889,7 @@ _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
    local __func__ = '@lune.@base.@Ast.popProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6102, function (  )
+   Log.log( Log.Level.Trace, __func__, 6105, function (  )
    
       return "start"
    end )

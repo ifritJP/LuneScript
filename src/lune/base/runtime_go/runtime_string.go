@@ -80,7 +80,7 @@ func (luaVM *Lns_luaVM) string_call_setup(
     callInfo.top = luaVM.string_static_call_setup( funcName )
 
     callInfo.string = C.CString( txt )
-    lua_pushstring( vm, callInfo.string )
+    lua_pushlstring( vm, callInfo.string, len( txt ) )
 
     //runtime.SetFinalizer( callInfo, func (obj *lns_callInfoString) { obj.end() } )
     
@@ -199,7 +199,7 @@ func (luaVM *Lns_luaVM) String_gmatch( txt string, pat string ) (LnsAny, LnsAny,
     return Lns_getFromMulti( ret, 0 ),Lns_getFromMulti( ret, 1 ),Lns_getFromMulti( ret, 2 )
 }
 
-func (luaVM *Lns_luaVM) String_dump( form *Lns_luaValue, flag bool ) string {
+func (luaVM *Lns_luaVM) String_dump( form *Lns_luaValue, flag LnsAny ) string {
 
     top := luaVM.string_static_call_setup( lns_c_ptr_dump )
 

@@ -3320,7 +3320,7 @@ pub class MacroEvalImp extend Nodes.MacroEval {
          Util.err( err );
       }
       when! chunk {
-         let mod = chunk();
+         let mod = chunk(##);
          if not mod {
             Util.err( "macro load error" );
          }

@@ -1731,7 +1731,7 @@ _DefBuiltinFuncType( [
          "require": { "arg": [ "str" ], "ret": ["stem!"] },
          "collectgarbage": { "arg": [ ], "ret": [] },
          "_fcall": { "arg": [ "form", "&..." ], "ret": [""] },
-         "_load": { "arg": [ "str", "stem!" ], "ret": ["__loadedfunc!", "str!"] },
+         "_load": { "arg": [ "str", "stem!" ], "ret": ["Luaval<form>!", "str!"] },
          "_kind": { "arg": [ "stem!" ], "ret":[ "int" ] },
       },
    },
@@ -1806,7 +1806,7 @@ _DefBuiltinFuncType( [
          "gmatch": { "arg": [ "str", "str" ], "ret": ["Luaval<form>", "stem!", "stem!"] },
          "gsub": { "arg": [ "str", "str", "str" ], "ret": ["str", "int"] },
          "sub": { "arg": [ "str", "int", "int!" ], "ret": ["str"] },
-         "dump": { "arg": [ "form", "bool!" ], "ret": ["str"] },
+         "dump": { "arg": [ "&Luaval<form>", "bool!" ], "ret": ["str"] },
          "lower": { "arg": [ "str" ], "ret": ["str"] },
          "upper": { "arg": [ "str" ], "ret": ["str"] },
          "reverse": { "arg": [ "str" ], "ret": ["str"] },
@@ -1857,7 +1857,7 @@ _DefBuiltinFuncType( [
       "math": {
          "__attrib": { "type": [ "module" ] },
          "random": { "arg": [ "int!", "int!" ], "ret": ["real"] },
-         "randomseed": { "arg": [ "int!" ], "ret": [] },
+         "randomseed": { "arg": [ "int" ], "ret": [] },
       }
    },
    {

@@ -4996,11 +4996,11 @@ pub let builtinTypeDDDLua:TypeInfo =
    NormalTypeInfo.createDDD( builtinTypeLua, true );
 registBuiltin( "__LuaDDD", "__LuaDDD", .Ext, builtinTypeDDDLua, headTypeInfo, false );
 
-pub let builtinTypeLoadedFunc = NormalTypeInfo.createFunc(
-   false, true, nil, .Form, headTypeInfo, true, true,
-   true, .Pub, "__loadedfunc", nil, nil, [ builtinTypeDDDLua ], false );
-registBuiltin( "__loadedfunc", "__loadedfunc", .Ext,
-               builtinTypeLoadedFunc, headTypeInfo, false );
+// pub let builtinTypeLoadedFunc = NormalTypeInfo.createFunc(
+//    false, true, nil, .Form, headTypeInfo, true, true,
+//    true, .Pub, "__loadedfunc", nil, [builtinTypeDDD], [ builtinTypeDDDLua ], false );
+// registBuiltin( "__loadedfunc", "__loadedfunc", .Ext,
+//                builtinTypeLoadedFunc, headTypeInfo, false );
 
 
 /**

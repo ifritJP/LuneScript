@@ -72,7 +72,7 @@ fn searchpath51( mod:str, pathPattern:str ) : str! {
 
 pub fn getLoadedMod() : &Map<str,stem>
 {
-   let loaded = _load( "return package.loaded"## )$();
+   let loaded = _load( "return package.loaded"## )$(##);
    return (unwrap loaded)@@Map<str,stem>;
 }
 
@@ -114,7 +114,7 @@ pub fn getLuaVersion():str {
    when! lua_version {
       return lua_version;
    }
-   let loaded = _load( "return _VERSION"## )$();
+   let loaded = _load( "return _VERSION"## )$(##);
    let version = (unwrap loaded)@@str;
    lua_version = version;
    return version;

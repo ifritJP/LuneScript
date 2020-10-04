@@ -66,9 +66,7 @@ func Lns_runLuaScript( script string ) {
     defer lua_close( vm )
     luaL_openlibs( vm )
 
-    block := C.CString( script )
-    defer C.free( unsafe.Pointer( block ) )
-    luaL_loadstring( vm, block )
+    luaL_loadstring( vm, script )
     lua_pcallk( vm, 0, cLUA_MULTRET )
 }
 
@@ -81,9 +79,9 @@ func (self *lns_pushedString) free() {
 }
 
 func (luaVM *Lns_luaVM) pushStr( txt string ) *lns_pushedString {
-    pStr := C.CString( txt )
-    lua_pushstring( luaVM.vm, pStr )
-    ret := &lns_pushedString{ pStr }    
+    pStr := C.CBytes([]byte(txt))
+    lua_pushlstring( luaVM.vm, (*C.char)(pStr), len( txt ) )
+    ret := &lns_pushedString{ (*C.char)(pStr) }
     //runtime.SetFinalizer( ret, func (obj *lns_pushedString) { obj.free() } )
     return ret
 }
@@ -248,3 +246,42 @@ func (luaValue *Lns_luaValue) pushValFromGlobalValMap() {
     lua_pop( vm, 1 )
 }
 
+
+func (luaVM *Lns_luaVM) CallStatic(
+    packName string, funcname string, args[] LnsAny ) []LnsAny {
+    
+    vm := luaVM.vm
+    top := lua_gettop( vm )
+    defer lua_settop( vm, top )
+
+    var argPos int
+    if packName == "" {
+        argPos = 1
+        pFuncname := C.CString( funcname )
+        defer C.free( unsafe.Pointer( pFuncname ) )
+        lua_getglobal( vm, pFuncname )
+    } else {
+        argPos = 2
+        pPackName := C.CString( packName )
+        defer C.free( unsafe.Pointer( pPackName ) )
+        pFuncname := C.CString( funcname )
+        defer C.free( unsafe.Pointer( pFuncname ) )
+        lua_getglobal( vm, pPackName )
+        lua_getfield(vm, -1, pFuncname )
+    }
+
+    
+    for _, val := range( args ) {
+        defer luaVM.pushAny( val ).free()
+    }
+    if lua_pcallk( vm, len( args ), cLUA_MULTRET ) != cLUA_OK {
+        log.Fatalf( lua_tolstring( vm, -1 ) )
+    }
+    ret := []LnsAny{}
+    nowTop := lua_gettop( vm )
+    for index := top + argPos; index <= nowTop; index++ {
+        ret = append( ret, luaVM.setupFromStack( index ) )
+    }
+    
+    return ret
+}

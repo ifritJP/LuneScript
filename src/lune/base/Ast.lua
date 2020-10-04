@@ -6564,12 +6564,6 @@ local builtinTypeDDDLua = NormalTypeInfo.createDDD( _moduleObj.builtinTypeLua, t
 _moduleObj.builtinTypeDDDLua = builtinTypeDDDLua
 
 registBuiltin( "__LuaDDD", "__LuaDDD", TypeInfoKind.Ext, _moduleObj.builtinTypeDDDLua, _moduleObj.headTypeInfo, false )
-
-local builtinTypeLoadedFunc = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Form, _moduleObj.headTypeInfo, true, true, true, AccessMode.Pub, "__loadedfunc", nil, nil, {_moduleObj.builtinTypeDDDLua}, false )
-_moduleObj.builtinTypeLoadedFunc = builtinTypeLoadedFunc
-
-registBuiltin( "__loadedfunc", "__loadedfunc", TypeInfoKind.Ext, _moduleObj.builtinTypeLoadedFunc, _moduleObj.headTypeInfo, false )
-
 local AndExpTypeInfo = {}
 setmetatable( AndExpTypeInfo, { __index = TypeInfo } )
 _moduleObj.AndExpTypeInfo = AndExpTypeInfo
