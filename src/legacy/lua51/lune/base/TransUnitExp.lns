@@ -2094,10 +2094,6 @@ fn TransUnit.analyzeExpField(
 
    let mut typeInfo:&Ast.TypeInfo = Ast.builtinTypeStem_;
    let mut prefixExpType = prefixExp.$expType;
-
-   self.checkFieldComp(
-      mode == .Get or mode == .GetNil, token, prefixExp );
-   
    if accessNil {
       if prefixExpType.$nilable {
          // nil 条件演算で、 prefixExpType が nilable ならば、
@@ -2114,6 +2110,13 @@ fn TransUnit.analyzeExpField(
          accessNil = false;
       }
    }
+   if! let extType = prefixExpType@@@Ast.ExtTypeInfo {
+      prefixExpType = extType.$extedType;
+   }
+
+   self.checkFieldComp(
+      mode == .Get or mode == .GetNil, token, prefixExp );
+   
    if accessNil {
       self.helperInfo.useNilAccess = true;
       switch prefixExpType.get_kind() {

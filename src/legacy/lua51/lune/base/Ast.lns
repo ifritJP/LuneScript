@@ -4892,6 +4892,7 @@ pub let builtinTypeAbbrNone:TypeInfo =
 
 pub class ExtTypeInfo extend TypeInfo {
    pri let typeId: int { pub };
+   /** 対応する LuneScript のタイプ。 必ず no-nolable になる。 */
    pri let extedType: &TypeInfo { pub };
    pri let nilableTypeInfo: &TypeInfo { pub };
 
@@ -4986,7 +4987,11 @@ pub class ExtTypeInfo extend TypeInfo {
 pub static fn NormalTypeInfo.createLuaval( luneType:&TypeInfo ) : &TypeInfo
 {
    idProv.increment();
-   return new ExtTypeInfo( getCurProcessInfo(), idProv, luneType );
+   let extType = new ExtTypeInfo( getCurProcessInfo(), idProv, luneType.$nonnilableType );
+   if luneType.$nilable {
+      return extType.$nilableTypeInfo;
+   }
+   return extType;
 }
 
 pub let builtinTypeLua:TypeInfo =

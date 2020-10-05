@@ -1772,8 +1772,8 @@ _DefBuiltinFuncType( [
          "stdin": { "type": [ "var" ], "typeInfo": [ "iStream" ] },
          "stdout": { "type": [ "var" ], "typeInfo": [ "oStream" ] },
          "stderr": { "type": [ "var" ], "typeInfo": [ "oStream" ] },
-         "open": { "arg": [ "str", "str!" ], "ret": ["luaStream!"] },
-         "popen": { "arg": [ "str" ], "ret": ["luaStream!"] },
+         "open": { "arg": [ "str", "str!" ], "ret": ["Luaval<luaStream>!"] },
+         "popen": { "arg": [ "str" ], "ret": ["Luaval<luaStream>!"] },
       },
    },
    {

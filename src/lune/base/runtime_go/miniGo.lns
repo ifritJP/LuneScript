@@ -1,15 +1,14 @@
-// print( os.date(##) );
-// print( os.time(##) );
-// print( math.random(##) );
-// print( string.format( "%s = %s", "abcd", 123 ) );
-if! let luafn = _load( 'print( "hoge:" )' ## ) {
-   luafn(##);
-   let bin = string.dump( luafn ## );
-   print( bin );
-   let fn2, mess =  _load( bin ## );
-   when! fn2 {
-      fn2(##);
-   } else {
-      print( mess );
+macro _test() {
+   fn func( val:Test ) {
+      print( val == .Val1 );
    }
+   func( .Val1 );
+   func( .Val2 );
+}
+{
+   enum Test {
+      Val1,
+      Val2,
+   }
+   _test();
 }

@@ -876,7 +876,9 @@ pub override fn convFilter.processRoot(
    foreach child in node.$children {
       if not ignoreNodeInInnerBlockSet.has( child.$kind ) {
          filter( child, self, node );
-         self.writeln( "" );
+         if child.$kind ~= Nodes.NodeKind.$BlankLine {
+            self.writeln( "" );
+         }
       }
    }
 
@@ -905,14 +907,16 @@ pub override fn convFilter.processBlockSub(
    foreach child in node.$stmtList {
       if not ignoreNodeInInnerBlockSet.has( child.$kind ) {
          filter( child, self, node );
-         self.writeln( "" );
+         if child.$kind ~= Nodes.NodeKind.$BlankLine {
+            self.writeln( "" );
+         }
       }
    }
    self.popIndent();
    self.popProcessMode();
 
    if node.$blockKind == .Block {
-      self.write( "}" );
+      self.writeln( "}" );
    }
 }
 
@@ -1121,7 +1125,12 @@ pub override fn convFilter.processExpMacroExp(
    node: Nodes.ExpMacroExpNode, opt: Opt ) mut
 {
    foreach stmt in node.$stmtList {
-      filter( stmt, self, node );
+      if not ignoreNodeInInnerBlockSet.has( stmt.$kind ) {
+         filter( stmt, self, node );
+         if stmt.$kind ~= Nodes.NodeKind.$BlankLine {
+            self.writeln( "" );
+         }
+      }
    }
 }
 
@@ -1778,7 +1787,7 @@ pub override fn convFilter.processIf(
          }
       }
    }
-   self.write( "}" );
+   self.writeln( "}" );
 }
 
 pub override fn convFilter.processSwitch(
@@ -2894,6 +2903,8 @@ alge CallKind {
    RunLoaded,
    /** */
    BuiltinCall( packName:str, funcName:str ),
+   /** */
+   LuaCall,
 }
 
 /**
@@ -2967,8 +2978,9 @@ pub fn convFilter.outputCallPrefix(
          }
       }
 
-      if Ast.isBuiltin( funcType.$typeId ) and
-         prefixNode.$expType.$nonnilableType == Ast.builtinTypeString
+      let prefixType = prefixNode.$expType.$nonnilableType;
+      
+      if prefixType == Ast.builtinTypeString
       {
          if node.hasNilAccess() {
             Util.err( "not support nilAccName" );
@@ -2991,52 +3003,55 @@ pub fn convFilter.outputCallPrefix(
 
          processNilAcc( prefixNode );
 
-         let prefixKind;
-         if prefixNode.$expType.$kind == .Alternate and
-            prefixNode.$expType.hasBase()
-         {
-            prefixKind = prefixNode.$expType.$baseTypeInfo.$kind;
+         if prefixType.$kind == .Ext {
+            self.write( '.CallMethod( "%s", Lns_2DDD' (funcSymbol.$name) );
+            callKind = .LuaCall;
          } else {
-            prefixKind = prefixNode.$expType.$kind;
-         }
-         
-         if Ast.isBuiltin( funcType.$typeId ) {
-            switch prefixKind {
-               case .Class {
-                  // class は継承があるので FP 経由で実行する
-                  self.write( ".FP.%s"( self.getSymbolSym( funcSymbol ) ) );
-               }
-               default {
-                  let builtinFuncs = TransUnit.getBuiltinFunc();
-                  if! let runtime = self.builtin2runtime[ funcType ] {
-                     self.write ( runtime );
-                  }
-                  else {
-                     switch funcType {
-                        case builtinFuncs.list_sort, builtinFuncs.array_sort {
-                           callKind = .SortCall(
-                              prefixNode.$expType.$itemTypeInfoList[ 1 ] );
-                        }
-                     }
-                     self.write( ".%s"( self.getSymbolSym( funcSymbol ) ) );
-                  }
-               }
+            let prefixKind;
+            if prefixType.$kind == .Alternate and prefixType.hasBase()
+            {
+               prefixKind = prefixType.$baseTypeInfo.$kind;
+            } else {
+               prefixKind = prefixType.$kind;
             }
-         } else {
-            switch funcType.$kind {
-               case .Method {
-                  switch prefixKind {
-                     case .Class {
-                        // class は継承があるので FP 経由で実行する
-                        self.write( ".FP.%s"( self.getSymbolSym( funcSymbol ) ) );
+            
+            if Ast.isBuiltin( funcType.$typeId ) {
+               switch prefixKind {
+                  case .Class {
+                     // class は継承があるので FP 経由で実行する
+                     self.write( ".FP.%s"( self.getSymbolSym( funcSymbol ) ) );
+                  }
+                  default {
+                     let builtinFuncs = TransUnit.getBuiltinFunc();
+                     if! let runtime = self.builtin2runtime[ funcType ] {
+                        self.write ( runtime );
                      }
-                     default {
+                     else {
+                        switch funcType {
+                           case builtinFuncs.list_sort, builtinFuncs.array_sort {
+                              callKind = .SortCall( prefixType.$itemTypeInfoList[ 1 ] );
+                           }
+                        }
                         self.write( ".%s"( self.getSymbolSym( funcSymbol ) ) );
                      }
                   }
                }
-               default {
-                  self.write( self.getSymbolSym( funcSymbol ) );
+            } else {
+               switch funcType.$kind {
+                  case .Method {
+                     switch prefixKind {
+                        case .Class {
+                           // class は継承があるので FP 経由で実行する
+                           self.write( ".FP.%s"( self.getSymbolSym( funcSymbol ) ) );
+                        }
+                        default {
+                           self.write( ".%s"( self.getSymbolSym( funcSymbol ) ) );
+                        }
+                     }
+                  }
+                  default {
+                     self.write( self.getSymbolSym( funcSymbol ) );
+                  }
                }
             }
          }
@@ -3113,7 +3128,7 @@ pub override fn convFilter.processExpCall(
 
    self.write( "(" );
 
-   let mut closeFlag = false;
+   let mut closeTxt:str! = nil;
    match callKind {
       case .RuntimeCall(prefixNode) {
          filter( prefixNode, self, node.$func );
@@ -3135,11 +3150,14 @@ pub override fn convFilter.processExpCall(
          self.write( "%s, " (getLnsItemKind( typeInfo )) );
       }
       case .BuiltinCall( packName, funcname ) {
-         closeFlag = true;
+         closeTxt = "}";
          self.write( '"%s", "%s"' (packName, funcname) );
          if node.$argList {
             self.write( ", []LnsAny{" );
          }
+      }
+      case .LuaCall {
+         closeTxt = ")";
       }
    }
 
@@ -3164,10 +3182,18 @@ pub override fn convFilter.processExpCall(
          fieldNode.$prefix.$expType.createAlt2typeMap( false ));
    }
 
-   if closeFlag {
-      self.write( "}" );
+   when! closeTxt {
+      self.write( closeTxt );
    }
    self.write( ")" );
+   if callKind == .LuaCall {
+      if #funcType.$retTypeInfoList == 1 {
+         self.write( "[0]" );
+         self.outputAny2Type( funcType.$retTypeInfoList[1] );
+      } elseif #funcType.$retTypeInfoList > 1 {
+         Util.err( "%s: not support" ( __func__ )  );
+      }
+   }
 
 
    if retGenerics {

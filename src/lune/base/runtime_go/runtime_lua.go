@@ -272,7 +272,8 @@ func (luaVM *Lns_luaVM) CallStatic(
 
     
     for _, val := range( args ) {
-        defer luaVM.pushAny( val ).free()
+        pVal := luaVM.pushAny( val )
+        defer pVal.free()
     }
     if lua_pcallk( vm, len( args ), cLUA_MULTRET ) != cLUA_OK {
         log.Fatalf( lua_tolstring( vm, -1 ) )
@@ -280,6 +281,36 @@ func (luaVM *Lns_luaVM) CallStatic(
     ret := []LnsAny{}
     nowTop := lua_gettop( vm )
     for index := top + argPos; index <= nowTop; index++ {
+        ret = append( ret, luaVM.setupFromStack( index ) )
+    }
+    
+    return ret
+}
+
+func (obj *Lns_luaValue) CallMethod( funcname string, args[] LnsAny ) []LnsAny {
+    luaVM := obj.luaVM
+    
+    vm := luaVM.vm
+    top := lua_gettop( vm )
+    defer lua_settop( vm, top )
+
+    pFuncname := C.CString( funcname )
+    defer C.free( unsafe.Pointer( pFuncname ) )
+
+    obj.pushValFromGlobalValMap() // obj を push
+    lua_getfield(vm, -1, pFuncname ) // obj の pFuncname のメソッドを取得
+    obj.pushValFromGlobalValMap() // obj を引数に push
+    
+    for _, val := range( args ) {
+        pVal := luaVM.pushAny( val ) // arg を push
+        defer pVal.free()
+    }
+    if lua_pcallk( vm, len( args ) + 1, cLUA_MULTRET ) != cLUA_OK {
+        log.Fatalf( lua_tolstring( vm, -1 ) )
+    }
+    ret := []LnsAny{}
+    nowTop := lua_gettop( vm )
+    for index := top + 2; index <= nowTop; index++ {
         ret = append( ret, luaVM.setupFromStack( index ) )
     }
     

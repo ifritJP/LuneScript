@@ -6552,7 +6552,12 @@ end
 function NormalTypeInfo.createLuaval( luneType )
 
    idProv:increment(  )
-   return ExtTypeInfo.new(getCurProcessInfo(  ), idProv, luneType)
+   local extType = ExtTypeInfo.new(getCurProcessInfo(  ), idProv, luneType:get_nonnilableType())
+   if luneType:get_nilable() then
+      return extType:get_nilableTypeInfo()
+   end
+   
+   return extType
 end
 
 
@@ -7834,7 +7839,7 @@ IdType.__allList[2] = IdType.Ext
 local function switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 6067, function (  )
+   Log.log( Log.Level.Trace, __func__, 6072, function (  )
    
       return "start"
    end )
@@ -7854,7 +7859,7 @@ local builtinTypeInfo2Map = typeInfo2Map:clone(  )
 local function pushProcessInfo( processInfo )
    local __func__ = '@lune.@base.@Ast.pushProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6079, function (  )
+   Log.log( Log.Level.Trace, __func__, 6084, function (  )
    
       return "start"
    end )
@@ -7889,7 +7894,7 @@ _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
    local __func__ = '@lune.@base.@Ast.popProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6105, function (  )
+   Log.log( Log.Level.Trace, __func__, 6110, function (  )
    
       return "start"
    end )

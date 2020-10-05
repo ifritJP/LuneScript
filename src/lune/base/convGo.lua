@@ -1224,7 +1224,10 @@ function convFilter:processRoot( node, opt )
    for __index, child in ipairs( node:get_children() ) do
       if not _lune._Set_has(ignoreNodeInInnerBlockSet, child:get_kind() ) then
          filter( child, self, node )
-         self:writeln( "" )
+         if child:get_kind() ~= Nodes.NodeKind.get_BlankLine() then
+            self:writeln( "" )
+         end
+         
       end
       
    end
@@ -1255,7 +1258,10 @@ function convFilter:processBlockSub( node, opt )
    for __index, child in ipairs( node:get_stmtList() ) do
       if not _lune._Set_has(ignoreNodeInInnerBlockSet, child:get_kind() ) then
          filter( child, self, node )
-         self:writeln( "" )
+         if child:get_kind() ~= Nodes.NodeKind.get_BlankLine() then
+            self:writeln( "" )
+         end
+         
       end
       
    end
@@ -1264,7 +1270,7 @@ function convFilter:processBlockSub( node, opt )
    self:popProcessMode(  )
    
    if node:get_blockKind() == Nodes.BlockKind.Block then
-      self:write( "}" )
+      self:writeln( "}" )
    end
    
 end
@@ -1502,7 +1508,14 @@ end
 function convFilter:processExpMacroExp( node, opt )
 
    for __index, stmt in ipairs( node:get_stmtList() ) do
-      filter( stmt, self, node )
+      if not _lune._Set_has(ignoreNodeInInnerBlockSet, stmt:get_kind() ) then
+         filter( stmt, self, node )
+         if stmt:get_kind() ~= Nodes.NodeKind.get_BlankLine() then
+            self:writeln( "" )
+         end
+         
+      end
+      
    end
    
 end
@@ -2316,7 +2329,7 @@ function convFilter:processIf( node, opt )
       
    end
    
-   self:write( "}" )
+   self:writeln( "}" )
 end
 
 
@@ -3607,6 +3620,8 @@ CallKind.BuiltinCall = { "BuiltinCall", {{ func=_lune._toStr, nilable=false, chi
 CallKind._name2Val["BuiltinCall"] = CallKind.BuiltinCall
 CallKind.FormCall = { "FormCall"}
 CallKind._name2Val["FormCall"] = CallKind.FormCall
+CallKind.LuaCall = { "LuaCall"}
+CallKind._name2Val["LuaCall"] = CallKind.LuaCall
 CallKind.Normal = { "Normal"}
 CallKind._name2Val["Normal"] = CallKind.Normal
 CallKind.RunLoaded = { "RunLoaded"}
@@ -3637,7 +3652,7 @@ function convFilter:outputCallPrefix( callId, node, prefixNode, funcSymbol )
             
                if retNum <= MaxNilAccNum then
                   local anys = "LnsAny"
-                  for _6082 = 2, retNum do
+                  for _6083 = 2, retNum do
                      anys = string.format( "%s,LnsAny", anys)
                   end
                   
@@ -3645,7 +3660,7 @@ function convFilter:outputCallPrefix( callId, node, prefixNode, funcSymbol )
                else
                 
                   local args = "LnsAny"
-                  for _6084 = 2, retNum do
+                  for _6085 = 2, retNum do
                      args = string.format( "%s,LnsAny", args)
                   end
                   
@@ -3676,7 +3691,9 @@ function convFilter:outputCallPrefix( callId, node, prefixNode, funcSymbol )
       end
       
       
-      if Ast.isBuiltin( funcType:get_typeId() ) and prefixNode:get_expType():get_nonnilableType() == Ast.builtinTypeString then
+      local prefixType = prefixNode:get_expType():get_nonnilableType()
+      
+      if prefixType == Ast.builtinTypeString then
          if node:hasNilAccess(  ) then
             Util.err( "not support nilAccName" )
          end
@@ -3707,62 +3724,69 @@ function convFilter:outputCallPrefix( callId, node, prefixNode, funcSymbol )
          
          processNilAcc( prefixNode )
          
-         local prefixKind
-         
-         if prefixNode:get_expType():get_kind() == Ast.TypeInfoKind.Alternate and prefixNode:get_expType():hasBase(  ) then
-            prefixKind = prefixNode:get_expType():get_baseTypeInfo():get_kind()
+         if prefixType:get_kind() == Ast.TypeInfoKind.Ext then
+            self:write( string.format( '.CallMethod( "%s", Lns_2DDD', funcSymbol:get_name()) )
+            callKind = _lune.newAlge( CallKind.LuaCall)
          else
           
-            prefixKind = prefixNode:get_expType():get_kind()
-         end
-         
-         
-         if Ast.isBuiltin( funcType:get_typeId() ) then
-            do
-               local _switchExp = prefixKind
-               if _switchExp == Ast.TypeInfoKind.Class then
-                  self:write( string.format( ".FP.%s", self:getSymbolSym( funcSymbol )) )
-               else 
-                  
-                     local builtinFuncs = TransUnit.getBuiltinFunc(  )
-                     do
-                        local runtime = self.builtin2runtime[funcType]
-                        if runtime ~= nil then
-                           self:write( runtime )
-                        else
-                           do
-                              local _switchExp = funcType
-                              if _switchExp == builtinFuncs.list_sort or _switchExp == builtinFuncs.array_sort then
-                                 callKind = _lune.newAlge( CallKind.SortCall, {prefixNode:get_expType():get_itemTypeInfoList()[1]})
+            local prefixKind
+            
+            if prefixType:get_kind() == Ast.TypeInfoKind.Alternate and prefixType:hasBase(  ) then
+               prefixKind = prefixType:get_baseTypeInfo():get_kind()
+            else
+             
+               prefixKind = prefixType:get_kind()
+            end
+            
+            
+            if Ast.isBuiltin( funcType:get_typeId() ) then
+               do
+                  local _switchExp = prefixKind
+                  if _switchExp == Ast.TypeInfoKind.Class then
+                     self:write( string.format( ".FP.%s", self:getSymbolSym( funcSymbol )) )
+                  else 
+                     
+                        local builtinFuncs = TransUnit.getBuiltinFunc(  )
+                        do
+                           local runtime = self.builtin2runtime[funcType]
+                           if runtime ~= nil then
+                              self:write( runtime )
+                           else
+                              do
+                                 local _switchExp = funcType
+                                 if _switchExp == builtinFuncs.list_sort or _switchExp == builtinFuncs.array_sort then
+                                    callKind = _lune.newAlge( CallKind.SortCall, {prefixType:get_itemTypeInfoList()[1]})
+                                 end
                               end
+                              
+                              self:write( string.format( ".%s", self:getSymbolSym( funcSymbol )) )
                            end
+                        end
+                        
+                  end
+               end
+               
+            else
+             
+               do
+                  local _switchExp = funcType:get_kind()
+                  if _switchExp == Ast.TypeInfoKind.Method then
+                     do
+                        local _switchExp = prefixKind
+                        if _switchExp == Ast.TypeInfoKind.Class then
+                           self:write( string.format( ".FP.%s", self:getSymbolSym( funcSymbol )) )
+                        else 
                            
-                           self:write( string.format( ".%s", self:getSymbolSym( funcSymbol )) )
+                              self:write( string.format( ".%s", self:getSymbolSym( funcSymbol )) )
                         end
                      end
                      
-               end
-            end
-            
-         else
-          
-            do
-               local _switchExp = funcType:get_kind()
-               if _switchExp == Ast.TypeInfoKind.Method then
-                  do
-                     local _switchExp = prefixKind
-                     if _switchExp == Ast.TypeInfoKind.Class then
-                        self:write( string.format( ".FP.%s", self:getSymbolSym( funcSymbol )) )
-                     else 
-                        
-                           self:write( string.format( ".%s", self:getSymbolSym( funcSymbol )) )
-                     end
+                  else 
+                     
+                        self:write( self:getSymbolSym( funcSymbol ) )
                   end
-                  
-               else 
-                  
-                     self:write( self:getSymbolSym( funcSymbol ) )
                end
+               
             end
             
          end
@@ -3850,7 +3874,7 @@ function convFilter:processExpCall( node, opt )
    
    self:write( "(" )
    
-   local closeFlag = false
+   local closeTxt = nil
    do
       local _matchExp = callKind
       if _matchExp[1] == CallKind.RuntimeCall[1] then
@@ -3880,12 +3904,15 @@ function convFilter:processExpCall( node, opt )
          local packName = _matchExp[2][1]
          local funcname = _matchExp[2][2]
       
-         closeFlag = true
+         closeTxt = "}"
          self:write( string.format( '"%s", "%s"', packName, funcname) )
          if node:get_argList() then
             self:write( ", []LnsAny{" )
          end
          
+      elseif _matchExp[1] == CallKind.LuaCall[1] then
+      
+         closeTxt = ")"
       end
    end
    
@@ -3912,11 +3939,21 @@ function convFilter:processExpCall( node, opt )
    end
    
    
-   if closeFlag then
-      self:write( "}" )
+   if closeTxt ~= nil then
+      self:write( closeTxt )
    end
    
    self:write( ")" )
+   if callKind == _lune.newAlge( CallKind.LuaCall) then
+      if #funcType:get_retTypeInfoList() == 1 then
+         self:write( "[0]" )
+         self:outputAny2Type( funcType:get_retTypeInfoList()[1] )
+      elseif #funcType:get_retTypeInfoList() > 1 then
+         Util.err( string.format( "%s: not support", __func__) )
+      end
+      
+   end
+   
    
    if retGenerics then
       if #funcType:get_retTypeInfoList() == 1 then
@@ -4440,7 +4477,7 @@ function convFilter:processRefField( node, opt )
    end
    
    
-   for _6217 = 1, openParenNum do
+   for _6220 = 1, openParenNum do
       self:write( ")" )
    end
    

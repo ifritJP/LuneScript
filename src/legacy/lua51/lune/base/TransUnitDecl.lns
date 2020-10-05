@@ -3509,11 +3509,12 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
       self.pushback();
       expList = self.analyzeExpList( false, false ## );
       let exp = expList.$expList[ 1 ];
-      if exp.$expType.$nilable {
-         typeInfoList.insert( exp.$expType.$nonnilableType );
+      let expType = exp.$expType;
+      if expType.$nilable {
+         typeInfoList.insert( expType.$nonnilableType );
       }
       else {
-         typeInfoList.insert( exp.$expType );
+         typeInfoList.insert( expType );
       }
       varNameList.insert(
          new Parser.Token( .Symb, "_exp", firstToken.pos, false, nil ) );

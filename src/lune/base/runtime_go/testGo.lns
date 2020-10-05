@@ -640,3 +640,23 @@ _section();
       let val = func();
    }
 }
+_section();
+{
+   print( string.format( "%s = %s", "abcd", 123 ) );
+   if! let luafn = _load( 'print( "hoge:" )' ## ) {
+      luafn(##);
+      let bin = string.dump( luafn ## );
+      let fn2, mess =  _load( bin ## );
+      when! fn2 {
+         fn2(##);
+      } else {
+         print( mess );
+      }
+   }
+}
+_section();
+{
+   if! let mut fileObj = io.open( "miniGo.lns" ##) {
+      print( fileObj.read( 100 ) );
+   }
+}
