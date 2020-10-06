@@ -786,6 +786,13 @@ pub override fn FormatterFilter.processExpList(
       filter( exp, self, opt.nextOpt( node ) );
    }	
 };
+
+pub override fn FormatterFilter.processExpMRet(
+   node: &Nodes.ExpMRetNode, opt:Opt ) mut
+{
+   filter( node.$mRet, self, opt.nextOpt( node ) );
+};
+
 pub override fn FormatterFilter.processExpAccessMRet(
    node: &Nodes.ExpAccessMRetNode, opt:Opt ) mut
 

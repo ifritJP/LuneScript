@@ -641,6 +641,15 @@ macro _declNodeClass(
 }
 
 _declNodeClass( "None", Node, false, false, true, []);
+
+
+/** AST からソースに変換する際に、動的にノードを生成する際に使用する */
+_declNodeClass( "ConvStat", Node, false, false, false,
+                [ { "txt": "str" } ]
+);
+
+
+
 _declNodeClass( "BlankLine", Node, false, false, true,
                 [ { "lineNum": "int" } ]
 );
@@ -980,9 +989,16 @@ pub override fn ExpListNode.setLValue() mut {
       expNode.isLValue = true;
    }
 }
-
-
-
+pub fn ExpListNode.getExpTypeAt( index:int ) : &Ast.TypeInfo {
+   if index > #self.$expTypeList {
+      let lastExpType = self.$expTypeList[ #self.$expTypeList ];
+      if! let dddTypeInfo = lastExpType@@@Ast.DDDTypeInfo {
+         return dddTypeInfo.$typeInfo.$nilableTypeInfo;
+      }
+      return Ast.builtinTypeNil;
+   }
+   return self.$expTypeList[ index ];
+}
 
 pub class CaseInfo {
    pri let expList: ExpListNode { pub };
@@ -1296,6 +1312,11 @@ pub override fn ExpCallNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind 
    }
    return .None;
 }
+
+// 多値戻り値の先頭
+_declNodeClass( "ExpMRet", Node, false, true, false,
+                [ { "mRet": "&Node" } ]
+);
 
 // 多値戻り値の index 番目 ( index >= 2 )
 _declNodeClass( "ExpAccessMRet", Node, false, true, false,
@@ -1677,6 +1698,37 @@ _declNodeClass( "DeclClass", Node, false, false, true,
                    */                 
                   { "outerMethodSet": "Set<str>" } ]
 );
+
+/**
+このクラスで定義しているメソッド名のセットを返す。 advertise を除く。
+*/
+pub fn DeclClassNode.createMethodNameSetWithoutAdv() : &Set<str> {
+   let mut methodNameSet: Set<str> = (@);
+   if self.$expType.$kind ~= .IF {
+      foreach field in self.$fieldList {
+         if field.$kind == NodeKind.$DeclConstr {
+            methodNameSet.add( "__init" );
+         }
+         if field.$kind == NodeKind.$DeclDestr {
+            methodNameSet.add( "__free" );
+         }
+         if! let methodNode = field@@@DeclMethodNode {
+            let methodNameToken = unwrap methodNode.$declInfo.$name;
+            methodNameSet.add( methodNameToken.txt );
+         }
+      }
+      foreach memberNode in self.$memberList {
+         let memberName = memberNode.$name.txt;
+         if memberNode.$getterMode ~= .None {
+            methodNameSet.add( "get_" .. memberName );
+         }
+         if memberNode.$setterMode ~= .None {
+            methodNameSet.add( "set_" .. memberName );
+         }
+      }
+   }
+   return methodNameSet;
+}
 
 pub fn DeclClassNode.setHasOldCtor() mut {
    self.hasOldCtor = true;
@@ -2551,3 +2603,18 @@ macro _declNodeKindEnum() {
    }
 }
 _declNodeKindEnum();
+
+
+pub fn getUnwraped( node:&Node ) : &Node {
+   if! let work = node@@@ExpMRetNode {
+      return getUnwraped( work.$mRet );
+   }
+   return node;
+}
+
+pub fn getCastUnwraped( node:&Node ) : &Node {
+   if! let work = node@@@ExpCastNode {
+      return getUnwraped( work.$exp );
+   }
+   return node;
+}

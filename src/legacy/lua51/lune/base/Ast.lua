@@ -1104,6 +1104,10 @@ function TypeInfo:__init(scope, processInfo)
    self.processInfo = processInfo
    
 end
+function TypeInfo:get_extedType(  )
+
+   return self
+end
 function TypeInfo.getModulePath( fullname )
 
    return (fullname:gsub( "@", "" ) )
@@ -1946,6 +1950,10 @@ end
 
 function AliasTypeInfo:get_display_stirng_with( ... )
    return self.aliasSrcTypeInfo:get_display_stirng_with( ... )
+end
+
+function AliasTypeInfo:get_extedType( ... )
+   return self.aliasSrcTypeInfo:get_extedType( ... )
 end
 
 function AliasTypeInfo:get_genSrcTypeInfo( ... )
@@ -3102,6 +3110,10 @@ function NilableTypeInfo:get_children( ... )
    return self.nonnilableType:get_children( ... )
 end
 
+function NilableTypeInfo:get_extedType( ... )
+   return self.nonnilableType:get_extedType( ... )
+end
+
 function NilableTypeInfo:get_externalFlag( ... )
    return self.nonnilableType:get_externalFlag( ... )
 end
@@ -3607,6 +3619,10 @@ function BoxTypeInfo:get_children( ... )
    return self.boxingType:get_children( ... )
 end
 
+function BoxTypeInfo:get_extedType( ... )
+   return self.boxingType:get_extedType( ... )
+end
+
 function BoxTypeInfo:get_externalFlag( ... )
    return self.boxingType:get_externalFlag( ... )
 end
@@ -3956,6 +3972,10 @@ function GenericTypeInfo:get_display_stirng( ... )
    return self.genSrcTypeInfo:get_display_stirng( ... )
 end
 
+function GenericTypeInfo:get_extedType( ... )
+   return self.genSrcTypeInfo:get_extedType( ... )
+end
+
 function GenericTypeInfo:get_externalFlag( ... )
    return self.genSrcTypeInfo:get_externalFlag( ... )
 end
@@ -4181,6 +4201,10 @@ end
 
 function ModifierTypeInfo:get_children( ... )
    return self.srcTypeInfo:get_children( ... )
+end
+
+function ModifierTypeInfo:get_extedType( ... )
+   return self.srcTypeInfo:get_extedType( ... )
 end
 
 function ModifierTypeInfo:get_externalFlag( ... )
@@ -6677,6 +6701,10 @@ function AndExpTypeInfo:get_display_stirng_with( ... )
    return self.result:get_display_stirng_with( ... )
 end
 
+function AndExpTypeInfo:get_extedType( ... )
+   return self.result:get_extedType( ... )
+end
+
 function AndExpTypeInfo:get_externalFlag( ... )
    return self.result:get_externalFlag( ... )
 end
@@ -7839,7 +7867,7 @@ IdType.__allList[2] = IdType.Ext
 local function switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 6072, function (  )
+   Log.log( Log.Level.Trace, __func__, 6076, function (  )
    
       return "start"
    end )
@@ -7859,7 +7887,7 @@ local builtinTypeInfo2Map = typeInfo2Map:clone(  )
 local function pushProcessInfo( processInfo )
    local __func__ = '@lune.@base.@Ast.pushProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6084, function (  )
+   Log.log( Log.Level.Trace, __func__, 6088, function (  )
    
       return "start"
    end )
@@ -7894,7 +7922,7 @@ _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
    local __func__ = '@lune.@base.@Ast.popProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6110, function (  )
+   Log.log( Log.Level.Trace, __func__, 6114, function (  )
    
       return "start"
    end )

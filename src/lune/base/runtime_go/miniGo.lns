@@ -1,14 +1,16 @@
-macro _test() {
-   fn func( val:Test ) {
-      print( val == .Val1 );
-   }
-   func( .Val1 );
-   func( .Val2 );
+class Test {
+   pub let val:int;
 }
+class Test2 {
+   pub let dummy:int;
+   pub let val:int;
+}
+fn func( val1:stem, val2:stem, val3:stem )
 {
-   enum Test {
-      Val1,
-      Val2,
-   }
-   _test();
+   print( val1@@int + 10, val2@@real + 100, (val3@@=Test).$val,
+          // lua は名前で動的にアクセスするのでが、
+          // C では静的に決定したアドレスでアクセスするため、この場合はズレる
+          "diff->", (val3@@=Test2).$val );
+
 }
+func( 1, 2.0, new Test( 1000 ) );

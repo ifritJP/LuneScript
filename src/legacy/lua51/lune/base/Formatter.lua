@@ -331,7 +331,7 @@ end
 
 function FormatterFilter:processBlankLine( node, opt )
 
-   for _4811 = 1, node:get_lineNum() do
+   for _4873 = 1, node:get_lineNum() do
       self:writeln( "" )
    end
    
@@ -1196,6 +1196,14 @@ function FormatterFilter:processExpList( node, opt )
    end
    
 end
+
+
+
+function FormatterFilter:processExpMRet( node, opt )
+
+   filter( node:get_mRet(), self, opt:nextOpt( node ) )
+end
+
 
 
 function FormatterFilter:processExpAccessMRet( node, opt )

@@ -3673,14 +3673,14 @@ fn TransUnit.analyzeApply( token: &Parser.Token ) mut : Nodes.ApplyNode {
       self.addErrMess( expListNode.$pos, "apply must have 3 values -- %s" (#expTypeList) );
    }
    else {
-      itFunc = expTypeList[ 1 ];
+      itFunc = expTypeList[ 1 ].$extedType;
    }
 
    let mut itemTypeList:List<&Ast.TypeInfo> = [];
    let mut defaultItemType = Ast.builtinTypeStem_;
 
    let mut readyFlag = false;
-   if! let callNode = expListNode.$expList[ 1 ]@@@Nodes.ExpCallNode {
+   if! let callNode = Nodes.getUnwraped( expListNode.$expList[ 1 ] )@@@Nodes.ExpCallNode {
       let callFuncType = callNode.$func.$expType;
       if callFuncType.equals( builtinFunc.str_gmatch ## ) or
          callFuncType.equals( builtinFunc.string_gmatch ## )
@@ -3692,7 +3692,6 @@ fn TransUnit.analyzeApply( token: &Parser.Token ) mut : Nodes.ApplyNode {
    }
 
    if not readyFlag {
-      itFunc = expTypeList[ 1 ];
       switch itFunc.$kind {
          case .Func, .FormFunc, .Form {
          }

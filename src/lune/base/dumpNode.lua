@@ -962,6 +962,14 @@ function dumpFilter:processExpList( node, opt )
 end
 
 
+function dumpFilter:processExpMRet( node, opt )
+
+   local prefix, depth = opt:get(  )
+   dump( prefix, depth, node, "" )
+   filter( node:get_mRet(), self, opt:nextOpt(  ) )
+end
+
+
 function dumpFilter:processExpAccessMRet( node, opt )
 
    local prefix, depth = opt:get(  )

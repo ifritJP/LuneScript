@@ -1955,6 +1955,11 @@ fn convFilter.processExpListSub(
    }
 }
 
+pub override fn convFilter.processExpMRet(
+   node: Nodes.ExpMRetNode, opt: Opt ) mut
+{
+   filter( node.$mRet, self, node );
+}
 
 pub override fn convFilter.processIfUnwrap(
    node: Nodes.IfUnwrapNode, opt: Opt ) mut

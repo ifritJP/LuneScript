@@ -90,7 +90,7 @@ fn TransUnit.createExpList(
                      exp.$macroArgFlag, [ firstType ], exp ) );
             }
             else {
-               workList.insert( exp );
+               //workList.insert( exp );
                // 最終ノードが複数の値を持つ場合は、その複数の型を追加する。
                mRetExp = new Nodes.MRetExp( exp, index );
                foreach expType, listIndex in exp.$expTypeList {
@@ -100,7 +100,12 @@ fn TransUnit.createExpList(
                }
                // 多値返却の場合、 ExpAccessMRet を追加する。
                foreach retType, retIndex in exp.$expTypeList {
-                  if retIndex ~= 1 {
+                  if retIndex == 1 {
+                     workList.insert( 
+                        Nodes.ExpMRetNode.create(
+                           self.nodeManager, exp.$pos,
+                           exp.$macroArgFlag, [ retType ], exp ) );
+                  } else {
                      workList.insert( 
                         Nodes.ExpAccessMRetNode.create(
                            self.nodeManager, exp.$pos,
@@ -424,7 +429,8 @@ fn TransUnit.checkImplicitCast(
          workNode = repNode;
       }
       else {
-         if dstType ~= Ast.builtinTypeEmpty and
+         if expNode.$expType ~= Ast.builtinTypeNil and
+            dstType ~= Ast.builtinTypeEmpty and
             not dstType.equals( expNode.$expType ## ) and
             not dstType.$nonnilableType.equals( expNode.$expType ## )
          {
@@ -2980,6 +2986,17 @@ fn TransUnit.analyzeExpOp2(
                      exp2Type.equals( Ast.builtinTypeReal ##)
                   {
                      retType = Ast.builtinTypeReal;
+                     if exp1Type.equals( Ast.builtinTypeInt ##) {
+                        exp = Nodes.ExpCastNode.create(
+                           self.nodeManager, exp.$pos,
+                           self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeReal ],
+                           exp, Ast.builtinTypeReal, .Implicit );   
+                     } elseif exp2Type.equals( Ast.builtinTypeInt ##) {
+                        exp2 = Nodes.ExpCastNode.create(
+                           self.nodeManager, exp2.$pos,
+                           self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeReal ],
+                           exp2, Ast.builtinTypeReal, .Implicit );   
+                     }
                   }
                   else {
                      retType = Ast.builtinTypeInt;
