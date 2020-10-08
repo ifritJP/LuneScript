@@ -2582,6 +2582,11 @@ end
 
 function Scope:accessSymbol( moduleScope, symbol )
 
+   if symbol:get_kind() == SymbolKind.Fun and self:getNamespaceTypeInfo(  ) == symbol:get_typeInfo() then
+      return 
+   end
+   
+   
    symbol:set_posForModToRef( symbol:get_posForLatestMod() )
    
    if self:isClosureAccess( moduleScope, symbol ) then
@@ -7866,7 +7871,7 @@ IdType.__allList[2] = IdType.Ext
 local function switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 6076, function (  )
+   Log.log( Log.Level.Trace, __func__, 6082, function (  )
    
       return "start"
    end )
@@ -7886,7 +7891,7 @@ local builtinTypeInfo2Map = typeInfo2Map:clone(  )
 local function pushProcessInfo( processInfo )
    local __func__ = '@lune.@base.@Ast.pushProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6088, function (  )
+   Log.log( Log.Level.Trace, __func__, 6094, function (  )
    
       return "start"
    end )
@@ -7921,7 +7926,7 @@ _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
    local __func__ = '@lune.@base.@Ast.popProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6114, function (  )
+   Log.log( Log.Level.Trace, __func__, 6120, function (  )
    
       return "start"
    end )

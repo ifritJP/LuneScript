@@ -1864,6 +1864,12 @@ pub fn Scope.isClosureAccess( moduleScope:&Scope, symbol:&SymbolInfo) : bool
 */
 pub fn Scope.accessSymbol( moduleScope:&Scope, symbol:&SymbolInfo ) mut
 {
+   if symbol.$kind == .Fun and self.getNamespaceTypeInfo() == symbol.$typeInfo {
+      // 関数の body 内で、自分自身の関数シンボルにアクセスしている場合は、
+      // クロージャにはならないので処理しない。
+      return;
+   }
+   
    symbol.set_posForModToRef( symbol.$posForLatestMod );
 
    if self.isClosureAccess( moduleScope, symbol ) {

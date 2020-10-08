@@ -1095,8 +1095,6 @@ test-tutorial-go:
 
 	$(call transwork,.,.,,base/convGo)
 
-	$(call test-Go-one,ccc)
-
 	$(call test-Go-one,match)
 	$(call test-Go-one,loop)
 	$(call test-Go-one,interface)
@@ -1118,6 +1116,7 @@ test-tutorial-go:
 	$(call test-Go-one,set)
 	$(call test-Go-one,value)
 
+	$(call test-Go-one,ccc)
 
 test-go:
 	mkdir -p $(GO_WORK_DIR)

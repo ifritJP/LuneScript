@@ -920,10 +920,6 @@ pub fn convFilter.outputDeclFunc( funcInfo:FuncInfo ) mut {
    }
    
    if isClosure( typeInfo ) {
-      when! name {
-         self.outputSymbol( .Func( typeInfo ), name );
-         self.write( " := " );
-      }
       self.write( "func" );
    }
    else {
@@ -1630,7 +1626,7 @@ pub fn convFilter.outputDeclFuncInfo(
    if node.$expType.$abstractFlag {
       return;
    }
-   if declInfo.$name {
+   if declInfo.$name and not isClosure( node.$expType ) {
       self.writeln( "// %d: decl %s"
                     (node.$pos.lineNo, self.getCanonicalName( node.$expType, false )) );
    }
@@ -2107,11 +2103,23 @@ pub override fn convFilter.processDeclFunc(
          return;
       }
    }
+   let funcType = node.$expType;
    if ( self.processMode == .NonClosureFuncDecl ) == isClosure( node.$expType ) {
-      if self.processMode ~= .NonClosureFuncDecl and node.$expType.$rawTxt == "" {
-         self.write( self.getFuncSymbol( node.$expType ) );
+      if self.processMode ~= .NonClosureFuncDecl and not node.$declInfo.$symbol {
+         self.write( self.getFuncSymbol( funcType ) );
       }
       return;
+   }
+   if isClosure( funcType ) {
+      if! let funcSym = node.$declInfo.$symbol {
+         self.write( "var " );
+         self.outputSymbol( .Func( funcType ), funcSym.$name );
+         self.write( " ");
+         self.outputDeclFunc( .DeclInfo( node, node.$declInfo ) );
+         self.writeln( "" );
+         self.outputSymbol( .Func( funcType ), funcSym.$name );
+         self.write( " = " );
+      }
    }
    self.outputDeclFuncInfo( node, node.$declInfo );
 }

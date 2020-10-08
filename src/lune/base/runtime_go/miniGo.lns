@@ -1,6 +1,10 @@
-fn func( ...<int> ) {
-   let mut val:int!;
-   val = ...;
-   print( val );  
+{
+   fn func( val:int ) : int {
+      if val > 0 {
+         return func( val - 1 ) + val;
+      }
+      return 0;
+   }
+   print( func( 10 ) );
 }
-func( 1, 2 );
+
