@@ -565,7 +565,7 @@ fn TransUnit.checkMatchType(
    mut message:str, pos: &Parser.Position, dstTypeList: &List<&Ast.TypeInfo>,
    expListNode: &Nodes.ExpListNode!, allowDstShort:bool, warnForFollow:bool,
    genericsClassType:&Ast.TypeInfo! ) mut :
-Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!, &List<&Ast.TypeInfo>
+Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, Nodes.ExpListNode!, &List<&Ast.TypeInfo>
 {
    let! expNodeList:&List<&Nodes.Node> = expListNode$.$expList {
       expNodeList = [];
@@ -648,7 +648,7 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!, &List<&Ast
    when! expListNode {
       let mut autoBoxingCount = 0;
       let mut hasImplictCast = false;
-      let newExpListNode:&Nodes.ExpListNode!;
+      let mut newExpListNode:Nodes.ExpListNode!;
 
       if! let mut workList = self.checkImplicitCast(
          alt2typeMap, dstTypeList, expListNode,
@@ -2420,6 +2420,7 @@ fn TransUnit.analyzeNewAlge(
 
 fn TransUnit.accessSymbol( symbolInfo:&Ast.SymbolInfo ) mut {
    if symbolInfo.$kind == .Fun {
+      self.scope.accessSymbol( self.moduleScope, symbolInfo );
       if self.scope.isClosureAccess( self.moduleScope, symbolInfo ) {
          // 関数の場合、AST 解析中の時点ではクロージャ処理が必要かどうかが
          // 判定できないので、リストに保持して AST 解析後に別途処理する。
@@ -2587,7 +2588,7 @@ fn TransUnit.analyzeExpOpSet(
                        (Nodes.getNodeKindName( exp.$kind ) ) );
    }
 
-   let expList = self.analyzeExpList( false, false, nil, expectTypeList## );
+   let mut expList = self.analyzeExpList( false, false, nil, expectTypeList## );
 
    if not expList.canBeRight() {
       self.addErrMess( expList.$pos,
@@ -2595,9 +2596,12 @@ fn TransUnit.analyzeExpOpSet(
                        (Nodes.getNodeKindName( expList.$kind ) ) );
    }
 
-   let _, _, _, expTypeList =
+   let _, _, mut workList, expTypeList =
       self.checkMatchType( "= operator", opeToken.pos, exp.$expTypeList,
                            expList, true, false, nil );
+   when! workList {
+      expList = workList;
+   }
 
    let mut initSymSet:Set<&Ast.SymbolInfo> = (@);
    
@@ -3117,7 +3121,7 @@ fn TransUnit.analyzeSuper( firstToken:&Parser.Token ) mut : Nodes.Node {
             }; 
             self.checkMatchValType(
                firstToken.$pos, superCtorType, expList, [], classType );
-            return Nodes.ExpCallSuperNode.create(
+            return Nodes.ExpCallSuperCtorNode.create(
                self.nodeManager, firstToken.pos,
                self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
                superType, superCtorType, expList );
@@ -3131,10 +3135,13 @@ fn TransUnit.analyzeSuper( firstToken:&Parser.Token ) mut : Nodes.Node {
                }
                self.checkMatchValType(
                   firstToken.$pos, superFunc, expList, [], classType );
-               return Nodes.ExpCallSuperNode.create(
+               let exp = Nodes.ExpCallSuperNode.create(
                   self.nodeManager, firstToken.pos,
                   self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
                   superType, superFunc, expList );
+               return Nodes.StmtExpNode.create(
+                  self.nodeManager, exp.$pos,
+                  self.macroCtrl.isInAnalyzeArgMode(), exp.$expTypeList, exp );
             }
             self.addErrMess( firstToken.pos, "this is not override method." );
             return self.createNoneNode( firstToken.pos );

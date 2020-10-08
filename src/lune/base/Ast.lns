@@ -1718,12 +1718,12 @@ pub fn Scope.addMember(
 }
 
 pub fn Scope.addMethod(
-   pos:&Parser.Position!, typeInfo: &TypeInfo,
-   accessMode:AccessMode, staticFlag:bool, mutable:bool ) mut
+   pos:&Parser.Position!, typeInfo: &TypeInfo, accessMode:AccessMode,
+   staticFlag:bool, mutable:bool ) mut : &SymbolInfo!, &SymbolInfo!
 {
-   self.add( SymbolKind.Mtd, true, staticFlag, typeInfo.$rawTxt, pos,
-             typeInfo, accessMode,
-             staticFlag, mutable and MutMode.Mut or MutMode.IMut, true );
+   return self.add(
+      SymbolKind.Mtd, true, staticFlag, typeInfo.$rawTxt, pos, typeInfo,
+      accessMode,staticFlag, mutable and MutMode.Mut or MutMode.IMut, true )**;
 }
 
 pub fn Scope.addFunc(

@@ -820,8 +820,8 @@ function StreamParser:parse(  )
       local comment = ""
       while true do
          do
-            local _479, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
-            if _479 ~= nil and termEndIndex ~= nil then
+            local _480, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
+            if _480 ~= nil and termEndIndex ~= nil then
                comment = comment .. rawLine:sub( searchIndex, termEndIndex )
                return comment, termEndIndex + 1
             end

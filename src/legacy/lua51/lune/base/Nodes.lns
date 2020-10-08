@@ -1570,6 +1570,7 @@ pub class DeclFuncInfo {
    /** このメソッドを保持するクラスを定義するノード。 クラスが builtin の場合 nil。 */
    let declClassNode: &DeclClassNode! {pub};
    let name: &Parser.Token! { pub };
+   let symbol: &Ast.SymbolInfo! { pub };
    let argList: &List<&Node> { pub };
    let staticFlag: bool { pub };
    let accessMode: Ast.AccessMode { pub };
@@ -1580,11 +1581,11 @@ pub class DeclFuncInfo {
 }
 
 pub static fn DeclFuncInfo.createFrom(
-   info:&DeclFuncInfo, name:&Parser.Token ): DeclFuncInfo
+   info:&DeclFuncInfo, name:&Parser.Token, symbol: &Ast.SymbolInfo ): DeclFuncInfo
 {
    return new DeclFuncInfo(
       info.$kind, info.classTypeInfo, info.declClassNode,
-      name, info.argList, info.staticFlag,
+      name, symbol, info.argList, info.staticFlag,
       info.accessMode, info.body, info.retTypeInfoList,
       info.has__func__Symbol, info.overrideFlag );
 }
@@ -1619,12 +1620,17 @@ _declNodeClass( "DeclDestr", Node, false, false, true,
                 [ { "declInfo": "&DeclFuncInfo" } ]
 );
 
-_declNodeClass( "ExpCallSuper", Node, false, nil, true,
+_declNodeClass( "ExpCallSuperCtor", Node, false, false, true,
                 [ { "superType": "&Ast.TypeInfo" },
                   { "methodType": "&Ast.TypeInfo" },
                   { "expList": "&ExpListNode!" } ]
 );
 
+_declNodeClass( "ExpCallSuper", Node, false, nil, true,
+                [ { "superType": "&Ast.TypeInfo" },
+                  { "methodType": "&Ast.TypeInfo" },
+                  { "expList": "&ExpListNode!" } ]
+);
 pub override fn ExpCallSuperNode.canBeRight():bool {
    return self.$expType ~= Ast.builtinTypeNone;
 }
@@ -2396,24 +2402,24 @@ fn ExpOp2Node.getValType( node:&Node ): bool, int, real, str, &Ast.TypeInfo {
    let mut intVal, mut realVal, mut strVal = 0, 0.0, "";
    let mut retTypeInfo = Ast.builtinTypeNone;
 
-   fn getEnum( txt:str, typeInfo:&Ast.TypeInfo ) {
-      if! let enumTypeInfo = typeInfo@@@Ast.EnumTypeInfo {
-         let valInfo = unwrap enumTypeInfo.getEnumValInfo( txt );
-         match valInfo.$val {
-            case .Int( val ) {
-               intVal = val;
-               realVal = val@@real;
-            }
-            case .Real( val ) {
-               realVal = val;
-            }
-            case .Str( val ) {
-               strVal = val;
-            }
-         }
-         retTypeInfo = enumTypeInfo.$valTypeInfo;
-      }
-   }
+   // fn getEnum( txt:str, typeInfo:&Ast.TypeInfo ) {
+   //    if! let enumTypeInfo = typeInfo@@@Ast.EnumTypeInfo {
+   //       let valInfo = unwrap enumTypeInfo.getEnumValInfo( txt );
+   //       match valInfo.$val {
+   //          case .Int( val ) {
+   //             intVal = val;
+   //             realVal = val@@real;
+   //          }
+   //          case .Real( val ) {
+   //             realVal = val;
+   //          }
+   //          case .Str( val ) {
+   //             strVal = val;
+   //          }
+   //       }
+   //       retTypeInfo = enumTypeInfo.$valTypeInfo;
+   //    }
+   // }
    
    match literal {
       case .Int( val ) {

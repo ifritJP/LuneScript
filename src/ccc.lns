@@ -1107,14 +1107,6 @@ class SubG extend (Mapping)
 }
 {
    _section();
-   import subC;
-
-   foreach val in subC.TestEnum.$_allList {
-      print( val );
-   }
-}
-{
-   _section();
    fn func(): ...<int> {
       return 1, 2, 3;
    }
@@ -1200,25 +1192,6 @@ return obj
          print( work == "a" );
       }
    }
-}
-{
-   _section();
-   class Test {
-      pub let val:int;
-   }
-   class Test2 {
-      pub let dummy:int;
-      pub let val:int;
-   }
-   fn func( val1:stem, val2:stem, val3:stem )
-   {
-      print( val1@@int + 10, val2@@real + 100, (val3@@=Test).$val,
-             // lua は名前で動的にアクセスするのでが、
-             // C では静的に決定したアドレスでアクセスするため、この場合はズレる
-             "diff->", (val3@@=Test2).$val );
-
-   }
-   func( 1, 2.0, new Test( 1000 ) );
 }
 {
    _section();
@@ -1685,6 +1658,7 @@ class Testzz {
    sub2( func2 );
    sub3( print );
 }
+_section();
 let valxx = 1000;
 let mut val3xx = 0;
 class Test1 {
@@ -1698,18 +1672,18 @@ class Test1 {
    }
 }
 let val2xx = 10000;
-class Test2 {
+class Test2gg {
    static let val:int;
    __init {
-      Test2.val = 200 + val2xx;
+      Test2gg.val = 200 + val2xx;
    }
    pub static fn func(): int {
-      return Test2.val + Test1.func();
+      return Test2gg.val + Test1.func();
    }
 }
 {
    _section();
-   print( Test2.func(), val3xx );
+   print( Test2gg.func(), val3xx );
 }
 {
    _section();
@@ -1964,7 +1938,7 @@ class Test2 {
       forsort item in (@ g_val, 3.5, 1, 2, 0 ) {
          print( item );
       }
-      forsort item, key in { val: g_val, val2: 3.5, "999": 1, "888": 2, "777": 3 } {
+      forsort item, key in { val: g_val, val2: 3.5, "-999": 1, "888": 2, "777": 3 } {
          print( key, item );
       }
    }
@@ -2155,4 +2129,28 @@ fn func3( val:int, val2:real, val3:bool ):int, real, bool {
    }
    func( 1, 2 );
 }
-
+// {
+//    _section();
+//    import subC;
+//    foreach val in subC.TestEnum.$_allList {
+//       print( val );
+//    }
+// }
+// {
+//    _section();
+//    class Test {
+//       pub let val:int;
+//    }
+//    class Test2 {
+//       pub let dummy:int;
+//       pub let val:int;
+//    }
+//    fn func( val1:stem, val2:stem, val3:stem )
+//    {
+//       print( val1@@int + 10, val2@@real + 100, (val3@@=Test).$val,
+//              // lua は名前で動的にアクセスするのでが、
+//              // C では静的に決定したアドレスでアクセスするため、この場合はズレる
+//              "diff->", (val3@@=Test2).$val );
+//    }
+//    func( 1, 2.0, new Test( 1000 ) );
+// }

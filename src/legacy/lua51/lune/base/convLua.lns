@@ -1842,18 +1842,12 @@ pub override fn convFilter.processDeclDestr(
 }
 
 
-pub override fn convFilter.processExpCallSuper(
-   node: Nodes.ExpCallSuperNode, opt: Opt ) mut
+pub override fn convFilter.processExpCallSuperCtor(
+   node: Nodes.ExpCallSuperCtorNode, opt: Opt ) mut
 {
    let typeInfo:Ast.TypeInfo = node.$superType;
-   if node.$methodType.$rawTxt == "__init" {
-      self.write( "%s.%s( self"
-                  ( self.getFullName( typeInfo ), node.$methodType.$rawTxt ) );
-   }
-   else {
-      self.write( "%s.%s( self"
-                  ( self.getFullName( typeInfo ), node.$methodType.$rawTxt ) );
-   }
+   self.write( "%s.%s( self"
+      ( self.getFullName( typeInfo ), node.$methodType.$rawTxt ) );
 
    if! node.$expList {
       self.write( "," );
@@ -1861,6 +1855,21 @@ pub override fn convFilter.processExpCallSuper(
    }
    self.writeln( ")" );
 };
+
+pub override fn convFilter.processExpCallSuper(
+   node: Nodes.ExpCallSuperNode, opt: Opt ) mut
+{
+   let typeInfo:Ast.TypeInfo = node.$superType;
+   self.write( "%s.%s( self"
+      ( self.getFullName( typeInfo ), node.$methodType.$rawTxt ) );
+
+   if! node.$expList {
+      self.write( "," );
+      filter( _exp, self, node );
+   }
+   self.write( ")" );
+};
+
 
 pub override fn convFilter.processDeclMethod(
    node: Nodes.DeclMethodNode, opt: Opt ) mut

@@ -28,7 +28,6 @@ package main
 import "C"
 
 import "unsafe"
-import "log"
 import "fmt"
 import "runtime"
 
@@ -114,7 +113,7 @@ func (luaVM *Lns_luaVM) pushAny( val LnsAny ) *lns_pushedVal {
         case *Lns_luaValue:
             val.(*Lns_luaValue).pushValFromGlobalValMap()
         default:
-            log.Fatalf( "not supoort -- %v", val )
+            panic( fmt.Sprintf( "not supoort -- %v", val ) )
         }
     }
     return lns_defaultPushedVal
@@ -276,7 +275,7 @@ func (luaVM *Lns_luaVM) CallStatic(
         defer pVal.free()
     }
     if lua_pcallk( vm, len( args ), cLUA_MULTRET ) != cLUA_OK {
-        log.Fatalf( lua_tolstring( vm, -1 ) )
+        panic( lua_tolstring( vm, -1 ) )
     }
     ret := []LnsAny{}
     nowTop := lua_gettop( vm )
@@ -306,7 +305,7 @@ func (obj *Lns_luaValue) CallMethod( funcname string, args[] LnsAny ) []LnsAny {
         defer pVal.free()
     }
     if lua_pcallk( vm, len( args ) + 1, cLUA_MULTRET ) != cLUA_OK {
-        log.Fatalf( lua_tolstring( vm, -1 ) )
+        panic( lua_tolstring( vm, -1 ) )
     }
     ret := []LnsAny{}
     nowTop := lua_gettop( vm )

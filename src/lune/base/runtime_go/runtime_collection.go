@@ -26,7 +26,6 @@ package main
 
 
 import "fmt"
-import "log"
 import "sort"
 
 type Lns_ToMap interface {
@@ -153,17 +152,64 @@ func (self *LnsList) Len() int {
     return len(self.Items)
 }
 func (self *LnsList) Less(idx1, idx2 int) bool {
+    val1 := self.Items[idx1]
+    val2 := self.Items[idx2]
     switch self.lnsItemKind {
     case LnsItemKindInt:
-        return self.Items[idx1].(LnsInt) < self.Items[idx2].(LnsInt)
+        return val1.(LnsInt) < val2.(LnsInt)
     case LnsItemKindReal:
-        return self.Items[idx1].(LnsReal) < self.Items[idx2].(LnsReal)
+        return val1.(LnsReal) < val2.(LnsReal)
     case LnsItemKindStr:
-        return self.Items[idx1].(string) < self.Items[idx2].(string)
+        return val1.(string) < val2.(string)
     case LnsItemKindStem:
-        return idx1 < idx2
+        switch val1.(type) {
+        case LnsInt:
+            cval1 := val1.(LnsInt)
+            switch val2.(type) {
+            case LnsInt:
+                return cval1 < val2.(LnsInt)
+            case LnsReal:
+                return LnsReal(cval1) < val2.(LnsReal)
+            default:
+                return true;
+            }
+        case LnsReal:
+            cval1 := val1.(LnsReal)
+            switch val2.(type) {
+            case LnsInt:
+                return cval1 < LnsReal(val2.(LnsInt))
+            case LnsReal:
+                return cval1 < val2.(LnsReal)
+            default:
+                return true;
+            }
+        case string:
+            cval1 := val1.(string)
+            switch val2.(type) {
+            case LnsInt:
+                return false;
+            case LnsReal:
+                return false;
+            case string:
+                cval2 := val2.(string)
+                return cval1 < cval2;
+            default:
+                return true;
+            }
+        default:
+            switch val2.(type) {
+            case LnsInt:
+                return false;
+            case LnsReal:
+                return false;
+            case string:
+                return false;
+            default:
+                return idx1 < idx2;
+            }
+        }
     }
-    log.Fatal( "error" )
+    panic( "error" )
     return false
 }
 func (self *LnsList) Swap(idx1, idx2 int) {

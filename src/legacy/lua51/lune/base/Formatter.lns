@@ -561,18 +561,26 @@ pub override fn FormatterFilter.processDeclDestr(
    self.processDeclFuncInfo( node, node.$declInfo, opt );
 };
 
+pub override fn FormatterFilter.processExpCallSuperCtor(
+   node: &Nodes.ExpCallSuperCtorNode, opt:Opt ) mut
+{
+   self.write( "super(" );
+   if! let expListNode = node.$expList {
+      filter( expListNode, self, opt.nextOpt( node ) );
+   }
+   self.writeln( ");" );
+}
+
 pub override fn FormatterFilter.processExpCallSuper(
    node: &Nodes.ExpCallSuperNode, opt:Opt ) mut
 {
+   self.write( "super(" );
    if! let expListNode = node.$expList {
-      self.write( "super(" );
       filter( expListNode, self, opt.nextOpt( node ) );
-      self.writeln( ");" );
    }
-   else {
-      self.writeln( "super();" );
-   }
+   self.writeln( ")" );
 };
+
 pub override fn FormatterFilter.processRefType(
    node: &Nodes.RefTypeNode, opt:Opt ) mut
 {

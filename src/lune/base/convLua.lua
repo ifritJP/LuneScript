@@ -448,7 +448,7 @@ function convFilter:writeRaw( txt )
    end
    
    
-   for _5330 in string.gmatch( txt, "\n" ) do
+   for _5357 in string.gmatch( txt, "\n" ) do
       self.curLineNo = self.curLineNo + 1
    end
    
@@ -1897,7 +1897,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _5670 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _5697 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -2325,16 +2325,10 @@ function convFilter:processDeclDestr( node, opt )
 end
 
 
-function convFilter:processExpCallSuper( node, opt )
+function convFilter:processExpCallSuperCtor( node, opt )
 
    local typeInfo = node:get_superType()
-   if node:get_methodType():get_rawTxt() == "__init" then
-      self:write( string.format( "%s.%s( self", self:getFullName( typeInfo ), node:get_methodType():get_rawTxt()) )
-   else
-    
-      self:write( string.format( "%s.%s( self", self:getFullName( typeInfo ), node:get_methodType():get_rawTxt()) )
-   end
-   
+   self:write( string.format( "%s.%s( self", self:getFullName( typeInfo ), node:get_methodType():get_rawTxt()) )
    
    do
       local _exp = node:get_expList()
@@ -2345,6 +2339,24 @@ function convFilter:processExpCallSuper( node, opt )
    end
    
    self:writeln( ")" )
+end
+
+
+
+function convFilter:processExpCallSuper( node, opt )
+
+   local typeInfo = node:get_superType()
+   self:write( string.format( "%s.%s( self", self:getFullName( typeInfo ), node:get_methodType():get_rawTxt()) )
+   
+   do
+      local _exp = node:get_expList()
+      if _exp ~= nil then
+         self:write( "," )
+         filter( _exp, self, node )
+      end
+   end
+   
+   self:write( ")" )
 end
 
 
@@ -4020,7 +4032,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3321, function (  )
+   Log.log( Log.Level.Info, __func__, 3330, function (  )
    
       return string.format( "code: %s", code)
    end )

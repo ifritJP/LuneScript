@@ -331,7 +331,7 @@ end
 
 function FormatterFilter:processBlankLine( node, opt )
 
-   for _4873 = 1, node:get_lineNum() do
+   for _4900 = 1, node:get_lineNum() do
       self:writeln( "" )
    end
    
@@ -915,20 +915,33 @@ end
 
 
 
-function FormatterFilter:processExpCallSuper( node, opt )
+function FormatterFilter:processExpCallSuperCtor( node, opt )
 
+   self:write( "super(" )
    do
       local expListNode = node:get_expList()
       if expListNode ~= nil then
-         self:write( "super(" )
          filter( expListNode, self, opt:nextOpt( node ) )
-         self:writeln( ");" )
-      else
-         self:writeln( "super();" )
       end
    end
    
+   self:writeln( ");" )
 end
+
+
+function FormatterFilter:processExpCallSuper( node, opt )
+
+   self:write( "super(" )
+   do
+      local expListNode = node:get_expList()
+      if expListNode ~= nil then
+         filter( expListNode, self, opt:nextOpt( node ) )
+      end
+   end
+   
+   self:writeln( ")" )
+end
+
 
 
 function FormatterFilter:processRefType( node, opt )

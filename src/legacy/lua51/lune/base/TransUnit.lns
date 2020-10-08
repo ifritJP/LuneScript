@@ -659,7 +659,9 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
          forsort symbolInfo in tentativeSymbol.$scope.$symbol2SymbolInfoMap {
             if ( not symbolInfo.$posForModToRef or
                  symbolInfo.$posForModToRef ~= symbolInfo.$posForLatestMod ) and
-               symbolInfo.$kind == .Var and not symbolInfo.$name.find( "^_"## )
+                ( symbolInfo.$kind == .Var or symbolInfo.$kind == .Fun ) and
+               not Ast.isPubToExternal( symbolInfo.$accessMode ) and
+               not symbolInfo.$name.find( "^_"## )
             {
                if! let pos = symbolInfo.$posForLatestMod or symbolInfo.$pos {
                   self.addWarnMess( pos, "'%s' var isn't accessed" (symbolInfo.$name) );

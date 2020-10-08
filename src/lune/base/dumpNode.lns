@@ -412,6 +412,13 @@ pub override fn dumpFilter.processDeclDestr(
    dump( prefix, depth, node, "" );
 };
 
+pub override fn dumpFilter.processExpCallSuperCtor(
+   node: &Nodes.ExpCallSuperCtorNode, opt:Opt ) mut
+{
+   let prefix, depth = opt.get();
+   let typeInfo:Ast.TypeInfo = node.get_superType();
+   dump( prefix, depth, node, typeInfo.getTxt(##) );
+};
 pub override fn dumpFilter.processExpCallSuper(
    node: &Nodes.ExpCallSuperNode, opt:Opt ) mut
 {

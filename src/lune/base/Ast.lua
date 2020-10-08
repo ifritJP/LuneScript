@@ -2442,7 +2442,7 @@ end
 
 function Scope:addMethod( pos, typeInfo, accessMode, staticFlag, mutable )
 
-   self:add( SymbolKind.Mtd, true, staticFlag, typeInfo:get_rawTxt(), pos, typeInfo, accessMode, staticFlag, mutable and MutMode.Mut or MutMode.IMut, true )
+   return self:add( SymbolKind.Mtd, true, staticFlag, typeInfo:get_rawTxt(), pos, typeInfo, accessMode, staticFlag, mutable and MutMode.Mut or MutMode.IMut, true )
 end
 
 
@@ -3498,7 +3498,6 @@ end
 function BoxTypeInfo:get_scope(  )
 
    return TypeInfo.get_scope( self)
-   
 end
 function BoxTypeInfo:get_kind(  )
 

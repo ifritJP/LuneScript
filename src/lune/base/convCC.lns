@@ -1534,14 +1534,14 @@ fn convFilter.processBuiltin() : &Nodes.NodeManager
 
             when! classInfo {
                let declFuncInfo = new Nodes.DeclFuncInfo(
-                  .Mtd, classInfo, nil, token, argList, false, .Pub, nil,
+                  .Mtd, classInfo, nil, token, symbol, argList, false, .Pub, nil,
                   symbol.$typeInfo.$retTypeInfoList, false, false );
                return Nodes.DeclMethodNode.create(
                   nodeManager, dummyPos, false, [ symbol.$typeInfo ], declFuncInfo );
             }
             else {
                let declFuncInfo = new Nodes.DeclFuncInfo(
-                  .Func, nil, nil, token, argList, false, .Pub, nil,
+                  .Func, nil, nil, token, symbol, argList, false, .Pub, nil,
                   symbol.$typeInfo.$retTypeInfoList, false, false );
                return Nodes.DeclFuncNode.create(
                   nodeManager, dummyPos, false, [ symbol.$typeInfo ], declFuncInfo );

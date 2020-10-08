@@ -1874,6 +1874,7 @@ nil の場合、メンバの宣言位置。
          }
       }
 
+      let mut parentScope = self.scope;
       let mut initBlockScope = self.pushScope( false## );
       self.prepareTentativeSymbol( initBlockScope, false );
 
@@ -1881,14 +1882,16 @@ nil の場合、メンバの宣言位置。
       let funcTypeInfo = Ast.NormalTypeInfo.createFunc(
          false, false, initBlockScope, .Func, classTypeInfo,
          false, false, true, .Pri, ininame, nil, nil, nil, false );
+      let funcSym, shadowing = parentScope.addFunc(
+         token.$pos, funcTypeInfo, .Pri, true, true );
       
       let block = self.analyzeFuncBlock(
          .InitBlock, token, classTypeInfo, funcTypeInfo, ininame, initBlockScope,
          funcTypeInfo.$retTypeInfoList );
 
       let mut info = new Nodes.DeclFuncInfo(
-         .InitBlock, classTypeInfo, node,
-         token, [], true, .Pri, block, [], false, false );
+         .InitBlock, classTypeInfo, node, token, unwrap (funcSym or shadowing),
+         [], true, .Pri, block, [], false, false );
       let initBlockNode = Nodes.DeclMethodNode.create(
          self.nodeManager, firstToken.pos,
          self.macroCtrl.isInAnalyzeArgMode(), [ funcTypeInfo ], info );
@@ -2397,8 +2400,9 @@ pri fn TransUnit.addMethod(
 }
 
 fn TransUnit.processAddFunc(
-   isFunc:bool, mut parentScope:Ast.Scope, name:&Parser.Token,
-   typeInfo:&Ast.TypeInfo, alt2typeMap:Map<&Ast.TypeInfo,&Ast.TypeInfo> ) mut
+   isFunc:bool, mut parentScope:Ast.Scope,
+   name:&Parser.Token, typeInfo:&Ast.TypeInfo,
+   alt2typeMap:Map<&Ast.TypeInfo,&Ast.TypeInfo> ) mut : &Ast.SymbolInfo
 {
    let accessMode = typeInfo.$accessMode;
    if accessMode == .Global {
@@ -2456,17 +2460,19 @@ fn TransUnit.processAddFunc(
    }
    
 
-
    let staticFlag = typeInfo.$staticFlag;
    let mutable = Ast.TypeInfo.isMut( typeInfo );
+
+   let funcSym, shadowing;
    if isFunc {
-      let funcSym, shadowing = parentScope.addFunc(
+      funcSym, shadowing = parentScope.addFunc(
          name.pos, typeInfo, accessMode, staticFlag, mutable );
       self.errorShadowing( name.pos, shadowing );
+   } else {
+      funcSym, shadowing = parentScope.addMethod(
+         name.pos, typeInfo, accessMode, staticFlag, mutable );
    }
-   else {
-      parentScope.addMethod( name.pos, typeInfo, accessMode, staticFlag, mutable );
-   }
+   return unwrap (funcSym or shadowing);
 }
 
 fn TransUnit.analyzeDeclFunc(
@@ -2680,10 +2686,13 @@ fn TransUnit.analyzeDeclFunc(
       false, false, staticFlag, accessMode,
       funcName, altTypeList, argTypeList, retTypeInfoList, mutable );
 
+   let funcSym:&Ast.SymbolInfo!;
    when! name {
-      self.processAddFunc(
+      funcSym = self.processAddFunc(
          kind == Nodes.NodeKind.$DeclFunc,
          funcBodyScope.$parent, name, typeInfo, alt2typeMap );
+   } else {
+      funcSym = nil;
    }
 
    if overrideFlag {
@@ -2814,7 +2823,7 @@ fn TransUnit.analyzeDeclFunc(
                let mut needCall = true;
                foreach stmt in workBody.$stmtList {
                   switch stmt.$kind {
-                     case Nodes.nodeKindEnum.ExpCallSuper {
+                     case Nodes.nodeKindEnum.ExpCallSuperCtor {
                         needCall = false;
                      }
                      case Nodes.nodeKindEnum.BlankLine {
@@ -2843,8 +2852,9 @@ fn TransUnit.analyzeDeclFunc(
          classDeclNode = nil;
       }
       return new Nodes.DeclFuncInfo(
-         funcKind, classTypeInfo, classDeclNode, name, argList, orgStaticFlag, accessMode,
-         body, retTypeInfoList, self.has__func__Symbol.has( typeInfo ), overrideFlag );
+         funcKind, classTypeInfo, classDeclNode, name, funcSym,
+         argList, orgStaticFlag, accessMode, body, retTypeInfoList,
+         self.has__func__Symbol.has( typeInfo ), overrideFlag );
    }
 
    switch ( kind ) {
@@ -3056,6 +3066,21 @@ fn TransUnit.analyzeLetAndInitExp(
 
    // 型推論の解決と、宣言されている型と初期値との整合性を確認
    when! expList {
+
+      if unwrapFlag {
+         // unwrapFlag 値の中に nilable があるかどうか確認する。
+         let mut hasNilable = false;
+         foreach _, index in letVarList {
+            if expList.getExpTypeAt( index ).$nilable {
+               hasNilable = true;
+               break;
+            }
+         }
+         if not hasNilable {
+            self.addWarnMess( firstPos, "has no nilable" );
+         }
+      }
+      
       let mut workList = expList;
       let mut updateExpList = false;
       let mut newExpList:List<&Nodes.Node> = [];
@@ -3317,13 +3342,13 @@ fn TransUnit.analyzeDeclVar(
                      letVarInfo.varName.txt, typeInfo.$itemTypeInfoList,
                      typeInfo.$argTypeInfoList, typeInfo.$retTypeInfoList,
                      Ast.TypeInfo.isMut( typeInfo ) );
-                  self.processAddFunc(
+                  let funcSym = self.processAddFunc(
                      true, self.scope, letVarInfo.varName, newTypeInfo,
                      Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) );
                   self.nodeManager.delNode( declNode );
 
                   let mut declInfo = Nodes.DeclFuncInfo.createFrom(
-                     declNode.$declInfo, letVarInfo.varName );
+                     declNode.$declInfo, letVarInfo.varName, funcSym );
                   return Nodes.DeclFuncNode.create(
                      self.nodeManager, declNode.$pos,
                      self.macroCtrl.isInAnalyzeArgMode(), [ newTypeInfo ], declInfo );

@@ -737,6 +737,14 @@ end
 
 
 
+function dumpFilter:processExpCallSuperCtor( node, opt )
+
+   local prefix, depth = opt:get(  )
+   local typeInfo = node:get_superType(  )
+   dump( prefix, depth, node, typeInfo:getTxt(  ) )
+end
+
+
 function dumpFilter:processExpCallSuper( node, opt )
 
    local prefix, depth = opt:get(  )

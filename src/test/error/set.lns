@@ -13,7 +13,7 @@
 }
 {
    let mut set = (@ "1", "2", "3", "4" );
-   if! let val = set.has( "1" ) {
+   if! let val = set.has( "1" ) { // error
       print( val .. "1" ); // error
    }
    set.add( 1 ); // error

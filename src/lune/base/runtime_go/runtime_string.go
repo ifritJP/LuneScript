@@ -29,7 +29,7 @@ package main
 import "C"
 
 import "unsafe"
-//import "log"
+import "fmt"
 import "strings"
 //import "runtime"
 
@@ -110,8 +110,20 @@ func (luaVM *Lns_luaVM) String_format( format string, ddd []LnsAny ) string {
     
     // ... の値を push する
     for _, val := range( ddd ) {
-        pVal := luaVM.pushAny( val )
-        defer pVal.free()
+        switch val.(type) {
+        case *LnsList:
+            pVal := luaVM.pushAny( fmt.Sprintf("table:%v", val ) )
+            defer pVal.free()
+        case *LnsSet:
+            pVal := luaVM.pushAny( fmt.Sprintf("table:%v", val ) )
+            defer pVal.free()
+        case *LnsMap:
+            pVal := luaVM.pushAny( fmt.Sprintf("table:%v", val ) )
+            defer pVal.free()
+        default:
+            pVal := luaVM.pushAny( val )
+            defer pVal.free()
+        }
     }
 
     return callInfo.call( luaVM, 1 )[0].(string)
