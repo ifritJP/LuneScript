@@ -33,7 +33,14 @@ pub enum BitOp {
    Cant,
 }
 
+pub enum VerKind {
+   v51 = 51,
+   v52 = 52,
+   v53 = 53,
+}
+
 pub class LuaVerInfo {
+   let verKind:VerKind {pub};
    let hasBitOp: BitOp {pub};
    let hasTableUnpack: bool {pub};
    let canFormStem2Str: bool {pub};
@@ -52,11 +59,27 @@ pub class LuaVerInfo {
    }
 }
 
-pub let ver51 = new LuaVerInfo( .Cant, false, false, false, "loadstring51",
+pub let ver51 = new LuaVerInfo( .v51, .Cant, false, false, false, "loadstring51",
                                 false, .LoadStr51,
                                 (@ "package.searchpath" ));
-pub let ver52 = new LuaVerInfo( .HasMod, true, true, true, "loadstring52",
+pub let ver52 = new LuaVerInfo( .v52, .HasMod, true, true, true, "loadstring52",
                                 true, .LoadStr52, (@) );
-pub let ver53 = new LuaVerInfo( .HasOp, true, true, true, "loadstring52",
+pub let ver53 = new LuaVerInfo( .v53, .HasOp, true, true, true, "loadstring52",
                                 true, .LoadStr52, (@) );
+let kind2verMap = {
+   VerKind.v51: ver51,
+   VerKind.v52: ver52,
+   VerKind.v53: ver53
+};
 
+
+let mut curVer:&LuaVerInfo! = nil;
+pub fn setCurVer( ver:int ) {
+   let! verKind = VerKind._from( ver ) {
+      return;
+   };
+   curVer = unwrap kind2verMap[ verKind ];
+}
+pub fn getCurVer() : &LuaVerInfo {
+   return unwrap curVer;
+}

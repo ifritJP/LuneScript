@@ -1059,6 +1059,7 @@ macro _declLoopGetBreakKind( node:sym, blockMem:sym ) {
 
 _declNodeClass( "While", Node, false, false, true,
                 [ { "exp": "&Node" },
+                  { "infinit": "bool" },
                   { "block": "&BlockNode" } ]
 );
 
@@ -1977,24 +1978,26 @@ pub override fn WhileNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
       return kind;
    }
    else {
-      if self.exp.$expType.$nilable {
-         return .None;
-      }
-      if self.exp.$expType.equals( Ast.builtinTypeBool ## ) {
-         if! let boolNode = self.exp@@@LiteralBoolNode {
-            if boolNode.$token.txt == "false" {
-               return .None;
-            }  
-         }
-         else {
-            return .None;
-         }        
-      }
+      // if self.exp.$expType.$nilable {
+      //    return .None;
+      // }
+      // if self.exp.$expType.equals( Ast.builtinTypeBool ## ) {
+      //    if! let boolNode = self.exp@@@LiteralBoolNode {
+      //       if boolNode.$token.txt == "false" {
+      //          return .None;
+      //       }  
+      //    }
+      //    else {
+      //       return .None;
+      //    }        
+      // }
       // 条件式が次のもの以外は無条件ループ。
       //  - nilable でない
       //  - bool 型の式でない
       //  - false でもない
-      
+      if not self.infinit {
+         return .None;
+      }
 
       // 無条件ループ用のフロー解析に変更する。
       let mut mode = CheckBreakMode.IgnoreFlow;

@@ -511,6 +511,61 @@ end
 local noneToken = Token.new(TokenKind.Eof, "", Position.new(0, -1), false, {})
 _moduleObj.noneToken = noneToken
 
+local function convFromRawToStr( txt )
+
+   if #txt == 0 then
+      return txt
+   end
+   
+   do
+      local _switchExp = string.byte( txt, 1 )
+      if _switchExp == 39 or _switchExp == 34 then
+      else 
+         
+            return txt:sub( 4, #txt - 3 )
+      end
+   end
+   
+   local findChar = string.byte( txt, 1 )
+   local workTxt = txt
+   local retTxt = ""
+   local workIndex = 2
+   local setIndex = 2
+   local workPattern = "[\"'\\]"
+   while true do
+      local endIndex = string.find( workTxt, workPattern, workIndex )
+      if  nil == endIndex then
+         local _endIndex = endIndex
+      
+         Util.err( string.format( "error: illegal string -- %s", workTxt) )
+      end
+      
+      local workChar = string.byte( workTxt, endIndex )
+      if workChar == findChar then
+         return retTxt .. workTxt:sub( setIndex, endIndex - 1 )
+      elseif workChar == 92 then
+         local quote = string.byte( workTxt, endIndex + 1 )
+         do
+            local _switchExp = quote
+            if _switchExp == 39 or _switchExp == 34 then
+               retTxt = string.format( "%s%s%c", retTxt, workTxt:sub( setIndex, endIndex - 1 ), quote)
+            else 
+               
+                  retTxt = string.format( "%s%s", retTxt, workTxt:sub( setIndex, endIndex + 1 ))
+            end
+         end
+         
+         workIndex = endIndex + 2
+         setIndex = workIndex
+      else
+       
+         workIndex = endIndex + 1
+      end
+      
+   end
+   
+end
+_moduleObj.convFromRawToStr = convFromRawToStr
 
 local StreamParser = {}
 setmetatable( StreamParser, { __index = Parser } )
@@ -820,8 +875,8 @@ function StreamParser:parse(  )
       local comment = ""
       while true do
          do
-            local _480, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
-            if _480 ~= nil and termEndIndex ~= nil then
+            local _493, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
+            if termEndIndex ~= nil then
                comment = comment .. rawLine:sub( searchIndex, termEndIndex )
                return comment, termEndIndex + 1
             end

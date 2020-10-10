@@ -24,12 +24,20 @@ SOFTWARE.
 
 package main
 
+import . "lns/lune/base/runtime_go"
+
 // import "runtime"
 // import "time"
 //IMPORT
+////TEST:import . "lns/lune/base"
+
+
 
 func main() {
     Lns_init()
+    Lns_runTest()
+    //TEST:Lns_Testing_init()
+    //TEST:Testing_outputAllResult(Lns_io_stdout)
     // runtime.GC()
     // time.Sleep(1 * time.Second)
 }

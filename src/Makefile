@@ -1062,8 +1062,11 @@ GO_WORK_DIR = work/go
 #
 # $1: 実行する作業ディレクトリ
 # $2: トランスコンパイルする lns ソースのパス
+# $3: lnsc のオプション
+# $4: 出力先ディレクトリ
 define convGo
-	$(call exeLune,$1,$2,save -langGo,$3)
+	$(call exeLune,$1,$2.lns,SAVE -langGo,$3 $4)
+	if [ "$4" != "" ]; then cp $1/$4/$2.go $1/$2.go ; fi
 endef
 
 define setup-go
@@ -1080,9 +1083,9 @@ define test-go-one
 	mkdir -p $1/mod
 	-rm $1/mod/*
 	cp -au $3/$2.lns $1/mod
-	$(call convGo,$1,mod/$2.lns)
+	$(call convGo,$1,mod/$2,--testing)
 	$(call buildGo,$1) > work/result-testGo.txt
-	$(call exeLune,$1,mod/$2.lns,exe,) > work/result-testGo2.txt
+	$(call exeLune,$1,mod/$2.lns,exe,--testing) > work/result-testGo2.txt
 	diff -C 2 -I 'ONLY_LUA' work/result-testGo.txt work/result-testGo2.txt
 endef
 
@@ -1092,7 +1095,9 @@ test-miniGo:
 	$(call setup-go,$(GO_WORK_DIR))
 	$(call test-go-one,$(GO_WORK_DIR),miniGo,.)
 
+ifndef NO_TEST
 	$(MAKE) test-go
+endif
 
 miniGo-go:
 	$(call buildGo,$(GO_WORK_DIR))
@@ -1133,23 +1138,31 @@ test-tutorial-go:
 
 define test-convGo-test
 	cat lune/base/runtime_go/main/runtime_main.go |		\
-		sed 's/Lns_init/Lns_$2_init/;' |		\
+		sed 's/Lns_init/Lns_$2_init/' |			\
+		sed 's@//TEST:@@' |				\
 		sed 's@//IMPORT@import . "$(GO_MOD)/lune/base"@' > $1/runtime_main.go
 
-	$(call convGo,$1,$3/$2.lns,--testing)
+	$(call convGo,$1,$3/$2,--testing,$4)
 	$(call buildGo,$1) > work/result-testGo.txt
-	$(call exeLune,$1,$3/$2,exe,--testing) > work/result-testGo2.txt
+	$(call exeLune,$1/$4,$3/$2.lns,exe,--testing) > work/result-testGo2.txt
 	diff -C 2 -I 'ONLY_LUA' work/result-testGo.txt work/result-testGo2.txt
 endef
 
 test-testGo:
 	$(call transwork,.,.,,base/convGo)
-	rm -rf $(GO_WORK_DIR)/*.*
+	rm -rf $(GO_WORK_DIR)/*.* $(GO_WORK_DIR)/lune $(GO_WORK_DIR)/test
 	$(call setup-go,$(GO_WORK_DIR))
-	cp -au lune/base/runtime_go/main/* $(GO_WORK_DIR)
+	$(call setup-go,$(GO_WORK_DIR)/test)
 
-	$(call convGo,$(GO_WORK_DIR),lune/base/Testing.lns,--testing)
-	$(call test-convGo-test,$(GO_WORK_DIR),Ver,lune/base)
+	$(call convGo,$(GO_WORK_DIR),lune/base/Testing,--testing,./test)
+	$(call test-convGo-test,$(GO_WORK_DIR),Ver,lune/base,./test)
+	$(call test-convGo-test,$(GO_WORK_DIR),Code,lune/base,./test)
+	$(call test-convGo-test,$(GO_WORK_DIR),LuaMod,lune/base,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/LuaVer,--testing,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/LuneControl,--testing,./test)
+	$(call test-convGo-test,$(GO_WORK_DIR),Util,lune/base,./test)
+	$(call test-convGo-test,$(GO_WORK_DIR),Parser,lune/base,./test)
+#	$(call test-convGo-test,$(GO_WORK_DIR),Writer,lune/base,./test)
 
 
 test-reference:

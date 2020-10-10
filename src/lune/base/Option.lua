@@ -199,7 +199,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 4218
+   return 4247
 end
 
 
@@ -387,7 +387,7 @@ function Option:__init()
    self.updateOnLoad = false
    self.byteCompile = false
    self.stripDebugInfo = false
-   self.targetLuaVer = Depend.curVer
+   self.targetLuaVer = LuaVer.getCurVer(  )
    self.transCtrlInfo = TransCtrlInfo.create_normal(  )
    self.bootPath = nil
    self.useIpairs = false

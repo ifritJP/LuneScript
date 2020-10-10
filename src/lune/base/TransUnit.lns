@@ -3575,9 +3575,23 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
 
 
 fn TransUnit.analyzeWhile( token: &Parser.Token ) mut : Nodes.WhileNode {
+   let cond = self.analyzeExpOne( false, false## );
+   let mut infinit = false;
+   if cond.$expType == Ast.builtinTypeBool {
+      if! let literal = cond.getLiteral() {
+         match literal {
+            case .Bool( val ) {
+               infinit = val;
+            }
+         }
+      }
+   } elseif not cond.$expType.$nilable {
+      infinit = true;
+   }
+   
    return Nodes.WhileNode.create(
       self.nodeManager, token.pos, self.macroCtrl.isInAnalyzeArgMode(),
-      [ Ast.builtinTypeNone ], self.analyzeExpOne( false, false## ),
+      [ Ast.builtinTypeNone ], cond, infinit,
       self.analyzeBlock( .While, .Loop ## ) );
 }
 

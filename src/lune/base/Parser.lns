@@ -267,6 +267,56 @@ pub class WrapParser extend Parser {
 
 pub let noneToken = new Token( .Eof, "", new Position( 0, -1 ), false, [] );
 
+/**
+', ", ``` の区切り記号で囲まれた文字列から、区切り記号を取り除いた文字列を返す。
+
+\', \" のクオートを解決した文字列を返す。
+*/
+pub fn convFromRawToStr( txt:str ) : str {
+   if #txt == 0 {
+      return txt;
+   }
+   switch txt[1] {
+      case ?\', ?\" {
+      }
+      default {
+         return txt.sub( 4, #txt - 3 );
+      }
+   }
+   let findChar = txt[1];
+   let mut workTxt = txt;
+   let mut retTxt = "";
+   let mut workIndex = 2;
+   let mut setIndex = 2;
+   let workPattern = "[\"'\\]";
+   while true {
+      let! endIndex = string.find( workTxt, workPattern, workIndex ## ) {
+         // 文字列の区切り文字がない場合はエラー
+         Util.err( "error: illegal string -- %s" ( workTxt ) );
+      };
+      let workChar = workTxt[ endIndex ];
+      if workChar == findChar {
+         // 対になる区切り文字だった場合は文字列として登録
+         return retTxt .. workTxt.sub( setIndex, endIndex - 1 );
+      } elseif workChar == ?\\ {
+         let mut quote = workTxt[ endIndex + 1 ];
+         switch quote {
+            case ?\', ?\" {
+               retTxt = "%s%s%c" (retTxt, workTxt.sub( setIndex, endIndex - 1 ), quote );
+            }
+            default {
+               retTxt = "%s%s" (retTxt, workTxt.sub( setIndex, endIndex + 1 ) );
+            }
+         }
+         workIndex = endIndex + 2;
+         setIndex = workIndex;
+      }
+      else {
+         workIndex = endIndex + 1;
+      }
+   }
+}
+
 pub class StreamParser extend Parser {
    /** stdin に紐付けている*/
    static let mut stdinStreamModuleName: str!;

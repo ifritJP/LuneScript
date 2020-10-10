@@ -35,6 +35,7 @@ import lune.base.glueFilter;
 import lune.base.Depend;
 import lune.base.OutputDepend;
 import lune.base.Ver;
+import lune.base.LuaVer;
 import lune.base.Log;
 import lune.base.Formatter;
 import lune.base.Testing;
@@ -42,6 +43,11 @@ import lune.base.TestCtrl;
 import lune.base.Meta;
 
 _lune_control ignore_symbol_;
+
+Depend.setup( fn(ver:int) {
+   LuaVer.setCurVer( ver );
+});
+
 
 let forceUpdateMeta = true;
 
@@ -941,6 +947,9 @@ Go に変換しファイルに書き込む
 pub fn Front.saveToGo( ast:&TransUnit.ASTInfo ) mut {
    let mut path = self.option.scriptPath.gsub( "%.lns$", ".go" );
 
+   if! let dir = self.option.outputDir {
+      path = "%s/%s" (dir,path);
+   }
    let! mut file = io.open( path, "w" ) {
       return;
    };

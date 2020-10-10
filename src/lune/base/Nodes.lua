@@ -723,7 +723,7 @@ end
 function NodeManager:__init() 
    self.idSeed = 0
    self.nodeKind2NodeList = {}
-   for kind, _2472 in pairs( nodeKind2NameMap ) do
+   for kind, _2473 in pairs( nodeKind2NameMap ) do
       if not self.nodeKind2NodeList[kind] then
          self.nodeKind2NodeList[kind] = {}
       end
@@ -2714,25 +2714,26 @@ function WhileNode:canBeStatement(  )
 
    return true
 end
-function WhileNode.new( id, pos, macroArgFlag, typeList, exp, block )
+function WhileNode.new( id, pos, macroArgFlag, typeList, exp, infinit, block )
    local obj = {}
    WhileNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, exp, block ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, exp, infinit, block ); end
    return obj
 end
-function WhileNode:__init(id, pos, macroArgFlag, typeList, exp, block) 
+function WhileNode:__init(id, pos, macroArgFlag, typeList, exp, infinit, block) 
    Node.__init( self,id, 12, pos, macroArgFlag, typeList)
    
    
    
    self.exp = exp
+   self.infinit = infinit
    self.block = block
    
    
 end
-function WhileNode.create( nodeMan, pos, macroArgFlag, typeList, exp, block )
+function WhileNode.create( nodeMan, pos, macroArgFlag, typeList, exp, infinit, block )
 
-   local node = WhileNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, exp, block)
+   local node = WhileNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, exp, infinit, block)
    nodeMan:addNode( node )
    return node
 end
@@ -2781,6 +2782,9 @@ function WhileNode.setmeta( obj )
 end
 function WhileNode:get_exp()
    return self.exp
+end
+function WhileNode:get_infinit()
+   return self.infinit
 end
 function WhileNode:get_block()
    return self.block
@@ -11358,23 +11362,8 @@ function WhileNode:getBreakKind( checkMode )
       return kind
    else
     
-      if self.exp:get_expType():get_nilable() then
+      if not self.infinit then
          return BreakKind.None
-      end
-      
-      if self.exp:get_expType():equals( Ast.builtinTypeBool ) then
-         do
-            local boolNode = _lune.__Cast( self.exp, 3, LiteralBoolNode )
-            if boolNode ~= nil then
-               if boolNode:get_token().txt == "false" then
-                  return BreakKind.None
-               end
-               
-            else
-               return BreakKind.None
-            end
-         end
-         
       end
       
       local mode = CheckBreakMode.IgnoreFlow
@@ -11656,7 +11645,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, _8353 in pairs( self.map ) do
+   for key, _8357 in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -11691,8 +11680,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, _8361 in ipairs( __sorted ) do
-         local key = __map[ _8361 ]
+      for __index, _8365 in ipairs( __sorted ) do
+         local key = __map[ _8365 ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false

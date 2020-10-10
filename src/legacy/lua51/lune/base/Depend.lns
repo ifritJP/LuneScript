@@ -131,7 +131,11 @@ fn getCurrentVer(): &LuaVer.LuaVerInfo {
    return LuaVer.ver51;
 }
 
-pub let curVer = getCurrentVer();
+let curVer = getCurrentVer();
+pub form UpdateVer( ver:int );
+pub fn setup( func:UpdateVer ) {
+   func( curVer.$verKind );
+}
 
 form SearchpathForm( mod:str, pathPattern:str ) : str!;
 
@@ -151,3 +155,4 @@ pub fn existFile( path:str ): bool {
    fileObj.close();
    return true;
 }
+

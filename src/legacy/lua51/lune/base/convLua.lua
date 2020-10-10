@@ -449,7 +449,7 @@ function convFilter:writeRaw( txt )
    end
    
    
-   for _5356 in string.gmatch( txt, "\n" ) do
+   for _5372 in string.gmatch( txt, "\n" ) do
       self.curLineNo = self.curLineNo + 1
    end
    
@@ -1898,7 +1898,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _5696 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _5712 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -2496,10 +2496,15 @@ function convFilter:processIfUnwrap( node, opt )
    self:writeln( "" )
    
    self:write( "if " )
-   for index, varSym in ipairs( node:get_varSymList() ) do
-      self:write( string.format( "%s ~= nil", getSymTxt( varSym:get_name(), string.format( "%d", varSym:get_symbolId()) )) )
-      if index ~= #node:get_varSymList() then
-         self:write( " and " )
+   local hasSym = false
+   for __index, varSym in ipairs( node:get_varSymList() ) do
+      if varSym:get_name() ~= "_" then
+         if hasSym then
+            self:write( " and  " )
+         end
+         
+         self:write( string.format( "%s ~= nil", getSymTxt( varSym:get_name(), string.format( "%d", varSym:get_symbolId()) )) )
+         hasSym = true
       end
       
    end
@@ -4033,7 +4038,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3330, function (  )
+   Log.log( Log.Level.Info, __func__, 3334, function (  )
    
       return string.format( "code: %s", code)
    end )
@@ -4058,7 +4063,7 @@ end
 function MacroEvalImp:evalFromCode( name, argNameList, code )
 
    local stream = Util.memStream.new()
-   local conv = convFilter.new("macro", stream, stream, ConvMode.Exec, true, Ast.headTypeInfo, Ast.SymbolKind.Typ, nil, Depend.curVer, false, true)
+   local conv = convFilter.new("macro", stream, stream, ConvMode.Exec, true, Ast.headTypeInfo, Ast.SymbolKind.Typ, nil, LuaVer.getCurVer(  ), false, true)
    
    conv:outputDeclMacro( name, argNameList, function (  )
    
@@ -4073,7 +4078,7 @@ end
 function MacroEvalImp:eval( node )
 
    local stream = Util.memStream.new()
-   local conv = convFilter.new("macro", stream, stream, ConvMode.Exec, true, Ast.headTypeInfo, Ast.SymbolKind.Typ, nil, Depend.curVer, false, true)
+   local conv = convFilter.new("macro", stream, stream, ConvMode.Exec, true, Ast.headTypeInfo, Ast.SymbolKind.Typ, nil, LuaVer.getCurVer(  ), false, true)
    
    conv:processDeclMacro( node, Opt.new(node) )
    

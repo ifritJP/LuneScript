@@ -1988,10 +1988,14 @@ pub override fn convFilter.processIfUnwrap(
    self.writeln( "" );
 
    self.write( "if " );
-   foreach varSym, index in node.$varSymList {
-      self.write( "%s ~= nil" (getSymTxt( varSym.$name, "%d" (varSym.$symbolId) )) );
-      if index ~= #node.$varSymList {
-         self.write( " and " );
+   let mut hasSym = false;
+   foreach varSym in node.$varSymList {
+      if varSym.$name ~= "_" {
+         if hasSym {
+            self.write( " and  " );
+         }
+         self.write( "%s ~= nil" (getSymTxt( varSym.$name, "%d" (varSym.$symbolId) )) );
+         hasSym = true;
       }
    }
    self.write( " then" );
@@ -3349,7 +3353,7 @@ pub class MacroEvalImp extend Nodes.MacroEval {
       let mut stream = new Util.memStream();
       let mut conv = new convFilter(
          "macro", stream, stream, .Exec, true,
-         Ast.headTypeInfo, .Typ, nil, Depend.curVer, false, true );
+         Ast.headTypeInfo, .Typ, nil, LuaVer.getCurVer(), false, true );
 
       conv.outputDeclMacro(
          name, argNameList,
@@ -3368,7 +3372,7 @@ pub class MacroEvalImp extend Nodes.MacroEval {
       let mut stream = new Util.memStream();
       let mut conv = new convFilter(
          "macro", stream, stream, .Exec, true,
-         Ast.headTypeInfo, .Typ, nil, Depend.curVer, false, true );
+         Ast.headTypeInfo, .Typ, nil, LuaVer.getCurVer(), false, true );
 
       conv.processDeclMacro( node, new Opt( node ) );
 

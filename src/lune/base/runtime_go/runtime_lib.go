@@ -36,6 +36,25 @@ type LnsForm func( []LnsAny ) []LnsAny
 
 var LnsNone interface{} = nil
 
+type LnsTestcase struct {
+    Name string
+    Call func()
+}
+
+var lnsTestcaseMap map[string] []*LnsTestcase = map[string] []*LnsTestcase {}
+
+func Lns_registerTestcase( modName string, list []*LnsTestcase ) {
+    lnsTestcaseMap[ modName ] = list
+}
+
+func Lns_runTest() {
+    for _, list := range( lnsTestcaseMap ) {
+        for _, testcase := range( list ) {
+            fmt.Printf( "%s:\n", testcase.Name  )
+            testcase.Call()
+        }
+    }
+}
 
 func Lns_IsNil( val LnsAny ) bool {
     if val == nil {

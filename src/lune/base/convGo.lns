@@ -59,6 +59,7 @@ class convFilter extend Nodes.Filter<Opt> {
    pri let mut builtin2runtime:&Map<&Ast.TypeInfo,str>;
    pri let mut type2gotypeMap:&Map<&Ast.TypeInfo,str>;
    pri let mut nodeManager:Nodes.NodeManager;
+   pri let mut enableTest:bool;
 
    pub fn __init( enableTest:bool, streamName: str, stream: oStream,
                   ast:&TransUnit.ASTInfo )
@@ -73,6 +74,7 @@ class convFilter extend Nodes.Filter<Opt> {
       self.builtin2runtime = {};
       self.type2gotypeMap = {};
       self.nodeManager = new Nodes.NodeManager();
+      self.enableTest = enableTest;
    }
 
    fn pushProcessMode( mode:ProcessMode ) mut {
@@ -242,7 +244,9 @@ fn convFilter.getSymbol( kind:SymbolKind, name:str ) : str {
                                              typeInfo.$typeId );
                }
             } else {
-               if not Ast.isBuiltin( typeInfo.$typeId ) {
+               if not Ast.isBuiltin( typeInfo.$typeId ) and
+                  not Ast.isPubToExternal( typeInfo.$accessMode )
+               {
                   symbolName = "%s_%d_" (symbolName, typeInfo.$typeId);
                }
             }
@@ -332,8 +336,11 @@ fn str2gostr( txt:str ) : str {
       work = ("%q" ( work.sub( 4, -4 ) )).gsub( "\\\n", "\\n" );
    }
    elseif string.find( work, "^'" ## ) {
-      work = '"%s"' ((("%s" ( work.sub( 2, -2 )) ).gsub( '"', '\\"' )));
+      work = Parser.convFromRawToStr( work ).gsub( '"', '\\"' );
+      work = '"%s"' (work);
    }
+   
+   work = work.gsub( "\\\n", "\\n" );
    work = work.gsub( "\\9", "\\t" );
    return work;
 }
@@ -876,7 +883,9 @@ fn convFilter.outputRetType(retTypeList:&List<&Ast.TypeInfo>) mut {
          self.write( "" );
       }
       case 1 {
-         self.write( " " .. self.type2gotype( retTypeList[1] ) );
+         if retTypeList[ 1 ] ~= Ast.builtinTypeNeverRet {
+            self.write( " " .. self.type2gotype( retTypeList[1] ) );
+         }
       }
       default {
          // 多値返却
@@ -1187,6 +1196,7 @@ pub override fn convFilter.processRoot(
    _makemap( { "str": [ "gsub", "find", "byte", "format", "rep", "gmatch",
                         "sub", "lower", "upper", "reverse" ] } );
 
+   builtin2runtime[ builtinFuncs.lns_error ] = "panic";
    builtin2runtime[ builtinFuncs.lns_print ] = "Lns_print";
    builtin2runtime[ builtinFuncs.lns__load ] = "Lns_getVM().Load";
 
@@ -1261,6 +1271,9 @@ pub override fn convFilter.processRoot(
       self.outputConvToFormFunc( workNode );
       
    }
+   foreach workNode in node.$nodeManager.getTestBlockNodeList() {
+      filter( workNode, self, node );
+   }
 
    foreach workNode in node.$nodeManager.getIfUnwrapNodeList() {
       let mut symTypeList:List<&Ast.TypeInfo> = [];
@@ -1303,10 +1316,27 @@ pub override fn convFilter.processRoot(
 
    self.writeln( "if %s { return }" (initModVar) );
    self.writeln( "%s = true" (initModVar));
-   
+
    self.writeln( '%s = "%s"' (self.getSymbolSym( modSym ),
                                node.$moduleTypeInfo.getFullName(
                                   self.$typeNameCtrl, self.$moduleInfoManager ##)));
+
+
+   self.writeln( "testcaseList := []*LnsTestcase{" );
+   if self.enableTest {
+      self.pushIndent( ## );
+      foreach workNode in node.$nodeManager.getTestBlockNodeList() {
+         self.writeln( '&LnsTestcase{ "%s", lns_test_%s_%s },'
+                       (workNode.$name.txt, getModuleName( node.$moduleTypeInfo),
+                         workNode.$name.txt) );   
+      }
+      self.popIndent();
+   }
+   self.writeln( "}" );
+   self.writeln(
+      'Lns_registerTestcase( "%s", testcaseList )'
+      (getModuleName( node.$moduleTypeInfo)) );
+   
 
    foreach child in node.$children {
       if not ignoreNodeInInnerBlockSet.has( child.$kind ) {
@@ -1790,7 +1820,11 @@ pub override fn convFilter.processIfUnwrap(
       if index > 1 {
          self.write( ", " );
       }
-      self.write( "_" .. varSym.$name );
+      if varSym.$name == "_" {
+         self.write( "_" );
+      } else {
+         self.write( "_" .. varSym.$name );
+      }
       tempTypeList.insert( Ast.builtinTypeStem_ );
       if index == #node.$varSymList {
          for _ = index + 1, #node.$expList.$expTypeList {
@@ -1806,22 +1840,28 @@ pub override fn convFilter.processIfUnwrap(
 
    // テンポラリ変数が nil かどうかを確認
    self.write( "if " );
-   foreach varSym, index in node.$varSymList {
-      if index > 1 {
-         self.write( " && " );
+   let mut hasSym = false;
+   foreach varSym in node.$varSymList {
+      if varSym.$name ~= "_" {
+         if hasSym {
+            self.write( " && " );
+         }
+         self.write( "_%s != nil" ( varSym.$name ) );
+         hasSym = true;
       }
-      self.write( "_%s != nil" ( varSym.$name ) );
    }
    self.writeln( " {" );
 
    // nil でなければ値を入れなおす
    self.pushIndent( ## );
    foreach varSym, index in node.$varSymList {
-      self.write( "%s := _%s" (varSym.$name, varSym.$name) );
-      if node.$expList.getExpTypeAt( index ).$nilable {
-         self.outputAny2Type( varSym.$typeInfo );
+      if varSym.$name ~= "_" {
+         self.write( "%s := _%s" (varSym.$name, varSym.$name) );
+         if node.$expList.getExpTypeAt( index ).$nilable {
+            self.outputAny2Type( varSym.$typeInfo );
+         }
+         self.writeln( "" );
       }
-      self.writeln( "" );
    }
    self.popIndent();
    
@@ -1944,7 +1984,9 @@ fn convFilter.outputLetVar( node: Nodes.DeclVarNode ) mut {
             if index > 1 {
                self.write( "," );
             }
-            if symbolInfo.$posForModToRef {
+            if symbolInfo.$posForModToRef or
+               Ast.isPubToExternal( symbolInfo.$accessMode )
+            {
                self.write( "%s" ( self.getSymbolSym( symbolInfo ) ) );
             } else {
                self.write( "_" );
@@ -1999,6 +2041,9 @@ pub override fn convFilter.processDeclVar(
                self.write( "," );
             }
             self.write( "_%s" (varSym.$name ));
+         }
+         for _ = #node.$symbolInfoList + 1, #expList.$expTypeList {
+            self.write( ",_" );
          }
          self.write( " = " );
          self.processSetFromExpList(
@@ -2264,7 +2309,9 @@ pub override fn convFilter.processWhile(
    node: Nodes.WhileNode, opt: Opt ) mut
 {
    self.write( "for " );
-   filter( node.$exp, self, node );
+   if not node.$infinit {
+      self.processCond( node.$exp, node );
+   }
    self.writeln( " {" );
 
    filter( node.$block, self, node );
@@ -2406,10 +2453,12 @@ pub override fn convFilter.processApply(
    self.writeln(
       "if Lns_IsNil( %s ) { break }" (prevSym) );
    let topSymInfo = node.$varList[1];
-   self.writeln(
-      "%s := %s.(%s)"
-      ( self.getSymbolSym( topSymInfo), prevSym,
-        self.type2gotype( topSymInfo.$typeInfo )) );
+   if topSymInfo.$name ~= "_" {
+      self.writeln(
+         "%s := %s.(%s)"
+         ( self.getSymbolSym( topSymInfo), prevSym,
+           self.type2gotype( topSymInfo.$typeInfo )) );
+   }
    self.popIndent();
    
    filter( node.$block, self, node );
@@ -3822,6 +3871,9 @@ pub override fn convFilter.processExpSetVal(
       }
    } 
    filter( node.$exp1, self, node );
+   for _ = #node.$exp1.$expTypeList + 1, #node.$exp2.$expTypeList {
+      self.write( ",_" );
+   }
    self.write( " = " );
    if node.$exp2.$expType.$kind == .DDD {
       self.write( "Lns_getFromMulti( " );
@@ -3984,8 +4036,8 @@ pub override fn convFilter.processExpRef(
 pub override fn convFilter.processExpRefItem(
    node: Nodes.ExpRefItemNode, opt: Opt ) mut
 {
-   let prefixTpe = node.$val.$expType.$nonnilableType;
-   switch prefixTpe.$kind {
+   let prefixType = node.$val.$expType.$nonnilableType;
+   switch prefixType.$kind {
       case .List, .Array {
          if node.$nilAccess {
             self.write( "Lns_NilAccFin( Lns_NilAccPush( " );
@@ -4011,7 +4063,7 @@ pub override fn convFilter.processExpRefItem(
             self.write( ") && Lns_NilAccLast( Lns_NilAccPop().(*LnsMap)" );
          } else {
             filter( node.$val, self, node );
-            if prefixTpe.$kind == .Stem {
+            if prefixType.$kind == .Stem {
                self.write( ".(*LnsMap)" );
             }
          }
@@ -4027,8 +4079,17 @@ pub override fn convFilter.processExpRefItem(
          }
       }
       default {
-         Util.err( "not support -- %s, %s"
-                   (__func__, prefixTpe.$kind.$_txt) );
+         if prefixType == Ast.builtinTypeString {
+            self.write( "LnsInt(" );
+            filter( node.$val, self, node );
+            self.write( "[" );
+            filter( unwrap node.$index, self, node );
+            self.write( "-1])" );
+            
+         } else {
+            Util.err( "%s: not support -- %d, %s"
+                      (__func__, node.$pos.lineNo, prefixType.$kind.$_txt) );
+         }
       }
    }
 }
@@ -4036,7 +4097,7 @@ pub override fn convFilter.processExpRefItem(
 pub override fn convFilter.processRefField(
    node: Nodes.RefFieldNode, opt: Opt ) mut
 {
-   if node.$expType.$kind == .Enum {
+   if node.$prefix.$expType.$kind == .Enum and node.$expType.$kind == .Enum {
       self.write( self.getSymbol( .Static( node.$expType ), node.$field.txt ) );
       return;
    }
@@ -4176,7 +4237,18 @@ pub override fn convFilter.processReturn(
 
 pub override fn convFilter.processTestBlock( node: Nodes.TestBlockNode, opt: Opt ) mut
 {
-   Util.err( "not support -- %s" (__func__) );
+   if not self.enableTest {
+      return;
+   }
+   self.writeln(
+      "func lns_test_%s_%s() {"
+      (getModuleName( self.$moduleTypeInfo), node.$name.txt) );
+   self.pushIndent(##);
+
+   filter( node.$block, self, node );
+   
+   self.popIndent();
+   self.writeln( "}" );
 }
 
 pub override fn convFilter.processProvide(

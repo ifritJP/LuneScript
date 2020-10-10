@@ -322,13 +322,17 @@ local function getCurrentVer(  )
 end
 
 local curVer = getCurrentVer(  )
-_moduleObj.curVer = curVer
 
+local function setup( func )
+
+   func( curVer:get_verKind() )
+end
+_moduleObj.setup = setup
 
 
 
 local searchpathForm = searchpath51
-if _moduleObj.curVer:get_hasSearchPath() then
+if curVer:get_hasSearchPath() then
    searchpathForm = (_lune.unwrap( _lune.nilacc( _G['package'], nil, 'item', 'searchpath')) )
 end
 

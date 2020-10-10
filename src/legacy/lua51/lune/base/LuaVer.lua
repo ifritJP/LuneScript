@@ -75,6 +75,19 @@ function _lune._toSet( val, toKeyInfo )
    return nil
 end
 
+function _lune.unwrap( val )
+   if val == nil then
+      __luneScript:error( 'unwrap val is nil' )
+   end
+   return val
+end
+function _lune.unwrapDefault( val, defval )
+   if val == nil then
+      return defval
+   end
+   return val
+end
+
 function _lune.loadModule( mod )
    if __luneScript then
       return  __luneScript:loadModule( mod )
@@ -170,6 +183,39 @@ BitOp._val2NameMap[2] = 'Cant'
 BitOp.__allList[3] = BitOp.Cant
 
 
+local VerKind = {}
+_moduleObj.VerKind = VerKind
+VerKind._val2NameMap = {}
+function VerKind:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "VerKind.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+function VerKind._from( val )
+   if VerKind._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+    
+VerKind.__allList = {}
+function VerKind.get__allList()
+   return VerKind.__allList
+end
+
+VerKind.v51 = 51
+VerKind._val2NameMap[51] = 'v51'
+VerKind.__allList[1] = VerKind.v51
+VerKind.v52 = 52
+VerKind._val2NameMap[52] = 'v52'
+VerKind.__allList[2] = VerKind.v52
+VerKind.v53 = 53
+VerKind._val2NameMap[53] = 'v53'
+VerKind.__allList[3] = VerKind.v53
+
+
 local LuaVerInfo = {}
 _moduleObj.LuaVerInfo = LuaVerInfo
 function LuaVerInfo:isSupport( symbol )
@@ -183,16 +229,17 @@ end
 function LuaVerInfo.setmeta( obj )
   setmetatable( obj, { __index = LuaVerInfo  } )
 end
-function LuaVerInfo.new( hasBitOp, hasTableUnpack, canFormStem2Str, hasSearchPath, loadStrFuncName, canUseMetaGc, loadKind, noSupportSymMap )
+function LuaVerInfo.new( verKind, hasBitOp, hasTableUnpack, canFormStem2Str, hasSearchPath, loadStrFuncName, canUseMetaGc, loadKind, noSupportSymMap )
    local obj = {}
    LuaVerInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( hasBitOp, hasTableUnpack, canFormStem2Str, hasSearchPath, loadStrFuncName, canUseMetaGc, loadKind, noSupportSymMap )
+      obj:__init( verKind, hasBitOp, hasTableUnpack, canFormStem2Str, hasSearchPath, loadStrFuncName, canUseMetaGc, loadKind, noSupportSymMap )
    end
    return obj
 end
-function LuaVerInfo:__init( hasBitOp, hasTableUnpack, canFormStem2Str, hasSearchPath, loadStrFuncName, canUseMetaGc, loadKind, noSupportSymMap )
+function LuaVerInfo:__init( verKind, hasBitOp, hasTableUnpack, canFormStem2Str, hasSearchPath, loadStrFuncName, canUseMetaGc, loadKind, noSupportSymMap )
 
+   self.verKind = verKind
    self.hasBitOp = hasBitOp
    self.hasTableUnpack = hasTableUnpack
    self.canFormStem2Str = canFormStem2Str
@@ -201,6 +248,9 @@ function LuaVerInfo:__init( hasBitOp, hasTableUnpack, canFormStem2Str, hasSearch
    self.canUseMetaGc = canUseMetaGc
    self.loadKind = loadKind
    self.noSupportSymMap = noSupportSymMap
+end
+function LuaVerInfo:get_verKind()
+   return self.verKind
 end
 function LuaVerInfo:get_hasBitOp()
    return self.hasBitOp
@@ -222,14 +272,34 @@ function LuaVerInfo:get_canUseMetaGc()
 end
 
 
-local ver51 = LuaVerInfo.new(BitOp.Cant, false, false, false, "loadstring51", false, LuaMod.CodeKind.LoadStr51, {["package.searchpath"] = true})
+local ver51 = LuaVerInfo.new(VerKind.v51, BitOp.Cant, false, false, false, "loadstring51", false, LuaMod.CodeKind.LoadStr51, {["package.searchpath"] = true})
 _moduleObj.ver51 = ver51
 
-local ver52 = LuaVerInfo.new(BitOp.HasMod, true, true, true, "loadstring52", true, LuaMod.CodeKind.LoadStr52, {})
+local ver52 = LuaVerInfo.new(VerKind.v52, BitOp.HasMod, true, true, true, "loadstring52", true, LuaMod.CodeKind.LoadStr52, {})
 _moduleObj.ver52 = ver52
 
-local ver53 = LuaVerInfo.new(BitOp.HasOp, true, true, true, "loadstring52", true, LuaMod.CodeKind.LoadStr52, {})
+local ver53 = LuaVerInfo.new(VerKind.v53, BitOp.HasOp, true, true, true, "loadstring52", true, LuaMod.CodeKind.LoadStr52, {})
 _moduleObj.ver53 = ver53
 
+local kind2verMap = {[VerKind.v51] = _moduleObj.ver51, [VerKind.v52] = _moduleObj.ver52, [VerKind.v53] = _moduleObj.ver53}
+
+local curVer = nil
+local function setCurVer( ver )
+
+   local verKind = VerKind._from( ver )
+   if  nil == verKind then
+      local _verKind = verKind
+   
+      return 
+   end
+   
+   curVer = _lune.unwrap( kind2verMap[verKind])
+end
+_moduleObj.setCurVer = setCurVer
+local function getCurVer(  )
+
+   return _lune.unwrap( curVer)
+end
+_moduleObj.getCurVer = getCurVer
 
 return _moduleObj

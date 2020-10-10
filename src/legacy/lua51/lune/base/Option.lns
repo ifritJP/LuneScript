@@ -151,7 +151,7 @@ pub class Option {
       self.updateOnLoad = false;
       self.byteCompile = false;
       self.stripDebugInfo = false;
-      self.targetLuaVer = Depend.curVer;
+      self.targetLuaVer = LuaVer.getCurVer();
       self.transCtrlInfo = TransCtrlInfo.create_normal();
       self.bootPath = nil;
       self.useIpairs = false;
