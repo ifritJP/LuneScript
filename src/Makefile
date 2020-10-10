@@ -1047,88 +1047,16 @@ test-gc:
 
 GO_RUNTIME = lune/base/runtime_go
 GO_LUA_LINK = $(GO_RUNTIME)/lua_link
-
-GO_SRC += runtime_main.go
-GO_SRC += runtime_lib.go
-GO_SRC += runtime_collection.go
-GO_SRC += runtime_lua.go
-GO_SRC += runtime_luaCore.go
-GO_SRC += runtime_luaMisc.go
-GO_SRC += runtime_string.go
-GO_SRC += runtime_stream.go
-GO_SRCS := $(addprefix $(GO_RUNTIME)/,$(GO_SRC))
+GO_MOD = lns
 
 define buildGo
 	mkdir -p $(GO_LUA_LINK)
 	if [ ! -h $(GO_LUA_LINK)/inc ]; then ln -s $(LUA_INC_DIR) $(GO_LUA_LINK)/inc; fi
-	go build $1 $(GO_SRCS)
+	(cd $1; if [ ! -f go.mod ]; then go mod init $(GO_MOD); fi)
+	(cd $1; go build && ./lns)
 endef
 
 GO_WORK_DIR = work/go
-
-define test-Go
-	$(call convGo,.,$(GO_WORK_DIR)/$1.lns)
-	$(call buildGo,$(GO_WORK_DIR)/$1.go)
-	mv $1 $(GO_WORK_DIR)
-	./$(GO_WORK_DIR)/$1 > $(GO_WORK_DIR)/result.go
-	rm ./$(GO_WORK_DIR)/$1
-	$(call exeLune,.,$(GO_WORK_DIR)/$1.lns,exe) > $(GO_WORK_DIR)/result.lua
-	diff -C 2 -I 'ONLY_LUA' $(GO_WORK_DIR)/result.lua $(GO_WORK_DIR)/result.go
-endef
-
-test-go-one:
-	$(call test-Go,$(GO_TEST_SRC))
-
-define test-Go-one
-	$(MAKE) test-go-one GO_RUNTIME=$(GO_WORK_DIR) GO_TEST_SRC=$1
-endef
-
-test-tutorial-go:
-	mkdir -p $(GO_WORK_DIR)
-	for file in $(GO_SRC); do					\
-		if [ ! -f $(GO_WORK_DIR)/$${file} ]; then		\
-			ln -s $(PWD)/$(GO_RUNTIME)/$${file} $(GO_WORK_DIR);	\
-		fi							\
-	done
-	cp -u test/tutorial/*.lns $(GO_WORK_DIR)
-	cp -u ccc.lns $(GO_WORK_DIR)
-
-	$(call transwork,.,.,,base/convGo)
-
-	$(call test-Go-one,match)
-	$(call test-Go-one,loop)
-	$(call test-Go-one,interface)
-	$(call test-Go-one,generics)
-	$(call test-Go-one,enum)
-	$(call test-Go-one,classOverride)
-	$(call test-Go-one,classMapping)
-	$(call test-Go-one,classInherit)
-	$(call test-Go-one,class2accessor)
-	$(call test-Go-one,class1)
-	$(call test-Go-one,cast)
-	$(call test-Go-one,branch)
-	$(call test-Go-one,nilable)
-	$(call test-Go-one,defaultArg)
-	$(call test-Go-one,multipleRetVal)
-	$(call test-Go-one,arg)
-	$(call test-Go-one,func)
-	$(call test-Go-one,variable)
-	$(call test-Go-one,set)
-	$(call test-Go-one,value)
-
-	$(call test-Go-one,ccc)
-
-test-go:
-	mkdir -p $(GO_WORK_DIR)
-	cp -u $(GO_RUNTIME)/testGo.lns $(GO_WORK_DIR)
-	$(call transwork,.,.,,base/convGo)
-	$(call exeLune,.,$(GO_RUNTIME)/testGo.lns,lua -langGo,) > /dev/null
-	$(call convGo,.,$(GO_RUNTIME)/testGo.lns)
-	$(call buildGo,$(GO_RUNTIME)/testGo.go)
-	./testGo > work/result-testGo.txt
-	$(call exeLune,.,$(GO_RUNTIME)/testGo.lns,exe,) > work/result-testGo2.txt
-	diff -C 2 -I 'ONLY_LUA' work/result-testGo.txt work/result-testGo2.txt
-
 
 # lns ソースを Golang へトランスコンパイルする
 #
@@ -1138,19 +1066,90 @@ define convGo
 	$(call exeLune,$1,$2,save -langGo,$3)
 endef
 
+define setup-go
+	mkdir -p $1
+	rsync -av --include='*.go' --include='*.lua' \
+			--include='*.lns' --exclude='*.*' lune $1
+endef
+
+define test-go-one
+#	cp -au lune/base/runtime_go/main/* $1
+	cat lune/base/runtime_go/main/runtime_main.go |		\
+		sed 's/Lns_init/Lns_$2_init/;' |		\
+		sed 's@//IMPORT@import . "$(GO_MOD)/mod"@' > $1/runtime_main.go
+	mkdir -p $1/mod
+	-rm $1/mod/*
+	cp -au $3/$2.lns $1/mod
+	$(call convGo,$1,mod/$2.lns)
+	$(call buildGo,$1) > work/result-testGo.txt
+	$(call exeLune,$1,mod/$2.lns,exe,) > work/result-testGo2.txt
+	diff -C 2 -I 'ONLY_LUA' work/result-testGo.txt work/result-testGo2.txt
+endef
+
+
 test-miniGo:
 	$(call transwork,.,.,,base/convGo)
-#	$(call exeLune,.,$(GO_RUNTIME)/miniGo.lns,lua -langGo,) > /dev/null
-	$(call convGo,.,$(GO_RUNTIME)/miniGo.lns)
-	$(call buildGo,$(GO_RUNTIME)/miniGo.go)
-	./miniGo
-	$(MAKE) test-go
-miniGo-go:
-	$(call buildGo,$(GO_RUNTIME)/miniGo.go)
-	./miniGo
+	$(call setup-go,$(GO_WORK_DIR))
+	$(call test-go-one,$(GO_WORK_DIR),miniGo,.)
 
-scratch-go:
-	go run $(GO_RUNTIME)/scratch.go $(GO_SRCS)
+	$(MAKE) test-go
+
+miniGo-go:
+	$(call buildGo,$(GO_WORK_DIR))
+
+test-go:
+	$(call transwork,.,.,,base/convGo)
+	$(call setup-go,$(GO_WORK_DIR))
+	$(call test-go-one,$(GO_WORK_DIR),testGo,test)
+
+
+test-tutorial-go:
+	$(call transwork,.,.,,base/convGo)
+	$(call setup-go,$(GO_WORK_DIR))
+
+	$(call test-go-one,$(GO_WORK_DIR),match,test/tutorial)
+	$(call test-go-one,$(GO_WORK_DIR),loop,test/tutorial)
+	$(call test-go-one,$(GO_WORK_DIR),interface,test/tutorial)
+	$(call test-go-one,$(GO_WORK_DIR),generics,test/tutorial)
+	$(call test-go-one,$(GO_WORK_DIR),enum,test/tutorial)
+	$(call test-go-one,$(GO_WORK_DIR),classOverride,test/tutorial)
+	$(call test-go-one,$(GO_WORK_DIR),classMapping,test/tutorial)
+	$(call test-go-one,$(GO_WORK_DIR),classInherit,test/tutorial)
+	$(call test-go-one,$(GO_WORK_DIR),class2accessor,test/tutorial)
+	$(call test-go-one,$(GO_WORK_DIR),class1,test/tutorial)
+	$(call test-go-one,$(GO_WORK_DIR),cast,test/tutorial)
+	$(call test-go-one,$(GO_WORK_DIR),branch,test/tutorial)
+	$(call test-go-one,$(GO_WORK_DIR),nilable,test/tutorial)
+	$(call test-go-one,$(GO_WORK_DIR),defaultArg,test/tutorial)
+	$(call test-go-one,$(GO_WORK_DIR),multipleRetVal,test/tutorial)
+	$(call test-go-one,$(GO_WORK_DIR),arg,test/tutorial)
+	$(call test-go-one,$(GO_WORK_DIR),func,test/tutorial)
+	$(call test-go-one,$(GO_WORK_DIR),variable,test/tutorial)
+	$(call test-go-one,$(GO_WORK_DIR),set,test/tutorial)
+	$(call test-go-one,$(GO_WORK_DIR),value,test/tutorial)
+
+	$(call test-go-one,$(GO_WORK_DIR),ccc,.)
+
+
+define test-convGo-test
+	cat lune/base/runtime_go/main/runtime_main.go |		\
+		sed 's/Lns_init/Lns_$2_init/;' |		\
+		sed 's@//IMPORT@import . "$(GO_MOD)/lune/base"@' > $1/runtime_main.go
+
+	$(call convGo,$1,$3/$2.lns,--testing)
+	$(call buildGo,$1) > work/result-testGo.txt
+	$(call exeLune,$1,$3/$2,exe,--testing) > work/result-testGo2.txt
+	diff -C 2 -I 'ONLY_LUA' work/result-testGo.txt work/result-testGo2.txt
+endef
+
+test-testGo:
+	$(call transwork,.,.,,base/convGo)
+	rm -rf $(GO_WORK_DIR)/*.*
+	$(call setup-go,$(GO_WORK_DIR))
+	cp -au lune/base/runtime_go/main/* $(GO_WORK_DIR)
+
+	$(call convGo,$(GO_WORK_DIR),lune/base/Testing.lns,--testing)
+	$(call test-convGo-test,$(GO_WORK_DIR),Ver,lune/base)
 
 
 test-reference:

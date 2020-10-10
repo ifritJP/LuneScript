@@ -184,9 +184,13 @@ fn convFilter.getCanonicalName( typeInfo:&Ast.TypeInfo, localFlag:bool ): str {
 }
 
 
+fn getModuleName( typeInfo:&Ast.TypeInfo ) : str {
+   return (typeInfo.getModule().$rawTxt.gsub( "@", "" ));
+}
+
 fn concatSymWithType( name:str, typeInfo:&Ast.TypeInfo ) : str {
    return concatGLSym(
-      "%s_" ((typeInfo.getModule().$rawTxt.gsub( "@", "" ))) .. name,
+      "%s_" (getModuleName( typeInfo.getModule())) .. name,
       Ast.isPubToExternal( typeInfo.$accessMode ) );
 }
 
@@ -418,7 +422,7 @@ _declIgnoreNode( None );
 pub override fn convFilter.processImport(
    node: Nodes.ImportNode, opt: Opt ) mut
 {
-   //Util.err( "not support -- %s" (__func__) );
+   self.writeln( "Lns_%s_init()" (getModuleName( node.$moduleTypeInfo )) );
 }
 
 fn needConvFormFunc( node:&Nodes.ExpCastNode ) : bool {
@@ -1220,8 +1224,14 @@ pub override fn convFilter.processRoot(
 
    self.writeln( "// This code is transcompiled by LuneScript." );
    
-   self.writeln( "package main" );
+   self.writeln( "package lns" );
 
+   self.writeln( 'import . "lns/lune/base/runtime_go"' );
+
+
+   let initModVar = "init_%s" (getModuleName(node.$moduleTypeInfo));
+   self.writeln( "var %s bool" (initModVar) );
+   
    self.pushProcessMode( .DeclTopScopeVar );
    let modSym = unwrap self.moduleScope.getSymbolInfoChild( "__mod__" );
    self.writeln( "var %s string" (self.getSymbolSym( modSym )) );
@@ -1286,20 +1296,30 @@ pub override fn convFilter.processRoot(
    }
    self.popProcessMode();
 
-   
-   self.writeln( "func Lns_init() {" );
+
+   self.writeln(
+      "func Lns_%s_init() {" (getModuleName( node.$moduleTypeInfo)) );
    self.pushIndent( ## );
 
+   self.writeln( "if %s { return }" (initModVar) );
+   self.writeln( "%s = true" (initModVar));
+   
    self.writeln( '%s = "%s"' (self.getSymbolSym( modSym ),
                                node.$moduleTypeInfo.getFullName(
                                   self.$typeNameCtrl, self.$moduleInfoManager ##)));
-   
+
    foreach child in node.$children {
       if not ignoreNodeInInnerBlockSet.has( child.$kind ) {
          filter( child, self, node );
       }
    }
 
+   self.popIndent();
+   self.writeln( "}" );
+
+   self.writeln( "func init() {" );
+   self.pushIndent( ## );
+   self.writeln( "%s = false" (initModVar) );
    self.popIndent();
    self.writeln( "}" );
 
@@ -1504,7 +1524,7 @@ pub override fn convFilter.processDeclAlge(
       if #valInfo.$typeList == 0 {
          self.writeln( "var %s_Obj = &%s{}" (algeSym,algeSym) );
       }
-      self.writeln( "func (self *%s) getTxt() string {" (algeSym) );
+      self.writeln( "func (self *%s) GetTxt() string {" (algeSym) );
       self.writeln( 'return "%s.%s"' (node.$algeType.$rawTxt, valInfo.$name) );
       self.writeln( "}" );
    }
@@ -2370,7 +2390,7 @@ pub override fn convFilter.processApply(
    if node.$expList.$expType.$kind == .Ext {
       let workSym = "_work%d" (node.$id);
       self.writeln(
-         "%s := %s.(*Lns_luaValue).call( Lns_2DDD( %s, %s ) )"
+         "%s := %s.(*Lns_luaValue).Call( Lns_2DDD( %s, %s ) )"
          (workSym, formSym, paramSym, prevSym ) );
       self.write( "%s = " (setTxt));
       foreach _, index in node.$varList {
@@ -3867,6 +3887,11 @@ fn convFilter.processAndOr( node: Nodes.ExpOp2Node,
    }
 }
 
+let op2map = {
+   "..": "+",
+   "~=": "!=",
+};
+
 
 pub override fn convFilter.processExpOp2(
    node: Nodes.ExpOp2Node, opt: Opt ) mut
@@ -3901,7 +3926,11 @@ pub override fn convFilter.processExpOp2(
          }
          else {
             filter( node.$exp1, self, node );
-            self.write( " " .. opTxt .. " " );
+            if! let op = op2map[ opTxt ] {
+               self.write( " %s " (op) );
+            } else {
+               self.write( " %s " (opTxt) );
+            }
             //self.accessPrimVal( node.$exp2, node );
             filter( node.$exp2, self, node );
          }
@@ -4102,7 +4131,7 @@ pub override fn convFilter.processGetField(
          }
          if symbolInfo.$namespaceTypeInfo@@@Ast.AlgeTypeInfo {
             filter( node.$prefix, self, node );
-            self.write( ".(LnsAlgeVal).getTxt()" );
+            self.write( ".(LnsAlgeVal).GetTxt()" );
             return;
          }
       }

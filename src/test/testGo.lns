@@ -656,7 +656,7 @@ _section();
 }
 _section();
 {
-   if! let mut fileObj = io.open( "miniGo.lns" ##) {
+   if! let mut fileObj = io.open( "testGo.lns" ##) {
       print( fileObj.read( 100 ) );
    }
 }

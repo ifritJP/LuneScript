@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-package main
+package runtimelns
 
 import "fmt"
 import "math"
@@ -163,7 +163,7 @@ func Lns_ToStrSub( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool,
 
 
 type LnsAlgeVal interface {
-    getTxt() string
+    GetTxt() string
 }
 
 func Lns_getFromMulti( multi []LnsAny, index LnsInt ) LnsAny {

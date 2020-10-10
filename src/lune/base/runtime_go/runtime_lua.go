@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-package main
+package runtimelns
 
 // #include <stdlib.h>
 import "C"
@@ -196,7 +196,7 @@ func (luaValue *Lns_luaValue) free() {
     luaValue.sym = nil
 }
 
-func (luaValue *Lns_luaValue) call( argList []LnsAny ) []LnsAny {
+func (luaValue *Lns_luaValue) Call( argList []LnsAny ) []LnsAny {
 
     luaVM := luaValue.luaVM
 

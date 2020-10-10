@@ -26,6 +26,7 @@ package main
 
 // import "runtime"
 // import "time"
+//IMPORT
 
 func main() {
     Lns_init()
