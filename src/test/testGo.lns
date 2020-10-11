@@ -691,3 +691,50 @@ _section();
    func( fn() {} );
    func( [ 1 ] );
 }
+_section();
+{
+   class Test {
+   }
+   class Sub extend Test {
+   }
+   fn func( val:&Test!, val2:int! ):int {
+      return 1;
+   }
+   func( new Sub() ## );
+}
+_section();
+{
+   class Test {
+   };
+   fn func( val1:&stem!, val2:&stem!, val3:str ) {
+   }
+   func( new Test(), new Test(), "a" );
+}
+_section();
+{
+   enum Val {
+      Val1,
+      Val2,
+   }
+
+   fn func( val:Val ) : int,real,str,bool,stem {
+      _switch val {
+         case .Val1 {
+            return 1,1.5,"",true,2;
+         }
+         case .Val2 {
+            return 1,1.5,"",true,2;
+         }
+      }
+   }
+   func( .Val1 );
+
+   fn func2( val:Val ) : int {
+      if val == .Val1 {
+         return 1;
+      } else {
+         return 2;
+      }
+   }
+   func2( .Val1 );
+}

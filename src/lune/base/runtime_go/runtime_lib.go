@@ -28,6 +28,7 @@ import "fmt"
 import "math"
 import "reflect"
 import "sort"
+import "strconv"
 
 type LnsInt = int
 type LnsReal = float64
@@ -111,6 +112,19 @@ func Lns_type( val LnsAny ) string {
         }
         return "table";
     }    
+}
+
+func Lns_tonumber( val string ) LnsAny {
+    f, err := strconv.ParseFloat( val, 64)
+    if err != nil {
+        return nil
+    }
+    return f
+}
+
+func Lns_require( val string ) LnsAny {
+    panic( "not support" )
+    return nil
 }
 
 

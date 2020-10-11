@@ -1164,6 +1164,9 @@ test-testGo:
 	$(call test-convGo-test,$(GO_WORK_DIR),Util,lune/base,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),Parser,lune/base,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),Writer,lune/base,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/frontInterface,--testing,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/Log,--testing,./test)
+	$(call test-convGo-test,$(GO_WORK_DIR),Ast,lune/base,./test)
 
 
 test-reference:
