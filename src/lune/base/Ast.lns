@@ -6393,10 +6393,7 @@ pub fn TypeAnalyzer.analyzeTypeItemList(
    return new RefTypeInfo( pos, genericRefList, typeInfo ), nil, nil;
 }
 
-__test case1 {
-   import lune.base.Testing;
-
-   let mut ctrl = new Testing.Ctrl();
+__test case1(ctrl) {
    let builtinMap = {
       "$$": headTypeInfo,
       "Array": builtinTypeArray,
@@ -6408,7 +6405,7 @@ __test case1 {
       "str": builtinTypeString
    };
    forsort typeInfo, name in builtinMap {
-      if not Testing._eq( ctrl, typeInfo, rootScope.getTypeInfoChild( name ) ) {
+      if not __t._eq( ctrl, typeInfo, rootScope.getTypeInfoChild( name ) ) {
          print( "NG:", name );
       }
    }
@@ -6426,14 +6423,14 @@ __test case1 {
          let refType =
             analyzer.analyzeTypeFromTxt( ,,typeTxt, testScope, .Local, false );
          when! refType {
-            if not Testing._isTM( ctrl, ,,typeTxt,
+            if not __t._isTM( ctrl, ,,typeTxt,
                                   refType.$typeInfo.equals( ,,typeInfo ## ) )
             {
                print( refType.$typeInfo.getTxt(##) );
             }
          }
          else {
-            Testing._err( ctrl, "refType is nil -- " .. ,,typeTxt );
+            __t._err( ctrl, "refType is nil -- " .. ,,typeTxt );
          }
       }
    }
@@ -6470,12 +6467,12 @@ __test case1 {
       }
       {
          if! let typeInfo1, typeInfo2 = getType( ,,type1 ), getType( ,,type2 ) {
-            Testing.,,,opSym(
+            __t.,,,opSym(
                ctrl, "%s <- %s" (,,type1, ,,type2),
                (typeInfo1.canEvalWith( typeInfo2, .SetOp, alt2typeMap )));
          }
          else {
-            Testing._err( ctrl, "not found type -- %s, %s" (,,type1, ,,type2) );
+            __t._err( ctrl, "not found type -- %s, %s" (,,type1, ,,type2) );
          }
       }
    }

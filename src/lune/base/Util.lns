@@ -238,17 +238,14 @@ pub fn scriptPath2Module( path:str ):str {
 }
 
 
-__test case1 {
-   import lune.base.Testing;
-   let mut ctrl = new Testing.Ctrl();
-
+__test case1(ctrl) {
    {
       // splitStr のテスト
       let splitList = splitStr( "123 456 789", "[0-9]+" );
-      Testing._eq( ctrl, #splitList, 3 );
-      Testing._eq( ctrl, splitList[ 1 ], "123" );
-      Testing._eq( ctrl, splitList[ 2 ], "456" );
-      Testing._eq( ctrl, splitList[ 3 ], "789" );
+      __t._eq( ctrl, #splitList, 3 );
+      __t._eq( ctrl, splitList[ 1 ], "123" );
+      __t._eq( ctrl, splitList[ 2 ], "456" );
+      __t._eq( ctrl, splitList[ 3 ], "789" );
    }
 
    {
@@ -272,7 +269,7 @@ __test case1 {
       foreach val in orderdSet.$list {
          concat = concat .. val;
       }
-      Testing._eq( ctrl, "abcdefghijklnmopqrstuvwxyz", concat );
+      __t._eq( ctrl, "abcdefghijklnmopqrstuvwxyz", concat );
    }
 
    {
@@ -280,7 +277,7 @@ __test case1 {
       let mut stream = new memStream();
       stream.write( "12345" );
       stream.write( "67890" );
-      Testing._eq( ctrl, stream.$txt, "1234567890" );
+      __t._eq( ctrl, stream.$txt, "1234567890" );
    }
 
    {
@@ -300,7 +297,7 @@ __test case1 {
       sourceStream.write( "}" );
       sourceStream.popIndent();
 
-      Testing._eq( ctrl, stream.$txt,
+      __t._eq( ctrl, stream.$txt,
 ```{
    let val = 1;
    {

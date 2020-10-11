@@ -29,6 +29,6 @@ pub let metaVersion = "1.0.72";
 /** _lune モジュールバージョン */
 pub let luaModVersion = 2;
 
-__test case1 {
+__test case1(ctrl) {
    print( version, metaVersion, luaModVersion );
 }

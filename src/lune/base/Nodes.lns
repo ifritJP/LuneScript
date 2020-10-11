@@ -1834,6 +1834,8 @@ pub abstract class MacroEval {
 
 _declNodeClass( "TestBlock", Node, false, false, true,
                 [ { "name": "&Parser.Token" },
+                  { "impNode": "&Node" },
+                  { "ctrlName": "str"},
                   { "block": "&BlockNode" } ]
 );
 

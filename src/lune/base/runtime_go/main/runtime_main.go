@@ -24,7 +24,7 @@ SOFTWARE.
 
 package main
 
-import . "lns/lune/base/runtime_go"
+//TEST:import . "lns/lune/base/runtime_go"
 
 // import "runtime"
 // import "time"
@@ -34,9 +34,9 @@ import . "lns/lune/base/runtime_go"
 
 
 func main() {
-    Lns_init()
-    Lns_runTest()
     //TEST:Lns_Testing_init()
+    Lns_init()
+    //TEST:Testing_run( "" )
     //TEST:Testing_outputAllResult(Lns_io_stdout)
     // runtime.GC()
     // time.Sleep(1 * time.Second)

@@ -27,6 +27,9 @@ package runtimelns
 import "os"
 
 func Lns_Depend_init() {
+    testcaseList := []*LnsTestcase{
+    }
+    Lns_registerTestcase( "lune.base.Depend", testcaseList )
 }
 
 

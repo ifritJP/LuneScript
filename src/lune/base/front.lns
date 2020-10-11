@@ -39,7 +39,7 @@ import lune.base.LuaVer;
 import lune.base.Log;
 import lune.base.Formatter;
 import lune.base.Testing;
-import lune.base.TestCtrl;
+//import lune.base.TestCtrl;
 import lune.base.Meta;
 
 _lune_control ignore_symbol_;
@@ -111,6 +111,7 @@ loadedMap で管理する前にシステムにロードされているため、
       self.loadedMapTest = {};
       self.loadedMetaMap = {};
       self.convertedMap = {};
+      
 
       frontInterface.setFront( self );
 
@@ -663,6 +664,7 @@ fn Front.loadModule( mod:str ) mut : stem!, &stem {
       }
    }
    if! self.getLoadInfo( mod ) {
+      //TestCtrl.add( mod, _exp.mod );
       return _exp.mod, _exp.meta;
    }
    error( "load error, %s" ( mod ) );
@@ -1311,8 +1313,8 @@ pub fn Front.exec() mut
          let modObj = self.loadModule( scriptPath2Module( self.option.scriptPath ) );
 
          if self.option.testing {
-            let testCtrl = new TestCtrl.Ctrl();
-            testCtrl.run( modObj );
+            //Testing.runAll();
+            Testing.run( scriptPath2Module( self.option.scriptPath ));
 
             Testing.outputAllResult( io.stdout );
          }

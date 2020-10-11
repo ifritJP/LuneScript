@@ -59,7 +59,6 @@ build = {
       [ "lune.base.dumpNode" ] = "src/legacy/lua51/lune/base/dumpNode.lua",
       [ "lune.base.Formatter" ] = "src/legacy/lua51/lune/base/Formatter.lua",
       [ "lune.base.OutputDepend" ] = "src/legacy/lua51/lune/base/OutputDepend.lua",
-      [ "lune.base.TestCtrl" ] = "src/legacy/lua51/lune/base/TestCtrl.lua",
       [ "lune.base.front" ] = "src/legacy/lua51/lune/base/front.lua",
       [ "lune.base.glueFilter" ] = "src/legacy/lua51/lune/base/glueFilter.lua",
       [ "lune.Util" ] = "src/legacy/lua51/lune/Util.lua"

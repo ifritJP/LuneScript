@@ -154,7 +154,6 @@ define buildLnsOp
 	$(call $4,$1,$2,$3,base/convCC)
 	$(call $4,$1,$2,$3,base/convGo)
 	$(call $4,$1,$2,$3,base/OutputDepend)
-	$(call $4,$1,$2,$3,base/TestCtrl)
 	$(call $4,$1,$2,$3,base/front)
 	$(call $4,$1,$2,$3,base/glueFilter)
 	$(call $4,$1,$2,$3,Util)
@@ -1083,9 +1082,9 @@ define test-go-one
 	mkdir -p $1/mod
 	-rm $1/mod/*
 	cp -au $3/$2.lns $1/mod
-	$(call convGo,$1,mod/$2,--testing)
+	$(call convGo,$1,mod/$2)
 	$(call buildGo,$1) > work/result-testGo.txt
-	$(call exeLune,$1,mod/$2.lns,exe,--testing) > work/result-testGo2.txt
+	$(call exeLune,$1,mod/$2.lns,exe) > work/result-testGo2.txt
 	diff -C 2 -I 'ONLY_LUA' work/result-testGo.txt work/result-testGo2.txt
 endef
 
@@ -1140,6 +1139,7 @@ define test-convGo-test
 	cat lune/base/runtime_go/main/runtime_main.go |		\
 		sed 's/Lns_init/Lns_$2_init/' |			\
 		sed 's@//TEST:@@' |				\
+		sed 's/run( "" )/run( "lune.base.$2" )/' |				\
 		sed 's@//IMPORT@import . "$(GO_MOD)/lune/base"@' > $1/runtime_main.go
 
 	$(call convGo,$1,$3/$2,--testing,$4)

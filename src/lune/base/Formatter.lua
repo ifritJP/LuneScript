@@ -331,7 +331,7 @@ end
 
 function FormatterFilter:processBlankLine( node, opt )
 
-   for _4904 = 1, node:get_lineNum() do
+   for _4926 = 1, node:get_lineNum() do
       self:writeln( "" )
    end
    

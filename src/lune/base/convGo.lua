@@ -727,6 +727,10 @@ end
 
 function convFilter:processImport( node, opt )
 
+   if node:get_modulePath() == "lune.base.Depend" then
+      self:writeln( "Lns_LuaVer_init()" )
+   end
+   
    self:writeln( string.format( "Lns_%s_init()", getModuleName( node:get_moduleTypeInfo() )) )
 end
 
@@ -1134,7 +1138,7 @@ function convFilter:processConvExp( nodeId, dstTypeList, argListNode )
    
    if restIndex ~= nil then
       self:write( "Lns_2DDD( " )
-      for index, _5515 in ipairs( argList:get_expList() ) do
+      for index, _5537 in ipairs( argList:get_expList() ) do
          if index >= restIndex then
             if index < #argList:get_expList() then
                self:write( string.format( "arg%d", index) )
@@ -1716,7 +1720,7 @@ function convFilter:processRoot( node, opt )
    
    for __index, workNode in ipairs( node:get_nodeManager():getIfUnwrapNodeList(  ) ) do
       local symTypeList = {}
-      for _5647 = 1, #workNode:get_varSymList() do
+      for _5669 = 1, #workNode:get_varSymList() do
          table.insert( symTypeList, Ast.builtinTypeStem_ )
       end
       
@@ -1757,18 +1761,13 @@ function convFilter:processRoot( node, opt )
    
    self:writeln( string.format( '%s = "%s"', self:getSymbolSym( modSym ), node:get_moduleTypeInfo():getFullName( self:get_typeNameCtrl(), self:get_moduleInfoManager() )) )
    
-   self:writeln( "testcaseList := []*LnsTestcase{" )
-   if self.enableTest then
-      self:pushIndent(  )
-      for __index, workNode in ipairs( node:get_nodeManager():getTestBlockNodeList(  ) ) do
-         self:writeln( string.format( '&LnsTestcase{ "%s", lns_test_%s_%s },', workNode:get_name().txt, getModuleName( node:get_moduleTypeInfo() ), workNode:get_name().txt) )
-      end
-      
-      self:popIndent(  )
+   local modulePath = node:get_moduleTypeInfo():getFullName( self:get_typeNameCtrl(), self:get_moduleInfoManager() ):gsub( "@", "" )
+   local moduleName = getModuleName( node:get_moduleTypeInfo() )
+   
+   for __index, workNode in ipairs( node:get_nodeManager():getTestBlockNodeList(  ) ) do
+      self:writeln( string.format( 'Testing_registerTestcase( "%s", "%s", lns_test_%s_%s )', modulePath, workNode:get_name().txt, moduleName, workNode:get_name().txt) )
    end
    
-   self:writeln( "}" )
-   self:writeln( string.format( 'Lns_registerTestcase( "%s", testcaseList )', getModuleName( node:get_moduleTypeInfo() )) )
    
    for __index, child in ipairs( node:get_children() ) do
       if not _lune._Set_has(ignoreNodeInInnerBlockSet, child:get_kind() ) then
@@ -2352,7 +2351,7 @@ function convFilter:processIfUnwrap( node, opt )
       
       table.insert( tempTypeList, Ast.builtinTypeStem_ )
       if index == #node:get_varSymList() then
-         for _5833 = index + 1, #node:get_expList():get_expTypeList() do
+         for _5857 = index + 1, #node:get_expList():get_expTypeList() do
             self:write( ", _" )
          end
          
@@ -2453,7 +2452,7 @@ function convFilter:outputLetVar( node )
                   do
                      local expListNode = node:get_expList()
                      if expListNode ~= nil then
-                        for _5851 = index + 1, #expListNode:get_expTypeList() do
+                        for _5875 = index + 1, #expListNode:get_expTypeList() do
                            self:write( ", _" )
                         end
                         
@@ -2547,7 +2546,7 @@ function convFilter:outputLetVar( node )
             end
             
             if #expList:get_expTypeList() > #node:get_symbolInfoList() then
-               for _5863 = #node:get_symbolInfoList() + 1, #expList:get_expTypeList() do
+               for _5887 = #node:get_symbolInfoList() + 1, #expList:get_expTypeList() do
                   self:write( ", _" )
                end
                
@@ -2610,7 +2609,7 @@ function convFilter:processDeclVar( node, opt )
             self:write( string.format( "_%s", varSym:get_name()) )
          end
          
-         for _5880 = #node:get_symbolInfoList() + 1, #expList:get_expTypeList() do
+         for _5904 = #node:get_symbolInfoList() + 1, #expList:get_expTypeList() do
             self:write( ",_" )
          end
          
@@ -2871,7 +2870,7 @@ function convFilter:processMatch( node, opt )
    local function hasAccessing(  )
    
       for __index, caseInfo in ipairs( node:get_caseList() ) do
-         for _5974, symbol in ipairs( caseInfo:get_valParamNameList() ) do
+         for _5998, symbol in ipairs( caseInfo:get_valParamNameList() ) do
             if symbol:get_posForModToRef() then
                return true
             end
@@ -3053,7 +3052,7 @@ function convFilter:processApply( node, opt )
       local workSym = string.format( "_work%d", node:get_id())
       self:writeln( string.format( "%s := %s.(*Lns_luaValue).Call( Lns_2DDD( %s, %s ) )", workSym, formSym, paramSym, prevSym) )
       self:write( string.format( "%s = ", setTxt) )
-      for index, _6017 in ipairs( node:get_varList() ) do
+      for index, _6041 in ipairs( node:get_varList() ) do
          if index > 1 then
             self:write( "," )
          end
@@ -3657,7 +3656,7 @@ function convFilter:outputConstructor( node )
       self:pushIndent(  )
       self:outputNewSetup( "obj", node:get_expType() )
       self:write( string.format( "obj.%s(", ctorName) )
-      for index, _6148 in ipairs( initFuncType:get_argTypeInfoList() ) do
+      for index, _6172 in ipairs( initFuncType:get_argTypeInfoList() ) do
          if index ~= 1 then
             self:write( ", " )
          end
@@ -4065,7 +4064,7 @@ function convFilter:outputAdvertise( node )
                   end
                   
                   self:write( string.format( "self.%s.%s( ", self:getSymbolSym( adv:get_member():get_symbolInfo() ), self:getSymbolSym( symbol )) )
-                  for index, _6238 in ipairs( funcType:get_argTypeInfoList() ) do
+                  for index, _6262 in ipairs( funcType:get_argTypeInfoList() ) do
                      if index > 1 then
                         self:write( "," )
                      end
@@ -4189,7 +4188,7 @@ function convFilter:outputCallPrefix( callId, node, prefixNode, funcSymbol )
             
                if retNum <= MaxNilAccNum then
                   local anys = "LnsAny"
-                  for _6271 = 2, retNum do
+                  for _6295 = 2, retNum do
                      anys = string.format( "%s,LnsAny", anys)
                   end
                   
@@ -4197,7 +4196,7 @@ function convFilter:outputCallPrefix( callId, node, prefixNode, funcSymbol )
                else
                 
                   local args = "LnsAny"
-                  for _6273 = 2, retNum do
+                  for _6297 = 2, retNum do
                      args = string.format( "%s,LnsAny", args)
                   end
                   
@@ -4712,7 +4711,7 @@ function convFilter:processExpSetVal( node, opt )
    end
    
    filter( node:get_exp1(), self, node )
-   for _6361 = #node:get_exp1():get_expTypeList() + 1, #node:get_exp2():get_expTypeList() do
+   for _6385 = #node:get_exp1():get_expTypeList() + 1, #node:get_exp2():get_expTypeList() do
       self:write( ",_" )
    end
    
@@ -5056,7 +5055,7 @@ function convFilter:processRefField( node, opt )
    end
    
    
-   for _6413 = 1, openParenNum do
+   for _6437 = 1, openParenNum do
       self:write( ")" )
    end
    
@@ -5153,12 +5152,10 @@ function convFilter:processTestBlock( node, opt )
       return 
    end
    
-   self:writeln( string.format( "func lns_test_%s_%s() {", getModuleName( self.moduleTypeInfo ), node:get_name().txt) )
-   self:pushIndent(  )
+   self:writeln( string.format( "func lns_test_%s_%s( %s *Testing_Ctrl ) {", getModuleName( self.moduleTypeInfo ), node:get_name().txt, node:get_ctrlName()) )
    
    filter( node:get_block(), self, node )
    
-   self:popIndent(  )
    self:writeln( "}" )
 end
 

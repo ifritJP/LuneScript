@@ -852,9 +852,9 @@ pub override fn convFilter.processRoot(
    if self.needModuleObj {
       self.writeln( "local _moduleObj = {}" );
    }
-   if self.enableTest {
-      self.writeln( "_moduleObj.__testMap = {}" );
-   }
+   // if self.enableTest {
+   //    self.writeln( "_moduleObj.__testMap = {}" );
+   // }
    self.writeln(
       "local __mod__ = '%s'"
       (node.$moduleTypeInfo.getFullName(
@@ -3100,12 +3100,32 @@ pub override fn convFilter.processLuneKind( node: Nodes.LuneKindNode, opt: Opt )
 pub override fn convFilter.processTestBlock( node: Nodes.TestBlockNode, opt: Opt ) mut
 {
    if self.enableTest {
-      self.writeln( "_moduleObj.__testMap[ '%s' ] = function () " (node.$name.txt) );
-
+      self.writeln( "do" );
       self.pushIndent( ## );
+      filter( node.$impNode, self, node );
+      self.writeln( "" );
+      self.writeln( "local function testcase( %s ) " (node.$ctrlName) );
+
+      // self.pushIndent( ## );
+
+      // self.writeln(
+      //    '%s = __t.Ctrl.new( "%s", "%s" )'
+      //    (node.$ctrlName,
+      //      self.moduleTypeInfo.getFullName(
+      //         self.$typeNameCtrl, self.$moduleInfoManager ##).gsub( "@", "" ),
+      //      node.$name.txt) );
+      
+      // self.popIndent();
       
       filter( node.$block, self, node );
 
+      self.writeln( "end" );
+      // self.writeln( "_moduleObj.__testMap[ '%s' ] = testcase" (node.$name.txt) );
+      self.writeln(
+         '__t.registerTestcase( "%s", "%s", testcase )'
+         ( self.moduleTypeInfo.getFullName(
+            self.$typeNameCtrl, self.$moduleInfoManager ##).gsub( "@", "" ),
+           node.$name.txt));
       self.popIndent();
       self.writeln( "end" );
    }

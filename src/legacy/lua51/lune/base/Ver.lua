@@ -5,6 +5,13 @@ local _lune = {}
 if _lune2 then
    _lune = _lune2
 end
+function _lune.loadModule( mod )
+   if __luneScript then
+      return  __luneScript:loadModule( mod )
+   end
+   return require( mod )
+end
+
 if not _lune2 then
    _lune2 = _lune
 end

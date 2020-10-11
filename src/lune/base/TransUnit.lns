@@ -2722,22 +2722,6 @@ fn TransUnit.analyzeBlock(
    return node;
 }
 
-fn TransUnit.analyzeTest( firstToken:&Parser.Token ) mut : Nodes.TestBlockNode
-{
-   let nameToken = self.getSymbolToken( .MustNot_ );
-
-   self.scopeAccess = .Full;
-
-   let block = self.analyzeBlock( .Test, .Ignore## );
-
-   self.scopeAccess = .Normal;
-   
-   return Nodes.TestBlockNode.create(
-      self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
-      [ Ast.builtinTypeNone ], nameToken, block );
-}
-
-
 /**
 modulePath で指定されたモジュールからメタ情報を読み込み、型情報を反映する。
 
@@ -3133,14 +3117,60 @@ fn TransUnit.processImport( modulePath:str ) mut :
    return metaInfo, typeId2TypeInfo, moduleInfo;
 }
 
+
+fn TransUnit.analyzeImportFor(
+   pos: &Parser.Position, modulePath:str, assignName:str ) mut : Nodes.Node
+{
+   let mut backupScope = self.scope;
+   // スコープをルートに変更
+   self.scope = self.topScope;
+   
+   Ast.switchIdProvier( .Ext );
+   
+   let metaInfo, typeId2TypeInfo, moduleInfo = self.processImport( modulePath );
+
+   Ast.switchIdProvier( .Base );
+
+
+   // スコープを元に戻す
+   //self.scope = self.moduleScope;
+   self.scope = backupScope;
+
+
+
+   // モジュールの末尾のシンボルでスコープに登録する。
+   // 例えば hoge.foo.bar をインポートした場合、 bar をスコープに登録する
+   let moduleTypeInfo = unwrap typeId2TypeInfo[ metaInfo.__moduleTypeId ];
+   self.scope.addModule( moduleTypeInfo, moduleInfo.assign( assignName ) );
+
+   let moduleSymbolKind = unwrap Ast.SymbolKind._from( metaInfo.__moduleSymbolKind );
+   let moduleSymbolInfo, shadowing = self.scope.add(
+      moduleSymbolKind, false, false, assignName, pos,
+      moduleTypeInfo, .Local, true,
+      metaInfo.__moduleMutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true );
+
+  
+   when! moduleSymbolInfo {
+      // if self.moduleScope ~= self.scope {
+      //    self.error( "illegal top scope." );
+      // }
+
+
+      return Nodes.ImportNode.create(
+         self.nodeManager, pos,
+         self.macroCtrl.isInAnalyzeArgMode(), [ moduleTypeInfo ],
+         modulePath, assignName, moduleSymbolInfo, moduleTypeInfo );
+   }
+
+   self.errorShadowing( pos, shadowing );
+   return self.createNoneNode( pos );
+}
+
+
 fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Nodes.Node {
    // if self.moduleScope ~= self.scope {
    //    self.error( "'import' must call at top scope." );
    // }
-
-   let mut backupScope = self.scope;
-   // スコープをルートに変更
-   self.scope = self.topScope;
 
    let mut moduleToken = self.getToken(##);
    let mut modulePath = moduleToken.txt;
@@ -3157,52 +3187,51 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Nodes.Node {
          break;
       }
    }
-
-   Ast.switchIdProvier( .Ext );
-
-   let metaInfo, typeId2TypeInfo, moduleInfo = self.processImport( modulePath );
-
-   Ast.switchIdProvier( .Base );
-
-
-   // スコープを元に戻す
-   //self.scope = self.moduleScope;
-   self.scope = backupScope;
-
-
    let mut assignName = moduleToken;
    if nextToken.txt == "as" {
       assignName = self.getSymbolToken( .MustNot_ );
       nextToken = self.getToken(##);
    }
-
-   // モジュールの末尾のシンボルでスコープに登録する。
-   // 例えば hoge.foo.bar をインポートした場合、 bar をスコープに登録する
-   let moduleTypeInfo = unwrap typeId2TypeInfo[ metaInfo.__moduleTypeId ];
-   self.scope.addModule( moduleTypeInfo, moduleInfo.assign( assignName.txt ) );
-
-   let moduleSymbolKind = unwrap Ast.SymbolKind._from( metaInfo.__moduleSymbolKind );
-   let moduleSymbolInfo, shadowing = self.scope.add(
-      moduleSymbolKind, false, false, assignName.txt, assignName.pos,
-      moduleTypeInfo, .Local, true,
-      metaInfo.__moduleMutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true );
-   when! moduleSymbolInfo {
-      self.checkToken( nextToken, ";" );
+   self.checkToken( nextToken, ";" );
+   
+   return self.analyzeImportFor( token.pos, modulePath, assignName.txt );
+}
 
 
-      // if self.moduleScope ~= self.scope {
-      //    self.error( "illegal top scope." );
-      // }
+   
 
+fn TransUnit.analyzeTest( firstToken:&Parser.Token ) mut : Nodes.TestBlockNode
+{
+   let mut newScope = self.pushScope( false ## );
+   
+   let importNode = self.analyzeImportFor( firstToken.pos, "lune.base.Testing", "__t" );
+   
+   let nameToken = self.getSymbolToken( .MustNot_ );
 
-      return Nodes.ImportNode.create(
-         self.nodeManager, token.pos,
-         self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
-         modulePath, assignName.txt, moduleSymbolInfo, moduleTypeInfo );
-   }
+   self.checkNextToken( "(" );
 
-   self.errorShadowing( token.pos, shadowing );
-   return self.createNoneNode( token.pos );
+   let ctrlToken = self.getSymbolToken( .MustNot_ );
+   let ctrlName = ctrlToken.txt;
+   self.checkNextToken( ")" );
+
+   let moduleType = importNode.$expType;
+   let! ctrlType = moduleType.$scope$.getTypeInfoChild$( "Ctrl" ) {
+      self.error( "not found Testing.Ctrl class" );
+   };
+   self.addLocalVar(
+      ctrlToken.pos, true, false, ctrlToken.txt, ctrlType, .IMut, false );
+
+   self.scopeAccess = .Full;
+
+   let block = self.analyzeBlock( .Test, .Ignore, newScope );
+
+   self.scopeAccess = .Normal;
+
+   self.popScope();
+   
+   return Nodes.TestBlockNode.create(
+      self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
+      [ Ast.builtinTypeNone ], nameToken, importNode, ctrlName, block );
 }
 
 

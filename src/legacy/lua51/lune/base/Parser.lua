@@ -427,7 +427,7 @@ end
 function Token:getLineCount(  )
 
    local count = 1
-   for _318 in self.txt:gmatch( "\n" ) do
+   for _336 in self.txt:gmatch( "\n" ) do
       count = count + 1
    end
    
@@ -875,7 +875,7 @@ function StreamParser:parse(  )
       local comment = ""
       while true do
          do
-            local _493, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
+            local _511, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
             if termEndIndex ~= nil then
                comment = comment .. rawLine:sub( searchIndex, termEndIndex )
                return comment, termEndIndex + 1

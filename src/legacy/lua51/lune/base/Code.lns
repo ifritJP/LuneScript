@@ -38,11 +38,8 @@ pub fn isMessageOf( id:ID, mess:str ): bool {
    return false;
 }
 
-__test case1 {
-   import lune.base.Testing;
-
-   let mut ctrl = new Testing.Ctrl();
+__test case1(ctrl) {
    let code = format( .nothing_define_abbr, "test" );
-   Testing._isT( ctrl, isMessageOf( .nothing_define_abbr, code ) );
-   Testing._isNotT( ctrl, isMessageOf( .nothing_define_abbr, "" ) );
+   __t._isT( ctrl, isMessageOf( .nothing_define_abbr, code ) );
+   __t._isNotT( ctrl, isMessageOf( .nothing_define_abbr, "" ) );
 }

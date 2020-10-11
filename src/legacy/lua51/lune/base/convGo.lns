@@ -429,6 +429,10 @@ _declIgnoreNode( None );
 pub override fn convFilter.processImport(
    node: Nodes.ImportNode, opt: Opt ) mut
 {
+   if node.$modulePath == "lune.base.Depend" {
+      // Depend は builtin しているので、関連モジュールはここで処理する
+      self.writeln( "Lns_LuaVer_init()" );
+   }
    self.writeln( "Lns_%s_init()" (getModuleName( node.$moduleTypeInfo )) );
 }
 
@@ -1322,20 +1326,33 @@ pub override fn convFilter.processRoot(
                                   self.$typeNameCtrl, self.$moduleInfoManager ##)));
 
 
-   self.writeln( "testcaseList := []*LnsTestcase{" );
-   if self.enableTest {
-      self.pushIndent( ## );
-      foreach workNode in node.$nodeManager.getTestBlockNodeList() {
-         self.writeln( '&LnsTestcase{ "%s", lns_test_%s_%s },'
-                       (workNode.$name.txt, getModuleName( node.$moduleTypeInfo),
-                         workNode.$name.txt) );   
-      }
-      self.popIndent();
+   // self.writeln( "testcaseList := []*LnsTestcase{" );
+   // if self.enableTest {
+   //    self.pushIndent( ## );
+   //    foreach workNode in node.$nodeManager.getTestBlockNodeList() {
+   //       self.writeln( '&LnsTestcase{ "%s", lns_test_%s_%s },'
+   //                     (workNode.$name.txt, getModuleName( node.$moduleTypeInfo),
+   //                       workNode.$name.txt) );   
+   //    }
+   //    self.popIndent();
+   // }
+   // self.writeln( "}" );
+   // self.writeln(
+   //    'Lns_registerTestcase( "%s", testcaseList )'
+   //    ((node.$moduleTypeInfo.getFullName(
+   //       self.$typeNameCtrl, self.$moduleInfoManager ##).gsub( "@", "" ))) );
+
+   let modulePath = node.$moduleTypeInfo.getFullName(
+      self.$typeNameCtrl, self.$moduleInfoManager ##).gsub( "@", "" );
+   let moduleName = getModuleName( node.$moduleTypeInfo);
+   
+   
+   foreach workNode in node.$nodeManager.getTestBlockNodeList() {
+      self.writeln(
+         'Testing_registerTestcase( "%s", "%s", lns_test_%s_%s )'
+         ( modulePath, workNode.$name.txt, moduleName, workNode.$name.txt ) );
    }
-   self.writeln( "}" );
-   self.writeln(
-      'Lns_registerTestcase( "%s", testcaseList )'
-      (getModuleName( node.$moduleTypeInfo)) );
+   
    
 
    foreach child in node.$children {
@@ -4241,13 +4258,11 @@ pub override fn convFilter.processTestBlock( node: Nodes.TestBlockNode, opt: Opt
       return;
    }
    self.writeln(
-      "func lns_test_%s_%s() {"
-      (getModuleName( self.$moduleTypeInfo), node.$name.txt) );
-   self.pushIndent(##);
+      "func lns_test_%s_%s( %s *Testing_Ctrl ) {"
+      ( getModuleName( self.$moduleTypeInfo), node.$name.txt, node.$ctrlName ) );
 
    filter( node.$block, self, node );
    
-   self.popIndent();
    self.writeln( "}" );
 }
 

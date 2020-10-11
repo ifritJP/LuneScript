@@ -723,7 +723,7 @@ end
 function NodeManager:__init() 
    self.idSeed = 0
    self.nodeKind2NodeList = {}
-   for kind, _2473 in pairs( nodeKind2NameMap ) do
+   for kind, _2491 in pairs( nodeKind2NameMap ) do
       if not self.nodeKind2NodeList[kind] then
          self.nodeKind2NodeList[kind] = {}
       end
@@ -9888,30 +9888,49 @@ function TestBlockNode:canBeStatement(  )
 
    return true
 end
-function TestBlockNode.new( id, pos, macroArgFlag, typeList, name, block )
+function TestBlockNode.new( id, pos, macroArgFlag, typeList, name, impNode, ctrlName, block )
    local obj = {}
    TestBlockNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, name, block ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, name, impNode, ctrlName, block ); end
    return obj
 end
-function TestBlockNode:__init(id, pos, macroArgFlag, typeList, name, block) 
+function TestBlockNode:__init(id, pos, macroArgFlag, typeList, name, impNode, ctrlName, block) 
    Node.__init( self,id, 70, pos, macroArgFlag, typeList)
    
    
    
    self.name = name
+   self.impNode = impNode
+   self.ctrlName = ctrlName
    self.block = block
    
    
 end
-function TestBlockNode.create( nodeMan, pos, macroArgFlag, typeList, name, block )
+function TestBlockNode.create( nodeMan, pos, macroArgFlag, typeList, name, impNode, ctrlName, block )
 
-   local node = TestBlockNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, name, block)
+   local node = TestBlockNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, name, impNode, ctrlName, block)
    nodeMan:addNode( node )
    return node
 end
 function TestBlockNode:visit( visitor, depth )
 
+   do
+      local child = self.impNode
+      do
+         local _switchExp = visitor( child, self, 'impNode', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
    do
       local child = self.block
       do
@@ -9938,6 +9957,12 @@ function TestBlockNode.setmeta( obj )
 end
 function TestBlockNode:get_name()
    return self.name
+end
+function TestBlockNode:get_impNode()
+   return self.impNode
+end
+function TestBlockNode:get_ctrlName()
+   return self.ctrlName
 end
 function TestBlockNode:get_block()
    return self.block
@@ -11645,7 +11670,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, _8357 in pairs( self.map ) do
+   for key, _8384 in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -11680,8 +11705,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, _8365 in ipairs( __sorted ) do
-         local key = __map[ _8365 ]
+      for __index, _8392 in ipairs( __sorted ) do
+         local key = __map[ _8392 ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false

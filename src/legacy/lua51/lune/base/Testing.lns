@@ -22,28 +22,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-pub proto class Ctrl;
-
-let mut ctrlList:List<Ctrl> = [];
-
-pub fn getCtrlList() : &List<&Ctrl> {
-   return ctrlList;
-}
-
-pub class Ctrl {
-   let mut okNum:int {pub};
-   let mut ngNum:int {pub};
-
-   pub fn __init() {
-      self.okNum = 0;
-      self.ngNum = 0;
-      ctrlList.insert( self );
-   }
+pub class Result {
+   let name:str;
+   let mut okNum:int;
+   let mut ngNum:int;
 
    pub fn outputResult(stream:oStream) {
       stream.write(
-         "test total: %d (OK:%d, NG:%d)\n"
-         (self.$okNum + self.$ngNum, self.$okNum, self.$ngNum ) );
+         "test total: %s %d (OK:%d, NG:%d)\n"
+         (self.name, self.$okNum + self.$ngNum, self.$okNum, self.$ngNum ) );
    }
 
    pub fn err( mess:str, mod:str, lineNo:int ) mut {
@@ -106,11 +93,89 @@ pub class Ctrl {
          ( msg or "", val1txt, val1, val2txt, val2 ), mod, lineNo );
       return false;
    }
+   
+}
+
+pub class Ctrl {
+   let mut result:Result {pub};
+
+   // pub fn __init( modName:str, caseName:str ) {
+   //    let mut info = unwrap testModuleMap[ modName ];
+   //    let mut testcase = unwrap info.$testcaseMap[ caseName ];
+   //    self.result = testcase.$result;
+   // }
+
+   advertise result;
+}
+
+
+pub form TestcaseFunc( ctrl:Ctrl );
+class TestCase {
+   let func:TestcaseFunc {pub};
+   let mut result:Result {pub};
+}
+
+class TestModuleInfo {
+   let mut runned:bool {pub};
+   let name:str {pub};
+   let mut testcaseMap:Map<str,TestCase> {pub};
+
+   pub fn __init( name:str ) {
+      self.runned = false;
+      self.name = name;
+      self.testcaseMap = {};
+   }
+   
+   pub fn addCase( name:str, testCase:TestCase ) mut {
+      self.testcaseMap[ name ] = testCase;
+   }
+
+   pub fn run() mut {
+      self.runned = true;
+      print( "module: %s %s" (self.name, string.rep( "=", 30 )) );
+      foreach testcase, name in self.testcaseMap {
+         print( "%s: %s" (name, string.rep( "-", 15 )) );
+         testcase.$func( new Ctrl( testcase.$result) );
+      }
+   }
+
+   pub fn outputResult( stream:oStream ) {
+      if not self.runned {
+         return;
+      }
+      print( "module: %s %s" (self.name, string.rep( "=", 30 )) );
+      foreach testcase in self.testcaseMap {
+         testcase.$result.outputResult( stream );
+      }
+   }
+}
+let mut testModuleMap:Map<str,TestModuleInfo> = {};
+
+pub fn registerTestcase( modName:str, caseName:str, testcase:TestcaseFunc ) {
+   let! mut info = testModuleMap[ modName ] {
+      info = new TestModuleInfo( modName );
+      testModuleMap[ modName ] = info;
+   };
+   let mut result = new Result(caseName,0,0);
+   info.addCase( caseName, new TestCase( testcase, result ) );
+}
+
+pub fn run( modPath:str ) {
+   foreach info, name in testModuleMap {
+      if name == modPath {
+         info.run();
+      }
+   }
+}
+pub fn runAll() {
+   foreach info in testModuleMap {
+      info.run();
+   }
 }
 
 pub fn outputAllResult( stream:oStream ) {
-   foreach ctrl in ctrlList {
-      ctrl.outputResult( stream );
+   foreach info in testModuleMap {
+      info.outputResult( stream );
    }
 }
 

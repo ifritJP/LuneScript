@@ -27,6 +27,7 @@ package runtimelns
 import "fmt"
 import "math"
 import "reflect"
+import "sort"
 
 type LnsInt = int
 type LnsReal = float64
@@ -48,9 +49,21 @@ func Lns_registerTestcase( modName string, list []*LnsTestcase ) {
 }
 
 func Lns_runTest() {
-    for _, list := range( lnsTestcaseMap ) {
-        for _, testcase := range( list ) {
-            fmt.Printf( "%s:\n", testcase.Name  )
+    keylist := make([]string, len( lnsTestcaseMap ))
+    index := 0
+    for key, _ := range( lnsTestcaseMap ) {
+        keylist[ index ] = key
+        index++
+    }
+    sort.Slice(
+        keylist,
+        func (idx1, idx2 int ) bool {
+            return keylist[ idx1 ] < keylist[ idx2 ]
+        } );
+    for _, key := range( keylist ) {
+        fmt.Printf( "module: %s ==============================\n", key )
+        for _, testcase := range( lnsTestcaseMap[ key ] ) {
+            fmt.Printf( "%s: ---------------\n", testcase.Name )
             testcase.Call()
         }
     }

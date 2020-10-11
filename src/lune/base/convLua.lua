@@ -448,7 +448,7 @@ function convFilter:writeRaw( txt )
    end
    
    
-   for _5373 in string.gmatch( txt, "\n" ) do
+   for _5395 in string.gmatch( txt, "\n" ) do
       self.curLineNo = self.curLineNo + 1
    end
    
@@ -1261,10 +1261,6 @@ function convFilter:processRoot( node, opt )
       self:writeln( "local _moduleObj = {}" )
    end
    
-   if self.enableTest then
-      self:writeln( "_moduleObj.__testMap = {}" )
-   end
-   
    self:writeln( string.format( "local __mod__ = '%s'", node:get_moduleTypeInfo():getFullName( self:get_typeNameCtrl(), self:get_moduleInfoManager() )) )
    
    local luneSymbol = string.format( "_lune%d", Ver.luaModVersion)
@@ -1897,7 +1893,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _5713 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _5735 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -3774,12 +3770,15 @@ end
 function convFilter:processTestBlock( node, opt )
 
    if self.enableTest then
-      self:writeln( string.format( "_moduleObj.__testMap[ '%s' ] = function () ", node:get_name().txt) )
-      
+      self:writeln( "do" )
       self:pushIndent(  )
-      
+      filter( node:get_impNode(), self, node )
+      self:writeln( "" )
+      self:writeln( string.format( "local function testcase( %s ) ", node:get_ctrlName()) )
       filter( node:get_block(), self, node )
       
+      self:writeln( "end" )
+      self:writeln( string.format( '__t.registerTestcase( "%s", "%s", testcase )', self.moduleTypeInfo:getFullName( self:get_typeNameCtrl(), self:get_moduleInfoManager() ):gsub( "@", "" ), node:get_name().txt) )
       self:popIndent(  )
       self:writeln( "end" )
    end
@@ -4037,7 +4036,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3334, function (  )
+   Log.log( Log.Level.Info, __func__, 3354, function (  )
    
       return string.format( "code: %s", code)
    end )
