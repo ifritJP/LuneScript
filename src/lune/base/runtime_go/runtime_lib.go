@@ -83,9 +83,36 @@ func Lns_IsNil( val LnsAny ) bool {
     case string:
         return false;
     default:
-        return reflect.ValueOf(val).IsNil()
+        value := reflect.ValueOf(val)
+        if value.Kind() == reflect.Func {
+            return false
+        }
+        return value.IsNil()
     }    
 }
+
+func Lns_type( val LnsAny ) string {
+    if val == nil {
+        return "nil";
+    }
+    switch val.(type) {
+    case LnsInt:
+        return "number";
+    case LnsReal:
+        return "number";
+    case bool:
+        return "boolean";
+    case string:
+        return "string";
+    default:
+        value := reflect.ValueOf(val)
+        if value.Kind() == reflect.Func {
+            return "function";
+        }
+        return "table";
+    }    
+}
+
 
 func Lns_unwrap( val LnsAny ) LnsAny {
     if Lns_IsNil( val ) {
@@ -125,6 +152,25 @@ func Lns_cast2string( val LnsAny ) LnsAny {
     return nil
 }
 
+func Lns_forceCastInt( val LnsAny ) LnsInt {
+    switch val.(type) {
+    case LnsInt:
+        return val.(LnsInt)
+    case LnsReal:
+        return LnsInt(val.(LnsReal))
+    }
+    panic( fmt.Sprintf( "illegal type -- %T", val ) );
+}
+
+func Lns_forceCastReal( val LnsAny ) LnsReal {
+    switch val.(type) {
+    case LnsInt:
+        return LnsReal(val.(LnsInt))
+    case LnsReal:
+        return val.(LnsReal)
+    }
+    panic( fmt.Sprintf( "illegal type -- %T", val ) );
+}
 
 type Lns_ToObjParam struct {
     Func func ( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny)
@@ -240,16 +286,13 @@ func Lns_NilAccFin( ret bool) LnsAny {
 
 func Lns_NilAccCall0( call func () ) bool {
     call()
-    Lns_NilAccLast( nil )
-    return true
+    return Lns_NilAccPush( true )
 }
 func Lns_NilAccCall1( call func () LnsAny ) bool {
-    Lns_NilAccLast( call() )
-    return true
+    return Lns_NilAccPush( call() )
 }
 func Lns_NilAccCall2( call func () (LnsAny,LnsAny) ) bool {
-    Lns_NilAccLast( Lns_2DDD( call() ) )
-    return true
+    return Lns_NilAccPush( Lns_2DDD( call() ) )
 }
 func Lns_NilAccFinCall2( ret LnsAny ) (LnsAny,LnsAny) {
     if Lns_IsNil( ret ) {
@@ -259,8 +302,7 @@ func Lns_NilAccFinCall2( ret LnsAny ) (LnsAny,LnsAny) {
     return list[0], list[1]
 }
 func Lns_NilAccCall3( call func () (LnsAny,LnsAny,LnsAny) ) bool {
-    Lns_NilAccLast( Lns_2DDD( call() ) )
-    return true
+    return Lns_NilAccPush( Lns_2DDD( call() ) )
 }
 func Lns_NilAccFinCall3( ret LnsAny ) (LnsAny,LnsAny,LnsAny) {
     if Lns_IsNil( ret ) {
@@ -344,6 +386,10 @@ func Lns_ToString( val LnsAny ) string {
     case string:
         return val.(string);
     default:
+        value := reflect.ValueOf(val)
+        if value.Kind() == reflect.Func {
+            return fmt.Sprintf( "function:%T", val )
+        }
         return fmt.Sprintf( "table:%T", val )
     }
 }

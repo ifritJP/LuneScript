@@ -198,6 +198,10 @@ pub abstract class Node {
       self.isLValue = true;
    }
 
+   pub fn getPrefix() : &Node! {
+      return nil;
+   }
+
    pub fn __init( id: int, kind: int, pos: &Parser.Position,
                   macroArgFlag:bool, expTypeList: &List<&Ast.TypeInfo> )
    {
@@ -1241,6 +1245,9 @@ _declNodeClass( "ExpCast", Node, false, true, false,
                   { "castKind": "CastKind" } ]
 );
 
+pub override fn ExpCastNode.getPrefix() : &Node! {
+   return self.exp.getPrefix();
+}
 pub override fn ExpCastNode.getLiteral(): Literal!, str! {
    return self.exp.getLiteral()**;
 }
@@ -1282,6 +1289,9 @@ _declNodeClass( "ExpRefItem", Node, nil, true, false,
                   { "symbol": "str!" },
                   { "index": "&Node!" } ]
 );
+pub override fn ExpRefItemNode.getPrefix() : &Node! {
+   return self.val;
+}
 pub override fn ExpRefItemNode.canBeLeft(): bool {
    if self.val.$expType == Ast.builtinTypeStem {
       return false;
@@ -1296,6 +1306,10 @@ _declNodeClass( "ExpCall", Node, false, nil, true,
                   { "nilAccess": "bool" },
                   { "argList": "&ExpListNode!" } ]
 );
+pub override fn ExpCallNode.getPrefix() : &Node! {
+   return self.func;
+}
+
 pub override fn ExpCallNode.canBeRight():bool {
    let expType = self.$expType;
    if expType.equals( Ast.builtinTypeNone## ) or
@@ -1318,18 +1332,25 @@ pub override fn ExpCallNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind 
 _declNodeClass( "ExpMRet", Node, false, true, false,
                 [ { "mRet": "&Node" } ]
 );
+pub override fn ExpMRetNode.getPrefix(): &Node! {
+   return self.mRet.getPrefix();
+}
 
 // 多値戻り値の index 番目 ( index >= 2 )
 _declNodeClass( "ExpAccessMRet", Node, false, true, false,
                 [ { "mRet": "&Node" },
                   { "index": "int" } ]
 );
-
+pub override fn ExpAccessMRetNode.getPrefix() : &Node! {
+   return self.mRet.getPrefix();
+}
 // 多値戻り値の先頭だけ使用する場合
 _declNodeClass( "ExpMultiTo1", Node, false, true, false,
                 [ { "exp": "&Node" } ]
 );
-
+pub override fn ExpMultiTo1Node.getPrefix() : &Node! {
+   return self.exp.getPrefix();
+}
 
 _declNodeClass( "ExpDDD", Node, false, true, false,
                 [ { "token": "&Parser.Token" } ]
@@ -1338,6 +1359,10 @@ _declNodeClass( "ExpDDD", Node, false, true, false,
 _declNodeClass( "ExpParen", Node, false, true, false,
                 [ { "exp": "&Node" } ]
 );
+pub override fn ExpParenNode.getPrefix() : &Node! {
+   return self.exp.getPrefix();
+}
+
 pub override fn ExpParenNode.getSymbolInfo(): &List<&Ast.SymbolInfo> {
    return self.exp.getSymbolInfo();
 }
@@ -1399,6 +1424,9 @@ _declNodeClass( "RefField", Node, nil, nil, false,
                   { "nilAccess": "bool" },
                   { "prefix": "&Node" }] 
 );
+pub override fn RefFieldNode.getPrefix() : &Node! {
+   return self.prefix;
+}
 pub override fn RefFieldNode.canBeLeft():bool {
    // if not Ast.isMutable( self.prefix.$expType.$mutMode ) {
    //    if self.$symbolInfo$.$mutMode == .AllMut {
@@ -1441,6 +1469,10 @@ pub override fn GetFieldNode.canBeLeft():bool {
    // }
    return false;
 }
+pub override fn GetFieldNode.getPrefix() : &Node! {
+   return self.prefix;
+}
+
 
 
 _declNodeClass( "Alias", Node, false, false, true,
@@ -2619,6 +2651,9 @@ _declNodeKindEnum();
 pub fn getUnwraped( node:&Node ) : &Node {
    if! let work = node@@@ExpMRetNode {
       return getUnwraped( work.$mRet );
+   }
+   if! let work = node@@@ExpParenNode {
+      return getUnwraped( work.$exp );
    }
    return node;
 }

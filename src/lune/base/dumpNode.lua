@@ -935,7 +935,7 @@ end
 function dumpFilter:processExpCall( node, opt )
 
    local prefix, depth = opt:get(  )
-   dump( prefix, depth, node, string.format( "-> %s", getTypeListTxt( node:get_expTypeList() )) )
+   dump( prefix, depth, node, string.format( "[nilacc:%s] -> %s", node:get_nilAccess(), getTypeListTxt( node:get_expTypeList() )) )
    filter( node:get_func(  ), self, opt:nextOpt(  ) )
    do
       local _exp = node:get_argList(  )

@@ -1070,7 +1070,7 @@ endef
 
 define setup-go
 	mkdir -p $1
-	rsync -av --include='*.go' --include='*.lua' \
+	rsync -a --include='*.go' --include='*.lua' \
 			--include='*.lns' --exclude='*.*' lune $1
 endef
 
@@ -1093,6 +1093,7 @@ test-miniGo:
 	$(call transwork,.,.,,base/convGo)
 	$(call setup-go,$(GO_WORK_DIR))
 	$(call test-go-one,$(GO_WORK_DIR),miniGo,.)
+	cat work/result-testGo.txt
 
 ifndef NO_TEST
 	$(MAKE) test-go
@@ -1162,7 +1163,7 @@ test-testGo:
 	$(call convGo,$(GO_WORK_DIR),lune/base/LuneControl,--testing,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),Util,lune/base,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),Parser,lune/base,./test)
-#	$(call test-convGo-test,$(GO_WORK_DIR),Writer,lune/base,./test)
+	$(call test-convGo-test,$(GO_WORK_DIR),Writer,lune/base,./test)
 
 
 test-reference:

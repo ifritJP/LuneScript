@@ -570,7 +570,8 @@ pub override fn dumpFilter.processExpCall(
    node: &Nodes.ExpCallNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
-   dump( prefix, depth, node, "-> %s" (getTypeListTxt( node.$expTypeList ) ) );
+   dump( prefix, depth, node,
+         "[nilacc:%s] -> %s" ( node.$nilAccess, getTypeListTxt( node.$expTypeList ) ) );
    filter( node.get_func(), self, opt.nextOpt() );
    if! node.get_argList() {
       filter( _exp, self, opt.nextOpt() );

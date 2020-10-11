@@ -513,6 +513,10 @@ function Node:setLValue(  )
 
    self.isLValue = true
 end
+function Node:getPrefix(  )
+
+   return nil
+end
 function Node.new( id, kind, pos, macroArgFlag, expTypeList )
    local obj = {}
    Node.setmeta( obj )
@@ -727,7 +731,7 @@ end
 function NodeManager:__init() 
    self.idSeed = 0
    self.nodeKind2NodeList = {}
-   for kind, _2490 in pairs( nodeKind2NameMap ) do
+   for kind, _2493 in pairs( nodeKind2NameMap ) do
       if not self.nodeKind2NodeList[kind] then
          self.nodeKind2NodeList[kind] = {}
       end
@@ -5070,6 +5074,11 @@ end
 
 
 
+function ExpCastNode:getPrefix(  )
+
+   return self.exp:getPrefix(  )
+end
+
 function ExpCastNode:getLiteral(  )
 
    return self.exp:getLiteral(  )
@@ -5535,6 +5544,11 @@ function ExpRefItemNode:get_index()
 end
 
 
+function ExpRefItemNode:getPrefix(  )
+
+   return self.val
+end
+
 function ExpRefItemNode:canBeLeft(  )
 
    if self.val:get_expType() == Ast.builtinTypeStem then
@@ -5672,6 +5686,12 @@ function ExpCallNode:get_argList()
 end
 
 
+function ExpCallNode:getPrefix(  )
+
+   return self.func
+end
+
+
 function ExpCallNode:canBeRight(  )
 
    local expType = self:get_expType()
@@ -5786,6 +5806,11 @@ function ExpMRetNode:get_mRet()
 end
 
 
+function ExpMRetNode:getPrefix(  )
+
+   return self.mRet:getPrefix(  )
+end
+
 
 
 function NodeKind.get_ExpAccessMRet(  )
@@ -5884,6 +5909,11 @@ function ExpAccessMRetNode:get_index()
 end
 
 
+function ExpAccessMRetNode:getPrefix(  )
+
+   return self.mRet:getPrefix(  )
+end
+
 
 
 function NodeKind.get_ExpMultiTo1(  )
@@ -5977,6 +6007,11 @@ function ExpMultiTo1Node:get_exp()
    return self.exp
 end
 
+
+function ExpMultiTo1Node:getPrefix(  )
+
+   return self.exp:getPrefix(  )
+end
 
 
 
@@ -6145,6 +6180,12 @@ function ExpParenNode.setmeta( obj )
 end
 function ExpParenNode:get_exp()
    return self.exp
+end
+
+
+function ExpParenNode:getPrefix(  )
+
+   return self.exp:getPrefix(  )
 end
 
 
@@ -6844,6 +6885,11 @@ function RefFieldNode:get_prefix()
 end
 
 
+function RefFieldNode:getPrefix(  )
+
+   return self.prefix
+end
+
 function RefFieldNode:canBeLeft(  )
 
    do
@@ -6988,6 +7034,11 @@ function GetFieldNode:canBeLeft(  )
    end
    
    return false
+end
+
+function GetFieldNode:getPrefix(  )
+
+   return self.prefix
 end
 
 
@@ -11674,7 +11725,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, _8383 in pairs( self.map ) do
+   for key, _8422 in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -11709,8 +11760,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, _8391 in ipairs( __sorted ) do
-         local key = __map[ _8391 ]
+      for __index, _8430 in ipairs( __sorted ) do
+         local key = __map[ _8430 ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false
@@ -12459,6 +12510,13 @@ local function getUnwraped( node )
       local work = _lune.__Cast( node, 3, ExpMRetNode )
       if work ~= nil then
          return getUnwraped( work:get_mRet() )
+      end
+   end
+   
+   do
+      local work = _lune.__Cast( node, 3, ExpParenNode )
+      if work ~= nil then
+         return getUnwraped( work:get_exp() )
       end
    end
    

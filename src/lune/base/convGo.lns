@@ -813,8 +813,7 @@ fn convFilter.outputNilAccCall( node: &Nodes.ExpCallNode ) mut {
       self.write(
       ```
 func lns_NilAccCall_%s( call func () (%s) ) bool {
-    Lns_NilAccLast( Lns_2DDD( call() ) )
-    return true
+    return Lns_NilAccPush( Lns_2DDD( call() ) )
 }
 func lns_NilAccFinCall_%s( ret LnsAny ) (%s) {
     if Lns_IsNil( ret ) {
@@ -1159,7 +1158,9 @@ pub override fn convFilter.processConvStat(
 
 fn convFilter.outputTopScopeVar( node: &Nodes.DeclVarNode ) mut {
    foreach symbolInfo in node.$symbolInfoList {
-      if symbolInfo.$posForModToRef {
+      if Ast.isPubToExternal( symbolInfo.$accessMode ) or
+         symbolInfo.$posForModToRef
+      {
          self.writeln( "var %s %s" ( self.getSymbolSym( symbolInfo ),
                                      self.type2gotype( symbolInfo.$typeInfo ) ) );
       }
@@ -1202,6 +1203,7 @@ pub override fn convFilter.processRoot(
 
    builtin2runtime[ builtinFuncs.lns_error ] = "panic";
    builtin2runtime[ builtinFuncs.lns_print ] = "Lns_print";
+   builtin2runtime[ builtinFuncs.lns_type ] = "Lns_type";
    builtin2runtime[ builtinFuncs.lns__load ] = "Lns_getVM().Load";
 
    builtin2runtime[ builtinFuncs.string_dump ] = "Lns_getVM().String_dump";
@@ -3434,6 +3436,7 @@ pub fn convFilter.outputCallPrefix(
             self.write( "Lns_NilAccCall0( func () {" );
          }
          case 1 {
+
             self.write( "Lns_NilAccCall1( func () LnsAny { return " );
          }
          default {
@@ -3488,11 +3491,22 @@ pub fn convFilter.outputCallPrefix(
          }
       } else {
          if not funcType.$staticFlag {
-            if node.hasNilAccess() and not prefixNode.hasNilAccess() {
-               self.write( "Lns_NilAccFin(" );
-               self.write( "Lns_NilAccPush(" );
-               filter( prefixNode, self, node );
-               self.writeln( ") && " );
+            if node.hasNilAccess() {
+               if not prefixNode.hasNilAccess() {
+                  self.write( "Lns_NilAccFin(" );
+                  self.write( "Lns_NilAccPush(" );
+                  filter( prefixNode, self, node );
+                  self.writeln( ") && " );
+               } else {
+                  filter( prefixNode, self, node );
+                  switch prefixNode.$kind {
+                     case Nodes.NodeKind.$RefField {
+                     }
+                     default {
+                        self.writeln( "&&" );
+                     }
+                  }
+               }
             } else {
                filter( prefixNode, self, node );
             }
@@ -3704,8 +3718,10 @@ pub override fn convFilter.processExpCall(
 
    if node.hasNilAccess() {
       self.write( "})" );
+      self.write( "/* %d:%d */" (node.$pos.lineNo, node.$pos.column) );
+      
       if opt.node.hasNilAccess() {
-         self.writeln(" &&" );
+         // self.writeln(" && // " );
       } else {
          self.write( ")" );
       }
@@ -3812,8 +3828,22 @@ pub override fn convFilter.processExpCast(
    switch node.$castKind {
       case .Force {
          if isAnyType( node.$exp.$expType ) {
-            filter( node.$exp, self, node );
-            self.outputAny2Type( node.$castType );
+            switch node.$castType {
+               case Ast.builtinTypeInt {
+                  self.write( "Lns_forceCastInt(" );
+                  filter( node.$exp, self, node );
+                  self.write( ")" );
+               }
+               case Ast.builtinTypeReal {
+                  self.write( "Lns_forceCastReal(" );
+                  filter( node.$exp, self, node );
+                  self.write( ")" );
+               }
+               default {
+                  filter( node.$exp, self, node );
+                  self.outputAny2Type( node.$castType );
+               }
+            }
          }
          else {
             self.write( "%s(" (self.type2gotype( node.$castType ) ) );
@@ -4059,7 +4089,8 @@ pub override fn convFilter.processExpRefItem(
          if node.$nilAccess {
             self.write( "Lns_NilAccFin( Lns_NilAccPush( " );
             filter( node.$val, self, node );
-            self.write( ") && Lns_NilAccLast( Lns_NilAccPop().(*LnsList)" );
+            self.write( ") && " );
+            self.write( "Lns_NilAccLast( Lns_NilAccPop().(*LnsList)" );
             self.write( ".GetAt(" );
             filter( unwrap node.$index, self, node );
             self.write( ")" );
@@ -4077,7 +4108,8 @@ pub override fn convFilter.processExpRefItem(
          if node.$nilAccess {
             self.write( "Lns_NilAccFin( Lns_NilAccPush( " );
             filter( node.$val, self, node );
-            self.write( ") && Lns_NilAccLast( Lns_NilAccPop().(*LnsMap)" );
+            self.write( ") && " );
+            self.write( "Lns_NilAccLast( Lns_NilAccPop().(*LnsMap)" );
          } else {
             filter( node.$val, self, node );
             if prefixType.$kind == .Stem {
@@ -4151,6 +4183,13 @@ pub override fn convFilter.processRefField(
          self.writeln( ") && " );
       } else {
          filter( node.$prefix, self, node );
+         switch Nodes.getUnwraped( node.$prefix ).$kind {
+            case Nodes.NodeKind.$ExpCall,
+                 Nodes.NodeKind.$GetField
+            {
+               self.writeln( "&&" );
+            }
+         }
       }
       self.write( "Lns_NilAccPush(" );
       if opt.node.hasNilAccess() {
@@ -4228,11 +4267,16 @@ pub override fn convFilter.processGetField(
          
          
          if node.hasNilAccess() {
-            self.write("} )" );
-            if opt.node.hasNilAccess() {
-               self.writeln(" &&" );
-            } else {
-               self.write( ")" );
+            self.write("})" );
+            switch opt.node.$kind {
+               case Nodes.NodeKind.$GetField,
+                    Nodes.NodeKind.$RefField,
+                    Nodes.NodeKind.$ExpCall
+               {
+               }
+               default {
+                  self.write ( ")" );
+               }
             }
          }
       }

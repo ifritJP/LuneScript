@@ -367,7 +367,26 @@ _section();
       pub let val2:Test2! {pub};
    }
    fn func(test:Test3) {
-      print( test.val2$.val1$.func$( 1 ), test.val2$.val1$.val0$.func$( 10 ) );
+      // field, field, call
+      print( test.val2$.val1$.func$( 1 ) );
+      // field, field, field, call
+      print( test.val2$.val1$.val0$.func$( 10 ) );
+      // field, get, call
+      print( test.val2$.$val1$.func$( 1 ) );
+      // field, get, get
+      print( test.val2$.$val1$.$val0$.val );
+      // field, get, get, call
+      print( test.val2$.$val1$.$val0$.func$( 1 ) );
+      // field, call, field
+      print( test.val2$.get_val1$()$.val0$.val );
+      // field, call, field, field
+      print( test.val2$.get_val1$()$.val0$.val );
+      // field, call, get
+      print( test.val2$.get_val1$()$.$val0$.val );
+      // field, call, get, get
+      print( test.val2$.get_val1$()$.$val0$.$val );
+      // field, call, cal
+      print( test.val2$.get_val1$()$.func$( 1 ) );
    }
    func( new Test3(##) );
    func( new Test3( new Test2(##)) );
@@ -659,4 +678,16 @@ _section();
    if! let mut fileObj = io.open( "testGo.lns" ##) {
       print( fileObj.read( 100 ) );
    }
+}
+_section();
+{
+   fn func( val:stem! ) {
+      print( type( val ) );
+   }
+   func( 1 );
+   func( 1.5 );
+   func( true );
+   func( "a" );
+   func( fn() {} );
+   func( [ 1 ] );
 }
