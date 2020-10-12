@@ -1,4 +1,7 @@
 {
+   pub form func();
+}
+{
    fn func( test1:form ) {
       test1( nil );
    }

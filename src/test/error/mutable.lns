@@ -131,7 +131,7 @@ test.$map[ 1 ] = 1; // error
 
 class Test2 {
 }
-fn func( map:&Map<int,&Test2>): Test2! {
+fn funcG( map:&Map<int,&Test2>): Test2! {
    return map[ 1 ]; // error
 }
 

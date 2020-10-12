@@ -516,7 +516,7 @@ function Front:loadFromLnsTxt( importModuleInfo, name, txt )
    
    local ast = transUnit:createAST( parser, false, nil )
    
-   local _5555, luaTxt = self:convertFromAst( ast, name, convLua.ConvMode.Exec )
+   local _5561, luaTxt = self:convertFromAst( ast, name, convLua.ConvMode.Exec )
    return _lune.unwrap( loadFromLuaTxt( luaTxt ))
 end
 
@@ -842,7 +842,7 @@ function Front:convertLns2LuaCode( importModuleInfo, stream, streamName )
    local mod = scriptPath2Module( streamName )
    local ast = self:createAst( importModuleInfo, Parser.StreamParser.new(stream, streamName, false), mod, frontInterface.ModuleId.createId( 0.0, 0 ), nil, TransUnit.AnalyzeMode.Compile )
    
-   local _5662, luaTxt = self:convertFromAst( ast, streamName, convLua.ConvMode.Exec )
+   local _5668, luaTxt = self:convertFromAst( ast, streamName, convLua.ConvMode.Exec )
    
    return luaTxt
 end
@@ -937,12 +937,9 @@ end
 function Front:searchLuaFile( moduleFullName, addSearchPath )
 
    local luaSearchPath = package.path
-   do
-      local _exp = addSearchPath
-      if _exp ~= nil then
-         luaSearchPath = string.format( "%s/?.lua;%s", addSearchPath, package.path )
-         
-      end
+   if addSearchPath ~= nil then
+      luaSearchPath = string.format( "%s/?.lua;%s", addSearchPath, package.path )
+      
    end
    
    local foundPath = Depend.searchpath( moduleFullName, luaSearchPath )
@@ -977,7 +974,7 @@ function Front:checkUptodateMeta( metaPath, addSearchPath )
    end
    
    
-   for moduleFullName, _5718 in pairs( meta.__dependModuleMap ) do
+   for moduleFullName, _5724 in pairs( meta.__dependModuleMap ) do
       do
          local moduleLuaPath = self:searchLuaFile( moduleFullName, addSearchPath )
          if moduleLuaPath ~= nil then
@@ -1089,7 +1086,6 @@ end
 
 
 function Front:loadMeta( importModuleInfo, mod )
-   local __func__ = '@lune.@base.@front.Front.loadMeta'
 
    if self.loadedMetaMap[mod] == nil then
       do
@@ -1226,7 +1222,7 @@ function Front:convertLuaToStreamFromScript( convMode, path, mod, byteCompile, s
       if stream ~= nil then
          if metaInfo ~= nil then
             local dependInfo = OutputDepend.DependInfo.new(mod)
-            for dependMod, _5815 in pairs( metaInfo.__dependModuleMap ) do
+            for dependMod, _5821 in pairs( metaInfo.__dependModuleMap ) do
                dependInfo:addImpotModule( dependMod )
             end
             

@@ -40,7 +40,7 @@ fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Nodes.ReturnNode {
    let retTypeList = funcTypeInfo.$retTypeInfoList;
    if nextToken.txt ~= ";" {
       self.pushback();
-      expList = self.analyzeExpList( false, false, nil, retTypeList ## );
+      expList = self.analyzeExpList( false, false, false, nil, retTypeList ## );
       self.checkNextToken( ";" );
    }
 
@@ -197,14 +197,28 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
       }
       else {
          self.pushback();
-         let mut exp = self.analyzeExp( true, false ## );
+
+         self.accessSymbolSetQueue.push();
+         
+         let mut exp = self.analyzeExp( true, false, true ## );
          let mut nextToken = self.getToken(##);
          if nextToken.txt == "," {
-            exp = self.analyzeExpList( true, true, exp ## );
-            exp = self.analyzeExpOp2( token, exp, nil );
+            let mut expList = self.analyzeExpList( true, true, true, exp ## );
+            exp = self.analyzeExpOp2( token, expList, nil );
             nextToken = self.getToken(##);
          }
          self.checkToken( nextToken, ";" );
+
+         if! let setNode = exp@@@Nodes.ExpSetValNode {
+            let mut set:Set<&Ast.SymbolInfo> = (@);
+            foreach symbol in setNode.$LeftSymList {
+               set.add( symbol.getOrg() );
+            }
+            self.accessSymbolSetQueue.pop( set );
+         } else {
+            self.accessSymbolSetQueue.pop( nil );
+         }
+         
          // statement = self.createNode(
          //     nodeKindStmtExp, self.currentToken.pos, [ builtinTypeNone ], exp );
          statement = Nodes.StmtExpNode.create(

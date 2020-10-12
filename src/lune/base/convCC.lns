@@ -2226,7 +2226,7 @@ fn convFilter.processSym2stem( symbolInfo:&Ast.LowSymbol) mut
                self.write( "_pDDD" );
             }
             case .Func {    
-               if! let scope = expType.$scope {
+               if expType.$scope {
                   self.write( "LNS_STEM_ANY(" );
                   self.write( getFunc2any( self.moduleCtrl, self.scopeMgr, expType ) );
                   self.write( ")" );
@@ -3374,7 +3374,7 @@ fn process2stem(
                      stream.write( "_pDDD" );
                   }
                   case .Func {    
-                     if! let scope = expType.$scope {
+                     if expType.$scope {
                         stream.write( "LNS_STEM_ANY(" );
                         stream.write( getFunc2any(
                            moduleCtrl, scopeMgr, expType ) );
@@ -10625,7 +10625,7 @@ pub override fn convFilter.processLiteralString(
    switch self.processMode {
       case .Prototype {
          if! let expListNode = node.$orgParam {
-            if! let mRetExp = expListNode.$mRetExp {
+            if expListNode.$mRetExp {
                self.processCallWithMRet(
                   node, getMRetFuncName( node ), cTypeAnyP,
                   MRetInfo.Format( txt, expListNode ), expListNode );
@@ -10643,7 +10643,7 @@ pub override fn convFilter.processLiteralString(
       }
       case .StringFormat {
          if! let expListNode = node.$orgParam {
-            if! let mRetExp = expListNode.$mRetExp {
+            if expListNode.$mRetExp {
                //self.write( "%s( _pEnv" ( getMRetFuncName( node ) ) );
                // foreach exp, index in expListNode.$expList {
                //    if index > mRetExp.$index {

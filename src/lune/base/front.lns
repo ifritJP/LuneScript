@@ -560,7 +560,7 @@ fn Front.searchModule( mod:str ): str! {
 
 fn Front.searchLuaFile( moduleFullName:str, addSearchPath:str! ) : str! {
    let mut luaSearchPath = package.path;
-   if! addSearchPath {
+   when! addSearchPath {
       luaSearchPath = string.format( "%s/?.lua;%s", addSearchPath, package.path );
       //luaSearchPath = string.format( "%s/?.lua", _exp );
    }

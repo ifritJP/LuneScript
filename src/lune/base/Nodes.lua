@@ -727,7 +727,7 @@ end
 function NodeManager:__init() 
    self.idSeed = 0
    self.nodeKind2NodeList = {}
-   for kind, _2494 in pairs( nodeKind2NameMap ) do
+   for kind, _2498 in pairs( nodeKind2NameMap ) do
       if not self.nodeKind2NodeList[kind] then
          self.nodeKind2NodeList[kind] = {}
       end
@@ -4134,26 +4134,27 @@ function ExpSetValNode:canBeStatement(  )
 
    return true
 end
-function ExpSetValNode.new( id, pos, macroArgFlag, typeList, exp1, exp2, initSymSet )
+function ExpSetValNode.new( id, pos, macroArgFlag, typeList, exp1, exp2, LeftSymList, initSymSet )
    local obj = {}
    ExpSetValNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, exp1, exp2, initSymSet ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, exp1, exp2, LeftSymList, initSymSet ); end
    return obj
 end
-function ExpSetValNode:__init(id, pos, macroArgFlag, typeList, exp1, exp2, initSymSet) 
+function ExpSetValNode:__init(id, pos, macroArgFlag, typeList, exp1, exp2, LeftSymList, initSymSet) 
    Node.__init( self,id, 24, pos, macroArgFlag, typeList)
    
    
    
    self.exp1 = exp1
    self.exp2 = exp2
+   self.LeftSymList = LeftSymList
    self.initSymSet = initSymSet
    
    
 end
-function ExpSetValNode.create( nodeMan, pos, macroArgFlag, typeList, exp1, exp2, initSymSet )
+function ExpSetValNode.create( nodeMan, pos, macroArgFlag, typeList, exp1, exp2, LeftSymList, initSymSet )
 
-   local node = ExpSetValNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, exp1, exp2, initSymSet)
+   local node = ExpSetValNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, exp1, exp2, LeftSymList, initSymSet)
    nodeMan:addNode( node )
    return node
 end
@@ -4205,6 +4206,9 @@ function ExpSetValNode:get_exp1()
 end
 function ExpSetValNode:get_exp2()
    return self.exp2
+end
+function ExpSetValNode:get_LeftSymList()
+   return self.LeftSymList
 end
 function ExpSetValNode:get_initSymSet()
    return self.initSymSet
@@ -11721,7 +11725,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, _8423 in pairs( self.map ) do
+   for key, _8431 in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -11756,8 +11760,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, _8431 in ipairs( __sorted ) do
-         local key = __map[ _8431 ]
+      for __index, _8439 in ipairs( __sorted ) do
+         local key = __map[ _8439 ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false

@@ -449,7 +449,7 @@ function convFilter:writeRaw( txt )
    end
    
    
-   for _5414 in string.gmatch( txt, "\n" ) do
+   for _5420 in string.gmatch( txt, "\n" ) do
       self.curLineNo = self.curLineNo + 1
    end
    
@@ -1703,11 +1703,8 @@ function convFilter:getDestrClass( classTypeInfo )
    local typeInfo = classTypeInfo
    while not typeInfo:equals( Ast.headTypeInfo ) do
       local scope = _lune.unwrap( typeInfo:get_scope())
-      do
-         local _exp = scope:getTypeInfoChild( "__free" )
-         if _exp ~= nil then
-            return typeInfo
-         end
+      if scope:getTypeInfoChild( "__free" ) then
+         return typeInfo
       end
       
       typeInfo = typeInfo:get_baseTypeInfo()
@@ -1817,7 +1814,6 @@ function convFilter:processDeclClass( node, opt )
    
    
    local hasConstrFlag = false
-   local hasDestrFlag = false
    local memberList = {}
    local fieldList = nodeInfo:get_fieldList(  )
    local outerMethodSet = nodeInfo:get_outerMethodSet(  )
@@ -1832,7 +1828,6 @@ function convFilter:processDeclClass( node, opt )
          end
          
          if field:get_kind() == Nodes.NodeKind.get_DeclDestr() then
-            hasDestrFlag = true
             methodNameSet["__free"]= true
          end
          
@@ -1894,7 +1889,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _5754 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _5758 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -4037,7 +4032,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3354, function (  )
+   Log.log( Log.Level.Info, __func__, 3352, function (  )
    
       return string.format( "code: %s", code)
    end )

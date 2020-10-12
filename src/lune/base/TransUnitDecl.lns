@@ -63,7 +63,7 @@ Nodes.RefTypeNode
          new Ast.AccessSymbolInfo( dddSym, .None, true ) );
    }
    else {
-      name = self.analyzeExpSymbol( firstToken, token, .Symbol, nil, true );
+      name = self.analyzeExpSymbol( firstToken, token, .Symbol, nil, true, false );
       let symbolList = name.getSymbolInfo();
       if #symbolList > 0 {
          let symbol = symbolList[ 1 ];
@@ -1038,7 +1038,7 @@ fn TransUnit.analyzeDeclEnum(
       }
 
       if nextToken.txt == "=" {
-         let exp = self.analyzeExpOne( false, false ## );
+         let exp = self.analyzeExpOneRVal( false, false ## );
          let literal, mess = exp.getLiteral();
          when! literal {
             match literal {
@@ -1222,7 +1222,7 @@ fn TransUnit.analyzeAlias(
    let srcToken = self.getToken(##);
 
    let symbolNode = self.analyzeExpSymbol(
-      firstToken, srcToken, .Symbol, nil, true );
+      firstToken, srcToken, .Symbol, nil, true, false );
 
 
    let mut newTypeInfo = Ast.builtinTypeNone;
@@ -1307,9 +1307,17 @@ fn TransUnit.analyzeDeclForm( accessMode:Ast.AccessMode, firstToken:&Parser.Toke
 mut : Nodes.DeclFormNode
 {
    let name = self.getSymbolToken( .MustNot_ );
+
+   if self.scope ~= self.moduleScope and Ast.isPubToExternal( accessMode ) {
+      self.addErrMess(
+         firstToken.pos,
+         "You must declare this form at the outside scope. -- %s"
+         (name.txt) );
+   }
+   
+   
    self.checkNextToken( "(" );
    let mut argList:List<&Nodes.Node> = [];
-
    let mut funcBodyScope = self.pushScope( false ## );
 
    let mut nextToken = self.analyzeDeclArgList(
@@ -2401,7 +2409,7 @@ pri fn TransUnit.addMethod(
 
 fn TransUnit.processAddFunc(
    isFunc:bool, mut parentScope:Ast.Scope,
-   name:&Parser.Token, typeInfo:&Ast.TypeInfo,
+   name:&Parser.Token, mut typeInfo:&Ast.TypeInfo,
    alt2typeMap:Map<&Ast.TypeInfo,&Ast.TypeInfo> ) mut : &Ast.SymbolInfo
 {
    let accessMode = typeInfo.$accessMode;
@@ -2414,11 +2422,13 @@ fn TransUnit.processAddFunc(
    if! let prottype = parentScope.getTypeInfoChild( typeInfo.$rawTxt ) {
       let argTypeList = typeInfo.$argTypeInfoList;
       let retTypeInfoList = typeInfo.$retTypeInfoList;
+      let mut matched = true;
       {
          let matchFlag, err = Ast.TypeInfo.checkMatchType(
             prottype.$argTypeInfoList, argTypeList, false, nil, alt2typeMap );
          if matchFlag ~= .Match {
             self.addErrMess( name.pos, "mismatch functype param: " .. err );
+            matched = false;
          }
       }
       {
@@ -2426,12 +2436,14 @@ fn TransUnit.processAddFunc(
             prottype.$retTypeInfoList, retTypeInfoList, false, nil, alt2typeMap );
          if matchFlag ~= .Match {
             self.addErrMess( name.pos, "mismatch functype ret: " .. err );
+            matched = false;
          }
       }
       if not typeInfo.canEvalWith( prottype, .SetOp, alt2typeMap ) {
          self.addErrMess( name.pos,
                           "mismatch functype -- %s / %s"
                           (typeInfo.$display_stirng, prottype.$display_stirng ) );
+         matched = false;
       }
 
       if self.protoFuncMap[ prottype ] {
@@ -2443,6 +2455,9 @@ fn TransUnit.processAddFunc(
          if not prottype.$autoFlag {
             self.addErrMess( name.pos, "multiple define -- %s" (name.txt) );
          }
+      }
+      if matched {
+         typeInfo = prottype;
       }
    }
    else {
@@ -2575,24 +2590,7 @@ fn TransUnit.analyzeDeclFunc(
       staticFlag = true;
    }
 
-   let mut funcName = "";
-   when! name {
-      funcName = name.txt;
-
-      if kind == Nodes.NodeKind.$DeclFunc {
-         switch accessMode {
-            case .Pub, .Global {
-               if self.scope ~= self.moduleScope {
-                  self.addErrMess(
-                     firstToken.pos,
-                     "'global' or 'pub' function must exist top scope." );
-               }
-            }
-         }
-      }
-   }
-
-
+   let mut parentScope = self.scope;
    let mut funcBodyScope = self.pushScope( false ## );
    
    let mut altTypeList:&List<&Ast.TypeInfo> = [];
@@ -2680,19 +2678,40 @@ fn TransUnit.analyzeDeclFunc(
 
    let namespaceInfo = self.getCurrentNamespaceTypeInfo();
 
-   let typeInfo = Ast.NormalTypeInfo.createFunc(
+   let mut funcName = "";
+   when! name {
+      funcName = name.txt;
+
+      if kind == Nodes.NodeKind.$DeclFunc {
+         switch accessMode {
+            case .Pub, .Global {
+               if parentScope ~= self.moduleScope {
+                  self.addErrMess(
+                     firstToken.pos,
+                     "'global' or 'pub' function must exist top scope." );
+               }
+            }
+         }
+      }
+   }
+
+   let mut workTypeInfo = Ast.NormalTypeInfo.createFunc(
       abstractFlag, false, funcBodyScope,
       typeKind, namespaceInfo,
       false, false, staticFlag, accessMode,
       funcName, altTypeList, argTypeList, retTypeInfoList, mutable );
 
    let funcSym:&Ast.SymbolInfo!;
+   let typeInfo;
    when! name {
-      funcSym = self.processAddFunc(
+      let workSym = self.processAddFunc(
          kind == Nodes.NodeKind.$DeclFunc,
-         funcBodyScope.$parent, name, typeInfo, alt2typeMap );
+         funcBodyScope.$parent, name, workTypeInfo, alt2typeMap );
+      typeInfo = workSym.$typeInfo;
+      funcSym = workSym;
    } else {
       funcSym = nil;
+      typeInfo = workTypeInfo;
    }
 
    if overrideFlag {
@@ -3052,7 +3071,7 @@ fn TransUnit.analyzeLetAndInitExp(
             unwrap varInfo.varType$.$expType default Ast.builtinTypeNone );
       }
       
-      expList = self.analyzeExpList( false, false, nil, expectTypeList ## );
+      expList = self.analyzeExpList( false, false, false, nil, expectTypeList ## );
       if not expList {
          self.error( "expList is nil" );
       }
@@ -3532,7 +3551,7 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
    }
    else {
       self.pushback();
-      expList = self.analyzeExpList( false, false ## );
+      expList = self.analyzeExpList( false, false, false ## );
       let exp = expList.$expList[ 1 ];
       let expType = exp.$expType;
       if expType.$nilable {
@@ -3592,6 +3611,13 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
       self.addErrMess( firstToken.pos, "This condition never be false" );
    }
 
+   foreach varSym in varList {
+      if varSym.$name ~= "_" and not varSym.$posForModToRef {
+         self.addWarnMess(
+            unwrap varSym.$pos, "This symbol has no referer -- %s" ( varSym.$name) );
+      }
+   }
+
    return Nodes.IfUnwrapNode.create(
       self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
       [ Ast.builtinTypeNone ], varList, expList, block, elseBlock );
@@ -3607,7 +3633,7 @@ fn TransUnit.analyzeWhen( firstToken: &Parser.Token ) mut : Nodes.Node
       self.addErrMess( nextToken.pos, "'when' need '!'" );
    }
 
-   let symListNode = self.analyzeExpList( false, false ## );
+   let symListNode = self.analyzeExpList( false, false, false ## );
 
    let mut scope = self.pushScope( false ## );
 

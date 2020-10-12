@@ -79,6 +79,11 @@ class AccessSymPos {
    pri let pos:&Parser.Position {pub};
 }
 
+class RefAccessSymPos {
+   pri let symbol:&Ast.SymbolInfo {pub};
+   pri let pos:&Parser.Position! {pub};
+}
+
 /**
 初期値を持たない変数について、次処理を行なう。
 
@@ -120,7 +125,12 @@ if のブロックを解析終了時に symbolSet を oldSymbolSet にセット�
    /** アクセスしたシンボルのセット */
    pri let mut accessSymSet:Set<&Ast.SymbolInfo>;
 
-   pub fn __init( parent:TentativeSymbol!, scope:&Ast.Scope, loopFlag:bool ) {
+   /** このブロック処理直前のアクセス可能なローカル変数の posForModToRef を保持。 */
+   pri let sym2posForModToRef:List<RefAccessSymPos>;
+
+   pub fn __init( parent:TentativeSymbol!, scope:&Ast.Scope,
+                  moduleScope:&Ast.Scope, loopFlag:bool )
+   { 
       self.symbolSet = (@);
       self.oldSymbolSet = nil;
       self.parent = parent;
@@ -132,6 +142,21 @@ if のブロックを解析終了時に symbolSet を oldSymbolSet にセット�
 
       self.accessSymSet = (@);
       self.modSymbolSet = (@);
+
+                     
+      let mut list:List<RefAccessSymPos> = [];
+      if self.loopFlag {
+         scope.filterSymbolTypeInfo(
+            scope, moduleScope, .Normal,
+            fn ( symInfo:&Ast.SymbolInfo ) : bool {
+               if symInfo.$kind == .Var {
+                  list.insert( new RefAccessSymPos( symInfo, symInfo.$posForModToRef ) );
+                  symInfo.set_posForModToRef(nil);
+               }
+               return true;
+            });
+      }
+      self.sym2posForModToRef = list;
    }
 
    pub fn modSym( accessSym:&Ast.SymbolInfo ) mut {
@@ -265,9 +290,15 @@ break でそのブロック自体を抜ける場合、
          // loop を抜けた後の変数アクセス判定を行なうために、
          // アクセスとセット両方している変数は、
          // セット位置とアクセス位置を一緒にする。
-         foreach symbol in self.accessSymSet {
-            if self.modSymbolSet.has( symbol ) {
+         // foreach symbol in self.accessSymSet {
+         //    if self.modSymbolSet.has( symbol ) and
+         //       self.sym2posForModToRef[ symbol ] ~= symbol.$posForModToRef
+         foreach info in self.sym2posForModToRef {
+            let symbol = info.$symbol;
+            if symbol.$posForModToRef {
                symbol.set_posForModToRef( symbol.$posForLatestMod );
+            } else {
+               symbol.set_posForModToRef( info.$pos );
             }
          }
       }
@@ -386,6 +417,60 @@ class ClosureFun {
    
 }
 
+
+/**
+analyzeExpSymbol で解析した参照シンボルと、
+その時点の posForLatestMod 情報を保持する。
+
+analyzeExpSymbol() 実行時点では、
+そのシンボルへの書き込みアクセスか参照アクセスかが確定しないため、
+一旦このクラスで保持しておいて、
+確定後に情報を更新するために利用する。
+
+なお、代入の左辺以外で利用される analyzeExpSymbol() は全て参照なので、
+参照として確定している場合は、このクラスは利用せずに直接情報を反映する。
+*/
+class AccessSymbolSet {
+   let mut accessSym2Pos:Map<&Ast.SymbolInfo,&Parser.Position> {pub&};
+   pub fn __init() {
+      self.accessSym2Pos = {};
+   }
+   pub fn add( symbol:&Ast.SymbolInfo ) mut {
+      self.accessSym2Pos[ symbol ] = symbol.$posForLatestMod;
+   }
+   pub fn applyPos( excludeSymList:&Set<&Ast.SymbolInfo>! ) mut {
+      let! set = excludeSymList {
+         set = (@);
+      };
+      foreach pos, symbol in self.accessSym2Pos {
+         if not set.has( symbol.getOrg() ) {
+            symbol.set_posForModToRef( pos );
+         }
+      }
+   }
+}
+
+class AccessSymbolSetQueue {
+   let mut queue:List<AccessSymbolSet>;
+   pub fn __init() {
+      self.queue = [];
+   }
+   pub fn push() mut {
+      self.queue.insert( new AccessSymbolSet() );
+   }
+   pub fn pop( symbolList:&Set<&Ast.SymbolInfo>! ) mut {
+      self.queue[ #self.queue ].applyPos( symbolList );
+      self.queue.remove(##);
+   }
+   pub fn add( symbol:&Ast.SymbolInfo ) mut {
+      self.queue[ #self.queue ].add( symbol );
+   }
+   pub fn getMap() : &Map<&Ast.SymbolInfo,&Parser.Position> {
+      return self.queue[ #self.queue ].$accessSym2Pos;
+   }
+}
+
+
 pub interface TransUnitIF {
    pub fn createModifier( typeInfo:&Ast.TypeInfo, mutMode: Ast.MutMode ) : &Ast.TypeInfo;
 }
@@ -499,6 +584,8 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
 
    /** advertise 宣言されているメンバの型の Set */
    let mut advertisedTypeSet:Set<&Ast.TypeInfo>;
+
+   let mut accessSymbolSetQueue:AccessSymbolSetQueue;
    
 
    pub fn __init( moduleId:&frontInterface.ModuleId,
@@ -507,6 +594,7 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
                   pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
                   ctrl_info: &Option.TransCtrlInfo )
    {
+      self.accessSymbolSetQueue = new AccessSymbolSetQueue();
       self.advertisedTypeSet = (@);
       self.closureFunList = [];
       self.scopeAccess = .Normal;
@@ -546,7 +634,8 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
       self.topScope = self.scope;
       self.moduleScope = self.scope;
 
-      self.tentativeSymbol = new TentativeSymbol( nil, self.globalScope, false );
+      self.tentativeSymbol = new TentativeSymbol(
+         nil, self.globalScope, self.moduleScope, false );
 
       self.typeId2ClassMap = {};
       self.typeInfo2ClassNode = {};
@@ -624,7 +713,8 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
    }
 
    pri fn prepareTentativeSymbol( scope:&Ast.Scope, loopFlag:bool ) mut {
-      self.tentativeSymbol = new TentativeSymbol( self.tentativeSymbol, scope, loopFlag );
+      self.tentativeSymbol = new TentativeSymbol(
+         self.tentativeSymbol, scope, self.moduleScope, loopFlag );
    }
 
    pri fn checkAccesSym() mut {
@@ -945,16 +1035,18 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
    pri fn analyzeDeclClass(
       abstractFlag:bool, classAccessMode: Ast.AccessMode,
       classToken: &Parser.Token, mode:DeclClassMode ) mut : Nodes.DeclClassNode;
-   pri fn analyzeExp( allowNoneType:bool, skipOp2Flag: bool, opLevel: int!,        
-                      expectType:&Ast.TypeInfo! ) mut : Nodes.Node;
-   pri fn analyzeExpOne( allowNoneType:bool, skipOp2Flag: bool, opLevel: int!,        
-                         expectType:&Ast.TypeInfo! ) mut : Nodes.Node;
+   pri fn analyzeExp(
+      allowNoneType:bool, skipOp2Flag: bool, canLeftExp:bool,
+      opLevel: int!, expectType:&Ast.TypeInfo! ) mut : Nodes.Node;
+   pri fn analyzeExpOneRVal(
+      allowNoneType:bool, skipOp2Flag: bool, opLevel: int!,        
+      expectType:&Ast.TypeInfo! ) mut : Nodes.Node;
    pri fn analyzeStatement( termTxt: str! ) mut : Nodes.Node!;
    pri fn analyzeExpSymbol(
-      firstToken: &Parser.Token, token: &Parser.Token,
-      mode: ExpSymbolMode, prefixExp: &Nodes.Node!, skipFlag: bool ) mut : Nodes.Node;
+      firstToken: &Parser.Token, token: &Parser.Token, mode: ExpSymbolMode,
+      prefixExp: &Nodes.Node!, skipFlag: bool, canLeftExp:bool ) mut : Nodes.Node;
    pri fn analyzeExpList(
-      allowNoneType:bool, skipOp2Flag: bool, expNode: &Nodes.Node!,
+      allowNoneType:bool, skipOp2Flag: bool, canLeftExp:bool, expNode: &Nodes.Node!,
       expectTypeList: &List<&Ast.TypeInfo>!, contExpect: bool! ) mut : Nodes.ExpListNode;
    pri fn analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNode;
    pub fn getTokenNoErr() mut : &Parser.Token;
@@ -2710,12 +2802,14 @@ fn TransUnit.analyzeBlock(
       self.tentativeSymbol.skip();
    }
 
-   switch tentativeMode {
-      case .Simple, .Finish {
-         self.finishTentativeSymbol( true );
-      }
-      case .Ignore, .Loop {
-         self.finishTentativeSymbol( false );
+   if blockKind ~= .Repeat {
+      switch tentativeMode {
+         case .Simple, .Finish {
+            self.finishTentativeSymbol( true );
+         }
+         case .Ignore, .Loop {
+            self.finishTentativeSymbol( false );
+         }
       }
    }
 
@@ -3296,7 +3390,7 @@ fn TransUnit.analyzeIf( token: &Parser.Token ) mut : Nodes.Node {
    self.pushback();
 
    let mut list:Nodes.IfStmtInfo[] = [];
-   let ifExp = self.analyzeExpOne( false, false ## );
+   let ifExp = self.analyzeExpOneRVal( false, false ## );
    list.insert( new Nodes.IfStmtInfo( .If, ifExp,
                                       self.analyzeBlock( .If, .Start ## ) ) );
 
@@ -3324,7 +3418,7 @@ fn TransUnit.analyzeIf( token: &Parser.Token ) mut : Nodes.Node {
    nextToken = self.getToken( true );
    if nextToken.txt == "elseif" {
       while nextToken.txt == "elseif" {
-         let condExp = self.analyzeExpOne( false, false ## );
+         let condExp = self.analyzeExpOneRVal( false, false ## );
          list.insert( new Nodes.IfStmtInfo( .ElseIf, condExp,
                                             self.analyzeBlock( .Elseif, .Merge ## ) ));
          checkCond( condExp );
@@ -3403,7 +3497,7 @@ Nodes.BlockNode!, bool
 }
 
 fn TransUnit.analyzeSwitch( firstToken: &Parser.Token ) mut : Nodes.SwitchNode {
-   let exp = self.analyzeExpOne( false, false ## );
+   let exp = self.analyzeExpOneRVal( false, false ## );
 
    self.checkNextToken( "{" );
 
@@ -3417,7 +3511,8 @@ fn TransUnit.analyzeSwitch( firstToken: &Parser.Token ) mut : Nodes.SwitchNode {
    let mut firstFlag = true;
    while ( nextToken.txt == "case" ) {
       self.checkToken( nextToken, "case" );
-      let condexpList = self.analyzeExpList( false, false, nil, [ exp.$expType ], true );
+      let condexpList = self.analyzeExpList(
+         false, false, false, nil, [ exp.$expType ], true );
       let condBock = self.analyzeBlock(
          .Switch, firstFlag and TentativeMode.Start or TentativeMode.Merge ## );
       if firstFlag {
@@ -3509,7 +3604,7 @@ fn TransUnit.analyzeSwitch( firstToken: &Parser.Token ) mut : Nodes.SwitchNode {
 
 
 fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
-   let exp = self.analyzeExpOne( false, false ## );
+   let exp = self.analyzeExpOneRVal( false, false ## );
 
    let! algeTypeInfo = exp.$expType.$srcTypeInfo@@@Ast.AlgeTypeInfo {
       self.error( "match must have alge value -- %s" (exp.$expType.getTxt(##)) );
@@ -3604,7 +3699,7 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
 
 
 fn TransUnit.analyzeWhile( token: &Parser.Token ) mut : Nodes.WhileNode {
-   let cond = self.analyzeExpOne( false, false## );
+   let cond = self.analyzeExpOneRVal( false, false## );
    let mut infinit = false;
    if cond.$expType == Ast.builtinTypeBool {
       if! let literal = cond.getLiteral() {
@@ -3629,7 +3724,14 @@ fn TransUnit.analyzeRepeat( token: &Parser.Token ) mut : Nodes.RepeatNode {
    let mut node = Nodes.RepeatNode.create(
       self.nodeManager, token.pos,
       self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
-      self.analyzeBlock( .Repeat, .Loop, scope ), self.analyzeExpOne( false, false## ) );
+      self.analyzeBlock( .Repeat, .Loop, scope ),
+      self.analyzeExpOneRVal( false, false ## ) );
+
+   // repeat は、ブロックの後に条件があって、
+   // その条件でブロック内のシンボルにアクセスできるので、
+   // finishTentativeSymbol はここで行なう。
+   self.finishTentativeSymbol( false );
+      
    self.popScope();
 
    self.checkNextToken( ";" );
@@ -3645,13 +3747,13 @@ fn TransUnit.analyzeFor( firstToken: &Parser.Token ) mut : Nodes.ForNode {
       self.error( "not symbol" );
    }
    self.checkNextToken( "=" );
-   let mut exp1 = self.analyzeExpOne( false, false## );
+   let mut exp1 = self.analyzeExpOneRVal( false, false## );
    if not Ast.isNumberType( exp1.$expType ) {
       self.addErrMess( exp1.$pos,
                        "exp1 is not number -- %s" (exp1.$expType.getTxt(##)) );
    }
    self.checkNextToken( "," );
-   let exp2 = self.analyzeExpOne( false, false## );
+   let exp2 = self.analyzeExpOneRVal( false, false## );
    if not Ast.isNumberType( exp2.$expType ) {
       self.addErrMess( exp2.$pos,
                        "exp2 is not number -- %s" (exp2.$expType.getTxt(##)) );
@@ -3659,7 +3761,7 @@ fn TransUnit.analyzeFor( firstToken: &Parser.Token ) mut : Nodes.ForNode {
    let token = self.getToken(##);
    let mut exp3:Nodes.Node! = nil;
    if token.txt == "," {
-      exp3 = self.analyzeExpOne( false, false## );
+      exp3 = self.analyzeExpOneRVal( false, false## );
       if! exp3 {
          if not Ast.isNumberType( _exp.$expType ) {
             self.addErrMess( _exp.$pos,
@@ -3709,7 +3811,7 @@ fn TransUnit.analyzeApply( token: &Parser.Token ) mut : Nodes.ApplyNode {
    } nextToken.txt ~= ",";
    self.checkToken( nextToken, "of" );
 
-   let expListNode = self.analyzeExpList( false, false## );
+   let expListNode = self.analyzeExpList( false, false, false ## );
 
    let mut itFunc = Ast.builtinTypeNone;
    
@@ -3830,7 +3932,7 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
    }
    self.checkToken( nextToken, "in" );
 
-   let exp = self.analyzeExpOne( false, false## );
+   let exp = self.analyzeExpOneRVal( false, false## );
 
    let expType;
    if! let extType = exp.$expType.$srcTypeInfo@@@Ast.ExtTypeInfo {
@@ -3927,7 +4029,8 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
 
 fn TransUnit.analyzeProvide( firstToken: &Parser.Token ) mut : Nodes.ProvideNode {
    let token = self.getSymbolToken( .MustNot_ );
-   let symbolNode = self.analyzeExpSymbol( firstToken, token, .Symbol, nil, true );
+   let symbolNode = self.analyzeExpSymbol(
+      firstToken, token, .Symbol, nil, true, false );
    self.checkNextToken( ";" );
 
    let symbolInfoList = symbolNode.getSymbolInfo();
@@ -3974,7 +4077,7 @@ fn TransUnit.analyzeScope( firstToken: &Parser.Token ) mut : Nodes.ScopeNode {
       nextToken = self.getToken( ## );
       while nextToken.txt ~= ")" {
          let symbolNode = self.analyzeExpSymbol(
-            nextToken, nextToken, .Symbol, nil, true );
+            nextToken, nextToken, .Symbol, nil, true, false );
          let workSymList = symbolNode.getSymbolInfo();
          if #workSymList > 0 {
             //let symbol = workSymList[ 1 ];

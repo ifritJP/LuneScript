@@ -824,6 +824,14 @@ end
 function SymbolInfo:__init() 
    self.namespaceTypeInfo = nil
 end
+function SymbolInfo:hasAccess(  )
+
+   if self:get_posForModToRef() or self:get_posForLatestMod() ~= self:get_pos() then
+      return true
+   end
+   
+   return false
+end
 function SymbolInfo:updateValue( pos )
 
    self:set_hasValueFlag( true )
@@ -2587,8 +2595,6 @@ function Scope:accessSymbol( moduleScope, symbol )
    end
    
    
-   symbol:set_posForModToRef( symbol:get_posForLatestMod() )
-   
    if self:isClosureAccess( moduleScope, symbol ) then
       self:setClosure( symbol )
    end
@@ -2951,6 +2957,10 @@ end
 
 function AccessSymbolInfo:get_symbolId( ... )
    return self.symbolInfo:get_symbolId( ... )
+end
+
+function AccessSymbolInfo:hasAccess( ... )
+   return self.symbolInfo:hasAccess( ... )
 end
 
 function AccessSymbolInfo:set_convModuleParam( ... )
@@ -4365,17 +4375,14 @@ function ModuleTypeInfo:serialize( stream, validChildrenSet )
       set = {}
    end
    
-   do
-      local _exp = validChildrenSet
-      if _exp ~= nil then
-         for __index, child in ipairs( self:get_children() ) do
-            if set[child:get_typeId()] and (child:get_accessMode() == AccessMode.Pub or child:get_accessMode() == AccessMode.Global ) then
-               stream:write( string.format( "%d, ", child:get_typeId()) )
-            end
-            
+   if validChildrenSet then
+      for __index, child in ipairs( self:get_children() ) do
+         if set[child:get_typeId()] and (child:get_accessMode() == AccessMode.Pub or child:get_accessMode() == AccessMode.Global ) then
+            stream:write( string.format( "%d, ", child:get_typeId()) )
          end
          
       end
+      
    end
    
    stream:write( "} }\n" )
@@ -7871,7 +7878,7 @@ IdType.__allList[2] = IdType.Ext
 local function switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 6082, function (  )
+   Log.log( Log.Level.Trace, __func__, 6087, function (  )
    
       return "start"
    end )
@@ -7891,7 +7898,7 @@ local builtinTypeInfo2Map = typeInfo2Map:clone(  )
 local function pushProcessInfo( processInfo )
    local __func__ = '@lune.@base.@Ast.pushProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6094, function (  )
+   Log.log( Log.Level.Trace, __func__, 6099, function (  )
    
       return "start"
    end )
@@ -7926,7 +7933,7 @@ _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
    local __func__ = '@lune.@base.@Ast.popProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6120, function (  )
+   Log.log( Log.Level.Trace, __func__, 6125, function (  )
    
       return "start"
    end )
@@ -8116,16 +8123,13 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
    
    
    
-   local arrayMode = "no"
    local genericRefList = {}
    while true do
       if token.txt == '[' or token.txt == '[@' then
          if token.txt == '[' then
-            arrayMode = "list"
             typeInfo = NormalTypeInfo.createList( self.accessMode, self.parentInfo, {typeInfo}, MutMode.Mut )
          else
           
-            arrayMode = "array"
             typeInfo = NormalTypeInfo.createArray( self.accessMode, self.parentInfo, {typeInfo}, MutMode.Mut )
          end
          

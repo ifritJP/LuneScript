@@ -400,7 +400,7 @@ class Test {
       let val;
       let mut val2;
       while true {
-         val2 = 1;
+         val2 = 1; // warn
          if op {
             val = 1; // error
          }  

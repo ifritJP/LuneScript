@@ -2968,15 +2968,13 @@ function convFilter:processSym2stem( symbolInfo )
                if _switchExp == Ast.TypeInfoKind.DDD then
                   self:write( "_pDDD" )
                elseif _switchExp == Ast.TypeInfoKind.Func then
-                  do
-                     local scope = expType:get_scope()
-                     if scope ~= nil then
-                        self:write( "LNS_STEM_ANY(" )
-                        self:write( getFunc2any( self.moduleCtrl, self.scopeMgr, expType ) )
-                        self:write( ")" )
-                     else
-                        Util.err( "illegal func" )
-                     end
+                  if expType:get_scope() then
+                     self:write( "LNS_STEM_ANY(" )
+                     self:write( getFunc2any( self.moduleCtrl, self.scopeMgr, expType ) )
+                     self:write( ")" )
+                  else
+                   
+                     Util.err( "illegal func" )
                   end
                   
                else 
@@ -3933,15 +3931,13 @@ local function process2stem( stream, moduleCtrl, scopeMgr, valKind, typeInfo, pa
                         if _switchExp == Ast.TypeInfoKind.DDD then
                            stream:write( "_pDDD" )
                         elseif _switchExp == Ast.TypeInfoKind.Func then
-                           do
-                              local scope = expType:get_scope()
-                              if scope ~= nil then
-                                 stream:write( "LNS_STEM_ANY(" )
-                                 stream:write( getFunc2any( moduleCtrl, scopeMgr, expType ) )
-                                 stream:write( ")" )
-                              else
-                                 Util.err( "illegal func" )
-                              end
+                           if expType:get_scope() then
+                              stream:write( "LNS_STEM_ANY(" )
+                              stream:write( getFunc2any( moduleCtrl, scopeMgr, expType ) )
+                              stream:write( ")" )
+                           else
+                            
+                              Util.err( "illegal func" )
                            end
                            
                         else 
@@ -4011,7 +4007,7 @@ local function processDeclCallMethodWrapper( stream, moduleCtrl, scopeMgr, paren
             stream:write( "pObj " )
          end
          
-         for index, _6387 in ipairs( funcTypeInfo:get_argTypeInfoList() ) do
+         for index, _6391 in ipairs( funcTypeInfo:get_argTypeInfoList() ) do
             stream:write( string.format( ", arg%d", index) )
          end
          
@@ -4100,7 +4096,7 @@ local function processAdvertise( stream, moduleCtrl, scopeMgr, processMode, node
                      end
                      
                      stream:write( string.format( "%s( _pEnv, pVal", getAccessMethod( memberClassName, "pVal", name )) )
-                     for index, _6418 in ipairs( methodType:get_argTypeInfoList() ) do
+                     for index, _6422 in ipairs( methodType:get_argTypeInfoList() ) do
                         stream:write( string.format( ", arg%d", index) )
                      end
                      
@@ -4188,14 +4184,14 @@ local function processDefaultCtor( stream, moduleCtrl, scopeMgr, node )
             
             if #ctorType:get_argTypeInfoList() >= #superInitType:get_argTypeInfoList() + memberNum then
                superArgNum = #superInitType:get_argTypeInfoList()
-               for index, _6446 in ipairs( superInitType:get_argTypeInfoList() ) do
+               for index, _6450 in ipairs( superInitType:get_argTypeInfoList() ) do
                   stream:write( string.format( ", _arg%d", index) )
                end
                
             else
              
                superArgNum = 0
-               for _6449, _6448 in ipairs( superInitType:get_argTypeInfoList() ) do
+               for _6453, _6452 in ipairs( superInitType:get_argTypeInfoList() ) do
                   stream:write( string.format( ", %s", cValNil) )
                end
                
@@ -4279,7 +4275,7 @@ function convFilter:processNewInsance( classType, callInit )
       local scope = _lune.unwrap( classType:get_scope())
       if not self.outputBuiltinFlag then
          local initFuncType = _lune.unwrap( scope:getTypeInfoField( "__init", true, scope, scopeAccess ))
-         for index, _6476 in ipairs( initFuncType:get_argTypeInfoList() ) do
+         for index, _6480 in ipairs( initFuncType:get_argTypeInfoList() ) do
             self:write( string.format( ", arg%d", index) )
          end
          
@@ -4611,7 +4607,7 @@ function convFilter:processMapping( node, classType, out2HMode )
          
          if #genType:get_itemTypeInfoList() > 0 then
             self:write( ", { " )
-            for subIndex, _6531 in ipairs( genType:get_itemTypeInfoList() ) do
+            for subIndex, _6535 in ipairs( genType:get_itemTypeInfoList() ) do
                if subIndex > 1 then
                   self:write( ", " )
                end
@@ -7984,7 +7980,7 @@ function convFilter:processCallWithMRet( parent, mRetFuncName, retTypeName, mRet
                         local expList = toDDDNode:get_expList():get_expList()
                         local lastExp = expList[#expList]
                         self:write( string.format( "( _pEnv, %s, %d", Nodes.hasMultiValNode( lastExp ), #expList) )
-                        for workIndex, _7443 in ipairs( expList ) do
+                        for workIndex, _7447 in ipairs( expList ) do
                            self:write( string.format( ", lns_getMRet( _pEnv, %d )", workIndex + index - 2) )
                         end
                         
@@ -8930,7 +8926,7 @@ function convFilter:processFuncCast( node )
       self:write( ", _pForm" )
    end
    
-   for index, _7619 in ipairs( orgFunc:get_argTypeInfoList() ) do
+   for index, _7623 in ipairs( orgFunc:get_argTypeInfoList() ) do
       self:write( string.format( ", var%s", index) )
    end
    
@@ -9916,7 +9912,7 @@ function convFilter:processLiteralVal( exp, parent )
    if self.processMode ~= ProcessMode.Immediate then
       local symbolList = exp:getSymbolInfo(  )
       if #symbolList > 0 then
-         local _7797, valKind = self.scopeMgr:getCTypeForSym( symbolList[1] )
+         local _7801, valKind = self.scopeMgr:getCTypeForSym( symbolList[1] )
          if valKind ~= ValKind.Prim then
             self:processVal2stem( exp, parent )
             return 
@@ -10309,18 +10305,16 @@ function convFilter:processLiteralString( node, opt )
          do
             local expListNode = node:get_orgParam()
             if expListNode ~= nil then
-               do
-                  local mRetExp = expListNode:get_mRetExp()
-                  if mRetExp ~= nil then
-                     self:processCallWithMRet( node, getMRetFuncName( node ), cTypeAnyP, _lune.newAlge( MRetInfo.Format, {txt,expListNode}), expListNode )
-                  else
-                     self:write( string.format( "static %s lns_litstr_%d( %s _pEnv", cTypeAnyP, node:get_id(), cTypeEnvP) )
-                     for index, _7907 in ipairs( expListNode:get_expList() ) do
-                        self:write( string.format( ", %s arg%d", cTypeStem, index) )
-                     end
-                     
-                     self:writeln( ");" )
+               if expListNode:get_mRetExp() then
+                  self:processCallWithMRet( node, getMRetFuncName( node ), cTypeAnyP, _lune.newAlge( MRetInfo.Format, {txt,expListNode}), expListNode )
+               else
+                
+                  self:write( string.format( "static %s lns_litstr_%d( %s _pEnv", cTypeAnyP, node:get_id(), cTypeEnvP) )
+                  for index, _7910 in ipairs( expListNode:get_expList() ) do
+                     self:write( string.format( ", %s arg%d", cTypeStem, index) )
                   end
+                  
+                  self:writeln( ");" )
                end
                
             end
@@ -10331,38 +10325,36 @@ function convFilter:processLiteralString( node, opt )
          do
             local expListNode = node:get_orgParam()
             if expListNode ~= nil then
-               do
-                  local mRetExp = expListNode:get_mRetExp()
-                  if mRetExp ~= nil then
-                     self:processCallWithMRet( node, getMRetFuncName( node ), cTypeAnyP, _lune.newAlge( MRetInfo.Format, {txt,expListNode}), expListNode )
-                  else
-                     self:write( string.format( "static %s lns_litstr_%d( %s _pEnv", cTypeAnyP, node:get_id(), cTypeEnvP) )
-                     for index, _7911 in ipairs( expListNode:get_expList() ) do
-                        self:write( string.format( ", %s arg%d", cTypeStem, index) )
-                     end
-                     
-                     self:writeln( string.format( ") // %d", node:get_pos().lineNo) )
-                     self:writeln( "{" )
-                     self:pushIndent(  )
-                     
-                     self:write( "return mtd_lns_string_format( _pEnv, " )
-                     self:write( getLiteralStrAny( txt ) )
-                     self:write( ", " )
-                     
-                     local expList = expListNode:get_expList()
-                     self:write( "lns_createDDD" )
-                     local lastExp = expList[#expList]
-                     self:write( string.format( "( _pEnv, %s, %d", Nodes.hasMultiValNode( lastExp ), #expList) )
-                     
-                     for index = 1, #expList do
-                        self:write( string.format( ", arg%d", index) )
-                     end
-                     
-                     self:writeln( ") );" )
-                     
-                     self:popIndent(  )
-                     self:writeln( "}" )
+               if expListNode:get_mRetExp() then
+                  self:processCallWithMRet( node, getMRetFuncName( node ), cTypeAnyP, _lune.newAlge( MRetInfo.Format, {txt,expListNode}), expListNode )
+               else
+                
+                  self:write( string.format( "static %s lns_litstr_%d( %s _pEnv", cTypeAnyP, node:get_id(), cTypeEnvP) )
+                  for index, _7913 in ipairs( expListNode:get_expList() ) do
+                     self:write( string.format( ", %s arg%d", cTypeStem, index) )
                   end
+                  
+                  self:writeln( string.format( ") // %d", node:get_pos().lineNo) )
+                  self:writeln( "{" )
+                  self:pushIndent(  )
+                  
+                  self:write( "return mtd_lns_string_format( _pEnv, " )
+                  self:write( getLiteralStrAny( txt ) )
+                  self:write( ", " )
+                  
+                  local expList = expListNode:get_expList()
+                  self:write( "lns_createDDD" )
+                  local lastExp = expList[#expList]
+                  self:write( string.format( "( _pEnv, %s, %d", Nodes.hasMultiValNode( lastExp ), #expList) )
+                  
+                  for index = 1, #expList do
+                     self:write( string.format( ", arg%d", index) )
+                  end
+                  
+                  self:writeln( ") );" )
+                  
+                  self:popIndent(  )
+                  self:writeln( "}" )
                end
                
             end

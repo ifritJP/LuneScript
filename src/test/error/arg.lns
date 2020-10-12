@@ -96,7 +96,7 @@ func7( func5() ); // warn
       return 1, 2, "a";  // error
    }
 
-   fn func2(): ...<int> {
+   fn func2l(): ...<int> {
       return 1, nil, 3;  // error
    }  
    
@@ -109,13 +109,13 @@ func7( func5() ); // warn
    fn func1( val:int, val2:int!, val3:int! ): int {
       return 0;
    }  
-   fn func2( ...<int> ) {
+   fn func2l( ...<int> ) {
       func( ...## ); // error
    }
    fn func3( ... ) {
    }
    func1( 1 ); // warn
-   func2( 1 ## ); // error
+   func2l( 1 ## ); // error
    func3( 2 ## ); // error
    func3( ## );
 }

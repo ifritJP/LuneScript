@@ -201,6 +201,14 @@
    }
 }
 {
+   fn func( hoge:int ) {
+      let mut val = 1;
+      while true {
+         val = 2; // error 
+      }
+   }
+}
+{
    alge Common {
       Val1( int ),
       Val2( str ),

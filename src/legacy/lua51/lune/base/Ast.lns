@@ -353,6 +353,13 @@ pub abstract class SymbolInfo extend (LowSymbol) {
    pub abstract fn get_posForModToRef():&Parser.Position!;
    pub abstract fn set_posForModToRef(pos:&Parser.Position!);
 
+   pub fn hasAccess(): bool {
+      if self.$posForModToRef or self.$posForLatestMod ~= self.$pos {
+         return true;
+      }
+      return false;
+   }
+   
    pub fn updateValue( pos:&Parser.Position! ) {
       self.set_hasValueFlag( true );
       self.set_posForLatestMod( pos );
@@ -1870,8 +1877,6 @@ pub fn Scope.accessSymbol( moduleScope:&Scope, symbol:&SymbolInfo ) mut
       return;
    }
    
-   symbol.set_posForModToRef( symbol.$posForLatestMod );
-
    if self.isClosureAccess( moduleScope, symbol ) {
       self.setClosure( symbol );
    }
@@ -3093,7 +3098,7 @@ pub class ModuleTypeInfo extend TypeInfo {
       let! set = validChildrenSet {
          set = {};
       };
-      if! validChildrenSet {
+      if validChildrenSet {
          foreach child in self.$children {
             if set[ child.$typeId ] and
                ( child.$accessMode == .Pub or child.$accessMode == .Global ) {
@@ -6275,17 +6280,14 @@ pub fn TypeAnalyzer.analyzeTypeItemList(
       }
    }
    
-   let mut arrayMode = "no";
    let mut genericRefList: List<&RefTypeInfo> = [];
    while true {
       if token.txt == '[' or token.txt == '[@' {
          if token.txt == '[' {
-            arrayMode = "list";
             typeInfo = NormalTypeInfo.createList(
                self.accessMode, self.parentInfo, [ typeInfo ], .Mut );
          }
          else {
-            arrayMode = "array";
             typeInfo = NormalTypeInfo.createArray(
                self.accessMode, self.parentInfo, [ typeInfo ], .Mut );
          }

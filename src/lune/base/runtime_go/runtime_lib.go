@@ -27,7 +27,6 @@ package runtimelns
 import "fmt"
 import "math"
 import "reflect"
-import "sort"
 import "strconv"
 
 type LnsInt = int
@@ -38,36 +37,15 @@ type LnsForm func( []LnsAny ) []LnsAny
 
 var LnsNone interface{} = nil
 
-type LnsTestcase struct {
-    Name string
-    Call func()
-}
+/**
+各モジュールを初期化する際に実行する関数。
 
-var lnsTestcaseMap map[string] []*LnsTestcase = map[string] []*LnsTestcase {}
+現状は特に処理しない。
 
-func Lns_registerTestcase( modName string, list []*LnsTestcase ) {
-    lnsTestcaseMap[ modName ] = list
-}
-
-func Lns_runTest() {
-    keylist := make([]string, len( lnsTestcaseMap ))
-    index := 0
-    for key, _ := range( lnsTestcaseMap ) {
-        keylist[ index ] = key
-        index++
-    }
-    sort.Slice(
-        keylist,
-        func (idx1, idx2 int ) bool {
-            return keylist[ idx1 ] < keylist[ idx2 ]
-        } );
-    for _, key := range( keylist ) {
-        fmt.Printf( "module: %s ==============================\n", key )
-        for _, testcase := range( lnsTestcaseMap[ key ] ) {
-            fmt.Printf( "%s: ---------------\n", testcase.Name )
-            testcase.Call()
-        }
-    }
+runtime のシンボルに何もアクセスしないと、
+ビルドエラーになるので、それを回避するために実行する。
+*/
+func Lns_InitMod() {
 }
 
 func Lns_IsNil( val LnsAny ) bool {
@@ -114,12 +92,23 @@ func Lns_type( val LnsAny ) string {
     }    
 }
 
-func Lns_tonumber( val string ) LnsAny {
-    f, err := strconv.ParseFloat( val, 64)
-    if err != nil {
-        return nil
+func Lns_tonumber( val string, base LnsAny ) LnsAny {
+    if Lns_IsNil( base ) {
+        f, err := strconv.ParseFloat( val, 64)
+        if err != nil {
+            return nil
+        }
+        return f
     }
-    return f
+    if bs, ok := base.(LnsInt); ok {
+        if dig, err := strconv.ParseInt( val, bs, 64 ); err != nil {
+            return nil;
+        } else {
+            return LnsReal( dig );
+        }
+    } else {
+        panic( fmt.Sprintf( "illegal base -- %s", base ) )
+    }
 }
 
 func Lns_require( val string ) LnsAny {
@@ -253,6 +242,16 @@ func Lns_ToStrSub( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool,
     return false, nil, "no str"
 }
 
+
+type LnsClass2StemIF interface {
+    ToLnsStem() LnsAny
+}
+func LnsClass2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(LnsClass2StemIF).ToLnsStem()
+}
 
 type LnsAlgeVal interface {
     GetTxt() string

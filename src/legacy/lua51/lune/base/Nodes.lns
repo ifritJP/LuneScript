@@ -569,19 +569,19 @@ macro _declNodeClass(
             filter.,,,"process%s" (baseName) (self, opt );
          } } );
 
-      if! canBeRightFlag {
+      when! canBeRightFlag {
          fieldStatList.insert( `{
             pub override fn canBeRight():bool {
                return ,,, canBeRightFlag;
             } } );
       }
-      if! canBeLeftFlag {
+      when! canBeLeftFlag {
          fieldStatList.insert( `{
             pub override fn canBeLeft():bool {
                return ,,, canBeLeftFlag;
             } } );
       }
-      if! canBeStatementFlag {
+      when! canBeStatementFlag {
          fieldStatList.insert( `{
             pub override fn canBeStatement():bool {
                return ,,, canBeStatementFlag;
@@ -1160,6 +1160,8 @@ pub override fn ExpRefNode.canBeRight():bool {
 _declNodeClass( "ExpSetVal", Node, false, false, true,
                 [ { "exp1": "&Node" },
                   { "exp2": "&Node" },
+                  // 代入先のシンボルリスト
+                  { "LeftSymList": "&List<&Ast.SymbolInfo>" },
                   // この代入によって値を初期化されるシンボル
                   { "initSymSet": "&Set<&Ast.SymbolInfo>" } ]
 );
