@@ -448,7 +448,7 @@ function convFilter:writeRaw( txt )
    end
    
    
-   for _5421 in string.gmatch( txt, "\n" ) do
+   for _5458 in string.gmatch( txt, "\n" ) do
       self.curLineNo = self.curLineNo + 1
    end
    
@@ -1888,7 +1888,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _5759 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _5796 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -3490,6 +3490,29 @@ end
 
 
 
+function convFilter:processExpSetItem( node, opt )
+
+   filter( node:get_val(), self, node )
+   self:write( "[" )
+   do
+      local _matchExp = node:get_index()
+      if _matchExp[1] == Nodes.IndexVal.NodeIdx[1] then
+         local index = _matchExp[2][1]
+      
+         filter( index, self, node )
+      elseif _matchExp[1] == Nodes.IndexVal.SymIdx[1] then
+         local index = _matchExp[2][1]
+      
+         self:write( string.format( "'%s'", index) )
+      end
+   end
+   
+   self:write( "]" )
+   self:write( " = " )
+   filter( node:get_exp2(), self, node )
+end
+
+
 function convFilter:processExpOp2( node, opt )
 
    local intCast = false
@@ -4031,7 +4054,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3352, function (  )
+   Log.log( Log.Level.Info, __func__, 3370, function (  )
    
       return string.format( "code: %s", code)
    end )

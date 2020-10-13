@@ -1035,6 +1035,34 @@ function dumpFilter:processExpSetVal( node, opt )
 end
 
 
+function dumpFilter:processExpSetItem( node, opt )
+
+   local prefix, depth = opt:get(  )
+   local indexSym = ""
+   local indexNode = nil
+   do
+      local _matchExp = node:get_index()
+      if _matchExp[1] == Nodes.IndexVal.NodeIdx[1] then
+         local index = _matchExp[2][1]
+      
+         indexNode = index
+      elseif _matchExp[1] == Nodes.IndexVal.SymIdx[1] then
+         local index = _matchExp[2][1]
+      
+         indexSym = index
+      end
+   end
+   
+   dump( prefix, depth, node, indexSym )
+   filter( node:get_val(), self, opt:nextOpt(  ) )
+   if indexNode ~= nil then
+      filter( indexNode, self, opt:nextOpt(  ) )
+   end
+   
+   filter( node:get_exp2(), self, opt:nextOpt(  ) )
+end
+
+
 function dumpFilter:processExpOp2( node, opt )
 
    local prefix, depth = opt:get(  )

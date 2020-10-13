@@ -1157,6 +1157,11 @@ pub override fn ExpRefNode.canBeRight():bool {
    //return self.$symbolInfo.$canBeRight;
 }
 
+/**
+値の設定
+
+リスト、マップの要素の設定は、 このノードではなく ExpSetItem で管理する。
+*/
 _declNodeClass( "ExpSetVal", Node, false, false, true,
                 [ { "exp1": "&Node" },
                   { "exp2": "&Node" },
@@ -1166,6 +1171,21 @@ _declNodeClass( "ExpSetVal", Node, false, false, true,
                   { "initSymSet": "&Set<&Ast.SymbolInfo>" } ]
 );
 
+pub alge IndexVal {
+   NodeIdx( &Node ),
+   SymIdx( str ),
+}
+
+// 要素の設定
+_declNodeClass( "ExpSetItem", Node, false, false, true,
+                // 要素を保持する値
+                [ { "val": "&Node" },
+                  // 要素のインデックス
+                  { "index": "IndexVal" },
+                  // 設定する値
+                  { "exp2": "&Node" }
+                ]
+);
 
 _declNodeClass( "ExpOp2", Node, false, true, false,
                 [ { "op": "&Parser.Token" },
@@ -2665,4 +2685,36 @@ pub fn getCastUnwraped( node:&Node ) : &Node {
       return getUnwraped( work.$exp );
    }
    return node;
+}
+
+__test case1(ctrl) {
+   let mut parser = new Parser.DefaultPushbackParser(
+      new Parser.StreamParser(
+         new Parser.TxtStream( "print( 'hoge' );" ), "test" ## ) );
+
+   let mut scope = new Ast.Scope( nil, false ##);
+
+   let printToken = parser.getTokenNoErr();
+   let symbol = unwrap scope.addFunc( nil, Ast.builtinTypeForm, .Global, true, false);
+
+   
+   parser.getTokenNoErr(); // (
+   let hogeToken = parser.getTokenNoErr(); // 'hoge'
+   
+   parser.getTokenNoErr(); // )
+   parser.getTokenNoErr(); // ;
+
+   let mut nodeManager = new NodeManager();
+
+   let strNode = LiteralStringNode.create( 
+      nodeManager, hogeToken.pos, false, [ Ast.builtinTypeString ], hogeToken, nil, nil );
+   let argListNode = ExpListNode.create(
+      nodeManager, hogeToken.pos, false, strNode.$expTypeList,
+      [ strNode ], nil, false );
+   let refNode = ExpRefNode.create(
+      nodeManager, printToken.pos, false, [ symbol.$typeInfo ], symbol );
+   let callNode = ExpCallNode.create(
+      nodeManager, printToken.pos, false, [ Ast.builtinTypeNone ],
+      refNode, false, false, argListNode );
+   __t._isNotT( ctrl, callNode.canBeLeft() );
 }

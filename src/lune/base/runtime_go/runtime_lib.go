@@ -243,15 +243,15 @@ func Lns_ToStrSub( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool,
 }
 
 
-type LnsClass2StemIF interface {
-    ToLnsStem() LnsAny
-}
-func LnsClass2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(LnsClass2StemIF).ToLnsStem()
-}
+// type LnsClass2StemIF interface {
+//     ToLnsStem() LnsAny
+// }
+// func LnsClass2Stem( obj LnsAny ) LnsAny {
+//     if obj == nil {
+//         return nil
+//     }
+//     return obj.(LnsClass2StemIF).ToLnsStem()
+// }
 
 type LnsAlgeVal interface {
     GetTxt() string

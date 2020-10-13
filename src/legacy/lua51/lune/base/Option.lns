@@ -464,3 +464,11 @@ usage:
 
    return option;
 }
+
+
+__test case1(ctrl) {
+   LuaVer.setCurVer( 53 );
+   let option = analyze( [ "lune/base/Option.lns", "exe" ] );
+   __t._eq(ctrl, option.mode, ModeKind.Exec );
+   __t._eq(ctrl, option.scriptPath, "lune/base/Option.lns" );
+}

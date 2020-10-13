@@ -7,6 +7,15 @@
 #+TITLE: TODO
 
 * バグ
+- [ ] 次がエラーしない。
+fn func( val1:int, val2:int, val3:int ) {
+   print( val1, val2, val3 );
+}
+let list = [ 1, 2 ];
+func( list.unpack() );
+
+  
+- [ ] enum がトップスコープではない場所で pub 宣言できてしまう。
 - [ ] form がトップスコープではない場所で pub 宣言できてしまう。
 {
    pub form CreateMessage(): str;

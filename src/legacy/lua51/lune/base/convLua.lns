@@ -2844,17 +2844,35 @@ pub override fn convFilter.processExpParen(
    node: Nodes.ExpParenNode, opt: Opt ) mut
 {
    self.write( "(" );
-   filter( node.$exp,  self, node );
+   filter( node.$exp, self, node );
    self.write( " )" );
 };
 
 
 pub override fn convFilter.processExpSetVal( node: &Nodes.ExpSetValNode, opt:Opt ) mut
 {
-   filter( node.$exp1,  self, node );
+   filter( node.$exp1, self, node );
    self.write( " = " );
-   filter( node.$exp2,  self, node );
+   filter( node.$exp2, self, node );
 };
+
+pub override fn convFilter.processExpSetItem(
+   node: &Nodes.ExpSetItemNode, opt:Opt ) mut
+{
+   filter( node.$val, self, node );
+   self.write( "[" );
+   _match node.$index {
+      case .NodeIdx( index ) {
+         filter( index, self, node );
+      }
+      case .SymIdx( index ) {
+         self.write( "'%s'" (index) );
+      }
+   }
+   self.write( "]" );
+   self.write( " = " );
+   filter( node.$exp2, self, node );
+}
 
 pub override fn convFilter.processExpOp2(
    node: Nodes.ExpOp2Node, opt: Opt ) mut

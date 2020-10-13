@@ -1335,6 +1335,12 @@ function TypeInfo:get_processInfo()
 end
 
 
+function SymbolInfo:getModule(  )
+
+   return self:get_namespaceTypeInfo(  ):getModule(  )
+end
+
+
 local MethodKind = {}
 _moduleObj.MethodKind = MethodKind
 MethodKind._val2NameMap = {}
@@ -1526,6 +1532,12 @@ function Scope:getNamespaceTypeInfo(  )
       scope = scope:get_parent()
    until scope:isRoot(  )
    return typeInfo
+end
+
+
+function Scope:getModule(  )
+
+   return self:getNamespaceTypeInfo(  ):getModule(  )
 end
 
 
@@ -2901,6 +2913,10 @@ function AccessSymbolInfo:get_symbolInfo()
 end
 function AccessSymbolInfo:clearValue( ... )
    return self.symbolInfo:clearValue( ... )
+end
+
+function AccessSymbolInfo:getModule( ... )
+   return self.symbolInfo:getModule( ... )
 end
 
 function AccessSymbolInfo:get_accessMode( ... )
@@ -5407,6 +5423,12 @@ immutableTypeSet[_moduleObj.builtinTypeReal]= true
 immutableTypeSet[_moduleObj.builtinTypeChar]= true
 immutableTypeSet[_moduleObj.builtinTypeString]= true
 
+local function isClass( typeInfo )
+
+   return typeInfo:get_kind() == TypeInfoKind.Class and typeInfo ~= _moduleObj.builtinTypeString
+end
+_moduleObj.isClass = isClass
+
 function AlternateTypeInfo.getAssign( typeInfo, alt2type )
 
    if typeInfo:get_kind() ~= TypeInfoKind.Alternate then
@@ -7878,7 +7900,7 @@ IdType.__allList[2] = IdType.Ext
 local function switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 6087, function (  )
+   Log.log( Log.Level.Trace, __func__, 6100, function (  )
    
       return "start"
    end )
@@ -7898,7 +7920,7 @@ local builtinTypeInfo2Map = typeInfo2Map:clone(  )
 local function pushProcessInfo( processInfo )
    local __func__ = '@lune.@base.@Ast.pushProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6099, function (  )
+   Log.log( Log.Level.Trace, __func__, 6112, function (  )
    
       return "start"
    end )
@@ -7933,7 +7955,7 @@ _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
    local __func__ = '@lune.@base.@Ast.popProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6125, function (  )
+   Log.log( Log.Level.Trace, __func__, 6138, function (  )
    
       return "start"
    end )

@@ -175,3 +175,11 @@
    }
    print( list[ Val.Val_1 ], list[ Val.Val0 ], list[ Val.Val1 ] ); // error
 }
+{
+   let mut list = [ 1, 2, 3 ];
+   list[ 1 ], list[ 2 ] = 10, 20; // error
+}
+{
+   let mut map = { 1:"a", 2:"ab", 3:"c" };
+   map[ 1 ], map[ 2 ] = "10", "20"; // error
+}

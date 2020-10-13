@@ -853,6 +853,23 @@ pub override fn FormatterFilter.processExpSetVal(
    self.write( " = " );
    filter( node.$exp2, self, opt.nextOpt( node ) );
 };
+pub override fn FormatterFilter.processExpSetItem(
+   node: &Nodes.ExpSetItemNode, opt:Opt ) mut
+{
+   filter( node.$val, self, opt.nextOpt( node ) );
+   _match node.$index {
+      case .NodeIdx( index ) {
+         self.write( "[" );
+         filter( index, self, opt.nextOpt( node ) );
+         self.write( "]" );
+      }
+      case .SymIdx( index ) {
+         self.write( ".%s" (index) );
+      }
+   }
+   self.write( " = " );
+   filter( node.$exp2, self, opt.nextOpt( node ) );
+};
 pub override fn FormatterFilter.processExpOp2(
    node: &Nodes.ExpOp2Node, opt:Opt ) mut
 {

@@ -658,6 +658,27 @@ pub override fn dumpFilter.processExpSetVal(
    filter( node.get_exp1(), self, opt.nextOpt() );
    filter( node.get_exp2(), self, opt.nextOpt() );
 };
+pub override fn dumpFilter.processExpSetItem(
+   node: &Nodes.ExpSetItemNode, opt:Opt ) mut
+{
+   let prefix, depth = opt.get();
+   let mut indexSym = "";
+   let mut indexNode:&Nodes.Node! = nil;
+   _match node.$index {
+      case .NodeIdx( index ) {
+         indexNode = index;
+      }
+      case .SymIdx( index ) {
+         indexSym = index;
+      }
+   }
+   dump( prefix, depth, node, indexSym );
+   filter( node.$val, self, opt.nextOpt() );
+   when! indexNode {
+      filter( indexNode, self, opt.nextOpt() );
+   }
+   filter( node.$exp2, self, opt.nextOpt() );
+};
 pub override fn dumpFilter.processExpOp2(
    node: &Nodes.ExpOp2Node, opt:Opt ) mut
 {

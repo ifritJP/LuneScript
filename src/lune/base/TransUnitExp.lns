@@ -2588,7 +2588,7 @@ fn TransUnit.analyzeExpSymbol(
 */
 fn TransUnit.analyzeExpOpSet(
    exp: Nodes.Node, opeToken: &Parser.Token,
-   expectTypeList:&List<&Ast.TypeInfo> ) mut : Nodes.ExpSetValNode
+   expectTypeList:&List<&Ast.TypeInfo> ) mut : Nodes.Node
 {
    exp.setLValue();
 
@@ -2598,6 +2598,37 @@ fn TransUnit.analyzeExpOpSet(
                        (Nodes.getNodeKindName( exp.$kind ) ) );
    }
 
+   fn process( lValNode:&Nodes.Node ) : &Nodes.ExpRefItemNode! {
+      let! refItemNode = lValNode@@@Nodes.ExpRefItemNode {
+         return nil;
+      };
+      switch refItemNode.$val.$expType.$kind {
+         case .List, .Map {
+            return refItemNode;
+         }
+      }
+      return nil;
+   }
+   
+   let mut listRefItemNode:&Nodes.ExpRefItemNode! = nil;
+   if! let symNodeList = exp@@@Nodes.ExpListNode {
+      foreach symNode in symNodeList.$expList {
+         if! let refItemNode = process( symNode ) {
+            listRefItemNode = refItemNode;
+            if #symNodeList.$expList > 1 {
+               // golang へ変換する場合、
+               // リストの要素に設定するには 1 ずつ処理しなければならない。
+               self.addErrMess(
+                  refItemNode.$pos,       
+                  "When left-value includes 'list[i]', left-value must be single." );
+            }
+            break;
+         }
+      }
+   } else {
+      listRefItemNode = process( exp );
+   }
+   
    let mut expList = self.analyzeExpList( false, false, false, nil, expectTypeList## );
 
    if not expList.canBeRight() {
@@ -2673,6 +2704,19 @@ fn TransUnit.analyzeExpOpSet(
       {
          symbolInfo.updateValue( exp.$pos );
       }
+   }
+
+   when! listRefItemNode {
+      let index:Nodes.IndexVal;
+      if! let indexNode = listRefItemNode.$index {
+         index = .NodeIdx( indexNode );
+      } else {
+         index = .SymIdx( unwrap listRefItemNode.$symbol );
+      }
+      return Nodes.ExpSetItemNode.create(
+         self.nodeManager, exp.$pos,
+         self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
+         listRefItemNode.$val, index, expList );
    }
 
    return Nodes.ExpSetValNode.create(

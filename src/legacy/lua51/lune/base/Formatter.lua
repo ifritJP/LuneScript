@@ -331,7 +331,7 @@ end
 
 function FormatterFilter:processBlankLine( node, opt )
 
-   for _4951 = 1, node:get_lineNum() do
+   for _4988 = 1, node:get_lineNum() do
       self:writeln( "" )
    end
    
@@ -1271,6 +1271,29 @@ end
 function FormatterFilter:processExpSetVal( node, opt )
 
    filter( node:get_exp1(), self, opt:nextOpt( node ) )
+   self:write( " = " )
+   filter( node:get_exp2(), self, opt:nextOpt( node ) )
+end
+
+
+function FormatterFilter:processExpSetItem( node, opt )
+
+   filter( node:get_val(), self, opt:nextOpt( node ) )
+   do
+      local _matchExp = node:get_index()
+      if _matchExp[1] == Nodes.IndexVal.NodeIdx[1] then
+         local index = _matchExp[2][1]
+      
+         self:write( "[" )
+         filter( index, self, opt:nextOpt( node ) )
+         self:write( "]" )
+      elseif _matchExp[1] == Nodes.IndexVal.SymIdx[1] then
+         local index = _matchExp[2][1]
+      
+         self:write( string.format( ".%s", index) )
+      end
+   end
+   
    self:write( " = " )
    filter( node:get_exp2(), self, opt:nextOpt( node ) )
 end

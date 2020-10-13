@@ -241,6 +241,21 @@ func (lnsList *LnsList) Remove( index LnsAny ) LnsAny {
 func (lnsList *LnsList) GetAt( index int ) LnsAny {
     return lnsList.Items[ index - 1 ]
 }
+func (lnsList *LnsList) Set( index int, val LnsAny ) {
+    index--;
+    if len( lnsList.Items ) > index {
+        lnsList.Items[ index ] = val;
+    } else {
+        if len( lnsList.Items ) == index {
+            lnsList.Items = append( lnsList.Items, val )
+        } else {
+            panic( fmt.Sprintf( "illegal index -- %d", index ) );
+        }
+    }
+}
+func (lnsList *LnsList) Unpack() []LnsAny {
+    return lnsList.Items
+}
 
 
 

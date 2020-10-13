@@ -834,3 +834,118 @@ _section();
    }
    func( 1 );
 }
+pub enum Valg {
+   Val1,
+   Val2,
+}
+_section();
+{
+   {
+      enum Val {
+         Val1,
+         Val2,
+      }
+      foreach val in Val.$_allList {
+         print( val );
+      }
+   }
+   {
+      enum Val {
+         Val1,
+         Val2,
+      }
+   }
+}
+_section();
+{
+   interface Test {
+      pub fn func();
+   }
+   class Hoge0 extend (Test) {
+      pub fn func() {
+         print( __func__ );
+      }
+   }
+
+   class Hoge1 extend (Test) {
+      let test:Test;
+
+      advertise test;
+   }
+   let hoge = new Hoge1( new Hoge0() );
+   hoge.func();
+}
+_section();
+{
+   class Super {
+      pub fn func() {
+         print( __func__ );
+      }
+   }
+   class Test extend Super {
+   }
+   let list = [ new Test() ];
+   let list2:&List<stem> = list;
+   foreach val in list2@@List<Super> {
+      val.func();
+   }
+}
+_section();
+{
+   {
+      let mut list = [ 1 ];
+      list[ 1 ] = 10;
+      list[ 2 ] = 20;
+      foreach val in list {
+         print( val );
+      }
+   }
+   {
+      let mut map = { 1:"a" };
+      map[ 1 ] = "10";
+      foreach val, key in map {
+         print( key, val );
+      }
+   }
+}
+_section();
+{
+   let list = [ 1, 2 ];
+   let list2 = [ 0, list.unpack() ];
+   foreach val in list2 {
+      print( val + 10 );
+   }
+}
+_section();
+{
+   class Test {
+   }
+   class Sub extend Test {
+   }
+
+   macro _test( comp:__exp, collection:__exp ) {
+      foreach val in ,,collection {
+         print( "%s  : %s" (,,,,comp, val == ,,comp) );
+      }
+   }
+
+   let sub = new Sub();
+   let test:&Test = sub;
+   let sub2 = new Sub();
+   let test2:&Test = sub2;
+   let list = [ sub ];
+   _test( test, list );
+   _test( sub, list );
+   _test( test2, list );
+   _test( sub2, list );
+   let set = (@ sub );
+   _test( test, set );
+   _test( sub, set );
+   _test( test2, set );
+   _test( sub2, set );
+   let map = { sub:sub };
+   _test( test, map );
+   _test( sub, map );
+   _test( test2, map );
+   _test( sub2, map );
+}

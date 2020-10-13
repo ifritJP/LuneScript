@@ -1072,6 +1072,7 @@ define setup-go
 	mkdir -p $1
 	rsync -a --include='*.go' --include='*.lua' \
 			--include='*.lns' --exclude='*.*' lune $1
+	cp -au build.counter $1
 endef
 
 define test-go-one
@@ -1167,6 +1168,8 @@ test-testGo:
 	$(call convGo,$(GO_WORK_DIR),lune/base/frontInterface,--testing,./test)
 	$(call convGo,$(GO_WORK_DIR),lune/base/Log,--testing,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),Ast,lune/base,./test)
+	$(call test-convGo-test,$(GO_WORK_DIR),Option,lune/base,./test)
+	$(call test-convGo-test,$(GO_WORK_DIR),Nodes,lune/base,./test)
 
 
 test-reference:

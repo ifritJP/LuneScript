@@ -880,6 +880,9 @@ static な型か。
    
 }
 
+pub fn SymbolInfo.getModule(): &TypeInfo {
+   return self.get_namespaceTypeInfo().getModule();
+}
 
 pub enum MethodKind {
    /** 全メソッド */
@@ -1018,6 +1021,12 @@ pub fn Scope.getNamespaceTypeInfo() : &TypeInfo {
    } scope.isRoot();
    return typeInfo;
 }
+
+pub fn Scope.getModule() : &TypeInfo {
+   return self.getNamespaceTypeInfo().getModule();
+}
+
+
 
 pub class NormalSymbolInfo extend SymbolInfo {
    pri static let mut symbolIdSeed:int;
@@ -4026,6 +4035,10 @@ immutableTypeSet.add( builtinTypeInt );
 immutableTypeSet.add( builtinTypeReal );
 immutableTypeSet.add( builtinTypeChar );
 immutableTypeSet.add( builtinTypeString );
+
+pub fn isClass( typeInfo:&TypeInfo ) : bool {
+   return typeInfo.$kind == .Class and typeInfo ~= builtinTypeString;
+}
 
 
 pub static fn AlternateTypeInfo.getAssign(
