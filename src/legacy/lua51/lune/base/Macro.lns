@@ -392,10 +392,11 @@ pub fn MacroCtrl.importMacro(
             column = 1;
          }
          else {
+            let pos = new Parser.Position( lineNo, column, "macro:%s" (macroInfo.name) );
             tokenList.insert(
                new Parser.Token(
                   unwrap Parser.TokenKind._from( tokenInfo[1]@@int ),
-                  txt, new Parser.Position( lineNo, column ), false ## ) );
+                  txt, pos, false ## ) );
             column = column + #txt + 1;
          }
       }

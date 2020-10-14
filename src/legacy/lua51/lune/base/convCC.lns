@@ -1385,7 +1385,7 @@ fn convFilter.processInitModule( node: Nodes.RootNode ) mut
                  //Nodes.NodeKind.$DeclClass,
                  Nodes.NodeKind.$DeclFunc,
                  Nodes.NodeKind.$DeclMacro,
-                 Nodes.NodeKind.$TestBlock
+                 Nodes.NodeKind.$TestCase
 
             {
                //filter( child, self, node );
@@ -1510,7 +1510,7 @@ fn registerBuiltin() {
 fn convFilter.processBuiltin() : &Nodes.NodeManager
 {
    let mut nodeManager = new Nodes.NodeManager();
-   let mut dummyPos = new Parser.Position( 0, 0 );
+   let mut dummyPos = new Parser.Position( 0, 0, "builtin" );
 
    fn createNodeFromSymbol(
       classInfo:&Ast.TypeInfo!, symbol:&Ast.SymbolInfo ): &Nodes.Node!
@@ -1660,7 +1660,7 @@ pub override fn convFilter.processRoot(
    }
 
    self.processMode = .Prototype;
-   foreach workNode in nodeManager.getTestBlockNodeList() {
+   foreach workNode in nodeManager.getTestCaseNodeList() {
       filter( workNode, self, node );
    }
 
@@ -1669,7 +1669,7 @@ pub override fn convFilter.processRoot(
    self.write(
       'static %s lns_moduleInfo_%s = {NULL,NULL,false, NULL, "%s", {'
       (cTypeMod, moduleName, moduleName) );
-   foreach workNode in nodeManager.getTestBlockNodeList() {
+   foreach workNode in nodeManager.getTestCaseNodeList() {
       self.write( "%s__test_%s, " ( moduleName, workNode.$name.txt ) );
    }
    self.writeln( "NULL } };" );
@@ -1837,7 +1837,7 @@ pub override fn convFilter.processRoot(
 
    self.processInitModule( node );
 
-   foreach testBlock in nodeManager.getTestBlockNodeList() {
+   foreach testBlock in nodeManager.getTestCaseNodeList() {
       filter( testBlock, self, node );
    }
 
@@ -10218,7 +10218,7 @@ pub override fn convFilter.processReturn(
    }
 };
 
-pub override fn convFilter.processTestBlock( node: Nodes.TestBlockNode, opt: Opt ) mut
+pub override fn convFilter.processTestCase( node: Nodes.TestCaseNode, opt: Opt ) mut
 {
    if not self.enableTest {
       return;

@@ -371,6 +371,56 @@ class Test9 extend Super7 {
    }
 }
 {
+   class Test {
+      fn func1() {
+      }
+      fn func2() {
+      }
+   }
+   class Sub extend Test {
+      fn func1() { // error
+      }
+      override fn func2() { // error
+      }
+   }
+}
+{
+   class Test {
+      pub fn func( val:Luaval<int> ) {
+      }
+      pub fn func2( val:int ) {
+      }
+   }
+   class Sub extend Test { // error
+      pub override fn func( val:int ) {
+      }
+      pub override fn func2( val:Luaval<int> ) { // error
+      }
+   }
+}
+{
+   form Hoge();
+   class Test {
+      let val:Luaval<Hoge>;
+   }
+   class Sub extend Test {
+      pub fn __init( val:Hoge ) {
+         super( val ); // error
+      }
+   }
+}
+{
+   form Hoge();
+   class Test {
+      let val:Hoge;
+   }
+   class Sub extend Test {
+      pub fn __init( val:Luaval<Hoge> ) {
+         super( val ); // error
+      }
+   }
+}
+{
    class Hoge {
    }
    class Test {

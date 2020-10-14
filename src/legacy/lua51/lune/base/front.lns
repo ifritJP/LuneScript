@@ -736,7 +736,7 @@ pub fn Front.dumpAst() mut {
             self.createPaser(), mod, getModuleId( self.option.scriptPath, mod ## ),
             nil, .Compile ## );
 	 ast.$node.processFilter(
-            dumpNode.createFilter( ast.$moduleTypeInfo ),
+            dumpNode.createFilter( ast.$moduleTypeInfo, io.stdout ),
             new dumpNode.Opt( "", 0 ) );
       }, self.option.scriptPath .. ".profi" );
 }

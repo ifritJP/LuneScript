@@ -316,18 +316,19 @@ _moduleObj.Position = Position
 function Position.setmeta( obj )
   setmetatable( obj, { __index = Position  } )
 end
-function Position.new( lineNo, column )
+function Position.new( lineNo, column, streamName )
    local obj = {}
    Position.setmeta( obj )
    if obj.__init then
-      obj:__init( lineNo, column )
+      obj:__init( lineNo, column, streamName )
    end
    return obj
 end
-function Position:__init( lineNo, column )
+function Position:__init( lineNo, column, streamName )
 
    self.lineNo = lineNo
    self.column = column
+   self.streamName = streamName
 end
 
 
@@ -427,7 +428,7 @@ end
 function Token:getLineCount(  )
 
    local count = 1
-   for _336 in self.txt:gmatch( "\n" ) do
+   for _337 in self.txt:gmatch( "\n" ) do
       count = count + 1
    end
    
@@ -443,6 +444,10 @@ end
 
 local Parser = {}
 _moduleObj.Parser = Parser
+function Parser:createPosition( lineNo, column )
+
+   return Position.new(lineNo, column, self:getStreamName(  ))
+end
 function Parser.setmeta( obj )
   setmetatable( obj, { __index = Parser  } )
 end
@@ -508,7 +513,7 @@ function WrapParser:__init( parser, name )
 end
 
 
-local noneToken = Token.new(TokenKind.Eof, "", Position.new(0, -1), false, {})
+local noneToken = Token.new(TokenKind.Eof, "", Position.new(0, -1, "eof"), false, {})
 _moduleObj.noneToken = noneToken
 
 local function convFromRawToStr( txt )
@@ -643,6 +648,10 @@ function DefaultPushbackParser:__init(parser)
    self.usedTokenList = {}
    self.currentToken = _moduleObj.noneToken
 end
+function DefaultPushbackParser:createPosition( lineNo, column )
+
+   return self.parser:createPosition( lineNo, column )
+end
 function DefaultPushbackParser:getTokenNoErr(  )
 
    if #self.pushbackedList > 0 then
@@ -736,7 +745,7 @@ function DefaultPushbackParser:error( message )
 end
 function DefaultPushbackParser:getLastPos(  )
 
-   local pos = Position.new(0, 0)
+   local pos = self.parser:createPosition( 0, 0 )
    if self.currentToken.kind ~= TokenKind.Eof then
       pos = self.currentToken.pos
    else
@@ -875,7 +884,7 @@ function StreamParser:parse(  )
       local comment = ""
       while true do
          do
-            local _511, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
+            local _526, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
             if termEndIndex ~= nil then
                comment = comment .. rawLine:sub( searchIndex, termEndIndex )
                return comment, termEndIndex + 1
@@ -909,7 +918,7 @@ function StreamParser:parse(  )
             consecutive = true
          end
          
-         local newToken = Token.new(tokenKind, token, Position.new(self.lineNo, tokenColumn), consecutive, {})
+         local newToken = Token.new(tokenKind, token, self:createPosition( self.lineNo, tokenColumn ), consecutive, {})
          self.prevToken = newToken
          return newToken
       end
@@ -1208,7 +1217,7 @@ function StreamParser:getToken(  )
 end
 
 
-local eofToken = Token.new(TokenKind.Eof, "<EOF>", Position.new(0, 0), false, {})
+local eofToken = Token.new(TokenKind.Eof, "<EOF>", Position.new(0, 0, "eof"), false, {})
 local function getEofToken(  )
 
    return eofToken

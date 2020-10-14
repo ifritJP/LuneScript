@@ -720,7 +720,8 @@ function MacroCtrl:importMacro( macroInfoStem, macroTypeInfo, typeId2TypeInfo )
             column = 1
          else
           
-            table.insert( tokenList, Parser.Token.new(_lune.unwrap( Parser.TokenKind._from( math.floor(tokenInfo[1]) )), txt, Parser.Position.new(lineNo, column), false) )
+            local pos = Parser.Position.new(lineNo, column, string.format( "macro:%s", macroInfo.name))
+            table.insert( tokenList, Parser.Token.new(_lune.unwrap( Parser.TokenKind._from( math.floor(tokenInfo[1]) )), txt, pos, false) )
             column = column + #txt + 1
          end
          

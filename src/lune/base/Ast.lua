@@ -562,6 +562,9 @@ SerializeKind.__allList[10] = SerializeKind.Generic
 SerializeKind.Box = 10
 SerializeKind._val2NameMap[10] = 'Box'
 SerializeKind.__allList[11] = SerializeKind.Box
+SerializeKind.Ext = 11
+SerializeKind._val2NameMap[11] = 'Ext'
+SerializeKind.__allList[12] = SerializeKind.Ext
 
 
 local TypeInfoKind = {}
@@ -1093,6 +1096,10 @@ CanEvalType.__allList[7] = CanEvalType.Logical
 
 local TypeInfo = {}
 _moduleObj.TypeInfo = TypeInfo
+function TypeInfo:getOverridingType(  )
+
+   return nil
+end
 function TypeInfo.new( scope, processInfo )
    local obj = {}
    TypeInfo.setmeta( obj )
@@ -1934,6 +1941,10 @@ end
 
 function AliasTypeInfo:getModule( ... )
    return self.aliasSrcTypeInfo:getModule( ... )
+end
+
+function AliasTypeInfo:getOverridingType( ... )
+   return self.aliasSrcTypeInfo:getOverridingType( ... )
 end
 
 function AliasTypeInfo:getParentFullName( ... )
@@ -3105,6 +3116,10 @@ function NilableTypeInfo:getModule( ... )
    return self.nonnilableType:getModule( ... )
 end
 
+function NilableTypeInfo:getOverridingType( ... )
+   return self.nonnilableType:getOverridingType( ... )
+end
+
 function NilableTypeInfo:getParentFullName( ... )
    return self.nonnilableType:getParentFullName( ... )
 end
@@ -3617,6 +3632,10 @@ function BoxTypeInfo:getModule( ... )
    return self.boxingType:getModule( ... )
 end
 
+function BoxTypeInfo:getOverridingType( ... )
+   return self.boxingType:getOverridingType( ... )
+end
+
 function BoxTypeInfo:getParentFullName( ... )
    return self.boxingType:getParentFullName( ... )
 end
@@ -3954,6 +3973,10 @@ function GenericTypeInfo:getFullName( ... )
    return self.genSrcTypeInfo:getFullName( ... )
 end
 
+function GenericTypeInfo:getOverridingType( ... )
+   return self.genSrcTypeInfo:getOverridingType( ... )
+end
+
 function GenericTypeInfo:getParentFullName( ... )
    return self.genSrcTypeInfo:getParentFullName( ... )
 end
@@ -4195,6 +4218,10 @@ end
 
 function ModifierTypeInfo:getModule( ... )
    return self.srcTypeInfo:getModule( ... )
+end
+
+function ModifierTypeInfo:getOverridingType( ... )
+   return self.srcTypeInfo:getOverridingType( ... )
 end
 
 function ModifierTypeInfo:getParentFullName( ... )
@@ -4759,9 +4786,69 @@ function AlgeTypeInfo:addValInfo( valInfo )
 end
 
 
+local OverridingType = {}
+OverridingType._name2Val = {}
+function OverridingType:_getTxt( val )
+   local name = val[ 1 ]
+   if name then
+      return string.format( "OverridingType.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+
+function OverridingType._from( val )
+   return _lune._AlgeFrom( OverridingType, val )
+end
+
+OverridingType.NoReady = { "NoReady"}
+OverridingType._name2Val["NoReady"] = OverridingType.NoReady
+OverridingType.NotOverride = { "NotOverride"}
+OverridingType._name2Val["NotOverride"] = OverridingType.NotOverride
+OverridingType.Override = { "Override", {{ func=TypeInfo._fromMap, nilable=false, child={} }}}
+OverridingType._name2Val["Override"] = OverridingType.Override
+
+
 local NormalTypeInfo = {}
 setmetatable( NormalTypeInfo, { __index = TypeInfo } )
 _moduleObj.NormalTypeInfo = NormalTypeInfo
+function NormalTypeInfo:getOverridingType(  )
+
+   do
+      local _matchExp = self.overridingType
+      if _matchExp[1] == OverridingType.NotOverride[1] then
+      
+         return nil
+      elseif _matchExp[1] == OverridingType.Override[1] then
+         local typeInfo = _matchExp[2][1]
+      
+         return typeInfo
+      elseif _matchExp[1] == OverridingType.NoReady[1] then
+      
+         local scope = _lune.unwrap( self.parentInfo:get_scope())
+         do
+            local typeInfo = scope:getTypeInfoField( self.rawTxt, false, scope, ScopeAccess.Normal )
+            if typeInfo ~= nil then
+               do
+                  local workType = typeInfo:getOverridingType(  )
+                  if workType ~= nil then
+                     self.overridingType = _lune.newAlge( OverridingType.Override, {workType})
+                     return workType
+                  else
+                     self.overridingType = _lune.newAlge( OverridingType.Override, {typeInfo})
+                     return typeInfo
+                  end
+               end
+               
+            else
+               self.overridingType = _lune.newAlge( OverridingType.NotOverride)
+               return nil
+            end
+         end
+         
+      end
+   end
+   
+end
 function NormalTypeInfo.new( abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode )
    local obj = {}
    NormalTypeInfo.setmeta( obj )
@@ -4774,6 +4861,14 @@ function NormalTypeInfo:__init(abstractFlag, scope, baseTypeInfo, interfaceList,
    
    if type( kind ) ~= "number" then
       Util.printStackTrace(  )
+   end
+   
+   
+   if kind == TypeInfoKind.Method and _lune.nilacc( parentInfo, 'hasBase', 'callmtd'  ) then
+      self.overridingType = _lune.newAlge( OverridingType.NoReady)
+   else
+    
+      self.overridingType = _lune.newAlge( OverridingType.NotOverride)
    end
    
    
@@ -6391,6 +6486,79 @@ local builtinTypeAbbrNone = AbbrTypeInfo.new(getCurProcessInfo(  ), idProv, "[##
 _moduleObj.builtinTypeAbbrNone = builtinTypeAbbrNone
 
 
+local function failCreateLuavalWith( typeInfo, convFlag )
+
+   
+   do
+      local _switchExp = typeInfo:get_kind()
+      if _switchExp == TypeInfoKind.Prim or _switchExp == TypeInfoKind.Stem or _switchExp == TypeInfoKind.Form then
+         return nil
+      elseif _switchExp == TypeInfoKind.IF then
+         return nil
+      elseif _switchExp == TypeInfoKind.Class then
+         if convFlag and typeInfo ~= _moduleObj.builtinTypeString then
+            return string.format( "not support mutable type -- %s", typeInfo:getTxt(  ))
+         end
+         
+         return nil
+      elseif _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Map then
+         if isMutable( typeInfo:get_mutMode() ) then
+            return string.format( "not support mutable type -- %s", typeInfo:getTxt(  ))
+         end
+         
+         
+         for __index, itemType in ipairs( typeInfo:get_itemTypeInfoList() ) do
+            do
+               local _exp = failCreateLuavalWith( itemType, convFlag )
+               if _exp ~= nil then
+                  return _exp
+               end
+            end
+            
+         end
+         
+         
+         return nil
+      elseif _switchExp == TypeInfoKind.FormFunc then
+         if convFlag then
+            return string.format( "not support mutable type -- %s", typeInfo:getTxt(  ))
+         end
+         
+         if #typeInfo:get_itemTypeInfoList() ~= 0 then
+            return string.format( "not support -- %s", typeInfo:getTxt(  ))
+         end
+         
+         
+         for __index, itemType in ipairs( typeInfo:get_argTypeInfoList() ) do
+            do
+               local _exp = failCreateLuavalWith( itemType, convFlag )
+               if _exp ~= nil then
+                  return _exp
+               end
+            end
+            
+         end
+         
+         
+         
+         for __index, itemType in ipairs( typeInfo:get_retTypeInfoList() ) do
+            do
+               local _exp = failCreateLuavalWith( itemType, convFlag )
+               if _exp ~= nil then
+                  return _exp
+               end
+            end
+            
+         end
+         
+         
+         return nil
+      end
+   end
+   
+   return string.format( "not support -- %s", typeInfo:getTxt(  ))
+end
+
 local ExtTypeInfo = {}
 setmetatable( ExtTypeInfo, { __index = TypeInfo } )
 _moduleObj.ExtTypeInfo = ExtTypeInfo
@@ -6429,15 +6597,36 @@ function ExtTypeInfo:equals( typeInfo, alt2type, checkModifer )
       end
    end
    
+   if failCreateLuavalWith( self.extedType, true ) then
+      return false
+   end
+   
    return self.extedType:equals( typeInfo, alt2type, checkModifer )
 end
 function ExtTypeInfo:canEvalWith( other, canEvalType, alt2type )
 
-   return self.extedType:canEvalWith( other, canEvalType, alt2type )
+   do
+      local extTypeInfo = _lune.__Cast( other:get_nonnilableType(), 3, ExtTypeInfo )
+      if extTypeInfo ~= nil then
+         local otherExtedType
+         
+         if other:get_nilable() then
+            otherExtedType = extTypeInfo.extedType:get_nilableTypeInfo()
+         else
+          
+            otherExtedType = extTypeInfo.extedType
+         end
+         
+         return self.extedType:canEvalWith( otherExtedType, canEvalType, alt2type )
+      end
+   end
+   
+   return false, nil
 end
 function ExtTypeInfo:serialize( stream, validChildrenSet )
 
-   Util.err( "illegal call" )
+   local parentId = self:getParentId(  )
+   stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, extedTypeId = %d }\n', SerializeKind.Ext, parentId, self.typeId, self.extedType:get_typeId()) )
 end
 function ExtTypeInfo:get_display_stirng_with( raw, alt2type )
 
@@ -6498,6 +6687,10 @@ end
 
 function ExtTypeInfo:getFullName( ... )
    return self.extedType:getFullName( ... )
+end
+
+function ExtTypeInfo:getOverridingType( ... )
+   return self.extedType:getOverridingType( ... )
 end
 
 function ExtTypeInfo:getParentFullName( ... )
@@ -6608,17 +6801,24 @@ end
 
 function NormalTypeInfo.createLuaval( luneType )
 
+   do
+      local _exp = failCreateLuavalWith( luneType, false )
+      if _exp ~= nil then
+         return nil, _exp
+      end
+   end
+   
    idProv:increment(  )
    local extType = ExtTypeInfo.new(getCurProcessInfo(  ), idProv, luneType:get_nonnilableType())
    if luneType:get_nilable() then
-      return extType:get_nilableTypeInfo()
+      return extType:get_nilableTypeInfo(), ""
    end
    
-   return extType
+   return extType, ""
 end
 
 
-local builtinTypeLua = NormalTypeInfo.createLuaval( _moduleObj.builtinTypeStem )
+local builtinTypeLua = _lune.unwrap( NormalTypeInfo.createLuaval( _moduleObj.builtinTypeStem ))
 _moduleObj.builtinTypeLua = builtinTypeLua
 
 registBuiltin( "Luaval", "Luaval", TypeInfoKind.Ext, _moduleObj.builtinTypeLua, _moduleObj.headTypeInfo, false )
@@ -6680,6 +6880,10 @@ end
 
 function AndExpTypeInfo:getModule( ... )
    return self.result:getModule( ... )
+end
+
+function AndExpTypeInfo:getOverridingType( ... )
+   return self.result:getOverridingType( ... )
 end
 
 function AndExpTypeInfo:getParentFullName( ... )
@@ -7501,7 +7705,10 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
    do
       local extTypeInfo = _lune.__Cast( otherSrc, 3, ExtTypeInfo )
       if extTypeInfo ~= nil then
-         otherSrc = extTypeInfo:get_extedType()
+         if canEvalType ~= CanEvalType.SetEq then
+            otherSrc = extTypeInfo:get_extedType()
+         end
+         
       end
    end
    
@@ -7900,7 +8107,7 @@ IdType.__allList[2] = IdType.Ext
 local function switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 6100, function (  )
+   Log.log( Log.Level.Trace, __func__, 6230, function (  )
    
       return "start"
    end )
@@ -7920,7 +8127,7 @@ local builtinTypeInfo2Map = typeInfo2Map:clone(  )
 local function pushProcessInfo( processInfo )
    local __func__ = '@lune.@base.@Ast.pushProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6112, function (  )
+   Log.log( Log.Level.Trace, __func__, 6242, function (  )
    
       return "start"
    end )
@@ -7955,7 +8162,7 @@ _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
    local __func__ = '@lune.@base.@Ast.popProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6138, function (  )
+   Log.log( Log.Level.Trace, __func__, 6268, function (  )
    
       return "start"
    end )
@@ -8256,7 +8463,13 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
                end
                
                
-               typeInfo = NormalTypeInfo.createLuaval( genericList[1] )
+               local work, mess = NormalTypeInfo.createLuaval( genericList[1] )
+               if work ~= nil then
+                  typeInfo = work
+               else
+                  return nil, pos, mess
+               end
+               
             else 
                
                   return nil, pos, string.format( "not support generic: %s", typeInfo:getTxt(  ))

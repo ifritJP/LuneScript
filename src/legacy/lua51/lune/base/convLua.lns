@@ -316,7 +316,7 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
                  ( node.$moduleId.getNextModuleId().$idStr) );
    self.writeln( "_moduleObj.__enableTest = %s" (self.enableTest ) );
    self.writeln( "_moduleObj.__hasTest = %s"
-                 (#node.$nodeManager.getTestBlockNodeList() ~= 0) );
+                 (#node.$nodeManager.getTestCaseNodeList() ~= 0) );
 
    let mut importModuleType2Index:Map<&Ast.TypeInfo,int> = {};
    let mut importNameMap:Map<str,&Ast.TypeInfo> = {};
@@ -3113,7 +3113,7 @@ pub override fn convFilter.processLuneKind( node: Nodes.LuneKindNode, opt: Opt )
 }
 
 
-pub override fn convFilter.processTestBlock( node: Nodes.TestBlockNode, opt: Opt ) mut
+pub override fn convFilter.processTestCase( node: Nodes.TestCaseNode, opt: Opt ) mut
 {
    if self.enableTest {
       self.writeln( "do" );
@@ -3122,21 +3122,9 @@ pub override fn convFilter.processTestBlock( node: Nodes.TestBlockNode, opt: Opt
       self.writeln( "" );
       self.writeln( "local function testcase( %s ) " (node.$ctrlName) );
 
-      // self.pushIndent( ## );
-
-      // self.writeln(
-      //    '%s = __t.Ctrl.new( "%s", "%s" )'
-      //    (node.$ctrlName,
-      //      self.moduleTypeInfo.getFullName(
-      //         self.$typeNameCtrl, self.$moduleInfoManager ##).gsub( "@", "" ),
-      //      node.$name.txt) );
-      
-      // self.popIndent();
-      
       filter( node.$block, self, node );
 
       self.writeln( "end" );
-      // self.writeln( "_moduleObj.__testMap[ '%s' ] = testcase" (node.$name.txt) );
       self.writeln(
          '__t.registerTestcase( "%s", "%s", testcase )'
          ( self.moduleTypeInfo.getFullName(
@@ -3146,6 +3134,17 @@ pub override fn convFilter.processTestBlock( node: Nodes.TestBlockNode, opt: Opt
       self.writeln( "end" );
    }
 }
+
+pub override fn convFilter.processTestBlock(
+   node: Nodes.TestBlockNode, opt: Opt ) mut
+{
+   if self.enableTest {
+      foreach statement in node.$stmtList {
+         filter( statement, self, node );
+         self.writeln( "" );
+      }
+   }
+};
 
 pub override fn convFilter.processProvide(
    node: Nodes.ProvideNode, opt: Opt ) mut

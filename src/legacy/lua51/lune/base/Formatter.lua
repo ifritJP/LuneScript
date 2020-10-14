@@ -331,7 +331,7 @@ end
 
 function FormatterFilter:processBlankLine( node, opt )
 
-   for _4988 = 1, node:get_lineNum() do
+   for _5037 = 1, node:get_lineNum() do
       self:writeln( "" )
    end
    
@@ -1419,10 +1419,11 @@ function FormatterFilter:processAlias( node, opt )
 end
 
 
-function FormatterFilter:processTestBlock( node, opt )
+function FormatterFilter:processTestCase( node, opt )
 
-   
+   self:write( string.format( "__test %s(%s) {", node:get_name().txt, node:get_ctrlName()) )
    filter( node:get_block(), self, opt:nextOpt( node ) )
+   self:write( "}" )
 end
 
 
@@ -1571,6 +1572,8 @@ function FormatterFilter:processAbbr( node, opt )
 
    self:write( "##" )
 end
+
+
 
 
 

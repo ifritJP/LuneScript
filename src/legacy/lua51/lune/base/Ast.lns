@@ -592,6 +592,16 @@ pub class TypeInfo {
    // この TypeInfo の typeId を生成した processInfo
    pri let processInfo:&ProcessInfo! {pub};
 
+
+   /**
+   この TypeInfo がオーバーライドしている場合、
+   そのオーバーライド元の TypeInfo を返す。
+   オーバーライドしていない場合、 nil を返す。 
+   */
+   pub fn getOverridingType() : &TypeInfo! {
+      return nil;
+   }
+   
    // pub fn get_scope(): Scope! {
    //    return typeInfo2ScopeMap[ self ];
    // }
@@ -3366,8 +3376,11 @@ pub fn AlgeTypeInfo.addValInfo( valInfo:&AlgeValInfo ) mut {
 }
 
 
-
-
+alge OverridingType {
+   NoReady,
+   NotOverride,
+   Override( &TypeInfo )
+}
 
 pub class NormalTypeInfo extend TypeInfo {
    // 外部モジュールで定義した TypeInfo かどうか
@@ -3407,6 +3420,40 @@ pub class NormalTypeInfo extend TypeInfo {
 
    pri let alt2typeMap:Map<&TypeInfo,&TypeInfo>;
 
+   /**
+   オーバーライド元の TypeInfo。
+   */
+   let allmut overridingType:OverridingType;
+
+   pub override fn getOverridingType() : &TypeInfo! {
+      _match self.overridingType {
+         case .NotOverride {
+            return nil;
+         }
+         case .Override( typeInfo ) {
+            return typeInfo;
+         }
+         case .NoReady {
+            let scope = unwrap self.parentInfo.$scope;
+            if! let typeInfo = scope.getTypeInfoField(
+               self.rawTxt, false, scope, .Normal )
+            {
+               if! let workType = typeInfo.getOverridingType() {
+                  self.overridingType = .Override( workType );
+                  return workType;
+               } else {
+                  self.overridingType = .Override( typeInfo );
+                  return typeInfo;
+               }
+            } else {
+               self.overridingType = .NotOverride;
+               return nil;
+            }
+         }
+      }
+   }
+
+   
    fn __init( abstractFlag:bool, scope: Scope!, baseTypeInfo: &TypeInfo!,
               interfaceList: &List<&TypeInfo>!,
               autoFlag: bool, externalFlag: bool, staticFlag: bool,
@@ -3419,6 +3466,12 @@ pub class NormalTypeInfo extend TypeInfo {
 
       if type(kind) ~= "number" {
          Util.printStackTrace();
+      }
+
+      if kind == .Method and parentInfo$.hasBase$() {
+         self.overridingType = .NoReady;
+      } else {
+         self.overridingType = .NotOverride;
       }
 
       self.abstractFlag = abstractFlag;

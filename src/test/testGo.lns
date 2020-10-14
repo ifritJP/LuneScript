@@ -949,3 +949,46 @@ _section();
    _test( test2, map );
    _test( sub2, map );
 }
+_section();
+{
+   class Test<T> {
+      let val:T {pro};
+      pub fn func( val:T ) : T {
+         print( __func__, self.val == val );
+         return val;
+      }
+   }
+   class Sub<T> extend Test<T>  {
+      pub override fn func( val:T ) : T {
+         print( __func__, self.$val == val );
+         return val;
+      }
+   }
+   let sub = new Sub( "abc" );
+   print( sub.func( "abc" ) .. "xyz" );
+}
+_section();
+{
+   for val = 1, 1 {
+      print( "hoge" );
+   }   
+}
+_section();
+{
+   form test( val:stem, list:&Map<int,str> );
+
+   let code = ```
+      return function( val, list )
+   print( val )
+   for index, item in pairs( list ) do
+      print( index, item )
+   end
+end```;
+   let loaded = _load( code ## );
+   when! loaded {
+      let func = loaded(##);
+      when! func {
+         (func@@Luaval<test>)( "hoge:", {1:"a", 2:"b", 3:"c" } );
+      }
+   }
+}

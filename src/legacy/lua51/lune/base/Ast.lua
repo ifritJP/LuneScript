@@ -1093,6 +1093,10 @@ CanEvalType.__allList[7] = CanEvalType.Logical
 
 local TypeInfo = {}
 _moduleObj.TypeInfo = TypeInfo
+function TypeInfo:getOverridingType(  )
+
+   return nil
+end
 function TypeInfo.new( scope, processInfo )
    local obj = {}
    TypeInfo.setmeta( obj )
@@ -1934,6 +1938,10 @@ end
 
 function AliasTypeInfo:getModule( ... )
    return self.aliasSrcTypeInfo:getModule( ... )
+end
+
+function AliasTypeInfo:getOverridingType( ... )
+   return self.aliasSrcTypeInfo:getOverridingType( ... )
 end
 
 function AliasTypeInfo:getParentFullName( ... )
@@ -3105,6 +3113,10 @@ function NilableTypeInfo:getModule( ... )
    return self.nonnilableType:getModule( ... )
 end
 
+function NilableTypeInfo:getOverridingType( ... )
+   return self.nonnilableType:getOverridingType( ... )
+end
+
 function NilableTypeInfo:getParentFullName( ... )
    return self.nonnilableType:getParentFullName( ... )
 end
@@ -3617,6 +3629,10 @@ function BoxTypeInfo:getModule( ... )
    return self.boxingType:getModule( ... )
 end
 
+function BoxTypeInfo:getOverridingType( ... )
+   return self.boxingType:getOverridingType( ... )
+end
+
 function BoxTypeInfo:getParentFullName( ... )
    return self.boxingType:getParentFullName( ... )
 end
@@ -3954,6 +3970,10 @@ function GenericTypeInfo:getFullName( ... )
    return self.genSrcTypeInfo:getFullName( ... )
 end
 
+function GenericTypeInfo:getOverridingType( ... )
+   return self.genSrcTypeInfo:getOverridingType( ... )
+end
+
 function GenericTypeInfo:getParentFullName( ... )
    return self.genSrcTypeInfo:getParentFullName( ... )
 end
@@ -4195,6 +4215,10 @@ end
 
 function ModifierTypeInfo:getModule( ... )
    return self.srcTypeInfo:getModule( ... )
+end
+
+function ModifierTypeInfo:getOverridingType( ... )
+   return self.srcTypeInfo:getOverridingType( ... )
 end
 
 function ModifierTypeInfo:getParentFullName( ... )
@@ -4759,9 +4783,69 @@ function AlgeTypeInfo:addValInfo( valInfo )
 end
 
 
+local OverridingType = {}
+OverridingType._name2Val = {}
+function OverridingType:_getTxt( val )
+   local name = val[ 1 ]
+   if name then
+      return string.format( "OverridingType.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+
+function OverridingType._from( val )
+   return _lune._AlgeFrom( OverridingType, val )
+end
+
+OverridingType.NoReady = { "NoReady"}
+OverridingType._name2Val["NoReady"] = OverridingType.NoReady
+OverridingType.NotOverride = { "NotOverride"}
+OverridingType._name2Val["NotOverride"] = OverridingType.NotOverride
+OverridingType.Override = { "Override", {{ func=TypeInfo._fromMap, nilable=false, child={} }}}
+OverridingType._name2Val["Override"] = OverridingType.Override
+
+
 local NormalTypeInfo = {}
 setmetatable( NormalTypeInfo, { __index = TypeInfo } )
 _moduleObj.NormalTypeInfo = NormalTypeInfo
+function NormalTypeInfo:getOverridingType(  )
+
+   do
+      local _matchExp = self.overridingType
+      if _matchExp[1] == OverridingType.NotOverride[1] then
+      
+         return nil
+      elseif _matchExp[1] == OverridingType.Override[1] then
+         local typeInfo = _matchExp[2][1]
+      
+         return typeInfo
+      elseif _matchExp[1] == OverridingType.NoReady[1] then
+      
+         local scope = _lune.unwrap( self.parentInfo:get_scope())
+         do
+            local typeInfo = scope:getTypeInfoField( self.rawTxt, false, scope, ScopeAccess.Normal )
+            if typeInfo ~= nil then
+               do
+                  local workType = typeInfo:getOverridingType(  )
+                  if workType ~= nil then
+                     self.overridingType = _lune.newAlge( OverridingType.Override, {workType})
+                     return workType
+                  else
+                     self.overridingType = _lune.newAlge( OverridingType.Override, {typeInfo})
+                     return typeInfo
+                  end
+               end
+               
+            else
+               self.overridingType = _lune.newAlge( OverridingType.NotOverride)
+               return nil
+            end
+         end
+         
+      end
+   end
+   
+end
 function NormalTypeInfo.new( abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode )
    local obj = {}
    NormalTypeInfo.setmeta( obj )
@@ -4774,6 +4858,14 @@ function NormalTypeInfo:__init(abstractFlag, scope, baseTypeInfo, interfaceList,
    
    if type( kind ) ~= "number" then
       Util.printStackTrace(  )
+   end
+   
+   
+   if kind == TypeInfoKind.Method and _lune.nilacc( parentInfo, 'hasBase', 'callmtd'  ) then
+      self.overridingType = _lune.newAlge( OverridingType.NoReady)
+   else
+    
+      self.overridingType = _lune.newAlge( OverridingType.NotOverride)
    end
    
    
@@ -6500,6 +6592,10 @@ function ExtTypeInfo:getFullName( ... )
    return self.extedType:getFullName( ... )
 end
 
+function ExtTypeInfo:getOverridingType( ... )
+   return self.extedType:getOverridingType( ... )
+end
+
 function ExtTypeInfo:getParentFullName( ... )
    return self.extedType:getParentFullName( ... )
 end
@@ -6680,6 +6776,10 @@ end
 
 function AndExpTypeInfo:getModule( ... )
    return self.result:getModule( ... )
+end
+
+function AndExpTypeInfo:getOverridingType( ... )
+   return self.result:getOverridingType( ... )
 end
 
 function AndExpTypeInfo:getParentFullName( ... )
@@ -7900,7 +8000,7 @@ IdType.__allList[2] = IdType.Ext
 local function switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 6100, function (  )
+   Log.log( Log.Level.Trace, __func__, 6153, function (  )
    
       return "start"
    end )
@@ -7920,7 +8020,7 @@ local builtinTypeInfo2Map = typeInfo2Map:clone(  )
 local function pushProcessInfo( processInfo )
    local __func__ = '@lune.@base.@Ast.pushProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6112, function (  )
+   Log.log( Log.Level.Trace, __func__, 6165, function (  )
    
       return "start"
    end )
@@ -7955,7 +8055,7 @@ _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
    local __func__ = '@lune.@base.@Ast.popProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6138, function (  )
+   Log.log( Log.Level.Trace, __func__, 6191, function (  )
    
       return "start"
    end )

@@ -967,11 +967,12 @@ pub override fn FormatterFilter.processAlias(
    
 }
 
-pub override fn FormatterFilter.processTestBlock(
-   node: &Nodes.TestBlockNode, opt:Opt ) mut
+pub override fn FormatterFilter.processTestCase(
+   node: &Nodes.TestCaseNode, opt:Opt ) mut
 {
-   
+   self.write( "__test %s(%s) {" (node.$name.txt, node.$ctrlName) );
    filter( node.$block, self, opt.nextOpt( node ) );
+   self.write( "}" );
 }
 
 pub override fn FormatterFilter.processBoxing(
@@ -1093,3 +1094,13 @@ pub override fn FormatterFilter.processAbbr(
 {
    self.write( "##" );
 };
+
+__test case1(ctrl) {
+   let mut rootNode = Nodes.createTestNodes();
+
+   let mut memStream = new Util.memStream();
+   let mut fomatter = createFilter( rootNode.$moduleTypeInfo, memStream );
+
+   rootNode.processFilter( fomatter, new Opt( rootNode ) );
+   __t._eq( ctrl, memStream.$txt, "form( 'hoge' );\n" );
+}

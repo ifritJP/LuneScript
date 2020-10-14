@@ -258,6 +258,15 @@ func (lnsList *LnsList) Unpack() []LnsAny {
 }
 
 
+func (LnsList *LnsList) ToLuaCode( conv *StemToLuaConv ) {
+    conv.write( "{" )
+    for _, val := range( LnsList.Items ) {
+        conv.conv( val )
+        conv.write( "," )
+    }
+    conv.write( "}" )
+}
+
 
 // ======== set ========
 
@@ -485,4 +494,16 @@ func (self *LnsMap) Set( key, val LnsAny ) {
     } else {
         self.Items[ key ] = val
     }
+}
+
+func (LnsMap *LnsMap) ToLuaCode( conv *StemToLuaConv ) {
+    conv.write( "{" )
+    for key, val := range( LnsMap.Items ) {
+        conv.write( "[ " )
+        conv.conv( key )
+        conv.write( " ] =" )
+        conv.conv( val )
+        conv.write( "," )
+    }
+    conv.write( "}" )
 }

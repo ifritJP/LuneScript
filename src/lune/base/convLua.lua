@@ -448,7 +448,7 @@ function convFilter:writeRaw( txt )
    end
    
    
-   for _5458 in string.gmatch( txt, "\n" ) do
+   for _5510 in string.gmatch( txt, "\n" ) do
       self.curLineNo = self.curLineNo + 1
    end
    
@@ -570,7 +570,7 @@ function convFilter:outputMeta( node )
    self:writeln( string.format( "_moduleObj.__formatVersion = '%s'", Ver.metaVersion) )
    self:writeln( string.format( "_moduleObj.__buildId = %q", node:get_moduleId():getNextModuleId(  ):get_idStr()) )
    self:writeln( string.format( "_moduleObj.__enableTest = %s", self.enableTest) )
-   self:writeln( string.format( "_moduleObj.__hasTest = %s", #node:get_nodeManager():getTestBlockNodeList(  ) ~= 0) )
+   self:writeln( string.format( "_moduleObj.__hasTest = %s", #node:get_nodeManager():getTestCaseNodeList(  ) ~= 0) )
    
    local importModuleType2Index = {}
    local importNameMap = {}
@@ -1888,7 +1888,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _5796 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _5848 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -3785,7 +3785,7 @@ function convFilter:processLuneKind( node, opt )
 end
 
 
-function convFilter:processTestBlock( node, opt )
+function convFilter:processTestCase( node, opt )
 
    if self.enableTest then
       self:writeln( "do" )
@@ -3793,6 +3793,7 @@ function convFilter:processTestBlock( node, opt )
       filter( node:get_impNode(), self, node )
       self:writeln( "" )
       self:writeln( string.format( "local function testcase( %s ) ", node:get_ctrlName()) )
+      
       filter( node:get_block(), self, node )
       
       self:writeln( "end" )
@@ -3802,6 +3803,20 @@ function convFilter:processTestBlock( node, opt )
    end
    
 end
+
+
+function convFilter:processTestBlock( node, opt )
+
+   if self.enableTest then
+      for __index, statement in ipairs( node:get_stmtList() ) do
+         filter( statement, self, node )
+         self:writeln( "" )
+      end
+      
+   end
+   
+end
+
 
 
 function convFilter:processProvide( node, opt )
@@ -4054,7 +4069,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3370, function (  )
+   Log.log( Log.Level.Info, __func__, 3369, function (  )
    
       return string.format( "code: %s", code)
    end )

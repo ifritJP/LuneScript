@@ -123,7 +123,8 @@ LuneScript のコード文字列からロードする。
 @param txt LuneScript のコード文字列
 @return stem ロードしたモジュール。
    */
-   pub fn loadFromLnsTxt( importModuleInfo:ImportModuleInfo, name:str, txt:str ): stem;
+   pub fn loadFromLnsTxt(
+      importModuleInfo:ImportModuleInfo, name:str, txt:str ): Luaval<stem>;
    pub fn searchModule( mod:str ): str!;
    pub fn error( message:str );
 }
@@ -136,7 +137,9 @@ class dummyFront extend (frontInterface) {
    pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ) mut : &stem! {
       error( "not implements" );
    }
-   pub fn loadFromLnsTxt( importModuleInfo:ImportModuleInfo, name:str, txt:str ): stem {
+   pub fn loadFromLnsTxt(
+      importModuleInfo:ImportModuleInfo, name:str, txt:str ): Luaval<stem>
+   {
       error( "not implements" );
    }
    pub fn searchModule( mod:str ): str! {
@@ -157,7 +160,9 @@ pub fn loadModule( mod:str ): stem!, &stem {
    return __luneScript.loadModule( mod )**;
 }
 
-pub fn loadFromLnsTxt( importModuleInfo:ImportModuleInfo, name:str, txt:str ): stem {
+pub fn loadFromLnsTxt(
+   importModuleInfo:ImportModuleInfo, name:str, txt:str ): Luaval<stem>
+{
    return __luneScript.loadFromLnsTxt( importModuleInfo, name, txt );
 }
 

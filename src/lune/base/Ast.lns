@@ -186,6 +186,7 @@ pub enum SerializeKind {
    Alternate,
    Generic,
    Box,
+   Ext,
 }
 
 pub enum TypeInfoKind {
@@ -592,6 +593,16 @@ pub class TypeInfo {
    // この TypeInfo の typeId を生成した processInfo
    pri let processInfo:&ProcessInfo! {pub};
 
+
+   /**
+   この TypeInfo がオーバーライドしている場合、
+   そのオーバーライド元の TypeInfo を返す。
+   オーバーライドしていない場合、 nil を返す。 
+   */
+   pub fn getOverridingType() : &TypeInfo! {
+      return nil;
+   }
+   
    // pub fn get_scope(): Scope! {
    //    return typeInfo2ScopeMap[ self ];
    // }
@@ -3366,8 +3377,11 @@ pub fn AlgeTypeInfo.addValInfo( valInfo:&AlgeValInfo ) mut {
 }
 
 
-
-
+alge OverridingType {
+   NoReady,
+   NotOverride,
+   Override( &TypeInfo )
+}
 
 pub class NormalTypeInfo extend TypeInfo {
    // 外部モジュールで定義した TypeInfo かどうか
@@ -3407,6 +3421,40 @@ pub class NormalTypeInfo extend TypeInfo {
 
    pri let alt2typeMap:Map<&TypeInfo,&TypeInfo>;
 
+   /**
+   オーバーライド元の TypeInfo。
+   */
+   let allmut overridingType:OverridingType;
+
+   pub override fn getOverridingType() : &TypeInfo! {
+      _match self.overridingType {
+         case .NotOverride {
+            return nil;
+         }
+         case .Override( typeInfo ) {
+            return typeInfo;
+         }
+         case .NoReady {
+            let scope = unwrap self.parentInfo.$scope;
+            if! let typeInfo = scope.getTypeInfoField(
+               self.rawTxt, false, scope, .Normal )
+            {
+               if! let workType = typeInfo.getOverridingType() {
+                  self.overridingType = .Override( workType );
+                  return workType;
+               } else {
+                  self.overridingType = .Override( typeInfo );
+                  return typeInfo;
+               }
+            } else {
+               self.overridingType = .NotOverride;
+               return nil;
+            }
+         }
+      }
+   }
+
+   
    fn __init( abstractFlag:bool, scope: Scope!, baseTypeInfo: &TypeInfo!,
               interfaceList: &List<&TypeInfo>!,
               autoFlag: bool, externalFlag: bool, staticFlag: bool,
@@ -3419,6 +3467,12 @@ pub class NormalTypeInfo extend TypeInfo {
 
       if type(kind) ~= "number" {
          Util.printStackTrace();
+      }
+
+      if kind == .Method and parentInfo$.hasBase$() {
+         self.overridingType = .NoReady;
+      } else {
+         self.overridingType = .NotOverride;
       }
 
       self.abstractFlag = abstractFlag;
@@ -4918,6 +4972,56 @@ pub let builtinTypeAbbrNone:TypeInfo =
    new AbbrTypeInfo( getCurProcessInfo(), idProv, "[##]" );
 
 
+
+/**
+typeInfo の Luaval を生成可能かどうかを調べる。
+
+@param convFlag true の場合、Luaval と LuneScript との値の変換を自動で行なえるかどうか。
+@return 生成可能な場合は nil。 生成できない場合は メッセージを返す。
+*/
+fn failCreateLuavalWith( typeInfo:&TypeInfo, convFlag:bool ) : str! {
+   macro _checkItemType( itemTypeList:__exp ) {
+      foreach itemType in ,,itemTypeList {
+         if! failCreateLuavalWith( itemType, convFlag ) {
+            return _exp;
+         }
+      }
+   }
+   switch typeInfo.$kind {
+      case .Prim, .Stem, .Form {
+         return nil;
+      }
+      case .IF {
+         return nil;
+      }
+      case .Class {
+         if convFlag and typeInfo ~= builtinTypeString {
+            return "not support mutable type -- %s" (typeInfo.getTxt(##));
+         }
+         return nil;
+      }
+      case .Array, .List, .Map {
+         if isMutable( typeInfo.$mutMode ) {
+            return "not support mutable type -- %s" (typeInfo.getTxt(##));
+         }
+         _checkItemType( typeInfo.$itemTypeInfoList );
+         return nil;
+      }
+      case .FormFunc {
+         if convFlag {
+            return "not support mutable type -- %s" (typeInfo.getTxt(##));
+         }
+         if #typeInfo.$itemTypeInfoList ~= 0 {
+            return "not support -- %s" (typeInfo.getTxt(##));
+         }
+         _checkItemType( typeInfo.$argTypeInfoList );
+         _checkItemType( typeInfo.$retTypeInfoList );
+         return nil;
+      }
+   }
+   return "not support -- %s" (typeInfo.getTxt(##));
+}
+
 pub class ExtTypeInfo extend TypeInfo {
    pri let typeId: int { pub };
    /** 対応する LuneScript のタイプ。 必ず no-nolable になる。 */
@@ -4960,6 +5064,9 @@ pub class ExtTypeInfo extend TypeInfo {
       if! let extTypeInfo = typeInfo@@@ExtTypeInfo {
          return self.extedType.equals( extTypeInfo.extedType, alt2type, checkModifer );
       }
+      if failCreateLuavalWith( self.extedType, true ) {
+         return false;
+      }
       return self.extedType.equals( typeInfo, alt2type, checkModifer );
    }
 
@@ -4968,11 +5075,27 @@ pub class ExtTypeInfo extend TypeInfo {
       other:&TypeInfo,
       canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool, str!
    {
-      return self.extedType.canEvalWith( other, canEvalType, alt2type )**;
+      if! let extTypeInfo = other.$nonnilableType@@@ExtTypeInfo {
+         let otherExtedType;
+         if other.$nilable {
+            otherExtedType = extTypeInfo.extedType.$nilableTypeInfo;
+         } else {
+            otherExtedType = extTypeInfo.extedType;
+         }
+         return self.extedType.canEvalWith( otherExtedType, canEvalType, alt2type )**;
+      }
+      // if canEvalType == .SetEq {
+      //    return false, nil;
+      // }
+      // return self.extedType.canEvalWith( other, canEvalType, alt2type )**;
+      return false, nil;
    }
 
    pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
-      Util.err( "illegal call" );
+      let parentId = self.getParentId();
+      stream.write(
+         '{ skind = %d, parentId = %d, typeId = %d, extedTypeId = %d }\n' (
+            SerializeKind.Ext, parentId, self.typeId, self.extedType.$typeId ) );
    }
 
    pub override fn get_display_stirng_with(
@@ -5012,18 +5135,21 @@ pub class ExtTypeInfo extend TypeInfo {
    advertise extedType;
 }
 
-pub static fn NormalTypeInfo.createLuaval( luneType:&TypeInfo ) : &TypeInfo
+pub static fn NormalTypeInfo.createLuaval( luneType:&TypeInfo ) : &TypeInfo!, str
 {
+   if! failCreateLuavalWith( luneType, false ) {
+      return nil, _exp;
+   }
    idProv.increment();
    let extType = new ExtTypeInfo( getCurProcessInfo(), idProv, luneType.$nonnilableType );
    if luneType.$nilable {
-      return extType.$nilableTypeInfo;
+      return extType.$nilableTypeInfo, "";
    }
-   return extType;
+   return extType, "";
 }
 
 pub let builtinTypeLua:TypeInfo =
-   NormalTypeInfo.createLuaval( builtinTypeStem );
+   unwrap NormalTypeInfo.createLuaval( builtinTypeStem );
 registBuiltin( "Luaval", "Luaval", .Ext, builtinTypeLua, headTypeInfo, false );
 pub let builtinTypeDDDLua:TypeInfo =
    NormalTypeInfo.createDDD( builtinTypeLua, true );
@@ -5744,7 +5870,11 @@ pub static fn TypeInfo.canEvalWithBase(
       return dest.canEvalWith( otherSrc, canEvalType, alt2type )**;
    }
    if! let extTypeInfo = otherSrc@@@ExtTypeInfo {
-      otherSrc = extTypeInfo.$extedType;
+      if canEvalType ~= .SetEq 
+      //   and not failCreateLuavalWith( extTypeInfo.$extedType, true )
+      {
+         otherSrc = extTypeInfo.$extedType;
+      }
    }
 
    
@@ -6375,7 +6505,12 @@ pub fn TypeAnalyzer.analyzeTypeItemList(
             }
             case .Ext {
                _checkAlternateTypeCount( 1 );
-               typeInfo = NormalTypeInfo.createLuaval( genericList[1] );
+               let work, mess = NormalTypeInfo.createLuaval( genericList[1] );
+               when! work {
+                  typeInfo = work;
+               } else {
+                  return nil , pos, mess;
+               }
             }
             default {
                return nil , pos, "not support generic: %s" (typeInfo.getTxt(##));
@@ -6454,7 +6589,8 @@ __test case1(ctrl) {
    _checkTypeAnalyzer( "&int", NormalTypeInfo.createModifier( builtinTypeInt, .IMut ) );
    _checkTypeAnalyzer( "...", builtinTypeDDD );
    _checkTypeAnalyzer( "...<int>", NormalTypeInfo.createDDD( builtinTypeInt, true ) );
-   _checkTypeAnalyzer( "Luaval<form>", NormalTypeInfo.createLuaval( builtinTypeForm ) );
+   _checkTypeAnalyzer( "Luaval<form>",
+                       unwrap NormalTypeInfo.createLuaval( builtinTypeForm ) );
 
    let intListType =
       NormalTypeInfo.createList( .Local, headTypeInfo, [ builtinTypeInt ], .Mut );

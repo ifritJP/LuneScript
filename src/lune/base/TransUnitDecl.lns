@@ -32,8 +32,7 @@ subfile owner lune.base.TransUnit;
 @param parentPub この型を使用している親の空間自体が public な場合 true
 */
 fn TransUnit.analyzeRefType(
-   accessMode: Ast.AccessMode, allowDDD:bool, parentPub:bool ) mut:
-Nodes.RefTypeNode
+   accessMode: Ast.AccessMode, allowDDD:bool, parentPub:bool ) mut: Nodes.RefTypeNode
 {
    let firstToken = self.getToken(##);
    let mut token = firstToken;
@@ -198,6 +197,17 @@ fn TransUnit.analyzeRefTypeWithSymbol(
                            "can't use nilable type -- %s" (itemType.getTxt(##)) );
                      }
                   }
+                  foreach itemType, index in typeInfo.$itemTypeInfoList {
+                     if itemType.hasBase() and
+                        not genericList[ index ].isInheritFrom( itemType.$baseTypeInfo ##)
+                     {
+                        self.addErrMess(
+                           symbolNode.$pos,
+                           "'%s' of %s doesn't inherit '%s'"
+                           (itemType.getTxt(##), typeInfo.getTxt(##),
+                             itemType.$baseTypeInfo.getTxt(##)) );
+                     }
+                  }
                   typeInfo = Ast.NormalTypeInfo.createGeneric(
                      typeInfo, genericList, self.moduleType );
                }
@@ -209,7 +219,12 @@ fn TransUnit.analyzeRefTypeWithSymbol(
             }
             case .Ext {
                if checkAlternateTypeCount( 1 ) {
-                  typeInfo = Ast.NormalTypeInfo.createLuaval( genericList[1] );
+                  let! workType, mess = Ast.NormalTypeInfo.createLuaval( genericList[1] )
+                  {
+                     self.addErrMess( symbolNode.$pos, mess );
+                     workType = Ast.builtinTypeNone;
+                  };
+                  typeInfo = workType;
                }
             }
             default {
@@ -457,7 +472,7 @@ pub fn TransUnit.createAST(
       lastStatement, lastLineNo = self.analyzeStatementList( children ## );
 
       let mut statement = Nodes.BlankLineNode.create(
-         self.nodeManager, new Parser.Position( lastLineNo + 1, 0 ),
+         self.nodeManager, self.createPosition( lastLineNo + 1, 0 ),
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], 0 );
       statement.addComment( self.commentCtrl.$commentList );
       self.commentCtrl.clear();
@@ -501,7 +516,7 @@ pub fn TransUnit.createAST(
 
 
       let mut rootNode = Nodes.RootNode.create(
-         self.nodeManager, new Parser.Position( 0, 0 ),
+         self.nodeManager, self.createPosition( 0, 0 ),
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
          children, self.moduleScope, self.macroCtrl.$useModuleMacroSet,
          self.moduleId, processInfo, moduleTypeInfo, nil, self.helperInfo,
@@ -2144,6 +2159,14 @@ fn TransUnit.analyzeDeclClass(
             true, nextToken, classAccessMode );
       }
       self.pushbackToken( nextToken );
+
+      if #altTypeList > 0 and mode ~= .Class {
+         // インタフェースの generics を当面禁止する。
+         // インタフェースの generics をサポートするには、
+         // そのインタフェースを implements しているクラスのどの型情報が
+         // 型パラメータに紐付くのかを処理する必要がある。
+         self.addErrMess( name.pos, "Only class can use the generics. -- %s " (name.txt) );
+      }
    }
 
    if classAccessMode == .Local {
@@ -2490,6 +2513,8 @@ fn TransUnit.processAddFunc(
    return unwrap (funcSym or shadowing);
 }
 
+let CantOverrideMethods = (@ "__init", "__free" );
+
 fn TransUnit.analyzeDeclFunc(
    declFuncMode: DeclFuncMode, abstractFlag: bool, overrideFlag: bool,
    mut accessMode: Ast.AccessMode,
@@ -2719,6 +2744,9 @@ fn TransUnit.analyzeDeclFunc(
       if not name {
          self.addErrMess( firstToken.pos, "can't override anonymous func" );
       };
+      if CantOverrideMethods.has( funcName ) {
+         self.addErrMess( firstToken.pos, "This method can't override -- %s" (funcName) );
+      }
       if! let overrideType = self.scope.$parent.getTypeInfoField(
          funcName, false, funcBodyScope, self.scopeAccess )
       {
@@ -2750,8 +2778,21 @@ fn TransUnit.analyzeDeclFunc(
             }
          }
 
-         if not overrideType.canEvalWith( typeInfo, .SetOp, alt2typeMap ) {
+         if not overrideType.canEvalWith( typeInfo, .SetEq, alt2typeMap ) {
             self.addErrMess( firstToken.pos, "mismatch method type -- %s" (funcName));
+         }
+
+         foreach retType, index in overrideType.$retTypeInfoList {
+            if #typeInfo.$retTypeInfoList >= index {
+               if retType.$nonnilableType.$kind == .Alternate and
+                  typeInfo.$retTypeInfoList[ index ].$nonnilableType.$kind ~= .Alternate
+               {
+                  let mess =
+                     "not support to override the method has generics at return type. -- %s"
+                      (funcName);
+                  self.addErrMess( firstToken.pos, mess );
+               }
+            }
          }
       }
       else {
@@ -2761,18 +2802,21 @@ fn TransUnit.analyzeDeclFunc(
    }
    else {
       when! name {
-         if name.txt ~= "__init" {
+         if not CantOverrideMethods.has( name.txt ) {
             if self.scope.$parent.getTypeInfoField(
-               name.txt, false, funcBodyScope, self.scopeAccess ) {
+               name.txt, false, funcBodyScope, .Full )
+            {
                // override 宣言していないのに、オーバーライドしている場合エラー
-               self.addErrMess( firstToken.pos, "mismatch override --" .. funcName );
-            }
-            else {
+               self.addErrMess( firstToken.pos,
+                                "mismatch override --" .. funcName );
+            } else {
                if! let ifFunc =
                   self.scope.$parent.getSymbolInfoIfField(
-                     name.txt, funcBodyScope, self.scopeAccess )
+                     name.txt, funcBodyScope, .Full )
                {
-                  if not ifFunc.$typeInfo.canEvalWith( typeInfo, .SetOp, alt2typeMap ) {
+                  if not ifFunc.$typeInfo.canEvalWith( typeInfo,
+                                                       .SetEq, alt2typeMap )
+                  {
                      self.addErrMess( firstToken.pos,
                                       "mismatch method type -- %s" (funcName));
                   }

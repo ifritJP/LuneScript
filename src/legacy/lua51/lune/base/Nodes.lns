@@ -1886,13 +1886,25 @@ pub abstract class MacroEval {
 }
 
 
-_declNodeClass( "TestBlock", Node, false, false, true,
+_declNodeClass( "TestCase", Node, false, false, true,
                 [ { "name": "&Parser.Token" },
                   { "impNode": "&Node" },
                   { "ctrlName": "str"},
                   { "block": "&BlockNode" } ]
 );
 
+_declNodeClass( "TestBlock", Node, false, false, true,
+                [ { "stmtList": "List<&Node>" } ]
+);
+
+pub fn TestBlockNode.isInnerPos( pos:&Parser.Position ) : bool {
+   if self.$pos.streamName == pos.streamName and self.$pos.lineNo < pos.lineNo and
+      #self.$stmtList > 0 and self.$stmtList[ 1 ].$pos.lineNo >= pos.lineNo
+   {
+      return true;
+   }
+   return false;
+}
 
 _declNodeClass( "Abbr", Node, false, true, false,
                 [ {} ]
@@ -2687,34 +2699,51 @@ pub fn getCastUnwraped( node:&Node ) : &Node {
    return node;
 }
 
+__test {
+   pub fn createTestNodes() : RootNode {
+      let mut parser = new Parser.DefaultPushbackParser(
+         new Parser.StreamParser(
+            new Parser.TxtStream( "print( 'hoge' );" ), "test" ## ) );
+
+      let mut scope = new Ast.Scope( nil, false ##);
+
+      let printToken = parser.getTokenNoErr(); // print
+      parser.getTokenNoErr(); // (
+      let hogeToken = parser.getTokenNoErr(); // 'hoge'
+      parser.getTokenNoErr(); // )
+      parser.getTokenNoErr(); // ;
+
+      let symbol = unwrap scope.addFunc( nil, Ast.builtinTypeForm, .Global, true, false);
+
+      let mut nodeManager = new NodeManager();
+
+      let strNode = LiteralStringNode.create( 
+         nodeManager, hogeToken.pos, false, [ Ast.builtinTypeString ], hogeToken, nil, nil );
+      let argListNode = ExpListNode.create(
+         nodeManager, hogeToken.pos, false, strNode.$expTypeList,
+         [ strNode ], nil, false );
+      let refNode = ExpRefNode.create(
+         nodeManager, printToken.pos, false, [ symbol.$typeInfo ], symbol );
+      let callNode = ExpCallNode.create(
+         nodeManager, printToken.pos, false, [ Ast.builtinTypeNone ],
+         refNode, false, false, argListNode );
+      let stmtExp = StmtExpNode.create(
+         nodeManager, callNode.$pos, false, [ Ast.builtinTypeNone ], callNode );
+
+      let moduleInfo = Ast.headTypeInfo;
+
+
+      return RootNode.create(
+         nodeManager, stmtExp.$pos, false, [ Ast.builtinTypeNone ],
+         [ stmtExp ], scope, (@), frontInterface.ModuleId.createId(0.0, 0),
+         Ast.pushProcessInfo( nil ), moduleInfo, nil,
+         new LuneHelperInfo(), nodeManager, {}, {}, {});
+   }
+}
+
 __test case1(ctrl) {
-   let mut parser = new Parser.DefaultPushbackParser(
-      new Parser.StreamParser(
-         new Parser.TxtStream( "print( 'hoge' );" ), "test" ## ) );
 
-   let mut scope = new Ast.Scope( nil, false ##);
+   let rootNode = createTestNodes();
 
-   let printToken = parser.getTokenNoErr();
-   let symbol = unwrap scope.addFunc( nil, Ast.builtinTypeForm, .Global, true, false);
-
-   
-   parser.getTokenNoErr(); // (
-   let hogeToken = parser.getTokenNoErr(); // 'hoge'
-   
-   parser.getTokenNoErr(); // )
-   parser.getTokenNoErr(); // ;
-
-   let mut nodeManager = new NodeManager();
-
-   let strNode = LiteralStringNode.create( 
-      nodeManager, hogeToken.pos, false, [ Ast.builtinTypeString ], hogeToken, nil, nil );
-   let argListNode = ExpListNode.create(
-      nodeManager, hogeToken.pos, false, strNode.$expTypeList,
-      [ strNode ], nil, false );
-   let refNode = ExpRefNode.create(
-      nodeManager, printToken.pos, false, [ symbol.$typeInfo ], symbol );
-   let callNode = ExpCallNode.create(
-      nodeManager, printToken.pos, false, [ Ast.builtinTypeNone ],
-      refNode, false, false, argListNode );
-   __t._isNotT( ctrl, callNode.canBeLeft() );
+   __t._isNotT( ctrl, rootNode.canBeLeft() );
 }

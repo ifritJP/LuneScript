@@ -429,7 +429,8 @@ usage:
                   elseif not column {
                      column = (unwrap tonumber( arg ## ) default 0)@@int;
                      option.analyzePos = new Parser.Position(
-                        unwrap lineNo, unwrap column );
+                        unwrap lineNo, unwrap column,
+                        Util.scriptPath2Module( option.scriptPath ) );
                   }
                }
                case .Save, .SaveMeta, .Glue {

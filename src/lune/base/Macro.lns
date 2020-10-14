@@ -142,7 +142,7 @@ class ExtMacroInfo extend Nodes.MacroInfo {
       return self.tokenList;
    }
 
-   pub fn __init( name:str, func: Nodes.macroStatmentProc,
+   pub fn __init( name:str, func: Luaval<Nodes.macroStatmentProc>,
                   symbol2MacroValInfoMap: Map<str,Nodes.MacroValInfo>,
                   argList:&List<&Nodes.MacroArgInfo>,
                   tokenList:&List<&Parser.Token> )
@@ -392,10 +392,11 @@ pub fn MacroCtrl.importMacro(
             column = 1;
          }
          else {
+            let pos = new Parser.Position( lineNo, column, "macro:%s" (macroInfo.name) );
             tokenList.insert(
                new Parser.Token(
                   unwrap Parser.TokenKind._from( tokenInfo[1]@@int ),
-                  txt, new Parser.Position( lineNo, column ), false ## ) );
+                  txt, pos, false ## ) );
             column = column + #txt + 1;
          }
       }

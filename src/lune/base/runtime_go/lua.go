@@ -30,6 +30,7 @@ import "C"
 import "unsafe"
 import "fmt"
 import "runtime"
+import "strings"
 
 var lns_globalValSym *C.char
 
@@ -96,6 +97,47 @@ func (obj *lns_pushedVal) free() {
 }
 var lns_defaultPushedVal *lns_pushedVal
 
+type StemToLuaConv struct {
+    builder *strings.Builder
+    luaVM *Lns_luaVM
+}
+
+func NewStemToLuaConv() *StemToLuaConv {
+    return &StemToLuaConv{ &strings.Builder{}, Lns_getVM() }
+}
+
+func (self *StemToLuaConv) write( txt string ) {
+    self.builder.WriteString( txt )
+}
+
+
+func (self *StemToLuaConv) conv( val LnsAny ) {
+    if Lns_IsNil( val ) {
+        self.builder.WriteString( "nil" )
+    } else {
+        switch val.(type) {
+        case LnsInt:
+            self.builder.WriteString( fmt.Sprintf( "%d", val.(LnsInt) ) )
+        case LnsReal:
+            self.builder.WriteString( fmt.Sprintf( "%g", val.(LnsInt) ) )
+        case bool:
+            self.builder.WriteString( fmt.Sprintf( "%s", val.(bool) ) )
+        case string:
+            self.builder.WriteString(
+                self.luaVM.String_format( "%q", Lns_2DDD( val ) ) )
+        case *LnsList:
+            val.(*LnsList).ToLuaCode( self )
+        case *LnsMap:
+            val.(*LnsMap).ToLuaCode( self )
+        default:
+            panic( fmt.Sprintf( "not supoort -- %v", val ) )
+        }
+    }
+}
+
+
+
+
 func (luaVM *Lns_luaVM) pushAny( val LnsAny ) *lns_pushedVal {
     vm := luaVM.vm
     if Lns_IsNil( val ) {
@@ -113,11 +155,48 @@ func (luaVM *Lns_luaVM) pushAny( val LnsAny ) *lns_pushedVal {
         case *Lns_luaValue:
             val.(*Lns_luaValue).pushValFromGlobalValMap()
         default:
-            panic( fmt.Sprintf( "not supoort -- %v", val ) )
+            conv := NewStemToLuaConv()
+            conv.write( "return " )
+            conv.conv( val )
+
+            print( fmt.Sprintf( "%s\n", conv.builder.String() ) );
+            
+            loaded, _ := luaVM.Load( conv.builder.String(), nil )
+            luaval := luaVM.RunLoadedfunc( loaded.(*Lns_luaValue),  []LnsAny{} )
+            
+            luaval[0].(*Lns_luaValue).pushValFromGlobalValMap()
         }
     }
     return lns_defaultPushedVal
 }
+
+// func StemToLuaCode( val LnsAny ) *lns_pushedVal {
+//     vm := luaVM.vm
+//     if Lns_IsNil( val ) {
+//         lua_pushnil( vm )
+//     } else {
+//         switch val.(type) {
+//         case LnsInt:
+//             lua_pushinteger( vm, val.(LnsInt) )
+//         case LnsReal:
+//             lua_pushnumber( vm, val.(LnsReal) )
+//         case bool:
+//             lua_pushboolean( vm, val.(bool) )
+//         case string:
+//             return &lns_pushedVal{ luaVM.pushStr( val.(string) ) }
+//         case *Lns_luaValue:
+//             val.(*Lns_luaValue).pushValFromGlobalValMap()
+//         case *LnsList:
+//             builder := &strings.Builder{}
+//             val.(*LnsList).ToLuaCode( builder )
+//             panic( builder.String() )
+//         default:
+//             panic( fmt.Sprintf( "not supoort -- %v", val ) )
+//         }
+//     }
+//     return lns_defaultPushedVal
+// }
+
 
 func (luaVM *Lns_luaVM) newLuaValue( index int ) *Lns_luaValue {
     val := &Lns_luaValue{ luaVM: luaVM }

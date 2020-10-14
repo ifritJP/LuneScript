@@ -199,7 +199,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 4412
+   return 4503
 end
 
 
@@ -700,7 +700,7 @@ usage:
                      lineNo = math.floor((_lune.unwrapDefault( tonumber( arg ), 0) ))
                   elseif not column then
                      column = math.floor((_lune.unwrapDefault( tonumber( arg ), 0) ))
-                     option.analyzePos = Parser.Position.new(_lune.unwrap( lineNo), _lune.unwrap( column))
+                     option.analyzePos = Parser.Position.new(_lune.unwrap( lineNo), _lune.unwrap( column), Util.scriptPath2Module( option.scriptPath ))
                   end
                   
                elseif _switchExp == ModeKind.Save or _switchExp == ModeKind.SaveMeta or _switchExp == ModeKind.Glue then

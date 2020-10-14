@@ -1162,6 +1162,7 @@ test-testGo:
 	$(call test-convGo-test,$(GO_WORK_DIR),LuaMod,lune/base,./test)
 	$(call convGo,$(GO_WORK_DIR),lune/base/LuaVer,--testing,./test)
 	$(call convGo,$(GO_WORK_DIR),lune/base/LuneControl,--testing,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/Meta,--testing,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),Util,lune/base,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),Parser,lune/base,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),Writer,lune/base,./test)
@@ -1170,6 +1171,8 @@ test-testGo:
 	$(call test-convGo-test,$(GO_WORK_DIR),Ast,lune/base,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),Option,lune/base,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),Nodes,lune/base,./test)
+	$(call test-convGo-test,$(GO_WORK_DIR),Formatter,lune/base,./test)
+	$(call test-convGo-test,$(GO_WORK_DIR),dumpNode,lune/base,./test)
 
 
 test-reference:

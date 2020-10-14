@@ -46,6 +46,26 @@
    print( test2$.$val );
 }
 {
+   class Super {
+   }
+   class Test<T:Super> {
+   }
+   class Sub extend Test<str>  { // error
+   }
+}
+{
+   class Test<T> {
+      pub fn func( val:T ):T {
+         return val;
+      }
+   }
+   class Sub extend Test<str>  {
+      pub override fn func( val:str ):str { // error
+         return val;
+      }
+   }
+}
+{
    class Test<T,T> { // error
       pub fn func<T>(val:T ) { // error
          print( val );

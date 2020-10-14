@@ -176,6 +176,7 @@ pub class TxtStream extend (iStream) {
 pub class Position {
    pub let lineNo: int;
    pub let column: int;
+   pub let streamName: str;
 }
 
 pub enum TokenKind {
@@ -241,6 +242,9 @@ pub class Token {
 pub abstract class Parser {
    pub abstract fn getToken() mut : &Token!;
    pub abstract fn getStreamName(): str;
+   pub fn createPosition( lineNo: int, column: int ) : &Position {
+      return new Position( lineNo, column, self.getStreamName() );
+   }
 }
 
 pub interface PushbackParser {
@@ -251,6 +255,7 @@ pub interface PushbackParser {
    pub fn newPushback( tokenList: List<&Token> ) mut;
    pub fn getStreamName(): str;
    pub fn error( message:str ) mut :__;
+   pub fn createPosition( lineNo: int, column: int ) : &Position;
 }
 
 pub class WrapParser extend Parser {
@@ -265,7 +270,7 @@ pub class WrapParser extend Parser {
    }
 }
 
-pub let noneToken = new Token( .Eof, "", new Position( 0, -1 ), false, [] );
+pub let noneToken = new Token( .Eof, "", new Position( 0, -1, "eof" ), false, [] );
 
 /**
 ', ", ``` の区切り記号で囲まれた文字列から、区切り記号を取り除いた文字列を返す。
@@ -392,6 +397,10 @@ pub class DefaultPushbackParser extend (PushbackParser) {
       self.usedTokenList = [];
       self.currentToken = noneToken;
    }
+
+   pub fn createPosition( lineNo: int, column: int ) : &Position {
+      return self.parser.createPosition( lineNo, column );
+   }
    
    pub fn getTokenNoErr() mut : &Token {
       if #self.pushbackedList > 0 {
@@ -465,7 +474,7 @@ pub class DefaultPushbackParser extend (PushbackParser) {
    }
 
    pub fn getLastPos() : &Position {
-      let mut pos:&Position = new Position( 0, 0 );
+      let mut pos:&Position = self.parser.createPosition( 0, 0 );
       if self.$currentToken.$kind ~= .Eof {
          pos = self.$currentToken.pos;
       }
@@ -633,7 +642,8 @@ fn StreamParser.parse() mut : Token[]! {
             consecutive = true;
          }
          let mut newToken = new Token(
-            tokenKind, token, new Position( self.lineNo, tokenColumn ), consecutive, [] );
+            tokenKind, token,
+            self.createPosition( self.lineNo, tokenColumn ), consecutive, [] );
          self.prevToken = newToken;
          return newToken;
       }
@@ -930,7 +940,7 @@ pub override fn StreamParser.getToken() mut : &Token! {
    return token;
 }
 
-let eofToken = new Token( .Eof, "<EOF>", new Position( 0, 0 ), false, [] );
+let eofToken = new Token( .Eof, "<EOF>", new Position( 0, 0, "eof" ), false, [] );
 pub fn getEofToken(): &Token {
    return eofToken;
 }
@@ -1084,8 +1094,8 @@ fn func():int {
       __t._eq( ctrl, parser.getTokenNoErr().txt, "4" );
       __t._eq( ctrl, parser.getTokenNoErr().txt, "a" );
       parser.newPushback(
-         [ new Token( .Symb, "z", new Position( 0, -1 ), false, [] ),
-           new Token( .Symb, "y", new Position( 0, -1 ), false, [] ) ] );
+         [ new Token( .Symb, "z", parser.createPosition( 0, -1 ), false, [] ),
+           new Token( .Symb, "y", parser.createPosition( 0, -1 ), false, [] ) ] );
       __t._eq( ctrl, parser.getTokenNoErr().txt, "z" );
       __t._eq( ctrl, parser.getTokenNoErr().txt, "y" );
       __t._eq( ctrl, parser.getTokenNoErr().txt, "b" );

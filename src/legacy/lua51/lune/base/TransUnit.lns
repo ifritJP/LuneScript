@@ -644,7 +644,7 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
       self.errMessList = [];
       self.warnMessList = [];
       self.analyzeMode = unwrap mode default AnalyzeMode.Compile;
-      self.analyzePos = unwrap pos default new Parser.Position( 0, 0 );
+      self.analyzePos = unwrap pos default self.createPosition( 0, 0 );
       self.analyzeModule = unwrap analyzeModule default "";
       self.provideNode = nil;
    }
@@ -2356,6 +2356,10 @@ pub fn TransUnit.getStreamName(): str {
    return self.parser.getStreamName();
 }
 
+pub fn TransUnit.createPosition( lineNo: int, column: int ): &Parser.Position {
+   return self.parser.createPosition( lineNo, column );
+}
+
 fn TransUnit.getTokenNoErr() mut : &Parser.Token
 {
    let mut token;
@@ -2637,7 +2641,7 @@ fn TransUnit.analyzeStatementList(
          if blank > 1 {
             stmtList.insert(
                Nodes.BlankLineNode.create(
-                  self.nodeManager, new Parser.Position( lastLineNo + 1, 0 ),
+                  self.nodeManager, self.createPosition( lastLineNo + 1, 0 ),
                   self.macroCtrl.isInAnalyzeArgMode(),
                   [ Ast.builtinTypeNone ], blank - 1 ) );
          }
@@ -3292,9 +3296,7 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Nodes.Node {
 }
 
 
-   
-
-fn TransUnit.analyzeTest( firstToken:&Parser.Token ) mut : Nodes.TestBlockNode
+fn TransUnit.analyzeTestCase( firstToken:&Parser.Token ) mut : Nodes.TestCaseNode
 {
    let mut newScope = self.pushScope( false ## );
    
@@ -3323,9 +3325,28 @@ fn TransUnit.analyzeTest( firstToken:&Parser.Token ) mut : Nodes.TestBlockNode
 
    self.popScope();
    
-   return Nodes.TestBlockNode.create(
+   return Nodes.TestCaseNode.create(
       self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
       [ Ast.builtinTypeNone ], nameToken, importNode, ctrlName, block );
+}
+   
+
+fn TransUnit.analyzeTest( firstToken:&Parser.Token ) mut : Nodes.Node
+{
+   let nextToken = self.getToken( ## );
+   if nextToken.txt ~= "{" {
+      self.pushback();
+      return self.analyzeTestCase( firstToken );
+   }
+   self.checkToken( nextToken, "{" );
+
+   let mut stmtList:List<&Nodes.Node> = [];
+   self.analyzeStatementList( stmtList, "}" );
+   self.checkNextToken( "}" );
+
+   return Nodes.TestBlockNode.create(
+      self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
+      [ Ast.builtinTypeNone ], stmtList );
 }
 
 

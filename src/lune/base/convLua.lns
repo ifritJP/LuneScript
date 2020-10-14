@@ -316,7 +316,7 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
                  ( node.$moduleId.getNextModuleId().$idStr) );
    self.writeln( "_moduleObj.__enableTest = %s" (self.enableTest ) );
    self.writeln( "_moduleObj.__hasTest = %s"
-                 (#node.$nodeManager.getTestBlockNodeList() ~= 0) );
+                 (#node.$nodeManager.getTestCaseNodeList() ~= 0) );
 
    let mut importModuleType2Index:Map<&Ast.TypeInfo,int> = {};
    let mut importNameMap:Map<str,&Ast.TypeInfo> = {};
@@ -3113,7 +3113,7 @@ pub override fn convFilter.processLuneKind( node: Nodes.LuneKindNode, opt: Opt )
 }
 
 
-pub override fn convFilter.processTestBlock( node: Nodes.TestBlockNode, opt: Opt ) mut
+pub override fn convFilter.processTestCase( node: Nodes.TestCaseNode, opt: Opt ) mut
 {
    if self.enableTest {
       self.writeln( "do" );
@@ -3122,21 +3122,9 @@ pub override fn convFilter.processTestBlock( node: Nodes.TestBlockNode, opt: Opt
       self.writeln( "" );
       self.writeln( "local function testcase( %s ) " (node.$ctrlName) );
 
-      // self.pushIndent( ## );
-
-      // self.writeln(
-      //    '%s = __t.Ctrl.new( "%s", "%s" )'
-      //    (node.$ctrlName,
-      //      self.moduleTypeInfo.getFullName(
-      //         self.$typeNameCtrl, self.$moduleInfoManager ##).gsub( "@", "" ),
-      //      node.$name.txt) );
-      
-      // self.popIndent();
-      
       filter( node.$block, self, node );
 
       self.writeln( "end" );
-      // self.writeln( "_moduleObj.__testMap[ '%s' ] = testcase" (node.$name.txt) );
       self.writeln(
          '__t.registerTestcase( "%s", "%s", testcase )'
          ( self.moduleTypeInfo.getFullName(
@@ -3146,6 +3134,17 @@ pub override fn convFilter.processTestBlock( node: Nodes.TestBlockNode, opt: Opt
       self.writeln( "end" );
    }
 }
+
+pub override fn convFilter.processTestBlock(
+   node: Nodes.TestBlockNode, opt: Opt ) mut
+{
+   if self.enableTest {
+      foreach statement in node.$stmtList {
+         filter( statement, self, node );
+         self.writeln( "" );
+      }
+   }
+};
 
 pub override fn convFilter.processProvide(
    node: Nodes.ProvideNode, opt: Opt ) mut
@@ -3353,7 +3352,7 @@ pub fn createFilter(
 pub class MacroEvalImp extend Nodes.MacroEval {
    pri let mode: str;
 
-   fn evalFromMacroCode( code:str ): Nodes.macroStatmentProc {
+   fn evalFromMacroCode( code:str ): Luaval<Nodes.macroStatmentProc> {
       //Util.errorLog( 'hoooo: %s' (oStream.get_txt()) );
 
       let mut newEnv:Map<str,stem> = {};
@@ -3378,13 +3377,13 @@ pub class MacroEvalImp extend Nodes.MacroEval {
          if not mod {
             Util.err( "macro load error" );
          }
-         return (unwrap mod)@@Nodes.macroStatmentProc;
+         return (unwrap mod)@@Luaval<Nodes.macroStatmentProc>;
       }
       Util.err( "failed to load" );
    }
 
    pub override fn evalFromCode(
-      name:str, argNameList:&List<str>, code:str! ): Nodes.macroStatmentProc
+      name:str, argNameList:&List<str>, code:str! ): Luaval<Nodes.macroStatmentProc>
    {
       let mut stream = new Util.memStream();
       let mut conv = new convFilter(
@@ -3403,7 +3402,7 @@ pub class MacroEvalImp extend Nodes.MacroEval {
    }
 
 
-   pub override fn eval( node: Nodes.DeclMacroNode ): Nodes.macroStatmentProc
+   pub override fn eval( node: Nodes.DeclMacroNode ): Luaval<Nodes.macroStatmentProc>
    {
       let mut stream = new Util.memStream();
       let mut conv = new convFilter(

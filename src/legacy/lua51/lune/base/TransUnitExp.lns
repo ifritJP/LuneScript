@@ -253,13 +253,13 @@ fn TransUnit.analyzeExpList(
    } token.txt ~= ",";
 
    let mut expListNode = self.createExpList(
-      unwrap pos default new Parser.Position( 0, 0 ),
+      unwrap pos default self.createPosition( 0, 0 ),
       expTypeList, expList, followOn, abbrNode );
 
    if not allowNoneType {
       foreach expType, expIndex in expTypeList {
          if expType == Ast.builtinTypeNone {
-            self.addErrMess( unwrap pos default new Parser.Position( 0, 0 ),
+            self.addErrMess( unwrap pos default self.createPosition( 0, 0 ),
                              "The type of exp(%d) is None!!" (expIndex) );
          }
       }
