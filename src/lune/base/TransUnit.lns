@@ -84,6 +84,22 @@ class RefAccessSymPos {
    pri let pos:&Parser.Position! {pub};
 }
 
+fn clearThePosForModToRef(
+   scope:&Ast.Scope, moduleScope:&Ast.Scope ) : &List<RefAccessSymPos>
+{
+   let mut list:List<RefAccessSymPos> = [];
+   scope.filterSymbolTypeInfo(
+      scope, moduleScope, .Normal,
+      fn ( symInfo:&Ast.SymbolInfo ) : bool {
+         if symInfo.$kind == .Var {
+            list.insert( new RefAccessSymPos( symInfo, symInfo.$posForModToRef ) );
+            symInfo.set_posForModToRef(nil);
+         }
+         return true;
+      });
+   return list;
+}
+
 /**
 初期値を持たない変数について、次処理を行なう。
 
@@ -128,8 +144,8 @@ if のブロックを解析終了時に symbolSet を oldSymbolSet にセット�
    /** このブロック処理直前のアクセス可能なローカル変数の posForModToRef を保持。 */
    pri let sym2posForModToRef:List<RefAccessSymPos>;
 
-   pub fn __init( parent:TentativeSymbol!, scope:&Ast.Scope,
-                  moduleScope:&Ast.Scope, loopFlag:bool )
+   pub fn __init( parent:TentativeSymbol!, scope:&Ast.Scope, moduleScope:&Ast.Scope,
+                  loopFlag:bool, refAccessSymPosList:&List<RefAccessSymPos>! )
    { 
       self.symbolSet = (@);
       self.oldSymbolSet = nil;
@@ -143,18 +159,16 @@ if のブロックを解析終了時に symbolSet を oldSymbolSet にセット�
       self.accessSymSet = (@);
       self.modSymbolSet = (@);
 
-                     
-      let mut list:List<RefAccessSymPos> = [];
-      if self.loopFlag {
-         scope.filterSymbolTypeInfo(
-            scope, moduleScope, .Normal,
-            fn ( symInfo:&Ast.SymbolInfo ) : bool {
-               if symInfo.$kind == .Var {
-                  list.insert( new RefAccessSymPos( symInfo, symInfo.$posForModToRef ) );
-                  symInfo.set_posForModToRef(nil);
-               }
-               return true;
-            });
+
+      let list;
+      when! refAccessSymPosList {
+         list = refAccessSymPosList;
+      } else {
+         if loopFlag {
+            list = clearThePosForModToRef( scope, moduleScope );
+         } else {
+            list = [];
+         }
       }
       self.sym2posForModToRef = list;
    }
@@ -635,7 +649,7 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
       self.moduleScope = self.scope;
 
       self.tentativeSymbol = new TentativeSymbol(
-         nil, self.globalScope, self.moduleScope, false );
+         nil, self.globalScope, self.moduleScope, false, nil );
 
       self.typeId2ClassMap = {};
       self.typeInfo2ClassNode = {};
@@ -712,9 +726,11 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
       self.scope = self.scope.get_parent();
    }
 
-   pri fn prepareTentativeSymbol( scope:&Ast.Scope, loopFlag:bool ) mut {
+   pri fn prepareTentativeSymbol(
+      scope:&Ast.Scope, loopFlag:bool, list:&List<RefAccessSymPos>! ) mut
+   {
       self.tentativeSymbol = new TentativeSymbol(
-         self.tentativeSymbol, scope, self.moduleScope, loopFlag );
+         self.tentativeSymbol, scope, self.moduleScope, loopFlag, list );
    }
 
    pri fn checkAccesSym() mut {
@@ -1282,12 +1298,14 @@ class _TypeInfoAlias extend _TypeInfo {
 
 class _TypeInfoDDD extend _TypeInfo {
    pub let itemTypeId:int;
+   pub let extTypeFlag:bool;
 
    pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
       //let itemTypeInfo = unwrap param.typeId2TypeInfo[ self.itemTypeId ];
       let itemTypeInfo = unwrap param.getTypeInfo( self.itemTypeId );
-      let newTypeInfo = Ast.NormalTypeInfo.createDDD( itemTypeInfo, true );
+      let newTypeInfo = Ast.NormalTypeInfo.createDDD(
+         itemTypeInfo, true, self.extTypeFlag );
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
       return newTypeInfo,nil;
    }
@@ -1355,7 +1373,15 @@ class _TypeInfoExt extend _TypeInfo {
    pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
       let extedType = unwrap param.getTypeInfo( self.extedTypeId );
-      let newTypeInfo = Ast.NormalTypeInfo.createLuaval( extedType );
+      let newTypeInfo;
+      _match Ast.NormalTypeInfo.createLuaval( extedType ) {
+         case .OK( extType, _ ) {
+            newTypeInfo = extType;
+         }
+         case .Err( mess ) {
+            Util.err( mess );
+         }
+      }
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
       return newTypeInfo, nil;
    }
@@ -1858,7 +1884,7 @@ _DefBuiltinFuncType( [
    },
    {
       "luaStream": {
-         "__attrib": { "inplements": [ "iStream", "oStream" ] },
+         "__attrib": { "type": [ "interface" ], "inplements": [ "iStream", "oStream" ] },
          "read": { "type": [ "mut" ], "arg": [ "stem!" ], "ret": [ "str!" ] },
          "write": { "type": [ "mut" ], "arg": [ "str" ], "ret": [ "stem!", "str!" ] },
          "close": { "type": [ "mut" ], "arg": [], "ret": [] },
@@ -1878,7 +1904,7 @@ _DefBuiltinFuncType( [
          "stdin": { "type": [ "var" ], "typeInfo": [ "iStream" ] },
          "stdout": { "type": [ "var" ], "typeInfo": [ "oStream" ] },
          "stderr": { "type": [ "var" ], "typeInfo": [ "oStream" ] },
-         "open": { "arg": [ "str", "str!" ], "ret": ["Luaval<luaStream>!"] },
+         "open": { "arg": [ "str", "str!" ], "ret": ["luaStream!", "str!"] },
          "popen": { "arg": [ "str" ], "ret": ["Luaval<luaStream>!"] },
       },
    },
@@ -2038,18 +2064,20 @@ fn TransUnit.registBuiltInScope() mut {
                   if #genTypeList ~= 1 {
                      Util.err( "illegal param -- %d" (#genTypeList) );
                   }
-                  let! workType, mess =
-                     Ast.NormalTypeInfo.createLuaval( genTypeList[ 1 ] )
-                  {
-                     Util.err( mess );
-                  };
-                  return workType;
+                  match Ast.NormalTypeInfo.createLuaval( genTypeList[ 1 ] ) {
+                     case .OK( workType, _ ) {
+                        return workType;
+                     }
+                     case .Err( mess ) {
+                        Util.err( mess );
+                     }
+                  }
                }
                case .DDD {
                   if #genTypeList ~= 1 {
                      Util.err( "illegal map param -- %d" (#genTypeList) );
                   }
-                  return Ast.NormalTypeInfo.createDDD( genTypeList[ 1 ], true );
+                  return Ast.NormalTypeInfo.createDDD( genTypeList[ 1 ], true, false );
                }
                default {
                   Util.err( "not support type -- %s" (typeInfo.getTxt(##)) );
@@ -2764,8 +2792,8 @@ enum TentativeMode {
 }
 
 fn TransUnit.analyzeBlock(
-   blockKind: Nodes.BlockKind,
-   tentativeMode:TentativeMode, scope: Ast.Scope! ) mut : Nodes.BlockNode
+   blockKind: Nodes.BlockKind, tentativeMode:TentativeMode, scope: Ast.Scope!,
+   refAccessSymPosList:&List<RefAccessSymPos>! ) mut : Nodes.BlockNode
 {
    let token = self.checkNextToken( "{" );
 
@@ -2780,8 +2808,11 @@ fn TransUnit.analyzeBlock(
 
 
    switch tentativeMode {
-      case .Simple, .Start, .Ignore, .Loop {
-         self.prepareTentativeSymbol( self.scope, tentativeMode == .Loop );
+      case .Loop {
+         self.prepareTentativeSymbol( self.scope, true, refAccessSymPosList );
+      }
+      case .Simple, .Start, .Ignore {
+         self.prepareTentativeSymbol( self.scope, false, nil );
       }
       case .Merge, .Finish {
          self.mergeTentativeSymbol( self.scope );
@@ -3339,7 +3370,7 @@ fn TransUnit.analyzeTestCase( firstToken:&Parser.Token ) mut : Nodes.TestCaseNod
 
    self.scopeAccess = .Full;
 
-   let block = self.analyzeBlock( .Test, .Ignore, newScope );
+   let block = self.analyzeBlock( .Test, .Ignore, newScope, nil );
 
    self.scopeAccess = .Normal;
 
@@ -3706,7 +3737,7 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
       }
       let mode = firstFlag and TentativeMode.Start or TentativeMode.Merge;
          
-      let block = self.analyzeBlock( .Match, mode, blockScope );
+      let block = self.analyzeBlock( .Match, mode, blockScope, nil );
       if firstFlag {
          firstFlag = false;
       }
@@ -3740,6 +3771,9 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
 
 
 fn TransUnit.analyzeWhile( token: &Parser.Token ) mut : Nodes.WhileNode {
+
+   let refAccessSymPosList = clearThePosForModToRef( self.scope, self.moduleScope );
+   
    let cond = self.analyzeExpOneRVal( false, false## );
    let mut infinit = false;
    if cond.$expType == Ast.builtinTypeBool {
@@ -3757,7 +3791,7 @@ fn TransUnit.analyzeWhile( token: &Parser.Token ) mut : Nodes.WhileNode {
    return Nodes.WhileNode.create(
       self.nodeManager, token.pos, self.macroCtrl.isInAnalyzeArgMode(),
       [ Ast.builtinTypeNone ], cond, infinit,
-      self.analyzeBlock( .While, .Loop ## ) );
+      self.analyzeBlock( .While, .Loop, nil, refAccessSymPosList ) );
 }
 
 fn TransUnit.analyzeRepeat( token: &Parser.Token ) mut : Nodes.RepeatNode {
@@ -3765,7 +3799,7 @@ fn TransUnit.analyzeRepeat( token: &Parser.Token ) mut : Nodes.RepeatNode {
    let mut node = Nodes.RepeatNode.create(
       self.nodeManager, token.pos,
       self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
-      self.analyzeBlock( .Repeat, .Loop, scope ),
+      self.analyzeBlock( .Repeat, .Loop, scope, nil ),
       self.analyzeExpOneRVal( false, false ## ) );
 
    // repeat は、ブロックの後に条件があって、
@@ -3832,7 +3866,8 @@ fn TransUnit.analyzeFor( firstToken: &Parser.Token ) mut : Nodes.ForNode {
    let mut node = Nodes.ForNode.create(
       self.nodeManager, firstToken.pos,
       self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
-      self.analyzeBlock( .For, .Loop, scope ), symbolInfo, exp1, exp2, exp3 );
+      self.analyzeBlock( .For, .Loop, scope, nil ),
+      symbolInfo, exp1, exp2, exp3 );
    self.popScope();
 
    return node;
@@ -3939,7 +3974,7 @@ fn TransUnit.analyzeApply( token: &Parser.Token ) mut : Nodes.ApplyNode {
    }
    
 
-   let block = self.analyzeBlock( .Apply, .Loop, scope );
+   let block = self.analyzeBlock( .Apply, .Loop, scope, nil );
    self.popScope();
 
    return Nodes.ApplyNode.create(
@@ -4046,7 +4081,7 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
       }
    }
    
-   let block = self.analyzeBlock( .Foreach, .Loop, scope );
+   let block = self.analyzeBlock( .Foreach, .Loop, scope, nil );
 
    when! seqSym {
       scope.remove( seqSym );

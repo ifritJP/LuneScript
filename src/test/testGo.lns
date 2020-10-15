@@ -992,3 +992,17 @@ end```;
       }
    }
 }
+_section();
+{
+   let code = ```
+      return { 10, 20, 30 }
+```;
+   let loaded = _load( code ## );
+   when! loaded {
+      if! let obj = loaded(##) {
+         foreach val, key in obj@@Luaval<&List<int>> {
+            print( key, val );
+         }
+      }
+   }
+}

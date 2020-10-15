@@ -199,7 +199,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 4503
+   return 4596
 end
 
 
@@ -401,7 +401,7 @@ function Option:openDepend(  )
    do
       local path = self.dependsPath
       if path ~= nil then
-         return io.open( path, "w" )
+         return (io.open( path, "w" ) )
       end
    end
    

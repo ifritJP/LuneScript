@@ -385,8 +385,9 @@ class Test9 extend Super7 {
    }
 }
 {
+   form Hoge();
    class Test {
-      pub fn func( val:Luaval<int> ) {
+      pub fn func( val:Luaval<Hoge> ) {
       }
       pub fn func2( val:int ) {
       }
@@ -394,7 +395,7 @@ class Test9 extend Super7 {
    class Sub extend Test { // error
       pub override fn func( val:int ) {
       }
-      pub override fn func2( val:Luaval<int> ) { // error
+      pub override fn func2( val:Luaval<Hoge> ) { // error
       }
    }
 }

@@ -399,6 +399,10 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
          return;
       }
 
+      if typeInfo.$kind == .Ext {
+         pickupTypeId( typeInfo.$extedType, true, true );
+      }
+      
       if typeInfo ~= typeInfo.$srcTypeInfo {
          pickupTypeId( typeInfo.$srcTypeInfo, true, false );
       }

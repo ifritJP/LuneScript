@@ -163,7 +163,7 @@ pub class Option {
 
    pub fn openDepend(): mut oStream! {
       if! let path = self.dependsPath {
-         return io.open( path, "w" );
+         return (io.open( path, "w" ));
       }
       return nil;
    }

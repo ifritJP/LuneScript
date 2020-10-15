@@ -184,7 +184,7 @@ fn TransUnit.analyzeRefTypeWithSymbol(
             }
             case .DDD {
                if checkAlternateTypeCount( 1 ) {
-                  typeInfo = Ast.NormalTypeInfo.createDDD( genericList[1], false );
+                  typeInfo = Ast.NormalTypeInfo.createDDD( genericList[1], false, false );
                }
             }
             case .Class, .IF {
@@ -219,21 +219,27 @@ fn TransUnit.analyzeRefTypeWithSymbol(
             }
             case .Ext {
                if checkAlternateTypeCount( 1 ) {
-                  let! workType, mess = Ast.NormalTypeInfo.createLuaval( genericList[1] )
-                  {
-                     self.addErrMess( symbolNode.$pos, mess );
-                     workType = Ast.builtinTypeNone;
+                  _match Ast.NormalTypeInfo.createLuaval( genericList[1] ) {
+                     case .OK( workType, pass ) {
+                        typeInfo = workType;
+                        // if pass {
+                        //    self.addErrMess(
+                        //       symbolNode.$pos,           
+                        //       "can't use Luaval<%s>, use just %s"
+                        //       ( genericList[1].getTxt(##), genericList[1].getTxt(##)) );
+                        // }
+                     }
+                     case .Err( mess ) {
+                        self.addErrMess( symbolNode.$pos, mess );
+                     }
                   };
-                  typeInfo = workType;
                }
-            }
-            default {
+            } default {
                self.error( string.format( "not support generic: %s",
                                           typeInfo.getTxt(##) ) );
             }
          }
-      }
-      else {
+      } else {
          self.pushback();
          break;
       }
@@ -664,7 +670,7 @@ fn TransUnit.analyzeDeclMacroSub(
       // self.parser = parser;
 
       let mut stmtList:List<&Nodes.Node> = [];
-      self.prepareTentativeSymbol( self.scope, false );
+      self.prepareTentativeSymbol( self.scope, false, nil );
       self.analyzeStatementList( stmtList, "}" );
 
       stmtNode = Nodes.BlockNode.create(
@@ -1711,7 +1717,7 @@ fn TransUnit.analyzeFuncBlock(
 
    self.pushAnalyzingState( analyzingState );
 
-   let mut body = self.analyzeBlock( .Func, .Ignore, funcBodyScope );
+   let mut body = self.analyzeBlock( .Func, .Ignore, funcBodyScope, nil );
 
    self.popAnalyzingState();
 
@@ -1899,7 +1905,7 @@ nil の場合、メンバの宣言位置。
 
       let mut parentScope = self.scope;
       let mut initBlockScope = self.pushScope( false## );
-      self.prepareTentativeSymbol( initBlockScope, false );
+      self.prepareTentativeSymbol( initBlockScope, false, nil );
 
       let ininame = "___init";
       let funcTypeInfo = Ast.NormalTypeInfo.createFunc(
@@ -3507,7 +3513,7 @@ fn TransUnit.analyzeDeclVar(
          }
       }
 
-      unwrapBlock = self.analyzeBlock( .LetUnwrap, .Start, scope );
+      unwrapBlock = self.analyzeBlock( .LetUnwrap, .Start, scope, nil );
       self.popScope();
 
       // unwrap ブロック後には変数にデータがセットされているものとする。
@@ -3538,7 +3544,7 @@ fn TransUnit.analyzeDeclVar(
 
       token = self.getToken( true );
       if token.txt == "then" {
-         thenBlock = self.analyzeBlock( .LetUnwrapThenDo, .Finish, scope );
+         thenBlock = self.analyzeBlock( .LetUnwrapThenDo, .Finish, scope, nil );
       }
       else {
          self.pushback();
@@ -3549,7 +3555,7 @@ fn TransUnit.analyzeDeclVar(
    let mut syncBlock: Nodes.BlockNode! = nil;
    if mode == .Sync {
       self.checkNextToken( "do" );
-      syncBlock = self.analyzeBlock( .LetUnwrapThenDo, .Simple, syncScope );
+      syncBlock = self.analyzeBlock( .LetUnwrapThenDo, .Simple, syncScope, nil );
       self.popScope();
    }
 
@@ -3620,7 +3626,7 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
       
    }
 
-   let block = self.analyzeBlock( .IfUnwrap, .Start, scope );
+   let block = self.analyzeBlock( .IfUnwrap, .Start, scope,  nil );
 
    self.popScope();
 
@@ -3708,7 +3714,7 @@ fn TransUnit.analyzeWhen( firstToken: &Parser.Token ) mut : Nodes.Node
       }
    }
 
-   let block = self.analyzeBlock( .When, .Start, scope );
+   let block = self.analyzeBlock( .When, .Start, scope, nil );
 
    self.popScope();
 
