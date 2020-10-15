@@ -478,7 +478,14 @@ local function loadFromChunk( chunk, err )
    end
    
    if chunk ~= nil then
-      return chunk(  )
+      do
+         local work = chunk(  )
+         if work ~= nil then
+            return work
+         end
+      end
+      
+      return nil
    end
    
    error( "failed to error" )
@@ -517,7 +524,7 @@ function Front:loadFromLnsTxt( importModuleInfo, name, txt )
    
    local ast = transUnit:createAST( parser, false, nil )
    
-   local _5648, luaTxt = self:convertFromAst( ast, name, convLua.ConvMode.Exec )
+   local _5665, luaTxt = self:convertFromAst( ast, name, convLua.ConvMode.Exec )
    return _lune.unwrap( loadFromLuaTxt( luaTxt ))
 end
 
@@ -740,7 +747,7 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
             local _modMetaPath = modMetaPath
          
             
-            Log.log( Log.Level.Debug, __func__, 398, function (  )
+            Log.log( Log.Level.Debug, __func__, 401, function (  )
             
                return "NeedUpdate"
             end )
@@ -753,7 +760,7 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
             local _time = time
          
             
-            Log.log( Log.Level.Debug, __func__, 403, function (  )
+            Log.log( Log.Level.Debug, __func__, 406, function (  )
             
                return "NeedUpdate"
             end )
@@ -767,7 +774,7 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
             if  nil == dependMeta then
                local _dependMeta = dependMeta
             
-               Log.log( Log.Level.Debug, __func__, 411, function (  )
+               Log.log( Log.Level.Debug, __func__, 414, function (  )
                
                   return "NeedUpdate"
                end )
@@ -780,7 +787,7 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
             
             if metaModuleId:get_buildCount() ~= 0 and metaModuleId:get_buildCount() ~= orgMetaModuleId:get_buildCount() then
                
-               Log.log( Log.Level.Debug, __func__, 421, function (  )
+               Log.log( Log.Level.Debug, __func__, 424, function (  )
                
                   return string.format( "NeedUpdate: %s, %d, %d", modMetaPath, metaModuleId:get_buildCount(), orgMetaModuleId:get_buildCount())
                end )
@@ -822,7 +829,7 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
       end
       
    else
-      Log.log( Log.Level.Debug, __func__, 459, function (  )
+      Log.log( Log.Level.Debug, __func__, 462, function (  )
       
          return "not found meta"
       end )
@@ -843,7 +850,7 @@ function Front:convertLns2LuaCode( importModuleInfo, stream, streamName )
    local mod = scriptPath2Module( streamName )
    local ast = self:createAst( importModuleInfo, Parser.StreamParser.new(stream, streamName, false), mod, frontInterface.ModuleId.createId( 0.0, 0 ), nil, TransUnit.AnalyzeMode.Compile )
    
-   local _5755, luaTxt = self:convertFromAst( ast, streamName, convLua.ConvMode.Exec )
+   local _5772, luaTxt = self:convertFromAst( ast, streamName, convLua.ConvMode.Exec )
    
    return luaTxt
 end
@@ -909,7 +916,7 @@ end
 function Front:loadFile( importModuleInfo, path, mod )
    local __func__ = '@lune.@base.@front.Front.loadFile'
 
-   Log.log( Log.Level.Info, __func__, 545, function (  )
+   Log.log( Log.Level.Info, __func__, 548, function (  )
       local __func__ = '@lune.@base.@front.Front.loadFile.<anonymous>'
    
       return string.format( "start %s:%s", __func__, mod)
@@ -975,7 +982,7 @@ function Front:checkUptodateMeta( metaPath, addSearchPath )
    end
    
    
-   for moduleFullName, _5811 in pairs( meta.__dependModuleMap ) do
+   for moduleFullName, _5828 in pairs( meta.__dependModuleMap ) do
       do
          local moduleLuaPath = self:searchLuaFile( moduleFullName, addSearchPath )
          if moduleLuaPath ~= nil then
@@ -1094,7 +1101,7 @@ function Front:loadMeta( importModuleInfo, mod )
          if _exp ~= nil then
             self.loadedMetaMap[mod] = _exp.meta
          else
-            Log.log( Log.Level.Info, __func__, 682, function (  )
+            Log.log( Log.Level.Info, __func__, 685, function (  )
             
                return string.format( "%s checking", mod)
             end )
@@ -1223,7 +1230,7 @@ function Front:convertLuaToStreamFromScript( convMode, path, mod, byteCompile, s
       if stream ~= nil then
          if metaInfo ~= nil then
             local dependInfo = OutputDepend.DependInfo.new(mod)
-            for dependMod, _5908 in pairs( metaInfo.__dependModuleMap ) do
+            for dependMod, _5925 in pairs( metaInfo.__dependModuleMap ) do
                dependInfo:addImpotModule( dependMod )
             end
             
@@ -1476,7 +1483,7 @@ function Front:saveToLua(  )
             end
             
             if not cont then
-               Log.log( Log.Level.Debug, __func__, 1066, function (  )
+               Log.log( Log.Level.Debug, __func__, 1069, function (  )
                
                   return string.format( "<%s>, <%s>", tostring( oldLine), tostring( newLine))
                end )
@@ -1720,7 +1727,7 @@ _moduleObj.convertLnsCode2LuaCode = convertLnsCode2LuaCode
 function Front:exec(  )
    local __func__ = '@lune.@base.@front.Front.exec'
 
-   Log.log( Log.Level.Trace, __func__, 1280, function (  )
+   Log.log( Log.Level.Trace, __func__, 1283, function (  )
    
       return Option.ModeKind:_getTxt( self.option.mode)
       

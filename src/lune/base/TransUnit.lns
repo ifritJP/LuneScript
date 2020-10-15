@@ -1081,6 +1081,34 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
       genericTypeList:&List<&Ast.TypeInfo>, genericsClass:&Ast.TypeInfo ) mut:
       Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!;
 
+   fn isTargetTokenPos( txt:str, pos:&Parser.Position ) : bool {
+      if self.analyzePos.lineNo == pos.lineNo and
+         self.analyzePos.column >= pos.column and
+         self.analyzePos.column <= pos.column + #txt
+      {
+         return true;
+      }
+      return false;
+   }
+
+   fn isTargetToken( token:&Parser.Token ) : bool {
+      return self.isTargetTokenPos( token.txt, token.pos );
+   }
+
+   fn dumpSymbolType( name:str, typeInfo:&Ast.TypeInfo ) {
+      let mut writer = new Writer.JSON( io.stdout );
+      writer.startParent( "lunescript", false );
+      writer.startParent( "inquire", false );
+      writer.write( "name", name );
+      writer.write( "type", typeInfo.getTxt( self.typeNameCtrl## ) );
+      writer.write( "display", typeInfo.$get_display_stirng_with( typeInfo.$rawTxt, nil ) );
+      writer.endElement();
+      writer.endElement();
+      writer.fin();
+      os.exit( 0 );
+   }
+
+   
    fn errorShadowing( pos:&Parser.Position, symbolInfo:&Ast.SymbolInfo! ) mut {
       when! symbolInfo {
          let symPos = symbolInfo.$pos;
@@ -1125,6 +1153,11 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
          //    self.addErrMess( pos, "shadowing variable -- %s" (name) );
          // }
       }
+
+      if self.analyzeMode == .Inquire and self.isTargetTokenPos( name, pos ) {
+         self.dumpSymbolType( name, typeInfo );
+      }
+      
       return unwrap self.scope.addLocalVar(
          argFlag, canBeLeft, name, pos, typeInfo, mutable );
    }
@@ -3983,6 +4016,22 @@ fn TransUnit.analyzeApply( token: &Parser.Token ) mut : Nodes.ApplyNode {
       varSymList, expListNode, block );
 }
 
+fn TransUnit.convToExtTypeList(
+   pos:&Parser.Position,
+   typeInfo:&Ast.TypeInfo, list:&List<&Ast.TypeInfo> ) mut : &List<&Ast.TypeInfo>
+{
+   if typeInfo.$nonnilableType.$kind ~= .Ext {
+      return list;
+   }
+   let newList, mess = Ast.convToExtTypeList( list );
+   when! newList {
+      return newList;
+   }
+   self.addErrMess( pos, mess );
+   return list;
+}
+
+
 fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.Node {
    let mut scope = self.pushScope( false## );
    let mut mainSymToken:&Parser.Token = Parser.getEofToken();
@@ -4009,16 +4058,15 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
    self.checkToken( nextToken, "in" );
 
    let exp = self.analyzeExpOneRVal( false, false## );
+   if sortFlag and exp.$expType.$kind == .Ext {
+      self.addErrMess(
+         exp.$pos, "forsort doesn't support with %s." (exp.$expType.getTxt(##)) );
+   }
 
-   let expType;
-   if! let extType = exp.$expType.$srcTypeInfo@@@Ast.ExtTypeInfo {
-      expType = extType.$extedType;
-   }
-   else {
-      expType = exp.$expType;
-   }
+   let expType = exp.$expType.$extedType;
    
-   let itemTypeInfoList = expType.$itemTypeInfoList;
+   let itemTypeInfoList = self.convToExtTypeList(
+      token.pos, exp.$expType, expType.$itemTypeInfoList );
    switch expType.$kind {
       case .Map {
          mainSym = self.addLocalVar(

@@ -1600,6 +1600,19 @@ fn TransUnit.analyzeExpCast(
    let castTypeNode = self.analyzeRefType( .Local, false, false );
    let mut castType = castTypeNode.$expType;
 
+   if exp.$expType.$kind == .Ext and castType.$kind ~= .Ext {
+      match Ast.NormalTypeInfo.createLuaval(
+         Ast.NormalTypeInfo.createModifier( castType, .IMut ) )
+      {
+         case .OK( extType, _ ) {
+            castType = extType;
+         }
+         case .Err( err ) {
+            self.addErrMess( castTypeNode.$pos, err );
+         }
+      }
+   }
+
    if castType.$kind == .Form and
       exp.$expType.$nonnilableType.$kind == .Stem
    {
@@ -2600,7 +2613,7 @@ fn TransUnit.analyzeExpSymbol(
    }
 
    if self.analyzeMode == .Inquire and self.isTargetToken ( symbolToken ) {
-      self.dumpSymbolType( symbolToken, exp.$expType );
+      self.dumpSymbolType( symbolToken.txt, exp.$expType );
    }
    
    return self.analyzeExpCont( firstToken, exp, skipFlag, canLeftExp );

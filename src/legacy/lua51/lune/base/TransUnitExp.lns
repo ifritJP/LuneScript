@@ -291,14 +291,19 @@ fn TransUnit.analyzeExpRefItem(
       
    let mut expType = exp.$expType;
 
+   expType = expType.$extedType;
    if nilAccess {
-      if not expType.$nilable {
+      if not exp.$expType.$nilable {
          self.addWarnMess( token.pos, "This is not nilable. -- %s" (expType.getTxt(##)) );
          nilAccess = false;
       }
       else {
          expType = expType.$nonnilableType;
       }
+   } elseif exp.$expType.$nilable {
+      self.addErrMess( token.pos,
+                       "could not access with []. Use '$[]'-- %s"
+                       (exp.$expType.getTxt(##)) );
    }
 
    let mut expectItemType:&Ast.TypeInfo! = nil;
@@ -327,8 +332,9 @@ fn TransUnit.analyzeExpRefItem(
       typeInfo = Ast.builtinTypeStem_;
    }
    else {
-      self.addErrMess( exp.$pos,
-                       "could not access with []. -- %s" (expType.getTxt(##)) );
+      self.addErrMess(
+         exp.$pos,
+         "could not access with []. -- %s" (exp.$expType.getTxt(##)) );
    }
 
    if nilAccess {
@@ -1428,7 +1434,7 @@ fn TransUnit.processFunc(
          let prefixType = refFieldNode.$prefix.$expType;
          if #prefixType.$itemTypeInfoList > 0 {
             let dddType = Ast.NormalTypeInfo.createDDD(
-               prefixType.$itemTypeInfoList[ 1 ], false );
+               prefixType.$itemTypeInfoList[ 1 ], false, false );
             retTypeInfoList = [];
             retTypeInfoList.insert( dddType );
          }
@@ -1492,6 +1498,15 @@ fn TransUnit.processFunc(
             funcSymbol.$typeInfo.$parentInfo, funcSymbol.$typeInfo, argList );
       }
    }
+   if funcType.$kind == .Ext {
+      let mut work, err = Ast.convToExtTypeList( retTypeInfoList );
+      when! work {
+         retTypeInfoList = work;
+      } else {
+         self.addErrMess( firstToken.pos, err );
+      }
+   }
+   
    return Nodes.ExpCallNode.create(
       self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
       retTypeInfoList, funcExp, errorFuncFlag, nilAccess, argList );
@@ -1585,6 +1600,19 @@ fn TransUnit.analyzeExpCast(
    let castTypeNode = self.analyzeRefType( .Local, false, false );
    let mut castType = castTypeNode.$expType;
 
+   if exp.$expType.$kind == .Ext and castType.$kind ~= .Ext {
+      match Ast.NormalTypeInfo.createLuaval(
+         Ast.NormalTypeInfo.createModifier( castType, .IMut ) )
+      {
+         case .OK( extType, _ ) {
+            castType = extType;
+         }
+         case .Err( err ) {
+            self.addErrMess( castTypeNode.$pos, err );
+         }
+      }
+   }
+
    if castType.$kind == .Form and
       exp.$expType.$nonnilableType.$kind == .Stem
    {
@@ -1652,11 +1680,13 @@ fn TransUnit.analyzeExpCast(
    }
 
    if castType.canEvalWith( expType, .SetOp, {} ) {
-      // "str"@@str のように、意味のないキャストはエラー
-      self.addWarnMess( castTypeNode.$pos,
-                        "This cast isn't need. (%s <- %s)"
-                        ( castType.getTxt( self.typeNameCtrl ## ),
-                          expType.getTxt( self.typeNameCtrl ## ) ) );          
+      if castType.$kind ~= .Ext {
+         // "str"@@str のように、意味のないキャストはエラー
+         self.addWarnMess( castTypeNode.$pos,
+                           "This cast isn't need. (%s <- %s)"
+                           ( castType.getTxt( self.typeNameCtrl ## ),
+                             expType.getTxt( self.typeNameCtrl ## ) ) );
+      }
    }
    elseif not expType.canEvalWith( castType, .SetOp, {} ) {
       if not Ast.isNumberType( expType ) or not Ast.isNumberType( castType ) {
@@ -1668,6 +1698,17 @@ fn TransUnit.analyzeExpCast(
       }
    }
 
+   if expType.$kind == .Ext and castType.$kind ~= .Ext {
+      _match Ast.NormalTypeInfo.createLuaval( castType ) {
+         case .OK( workType, _ ) {
+            castType = workType;
+         }
+         case .Err( mess ) {
+            self.addErrMess( castTypeNode.$pos, mess );
+         }
+      }
+   }
+   
    if opTxt == "@@@" {
       castType = castType.$nilableTypeInfo;
    }
@@ -2572,7 +2613,7 @@ fn TransUnit.analyzeExpSymbol(
    }
 
    if self.analyzeMode == .Inquire and self.isTargetToken ( symbolToken ) {
-      self.dumpSymbolType( symbolToken, exp.$expType );
+      self.dumpSymbolType( symbolToken.txt, exp.$expType );
    }
    
    return self.analyzeExpCont( firstToken, exp, skipFlag, canLeftExp );

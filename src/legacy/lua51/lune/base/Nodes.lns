@@ -785,7 +785,7 @@ macro-statment に定義した処理を表わす関数。
 pub form macroStatmentProc( macroArg:&Map<str,&stem> ): &Map<str,&stem>;
 
 pub abstract class MacroInfo {
-   pub let func: macroStatmentProc;
+   pub let func: Luaval<macroStatmentProc>;
    pub let symbol2MacroValInfoMap: Map<str,MacroValInfo>;
    pub abstract fn getArgList():&List<&MacroArgInfo>;
    pub abstract fn getTokenList():&List<&Parser.Token>;
@@ -1881,8 +1881,8 @@ _declNodeClass( "DeclMacro", Node, false, false, true,
 
 pub abstract class MacroEval {
    pub abstract fn evalFromCode(
-      name:str, argNameList:&List<str>, code:str! ): macroStatmentProc;
-   pub abstract fn eval( macroNode: DeclMacroNode ): macroStatmentProc;
+      name:str, argNameList:&List<str>, code:str! ): Luaval<macroStatmentProc>;
+   pub abstract fn eval( macroNode: DeclMacroNode ): Luaval<macroStatmentProc>;
 }
 
 
@@ -2614,7 +2614,7 @@ pub class DefMacroInfo extend MacroInfo {
       return self.declInfo.$tokenList;
    }
    
-   pub fn __init( func: macroStatmentProc, declInfo: DeclMacroInfo, 
+   pub fn __init( func: Luaval<macroStatmentProc>, declInfo: DeclMacroInfo, 
                   symbol2MacroValInfoMap: Map<str,MacroValInfo> )
    {
       super( func, symbol2MacroValInfoMap );

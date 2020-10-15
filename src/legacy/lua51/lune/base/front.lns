@@ -143,7 +143,7 @@ loadedMap で管理する前にシステムにロードされているため、
    pub fn loadModule( mod:str ) mut: stem!, &stem;
    pub fn loadMeta( importModuleInfo:frontInterface.ImportModuleInfo, mod:str ) mut: &stem!;
    pub fn loadFromLnsTxt( importModuleInfo:frontInterface.ImportModuleInfo,
-                          name:str, txt:str ): stem;
+                          name:str, txt:str ): Luaval<stem>;
    pub fn searchModule( mod:str ): str!;
    pub fn error( message:str );
 }
@@ -207,17 +207,20 @@ fn Front.convert(
    ast.$node.processFilter( conv, new convLua.Opt( ast.$node ) );
 }
 
-fn loadFromChunk( chunk:form!, err:str! ): stem! {
+fn loadFromChunk( chunk:Luaval<form>!, err:str! ): Luaval<stem>! {
    when! err {
       Util.errorLog( err );
    }
    when! chunk {
-      return chunk(##);
+      if! let mut work = chunk(##) {
+         return work@@Luaval<stem>;
+      }
+      return nil;
    }
    error( "failed to error" );
 }
 
-fn loadFromLuaTxt( txt:str ): stem! {
+fn loadFromLuaTxt( txt:str ): Luaval<stem>! {
    //--print( txt )
    return loadFromChunk( _load( txt ## )** );
 }
@@ -246,7 +249,7 @@ fn Front.convertFromAst(
 マクロ解析用
 */
 fn Front.loadFromLnsTxt(
-   importModuleInfo:frontInterface.ImportModuleInfo, name:str, txt:str ): stem
+   importModuleInfo:frontInterface.ImportModuleInfo, name:str, txt:str ): Luaval<stem>
 {
    let mut transUnit = new TransUnit.TransUnit(
       frontInterface.ModuleId.tempId,

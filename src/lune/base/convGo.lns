@@ -149,6 +149,11 @@ fn isAnyType( typeInfo:&Ast.TypeInfo ): bool {
          }
          return true;
       }
+      case .Ext {
+         if typeInfo.$extedType.$kind == .Stem {
+            return true;
+         }
+      }
    }
    return false;
 }
@@ -428,6 +433,9 @@ fn convFilter.type2gotype( typeInfo:&Ast.TypeInfo ) : str {
 
    switch orgType.$kind {
       case .Ext {
+         if orgType.$extedType.$kind == .Stem {
+            return "LnsAny";
+         }
          return "*Lns_luaValue";
       }
       case .List, .Array {
@@ -2802,7 +2810,7 @@ fn convFilter.outputForeachLua( node: Nodes.ForeachNode, extType:&Ast.ExtTypeInf
          self.pushIndent( ## );
          self.write( "_index, _val := " );
          filter( node.$exp, self, node );
-         self.writeln( ".Get1stFromMap()" );
+         self.writeln( ".Get1stFromList()" );
          self.writeln( "for _index != nil {" );
          self.pushIndent( ## );
          if! let keySym = node.$key {
@@ -2868,7 +2876,6 @@ fn convFilter.outputForeachLua( node: Nodes.ForeachNode, extType:&Ast.ExtTypeInf
 pub override fn convFilter.processForeach(
    node: Nodes.ForeachNode, opt: Opt ) mut
 {
-
    if! let extType = node.$exp.$expType.$srcTypeInfo@@@Ast.ExtTypeInfo {
       self.outputForeachLua( node, unwrap extType.$srcTypeInfo@@@Ast.ExtTypeInfo );
       return;
@@ -2972,6 +2979,7 @@ fn getLnsItemKind( typeInfo:&Ast.TypeInfo ): str {
    }
    return "LnsItemKindStem";
 }
+
 
 pub override fn convFilter.processForsort(
    node: Nodes.ForsortNode, opt: Opt ) mut

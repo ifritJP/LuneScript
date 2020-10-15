@@ -1085,8 +1085,11 @@ define test-go-one
 	cp -au $3/$2.lns $1/mod
 	$(call convGo,$1,mod/$2)
 	$(call buildGo,$1) > work/result-testGo.txt
-	$(call exeLune,$1,mod/$2.lns,exe) > work/result-testGo2.txt
-	diff -C 2 -I 'ONLY_LUA' work/result-testGo.txt work/result-testGo2.txt
+	if test "${NO_LUA_DIFF}" = ""; then					\
+		$(call exeLune,$1,mod/$2.lns,exe) > work/result-testGo2.txt;	\
+		diff -C 2 -I 'ONLY_LUA'						\
+				work/result-testGo.txt work/result-testGo2.txt;	\
+	fi
 endef
 
 

@@ -7,6 +7,9 @@
 #+TITLE: TODO
 
 * バグ
+- [ ] subfile で emacs からシンボル情報が参照できない。
+
+
 - [ ] 次がエラーしない。
 fn func( val1:int, val2:int, val3:int ) {
    print( val1, val2, val3 );

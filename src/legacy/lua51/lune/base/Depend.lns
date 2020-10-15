@@ -70,10 +70,10 @@ fn searchpath51( mod:str, pathPattern:str ) : str! {
    return nil;
 }
 
-pub fn getLoadedMod() : &Map<str,stem>
+pub fn getLoadedMod() : Luaval<&Map<str,stem>>
 {
    let loaded = _load( "return package.loaded"## )$(##);
-   return (unwrap loaded)@@Map<str,stem>;
+   return (unwrap loaded)@@Luaval<&Map<str,stem>>;
 }
 
 pub fn profile( validTest:bool, func: form, path: str ): stem! {

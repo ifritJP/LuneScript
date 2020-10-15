@@ -1006,3 +1006,74 @@ _section();
       }
    }
 }
+_section();
+{
+   form test() : Luaval<&List<stem>>;
+
+   let code = ```
+      return { 1,2,3, "a", "b", { abc = 1, xyz = 10 } }
+```;
+   fn func( txt:str ) {
+      let loaded = _load( txt ## );
+      when! loaded {
+         if! let obj = loaded(##) {
+            foreach val, index in obj@@List<&stem> {
+               if type( val ) == "table" {
+                  foreach val2, key2 in val@@&Map<stem,stem> {
+                     print( key2, val2, type( key2 ), type( val2 ) );
+                  }
+               } else {
+                  print( index + 10, val, type( val ) );
+               }
+            }
+         }
+      }
+   }
+   func( code );
+}
+_section();
+{
+   let step = 32;
+
+   // Lua のフィボナッチ関数
+   let code = ```
+      local function fib ( n )
+   if n < 2 then return n end
+   return fib(n - 2) + fib(n - 1)
+end
+return fib
+```;
+
+   // Lua コードのロード
+   form fibFunc( num:int ):int;
+   fn loadLua( txt:str ) : Luaval<fibFunc> {
+      let loaded = unwrap _load( txt ## );
+      let fib = unwrap loaded(##);
+      return fib@@fibFunc;
+   }
+
+   // プロファイル用マクロ
+   macro _profile( exec:__exp ) {
+      {}
+      {
+         let prev = os.clock();
+         print( "%s = %d: step = %d: time = %g"
+                (,,,,exec, ,,exec, step, os.clock() - prev ) );
+      }
+   }
+
+   // Lua のコードをロードして実行
+   let fib_lua = loadLua( code );
+   _profile( fib_lua( step ) );
+
+
+   // LuneScript のフィボナッチ関数
+   fn fib_lns( num:int ) : int {
+      if num < 2 {
+         return num;
+      }
+      return fib_lns( num - 2 ) + fib_lns( num - 1 );
+   }
+   // Go で定義した fib_lns 関数を実行
+   _profile( fib_lns( step ) );
+}

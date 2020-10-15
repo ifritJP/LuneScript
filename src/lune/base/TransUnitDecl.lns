@@ -3022,29 +3022,6 @@ fn TransUnit.checkLiteralEmptyCollection(
    }
 }
 
-fn TransUnit.isTargetToken( token:&Parser.Token ) : bool {
-   if self.analyzePos.lineNo == token.pos.lineNo and
-      self.analyzePos.column >= token.pos.column and
-      self.analyzePos.column <= token.pos.column + #token.txt
-   {
-      return true;
-   }
-   return false;
-}
-fn TransUnit.dumpSymbolType( token:&Parser.Token, typeInfo:&Ast.TypeInfo ) {
-   let mut writer = new Writer.JSON( io.stdout );
-   writer.startParent( "lunescript", false );
-   writer.startParent( "inquire", false );
-   writer.write( "name", token.txt );
-   writer.write( "type", typeInfo.getTxt( self.typeNameCtrl## ) );
-   writer.write( "display", typeInfo.$get_display_stirng_with( typeInfo.$rawTxt, nil ) );
-   writer.endElement();
-   writer.endElement();
-   writer.fin();
-   os.exit( 0 );
-}
-
-
 class LetVarInfo {
    pub let mutable:Ast.MutMode;
    pub let varName: &Parser.Token;
@@ -3320,7 +3297,7 @@ fn TransUnit.analyzeLetAndInitExp(
                }
 
                if self.analyzeMode == .Inquire and self.isTargetToken( letVar.varName ) {
-                  self.dumpSymbolType( letVar.varName, workType );
+                  self.dumpSymbolType( letVar.varName.txt, workType );
                }
             }
             else {
