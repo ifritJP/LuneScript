@@ -3049,6 +3049,10 @@ function NilableTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag
 end
 function NilableTypeInfo:get_display_stirng_with( raw, alt2type )
 
+   if self.nonnilableType:get_kind() == TypeInfoKind.FormFunc then
+      return self.nonnilableType:get_display_stirng_with( raw .. "!", alt2type )
+   end
+   
    return self.nonnilableType:get_display_stirng_with( raw, alt2type ) .. "!"
 end
 function NilableTypeInfo:get_display_stirng(  )
@@ -5350,8 +5354,15 @@ local immutableTypeSet = {}
 local function isMutableType( typeInfo )
 
    typeInfo = typeInfo:get_nonnilableType()
-   if _lune._Set_has(immutableTypeSet, typeInfo ) or typeInfo:get_kind() == TypeInfoKind.FormFunc then
+   if _lune._Set_has(immutableTypeSet, typeInfo ) then
       return false
+   end
+   
+   do
+      local _switchExp = typeInfo:get_kind()
+      if _switchExp == TypeInfoKind.FormFunc or _switchExp == TypeInfoKind.Enum then
+         return false
+      end
    end
    
    return true
@@ -6059,6 +6070,10 @@ end
 local DDDTypeInfo = {}
 setmetatable( DDDTypeInfo, { __index = TypeInfo } )
 _moduleObj.DDDTypeInfo = DDDTypeInfo
+function DDDTypeInfo:get_extTypeFlag(  )
+
+   return self.extedType ~= self
+end
 function DDDTypeInfo:get_scope(  )
 
    return nil
@@ -6076,21 +6091,16 @@ function DDDTypeInfo:__init(processInfo, typeId, typeInfo, externalFlag, extOrgD
    self.typeInfo = typeInfo
    self.externalFlag = externalFlag
    self.itemTypeInfoList = {self.typeInfo}
-   local extFlag
-   
    local extOrgType
    
    if extOrgDDType ~= nil then
-      extFlag = false
       extOrgType = extOrgDDType
-      typeInfo2Map.DDDMap[typeInfo] = self
-   else
-      extFlag = true
-      extOrgType = self
       typeInfo2Map.ExtDDDMap[typeInfo] = self
+   else
+      extOrgType = self
+      typeInfo2Map.DDDMap[typeInfo] = self
    end
    
-   self.extTypeFlag = extFlag
    self.extedType = extOrgType
 end
 function DDDTypeInfo:isModule(  )
@@ -6103,7 +6113,7 @@ function DDDTypeInfo:canEvalWith( other, canEvalType, alt2type )
 end
 function DDDTypeInfo:serialize( stream, validChildrenSet )
 
-   stream:write( string.format( '{ skind=%d, typeId = %d, itemTypeId = %d, parentId = %d, extTypeFlag = %s }\n', SerializeKind.DDD, self.typeId, self.typeInfo:get_typeId(), _moduleObj.headTypeInfo:get_typeId(), tostring( self.extTypeFlag)) )
+   stream:write( string.format( '{ skind=%d, typeId = %d, itemTypeId = %d, parentId = %d, extTypeFlag = %s }\n', SerializeKind.DDD, self.typeId, self.typeInfo:get_typeId(), _moduleObj.headTypeInfo:get_typeId(), tostring( self:get_extTypeFlag())) )
 end
 function DDDTypeInfo:get_display_stirng_with( raw, alt2type )
 
@@ -6161,9 +6171,6 @@ function DDDTypeInfo:get_externalFlag()
 end
 function DDDTypeInfo:get_itemTypeInfoList()
    return self.itemTypeInfoList
-end
-function DDDTypeInfo:get_extTypeFlag()
-   return self.extTypeFlag
 end
 function DDDTypeInfo:get_extedType()
    return self.extedType
@@ -6566,7 +6573,7 @@ end
 function DDDTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag )
 
    if self.typeInfo == _moduleObj.builtinTypeStem_ then
-      if self.extTypeFlag then
+      if self:get_extTypeFlag() then
          return "Luaval<...>"
       end
       
@@ -6574,7 +6581,7 @@ function DDDTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag )
    end
    
    local txt = string.format( "...<%s>", self.typeInfo:getTxt( typeNameCtrl, importInfo, localFlag ))
-   if self.extTypeFlag then
+   if self:get_extTypeFlag() then
       return string.format( "Luaval<%s>", txt)
    end
    
@@ -8395,7 +8402,7 @@ IdType.__allList[2] = IdType.Ext
 local function switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 6427, function (  )
+   Log.log( Log.Level.Trace, __func__, 6435, function (  )
    
       return "start"
    end )
@@ -8415,7 +8422,7 @@ local builtinTypeInfo2Map = typeInfo2Map:clone(  )
 local function pushProcessInfo( processInfo )
    local __func__ = '@lune.@base.@Ast.pushProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6439, function (  )
+   Log.log( Log.Level.Trace, __func__, 6447, function (  )
    
       return "start"
    end )
@@ -8450,7 +8457,7 @@ _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
    local __func__ = '@lune.@base.@Ast.popProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6465, function (  )
+   Log.log( Log.Level.Trace, __func__, 6473, function (  )
    
       return "start"
    end )

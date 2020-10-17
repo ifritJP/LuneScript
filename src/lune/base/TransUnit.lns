@@ -25,6 +25,7 @@ SOFTWARE.
 subfile use lune.base.TransUnitDecl;
 subfile use lune.base.TransUnitExp;
 subfile use lune.base.TransUnitStatementList;
+subfile use lune.base.TransUnitTest;
 
 import lune.base.Meta;
 import lune.base.Parser;
@@ -691,7 +692,7 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
 
    pri fn addErrMess( pos: &Parser.Position, mess: str ) mut {
       self.errMessList.insert(
-         "%s:%d:%d: error: %s" ( self.parser.getStreamName(),
+         "%s:%d:%d: error: %s" ( pos.streamName,
                                  pos.lineNo, pos.column, mess ) );
    }
 
@@ -2432,7 +2433,7 @@ pub fn TransUnit.pushbackToken( token: &Parser.Token ) mut {
 }
 
 
-fn TransUnit.newPushback( tokenList: List<&Parser.Token> ) mut {
+pub fn TransUnit.newPushback( tokenList: List<&Parser.Token> ) mut {
    // for index = #tokenList, 1, -1  {
    //    self.pushbackList.insert( tokenList[ index ] );
    // }
@@ -2515,7 +2516,7 @@ fn TransUnit.getToken( allowEof:bool! ) mut : &Parser.Token {
    return token;
 }
 
-fn TransUnit.pushback() mut {
+pub fn TransUnit.pushback() mut {
    // if self.currentToken ~= Parser.getEofToken() {
    //    self.pushbackList.insert( self.currentToken );
    //    self.currentToken = self.usedTokenList[ #self.usedTokenList ];

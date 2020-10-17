@@ -3921,11 +3921,16 @@ pub fn isExtType( typeInfo:&TypeInfo ): bool {
 }
 
 let mut immutableTypeSet:Set<&TypeInfo> = (@);
+// 指定の型が mutable/imuttable に切り替え可能かどうか
 pub fn isMutableType( mut typeInfo:&TypeInfo ) : bool {
    typeInfo = typeInfo.$nonnilableType;
-   if immutableTypeSet.has( typeInfo ) or typeInfo.$kind == .FormFunc
-   {
+   if immutableTypeSet.has( typeInfo ) {
       return false;
+   }
+   switch typeInfo.$kind {
+      case .FormFunc, .Enum {
+         return false;
+      }
    }
    return true;
 }

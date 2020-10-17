@@ -481,32 +481,6 @@ fn expandVal( tokenList:List<&Parser.Token>, val: stem!, pos: &Parser.Position )
             // val 中に \n 等の制御コードが入ると正常に処理されない。
             // val 内の制御コードを \xXX に変換する必要がある。
          }
-         // case "table" {
-         //    tokenList.insert(
-         //       new Parser.Token( Parser.TokenKind.Dlmt, "{", pos, false ## ) );
-         //    foreach item, key in val@@stem![] {
-         //       tokenList.insert(
-         //          new Parser.Token( Parser.TokenKind.Dlmt, "[", pos, false ## ) );
-
-         //       if! let mess = expandVal( tokenList, key, pos ) {
-         //          return mess;
-         //       }
-
-         //       tokenList.insert(
-         //          new Parser.Token( Parser.TokenKind.Dlmt, "]", pos, false ## ) );
-
-         //       tokenList.insert(
-         //          new Parser.Token( Parser.TokenKind.Dlmt, "=", pos, false ## ) );
-               
-         //       if! let mess = expandVal( tokenList, item, pos ) {
-         //          return mess;
-         //       }
-         //       tokenList.insert(
-         //          new Parser.Token( Parser.TokenKind.Dlmt, ",", pos, false ## ) );
-         //    }
-         //    tokenList.insert(
-         //       new Parser.Token( Parser.TokenKind.Dlmt, "}", pos, false ## ) );
-         // }
          default {
             return "not support ,, List -- %s" ( type( val ) );
          }
@@ -890,3 +864,5 @@ pub fn nodeToCodeTxt(node:&Nodes.Node, moduleTypeInfo:&Ast.TypeInfo ):str
    return memStream.$txt;
 }
 
+__test case1(ctrl) {
+}

@@ -5354,8 +5354,15 @@ local immutableTypeSet = {}
 local function isMutableType( typeInfo )
 
    typeInfo = typeInfo:get_nonnilableType()
-   if _lune._Set_has(immutableTypeSet, typeInfo ) or typeInfo:get_kind() == TypeInfoKind.FormFunc then
+   if _lune._Set_has(immutableTypeSet, typeInfo ) then
       return false
+   end
+   
+   do
+      local _switchExp = typeInfo:get_kind()
+      if _switchExp == TypeInfoKind.FormFunc or _switchExp == TypeInfoKind.Enum then
+         return false
+      end
    end
    
    return true
@@ -8395,7 +8402,7 @@ IdType.__allList[2] = IdType.Ext
 local function switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 6430, function (  )
+   Log.log( Log.Level.Trace, __func__, 6435, function (  )
    
       return "start"
    end )
@@ -8415,7 +8422,7 @@ local builtinTypeInfo2Map = typeInfo2Map:clone(  )
 local function pushProcessInfo( processInfo )
    local __func__ = '@lune.@base.@Ast.pushProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6442, function (  )
+   Log.log( Log.Level.Trace, __func__, 6447, function (  )
    
       return "start"
    end )
@@ -8450,7 +8457,7 @@ _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
    local __func__ = '@lune.@base.@Ast.popProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6468, function (  )
+   Log.log( Log.Level.Trace, __func__, 6473, function (  )
    
       return "start"
    end )

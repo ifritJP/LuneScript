@@ -1176,6 +1176,14 @@ test-testGo:
 	$(call test-convGo-test,$(GO_WORK_DIR),Nodes,lune/base,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),Formatter,lune/base,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),dumpNode,lune/base,./test)
+	$(call test-convGo-test,$(GO_WORK_DIR),Macro,lune/base,./test)
+#	$(call convGo,$(GO_WORK_DIR),lune/base/TransUnit,--testing,./test)
+	$(call test-convGo-test,$(GO_WORK_DIR),TransUnit,lune/base,./test)
+#	$(call test-convGo-test,$(GO_WORK_DIR),convLua,lune/base,./test)
+
+test-subgo:
+	$(call test-convGo-test,$(GO_WORK_DIR),TransUnit,lune/base,./test)
+
 
 
 test-reference:

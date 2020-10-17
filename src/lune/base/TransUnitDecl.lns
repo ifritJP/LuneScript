@@ -356,47 +356,113 @@ fn TransUnit.analyzeDeclArgList(
    return nextToken;
 }
 
-fn TransUnit.checkOverriededMethod() mut
+fn TransUnit.checkOverrideMethod(
+   overrideType:&Ast.TypeInfo, typeInfo:&Ast.TypeInfo ) : List<str>
 {
-   fn checkOverrideMethodSub(
+   let accessMode = typeInfo.$accessMode;
+   let funcName = typeInfo.$rawTxt;
+   let altTypeList= typeInfo.$itemTypeInfoList;
+   let mut alt2typeMap = typeInfo.$parentInfo.createAlt2typeMap( false );
+   let mut errList:List<str> = [];
+
+   
+   fn addErr( mess:str ) {
+      let fullName = "%s.%s" (typeInfo.$parentInfo.$rawTxt, typeInfo.$rawTxt );
+      errList.insert( "%s: %s: %s -- %s" ( fullName, mess, typeInfo.$display_stirng,
+                                           typeInfo.$display_stirng ) );
+   }
+   
+   if overrideType.get_accessMode() ~= accessMode {
+      let mess = "mismatch override accessMode -- %s,%s,%s"
+          ( funcName, overrideType.get_accessMode().$_txt,
+            accessMode.$_txt );
+      addErr( mess );
+   }
+   if overrideType.get_staticFlag() ~= typeInfo.$staticFlag {
+      addErr( "mismatch override staticFlag -- " .. funcName );
+   }
+   if overrideType.get_kind() ~= .Method {
+      addErr( "mismatch override kind -- %s, %d"
+                      ( funcName, overrideType.get_kind() ) );
+   }
+   if overrideType.$mutMode ~= typeInfo.$mutMode {
+      addErr( "mismatch mutable -- %s" ( funcName ) );
+   }
+
+   if #overrideType.$itemTypeInfoList ~= #altTypeList {
+      let mess = "mismatch altTypeList -- %d, %d"
+          (#overrideType.$itemTypeInfoList, #altTypeList);
+      addErr( mess );
+   }
+   else {
+      foreach alterType, index in overrideType.$itemTypeInfoList {
+         alt2typeMap[ alterType ] = altTypeList[ index ];
+      }
+   }
+
+   let matchFlag, err = overrideType.canEvalWith( typeInfo, .SetEq, alt2typeMap );
+   if not matchFlag {
+      when! err {
+         addErr( "mismatch method type -- %s" (err) );
+      } else {
+         addErr( "mismatch method type"  );
+      }
+   }
+
+   foreach retType, index in overrideType.$retTypeInfoList {
+      if #typeInfo.$retTypeInfoList >= index {
+         if retType.$nonnilableType.$kind == .Alternate and
+            typeInfo.$retTypeInfoList[ index ].$nonnilableType.$kind ~= .Alternate
+         {
+            let mess =
+               "not support to override the method has generics at return type. -- %s"
+                (funcName);
+            addErr( mess );
+         }
+      }
+   }
+
+   return errList;
+}
+
+
+fn TransUnit.checkOverriededMethodOfAllClass() mut
+{
+   fn process(
       pos:&Parser.Position, alt2typeMap:Map<&Ast.TypeInfo,&Ast.TypeInfo>,
-      classScope:&Ast.Scope, scope:&Ast.Scope )
+      classScope:&Ast.Scope, superScope:&Ast.Scope )
    {
-      scope.filterTypeInfoField(
+      superScope.filterTypeInfoField(
          true, classScope, self.scopeAccess,
          fn ( symbolInfo:&Ast.SymbolInfo ): bool {
             if symbolInfo.$name == "__init" {
                return true;
             }
             if symbolInfo.$typeInfo.$kind == .Method {
-               let mut noImp = false;
                if! let impMethodType = classScope.getTypeInfoField(
                   symbolInfo.$name, true, classScope, self.scopeAccess )
                {
-                  let isMatch, mess = impMethodType.canEvalWith(
-                     symbolInfo.$typeInfo, .SetOp, alt2typeMap );
-                  if not isMatch {
-                     
-                     self.addErrMess(
-                        pos,
-                        "mismatch method -- %s %s: %s"
-                        (symbolInfo.$typeInfo.$display_stirng,
-                          impMethodType.$display_stirng,
-                          unwrap mess default "") );
+                  // let isMatch, mess = impMethodType.canEvalWith(
+                  //    symbolInfo.$typeInfo, .SetOp, alt2typeMap );
+                  // if not isMatch {
+                  //    self.addErrMess(
+                  //       pos,
+                  //       "mismatch method -- %s %s: %s"
+                  //       (symbolInfo.$typeInfo.$display_stirng,
+                  //         impMethodType.$display_stirng,
+                  //         unwrap mess default "") );
+                  // }
+                  foreach err in self.checkOverrideMethod(
+                     symbolInfo.$typeInfo, impMethodType )
+                  {
+                     self.addErrMess( pos, err );
                   }
-                  if impMethodType.$abstractFlag {
-                     noImp = true;
-                  }
-               }
-               else {
-                  noImp = true;
-               }
-               if noImp {
+               } else {
                   self.addErrMess( pos, "not implements method -- %s.%s"
                                    ( classScope.$ownerTypeInfo$.getTxt$(##),
                                      symbolInfo.$name) );
                }
-            }
+            } 
             return true;
          } );
    }
@@ -414,16 +480,14 @@ fn TransUnit.checkOverriededMethod() mut
          let mut alt2typeMap = classTypeInfo.createAlt2typeMap(false);
          repeat {
             if workTypeInfo ~= Ast.headTypeInfo {
-               checkOverrideMethodSub(
-                  classNode.$pos, alt2typeMap,
-                  unwrap classTypeInfo.$scope,
-                  unwrap workTypeInfo.$scope );
+               process( classNode.$pos, alt2typeMap,
+                        unwrap classTypeInfo.$scope,
+                        unwrap workTypeInfo.$scope );
             }
             foreach ifType in workTypeInfo.$interfaceList {
                if ifType ~= Ast.builtinTypeMapping {
-                  checkOverrideMethodSub(
-                     classNode.$pos, alt2typeMap,
-                     unwrap classTypeInfo.$scope, unwrap ifType.$scope );
+                  process( classNode.$pos, alt2typeMap,
+                           unwrap classTypeInfo.$scope, unwrap ifType.$scope );
                }
             }
             workTypeInfo = workTypeInfo.$baseTypeInfo;
@@ -518,7 +582,7 @@ pub fn TransUnit.createAST(
          }
       }
 
-      self.checkOverriededMethod();
+      self.checkOverriededMethodOfAllClass();
 
 
       let mut rootNode = Nodes.RootNode.create(
@@ -2381,45 +2445,6 @@ fn TransUnit.analyzeDeclClass(
       classScope.addMethod( nil, fromStemFuncTypeInfo, ctorAccessMode, true, false );
    }
 
-   // fn checkOverrideMethodSub( scope:&Ast.Scope ) {
-   //    scope.filterTypeInfoField(
-   //       true, classScope,
-   //       fn ( symbolInfo:&Ast.SymbolInfo ): bool {
-   //          if symbolInfo.$kind == .Mtd {
-   //             let mut noImp = false;
-   //             if! let impMethodType = classScope.getTypeInfoField(
-   //                symbolInfo.$name, true, classScope )
-   //             {
-   //                if impMethodType.$abstractFlag {
-   //                   noImp = true;
-   //                }
-   //             }
-   //             else {
-   //                noImp = true;
-   //             }
-   //             if noImp {
-   //                self.addErrMess( firstToken.pos,
-   //                                 "not implements method -- " .. symbolInfo.$name );
-   //             }
-   //          }
-   //          return true;
-   //       } );
-   // }
-
-   // if not classAbstructFlag {
-   //    // extend のメソッドがオーバーライドされているか確認
-   //    let mut workTypeInfo = classTypeInfo;
-   //    repeat {
-   //       if workTypeInfo ~= Ast.headTypeInfo {
-   //          checkOverrideMethodSub( unwrap workTypeInfo.$scope );
-   //       }
-   //       foreach ifType in workTypeInfo.$interfaceList {
-   //          checkOverrideMethodSub( unwrap ifType.$scope );
-   //       }
-   //       workTypeInfo = workTypeInfo.$baseTypeInfo;
-   //    } workTypeInfo == Ast.headTypeInfo;
-   // }
-
    self.popClass();
 
    return node;
@@ -2518,6 +2543,7 @@ fn TransUnit.processAddFunc(
    }
    return unwrap (funcSym or shadowing);
 }
+
 
 let CantOverrideMethods = (@ "__init", "__free" );
 
@@ -2726,27 +2752,30 @@ fn TransUnit.analyzeDeclFunc(
       }
    }
 
-   let mut workTypeInfo = Ast.NormalTypeInfo.createFunc(
-      abstractFlag, false, funcBodyScope,
-      typeKind, namespaceInfo,
-      false, false, staticFlag, accessMode,
-      funcName, altTypeList, argTypeList, retTypeInfoList, mutable );
-
-   let funcSym:&Ast.SymbolInfo!;
    let typeInfo;
-   when! name {
-      let workSym = self.processAddFunc(
-         kind == Nodes.NodeKind.$DeclFunc,
-         funcBodyScope.$parent, name, workTypeInfo, alt2typeMap );
-      typeInfo = workSym.$typeInfo;
-      funcSym = workSym;
-   } else {
-      funcSym = nil;
-      typeInfo = workTypeInfo;
+   let funcSym:&Ast.SymbolInfo!;
+   {
+      let mut workTypeInfo = Ast.NormalTypeInfo.createFunc(
+         abstractFlag, false, funcBodyScope,
+         typeKind, namespaceInfo,
+         false, false, staticFlag, accessMode,
+         funcName, altTypeList, argTypeList, retTypeInfoList, mutable );
+
+      when! name {
+         let workSym = self.processAddFunc(
+            kind == Nodes.NodeKind.$DeclFunc,
+            funcBodyScope.$parent, name, workTypeInfo, alt2typeMap );
+         typeInfo = workSym.$typeInfo;
+         funcSym = workSym;
+      } else {
+         typeInfo = workTypeInfo;
+         funcSym = nil;
+      }
    }
 
    if overrideFlag {
       // オーバーライドの型チェック
+
       if not name {
          self.addErrMess( firstToken.pos, "can't override anonymous func" );
       };
@@ -2756,49 +2785,8 @@ fn TransUnit.analyzeDeclFunc(
       if! let overrideType = self.scope.$parent.getTypeInfoField(
          funcName, false, funcBodyScope, self.scopeAccess )
       {
-         if overrideType.get_accessMode() ~= accessMode {
-            self.addErrMess( firstToken.pos, "mismatch override accessMode -- %s,%s,%s"
-                             ( funcName, overrideType.get_accessMode().$_txt,
-                               accessMode.$_txt ) );
-         }
-         if overrideType.get_staticFlag() ~= staticFlag {
-            self.addErrMess( firstToken.pos,
-                             "mismatch override staticFlag -- " .. funcName );
-         }
-         if overrideType.get_kind() ~= .Method {
-            self.addErrMess( firstToken.pos, "mismatch override kind -- %s, %d"
-                             ( funcName, overrideType.get_kind() ) );
-         }
-         if overrideType.$mutMode ~= typeInfo.$mutMode {
-            self.addErrMess( firstToken.pos, "mismatch mutable -- %s" ( funcName ) );
-         }
-
-         if #overrideType.$itemTypeInfoList ~= #altTypeList {
-            self.addErrMess( firstToken.pos,
-                             "mismatch altTypeList -- %d, %d"
-                             (#overrideType.$itemTypeInfoList, #altTypeList) );
-         }
-         else {
-            foreach alterType, index in overrideType.$itemTypeInfoList {
-               alt2typeMap[ alterType ] = altTypeList[ index ];
-            }
-         }
-
-         if not overrideType.canEvalWith( typeInfo, .SetEq, alt2typeMap ) {
-            self.addErrMess( firstToken.pos, "mismatch method type -- %s" (funcName));
-         }
-
-         foreach retType, index in overrideType.$retTypeInfoList {
-            if #typeInfo.$retTypeInfoList >= index {
-               if retType.$nonnilableType.$kind == .Alternate and
-                  typeInfo.$retTypeInfoList[ index ].$nonnilableType.$kind ~= .Alternate
-               {
-                  let mess =
-                     "not support to override the method has generics at return type. -- %s"
-                      (funcName);
-                  self.addErrMess( firstToken.pos, mess );
-               }
-            }
+         foreach err in self.checkOverrideMethod( overrideType, typeInfo ) {
+            self.addErrMess( firstToken.pos, err );
          }
       }
       else {

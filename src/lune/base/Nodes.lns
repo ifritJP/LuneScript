@@ -1524,6 +1524,7 @@ _declNodeClass( "DeclVar", Node, false, false, true,
                   { "varList": "&List<&VarInfo>" },
                   { "expList": "&ExpListNode!" },
                   { "symbolInfoList": "&List<&Ast.SymbolInfo>"},
+                  /** 初期化されていない場合は builtinTypeEmpty が入っている型情報 */ 
                   { "typeInfoList": "&List<&Ast.TypeInfo>" },
                   { "unwrapFlag": "bool" },
                   { "unwrapBlock": "&BlockNode!" },

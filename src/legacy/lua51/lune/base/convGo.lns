@@ -717,6 +717,12 @@ enum ExpListKind {
 fn getExpListKind( dstTypeList:&List<&Ast.TypeInfo>,
                    node:&Nodes.ExpListNode ): ExpListKind
 {
+   if #dstTypeList < #node.$expList {
+      if dstTypeList[ #dstTypeList ].$kind ~= .DDD {
+         return .Conv;
+      }
+   }
+   
    if #dstTypeList > 1 and node.$mRetExp {
       foreach exp in node.$expList {
          if! let castNode = exp@@@Nodes.ExpCastNode {
@@ -1340,8 +1346,10 @@ pub override fn convFilter.processConvStat(
 
 fn convFilter.outputTopScopeVar( node: &Nodes.DeclVarNode ) mut {
    foreach symbolInfo in node.$symbolInfoList {
-      if Ast.isPubToExternal( symbolInfo.$accessMode ) or
-         symbolInfo.$posForModToRef
+      if symbolInfo.$scope == self.moduleScope and
+         ( Ast.isPubToExternal( symbolInfo.$accessMode ) or
+           symbolInfo.$posForModToRef )
+         
       {
          self.writeln( "var %s %s" ( self.getSymbolSym( symbolInfo ),
                                      self.type2gotype( symbolInfo.$typeInfo ) ) );
@@ -1491,10 +1499,8 @@ pub override fn convFilter.processRoot(
             fn ( workNode:&Nodes.Node ) {
                filter( workNode, self, node );
             } );
-   foreach child in node.$children {
-      if! let declVarNode = child@@@Nodes.DeclVarNode {
-         self.outputTopScopeVar( declVarNode );
-      }
+   foreach workNode in node.$nodeManager.getDeclVarNodeList() {
+      self.outputTopScopeVar( workNode );
    }
    self.popProcessMode();
 
@@ -1539,8 +1545,19 @@ pub override fn convFilter.processRoot(
             } );
    _filter( node.$nodeManager.getDeclVarNodeList(),
             fn ( workNode:&Nodes.DeclVarNode ) {
-               self.processConvExp( workNode.$id, workNode.$typeInfoList,
-                                    workNode.$expList );
+               let mut typeList:List<&Ast.TypeInfo> = [];
+               if! let expList = workNode.$expList {
+                  foreach symbolInfo, index in workNode.$symbolInfoList {
+                     if workNode.$mode == .Let or workNode.$mode == .Unwrap {
+                        if workNode.$unwrapFlag {
+                           typeList.insert( expList.getExpTypeAt( index ) );
+                        } else {
+                           typeList.insert( symbolInfo.$typeInfo );
+                        }
+                     }
+                  }
+                  self.processConvExp( workNode.$id, typeList, expList );
+               }
             } );
    
 
@@ -2155,10 +2172,10 @@ pub override fn convFilter.processIfUnwrap(
          self.write( "_" .. varSym.$name );
       }
       tempTypeList.insert( Ast.builtinTypeStem_ );
-      if index == #node.$varSymList {
-         for _ = index + 1, #node.$expList.$expTypeList {
-            self.write( ", _" );
-         }
+   }
+   if getExpListKind( tempTypeList, node.$expList ) == .Direct {
+      for _ =  #node.$varSymList + 1, #node.$expList.$expTypeList {
+         self.write( ", _" );
       }
    }
    self.write( " := " );
@@ -2229,6 +2246,7 @@ fn convFilter.outputLetVar( node: Nodes.DeclVarNode ) mut {
       }
    }
 
+
    if node.$unwrapFlag {
       if! let expList, unwrapBlock = node.$expList, node.$unwrapBlock {
          if node.$symbolInfoList[ 1 ].$scope ~= self.moduleScope {
@@ -2244,18 +2262,21 @@ fn convFilter.outputLetVar( node: Nodes.DeclVarNode ) mut {
                self.write( ", " );
             }
             self.write( "_%s" ( varInfo.$name.txt ) );
-            if index == #node.$varList {
-               if! let expListNode = node.$expList {
-                  for _ = index + 1, #expListNode.$expTypeList {
-                     self.write( ", _" );
-                  }
-               }
+         }
+
+         let mut tmpVarTypeList:List<&Ast.TypeInfo> = [];
+         foreach _, index in node.$symbolInfoList {
+            tmpVarTypeList.insert( expList.getExpTypeAt( index ) );
+         }
+         
+         if getExpListKind( tmpVarTypeList, expList ) == .Direct {
+            for _ =  #tmpVarTypeList + 1, #expList.$expTypeList {
+               self.write( ", _" );
             }
          }
          self.write( " := " );
          self.processSetFromExpList(
-            getConvExpName( node.$id, expList ), 
-            node.$typeInfoList, expList );
+            getConvExpName( node.$id, expList ), tmpVarTypeList, expList );
          self.writeln( "" );
 
          // テンポラリに nil が含まれるか確認する
@@ -2311,7 +2332,9 @@ fn convFilter.outputLetVar( node: Nodes.DeclVarNode ) mut {
       declVar();
 
       if! let expList = node.$expList {
+         let mut varTypeList:List<&Ast.TypeInfo> = [];
          foreach symbolInfo, index in node.$symbolInfoList {
+            varTypeList.insert( symbolInfo.$typeInfo );
             if index > 1 {
                self.write( "," );
             }
@@ -2323,16 +2346,15 @@ fn convFilter.outputLetVar( node: Nodes.DeclVarNode ) mut {
                self.write( "_" );
             }
          }
-         if #expList.$expTypeList > #node.$symbolInfoList {
-            for _ = #node.$symbolInfoList + 1, #expList.$expTypeList {
+         
+         if getExpListKind( varTypeList, expList ) == .Direct {
+            for _ =  #varTypeList + 1, #expList.$expTypeList {
                self.write( ", _" );
             }
          }
-         
          self.write( " = " );
          self.processSetFromExpList(
-            getConvExpName( node.$id, expList ), 
-            node.$typeInfoList, expList );
+            getConvExpName( node.$id, expList ), varTypeList, expList );
          self.writeln( "" );   
       }
    }
@@ -2373,8 +2395,10 @@ pub override fn convFilter.processDeclVar(
             }
             self.write( "_%s" (varSym.$name ));
          }
-         for _ = #node.$symbolInfoList + 1, #expList.$expTypeList {
-            self.write( ",_" );
+         if getExpListKind( typeList, expList ) == .Direct {
+            for _ = #node.$symbolInfoList + 1, #expList.$expTypeList {
+               self.write( ",_" );
+            }
          }
          self.write( " = " );
          self.processSetFromExpList(
@@ -2805,59 +2829,39 @@ pub override fn convFilter.processApply(
 
 fn convFilter.outputForeachLua( node: Nodes.ForeachNode, extType:&Ast.ExtTypeInfo ) mut {
    switch extType.$extedType.$kind {
-      case .List {
-         self.writeln( "{" );
-         self.pushIndent( ## );
-         self.write( "_index, _val := " );
+      case .List, .Map {
+         self.write( "_exp := " );
          filter( node.$exp, self, node );
-         self.writeln( ".Get1stFromMap()" );
-         self.writeln( "for _index != nil {" );
-         self.pushIndent( ## );
-         if! let keySym = node.$key {
-            self.write( "%s := _index" ( self.getSymbolSym( keySym ) ) );
-            self.outputAny2Type( keySym.$typeInfo );
-            self.writeln( "" );
-         }
-         self.write( "%s := _val" ( self.getSymbolSym( node.$val ) ) );
-         self.outputAny2Type( node.$val.$typeInfo );
          self.writeln( "" );
-         self.popIndent();
-
-         filter( node.$block, self, node );
-
-         self.pushIndent( ## );
-         self.write( "_index, _val = " );
-         filter( node.$exp, self, node );
-         self.writeln( ".NextFromMap( _index )" );
-
-         self.popIndent();
-         
-         self.writeln( "}" );
-         self.popIndent();
-         self.writeln( "}" );
-      }
-      case .Map {
          self.writeln( "{" );
          self.pushIndent( ## );
-         self.write( "_key, _val := " );
-         filter( node.$exp, self, node );
-         self.writeln( ".Get1stFromMap()" );
+         let tmpValName;
+         if node.$val.hasAccess() {
+            tmpValName = "_val";
+         } else {
+            tmpValName = "_";
+         }
+         self.writeln( "_key, %s := _exp.Get1stFromMap()" (tmpValName) );
          self.writeln( "for _key != nil {" );
          self.pushIndent( ## );
          if! let keySym = node.$key {
-            self.write( "%s := _key" ( self.getSymbolSym( keySym ) ) );
-            self.outputAny2Type( keySym.$typeInfo );
+            if keySym.hasAccess() {
+               self.write( "%s := _key" ( self.getSymbolSym( keySym ) ) );
+               self.outputAny2Type( keySym.$typeInfo );
+               self.writeln( "" );
+            }
+         }
+         if node.$val.hasAccess() {
+            self.write( "%s := _val" ( self.getSymbolSym( node.$val ) ) );
+            self.outputAny2Type( node.$val.$typeInfo );
             self.writeln( "" );
          }
-         self.write( "%s := _val" ( self.getSymbolSym( node.$val ) ) );
-         self.outputAny2Type( node.$val.$typeInfo );
-         self.writeln( "" );
          self.popIndent();
 
          filter( node.$block, self, node );
 
          self.pushIndent( ## );
-         self.write( "_key, _val = " );
+         self.write( "_key, %s = " (tmpValName));
          filter( node.$exp, self, node );
          self.writeln( ".NextFromMap( _key )" );
 
@@ -2876,11 +2880,12 @@ fn convFilter.outputForeachLua( node: Nodes.ForeachNode, extType:&Ast.ExtTypeInf
 pub override fn convFilter.processForeach(
    node: Nodes.ForeachNode, opt: Opt ) mut
 {
+   
    if! let extType = node.$exp.$expType.$srcTypeInfo@@@Ast.ExtTypeInfo {
       self.outputForeachLua( node, unwrap extType.$srcTypeInfo@@@Ast.ExtTypeInfo );
       return;
    }
-   
+
    macro _keyItemDecl( typeName:__exp ) {
       if ,,typeName ~= "_" {
          self.write( "_%s" (,,typeName) );
@@ -2895,23 +2900,28 @@ pub override fn convFilter.processForeach(
          self.writeln( "" );
       }
    }
+
+   let hasAccessLoopSym = node.$key$.$posForModToRef or node.$val.$posForModToRef;
    
    self.write( "for " );
    let loopExpType = node.$exp.$expType;
    switch loopExpType.$kind {
       case .List, .Array {
-         if! let key = node.$key {
-            _keyItemDecl( key.$name );
-            self.write( ", " );
-         }
-         else {
-            self.write( "_, " );
-         }
-         
          let valName = self.getSymbolSym( node.$val );
          let itemType = loopExpType.$itemTypeInfoList[ 1 ];
-         _keyItemDecl( valName );
-         self.write( " := range( " );
+         if hasAccessLoopSym {
+            if! let key = node.$key {
+               _keyItemDecl( key.$name );
+               self.write( ", " );
+            }
+            else {
+               self.write( "_, " );
+            }
+            
+            _keyItemDecl( valName );
+            self.write( " := " );
+         }
+         self.write( "range( " );
          filter( node.$exp, self, node );
          self.writeln( ".Items ) {" );
          self.pushIndent( ## );
@@ -2922,19 +2932,22 @@ pub override fn convFilter.processForeach(
          self.popIndent();
       }
       case .Map {
-         let keyType = loopExpType.$itemTypeInfoList[ 1 ];
-         if! let key = node.$key {
-            _keyItemDecl( key.$name );
-            self.write( ", " );
-         }
-         else {
-            self.write( "_, " );
-         }
-         
          let valName = self.getSymbolSym( node.$val );
          let itemType = loopExpType.$itemTypeInfoList[ 2 ];
-         _keyItemDecl( valName );
-         self.write( " := range( " );
+         let keyType = loopExpType.$itemTypeInfoList[ 1 ];
+         if hasAccessLoopSym {
+            if! let key = node.$key {
+               _keyItemDecl( key.$name );
+               self.write( ", " );
+            }
+            else {
+               self.write( "_, " );
+            }
+            
+            _keyItemDecl( valName );
+            self.write( " := " );
+         }
+         self.write( "range( " );
          filter( node.$exp, self, node );
          self.writeln( ".Items ) {" );
          self.pushIndent( ## );
@@ -2947,8 +2960,11 @@ pub override fn convFilter.processForeach(
       case .Set {
          let valType = loopExpType.$itemTypeInfoList[ 1 ];
          let valName = self.getSymbolSym( node.$val );
-         _keyItemDecl( valName );
-         self.write( " := range( " );
+         if hasAccessLoopSym {
+            _keyItemDecl( valName );
+            self.write( " := " );
+         }
+         self.write( "range( " );
          filter( node.$exp, self, node );
          self.writeln( ".Items ) {" );
          self.pushIndent( ## );
@@ -3215,8 +3231,11 @@ fn convFilter.outputDownCast( node: Nodes.DeclClassNode ) mut {
    self.popIndent();
    self.writeln( "}" );
 
-   self.writeln( "func %sDownCastF( obj LnsAny ) LnsAny {" (symbol ));
+   self.writeln( "func %sDownCastF( multi ...LnsAny ) LnsAny {" (symbol ));
    self.pushIndent( ## );
+   self.writeln( "if len( multi ) == 0 { return nil }" );
+   self.writeln( "obj := multi[ 0 ]" );
+   self.writeln( "if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }" );
    self.writeln( "work, ok := obj.(%sDownCast)" (symbol) );
    self.writeln( "if ok { return work.To%s() }" (symbol) );
    self.writeln( "return nil" );
@@ -3418,7 +3437,7 @@ let type2FromStemNameMap = {
    Ast.builtinTypeStem:"Lns_ToStem"
 };
 fn convFilter.getFromStemName(typeInfo:&Ast.TypeInfo) : str {
-   let workTypeInfo = typeInfo.$srcTypeInfo.$nonnilableType;
+   let workTypeInfo = getOrgTypeInfo( typeInfo );
    if! let name = type2FromStemNameMap[ workTypeInfo ] {
       return name;
    }
@@ -4261,8 +4280,14 @@ pub override fn convFilter.processExpSetVal(
    node: Nodes.ExpSetValNode, opt: Opt ) mut
 {
    filter( node.$exp1, self, node );
-   for _ = #node.$exp1.$expTypeList + 1, #node.$exp2.$expTypeList {
-      self.write( ",_" );
+   if getExpListKind( node.$exp1.$expTypeList,
+                      unwrap node.$exp2@@@Nodes.ExpListNode ) == .Direct
+   {
+      // ここは '_' の補正は不要
+   } else {
+      for _ = #node.$exp1.$expTypeList + 1, #node.$exp2.$expTypeList {
+         self.write( ",_" );
+      }
    }
    self.write( " = " );
    if node.$exp2.$expType.$kind == .DDD {
@@ -4445,6 +4470,23 @@ pub override fn convFilter.processExpRefItem(
 {
    let prefixType = node.$val.$expType.$nonnilableType;
    switch prefixType.$kind {
+      case .Ext {
+         if node.$nilAccess {
+            self.write( "Lns_NilAccFin( Lns_NilAccPush( " );
+            filter( node.$val, self, node );
+            self.write( ") && " );
+            self.write( "Lns_NilAccLast( Lns_NilAccPop().(*Lns_luaValue)" );
+         } else {
+            filter( node.$val, self, node );
+         }
+         self.write( ".GetAt(" );
+         if! let index = node.$index {
+            filter( index, self, node );
+         } else {
+            self.write( '"%s"' (str2gostr( unwrap node.$symbol)) );
+         }
+         self.write( ")" );
+      }
       case .List, .Array {
          if node.$nilAccess {
             self.write( "Lns_NilAccFin( Lns_NilAccPush( " );

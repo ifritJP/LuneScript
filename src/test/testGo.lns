@@ -1107,3 +1107,18 @@ return obj
       }
    }
 }
+_section();
+{
+   macro _hoge() {
+      let mut GGG = 1;
+   }
+
+   _hoge();
+   print( GGG );
+}
+_section();
+{
+   foreach _ in [ 1, 2, 3 ] {
+      print( "hoge" );
+   }
+}

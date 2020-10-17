@@ -2273,7 +2273,11 @@ pub class NilableTypeInfo extend TypeInfo {
 
 
    pub override fn get_display_stirng_with(
-      raw:str, alt2type:&Map<&TypeInfo,&TypeInfo>!  ): str {
+      mut raw:str, alt2type:&Map<&TypeInfo,&TypeInfo>!  ): str
+   {
+      if self.nonnilableType.$kind == .FormFunc {
+         return self.nonnilableType.get_display_stirng_with( raw .. "!", alt2type );
+      }
       return self.nonnilableType.get_display_stirng_with( raw, alt2type ) .. "!";
    }
    pub override fn get_display_stirng(): str {
@@ -3917,11 +3921,16 @@ pub fn isExtType( typeInfo:&TypeInfo ): bool {
 }
 
 let mut immutableTypeSet:Set<&TypeInfo> = (@);
+// 指定の型が mutable/imuttable に切り替え可能かどうか
 pub fn isMutableType( mut typeInfo:&TypeInfo ) : bool {
    typeInfo = typeInfo.$nonnilableType;
-   if immutableTypeSet.has( typeInfo ) or typeInfo.$kind == .FormFunc
-   {
+   if immutableTypeSet.has( typeInfo ) {
       return false;
+   }
+   switch typeInfo.$kind {
+      case .FormFunc, .Enum {
+         return false;
+      }
    }
    return true;
 }
@@ -4523,9 +4532,12 @@ pub class DDDTypeInfo extend TypeInfo {
    pri let typeId: int { pub };
    pri let externalFlag: bool {pub};
    pri let itemTypeInfoList: &List<&TypeInfo> {pub};
-   pri let extTypeFlag: bool {pub};
    pri let extedType:&TypeInfo {pub};
 
+   pub fn get_extTypeFlag(): bool {
+      return self.extedType ~= self;
+   }
+   
    pub override fn get_scope(): Scope! {
       return nil;
    }
@@ -4539,18 +4551,14 @@ pub class DDDTypeInfo extend TypeInfo {
       self.typeInfo = typeInfo;
       self.externalFlag = externalFlag;
       self.itemTypeInfoList = [ self.typeInfo ];
-      let extFlag;
       let extOrgType;
       when! extOrgDDType {
-         extFlag = false;
          extOrgType = extOrgDDType;
-         typeInfo2Map.DDDMap[ typeInfo ] = self;
-      } else {
-         extFlag = true;
-         extOrgType = self;
          typeInfo2Map.ExtDDDMap[ typeInfo ] = self;
+      } else {
+         extOrgType = self;
+         typeInfo2Map.DDDMap[ typeInfo ] = self;
       }
-      self.extTypeFlag = extFlag;
       self.extedType = extOrgType;
    }
 
@@ -4569,7 +4577,7 @@ pub class DDDTypeInfo extend TypeInfo {
       stream.write(
          '{ skind=%d, typeId = %d, itemTypeId = %d, parentId = %d, extTypeFlag = %s }\n'
          ( SerializeKind.DDD, self.typeId,
-           self.typeInfo.$typeId, headTypeInfo.$typeId, self.extTypeFlag ) );
+           self.typeInfo.$typeId, headTypeInfo.$typeId, self.$extTypeFlag ) );
    }
 
    pub override fn get_display_stirng_with(
@@ -4977,13 +4985,13 @@ pro override fn DDDTypeInfo.getTxtWithRaw(
    importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
 {
    if self.typeInfo == builtinTypeStem_ {
-      if self.extTypeFlag {
+      if self.$extTypeFlag {
          return "Luaval<...>";
       }
       return "...";
    }
    let txt = "...<%s>" (self.typeInfo.getTxt( typeNameCtrl, importInfo, localFlag ));
-   if self.extTypeFlag {
+   if self.$extTypeFlag {
       return "Luaval<%s>" (txt);
    }
    return txt;
