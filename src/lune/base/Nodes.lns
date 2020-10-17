@@ -1165,7 +1165,7 @@ pub override fn ExpRefNode.canBeRight():bool {
 */
 _declNodeClass( "ExpSetVal", Node, false, false, true,
                 [ { "exp1": "&Node" },
-                  { "exp2": "&Node" },
+                  { "exp2": "&ExpListNode" },
                   // 代入先のシンボルリスト
                   { "LeftSymList": "&List<&Ast.SymbolInfo>" },
                   // この代入によって値を初期化されるシンボル

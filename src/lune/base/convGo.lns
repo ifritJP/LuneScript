@@ -1535,6 +1535,11 @@ pub override fn convFilter.processRoot(
                }
                self.processConvExp( workNode.$id, symTypeList, workNode.$expList );
             } );
+   _filter( node.$nodeManager.getExpSetValNodeList(),
+            fn ( workNode:&Nodes.ExpSetValNode ) {
+               self.processConvExp(
+                  workNode.$id, workNode.$exp1.$expTypeList, workNode.$exp2 );
+            });
    
    _filter( node.$nodeManager.getExpCallNodeList(),
             fn ( workNode:&Nodes.ExpCallNode ) {
@@ -4280,23 +4285,15 @@ pub override fn convFilter.processExpSetVal(
    node: Nodes.ExpSetValNode, opt: Opt ) mut
 {
    filter( node.$exp1, self, node );
-   if getExpListKind( node.$exp1.$expTypeList,
-                      unwrap node.$exp2@@@Nodes.ExpListNode ) == .Direct
-   {
-      // ここは '_' の補正は不要
-   } else {
+   if getExpListKind( node.$exp1.$expTypeList, node.$exp2 ) == .Direct {
       for _ = #node.$exp1.$expTypeList + 1, #node.$exp2.$expTypeList {
          self.write( ",_" );
       }
    }
    self.write( " = " );
-   if node.$exp2.$expType.$kind == .DDD {
-      self.write( "Lns_getFromMulti( " );
-      filter( node.$exp2, self, node );
-      self.write( ", 0 )" );
-   } else {
-      filter( node.$exp2, self, node );
-   }
+   self.processSetFromExpList(
+      getConvExpName( node.$id, node.$exp2 ), node.$exp1.$expTypeList, node.$exp2 );
+   self.writeln( "" );
 }
 
 pub override fn convFilter.processExpSetItem(

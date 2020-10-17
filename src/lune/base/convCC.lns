@@ -9580,19 +9580,10 @@ fn convFilter.processConcat( node:&Nodes.ExpOp2Node, parent:&Nodes.Node ) mut
 pub override fn convFilter.processExpSetVal(
    node: Nodes.ExpSetValNode, opt: Opt ) mut
 {
-   //let symbolList = node.$exp1.getSymbolInfo();
-   let expList;
-   let mRetExp:&Nodes.MRetExp!;
-   if! let expListNode = node.$exp2@@@Nodes.ExpListNode {
-      expList = expListNode.$expList;
-      mRetExp = expListNode.$mRetExp;
-   }
-   else {
-      expList = [ node.$exp2 ];
-      mRetExp = nil;
-   }
-   
-   self.processSetValToNode( node, node.$exp1, node.$initSymSet, expList, mRetExp );
+   let expList = node.$exp2;
+   let mRetExp = node.$exp2.$mRetExp;
+   self.processSetValToNode(
+      node, node.$exp1, node.$initSymSet, expList.$expList, mRetExp );
 };
 
 
