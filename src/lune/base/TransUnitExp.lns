@@ -356,6 +356,17 @@ fn TransUnit.analyzeExpRefItem(
       // }
    }
 
+   // if Ast.isExtType( exp.$expType.$nonnilableType ) {
+   //    _match Ast.NormalTypeInfo.createLuaval( typeInfo ) {
+   //       case .OK( work, _ ) {
+   //          typeInfo = work;
+   //       }
+   //       case .Err( err ) {
+   //          self.addErrMess( exp.$pos, err );
+   //       }
+   //    }
+   // }
+
    let indexExp = self.analyzeExpOneRVal( false, false, nil, expectItemType );
    if not indexExp.canBeRight() {
       self.addErrMess( indexExp.$pos, "This node can't use index" );
@@ -3412,6 +3423,17 @@ fn TransUnit.analyzeExpUnwrap( firstToken: &Parser.Token ) mut : Nodes.Node {
    }
 
    self.helperInfo.useUnwrapExp = true;
+
+   if Ast.isExtType( expType.$nonnilableType ) {
+      match Ast.NormalTypeInfo.createLuaval( unwrapType ) {
+         case .OK( work, _ ) {
+            unwrapType = work;
+         }
+         case .Err( err ) {
+            self.addErrMess( firstToken.pos, err );
+         }
+      }
+   }
 
    return Nodes.ExpUnwrapNode.create(
       self.nodeManager, firstToken.pos,

@@ -68,6 +68,15 @@
       )))
 
 
+(defun lns-nilable-emphasis (str)
+  (let ((emphasis))
+    (setq emphasis (propertize "!" 'face font-lock-warning-face))
+    (apply 'concat
+	   (seq-subseq
+	    (apply 'append (mapcar (lambda (X) (list X emphasis))
+				   (split-string str "!" nil)))
+	    0 -1))))
+
 (defun lns-helm-create-candidate-list (candidate)
   (let* ((info (lns-json-val candidate :candidate))
 	 (item-type (lns-candidate-get-type info))
@@ -87,8 +96,8 @@
       (setq item-name (substring item-txt
 				 (match-beginning 1)
 				 (match-end 1)))
-      (setq item-name-append (substring item-txt
-					(match-end 1))))
+      (setq item-name-append
+	    (lns-nilable-emphasis (substring item-txt (match-end 1)))))
     (cons (format "(%s) %s%s"
 		  (propertize
 		   item-type 'face face)

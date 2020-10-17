@@ -2805,59 +2805,39 @@ pub override fn convFilter.processApply(
 
 fn convFilter.outputForeachLua( node: Nodes.ForeachNode, extType:&Ast.ExtTypeInfo ) mut {
    switch extType.$extedType.$kind {
-      case .List {
-         self.writeln( "{" );
-         self.pushIndent( ## );
-         self.write( "_index, _val := " );
+      case .List, .Map {
+         self.write( "_exp := " );
          filter( node.$exp, self, node );
-         self.writeln( ".Get1stFromMap()" );
-         self.writeln( "for _index != nil {" );
-         self.pushIndent( ## );
-         if! let keySym = node.$key {
-            self.write( "%s := _index" ( self.getSymbolSym( keySym ) ) );
-            self.outputAny2Type( keySym.$typeInfo );
-            self.writeln( "" );
-         }
-         self.write( "%s := _val" ( self.getSymbolSym( node.$val ) ) );
-         self.outputAny2Type( node.$val.$typeInfo );
          self.writeln( "" );
-         self.popIndent();
-
-         filter( node.$block, self, node );
-
-         self.pushIndent( ## );
-         self.write( "_index, _val = " );
-         filter( node.$exp, self, node );
-         self.writeln( ".NextFromMap( _index )" );
-
-         self.popIndent();
-         
-         self.writeln( "}" );
-         self.popIndent();
-         self.writeln( "}" );
-      }
-      case .Map {
          self.writeln( "{" );
          self.pushIndent( ## );
-         self.write( "_key, _val := " );
-         filter( node.$exp, self, node );
-         self.writeln( ".Get1stFromMap()" );
+         let tmpValName;
+         if node.$val.hasAccess() {
+            tmpValName = "_val";
+         } else {
+            tmpValName = "_";
+         }
+         self.writeln( "_key, %s := _exp.Get1stFromMap()" (tmpValName) );
          self.writeln( "for _key != nil {" );
          self.pushIndent( ## );
          if! let keySym = node.$key {
-            self.write( "%s := _key" ( self.getSymbolSym( keySym ) ) );
-            self.outputAny2Type( keySym.$typeInfo );
+            if keySym.hasAccess() {
+               self.write( "%s := _key" ( self.getSymbolSym( keySym ) ) );
+               self.outputAny2Type( keySym.$typeInfo );
+               self.writeln( "" );
+            }
+         }
+         if node.$val.hasAccess() {
+            self.write( "%s := _val" ( self.getSymbolSym( node.$val ) ) );
+            self.outputAny2Type( node.$val.$typeInfo );
             self.writeln( "" );
          }
-         self.write( "%s := _val" ( self.getSymbolSym( node.$val ) ) );
-         self.outputAny2Type( node.$val.$typeInfo );
-         self.writeln( "" );
          self.popIndent();
 
          filter( node.$block, self, node );
 
          self.pushIndent( ## );
-         self.write( "_key, _val = " );
+         self.write( "_key, %s = " (tmpValName));
          filter( node.$exp, self, node );
          self.writeln( ".NextFromMap( _key )" );
 
@@ -4445,6 +4425,23 @@ pub override fn convFilter.processExpRefItem(
 {
    let prefixType = node.$val.$expType.$nonnilableType;
    switch prefixType.$kind {
+      case .Ext {
+         if node.$nilAccess {
+            self.write( "Lns_NilAccFin( Lns_NilAccPush( " );
+            filter( node.$val, self, node );
+            self.write( ") && " );
+            self.write( "Lns_NilAccLast( Lns_NilAccPop().(*Lns_luaValue)" );
+         } else {
+            filter( node.$val, self, node );
+         }
+         self.write( ".GetAt(" );
+         if! let index = node.$index {
+            filter( index, self, node );
+         } else {
+            self.write( '"%s"' (str2gostr( unwrap node.$symbol)) );
+         }
+         self.write( ")" );
+      }
       case .List, .Array {
          if node.$nilAccess {
             self.write( "Lns_NilAccFin( Lns_NilAccPush( " );

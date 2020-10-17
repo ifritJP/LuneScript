@@ -664,6 +664,7 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
    }
 
    pub fn error( mess: str ) mut : __;
+   pub fn errorAt( pos:&Parser.Position, mess: str ) mut : __;
 
    pri fn pushAnalyzingState( state:AnalyzingState ) mut {
       self.analyzingStateQueue.insert( state );
@@ -1994,16 +1995,20 @@ _DefBuiltinFuncType( [
    },
    {
       "List<T>": {
+         "__less": { "type": [ "formfunc" ],
+                        "arg": [ "T", "T" ], "ret":[ "bool" ] },
          "insert": { "type": [ "mut" ], "arg": [ "T" ], "ret": [""] },
          "remove": { "type": [ "mut" ], "arg": [ "int!" ], "ret": ["T!"] },
          "unpack": { "type": [ "method" ], "arg": [ ], "ret": ["..."] },
-         "sort": { "type": [ "mut" ], "arg": [ "form!" ], "ret": [] },
+         "sort": { "type": [ "mut" ], "arg": [ "__less!" ], "ret": [] },
       },
    },
    {
       "Array<T>": {
+         "__less": { "type": [ "formfunc" ],
+                        "arg": [ "T", "T" ], "ret":[ "bool" ] },
          "unpack": { "type": [ "method" ], "arg": [ ], "ret": ["..."] },
-         "sort": { "type": [ "mut" ], "arg": [ "form!" ], "ret": [] },
+         "sort": { "type": [ "mut" ], "arg": [ "__less!" ], "ret": [] },
       },
    },
    {
@@ -2214,6 +2219,11 @@ fn TransUnit.registBuiltInScope() mut {
                   kind = .Macro;
                   symbolKind = .Mac;
                }
+               case "formfunc" {
+                  staticFlag = true;
+                  kind = .FormFunc;
+                  symbolKind = .Typ;
+               }
                default {
                   staticFlag = true;
                   kind = .Func;
@@ -2376,11 +2386,8 @@ fn TransUnit.registBuiltInScope() mut {
    self.scope = self.topScope;
 }
 
-pub fn TransUnit.error( mess: str ) mut : __ {
-   self.addErrMess( self.parser.getLastPos(), mess);
-   // Util.err( "%s:%d:%d: error:(%s) %s"
-   //           ( self.parser.getStreamName(),
-   //             pospos.lineNo, pos.column, txt, mess ) );
+pub fn TransUnit.errorAt( pos:&Parser.Position, mess: str ) mut : __ {
+   self.addErrMess( pos, mess);
 
    foreach errmess in self.errMessList {
       Util.errorLog( errmess );
@@ -2395,6 +2402,10 @@ pub fn TransUnit.error( mess: str ) mut : __ {
    }
    
    Util.err( "has error" );
+}
+
+pub fn TransUnit.error( mess: str ) mut : __ {
+   self.errorAt( self.parser.getLastPos(), mess );
 }
 
 fn TransUnit.createNoneNode( pos: &Parser.Position ) mut : Nodes.Node {
@@ -4103,9 +4114,8 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
 //          }
       }
       default {
-         self.error(
-            "unknown kind type of exp for foreach-- %s(%d:%d)"
-            (expType.getTxt(##), exp.$pos.lineNo, exp.$pos.column) );
+         self.errorAt(
+            exp.$pos, "unknown kind type of exp for foreach -- %s" (expType.getTxt(##)) );
       }
    }
 
