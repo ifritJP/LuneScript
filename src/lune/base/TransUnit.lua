@@ -1212,7 +1212,7 @@ function TransUnit:pushModule( externalFlag, name, mutable )
          local scope = self:pushScope( true )
          typeInfo = Ast.NormalTypeInfo.createModule( scope, parentInfo, externalFlag, modName, mutable )
          
-         local _5660, existSym = parentScope:addClass( modName, nil, typeInfo )
+         local _5663, existSym = parentScope:addClass( modName, nil, typeInfo )
          if existSym ~= nil then
             self:addErrMess( self.parser:getLastPos(  ), string.format( "module symbols exist -- %s.%s -- %s.%s", existSym:get_namespaceTypeInfo():getFullName( self.typeNameCtrl, parentScope, false ), existSym:get_name(), parentInfo:getFullName( self.typeNameCtrl, parentScope, false ), modName) )
          end
@@ -3605,7 +3605,7 @@ function TransUnit:registBuiltInScope(  )
       end
       
       local genTypeList = {}
-      local _6460, endIndex = typeName:find( "[%w%.]+<" )
+      local _6463, endIndex = typeName:find( "[%w%.]+<" )
       local suffix = ""
       if endIndex ~= nil then
          local genTypeName = typeName:sub( endIndex + 1 )
@@ -4482,7 +4482,7 @@ function TransUnit:processImport( modulePath )
          local dependInfo = __map[ dependName ]
          do
             if dependInfo['use'] then
-               local _6684, metaTypeId2TypeInfoMap = self:processImport( dependName )
+               local _6687, metaTypeId2TypeInfoMap = self:processImport( dependName )
                local typeId = math.floor((_lune.unwrap( dependInfo['typeId']) ))
                dependLibId2DependInfo[typeId] = DependModuleInfo.new(typeId, metaTypeId2TypeInfoMap)
             end
@@ -4520,7 +4520,7 @@ function TransUnit:processImport( modulePath )
       moduleTypeInfo = self:pushModule( true, moduleName, mutable )
    end
    
-   for __index, _6698 in ipairs( nameList ) do
+   for __index, _6701 in ipairs( nameList ) do
       self:popModule(  )
    end
    
@@ -4796,7 +4796,7 @@ function TransUnit:processImport( modulePath )
    end
    
    
-   for __index, _6754 in ipairs( nameList ) do
+   for __index, _6757 in ipairs( nameList ) do
       self:popModule(  )
    end
    
@@ -6268,7 +6268,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
    
    
    if moduleName ~= nil then
-      for _7105 in string.gmatch( moduleName, '[^%.]+' ) do
+      for _7108 in string.gmatch( moduleName, '[^%.]+' ) do
          self:popModule(  )
       end
       
@@ -6436,7 +6436,7 @@ function TransUnit:analyzeDeclMacro( accessMode, firstToken )
    local node = self:analyzeDeclMacroSub( accessMode, firstToken, nameToken, scope, parentInfo, workArgList )
    self.scope = backScope
    
-   local _7149, existSym = self.scope:addMacro( nameToken.pos, node:get_expType(), accessMode )
+   local _7152, existSym = self.scope:addMacro( nameToken.pos, node:get_expType(), accessMode )
    if existSym then
       self:addErrMess( nameToken.pos, string.format( "multiple define symbol -- %s", nameToken.txt) )
    end
@@ -6803,7 +6803,7 @@ function TransUnit:analyzeDeclEnum( accessMode, firstToken )
    
    self:popScope(  )
    
-   local _7245, shadowing = self.scope:addEnum( accessMode, name.txt, name.pos, enumTypeInfo )
+   local _7248, shadowing = self.scope:addEnum( accessMode, name.txt, name.pos, enumTypeInfo )
    self:errorShadowing( name.pos, shadowing )
    
    return Nodes.DeclEnumNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {enumTypeInfo}, enumTypeInfo, accessMode, name, valueList, scope )
@@ -6822,7 +6822,7 @@ function TransUnit:analyzeDeclAlge( accessMode, firstToken )
    local algeScope = self:pushScope( true )
    
    local algeTypeInfo = Ast.NormalTypeInfo.createAlge( algeScope, self:getCurrentNamespaceTypeInfo(  ), false, accessMode, name.txt )
-   local _7256, shadowing = scope:addAlge( accessMode, name.txt, name.pos, algeTypeInfo )
+   local _7259, shadowing = scope:addAlge( accessMode, name.txt, name.pos, algeTypeInfo )
    self:errorShadowing( name.pos, shadowing )
    
    local nextToken = self:getToken(  )
@@ -6838,7 +6838,7 @@ function TransUnit:analyzeDeclAlge( accessMode, firstToken )
       local typeInfoList = {}
       if nextToken.txt == "(" then
          while true do
-            local _7261 = self:getToken(  )
+            local _7264 = self:getToken(  )
             local workToken2 = self:getToken(  )
             if workToken2.txt ~= ":" then
                self:pushback(  )
@@ -7764,7 +7764,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
    end
    
    
-   local node, _7510, methodNameSet = self:analyzeClassBody( classAccessMode, firstToken, mode, gluePrefix, classTypeInfo, name, moduleName, nextToken )
+   local node, _7513, methodNameSet = self:analyzeClassBody( classAccessMode, firstToken, mode, gluePrefix, classTypeInfo, name, moduleName, nextToken )
    local parentInfo = classTypeInfo
    for __index, memberNode in ipairs( node:get_memberList() ) do
       local memberType = memberNode:get_expType()
@@ -8539,7 +8539,7 @@ function TransUnit:analyzeLetAndInitExp( firstPos, initMutable, accessMode, unwr
       
       if unwrapFlag then
          local hasNilable = false
-         for index, _7680 in ipairs( letVarList ) do
+         for index, _7683 in ipairs( letVarList ) do
             if expList:getExpTypeAt( index ):get_nilable() then
                hasNilable = true
                break
@@ -9787,7 +9787,7 @@ function TransUnit:analyzeListItems( firstPos, nextToken, termTxt, expectTypeLis
                   table.insert( expTypeList, expNode:get_expType() )
                else
                 
-                  for _7982 = 1, #expNode:get_expTypeList() do
+                  for _7985 = 1, #expNode:get_expTypeList() do
                      table.insert( expTypeList, itemTypeInfo )
                   end
                   
@@ -9802,7 +9802,7 @@ function TransUnit:analyzeListItems( firstPos, nextToken, termTxt, expectTypeLis
          
       end
       
-      local _7983, _7984, workExpList = self:checkMatchType( "List constructor", firstPos, expTypeList, expList, false, false, nil )
+      local _7986, _7987, workExpList = self:checkMatchType( "List constructor", firstPos, expTypeList, expList, false, false, nil )
       if workExpList ~= nil then
          expList = workExpList
       end
@@ -10593,21 +10593,26 @@ function TransUnit:analyzeExpCast( firstToken, opTxt, exp )
          if _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.Prim then
          else 
             
-               self:addErrMess( castTypeNode:get_pos(), string.format( "not support cast -- %s", castType:getTxt(  )) )
+               if opTxt ~= "@@=" then
+                  self:addErrMess( castTypeNode:get_pos(), string.format( "not support cast -- %s", castType:getTxt(  )) )
+               end
+               
          end
       end
       
       
       if opTxt == "@@=" then
-         if castType:get_kind() ~= Ast.TypeInfoKind.IF and castType:get_kind() ~= Ast.TypeInfoKind.Class then
+         local orgExpType = expType:get_extedType()
+         local orgCastType = castType:get_extedType()
+         if orgCastType:get_kind() ~= Ast.TypeInfoKind.IF and orgCastType:get_kind() ~= Ast.TypeInfoKind.Class then
             self:addErrMess( castTypeNode:get_pos(), string.format( "'@@=' cast must be class or interface. -- %s", castType:getTxt(  )) )
          end
          
-         if expType:get_srcTypeInfo() ~= Ast.builtinTypeStem and expType:get_kind() ~= Ast.TypeInfoKind.IF and expType:get_kind() ~= Ast.TypeInfoKind.Class then
+         if orgExpType:get_srcTypeInfo() ~= Ast.builtinTypeStem and orgExpType:get_kind() ~= Ast.TypeInfoKind.IF and orgExpType:get_kind() ~= Ast.TypeInfoKind.Class then
             self:addErrMess( castTypeNode:get_pos(), string.format( "'@@=' cast must be class or interface. -- %s", castType:getTxt(  )) )
          end
          
-         if not Ast.isStruct( castType ) then
+         if not Ast.isStruct( orgCastType ) then
             self:addErrMess( castTypeNode:get_pos(), string.format( "'@@=' cast type can't use class has method -- %s", castType:getTxt(  )) )
          end
          
@@ -11118,11 +11123,15 @@ function TransUnit:analyzeExpField( firstToken, token, mode, prefixExp )
       
    end
    
-   do
-      local extType = _lune.__Cast( prefixExpType, 3, Ast.ExtTypeInfo )
-      if extType ~= nil then
-         prefixExpType = extType:get_extedType()
-      end
+   
+   local extFlag
+   
+   if prefixExpType:get_kind() == Ast.TypeInfoKind.Ext then
+      extFlag = true
+      prefixExpType = prefixExpType:get_extedType()
+   else
+    
+      extFlag = false
    end
    
    
@@ -11365,6 +11374,23 @@ function TransUnit:analyzeExpField( firstToken, token, mode, prefixExp )
    end
    
    
+   if extFlag then
+      do
+         local _matchExp = Ast.NormalTypeInfo.createLuaval( typeInfo )
+         if _matchExp[1] == Ast.LuavalResult.OK[1] then
+            local work = _matchExp[2][1]
+            local _ = _matchExp[2][2]
+         
+            typeInfo = work
+         elseif _matchExp[1] == Ast.LuavalResult.Err[1] then
+            local err = _matchExp[2][1]
+         
+            self:addErrMess( firstToken.pos, string.format( "not support -- %s", err) )
+         end
+      end
+      
+   end
+   
    do
       local _exp = getterTypeInfo
       if _exp ~= nil then
@@ -11402,7 +11428,7 @@ function TransUnit:analyzeNewAlge( firstToken, algeTypeInfo, prefix )
          
          
          do
-            local _8381, _8382, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, nil )
+            local _8389, _8390, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, nil )
             if newExpNodeList ~= nil then
                argList = newExpNodeList:get_expList()
             end
@@ -11659,7 +11685,7 @@ function TransUnit:analyzeExpOpSet( exp, opeToken, expectTypeList )
    end
    
    
-   local _8432, _8433, workList, expTypeList = self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), expList, true, false, nil )
+   local _8440, _8441, workList, expTypeList = self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), expList, true, false, nil )
    if workList ~= nil then
       expList = workList
    end
@@ -12345,7 +12371,7 @@ function TransUnit:analyzeStrConst( firstToken, token )
          local argNodeList = self:analyzeExpList( false, false, false )
          param = argNodeList
          
-         local _8550, _8551, workExpList = self:checkMatchType( "str constructor", firstToken.pos, {Ast.builtinTypeDDD}, argNodeList, false, false, nil )
+         local _8558, _8559, workExpList = self:checkMatchType( "str constructor", firstToken.pos, {Ast.builtinTypeDDD}, argNodeList, false, false, nil )
          if workExpList ~= nil then
             dddParam = workExpList
          else
@@ -12492,7 +12518,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, canLeftExp, prevOpLev
       end
       
       
-      local _8585, alt2type, newArgList = self:checkMatchValType( exp:get_pos(), initTypeInfo, argList, classTypeInfo:get_itemTypeInfoList(), classTypeInfo )
+      local _8593, alt2type, newArgList = self:checkMatchValType( exp:get_pos(), initTypeInfo, argList, classTypeInfo:get_itemTypeInfoList(), classTypeInfo )
       
       if #classTypeInfo:get_itemTypeInfoList() > 0 then
          if classTypeInfo:get_itemTypeInfoList()[1]:get_kind() == Ast.TypeInfoKind.Alternate then
@@ -12778,7 +12804,7 @@ function TransUnit:analyzeReturn( token )
       local workList = expList
       if workList ~= nil then
          do
-            local _8622, _8623, newExpNodeList = self:checkMatchType( "return", token.pos, retTypeList, workList, false, not workList:get_followOn(), nil )
+            local _8630, _8631, newExpNodeList = self:checkMatchType( "return", token.pos, retTypeList, workList, false, not workList:get_followOn(), nil )
             if newExpNodeList ~= nil then
                expList = newExpNodeList
             end

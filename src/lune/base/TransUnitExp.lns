@@ -1634,25 +1634,29 @@ fn TransUnit.analyzeExpCast(
          case .IF, .Class, .Prim {
          }
          default {
-            self.addErrMess( castTypeNode.$pos,
-                             "not support cast -- %s" (castType.getTxt(##)));
+            if opTxt ~= "@@=" {
+               self.addErrMess( castTypeNode.$pos,
+                                "not support cast -- %s" (castType.getTxt(##)));
+            }
          }
       }
 
       if opTxt == "@@=" {
-         if castType.$kind ~= .IF and castType.$kind ~= .Class {
+         let orgExpType = expType.$extedType;
+         let orgCastType = castType.$extedType;
+         if orgCastType.$kind ~= .IF and orgCastType.$kind ~= .Class {
             self.addErrMess( castTypeNode.$pos,
                              "'@@=' cast must be class or interface. -- %s"
                              (castType.getTxt(##)) );
          }
-         if expType.$srcTypeInfo ~= Ast.builtinTypeStem and
-            expType.$kind ~= .IF and expType.$kind ~= .Class
+         if orgExpType.$srcTypeInfo ~= Ast.builtinTypeStem and
+            orgExpType.$kind ~= .IF and orgExpType.$kind ~= .Class
          {           
             self.addErrMess( castTypeNode.$pos,
                              "'@@=' cast must be class or interface. -- %s"
                              (castType.getTxt(##)) );
          }  
-         if not Ast.isStruct( castType ) {
+         if not Ast.isStruct( orgCastType ) {
             self.addErrMess( castTypeNode.$pos,
                              "'@@=' cast type can't use class has method -- %s"
                              (castType.getTxt(##)));
@@ -2159,8 +2163,13 @@ fn TransUnit.analyzeExpField(
          accessNil = false;
       }
    }
-   if! let extType = prefixExpType@@@Ast.ExtTypeInfo {
-      prefixExpType = extType.$extedType;
+
+   let extFlag;
+   if prefixExpType.$kind == .Ext {
+      extFlag = true;
+      prefixExpType = prefixExpType.$extedType;
+   } else {
+      extFlag = false;
    }
 
    self.checkFieldComp(
@@ -2217,7 +2226,8 @@ fn TransUnit.analyzeExpField(
                let funcType = funcSymbol.$typeInfo;
                if funcType.$staticFlag ~= isTypeSymbol {
                   self.addErrMess(
-                     prefixExp.$pos, "Can't access -- %s, %s" ( fieldName, isTypeSymbol) );
+                     prefixExp.$pos,
+                     "Can't access -- %s, %s" ( fieldName, isTypeSymbol) );
                }
                
                
@@ -2394,6 +2404,16 @@ fn TransUnit.analyzeExpField(
    }
    
    
+   if extFlag {
+      match Ast.NormalTypeInfo.createLuaval( typeInfo ) {
+         case .OK( work, _ ) {
+            typeInfo = work;
+         }
+         case .Err( err ) {
+            self.addErrMess( firstToken.pos, "not support -- %s" ( err ) );
+         }
+      }
+   }
    if! getterTypeInfo {
       return Nodes.GetFieldNode.create(
          self.nodeManager, firstToken.pos,

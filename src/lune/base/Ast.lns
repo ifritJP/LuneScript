@@ -2253,7 +2253,10 @@ pub class NilableTypeInfo extend TypeInfo {
    pub override fn get_nilable(): bool {
       return true;
    }
-
+   pub override fn get_extedType(): &TypeInfo {
+      return self;
+   }
+   
    /** この型の名前を取得する。 */
    pub override fn getTxt(
       typeNameCtrl:&TypeNameCtrl!, importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
@@ -2644,6 +2647,10 @@ pub class BoxTypeInfo extend TypeInfo {
    pub override fn get_nilable(): bool {
       return false;
    }
+   pub override fn get_extedType(): &TypeInfo {
+      return self;
+   }
+   
 
    /** この型の名前を取得する。 */
    pub override fn getTxt(
@@ -2800,6 +2807,9 @@ pub class GenericTypeInfo extend TypeInfo {
 
    /** Modifier の元となる型情報 */
    pub override fn get_srcTypeInfo(): &TypeInfo {
+      return self;
+   }
+   pub override fn get_extedType(): &TypeInfo {
       return self;
    }
 
@@ -3901,10 +3911,16 @@ pub class TypeInfo2Map {
 
 let mut typeInfo2Map = new TypeInfo2Map();
 
+pub fn isExtType( typeInfo:&TypeInfo ): bool {
+   return typeInfo.$kind == .Ext or (typeInfo.$kind == .DDD and
+                                      typeInfo.$extedType ~= typeInfo );
+}
 
 let mut immutableTypeSet:Set<&TypeInfo> = (@);
-pub fn isMutableType( typeInfo:&TypeInfo ) : bool {
-   if immutableTypeSet.has( typeInfo ) or typeInfo.$kind == .FormFunc {
+pub fn isMutableType( mut typeInfo:&TypeInfo ) : bool {
+   typeInfo = typeInfo.$nonnilableType;
+   if immutableTypeSet.has( typeInfo ) or typeInfo.$kind == .FormFunc
+   {
       return false;
    }
    return true;
@@ -4129,6 +4145,75 @@ immutableTypeSet.add( builtinTypeInt );
 immutableTypeSet.add( builtinTypeReal );
 immutableTypeSet.add( builtinTypeChar );
 immutableTypeSet.add( builtinTypeString );
+
+
+/**
+typeInfo の Luaval を生成可能かどうかを調べる。
+
+@param convFlag true の場合、Luaval と LuneScript との値の変換を自動で行なえるかどうか。
+@return 生成可能な場合は nil。 生成できない場合は メッセージを返す。
+*/
+fn failCreateLuavalWith( typeInfo:&TypeInfo, convFlag:bool ) : str!, bool {
+   macro _checkItemType( itemTypeList:__exp ) {
+      foreach itemType in ,,itemTypeList {
+         let err, work = failCreateLuavalWith( itemType, convFlag );
+         when! err {
+            return err, false;
+         }
+         if not work {
+            canConv = false;
+         }
+      }
+   }
+   let mess = "not support to use the type as Luaval -- %s" (typeInfo.getTxt(##));
+   switch typeInfo.$kind {
+      case .Nilable {
+         return failCreateLuavalWith( typeInfo.$nonnilableType, convFlag )**;
+      }
+      case .Prim {
+         return nil, true;
+      }
+      case .Form, .IF, .Stem, .DDD {
+         if convFlag {
+            return mess, false;
+         }
+         return nil, false;
+      }
+      case .Class {
+         if typeInfo ~= builtinTypeString {
+            if convFlag {
+               return mess, false;
+            }
+            return nil, false;
+         }
+         return nil, true;
+      }
+      case .Array, .List, .Map {
+         if isMutable( typeInfo.$mutMode ) {
+            return "not support mutable collecion. " .. mess, false;
+         }
+         let mut canConv = true;
+         _checkItemType( typeInfo.$itemTypeInfoList );
+         canConv = false;
+         return nil, canConv;
+      }
+      case .FormFunc {
+         if convFlag {
+            return mess, false;
+         }
+         if #typeInfo.$itemTypeInfoList ~= 0 {
+            return mess, false;
+         }
+         let mut canConv = true;
+         _checkItemType( typeInfo.$argTypeInfoList );
+         _checkItemType( typeInfo.$retTypeInfoList );
+         canConv = false;
+         return nil, canConv;
+      }
+   }
+   return "not support -- %s" (typeInfo.getTxt(##)), false;
+}
+
 
 pub fn isClass( typeInfo:&TypeInfo ) : bool {
    return typeInfo.$kind == .Class and typeInfo ~= builtinTypeString;
@@ -4439,13 +4524,14 @@ pub class DDDTypeInfo extend TypeInfo {
    pri let externalFlag: bool {pub};
    pri let itemTypeInfoList: &List<&TypeInfo> {pub};
    pri let extTypeFlag: bool {pub};
+   pri let extedType:&TypeInfo {pub};
 
    pub override fn get_scope(): Scope! {
       return nil;
    }
 
    pub fn __init( processInfo:&ProcessInfo!, typeId:int, typeInfo:&TypeInfo,
-                  externalFlag:bool, extTypeFlag:bool )   
+                  externalFlag:bool, extOrgDDType:&DDDTypeInfo! )   
    {
       super( nil, processInfo );
       self.typeId = typeId;
@@ -4453,13 +4539,19 @@ pub class DDDTypeInfo extend TypeInfo {
       self.typeInfo = typeInfo;
       self.externalFlag = externalFlag;
       self.itemTypeInfoList = [ self.typeInfo ];
-      self.extTypeFlag = extTypeFlag;
-
-      if extTypeFlag {
-         typeInfo2Map.ExtDDDMap[ typeInfo ] = self;
-      } else {
+      let extFlag;
+      let extOrgType;
+      when! extOrgDDType {
+         extFlag = false;
+         extOrgType = extOrgDDType;
          typeInfo2Map.DDDMap[ typeInfo ] = self;
+      } else {
+         extFlag = true;
+         extOrgType = self;
+         typeInfo2Map.ExtDDDMap[ typeInfo ] = self;
       }
+      self.extTypeFlag = extFlag;
+      self.extedType = extOrgType;
    }
 
    pub override fn isModule(): bool {
@@ -4484,16 +4576,10 @@ pub class DDDTypeInfo extend TypeInfo {
       raw:str, alt2type:&Map<&TypeInfo,&TypeInfo>! ): str
    {
       let txt = self.getTxtWithRaw( raw ##);
-      if self.extTypeFlag {
-         return "Luaval<%s>" (txt);
-      }
       return txt;
    }
    pub override fn get_display_stirng(): str {
       let txt = self.get_display_stirng_with( self.$rawTxt, nil );
-      if self.extTypeFlag {
-         return "Luaval<%s>" (txt);
-      }
       return txt;
    }
 
@@ -4529,8 +4615,15 @@ pub class DDDTypeInfo extend TypeInfo {
 
 
 pub static fn NormalTypeInfo.createDDD(
-   typeInfo:&TypeInfo, externalFlag:bool, extTypeFlag:bool ): &DDDTypeInfo
+   mut typeInfo:&TypeInfo, externalFlag:bool, mut extTypeFlag:bool ): &DDDTypeInfo
 {
+   if typeInfo.$kind == .DDD {
+      typeInfo = typeInfo.$itemTypeInfoList[ 1 ];
+   }
+   if not failCreateLuavalWith( typeInfo, true ) and extTypeFlag {
+      extTypeFlag = false;
+   }
+   
    let dddMap = extTypeFlag and typeInfo2Map.ExtDDDMap or typeInfo2Map.DDDMap;
    if! dddMap[ typeInfo ] {
       if _exp.$typeId < userStartId and typeInfo.$typeId >= userStartId {
@@ -4539,10 +4632,22 @@ pub static fn NormalTypeInfo.createDDD(
       return _exp;
    }
 
-   //typeIdSeed = typeIdSeed + 1;
    idProv.increment();
-   return new DDDTypeInfo( getCurProcessInfo(), idProv.$id, typeInfo,
-                           externalFlag, extTypeFlag );            
+   let dddType = new DDDTypeInfo(
+      getCurProcessInfo(), idProv.$id, typeInfo, externalFlag, nil );
+
+   if failCreateLuavalWith( typeInfo, true ) {
+      // dddType 生成時に extTypeFlag の dddType を生成して map に登録しておく
+      idProv.increment();
+      let extDDDType = new DDDTypeInfo(
+         getCurProcessInfo(), idProv.$id, typeInfo, externalFlag, dddType );
+
+      if extTypeFlag {
+         return extDDDType;
+      }
+   }
+
+   return dddType;
 }
 
 
@@ -5036,69 +5141,6 @@ pub let builtinTypeAbbrNone:TypeInfo =
 
 
 
-/**
-typeInfo の Luaval を生成可能かどうかを調べる。
-
-@param convFlag true の場合、Luaval と LuneScript との値の変換を自動で行なえるかどうか。
-@return 生成可能な場合は nil。 生成できない場合は メッセージを返す。
-*/
-fn failCreateLuavalWith( typeInfo:&TypeInfo, convFlag:bool ) : str!, bool {
-   macro _checkItemType( itemTypeList:__exp ) {
-      foreach itemType in ,,itemTypeList {
-         let err, work = failCreateLuavalWith( itemType, convFlag );
-         when! err {
-            return err, false;
-         }
-         if not work {
-            canConv = false;
-         }
-      }
-   }
-   let mess = "not support to use the type as Luaval -- %s" (typeInfo.getTxt(##));
-   switch typeInfo.$kind {
-      case .Prim {
-         return nil, true;
-      }
-      case .Form, .IF, .Stem, .DDD {
-         if convFlag {
-            return mess, false;
-         }
-         return nil, false;
-      }
-      case .Class {
-         if typeInfo ~= builtinTypeString {
-            if convFlag {
-               return mess, false;
-            }
-            return nil, false;
-         }
-         return nil, true;
-      }
-      case .Array, .List, .Map {
-         if isMutable( typeInfo.$mutMode ) {
-            return "not support mutable collecion. " .. mess, false;
-         }
-         let mut canConv = true;
-         _checkItemType( typeInfo.$itemTypeInfoList );
-         canConv = false;
-         return nil, canConv;
-      }
-      case .FormFunc {
-         if convFlag {
-            return mess, false;
-         }
-         if #typeInfo.$itemTypeInfoList ~= 0 {
-            return mess, false;
-         }
-         let mut canConv = true;
-         _checkItemType( typeInfo.$argTypeInfoList );
-         _checkItemType( typeInfo.$retTypeInfoList );
-         canConv = false;
-         return nil, canConv;
-      }
-   }
-   return "not support -- %s" (typeInfo.getTxt(##)), false;
-}
 
 pub class ExtTypeInfo extend TypeInfo {
    pri let typeId: int { pub };
@@ -5219,7 +5261,10 @@ pub class ExtTypeInfo extend TypeInfo {
 
 pub static fn NormalTypeInfo.createLuaval( luneType:&TypeInfo ) : LuavalResult
 {
-   if luneType.$kind == .Ext {
+   if luneType.$kind == .Method {
+      return .OK( luneType, true );
+   }
+   if isExtType( luneType ) {
       return .OK( luneType, true );
    }
    if! let extType = typeInfo2Map.ExtMap[ luneType ] {
@@ -5284,8 +5329,11 @@ match NormalTypeInfo.createLuaval( builtinTypeStem ) {
    }
 }
 registBuiltin( "Luaval", "Luaval", .Ext, builtinTypeLua, headTypeInfo, false );
+// NormalTypeInfo.createDDD( builtinTypeLua, true, false );
+// pub let builtinTypeDDDLua:TypeInfo =
+//    NormalTypeInfo.createDDD( builtinTypeLua, true, true );
 pub let builtinTypeDDDLua:TypeInfo =
-   NormalTypeInfo.createDDD( builtinTypeLua, true, true );
+   NormalTypeInfo.createDDD( builtinTypeStem_, true, true );
 registBuiltin( "__LuaDDD", "__LuaDDD", .Ext, builtinTypeDDDLua, headTypeInfo, false );
 
 pub fn convToExtTypeList( list:&List<&TypeInfo> ) : List<&TypeInfo>!, str {
@@ -5508,6 +5556,7 @@ pub override fn NilableTypeInfo.canEvalWith(
    if self == builtinTypeStem_ {
       return true, nil;
    }
+   
    if otherSrc == builtinTypeNil or otherSrc.$kind == .Abbr {
       if self.$nonnilableType.$kind == .Box {
          return self.$nonnilableType.canEvalWith( otherSrc, canEvalType, alt2type )**;
@@ -5701,7 +5750,7 @@ pub static fn TypeInfo.checkMatchType(
          }
          elseif workExpType == builtinTypeAbbrNone {
             return .Warn, Code.format( .nothing_define_abbr,
-                                       "use '##', instate of %s."
+                                       "use '##', instate of '%s'."
                                        (workDstType.getTxt(defaultTypeNameCtrl##)) );
          }
 
@@ -5848,7 +5897,7 @@ pub static fn TypeInfo.checkMatchType(
                ( index, dstType.getTxt( defaultTypeNameCtrl## ));
             }
             return .Warn, Code.format( .nothing_define_abbr,
-                                       "use '##', instate of %s."
+                                       "use '##', instate of '%s'."
                                        (dstType.getTxt( defaultTypeNameCtrl##) ) );
          }
       // }

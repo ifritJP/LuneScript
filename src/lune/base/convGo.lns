@@ -2810,7 +2810,7 @@ fn convFilter.outputForeachLua( node: Nodes.ForeachNode, extType:&Ast.ExtTypeInf
          self.pushIndent( ## );
          self.write( "_index, _val := " );
          filter( node.$exp, self, node );
-         self.writeln( ".Get1stFromList()" );
+         self.writeln( ".Get1stFromMap()" );
          self.writeln( "for _index != nil {" );
          self.pushIndent( ## );
          if! let keySym = node.$key {
@@ -2881,7 +2881,7 @@ pub override fn convFilter.processForeach(
       return;
    }
    
-   macro _keyItemDecl( typeSym:sym, typeName:__exp ) {
+   macro _keyItemDecl( typeName:__exp ) {
       if ,,typeName ~= "_" {
          self.write( "_%s" (,,typeName) );
       } else {
@@ -2901,11 +2901,8 @@ pub override fn convFilter.processForeach(
    switch loopExpType.$kind {
       case .List, .Array {
          if! let key = node.$key {
-            if key.$name == "_" {
-               self.write( "_, " );
-            } else {
-               self.write( "_%s, " (key.$name) );
-            }
+            _keyItemDecl( key.$name );
+            self.write( ", " );
          }
          else {
             self.write( "_, " );
@@ -2913,7 +2910,7 @@ pub override fn convFilter.processForeach(
          
          let valName = self.getSymbolSym( node.$val );
          let itemType = loopExpType.$itemTypeInfoList[ 1 ];
-         _keyItemDecl( itemType, valName );
+         _keyItemDecl( valName );
          self.write( " := range( " );
          filter( node.$exp, self, node );
          self.writeln( ".Items ) {" );
@@ -2927,7 +2924,7 @@ pub override fn convFilter.processForeach(
       case .Map {
          let keyType = loopExpType.$itemTypeInfoList[ 1 ];
          if! let key = node.$key {
-            _keyItemDecl( keyType, key.$name );
+            _keyItemDecl( key.$name );
             self.write( ", " );
          }
          else {
@@ -2936,7 +2933,7 @@ pub override fn convFilter.processForeach(
          
          let valName = self.getSymbolSym( node.$val );
          let itemType = loopExpType.$itemTypeInfoList[ 2 ];
-         _keyItemDecl( itemType, valName );
+         _keyItemDecl( valName );
          self.write( " := range( " );
          filter( node.$exp, self, node );
          self.writeln( ".Items ) {" );
@@ -2950,7 +2947,7 @@ pub override fn convFilter.processForeach(
       case .Set {
          let valType = loopExpType.$itemTypeInfoList[ 1 ];
          let valName = self.getSymbolSym( node.$val );
-         _keyItemDecl( valType, valName );
+         _keyItemDecl( valName );
          self.write( " := range( " );
          filter( node.$exp, self, node );
          self.writeln( ".Items ) {" );
@@ -4570,15 +4567,20 @@ pub override fn convFilter.processRefField(
    
    self.write( "." );
    if! let symbol = node.$symbolInfo {
-      self.write( self.getSymbolSym( symbol ) );
-      // self.outputSymbol(
-      //    .Member( Ast.isPubToExternal( symbol.$accessMode ) ), node.$field.txt );
+      if node.$prefix.$expType.$kind == .Ext {
+         self.write( 'GetAt( "%s" )' (symbol.$name) );
+         self.outputAny2Type( node.$expType );
+      } else {
+         self.write( self.getSymbolSym( symbol ) );
+         // self.outputSymbol(
+         //    .Member( Ast.isPubToExternal( symbol.$accessMode ) ), node.$field.txt );
 
-      let orgSym = symbol.getOrg();
-      if orgSym.$kind == .Mbr and orgSym.$typeInfo.$kind == .Alternate and
-         isAnyType( orgSym.$typeInfo )
-      {
-         self.outputAny2Type( symbol.$typeInfo );
+         let orgSym = symbol.getOrg();
+         if orgSym.$kind == .Mbr and orgSym.$typeInfo.$kind == .Alternate and
+            isAnyType( orgSym.$typeInfo )
+         {
+            self.outputAny2Type( node.$expType );
+         }
       }
    } else {
       Util.err( "not support -- %s" (__func__) );

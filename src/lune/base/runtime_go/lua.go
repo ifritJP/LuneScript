@@ -394,3 +394,17 @@ func (obj *Lns_luaValue) CallMethod( funcname string, args[] LnsAny ) []LnsAny {
     
     return ret
 }
+
+func (obj *Lns_luaValue) GetAt( index LnsAny ) LnsAny {
+    luaVM := obj.luaVM
+    
+    vm := luaVM.vm
+    top := lua_gettop( vm )
+    defer lua_settop( vm, top )
+
+    obj.pushValFromGlobalValMap() // obj を push
+    pVal := luaVM.pushAny( index ) // arg を push
+    defer pVal.free()
+    lua_gettable( vm, -2 ); // obj[arg] を push
+    return luaVM.setupFromStack( -1 )
+}

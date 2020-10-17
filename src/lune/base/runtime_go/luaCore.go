@@ -86,6 +86,12 @@ func lua_copy(vm *C.lua_State, from int, to int ) {
 func lua_createtable(vm *C.lua_State) {
     C.lua_createtable(vm,C.int(0), C.int(0))
 }
+func lua_geti(vm *C.lua_State, index int, fieldPos int ) int {
+    return int(C.lua_geti(vm, C.int(index), C.longlong(fieldPos) ))
+}
+func lua_gettable(vm *C.lua_State, index int ) int {
+    return int(C.lua_gettable(vm, C.int(index) ))
+}
 func lua_getfield(vm *C.lua_State, index int, pSym *C.char ) int {
     return int(C.lua_getfield(vm, C.int(index), pSym ))
 }

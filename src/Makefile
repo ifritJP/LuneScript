@@ -68,7 +68,7 @@ help:
 	@echo "  make test-on-docker"
 	@echo "  make test-reference"
 	@echo "  make test-go"
-	@echo "  make test-miniGo"
+	@echo "  make test-miniGo [NO_LUA_DIFF=y]"
 	@echo "  make scratch-go"
 	@echo "  make test-tutorial-go"
 

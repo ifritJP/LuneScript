@@ -3035,6 +3035,10 @@ function NilableTypeInfo:get_nilable(  )
 
    return true
 end
+function NilableTypeInfo:get_extedType(  )
+
+   return self
+end
 function NilableTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
 
    return self:getTxtWithRaw( self:get_rawTxt(), typeNameCtrl, importInfo, localFlag )
@@ -3154,10 +3158,6 @@ end
 
 function NilableTypeInfo:get_children( ... )
    return self.nonnilableType:get_children( ... )
-end
-
-function NilableTypeInfo:get_extedType( ... )
-   return self.nonnilableType:get_extedType( ... )
 end
 
 function NilableTypeInfo:get_externalFlag( ... )
@@ -3561,6 +3561,10 @@ function BoxTypeInfo:get_nilable(  )
 
    return false
 end
+function BoxTypeInfo:get_extedType(  )
+
+   return self
+end
 function BoxTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
 
    return self:getTxtWithRaw( self:get_rawTxt(), typeNameCtrl, importInfo, localFlag )
@@ -3666,10 +3670,6 @@ end
 
 function BoxTypeInfo:get_children( ... )
    return self.boxingType:get_children( ... )
-end
-
-function BoxTypeInfo:get_extedType( ... )
-   return self.boxingType:get_extedType( ... )
 end
 
 function BoxTypeInfo:get_externalFlag( ... )
@@ -3824,6 +3824,10 @@ function GenericTypeInfo:isInheritFrom( other, alt2type )
    return true
 end
 function GenericTypeInfo:get_srcTypeInfo(  )
+
+   return self
+end
+function GenericTypeInfo:get_extedType(  )
 
    return self
 end
@@ -4023,10 +4027,6 @@ end
 
 function GenericTypeInfo:get_display_stirng( ... )
    return self.genSrcTypeInfo:get_display_stirng( ... )
-end
-
-function GenericTypeInfo:get_extedType( ... )
-   return self.genSrcTypeInfo:get_extedType( ... )
 end
 
 function GenericTypeInfo:get_externalFlag( ... )
@@ -5340,9 +5340,16 @@ end
 
 local typeInfo2Map = TypeInfo2Map.new()
 
+local function isExtType( typeInfo )
+
+   return typeInfo:get_kind() == TypeInfoKind.Ext or (typeInfo:get_kind() == TypeInfoKind.DDD and typeInfo:get_extedType() ~= typeInfo )
+end
+_moduleObj.isExtType = isExtType
+
 local immutableTypeSet = {}
 local function isMutableType( typeInfo )
 
+   typeInfo = typeInfo:get_nonnilableType()
    if _lune._Set_has(immutableTypeSet, typeInfo ) or typeInfo:get_kind() == TypeInfoKind.FormFunc then
       return false
    end
@@ -5608,6 +5615,100 @@ immutableTypeSet[_moduleObj.builtinTypeInt]= true
 immutableTypeSet[_moduleObj.builtinTypeReal]= true
 immutableTypeSet[_moduleObj.builtinTypeChar]= true
 immutableTypeSet[_moduleObj.builtinTypeString]= true
+
+local function failCreateLuavalWith( typeInfo, convFlag )
+
+   
+   local mess = string.format( "not support to use the type as Luaval -- %s", typeInfo:getTxt(  ))
+   do
+      local _switchExp = typeInfo:get_kind()
+      if _switchExp == TypeInfoKind.Nilable then
+         return failCreateLuavalWith( typeInfo:get_nonnilableType(), convFlag )
+      elseif _switchExp == TypeInfoKind.Prim then
+         return nil, true
+      elseif _switchExp == TypeInfoKind.Form or _switchExp == TypeInfoKind.IF or _switchExp == TypeInfoKind.Stem or _switchExp == TypeInfoKind.DDD then
+         if convFlag then
+            return mess, false
+         end
+         
+         return nil, false
+      elseif _switchExp == TypeInfoKind.Class then
+         if typeInfo ~= _moduleObj.builtinTypeString then
+            if convFlag then
+               return mess, false
+            end
+            
+            return nil, false
+         end
+         
+         return nil, true
+      elseif _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Map then
+         if isMutable( typeInfo:get_mutMode() ) then
+            return "not support mutable collecion. " .. mess, false
+         end
+         
+         local canConv = true
+         
+         for __index, itemType in ipairs( typeInfo:get_itemTypeInfoList() ) do
+            local err, work = failCreateLuavalWith( itemType, convFlag )
+            if err ~= nil then
+               return err, false
+            end
+            
+            if not work then
+               canConv = false
+            end
+            
+         end
+         
+         
+         canConv = false
+         return nil, canConv
+      elseif _switchExp == TypeInfoKind.FormFunc then
+         if convFlag then
+            return mess, false
+         end
+         
+         if #typeInfo:get_itemTypeInfoList() ~= 0 then
+            return mess, false
+         end
+         
+         local canConv = true
+         
+         for __index, itemType in ipairs( typeInfo:get_argTypeInfoList() ) do
+            local err, work = failCreateLuavalWith( itemType, convFlag )
+            if err ~= nil then
+               return err, false
+            end
+            
+            if not work then
+               canConv = false
+            end
+            
+         end
+         
+         
+         
+         for __index, itemType in ipairs( typeInfo:get_retTypeInfoList() ) do
+            local err, work = failCreateLuavalWith( itemType, convFlag )
+            if err ~= nil then
+               return err, false
+            end
+            
+            if not work then
+               canConv = false
+            end
+            
+         end
+         
+         
+         canConv = false
+         return nil, canConv
+      end
+   end
+   
+   return string.format( "not support -- %s", typeInfo:getTxt(  )), false
+end
 
 local function isClass( typeInfo )
 
@@ -5962,28 +6063,35 @@ function DDDTypeInfo:get_scope(  )
 
    return nil
 end
-function DDDTypeInfo.new( processInfo, typeId, typeInfo, externalFlag, extTypeFlag )
+function DDDTypeInfo.new( processInfo, typeId, typeInfo, externalFlag, extOrgDDType )
    local obj = {}
    DDDTypeInfo.setmeta( obj )
-   if obj.__init then obj:__init( processInfo, typeId, typeInfo, externalFlag, extTypeFlag ); end
+   if obj.__init then obj:__init( processInfo, typeId, typeInfo, externalFlag, extOrgDDType ); end
    return obj
 end
-function DDDTypeInfo:__init(processInfo, typeId, typeInfo, externalFlag, extTypeFlag) 
+function DDDTypeInfo:__init(processInfo, typeId, typeInfo, externalFlag, extOrgDDType) 
    TypeInfo.__init( self,nil, processInfo)
    
    self.typeId = typeId
    self.typeInfo = typeInfo
    self.externalFlag = externalFlag
    self.itemTypeInfoList = {self.typeInfo}
-   self.extTypeFlag = extTypeFlag
+   local extFlag
    
-   if extTypeFlag then
-      typeInfo2Map.ExtDDDMap[typeInfo] = self
-   else
-    
+   local extOrgType
+   
+   if extOrgDDType ~= nil then
+      extFlag = false
+      extOrgType = extOrgDDType
       typeInfo2Map.DDDMap[typeInfo] = self
+   else
+      extFlag = true
+      extOrgType = self
+      typeInfo2Map.ExtDDDMap[typeInfo] = self
    end
    
+   self.extTypeFlag = extFlag
+   self.extedType = extOrgType
 end
 function DDDTypeInfo:isModule(  )
 
@@ -6000,19 +6108,11 @@ end
 function DDDTypeInfo:get_display_stirng_with( raw, alt2type )
 
    local txt = self:getTxtWithRaw( raw )
-   if self.extTypeFlag then
-      return string.format( "Luaval<%s>", txt)
-   end
-   
    return txt
 end
 function DDDTypeInfo:get_display_stirng(  )
 
    local txt = self:get_display_stirng_with( self:get_rawTxt(), nil )
-   if self.extTypeFlag then
-      return string.format( "Luaval<%s>", txt)
-   end
-   
    return txt
 end
 function DDDTypeInfo:getModule(  )
@@ -6065,10 +6165,22 @@ end
 function DDDTypeInfo:get_extTypeFlag()
    return self.extTypeFlag
 end
+function DDDTypeInfo:get_extedType()
+   return self.extedType
+end
 
 
 function NormalTypeInfo.createDDD( typeInfo, externalFlag, extTypeFlag )
 
+   if typeInfo:get_kind() == TypeInfoKind.DDD then
+      typeInfo = typeInfo:get_itemTypeInfoList()[1]
+   end
+   
+   if not failCreateLuavalWith( typeInfo, true ) and extTypeFlag then
+      extTypeFlag = false
+   end
+   
+   
    local dddMap = extTypeFlag and typeInfo2Map.ExtDDDMap or typeInfo2Map.DDDMap
    do
       local _exp = dddMap[typeInfo]
@@ -6081,8 +6193,22 @@ function NormalTypeInfo.createDDD( typeInfo, externalFlag, extTypeFlag )
       end
    end
    
+   
    idProv:increment(  )
-   return DDDTypeInfo.new(getCurProcessInfo(  ), idProv:get_id(), typeInfo, externalFlag, extTypeFlag)
+   local dddType = DDDTypeInfo.new(getCurProcessInfo(  ), idProv:get_id(), typeInfo, externalFlag, nil)
+   
+   if failCreateLuavalWith( typeInfo, true ) then
+      idProv:increment(  )
+      local extDDDType = DDDTypeInfo.new(getCurProcessInfo(  ), idProv:get_id(), typeInfo, externalFlag, dddType)
+      
+      if extTypeFlag then
+         return extDDDType
+      end
+      
+   end
+   
+   
+   return dddType
 end
 
 
@@ -6606,98 +6732,6 @@ local builtinTypeAbbrNone = AbbrTypeInfo.new(getCurProcessInfo(  ), idProv, "[##
 _moduleObj.builtinTypeAbbrNone = builtinTypeAbbrNone
 
 
-local function failCreateLuavalWith( typeInfo, convFlag )
-
-   
-   local mess = string.format( "not support to use the type as Luaval -- %s", typeInfo:getTxt(  ))
-   do
-      local _switchExp = typeInfo:get_kind()
-      if _switchExp == TypeInfoKind.Prim then
-         return nil, true
-      elseif _switchExp == TypeInfoKind.Form or _switchExp == TypeInfoKind.IF or _switchExp == TypeInfoKind.Stem or _switchExp == TypeInfoKind.DDD then
-         if convFlag then
-            return mess, false
-         end
-         
-         return nil, false
-      elseif _switchExp == TypeInfoKind.Class then
-         if typeInfo ~= _moduleObj.builtinTypeString then
-            if convFlag then
-               return mess, false
-            end
-            
-            return nil, false
-         end
-         
-         return nil, true
-      elseif _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Map then
-         if isMutable( typeInfo:get_mutMode() ) then
-            return "not support mutable collecion. " .. mess, false
-         end
-         
-         local canConv = true
-         
-         for __index, itemType in ipairs( typeInfo:get_itemTypeInfoList() ) do
-            local err, work = failCreateLuavalWith( itemType, convFlag )
-            if err ~= nil then
-               return err, false
-            end
-            
-            if not work then
-               canConv = false
-            end
-            
-         end
-         
-         
-         canConv = false
-         return nil, canConv
-      elseif _switchExp == TypeInfoKind.FormFunc then
-         if convFlag then
-            return mess, false
-         end
-         
-         if #typeInfo:get_itemTypeInfoList() ~= 0 then
-            return mess, false
-         end
-         
-         local canConv = true
-         
-         for __index, itemType in ipairs( typeInfo:get_argTypeInfoList() ) do
-            local err, work = failCreateLuavalWith( itemType, convFlag )
-            if err ~= nil then
-               return err, false
-            end
-            
-            if not work then
-               canConv = false
-            end
-            
-         end
-         
-         
-         
-         for __index, itemType in ipairs( typeInfo:get_retTypeInfoList() ) do
-            local err, work = failCreateLuavalWith( itemType, convFlag )
-            if err ~= nil then
-               return err, false
-            end
-            
-            if not work then
-               canConv = false
-            end
-            
-         end
-         
-         
-         canConv = false
-         return nil, canConv
-      end
-   end
-   
-   return string.format( "not support -- %s", typeInfo:getTxt(  )), false
-end
-
 local ExtTypeInfo = {}
 setmetatable( ExtTypeInfo, { __index = TypeInfo } )
 _moduleObj.ExtTypeInfo = ExtTypeInfo
@@ -6948,7 +6982,11 @@ end
 
 function NormalTypeInfo.createLuaval( luneType )
 
-   if luneType:get_kind() == TypeInfoKind.Ext then
+   if luneType:get_kind() == TypeInfoKind.Method then
+      return _lune.newAlge( LuavalResult.OK, {luneType,true})
+   end
+   
+   if isExtType( luneType ) then
       return _lune.newAlge( LuavalResult.OK, {luneType,true})
    end
    
@@ -7047,7 +7085,7 @@ do
 end
 
 registBuiltin( "Luaval", "Luaval", TypeInfoKind.Ext, _moduleObj.builtinTypeLua, _moduleObj.headTypeInfo, false )
-local builtinTypeDDDLua = NormalTypeInfo.createDDD( _moduleObj.builtinTypeLua, true, true )
+local builtinTypeDDDLua = NormalTypeInfo.createDDD( _moduleObj.builtinTypeStem_, true, true )
 _moduleObj.builtinTypeDDDLua = builtinTypeDDDLua
 
 registBuiltin( "__LuaDDD", "__LuaDDD", TypeInfoKind.Ext, _moduleObj.builtinTypeDDDLua, _moduleObj.headTypeInfo, false )
@@ -7464,6 +7502,7 @@ function NilableTypeInfo:canEvalWith( other, canEvalType, alt2type )
       return true, nil
    end
    
+   
    if otherSrc == _moduleObj.builtinTypeNil or otherSrc:get_kind() == TypeInfoKind.Abbr then
       if self:get_nonnilableType():get_kind() == TypeInfoKind.Box then
          return self:get_nonnilableType():canEvalWith( otherSrc, canEvalType, alt2type )
@@ -7624,7 +7663,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
             local message = string.format( "exp(%d) type mismatch %s <- %s: dst %d", dstIndex, workDstType:getTxt( _moduleObj.defaultTypeNameCtrl ), workExpType:getTxt( _moduleObj.defaultTypeNameCtrl ), dstIndex)
             return MatchType.Error, message
          elseif workExpType == _moduleObj.builtinTypeAbbrNone then
-            return MatchType.Warn, Code.format( Code.ID.nothing_define_abbr, string.format( "use '##', instate of %s.", workDstType:getTxt( _moduleObj.defaultTypeNameCtrl )) )
+            return MatchType.Warn, Code.format( Code.ID.nothing_define_abbr, string.format( "use '##', instate of '%s'.", workDstType:getTxt( _moduleObj.defaultTypeNameCtrl )) )
          end
          
          
@@ -7782,7 +7821,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
             return MatchType.Error, string.format( "exp(%d) type mismatch %s <- nil: short", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ))
          end
          
-         return MatchType.Warn, Code.format( Code.ID.nothing_define_abbr, string.format( "use '##', instate of %s.", dstType:getTxt( _moduleObj.defaultTypeNameCtrl )) )
+         return MatchType.Warn, Code.format( Code.ID.nothing_define_abbr, string.format( "use '##', instate of '%s'.", dstType:getTxt( _moduleObj.defaultTypeNameCtrl )) )
       end
       
       
@@ -8356,7 +8395,7 @@ IdType.__allList[2] = IdType.Ext
 local function switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 6378, function (  )
+   Log.log( Log.Level.Trace, __func__, 6427, function (  )
    
       return "start"
    end )
@@ -8376,7 +8415,7 @@ local builtinTypeInfo2Map = typeInfo2Map:clone(  )
 local function pushProcessInfo( processInfo )
    local __func__ = '@lune.@base.@Ast.pushProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6390, function (  )
+   Log.log( Log.Level.Trace, __func__, 6439, function (  )
    
       return "start"
    end )
@@ -8411,7 +8450,7 @@ _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
    local __func__ = '@lune.@base.@Ast.popProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6416, function (  )
+   Log.log( Log.Level.Trace, __func__, 6465, function (  )
    
       return "start"
    end )

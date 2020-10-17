@@ -62,25 +62,6 @@ func (luaVM *Lns_luaVM) RunLoadedfunc( loaded *Lns_luaValue, args[]LnsAny ) []Ln
     return luaVM.lua_call( top, len( args ), cLUA_MULTRET )
 }
 
-func (luaValue *Lns_luaValue) Get1stFromList() (LnsAny, LnsAny) {
-    vm := luaValue.luaVM.vm
-    top := lua_gettop( vm )
-    defer lua_settop( vm, top )
-
-    luaValue.pushValFromGlobalValMap()
-    
-    lua_pushnil( vm )
-    if lua_next( vm, -2 ) == 0 {
-        return nil, nil
-    }
-
-    ret2 := luaValue.luaVM.setupFromStack( -1 )
-    ret1 := luaValue.luaVM.setupFromStack( -2 )
-
-    return ret2, ret1
-}
-
-
 func (luaValue *Lns_luaValue) Get1stFromMap() (LnsAny, LnsAny) {
     vm := luaValue.luaVM.vm
     top := lua_gettop( vm )
