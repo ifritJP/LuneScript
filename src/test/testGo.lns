@@ -1077,3 +1077,33 @@ return fib
    // Go で定義した fib_lns 関数を実行
    _profile( fib_lns( step ) );
 }
+_section();
+{
+   let code = ```
+      local obj = {}
+local list = { 100, 200, 300 }
+local list2 = { 11, 12, 13 }
+obj.val = { item1=list, item2=list2 }
+return obj
+```;
+
+   class Hoge {
+      pub let val:&Map<str,&List<int>>;
+   }
+   
+
+   let loaded = unwrap _load( code ## );
+   let obj = unwrap loaded(##);
+   let hoge = obj@@=Hoge;
+   let mut keyList:List<str> = [];
+   foreach _, key in hoge.val {
+      keyList.insert( key );
+   }
+   keyList.sort(##);
+   foreach key in keyList {
+      let list = unwrap hoge.val[key];
+      foreach val, index in list {
+         print( key, index, val );
+      }
+   }
+}

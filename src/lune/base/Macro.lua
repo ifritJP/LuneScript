@@ -112,6 +112,13 @@ function _lune._toSet( val, toKeyInfo )
    return nil
 end
 
+function _lune.loadstring52( txt, env )
+   if not env then
+      return load( txt )
+   end
+   return load( txt, "", "bt", env )
+end
+
 function _lune.unwrap( val )
    if val == nil then
       __luneScript:error( 'unwrap val is nil' )
@@ -663,15 +670,48 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
    
    local func = macroInfo.func
    local macroVars = func( macroArgValMap )
+   
+   
+   local addFunc = nil
+   do
+      local loaded = _lune.loadstring52( "return function( val ) return { val } end" )
+      if loaded ~= nil then
+         do
+            local luafunc = loaded(  )
+            if luafunc ~= nil then
+               addFunc = luafunc
+            end
+         end
+         
+      end
+   end
+   
    for __index, name in ipairs( (_lune.unwrap( macroVars['__names']) ) ) do
       local valInfo = _lune.unwrap( macroInfo.symbol2MacroValInfoMap[name])
       local typeInfo = valInfo.typeInfo
-      local val = macroVars[name]
-      if typeInfo:equals( Ast.builtinTypeSymbol ) then
-         val = {val}
+      local valList
+      
+      do
+         local val = macroVars[name]
+         if val ~= nil then
+            if typeInfo:equals( Ast.builtinTypeSymbol ) then
+               if addFunc ~= nil then
+                  valList = addFunc( val )
+               else
+                  Util.err( "not ready" )
+               end
+               
+            else
+             
+               valList = val
+            end
+            
+         else
+            valList = {}
+         end
       end
       
-      self.symbol2ValueMapForMacro[name] = Nodes.MacroValInfo.new(val, typeInfo, macroArgName2ArgNode[name])
+      self.symbol2ValueMapForMacro[name] = Nodes.MacroValInfo.new(valList, typeInfo, macroArgName2ArgNode[name])
    end
    
    for index, arg in ipairs( macroInfo:getArgList(  ) ) do

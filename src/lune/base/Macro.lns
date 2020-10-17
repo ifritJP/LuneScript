@@ -317,17 +317,35 @@ pub fn MacroCtrl.evalMacroOp(
    let func = macroInfo.func;
    let mut macroVars = func( macroArgValMap );
 
+   form addFuncLua( val:&stem ) : &List<&stem>;
+   let mut addFunc:Luaval<addFuncLua>! = nil;
+   if! let loaded = _load( "return function( val ) return { val } end" ## ) {
+      if! let luafunc = loaded(##) {
+         addFunc = luafunc@@addFuncLua;
+      }
+   }
+   
    // macro-statment の実行結果から、
    // symbol2ValueMapForMacro にシンボル名と値を紐付け
    foreach name in (unwrap macroVars.__names)@@List<str> {
       let valInfo = unwrap macroInfo.symbol2MacroValInfoMap[ name ];
       let typeInfo = valInfo.typeInfo;
-      let mut val = macroVars[ name ];
-      if typeInfo.equals( Ast.builtinTypeSymbol ##) {
-         val = [ val ];
+      let mut valList:&stem;
+      if! let mut val = macroVars[ name ] {
+         if typeInfo.equals( Ast.builtinTypeSymbol ##) {
+            when! addFunc {
+               valList = addFunc( val );
+            } else {
+               Util.err( "not ready" );
+            }
+         } else {
+            valList = val;
+         }
+      } else {
+         valList = [];
       }
       self.symbol2ValueMapForMacro[ name ] =
-         new Nodes.MacroValInfo( val, typeInfo, macroArgName2ArgNode[ name ] );
+         new Nodes.MacroValInfo( valList, typeInfo, macroArgName2ArgNode[ name ] );
    }
 
    //let scope = self.pushScope();

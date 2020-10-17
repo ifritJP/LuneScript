@@ -356,16 +356,16 @@ fn TransUnit.analyzeExpRefItem(
       // }
    }
 
-   // if Ast.isExtType( exp.$expType.$nonnilableType ) {
-   //    _match Ast.NormalTypeInfo.createLuaval( typeInfo ) {
-   //       case .OK( work, _ ) {
-   //          typeInfo = work;
-   //       }
-   //       case .Err( err ) {
-   //          self.addErrMess( exp.$pos, err );
-   //       }
-   //    }
-   // }
+   if Ast.isExtType( exp.$expType.$nonnilableType ) {
+      _match Ast.NormalTypeInfo.createLuaval( typeInfo ) {
+         case .OK( work, _ ) {
+            typeInfo = work;
+         }
+         case .Err( err ) {
+            self.addErrMess( exp.$pos, err );
+         }
+      }
+   }
 
    let indexExp = self.analyzeExpOneRVal( false, false, nil, expectItemType );
    if not indexExp.canBeRight() {
