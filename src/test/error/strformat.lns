@@ -55,3 +55,9 @@ let formatTxt = "%d";
 string.format( formatTxt, "str" );
 
 print( "%d" ( 1, 2 ) ); // error
+
+{
+   let txt:str! = nil;
+   print( "abc" .. txt, txt .. "abc" ); // error
+}
+

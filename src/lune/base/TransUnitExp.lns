@@ -3157,7 +3157,7 @@ fn TransUnit.analyzeExpOp2(
                }
                case ".." {
                   if not exp1Type.equals( Ast.builtinTypeString ##) or
-                     not exp1Type.equals( Ast.builtinTypeString ##)
+                     not exp2Type.equals( Ast.builtinTypeString ##)
                   {
                      self.addErrMess(
                         nextToken.pos,

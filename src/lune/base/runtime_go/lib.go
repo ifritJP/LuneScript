@@ -242,17 +242,6 @@ func Lns_ToStrSub( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool,
     return false, nil, "no str"
 }
 
-
-// type LnsClass2StemIF interface {
-//     ToLnsStem() LnsAny
-// }
-// func LnsClass2Stem( obj LnsAny ) LnsAny {
-//     if obj == nil {
-//         return nil
-//     }
-//     return obj.(LnsClass2StemIF).ToLnsStem()
-// }
-
 type LnsAlgeVal interface {
     GetTxt() string
 }
@@ -441,35 +430,3 @@ func Lns_popVal( dummy bool ) LnsAny {
     cur_LnsEnv.valStack = cur_LnsEnv.valStack[:cur_LnsEnv.stackPos+1]
     return val;
 }
-
-func test() {
-    fmt.Println( Lns_isCondTrue( 1 ), Lns_isCondTrue( nil ),
-        Lns_isCondTrue( true ), Lns_isCondTrue( false ) )
-
-    {
-        lnsList := LnsList{ []LnsAny{}, 0 }
-        for count:=0; count < 10; count++ {
-            lnsList.Insert( count )
-        }
-        fmt.Println( lnsList )
-        lnsList.Remove(nil)
-        fmt.Println( lnsList )
-        lnsList.Remove(2)
-        fmt.Println( lnsList )
-        lnsList.Remove(4)
-        fmt.Println( lnsList )
-        lnsList.Insert( 100 )
-        fmt.Println( lnsList )
-
-        for _, val := range( lnsList.Items ) {
-            fmt.Println( val )
-        }
-
-        hoge := func () [] LnsAny {
-            return []LnsAny{ 1 }
-        }
-        foo := []LnsAny{1, 2, hoge() }
-        fmt.Println( foo )
-    }
-}
-

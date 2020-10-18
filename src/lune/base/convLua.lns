@@ -27,14 +27,13 @@ import lune.base.Ast;
 import lune.base.Nodes;
 import lune.base.Util;
 import lune.base.TransUnit;
-import lune.base.frontInterface;
 import lune.base.LuaMod;
 import lune.base.LuaVer;
-import lune.base.Depend;
 import lune.base.Parser;
 import lune.base.Log;
 import lune.base.LuneControl;
 import lune.base.Option;
+import lune.base.DependLuaOnLns;
 
 class PubVerInfo {
    pub let staticFlag: bool;
@@ -3357,33 +3356,11 @@ pub class MacroEvalImp extend Nodes.MacroEval {
    pri let mode: str;
 
    fn evalFromMacroCode( code:str ): Luaval<Nodes.macroStatmentProc> {
-      //Util.errorLog( 'hoooo: %s' (oStream.get_txt()) );
-
-      let mut newEnv:Map<str,stem> = {};
-      foreach val, key in _G {
-         newEnv[ key ] = val;
+      let func, err = DependLuaOnLns.runLuaOnLns( code );
+      when! func {
+         return func;
       }
-      newEnv[ "_lnsLoad" ] = fn ( name:str, txt:str ): stem {
-         let mut importModuleInfo = new frontInterface.ImportModuleInfo();
-         let mut val = frontInterface.loadFromLnsTxt( importModuleInfo, name, txt );
-         return val;
-      };
-      //newEnv[ "__var" ] = {};
-
-      Log._log( .Info, `{ return "code: %s" (code); } );
-      
-      let chunk, err = _load( code, newEnv );
-      when! err {
-         Util.err( err );
-      }
-      when! chunk {
-         let mod = chunk(##);
-         if not mod {
-            Util.err( "macro load error" );
-         }
-         return (unwrap mod)@@Luaval<Nodes.macroStatmentProc>;
-      }
-      Util.err( "failed to load" );
+      Util.err( err );
    }
 
    pub override fn evalFromCode(
@@ -3417,4 +3394,88 @@ pub class MacroEvalImp extend Nodes.MacroEval {
 
       return self.evalFromMacroCode( stream.$txt );
    }
+}
+
+
+__test {
+   import lune.base.frontInterface;
+   
+   class Front {
+      let mut option:&Option.Option;
+   }
+
+   fn Front.createAst(
+      importModuleInfo:frontInterface.ImportModuleInfo,
+      parser:Parser.Parser, mod:str, moduleId:&frontInterface.ModuleId, analyzeModule:str!,
+      analyzeMode:TransUnit.AnalyzeMode, pos:&Parser.Position! ): &TransUnit.ASTInfo
+   {
+      let mut transUnit = new TransUnit.TransUnit(
+         moduleId, importModuleInfo, new MacroEvalImp( self.option.mode ),
+         analyzeModule, analyzeMode, pos, self.option.targetLuaVer,
+         self.option.transCtrlInfo );
+      return transUnit.createAST( parser, false, mod );
+   }
+
+   fn Front.convert(
+      ast:&TransUnit.ASTInfo, streamName:str,
+      mut stream:oStream, mut metaStream:oStream, convMode:ConvMode, inMacro:bool )
+   {
+      let mut conv = createFilter(
+         streamName, stream, metaStream, convMode, inMacro,
+         ast.$moduleTypeInfo, ast.$moduleSymbolKind,
+         self.option.useLuneModule, self.option.targetLuaVer,
+         self.option.testing, self.option.useIpairs );
+      ast.$node.processFilter( conv, new Opt( ast.$node ) );
+   }
+
+   
+   fn Front.convertFromAst(
+      ast:&TransUnit.ASTInfo, streamName:str, mode:ConvMode ) : str, str
+   {
+      let mut stream = new Util.memStream();
+      let mut metaStream = new Util.memStream();
+
+      self.convert( ast, streamName, stream, metaStream, mode, false );
+
+      return metaStream.$txt, stream.$txt;
+   }
+   
+
+   pub fn Front.convertLns2LuaCode(
+      importModuleInfo:frontInterface.ImportModuleInfo,
+      stream:iStream, streamName:str ): str
+   {
+      let mod = Util.scriptPath2Module( streamName );
+      let ast = self.createAst(
+         importModuleInfo,
+         new Parser.StreamParser( stream, streamName, false ), mod,
+         frontInterface.ModuleId.createId( 0.0, 0 ), nil, .Compile ## );
+
+      let _, luaTxt = self.convertFromAst( ast, streamName, ConvMode.Exec );
+
+      return luaTxt;
+   }
+
+   pub fn convertLnsCode2LuaCode( lnsCode:str, path:str ) : str
+   {
+      let mut option = new Option.Option();
+      option.scriptPath = path;
+      option.useLuneModule = Option.getRuntimeModule();
+      option.useIpairs = true;
+      let mut front = new Front( option );
+      
+      return front.convertLns2LuaCode(
+         new frontInterface.ImportModuleInfo(),
+         new Parser.TxtStream( lnsCode ), path );
+   }
+}
+
+__test case1(ctrl) {
+   LuaVer.setCurVer( 53 );
+   
+   let lnsCode = ```
+print( "hello world" );
+```;
+   let luaCode = convertLnsCode2LuaCode(  lnsCode, "mini.lns" );
+   __t._eq(ctrl, luaCode, 'print( "hello world" )');
 }

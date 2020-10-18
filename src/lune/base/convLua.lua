@@ -112,13 +112,6 @@ function _lune._toSet( val, toKeyInfo )
    return nil
 end
 
-function _lune.loadstring52( txt, env )
-   if not env then
-      return load( txt )
-   end
-   return load( txt, "", "bt", env )
-end
-
 function _lune.nilacc( val, fieldName, access, ... )
    if not val then
       return nil
@@ -239,14 +232,13 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local TransUnit = _lune.loadModule( 'lune.base.TransUnit' )
-local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
 local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
-local Depend = _lune.loadModule( 'lune.base.Depend' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Log = _lune.loadModule( 'lune.base.Log' )
 local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
 local Option = _lune.loadModule( 'lune.base.Option' )
+local DependLuaOnLns = _lune.loadModule( 'lune.base.DependLuaOnLns' )
 
 local PubVerInfo = {}
 function PubVerInfo.setmeta( obj )
@@ -448,7 +440,7 @@ function convFilter:writeRaw( txt )
    end
    
    
-   for _5542 in string.gmatch( txt, "\n" ) do
+   for _5533 in string.gmatch( txt, "\n" ) do
       self.curLineNo = self.curLineNo + 1
    end
    
@@ -1893,7 +1885,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _5880 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _5871 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -4060,41 +4052,13 @@ local MacroEvalImp = {}
 setmetatable( MacroEvalImp, { __index = Nodes.MacroEval } )
 _moduleObj.MacroEvalImp = MacroEvalImp
 function MacroEvalImp:evalFromMacroCode( code )
-   local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
-   local newEnv = {}
-   for key, val in pairs( _G ) do
-      newEnv[key] = val
+   local func, err = DependLuaOnLns.runLuaOnLns( code )
+   if func ~= nil then
+      return func
    end
    
-   newEnv["_lnsLoad"] = function ( name, txt )
-   
-      local importModuleInfo = frontInterface.ImportModuleInfo.new()
-      local val = frontInterface.loadFromLnsTxt( importModuleInfo, name, txt )
-      return val
-   end
-   
-   Log.log( Log.Level.Info, __func__, 3373, function (  )
-   
-      return string.format( "code: %s", code)
-   end )
-   
-   
-   local chunk, err = _lune.loadstring52( code, newEnv )
-   if err ~= nil then
-      Util.err( err )
-   end
-   
-   if chunk ~= nil then
-      local mod = chunk(  )
-      if not mod then
-         Util.err( "macro load error" )
-      end
-      
-      return (_lune.unwrap( mod) )
-   end
-   
-   Util.err( "failed to load" )
+   Util.err( err )
 end
 function MacroEvalImp:evalFromCode( name, argNameList, code )
 
@@ -4136,6 +4100,10 @@ function MacroEvalImp:__init( mode )
    Nodes.MacroEval.__init( self)
    self.mode = mode
 end
+
+
+
+
 
 
 return _moduleObj

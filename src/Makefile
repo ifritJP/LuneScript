@@ -150,6 +150,7 @@ define buildLnsOp
 	$(call $4,$1,$2,$3,base/dumpNode)
 	$(call $4,$1,$2,$3,base/Macro)
 	$(call $4,$1,$2,$3,base/TransUnit)
+	$(call $4,$1,$2,$3,base/DependLuaOnLns)
 	$(call $4,$1,$2,$3,base/convLua)
 	$(call $4,$1,$2,$3,base/convCC)
 	$(call $4,$1,$2,$3,base/convGo)
@@ -1140,6 +1141,16 @@ test-tutorial-go:
 	$(call test-go-one,$(GO_WORK_DIR),ccc,.)
 
 
+define test-lns-test
+	@echo "local _lune = require( 'lune.base.runtime' )" > $1/testRun.lua
+	@echo "local __t = _lune.loadModule( 'lune.base.$2' )" >> $1/testRun.lua
+	@echo "local __t = _lune.loadModule( 'lune.base.Testing' )" >> $1/testRun.lua
+	@echo "__t.run( 'lune.base.$2');"			>> $1/testRun.lua
+	@echo "__t.outputAllResult( io.stdout );"		>> $1/testRun.lua
+	(cd $1; LUA_PATH=./?.lua $(LUA) testRun.lua)
+endef
+
+
 define test-convGo-test
 	cat lune/base/runtime_go/main/runtime_main.go |		\
 		sed 's/Lns_init/Lns_$2_init/' |			\
@@ -1149,7 +1160,8 @@ define test-convGo-test
 
 	$(call convGo,$1,$3/$2,--testing,$4)
 	$(call buildGo,$1) > work/result-testGo.txt
-	$(call exeLune,$1/$4,$3/$2.lns,exe,--testing) > work/result-testGo2.txt
+	$(call exeLune,$1/$4,$3/$2.lns,SAVE,--testing) 
+	$(call test-lns-test,$1/$4,$2) > work/result-testGo2.txt
 	diff -C 2 -I 'ONLY_LUA' work/result-testGo.txt work/result-testGo2.txt
 endef
 
@@ -1177,12 +1189,12 @@ test-testGo:
 	$(call test-convGo-test,$(GO_WORK_DIR),Formatter,lune/base,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),dumpNode,lune/base,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),Macro,lune/base,./test)
-#	$(call convGo,$(GO_WORK_DIR),lune/base/TransUnit,--testing,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),TransUnit,lune/base,./test)
-#	$(call test-convGo-test,$(GO_WORK_DIR),convLua,lune/base,./test)
+#	$(call test-convGo-test,$(GO_WORK_DIR),DependLuaOnLns,lune/base,./test)
+	$(call test-convGo-test,$(GO_WORK_DIR),convLua,lune/base,./test)
 
 test-subgo:
-	$(call test-convGo-test,$(GO_WORK_DIR),TransUnit,lune/base,./test)
+	$(call test-convGo-test,$(GO_WORK_DIR),convLua,lune/base,./test)
 
 
 

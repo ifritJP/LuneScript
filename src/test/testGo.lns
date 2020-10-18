@@ -1122,3 +1122,16 @@ _section();
       print( "hoge" );
    }
 }
+_section();
+{
+   abstract class Test extend (Mapping) {
+      let val:int {pub};
+      pub abstract fn func();
+   }
+   class Sub extend Test(Mapping) {
+      pub override fn func() {
+      }
+   }
+   let test:&Test = new Sub(1);
+   test.func();
+}

@@ -830,7 +830,7 @@ Macro._section();
 {
    let set = (@ "1", "2", "3", "4" );
    forsort val in set {
-      print( val .. 1 );
+      print( val .. "a" );
    }
 }
 {

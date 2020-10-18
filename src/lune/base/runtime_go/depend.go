@@ -76,3 +76,8 @@ func Depend_setup( callback func( ver LnsInt )) {
     callback( 53 );
 }
 
+func DependLuaOnLns_runLuaOnLns( luaCode string ) (LnsAny,string) {
+    return nil, "not ready"
+}
+func Lns_DependLuaOnLns_init() {
+}

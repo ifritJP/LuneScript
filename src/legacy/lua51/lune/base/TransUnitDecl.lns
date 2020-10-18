@@ -3198,7 +3198,7 @@ fn TransUnit.analyzeLetAndInitExp(
                         ( index,
                           varType.getTxt( self.typeNameCtrl ## ),
                           expTypeInfo.getTxt( self.typeNameCtrl ## ),
-                          mess and " -- " .. mess or "" ) );
+                          mess and " -- %s" ( mess ) or "" ) );
                   }
                }
                if varType.$kind == .Box {

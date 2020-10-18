@@ -1346,11 +1346,7 @@ pub override fn convFilter.processConvStat(
 
 fn convFilter.outputTopScopeVar( node: &Nodes.DeclVarNode ) mut {
    foreach symbolInfo in node.$symbolInfoList {
-      if symbolInfo.$scope == self.moduleScope and
-         ( Ast.isPubToExternal( symbolInfo.$accessMode ) or
-           symbolInfo.$posForModToRef )
-         
-      {
+      if symbolInfo.$scope == self.moduleScope {
          self.writeln( "var %s %s" ( self.getSymbolSym( symbolInfo ),
                                      self.type2gotype( symbolInfo.$typeInfo ) ) );
       }
@@ -1535,6 +1531,11 @@ pub override fn convFilter.processRoot(
                }
                self.processConvExp( workNode.$id, symTypeList, workNode.$expList );
             } );
+   _filter( node.$nodeManager.getExpSetValNodeList(),
+            fn ( workNode:&Nodes.ExpSetValNode ) {
+               self.processConvExp(
+                  workNode.$id, workNode.$exp1.$expTypeList, workNode.$exp2 );
+            });
    
    _filter( node.$nodeManager.getExpCallNodeList(),
             fn ( workNode:&Nodes.ExpCallNode ) {
@@ -3557,48 +3558,50 @@ fn convFilter.outputMapping( node: Nodes.DeclClassNode ) mut {
    let fromStemName = self.getFromStemName(classType);
    
    let classScope = unwrap classType.$scope;
-   {
-      let fromMapSym = unwrap classScope.getSymbolInfoChild( "_fromMap" );
+   if not classType.$abstractFlag {
+      {
+         let fromMapSym = unwrap classScope.getSymbolInfoChild( "_fromMap" );
+         self.writeln(
+            "func %s(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){"
+            (self.getSymbolSym( fromMapSym ) ) );
+         self.writeln( "   return %s( arg1, paramList )" (fromStemName) );
+         self.writeln( "}" );
+      }
+      {
+         let fromStemSym = unwrap classScope.getSymbolInfoChild( "_fromStem" );
+         self.writeln(
+            "func %s(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){"
+            (self.getSymbolSym( fromStemSym ) ) );
+         self.writeln( "   return %s( arg1, paramList )" (fromStemName) );
+         self.writeln( "}" );
+      }
+      
+      
       self.writeln(
-         "func %s(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){"
-         (self.getSymbolSym( fromMapSym ) ) );
-      self.writeln( "   return %s( arg1, paramList )" (fromStemName) );
+         "func %s( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {"
+         (fromStemName ));
+      self.pushIndent(##);
+      self.writeln( "_,conv,mess := %sSub(obj,false, paramList);"
+         (fromStemName ));
+      self.writeln( "return conv,mess" );
+      self.popIndent();
+      self.writeln( "}" );
+      
+      self.writeln(
+         "func %sSub( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {"
+         (fromStemName ));
+      self.pushIndent( ## );
+      self.writeln( "var objMap *LnsMap" );
+      self.writeln( "if work, ok := obj.(*LnsMap); !ok {" );
+      self.writeln( '   return false, nil, "no map"' );
+      self.writeln( "} else {" );
+      self.writeln( '   objMap = work' );
+      self.writeln( "}" );
+      self.outputNewSetup( "newObj", classType );
+      self.writeln( "return %sMain( newObj, objMap, paramList )" (fromStemName) );
+      self.popIndent();
       self.writeln( "}" );
    }
-   {
-      let fromStemSym = unwrap classScope.getSymbolInfoChild( "_fromStem" );
-      self.writeln(
-         "func %s(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){"
-         (self.getSymbolSym( fromStemSym ) ) );
-      self.writeln( "   return %s( arg1, paramList )" (fromStemName) );
-      self.writeln( "}" );
-   }
-   
-   
-   self.writeln(
-      "func %s( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {"
-      (fromStemName ));
-   self.pushIndent(##);
-   self.writeln( "_,conv,mess := %sSub(obj,false, paramList);"
-      (fromStemName ));
-   self.writeln( "return conv,mess" );
-   self.popIndent();
-   self.writeln( "}" );
-   
-   self.writeln(
-      "func %sSub( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {"
-      (fromStemName ));
-   self.pushIndent( ## );
-   self.writeln( "var objMap *LnsMap" );
-   self.writeln( "if work, ok := obj.(*LnsMap); !ok {" );
-   self.writeln( '   return false, nil, "no map"' );
-   self.writeln( "} else {" );
-   self.writeln( '   objMap = work' );
-   self.writeln( "}" );
-   self.outputNewSetup( "newObj", classType );
-   self.writeln( "return %sMain( newObj, objMap, paramList )" (fromStemName) );
-   self.popIndent();
-   self.writeln( "}" );
 
 
    self.writeln(
@@ -4280,23 +4283,15 @@ pub override fn convFilter.processExpSetVal(
    node: Nodes.ExpSetValNode, opt: Opt ) mut
 {
    filter( node.$exp1, self, node );
-   if getExpListKind( node.$exp1.$expTypeList,
-                      unwrap node.$exp2@@@Nodes.ExpListNode ) == .Direct
-   {
-      // ここは '_' の補正は不要
-   } else {
+   if getExpListKind( node.$exp1.$expTypeList, node.$exp2 ) == .Direct {
       for _ = #node.$exp1.$expTypeList + 1, #node.$exp2.$expTypeList {
          self.write( ",_" );
       }
    }
    self.write( " = " );
-   if node.$exp2.$expType.$kind == .DDD {
-      self.write( "Lns_getFromMulti( " );
-      filter( node.$exp2, self, node );
-      self.write( ", 0 )" );
-   } else {
-      filter( node.$exp2, self, node );
-   }
+   self.processSetFromExpList(
+      getConvExpName( node.$id, node.$exp2 ), node.$exp1.$expTypeList, node.$exp2 );
+   self.writeln( "" );
 }
 
 pub override fn convFilter.processExpSetItem(

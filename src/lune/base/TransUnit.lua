@@ -8671,7 +8671,7 @@ function TransUnit:analyzeLetAndInitExp( firstPos, initMutable, accessMode, unwr
                if not varType:equals( Ast.builtinTypeEmpty ) and not (unwrapFlag and expTypeInfo:equals( Ast.builtinTypeNil ) ) then
                   local canEval, mess = varType:canEvalWith( expTypeInfo, Ast.CanEvalType.SetOp, alt2typeMap )
                   if not canEval then
-                     self:addErrMess( firstPos, string.format( "unmatch value type (index:%d) %s <- %s%s", index, varType:getTxt( self.typeNameCtrl ), expTypeInfo:getTxt( self.typeNameCtrl ), mess and " -- " .. mess or "") )
+                     self:addErrMess( firstPos, string.format( "unmatch value type (index:%d) %s <- %s%s", index, varType:getTxt( self.typeNameCtrl ), expTypeInfo:getTxt( self.typeNameCtrl ), mess and string.format( " -- %s", mess) or "") )
                   end
                   
                end
@@ -12158,7 +12158,7 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
                   
                   retType = Ast.builtinTypeInt
                elseif _switchExp == ".." then
-                  if not exp1Type:equals( Ast.builtinTypeString ) or not exp1Type:equals( Ast.builtinTypeString ) then
+                  if not exp1Type:equals( Ast.builtinTypeString ) or not exp2Type:equals( Ast.builtinTypeString ) then
                      self:addErrMess( nextToken.pos, string.format( "no string type '%s' or '%s'", exp1Type:getTxt(  ), exp2Type:getTxt(  )) )
                   end
                   
