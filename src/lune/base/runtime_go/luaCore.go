@@ -40,6 +40,7 @@ type lua_bool = C.int
 var cLUA_MULTRET int
 var cLUA_TBOOLEAN int
 var cLUA_TFUNCTION int
+var cLUA_TTABLE int
 var cLUA_TNIL int
 var cLUA_TNUMBER int
 var cLUA_TSTRING int
@@ -49,6 +50,7 @@ func init() {
     cLUA_MULTRET = int(C.LUA_MULTRET)
     cLUA_TBOOLEAN = int(C.LUA_TBOOLEAN)
     cLUA_TFUNCTION = int(C.LUA_TFUNCTION)
+    cLUA_TTABLE = int(C.LUA_TTABLE)
     cLUA_TNIL = int(C.LUA_TNIL)
     cLUA_TNUMBER = int(C.LUA_TNUMBER)
     cLUA_TSTRING = int(C.LUA_TSTRING)

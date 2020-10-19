@@ -946,11 +946,11 @@ Macro._section();
 
 // func( test3 );  // error
 
-abstract class Super<T> {
+abstract class SuperG<T> {
    pub abstract fn func( val:T );
 }
 
-class TestGenSub extend Super<int> {
+class TestGenSub extend SuperG<int> {
    pub override fn func( val:int ) {
       print( val );
    }
@@ -962,7 +962,7 @@ class TestGenSub extend Super<int> {
    //testsub.func( "abc" );
 }
 
-class TestGenSub2<T> extend Super<T> {
+class TestGenSub2<T> extend SuperG<T> {
    pub override fn func( val:T ) {
       print( val );
    }
@@ -1109,12 +1109,12 @@ macro _Test6( name:sym ) {
    }
 }
 
-class Test {
+class TestGG {
    _Test6( func1 );
    _Test6( func2 );
 }  
 {
-   let test = new Test();
+   let test = new TestGG();
    test.func1();
    test.func2();
 }
@@ -1372,15 +1372,15 @@ print( '\\""\"\'\\.\\' );
       pub fn __init( test:T ) {
          self.test = test;
       }
-      pri fn current() : T {
+      pri fn current() mut : T {
          return self.test;
       }
-      pub fn set(val:int) {
+      pub fn set(val:int) mut {
          let mut info = self.current();
          info.val = val;
       }
    }
-   let hoge2 = new Hoge( new Test_c( 1 ) );
+   let mut hoge2 = new Hoge( new Test_c( 1 ) );
    print( hoge2.$test.val );
    hoge2.set( 100 );
    print( hoge2.$test.val );
@@ -1795,4 +1795,24 @@ class Test_ccc {
       }
    }
    print( Test22.func(1) );
+}
+{
+   Macro._section();
+   class Super {
+      let val:int {pub};
+   }
+   class Sub extend Super {
+   }
+
+   class Test<T:Super> {
+      let mut val:Super;
+      pub fn func( val:T ) mut : &T {
+         print( self.val.$val );
+         self.val = val;
+         print( self.val.$val );
+         return self.val;
+      }
+   }
+   let mut test = new Test<Sub>( new Sub( 1 ) );
+   test.func( new Sub( 2 ));
 }

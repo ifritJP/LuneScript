@@ -686,7 +686,7 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
       end
    end
    
-   for __index, name in ipairs( (_lune.unwrap( macroVars['__names']) ) ) do
+   for __index, name in pairs( (_lune.unwrap( macroVars['__names']) ) ) do
       local valInfo = _lune.unwrap( macroInfo.symbol2MacroValInfoMap[name])
       local typeInfo = valInfo.typeInfo
       local valList

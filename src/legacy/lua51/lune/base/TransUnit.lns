@@ -1166,7 +1166,7 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
 
 
    fn checkImplicitCast(
-      alt2typeMap:Map<&Ast.TypeInfo,&Ast.TypeInfo>,
+      alt2typeMap:Map<&Ast.TypeInfo,&Ast.TypeInfo>, validCastToGen:bool,
       dstTypeList:&List<&Ast.TypeInfo>, expListNode:&Nodes.ExpListNode,
       callback:checkImplicitCastCallback ) mut : Nodes.ExpListNode!;
 }
@@ -1231,6 +1231,20 @@ pub fn TransUnit.createModifier(
       return typeInfo;
    }
    return Ast.NormalTypeInfo.createModifier( typeInfo, mutMode );
+}
+
+fn TransUnit.createExtType(
+   pos:&Parser.Position, typeInfo:&Ast.TypeInfo ) mut :&Ast.TypeInfo
+{
+   _match Ast.NormalTypeInfo.createLuaval( typeInfo ) {
+      case .OK( work, _ ) {
+         return work;
+      }
+      case .Err( err ) {
+         self.addErrMess( pos, "not support -- %s" ( err ) );
+         return typeInfo;
+      }
+   }
 }
 
 proto abstract class _TypeInfo extend (Mapping);

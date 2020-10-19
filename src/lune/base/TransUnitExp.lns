@@ -357,14 +357,7 @@ fn TransUnit.analyzeExpRefItem(
    }
 
    if Ast.isExtType( exp.$expType.$nonnilableType ) {
-      _match Ast.NormalTypeInfo.createLuaval( typeInfo ) {
-         case .OK( work, _ ) {
-            typeInfo = work;
-         }
-         case .Err( err ) {
-            self.addErrMess( exp.$pos, err );
-         }
-      }
+      typeInfo = self.createExtType( exp.$pos, typeInfo );
    }
 
    let indexExp = self.analyzeExpOneRVal( false, false, nil, expectItemType );
@@ -421,7 +414,7 @@ expListNode の値を dstTypeList へ代入する際に、
 
 */
 fn TransUnit.checkImplicitCast(
-   alt2typeMap:Map<&Ast.TypeInfo,&Ast.TypeInfo>,
+   alt2typeMap:Map<&Ast.TypeInfo,&Ast.TypeInfo>, validCastToGen:bool,
    dstTypeList:&List<&Ast.TypeInfo>, expListNode:&Nodes.ExpListNode,
    callback:checkImplicitCastCallback ) mut : Nodes.ExpListNode!
 {
@@ -500,9 +493,26 @@ fn TransUnit.checkImplicitCast(
                   return workNode, true;
                }
                else {
-                  let! castType = alt2typeMap[ dstType ] {
+                  let castType;
+                  if validCastToGen {
+                     castType = unwrap alt2typeMap[ dstType ] default dstType;
+                  } else {
                      castType = dstType;
-                  };
+                  }
+                  if dstType.$srcTypeInfo == expNode.$expType.$srcTypeInfo
+                  {
+                     if not Ast.isGenericType( expNode.$expType ) {
+                        self.errorAt(
+                           expNode.$pos,           
+                           "not support cast -- %s(%d:%s) <- %s(%d:%s)"
+                           ( dstType.$srcTypeInfo.getTxt(##),
+                             dstType.$srcTypeInfo.$typeId,
+                             dstType.$kind.$_txt,
+                             expNode.$expType.$srcTypeInfo.getTxt(##),
+                             expNode.$expType.$srcTypeInfo.$typeId,
+                             expNode.$expType.$kind.$_txt));
+                     }
+                  }
                   workNode = Nodes.ExpCastNode.create(
                      self.nodeManager, expNode.$pos,
                      self.macroCtrl.isInAnalyzeArgMode(),
@@ -668,23 +678,27 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, Nodes.ExpListNode!, &List<&Ast.
       let mut hasImplictCast = false;
       let mut newExpListNode:Nodes.ExpListNode!;
 
-      if! let mut workList = self.checkImplicitCast(
-         alt2typeMap, dstTypeList, expListNode,
-         fn ( dstType:&Ast.TypeInfo, expNode:&Nodes.Node ): &Nodes.Node! {
-            if Ast.CanEvalCtrlTypeInfo.canAutoBoxing( dstType, expNode.$expType ) {
-               autoBoxingCount = autoBoxingCount + 1;
+      if result ~= .Error {
+         if! let mut workList = self.checkImplicitCast(
+            alt2typeMap, false, dstTypeList, expListNode,
+            fn ( dstType:&Ast.TypeInfo, expNode:&Nodes.Node ): &Nodes.Node! {
+               if Ast.CanEvalCtrlTypeInfo.canAutoBoxing( dstType, expNode.$expType ) {
+                  autoBoxingCount = autoBoxingCount + 1;
 
-               return Nodes.BoxingNode.create(
-                  self.nodeManager, expNode.$pos,
-                  self.macroCtrl.isInAnalyzeArgMode(), [ dstType ], expNode );
-            }
-            return nil;
-         } )
-      {
-         newExpListNode = workList;
-         hasImplictCast = true;
-      }
-      else {
+                  return Nodes.BoxingNode.create(
+                     self.nodeManager, expNode.$pos,
+                     self.macroCtrl.isInAnalyzeArgMode(), [ dstType ], expNode );
+               }
+               return nil;
+            } )
+         {
+            newExpListNode = workList;
+            hasImplictCast = true;
+         }
+         else {
+            newExpListNode = nil;
+         }
+      } else {
          newExpListNode = nil;
       }
       
@@ -738,7 +752,7 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
    let mut argTypeList = funcTypeInfo.$argTypeInfoList;
    switch funcTypeInfo {
       case builtinFunc.list_insert, builtinFunc.set_add, builtinFunc.set_del {
-         argTypeList = genericTypeList;
+         //argTypeList = genericTypeList;
       }
       case builtinFunc.list_sort {
          let alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
@@ -1612,16 +1626,11 @@ fn TransUnit.analyzeExpCast(
    let mut castType = castTypeNode.$expType;
 
    if exp.$expType.$kind == .Ext and castType.$kind ~= .Ext {
-      match Ast.NormalTypeInfo.createLuaval(
-         Ast.NormalTypeInfo.createModifier( castType, .IMut ) )
-      {
-         case .OK( extType, _ ) {
-            castType = extType;
-         }
-         case .Err( err ) {
-            self.addErrMess( castTypeNode.$pos, err );
-         }
+      if opTxt == "@@" or opTxt == "@@=" {
+         // 外部言語型のデータは、強制的に immutable にする。
+         castType = self.createModifier( castType, .IMut );
       }
+      castType = self.createExtType( castTypeNode.$pos, castType );
    }
 
    if castType.$kind == .Form and
@@ -1714,14 +1723,7 @@ fn TransUnit.analyzeExpCast(
    }
 
    if expType.$kind == .Ext and castType.$kind ~= .Ext {
-      _match Ast.NormalTypeInfo.createLuaval( castType ) {
-         case .OK( workType, _ ) {
-            castType = workType;
-         }
-         case .Err( mess ) {
-            self.addErrMess( castTypeNode.$pos, mess );
-         }
-      }
+      castType = self.createExtType( castTypeNode.$pos, castType );
    }
    
    if opTxt == "@@@" {
@@ -2176,7 +2178,7 @@ fn TransUnit.analyzeExpField(
    }
 
    let extFlag;
-   if prefixExpType.$kind == .Ext {
+   if Ast.isExtType( prefixExpType ) {
       extFlag = true;
       prefixExpType = prefixExpType.$extedType;
    } else {
@@ -2286,15 +2288,22 @@ fn TransUnit.analyzeExpField(
          if not typeInfo.$nilable {
             typeInfo = typeInfo.$nilableTypeInfo;
          }
+         if extFlag {
+            typeInfo = self.createExtType( token.pos, typeInfo );
+         }
          return Nodes.ExpRefItemNode.create(
             self.nodeManager, token.pos, self.macroCtrl.isInAnalyzeArgMode(),
             [ typeInfo ], prefixExp, accessNil, token.txt, nil );
       }
       default {
          if prefixExpType.equals( Ast.builtinTypeStem ##) {
+            typeInfo = Ast.builtinTypeStem_;
+            if extFlag {
+               typeInfo = self.createExtType( token.pos, typeInfo );
+            }
             return Nodes.ExpRefItemNode.create(
                self.nodeManager, token.pos, self.macroCtrl.isInAnalyzeArgMode(),
-               [ Ast.builtinTypeStem_ ], prefixExp, accessNil, token.txt, nil );
+               [ typeInfo ], prefixExp, accessNil, token.txt, nil );
          }
          else {
             self.error( "illegal type -- %s, %s"
@@ -2416,14 +2425,7 @@ fn TransUnit.analyzeExpField(
    
    
    if extFlag {
-      match Ast.NormalTypeInfo.createLuaval( typeInfo ) {
-         case .OK( work, _ ) {
-            typeInfo = work;
-         }
-         case .Err( err ) {
-            self.addErrMess( firstToken.pos, "not support -- %s" ( err ) );
-         }
-      }
+      typeInfo = self.createExtType( firstToken.pos, typeInfo );
    }
    if! getterTypeInfo {
       return Nodes.GetFieldNode.create(

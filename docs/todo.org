@@ -8,6 +8,16 @@
 
 * バグ
 
+- [ ]
+class Test6<T> {
+   let val:T {pub};
+   pub fn func():T { // ここでエラーを出すべき
+      return self.val;
+   }
+}
+  
+- [ ] string の enum で .. が利用できない。
+  
 - [ ] subfile で emacs からシンボル情報が参照できない。
 
 

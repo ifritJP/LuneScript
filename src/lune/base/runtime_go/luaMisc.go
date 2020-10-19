@@ -39,15 +39,6 @@ func (luaVM *Lns_luaVM) Load( txt string, opt LnsAny ) (LnsAny, LnsAny) {
         return ret[ 0 ], nil
     }
     return ret[ 0 ], ret[ 1 ]
-    
-    // top := lua_gettop( luaVM.vm )
-    // defer lua_settop( luaVM.vm, top )
-    
-    // vm := luaVM.vm
-    // if luaL_loadstring( vm, txt ) == cLUA_OK {
-    //     return luaVM.newLuaValue( -1 ), nil
-    // }
-    // return nil, luaVM.setupFromStack( -1 )
 }
 
 func (luaVM *Lns_luaVM) RunLoadedfunc( loaded *Lns_luaValue, args[]LnsAny ) []LnsAny {
@@ -117,7 +108,11 @@ func (luaVM *Lns_luaVM) Package_searchpath( name string, path string ) LnsAny {
 }
 func (luaVM *Lns_luaVM) OS_clock() LnsReal {
     ret := luaVM.CallStatic( "os", "clock", []LnsAny{} )
-    return Lns_getFromMulti( ret, 0 ).(LnsReal)
+    clock := Lns_getFromMulti( ret, 0 )
+    if val, ok := clock.(LnsReal); ok {
+        return val;
+    }
+    return LnsReal(clock.(LnsInt))
 }
 func (luaVM *Lns_luaVM) OS_exit( code LnsAny ) {
     luaVM.CallStatic( "os", "exit", []LnsAny{ code } )

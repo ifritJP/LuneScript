@@ -112,6 +112,14 @@ function _lune._toSet( val, toKeyInfo )
    return nil
 end
 
+function _lune.loadstring51( txt, env )
+   local func = loadstring( txt )
+   if func and env then
+      setfenv( func, env )
+   end
+   return func
+end
+
 function _lune.nilacc( val, fieldName, access, ... )
    if not val then
       return nil
@@ -440,7 +448,7 @@ function convFilter:writeRaw( txt )
    end
    
    
-   for _5532 in string.gmatch( txt, "\n" ) do
+   for _5534 in string.gmatch( txt, "\n" ) do
       self.curLineNo = self.curLineNo + 1
    end
    
@@ -1885,7 +1893,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _5870 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _5872 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -4048,12 +4056,27 @@ local function createFilter( streamName, stream, metaStream, convMode, inMacro, 
 end
 _moduleObj.createFilter = createFilter
 
+local function runLuaOnLns( code )
+
+   local loadFunc, err = DependLuaOnLns.runLuaOnLns( code )
+   if loadFunc ~= nil then
+      local mod = loadFunc(  )
+      if mod ~= nil then
+         return mod, ""
+      end
+      
+      return nil, "load error"
+   end
+   
+   return nil, err
+end
+
 local MacroEvalImp = {}
 setmetatable( MacroEvalImp, { __index = Nodes.MacroEval } )
 _moduleObj.MacroEvalImp = MacroEvalImp
 function MacroEvalImp:evalFromMacroCode( code )
 
-   local func, err = DependLuaOnLns.runLuaOnLns( code )
+   local func, err = runLuaOnLns( code )
    if func ~= nil then
       return func
    end

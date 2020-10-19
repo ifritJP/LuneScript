@@ -83,6 +83,17 @@ func Lns_type( val LnsAny ) string {
         return "boolean";
     case string:
         return "string";
+    case *Lns_luaValue:
+        switch val.(*Lns_luaValue).typeId {
+        case cLUA_TFUNCTION:
+            return "function"
+        case cLUA_TTABLE:
+            return "table"
+        default:
+            return fmt.Sprintf( "<notsupport>:%d, %d, %s",
+                val.(*Lns_luaValue).typeId, cLUA_TTABLE,
+                val.(*Lns_luaValue).typeId == cLUA_TTABLE)
+        }
     default:
         value := reflect.ValueOf(val)
         if value.Kind() == reflect.Func {

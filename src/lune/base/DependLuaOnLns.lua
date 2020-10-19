@@ -112,12 +112,11 @@ function _lune._toSet( val, toKeyInfo )
    return nil
 end
 
-function _lune.loadstring51( txt, env )
-   local func = loadstring( txt )
-   if func and env then
-      setfenv( func, env )
+function _lune.loadstring52( txt, env )
+   if not env then
+      return load( txt )
    end
-   return func
+   return load( txt, "", "bt", env )
 end
 
 function _lune.loadModule( mod )
@@ -199,7 +198,7 @@ local function runLuaOnLns( luaCode )
       return val
    end
    
-   local loaded, err = _lune.loadstring51( luaCode, newEnv )
+   local loaded, err = _lune.loadstring52( luaCode, newEnv )
    if loaded ~= nil then
       return loaded, ""
    end

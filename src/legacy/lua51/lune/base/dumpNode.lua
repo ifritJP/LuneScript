@@ -963,7 +963,7 @@ end
 
 function dumpFilter:processExpCast( node, opt )
 
-   self:dump( opt, node, string.format( "%s -> %s", node:get_exp():get_expType():getTxt( self:get_typeNameCtrl() ), node:get_castType():getTxt( self:get_typeNameCtrl() )) )
+   self:dump( opt, node, string.format( "%s(%d) -> %s(%d)", node:get_exp():get_expType():getTxt( self:get_typeNameCtrl() ), node:get_exp():get_expType():get_typeId(), node:get_castType():getTxt( self:get_typeNameCtrl() ), node:get_castType():get_typeId()) )
    filter( node:get_exp(  ), self, opt:nextOpt(  ) )
 end
 

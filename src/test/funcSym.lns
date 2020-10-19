@@ -98,7 +98,7 @@ ctrl.process( new Super<int>(), 1 );
 
 class Test6<T> {
    let val:T {pub};
-   pub fn func():T {
+   pub fn func():&T {
       return self.val;
    }
 }

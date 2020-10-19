@@ -448,10 +448,10 @@ _section();
 {
    class Test<T> {
       pub let val:T {pub};
-      pub fn func():T {
+      pub fn func():&T {
          return self.val;
       }
-      pub fn func2():T, T {
+      pub fn func2():&T, &T {
          return self.val, self.val;
       }
    }
@@ -1026,7 +1026,11 @@ _section();
                   print( index + 10, val, type( val ) );
                }
             }
+         } else {
+            print( "NG", __line__ );
          }
+      } else {
+         print( "NG", __line__ );
       }
    }
    func( code );
@@ -1134,4 +1138,34 @@ _section();
    }
    let test:&Test = new Sub(1);
    test.func();
+}
+_section();
+{
+   class Test {
+      pub fn func() {
+         print( __func__ );
+      }
+   }
+   class Sub extend Test {
+      pub fn sub() {
+         print( __func__ );
+      }
+   }
+   fn hoge( list:&List<&Test> ) {
+      foreach val in list@@List<&Sub> {
+         val.sub();
+      }
+   }
+   let test:Test = new Sub();
+   let mut list:List<&Test> = [];
+   list.insert( test );
+   hoge( list );
+
+   class Hoge<T:Test> {
+      pub fn func( val:T ) {
+         val.func();
+      }
+   }
+   let hoge2 = new Hoge<Test>();
+   hoge2.func( new Test() );
 }

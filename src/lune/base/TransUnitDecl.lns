@@ -219,20 +219,7 @@ fn TransUnit.analyzeRefTypeWithSymbol(
             }
             case .Ext {
                if checkAlternateTypeCount( 1 ) {
-                  _match Ast.NormalTypeInfo.createLuaval( genericList[1] ) {
-                     case .OK( workType, pass ) {
-                        typeInfo = workType;
-                        // if pass {
-                        //    self.addErrMess(
-                        //       symbolNode.$pos,           
-                        //       "can't use Luaval<%s>, use just %s"
-                        //       ( genericList[1].getTxt(##), genericList[1].getTxt(##)) );
-                        // }
-                     }
-                     case .Err( mess ) {
-                        self.addErrMess( symbolNode.$pos, mess );
-                     }
-                  };
+                  typeInfo = self.createExtType( symbolNode.$pos, genericList[1] );
                }
             } default {
                self.error( string.format( "not support generic: %s",
@@ -3241,7 +3228,7 @@ fn TransUnit.analyzeLetAndInitExp(
             Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap(false);
 
          if! self.checkImplicitCast(
-            alt2typeMap, typeInfoList, workList,
+            alt2typeMap, true, typeInfoList, workList,
             fn ( dstType:&Ast.TypeInfo, expNode:&Nodes.Node ): &Nodes.Node! {
                return nil;
             } )

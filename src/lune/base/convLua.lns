@@ -3351,14 +3351,25 @@ pub fn createFilter(
       moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest, useIpairs );
 }
 
+fn runLuaOnLns( code:str ): Luaval<&stem>!, str {
+   let loadFunc, err = DependLuaOnLns.runLuaOnLns( code );
+   when! loadFunc {
+      let mod = loadFunc();
+      when! mod {
+         return mod, "";
+      }
+      return nil, "load error";
+   }
+   return nil, err;
+}
 
 pub class MacroEvalImp extend Nodes.MacroEval {
    pri let mode: str;
 
    fn evalFromMacroCode( code:str ): Luaval<Nodes.macroStatmentProc> {
-      let func, err = DependLuaOnLns.runLuaOnLns( code );
+      let func, err = runLuaOnLns( code );
       when! func {
-         return func;
+         return func@@Luaval<Nodes.macroStatmentProc>;
       }
       Util.err( err );
    }
@@ -3474,8 +3485,38 @@ __test case1(ctrl) {
    LuaVer.setCurVer( 53 );
    
    let lnsCode = ```
-print( "hello world" );
+pub let mut outputList:List<str> = [];
+fn Print( ... ) {
+   let args = [ ... ];
+   let mut format = "";
+   foreach _, index in args {
+      if index > 1 {
+         format = "%s\t" (format);
+      }
+      format = format .. "%s";
+   }
+   outputList.insert( string.format( format, ... ) );
+}
+
+Print( "hello world" );
+macro _hoge() {
+   Print("hoge");
+}
+_hoge();
+
 ```;
-   let luaCode = convertLnsCode2LuaCode(  lnsCode, "mini.lns" );
-   __t._eq(ctrl, luaCode, 'print( "hello world" )');
+   let luaCode = convertLnsCode2LuaCode(  lnsCode, "test.lns" );
+   //__t._eq(ctrl, luaCode, "");
+   let loaded, mess = _load( luaCode## );
+   when! loaded {
+      if! let mod = loaded(##) {
+         if! let list = mod.outputList {
+            foreach line in list@@&List<str> {
+               print( line );
+            }
+         }
+      }
+   } else {
+      print( mess );
+   }
 }

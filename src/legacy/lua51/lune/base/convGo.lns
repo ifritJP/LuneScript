@@ -655,7 +655,14 @@ fn convFilter.outputImplicitCast(
       }
       case .Alternate {
          if not castType.hasBase() {
-            filter( node, self, parent );
+            if Ast.isClass( node.$expType.$nonnilableType ) {
+               self.write( "%s2Stem("
+                           (self.getTypeSymbol( node.$expType.$nonnilableType )) );
+               filter( node, self, parent );
+               self.write( ")" );
+            } else {
+               filter( node, self, parent );
+            }
          } else {
             self.outputImplicitCast( castType.$baseTypeInfo, node, parent );
          }
@@ -687,7 +694,7 @@ fn convFilter.outputImplicitCast(
          }
       }
       default {
-         if node.$expType.$nilable and node.$expType.$nonnilableType.$kind == .Class {
+         if node.$expType.$nilable and Ast.isClass( node.$expType.$nonnilableType ) {
             self.write( "%s2Stem("
                         (self.getTypeSymbol( node.$expType.$nonnilableType )) );
             filter( node, self, parent );
@@ -4473,6 +4480,9 @@ pub override fn convFilter.processExpRefItem(
             self.write( "Lns_NilAccLast( Lns_NilAccPop().(*Lns_luaValue)" );
          } else {
             filter( node.$val, self, node );
+            if prefixType.$extedType.$kind == .Stem {
+               self.write( ".(*Lns_luaValue)" );
+            }
          }
          self.write( ".GetAt(" );
          if! let index = node.$index {

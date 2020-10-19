@@ -1,18 +1,19 @@
 import lune.base.frontInterface;
 import lune.base.Nodes;
 
+pub form LoadFunc():&stem!;
+
 /**
-lua コードを LuneScript コンパイラ上で動かすことで、
-Lua コードから .Lns コードのトランスコンパイルを実行できるようにする。
+lua コードを LuneScript コンパイラ上で動かす。
 
-Lua コードから _lnsLoad( "lnsCode" )  を実行することで、
-.Lns コードのトランスコンパイルを実行する。
+この Lua コードからは、 _lnsLoad( "lnsCode" )  を実行することで、
+.Lns コードのトランスコンパイルした Lua コードを取得できる。
 
-@return Luaval<Nodes.macroStatmentProc>!
+@return Luaval<LoadFunc>!
   成功した場合、ロードした Lua コードを実行するための関数。
 @return エラー内容を示す文字列
 */
-pub fn runLuaOnLns( luaCode:str ): Luaval<Nodes.macroStatmentProc>!, str {
+pub fn runLuaOnLns( luaCode:str ): Luaval<LoadFunc>!, str {
 
    let mut newEnv:Map<str,stem> = {};
    foreach val, key in _G {
@@ -24,16 +25,12 @@ pub fn runLuaOnLns( luaCode:str ): Luaval<Nodes.macroStatmentProc>!, str {
       return val;
    };
 
-   let chunk, err = _load( luaCode, newEnv );
+   let loaded, err = _load( luaCode, newEnv );
+   when! loaded {
+      return loaded@@LoadFunc, "";
+   }
    when! err {
       return nil, err;
    }
-   when! chunk {
-      let mod = chunk(##);
-      when! mod {
-         return mod@@Luaval<Nodes.macroStatmentProc>, "";
-      }
-      return nil, "macro load error";
-   }
-   return nil, "failed to load";
+   return nil, "";
 }

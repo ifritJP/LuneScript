@@ -40,6 +40,7 @@ type Lns_luaValue struct {
     // lua VM の lns_globalValMap に格納しているシンボル名
     sym *C.char
     luaVM *Lns_luaVM
+    typeId int
 }
 
 func init() {
@@ -198,8 +199,8 @@ func (luaVM *Lns_luaVM) pushAny( val LnsAny ) *lns_pushedVal {
 // }
 
 
-func (luaVM *Lns_luaVM) newLuaValue( index int ) *Lns_luaValue {
-    val := &Lns_luaValue{ luaVM: luaVM }
+func (luaVM *Lns_luaVM) newLuaValue( index int, typeId int ) *Lns_luaValue {
+    val := &Lns_luaValue{ luaVM: luaVM, typeId: typeId }
     val.sym = C.CString( fmt.Sprintf( "%p", &val ) )
     runtime.SetFinalizer( val, func (obj *Lns_luaValue) { obj.free() } )
     val.setValToGlobalValMap( index )
@@ -226,7 +227,7 @@ func (luaVM *Lns_luaVM) setupFromStack( index int ) LnsAny {
     case cLUA_TSTRING:
         return lua_tolstring( vm, index )
     default:
-        return luaVM.newLuaValue( -1 )
+        return luaVM.newLuaValue( index, typeId )
     }
 }
 
@@ -325,6 +326,13 @@ func (luaValue *Lns_luaValue) pushValFromGlobalValMap() {
 }
 
 
+/**
+Lua の関数を実行する。
+
+@param packName Lua のパッケージ名。 string.format() を実行する場合 "string"。
+@param funcname 実行する関数名。string.format() を実行する場合、 "format"。
+@return []LnsAny 実行結果。
+*/
 func (luaVM *Lns_luaVM) CallStatic(
     packName string, funcname string, args[] LnsAny ) []LnsAny {
     

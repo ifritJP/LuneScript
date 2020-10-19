@@ -1181,7 +1181,11 @@ function TypeInfo:get_srcTypeInfo(  )
 end
 function TypeInfo:equals( typeInfo, alt2type, checkModifer )
 
-   return self == typeInfo
+   if checkModifer then
+      return self == typeInfo
+   end
+   
+   return self == typeInfo:get_srcTypeInfo()
 end
 function TypeInfo:get_externalFlag(  )
 
@@ -1341,6 +1345,19 @@ function TypeInfo:get_processInfo()
    return self.processInfo
 end
 
+
+local function applyGenericDefault( typeInfo, alt2typeMap, moduleTypeInfo )
+
+   do
+      local genType = typeInfo:applyGeneric( alt2typeMap, moduleTypeInfo )
+      if genType ~= nil then
+         return genType
+      end
+   end
+   
+   return typeInfo
+end
+_moduleObj.applyGenericDefault = applyGenericDefault
 
 function SymbolInfo:getModule(  )
 
@@ -3308,13 +3325,22 @@ function AlternateTypeInfo:canSetFrom( other, canEvalType, alt2type )
       end
    end
    
+   local workAlt2type
+   
    if not CanEvalCtrlTypeInfo.isValidApply( alt2type ) then
-      return false
+      if otherWork:get_kind() ~= TypeInfoKind.Class and otherWork:get_kind() ~= TypeInfoKind.IF then
+         return false
+      end
+      
+      workAlt2type = CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false )
+   else
+    
+      workAlt2type = alt2type
    end
    
    
-   if self.baseTypeInfo ~= _moduleObj.headTypeInfo then
-      if not other:isInheritFrom( self.baseTypeInfo, alt2type ) then
+   if self:hasBase(  ) then
+      if not other:isInheritFrom( self.baseTypeInfo, workAlt2type ) then
          return false
       end
       
@@ -3322,18 +3348,20 @@ function AlternateTypeInfo:canSetFrom( other, canEvalType, alt2type )
    
    
    for __index, ifType in ipairs( self.interfaceList ) do
-      if not other:isInheritFrom( ifType, alt2type ) then
+      if not other:isInheritFrom( ifType, workAlt2type ) then
          return false
       end
       
    end
    
    
-   alt2type[self] = otherWork
+   workAlt2type[self] = otherWork
    return true
 end
 function AlternateTypeInfo:isInheritFrom( other, alt2type )
 
+   local workAlt2type
+   
    if alt2type ~= nil then
       local otherWork = AlternateTypeInfo.getAssign( other, alt2type )
       if self == otherWork:get_srcTypeInfo() then
@@ -3349,9 +3377,14 @@ function AlternateTypeInfo:isInheritFrom( other, alt2type )
       end
       
       if not CanEvalCtrlTypeInfo.isValidApply( alt2type ) then
-         return false
+         workAlt2type = nil
+      else
+       
+         workAlt2type = alt2type
       end
       
+   else
+      workAlt2type = nil
    end
    
    if self == other:get_srcTypeInfo() then
@@ -3361,8 +3394,8 @@ function AlternateTypeInfo:isInheritFrom( other, alt2type )
    
    local function check(  )
    
-      if self.baseTypeInfo ~= _moduleObj.headTypeInfo then
-         if self.baseTypeInfo:isInheritFrom( other, alt2type ) then
+      if self:hasBase(  ) then
+         if self.baseTypeInfo:isInheritFrom( other, workAlt2type ) then
             return true
          end
          
@@ -3370,7 +3403,7 @@ function AlternateTypeInfo:isInheritFrom( other, alt2type )
       
       
       for __index, ifType in ipairs( self.interfaceList ) do
-         if ifType:isInheritFrom( other, alt2type ) then
+         if ifType:isInheritFrom( other, workAlt2type ) then
             return true
          end
          
@@ -3380,8 +3413,8 @@ function AlternateTypeInfo:isInheritFrom( other, alt2type )
    end
    
    if check(  ) then
-      if alt2type ~= nil then
-         alt2type[self] = other
+      if workAlt2type ~= nil then
+         workAlt2type[self] = other
       end
       
       return true
@@ -7733,7 +7766,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
             if dstType:get_srcTypeInfo():get_kind() ~= TypeInfoKind.DDD then
                local isMatch, msg = dstType:canEvalWith( expType, CanEvalType.SetOp, alt2type )
                if not isMatch then
-                  return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s: index %d%s", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:getTxt( _moduleObj.defaultTypeNameCtrl ), index, msg and string.format( " -- %s", tostring( msg)) or "")
+                  return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s: index %d%s", index, applyGenericDefault( dstType, alt2type, dstType:getModule(  ) ):getTxt( _moduleObj.defaultTypeNameCtrl ), expType:getTxt( _moduleObj.defaultTypeNameCtrl ), index, msg and string.format( " -- %s", tostring( msg)) or "")
                end
                
                if not allowDstShort and #dstTypeList < #expTypeList then
@@ -8009,6 +8042,11 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
    
    
    if dest:get_kind() ~= otherSrc:get_kind() then
+      if otherSrc:get_kind() == TypeInfoKind.Alternate and otherSrc:hasBase(  ) then
+         return TypeInfo.canEvalWithBase( dest, destMut, otherSrc:get_baseTypeInfo(), canEvalType, alt2type )
+      end
+      
+      
       if dest:get_kind() == TypeInfoKind.Nilable then
          local dstNonNil
          
@@ -8402,7 +8440,7 @@ IdType.__allList[2] = IdType.Ext
 local function switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 6435, function (  )
+   Log.log( Log.Level.Trace, __func__, 6468, function (  )
    
       return "start"
    end )
@@ -8422,7 +8460,7 @@ local builtinTypeInfo2Map = typeInfo2Map:clone(  )
 local function pushProcessInfo( processInfo )
    local __func__ = '@lune.@base.@Ast.pushProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6447, function (  )
+   Log.log( Log.Level.Trace, __func__, 6480, function (  )
    
       return "start"
    end )
@@ -8457,7 +8495,7 @@ _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
    local __func__ = '@lune.@base.@Ast.popProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6473, function (  )
+   Log.log( Log.Level.Trace, __func__, 6506, function (  )
    
       return "start"
    end )

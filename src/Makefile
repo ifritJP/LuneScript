@@ -1160,7 +1160,7 @@ define test-convGo-test
 
 	$(call convGo,$1,$3/$2,--testing,$4)
 	$(call buildGo,$1) > work/result-testGo.txt
-	$(call exeLune,$1/$4,$3/$2.lns,SAVE,--testing) 
+#	$(call exeLune,$1/$4,$3/$2.lns,SAVE,--testing) 
 	$(call test-lns-test,$1/$4,$2) > work/result-testGo2.txt
 	diff -C 2 -I 'ONLY_LUA' work/result-testGo.txt work/result-testGo2.txt
 endef
@@ -1194,6 +1194,13 @@ test-testGo:
 	$(call test-convGo-test,$(GO_WORK_DIR),convLua,lune/base,./test)
 
 test-subgo:
+	$(call transwork,.,.,,base/convGo)
+	$(call setup-go,$(GO_WORK_DIR))
+
+#	cp lune/base/convGo.* $(GO_WORK_DIR)/lune/base
+#	cp lune/base/convGo.* $(GO_WORK_DIR)/test/lune/base/
+#	cp lune/base/convLua.* $(GO_WORK_DIR)/lune/base/
+#	cp lune/base/convLua.* $(GO_WORK_DIR)/test/lune/base/
 	$(call test-convGo-test,$(GO_WORK_DIR),convLua,lune/base,./test)
 
 

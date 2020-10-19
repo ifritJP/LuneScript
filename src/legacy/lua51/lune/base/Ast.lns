@@ -717,8 +717,12 @@ pub class TypeInfo {
 
    /** この型と typeInfo が等しいかどうか */
    pub fn equals( typeInfo: &TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>!,
-                  checkModifer:bool! ): bool {
-      return self == typeInfo;
+                  checkModifer:bool! ): bool
+   {
+      if checkModifer {
+         return self == typeInfo;
+      }
+      return self == typeInfo.$srcTypeInfo;
    }
 
    /** この型が外部モジュールで定義した型かどうか */
@@ -889,6 +893,16 @@ static な型か。
    pub fn getFullName(
       typeNameCtrl:&TypeNameCtrl, importInfo:&ModuleInfoManager, localFlag:bool! ) : str;
    
+}
+
+pub fn applyGenericDefault(
+   typeInfo:&TypeInfo, alt2typeMap:&Map<&TypeInfo,&TypeInfo>,
+   moduleTypeInfo:&TypeInfo ): &TypeInfo
+{
+   if! let genType = typeInfo.applyGeneric( alt2typeMap, moduleTypeInfo ) {
+      return genType;
+   }
+   return typeInfo;
 }
 
 pub fn SymbolInfo.getModule(): &TypeInfo {
@@ -2413,22 +2427,28 @@ pub class AlternateTypeInfo extend TypeInfo {
          }
          return genType.equals( otherWork, alt2type ## );
       }
+      let workAlt2type;
       if not CanEvalCtrlTypeInfo.isValidApply( alt2type ) {
-         return false;
+         if otherWork.$kind ~= .Class and otherWork.$kind ~= .IF {
+            return false;
+         }
+         workAlt2type = CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
+      } else {
+         workAlt2type = alt2type;
       }
 
-      if self.baseTypeInfo ~= headTypeInfo {
-         if not other.isInheritFrom( self.baseTypeInfo, alt2type ) {
+      if self.hasBase() {
+         if not other.isInheritFrom( self.baseTypeInfo, workAlt2type ) {
             return false;
          }
       };
       foreach ifType in self.interfaceList {
-         if not other.isInheritFrom( ifType, alt2type ) {
+         if not other.isInheritFrom( ifType, workAlt2type ) {
             return false;
          }
       }
 
-      alt2type[ self ] = otherWork;
+      workAlt2type[ self ] = otherWork;
       return true;
    }
 
@@ -2436,6 +2456,7 @@ pub class AlternateTypeInfo extend TypeInfo {
    pub override fn isInheritFrom(
       other:&TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>! ) : bool
    {
+      let mut workAlt2type:Map<&TypeInfo,&TypeInfo>!;
       when! alt2type {
          let otherWork = AlternateTypeInfo.getAssign( other, alt2type );
          if self == otherWork.$srcTypeInfo {
@@ -2446,21 +2467,25 @@ pub class AlternateTypeInfo extend TypeInfo {
             return genType.isInheritFrom( otherWork, alt2type );
          }
          if not CanEvalCtrlTypeInfo.isValidApply( alt2type ) {
-            return false;
+            workAlt2type = nil;
+         } else {
+            workAlt2type = alt2type;
          }
+      } else {
+         workAlt2type = nil;
       }
       if self == other.$srcTypeInfo {
          return true;
       }
 
       fn check(): bool {
-         if self.baseTypeInfo ~= headTypeInfo {
-            if self.baseTypeInfo.isInheritFrom( other, alt2type ) {
+         if self.hasBase() {
+            if self.baseTypeInfo.isInheritFrom( other, workAlt2type ) {
                return true;
             }
          };
          foreach ifType in self.interfaceList {
-            if ifType.isInheritFrom( other, alt2type ) {
+            if ifType.isInheritFrom( other, workAlt2type ) {
                return true;
             }
          }
@@ -2468,8 +2493,8 @@ pub class AlternateTypeInfo extend TypeInfo {
       }
 
       if check() {
-         when! alt2type {
-            alt2type[ self ] = other;
+         when! workAlt2type {
+            workAlt2type[ self ] = other;
          }
          return true;
       }
@@ -5815,7 +5840,10 @@ pub static fn TypeInfo.checkMatchType(
                let isMatch, msg = dstType.canEvalWith( expType, .SetOp, alt2type );
                if not isMatch {
                   return .Error, "exp(%d) type mismatch %s <- %s: index %d%s"
-                  ( index, dstType.getTxt( defaultTypeNameCtrl## ),
+                  ( index,
+                    applyGenericDefault(
+                       dstType, alt2type, dstType.getModule() ).getTxt(
+                          defaultTypeNameCtrl## ),  
                     expType.getTxt(defaultTypeNameCtrl## ), index,
                     msg and " -- %s" (msg) or "");               
                }
@@ -6084,6 +6112,11 @@ pub static fn TypeInfo.canEvalWithBase(
 
    
    if dest.$kind ~= otherSrc.$kind {
+      if otherSrc.$kind == .Alternate and otherSrc.hasBase() {
+         return TypeInfo.canEvalWithBase(
+            dest, destMut, otherSrc.$baseTypeInfo, canEvalType, alt2type )**;
+      }
+      
       if dest.$kind == .Nilable {
          let dstNonNil;
          if destMut {

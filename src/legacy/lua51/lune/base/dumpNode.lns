@@ -590,9 +590,12 @@ pub override fn dumpFilter.processExpMultiTo1(
 pub override fn dumpFilter.processExpCast(
    node: &Nodes.ExpCastNode, opt:Opt ) mut
 {
-   self.dump( opt, node,
-         "%s -> %s" (node.$exp.$expType.getTxt( self.$typeNameCtrl ##),
-                      node.$castType.getTxt( self.$typeNameCtrl ## ) ) );
+   self.dump(
+      opt, node,
+      "%s(%d) -> %s(%d)" ( node.$exp.$expType.getTxt( self.$typeNameCtrl ##),
+                           node.$exp.$expType.$typeId,
+                           node.$castType.getTxt( self.$typeNameCtrl ## ),
+                           node.$castType.$typeId) );
    filter( node.get_exp(), self, opt.nextOpt() );
 };
 pub override fn dumpFilter.processExpParen(

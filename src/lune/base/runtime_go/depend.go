@@ -25,6 +25,7 @@ SOFTWARE.
 package runtimelns
 
 import "os"
+import "fmt"
 
 func Lns_Depend_init() {
 }
@@ -76,8 +77,30 @@ func Depend_setup( callback func( ver LnsInt )) {
     callback( 53 );
 }
 
+
+var DependLuaOnLns_runLuaOnLnsFunc func(luaCode string) (LnsAny,string) = nil
+
 func DependLuaOnLns_runLuaOnLns( luaCode string ) (LnsAny,string) {
-    return nil, "not ready"
+    txt := fmt.Sprintf(`
+local DependLuaOnLns = require( 'lune.base.DependLuaOnLns' )
+
+local txt=[==[
+%s
+]==]
+
+return DependLuaOnLns.runLuaOnLns( txt )
+`, luaCode);
+
+    luaVM := Lns_getVM()
+    loaded, err := luaVM.Load( txt, nil )
+    if loaded != nil {
+        ret := luaVM.RunLoadedfunc( loaded.(*Lns_luaValue), []LnsAny{} );
+        return ret[ 0 ], ""
+    }
+    if err != nil {
+        return nil, err.(string)
+    }
+    return nil, ""
 }
 func Lns_DependLuaOnLns_init() {
 }
