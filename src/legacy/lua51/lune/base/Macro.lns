@@ -27,6 +27,26 @@ import lune.base.Nodes;
 import lune.base.Ast;
 import lune.base.Parser;
 import lune.base.Formatter;
+import lune.base.Depend;
+
+
+fn loadCode( code:str ) : Luaval<&stem> {
+   let loaded, mess = _load( code ## );
+   when! loaded {
+      if! let obj = loaded(##) {
+         return obj;
+      }
+      error( "failed to load" );
+   }
+   error( "%s -- %s" (mess, code) );
+}
+   
+
+pub form toListLua( ... ) : &List<&stem>;
+pub let toList = loadCode( "return function( ... ) return { ... } end" )@@toListLua;
+pub form toLuavalLua( val:&stem! ) : &stem!;
+pub let toLuaval = loadCode( "return function( val ) return val end" )@@toLuavalLua;
+
 
 class MacroMetaArgInfo extend (Mapping) {
    pub let name:str;
@@ -317,32 +337,20 @@ pub fn MacroCtrl.evalMacroOp(
    let func = macroInfo.func;
    let mut macroVars = func( macroArgValMap );
 
-   form addFuncLua( val:&stem ) : &List<&stem>;
-   let mut addFunc:Luaval<addFuncLua>! = nil;
-   if! let loaded = _load( "return function( val ) return { val } end" ## ) {
-      if! let luafunc = loaded(##) {
-         addFunc = luafunc@@addFuncLua;
-      }
-   }
-   
    // macro-statment の実行結果から、
    // symbol2ValueMapForMacro にシンボル名と値を紐付け
    foreach name in (unwrap macroVars.__names)@@List<str> {
       let valInfo = unwrap macroInfo.symbol2MacroValInfoMap[ name ];
       let typeInfo = valInfo.typeInfo;
-      let mut valList:&stem;
+      let mut valList:Luaval<&stem>;
       if! let mut val = macroVars[ name ] {
          if typeInfo.equals( Ast.builtinTypeSymbol ##) {
-            when! addFunc {
-               valList = addFunc( val );
-            } else {
-               Util.err( "not ready" );
-            }
+            valList = toList( val );
          } else {
             valList = val;
          }
       } else {
-         valList = [];
+         valList = toList(##);
       }
       self.symbol2ValueMapForMacro[ name ] =
          new Nodes.MacroValInfo( valList, typeInfo, macroArgName2ArgNode[ name ] );
@@ -357,8 +365,8 @@ pub fn MacroCtrl.evalMacroOp(
          let argName = arg.$name;
          //scope.add( argName, argType.expType );
          self.symbol2ValueMapForMacro[ argName ] =
-            new Nodes.MacroValInfo( argValMap[ index ], argType,
-                                    macroArgName2ArgNode[ argName ] );
+            new Nodes.MacroValInfo( toLuaval(argValMap[ index ]),
+                                    argType, macroArgName2ArgNode[ argName ] );
       }
       else {
          return nil, "not support ... in macro";
@@ -562,7 +570,10 @@ pub fn MacroCtrl.expandMacroVal(
       if tokenTxt == ',,' {
          //Util.errorLog( "nextToken: %s" ( nextToken.txt ) );
          if macroVal.typeInfo.equals( Ast.builtinTypeSymbol ## ) {
-            let txtList = (unwrap macroVal.val)@@str[];
+            let mut txtList:List<str> = [];
+            foreach txt in (unwrap macroVal.val)@@str[] {
+               txtList.insert( txt );
+            }
             pushbackTxt( parser, txtList, nextToken.txt, nextToken.pos );
          }
          elseif macroVal.typeInfo.equals( Ast.builtinTypeStat ## ) or

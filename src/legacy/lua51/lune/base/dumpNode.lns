@@ -81,8 +81,9 @@ class dumpFilter extend Nodes.Filter<Opt> {
       }
 
       self.writeln( opt,
-                    ": %s %s %s %s"     
-                    ( Nodes.getNodeKindName( node.get_kind() ), txt, typeStr, comment ) );
+                    ": %s:%d %s %s %s"     
+                    ( Nodes.getNodeKindName( node.get_kind() ), node.$id,
+                      txt, typeStr, comment ) );
    }
 }
 
@@ -540,13 +541,17 @@ pub override fn dumpFilter.processExpList(
    node: &Nodes.ExpListNode, opt:Opt ) mut
 
 {
-   let mess;
+   let mut mess;
    if! let mRetExp = node.$mRetExp {
-      mess = "hasMRetExp (%d)" (mRetExp.$index);
+      mess = "hasMRetExp (%d): " (mRetExp.$index);
    }
    else {
-      mess = "noMRetExp";
+      mess = "noMRetExp: ";
    }
+   foreach expType in node.$expTypeList {
+      mess = "%s %s" (mess, expType.getTxt(##) );
+   }
+   
    self.dump( opt, node, mess );
    let expList = node.get_expList();
    foreach exp in expList {
@@ -832,20 +837,32 @@ pub override fn dumpFilter.processAbbr(
 };
 
 
+__test {
+   import lune.base.convLua;
+   import lune.base.TransUnit;
+   
+   class FrontDump extend convLua.Front {
+      pro override fn convertFromAst( ast:&TransUnit.ASTInfo, streamName:str ) : str, str
+      {
+         let mut stream = new Util.memStream();
+
+         let mut conv = createFilter( ast.$moduleTypeInfo, stream );
+
+         ast.$node.processFilter( conv, new Opt( "", 0 ));
+
+         return "", stream.$txt;
+      }
+   }
+}
+
 __test case1(ctrl) {
-   let mut rootNode = Nodes.createTestNodes();
+   import lune.base.LuaVer;
+   import lune.base.convLua;
+   
+   LuaVer.setCurVer( 53 );
 
-   let mut memStream = new Util.memStream();
-   let mut dump = createFilter( rootNode.$moduleTypeInfo, memStream );
-
-   rootNode.processFilter( dump, new Opt( "", 0 ) );
-
-   let txt = ```: Root  (6::2)
-  : StmtExp  (6::2)
-    : ExpCall [nilacc:false] ->  (6::2)
-      : ExpRef form:form
-      : ExpList noMRetExp
-        : LiteralString 'hoge'
-```;
-   __t._eq( ctrl, memStream.$txt, txt );
+   let mut front = new FrontDump( convLua.createDefaultOption( "test.lns" ) );
+     
+   let dump = convLua.convertLnsCode2LuaCode( convLua.getTestLnsCode(), front );
+   print( dump );
 }

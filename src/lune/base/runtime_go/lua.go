@@ -160,8 +160,6 @@ func (luaVM *Lns_luaVM) pushAny( val LnsAny ) *lns_pushedVal {
             conv.write( "return " )
             conv.conv( val )
 
-            print( fmt.Sprintf( "%s\n", conv.builder.String() ) );
-            
             loaded, _ := luaVM.Load( conv.builder.String(), nil )
             luaval := luaVM.RunLoadedfunc( loaded.(*Lns_luaValue),  []LnsAny{} )
             
@@ -415,4 +413,15 @@ func (obj *Lns_luaValue) GetAt( index LnsAny ) LnsAny {
     defer pVal.free()
     lua_gettable( vm, -2 ); // obj[arg] を push
     return luaVM.setupFromStack( -1 )
+}
+
+func (obj *Lns_luaValue) Len() LnsInt {
+    luaVM := obj.luaVM
+    vm := luaVM.vm
+    top := lua_gettop( vm )
+    defer lua_settop( vm, top )
+    obj.pushValFromGlobalValMap() // obj を push
+
+    lua_len( vm, -1 )
+    return lua_tointegerx(vm, -1 )
 }

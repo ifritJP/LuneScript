@@ -1816,3 +1816,15 @@ class Test_ccc {
    let mut test = new Test<Sub>( new Sub( 1 ) );
    test.func( new Sub( 2 ));
 }
+{
+   Macro._section();
+   fn foo( test_:str ) {
+      __scope root ( test_ ) {
+         fn func( val:str ) {
+            print( test_ .. "abc" .. val );
+         }
+         func( test_ );
+      }
+   }
+   foo( "123" );
+}

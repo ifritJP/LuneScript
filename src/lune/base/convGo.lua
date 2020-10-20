@@ -3617,7 +3617,10 @@ function convFilter:processForeach( node, opt )
          do
             local key = node:get_key()
             if key ~= nil then
-               self:writeln( string.format( "%s := _%s + 1", self:getSymbolSym( key ), key:get_name()) )
+               if key:get_posForModToRef() then
+                  self:writeln( string.format( "%s := _%s + 1", self:getSymbolSym( key ), key:get_name()) )
+               end
+               
             end
          end
          
@@ -5074,6 +5077,18 @@ function convFilter:processExpOp1( node, opt )
             if _switchExp == Ast.TypeInfoKind.List then
                filter( node:get_exp(), self, node )
                self:write( ".Len()" )
+            elseif _switchExp == Ast.TypeInfoKind.Ext then
+               do
+                  local _switchExp = node:get_exp():get_expType():get_extedType():get_kind()
+                  if _switchExp == Ast.TypeInfoKind.List then
+                     filter( node:get_exp(), self, node )
+                     self:write( ".Len()" )
+                  else 
+                     
+                        Util.err( string.format( "%s: not support -- %s", __func__, node:get_exp():get_expType():getTxt(  )) )
+                  end
+               end
+               
             else 
                
                   self:write( "len(" )
@@ -5421,6 +5436,7 @@ function convFilter:processExpRefItem( node, opt )
          end
          
          self:write( ")" )
+         self:outputStem2Type( node:get_expType() )
       elseif _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
          if node:get_nilAccess() then
             self:write( "Lns_NilAccFin( Lns_NilAccPush( " )
@@ -5912,5 +5928,9 @@ local function createFilter( enableTest, streamName, stream, ast )
    return convFilter.new(enableTest, streamName, stream, ast)
 end
 _moduleObj.createFilter = createFilter
+
+
+
+
 
 return _moduleObj

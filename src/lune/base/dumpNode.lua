@@ -302,7 +302,7 @@ function dumpFilter:dump( opt, node, txt )
    end
    
    
-   self:writeln( opt, string.format( ": %s %s %s %s", Nodes.getNodeKindName( node:get_kind(  ) ), txt, typeStr, comment) )
+   self:writeln( opt, string.format( ": %s:%d %s %s %s", Nodes.getNodeKindName( node:get_kind(  ) ), node:get_id(), txt, typeStr, comment) )
 end
 function dumpFilter.setmeta( obj )
   setmetatable( obj, { __index = dumpFilter  } )
@@ -911,11 +911,16 @@ function dumpFilter:processExpList( node, opt )
    do
       local mRetExp = node:get_mRetExp()
       if mRetExp ~= nil then
-         mess = string.format( "hasMRetExp (%d)", mRetExp:get_index())
+         mess = string.format( "hasMRetExp (%d): ", mRetExp:get_index())
       else
-         mess = "noMRetExp"
+         mess = "noMRetExp: "
       end
    end
+   
+   for __index, expType in ipairs( node:get_expTypeList() ) do
+      mess = string.format( "%s %s", mess, expType:getTxt(  ))
+   end
+   
    
    self:dump( opt, node, mess )
    local expList = node:get_expList(  )
@@ -1245,6 +1250,8 @@ function dumpFilter:processAbbr( node, opt )
 
    self:dump( opt, node, "##" )
 end
+
+
 
 
 

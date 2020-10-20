@@ -279,6 +279,33 @@ local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Formatter = _lune.loadModule( 'lune.base.Formatter' )
+local Depend = _lune.loadModule( 'lune.base.Depend' )
+
+local function loadCode( code )
+
+   local loaded, mess = _lune.loadstring52( code )
+   if loaded ~= nil then
+      do
+         local obj = loaded(  )
+         if obj ~= nil then
+            return obj
+         end
+      end
+      
+      error( "failed to load" )
+   end
+   
+   error( string.format( "%s -- %s", mess, code) )
+end
+
+
+local toList = loadCode( "return function( ... ) return { ... } end" )
+_moduleObj.toList = toList
+
+
+local toLuaval = loadCode( "return function( val ) return val end" )
+_moduleObj.toLuaval = toLuaval
+
 
 local MacroMetaArgInfo = {}
 setmetatable( MacroMetaArgInfo, { ifList = {Mapping,} } )
@@ -670,22 +697,6 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
    
    local func = macroInfo.func
    local macroVars = func( macroArgValMap )
-   
-   
-   local addFunc = nil
-   do
-      local loaded = _lune.loadstring52( "return function( val ) return { val } end" )
-      if loaded ~= nil then
-         do
-            local luafunc = loaded(  )
-            if luafunc ~= nil then
-               addFunc = luafunc
-            end
-         end
-         
-      end
-   end
-   
    for __index, name in pairs( (_lune.unwrap( macroVars['__names']) ) ) do
       local valInfo = _lune.unwrap( macroInfo.symbol2MacroValInfoMap[name])
       local typeInfo = valInfo.typeInfo
@@ -695,19 +706,14 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
          local val = macroVars[name]
          if val ~= nil then
             if typeInfo:equals( Ast.builtinTypeSymbol ) then
-               if addFunc ~= nil then
-                  valList = addFunc( val )
-               else
-                  Util.err( "not ready" )
-               end
-               
+               valList = _moduleObj.toList( val )
             else
              
                valList = val
             end
             
          else
-            valList = {}
+            valList = _moduleObj.toList(  )
          end
       end
       
@@ -718,7 +724,7 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
       if arg:get_typeInfo():get_kind() ~= Ast.TypeInfoKind.DDD then
          local argType = arg:get_typeInfo()
          local argName = arg:get_name()
-         self.symbol2ValueMapForMacro[argName] = Nodes.MacroValInfo.new(argValMap[index], argType, macroArgName2ArgNode[argName])
+         self.symbol2ValueMapForMacro[argName] = Nodes.MacroValInfo.new(_moduleObj.toLuaval( argValMap[index] ), argType, macroArgName2ArgNode[argName])
       else
        
          return nil, "not support ... in macro"
@@ -880,7 +886,11 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
       
       if tokenTxt == ',,' then
          if macroVal.typeInfo:equals( Ast.builtinTypeSymbol ) then
-            local txtList = (_lune.unwrap( macroVal.val) )
+            local txtList = {}
+            for __index, txt in pairs( (_lune.unwrap( macroVal.val) ) ) do
+               table.insert( txtList, txt )
+            end
+            
             pushbackTxt( parser, txtList, nextToken.txt, nextToken.pos )
          elseif macroVal.typeInfo:equals( Ast.builtinTypeStat ) or macroVal.typeInfo:equals( Ast.builtinTypeExp ) or macroVal.typeInfo:equals( Ast.builtinTypeMultiExp ) then
             parser:pushbackStr( string.format( "macroVal %s", nextToken.txt), (_lune.unwrap( macroVal.val) ) )
@@ -961,7 +971,7 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
          if macroVal.typeInfo:equals( Ast.builtinTypeSymbol ) then
             local txtList = (_lune.unwrap( macroVal.val) )
             local newToken = ""
-            for __index, txt in ipairs( txtList ) do
+            for __index, txt in pairs( txtList ) do
                newToken = string.format( "%s%s", newToken, txt)
             end
             

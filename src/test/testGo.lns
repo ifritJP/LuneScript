@@ -1000,7 +1000,9 @@ _section();
    let loaded = _load( code ## );
    when! loaded {
       if! let obj = loaded(##) {
-         foreach val, key in obj@@Luaval<&List<int>> {
+         let list = obj@@&List<int>;
+         print( #list );
+         foreach val, key in list {
             print( key, val );
          }
       }

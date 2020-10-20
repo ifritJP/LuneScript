@@ -161,3 +161,6 @@ func lua_type(vm *C.lua_State, index int) int {
 func lua_next(vm *C.lua_State, index int) int {
     return int(C.lua_next(vm, C.int( index )))
 }
+func lua_len( vm *C.lua_State, index int) {
+    C.lua_len(vm, C.int( index ))
+}

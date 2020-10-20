@@ -2934,7 +2934,9 @@ pub override fn convFilter.processForeach(
          self.writeln( ".Items ) {" );
          self.pushIndent( ## );
          if! let key = node.$key {
-            self.writeln( "%s := _%s + 1" (self.getSymbolSym( key ), key.$name) );
+            if key.$posForModToRef {
+               self.writeln( "%s := _%s + 1" (self.getSymbolSym( key ), key.$name) );
+            }
          }
          _keyItemSet( itemType, valName );
          self.popIndent();
@@ -4184,6 +4186,18 @@ pub override fn convFilter.processExpOp1(
                filter( node.$exp, self, node );
                self.write( ".Len()" );
             }
+            case .Ext {
+               switch node.$exp.$expType.$extedType.$kind {
+                  case .List {
+                     filter( node.$exp, self, node );
+                     self.write( ".Len()" );
+                  }
+                  default {
+                     Util.err( "%s: not support -- %s"
+                               (__func__, node.$exp.$expType.getTxt(##)) );
+                  }
+               }
+            }
             default {
                self.write( "len(" );
                filter( node.$exp, self, node );
@@ -4491,6 +4505,7 @@ pub override fn convFilter.processExpRefItem(
             self.write( '"%s"' (str2gostr( unwrap node.$symbol)) );
          }
          self.write( ")" );
+         self.outputStem2Type( node.$expType );
       }
       case .List, .Array {
          if node.$nilAccess {
@@ -4918,4 +4933,30 @@ pub fn createFilter(
    stream: oStream, ast:&TransUnit.ASTInfo ) : Nodes.Filter<Opt>
 {
    return new convFilter( enableTest, streamName, stream, ast );
+}
+
+__test {
+   import lune.base.convLua;
+   
+   class FrontGo extend convLua.Front {
+      pro override fn convertFromAst( ast:&TransUnit.ASTInfo, streamName:str ) : str, str
+      {
+         let mut stream = new Util.memStream();
+
+         let mut conv = createFilter( false, streamName, stream, ast );
+
+         ast.$node.processFilter( conv, new Opt( ast.$node ));
+
+         return "", stream.$txt;
+      }
+   }
+}
+
+__test case1(ctrl ) {
+   LuaVer.setCurVer( 53 );
+   
+   let mut front = new FrontGo( convLua.createDefaultOption( "test.lns" ) );
+     
+   let goCode = convLua.convertLnsCode2LuaCode( convLua.getTestLnsCode(), front );
+   print( goCode );
 }

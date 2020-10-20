@@ -8,6 +8,27 @@
 
 * バグ
 
+- [ ] 以下のマクロ呼び出しができない。 print() が値を返さないので __exp にセットできない。
+      しかし、 __exp の用途的に、セットできるべき。
+         
+macro _hoge( val:__exp) {
+   ,,val;
+}
+_hoge( print("hoge") );
+  
+  
+- [ ] 以下のマクロがエラーする。
+      valName 変数の型推論が出来ていないのと、そもそも valName は expand-block には登録しないはず。
+macro _hoge( list:List<int> ) {
+   {
+      foreach val in list {
+         let valName;
+         valName = "%s" (val);
+      }
+   }
+}
+
+  
 - [ ]
 class Test6<T> {
    let val:T {pub};

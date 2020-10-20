@@ -760,9 +760,9 @@ let workList:List<stat> = [ stat ];
 ここで work に対応する MacroValInfo.val には List<str> のデータが格納され、
 ここで workList に対応する MacroValInfo.val には List<List<str>> のデータが格納される。
 
-   */
-   // pub let val: Luaval<stem>!;
-   pub let val: stem!;
+*/
+   pub let val: Luaval<stem>!;
+   //pub let val: stem!;
    /** マクロ内での変数の型 */
    pub let typeInfo: &Ast.TypeInfo;
    /** 実引数のノード。 この変数がマクロの引数の場合に有効。 */

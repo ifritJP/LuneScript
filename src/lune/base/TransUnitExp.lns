@@ -442,8 +442,8 @@ fn TransUnit.checkImplicitCast(
       else {
          if expNode.$expType ~= Ast.builtinTypeNil and
             dstType ~= Ast.builtinTypeEmpty and
-            not dstType.equals( expNode.$expType ## ) and
-            not dstType.$nonnilableType.equals( expNode.$expType ## )
+            not dstType.$srcTypeInfo.equals( expNode.$expType.$srcTypeInfo ## ) and
+            not dstType.$nonnilableType.$srcTypeInfo.equals( expNode.$expType.$srcTypeInfo ## )
          {
             if expNode.$kind ~= Nodes.NodeKind.$Abbr {
                if not hasModNode {
@@ -498,20 +498,6 @@ fn TransUnit.checkImplicitCast(
                      castType = unwrap alt2typeMap[ dstType ] default dstType;
                   } else {
                      castType = dstType;
-                  }
-                  if dstType.$srcTypeInfo == expNode.$expType.$srcTypeInfo
-                  {
-                     if not Ast.isGenericType( expNode.$expType ) {
-                        self.errorAt(
-                           expNode.$pos,           
-                           "not support cast -- %s(%d:%s) <- %s(%d:%s)"
-                           ( dstType.$srcTypeInfo.getTxt(##),
-                             dstType.$srcTypeInfo.$typeId,
-                             dstType.$kind.$_txt,
-                             expNode.$expType.$srcTypeInfo.getTxt(##),
-                             expNode.$expType.$srcTypeInfo.$typeId,
-                             expNode.$expType.$kind.$_txt));
-                     }
                   }
                   workNode = Nodes.ExpCastNode.create(
                      self.nodeManager, expNode.$pos,
@@ -3668,14 +3654,14 @@ fn TransUnit.analyzeExp(
             typeInfo = expType;
          }
          case "#" {
-            if expType.$kind ~= .List and
-               expType.$kind ~= .Array and
+            if expType.$extedType.$kind ~= .List and
+               expType.$extedType.$kind ~= .Array and
                not Ast.builtinTypeString.canEvalWith( expType, .SetOp, {} )
             {  
                self.addErrMess(
                   token.pos,
                   'unmatch type for "#" -- %s' ( expType.getTxt(##) ) );
-            }  
+            }
             typeInfo = Ast.builtinTypeInt;
          }  
          case "not" {

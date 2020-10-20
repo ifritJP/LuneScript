@@ -5691,6 +5691,10 @@ local function failCreateLuavalWith( typeInfo, convFlag )
             return "not support mutable collecion. " .. mess, false
          end
          
+         if convFlag then
+            return mess, false
+         end
+         
          local canConv = true
          
          for __index, itemType in ipairs( typeInfo:get_itemTypeInfoList() ) do
@@ -8440,7 +8444,7 @@ IdType.__allList[2] = IdType.Ext
 local function switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 6468, function (  )
+   Log.log( Log.Level.Trace, __func__, 6471, function (  )
    
       return "start"
    end )
@@ -8460,7 +8464,7 @@ local builtinTypeInfo2Map = typeInfo2Map:clone(  )
 local function pushProcessInfo( processInfo )
    local __func__ = '@lune.@base.@Ast.pushProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6480, function (  )
+   Log.log( Log.Level.Trace, __func__, 6483, function (  )
    
       return "start"
    end )
@@ -8495,7 +8499,7 @@ _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
    local __func__ = '@lune.@base.@Ast.popProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6506, function (  )
+   Log.log( Log.Level.Trace, __func__, 6509, function (  )
    
       return "start"
    end )

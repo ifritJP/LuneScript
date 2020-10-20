@@ -147,11 +147,11 @@ define buildLnsOp
 	$(call $4,$1,$2,$3,base/Option)
 	$(call $4,$1,$2,$3,base/Nodes)
 	$(call $4,$1,$2,$3,base/Formatter)
-	$(call $4,$1,$2,$3,base/dumpNode)
 	$(call $4,$1,$2,$3,base/Macro)
 	$(call $4,$1,$2,$3,base/TransUnit)
 	$(call $4,$1,$2,$3,base/DependLuaOnLns)
 	$(call $4,$1,$2,$3,base/convLua)
+	$(call $4,$1,$2,$3,base/dumpNode)
 	$(call $4,$1,$2,$3,base/convCC)
 	$(call $4,$1,$2,$3,base/convGo)
 	$(call $4,$1,$2,$3,base/OutputDepend)
@@ -416,6 +416,7 @@ TEST_CASE += multiple-class.lns
 TEST_CASE += multiple-if.lns
 TEST_CASE += multiple.lns
 TEST_CASE += switch.lns
+TEST_CASE += lua.lns
 TEST_CASE_SRCS := $(addprefix test/error/,$(TEST_CASE))
 TEST_CASE_LOGS := $(addprefix $(LOG_DIR)/,$(addsuffix .log,$(TEST_CASE)))
 
@@ -1187,21 +1188,18 @@ test-testGo:
 	$(call test-convGo-test,$(GO_WORK_DIR),Option,lune/base,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),Nodes,lune/base,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),Formatter,lune/base,./test)
-	$(call test-convGo-test,$(GO_WORK_DIR),dumpNode,lune/base,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),Macro,lune/base,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),TransUnit,lune/base,./test)
 #	$(call test-convGo-test,$(GO_WORK_DIR),DependLuaOnLns,lune/base,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),convLua,lune/base,./test)
+	$(call test-convGo-test,$(GO_WORK_DIR),dumpNode,lune/base,./test)
+	$(call test-convGo-test,$(GO_WORK_DIR),convGo,lune/base,./test)
 
 test-subgo:
 	$(call transwork,.,.,,base/convGo)
 	$(call setup-go,$(GO_WORK_DIR))
 
-#	cp lune/base/convGo.* $(GO_WORK_DIR)/lune/base
-#	cp lune/base/convGo.* $(GO_WORK_DIR)/test/lune/base/
-#	cp lune/base/convLua.* $(GO_WORK_DIR)/lune/base/
-#	cp lune/base/convLua.* $(GO_WORK_DIR)/test/lune/base/
-	$(call test-convGo-test,$(GO_WORK_DIR),convLua,lune/base,./test)
+	$(call test-convGo-test,$(GO_WORK_DIR),convGo,lune/base,./test)
 
 
 

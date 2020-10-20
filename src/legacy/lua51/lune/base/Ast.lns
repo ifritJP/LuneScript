@@ -4226,6 +4226,9 @@ fn failCreateLuavalWith( typeInfo:&TypeInfo, convFlag:bool ) : str!, bool {
          if isMutable( typeInfo.$mutMode ) {
             return "not support mutable collecion. " .. mess, false;
          }
+         if convFlag {
+            return mess, false;
+         }
          let mut canConv = true;
          _checkItemType( typeInfo.$itemTypeInfoList );
          canConv = false;

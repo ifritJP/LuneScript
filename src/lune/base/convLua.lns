@@ -3411,8 +3411,11 @@ pub class MacroEvalImp extend Nodes.MacroEval {
 __test {
    import lune.base.frontInterface;
    
-   class Front {
-      let mut option:&Option.Option;
+   pub abstract class Front {
+      pro let mut option:&Option.Option;
+
+      pro abstract fn convertFromAst(
+         ast:&TransUnit.ASTInfo, streamName:str ) : str, str;
    }
 
    fn Front.createAst(
@@ -3427,64 +3430,64 @@ __test {
       return transUnit.createAST( parser, false, mod );
    }
 
-   fn Front.convert(
-      ast:&TransUnit.ASTInfo, streamName:str,
-      mut stream:oStream, mut metaStream:oStream, convMode:ConvMode, inMacro:bool )
-   {
-      let mut conv = createFilter(
-         streamName, stream, metaStream, convMode, inMacro,
-         ast.$moduleTypeInfo, ast.$moduleSymbolKind,
-         self.option.useLuneModule, self.option.targetLuaVer,
-         self.option.testing, self.option.useIpairs );
-      ast.$node.processFilter( conv, new Opt( ast.$node ) );
-   }
-
    
-   fn Front.convertFromAst(
-      ast:&TransUnit.ASTInfo, streamName:str, mode:ConvMode ) : str, str
-   {
-      let mut stream = new Util.memStream();
-      let mut metaStream = new Util.memStream();
-
-      self.convert( ast, streamName, stream, metaStream, mode, false );
-
-      return metaStream.$txt, stream.$txt;
-   }
-   
-
    pub fn Front.convertLns2LuaCode(
-      importModuleInfo:frontInterface.ImportModuleInfo,
-      stream:iStream, streamName:str ): str
+      importModuleInfo:frontInterface.ImportModuleInfo,stream:iStream ): str
    {
+      let streamName = self.option.scriptPath;
       let mod = Util.scriptPath2Module( streamName );
       let ast = self.createAst(
          importModuleInfo,
          new Parser.StreamParser( stream, streamName, false ), mod,
          frontInterface.ModuleId.createId( 0.0, 0 ), nil, .Compile ## );
 
-      let _, luaTxt = self.convertFromAst( ast, streamName, ConvMode.Exec );
+      let _, luaTxt = self.convertFromAst( ast, streamName );
 
       return luaTxt;
    }
 
-   pub fn convertLnsCode2LuaCode( lnsCode:str, path:str ) : str
+   pub class FrontLua extend Front {
+   }
+
+   fn FrontLua.convert(
+      ast:&TransUnit.ASTInfo, streamName:str,
+      mut stream:oStream, mut metaStream:oStream, inMacro:bool )
    {
+      let mut conv = createFilter(
+         streamName, stream, metaStream, .Convert, inMacro,
+         ast.$moduleTypeInfo, ast.$moduleSymbolKind,
+         self.option.useLuneModule, self.option.targetLuaVer,
+         self.option.testing, self.option.useIpairs );
+      ast.$node.processFilter( conv, new Opt( ast.$node ) );
+   }
+
+   pro override fn FrontLua.convertFromAst(
+      ast:&TransUnit.ASTInfo, streamName:str ) : str, str
+   {
+      let mut stream = new Util.memStream();
+      let mut metaStream = new Util.memStream();
+
+      self.convert( ast, streamName, stream, metaStream, false );
+
+      return metaStream.$txt, stream.$txt;
+   }
+
+   pub fn createDefaultOption( path:str ) : Option.Option {
       let mut option = new Option.Option();
       option.scriptPath = path;
       option.useLuneModule = Option.getRuntimeModule();
       option.useIpairs = true;
-      let mut front = new Front( option );
-      
-      return front.convertLns2LuaCode(
-         new frontInterface.ImportModuleInfo(),
-         new Parser.TxtStream( lnsCode ), path );
+      return option;
    }
-}
-
-__test case1(ctrl) {
-   LuaVer.setCurVer( 53 );
    
-   let lnsCode = ```
+   pub fn convertLnsCode2LuaCode( lnsCode:str, front:Front ) : str
+   {
+      return front.convertLns2LuaCode(
+         new frontInterface.ImportModuleInfo(), new Parser.TxtStream( lnsCode ) );
+   }
+
+   pub fn getTestLnsCode() : str {
+      let lnsCode = ```
 pub let mut outputList:List<str> = [];
 fn Print( ... ) {
    let args = [ ... ];
@@ -3499,20 +3502,36 @@ fn Print( ... ) {
 }
 
 Print( "hello world" );
-macro _hoge() {
-   Print("hoge");
+macro _hoge( list:List<int>) {
+  {
+     let mut statList:List<stat> = [];
+     foreach val in list {
+        statList.insert( `{ Print( ,,val + 10 ); } );
+     }
+  }
+   ,,statList;
 }
-_hoge();
+_hoge( [1,2,3] );
 
 ```;
-   let luaCode = convertLnsCode2LuaCode(  lnsCode, "test.lns" );
+     return lnsCode;
+   }
+}
+
+
+__test case1(ctrl) {
+   LuaVer.setCurVer( 53 );
+   
+   let mut front = new FrontLua( createDefaultOption( "test.lns" ) );
+     
+   let luaCode = convertLnsCode2LuaCode( getTestLnsCode(), front );
    //__t._eq(ctrl, luaCode, "");
    let loaded, mess = _load( luaCode## );
    when! loaded {
       if! let mod = loaded(##) {
          if! let list = mod.outputList {
             foreach line in list@@&List<str> {
-               print( line );
+               print( __mod__, line );
             }
          }
       }

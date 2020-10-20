@@ -1,0 +1,9 @@
+interface IF {
+   pub fn func(): Luaval<&List<str>>;
+}
+
+fn func( work:&List<str> ) {
+}
+fn sub( obj:IF ) {
+   func( obj.func() ); // error
+}
