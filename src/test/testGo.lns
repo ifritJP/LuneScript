@@ -1171,3 +1171,48 @@ _section();
    let hoge2 = new Hoge<Test>();
    hoge2.func( new Test() );
 }
+_section();
+{
+   let lnsCode = ```
+aaa
+```;
+   print( lnsCode );
+}
+_section();
+{
+   fn func() : int, int {
+      return 1,2;
+   }
+   let val;
+   val = func();
+   print( val );
+}
+_section();
+{
+   interface IF {
+      pub fn func();
+   }
+   interface IF2 {
+      pub fn func();
+   }
+   abstract class Test extend (IF,IF2) {
+      pub abstract fn func();
+   }
+   abstract class Sub extend Test {
+   }
+   class SubSub extend Sub {
+      pub override fn func() {
+         print( __func__ );
+      }
+   }
+   fn func( obj:&IF ) {
+      obj.func();
+   }
+
+   {
+      let sub:Sub = new SubSub();
+      func( sub );
+      let test:Test = sub;
+      func( test );
+   }
+}

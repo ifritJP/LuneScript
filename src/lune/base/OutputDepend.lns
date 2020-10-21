@@ -93,3 +93,14 @@ pub fn createFilter( stream: oStream ) : Nodes.Filter<int>
 {
    return new convFilter( stream );
 }
+
+__test case1(ctrl) {
+   let code = ```
+import lune.base.Ver;
+import lune.base.Code;
+
+print( Ver.version );
+print( Code.ID.nothing_define_abbr );
+```;
+   print( code );
+}

@@ -6168,7 +6168,7 @@ function TransUnit:checkOverriededMethodOfAllClass(  )
                   end
                   
                else
-                  self:addErrMess( pos, string.format( "not implements method -- %s.%s", tostring( _lune.nilacc( classScope:get_ownerTypeInfo(), 'getTxt', 'callmtd'  )), symbolInfo:get_name()) )
+                  self:addErrMess( pos, string.format( "not implements method -- %s.%s at %s", tostring( _lune.nilacc( superScope:get_ownerTypeInfo(), 'getTxt', 'callmtd'  )), symbolInfo:get_name(), tostring( _lune.nilacc( classScope:get_ownerTypeInfo(), 'getTxt', 'callmtd'  ))) )
                end
             end
             
@@ -6195,25 +6195,25 @@ function TransUnit:checkOverriededMethodOfAllClass(  )
          local classNode = __map[ __key ]
          do
             local classTypeInfo = classNode:get_expType()
-            if not classTypeInfo:get_abstractFlag() then
-               local workTypeInfo = classTypeInfo
-               local alt2typeMap = classTypeInfo:createAlt2typeMap( false )
-               repeat 
+            local workTypeInfo = classTypeInfo
+            local alt2typeMap = classTypeInfo:createAlt2typeMap( false )
+            repeat 
+               if not classTypeInfo:get_abstractFlag() then
                   if workTypeInfo ~= Ast.headTypeInfo then
                      process( classNode:get_pos(), alt2typeMap, _lune.unwrap( classTypeInfo:get_scope()), _lune.unwrap( workTypeInfo:get_scope()) )
                   end
                   
-                  for __index, ifType in ipairs( workTypeInfo:get_interfaceList() ) do
-                     if ifType ~= Ast.builtinTypeMapping then
-                        process( classNode:get_pos(), alt2typeMap, _lune.unwrap( classTypeInfo:get_scope()), _lune.unwrap( ifType:get_scope()) )
-                     end
-                     
+               end
+               
+               for __index, ifType in ipairs( workTypeInfo:get_interfaceList() ) do
+                  if ifType ~= Ast.builtinTypeMapping then
+                     process( classNode:get_pos(), alt2typeMap, _lune.unwrap( classTypeInfo:get_scope()), _lune.unwrap( ifType:get_scope()) )
                   end
                   
-                  workTypeInfo = workTypeInfo:get_baseTypeInfo()
-               until workTypeInfo == Ast.headTypeInfo
-            end
-            
+               end
+               
+               workTypeInfo = workTypeInfo:get_baseTypeInfo()
+            until workTypeInfo == Ast.headTypeInfo
          end
       end
    end
@@ -7264,7 +7264,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
             self:addErrMess( varName.pos, string.format( "This member can't have setter, this member is immutable. -- %s", varName.txt) )
          end
          
-         Log.log( Log.Level.Debug, __func__, 1611, function (  )
+         Log.log( Log.Level.Debug, __func__, 1602, function (  )
          
             return string.format( "%s", tostring( dummyRetType))
          end )

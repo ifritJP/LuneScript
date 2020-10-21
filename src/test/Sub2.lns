@@ -204,10 +204,11 @@ pub interface IF_test {
 }
 
 pub abstract class Test_class extend (IF_test) {
+   pub abstract fn func();
 }
 
 pub class Sub_class extend Test_class {
-   pub fn func() {
+   pub override fn func() {
       print( __func__ );
    }
 }

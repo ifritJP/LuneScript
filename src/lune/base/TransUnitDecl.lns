@@ -429,25 +429,16 @@ fn TransUnit.checkOverriededMethodOfAllClass() mut
                if! let impMethodType = classScope.getTypeInfoField(
                   symbolInfo.$name, true, classScope, self.scopeAccess )
                {
-                  // let isMatch, mess = impMethodType.canEvalWith(
-                  //    symbolInfo.$typeInfo, .SetOp, alt2typeMap );
-                  // if not isMatch {
-                  //    self.addErrMess(
-                  //       pos,
-                  //       "mismatch method -- %s %s: %s"
-                  //       (symbolInfo.$typeInfo.$display_stirng,
-                  //         impMethodType.$display_stirng,
-                  //         unwrap mess default "") );
-                  // }
                   foreach err in self.checkOverrideMethod(
                      symbolInfo.$typeInfo, impMethodType )
                   {
                      self.addErrMess( pos, err );
                   }
                } else {
-                  self.addErrMess( pos, "not implements method -- %s.%s"
-                                   ( classScope.$ownerTypeInfo$.getTxt$(##),
-                                     symbolInfo.$name) );
+                  self.addErrMess( pos, "not implements method -- %s.%s at %s"
+                                   ( superScope.$ownerTypeInfo$.getTxt$(##),
+                                     symbolInfo.$name,
+                                     classScope.$ownerTypeInfo$.getTxt$(##) ) );
                }
             } 
             return true;
@@ -461,25 +452,25 @@ fn TransUnit.checkOverriededMethodOfAllClass() mut
 
    forsort classNode in typeId2DeclClassNode {
       let classTypeInfo = classNode.$expType;
-      if not classTypeInfo.$abstractFlag {
-         // extend のメソッドがオーバーライドされているか確認
-         let mut workTypeInfo = classTypeInfo;
-         let mut alt2typeMap = classTypeInfo.createAlt2typeMap(false);
-         repeat {
+      // extend のメソッドがオーバーライドされているか確認
+      let mut workTypeInfo = classTypeInfo;
+      let mut alt2typeMap = classTypeInfo.createAlt2typeMap(false);
+      repeat {
+         if not classTypeInfo.$abstractFlag {
             if workTypeInfo ~= Ast.headTypeInfo {
                process( classNode.$pos, alt2typeMap,
                         unwrap classTypeInfo.$scope,
                         unwrap workTypeInfo.$scope );
             }
-            foreach ifType in workTypeInfo.$interfaceList {
-               if ifType ~= Ast.builtinTypeMapping {
-                  process( classNode.$pos, alt2typeMap,
-                           unwrap classTypeInfo.$scope, unwrap ifType.$scope );
-               }
+         }
+         foreach ifType in workTypeInfo.$interfaceList {
+            if ifType ~= Ast.builtinTypeMapping {
+               process( classNode.$pos, alt2typeMap,
+                        unwrap classTypeInfo.$scope, unwrap ifType.$scope );
             }
-            workTypeInfo = workTypeInfo.$baseTypeInfo;
-         } workTypeInfo == Ast.headTypeInfo;
-      }
+         }
+         workTypeInfo = workTypeInfo.$baseTypeInfo;
+      } workTypeInfo == Ast.headTypeInfo;
    }
 }
 

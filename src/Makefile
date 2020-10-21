@@ -1193,13 +1193,15 @@ test-testGo:
 #	$(call test-convGo-test,$(GO_WORK_DIR),DependLuaOnLns,lune/base,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),convLua,lune/base,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),dumpNode,lune/base,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/convCC,--testing,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),convGo,lune/base,./test)
+	$(call test-convGo-test,$(GO_WORK_DIR),OutputDepend,lune/base,./test)
 
 test-subgo:
 	$(call transwork,.,.,,base/convGo)
 	$(call setup-go,$(GO_WORK_DIR))
 
-	$(call test-convGo-test,$(GO_WORK_DIR),convGo,lune/base,./test)
+	$(call test-convGo-test,$(GO_WORK_DIR),OutputDepend,lune/base,./test)
 
 
 

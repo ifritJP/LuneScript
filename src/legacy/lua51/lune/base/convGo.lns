@@ -400,7 +400,8 @@ fn convFilter.outputSymbol( kind:SymbolKind, name:str ) {
 fn str2gostr( txt:str ) : str {
    let mut work = txt;
    if string.find( work, '^```' ## ) {
-      work = ("%q" ( work.sub( 4, -4 ) )).gsub( "\\\n", "\\n" );
+      work = work.sub( 4, -4 ).gsub( "^\n", "" );
+      work = ("%q" ( work )).gsub( "\\\n", "\\n" );
    }
    elseif string.find( work, "^'" ## ) {
       work = Parser.convFromRawToStr( work ).gsub( '"', '\\"' );
@@ -639,6 +640,9 @@ fn convFilter.outputImplicitCast(
       }
       case .IF {
          filter( node, self, parent );
+         if Ast.isClass( node.$expType ) {
+            self.write( ".FP" );
+         }
       }
       case .FormFunc {
          let expType = node.$expType;
@@ -823,7 +827,8 @@ fn convFilter.processConvExp( nodeId:int, dstTypeList:&List<&Ast.TypeInfo>,
       workList.insert( workExp );
    }
    expList = workList;
-   
+
+   self.writeln( "// for %d" (argList.$pos.lineNo) );
    self.write( "func %s(" (getConvExpName( nodeId, argList )) );
 
    foreach argExp, index in expList {
@@ -854,35 +859,50 @@ fn convFilter.processConvExp( nodeId:int, dstTypeList:&List<&Ast.TypeInfo>,
          }
       }
    }
-   self.write( ")" );
+   self.write( ") " );
+
+   fn getRetType( retType:&Ast.TypeInfo, index:int ) : &Ast.TypeInfo {
+      if retType == Ast.builtinTypeEmpty {
+         return argList.getExpTypeAt( index );
+      }
+      return retType;
+   }
+
+   let mut retTypeList:List<&Ast.TypeInfo> = [];
+   foreach dstType, index in dstTypeList {
+      retTypeList.insert( getRetType( dstType, index ) );
+   }
+      
+   
    // 関数戻り値の型宣言
-   if #dstTypeList >= 2 {
+   if #retTypeList >= 2 {
       self.write( "(" );
-      foreach argType, index in dstTypeList {
+      foreach retType, index in retTypeList {
          if index ~= 1 {
             self.write( ", " );
          }
-         self.write( self.type2gotype( argType ) );
+         self.write( self.type2gotype( getRetType( retType, index ) ) );
       }
       self.writeln( ") {" );
    }
-   elseif #dstTypeList == 1 {
-      self.writeln( " %s {" (self.type2gotype( dstTypeList[ 1 ] )) );
+   elseif #retTypeList == 1 {
+      self.write( self.type2gotype( getRetType( retTypeList[ 1 ], 1 ) ) );
+      self.writeln( " {" );
    }
    else {
-      self.writeln( "{" );
+      self.writeln( " {" );
    }
 
    // 変換コード
-   self.write( "return " );
+   self.write( "    return " );
 
    when! mRetIndex {
       let mut restIndex:int! = nil;
-      foreach dstType, index in dstTypeList {
+      foreach retType, index in retTypeList {
          if index ~= 1 {
             self.write( ", " );
          }
-         if dstType.$kind == .DDD {
+         if retType.$kind == .DDD {
             restIndex = index;
             break;
          }
@@ -900,7 +920,7 @@ fn convFilter.processConvExp( nodeId:int, dstTypeList:&List<&Ast.TypeInfo>,
             }
             if not wrote {
                self.write( "Lns_getFromMulti( arg%d, %d )" (mRetIndex, index - mRetIndex) );
-               self.outputAny2Type( dstType);
+               self.outputAny2Type( retType);
             }
          }
          else {
@@ -925,7 +945,7 @@ fn convFilter.processConvExp( nodeId:int, dstTypeList:&List<&Ast.TypeInfo>,
          self.writeln( "" );
       }
    } else {
-      foreach _, index in dstTypeList {
+      foreach _, index in retTypeList {
          if index ~= 1 {
             self.write( ", " );
          }
@@ -1023,7 +1043,7 @@ fn convFilter.processGenericsCall( node:&Nodes.ExpCallNode ) mut {
 alge FuncInfo {
    DeclInfo( node:&Nodes.Node, &Nodes.DeclFuncInfo ),
    Type( &Ast.TypeInfo ),
-   Advertise( classType:&Ast.TypeInfo, methodType:&Ast.TypeInfo )
+   WithClass( classType:&Ast.TypeInfo, methodType:&Ast.TypeInfo )
 }
 
 fn convFilter.outputRetType(retTypeList:&List<&Ast.TypeInfo>) mut {
@@ -1086,7 +1106,7 @@ pub fn convFilter.outputDeclFunc( funcInfo:FuncInfo ) mut : &FuncConv {
          prefixType = typeInfo.$parentInfo;
          name = typeInfo.$rawTxt;
       }
-      case .Advertise( classType, methodType ) {
+      case .WithClass( classType, methodType ) {
          extFlag = false;
          typeInfo = methodType;
          prefixType = classType;
@@ -1159,7 +1179,7 @@ pub fn convFilter.outputDeclFunc( funcInfo:FuncInfo ) mut : &FuncConv {
             self.write( "arg%d %s" (index, self.type2gotype( argType ) ) );
          }
       }
-      case .Advertise( _, _ ) {
+      case .WithClass( _, _ ) {
          foreach argType, index in workType.$argTypeInfoList {
             if index ~= 1 {
                self.write( "," );
@@ -1791,25 +1811,19 @@ fn convFilter.processSetFromExpList(
             if index ~= 1 {
                self.write( ', ' );
             }
-            if index == #dstTypeList and
-               funcArgType.$kind == .DDD 
-            {
+            let exp = expListNode.$expList[ index ];
+            if index == #dstTypeList and funcArgType.$kind == .DDD {
                // 関数の最終仮引数が DDD の場合、
                // []LnsAny に変換する
-               if #expListNode.$expList < index or
-                  expListNode.$expList[ index ].$expType.$kind == .Abbr
-               {
+               if #expListNode.$expList < index or exp.$expType.$kind == .Abbr {
                   self.write( "[]LnsAny{}" );
                }
                else {
-                  filter( expListNode.$expList[ index ], self, expListNode );
+                  filter( exp, self, expListNode );
                }
-            }
-            else {
+            } else {
                // 最終仮引数より前
-               if #expListNode.$expList < index or
-                  expListNode.$expList[ index ].$expType.$kind == .Abbr
-               {
+               if #expListNode.$expList < index or exp.$expType.$kind == .Abbr {
                   // 最終実引数より後は、引数を省略している
                   self.write( "nil" );
                }
@@ -1958,6 +1972,38 @@ pub override fn convFilter.processExpCallSuper(
    self.write( ")" );
 }
 
+fn convFilter.outputDummyReturn( retTypeInfoList:&List<&Ast.TypeInfo> ) mut {
+   self.writeln( "// insert a dummy" );
+   self.write( "    return " );
+   foreach retType, index in retTypeInfoList {
+      if index > 1 {
+         self.write( "," );
+      }
+      if isAnyType( retType ) {
+         self.write( "nil" );
+      } else {
+         switch getOrgTypeInfo( retType ) {
+            case Ast.builtinTypeInt {
+               self.write( "0" );
+            }
+            case Ast.builtinTypeReal {
+               self.write( "0.0" );
+            }
+            case Ast.builtinTypeBool {
+               self.write( "false" );
+            }
+            case Ast.builtinTypeString {
+               self.write( '""' );
+            }
+            default {
+               self.write( "nil" );
+            }
+         }
+      }
+   }
+   self.writeln( "" );
+}
+
 pub fn convFilter.outputDeclFuncInfo(
    node: Nodes.Node, declInfo:&Nodes.DeclFuncInfo ) mut
 {
@@ -2025,35 +2071,7 @@ pub fn convFilter.outputDeclFuncInfo(
             }
          }
          if needReturn {
-            self.writeln( "// insert a dummy" );
-            self.write( "    return " );
-            foreach retType, index in funcType.$retTypeInfoList {
-               if index > 1 {
-                  self.write( "," );
-               }
-               if isAnyType( retType ) {
-                  self.write( "nil" );
-               } else {
-                  switch getOrgTypeInfo( retType ) {
-                     case Ast.builtinTypeInt {
-                        self.write( "0" );
-                     }
-                     case Ast.builtinTypeReal {
-                        self.write( "0.0" );
-                     }
-                     case Ast.builtinTypeBool {
-                        self.write( "false" );
-                     }
-                     case Ast.builtinTypeString {
-                        self.write( '""' );
-                     }
-                     default {
-                        self.write( "nil" );
-                     }
-                  }
-               }
-            }
-            self.writeln( "" );
+            self.outputDummyReturn( funcType.$retTypeInfoList );
          }
       }
    }
@@ -3399,9 +3417,15 @@ pub fn convFilter.outputAccessor( node: Nodes.DeclClassNode ) mut
          }
          
          if retType ~= memberSym.$typeInfo.$srcTypeInfo {
-            self.write( "&%s%s.%s"
-                        ( prefix, self.getSymbolSym( memberSym),
-                          self.getTypeSymbol( retType ) ) );
+            if retType.$kind == .IF {
+               if Ast.isClass( memberSym.$typeInfo.$srcTypeInfo ) {
+                  self.write( "%s%s.FP" (prefix, self.getSymbolSym( memberSym)) );
+               }
+            } else {
+               self.write( "&%s%s.%s"
+                           ( prefix, self.getSymbolSym( memberSym),
+                             self.getTypeSymbol( retType ) ) );
+            }
          } else {
             self.write( "%s%s" ( prefix, self.getSymbolSym( memberSym)) );
          }
@@ -3661,6 +3685,47 @@ fn convFilter.outputMapping( node: Nodes.DeclClassNode ) mut {
    self.writeln( "}" );
 }
 
+fn convFilter.outputDummyAbstractMethod(
+   classType:&Ast.TypeInfo, methodType:&Ast.TypeInfo ) mut
+{
+   self.outputDeclFunc( .WithClass( classType, methodType ) );
+   self.writeln( "{" );
+   self.outputDummyReturn( methodType.$retTypeInfoList );
+   self.writeln( "}" );
+}
+   
+
+
+fn convFilter.outputDummyAbstractMethodOfClass( classType:&Ast.TypeInfo ) mut
+{
+   // abstract を処理するダミーのメソッドを定義する。
+   // これをしないと、 superObj = subObj の代入が出来ない
+
+   let mut name2typeMap:Map<str,&Ast.TypeInfo> = {};
+   
+   let scope = unwrap classType.$scope;
+   scope.filterSymbolInfoIfField(
+      scope, .Normal,
+      fn ( symbolInfo:&Ast.SymbolInfo ): bool {
+         if symbolInfo.$kind == .Mtd and symbolInfo.$typeInfo.$abstractFlag {
+            if! let methodType = scope.getTypeInfoChild( symbolInfo.$name ) {
+               if methodType.$abstractFlag {
+                  name2typeMap[ symbolInfo.$name ] = symbolInfo.$typeInfo;
+               }
+            }
+            else {
+               name2typeMap[ symbolInfo.$name ] = symbolInfo.$typeInfo;
+            }
+         }
+         return true;
+      });
+
+   forsort methodType in name2typeMap {
+      self.outputDummyAbstractMethod( classType, methodType );
+   }
+}
+
+
 fn convFilter.outputAdvertise( node: Nodes.DeclClassNode ) mut
 {
    let methodNameSet = node.createMethodNameSetWithoutAdv();
@@ -3676,7 +3741,7 @@ fn convFilter.outputAdvertise( node: Nodes.DeclClassNode ) mut
                   not methodNameSet.has( symbol.$name ) and not symbol.$staticFlag
                {
                   let funcType = symbol.$typeInfo;
-                  self.outputDeclFunc( .Advertise( node.$expType, funcType ) );
+                  self.outputDeclFunc( .WithClass( node.$expType, funcType ) );
                   self.writeln( " {" );
                   if #funcType.$retTypeInfoList > 0 {
                      self.write( "    return " );
@@ -3717,6 +3782,7 @@ pub override fn convFilter.processDeclClass(
             self.outputCastReceiver( node );
             self.outputConstructor( node );
             self.outputAccessor( node );
+            self.outputDummyAbstractMethodOfClass( node.$expType );
             self.outputAdvertise( node );
 
             if node.$expType.isInheritFrom( Ast.builtinTypeMapping, nil ) {

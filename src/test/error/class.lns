@@ -197,7 +197,7 @@ abstract class TestProto {  // error
 interface IF {
    pub fn func();
 }
-abstract class extIF extend (IF) {
+abstract class extIF extend (IF) { // error
 }
 class extIF2 extend (IF) { // error
 }
