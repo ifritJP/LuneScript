@@ -638,14 +638,14 @@ end
 
 function dumpFilter:processDeclFuncInfo( node, declInfo, opt )
 
-   local name = "<anonymous>"
-   do
-      local _exp = declInfo:get_name(  )
-      if _exp ~= nil then
-         name = _exp.txt
-      end
+   local name = _lune.nilacc( declInfo:get_name(), "txt" )
+   if  nil == name then
+      local _name = name
+   
+      name = "<anonymous>"
    end
    
+   name = node:get_expType():get_display_stirng_with( name )
    if Ast.TypeInfo.isMut( node:get_expType() ) then
       name = name .. " mut"
    end

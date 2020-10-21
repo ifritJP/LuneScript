@@ -60,6 +60,7 @@ pub class Filter<T>  {
    pri let mut moduleInfoManager:SimpleModuleInfoManager;
    pri let typeNameCtrl:&Ast.TypeNameCtrl {pub};
    pri let errorOnDefault:bool;
+   pri let mut optStack:List<T> {pub&};
 
    pro fn __init( errorOnDefault:bool,
                   moduleTypeInfo:&Ast.TypeInfo!,
@@ -74,6 +75,14 @@ pub class Filter<T>  {
          return Ast.defaultTypeNameCtrl;
       };
       self.typeNameCtrl = process();
+      self.optStack = [];
+   }
+
+   local fn pushOpt( opt:T ) mut {
+      self.optStack.insert( opt );
+   }
+   local fn popOpt( opt:T ) mut {
+      self.optStack.remove(##);
    }
 
    pro fn get_moduleInfoManager() : &Ast.ModuleInfoManager {
@@ -595,7 +604,9 @@ macro _declNodeClass(
       if baseName ~= "Block" {
          relateStat.insert( `{
             pub fn Filter. ,,,"process%s" (baseName) ( node: &,,className, opt:T ) mut {
+               self.pushOpt( opt );
                self.defaultProcess( node, opt );
+               self.popOpt( opt );
             };
          } );
       }

@@ -337,10 +337,10 @@ pub override fn dumpFilter.processDeclForm( node: &Nodes.DeclFormNode, opt:Opt )
 fn dumpFilter.processDeclFuncInfo(
    node: &Nodes.Node, declInfo: &Nodes.DeclFuncInfo, opt:Opt ) mut
 {
-   let mut name = "<anonymous>";
-   if! declInfo.get_name() {
-      name = _exp.txt;
-   }
+   let! mut name = declInfo.$name$.txt {
+      name = "<anonymous>";
+   };
+   name = node.$expType.get_display_stirng_with( name ## );
    if Ast.TypeInfo.isMut( node.$expType ) {
       name = name .. " mut";
    }

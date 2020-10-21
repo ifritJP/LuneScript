@@ -2118,8 +2118,15 @@ fn TransUnit.checkSymbolComp( token:&Parser.Token )
 
 fn TransUnit.analyzeExpField(
    firstToken: &Parser.Token, token: &Parser.Token,
-   mode: ExpSymbolMode, prefixExp: &Nodes.Node ) mut : Nodes.Node
+   mode: ExpSymbolMode, mut prefixExp: &Nodes.Node ) mut : Nodes.Node
 {
+   if #prefixExp.$expTypeList > 1 {
+      prefixExp = Nodes.ExpMultiTo1Node.create(
+         self.nodeManager, prefixExp.$pos,
+         self.macroCtrl.isInAnalyzeArgMode(),
+         [ prefixExp.$expType ], prefixExp );
+   }
+   
    let mut accessNil = false;
    if mode == .FieldNil or mode == .GetNil {
       accessNil = true;

@@ -9893,7 +9893,7 @@ pub override fn convFilter.processRefField(
 
       switch symbolInfo.$kind {
          case .Mbr {
-            if node.$prefix.$expType.$kind == .Class {
+            if Ast.isClass( node.$prefix.$expType ) {
                if symbolInfo.$staticFlag {
                   let symbolName = self.moduleCtrl.getClassMemberName( symbolInfo );
                   if self.isManagedAnySymbol( symbolInfo ) {

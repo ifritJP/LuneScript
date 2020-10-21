@@ -35,7 +35,10 @@ import lune.base.LuneControl;
 let MaxNilAccNum = 3;
 
 pub class Opt {
-   pub let node:&Nodes.Node;
+   pub let parent:&Nodes.Node;
+   pub fn __init( parent:&Nodes.Node ) {
+      self.parent = parent;
+   }
 }
 
 /** 変換プロセス */
@@ -487,13 +490,23 @@ fn convFilter.outputAny2Type( dstType:&Ast.TypeInfo ) {
 
 // LnsAny から dstType への型変換用コードを出力する
 fn convFilter.outputStem2Type( dstType:&Ast.TypeInfo ) {
-   if dstType.$kind == .Class and dstType ~= Ast.builtinTypeString {
+   if dstType.$kind == .Alternate and dstType.hasBase() {
+      self.write( ".(%s)" (self.type2gotype( dstType )) );
+   } elseif dstType.$kind == .Class and dstType ~= Ast.builtinTypeString {
       self.write( ".(%sDownCast).To%s()"
                   (self.getTypeSymbol( dstType ), self.getTypeSymbol( dstType )) );
    } else {
       self.outputAny2Type( dstType );
    }
 }
+
+// fn convFilter.outputAlt2Type( dstType:&Ast.TypeInfo ) {
+//    if dstType.$kind == .Alternate and dstType.hasBase() {
+//       self.write( ".(%s)" (self.type2gotype( dstType )) );
+//    } else {
+//       self.outputStem2Type( dstType );
+//    }
+// }
 
 macro _declIgnoreNode( name:sym )
 {
@@ -3416,15 +3429,25 @@ pub fn convFilter.outputAccessor( node: Nodes.DeclClassNode ) mut
             prefix = "self.";
          }
          
-         if retType ~= memberSym.$typeInfo.$srcTypeInfo {
+         if retType.$srcTypeInfo ~= memberSym.$typeInfo.$srcTypeInfo {
             if retType.$kind == .IF {
                if Ast.isClass( memberSym.$typeInfo.$srcTypeInfo ) {
                   self.write( "%s%s.FP" (prefix, self.getSymbolSym( memberSym)) );
                }
-            } else {
+            } elseif Ast.isClass( retType ) {
                self.write( "&%s%s.%s"
                            ( prefix, self.getSymbolSym( memberSym),
                              self.getTypeSymbol( retType ) ) );
+            } elseif retType.$kind == .Alternate and retType.hasBase() {
+               self.write( "%s%s.FP" (prefix, self.getSymbolSym( memberSym)) );
+               self.outputStem2Type( retType );
+            } else {
+               if isAnyType( retType ) and Ast.isClass( memberSym.$typeInfo ) {
+                  self.write( "%s%s.FP" (prefix, self.getSymbolSym( memberSym)) );
+               }
+               else {
+                  Util.err( "not support" );
+               }
             }
          } else {
             self.write( "%s%s" ( prefix, self.getSymbolSym( memberSym)) );
@@ -4040,9 +4063,17 @@ pub override fn convFilter.processExpCall(
    }
 
 
-   let mut retGenerics = isRetGenerics( node );
-   if retGenerics and #funcType.$retTypeInfoList ~= 1 {
-      self.write( "lns_convGenerics%d( " (node.$id) );
+   let retGenerics;
+   if opt.parent.$kind == Nodes.NodeKind.$StmtExp {
+      // このノードの親が SmmtExp なら call(); の形で戻り値は捨てられている
+      retGenerics = false;
+   } else {
+      // この関数の戻り値が捨てられないなら、
+      // generics 化処理の必要性の有無をチェックする。
+      retGenerics = isRetGenerics( node );
+      if retGenerics and #funcType.$retTypeInfoList ~= 1 {
+         self.write( "lns_convGenerics%d( " (node.$id) );
+      }
    }
 
 
@@ -4151,7 +4182,7 @@ pub override fn convFilter.processExpCall(
    self.write( ")" );
    if callKind == .LuaCall or callKind == .RunLoaded {
       if #funcType.$retTypeInfoList == 1 {
-         if opt.node.$kind ~= Nodes.NodeKind.$StmtExp {
+         if opt.parent.$kind ~= Nodes.NodeKind.$StmtExp {
             self.write( "[0]" );
             let retTypeList = unwrap Ast.convToExtTypeList( funcType.$retTypeInfoList );
             self.outputAny2Type( retTypeList[ 1 ] );
@@ -4165,7 +4196,17 @@ pub override fn convFilter.processExpCall(
    if retGenerics {
       // generics の解決
       if #funcType.$retTypeInfoList == 1 {
-         self.outputAny2Type( node.$expType );
+         let retType = funcType.$retTypeInfoList[ 1 ];
+         if isAnyType( retType ) {
+            if not isAnyType( node.$expType ) {
+               self.outputAny2Type( node.$expType );
+            }
+         } elseif retType.$kind == .Alternate {
+            if retType.$srcTypeInfo ~= node.$expType.$srcTypeInfo {
+               self.write( ".FP" );
+               self.outputStem2Type( node.$expType );
+            }
+         }
       } else {
          self.write( ")" );
       }
@@ -4175,7 +4216,7 @@ pub override fn convFilter.processExpCall(
       self.write( "})" );
       self.write( "/* %d:%d */" (node.$pos.lineNo, node.$pos.column) );
       
-      if opt.node.hasNilAccess() {
+      if opt.parent.hasNilAccess() {
          // self.writeln(" && // " );
       } else {
          self.write( ")" );
@@ -4466,7 +4507,7 @@ pub override fn convFilter.processExpOp2(
 
    switch opTxt {
       case "and", "or" {
-         self.processAndOr( node, opTxt, opt.node );
+         self.processAndOr( node, opTxt, opt.parent );
       }
       case ".." {
          filter( node.$exp1, self, node );
@@ -4681,7 +4722,7 @@ pub override fn convFilter.processRefField(
          }
       }
       self.write( "Lns_NilAccPush(" );
-      if opt.node.hasNilAccess() {
+      if opt.parent.hasNilAccess() {
          andOp = true;
          openParenNum = 1;
       } else {
@@ -4762,7 +4803,7 @@ pub override fn convFilter.processGetField(
          
          if node.hasNilAccess() {
             self.write("})" );
-            switch opt.node.$kind {
+            switch opt.parent.$kind {
                case Nodes.NodeKind.$GetField,
                     Nodes.NodeKind.$RefField,
                     Nodes.NodeKind.$ExpCall

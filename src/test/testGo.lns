@@ -1216,3 +1216,51 @@ _section();
       func( test );
    }
 }
+_section();
+{
+   class Test {
+   }
+   class Sub<T:Test> {
+      let mut stack:List<T>;
+
+      pub fn __init() {
+         self.stack = [];
+      }
+      
+      pub fn current() mut : T {
+         if #self.stack == 0 {
+         }
+         return self.stack[ #self.stack ];
+      }
+      pub fn currentR() : &T {
+         if #self.stack == 0 {
+         }
+         return self.stack[ #self.stack ];
+      }
+   }
+}
+_section();
+{
+   let workName = "abc";
+   let fullName = "%s" ( (workName.gsub( "[&@]", "" ).gsub( "%.", "/" ) ) );
+   print( fullName );
+}
+_section();
+{
+   class Test {
+      pub fn func() {
+         print( __func__ );
+      }
+   }
+   class Sub<T:Test> {
+      let val:Test {pub:stem!};
+      let val2:T {pub:&T};
+   }
+   let sub = new Sub( new Test(), new Test());
+   if! let val = sub.$val {
+      if! let test = val@@@Test {
+         test.func();
+      }
+   }
+   sub.$val2.func();
+}
