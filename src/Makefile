@@ -1075,6 +1075,7 @@ define setup-go
 	rsync -a --include='*.go' --include='*.lua' \
 			--include='*.lns' --exclude='*.*' lune $1
 	cp -au build.counter $1
+	-rm work/result-testGo.txt work/result-testGo2.txt
 endef
 
 define test-go-one
@@ -1086,9 +1087,9 @@ define test-go-one
 	-rm $1/mod/*
 	cp -au $3/$2.lns $1/mod
 	$(call convGo,$1,mod/$2)
-	$(call buildGo,$1) > work/result-testGo.txt
+	$(call buildGo,$1) >> work/result-testGo.txt
 	if test "${NO_LUA_DIFF}" = ""; then					\
-		$(call exeLune,$1,mod/$2.lns,exe) > work/result-testGo2.txt;	\
+		$(call exeLune,$1,mod/$2.lns,exe) >> work/result-testGo2.txt;	\
 		diff -C 2 -I 'ONLY_LUA'						\
 				work/result-testGo.txt work/result-testGo2.txt;	\
 	fi
@@ -1160,9 +1161,9 @@ define test-convGo-test
 		sed 's@//IMPORT@import . "$(GO_MOD)/lune/base"@' > $1/runtime_main.go
 
 	$(call convGo,$1,$3/$2,--testing,$4)
-	$(call buildGo,$1) > work/result-testGo.txt
+	$(call buildGo,$1) >> work/result-testGo.txt
 #	$(call exeLune,$1/$4,$3/$2.lns,SAVE,--testing) 
-	$(call test-lns-test,$1/$4,$2) > work/result-testGo2.txt
+	$(call test-lns-test,$1/$4,$2) >> work/result-testGo2.txt
 	diff -C 2 -I 'ONLY_LUA' work/result-testGo.txt work/result-testGo2.txt
 endef
 

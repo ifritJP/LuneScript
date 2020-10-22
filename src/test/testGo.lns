@@ -1264,3 +1264,75 @@ _section();
    }
    sub.$val2.func();
 }
+_section();
+{
+   let mut func:form! = nil;
+   func = fn () {
+      print( "func" );
+   };
+   when! func {
+      func(##);
+   }
+}
+_section();
+{
+   form fornfunc();
+   let mut func:fornfunc! = nil;
+   func = fn () {
+      print( "func" );
+   };
+   when! func {
+      func();
+   }
+}
+_section();
+{
+   fn func( txt:str ) {
+      let path = "hoge";
+      let! mut file = io.open( path, "w" ) {
+         print( "open error" );
+         return;
+      };
+      file.write( txt );
+      file.close();
+      let loaded, mess = loadfile( path );
+      when! loaded {
+         let! obj = loaded(##) {
+            print( "load error" );
+            return;
+         };
+         foreach val in obj@@List<stem> {
+            print( val );
+         }
+      } else {
+         print( mess );
+      }
+   }
+   func( "return { 'a', 'b', 'c' }" );
+}
+_section();
+{
+   fn func( txt:str ) {
+      let loaded, mess = _load( txt ## );
+      when! loaded {
+         let! obj = loaded(##) {
+            print( "load error" );
+            return;
+         };
+         class Test {
+            pub let val1:List<str>;
+            pub let val2:List<int>;
+         }
+         let test = obj@@=Test;
+         foreach val, index in test.val1 {
+            print( index, val );
+         }
+         foreach val, index in test.val2 {
+            print( index, val );
+         }
+      } else {
+         print( mess );
+      }
+   }
+   func( "return { val1 = {'a', 'b'}, val2 = {10,20} }" );
+}

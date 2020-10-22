@@ -3411,67 +3411,6 @@ pub class MacroEvalImp extend Nodes.MacroEval {
 __test {
    import lune.base.frontInterface;
    
-   pub abstract class Front {
-      pro let mut option:&Option.Option;
-
-      pro abstract fn convertFromAst(
-         ast:&TransUnit.ASTInfo, streamName:str ) : str, str;
-   }
-
-   fn Front.createAst(
-      importModuleInfo:frontInterface.ImportModuleInfo,
-      parser:Parser.Parser, mod:str, moduleId:&frontInterface.ModuleId, analyzeModule:str!,
-      analyzeMode:TransUnit.AnalyzeMode, pos:&Parser.Position! ): &TransUnit.ASTInfo
-   {
-      let mut transUnit = new TransUnit.TransUnit(
-         moduleId, importModuleInfo, new MacroEvalImp( self.option.mode ),
-         analyzeModule, analyzeMode, pos, self.option.targetLuaVer,
-         self.option.transCtrlInfo );
-      return transUnit.createAST( parser, false, mod );
-   }
-
-   
-   pub fn Front.convertLns2LuaCode(
-      importModuleInfo:frontInterface.ImportModuleInfo,stream:iStream ): str
-   {
-      let streamName = self.option.scriptPath;
-      let mod = Util.scriptPath2Module( streamName );
-      let ast = self.createAst(
-         importModuleInfo,
-         new Parser.StreamParser( stream, streamName, false ), mod,
-         frontInterface.ModuleId.createId( 0.0, 0 ), nil, .Compile ## );
-
-      let _, luaTxt = self.convertFromAst( ast, streamName );
-
-      return luaTxt;
-   }
-
-   pub class FrontLua extend Front {
-   }
-
-   fn FrontLua.convert(
-      ast:&TransUnit.ASTInfo, streamName:str,
-      mut stream:oStream, mut metaStream:oStream, inMacro:bool )
-   {
-      let mut conv = createFilter(
-         streamName, stream, metaStream, .Convert, inMacro,
-         ast.$moduleTypeInfo, ast.$moduleSymbolKind,
-         self.option.useLuneModule, self.option.targetLuaVer,
-         self.option.testing, self.option.useIpairs );
-      ast.$node.processFilter( conv, new Opt( ast.$node ) );
-   }
-
-   pro override fn FrontLua.convertFromAst(
-      ast:&TransUnit.ASTInfo, streamName:str ) : str, str
-   {
-      let mut stream = new Util.memStream();
-      let mut metaStream = new Util.memStream();
-
-      self.convert( ast, streamName, stream, metaStream, false );
-
-      return metaStream.$txt, stream.$txt;
-   }
-
    pub fn createDefaultOption( path:str ) : Option.Option {
       let mut option = new Option.Option();
       option.scriptPath = path;
@@ -3479,13 +3418,23 @@ __test {
       option.useIpairs = true;
       return option;
    }
-   
-   pub fn convertLnsCode2LuaCode( lnsCode:str, front:Front ) : str
-   {
-      return front.convertLns2LuaCode(
-         new frontInterface.ImportModuleInfo(), new Parser.TxtStream( lnsCode ) );
-   }
 
+   pub fn createAst(
+      scriptPath:str, lnsCode:str, option:&Option.Option ) : &TransUnit.ASTInfo
+   {
+      let mut inStream = new Parser.TxtStream( lnsCode );
+      let moduleId = frontInterface.ModuleId.createId( 0.0, 0 );
+      let mut moduleInfo = new frontInterface.ImportModuleInfo();
+      
+      let mod = Util.scriptPath2Module( scriptPath );
+      let mut transUnit = new TransUnit.TransUnit(
+         moduleId, moduleInfo, new MacroEvalImp( option.mode ),
+         nil, .Compile, nil, option.targetLuaVer, option.transCtrlInfo );
+      
+      let mut parser = new Parser.StreamParser( inStream, scriptPath, false );
+      return transUnit.createAST( parser, false, mod );
+   }
+   
    pub fn getTestLnsCode() : str {
       let lnsCode = ```
 pub let mut outputList:List<str> = [];
@@ -3515,16 +3464,35 @@ _hoge( [1,2,3] );
 
 ```;
      return lnsCode;
+  }
+
+   fn Ast2Code( option:&Option.Option,
+                ast:&TransUnit.ASTInfo, streamName:str ) : str, str
+   {
+      let mut stream = new Util.memStream();
+      let mut metaStream = new Util.memStream();
+      
+      let mut conv = createFilter(
+         streamName, stream, metaStream, .ConvMeta, false,
+         ast.$moduleTypeInfo, ast.$moduleSymbolKind,
+         option.useLuneModule, option.targetLuaVer,
+         option.testing, option.useIpairs );
+      ast.$node.processFilter( conv, new Opt( ast.$node ) );
+
+      return metaStream.$txt, stream.$txt;
    }
 }
 
 
 __test case1(ctrl) {
    LuaVer.setCurVer( 53 );
+
+   let scriptPath = "test.lns";
+   let option = createDefaultOption( scriptPath );
+   let ast = createAst( scriptPath, getTestLnsCode(), option );
+   let meta, luaCode = Ast2Code( option, ast, scriptPath );
+   print( meta, luaCode );
    
-   let mut front = new FrontLua( createDefaultOption( "test.lns" ) );
-     
-   let luaCode = convertLnsCode2LuaCode( getTestLnsCode(), front );
    //__t._eq(ctrl, luaCode, "");
    let loaded, mess = _load( luaCode## );
    when! loaded {

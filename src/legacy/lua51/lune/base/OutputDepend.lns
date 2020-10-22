@@ -94,7 +94,54 @@ pub fn createFilter( stream: oStream ) : Nodes.Filter<int>
    return new convFilter( stream );
 }
 
+__test {
+   import lune.base.convLua;
+   import lune.base.frontInterface;
+
+   // class Front extend (frontInterface.frontInterface) {
+   //    pub fn loadModule( mod:str ) mut: stem!, &stem {
+   //       Util.err( "not implements" );
+   //    }
+   //    pub fn loadFromLnsTxt(
+   //       importModuleInfo:frontInterface.ImportModuleInfo,
+   //       name:str, txt:str ): Luaval<stem>
+   //    {
+   //       Util.err( "not implements" );
+   //    }
+   //    pub fn searchModule( mod:str ): str! {
+   //       Util.err( "not implements" );
+   //    }
+   //    pub fn error( message:str ) {
+   //       Util.err( message );
+   //    }
+
+   //    pub fn loadMeta(
+   //       importModuleInfo:frontInterface.ImportModuleInfo, mod:str ) mut: &stem!
+   //    {
+   //       let metaPath = mod.gsub( "%.", "/" );
+         
+   //    }
+
+   // }
+   
+   
+
+   fn Ast2Depend( ast:&TransUnit.ASTInfo ) : str
+   {
+      let mut stream = new Util.memStream();
+
+      let mut conv = createFilter( stream );
+
+      ast.$node.processFilter( conv, 0 );
+
+      return stream.$txt;
+   }
+   
+}
+
 __test case1(ctrl) {
+   import lune.base.LuaVer;
+
    let code = ```
 import lune.base.Ver;
 import lune.base.Code;
@@ -102,5 +149,12 @@ import lune.base.Code;
 print( Ver.version );
 print( Code.ID.nothing_define_abbr );
 ```;
-   print( code );
+
+   LuaVer.setCurVer( 53 );
+
+   let scriptPath = "test.lns";
+   let option = convLua.createDefaultOption( scriptPath );
+   let ast = convLua.createAst( scriptPath, code, option );
+   let depend = Ast2Depend( ast );
+   print( depend );
 }

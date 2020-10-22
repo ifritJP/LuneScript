@@ -32,6 +32,15 @@ import "C"
 //import "runtime"
 
 
+func (luaVM *Lns_luaVM) Loadfile( path string ) (LnsAny, LnsAny) {
+
+    ret := luaVM.CallStatic( "", "loadfile", []LnsAny{ path } )
+    if len( ret ) == 1 {
+        return ret[ 0 ], nil
+    }
+    return ret[ 0 ], ret[ 1 ]
+}
+
 func (luaVM *Lns_luaVM) Load( txt string, opt LnsAny ) (LnsAny, LnsAny) {
 
     ret := luaVM.CallStatic( "", "load", []LnsAny{ txt, opt } )
