@@ -1254,7 +1254,7 @@ class ImportParam {
    pub let mut transUnit:TransUnitIF;
    pub let mut typeId2Scope:Map<int,Ast.Scope>;
    pub let mut typeId2TypeInfo:Map<int,&Ast.TypeInfo>;
-   pub let metaInfo:Meta._MetaInfo;
+   pub let metaInfo:Luaval<&Meta._MetaInfo>;
    pub let scope:Ast.Scope;
    pub let moduleTypeInfo: &Ast.TypeInfo;
    pub let scopeAccess:Ast.ScopeAccess;
@@ -1517,11 +1517,11 @@ class _TypeInfoNormal extend _TypeInfo {
    pub let accessMode:Ast.AccessMode;
    pub let kind:Ast.TypeInfoKind;
    pub let mutMode: Ast.MutMode;
-   pub let ifList: int[];
-   pub let itemTypeId: int[];
-   pub let argTypeId: int[];
-   pub let retTypeId: int[];
-   pub let children: int[];
+   pub let ifList: &List<int>;
+   pub let itemTypeId: &List<int>;
+   pub let argTypeId: &List<int>;
+   pub let retTypeId: &List<int>;
+   pub let children: &List<int>;
 
    pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
@@ -1914,6 +1914,7 @@ _DefBuiltinFuncType( [
          "_fcall": { "arg": [ "form", "&..." ], "ret": [""] },
          "_load": { "arg": [ "str", "stem!" ], "ret": ["Luaval<form>!", "str!"] },
          "_kind": { "arg": [ "stem!" ], "ret":[ "int" ] },
+         "expandLuavalMap": { "arg": [ "Luaval<&stem>!" ], "ret":[ "&stem!" ] },
       },
    },
    {
@@ -2946,7 +2947,7 @@ class DependModuleInfo {
 
 
 fn TransUnit.processImport( modulePath:str ) mut :
-   &Meta._MetaInfo, &Map<int,&Ast.TypeInfo>, &Nodes.ModuleInfo
+   Luaval<&Meta._MetaInfo>, &Map<int,&Ast.TypeInfo>, &Nodes.ModuleInfo
 {
    Log._log( .Info, `{ return "%s -> %s start"
                        ( self.moduleType.getTxt( self.typeNameCtrl## ), modulePath); } );
@@ -3041,7 +3042,11 @@ fn TransUnit.processImport( modulePath:str ) mut :
    let mut _typeInfoList:List<_TypeInfo> = [];
    let mut id2atomMap:Map<int,_TypeInfo> = {};
    let mut _typeInfoNormalList:List<_TypeInfoNormal> = [];
-   foreach atomInfo in metaInfo.__typeInfoList {
+   foreach atomInfoLua in metaInfo.__typeInfoList {
+      let! workAtomInfo = expandLuavalMap( atomInfoLua ) {
+         self.error( "illegal atomInfo" );
+      };
+      let atomInfo = workAtomInfo@@Map<str,&stem>;
       if! let skind = atomInfo.skind {
          let mut actInfo:_TypeInfo! = nil;
          let mut mess:str! = nil;
@@ -3212,7 +3217,9 @@ fn TransUnit.processImport( modulePath:str ) mut :
             self.pushClassScope( self.parser.getLastPos(), classTypeInfo );
             
             if! metaInfo.__typeId2ClassInfoMap[ classTypeId ] {
-               let classInfo = _exp;
+               let! classInfo = expandLuavalMap( _exp ) {
+                  self.error( "illegal val" );
+               };
                foreach fieldInfo, fieldName in classInfo@@Map<str,Map<str,stem>> {
                   if! let typeId = fieldInfo.typeId {
                      let fieldTypeInfo = unwrap typeId2TypeInfo[ typeId@@int ];
@@ -4084,10 +4091,10 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
    self.checkToken( nextToken, "in" );
 
    let exp = self.analyzeExpOneRVal( false, false## );
-   if sortFlag and exp.$expType.$kind == .Ext {
-      self.addErrMess(
-         exp.$pos, "forsort doesn't support with %s." (exp.$expType.getTxt(##)) );
-   }
+   // if sortFlag and exp.$expType.$kind == .Ext {
+   //    self.addErrMess(
+   //       exp.$pos, "forsort doesn't support with %s." (exp.$expType.getTxt(##)) );
+   // }
 
    let expType = exp.$expType.$extedType;
    

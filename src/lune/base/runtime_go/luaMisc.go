@@ -31,6 +31,15 @@ import "C"
 //import "log"
 //import "runtime"
 
+func (luaVM *Lns_luaVM) ExpandLuavalMap( stem LnsAny ) LnsAny {
+    if Lns_IsNil( stem ) {
+        return nil
+    }
+
+    pVal := luaVM.pushAny( stem )
+    defer pVal.free()
+    return luaVM.setupFromStack( -1, false );
+}
 
 func (luaVM *Lns_luaVM) Loadfile( path string ) (LnsAny, LnsAny) {
 
@@ -74,8 +83,8 @@ func (luaValue *Lns_luaValue) Get1stFromMap() (LnsAny, LnsAny) {
         return nil, nil
     }
 
-    ret2 := luaValue.luaVM.setupFromStack( -1 )
-    ret1 := luaValue.luaVM.setupFromStack( -2 )
+    ret2 := luaValue.luaVM.setupFromStack( -1, true )
+    ret1 := luaValue.luaVM.setupFromStack( -2, true )
 
     return ret1, ret2
 }
@@ -94,8 +103,8 @@ func (luaValue *Lns_luaValue) NextFromMap( prev LnsAny ) (LnsAny, LnsAny) {
         return nil, nil
     }
 
-    ret2 := luaVM.setupFromStack( -1 )
-    ret1 := luaVM.setupFromStack( -2 )
+    ret2 := luaVM.setupFromStack( -1, true )
+    ret1 := luaVM.setupFromStack( -2, true )
 
     return ret1, ret2
 }

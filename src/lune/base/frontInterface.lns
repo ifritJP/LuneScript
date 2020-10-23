@@ -105,7 +105,7 @@ Lua からも利用される。
 @return stem! ロードしたモジュール。 失敗した場合 nil
 @return &stem ロードしたモジュールのメタ情報。
    */
-   pub fn loadModule( mod:str ) mut: stem!, &stem;
+   pub fn loadModule( mod:str ) mut: stem!, Luaval<&stem>;
 
    /**
 指定の LuneScript のモジュールからメタ情報をロードする。
@@ -114,7 +114,7 @@ Lua からも利用される。
 @param mod モジュール (foo.bar)
 @return &stem ロードしたモジュールのメタ情報。
    */
-   pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ) mut: &stem!;
+   pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ) mut: Luaval<&stem>!;
    /**
 LuneScript のコード文字列からロードする。
 
@@ -130,11 +130,18 @@ LuneScript のコード文字列からロードする。
 }
 
 class dummyFront extend (frontInterface) {
-   pub fn loadModule( mod:str ) mut: stem!, &stem {
+   pub fn loadModule( mod:str ) mut: stem!, Luaval<&stem> {
       // error( "not implements" );
-      return require( mod ), {};
+      let loaded = _load( "return {}" ## );
+      let emptyTable;
+      when! loaded {
+         emptyTable = unwrap loaded(##);
+      } else {
+         error( "load error" );
+      }
+      return require( mod ), emptyTable;
    }
-   pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ) mut : &stem! {
+   pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ) mut : Luaval<&stem>! {
       error( "not implements" );
    }
    pub fn loadFromLnsTxt(
@@ -156,7 +163,7 @@ pub fn setFront( newFront:frontInterface ) {
    __luneScript = newFront;
 }
 
-pub fn loadModule( mod:str ): stem!, &stem {
+pub fn loadModule( mod:str ): stem!, Luaval<&stem> {
    return __luneScript.loadModule( mod )**;
 }
 
@@ -166,7 +173,7 @@ pub fn loadFromLnsTxt(
    return __luneScript.loadFromLnsTxt( importModuleInfo, name, txt );
 }
 
-pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ): &stem! {
+pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ): Luaval<&stem>! {
    return __luneScript.loadMeta( importModuleInfo, mod );
 }
 

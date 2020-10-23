@@ -1397,6 +1397,7 @@ pub override fn convFilter.processRoot(
    builtin2runtime[ builtinFuncs.lns_tonumber ] = "Lns_tonumber";
    builtin2runtime[ builtinFuncs.lns__load ] = "Lns_getVM().Load";
    builtin2runtime[ builtinFuncs.lns_loadfile ] = "Lns_getVM().Loadfile";
+   builtin2runtime[ builtinFuncs.lns_expandLuavalMap ] = "Lns_getVM().ExpandLuavalMap";
 
    builtin2runtime[ builtinFuncs.string_dump ] = "Lns_getVM().String_dump";
    
@@ -2779,44 +2780,71 @@ pub override fn convFilter.processApply(
    self.writeln( "}" );
 }
 
-fn convFilter.outputForeachLua( node: Nodes.ForeachNode, extType:&Ast.ExtTypeInfo ) mut {
-   switch extType.$extedType.$kind {
+fn convFilter.outputForeachLua(
+   node: Nodes.Node, sortFlag:bool, exp:&Nodes.Node,
+   val:&Ast.SymbolInfo, key:&Ast.SymbolInfo!, block:&Nodes.BlockNode ) mut
+{
+   switch exp.$expType.$extedType.$kind {
       case .List, .Map {
          self.writeln( "{" );
          self.pushIndent( ## );
-         self.write( "_exp := " );
-         filter( node.$exp, self, node );
+         let tmpExp = "_exp%d" (node.$id);
+         let tmpKey = "_key%d" (node.$id);
+         let tmpVal = "_val%d" (node.$id);
+         let tmpIndex = "_index%d" (node.$id);
+         let sorted = "_sorted%d" (node.$id);
+         self.write( "%s := " (tmpExp) );
+         filter( exp, self, node );
          self.writeln( "" );
-         
+
          let tmpValName;
-         if node.$val.hasAccess() {
-            tmpValName = "_val";
+         if val.hasAccess() {
+            tmpValName = tmpVal;
          } else {
             tmpValName = "_";
          }
-         self.writeln( "_key, %s := _exp.Get1stFromMap()" (tmpValName) );
-         self.writeln( "for _key != nil {" );
-         self.pushIndent( ## );
-         if! let keySym = node.$key {
+         if sortFlag {
+            self.writeln( "%s := Lns_getVM().SortMapKeyList( %s )" (sorted,tmpExp) );
+            self.writeln( "%s, %s := %s.Get1stFromMap()"
+               (tmpIndex,tmpKey, sorted) );
+            self.writeln( "for %s != nil {" (tmpIndex));
+            self.pushIndent( ## );
+         } else {
+            self.writeln( "%s, %s := %s.Get1stFromMap()"
+               (tmpKey,tmpValName,tmpExp) );
+            self.writeln( "for %s != nil {" (tmpKey));
+            self.pushIndent( ## );
+         }
+         if! let keySym = key {
             if keySym.hasAccess() {
-               self.write( "%s := _key" ( self.getSymbolSym( keySym ) ) );
+               self.write( "%s := %s" ( self.getSymbolSym( keySym ), tmpKey ) );
                self.outputAny2Type( keySym.$typeInfo );
                self.writeln( "" );
             }
          }
-         if node.$val.hasAccess() {
-            self.write( "%s := _val" ( self.getSymbolSym( node.$val ) ) );
-            self.outputAny2Type( node.$val.$typeInfo );
+         if val.hasAccess() {
+            if sortFlag {
+               self.write(
+                  "%s := %s.GetAt( %s )"
+                  (self.getSymbolSym( val ), tmpExp, tmpKey) );
+            } else {
+               self.write( "%s := %s" ( self.getSymbolSym( val ), tmpVal ) );
+            }
+            self.outputAny2Type( val.$typeInfo );
             self.writeln( "" );
          }
          self.popIndent();
 
-         filter( node.$block, self, node );
+         filter( block, self, node );
 
          self.pushIndent( ## );
-         self.write( "_key, %s = " (tmpValName));
-         filter( node.$exp, self, node );
-         self.writeln( ".NextFromMap( _key )" );
+         if not sortFlag {
+            self.write( "%s, %s = " (tmpKey, tmpValName));
+            self.writeln( "%s.NextFromMap( %s )" (tmpExp,tmpKey) );
+         } else {
+            self.write( "%s, %s = " (tmpIndex, tmpKey));
+            self.writeln( "%s.NextFromMap( %s )" (sorted,tmpIndex));
+         }
 
          self.popIndent();
          
@@ -2833,9 +2861,8 @@ fn convFilter.outputForeachLua( node: Nodes.ForeachNode, extType:&Ast.ExtTypeInf
 pub override fn convFilter.processForeach(
    node: Nodes.ForeachNode, opt: Opt ) mut
 {
-   
-   if! let extType = node.$exp.$expType.$srcTypeInfo@@@Ast.ExtTypeInfo {
-      self.outputForeachLua( node, unwrap extType.$srcTypeInfo@@@Ast.ExtTypeInfo );
+   if node.$exp.$expType.$srcTypeInfo.$kind == .Ext {
+      self.outputForeachLua( node, false, node.$exp, node.$val, node.$key, node.$block );
       return;
    }
 
@@ -2952,6 +2979,11 @@ fn getLnsItemKind( typeInfo:&Ast.TypeInfo ): str {
 pub override fn convFilter.processForsort(
    node: Nodes.ForsortNode, opt: Opt ) mut
 {
+   if node.$exp.$expType.$srcTypeInfo.$kind == .Ext {
+      self.outputForeachLua( node, true, node.$exp, node.$val, node.$key, node.$block );
+      return;
+   }
+   
    let keySym:&Ast.SymbolInfo!;
    let valSym:&Ast.SymbolInfo!;
    let keyTypeInfo = node.$exp.$expType.$itemTypeInfoList[ 1 ];

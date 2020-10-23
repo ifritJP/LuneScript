@@ -1158,10 +1158,10 @@ define test-convGo-test
 		sed 's/Lns_init/Lns_$2_init/' |			\
 		sed 's@//TEST:@@' |				\
 		sed 's/run( "" )/run( "lune.base.$2" )/' |				\
-		sed 's@//IMPORT@import . "$(GO_MOD)/lune/base"@' > $1/runtime_main.go
+		sed 's@//IMPORT@import . "$(GO_MOD)/lune/base"@' > $1/$4/runtime_main.go
 
 	$(call convGo,$1,$3/$2,--testing,$4)
-	$(call buildGo,$1) >> work/result-testGo.txt
+	$(call buildGo,$1/$4) >> work/result-testGo.txt
 #	$(call exeLune,$1/$4,$3/$2.lns,SAVE,--testing) 
 	$(call test-lns-test,$1/$4,$2) >> work/result-testGo2.txt
 	diff -C 2 -I 'ONLY_LUA' work/result-testGo.txt work/result-testGo2.txt

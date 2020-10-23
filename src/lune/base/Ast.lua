@@ -3052,10 +3052,6 @@ function NilableTypeInfo:get_nilable(  )
 
    return true
 end
-function NilableTypeInfo:get_extedType(  )
-
-   return self
-end
 function NilableTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
 
    return self:getTxtWithRaw( self:get_rawTxt(), typeNameCtrl, importInfo, localFlag )
@@ -3179,6 +3175,10 @@ end
 
 function NilableTypeInfo:get_children( ... )
    return self.nonnilableType:get_children( ... )
+end
+
+function NilableTypeInfo:get_extedType( ... )
+   return self.nonnilableType:get_extedType( ... )
 end
 
 function NilableTypeInfo:get_externalFlag( ... )
@@ -5472,14 +5472,20 @@ function NormalTypeInfo.createModifier( srcTypeInfo, mutMode )
    idProv:increment(  )
    local modifier
    
-   if srcTypeInfo:get_kind() == TypeInfoKind.Ext then
+   if srcTypeInfo:get_nonnilableType():get_kind() == TypeInfoKind.Ext then
       do
          local _matchExp = createLuaval( NormalTypeInfo.createModifier( srcTypeInfo:get_extedType(), mutMode ) )
          if _matchExp[1] == LuavalResult.OK[1] then
             local workType = _matchExp[2][1]
             local _ = _matchExp[2][2]
          
-            modifier = workType
+            if srcTypeInfo:get_nilable() then
+               modifier = workType:get_nilableTypeInfo()
+            else
+             
+               modifier = workType
+            end
+            
          elseif _matchExp[1] == LuavalResult.Err[1] then
             local err = _matchExp[2][1]
          
@@ -6220,8 +6226,27 @@ function NormalTypeInfo.createDDD( typeInfo, externalFlag, extTypeFlag )
       typeInfo = typeInfo:get_itemTypeInfoList()[1]
    end
    
+   
    if not failCreateLuavalWith( typeInfo, true ) and extTypeFlag then
       extTypeFlag = false
+   end
+   
+   
+   if typeInfo:get_nonnilableType():get_kind() ~= TypeInfoKind.Ext and extTypeFlag then
+      do
+         local _matchExp = createLuaval( typeInfo )
+         if _matchExp[1] == LuavalResult.OK[1] then
+            local work = _matchExp[2][1]
+            local _ = _matchExp[2][2]
+         
+            typeInfo = work
+         elseif _matchExp[1] == LuavalResult.Err[1] then
+            local mess = _matchExp[2][1]
+         
+            Util.err( mess )
+         end
+      end
+      
    end
    
    
@@ -6268,6 +6293,8 @@ registBuiltin( "DDD", "...", TypeInfoKind.DDD, _moduleObj.builtinTypeDDD, _modul
 
 local builtinTypeForm = NormalTypeInfo.createBuiltin( "Form", "form", TypeInfoKind.Form, _moduleObj.builtinTypeDDD )
 _moduleObj.builtinTypeForm = builtinTypeForm
+
+immutableTypeSet[_moduleObj.builtinTypeForm]= true
 
 local builtinTypeSymbol = NormalTypeInfo.createBuiltin( "Symbol", "sym", TypeInfoKind.Prim )
 _moduleObj.builtinTypeSymbol = builtinTypeSymbol
@@ -6617,7 +6644,16 @@ function DDDTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag )
       return "..."
    end
    
-   local txt = string.format( "...<%s>", self.typeInfo:getTxt( typeNameCtrl, importInfo, localFlag ))
+   local typeInfo
+   
+   if self:get_extTypeFlag() then
+      typeInfo = self.typeInfo:get_extedType()
+   else
+    
+      typeInfo = self.typeInfo
+   end
+   
+   local txt = string.format( "...<%s>", typeInfo:getTxt( typeNameCtrl, importInfo, localFlag ))
    if self:get_extTypeFlag() then
       return string.format( "Luaval<%s>", txt)
    end
@@ -8444,7 +8480,7 @@ IdType.__allList[2] = IdType.Ext
 local function switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 6471, function (  )
+   Log.log( Log.Level.Trace, __func__, 6505, function (  )
    
       return "start"
    end )
@@ -8464,7 +8500,7 @@ local builtinTypeInfo2Map = typeInfo2Map:clone(  )
 local function pushProcessInfo( processInfo )
    local __func__ = '@lune.@base.@Ast.pushProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6483, function (  )
+   Log.log( Log.Level.Trace, __func__, 6517, function (  )
    
       return "start"
    end )
@@ -8499,7 +8535,7 @@ _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
    local __func__ = '@lune.@base.@Ast.popProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6509, function (  )
+   Log.log( Log.Level.Trace, __func__, 6543, function (  )
    
       return "start"
    end )

@@ -289,6 +289,8 @@
       (previous-line)
       (end-of-line)
       (re-search-backward "[^\s \t]" (point-min) 'noerror)
+      (when (eq (char-before) 10)
+	(re-search-backward "[^\s \t]" (point-min) 'noerror))
       (end-of-line)
       t
       )))
@@ -447,7 +449,9 @@ pattern は  {, }, {{, }} のいずれか。
 	       (eq count-bracket 0)
 	       (re-search-forward
 		(format "^[\s \t]*\\(%s\\)" lns-bloak-statement-head)
-		start-pos t))
+		start-pos t)
+	       (not (lns-is-in-comment-string (point)))
+	       )
 	      ;; 文の先頭が見つかった場合
 	       (progn
 		 (goto-char (match-beginning 0))
@@ -637,7 +641,18 @@ pattern は  {, }, {{, }} のいずれか。
 	      (t
 	       ;; ブロック開始、終了でない場合、
 	       (if (and (not (lns-is-in-comment-string (1- (point))))
-			(lns-indent-is-line-no-term))
+			(save-excursion
+			  (let ((pos (point)))
+			    (beginning-of-line)
+			    (if (re-search-forward "```" pos t)
+				(progn
+				  (beginning-of-line)
+				  (re-search-backward "```")
+				  (lns-indent-prev-eol)
+				  (lns-indent-is-line-no-term))
+			      (goto-char pos)
+			      (lns-indent-is-line-no-term))
+			    )))
 		   (lns-indent-to lns-indent-level)
 		 (lns-indent-to 0)
 		 ))

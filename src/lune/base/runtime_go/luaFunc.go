@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2018,2019 ifritJP
+Copyright (c) 2018,2020 ifritJP
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,21 +22,36 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-_lune_control ignore_symbol_;
+package runtimelns
 
-pub class _MetaInfo {
-   pub let __formatVersion:str;
-   pub let __enableTest:bool;
-   pub let __buildId:str;
-   pub let __typeId2ClassInfoMap: &Map<int,&Map<str,&stem>>;
-   pub let __typeInfoList: &List<&Map<str,&stem>>;
-   pub let __varName2InfoMap: &Map<str,&Map<str,&stem>>;
-   pub let __funcName2InfoMap: &Map<str,&stem>;
-   pub let __moduleTypeId: int;
-   pub let __moduleSymbolKind: int;
-   pub let __moduleMutable: bool;
-   pub let __dependModuleMap: &Map<str,&Map<str,&stem>>;
-   pub let __dependIdMap: &Map<int,&List<int>>;
-   pub let __macroName2InfoMap: &Map<int,&stem>;
-   pub let __hasTest: bool;
+// #include <stdlib.h>
+import "C"
+
+func (luaVM *Lns_luaVM) RunCode( code string ) (bool,[]LnsAny, LnsAny) {
+    loaded, mess := luaVM.Load( code, nil )
+    if loaded == nil {
+        return false, []LnsAny{}, mess
+    }
+    ret := luaVM.RunLoadedfunc( loaded.(*Lns_luaValue), []LnsAny{} )
+    return true, ret, nil
+}
+
+func (luaVM *Lns_luaVM) SortMapKeyList( mapObj *Lns_luaValue ) *Lns_luaValue {
+    code := `
+return function( map )
+  local keys = {}
+  for key in pairs( map ) do
+    table.insert( keys, key )
+  end
+  table.sort(keys)
+  return keys
+end
+`
+    ok, ret, mess := luaVM.RunCode( code )
+    if !ok {
+        panic( mess )
+    }
+    loaded := ret[0].(*Lns_luaValue)
+    vals := luaVM.RunLoadedfunc( loaded, []LnsAny{ mapObj } )
+    return vals[ 0 ].(*Lns_luaValue)
 }

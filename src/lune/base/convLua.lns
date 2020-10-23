@@ -2640,6 +2640,10 @@ pub override fn convFilter.processExpCall(
          let funcType = refNode.$expType;
          self.write( "%s.%s( self " ( self.getFullName( funcType.$parentInfo ),
                                       funcType.$rawTxt ) );
+      } elseif refNode.$expType == TransUnit.getBuiltinFunc().lns_expandLuavalMap {
+         // なにもしない
+         wroteFuncFlag = true;
+         self.write( "(" );
       }
    }
 
@@ -2955,10 +2959,11 @@ pub override fn convFilter.processExpRef(
                                funcType.$rawTxt ) );
       }
       default {
-         if node.$expType.equals( TransUnit.getBuiltinFunc().lns__load ##) {
+         let builtinFunc = TransUnit.getBuiltinFunc();
+         if node.$expType.equals( builtinFunc.lns__load ##) {
             self.write( "_lune." .. self.targetLuaVer.$loadStrFuncName );
          }
-         else {
+         else {   
             if self.macroVarSymSet.has( node.$symbolInfo.getOrg() ) {
                self.write( "macroVar." );
             }

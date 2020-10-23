@@ -2267,9 +2267,9 @@ pub class NilableTypeInfo extend TypeInfo {
    pub override fn get_nilable(): bool {
       return true;
    }
-   pub override fn get_extedType(): &TypeInfo {
-      return self;
-   }
+   // pub override fn get_extedType(): &TypeInfo {
+   //    return self;
+   // }
    
    /** この型の名前を取得する。 */
    pub override fn getTxt(
@@ -4001,12 +4001,16 @@ pub static fn NormalTypeInfo.createModifier(
 
    idProv.increment();
    let modifier;
-   if srcTypeInfo.$kind == .Ext {
+   if srcTypeInfo.$nonnilableType.$kind == .Ext {
       _match createLuaval(
          NormalTypeInfo.createModifier( srcTypeInfo.$extedType, mutMode ) )
       {
          case .OK( workType, _ ) {
-            modifier = workType;
+            if srcTypeInfo.$nilable {
+               modifier = workType.$nilableTypeInfo;
+            } else{
+               modifier = workType;
+            }
          }
          case .Err( err ) {
             Util.err( err );
@@ -4656,9 +4660,31 @@ pub static fn NormalTypeInfo.createDDD(
    if typeInfo.$kind == .DDD {
       typeInfo = typeInfo.$itemTypeInfoList[ 1 ];
    }
+   // if typeInfo.$nonnilableType.$kind == .Ext {
+   //    let work = typeInfo.$extedType;
+   //    if typeInfo.$nilable {
+   //       typeInfo = work.$nilableTypeInfo;
+   //    } else {
+   //       typeInfo = work;
+   //    }
+   // }
+
    if not failCreateLuavalWith( typeInfo, true ) and extTypeFlag {
       extTypeFlag = false;
    }
+
+   if typeInfo.$nonnilableType.$kind ~= .Ext and extTypeFlag {
+      _match createLuaval( typeInfo ) {
+         case .OK( work, _ ) {
+            typeInfo = work;
+         }
+         case .Err( mess ) {
+            Util.err( mess );
+         }
+      }
+   }
+   
+   
    
    let dddMap = extTypeFlag and typeInfo2Map.ExtDDDMap or typeInfo2Map.DDDMap;
    if! dddMap[ typeInfo ] {
@@ -4698,6 +4724,8 @@ registBuiltin( "DDD", "...", .DDD, builtinTypeDDD, headTypeInfo, false );
 
 pub let builtinTypeForm:TypeInfo =
    NormalTypeInfo.createBuiltin( "Form", "form" , .Form, builtinTypeDDD ## );
+immutableTypeSet.add( builtinTypeForm );
+
 pub let builtinTypeSymbol:TypeInfo =
    NormalTypeInfo.createBuiltin( "Symbol", "sym" , .Prim## );
 pub let builtinTypeStat:TypeInfo =
@@ -5018,7 +5046,13 @@ pro override fn DDDTypeInfo.getTxtWithRaw(
       }
       return "...";
    }
-   let txt = "...<%s>" (self.typeInfo.getTxt( typeNameCtrl, importInfo, localFlag ));
+   let typeInfo;
+   if self.$extTypeFlag {
+      typeInfo = self.typeInfo.$extedType;
+   } else {
+      typeInfo = self.typeInfo;
+   }
+   let txt = "...<%s>" (typeInfo.getTxt( typeNameCtrl, importInfo, localFlag ));
    if self.$extTypeFlag {
       return "Luaval<%s>" (txt);
    }

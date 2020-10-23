@@ -1021,7 +1021,7 @@ _section();
          if! let obj = loaded(##) {
             foreach val, index in obj@@List<&stem> {
                if type( val ) == "table" {
-                  foreach val2, key2 in val@@&Map<stem,stem> {
+                  forsort val2, key2 in val@@&Map<stem,stem> {
                      print( key2, val2, type( key2 ), type( val2 ) );
                   }
                } else {
@@ -1335,4 +1335,33 @@ _section();
       }
    }
    func( "return { val1 = {'a', 'b'}, val2 = {10,20} }" );
+}
+_section();
+{
+   let loaded, mess = _load( "return { [1] = 'a', [5] = 'b', [2] = 'c' }"## );
+   when! loaded {
+      let map = unwrap loaded(##);
+      forsort val, key in map@@Map<int,str> {
+         print( key, val );
+      }
+   } else {
+      print( mess );
+   }
+}
+_section();
+{
+   let loaded, mess = _load( "return { [1] = 'a', [5] = 'b', [2] = 'c' }"## );
+   when! loaded {
+      let map = unwrap loaded(##);
+      forsort val, key in map@@Map<int,str> {
+         print( key, val );
+      }
+      if! let map2 = expandLuavalMap( map ) {
+         forsort val, key in map2@@Map<int,str> {
+            print( key, val );
+         }
+      }
+   } else {
+      print( mess );
+   }
 }

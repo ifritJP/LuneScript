@@ -5,6 +5,13 @@ local _lune = {}
 if _lune2 then
    _lune = _lune2
 end
+function _lune.loadstring52( txt, env )
+   if not env then
+      return load( txt )
+   end
+   return load( txt, "", "bt", env )
+end
+
 function _lune.unwrap( val )
    if val == nil then
       __luneScript:error( 'unwrap val is nil' )
@@ -182,7 +189,16 @@ local dummyFront = {}
 setmetatable( dummyFront, { ifList = {frontInterface,} } )
 function dummyFront:loadModule( mod )
 
-   return require( mod ), {}
+   local loaded = _lune.loadstring52( "return {}" )
+   local emptyTable
+   
+   if loaded ~= nil then
+      emptyTable = _lune.unwrap( loaded(  ))
+   else
+      error( "load error" )
+   end
+   
+   return require( mod ), emptyTable
 end
 function dummyFront:loadMeta( importModuleInfo, mod )
 

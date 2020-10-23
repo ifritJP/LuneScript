@@ -207,8 +207,13 @@ func (luaVM *Lns_luaVM) newLuaValue( index int, typeId int ) *Lns_luaValue {
 
 /**
 スタックの指定 index の値を取得する
+
+@param index スタック位置
+@param passTable 指定位置の値がテーブルの場合の処理方法の指定。
+   true の場合、 Go の値に変換せずにそのまま Lns_luaVal として返す。
+   false の場合、 LnsMap に変換して返す。
  */
-func (luaVM *Lns_luaVM) setupFromStack( index int ) LnsAny {
+func (luaVM *Lns_luaVM) setupFromStack( index int, passTable bool ) LnsAny {
     vm := luaVM.vm
     switch typeId := lua_type( vm, index ); typeId {
     case cLUA_TNIL:
@@ -224,6 +229,33 @@ func (luaVM *Lns_luaVM) setupFromStack( index int ) LnsAny {
         return lua_toboolean( vm, index )
     case cLUA_TSTRING:
         return lua_tolstring( vm, index )
+    case cLUA_TTABLE:
+        if passTable {
+            return luaVM.newLuaValue( index, typeId )
+        }
+        retVal := NewLnsMap( map[LnsAny]LnsAny{} )
+        tbl := luaVM.newLuaValue( index, typeId )
+        key, val := tbl.Get1stFromMap()
+        for key != nil {
+            // key, val を go の値に変換して retVal に登録
+            if keyObj, ok := key.(*Lns_luaValue); ok {
+                keyObj.pushValFromGlobalValMap()
+                key = luaVM.setupFromStack( -1, false )
+                if key == nil {
+                    return nil
+                }
+            }
+            if valObj, ok := val.(*Lns_luaValue); ok {
+                valObj.pushValFromGlobalValMap()
+                val = luaVM.setupFromStack( -1, false )
+                if val == nil {
+                    return nil
+                }
+            }
+            retVal.Items[ key ] = val
+            key, val = tbl.NextFromMap( key )
+        }
+        return retVal
     default:
         return luaVM.newLuaValue( index, typeId )
     }
@@ -250,10 +282,10 @@ func (luaVM *Lns_luaVM) lua_call( stackBase int , argNum int, retNum int ) []Lns
     stackNum := lastRet - argTop + 1
     if retNum >= 2 || retNum == cLUA_MULTRET {
         for index := argTop; index <= lastRet; index++ {
-            result = append( result, luaVM.setupFromStack( index ) )
+            result = append( result, luaVM.setupFromStack( index, true ) )
         }
     } else if ( stackNum == 1 ) {
-        result = append( result, luaVM.setupFromStack( -1 ) )
+        result = append( result, luaVM.setupFromStack( -1, true ) )
     }
 
     lua_settop( luaVM.vm, stackBase )
@@ -365,7 +397,7 @@ func (luaVM *Lns_luaVM) CallStatic(
     ret := []LnsAny{}
     nowTop := lua_gettop( vm )
     for index := top + argPos; index <= nowTop; index++ {
-        ret = append( ret, luaVM.setupFromStack( index ) )
+        ret = append( ret, luaVM.setupFromStack( index, true ) )
     }
     
     return ret
@@ -395,7 +427,7 @@ func (obj *Lns_luaValue) CallMethod( funcname string, args[] LnsAny ) []LnsAny {
     ret := []LnsAny{}
     nowTop := lua_gettop( vm )
     for index := top + 2; index <= nowTop; index++ {
-        ret = append( ret, luaVM.setupFromStack( index ) )
+        ret = append( ret, luaVM.setupFromStack( index, true ) )
     }
     
     return ret
@@ -412,7 +444,7 @@ func (obj *Lns_luaValue) GetAt( index LnsAny ) LnsAny {
     pVal := luaVM.pushAny( index ) // arg を push
     defer pVal.free()
     lua_gettable( vm, -2 ); // obj[arg] を push
-    return luaVM.setupFromStack( -1 )
+    return luaVM.setupFromStack( -1, true )
 }
 
 func (obj *Lns_luaValue) Len() LnsInt {
