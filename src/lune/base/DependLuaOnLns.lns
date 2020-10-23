@@ -19,7 +19,7 @@ pub fn runLuaOnLns( luaCode:str ): Luaval<LoadFunc>!, str {
    foreach val, key in _G {
       newEnv[ key ] = val;
    }
-   newEnv[ "_lnsLoad" ] = fn ( name:str, txt:str ): stem {
+   newEnv[ "_lnsLoad" ] = fn ( name:str, txt:str ): Luaval<&stem> {
       let mut importModuleInfo = new frontInterface.ImportModuleInfo();
       let mut val = frontInterface.loadFromLnsTxt( importModuleInfo, name, txt );
       return val;

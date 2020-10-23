@@ -1611,7 +1611,7 @@ fn TransUnit.analyzeExpCast(
    let castTypeNode = self.analyzeRefType( .Local, false, false );
    let mut castType = castTypeNode.$expType;
 
-   if exp.$expType.$kind == .Ext and castType.$kind ~= .Ext {
+   if exp.$expType.$kind == .Ext and castType.$kind ~= .Ext and castType.$kind ~= .Stem {
       if opTxt == "@@" or opTxt == "@@=" {
          // 外部言語型のデータは、強制的に immutable にする。
          castType = self.createModifier( castType, .IMut );
@@ -1690,7 +1690,9 @@ fn TransUnit.analyzeExpCast(
    }
 
    if castType.canEvalWith( expType, .SetOp, {} ) {
-      if castType.$kind ~= .Ext {
+      if castType.$kind ~= .Ext and
+         not ( castType.$kind == .Stem and  Ast.isExtType( expType ) )
+      {
          // "str"@@str のように、意味のないキャストはエラー
          self.addWarnMess( castTypeNode.$pos,
                            "This cast isn't need. (%s <- %s)"
@@ -1708,9 +1710,10 @@ fn TransUnit.analyzeExpCast(
       }
    }
 
-   if expType.$kind == .Ext and castType.$kind ~= .Ext {
-      castType = self.createExtType( castTypeNode.$pos, castType );
-   }
+   // if expType.$kind == .Ext and castType.$kind ~= .Ext and castType.$kind ~= .Stem
+   // {
+   //    castType = self.createExtType( castTypeNode.$pos, castType );
+   // }
    
    if opTxt == "@@@" {
       castType = castType.$nilableTypeInfo;

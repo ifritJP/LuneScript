@@ -4203,6 +4203,10 @@ fn failCreateLuavalWith( typeInfo:&TypeInfo, convFlag:bool ) : str!, bool {
          }
       }
    }
+   // if isExtType( typeInfo ) {
+   //    return nil, true;
+   // }
+   
    let mess = "not support to use the type as Luaval -- %s" (typeInfo.getTxt(##));
    switch typeInfo.$kind {
       case .Nilable {
@@ -5319,7 +5323,7 @@ pub class ExtTypeInfo extend TypeInfo {
    {
       let typeInfo = self.extedType.applyGeneric( alt2typeMap, moduleTypeInfo );
       if typeInfo ~= self.extedType {
-         Util.err( "not support -- %s" (self.extedType.getTxt(##) ) );
+         Util.err( "not support generic -- %s" (self.extedType.getTxt(##) ) );
       }
       return self;
    }
@@ -5799,7 +5803,15 @@ pub static fn TypeInfo.checkMatchType(
             return .Warn, workMess;
          }
       }
+      if dstType ~= builtinTypeEmpty and
+         not isExtType( dstType.$srcTypeInfo.$nonnilableType ) and
+         isExtType( expType.$srcTypeInfo.$nonnilableType )
+      {
+         warnMess = "%s <- %s" (dstType.getTxt(##), expType.getTxt(##));
+      }
    }
+
+   let mut warnMess:str! = nil;
 
    // index 番以降の dstTypeList の要素が srcType, srcType2nd と等しいか調べる。
    // index 番目と srcType, index + 1 以降と srcType2nd を調べる。
@@ -5811,7 +5823,6 @@ pub static fn TypeInfo.checkMatchType(
       let mut workExpType = srcType;
       for dstIndex = index, #dstTypeList {
          let workDstType = dstTypeList[ dstIndex ];
-         let mut matchResult = MatchType.Match;
          if not workDstType.canEvalWith( workExpType, .SetOp, alt2type ) {
             let message = "exp(%d) type mismatch %s <- %s: dst %d"
                 ( dstIndex, workDstType.getTxt( defaultTypeNameCtrl## ),
@@ -5824,8 +5835,6 @@ pub static fn TypeInfo.checkMatchType(
                                        (workDstType.getTxt(defaultTypeNameCtrl##)) );
          }
 
-         if matchResult ~= .Match {
-         }
          workExpType = srcType2nd;
       }
       return .Match, "";
@@ -5975,6 +5984,11 @@ pub static fn TypeInfo.checkMatchType(
          }
       // }
    }
+
+   when! warnMess {
+      return .Warn, warnMess;
+   }
+   
    return .Match, "";
 }
 

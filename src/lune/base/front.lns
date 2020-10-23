@@ -84,7 +84,7 @@ global fn __luneSym2Str( val:stem! ):str! {
 }
 
 class LoadInfo {
-   pub let mut mod:stem;
+   pub let mut mod:Luaval<&stem>;
    pub let mut meta:Luaval<&stem>;
 }
 
@@ -103,7 +103,7 @@ loadedMap で管理する前にシステムにロードされているため、
 後で import すると多重ロードになってしまう。
 多重ロードを防ぐため、 loadedMap で管理する前にロードされているモジュールを保持する。
 */
-   let preloadedModMap:&Map<str,stem>;
+   let preloadedModMap:&Map<str,Luaval<&stem>>;
 
    pub fn __init( option:&Option.Option ) {
       self.option = option;
@@ -115,7 +115,7 @@ loadedMap で管理する前にシステムにロードされているため、
 
       frontInterface.setFront( self );
 
-      let mut loadedMap:Map<str,stem> = {};
+      let mut loadedMap:Map<str,Luaval<&stem>> = {};
       foreach modval, mod in Depend.getLoadedMod() {
          // pending:
          if mod == "lune.base.Testing" {
@@ -140,7 +140,7 @@ loadedMap で管理する前にシステムにロードされているため、
    }
    
 
-   pub fn loadModule( mod:str ) mut: stem!, Luaval<&stem>;
+   pub fn loadModule( mod:str ) mut: Luaval<&stem>!, Luaval<&stem>;
    pub fn loadMeta(
       importModuleInfo:frontInterface.ImportModuleInfo, mod:str ) mut: Luaval<&stem>!;
    pub fn loadFromLnsTxt( importModuleInfo:frontInterface.ImportModuleInfo,
@@ -546,7 +546,7 @@ fn Front.loadFileToLuaCode(
 */
 fn Front.loadFile(
    importModuleInfo:frontInterface.ImportModuleInfo,
-   path:str, mod:str ): Luaval<&stem>, stem
+   path:str, mod:str ): Luaval<&stem>, Luaval<&stem>
 {
    Log._log2( .Info, "start %s:%s" ( __func__, mod ) );
    
@@ -618,7 +618,7 @@ fn Front.checkUptodateMeta( metaPath:str, addSearchPath:str! ): Luaval<&stem>! {
 }
 
 
-fn Front.loadModule( mod:str ) mut : stem!, Luaval<&stem> {
+fn Front.loadModule( mod:str ) mut : Luaval<&stem>!, Luaval<&stem> {
    if not self.getLoadInfo( mod ) {
       if! let luaTxt = self.convertedMap[ mod ] {
          if! let meta = self.loadedMetaMap[ mod ] {
@@ -637,7 +637,7 @@ fn Front.loadModule( mod:str ) mut : stem!, Luaval<&stem> {
                luaPath = self.searchLuaFile( mod, dir );
             }
 
-            let mut loadVal:stem! = nil;
+            let mut loadVal:Luaval<&stem>! = nil;
             when! luaPath {
                if Util.getReadyCode( lnsPath, luaPath ) {
 	          let metaPath = string.gsub( luaPath, "%.lua$", ".meta" );

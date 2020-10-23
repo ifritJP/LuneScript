@@ -4522,7 +4522,7 @@ function convFilter:outputMapping( node )
    self:pushIndent(  )
    for __index, memberNode in pairs( node:get_memberList() ) do
       if not memberNode:get_staticFlag() then
-         self:writeln( string.format( 'obj.Items["%s"] = Lns_ToCollection( self.%s )', self:getSymbolSym( memberNode:get_symbolInfo() ), self:getSymbolSym( memberNode:get_symbolInfo() )) )
+         self:writeln( string.format( 'obj.Items["%s"] = Lns_ToCollection( self.%s )', memberNode:get_symbolInfo():get_name(), self:getSymbolSym( memberNode:get_symbolInfo() )) )
       end
       
    end
@@ -4570,7 +4570,7 @@ function convFilter:outputMapping( node )
       self:pushIndent(  )
       self:writeln( "var objMap *LnsMap" )
       self:writeln( "if work, ok := obj.(*LnsMap); !ok {" )
-      self:writeln( '   return false, nil, "no map"' )
+      self:writeln( '   return false, nil, "no map -- " + Lns_ToString(obj)' )
       self:writeln( "} else {" )
       self:writeln( '   objMap = work' )
       self:writeln( "}" )
@@ -4598,19 +4598,19 @@ function convFilter:outputMapping( node )
          if memberNode:get_expType():get_nonnilableType():get_kind() == Ast.TypeInfoKind.Alternate then
             for index, itemType in pairs( classType:get_itemTypeInfoList() ) do
                if itemType == memberNode:get_expType():get_srcTypeInfo() then
-                  self:write( string.format( 'paramList[%d].Func( objMap.Items["%s"], %s, paramList[%d].Child', index - 1, memberName, memberNode:get_expType():get_nilable(), index - 1) )
+                  self:write( string.format( 'paramList[%d].Func( objMap.Items["%s"], %s, paramList[%d].Child', index - 1, memberNode:get_symbolInfo():get_name(), memberNode:get_expType():get_nilable(), index - 1) )
                end
                
             end
             
          else
           
-            self:write( string.format( '%sSub( objMap.Items["%s"], %s, ', self:getFromStemName( memberNode:get_expType() ), memberName, memberNode:get_expType():get_nilable()) )
+            self:write( string.format( '%sSub( objMap.Items["%s"], %s, ', self:getFromStemName( memberNode:get_expType() ), memberNode:get_symbolInfo():get_name(), memberNode:get_expType():get_nilable()) )
             self:outputConvItemTypeList( memberNode:get_expType():get_itemTypeInfoList(), nil )
          end
          
          self:writeln( "); !ok {" )
-         self:writeln( string.format( '   return false,nil,"%s:" + mess.(string)', memberName) )
+         self:writeln( string.format( '   return false,nil,"%s:" + mess.(string)', memberNode:get_symbolInfo():get_name()) )
          self:writeln( "} else {" )
          self:write( string.format( "   newObj.%s = conv", memberName) )
          self:outputAny2Type( memberNode:get_expType() )

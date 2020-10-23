@@ -3053,26 +3053,28 @@ fn TransUnit.processImport( modulePath:str ) mut :
          let kind = unwrap Ast.SerializeKind._from( skind@@int );
          _switch kind {
             case .Enum {
-               actInfo = _TypeInfoEnum._fromMap( atomInfo );
+               actInfo, mess = _TypeInfoEnum._fromMap( atomInfo );
             }
             case .Alge {
-               actInfo = _TypeInfoAlge._fromMap( atomInfo );
+               actInfo, mess = _TypeInfoAlge._fromMap( atomInfo );
                self.helperInfo.useAlge = true;
             }
             case .Module {
-               actInfo = _TypeInfoModule._fromMap( atomInfo );
+               actInfo, mess = _TypeInfoModule._fromMap( atomInfo );
             }
             case .Normal {
-               if! _TypeInfoNormal._fromMap( atomInfo ) {
-                  _typeInfoNormalList.insert( _exp );
-                  actInfo = _exp;
+               let workInfo;
+               workInfo, mess = _TypeInfoNormal._fromMap( atomInfo );
+               when! workInfo {
+                  _typeInfoNormalList.insert( workInfo );
                }
+               actInfo = workInfo;
             }
             case .Nilable {
-               actInfo = _TypeInfoNilable._fromMap( atomInfo );
+               actInfo, mess = _TypeInfoNilable._fromMap( atomInfo );
             }
             case .Alias {
-               actInfo = _TypeInfoAlias._fromMap( atomInfo );
+               actInfo, mess = _TypeInfoAlias._fromMap( atomInfo );
             }
             case .DDD {
                actInfo, mess = _TypeInfoDDD._fromMap( atomInfo );
@@ -3084,13 +3086,13 @@ fn TransUnit.processImport( modulePath:str ) mut :
                actInfo, mess = _TypeInfoGeneric._fromMap( atomInfo );
             }
             case .Modifier {
-               actInfo = _TypeInfoModifier._fromMap( atomInfo );
+               actInfo, mess = _TypeInfoModifier._fromMap( atomInfo );
             }
             case .Box {
-               actInfo = _TypeInfoBox._fromMap( atomInfo );
+               actInfo, mess = _TypeInfoBox._fromMap( atomInfo );
             }
             case .Ext {
-               actInfo = _TypeInfoExt._fromMap( atomInfo );
+               actInfo, mess = _TypeInfoExt._fromMap( atomInfo );
             }
          }
          when! actInfo {

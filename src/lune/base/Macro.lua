@@ -776,7 +776,7 @@ function MacroCtrl:importMacro( macroInfoStem, macroTypeInfo, typeId2TypeInfo )
       
       self.typeId2MacroInfo[macroTypeInfo:get_typeId()] = ExtMacroInfo.new(macroInfo.name, self.macroEval:evalFromCode( macroInfo.name, argNameList, macroInfo.stmtBlock ), symbol2MacroValInfoMap, argList, tokenList)
    else
-      Util.errorLog( string.format( "macro load fail -- %s", _lune.unwrapDefault( err, "")) )
+      Util.errorLog( string.format( "macro load fail -- %s: %s ", macroTypeInfo:getTxt(  ), _lune.unwrapDefault( err, "")) )
    end
    
 end

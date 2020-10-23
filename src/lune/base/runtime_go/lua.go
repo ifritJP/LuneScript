@@ -169,35 +169,9 @@ func (luaVM *Lns_luaVM) pushAny( val LnsAny ) *lns_pushedVal {
     return lns_defaultPushedVal
 }
 
-// func StemToLuaCode( val LnsAny ) *lns_pushedVal {
-//     vm := luaVM.vm
-//     if Lns_IsNil( val ) {
-//         lua_pushnil( vm )
-//     } else {
-//         switch val.(type) {
-//         case LnsInt:
-//             lua_pushinteger( vm, val.(LnsInt) )
-//         case LnsReal:
-//             lua_pushnumber( vm, val.(LnsReal) )
-//         case bool:
-//             lua_pushboolean( vm, val.(bool) )
-//         case string:
-//             return &lns_pushedVal{ luaVM.pushStr( val.(string) ) }
-//         case *Lns_luaValue:
-//             val.(*Lns_luaValue).pushValFromGlobalValMap()
-//         case *LnsList:
-//             builder := &strings.Builder{}
-//             val.(*LnsList).ToLuaCode( builder )
-//             panic( builder.String() )
-//         default:
-//             panic( fmt.Sprintf( "not supoort -- %v", val ) )
-//         }
-//     }
-//     return lns_defaultPushedVal
-// }
-
-
 func (luaVM *Lns_luaVM) newLuaValue( index int, typeId int ) *Lns_luaValue {
+    // print( fmt.Sprintf( "xxx:%d\n", lua_gettop( luaVM.vm ) ) )
+    
     val := &Lns_luaValue{ luaVM: luaVM, typeId: typeId }
     val.sym = C.CString( fmt.Sprintf( "%p", &val ) )
     runtime.SetFinalizer( val, func (obj *Lns_luaValue) { obj.free() } )
@@ -241,6 +215,7 @@ func (luaVM *Lns_luaVM) setupFromStack( index int, passTable bool ) LnsAny {
             if keyObj, ok := key.(*Lns_luaValue); ok {
                 keyObj.pushValFromGlobalValMap()
                 key = luaVM.setupFromStack( -1, false )
+                lua_pop( vm, 1 )
                 if key == nil {
                     return nil
                 }
@@ -248,6 +223,7 @@ func (luaVM *Lns_luaVM) setupFromStack( index int, passTable bool ) LnsAny {
             if valObj, ok := val.(*Lns_luaValue); ok {
                 valObj.pushValFromGlobalValMap()
                 val = luaVM.setupFromStack( -1, false )
+                lua_pop( vm, 1 )
                 if val == nil {
                     return nil
                 }
@@ -327,6 +303,9 @@ index 指定のスタックの値を globalVal[ symbol ] にセットする
 */
 func (luaValue *Lns_luaValue) setValToGlobalValMap( index int ) {
     vm := luaValue.luaVM.vm
+    top := lua_gettop( vm )
+    defer lua_settop( vm, top )
+    
     // globalVal をスタックトップに push
     lua_getglobal( vm, lns_globalValSym )
     // 指定の値をスタックトップに push

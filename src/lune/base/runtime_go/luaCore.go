@@ -76,6 +76,10 @@ func luaL_openlibs( vm *C.lua_State ) {
 
 // lua api ======================
 
+func lua_checkstack( vm *C.lua_State, size int ) int {
+    return int( C.lua_checkstack( vm, C.int( size ) ) )
+}
+
 func lua_callk( vm *C.lua_State, argNum int, retNum int ) {
     C.lua_callk( vm, C.int(argNum), C.int(retNum), C.long(0), nil )
 }

@@ -30,11 +30,15 @@ import "C"
 //import "unsafe"
 //import "log"
 //import "runtime"
+//import "fmt"
 
 func (luaVM *Lns_luaVM) ExpandLuavalMap( stem LnsAny ) LnsAny {
     if Lns_IsNil( stem ) {
         return nil
     }
+
+    top := lua_gettop( luaVM.vm )
+    defer lua_settop( luaVM.vm, top )
 
     pVal := luaVM.pushAny( stem )
     defer pVal.free()

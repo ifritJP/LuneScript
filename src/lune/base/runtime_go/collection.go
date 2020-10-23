@@ -91,6 +91,24 @@ func Lns_ToListSub(
             list[ index ] = conved
         }
         return true, NewLnsList( list ), nil
+    } else if val, ok := obj.(*LnsMap); ok {
+        // lua は list と map に明確な差がないので、
+        // 本来 list のデータも map になる可能性があるため、
+        // map からも処理できるようにする。
+        list := make([]LnsAny, len(val.Items))
+        for index := 1; index <= len( val.Items ); index++ {
+            if val, ok := val.Items[ index ]; ok {
+                success, conved, mess :=
+                    itemParam.Func( val, itemParam.Nilable, itemParam.Child )
+                if !success {
+                    return false, nil, fmt.Sprintf( "%d:%s", index, mess )
+                }
+                list[ index - 1 ] = conved
+            } else {
+                return false, nil, fmt.Sprintf( "%d:%s", index, "no index" )
+            }
+        }
+        return true, NewLnsList( list ), nil
     }
     return false, nil, "no list"
 }

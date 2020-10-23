@@ -3540,7 +3540,7 @@ fn convFilter.outputMapping( node: Nodes.DeclClassNode ) mut {
       if not memberNode.$staticFlag {
          self.writeln(
             'obj.Items["%s"] = Lns_ToCollection( self.%s )'
-            ( self.getSymbolSym( memberNode.$symbolInfo ),
+            ( memberNode.$symbolInfo.$name,
               self.getSymbolSym( memberNode.$symbolInfo ) ) );
          }
    }
@@ -3595,7 +3595,7 @@ fn convFilter.outputMapping( node: Nodes.DeclClassNode ) mut {
       self.pushIndent( ## );
       self.writeln( "var objMap *LnsMap" );
       self.writeln( "if work, ok := obj.(*LnsMap); !ok {" );
-      self.writeln( '   return false, nil, "no map"' );
+      self.writeln( '   return false, nil, "no map -- " + Lns_ToString(obj)' );
       self.writeln( "} else {" );
       self.writeln( '   objMap = work' );
       self.writeln( "}" );
@@ -3629,19 +3629,22 @@ fn convFilter.outputMapping( node: Nodes.DeclClassNode ) mut {
                if itemType == memberNode.$expType.$srcTypeInfo {
                   self.write(
                      'paramList[%d].Func( objMap.Items["%s"], %s, paramList[%d].Child'
-                     (index - 1, memberName, memberNode.$expType.$nilable, index - 1 ) );
+                     (index - 1, memberNode.$symbolInfo.$name,
+                       memberNode.$expType.$nilable, index - 1 ) );
                }
             }
          }
          else {
             self.write(
                '%sSub( objMap.Items["%s"], %s, '
-               ( self.getFromStemName(memberNode.$expType), memberName,
+               ( self.getFromStemName(memberNode.$expType),
+                 memberNode.$symbolInfo.$name,      
                  memberNode.$expType.$nilable ));
             self.outputConvItemTypeList( memberNode.$expType.$itemTypeInfoList, nil );
          }
          self.writeln( "); !ok {" );
-         self.writeln( '   return false,nil,"%s:" + mess.(string)' (memberName) );
+         self.writeln( '   return false,nil,"%s:" + mess.(string)'
+                       (memberNode.$symbolInfo.$name) );
          self.writeln( "} else {" );
          self.write( "   newObj.%s = conv" (memberName) );
          self.outputAny2Type( memberNode.$expType );

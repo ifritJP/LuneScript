@@ -1365,3 +1365,49 @@ _section();
       print( mess );
    }
 }
+_section();
+{
+   class Test extend (Mapping) {
+      pub let val:int;
+   }
+   let test = new Test( 100 );
+   let map = test._toMap();
+   foreach val, key in map {
+      print( key, val );
+   }
+   if! let test2 = Test._fromStem( map ) {
+      print( test2.val );
+   }
+}
+_section();
+{
+   class Test extend (Mapping) {
+      pub let val:int;
+   }
+   let test = new Test( 100 );
+   let map = test._toMap();
+   foreach val, key in map {
+      print( key, val );
+   }
+   if! let test2 = Test._fromStem( map ) {
+      print( test2.val );
+   }
+}
+_section();
+{
+   let loaded, mess = _load( "return { list = { 10, 20, 30 } }"## );
+   when! loaded {
+      let obj = unwrap loaded(##);
+      class Test extend (Mapping) {
+         pub let list:&List<int>;
+      }
+      if! let test = Test._fromStem( expandLuavalMap( obj ) ) {
+         foreach val, key in test.list {
+            print( key, val );
+         }
+      }
+   } else {
+      print( mess );
+   }
+}
+

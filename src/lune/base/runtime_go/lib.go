@@ -46,6 +46,7 @@ runtime のシンボルに何もアクセスしないと、
 ビルドエラーになるので、それを回避するために実行する。
 */
 func Lns_InitMod() {
+    lua_checkstack( Lns_getVM().vm, 300 )
 }
 
 func Lns_IsNil( val LnsAny ) bool {

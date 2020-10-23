@@ -80,6 +80,7 @@ func (luaVM *Lns_luaVM) string_call_setup(
 
     callInfo.string = C.CString( txt )
     lua_pushlstring( vm, callInfo.string, len( txt ) )
+    C.free( unsafe.Pointer( callInfo.string ) )
 
     //runtime.SetFinalizer( callInfo, func (obj *lns_callInfoString) { obj.end() } )
     
@@ -99,7 +100,7 @@ func (self *lns_callInfoString) call( luaVM *Lns_luaVM, retNum int ) []LnsAny {
 
 
 func (self *lns_callInfoString) end() {
-    C.free( unsafe.Pointer( self.string ) )
+    //C.free( unsafe.Pointer( self.string ) )
 }
 
 

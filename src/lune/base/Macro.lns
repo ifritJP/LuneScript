@@ -42,8 +42,10 @@ fn loadCode( code:str ) : Luaval<&stem> {
 }
    
 
-pub form toListLua( ... ) : &List<&stem>;
+pub form toListLua( val:Luaval<&stem> ) : &List<&stem>;
 pub let toList = loadCode( "return function( ... ) return { ... } end" )@@toListLua;
+pub form toListEmptyLua() : &List<&stem>;
+pub let toListEmpty = loadCode( "return function() return {} end" )@@toListEmptyLua;
 pub form toLuavalLua( val:&stem! ) : &stem!;
 pub let toLuaval = loadCode( "return function( val ) return val end" )@@toLuavalLua;
 
@@ -350,7 +352,7 @@ pub fn MacroCtrl.evalMacroOp(
             valList = val;
          }
       } else {
-         valList = toList(##);
+         valList = toListEmpty();
       }
       self.symbol2ValueMapForMacro[ name ] =
          new Nodes.MacroValInfo( valList, typeInfo, macroArgName2ArgNode[ name ] );
@@ -436,7 +438,8 @@ pub fn MacroCtrl.importMacro(
             symbol2MacroValInfoMap, argList, tokenList );
    }
    else {
-      Util.errorLog( "macro load fail -- %s" (unwrap err default "") );
+      Util.errorLog( "macro load fail -- %s: %s "
+                     (macroTypeInfo.getTxt(##), unwrap err default "") );
    }
 }
 
@@ -466,8 +469,11 @@ pub fn MacroCtrl.regist( node:Nodes.DeclMacroNode, macroScope:&Ast.Scope ) mut {
    self.symbol2ValueMapForMacro = {};
 }
 
-fn expandVal( tokenList:List<&Parser.Token>, val: stem!, pos: &Parser.Position ): str! {
-   when! val {
+fn expandVal( tokenList:List<&Parser.Token>,
+              workval: Luaval<&stem>!, pos: &Parser.Position ): str!
+{
+   when! workval {
+      let val = workval@@stem;
       switch type( val ) {
          case "boolean" {
             let token = "%s" (val);

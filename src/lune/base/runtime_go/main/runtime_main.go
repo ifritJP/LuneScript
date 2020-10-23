@@ -34,6 +34,7 @@ package main
 
 
 func main() {
+    Lns_InitMod()
     //TEST:Lns_Testing_init()
     Lns_init()
     //TEST:Testing_run( "" )

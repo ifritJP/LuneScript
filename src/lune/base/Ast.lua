@@ -6921,7 +6921,7 @@ function ExtTypeInfo:applyGeneric( alt2typeMap, moduleTypeInfo )
 
    local typeInfo = self.extedType:applyGeneric( alt2typeMap, moduleTypeInfo )
    if typeInfo ~= self.extedType then
-      Util.err( string.format( "not support -- %s", self.extedType:getTxt(  )) )
+      Util.err( string.format( "not support generic -- %s", self.extedType:getTxt(  )) )
    end
    
    return self
