@@ -5669,6 +5669,10 @@ immutableTypeSet[_moduleObj.builtinTypeString]= true
 local function failCreateLuavalWith( typeInfo, convFlag )
 
    
+   if isExtType( typeInfo ) then
+      return nil, true
+   end
+   
    local mess = string.format( "not support to use the type as Luaval -- %s", typeInfo:getTxt(  ))
    do
       local _switchExp = typeInfo:get_kind()
@@ -6921,7 +6925,7 @@ function ExtTypeInfo:applyGeneric( alt2typeMap, moduleTypeInfo )
 
    local typeInfo = self.extedType:applyGeneric( alt2typeMap, moduleTypeInfo )
    if typeInfo ~= self.extedType then
-      Util.err( string.format( "not support -- %s", self.extedType:getTxt(  )) )
+      Util.err( string.format( "not support generics -- %s", self.extedType:getTxt(  )) )
    end
    
    return self
@@ -8480,7 +8484,7 @@ IdType.__allList[2] = IdType.Ext
 local function switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 6505, function (  )
+   Log.log( Log.Level.Trace, __func__, 6508, function (  )
    
       return "start"
    end )
@@ -8500,7 +8504,7 @@ local builtinTypeInfo2Map = typeInfo2Map:clone(  )
 local function pushProcessInfo( processInfo )
    local __func__ = '@lune.@base.@Ast.pushProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6517, function (  )
+   Log.log( Log.Level.Trace, __func__, 6520, function (  )
    
       return "start"
    end )
@@ -8535,7 +8539,7 @@ _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
    local __func__ = '@lune.@base.@Ast.popProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6543, function (  )
+   Log.log( Log.Level.Trace, __func__, 6546, function (  )
    
       return "start"
    end )

@@ -4203,6 +4203,9 @@ fn failCreateLuavalWith( typeInfo:&TypeInfo, convFlag:bool ) : str!, bool {
          }
       }
    }
+   if isExtType( typeInfo ) {
+      return nil, true;
+   }
    let mess = "not support to use the type as Luaval -- %s" (typeInfo.getTxt(##));
    switch typeInfo.$kind {
       case .Nilable {
@@ -5319,7 +5322,7 @@ pub class ExtTypeInfo extend TypeInfo {
    {
       let typeInfo = self.extedType.applyGeneric( alt2typeMap, moduleTypeInfo );
       if typeInfo ~= self.extedType {
-         Util.err( "not support -- %s" (self.extedType.getTxt(##) ) );
+         Util.err( "not support generics -- %s" (self.extedType.getTxt(##) ) );
       }
       return self;
    }
