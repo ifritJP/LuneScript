@@ -1411,3 +1411,209 @@ _section();
    }
 }
 
+_section();
+{
+   fn func( txt:str )
+   {
+      let loaded, mess = _load( txt ## );
+      when! loaded {
+         let map = unwrap loaded(##);
+         if! let map2 = expandLuavalMap( map ) {
+            forsort _, key in map2@@Map<str,stem> {
+               print( key );
+            }
+         }
+      } else {
+         print( mess );
+      }
+   }
+   let txt = ```
+         local _moduleObj = {}
+----- meta -----
+_moduleObj.__version = '1.1.10'
+_moduleObj.__formatVersion = '1.0.78'
+_moduleObj.__buildId = "1603461398.000000:1"
+_moduleObj.__enableTest = false
+_moduleObj.__hasTest = false
+local __typeId2ClassInfoMap = {}
+_moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap
+do
+   local __classInfo1007 = {}
+   __typeId2ClassInfoMap[ 1007 ] = __classInfo1007
+end
+do
+   local __classInfo1039 = {}
+   __typeId2ClassInfoMap[ 1039 ] = __classInfo1039
+end
+do
+   local __classInfo1001 = {}
+   __typeId2ClassInfoMap[ 1001 ] = __classInfo1001
+end
+do
+   local __classInfo1003 = {}
+   __typeId2ClassInfoMap[ 1003 ] = __classInfo1003
+end
+do
+   local __classInfo1005 = {}
+   __typeId2ClassInfoMap[ 1005 ] = __classInfo1005
+end
+local __macroName2InfoMap = {}
+_moduleObj.__macroName2InfoMap = __macroName2InfoMap
+do
+   local info = {}
+   __macroName2InfoMap[ 1147 ] = info
+   info.name = "_eq"
+   info.argList = {{name="ctrl",typeId=100},{name="val1",typeId=110},{name="val2",typeId=110}}
+   info.symList = {}
+   info.tokenList = {
+   {8,",,"},{5,"ctrl"},{6,"."},{5,"checkEq"},{6,"("},{8,",,"},{5,"val1"},{6,","},{8,",,"},{5,"val2"},{6,","},{8,",,,,"},{5,"val1"},{6,","},{8,",,,,"},{5,"val2"},{6,","},{7,"nil"},{6,","},{5,"__mod__"},{6,","},{5,"__line__"},{6,")"}}
+end
+do
+   local info = {}
+   __macroName2InfoMap[ 1149 ] = info
+   info.name = "_neq"
+   info.argList = {{name="ctrl",typeId=100},{name="val1",typeId=110},{name="val2",typeId=110}}
+   info.symList = {}
+   info.tokenList = {
+   {8,",,"},{5,"ctrl"},{6,"."},{5,"checkEq"},{6,"("},{8,",,"},{5,"val1"},{6,","},{8,",,"},{5,"val2"},{6,","},{8,",,,,"},{5,"val1"},{6,","},{8,",,,,"},{5,"val2"},{6,","},{7,"nil"},{6,","},{5,"__mod__"},{6,","},{5,"__line__"},{6,")"}}
+end
+do
+   local info = {}
+   __macroName2InfoMap[ 1151 ] = info
+   info.name = "_isT"
+   info.argList = {{name="ctrl",typeId=100},{name="val",typeId=110}}
+   info.symList = {}
+   info.tokenList = {
+   {8,",,"},{5,"ctrl"},{6,"."},{5,"isTrue"},{6,"("},{8,",,"},{5,"val"},{6,","},{8,",,,,"},{5,"val"},{6,","},{7,"nil"},{6,","},{5,"__mod__"},{6,","},{5,"__line__"},{6,")"}}
+end
+do
+   local info = {}
+   __macroName2InfoMap[ 1153 ] = info
+   info.name = "_isNotT"
+   info.argList = {{name="ctrl",typeId=100},{name="val",typeId=110}}
+   info.symList = {}
+   info.tokenList = {
+   {8,",,"},{5,"ctrl"},{6,"."},{5,"isNotTrue"},{6,"("},{8,",,"},{5,"val"},{6,","},{8,",,,,"},{5,"val"},{6,","},{7,"nil"},{6,","},{5,"__mod__"},{6,","},{5,"__line__"},{6,")"}}
+end
+do
+   local info = {}
+   __macroName2InfoMap[ 1155 ] = info
+   info.name = "_isNil"
+   info.argList = {{name="ctrl",typeId=100},{name="val",typeId=110}}
+   info.symList = {}
+   info.tokenList = {
+   {8,",,"},{5,"ctrl"},{6,"."},{5,"isNil"},{6,"("},{8,",,"},{5,"val"},{6,","},{8,",,,,"},{5,"val"},{6,","},{7,"nil"},{6,","},{5,"__mod__"},{6,","},{5,"__line__"},{6,")"}}
+end
+do
+   local info = {}
+   __macroName2InfoMap[ 1157 ] = info
+   info.name = "_err"
+   info.argList = {{name="ctrl",typeId=100},{name="mes",typeId=110}}
+   info.symList = {}
+   info.tokenList = {
+   {8,",,"},{5,"ctrl"},{6,"."},{5,"err"},{6,"("},{8,",,"},{5,"mes"},{6,","},{5,"__mod__"},{6,","},{5,"__line__"},{6,")"},{6,";"}}
+end
+do
+   local info = {}
+   __macroName2InfoMap[ 1159 ] = info
+   info.name = "_eqM"
+   info.argList = {{name="ctrl",typeId=100},{name="msg",typeId=51},{name="val1",typeId=110},{name="val2",typeId=110}}
+   info.symList = {}
+   info.tokenList = {
+   {8,",,"},{5,"ctrl"},{6,"."},{5,"checkEq"},{6,"("},{8,",,"},{5,"val1"},{6,","},{8,",,"},{5,"val2"},{6,","},{8,",,,,"},{5,"val1"},{6,","},{8,",,,,"},{5,"val2"},{6,","},{8,",,"},{5,"msg"},{6,","},{5,"__mod__"},{6,","},{5,"__line__"},{6,")"}}
+end
+do
+   local info = {}
+   __macroName2InfoMap[ 1161 ] = info
+   info.name = "_neqM"
+   info.argList = {{name="ctrl",typeId=100},{name="msg",typeId=51},{name="val1",typeId=110},{name="val2",typeId=110}}
+   info.symList = {}
+   info.tokenList = {
+   {8,",,"},{5,"ctrl"},{6,"."},{5,"checkEq"},{6,"("},{8,",,"},{5,"val1"},{6,","},{8,",,"},{5,"val2"},{6,","},{8,",,,,"},{5,"val1"},{6,","},{8,",,,,"},{5,"val2"},{6,","},{8,",,"},{5,"msg"},{6,","},{5,"__mod__"},{6,","},{5,"__line__"},{6,")"}}
+end
+do
+   local info = {}
+   __macroName2InfoMap[ 1163 ] = info
+   info.name = "_isTM"
+   info.argList = {{name="ctrl",typeId=100},{name="msg",typeId=51},{name="val",typeId=110}}
+   info.symList = {}
+   info.tokenList = {
+   {8,",,"},{5,"ctrl"},{6,"."},{5,"isTrue"},{6,"("},{8,",,"},{5,"val"},{6,","},{8,",,,,"},{5,"val"},{6,","},{8,",,"},{5,"msg"},{6,","},{5,"__mod__"},{6,","},{5,"__line__"},{6,")"}}
+end
+do
+   local info = {}
+   __macroName2InfoMap[ 1165 ] = info
+   info.name = "_isNotTM"
+   info.argList = {{name="ctrl",typeId=100},{name="msg",typeId=51},{name="val",typeId=110}}
+   info.symList = {}
+   info.tokenList = {
+   {8,",,"},{5,"ctrl"},{6,"."},{5,"isNotTrue"},{6,"("},{8,",,"},{5,"val"},{6,","},{8,",,,,"},{5,"val"},{6,","},{8,",,"},{5,"msg"},{6,","},{5,"__mod__"},{6,","},{5,"__line__"},{6,")"}}
+end
+do
+   local info = {}
+   __macroName2InfoMap[ 1167 ] = info
+   info.name = "_isNilM"
+   info.argList = {{name="ctrl",typeId=100},{name="msg",typeId=51},{name="val",typeId=110}}
+   info.symList = {}
+   info.tokenList = {
+   {8,",,"},{5,"ctrl"},{6,"."},{5,"isNil"},{6,"("},{8,",,"},{5,"val"},{6,","},{8,",,,,"},{5,"val"},{6,","},{8,",,"},{5,"msg"},{6,","},{5,"__mod__"},{6,","},{5,"__line__"},{6,")"}}
+end
+local __varName2InfoMap = {}
+_moduleObj.__varName2InfoMap = __varName2InfoMap
+local __typeInfoList = {}
+_moduleObj.__typeInfoList = __typeInfoList
+local __dependIdMap = {}
+_moduleObj.__dependIdMap = __dependIdMap
+__typeInfoList[1] = { skind = 2, parentId = 1, typeId = 1001, txt = '@lune', kind = 12, 
+children = {1003, } }
+__typeInfoList[2] = { skind = 2, parentId = 1001, typeId = 1003, txt = '@base', kind = 12, 
+children = {1005, } }
+__typeInfoList[3] = { skind = 2, parentId = 1003, typeId = 1005, txt = '@Testing', kind = 12, 
+children = {1007, 1039, 1073, 1134, 1137, 1141, 1144, 1147, 1149, 1151, 1153, 1155, 1157, 1159, 1161, 1163, 1165, 1167, } }
+__typeInfoList[4] = { skind=3, parentId = 1005, typeId = 1007, baseId = 1, txt = 'Result',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {1015, 1018, 1021, 1024, 1027, 1030, 1033, 1036}, }
+__typeInfoList[5] = { skind = 0, parentId = 1005, typeId = 1008, nilable = true, orgTypeId = 1007 }
+__typeInfoList[6] = { skind = 1, parentId = 1005, typeId = 1014, srcTypeId = 1007, mutMode = 0 }
+__typeInfoList[7] = { skind=3, parentId = 1007, typeId = 1015, baseId = 1, txt = 'outputResult',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {184}, retTypeId = {}, children = {}, }
+__typeInfoList[8] = { skind=3, parentId = 1007, typeId = 1018, baseId = 1, txt = 'err',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {51, 51, 31}, retTypeId = {}, children = {}, }
+__typeInfoList[9] = { skind=3, parentId = 1007, typeId = 1021, baseId = 1, txt = 'isTrue',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {25, 51, 52, 51, 31}, retTypeId = {26}, children = {}, }
+__typeInfoList[10] = { skind=3, parentId = 1007, typeId = 1024, baseId = 1, txt = 'isNotTrue',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {25, 51, 52, 51, 31}, retTypeId = {26}, children = {}, }
+__typeInfoList[11] = { skind=3, parentId = 1007, typeId = 1027, baseId = 1, txt = 'isNil',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {25, 51, 52, 51, 31}, retTypeId = {26}, children = {}, }
+__typeInfoList[12] = { skind=3, parentId = 1007, typeId = 1030, baseId = 1, txt = 'checkEq',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {25, 25, 51, 51, 52, 51, 31}, retTypeId = {26}, children = {}, }
+__typeInfoList[13] = { skind=3, parentId = 1007, typeId = 1033, baseId = 1, txt = 'checkNotEq',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {25, 25, 51, 51, 52, 51, 31}, retTypeId = {26}, children = {}, }
+__typeInfoList[14] = { skind=3, parentId = 1007, typeId = 1036, baseId = 1, txt = '__init',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {51, 31, 31}, retTypeId = {}, children = {}, }
+__typeInfoList[15] = { skind=3, parentId = 1005, typeId = 1039, baseId = 1, txt = 'Ctrl',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {1046, 1049, 1052, 1055, 1058, 1061, 1064, 1067, 1070}, }
+__typeInfoList[16] = { skind = 0, parentId = 1005, typeId = 1040, nilable = true, orgTypeId = 1039 }
+__typeInfoList[17] = { skind=3, parentId = 1039, typeId = 1046, baseId = 1, txt = 'get_result',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {1007}, children = {}, }
+__typeInfoList[18] = { skind=3, parentId = 1039, typeId = 1049, baseId = 1, txt = '__init',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {1007}, retTypeId = {}, children = {}, }
+__typeInfoList[19] = { skind=3, parentId = 1039, typeId = 1052, baseId = 1, txt = 'checkEq',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {25, 25, 51, 51, 52, 51, 31}, retTypeId = {26}, children = {}, }
+__typeInfoList[20] = { skind=3, parentId = 1039, typeId = 1055, baseId = 1, txt = 'checkNotEq',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {25, 25, 51, 51, 52, 51, 31}, retTypeId = {26}, children = {}, }
+__typeInfoList[21] = { skind=3, parentId = 1039, typeId = 1058, baseId = 1, txt = 'err',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {51, 51, 31}, retTypeId = {}, children = {}, }
+__typeInfoList[22] = { skind=3, parentId = 1039, typeId = 1061, baseId = 1, txt = 'isNil',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {25, 51, 52, 51, 31}, retTypeId = {26}, children = {}, }
+
+local __dependModuleMap = {}
+_moduleObj.__dependModuleMap = __dependModuleMap
+_moduleObj.__subModuleMap = {}
+_moduleObj.__moduleTypeId = 1005
+_moduleObj.__moduleSymbolKind = 0
+_moduleObj.__moduleMutable = true
+----- meta -----
+return _moduleObj
+```;
+   func( txt );
+}

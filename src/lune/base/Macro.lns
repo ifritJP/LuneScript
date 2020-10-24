@@ -388,7 +388,7 @@ pub fn MacroCtrl.evalMacroOp(
 
 
 pub fn MacroCtrl.importMacro(
-   macroInfoStem:&stem, macroTypeInfo:&Ast.TypeInfo,
+   macroInfoStem:&stem!, macroTypeInfo:&Ast.TypeInfo,
    typeId2TypeInfo: &Map<int,&Ast.TypeInfo> ) mut
 {
    let macroInfo, err = MacroMetaInfo._fromStem( macroInfoStem );

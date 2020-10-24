@@ -303,6 +303,10 @@ local toList = loadCode( "return function( ... ) return { ... } end" )
 _moduleObj.toList = toList
 
 
+local toListEmpty = loadCode( "return function() return {} end" )
+_moduleObj.toListEmpty = toListEmpty
+
+
 local toLuaval = loadCode( "return function( val ) return val end" )
 _moduleObj.toLuaval = toLuaval
 
@@ -713,7 +717,7 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
             end
             
          else
-            valList = _moduleObj.toList(  )
+            valList = _moduleObj.toListEmpty(  )
          end
       end
       
@@ -803,9 +807,10 @@ function MacroCtrl:regist( node, macroScope )
 end
 
 
-local function expandVal( tokenList, val, pos )
+local function expandVal( tokenList, workval, pos )
 
-   if val ~= nil then
+   if workval ~= nil then
+      local val = workval
       do
          local _switchExp = type( val )
          if _switchExp == "boolean" then

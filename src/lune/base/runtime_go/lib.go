@@ -39,11 +39,6 @@ var LnsNone interface{} = nil
 
 /**
 各モジュールを初期化する際に実行する関数。
-
-現状は特に処理しない。
-
-runtime のシンボルに何もアクセスしないと、
-ビルドエラーになるので、それを回避するために実行する。
 */
 func Lns_InitMod() {
     lua_checkstack( Lns_getVM().vm, 300 )

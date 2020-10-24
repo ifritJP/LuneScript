@@ -104,7 +104,7 @@ __test {
       }
       pub fn loadFromLnsTxt(
          importModuleInfo:frontInterface.ImportModuleInfo,
-         name:str, txt:str ): Luaval<stem>
+         name:str, txt:str ): Luaval<&stem>
       {
          Util.err( "not implements" );
       }

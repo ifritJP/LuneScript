@@ -24,7 +24,7 @@ SOFTWARE.
 
 package main
 
-//TEST:import . "lns/lune/base/runtime_go"
+import . "lns/lune/base/runtime_go"
 
 // import "runtime"
 // import "time"

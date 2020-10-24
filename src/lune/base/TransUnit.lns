@@ -3309,8 +3309,8 @@ fn TransUnit.processImport( modulePath:str ) mut :
    foreach macroInfoStem, orgTypeId in metaInfo.__macroName2InfoMap {
 
       self.macroCtrl.importMacro(
-         macroInfoStem, unwrap orgId2MacroTypeInfo[ orgTypeId ],
-         typeId2TypeInfo );
+         expandLuavalMap( macroInfoStem ),
+         unwrap orgId2MacroTypeInfo[ orgTypeId ], typeId2TypeInfo );
    }
 
 

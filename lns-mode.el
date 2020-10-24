@@ -288,12 +288,16 @@
       (beginning-of-line)
       (previous-line)
       (end-of-line)
-      (re-search-backward "[^\s \t]" (point-min) 'noerror)
-      (when (eq (char-before) 10)
-	(re-search-backward "[^\s \t]" (point-min) 'noerror))
-      (end-of-line)
-      t
-      )))
+      (if (and (eq (current-column) 1)
+	       (string-match "[^\s \t]"
+			     (buffer-substring-no-properties (1- (point)) (point))))
+	  t
+	(re-search-backward "[^\s \t]" (point-min) 'noerror)
+	(when (eq (char-before) 10)
+	  (re-search-backward "[^\s \t]" (point-min) 'noerror))
+	(end-of-line)
+	t
+	))))
 
 
 (defun lns-indent-search-block (pattern)

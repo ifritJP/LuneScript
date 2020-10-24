@@ -5669,6 +5669,10 @@ immutableTypeSet[_moduleObj.builtinTypeString]= true
 local function failCreateLuavalWith( typeInfo, convFlag )
 
    
+   if isExtType( typeInfo ) then
+      return nil, true
+   end
+   
    local mess = string.format( "not support to use the type as Luaval -- %s", typeInfo:getTxt(  ))
    do
       local _switchExp = typeInfo:get_kind()
@@ -6921,7 +6925,7 @@ function ExtTypeInfo:applyGeneric( alt2typeMap, moduleTypeInfo )
 
    local typeInfo = self.extedType:applyGeneric( alt2typeMap, moduleTypeInfo )
    if typeInfo ~= self.extedType then
-      Util.err( string.format( "not support generic -- %s", self.extedType:getTxt(  )) )
+      Util.err( string.format( "not support generics -- %s", self.extedType:getTxt(  )) )
    end
    
    return self
@@ -7733,12 +7737,13 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
 
    
    
+   
+   local warnMess = nil
    local function checkDstTypeFrom( index, srcType, srcType2nd )
    
       local workExpType = srcType
       for dstIndex = index, #dstTypeList do
          local workDstType = dstTypeList[dstIndex]
-         local matchResult = MatchType.Match
          if not workDstType:canEvalWith( workExpType, CanEvalType.SetOp, alt2type ) then
             local message = string.format( "exp(%d) type mismatch %s <- %s: dst %d", dstIndex, workDstType:getTxt( _moduleObj.defaultTypeNameCtrl ), workExpType:getTxt( _moduleObj.defaultTypeNameCtrl ), dstIndex)
             return MatchType.Error, message
@@ -7746,9 +7751,6 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
             return MatchType.Warn, Code.format( Code.ID.nothing_define_abbr, string.format( "use '##', instate of '%s'.", workDstType:getTxt( _moduleObj.defaultTypeNameCtrl )) )
          end
          
-         
-         if matchResult ~= MatchType.Match then
-         end
          
          workExpType = srcType2nd
       end
@@ -7787,6 +7789,10 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
                return MatchType.Warn, workMess
             end
             
+         end
+         
+         if dstType ~= _moduleObj.builtinTypeEmpty and not isExtType( dstType:get_srcTypeInfo():get_nonnilableType() ) and isExtType( expType:get_srcTypeInfo():get_nonnilableType() ) then
+            warnMess = string.format( "%s <- %s", dstType:getTxt(  ), expType:getTxt(  ))
          end
          
          
@@ -7838,6 +7844,10 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
                
             end
             
+            if dstType ~= _moduleObj.builtinTypeEmpty and not isExtType( dstType:get_srcTypeInfo():get_nonnilableType() ) and isExtType( expType:get_srcTypeInfo():get_nonnilableType() ) then
+               warnMess = string.format( "%s <- %s", dstType:getTxt(  ), expType:getTxt(  ))
+            end
+            
             
             break
          elseif #expTypeList == index then
@@ -7871,6 +7881,10 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
                
             end
             
+            if dstType ~= _moduleObj.builtinTypeEmpty and not isExtType( dstType:get_srcTypeInfo():get_nonnilableType() ) and isExtType( expType:get_srcTypeInfo():get_nonnilableType() ) then
+               warnMess = string.format( "%s <- %s", dstType:getTxt(  ), expType:getTxt(  ))
+            end
+            
             
             break
          else
@@ -7887,6 +7901,10 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
                   return MatchType.Warn, workMess
                end
                
+            end
+            
+            if dstType ~= _moduleObj.builtinTypeEmpty and not isExtType( dstType:get_srcTypeInfo():get_nonnilableType() ) and isExtType( expType:get_srcTypeInfo():get_nonnilableType() ) then
+               warnMess = string.format( "%s <- %s", dstType:getTxt(  ), expType:getTxt(  ))
             end
             
             
@@ -7906,6 +7924,12 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
       
       
    end
+   
+   
+   if warnMess ~= nil then
+      return MatchType.Warn, warnMess
+   end
+   
    
    return MatchType.Match, ""
 end
@@ -8480,7 +8504,7 @@ IdType.__allList[2] = IdType.Ext
 local function switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 6505, function (  )
+   Log.log( Log.Level.Trace, __func__, 6518, function (  )
    
       return "start"
    end )
@@ -8500,7 +8524,7 @@ local builtinTypeInfo2Map = typeInfo2Map:clone(  )
 local function pushProcessInfo( processInfo )
    local __func__ = '@lune.@base.@Ast.pushProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6517, function (  )
+   Log.log( Log.Level.Trace, __func__, 6530, function (  )
    
       return "start"
    end )
@@ -8535,7 +8559,7 @@ _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
    local __func__ = '@lune.@base.@Ast.popProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6543, function (  )
+   Log.log( Log.Level.Trace, __func__, 6556, function (  )
    
       return "start"
    end )

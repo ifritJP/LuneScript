@@ -124,7 +124,7 @@ LuneScript のコード文字列からロードする。
 @return stem ロードしたモジュール。
    */
    pub fn loadFromLnsTxt(
-      importModuleInfo:ImportModuleInfo, name:str, txt:str ): Luaval<stem>;
+      importModuleInfo:ImportModuleInfo, name:str, txt:str ): Luaval<&stem>;
    pub fn searchModule( mod:str ): str!;
    pub fn error( message:str );
 }
@@ -145,7 +145,7 @@ class dummyFront extend (frontInterface) {
       error( "not implements" );
    }
    pub fn loadFromLnsTxt(
-      importModuleInfo:ImportModuleInfo, name:str, txt:str ): Luaval<stem>
+      importModuleInfo:ImportModuleInfo, name:str, txt:str ): Luaval<&stem>
    {
       error( "not implements" );
    }
@@ -168,7 +168,7 @@ pub fn loadModule( mod:str ): Luaval<&stem>!, Luaval<&stem> {
 }
 
 pub fn loadFromLnsTxt(
-   importModuleInfo:ImportModuleInfo, name:str, txt:str ): Luaval<stem>
+   importModuleInfo:ImportModuleInfo, name:str, txt:str ): Luaval<&stem>
 {
    return __luneScript.loadFromLnsTxt( importModuleInfo, name, txt );
 }

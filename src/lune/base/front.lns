@@ -144,7 +144,7 @@ loadedMap で管理する前にシステムにロードされているため、
    pub fn loadMeta(
       importModuleInfo:frontInterface.ImportModuleInfo, mod:str ) mut: Luaval<&stem>!;
    pub fn loadFromLnsTxt( importModuleInfo:frontInterface.ImportModuleInfo,
-                          name:str, txt:str ): Luaval<stem>;
+                          name:str, txt:str ): Luaval<&stem>;
    pub fn searchModule( mod:str ): str!;
    pub fn error( message:str );
 }
@@ -208,7 +208,7 @@ fn Front.convert(
    ast.$node.processFilter( conv, new convLua.Opt( ast.$node ) );
 }
 
-fn loadFromChunk( chunk:Luaval<form>!, err:str! ): Luaval<stem>! {
+fn loadFromChunk( chunk:Luaval<form>!, err:str! ): Luaval<&stem>! {
    when! err {
       Util.errorLog( err );
    }
@@ -221,7 +221,7 @@ fn loadFromChunk( chunk:Luaval<form>!, err:str! ): Luaval<stem>! {
    error( "failed to error" );
 }
 
-fn loadFromLuaTxt( txt:str ): Luaval<stem>! {
+fn loadFromLuaTxt( txt:str ): Luaval<&stem>! {
    //--print( txt )
    return loadFromChunk( _load( txt ## )** );
 }
@@ -250,7 +250,7 @@ fn Front.convertFromAst(
 マクロ解析用
 */
 fn Front.loadFromLnsTxt(
-   importModuleInfo:frontInterface.ImportModuleInfo, name:str, txt:str ): Luaval<stem>
+   importModuleInfo:frontInterface.ImportModuleInfo, name:str, txt:str ): Luaval<&stem>
 {
    let mut transUnit = new TransUnit.TransUnit(
       frontInterface.ModuleId.tempId,
@@ -286,7 +286,8 @@ pub static fn MetaForBuildId.LoadFromMeta( metaPath:str ): &MetaForBuildId!, str
       let luaCode = fileObj.read( "*a" );
       fileObj.close();
       when! luaCode {
-         let meta = MetaForBuildId._fromStem( loadFromLuaTxt( luaCode ) );
+         let meta = MetaForBuildId._fromStem(
+            expandLuavalMap( loadFromLuaTxt( luaCode )) );
          return meta, luaCode;
       }
    }
