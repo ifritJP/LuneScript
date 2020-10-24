@@ -29,31 +29,90 @@ import "io"
 import "bytes"
 import "strings"
 import "fmt"
+import "bufio"
+
 
 type Lns_iStream interface {
     Read( arg LnsAny ) LnsAny
     Close()
 }
+
+type LnsReader struct {
+    bufReader *bufio.Reader
+    orgReader io.Reader
+}
+
+func NewLnsReader( reader io.Reader ) *LnsReader {
+    lnsReader := LnsReader{}
+    lnsReader.orgReader = reader
+    lnsReader.bufReader = nil
+    return &lnsReader
+}
+
+func (self *LnsReader) Sync() {
+    self.bufReader = nil
+}
+
+func (self *LnsReader) Read( arg LnsAny) LnsAny {
+    if self.bufReader == nil {
+        self.bufReader = bufio.NewReader( self.orgReader )
+    }
+    
+    switch arg.(type) {
+    case string:
+        mode := arg.(string)
+        switch mode {
+        case "*a":
+            buffer := bytes.Buffer{}
+            buffer.Reset()
+
+            buf := make([]byte,1024 * 100)
+
+            for {
+                readSize, err := self.bufReader.Read( buf )
+                if err == io.EOF {
+                    break
+                }
+                
+                buffer.Write( buf[:readSize] )
+            }
+
+            ret := buffer.Bytes()
+            if len( ret ) == 0 {
+                return nil
+            }
+            return string(ret)
+        case "*l":
+            buf, err := self.bufReader.ReadBytes( '\n' )
+            if err == io.EOF {
+                return nil
+            }
+            // 改行を除外して返す
+            return string( buf[ : len( buf ) - 1 ] )
+        default:
+            panic( fmt.Sprintf( "not support -- %s", mode ) );
+        }
+    case LnsInt:
+        buf := make([]byte, arg.(LnsInt) )
+        _, err := self.bufReader.Read( buf )
+        if err == io.EOF {
+            return nil
+        }
+        return string( buf )
+    default:
+        panic( fmt.Sprintf( "not support -- %s", arg ) );
+    }
+}
+
+
 type Lns_stdin_t struct {
+    reader *LnsReader
     FP Lns_iStream
 }
 var Lns_io_stdin *Lns_stdin_t
 
 func (self *Lns_stdin_t) Read( arg LnsAny) LnsAny {
-    buffer := bytes.Buffer{}
-    buffer.Reset()
-
-    buf := make([]byte,1024 * 100)
-
-    for {
-        readSize, err := os.Stdin.Read( buf )
-        if err == io.EOF {
-            break
-        }
-        buffer.Write( buf[:readSize] )
-    }
-    
-    return string(buffer.Bytes())
+    return self.reader.Read( arg )
 }
 func (self *Lns_stdin_t) Close() {
 }
@@ -98,6 +157,8 @@ type Lns_luaStream interface {
 
 type Lns_FileObj_t struct {
     fileObj *os.File
+    reader *LnsReader
+    
     FP Lns_luaStream
 }
 
@@ -112,17 +173,11 @@ func Lns_io_open( path string, mode LnsAny ) (LnsAny,LnsAny) {
     flag := 0
     
     if strings.Index( modeStr, "a" ) != -1 || strings.Index( modeStr, "w" ) != -1 {
+        // a, w いずれかの場合
+        flag |= os.O_RDWR
         if strings.Index( modeStr, "a" ) == -1 {
             // a がなければ create
             flag |= os.O_CREATE
-        }
-        // a, w いずれかの場合
-        if strings.Index( modeStr, "r" ) == -1 {
-            // r がないなら write only
-            flag |= os.O_WRONLY
-        } else {
-            // r があれば read/write
-            flag |= os.O_RDWR
         }
         if strings.Index( modeStr, "a" ) != -1 && strings.Index( modeStr, "+" ) != -1 {
             // a+ は append
@@ -137,29 +192,18 @@ func Lns_io_open( path string, mode LnsAny ) (LnsAny,LnsAny) {
     if fileObj, err := os.OpenFile( path, flag, 0666 ); err != nil {
         return nil, err.Error()
     } else {
-        obj := &Lns_FileObj_t{ fileObj, nil }
+        obj := &Lns_FileObj_t{ fileObj, nil, nil }
+        obj.reader = NewLnsReader( fileObj )
         obj.FP = obj
         return obj, nil
     }
 }
 
 func (self *Lns_FileObj_t) Read( arg LnsAny) LnsAny {
-    buffer := bytes.Buffer{}
-    buffer.Reset()
-
-    buf := make([]byte,1024 * 100)
-
-    for {
-        readSize, err := self.fileObj.Read( buf )
-        if err == io.EOF {
-            break
-        }
-        buffer.Write( buf[:readSize] )
-    }
-    
-    return string(buffer.Bytes())
+    return self.reader.Read( arg )
 }
 func (self *Lns_FileObj_t) Write( arg string ) (LnsAny, LnsAny) {
+    self.reader.Sync()
     _, err := self.fileObj.Write( []byte(arg) )
     return self, err
 }
@@ -173,6 +217,8 @@ func (self *Lns_FileObj_t) Flush() {
     self.fileObj.Sync()
 }
 func (self *Lns_FileObj_t) Seek( kind string, pos LnsInt ) (LnsAny, LnsAny) {
+    self.reader.Sync()
+    
     var ret int64
     var err error
     switch kind {
@@ -197,6 +243,7 @@ func (self *Lns_FileObj_t) Seek( kind string, pos LnsInt ) (LnsAny, LnsAny) {
 func init() {
     Lns_io_stdin = &Lns_stdin_t{}
     Lns_io_stdin.FP = Lns_io_stdin;
+    Lns_io_stdin.reader = NewLnsReader( os.Stdin )
     Lns_io_stdout = &Lns_stdout_t{}
     Lns_io_stdout.FP = Lns_io_stdout
     Lns_io_stderr = &Lns_stdout_t{}

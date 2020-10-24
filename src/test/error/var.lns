@@ -52,8 +52,6 @@
    }
 }
 
-
-
 pub let var = 1;
 {
    pub let var2 = 1;  // error

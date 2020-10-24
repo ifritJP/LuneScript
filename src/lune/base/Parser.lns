@@ -371,7 +371,7 @@ pub class StreamParser extend Parser {
    }
 
    pub static fn create( path: str, luaMode: bool, moduleName:str ): StreamParser! {
-      let mut stream = new TxtStream( StreamParser.stdinTxt );
+      let mut stream:iStream = new TxtStream( StreamParser.stdinTxt );
       if StreamParser.stdinStreamModuleName ~= moduleName {
          unwrap! stream = io.open( path, "r" ) {
             return nil;

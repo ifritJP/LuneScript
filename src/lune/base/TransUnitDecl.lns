@@ -3013,7 +3013,7 @@ let で宣言している変数シンボル、型、初期値の型情報を解�
 @return Nodes.ExpListNode! 初期値の ExpListNode。初期値が与えられていない場合は nil。
 */
 fn TransUnit.analyzeLetAndInitExp(
-   firstPos:&Parser.Position, initMutable:Ast.MutMode,
+   firstPos:&Parser.Position, letFlag:bool, initMutable:Ast.MutMode,
    accessMode:Ast.AccessMode, unwrapFlag:bool ) mut :
    List<&Ast.TypeInfo>, &List<&LetVarInfo>, &List<&Ast.TypeInfo>, Nodes.ExpListNode!
 {
@@ -3024,38 +3024,58 @@ fn TransUnit.analyzeLetAndInitExp(
 
    let mut nextToken = Parser.getEofToken();
 
-   repeat {
-      // 変数名と : で明示している型情報を取得。
-      let mut mutable = initMutable;
-      nextToken = self.getToken(##);
-      if nextToken.txt == "mut" {
-         mutable = .Mut;
+   if letFlag {
+      repeat {
+         // 変数名と : で明示している型情報を取得。
+         let mut mutable = initMutable;
          nextToken = self.getToken(##);
-      }
-      let varName = self.checkSymbol( nextToken, .MustNot_Or_ );
-      nextToken = self.getToken(##);
-      let mut typeInfo = Ast.builtinTypeEmpty;
-      if nextToken.txt == ":" {
-         // 型を明示している場合
-         let refType = self.analyzeRefType(
-            accessMode, false, Ast.isPubToExternal( accessMode ));
-         letVarList.insert( new LetVarInfo( mutable, varName, refType ) );
-         typeInfo = refType.$expType;
+         if nextToken.txt == "mut" {
+            mutable = .Mut;
+            nextToken = self.getToken(##);
+         }
+         let varName = self.checkSymbol( nextToken, .MustNot_Or_ );
          nextToken = self.getToken(##);
+         let mut typeInfo = Ast.builtinTypeEmpty;
+         if nextToken.txt == ":" {
+            // 型を明示している場合
+            let refType = self.analyzeRefType(
+               accessMode, false, Ast.isPubToExternal( accessMode ));
+            letVarList.insert( new LetVarInfo( mutable, varName, refType ) );
+            typeInfo = refType.$expType;
+            nextToken = self.getToken(##);
+         }
+         else {
+            // 型を明示していない場合、 mut でなければ .IMutRe とする
+            letVarList.insert(
+               new LetVarInfo( Ast.isMutable( mutable ) and mutable or Ast.MutMode.IMutRe,
+                               varName, nil ) );
+         }
+         if not typeInfo.equals( Ast.builtinTypeEmpty ## ) and
+            Ast.TypeInfo.isMut( typeInfo ) and not Ast.isMutable( mutable )
+         {
+            typeInfo = self.createModifier( typeInfo, .IMutRe );
+         }
+         typeInfoList.insert( typeInfo );
+      } nextToken.txt ~= ",";
+   } else {
+      while true {
+         let symbolToken = self.getToken(##);
+         nextToken = self.getToken(##);
+
+         let verSym = self.scope.getSymbolTypeInfo(
+            symbolToken.txt, self.scope, self.moduleScope, self.scopeAccess );
+         when! verSym {
+            letVarList.insert( new LetVarInfo( verSym.$mutMode, symbolToken, nil ) );
+            typeInfoList.insert( verSym.$typeInfo );
+         } else {
+            self.addErrMess( symbolToken.pos,
+                             "not found symbol -- %s" (symbolToken.txt) );
+         }
+         if nextToken.txt ~= "," {
+            break;
+         }
       }
-      else {
-         // 型を明示していない場合、 mut でなければ .IMutRe とする
-         letVarList.insert(
-            new LetVarInfo( Ast.isMutable( mutable ) and mutable or Ast.MutMode.IMutRe,
-                            varName, nil ) );
-      }
-      if not typeInfo.equals( Ast.builtinTypeEmpty ## ) and
-         Ast.TypeInfo.isMut( typeInfo ) and not Ast.isMutable( mutable )
-      {
-         typeInfo = self.createModifier( typeInfo, .IMutRe );
-      }
-      typeInfoList.insert( typeInfo );
-   } nextToken.txt ~= ",";
+   }
 
    // 初期値の式を取得
    let mut expList:Nodes.ExpListNode! = nil;
@@ -3323,8 +3343,8 @@ fn TransUnit.analyzeDeclVar(
 
    let mut typeInfoList, mut letVarList, mut orgExpTypeList, mut expList =
       self.analyzeLetAndInitExp(
-         firstToken.pos, mode == .Sync and Ast.MutMode.Mut or Ast.MutMode.IMut,
-         accessMode, unwrapFlag );
+         firstToken.pos, mode == .Let,
+         mode == .Sync and Ast.MutMode.Mut or Ast.MutMode.IMut, accessMode, unwrapFlag );
 
    if mode == .Let and #typeInfoList == 1 {
       when! expList {
@@ -3531,7 +3551,7 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
 
    if nextToken.txt == "let" {
       let mut workTypeInfoList, mut letVarList, mut orgExpTypeList, workExpList =
-         self.analyzeLetAndInitExp( firstToken.pos, .IMut, .Local, true );
+         self.analyzeLetAndInitExp( firstToken.pos, true, .IMut, .Local, true );
       typeInfoList = workTypeInfoList;
       when! workExpList {
          expList = workExpList;

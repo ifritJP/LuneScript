@@ -46,6 +46,7 @@ macro _test_letunwrap() {
 { _test_letunwrap(); }
 
 macro _test_syncunwrap() {
+   let val;
    sync! val = 1 {
    }
    do {

@@ -52,38 +52,6 @@ Depend.setup( fn(ver:int) {
 
 let forceUpdateMeta = true;
 
-// global fn __luneGetLocal( varName:str ):stem!
-// {
-//    let mut index = 1;
-//    while true {
-//       let name, val = debug.getlocal( 3, index );
-//       if name == varName {
-// 	 return val;
-//       }
-//       if not name {
-// 	 break;
-//       }
-//       //print( name, val )
-//       index = index + 1;
-//    }
-//    error( "not found -- " .. varName );
-// }
-
-// global fn __luneSym2Str( val:stem! ):str! {
-//    if! val {
-//       if type( _exp ) ~= "table" {
-//          return string.format( "%s", _exp );
-//       }
-
-//       let mut txt = "";
-//       foreach item in _exp@@str[] {
-//          txt = txt .. item;
-//       }
-//       return txt;
-//    }
-//    return nil;
-// }
-
 class LoadInfo {
    pub let mut mod:Luaval<&stem>;
    pub let mut meta:Luaval<&stem>;
@@ -821,7 +789,7 @@ form CloseOStreamForConvert( stream:oStream!, metaStream:oStream!, dependStream:
 @return
 */
 pub fn Front.convertLuaToStreamFromScript(
-   convMode:convLua.ConvMode, path:str, mod:str,
+   checkUptodate:bool, convMode:convLua.ConvMode, path:str, mod:str,
    byteCompile:bool, stripDebugInfo:bool, openOStream:OpenOStreamForConvert,
    closeOStream:CloseOStreamForConvert! ) mut : &TransUnit.ASTInfo!
 {
@@ -845,7 +813,12 @@ pub fn Front.convertLuaToStreamFromScript(
 
    let mut retAst:&TransUnit.ASTInfo! = nil;
    
-   let moduleId, uptodate = self.getModuleIdAndCheckUptodate( path, mod );
+   let moduleId, uptodate;
+   if checkUptodate {
+      moduleId, uptodate = self.getModuleIdAndCheckUptodate( path, mod );
+   } else {
+      moduleId, uptodate = frontInterface.ModuleId.tempId, ModuleUptodate.NeedUpdate;
+   }
 
    let mut stream, mut metaStream, mut dependsStream = openOStream( uptodate );
 
@@ -918,7 +891,7 @@ pub fn Front.convertLuaToStreamFromScript(
    return retAst;
 }
 
-pub fn Front.convertToLua() mut {
+fn Front.convertToLua() mut {
    //frontInterface.setFront( self );
 
    let mod = scriptPath2Module( self.option.scriptPath );
@@ -928,17 +901,17 @@ pub fn Front.convertToLua() mut {
    }
 
    let ast = self.convertLuaToStreamFromScript(
-      convMode, self.option.scriptPath, mod,
+      false, convMode, self.option.scriptPath, mod,
       self.option.byteCompile, self.option.stripDebugInfo,
       fn ( mode:ModuleUptodate ): oStream!, oStream!, oStream! {
          return io.stdout, io.stdout, self.option.openDepend();
       },
-         fn ( stream:oStream!, metaStream:oStream!, dependStream:oStream! ) {
-            when! dependStream {
-               dependStream.close();
-            }
+      fn ( stream:oStream!, metaStream:oStream!, dependStream:oStream! ) {
+         when! dependStream {
+            dependStream.close();
          }
-      );
+      }
+   );
 
    when! ast {
       switch self.option.convTo {
@@ -1139,7 +1112,7 @@ oldStream, newStream に格納されているモジュールのメタ情報が�
 
 
             ast = self.convertLuaToStreamFromScript(
-               convMode, self.option.scriptPath, mod,
+               true, convMode, self.option.scriptPath, mod,
                self.option.byteCompile, self.option.stripDebugInfo,
                fn ( mode:ModuleUptodate ): oStream!, oStream!, oStream!
                {
@@ -1360,4 +1333,6 @@ pub fn exec( args: &List<str> ) {
 __test case1(ctrl) {
    let luaCode = convertLnsCode2LuaCode( convLua.getTestLnsCode(), "test.lns" );
    convLua.runTestCode( ctrl, luaCode );
+
+   exec( [ "lune/base/Ver.lns", "lua" ] );
 }

@@ -29,6 +29,7 @@
 }
 
 {
+   let val1, val2;
    sync! val1, val2 = 1, 2 {
       val1 = 1;
       val2 = 2;

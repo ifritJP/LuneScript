@@ -88,10 +88,9 @@ func (luaVM *Lns_luaVM) string_call_setup(
 }
 
 
-func (self *lns_callInfoString) call( luaVM *Lns_luaVM, retNum int ) []LnsAny {
-    now := int(lua_gettop( luaVM.vm ))
-
-    ret := luaVM.lua_call( self.top, now - self.top - 2, retNum )
+func (self *lns_callInfoString) call(
+    luaVM *Lns_luaVM, argNum int, retNum int ) []LnsAny {
+    ret := luaVM.lua_call( self.top, argNum, retNum )
 
     self.end()
     
@@ -126,7 +125,7 @@ func (luaVM *Lns_luaVM) String_format( format string, ddd []LnsAny ) string {
         }
     }
 
-    return callInfo.call( luaVM, 1 )[0].(string)
+    return callInfo.call( luaVM, 1 + len( ddd ), 1 )[0].(string)
 }
 
 func (luaVM *Lns_luaVM) String_gsub(
@@ -139,7 +138,7 @@ func (luaVM *Lns_luaVM) String_gsub(
     pDst := luaVM.pushStr( dst )
     defer pDst.free()
 
-    ret := callInfo.call( luaVM, 2 );
+    ret := callInfo.call( luaVM, 3, 2 );
     return ret[0].(string), LnsInt(ret[1].(int))
 }
 
@@ -153,7 +152,7 @@ func (luaVM *Lns_luaVM) String_find(
     luaVM.pushAny( index )
     luaVM.pushAny( plain )
     
-    ret := callInfo.call( luaVM, 2 )
+    ret := callInfo.call( luaVM, 4, 2 )
     return Lns_getFromMulti( ret, 0 ), Lns_getFromMulti( ret, 1 )
 }
 
@@ -165,7 +164,7 @@ func (luaVM *Lns_luaVM) String_byte(
     luaVM.pushAny( from )
     luaVM.pushAny( to )
     
-    ret := callInfo.call( luaVM, cLUA_MULTRET )
+    ret := callInfo.call( luaVM, 3, cLUA_MULTRET )
     return ret
 }
 
@@ -183,7 +182,7 @@ func (luaVM *Lns_luaVM) String_sub( txt string, from LnsInt, to LnsAny ) string 
 
     luaVM.pushAny( from )
     luaVM.pushAny( to )
-    return callInfo.call( luaVM, 1 )[0].(string)
+    return callInfo.call( luaVM, 3, 1 )[0].(string)
 }
 
 func (luaVM *Lns_luaVM) String_lower( txt string ) string {
@@ -196,7 +195,7 @@ func (luaVM *Lns_luaVM) String_upper( txt string ) string {
 
 func (luaVM *Lns_luaVM) String_reverse( txt string ) string {
     callInfo := luaVM.string_call_setup( lns_c_ptr_reverse, txt )
-    return callInfo.call( luaVM, 1 )[0].(string)
+    return callInfo.call( luaVM, 1, 1 )[0].(string)
 }
 
 
@@ -207,7 +206,7 @@ func (luaVM *Lns_luaVM) String_gmatch( txt string, pat string ) (LnsAny, LnsAny,
     pSrc := luaVM.pushStr( pat )
     defer pSrc.free()
     
-    ret := callInfo.call( luaVM, 3 )
+    ret := callInfo.call( luaVM, 2, 3 )
     return Lns_getFromMulti( ret, 0 ),Lns_getFromMulti( ret, 1 ),Lns_getFromMulti( ret, 2 )
 }
 

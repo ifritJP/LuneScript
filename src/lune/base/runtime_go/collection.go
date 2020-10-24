@@ -56,6 +56,19 @@ func Lns_ToCollection( val LnsAny ) LnsAny {
     }
 }
 
+func Lns_FromStemGetAt( obj LnsAny, index LnsAny, nilAccess bool ) LnsAny {
+    if nilAccess {
+        if Lns_IsNil( obj ) {
+            return nil
+        }
+    }
+    if mapObj, ok := obj.(*LnsMap); ok {
+        return mapObj.Items[ index ]
+    }
+    return obj.(*LnsList).Items[ index.(LnsInt) - 1 ]
+}
+
+
 // ======== list ========
 
 const (
@@ -249,7 +262,7 @@ func (lnsList *LnsList) Remove( index LnsAny ) LnsAny {
         lnsList.Items = lnsList.Items[ : len(lnsList.Items) - 1 ]
         return ret
     } else {
-        work := index.(LnsInt)
+        work := index.(LnsInt) - 1
         ret := lnsList.Items[ work ]
         lnsList.Items =
             append( lnsList.Items[ : work ], lnsList.Items[ work+1: ]... )

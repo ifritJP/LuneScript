@@ -29,7 +29,7 @@ import "C"
 
 import "unsafe"
 import "fmt"
-import "runtime"
+//import "runtime"
 import "strings"
 
 var lns_globalValSym *C.char
@@ -174,7 +174,8 @@ func (luaVM *Lns_luaVM) newLuaValue( index int, typeId int ) *Lns_luaValue {
     
     val := &Lns_luaValue{ luaVM: luaVM, typeId: typeId }
     val.sym = C.CString( fmt.Sprintf( "%p", &val ) )
-    runtime.SetFinalizer( val, func (obj *Lns_luaValue) { obj.free() } )
+    // pending: gc と 他の lua の処理が被ることがあるっぽい
+    //runtime.SetFinalizer( val, func (obj *Lns_luaValue) { obj.free() } )
     val.setValToGlobalValMap( index )
     return val
 }
@@ -248,6 +249,7 @@ func (luaVM *Lns_luaVM) setupFromStack( index int, passTable bool ) LnsAny {
  * @param Lua 関数の戻り値。
  */
 func (luaVM *Lns_luaVM) lua_call( stackBase int , argNum int, retNum int ) []LnsAny {
+
     argTop := int(lua_gettop( luaVM.vm )) - argNum
     lua_callk( luaVM.vm, argNum, cLUA_MULTRET )
 
@@ -316,8 +318,6 @@ func (luaValue *Lns_luaValue) setValToGlobalValMap( index int ) {
     }
     // スタックトップの値を globalVal[ symbol ] にセットし、スタックトップは削除。
     lua_setfield( vm, -2, luaValue.sym )
-    // globalVal をスタックから除外
-    lua_pop( vm, 1 )
 }
 
 /**

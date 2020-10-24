@@ -12,6 +12,21 @@
    if! let val1 = val2 {  // error
    }
 }
+{
+   class Test {
+   }
+   class Sub1 extend Test {
+   }
+   class Sub2 extend Test {
+   }
+   fn func() : Sub2! {
+      return new Sub2();
+   }
+   let mut sub = new Sub1();
+   unwrap! sub = func() { // error
+      sub = new Sub1();
+   };
+}
 
 {
    fn sub():int! {

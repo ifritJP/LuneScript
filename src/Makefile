@@ -1067,7 +1067,6 @@ GO_WORK_DIR = work/go
 # $4: 出力先ディレクトリ
 define convGo
 	$(call exeLune,$1,$2.lns,SAVE -langGo,$3 $4)
-	if [ "$4" != "" ]; then cp $1/$4/$2.go $1/$2.go ; fi
 endef
 
 define setup-go
@@ -1099,6 +1098,7 @@ endef
 test-miniGo:
 	$(call transwork,.,.,,base/convGo)
 	$(call setup-go,$(GO_WORK_DIR))
+	-rm $(GO_WORK_DIR)/*.*
 	$(call test-go-one,$(GO_WORK_DIR),miniGo,.)
 	cat work/result-testGo.txt
 
@@ -1206,6 +1206,60 @@ test-subgo:
 
 	$(call test-convGo-test,$(GO_WORK_DIR),front,lune/base,./test)
 
+
+go-build:
+	rm -rf $(GO_WORK_DIR)
+	$(call setup-go,$(GO_WORK_DIR))
+	$(call setup-go,$(GO_WORK_DIR)/test)
+
+	$(call convGo,$(GO_WORK_DIR),lune/base/Testing,,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/Ver,,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/Code,,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/LuaMod,,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/LuaVer,,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/LuneControl,,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/Meta,,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/Util,,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/Parser,,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/Writer,,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/frontInterface,,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/Log,,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/Ast,,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/Option,,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/Nodes,,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/Formatter,,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/Macro,,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/TransUnit,,./test)
+#	$(call convGo,$(GO_WORK_DIR),lune/base/DependLuaOnLns,,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/convLua,,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/dumpNode,,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/convCC,,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/convGo,,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/OutputDepend,,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/glueFilter,,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/front,,./test)
+
+	cp lune/base/runtime_go/main/lnsc_main.go $(GO_WORK_DIR)/test
+	(cd $(GO_WORK_DIR)/test; go mod init lns)
+	(cd $(GO_WORK_DIR)/test; go build)
+
+
+define test-govslua-comp
+	(cd $1; ./lns lune/base/$2.lns SAVE $3)
+	(cd $1; LUA_PATH=./?.lua $(LUA) lune/base/base.lua lune/base/$2.lns SAVE $4)
+	(cd $1; diff $4/lune/base/$2.lua $3/lune/base/$2.lua)
+	(cd $1; diff $4/lune/base/$2.meta $3/lune/base/$2.meta)
+endef
+
+test-govslua:
+	mkdir -p $(GO_WORK_DIR)/test/go
+	(cd $(GO_WORK_DIR); find lune -type d | (cd test/go; xargs mkdir -p))
+	mkdir -p $(GO_WORK_DIR)/test/lua
+	(cd $(GO_WORK_DIR); find lune -type d | (cd test/lua; xargs mkdir -p))
+	$(call test-govslua-comp,$(GO_WORK_DIR)/test,Ver,./go,./lua)
+	$(call test-govslua-comp,$(GO_WORK_DIR)/test,Code,./go,./lua)
+	$(call test-govslua-comp,$(GO_WORK_DIR)/test,LuaMod,./go,./lua)
+	$(call test-govslua-comp,$(GO_WORK_DIR)/test,LuaVer,./go,./lua)
 
 
 test-reference:

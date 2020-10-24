@@ -1617,3 +1617,25 @@ return _moduleObj
 ```;
    func( txt );
 }
+_section();
+{
+   fn func( obj:stem ) {
+      print( obj[ 1 ] );
+   }
+   fn func2( obj:stem! ) {
+      print( obj$[ 1 ] );
+   }
+   func( [ "a", "b" ] );
+   func( { 1:"a", 2:"b" } );
+   func2( [ "a", "b" ] );
+   func2( { 1:"a", 2:"b" } );
+   func2( nil );
+}
+_section();
+{
+   if! let mut fileObj = io.open( "hoge", "w" ) {
+      fileObj.write( "aaaa" );
+      fileObj.seek( "set", 0 );
+      fileObj.read( "*a" );
+   }
+}

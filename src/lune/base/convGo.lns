@@ -1299,7 +1299,7 @@ pub override fn convFilter.processConvStat(
 
 fn convFilter.outputTopScopeVar( node: &Nodes.DeclVarNode ) mut {
    foreach symbolInfo in node.$symbolInfoList {
-      if symbolInfo.$scope == self.moduleScope {
+      if symbolInfo.$scope == self.moduleScope and node.$mode == .Let {
          self.writeln( "var %s %s" ( self.getSymbolSym( symbolInfo ),
                                      self.type2gotype( symbolInfo.$typeInfo ) ) );
       }
@@ -2332,7 +2332,7 @@ pub override fn convFilter.processDeclVar(
 
          fn setVals() {
             foreach varSym, index in node.$symbolInfoList {
-               self.write( "%s = _%s" (varSym.$name, varSym.$name) );
+               self.write( "%s = _%s" (self.getSymbolSym( varSym ), varSym.$name) );
                if expList.getExpTypeAt( index ).$nilable {
                   self.outputAny2Type( varSym.$typeInfo );
                }
@@ -4582,7 +4582,7 @@ pub override fn convFilter.processExpRefItem(
             self.outputStem2Type( node.$expType );
          }
       }
-      case .Map, .Stem {
+      case .Map {
          if node.$nilAccess {
             self.write( "Lns_NilAccFin( Lns_NilAccPush( " );
             filter( node.$val, self, node );
@@ -4605,6 +4605,18 @@ pub override fn convFilter.processExpRefItem(
          if node.$nilAccess {
             self.write( "))" );
          }
+      }
+      case .Stem {
+         self.write( "Lns_FromStemGetAt(" );
+         filter( node.$val, self, node );
+         self.write( "," );
+         if! let index = node.$index {
+            filter( index, self, node );
+         } else {
+            self.write( '"%s"' (str2gostr( unwrap node.$symbol)) );
+         }
+         self.write( ", %s )" (node.$nilAccess) );
+         self.outputStem2Type( node.$expType );
       }
       default {
          if prefixType == Ast.builtinTypeString {

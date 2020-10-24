@@ -1788,7 +1788,7 @@ end
 function convFilter:outputTopScopeVar( node )
 
    for __index, symbolInfo in ipairs( node:get_symbolInfoList() ) do
-      if symbolInfo:get_scope() == self.moduleScope then
+      if symbolInfo:get_scope() == self.moduleScope and node:get_mode() == Nodes.DeclVarMode.Let then
          self:writeln( string.format( "var %s %s", self:getSymbolSym( symbolInfo ), self:type2gotype( symbolInfo:get_typeInfo() )) )
       end
       
@@ -3100,7 +3100,7 @@ function convFilter:processDeclVar( node, opt )
          local function setVals(  )
          
             for index, varSym in ipairs( node:get_symbolInfoList() ) do
-               self:write( string.format( "%s = _%s", varSym:get_name(), varSym:get_name()) )
+               self:write( string.format( "%s = _%s", self:getSymbolSym( varSym ), varSym:get_name()) )
                if expList:getExpTypeAt( index ):get_nilable() then
                   self:outputAny2Type( varSym:get_typeInfo() )
                end
@@ -5691,7 +5691,7 @@ function convFilter:processExpRefItem( node, opt )
             self:outputStem2Type( node:get_expType() )
          end
          
-      elseif _switchExp == Ast.TypeInfoKind.Map or _switchExp == Ast.TypeInfoKind.Stem then
+      elseif _switchExp == Ast.TypeInfoKind.Map then
          if node:get_nilAccess() then
             self:write( "Lns_NilAccFin( Lns_NilAccPush( " )
             filter( node:get_val(), self, node )
@@ -5722,6 +5722,21 @@ function convFilter:processExpRefItem( node, opt )
             self:write( "))" )
          end
          
+      elseif _switchExp == Ast.TypeInfoKind.Stem then
+         self:write( "Lns_FromStemGetAt(" )
+         filter( node:get_val(), self, node )
+         self:write( "," )
+         do
+            local index = node:get_index()
+            if index ~= nil then
+               filter( index, self, node )
+            else
+               self:write( string.format( '"%s"', str2gostr( _lune.unwrap( node:get_symbol()) )) )
+            end
+         end
+         
+         self:write( string.format( ", %s )", node:get_nilAccess()) )
+         self:outputStem2Type( node:get_expType() )
       else 
          
             if prefixType == Ast.builtinTypeString then
@@ -5840,7 +5855,7 @@ function convFilter:processRefField( node, opt )
    end
    
    
-   for _6799 = 1, openParenNum do
+   for _6800 = 1, openParenNum do
       self:write( ")" )
    end
    

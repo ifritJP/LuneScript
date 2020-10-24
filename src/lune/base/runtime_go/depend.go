@@ -38,11 +38,11 @@ path の最終更新日時を取得する。
 @return 1970/1/1 0:0:0 からの秒数。 取得失敗した場合は nil。
 */
 func Depend_getFileLastModifiedTime( path string ) LnsAny {
-    fileinfo, err := os.Stat( "miniGo.lns" )
+    fileinfo, err := os.Stat( path )
     if err != nil {
         return nil
     }
-    return fileinfo.ModTime().Unix()
+    return LnsReal(fileinfo.ModTime().Unix())
 }
 
 
