@@ -1,6 +1,8 @@
 import lune.base.frontInterface;
 import lune.base.Nodes;
 
+_lune_control ignore_symbol_;
+
 pub form LoadFunc():&stem!;
 
 /**
@@ -33,4 +35,37 @@ pub fn runLuaOnLns( luaCode:str ): Luaval<LoadFunc>!, str {
       return nil, err;
    }
    return nil, "";
+}
+
+
+global fn __luneGetLocal( varName:str ):stem!
+{
+   let mut index = 1;
+   while true {
+      let name, val = debug.getlocal( 3, index );
+      if name == varName {
+	 return val;
+      }
+      if not name {
+	 break;
+      }
+      //print( name, val )
+      index = index + 1;
+   }
+   error( "not found -- " .. varName );
+}
+
+global fn __luneSym2Str( val:stem! ):str! {
+   if! val {
+      if type( _exp ) ~= "table" {
+         return string.format( "%s", _exp );
+      }
+
+      let mut txt = "";
+      foreach item in _exp@@str[] {
+         txt = txt .. item;
+      }
+      return txt;
+   }
+   return nil;
 }

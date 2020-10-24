@@ -380,10 +380,16 @@ pub fn glueGenerator.outputClass(
 
 class glueFilter extend Nodes.Filter<int> {
    let outputDir:str!;
+   
+   
+   local fn __init( outputDir:str! ) {
+      super( false, nil, nil );
+      self.outputDir = outputDir;
+   }
 }
 
 pub fn createFilter( outputDir:str! ): Nodes.Filter<int> {
-   return new glueFilter( false, nil, nil, outputDir );
+   return new glueFilter( outputDir );
 }
 
 pub override fn glueFilter.processRoot( node: &Nodes.RootNode, dummy:int ) mut

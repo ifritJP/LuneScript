@@ -36,12 +36,14 @@ type LnsAny = interface{}
 type LnsForm func( []LnsAny ) []LnsAny
 
 var LnsNone interface{} = nil
+var Lns_package_path string
 
 /**
 各モジュールを初期化する際に実行する関数。
 */
 func Lns_InitMod() {
     lua_checkstack( Lns_getVM().vm, 300 )
+    Lns_package_path = Lns_getVM().GetPackagePath()
 }
 
 func Lns_IsNil( val LnsAny ) bool {

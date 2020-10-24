@@ -36,6 +36,25 @@ func (luaVM *Lns_luaVM) RunCode( code string ) (bool,[]LnsAny, LnsAny) {
     return true, ret, nil
 }
 
+func (luaVM *Lns_luaVM) GetEmptyMap() *Lns_luaValue {
+    code := "return {}"
+    ok, ret, mess := luaVM.RunCode( code )
+    if !ok {
+        panic( mess )
+    }
+    return ret[0].(*Lns_luaValue)
+}
+
+func (luaVM *Lns_luaVM) GetPackagePath() string {
+    code := "return package.path"
+    ok, ret, mess := luaVM.RunCode( code )
+    if !ok {
+        panic( mess )
+    }
+    return ret[0].(string)
+}
+
+
 func (luaVM *Lns_luaVM) SortMapKeyList( mapObj *Lns_luaValue ) *Lns_luaValue {
     code := `
 return function( map )

@@ -28,6 +28,7 @@ import "os"
 import "io"
 import "bytes"
 import "strings"
+import "fmt"
 
 type Lns_iStream interface {
     Read( arg LnsAny ) LnsAny
@@ -91,6 +92,7 @@ type Lns_luaStream interface {
     Write( arg string ) (LnsAny, LnsAny)
     Flush()
     Close()
+    Seek( kind string, pos LnsInt ) (LnsAny, LnsAny)
 }
 
 
@@ -169,6 +171,24 @@ func (self *Lns_FileObj_t) Close() {
 }
 func (self *Lns_FileObj_t) Flush() {
     self.fileObj.Sync()
+}
+func (self *Lns_FileObj_t) Seek( kind string, pos LnsInt ) (LnsAny, LnsAny) {
+    var ret int64
+    var err error
+    switch kind {
+    case "set":
+        ret, err = self.fileObj.Seek( int64(pos), os.SEEK_SET )
+    case "cur":
+        ret, err = self.fileObj.Seek( int64(pos), os.SEEK_CUR )
+    case "end":
+        ret, err = self.fileObj.Seek( int64(pos), os.SEEK_END )
+    default:
+        panic( fmt.Sprintf( "not support -- %s", kind ) )
+    }
+    if err != nil {
+        return nil, err.Error()
+    }
+    return LnsInt(ret), nil
 }
 
 

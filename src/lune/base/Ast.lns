@@ -461,6 +461,10 @@ pub class Scope extend (ModuleInfoManager) {
          self.ownerTypeInfo = owner;
       }
    }
+   pub fn switchOwnerTypeInfo( owner: &TypeInfo! ) mut {
+      self.ownerTypeInfo = owner;
+   }
+   
 
    pub fn getTypeInfoChild( name: str ) : &TypeInfo! {
       if! self.symbol2SymbolInfoMap[ name ] {
@@ -593,6 +597,10 @@ pub class TypeInfo {
    // この TypeInfo の typeId を生成した processInfo
    pri let processInfo:&ProcessInfo! {pub};
 
+   pro fn switchScope( scope: Scope ) {
+      self.scope = scope;
+      scope.switchOwnerTypeInfo( self );
+   }
 
    /**
    この TypeInfo がオーバーライドしている場合、
@@ -3497,6 +3505,9 @@ pub class NormalTypeInfo extend TypeInfo {
       }
    }
 
+   pub fn switchScopeTo( scope: Scope ) {
+      self.switchScope( scope );
+   }
    
    fn __init( abstractFlag:bool, scope: Scope!, baseTypeInfo: &TypeInfo!,
               interfaceList: &List<&TypeInfo>!,

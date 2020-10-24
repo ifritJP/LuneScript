@@ -28,15 +28,15 @@ pub class _MetaInfo {
    pub let __formatVersion:str;
    pub let __enableTest:bool;
    pub let __buildId:str;
-   pub let __typeId2ClassInfoMap: Map<int,Map<str,stem>>;
-   pub let __typeInfoList: Map<str,stem>[];
-   pub let __varName2InfoMap: Map<str,Map<str,stem>>;
-   pub let __funcName2InfoMap: Map<str,stem>;
+   pub let __typeId2ClassInfoMap: &Map<int,&Map<str,&stem>>;
+   pub let __typeInfoList: &List<&Map<str,&stem>>;
+   pub let __varName2InfoMap: &Map<str,&Map<str,&stem>>;
+   pub let __funcName2InfoMap: &Map<str,&stem>;
    pub let __moduleTypeId: int;
    pub let __moduleSymbolKind: int;
    pub let __moduleMutable: bool;
-   pub let __dependModuleMap: Map<str,Map<str,stem>>;
-   pub let __dependIdMap: Map<int,int[]>;
-   pub let __macroName2InfoMap: Map<int,stem>;
+   pub let __dependModuleMap: &Map<str,&Map<str,&stem>>;
+   pub let __dependIdMap: &Map<int,&List<int>>;
+   pub let __macroName2InfoMap: &Map<int,&stem>;
    pub let __hasTest: bool;
 }

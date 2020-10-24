@@ -2489,6 +2489,7 @@ fn TransUnit.processAddFunc(
          }
       }
       if matched {
+         (unwrap prottype@@@Ast.NormalTypeInfo).switchScopeTo( unwrap typeInfo.$scope );
          typeInfo = prottype;
       }
    }
@@ -2843,7 +2844,7 @@ fn TransUnit.analyzeDeclFunc(
       }
 
       funcBodyScope.addLocalVar(
-         false, false, "__func__", nil, Ast.builtinTypeString, .IMut );
+         false, false, "__func__", firstToken.pos, Ast.builtinTypeString, .IMut );
 
       let mut workBody = self.analyzeFuncBlock(
          analyzingState, firstToken, classTypeInfo, typeInfo,
@@ -2886,6 +2887,7 @@ fn TransUnit.analyzeDeclFunc(
       else {
          classDeclNode = nil;
       }
+      
       return new Nodes.DeclFuncInfo(
          funcKind, classTypeInfo, classDeclNode, name, funcSym,
          argList, orgStaticFlag, accessMode, body, retTypeInfoList,

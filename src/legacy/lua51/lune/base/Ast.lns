@@ -461,6 +461,10 @@ pub class Scope extend (ModuleInfoManager) {
          self.ownerTypeInfo = owner;
       }
    }
+   pub fn switchOwnerTypeInfo( owner: &TypeInfo! ) mut {
+      self.ownerTypeInfo = owner;
+   }
+   
 
    pub fn getTypeInfoChild( name: str ) : &TypeInfo! {
       if! self.symbol2SymbolInfoMap[ name ] {
@@ -593,6 +597,10 @@ pub class TypeInfo {
    // この TypeInfo の typeId を生成した processInfo
    pri let processInfo:&ProcessInfo! {pub};
 
+   pro fn switchScope( scope: Scope ) {
+      self.scope = scope;
+      scope.switchOwnerTypeInfo( self );
+   }
 
    /**
    この TypeInfo がオーバーライドしている場合、
@@ -2267,9 +2275,9 @@ pub class NilableTypeInfo extend TypeInfo {
    pub override fn get_nilable(): bool {
       return true;
    }
-   pub override fn get_extedType(): &TypeInfo {
-      return self;
-   }
+   // pub override fn get_extedType(): &TypeInfo {
+   //    return self;
+   // }
    
    /** この型の名前を取得する。 */
    pub override fn getTxt(
@@ -3497,6 +3505,9 @@ pub class NormalTypeInfo extend TypeInfo {
       }
    }
 
+   pub fn switchScopeTo( scope: Scope ) {
+      self.switchScope( scope );
+   }
    
    fn __init( abstractFlag:bool, scope: Scope!, baseTypeInfo: &TypeInfo!,
               interfaceList: &List<&TypeInfo>!,
@@ -4001,12 +4012,16 @@ pub static fn NormalTypeInfo.createModifier(
 
    idProv.increment();
    let modifier;
-   if srcTypeInfo.$kind == .Ext {
+   if srcTypeInfo.$nonnilableType.$kind == .Ext {
       _match createLuaval(
          NormalTypeInfo.createModifier( srcTypeInfo.$extedType, mutMode ) )
       {
          case .OK( workType, _ ) {
-            modifier = workType;
+            if srcTypeInfo.$nilable {
+               modifier = workType.$nilableTypeInfo;
+            } else{
+               modifier = workType;
+            }
          }
          case .Err( err ) {
             Util.err( err );
@@ -4198,6 +4213,9 @@ fn failCreateLuavalWith( typeInfo:&TypeInfo, convFlag:bool ) : str!, bool {
             canConv = false;
          }
       }
+   }
+   if isExtType( typeInfo ) {
+      return nil, true;
    }
    let mess = "not support to use the type as Luaval -- %s" (typeInfo.getTxt(##));
    switch typeInfo.$kind {
@@ -4656,9 +4674,31 @@ pub static fn NormalTypeInfo.createDDD(
    if typeInfo.$kind == .DDD {
       typeInfo = typeInfo.$itemTypeInfoList[ 1 ];
    }
+   // if typeInfo.$nonnilableType.$kind == .Ext {
+   //    let work = typeInfo.$extedType;
+   //    if typeInfo.$nilable {
+   //       typeInfo = work.$nilableTypeInfo;
+   //    } else {
+   //       typeInfo = work;
+   //    }
+   // }
+
    if not failCreateLuavalWith( typeInfo, true ) and extTypeFlag {
       extTypeFlag = false;
    }
+
+   if typeInfo.$nonnilableType.$kind ~= .Ext and extTypeFlag {
+      _match createLuaval( typeInfo ) {
+         case .OK( work, _ ) {
+            typeInfo = work;
+         }
+         case .Err( mess ) {
+            Util.err( mess );
+         }
+      }
+   }
+   
+   
    
    let dddMap = extTypeFlag and typeInfo2Map.ExtDDDMap or typeInfo2Map.DDDMap;
    if! dddMap[ typeInfo ] {
@@ -4698,6 +4738,8 @@ registBuiltin( "DDD", "...", .DDD, builtinTypeDDD, headTypeInfo, false );
 
 pub let builtinTypeForm:TypeInfo =
    NormalTypeInfo.createBuiltin( "Form", "form" , .Form, builtinTypeDDD ## );
+immutableTypeSet.add( builtinTypeForm );
+
 pub let builtinTypeSymbol:TypeInfo =
    NormalTypeInfo.createBuiltin( "Symbol", "sym" , .Prim## );
 pub let builtinTypeStat:TypeInfo =
@@ -5018,7 +5060,13 @@ pro override fn DDDTypeInfo.getTxtWithRaw(
       }
       return "...";
    }
-   let txt = "...<%s>" (self.typeInfo.getTxt( typeNameCtrl, importInfo, localFlag ));
+   let typeInfo;
+   if self.$extTypeFlag {
+      typeInfo = self.typeInfo.$extedType;
+   } else {
+      typeInfo = self.typeInfo;
+   }
+   let txt = "...<%s>" (typeInfo.getTxt( typeNameCtrl, importInfo, localFlag ));
    if self.$extTypeFlag {
       return "Luaval<%s>" (txt);
    }
@@ -5285,7 +5333,7 @@ pub class ExtTypeInfo extend TypeInfo {
    {
       let typeInfo = self.extedType.applyGeneric( alt2typeMap, moduleTypeInfo );
       if typeInfo ~= self.extedType {
-         Util.err( "not support -- %s" (self.extedType.getTxt(##) ) );
+         Util.err( "not support generics -- %s" (self.extedType.getTxt(##) ) );
       }
       return self;
    }
@@ -5765,7 +5813,15 @@ pub static fn TypeInfo.checkMatchType(
             return .Warn, workMess;
          }
       }
+      if dstType ~= builtinTypeEmpty and
+         not isExtType( dstType.$srcTypeInfo.$nonnilableType ) and
+         isExtType( expType.$srcTypeInfo.$nonnilableType )
+      {
+         warnMess = "%s <- %s" (dstType.getTxt(##), expType.getTxt(##));
+      }
    }
+
+   let mut warnMess:str! = nil;
 
    // index 番以降の dstTypeList の要素が srcType, srcType2nd と等しいか調べる。
    // index 番目と srcType, index + 1 以降と srcType2nd を調べる。
@@ -5777,7 +5833,6 @@ pub static fn TypeInfo.checkMatchType(
       let mut workExpType = srcType;
       for dstIndex = index, #dstTypeList {
          let workDstType = dstTypeList[ dstIndex ];
-         let mut matchResult = MatchType.Match;
          if not workDstType.canEvalWith( workExpType, .SetOp, alt2type ) {
             let message = "exp(%d) type mismatch %s <- %s: dst %d"
                 ( dstIndex, workDstType.getTxt( defaultTypeNameCtrl## ),
@@ -5790,8 +5845,6 @@ pub static fn TypeInfo.checkMatchType(
                                        (workDstType.getTxt(defaultTypeNameCtrl##)) );
          }
 
-         if matchResult ~= .Match {
-         }
          workExpType = srcType2nd;
       }
       return .Match, "";
@@ -5941,6 +5994,11 @@ pub static fn TypeInfo.checkMatchType(
          }
       // }
    }
+
+   when! warnMess {
+      return .Warn, warnMess;
+   }
+   
    return .Match, "";
 }
 

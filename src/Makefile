@@ -155,8 +155,8 @@ define buildLnsOp
 	$(call $4,$1,$2,$3,base/convCC)
 	$(call $4,$1,$2,$3,base/convGo)
 	$(call $4,$1,$2,$3,base/OutputDepend)
-	$(call $4,$1,$2,$3,base/front)
 	$(call $4,$1,$2,$3,base/glueFilter)
+	$(call $4,$1,$2,$3,base/front)
 	$(call $4,$1,$2,$3,Util)
 	$(call exeLune,$1/$2,-mklunemod,lune/base/runtime.lua) > /dev/null
 	cat $1/$2/$(VER_PATH) | $(RUNTIME_VER_PICK) | \
@@ -1197,12 +1197,14 @@ test-testGo:
 	$(call convGo,$(GO_WORK_DIR),lune/base/convCC,--testing,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),convGo,lune/base,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),OutputDepend,lune/base,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/glueFilter,--testing,./test)
+	$(call test-convGo-test,$(GO_WORK_DIR),front,lune/base,./test)
 
 test-subgo:
 	$(call transwork,.,.,,base/convGo)
 	$(call setup-go,$(GO_WORK_DIR))
 
-	$(call test-convGo-test,$(GO_WORK_DIR),OutputDepend,lune/base,./test)
+	$(call test-convGo-test,$(GO_WORK_DIR),front,lune/base,./test)
 
 
 
@@ -1223,3 +1225,5 @@ test-reference:
 
 test-reference-sample:
 	$(call exeLune,.,test/checkReference.lns exe)
+
+

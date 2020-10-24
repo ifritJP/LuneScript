@@ -1828,3 +1828,15 @@ class Test_ccc {
    }
    foo( "123" );
 }
+{
+   Macro._section();
+   class Hoge {
+   }
+   pub fn Hoge.func();
+   pub fn Hoge.func()
+   {
+      print( __func__ );
+   }
+   let hogess = new Hoge();
+   hogess.func();
+}

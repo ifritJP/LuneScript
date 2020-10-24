@@ -448,7 +448,7 @@ function convFilter:writeRaw( txt )
    end
    
    
-   for _5536 in string.gmatch( txt, "\n" ) do
+   for _5555 in string.gmatch( txt, "\n" ) do
       self.curLineNo = self.curLineNo + 1
    end
    
@@ -1893,7 +1893,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _5874 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _5893 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -3241,6 +3241,9 @@ function convFilter:processExpCall( node, opt )
             setArgFlag = true
             local funcType = refNode:get_expType()
             self:write( string.format( "%s.%s( self ", self:getFullName( funcType:get_parentInfo() ), funcType:get_rawTxt()) )
+         elseif refNode:get_expType() == TransUnit.getBuiltinFunc(  ).lns_expandLuavalMap then
+            wroteFuncFlag = true
+            self:write( "(" )
          end
          
       end
@@ -3598,7 +3601,8 @@ function convFilter:processExpRef( node, opt )
          self:write( string.format( "%s.%s", self:getFullName( funcType:get_parentInfo() ), funcType:get_rawTxt()) )
       else 
          
-            if node:get_expType():equals( TransUnit.getBuiltinFunc(  ).lns__load ) then
+            local builtinFunc = TransUnit.getBuiltinFunc(  )
+            if node:get_expType():equals( builtinFunc.lns__load ) then
                self:write( "_lune." .. self.targetLuaVer:get_loadStrFuncName() )
             else
              

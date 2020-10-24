@@ -3415,6 +3415,7 @@ pub class MacroEvalImp extend Nodes.MacroEval {
 
 __test {
    import lune.base.frontInterface;
+   import lune.base.Testing;
    
    pub fn createDefaultOption( path:str ) : Option.Option {
       let mut option = new Option.Option();
@@ -3486,6 +3487,25 @@ _hoge( [1,2,3] );
 
       return metaStream.$txt, stream.$txt;
    }
+
+   pub fn runTestCode( ctrl:Testing.Ctrl, luaCode:str ) {
+      let loaded, mess = _load( luaCode## );
+      when! loaded {
+         if! let mod = loaded(##) {
+            if! let listobj = mod.outputList {
+               let strList = listobj@@List<str>;
+               if Testing._eq( ctrl, #strList, 4 ) {
+                  Testing._eq( ctrl, strList[ 1 ], "hello world" );
+                  Testing._eq( ctrl, strList[ 2 ], "11" );
+                  Testing._eq( ctrl, strList[ 3 ], "12" );
+                  Testing._eq( ctrl, strList[ 4 ], "13" );
+               }
+            }
+         }
+      } else {
+         print( mess );
+      }
+   }
 }
 
 
@@ -3499,16 +3519,5 @@ __test case1(ctrl) {
    print( meta, luaCode );
    
    //__t._eq(ctrl, luaCode, "");
-   let loaded, mess = _load( luaCode## );
-   when! loaded {
-      if! let mod = loaded(##) {
-         if! let list = mod.outputList {
-            foreach line in list@@&List<str> {
-               print( __mod__, line );
-            }
-         }
-      }
-   } else {
-      print( mess );
-   }
+   runTestCode( ctrl, luaCode );
 }

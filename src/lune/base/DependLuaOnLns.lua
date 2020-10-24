@@ -183,6 +183,8 @@ local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 
 
+
+
 local function runLuaOnLns( luaCode )
 
    
@@ -210,5 +212,46 @@ local function runLuaOnLns( luaCode )
    return nil, ""
 end
 _moduleObj.runLuaOnLns = runLuaOnLns
+
+function __luneGetLocal( varName )
+
+   local index = 1
+   while true do
+      local name, val = debug.getlocal( 3, index )
+      if name == varName then
+         return val
+      end
+      
+      if not name then
+         break
+      end
+      
+      index = index + 1
+   end
+   
+   error( "not found -- " .. varName )
+end
+
+function __luneSym2Str( val )
+
+   do
+      local _exp = val
+      if _exp ~= nil then
+         if type( _exp ) ~= "table" then
+            return string.format( "%s", _exp )
+         end
+         
+         
+         local txt = ""
+         for __index, item in ipairs( _exp ) do
+            txt = txt .. item
+         end
+         
+         return txt
+      end
+   end
+   
+   return nil
+end
 
 return _moduleObj

@@ -906,6 +906,10 @@ function Scope:set_ownerTypeInfo( owner )
    end
    
 end
+function Scope:switchOwnerTypeInfo( owner )
+
+   self.ownerTypeInfo = owner
+end
 function Scope:getTypeInfoChild( name )
 
    do
@@ -1096,6 +1100,11 @@ CanEvalType.__allList[7] = CanEvalType.Logical
 
 local TypeInfo = {}
 _moduleObj.TypeInfo = TypeInfo
+function TypeInfo:switchScope( scope )
+
+   self.scope = scope
+   scope:switchOwnerTypeInfo( self )
+end
 function TypeInfo:getOverridingType(  )
 
    return nil
@@ -2078,6 +2087,10 @@ end
 
 function AliasTypeInfo:serializeTypeInfoList( ... )
    return self.aliasSrcTypeInfo:serializeTypeInfoList( ... )
+end
+
+function AliasTypeInfo:switchScope( ... )
+   return self.aliasSrcTypeInfo:switchScope( ... )
 end
 
 
@@ -3253,6 +3266,10 @@ function NilableTypeInfo:serializeTypeInfoList( ... )
    return self.nonnilableType:serializeTypeInfoList( ... )
 end
 
+function NilableTypeInfo:switchScope( ... )
+   return self.nonnilableType:switchScope( ... )
+end
+
 
 
 local AlternateTypeInfo = {}
@@ -3769,6 +3786,10 @@ function BoxTypeInfo:serializeTypeInfoList( ... )
    return self.boxingType:serializeTypeInfoList( ... )
 end
 
+function BoxTypeInfo:switchScope( ... )
+   return self.boxingType:switchScope( ... )
+end
+
 
 
 local GenericTypeInfo = {}
@@ -4134,6 +4155,10 @@ function GenericTypeInfo:serializeTypeInfoList( ... )
    return self.genSrcTypeInfo:serializeTypeInfoList( ... )
 end
 
+function GenericTypeInfo:switchScope( ... )
+   return self.genSrcTypeInfo:switchScope( ... )
+end
+
 
 
 local function isGenericType( typeInfo )
@@ -4371,6 +4396,10 @@ end
 
 function ModifierTypeInfo:serializeTypeInfoList( ... )
    return self.srcTypeInfo:serializeTypeInfoList( ... )
+end
+
+function ModifierTypeInfo:switchScope( ... )
+   return self.srcTypeInfo:switchScope( ... )
 end
 
 
@@ -4885,6 +4914,10 @@ function NormalTypeInfo:getOverridingType(  )
       end
    end
    
+end
+function NormalTypeInfo:switchScopeTo( scope )
+
+   self:switchScope( scope )
 end
 function NormalTypeInfo.new( abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode )
    local obj = {}
@@ -7062,6 +7095,10 @@ function ExtTypeInfo:serializeTypeInfoList( ... )
    return self.extedType:serializeTypeInfoList( ... )
 end
 
+function ExtTypeInfo:switchScope( ... )
+   return self.extedType:switchScope( ... )
+end
+
 
 
 function NormalTypeInfo.createLuaval( luneType )
@@ -7407,6 +7444,10 @@ end
 
 function AndExpTypeInfo:serializeTypeInfoList( ... )
    return self.result:serializeTypeInfoList( ... )
+end
+
+function AndExpTypeInfo:switchScope( ... )
+   return self.result:switchScope( ... )
 end
 
 
@@ -8504,7 +8545,7 @@ IdType.__allList[2] = IdType.Ext
 local function switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 6518, function (  )
+   Log.log( Log.Level.Trace, __func__, 6529, function (  )
    
       return "start"
    end )
@@ -8524,7 +8565,7 @@ local builtinTypeInfo2Map = typeInfo2Map:clone(  )
 local function pushProcessInfo( processInfo )
    local __func__ = '@lune.@base.@Ast.pushProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6530, function (  )
+   Log.log( Log.Level.Trace, __func__, 6541, function (  )
    
       return "start"
    end )
@@ -8559,7 +8600,7 @@ _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
    local __func__ = '@lune.@base.@Ast.popProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6556, function (  )
+   Log.log( Log.Level.Trace, __func__, 6567, function (  )
    
       return "start"
    end )

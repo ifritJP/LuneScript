@@ -46,13 +46,12 @@ func Depend_getFileLastModifiedTime( path string ) LnsAny {
 }
 
 
-func Depend_getLoadedMod() *LnsMap {
-    return NewLnsMap( map[LnsAny]LnsAny{} )
+func Depend_getLoadedMod() *Lns_luaValue {
+    return Lns_getVM().GetEmptyMap()
 }
 
-func Depend_profile( validTest bool, work func(), path string ) LnsAny {
-    work()
-    return nil
+func Depend_profile( validTest bool, work LnsForm, path string ) LnsAny {
+    return work( []LnsAny{} )
 }
 
 func Depend_getStackTrace() string {
@@ -73,7 +72,10 @@ func Depend_existFile( path string ) bool {
 func Depend_getLuaVersion() string {
     return "5.3"
 }
-func Depend_setup( callback func( ver LnsInt )) {
+
+type Depend_UpdateVer func ( ver LnsInt )
+
+func Depend_setup( callback Depend_UpdateVer) {
     callback( 53 );
 }
 

@@ -98,32 +98,37 @@ __test {
    import lune.base.convLua;
    import lune.base.frontInterface;
 
-   // class Front extend (frontInterface.frontInterface) {
-   //    pub fn loadModule( mod:str ) mut: stem!, &stem {
-   //       Util.err( "not implements" );
-   //    }
-   //    pub fn loadFromLnsTxt(
-   //       importModuleInfo:frontInterface.ImportModuleInfo,
-   //       name:str, txt:str ): Luaval<stem>
-   //    {
-   //       Util.err( "not implements" );
-   //    }
-   //    pub fn searchModule( mod:str ): str! {
-   //       Util.err( "not implements" );
-   //    }
-   //    pub fn error( message:str ) {
-   //       Util.err( message );
-   //    }
+   class Front extend (frontInterface.frontInterface) {
+      pub fn loadModule( mod:str ) mut: Luaval<&stem>!, Luaval<&stem> {
+         Util.err( "not implements" );
+      }
+      pub fn loadFromLnsTxt(
+         importModuleInfo:frontInterface.ImportModuleInfo,
+         name:str, txt:str ): Luaval<&stem>
+      {
+         Util.err( "not implements" );
+      }
+      pub fn searchModule( mod:str ): str! {
+         Util.err( "not implements" );
+      }
+      pub fn error( message:str ) {
+         Util.err( message );
+      }
 
-   //    pub fn loadMeta(
-   //       importModuleInfo:frontInterface.ImportModuleInfo, mod:str ) mut: &stem!
-   //    {
-   //       let metaPath = mod.gsub( "%.", "/" );
-         
-   //    }
-
-   // }
-   
+      pub fn loadMeta(
+         importModuleInfo:frontInterface.ImportModuleInfo, mod:str ) mut: Luaval<&stem>!
+      {
+         let metaPath = mod.gsub( "%.", "/" ) .. ".meta";
+         print( metaPath );
+         let loaded, mess = loadfile( metaPath );
+         when! loaded {
+            let meta = loaded(##);
+            return meta;
+         }
+         print( mess );
+         return nil;
+      }
+   }
    
 
    fn Ast2Depend( ast:&TransUnit.ASTInfo ) : str
@@ -142,19 +147,24 @@ __test {
 __test case1(ctrl) {
    import lune.base.LuaVer;
 
+   LuaVer.setCurVer( 53 );
+
+   let mut front = new Front();
+   frontInterface.setFront( front );
+   
+   
    let code = ```
 import lune.base.Ver;
 import lune.base.Code;
+import lune.base.LuaMod;
 
 print( Ver.version );
 print( Code.ID.nothing_define_abbr );
 ```;
-
-   LuaVer.setCurVer( 53 );
-
    let scriptPath = "test.lns";
    let option = convLua.createDefaultOption( scriptPath );
    let ast = convLua.createAst( scriptPath, code, option );
    let depend = Ast2Depend( ast );
    print( depend );
 }
+

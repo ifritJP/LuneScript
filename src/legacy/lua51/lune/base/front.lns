@@ -44,6 +44,7 @@ import lune.base.Meta;
 
 _lune_control ignore_symbol_;
 
+
 Depend.setup( fn(ver:int) {
    LuaVer.setCurVer( ver );
 });
@@ -51,41 +52,41 @@ Depend.setup( fn(ver:int) {
 
 let forceUpdateMeta = true;
 
-global fn __luneGetLocal( varName:str ):stem!
-{
-   let mut index = 1;
-   while true {
-      let name, val = debug.getlocal( 3, index );
-      if name == varName {
-	 return val;
-      }
-      if not name {
-	 break;
-      }
-      //print( name, val )
-      index = index + 1;
-   }
-   error( "not found -- " .. varName );
-}
+// global fn __luneGetLocal( varName:str ):stem!
+// {
+//    let mut index = 1;
+//    while true {
+//       let name, val = debug.getlocal( 3, index );
+//       if name == varName {
+// 	 return val;
+//       }
+//       if not name {
+// 	 break;
+//       }
+//       //print( name, val )
+//       index = index + 1;
+//    }
+//    error( "not found -- " .. varName );
+// }
 
-global fn __luneSym2Str( val:stem! ):str! {
-   if! val {
-      if type( _exp ) ~= "table" {
-         return string.format( "%s", _exp );
-      }
+// global fn __luneSym2Str( val:stem! ):str! {
+//    if! val {
+//       if type( _exp ) ~= "table" {
+//          return string.format( "%s", _exp );
+//       }
 
-      let mut txt = "";
-      foreach item in _exp@@str[] {
-         txt = txt .. item;
-      }
-      return txt;
-   }
-   return nil;
-}
+//       let mut txt = "";
+//       foreach item in _exp@@str[] {
+//          txt = txt .. item;
+//       }
+//       return txt;
+//    }
+//    return nil;
+// }
 
 class LoadInfo {
-   pub let mut mod:stem;
-   pub let mut meta:&stem;
+   pub let mut mod:Luaval<&stem>;
+   pub let mut meta:Luaval<&stem>;
 }
 
 class Front extend (frontInterface.frontInterface) {
@@ -94,7 +95,7 @@ class Front extend (frontInterface.frontInterface) {
    let mut loadedMap:Map<str,LoadInfo>;
    /** import 済みの Test ビルド用モジュールと、その LoadInfoの紐付け。 */ 
    let mut loadedMapTest:Map<str,LoadInfo>;
-   let mut loadedMetaMap:Map<str,stem>;
+   let mut loadedMetaMap:Map<str,Luaval<&stem>>;
    let mut convertedMap:Map<str,str>;
 
    /**
@@ -103,7 +104,7 @@ loadedMap で管理する前にシステムにロードされているため、
 後で import すると多重ロードになってしまう。
 多重ロードを防ぐため、 loadedMap で管理する前にロードされているモジュールを保持する。
 */
-   let preloadedModMap:&Map<str,stem>;
+   let preloadedModMap:&Map<str,Luaval<&stem>>;
 
    pub fn __init( option:&Option.Option ) {
       self.option = option;
@@ -115,7 +116,7 @@ loadedMap で管理する前にシステムにロードされているため、
 
       frontInterface.setFront( self );
 
-      let mut loadedMap:Map<str,stem> = {};
+      let mut loadedMap:Map<str,Luaval<&stem>> = {};
       foreach modval, mod in Depend.getLoadedMod() {
          // pending:
          if mod == "lune.base.Testing" {
@@ -140,10 +141,11 @@ loadedMap で管理する前にシステムにロードされているため、
    }
    
 
-   pub fn loadModule( mod:str ) mut: stem!, &stem;
-   pub fn loadMeta( importModuleInfo:frontInterface.ImportModuleInfo, mod:str ) mut: &stem!;
+   pub fn loadModule( mod:str ) mut: Luaval<&stem>!, Luaval<&stem>;
+   pub fn loadMeta(
+      importModuleInfo:frontInterface.ImportModuleInfo, mod:str ) mut: Luaval<&stem>!;
    pub fn loadFromLnsTxt( importModuleInfo:frontInterface.ImportModuleInfo,
-                          name:str, txt:str ): Luaval<stem>;
+                          name:str, txt:str ): Luaval<&stem>;
    pub fn searchModule( mod:str ): str!;
    pub fn error( message:str );
 }
@@ -154,7 +156,7 @@ fn Front.error( message:str ) {
    os.exit( 1 );
 }
 
-fn Front.loadLua( path:str ):stem! {
+fn Front.loadLua( path:str ):Luaval<&stem>! {
    let chunk, err = loadfile( path );
    when! chunk {
       return unwrap chunk(##);
@@ -207,7 +209,7 @@ fn Front.convert(
    ast.$node.processFilter( conv, new convLua.Opt( ast.$node ) );
 }
 
-fn loadFromChunk( chunk:Luaval<form>!, err:str! ): Luaval<stem>! {
+fn loadFromChunk( chunk:Luaval<form>!, err:str! ): Luaval<&stem>! {
    when! err {
       Util.errorLog( err );
    }
@@ -220,7 +222,7 @@ fn loadFromChunk( chunk:Luaval<form>!, err:str! ): Luaval<stem>! {
    error( "failed to error" );
 }
 
-fn loadFromLuaTxt( txt:str ): Luaval<stem>! {
+fn loadFromLuaTxt( txt:str ): Luaval<&stem>! {
    //--print( txt )
    return loadFromChunk( _load( txt ## )** );
 }
@@ -249,7 +251,7 @@ fn Front.convertFromAst(
 マクロ解析用
 */
 fn Front.loadFromLnsTxt(
-   importModuleInfo:frontInterface.ImportModuleInfo, name:str, txt:str ): Luaval<stem>
+   importModuleInfo:frontInterface.ImportModuleInfo, name:str, txt:str ): Luaval<&stem>
 {
    let mut transUnit = new TransUnit.TransUnit(
       frontInterface.ModuleId.tempId,
@@ -285,7 +287,8 @@ pub static fn MetaForBuildId.LoadFromMeta( metaPath:str ): &MetaForBuildId!, str
       let luaCode = fileObj.read( "*a" );
       fileObj.close();
       when! luaCode {
-         let meta = MetaForBuildId._fromStem( loadFromLuaTxt( luaCode ) );
+         let meta = MetaForBuildId._fromStem(
+            expandLuavalMap( loadFromLuaTxt( luaCode )) );
          return meta, luaCode;
       }
    }
@@ -492,7 +495,8 @@ pub fn Front.convertLns2LuaCode(
 指定 path の LuneScript をロードし、 meta 情報と変換した Lua コードを取得する。
 */
 fn Front.loadFileToLuaCode(
-   importModuleInfo:frontInterface.ImportModuleInfo, path:str, mod:str ): stem, str
+   importModuleInfo:frontInterface.ImportModuleInfo,
+   path:str, mod:str ): Luaval<&stem>, str
 {
    let ast = self.createAst( importModuleInfo, createPaser( path, mod ),
                              mod, getModuleId( path, mod ## ), nil, .Compile, nil );
@@ -543,7 +547,8 @@ fn Front.loadFileToLuaCode(
 
 */
 fn Front.loadFile(
-   importModuleInfo:frontInterface.ImportModuleInfo, path:str, mod:str ): &stem, stem
+   importModuleInfo:frontInterface.ImportModuleInfo,
+   path:str, mod:str ): Luaval<&stem>, Luaval<&stem>
 {
    Log._log2( .Info, "start %s:%s" ( __func__, mod ) );
    
@@ -580,7 +585,7 @@ fn Front.searchLuaFile( moduleFullName:str, addSearchPath:str! ) : str! {
 @param metaPath メタファイルのパス
 @return stem! 最新の場合、ロードしたメタ情報。 最新でない場合は nil。
 */
-fn Front.checkUptodateMeta( metaPath:str, addSearchPath:str! ): stem! {
+fn Front.checkUptodateMeta( metaPath:str, addSearchPath:str! ): Luaval<&stem>! {
    let! metaObj = self.loadLua( metaPath ) {
       return nil;
    };
@@ -615,7 +620,7 @@ fn Front.checkUptodateMeta( metaPath:str, addSearchPath:str! ): stem! {
 }
 
 
-fn Front.loadModule( mod:str ) mut : stem!, &stem {
+fn Front.loadModule( mod:str ) mut : Luaval<&stem>!, Luaval<&stem> {
    if not self.getLoadInfo( mod ) {
       if! let luaTxt = self.convertedMap[ mod ] {
          if! let meta = self.loadedMetaMap[ mod ] {
@@ -634,7 +639,7 @@ fn Front.loadModule( mod:str ) mut : stem!, &stem {
                luaPath = self.searchLuaFile( mod, dir );
             }
 
-            let mut loadVal:stem! = nil;
+            let mut loadVal:Luaval<&stem>! = nil;
             when! luaPath {
                if Util.getReadyCode( lnsPath, luaPath ) {
 	          let metaPath = string.gsub( luaPath, "%.lua$", ".meta" );
@@ -675,7 +680,7 @@ fn Front.loadModule( mod:str ) mut : stem!, &stem {
 
 
 fn Front.loadMeta(
-   importModuleInfo:frontInterface.ImportModuleInfo, mod:str ) mut : &stem!
+   importModuleInfo:frontInterface.ImportModuleInfo, mod:str ) mut : Luaval<&stem>!
 {
    if self.loadedMetaMap[ mod ] == nil {
       if! self.getLoadInfo( mod ) {
@@ -690,7 +695,7 @@ fn Front.loadMeta(
                luaPath = self.searchLuaFile( mod, dir );
             }
 
-            let mut meta:stem! = nil;
+            let mut meta:Luaval<&stem>! = nil;
             when! luaPath {
                if Util.getReadyCode( lnsPath, luaPath ) {
 	          let metaPath = string.gsub( luaPath, "%.lua$", ".meta" );
@@ -1349,4 +1354,10 @@ pub fn exec( args: &List<str> ) {
    let mut front = new Front( option );
 
    front.exec();
+}
+
+
+__test case1(ctrl) {
+   let luaCode = convertLnsCode2LuaCode( convLua.getTestLnsCode(), "test.lns" );
+   convLua.runTestCode( ctrl, luaCode );
 }

@@ -44,6 +44,7 @@ import lune.base.Meta;
 
 _lune_control ignore_symbol_;
 
+
 Depend.setup( fn(ver:int) {
    LuaVer.setCurVer( ver );
 });
@@ -51,37 +52,37 @@ Depend.setup( fn(ver:int) {
 
 let forceUpdateMeta = true;
 
-global fn __luneGetLocal( varName:str ):stem!
-{
-   let mut index = 1;
-   while true {
-      let name, val = debug.getlocal( 3, index );
-      if name == varName {
-	 return val;
-      }
-      if not name {
-	 break;
-      }
-      //print( name, val )
-      index = index + 1;
-   }
-   error( "not found -- " .. varName );
-}
+// global fn __luneGetLocal( varName:str ):stem!
+// {
+//    let mut index = 1;
+//    while true {
+//       let name, val = debug.getlocal( 3, index );
+//       if name == varName {
+// 	 return val;
+//       }
+//       if not name {
+// 	 break;
+//       }
+//       //print( name, val )
+//       index = index + 1;
+//    }
+//    error( "not found -- " .. varName );
+// }
 
-global fn __luneSym2Str( val:stem! ):str! {
-   if! val {
-      if type( _exp ) ~= "table" {
-         return string.format( "%s", _exp );
-      }
+// global fn __luneSym2Str( val:stem! ):str! {
+//    if! val {
+//       if type( _exp ) ~= "table" {
+//          return string.format( "%s", _exp );
+//       }
 
-      let mut txt = "";
-      foreach item in _exp@@str[] {
-         txt = txt .. item;
-      }
-      return txt;
-   }
-   return nil;
-}
+//       let mut txt = "";
+//       foreach item in _exp@@str[] {
+//          txt = txt .. item;
+//       }
+//       return txt;
+//    }
+//    return nil;
+// }
 
 class LoadInfo {
    pub let mut mod:Luaval<&stem>;
@@ -1353,4 +1354,10 @@ pub fn exec( args: &List<str> ) {
    let mut front = new Front( option );
 
    front.exec();
+}
+
+
+__test case1(ctrl) {
+   let luaCode = convertLnsCode2LuaCode( convLua.getTestLnsCode(), "test.lns" );
+   convLua.runTestCode( ctrl, luaCode );
 }
