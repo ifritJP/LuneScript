@@ -520,7 +520,7 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
                   "  name='%s', staticFlag = %s, mutMode = %d,"
                   ( memberName, memberNode.$staticFlag,
                     memberNode.$symbolInfo.$mutMode ) ..
-                  "accessMode = '%s', typeId = %d }"
+                  "accessMode = %d, typeId = %d }"
                   ( memberNode.$accessMode, memberTypeInfo.get_typeId() ) );
 
                pickupTypeId( memberTypeInfo, true ## );
@@ -912,6 +912,10 @@ if not %s then
 end``` (luneSymbol, luneSymbol) );
 
 
+   if node.$moduleScope.getSymbolInfoChild( "_" )$.$posForLatestMod {
+      self.writeln( "local _" );
+   }
+   
    let children:List<&Nodes.Node> = node.get_children();
 
    foreach child in children {
@@ -991,6 +995,12 @@ pub override fn convFilter.processBlockSub(
    }
    self.writeln( word );
    self.pushIndent(##);
+
+   if node.$scope.getSymbolInfoChild( "_" )$.$posForLatestMod {
+      self.writeln( "local _" );
+   }
+   
+   
    let stmtList = node.get_stmtList();
    foreach statement in stmtList {
       filter( statement, self, node );
@@ -1692,6 +1702,8 @@ end
    self.macroDepth = self.macroDepth - 1;
 
    self.writeln( "" );
+   // __var を変更結果を Macro.lns に伝えるために、 macroVar にセットする
+   self.writeln( "macroVar.__var = __var" );
    self.writeln( "return macroVar" );
    self.popIndent();
    self.writeln( "end" );
@@ -3369,9 +3381,11 @@ fn runLuaOnLns( code:str ): Luaval<&stem>!, str {
 }
 
 pub class MacroEvalImp extend Nodes.MacroEval {
-   pri let mode: str;
 
    fn evalFromMacroCode( code:str ): Luaval<Nodes.macroStatmentProc> {
+
+      Log._log2( .Trace, "macro: %s" (code) );
+      
       let func, err = runLuaOnLns( code );
       when! func {
          return func@@Luaval<Nodes.macroStatmentProc>;
@@ -3434,7 +3448,7 @@ __test {
       
       let mod = Util.scriptPath2Module( scriptPath );
       let mut transUnit = new TransUnit.TransUnit(
-         moduleId, moduleInfo, new MacroEvalImp( option.mode ),
+         moduleId, moduleInfo, new MacroEvalImp(),
          nil, .Compile, nil, option.targetLuaVer, option.transCtrlInfo );
       
       let mut parser = new Parser.StreamParser( inStream, scriptPath, false );
@@ -3467,8 +3481,9 @@ macro _hoge( list:List<int>) {
    ,,statList;
 }
 _hoge( [1,2,3] );
-
+_ = 1;
 ```;
+
      return lnsCode;
   }
 

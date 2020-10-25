@@ -82,15 +82,15 @@ func Lns_type( val LnsAny ) string {
     case string:
         return "string";
     case *Lns_luaValue:
-        switch val.(*Lns_luaValue).typeId {
+        switch val.(*Lns_luaValue).core.typeId {
         case cLUA_TFUNCTION:
             return "function"
         case cLUA_TTABLE:
             return "table"
         default:
             return fmt.Sprintf( "<notsupport>:%d, %d, %s",
-                val.(*Lns_luaValue).typeId, cLUA_TTABLE,
-                val.(*Lns_luaValue).typeId == cLUA_TTABLE)
+                val.(*Lns_luaValue).core.typeId, cLUA_TTABLE,
+                val.(*Lns_luaValue).core.typeId == cLUA_TTABLE)
         }
     default:
         value := reflect.ValueOf(val)
@@ -349,6 +349,9 @@ func Lns_car( multi ...LnsAny ) LnsAny {
     }
     if Lns_IsNil( multi[0] ) {
         return nil
+    }
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok {
+        return Lns_car( ddd... )
     }
     return multi[0]
 }

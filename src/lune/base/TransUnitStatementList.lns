@@ -68,7 +68,7 @@ fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Nodes.ReturnNode {
 
    return Nodes.ReturnNode.create(
       self.nodeManager, token.pos,
-      self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], expList );
+      self.macroCtrl.isInAnalyzeArgMode(), retTypeList, expList );
 }
 
 fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!

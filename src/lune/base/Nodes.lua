@@ -739,7 +739,7 @@ end
 function NodeManager:__init() 
    self.idSeed = 0
    self.nodeKind2NodeList = {}
-   for kind, _2575 in pairs( nodeKind2NameMap ) do
+   for kind, _2626 in pairs( nodeKind2NameMap ) do
       if not self.nodeKind2NodeList[kind] then
          self.nodeKind2NodeList[kind] = {}
       end
@@ -2406,6 +2406,7 @@ function ExpListNode:setLValue(  )
    
 end
 
+
 function ExpListNode:getExpTypeAt( index )
 
    if index > #self:get_expTypeList() then
@@ -2415,6 +2416,27 @@ function ExpListNode:getExpTypeAt( index )
          if dddTypeInfo ~= nil then
             return dddTypeInfo:get_typeInfo():get_nilableTypeInfo()
          end
+      end
+      
+      return Ast.builtinTypeNil
+   end
+   
+   return self:get_expTypeList()[index]
+end
+
+function ExpListNode:getExpTypeNoDDDAt( index )
+
+   if index >= #self:get_expTypeList() then
+      local lastExpType = self:get_expTypeList()[#self:get_expTypeList()]
+      do
+         local dddTypeInfo = _lune.__Cast( lastExpType, 3, Ast.DDDTypeInfo )
+         if dddTypeInfo ~= nil then
+            return dddTypeInfo:get_typeInfo():get_nilableTypeInfo()
+         end
+      end
+      
+      if index == #self:get_expTypeList() then
+         return lastExpType
       end
       
       return Ast.builtinTypeNil
@@ -12157,7 +12179,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, _8636 in pairs( self.map ) do
+   for key, _10304 in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -12192,8 +12214,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, _8644 in ipairs( __sorted ) do
-         local key = __map[ _8644 ]
+      for __index, _10318 in ipairs( __sorted ) do
+         local key = __map[ _10318 ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false

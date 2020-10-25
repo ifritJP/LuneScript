@@ -175,22 +175,22 @@ endef
 
 
 define build-testcode
-	$(call exeLune,$1,test/macro.lns,$2 save,) > /dev/null
-	$(call exeLune,$1,test/Sub2.lns,$2 save,) > /dev/null
-	$(call exeLune,$1,test/Sub3.lns,$2 save,) > /dev/null
-	$(call exeLune,$1,test/Sub3_2.lns,$2 save,) > /dev/null
-	$(call exeLune,$1,test/Sub4.lns,$2 save,) > /dev/null
-	$(call exeLune,$1,test/Sub5.lns,$2 save,) > /dev/null
-	$(call exeLune,$1,test/Sub6.lns,$2 save,) > /dev/null
-	$(call exeLune,$1,test/simple.lns,$2 save,) > /dev/null
-	$(call exeLune,$1,test/Class1.lns,$2 save,) > /dev/null
-	$(call exeLune,$1,test/Class2.lns,$2 save,) > /dev/null
-	$(call exeLune,$1,test/Class3.lns,$2 save,) > /dev/null
-	$(call exeLune,$1,test/Class4.lns,$2 save,) > /dev/null
-	$(call exeLune,$1,test/start.lns,$2 save,) > /dev/null
-	$(call exeLune,$1,test/mapping.lns,$2 save,) > /dev/null
-	$(call exeLune,$1,test/funcSym.lns,$2 save,) > /dev/null
-	$(call exeLune,$1,test/test2/test2/test.lns,$2 save,) > /dev/null
+	$(call exeLune,$1,test/macro.lns,$2 save,$3) > /dev/null
+	$(call exeLune,$1,test/Sub2.lns,$2 save,$3) > /dev/null
+	$(call exeLune,$1,test/Sub3.lns,$2 save,$3) > /dev/null
+	$(call exeLune,$1,test/Sub3_2.lns,$2 save,$3) > /dev/null
+	$(call exeLune,$1,test/Sub4.lns,$2 save,$3) > /dev/null
+	$(call exeLune,$1,test/Sub5.lns,$2 save,$3) > /dev/null
+	$(call exeLune,$1,test/Sub6.lns,$2 save,$3) > /dev/null
+	$(call exeLune,$1,test/simple.lns,$2 save,$3) > /dev/null
+	$(call exeLune,$1,test/Class1.lns,$2 save,$3) > /dev/null
+	$(call exeLune,$1,test/Class2.lns,$2 save,$3) > /dev/null
+	$(call exeLune,$1,test/Class3.lns,$2 save,$3) > /dev/null
+	$(call exeLune,$1,test/Class4.lns,$2 save,$3) > /dev/null
+	$(call exeLune,$1,test/start.lns,$2 save,$3) > /dev/null
+	$(call exeLune,$1,test/mapping.lns,$2 save,$3) > /dev/null
+	$(call exeLune,$1,test/funcSym.lns,$2 save,$3) > /dev/null
+	$(call exeLune,$1,test/test2/test2/test.lns,$2 save,$3) > /dev/null
 endef
 
 # meta 情報の更新時に正常に解析できるかテスト。
@@ -325,6 +325,8 @@ test-comp:
 	mkdir -p work/newglue
 	$(call cp_src_set,work/1,.)
 	$(call buildLns_dep,.,work/1,)
+	cp -au test work/1
+	$(call build-testcode,.,,work/1)
 	$(call cp_src_set,work/2,work/1)
 	$(call cp_src_set,work/3,work/1)
 	$(call cp_src_set,work/5,work/1)
@@ -679,6 +681,7 @@ endif
 
 
 diff-result:
+	diff -r work/1/test/ work/4/test/ -x '*.meta'
 	diff work/test1.result work/test2.result
 	diff work/test.result work/test3.result
 	diff work/test3.result work/test4.result
@@ -1099,6 +1102,7 @@ test-miniGo:
 	$(call transwork,.,.,,base/convGo)
 	$(call setup-go,$(GO_WORK_DIR))
 	-rm $(GO_WORK_DIR)/*.*
+	cp build.counter $(GO_WORK_DIR)
 	$(call test-go-one,$(GO_WORK_DIR),miniGo,.)
 	cat work/result-testGo.txt
 
@@ -1245,10 +1249,10 @@ go-build:
 
 
 define test-govslua-comp
-	(cd $1; ./lns lune/base/$2.lns SAVE $3)
-	(cd $1; LUA_PATH=./?.lua $(LUA) lune/base/base.lua lune/base/$2.lns SAVE $4)
-	(cd $1; diff $4/lune/base/$2.lua $3/lune/base/$2.lua)
-	(cd $1; diff $4/lune/base/$2.meta $3/lune/base/$2.meta)
+	(cd $1; /usr/bin/time -f 'lns:%e/%U/%S:$2' ./lns lune/base/$2.lns SAVE $3)
+	(cd $1; LUA_PATH=./?.lua /usr/bin/time -f 'lua:%e/%U/%S:$2' $(LUA) lune/base/base.lua lune/base/$2.lns SAVE $4)
+	@(cd $1; diff $4/lune/base/$2.lua $3/lune/base/$2.lua)
+	@(cd $1; diff $4/lune/base/$2.meta $3/lune/base/$2.meta)
 endef
 
 test-govslua:
@@ -1256,10 +1260,34 @@ test-govslua:
 	(cd $(GO_WORK_DIR); find lune -type d | (cd test/go; xargs mkdir -p))
 	mkdir -p $(GO_WORK_DIR)/test/lua
 	(cd $(GO_WORK_DIR); find lune -type d | (cd test/lua; xargs mkdir -p))
+	$(call test-govslua-comp,$(GO_WORK_DIR)/test,Testing,./go,./lua)
 	$(call test-govslua-comp,$(GO_WORK_DIR)/test,Ver,./go,./lua)
 	$(call test-govslua-comp,$(GO_WORK_DIR)/test,Code,./go,./lua)
 	$(call test-govslua-comp,$(GO_WORK_DIR)/test,LuaMod,./go,./lua)
 	$(call test-govslua-comp,$(GO_WORK_DIR)/test,LuaVer,./go,./lua)
+	$(call test-govslua-comp,$(GO_WORK_DIR)/test,Depend,./go,./lua)
+	$(call test-govslua-comp,$(GO_WORK_DIR)/test,Util,./go,./lua)
+	$(call test-govslua-comp,$(GO_WORK_DIR)/test,frontInterface,./go,./lua)
+	$(call test-govslua-comp,$(GO_WORK_DIR)/test,Writer,./go,./lua)
+	$(call test-govslua-comp,$(GO_WORK_DIR)/test,Parser,./go,./lua)
+	$(call test-govslua-comp,$(GO_WORK_DIR)/test,Ast,./go,./lua)
+	$(call test-govslua-comp,$(GO_WORK_DIR)/test,Option,./go,./lua)
+	$(call test-govslua-comp,$(GO_WORK_DIR)/test,Nodes,./go,./lua)
+	$(call test-govslua-comp,$(GO_WORK_DIR)/test,Formatter,./go,./lua)
+	$(call test-govslua-comp,$(GO_WORK_DIR)/test,Macro,./go,./lua)
+	$(call test-govslua-comp,$(GO_WORK_DIR)/test,TransUnit,./go,./lua)
+	$(call test-govslua-comp,$(GO_WORK_DIR)/test,DependLuaOnLns,./go,./lua)
+	$(call test-govslua-comp,$(GO_WORK_DIR)/test,convLua,./go,./lua)
+	$(call test-govslua-comp,$(GO_WORK_DIR)/test,dumpNode,./go,./lua)
+	$(call test-govslua-comp,$(GO_WORK_DIR)/test,convCC,./go,./lua)
+	$(call test-govslua-comp,$(GO_WORK_DIR)/test,convGo,./go,./lua)
+	$(call test-govslua-comp,$(GO_WORK_DIR)/test,OutputDepend,./go,./lua)
+	$(call test-govslua-comp,$(GO_WORK_DIR)/test,glueFilter,./go,./lua)
+	$(call test-govslua-comp,$(GO_WORK_DIR)/test,front,./go,./lua)
+
+goprof:
+	(cd work/go/test/; go tool pprof -dot cpu.pprof  ) | dot -Tsvg -odump.svg
+
 
 
 test-reference:

@@ -1248,7 +1248,7 @@ function convFilter:processConvExp( nodeId, dstTypeList, argListNode )
    local function getRetType( retType, index )
    
       if retType == Ast.builtinTypeEmpty then
-         return argList:getExpTypeAt( index )
+         return argList:getExpTypeNoDDDAt( index )
       end
       
       return retType
@@ -1322,7 +1322,7 @@ function convFilter:processConvExp( nodeId, dstTypeList, argListNode )
       
       if restIndex ~= nil then
          self:write( "Lns_2DDD( " )
-         for index, _5746 in ipairs( expList ) do
+         for index, _5971 in ipairs( expList ) do
             if index >= restIndex then
                if index < #expList then
                   self:write( string.format( "arg%d", index) )
@@ -1342,7 +1342,7 @@ function convFilter:processConvExp( nodeId, dstTypeList, argListNode )
       end
       
    else
-      for index, _5748 in ipairs( retTypeList ) do
+      for index, _5979 in ipairs( retTypeList ) do
          if index ~= 1 then
             self:write( ", " )
          end
@@ -1822,7 +1822,7 @@ function convFilter:outputConvExt( funcNode )
    
    self:writeln( ") {" )
    self:write( "    return " )
-   for index, _5858 in ipairs( funcNode:get_expType():get_retTypeInfoList() ) do
+   for index, _6171 in ipairs( funcNode:get_expType():get_retTypeInfoList() ) do
       if index > 1 then
          self:write( "," )
       end
@@ -2023,7 +2023,7 @@ function convFilter:processRoot( node, opt )
       local function procNode( workNode )
       
          local symTypeList = {}
-         for _5937 = 1, #workNode:get_varSymList() do
+         for _6298 = 1, #workNode:get_varSymList() do
             table.insert( symTypeList, Ast.builtinTypeStem_ )
          end
          
@@ -2089,7 +2089,7 @@ function convFilter:processRoot( node, opt )
                for index, symbolInfo in ipairs( workNode:get_symbolInfoList() ) do
                   if workNode:get_mode() == Nodes.DeclVarMode.Let or workNode:get_mode() == Nodes.DeclVarMode.Unwrap then
                      if workNode:get_unwrapFlag() then
-                        table.insert( typeList, expList:getExpTypeAt( index ) )
+                        table.insert( typeList, expList:getExpTypeNoDDDAt( index ) )
                      else
                       
                         table.insert( typeList, symbolInfo:get_typeInfo() )
@@ -2377,7 +2377,7 @@ function convFilter:processSetFromExpList( convArgFuncName, dstTypeList, expList
          
       elseif _switchExp == ExpListKind.Direct then
          local mRetIndex = _lune.nilacc( expListNode:get_mRetExp(), 'get_index', 'callmtd' )
-         for index, funcArgType in ipairs( dstTypeList ) do
+         for index, dstType in ipairs( dstTypeList ) do
             if mRetIndex == index - 1 then
                break
             end
@@ -2387,7 +2387,7 @@ function convFilter:processSetFromExpList( convArgFuncName, dstTypeList, expList
             end
             
             local exp = expListNode:get_expList()[index]
-            if index == #dstTypeList and funcArgType:get_kind() == Ast.TypeInfoKind.DDD then
+            if index == #dstTypeList and dstType:get_kind() == Ast.TypeInfoKind.DDD then
                if #expListNode:get_expList() < index or exp:get_expType():get_kind() == Ast.TypeInfoKind.Abbr then
                   self:write( "[]LnsAny{}" )
                else
@@ -2399,9 +2399,13 @@ function convFilter:processSetFromExpList( convArgFuncName, dstTypeList, expList
              
                if #expListNode:get_expList() < index or exp:get_expType():get_kind() == Ast.TypeInfoKind.Abbr then
                   self:write( "nil" )
+               elseif expListNode:get_expTypeList()[index]:get_kind() == Ast.TypeInfoKind.DDD then
+                  self:write( "Lns_car(" )
+                  filter( exp, self, expListNode )
+                  self:write( ")" )
                else
                 
-                  filter( expListNode:get_expList()[index], self, expListNode )
+                  filter( exp, self, expListNode )
                end
                
             end
@@ -2858,7 +2862,7 @@ function convFilter:processIfUnwrap( node, opt )
    end
    
    if getExpListKind( tempTypeList, node:get_expList() ) == ExpListKind.Direct then
-      for _6179 = #node:get_varSymList() + 1, #node:get_expList():get_expTypeList() do
+      for _6706 = #node:get_varSymList() + 1, #node:get_expList():get_expTypeList() do
          self:write( ", _" )
       end
       
@@ -2887,7 +2891,7 @@ function convFilter:processIfUnwrap( node, opt )
       if varSym:get_name() ~= "_" then
          if varSym:hasAccess(  ) then
             self:write( string.format( "%s := _%s", varSym:get_name(), varSym:get_name()) )
-            if node:get_expList():getExpTypeAt( index ):get_nilable() then
+            if node:get_expList():getExpTypeNoDDDAt( index ):get_nilable() then
                self:outputAny2Type( varSym:get_typeInfo() )
             end
             
@@ -2960,13 +2964,13 @@ function convFilter:outputLetVar( node )
             
             
             local tmpVarTypeList = {}
-            for index, _6197 in ipairs( node:get_symbolInfoList() ) do
-               table.insert( tmpVarTypeList, expList:getExpTypeAt( index ) )
+            for index, _6744 in ipairs( node:get_symbolInfoList() ) do
+               table.insert( tmpVarTypeList, expList:getExpTypeNoDDDAt( index ) )
             end
             
             
             if getExpListKind( tmpVarTypeList, expList ) == ExpListKind.Direct then
-               for _6199 = #tmpVarTypeList + 1, #expList:get_expTypeList() do
+               for _6748 = #tmpVarTypeList + 1, #expList:get_expTypeList() do
                   self:write( ", _" )
                end
                
@@ -2978,7 +2982,7 @@ function convFilter:outputLetVar( node )
             self:write( "if " )
             local hasCond = false
             for index, varInfo in ipairs( node:get_varList() ) do
-               if expList:getExpTypeAt( index ):get_nilable() then
+               if expList:getExpTypeNoDDDAt( index ):get_nilable() then
                   if hasCond then
                      self:write( " || " )
                   end
@@ -3000,7 +3004,7 @@ function convFilter:outputLetVar( node )
                   self:pushIndent(  )
                   for index, varInfo in ipairs( node:get_symbolInfoList() ) do
                      self:write( string.format( "%s = _%s", self:getSymbolSym( varInfo ), varInfo:get_name()) )
-                     if expList:getExpTypeAt( index ):get_nilable() then
+                     if expList:getExpTypeNoDDDAt( index ):get_nilable() then
                         self:outputAny2Type( varInfo:get_typeInfo() )
                      end
                      
@@ -3015,7 +3019,7 @@ function convFilter:outputLetVar( node )
                   self:pushIndent(  )
                   for index, varInfo in ipairs( node:get_symbolInfoList() ) do
                      self:write( string.format( "%s = _%s", self:getSymbolSym( varInfo ), varInfo:get_name()) )
-                     if expList:getExpTypeAt( index ):get_nilable() then
+                     if expList:getExpTypeNoDDDAt( index ):get_nilable() then
                         self:outputAny2Type( varInfo:get_typeInfo() )
                      end
                      
@@ -3058,7 +3062,7 @@ function convFilter:outputLetVar( node )
             
             
             if getExpListKind( varTypeList, expList ) == ExpListKind.Direct then
-               for _6212 = #varTypeList + 1, #expList:get_expTypeList() do
+               for _6778 = #varTypeList + 1, #expList:get_expTypeList() do
                   self:write( ", _" )
                end
                
@@ -3101,7 +3105,7 @@ function convFilter:processDeclVar( node, opt )
          
             for index, varSym in ipairs( node:get_symbolInfoList() ) do
                self:write( string.format( "%s = _%s", self:getSymbolSym( varSym ), varSym:get_name()) )
-               if expList:getExpTypeAt( index ):get_nilable() then
+               if expList:getExpTypeNoDDDAt( index ):get_nilable() then
                   self:outputAny2Type( varSym:get_typeInfo() )
                end
                
@@ -3121,7 +3125,7 @@ function convFilter:processDeclVar( node, opt )
          end
          
          if getExpListKind( typeList, expList ) == ExpListKind.Direct then
-            for _6229 = #node:get_symbolInfoList() + 1, #expList:get_expTypeList() do
+            for _6807 = #node:get_symbolInfoList() + 1, #expList:get_expTypeList() do
                self:write( ",_" )
             end
             
@@ -3133,7 +3137,7 @@ function convFilter:processDeclVar( node, opt )
          self:write( "if " )
          local hasCond = false
          for index, varSym in ipairs( node:get_symbolInfoList() ) do
-            if expList:getExpTypeAt( index ):get_nilable() then
+            if expList:getExpTypeNoDDDAt( index ):get_nilable() then
                if hasCond then
                   self:write( " || " )
                end
@@ -3384,7 +3388,7 @@ function convFilter:processMatch( node, opt )
    local function hasAccessing(  )
    
       for __index, caseInfo in ipairs( node:get_caseList() ) do
-         for _6323, symbol in ipairs( caseInfo:get_valParamNameList() ) do
+         for _6945, symbol in ipairs( caseInfo:get_valParamNameList() ) do
             if symbol:get_posForModToRef() then
                return true
             end
@@ -3569,7 +3573,7 @@ function convFilter:processApply( node, opt )
       local workSym = string.format( "_work%d", node:get_id())
       self:writeln( string.format( "%s := %s.(*Lns_luaValue).Call( Lns_2DDD( %s, %s ) )", workSym, formSym, paramSym, prevSym) )
       self:write( string.format( "%s = ", setTxt) )
-      for index, _6366 in ipairs( node:get_varList() ) do
+      for index, _7009 in ipairs( node:get_varList() ) do
          if index > 1 then
             self:write( "," )
          end
@@ -4218,7 +4222,7 @@ function convFilter:outputConstructor( node )
       self:pushIndent(  )
       self:outputNewSetup( "obj", node:get_expType() )
       self:write( string.format( "obj.%s(", ctorName) )
-      for index, _6508 in ipairs( initFuncType:get_argTypeInfoList() ) do
+      for index, _7243 in ipairs( initFuncType:get_argTypeInfoList() ) do
          if index ~= 1 then
             self:write( ", " )
          end
@@ -4706,7 +4710,7 @@ function convFilter:outputAdvertise( node )
                   end
                   
                   self:write( string.format( "%s( ", self:getSymbolSym( symbol )) )
-                  for index, _6613 in ipairs( funcType:get_argTypeInfoList() ) do
+                  for index, _7438 in ipairs( funcType:get_argTypeInfoList() ) do
                      if index > 1 then
                         self:write( "," )
                      end
@@ -4847,7 +4851,7 @@ function convFilter:outputCallPrefix( callId, node, prefixNode, funcSymbol )
             
                if retNum <= MaxNilAccNum then
                   local anys = "LnsAny"
-                  for _6648 = 2, retNum do
+                  for _7495 = 2, retNum do
                      anys = string.format( "%s,LnsAny", anys)
                   end
                   
@@ -4855,7 +4859,7 @@ function convFilter:outputCallPrefix( callId, node, prefixNode, funcSymbol )
                else
                 
                   local args = "LnsAny"
-                  for _6650 = 2, retNum do
+                  for _7499 = 2, retNum do
                      args = string.format( "%s,LnsAny", args)
                   end
                   
@@ -5344,10 +5348,6 @@ function convFilter:processExpMultiTo1( node, opt )
 
    self:write( "Lns_car(" )
    filter( node:get_exp(), self, node )
-   if node:get_exp():get_expType():get_kind() == Ast.TypeInfoKind.DDD then
-      self:write( "..." )
-   end
-   
    self:write( ")" )
    self:outputAny2Type( node:get_expType() )
 end
@@ -5436,7 +5436,7 @@ function convFilter:processExpSetVal( node, opt )
 
    filter( node:get_exp1(), self, node )
    if getExpListKind( node:get_exp1():get_expTypeList(), node:get_exp2() ) == ExpListKind.Direct then
-      for _6738 = #node:get_exp1():get_expTypeList() + 1, #node:get_exp2():get_expTypeList() do
+      for _7709 = #node:get_exp1():get_expTypeList() + 1, #node:get_exp2():get_expTypeList() do
          self:write( ",_" )
       end
       
@@ -5855,7 +5855,7 @@ function convFilter:processRefField( node, opt )
    end
    
    
-   for _6799 = 1, openParenNum do
+   for _7851 = 1, openParenNum do
       self:write( ")" )
    end
    

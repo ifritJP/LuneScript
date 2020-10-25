@@ -26,6 +26,7 @@ pub enum Level {
    Fatal,
    Err,
    Warn,
+   Log,
    Info,
    Debug,
    Trace,
@@ -35,6 +36,7 @@ let mut name2levelMap:Map<str,Level> = {};
 name2levelMap[ "fatal" ] = .Fatal;
 name2levelMap[ "error" ] = .Err;
 name2levelMap[ "warn" ] = .Warn;
+name2levelMap[ "log" ] = .Log;
 name2levelMap[ "info" ] = .Info;
 name2levelMap[ "debug" ] = .Debug;
 name2levelMap[ "trace" ] = .Trace;

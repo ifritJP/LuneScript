@@ -885,7 +885,7 @@ fn convFilter.processConvExp( nodeId:int, dstTypeList:&List<&Ast.TypeInfo>,
 
    fn getRetType( retType:&Ast.TypeInfo, index:int ) : &Ast.TypeInfo {
       if retType == Ast.builtinTypeEmpty {
-         return argList.getExpTypeAt( index );
+         return argList.getExpTypeNoDDDAt( index );
       }
       return retType;
    }
@@ -1505,7 +1505,7 @@ pub override fn convFilter.processRoot(
                   foreach symbolInfo, index in workNode.$symbolInfoList {
                      if workNode.$mode == .Let or workNode.$mode == .Unwrap {
                         if workNode.$unwrapFlag {
-                           typeList.insert( expList.getExpTypeAt( index ) );
+                           typeList.insert( expList.getExpTypeNoDDDAt( index ) );
                         } else {
                            typeList.insert( symbolInfo.$typeInfo );
                         }
@@ -1731,7 +1731,7 @@ fn convFilter.processSetFromExpList(
       }
       case .Direct {
          let mRetIndex = expListNode.$mRetExp$.$index;
-         foreach funcArgType, index in dstTypeList {
+         foreach dstType, index in dstTypeList {
             if mRetIndex == index - 1 {
                break;
             }
@@ -1739,7 +1739,7 @@ fn convFilter.processSetFromExpList(
                self.write( ', ' );
             }
             let exp = expListNode.$expList[ index ];
-            if index == #dstTypeList and funcArgType.$kind == .DDD {
+            if index == #dstTypeList and dstType.$kind == .DDD {
                // 関数の最終仮引数が DDD の場合、
                // []LnsAny に変換する
                if #expListNode.$expList < index or exp.$expType.$kind == .Abbr {
@@ -1749,13 +1749,17 @@ fn convFilter.processSetFromExpList(
                   filter( exp, self, expListNode );
                }
             } else {
-               // 最終仮引数より前
                if #expListNode.$expList < index or exp.$expType.$kind == .Abbr {
                   // 最終実引数より後は、引数を省略している
                   self.write( "nil" );
                }
+               elseif expListNode.$expTypeList[ index ].$kind == .DDD {
+                  self.write( "Lns_car(" );
+                  filter( exp, self, expListNode );
+                  self.write( ")" );
+               }
                else {
-                  filter( expListNode.$expList[ index ], self, expListNode );
+                  filter( exp, self, expListNode );
                }
             }
          }
@@ -2157,7 +2161,7 @@ pub override fn convFilter.processIfUnwrap(
       if varSym.$name ~= "_" {
          if varSym.hasAccess() {
             self.write( "%s := _%s" (varSym.$name, varSym.$name) );
-            if node.$expList.getExpTypeAt( index ).$nilable {
+            if node.$expList.getExpTypeNoDDDAt( index ).$nilable {
                self.outputAny2Type( varSym.$typeInfo );
             }
             self.writeln( "" );
@@ -2219,7 +2223,7 @@ fn convFilter.outputLetVar( node: Nodes.DeclVarNode ) mut {
 
          let mut tmpVarTypeList:List<&Ast.TypeInfo> = [];
          foreach _, index in node.$symbolInfoList {
-            tmpVarTypeList.insert( expList.getExpTypeAt( index ) );
+            tmpVarTypeList.insert( expList.getExpTypeNoDDDAt( index ) );
          }
          
          if getExpListKind( tmpVarTypeList, expList ) == .Direct {
@@ -2236,7 +2240,7 @@ fn convFilter.outputLetVar( node: Nodes.DeclVarNode ) mut {
          self.write( "if " );
          let mut hasCond = false;
          foreach varInfo, index in node.$varList {
-            if expList.getExpTypeAt( index ).$nilable {
+            if expList.getExpTypeNoDDDAt( index ).$nilable {
                if hasCond {
                   self.write( " || " );
                }
@@ -2253,7 +2257,7 @@ fn convFilter.outputLetVar( node: Nodes.DeclVarNode ) mut {
             self.pushIndent(##);
             foreach varInfo, index in node.$symbolInfoList {
                self.write( "%s = _%s" (self.getSymbolSym( varInfo ), varInfo.$name) );
-               if expList.getExpTypeAt( index ).$nilable {
+               if expList.getExpTypeNoDDDAt( index ).$nilable {
                   self.outputAny2Type( varInfo.$typeInfo );
                }
                self.writeln( "" );
@@ -2267,7 +2271,7 @@ fn convFilter.outputLetVar( node: Nodes.DeclVarNode ) mut {
             self.pushIndent(##);
             foreach varInfo, index in node.$symbolInfoList {
                self.write( "%s = _%s" (self.getSymbolSym( varInfo ), varInfo.$name) );
-               if expList.getExpTypeAt( index ).$nilable {
+               if expList.getExpTypeNoDDDAt( index ).$nilable {
                   self.outputAny2Type( varInfo.$typeInfo );
                }
                self.writeln( "" );
@@ -2333,7 +2337,7 @@ pub override fn convFilter.processDeclVar(
          fn setVals() {
             foreach varSym, index in node.$symbolInfoList {
                self.write( "%s = _%s" (self.getSymbolSym( varSym ), varSym.$name) );
-               if expList.getExpTypeAt( index ).$nilable {
+               if expList.getExpTypeNoDDDAt( index ).$nilable {
                   self.outputAny2Type( varSym.$typeInfo );
                }
                self.writeln( "" );
@@ -2360,7 +2364,7 @@ pub override fn convFilter.processDeclVar(
          self.write( "if " );
          let mut hasCond = false;
          foreach varSym, index in node.$symbolInfoList {
-            if expList.getExpTypeAt( index ).$nilable {
+            if expList.getExpTypeNoDDDAt( index ).$nilable {
                if hasCond {
                   self.write( " || " );
                }
@@ -4272,9 +4276,9 @@ pub override fn convFilter.processExpMultiTo1(
 {
    self.write( "Lns_car(" );
    filter( node.$exp, self, node );
-   if node.$exp.$expType.$kind == .DDD {
-      self.write( "..." );
-   }
+   // if node.$exp.$expType.$kind == .DDD {
+   //    self.write( "..." );
+   // }
    self.write( ")" );
    self.outputAny2Type( node.$expType );
 }

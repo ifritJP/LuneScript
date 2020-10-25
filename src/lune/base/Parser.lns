@@ -1033,8 +1033,7 @@ let val = ?a;
 // hoge
 fn func():int {
    return "%g" val + 1 + 2.0;
-}
-```);
+}```);
       let mut parser = new StreamParser( stream, "test" ## );
 
       class LowToken {

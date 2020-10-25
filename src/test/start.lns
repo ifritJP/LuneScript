@@ -564,6 +564,7 @@ class TestDest {
    }                                                    // skip-lua51
 }
 new TestDest( 100 );
+collectgarbage();
 
 
 module GlueTest require 'test.glueTest' glue 'hoge_' {
@@ -619,7 +620,7 @@ macro _test3() {
       let val = unwrap _load( txt )$();
       let val2 = unwrap val.a;
       let mut val3:stat[] = [];
-      foreach val4, key in val2@@Map<str,stem> {
+      forsort val4, key in val2@@Map<str,stem> {
          val3.insert( `{ ,,,key = ,,val4, } );
       }
    }
@@ -1839,4 +1840,36 @@ class Test_ccc {
    }
    let hogess = new Hoge();
    hogess.func();
+}
+{
+   Macro._section();
+   fn func():...<int!> {
+      return 1, 2;
+   }
+   if! func() {
+      print( _exp + 10 );
+   }
+}
+_ = 1;
+{
+   _ = 2;
+}
+{
+   Macro._section();
+   {
+      fn func():...<int!> {
+         return 1,2;
+      }
+      if func() {
+         print( "abc");
+      }
+   }
+   {
+      fn func():...<int!> {
+         return ;
+      }
+      if func() {
+         print( "xyz");
+      }
+   }
 }

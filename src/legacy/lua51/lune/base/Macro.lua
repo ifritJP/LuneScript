@@ -622,7 +622,7 @@ function MacroCtrl:__init(macroEval)
    self.analyzeInfo = MacroAnalyzeInfo.new(Ast.builtinTypeNone, Nodes.MacroMode.None)
    self.macroCallLineNo = 0
    self.macroAnalyzeInfoStack = {self.analyzeInfo}
-   self.macroLocalVarMap = {}
+   self.macroLocalVarMap = _moduleObj.toListEmpty(  )
 end
 function MacroCtrl.setmeta( obj )
   setmetatable( obj, { __index = MacroCtrl  } )
@@ -702,6 +702,7 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
    
    local func = macroInfo.func
    local macroVars = func( macroArgValMap )
+   self.macroLocalVarMap = _lune.unwrap( macroVars['__var'])
    for __index, name in pairs( (_lune.unwrap( macroVars['__names']) ) ) do
       local valInfo = _lune.unwrap( macroInfo.symbol2MacroValInfoMap[name])
       local typeInfo = valInfo.typeInfo
@@ -827,7 +828,7 @@ local function expandVal( tokenList, workval, pos )
             
             table.insert( tokenList, Parser.Token.new(kind, num, pos, false) )
          elseif _switchExp == "string" then
-            table.insert( tokenList, Parser.Token.new(Parser.TokenKind.Str, string.format( '[[%s]]', tostring( val)), pos, false) )
+            table.insert( tokenList, Parser.Token.new(Parser.TokenKind.Str, string.format( '%q', val), pos, false) )
             
          else 
             

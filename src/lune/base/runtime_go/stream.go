@@ -70,7 +70,10 @@ func (self *LnsReader) Read( arg LnsAny) LnsAny {
 
             for {
                 readSize, err := self.bufReader.Read( buf )
-                if err == io.EOF {
+                if err != nil && err != io.EOF {
+                    break
+                }
+                if err == io.EOF && readSize == 0 {
                     break
                 }
                 
@@ -84,21 +87,30 @@ func (self *LnsReader) Read( arg LnsAny) LnsAny {
             return string(ret)
         case "*l":
             buf, err := self.bufReader.ReadBytes( '\n' )
-            if err == io.EOF {
+            if err != nil && err != io.EOF {
                 return nil
             }
-            // 改行を除外して返す
-            return string( buf[ : len( buf ) - 1 ] )
+            if len( buf ) == 0 {
+                return nil
+            }
+            if buf[ len( buf ) - 1 ] == '\n' {
+                // 改行を除外して返す
+                return string( buf[ : len( buf ) - 1 ] )
+            }
+            return string( buf )
         default:
             panic( fmt.Sprintf( "not support -- %s", mode ) );
         }
     case LnsInt:
         buf := make([]byte, arg.(LnsInt) )
-        _, err := self.bufReader.Read( buf )
-        if err == io.EOF {
+        size, err := self.bufReader.Read( buf )
+        if err != nil && err != io.EOF {
             return nil
         }
-        return string( buf )
+        if size == 0 {
+            return nil
+        }
+        return string( buf[ :size] )
     default:
         panic( fmt.Sprintf( "not support -- %s", arg ) );
     }

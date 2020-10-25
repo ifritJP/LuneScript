@@ -199,7 +199,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 4958
+   return 5041
 end
 
 
@@ -499,7 +499,7 @@ usage:
     -u: update meta and lua on load.
     -Werror: error by warrning.
     --log <mode>: set log level.
-         mode: fatal, error, warn, info, debug, trace
+         mode: fatal, error, warn, log, info, debug, trace
     --warning-shadowing: shadowing error convert to warning.
     --compat-comment: backward compatibility to process the comment.
     --disable-checking-define-abbr: disable checking for ##.

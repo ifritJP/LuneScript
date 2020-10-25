@@ -32,6 +32,8 @@ import "fmt"
 import "strings"
 //import "runtime"
 
+// import "github.com/yuin/gopher-lua/pm"
+
 var lns_c_ptr_string *C.char
 var lns_c_ptr_format *C.char
 var lns_c_ptr_gsub *C.char
@@ -102,6 +104,14 @@ func (self *lns_callInfoString) end() {
     //C.free( unsafe.Pointer( self.string ) )
 }
 
+func string_index( index LnsInt, len LnsInt ) LnsInt {
+    if index >= 0 {
+        return index;
+    } else if -index > len {
+        return 0;
+    }
+    return len + index + 1;
+}
 
 func (luaVM *Lns_luaVM) String_format( format string, ddd []LnsAny ) string {
 
@@ -143,17 +153,48 @@ func (luaVM *Lns_luaVM) String_gsub(
 }
 
 func (luaVM *Lns_luaVM) String_find(
-    txt string, src string, index LnsAny, plain LnsAny ) (LnsAny,LnsAny) {
+    txt string, src string, index LnsAny, plain LnsAny ) []LnsAny {
 
     callInfo := luaVM.string_call_setup( lns_c_ptr_find, txt )
 
     pSrc := luaVM.pushStr( src )
     defer pSrc.free()
-    luaVM.pushAny( index )
-    luaVM.pushAny( plain )
+    luaVM.pushAny( index ) // int なので defer 不要
+    luaVM.pushAny( plain ) // bool なので defer 不要
     
     ret := callInfo.call( luaVM, 4, 2 )
-    return Lns_getFromMulti( ret, 0 ), Lns_getFromMulti( ret, 1 )
+    return ret
+
+    // offset := 1
+    // if work, ok := index.(LnsInt); ok {
+    //     offset = work
+    // }
+    // if offset < 0 {
+    //     return []LnsAny{}
+    // } else if offset == 0 {
+    //     offset = 1;
+    // }
+    
+    // matches, err := pm.Find( src, []byte(txt), offset - 1, 1 )
+	// if err != nil {
+	// 	panic( err )
+	// }
+	// if len( matches ) == 0 {
+    //     return []LnsAny{}
+	// }
+	// md := matches[0]
+    // return []LnsAny{ md.Capture(0) + 1, md.Capture(1) }
+    
+	// // L.Push(LNumber(md.Capture(0) + 1))
+	// // L.Push(LNumber(md.Capture(1)))
+	// // for i := 2; i < md.CaptureLength(); i += 2 {
+	// // 	if md.IsPosCapture(i) {
+	// // 		L.Push(LNumber(md.Capture(i)))
+	// // 	} else {
+	// // 		L.Push(LString(str[md.Capture(i):md.Capture(i+1)]))
+	// // 	}
+	// // }
+	// // return md.CaptureLength()/2 + 1
 }
 
 func (luaVM *Lns_luaVM) String_byte(
@@ -161,8 +202,8 @@ func (luaVM *Lns_luaVM) String_byte(
 
     callInfo := luaVM.string_call_setup( lns_c_ptr_byte, txt )
 
-    luaVM.pushAny( from )
-    luaVM.pushAny( to )
+    luaVM.pushAny( from ) // int なので defer 不要
+    luaVM.pushAny( to ) // int なので defer 不要
     
     ret := callInfo.call( luaVM, 3, cLUA_MULTRET )
     return ret
@@ -178,11 +219,26 @@ func (luaVM *Lns_luaVM) String_rep( txt string, num LnsInt ) string {
 }
 
 func (luaVM *Lns_luaVM) String_sub( txt string, from LnsInt, to LnsAny ) string {
-    callInfo := luaVM.string_call_setup( lns_c_ptr_sub, txt )
+    // callInfo := luaVM.string_call_setup( lns_c_ptr_sub, txt )
+    // luaVM.pushAny( from ) // int なので defer 不要
+    // luaVM.pushAny( to ) // int なので defer 不要
+    // return callInfo.call( luaVM, 3, 1 )[0].(string)
 
-    luaVM.pushAny( from )
-    luaVM.pushAny( to )
-    return callInfo.call( luaVM, 3, 1 )[0].(string)
+    from = string_index( from, len( txt ) )
+    if from < 1 {
+        from = 1
+    }
+    end := len( txt )
+    if work, ok := to.(LnsInt); ok {
+        end = string_index( work, len( txt ) )
+    }
+    if from <= end {
+        if end > len(txt) {
+            end = len(txt)
+        }
+        return txt[from - 1:end]
+    }
+    return ""
 }
 
 func (luaVM *Lns_luaVM) String_lower( txt string ) string {
@@ -214,8 +270,8 @@ func (luaVM *Lns_luaVM) String_dump( form *Lns_luaValue, flag LnsAny ) string {
 
     top := luaVM.string_static_call_setup( lns_c_ptr_dump )
 
-    form.pushValFromGlobalValMap()
-    luaVM.pushAny( flag )
+    form.core.pushValFromGlobalValMap()
+    luaVM.pushAny( flag ) // bool なので defer 不要
     
     ret := luaVM.lua_call( top, 2, 1 )
     return ret[0].(string)

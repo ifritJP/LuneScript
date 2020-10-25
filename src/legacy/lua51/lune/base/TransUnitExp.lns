@@ -24,6 +24,20 @@ SOFTWARE.
 
 subfile owner lune.base.TransUnit;
 
+fn TransUnit.MultiTo1( mut exp:Nodes.Node ) mut : Nodes.Node {
+   if #exp.$expTypeList > 1 {
+      exp = Nodes.ExpMultiTo1Node.create(
+         self.nodeManager, exp.$pos, exp.$macroArgFlag, [ exp.$expType ], exp );
+   } else {
+      if! let dddType = exp.$expType@@@Ast.DDDTypeInfo {
+         exp = Nodes.ExpMultiTo1Node.create(
+            self.nodeManager, exp.$pos, exp.$macroArgFlag,
+            [ dddType.$typeInfo.$nilableTypeInfo ], exp );
+      }
+   }
+   return exp;
+}
+
 /**
 一つの値を持つ R-Value の expression を期待する。
 
@@ -35,10 +49,7 @@ fn TransUnit.analyzeExpOneRVal(
 {
    let mut exp = self.analyzeExp(
       allowNoneType, skipOp2Flag, false, opLevel, expectType );
-   if #exp.$expTypeList ~= 1 {
-      exp = Nodes.ExpMultiTo1Node.create(
-         self.nodeManager, exp.$pos, exp.$macroArgFlag, [ exp.$expType ], exp );
-   }
+   exp = self.MultiTo1( exp );
 
    when! expectType {
       switch expectType.$kind {
@@ -2556,9 +2567,9 @@ fn TransUnit.analyzeExpSymbol(
       else {
          self.checkSymbolComp( symbolToken );
 
-         if symbolToken.txt == "_" {
-            self.addErrMess( symbolToken.pos, "can't access '_' symbol." );
-         }
+         // if symbolToken.txt == "_" {
+         //    self.addErrMess( symbolToken.pos, "can't access '_' symbol." );
+         // }
          
          let! symbolInfo = self.scope.getSymbolTypeInfo(
             symbolToken.txt, self.scope, self.moduleScope, self.scopeAccess )
@@ -2797,7 +2808,7 @@ fn TransUnit.analyzeExpOpSet(
 
 fn TransUnit.analyzeExpOpEquals(
    pos:&Parser.Position, opToken:&Parser.Token,
-   mut exp1: Nodes.Node, mut exp2: &Nodes.Node ) mut : Nodes.Node, &Nodes.Node
+   mut exp1: Nodes.Node, mut exp2: Nodes.Node ) mut : Nodes.Node, Nodes.Node
 {
    let exp1Type = exp1.$expType;
    let exp2Type = exp2.$expType;
@@ -2932,8 +2943,12 @@ fn TransUnit.analyzeExpOp2(
                return self.analyzeExpOpSet( exp, nextToken, expectTypeList );
             }
 
-            let mut exp2:&Nodes.Node =
-               self.analyzeExp( false, false, false, opLevel, expectTypeList[ 1 ] );
+            exp = self.MultiTo1( exp );
+            
+            let mut exp2:Nodes.Node = self.analyzeExp(
+               false, false, false, opLevel, expectTypeList[ 1 ] );
+            exp2 = self.MultiTo1( exp2 );
+            
             if not exp2.canBeRight() {
                self.addErrMess(
                   exp2.$pos, "This can't evaluate for '%s' -- %s"

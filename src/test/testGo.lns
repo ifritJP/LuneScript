@@ -1639,3 +1639,71 @@ _section();
       fileObj.read( "*a" );
    }
 }
+_section();
+{
+   macro _hoge() {
+      {
+         __var.abc = "abc";
+      }
+   }
+   _hoge();
+   macro _hoge2() {
+      {
+         let txt = (unwrap __var.abc)@@str;
+      }
+      print( ,,txt );
+   }
+   _hoge2();
+}
+_section();
+{
+   let txt = "123456789";
+   let mut map:Map<str,int> = {};
+   fn func( val:str, from:int, to:int ) {
+      print( from, to, val );
+   }
+   for index = 1, #txt + 1 {
+      func( txt.sub( index ## ), index, 0 );
+   }
+   for index = 1, #txt + 1{
+      for subindex = 1, #txt + 1{
+         func( txt.sub( index, subindex ), index, subindex );
+         func( txt.sub( index, -subindex ), index, -subindex );
+         func( txt.sub( -index, subindex ), -index, subindex );
+         func( txt.sub( -index, -subindex ), -index, -subindex );
+      }
+   }
+
+   forsort len, val in map {
+      print( len, val );
+   }
+}
+_section();
+{
+   let val = "abcd";
+   if val.find( "^abc", -1 ## ) {
+      print( "hoge" );
+   }
+   if val.find( "^abc", 0 ## ) {
+      print( "hoge" );
+   }
+   if val.find( "^abc", 1 ## ) {
+      print( "hoge" );
+   }
+   if val.find( "^abc", 2 ## ) {
+      print( "hoge" );
+   }
+}
+_section();
+{
+   fn func():...<int!> {
+      return 1,2;
+   }
+   fn hoge() {
+      let! index = func() {
+         return;
+      };
+      print( index );
+   }
+   hoge();
+}

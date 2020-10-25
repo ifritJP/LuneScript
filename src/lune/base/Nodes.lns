@@ -1005,11 +1005,46 @@ pub override fn ExpListNode.setLValue() mut {
       expNode.isLValue = true;
    }
 }
+
+
+/**
+この ExpListNode の index 番目の要素の型を返す。
+
+index 番目の型が DDD の場合、DDD を返す。
+具体的には ...<int> の場合、 ...<int> を返す。
+
+index がこのリストの要素の数を越えた場合で、
+かつ最終要素が DDD の場合、その DDD が保持する型を返す。
+具体的には ...<int> の場合、 int! を返す。
+*/
 pub fn ExpListNode.getExpTypeAt( index:int ) : &Ast.TypeInfo {
    if index > #self.$expTypeList {
       let lastExpType = self.$expTypeList[ #self.$expTypeList ];
       if! let dddTypeInfo = lastExpType@@@Ast.DDDTypeInfo {
          return dddTypeInfo.$typeInfo.$nilableTypeInfo;
+      }
+      return Ast.builtinTypeNil;
+   }
+   return self.$expTypeList[ index ];
+}
+
+/**
+この ExpListNode の index 番目の要素の型を返す。
+
+index 番目の型が DDD の場合、その DDD が保持する型を返す。
+具体的には ...<int> の場合、 int! を返す。
+index がこのリストの要素の数を越えた場合で、
+かつ最終要素が DDD の場合、その DDD が保持する型を返す。
+具体的には ...<int> の場合、 int! を返す。
+*/
+pub fn ExpListNode.getExpTypeNoDDDAt( index:int ) : &Ast.TypeInfo {
+   if index >= #self.$expTypeList {
+      let lastExpType = self.$expTypeList[ #self.$expTypeList ];
+      if! let dddTypeInfo = lastExpType@@@Ast.DDDTypeInfo {
+         return dddTypeInfo.$typeInfo.$nilableTypeInfo;
+      }
+      if index == #self.$expTypeList {
+         return lastExpType;
       }
       return Ast.builtinTypeNil;
    }

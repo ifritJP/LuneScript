@@ -448,7 +448,7 @@ function convFilter:writeRaw( txt )
    end
    
    
-   for _5555 in string.gmatch( txt, "\n" ) do
+   for _5573 in string.gmatch( txt, "\n" ) do
       self.curLineNo = self.curLineNo + 1
    end
    
@@ -799,7 +799,7 @@ function convFilter:outputMeta( node )
                      local memberName = memberNode:get_name().txt
                      local memberTypeInfo = memberNode:get_expType(  )
                      self:writeln( string.format( "__classInfo%d.%s = {", classTypeId, memberName) )
-                     self:writeln( string.format( "  name='%s', staticFlag = %s, mutMode = %d,", memberName, tostring( memberNode:get_staticFlag()), memberNode:get_symbolInfo():get_mutMode()) .. string.format( "accessMode = '%s', typeId = %d }", tostring( memberNode:get_accessMode()), memberTypeInfo:get_typeId(  )) )
+                     self:writeln( string.format( "  name='%s', staticFlag = %s, mutMode = %d,", memberName, tostring( memberNode:get_staticFlag()), memberNode:get_symbolInfo():get_mutMode()) .. string.format( "accessMode = %d, typeId = %d }", memberNode:get_accessMode(), memberTypeInfo:get_typeId(  )) )
                      
                      pickupTypeId( memberTypeInfo, true )
                   end
@@ -1328,6 +1328,11 @@ if not %s then
    %s = _lune
 end]==], luneSymbol, luneSymbol) )
    
+   if _lune.nilacc( node:get_moduleScope():getSymbolInfoChild( "_" ), 'get_posForLatestMod', 'callmtd' ) then
+      self:writeln( "local _" )
+   end
+   
+   
    local children = node:get_children(  )
    
    for __index, child in ipairs( children ) do
@@ -1398,6 +1403,12 @@ function convFilter:processBlockSub( node, opt )
    
    self:writeln( word )
    self:pushIndent(  )
+   
+   if _lune.nilacc( node:get_scope():getSymbolInfoChild( "_" ), 'get_posForLatestMod', 'callmtd' ) then
+      self:writeln( "local _" )
+   end
+   
+   
    local stmtList = node:get_stmtList(  )
    for __index, statement in ipairs( stmtList ) do
       filter( statement, self, node )
@@ -1893,7 +1904,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _5893 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _6146 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -2153,6 +2164,7 @@ end
    self.macroDepth = self.macroDepth - 1
    
    self:writeln( "" )
+   self:writeln( "macroVar.__var = __var" )
    self:writeln( "return macroVar" )
    self:popIndent(  )
    self:writeln( "end" )
@@ -4079,7 +4091,15 @@ local MacroEvalImp = {}
 setmetatable( MacroEvalImp, { __index = Nodes.MacroEval } )
 _moduleObj.MacroEvalImp = MacroEvalImp
 function MacroEvalImp:evalFromMacroCode( code )
+   local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
+   
+   Log.log( Log.Level.Trace, __func__, 3387, function (  )
+   
+      return string.format( "macro: %s", code)
+   end )
+   
+   
    local func, err = runLuaOnLns( code )
    if func ~= nil then
       return func
@@ -4114,18 +4134,17 @@ end
 function MacroEvalImp.setmeta( obj )
   setmetatable( obj, { __index = MacroEvalImp  } )
 end
-function MacroEvalImp.new( mode )
+function MacroEvalImp.new(  )
    local obj = {}
    MacroEvalImp.setmeta( obj )
    if obj.__init then
-      obj:__init( mode )
+      obj:__init(  )
    end
    return obj
 end
-function MacroEvalImp:__init( mode )
+function MacroEvalImp:__init(  )
 
    Nodes.MacroEval.__init( self)
-   self.mode = mode
 end
 
 

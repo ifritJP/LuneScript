@@ -125,10 +125,10 @@
 	   (t
 	    ;; 見つかった場合は、前の文字が文字列中か調べる
 	    (cond
-	     ((lns-is-in-comment-string (point))
+	     ((lns-is-in-comment-string (1- (point)))
 	      ;; まだ文字列中なのでもっと前の文字を調べる
 	      )
-	      ;;(setq loop-flag nil))
+	     ;;(setq loop-flag nil))
 	     ;; ((lns-is-in-comment-string (1- (point)))
 	     ;;  ;; まだ文字列中なのでもっと前の文字を調べる
 	     ;;  nil)
@@ -141,7 +141,7 @@
 		;; 違う文字なので文字列継続
 		(setq syntax-code "\."))
 	      ))))
-	)))
+	  )))
     syntax-code))
 
 
@@ -542,6 +542,10 @@ pattern は  {, }, {{, }} のいずれか。
 		     (setq column (+ column indent))
 		   (setq column (+ column 5)))))
 	      ((equal (lns-get-current-token) "fn")
+	       (setq column (current-column)))
+	      ((and (lns-get-current-token)
+		    (string-match lns-bloak-statement-head
+				  (lns-get-current-token)))
 	       (setq column (current-column)))
 	      (t
 	       (setq column (+ (current-column) indent))))

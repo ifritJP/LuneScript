@@ -68,40 +68,42 @@ func (luaVM *Lns_luaVM) RunLoadedfunc( loaded *Lns_luaValue, args[]LnsAny ) []Ln
     top := lua_gettop( luaVM.vm )
     defer lua_settop( luaVM.vm, top )
 
-    loaded.pushValFromGlobalValMap()
+    loaded.core.pushValFromGlobalValMap()
     for _, val := range( args ) {
-        luaVM.pushAny( val )
+        pVal := luaVM.pushAny( val )
+        defer pVal.free()
     }
     return luaVM.lua_call( top, len( args ), cLUA_MULTRET )
 }
 
 func (luaValue *Lns_luaValue) Get1stFromMap() (LnsAny, LnsAny) {
-    vm := luaValue.luaVM.vm
+    vm := luaValue.core.luaVM.vm
     top := lua_gettop( vm )
     defer lua_settop( vm, top )
 
-    luaValue.pushValFromGlobalValMap()
+    luaValue.core.pushValFromGlobalValMap()
     
     lua_pushnil( vm )
     if lua_next( vm, -2 ) == 0 {
         return nil, nil
     }
 
-    ret2 := luaValue.luaVM.setupFromStack( -1, true )
-    ret1 := luaValue.luaVM.setupFromStack( -2, true )
+    ret2 := luaValue.core.luaVM.setupFromStack( -1, true )
+    ret1 := luaValue.core.luaVM.setupFromStack( -2, true )
 
     return ret1, ret2
 }
 
 func (luaValue *Lns_luaValue) NextFromMap( prev LnsAny ) (LnsAny, LnsAny) {
-    vm := luaValue.luaVM.vm
+    vm := luaValue.core.luaVM.vm
     top := lua_gettop( vm )
     defer lua_settop( vm, top )
 
-    luaVM := luaValue.luaVM
+    luaVM := luaValue.core.luaVM
 
-    luaValue.pushValFromGlobalValMap()
-    luaVM.pushAny( prev )
+    luaValue.core.pushValFromGlobalValMap()
+    pPrev := luaVM.pushAny( prev )
+    defer pPrev.free()
 
     if lua_next( vm, -2 ) == 0 {
         return nil, nil

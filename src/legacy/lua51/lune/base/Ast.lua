@@ -1649,9 +1649,6 @@ end
 function NormalSymbolInfo:get_typeInfo()
    return self.typeInfo
 end
-function NormalSymbolInfo:set_typeInfo( typeInfo )
-   self.typeInfo = typeInfo
-end
 function NormalSymbolInfo:get_kind()
    return self.kind
 end
@@ -2439,18 +2436,18 @@ end
 
 function Scope:addLocalVar( argFlag, canBeLeft, name, pos, typeInfo, mutable )
 
-   return self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, pos, typeInfo, AccessMode.Local, false, mutable, true )
+   return self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, name ~= "_", name, pos, typeInfo, AccessMode.Local, false, mutable, true )
 end
+
+
+local dummySymbol = _lune.unwrap( _moduleObj.rootScope:addLocalVar( false, false, "$$", nil, _moduleObj.headTypeInfo, MutMode.IMut ))
+_moduleObj.dummySymbol = dummySymbol
 
 
 function Scope:addUnwrapedVar( argFlag, canBeLeft, name, pos, typeInfo, mutable )
 
    return self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, pos, typeInfo, AccessMode.Local, false, mutable, true )
 end
-
-
-local dummySymbol = _lune.unwrap( _moduleObj.rootScope:addLocalVar( false, false, "$$", nil, _moduleObj.headTypeInfo, MutMode.IMut ))
-_moduleObj.dummySymbol = dummySymbol
 
 
 function Scope:addStaticVar( argFlag, canBeLeft, name, pos, typeInfo, mutable )
@@ -5699,6 +5696,22 @@ immutableTypeSet[_moduleObj.builtinTypeReal]= true
 immutableTypeSet[_moduleObj.builtinTypeChar]= true
 immutableTypeSet[_moduleObj.builtinTypeString]= true
 
+function Scope:addIgnoredVar(  )
+
+   self:addLocalVar( false, true, "_", nil, _moduleObj.builtinTypeEmpty, MutMode.Mut )
+end
+
+
+function NormalSymbolInfo:set_typeInfo( typeInfo )
+
+   if self.name == "_" then
+      return 
+   end
+   
+   self.typeInfo = typeInfo
+end
+
+
 local function failCreateLuavalWith( typeInfo, convFlag )
 
    
@@ -8545,7 +8558,7 @@ IdType.__allList[2] = IdType.Ext
 local function switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 6529, function (  )
+   Log.log( Log.Level.Trace, __func__, 6543, function (  )
    
       return "start"
    end )
@@ -8565,7 +8578,7 @@ local builtinTypeInfo2Map = typeInfo2Map:clone(  )
 local function pushProcessInfo( processInfo )
    local __func__ = '@lune.@base.@Ast.pushProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6541, function (  )
+   Log.log( Log.Level.Trace, __func__, 6555, function (  )
    
       return "start"
    end )
@@ -8600,7 +8613,7 @@ _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
    local __func__ = '@lune.@base.@Ast.popProcessInfo'
 
-   Log.log( Log.Level.Trace, __func__, 6567, function (  )
+   Log.log( Log.Level.Trace, __func__, 6581, function (  )
    
       return "start"
    end )

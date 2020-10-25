@@ -25,9 +25,26 @@ SOFTWARE.
 package main
 
 import "os"
+import "runtime/pprof"
 
 import . "lns/lune/base/runtime_go"
 import lns "lns/lune/base"
+
+func exec( args []LnsAny ) error {
+    prof, err := os.Create("cpu.pprof")
+    if err != nil {
+        return err
+    }
+
+    if err := pprof.StartCPUProfile(prof); err != nil {
+        return err
+    }
+    defer pprof.StopCPUProfile()    
+
+    lns.Front_exec( NewLnsList( args[ 1:] ) )
+
+    return nil
+}
 
 
 func main() {
@@ -39,5 +56,5 @@ func main() {
         args = append( args, arg )
     }
 
-    lns.Front_exec( NewLnsList( args[ 1:] ) )
+    exec( args )
 }

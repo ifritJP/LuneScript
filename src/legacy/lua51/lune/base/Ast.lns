@@ -1086,7 +1086,7 @@ pub class NormalSymbolInfo extend SymbolInfo {
    /** シンボルの名前 */
    pri let pos: &Parser.Position! { pub };
    /** シンボルの型 */
-   pri let allmut typeInfo: &TypeInfo { pub, pub };
+   pri let allmut typeInfo: &TypeInfo {pub};
    /** このシンボルの種類 SymbolKind */
    pri let kind: SymbolKind { pub };
    /** このシンボルがデータを保持しているかどうか */
@@ -1099,7 +1099,7 @@ pub class NormalSymbolInfo extend SymbolInfo {
    
    /** 変換モジュール用パラメータ */
    pri let allmut convModuleParam:stem! {pub,pub}; 
-   
+
    pub override fn get_mutable(): bool {
       return isMutable( self.mutMode );
    }
@@ -1687,8 +1687,11 @@ pub fn Scope.addLocalVar(
 {
    return self.add(
       argFlag and SymbolKind.Arg or SymbolKind.Var,
-      canBeLeft, true, name, pos, typeInfo, .Local, false, mutable, true )**;
+      canBeLeft, name ~= "_", name, pos, typeInfo, .Local, false, mutable, true )**;
 }
+
+pub let dummySymbol =
+   unwrap rootScope.addLocalVar( false, false, "$$", nil, headTypeInfo, .IMut );
 
 pub fn Scope.addUnwrapedVar(
    argFlag:bool, canBeLeft:bool, name:str, pos:&Parser.Position!,
@@ -1699,8 +1702,6 @@ pub fn Scope.addUnwrapedVar(
       canBeLeft, true, name, pos, typeInfo, .Local, false, mutable, true )**;
 }
 
-pub let dummySymbol =
-   unwrap rootScope.addLocalVar( false, false, "$$", nil, headTypeInfo, .IMut );
 
 pub fn Scope.addStaticVar(
    argFlag:bool, canBeLeft:bool, name:str, pos:&Parser.Position!,
@@ -1719,6 +1720,8 @@ pub fn Scope.addVar(
    return self.add( SymbolKind.Var, true, true, name, pos, typeInfo,
                     accessMode, false, mutable, hasValueFlag )**;
 }
+
+
 
 
 pub fn Scope.addEnumVal( name:str, pos:&Parser.Position!, typeInfo: &TypeInfo ) mut :
@@ -4194,6 +4197,17 @@ immutableTypeSet.add( builtinTypeInt );
 immutableTypeSet.add( builtinTypeReal );
 immutableTypeSet.add( builtinTypeChar );
 immutableTypeSet.add( builtinTypeString );
+
+pub fn Scope.addIgnoredVar() mut {
+   self.addLocalVar( false, true, "_", nil, builtinTypeEmpty, .Mut );
+}
+
+pub override fn NormalSymbolInfo.set_typeInfo(typeInfo:&TypeInfo) {
+   if self.name == "_" {
+      return;
+   }
+   self.typeInfo = typeInfo;
+}
 
 
 /**

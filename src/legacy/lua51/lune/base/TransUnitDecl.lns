@@ -508,6 +508,9 @@ pub fn TransUnit.createAST(
 
    self.parser = new Parser.DefaultPushbackParser( parser );
 
+   self.scope.addIgnoredVar();
+
+   
    let ast:Nodes.Node;
 
    let mut lastStatement:&Nodes.Node! = nil;
@@ -803,6 +806,9 @@ fn TransUnit.analyzeDeclMacro(
    // スコープをマクロ用スコープに変更
    let mut backScope = self.scope;
    self.scope = scope;
+
+   self.scope.addIgnoredVar();
+   
 
    let mut node = self.analyzeDeclMacroSub(
       accessMode, firstToken, nameToken, scope, parentInfo, workArgList );
@@ -2845,7 +2851,7 @@ fn TransUnit.analyzeDeclFunc(
 
       funcBodyScope.addLocalVar(
          false, false, "__func__", firstToken.pos, Ast.builtinTypeString, .IMut );
-
+      
       let mut workBody = self.analyzeFuncBlock(
          analyzingState, firstToken, classTypeInfo, typeInfo,
          funcName, funcBodyScope, typeInfo.$retTypeInfoList );
@@ -2997,6 +3003,249 @@ class LetVarInfo {
 }
 
 
+fn TransUnit.analyzeInitExp(
+   firstPos:&Parser.Position, accessMode:Ast.AccessMode, unwrapFlag:bool,
+   letVarList:List<&LetVarInfo>, typeInfoList : List<&Ast.TypeInfo> ) mut :
+   List<&Ast.TypeInfo>, &List<&LetVarInfo>, &List<&Ast.TypeInfo>, Nodes.ExpListNode!
+{
+   // 初期値の式を取得
+   let mut expList:Nodes.ExpListNode! = nil;
+   let mut expectTypeList:List<&Ast.TypeInfo> = [];
+   foreach varInfo in letVarList {
+      expectTypeList.insert(
+         unwrap varInfo.varType$.$expType default Ast.builtinTypeNone );
+   }
+   
+   expList = self.analyzeExpList( false, false, false, nil, expectTypeList ## );
+   if not expList {
+      self.error( "expList is nil" );
+   }
+   
+
+   // unwrap 前の型
+   let mut orgExpTypeList: List<&Ast.TypeInfo> = [];
+
+   // 型推論の解決と、宣言されている型と初期値との整合性を確認
+   when! expList {
+
+      if unwrapFlag {
+         // unwrapFlag 値の中に nilable があるかどうか確認する。
+         let mut hasNilable = false;
+         foreach _, index in letVarList {
+            if expList.getExpTypeAt( index ).$nilable {
+               hasNilable = true;
+               break;
+            }
+         }
+         if not hasNilable {
+            self.addWarnMess( firstPos, "has no nilable" );
+         }
+      }
+      
+      let mut workList = expList;
+      let mut updateExpList = false;
+      let mut newExpList:List<&Nodes.Node> = [];
+      foreach exp, index in workList.$expList {
+         newExpList.insert( exp ) ;
+         if not exp.canBeRight() {
+            self.addErrMess( exp.$pos,
+                             "this node(%d) can not be r-value. -- %s"
+                             (index, Nodes.getNodeKindName( exp.$kind ) ) );
+         }
+      }
+
+      //  初期化値の型を反映する
+      let mut expTypeList: List<&Ast.TypeInfo> = [];
+      foreach expType, index in workList.$expTypeList {
+         if index == #workList.$expTypeList and expType.$kind == .DDD
+         {
+            // 最終要素が ... の場合、残りの変数宣言の分 stem をセットする
+            let mut dddItemType = Ast.builtinTypeStem_;
+            if #expType.$itemTypeInfoList > 0 {
+               dddItemType = expType.$itemTypeInfoList[ 1 ].$nilableTypeInfo;
+            }
+            for subIndex = index, #letVarList {
+               let argType = typeInfoList[ subIndex ];
+               let mut checkType = dddItemType;
+               if unwrapFlag {
+                  checkType = dddItemType.$nonnilableType;
+               }
+               if not argType.equals( Ast.builtinTypeEmpty ## ) and
+               not argType.canEvalWith( checkType, .SetOp, {} )
+               {
+                  self.addErrMess(
+                     firstPos,
+                     "unmatch value type (index = %d) %s <- %s"
+                     ( subIndex, argType.getTxt( self.typeNameCtrl## ),
+                       dddItemType.getTxt(##) ));
+               }
+               expTypeList.insert( checkType );
+               orgExpTypeList.insert( dddItemType );
+            }
+         }
+         else {
+            // 最終要素でない場合
+            let mut expTypeInfo: &Ast.TypeInfo = expType;
+            if expType.$kind == .DDD {
+               let itemList = expType.$itemTypeInfoList;
+               if #itemList > 0 {
+                  expTypeInfo = itemList[ 1 ];
+               }
+               else {
+                  expTypeInfo = Ast.builtinTypeStem_;
+               }
+            }
+            orgExpTypeList.insert( expTypeInfo );
+            if expTypeInfo == Ast.builtinTypeNil and index <= #typeInfoList {
+               // 初期値が nil の場合、 orgExpTypeList は代入先の nilable 型とする
+               orgExpTypeList[ index ] = typeInfoList[ index ].$nilableTypeInfo;
+            }
+            if unwrapFlag and expTypeInfo.$nilable {
+               expTypeInfo = expTypeInfo.$nonnilableType;
+            }
+
+            if index <= #typeInfoList {
+               let varType = typeInfoList[ index ];
+               let mut alt2typeMap =
+               Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap(false);
+               if varType.$kind == .Box {
+                  alt2typeMap = varType.createAlt2typeMap( true );
+               }
+               Ast.CanEvalCtrlTypeInfo.setupNeedAutoBoxing( alt2typeMap );
+
+               if not varType.equals( Ast.builtinTypeEmpty ## ) and
+               not (unwrapFlag and expTypeInfo.equals( Ast.builtinTypeNil ## ))
+               {
+                  let canEval, mess = varType.canEvalWith(
+                     expTypeInfo, .SetOp, alt2typeMap );
+                  if not canEval {
+                     self.addErrMess(
+                        firstPos,
+                        "unmatch value type (index:%d) %s <- %s%s"
+                        ( index,
+                          varType.getTxt( self.typeNameCtrl ## ),
+                          expTypeInfo.getTxt( self.typeNameCtrl ## ),
+                          mess and " -- %s" ( mess ) or "" ) );
+                  }
+               }
+               if varType.$kind == .Box {
+                  typeInfoList[ index ] = Ast.NormalTypeInfo.createBox(
+                     accessMode, expTypeInfo );
+               }
+               //if varType.$kind == .Box and expTypeInfo.$srcTypeInfo.$kind ~= .Box {
+               if Ast.CanEvalCtrlTypeInfo.canAutoBoxing( varType, expTypeInfo ) {
+                  // auto boxing
+                  updateExpList = true;
+                  let exp = newExpList[ index ];
+                  newExpList[ index ] = Nodes.BoxingNode.create(
+                     self.nodeManager, exp.$pos,
+                     self.macroCtrl.isInAnalyzeArgMode(), [ varType ], exp );
+                  if not Ast.CanEvalCtrlTypeInfo.finishNeedAutoBoxing( alt2typeMap, 1 ) {
+                     self.addErrMess( exp.$pos,
+                                      "auto boxing error %s <- %s"
+                                      ( varType.getTxt(##), expTypeInfo.getTxt(##)) );
+                  }
+               }
+               else {
+                  if not Ast.CanEvalCtrlTypeInfo.finishNeedAutoBoxing( alt2typeMap, 0 ) {
+                     self.addErrMess(
+                        newExpList[ index ].$pos,
+                        "illegal auto boxing error %s <- %s"
+                        ( varType.getTxt(##), expTypeInfo.getTxt(##)) );
+                  }
+               }
+            }
+            expTypeList.insert( expTypeInfo );
+         }
+      }
+      if updateExpList {
+         // 引数リストを更新する
+         workList = self.createExpListNode( workList, newExpList );
+      }
+
+      {
+         let mut alt2typeMap =
+         Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap(false);
+
+         if! self.checkImplicitCast(
+            alt2typeMap, true, typeInfoList, workList,
+            fn ( dstType:&Ast.TypeInfo, expNode:&Nodes.Node ): &Nodes.Node! {
+               return nil;
+            } )
+         {
+            workList = _exp;
+         }
+      }
+
+
+      // 宣言する変数の数より初期値が少ない場合、
+      // nil で初期化されるため変数が nilable かどうか判定
+      foreach varType, index in typeInfoList {
+         if index > #expTypeList {
+            if not varType.$nilable {
+               self.addErrMess(
+                  firstPos,
+                  "unmatch value type (index:%d) %s <- nil"
+                  (index, varType.getTxt( self.typeNameCtrl## )));
+            }
+         }
+      }
+      // 変数の型を、型推論で初期値から設定
+      foreach typeInfo, index in expTypeList {
+         if #typeInfoList < index or
+         typeInfoList[ index ].equals( Ast.builtinTypeEmpty ## )
+         {
+            let workPos;
+            let workType;
+            let workName;
+            if index <= #letVarList {
+               let letVar = letVarList[ index ];
+               workPos = letVar.varName.pos;
+               workName = letVar.varName.txt;
+               if Ast.TypeInfo.isMut( typeInfo ) and
+               not Ast.isMutable( letVar.mutable )
+               {
+                  workType = self.createModifier( typeInfo, .IMutRe );
+               }
+               else {
+                  workType = typeInfo;
+               }
+
+               if self.analyzeMode == .Inquire and self.isTargetToken( letVar.varName ) {
+                  self.dumpSymbolType( letVar.varName.txt, workType );
+               }
+            }
+            else {
+               workType = typeInfo;
+               workPos = firstPos;
+               workName = "";
+            }
+            typeInfoList[ index ] = workType;
+
+            switch workType.$kind {
+               case .Func {
+                  if #expTypeList ~= 1 or workType.$rawTxt ~= "" {
+                     // anonymous 関数宣言の型推論変数宣言は、
+                     // 通常関数宣言に置き換えるが、
+                     // 2 つ以上の変数を宣言している場合はエラーとする。
+                     self.addErrMess(
+                        firstPos,
+                        "must set the type of variable for function. -- %s"
+                        (workName) );
+                  }
+               }
+               case .List, .Array, .Set, .Map {
+                  self.checkLiteralEmptyCollection( workPos, workName, workType );
+               }
+            }
+         }
+      }
+      return typeInfoList, letVarList, orgExpTypeList, workList;
+   }
+
+   return typeInfoList, letVarList, orgExpTypeList, nil;
+}
+
 /*
 let で宣言している変数シンボル、型、初期値の型情報を解析して返す。
 
@@ -3077,246 +3326,14 @@ fn TransUnit.analyzeLetAndInitExp(
       }
    }
 
-   // 初期値の式を取得
-   let mut expList:Nodes.ExpListNode! = nil;
-   if nextToken.txt == "=" {
-      let mut expectTypeList:List<&Ast.TypeInfo> = [];
-      foreach varInfo in letVarList {
-         expectTypeList.insert(
-            unwrap varInfo.varType$.$expType default Ast.builtinTypeNone );
-      }
-      
-      expList = self.analyzeExpList( false, false, false, nil, expectTypeList ## );
-      if not expList {
-         self.error( "expList is nil" );
-      }
-   }
-   else {
+
+   if nextToken.txt ~= "=" {
       self.pushback();
+      let mut orgExpTypeList: List<&Ast.TypeInfo> = [];
+      return typeInfoList, letVarList, orgExpTypeList, nil;
    }
-
-   // unwrap 前の型
-   let mut orgExpTypeList: List<&Ast.TypeInfo> = [];
-
-   // 型推論の解決と、宣言されている型と初期値との整合性を確認
-   when! expList {
-
-      if unwrapFlag {
-         // unwrapFlag 値の中に nilable があるかどうか確認する。
-         let mut hasNilable = false;
-         foreach _, index in letVarList {
-            if expList.getExpTypeAt( index ).$nilable {
-               hasNilable = true;
-               break;
-            }
-         }
-         if not hasNilable {
-            self.addWarnMess( firstPos, "has no nilable" );
-         }
-      }
-      
-      let mut workList = expList;
-      let mut updateExpList = false;
-      let mut newExpList:List<&Nodes.Node> = [];
-      foreach exp, index in workList.$expList {
-         newExpList.insert( exp ) ;
-         if not exp.canBeRight() {
-            self.addErrMess( exp.$pos,
-                             "this node(%d) can not be r-value. -- %s"
-                             (index, Nodes.getNodeKindName( exp.$kind ) ) );
-         }
-      }
-
-      //  初期化値の型を反映する
-      let mut expTypeList: List<&Ast.TypeInfo> = [];
-      foreach expType, index in workList.$expTypeList {
-         if index == #workList.$expTypeList and expType.$kind == .DDD
-         {
-            // 最終要素が ... の場合、残りの変数宣言の分 stem をセットする
-            let mut dddItemType = Ast.builtinTypeStem_;
-            if #expType.$itemTypeInfoList > 0 {
-               dddItemType = expType.$itemTypeInfoList[ 1 ].$nilableTypeInfo;
-            }
-            for subIndex = index, #letVarList {
-               let argType = typeInfoList[ subIndex ];
-               let mut checkType = dddItemType;
-               if unwrapFlag {
-                  checkType = dddItemType.$nonnilableType;
-               }
-               if not argType.equals( Ast.builtinTypeEmpty ## ) and
-                  not argType.canEvalWith( checkType, .SetOp, {} )
-               {
-                  self.addErrMess(
-                     firstPos,
-                     "unmatch value type (index = %d) %s <- %s"
-                     ( subIndex, argType.getTxt( self.typeNameCtrl## ),
-                       dddItemType.getTxt(##) ));
-               }
-               expTypeList.insert( checkType );
-               orgExpTypeList.insert( dddItemType );
-            }
-         }
-         else {
-            // 最終要素でない場合
-            let mut expTypeInfo: &Ast.TypeInfo = expType;
-            if expType.$kind == .DDD {
-               let itemList = expType.$itemTypeInfoList;
-               if #itemList > 0 {
-                  expTypeInfo = itemList[ 1 ];
-               }
-               else {
-                  expTypeInfo = Ast.builtinTypeStem_;
-               }
-            }
-            orgExpTypeList.insert( expTypeInfo );
-            if expTypeInfo == Ast.builtinTypeNil and index <= #typeInfoList {
-               // 初期値が nil の場合、 orgExpTypeList は代入先の nilable 型とする
-               orgExpTypeList[ index ] = typeInfoList[ index ].$nilableTypeInfo;
-            }
-            if unwrapFlag and expTypeInfo.$nilable {
-               expTypeInfo = expTypeInfo.$nonnilableType;
-            }
-
-            if index <= #typeInfoList {
-               let varType = typeInfoList[ index ];
-               let mut alt2typeMap =
-                  Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap(false);
-               if varType.$kind == .Box {
-                  alt2typeMap = varType.createAlt2typeMap( true );
-               }
-               Ast.CanEvalCtrlTypeInfo.setupNeedAutoBoxing( alt2typeMap );
-
-               if not varType.equals( Ast.builtinTypeEmpty ## ) and
-                  not (unwrapFlag and expTypeInfo.equals( Ast.builtinTypeNil ## ))
-               {
-                  let canEval, mess = varType.canEvalWith(
-                     expTypeInfo, .SetOp, alt2typeMap );
-                  if not canEval {
-                     self.addErrMess(
-                        firstPos,
-                        "unmatch value type (index:%d) %s <- %s%s"
-                        ( index,
-                          varType.getTxt( self.typeNameCtrl ## ),
-                          expTypeInfo.getTxt( self.typeNameCtrl ## ),
-                          mess and " -- %s" ( mess ) or "" ) );
-                  }
-               }
-               if varType.$kind == .Box {
-                  typeInfoList[ index ] = Ast.NormalTypeInfo.createBox(
-                     accessMode, expTypeInfo );
-               }
-               //if varType.$kind == .Box and expTypeInfo.$srcTypeInfo.$kind ~= .Box {
-               if Ast.CanEvalCtrlTypeInfo.canAutoBoxing( varType, expTypeInfo ) {
-                  // auto boxing
-                  updateExpList = true;
-                  let exp = newExpList[ index ];
-                  newExpList[ index ] = Nodes.BoxingNode.create(
-                     self.nodeManager, exp.$pos,
-                     self.macroCtrl.isInAnalyzeArgMode(), [ varType ], exp );
-                  if not Ast.CanEvalCtrlTypeInfo.finishNeedAutoBoxing( alt2typeMap, 1 ) {
-                     self.addErrMess( exp.$pos,
-                                      "auto boxing error %s <- %s"
-                                      ( varType.getTxt(##), expTypeInfo.getTxt(##)) );
-                  }
-               }
-               else {
-                  if not Ast.CanEvalCtrlTypeInfo.finishNeedAutoBoxing( alt2typeMap, 0 ) {
-                     self.addErrMess(
-                        newExpList[ index ].$pos,
-                        "illegal auto boxing error %s <- %s"
-                        ( varType.getTxt(##), expTypeInfo.getTxt(##)) );
-                  }
-               }
-            }
-            expTypeList.insert( expTypeInfo );
-         }
-      }
-      if updateExpList {
-         // 引数リストを更新する
-         workList = self.createExpListNode( workList, newExpList );
-      }
-
-      {
-         let mut alt2typeMap =
-            Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap(false);
-
-         if! self.checkImplicitCast(
-            alt2typeMap, true, typeInfoList, workList,
-            fn ( dstType:&Ast.TypeInfo, expNode:&Nodes.Node ): &Nodes.Node! {
-               return nil;
-            } )
-         {
-            workList = _exp;
-         }
-      }
-
-
-      // 宣言する変数の数より初期値が少ない場合、
-      // nil で初期化されるため変数が nilable かどうか判定
-      foreach varType, index in typeInfoList {
-         if index > #expTypeList {
-            if not varType.$nilable {
-               self.addErrMess(
-                  firstPos,
-                  "unmatch value type (index:%d) %s <- nil"
-                  (index, varType.getTxt( self.typeNameCtrl## )));
-            }
-         }
-      }
-      // 変数の型を、型推論で初期値から設定
-      foreach typeInfo, index in expTypeList {
-         if #typeInfoList < index or
-            typeInfoList[ index ].equals( Ast.builtinTypeEmpty ## )
-         {
-            let workPos;
-            let workType;
-            let workName;
-            if index <= #letVarList {
-               let letVar = letVarList[ index ];
-               workPos = letVar.varName.pos;
-               workName = letVar.varName.txt;
-               if Ast.TypeInfo.isMut( typeInfo ) and
-                  not Ast.isMutable( letVar.mutable )
-               {
-                  workType = self.createModifier( typeInfo, .IMutRe );
-               }
-               else {
-                  workType = typeInfo;
-               }
-
-               if self.analyzeMode == .Inquire and self.isTargetToken( letVar.varName ) {
-                  self.dumpSymbolType( letVar.varName.txt, workType );
-               }
-            }
-            else {
-               workType = typeInfo;
-               workPos = firstPos;
-               workName = "";
-            }
-            typeInfoList[ index ] = workType;
-
-            switch workType.$kind {
-               case .Func {
-                  if #expTypeList ~= 1 or workType.$rawTxt ~= "" {
-                     // anonymous 関数宣言の型推論変数宣言は、
-                     // 通常関数宣言に置き換えるが、
-                     // 2 つ以上の変数を宣言している場合はエラーとする。
-                     self.addErrMess(
-                        firstPos,
-                        "must set the type of variable for function. -- %s"
-                        (workName) );
-                  }
-               }
-               case .List, .Array, .Set, .Map {
-                  self.checkLiteralEmptyCollection( workPos, workName, workType );
-               }
-            }
-         }
-      }
-      return typeInfoList, letVarList, orgExpTypeList, workList;
-   }
-
-   return typeInfoList, letVarList, orgExpTypeList, nil;
+   return self.analyzeInitExp(
+      firstPos, accessMode, unwrapFlag, letVarList, typeInfoList)**;
 }
 
 fn TransUnit.analyzeDeclVar(
@@ -3549,36 +3566,32 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
    let mut expList:&Nodes.ExpListNode;
    let mut varList:List<&Ast.SymbolInfo> = [];
 
+   let mut workTypeInfoList, mut letVarList, workExpList;
    if nextToken.txt == "let" {
-      let mut workTypeInfoList, mut letVarList, mut orgExpTypeList, workExpList =
-         self.analyzeLetAndInitExp( firstToken.pos, true, .IMut, .Local, true );
-      typeInfoList = workTypeInfoList;
-      when! workExpList {
-         expList = workExpList;
-      }
-      else {
-         self.addErrMess( nextToken.pos, "if! let has illegal init val." );
-         self.error( "system error" );
-      }
-      foreach varInfo in letVarList {
-         varNameList.insert( varInfo.varName );
-      }
+      workTypeInfoList, letVarList, _, workExpList = self.analyzeLetAndInitExp(
+         firstToken.pos, true, .IMut, .Local, true );
+   } else {
+      self.pushback();
+      let mut tmpTypeInfoList : List<&Ast.TypeInfo> = [ Ast.builtinTypeEmpty ];
+      let mut tmpLetVarList:List<&LetVarInfo> = [
+         new LetVarInfo(
+            .Mut, new Parser.Token( .Symb, "_exp", firstToken.pos, false## ), nil )
+      ];
+      workTypeInfoList, letVarList, _, workExpList = self.analyzeInitExp(
+         firstToken.pos, .Local, true, tmpLetVarList, tmpTypeInfoList );
+   }
+   typeInfoList = workTypeInfoList;
+   when! workExpList {
+      expList = workExpList;
    }
    else {
-      self.pushback();
-      expList = self.analyzeExpList( false, false, false ## );
-      let exp = expList.$expList[ 1 ];
-      let expType = exp.$expType;
-      if expType.$nilable {
-         typeInfoList.insert( expType.$nonnilableType );
-      }
-      else {
-         typeInfoList.insert( expType );
-      }
-      varNameList.insert(
-         new Parser.Token( .Symb, "_exp", firstToken.pos, false, nil ) );
+      self.addErrMess( nextToken.pos, "if! let has illegal init val." );
+      self.error( "system error" );
    }
-
+   foreach varInfo in letVarList {
+      varNameList.insert( varInfo.varName );
+   }
+   
    let mut scope = self.pushScope( false ## );
 
    foreach expType, index in typeInfoList {

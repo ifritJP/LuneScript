@@ -159,7 +159,7 @@ fn Front.createAst(
    analyzeMode:TransUnit.AnalyzeMode, pos:&Parser.Position! ): &TransUnit.ASTInfo
 {
    let mut transUnit = new TransUnit.TransUnit(
-      moduleId, importModuleInfo, new convLua.MacroEvalImp( self.option.mode ),
+      moduleId, importModuleInfo, new convLua.MacroEvalImp(),
       analyzeModule, analyzeMode, pos, self.option.targetLuaVer,
       self.option.transCtrlInfo );
    return transUnit.createAST( parser, false, mod );
@@ -223,7 +223,7 @@ fn Front.loadFromLnsTxt(
 {
    let mut transUnit = new TransUnit.TransUnit(
       frontInterface.ModuleId.tempId,
-      importModuleInfo, new convLua.MacroEvalImp( self.option.mode ),
+      importModuleInfo, new convLua.MacroEvalImp(),
       nil, nil, nil, self.option.targetLuaVer, self.option.transCtrlInfo );
    let mut stream = new Parser.TxtStream( txt );
    let mut parser = new Parser.StreamParser( stream, name, false );
@@ -535,16 +535,17 @@ fn Front.searchModule( mod:str ): str! {
 }
 
 fn Front.searchLuaFile( moduleFullName:str, addSearchPath:str! ) : str! {
-   let mut luaSearchPath = package.path;
-   when! addSearchPath {
-      luaSearchPath = string.format( "%s/?.lua;%s", addSearchPath, package.path );
-      //luaSearchPath = string.format( "%s/?.lua", _exp );
-   }
-   //let! foundPath = package.searchpath( moduleFullName, luaSearchPath ) {
-   let! foundPath = Depend.searchpath( moduleFullName, luaSearchPath ) {
-      return nil;
-   };
-   return (foundPath.gsub( "^./", "" ));
+   return self.searchModuleFile( moduleFullName, ".lua", addSearchPath );
+   // let mut luaSearchPath = package.path;
+   // when! addSearchPath {
+   //    luaSearchPath = string.format( "%s/?.lua;%s", addSearchPath, package.path );
+   //    //luaSearchPath = string.format( "%s/?.lua", _exp );
+   // }
+   // //let! foundPath = package.searchpath( moduleFullName, luaSearchPath ) {
+   // let! foundPath = Depend.searchpath( moduleFullName, luaSearchPath ) {
+   //    return nil;
+   // };
+   // return (foundPath.gsub( "^./", "" ));
 }
 
 /**
@@ -555,33 +556,48 @@ fn Front.searchLuaFile( moduleFullName:str, addSearchPath:str! ) : str! {
 */
 fn Front.checkUptodateMeta( metaPath:str, addSearchPath:str! ): Luaval<&stem>! {
    let! metaObj = self.loadLua( metaPath ) {
+      Log._log( .Warn, `{ return "load error -- %s" ( metaPath ); } );
       return nil;
    };
    let meta = metaObj@@=Meta._MetaInfo;
    if meta.$__formatVersion ~= Ver.metaVersion {
+      Log._log( .Warn, `{ return "unmatch meta version -- %s" ( metaPath ); } );
       return nil;
    }
    if meta.$__hasTest {
       // テストコードを持つモジュールは、テストモードがあっていないものは更新が必要
       if meta.$__enableTest ~= self.option.testing {
+         Log._log( .Warn, `{ return "unmatch test setting -- %s" ( metaPath ); } );
          return nil;
       }
    }
    
    foreach _, moduleFullName in meta.__dependModuleMap {
-      if! let moduleLuaPath = self.searchLuaFile( moduleFullName, addSearchPath ) {
-         let moduleLnsPath = moduleLuaPath.gsub( "%.lua$", ".lns" );
-         if not Util.getReadyCode( moduleLnsPath, metaPath ) {
-            // 依存するモジュールが更新されている場合、
-            // 作成済みのメタファイルは使えないので nil を返す。
+      if! let lnsPath = self.searchModule( moduleFullName ) {
+         if! let moduleLuaPath = self.searchLuaFile( moduleFullName, addSearchPath ) {
+            if not Util.getReadyCode( lnsPath, metaPath ) {
+               // 依存するモジュールが更新されている場合、
+               // 作成済みのメタファイルは使えないので nil を返す。
+               Log._log( .Warn, `{ return "not ready -- %s, %s"
+                                  ( lnsPath, metaPath ); } );
+               return nil;
+            }
+            let moduleMetaPath = moduleLuaPath.gsub( "%.lua$", ".meta" );
+            if Depend.existFile( moduleMetaPath ) and
+               not Util.getReadyCode( moduleMetaPath, metaPath )
+            {
+               Log._log( .Warn, `{ return "not ready -- %s, %s"
+                                  ( moduleMetaPath, metaPath ); } );
+               return nil;
+            }
+         } else {
+            Log._log( .Warn, `{ return "not found .lua file for -- %s"
+                               ( moduleFullName ); } );
             return nil;
          }
-         let moduleMetaPath = moduleLuaPath.gsub( "%.lua$", ".meta" );
-         if Depend.existFile( moduleMetaPath ) and
-            not Util.getReadyCode( moduleMetaPath, metaPath )
-         {
-            return nil;
-         }
+      } else {
+         Log._log( .Warn, `{ return "not found .lns file -- %s" ( moduleFullName); } );
+         return nil;
       }
    }
    return meta;
@@ -655,7 +671,6 @@ fn Front.loadMeta(
          self.loadedMetaMap[ mod ] = _exp.meta;
       }
       else {
-         Log._log( .Info, `{ return "%s checking" ( mod ); } );
          if! let lnsPath = self.searchModule( mod ) {
             let mut luaPath:str! = string.gsub( lnsPath, "%.lns$", ".lua" );
 
@@ -673,8 +688,17 @@ fn Front.loadMeta(
                      when! meta {
 	                self.loadedMetaMap[ mod ] = meta;
                      }
+                  } else {
+                     Log._log( .Warn, `{ return "%s not ready meta %s, %s"
+                                         ( mod, lnsPath, metaPath ); } );
                   }
+               } else {
+                     Log._log( .Warn, `{ return "%s not ready lua %s, %s"
+                                         ( mod, lnsPath, luaPath ); } );
                }
+            } else {
+               Log._log( .Warn, `{ return "%s not found lua in %s"
+                                   ( mod, self.option.outputDir ); } );
             }
             if meta == nil {
 	       let metawork, luaTxt =

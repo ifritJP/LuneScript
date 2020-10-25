@@ -1602,7 +1602,7 @@ class _TypeInfoNormal extend _TypeInfo {
                self.kind == Ast.TypeInfoKind.IF
             {
                Log._log(
-                  .Info,         
+                  .Debug,         
                   `{ return "new type -- %d, %s -- %s, %d"
                      (self.parentId, self.txt, 
                        parentScope.$ownerTypeInfo$.getFullName$(
@@ -1981,7 +1981,7 @@ _DefBuiltinFuncType( [
    {
       "string": {
          "__attrib": { "type": [ "module" ] },
-         "find": { "arg": [ "str", "str", "int!", "bool!" ], "ret": ["int!", "int!"] },
+         "find": { "arg": [ "str", "str", "int!", "bool!" ], "ret": ["...<int>"] },
          "byte": { "arg": [ "str", "int!", "int!" ], "ret": ["...<int>"] },
          "format": { "arg": [ "str", "..." ], "ret": ["str"] },
          "rep": { "arg": [ "str", "int" ], "ret": ["str"] },
@@ -1997,7 +1997,7 @@ _DefBuiltinFuncType( [
    {
       "str": {
          "__attrib": { "inplements": [ "Mapping" ] },
-         "find": { "type": [ "method" ], "arg": [ "str", "int!", "bool!" ], "ret": ["int!", "int!"] },
+         "find": { "type": [ "method" ], "arg": [ "str", "int!", "bool!" ], "ret": ["...<int>"] },
          "byte": { "type": [ "method" ], "arg": [ "int!","int!" ], "ret": ["...<int!>"] },
          "format": { "type": [ "method" ], "arg": [ "&..." ], "ret": ["str"] },
          "rep": { "type": [ "method" ], "arg": [ "int" ], "ret": ["str"] },
@@ -2864,7 +2864,9 @@ fn TransUnit.analyzeBlock(
    else {
       self.pushScope( false ## );
    }
-   let blockScope = self.scope;
+   let mut blockScope = self.scope;
+
+   blockScope.addIgnoredVar();
 
 
    switch tentativeMode {
@@ -2961,7 +2963,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
    if! let moduleInfo = self.importModuleName2ModuleInfo[ modulePath ] {
       if! let metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
       {
-         Log._log( .Info, `{ return "%s already" (modulePath); } );
+         Log._log( .Debug, `{ return "%s already" (modulePath); } );
 
          let metaInfo = metaInfoStem@@=Meta._MetaInfo;
          let typeId2TypeInfo = moduleInfo.$importId2localTypeInfoMap;
@@ -2981,7 +2983,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
       self.error( "failed to load meta -- " .. modulePath );
    };
    let metaInfo = metaInfoStem@@=Meta._MetaInfo;
-   Log._log( .Info, `{ return "%s processing" (modulePath); } );
+   Log._log( .Debug, `{ return "%s processing" (modulePath); } );
 
 
    // 依存するモジュールのメタ情報を読み込み
@@ -3245,7 +3247,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
             self.pushModule( true, classTypeInfo.getTxt(##),
                              Ast.TypeInfo.isMut( classTypeInfo ) );
             Log._log(
-               .Info,         
+               .Debug,         
                `{ return "push module -- %s, %s, %d, %d, %d"
                   ( classTypeInfo.getTxt(##),
                     self.scope.$ownerTypeInfo$.getFullName$(
@@ -3329,7 +3331,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
 
    self.importModuleInfo.remove();
 
-   Log._log( .Info, `{ return "%s complete" (modulePath); } );
+   Log._log( .Debug, `{ return "%s complete" (modulePath); } );
 
    return metaInfo, typeId2TypeInfo, moduleInfo;
 }
