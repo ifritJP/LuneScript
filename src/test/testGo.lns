@@ -1693,6 +1693,12 @@ _section();
    if val.find( "^abc", 2 ## ) {
       print( "hoge" );
    }
+   print( string.find( "abcd", "^abc", 0 ## ) );
+   let txt = "1234567890";
+   print( txt.find( "67"## ) );
+   print( txt.find( "90"## ) );
+   print( txt.find( "0"## ) );
+   print( string.find( '"%s\\t"', '[^%%]%%[%d]*%a'## ) );
 }
 _section();
 {

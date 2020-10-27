@@ -463,6 +463,8 @@ usage:
       }
    }
 
+   Log._log2( .Log, "mode is '%s'" (option.mode.$_txt) );
+
    return option;
 }
 

@@ -71,6 +71,7 @@ help:
 	@echo "  make test-miniGo [NO_LUA_DIFF=y]"
 	@echo "  make scratch-go"
 	@echo "  make test-tutorial-go"
+	@echo "  make go-build"
 
 
 exec:
@@ -130,6 +131,7 @@ endef
 
 
 define buildLnsOp
+	$(call $4,$1,$2,$3,base/Str)
 	$(call $4,$1,$2,$3,base/Ver)
 	$(call $4,$1,$2,$3,base/LuaMod)
 	$(call $4,$1,$2,$3,base/LuneControl)
@@ -682,6 +684,7 @@ endif
 
 diff-result:
 	diff -r work/1/test/ work/4/test/ -x '*.meta'
+	diff -r work/1/test/proj/  work/3/test/proj/ -I buildId
 	diff work/test1.result work/test2.result
 	diff work/test.result work/test3.result
 	diff work/test3.result work/test4.result
@@ -1178,17 +1181,18 @@ test-testGo:
 	$(call setup-go,$(GO_WORK_DIR)/test)
 
 	$(call convGo,$(GO_WORK_DIR),lune/base/Testing,--testing,./test)
+#	$(call test-convGo-test,$(GO_WORK_DIR),Str,lune/base,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),Ver,lune/base,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),Code,lune/base,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),LuaMod,lune/base,./test)
 	$(call convGo,$(GO_WORK_DIR),lune/base/LuaVer,--testing,./test)
 	$(call convGo,$(GO_WORK_DIR),lune/base/LuneControl,--testing,./test)
 	$(call convGo,$(GO_WORK_DIR),lune/base/Meta,--testing,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/Log,--testing,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),Util,lune/base,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),Parser,lune/base,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),Writer,lune/base,./test)
 	$(call convGo,$(GO_WORK_DIR),lune/base/frontInterface,--testing,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/Log,--testing,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),Ast,lune/base,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),Option,lune/base,./test)
 	$(call test-convGo-test,$(GO_WORK_DIR),Nodes,lune/base,./test)
@@ -1211,23 +1215,25 @@ test-subgo:
 	$(call test-convGo-test,$(GO_WORK_DIR),front,lune/base,./test)
 
 
+# セルフホストのソースを go に変換し、 go 版 lns をビルドする
 go-build:
 	rm -rf $(GO_WORK_DIR)
 	$(call setup-go,$(GO_WORK_DIR))
 	$(call setup-go,$(GO_WORK_DIR)/test)
 
 	$(call convGo,$(GO_WORK_DIR),lune/base/Testing,,./test)
+#	$(call convGo,$(GO_WORK_DIR),lune/base/Str,,./test)
 	$(call convGo,$(GO_WORK_DIR),lune/base/Ver,,./test)
 	$(call convGo,$(GO_WORK_DIR),lune/base/Code,,./test)
 	$(call convGo,$(GO_WORK_DIR),lune/base/LuaMod,,./test)
 	$(call convGo,$(GO_WORK_DIR),lune/base/LuaVer,,./test)
 	$(call convGo,$(GO_WORK_DIR),lune/base/LuneControl,,./test)
 	$(call convGo,$(GO_WORK_DIR),lune/base/Meta,,./test)
+	$(call convGo,$(GO_WORK_DIR),lune/base/Log,,./test)
 	$(call convGo,$(GO_WORK_DIR),lune/base/Util,,./test)
 	$(call convGo,$(GO_WORK_DIR),lune/base/Parser,,./test)
 	$(call convGo,$(GO_WORK_DIR),lune/base/Writer,,./test)
 	$(call convGo,$(GO_WORK_DIR),lune/base/frontInterface,,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/Log,,./test)
 	$(call convGo,$(GO_WORK_DIR),lune/base/Ast,,./test)
 	$(call convGo,$(GO_WORK_DIR),lune/base/Option,,./test)
 	$(call convGo,$(GO_WORK_DIR),lune/base/Nodes,,./test)
@@ -1249,18 +1255,22 @@ go-build:
 
 
 define test-govslua-comp
-	(cd $1; /usr/bin/time -f 'lns:%e/%U/%S:$2' ./lns lune/base/$2.lns SAVE $3)
-	(cd $1; LUA_PATH=./?.lua /usr/bin/time -f 'lua:%e/%U/%S:$2' $(LUA) lune/base/base.lua lune/base/$2.lns SAVE $4)
+	(cd $1; /usr/bin/time -f 'lns:%e/%U/%S:$2' ./lns lune/base/$2.lns SAVE $3 --log log)
+	(cd $1; LUA_PATH=./?.lua /usr/bin/time -f 'lua:%e/%U/%S:$2' $(LUA) lune/base/base.lua lune/base/$2.lns SAVE $4 --log log)
 	@(cd $1; diff $4/lune/base/$2.lua $3/lune/base/$2.lua)
 	@(cd $1; diff $4/lune/base/$2.meta $3/lune/base/$2.meta)
 endef
 
+
+# go-build でビルドした go 版 lns と lua 版 lns とで、
+# lns ソースの変換を行ない。同じ結果になることを確認する。
 test-govslua:
 	mkdir -p $(GO_WORK_DIR)/test/go
 	(cd $(GO_WORK_DIR); find lune -type d | (cd test/go; xargs mkdir -p))
 	mkdir -p $(GO_WORK_DIR)/test/lua
 	(cd $(GO_WORK_DIR); find lune -type d | (cd test/lua; xargs mkdir -p))
 	$(call test-govslua-comp,$(GO_WORK_DIR)/test,Testing,./go,./lua)
+	$(call test-govslua-comp,$(GO_WORK_DIR)/test,Str,./go,./lua)
 	$(call test-govslua-comp,$(GO_WORK_DIR)/test,Ver,./go,./lua)
 	$(call test-govslua-comp,$(GO_WORK_DIR)/test,Code,./go,./lua)
 	$(call test-govslua-comp,$(GO_WORK_DIR)/test,LuaMod,./go,./lua)

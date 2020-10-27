@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 import lune.base.Depend;
+import lune.base.Log;
 
 pri let mut debugFlag = true;
 pub fn setDebugFlag( flag:bool ) {
@@ -213,20 +214,24 @@ pub fn printStackTrace() {
 }
 
 /**
-path で指定した lns コードに対応する Lua コードが存在する場合、
-その Lua コードのパスを返す。
+tgtPath のファイルが depPath のファイルに依存している時、
+tgtPath のファイル が depPath ファイルより新しいか調べる。
+
 */
-pub fn getReadyCode( lnsPath:str, luaPath:str ): bool {
-   let! luaTime, lnsTime =
-      Depend.getFileLastModifiedTime( luaPath ),
-      Depend.getFileLastModifiedTime( lnsPath )
+pub fn getReadyCode( depPath:str, tgtPath:str ): bool {
+   let! tgtTime, depTime =
+      Depend.getFileLastModifiedTime( tgtPath ),
+      Depend.getFileLastModifiedTime( depPath )
    {
-      // errorLog( "getReadyCode: false, %s %s" (luaPath, lnsPath ) );
+      // errorLog( "getReadyCode: false, %s %s" (tgtPath, depPath ) );
       return false;
    };
-   // errorLog( "getReadyCode: %s %s %s (%f, %f)"
-   //           (luaTime >= lnsTime, luaPath, lnsPath, luaTime, lnsTime ) );
-   return luaTime >= lnsTime;
+   if tgtTime >= depTime {
+      return true;
+   }
+   Log._log( .Warn, `{ return "not ready %g < %g : %s, %s"
+                       ( tgtTime, depTime, tgtPath, depPath ); } );
+   return false;
 }
 
 pub fn scriptPath2Module( path:str ):str {

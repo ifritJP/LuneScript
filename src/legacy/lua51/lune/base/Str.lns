@@ -1,0 +1,37 @@
+/**
+txt の先頭が ptn の文字列で始まっているかどうか調べる。
+
+@return ptn の文字列で始まっている場合 true
+*/
+pub fn startsWith( txt:str, ptn:str ) : bool {
+   return txt.find( ptn, 1, true ) ~= nil;
+}
+
+/**
+txt の先頭が ptn の文字列で始まっているかどうか調べる。
+
+@return ptn の文字列で始まっている場合 true
+*/
+pub fn endsWith( txt:str, ptn:str ) : bool {
+   return txt.find( ptn, #txt - #ptn + 1, true ) ~= nil;
+}
+
+/**
+txt を行ごとに分割したリストを返す
+*/
+pub fn getLineList( txt:str ) : List<str> {
+   let mut list:List<str> = [];
+   // 改行までの文字列
+   apply line of string.gmatch( txt, "[^\n]*\n" ) {
+      list.insert( line );
+   }
+   // if txt.find( "\n$"## ) {
+   //    list.insert( "" );
+   // } else {
+      // 改行のない最後の文字列
+      apply last of string.gmatch( txt, "[^\n]+$" ) {
+         list.insert( last );
+      }
+   // }
+   return list;
+}

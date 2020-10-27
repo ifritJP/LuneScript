@@ -296,6 +296,8 @@
 	(when (eq (char-before) 10)
 	  (re-search-backward "[^\s \t]" (point-min) 'noerror))
 	(end-of-line)
+	(re-search-backward "[^\s \t]" (point-min) 'noerror)
+	(forward-char)
 	t
 	))))
 
@@ -543,10 +545,10 @@ pattern は  {, }, {{, }} のいずれか。
 		   (setq column (+ column 5)))))
 	      ((equal (lns-get-current-token) "fn")
 	       (setq column (current-column)))
-	      ((and (lns-get-current-token)
-		    (string-match lns-bloak-statement-head
-				  (lns-get-current-token)))
-	       (setq column (current-column)))
+	      ;; ((and (lns-get-current-token)
+	      ;; 	    (string-match lns-bloak-statement-head
+	      ;; 			  (lns-get-current-token)))
+	      ;;  (setq column (current-column)))
 	      (t
 	       (setq column (+ (current-column) indent))))
 	))))
@@ -625,45 +627,49 @@ pattern は  {, }, {{, }} のいずれか。
 	      (start-block-flag
 	       ;; ブロック開始の場合
 	       (save-excursion
-		 (lns-indent-search-open-pair)
-		 (setq column (current-column))
-		 (setq pos (point)))
-	       (save-excursion
-		 (when (lns-indent-search-open-pair)
-		   (if (or (eq (char-after) ?{)
-			   (eq (char-after) ?\()
-			   (eq (char-after) ?\[))
-		       (progn
-			 (setq pos (point))
-			 (forward-char)
-			 (if (lns-re-search-forward-eol "[^\\s \t]")
-			     (progn
-			       (goto-char pos)
-			       (setq column (+ (current-column) 2)))
-			   (lns-indent-goto-no-space-bol)
-			   (setq column (+ (current-column) lns-indent-level))))
-		     (if (equal start-block-flag "}")
-			 (setq column (current-column))
-		       (setq column (+ 4 (current-column))))
-		     ))))
+		 (goto-char org-pos)
+		 (lns-indent-prev-eol)
+		 (when (eq (char-before) ?})
+		   (setq column (1- (current-column)))))
+	       (when (not column)
+		 (save-excursion
+		   (lns-indent-search-open-pair)
+		   (setq column (current-column))
+		   (setq pos (point)))
+		 (save-excursion
+		   (when (lns-indent-search-open-pair)
+		     (if (or (eq (char-after) ?{)
+			     (eq (char-after) ?\()
+			     (eq (char-after) ?\[))
+			 (progn
+			   (setq pos (point))
+			   (forward-char)
+			   (if (lns-re-search-forward-eol "[^\\s \t]")
+			       (progn
+				 (goto-char pos)
+				 (setq column (+ (current-column) 2)))
+			     (lns-indent-goto-no-space-bol)
+			     (setq column (+ (current-column) lns-indent-level))))
+		       (if (equal start-block-flag "}")
+			   (setq column (current-column))
+			 (setq column (+ 4 (current-column))))
+		       )))))
 	      (t
-	       ;; ブロック開始、終了でない場合、
-	       (if (and (not (lns-is-in-comment-string (1- (point))))
-			(save-excursion
-			  (let ((pos (point)))
-			    (beginning-of-line)
-			    (if (re-search-forward "```" pos t)
-				(progn
-				  (beginning-of-line)
-				  (re-search-backward "```")
-				  (lns-indent-prev-eol)
-				  (lns-indent-is-line-no-term))
-			      (goto-char pos)
-			      (lns-indent-is-line-no-term))
-			    )))
-		   (lns-indent-to lns-indent-level)
-		 (lns-indent-to 0)
-		 ))
+	       ;; ブロック開始、終了でない場合、一つ前のインデントに併せる
+	       (cond ((lns-is-in-comment-string (1- (point)))
+		      (lns-indent-to 0))
+		     (t (save-excursion
+			  (goto-char org-pos)
+			  (lns-indent-prev-eol)
+			  (when (eq (char-before) ?})
+			    (setq column (1- (current-column))))
+			  (when (not column)
+			    (goto-char org-pos)
+			    (lns-indent-prev-eol)
+			    (if (lns-indent-is-line-no-term)
+				(lns-indent-to lns-indent-level)
+			      (lns-indent-to 0))))))
+	       )
 	      ))))
     (let ((marker (point-marker)))
       (when (>= column 0)

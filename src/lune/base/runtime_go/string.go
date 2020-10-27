@@ -30,9 +30,31 @@ import "C"
 import "unsafe"
 import "fmt"
 import "strings"
+import "regexp"
 //import "runtime"
 
 // import "github.com/yuin/gopher-lua/pm"
+
+func Lns_Str_init() {
+}
+
+func Str_getLineList( txt string ) *LnsList {
+    list := NewLnsList( []LnsAny{} )
+    for _, line := range( strings.SplitAfter( txt, "\n" ) ) {
+        list.Insert( line )
+    }
+    return list
+}
+
+func Str_startsWith( txt, ptn string ) bool {
+    return strings.HasPrefix( txt, ptn )
+}
+
+func Str_endsWith( txt, ptn string ) bool {
+    return strings.HasSuffix( txt, ptn )
+}
+
+
 
 var lns_c_ptr_string *C.char
 var lns_c_ptr_format *C.char
@@ -152,8 +174,163 @@ func (luaVM *Lns_luaVM) String_gsub(
     return ret[0].(string), LnsInt(ret[1].(int))
 }
 
+func goFind( txt string, src string, index LnsInt ) (bool, []LnsAny) {
+    offset := 0
+    remain := len( src )
+
+    dummyRet := []LnsAny{ nil }
+
+    reg := ""
+
+    if index <= 0 {
+        index = 1
+    }
+
+    processQuote := func ( inClass bool ) string {
+        remain--
+        offset++
+        if remain <= 0 {
+            return ""
+        }
+        cls := ""
+        switch src[ offset ] {
+        case 'a':
+            cls = "[:alpha:]"
+        case 'c':
+            cls = "[:cntrl:]"
+        case 'd':
+            cls = "[:digit:]"
+        case 'g':
+            cls = "[:graph:]"
+        case 'l':
+            cls = "[:lower:]"
+        case 'p':
+            cls = "[:punct:]"
+        case 's':
+            cls = "[:space:]"
+        case 'u':
+            cls = "[:upper:]"
+        case 'w':
+            cls = "[:alnum:]"
+        case 'x':
+            cls = "[:xdigit:]"
+        default:
+            return fmt.Sprintf( "\\x%02X", src[ offset ] )
+        }
+        if inClass {
+            return cls
+        }
+        return fmt.Sprintf( "[%s]", cls )
+    }
+    
+    if remain >= 2 && src[ offset ] == '^' {
+        reg += "^"
+
+        offset++
+        remain--
+    }
+
+    inClass := false
+    firstFlag := true
+    for remain > 0 {
+        switch src[ offset ] {
+        case '%':
+            if quote := processQuote( inClass ); quote == "" {
+                return false, dummyRet
+            } else {
+                reg += quote
+            }
+        case '[':
+            if inClass {
+                return false, dummyRet
+            }
+            inClass = true
+            reg += src[ offset:offset + 1 ]
+        case ']':
+            if !inClass {
+                return false, dummyRet
+            }
+            inClass = false
+            reg += src[ offset:offset + 1 ]
+        case '^':
+            reg += src[ offset:offset + 1 ]
+        case '$':
+            reg += src[ offset:offset + 1 ]
+        case '*':
+            reg += src[ offset:offset + 1 ]
+        case '+':
+            reg += src[ offset:offset + 1 ]
+        case '-':
+            if inClass || firstFlag {
+                reg += src[ offset:offset + 1 ]
+            } else {
+                return false, dummyRet
+            }
+        case '|':
+            reg += fmt.Sprintf( "\\x%02X", src[ offset ] )
+        case '{':
+            reg += fmt.Sprintf( "\\x%02X", src[ offset ] )
+        case '}':
+            reg += fmt.Sprintf( "\\x%02X", src[ offset ] )
+        case '(':
+            return false, dummyRet
+        case '\\':
+            reg += fmt.Sprintf( "\\x%02X", src[ offset ] )
+        case ':':
+            reg += fmt.Sprintf( "\\x%02X", src[ offset ] )
+        default:
+            reg += src[ offset:offset + 1 ]
+        }
+
+        if firstFlag {
+            firstFlag = false
+        }
+        remain--
+        offset++        
+    }
+
+    re := regexp.MustCompile( reg )
+    loc := re.FindStringIndex( txt )
+    if loc == nil {
+        return true, dummyRet
+    }
+    return true, []LnsAny{ index + loc[0], index  + loc[1] - 1 }
+}
+
+// goFind の結果と lua ラインタイムの find の結果を比べるかどうか。
+// デバッグ用途。
+var checkFindResult = false
 func (luaVM *Lns_luaVM) String_find(
     txt string, src string, index LnsAny, plain LnsAny ) []LnsAny {
+
+    target := txt
+    offset := 1
+    if work, ok := index.(LnsInt); ok {
+        offset = string_index( work, len( txt ) )
+        if offset > 0 {
+            target = txt[ offset - 1: ]
+        }
+    }
+    
+    if plain == true {
+        findIndex := strings.Index( target, src )
+        if findIndex < 0 {
+            return []LnsAny{}
+        }
+        return []LnsAny{ offset + findIndex, offset + findIndex + len( src ) - 1 }
+    }
+    var goResult []LnsAny
+    if ok, result := goFind( target, src, offset ); ok {
+        if !checkFindResult {
+            return result;
+        }
+        goResult = result
+    }
+    print( fmt.Sprintf( "log: fallback -- string.find()  %s, %s, %v\n", txt, src, index ) )
+
+
+    // goFind で処理できなかった場合は、 lua のランタイムで処理する
+    
 
     callInfo := luaVM.string_call_setup( lns_c_ptr_find, txt )
 
@@ -163,38 +340,22 @@ func (luaVM *Lns_luaVM) String_find(
     luaVM.pushAny( plain ) // bool なので defer 不要
     
     ret := callInfo.call( luaVM, 4, 2 )
-    return ret
 
-    // offset := 1
-    // if work, ok := index.(LnsInt); ok {
-    //     offset = work
-    // }
-    // if offset < 0 {
-    //     return []LnsAny{}
-    // } else if offset == 0 {
-    //     offset = 1;
-    // }
+    if checkFindResult {
+        if len( ret ) != len( goResult ) ||
+            ret[ 0 ] != goResult[ 0 ] ||
+            ( len( ret ) > 1 && ret[ 1 ] != goResult[ 1 ] ) {
+            mess := fmt.Sprintf(
+                "hoge: %s %s %d %d %d %s %s\n", txt, src, index,
+                len( ret ), len( goResult ), ret[0], goResult[0] )
+            if len( ret ) > 1 && len( goResult ) > 1 {
+                mess = fmt.Sprintf( "%s %s %s\n", mess, ret[1], goResult[1] )
+            }
+            panic( mess )
+        }
+    }
     
-    // matches, err := pm.Find( src, []byte(txt), offset - 1, 1 )
-	// if err != nil {
-	// 	panic( err )
-	// }
-	// if len( matches ) == 0 {
-    //     return []LnsAny{}
-	// }
-	// md := matches[0]
-    // return []LnsAny{ md.Capture(0) + 1, md.Capture(1) }
-    
-	// // L.Push(LNumber(md.Capture(0) + 1))
-	// // L.Push(LNumber(md.Capture(1)))
-	// // for i := 2; i < md.CaptureLength(); i += 2 {
-	// // 	if md.IsPosCapture(i) {
-	// // 		L.Push(LNumber(md.Capture(i)))
-	// // 	} else {
-	// // 		L.Push(LString(str[md.Capture(i):md.Capture(i+1)]))
-	// // 	}
-	// // }
-	// // return md.CaptureLength()/2 + 1
+    return ret
 }
 
 func (luaVM *Lns_luaVM) String_byte(

@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 import lune.base.Util;
+import lune.base.Str;
 
 let mut luaKeywordSet:Set<str> = (@);
 luaKeywordSet.add( "if" );
@@ -54,7 +55,7 @@ pub fn isLuaKeyword( txt:str ) : bool {
 
 
 fn createReserveInfo( luaMode: bool! ) :
-   Set<str>, Set<str>, Set<str>, Map<str,str[@]>
+Set<str>, Set<str>, Set<str>, Map<str,str[@]>
 {
    let mut keywordSet:Set<str> = (@);
    let mut typeSet:Set<str> = (@);
@@ -135,39 +136,72 @@ fn createReserveInfo( luaMode: bool! ) :
 // }
 
 pub class TxtStream extend (iStream) {
-   pri let txt: str {pub};
-   pri let mut start: int;
-   pri let mut eof: bool;
+   let txt: str {pub};
+   let lineList:&List<str>;
+   let mut start: int;
+   let mut eof: bool;
+   let mut lineNo: int {pub};
    pub fn __init( txt: str ) {
       self.txt = txt;
       self.start = 1;
       self.eof = false;
+      self.lineList = Str.getLineList( self.txt );
+      self.lineNo = 1;
    }
 
-   pub fn get_pos():int {
-      return self.start;
+   /**
+指定範囲の文字列を取得する。
+
+fromLineNo: 1,  toLineNo: 2 を指定した場合、 1 行目だけを取得する。
+
+行番号は、 1 から。
+
+
+@param fromLineNo 取得開始する行番号
+@param toLineNo 取得終了する行番号。
+   */
+   pub fn getSubstring( fromLineNo:int, toLineNo:int! ) : str {
+      let mut txt = "";
+      let to = unwrap toLineNo default #self.lineList + 1;
+      for index = fromLineNo, to - 1 {
+         if index < 1 or index > #self.lineList {
+            break;
+         }
+         txt = "%s%s" (txt, self.lineList[ index ] );
+      }
+      return txt;
    }
+
+   // pub fn get_pos():int {
+   //    return self.start;
+   // }
    pub fn read( mode:stem! ) mut : str! {
       //pub override fn read( mode:str ): str{
-      if self.eof {
+      if mode ~= '*l' {
+         Util.err( "not support -- %s" (mode) );
+      }
+      // if self.eof {
+      //    return nil;
+      // }
+      // let index = self.txt.find( "\n", self.start, true );
+      // when! index {
+      //    let txt = self.txt.sub( self.start, index - 1 );
+      //    self.start = index + 1;
+      //    return txt;
+      // }
+      // self.eof = true;
+      // return self.txt.sub( self.start## );
+      if self.lineNo > #self.lineList {
          return nil;
       }
-      let index = self.txt.find( "\n", self.start, true );
-      if! index {
-         let txt = self.txt.sub( self.start, _exp - 1 );
-         self.start = _exp + 1;
-         return txt;
+      self.lineNo = self.lineNo + 1;
+      let line = self.lineList[ self.lineNo - 1 ];
+      if Str.endsWith( line, "\n") {
+         return line.sub( 1, #line - 1 );
       }
-      self.eof = true;
-      return self.txt.sub( self.start## );
+      return line;
    }
    pub fn close() mut {
-   }
-   pub fn getHead() : str {
-      return self.txt.sub( 1, self.start );
-   }
-   pub fn getTail() : str {
-      return self.txt.sub( self.start ## );
    }
 }
 
@@ -379,7 +413,7 @@ pub class StreamParser extend Parser {
       }
 
       return new StreamParser(
-         stream, path, luaMode or string.find( path, "%.lua$" ## ) and true );
+         stream, path, luaMode or Str.endsWith( path, ".lua" ) and true );
    }
 
    pub override fn getToken() mut : &Token!;
@@ -401,7 +435,7 @@ pub class DefaultPushbackParser extend (PushbackParser) {
    pub fn createPosition( lineNo: int, column: int ) : &Position {
       return self.parser.createPosition( lineNo, column );
    }
-   
+
    pub fn getTokenNoErr() mut : &Token {
       if #self.pushbackedList > 0 {
          self.currentToken = self.pushbackedList[ #self.pushbackedList ];
@@ -428,7 +462,7 @@ pub class DefaultPushbackParser extend (PushbackParser) {
       if token == self.currentToken {
          if #self.usedTokenList > 0 {
             let used = self.usedTokenList[ #self.usedTokenList ];
-            if used == token { 
+            if used == token {
                self.usedTokenList.remove(##);
             }
             if #self.usedTokenList > 0 {
@@ -705,9 +739,9 @@ fn StreamParser.parse() mut : Token[]! {
             searchIndex = tokenEndIndex + 1;
             let token:str = val.sub( tokenIndex, tokenEndIndex );
             let mut subIndex = 1;
-            while true {
+            while #token >= subIndex {
                if token.find( '^[%d]', subIndex ## ) or
-                  token.find( '^-[%d]', subIndex ## )
+                  token[subIndex] == ?- and token.find( '^[%d]', subIndex + 1 ## )
                {
                   // 数値の場合
                   let mut checkIndex = subIndex;
@@ -884,42 +918,42 @@ fn StreamParser.parse() mut : Token[]! {
             if ( nextChar == findChar and
                  rawLine[ index + 2 ] == ?` )
             { // '```'
-               // 複数行文字列の場合
-               let txt, nextIndex = multiComment( index + 3, '```' );
-               addVal( .Str, '```' .. txt, index );
-               searchIndex = nextIndex;
-            }
-            else {
-               addVal( .Ope, '`', index );
-               searchIndex = index + 1;
-            }
-         }
-         elseif findChar == ?? {
-            let mut codeChar = rawLine.sub( index + 1, index + 1 );
-            if nextChar == ?\\ {
-               let quoted = rawLine.sub( index + 2, index + 2 );
-               if quotedCharSet.has( quoted ) {
-                  codeChar = rawLine.sub( index + 1, index + 2 );
-               }
-               else {
-                  codeChar = quoted;
-               }
-               searchIndex = index + 3;
-            }
-            else {
-               searchIndex = index + 2;
-            }
-            addVal( .Char, codeChar, index );
-         }
-         else {
-            Util.err( "%s:%d:%d: error: illegal syntax -- %s"
-                      ( self.getStreamName(), self.lineNo, index, rawLine ) );
-         }
-      }
-      if syncIndexFlag {
-         startIndex = searchIndex;
-      }
-   }
+              // 複数行文字列の場合
+              let txt, nextIndex = multiComment( index + 3, '```' );
+              addVal( .Str, '```' .. txt, index );
+              searchIndex = nextIndex;
+           }
+           else {
+              addVal( .Ope, '`', index );
+              searchIndex = index + 1;
+           }
+        }
+        elseif findChar == ?? {
+           let mut codeChar = rawLine.sub( index + 1, index + 1 );
+           if nextChar == ?\\ {
+              let quoted = rawLine.sub( index + 2, index + 2 );
+              if quotedCharSet.has( quoted ) {
+                 codeChar = rawLine.sub( index + 1, index + 2 );
+              }
+              else {
+                 codeChar = quoted;
+              }
+              searchIndex = index + 3;
+           }
+           else {
+              searchIndex = index + 2;
+           }
+           addVal( .Char, codeChar, index );
+        }
+        else {
+           Util.err( "%s:%d:%d: error: illegal syntax -- %s"
+                     ( self.getStreamName(), self.lineNo, index, rawLine ) );
+        }
+     }
+     if syncIndexFlag {
+        startIndex = searchIndex;
+     }
+  }
 }
 
 pub override fn StreamParser.getToken() mut : &Token! {
@@ -971,7 +1005,7 @@ pub class CommentLayer {
       foreach comment in commentList {
          self.commentList.insert( comment );
       }
-      
+
    }
    pub fn add( token:&Token ) mut {
       if not self.tokenSet.has( token ) {
@@ -989,11 +1023,11 @@ pub class CommentLayer {
          self.tokenList = [];
       }
    }
-   
+
 
    /**
 文の中途半端な位置にコメントがある調べる。
- 
+
 たとえば、次のような箇所にコメントがあるかどうか。
 
 func( val1 コメント, val )
@@ -1011,7 +1045,7 @@ pub class CommentCtrl {
       self.layer = new CommentLayer();
       self.layerStack = [ self.layer ];
    }
-   
+
    pub fn push() mut {
       self.layer = new CommentLayer();
       self.layerStack.insert( self.layer );
@@ -1044,7 +1078,7 @@ fn func():int {
          new LowToken( "let", .Kywd ), new LowToken( "hoge", .Symb ),
          new LowToken( ":", .Dlmt ), new LowToken( "real", .Type ),
          new LowToken( "=", .Ope ), new LowToken( "2.0", .Real ),
-         new LowToken( ";", .Dlmt ), 
+         new LowToken( ";", .Dlmt ),
          new LowToken( "let", .Kywd ), new LowToken( "val", .Symb ),
          new LowToken( "=", .Ope ), new LowToken( "a", .Char ),
          new LowToken( ";", .Dlmt ),
@@ -1110,4 +1144,27 @@ fn func():int {
       __t._eq( ctrl, parser.getTokenNoErr().txt, "int" );
       __t._eq( ctrl, parser.getTokenNoErr().kind, TokenKind.Eof );
    }
+
+   {
+      let txt = ```
+1
+2
+3
+4
+5
+```;
+      let stream = new TxtStream( txt );
+      __t._eq( ctrl, stream.getSubstring( 1, 2 ), "1\n" );
+      __t._eq( ctrl, stream.getSubstring( 1, 3 ), "1\n2\n" );
+      __t._eq( ctrl, stream.getSubstring( 4, 6 ), "4\n5\n" );
+      __t._eq( ctrl, stream.getSubstring( 4## ), "4\n5\n" );
+      __t._eq( ctrl, stream.getSubstring( 6, 7 ), "" );
+   }
+   let txt = "aa\nbbb\ncc\n\nd";
+   let lineList = Str.getLineList( txt );
+   __t._eq( ctrl, lineList[ 1 ], "aa\n" );
+   __t._eq( ctrl, lineList[ 2 ], "bbb\n" );
+   __t._eq( ctrl, lineList[ 3 ], "cc\n" );
+   __t._eq( ctrl, lineList[ 4 ], "\n" );
+   __t._eq( ctrl, lineList[ 5 ], "d" );
 }

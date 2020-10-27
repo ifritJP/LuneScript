@@ -278,7 +278,6 @@ func (luaVM *Lns_luaVM) newLuaValue( index int, typeId int ) *Lns_luaValue {
     lns_luvValueCoreMap[ core ] = true
     
     val := &Lns_luaValue{ core }
-    // pending: gc と 他の lua の処理が被ることがあるっぽい
     runtime.SetFinalizer( val, func (obj *Lns_luaValue) { obj.free() } )
     val.core.setValToGlobalValMap( index )
     return val

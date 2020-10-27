@@ -483,7 +483,7 @@ function Front:loadFromLnsTxt( importModuleInfo, name, txt )
    
    local ast = transUnit:createAST( parser, false, nil )
    
-   local _5725, luaTxt = self:convertFromAst( ast, name, convLua.ConvMode.Exec )
+   local _5723, luaTxt = self:convertFromAst( ast, name, convLua.ConvMode.Exec )
    return _lune.unwrap( loadFromLuaTxt( luaTxt ))
 end
 
@@ -810,7 +810,7 @@ function Front:convertLns2LuaCode( importModuleInfo, stream, streamName )
    local mod = scriptPath2Module( streamName )
    local ast = self:createAst( importModuleInfo, Parser.StreamParser.new(stream, streamName, false), mod, frontInterface.ModuleId.createId( 0.0, 0 ), nil, TransUnit.AnalyzeMode.Compile )
    
-   local _5870, luaTxt = self:convertFromAst( ast, streamName, convLua.ConvMode.Exec )
+   local _5868, luaTxt = self:convertFromAst( ast, streamName, convLua.ConvMode.Exec )
    
    return luaTxt
 end
@@ -948,7 +948,7 @@ function Front:checkUptodateMeta( metaPath, addSearchPath )
    end
    
    
-   for moduleFullName, _5948 in pairs( meta.__dependModuleMap ) do
+   for moduleFullName, _5946 in pairs( meta.__dependModuleMap ) do
       do
          local lnsPath = self:searchModule( moduleFullName )
          if lnsPath ~= nil then
@@ -1242,7 +1242,7 @@ function Front:convertLuaToStreamFromScript( checkUptodate, convMode, path, mod,
       if stream ~= nil then
          if metaInfo ~= nil then
             local dependInfo = OutputDepend.DependInfo.new(mod)
-            for dependMod, _6112 in pairs( metaInfo.__dependModuleMap ) do
+            for dependMod, _6110 in pairs( metaInfo.__dependModuleMap ) do
                dependInfo:addImpotModule( dependMod )
             end
             
@@ -1454,6 +1454,9 @@ function Front:saveToLua(  )
    local function checkDiff( oldStream, newStream )
       local __func__ = '@lune.@base.@front.Front.saveToLua.checkDiff'
    
+      
+      
+      
       local headEndPos = 0
       local tailBeginPos = 0
       local oldBuildIdLine = ""
@@ -1461,6 +1464,7 @@ function Front:saveToLua(  )
       while true do
          local newLine = newStream:read( "*l" )
          local oldLine = oldStream:read( "*l" )
+         
          if oldLine ~= nil then
             if #oldBuildIdLine == 0 then
                if oldLine:find( "^_moduleObj.__buildId" ) then
@@ -1470,6 +1474,8 @@ function Front:saveToLua(  )
             end
             
          end
+         
+         
          
          if newLine ~= nil then
             if #newBuildIdLine == 0 then
@@ -1482,12 +1488,13 @@ function Front:saveToLua(  )
          end
          
          
+         
          if newLine ~= oldLine then
             local cont = false
             if newLine ~= nil and oldLine ~= nil then
                if oldLine:find( "^_moduleObj.__buildId" ) then
                   if newLine:find( "^_moduleObj.__buildId" ) then
-                     tailBeginPos = newStream:get_pos()
+                     tailBeginPos = newStream:get_lineNo()
                      cont = true
                   end
                   
@@ -1503,7 +1510,7 @@ function Front:saveToLua(  )
             end
             
             if not cont then
-               Log.log( Log.Level.Debug, __func__, 1071, function (  )
+               Log.log( Log.Level.Debug, __func__, 1081, function (  )
                
                   return string.format( "<%s>, <%s>", oldLine, newLine)
                end )
@@ -1514,7 +1521,7 @@ function Front:saveToLua(  )
          else
           
             if tailBeginPos == 0 then
-               headEndPos = newStream:get_pos()
+               headEndPos = newStream:get_lineNo()
             end
             
             if not oldLine then
@@ -1528,7 +1535,7 @@ function Front:saveToLua(  )
                local worlBuildId = frontInterface.ModuleId.createId( newBuildId:get_modTime(), oldBuildId:get_buildCount() )
                local buildIdLine = string.format( "_moduleObj.__buildId = %q", worlBuildId:get_idStr())
                
-               local txt = string.format( "%s%s\n%s", newStream:get_txt():sub( 1, headEndPos - 1 ), buildIdLine, newStream:get_txt():sub( tailBeginPos ))
+               local txt = string.format( "%s%s\n%s", newStream:getSubstring( 1, headEndPos ), buildIdLine, newStream:getSubstring( tailBeginPos ))
                return true, txt
             end
             
@@ -1747,7 +1754,7 @@ _moduleObj.convertLnsCode2LuaCode = convertLnsCode2LuaCode
 function Front:exec(  )
    local __func__ = '@lune.@base.@front.Front.exec'
 
-   Log.log( Log.Level.Trace, __func__, 1285, function (  )
+   Log.log( Log.Level.Trace, __func__, 1295, function (  )
    
       return Option.ModeKind:_getTxt( self.option.mode)
       

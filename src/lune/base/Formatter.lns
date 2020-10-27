@@ -1060,6 +1060,7 @@ pub override fn FormatterFilter.processLiteralString(
    node: &Nodes.LiteralStringNode, opt:Opt ) mut
 {
    self.write( node.$token.txt );
+   
 
    if! let expList = node.$orgParam {
       self.write( " ( " );

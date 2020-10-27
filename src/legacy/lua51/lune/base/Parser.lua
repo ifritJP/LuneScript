@@ -149,6 +149,7 @@ if not _lune2 then
    _lune2 = _lune
 end
 local Util = _lune.loadModule( 'lune.base.Util' )
+local Str = _lune.loadModule( 'lune.base.Str' )
 
 local luaKeywordSet = {}
 luaKeywordSet["if"]= true
@@ -268,46 +269,52 @@ function TxtStream:__init(txt)
    self.txt = txt
    self.start = 1
    self.eof = false
+   self.lineList = Str.getLineList( self.txt )
+   self.lineNo = 1
 end
-function TxtStream:get_pos(  )
+function TxtStream:getSubstring( fromLineNo, toLineNo )
 
-   return self.start
+   local txt = ""
+   local to = _lune.unwrapDefault( toLineNo, #self.lineList + 1)
+   for index = fromLineNo, to - 1 do
+      if index < 1 or index > #self.lineList then
+         break
+      end
+      
+      txt = string.format( "%s%s", txt, self.lineList[index])
+   end
+   
+   return txt
 end
 function TxtStream:read( mode )
 
-   if self.eof then
+   if mode ~= '*l' then
+      Util.err( string.format( "not support -- %s", tostring( mode)) )
+   end
+   
+   if self.lineNo > #self.lineList then
       return nil
    end
    
-   local index = self.txt:find( "\n", self.start, true )
-   do
-      local _exp = index
-      if _exp ~= nil then
-         local txt = self.txt:sub( self.start, _exp - 1 )
-         self.start = _exp + 1
-         return txt
-      end
+   self.lineNo = self.lineNo + 1
+   local line = self.lineList[self.lineNo - 1]
+   if Str.endsWith( line, "\n" ) then
+      return line:sub( 1, #line - 1 )
    end
    
-   self.eof = true
-   return self.txt:sub( self.start )
+   return line
 end
 function TxtStream:close(  )
 
-end
-function TxtStream:getHead(  )
-
-   return self.txt:sub( 1, self.start )
-end
-function TxtStream:getTail(  )
-
-   return self.txt:sub( self.start )
 end
 function TxtStream.setmeta( obj )
   setmetatable( obj, { __index = TxtStream  } )
 end
 function TxtStream:get_txt()
    return self.txt
+end
+function TxtStream:get_lineNo()
+   return self.lineNo
 end
 
 
@@ -428,7 +435,7 @@ end
 function Token:getLineCount(  )
 
    local count = 1
-   for _363 in self.txt:gmatch( "\n" ) do
+   for _388 in self.txt:gmatch( "\n" ) do
       count = count + 1
    end
    
@@ -622,7 +629,7 @@ function StreamParser.create( path, luaMode, moduleName )
    end
    
    
-   return StreamParser.new(stream, path, luaMode or string.find( path, "%.lua$" ) and true)
+   return StreamParser.new(stream, path, luaMode or Str.endsWith( path, ".lua" ) and true)
 end
 function StreamParser.setmeta( obj )
   setmetatable( obj, { __index = StreamParser  } )
@@ -884,7 +891,7 @@ function StreamParser:parse(  )
       local comment = ""
       while true do
          do
-            local _618, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
+            local _643, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
             if termEndIndex ~= nil then
                comment = comment .. rawLine:sub( searchIndex, termEndIndex )
                return comment, termEndIndex + 1
@@ -998,8 +1005,8 @@ function StreamParser:parse(  )
             searchIndex = tokenEndIndex + 1
             local token = val:sub( tokenIndex, tokenEndIndex )
             local subIndex = 1
-            while true do
-               if token:find( '^[%d]', subIndex ) or token:find( '^-[%d]', subIndex ) then
+            while #token >= subIndex do
+               if token:find( '^[%d]', subIndex ) or string.byte( token, subIndex ) == 45 and token:find( '^[%d]', subIndex + 1 ) then
                   local checkIndex = subIndex
                   if string.byte( token, checkIndex ) == 45 then
                      checkIndex = checkIndex + 1

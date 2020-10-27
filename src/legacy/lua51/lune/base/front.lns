@@ -1019,41 +1019,51 @@ pub fn Front.saveToLua() mut : bool {
 oldStream, newStream に格納されているモジュールのメタ情報が、
 モジュールのビルド ID 情報以外が一致しているかどうかを調べる。
 
+モジュールのビルド ID 情報以外が一致している場合、
+モジュールのビルド ID 情報の部分だけを更新したメタ情報を返す。
+
 @param oldStream 古いメタ情報
 @param newStream 新しいメタ情報
-@return bool 一致している場合 true
+@return bool 一致している場合 true。 true の場合、次の str の情報が有効。
 @return str 新しく書き込むメタ情報の文字列。
    */
    fn checkDiff( oldStream:Parser.TxtStream, newStream:Parser.TxtStream ) : bool, str
    {
+      macro _getBuildId( line:__exp, buildIdLine:__exp ) {
+         when! ,,line {
+            if #,,buildIdLine == 0 {
+               if ,,line.find( "^_moduleObj.__buildId" ## ) {
+                  // ビルド ID 情報を取得する。
+                  ,,buildIdLine = ,,line;
+               }
+            }
+         }
+      }
+
+
+      // ビルド ID よりも前のファイル内部の位置
       let mut headEndPos = 0;
+      // ビルド ID よりも後のファイル内部の位置
       let mut tailBeginPos = 0;
+
+      // 古い build ID を記録した行
       let mut oldBuildIdLine = "";
+      // 新しい build ID を記録した行
       let mut newBuildIdLine = "";
       while true {
          let newLine = newStream.read( "*l" );
          let oldLine = oldStream.read( "*l" );
-         when! oldLine {
-            if #oldBuildIdLine == 0 {
-               if oldLine.find( "^_moduleObj.__buildId" ## ) {
-                  oldBuildIdLine = oldLine;
-               }
-            }
-         }
-         when! newLine {
-            if #newBuildIdLine == 0 {
-               if newLine.find( "^_moduleObj.__buildId" ## ) {
-                  newBuildIdLine = newLine;
-               }
-            }
-         }
+         _getBuildId( oldLine, oldBuildIdLine );
+         _getBuildId( newLine, newBuildIdLine );
 
          if newLine ~= oldLine {
+            // 差分がある箇所を見つけて、それが ビルド ID の場合、
+            // 
             let mut cont = false;
             when! newLine, oldLine {
                if oldLine.find( "^_moduleObj.__buildId" ## ) {
                   if newLine.find( "^_moduleObj.__buildId" ## ) {
-                     tailBeginPos = newStream.$pos;
+                     tailBeginPos = newStream.$lineNo;
                      cont = true;
                   }
                }
@@ -1074,7 +1084,7 @@ oldStream, newStream に格納されているモジュールのメタ情報が�
          }
          else {
             if tailBeginPos == 0 {
-               headEndPos = newStream.$pos;
+               headEndPos = newStream.$lineNo;
             }
             if not oldLine {
                // ファイル一致
@@ -1088,9 +1098,9 @@ oldStream, newStream に格納されているモジュールのメタ情報が�
                   newBuildId.$modTime, oldBuildId.$buildCount );
                let buildIdLine = "_moduleObj.__buildId = %q" (worlBuildId.$idStr);
 
-               let mut txt = "%s%s\n%s" ( newStream.$txt.sub( 1, headEndPos - 1 ),
-                                          buildIdLine,
-                                          newStream.$txt.sub( tailBeginPos## ) );
+               let txt = "%s%s\n%s" ( newStream.getSubstring( 1, headEndPos ),
+                                      buildIdLine,
+                                      newStream.getSubstring( tailBeginPos## ) );
                return true, txt;
             }
          }

@@ -149,6 +149,7 @@ if not _lune2 then
    _lune2 = _lune
 end
 local Depend = _lune.loadModule( 'lune.base.Depend' )
+local Log = _lune.loadModule( 'lune.base.Log' )
 
 local debugFlag = true
 local function setDebugFlag( flag )
@@ -328,7 +329,7 @@ function SimpleSourceOStream:writeRaw( txt )
    end
    
    
-   for _273 in string.gmatch( txt, "\n" ) do
+   for _293 in string.gmatch( txt, "\n" ) do
       self.curLineNo = self.curLineNo + 1
    end
    
@@ -400,17 +401,28 @@ local function printStackTrace(  )
    errorLog( Depend.getStackTrace(  ) )
 end
 _moduleObj.printStackTrace = printStackTrace
-local function getReadyCode( lnsPath, luaPath )
 
-   local luaTime, lnsTime = Depend.getFileLastModifiedTime( luaPath ), Depend.getFileLastModifiedTime( lnsPath )
-   if  nil == luaTime or  nil == lnsTime then
-      local _luaTime = luaTime
-      local _lnsTime = lnsTime
+local function getReadyCode( depPath, tgtPath )
+   local __func__ = '@lune.@base.@Util.getReadyCode'
+
+   local tgtTime, depTime = Depend.getFileLastModifiedTime( tgtPath ), Depend.getFileLastModifiedTime( depPath )
+   if  nil == tgtTime or  nil == depTime then
+      local _tgtTime = tgtTime
+      local _depTime = depTime
    
       return false
    end
    
-   return luaTime >= lnsTime
+   if tgtTime >= depTime then
+      return true
+   end
+   
+   Log.log( Log.Level.Warn, __func__, 232, function (  )
+   
+      return string.format( "not ready %g < %g : %s, %s", tgtTime, depTime, tgtPath, depPath)
+   end )
+   
+   return false
 end
 _moduleObj.getReadyCode = getReadyCode
 

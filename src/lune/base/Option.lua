@@ -199,7 +199,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 5041
+   return 5084
 end
 
 
@@ -467,6 +467,7 @@ end
 _moduleObj.outputLuneMod = outputLuneMod
 
 local function analyze( argList )
+   local __func__ = '@lune.@base.@Option.analyze'
 
    
    local function printUsage( code )
@@ -739,6 +740,13 @@ usage:
       end
       
    end
+   
+   
+   Log.log( Log.Level.Log, __func__, 466, function (  )
+   
+      return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
+      )
+   end )
    
    
    return option
