@@ -26,6 +26,7 @@ package runtimelns
 
 import "os"
 import "fmt"
+import "runtime/pprof"
 
 func Lns_Depend_init() {
 }
@@ -51,6 +52,17 @@ func Depend_getLoadedMod() *Lns_luaValue {
 }
 
 func Depend_profile( validTest bool, work LnsForm, path string ) LnsAny {
+    if validTest {
+        prof, err := os.Create( path )
+        if err != nil {
+            panic( err )
+        }
+        if err := pprof.StartCPUProfile(prof); err != nil {
+            panic( err )
+        }
+        defer pprof.StopCPUProfile()
+    }
+    
     return work( []LnsAny{} )
 }
 

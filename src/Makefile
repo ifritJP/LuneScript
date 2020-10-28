@@ -12,15 +12,15 @@ ifneq ($(LUA_INC_DIR),)
 LUA_CFLAGS=-I$(LUA_INC_DIR)
 endif
 
-LNSC=~/.luarocks/bin/lnsc
-
 LUAROCKS=luarocks
 
 ifdef LOG
 LOG_OPT=--log info
 endif
 
-ifdef LNSC_ENABLE
+LNSC=LUA_PATH=./?.lua $(LUA) lune/base/base.lua
+
+ifdef ENABLE_LUAROCKS
 ifneq ($(LUA51),)
 ENABLE_LUA51:=$(shell which $(LUA51))
 endif
@@ -105,15 +105,9 @@ define cutMeta
 endef
 
 
-ifndef LNSC_ENABLE
 define exeLune
-	(cd $1; LUA_PATH=./?.lua $(LUA) lune/base/base.lua $2 $3 $4)
+	(cd $2; $1 $3 $4 $5)
 endef
-else
-define exeLune
-	(cd $1; $(LNSC) $2 $3 $4)
-endef
-endif
 
 define exeFront
 	(cd $1; LUA_PATH=./?.lua $(LUA) -e 'print( require( "lune.base.front" ).convertLnsCode2LuaCode( "print( 1 + 10 );", "lua" ) )')
@@ -122,90 +116,90 @@ endef
 
 
 define transwork
-	$(call exeLune,$1,lune/$4.lns SAVE $2 $3 $(BYTECOMP) $(COM_OPT) $(LOG_OPT))
+	$(call exeLune,$1,$2,lune/$5.lns SAVE $3 $4 $(BYTECOMP) $(COM_OPT) $(LOG_OPT))
 endef
 
 define transwork_dep
-	$(call exeLune,$1,lune/$4.lns SAVE $2 --depends $2/lune/$4.d $3 $(BYTECOMP) $(COM_OPT) $(LOG_OPT))
+	$(call exeLune,$1,$2,lune/$5.lns SAVE $3 --depends $3/lune/$5.d $4 $(BYTECOMP) $(COM_OPT) $(LOG_OPT))
 endef
 
 
 define buildLnsOp
-	$(call $4,$1,$2,$3,base/Str)
-	$(call $4,$1,$2,$3,base/Ver)
-	$(call $4,$1,$2,$3,base/LuaMod)
-	$(call $4,$1,$2,$3,base/LuneControl)
-	$(call $4,$1,$2,$3,base/Meta)
-	$(call $4,$1,$2,$3,base/Testing)
-	$(call $4,$1,$2,$3,base/Code)
-	$(call $4,$1,$2,$3,base/Log)
-	$(call $4,$1,$2,$3,base/LuaVer)
-	$(call $4,$1,$2,$3,base/Depend)
-	$(call $4,$1,$2,$3,base/Util)
-	$(call $4,$1,$2,$3,base/frontInterface)
-	$(call $4,$1,$2,$3,base/Writer)
-	$(call $4,$1,$2,$3,base/Parser)
-	$(call $4,$1,$2,$3,base/Ast)
-	$(call $4,$1,$2,$3,base/Option)
-	$(call $4,$1,$2,$3,base/Nodes)
-	$(call $4,$1,$2,$3,base/Formatter)
-	$(call $4,$1,$2,$3,base/Macro)
-	$(call $4,$1,$2,$3,base/TransUnit)
-	$(call $4,$1,$2,$3,base/DependLuaOnLns)
-	$(call $4,$1,$2,$3,base/convLua)
-	$(call $4,$1,$2,$3,base/dumpNode)
-	$(call $4,$1,$2,$3,base/convCC)
-	$(call $4,$1,$2,$3,base/convGo)
-	$(call $4,$1,$2,$3,base/OutputDepend)
-	$(call $4,$1,$2,$3,base/glueFilter)
-	$(call $4,$1,$2,$3,base/front)
-	$(call $4,$1,$2,$3,Util)
-	$(call exeLune,$1/$2,-mklunemod,lune/base/runtime.lua) > /dev/null
-	cat $1/$2/$(VER_PATH) | $(RUNTIME_VER_PICK) | \
-		awk '//{printf( "$1/$2/lune/base/runtime%s.lua",$$0);}' | \
-		xargs cp $1/$2/lune/base/runtime.lua 
+	$(call $5,$1,$2,$3,$4,base/Str)
+	$(call $5,$1,$2,$3,$4,base/Ver)
+	$(call $5,$1,$2,$3,$4,base/LuaMod)
+	$(call $5,$1,$2,$3,$4,base/LuneControl)
+	$(call $5,$1,$2,$3,$4,base/Meta)
+	$(call $5,$1,$2,$3,$4,base/Testing)
+	$(call $5,$1,$2,$3,$4,base/Code)
+	$(call $5,$1,$2,$3,$4,base/Log)
+	$(call $5,$1,$2,$3,$4,base/LuaVer)
+	$(call $5,$1,$2,$3,$4,base/Depend)
+	$(call $5,$1,$2,$3,$4,base/Util)
+	$(call $5,$1,$2,$3,$4,base/frontInterface)
+	$(call $5,$1,$2,$3,$4,base/Writer)
+	$(call $5,$1,$2,$3,$4,base/Parser)
+	$(call $5,$1,$2,$3,$4,base/Ast)
+	$(call $5,$1,$2,$3,$4,base/Option)
+	$(call $5,$1,$2,$3,$4,base/Nodes)
+	$(call $5,$1,$2,$3,$4,base/Formatter)
+	$(call $5,$1,$2,$3,$4,base/Macro)
+	$(call $5,$1,$2,$3,$4,base/TransUnit)
+	$(call $5,$1,$2,$3,$4,base/DependLuaOnLns)
+	$(call $5,$1,$2,$3,$4,base/convLua)
+	$(call $5,$1,$2,$3,$4,base/dumpNode)
+	$(call $5,$1,$2,$3,$4,base/convCC)
+	$(call $5,$1,$2,$3,$4,base/convGo)
+	$(call $5,$1,$2,$3,$4,base/OutputDepend)
+	$(call $5,$1,$2,$3,$4,base/glueFilter)
+	$(call $5,$1,$2,$3,$4,base/front)
+	$(call $5,$1,$2,$3,$4,Util)
+	$(call exeLune,$1,$2,$3/$4,-mklunemod,lune/base/runtime.lua) > /dev/null
+	cat $2/$3/$(VER_PATH) | $(RUNTIME_VER_PICK) | \
+		awk '//{printf( "$2/$3/lune/base/runtime%s.lua",$$0);}' | \
+		xargs cp $2/$3/lune/base/runtime.lua 
 endef
 
 define buildLns
-	$(call buildLnsOp,$1,$2,$3,transwork)
+	$(call buildLnsOp,$1,$2,$3,$4,transwork)
 endef
 
 define buildLns_dep
-	$(call buildLnsOp,$1,$2,$3,transwork_dep)
+	$(call buildLnsOp,$1,$2,$3,$4,transwork_dep)
 endef
 
 
 
 define build-testcode
-	$(call exeLune,$1,test/macro.lns,$2 save,$3) > /dev/null
-	$(call exeLune,$1,test/Sub2.lns,$2 save,$3) > /dev/null
-	$(call exeLune,$1,test/Sub3.lns,$2 save,$3) > /dev/null
-	$(call exeLune,$1,test/Sub3_2.lns,$2 save,$3) > /dev/null
-	$(call exeLune,$1,test/Sub4.lns,$2 save,$3) > /dev/null
-	$(call exeLune,$1,test/Sub5.lns,$2 save,$3) > /dev/null
-	$(call exeLune,$1,test/Sub6.lns,$2 save,$3) > /dev/null
-	$(call exeLune,$1,test/simple.lns,$2 save,$3) > /dev/null
-	$(call exeLune,$1,test/Class1.lns,$2 save,$3) > /dev/null
-	$(call exeLune,$1,test/Class2.lns,$2 save,$3) > /dev/null
-	$(call exeLune,$1,test/Class3.lns,$2 save,$3) > /dev/null
-	$(call exeLune,$1,test/Class4.lns,$2 save,$3) > /dev/null
-	$(call exeLune,$1,test/start.lns,$2 save,$3) > /dev/null
-	$(call exeLune,$1,test/mapping.lns,$2 save,$3) > /dev/null
-	$(call exeLune,$1,test/funcSym.lns,$2 save,$3) > /dev/null
-	$(call exeLune,$1,test/test2/test2/test.lns,$2 save,$3) > /dev/null
+	$(call exeLune,$1,$2,test/macro.lns,$3 save,$4) > /dev/null
+	$(call exeLune,$1,$2,test/Sub2.lns,$3 save,$4) > /dev/null
+	$(call exeLune,$1,$2,test/Sub3.lns,$3 save,$4) > /dev/null
+	$(call exeLune,$1,$2,test/Sub3_2.lns,$3 save,$4) > /dev/null
+	$(call exeLune,$1,$2,test/Sub4.lns,$3 save,$4) > /dev/null
+	$(call exeLune,$1,$2,test/Sub5.lns,$3 save,$4) > /dev/null
+	$(call exeLune,$1,$2,test/Sub6.lns,$3 save,$4) > /dev/null
+	$(call exeLune,$1,$2,test/simple.lns,$3 save,$4) > /dev/null
+	$(call exeLune,$1,$2,test/Class1.lns,$3 save,$4) > /dev/null
+	$(call exeLune,$1,$2,test/Class2.lns,$3 save,$4) > /dev/null
+	$(call exeLune,$1,$2,test/Class3.lns,$3 save,$4) > /dev/null
+	$(call exeLune,$1,$2,test/Class4.lns,$3 save,$4) > /dev/null
+	$(call exeLune,$1,$2,test/start.lns,$3 save,$4) > /dev/null
+	$(call exeLune,$1,$2,test/mapping.lns,$3 save,$4) > /dev/null
+	$(call exeLune,$1,$2,test/funcSym.lns,$3 save,$4) > /dev/null
+	$(call exeLune,$1,$2,test/test2/test2/test.lns,$3 save,$4) > /dev/null
 endef
 
 # meta 情報の更新時に正常に解析できるかテスト。
 define test-meta-update
-	-(cd $1; rm -f test/ext/*.lua test/ext/*.meta )
-	$(call exeLune,$1,test/ext/sub3.lns,SAVE,)
-	$(call exeLune,$1,test/ext/sub2.lns,SAVE,)
-	(cd $1; rm test/ext/sub3.lua test/ext/sub3.meta )
-	$(call exeLune,$1,test/ext/sub1.lns,SAVE,)
+	-(cd $2; rm -f test/ext/*.lua test/ext/*.meta )
+	$(call exeLune,$1,$2,test/ext/sub3.lns,SAVE,)
+	$(call exeLune,$1,$2,test/ext/sub2.lns,SAVE,)
+	(cd $2; rm test/ext/sub3.lua test/ext/sub3.meta )
+	$(call exeLune,$1,$2,test/ext/sub1.lns,SAVE,)
 endef
 
 luarocks-check:
-	$(MAKE) luarocks-check-sub LNSC_ENABLE=y 
+	$(MAKE) luarocks-check-sub ENABLE_LUAROCKS=y LNSC=~/.luarocks/bin/lnsc
 
 # luarocks でインストールして動作を確認する
 #
@@ -254,10 +248,10 @@ release-check:
 
 
 build:
-	$(call buildLns,$(LNSDIR),.)
+	$(call buildLns,$(LNSC),$(LNSDIR),.)
 
 test-save:
-	$(call test-meta-update,.)
+	$(call test-meta-update,$(LNSC),.)
 
 
 BUILD_COUNTER=build.counter
@@ -326,9 +320,9 @@ test-comp:
 	mkdir -p work/1/test
 	mkdir -p work/newglue
 	$(call cp_src_set,work/1,.)
-	$(call buildLns_dep,.,work/1,)
+	$(call buildLns_dep,$(LNSC),.,work/1,)
 	cp -au test work/1
-	$(call build-testcode,.,,work/1)
+	$(call build-testcode,$(LNSC),.,,work/1)
 	$(call cp_src_set,work/2,work/1)
 	$(call cp_src_set,work/3,work/1)
 	$(call cp_src_set,work/5,work/1)
@@ -346,7 +340,7 @@ test-registered-rockspec:
 
 test-etc:
 # 存在しないファイルを指定した時に、不正なファイルが作成されないことを確認する
-	-@$(call exeLune,$(TEST_DIR),test/error/__.lns,SAVE,2>&1) > /dev/null
+	-@$(call exeLune,$(LNSC),$(TEST_DIR),test/error/__.lns,SAVE,2>&1) > /dev/null
 	@echo -- not exist file access --
 	@(cd $(TEST_DIR); find test/error -iname '__.*')
 
@@ -428,7 +422,7 @@ TEST_CASE_LOGS := $(addprefix $(LOG_DIR)/,$(addsuffix .log,$(TEST_CASE)))
 
 # テストケースを実行して、テストケース毎にログをログディレクトリに出力する
 $(LOG_DIR)/%.log: test/error/%
-	-$(call exeLune,$(TEST_DIR),$<,exe,2>&1) | grep -e 'error:' -e 'warning:' > $@
+	-$(call exeLune,$(LNSC),$(TEST_DIR),$<,exe,2>&1) | grep -e 'error:' -e 'warning:' > $@
 
 test-error-all: $(TEST_CASE_LOGS)
 	cat $(TEST_CASE_LOGS)
@@ -442,16 +436,16 @@ endef
 test-error:
 	$(call test-error-all-case,$(LOG_DIR),$(TEST_DIR))
 
-	-$(call exeLune,$(TEST_DIR),test/error/noexist.lns,exe,2>&1)
-	-$(call exeLune,$(TEST_DIR),test/error/abbr.lns,exe $(COM_OPT),2>&1) && echo error:NG
+	-$(call exeLune,$(LNSC),$(TEST_DIR),test/error/noexist.lns,exe,2>&1)
+	-$(call exeLune,$(LNSC),$(TEST_DIR),test/error/abbr.lns,exe $(COM_OPT),2>&1) && echo error:NG
 
 	cat test/error/mutable.lns | sed 's@//_lune@_lune@' > $(TEST_DIR)/test/error/dis_mutable.lns
-	-$(call exeLune,$(TEST_DIR),test/error/dis_mutable.lns,exe,2>&1)
+	-$(call exeLune,$(LNSC),$(TEST_DIR),test/error/dis_mutable.lns,exe,2>&1)
 	rm $(TEST_DIR)/test/error/dis_mutable.lns
 
 
 define exeComp
-	echo lune | cat $3 - | $(call exeLune,$1,$2,comp -i,$4) | \
+	echo lune | cat $3 - | $(call exeLune,$(LNSC),$1,$2,comp -i,$4) | \
 			json_pp --json_opt=canonical,pretty | sort
 endef
 
@@ -510,12 +504,12 @@ test-compl: $(COMP_TARGETS)
 
 # オリジナルの LuneScript のテストを行ない、結果を work/test1.resut に出力する
 test-org:
-	$(call exeLune,.,test/start.lns,glue,work/glue 2>&1)
+	$(call exeLune,$(LNSC),.,test/start.lns,glue,work/glue 2>&1)
 	$(MAKE) build-glue
-	$(call exeLune,.,test/start.lns,exe,2>&1) > work/test1.result
-	$(call exeLune,.,test/start.lns,save,--depends work/1/start.dep)
+	$(call exeLune,$(LNSC),.,test/start.lns,exe,2>&1) > work/test1.result
+	$(call exeLune,$(LNSC),.,test/start.lns,save,--depends work/1/start.dep)
 
-	$(call exeLune,.,test/Sub2.lns,SAVE,work/1)
+	$(call exeLune,$(LNSC),.,test/Sub2.lns,SAVE,work/1)
 
 
 	grep -v 'warning:' work/test1.result > work/test.result
@@ -545,9 +539,9 @@ test-new:
 #	$(call exeLune,work/3,test/start.lns,glue, ../newglue 2>&1)
 #	$(MAKE) build-glue GLUE_DIR=work/newglue
 
-	$(call exeLune,work/3,test/start.lns,ast,) > work/ast2.result
-	$(call exeLune,work/3,test/start.lns,lua,) > work/lua.result
-	$(call exeLune,work/3,test/start.lns,exe,2>&1) > work/test2.result
+	$(call exeLune,$(LNSC),work/3,test/start.lns,ast,) > work/ast2.result
+	$(call exeLune,$(LNSC),work/3,test/start.lns,lua,) > work/lua.result
+	$(call exeLune,$(LNSC),work/3,test/start.lns,exe,2>&1) > work/test2.result
 
 
 	mkdir -p work/3/log/comp
@@ -570,16 +564,16 @@ endif
 
 test-new2:
 ## テストスクリプトを lua 化して、 lunescript なしで動かすテスト。
-	$(call build-testcode,work/3_2)
+	$(call build-testcode,$(LNSC),work/3_2)
 	(cd work/3_2; $(LUA) test/start.lua) > work/test3.result
 
 # テストスクリプトを lua 化して、 runtime をロードしてテスト。
-	$(call build-testcode,work/3_2,-r)
+	$(call build-testcode,$(LNSC),work/3_2,-r)
 	(cd work/3_2; $(LUA) test/start.lua) > work/test4.result
 
 # 使用するランタイム名指定してテスト
-	$(call exeLune,work/3_2,-mklunemod,runtime.lua) > /dev/null
-	$(call build-testcode,work/3_2,--runtime runtime )
+	$(call exeLune,$(LNSC),work/3_2,-mklunemod,runtime.lua) > /dev/null
+	$(call build-testcode,$(LNSC),work/3_2,--runtime runtime )
 # ランタイムを使用していることを確認するため runtime.lua を移動しておく
 	mkdir -p work/backup
 	mv work/3_2/lune/base/runtime*.lua work/backup
@@ -588,13 +582,13 @@ test-new2:
 	mv work/backup/* work/3_2/lune/base/
 	rmdir work/backup
 
-	$(call exeLune,work/3_2,test/start.lns,save,--depends start.dep)
+	$(call exeLune,$(LNSC),work/3_2,test/start.lns,save,--depends start.dep)
 
 # オプション -u 付きで save して実行テスト
 	$(call mk_lune_proj_dir,work/4)
 	cp -a test work/4
 	cp -a work/3_2/lune work/4
-	$(call exeLune,work/3_2,test/start.lns,-u SAVE ../4,)
+	$(call exeLune,$(LNSC),work/3_2,test/start.lns,-u SAVE ../4,)
 	(cd work/4; $(LUA) test/start.lua) > work/test5.result
 
 
@@ -620,7 +614,7 @@ test-comp2:
 
 #	$(MAKE) test-new
 
-	$(call exeLune,work/3,test/start.lns,glue, ../newglue 2>&1)
+	$(call exeLune,$(LNSC),work/3,test/start.lns,glue, ../newglue 2>&1)
 	$(MAKE) build-glue GLUE_DIR=work/newglue
 	mv test/glueTest.so work/3/test/glueTest.so 
 	cp -a work/3 work/3_2
@@ -651,7 +645,7 @@ ifndef NO_LUAROCKS
 endif
 
 
-	$(call test-meta-update,work/3)
+	$(call test-meta-update,$(LNSC),work/3)
 
 # rockspec の更新が必要かどうか
 	$(MAKE) check-rockspec
@@ -683,7 +677,7 @@ endif
 
 
 diff-result:
-	diff -r work/1/test/ work/4/test/ -x '*.meta'
+	(cd work/1; find test/ -iname '*.lua' -exec diff {} ../4/{} \; )
 	diff -r work/1/test/proj/  work/3/test/proj/ -I buildId
 	diff work/test1.result work/test2.result
 	diff work/test.result work/test3.result
@@ -706,7 +700,7 @@ define setup-lua51-test-cross
 endef
 
 test-lua51-mkruntime:
-	$(call exeLune,work/5,-mklunemod,lune/base/runtime.lua)
+	$(call exeLune,$(LNSC),work/5,-mklunemod,lune/base/runtime.lua)
 
 test-lua51:
 # LuneScript を Lua 5.1 にクロスコンパイルして実行
@@ -725,7 +719,7 @@ test-lua51:
 	$(call mk_lune_proj_dir,work/7)
 	cp -a work/3/lune work/7
 	$(call setup-lua51-test-cross,work/7)
-	$(call exeLune,work/7,test/start.lns,-u -ol 51 SAVE,)
+	$(call exeLune,$(LNSC),work/7,test/start.lns,-u -ol 51 SAVE,)
 	(cd work/7; $(LUA51) test/start.lua) | sed 's/\.0//g' > work/test7-3.result
 
 	diff work/test6.result  work/test7.result 
@@ -739,13 +733,13 @@ test-lua51-sub:
 	$(MAKE) -C work/6 build_from_d depend_on=y FROM_DIR=../5 TO_DIR=../6
 #	$(call buildLns,work/5,../6)
 	$(call setup-lua51-test,work/6)
-	$(call exeLune,work/6,-mklunemod,lune/base/runtime.lua)
-	$(call exeLune,work/6,test/start.lns,exe,) | sed 's/\.0//g' > work/test7.result
+	$(call exeLune,$(LNSC),work/6,-mklunemod,lune/base/runtime.lua)
+	$(call exeLune,$(LNSC),work/6,test/start.lns,exe,) | sed 's/\.0//g' > work/test7.result
 
 	cp -a work/6 work/6_2
 	rm -rf work/6_2/test
 	$(call setup-lua51-test-cross,work/6_2)
-	$(call exeLune,work/6_2,test/start.lns,exe,) | sed 's/\.0//g' > work/test7_2.result
+	$(call exeLune,$(LNSC),work/6_2,test/start.lns,exe,) | sed 's/\.0//g' > work/test7_2.result
 
 
 
@@ -771,7 +765,7 @@ endif
 
 
 test-installed-cmd:
-	$(MAKE) LNSC_ENABLE=y LNSC=lnsc test-comp -j
+	$(MAKE) ENABLE_LUAROCKS=y LNSC=lnsc test-comp -j
 
 test-on-docker:
 	sudo docker build -t testlns -f test/docker/test_install test/docker
@@ -862,7 +856,7 @@ uninstall: check_lua_mod_dir
 build-testcase:
 	mkdir -p work/0
 	cp -a lune work/0
-	$(call buildLns,.,work/0,)
+	$(call buildLns,$(LNSC),.,work/0,)
 	diff -r lune work/0/lune -x '*.meta' -x '*.d' -x '*.*~' -x '*.h' -x '*.c' -x '*.tmp'
 	cp work/0/lune/base/*.lua lune/base/
 	cp work/0/lune/base/*.meta lune/base/
@@ -888,14 +882,14 @@ clean-ccc:
 # $4: 実行するメインモジュールファイルパス (拡張子 .lns は付けないファイルパス)
 # $5: 比較用に実行する Lns のオプション
 define test-convC-exe
-	$(call exeLune,$1,$4.lns,bootC -oc work/boot.c)
-	LANG= $(MAKE) -C $1 -f Makefile.ccc "SRCS=$2 work/boot.c" TEST_OUT=test.exe \
+	$(call exeLune,$1,$2,$5.lns,bootC -oc work/boot.c)
+	LANG= $(MAKE) -C $2 -f Makefile.ccc "SRCS=$3 work/boot.c" TEST_OUT=test.exe \
 		LUA_INC_DIR=$(LUA_INC_DIR) LUA_LIB=$(LUA_LIB)
 	@# C へのトランスコンパイラ結果と、
 	@# Lua へのトランスコンパイラ結果で出力が同じになることを確認
-	@(cd $1; ./test.exe | grep -v -e '^:debug:' > work/$3.c.log)
-	$(call exeLune,$1,$4.lns,$5,exe > work/$3.lua.log)
-	diff $1/work/$3.c.log $1/work/$3.lua.log
+	@(cd $2; ./test.exe | grep -v -e '^:debug:' > work/$4.c.log)
+	$(call exeLune,$2,$5.lns,$6,exe > work/$4.lua.log)
+	diff $2/work/$4.c.log $2/work/$4.lua.log
 endef
 
 # lns ソースを C へトランスコンパイルする
@@ -903,87 +897,87 @@ endef
 # $1: 実行する作業ディレクトリ
 # $2: トランスコンパイルする lns ソースのパス
 define convC
-	$(call exeLune,$1,$2,save -langC,$3)
+	$(call exeLune,$1,$2,$3,save -langC,$4)
 endef
 
 build-miniC:
-	$(call test-convC-exe,.,miniC.lns,miniC,miniC)
+	$(call test-convC-exe,$(LNSC),.,miniC.lns,miniC,miniC)
 
 test-miniC:
-	$(call transwork,.,.,,base/convCC)
+	$(call transwork,$(LNSC),.,.,,base/convCC)
 	$(LUA) lune/base/base.lua --mkbuiltin lune/base/runtime_c
 	mkdir -p work/0
 	rm -rf work/0/*
 	mkdir -p work/0/work/c
 	cp -a lune work/0
 	cp Makefile.ccc work/0
-	$(call convC,work/0,lune/base/Testing.lns,--testing)
+	$(call convC,$(LNSC),work/0,lune/base/Testing.lns,--testing)
 #	-$(call test-convC-test,work/0,lune/base/Testing)
 #	cp -a work/c/* work/0/work/c
 #	cp -a work/0/work/* work/
 	cp miniC.lns work/0
 #	$(call test-convC-test,.,miniC)
-	$(call test-convC-test,work/0,miniC)
+	$(call test-convC-test,$(LNSC),work/0,miniC)
 	cp work/0/test.exe .
 
 
 test-subC:
-	$(call transwork,.,.,,base/convCC)
-	$(call convC,.,miniC.lns)
-	$(call convC,.,subC.lns)
-	$(call test-convC-exe,.,miniC.lns subC.lns,subc,miniC)
+	$(call transwork,$(LNSC),.,.,,base/convCC)
+	$(call convC,$(LNSC),.,miniC.lns)
+	$(call convC,$(LNSC),.,subC.lns)
+	$(call test-convC-exe,$(LNSC),.,miniC.lns subC.lns,subc,miniC)
 
 
 build-cc:
 	$(MAKE) test-miniC
-	$(call convC,.,ccc.lns)
-	$(call convC,.,subC.lns)
-	$(call test-convC-exe,.,ccc.lns subC.lns,ccc,ccc)
+	$(call convC,$(LNSC),.,ccc.lns)
+	$(call convC,$(LNSC),.,subC.lns)
+	$(call test-convC-exe,$(LNSC),.,ccc.lns subC.lns,ccc,ccc)
 
 test-formatter:
-	$(call transwork,.,.,,base/Formatter)
-	$(call exeLune,.,ccc.lns,format,) > work/format.lns
+	$(call transwork,$(LNSC),.,.,,base/Formatter)
+	$(call exeLune,$(LNSC),.,ccc.lns,format,) > work/format.lns
 
 define test-convC-test
-	$(call convC,$1,$2.lns,--testing)
-	$(call test-convC-exe,$1,$2.c lune/base/Testing.c $3,$(notdir $2),$2,--testing)
+	$(call convC,$1,$2,$3.lns,--testing)
+	$(call test-convC-exe,$1,$2,$3.c lune/base/Testing.c $4,$(notdir $3),$3,--testing)
 endef
 
 test-testC:
-	$(call transwork,.,.,,base/convCC)
+	$(call transwork,$(LNSC),.,.,,base/convCC)
 	$(LUA) lune/base/base.lua --mkbuiltin lune/base/runtime_c
 	mkdir -p work/0
 	rm -rf work/0/*
 	mkdir -p work/0/work/c
 	cp -a lune work/0
 	cp Makefile.ccc work/0
-	$(call convC,work/0,lune/base/Testing.lns,--testing)
-	$(call test-convC-test,work/0,lune/base/Ver)
-	$(call test-convC-test,work/0,lune/base/Code)
-	$(call test-convC-test,work/0,lune/base/LuaMod)
-	$(call convC,work/0,lune/base/LuaVer.lns,--testing)
-	$(call convC,work/0,lune/base/LuneControl.lns,--testing)
-	$(call convC,work/0,lune/base/Depend.lns,--testing)
-	$(call test-convC-test,work/0,lune/base/Util, \
+	$(call convC,$(LNSC),work/0,lune/base/Testing.lns,--testing)
+	$(call test-convC-test,$(LNSC),work/0,lune/base/Ver)
+	$(call test-convC-test,$(LNSC),work/0,lune/base/Code)
+	$(call test-convC-test,$(LNSC),work/0,lune/base/LuaMod)
+	$(call convC,$(LNSC),work/0,lune/base/LuaVer.lns,--testing)
+	$(call convC,$(LNSC),work/0,lune/base/LuneControl.lns,--testing)
+	$(call convC,$(LNSC),work/0,lune/base/Depend.lns,--testing)
+	$(call test-convC-test,$(LNSC),work/0,lune/base/Util, \
 		lune/base/Depend.sub.c lune/base/Depend.c \
 		lune/base/LuneControl.c lune/base/LuaMod.c )
-	$(call test-convC-test,work/0,lune/base/Parser, \
+	$(call test-convC-test,$(LNSC),work/0,lune/base/Parser, \
 		lune/base/Depend.sub.c lune/base/Depend.c \
 		lune/base/LuneControl.c lune/base/LuaMod.c \
 		lune/base/Util.c)
-	$(call test-convC-test,work/0,lune/base/Writer, \
+	$(call test-convC-test,$(LNSC),work/0,lune/base/Writer, \
 		lune/base/Depend.sub.c lune/base/Depend.c \
 		lune/base/LuneControl.c lune/base/LuaMod.c \
 		lune/base/Util.c)
-	$(call test-convC-test,work/0,lune/base/Ast, \
+	$(call test-convC-test,$(LNSC),work/0,lune/base/Ast, \
 		lune/base/Depend.sub.c lune/base/Depend.c \
 		lune/base/LuneControl.c lune/base/LuaMod.c \
 		lune/base/Util.c lune/base/Writer.c \
 		lune/base/Parser.c lune/base/Code.c )
-	$(call convC,work/0,lune/base/frontInterface.lns,--testing)
+	$(call convC,$(LNSC),work/0,lune/base/frontInterface.lns,--testing)
 
 test-mkbuiltin:
-	$(call transwork,.,.,,base/convCC)
+	$(call transwork,$(LNSC),.,.,,base/convCC)
 	$(LUA) lune/base/base.lua --mkbuiltin lune/base/runtime_c
 	$(MAKE) test-miniC
 
@@ -992,7 +986,7 @@ lctags:
 
 
 test-start:
-	$(call transwork,.,.,,base/convCC)
+	$(call transwork,$(LNSC),.,.,,base/convCC)
 	$(LUA) lune/base/base.lua --mkbuiltin lune/base/runtime_c
 	mkdir -p work/0
 	rm -rf work/0/*
@@ -1000,19 +994,19 @@ test-start:
 	cp -a lune work/0
 	cp -a test work/0
 	cp Makefile.ccc work/0
-	$(call convC,work/0,test/Sub4.lns)
-	$(call convC,work/0,test/Sub2.lns)
-	$(call test-convC-exe,work/0,test/Sub2.lns,test/Sub2,test/Sub2)
+	$(call convC,$(LNSC),work/0,test/Sub4.lns)
+	$(call convC,$(LNSC),work/0,test/Sub2.lns)
+	$(call test-convC-exe,$(LNSC),work/0,test/Sub2.lns,test/Sub2,test/Sub2)
 
 
 define test-tutorialC
-	$(call convC,$1,$(basename $2).lns)
-	$(call test-convC-exe,$1,$2,$(notdir $2),$(basename $2))
+	$(call convC,$1,$2,$(basename $3).lns)
+	$(call test-convC-exe,$1,$2,$3,$(notdir $3),$(basename $3))
 endef
 
 
 test-tutorial:
-	$(call transwork,.,.,,base/convCC)
+	$(call transwork,$(LNSC),.,.,,base/convCC)
 	$(LUA) lune/base/base.lua --mkbuiltin lune/base/runtime_c
 	mkdir -p work/0
 	rm -rf work/0/*
@@ -1020,30 +1014,30 @@ test-tutorial:
 	cp -a lune work/0
 	cp -a test work/0
 	cp Makefile.ccc work/0
-	$(call test-tutorialC,work/0,test/tutorial/match.lns)
-	$(call test-tutorialC,work/0,test/tutorial/loop.lns)
-	$(call test-tutorialC,work/0,test/tutorial/interface.lns)
-	$(call test-tutorialC,work/0,test/tutorial/generics.lns)
-	$(call test-tutorialC,work/0,test/tutorial/enum.lns)
-	$(call test-tutorialC,work/0,test/tutorial/classOverride.lns)
-	$(call test-tutorialC,work/0,test/tutorial/classMapping.lns)
-	$(call test-tutorialC,work/0,test/tutorial/classInherit.lns)
-	$(call test-tutorialC,work/0,test/tutorial/class2accessor.lns)
-	$(call test-tutorialC,work/0,test/tutorial/class1.lns)
-	$(call test-tutorialC,work/0,test/tutorial/cast.lns)
-	$(call test-tutorialC,work/0,test/tutorial/branch.lns)
-	$(call test-tutorialC,work/0,test/tutorial/nilable.lns)
-	$(call test-tutorialC,work/0,test/tutorial/defaultArg.lns)
-	$(call test-tutorialC,work/0,test/tutorial/multipleRetVal.lns)
-	$(call test-tutorialC,work/0,test/tutorial/arg.lns)
-	$(call test-tutorialC,work/0,test/tutorial/func.lns)
-	$(call test-tutorialC,work/0,test/tutorial/variable.lns)
-	$(call test-tutorialC,work/0,test/tutorial/set.lns)
-	$(call test-tutorialC,work/0,test/tutorial/value.lns)
+	$(call test-tutorialC,$(LNSC),work/0,test/tutorial/match.lns)
+	$(call test-tutorialC,$(LNSC),work/0,test/tutorial/loop.lns)
+	$(call test-tutorialC,$(LNSC),work/0,test/tutorial/interface.lns)
+	$(call test-tutorialC,$(LNSC),work/0,test/tutorial/generics.lns)
+	$(call test-tutorialC,$(LNSC),work/0,test/tutorial/enum.lns)
+	$(call test-tutorialC,$(LNSC),work/0,test/tutorial/classOverride.lns)
+	$(call test-tutorialC,$(LNSC),work/0,test/tutorial/classMapping.lns)
+	$(call test-tutorialC,$(LNSC),work/0,test/tutorial/classInherit.lns)
+	$(call test-tutorialC,$(LNSC),work/0,test/tutorial/class2accessor.lns)
+	$(call test-tutorialC,$(LNSC),work/0,test/tutorial/class1.lns)
+	$(call test-tutorialC,$(LNSC),work/0,test/tutorial/cast.lns)
+	$(call test-tutorialC,$(LNSC),work/0,test/tutorial/branch.lns)
+	$(call test-tutorialC,$(LNSC),work/0,test/tutorial/nilable.lns)
+	$(call test-tutorialC,$(LNSC),work/0,test/tutorial/defaultArg.lns)
+	$(call test-tutorialC,$(LNSC),work/0,test/tutorial/multipleRetVal.lns)
+	$(call test-tutorialC,$(LNSC),work/0,test/tutorial/arg.lns)
+	$(call test-tutorialC,$(LNSC),work/0,test/tutorial/func.lns)
+	$(call test-tutorialC,$(LNSC),work/0,test/tutorial/variable.lns)
+	$(call test-tutorialC,$(LNSC),work/0,test/tutorial/set.lns)
+	$(call test-tutorialC,$(LNSC),work/0,test/tutorial/value.lns)
 
 test-cAll:
 	$(MAKE) build-cc
-	$(MAKE) test-tutorialC
+	$(MAKE) test-tutorial
 	$(MAKE) test-testC
 
 
@@ -1072,7 +1066,7 @@ GO_WORK_DIR = work/go
 # $3: lnsc のオプション
 # $4: 出力先ディレクトリ
 define convGo
-	$(call exeLune,$1,$2.lns,SAVE -langGo,$3 $4)
+	$(call exeLune,$1,$2,$3.lns,SAVE -langGo,$4 $5)
 endef
 
 define setup-go
@@ -1086,15 +1080,15 @@ endef
 define test-go-one
 #	cp -au lune/base/runtime_go/main/* $1
 	cat lune/base/runtime_go/main/runtime_main.go |		\
-		sed 's/Lns_init/Lns_$2_init/;' |		\
-		sed 's@//IMPORT@import . "$(GO_MOD)/mod"@' > $1/runtime_main.go
-	mkdir -p $1/mod
-	-rm $1/mod/*
-	cp -au $3/$2.lns $1/mod
-	$(call convGo,$1,mod/$2)
-	$(call buildGo,$1) >> work/result-testGo.txt
+		sed 's/Lns_init/Lns_$3_init/;' |		\
+		sed 's@//IMPORT@import . "$(GO_MOD)/mod"@' > $2/runtime_main.go
+	mkdir -p $2/mod
+	-rm $2/mod/*
+	cp -au $4/$3.lns $2/mod
+	$(call convGo,$1,$2,mod/$3)
+	$(call buildGo,$2) >> work/result-testGo.txt
 	if test "${NO_LUA_DIFF}" = ""; then					\
-		$(call exeLune,$1,mod/$2.lns,exe) >> work/result-testGo2.txt;	\
+		$(call exeLune,$1,$2,mod/$3.lns,exe) >> work/result-testGo2.txt;	\
 		diff -C 2 -I 'ONLY_LUA'						\
 				work/result-testGo.txt work/result-testGo2.txt;	\
 	fi
@@ -1102,11 +1096,11 @@ endef
 
 
 test-miniGo:
-	$(call transwork,.,.,,base/convGo)
+	$(call transwork,$(LNSC),.,.,,base/convGo)
 	$(call setup-go,$(GO_WORK_DIR))
 	-rm $(GO_WORK_DIR)/*.*
 	cp build.counter $(GO_WORK_DIR)
-	$(call test-go-one,$(GO_WORK_DIR),miniGo,.)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),miniGo,.)
 	cat work/result-testGo.txt
 
 ifndef NO_TEST
@@ -1117,37 +1111,37 @@ miniGo-go:
 	$(call buildGo,$(GO_WORK_DIR))
 
 test-go:
-	$(call transwork,.,.,,base/convGo)
+	$(call transwork,$(LNSC),.,.,,base/convGo)
 	$(call setup-go,$(GO_WORK_DIR))
-	$(call test-go-one,$(GO_WORK_DIR),testGo,test)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),testGo,test)
 
 
 test-tutorial-go:
-	$(call transwork,.,.,,base/convGo)
+	$(call transwork,$(LNSC),.,.,,base/convGo)
 	$(call setup-go,$(GO_WORK_DIR))
 
-	$(call test-go-one,$(GO_WORK_DIR),match,test/tutorial)
-	$(call test-go-one,$(GO_WORK_DIR),loop,test/tutorial)
-	$(call test-go-one,$(GO_WORK_DIR),interface,test/tutorial)
-	$(call test-go-one,$(GO_WORK_DIR),generics,test/tutorial)
-	$(call test-go-one,$(GO_WORK_DIR),enum,test/tutorial)
-	$(call test-go-one,$(GO_WORK_DIR),classOverride,test/tutorial)
-	$(call test-go-one,$(GO_WORK_DIR),classMapping,test/tutorial)
-	$(call test-go-one,$(GO_WORK_DIR),classInherit,test/tutorial)
-	$(call test-go-one,$(GO_WORK_DIR),class2accessor,test/tutorial)
-	$(call test-go-one,$(GO_WORK_DIR),class1,test/tutorial)
-	$(call test-go-one,$(GO_WORK_DIR),cast,test/tutorial)
-	$(call test-go-one,$(GO_WORK_DIR),branch,test/tutorial)
-	$(call test-go-one,$(GO_WORK_DIR),nilable,test/tutorial)
-	$(call test-go-one,$(GO_WORK_DIR),defaultArg,test/tutorial)
-	$(call test-go-one,$(GO_WORK_DIR),multipleRetVal,test/tutorial)
-	$(call test-go-one,$(GO_WORK_DIR),arg,test/tutorial)
-	$(call test-go-one,$(GO_WORK_DIR),func,test/tutorial)
-	$(call test-go-one,$(GO_WORK_DIR),variable,test/tutorial)
-	$(call test-go-one,$(GO_WORK_DIR),set,test/tutorial)
-	$(call test-go-one,$(GO_WORK_DIR),value,test/tutorial)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),match,test/tutorial)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),loop,test/tutorial)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),interface,test/tutorial)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),generics,test/tutorial)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),enum,test/tutorial)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),classOverride,test/tutorial)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),classMapping,test/tutorial)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),classInherit,test/tutorial)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),class2accessor,test/tutorial)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),class1,test/tutorial)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),cast,test/tutorial)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),branch,test/tutorial)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),nilable,test/tutorial)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),defaultArg,test/tutorial)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),multipleRetVal,test/tutorial)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),arg,test/tutorial)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),func,test/tutorial)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),variable,test/tutorial)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),set,test/tutorial)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),value,test/tutorial)
 
-	$(call test-go-one,$(GO_WORK_DIR),ccc,.)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),ccc,.)
 
 
 define test-lns-test
@@ -1162,57 +1156,56 @@ endef
 
 define test-convGo-test
 	cat lune/base/runtime_go/main/runtime_main.go |		\
-		sed 's/Lns_init/Lns_$2_init/' |			\
+		sed 's/Lns_init/Lns_$3_init/' |			\
 		sed 's@//TEST:@@' |				\
-		sed 's/run( "" )/run( "lune.base.$2" )/' |				\
-		sed 's@//IMPORT@import . "$(GO_MOD)/lune/base"@' > $1/$4/runtime_main.go
+		sed 's/run( "" )/run( "lune.base.$3" )/' |				\
+		sed 's@//IMPORT@import . "$(GO_MOD)/lune/base"@' > $2/$5/runtime_main.go
 
-	$(call convGo,$1,$3/$2,--testing,$4)
-	$(call buildGo,$1/$4) >> work/result-testGo.txt
-#	$(call exeLune,$1/$4,$3/$2.lns,SAVE,--testing) 
-	$(call test-lns-test,$1/$4,$2) >> work/result-testGo2.txt
+	$(call convGo,$1,$2,$4/$3,--testing,$5)
+	$(call buildGo,$2/$5) >> work/result-testGo.txt
+	$(call test-lns-test,$2/$5,$3) >> work/result-testGo2.txt
 	diff -C 2 -I 'ONLY_LUA' work/result-testGo.txt work/result-testGo2.txt
 endef
 
 test-testGo:
-	$(call transwork,.,.,,base/convGo)
+	$(call transwork,$(LNSC),.,.,,base/convGo)
 	rm -rf $(GO_WORK_DIR)/*.* $(GO_WORK_DIR)/lune $(GO_WORK_DIR)/test
 	$(call setup-go,$(GO_WORK_DIR))
 	$(call setup-go,$(GO_WORK_DIR)/test)
 
-	$(call convGo,$(GO_WORK_DIR),lune/base/Testing,--testing,./test)
-#	$(call test-convGo-test,$(GO_WORK_DIR),Str,lune/base,./test)
-	$(call test-convGo-test,$(GO_WORK_DIR),Ver,lune/base,./test)
-	$(call test-convGo-test,$(GO_WORK_DIR),Code,lune/base,./test)
-	$(call test-convGo-test,$(GO_WORK_DIR),LuaMod,lune/base,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/LuaVer,--testing,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/LuneControl,--testing,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/Meta,--testing,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/Log,--testing,./test)
-	$(call test-convGo-test,$(GO_WORK_DIR),Util,lune/base,./test)
-	$(call test-convGo-test,$(GO_WORK_DIR),Parser,lune/base,./test)
-	$(call test-convGo-test,$(GO_WORK_DIR),Writer,lune/base,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/frontInterface,--testing,./test)
-	$(call test-convGo-test,$(GO_WORK_DIR),Ast,lune/base,./test)
-	$(call test-convGo-test,$(GO_WORK_DIR),Option,lune/base,./test)
-	$(call test-convGo-test,$(GO_WORK_DIR),Nodes,lune/base,./test)
-	$(call test-convGo-test,$(GO_WORK_DIR),Formatter,lune/base,./test)
-	$(call test-convGo-test,$(GO_WORK_DIR),Macro,lune/base,./test)
-	$(call test-convGo-test,$(GO_WORK_DIR),TransUnit,lune/base,./test)
-#	$(call test-convGo-test,$(GO_WORK_DIR),DependLuaOnLns,lune/base,./test)
-	$(call test-convGo-test,$(GO_WORK_DIR),convLua,lune/base,./test)
-	$(call test-convGo-test,$(GO_WORK_DIR),dumpNode,lune/base,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/convCC,--testing,./test)
-	$(call test-convGo-test,$(GO_WORK_DIR),convGo,lune/base,./test)
-	$(call test-convGo-test,$(GO_WORK_DIR),OutputDepend,lune/base,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/glueFilter,--testing,./test)
-	$(call test-convGo-test,$(GO_WORK_DIR),front,lune/base,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Testing,--testing,./test)
+#	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Str,lune/base,./test)
+	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Ver,lune/base,./test)
+	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Code,lune/base,./test)
+	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),LuaMod,lune/base,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/LuaVer,--testing,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/LuneControl,--testing,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Meta,--testing,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Log,--testing,./test)
+	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Util,lune/base,./test)
+	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Parser,lune/base,./test)
+	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Writer,lune/base,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/frontInterface,--testing,./test)
+	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Ast,lune/base,./test)
+	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Option,lune/base,./test)
+	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Nodes,lune/base,./test)
+	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Formatter,lune/base,./test)
+	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Macro,lune/base,./test)
+	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),TransUnit,lune/base,./test)
+#	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),DependLuaOnLns,lune/base,./test)
+	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),convLua,lune/base,./test)
+	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),dumpNode,lune/base,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convCC,--testing,./test)
+	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),convGo,lune/base,./test)
+	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),OutputDepend,lune/base,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/glueFilter,--testing,./test)
+	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),front,lune/base,./test)
 
 test-subgo:
-	$(call transwork,.,.,,base/convGo)
+	$(call transwork,$(LNSC),.,.,,base/convGo)
 	$(call setup-go,$(GO_WORK_DIR))
 
-	$(call test-convGo-test,$(GO_WORK_DIR),front,lune/base,./test)
+	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),front,lune/base,./test)
 
 
 # セルフホストのソースを go に変換し、 go 版 lns をビルドする
@@ -1221,33 +1214,33 @@ go-build:
 	$(call setup-go,$(GO_WORK_DIR))
 	$(call setup-go,$(GO_WORK_DIR)/test)
 
-	$(call convGo,$(GO_WORK_DIR),lune/base/Testing,,./test)
-#	$(call convGo,$(GO_WORK_DIR),lune/base/Str,,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/Ver,,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/Code,,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/LuaMod,,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/LuaVer,,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/LuneControl,,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/Meta,,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/Log,,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/Util,,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/Parser,,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/Writer,,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/frontInterface,,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/Ast,,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/Option,,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/Nodes,,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/Formatter,,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/Macro,,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/TransUnit,,./test)
-#	$(call convGo,$(GO_WORK_DIR),lune/base/DependLuaOnLns,,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/convLua,,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/dumpNode,,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/convCC,,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/convGo,,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/OutputDepend,,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/glueFilter,,./test)
-	$(call convGo,$(GO_WORK_DIR),lune/base/front,,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Testing,,./test)
+#	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Str,,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Ver,,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Code,,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/LuaMod,,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/LuaVer,,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/LuneControl,,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Meta,,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Log,,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Util,,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Parser,,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Writer,,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/frontInterface,,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Ast,,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Option,,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Nodes,,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Formatter,,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Macro,,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/TransUnit,,./test)
+#	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/DependLuaOnLns,,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convLua,,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/dumpNode,,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convCC,,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convGo,,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/OutputDepend,,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/glueFilter,,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/front,,./test)
 
 	cp lune/base/runtime_go/main/lnsc_main.go $(GO_WORK_DIR)/test
 	(cd $(GO_WORK_DIR)/test; go mod init lns)
@@ -1265,35 +1258,29 @@ endef
 # go-build でビルドした go 版 lns と lua 版 lns とで、
 # lns ソースの変換を行ない。同じ結果になることを確認する。
 test-govslua:
-	mkdir -p $(GO_WORK_DIR)/test/go
-	(cd $(GO_WORK_DIR); find lune -type d | (cd test/go; xargs mkdir -p))
-	mkdir -p $(GO_WORK_DIR)/test/lua
-	(cd $(GO_WORK_DIR); find lune -type d | (cd test/lua; xargs mkdir -p))
-	$(call test-govslua-comp,$(GO_WORK_DIR)/test,Testing,./go,./lua)
-	$(call test-govslua-comp,$(GO_WORK_DIR)/test,Str,./go,./lua)
-	$(call test-govslua-comp,$(GO_WORK_DIR)/test,Ver,./go,./lua)
-	$(call test-govslua-comp,$(GO_WORK_DIR)/test,Code,./go,./lua)
-	$(call test-govslua-comp,$(GO_WORK_DIR)/test,LuaMod,./go,./lua)
-	$(call test-govslua-comp,$(GO_WORK_DIR)/test,LuaVer,./go,./lua)
-	$(call test-govslua-comp,$(GO_WORK_DIR)/test,Depend,./go,./lua)
-	$(call test-govslua-comp,$(GO_WORK_DIR)/test,Util,./go,./lua)
-	$(call test-govslua-comp,$(GO_WORK_DIR)/test,frontInterface,./go,./lua)
-	$(call test-govslua-comp,$(GO_WORK_DIR)/test,Writer,./go,./lua)
-	$(call test-govslua-comp,$(GO_WORK_DIR)/test,Parser,./go,./lua)
-	$(call test-govslua-comp,$(GO_WORK_DIR)/test,Ast,./go,./lua)
-	$(call test-govslua-comp,$(GO_WORK_DIR)/test,Option,./go,./lua)
-	$(call test-govslua-comp,$(GO_WORK_DIR)/test,Nodes,./go,./lua)
-	$(call test-govslua-comp,$(GO_WORK_DIR)/test,Formatter,./go,./lua)
-	$(call test-govslua-comp,$(GO_WORK_DIR)/test,Macro,./go,./lua)
-	$(call test-govslua-comp,$(GO_WORK_DIR)/test,TransUnit,./go,./lua)
-	$(call test-govslua-comp,$(GO_WORK_DIR)/test,DependLuaOnLns,./go,./lua)
-	$(call test-govslua-comp,$(GO_WORK_DIR)/test,convLua,./go,./lua)
-	$(call test-govslua-comp,$(GO_WORK_DIR)/test,dumpNode,./go,./lua)
-	$(call test-govslua-comp,$(GO_WORK_DIR)/test,convCC,./go,./lua)
-	$(call test-govslua-comp,$(GO_WORK_DIR)/test,convGo,./go,./lua)
-	$(call test-govslua-comp,$(GO_WORK_DIR)/test,OutputDepend,./go,./lua)
-	$(call test-govslua-comp,$(GO_WORK_DIR)/test,glueFilter,./go,./lua)
-	$(call test-govslua-comp,$(GO_WORK_DIR)/test,front,./go,./lua)
+	-rm work/go.time work/lua.time
+	/usr/bin/time -f 'go:%e/%U/%S:$2' -o work/go.time --append		\
+		$(MAKE) test-govslua-go
+	/usr/bin/time -f 'lua:%e/%U/%S:$2' -o work/lua.time --append		\
+		$(MAKE) test-govslua-lua
+	diff -r work/1 work/2
+	cat work/go.time work/lua.time
+
+
+define test-buildlns
+	mkdir -p $2
+	rm -rf $2/*
+	$(call mk_lune_proj_dir,$2)
+	$(call cp_src_set,$2,.)
+	$(call buildLns,$1,.,$2,)
+endef
+
+test-govslua-lua:
+	$(call test-buildlns,$(LNSC),work/1)
+
+test-govslua-go:
+	$(call test-buildlns,/usr/bin/time -f 'go:%e/%U/%S:$2' -o work/go.time --append $(GO_WORK_DIR)/test/lns,work/2)
+
 
 goprof:
 	(cd work/go/test/; go tool pprof -dot cpu.pprof  ) | dot -Tsvg -odump.svg
@@ -1316,6 +1303,6 @@ test-reference:
 
 
 test-reference-sample:
-	$(call exeLune,.,test/checkReference.lns exe)
+	$(call exeLune,$(LNSC),.,test/checkReference.lns exe)
 
 

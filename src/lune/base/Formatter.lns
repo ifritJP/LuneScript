@@ -96,13 +96,13 @@ pub override fn FormatterFilter.processImport(
 pub override fn FormatterFilter.processRoot(
    node: &Nodes.RootNode, opt:Opt ) mut
 {
-   Ast.pushProcessInfo(##);
+   //Ast.pushProcessInfo(##);
    
    foreach child in node.$children {
       filter( child, self, opt.nextOpt( node ) );
    }
 
-   Ast.popProcessInfo();
+   //Ast.popProcessInfo();
 };
 pub override fn FormatterFilter.processSubfile(
    node: &Nodes.SubfileNode, opt:Opt ) mut
@@ -176,16 +176,16 @@ pub override fn FormatterFilter.processNewAlgeVal(
    }
 }
 
-
-pub override fn FormatterFilter.processDeclClass(
-   node: &Nodes.DeclClassNode, opt:Opt ) mut
+fn FormatterFilter.outputDeclClass(
+   protoFlag:bool, classType:&Ast.TypeInfo,
+   gluePrefix: str!, moduleName: &Parser.Token! )
 {
-   if node.$accessMode == .Pub {
+   if classType.$accessMode == .Pub {
       self.write( "pub " );
    }
-   switch node.$expType.$kind {
+   switch classType.$kind {
       case .Class {
-         if node.$moduleName {
+         if moduleName {
             self.write( "module " );
          }
          else {
@@ -196,9 +196,8 @@ pub override fn FormatterFilter.processDeclClass(
          self.write( "interface " );
       }
    }
-   self.write( node.$name.txt );
+   self.write( classType.$rawTxt );
 
-   let classType = node.$expType;
    if #classType.$itemTypeInfoList > 0 {
       self.write( "<" );
       foreach genType, index in classType.$itemTypeInfoList {
@@ -210,10 +209,10 @@ pub override fn FormatterFilter.processDeclClass(
       self.write( ">" );
    }
 
-   if! let moduleName = node.$moduleName {
+   when! moduleName {
       self.write( " require " );
       self.write( "%s " ( moduleName.txt ) );
-      if! let gluePrefix = node.$gluePrefix {
+      when! gluePrefix {
          self.write( "glue " );
          self.write( gluePrefix );
       }
@@ -235,6 +234,74 @@ pub override fn FormatterFilter.processDeclClass(
          self.write( ")" );
       }
    }
+}
+
+pub override fn FormatterFilter.processProtoClass(
+   node: &Nodes.ProtoClassNode, opt:Opt ) mut
+{
+   self.outputDeclClass( true, node.$expType, nil, nil );
+}
+
+pub override fn FormatterFilter.processDeclClass(
+   node: &Nodes.DeclClassNode, opt:Opt ) mut
+{
+   self.outputDeclClass(
+      false, node.$expType, node.$gluePrefix, node.$moduleName );
+   // if node.$accessMode == .Pub {
+   //    self.write( "pub " );
+   // }
+   // switch node.$expType.$kind {
+   //    case .Class {
+   //       if node.$moduleName {
+   //          self.write( "module " );
+   //       }
+   //       else {
+   //          self.write( "class " );
+   //       }
+   //    }
+   //    case .IF {
+   //       self.write( "interface " );
+   //    }
+   // }
+   // self.write( node.$name.txt );
+
+   // let classType = node.$expType;
+   // if #classType.$itemTypeInfoList > 0 {
+   //    self.write( "<" );
+   //    foreach genType, index in classType.$itemTypeInfoList {
+   //       if index > 1 {
+   //          self.write( ",");
+   //       }
+   //       self.write( genType.getTxt( ## ) );
+   //    }
+   //    self.write( ">" );
+   // }
+
+   // if! let moduleName = node.$moduleName {
+   //    self.write( " require " );
+   //    self.write( "%s " ( moduleName.txt ) );
+   //    if! let gluePrefix = node.$gluePrefix {
+   //       self.write( "glue " );
+   //       self.write( gluePrefix );
+   //    }
+   // }
+
+   // if classType.hasBase() or #classType.$interfaceList > 0 {
+   //    self.write( " extend " );
+   //    if classType.hasBase() {
+   //       self.write( classType.$baseTypeInfo.getTxt(##) );
+   //    }
+   //    if #classType.$interfaceList > 0 {
+   //       self.write( "(" );
+   //       foreach ifType, index in classType.$interfaceList {
+   //          if index > 1 {
+   //             self.write( "," );
+   //          }
+   //          self.write( ifType.getTxt(##) );
+   //       }
+   //       self.write( ")" );
+   //    }
+   // }
    self.writeln( "" );
    self.writeln( "{" );
    self.pushIndent( ## );

@@ -234,7 +234,6 @@ pub class MacroCtrl
    pri let mut tokenExpanding:bool {pub};
    /** マクロをコールしている行番号 */
    pri let mut macroCallLineNo: int {pub};
-
    /**
    * マクロ内で利用可能な、マクロ共通ローカルマップ。
    * マクロ横断で共通。
@@ -253,6 +252,10 @@ pub class MacroCtrl
       self.macroAnalyzeInfoStack = [ self.analyzeInfo ];
       self.macroLocalVarMap = toListEmpty();
    }
+}
+
+fn equalsType( typeInfo:&Ast.TypeInfo, builtinType:&Ast.TypeInfo ) : bool {
+   return typeInfo.$srcTypeInfo == builtinType;
 }
 
 /**
@@ -350,7 +353,7 @@ pub fn MacroCtrl.evalMacroOp(
       let typeInfo = valInfo.typeInfo;
       let mut valList:Luaval<&stem>;
       if! let mut val = macroVars[ name ] {
-         if typeInfo.equals( Ast.builtinTypeSymbol ##) {
+         if equalsType( typeInfo, Ast.builtinTypeSymbol ) {
             valList = toList( val );
          } else {
             valList = val;
@@ -392,7 +395,7 @@ pub fn MacroCtrl.evalMacroOp(
 
 
 pub fn MacroCtrl.importMacro(
-   macroInfoStem:&stem!, macroTypeInfo:&Ast.TypeInfo,
+   processInfo:Ast.ProcessInfo, macroInfoStem:&stem!, macroTypeInfo:&Ast.TypeInfo,
    typeId2TypeInfo: &Map<int,&Ast.TypeInfo> ) mut
 {
    let macroInfo, err = MacroMetaInfo._fromStem( macroInfoStem );
@@ -438,7 +441,7 @@ pub fn MacroCtrl.importMacro(
          new ExtMacroInfo(
             macroInfo.name,
             self.macroEval.evalFromCode(
-               macroInfo.name, argNameList, macroInfo.stmtBlock ),
+               processInfo, macroInfo.name, argNameList, macroInfo.stmtBlock ),
             symbol2MacroValInfoMap, argList, tokenList );
    }
    else {
@@ -448,13 +451,14 @@ pub fn MacroCtrl.importMacro(
 }
 
 
-pub fn MacroCtrl.regist( node:Nodes.DeclMacroNode, macroScope:&Ast.Scope ) mut {
-   let macroObj = self.macroEval.eval( node );
+pub fn MacroCtrl.regist(
+   processInfo:Ast.ProcessInfo, node:Nodes.DeclMacroNode, macroScope:&Ast.Scope ) mut {
+   let macroObj = self.macroEval.eval( processInfo, node );
 
    // registVar() した時に確定していない変数の型を、ここで確定する。
    let mut remap:Map<str,Nodes.MacroValInfo> = {};
    foreach macroValInfo, name in self.symbol2ValueMapForMacro {
-      if macroValInfo.typeInfo.equals( Ast.builtinTypeEmpty## ) {
+      if equalsType( macroValInfo.typeInfo, Ast.builtinTypeEmpty ) {
          remap[ name ] = new Nodes.MacroValInfo(
             macroValInfo.val, unwrap macroScope.getTypeInfoChild( name ),
             macroValInfo.argNode );
@@ -579,16 +583,16 @@ pub fn MacroCtrl.expandMacroVal(
 
       if tokenTxt == ',,' {
          //Util.errorLog( "nextToken: %s" ( nextToken.txt ) );
-         if macroVal.typeInfo.equals( Ast.builtinTypeSymbol ## ) {
+         if equalsType( macroVal.typeInfo, Ast.builtinTypeSymbol ) {
             let mut txtList:List<str> = [];
             foreach txt in (unwrap macroVal.val)@@str[] {
                txtList.insert( txt );
             }
             pushbackTxt( parser, txtList, nextToken.txt, nextToken.pos );
          }
-         elseif macroVal.typeInfo.equals( Ast.builtinTypeStat ## ) or
-            macroVal.typeInfo.equals( Ast.builtinTypeExp ## ) or
-            macroVal.typeInfo.equals( Ast.builtinTypeMultiExp ## ) 
+         elseif equalsType( macroVal.typeInfo, Ast.builtinTypeStat ) or
+            equalsType( macroVal.typeInfo, Ast.builtinTypeExp ) or
+            equalsType( macroVal.typeInfo, Ast.builtinTypeMultiExp ) 
          {
             parser.pushbackStr( "macroVal %s" (nextToken.txt),
                                 (unwrap macroVal.val)@@str );
@@ -596,7 +600,9 @@ pub fn MacroCtrl.expandMacroVal(
          elseif macroVal.typeInfo.$kind == .Array or
             macroVal.typeInfo.get_kind() == .List
          {
-            if macroVal.typeInfo.$itemTypeInfoList[ 1 ].equals( Ast.builtinTypeStat ##) {
+            if equalsType( macroVal.typeInfo.$itemTypeInfoList[ 1 ],
+                           Ast.builtinTypeStat )
+            {
                let strList = (unwrap macroVal.val)@@str[];
                for index = #strList, 1, -1 {
                   parser.pushbackStr(
@@ -654,7 +660,7 @@ pub fn MacroCtrl.expandMacroVal(
          }
       }
       elseif tokenTxt == ',,,' {
-         if macroVal.typeInfo.equals( Ast.builtinTypeString ## ) {
+         if equalsType( macroVal.typeInfo, Ast.builtinTypeString ) {
             pushbackTxt( parser, [ (unwrap macroVal.val)@@str ],
                          nextToken.txt, nextToken.pos );
          }
@@ -664,7 +670,7 @@ pub fn MacroCtrl.expandMacroVal(
          }
       }
       elseif tokenTxt == ',,,,' {
-         if macroVal.typeInfo.equals( Ast.builtinTypeSymbol ## ) {
+         if equalsType( macroVal.typeInfo, Ast.builtinTypeSymbol ) {
             let txtList = (unwrap macroVal.val)@@str[];
             let mut newToken = "";
             foreach txt in txtList {
@@ -674,9 +680,9 @@ pub fn MacroCtrl.expandMacroVal(
                Parser.TokenKind.Str, "'%s'" (newToken), nextToken.pos, false ## );
             parser.pushbackToken( nextToken );
          }
-         elseif macroVal.typeInfo.equals( Ast.builtinTypeStat ## ) or
-            macroVal.typeInfo.equals( Ast.builtinTypeExp ## ) or
-            macroVal.typeInfo.equals( Ast.builtinTypeMultiExp ## )
+         elseif equalsType( macroVal.typeInfo, Ast.builtinTypeStat ) or
+            equalsType( macroVal.typeInfo, Ast.builtinTypeExp ) or
+            equalsType( macroVal.typeInfo, Ast.builtinTypeMultiExp )
          {
             let txt = (unwrap macroVal.val)@@str;
             let rawTxt;
@@ -714,7 +720,7 @@ pub class ErrorMess {
 pub fn MacroCtrl.expandSymbol(
    parser:Parser.PushbackParser, prefixToken:&Parser.Token,
    mut exp:&Nodes.Node, nodeManager:Nodes.NodeManager,
-   errMessList:List<&ErrorMess>) : &Nodes.LiteralStringNode
+   errMessList:List<&ErrorMess>) mut : &Nodes.LiteralStringNode
 {
    let nextToken = parser.getTokenNoErr();
    if nextToken.txt ~= "~~" {
@@ -729,26 +735,26 @@ pub fn MacroCtrl.expandSymbol(
          let macroInfo = self.symbol2ValueMapForMacro[ symbolInfo.$name ];
          when! macroInfo {
             let valType = macroInfo.typeInfo;
-            if valType.equals( Ast.builtinTypeSymbol ##) or
-               valType.equals( Ast.builtinTypeExp ##) or
-               valType.equals( Ast.builtinTypeMultiExp ##) or
-               valType.equals( Ast.builtinTypeStat ##)
+            if equalsType( valType, Ast.builtinTypeSymbol ) or
+               equalsType( valType, Ast.builtinTypeExp ) or
+               equalsType( valType, Ast.builtinTypeMultiExp ) or
+               equalsType( valType, Ast.builtinTypeStat )
             {
                format = "' %s '";
             }
             elseif valType.$kind == .List and
-               valType.$itemTypeInfoList[1].equals( Ast.builtinTypeStat ##)
+               equalsType( valType.$itemTypeInfoList[1], Ast.builtinTypeStat )
             {
                format = "' %s '";
                exp = Nodes.ExpMacroStatListNode.create(
                   nodeManager, prefixToken.pos,
                   self.analyzeInfo.$mode == .AnalyzeArg, [ Ast.builtinTypeString ], exp );
             }
-            elseif Ast.builtinTypeString.equals( valType ##) {
+            elseif equalsType( Ast.builtinTypeString, valType ) {
                //
             }
-            elseif valType.equals( Ast.builtinTypeInt ##) or
-               valType.equals( Ast.builtinTypeReal ##)
+            elseif equalsType( valType, Ast.builtinTypeInt ) or
+               equalsType( valType, Ast.builtinTypeReal )
             {
                format = "' %s' ";
             }
@@ -759,15 +765,15 @@ pub fn MacroCtrl.expandSymbol(
             }
          }
          else {
-            if exp.$expType.equals( Ast.builtinTypeInt ##) or
-               exp.$expType.equals( Ast.builtinTypeReal ##)
+            if equalsType( exp.$expType, Ast.builtinTypeInt ) or
+               equalsType( exp.$expType, Ast.builtinTypeReal )
             {
                format = "' %s' ";
             }
-            elseif exp.$expType.equals( Ast.builtinTypeSymbol ##) or
-               exp.$expType.equals( Ast.builtinTypeExp ##) or
-               exp.$expType.equals( Ast.builtinTypeMultiExp ##) or
-               exp.$expType.equals( Ast.builtinTypeStat ##)
+            elseif equalsType( exp.$expType, Ast.builtinTypeSymbol ) or
+               equalsType( exp.$expType, Ast.builtinTypeExp ) or
+               equalsType( exp.$expType, Ast.builtinTypeMultiExp ) or
+               equalsType( exp.$expType, Ast.builtinTypeStat )
             {
                format = "' %s '";
             }

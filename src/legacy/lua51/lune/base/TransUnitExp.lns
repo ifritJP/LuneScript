@@ -56,7 +56,7 @@ fn TransUnit.analyzeExpOneRVal(
          case .IF, .Class {
             let expOrgType = exp.$expType.$nonnilableType.$srcTypeInfo;
             let exceptOrgType = expectType.$nonnilableType.$srcTypeInfo;
-            if expOrgType.isInheritFrom( exceptOrgType ##) {
+            if expOrgType.isInheritFrom( self.processInfo, exceptOrgType ##) {
                exp = Nodes.ExpCastNode.create(
                   self.nodeManager, exp.$pos,
                   self.macroCtrl.isInAnalyzeArgMode(), [ expectType ],
@@ -213,7 +213,7 @@ fn TransUnit.analyzeExpList(
       }
 
       
-      if not allowNoneType and not exp.canBeRight() {
+      if not allowNoneType and not exp.canBeRight( self.processInfo ) {
          self.addErrMess(
             exp.$pos,
             "This arg can't be r-value. -- %s" ( Nodes.getNodeKindName( exp.$kind) ) );
@@ -327,7 +327,8 @@ fn TransUnit.analyzeExpRefItem(
       typeInfo = itemTypeList[2];
       indexTypeInfo = itemTypeList[1];
       expectItemType = itemTypeList[1];
-      if not typeInfo.equals( Ast.builtinTypeStem_ ##) and not typeInfo.$nilable {
+      if not typeInfo.equals( self.processInfo, Ast.builtinTypeStem_ ##) and
+         not typeInfo.$nilable {
          typeInfo = typeInfo.$nilableTypeInfo;
       }
    }
@@ -335,10 +336,10 @@ fn TransUnit.analyzeExpRefItem(
    {
       typeInfo = expType.get_itemTypeInfoList()[1];
    }
-   elseif expType.equals( Ast.builtinTypeString ##) {
+   elseif expType.equals( self.processInfo, Ast.builtinTypeString ##) {
       typeInfo = Ast.builtinTypeInt;
    }
-   elseif expType.equals( Ast.builtinTypeStem ##) {
+   elseif expType.equals( self.processInfo, Ast.builtinTypeStem ##) {
       indexTypeInfo = Ast.builtinTypeStem;
       typeInfo = Ast.builtinTypeStem_;
    }
@@ -372,10 +373,11 @@ fn TransUnit.analyzeExpRefItem(
    }
 
    let indexExp = self.analyzeExpOneRVal( false, false, nil, expectItemType );
-   if not indexExp.canBeRight() {
+   if not indexExp.canBeRight( self.processInfo ) {
       self.addErrMess( indexExp.$pos, "This node can't use index" );
    }
-   if not indexTypeInfo.canEvalWith( indexExp.$expType, .SetOp, {} ) {
+   if not indexTypeInfo.canEvalWith(
+      self.processInfo, indexExp.$expType, .SetOp, {} ) {
       self.addErrMess( indexExp.$pos,
                        "unmatch index type -- %s, %s"
                        ( indexTypeInfo.getTxt(##), indexExp.$expType.getTxt(##) ) );
@@ -453,8 +455,10 @@ fn TransUnit.checkImplicitCast(
       else {
          if expNode.$expType ~= Ast.builtinTypeNil and
             dstType ~= Ast.builtinTypeEmpty and
-            not dstType.$srcTypeInfo.equals( expNode.$expType.$srcTypeInfo ## ) and
-            not dstType.$nonnilableType.$srcTypeInfo.equals( expNode.$expType.$srcTypeInfo ## )
+            not dstType.$srcTypeInfo.equals( self.processInfo,
+                                             expNode.$expType.$srcTypeInfo ## ) and       
+            not dstType.$nonnilableType.$srcTypeInfo.equals(
+               self.processInfo, expNode.$expType.$srcTypeInfo ## )
          {
             if expNode.$kind ~= Nodes.NodeKind.$Abbr {
                if not hasModNode {
@@ -649,9 +653,10 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, Nodes.ExpListNode!, &List<&Ast.
       alt2typeMap = genericsClassType.createAlt2typeMap( true );
    }
 
-   Ast.CanEvalCtrlTypeInfo.setupNeedAutoBoxing( alt2typeMap );
+   Ast.CanEvalCtrlTypeInfo.setupNeedAutoBoxing( alt2typeMap, self.processInfo );
    
    let result, mess = Ast.TypeInfo.checkMatchType(
+      self.processInfo,
       dstTypeList, expTypeList, allowDstShort, warnForFollowSrcIndex, alt2typeMap );
    //Ast.AlternateTypeInfo.createAlt2typeMap( applyGeneric ) ); 
    switch result {
@@ -753,7 +758,7 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
       }
       case builtinFunc.list_sort {
          let alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
-         let callback = Ast.NormalTypeInfo.createFunc(
+         let callback = self.processInfo.createFunc(
             false, false, nil, Ast.TypeInfoKind.Func,
             Ast.headTypeInfo, false, false, true, .Pri, "sort", nil,
             [ genericTypeList[ 1 ], genericTypeList[ 1 ] ],
@@ -797,7 +802,7 @@ fn TransUnit.analyzeListItems(
       let nodeList: List<&Nodes.Node> = (unwrap expList).$expList;
       foreach exp in nodeList {
          itemCommonType = Ast.TypeInfo.getCommonTypeCombo(
-            itemCommonType, Ast.CommonType.Normal( exp.$expType ),
+            self.processInfo, itemCommonType, Ast.CommonType.Normal( exp.$expType ),
             Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) );
       }
    }
@@ -808,7 +813,7 @@ fn TransUnit.analyzeListItems(
          itemTypeInfo = info;
       }
       case .Combine( info ) {
-         itemTypeInfo = info.$typeInfo;
+         itemTypeInfo = info.get_typeInfo( self.processInfo );
       }
    }
 
@@ -869,14 +874,14 @@ fn TransUnit.analyzeListConst(
    
    let mut typeInfoList = [ Ast.builtinTypeNone ];
    if token.txt == '[' {
-      typeInfoList = [ Ast.NormalTypeInfo.createList( .Local, self.getCurrentClass(),
+      typeInfoList = [ self.processInfo.createList( .Local, self.getCurrentClass(),
                                                       [ itemTypeInfo ], .Mut ) ];
       return Nodes.LiteralListNode.create(
          self.nodeManager, token.pos,
          self.macroCtrl.isInAnalyzeArgMode(), typeInfoList, expList );
    }
    else {
-      typeInfoList = [ Ast.NormalTypeInfo.createArray( .Local, self.getCurrentClass(),
+      typeInfoList = [ self.processInfo.createArray( .Local, self.getCurrentClass(),
                                                        [ itemTypeInfo ], .Mut ) ];
       return Nodes.LiteralArrayNode.create(
          self.nodeManager, token.pos,
@@ -917,7 +922,7 @@ fn TransUnit.analyzeSetConst(
    
    
    let mut typeInfoList = [ Ast.builtinTypeNone ];
-   typeInfoList = [ Ast.NormalTypeInfo.createSet( .Local, self.getCurrentClass(),
+   typeInfoList = [ self.processInfo.createSet( .Local, self.getCurrentClass(),
                                                   [ itemTypeInfo ], .Mut ) ];
    return Nodes.LiteralSetNode.create(
       self.nodeManager, token.pos,
@@ -943,13 +948,13 @@ fn TransUnit.analyzeMapConst(
             self.addErrMess(
                pos, "map key can't set a nilable -- %s" (expType.getTxt(##)) );
          }
-         if expType.equals( Ast.builtinTypeNil ## ) {
+         if expType.equals( self.processInfo, Ast.builtinTypeNil ## ) {
             return typeInfo;
          }
          expType = expType.$nonnilableType;
       }
       return Ast.TypeInfo.getCommonType(
-         typeInfo, expType,
+         self.processInfo, typeInfo, expType,
          Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) );
    }
 
@@ -986,7 +991,7 @@ fn TransUnit.analyzeMapConst(
       nextToken = self.getToken(##);
    }
 
-   let typeInfo = Ast.NormalTypeInfo.createMap(
+   let typeInfo = self.processInfo.createMap(
       .Local, self.getCurrentClass(), keyTypeInfo, valTypeInfo, .Mut );
 
    self.checkToken( nextToken, "}" );
@@ -1077,10 +1082,10 @@ fn TransUnit.evalMacro(
       if #stmtList == 1 {
          let node = stmtList[ 1 ];
          let retType = macroRetTypeList[ 1 ];
-         if retType.equals( Ast.builtinTypeMultiExp ## ) {
+         if retType.equals( self.processInfo, Ast.builtinTypeMultiExp ## ) {
             expTypeList = node.$expTypeList;
          }
-         elseif retType.equals( Ast.builtinTypeExp ## ) {
+         elseif retType.equals( self.processInfo, Ast.builtinTypeExp ## ) {
             if #node.$expTypeList == 1 {
                expTypeList = node.$expTypeList;
             }
@@ -1090,7 +1095,7 @@ fn TransUnit.evalMacro(
             }
          }
          elseif #node.$expTypeList == 1 {
-            if retType.equals( node.$expType ## ) {
+            if retType.equals( self.processInfo, node.$expType ## ) {
                expTypeList = node.$expTypeList;
             }
             else {
@@ -1162,26 +1167,26 @@ pub fn isMatchStringFormatType(
    }
    switch opKind[ #opKind ] {
       case ?s {
-         if not argType.equals( Ast.builtinTypeString ##) {
+         if argType.$srcTypeInfo ~= Ast.builtinTypeString {
             if not luaVer.$canFormStem2Str {
                return .NeedConv, Ast.builtinTypeString;
             }
          }
       }
       case ?q {
-         if not argType.equals( Ast.builtinTypeString ##) {
+         if argType.$srcTypeInfo ~= Ast.builtinTypeString {
             // 文字列以外に %q を使うのは不具合の可能性があるので unmatch にする。
             return .Unmatch, Ast.builtinTypeString;
          }
       }
       case ?A, ?a, ?E, ?e, ?f, ?G, ?g {
-         if not argType.equals( Ast.builtinTypeReal ##) {
+         if argType.$srcTypeInfo ~= Ast.builtinTypeReal {
             return .Unmatch, Ast.builtinTypeReal;
          }
       }
       default {
-         if not argType.equals( Ast.builtinTypeInt ##) and
-            not argType.equals( Ast.builtinTypeChar ##)
+         if argType.$srcTypeInfo ~= Ast.builtinTypeInt and
+            argType.$srcTypeInfo ~= Ast.builtinTypeChar
          {
             return .Unmatch, Ast.builtinTypeInt;
          }
@@ -1250,7 +1255,9 @@ fn TransUnit.prepareExpCall(
 
       when! argList {
          foreach argNode in argList.$expList {
-            if not argNode.canBeRight() and argNode.$kind ~= Nodes.NodeKind.$Abbr {
+            if not argNode.canBeRight( self.processInfo) and
+               argNode.$kind ~= Nodes.NodeKind.$Abbr
+            {
                self.addErrMess( argNode.$pos, "this node can't be r-value. -- %s"
                                 (Nodes.getNodeKindName( argNode.$kind )));
             }
@@ -1330,7 +1337,8 @@ fn TransUnit.checkArgForSort(
             (#callback.$retTypeInfoList) );
          return;
       }
-      if not Ast.builtinTypeBool.equals( callback.$retTypeInfoList[ 1 ] ##) {
+      if not Ast.builtinTypeBool.equals(
+         self.processInfo, callback.$retTypeInfoList[ 1 ] ##) {
          self.addErrMess(
             firstToken.$pos,
             "The callback's return type of sort() must be bool. -- '%s'"
@@ -1344,7 +1352,9 @@ fn TransUnit.checkArgForSort(
       }
       if #genericTypeList == 1 {
          foreach argType, index in callback.$argTypeInfoList {
-            if not genericTypeList[ 1 ].equals( argType ##) {
+            if not genericTypeList[ 1 ].equals(
+               self.processInfo, argType ##)
+            { 
                self.addErrMess(
                   firstToken.$pos,
                   "The callback's argument(%d) type must be -- '%s'"
@@ -1436,7 +1446,8 @@ fn TransUnit.processFunc(
          elseif funcTypeInfo.$kind == .Func and
              ( funcTypeInfo.$rawTxt == "_fromMap" or
                funcTypeInfo.$rawTxt == "_fromStem" ) and
-            genericsClass.isInheritFrom( Ast.builtinTypeMapping, alt2typeMap )
+            genericsClass.isInheritFrom( self.processInfo,
+                                         Ast.builtinTypeMapping, alt2typeMap )    
          {
             retTypeInfoList[ index ] = genericsClass.$nilableTypeInfo;
          }
@@ -1449,13 +1460,13 @@ fn TransUnit.processFunc(
    }
    
    when! refFieldNode {
-      if funcTypeInfo.equals( builtinFunc.list_unpack ##) or
-         funcTypeInfo.equals( builtinFunc.array_unpack ##)
+      if funcTypeInfo.equals( self.processInfo, builtinFunc.list_unpack ##) or
+         funcTypeInfo.equals( self.processInfo, builtinFunc.array_unpack ##)
       {
          // unpack の型を list の要素の DDD 型にする
          let prefixType = refFieldNode.$prefix.$expType;
          if #prefixType.$itemTypeInfoList > 0 {
-            let dddType = Ast.NormalTypeInfo.createDDD(
+            let dddType = self.processInfo.createDDD(
                prefixType.$itemTypeInfoList[ 1 ], false, false );
             retTypeInfoList = [];
             retTypeInfoList.insert( dddType );
@@ -1497,7 +1508,7 @@ fn TransUnit.processFunc(
       }
    }
 
-   if funcTypeInfo.equals( builtinFunc.lns__kind ##) {
+   if funcTypeInfo.equals( self.processInfo, builtinFunc.lns__kind ##) {
       if! let expList = argList$.$expList {
          if #expList > 0 {
             return Nodes.LuneKindNode.create(
@@ -1521,7 +1532,7 @@ fn TransUnit.processFunc(
       }
    }
    if funcType.$kind == .Ext {
-      let mut work, err = Ast.convToExtTypeList( retTypeInfoList );
+      let mut work, err = Ast.convToExtTypeList( self.processInfo, retTypeInfoList );
       when! work {
          retTypeInfoList = work;
       } else {
@@ -1575,21 +1586,21 @@ fn TransUnit.analyzeExpCall(
    let mut alt2typeMap, argList = self.prepareExpCall(
       funcExp.$pos, funcTypeInfo, genericTypeList, genericsClass );
 
-   if funcTypeInfo.equals( builtinFunc.list_insert ##) {
+   if funcTypeInfo.equals( self.processInfo, builtinFunc.list_insert ##) {
       when! argList {
          if argList.$expType.$nilable {
             self.addErrMess( argList.$pos, "list can't insert nilable" );
          }
       }
    }
-   if funcTypeInfo.equals( builtinFunc.set_add ##) {
+   if funcTypeInfo.equals( self.processInfo, builtinFunc.set_add ##) {
       when! argList {
          if argList.$expType.$nilable {
             self.addErrMess( argList.$pos, "set can't add nilable" );
          }
       }
    }
-   elseif funcTypeInfo.equals( builtinFunc.list_remove ##) {
+   elseif funcTypeInfo.equals( self.processInfo, builtinFunc.list_remove ##) {
       if #genericTypeList > 0 {
          if genericTypeList[ 1 ].$nilable {
             self.addWarnMess( funcExp.$pos, "remove() is dangerous for nilable's list." );
@@ -1700,7 +1711,8 @@ fn TransUnit.analyzeExpCast(
       castType = self.createModifier( castType, .IMut );
    }
 
-   if castType.canEvalWith( expType, .SetOp, {} ) {
+   if castType.canEvalWith(
+      self.processInfo, expType, .SetOp, {} ) {
       if castType.$kind ~= .Ext and
          not ( castType.$kind == .Stem and  Ast.isExtType( expType ) )
       {
@@ -1711,7 +1723,8 @@ fn TransUnit.analyzeExpCast(
                              expType.getTxt( self.typeNameCtrl ## ) ) );
       }
    }
-   elseif not expType.canEvalWith( castType, .SetOp, {} ) {
+   elseif not expType.canEvalWith(
+      self.processInfo, castType, .SetOp, {} ) {
       if not Ast.isNumberType( expType ) or not Ast.isNumberType( castType ) {
          // キャスト先の型からキャスト元の型へ互換性がない場合はエラー
          self.addErrMess( castTypeNode.$pos,
@@ -1836,6 +1849,12 @@ fn TransUnit.analyzeAccessClassField(
                   fieldTypeInfo = retTypeList[ 1 ];
                }
             }
+            if #fieldSymbolInfo.$typeInfo.$argTypeInfoList > 0 {
+               self.addErrMess(
+                  token.pos,        
+                  "can't use '$' with -- %s" ( fieldSymbolInfo.$typeInfo.getTxt(##) ) );
+            }
+            
             getterFlag = true;
          }
       }
@@ -2234,7 +2253,7 @@ fn TransUnit.analyzeExpField(
          }
          if mode == .Get {
             let moduleType = prefixExpType.getModule();
-            if not moduleType.equals( self.moduleType ##) and
+            if not moduleType.equals( self.processInfo, self.moduleType ##) and
                not self.scope.getModuleInfo( moduleType ) {
                   // enum の名前を取得するには、そのモジュールのインポートが必要
                   self.addErrMess( token.pos, "need to import module -- %s"
@@ -2286,7 +2305,7 @@ fn TransUnit.analyzeExpField(
       }
       case .Map {
          let work = prefixExpType.$itemTypeInfoList[1];
-         if not work.equals( Ast.builtinTypeString ##) {
+         if not work.equals( self.processInfo, Ast.builtinTypeString ##) {
             self.addErrMess(
                token.pos,
                "map key type is not str. (%s)" (work.getTxt(##)) );
@@ -2303,7 +2322,7 @@ fn TransUnit.analyzeExpField(
             [ typeInfo ], prefixExp, accessNil, token.txt, nil );
       }
       default {
-         if prefixExpType.equals( Ast.builtinTypeStem ##) {
+         if prefixExpType.equals( self.processInfo, Ast.builtinTypeStem ##) {
             typeInfo = Ast.builtinTypeStem_;
             if extFlag {
                typeInfo = self.createExtType( token.pos, typeInfo );
@@ -2386,8 +2405,8 @@ fn TransUnit.analyzeExpField(
       typeInfo = self.createModifier( typeInfo, .IMut );
    }
 
-   if typeInfo.equals( builtinFunc.list_unpack ##) or
-      typeInfo.equals( builtinFunc.array_unpack ##)
+   if typeInfo.equals( self.processInfo, builtinFunc.list_unpack ##) or
+      typeInfo.equals( self.processInfo, builtinFunc.array_unpack ##)
    {
       self.helperInfo.useUnpack = true;
    }
@@ -2624,10 +2643,10 @@ fn TransUnit.analyzeExpSymbol(
             }           
          }
          
-         if typeInfo.equals( Ast.builtinTypeSymbol ##) {
+         if typeInfo.equals( self.processInfo, Ast.builtinTypeSymbol ##) {
             skipFlag = true;
          }
-         if typeInfo.equals( builtinFunc.lns__load ##) {
+         if typeInfo.equals( self.processInfo, builtinFunc.lns__load ##) {
             self.helperInfo.useLoad = true;
          }
 
@@ -2712,7 +2731,7 @@ fn TransUnit.analyzeExpOpSet(
    
    let mut expList = self.analyzeExpList( false, false, false, nil, expectTypeList## );
 
-   if not expList.canBeRight() {
+   if not expList.canBeRight( self.processInfo ) {
       self.addErrMess( expList.$pos,
                        "this node can not be r-value. -- %s"
                        (Nodes.getNodeKindName( expList.$kind ) ) );
@@ -2813,8 +2832,10 @@ fn TransUnit.analyzeExpOpEquals(
    let exp1Type = exp1.$expType;
    let exp2Type = exp2.$expType;
    
-   if ( not exp1Type.canEvalWith( exp2Type, .SetOp, {} ) and
-        not exp2Type.canEvalWith( exp1Type, .SetOp, {} ) )
+   if ( not exp1Type.canEvalWith(
+      self.processInfo, exp2Type, .SetOp, {} ) and
+        not exp2Type.canEvalWith(
+           self.processInfo, exp1Type, .SetOp, {} ) )
    {
       self.addErrMess(
          opToken.pos,
@@ -2835,8 +2856,8 @@ fn TransUnit.analyzeExpOpEquals(
          return exp1, exp2;
       }
    }
-   if exp1Type.equals( Ast.builtinTypeBool ##) and
-      exp2Type.equals( Ast.builtinTypeBool ##) and
+   if exp1Type.equals( self.processInfo, Ast.builtinTypeBool ##) and
+      exp2Type.equals( self.processInfo, Ast.builtinTypeBool ##) and
        ( exp1.$kind == Nodes.NodeKind.$LiteralBool or
          exp2.$kind == Nodes.NodeKind.$LiteralBool )
    {
@@ -2859,7 +2880,7 @@ fn TransUnit.analyzeExpOpEquals(
       if nonNilType1.$kind == .Class or nonNilType1.$kind == .IF {
          // exp1 が class/if の場合
          if nonNilType2.$kind == .Class or nonNilType2.$kind == .IF {
-            if nonNilType1.isInheritFrom( nonNilType2 ## ) {
+            if nonNilType1.isInheritFrom( self.processInfo, nonNilType2 ## ) {
                // exp1 が exp2 を派生している場合、exp1 を exp2 に upcast する。
                exp1 = Nodes.ExpCastNode.create(
                   self.nodeManager, exp1.$pos,
@@ -2907,7 +2928,7 @@ fn TransUnit.analyzeExpOp2(
       }
       elseif nextToken.kind == Parser.TokenKind.Ope {
          if Parser.isOp2( opTxt ) {
-            if opTxt ~= "=" and not exp.canBeRight() {
+            if opTxt ~= "=" and not exp.canBeRight( self.processInfo ) {
                self.addErrMess(
                   exp.$pos, "This can't evaluate for '%s' -- %s"
                   ( opTxt, Nodes.getNodeKindName( exp.$kind ) ) );
@@ -2949,7 +2970,7 @@ fn TransUnit.analyzeExpOp2(
                false, false, false, opLevel, expectTypeList[ 1 ] );
             exp2 = self.MultiTo1( exp2 );
             
-            if not exp2.canBeRight() {
+            if not exp2.canBeRight( self.processInfo ) {
                self.addErrMess(
                   exp2.$pos, "This can't evaluate for '%s' -- %s"
                   ( opTxt, Nodes.getNodeKindName( exp2.$kind ) ) );
@@ -2957,7 +2978,7 @@ fn TransUnit.analyzeExpOp2(
             
             let mut retType = Ast.builtinTypeNone;
 
-            if not exp2.canBeRight() {
+            if not exp2.canBeRight( self.processInfo ) {
                self.addErrMess( exp2.$pos,
                                 "this node can not be r-value. -- %s"
                                 (Nodes.getNodeKindName( exp2.$kind ) ) );
@@ -2996,8 +3017,8 @@ fn TransUnit.analyzeExpOp2(
                      is3op = false;
                   }
 
-                  if not exp1Type.equals( Ast.builtinTypeBool ##) and
-                     not exp1Type.equals( Ast.builtinTypeStem ##) and
+                  if not exp1Type.equals( self.processInfo, Ast.builtinTypeBool ##) and
+                     not exp1Type.equals( self.processInfo, Ast.builtinTypeStem ##) and
                      not exp1Type.$nilable
                   {
                      if (exp@@@Nodes.ExpOp2Node)$.$op$.txt == "and" {
@@ -3020,27 +3041,30 @@ fn TransUnit.analyzeExpOp2(
                      }
                   }
                   
-                  if exp1Type.equals( exp2Type ##) {
+                  if exp1Type.equals( self.processInfo, exp2Type ##) {
                      retType = exp1Type;
                   }
-                  elseif exp1Type.canEvalWith( exp2Type, .SetOp, {}) {
+                  elseif exp1Type.canEvalWith(
+                     self.processInfo, exp2Type, .SetOp, {}) {
                      // 暗黙キャストの関係にある場合
                      retType = exp1Type;
                   }
-                  elseif exp2Type.canEvalWith( exp1Type, .SetOp, {}) {
+                  elseif exp2Type.canEvalWith(
+                     self.processInfo, exp1Type, .SetOp, {}) {
                      // 暗黙キャストの関係にある場合
                      retType = exp2Type;
                   }
-                  elseif exp2Type.equals( Ast.builtinTypeNil ##) {
+                  elseif exp2Type.equals( self.processInfo, Ast.builtinTypeNil ##) {
                      // 片方が nil の場合
-                     if is3op or exp1Type.equals( Ast.builtinTypeBool ## ) {
+                     if is3op or exp1Type.equals( self.processInfo,
+                                                  Ast.builtinTypeBool ## ) {                        
                         retType = exp1Type.$nilableTypeInfo;
                      }
                      else {
                         retType = exp1Type;
                      }
                   }
-                  elseif exp1Type.equals( Ast.builtinTypeNil ##) {
+                  elseif exp1Type.equals( self.processInfo, Ast.builtinTypeNil ##) {
                      // 片方が nil の場合
                      retType = exp2Type;
                   }
@@ -3072,8 +3096,8 @@ fn TransUnit.analyzeExpOp2(
                   let workToken = self.getToken(##);
                   self.pushback();
 
-                  if not exp1Type.equals( Ast.builtinTypeBool ##) and
-                     not exp1Type.equals( Ast.builtinTypeStem ##) and
+                  if not exp1Type.equals( self.processInfo, Ast.builtinTypeBool ##) and
+                     not exp1Type.equals( self.processInfo, Ast.builtinTypeStem ##) and
                      not exp1Type.$nilable
                   {  
                      self.addWarnMess( exp.$pos, "this value never be 'false'" );
@@ -3093,48 +3117,51 @@ fn TransUnit.analyzeExpOp2(
                   //    retType = exp2Type;
                   // }
                   // else {
-                     if exp1Type.$nilable {
-                        if exp2Type.$nilable {
-                           retType = exp2Type;
-                        }  
-                        else {
-                           retType = exp2Type.$nilableTypeInfo;
-                        }
-                     }
-                     elseif exp1Type.equals( Ast.builtinTypeBool ##) or
-                        exp2Type.equals( Ast.builtinTypeBool ##)
-                     {
-                        if exp1Type.canEvalWith( exp2Type, .SetOp, {} ) {
-                           retType = exp1Type;
-                        }
-                        elseif exp2Type.canEvalWith( exp1Type, .SetOp, {} ) {
-                           retType = exp2Type;
-                        }  
-                        else {
-                           if exp2Type.$nilable {
-                              retType = Ast.builtinTypeStem_;
-                           }  
-                           else {
-                              retType = Ast.builtinTypeStem;
-                           }  
-                        }  
-                     }
-                     elseif exp1Type.equals( Ast.builtinTypeStem ## ) {
-                        retType = Ast.builtinTypeStem;
-                     }
-                     else {
+                  if exp1Type.$nilable {
+                     if exp2Type.$nilable {
                         retType = exp2Type;
+                     } else {
+                        retType = exp2Type.$nilableTypeInfo;
                      }
-                  // }
-                  retType = new Ast.AndExpTypeInfo( exp1Type, exp2Type, retType );
+                  }
+                  elseif exp1Type.equals( self.processInfo, Ast.builtinTypeBool ##) or
+                     exp2Type.equals( self.processInfo, Ast.builtinTypeBool ##)
+                  {
+                     if exp1Type.canEvalWith( self.processInfo, exp2Type, .SetOp, {} ) {  
+                        retType = exp1Type;
+                     } elseif exp2Type.canEvalWith(
+                        self.processInfo, exp1Type, .SetOp, {} )
+                     {  
+                        retType = exp2Type;
+                     } else {
+                        if exp2Type.$nilable {
+                           retType = Ast.builtinTypeStem_;
+                        } else {
+                           retType = Ast.builtinTypeStem;
+                        }  
+                     }  
+                  } elseif exp1Type.equals( self.processInfo, Ast.builtinTypeStem ## ) {
+                     retType = Ast.builtinTypeStem;
+                  } else {
+                     retType = exp2Type;
+                  }
+                  // }  
+                  retType = new Ast.AndExpTypeInfo(
+                     self.processInfo,  exp1Type, exp2Type, retType );
                }
                case "<", ">", "<=", ">=" {
-                  if Ast.builtinTypeString.canEvalWith( exp1Type, .SetOp, {} ) and
-                     Ast.builtinTypeString.canEvalWith( exp2Type, .SetOp, {} ) or
-                      ( Ast.builtinTypeInt.canEvalWith( exp1Type, .Comp, {} ) or
-                        Ast.builtinTypeReal.canEvalWith( exp1Type, .Comp, {} ) ) and
-                     ( Ast.builtinTypeInt.canEvalWith( exp2Type, .Comp, {} ) or
-                        Ast.builtinTypeReal.canEvalWith( exp2Type, .Comp, {} ) )
+                  if Ast.builtinTypeString.canEvalWith(
+                     self.processInfo, exp1Type, .SetOp, {} ) and
+                     Ast.builtinTypeString.canEvalWith(
+                        self.processInfo, exp2Type, .SetOp, {} ) or
+                      ( Ast.builtinTypeInt.canEvalWith(
+                         self.processInfo, exp1Type, .Comp, {} ) or
+                        Ast.builtinTypeReal.canEvalWith(
+                           self.processInfo, exp1Type, .Comp, {} ) ) and
+                      ( Ast.builtinTypeInt.canEvalWith(
+                         self.processInfo, exp2Type, .Comp, {} ) or 
+                        Ast.builtinTypeReal.canEvalWith(
+                           self.processInfo, exp2Type, .Comp, {} ) )   
                   {
                      ;
                   }
@@ -3158,8 +3185,10 @@ fn TransUnit.analyzeExpOp2(
                                       "this lua version can't use bit operand." );
                   }
                   
-                  if not Ast.builtinTypeInt.canEvalWith( exp1Type, .Logical, {} ) or
-                     not Ast.builtinTypeInt.canEvalWith( exp2Type, .Logical, {} )
+                  if not Ast.builtinTypeInt.canEvalWith(
+                     self.processInfo, exp1Type, .Logical, {} ) or
+                     not Ast.builtinTypeInt.canEvalWith(
+                        self.processInfo, exp2Type, .Logical, {} )
                   {
                      self.addErrMess(
                         nextToken.pos,
@@ -3169,8 +3198,8 @@ fn TransUnit.analyzeExpOp2(
                   retType = Ast.builtinTypeInt;
                }
                case ".." {
-                  if not exp1Type.equals( Ast.builtinTypeString ##) or
-                     not exp2Type.equals( Ast.builtinTypeString ##)
+                  if not exp1Type.equals( self.processInfo, Ast.builtinTypeString ##) or
+                     not exp2Type.equals( self.processInfo, Ast.builtinTypeString ##)
                   {
                      self.addErrMess(
                         nextToken.pos,
@@ -3180,10 +3209,14 @@ fn TransUnit.analyzeExpOp2(
                   retType = Ast.builtinTypeString;
                }
                case "+", "-", "*", "/", "%" {
-                  if ( not Ast.builtinTypeInt.canEvalWith( exp1Type, .Math, {} ) and
-                       not Ast.builtinTypeReal.canEvalWith( exp1Type, .Math, {} ) ) or
-                      ( not Ast.builtinTypeInt.canEvalWith( exp2Type, .Math, {} ) and
-                        not Ast.builtinTypeReal.canEvalWith( exp2Type, .Math, {} ) )
+                  if ( not Ast.builtinTypeInt.canEvalWith(
+                     self.processInfo, exp1Type, .Math, {} ) and
+                       not Ast.builtinTypeReal.canEvalWith(
+                          self.processInfo, exp1Type, .Math, {} ) ) or
+                      ( not Ast.builtinTypeInt.canEvalWith(
+                         self.processInfo, exp2Type, .Math, {} ) and
+                        not Ast.builtinTypeReal.canEvalWith(
+                           self.processInfo, exp2Type, .Math, {} ) )   
                   {
                      self.addErrMess(
                         nextToken.pos,
@@ -3191,16 +3224,16 @@ fn TransUnit.analyzeExpOp2(
                         ( exp1Type.getTxt(##), exp2Type.getTxt(##) ) );
                   }
 
-                  if exp1Type.equals( Ast.builtinTypeReal ##) or
-                     exp2Type.equals( Ast.builtinTypeReal ##)
+                  if exp1Type.equals( self.processInfo, Ast.builtinTypeReal ##) or
+                     exp2Type.equals( self.processInfo, Ast.builtinTypeReal ##)
                   {
                      retType = Ast.builtinTypeReal;
-                     if exp1Type.equals( Ast.builtinTypeInt ##) {
+                     if exp1Type.equals( self.processInfo, Ast.builtinTypeInt ##) {
                         exp = Nodes.ExpCastNode.create(
                            self.nodeManager, exp.$pos,
                            self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeReal ],
                            exp, Ast.builtinTypeReal, .Implicit );   
-                     } elseif exp2Type.equals( Ast.builtinTypeInt ##) {
+                     } elseif exp2Type.equals( self.processInfo, Ast.builtinTypeInt ##) {
                         exp2 = Nodes.ExpCastNode.create(
                            self.nodeManager, exp2.$pos,
                            self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeReal ],
@@ -3313,7 +3346,7 @@ fn TransUnit.analyzeSuper( firstToken:&Parser.Token ) mut : Nodes.Node {
    let currentFunc = self.getCurrentNamespaceTypeInfo();
    if currentFunc.$kind == .Method {
       let superType = classType.get_baseTypeInfo();
-      if superType.equals( Ast.headTypeInfo ##) {
+      if superType.equals( self.processInfo, Ast.headTypeInfo ##) {
          self.addErrMess( firstToken.pos, "This class doesn't have super-class." );
       }     
       else {
@@ -3419,9 +3452,11 @@ fn TransUnit.analyzeExpUnwrap( firstToken: &Parser.Token ) mut : Nodes.Node {
       }
       
       let mut alt2type = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
-      if not unwrapType.canEvalWith( insType, .SetOp, alt2type )
+      if not unwrapType.canEvalWith(
+         self.processInfo, insType, .SetOp, alt2type )
       {
-         if not insType.canEvalWith( unwrapType, .SetOp, alt2type ) {
+         if not insType.canEvalWith(
+            self.processInfo, unwrapType, .SetOp, alt2type ) {
             unwrapType = Ast.builtinTypeStem;
             // self.addErrMess(
             //    insNode.$pos,
@@ -3438,7 +3473,7 @@ fn TransUnit.analyzeExpUnwrap( firstToken: &Parser.Token ) mut : Nodes.Node {
    self.helperInfo.useUnwrapExp = true;
 
    if Ast.isExtType( expType.$nonnilableType ) {
-      match Ast.NormalTypeInfo.createLuaval( unwrapType ) {
+      match self.processInfo.createLuaval( unwrapType ) {
          case .OK( work, _ ) {
             unwrapType = work;
          }
@@ -3559,7 +3594,7 @@ fn TransUnit.analyzeExp(
       let mut classTypeInfo = exp.$expType;
       switch classTypeInfo.$kind {
          case .Class, .IF {
-            if classTypeInfo.equals( Ast.builtinTypeString## ) {
+            if classTypeInfo.equals( self.processInfo, Ast.builtinTypeString## ) {
                self.error( "'new' can't use this type -- %s" (classTypeInfo.getTxt(##)));
             }
          }
@@ -3598,7 +3633,8 @@ fn TransUnit.analyzeExp(
 
       if initTypeInfo.$accessMode == .Pub or
           ( initTypeInfo.$accessMode == .Pro and
-            self.scope.getClassTypeInfo().isInheritFrom( classTypeInfo, nil ) ) or
+            self.scope.getClassTypeInfo().isInheritFrom(
+               self.processInfo, classTypeInfo, nil ) ) or
           ( self.scope.getClassTypeInfo() == classTypeInfo ) or
           ( initTypeInfo.$accessMode == .Local and
             initTypeInfo.getModule() == self.moduleType )
@@ -3636,7 +3672,7 @@ fn TransUnit.analyzeExp(
             }
 
             if detect {
-               classTypeInfo = Ast.NormalTypeInfo.createGeneric(
+               classTypeInfo = self.processInfo.createGeneric(
                   classTypeInfo, genTypeList, self.moduleType );
             }
          }
@@ -3669,8 +3705,8 @@ fn TransUnit.analyzeExp(
 
       switch ( token.txt ) {
          case "-" {
-            if not expType.equals( Ast.builtinTypeInt ##) and
-               not expType.equals( Ast.builtinTypeReal ##)
+            if not expType.equals( self.processInfo, Ast.builtinTypeInt ##) and
+               not expType.equals( self.processInfo, Ast.builtinTypeReal ##)
             {
                self.addErrMess(
                   token.pos,
@@ -3681,7 +3717,8 @@ fn TransUnit.analyzeExp(
          case "#" {
             if expType.$extedType.$kind ~= .List and
                expType.$extedType.$kind ~= .Array and
-               not Ast.builtinTypeString.canEvalWith( expType, .SetOp, {} )
+               not Ast.builtinTypeString.canEvalWith(
+                  self.processInfo, expType, .SetOp, {} )
             {  
                self.addErrMess(
                   token.pos,
@@ -3693,8 +3730,8 @@ fn TransUnit.analyzeExp(
             typeInfo = Ast.builtinTypeBool;
             
             if not expType.$nilable and
-               not expType.equals( Ast.builtinTypeBool ##) and
-               not expType.equals( Ast.builtinTypeStem ##) and
+               not expType.equals( self.processInfo, Ast.builtinTypeBool ##) and
+               not expType.equals( self.processInfo, Ast.builtinTypeStem ##) and
                expType.$kind ~= .DDD
             {
                self.addErrMess( token.pos, "this 'not' operand never be false" );
@@ -3706,14 +3743,14 @@ fn TransUnit.analyzeExp(
          }  
          case ",,," {
             macroExpFlag = true;
-            if not expType.equals( Ast.builtinTypeString ##) {
+            if not expType.equals( self.processInfo, Ast.builtinTypeString ##) {
                self.error( "unmatch ,,, type, need string type" );
             }  
             typeInfo = Ast.builtinTypeSymbol;
          }
          case ",,,," {
             macroExpFlag = true;
-            if not expType.equals( Ast.builtinTypeSymbol ##) {
+            if not expType.equals( self.processInfo, Ast.builtinTypeSymbol ##) {
                self.error( "unmatch ,,, type, need symbol type" );
             }  
             typeInfo = Ast.builtinTypeString;
@@ -3722,7 +3759,7 @@ fn TransUnit.analyzeExp(
             typeInfo = Ast.builtinTypeNone;
          }  
          case "~" {
-            if not expType.equals( Ast.builtinTypeInt ##) {
+            if not expType.equals( self.processInfo, Ast.builtinTypeInt ##) {
                self.addErrMess(
                   token.pos,
                   'unmatch type for "~" -- %s' ( expType.getTxt(##) ) );
@@ -3791,7 +3828,7 @@ fn TransUnit.analyzeExp(
       elseif token.txt == "(" {
          exp = self.analyzeExp( false, false, false ## );
          self.checkNextToken( ")" );
-         if not exp.canBeRight() {
+         if not exp.canBeRight( self.processInfo ) {
             self.addErrMess( exp.$pos,
                              "can't be r-value in paren. -- %s"
                              (Nodes.getNodeKindName( exp.$kind) ) );

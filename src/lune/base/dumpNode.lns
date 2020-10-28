@@ -53,6 +53,7 @@ pub class Opt {
 
 class dumpFilter extend Nodes.Filter<Opt> {
    let mut stream:oStream;
+   let mut processInfo:Ast.ProcessInfo;
 
    fn writeln( opt:&Opt, txt:str ) mut {
       let prefix = opt.get();
@@ -61,7 +62,7 @@ class dumpFilter extend Nodes.Filter<Opt> {
    fn dump( opt:&Opt, node: &Nodes.Node, txt: str ) mut {
       let mut typeStr = "";
       let expType = node.get_expType();
-      if expType.equals( Ast.builtinTypeNone ##) {
+      if expType.equals( self.processInfo, Ast.builtinTypeNone ##) {
          typeStr = "(%d:%s:%s)" ( expType.get_typeId(),
                                   expType.getTxt(##),
                                   expType.get_kind() );
@@ -87,8 +88,11 @@ class dumpFilter extend Nodes.Filter<Opt> {
    }
 }
 
-pub fn createFilter( moduleTypeInfo:&Ast.TypeInfo, stream:oStream ): Nodes.Filter<Opt> {
-   return new dumpFilter(true, moduleTypeInfo, moduleTypeInfo.$scope, stream);
+pub fn createFilter( moduleTypeInfo:&Ast.TypeInfo, processInfo:Ast.ProcessInfo,
+                     stream:oStream ): Nodes.Filter<Opt>
+{
+   return new dumpFilter( true, moduleTypeInfo, moduleTypeInfo.$scope,
+                          stream, processInfo );                  
 }
 
 fn filter( node: &Nodes.Node, filter: dumpFilter, opt:Opt ) {
@@ -187,6 +191,11 @@ pub override fn dumpFilter.processNewAlgeVal(
    }
 }
 
+pub override fn dumpFilter.processProtoClass(
+   node: &Nodes.ProtoClassNode, opt:Opt ) mut
+{
+   self.dump( opt, node, node.get_name().txt );
+};
 
 pub override fn dumpFilter.processDeclClass(
    node: &Nodes.DeclClassNode, opt:Opt ) mut
@@ -841,11 +850,11 @@ __test {
    import lune.base.convLua;
    import lune.base.TransUnit;
 
-   fn Ast2Dump( ast:&TransUnit.ASTInfo ) : str
+   fn Ast2Dump( ast:TransUnit.ASTInfo ) : str
    {
       let mut stream = new Util.memStream();
 
-      let mut conv = createFilter( ast.$moduleTypeInfo, stream );
+      let mut conv = createFilter( ast.$moduleTypeInfo, ast.$processInfo, stream );
 
       ast.$node.processFilter( conv, new Opt( "", 0 ));
 
@@ -860,7 +869,7 @@ __test case1(ctrl) {
 
    let scriptPath = "test.lns";
    let option = convLua.createDefaultOption( scriptPath );
-   let ast = convLua.createAst( scriptPath, convLua.getTestLnsCode(), option );
+   let mut ast = convLua.createAst( scriptPath, convLua.getTestLnsCode(), option );
    let dump = Ast2Dump( ast );
    print( dump );
 }

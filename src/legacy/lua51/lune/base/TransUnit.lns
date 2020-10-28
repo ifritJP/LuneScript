@@ -601,6 +601,9 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
    let mut advertisedTypeSet:Set<&Ast.TypeInfo>;
 
    let mut accessSymbolSetQueue:AccessSymbolSetQueue;
+
+   local let allmut processInfo:Ast.ProcessInfo;
+   
    
 
    pub fn __init( moduleId:&frontInterface.ModuleId,
@@ -609,6 +612,7 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
                   pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
                   ctrl_info: &Option.TransCtrlInfo )
    {
+      self.processInfo = Ast.createProcessInfo();
       self.accessSymbolSetQueue = new AccessSymbolSetQueue();
       self.advertisedTypeSet = (@);
       self.closureFunList = [];
@@ -837,7 +841,7 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
          let parentInfo = self.getCurrentNamespaceTypeInfo();
          let mut parentScope = self.scope;
          let mut scope = self.pushScope( true ## );
-         typeInfo = Ast.NormalTypeInfo.createModule(
+         typeInfo = self.processInfo.createModule(
             scope, parentInfo, externalFlag, modName, mutable );
 
          let _, existSym = parentScope.addClass( modName, nil, typeInfo );
@@ -1015,7 +1019,7 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
          else {
             workGenTypeList = [];
          }
-         typeInfo = Ast.NormalTypeInfo.createClass(
+         typeInfo = self.processInfo.createClass(
             classFlag, abstractFlag, scope, baseInfo, interfaceList,
             workGenTypeList, parentInfo, externalFlag, accessMode, name );
          
@@ -1230,13 +1234,13 @@ pub fn TransUnit.createModifier(
    if not self.validMutControl {
       return typeInfo;
    }
-   return Ast.NormalTypeInfo.createModifier( typeInfo, mutMode );
+   return self.processInfo.createModifier( typeInfo, mutMode );
 }
 
 fn TransUnit.createExtType(
    pos:&Parser.Position, typeInfo:&Ast.TypeInfo ) mut :&Ast.TypeInfo
 {
-   _match Ast.NormalTypeInfo.createLuaval( typeInfo ) {
+   _match self.processInfo.createLuaval( typeInfo ) {
       case .OK( work, _ ) {
          return work;
       }
@@ -1252,6 +1256,7 @@ proto abstract class _TypeInfo extend (Mapping);
 class ImportParam {
    pub let pos:&Parser.Position;
    pub let mut transUnit:TransUnitIF;
+   pub let mut processInfo:Ast.ProcessInfo;
    pub let mut typeId2Scope:Map<int,Ast.Scope>;
    pub let mut typeId2TypeInfo:Map<int,&Ast.TypeInfo>;
    pub let metaInfo:Luaval<&Meta._MetaInfo>;
@@ -1329,7 +1334,7 @@ class _TypeInfoAlias extend _TypeInfo {
    pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
       let srcTypeInfo = unwrap param.getTypeInfo( self.srcTypeId );
-      let newTypeInfo = Ast.NormalTypeInfo.createAlias(
+      let newTypeInfo = param.processInfo.createAlias(
          self.rawTxt, true, .Pub, param.moduleTypeInfo, srcTypeInfo );
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
 
@@ -1353,7 +1358,7 @@ class _TypeInfoDDD extend _TypeInfo {
    {
       //let itemTypeInfo = unwrap param.typeId2TypeInfo[ self.itemTypeId ];
       let itemTypeInfo = unwrap param.getTypeInfo( self.itemTypeId );
-      let newTypeInfo = Ast.NormalTypeInfo.createDDD(
+      let newTypeInfo = param.processInfo.createDDD(
          itemTypeInfo, true, self.extTypeFlag );
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
       return newTypeInfo,nil;
@@ -1377,7 +1382,7 @@ class _TypeInfoAlternate extend _TypeInfo {
          //interfaceList.insert( unwrap param.typeId2TypeInfo[ ifTypeId ] );
          interfaceList.insert( unwrap param.getTypeInfo( ifTypeId ) );
       }
-      let newTypeInfo = Ast.NormalTypeInfo.createAlternate(
+      let newTypeInfo = param.processInfo.createAlternate(
          self.belongClassFlag, self.altIndex,
          self.txt, self.accessMode, param.moduleTypeInfo, baseInfo, interfaceList );
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
@@ -1396,7 +1401,7 @@ class _TypeInfoGeneric extend _TypeInfo {
       foreach typeId in self.genTypeList {
          genTypeList.insert( unwrap param.getTypeInfo( typeId ) );
       }
-      let newTypeInfo = Ast.NormalTypeInfo.createGeneric(
+      let newTypeInfo = param.processInfo.createGeneric(
          genSrcTypeInfo, genTypeList, param.moduleTypeInfo );
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
       return newTypeInfo, nil;
@@ -1410,7 +1415,7 @@ class _TypeInfoBox extend _TypeInfo {
    pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
       let boxingType = unwrap param.getTypeInfo( self.boxingType );
-      let newTypeInfo = Ast.NormalTypeInfo.createBox( self.accessMode, boxingType );
+      let newTypeInfo = param.processInfo.createBox( self.accessMode, boxingType );
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
       return newTypeInfo, nil;
    }
@@ -1423,7 +1428,7 @@ class _TypeInfoExt extend _TypeInfo {
    {
       let extedType = unwrap param.getTypeInfo( self.extedTypeId );
       let newTypeInfo;
-      _match Ast.NormalTypeInfo.createLuaval( extedType ) {
+      _match param.processInfo.createLuaval( extedType ) {
          case .OK( extType, _ ) {
             newTypeInfo = extType;
          }
@@ -1489,7 +1494,7 @@ class _TypeInfoModule extend _TypeInfo {
          if self.typeId == param.metaInfo.__moduleTypeId {
             mutable = param.metaInfo.__moduleMutable;
          }
-         let workTypeInfo = Ast.NormalTypeInfo.createModule(
+         let workTypeInfo = param.processInfo.createModule(
             scope, parentInfo, true, self.txt, mutable );
 
          newTypeInfo = workTypeInfo;
@@ -1623,7 +1628,7 @@ class _TypeInfoNormal extend _TypeInfo {
                   altTypeList.insert( unwrap (itemType@@@Ast.AlternateTypeInfo) );
                }
 
-               let workTypeInfo = Ast.NormalTypeInfo.createClass(
+               let workTypeInfo = param.processInfo.createClass(
                   self.kind == Ast.TypeInfoKind.Class, self.abstractFlag,
                   scope, baseInfo, interfaceList, altTypeList,
                   parentInfo, true, .Pub, self.txt );
@@ -1647,7 +1652,7 @@ class _TypeInfoNormal extend _TypeInfo {
                let typeInfoKind = self.kind;
                let accessMode = self.accessMode;
                let workTypeInfo = Ast.NormalTypeInfo.create(
-                  accessMode,
+                  param.processInfo, accessMode,
                   self.abstractFlag, scope, baseInfo,
                   interfaceList, parentInfo, self.staticFlag, typeInfoKind,
                   self.txt, itemTypeInfo, argTypeInfo, retTypeInfo, self.mutMode );
@@ -1712,7 +1717,7 @@ class _TypeInfoEnum extend _TypeInfo {
 
       param.typeId2Scope[ self.typeId ] = scope;
       let valTypeInfo = unwrap param.getTypeInfo( self.valTypeId );
-      let mut enumTypeInfo = Ast.NormalTypeInfo.createEnum(
+      let mut enumTypeInfo = param.processInfo.createEnum(
          scope, parentInfo, true, accessMode, self.txt, valTypeInfo );
       let newTypeInfo = enumTypeInfo;
       param.typeId2TypeInfo[ self.typeId ] = enumTypeInfo;
@@ -1763,7 +1768,7 @@ class _TypeInfoAlge extend _TypeInfo {
       let mut scope = new Ast.Scope( parentScope, true, nil ## );
 
       param.typeId2Scope[ self.typeId ] = scope;
-      let mut algeTypeInfo = Ast.NormalTypeInfo.createAlge(
+      let mut algeTypeInfo = param.processInfo.createAlge(
          scope, parentInfo, true, accessMode, self.txt );
       let newTypeInfo = algeTypeInfo;
       param.typeId2TypeInfo[ self.typeId ] = algeTypeInfo;
@@ -2061,7 +2066,7 @@ _DefBuiltinFuncType( [
 ] );
    
 pub fn isStrFormFunc( typeInfo:&Ast.TypeInfo ):bool {
-   if typeInfo.equals( builtinFunc.string_format ## ) {
+   if typeInfo.$srcTypeInfo == builtinFunc.string_format {
       return true;
    }
    return false;
@@ -2111,14 +2116,14 @@ fn TransUnit.registBuiltInScope() mut {
                   }
                   let keyType = genTypeList[ 1 ];
                   let valType = genTypeList[ 2 ];
-                  return Ast.NormalTypeInfo.createMap(
+                  return self.processInfo.createMap(
                      .Pub, typeInfo.$parentInfo, keyType, valType, typeInfo.$mutMode );
                }
                case .Ext {
                   if #genTypeList ~= 1 {
                      Util.err( "illegal param -- %d" (#genTypeList) );
                   }
-                  match Ast.NormalTypeInfo.createLuaval( genTypeList[ 1 ] ) {
+                  match self.processInfo.createLuaval( genTypeList[ 1 ] ) {
                      case .OK( workType, _ ) {
                         return workType;
                      }
@@ -2131,7 +2136,7 @@ fn TransUnit.registBuiltInScope() mut {
                   if #genTypeList ~= 1 {
                      Util.err( "illegal map param -- %d" (#genTypeList) );
                   }
-                  return Ast.NormalTypeInfo.createDDD( genTypeList[ 1 ], true, false );
+                  return self.processInfo.createDDD( genTypeList[ 1 ], true, false );
                }
                default {
                   Util.err( "not support type -- %s" (typeInfo.getTxt(##)) );
@@ -2249,7 +2254,7 @@ fn TransUnit.registBuiltInScope() mut {
             
             self.pushScope( false ## );
 
-            let typeInfo = Ast.NormalTypeInfo.createFunc(
+            let typeInfo = self.processInfo.createFunc(
                false, true, self.scope, kind,
                parentInfo, false, true, staticFlag, .Pub,
                fieldName, nil, argTypeList, retTypeList, mutable );
@@ -2274,7 +2279,7 @@ fn TransUnit.registBuiltInScope() mut {
 
    let mut builtinModuleName2Scope:Map<str,Ast.Scope> = {};
 
-   let mapType = Ast.NormalTypeInfo.createMap(
+   let mapType = self.processInfo.createMap(
       .Pub, Ast.headTypeInfo, Ast.builtinTypeString, Ast.builtinTypeStem, .Mut );
    self.scope.addVar( .Global, "_ENV", nil, mapType, .IMutRe, true );
    self.scope.addVar( .Global, "_G", nil, mapType, .IMutRe, true );
@@ -2325,7 +2330,7 @@ fn TransUnit.registBuiltInScope() mut {
                      }
                      else {
                         genTypeList.insert(
-                           Ast.NormalTypeInfo.createAlternate(
+                           self.processInfo.createAlternate(
                               true, #genTypeList + 1,
                               token, .Pri, self.moduleType ## ) );
                      }
@@ -3118,7 +3123,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
 
    // 初めに child 以外で TypeInfo を登録
    let mut importParam = new ImportParam(
-      self.parser.getLastPos(), self, typeId2Scope, typeId2TypeInfo,
+      self.parser.getLastPos(), self, self.processInfo, typeId2Scope, typeId2TypeInfo,
       metaInfo, self.scope, moduleTypeInfo, self.scopeAccess, id2atomMap );
    foreach atomInfo in _typeInfoList {
       let newTypeInfo, errMess = atomInfo.createTypeInfoCache( importParam );
@@ -3311,7 +3316,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
    foreach macroInfoStem, orgTypeId in metaInfo.__macroName2InfoMap {
 
       self.macroCtrl.importMacro(
-         expandLuavalMap( macroInfoStem ),
+         self.processInfo, expandLuavalMap( macroInfoStem ),
          unwrap orgId2MacroTypeInfo[ orgTypeId ], typeId2TypeInfo );
    }
 
@@ -3343,12 +3348,12 @@ fn TransUnit.analyzeImportFor(
    let mut backupScope = self.scope;
    // スコープをルートに変更
    self.scope = self.topScope;
-   
-   Ast.switchIdProvier( .Ext );
+
+   self.processInfo.switchIdProvier( .Ext );
    
    let metaInfo, typeId2TypeInfo, moduleInfo = self.processImport( modulePath );
 
-   Ast.switchIdProvier( .Base );
+   self.processInfo.switchIdProvier( .Base );
 
 
    // スコープを元に戻す
@@ -3542,7 +3547,7 @@ fn TransUnit.analyzeIf( token: &Parser.Token ) mut : Nodes.Node {
             ;
          }
          case .Prim {
-            if not condExp.$expType.equals( Ast.builtinTypeBool ## ) {
+            if not condExp.$expType.equals( self.processInfo, Ast.builtinTypeBool ## ) {
                self.addErrMess(
                   condExp.$pos, "This exp never be false -- %s"
                   ( condExp.$expType.getTxt(##)) );
@@ -3694,7 +3699,9 @@ fn TransUnit.analyzeSwitch( firstToken: &Parser.Token ) mut : Nodes.SwitchNode {
          }
          
          // switch の式と case の条件の型の不一致チェック
-         if not exp.$expType.canEvalWith( condExp.$expType, .Equal, {} ) {
+         if not exp.$expType.canEvalWith(
+            self.processInfo, condExp.$expType, .Equal, {} )
+         {
             self.addErrMess(
                condExp.$pos,
                "case exp unmatch type -- %s <- %s"
@@ -3975,8 +3982,8 @@ fn TransUnit.analyzeApply( token: &Parser.Token ) mut : Nodes.ApplyNode {
    let mut readyFlag = false;
    if! let callNode = Nodes.getUnwraped( expListNode.$expList[ 1 ] )@@@Nodes.ExpCallNode {
       let callFuncType = callNode.$func.$expType;
-      if callFuncType.equals( builtinFunc.str_gmatch ## ) or
-         callFuncType.equals( builtinFunc.string_gmatch ## )
+      if callFuncType.equals( self.processInfo, builtinFunc.str_gmatch ## ) or
+         callFuncType.equals( self.processInfo, builtinFunc.string_gmatch ## )
       {
          itemTypeList.insert( Ast.builtinTypeString );
          defaultItemType = Ast.builtinTypeString.$nilableTypeInfo;
@@ -4060,7 +4067,7 @@ fn TransUnit.convToExtTypeList(
    if typeInfo.$nonnilableType.$kind ~= .Ext {
       return list;
    }
-   let newList, mess = Ast.convToExtTypeList( list );
+   let newList, mess = Ast.convToExtTypeList( self.processInfo, list );
    when! newList {
       return newList;
    }

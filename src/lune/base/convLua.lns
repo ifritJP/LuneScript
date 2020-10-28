@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 import lune.base.Ver;
+import lune.base.Str;
 import lune.base.Ast;
 import lune.base.Nodes;
 import lune.base.Util;
@@ -107,14 +108,17 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
    pri let targetLuaVer:&LuaVer.LuaVerInfo;
    pri let enableTest:bool;
    pri let useIpairs:bool;
+   let allmut processInfo:Ast.ProcessInfo;
 
 
    pub fn __init( streamName: str, stream: oStream, metaStream: oStream,
                   convMode: ConvMode, inMacro: bool, moduleTypeInfo: &Ast.TypeInfo,
+                  processInfo:Ast.ProcessInfo,
                   moduleSymbolKind: Ast.SymbolKind, useLuneRuntime: str!,
                   targetLuaVer:&LuaVer.LuaVerInfo, enableTest:bool, useIpairs:bool )
    {
       super(true, moduleTypeInfo, moduleTypeInfo.$scope);
+      self.processInfo = processInfo;
       self.enableTest = enableTest;
       self.macroVarSymSet = (@);
       self.needModuleObj = true;
@@ -162,35 +166,22 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
    }
    pub fn flush() mut {
    }
-   pub fn writeRaw( txt: str ) mut {
+
+   pub fn write( mut txt: str ) mut : stem!, str! {
       let mut stream = self.stream;
       if self.outMetaFlag {
          stream = self.metaStream;
       }
-
-      if self.needIndent {
-         stream.write( string.rep( " ", self.$indent ) );
-         self.needIndent = false;
-      }
-
-      apply _ of string.gmatch( txt, "\n" ) {
-         self.curLineNo = self.curLineNo + 1;
-      }
-      stream.write( txt );
-   }
-
-   pub fn write( mut txt: str ) mut : stem!, str! {
-      while true {
-         if! let index = string.find( txt, "\n"## ) {
-            self.writeRaw( txt.sub( 1, index ) );
-            txt = txt.sub( index + 1 ##);
+      foreach line in Str.getLineList( txt ) {
+         if self.needIndent {
+            stream.write( string.rep( " ", self.$indent ) );
+            self.needIndent = false;
          }
-         else {
-            break;
+
+         if #line > 0 and line[ #line ] == ?\n {
+            self.curLineNo = self.curLineNo + 1;
          }
-      }
-      if #txt > 0 {
-         self.writeRaw( txt );
+         stream.write( line );
       }
       return self, nil;
    }
@@ -345,7 +336,7 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
       return typeId2TypeInfo[ typeId ] and not Ast.isBuiltin( typeId ) and
           ( moduleTypeInfo.hasRouteNamespaceFrom( node.$moduleTypeInfo ) or
             typeInfo.$srcTypeInfo ~= typeInfo or
-            moduleTypeInfo.equals( Ast.headTypeInfo ##) );
+            moduleTypeInfo.equals( self.processInfo, Ast.headTypeInfo ##) );
    }
 
    fn isDependOnExt( typeInfo:&Ast.TypeInfo ):bool {
@@ -427,7 +418,7 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
                {
                   pickupTypeId( typeInfo.$nilableTypeInfo, true, false );
                   // Modifier の Type を export しておく
-                  let imutType = Ast.NormalTypeInfo.createModifier( typeInfo, .IMut );
+                  let imutType = self.processInfo.createModifier( typeInfo, .IMut );
                   pickupTypeId( imutType, true, false );
                }
             }
@@ -638,7 +629,7 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
 
             let mut workFilter = new convFilter(
                declInfo.$name.txt, memStream, memStream, .Convert, false,
-               Ast.headTypeInfo, .Typ, self.useLuneRuntime,
+               Ast.headTypeInfo, self.processInfo, .Typ, self.useLuneRuntime,
                self.targetLuaVer, self.enableTest, self.useIpairs );
 
             workFilter.macroDepth = workFilter.macroDepth + 1;
@@ -846,7 +837,7 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
 pub override fn convFilter.processRoot(
    node: Nodes.RootNode, opt: Opt ) mut
 {
-   Ast.pushProcessInfo( node.$processInfo );
+   //Ast.pushProcessInfo( node.$processInfo );
 
    self.writeln( "--%s" ( self.streamName ) );
 
@@ -936,7 +927,7 @@ end``` (luneSymbol, luneSymbol) );
       self.writeln( "return _moduleObj" );
    }
 
-   Ast.popProcessInfo();
+   //Ast.popProcessInfo();
 };
 
 pub override fn convFilter.processSubfile(
@@ -1093,7 +1084,7 @@ end
    foreach valName, index in node.$valueNameList {
       let valInfo = unwrap typeInfo.getEnumValInfo( valName.txt );
       let mut valTxt = "%s" (Ast.getEnumLiteralVal(valInfo.$val));
-      if typeInfo.$valTypeInfo.equals( Ast.builtinTypeString ##) {
+      if typeInfo.$valTypeInfo.equals( self.processInfo, Ast.builtinTypeString ##) {
          valTxt = "'%s'" (Ast.getEnumLiteralVal(valInfo.$val));
       }
       self.writeln( "%s.%s = %s" (enumFullName, valName.txt, valTxt ) );
@@ -1136,7 +1127,7 @@ fn convFilter.getMapInfo(
          funcTxt = '_lune._toStem';
       }
       case .Class, .IF {
-         if not nonnilableType.equals( Ast.builtinTypeString ##) {
+         if not nonnilableType.equals( self.processInfo, Ast.builtinTypeString ##) {
             funcTxt = '%s._fromMap' (self.getFullName(nonnilableType));
             if isGenericType( nonnilableType ) {
                let mut memStream = new Util.memStream();
@@ -1290,7 +1281,7 @@ pub override fn convFilter.processNewAlgeVal(
 fn convFilter.getDestrClass( classTypeInfo:&Ast.TypeInfo ) : &Ast.TypeInfo!
 {
    let mut typeInfo = classTypeInfo;
-   while not typeInfo.equals( Ast.headTypeInfo ##) {
+   while not typeInfo.equals( self.processInfo, Ast.headTypeInfo ##) {
       let scope = unwrap typeInfo.$scope;
       if scope.getTypeInfoChild( "__free" ) {
          return typeInfo;
@@ -1325,6 +1316,12 @@ fn convFilter.outputAlter2MapFunc(
 }
 
 
+pub override fn convFilter.processProtoClass(
+   node: Nodes.ProtoClassNode, opt: Opt ) mut
+{
+   self.write( "local %s = {}" ( node.$name.txt) );
+}
+
 pub override fn convFilter.processDeclClass(
    node: Nodes.DeclClassNode, opt: Opt ) mut
 {
@@ -1354,7 +1351,9 @@ pub override fn convFilter.processDeclClass(
       }
       return;
    }
-   self.writeln( string.format( "local %s = {}", className ) );
+   if not node.$hasPrototype {
+      self.writeln( string.format( "local %s = {}", className ) );
+   }
 
    let mut ifTxt = "";
    if #classTypeInfo.$interfaceList > 0 {
@@ -1591,7 +1590,7 @@ end
    }
 
    // Mapping
-   if classTypeInfo.isInheritFrom( Ast.builtinTypeMapping, nil ) {
+   if classTypeInfo.isInheritFrom( self.processInfo, Ast.builtinTypeMapping, nil ) {
       let mut declArgTxt = "val";
       let mut argTxt = "{}, val";
       if isGenericType( classTypeInfo ) {
@@ -2618,7 +2617,8 @@ pub override fn convFilter.processExpCall(
                return false;
             }
             case .Class {
-               if prefixType.isInheritFrom( Ast.builtinTypeMapping, nil ) and
+               if prefixType.isInheritFrom( self.processInfo,
+                                            Ast.builtinTypeMapping, nil ) and
                   isGenericType( prefixType ) and
                   ( fieldNode.$field.txt == "_fromMap" or
                     fieldNode.$field.txt == "_fromStem" )
@@ -2817,12 +2817,12 @@ pub override fn convFilter.processExpCast(
 {
    switch node.$castKind {
       case .Force {
-         if node.$expType.equals( Ast.builtinTypeInt ##) {
+         if node.$expType.equals( self.processInfo, Ast.builtinTypeInt ##) {
             self.write( "math.floor(" );
             filter( node.$exp,  self, node );
             self.write( ")" );
          }
-         elseif node.$expType.equals( Ast.builtinTypeReal ##) {
+         elseif node.$expType.equals( self.processInfo, Ast.builtinTypeReal ##) {
             filter( node.$exp,  self, node );
             self.write( " * 1.0" );
          }
@@ -2897,7 +2897,9 @@ pub override fn convFilter.processExpOp2(
    node: Nodes.ExpOp2Node, opt: Opt ) mut
 {
    let mut intCast = false;
-   if node.$expType.equals( Ast.builtinTypeInt ##) and node.$op.txt == "/" {
+   if node.$expType.equals( self.processInfo, Ast.builtinTypeInt ##) and
+      node.$op.txt == "/"
+   {
       intCast = true;
       self.write( "math.floor(" );
    }
@@ -2972,7 +2974,7 @@ pub override fn convFilter.processExpRef(
       }
       default {
          let builtinFunc = TransUnit.getBuiltinFunc();
-         if node.$expType.equals( builtinFunc.lns__load ##) {
+         if node.$expType.equals( self.processInfo, builtinFunc.lns__load ##) {
             self.write( "_lune." .. self.targetLuaVer.$loadStrFuncName );
          }
          else {   
@@ -3010,7 +3012,7 @@ pub override fn convFilter.processExpRefItem(
       self.write( ")" );
    }
    else {
-      if node.$val.$expType.equals( Ast.builtinTypeString ##) {
+      if node.$val.$expType.equals( self.processInfo, Ast.builtinTypeString ##) {
          self.write( "string.byte( " );
          filter( node.$val, self, node );
          self.write( ", " );
@@ -3360,11 +3362,11 @@ pub override fn convFilter.processLuneControl(
 pub fn createFilter(
    streamName: str, stream: oStream, metaStream: oStream,
    convMode: ConvMode, inMacro: bool, moduleTypeInfo: &Ast.TypeInfo,
-   moduleSymbolKind: &Ast.SymbolKind, useLuneRuntime:str!,
+   processInfo:Ast.ProcessInfo, moduleSymbolKind: &Ast.SymbolKind, useLuneRuntime:str!,
    targetLuaVer:&LuaVer.LuaVerInfo, enableTest:bool, useIpairs:bool ) : Nodes.Filter<Opt>
 {
    return new convFilter(
-      streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo,
+      streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo,
       moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest, useIpairs );
 }
 
@@ -3394,12 +3396,13 @@ pub class MacroEvalImp extend Nodes.MacroEval {
    }
 
    pub override fn evalFromCode(
-      name:str, argNameList:&List<str>, code:str! ): Luaval<Nodes.macroStatmentProc>
+      processInfo:Ast.ProcessInfo, name:str, argNameList:&List<str>, code:str! ):
+      Luaval<Nodes.macroStatmentProc>
    {
       let mut stream = new Util.memStream();
       let mut conv = new convFilter(
-         "macro", stream, stream, .Exec, true,
-         Ast.headTypeInfo, .Typ, nil, LuaVer.getCurVer(), false, true );
+         "macro", stream, stream, .Exec, true, Ast.headTypeInfo,
+         processInfo, .Typ, nil, LuaVer.getCurVer(), false, true );
 
       conv.outputDeclMacro(
          name, argNameList,
@@ -3413,12 +3416,13 @@ pub class MacroEvalImp extend Nodes.MacroEval {
    }
 
 
-   pub override fn eval( node: Nodes.DeclMacroNode ): Luaval<Nodes.macroStatmentProc>
+   pub override fn eval( processInfo:Ast.ProcessInfo, node: Nodes.DeclMacroNode ):
+      Luaval<Nodes.macroStatmentProc>
    {
       let mut stream = new Util.memStream();
       let mut conv = new convFilter(
-         "macro", stream, stream, .Exec, true,
-         Ast.headTypeInfo, .Typ, nil, LuaVer.getCurVer(), false, true );
+         "macro", stream, stream, .Exec, true, Ast.headTypeInfo,
+         processInfo, .Typ, nil, LuaVer.getCurVer(), false, true );
 
       conv.processDeclMacro( node, new Opt( node ) );
 
@@ -3440,7 +3444,7 @@ __test {
    }
 
    pub fn createAst(
-      scriptPath:str, lnsCode:str, option:&Option.Option ) : &TransUnit.ASTInfo
+      scriptPath:str, lnsCode:str, option:&Option.Option ) : TransUnit.ASTInfo
    {
       let mut inStream = new Parser.TxtStream( lnsCode );
       let moduleId = frontInterface.ModuleId.createId( 0.0, 0 );
@@ -3488,14 +3492,14 @@ _ = 1;
   }
 
    fn Ast2Code( option:&Option.Option,
-                ast:&TransUnit.ASTInfo, streamName:str ) : str, str
+                ast:TransUnit.ASTInfo, streamName:str ) : str, str
    {
       let mut stream = new Util.memStream();
       let mut metaStream = new Util.memStream();
       
       let mut conv = createFilter(
          streamName, stream, metaStream, .ConvMeta, false,
-         ast.$moduleTypeInfo, ast.$moduleSymbolKind,
+         ast.$moduleTypeInfo, ast.$processInfo, ast.$moduleSymbolKind,
          option.useLuneModule, option.targetLuaVer,
          option.testing, option.useIpairs );
       ast.$node.processFilter( conv, new Opt( ast.$node ) );
@@ -3529,7 +3533,7 @@ __test case1(ctrl) {
 
    let scriptPath = "test.lns";
    let option = createDefaultOption( scriptPath );
-   let ast = createAst( scriptPath, getTestLnsCode(), option );
+   let mut ast = createAst( scriptPath, getTestLnsCode(), option );
    let meta, luaCode = Ast2Code( option, ast, scriptPath );
    print( meta, luaCode );
    

@@ -331,7 +331,7 @@ end
 
 function FormatterFilter:processBlankLine( node, opt )
 
-   for _5089 = 1, node:get_lineNum() do
+   for _5134 = 1, node:get_lineNum() do
       self:writeln( "" )
    end
    
@@ -352,14 +352,11 @@ end
 
 function FormatterFilter:processRoot( node, opt )
 
-   Ast.pushProcessInfo(  )
-   
    for __index, child in ipairs( node:get_children() ) do
       filter( child, self, opt:nextOpt( node ) )
    end
    
    
-   Ast.popProcessInfo(  )
 end
 
 
@@ -440,16 +437,16 @@ function FormatterFilter:processNewAlgeVal( node, opt )
 end
 
 
-function FormatterFilter:processDeclClass( node, opt )
+function FormatterFilter:outputDeclClass( protoFlag, classType, gluePrefix, moduleName )
 
-   if node:get_accessMode() == Ast.AccessMode.Pub then
+   if classType:get_accessMode() == Ast.AccessMode.Pub then
       self:write( "pub " )
    end
    
    do
-      local _switchExp = node:get_expType():get_kind()
+      local _switchExp = classType:get_kind()
       if _switchExp == Ast.TypeInfoKind.Class then
-         if node:get_moduleName() then
+         if moduleName then
             self:write( "module " )
          else
           
@@ -461,9 +458,8 @@ function FormatterFilter:processDeclClass( node, opt )
       end
    end
    
-   self:write( node:get_name().txt )
+   self:write( classType:get_rawTxt() )
    
-   local classType = node:get_expType()
    if #classType:get_itemTypeInfoList() > 0 then
       self:write( "<" )
       for index, genType in ipairs( classType:get_itemTypeInfoList() ) do
@@ -478,20 +474,14 @@ function FormatterFilter:processDeclClass( node, opt )
    end
    
    
-   do
-      local moduleName = node:get_moduleName()
-      if moduleName ~= nil then
-         self:write( " require " )
-         self:write( string.format( "%s ", moduleName.txt) )
-         do
-            local gluePrefix = node:get_gluePrefix()
-            if gluePrefix ~= nil then
-               self:write( "glue " )
-               self:write( gluePrefix )
-            end
-         end
-         
+   if moduleName ~= nil then
+      self:write( " require " )
+      self:write( string.format( "%s ", moduleName.txt) )
+      if gluePrefix ~= nil then
+         self:write( "glue " )
+         self:write( gluePrefix )
       end
+      
    end
    
    
@@ -516,6 +506,18 @@ function FormatterFilter:processDeclClass( node, opt )
       
    end
    
+end
+
+
+function FormatterFilter:processProtoClass( node, opt )
+
+   self:outputDeclClass( true, node:get_expType(), nil, nil )
+end
+
+
+function FormatterFilter:processDeclClass( node, opt )
+
+   self:outputDeclClass( false, node:get_expType(), node:get_gluePrefix(), node:get_moduleName() )
    self:writeln( "" )
    self:writeln( "{" )
    self:pushIndent(  )

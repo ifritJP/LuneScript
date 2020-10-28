@@ -642,6 +642,11 @@ function MacroCtrl:get_macroCallLineNo()
    return self.macroCallLineNo
 end
 
+
+local function equalsType( typeInfo, builtinType )
+
+   return typeInfo:get_srcTypeInfo() == builtinType
+end
 function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
 
    self.useModuleMacroSet[macroTypeInfo:getModule(  )]= true
@@ -710,7 +715,7 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
       do
          local val = macroVars[name]
          if val ~= nil then
-            if typeInfo:equals( Ast.builtinTypeSymbol ) then
+            if equalsType( typeInfo, Ast.builtinTypeSymbol ) then
                valList = _moduleObj.toList( val )
             else
              
@@ -741,7 +746,7 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
 end
 
 
-function MacroCtrl:importMacro( macroInfoStem, macroTypeInfo, typeId2TypeInfo )
+function MacroCtrl:importMacro( processInfo, macroInfoStem, macroTypeInfo, typeId2TypeInfo )
 
    local macroInfo, err = MacroMetaInfo._fromStem( macroInfoStem )
    if macroInfo ~= nil then
@@ -779,7 +784,7 @@ function MacroCtrl:importMacro( macroInfoStem, macroTypeInfo, typeId2TypeInfo )
       end
       
       
-      self.typeId2MacroInfo[macroTypeInfo:get_typeId()] = ExtMacroInfo.new(macroInfo.name, self.macroEval:evalFromCode( macroInfo.name, argNameList, macroInfo.stmtBlock ), symbol2MacroValInfoMap, argList, tokenList)
+      self.typeId2MacroInfo[macroTypeInfo:get_typeId()] = ExtMacroInfo.new(macroInfo.name, self.macroEval:evalFromCode( processInfo, macroInfo.name, argNameList, macroInfo.stmtBlock ), symbol2MacroValInfoMap, argList, tokenList)
    else
       Util.errorLog( string.format( "macro load fail -- %s: %s ", macroTypeInfo:getTxt(  ), _lune.unwrapDefault( err, "")) )
    end
@@ -787,12 +792,12 @@ function MacroCtrl:importMacro( macroInfoStem, macroTypeInfo, typeId2TypeInfo )
 end
 
 
-function MacroCtrl:regist( node, macroScope )
+function MacroCtrl:regist( processInfo, node, macroScope )
 
-   local macroObj = self.macroEval:eval( node )
+   local macroObj = self.macroEval:eval( processInfo, node )
    local remap = {}
    for name, macroValInfo in pairs( self.symbol2ValueMapForMacro ) do
-      if macroValInfo.typeInfo:equals( Ast.builtinTypeEmpty ) then
+      if equalsType( macroValInfo.typeInfo, Ast.builtinTypeEmpty ) then
          remap[name] = Nodes.MacroValInfo.new(macroValInfo.val, _lune.unwrap( macroScope:getTypeInfoChild( name )), macroValInfo.argNode)
       else
        
@@ -891,17 +896,17 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
       
       
       if tokenTxt == ',,' then
-         if macroVal.typeInfo:equals( Ast.builtinTypeSymbol ) then
+         if equalsType( macroVal.typeInfo, Ast.builtinTypeSymbol ) then
             local txtList = {}
             for __index, txt in pairs( (_lune.unwrap( macroVal.val) ) ) do
                table.insert( txtList, txt )
             end
             
             pushbackTxt( parser, txtList, nextToken.txt, nextToken.pos )
-         elseif macroVal.typeInfo:equals( Ast.builtinTypeStat ) or macroVal.typeInfo:equals( Ast.builtinTypeExp ) or macroVal.typeInfo:equals( Ast.builtinTypeMultiExp ) then
+         elseif equalsType( macroVal.typeInfo, Ast.builtinTypeStat ) or equalsType( macroVal.typeInfo, Ast.builtinTypeExp ) or equalsType( macroVal.typeInfo, Ast.builtinTypeMultiExp ) then
             parser:pushbackStr( string.format( "macroVal %s", nextToken.txt), (_lune.unwrap( macroVal.val) ) )
          elseif macroVal.typeInfo:get_kind() == Ast.TypeInfoKind.Array or macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKind.List then
-            if macroVal.typeInfo:get_itemTypeInfoList()[1]:equals( Ast.builtinTypeStat ) then
+            if equalsType( macroVal.typeInfo:get_itemTypeInfoList()[1], Ast.builtinTypeStat ) then
                local strList = (_lune.unwrap( macroVal.val) )
                for index = #strList, 1, -1 do
                   parser:pushbackStr( string.format( "macroVal %s[%d]", nextToken.txt, index), strList[index] )
@@ -966,7 +971,7 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
          end
          
       elseif tokenTxt == ',,,' then
-         if macroVal.typeInfo:equals( Ast.builtinTypeString ) then
+         if equalsType( macroVal.typeInfo, Ast.builtinTypeString ) then
             pushbackTxt( parser, {(_lune.unwrap( macroVal.val) )}, nextToken.txt, nextToken.pos )
          else
           
@@ -974,7 +979,7 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
          end
          
       elseif tokenTxt == ',,,,' then
-         if macroVal.typeInfo:equals( Ast.builtinTypeSymbol ) then
+         if equalsType( macroVal.typeInfo, Ast.builtinTypeSymbol ) then
             local txtList = (_lune.unwrap( macroVal.val) )
             local newToken = ""
             for __index, txt in pairs( txtList ) do
@@ -983,7 +988,7 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
             
             nextToken = Parser.Token.new(Parser.TokenKind.Str, string.format( "'%s'", newToken), nextToken.pos, false)
             parser:pushbackToken( nextToken )
-         elseif macroVal.typeInfo:equals( Ast.builtinTypeStat ) or macroVal.typeInfo:equals( Ast.builtinTypeExp ) or macroVal.typeInfo:equals( Ast.builtinTypeMultiExp ) then
+         elseif equalsType( macroVal.typeInfo, Ast.builtinTypeStat ) or equalsType( macroVal.typeInfo, Ast.builtinTypeExp ) or equalsType( macroVal.typeInfo, Ast.builtinTypeMultiExp ) then
             local txt = (_lune.unwrap( macroVal.val) )
             local rawTxt
             
@@ -1053,14 +1058,14 @@ function MacroCtrl:expandSymbol( parser, prefixToken, exp, nodeManager, errMessL
             local macroInfo = self.symbol2ValueMapForMacro[symbolInfo:get_name()]
             if macroInfo ~= nil then
                local valType = macroInfo.typeInfo
-               if valType:equals( Ast.builtinTypeSymbol ) or valType:equals( Ast.builtinTypeExp ) or valType:equals( Ast.builtinTypeMultiExp ) or valType:equals( Ast.builtinTypeStat ) then
+               if equalsType( valType, Ast.builtinTypeSymbol ) or equalsType( valType, Ast.builtinTypeExp ) or equalsType( valType, Ast.builtinTypeMultiExp ) or equalsType( valType, Ast.builtinTypeStat ) then
                   format = "' %s '"
-               elseif valType:get_kind() == Ast.TypeInfoKind.List and valType:get_itemTypeInfoList()[1]:equals( Ast.builtinTypeStat ) then
+               elseif valType:get_kind() == Ast.TypeInfoKind.List and equalsType( valType:get_itemTypeInfoList()[1], Ast.builtinTypeStat ) then
                   format = "' %s '"
                   exp = Nodes.ExpMacroStatListNode.create( nodeManager, prefixToken.pos, self.analyzeInfo:get_mode() == Nodes.MacroMode.AnalyzeArg, {Ast.builtinTypeString}, exp )
-               elseif Ast.builtinTypeString:equals( valType ) then
+               elseif equalsType( Ast.builtinTypeString, valType ) then
                   
-               elseif valType:equals( Ast.builtinTypeInt ) or valType:equals( Ast.builtinTypeReal ) then
+               elseif equalsType( valType, Ast.builtinTypeInt ) or equalsType( valType, Ast.builtinTypeReal ) then
                   format = "' %s' "
                else
                 
@@ -1068,9 +1073,9 @@ function MacroCtrl:expandSymbol( parser, prefixToken, exp, nodeManager, errMessL
                end
                
             else
-               if exp:get_expType():equals( Ast.builtinTypeInt ) or exp:get_expType():equals( Ast.builtinTypeReal ) then
+               if equalsType( exp:get_expType(), Ast.builtinTypeInt ) or equalsType( exp:get_expType(), Ast.builtinTypeReal ) then
                   format = "' %s' "
-               elseif exp:get_expType():equals( Ast.builtinTypeSymbol ) or exp:get_expType():equals( Ast.builtinTypeExp ) or exp:get_expType():equals( Ast.builtinTypeMultiExp ) or exp:get_expType():equals( Ast.builtinTypeStat ) then
+               elseif equalsType( exp:get_expType(), Ast.builtinTypeSymbol ) or equalsType( exp:get_expType(), Ast.builtinTypeExp ) or equalsType( exp:get_expType(), Ast.builtinTypeMultiExp ) or equalsType( exp:get_expType(), Ast.builtinTypeStat ) then
                   format = "' %s '"
                end
                

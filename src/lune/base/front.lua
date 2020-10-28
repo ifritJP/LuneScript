@@ -424,7 +424,7 @@ end
 
 function Front:convert( ast, streamName, stream, metaStream, convMode, inMacro )
 
-   local conv = convLua.createFilter( streamName, stream, metaStream, convMode, inMacro, ast:get_moduleTypeInfo(), ast:get_moduleSymbolKind(), self.option.useLuneModule, self.option.targetLuaVer, self.option.testing, self.option.useIpairs )
+   local conv = convLua.createFilter( streamName, stream, metaStream, convMode, inMacro, ast:get_moduleTypeInfo(), ast:get_processInfo(), ast:get_moduleSymbolKind(), self.option.useLuneModule, self.option.targetLuaVer, self.option.testing, self.option.useIpairs )
    ast:get_node():processFilter( conv, convLua.Opt.new(ast:get_node()) )
 end
 
@@ -483,7 +483,7 @@ function Front:loadFromLnsTxt( importModuleInfo, name, txt )
    
    local ast = transUnit:createAST( parser, false, nil )
    
-   local _5723, luaTxt = self:convertFromAst( ast, name, convLua.ConvMode.Exec )
+   local _5771, luaTxt = self:convertFromAst( ast, name, convLua.ConvMode.Exec )
    return _lune.unwrap( loadFromLuaTxt( luaTxt ))
 end
 
@@ -810,7 +810,7 @@ function Front:convertLns2LuaCode( importModuleInfo, stream, streamName )
    local mod = scriptPath2Module( streamName )
    local ast = self:createAst( importModuleInfo, Parser.StreamParser.new(stream, streamName, false), mod, frontInterface.ModuleId.createId( 0.0, 0 ), nil, TransUnit.AnalyzeMode.Compile )
    
-   local _5868, luaTxt = self:convertFromAst( ast, streamName, convLua.ConvMode.Exec )
+   local _5916, luaTxt = self:convertFromAst( ast, streamName, convLua.ConvMode.Exec )
    
    return luaTxt
 end
@@ -948,7 +948,7 @@ function Front:checkUptodateMeta( metaPath, addSearchPath )
    end
    
    
-   for moduleFullName, _5946 in pairs( meta.__dependModuleMap ) do
+   for moduleFullName, _5994 in pairs( meta.__dependModuleMap ) do
       do
          local lnsPath = self:searchModule( moduleFullName )
          if lnsPath ~= nil then
@@ -1189,7 +1189,7 @@ function Front:dumpAst(  )
    Depend.profile( self.option.validProf, function (  )
    
       local ast = self:createAst( frontInterface.ImportModuleInfo.new(), self:createPaser(  ), mod, getModuleId( self.option.scriptPath, mod ), nil, TransUnit.AnalyzeMode.Compile )
-      ast:get_node():processFilter( dumpNode.createFilter( ast:get_moduleTypeInfo(), io.stdout ), dumpNode.Opt.new("", 0) )
+      ast:get_node():processFilter( dumpNode.createFilter( ast:get_moduleTypeInfo(), ast:get_processInfo(), io.stdout ), dumpNode.Opt.new("", 0) )
    end, self.option.scriptPath .. ".profi" )
 end
 
@@ -1242,7 +1242,7 @@ function Front:convertLuaToStreamFromScript( checkUptodate, convMode, path, mod,
       if stream ~= nil then
          if metaInfo ~= nil then
             local dependInfo = OutputDepend.DependInfo.new(mod)
-            for dependMod, _6110 in pairs( metaInfo.__dependModuleMap ) do
+            for dependMod, _6158 in pairs( metaInfo.__dependModuleMap ) do
                dependInfo:addImpotModule( dependMod )
             end
             
@@ -1510,7 +1510,7 @@ function Front:saveToLua(  )
             end
             
             if not cont then
-               Log.log( Log.Level.Debug, __func__, 1081, function (  )
+               Log.log( Log.Level.Debug, __func__, 1080, function (  )
                
                   return string.format( "<%s>, <%s>", oldLine, newLine)
                end )
@@ -1754,7 +1754,7 @@ _moduleObj.convertLnsCode2LuaCode = convertLnsCode2LuaCode
 function Front:exec(  )
    local __func__ = '@lune.@base.@front.Front.exec'
 
-   Log.log( Log.Level.Trace, __func__, 1295, function (  )
+   Log.log( Log.Level.Trace, __func__, 1294, function (  )
    
       return Option.ModeKind:_getTxt( self.option.mode)
       

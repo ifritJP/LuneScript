@@ -63,12 +63,14 @@ class convFilter extend Nodes.Filter<Opt> {
    pri let mut type2gotypeMap:&Map<&Ast.TypeInfo,str>;
    pri let mut nodeManager:Nodes.NodeManager;
    pri let mut enableTest:bool;
+   let mut processInfo:Ast.ProcessInfo;
 
    pub fn __init( enableTest:bool, streamName: str, stream: oStream,
-                  ast:&TransUnit.ASTInfo )
+                  ast:TransUnit.ASTInfo )
    {
       super(true, ast.$moduleTypeInfo, ast.$moduleTypeInfo.$scope);
 
+      self.processInfo = ast.$processInfo;
       self.stream = new Util.SimpleSourceOStream( stream, nil, 4 );
       self.processMode = .Main;
       self.processModeStack = [];
@@ -815,8 +817,9 @@ fn getExpListKind( dstTypeList:&List<&Ast.TypeInfo>,
    return .Conv;
 }
 
-fn getConvExpName( nodeId:int, argListNode:&Nodes.ExpListNode ): str {
-   return "_convExp%d_%d"  (nodeId, argListNode.$id);
+fn convFilter.getConvExpName( nodeId:int, argListNode:&Nodes.ExpListNode ): str
+{
+   return "%s_convExp%d"  ( self.moduleTypeInfo.$rawTxt.gsub( "@", "" ), nodeId);
 }
 
 fn convFilter.processConvExp( nodeId:int, dstTypeList:&List<&Ast.TypeInfo>,
@@ -851,7 +854,7 @@ fn convFilter.processConvExp( nodeId:int, dstTypeList:&List<&Ast.TypeInfo>,
    expList = workList;
 
    self.writeln( "// for %d" (argList.$pos.lineNo) );
-   self.write( "func %s(" (getConvExpName( nodeId, argList )) );
+   self.write( "func %s(" (self.getConvExpName( nodeId, argList )) );
 
    foreach argExp, index in expList {
       if! let exp2ddd = argExp@@@Nodes.ExpToDDDNode {
@@ -1166,7 +1169,8 @@ pub fn convFilter.outputDeclFunc( funcInfo:FuncInfo ) mut : &FuncConv {
 
    let retTypeList:&List<&Ast.TypeInfo>;
    if extFlag {
-      retTypeList = unwrap Ast.convToExtTypeList( workType.$retTypeInfoList );
+      retTypeList = unwrap Ast.convToExtTypeList(
+         self.processInfo, workType.$retTypeInfoList );
    } else {
       retTypeList = workType.$retTypeInfoList;
    }
@@ -1430,7 +1434,7 @@ pub override fn convFilter.processRoot(
    };
 
    
-   Ast.pushProcessInfo( node.$processInfo );
+   //Ast.pushProcessInfo( node.$processInfo );
 
    self.writeln( "// This code is transcompiled by LuneScript." );
    
@@ -1576,7 +1580,7 @@ pub override fn convFilter.processRoot(
    self.writeln( "}" );
 
 
-   Ast.popProcessInfo();
+   //Ast.popProcessInfo();
 }
 
 pub override fn convFilter.processSubfile(
@@ -1885,7 +1889,7 @@ pub override fn convFilter.processExpCallSuperCtor(
 {
    self.write( "self.%s(" ( self.getConstrSymbol( node.$superType ) ) );
    if! let argList = node.$expList {
-      self.processSetFromExpList( getConvExpName( node.$id, argList ), 
+      self.processSetFromExpList( self.getConvExpName( node.$id, argList ), 
                                   node.$methodType.$argTypeInfoList, argList );
    }
    self.writeln( ")" );
@@ -1897,7 +1901,7 @@ pub override fn convFilter.processExpCallSuper(
    self.write( "self.%s.%s(" ( self.getTypeSymbol( node.$methodType.$parentInfo ),
                                self.getFuncSymbol( node.$methodType ) ) );
    if! let argList = node.$expList {
-      self.processSetFromExpList( getConvExpName( node.$id, argList ), 
+      self.processSetFromExpList( self.getConvExpName( node.$id, argList ), 
                                   node.$methodType.$argTypeInfoList, argList );
    }
    self.write( ")" );
@@ -2055,9 +2059,9 @@ pub override fn convFilter.processDeclEnum(
          // list
          let listName = "%sList_" (self.getTypeSymbol( node.$enumType ));
          self.writeln( "var %s = NewLnsList( []LnsAny {" (listName) );
-         forsort valInfo in node.$enumType.$name2EnumValInfo {
+         foreach valName in node.$valueNameList {
             self.writeln( "  %s," ( self.getSymbol( .Static( node.$enumType ),
-                                                    valInfo.$name ) ) );
+                                                    valName.txt ) ) );
          }
          self.writeln( "})" );
 
@@ -2137,7 +2141,7 @@ pub override fn convFilter.processIfUnwrap(
    }
    self.write( " := " );
    self.processSetFromExpList(
-      getConvExpName( node.$id, node.$expList ),
+      self.getConvExpName( node.$id, node.$expList ),
       tempTypeList, node.$expList );
    self.writeln( "" );
 
@@ -2233,7 +2237,7 @@ fn convFilter.outputLetVar( node: Nodes.DeclVarNode ) mut {
          }
          self.write( " := " );
          self.processSetFromExpList(
-            getConvExpName( node.$id, expList ), tmpVarTypeList, expList );
+            self.getConvExpName( node.$id, expList ), tmpVarTypeList, expList );
          self.writeln( "" );
 
          // テンポラリに nil が含まれるか確認する
@@ -2311,7 +2315,7 @@ fn convFilter.outputLetVar( node: Nodes.DeclVarNode ) mut {
          }
          self.write( " = " );
          self.processSetFromExpList(
-            getConvExpName( node.$id, expList ), varTypeList, expList );
+            self.getConvExpName( node.$id, expList ), varTypeList, expList );
          self.writeln( "" );   
       }
    }
@@ -2359,7 +2363,7 @@ pub override fn convFilter.processDeclVar(
          }
          self.write( " = " );
          self.processSetFromExpList(
-            getConvExpName( node.$id, expList ), typeList,  expList );
+            self.getConvExpName( node.$id, expList ), typeList,  expList );
          self.writeln( "" );
          self.write( "if " );
          let mut hasCond = false;
@@ -3096,7 +3100,7 @@ pub override fn convFilter.processExpNew(
       let initFuncType = unwrap scope.getTypeInfoField( "__init", true, scope, .Normal );
       
       self.processSetFromExpList(
-         getConvExpName( node.$id, argList ), 
+         self.getConvExpName( node.$id, argList ), 
          initFuncType.$argTypeInfoList, argList );
    }
    self.write( ")" );
@@ -3743,6 +3747,11 @@ fn convFilter.outputAdvertise( node: Nodes.DeclClassNode ) mut
    }
 }
 
+pub override fn convFilter.processProtoClass(
+   node: Nodes.ProtoClassNode, opt: Opt ) mut
+{
+}
+
 pub override fn convFilter.processDeclClass(
    node: Nodes.DeclClassNode, opt: Opt ) mut
 {
@@ -3761,7 +3770,8 @@ pub override fn convFilter.processDeclClass(
             self.outputDummyAbstractMethodOfClass( node.$expType );
             self.outputAdvertise( node );
 
-            if node.$expType.isInheritFrom( Ast.builtinTypeMapping, nil ) {
+            if node.$expType.isInheritFrom(
+               self.processInfo, Ast.builtinTypeMapping, nil ) {
                self.outputMapping( node );
             }
             
@@ -4110,13 +4120,14 @@ pub override fn convFilter.processExpCall(
 
    if! let argList = node.$argList {
       self.processSetFromExpList(
-         getConvExpName( node.$id, argList ), 
+         self.getConvExpName( node.$id, argList ), 
          funcType.$argTypeInfoList, argList );
    }
 
    if funcType.$kind == .Func and
       funcType.$staticFlag and
-      funcType.$parentInfo.isInheritFrom( Ast.builtinTypeMapping ## ) and
+      funcType.$parentInfo.isInheritFrom(
+         self.processInfo, Ast.builtinTypeMapping ## ) and
        (funcType.$rawTxt == "_fromMap" or funcType.$rawTxt == "_fromStem")
    {
       let! fieldNode = node.$func@@@Nodes.RefFieldNode {
@@ -4137,7 +4148,8 @@ pub override fn convFilter.processExpCall(
       if #funcType.$retTypeInfoList == 1 {
          if opt.parent.$kind ~= Nodes.NodeKind.$StmtExp {
             self.write( "[0]" );
-            let retTypeList = unwrap Ast.convToExtTypeList( funcType.$retTypeInfoList );
+            let retTypeList = unwrap Ast.convToExtTypeList(
+               self.processInfo, funcType.$retTypeInfoList );
             self.outputAny2Type( retTypeList[ 1 ] );
          }
       } elseif #funcType.$retTypeInfoList > 1 {
@@ -4371,7 +4383,7 @@ pub override fn convFilter.processExpSetVal(
    }
    self.write( " = " );
    self.processSetFromExpList(
-      getConvExpName( node.$id, node.$exp2 ), node.$exp1.$expTypeList, node.$exp2 );
+      self.getConvExpName( node.$id, node.$exp2 ), node.$exp1.$expTypeList, node.$exp2 );
    self.writeln( "" );
 }
 
@@ -4940,7 +4952,7 @@ pub override fn convFilter.processLiteralString(
    if! let expList = node.$dddParam {
       self.write( 'Lns_getVM().String_format(%s, ' (str2gostr(txt)));
       self.processSetFromExpList(
-         getConvExpName( node.$id, expList ),  [ Ast.builtinTypeDDD ], expList );
+         self.getConvExpName( node.$id, expList ),  [ Ast.builtinTypeDDD ], expList );
       self.write( ")" );
    } else {
       self.write( '%s' (str2gostr(txt)) );
@@ -5002,7 +5014,7 @@ pub override fn convFilter.processAbbr(
 
 pub fn createFilter(
    enableTest:bool, streamName: str,
-   stream: oStream, ast:&TransUnit.ASTInfo ) : Nodes.Filter<Opt>
+   stream: oStream, ast:TransUnit.ASTInfo ) : Nodes.Filter<Opt>
 {
    return new convFilter( enableTest, streamName, stream, ast );
 }
@@ -5010,7 +5022,7 @@ pub fn createFilter(
 __test {
    import lune.base.convLua;
 
-   fn Ast2Code( streamName:str, ast:&TransUnit.ASTInfo ) : str
+   fn Ast2Code( streamName:str, ast:TransUnit.ASTInfo ) : str
    {
       let mut stream = new Util.memStream();
 
@@ -5027,7 +5039,7 @@ __test case1(ctrl ) {
    
    let scriptPath = "test.lns";
    let option = convLua.createDefaultOption( scriptPath );
-   let ast = convLua.createAst( scriptPath, convLua.getTestLnsCode(), option );
+   let mut ast = convLua.createAst( scriptPath, convLua.getTestLnsCode(), option );
    let goCode = Ast2Code( scriptPath, ast);
    print( goCode );
 }

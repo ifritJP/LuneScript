@@ -236,6 +236,7 @@ if not _lune2 then
    _lune2 = _lune
 end
 local Ver = _lune.loadModule( 'lune.base.Ver' )
+local Str = _lune.loadModule( 'lune.base.Str' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Util = _lune.loadModule( 'lune.base.Util' )
@@ -377,15 +378,16 @@ end
 
 local convFilter = {}
 setmetatable( convFilter, { __index = Nodes.Filter,ifList = {oStream,} } )
-function convFilter.new( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest, useIpairs )
+function convFilter.new( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest, useIpairs )
    local obj = {}
    convFilter.setmeta( obj )
-   if obj.__init then obj:__init( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest, useIpairs ); end
+   if obj.__init then obj:__init( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest, useIpairs ); end
    return obj
 end
-function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest, useIpairs) 
+function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest, useIpairs) 
    Nodes.Filter.__init( self,true, moduleTypeInfo, moduleTypeInfo:get_scope())
    
+   self.processInfo = processInfo
    self.enableTest = enableTest
    self.macroVarSymSet = {}
    self.needModuleObj = true
@@ -434,43 +436,25 @@ end
 function convFilter:flush(  )
 
 end
-function convFilter:writeRaw( txt )
+function convFilter:write( txt )
 
    local stream = self.stream
    if self.outMetaFlag then
       stream = self.metaStream
    end
    
-   
-   if self.needIndent then
-      stream:write( string.rep( " ", self:get_indent() ) )
-      self.needIndent = false
-   end
-   
-   
-   for _5571 in string.gmatch( txt, "\n" ) do
-      self.curLineNo = self.curLineNo + 1
-   end
-   
-   stream:write( txt )
-end
-function convFilter:write( txt )
-
-   while true do
-      do
-         local index = string.find( txt, "\n" )
-         if index ~= nil then
-            self:writeRaw( txt:sub( 1, index ) )
-            txt = txt:sub( index + 1 )
-         else
-            break
-         end
+   for __index, line in ipairs( Str.getLineList( txt ) ) do
+      if self.needIndent then
+         stream:write( string.rep( " ", self:get_indent() ) )
+         self.needIndent = false
       end
       
-   end
-   
-   if #txt > 0 then
-      self:writeRaw( txt )
+      
+      if #line > 0 and string.byte( line, #line ) == 10 then
+         self.curLineNo = self.curLineNo + 1
+      end
+      
+      stream:write( line )
    end
    
    return self, nil
@@ -608,7 +592,7 @@ function convFilter:outputMeta( node )
    
       local moduleTypeInfo = typeInfo:getModule(  )
       local typeId = typeInfo:get_typeId()
-      return typeId2TypeInfo[typeId] and not Ast.isBuiltin( typeId ) and (moduleTypeInfo:hasRouteNamespaceFrom( node:get_moduleTypeInfo() ) or typeInfo:get_srcTypeInfo() ~= typeInfo or moduleTypeInfo:equals( Ast.headTypeInfo ) )
+      return typeId2TypeInfo[typeId] and not Ast.isBuiltin( typeId ) and (moduleTypeInfo:hasRouteNamespaceFrom( node:get_moduleTypeInfo() ) or typeInfo:get_srcTypeInfo() ~= typeInfo or moduleTypeInfo:equals( self.processInfo, Ast.headTypeInfo ) )
    end
    
    local function isDependOnExt( typeInfo )
@@ -693,7 +677,7 @@ function convFilter:outputMeta( node )
                local _switchExp = typeInfo:get_kind()
                if _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.Form or _switchExp == Ast.TypeInfoKind.FormFunc or _switchExp == Ast.TypeInfoKind.Alge or _switchExp == Ast.TypeInfoKind.Enum or _switchExp == Ast.TypeInfoKind.Map or _switchExp == Ast.TypeInfoKind.Set or _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Alternate or _switchExp == Ast.TypeInfoKind.Box then
                   pickupTypeId( typeInfo:get_nilableTypeInfo(), true, false )
-                  local imutType = Ast.NormalTypeInfo.createModifier( typeInfo, Ast.MutMode.IMut )
+                  local imutType = self.processInfo:createModifier( typeInfo, Ast.MutMode.IMut )
                   pickupTypeId( imutType, true, false )
                end
             end
@@ -956,7 +940,7 @@ function convFilter:outputMeta( node )
             if stmtBlock ~= nil then
                local memStream = Util.memStream.new()
                
-               local workFilter = convFilter.new(declInfo:get_name().txt, memStream, memStream, ConvMode.Convert, false, Ast.headTypeInfo, Ast.SymbolKind.Typ, self.useLuneRuntime, self.targetLuaVer, self.enableTest, self.useIpairs)
+               local workFilter = convFilter.new(declInfo:get_name().txt, memStream, memStream, ConvMode.Convert, false, Ast.headTypeInfo, self.processInfo, Ast.SymbolKind.Typ, self.useLuneRuntime, self.targetLuaVer, self.enableTest, self.useIpairs)
                
                workFilter.macroDepth = workFilter.macroDepth + 1
                workFilter:processBlock( stmtBlock, Opt.new(node) )
@@ -1256,8 +1240,6 @@ end
 
 function convFilter:processRoot( node, opt )
 
-   Ast.pushProcessInfo( node:get_processInfo() )
-   
    self:writeln( string.format( "--%s", self.streamName) )
    
    self.needModuleObj = node:get_provideNode() == nil
@@ -1355,7 +1337,6 @@ end]==], luneSymbol, luneSymbol) )
    end
    
    
-   Ast.popProcessInfo(  )
 end
 
 
@@ -1509,7 +1490,7 @@ end
    for index, valName in ipairs( node:get_valueNameList() ) do
       local valInfo = _lune.unwrap( typeInfo:getEnumValInfo( valName.txt ))
       local valTxt = string.format( "%s", tostring( Ast.getEnumLiteralVal( valInfo:get_val() )))
-      if typeInfo:get_valTypeInfo():equals( Ast.builtinTypeString ) then
+      if typeInfo:get_valTypeInfo():equals( self.processInfo, Ast.builtinTypeString ) then
          valTxt = string.format( "'%s'", tostring( Ast.getEnumLiteralVal( valInfo:get_val() )))
       end
       
@@ -1556,7 +1537,7 @@ function convFilter:getMapInfo( typeInfo )
       if _switchExp == Ast.TypeInfoKind.Stem then
          funcTxt = '_lune._toStem'
       elseif _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
-         if not nonnilableType:equals( Ast.builtinTypeString ) then
+         if not nonnilableType:equals( self.processInfo, Ast.builtinTypeString ) then
             funcTxt = string.format( '%s._fromMap', self:getFullName( nonnilableType ))
             if isGenericType( nonnilableType ) then
                local memStream = Util.memStream.new()
@@ -1716,7 +1697,7 @@ end
 function convFilter:getDestrClass( classTypeInfo )
 
    local typeInfo = classTypeInfo
-   while not typeInfo:equals( Ast.headTypeInfo ) do
+   while not typeInfo:equals( self.processInfo, Ast.headTypeInfo ) do
       local scope = _lune.unwrap( typeInfo:get_scope())
       if scope:getTypeInfoChild( "__free" ) then
          return typeInfo
@@ -1752,6 +1733,12 @@ function convFilter:outputAlter2MapFunc( stream, alt2Map )
 end
 
 
+function convFilter:processProtoClass( node, opt )
+
+   self:write( string.format( "local %s = {}", node:get_name().txt) )
+end
+
+
 function convFilter:processDeclClass( node, opt )
 
    local nodeInfo = node
@@ -1784,7 +1771,10 @@ function convFilter:processDeclClass( node, opt )
       end
    end
    
-   self:writeln( string.format( "local %s = {}", className ) )
+   if not node:get_hasPrototype() then
+      self:writeln( string.format( "local %s = {}", className ) )
+   end
+   
    
    local ifTxt = ""
    if #classTypeInfo:get_interfaceList() > 0 then
@@ -1904,7 +1894,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _6144 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _6198 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -2052,7 +2042,7 @@ end
       end
    end
    
-   if classTypeInfo:isInheritFrom( Ast.builtinTypeMapping, nil ) then
+   if classTypeInfo:isInheritFrom( self.processInfo, Ast.builtinTypeMapping, nil ) then
       local declArgTxt = "val"
       local argTxt = "{}, val"
       if isGenericType( classTypeInfo ) then
@@ -3214,7 +3204,7 @@ function convFilter:processExpCall( node, opt )
                self:write( "[1]" )
                return false
             elseif _switchExp == Ast.TypeInfoKind.Class then
-               if prefixType:isInheritFrom( Ast.builtinTypeMapping, nil ) and isGenericType( prefixType ) and (fieldNode:get_field().txt == "_fromMap" or fieldNode:get_field().txt == "_fromStem" ) then
+               if prefixType:isInheritFrom( self.processInfo, Ast.builtinTypeMapping, nil ) and isGenericType( prefixType ) and (fieldNode:get_field().txt == "_fromMap" or fieldNode:get_field().txt == "_fromStem" ) then
                   wroteFuncFlag = true
                   setArgFlag = true
                   filter( node:get_func(), self, node )
@@ -3449,11 +3439,11 @@ function convFilter:processExpCast( node, opt )
    do
       local _switchExp = node:get_castKind()
       if _switchExp == Nodes.CastKind.Force then
-         if node:get_expType():equals( Ast.builtinTypeInt ) then
+         if node:get_expType():equals( self.processInfo, Ast.builtinTypeInt ) then
             self:write( "math.floor(" )
             filter( node:get_exp(), self, node )
             self:write( ")" )
-         elseif node:get_expType():equals( Ast.builtinTypeReal ) then
+         elseif node:get_expType():equals( self.processInfo, Ast.builtinTypeReal ) then
             filter( node:get_exp(), self, node )
             self:write( " * 1.0" )
          else
@@ -3536,7 +3526,7 @@ end
 function convFilter:processExpOp2( node, opt )
 
    local intCast = false
-   if node:get_expType():equals( Ast.builtinTypeInt ) and node:get_op().txt == "/" then
+   if node:get_expType():equals( self.processInfo, Ast.builtinTypeInt ) and node:get_op().txt == "/" then
       intCast = true
       self:write( "math.floor(" )
    end
@@ -3614,7 +3604,7 @@ function convFilter:processExpRef( node, opt )
       else 
          
             local builtinFunc = TransUnit.getBuiltinFunc(  )
-            if node:get_expType():equals( builtinFunc.lns__load ) then
+            if node:get_expType():equals( self.processInfo, builtinFunc.lns__load ) then
                self:write( "_lune." .. self.targetLuaVer:get_loadStrFuncName() )
             else
              
@@ -3659,7 +3649,7 @@ function convFilter:processExpRefItem( node, opt )
       self:write( ")" )
    else
     
-      if node:get_val():get_expType():equals( Ast.builtinTypeString ) then
+      if node:get_val():get_expType():equals( self.processInfo, Ast.builtinTypeString ) then
          self:write( "string.byte( " )
          filter( node:get_val(), self, node )
          self:write( ", " )
@@ -4066,9 +4056,9 @@ function convFilter:processLuneControl( node, opt )
 end
 
 
-local function createFilter( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest, useIpairs )
+local function createFilter( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest, useIpairs )
 
-   return convFilter.new(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest, useIpairs)
+   return convFilter.new(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest, useIpairs)
 end
 _moduleObj.createFilter = createFilter
 
@@ -4094,7 +4084,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3387, function (  )
+   Log.log( Log.Level.Trace, __func__, 3389, function (  )
    
       return string.format( "macro: %s", code)
    end )
@@ -4107,10 +4097,10 @@ function MacroEvalImp:evalFromMacroCode( code )
    
    Util.err( err )
 end
-function MacroEvalImp:evalFromCode( name, argNameList, code )
+function MacroEvalImp:evalFromCode( processInfo, name, argNameList, code )
 
    local stream = Util.memStream.new()
-   local conv = convFilter.new("macro", stream, stream, ConvMode.Exec, true, Ast.headTypeInfo, Ast.SymbolKind.Typ, nil, LuaVer.getCurVer(  ), false, true)
+   local conv = convFilter.new("macro", stream, stream, ConvMode.Exec, true, Ast.headTypeInfo, processInfo, Ast.SymbolKind.Typ, nil, LuaVer.getCurVer(  ), false, true)
    
    conv:outputDeclMacro( name, argNameList, function (  )
    
@@ -4122,10 +4112,10 @@ function MacroEvalImp:evalFromCode( name, argNameList, code )
    
    return self:evalFromMacroCode( stream:get_txt() )
 end
-function MacroEvalImp:eval( node )
+function MacroEvalImp:eval( processInfo, node )
 
    local stream = Util.memStream.new()
-   local conv = convFilter.new("macro", stream, stream, ConvMode.Exec, true, Ast.headTypeInfo, Ast.SymbolKind.Typ, nil, LuaVer.getCurVer(  ), false, true)
+   local conv = convFilter.new("macro", stream, stream, ConvMode.Exec, true, Ast.headTypeInfo, processInfo, Ast.SymbolKind.Typ, nil, LuaVer.getCurVer(  ), false, true)
    
    conv:processDeclMacro( node, Opt.new(node) )
    

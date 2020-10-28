@@ -479,7 +479,7 @@ local function getLiteralObj( obj )
 end
 _moduleObj.getLiteralObj = getLiteralObj
 
-
+local Node = {}
 
 local NodeVisitMode = {}
 _moduleObj.NodeVisitMode = NodeVisitMode
@@ -515,7 +515,6 @@ NodeVisitMode.__allList[3] = NodeVisitMode.End
 
 
 
-local Node = {}
 _moduleObj.Node = Node
 function Node:setLValue(  )
 
@@ -590,7 +589,7 @@ function Node:canBeLeft(  )
 
    return false
 end
-function Node:canBeRight(  )
+function Node:canBeRight( processInfo )
 
    return false
 end
@@ -659,11 +658,11 @@ function NamespaceInfo:__init( name, scope, typeInfo )
 end
 
 
-
-
-
-
-
+local MacroEval = {}
+local ExpListNode = {}
+local DeclArgNode = {}
+local BlockNode = {}
+local DeclClassNode = {}
 
 local DeclMacroInfo = {}
 _moduleObj.DeclMacroInfo = DeclMacroInfo
@@ -739,7 +738,7 @@ end
 function NodeManager:__init() 
    self.idSeed = 0
    self.nodeKind2NodeList = {}
-   for kind, _2624 in pairs( nodeKind2NameMap ) do
+   for kind, _2647 in pairs( nodeKind2NameMap ) do
       if not self.nodeKind2NodeList[kind] then
          self.nodeKind2NodeList[kind] = {}
       end
@@ -830,7 +829,7 @@ function NodeKind.get_None(  )
 end
 
 
-
+local NoneNode = {}
 regKind( "None" )
 function Filter:processNone( node, opt )
 
@@ -847,14 +846,13 @@ end
 
 
 
-local NoneNode = {}
 setmetatable( NoneNode, { __index = Node } )
 _moduleObj.NoneNode = NoneNode
 function NoneNode:processFilter( filter, opt )
 
    filter:processNone( self, opt )
 end
-function NoneNode:canBeRight(  )
+function NoneNode:canBeRight( processInfo )
 
    return false
 end
@@ -903,7 +901,7 @@ function NodeKind.get_ConvStat(  )
 end
 
 
-
+local ConvStatNode = {}
 regKind( "ConvStat" )
 function Filter:processConvStat( node, opt )
 
@@ -920,14 +918,13 @@ end
 
 
 
-local ConvStatNode = {}
 setmetatable( ConvStatNode, { __index = Node } )
 _moduleObj.ConvStatNode = ConvStatNode
 function ConvStatNode:processFilter( filter, opt )
 
    filter:processConvStat( self, opt )
 end
-function ConvStatNode:canBeRight(  )
+function ConvStatNode:canBeRight( processInfo )
 
    return false
 end
@@ -981,7 +978,7 @@ function NodeKind.get_BlankLine(  )
 end
 
 
-
+local BlankLineNode = {}
 regKind( "BlankLine" )
 function Filter:processBlankLine( node, opt )
 
@@ -998,14 +995,13 @@ end
 
 
 
-local BlankLineNode = {}
 setmetatable( BlankLineNode, { __index = Node } )
 _moduleObj.BlankLineNode = BlankLineNode
 function BlankLineNode:processFilter( filter, opt )
 
    filter:processBlankLine( self, opt )
 end
-function BlankLineNode:canBeRight(  )
+function BlankLineNode:canBeRight( processInfo )
 
    return false
 end
@@ -1058,7 +1054,7 @@ function NodeKind.get_Subfile(  )
 end
 
 
-
+local SubfileNode = {}
 regKind( "Subfile" )
 function Filter:processSubfile( node, opt )
 
@@ -1075,14 +1071,13 @@ end
 
 
 
-local SubfileNode = {}
 setmetatable( SubfileNode, { __index = Node } )
 _moduleObj.SubfileNode = SubfileNode
 function SubfileNode:processFilter( filter, opt )
 
    filter:processSubfile( self, opt )
 end
-function SubfileNode:canBeRight(  )
+function SubfileNode:canBeRight( processInfo )
 
    return false
 end
@@ -1135,7 +1130,7 @@ function NodeKind.get_Import(  )
 end
 
 
-
+local ImportNode = {}
 regKind( "Import" )
 function Filter:processImport( node, opt )
 
@@ -1152,14 +1147,13 @@ end
 
 
 
-local ImportNode = {}
 setmetatable( ImportNode, { __index = Node } )
 _moduleObj.ImportNode = ImportNode
 function ImportNode:processFilter( filter, opt )
 
    filter:processImport( self, opt )
 end
-function ImportNode:canBeRight(  )
+function ImportNode:canBeRight( processInfo )
 
    return false
 end
@@ -1218,7 +1212,7 @@ end
 
 
 
-
+local ProvideNode = {}
 
 local LuneHelperInfo = {}
 _moduleObj.LuneHelperInfo = LuneHelperInfo
@@ -1366,7 +1360,7 @@ function NodeKind.get_Root(  )
 end
 
 
-
+local RootNode = {}
 regKind( "Root" )
 function Filter:processRoot( node, opt )
 
@@ -1383,14 +1377,13 @@ end
 
 
 
-local RootNode = {}
 setmetatable( RootNode, { __index = Node } )
 _moduleObj.RootNode = RootNode
 function RootNode:processFilter( filter, opt )
 
    filter:processRoot( self, opt )
 end
-function RootNode:canBeRight(  )
+function RootNode:canBeRight( processInfo )
 
    return false
 end
@@ -1538,7 +1531,7 @@ function NodeKind.get_RefType(  )
 end
 
 
-
+local RefTypeNode = {}
 regKind( "RefType" )
 function Filter:processRefType( node, opt )
 
@@ -1555,14 +1548,13 @@ end
 
 
 
-local RefTypeNode = {}
 setmetatable( RefTypeNode, { __index = Node } )
 _moduleObj.RefTypeNode = RefTypeNode
 function RefTypeNode:processFilter( filter, opt )
 
    filter:processRefType( self, opt )
 end
-function RefTypeNode:canBeRight(  )
+function RefTypeNode:canBeRight( processInfo )
 
    return false
 end
@@ -1755,7 +1747,7 @@ function NodeKind.get_Block(  )
 end
 
 
-
+local BlockNode = {}
 regKind( "Block" )
 
 function NodeManager:getBlockNodeList(  )
@@ -1765,14 +1757,13 @@ end
 
 
 
-local BlockNode = {}
 setmetatable( BlockNode, { __index = Node } )
 _moduleObj.BlockNode = BlockNode
 function BlockNode:processFilter( filter, opt )
 
    filter:processBlock( self, opt )
 end
-function BlockNode:canBeRight(  )
+function BlockNode:canBeRight( processInfo )
 
    return false
 end
@@ -1882,7 +1873,7 @@ function NodeKind.get_Scope(  )
 end
 
 
-
+local ScopeNode = {}
 regKind( "Scope" )
 function Filter:processScope( node, opt )
 
@@ -1899,14 +1890,13 @@ end
 
 
 
-local ScopeNode = {}
 setmetatable( ScopeNode, { __index = Node } )
 _moduleObj.ScopeNode = ScopeNode
 function ScopeNode:processFilter( filter, opt )
 
    filter:processScope( self, opt )
 end
-function ScopeNode:canBeRight(  )
+function ScopeNode:canBeRight( processInfo )
 
    return false
 end
@@ -2123,7 +2113,7 @@ function NodeKind.get_If(  )
 end
 
 
-
+local IfNode = {}
 regKind( "If" )
 function Filter:processIf( node, opt )
 
@@ -2140,14 +2130,13 @@ end
 
 
 
-local IfNode = {}
 setmetatable( IfNode, { __index = Node } )
 _moduleObj.IfNode = IfNode
 function IfNode:processFilter( filter, opt )
 
    filter:processIf( self, opt )
 end
-function IfNode:canBeRight(  )
+function IfNode:canBeRight( processInfo )
 
    return false
 end
@@ -2282,7 +2271,7 @@ function NodeKind.get_ExpList(  )
 end
 
 
-
+local ExpListNode = {}
 regKind( "ExpList" )
 function Filter:processExpList( node, opt )
 
@@ -2299,7 +2288,6 @@ end
 
 
 
-local ExpListNode = {}
 setmetatable( ExpListNode, { __index = Node } )
 _moduleObj.ExpListNode = ExpListNode
 function ExpListNode:processFilter( filter, opt )
@@ -2386,10 +2374,10 @@ function ExpListNode:canBeLeft(  )
    return true
 end
 
-function ExpListNode:canBeRight(  )
+function ExpListNode:canBeRight( processInfo )
 
    for __index, expNode in ipairs( self:get_expList() ) do
-      if not expNode:canBeRight(  ) then
+      if not expNode:canBeRight( processInfo ) then
          return false
       end
       
@@ -2510,7 +2498,7 @@ function NodeKind.get_Switch(  )
 end
 
 
-
+local SwitchNode = {}
 regKind( "Switch" )
 function Filter:processSwitch( node, opt )
 
@@ -2527,14 +2515,13 @@ end
 
 
 
-local SwitchNode = {}
 setmetatable( SwitchNode, { __index = Node } )
 _moduleObj.SwitchNode = SwitchNode
 function SwitchNode:processFilter( filter, opt )
 
    filter:processSwitch( self, opt )
 end
-function SwitchNode:canBeRight(  )
+function SwitchNode:canBeRight( processInfo )
 
    return false
 end
@@ -2740,7 +2727,7 @@ function NodeKind.get_While(  )
 end
 
 
-
+local WhileNode = {}
 regKind( "While" )
 function Filter:processWhile( node, opt )
 
@@ -2757,14 +2744,13 @@ end
 
 
 
-local WhileNode = {}
 setmetatable( WhileNode, { __index = Node } )
 _moduleObj.WhileNode = WhileNode
 function WhileNode:processFilter( filter, opt )
 
    filter:processWhile( self, opt )
 end
-function WhileNode:canBeRight(  )
+function WhileNode:canBeRight( processInfo )
 
    return false
 end
@@ -2861,7 +2847,7 @@ function NodeKind.get_Repeat(  )
 end
 
 
-
+local RepeatNode = {}
 regKind( "Repeat" )
 function Filter:processRepeat( node, opt )
 
@@ -2878,14 +2864,13 @@ end
 
 
 
-local RepeatNode = {}
 setmetatable( RepeatNode, { __index = Node } )
 _moduleObj.RepeatNode = RepeatNode
 function RepeatNode:processFilter( filter, opt )
 
    filter:processRepeat( self, opt )
 end
-function RepeatNode:canBeRight(  )
+function RepeatNode:canBeRight( processInfo )
 
    return false
 end
@@ -2991,7 +2976,7 @@ function NodeKind.get_For(  )
 end
 
 
-
+local ForNode = {}
 regKind( "For" )
 function Filter:processFor( node, opt )
 
@@ -3008,14 +2993,13 @@ end
 
 
 
-local ForNode = {}
 setmetatable( ForNode, { __index = Node } )
 _moduleObj.ForNode = ForNode
 function ForNode:processFilter( filter, opt )
 
    filter:processFor( self, opt )
 end
-function ForNode:canBeRight(  )
+function ForNode:canBeRight( processInfo )
 
    return false
 end
@@ -3172,7 +3156,7 @@ function NodeKind.get_Apply(  )
 end
 
 
-
+local ApplyNode = {}
 regKind( "Apply" )
 function Filter:processApply( node, opt )
 
@@ -3189,14 +3173,13 @@ end
 
 
 
-local ApplyNode = {}
 setmetatable( ApplyNode, { __index = Node } )
 _moduleObj.ApplyNode = ApplyNode
 function ApplyNode:processFilter( filter, opt )
 
    filter:processApply( self, opt )
 end
-function ApplyNode:canBeRight(  )
+function ApplyNode:canBeRight( processInfo )
 
    return false
 end
@@ -3306,7 +3289,7 @@ function NodeKind.get_Foreach(  )
 end
 
 
-
+local ForeachNode = {}
 regKind( "Foreach" )
 function Filter:processForeach( node, opt )
 
@@ -3323,14 +3306,13 @@ end
 
 
 
-local ForeachNode = {}
 setmetatable( ForeachNode, { __index = Node } )
 _moduleObj.ForeachNode = ForeachNode
 function ForeachNode:processFilter( filter, opt )
 
    filter:processForeach( self, opt )
 end
-function ForeachNode:canBeRight(  )
+function ForeachNode:canBeRight( processInfo )
 
    return false
 end
@@ -3444,7 +3426,7 @@ function NodeKind.get_Forsort(  )
 end
 
 
-
+local ForsortNode = {}
 regKind( "Forsort" )
 function Filter:processForsort( node, opt )
 
@@ -3461,14 +3443,13 @@ end
 
 
 
-local ForsortNode = {}
 setmetatable( ForsortNode, { __index = Node } )
 _moduleObj.ForsortNode = ForsortNode
 function ForsortNode:processFilter( filter, opt )
 
    filter:processForsort( self, opt )
 end
-function ForsortNode:canBeRight(  )
+function ForsortNode:canBeRight( processInfo )
 
    return false
 end
@@ -3586,7 +3567,7 @@ function NodeKind.get_Return(  )
 end
 
 
-
+local ReturnNode = {}
 regKind( "Return" )
 function Filter:processReturn( node, opt )
 
@@ -3603,14 +3584,13 @@ end
 
 
 
-local ReturnNode = {}
 setmetatable( ReturnNode, { __index = Node } )
 _moduleObj.ReturnNode = ReturnNode
 function ReturnNode:processFilter( filter, opt )
 
    filter:processReturn( self, opt )
 end
-function ReturnNode:canBeRight(  )
+function ReturnNode:canBeRight( processInfo )
 
    return false
 end
@@ -3692,7 +3672,7 @@ function NodeKind.get_Break(  )
 end
 
 
-
+local BreakNode = {}
 regKind( "Break" )
 function Filter:processBreak( node, opt )
 
@@ -3709,14 +3689,13 @@ end
 
 
 
-local BreakNode = {}
 setmetatable( BreakNode, { __index = Node } )
 _moduleObj.BreakNode = BreakNode
 function BreakNode:processFilter( filter, opt )
 
    filter:processBreak( self, opt )
 end
-function BreakNode:canBeRight(  )
+function BreakNode:canBeRight( processInfo )
 
    return false
 end
@@ -3771,7 +3750,7 @@ function NodeKind.get_Provide(  )
 end
 
 
-
+local ProvideNode = {}
 regKind( "Provide" )
 function Filter:processProvide( node, opt )
 
@@ -3788,14 +3767,13 @@ end
 
 
 
-local ProvideNode = {}
 setmetatable( ProvideNode, { __index = Node } )
 _moduleObj.ProvideNode = ProvideNode
 function ProvideNode:processFilter( filter, opt )
 
    filter:processProvide( self, opt )
 end
-function ProvideNode:canBeRight(  )
+function ProvideNode:canBeRight( processInfo )
 
    return false
 end
@@ -3849,7 +3827,7 @@ function NodeKind.get_ExpNew(  )
 end
 
 
-
+local ExpNewNode = {}
 regKind( "ExpNew" )
 function Filter:processExpNew( node, opt )
 
@@ -3866,14 +3844,13 @@ end
 
 
 
-local ExpNewNode = {}
 setmetatable( ExpNewNode, { __index = Node } )
 _moduleObj.ExpNewNode = ExpNewNode
 function ExpNewNode:processFilter( filter, opt )
 
    filter:processExpNew( self, opt )
 end
-function ExpNewNode:canBeRight(  )
+function ExpNewNode:canBeRight( processInfo )
 
    return true
 end
@@ -3975,7 +3952,7 @@ function NodeKind.get_ExpUnwrap(  )
 end
 
 
-
+local ExpUnwrapNode = {}
 regKind( "ExpUnwrap" )
 function Filter:processExpUnwrap( node, opt )
 
@@ -3992,14 +3969,13 @@ end
 
 
 
-local ExpUnwrapNode = {}
 setmetatable( ExpUnwrapNode, { __index = Node } )
 _moduleObj.ExpUnwrapNode = ExpUnwrapNode
 function ExpUnwrapNode:processFilter( filter, opt )
 
    filter:processExpUnwrap( self, opt )
 end
-function ExpUnwrapNode:canBeRight(  )
+function ExpUnwrapNode:canBeRight( processInfo )
 
    return true
 end
@@ -4097,7 +4073,7 @@ function NodeKind.get_ExpRef(  )
 end
 
 
-
+local ExpRefNode = {}
 regKind( "ExpRef" )
 function Filter:processExpRef( node, opt )
 
@@ -4114,7 +4090,6 @@ end
 
 
 
-local ExpRefNode = {}
 setmetatable( ExpRefNode, { __index = Node } )
 _moduleObj.ExpRefNode = ExpRefNode
 function ExpRefNode:processFilter( filter, opt )
@@ -4166,7 +4141,7 @@ function ExpRefNode:canBeLeft(  )
 end
 
 
-function ExpRefNode:canBeRight(  )
+function ExpRefNode:canBeRight( processInfo )
 
    return self:get_symbolInfo():get_canBeRight() and self:get_symbolInfo():get_hasValueFlag()
    
@@ -4180,7 +4155,7 @@ function NodeKind.get_ExpSetVal(  )
 end
 
 
-
+local ExpSetValNode = {}
 regKind( "ExpSetVal" )
 function Filter:processExpSetVal( node, opt )
 
@@ -4197,14 +4172,13 @@ end
 
 
 
-local ExpSetValNode = {}
 setmetatable( ExpSetValNode, { __index = Node } )
 _moduleObj.ExpSetValNode = ExpSetValNode
 function ExpSetValNode:processFilter( filter, opt )
 
    filter:processExpSetVal( self, opt )
 end
-function ExpSetValNode:canBeRight(  )
+function ExpSetValNode:canBeRight( processInfo )
 
    return false
 end
@@ -4326,7 +4300,7 @@ function NodeKind.get_ExpSetItem(  )
 end
 
 
-
+local ExpSetItemNode = {}
 regKind( "ExpSetItem" )
 function Filter:processExpSetItem( node, opt )
 
@@ -4343,14 +4317,13 @@ end
 
 
 
-local ExpSetItemNode = {}
 setmetatable( ExpSetItemNode, { __index = Node } )
 _moduleObj.ExpSetItemNode = ExpSetItemNode
 function ExpSetItemNode:processFilter( filter, opt )
 
    filter:processExpSetItem( self, opt )
 end
-function ExpSetItemNode:canBeRight(  )
+function ExpSetItemNode:canBeRight( processInfo )
 
    return false
 end
@@ -4447,7 +4420,7 @@ function NodeKind.get_ExpOp2(  )
 end
 
 
-
+local ExpOp2Node = {}
 regKind( "ExpOp2" )
 function Filter:processExpOp2( node, opt )
 
@@ -4464,14 +4437,13 @@ end
 
 
 
-local ExpOp2Node = {}
 setmetatable( ExpOp2Node, { __index = Node } )
 _moduleObj.ExpOp2Node = ExpOp2Node
 function ExpOp2Node:processFilter( filter, opt )
 
    filter:processExpOp2( self, opt )
 end
-function ExpOp2Node:canBeRight(  )
+function ExpOp2Node:canBeRight( processInfo )
 
    return true
 end
@@ -4568,7 +4540,7 @@ function NodeKind.get_UnwrapSet(  )
 end
 
 
-
+local UnwrapSetNode = {}
 regKind( "UnwrapSet" )
 function Filter:processUnwrapSet( node, opt )
 
@@ -4585,14 +4557,13 @@ end
 
 
 
-local UnwrapSetNode = {}
 setmetatable( UnwrapSetNode, { __index = Node } )
 _moduleObj.UnwrapSetNode = UnwrapSetNode
 function UnwrapSetNode:processFilter( filter, opt )
 
    filter:processUnwrapSet( self, opt )
 end
-function UnwrapSetNode:canBeRight(  )
+function UnwrapSetNode:canBeRight( processInfo )
 
    return false
 end
@@ -4711,7 +4682,7 @@ function NodeKind.get_IfUnwrap(  )
 end
 
 
-
+local IfUnwrapNode = {}
 regKind( "IfUnwrap" )
 function Filter:processIfUnwrap( node, opt )
 
@@ -4728,14 +4699,13 @@ end
 
 
 
-local IfUnwrapNode = {}
 setmetatable( IfUnwrapNode, { __index = Node } )
 _moduleObj.IfUnwrapNode = IfUnwrapNode
 function IfUnwrapNode:processFilter( filter, opt )
 
    filter:processIfUnwrap( self, opt )
 end
-function IfUnwrapNode:canBeRight(  )
+function IfUnwrapNode:canBeRight( processInfo )
 
    return false
 end
@@ -4968,7 +4938,7 @@ function NodeKind.get_When(  )
 end
 
 
-
+local WhenNode = {}
 regKind( "When" )
 function Filter:processWhen( node, opt )
 
@@ -4985,14 +4955,13 @@ end
 
 
 
-local WhenNode = {}
 setmetatable( WhenNode, { __index = Node } )
 _moduleObj.WhenNode = WhenNode
 function WhenNode:processFilter( filter, opt )
 
    filter:processWhen( self, opt )
 end
-function WhenNode:canBeRight(  )
+function WhenNode:canBeRight( processInfo )
 
    return false
 end
@@ -5211,7 +5180,7 @@ function NodeKind.get_ExpCast(  )
 end
 
 
-
+local ExpCastNode = {}
 regKind( "ExpCast" )
 function Filter:processExpCast( node, opt )
 
@@ -5228,14 +5197,13 @@ end
 
 
 
-local ExpCastNode = {}
 setmetatable( ExpCastNode, { __index = Node } )
 _moduleObj.ExpCastNode = ExpCastNode
 function ExpCastNode:processFilter( filter, opt )
 
    filter:processExpCast( self, opt )
 end
-function ExpCastNode:canBeRight(  )
+function ExpCastNode:canBeRight( processInfo )
 
    return true
 end
@@ -5331,7 +5299,7 @@ function NodeKind.get_ExpToDDD(  )
 end
 
 
-
+local ExpToDDDNode = {}
 regKind( "ExpToDDD" )
 function Filter:processExpToDDD( node, opt )
 
@@ -5348,14 +5316,13 @@ end
 
 
 
-local ExpToDDDNode = {}
 setmetatable( ExpToDDDNode, { __index = Node } )
 _moduleObj.ExpToDDDNode = ExpToDDDNode
 function ExpToDDDNode:processFilter( filter, opt )
 
    filter:processExpToDDD( self, opt )
 end
-function ExpToDDDNode:canBeRight(  )
+function ExpToDDDNode:canBeRight( processInfo )
 
    return true
 end
@@ -5427,7 +5394,7 @@ function NodeKind.get_ExpSubDDD(  )
 end
 
 
-
+local ExpSubDDDNode = {}
 regKind( "ExpSubDDD" )
 function Filter:processExpSubDDD( node, opt )
 
@@ -5444,14 +5411,13 @@ end
 
 
 
-local ExpSubDDDNode = {}
 setmetatable( ExpSubDDDNode, { __index = Node } )
 _moduleObj.ExpSubDDDNode = ExpSubDDDNode
 function ExpSubDDDNode:processFilter( filter, opt )
 
    filter:processExpSubDDD( self, opt )
 end
-function ExpSubDDDNode:canBeRight(  )
+function ExpSubDDDNode:canBeRight( processInfo )
 
    return true
 end
@@ -5560,7 +5526,7 @@ function NodeKind.get_ExpOp1(  )
 end
 
 
-
+local ExpOp1Node = {}
 regKind( "ExpOp1" )
 function Filter:processExpOp1( node, opt )
 
@@ -5577,14 +5543,13 @@ end
 
 
 
-local ExpOp1Node = {}
 setmetatable( ExpOp1Node, { __index = Node } )
 _moduleObj.ExpOp1Node = ExpOp1Node
 function ExpOp1Node:processFilter( filter, opt )
 
    filter:processExpOp1( self, opt )
 end
-function ExpOp1Node:canBeRight(  )
+function ExpOp1Node:canBeRight( processInfo )
 
    return true
 end
@@ -5664,7 +5629,7 @@ function NodeKind.get_ExpRefItem(  )
 end
 
 
-
+local ExpRefItemNode = {}
 regKind( "ExpRefItem" )
 function Filter:processExpRefItem( node, opt )
 
@@ -5681,7 +5646,6 @@ end
 
 
 
-local ExpRefItemNode = {}
 setmetatable( ExpRefItemNode, { __index = Node } )
 _moduleObj.ExpRefItemNode = ExpRefItemNode
 function ExpRefItemNode:hasNilAccess(  )
@@ -5692,7 +5656,7 @@ function ExpRefItemNode:processFilter( filter, opt )
 
    filter:processExpRefItem( self, opt )
 end
-function ExpRefItemNode:canBeRight(  )
+function ExpRefItemNode:canBeRight( processInfo )
 
    return true
 end
@@ -5808,7 +5772,7 @@ function NodeKind.get_ExpCall(  )
 end
 
 
-
+local ExpCallNode = {}
 regKind( "ExpCall" )
 function Filter:processExpCall( node, opt )
 
@@ -5825,7 +5789,6 @@ end
 
 
 
-local ExpCallNode = {}
 setmetatable( ExpCallNode, { __index = Node } )
 _moduleObj.ExpCallNode = ExpCallNode
 function ExpCallNode:hasNilAccess(  )
@@ -5936,10 +5899,10 @@ function ExpCallNode:getPrefix(  )
 end
 
 
-function ExpCallNode:canBeRight(  )
+function ExpCallNode:canBeRight( processInfo )
 
    local expType = self:get_expType()
-   if expType:equals( Ast.builtinTypeNone ) or expType:equals( Ast.builtinTypeNeverRet ) then
+   if expType:equals( processInfo, Ast.builtinTypeNone ) or expType:equals( processInfo, Ast.builtinTypeNeverRet ) then
       return false
    end
    
@@ -5964,7 +5927,7 @@ function NodeKind.get_ExpMRet(  )
 end
 
 
-
+local ExpMRetNode = {}
 regKind( "ExpMRet" )
 function Filter:processExpMRet( node, opt )
 
@@ -5981,14 +5944,13 @@ end
 
 
 
-local ExpMRetNode = {}
 setmetatable( ExpMRetNode, { __index = Node } )
 _moduleObj.ExpMRetNode = ExpMRetNode
 function ExpMRetNode:processFilter( filter, opt )
 
    filter:processExpMRet( self, opt )
 end
-function ExpMRetNode:canBeRight(  )
+function ExpMRetNode:canBeRight( processInfo )
 
    return true
 end
@@ -6065,7 +6027,7 @@ function NodeKind.get_ExpAccessMRet(  )
 end
 
 
-
+local ExpAccessMRetNode = {}
 regKind( "ExpAccessMRet" )
 function Filter:processExpAccessMRet( node, opt )
 
@@ -6082,14 +6044,13 @@ end
 
 
 
-local ExpAccessMRetNode = {}
 setmetatable( ExpAccessMRetNode, { __index = Node } )
 _moduleObj.ExpAccessMRetNode = ExpAccessMRetNode
 function ExpAccessMRetNode:processFilter( filter, opt )
 
    filter:processExpAccessMRet( self, opt )
 end
-function ExpAccessMRetNode:canBeRight(  )
+function ExpAccessMRetNode:canBeRight( processInfo )
 
    return true
 end
@@ -6170,7 +6131,7 @@ function NodeKind.get_ExpMultiTo1(  )
 end
 
 
-
+local ExpMultiTo1Node = {}
 regKind( "ExpMultiTo1" )
 function Filter:processExpMultiTo1( node, opt )
 
@@ -6187,14 +6148,13 @@ end
 
 
 
-local ExpMultiTo1Node = {}
 setmetatable( ExpMultiTo1Node, { __index = Node } )
 _moduleObj.ExpMultiTo1Node = ExpMultiTo1Node
 function ExpMultiTo1Node:processFilter( filter, opt )
 
    filter:processExpMultiTo1( self, opt )
 end
-function ExpMultiTo1Node:canBeRight(  )
+function ExpMultiTo1Node:canBeRight( processInfo )
 
    return true
 end
@@ -6271,7 +6231,7 @@ function NodeKind.get_ExpDDD(  )
 end
 
 
-
+local ExpDDDNode = {}
 regKind( "ExpDDD" )
 function Filter:processExpDDD( node, opt )
 
@@ -6288,14 +6248,13 @@ end
 
 
 
-local ExpDDDNode = {}
 setmetatable( ExpDDDNode, { __index = Node } )
 _moduleObj.ExpDDDNode = ExpDDDNode
 function ExpDDDNode:processFilter( filter, opt )
 
    filter:processExpDDD( self, opt )
 end
-function ExpDDDNode:canBeRight(  )
+function ExpDDDNode:canBeRight( processInfo )
 
    return true
 end
@@ -6349,7 +6308,7 @@ function NodeKind.get_ExpParen(  )
 end
 
 
-
+local ExpParenNode = {}
 regKind( "ExpParen" )
 function Filter:processExpParen( node, opt )
 
@@ -6366,14 +6325,13 @@ end
 
 
 
-local ExpParenNode = {}
 setmetatable( ExpParenNode, { __index = Node } )
 _moduleObj.ExpParenNode = ExpParenNode
 function ExpParenNode:processFilter( filter, opt )
 
    filter:processExpParen( self, opt )
 end
-function ExpParenNode:canBeRight(  )
+function ExpParenNode:canBeRight( processInfo )
 
    return true
 end
@@ -6456,7 +6414,7 @@ function NodeKind.get_ExpMacroExp(  )
 end
 
 
-
+local ExpMacroExpNode = {}
 regKind( "ExpMacroExp" )
 function Filter:processExpMacroExp( node, opt )
 
@@ -6473,7 +6431,6 @@ end
 
 
 
-local ExpMacroExpNode = {}
 setmetatable( ExpMacroExpNode, { __index = Node } )
 _moduleObj.ExpMacroExpNode = ExpMacroExpNode
 function ExpMacroExpNode:processFilter( filter, opt )
@@ -6545,7 +6502,7 @@ end
 
 
 
-function ExpMacroExpNode:canBeRight(  )
+function ExpMacroExpNode:canBeRight( processInfo )
 
    return self:get_expType() ~= Ast.builtinTypeNone
 end
@@ -6594,7 +6551,7 @@ function NodeKind.get_ExpMacroStat(  )
 end
 
 
-
+local ExpMacroStatNode = {}
 regKind( "ExpMacroStat" )
 function Filter:processExpMacroStat( node, opt )
 
@@ -6611,14 +6568,13 @@ end
 
 
 
-local ExpMacroStatNode = {}
 setmetatable( ExpMacroStatNode, { __index = Node } )
 _moduleObj.ExpMacroStatNode = ExpMacroStatNode
 function ExpMacroStatNode:processFilter( filter, opt )
 
    filter:processExpMacroStat( self, opt )
 end
-function ExpMacroStatNode:canBeRight(  )
+function ExpMacroStatNode:canBeRight( processInfo )
 
    return true
 end
@@ -6694,7 +6650,7 @@ function NodeKind.get_ExpMacroArgExp(  )
 end
 
 
-
+local ExpMacroArgExpNode = {}
 regKind( "ExpMacroArgExp" )
 function Filter:processExpMacroArgExp( node, opt )
 
@@ -6711,14 +6667,13 @@ end
 
 
 
-local ExpMacroArgExpNode = {}
 setmetatable( ExpMacroArgExpNode, { __index = Node } )
 _moduleObj.ExpMacroArgExpNode = ExpMacroArgExpNode
 function ExpMacroArgExpNode:processFilter( filter, opt )
 
    filter:processExpMacroArgExp( self, opt )
 end
-function ExpMacroArgExpNode:canBeRight(  )
+function ExpMacroArgExpNode:canBeRight( processInfo )
 
    return true
 end
@@ -6772,7 +6727,7 @@ function NodeKind.get_StmtExp(  )
 end
 
 
-
+local StmtExpNode = {}
 regKind( "StmtExp" )
 function Filter:processStmtExp( node, opt )
 
@@ -6789,14 +6744,13 @@ end
 
 
 
-local StmtExpNode = {}
 setmetatable( StmtExpNode, { __index = Node } )
 _moduleObj.StmtExpNode = StmtExpNode
 function StmtExpNode:processFilter( filter, opt )
 
    filter:processStmtExp( self, opt )
 end
-function StmtExpNode:canBeRight(  )
+function StmtExpNode:canBeRight( processInfo )
 
    return true
 end
@@ -6875,7 +6829,7 @@ function NodeKind.get_ExpMacroStatList(  )
 end
 
 
-
+local ExpMacroStatListNode = {}
 regKind( "ExpMacroStatList" )
 function Filter:processExpMacroStatList( node, opt )
 
@@ -6892,14 +6846,13 @@ end
 
 
 
-local ExpMacroStatListNode = {}
 setmetatable( ExpMacroStatListNode, { __index = Node } )
 _moduleObj.ExpMacroStatListNode = ExpMacroStatListNode
 function ExpMacroStatListNode:processFilter( filter, opt )
 
    filter:processExpMacroStatList( self, opt )
 end
-function ExpMacroStatListNode:canBeRight(  )
+function ExpMacroStatListNode:canBeRight( processInfo )
 
    return true
 end
@@ -6971,7 +6924,7 @@ function NodeKind.get_ExpOmitEnum(  )
 end
 
 
-
+local ExpOmitEnumNode = {}
 regKind( "ExpOmitEnum" )
 function Filter:processExpOmitEnum( node, opt )
 
@@ -6988,14 +6941,13 @@ end
 
 
 
-local ExpOmitEnumNode = {}
 setmetatable( ExpOmitEnumNode, { __index = Node } )
 _moduleObj.ExpOmitEnumNode = ExpOmitEnumNode
 function ExpOmitEnumNode:processFilter( filter, opt )
 
    filter:processExpOmitEnum( self, opt )
 end
-function ExpOmitEnumNode:canBeRight(  )
+function ExpOmitEnumNode:canBeRight( processInfo )
 
    return true
 end
@@ -7057,7 +7009,7 @@ function NodeKind.get_RefField(  )
 end
 
 
-
+local RefFieldNode = {}
 regKind( "RefField" )
 function Filter:processRefField( node, opt )
 
@@ -7074,7 +7026,6 @@ end
 
 
 
-local RefFieldNode = {}
 setmetatable( RefFieldNode, { __index = Node } )
 _moduleObj.RefFieldNode = RefFieldNode
 function RefFieldNode:hasNilAccess(  )
@@ -7170,7 +7121,7 @@ function RefFieldNode:canBeLeft(  )
    return false
 end
 
-function RefFieldNode:canBeRight(  )
+function RefFieldNode:canBeRight( processInfo )
 
    do
       local _exp = self:get_symbolInfo()
@@ -7190,7 +7141,7 @@ function NodeKind.get_GetField(  )
 end
 
 
-
+local GetFieldNode = {}
 regKind( "GetField" )
 function Filter:processGetField( node, opt )
 
@@ -7207,7 +7158,6 @@ end
 
 
 
-local GetFieldNode = {}
 setmetatable( GetFieldNode, { __index = Node } )
 _moduleObj.GetFieldNode = GetFieldNode
 function GetFieldNode:hasNilAccess(  )
@@ -7218,7 +7168,7 @@ function GetFieldNode:processFilter( filter, opt )
 
    filter:processGetField( self, opt )
 end
-function GetFieldNode:canBeRight(  )
+function GetFieldNode:canBeRight( processInfo )
 
    return true
 end
@@ -7319,7 +7269,7 @@ function NodeKind.get_Alias(  )
 end
 
 
-
+local AliasNode = {}
 regKind( "Alias" )
 function Filter:processAlias( node, opt )
 
@@ -7336,14 +7286,13 @@ end
 
 
 
-local AliasNode = {}
 setmetatable( AliasNode, { __index = Node } )
 _moduleObj.AliasNode = AliasNode
 function AliasNode:processFilter( filter, opt )
 
    filter:processAlias( self, opt )
 end
-function AliasNode:canBeRight(  )
+function AliasNode:canBeRight( processInfo )
 
    return false
 end
@@ -7486,7 +7435,7 @@ function NodeKind.get_DeclVar(  )
 end
 
 
-
+local DeclVarNode = {}
 regKind( "DeclVar" )
 function Filter:processDeclVar( node, opt )
 
@@ -7503,14 +7452,13 @@ end
 
 
 
-local DeclVarNode = {}
 setmetatable( DeclVarNode, { __index = Node } )
 _moduleObj.DeclVarNode = DeclVarNode
 function DeclVarNode:processFilter( filter, opt )
 
    filter:processDeclVar( self, opt )
 end
-function DeclVarNode:canBeRight(  )
+function DeclVarNode:canBeRight( processInfo )
 
    return false
 end
@@ -7833,7 +7781,7 @@ function NodeKind.get_DeclForm(  )
 end
 
 
-
+local DeclFormNode = {}
 regKind( "DeclForm" )
 function Filter:processDeclForm( node, opt )
 
@@ -7850,14 +7798,13 @@ end
 
 
 
-local DeclFormNode = {}
 setmetatable( DeclFormNode, { __index = Node } )
 _moduleObj.DeclFormNode = DeclFormNode
 function DeclFormNode:processFilter( filter, opt )
 
    filter:processDeclForm( self, opt )
 end
-function DeclFormNode:canBeRight(  )
+function DeclFormNode:canBeRight( processInfo )
 
    return false
 end
@@ -8044,7 +7991,7 @@ function NodeKind.get_DeclFunc(  )
 end
 
 
-
+local DeclFuncNode = {}
 regKind( "DeclFunc" )
 function Filter:processDeclFunc( node, opt )
 
@@ -8061,7 +8008,6 @@ end
 
 
 
-local DeclFuncNode = {}
 setmetatable( DeclFuncNode, { __index = Node } )
 _moduleObj.DeclFuncNode = DeclFuncNode
 function DeclFuncNode:processFilter( filter, opt )
@@ -8106,7 +8052,7 @@ function DeclFuncNode:get_declInfo()
 end
 
 
-function DeclFuncNode:canBeRight(  )
+function DeclFuncNode:canBeRight( processInfo )
 
    return self.declInfo:get_name() == nil
 end
@@ -8124,7 +8070,7 @@ function NodeKind.get_DeclMethod(  )
 end
 
 
-
+local DeclMethodNode = {}
 regKind( "DeclMethod" )
 function Filter:processDeclMethod( node, opt )
 
@@ -8141,14 +8087,13 @@ end
 
 
 
-local DeclMethodNode = {}
 setmetatable( DeclMethodNode, { __index = Node } )
 _moduleObj.DeclMethodNode = DeclMethodNode
 function DeclMethodNode:processFilter( filter, opt )
 
    filter:processDeclMethod( self, opt )
 end
-function DeclMethodNode:canBeRight(  )
+function DeclMethodNode:canBeRight( processInfo )
 
    return false
 end
@@ -8202,7 +8147,7 @@ function NodeKind.get_ProtoMethod(  )
 end
 
 
-
+local ProtoMethodNode = {}
 regKind( "ProtoMethod" )
 function Filter:processProtoMethod( node, opt )
 
@@ -8219,14 +8164,13 @@ end
 
 
 
-local ProtoMethodNode = {}
 setmetatable( ProtoMethodNode, { __index = Node } )
 _moduleObj.ProtoMethodNode = ProtoMethodNode
 function ProtoMethodNode:processFilter( filter, opt )
 
    filter:processProtoMethod( self, opt )
 end
-function ProtoMethodNode:canBeRight(  )
+function ProtoMethodNode:canBeRight( processInfo )
 
    return false
 end
@@ -8280,7 +8224,7 @@ function NodeKind.get_DeclConstr(  )
 end
 
 
-
+local DeclConstrNode = {}
 regKind( "DeclConstr" )
 function Filter:processDeclConstr( node, opt )
 
@@ -8297,14 +8241,13 @@ end
 
 
 
-local DeclConstrNode = {}
 setmetatable( DeclConstrNode, { __index = Node } )
 _moduleObj.DeclConstrNode = DeclConstrNode
 function DeclConstrNode:processFilter( filter, opt )
 
    filter:processDeclConstr( self, opt )
 end
-function DeclConstrNode:canBeRight(  )
+function DeclConstrNode:canBeRight( processInfo )
 
    return false
 end
@@ -8358,7 +8301,7 @@ function NodeKind.get_DeclDestr(  )
 end
 
 
-
+local DeclDestrNode = {}
 regKind( "DeclDestr" )
 function Filter:processDeclDestr( node, opt )
 
@@ -8375,14 +8318,13 @@ end
 
 
 
-local DeclDestrNode = {}
 setmetatable( DeclDestrNode, { __index = Node } )
 _moduleObj.DeclDestrNode = DeclDestrNode
 function DeclDestrNode:processFilter( filter, opt )
 
    filter:processDeclDestr( self, opt )
 end
-function DeclDestrNode:canBeRight(  )
+function DeclDestrNode:canBeRight( processInfo )
 
    return false
 end
@@ -8436,7 +8378,7 @@ function NodeKind.get_ExpCallSuperCtor(  )
 end
 
 
-
+local ExpCallSuperCtorNode = {}
 regKind( "ExpCallSuperCtor" )
 function Filter:processExpCallSuperCtor( node, opt )
 
@@ -8453,14 +8395,13 @@ end
 
 
 
-local ExpCallSuperCtorNode = {}
 setmetatable( ExpCallSuperCtorNode, { __index = Node } )
 _moduleObj.ExpCallSuperCtorNode = ExpCallSuperCtorNode
 function ExpCallSuperCtorNode:processFilter( filter, opt )
 
    filter:processExpCallSuperCtor( self, opt )
 end
-function ExpCallSuperCtorNode:canBeRight(  )
+function ExpCallSuperCtorNode:canBeRight( processInfo )
 
    return false
 end
@@ -8545,7 +8486,7 @@ function NodeKind.get_ExpCallSuper(  )
 end
 
 
-
+local ExpCallSuperNode = {}
 regKind( "ExpCallSuper" )
 function Filter:processExpCallSuper( node, opt )
 
@@ -8562,7 +8503,6 @@ end
 
 
 
-local ExpCallSuperNode = {}
 setmetatable( ExpCallSuperNode, { __index = Node } )
 _moduleObj.ExpCallSuperNode = ExpCallSuperNode
 function ExpCallSuperNode:processFilter( filter, opt )
@@ -8642,7 +8582,7 @@ function ExpCallSuperNode:get_expList()
 end
 
 
-function ExpCallSuperNode:canBeRight(  )
+function ExpCallSuperNode:canBeRight( processInfo )
 
    return self:get_expType() ~= Ast.builtinTypeNone
 end
@@ -8655,7 +8595,7 @@ function NodeKind.get_DeclMember(  )
 end
 
 
-
+local DeclMemberNode = {}
 regKind( "DeclMember" )
 function Filter:processDeclMember( node, opt )
 
@@ -8672,14 +8612,13 @@ end
 
 
 
-local DeclMemberNode = {}
 setmetatable( DeclMemberNode, { __index = Node } )
 _moduleObj.DeclMemberNode = DeclMemberNode
 function DeclMemberNode:processFilter( filter, opt )
 
    filter:processDeclMember( self, opt )
 end
-function DeclMemberNode:canBeRight(  )
+function DeclMemberNode:canBeRight( processInfo )
 
    return false
 end
@@ -8787,7 +8726,7 @@ function NodeKind.get_DeclArg(  )
 end
 
 
-
+local DeclArgNode = {}
 regKind( "DeclArg" )
 function Filter:processDeclArg( node, opt )
 
@@ -8804,14 +8743,13 @@ end
 
 
 
-local DeclArgNode = {}
 setmetatable( DeclArgNode, { __index = Node } )
 _moduleObj.DeclArgNode = DeclArgNode
 function DeclArgNode:processFilter( filter, opt )
 
    filter:processDeclArg( self, opt )
 end
-function DeclArgNode:canBeRight(  )
+function DeclArgNode:canBeRight( processInfo )
 
    return false
 end
@@ -8896,7 +8834,7 @@ function NodeKind.get_DeclArgDDD(  )
 end
 
 
-
+local DeclArgDDDNode = {}
 regKind( "DeclArgDDD" )
 function Filter:processDeclArgDDD( node, opt )
 
@@ -8913,14 +8851,13 @@ end
 
 
 
-local DeclArgDDDNode = {}
 setmetatable( DeclArgDDDNode, { __index = Node } )
 _moduleObj.DeclArgDDDNode = DeclArgDDDNode
 function DeclArgDDDNode:processFilter( filter, opt )
 
    filter:processDeclArgDDD( self, opt )
 end
-function DeclArgDDDNode:canBeRight(  )
+function DeclArgDDDNode:canBeRight( processInfo )
 
    return false
 end
@@ -8999,7 +8936,7 @@ function NodeKind.get_DeclAdvertise(  )
 end
 
 
-
+local DeclAdvertiseNode = {}
 regKind( "DeclAdvertise" )
 function Filter:processDeclAdvertise( node, opt )
 
@@ -9016,14 +8953,13 @@ end
 
 
 
-local DeclAdvertiseNode = {}
 setmetatable( DeclAdvertiseNode, { __index = Node } )
 _moduleObj.DeclAdvertiseNode = DeclAdvertiseNode
 function DeclAdvertiseNode:processFilter( filter, opt )
 
    filter:processDeclAdvertise( self, opt )
 end
-function DeclAdvertiseNode:canBeRight(  )
+function DeclAdvertiseNode:canBeRight( processInfo )
 
    return false
 end
@@ -9070,6 +9006,83 @@ end
 
 
 
+
+function NodeKind.get_ProtoClass(  )
+
+   return 63
+end
+
+
+local ProtoClassNode = {}
+regKind( "ProtoClass" )
+function Filter:processProtoClass( node, opt )
+
+   self:pushOpt( opt )
+   self:defaultProcess( node, opt )
+   self:popOpt( opt )
+end
+
+
+function NodeManager:getProtoClassNodeList(  )
+
+   return self:getList( 63 )
+end
+
+
+
+setmetatable( ProtoClassNode, { __index = Node } )
+_moduleObj.ProtoClassNode = ProtoClassNode
+function ProtoClassNode:processFilter( filter, opt )
+
+   filter:processProtoClass( self, opt )
+end
+function ProtoClassNode:canBeRight( processInfo )
+
+   return false
+end
+function ProtoClassNode:canBeLeft(  )
+
+   return false
+end
+function ProtoClassNode:canBeStatement(  )
+
+   return true
+end
+function ProtoClassNode.new( id, pos, macroArgFlag, typeList, name )
+   local obj = {}
+   ProtoClassNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, name ); end
+   return obj
+end
+function ProtoClassNode:__init(id, pos, macroArgFlag, typeList, name) 
+   Node.__init( self,id, 63, pos, macroArgFlag, typeList)
+   
+   
+   
+   self.name = name
+   
+   
+end
+function ProtoClassNode.create( nodeMan, pos, macroArgFlag, typeList, name )
+
+   local node = ProtoClassNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, name)
+   nodeMan:addNode( node )
+   return node
+end
+function ProtoClassNode:visit( visitor, depth )
+
+   
+   return true
+end
+function ProtoClassNode.setmeta( obj )
+  setmetatable( obj, { __index = ProtoClassNode  } )
+end
+function ProtoClassNode:get_name()
+   return self.name
+end
+
+
+
 local ClassInitBlockInfo = {}
 _moduleObj.ClassInitBlockInfo = ClassInitBlockInfo
 function ClassInitBlockInfo.setmeta( obj )
@@ -9097,11 +9110,11 @@ end
 
 function NodeKind.get_DeclClass(  )
 
-   return 63
+   return 64
 end
 
 
-
+local DeclClassNode = {}
 regKind( "DeclClass" )
 function Filter:processDeclClass( node, opt )
 
@@ -9113,19 +9126,18 @@ end
 
 function NodeManager:getDeclClassNodeList(  )
 
-   return self:getList( 63 )
+   return self:getList( 64 )
 end
 
 
 
-local DeclClassNode = {}
 setmetatable( DeclClassNode, { __index = Node } )
 _moduleObj.DeclClassNode = DeclClassNode
 function DeclClassNode:processFilter( filter, opt )
 
    filter:processDeclClass( self, opt )
 end
-function DeclClassNode:canBeRight(  )
+function DeclClassNode:canBeRight( processInfo )
 
    return false
 end
@@ -9137,19 +9149,20 @@ function DeclClassNode:canBeStatement(  )
 
    return true
 end
-function DeclClassNode.new( id, pos, macroArgFlag, typeList, accessMode, name, gluePrefix, moduleName, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet )
+function DeclClassNode.new( id, pos, macroArgFlag, typeList, accessMode, name, hasPrototype, gluePrefix, moduleName, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet )
    local obj = {}
    DeclClassNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, accessMode, name, gluePrefix, moduleName, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, accessMode, name, hasPrototype, gluePrefix, moduleName, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet ); end
    return obj
 end
-function DeclClassNode:__init(id, pos, macroArgFlag, typeList, accessMode, name, gluePrefix, moduleName, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet) 
-   Node.__init( self,id, 63, pos, macroArgFlag, typeList)
+function DeclClassNode:__init(id, pos, macroArgFlag, typeList, accessMode, name, hasPrototype, gluePrefix, moduleName, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet) 
+   Node.__init( self,id, 64, pos, macroArgFlag, typeList)
    
    
    
    self.accessMode = accessMode
    self.name = name
+   self.hasPrototype = hasPrototype
    self.gluePrefix = gluePrefix
    self.moduleName = moduleName
    self.hasOldCtor = hasOldCtor
@@ -9166,9 +9179,9 @@ function DeclClassNode:__init(id, pos, macroArgFlag, typeList, accessMode, name,
    
    
 end
-function DeclClassNode.create( nodeMan, pos, macroArgFlag, typeList, accessMode, name, gluePrefix, moduleName, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet )
+function DeclClassNode.create( nodeMan, pos, macroArgFlag, typeList, accessMode, name, hasPrototype, gluePrefix, moduleName, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet )
 
-   local node = DeclClassNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, accessMode, name, gluePrefix, moduleName, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet)
+   local node = DeclClassNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, accessMode, name, hasPrototype, gluePrefix, moduleName, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet)
    nodeMan:addNode( node )
    return node
 end
@@ -9271,6 +9284,9 @@ end
 function DeclClassNode:get_name()
    return self.name
 end
+function DeclClassNode:get_hasPrototype()
+   return self.hasPrototype
+end
 function DeclClassNode:get_gluePrefix()
    return self.gluePrefix
 end
@@ -9370,11 +9386,11 @@ end
 
 function NodeKind.get_DeclEnum(  )
 
-   return 64
+   return 65
 end
 
 
-
+local DeclEnumNode = {}
 regKind( "DeclEnum" )
 function Filter:processDeclEnum( node, opt )
 
@@ -9386,19 +9402,18 @@ end
 
 function NodeManager:getDeclEnumNodeList(  )
 
-   return self:getList( 64 )
+   return self:getList( 65 )
 end
 
 
 
-local DeclEnumNode = {}
 setmetatable( DeclEnumNode, { __index = Node } )
 _moduleObj.DeclEnumNode = DeclEnumNode
 function DeclEnumNode:processFilter( filter, opt )
 
    filter:processDeclEnum( self, opt )
 end
-function DeclEnumNode:canBeRight(  )
+function DeclEnumNode:canBeRight( processInfo )
 
    return false
 end
@@ -9417,7 +9432,7 @@ function DeclEnumNode.new( id, pos, macroArgFlag, typeList, enumType, accessMode
    return obj
 end
 function DeclEnumNode:__init(id, pos, macroArgFlag, typeList, enumType, accessMode, name, valueNameList, scope) 
-   Node.__init( self,id, 64, pos, macroArgFlag, typeList)
+   Node.__init( self,id, 65, pos, macroArgFlag, typeList)
    
    
    
@@ -9464,11 +9479,11 @@ end
 
 function NodeKind.get_DeclAlge(  )
 
-   return 65
+   return 66
 end
 
 
-
+local DeclAlgeNode = {}
 regKind( "DeclAlge" )
 function Filter:processDeclAlge( node, opt )
 
@@ -9480,19 +9495,18 @@ end
 
 function NodeManager:getDeclAlgeNodeList(  )
 
-   return self:getList( 65 )
+   return self:getList( 66 )
 end
 
 
 
-local DeclAlgeNode = {}
 setmetatable( DeclAlgeNode, { __index = Node } )
 _moduleObj.DeclAlgeNode = DeclAlgeNode
 function DeclAlgeNode:processFilter( filter, opt )
 
    filter:processDeclAlge( self, opt )
 end
-function DeclAlgeNode:canBeRight(  )
+function DeclAlgeNode:canBeRight( processInfo )
 
    return false
 end
@@ -9511,7 +9525,7 @@ function DeclAlgeNode.new( id, pos, macroArgFlag, typeList, accessMode, algeType
    return obj
 end
 function DeclAlgeNode:__init(id, pos, macroArgFlag, typeList, accessMode, algeType, scope) 
-   Node.__init( self,id, 65, pos, macroArgFlag, typeList)
+   Node.__init( self,id, 66, pos, macroArgFlag, typeList)
    
    
    
@@ -9550,11 +9564,11 @@ end
 
 function NodeKind.get_NewAlgeVal(  )
 
-   return 66
+   return 67
 end
 
 
-
+local NewAlgeValNode = {}
 regKind( "NewAlgeVal" )
 function Filter:processNewAlgeVal( node, opt )
 
@@ -9566,19 +9580,18 @@ end
 
 function NodeManager:getNewAlgeValNodeList(  )
 
-   return self:getList( 66 )
+   return self:getList( 67 )
 end
 
 
 
-local NewAlgeValNode = {}
 setmetatable( NewAlgeValNode, { __index = Node } )
 _moduleObj.NewAlgeValNode = NewAlgeValNode
 function NewAlgeValNode:processFilter( filter, opt )
 
    filter:processNewAlgeVal( self, opt )
 end
-function NewAlgeValNode:canBeRight(  )
+function NewAlgeValNode:canBeRight( processInfo )
 
    return true
 end
@@ -9597,7 +9610,7 @@ function NewAlgeValNode.new( id, pos, macroArgFlag, typeList, name, prefix, alge
    return obj
 end
 function NewAlgeValNode:__init(id, pos, macroArgFlag, typeList, name, prefix, algeTypeInfo, valInfo, paramList) 
-   Node.__init( self,id, 66, pos, macroArgFlag, typeList)
+   Node.__init( self,id, 67, pos, macroArgFlag, typeList)
    
    
    
@@ -9688,11 +9701,11 @@ end
 
 function NodeKind.get_LuneControl(  )
 
-   return 67
+   return 68
 end
 
 
-
+local LuneControlNode = {}
 regKind( "LuneControl" )
 function Filter:processLuneControl( node, opt )
 
@@ -9704,19 +9717,18 @@ end
 
 function NodeManager:getLuneControlNodeList(  )
 
-   return self:getList( 67 )
+   return self:getList( 68 )
 end
 
 
 
-local LuneControlNode = {}
 setmetatable( LuneControlNode, { __index = Node } )
 _moduleObj.LuneControlNode = LuneControlNode
 function LuneControlNode:processFilter( filter, opt )
 
    filter:processLuneControl( self, opt )
 end
-function LuneControlNode:canBeRight(  )
+function LuneControlNode:canBeRight( processInfo )
 
    return false
 end
@@ -9735,7 +9747,7 @@ function LuneControlNode.new( id, pos, macroArgFlag, typeList, pragma )
    return obj
 end
 function LuneControlNode:__init(id, pos, macroArgFlag, typeList, pragma) 
-   Node.__init( self,id, 67, pos, macroArgFlag, typeList)
+   Node.__init( self,id, 68, pos, macroArgFlag, typeList)
    
    
    
@@ -9796,11 +9808,11 @@ end
 
 function NodeKind.get_Match(  )
 
-   return 68
+   return 69
 end
 
 
-
+local MatchNode = {}
 regKind( "Match" )
 function Filter:processMatch( node, opt )
 
@@ -9812,19 +9824,18 @@ end
 
 function NodeManager:getMatchNodeList(  )
 
-   return self:getList( 68 )
+   return self:getList( 69 )
 end
 
 
 
-local MatchNode = {}
 setmetatable( MatchNode, { __index = Node } )
 _moduleObj.MatchNode = MatchNode
 function MatchNode:processFilter( filter, opt )
 
    filter:processMatch( self, opt )
 end
-function MatchNode:canBeRight(  )
+function MatchNode:canBeRight( processInfo )
 
    return false
 end
@@ -9843,7 +9854,7 @@ function MatchNode.new( id, pos, macroArgFlag, typeList, val, algeTypeInfo, case
    return obj
 end
 function MatchNode:__init(id, pos, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault) 
-   Node.__init( self,id, 68, pos, macroArgFlag, typeList)
+   Node.__init( self,id, 69, pos, macroArgFlag, typeList)
    
    
    
@@ -10027,11 +10038,11 @@ end
 
 function NodeKind.get_LuneKind(  )
 
-   return 69
+   return 70
 end
 
 
-
+local LuneKindNode = {}
 regKind( "LuneKind" )
 function Filter:processLuneKind( node, opt )
 
@@ -10043,19 +10054,18 @@ end
 
 function NodeManager:getLuneKindNodeList(  )
 
-   return self:getList( 69 )
+   return self:getList( 70 )
 end
 
 
 
-local LuneKindNode = {}
 setmetatable( LuneKindNode, { __index = Node } )
 _moduleObj.LuneKindNode = LuneKindNode
 function LuneKindNode:processFilter( filter, opt )
 
    filter:processLuneKind( self, opt )
 end
-function LuneKindNode:canBeRight(  )
+function LuneKindNode:canBeRight( processInfo )
 
    return true
 end
@@ -10074,7 +10084,7 @@ function LuneKindNode.new( id, pos, macroArgFlag, typeList, exp )
    return obj
 end
 function LuneKindNode:__init(id, pos, macroArgFlag, typeList, exp) 
-   Node.__init( self,id, 69, pos, macroArgFlag, typeList)
+   Node.__init( self,id, 70, pos, macroArgFlag, typeList)
    
    
    
@@ -10123,11 +10133,11 @@ end
 
 function NodeKind.get_DeclMacro(  )
 
-   return 70
+   return 71
 end
 
 
-
+local DeclMacroNode = {}
 regKind( "DeclMacro" )
 function Filter:processDeclMacro( node, opt )
 
@@ -10139,19 +10149,18 @@ end
 
 function NodeManager:getDeclMacroNodeList(  )
 
-   return self:getList( 70 )
+   return self:getList( 71 )
 end
 
 
 
-local DeclMacroNode = {}
 setmetatable( DeclMacroNode, { __index = Node } )
 _moduleObj.DeclMacroNode = DeclMacroNode
 function DeclMacroNode:processFilter( filter, opt )
 
    filter:processDeclMacro( self, opt )
 end
-function DeclMacroNode:canBeRight(  )
+function DeclMacroNode:canBeRight( processInfo )
 
    return false
 end
@@ -10170,7 +10179,7 @@ function DeclMacroNode.new( id, pos, macroArgFlag, typeList, declInfo )
    return obj
 end
 function DeclMacroNode:__init(id, pos, macroArgFlag, typeList, declInfo) 
-   Node.__init( self,id, 70, pos, macroArgFlag, typeList)
+   Node.__init( self,id, 71, pos, macroArgFlag, typeList)
    
    
    
@@ -10198,7 +10207,6 @@ end
 
 
 
-local MacroEval = {}
 _moduleObj.MacroEval = MacroEval
 function MacroEval.setmeta( obj )
   setmetatable( obj, { __index = MacroEval  } )
@@ -10219,11 +10227,11 @@ end
 
 function NodeKind.get_TestCase(  )
 
-   return 71
+   return 72
 end
 
 
-
+local TestCaseNode = {}
 regKind( "TestCase" )
 function Filter:processTestCase( node, opt )
 
@@ -10235,19 +10243,18 @@ end
 
 function NodeManager:getTestCaseNodeList(  )
 
-   return self:getList( 71 )
+   return self:getList( 72 )
 end
 
 
 
-local TestCaseNode = {}
 setmetatable( TestCaseNode, { __index = Node } )
 _moduleObj.TestCaseNode = TestCaseNode
 function TestCaseNode:processFilter( filter, opt )
 
    filter:processTestCase( self, opt )
 end
-function TestCaseNode:canBeRight(  )
+function TestCaseNode:canBeRight( processInfo )
 
    return false
 end
@@ -10266,7 +10273,7 @@ function TestCaseNode.new( id, pos, macroArgFlag, typeList, name, impNode, ctrlN
    return obj
 end
 function TestCaseNode:__init(id, pos, macroArgFlag, typeList, name, impNode, ctrlName, block) 
-   Node.__init( self,id, 71, pos, macroArgFlag, typeList)
+   Node.__init( self,id, 72, pos, macroArgFlag, typeList)
    
    
    
@@ -10344,11 +10351,11 @@ end
 
 function NodeKind.get_TestBlock(  )
 
-   return 72
+   return 73
 end
 
 
-
+local TestBlockNode = {}
 regKind( "TestBlock" )
 function Filter:processTestBlock( node, opt )
 
@@ -10360,19 +10367,18 @@ end
 
 function NodeManager:getTestBlockNodeList(  )
 
-   return self:getList( 72 )
+   return self:getList( 73 )
 end
 
 
 
-local TestBlockNode = {}
 setmetatable( TestBlockNode, { __index = Node } )
 _moduleObj.TestBlockNode = TestBlockNode
 function TestBlockNode:processFilter( filter, opt )
 
    filter:processTestBlock( self, opt )
 end
-function TestBlockNode:canBeRight(  )
+function TestBlockNode:canBeRight( processInfo )
 
    return false
 end
@@ -10391,7 +10397,7 @@ function TestBlockNode.new( id, pos, macroArgFlag, typeList, stmtList )
    return obj
 end
 function TestBlockNode:__init(id, pos, macroArgFlag, typeList, stmtList) 
-   Node.__init( self,id, 72, pos, macroArgFlag, typeList)
+   Node.__init( self,id, 73, pos, macroArgFlag, typeList)
    
    
    
@@ -10454,11 +10460,11 @@ end
 
 function NodeKind.get_Abbr(  )
 
-   return 73
+   return 74
 end
 
 
-
+local AbbrNode = {}
 regKind( "Abbr" )
 function Filter:processAbbr( node, opt )
 
@@ -10470,19 +10476,18 @@ end
 
 function NodeManager:getAbbrNodeList(  )
 
-   return self:getList( 73 )
+   return self:getList( 74 )
 end
 
 
 
-local AbbrNode = {}
 setmetatable( AbbrNode, { __index = Node } )
 _moduleObj.AbbrNode = AbbrNode
 function AbbrNode:processFilter( filter, opt )
 
    filter:processAbbr( self, opt )
 end
-function AbbrNode:canBeRight(  )
+function AbbrNode:canBeRight( processInfo )
 
    return true
 end
@@ -10501,7 +10506,7 @@ function AbbrNode.new( id, pos, macroArgFlag, typeList )
    return obj
 end
 function AbbrNode:__init(id, pos, macroArgFlag, typeList) 
-   Node.__init( self,id, 73, pos, macroArgFlag, typeList)
+   Node.__init( self,id, 74, pos, macroArgFlag, typeList)
    
    
    
@@ -10527,11 +10532,11 @@ end
 
 function NodeKind.get_Boxing(  )
 
-   return 74
+   return 75
 end
 
 
-
+local BoxingNode = {}
 regKind( "Boxing" )
 function Filter:processBoxing( node, opt )
 
@@ -10543,19 +10548,18 @@ end
 
 function NodeManager:getBoxingNodeList(  )
 
-   return self:getList( 74 )
+   return self:getList( 75 )
 end
 
 
 
-local BoxingNode = {}
 setmetatable( BoxingNode, { __index = Node } )
 _moduleObj.BoxingNode = BoxingNode
 function BoxingNode:processFilter( filter, opt )
 
    filter:processBoxing( self, opt )
 end
-function BoxingNode:canBeRight(  )
+function BoxingNode:canBeRight( processInfo )
 
    return true
 end
@@ -10574,7 +10578,7 @@ function BoxingNode.new( id, pos, macroArgFlag, typeList, src )
    return obj
 end
 function BoxingNode:__init(id, pos, macroArgFlag, typeList, src) 
-   Node.__init( self,id, 74, pos, macroArgFlag, typeList)
+   Node.__init( self,id, 75, pos, macroArgFlag, typeList)
    
    
    
@@ -10623,11 +10627,11 @@ end
 
 function NodeKind.get_Unboxing(  )
 
-   return 75
+   return 76
 end
 
 
-
+local UnboxingNode = {}
 regKind( "Unboxing" )
 function Filter:processUnboxing( node, opt )
 
@@ -10639,19 +10643,18 @@ end
 
 function NodeManager:getUnboxingNodeList(  )
 
-   return self:getList( 75 )
+   return self:getList( 76 )
 end
 
 
 
-local UnboxingNode = {}
 setmetatable( UnboxingNode, { __index = Node } )
 _moduleObj.UnboxingNode = UnboxingNode
 function UnboxingNode:processFilter( filter, opt )
 
    filter:processUnboxing( self, opt )
 end
-function UnboxingNode:canBeRight(  )
+function UnboxingNode:canBeRight( processInfo )
 
    return true
 end
@@ -10670,7 +10673,7 @@ function UnboxingNode.new( id, pos, macroArgFlag, typeList, src )
    return obj
 end
 function UnboxingNode:__init(id, pos, macroArgFlag, typeList, src) 
-   Node.__init( self,id, 75, pos, macroArgFlag, typeList)
+   Node.__init( self,id, 76, pos, macroArgFlag, typeList)
    
    
    
@@ -10719,11 +10722,11 @@ end
 
 function NodeKind.get_LiteralNil(  )
 
-   return 76
+   return 77
 end
 
 
-
+local LiteralNilNode = {}
 regKind( "LiteralNil" )
 function Filter:processLiteralNil( node, opt )
 
@@ -10735,19 +10738,18 @@ end
 
 function NodeManager:getLiteralNilNodeList(  )
 
-   return self:getList( 76 )
+   return self:getList( 77 )
 end
 
 
 
-local LiteralNilNode = {}
 setmetatable( LiteralNilNode, { __index = Node } )
 _moduleObj.LiteralNilNode = LiteralNilNode
 function LiteralNilNode:processFilter( filter, opt )
 
    filter:processLiteralNil( self, opt )
 end
-function LiteralNilNode:canBeRight(  )
+function LiteralNilNode:canBeRight( processInfo )
 
    return true
 end
@@ -10766,7 +10768,7 @@ function LiteralNilNode.new( id, pos, macroArgFlag, typeList )
    return obj
 end
 function LiteralNilNode:__init(id, pos, macroArgFlag, typeList) 
-   Node.__init( self,id, 76, pos, macroArgFlag, typeList)
+   Node.__init( self,id, 77, pos, macroArgFlag, typeList)
    
    
    
@@ -10792,11 +10794,11 @@ end
 
 function NodeKind.get_LiteralChar(  )
 
-   return 77
+   return 78
 end
 
 
-
+local LiteralCharNode = {}
 regKind( "LiteralChar" )
 function Filter:processLiteralChar( node, opt )
 
@@ -10808,19 +10810,18 @@ end
 
 function NodeManager:getLiteralCharNodeList(  )
 
-   return self:getList( 77 )
+   return self:getList( 78 )
 end
 
 
 
-local LiteralCharNode = {}
 setmetatable( LiteralCharNode, { __index = Node } )
 _moduleObj.LiteralCharNode = LiteralCharNode
 function LiteralCharNode:processFilter( filter, opt )
 
    filter:processLiteralChar( self, opt )
 end
-function LiteralCharNode:canBeRight(  )
+function LiteralCharNode:canBeRight( processInfo )
 
    return true
 end
@@ -10839,7 +10840,7 @@ function LiteralCharNode.new( id, pos, macroArgFlag, typeList, token, num )
    return obj
 end
 function LiteralCharNode:__init(id, pos, macroArgFlag, typeList, token, num) 
-   Node.__init( self,id, 77, pos, macroArgFlag, typeList)
+   Node.__init( self,id, 78, pos, macroArgFlag, typeList)
    
    
    
@@ -10874,11 +10875,11 @@ end
 
 function NodeKind.get_LiteralInt(  )
 
-   return 78
+   return 79
 end
 
 
-
+local LiteralIntNode = {}
 regKind( "LiteralInt" )
 function Filter:processLiteralInt( node, opt )
 
@@ -10890,19 +10891,18 @@ end
 
 function NodeManager:getLiteralIntNodeList(  )
 
-   return self:getList( 78 )
+   return self:getList( 79 )
 end
 
 
 
-local LiteralIntNode = {}
 setmetatable( LiteralIntNode, { __index = Node } )
 _moduleObj.LiteralIntNode = LiteralIntNode
 function LiteralIntNode:processFilter( filter, opt )
 
    filter:processLiteralInt( self, opt )
 end
-function LiteralIntNode:canBeRight(  )
+function LiteralIntNode:canBeRight( processInfo )
 
    return true
 end
@@ -10921,7 +10921,7 @@ function LiteralIntNode.new( id, pos, macroArgFlag, typeList, token, num )
    return obj
 end
 function LiteralIntNode:__init(id, pos, macroArgFlag, typeList, token, num) 
-   Node.__init( self,id, 78, pos, macroArgFlag, typeList)
+   Node.__init( self,id, 79, pos, macroArgFlag, typeList)
    
    
    
@@ -10956,11 +10956,11 @@ end
 
 function NodeKind.get_LiteralReal(  )
 
-   return 79
+   return 80
 end
 
 
-
+local LiteralRealNode = {}
 regKind( "LiteralReal" )
 function Filter:processLiteralReal( node, opt )
 
@@ -10972,19 +10972,18 @@ end
 
 function NodeManager:getLiteralRealNodeList(  )
 
-   return self:getList( 79 )
+   return self:getList( 80 )
 end
 
 
 
-local LiteralRealNode = {}
 setmetatable( LiteralRealNode, { __index = Node } )
 _moduleObj.LiteralRealNode = LiteralRealNode
 function LiteralRealNode:processFilter( filter, opt )
 
    filter:processLiteralReal( self, opt )
 end
-function LiteralRealNode:canBeRight(  )
+function LiteralRealNode:canBeRight( processInfo )
 
    return true
 end
@@ -11003,7 +11002,7 @@ function LiteralRealNode.new( id, pos, macroArgFlag, typeList, token, num )
    return obj
 end
 function LiteralRealNode:__init(id, pos, macroArgFlag, typeList, token, num) 
-   Node.__init( self,id, 79, pos, macroArgFlag, typeList)
+   Node.__init( self,id, 80, pos, macroArgFlag, typeList)
    
    
    
@@ -11038,11 +11037,11 @@ end
 
 function NodeKind.get_LiteralArray(  )
 
-   return 80
+   return 81
 end
 
 
-
+local LiteralArrayNode = {}
 regKind( "LiteralArray" )
 function Filter:processLiteralArray( node, opt )
 
@@ -11054,19 +11053,18 @@ end
 
 function NodeManager:getLiteralArrayNodeList(  )
 
-   return self:getList( 80 )
+   return self:getList( 81 )
 end
 
 
 
-local LiteralArrayNode = {}
 setmetatable( LiteralArrayNode, { __index = Node } )
 _moduleObj.LiteralArrayNode = LiteralArrayNode
 function LiteralArrayNode:processFilter( filter, opt )
 
    filter:processLiteralArray( self, opt )
 end
-function LiteralArrayNode:canBeRight(  )
+function LiteralArrayNode:canBeRight( processInfo )
 
    return true
 end
@@ -11085,7 +11083,7 @@ function LiteralArrayNode.new( id, pos, macroArgFlag, typeList, expList )
    return obj
 end
 function LiteralArrayNode:__init(id, pos, macroArgFlag, typeList, expList) 
-   Node.__init( self,id, 80, pos, macroArgFlag, typeList)
+   Node.__init( self,id, 81, pos, macroArgFlag, typeList)
    
    
    
@@ -11139,11 +11137,11 @@ end
 
 function NodeKind.get_LiteralList(  )
 
-   return 81
+   return 82
 end
 
 
-
+local LiteralListNode = {}
 regKind( "LiteralList" )
 function Filter:processLiteralList( node, opt )
 
@@ -11155,19 +11153,18 @@ end
 
 function NodeManager:getLiteralListNodeList(  )
 
-   return self:getList( 81 )
+   return self:getList( 82 )
 end
 
 
 
-local LiteralListNode = {}
 setmetatable( LiteralListNode, { __index = Node } )
 _moduleObj.LiteralListNode = LiteralListNode
 function LiteralListNode:processFilter( filter, opt )
 
    filter:processLiteralList( self, opt )
 end
-function LiteralListNode:canBeRight(  )
+function LiteralListNode:canBeRight( processInfo )
 
    return true
 end
@@ -11186,7 +11183,7 @@ function LiteralListNode.new( id, pos, macroArgFlag, typeList, expList )
    return obj
 end
 function LiteralListNode:__init(id, pos, macroArgFlag, typeList, expList) 
-   Node.__init( self,id, 81, pos, macroArgFlag, typeList)
+   Node.__init( self,id, 82, pos, macroArgFlag, typeList)
    
    
    
@@ -11240,11 +11237,11 @@ end
 
 function NodeKind.get_LiteralSet(  )
 
-   return 82
+   return 83
 end
 
 
-
+local LiteralSetNode = {}
 regKind( "LiteralSet" )
 function Filter:processLiteralSet( node, opt )
 
@@ -11256,19 +11253,18 @@ end
 
 function NodeManager:getLiteralSetNodeList(  )
 
-   return self:getList( 82 )
+   return self:getList( 83 )
 end
 
 
 
-local LiteralSetNode = {}
 setmetatable( LiteralSetNode, { __index = Node } )
 _moduleObj.LiteralSetNode = LiteralSetNode
 function LiteralSetNode:processFilter( filter, opt )
 
    filter:processLiteralSet( self, opt )
 end
-function LiteralSetNode:canBeRight(  )
+function LiteralSetNode:canBeRight( processInfo )
 
    return true
 end
@@ -11287,7 +11283,7 @@ function LiteralSetNode.new( id, pos, macroArgFlag, typeList, expList )
    return obj
 end
 function LiteralSetNode:__init(id, pos, macroArgFlag, typeList, expList) 
-   Node.__init( self,id, 82, pos, macroArgFlag, typeList)
+   Node.__init( self,id, 83, pos, macroArgFlag, typeList)
    
    
    
@@ -11366,11 +11362,11 @@ end
 
 function NodeKind.get_LiteralMap(  )
 
-   return 83
+   return 84
 end
 
 
-
+local LiteralMapNode = {}
 regKind( "LiteralMap" )
 function Filter:processLiteralMap( node, opt )
 
@@ -11382,19 +11378,18 @@ end
 
 function NodeManager:getLiteralMapNodeList(  )
 
-   return self:getList( 83 )
+   return self:getList( 84 )
 end
 
 
 
-local LiteralMapNode = {}
 setmetatable( LiteralMapNode, { __index = Node } )
 _moduleObj.LiteralMapNode = LiteralMapNode
 function LiteralMapNode:processFilter( filter, opt )
 
    filter:processLiteralMap( self, opt )
 end
-function LiteralMapNode:canBeRight(  )
+function LiteralMapNode:canBeRight( processInfo )
 
    return true
 end
@@ -11413,7 +11408,7 @@ function LiteralMapNode.new( id, pos, macroArgFlag, typeList, map, pairList )
    return obj
 end
 function LiteralMapNode:__init(id, pos, macroArgFlag, typeList, map, pairList) 
-   Node.__init( self,id, 83, pos, macroArgFlag, typeList)
+   Node.__init( self,id, 84, pos, macroArgFlag, typeList)
    
    
    
@@ -11491,11 +11486,11 @@ end
 
 function NodeKind.get_LiteralString(  )
 
-   return 84
+   return 85
 end
 
 
-
+local LiteralStringNode = {}
 regKind( "LiteralString" )
 function Filter:processLiteralString( node, opt )
 
@@ -11507,19 +11502,18 @@ end
 
 function NodeManager:getLiteralStringNodeList(  )
 
-   return self:getList( 84 )
+   return self:getList( 85 )
 end
 
 
 
-local LiteralStringNode = {}
 setmetatable( LiteralStringNode, { __index = Node } )
 _moduleObj.LiteralStringNode = LiteralStringNode
 function LiteralStringNode:processFilter( filter, opt )
 
    filter:processLiteralString( self, opt )
 end
-function LiteralStringNode:canBeRight(  )
+function LiteralStringNode:canBeRight( processInfo )
 
    return true
 end
@@ -11538,7 +11532,7 @@ function LiteralStringNode.new( id, pos, macroArgFlag, typeList, token, orgParam
    return obj
 end
 function LiteralStringNode:__init(id, pos, macroArgFlag, typeList, token, orgParam, dddParam) 
-   Node.__init( self,id, 84, pos, macroArgFlag, typeList)
+   Node.__init( self,id, 85, pos, macroArgFlag, typeList)
    
    
    
@@ -11622,11 +11616,11 @@ end
 
 function NodeKind.get_LiteralBool(  )
 
-   return 85
+   return 86
 end
 
 
-
+local LiteralBoolNode = {}
 regKind( "LiteralBool" )
 function Filter:processLiteralBool( node, opt )
 
@@ -11638,19 +11632,18 @@ end
 
 function NodeManager:getLiteralBoolNodeList(  )
 
-   return self:getList( 85 )
+   return self:getList( 86 )
 end
 
 
 
-local LiteralBoolNode = {}
 setmetatable( LiteralBoolNode, { __index = Node } )
 _moduleObj.LiteralBoolNode = LiteralBoolNode
 function LiteralBoolNode:processFilter( filter, opt )
 
    filter:processLiteralBool( self, opt )
 end
-function LiteralBoolNode:canBeRight(  )
+function LiteralBoolNode:canBeRight( processInfo )
 
    return true
 end
@@ -11669,7 +11662,7 @@ function LiteralBoolNode.new( id, pos, macroArgFlag, typeList, token )
    return obj
 end
 function LiteralBoolNode:__init(id, pos, macroArgFlag, typeList, token) 
-   Node.__init( self,id, 85, pos, macroArgFlag, typeList)
+   Node.__init( self,id, 86, pos, macroArgFlag, typeList)
    
    
    
@@ -11700,11 +11693,11 @@ end
 
 function NodeKind.get_LiteralSymbol(  )
 
-   return 86
+   return 87
 end
 
 
-
+local LiteralSymbolNode = {}
 regKind( "LiteralSymbol" )
 function Filter:processLiteralSymbol( node, opt )
 
@@ -11716,19 +11709,18 @@ end
 
 function NodeManager:getLiteralSymbolNodeList(  )
 
-   return self:getList( 86 )
+   return self:getList( 87 )
 end
 
 
 
-local LiteralSymbolNode = {}
 setmetatable( LiteralSymbolNode, { __index = Node } )
 _moduleObj.LiteralSymbolNode = LiteralSymbolNode
 function LiteralSymbolNode:processFilter( filter, opt )
 
    filter:processLiteralSymbol( self, opt )
 end
-function LiteralSymbolNode:canBeRight(  )
+function LiteralSymbolNode:canBeRight( processInfo )
 
    return true
 end
@@ -11747,7 +11739,7 @@ function LiteralSymbolNode.new( id, pos, macroArgFlag, typeList, token )
    return obj
 end
 function LiteralSymbolNode:__init(id, pos, macroArgFlag, typeList, token) 
-   Node.__init( self,id, 86, pos, macroArgFlag, typeList)
+   Node.__init( self,id, 87, pos, macroArgFlag, typeList)
    
    
    
@@ -12179,7 +12171,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, _10302 in pairs( self.map ) do
+   for key, _10483 in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -12214,8 +12206,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, _10316 in ipairs( __sorted ) do
-         local key = __map[ _10316 ]
+      for __index, _10497 in ipairs( __sorted ) do
+         local key = __map[ _10497 ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false
@@ -12889,78 +12881,81 @@ nodeKindEnum.__allList[62] = nodeKindEnum.DeclArgDDD
 nodeKindEnum.DeclAdvertise = 62
 nodeKindEnum._val2NameMap[62] = 'DeclAdvertise'
 nodeKindEnum.__allList[63] = nodeKindEnum.DeclAdvertise
-nodeKindEnum.DeclClass = 63
-nodeKindEnum._val2NameMap[63] = 'DeclClass'
-nodeKindEnum.__allList[64] = nodeKindEnum.DeclClass
-nodeKindEnum.DeclEnum = 64
-nodeKindEnum._val2NameMap[64] = 'DeclEnum'
-nodeKindEnum.__allList[65] = nodeKindEnum.DeclEnum
-nodeKindEnum.DeclAlge = 65
-nodeKindEnum._val2NameMap[65] = 'DeclAlge'
-nodeKindEnum.__allList[66] = nodeKindEnum.DeclAlge
-nodeKindEnum.NewAlgeVal = 66
-nodeKindEnum._val2NameMap[66] = 'NewAlgeVal'
-nodeKindEnum.__allList[67] = nodeKindEnum.NewAlgeVal
-nodeKindEnum.LuneControl = 67
-nodeKindEnum._val2NameMap[67] = 'LuneControl'
-nodeKindEnum.__allList[68] = nodeKindEnum.LuneControl
-nodeKindEnum.Match = 68
-nodeKindEnum._val2NameMap[68] = 'Match'
-nodeKindEnum.__allList[69] = nodeKindEnum.Match
-nodeKindEnum.LuneKind = 69
-nodeKindEnum._val2NameMap[69] = 'LuneKind'
-nodeKindEnum.__allList[70] = nodeKindEnum.LuneKind
-nodeKindEnum.DeclMacro = 70
-nodeKindEnum._val2NameMap[70] = 'DeclMacro'
-nodeKindEnum.__allList[71] = nodeKindEnum.DeclMacro
-nodeKindEnum.TestCase = 71
-nodeKindEnum._val2NameMap[71] = 'TestCase'
-nodeKindEnum.__allList[72] = nodeKindEnum.TestCase
-nodeKindEnum.TestBlock = 72
-nodeKindEnum._val2NameMap[72] = 'TestBlock'
-nodeKindEnum.__allList[73] = nodeKindEnum.TestBlock
-nodeKindEnum.Abbr = 73
-nodeKindEnum._val2NameMap[73] = 'Abbr'
-nodeKindEnum.__allList[74] = nodeKindEnum.Abbr
-nodeKindEnum.Boxing = 74
-nodeKindEnum._val2NameMap[74] = 'Boxing'
-nodeKindEnum.__allList[75] = nodeKindEnum.Boxing
-nodeKindEnum.Unboxing = 75
-nodeKindEnum._val2NameMap[75] = 'Unboxing'
-nodeKindEnum.__allList[76] = nodeKindEnum.Unboxing
-nodeKindEnum.LiteralNil = 76
-nodeKindEnum._val2NameMap[76] = 'LiteralNil'
-nodeKindEnum.__allList[77] = nodeKindEnum.LiteralNil
-nodeKindEnum.LiteralChar = 77
-nodeKindEnum._val2NameMap[77] = 'LiteralChar'
-nodeKindEnum.__allList[78] = nodeKindEnum.LiteralChar
-nodeKindEnum.LiteralInt = 78
-nodeKindEnum._val2NameMap[78] = 'LiteralInt'
-nodeKindEnum.__allList[79] = nodeKindEnum.LiteralInt
-nodeKindEnum.LiteralReal = 79
-nodeKindEnum._val2NameMap[79] = 'LiteralReal'
-nodeKindEnum.__allList[80] = nodeKindEnum.LiteralReal
-nodeKindEnum.LiteralArray = 80
-nodeKindEnum._val2NameMap[80] = 'LiteralArray'
-nodeKindEnum.__allList[81] = nodeKindEnum.LiteralArray
-nodeKindEnum.LiteralList = 81
-nodeKindEnum._val2NameMap[81] = 'LiteralList'
-nodeKindEnum.__allList[82] = nodeKindEnum.LiteralList
-nodeKindEnum.LiteralSet = 82
-nodeKindEnum._val2NameMap[82] = 'LiteralSet'
-nodeKindEnum.__allList[83] = nodeKindEnum.LiteralSet
-nodeKindEnum.LiteralMap = 83
-nodeKindEnum._val2NameMap[83] = 'LiteralMap'
-nodeKindEnum.__allList[84] = nodeKindEnum.LiteralMap
-nodeKindEnum.LiteralString = 84
-nodeKindEnum._val2NameMap[84] = 'LiteralString'
-nodeKindEnum.__allList[85] = nodeKindEnum.LiteralString
-nodeKindEnum.LiteralBool = 85
-nodeKindEnum._val2NameMap[85] = 'LiteralBool'
-nodeKindEnum.__allList[86] = nodeKindEnum.LiteralBool
-nodeKindEnum.LiteralSymbol = 86
-nodeKindEnum._val2NameMap[86] = 'LiteralSymbol'
-nodeKindEnum.__allList[87] = nodeKindEnum.LiteralSymbol
+nodeKindEnum.ProtoClass = 63
+nodeKindEnum._val2NameMap[63] = 'ProtoClass'
+nodeKindEnum.__allList[64] = nodeKindEnum.ProtoClass
+nodeKindEnum.DeclClass = 64
+nodeKindEnum._val2NameMap[64] = 'DeclClass'
+nodeKindEnum.__allList[65] = nodeKindEnum.DeclClass
+nodeKindEnum.DeclEnum = 65
+nodeKindEnum._val2NameMap[65] = 'DeclEnum'
+nodeKindEnum.__allList[66] = nodeKindEnum.DeclEnum
+nodeKindEnum.DeclAlge = 66
+nodeKindEnum._val2NameMap[66] = 'DeclAlge'
+nodeKindEnum.__allList[67] = nodeKindEnum.DeclAlge
+nodeKindEnum.NewAlgeVal = 67
+nodeKindEnum._val2NameMap[67] = 'NewAlgeVal'
+nodeKindEnum.__allList[68] = nodeKindEnum.NewAlgeVal
+nodeKindEnum.LuneControl = 68
+nodeKindEnum._val2NameMap[68] = 'LuneControl'
+nodeKindEnum.__allList[69] = nodeKindEnum.LuneControl
+nodeKindEnum.Match = 69
+nodeKindEnum._val2NameMap[69] = 'Match'
+nodeKindEnum.__allList[70] = nodeKindEnum.Match
+nodeKindEnum.LuneKind = 70
+nodeKindEnum._val2NameMap[70] = 'LuneKind'
+nodeKindEnum.__allList[71] = nodeKindEnum.LuneKind
+nodeKindEnum.DeclMacro = 71
+nodeKindEnum._val2NameMap[71] = 'DeclMacro'
+nodeKindEnum.__allList[72] = nodeKindEnum.DeclMacro
+nodeKindEnum.TestCase = 72
+nodeKindEnum._val2NameMap[72] = 'TestCase'
+nodeKindEnum.__allList[73] = nodeKindEnum.TestCase
+nodeKindEnum.TestBlock = 73
+nodeKindEnum._val2NameMap[73] = 'TestBlock'
+nodeKindEnum.__allList[74] = nodeKindEnum.TestBlock
+nodeKindEnum.Abbr = 74
+nodeKindEnum._val2NameMap[74] = 'Abbr'
+nodeKindEnum.__allList[75] = nodeKindEnum.Abbr
+nodeKindEnum.Boxing = 75
+nodeKindEnum._val2NameMap[75] = 'Boxing'
+nodeKindEnum.__allList[76] = nodeKindEnum.Boxing
+nodeKindEnum.Unboxing = 76
+nodeKindEnum._val2NameMap[76] = 'Unboxing'
+nodeKindEnum.__allList[77] = nodeKindEnum.Unboxing
+nodeKindEnum.LiteralNil = 77
+nodeKindEnum._val2NameMap[77] = 'LiteralNil'
+nodeKindEnum.__allList[78] = nodeKindEnum.LiteralNil
+nodeKindEnum.LiteralChar = 78
+nodeKindEnum._val2NameMap[78] = 'LiteralChar'
+nodeKindEnum.__allList[79] = nodeKindEnum.LiteralChar
+nodeKindEnum.LiteralInt = 79
+nodeKindEnum._val2NameMap[79] = 'LiteralInt'
+nodeKindEnum.__allList[80] = nodeKindEnum.LiteralInt
+nodeKindEnum.LiteralReal = 80
+nodeKindEnum._val2NameMap[80] = 'LiteralReal'
+nodeKindEnum.__allList[81] = nodeKindEnum.LiteralReal
+nodeKindEnum.LiteralArray = 81
+nodeKindEnum._val2NameMap[81] = 'LiteralArray'
+nodeKindEnum.__allList[82] = nodeKindEnum.LiteralArray
+nodeKindEnum.LiteralList = 82
+nodeKindEnum._val2NameMap[82] = 'LiteralList'
+nodeKindEnum.__allList[83] = nodeKindEnum.LiteralList
+nodeKindEnum.LiteralSet = 83
+nodeKindEnum._val2NameMap[83] = 'LiteralSet'
+nodeKindEnum.__allList[84] = nodeKindEnum.LiteralSet
+nodeKindEnum.LiteralMap = 84
+nodeKindEnum._val2NameMap[84] = 'LiteralMap'
+nodeKindEnum.__allList[85] = nodeKindEnum.LiteralMap
+nodeKindEnum.LiteralString = 85
+nodeKindEnum._val2NameMap[85] = 'LiteralString'
+nodeKindEnum.__allList[86] = nodeKindEnum.LiteralString
+nodeKindEnum.LiteralBool = 86
+nodeKindEnum._val2NameMap[86] = 'LiteralBool'
+nodeKindEnum.__allList[87] = nodeKindEnum.LiteralBool
+nodeKindEnum.LiteralSymbol = 87
+nodeKindEnum._val2NameMap[87] = 'LiteralSymbol'
+nodeKindEnum.__allList[88] = nodeKindEnum.LiteralSymbol
 
 
 

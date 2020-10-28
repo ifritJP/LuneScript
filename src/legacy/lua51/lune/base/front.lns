@@ -156,7 +156,7 @@ fn Front.createPaser(): Parser.Parser
 fn Front.createAst(
    importModuleInfo:frontInterface.ImportModuleInfo,
    parser:Parser.Parser, mod:str, moduleId:&frontInterface.ModuleId, analyzeModule:str!,
-   analyzeMode:TransUnit.AnalyzeMode, pos:&Parser.Position! ): &TransUnit.ASTInfo
+   analyzeMode:TransUnit.AnalyzeMode, pos:&Parser.Position! ): TransUnit.ASTInfo
 {
    let mut transUnit = new TransUnit.TransUnit(
       moduleId, importModuleInfo, new convLua.MacroEvalImp(),
@@ -166,12 +166,12 @@ fn Front.createAst(
 }
 
 fn Front.convert(
-   ast:&TransUnit.ASTInfo, streamName:str,
+   ast:TransUnit.ASTInfo, streamName:str,
    mut stream:oStream, mut metaStream:oStream, convMode:convLua.ConvMode, inMacro:bool )
 {
    let mut conv = convLua.createFilter(
       streamName, stream, metaStream, convMode, inMacro,
-      ast.$moduleTypeInfo, ast.$moduleSymbolKind,
+      ast.$moduleTypeInfo, ast.$processInfo, ast.$moduleSymbolKind,
       self.option.useLuneModule, self.option.targetLuaVer,
       self.option.testing, self.option.useIpairs );
    ast.$node.processFilter( conv, new convLua.Opt( ast.$node ) );
@@ -205,7 +205,7 @@ fn byteCompileFromLuaTxt( txt:str, stripDebugInfo:bool ): str {
 
 
 fn Front.convertFromAst(
-   ast:&TransUnit.ASTInfo, streamName:str, mode:convLua.ConvMode ) : str, str
+   ast:TransUnit.ASTInfo, streamName:str, mode:convLua.ConvMode ) : str, str
 {
    let mut stream = new Util.memStream();
    let mut metaStream = new Util.memStream();
@@ -228,7 +228,7 @@ fn Front.loadFromLnsTxt(
    let mut stream = new Parser.TxtStream( txt );
    let mut parser = new Parser.StreamParser( stream, name, false );
 
-   let ast = transUnit.createAST( parser, false, nil );
+   let mut ast = transUnit.createAST( parser, false, nil );
 
    let _, luaTxt = self.convertFromAst( ast, name, .Exec );
    return unwrap loadFromLuaTxt( luaTxt );
@@ -448,7 +448,7 @@ pub fn Front.convertLns2LuaCode(
    stream:iStream, streamName:str ): str
 {
    let mod = scriptPath2Module( streamName );
-   let ast = self.createAst(
+   let mut ast = self.createAst(
       importModuleInfo,
       new Parser.StreamParser( stream, streamName, false ), mod,
       frontInterface.ModuleId.createId( 0.0, 0 ), nil, .Compile ## );
@@ -466,8 +466,8 @@ fn Front.loadFileToLuaCode(
    importModuleInfo:frontInterface.ImportModuleInfo,
    path:str, mod:str ): Luaval<&stem>, str
 {
-   let ast = self.createAst( importModuleInfo, createPaser( path, mod ),
-                             mod, getModuleId( path, mod ## ), nil, .Compile, nil );
+   let mut ast = self.createAst( importModuleInfo, createPaser( path, mod ),
+                                 mod, getModuleId( path, mod ## ), nil, .Compile, nil );
 
    let mut metaTxt, luaTxt = self.convertFromAst( ast, path, convLua.ConvMode.Exec );
 
@@ -731,12 +731,12 @@ pub fn Front.dumpAst() mut {
    Depend.profile(
       self.option.validProf,
       fn() {
-	 let ast = self.createAst(
+	 let mut ast = self.createAst(
             new frontInterface.ImportModuleInfo(),
             self.createPaser(), mod, getModuleId( self.option.scriptPath, mod ## ),
             nil, .Compile ## );
 	 ast.$node.processFilter(
-            dumpNode.createFilter( ast.$moduleTypeInfo, io.stdout ),
+            dumpNode.createFilter( ast.$moduleTypeInfo, ast.$processInfo, io.stdout ),
             new dumpNode.Opt( "", 0 ) );
       }, self.option.scriptPath .. ".profi" );
 }
@@ -746,7 +746,7 @@ pub fn Front.format() mut {
 
    let mod = scriptPath2Module( self.option.scriptPath );
 
-   let ast = self.createAst(
+   let mut ast = self.createAst(
       new frontInterface.ImportModuleInfo(),
       self.createPaser(), mod, getModuleId( self.option.scriptPath, mod ## ),
       nil, .Compile ## );
@@ -782,7 +782,7 @@ pub fn Front.createGlue() mut {
    //frontInterface.setFront( self );
 
    let mod = scriptPath2Module( self.option.scriptPath );
-   let ast = self.createAst( new frontInterface.ImportModuleInfo(),
+   let mut ast = self.createAst( new frontInterface.ImportModuleInfo(),
                              self.createPaser(), mod,
                              getModuleId( self.option.scriptPath, mod ## ),
                              nil, .Compile ## );
@@ -815,7 +815,7 @@ form CloseOStreamForConvert( stream:oStream!, metaStream:oStream!, dependStream:
 pub fn Front.convertLuaToStreamFromScript(
    checkUptodate:bool, convMode:convLua.ConvMode, path:str, mod:str,
    byteCompile:bool, stripDebugInfo:bool, openOStream:OpenOStreamForConvert,
-   closeOStream:CloseOStreamForConvert! ) mut : &TransUnit.ASTInfo!
+   closeOStream:CloseOStreamForConvert! ) mut : TransUnit.ASTInfo!
 {
    fn outputDependInfo( stream:oStream!, metaInfo:&MetaForBuildId! ) {
       when! stream {
@@ -835,7 +835,7 @@ pub fn Front.convertLuaToStreamFromScript(
       }
    }
 
-   let mut retAst:&TransUnit.ASTInfo! = nil;
+   let mut retAst:TransUnit.ASTInfo! = nil;
    
    let moduleId, uptodate;
    if checkUptodate {
@@ -855,7 +855,7 @@ pub fn Front.convertLuaToStreamFromScript(
          // lns ファイルを解析して Lua/Meta を更新する
 
          when! stream, metaStream {
-            let ast = self.createAst(
+            let mut ast = self.createAst(
                new frontInterface.ImportModuleInfo(),
                createPaser( path, mod ), mod, moduleId, nil, .Compile, ## );
             retAst = ast;
@@ -875,8 +875,7 @@ pub fn Front.convertLuaToStreamFromScript(
                oMetaStream = byteMetaStream;
             }
 
-            self.convert(
-               ast, path, outStream, oMetaStream, convMode, false );
+            self.convert( ast, path, outStream, oMetaStream, convMode, false );
 
             if byteCompile {
                // byteCompile 時は、
@@ -924,7 +923,7 @@ fn Front.convertToLua() mut {
       convMode = .ConvMeta;
    }
 
-   let ast = self.convertLuaToStreamFromScript(
+   let mut ast = self.convertLuaToStreamFromScript(
       false, convMode, self.option.scriptPath, mod,
       self.option.byteCompile, self.option.stripDebugInfo,
       fn ( mode:ModuleUptodate ): oStream!, oStream!, oStream! {
@@ -951,7 +950,7 @@ fn Front.convertToLua() mut {
 /**
 Go に変換しファイルに書き込む
 */
-pub fn Front.saveToGo( ast:&TransUnit.ASTInfo ) mut {
+pub fn Front.saveToGo( ast:TransUnit.ASTInfo ) mut {
    let mut path = self.option.scriptPath.gsub( "%.lns$", ".go" );
 
    if! let dir = self.option.outputDir {
@@ -972,7 +971,7 @@ pub fn Front.saveToGo( ast:&TransUnit.ASTInfo ) mut {
 /**
 C に変換しファイルに書き込む
 */
-pub fn Front.saveToC( ast:&TransUnit.ASTInfo ) mut {
+pub fn Front.saveToC( ast:TransUnit.ASTInfo ) mut {
    let mut cPath = self.option.scriptPath.gsub( "%.lns$", ".c" );
 
    let! mut file = io.open( cPath, "w" ) {
@@ -995,7 +994,7 @@ pub fn Front.saveToC( ast:&TransUnit.ASTInfo ) mut {
 pub fn Front.outputBuiltin() mut {
    let mod = scriptPath2Module( "lns_builtin" );
 
-   let ast = self.createAst(
+   let mut ast = self.createAst(
       new frontInterface.ImportModuleInfo(),
       new Parser.DummyParser(), mod,
       frontInterface.ModuleId.createId( 0.0, 0 ), nil, .Compile ## );
@@ -1109,7 +1108,7 @@ oldStream, newStream に格納されているモジュールのメタ情報が�
 
 
    let mut updateFlag = true;
-   let mut ast:&TransUnit.ASTInfo! = nil;
+   let mut ast:TransUnit.ASTInfo! = nil;
    
    let mod = scriptPath2Module( self.option.scriptPath );
    Depend.profile(

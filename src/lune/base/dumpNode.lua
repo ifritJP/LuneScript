@@ -279,7 +279,7 @@ function dumpFilter:dump( opt, node, txt )
 
    local typeStr = ""
    local expType = node:get_expType(  )
-   if expType:equals( Ast.builtinTypeNone ) then
+   if expType:equals( self.processInfo, Ast.builtinTypeNone ) then
       typeStr = string.format( "(%d:%s:%s)", expType:get_typeId(  ), expType:getTxt(  ), expType:get_kind(  ))
    end
    
@@ -307,24 +307,25 @@ end
 function dumpFilter.setmeta( obj )
   setmetatable( obj, { __index = dumpFilter  } )
 end
-function dumpFilter.new( __superarg1, __superarg2, __superarg3,stream )
+function dumpFilter.new( __superarg1, __superarg2, __superarg3,stream, processInfo )
    local obj = {}
    dumpFilter.setmeta( obj )
    if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,stream )
+      obj:__init( __superarg1, __superarg2, __superarg3,stream, processInfo )
    end
    return obj
 end
-function dumpFilter:__init( __superarg1, __superarg2, __superarg3,stream )
+function dumpFilter:__init( __superarg1, __superarg2, __superarg3,stream, processInfo )
 
    Nodes.Filter.__init( self, __superarg1, __superarg2, __superarg3 )
    self.stream = stream
+   self.processInfo = processInfo
 end
 
 
-local function createFilter( moduleTypeInfo, stream )
+local function createFilter( moduleTypeInfo, processInfo, stream )
 
-   return dumpFilter.new(true, moduleTypeInfo, moduleTypeInfo:get_scope(), stream)
+   return dumpFilter.new(true, moduleTypeInfo, moduleTypeInfo:get_scope(), stream, processInfo)
 end
 _moduleObj.createFilter = createFilter
 
@@ -450,6 +451,13 @@ function dumpFilter:processNewAlgeVal( node, opt )
    end
    
 end
+
+
+function dumpFilter:processProtoClass( node, opt )
+
+   self:dump( opt, node, node:get_name(  ).txt )
+end
+
 
 
 function dumpFilter:processDeclClass( node, opt )

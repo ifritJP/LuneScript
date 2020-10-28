@@ -265,7 +265,7 @@ pub abstract class Node {
       return false;
    };     
    /** 代入式の右辺になれるかどうか */
-   pub fn canBeRight(): bool {
+   pub fn canBeRight( processInfo:Ast.ProcessInfo ): bool {
       return false;
    }
    /** 単体で文になれるかどうか */
@@ -580,7 +580,7 @@ macro _declNodeClass(
 
       when! canBeRightFlag {
          fieldStatList.insert( `{
-            pub override fn canBeRight():bool {
+            pub override fn canBeRight( processInfo:Ast.ProcessInfo ):bool {
                return ,,, canBeRightFlag;
             } } );
       }
@@ -992,9 +992,9 @@ pub override fn ExpListNode.canBeLeft():bool {
    }
    return true;
 }
-pub override fn ExpListNode.canBeRight():bool {
+pub override fn ExpListNode.canBeRight( processInfo:Ast.ProcessInfo ):bool {
    foreach expNode in self.$expList {
-      if not expNode.canBeRight() {
+      if not expNode.canBeRight( processInfo ) {
          return false;
       }
    }
@@ -1199,7 +1199,7 @@ pub override fn ExpRefNode.canBeLeft():bool {
    return self.$symbolInfo.$canBeLeft;
 }
 
-pub override fn ExpRefNode.canBeRight():bool {
+pub override fn ExpRefNode.canBeRight( processInfo:Ast.ProcessInfo ):bool {
    return self.$symbolInfo.$canBeRight and self.$symbolInfo.$hasValueFlag;
    //return self.$symbolInfo.$canBeRight;
 }
@@ -1379,10 +1379,10 @@ pub override fn ExpCallNode.getPrefix() : &Node! {
    return self.func;
 }
 
-pub override fn ExpCallNode.canBeRight():bool {
+pub override fn ExpCallNode.canBeRight( processInfo:Ast.ProcessInfo ):bool {
    let expType = self.$expType;
-   if expType.equals( Ast.builtinTypeNone## ) or
-      expType.equals( Ast.builtinTypeNeverRet## )
+   if expType.equals( processInfo, Ast.builtinTypeNone## ) or
+      expType.equals( processInfo, Ast.builtinTypeNeverRet## )
    {
       return false;
    }
@@ -1442,7 +1442,7 @@ _declNodeClass( "ExpMacroExp", Node, false, nil, true,
                 [ { "stmtList": "List<&Node>" } ]
 );
 
-pub override fn ExpMacroExpNode.canBeRight():bool {
+pub override fn ExpMacroExpNode.canBeRight( processInfo:Ast.ProcessInfo ):bool {
    return self.$expType ~= Ast.builtinTypeNone;
 }
 
@@ -1511,7 +1511,7 @@ pub override fn RefFieldNode.canBeLeft():bool {
    // }
    return false;
 }
-pub override fn RefFieldNode.canBeRight():bool {
+pub override fn RefFieldNode.canBeRight( processInfo:Ast.ProcessInfo ):bool {
    if! self.$symbolInfo {
       return _exp.$canBeRight;
    }
@@ -1696,7 +1696,7 @@ pub static fn DeclFuncInfo.createFrom(
 _declNodeClass( "DeclFunc", Node, false, nil, nil,
                 [ { "declInfo": "&DeclFuncInfo" } ]
 );
-pub override fn DeclFuncNode.canBeRight():bool {
+pub override fn DeclFuncNode.canBeRight( processInfo:Ast.ProcessInfo ):bool {
    // anonymous 関数なら r-value に成れる
    return self.declInfo.$name == nil;
 }
@@ -1734,7 +1734,7 @@ _declNodeClass( "ExpCallSuper", Node, false, nil, true,
                   { "methodType": "&Ast.TypeInfo" },
                   { "expList": "&ExpListNode!" } ]
 );
-pub override fn ExpCallSuperNode.canBeRight():bool {
+pub override fn ExpCallSuperNode.canBeRight( processInfo:Ast.ProcessInfo ):bool {
    return self.$expType ~= Ast.builtinTypeNone;
 }
 
@@ -1768,12 +1768,16 @@ pub class AdvertiseInfo {
 _declNodeClass( "DeclAdvertise", Node, false, false, false,
                 [ { "advInfo" : "&AdvertiseInfo" } ] );
 
+_declNodeClass( "ProtoClass", Node, false, false, true,
+                [ { "name": "&Parser.Token" } ] );
+
 pub class ClassInitBlockInfo {
    pri let mut func: &DeclMethodNode! {pub,pub};
 }
 _declNodeClass( "DeclClass", Node, false, false, true,
                 [ { "accessMode": "Ast.AccessMode" },
                   { "name": "&Parser.Token" },
+                  { "hasPrototype": "bool" },
                   { "gluePrefix": "str!" },
                   { "moduleName": "&Parser.Token!" },
                   // default__init_old で、旧形式のコンストラクタが使用されている場合 true
@@ -1929,8 +1933,10 @@ _declNodeClass( "DeclMacro", Node, false, false, true,
 
 pub abstract class MacroEval {
    pub abstract fn evalFromCode(
+      processInfo:Ast.ProcessInfo,
       name:str, argNameList:&List<str>, code:str! ): Luaval<macroStatmentProc>;
-   pub abstract fn eval( macroNode: DeclMacroNode ): Luaval<macroStatmentProc>;
+   pub abstract fn eval(
+      processInfo:Ast.ProcessInfo, macroNode: DeclMacroNode ): Luaval<macroStatmentProc>;
 }
 
 

@@ -1103,16 +1103,18 @@ class convFilter extend Nodes.Filter<Opt> {
 
    pri let mut dummyNodeManager:Nodes.NodeManager;
 
+   let mut processInfo:Ast.ProcessInfo;
+
    fn createRefNodeFromSym( symbol:&Ast.SymbolInfo ) mut: &Nodes.ExpRefNode {
       return Nodes.ExpRefNode.create(
          self.dummyNodeManager, unwrap symbol.$pos, false, [ symbol.$typeInfo ], symbol );
    }
 
    pub fn __init( enableTest:bool, outputBuiltin:bool, streamName: str, stream: oStream,
-                  headerStream: oStream, ast:&TransUnit.ASTInfo )
+                  headerStream: oStream, ast:TransUnit.ASTInfo )
    {
       super(true, ast.$moduleTypeInfo, ast.$moduleTypeInfo.$scope);
-
+      self.processInfo = ast.$processInfo;
       self.dummyNodeManager = new Nodes.NodeManager();
       self.canConv = true;
       self.enableTest = enableTest;
@@ -1581,7 +1583,7 @@ fn convFilter.processBuiltin() : &Nodes.NodeManager
                
                Nodes.DeclClassNode.create(
                   nodeManager, dummyPos, false, [ classInfo ], .Pub,
-                  new Parser.Token( .Symb, classInfo.$rawTxt, dummyPos, false## ),
+                  new Parser.Token( .Symb, classInfo.$rawTxt, dummyPos, false## ), false,
                   classInfo.$rawTxt, nil, false, fieldList, [], fieldList, [], classScope,
                   new Nodes.ClassInitBlockInfo( nil ), [], [], [], (@));
 
@@ -1622,7 +1624,7 @@ pub override fn convFilter.processRoot(
                         node.$nodeManager.getDeclMemberNodeList() );
 
    
-   Ast.pushProcessInfo( node.$processInfo );
+   //Ast.pushProcessInfo( node.$processInfo );
 
    foreach pragma in node.$luneHelperInfo.pragmaSet {
       match pragma {
@@ -1850,7 +1852,7 @@ pub override fn convFilter.processRoot(
    self.writeln( "#endif" );
    self.stream.returnToSource();
    
-   Ast.popProcessInfo();
+   //Ast.popProcessInfo();
 };
 
 pub override fn convFilter.processSubfile(
@@ -2251,7 +2253,8 @@ pub override fn convFilter.processDeclEnum(
    let enumFullName = self.moduleCtrl.getEnumTypeName( enumType );
    let fullName = self.getFullName( enumType );
 
-   let isStrEnum = enumType.$valTypeInfo.equals( Ast.builtinTypeString ##);
+   let isStrEnum = enumType.$valTypeInfo.equals(
+      self.processInfo, Ast.builtinTypeString ##);
 
    switch self.processMode {
       case .Prototype {
@@ -3774,7 +3777,8 @@ fn convFilter.processNewInsance( classType:&Ast.TypeInfo, callInit:bool ) mut {
 fn convFilter.processMapping(
    node:&Nodes.DeclClassNode, classType:&Ast.TypeInfo, out2HMode:Out2HMode ) mut
 {
-   if not classType.isInheritFrom( Ast.builtinTypeMapping, nil ) {
+   if not classType.isInheritFrom(
+      self.processInfo, Ast.builtinTypeMapping, nil ) {
       return;
    }
 
@@ -3984,7 +3988,8 @@ fn convFilter.processMapping(
                  getAccessPrimValFromStem( false, memberSym.$typeInfo, 0 ) ) );
          }
          else {
-            if nonNilMemberType.equals( Ast.builtinTypeString## )
+            if nonNilMemberType.equals(
+               self.processInfo, Ast.builtinTypeString## )
             {
                self.writeln( 
                   "lns_check_err_from_map_str( pErr, _pEnv, pMap, %s, %s, %s );"
@@ -5075,7 +5080,8 @@ pub fn convFilter.processCallArgList(
    let abbrValTxt;
    if self.moduleCtrl.getBuiltinFuncNameFromType( funcType ) or
        ( funcType.$kind == .Method and
-         funcType.$parentInfo.equals( Ast.builtinTypeString ## ) )
+         funcType.$parentInfo.equals(
+            self.processInfo, Ast.builtinTypeString ## ) )
    {
       // 本来は、 Lua モジュールで、かつ C で定義しているもの
       abbrValTxt = cValNone;
@@ -5639,14 +5645,14 @@ fn processGetMRet( stream:Util.SourceStream, moduleCtrl:ModuleCtrl,
    }
 }
 
-fn needsWrapper( orgFunc:&Ast.TypeInfo, castType:&Ast.TypeInfo ): bool {
+fn convFilter.needsWrapper( orgFunc:&Ast.TypeInfo, castType:&Ast.TypeInfo ) mut : bool {
    if #orgFunc.$argTypeInfoList == #castType.$argTypeInfoList and
       #orgFunc.$retTypeInfoList == #castType.$retTypeInfoList
    {
       fn check( typeList1:&List<&Ast.TypeInfo>, typeList2:&List<&Ast.TypeInfo> ) : bool
       {
          foreach type1, index in typeList1 {
-            if not type1.equals( typeList2[ index ] ## ) {
+            if not type1.equals( self.processInfo, typeList2[ index ] ## ) {
                return false;
             }
          }
@@ -5665,7 +5671,7 @@ fn needsWrapper( orgFunc:&Ast.TypeInfo, castType:&Ast.TypeInfo ): bool {
 fn convFilter.processFuncCast2Form(
    castType:&Ast.TypeInfo, orgFunc:&Ast.TypeInfo  ) mut
 {
-   if not needsWrapper( orgFunc, castType ) {
+   if not self.needsWrapper( orgFunc, castType ) {
       self.write( getFunc2any( self.moduleCtrl, self.scopeMgr, orgFunc ) );
       return;
    }
@@ -8783,7 +8789,9 @@ pub override fn convFilter.processExpCall(
                //    return false;
                // }
                case .Class {
-                  if prefixType.equals( Ast.builtinTypeString## ) {
+                  if prefixType.equals(
+                     self.processInfo, Ast.builtinTypeString## )
+                  {
                      wroteFuncFlag = true;
                      setArgFlag = true;
                      self.write( "mtd_lns_string_%s( _pEnv, " (fieldNode.$field.txt) );
@@ -9152,7 +9160,7 @@ fn convFilter.processFuncCast( node: Nodes.ExpCastNode ) mut
       }
    }
 
-   if not needsWrapper( orgFunc, castType ) {
+   if not self.needsWrapper( orgFunc, castType ) {
       return;      
    }
 
@@ -9188,7 +9196,7 @@ fn convFilter.processFuncCast( node: Nodes.ExpCastNode ) mut
       
       if index == #castType.$argTypeInfoList and
           ( #orgFunc.$argTypeInfoList ~= #castType.$argTypeInfoList or
-            not dstType.equals( srcType ## ) )
+            not dstType.equals( self.processInfo, srcType ## ) )
       {
          if srcType.$kind == .DDD and dstType.$kind ~= .DDD {
             let dddSym = "arg%d%s" (index,accessAny);
@@ -9374,7 +9382,7 @@ pub override fn convFilter.processExpCast(
       case .Normal {
          let nonNilCastType = castType.$nonnilableType;
          if nonNilCastType.$kind == .Class and
-            not nonNilCastType.equals( Ast.builtinTypeString ## )
+            not nonNilCastType.equals( self.processInfo, Ast.builtinTypeString ## )
          {
             self.write( "lns_castClass( " );
             self.processVal2stem( exp, node );
@@ -9406,7 +9414,7 @@ pub override fn convFilter.processExpCast(
                      kindTxt = "lns_value_type_Map";
                   }
                   case .Class {
-                     if workType.equals( Ast.builtinTypeString## ) { 
+                     if workType.equals( self.processInfo, Ast.builtinTypeString## ) { 
                         kindTxt = "lns_value_type_str";
                      }
                      else {
@@ -9791,7 +9799,7 @@ pub override fn convFilter.processExpRefItem(
 
    //let parent = opt.node;
    
-   if valType.equals( Ast.builtinTypeString ##) {
+   if valType.equals( self.processInfo, Ast.builtinTypeString ##) {
       // str のインデックスアクセスは、文字を返す
       self.accessPrimVal( val, node );
       self.write( "->val.str.pStr[" );
@@ -10756,7 +10764,7 @@ pub override fn convFilter.processAbbr(
 
 pub fn createFilter(
    enableTest:bool, outputBuiltin:bool, streamName: str, stream: oStream,
-   headerStream: oStream, ast:&TransUnit.ASTInfo ) : Nodes.Filter<Opt>
+   headerStream: oStream, ast:TransUnit.ASTInfo ) : Nodes.Filter<Opt>
 {
    return new convFilter( enableTest, outputBuiltin,
                           streamName, stream, headerStream, ast );
