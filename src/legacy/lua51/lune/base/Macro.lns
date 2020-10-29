@@ -499,7 +499,10 @@ fn expandVal( tokenList:List<&Parser.Token>,
          case "string" {
             tokenList.insert(
                new Parser.Token(
-                  Parser.TokenKind.Str, '%q' (val@@str), pos, false ## ) );
+                  Parser.TokenKind.Str,
+                  //'%q' (val@@str),
+                  Parser.quoteStr( val@@str ),
+                  pos, false ## ) );
             // val 中に \n 等の制御コードが入ると正常に処理されない。
             // val 内の制御コードを \xXX に変換する必要がある。
          }

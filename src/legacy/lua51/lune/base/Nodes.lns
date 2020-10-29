@@ -657,7 +657,6 @@ macro _declNodeClass(
 
 _declNodeClass( "None", Node, false, false, true, []);
 
-
 /** AST からソースに変換する際に、動的にノードを生成する際に使用する */
 _declNodeClass( "ConvStat", Node, false, false, false,
                 [ { "txt": "str" } ]
@@ -2759,7 +2758,8 @@ __test {
          new Parser.StreamParser(
             new Parser.TxtStream( "print( 'hoge' );" ), "test" ## ) );
 
-      let mut scope = new Ast.Scope( nil, false ##);
+      let mut processInfo = Ast.createProcessInfo();
+      let mut scope = new Ast.Scope( processInfo, nil, false ##);
 
       let printToken = parser.getTokenNoErr(); // print
       parser.getTokenNoErr(); // (
@@ -2767,12 +2767,14 @@ __test {
       parser.getTokenNoErr(); // )
       parser.getTokenNoErr(); // ;
 
-      let symbol = unwrap scope.addFunc( nil, Ast.builtinTypeForm, .Global, true, false);
+      let symbol = unwrap scope.addFunc(
+         processInfo, nil, Ast.builtinTypeForm, .Global, true, false);
 
       let mut nodeManager = new NodeManager();
 
       let strNode = LiteralStringNode.create( 
-         nodeManager, hogeToken.pos, false, [ Ast.builtinTypeString ], hogeToken, nil, nil );
+         nodeManager, hogeToken.pos, false,
+         [ Ast.builtinTypeString ], hogeToken, nil, nil );
       let argListNode = ExpListNode.create(
          nodeManager, hogeToken.pos, false, strNode.$expTypeList,
          [ strNode ], nil, false );
@@ -2790,7 +2792,7 @@ __test {
       return RootNode.create(
          nodeManager, stmtExp.$pos, false, [ Ast.builtinTypeNone ],
          [ stmtExp ], scope, (@), frontInterface.ModuleId.createId(0.0, 0),
-         Ast.pushProcessInfo( nil ), moduleInfo, nil,
+         processInfo, moduleInfo, nil,
          new LuneHelperInfo(), nodeManager, {}, {}, {});
    }
 }

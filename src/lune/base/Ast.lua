@@ -326,6 +326,8 @@ function ProcessInfo:__init(idProvBase, typeInfo2Map)
    self.idProvBase = idProvBase
    self.idProvExt = IdProvider.new(extStartId, extMaxId)
    self.idProv = self.idProvBase
+   self.idProvSym = IdProvider.new(0, extMaxId)
+   self.idProvScope = IdProvider.new(0, extMaxId)
    self.typeInfo2Map = typeInfo2Map
 end
 function ProcessInfo.createRoot(  )
@@ -339,7 +341,7 @@ end
 function ProcessInfo:switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.ProcessInfo.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 95, function (  )
+   Log.log( Log.Level.Trace, __func__, 99, function (  )
    
       return "start"
    end )
@@ -354,6 +356,12 @@ function ProcessInfo:switchIdProvier( idType )
 end
 function ProcessInfo.setmeta( obj )
   setmetatable( obj, { __index = ProcessInfo  } )
+end
+function ProcessInfo:get_idProvSym()
+   return self.idProvSym
+end
+function ProcessInfo:get_idProvScope()
+   return self.idProvScope
 end
 function ProcessInfo:get_idProv()
    return self.idProv
@@ -936,16 +944,14 @@ end
 
 setmetatable( Scope, { ifList = {ModuleInfoManager,} } )
 _moduleObj.Scope = Scope
-function Scope.new( parent, classFlag, inherit, ifScopeList )
+function Scope.new( processInfo, parent, classFlag, inherit, ifScopeList )
    local obj = {}
    Scope.setmeta( obj )
-   if obj.__init then obj:__init( parent, classFlag, inherit, ifScopeList ); end
+   if obj.__init then obj:__init( processInfo, parent, classFlag, inherit, ifScopeList ); end
    return obj
 end
-function Scope:__init(parent, classFlag, inherit, ifScopeList) 
-   self.scopeId = Scope.seedId
-   Scope.seedId = Scope.seedId + 1
-   
+function Scope:__init(processInfo, parent, classFlag, inherit, ifScopeList) 
+   self.scopeId = processInfo:get_idProvScope():getNewId(  )
    self.typeInfo2ModuleInfoMap = {}
    self.closureSymMap = {}
    self.closureSym2NumMap = {}
@@ -1053,9 +1059,6 @@ end
 function Scope:set_validCheckingUnaccess( validCheckingUnaccess )
    self.validCheckingUnaccess = validCheckingUnaccess
 end
-do
-   Scope.seedId = 0
-end
 
 
 function SymbolInfo:get_namespaceTypeInfo(  )
@@ -1072,7 +1075,7 @@ function SymbolInfo:get_namespaceTypeInfo(  )
    return work
 end
 
-local rootScope = Scope.new(nil, false, nil)
+local rootScope = Scope.new(rootProcessInfo, nil, false, nil)
 _moduleObj.rootScope = rootScope
 
 function Scope:isInnerOf( scope )
@@ -1391,7 +1394,7 @@ function TypeInfo:serializeTypeInfoList( name, list, onlyPub )
    
    return work .. "}, "
 end
-function TypeInfo.createScope( parent, classFlag, baseInfo, interfaceList )
+function TypeInfo.createScope( processInfo, parent, classFlag, baseInfo, interfaceList )
 
    local inheritScope = nil
    if baseInfo ~= nil then
@@ -1406,7 +1409,7 @@ function TypeInfo.createScope( parent, classFlag, baseInfo, interfaceList )
       
    end
    
-   return Scope.new(parent, classFlag, inheritScope, ifScopeList)
+   return Scope.new(processInfo, parent, classFlag, inheritScope, ifScopeList)
 end
 function TypeInfo.setmeta( obj )
   setmetatable( obj, { __index = TypeInfo  } )
@@ -1680,13 +1683,13 @@ function NormalSymbolInfo:getOrg(  )
 
    return self
 end
-function NormalSymbolInfo.new( kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, pos, typeInfo, mutMode, hasValueFlag )
+function NormalSymbolInfo.new( processInfo, kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, pos, typeInfo, mutMode, hasValueFlag )
    local obj = {}
    NormalSymbolInfo.setmeta( obj )
-   if obj.__init then obj:__init( kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, pos, typeInfo, mutMode, hasValueFlag ); end
+   if obj.__init then obj:__init( processInfo, kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, pos, typeInfo, mutMode, hasValueFlag ); end
    return obj
 end
-function NormalSymbolInfo:__init(kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, pos, typeInfo, mutMode, hasValueFlag) 
+function NormalSymbolInfo:__init(processInfo, kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, pos, typeInfo, mutMode, hasValueFlag) 
    SymbolInfo.__init( self)
    
    self.convModuleParam = nil
@@ -1699,12 +1702,10 @@ function NormalSymbolInfo:__init(kind, canBeLeft, canBeRight, scope, accessMode,
    end
    
    self.posForModToRef = nil
-   
-   NormalSymbolInfo.symbolIdSeed = NormalSymbolInfo.symbolIdSeed + 1
    self.kind = kind
    self.canBeLeft = canBeLeft
    self.canBeRight = canBeRight
-   self.symbolId = NormalSymbolInfo.symbolIdSeed
+   self.symbolId = processInfo:get_idProvSym():getNewId(  )
    self.scope = scope
    self.accessMode = accessMode
    self.staticFlag = staticFlag
@@ -1779,9 +1780,6 @@ function NormalSymbolInfo:get_convModuleParam()
 end
 function NormalSymbolInfo:set_convModuleParam( convModuleParam )
    self.convModuleParam = convModuleParam
-end
-do
-   NormalSymbolInfo.symbolIdSeed = 0
 end
 
 
@@ -2489,7 +2487,7 @@ function Scope:filterSymbolTypeInfo( fromScope, moduleScope, access, callback )
 end
 
 
-function Scope:add( kind, canBeLeft, canBeRight, name, pos, typeInfo, accessMode, staticFlag, mutMode, hasValueFlag )
+function Scope:add( processInfo, kind, canBeLeft, canBeRight, name, pos, typeInfo, accessMode, staticFlag, mutMode, hasValueFlag )
 
    do
       local _switchExp = kind
@@ -2525,103 +2523,103 @@ function Scope:add( kind, canBeLeft, canBeRight, name, pos, typeInfo, accessMode
    end
    
    
-   local symbolInfo = NormalSymbolInfo.new(kind, canBeLeft, canBeRight, self, accessMode, staticFlag, name, pos, typeInfo, mutMode, hasValueFlag)
+   local symbolInfo = NormalSymbolInfo.new(processInfo, kind, canBeLeft, canBeRight, self, accessMode, staticFlag, name, pos, typeInfo, mutMode, hasValueFlag)
    self.symbol2SymbolInfoMap[name] = symbolInfo
    return symbolInfo, nil
 end
 
 
-function Scope:addLocalVar( argFlag, canBeLeft, name, pos, typeInfo, mutable )
+function Scope:addLocalVar( processInfo, argFlag, canBeLeft, name, pos, typeInfo, mutable )
 
-   return self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, name ~= "_", name, pos, typeInfo, AccessMode.Local, false, mutable, true )
+   return self:add( processInfo, argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, name ~= "_", name, pos, typeInfo, AccessMode.Local, false, mutable, true )
 end
 
 
-local dummySymbol = _lune.unwrap( _moduleObj.rootScope:addLocalVar( false, false, "$$", nil, _moduleObj.headTypeInfo, MutMode.IMut ))
+local dummySymbol = _lune.unwrap( _moduleObj.rootScope:addLocalVar( rootProcessInfo, false, false, "$$", nil, _moduleObj.headTypeInfo, MutMode.IMut ))
 _moduleObj.dummySymbol = dummySymbol
 
 
-function Scope:addUnwrapedVar( argFlag, canBeLeft, name, pos, typeInfo, mutable )
+function Scope:addUnwrapedVar( processInfo, argFlag, canBeLeft, name, pos, typeInfo, mutable )
 
-   return self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, pos, typeInfo, AccessMode.Local, false, mutable, true )
+   return self:add( processInfo, argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, pos, typeInfo, AccessMode.Local, false, mutable, true )
 end
 
 
-function Scope:addStaticVar( argFlag, canBeLeft, name, pos, typeInfo, mutable )
+function Scope:addStaticVar( processInfo, argFlag, canBeLeft, name, pos, typeInfo, mutable )
 
-   return self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, pos, typeInfo, AccessMode.Local, true, mutable, true )
+   return self:add( processInfo, argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, pos, typeInfo, AccessMode.Local, true, mutable, true )
 end
 
 
-function Scope:addVar( accessMode, name, pos, typeInfo, mutable, hasValueFlag )
+function Scope:addVar( processInfo, accessMode, name, pos, typeInfo, mutable, hasValueFlag )
 
-   return self:add( SymbolKind.Var, true, true, name, pos, typeInfo, accessMode, false, mutable, hasValueFlag )
+   return self:add( processInfo, SymbolKind.Var, true, true, name, pos, typeInfo, accessMode, false, mutable, hasValueFlag )
 end
 
 
-function Scope:addEnumVal( name, pos, typeInfo )
+function Scope:addEnumVal( processInfo, name, pos, typeInfo )
 
-   return self:add( SymbolKind.Mbr, false, true, name, pos, typeInfo, AccessMode.Pub, true, MutMode.Mut, true )
+   return self:add( processInfo, SymbolKind.Mbr, false, true, name, pos, typeInfo, AccessMode.Pub, true, MutMode.Mut, true )
 end
 
 
-function Scope:addEnum( accessMode, name, pos, typeInfo )
+function Scope:addEnum( processInfo, accessMode, name, pos, typeInfo )
 
-   return self:add( SymbolKind.Typ, false, false, name, pos, typeInfo, accessMode, true, MutMode.Mut, true )
+   return self:add( processInfo, SymbolKind.Typ, false, false, name, pos, typeInfo, accessMode, true, MutMode.Mut, true )
 end
 
 
-function Scope:addAlgeVal( name, pos, typeInfo )
+function Scope:addAlgeVal( processInfo, name, pos, typeInfo )
 
-   return self:add( SymbolKind.Mbr, false, true, name, pos, typeInfo, AccessMode.Pub, true, MutMode.Mut, true )
+   return self:add( processInfo, SymbolKind.Mbr, false, true, name, pos, typeInfo, AccessMode.Pub, true, MutMode.Mut, true )
 end
 
 
-function Scope:addAlge( accessMode, name, pos, typeInfo )
+function Scope:addAlge( processInfo, accessMode, name, pos, typeInfo )
 
-   return self:add( SymbolKind.Typ, false, false, name, pos, typeInfo, accessMode, true, MutMode.Mut, true )
+   return self:add( processInfo, SymbolKind.Typ, false, false, name, pos, typeInfo, accessMode, true, MutMode.Mut, true )
 end
 
 
-function Scope:addAlternate( accessMode, name, pos, typeInfo )
+function Scope:addAlternate( processInfo, accessMode, name, pos, typeInfo )
 
-   self:add( SymbolKind.Typ, false, false, name, pos, typeInfo, accessMode, true, MutMode.Mut, true )
+   self:add( processInfo, SymbolKind.Typ, false, false, name, pos, typeInfo, accessMode, true, MutMode.Mut, true )
 end
 
 
-function Scope:addMember( name, pos, typeInfo, accessMode, staticFlag, mutMode )
+function Scope:addMember( processInfo, name, pos, typeInfo, accessMode, staticFlag, mutMode )
 
-   return self:add( SymbolKind.Mbr, true, true, name, pos, typeInfo, accessMode, staticFlag, mutMode, true )
+   return self:add( processInfo, SymbolKind.Mbr, true, true, name, pos, typeInfo, accessMode, staticFlag, mutMode, true )
 end
 
 
-function Scope:addMethod( pos, typeInfo, accessMode, staticFlag, mutable )
+function Scope:addMethod( processInfo, pos, typeInfo, accessMode, staticFlag, mutable )
 
-   return self:add( SymbolKind.Mtd, true, staticFlag, typeInfo:get_rawTxt(), pos, typeInfo, accessMode, staticFlag, mutable and MutMode.Mut or MutMode.IMut, true )
+   return self:add( processInfo, SymbolKind.Mtd, true, staticFlag, typeInfo:get_rawTxt(), pos, typeInfo, accessMode, staticFlag, mutable and MutMode.Mut or MutMode.IMut, true )
 end
 
 
-function Scope:addFunc( pos, typeInfo, accessMode, staticFlag, mutable )
+function Scope:addFunc( processInfo, pos, typeInfo, accessMode, staticFlag, mutable )
 
-   return self:add( SymbolKind.Fun, true, true, typeInfo:get_rawTxt(), pos, typeInfo, accessMode, staticFlag, mutable and MutMode.Mut or MutMode.IMut, true )
+   return self:add( processInfo, SymbolKind.Fun, true, true, typeInfo:get_rawTxt(), pos, typeInfo, accessMode, staticFlag, mutable and MutMode.Mut or MutMode.IMut, true )
 end
 
 
-function Scope:addForm( pos, typeInfo, accessMode )
+function Scope:addForm( processInfo, pos, typeInfo, accessMode )
 
-   self:add( SymbolKind.Typ, false, false, typeInfo:get_rawTxt(), pos, typeInfo, accessMode, true, MutMode.IMut, false )
+   self:add( processInfo, SymbolKind.Typ, false, false, typeInfo:get_rawTxt(), pos, typeInfo, accessMode, true, MutMode.IMut, false )
 end
 
 
-function Scope:addMacro( pos, typeInfo, accessMode )
+function Scope:addMacro( processInfo, pos, typeInfo, accessMode )
 
-   return self:add( SymbolKind.Mac, false, false, typeInfo:get_rawTxt(), pos, typeInfo, accessMode, true, MutMode.IMut, true )
+   return self:add( processInfo, SymbolKind.Mac, false, false, typeInfo:get_rawTxt(), pos, typeInfo, accessMode, true, MutMode.IMut, true )
 end
 
 
-function Scope:addClass( name, pos, typeInfo )
+function Scope:addClass( processInfo, name, pos, typeInfo )
 
-   return self:add( SymbolKind.Typ, false, false, name, pos, typeInfo, typeInfo:get_accessMode(), true, MutMode.Mut, true )
+   return self:add( processInfo, SymbolKind.Typ, false, false, name, pos, typeInfo, typeInfo:get_accessMode(), true, MutMode.Mut, true )
 end
 
 
@@ -3384,7 +3382,7 @@ function AlternateTypeInfo.new( processInfo, belongClassFlag, altIndex, txt, acc
    return obj
 end
 function AlternateTypeInfo:__init(processInfo, belongClassFlag, altIndex, txt, accessMode, moduleTypeInfo, baseTypeInfo, interfaceList) 
-   TypeInfo.__init( self,TypeInfo.createScope( nil, true, baseTypeInfo, interfaceList ), processInfo)
+   TypeInfo.__init( self,TypeInfo.createScope( processInfo, nil, true, baseTypeInfo, interfaceList ), processInfo)
    
    
    processInfo:get_idProv():increment(  )
@@ -3565,7 +3563,6 @@ function AlternateTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2typ
    end
    
    return self:canSetFrom( processInfo, other, canEvalType, alt2type ), nil
-   
 end
 function AlternateTypeInfo:get_display_stirng_with( raw, alt2type )
 
@@ -3607,7 +3604,6 @@ function AlternateTypeInfo:equals( processInfo, typeInfo, alt2type, checkModifer
    
    if alt2type ~= nil then
       return self:canSetFrom( processInfo, typeInfo, nil, alt2type )
-      
    end
    
    return false
@@ -3675,7 +3671,7 @@ end
 
 
 local boxRootAltType = AlternateTypeInfo.new(rootProcessInfo, true, 1, "_T", AccessMode.Pub, _moduleObj.headTypeInfo)
-local boxRootScope = Scope.new(_moduleObj.rootScope, true, nil)
+local boxRootScope = Scope.new(rootProcessInfo, _moduleObj.rootScope, true, nil)
 
 local BoxTypeInfo = {}
 setmetatable( BoxTypeInfo, { __index = TypeInfo } )
@@ -3912,7 +3908,7 @@ function GenericTypeInfo.new( processInfo, genSrcTypeInfo, itemTypeInfoList, mod
    return obj
 end
 function GenericTypeInfo:__init(processInfo, genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo) 
-   TypeInfo.__init( self,TypeInfo.createScope( (_lune.unwrap( genSrcTypeInfo:get_scope()) ):get_parent(), true, genSrcTypeInfo, nil ), processInfo)
+   TypeInfo.__init( self,TypeInfo.createScope( processInfo, (_lune.unwrap( genSrcTypeInfo:get_scope()) ):get_parent(), true, genSrcTypeInfo, nil ), processInfo)
    
    
    processInfo:get_idProv():increment(  )
@@ -4546,6 +4542,7 @@ function ModuleTypeInfo:__init(processInfo, scope, externalFlag, txt, parentInfo
    
    
    processInfo:get_idProv():increment(  )
+   
    scope:set_ownerTypeInfo( self )
 end
 function ModuleTypeInfo:isModule(  )
@@ -4733,6 +4730,7 @@ function EnumTypeInfo:__init(processInfo, scope, externalFlag, accessMode, txt, 
    
    self.nilableTypeInfo = NilableTypeInfo.new(nil, processInfo, self, typeId + 1)
    processInfo:get_idProv():increment(  )
+   
    scope:set_ownerTypeInfo( self )
 end
 function EnumTypeInfo:isModule(  )
@@ -4845,6 +4843,7 @@ function AlgeTypeInfo:__init(processInfo, scope, externalFlag, accessMode, txt, 
    
    self.nilableTypeInfo = NilableTypeInfo.new(nil, processInfo, self, typeId + 1)
    processInfo:get_idProv():increment(  )
+   
    scope:set_ownerTypeInfo( self )
 end
 function AlgeTypeInfo:getValInfo( name )
@@ -5114,7 +5113,6 @@ function NormalTypeInfo:__init(processInfo, abstractFlag, scope, baseTypeInfo, i
    
    self.typeId = typeId
    if kind == TypeInfoKind.Root then
-      
    else
     
       if parentInfo ~= nil then
@@ -5351,6 +5349,7 @@ function NormalTypeInfo:equalsSub( processInfo, typeInfo, alt2type, checkModifer
       
    end
    
+   
    return true
 end
 function NormalTypeInfo:equals( processInfo, typeInfo, alt2type, checkModifer )
@@ -5434,6 +5433,7 @@ function ProcessInfo:createAlternate( belongClassFlag, altIndex, txt, accessMode
 
    return AlternateTypeInfo.new(self, belongClassFlag, altIndex, txt, accessMode, moduleTypeInfo, baseTypeInfo, interfaceList)
 end
+
 
 local DDDTypeInfo = {}
 
@@ -5635,6 +5635,7 @@ end
 
 
 rootProcessInfo:get_idProv():increment(  )
+
 local function addBuiltin( typeInfo )
 
    builtInTypeIdSet[typeInfo:get_typeId()] = typeInfo
@@ -5643,9 +5644,9 @@ _moduleObj.addBuiltin = addBuiltin
 
 local function registBuiltin( idName, typeTxt, kind, typeInfo, nilableTypeInfo, registScope )
 
-   sym2builtInTypeMap[typeTxt] = NormalSymbolInfo.new(SymbolKind.Typ, false, false, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, nil, typeInfo, MutMode.IMut, true)
+   sym2builtInTypeMap[typeTxt] = NormalSymbolInfo.new(rootProcessInfo, SymbolKind.Typ, false, false, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, nil, typeInfo, MutMode.IMut, true)
    if nilableTypeInfo ~= _moduleObj.headTypeInfo then
-      sym2builtInTypeMap[typeTxt .. "!"] = NormalSymbolInfo.new(SymbolKind.Typ, false, kind == TypeInfoKind.Func, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, nil, nilableTypeInfo, MutMode.IMut, true)
+      sym2builtInTypeMap[typeTxt .. "!"] = NormalSymbolInfo.new(rootProcessInfo, SymbolKind.Typ, false, kind == TypeInfoKind.Func, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, nil, nilableTypeInfo, MutMode.IMut, true)
    end
    
    addBuiltin( typeInfo )
@@ -5658,7 +5659,7 @@ local function registBuiltin( idName, typeTxt, kind, typeInfo, nilableTypeInfo, 
    
    
    if registScope then
-      _moduleObj.rootScope:addClass( typeTxt, nil, typeInfo )
+      _moduleObj.rootScope:addClass( rootProcessInfo, typeTxt, nil, typeInfo )
    end
    
 end
@@ -5688,7 +5689,7 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD, ifList )
    do
       local _switchExp = kind
       if _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Set or _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.Module or _switchExp == TypeInfoKind.IF or _switchExp == TypeInfoKind.Form or _switchExp == TypeInfoKind.FormFunc or _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.Method or _switchExp == TypeInfoKind.Macro then
-         scope = Scope.new(_moduleObj.rootScope, kind == TypeInfoKind.Class or kind == TypeInfoKind.Module or kind == TypeInfoKind.IF or kind == TypeInfoKind.List or kind == TypeInfoKind.Array or kind == TypeInfoKind.Set, nil)
+         scope = Scope.new(rootProcessInfo, _moduleObj.rootScope, kind == TypeInfoKind.Class or kind == TypeInfoKind.Module or kind == TypeInfoKind.IF or kind == TypeInfoKind.List or kind == TypeInfoKind.Array or kind == TypeInfoKind.Set, nil)
       end
    end
    
@@ -5764,9 +5765,9 @@ immutableTypeSet[_moduleObj.builtinTypeReal]= true
 immutableTypeSet[_moduleObj.builtinTypeChar]= true
 immutableTypeSet[_moduleObj.builtinTypeString]= true
 
-function Scope:addIgnoredVar(  )
+function Scope:addIgnoredVar( processInfo )
 
-   self:addLocalVar( false, true, "_", nil, _moduleObj.builtinTypeEmpty, MutMode.Mut )
+   self:addLocalVar( processInfo, false, true, "_", nil, _moduleObj.builtinTypeEmpty, MutMode.Mut )
 end
 
 
@@ -6196,14 +6197,14 @@ function ProcessInfo:createAlias( name, externalFlag, accessMode, parentInfo, ty
 end
 
 
-function Scope:addAlias( name, pos, externalFlag, accessMode, parentInfo, symbolInfo )
+function Scope:addAlias( processInfo, name, pos, externalFlag, accessMode, parentInfo, symbolInfo )
 
    local aliasType = self:getProcessInfo(  ):createAlias( name, externalFlag, accessMode, parentInfo, symbolInfo:get_typeInfo():get_srcTypeInfo() )
-   return self:add( symbolInfo:get_kind(), false, symbolInfo:get_canBeRight(), name, pos, aliasType, accessMode, true, MutMode.IMut, true )
+   return self:add( processInfo, symbolInfo:get_kind(), false, symbolInfo:get_canBeRight(), name, pos, aliasType, accessMode, true, MutMode.IMut, true )
 end
 
 
-function Scope:addAliasForType( name, pos, typeInfo )
+function Scope:addAliasForType( processInfo, name, pos, typeInfo )
 
    local skind = SymbolKind.Typ
    local canBeRight = false
@@ -6220,7 +6221,7 @@ function Scope:addAliasForType( name, pos, typeInfo )
    end
    
    
-   return self:add( skind, false, canBeRight, name, pos, typeInfo, typeInfo:get_accessMode(), true, MutMode.IMut, true )
+   return self:add( processInfo, skind, false, canBeRight, name, pos, typeInfo, typeInfo:get_accessMode(), true, MutMode.IMut, true )
 end
 
 
@@ -6923,6 +6924,7 @@ function AbbrTypeInfo:get_rawTxt()
    return self.rawTxt
 end
 
+
 local builtinTypeAbbr = AbbrTypeInfo.new(rootProcessInfo, "##")
 _moduleObj.builtinTypeAbbr = builtinTypeAbbr
 
@@ -7557,14 +7559,14 @@ function ProcessInfo:createEnum( scope, parentInfo, externalFlag, accessMode, en
    local info = EnumTypeInfo.new(self, scope, externalFlag, accessMode, enumName, parentInfo, self:get_idProv():getNewId(  ), valTypeInfo)
    
    local getEnumName = self:createFunc( false, true, nil, TypeInfoKind.Method, info, true, externalFlag, false, AccessMode.Pub, "get__txt", nil, nil, {_moduleObj.builtinTypeString}, false )
-   scope:addMethod( nil, getEnumName, AccessMode.Pub, false, false )
+   scope:addMethod( self, nil, getEnumName, AccessMode.Pub, false, false )
    
    local fromVal = self:createFunc( false, true, nil, TypeInfoKind.Func, info, true, externalFlag, true, AccessMode.Pub, "_from", nil, {self:createModifier( valTypeInfo, MutMode.IMut )}, {info:get_nilableTypeInfo()}, false )
-   scope:addMethod( nil, fromVal, AccessMode.Pub, true, false )
+   scope:addMethod( self, nil, fromVal, AccessMode.Pub, true, false )
    
    local allListType = self:createList( AccessMode.Pub, info, {info}, MutMode.IMut )
    local allList = self:createFunc( false, true, nil, TypeInfoKind.Func, info, true, externalFlag, true, AccessMode.Pub, "get__allList", nil, nil, {self:createModifier( allListType, MutMode.IMut )}, false )
-   scope:addMethod( nil, allList, AccessMode.Pub, true, false )
+   scope:addMethod( self, nil, allList, AccessMode.Pub, true, false )
    
    return info
 end
@@ -7605,7 +7607,6 @@ accessMode = %d, kind = %d, valTypeId = %d, ]==], SerializeKind.Enum, self:getPa
                end
             end
             
-            
          end
       end
    end
@@ -7624,7 +7625,7 @@ function ProcessInfo:createAlge( scope, parentInfo, externalFlag, accessMode, al
    local info = AlgeTypeInfo.new(self, scope, externalFlag, accessMode, algeName, parentInfo, self:get_idProv():getNewId(  ))
    
    local getAlgeName = self:createFunc( false, true, nil, TypeInfoKind.Method, info, true, externalFlag, false, AccessMode.Pub, "get__txt", nil, nil, {_moduleObj.builtinTypeString}, false )
-   scope:addMethod( nil, getAlgeName, AccessMode.Pub, false, false )
+   scope:addMethod( self, nil, getAlgeName, AccessMode.Pub, false, false )
    
    return info
 end
@@ -8033,7 +8034,6 @@ function TypeInfo.checkMatchType( processInfo, dstTypeList, expTypeList, allowDs
             end
             
             
-            
          end
          
       end
@@ -8046,7 +8046,6 @@ function TypeInfo.checkMatchType( processInfo, dstTypeList, expTypeList, allowDs
          
          return MatchType.Warn, Code.format( Code.ID.nothing_define_abbr, string.format( "use '##', instate of '%s'.", dstType:getTxt( _moduleObj.defaultTypeNameCtrl )) )
       end
-      
       
    end
    
@@ -8604,45 +8603,6 @@ local function createProcessInfo(  )
    return ProcessInfo.createUser( builtinTypeInfo2Map:clone(  ) )
 end
 _moduleObj.createProcessInfo = createProcessInfo
-
-local function pushProcessInfo( processInfo )
-   local __func__ = '@lune.@base.@Ast.pushProcessInfo'
-
-   Log.log( Log.Level.Log, __func__, 6648, function (  )
-   
-      return "start"
-   end )
-   
-   
-   if processInfo ~= nil then
-      curProcessInfo = processInfo
-   else
-      curProcessInfo = createProcessInfo(  )
-   end
-   
-   table.insert( processInfoQueue, curProcessInfo )
-   curProcessInfo:switchIdProvier( IdType.Base )
-   return curProcessInfo
-end
-_moduleObj.pushProcessInfo = pushProcessInfo
-
-local function popProcessInfo(  )
-   local __func__ = '@lune.@base.@Ast.popProcessInfo'
-
-   Log.log( Log.Level.Log, __func__, 6661, function (  )
-   
-      return "start"
-   end )
-   
-   table.remove( processInfoQueue )
-   if #processInfoQueue == 0 then
-      Util.err( "processInfoQueue is empty!!" )
-   end
-   
-   curProcessInfo = processInfoQueue[#processInfoQueue]
-   curProcessInfo:switchIdProvier( IdType.Base )
-end
-_moduleObj.popProcessInfo = popProcessInfo
 
 local BitOpKind = {}
 _moduleObj.BitOpKind = BitOpKind

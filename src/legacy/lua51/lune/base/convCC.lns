@@ -1509,7 +1509,7 @@ fn registerBuiltin() {
    }
 }
 
-fn convFilter.processBuiltin() : &Nodes.NodeManager
+fn convFilter.processBuiltin() mut : &Nodes.NodeManager
 {
    let mut nodeManager = new Nodes.NodeManager();
    let mut dummyPos = new Parser.Position( 0, 0, "builtin" );
@@ -1524,7 +1524,7 @@ fn convFilter.processBuiltin() : &Nodes.NodeManager
             foreach argType, index in symbol.$typeInfo.$argTypeInfoList {
                let argToken = new Parser.Token(
                   .Symb, "arg%d" (index), dummyPos, false## );
-               let dummyScope = new Ast.Scope( nil, false ## );
+               let dummyScope = new Ast.Scope( self.processInfo, nil, false ## );  
                let argSym = new BuiltinArgSymbolInfo(
                   dummyScope, argToken.txt, argType, nil, symbol.$typeInfo );
                
@@ -1624,8 +1624,6 @@ pub override fn convFilter.processRoot(
                         node.$nodeManager.getDeclMemberNodeList() );
 
    
-   //Ast.pushProcessInfo( node.$processInfo );
-
    foreach pragma in node.$luneHelperInfo.pragmaSet {
       match pragma {
          case .can_not_conv_code( codeSet ) {
@@ -1851,8 +1849,6 @@ pub override fn convFilter.processRoot(
    self.stream.switchToHeader();
    self.writeln( "#endif" );
    self.stream.returnToSource();
-   
-   //Ast.popProcessInfo();
 };
 
 pub override fn convFilter.processSubfile(
@@ -7190,13 +7186,17 @@ pub override fn convFilter.processApply(
 
    let dummyId = varList[1].$symbolId;
 
-   let mut dummyScope = new Ast.Scope( self.moduleTypeInfo.$scope , false## );
+   let mut dummyScope = new Ast.Scope(
+      self.processInfo, self.moduleTypeInfo.$scope , false## );
    
    let formSym = unwrap dummyScope.addLocalVar(
+      self.processInfo, 
       false, false, "_form%d" (dummyId), node.$pos, iteFuncType, .IMut);
    let paramSym = unwrap dummyScope.addLocalVar(
+      self.processInfo, 
       false, false, "_param%d" (dummyId), node.$pos, iteExpTypeList[ 2 ], .IMut);
    let stateSym = unwrap dummyScope.addLocalVar(
+      self.processInfo, 
       false, false, "_state%d" (dummyId), node.$pos, iteExpTypeList[ 3 ], .IMut);
    self.scopeMgr.setupScopeParam( dummyScope );
 

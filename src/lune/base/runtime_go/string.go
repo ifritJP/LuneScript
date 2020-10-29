@@ -33,7 +33,7 @@ import "strings"
 import "regexp"
 //import "runtime"
 
-// import "github.com/yuin/gopher-lua/pm"
+import "github.com/golang/groupcache/lru"
 
 func Lns_Str_init() {
 }
@@ -76,6 +76,8 @@ func init() {
     lns_c_ptr_reverse = C.CString( "reverse" )
     lns_c_ptr_gmatch = C.CString( "gmatch" )
     lns_c_ptr_dump = C.CString( "dump" )
+
+    regexpCache = lru.New( 20 )
 }
 
 type lns_callInfoString struct {
@@ -174,18 +176,17 @@ func (luaVM *Lns_luaVM) String_gsub(
     return ret[0].(string), LnsInt(ret[1].(int))
 }
 
-func goFind( txt string, src string, index LnsInt ) (bool, []LnsAny) {
+var regexpCache *lru.Cache
+
+func createRegexp( src string ) *regexp.Regexp {
+
+    if exp, ok := regexpCache.Get( src ); ok {
+        return exp.(*regexp.Regexp);
+    }
+    
     offset := 0
     remain := len( src )
-
-    dummyRet := []LnsAny{ nil }
-
-    reg := ""
-
-    if index <= 0 {
-        index = 1
-    }
-
+    
     processQuote := func ( inClass bool ) string {
         remain--
         offset++
@@ -222,7 +223,8 @@ func goFind( txt string, src string, index LnsInt ) (bool, []LnsAny) {
         }
         return fmt.Sprintf( "[%s]", cls )
     }
-    
+
+    reg := ""
     if remain >= 2 && src[ offset ] == '^' {
         reg += "^"
 
@@ -230,25 +232,26 @@ func goFind( txt string, src string, index LnsInt ) (bool, []LnsAny) {
         remain--
     }
 
+    
     inClass := false
     firstFlag := true
     for remain > 0 {
         switch src[ offset ] {
         case '%':
             if quote := processQuote( inClass ); quote == "" {
-                return false, dummyRet
+                return nil
             } else {
                 reg += quote
             }
         case '[':
             if inClass {
-                return false, dummyRet
+                return nil
             }
             inClass = true
             reg += src[ offset:offset + 1 ]
         case ']':
             if !inClass {
-                return false, dummyRet
+                return nil
             }
             inClass = false
             reg += src[ offset:offset + 1 ]
@@ -264,7 +267,7 @@ func goFind( txt string, src string, index LnsInt ) (bool, []LnsAny) {
             if inClass || firstFlag {
                 reg += src[ offset:offset + 1 ]
             } else {
-                return false, dummyRet
+                return nil
             }
         case '|':
             reg += fmt.Sprintf( "\\x%02X", src[ offset ] )
@@ -273,7 +276,7 @@ func goFind( txt string, src string, index LnsInt ) (bool, []LnsAny) {
         case '}':
             reg += fmt.Sprintf( "\\x%02X", src[ offset ] )
         case '(':
-            return false, dummyRet
+            return nil
         case '\\':
             reg += fmt.Sprintf( "\\x%02X", src[ offset ] )
         case ':':
@@ -290,9 +293,28 @@ func goFind( txt string, src string, index LnsInt ) (bool, []LnsAny) {
     }
 
     re := regexp.MustCompile( reg )
+    regexpCache.Add( src, re )
+    
+    return re
+}
+
+
+func goFind( txt string, src string, index LnsInt ) (bool, []LnsAny) {
+
+    dummyRet := []LnsAny{ nil }
+
+    re := createRegexp( src )
+    if re == nil {
+        return false, dummyRet
+    }
+
     loc := re.FindStringIndex( txt )
     if loc == nil {
         return true, dummyRet
+    }
+
+    if index <= 0 {
+        index = 1
     }
     return true, []LnsAny{ index + loc[0], index  + loc[1] - 1 }
 }

@@ -24,6 +24,7 @@ SOFTWARE.
 
 import lune.base.Depend;
 import lune.base.Log;
+import lune.base.Str;
 
 pri let mut debugFlag = true;
 pub fn setDebugFlag( flag:bool ) {
@@ -56,7 +57,6 @@ pub fn splitStr( txt:str, pattern:str ) : &List<str> {
    }
    return list;
 }
-
 
 pub class OrderedSet<T> {
    pri let mut set:Set<&T>;
@@ -148,32 +148,44 @@ pub class SimpleSourceOStream extend (SourceStream) {
       return 0;
    }
    
-   fn writeRaw( txt: str ) mut {
-      let mut stream = self.nowStream;
+   // fn writeRaw( txt: str ) mut {
+   //    let mut stream = self.nowStream;
 
-      if self.needIndent {
-         stream.write( string.rep( " ", self.$indent ) );
-         self.needIndent = false;
-      }
+   //    if self.needIndent {
+   //       stream.write( string.rep( " ", self.$indent ) );
+   //       self.needIndent = false;
+   //    }
 
-      apply _ of string.gmatch( txt, "\n" ) {
-         self.curLineNo = self.curLineNo + 1;
-      }
-      stream.write( txt );
-   }
+   //    apply _ of string.gmatch( txt, "\n" ) {
+   //       self.curLineNo = self.curLineNo + 1;
+   //    }
+   //    stream.write( txt );
+   // }
 
    pub fn write( mut txt: str ) mut {
-      while true {
-         if! let index = string.find( txt, "\n"## ) {
-            self.writeRaw( txt.sub( 1, index ) );
-            txt = txt.sub( index + 1 ##);
+      // while true {
+      //    if! let index = string.find( txt, "\n"## ) {
+      //       self.writeRaw( txt.sub( 1, index ) );
+      //       txt = txt.sub( index + 1 ##);
+      //    }
+      //    else {
+      //       break;
+      //    }
+      // }
+      // if #txt > 0 {
+      //    self.writeRaw( txt );
+      // }
+      let mut stream = self.nowStream;
+      foreach line in Str.getLineList( txt ) {
+         if self.needIndent {
+            stream.write( string.rep( " ", self.$indent ) );
+            self.needIndent = false;
          }
-         else {
-            break;
+
+         if #line > 0 and line[ #line ] == ?\n {
+            self.curLineNo = self.curLineNo + 1;
          }
-      }
-      if #txt > 0 {
-         self.writeRaw( txt );
+         stream.write( line );
       }
    }
 

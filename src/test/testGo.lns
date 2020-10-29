@@ -1713,3 +1713,10 @@ _section();
    }
    hoge();
 }
+_section();
+{
+   let txt = ```
+1	2
+```;
+   print( txt );
+}

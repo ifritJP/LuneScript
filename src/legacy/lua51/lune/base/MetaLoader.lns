@@ -1,0 +1,69 @@
+import lune.base.Str;
+import lune.base.Util;
+import lune.base.Meta;
+import lune.base.Parser;
+
+class Loader {
+   let mut parser:Parser.PushbackParser;
+   pub fn __init( parser:Parser.PushbackParser ) {
+      self.parser = parser;
+   }
+
+   fn processDeclVar() mut : bool {
+      return false;
+   }
+   
+   pub fn process() mut : &Meta._MetaInfo! {
+      while true {
+         let token = self.parser.getTokenNoErr();
+         if token.kind == .Eof {
+            break;
+         }
+         // if not token.txt.find( "^--" ## ) {
+         //    switch token.txt {
+         //       case "local" {
+         //          if self.processDeclVar() {
+         //             return nil;
+         //          }
+         //       }
+         //       case "do", "end" {
+         //       }
+         //    }
+         // }
+         
+         print( "%3d:%2d" (token.pos.lineNo, token.pos.column),
+                token.kind.$_txt, token.txt );
+      }
+      
+      return new Meta._MetaInfo(
+         "", false, "", {}, [], {}, {}, 0, 0, true, {}, {}, {}, false );
+   }
+}
+
+pub fn loadFromStream( path:str, stream:iStream ) : &Meta._MetaInfo! {
+   let mut streamParser = new Parser.StreamParser( stream, path, true );
+   let mut parser = new Parser.DefaultPushbackParser( streamParser );
+   let mut loader = new Loader( parser );
+   return loader.process();
+}
+
+pub fn loadFromCode( path:str, code:str ) : &Meta._MetaInfo! {
+   return loadFromStream( path, new Parser.TxtStream( code ) );
+}
+
+pub fn load( path:str ) : &Meta._MetaInfo! {
+   let! mut stream = io.open( path, "r" ) {
+      return nil;
+   };
+   return loadFromStream( path, stream );
+}
+
+__test case1(ctrl) {
+   loadFromCode( "hoge.lua",
+                 ```local val = {
+1, 2, 3, 4
+}
+-- abcde
+return val
+``` );
+}

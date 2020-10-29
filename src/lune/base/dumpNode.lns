@@ -265,7 +265,7 @@ pub override fn dumpFilter.processWhen(
 {
    let mut symTxt = "";
    foreach symPair in node.$symPairList {
-      symTxt = "%s %s" (symTxt, symPair.$src);
+      symTxt = "%s %s" (symTxt, symPair.$src.$name );
    }
    
    self.dump( opt, node, symTxt );

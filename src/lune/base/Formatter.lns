@@ -96,13 +96,9 @@ pub override fn FormatterFilter.processImport(
 pub override fn FormatterFilter.processRoot(
    node: &Nodes.RootNode, opt:Opt ) mut
 {
-   //Ast.pushProcessInfo(##);
-   
    foreach child in node.$children {
       filter( child, self, opt.nextOpt( node ) );
    }
-
-   //Ast.popProcessInfo();
 };
 pub override fn FormatterFilter.processSubfile(
    node: &Nodes.SubfileNode, opt:Opt ) mut

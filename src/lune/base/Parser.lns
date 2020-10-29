@@ -25,29 +25,31 @@ SOFTWARE.
 import lune.base.Util;
 import lune.base.Str;
 
-let mut luaKeywordSet:Set<str> = (@);
-luaKeywordSet.add( "if" );
-luaKeywordSet.add( "else" );
-luaKeywordSet.add( "elseif" );
-luaKeywordSet.add( "while" );
-luaKeywordSet.add( "for" );
-luaKeywordSet.add( "in" );
-luaKeywordSet.add( "return" );
-luaKeywordSet.add( "break" );
-luaKeywordSet.add( "nil" );
-luaKeywordSet.add( "true" );
-luaKeywordSet.add( "false" );
-luaKeywordSet.add( "{" );
-luaKeywordSet.add( "}" );
-luaKeywordSet.add( "do" );
-luaKeywordSet.add( "require" );
-luaKeywordSet.add( "function" );
-luaKeywordSet.add( "then" );
-luaKeywordSet.add( "end" );
-luaKeywordSet.add( "repeat" );
-luaKeywordSet.add( "until" );
-luaKeywordSet.add( "goto" );
-luaKeywordSet.add( "local" );
+let luaKeywordSet:Set<str> =
+    (@
+      "if", 
+      "else",
+      "elseif",
+      "while",
+      "for",
+      "in", 
+      "return",
+      "break",
+      "nil",
+      "true",
+      "false",
+      "{",  
+      "}",  
+      "do", 
+      "require",
+      "function",
+      "then",
+      "end",
+      "repeat",
+      "until",
+      "goto",
+      "local"
+    );
 
 pub fn isLuaKeyword( txt:str ) : bool {
    return luaKeywordSet.has( txt );
@@ -381,6 +383,7 @@ pub class StreamParser extend Parser {
    let typeSet : Set<str>;
    let builtInSet :Set<str>;
    let multiCharDelimitMap : Map<str,str[@]>;
+   let luaMode:bool;
    pub fn __init( stream: iStream, name: str, luaMode: bool! ) {
       super();
       self.eof = false;
@@ -390,9 +393,10 @@ pub class StreamParser extend Parser {
       self.pos = 1;
       self.lineTokenList = [];
       self.prevToken = noneToken;
+      self.luaMode = unwrap luaMode default false;
 
       let keywordSet, typeSet, builtInSet, multiCharDelimitMap =
-         createReserveInfo( luaMode );
+      createReserveInfo( luaMode );
 
       self.keywordSet = keywordSet;
       self.typeSet = typeSet;
@@ -405,11 +409,13 @@ pub class StreamParser extend Parser {
    }
 
    pub static fn create( path: str, luaMode: bool, moduleName:str ): StreamParser! {
-      let mut stream:iStream = new TxtStream( StreamParser.stdinTxt );
+      let mut stream:iStream;
       if StreamParser.stdinStreamModuleName ~= moduleName {
          unwrap! stream = io.open( path, "r" ) {
             return nil;
          };
+      } else {
+         stream = new TxtStream( StreamParser.stdinTxt );
       }
 
       return new StreamParser(
@@ -543,55 +549,61 @@ pub class DefaultPushbackParser extend (PushbackParser) {
    }
 }
 
-let mut quotedCharSet:Set<str> = (@);
-quotedCharSet.add( 'a' );
-quotedCharSet.add( 'b' );
-quotedCharSet.add( 'f' );
-quotedCharSet.add( 'n' );
-quotedCharSet.add( 'r' );
-quotedCharSet.add( 't' );
-quotedCharSet.add( 'v' );
-quotedCharSet.add( '\\' );
-quotedCharSet.add( '"' );
-quotedCharSet.add( "'" );
+let quotedCharSet:Set<str> =
+    (@
+      'a',  
+      'b',  
+      'f',  
+      'n',  
+      'r',  
+      't',  
+      'v',  
+      '\\', 
+      '"',  
+      "'"
+    );
 
 
-let mut op2Set:Set<str> = (@);
-op2Set.add( '+' );
-op2Set.add( '-' );
-op2Set.add( '*' );
-op2Set.add( '/' );
-op2Set.add( '^' );
-op2Set.add( '%' );
-op2Set.add( '&' );
-op2Set.add( '~' );
-op2Set.add( '|' );
-op2Set.add( '|>>' );
-op2Set.add( '|<<' );
-op2Set.add( '..' );
-op2Set.add( '<' );
-op2Set.add( '<=' );
-op2Set.add( '>' );
-op2Set.add( '>=' );
-op2Set.add( '==' );
-op2Set.add( '~=' );
-op2Set.add( 'and' );
-op2Set.add( 'or' );
-op2Set.add( '@' );
-op2Set.add( '@@' );
-op2Set.add( '@@@' );
-op2Set.add( '=' );
+let op2Set:Set<str> =
+    (@
+      '+',  
+      '-',  
+      '*',  
+      '/',  
+      '^',  
+      '%',  
+      '&',  
+      '~',  
+      '|',  
+      '|>>',
+      '|<<',
+      '..', 
+      '<',  
+      '<=', 
+      '>',  
+      '>=', 
+      '==', 
+      '~=', 
+      'and',
+      'or', 
+      '@',  
+      '@@', 
+      '@@@',
+      '='
+    );
 
-let mut op1Set:Set<str> = (@);
-op1Set.add( '-' );
-op1Set.add( 'not' );
-op1Set.add( '#' );
-op1Set.add( '~' );
-op1Set.add( '*' );
-op1Set.add( '`' );
-op1Set.add( ',,' );
-op1Set.add( ',,,' );
-op1Set.add( ',,,,' );
+let op1Set:Set<str> =
+    (@
+      '-',  
+      'not',
+      '#',  
+      '~',  
+      '*',  
+      '`',  
+      ',,', 
+      ',,,',
+      ',,,,'
+    );
 
 
 // pub static fn getKindTxt( kind: int ) : str {
@@ -671,7 +683,7 @@ fn StreamParser.parse() mut : Token[]! {
          }
          let mut consecutive = false;
          if self.prevToken.pos.lineNo == self.lineNo and
-            self.prevToken.pos.column + #self.prevToken.txt == tokenColumn
+         self.prevToken.pos.column + #self.prevToken.txt == tokenColumn
          {
             consecutive = true;
          }
@@ -697,7 +709,7 @@ fn StreamParser.parse() mut : Token[]! {
          let mut intFlag = true;
          let mut nonNumChar = token[nonNumIndex];
          if nonNumChar == ?. { // .
-            intFlag = false;
+            intFlag = false;   
             unwrap! nonNumIndex = token.find( '[^%d]', nonNumIndex + 1 ## ) {
                return #token, intFlag;
             };
@@ -706,21 +718,21 @@ fn StreamParser.parse() mut : Token[]! {
          }
          if nonNumChar == ?X or nonNumChar == ?x { // X or x
             unwrap! nonNumIndex = token.find( '[^%da-fA-F]', nonNumIndex + 1 ## ) {
-               return #token, intFlag;
+               return #token, intFlag;                
             };
-            nonNumChar = token[nonNumIndex];
+            nonNumChar = token[nonNumIndex];       
          }
          if nonNumChar == ?E or nonNumChar == ?e { // E or e
-            intFlag = false;
+            intFlag = false;                       
             let nextChar = token[nonNumIndex + 1 ];
             if nextChar == ?- or nextChar == ?+ { // '-' or '+'
                unwrap! nonNumIndex = token.find( '[^%d]', nonNumIndex + 2 ## ) {
                   return #token, intFlag;
                };
             }
-            else {
+            else {                                 
                unwrap! nonNumIndex = token.find( '[^%d]', nonNumIndex + 1 ## ) {
-                  return #token, intFlag;
+                  return #token, intFlag;                
                };
             }
          }
@@ -741,7 +753,7 @@ fn StreamParser.parse() mut : Token[]! {
             let mut subIndex = 1;
             while #token >= subIndex {
                if token.find( '^[%d]', subIndex ## ) or
-                  token[subIndex] == ?- and token.find( '^[%d]', subIndex + 1 ## )
+               token[subIndex] == ?- and token.find( '^[%d]', subIndex + 1 ## )
                {
                   // 数値の場合
                   let mut checkIndex = subIndex;
@@ -806,9 +818,8 @@ fn StreamParser.parse() mut : Token[]! {
                   else {
                      if subIndex <= #token {
                         list.insert(
-                           createInfo(
-                              .Symb, token.sub( subIndex ##),
-                              columnIndex + subIndex ) );
+                           createInfo( .Symb, token.sub( subIndex ##),
+                                       columnIndex + subIndex ) );
                      }
                      break;
                   }
@@ -826,18 +837,26 @@ fn StreamParser.parse() mut : Token[]! {
    // たとえば、 0.12e-2 のときに - の部分が検索開始位置、 0 の部分が領域開始位置になる
    let mut searchIndex = startIndex;
 
+   fn getChar( index:int ) : int {
+      if #rawLine >= index {
+         return rawLine[ index ];
+      }
+      return 0;
+   }
+   
    // 領域をカテゴライズする
    while true {
       let mut syncIndexFlag = true;
-      //let pattern = ```[/%-%?"%'%`%[].```;
-      let pattern = ```[/%-%?"%'%`].```;
+      let pattern = ```[/%-%?"%'%`].```;  // /-?"'` の特殊処理が必要なパターンを見つける
       let! index = string.find( rawLine, pattern, searchIndex ## ) {
+         // 特殊処理が必要ない場合
          addVal( .Symb, rawLine.sub( startIndex ##), startIndex );
          return list;
       };
 
-      let findChar = rawLine[ index];
-      let nextChar = rawLine[ index + 1];
+      // 特殊処理が必要な場合
+      let findChar = getChar( index );
+      let nextChar = getChar( index + 1 );
 
       if findChar == ?- and nextChar ~= ?- {
          searchIndex = index + 1;
@@ -847,48 +866,7 @@ fn StreamParser.parse() mut : Token[]! {
          if startIndex < index {
             addVal( .Symb, rawLine.sub( startIndex, index - 1 ), startIndex );
          }
-         if findChar == ?/ {
-            // コメント処理
-            if nextChar == ?* {
-               // 複数行コメントの場合
-               let comment, nextIndex = multiComment( index + 2, "*/" );
-               addVal( .Cmnt, "/*" .. comment, index );
-               searchIndex = nextIndex;
-            }
-            elseif nextChar == ?/ {
-               // 1行コメント
-               addVal( .Cmnt, rawLine.sub( index ## ), index );
-               searchIndex = #rawLine + 1;
-            }
-            else {
-               addVal( .Ope, "/", index );
-               searchIndex = index + 1;
-            }
-         }
-         // elseif findChar == ?\' and nextChar == ?\' { // コメント処理
-         //     if string[rawLine, index + 2 ) == ?\' {
-         //         // 複数行コメントの場合
-         //         let comment, nextIndex = multiComment( index + 3, "'''" );
-         //         addVal( kindCmnt, "'''" .. comment, index );
-         //         searchIndex = nextIndex;
-         //     }
-         //     else {
-         //         // 1行コメント
-         //         addVal( kindCmnt, rawLine.sub( index ), index );
-         //         searchIndex = #rawLine + 1;
-         //     }
-         // }
-         // elseif findChar == ?\[ {
-         //     if nextChar == ?@ {
-         //         addVal( kindDlmt, "[@", index );
-         //         searchIndex = index + 2;
-         //     }
-         //     else {
-         //         addVal( kindDlmt, "[", index );
-         //         searchIndex = index + 1;
-         //     }
-         // }
-         elseif findChar == ?\' or findChar == ?\" {
+         if findChar == ?\' or findChar == ?\" {
             // 文字列の場合
             let mut workIndex = index + 1;
             let workPattern = '["\'\\]';
@@ -923,37 +901,61 @@ fn StreamParser.parse() mut : Token[]! {
               addVal( .Str, '```' .. txt, index );
               searchIndex = nextIndex;
            }
-           else {
-              addVal( .Ope, '`', index );
-              searchIndex = index + 1;
-           }
-        }
-        elseif findChar == ?? {
-           let mut codeChar = rawLine.sub( index + 1, index + 1 );
-           if nextChar == ?\\ {
-              let quoted = rawLine.sub( index + 2, index + 2 );
-              if quotedCharSet.has( quoted ) {
-                 codeChar = rawLine.sub( index + 1, index + 2 );
-              }
-              else {
-                 codeChar = quoted;
-              }
-              searchIndex = index + 3;
-           }
-           else {
-              searchIndex = index + 2;
-           }
-           addVal( .Char, codeChar, index );
-        }
-        else {
-           Util.err( "%s:%d:%d: error: illegal syntax -- %s"
-                     ( self.getStreamName(), self.lineNo, index, rawLine ) );
-        }
-     }
-     if syncIndexFlag {
-        startIndex = searchIndex;
-     }
-  }
+            else {
+               addVal( .Ope, '`', index );
+               searchIndex = index + 1;
+            }
+         }
+         elseif findChar == ?? {
+            let mut codeChar = rawLine.sub( index + 1, index + 1 );
+            if nextChar == ?\\ {
+               let quoted = rawLine.sub( index + 2, index + 2 );
+               if quotedCharSet.has( quoted ) {
+                  codeChar = rawLine.sub( index + 1, index + 2 );
+               }
+               else {
+                  codeChar = quoted;
+               }
+               searchIndex = index + 3;
+            }
+            else {
+               searchIndex = index + 2;
+            }
+            addVal( .Char, codeChar, index );
+         }
+         else {
+            if self.luaMode and findChar == ?- and nextChar == ?-{
+               // 1行コメント
+               addVal( .Cmnt, rawLine.sub( index ## ), index );
+               searchIndex = #rawLine + 1;
+               // Lua の複数行コメントは非対応
+            } elseif findChar == ?/ {
+               // コメント処理
+               if nextChar == ?* {
+                  // 複数行コメントの場合
+                  let comment, nextIndex = multiComment( index + 2, "*/" );
+                  addVal( .Cmnt, "/*" .. comment, index );
+                  searchIndex = nextIndex;
+               }
+               elseif nextChar == ?/ {
+                  // 1行コメント
+                  addVal( .Cmnt, rawLine.sub( index ## ), index );
+                  searchIndex = #rawLine + 1;
+               }
+               else {
+                  addVal( .Ope, "/", index );
+                  searchIndex = index + 1;
+               }
+            } else {
+               Util.err( "%s:%d:%d: error: illegal syntax -- %s"
+                         ( self.getStreamName(), self.lineNo, index, rawLine ) );
+            }
+         }
+      }
+      if syncIndexFlag {
+         startIndex = searchIndex;
+      }
+   }
 }
 
 pub override fn StreamParser.getToken() mut : &Token! {
@@ -1058,6 +1060,40 @@ pub class CommentCtrl {
 
    advertise layer;
 }
+
+/**
+区切り記号で囲んでいる文字列を quote 変換する。
+*/
+pub fn quoteStr( txt:str ) : str {
+   let mut work = txt;
+   let mut part = '"';
+   for index = 1, #work {
+      let char = work[ index ];
+      switch char {
+         case ?\n {
+            part = part .. "\\n";
+         }
+         case ?\r {
+            part = part .. "\\r";
+         }
+         case ?\t {
+            part = part .. "\\t";
+         }
+         case ?\" {
+            part = part .. '\\"';
+         }
+         case ?\\ {
+            part = part .. '\\\\';
+         }
+         default {
+            part = part .. "%c" ( char );
+         }
+      }
+   }
+   work = part .. '"';
+   return work;
+}
+
 
 __test case1(ctrl) {
    {

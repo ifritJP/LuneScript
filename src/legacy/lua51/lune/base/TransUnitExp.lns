@@ -2520,36 +2520,6 @@ fn TransUnit.analyzeNewAlge(
    }
 }
 
-fn TransUnit.accessSymbol( symbolInfo:&Ast.SymbolInfo, canLeftExp:bool ) mut {
-   if symbolInfo.$kind == .Fun {
-      self.scope.accessSymbol( self.moduleScope, symbolInfo );
-      symbolInfo.set_posForModToRef( symbolInfo.$posForLatestMod );
-
-      
-      if self.scope.isClosureAccess( self.moduleScope, symbolInfo ) {
-         // 関数の場合、AST 解析中の時点ではクロージャ処理が必要かどうかが
-         // 判定できないので、リストに保持して AST 解析後に別途処理する。
-         self.closureFunList.insert( new ClosureFun( symbolInfo, self.scope ) );
-      }
-
-      
-      // クロージャの変数をアクセスありにする
-      if! let scope = symbolInfo.$typeInfo.$scope {
-         foreach symInfo in scope.$closureSymList {
-            symInfo.set_posForModToRef( symInfo.$posForLatestMod );
-         }
-      }
-   }
-   else {
-      self.scope.accessSymbol( self.moduleScope, symbolInfo );
-      if canLeftExp {
-         self.accessSymbolSetQueue.add( symbolInfo );
-      } else {
-         symbolInfo.set_posForModToRef( symbolInfo.$posForLatestMod );
-      }
-   }
-}
-
 fn TransUnit.analyzeExpSymbol(
    firstToken: &Parser.Token, symbolToken: &Parser.Token, mode: ExpSymbolMode,
    prefixExp: &Nodes.Node!, mut skipFlag: bool, canLeftExp:bool ) mut : Nodes.Node

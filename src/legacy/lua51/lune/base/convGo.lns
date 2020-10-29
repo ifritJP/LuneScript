@@ -64,6 +64,7 @@ class convFilter extend Nodes.Filter<Opt> {
    pri let mut nodeManager:Nodes.NodeManager;
    pri let mut enableTest:bool;
    let mut processInfo:Ast.ProcessInfo;
+   pri let noneNode:Nodes.NoneNode;
 
    pub fn __init( enableTest:bool, streamName: str, stream: oStream,
                   ast:TransUnit.ASTInfo )
@@ -80,6 +81,10 @@ class convFilter extend Nodes.Filter<Opt> {
       self.type2gotypeMap = {};
       self.nodeManager = new Nodes.NodeManager();
       self.enableTest = enableTest;
+
+      self.noneNode = Nodes.NoneNode.create(
+         self.nodeManager, Parser.noneToken.pos, false,
+         [ Ast.builtinTypeNone ] );
    }
 
    fn pushProcessMode( mode:ProcessMode ) mut {
@@ -415,15 +420,14 @@ fn str2gostr( txt:str ) : str {
    let mut work = txt;
    if string.find( work, '^```' ## ) {
       work = work.sub( 4, -4 ).gsub( "^\n", "" );
-      work = ("%q" ( work )).gsub( "\\\n", "\\n" );
+      work = Parser.quoteStr( work );
    }
    elseif string.find( work, "^'" ## ) {
       work = Parser.convFromRawToStr( work ).gsub( '"', '\\"' );
       work = '"%s"' (work);
    }
+   //work = work.gsub( "\\\n", "\\n" );
    
-   work = work.gsub( "\\\n", "\\n" );
-   work = work.gsub( "\\9", "\\t" );
    return work;
 }
 
@@ -1434,8 +1438,6 @@ pub override fn convFilter.processRoot(
    };
 
    
-   //Ast.pushProcessInfo( node.$processInfo );
-
    self.writeln( "// This code is transcompiled by LuneScript." );
    
    self.writeln( "package lns" );
@@ -1578,9 +1580,6 @@ pub override fn convFilter.processRoot(
    self.writeln( "%s = false" (initModVar) );
    self.popIndent();
    self.writeln( "}" );
-
-
-   //Ast.popProcessInfo();
 }
 
 pub override fn convFilter.processSubfile(
@@ -1742,7 +1741,12 @@ fn convFilter.processSetFromExpList(
             if index ~= 1 {
                self.write( ', ' );
             }
-            let exp = expListNode.$expList[ index ];
+            let exp:&Nodes.Node;
+            if #expListNode.$expList < index {
+               exp = self.noneNode;
+            } else {
+               exp = expListNode.$expList[ index ];
+            }
             if index == #dstTypeList and dstType.$kind == .DDD {
                // 関数の最終仮引数が DDD の場合、
                // []LnsAny に変換する

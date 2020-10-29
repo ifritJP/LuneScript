@@ -1873,3 +1873,17 @@ _ = 1;
       }
    }
 }
+{
+   Macro._section();
+   fn func(): int! {
+      return 1;
+   }
+   fn sub() {
+      let val:int;
+      unwrap! val = func() {
+         return;
+      };
+      print( val );
+   }
+   sub();
+}

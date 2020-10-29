@@ -63,6 +63,8 @@ pub enum IdType {
    Ext,
 }
 pub class ProcessInfo {
+   let mut idProvSym:IdProvider {pub};
+   let mut idProvScope:IdProvider {pub};
    let mut idProv:IdProvider {pub};
    let mut idProvBase:IdProvider {pub};
    let mut idProvExt:IdProvider {pub};
@@ -80,6 +82,8 @@ pub class ProcessInfo {
       self.idProvBase = idProvBase;
       self.idProvExt = new IdProvider( extStartId, extMaxId );
       self.idProv = self.idProvBase;
+      self.idProvSym = new IdProvider( 0, extMaxId );
+      self.idProvScope = new IdProvider( 0, extMaxId );
       self.typeInfo2Map = typeInfo2Map;
    }
 
@@ -435,11 +439,11 @@ pub class DataOwnerInfo {
 }
 
 pub class Scope extend (ModuleInfoManager) {
-   pri static let mut seedId:int;
+   // pri static let mut seedId:int;
    
-   __init {
-      Scope.seedId = 0;
-   }
+   // __init {
+   //    Scope.seedId = 0;
+   // }
 
    pri let scopeId:int {pub};
    
@@ -467,11 +471,11 @@ pub class Scope extend (ModuleInfoManager) {
    pri let mut validCheckingUnaccess:bool {pub,pub};
    
 
-   pub fn __init( parent: Scope!, classFlag: bool,
+   pub fn __init( processInfo:ProcessInfo, parent: Scope!, classFlag: bool,
                   inherit: &Scope!, ifScopeList:List<&Scope>! )
    {
-      self.scopeId = Scope.seedId;
-      Scope.seedId = Scope.seedId + 1;
+      self.scopeId = processInfo.$idProvScope.getNewId();
+      // Scope.seedId = Scope.seedId + 1;
 
       self.typeInfo2ModuleInfoMap = {};
       self.closureSymMap = {};
@@ -553,7 +557,7 @@ pub fn SymbolInfo.get_namespaceTypeInfo(): &TypeInfo {
 }
 
 // 最上位のスコープ
-pub let mut rootScope = new Scope( nil, false, nil## );
+pub let mut rootScope = new Scope( rootProcessInfo, nil, false, nil## );
 
 /**
 このスコープが scope の同じか内部のスコープか調べる。
@@ -924,7 +928,7 @@ static な型か。
    }
 
    pub static fn createScope(
-      parent: Scope!, classFlag: bool,
+      processInfo:ProcessInfo, parent: Scope!, classFlag: bool,
       baseInfo: &TypeInfo!, interfaceList: &List<&TypeInfo>! ) : Scope
    {
       let mut inheritScope:Scope! = nil;
@@ -938,7 +942,7 @@ static な型か。
             ifScopeList.insert( unwrap ifType.$scope );
          }
       }
-      return new Scope( parent, classFlag, inheritScope, ifScopeList );
+      return new Scope( processInfo, parent, classFlag, inheritScope, ifScopeList );
    }
 
    // prototype
@@ -1115,11 +1119,11 @@ pub fn Scope.getProcessInfo(): ProcessInfo {
 }
 
 pub class NormalSymbolInfo extend SymbolInfo {
-   pri static let mut symbolIdSeed:int;
+   // pri static let mut symbolIdSeed:int;
 
-   __init {
-      NormalSymbolInfo.symbolIdSeed = 0;
-   }
+   // __init {
+   //    NormalSymbolInfo.symbolIdSeed = 0;
+   // }
 
    /** 左辺値になれる場合 true */
    pri let canBeLeft: bool { pub };
@@ -1166,6 +1170,7 @@ pub class NormalSymbolInfo extend SymbolInfo {
    }
 
    pub fn __init(
+      processInfo:ProcessInfo,
       kind:SymbolKind, canBeLeft:bool, canBeRight:bool, scope: Scope,
       accessMode: AccessMode, staticFlag: bool, name: str, pos:&Parser.Position!,
       typeInfo: &TypeInfo, mutMode: MutMode!, hasValueFlag: bool )
@@ -1182,11 +1187,11 @@ pub class NormalSymbolInfo extend SymbolInfo {
       }
       self.posForModToRef = nil;
       
-      NormalSymbolInfo.symbolIdSeed = NormalSymbolInfo.symbolIdSeed + 1;
+      //NormalSymbolInfo.symbolIdSeed = NormalSymbolInfo.symbolIdSeed + 1;
       self.kind = kind;
       self.canBeLeft = canBeLeft;
       self.canBeRight = canBeRight;
-      self.symbolId = NormalSymbolInfo.symbolIdSeed;
+      self.symbolId = processInfo.$idProvSym.getNewId();
       self.scope = scope;
       self.accessMode = accessMode;
       self.staticFlag = staticFlag;
@@ -1689,6 +1694,7 @@ pub fn Scope.filterSymbolTypeInfo(
 
 
 pub fn Scope.add(
+   processInfo:ProcessInfo,
    kind: SymbolKind, canBeLeft:bool, canBeRight:bool, name:str, pos:&Parser.Position!,
    typeInfo: &TypeInfo, accessMode:AccessMode, staticFlag:bool,
    mutMode:MutMode, hasValueFlag:bool ) mut : SymbolInfo!, &SymbolInfo!
@@ -1723,140 +1729,167 @@ pub fn Scope.add(
    }
    
    let mut symbolInfo = new NormalSymbolInfo(
-      kind, canBeLeft, canBeRight, self, accessMode, staticFlag,
+      processInfo, kind, canBeLeft, canBeRight, self, accessMode, staticFlag,
       name, pos, typeInfo, mutMode, hasValueFlag );
    self.symbol2SymbolInfoMap[ name ] = symbolInfo;
    return symbolInfo, nil;
 }
 
 pub fn Scope.addLocalVar(
+   processInfo:ProcessInfo,
    argFlag:bool, canBeLeft:bool, name:str, pos:&Parser.Position!,
    typeInfo: &TypeInfo, mutable:MutMode ) mut : SymbolInfo!, &SymbolInfo!
 {
    return self.add(
-      argFlag and SymbolKind.Arg or SymbolKind.Var,
+      processInfo, argFlag and SymbolKind.Arg or SymbolKind.Var,
       canBeLeft, name ~= "_", name, pos, typeInfo, .Local, false, mutable, true )**;
 }
 
-pub let dummySymbol =
-   unwrap rootScope.addLocalVar( false, false, "$$", nil, headTypeInfo, .IMut );
+pub let dummySymbol = unwrap rootScope.addLocalVar(
+   rootProcessInfo, false, false, "$$", nil, headTypeInfo, .IMut );
 
 pub fn Scope.addUnwrapedVar(
+   processInfo:ProcessInfo,
    argFlag:bool, canBeLeft:bool, name:str, pos:&Parser.Position!,
    typeInfo: &TypeInfo, mutable:MutMode ) mut : SymbolInfo!, &SymbolInfo!
 {
    return self.add(
-      argFlag and SymbolKind.Arg or SymbolKind.Var,
+      processInfo, argFlag and SymbolKind.Arg or SymbolKind.Var,
       canBeLeft, true, name, pos, typeInfo, .Local, false, mutable, true )**;
 }
 
 
 pub fn Scope.addStaticVar(
+   processInfo:ProcessInfo,
    argFlag:bool, canBeLeft:bool, name:str, pos:&Parser.Position!,
    typeInfo: &TypeInfo, mutable:MutMode ) mut : &SymbolInfo!, &SymbolInfo!
 {
    return self.add(
-      argFlag and SymbolKind.Arg or SymbolKind.Var,
+      processInfo, argFlag and SymbolKind.Arg or SymbolKind.Var,
       canBeLeft, true, name, pos, typeInfo, .Local, true, mutable, true )**;
 }
 
 pub fn Scope.addVar(
+   processInfo:ProcessInfo,
    accessMode:AccessMode, name:str, pos:&Parser.Position!,
    typeInfo: &TypeInfo, mutable:MutMode, hasValueFlag:bool ) mut :
    &SymbolInfo!, &SymbolInfo!
 {
-   return self.add( SymbolKind.Var, true, true, name, pos, typeInfo,
-                    accessMode, false, mutable, hasValueFlag )**;
+   return self.add(
+      processInfo, SymbolKind.Var, true, true, name, pos, typeInfo,
+      accessMode, false, mutable, hasValueFlag )**;
 }
 
 
 
 
-pub fn Scope.addEnumVal( name:str, pos:&Parser.Position!, typeInfo: &TypeInfo ) mut :
+pub fn Scope.addEnumVal(
+   processInfo:ProcessInfo,
+   name:str, pos:&Parser.Position!, typeInfo: &TypeInfo ) mut :
    &SymbolInfo!, &SymbolInfo!
 {
-   return self.add( SymbolKind.Mbr, false, true,
-                    name, pos, typeInfo, .Pub, true, .Mut, true )**;
+   return self.add(
+      processInfo, SymbolKind.Mbr, false, true,
+      name, pos, typeInfo, .Pub, true, .Mut, true )**;
 }
 
 pub fn Scope.addEnum(
+   processInfo:ProcessInfo,
    accessMode:AccessMode, name:str, pos:&Parser.Position!, typeInfo: &TypeInfo ) mut :
    &SymbolInfo!, &SymbolInfo!
 {
-   return self.add( SymbolKind.Typ, false, false,
-                    name, pos, typeInfo, accessMode, true, .Mut, true )**;
+   return self.add(
+      processInfo, SymbolKind.Typ, false, false,
+      name, pos, typeInfo, accessMode, true, .Mut, true )**;
 }
 
-pub fn Scope.addAlgeVal( name:str, pos:&Parser.Position!, typeInfo: &TypeInfo ) mut :
+pub fn Scope.addAlgeVal(
+   processInfo:ProcessInfo,
+   name:str, pos:&Parser.Position!, typeInfo: &TypeInfo ) mut :
    &SymbolInfo!, &SymbolInfo!
 {
-   return self.add( SymbolKind.Mbr, false, true,
-                    name, pos, typeInfo, .Pub, true, .Mut, true )**;
+   return self.add(
+      processInfo, SymbolKind.Mbr, false, true,
+      name, pos, typeInfo, .Pub, true, .Mut, true )**;
 }
 
 pub fn Scope.addAlge(
+   processInfo:ProcessInfo,
    accessMode:AccessMode, name:str, pos:&Parser.Position!, typeInfo: &TypeInfo ) mut :
    &SymbolInfo!, &SymbolInfo!
 {
-   return self.add( SymbolKind.Typ, false, false,
-                    name, pos, typeInfo, accessMode, true, .Mut, true )**;
+   return self.add(
+      processInfo, SymbolKind.Typ, false, false,
+      name, pos, typeInfo, accessMode, true, .Mut, true )**;
 }
 
 pub fn Scope.addAlternate(
+   processInfo:ProcessInfo,
    accessMode:AccessMode, name:str, pos:&Parser.Position!, typeInfo: &TypeInfo ) mut
 {
-   self.add( SymbolKind.Typ, false, false,
-             name, pos, typeInfo, accessMode, true, .Mut, true );
+   self.add(
+      processInfo, SymbolKind.Typ, false, false,
+      name, pos, typeInfo, accessMode, true, .Mut, true );
 }
 
 pub fn Scope.addMember(
+   processInfo:ProcessInfo,
    name:str, pos:&Parser.Position!, typeInfo: &TypeInfo, accessMode:AccessMode,
    staticFlag:bool, mutMode:MutMode ) mut : &SymbolInfo!, &SymbolInfo!
 {
-   return self.add( SymbolKind.Mbr, true, true, name, pos,
-                    typeInfo, accessMode, staticFlag, mutMode, true )**;
+   return self.add(
+      processInfo, SymbolKind.Mbr, true, true, name, pos,
+      typeInfo, accessMode, staticFlag, mutMode, true )**;
 }
 
 pub fn Scope.addMethod(
+   processInfo:ProcessInfo,
    pos:&Parser.Position!, typeInfo: &TypeInfo, accessMode:AccessMode,
    staticFlag:bool, mutable:bool ) mut : &SymbolInfo!, &SymbolInfo!
 {
    return self.add(
-      SymbolKind.Mtd, true, staticFlag, typeInfo.$rawTxt, pos, typeInfo,
+      processInfo, SymbolKind.Mtd, true, staticFlag, typeInfo.$rawTxt, pos, typeInfo,
       accessMode,staticFlag, mutable and MutMode.Mut or MutMode.IMut, true )**;
 }
 
 pub fn Scope.addFunc(
+   processInfo:ProcessInfo,
    pos:&Parser.Position!, typeInfo: &TypeInfo,
    accessMode:AccessMode, staticFlag:bool, mutable:bool ) mut :
    &SymbolInfo!, &SymbolInfo!
 {
    return self.add(
-      SymbolKind.Fun, true, true, typeInfo.$rawTxt, pos, typeInfo, accessMode,
-      staticFlag, mutable and MutMode.Mut or MutMode.IMut, true )**;
+      processInfo, SymbolKind.Fun, true, true, typeInfo.$rawTxt, pos, typeInfo,
+      accessMode, staticFlag, mutable and MutMode.Mut or MutMode.IMut, true )**;
 }
 
 pub fn Scope.addForm(
+   processInfo:ProcessInfo,
    pos:&Parser.Position!, typeInfo: &TypeInfo, accessMode:AccessMode ) mut
 {
-   self.add( .Typ, false, false, typeInfo.$rawTxt, pos, typeInfo, accessMode,
-             true, .IMut, false );
+   self.add(
+      processInfo, .Typ, false, false, typeInfo.$rawTxt, pos,
+      typeInfo, accessMode, true, .IMut, false );
 }
 
 pub fn Scope.addMacro(
+   processInfo:ProcessInfo,
    pos:&Parser.Position!, typeInfo: &TypeInfo, accessMode:AccessMode ) mut :
    &SymbolInfo!, &SymbolInfo!
 {
-   return self.add( SymbolKind.Mac, false, false, typeInfo.$rawTxt, pos,
-                    typeInfo, accessMode, true, .IMut, true )**;
+   return self.add(
+      processInfo, SymbolKind.Mac, false, false, typeInfo.$rawTxt, pos,
+      typeInfo, accessMode, true, .IMut, true )**;
 }
 
 
-pub fn Scope.addClass( name:str, pos:&Parser.Position!,
-                       typeInfo: &TypeInfo ) mut : &SymbolInfo!, &SymbolInfo!
+pub fn Scope.addClass(
+   processInfo:ProcessInfo, name:str, pos:&Parser.Position!,
+   typeInfo: &TypeInfo ) mut : &SymbolInfo!, &SymbolInfo!
 {
-   return self.add( SymbolKind.Typ, false, false, name, pos, typeInfo,
-                    typeInfo.$accessMode, true, .Mut, true )**;
+   return self.add(
+      processInfo, SymbolKind.Typ, false, false, name, pos, typeInfo,
+      typeInfo.$accessMode, true, .Mut, true )**;
 }
 
 
@@ -2223,28 +2256,6 @@ pub class AccessSymbolInfo extend SymbolInfo {
    
 
    pub override fn get_typeInfo() : &TypeInfo {
-      // _match self.overrideMut {
-      //    case .None {
-      //    }
-      //    case .Prefix( prefixTypeInfo ) {
-      //       let symType = self.symbolInfo.$typeInfo;
-      //       if self.symbolInfo.$kind == .Mbr and
-      //          symType.$kind == .Alternate and
-      //          prefixTypeInfo.$kind == .Class and
-      //          #prefixTypeInfo.$itemTypeInfoList > 0
-      //       {
-      //          let mut alt2TypeMap = prefixTypeInfo.createAlt2typeMap( false );
-      //          let! typeInfo = symType.applyGeneric( alt2TypeMap, symType.getModule() ) {
-      //             return symType;
-      //          };
-      //          return typeInfo;
-      //       }
-      //    }
-      //    case .IMut( typeInfo ) {
-      //       return typeInfo;
-      //    }
-      // }
-      // return self.symbolInfo.$typeInfo;
       return self.overrideTypeInfo;
    }
    
@@ -2285,27 +2296,6 @@ pub class AccessSymbolInfo extend SymbolInfo {
       if not self.overrideCanBeLeft {
          return false;
       }
-      // if not self.symbolInfo.$canBeLeft {
-      //    return false;
-      // }
-      // return self.get_mutable();
-      // if! self.prefixTypeInfo {
-      //    switch self.symbolInfo.$mutMode {
-      //       case .AllMut {
-      //          return true;
-      //       }
-      //       case .IMut {
-      //          return false;
-      //       }
-      //    }
-      //    return _exp.$mutMode ~= .IMut;
-      // }
-      // return true;
-      // if! self.prefixTypeInfo {
-      //    if _exp.$mutMode == .IMut {
-      //       return false;
-      //    }
-      // }
       return self.symbolInfo.$canBeLeft;
    }
 
@@ -2317,12 +2307,6 @@ pub class NilableTypeInfo extend TypeInfo {
    pri let nonnilableType: &TypeInfo { pub };
    pri let typeId: int { pub };
 
-   // pub fn __init( nonnilableType: &TypeInfo, typeId: int ) {
-   //    super( nil );
-   //    self.nonnilableType = nonnilableType;
-   //    self.typeId = typeId;
-   // }
-
    pub override fn get_kind(): TypeInfoKind {
       return .Nilable;
    }
@@ -2332,9 +2316,6 @@ pub class NilableTypeInfo extend TypeInfo {
    pub override fn get_nilable(): bool {
       return true;
    }
-   // pub override fn get_extedType(): &TypeInfo {
-   //    return self;
-   // }
    
    /** この型の名前を取得する。 */
    pub override fn getTxt(
@@ -2425,7 +2406,7 @@ pub class AlternateTypeInfo extend TypeInfo {
                   txt:str, accessMode:AccessMode, moduleTypeInfo:&TypeInfo,
                   baseTypeInfo: &TypeInfo!, interfaceList: &List<&TypeInfo>! )
    {
-      super( TypeInfo.createScope( nil, true, baseTypeInfo, interfaceList ),
+      super( TypeInfo.createScope( processInfo, nil, true, baseTypeInfo, interfaceList ),
              processInfo );
 
       processInfo.$idProv.increment();
@@ -2595,15 +2576,6 @@ pub class AlternateTypeInfo extend TypeInfo {
 
       //let mut otherWork = unwrap other.applyGeneric( alt2type ) default other;
       return self.canSetFrom( processInfo, other, canEvalType, alt2type ), nil;
-      // let otherWork = AlternateTypeInfo.getAssign( other, alt2type );
-      // if! let genType = alt2type[ self ] {
-      //    return genType.canEvalWith( otherWork, canEvalType, alt2type );
-      // }
-      // if not CanEvalCtrlTypeInfo.isValidApply( alt2type ) {
-      //    return false;
-      // }
-      // alt2type[ self ] = otherWork;
-      // return true;
    }
 
    /** 表示用文字列取得 */
@@ -2643,16 +2615,6 @@ pub class AlternateTypeInfo extend TypeInfo {
 
       when! alt2type {
          return self.canSetFrom( processInfo, typeInfo, nil, alt2type );
-
-         // let mut otherWork = AlternateTypeInfo.getAssign( typeInfo, alt2type );
-         // if! let genType = alt2type[ self ] {
-         //    return genType.equals( otherWork, alt2type );
-         // }
-         // if not CanEvalCtrlTypeInfo.isValidApply( alt2type ) {
-         //    return false;
-         // }
-         // alt2type[ self ] = otherWork;
-         // return true;
       }
       return false;
    }
@@ -2711,7 +2673,7 @@ pub class AlternateTypeInfo extend TypeInfo {
 
 let boxRootAltType = new AlternateTypeInfo(
    rootProcessInfo, true, 1, "_T", .Pub, headTypeInfo ## );
-let mut boxRootScope = new Scope( rootScope, true, nil## );
+let mut boxRootScope = new Scope( rootProcessInfo, rootScope, true, nil## );
 
 pub class BoxTypeInfo extend TypeInfo {
    pri let boxingType: &TypeInfo {pub};
@@ -2833,7 +2795,7 @@ pub class GenericTypeInfo extend TypeInfo {
    pub fn __init( processInfo:ProcessInfo, genSrcTypeInfo:&TypeInfo,
                   itemTypeInfoList:&List<&TypeInfo>, moduleTypeInfo:&TypeInfo )
    {
-      super( TypeInfo.createScope( (unwrap genSrcTypeInfo.$scope).$parent,
+      super( TypeInfo.createScope( processInfo, (unwrap genSrcTypeInfo.$scope).$parent,
                                    true, genSrcTypeInfo, nil ),
              processInfo );
 
@@ -3172,7 +3134,6 @@ pub class ModuleTypeInfo extend TypeInfo {
       }
 
       processInfo.$idProv.increment();
-      //typeIdSeed = typeIdSeed + 1;
 
 
       scope.set_ownerTypeInfo( self );
@@ -3316,7 +3277,6 @@ pub class EnumTypeInfo extend TypeInfo {
 
       self.nilableTypeInfo = new NilableTypeInfo( nil, processInfo, self, typeId + 1 );
       processInfo.$idProv.increment();
-      //typeIdSeed = typeIdSeed + 1;
 
       scope.set_ownerTypeInfo( self );
    }
@@ -3417,8 +3377,6 @@ pub class AlgeTypeInfo extend TypeInfo {
 
       self.nilableTypeInfo = new NilableTypeInfo( nil, processInfo, self, typeId + 1 );
       processInfo.$idProv.increment();
-      //typeIdSeed = typeIdSeed + 1;
-
 
       scope.set_ownerTypeInfo( self );
    }
@@ -3633,11 +3591,6 @@ pub class NormalTypeInfo extend TypeInfo {
                }
             }
             case .Class, .IF {
-               // if! let genericType = self.baseTypeInfo@@@GenericTypeInfo {
-               //    foreach genType, altType in genericType.createAlt2typeMap( false ) {
-               //       alt2typeMap[ altType ] = genType;
-               //    }
-               // }
                foreach ifType in self.interfaceList {
                   if! let genericType = ifType@@@GenericTypeInfo {
                      foreach genType, altType in genericType.createAlt2typeMap( false ) {
@@ -3653,14 +3606,8 @@ pub class NormalTypeInfo extend TypeInfo {
       self.alt2typeMap = setupAlt2typeMap();
 
 
-      // if dummyRootTypeInfo and not parentInfo {
-      //     Util.debugLog();
-      //     error( "" );
-      // }
-
       self.typeId = typeId;
       if kind == .Root {
-         // dummyRootTypeInfo = self;
       }
       else {
          when! parentInfo {
@@ -3856,12 +3803,6 @@ pub class NormalTypeInfo extend TypeInfo {
          //  or
          // self ~= typeInfo.$srcTypeInfo
       {
-         // errorLog( "%s, %s" ( self.externalFlag, typeInfo.externalFlag ) );
-         // errorLog( "%s, %s" ( self.kind, typeInfo.kind ) );
-         // errorLog( "%s, %s" ( self.staticFlag, typeInfo.staticFlag ) );
-         // errorLog( "%s, %s" ( self.accessMode, typeInfo.accessMode ) );
-         // errorLog( "%s, %s" ( self.autoFlag, typeInfo.autoFlag ) );
-         // errorLog( "%s, %s" ( self.nilable, typeInfo.nilable ) );
          return false;
       }
 
@@ -3876,15 +3817,6 @@ pub class NormalTypeInfo extend TypeInfo {
          }
       }
 
-
-      // if ( self ~= typeInfo.$nonnilableType )
-      // {
-      //    Util.log( "%s, %s" ( self, typeInfo.$nonnilableType ) );
-      //    //          error( "illegal %s:%d %s:%d" ( self.getTxt(), self.typeId,
-      //    //                                     typeInfo.getTxt(), typeInfo.typeId ) );
-      //    return false;
-      // }
-
       {
          if #self.itemTypeInfoList ~= #typeInfo.$itemTypeInfoList {
             return false;
@@ -3893,9 +3825,6 @@ pub class NormalTypeInfo extend TypeInfo {
             if not item.equals(
                processInfo, typeInfo.$itemTypeInfoList[ index ], alt2type, checkModifer )
             {
-               // error( "illegal %s:%d %s:%d"
-               //    ( self.getTxt(), self.typeId,
-               //      typeInfo.getTxt(), typeInfo.$typeId ) );
                return false;
             }
          }
@@ -3903,28 +3832,17 @@ pub class NormalTypeInfo extend TypeInfo {
 
       {
          if #self.retTypeInfoList ~= #typeInfo.$retTypeInfoList {
-            // error( "illegal %s:%d %s:%d"
-            //    ( self.getTxt(), self.typeId,
-            //      typeInfo.getTxt(), typeInfo.$typeId ) );
             return false;
          }
          foreach item, index in self.retTypeInfoList {
             if not item.equals(
                processInfo, typeInfo.$retTypeInfoList[ index ], alt2type, checkModifer )
             {
-               // error( "illegal %s:%d %s:%d"
-               //    ( self.getTxt(), self.typeId,
-               //      typeInfo.getTxt(), typeInfo.$typeId ) );
                return false;
             }
          }
       }
 
-      // if not self.equals( typeInfo.$nonnilableType )
-      // {
-      //    error( "illegal %s:%d %s:%d" ( self.getTxt(##), self.typeId,
-      //                                   typeInfo.getTxt(##), typeInfo.$typeId ) );
-      // }
       return true;
    }
 
@@ -3934,18 +3852,6 @@ pub class NormalTypeInfo extend TypeInfo {
    {
       return self.equalsSub( processInfo, typeInfo, alt2type, checkModifer );
    }
-
-
-   // pub static fn cloneToPublic( typeInfo: TypeInfo ): NormalTypeInfo {
-   //    typeIdSeed = typeIdSeed + 1;
-   //    return new NormalTypeInfo(
-   //       typeInfo.$scope, typeInfo.$baseTypeInfo, nil, typeInfo.$autoFlag,
-   //       typeInfo.$externalFlag, typeInfo.$staticFlag,
-   //       "pub", typeInfo.$rawTxt, typeInfo.$parentInfo, typeIdSeed, typeInfo.$kind,
-   //       typeInfo.$itemTypeInfoList, typeInfo.$argTypeInfoList,
-   //       typeInfo.$retTypeInfoList );
-   // }
-
 
 
    pub static fn create(
@@ -3981,15 +3887,6 @@ pub fn ProcessInfo.createAlternate(
       self, belongClassFlag, altIndex, txt,
       accessMode, moduleTypeInfo, baseTypeInfo, interfaceList );
 }
-// pub static fn NormalTypeInfo.createAlternate(
-//    belongClassFlag:bool, altIndex:int,
-//    txt:str, accessMode:AccessMode, moduleTypeInfo:&TypeInfo,
-//    baseTypeInfo: &TypeInfo!, interfaceList: &List<&TypeInfo>! ) : &AlternateTypeInfo
-// {
-//    return new AlternateTypeInfo(
-//       belongClassFlag, altIndex, txt,
-//       accessMode, moduleTypeInfo, baseTypeInfo, interfaceList );
-// }
 
 pub proto class DDDTypeInfo extend TypeInfo;
 
@@ -4139,7 +4036,6 @@ pub fn Scope.addOverrideImut( symbolInfo:&SymbolInfo ) mut {
 //pub let typeInfoRoot = rootTypeInfo;
 
 rootProcessInfo.$idProv.increment();
-//typeIdSeed = typeIdSeed + 1;
 
 pub fn addBuiltin( typeInfo:&TypeInfo ) {
    builtInTypeIdSet[ typeInfo.$typeId ] = typeInfo;
@@ -4150,10 +4046,11 @@ fn registBuiltin( idName: str, typeTxt: str, kind: TypeInfoKind,
 {
    //typeInfoKind[ idName ] = typeInfo;
    sym2builtInTypeMap[ typeTxt ] = new NormalSymbolInfo(
-      SymbolKind.Typ, false, false,
+      rootProcessInfo, SymbolKind.Typ, false, false,
       rootScope, AccessMode.Pub, false, typeTxt, nil, typeInfo, .IMut, true );
    if nilableTypeInfo ~= headTypeInfo {
       sym2builtInTypeMap[ typeTxt .. "!" ] = new NormalSymbolInfo(
+         rootProcessInfo,
          SymbolKind.Typ, false, kind == .Func, rootScope,
          AccessMode.Pub, false, typeTxt, nil, nilableTypeInfo, .IMut, true );
    }
@@ -4169,7 +4066,7 @@ fn registBuiltin( idName: str, typeTxt: str, kind: TypeInfoKind,
 
 
    if registScope {
-      rootScope.addClass( typeTxt, nil, typeInfo );
+      rootScope.addClass( rootProcessInfo, typeTxt, nil, typeInfo );
    }
 }
 
@@ -4196,7 +4093,7 @@ pub static fn NormalTypeInfo.createBuiltin(
            .IF, .Form, .FormFunc, .Func, .Method, .Macro
       {
          scope = new Scope(
-            rootScope,
+            rootProcessInfo, rootScope,
             kind == .Class or kind == .Module or kind == .IF or kind == .List or
             kind == .Array or kind == .Set, nil## );
       }
@@ -4262,8 +4159,8 @@ immutableTypeSet.add( builtinTypeReal );
 immutableTypeSet.add( builtinTypeChar );
 immutableTypeSet.add( builtinTypeString );
 
-pub fn Scope.addIgnoredVar() mut {
-   self.addLocalVar( false, true, "_", nil, builtinTypeEmpty, .Mut );
+pub fn Scope.addIgnoredVar( processInfo:ProcessInfo ) mut {
+   self.addLocalVar( processInfo, false, true, "_", nil, builtinTypeEmpty, .Mut );
 }
 
 pub override fn NormalSymbolInfo.set_typeInfo(typeInfo:&TypeInfo) {
@@ -4620,18 +4517,19 @@ pub fn ProcessInfo.createAlias(
 }
 
 pub fn Scope.addAlias(
+   processInfo:ProcessInfo,
    name:str, pos:&Parser.Position, externalFlag:bool, accessMode:AccessMode,
    parentInfo: &TypeInfo, symbolInfo:&SymbolInfo ) mut : &SymbolInfo!, &SymbolInfo!
 {
    let aliasType = self.getProcessInfo().createAlias(
       name, externalFlag, accessMode, parentInfo, symbolInfo.$typeInfo.$srcTypeInfo );
    return self.add(
-      symbolInfo.$kind, false, symbolInfo.$canBeRight,
+      processInfo, symbolInfo.$kind, false, symbolInfo.$canBeRight,
       name, pos, aliasType, accessMode, true, .IMut, true )**;
 }
 
 pub fn Scope.addAliasForType(
-   name:str, pos:&Parser.Position!, typeInfo:&TypeInfo ) mut :
+   processInfo:ProcessInfo, name:str, pos:&Parser.Position!, typeInfo:&TypeInfo ) mut :
    &SymbolInfo!, &SymbolInfo!
 {
    let mut skind = SymbolKind.Typ;
@@ -4650,7 +4548,7 @@ pub fn Scope.addAliasForType(
    }
 
    return self.add(
-      skind, false, canBeRight, name, pos,
+      processInfo, skind, false, canBeRight, name, pos,
       typeInfo, typeInfo.$accessMode, true, .IMut, true )**;
 }
 
@@ -4989,13 +4887,6 @@ pub static fn TypeInfo.getCommonTypeCombo(
       if typeInfo.$nilable or other.$nilable {
          workType = workType.$nilableTypeInfo;
       }
-      // if TypeInfo.isMut( typeInfo ) or TypeInfo.isMut( other ) {
-      //    // どちらかが mutable なら、結果を mutable とする。
-      //    // いまのところ、 immutable を mutable とするキャストはサポートしていないので、
-      //    // immutable と mutable の共通の型を immutable としてしまうと、
-      //    // 扱い難いので。。
-      //    workType = workType.$srcTypeInfo;
-      // }
       if not TypeInfo.isMut( typeInfo ) or not TypeInfo.isMut( other ) {
          // どちらかが immutable なら、結果も immutable にする
          workType = processInfo.createModifier( workType, .IMut);
@@ -5299,11 +5190,6 @@ pub class AbbrTypeInfo extend TypeInfo {
    }
 }
 
-// pub let builtinTypeAbbr:TypeInfo =
-//    NormalTypeInfo.createBuiltin( "Abbr", "#" , .Abbr );
-// pub let builtinTypeAbbrNone:TypeInfo =
-//    NormalTypeInfo.createBuiltin( "AbbrNone", "#_" , .Abbr );
-
 pub let builtinTypeAbbr:TypeInfo = new AbbrTypeInfo( rootProcessInfo, "##" );
 pub let builtinTypeAbbrNone:TypeInfo = new AbbrTypeInfo( rootProcessInfo, "[##]" );
 
@@ -5499,9 +5385,6 @@ match rootProcessInfo.createLuaval( builtinTypeStem ) {
    }
 }
 registBuiltin( "Luaval", "Luaval", .Ext, builtinTypeLua, headTypeInfo, false );
-// NormalTypeInfo.createDDD( builtinTypeLua, true, false );
-// pub let builtinTypeDDDLua:TypeInfo =
-//    NormalTypeInfo.createDDD( builtinTypeLua, true, true );
 pub let builtinTypeDDDLua:TypeInfo =
    rootProcessInfo.createDDD( builtinTypeStem_, true, true );
 registBuiltin( "__LuaDDD", "__LuaDDD", .Ext, builtinTypeDDDLua, headTypeInfo, false );
@@ -5522,13 +5405,6 @@ pub fn convToExtTypeList(
    }
    return extList, "";
 }
-
-// pub let builtinTypeLoadedFunc = NormalTypeInfo.createFunc(
-//    false, true, nil, .Form, headTypeInfo, true, true,
-//    true, .Pub, "__loadedfunc", nil, [builtinTypeDDD], [ builtinTypeDDDLua ], false );
-// registBuiltin( "__loadedfunc", "__loadedfunc", .Ext,
-//                builtinTypeLoadedFunc, headTypeInfo, false );
-
 
 /**
 and 演算結果の TypeInfo。
@@ -5580,14 +5456,14 @@ pub fn ProcessInfo.createEnum(
       false, true, nil, .Method, info,
       true, externalFlag, false, AccessMode.Pub,
       "get__txt", nil, nil, [ builtinTypeString ], false );
-   scope.addMethod( nil, getEnumName, AccessMode.Pub, false, false );
+   scope.addMethod( self, nil, getEnumName, AccessMode.Pub, false, false );
 
    let mut fromVal = self.createFunc(
       false, true, nil, .Func, info,
       true, externalFlag, true, AccessMode.Pub,
       "_from", nil, [ self.createModifier( valTypeInfo, .IMut ) ],
       [ info.$nilableTypeInfo ], false );
-   scope.addMethod( nil, fromVal, AccessMode.Pub, true, false );
+   scope.addMethod( self, nil, fromVal, AccessMode.Pub, true, false );
 
    let allListType = self.createList( .Pub, info, [ info ], .IMut );
    let mut allList = self.createFunc(
@@ -5595,7 +5471,7 @@ pub fn ProcessInfo.createEnum(
       true, externalFlag, true, AccessMode.Pub,
       "get__allList", nil, nil,
       [ self.createModifier( allListType, .IMut ) ], false );
-   scope.addMethod( nil, allList, AccessMode.Pub, true, false );
+   scope.addMethod( self, nil, allList, AccessMode.Pub, true, false );
 
    return info;
 }
@@ -5623,12 +5499,6 @@ accessMode = %d, kind = %d, valTypeId = %d, ```
             stream.write( "%q," (val) );
          }
       }
-      // if self.valTypeInfo.equals( builtinTypeString## ) {
-      //    stream.write( "%s = '%s'," (enumValInfo.$name, enumValInfo.$val) );
-      // }
-      // else {
-      //    stream.write( "%s = %s," (enumValInfo.$name, enumValInfo.$val) );
-      // }
    }
    stream.write( "} }\n" );
 }
@@ -5653,7 +5523,7 @@ pub fn ProcessInfo.createAlge(
       false, true, nil, .Method, info,
       true, externalFlag, false, AccessMode.Pub,
       "get__txt", nil, nil, [ builtinTypeString ], false );
-   scope.addMethod( nil, getAlgeName, AccessMode.Pub, false, false );
+   scope.addMethod( self, nil, getAlgeName, AccessMode.Pub, false, false );
 
    return info;
 }
@@ -5967,11 +5837,6 @@ pub static fn TypeInfo.checkMatchType(
             ( srcIndex, dstType.getTxt( defaultTypeNameCtrl## ),
               expType.getTxt( defaultTypeNameCtrl## ), srcIndex );
          }
-         // let genDstType = dstType.applyGeneric( alt2type );
-         // if not checkType.canEvalWith( dstType, .SetOp, alt2type ) {
-         //    return .Error, "exp(%d) type mismatch %s <- %s"
-         //    ( srcIndex, dstType.getTxt( true## ), expType.getTxt( true## ) );
-         // }
 
          _checkWarnForFollow( srcIndex, dstType, expType );
       }
@@ -6016,13 +5881,6 @@ pub static fn TypeInfo.checkMatchType(
             }
 
             _checkWarnForFollow( index, dstType, expType );
-            // when! warnForFollowSrcIndex {
-            //    if warnForFollowSrcIndex <= index and dstType.$nilable {
-            //       let mess = "use '**' at arg(%d). %s <- %s"
-            //           ( index, dstType.getTxt(true##), expType.getTxt(true##) );
-            //       return .Warn, mess;
-            //    }
-            // }
             break;
          }
          elseif #expTypeList == index {
@@ -6047,13 +5905,6 @@ pub static fn TypeInfo.checkMatchType(
                return result, mess;
             }
             _checkWarnForFollow( index, dstType, expType );
-            // when! warnForFollowSrcIndex {
-            //    if warnForFollowSrcIndex <= index and dstType.$nilable {
-            //       let warnMess = "use '**' at arg(%d). %s <- %s"
-            //           ( index, dstType.getTxt(true##), expType.getTxt(true##) );
-            //       return .Warn, warnMess;
-            //    }
-            // }
             break;
          }
          else {
@@ -6064,21 +5915,11 @@ pub static fn TypeInfo.checkMatchType(
                  expType.getTxt( defaultTypeNameCtrl## ), expType.$typeId);
             }
             _checkWarnForFollow( index, dstType, expType );
-            // when! warnForFollowSrcIndex {
-            //    if warnForFollowSrcIndex <= index and dstType.$nilable {
-            //       let mess = "use '**' at arg(%d). %s <- %s"
-            //           ( index, dstType.getTxt(true##), expType.getTxt(true##) );
-            //       return .Warn, mess;
-            //    }
-            // }
          }
       }
    }
    elseif not allowDstShort {
       foreach dstType, index in dstTypeList {
-         // if dstType.$kind == .DDD {
-         // }
-         // else {
          if not dstType.canEvalWith(
             processInfo, builtinTypeNil, .SetOp, alt2type ) {
                return .Error, "exp(%d) type mismatch %s <- nil: short"
@@ -6088,7 +5929,6 @@ pub static fn TypeInfo.checkMatchType(
                                        "use '##', instate of '%s'."
                                        (dstType.getTxt( defaultTypeNameCtrl##) ) );
          }
-      // }
    }
 
    when! warnMess {
@@ -6468,14 +6308,6 @@ pub static fn TypeInfo.canEvalWithBase(
          return true, nil;
       }
       case .Method {
-         // if TypeInfo.checkMatchType( dest.$argTypeInfoList, otherSrc.$argTypeInfoList,
-         //                             false, nil, alt2type ) == .Error or
-         //    TypeInfo.checkMatchType( dest.$retTypeInfoList, otherSrc.$retTypeInfoList,
-         //                             false, nil, alt2type ) == .Error or
-         //    #dest.$retTypeInfoList ~= #otherSrc.$retTypeInfoList
-         // {
-         //    return false;
-         // }
          if #dest.$argTypeInfoList ~= #otherSrc.$argTypeInfoList or
             #dest.$retTypeInfoList ~= #otherSrc.$retTypeInfoList
          {
@@ -6642,29 +6474,6 @@ let builtinTypeInfo2Map = rootProcessInfo.$typeInfo2Map.clone();
 
 pub fn createProcessInfo() : ProcessInfo {
    return ProcessInfo.createUser( builtinTypeInfo2Map.clone() );
-}
-
-pub fn pushProcessInfo( processInfo:ProcessInfo! ): ProcessInfo {
-   Log._log2( .Log, "start" );
-
-   when! processInfo {
-      curProcessInfo = processInfo;
-   } else {
-      curProcessInfo = createProcessInfo();
-   }
-   processInfoQueue.insert( curProcessInfo );
-   curProcessInfo.switchIdProvier( .Base );
-   return curProcessInfo;
-}
-
-pub fn popProcessInfo() {
-   Log._log2( .Log, "start" );
-   processInfoQueue.remove(##);
-   if #processInfoQueue == 0 {
-      Util.err( "processInfoQueue is empty!!" );
-   }
-   curProcessInfo = processInfoQueue[ #processInfoQueue ];
-   curProcessInfo.switchIdProvier( .Base );
 }
 
 pub enum BitOpKind {
@@ -6963,10 +6772,10 @@ __test case1(ctrl) {
    }
    let mut alt2typeMap = CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
 
-   let mut testScope = new Scope( rootScope, false## );
-
-
    let mut processInfo = ProcessInfo.createUser( builtinTypeInfo2Map.clone() );
+   let mut testScope = new Scope( processInfo, rootScope, false## );
+
+
 
    macro _checkTypeAnalyzer(typeTxt:str,typeInfo:__exp ) {
       {}
@@ -7063,13 +6872,13 @@ __test case1(ctrl) {
 
    // Super と Sub の canEvalWith
    let superType = processInfo.createClass(
-      true, false, new Scope( rootScope, true ## ),
+      true, false, new Scope( processInfo, rootScope, true ## ),
       nil, nil, [], headTypeInfo, false, .Local, "Super" );
-   testScope.addClass( "Super", nil, superType );   
+   testScope.addClass( processInfo, "Super", nil, superType );   
    let subType = processInfo.createClass(
-      true, false, new Scope( rootScope, true ## ),
+      true, false, new Scope( processInfo, rootScope, true ## ),
       superType, nil, [], headTypeInfo, false, .Local, "Sub" );
-   testScope.addClass( "Sub", nil, subType );   
+   testScope.addClass( processInfo, "Sub", nil, subType );   
 
    _checkCanEvalWith( "Super", "Sub", "OK" );
    _checkCanEvalWith( "Super", "Sub!", "NG" );
@@ -7145,9 +6954,9 @@ __test case1(ctrl) {
    let alter = processInfo.createAlternate( true, 1, "T", .Pri, headTypeInfo ## );
    genTypeList.insert( alter );
    let hogeType = processInfo.createClass(
-      true, false, new Scope( rootScope, true ## ),
+      true, false, new Scope( processInfo, rootScope, true ## ),
       nil, nil, genTypeList, headTypeInfo, false, .Local, "Hoge" );
-   testScope.addClass( "Hoge", nil, hogeType );
+   testScope.addClass( processInfo, "Hoge", nil, hogeType );
 
    _checkCanEvalWith( "Hoge<int>", "Hoge<int>", "OK" );
    _checkCanEvalWith( "Hoge<int>!", "Hoge<int>", "OK" );

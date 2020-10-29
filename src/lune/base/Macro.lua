@@ -832,7 +832,8 @@ local function expandVal( tokenList, workval, pos )
             
             table.insert( tokenList, Parser.Token.new(kind, num, pos, false) )
          elseif _switchExp == "string" then
-            table.insert( tokenList, Parser.Token.new(Parser.TokenKind.Str, string.format( '%q', val), pos, false) )
+            
+            table.insert( tokenList, Parser.Token.new(Parser.TokenKind.Str, Parser.quoteStr( val ), pos, false) )
             
          else 
             

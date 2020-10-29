@@ -151,29 +151,7 @@ end
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Str = _lune.loadModule( 'lune.base.Str' )
 
-local luaKeywordSet = {}
-luaKeywordSet["if"]= true
-luaKeywordSet["else"]= true
-luaKeywordSet["elseif"]= true
-luaKeywordSet["while"]= true
-luaKeywordSet["for"]= true
-luaKeywordSet["in"]= true
-luaKeywordSet["return"]= true
-luaKeywordSet["break"]= true
-luaKeywordSet["nil"]= true
-luaKeywordSet["true"]= true
-luaKeywordSet["false"]= true
-luaKeywordSet["{"]= true
-luaKeywordSet["}"]= true
-luaKeywordSet["do"]= true
-luaKeywordSet["require"]= true
-luaKeywordSet["function"]= true
-luaKeywordSet["then"]= true
-luaKeywordSet["end"]= true
-luaKeywordSet["repeat"]= true
-luaKeywordSet["until"]= true
-luaKeywordSet["goto"]= true
-luaKeywordSet["local"]= true
+local luaKeywordSet = {["if"] = true, ["else"] = true, ["elseif"] = true, ["while"] = true, ["for"] = true, ["in"] = true, ["return"] = true, ["break"] = true, ["nil"] = true, ["true"] = true, ["false"] = true, ["{"] = true, ["}"] = true, ["do"] = true, ["require"] = true, ["function"] = true, ["then"] = true, ["end"] = true, ["repeat"] = true, ["until"] = true, ["goto"] = true, ["local"] = true}
 
 local function isLuaKeyword( txt )
 
@@ -435,7 +413,7 @@ end
 function Token:getLineCount(  )
 
    local count = 1
-   for _389 in self.txt:gmatch( "\n" ) do
+   for _256 in self.txt:gmatch( "\n" ) do
       count = count + 1
    end
    
@@ -603,6 +581,7 @@ function StreamParser:__init(stream, name, luaMode)
    self.pos = 1
    self.lineTokenList = {}
    self.prevToken = _moduleObj.noneToken
+   self.luaMode = _lune.unwrapDefault( luaMode, false)
    
    local keywordSet, typeSet, builtInSet, multiCharDelimitMap = createReserveInfo( luaMode )
    
@@ -617,7 +596,8 @@ function StreamParser:getStreamName(  )
 end
 function StreamParser.create( path, luaMode, moduleName )
 
-   local stream = TxtStream.new(StreamParser.stdinTxt)
+   local stream
+   
    if StreamParser.stdinStreamModuleName ~= moduleName then
       stream = io.open( path, "r" )
       if  nil == stream then
@@ -626,6 +606,9 @@ function StreamParser.create( path, luaMode, moduleName )
          return nil
       end
       
+   else
+    
+      stream = TxtStream.new(StreamParser.stdinTxt)
    end
    
    
@@ -798,54 +781,11 @@ function DefaultPushbackParser:get_currentToken()
 end
 
 
-local quotedCharSet = {}
-quotedCharSet['a']= true
-quotedCharSet['b']= true
-quotedCharSet['f']= true
-quotedCharSet['n']= true
-quotedCharSet['r']= true
-quotedCharSet['t']= true
-quotedCharSet['v']= true
-quotedCharSet['\\']= true
-quotedCharSet['"']= true
-quotedCharSet["'"]= true
+local quotedCharSet = {['a'] = true, ['b'] = true, ['f'] = true, ['n'] = true, ['r'] = true, ['t'] = true, ['v'] = true, ['\\'] = true, ['"'] = true, ["'"] = true}
 
-local op2Set = {}
-op2Set['+']= true
-op2Set['-']= true
-op2Set['*']= true
-op2Set['/']= true
-op2Set['^']= true
-op2Set['%']= true
-op2Set['&']= true
-op2Set['~']= true
-op2Set['|']= true
-op2Set['|>>']= true
-op2Set['|<<']= true
-op2Set['..']= true
-op2Set['<']= true
-op2Set['<=']= true
-op2Set['>']= true
-op2Set['>=']= true
-op2Set['==']= true
-op2Set['~=']= true
-op2Set['and']= true
-op2Set['or']= true
-op2Set['@']= true
-op2Set['@@']= true
-op2Set['@@@']= true
-op2Set['=']= true
+local op2Set = {['+'] = true, ['-'] = true, ['*'] = true, ['/'] = true, ['^'] = true, ['%'] = true, ['&'] = true, ['~'] = true, ['|'] = true, ['|>>'] = true, ['|<<'] = true, ['..'] = true, ['<'] = true, ['<='] = true, ['>'] = true, ['>='] = true, ['=='] = true, ['~='] = true, ['and'] = true, ['or'] = true, ['@'] = true, ['@@'] = true, ['@@@'] = true, ['='] = true}
 
-local op1Set = {}
-op1Set['-']= true
-op1Set['not']= true
-op1Set['#']= true
-op1Set['~']= true
-op1Set['*']= true
-op1Set['`']= true
-op1Set[',,']= true
-op1Set[',,,']= true
-op1Set[',,,,']= true
+local op1Set = {['-'] = true, ['not'] = true, ['#'] = true, ['~'] = true, ['*'] = true, ['`'] = true, [',,'] = true, [',,,'] = true, [',,,,'] = true}
 
 local function isOp2( ope )
 
@@ -891,7 +831,7 @@ function StreamParser:parse(  )
       local comment = ""
       while true do
          do
-            local _644, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
+            local _513, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
             if termEndIndex ~= nil then
                comment = comment .. rawLine:sub( searchIndex, termEndIndex )
                return comment, termEndIndex + 1
@@ -1090,6 +1030,15 @@ function StreamParser:parse(  )
    end
    
    local searchIndex = startIndex
+   
+   local function getChar( index )
+   
+      if #rawLine >= index then
+         return string.byte( rawLine, index )
+      end
+      
+      return 0
+   end
    while true do
       local syncIndexFlag = true
       local pattern = [==[[/%-%?"%'%`].]==]
@@ -1101,9 +1050,8 @@ function StreamParser:parse(  )
          return list
       end
       
-      
-      local findChar = string.byte( rawLine, index )
-      local nextChar = string.byte( rawLine, index + 1 )
+      local findChar = getChar( index )
+      local nextChar = getChar( index + 1 )
       
       if findChar == 45 and nextChar ~= 45 then
          searchIndex = index + 1
@@ -1114,21 +1062,7 @@ function StreamParser:parse(  )
             addVal( TokenKind.Symb, rawLine:sub( startIndex, index - 1 ), startIndex )
          end
          
-         if findChar == 47 then
-            if nextChar == 42 then
-               local comment, nextIndex = multiComment( index + 2, "*/" )
-               addVal( TokenKind.Cmnt, "/*" .. comment, index )
-               searchIndex = nextIndex
-            elseif nextChar == 47 then
-               addVal( TokenKind.Cmnt, rawLine:sub( index ), index )
-               searchIndex = #rawLine + 1
-            else
-             
-               addVal( TokenKind.Ope, "/", index )
-               searchIndex = index + 1
-            end
-            
-         elseif findChar == 39 or findChar == 34 then
+         if findChar == 39 or findChar == 34 then
             local workIndex = index + 1
             local workPattern = '["\'\\]'
             while true do
@@ -1184,7 +1118,29 @@ function StreamParser:parse(  )
             addVal( TokenKind.Char, codeChar, index )
          else
           
-            Util.err( string.format( "%s:%d:%d: error: illegal syntax -- %s", self:getStreamName(  ), self.lineNo, index, rawLine) )
+            if self.luaMode and findChar == 45 and nextChar == 45 then
+               addVal( TokenKind.Cmnt, rawLine:sub( index ), index )
+               searchIndex = #rawLine + 1
+               
+            elseif findChar == 47 then
+               if nextChar == 42 then
+                  local comment, nextIndex = multiComment( index + 2, "*/" )
+                  addVal( TokenKind.Cmnt, "/*" .. comment, index )
+                  searchIndex = nextIndex
+               elseif nextChar == 47 then
+                  addVal( TokenKind.Cmnt, rawLine:sub( index ), index )
+                  searchIndex = #rawLine + 1
+               else
+                
+                  addVal( TokenKind.Ope, "/", index )
+                  searchIndex = index + 1
+               end
+               
+            else
+             
+               Util.err( string.format( "%s:%d:%d: error: illegal syntax -- %s", self:getStreamName(  ), self.lineNo, index, rawLine) )
+            end
+            
          end
          
       end
@@ -1355,6 +1311,36 @@ function CommentCtrl:hasInvalidComment( ... )
 end
 
 
+local function quoteStr( txt )
+
+   local work = txt
+   local part = '"'
+   for index = 1, #work do
+      local char = string.byte( work, index )
+      do
+         local _switchExp = char
+         if _switchExp == 10 then
+            part = part .. "\\n"
+         elseif _switchExp == 13 then
+            part = part .. "\\r"
+         elseif _switchExp == 9 then
+            part = part .. "\\t"
+         elseif _switchExp == 34 then
+            part = part .. '\\"'
+         elseif _switchExp == 92 then
+            part = part .. '\\\\'
+         else 
+            
+               part = part .. string.format( "%c", char)
+         end
+      end
+      
+   end
+   
+   work = part .. '"'
+   return work
+end
+_moduleObj.quoteStr = quoteStr
 
 
 

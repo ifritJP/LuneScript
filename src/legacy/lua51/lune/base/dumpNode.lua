@@ -537,7 +537,7 @@ function dumpFilter:processWhen( node, opt )
 
    local symTxt = ""
    for __index, symPair in ipairs( node:get_symPairList() ) do
-      symTxt = string.format( "%s %s", symTxt, tostring( symPair:get_src()))
+      symTxt = string.format( "%s %s", symTxt, symPair:get_src():get_name())
    end
    
    

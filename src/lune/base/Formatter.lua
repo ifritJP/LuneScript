@@ -331,7 +331,7 @@ end
 
 function FormatterFilter:processBlankLine( node, opt )
 
-   for _5134 = 1, node:get_lineNum() do
+   for _5004 = 1, node:get_lineNum() do
       self:writeln( "" )
    end
    
@@ -355,7 +355,6 @@ function FormatterFilter:processRoot( node, opt )
    for __index, child in ipairs( node:get_children() ) do
       filter( child, self, opt:nextOpt( node ) )
    end
-   
    
 end
 

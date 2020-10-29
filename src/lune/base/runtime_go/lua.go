@@ -229,7 +229,8 @@ func (self *StemToLuaConv) conv( val LnsAny ) {
             self.builder.WriteString(
                 fmt.Sprintf( "%s['%s']", lns_globalValMapName, luaVal.core.getKey() ) )
         default:
-            panic( fmt.Sprintf( "not supoort -- %T", val ) )
+            self.builder.WriteString( fmt.Sprintf( "%v", val ) )
+            //panic( fmt.Sprintf( "not supoort -- %T", val ) )
         }
     }
 }

@@ -1335,7 +1335,6 @@ end]==], luneSymbol, luneSymbol) )
       end
    end
    
-   
 end
 
 
@@ -1893,7 +1892,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _6199 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _6069 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -4083,7 +4082,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3389, function (  )
+   Log.log( Log.Level.Trace, __func__, 3385, function (  )
    
       return string.format( "macro: %s", code)
    end )

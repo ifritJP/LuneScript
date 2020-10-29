@@ -150,6 +150,7 @@ if not _lune2 then
 end
 local Depend = _lune.loadModule( 'lune.base.Depend' )
 local Log = _lune.loadModule( 'lune.base.Log' )
+local Str = _lune.loadModule( 'lune.base.Str' )
 
 local debugFlag = true
 local function setDebugFlag( flag )
@@ -319,39 +320,21 @@ function SimpleSourceOStream:get_indent(  )
    
    return 0
 end
-function SimpleSourceOStream:writeRaw( txt )
-
-   local stream = self.nowStream
-   
-   if self.needIndent then
-      stream:write( string.rep( " ", self:get_indent() ) )
-      self.needIndent = false
-   end
-   
-   
-   for _293 in string.gmatch( txt, "\n" ) do
-      self.curLineNo = self.curLineNo + 1
-   end
-   
-   stream:write( txt )
-end
 function SimpleSourceOStream:write( txt )
 
-   while true do
-      do
-         local index = string.find( txt, "\n" )
-         if index ~= nil then
-            self:writeRaw( txt:sub( 1, index ) )
-            txt = txt:sub( index + 1 )
-         else
-            break
-         end
+   local stream = self.nowStream
+   for __index, line in ipairs( Str.getLineList( txt ) ) do
+      if self.needIndent then
+         stream:write( string.rep( " ", self:get_indent() ) )
+         self.needIndent = false
       end
       
-   end
-   
-   if #txt > 0 then
-      self:writeRaw( txt )
+      
+      if #line > 0 and string.byte( line, #line ) == 10 then
+         self.curLineNo = self.curLineNo + 1
+      end
+      
+      stream:write( line )
    end
    
 end
@@ -417,7 +400,7 @@ local function getReadyCode( depPath, tgtPath )
       return true
    end
    
-   Log.log( Log.Level.Warn, __func__, 232, function (  )
+   Log.log( Log.Level.Warn, __func__, 244, function (  )
    
       return string.format( "not ready %g < %g : %s, %s", tgtTime, depTime, tgtPath, depPath)
    end )
