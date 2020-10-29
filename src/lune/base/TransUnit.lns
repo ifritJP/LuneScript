@@ -41,7 +41,7 @@ import lune.base.Log;
 import lune.base.LuneControl;
 import lune.base.Macro;
 
-import lune.base.Depend;
+//import lune.base.Depend;
 
 _lune_control ignore_symbol_;
 

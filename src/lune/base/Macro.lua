@@ -279,8 +279,6 @@ local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Formatter = _lune.loadModule( 'lune.base.Formatter' )
-local Depend = _lune.loadModule( 'lune.base.Depend' )
-
 local function loadCode( code )
 
    local loaded, mess = _lune.loadstring52( code )
