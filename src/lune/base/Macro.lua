@@ -992,10 +992,10 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
             local rawTxt
             
             if txt:find( "^```" ) then
-               rawTxt = string.format( "%q", txt)
+               rawTxt = Parser.quoteStr( txt )
             else
              
-               rawTxt = string.format( "%q", txt)
+               rawTxt = Parser.quoteStr( txt )
             end
             
             nextToken = Parser.Token.new(Parser.TokenKind.Str, rawTxt, nextToken.pos, false)

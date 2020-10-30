@@ -73,6 +73,9 @@ Code.__allList[1] = Code.Lua
 Code.C = 'c'
 Code._val2NameMap['c'] = 'C'
 Code.__allList[2] = Code.C
+Code.Go = 'go'
+Code._val2NameMap['go'] = 'Go'
+Code.__allList[3] = Code.Go
 
 
 local Pragma = {}
@@ -90,8 +93,6 @@ function Pragma._from( val )
    return _lune._AlgeFrom( Pragma, val )
 end
 
-Pragma.can_not_conv_code = { "can_not_conv_code", {{ func=_lune._toSet, nilable=false, child={ func = Code._from, nilable = false, child = {} } }}}
-Pragma._name2Val["can_not_conv_code"] = Pragma.can_not_conv_code
 Pragma.default__init = { "default__init"}
 Pragma._name2Val["default__init"] = Pragma.default__init
 Pragma.default__init_old = { "default__init_old"}
@@ -100,6 +101,8 @@ Pragma.disable_mut_control = { "disable_mut_control"}
 Pragma._name2Val["disable_mut_control"] = Pragma.disable_mut_control
 Pragma.ignore_symbol_ = { "ignore_symbol_"}
 Pragma._name2Val["ignore_symbol_"] = Pragma.ignore_symbol_
+Pragma.limit_conv_code = { "limit_conv_code", {{ func=_lune._toSet, nilable=false, child={ func = Code._from, nilable = false, child = {} } }}}
+Pragma._name2Val["limit_conv_code"] = Pragma.limit_conv_code
 Pragma.load__lune_module = { "load__lune_module"}
 Pragma._name2Val["load__lune_module"] = Pragma.load__lune_module
 

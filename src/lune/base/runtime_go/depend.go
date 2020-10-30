@@ -98,6 +98,60 @@ func DependLuaOnLns_runLuaOnLns( luaCode string ) (LnsAny,string) {
     txt := fmt.Sprintf(`
 local DependLuaOnLns = require( 'lune.base.DependLuaOnLns' )
 
+-- 高速性最重視のため、 __luneScript に直接アクセスする
+local WrapFront = {}
+function WrapFront:setupFront()
+   if self.readyFront then
+      return
+   end
+   -- require( 'lune.base.front' ) 内の loadModule 処理で
+   -- 再度 WrapFront:loadModule() がコールされて無限ループなるので、
+   -- __luneScript を nil でクリアしておく
+   __luneScript = nil
+   self.readyFront = true
+   local Front = require( 'lune.base.front' )
+   Front.setFront()
+end
+function WrapFront:loadModule( mod )
+   self:setupFront()
+   return __luneScript:loadModule( mod )
+end
+function WrapFront:loadMeta( importModuleInfo, mod )
+   self:setupFront()
+   return __luneScript:loadMeta( importModuleInfo, mod )
+end
+function WrapFront:loadFromLnsTxt( importModuleInfo, name, txt )
+   self:setupFront()
+   return __luneScript:loadFromLnsTxt( importModuleInfo, name, txt )
+end
+function WrapFront:searchModule( mod )
+   self:setupFront()
+   return __luneScript:searchModule( mod )
+end
+function WrapFront:error( message )
+   self:setupFront()
+   return __luneScript:error( message )
+end
+function WrapFront.setmeta( obj )
+  setmetatable( obj, { __index = WrapFront  } )
+end
+function WrapFront.new(  )
+   local obj = {}
+   WrapFront.setmeta( obj )
+   return obj
+end
+
+__luneScript = WrapFront.new()
+
+_lnsLoad = function( name, code )
+   __luneScript = nil
+   local frontInterface = require( 'lune.base.frontInterface' )
+   local Front = require( 'lune.base.front' )
+   Front.setFront()
+   local importModuleInfo = frontInterface.ImportModuleInfo.new();
+   return frontInterface.loadFromLnsTxt( importModuleInfo, name, code )
+end
+
 local txt=[==[
 %s
 ]==]

@@ -199,7 +199,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 5318
+   return 5410
 end
 
 
@@ -752,6 +752,16 @@ usage:
    return option
 end
 _moduleObj.analyze = analyze
+
+local function createDefaultOption( path )
+
+   local option = Option.new()
+   option.scriptPath = path
+   option.useLuneModule = getRuntimeModule(  )
+   option.useIpairs = true
+   return option
+end
+_moduleObj.createDefaultOption = createDefaultOption
 
 
 

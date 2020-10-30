@@ -24,7 +24,7 @@ SOFTWARE.
 
 import lune.base.Ast;
 import lune.base.Nodes;
-import lune.base.Parser;
+//import lune.base.Parser;
 import lune.base.LuneControl;
 import lune.base.Util;
 
@@ -864,11 +864,12 @@ __test {
 
 __test case1(ctrl) {
    import lune.base.LuaVer;
+   import lune.base.Option;
    
    LuaVer.setCurVer( 53 );
 
    let scriptPath = "test.lns";
-   let option = convLua.createDefaultOption( scriptPath );
+   let option = Option.createDefaultOption( scriptPath );
    let mut ast = convLua.createAst( scriptPath, convLua.getTestLnsCode(), option );
    let dump = Ast2Dump( ast );
    print( dump );

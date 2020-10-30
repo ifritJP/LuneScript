@@ -468,6 +468,13 @@ usage:
    return option;
 }
 
+pub fn createDefaultOption( path:str ) : Option {
+   let mut option = new Option();
+   option.scriptPath = path;
+   option.useLuneModule = getRuntimeModule();
+   option.useIpairs = true;
+   return option;
+}
 
 __test case1(ctrl) {
    LuaVer.setCurVer( 53 );

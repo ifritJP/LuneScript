@@ -3431,14 +3431,6 @@ __test {
    import lune.base.frontInterface;
    import lune.base.Testing;
    
-   pub fn createDefaultOption( path:str ) : Option.Option {
-      let mut option = new Option.Option();
-      option.scriptPath = path;
-      option.useLuneModule = Option.getRuntimeModule();
-      option.useIpairs = true;
-      return option;
-   }
-
    pub fn createAst(
       scriptPath:str, lnsCode:str, option:&Option.Option ) : TransUnit.ASTInfo
    {
@@ -3528,7 +3520,7 @@ __test case1(ctrl) {
    LuaVer.setCurVer( 53 );
 
    let scriptPath = "test.lns";
-   let option = createDefaultOption( scriptPath );
+   let option = Option.createDefaultOption( scriptPath );
    let mut ast = createAst( scriptPath, getTestLnsCode(), option );
    let meta, luaCode = Ast2Code( option, ast, scriptPath );
    print( meta, luaCode );

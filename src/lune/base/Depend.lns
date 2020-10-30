@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-_lune_control can_not_conv_code c;
+_lune_control limit_conv_code lua;
 
 import lune.base.LuaVer;
 

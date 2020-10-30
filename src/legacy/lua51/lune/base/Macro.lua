@@ -280,8 +280,6 @@ local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Formatter = _lune.loadModule( 'lune.base.Formatter' )
-local Depend = _lune.loadModule( 'lune.base.Depend' )
-
 local function loadCode( code )
 
    local loaded, mess = _lune.loadstring51( code )
@@ -995,10 +993,10 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
             local rawTxt
             
             if txt:find( "^```" ) then
-               rawTxt = string.format( "%q", txt)
+               rawTxt = Parser.quoteStr( txt )
             else
              
-               rawTxt = string.format( "%q", txt)
+               rawTxt = Parser.quoteStr( txt )
             end
             
             nextToken = Parser.Token.new(Parser.TokenKind.Str, rawTxt, nextToken.pos, false)

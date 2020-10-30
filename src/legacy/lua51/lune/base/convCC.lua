@@ -232,8 +232,6 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local TransUnit = _lune.loadModule( 'lune.base.TransUnit' )
-local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
-local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
 
@@ -2080,10 +2078,10 @@ function convFilter:processRoot( node, opt )
    for pragma, __val in pairs( node:get_luneHelperInfo().pragmaSet ) do
       do
          local _matchExp = pragma
-         if _matchExp[1] == LuneControl.Pragma.can_not_conv_code[1] then
+         if _matchExp[1] == LuneControl.Pragma.limit_conv_code[1] then
             local codeSet = _matchExp[2][1]
          
-            if _lune._Set_has(codeSet, LuneControl.Code.C ) then
+            if not _lune._Set_has(codeSet, LuneControl.Code.C ) then
                self.canConv = false
                break
             end

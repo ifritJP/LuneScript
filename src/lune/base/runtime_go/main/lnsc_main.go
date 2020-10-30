@@ -25,27 +25,15 @@ SOFTWARE.
 package main
 
 import "os"
-// import "runtime/pprof"
 
-import . "lns/lune/base/runtime_go"
-import lns "lns/lune/base"
+import . "lnsc/lune/base/runtime_go"
+import lnsc "lnsc/lune/base"
 
 func exec( args []LnsAny ) error {
-    //prof, err := os.Create("cpu.pprof")
-    // prof, err := os.Create( args[ 1 ].(string) + ".pprof" )
-    // if err != nil {
-    //     return err
-    // }
-
-    // if err := pprof.StartCPUProfile(prof); err != nil {
-    //     return err
-    // }
-    // defer pprof.StopCPUProfile()    
-
     Lns_InitMod()
-    lns.Lns_front_init()
+    lnsc.Lns_front_init()
     
-    lns.Front_exec( NewLnsList( args[ 1:] ) )
+    lnsc.Front_exec( NewLnsList( args[ 1:] ) )
 
     return nil
 }

@@ -25,6 +25,7 @@ SOFTWARE.
 pub enum Code {
    Lua = "lua",
    C = "c",
+   Go = "go",
 }
 
 pub alge Pragma {
@@ -33,5 +34,5 @@ pub alge Pragma {
    disable_mut_control,
    ignore_symbol_,
    load__lune_module,
-   can_not_conv_code( codeSet:&Set<Code> ),
+   limit_conv_code( codeSet:&Set<Code> ),
 }

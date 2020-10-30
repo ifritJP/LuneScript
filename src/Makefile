@@ -18,7 +18,11 @@ ifdef LOG
 LOG_OPT=--log info
 endif
 
-LNSC=LUA_PATH=./?.lua $(LUA) lune/base/base.lua
+LNSC_LUA=$(LUA) lune/base/base.lua
+LNSC_GO=./lnsc
+
+LNSC=LUA_PATH=./?.lua $(LNSC_LUA)
+LANG_KIND=lua
 
 ifdef ENABLE_LUAROCKS
 ifneq ($(LUA51),)
@@ -79,6 +83,12 @@ exec:
 	$(LUA) lune/base/base.lua test/test.lns ast
 	$(LUA) lune/base/base.lua test/test.lns LUA
 
+COM_OPT := --use-ipairs -Werror
+ifeq ($(WITH_GO),y)
+COM_OPT += -langGo
+endif
+
+
 ifdef depend_on
 DEPENDS := $(shell find lune -iname '*.d')
 DEPENDS_META := $(patsubst %.d,%.meta,$(DEPENDS))
@@ -87,20 +97,13 @@ include $(DEPENDS)
 
 $(DEPENDS_META):
 
-COM_OPT := --use-ipairs -Werror
-ifdef WITH_GO
-COM_OPT += -langGo
-endif
-
 %.meta: %.lns
-	(cd $(FROM_DIR); \
-		LUA_PATH=./?.lua $(LUA) lune/base/base.lua $< SAVE $(TO_DIR) \
+	(cd $(FROM_DIR); $(LNSC) $< SAVE $(TO_DIR) \
 			$(BYTECOMP) $(COM_OPT) $(LOG_OPT) $(LNS_OPT))
 
 build_from_d: $(DEPENDS_META)
-ifdef WITH_GO
+ifeq ($(WITH_GO),y)
 	$(call go-build-lns,.)
-	exit 1
 endif
 
 endif
@@ -284,6 +287,8 @@ build-countup:
 	@echo $$(($$(head -n 1 $(BUILD_COUNTER)) + 1)) > $(BUILD_COUNTER)
 	@echo build -- $$(cat $(BUILD_COUNTER))
 
+
+
 define mk_lune_proj_dir
 	mkdir -p $1/lune/base
 	cp $(BUILD_COUNTER) $1
@@ -312,7 +317,10 @@ define cp_src_set
 #	@cp lune/base/base*.lua lune/base/*.lns lune/base/*.d $1/lune/base
 	$(call cp_src_set_sub,$2/lune,'*.lns',$1/lune)
 	$(call cp_src_set_sub,$2/lune,'*.d',$1/lune)
+
+	cp -au $2/lune/base/runtime_go $1/lune/base/runtime_go
 endef
+
 
 # LuneScript 自身のソースを Lua に変換する。
 #
@@ -346,7 +354,7 @@ test-comp:
 	mkdir -p work/newglue
 	$(call cp_src_set,work/1,.)
 	$(call selfhost_build_dep,$(LNSC),.,work/1,)
-ifdef WITH_GO
+ifeq ($(WITH_GO),y)
 	$(call go-build-lns,work/1)
 endif
 
@@ -363,7 +371,7 @@ endif
 	@LANG= date
 
 test-comp-with-go:
-	$(MAKE) test-comp LNSC=./lns WITH_GO=y
+	$(MAKE) test-comp LNSC=$(LNSC_GO) WITH_GO=y LANG_KIND=go
 
 
 test-registered-rockspec:
@@ -531,7 +539,7 @@ COMP_TARGETS += test/comp9.lns@1_test/comp9.lns@2_4.3.comp
 
 
 # コード補完のテスト
-test-compl: $(COMP_TARGETS)
+test-cmpl: $(COMP_TARGETS)
 	find $(LOG_DIR) -type f | sort | xargs cat >> $(LOG_FILE)
 
 
@@ -548,7 +556,7 @@ test-org:
 	grep -v 'warning:' work/test1.result > work/test.result
 
 	mkdir -p work/0/log/comp
-	$(MAKE) test-compl TEST_DIR=. LOG_DIR=work/0/log/comp LOG_FILE=work/test1.result
+	$(MAKE) test-cmpl TEST_DIR=. LOG_DIR=work/0/log/comp LOG_FILE=work/test1.result
 
 	$(MAKE) -s TEST_DIR=. LOG_DIR=work/0/log test-error | \
 		grep -e 'error:' -e 'warning:' >> work/test1.result
@@ -578,7 +586,7 @@ test-new:
 
 
 	mkdir -p work/3/log/comp
-	$(MAKE) test-compl TEST_DIR=work/3 LOG_DIR=work/3/log/comp LOG_FILE=work/test2.result
+	$(MAKE) test-cmpl TEST_DIR=work/3 LOG_DIR=work/3/log/comp LOG_FILE=work/test2.result
 
 	$(MAKE) -s TEST_DIR=work/3 LOG_DIR=work/3/log  test-error | \
 		grep -e 'error:' -e 'warning:' >> work/test2.result
@@ -630,16 +638,44 @@ test-parallel: test-org test-org-proj \
 			test-new test-new-proj test-new2
 
 
+
+
 test-comp2:
+ifeq ($(LANG_KIND),lua)
+	$(MAKE) test-comp2-main
+else
+	$(MAKE) test-comp2-para
+endif
+# diff で、修正前と修正後の差分がないことを確認
+	$(MAKE) diff-result
+ifdef LUA51
+	$(MAKE) accept-package ACCEPT=y ENABLE_LUA51=$(shell which $(LUA51))
+else
+	$(MAKE) accept-package ACCEPT=y
+endif
+
+# lua 版と go 版を並列処理させるためのターゲット
+test-comp2-para: test-comp2-main test-comp2-sub
+
+test-comp2-sub:
+	$(MAKE) test-comp2-sub-2 LNSC="$(LNSC_LUA)" WITH_GO= LANG_KIND=lua
+
+# 一度ビルドしたソース work/ から、 lua 版の lns でビルドして work/13 に出力する。
+# 後工程の diff-result で、 go 版の lns のビルド結果と比較して lua と go で
+# 同じ出力結果になることを確認する
+test-comp2-sub-2:
+	$(call cp_src_set,work/13,work/1)
+	$(MAKE) -C work/13 build_from_d depend_on=y FROM_DIR=../1 TO_DIR=../13
+
+test-comp2-main:
 #	$(MAKE) test-org
 
 
 # 新しいトランコンパイラで再度自分自身をコンパイルした結果が同じになることを確認する。
-#	$(call selfhost_build,work/1,../2)
-#	$(call selfhost_build,work/2,../3)
 	$(MAKE) -C work/2 build_from_d depend_on=y FROM_DIR=../1 TO_DIR=../2
 	$(MAKE) -C work/3 build_from_d depend_on=y FROM_DIR=../2 TO_DIR=../3
-	diff -r -I '_moduleObj.__buildId.*' -I '.*buildId = .*' work/2 work/3
+	diff -r -I '_moduleObj.__buildId.*' -I '.*buildId = .*' \
+			-x $(notdir $(LNSC_GO)) work/2 work/3
 
 
 	cp -a test work/3
@@ -663,21 +699,15 @@ ifndef SKIP_PROJ_TEST
 endif
 
 
-
-
-ifeq ($(MAKECMDGOALS),test-comp2)
 ifdef LUA51
 ifneq ($(shell which $(LUA51)),)
 	$(MAKE) test-lua51
-endif
 endif
 endif
 
 ifndef NO_LUAROCKS
 	$(MAKE) luarocks-check
 endif
-
-
 	$(call test-meta-update,$(LNSC),work/3)
 
 # rockspec の更新が必要かどうか
@@ -686,14 +716,6 @@ endif
 # メタフォーマットバージョンを上げなくて良いか確認
 	$(MAKE) check-meta-format
 
-# diff で、修正前と修正後の差分がないことを確認
-	$(MAKE) diff-result
-
-ifdef LUA51
-	$(MAKE) accept-package ACCEPT=y ENABLE_LUA51=$(shell which $(LUA51))
-else
-	$(MAKE) accept-package ACCEPT=y
-endif
 
 define check-rockspec-op
 	@grep 'lune\.' ../$1 | sed 's@.*src/@@g' | sed 's@\.lua.*@.lua@g' | sort > work/$1.list
@@ -712,6 +734,11 @@ endif
 diff-result:
 	(cd work/1; find test/ -iname '*.lua' -exec diff {} ../4/{} \; )
 	diff -r work/1/test/proj/  work/3/test/proj/ -I buildId
+ifneq ($(LANG_KIND),lua)
+	diff -r -I '_moduleObj.__buildId.*' -I '.*buildId = .*'		\
+			-x $(notdir $(LNSC_GO)) -x '*.go' -x 'go.*'	\
+			-x 'log' -x 'test' work/13 work/3
+endif
 	diff work/test1.result work/test2.result
 	diff work/test.result work/test3.result
 	diff work/test3.result work/test4.result
@@ -785,15 +812,19 @@ ifndef ACCEPT
 	@read -p "accept? $1 (y/n): " ANS; \
 	if [ $${ANS}x != yx ]; then exit 1; fi;
 endif
-	rm lune/base/*.lua
-	cp work/3/lune/base/*.lua lune/base/
-	cp work/3/lune/base/*.meta lune/base/
-	cp work/3/lune/*.* lune/
+#	rm lune/base/*.lua
+	cp work/3/lune/base/*.lua $(ORG_DIR)lune/base/
+	cp work/3/lune/base/*.meta $(ORG_DIR)lune/base/
+	cp work/3/lune/*.* $(ORG_DIR)lune/
+ifeq ($(WITH_GO),y)
+	cp work/3/$(LNSC_GO) $(ORG_DIR).
+	cp work/3/lune/base/*.go $(ORG_DIR)lune/base/
+endif
 ifneq ($(ENABLE_LUA51),)
-	cp work/6/lune/base/*.lns legacy/lua51/lune/base/
-	cp work/6/lune/base/*.lua legacy/lua51/lune/base/
-	cp work/6/lune/base/*.meta legacy/lua51/lune/base/
-	cp work/6/lune/*.* legacy/lua51/lune/
+	cp work/6/lune/base/*.lns $(ORG_DIR)legacy/lua51/lune/base/
+	cp work/6/lune/base/*.lua $(ORG_DIR)legacy/lua51/lune/base/
+	cp work/6/lune/base/*.meta $(ORG_DIR)legacy/lua51/lune/base/
+	cp work/6/lune/*.* $(ORG_DIR)legacy/lua51/lune/
 endif
 
 
@@ -1081,13 +1112,15 @@ test-gc:
 
 GO_RUNTIME = lune/base/runtime_go
 GO_LUA_LINK = $(GO_RUNTIME)/lua_link
-GO_MOD = lns
+GO_MOD = lnsc
 
 define buildGo
 	mkdir -p $(GO_LUA_LINK)
-	if [ ! -h $(GO_LUA_LINK)/inc ]; then ln -s $(LUA_INC_DIR) $(GO_LUA_LINK)/inc; fi
+	if [ ! -h $1/$(GO_LUA_LINK)/inc ]; then				\
+		ln -s $(LUA_INC_DIR) $1/$(GO_LUA_LINK)/inc;		\
+	fi
 	(cd $1; if [ ! -f go.mod ]; then go mod init $(GO_MOD); fi)
-	(cd $1; go build && ./lns)
+	(cd $1; go build && $(LNSC_GO))
 endef
 
 GO_WORK_DIR = work/go
@@ -1129,7 +1162,7 @@ endef
 
 
 test-miniGo:
-	$(call cmd_exec_trans,$(LNSC),.,.,,base/convGo)
+	$(call cmd_exec_trans,$(LNSC_GO),.,.,,base/convGo)
 	$(call setup-go,$(GO_WORK_DIR))
 	-rm $(GO_WORK_DIR)/*.*
 	cp build.counter $(GO_WORK_DIR)
@@ -1243,8 +1276,8 @@ test-subgo:
 
 define go-build-lns
 	cp lune/base/runtime_go/main/lnsc_main.go $1
-	(cd $1; go mod init lns)
-	(cd $1; go build)
+	(cd $1; go mod init $(GO_MOD))
+	(cd $1; time go build)
 endef
 
 # セルフホストのソースを go に変換し、 go 版 lns をビルドする
@@ -1283,13 +1316,15 @@ go-build:
 
 	$(call go-build-lns,$(GO_WORK_DIR)/test)
 
+ifndef NO_TEST
 	$(MAKE) test-govslua
-	cp $(GO_WORK_DIR)/test/lns .
+endif
+	cp $(GO_WORK_DIR)/test/$(LNSC_GO) .
 
 
 define test-govslua-comp
-	(cd $1; /usr/bin/time -f 'lns:%e/%U/%S:$2' ./lns lune/base/$2.lns SAVE $3 --log log)
-	(cd $1; LUA_PATH=./?.lua /usr/bin/time -f 'lua:%e/%U/%S:$2' $(LUA) lune/base/base.lua lune/base/$2.lns SAVE $4 --log log)
+	(cd $1; /usr/bin/time -f 'lns:%e/%U/%S:$2' $(LNSC_GO) lune/base/$2.lns SAVE $3 --log log)
+	(cd $1; LUA_PATH=./?.lua /usr/bin/time -f 'lua:%e/%U/%S:$2' $(LNSC_LUA) lune/base/$2.lns SAVE $4 --log log)
 	@(cd $1; diff $4/lune/base/$2.lua $3/lune/base/$2.lua)
 	@(cd $1; diff $4/lune/base/$2.meta $3/lune/base/$2.meta)
 endef
@@ -1312,7 +1347,7 @@ define test-buildlns
 	rm -rf $2/*
 	$(call mk_lune_proj_dir,$2)
 	$(call cp_src_set,$2,.)
-	$(call selfhost_build_dep,$1,.,$2,-langGo)
+	$(call selfhost_build_dep,$1,.,$2,-langGo -ol 53)
 	test "$(ONLY_CONV)" = "" && $(MAKE) LNSC="$1" tgt_dump_ast > $2/ast || echo skip
 endef
 
@@ -1320,7 +1355,7 @@ test-govslua-lua:
 	$(call test-buildlns,$(LNSC),work/1)
 
 test-govslua-go:
-	$(call test-buildlns,/usr/bin/time -f 'go:%e/%U/%S:$2' -o work/go.time --append $(GO_WORK_DIR)/test/lns,work/2)
+	$(call test-buildlns,/usr/bin/time -f 'go:%e/%U/%S:$2' -o work/go.time --append $(GO_WORK_DIR)/test/$(LNSC_GO),work/2)
 
 
 goprof:

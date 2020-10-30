@@ -1626,8 +1626,8 @@ pub override fn convFilter.processRoot(
    
    foreach pragma in node.$luneHelperInfo.pragmaSet {
       match pragma {
-         case .can_not_conv_code( codeSet ) {
-            if codeSet.has( LuneControl.Code.C ) {
+         case .limit_conv_code( codeSet ) {
+            if not codeSet.has( LuneControl.Code.C ) {
                self.canConv = false;
                break;
             }

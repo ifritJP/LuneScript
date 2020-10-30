@@ -146,6 +146,7 @@ __test {
 
 __test case1(ctrl) {
    import lune.base.LuaVer;
+   import lune.base.Option;
 
    LuaVer.setCurVer( 53 );
 
@@ -162,7 +163,7 @@ print( Ver.version );
 print( Code.ID.nothing_define_abbr );
 ```;
    let scriptPath = "test.lns";
-   let option = convLua.createDefaultOption( scriptPath );
+   let option = Option.createDefaultOption( scriptPath );
    let ast = convLua.createAst( scriptPath, code, option );
    let depend = Ast2Depend( ast );
    print( depend );

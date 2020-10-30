@@ -1362,6 +1362,10 @@ pub fn exec( args: &List<str> ) {
    front.exec();
 }
 
+pub fn setFront() {
+   let mut option = Option.createDefaultOption( "dummy.lns" );
+   new Front( option );
+}
 
 __test case1(ctrl) {
    let luaCode = convertLnsCode2LuaCode( convLua.getTestLnsCode(), "test.lns" );

@@ -756,14 +756,21 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
       self.checkAccesSym();
       let mut tentativeSymbol = self.tentativeSymbol;
       self.tentativeSymbol = unwrap tentativeSymbol.finish( complete );
-      
-      foreach symbolInfo in tentativeSymbol.$initSymSet {
-         if tentativeSymbol.$scope.$parent == symbolInfo.$scope {
-            if not symbolInfo.$hasValueFlag {
-               self.addWarnMess(
-                  self.parser.getLastPos(),
-                  "It exists the case no initialized value for '%s'" (symbolInfo.$name) );
+
+      {
+         let mut errSymMap:Map<str,&Ast.SymbolInfo> = {};
+         foreach symbolInfo in tentativeSymbol.$initSymSet {
+            if tentativeSymbol.$scope.$parent == symbolInfo.$scope {
+               if not symbolInfo.$hasValueFlag {
+                  errSymMap[ symbolInfo.$name ] = symbolInfo;
+               }
             }
+         }
+         forsort symbolInfo in errSymMap {
+            self.addWarnMess(
+               self.parser.getLastPos(),
+               "It exists the case no initialized value for '%s'"
+               (symbolInfo.$name) );
          }
       }
 
@@ -2744,7 +2751,7 @@ fn TransUnit.analyzeLuneControl(
       case "load__lune_module" {
          pragma = LuneControl.Pragma.load__lune_module;
       }
-      case "can_not_conv_code" {
+      case "limit_conv_code" {
          let mut codeSet:Set<LuneControl.Code> = (@);
          while true {
             let token = self.getToken(##);
@@ -2759,7 +2766,7 @@ fn TransUnit.analyzeLuneControl(
                self.addErrMess( token.pos, "illegal code -- '%s'" (token.txt ) );
             }
          }
-         pragma = LuneControl.Pragma.can_not_conv_code( codeSet );
+         pragma = LuneControl.Pragma.limit_conv_code( codeSet );
       }
       default {
          self.addErrMess( nextToken.pos, "unknown option -- %s" (nextToken.txt) );
@@ -2904,7 +2911,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
    if! let moduleInfo = self.importModuleName2ModuleInfo[ modulePath ] {
       if! let metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
       {
-         Log._log( .Debug, `{ return "%s already" (modulePath); } );
+         Log._log( .Info, `{ return "%s already" (modulePath); } );
 
          let metaInfo = metaInfoStem@@=Meta._MetaInfo;
          let typeId2TypeInfo = moduleInfo.$importId2localTypeInfoMap;
@@ -3274,7 +3281,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
 
    self.importModuleInfo.remove();
 
-   Log._log( .Debug, `{ return "%s complete" (modulePath); } );
+   Log._log( .Info, `{ return "%s complete" (modulePath); } );
 
    return metaInfo, typeId2TypeInfo, moduleInfo;
 }

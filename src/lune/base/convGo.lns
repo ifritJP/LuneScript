@@ -1344,6 +1344,18 @@ fn convFilter.outputConvExt( funcNode:&Nodes.Node ) {
 pub override fn convFilter.processRoot(
    node: Nodes.RootNode, opt: Opt ) mut
 {
+   foreach pragma in node.$luneHelperInfo.pragmaSet {
+      match pragma {
+         case .limit_conv_code( codeSet ) {
+            if not codeSet.has( LuneControl.Code.Go ) {
+               self.writeln( "// This code is transcompiled by LuneScript." );
+               self.writeln( "package lnsc" );
+               return;
+            }
+         }
+      }
+   }
+   
    fn isUsingInTest( aNode:&Nodes.Node ) : bool {
       foreach testBlock in node.$nodeManager.getTestBlockNodeList() {
          if testBlock.isInnerPos( aNode.$pos ) {
@@ -1440,9 +1452,9 @@ pub override fn convFilter.processRoot(
    
    self.writeln( "// This code is transcompiled by LuneScript." );
    
-   self.writeln( "package lns" );
+   self.writeln( "package lnsc" );
 
-   self.writeln( 'import . "lns/lune/base/runtime_go"' );
+   self.writeln( 'import . "lnsc/lune/base/runtime_go"' );
 
 
    let initModVar = "init_%s" (getModuleName(node.$moduleTypeInfo));
@@ -5002,7 +5014,7 @@ pub override fn convFilter.processLuneControl(
       }
       case .load__lune_module {
       }
-      case .can_not_conv_code( _ ) {
+      case .limit_conv_code( _ ) {
       }
    }
 }
@@ -5039,10 +5051,12 @@ __test {
 }
 
 __test case1(ctrl ) {
+   import lune.base.Option;
+   
    LuaVer.setCurVer( 53 );
    
    let scriptPath = "test.lns";
-   let option = convLua.createDefaultOption( scriptPath );
+   let option = Option.createDefaultOption( scriptPath );
    let mut ast = convLua.createAst( scriptPath, convLua.getTestLnsCode(), option );
    let goCode = Ast2Code( scriptPath, ast);
    print( goCode );

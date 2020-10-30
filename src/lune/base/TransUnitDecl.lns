@@ -600,15 +600,24 @@ pub fn TransUnit.createAST(
       }
    }
 
-   foreach pos, protoType in self.protoFuncMap {
-      self.addErrMess(
-         pos, "This function doesn't have body. -- %s" ( protoType.getTxt(##) ) );
+   fn createId2proto( map:Map<&Ast.TypeInfo,&Parser.Position> ) :&Map<int,&Ast.TypeInfo> {
+      let mut id2proto:Map<int,&Ast.TypeInfo> = {};
+      foreach _, protoType in map {
+         id2proto[ protoType.$typeId ] = protoType;
+      }
+      return id2proto;
    }
-   foreach pos, protoType in self.protoClassMap {
+   
+   forsort protoType in createId2proto( self.protoFuncMap ) {
       self.addErrMess(
-         pos, "This class doesn't have body. -- %s" ( protoType.getTxt(##) ) );
+         unwrap self.protoFuncMap[ protoType ],
+         "This function doesn't have body. -- %s" ( protoType.getTxt(##) ) );
    }
-
+   forsort protoType in createId2proto( self.protoClassMap ) {
+      self.addErrMess(
+         unwrap self.protoClassMap[ protoType ],
+         "This class doesn't have body. -- %s" ( protoType.getTxt(##) ) );
+   }
 
    foreach mess in self.warnMessList {
       Util.errorLog( mess );

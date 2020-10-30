@@ -690,11 +690,12 @@ pub fn MacroCtrl.expandMacroVal(
             let txt = (unwrap macroVal.val)@@str;
             let rawTxt;
             if txt.find( "^```"## ) {
-               //rawTxt = "[==[%s]==]" (txt);
-               rawTxt = "%q" (txt);
+               //rawTxt = "%q" (txt);
+               rawTxt = Parser.quoteStr( txt );
             }
             else {
-               rawTxt = "%q" (txt);
+               //rawTxt = "%q" (txt);
+               rawTxt = Parser.quoteStr( txt );
             }
             nextToken = new Parser.Token(
                Parser.TokenKind.Str, rawTxt, nextToken.pos, false ##);
