@@ -946,7 +946,7 @@ function convFilter:outputMeta( node )
                workFilter.macroDepth = workFilter.macroDepth - 1
                
                memStream:close(  )
-               self:writeln( string.format( 'info.stmtBlock = %q', memStream:get_txt()) )
+               self:writeln( string.format( 'info.stmtBlock = %s', Parser.quoteStr( memStream:get_txt() )) )
             end
          end
          
@@ -959,11 +959,11 @@ function convFilter:outputMeta( node )
             end
             
             if prevLineNo ~= -1 and prevLineNo ~= token.pos.lineNo then
-               self:write( string.format( "{%d,%q},", Parser.TokenKind.Dlmt, "\n") )
+               self:write( string.format( "{%d,%s},", Parser.TokenKind.Dlmt, Parser.quoteStr( "\n" )) )
             end
             
             prevLineNo = token.pos.lineNo
-            self:write( string.format( "{%d,%q}", token.kind, token.txt) )
+            self:write( string.format( "{%d,%s}", token.kind, Parser.quoteStr( token.txt )) )
          end
          
          self:writeln( '}' )
@@ -1892,7 +1892,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _6071 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _6089 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -4082,7 +4082,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3385, function (  )
+   Log.log( Log.Level.Trace, __func__, 3388, function (  )
    
       return string.format( "macro: %s", code)
    end )

@@ -49,6 +49,7 @@ build = {
       [ "lune.base.frontInterface" ] = "src/legacy/lua51/lune/base/frontInterface.lua",
       [ "lune.base.Writer" ] = "src/legacy/lua51/lune/base/Writer.lua",
       [ "lune.base.Parser" ] = "src/legacy/lua51/lune/base/Parser.lua",
+      [ "lune.base.MetaLoader" ] = "src/legacy/lua51/lune/base/MetaLoader.lua",
       [ "lune.base.Option" ] = "src/legacy/lua51/lune/base/Option.lua",
       [ "lune.base.Ast" ] = "src/legacy/lua51/lune/base/Ast.lua",
       [ "lune.base.Nodes" ] = "src/legacy/lua51/lune/base/Nodes.lua",

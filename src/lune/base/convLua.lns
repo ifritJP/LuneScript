@@ -637,7 +637,8 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
             workFilter.macroDepth = workFilter.macroDepth - 1;
 
             memStream.close();
-            self.writeln( 'info.stmtBlock = %q' (memStream.$txt ) );
+            self.writeln( 'info.stmtBlock = %s'
+                          (Parser.quoteStr( memStream.$txt ) ) );
          }
 
          self.writeln( 'info.tokenList = {' );
@@ -647,10 +648,12 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
                self.write( "," );
             }
             if prevLineNo ~= -1 and prevLineNo ~= token.pos.lineNo {
-               self.write( "{%d,%q}," (Parser.TokenKind.Dlmt,"\n") );
+               self.write( "{%d,%s}," (Parser.TokenKind.Dlmt,
+                                        Parser.quoteStr( "\n" ) ) );
             }
             prevLineNo = token.pos.lineNo;
-            self.write( "{%d,%q}" (token.kind, token.txt) );
+            self.write( "{%d,%s}" (token.kind,
+                                    Parser.quoteStr( token.txt )) );
          }
          self.writeln( '}' );
 

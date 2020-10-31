@@ -330,6 +330,9 @@ func (luaVM *Lns_luaVM) String_find(
     if work, ok := index.(LnsInt); ok {
         offset = string_index( work, len( txt ) )
         if offset > 0 {
+            if offset > len(txt) {
+                return []LnsAny{}
+            }
             target = txt[ offset - 1: ]
         }
     }

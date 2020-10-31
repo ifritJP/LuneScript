@@ -85,6 +85,10 @@ func Depend_getLuaVersion() string {
     return "5.3"
 }
 
+func Depend_useMetaLoader() bool {
+    return true
+}
+
 type Depend_UpdateVer func ( ver LnsInt )
 
 func Depend_setup( callback Depend_UpdateVer) {

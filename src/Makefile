@@ -173,6 +173,7 @@ define selfhost_buildOp
 	$(call $5,$1,$2,$3,$4,base/frontInterface)
 	$(call $5,$1,$2,$3,$4,base/Writer)
 	$(call $5,$1,$2,$3,$4,base/Parser)
+	$(call $5,$1,$2,$3,$4,base/MetaLoader)
 	$(call $5,$1,$2,$3,$4,base/Ast)
 	$(call $5,$1,$2,$3,$4,base/Option)
 	$(call $5,$1,$2,$3,$4,base/Nodes)
@@ -1137,7 +1138,7 @@ GO_LUA_LINK = $(GO_RUNTIME)/lua_link
 GO_MOD = lnsc
 
 define buildGo
-	mkdir -p $(GO_LUA_LINK)
+	mkdir -p $1/$(GO_LUA_LINK)
 	if [ ! -h $1/$(GO_LUA_LINK)/inc ]; then				\
 		ln -s $(LUA_INC_DIR) $1/$(GO_LUA_LINK)/inc;		\
 	fi
@@ -1184,7 +1185,7 @@ endef
 
 
 test-miniGo:
-	$(call cmd_exec_trans,$(LNSC_GO),.,.,,base/convGo)
+	$(call cmd_exec_trans,$(LNSC),.,.,,base/convGo)
 	$(call setup-go,$(GO_WORK_DIR))
 	-rm $(GO_WORK_DIR)/*.*
 	cp build.counter $(GO_WORK_DIR)
@@ -1272,6 +1273,7 @@ test-testGo:
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Log,--testing,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Util,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Parser,lune/base,./test)
+	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),MetaLoader,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Writer,lune/base,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/frontInterface,--testing,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Ast,lune/base,./test)
@@ -1319,6 +1321,7 @@ go-build:
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Log,,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Util,,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Parser,,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/MetaLoader,,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Writer,,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/frontInterface,,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Ast,,./test)
@@ -1370,7 +1373,7 @@ define test-buildlns
 	$(call mk_lune_proj_dir,$2)
 	$(call cp_src_set,$2,.)
 	$(call selfhost_build_dep,$1,.,$2,-langGo -ol 53)
-	test "$(ONLY_CONV)" = "" && $(MAKE) LANG_KIND==$3 tgt_dump_ast > $2/ast || echo skip
+	test "$(ONLY_CONV)" = "" && $(MAKE) LANG_KIND=$3 tgt_dump_ast > $2/ast || echo skip
 endef
 
 test-govslua-lua:
