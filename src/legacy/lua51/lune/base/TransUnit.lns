@@ -2957,8 +2957,8 @@ fn TransUnit.processImport( modulePath:str ) mut :
 
    // 依存するモジュールの typeInfo と、 meta 情報内の typeId との紐付け
    foreach dependIdInfo, typeId in metaInfo.__dependIdMap {
-      let dependInfo = unwrap dependLibId2DependInfo[ dependIdInfo[ 1 ] ];
-      let typeInfo = dependInfo.getTypeInfo( dependIdInfo[ 2 ] );
+      let dependInfo = unwrap dependLibId2DependInfo[ unwrap dependIdInfo[ 1 ] ];
+      let typeInfo = dependInfo.getTypeInfo( unwrap dependIdInfo[ 2 ] );
       typeId2TypeInfo[ typeId ] = typeInfo;
       if! Ast.getScope( typeInfo ) {
          typeId2Scope[ typeId ] = _exp;

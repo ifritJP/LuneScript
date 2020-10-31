@@ -20,6 +20,7 @@ type Meta__MetaInfo struct {
     __dependIdMap *LnsMap
     __macroName2InfoMap *LnsMap
     __hasTest bool
+    __subModuleMap *LnsMap
     FP Meta__MetaInfoMtd
 }
 func Meta__MetaInfo2Stem( obj LnsAny ) LnsAny {
@@ -42,13 +43,13 @@ func Meta__MetaInfoDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Meta__MetaInfo) ToMeta__MetaInfo() *Meta__MetaInfo {
     return obj
 }
-func NewMeta__MetaInfo(arg1 string, arg2 bool, arg3 string, arg4 *LnsMap, arg5 *LnsMap, arg6 *LnsMap, arg7 LnsInt, arg8 LnsInt, arg9 bool, arg10 *LnsMap, arg11 *LnsMap, arg12 *LnsMap, arg13 bool) *Meta__MetaInfo {
+func NewMeta__MetaInfo(arg1 string, arg2 bool, arg3 string, arg4 *LnsMap, arg5 *LnsMap, arg6 *LnsMap, arg7 LnsInt, arg8 LnsInt, arg9 bool, arg10 *LnsMap, arg11 *LnsMap, arg12 *LnsMap, arg13 bool, arg14 *LnsMap) *Meta__MetaInfo {
     obj := &Meta__MetaInfo{}
     obj.FP = obj
-    obj.InitMeta__MetaInfo(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13)
+    obj.InitMeta__MetaInfo(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14)
     return obj
 }
-func (self *Meta__MetaInfo) InitMeta__MetaInfo(arg1 string, arg2 bool, arg3 string, arg4 *LnsMap, arg5 *LnsMap, arg6 *LnsMap, arg7 LnsInt, arg8 LnsInt, arg9 bool, arg10 *LnsMap, arg11 *LnsMap, arg12 *LnsMap, arg13 bool) {
+func (self *Meta__MetaInfo) InitMeta__MetaInfo(arg1 string, arg2 bool, arg3 string, arg4 *LnsMap, arg5 *LnsMap, arg6 *LnsMap, arg7 LnsInt, arg8 LnsInt, arg9 bool, arg10 *LnsMap, arg11 *LnsMap, arg12 *LnsMap, arg13 bool, arg14 *LnsMap) {
     self.__formatVersion = arg1
     self.__enableTest = arg2
     self.__buildId = arg3
@@ -62,6 +63,7 @@ func (self *Meta__MetaInfo) InitMeta__MetaInfo(arg1 string, arg2 bool, arg3 stri
     self.__dependIdMap = arg11
     self.__macroName2InfoMap = arg12
     self.__hasTest = arg13
+    self.__subModuleMap = arg14
 }
 
 func Lns_Meta_init() {

@@ -4,11 +4,11 @@ import . "lnsc/lune/base/runtime_go"
 var init_MetaLoader bool
 var MetaLoader__mod__ string
 var MetaLoader_quotedChar2Code *LnsMap
-// for 358
-func MetaLoader_convExp2179(arg1 []LnsAny) LnsAny {
+// for 378
+func MetaLoader_convExp2307(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// 289: decl @lune.@base.@MetaLoader.loadFromStream
+// 307: decl @lune.@base.@MetaLoader.loadFromStream
 func MetaLoader_loadFromStream(path string,stream Lns_iStream)(LnsAny, LnsAny) {
     var streamParser *Parser_StreamParser
     streamParser = NewParser_StreamParser(stream, path, true)
@@ -23,9 +23,9 @@ func MetaLoader_loadFromStream(path string,stream Lns_iStream)(LnsAny, LnsAny) {
         return nil, err
     }
     if item != nil{
-        item_525 := item
+        item_544 := item
         var _map *LnsMap
-        _map = item_525.(*LnsMap)
+        _map = item_544.(*LnsMap)
         var formatVersion string
         {
             _workVal := _map.Items["__formatVersion"]
@@ -170,6 +170,18 @@ func MetaLoader_loadFromStream(path string,stream Lns_iStream)(LnsAny, LnsAny) {
             }
         }
         
+        var subModuleMap *LnsMap
+        {
+            _workVal := _map.Items["__subModuleMap"]
+            if _workVal != nil {
+                workVal := _workVal
+                subModuleMap = workVal.(*LnsMap)
+                
+            } else {
+                return nil, Lns_getVM().String_format("error -- %s", []LnsAny{"subModuleMap"})
+            }
+        }
+        
         var hasTest bool
         {
             _workVal := _map.Items["__hasTest"]
@@ -182,22 +194,22 @@ func MetaLoader_loadFromStream(path string,stream Lns_iStream)(LnsAny, LnsAny) {
             }
         }
         
-        return NewMeta__MetaInfo(formatVersion, enableTest, buildId, typeId2ClassInfoMap, typeInfoList, varName2InfoMap, moduleTypeId, moduleSymbolKind, moduleMutable, dependModuleMap, dependIdMap, macroName2InfoMap, hasTest), nil
+        return NewMeta__MetaInfo(formatVersion, enableTest, buildId, typeId2ClassInfoMap, typeInfoList, varName2InfoMap, moduleTypeId, moduleSymbolKind, moduleMutable, dependModuleMap, dependIdMap, macroName2InfoMap, hasTest, subModuleMap), nil
     }
     return nil, "error"
 }
 
-// 353: decl @lune.@base.@MetaLoader.loadFromCode
+// 373: decl @lune.@base.@MetaLoader.loadFromCode
 func MetaLoader_loadFromCode(path string,code string)(LnsAny, LnsAny) {
     return MetaLoader_loadFromStream(path, NewParser_TxtStream(code).FP)
 }
 
-// 357: decl @lune.@base.@MetaLoader.load
+// 377: decl @lune.@base.@MetaLoader.load
 func MetaLoader_load(path string)(LnsAny, LnsAny) {
     var stream Lns_luaStream
     
     {
-        _stream := MetaLoader_convExp2179(Lns_2DDD(Lns_io_open(path, "r")))
+        _stream := MetaLoader_convExp2307(Lns_2DDD(Lns_io_open(path, "r")))
         if _stream == nil{
             return nil, Lns_getVM().String_format("open error -- %s", []LnsAny{path})
         } else {
@@ -288,7 +300,7 @@ func NewMetaLoader_Scope(arg1 LnsAny) *MetaLoader_Scope {
     return obj
 }
 func (self *MetaLoader_Scope) Get_parent() LnsAny{ return self.parent }
-// 14: DeclConstr
+// 15: DeclConstr
 func (self *MetaLoader_Scope) InitMetaLoader_Scope(parent LnsAny) {
     self.parent = parent
     
@@ -296,7 +308,7 @@ func (self *MetaLoader_Scope) InitMetaLoader_Scope(parent LnsAny) {
     
 }
 
-// 18: decl @lune.@base.@MetaLoader.Scope.add
+// 19: decl @lune.@base.@MetaLoader.Scope.add
 func (self *MetaLoader_Scope) Add(name string,val LnsAny) *MetaLoader_SymbolInfo {
     var symbolInfo *MetaLoader_SymbolInfo
     symbolInfo = NewMetaLoader_SymbolInfo(name, val)
@@ -304,7 +316,7 @@ func (self *MetaLoader_Scope) Add(name string,val LnsAny) *MetaLoader_SymbolInfo
     return symbolInfo
 }
 
-// 23: decl @lune.@base.@MetaLoader.Scope.get
+// 24: decl @lune.@base.@MetaLoader.Scope.get
 func (self *MetaLoader_Scope) Get(name string) LnsAny {
     {
         __exp := self.name2val.Items[name]
@@ -364,7 +376,7 @@ func NewMetaLoader_Loader(arg1 Parser_PushbackParser) *MetaLoader_Loader {
     obj.InitMetaLoader_Loader(arg1)
     return obj
 }
-// 51: DeclConstr
+// 52: DeclConstr
 func (self *MetaLoader_Loader) InitMetaLoader_Loader(parser Parser_PushbackParser) {
     self.parser = parser
     
@@ -373,7 +385,7 @@ func (self *MetaLoader_Loader) InitMetaLoader_Loader(parser Parser_PushbackParse
 }
 
 
-// 58: decl @lune.@base.@MetaLoader.Loader.analyzeTable
+// 59: decl @lune.@base.@MetaLoader.Loader.analyzeTable
 func (self *MetaLoader_Loader) analyzeTable()(LnsAny, LnsAny) {
     var _map *LnsMap
     _map = NewLnsMap( map[LnsAny]LnsAny{})
@@ -385,30 +397,44 @@ func (self *MetaLoader_Loader) analyzeTable()(LnsAny, LnsAny) {
         if token.Kind == Parser_TokenKind__Eof{
             return nil, "eof"
         }
-        if _switch470 := token.Txt; _switch470 == "}" {
+        if _switch545 := token.Txt; _switch545 == "}" {
             return _map, nil
-        } else if _switch470 == "," {
+        } else if _switch545 == "," {
         } else {
             var item LnsAny
             item = nil
-            if token.Kind == Parser_TokenKind__Symb{
+            if _switch445 := token.Kind; _switch445 == Parser_TokenKind__Symb {
                 var nextToken *Parser_Token
                 nextToken = self.parser.GetTokenNoErr()
+                self.parser.PushbackToken(nextToken)
                 if nextToken.Txt == "="{
                     item = token.Txt
                     
                 } else { 
-                    self.parser.PushbackToken(nextToken)
+                    return nil, Lns_getVM().String_format("not support -- %s", []LnsAny{token.Txt})
+                }
+            } else if _switch445 == Parser_TokenKind__Dlmt {
+                if token.Txt == "{"{
+                    var err LnsAny
+                    item, err = self.FP.analyzeTable()
+                    
+                    if Lns_isCondTrue( err){
+                        return nil, err
+                    }
+                } else { 
+                    return nil, Lns_getVM().String_format("not support -- %s", []LnsAny{token.Txt})
+                }
+            } else {
+                self.parser.Pushback()
+                var err LnsAny
+                item, err = self.FP.analyzeExp()
+                
+                if Lns_isCondTrue( err){
+                    return nil, err
                 }
             }
             if Lns_op_not(item){
                 self.parser.PushbackToken(token)
-            }
-            var err LnsAny
-            item, err = self.FP.analyzeExp()
-            
-            if Lns_isCondTrue( err){
-                return nil, err
             }
             var nextToken *Parser_Token
             nextToken = self.parser.GetTokenNoErr()
@@ -419,16 +445,16 @@ func (self *MetaLoader_Loader) analyzeTable()(LnsAny, LnsAny) {
                 if Lns_isCondTrue( work){
                     return nil, work
                 }
-                if val != nil && item != nil{
-                    val_400 := val
-                    item_401 := item
-                    _map.Set(val_400,item_401)
+                if item != nil && val != nil{
+                    item_418 := item
+                    val_419 := val
+                    _map.Set(item_418,val_419)
                 }
             } else { 
                 self.parser.Pushback()
                 if item != nil{
-                    item_404 := item
-                    _map.Set(index,item_404)
+                    item_422 := item
+                    _map.Set(index,item_422)
                 }
                 index = index + 1
                 
@@ -439,7 +465,7 @@ func (self *MetaLoader_Loader) analyzeTable()(LnsAny, LnsAny) {
     return nil,nil
 }
 
-// 112: decl @lune.@base.@MetaLoader.Loader.analyzeExp
+// 130: decl @lune.@base.@MetaLoader.Loader.analyzeExp
 func (self *MetaLoader_Loader) analyzeExp()(LnsAny, LnsAny) {
     for  {
         var token *Parser_Token
@@ -449,26 +475,26 @@ func (self *MetaLoader_Loader) analyzeExp()(LnsAny, LnsAny) {
         }
         var txt string
         txt = token.Txt
-        if _switch799 := token.Kind; _switch799 == Parser_TokenKind__Dlmt {
+        if _switch874 := token.Kind; _switch874 == Parser_TokenKind__Dlmt {
             if txt == "{"{
                 return self.FP.analyzeTable()
             }
             return nil, Lns_getVM().String_format("illegal delimit -- %s", []LnsAny{txt})
-        } else if _switch799 == Parser_TokenKind__Char {
+        } else if _switch874 == Parser_TokenKind__Char {
             if len(txt) == 1{
                 return LnsInt(txt[1-1]), nil
             }
             return Lns_unwrap( MetaLoader_quotedChar2Code.Items[Lns_getVM().String_sub(txt,2, 2)]).(LnsInt), nil
-        } else if _switch799 == Parser_TokenKind__Int {
+        } else if _switch874 == Parser_TokenKind__Int {
             return Lns_forceCastInt((Lns_unwrapDefault( Lns_tonumber(txt, nil), 0))), nil
-        } else if _switch799 == Parser_TokenKind__Real {
+        } else if _switch874 == Parser_TokenKind__Real {
             return Lns_unwrapDefault( Lns_tonumber(txt, nil), 0.0).(LnsReal), nil
-        } else if _switch799 == Parser_TokenKind__Str {
+        } else if _switch874 == Parser_TokenKind__Str {
             if LnsInt(txt[1-1]) == 96{
                 return Lns_getVM().String_sub(txt,4, -4), nil
             }
-            return Lns_getVM().String_sub(txt,1, -1), nil
-        } else if _switch799 == Parser_TokenKind__Symb {
+            return Lns_getVM().String_sub(txt,2, -2), nil
+        } else if _switch874 == Parser_TokenKind__Symb {
             {
                 _symbolInfo := self.curScope.FP.Get(txt)
                 if _symbolInfo != nil {
@@ -477,17 +503,17 @@ func (self *MetaLoader_Loader) analyzeExp()(LnsAny, LnsAny) {
                 }
             }
             return nil, Lns_getVM().String_format("not found -- %s", []LnsAny{txt})
-        } else if _switch799 == Parser_TokenKind__Kywd {
-            if _switch744 := token.Txt; _switch744 == "true" {
+        } else if _switch874 == Parser_TokenKind__Kywd {
+            if _switch819 := token.Txt; _switch819 == "true" {
                 return true, nil
-            } else if _switch744 == "false" {
+            } else if _switch819 == "false" {
                 return false, nil
             }
             return nil, Lns_getVM().String_format("illegal keyword -- %s", []LnsAny{token.Txt})
-        } else if _switch799 == Parser_TokenKind__Cmnt {
-        } else if _switch799 == Parser_TokenKind__Eof || _switch799 == Parser_TokenKind__Type {
+        } else if _switch874 == Parser_TokenKind__Cmnt {
+        } else if _switch874 == Parser_TokenKind__Eof || _switch874 == Parser_TokenKind__Type {
             return nil, Lns_getVM().String_format("illegal kind -- %s", []LnsAny{Parser_TokenKind_getTxt( token.Kind)})
-        } else if _switch799 == Parser_TokenKind__Ope {
+        } else if _switch874 == Parser_TokenKind__Ope {
             return nil, Lns_getVM().String_format("not support -- %s", []LnsAny{txt})
         }
     }
@@ -495,7 +521,7 @@ func (self *MetaLoader_Loader) analyzeExp()(LnsAny, LnsAny) {
     return nil,nil
 }
 
-// 173: decl @lune.@base.@MetaLoader.Loader.processDeclVar
+// 191: decl @lune.@base.@MetaLoader.Loader.processDeclVar
 func (self *MetaLoader_Loader) processDeclVar() LnsAny {
     var token *Parser_Token
     token = self.parser.GetTokenNoErr()
@@ -518,7 +544,7 @@ func (self *MetaLoader_Loader) processDeclVar() LnsAny {
     return nil
 }
 
-// 192: decl @lune.@base.@MetaLoader.Loader.processExpSym
+// 210: decl @lune.@base.@MetaLoader.Loader.processExpSym
 func (self *MetaLoader_Loader) processExpSym(symToken *Parser_Token) LnsAny {
     var symbolInfo *MetaLoader_SymbolInfo
     
@@ -540,7 +566,7 @@ func (self *MetaLoader_Loader) processExpSym(symToken *Parser_Token) LnsAny {
         if nextToken.Kind == Parser_TokenKind__Eof{
             return "eof"
         }
-        if _switch1098 := nextToken.Txt; _switch1098 == "." {
+        if _switch1177 := nextToken.Txt; _switch1177 == "." {
             var fieldToken *Parser_Token
             fieldToken = self.parser.GetTokenNoErr()
             if exp != nil{
@@ -549,21 +575,22 @@ func (self *MetaLoader_Loader) processExpSym(symToken *Parser_Token) LnsAny {
             } else {
                 return "nil access"
             }
-        } else if _switch1098 == "[" {
-            var indexToken *Parser_Token
-            indexToken = self.parser.GetTokenNoErr()
+        } else if _switch1177 == "[" {
+            var indexExp LnsAny
+            var err LnsAny
+            indexExp,err = self.FP.analyzeExp()
             if exp != nil{
-                index = indexToken.Txt
+                index = indexExp
                 
             } else {
-                return "nil access"
+                return Lns_getVM().String_format("illegal index -- %s", []LnsAny{err})
             }
             var closeToken *Parser_Token
             closeToken = self.parser.GetTokenNoErr()
             if closeToken.Txt != "]"{
                 return Lns_getVM().String_format("illegal token -- %s", []LnsAny{closeToken.Txt})
             }
-        } else if _switch1098 == "=" {
+        } else if _switch1177 == "=" {
             var val LnsAny
             var err LnsAny
             val,err = self.FP.analyzeExp()
@@ -571,11 +598,11 @@ func (self *MetaLoader_Loader) processExpSym(symToken *Parser_Token) LnsAny {
                 return err
             }
             if index != nil && exp != nil{
-                index_471 := index
-                exp_472 := exp
+                index_490 := index
+                exp_491 := exp
                 var _map *LnsMap
-                _map = exp_472.(*LnsMap)
-                _map.Set(index_471,val)
+                _map = exp_491.(*LnsMap)
+                _map.Set(index_490,val)
             }
             return nil
         }
@@ -586,7 +613,7 @@ func (self *MetaLoader_Loader) processExpSym(symToken *Parser_Token) LnsAny {
     return nil
 }
 
-// 241: decl @lune.@base.@MetaLoader.Loader.processStmt
+// 259: decl @lune.@base.@MetaLoader.Loader.processStmt
 func (self *MetaLoader_Loader) processStmt()(LnsAny, LnsAny) {
     for  {
         var token *Parser_Token
@@ -594,7 +621,7 @@ func (self *MetaLoader_Loader) processStmt()(LnsAny, LnsAny) {
         if token.Kind == Parser_TokenKind__Eof{
             return nil, "eof"
         }
-        if _switch1246 := token.Kind; _switch1246 == Parser_TokenKind__Symb {
+        if _switch1325 := token.Kind; _switch1325 == Parser_TokenKind__Symb {
             {
                 __exp := self.FP.processExpSym(token)
                 if __exp != nil {
@@ -602,8 +629,8 @@ func (self *MetaLoader_Loader) processStmt()(LnsAny, LnsAny) {
                     return nil, _exp
                 }
             }
-        } else if _switch1246 == Parser_TokenKind__Kywd {
-            if _switch1244 := token.Txt; _switch1244 == "local" {
+        } else if _switch1325 == Parser_TokenKind__Kywd {
+            if _switch1323 := token.Txt; _switch1323 == "local" {
                 {
                     _err := self.FP.processDeclVar()
                     if _err != nil {
@@ -611,10 +638,10 @@ func (self *MetaLoader_Loader) processStmt()(LnsAny, LnsAny) {
                         return nil, err
                     }
                 }
-            } else if _switch1244 == "do" {
+            } else if _switch1323 == "do" {
                 self.curScope = NewMetaLoader_Scope(self.curScope)
                 
-            } else if _switch1244 == "end" {
+            } else if _switch1323 == "end" {
                 {
                     _parent := self.curScope.FP.Get_parent()
                     if _parent != nil {
@@ -625,7 +652,7 @@ func (self *MetaLoader_Loader) processStmt()(LnsAny, LnsAny) {
                         return nil, "underflow scope"
                     }
                 }
-            } else if _switch1244 == "return" {
+            } else if _switch1323 == "return" {
                 return self.FP.analyzeExp()
             }
         }
@@ -634,16 +661,16 @@ func (self *MetaLoader_Loader) processStmt()(LnsAny, LnsAny) {
     return nil,nil
 }
 
-// 279: decl @lune.@base.@MetaLoader.Loader.process
+// 297: decl @lune.@base.@MetaLoader.Loader.process
 func (self *MetaLoader_Loader) Process()(LnsAny, LnsAny) {
     var val LnsAny
     var err LnsAny
     val,err = self.FP.processStmt()
     if err != nil{
-        err_501 := err.(string)
+        err_520 := err.(string)
         var pos *Parser_Position
         pos = self.parser.GetTokenNoErr().Pos
-        return nil, Lns_getVM().String_format("%d:%d:%s", []LnsAny{pos.LineNo, pos.Column, err_501})
+        return nil, Lns_getVM().String_format("%d:%d:%s", []LnsAny{pos.LineNo, pos.Column, err_520})
     }
     return val, err
 }
@@ -658,6 +685,8 @@ func Lns_MetaLoader_init() {
     Lns_Util_init()
     Lns_Meta_init()
     Lns_Parser_init()
+    Lns_LuaVer_init()
+    Lns_Depend_init()
     MetaLoader_quotedChar2Code = NewLnsMap( map[LnsAny]LnsAny{"a":7,"b":8,"t":9,"n":10,"v":11,"f":12,"r":13,"\\":92,"\"":34,"'":39,})
 }
 func init() {

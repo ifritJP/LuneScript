@@ -15,15 +15,15 @@ _moduleObj._MetaInfo = _MetaInfo
 function _MetaInfo.setmeta( obj )
   setmetatable( obj, { __index = _MetaInfo  } )
 end
-function _MetaInfo.new( __formatVersion, __enableTest, __buildId, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __funcName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap, __hasTest )
+function _MetaInfo.new( __formatVersion, __enableTest, __buildId, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap, __hasTest, __subModuleMap )
    local obj = {}
    _MetaInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( __formatVersion, __enableTest, __buildId, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __funcName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap, __hasTest )
+      obj:__init( __formatVersion, __enableTest, __buildId, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap, __hasTest, __subModuleMap )
    end
    return obj
 end
-function _MetaInfo:__init( __formatVersion, __enableTest, __buildId, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __funcName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap, __hasTest )
+function _MetaInfo:__init( __formatVersion, __enableTest, __buildId, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap, __hasTest, __subModuleMap )
 
    self.__formatVersion = __formatVersion
    self.__enableTest = __enableTest
@@ -31,7 +31,6 @@ function _MetaInfo:__init( __formatVersion, __enableTest, __buildId, __typeId2Cl
    self.__typeId2ClassInfoMap = __typeId2ClassInfoMap
    self.__typeInfoList = __typeInfoList
    self.__varName2InfoMap = __varName2InfoMap
-   self.__funcName2InfoMap = __funcName2InfoMap
    self.__moduleTypeId = __moduleTypeId
    self.__moduleSymbolKind = __moduleSymbolKind
    self.__moduleMutable = __moduleMutable
@@ -39,6 +38,7 @@ function _MetaInfo:__init( __formatVersion, __enableTest, __buildId, __typeId2Cl
    self.__dependIdMap = __dependIdMap
    self.__macroName2InfoMap = __macroName2InfoMap
    self.__hasTest = __hasTest
+   self.__subModuleMap = __subModuleMap
 end
 
 

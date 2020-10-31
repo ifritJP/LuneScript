@@ -370,30 +370,11 @@ pub fn loadFromStream( path:str, stream:iStream ) : &Meta._MetaInfo!, str! {
    return nil, "error";
 }
 
-fn formToMeta( func:Luaval<form>!, err:str! ) : &Meta._MetaInfo!, str! {
-   when! func {
-      let obj = func(##);
-      let! val = expandLuavalMap( obj ) {
-         return nil, "error";
-      };
-      return val@@=Meta._MetaInfo, nil;
-   } else {
-      return nil, err;
-   }
-}
-
 pub fn loadFromCode( path:str, code:str ) : &Meta._MetaInfo!, str! {
-   if not Depend.useMetaLoader() {
-      return formToMeta( _load( code, nil ), nil )**;
-   }
    return loadFromStream( path, new Parser.TxtStream( code ) )**;
 }
 
 pub fn load( path:str ) : &Meta._MetaInfo!, str! {
-   if not Depend.useMetaLoader() {
-      return formToMeta( loadfile( path )** )**;
-   }
-   
    let! mut stream = io.open( path, "r" ) {
       return nil, "open error -- %s" (path) ;
    };

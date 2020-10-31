@@ -373,7 +373,7 @@ function Loader:processExpSym( symToken )
             if exp ~= nil then
                index = indexExp
             else
-               return string.format( "illegal index -- %s", err)
+               return string.format( "illegal index -- %s", tostring( err))
             end
             
             local closeToken = self.parser:getTokenNoErr(  )

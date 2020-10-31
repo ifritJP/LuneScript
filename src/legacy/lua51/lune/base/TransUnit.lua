@@ -4571,8 +4571,8 @@ function TransUnit:processImport( modulePath )
    typeId2Scope[Ast.rootTypeId] = self.scope
    
    for typeId, dependIdInfo in pairs( metaInfo.__dependIdMap ) do
-      local dependInfo = _lune.unwrap( dependLibId2DependInfo[dependIdInfo[1]])
-      local typeInfo = dependInfo:getTypeInfo( dependIdInfo[2] )
+      local dependInfo = _lune.unwrap( dependLibId2DependInfo[_lune.unwrap( dependIdInfo[1])])
+      local typeInfo = dependInfo:getTypeInfo( _lune.unwrap( dependIdInfo[2]) )
       typeId2TypeInfo[typeId] = typeInfo
       do
          local _exp = Ast.getScope( typeInfo )

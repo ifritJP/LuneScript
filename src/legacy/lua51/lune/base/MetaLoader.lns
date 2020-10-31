@@ -2,68 +2,428 @@ import lune.base.Str;
 import lune.base.Util;
 import lune.base.Meta;
 import lune.base.Parser;
+import lune.base.Depend;
+
+class SymbolInfo {
+   let name:str {pub};
+   let mut val:stem! {pub};
+}
+
+class Scope {
+   let mut parent:Scope! {pub};
+   let mut name2val:Map<str,SymbolInfo>;
+   pub fn __init( parent:Scope! ) {
+      self.parent = parent;
+      self.name2val = {};
+   }
+   pub fn add( name:str, val:stem! ) mut : SymbolInfo {
+      let mut symbolInfo = new SymbolInfo( name, val );
+      self.name2val[ name ] = symbolInfo;
+      return symbolInfo;
+   }
+   pub fn get( name:str ) : SymbolInfo! {
+      if! self.name2val[ name ] {
+         return _exp;
+      }
+      if! self.parent {
+         return _exp.get( name );
+      }
+      return nil;
+   }
+}
+
+let quotedChar2Code:Map<str,int> = {
+   'a':7,    // \a
+   'b':8,    // \b
+   't':9,    // \t
+   'n':10,   // \t
+   'v':11,   // \v
+   'f':12,   // \f
+   'r':13,   // \r
+   '\\':?\\, // \\
+   '"':?\",  // "
+   "'":?\',  // '
+};
 
 class Loader {
    let mut parser:Parser.PushbackParser;
+   let mut curScope:Scope;
+   
    pub fn __init( parser:Parser.PushbackParser ) {
       self.parser = parser;
-   }
-
-   fn processDeclVar() mut : bool {
-      return false;
+      self.curScope = new Scope( nil );
    }
    
-   pub fn process() mut : &Meta._MetaInfo! {
+   fn analyzeExp() mut : stem!, str!;
+   
+   fn analyzeTable() mut : Map<&stem,&stem>!, str! {
+      let mut map:Map<&stem,&stem> = {};
+      let mut index = 1;
       while true {
          let token = self.parser.getTokenNoErr();
          if token.kind == .Eof {
-            break;
+            return nil, "eof";
          }
-         // if not token.txt.find( "^--" ## ) {
-         //    switch token.txt {
-         //       case "local" {
-         //          if self.processDeclVar() {
-         //             return nil;
-         //          }
-         //       }
-         //       case "do", "end" {
-         //       }
-         //    }
-         // }
-         
-         print( "%3d:%2d" (token.pos.lineNo, token.pos.column),
-                token.kind.$_txt, token.txt );
+         switch token.txt {
+            case "}" {
+               return map, nil;
+            }
+            case "," {
+            }
+            default {
+               let mut item:&stem! = nil;
+               switch token.kind {
+                  case .Symb {
+                     let nextToken = self.parser.getTokenNoErr();
+                     self.parser.pushbackToken( nextToken );
+                     if nextToken.txt == "=" {
+                        item = token.txt;
+                     }  else {
+                        return nil, "not support -- %s" (token.txt);
+                     }
+                  }
+                  case .Dlmt {
+                     if token.txt == "{" {
+                        let err;
+                        item, err = self.analyzeTable();
+                        if err {
+                           return nil, err;
+                        }
+                     } else {
+                        return nil, "not support -- %s" (token.txt);
+                     }
+                  }
+                  default {
+                     self.parser.pushback();
+                     let err;
+                     item, err = self.analyzeExp();
+                     if err {
+                        return nil, err;
+                     }
+                  }
+               }
+               if not item {
+                  self.parser.pushbackToken( token );
+               }
+               let nextToken = self.parser.getTokenNoErr();
+               if nextToken.txt == "=" {
+                  // key = val なので、 val を解析して登録する。
+                  let val, work = self.analyzeExp();
+                  if work {
+                     return nil, work;
+                  }
+                  when! item, val {
+                     map[ item ] = val;
+                  }
+               } else {
+                  self.parser.pushback();
+                  when! item {
+                     map[ index ] = item;
+                  }
+                  index = index + 1;
+               }
+            }
+         }
       }
-      
-      return new Meta._MetaInfo(
-         "", false, "", {}, [], {}, {}, 0, 0, true, {}, {}, {}, false );
+   }
+
+   fn analyzeExp() mut : stem!, str! {
+      while true {
+         let token = self.parser.getTokenNoErr();
+         if token.kind == .Eof {
+            return nil, "eof";
+         }
+         let txt = token.txt;
+         _switch token.kind {
+            case .Dlmt {
+               if txt == "{" {
+                  return self.analyzeTable()**;
+               }
+               return nil, "illegal delimit -- %s" (txt);
+            }
+            case .Char {
+               if #txt == 1 {
+                  return txt[ 1 ], nil;
+               }  
+               return unwrap quotedChar2Code[ txt.sub( 2, 2 ) ], nil;
+            }
+            case .Int {
+               return (unwrap tonumber( txt ## ) default 0)@@int, nil;
+            }
+            case .Real {
+               return unwrap tonumber( txt ## ) default 0.0, nil;
+            }
+            case .Str {
+               if txt[1] == ?` {
+                  return txt.sub( 4, -4 ), nil;
+               }
+               return txt.sub( 2, -2 ), nil;
+            }
+            case .Symb {
+               if! let symbolInfo = self.curScope.get( txt) {
+                  return symbolInfo.$val, nil;
+               }
+               return nil, "not found -- %s" (txt);
+            }
+            case .Kywd {
+               switch token.txt {
+                  case "true" {
+                     return true, nil;
+                  }
+                  case "false" {
+                     return false, nil;
+                  }
+               }
+               return nil, "illegal keyword -- %s" (token.txt);
+            }
+            case .Cmnt {
+            }
+            case .Eof, .Type {
+               return nil, "illegal kind -- %s" (token.kind.$_txt);
+            }
+            case .Ope {
+               return nil, "not support -- %s" (txt);
+            }
+         }
+      }
+   }
+   
+   fn processDeclVar() mut : str! {
+      let token = self.parser.getTokenNoErr();
+      if token.kind ~= .Symb {
+         return "no synbol -- %s" (token.txt);
+      }
+      let nextToken = self.parser.getTokenNoErr();
+      if nextToken.txt ~= "=" {
+         self.parser.pushback();
+         return nil;
+      }
+      let val, err = self.analyzeExp();
+      if err {
+         return err;
+      }
+
+      self.curScope.add( token.txt, val );
+      return nil;
+   }
+
+   fn processExpSym( symToken:&Parser.Token ) mut : str! {
+      let! mut symbolInfo = self.curScope.get( symToken.txt ) {
+         return "not found -- %s" (symToken.txt);
+      };
+      let mut nextToken = self.parser.getTokenNoErr();
+      let mut exp = symbolInfo.$val;
+      let mut index:stem! = nil;
+
+      while true {
+         if nextToken.kind == .Eof {
+            return "eof";
+         }
+         switch nextToken.txt {
+            case "." {
+               let fieldToken = self.parser.getTokenNoErr();
+               when! exp {
+                  index = fieldToken.txt;
+               } else {
+                  return "nil access";
+               }
+            }
+            case "[" {
+               let indexExp, err = self.analyzeExp();
+               when! exp {
+                  index = indexExp;
+               } else {
+                  return "illegal index -- %s" (err);
+               }
+               let closeToken = self.parser.getTokenNoErr();
+               if closeToken.txt ~= "]" {
+                  return "illegal token -- %s" (closeToken.txt);
+               }
+            }
+            case "=" {
+               let val, err = self.analyzeExp();
+               if err {
+                  return err;
+               }
+               when! index, exp {
+                  let mut map = exp@@Map<&stem,&stem>;
+                  map[ index ] = val;
+               }
+               return nil;
+            }
+         }
+         nextToken = self.parser.getTokenNoErr();
+      }
+   }
+
+   fn processStmt() mut : &stem!, str! {
+      while true {
+         let token = self.parser.getTokenNoErr();
+         if token.kind == .Eof {
+            return nil, "eof";
+         }
+         switch token.kind {
+            case .Symb {
+               if! self.processExpSym( token ) {
+                  return nil, _exp;
+               }
+            }
+            case .Kywd {
+               switch token.txt {
+                  case "local" {
+                     if! let err = self.processDeclVar() {
+                        return nil, err;
+                     }
+                  }
+                  case "do" {
+                     self.curScope = new Scope( self.curScope );
+                  }
+                  case "end" {
+                     if! let mut parent = self.curScope.$parent {
+                        self.curScope = parent;
+                     } else {
+                        return nil, "underflow scope";
+                     }
+                  }
+                  case "return" {
+                     return self.analyzeExp()**;
+                  }
+               }
+            }
+         }
+      }
+   }
+   
+   pub fn process() mut : &stem!, str! {
+      let val, err = self.processStmt();
+      when! err {
+         let pos = self.parser.getTokenNoErr().pos;
+         return nil, "%d:%d:%s" (pos.lineNo, pos.column, err);
+      }
+      return val, err;
    }
 }
 
-pub fn loadFromStream( path:str, stream:iStream ) : &Meta._MetaInfo! {
+pub fn loadFromStream( path:str, stream:iStream ) : &Meta._MetaInfo!, str! {
    let mut streamParser = new Parser.StreamParser( stream, path, true );
    let mut parser = new Parser.DefaultPushbackParser( streamParser );
    let mut loader = new Loader( parser );
-   return loader.process();
+
+   let item, err = loader.process();
+   if err {
+      return nil, err;
+   }
+
+   macro _getItem( symbol:sym, typeSym:str ) {
+      {
+         let key = "__%s" (,,,,symbol);
+         let elseStat;
+         if typeSym.find( "!$" ## ) {
+            elseStat = `{,,symbol = nil;};
+         } else {
+            elseStat = `{return nil, "error -- %s" (,,,,symbol)};
+         }
+      }
+      let ,,symbol;
+      if! let workVal =  map[ ,,key ] {
+         ,,symbol = workVal@@,,,typeSym;
+      } else {
+         ,,elseStat;
+      }
+   }
+   
+   when! item {
+      let map = item@@Map<str,&stem>;
+
+      _getItem( formatVersion, "str" );
+      _getItem( enableTest, "bool" );
+      _getItem( buildId, "str" );
+      _getItem( typeId2ClassInfoMap, "&Map<int,&Map<str,&stem>>" );
+      _getItem( typeInfoList, "&Map<int,&Map<str,&stem>>" );
+      _getItem( varName2InfoMap, "&Map<str,&Map<str,&stem>>" );
+      _getItem( moduleTypeId, "int" );
+      _getItem( moduleSymbolKind, "int" );
+      _getItem( moduleMutable, "bool" );
+      _getItem( dependModuleMap, "&Map<str,&Map<str,&stem>>" );
+      _getItem( dependIdMap, "&Map<int,&Map<int,int>>" );
+      _getItem( macroName2InfoMap, "&Map<int,&stem>" );
+      _getItem( subModuleMap, "&Map<int,str>" );
+      _getItem( hasTest, "bool" );
+
+      return new Meta._MetaInfo(
+         formatVersion,
+         enableTest,
+         buildId, 
+         typeId2ClassInfoMap,
+         typeInfoList,
+         varName2InfoMap,
+         moduleTypeId,
+         moduleSymbolKind,
+         moduleMutable,
+         dependModuleMap,
+         dependIdMap,
+         macroName2InfoMap,
+         hasTest,
+         subModuleMap ), nil;
+   }
+   
+   return nil, "error";
 }
 
-pub fn loadFromCode( path:str, code:str ) : &Meta._MetaInfo! {
-   return loadFromStream( path, new Parser.TxtStream( code ) );
+pub fn loadFromCode( path:str, code:str ) : &Meta._MetaInfo!, str! {
+   return loadFromStream( path, new Parser.TxtStream( code ) )**;
 }
 
-pub fn load( path:str ) : &Meta._MetaInfo! {
+pub fn load( path:str ) : &Meta._MetaInfo!, str! {
    let! mut stream = io.open( path, "r" ) {
-      return nil;
+      return nil, "open error -- %s" (path) ;
    };
-   return loadFromStream( path, stream );
+   return loadFromStream( path, stream )**;
+}
+
+__test {
+   fn dumpStem( stream:oStream, val:stem!) {
+      when! val {
+         if type( val ) == "table" {
+            forsort item, key in val@@Map<&stem,&stem> {
+               dumpStem( stream, key );
+               stream.write( ":" );
+               dumpStem( stream, item );
+               stream.write( "\n" );
+            }
+         } else {
+            stream.write ( "%s" ( val ) );
+         }
+      } else {
+         stream.write( "nil" );
+      }
+   }
 }
 
 __test case1(ctrl) {
-   loadFromCode( "hoge.lua",
-                 ```local val = {
-1, 2, 3, 4
-}
--- abcde
-return val
-``` );
+   let info, err = load( "lune/base/Testing.meta" );
+   __t._isNil( ctrl, err );
+
+   when! info {
+      print( info.__formatVersion );
+      print( info.__enableTest );
+      print( info.__buildId );
+      print( "========== __typeId2ClassInfoMap ======== ");
+      dumpStem( io.stdout, info.__typeId2ClassInfoMap );
+      print( "========== __typeInfoList ======== ");
+      dumpStem( io.stdout, info.__typeInfoList );
+      print( "========== __varName2InfoMap ======== ");
+      dumpStem( io.stdout, info.__varName2InfoMap );
+      print( info.__moduleTypeId );
+      print( info.__moduleSymbolKind );
+      print( "========== __moduleMutable ======== ");
+      dumpStem( io.stdout, info.__moduleMutable );
+      print( "========== __dependModuleMap ======== ");
+      dumpStem( io.stdout, info.__dependModuleMap );
+      print( "========== __dependIdMap ======== ");
+      dumpStem( io.stdout, info.__dependIdMap );
+      print( info.__hasTest );
+   } else {
+      __t._err( ctrl, "info is nil" );
+   }
 }
