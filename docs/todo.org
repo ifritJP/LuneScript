@@ -8,6 +8,27 @@
 
 * バグ
 
+- [ ] 型パラメータを持つクラスを継承した時、
+      そのクラスの継承元のコンストラクタに引数がある場合、
+      デフォルトコンストラクタが正しく処理されない。
+
+class Hoge<T> {
+   let item:T {pub};
+}
+
+abstract class Test<T> {
+   let mut val:T!;
+   
+   pro fn __init( val:T! ) {
+      self.val = val
+   }
+}
+
+class Sub extend Test<int> {
+}
+      
+
+  
 - [ ] 以下のマクロ呼び出しができない。 print() が値を返さないので __exp にセットできない。
       しかし、 __exp の用途的に、セットできるべき。
          

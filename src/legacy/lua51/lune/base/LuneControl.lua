@@ -105,6 +105,8 @@ Pragma.limit_conv_code = { "limit_conv_code", {{ func=_lune._toSet, nilable=fals
 Pragma._name2Val["limit_conv_code"] = Pragma.limit_conv_code
 Pragma.load__lune_module = { "load__lune_module"}
 Pragma._name2Val["load__lune_module"] = Pragma.load__lune_module
+Pragma.run_async_pipe = { "run_async_pipe"}
+Pragma._name2Val["run_async_pipe"] = Pragma.run_async_pipe
 
 
 return _moduleObj

@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2018 ifritJP
+Copyright (c) 2018, 2020 ifritJP
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,13 +22,46 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-/** lns バージョン */
-pub let version = "1.1.10";
-/** meta フォーマットバージョン */
-pub let metaVersion = "1.0.82";
-/** _lune モジュールバージョン */
-pub let luaModVersion = 2;
+pub class PipeItem<T> {
+   let item:T {pub};
+}
 
-__test case1(ctrl) {
-   print( version, metaVersion, luaModVersion );
+pub abstract class Pipe<T> {
+   let mut pipe:__pipe<T>!;
+   let mut started:bool;
+   
+   pro fn __init( pipe:__pipe<T>! ) {
+      self.pipe = pipe;
+      self.started = false;
+   }
+
+   pub abstract fn access() mut : PipeItem<T>!;
+
+   pub fn getNext() mut : PipeItem<T>! {
+      if self.started {
+         if! let mut pipe = self.pipe {
+            let! val = pipe.get() {
+               return nil;
+            };
+            return new PipeItem( val );
+         }
+      }
+      return self.access();
+   }
+   
+   pri fn loop() mut {
+      let! mut pipe = self.pipe {
+         return;
+      };
+      while true {
+         let! mut val = self.access() {
+            break;
+         };
+         pipe.put( val );
+      }
+   }
+   pub fn start() mut {
+      self.started = true;
+      _lune_control run_async_pipe;
+   }
 }

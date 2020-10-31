@@ -476,6 +476,9 @@ fn convFilter.type2gotype( typeInfo:&Ast.TypeInfo ) : str {
          return self.getFuncSymbol( typeInfo );
       }
       case .Class {
+         if typeInfo.$genSrcTypeInfo == TransUnit.getBuiltinFunc().__pipe_ {
+            return "*Lns__pipe";
+         }
          return "*" .. self.getTypeSymbol( typeInfo );
       }
       case .IF {
@@ -2146,7 +2149,7 @@ pub override fn convFilter.processIfUnwrap(
       if varSym.$name == "_" {
          self.write( "_" );
       } else {
-         self.write( "_" .. varSym.$name );
+         self.write( "_" .. self.getSymbolSym( varSym ) );
       }
       tempTypeList.insert( Ast.builtinTypeStem_ );
    }
@@ -2169,7 +2172,7 @@ pub override fn convFilter.processIfUnwrap(
          if hasSym {
             self.write( " && " );
          }
-         self.write( "_%s != nil" ( varSym.$name ) );
+         self.write( "_%s != nil" ( self.getSymbolSym( varSym ) ) );
          hasSym = true;
       }
    }
@@ -2180,7 +2183,8 @@ pub override fn convFilter.processIfUnwrap(
    foreach varSym, index in node.$varSymList {
       if varSym.$name ~= "_" {
          if varSym.hasAccess() {
-            self.write( "%s := _%s" (varSym.$name, varSym.$name) );
+            self.write( "%s := _%s" ( self.getSymbolSym( varSym ),
+                                      self.getSymbolSym( varSym )) );    
             if node.$expList.getExpTypeNoDDDAt( index ).$nilable {
                self.outputAny2Type( varSym.$typeInfo );
             }
@@ -3554,6 +3558,15 @@ fn convFilter.outputAlter2MapFunc( alt2Map:&Map<&Ast.TypeInfo,&Ast.TypeInfo>) mu
 }
 
 
+fn convFilter.outputAsyncItem( node: Nodes.DeclClassNode ) mut {
+   let classType = node.$expType;
+   let classScope = unwrap classType.$scope;
+   let createSym = unwrap classScope.getSymbolInfoChild( "_createPipe" );
+   self.outputDeclFunc( .WithClass( classType, createSym.$typeInfo ) );
+   self.writeln( "{" );
+   self.writeln( "   return NewLnspipe( arg1 )" );
+   self.writeln( "}" );
+}
 
 fn convFilter.outputMapping( node: Nodes.DeclClassNode ) mut {
    let classType = node.$expType;
@@ -3789,6 +3802,11 @@ pub override fn convFilter.processDeclClass(
             if node.$expType.isInheritFrom(
                self.processInfo, Ast.builtinTypeMapping, nil ) {
                self.outputMapping( node );
+            }
+
+            if node.$expType.isInheritFrom(
+               self.processInfo, Ast.builtinTypeAsyncItem, nil ) {
+               self.outputAsyncItem( node );
             }
             
             foreach fieldNode in node.$fieldList {
@@ -5015,6 +5033,9 @@ pub override fn convFilter.processLuneControl(
       case .load__lune_module {
       }
       case .limit_conv_code( _ ) {
+      }
+      case .run_async_pipe {
+         self.writeln( "go self.FP.loop()" );
       }
    }
 }

@@ -36,6 +36,7 @@ build = {
       [ "lune.base.runtime2" ] = "src/lune/base/runtime2.lua",
       [ "lune.base.base" ] = "src/lune/base/base.lua",
       [ "lune.base.Str" ] = "src/lune/base/Str.lua",
+      [ "lune.base.Async" ] = "src/lune/base/Async.lua",
       [ "lune.base.Ver" ] = "src/lune/base/Ver.lua",
       [ "lune.base.Meta" ] = "src/lune/base/Meta.lua",
       [ "lune.base.LuneControl" ] = "src/lune/base/LuneControl.lua",

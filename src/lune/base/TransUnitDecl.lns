@@ -2462,6 +2462,27 @@ fn TransUnit.analyzeDeclClass(
          self.processInfo, nil, fromStemFuncTypeInfo, ctorAccessMode, true, false );
    }
 
+   if classTypeInfo.isInheritFrom(
+      self.processInfo, Ast.builtinTypeAsyncItem, nil )
+   {
+      if not classTypeInfo.isInheritFrom(
+         self.processInfo, Ast.builtinTypeMapping, nil )
+      {
+         self.addErrMess(
+            firstToken.pos, "__AsyncItem implemented class must inherit Mapping." );
+      }
+
+      //
+      let pipeType = self.processInfo.createGeneric(
+         builtinFunc.__pipe_, [classTypeInfo], self.moduleType );
+      let createPipeFuncTypeInfo = self.processInfo.createFunc(
+         false, false, nil, .Func, classTypeInfo,
+         true, false, true, .Pub, "_createPipe",
+         nil, [ Ast.builtinTypeInt ], [ pipeType.$nilableTypeInfo ], true );
+      classScope.addMethod(
+         self.processInfo, nil, createPipeFuncTypeInfo, .Pub, true, false );
+   }
+
    self.popClass();
 
    return node;

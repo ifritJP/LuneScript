@@ -2525,6 +2525,14 @@ pub override fn convFilter.processExpCall(
       };
       let prefixNode = fieldNode.$prefix;
 
+      if prefixNode.$expType.isInheritFrom(
+         self.processInfo, Ast.builtinTypeAsyncItem, nil) and
+         node.$func.$expType.$rawTxt == "_createPipe"
+      {
+         self.write( "nil" );
+         return false;
+      }
+
       fn processSet(): bool {
          setArgFlag = true;
          wroteFuncFlag = true;

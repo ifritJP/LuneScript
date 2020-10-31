@@ -1022,8 +1022,8 @@ func (self *Nodes_SimpleModuleInfoManager) GetModuleInfo(arg1 *Ast_TypeInfo) Lns
 // 36: DeclConstr
 func (self *Nodes_SimpleModuleInfoManager) InitNodes_SimpleModuleInfoManager(moduleInfoManager LnsAny) {
     if moduleInfoManager != nil{
-        moduleInfoManager_2254 := moduleInfoManager.(Ast_ModuleInfoManager)
-        self.ModuleInfoManager = moduleInfoManager_2254
+        moduleInfoManager_2264 := moduleInfoManager.(Ast_ModuleInfoManager)
+        self.ModuleInfoManager = moduleInfoManager_2264
         
     } else {
         self.ModuleInfoManager = Ast_DummyModuleInfoManager_get_instance().FP
@@ -1190,8 +1190,8 @@ func (self *Nodes_Filter) InitNodes_Filter(errorOnDefault bool,moduleTypeInfo Ln
     var process func() *Ast_TypeNameCtrl
     process = func() *Ast_TypeNameCtrl {
         if moduleTypeInfo != nil{
-            moduleTypeInfo_2284 := moduleTypeInfo.(*Ast_TypeInfo)
-            return NewAst_TypeNameCtrl(moduleTypeInfo_2284)
+            moduleTypeInfo_2294 := moduleTypeInfo.(*Ast_TypeInfo)
+            return NewAst_TypeNameCtrl(moduleTypeInfo_2294)
         }
         return Ast_defaultTypeNameCtrl
     }
@@ -7639,8 +7639,8 @@ func (self *Nodes_ExpOp2Node) SetupLiteralTokenList(list *LnsList) bool {
     var literal LnsAny
     literal = Nodes_convExp43138(Lns_2DDD(self.FP.GetLiteral()))
     if literal != nil{
-        literal_10528 := literal
-        switch _exp43206 := literal_10528.(type) {
+        literal_10538 := literal
+        switch _exp43206 := literal_10538.(type) {
         case *Nodes_Literal__Int:
         val := _exp43206.Val1
             self.FP.AddTokenList(list, Parser_TokenKind__Int, Lns_getVM().String_format("%d", []LnsAny{val}))
@@ -10017,8 +10017,8 @@ func (self *Nodes_ExpMacroStatNode) GetLiteral()(LnsAny, LnsAny) {
         var literal LnsAny
         literal = Nodes_convExp42732(Lns_2DDD(token.FP.GetLiteral()))
         if literal != nil{
-            literal_10469 := literal
-            switch _exp42754 := literal_10469.(type) {
+            literal_10479 := literal
+            switch _exp42754 := literal_10479.(type) {
             case *Nodes_Literal__Str:
             work := _exp42754.Val1
                 txt = Lns_getVM().String_format("%s%s", []LnsAny{txt, work})
@@ -10675,8 +10675,8 @@ func (self *Nodes_RefFieldNode) GetLiteral()(LnsAny, LnsAny) {
     var mess LnsAny
     literal,mess = self.prefix.FP.GetLiteral()
     if literal != nil{
-        literal_10449 := literal
-        switch _exp42653 := literal_10449.(type) {
+        literal_10459 := literal
+        switch _exp42653 := literal_10459.(type) {
         case *Nodes_Literal__Symbol:
         symbol := _exp42653.Val1
             tokenList.Insert(symbol)
@@ -10687,7 +10687,7 @@ func (self *Nodes_RefFieldNode) GetLiteral()(LnsAny, LnsAny) {
                 tokenList.Insert(symbol)
             }
         default:
-            return nil, Lns_getVM().String_format("not support -- %s", []LnsAny{literal_10449.(LnsAlgeVal).GetTxt()})
+            return nil, Lns_getVM().String_format("not support -- %s", []LnsAny{literal_10459.(LnsAlgeVal).GetTxt()})
         }
         if self.nilAccess{
             tokenList.Insert("$.")
@@ -15520,8 +15520,8 @@ func (self *Nodes_LiteralArrayNode) GetLiteral()(LnsAny, LnsAny) {
                 var mess LnsAny
                 literal,mess = node.FP.GetLiteral()
                 if literal != nil{
-                    literal_10256 := literal
-                    literalList.Insert(literal_10256)
+                    literal_10266 := literal
+                    literalList.Insert(literal_10266)
                 } else {
                     return nil, mess
                 }
@@ -15686,8 +15686,8 @@ func (self *Nodes_LiteralListNode) GetLiteral()(LnsAny, LnsAny) {
                 var mess LnsAny
                 literal,mess = node.FP.GetLiteral()
                 if literal != nil{
-                    literal_10284 := literal
-                    literalList.Insert(literal_10284)
+                    literal_10294 := literal
+                    literalList.Insert(literal_10294)
                 } else {
                     return nil, mess
                 }
@@ -15852,8 +15852,8 @@ func (self *Nodes_LiteralSetNode) GetLiteral()(LnsAny, LnsAny) {
                 var mess LnsAny
                 literal,mess = node.FP.GetLiteral()
                 if literal != nil{
-                    literal_10312 := literal
-                    literalList.Insert(literal_10312)
+                    literal_10322 := literal
+                    literalList.Insert(literal_10322)
                 } else {
                     return nil, mess
                 }
@@ -16081,9 +16081,9 @@ func (self *Nodes_LiteralMapNode) GetLiteral()(LnsAny, LnsAny) {
         var valMess LnsAny
         valLiteral,valMess = val.FP.GetLiteral()
         if keyLiteral != nil && valLiteral != nil{
-            keyLiteral_10341 := keyLiteral
-            valLiteral_10342 := valLiteral
-            litMap.Set(keyLiteral_10341,valLiteral_10342)
+            keyLiteral_10351 := keyLiteral
+            valLiteral_10352 := valLiteral
+            litMap.Set(keyLiteral_10351,valLiteral_10352)
         } else {
             if Lns_op_not(keyLiteral){
                 return nil, keyMess
@@ -16106,8 +16106,8 @@ func (self *Nodes_LiteralMapNode) SetupLiteralTokenList(list *LnsList) bool {
         var literal LnsAny
         literal = Nodes_convExp42009(Lns_2DDD(key.FP.GetLiteral()))
         if literal != nil{
-            literal_10358 := literal
-            switch _exp42053 := literal_10358.(type) {
+            literal_10368 := literal
+            switch _exp42053 := literal_10368.(type) {
             case *Nodes_Literal__Int:
             param := _exp42053.Val1
                 lit2valNode.Set(param,key)
@@ -16311,8 +16311,8 @@ func (self *Nodes_LiteralStringNode) GetLiteral()(LnsAny, LnsAny) {
                 var mess LnsAny
                 arg,mess = argNode.FP.GetLiteral()
                 if arg != nil{
-                    arg_10388 := arg
-                    paramList.Set(paramList.Len() + 1,Nodes_getLiteralObj(arg_10388))
+                    arg_10398 := arg
+                    paramList.Set(paramList.Len() + 1,Nodes_getLiteralObj(arg_10398))
                 } else {
                     return nil, mess
                 }

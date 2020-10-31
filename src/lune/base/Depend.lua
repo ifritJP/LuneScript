@@ -362,4 +362,10 @@ local function existFile( path )
 end
 _moduleObj.existFile = existFile
 
+local function canUseChannel(  )
+
+   return false
+end
+_moduleObj.canUseChannel = canUseChannel
+
 return _moduleObj

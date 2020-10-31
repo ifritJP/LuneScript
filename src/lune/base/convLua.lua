@@ -1892,7 +1892,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _6071 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _6086 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -3100,6 +3100,12 @@ function convFilter:processExpCall( node, opt )
       
       local prefixNode = fieldNode:get_prefix()
       
+      if prefixNode:get_expType():isInheritFrom( self.processInfo, Ast.builtinTypeAsyncItem, nil ) and node:get_func():get_expType():get_rawTxt() == "_createPipe" then
+         self:write( "nil" )
+         return false
+      end
+      
+      
       local function processSet(  )
       
          setArgFlag = true
@@ -4082,7 +4088,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3388, function (  )
+   Log.log( Log.Level.Trace, __func__, 3396, function (  )
    
       return string.format( "macro: %s", code)
    end )

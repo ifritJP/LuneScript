@@ -88,6 +88,88 @@ function _lune.unwrapDefault( val, defval )
    return val
 end
 
+function _lune._toStem( val )
+   return val
+end
+function _lune._toInt( val )
+   if type( val ) == "number" then
+      return math.floor( val )
+   end
+   return nil
+end
+function _lune._toReal( val )
+   if type( val ) == "number" then
+      return val
+   end
+   return nil
+end
+function _lune._toBool( val )
+   if type( val ) == "boolean" then
+      return val
+   end
+   return nil
+end
+function _lune._toStr( val )
+   if type( val ) == "string" then
+      return val
+   end
+   return nil
+end
+function _lune._toList( val, toValInfoList )
+   if type( val ) == "table" then
+      local tbl = {}
+      local toValInfo = toValInfoList[ 1 ]
+      for index, mem in ipairs( val ) do
+         local memval, mess = toValInfo.func( mem, toValInfo.child )
+         if memval == nil and not toValInfo.nilable then
+            if mess then
+              return nil, string.format( "%d.%s", index, mess )
+            end
+            return nil, index
+         end
+         tbl[ index ] = memval
+      end
+      return tbl
+   end
+   return nil
+end
+function _lune._toMap( val, toValInfoList )
+   if type( val ) == "table" then
+      local tbl = {}
+      local toKeyInfo = toValInfoList[ 1 ]
+      local toValInfo = toValInfoList[ 2 ]
+      for key, mem in pairs( val ) do
+         local mapKey, keySub = toKeyInfo.func( key, toKeyInfo.child )
+         local mapVal, valSub = toValInfo.func( mem, toValInfo.child )
+         if mapKey == nil or mapVal == nil then
+            if mapKey == nil then
+               return nil
+            end
+            if keySub == nil then
+               return nil, mapKey
+            end
+            return nil, string.format( "%s.%s", mapKey, keySub)
+         end
+         tbl[ mapKey ] = mapVal
+      end
+      return tbl
+   end
+   return nil
+end
+function _lune._fromMap( obj, map, memInfoList )
+   if type( map ) ~= "table" then
+      return false
+   end
+   for index, memInfo in ipairs( memInfoList ) do
+      local val, key = memInfo.func( map[ memInfo.name ], memInfo.child )
+      if val == nil and not memInfo.nilable then
+         return false, key and string.format( "%s.%s", memInfo.name, key) or memInfo.name
+      end
+      obj[ memInfo.name ] = val
+   end
+   return true
+end
+
 function _lune.loadModule( mod )
    if __luneScript then
       return  __luneScript:loadModule( mod )
@@ -150,6 +232,7 @@ if not _lune2 then
 end
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Str = _lune.loadModule( 'lune.base.Str' )
+local Async = _lune.loadModule( 'lune.base.Async' )
 
 local luaKeywordSet = {["if"] = true, ["else"] = true, ["elseif"] = true, ["while"] = true, ["for"] = true, ["in"] = true, ["return"] = true, ["break"] = true, ["nil"] = true, ["true"] = true, ["false"] = true, ["{"] = true, ["}"] = true, ["do"] = true, ["require"] = true, ["function"] = true, ["then"] = true, ["end"] = true, ["repeat"] = true, ["until"] = true, ["goto"] = true, ["local"] = true}
 
@@ -297,6 +380,7 @@ end
 
 
 local Position = {}
+setmetatable( Position, { ifList = {Mapping,} } )
 _moduleObj.Position = Position
 function Position.setmeta( obj )
   setmetatable( obj, { __index = Position  } )
@@ -314,6 +398,31 @@ function Position:__init( lineNo, column, streamName )
    self.lineNo = lineNo
    self.column = column
    self.streamName = streamName
+end
+function Position:_toMap()
+  return self
+end
+function Position._fromMap( val )
+  local obj, mes = Position._fromMapSub( {}, val )
+  if obj then
+     Position.setmeta( obj )
+  end
+  return obj, mes
+end
+function Position._fromStem( val )
+  return Position._fromMap( val )
+end
+
+function Position._fromMapSub( obj, val )
+   local memInfo = {}
+   table.insert( memInfo, { name = "lineNo", func = _lune._toInt, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "column", func = _lune._toInt, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "streamName", func = _lune._toStr, nilable = false, child = {} } )
+   local result, mess = _lune._fromMap( obj, val, memInfo )
+   if not result then
+      return nil, mess
+   end
+   return obj
 end
 
 
@@ -375,6 +484,7 @@ TokenKind.__allList[11] = TokenKind.Eof
 
 
 local Token = {}
+setmetatable( Token, { ifList = {Mapping,} } )
 _moduleObj.Token = Token
 function Token.new( kind, txt, pos, consecutive, commentList )
    local obj = {}
@@ -413,7 +523,7 @@ end
 function Token:getLineCount(  )
 
    local count = 1
-   for _256 in self.txt:gmatch( "\n" ) do
+   for _275 in self.txt:gmatch( "\n" ) do
       count = count + 1
    end
    
@@ -424,6 +534,33 @@ function Token.setmeta( obj )
 end
 function Token:get_commentList()
    return self.commentList
+end
+function Token:_toMap()
+  return self
+end
+function Token._fromMap( val )
+  local obj, mes = Token._fromMapSub( {}, val )
+  if obj then
+     Token.setmeta( obj )
+  end
+  return obj, mes
+end
+function Token._fromStem( val )
+  return Token._fromMap( val )
+end
+
+function Token._fromMapSub( obj, val )
+   local memInfo = {}
+   table.insert( memInfo, { name = "kind", func = TokenKind._from, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "txt", func = _lune._toStr, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "pos", func = Position._fromMap, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "consecutive", func = _lune._toBool, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "commentList", func = _lune._toList, nilable = false, child = { { func = Token._fromMap, nilable = false, child = {} } } } )
+   local result, mess = _lune._fromMap( obj, val, memInfo )
+   if not result then
+      return nil, mess
+   end
+   return obj
 end
 
 
@@ -558,6 +695,67 @@ end
 _moduleObj.convFromRawToStr = convFromRawToStr
 
 local StreamParser = {}
+
+local AsyncItem = {}
+setmetatable( AsyncItem, { ifList = {__AsyncItem,Mapping,} } )
+function AsyncItem.setmeta( obj )
+  setmetatable( obj, { __index = AsyncItem  } )
+end
+function AsyncItem.new( list )
+   local obj = {}
+   AsyncItem.setmeta( obj )
+   if obj.__init then
+      obj:__init( list )
+   end
+   return obj
+end
+function AsyncItem:__init( list )
+
+   self.list = list
+end
+function AsyncItem:_toMap()
+  return self
+end
+function AsyncItem._fromMap( val )
+  local obj, mes = AsyncItem._fromMapSub( {}, val )
+  if obj then
+     AsyncItem.setmeta( obj )
+  end
+  return obj, mes
+end
+function AsyncItem._fromStem( val )
+  return AsyncItem._fromMap( val )
+end
+
+function AsyncItem._fromMapSub( obj, val )
+   local memInfo = {}
+   table.insert( memInfo, { name = "list", func = _lune._toList, nilable = false, child = { { func = Token._fromMap, nilable = false, child = {} } } } )
+   local result, mess = _lune._fromMap( obj, val, memInfo )
+   if not result then
+      return nil, mess
+   end
+   return obj
+end
+
+
+local AsyncStreamParser = {}
+setmetatable( AsyncStreamParser, { __index = Async.Pipe } )
+function AsyncStreamParser.new( pipe, streamParser )
+   local obj = {}
+   AsyncStreamParser.setmeta( obj )
+   if obj.__init then obj:__init( pipe, streamParser ); end
+   return obj
+end
+function AsyncStreamParser:__init(pipe, streamParser) 
+   Async.Pipe.__init( self,pipe)
+   
+   self.streamParser = streamParser
+end
+function AsyncStreamParser.setmeta( obj )
+  setmetatable( obj, { __index = AsyncStreamParser  } )
+end
+
+
 setmetatable( StreamParser, { __index = Parser } )
 _moduleObj.StreamParser = StreamParser
 function StreamParser.setStdinStream( moduleName )
@@ -574,6 +772,8 @@ end
 function StreamParser:__init(stream, name, luaMode) 
    Parser.__init( self)
    
+   self.pipe = AsyncStreamParser.new(nil, self)
+   
    self.eof = false
    self.stream = stream
    self.streamName = name
@@ -589,6 +789,8 @@ function StreamParser:__init(stream, name, luaMode)
    self.typeSet = typeSet
    self.builtInSet = builtInSet
    self.multiCharDelimitMap = multiCharDelimitMap
+   
+   
 end
 function StreamParser:getStreamName(  )
 
@@ -620,6 +822,19 @@ end
 do
    StreamParser.stdinStreamModuleName = nil
    StreamParser.stdinTxt = ""
+end
+
+
+function AsyncStreamParser:access(  )
+
+   local tokenList = self.streamParser:parse(  )
+   if  nil == tokenList then
+      local _tokenList = tokenList
+   
+      return nil
+   end
+   
+   return Async.PipeItem.new(AsyncItem.new(tokenList))
 end
 
 
@@ -799,6 +1014,24 @@ local function isOp1( ope )
 end
 _moduleObj.isOp1 = isOp1
 
+local TokenList = {}
+function TokenList.setmeta( obj )
+  setmetatable( obj, { __index = TokenList  } )
+end
+function TokenList.new( list )
+   local obj = {}
+   TokenList.setmeta( obj )
+   if obj.__init then
+      obj:__init( list )
+   end
+   return obj
+end
+function TokenList:__init( list )
+
+   self.list = list
+end
+
+
 function StreamParser:parse(  )
 
    local function readLine(  )
@@ -831,7 +1064,7 @@ function StreamParser:parse(  )
       local comment = ""
       while true do
          do
-            local _513, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
+            local _563, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
             if termEndIndex ~= nil then
                comment = comment .. rawLine:sub( searchIndex, termEndIndex )
                return comment, termEndIndex + 1
@@ -1160,14 +1393,14 @@ function StreamParser:getToken(  )
       self.pos = 1
       self.lineTokenList = {}
       while #self.lineTokenList == 0 do
-         local workList = self:parse(  )
-         if  nil == workList then
-            local _workList = workList
+         local pipeItem = self.pipe:getNext(  )
+         if  nil == pipeItem then
+            local _pipeItem = pipeItem
          
             return nil
          end
          
-         self.lineTokenList = workList
+         self.lineTokenList = pipeItem:get_item().list
       end
       
    end

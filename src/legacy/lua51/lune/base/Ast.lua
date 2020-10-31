@@ -5743,6 +5743,9 @@ _moduleObj.builtinTypeChar = builtinTypeChar
 local builtinTypeMapping = NormalTypeInfo.createBuiltin( "Mapping", "Mapping", TypeInfoKind.IF )
 _moduleObj.builtinTypeMapping = builtinTypeMapping
 
+local builtinTypeAsyncItem = NormalTypeInfo.createBuiltin( "__AsyncItem", "__AsyncItem", TypeInfoKind.IF )
+_moduleObj.builtinTypeAsyncItem = builtinTypeAsyncItem
+
 local builtinTypeString = NormalTypeInfo.createBuiltin( "String", "str", TypeInfoKind.Class, nil, {_moduleObj.builtinTypeMapping} )
 _moduleObj.builtinTypeString = builtinTypeString
 

@@ -313,28 +313,30 @@ func (luaVM *Lns_luaVM) setupFromStack( index int, passTable bool ) LnsAny {
             return luaVM.newLuaValue( index, typeId )
         }
         retVal := NewLnsMap( map[LnsAny]LnsAny{} )
-        tbl := luaVM.newLuaValue( index, typeId )
-        key, val := tbl.Get1stFromMap()
-        for key != nil {
-            // key, val を go の値に変換して retVal に登録
-            if keyObj, ok := key.(*Lns_luaValue); ok {
-                keyObj.core.pushValFromGlobalValMap()
-                key = luaVM.setupFromStack( -1, false )
-                lua_pop( vm, 1 )
-                if key == nil {
-                    return nil
-                }
+        top := lua_gettop( vm )
+        defer lua_settop( vm, top )
+
+        // tbl を push
+        lua_pushvalue( vm, index );
+        lua_pushnil( vm )
+
+        for true {
+            if lua_next( vm, -2 ) == 0 {
+                return retVal
             }
-            if valObj, ok := val.(*Lns_luaValue); ok {
-                valObj.core.pushValFromGlobalValMap()
-                val = luaVM.setupFromStack( -1, false )
-                lua_pop( vm, 1 )
-                if val == nil {
-                    return nil
-                }
+            // kye = (index:-2) , val = (index:-1)
+            val := luaVM.setupFromStack( -1, false );
+            if val == nil {
+                return retVal
+            }
+            key := luaVM.setupFromStack( -2, false );
+            if key == nil {
+                return retVal
             }
             retVal.Items[ key ] = val
-            key, val = tbl.NextFromMap( key )
+
+            // val を削除して、 key は lua_next() 用に残す
+            lua_pop( vm, 1 )
         }
         return retVal
     default:

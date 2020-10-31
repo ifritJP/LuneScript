@@ -151,3 +151,7 @@ pub fn existFile( path:str ): bool {
    fileObj.close();
    return true;
 }
+
+pub fn canUseChannel() : bool {
+   return false;
+}

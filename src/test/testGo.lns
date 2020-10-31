@@ -1720,3 +1720,57 @@ _section();
 ```;
    print( txt );
 }
+_section();
+{
+   let code = ```
+return { 1, 2, 3, 4 };
+```;
+   if! let loaded = _load( code, nil ) {
+      let obj = loaded( ## );
+      if! let map = expandLuavalMap( obj ) {
+         forsort val, key in map@@Map<int,int> {
+            print( key + 10, val + 20 );
+         }
+      }
+   }
+}
+_section();
+{
+   class Test extend (__AsyncItem,Mapping) {
+      let val:int {pub};
+   }
+
+   class Async {
+      let mut pipe:__pipe<Test>!;
+      pri fn loop() mut {
+         print( "hoge:" );
+         while true {
+            if! let mut pipe = self.pipe {
+               let! val = pipe.get() {
+                  print( "hoge:" );
+                  break;
+               };
+               print( val.$val );
+            }
+         }
+      }
+      pub fn start() {
+         _lune_control run_async_pipe;
+      }
+      pub fn put( test:Test ) mut {
+         if! let mut pipe = self.pipe {
+            pipe.put( test );
+         }
+      }
+   }
+
+   let mut async = new Async( Test._createPipe( 10 ) );
+   async.start();
+
+   async.put( new Test( 100 ) );
+
+   for _ = 1, 100000 {
+      for _ = 1, 10000 {
+      }
+   }
+}

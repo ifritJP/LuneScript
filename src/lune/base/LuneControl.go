@@ -64,6 +64,12 @@ var LuneControl_Pragma__load__lune_module_Obj = &LuneControl_Pragma__load__lune_
 func (self *LuneControl_Pragma__load__lune_module) GetTxt() string {
 return "Pragma.load__lune_module"
 }
+type LuneControl_Pragma__run_async_pipe struct{
+}
+var LuneControl_Pragma__run_async_pipe_Obj = &LuneControl_Pragma__run_async_pipe{}
+func (self *LuneControl_Pragma__run_async_pipe) GetTxt() string {
+return "Pragma.run_async_pipe"
+}
 func Lns_LuneControl_init() {
     if init_LuneControl { return }
     init_LuneControl = true

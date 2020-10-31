@@ -4142,6 +4142,8 @@ pub let builtinTypeChar:TypeInfo =
    NormalTypeInfo.createBuiltin( "char", "__char" , .Prim## );
 pub let builtinTypeMapping:TypeInfo =
    NormalTypeInfo.createBuiltin( "Mapping", "Mapping" , .IF## );
+pub let builtinTypeAsyncItem:TypeInfo =
+   NormalTypeInfo.createBuiltin( "__AsyncItem", "__AsyncItem" , .IF## );
 pub let builtinTypeString:TypeInfo =
    NormalTypeInfo.createBuiltin( "String", "str" , .Class, nil, [ builtinTypeMapping ] );
 pub let builtinTypeMap:TypeInfo =

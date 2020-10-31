@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2018 ifritJP
+Copyright (c) 2018,2020 ifritJP
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,13 +22,28 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-/** lns バージョン */
-pub let version = "1.1.10";
-/** meta フォーマットバージョン */
-pub let metaVersion = "1.0.82";
-/** _lune モジュールバージョン */
-pub let luaModVersion = 2;
+package runtimelns
 
-__test case1(ctrl) {
-   print( version, metaVersion, luaModVersion );
+
+type Lns_pipeMtd interface {
+    Put( val LnsAny )
+    Get() LnsAny
+}
+type Lns__pipe struct {
+    ch chan LnsAny
+    FP Lns_pipeMtd
+}
+
+func NewLnspipe( count int ) *Lns__pipe {
+    pipe := &Lns__pipe{}
+    pipe.ch = make(chan LnsAny,count)
+    pipe.FP = pipe
+    return pipe
+}
+
+func (self *Lns__pipe) Put( val LnsAny ) {
+    self.ch<- val
+}
+func (self *Lns__pipe) Get() LnsAny {
+    return <-self.ch
 }

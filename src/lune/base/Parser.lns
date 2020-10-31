@@ -24,6 +24,7 @@ SOFTWARE.
 
 import lune.base.Util;
 import lune.base.Str;
+import lune.base.Async;
 
 let luaKeywordSet:Set<str> =
     (@
@@ -209,7 +210,7 @@ fromLineNo: 1,  toLineNo: 2 を指定した場合、 1 行目だけを取得す�
 
 
 
-pub class Position {
+pub class Position extend (Mapping) {
    pub let lineNo: int;
    pub let column: int;
    pub let streamName: str;
@@ -229,7 +230,7 @@ pub enum TokenKind {
    Eof,
 }
 
-pub class Token {
+pub class Token extend (Mapping) {
    pub let kind: TokenKind;
    pub let txt: str;
    pub let pos: &Position;
@@ -358,6 +359,22 @@ pub fn convFromRawToStr( txt:str ) : str {
    }
 }
 
+pub proto class StreamParser extend Parser;
+
+class AsyncItem extend (__AsyncItem,Mapping) {
+   pub let list : &List<&Token>;
+}
+
+class AsyncStreamParser extend Async.Pipe<AsyncItem>
+{
+   let mut streamParser:StreamParser;
+
+   pub fn __init( pipe:__pipe<AsyncItem>!, streamParser:StreamParser ) {
+      super( pipe );
+      self.streamParser = streamParser;
+   }
+}
+
 pub class StreamParser extend Parser {
    /** stdin に紐付けている*/
    static let mut stdinStreamModuleName: str!;
@@ -378,14 +395,18 @@ pub class StreamParser extend Parser {
    let mut lineNo : int;
    let mut prevToken: &Token;
    let mut pos : int;
-   let mut lineTokenList : List<&Token>;
+   let mut lineTokenList : &List<&Token>;
    let keywordSet : Set<str>;
    let typeSet : Set<str>;
    let builtInSet :Set<str>;
    let multiCharDelimitMap : Map<str,str[@]>;
    let luaMode:bool;
+   let mut pipe:AsyncStreamParser;
+
    pub fn __init( stream: iStream, name: str, luaMode: bool! ) {
       super();
+      self.pipe = new AsyncStreamParser( AsyncItem._createPipe( 100 ), self );
+      
       self.eof = false;
       self.stream = stream;
       self.streamName = name;
@@ -402,7 +423,14 @@ pub class StreamParser extend Parser {
       self.typeSet = typeSet;
       self.builtInSet = builtInSet;
       self.multiCharDelimitMap = multiCharDelimitMap;
+
+
+
+      // 最後に start を呼ぶ
+      // self.pipe.start();
    }
+
+   local fn parse() mut : Token[]!;
 
    pub override fn getStreamName(): str {
       return self.streamName;
@@ -424,6 +452,14 @@ pub class StreamParser extend Parser {
 
    pub override fn getToken() mut : &Token!;
 }
+
+pub override fn AsyncStreamParser.access() mut : Async.PipeItem<AsyncItem>! {
+   let! tokenList = self.streamParser.parse() {
+      return nil;
+   };
+   return new Async.PipeItem( new AsyncItem( tokenList ) );
+}
+
 
 pub class DefaultPushbackParser extend (PushbackParser) {
    let mut parser:Parser;
@@ -618,6 +654,10 @@ pub static fn isOp1( ope: str ) : bool {
    return op1Set.has( ope );
 }
 
+class TokenList {
+   pub let list:List<Token>;
+}
+
 fn StreamParser.parse() mut : Token[]! {
    fn readLine() : str! {
       if self.eof {
@@ -632,7 +672,7 @@ fn StreamParser.parse() mut : Token[]! {
    }
    let! mut rawLine = readLine() { return nil; };
 
-   let mut list: Token[] = [];
+   let mut list: List<Token> = [];
    let mut startIndex = 1;
 
    /*
@@ -963,10 +1003,10 @@ pub override fn StreamParser.getToken() mut : &Token! {
       self.pos = 1;
       self.lineTokenList = [];
       while #self.lineTokenList == 0 {
-         let! mut workList = self.parse() {
+         let! mut pipeItem = self.pipe.getNext() {
             return nil;
          };
-         self.lineTokenList = workList;
+         self.lineTokenList = pipeItem.$item.list;
       }
    }
 

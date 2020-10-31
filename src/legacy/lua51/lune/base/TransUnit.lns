@@ -1965,6 +1965,12 @@ _DefBuiltinFuncType( [
       },
    },
    {
+      "__pipe<T>": {
+         "put": { "type": [ "mut" ], "arg": [ "T!" ], "ret": [ ] },
+         "get": { "type": [ "mut" ], "arg": [], "ret": [ "T!" ] },
+      },
+   },
+   {
       "io": {
          "__attrib": { "type": [ "module" ] },
          "stdin": { "type": [ "var" ], "typeInfo": [ "iStream" ] },
@@ -2767,6 +2773,26 @@ fn TransUnit.analyzeLuneControl(
             }
          }
          pragma = LuneControl.Pragma.limit_conv_code( codeSet );
+      }
+      case "run_async_pipe" {
+         let nowMethod = self.getCurrentNamespaceTypeInfo();
+         let nowClass = nowMethod.$parentInfo;
+         let mut valid = false;
+         if nowMethod.$kind == .Method and Ast.isClass( nowClass ) {
+            if! let loopMethod = nowClass.$scope$.getTypeInfoChild$( "loop" ) {
+               if loopMethod.$kind == .Method and #loopMethod.$argTypeInfoList == 0 {
+                  valid = true;
+               }
+            } 
+         }
+         if valid {
+            pragma = LuneControl.Pragma.run_async_pipe;
+         } else {
+            self.addErrMess(
+               nextToken.pos, 
+               "this option only use in method of the class have loop method." );
+            return nil;
+         }
       }
       default {
          self.addErrMess( nextToken.pos, "unknown option -- %s" (nextToken.txt) );

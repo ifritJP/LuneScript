@@ -159,6 +159,7 @@ endef
 
 
 define selfhost_buildOp
+	$(call $5,$1,$2,$3,$4,base/Async)
 	$(call $5,$1,$2,$3,$4,base/Str)
 	$(call $5,$1,$2,$3,$4,base/Ver)
 	$(call $5,$1,$2,$3,$4,base/LuaMod)
@@ -753,9 +754,10 @@ endif
 
 diff-result:
 	(cd work/1; find test/ -iname '*.lua' -exec diff {} ../4/{} \; )
-	diff -r work/1/test/proj/  work/3/test/proj/ -I buildId
+	diff -r work/1/test/proj/  work/3/test/proj/ \
+		-I '_moduleObj.__buildId.*' -I '.*buildId = .*'
 ifneq ($(LANG_KIND),lua)
-	diff -r -I '_moduleObj.__buildId.*' -I '.*buildId = .*'		\
+	diff -r -I '_moduleObj.__buildId' -I '.*buildId = .*'		\
 			-x $(notdir $(LNSC_GO))				\
 			-x 'log' -x 'test' work/13 work/3
 endif
@@ -1160,8 +1162,9 @@ endef
 
 define setup-go
 	mkdir -p $1
-	rsync -a --include='*.go' --include='*.lua' \
+	rsync -a --include='*.lua' \
 			--include='*.lns' --exclude='*.*' lune $1
+	cp -au build.counter lune/base/runtime_go $1/lune/base/
 	cp -au build.counter $1
 	-rm work/result-testGo.txt work/result-testGo2.txt
 endef
@@ -1264,6 +1267,7 @@ test-testGo:
 
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Testing,--testing,./test)
 #	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Str,lune/base,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Async,--testing,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Ver,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Code,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),LuaMod,lune/base,./test)
@@ -1311,6 +1315,7 @@ go-build:
 	$(call setup-go,$(GO_WORK_DIR)/test)
 
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Testing,,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Async,,./test)
 #	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Str,,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Ver,,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Code,,./test)
@@ -1364,23 +1369,32 @@ test-govslua:
 	/usr/bin/time -f 'lua:%e/%U/%S:$2' -o work/lua.time --append		\
 		$(MAKE) test-govslua-lua
 	cat work/go.time work/lua.time
-	diff -r work/1 work/2 -I buildId
+	diff -r work/1 work/2 -I buildId				\
+		-I ': Entering directory'				\
+		-I ': Leaving directory' -x '$(notdir $(LNSC_GO))'
 
 
-define test-buildlns
-	mkdir -p $2
-	rm -rf $2/*
-	$(call mk_lune_proj_dir,$2)
-	$(call cp_src_set,$2,.)
+define test-buildlns-setup
+	mkdir -p $1
+	rm -rf $1/*
+	$(call mk_lune_proj_dir,$1)
+	$(call cp_src_set,$1,.)
+endef
+
+define test-buildlns-run
 	$(call selfhost_build_dep,$1,.,$2,-langGo -ol 53)
-	test "$(ONLY_CONV)" = "" && $(MAKE) LANG_KIND=$3 tgt_dump_ast > $2/ast || echo skip
+	test "$(ONLY_CONV)" = "" && LANG= $(MAKE) -C $2 LANG_KIND=$3 tgt_dump_ast > $2/ast || echo skip
 endef
 
 test-govslua-lua:
-	$(call test-buildlns,$(LNSC),work/1,lua)
+	$(call test-buildlns-setup,work/1)
+	$(call test-buildlns-run,$(LNSC),work/1,lua)
 
 test-govslua-go:
-	$(call test-buildlns,/usr/bin/time -f 'go:%e/%U/%S:$2' -o work/go.time --append $(GO_WORK_DIR)/test/$(LNSC_GO),work/2,go)
+	$(call test-buildlns-setup,work/2)
+	cp $(GO_WORK_DIR)/test/$(LNSC_GO) work/2
+	$(call test-buildlns-run,/usr/bin/time -f 'go:%e/%U/%S:$2' -o work/go.time --append work/2/$(LNSC_GO),work/2,go)
+
 
 
 goprof:
