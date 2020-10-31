@@ -20,9 +20,28 @@ endif
 
 LNSC_LUA=$(LUA) lune/base/base.lua
 LNSC_GO=./lnsc
+LNSC_LUAROCKS=~/.luarocks/bin/lnsc
 
-LNSC=LUA_PATH=./?.lua $(LNSC_LUA)
+
+# make のパラメータで言語を切り替える場合、
+# LNSC_CMD や LNSC を直接変更するのではなく LANG_KIND を変更する。
 LANG_KIND=lua
+
+ifeq ($(LANG_KIND),lua)
+LNSC_CMD=$(LNSC_LUA)
+endif
+ifeq ($(LANG_KIND),go)
+LNSC_CMD=$(LNSC_GO)
+endif
+ifeq ($(LANG_KIND),luarocks)
+LNSC_CMD=$(LNSC_LUAROCKS)
+endif
+
+ifeq ($(LNSC_CMD),)
+$(error "LANG_KIND is illegal -- " $(LNSC_CMD) )
+endif
+
+LNSC=LUA_PATH=./?.lua $(LNSC_CMD)
 
 ifdef ENABLE_LUAROCKS
 ifneq ($(LUA51),)
@@ -227,7 +246,7 @@ define test-meta-update
 endef
 
 luarocks-check:
-	$(MAKE) luarocks-check-sub ENABLE_LUAROCKS=y LNSC=~/.luarocks/bin/lnsc
+	$(MAKE) luarocks-check-sub ENABLE_LUAROCKS=y LANG_KIND=luarocks
 
 # luarocks でインストールして動作を確認する
 #
@@ -371,7 +390,7 @@ endif
 	@LANG= date
 
 test-comp-with-go:
-	$(MAKE) test-comp LNSC=$(LNSC_GO) WITH_GO=y LANG_KIND=go
+	$(MAKE) test-comp LANG_KIND=go WITH_GO=y LANG_KIND=go
 
 
 test-registered-rockspec:
@@ -658,7 +677,7 @@ endif
 test-comp2-para: test-comp2-main test-comp2-sub
 
 test-comp2-sub:
-	$(MAKE) test-comp2-sub-2 LNSC="$(LNSC_LUA)" WITH_GO= LANG_KIND=lua
+	$(MAKE) test-comp2-sub-2 LANG_KIND=lua LANG_KIND=lua
 
 # 一度ビルドしたソース work/ から、 lua 版の lns でビルドして work/13 に出力する。
 # 後工程の diff-result で、 go 版の lns のビルド結果と比較して lua と go で
@@ -736,7 +755,7 @@ diff-result:
 	diff -r work/1/test/proj/  work/3/test/proj/ -I buildId
 ifneq ($(LANG_KIND),lua)
 	diff -r -I '_moduleObj.__buildId.*' -I '.*buildId = .*'		\
-			-x $(notdir $(LNSC_GO)) -x '*.go' -x 'go.*'	\
+			-x $(notdir $(LNSC_GO))				\
 			-x 'log' -x 'test' work/13 work/3
 endif
 	diff work/test1.result work/test2.result
@@ -771,13 +790,16 @@ test-lua51:
 	(cd work/5; LUA_PATH=./?.lua $(LUA51) lune/base/base.lua test/start.lns -u exe ) > work/test6.result
 
 # 比較用にクロスコンパイル前のテスト結果を取得
-	$(MAKE) test-lua51-sub LUA=$(LUA51) 
+	$(MAKE) test-lua51-sub LANG_KIND=lua LUA=$(LUA51) 
 
 	diff -r work/5/lune work/6/lune
 
 # サンプルを lua5.1 にクロスコンパイルして実行テスト
 	$(call mk_lune_proj_dir,work/7)
 	cp -a work/3/lune work/7
+ifeq ($(WITH_GO),y)
+	cp $(LNSC_GO) work/7
+endif
 	$(call setup-lua51-test-cross,work/7)
 	$(call exeLune,$(LNSC),work/7,test/start.lns,-u -ol 51 SAVE,)
 	(cd work/7; $(LUA51) test/start.lua) | sed 's/\.0//g' > work/test7-3.result
@@ -829,7 +851,7 @@ endif
 
 
 test-installed-cmd:
-	$(MAKE) ENABLE_LUAROCKS=y LNSC=lnsc test-comp -j
+	$(MAKE) ENABLE_LUAROCKS=y LANG_KIND=luarocks test-comp -j
 
 test-on-docker:
 	sudo docker build -t testlns -f test/docker/test_install test/docker
@@ -1348,14 +1370,14 @@ define test-buildlns
 	$(call mk_lune_proj_dir,$2)
 	$(call cp_src_set,$2,.)
 	$(call selfhost_build_dep,$1,.,$2,-langGo -ol 53)
-	test "$(ONLY_CONV)" = "" && $(MAKE) LNSC="$1" tgt_dump_ast > $2/ast || echo skip
+	test "$(ONLY_CONV)" = "" && $(MAKE) LANG_KIND==$3 tgt_dump_ast > $2/ast || echo skip
 endef
 
 test-govslua-lua:
-	$(call test-buildlns,$(LNSC),work/1)
+	$(call test-buildlns,$(LNSC),work/1,lua)
 
 test-govslua-go:
-	$(call test-buildlns,/usr/bin/time -f 'go:%e/%U/%S:$2' -o work/go.time --append $(GO_WORK_DIR)/test/$(LNSC_GO),work/2)
+	$(call test-buildlns,/usr/bin/time -f 'go:%e/%U/%S:$2' -o work/go.time --append $(GO_WORK_DIR)/test/$(LNSC_GO),work/2,go)
 
 
 goprof:
