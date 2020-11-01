@@ -773,7 +773,7 @@ endif
 define setup-lua51-test
 	cp -a test $1
 	$(MAKE) build-glue GLUE_DIR=work/newglue LUA_INC_DIR=$(LUA51_INC) LUA_GLUE=51
-	mv $1/test/glueTest51.so $1/test/glueTest.so 
+	mv test/glueTest51.so $1/test/glueTest.so 
 	grep -v -e 'skip-lua51' $2 test/start.lns > $1/test/start.lns
 endef
 
@@ -1139,12 +1139,16 @@ GO_RUNTIME = lune/base/runtime_go
 GO_LUA_LINK = $(GO_RUNTIME)/lua_link
 GO_MOD = lnsc
 
-define buildGo
+define buildGoSetup
 	mkdir -p $1/$(GO_LUA_LINK)
 	if [ ! -h $1/$(GO_LUA_LINK)/inc ]; then				\
 		ln -s $(LUA_INC_DIR) $1/$(GO_LUA_LINK)/inc;		\
 	fi
 	(cd $1; if [ ! -f go.mod ]; then go mod init $(GO_MOD); fi)
+endef
+
+define buildGo
+	$(call buildGoSetup,$1)
 	(cd $1; go build && $(LNSC_GO))
 endef
 
@@ -1304,7 +1308,7 @@ test-subgo:
 
 define go-build-lns
 	cp lune/base/runtime_go/main/lnsc_main.go $1
-	(cd $1; go mod init $(GO_MOD))
+	$(call buildGoSetup,$1)
 	(cd $1; time go build)
 endef
 
