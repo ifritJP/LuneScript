@@ -30,7 +30,7 @@ import . "lnsc/lune/base/runtime_go"
 import lnsc "lnsc/lune/base"
 
 func exec( args []LnsAny ) error {
-    Lns_InitMod()
+    Lns_InitModOnce()
     lnsc.Lns_front_init()
     
     lnsc.Front_exec( NewLnsList( args[ 1:] ) )

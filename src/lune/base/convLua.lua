@@ -1022,6 +1022,11 @@ function convFilter:outputMeta( node )
    
    local function outputDepend( typeInfo, moduleTypeInfo )
    
+      if typeInfo:get_nilable() and typeInfo:get_nonnilableType() ~= typeInfo then
+         return false
+      end
+      
+      
       do
          local moduleIndex = importModuleType2Index[moduleTypeInfo]
          if moduleIndex ~= nil then
@@ -1043,24 +1048,8 @@ function convFilter:outputMeta( node )
    local wroteTypeIdSet = {}
    local function outputTypeInfo( typeInfo )
    
-      local force = false
-      if Ast.isExtId( typeInfo ) then
-         
-         local moduleTypeInfo = typeInfo:getModule(  )
-         do
-            local moduleInfo = node:get_importModule2moduleInfo()[moduleTypeInfo]
-            if moduleInfo ~= nil then
-               if moduleInfo:get_localTypeInfo2importIdMap()[typeInfo] then
-                  return 
-               end
-               
-            end
-         end
-         
-         if moduleTypeInfo == self.moduleTypeInfo then
-            force = true
-         end
-         
+      if Ast.isBuiltin( typeInfo:get_typeId() ) then
+         return 
       end
       
       
@@ -1086,18 +1075,15 @@ function convFilter:outputMeta( node )
       end
       
       wroteTypeIdSet[typeId]= true
-      if force or checkExportTypeInfo( typeInfo ) then
-         self:write( string.format( "__typeInfoList[%d] = ", listIndex) )
-         listIndex = listIndex + 1
-         
-         local validChildren = validChildrenSet[typeInfo]
-         if not validChildren then
-            validChildren = typeId2TypeInfo
-         end
-         
-         typeInfo:serialize( self, validChildren )
-         
+      self:write( string.format( "__typeInfoList[%d] = ", listIndex) )
+      listIndex = listIndex + 1
+      
+      local validChildren = validChildrenSet[typeInfo]
+      if not validChildren then
+         validChildren = typeId2TypeInfo
       end
+      
+      typeInfo:serialize( self, validChildren )
       
    end
    
@@ -1892,7 +1878,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _6086 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _6081 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -4088,7 +4074,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3396, function (  )
+   Log.log( Log.Level.Trace, __func__, 3404, function (  )
    
       return string.format( "macro: %s", code)
    end )

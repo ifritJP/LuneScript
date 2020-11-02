@@ -694,6 +694,10 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
    let mut listIndex = 1;
 
    fn outputDepend( typeInfo:&Ast.TypeInfo, moduleTypeInfo:&Ast.TypeInfo): bool {
+      if typeInfo.$nilable and typeInfo.$nonnilableType ~= typeInfo {
+         return false;
+      }
+      
       if! let moduleIndex = importModuleType2Index[ moduleTypeInfo ] {
          let moduleInfo = unwrap node.$importModule2moduleInfo[ moduleTypeInfo ];
          if! let extId = moduleInfo.$localTypeInfo2importIdMap[ typeInfo ] {
@@ -708,19 +712,23 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
    
    let mut wroteTypeIdSet:Set<int> = (@);
    fn outputTypeInfo( typeInfo: &Ast.TypeInfo ) {
-      let mut force = false;
-      if Ast.isExtId( typeInfo ) {
-
-         let moduleTypeInfo = typeInfo.getModule();
-         if! let moduleInfo = node.$importModule2moduleInfo[ moduleTypeInfo ] {
-            if moduleInfo.$localTypeInfo2importIdMap[ typeInfo ] {
-               return;
-            }
-         }
-         if moduleTypeInfo == self.moduleTypeInfo {
-            force = true;
-         }
+      if Ast.isBuiltin( typeInfo.$typeId) {
+         return;
       }
+      
+      // let mut force = false;
+      // if Ast.isExtId( typeInfo ) {
+
+      //    let moduleTypeInfo = typeInfo.getModule();
+      //    // if! let moduleInfo = node.$importModule2moduleInfo[ moduleTypeInfo ] {
+      //    //    if moduleInfo.$localTypeInfo2importIdMap[ typeInfo ] {
+      //    //       return;
+      //    //    }
+      //    // }
+      //    if moduleTypeInfo == self.moduleTypeInfo {
+      //       force = true;
+      //    }
+      // }
 
 
       switch typeInfo.$kind {
@@ -741,7 +749,7 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
          return;
       }
       wroteTypeIdSet.add( typeId );
-      if force or checkExportTypeInfo( typeInfo ) {
+      // if force or checkExportTypeInfo( typeInfo ) {
          self.write( "__typeInfoList[%d] = " (listIndex) );
          listIndex = listIndex + 1;
 
@@ -751,7 +759,7 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
          }
          typeInfo.serialize( self, validChildren );
          //self.writeln( "-- %s" (typeInfo.getTxt(##) ) );
-      }
+      // }
    }
 
    foreach typeInfo, typeId in self.pubEnumId2EnumTypeInfo {

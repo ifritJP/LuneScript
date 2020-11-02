@@ -64,86 +64,39 @@ func Option_ModeKind__from(arg1 string) LnsAny{
 func Option_ModeKind_getTxt(arg1 string) string {
     return Option_ModeKindMap_[arg1];
 }
-// decl enum -- CheckingUptodateMode 
-const Option_CheckingUptodateMode__Force = "force"
-const Option_CheckingUptodateMode__Normal = "none"
-const Option_CheckingUptodateMode__Touch = "touch"
-var Option_CheckingUptodateModeList_ = NewLnsList( []LnsAny {
-  Option_CheckingUptodateMode__Force,
-  Option_CheckingUptodateMode__Normal,
-  Option_CheckingUptodateMode__Touch,
-})
-func Option_CheckingUptodateMode_get__allList() *LnsList{
-    return Option_CheckingUptodateModeList_
-}
-var Option_CheckingUptodateModeMap_ = map[string]string {
-  Option_CheckingUptodateMode__Force: "CheckingUptodateMode.Force",
-  Option_CheckingUptodateMode__Normal: "CheckingUptodateMode.Normal",
-  Option_CheckingUptodateMode__Touch: "CheckingUptodateMode.Touch",
-}
-func Option_CheckingUptodateMode__from(arg1 string) LnsAny{
-    if _, ok := Option_CheckingUptodateModeMap_[arg1]; ok { return arg1 }
-    return nil
-}
-
-func Option_CheckingUptodateMode_getTxt(arg1 string) string {
-    return Option_CheckingUptodateModeMap_[arg1];
-}
-// decl enum -- Conv 
-const Option_Conv__C = 0
-const Option_Conv__Go = 1
-var Option_ConvList_ = NewLnsList( []LnsAny {
-  Option_Conv__C,
-  Option_Conv__Go,
-})
-func Option_Conv_get__allList() *LnsList{
-    return Option_ConvList_
-}
-var Option_ConvMap_ = map[LnsInt]string {
-  Option_Conv__C: "Conv.C",
-  Option_Conv__Go: "Conv.Go",
-}
-func Option_Conv__from(arg1 LnsInt) LnsAny{
-    if _, ok := Option_ConvMap_[arg1]; ok { return arg1 }
-    return nil
-}
-
-func Option_Conv_getTxt(arg1 LnsInt) string {
-    return Option_ConvMap_[arg1];
-}
-// for 37
-func Option_convExp58(arg1 []LnsAny) LnsAny {
+// for 38
+func Option_convExp59(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 179
-func Option_convExp469(arg1 []LnsAny) LnsAny {
+// for 149
+func Option_convExp424(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// 46: decl @lune.@base.@Option.getBuildCount
+// 47: decl @lune.@base.@Option.getBuildCount
 func Option_getBuildCount_1015_() LnsInt {
-    return 5517
+    return 5612
 }
 
-// 102: decl @lune.@base.@Option.getRuntimeModule
+// 72: decl @lune.@base.@Option.getRuntimeModule
 func Option_getRuntimeModule() string {
     return Lns_getVM().String_format("lune.base.runtime%d", []LnsAny{Ver_luaModVersion})
 }
 
-// 172: decl @lune.@base.@Option.outputLuneMod
+// 142: decl @lune.@base.@Option.outputLuneMod
 func Option_outputLuneMod(path LnsAny) LnsAny {
     var lune_path string
     lune_path = "runtime.lua"
     if path != nil{
-        path_2379 := path.(string)
-        if path_2379 != ""{
-            lune_path = path_2379
+        path_2382 := path.(string)
+        if path_2382 != ""{
+            lune_path = path_2382
             
         }
     }
     var fileObj Lns_luaStream
     
     {
-        _fileObj := Option_convExp469(Lns_2DDD(Lns_io_open(lune_path, "w")))
+        _fileObj := Option_convExp424(Lns_2DDD(Lns_io_open(lune_path, "w")))
         if _fileObj == nil{
             return Lns_getVM().String_format("failed to open -- %s", []LnsAny{lune_path})
         } else {
@@ -159,15 +112,15 @@ func Option_outputLuneMod(path LnsAny) LnsAny {
     return nil
 }
 
-// 219: decl @lune.@base.@Option.analyze.printUsage
-func analyze__printUsage_1104_(code LnsInt) {
+// 189: decl @lune.@base.@Option.analyze.printUsage
+func analyze__printUsage_1060_(code LnsInt) {
     Lns_print([]LnsAny{"usage:\n  <type1> [-prof] [-r] src.lns mode [mode-option]\n  <type2> -mklunemod path\n  <type3> --version\n\n* type1\n  - src.lns [common_op] ast\n  - src.lns [common_op] comp [-i] module line column\n  - src.lns [common_op] inq [-i] module line column\n  - src.lns [common_op] [-ol ver] [-ob<0|1>] [-dmr] <lua|LUA>\n  - src.lns [common_op] [-ol ver] [-ob<0|1>] [-dmr] [--depends dependfile] <save|SAVE> output-dir\n  - src.lns [common_op] exe\n\n  -r: use 'require( \"lune.base.runtime\" )'\n  -ol: output lua version. ver = 51 or 52 or 53.\n  -ob: output bytecompiled-code.\n      -ob0 is without debug information.\n      -ob1 is with debug information.\n  -langC: transcompile to c-lang.\n  -langGo: transcompile to golang.\n  -oc: output path of the source code transcompiled to c-lang .\n  --depends: output dependfile\n\n  common_op:\n    -u: update meta and lua on load.\n    -Werror: error by warrning.\n    --log <mode>: set log level.\n         mode: fatal, error, warn, log, info, debug, trace\n    --warning-shadowing: shadowing error convert to warning.\n    --compat-comment: backward compatibility to process the comment.\n    --disable-checking-define-abbr: disable checking for ##.\n    --uptodate <mode>: checking uptodate mode.\n            mode: skip check.\n            none: skip process when file is uptodate.\n            touch: touch meta file when file is uptodate.  (default)\n    --use-ipairs: use ipairs for foreach with List value.\n    \n\n* type2\n  dir: output directory.\n"})
     Lns_getVM().OS_exit(code)
 }
 
 
 
-// 217: decl @lune.@base.@Option.analyze
+// 187: decl @lune.@base.@Option.analyze
 func Option_analyze(argList *LnsList) *Option_Option {
     __func__ := "@lune.@base.@Option.analyze"
     var option *Option_Option
@@ -193,30 +146,30 @@ func Option_analyze(argList *LnsList) *Option_Option {
         var arg string
         arg = argList.GetAt(index).(string)
         if Lns_isCondTrue( Lns_car(Lns_getVM().String_find(arg,"^-", nil, nil))){
-            if _switch1175 := (arg); _switch1175 == "-i" {
+            if _switch1162 := (arg); _switch1162 == "-i" {
                 useStdInFlag = true
                 
-            } else if _switch1175 == "-prof" {
+            } else if _switch1162 == "-prof" {
                 option.ValidProf = true
                 
-            } else if _switch1175 == "--nodebug" {
+            } else if _switch1162 == "--nodebug" {
                 Util_setDebugFlag(false)
-            } else if _switch1175 == "--version" {
+            } else if _switch1162 == "--version" {
                 Lns_print([]LnsAny{Lns_getVM().String_format("LuneScript: version %s (%d:%s) [%s]", []LnsAny{Ver_version, Option_getBuildCount_1015_(), Depend_getLuaVersion(), Ver_metaVersion})})
                 Lns_getVM().OS_exit(0)
-            } else if _switch1175 == "--builtin" {
+            } else if _switch1162 == "--builtin" {
                 {
-                    __collection735 := Ast_getBuiltInTypeIdMap()
-                    __sorted735 := __collection735.CreateKeyListInt()
-                    __sorted735.Sort( LnsItemKindInt, nil )
-                    for _, _typeId := range( __sorted735.Items ) {
-                        typeInfo := __collection735.Items[ _typeId ].(Ast_TypeInfoDownCast).ToAst_TypeInfo()
+                    __collection690 := Ast_getBuiltInTypeIdMap()
+                    __sorted690 := __collection690.CreateKeyListInt()
+                    __sorted690.Sort( LnsItemKindInt, nil )
+                    for _, _typeId := range( __sorted690.Items ) {
+                        typeInfo := __collection690.Items[ _typeId ].(Ast_TypeInfoDownCast).ToAst_TypeInfo()
                         typeId := _typeId.(LnsInt)
                         Lns_print([]LnsAny{typeId, typeInfo.FP.GetTxt(nil, nil, nil)})
                     }
                 }
                 Lns_getVM().OS_exit(0)
-            } else if _switch1175 == "-mklunemod" {
+            } else if _switch1162 == "-mklunemod" {
                 var path LnsAny
                 path = getNextOp()
                 {
@@ -228,7 +181,7 @@ func Option_analyze(argList *LnsList) *Option_Option {
                     }
                 }
                 Lns_getVM().OS_exit(0)
-            } else if _switch1175 == "--mkbuiltin" {
+            } else if _switch1162 == "--mkbuiltin" {
                 var path string
                 
                 {
@@ -244,31 +197,34 @@ func Option_analyze(argList *LnsList) *Option_Option {
                 
                 option.Mode = Option_ModeKind__Builtin
                 
-            } else if _switch1175 == "-r" {
+            } else if _switch1162 == "-r" {
                 option.UseLuneModule = Option_getRuntimeModule()
                 
-            } else if _switch1175 == "--runtime" {
+            } else if _switch1162 == "--runtime" {
                 option.UseLuneModule = getNextOp()
                 
-            } else if _switch1175 == "-oc" {
+            } else if _switch1162 == "-oc" {
                 option.BootPath = getNextOp()
                 
-            } else if _switch1175 == "-u" {
+            } else if _switch1162 == "-u" {
                 option.UpdateOnLoad = true
                 
-            } else if _switch1175 == "-Werror" {
+            } else if _switch1162 == "-Werror" {
                 option.TransCtrlInfo.StopByWarning = true
                 
-            } else if _switch1175 == "--disable-checking-define-abbr" {
+            } else if _switch1162 == "--disable-checking-define-abbr" {
                 option.TransCtrlInfo.CheckingDefineAbbr = false
                 
-            } else if _switch1175 == "--compat-comment" {
+            } else if _switch1162 == "--compat-comment" {
                 option.TransCtrlInfo.CompatComment = true
                 
-            } else if _switch1175 == "--warning-shadowing" {
+            } else if _switch1162 == "--warning-shadowing" {
                 option.TransCtrlInfo.WarningShadowing = true
                 
-            } else if _switch1175 == "--log" {
+            } else if _switch1162 == "--valid-luaval" {
+                option.TransCtrlInfo.ValidLuaval = true
+                
+            } else if _switch1162 == "--log" {
                 {
                     _txt := getNextOp()
                     if _txt != nil {
@@ -284,22 +240,22 @@ func Option_analyze(argList *LnsList) *Option_Option {
                         }
                     }
                 }
-            } else if _switch1175 == "--testing" {
+            } else if _switch1162 == "--testing" {
                 option.Testing = true
                 
-            } else if _switch1175 == "--depends" {
+            } else if _switch1162 == "--depends" {
                 option.DependsPath = getNextOp()
                 
-            } else if _switch1175 == "--use-ipairs" {
+            } else if _switch1162 == "--use-ipairs" {
                 option.UseIpairs = true
                 
-            } else if _switch1175 == "--uptodate" {
+            } else if _switch1162 == "--uptodate" {
                 {
                     _txt := getNextOp()
                     if _txt != nil {
                         txt := _txt.(string)
                         {
-                            _mode := Option_CheckingUptodateMode__from(txt)
+                            _mode := Types_CheckingUptodateMode__from(txt)
                             if _mode != nil {
                                 mode := _mode.(string)
                                 option.TransCtrlInfo.UptodateMode = mode
@@ -310,30 +266,34 @@ func Option_analyze(argList *LnsList) *Option_Option {
                         }
                     }
                 }
-            } else if _switch1175 == "-langC" {
-                option.ConvTo = Option_Conv__C
+            } else if _switch1162 == "-langC" {
+                option.ConvTo = Types_Conv__C
                 
-            } else if _switch1175 == "-langGo" {
-                option.ConvTo = Option_Conv__Go
+                option.TransCtrlInfo.ValidLuaval = true
                 
-            } else if _switch1175 == "-ol" {
+            } else if _switch1162 == "-langGo" {
+                option.ConvTo = Types_Conv__Go
+                
+                option.TransCtrlInfo.ValidLuaval = true
+                
+            } else if _switch1162 == "-ol" {
                 {
                     _txt := getNextOp()
                     if _txt != nil {
                         txt := _txt.(string)
-                        if _switch1119 := txt; _switch1119 == "51" {
+                        if _switch1106 := txt; _switch1106 == "51" {
                             option.TargetLuaVer = LuaVer_ver51
                             
-                        } else if _switch1119 == "52" {
+                        } else if _switch1106 == "52" {
                             option.TargetLuaVer = LuaVer_ver52
                             
-                        } else if _switch1119 == "53" {
+                        } else if _switch1106 == "53" {
                             option.TargetLuaVer = LuaVer_ver53
                             
                         }
                     }
                 }
-            } else if _switch1175 == "-ob0" || _switch1175 == "-ob1" {
+            } else if _switch1162 == "-ob0" || _switch1162 == "-ob1" {
                 option.ByteCompile = true
                 
                 if arg == "-ob0"{
@@ -360,7 +320,7 @@ func Option_analyze(argList *LnsList) *Option_Option {
                     }
                 }
             } else { 
-                if _switch1358 := (option.Mode); _switch1358 == Option_ModeKind__Complete || _switch1358 == Option_ModeKind__Inquire {
+                if _switch1345 := (option.Mode); _switch1345 == Option_ModeKind__Complete || _switch1345 == Option_ModeKind__Inquire {
                     if Lns_op_not(option.AnalyzeModule){
                         option.AnalyzeModule = arg
                         
@@ -373,7 +333,7 @@ func Option_analyze(argList *LnsList) *Option_Option {
                         option.AnalyzePos = NewParser_Position(Lns_unwrap( lineNo).(LnsInt), Lns_unwrap( column).(LnsInt), Util_scriptPath2Module(option.ScriptPath))
                         
                     }
-                } else if _switch1358 == Option_ModeKind__Save || _switch1358 == Option_ModeKind__SaveMeta || _switch1358 == Option_ModeKind__Glue {
+                } else if _switch1345 == Option_ModeKind__Save || _switch1345 == Option_ModeKind__SaveMeta || _switch1345 == Option_ModeKind__Glue {
                     option.OutputDir = arg
                     
                 } else {
@@ -387,7 +347,7 @@ func Option_analyze(argList *LnsList) *Option_Option {
         if Lns_popVal( Lns_incStack() ||
             Lns_setStackVal( option.ScriptPath == "") ||
             Lns_setStackVal( option.Mode == Option_ModeKind__Unknown) ).(bool){
-            analyze__printUsage_1104_(Lns_popVal( Lns_incStack() ||
+            analyze__printUsage_1060_(Lns_popVal( Lns_incStack() ||
                 Lns_setStackVal( (Lns_popVal( Lns_incStack() ||
                     Lns_setStackVal( argList.Len() == 0) ||
                     Lns_setStackVal( argList.GetAt(1).(string) == "") ).(bool))) &&
@@ -404,14 +364,14 @@ func Option_analyze(argList *LnsList) *Option_Option {
             }
         }
     }
-    Log_log(Log_Level__Log, __func__, 466, Log_CreateMessage(func() string {
+    Log_log(Log_Level__Log, __func__, 441, Log_CreateMessage(func() string {
         return Lns_getVM().String_format("mode is '%s'", []LnsAny{Option_ModeKind_getTxt( option.Mode)})
     }))
     
     return option
 }
 
-// 471: decl @lune.@base.@Option.createDefaultOption
+// 446: decl @lune.@base.@Option.createDefaultOption
 func Option_createDefaultOption(path string) *Option_Option {
     var option *Option_Option
     option = NewOption_Option()
@@ -423,56 +383,6 @@ func Option_createDefaultOption(path string) *Option_Option {
     
     return option
 }
-
-// declaration Class -- TransCtrlInfo
-type Option_TransCtrlInfoMtd interface {
-}
-type Option_TransCtrlInfo struct {
-    WarningShadowing bool
-    CompatComment bool
-    CheckingDefineAbbr bool
-    StopByWarning bool
-    UptodateMode string
-    FP Option_TransCtrlInfoMtd
-}
-func Option_TransCtrlInfo2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Option_TransCtrlInfo).FP
-}
-type Option_TransCtrlInfoDownCast interface {
-    ToOption_TransCtrlInfo() *Option_TransCtrlInfo
-}
-func Option_TransCtrlInfoDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Option_TransCtrlInfoDownCast)
-    if ok { return work.ToOption_TransCtrlInfo() }
-    return nil
-}
-func (obj *Option_TransCtrlInfo) ToOption_TransCtrlInfo() *Option_TransCtrlInfo {
-    return obj
-}
-func NewOption_TransCtrlInfo(arg1 bool, arg2 bool, arg3 bool, arg4 bool, arg5 string) *Option_TransCtrlInfo {
-    obj := &Option_TransCtrlInfo{}
-    obj.FP = obj
-    obj.InitOption_TransCtrlInfo(arg1, arg2, arg3, arg4, arg5)
-    return obj
-}
-func (self *Option_TransCtrlInfo) InitOption_TransCtrlInfo(arg1 bool, arg2 bool, arg3 bool, arg4 bool, arg5 string) {
-    self.WarningShadowing = arg1
-    self.CompatComment = arg2
-    self.CheckingDefineAbbr = arg3
-    self.StopByWarning = arg4
-    self.UptodateMode = arg5
-}
-// 93: decl @lune.@base.@Option.TransCtrlInfo.create_normal
-func Option_TransCtrlInfo_create_normal() *Option_TransCtrlInfo {
-    return NewOption_TransCtrlInfo(false, false, true, false, Option_CheckingUptodateMode__Touch)
-}
-
 
 // declaration Class -- Option
 type Option_OptionMtd interface {
@@ -493,7 +403,7 @@ type Option_Option struct {
     TargetLuaVer *LuaVer_LuaVerInfo
     BootPath LnsAny
     UseIpairs bool
-    TransCtrlInfo *Option_TransCtrlInfo
+    TransCtrlInfo *Types_TransCtrlInfo
     ConvTo LnsAny
     Testing bool
     FP Option_OptionMtd
@@ -524,7 +434,7 @@ func NewOption_Option() *Option_Option {
     obj.InitOption_Option()
     return obj
 }
-// 144: DeclConstr
+// 114: DeclConstr
 func (self *Option_Option) InitOption_Option() {
     self.Testing = false
     
@@ -546,7 +456,7 @@ func (self *Option_Option) InitOption_Option() {
     
     self.TargetLuaVer = LuaVer_getCurVer()
     
-    self.TransCtrlInfo = Option_TransCtrlInfo_create_normal()
+    self.TransCtrlInfo = Types_TransCtrlInfo_create_normal()
     
     self.BootPath = nil
     
@@ -562,7 +472,7 @@ func (self *Option_Option) InitOption_Option() {
     
 }
 
-// 164: decl @lune.@base.@Option.Option.openDepend
+// 134: decl @lune.@base.@Option.Option.openDepend
 func (self *Option_Option) OpenDepend() LnsAny {
     {
         _path := self.DependsPath
@@ -580,6 +490,7 @@ func Lns_Option_init() {
     init_Option = true
     Option__mod__ = "@lune.@base.@Option"
     Lns_InitMod()
+    Lns_Types_init()
     Lns_Parser_init()
     Lns_Util_init()
     Lns_LuaMod_init()

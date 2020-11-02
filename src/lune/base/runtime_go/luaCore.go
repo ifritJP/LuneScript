@@ -32,6 +32,7 @@ package runtimelns
 // #include <lualib.h>
 import "C"
 import "unsafe"
+//import "sync"
 
 type lua_int = C.longlong
 type lua_num = C.double
@@ -59,6 +60,12 @@ func init() {
 
 type Lns_luaVM struct {
     vm *C.lua_State
+
+    lns_luvValueCoreMap map[*Lns_luaValueCore]bool
+    lns_luaValChan chan *Lns_luaValueCore
+
+    lns_luvValueCoreFreeList []*Lns_luaValueCoreList
+    lns_hasLuvValueCoreFree bool
 }
 
 // luaL api ======================

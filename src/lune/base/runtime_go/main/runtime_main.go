@@ -34,7 +34,7 @@ import . "lnsc/lune/base/runtime_go"
 
 
 func main() {
-    Lns_InitMod()
+    Lns_InitModOnce()
     //TEST:Lns_Testing_init()
     Lns_init()
     //TEST:Testing_run( "" )

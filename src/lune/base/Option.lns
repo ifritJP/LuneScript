@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2018 ifritJP
+Copyright (c) 2018,2020 ifritJP
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+import lune.base.Types;
 import lune.base.Parser;
 import lune.base.Util;
 import lune.base.LuaMod;
@@ -68,37 +69,6 @@ pub enum ModeKind {
    Inquire = "inq",
 }
 
-/** meta ファイルの更新必要性チェックモード */
-pub enum CheckingUptodateMode {
-   /** uptodate チェックせずに必ずビルドしなおす */
-   Force = "force",
-   /** uptodate チェックし、 uptodate だった場合なにもしない */
-   Normal = "none",
-   /** uptodate チェックし、 uptodate だった場合 touch だけ行なう */
-   Touch = "touch",
-}
-
-pub class TransCtrlInfo {
-   /** shadowing をワーニングにする */
-   pub let mut warningShadowing:bool;
-   /** コメントを従来互換の処理する */
-   pub let mut compatComment:bool;
-   /** ## を明示していない時の warning を出力するかどうか。 trueの場合出力する。*/
-   pub let mut checkingDefineAbbr:bool;
-   /** warning 発生した場合、 AST 解析を続けるかどうか。 true の場合止める。*/
-   pub let mut stopByWarning:bool;
-   pub let mut uptodateMode:CheckingUptodateMode;
-}
-
-pub static fn TransCtrlInfo.create_normal(): TransCtrlInfo {
-   return new TransCtrlInfo( false, false, true, false, .Touch );
-}
-
-pub enum Conv {
-   C,
-   Go,
-}
-
 pub fn getRuntimeModule(): str {
    return "lune.base.runtime%d" (Ver.luaModVersion);
 }
@@ -133,10 +103,10 @@ pub class Option {
    /** List の foreach に ipairs を使う。 */
    pub let mut useIpairs:bool;
 
-   pub let mut transCtrlInfo:TransCtrlInfo;
+   pub let mut transCtrlInfo:Types.TransCtrlInfo;
 
    /** true の場合 C への変換を行なう */
-   pub let mut convTo:Conv!;
+   pub let mut convTo:Types.Conv!;
 
    /** テストする時 true */
    pub let mut testing:bool;
@@ -152,7 +122,7 @@ pub class Option {
       self.byteCompile = false;
       self.stripDebugInfo = false;
       self.targetLuaVer = LuaVer.getCurVer();
-      self.transCtrlInfo = TransCtrlInfo.create_normal();
+      self.transCtrlInfo = Types.TransCtrlInfo.create_normal();
       self.bootPath = nil;
       self.useIpairs = false;
       self.analyzeModule = nil;
@@ -343,6 +313,9 @@ usage:
             case "--warning-shadowing" {
                option.transCtrlInfo.warningShadowing = true;
             }
+            case "--valid-luaval" {
+               option.transCtrlInfo.validLuaval = true;
+            }
             case "--log" {
                if! let txt = getNextOp() {
                   if! let level = Log.str2level( txt ) {
@@ -364,7 +337,7 @@ usage:
             }
             case "--uptodate" {
                if! let txt = getNextOp() {
-                  if! let mode = CheckingUptodateMode._from( txt ) {
+                  if! let mode = Types.CheckingUptodateMode._from( txt ) {
                      option.transCtrlInfo.uptodateMode = mode;
                   }
                   else {
@@ -374,9 +347,11 @@ usage:
             }
             case "-langC" {
                option.convTo = .C;
+               option.transCtrlInfo.validLuaval = true;
             }
             case "-langGo" {
                option.convTo = .Go;
+               option.transCtrlInfo.validLuaval = true;
             }
             case "-ol" {
                if! let txt = getNextOp() {

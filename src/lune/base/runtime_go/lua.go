@@ -36,7 +36,7 @@ import "sync"
 var lns_globalValSym *C.char
 const lns_globalValMapName = "lns_globalValMap"
 
-var defaultVM Lns_luaVM
+var lns_luvValueCoreFreeListMutex sync.Mutex 
 
 type Lns_luaValueCore struct {
     // lua VM の lns_globalValMap に格納しているシンボル名
@@ -49,14 +49,6 @@ type Lns_luaValueCoreList struct {
     list []*Lns_luaValueCore
 }
 
-var lns_luvValueCoreMap map[*Lns_luaValueCore]bool
-var lns_luaValChan chan *Lns_luaValueCore
-
-var lns_luvValueCoreFreeList []*Lns_luaValueCoreList
-var lns_hasLuvValueCoreFree bool
-var lns_luvValueCoreFreeListMutex sync.Mutex 
-
-
 type Lns_luaValue struct {
     core *Lns_luaValueCore
 }
@@ -67,14 +59,14 @@ const lns_luaValueCoreNum = 10
 symbol を globalVal から除外する
 */
 func (luaValue *Lns_luaValue) free() {
-    lns_luaValChan<- luaValue.core
+    luaValue.core.luaVM.lns_luaValChan<- luaValue.core
 }
 
 /**
 symbol を globalVal から除外する
 */
 func (core *Lns_luaValueCore) free() {
-    delete( lns_luvValueCoreMap, core )
+    delete( core.luaVM.lns_luvValueCoreMap, core )
 
     top := lua_gettop( core.luaVM.vm )
     lua_pushnil( core.luaVM.vm )
@@ -91,11 +83,16 @@ func (core *Lns_luaValueCore) getKey() string {
     return fmt.Sprintf( "%p", core )
 }
 
-func lns_luaValChanProc() {
+func init() {
+    lns_globalValSym = C.CString( lns_globalValMapName )
+    lns_defaultPushedVal = &lns_pushedVal{}
+}
+
+func lns_luaValChanProc( luaVM *Lns_luaVM ) {
     list := make([]*Lns_luaValueCore,lns_luaValueCoreNum)
     count := 0
     for {
-        core := <-lns_luaValChan
+        core := <-luaVM.lns_luaValChan
 
         list[ count ] = core
         count++
@@ -104,8 +101,9 @@ func lns_luaValChanProc() {
             freeList := &Lns_luaValueCoreList{ list }
             
             lns_luvValueCoreFreeListMutex.Lock()
-            lns_hasLuvValueCoreFree = true
-            lns_luvValueCoreFreeList = append( lns_luvValueCoreFreeList, freeList )
+            luaVM.lns_hasLuvValueCoreFree = true
+            luaVM.lns_luvValueCoreFreeList =
+                append( luaVM.lns_luvValueCoreFreeList, freeList )
             lns_luvValueCoreFreeListMutex.Unlock()
             
             list = make([]*Lns_luaValueCore,lns_luaValueCoreNum)
@@ -113,31 +111,32 @@ func lns_luaValChanProc() {
     }
 }
 
-func init() {
-    lns_luvValueCoreMap = map[*Lns_luaValueCore]bool{}
-    lns_luaValChan = make(chan *Lns_luaValueCore, 1000)
-    lns_luvValueCoreFreeList = []*Lns_luaValueCoreList{}
-    lns_hasLuvValueCoreFree = false
+var aaaa = 0
+func createVM() *Lns_luaVM {
+    luaVM := &Lns_luaVM{}
+    luaVM.vm = luaL_newstate()
+    luaL_openlibs( luaVM.vm )
+    luaVM.lns_luvValueCoreMap = map[*Lns_luaValueCore]bool{}
+    luaVM.lns_luaValChan = make(chan *Lns_luaValueCore, 1000)
+    luaVM.lns_luvValueCoreFreeList = []*Lns_luaValueCoreList{}
+    luaVM.lns_hasLuvValueCoreFree = false
 
-    go lns_luaValChanProc()
+    lua_createtable( luaVM.vm )
+    lua_setglobal( luaVM.vm, lns_globalValSym )
+    lua_checkstack( luaVM.vm, 300 )
     
-    defaultVM.vm = luaL_newstate()
-    luaL_openlibs( defaultVM.vm )
+    go lns_luaValChanProc( luaVM )
 
-    lns_globalValSym = C.CString( lns_globalValMapName )
-    lua_createtable( defaultVM.vm )
-    lua_setglobal( defaultVM.vm, lns_globalValSym )
-    
-    lns_defaultPushedVal = &lns_pushedVal{}
+    return luaVM
 }
 
-
 func Lns_getVM() *Lns_luaVM {
-    if lns_hasLuvValueCoreFree {
+    luaVM := cur_LnsEnv.luaVM
+    if luaVM.lns_hasLuvValueCoreFree {
         lns_luvValueCoreFreeListMutex.Lock()
-        lns_hasLuvValueCoreFree = false
-        freeList := lns_luvValueCoreFreeList
-        lns_luvValueCoreFreeList = []*Lns_luaValueCoreList{}
+        luaVM.lns_hasLuvValueCoreFree = false
+        freeList := luaVM.lns_luvValueCoreFreeList
+        luaVM.lns_luvValueCoreFreeList = []*Lns_luaValueCoreList{}
         lns_luvValueCoreFreeListMutex.Unlock()
         for _, coreList := range( freeList ) {
             for _, core := range( coreList.list ) {
@@ -146,7 +145,7 @@ func Lns_getVM() *Lns_luaVM {
         }
     }
     
-    return &defaultVM
+    return luaVM
 }
 
 func Lns_runLuaScript( script string ) {
@@ -276,7 +275,7 @@ func (luaVM *Lns_luaVM) newLuaValue( index int, typeId int ) *Lns_luaValue {
 
     core := &Lns_luaValueCore{ luaVM: luaVM, typeId: typeId }
     core.sym = C.CString( core.getKey() )
-    lns_luvValueCoreMap[ core ] = true
+    luaVM.lns_luvValueCoreMap[ core ] = true
     
     val := &Lns_luaValue{ core }
     runtime.SetFinalizer( val, func (obj *Lns_luaValue) { obj.free() } )

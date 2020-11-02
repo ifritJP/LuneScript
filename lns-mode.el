@@ -386,6 +386,7 @@ pattern は  {, }, {{, }} のいずれか。
   (let ((count-brace 0) ;; {
 	(count-paren 0) ;; (
 	(count-bracket 0) ;; [
+	(org-pos (point))
 	end-pos start-pos pos)
     (save-excursion
       (while (not pos)
@@ -468,7 +469,10 @@ pattern は  {, }, {{, }} のいずれか。
 		 (setq pos (point)))
 	    (when (not (lns-indent-prev-eol))
 	      (setq pos 0)))
-	  )))
+	  )
+	(when (eq org-pos (point))
+	  (setq pos 0))
+	))
     (when pos
       (goto-char pos))
     (if (eq pos 0)

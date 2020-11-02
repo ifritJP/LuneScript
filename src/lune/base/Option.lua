@@ -185,6 +185,7 @@ end
 if not _lune2 then
    _lune2 = _lune
 end
+local Types = _lune.loadModule( 'lune.base.Types' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
@@ -199,7 +200,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 5517
+   return 5612
 end
 
 
@@ -271,97 +272,6 @@ ModeKind.Inquire = 'inq'
 ModeKind._val2NameMap['inq'] = 'Inquire'
 ModeKind.__allList[15] = ModeKind.Inquire
 
-local CheckingUptodateMode = {}
-_moduleObj.CheckingUptodateMode = CheckingUptodateMode
-CheckingUptodateMode._val2NameMap = {}
-function CheckingUptodateMode:_getTxt( val )
-   local name = self._val2NameMap[ val ]
-   if name then
-      return string.format( "CheckingUptodateMode.%s", name )
-   end
-   return string.format( "illegal val -- %s", val )
-end
-function CheckingUptodateMode._from( val )
-   if CheckingUptodateMode._val2NameMap[ val ] then
-      return val
-   end
-   return nil
-end
-    
-CheckingUptodateMode.__allList = {}
-function CheckingUptodateMode.get__allList()
-   return CheckingUptodateMode.__allList
-end
-
-CheckingUptodateMode.Force = 'force'
-CheckingUptodateMode._val2NameMap['force'] = 'Force'
-CheckingUptodateMode.__allList[1] = CheckingUptodateMode.Force
-CheckingUptodateMode.Normal = 'none'
-CheckingUptodateMode._val2NameMap['none'] = 'Normal'
-CheckingUptodateMode.__allList[2] = CheckingUptodateMode.Normal
-CheckingUptodateMode.Touch = 'touch'
-CheckingUptodateMode._val2NameMap['touch'] = 'Touch'
-CheckingUptodateMode.__allList[3] = CheckingUptodateMode.Touch
-
-
-local TransCtrlInfo = {}
-_moduleObj.TransCtrlInfo = TransCtrlInfo
-function TransCtrlInfo.setmeta( obj )
-  setmetatable( obj, { __index = TransCtrlInfo  } )
-end
-function TransCtrlInfo.new( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode )
-   local obj = {}
-   TransCtrlInfo.setmeta( obj )
-   if obj.__init then
-      obj:__init( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode )
-   end
-   return obj
-end
-function TransCtrlInfo:__init( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode )
-
-   self.warningShadowing = warningShadowing
-   self.compatComment = compatComment
-   self.checkingDefineAbbr = checkingDefineAbbr
-   self.stopByWarning = stopByWarning
-   self.uptodateMode = uptodateMode
-end
-
-
-function TransCtrlInfo.create_normal(  )
-
-   return TransCtrlInfo.new(false, false, true, false, CheckingUptodateMode.Touch)
-end
-
-
-local Conv = {}
-_moduleObj.Conv = Conv
-Conv._val2NameMap = {}
-function Conv:_getTxt( val )
-   local name = self._val2NameMap[ val ]
-   if name then
-      return string.format( "Conv.%s", name )
-   end
-   return string.format( "illegal val -- %s", val )
-end
-function Conv._from( val )
-   if Conv._val2NameMap[ val ] then
-      return val
-   end
-   return nil
-end
-    
-Conv.__allList = {}
-function Conv.get__allList()
-   return Conv.__allList
-end
-
-Conv.C = 0
-Conv._val2NameMap[0] = 'C'
-Conv.__allList[1] = Conv.C
-Conv.Go = 1
-Conv._val2NameMap[1] = 'Go'
-Conv.__allList[2] = Conv.Go
-
 
 local function getRuntimeModule(  )
 
@@ -388,7 +298,7 @@ function Option:__init()
    self.byteCompile = false
    self.stripDebugInfo = false
    self.targetLuaVer = LuaVer.getCurVer(  )
-   self.transCtrlInfo = TransCtrlInfo.create_normal(  )
+   self.transCtrlInfo = Types.TransCtrlInfo.create_normal(  )
    self.bootPath = nil
    self.useIpairs = false
    self.analyzeModule = nil
@@ -603,6 +513,8 @@ usage:
                option.transCtrlInfo.compatComment = true
             elseif _switchExp == "--warning-shadowing" then
                option.transCtrlInfo.warningShadowing = true
+            elseif _switchExp == "--valid-luaval" then
+               option.transCtrlInfo.validLuaval = true
             elseif _switchExp == "--log" then
                do
                   local txt = getNextOp(  )
@@ -630,7 +542,7 @@ usage:
                   local txt = getNextOp(  )
                   if txt ~= nil then
                      do
-                        local mode = CheckingUptodateMode._from( txt )
+                        local mode = Types.CheckingUptodateMode._from( txt )
                         if mode ~= nil then
                            option.transCtrlInfo.uptodateMode = mode
                         else
@@ -642,9 +554,11 @@ usage:
                end
                
             elseif _switchExp == "-langC" then
-               option.convTo = Conv.C
+               option.convTo = Types.Conv.C
+               option.transCtrlInfo.validLuaval = true
             elseif _switchExp == "-langGo" then
-               option.convTo = Conv.Go
+               option.convTo = Types.Conv.Go
+               option.transCtrlInfo.validLuaval = true
             elseif _switchExp == "-ol" then
                do
                   local txt = getNextOp(  )
@@ -742,7 +656,7 @@ usage:
    end
    
    
-   Log.log( Log.Level.Log, __func__, 466, function (  )
+   Log.log( Log.Level.Log, __func__, 441, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

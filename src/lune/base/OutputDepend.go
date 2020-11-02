@@ -13,7 +13,7 @@ func OutputDepend_createFilter(stream Lns_oStream) *Nodes_Filter {
 }
 
 // 134: decl @lune.@base.@OutputDepend.Ast2Depend
-func OutputDepend_Ast2Depend_1093_(ast *TransUnit_ASTInfo) string {
+func OutputDepend_Ast2Depend_1094_(ast *TransUnit_ASTInfo) string {
     var stream *Util_memStream
     stream = NewUtil_memStream()
     var conv *Nodes_Filter
@@ -328,9 +328,9 @@ func (self *OutputDepend_Front) LoadMeta(importModuleInfo *FrontInterface_Import
     var mess LnsAny
     loaded,mess = Lns_getVM().Loadfile(metaPath)
     if loaded != nil{
-        loaded_5495 := loaded.(*Lns_luaValue)
+        loaded_5496 := loaded.(*Lns_luaValue)
         var meta LnsAny
-        meta = OutputDepend_convExp487(Lns_2DDD(Lns_getVM().RunLoadedfunc(loaded_5495,Lns_2DDD([]LnsAny{}))[0]))
+        meta = OutputDepend_convExp487(Lns_2DDD(Lns_getVM().RunLoadedfunc(loaded_5496,Lns_2DDD([]LnsAny{}))[0]))
         return meta
     }
     Lns_print([]LnsAny{mess})

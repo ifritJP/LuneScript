@@ -38,13 +38,38 @@ type LnsForm func( []LnsAny ) []LnsAny
 var LnsNone interface{} = nil
 var Lns_package_path string
 
+type LnsEnv struct {
+    valStack []LnsAny
+    nilAccStack []LnsAny
+    luaVM *Lns_luaVM
+}
+var cur_LnsEnv *LnsEnv
+
+
+
+/**
+各モジュールを初期化する際に実行する関数。
+
+import エラーを回避するため、
+敢てランタイムの関数のどれか一つを呼んでいる。
+
+実際の初期化関数は、 Lns_InitModOnce() で行なう。
+*/
+func Lns_InitMod() {
+}
+
 /**
 各モジュールを初期化する際に実行する関数。
 */
-func Lns_InitMod() {
-    lua_checkstack( Lns_getVM().vm, 300 )
-    Lns_package_path = Lns_getVM().GetPackagePath()
+func Lns_InitModOnce() {
+    cur_LnsEnv = &LnsEnv{}
+    cur_LnsEnv.valStack = []LnsAny{}
+    cur_LnsEnv.nilAccStack = []LnsAny{}
+    cur_LnsEnv.luaVM = createVM()
+    
+    Lns_package_path = cur_LnsEnv.luaVM.GetPackagePath()
 }
+
 
 func Lns_IsNil( val LnsAny ) bool {
     if val == nil {
@@ -103,6 +128,13 @@ func Lns_type( val LnsAny ) string {
 
 func Lns_tonumber( val string, base LnsAny ) LnsAny {
     if Lns_IsNil( base ) {
+        if Str_startsWith( val, "0x" ) || Str_startsWith( val, "0X" ) {
+            if dig, err := strconv.ParseInt( val[2:], 16, 64 ); err != nil {
+                return nil
+            } else {
+                return LnsReal( dig )
+            }
+        }
         f, err := strconv.ParseFloat( val, 64)
         if err != nil {
             return nil
@@ -110,13 +142,14 @@ func Lns_tonumber( val string, base LnsAny ) LnsAny {
         return f
     }
     if bs, ok := base.(LnsInt); ok {
+        print( fmt.Sprint( "hoge: %s %s", val, bs ) );
         if dig, err := strconv.ParseInt( val, bs, 64 ); err != nil {
-            return nil;
+            return nil
         } else {
-            return LnsReal( dig );
+            return LnsReal( dig )
         }
     } else {
-        panic( fmt.Sprintf( "illegal base -- %s", base ) )
+        return nil
     }
 }
 
@@ -262,13 +295,6 @@ func Lns_getFromMulti( multi []LnsAny, index LnsInt ) LnsAny {
     return nil;
 }
 
-type LnsEnv struct {
-    valStack []LnsAny
-    stackPos int
-    nilAccStack []LnsAny
-}
-var cur_LnsEnv = LnsEnv{ []LnsAny{}, -1, []LnsAny{} }
-
 func Lns_NilAccPush( obj interface{} ) bool {
     if Lns_IsNil( obj )  {
         return false
@@ -413,7 +439,6 @@ func Lns_ToString( val LnsAny ) string {
  */
 func Lns_incStack() bool {
     cur_LnsEnv.valStack = append( cur_LnsEnv.valStack, nil )
-    cur_LnsEnv.stackPos++;
     return false;
 }
 
@@ -427,7 +452,7 @@ func Lns_incStack() bool {
  * @return pVal の条件判定結果。 lns_isCondTrue()。
  */
 func Lns_setStackVal( val LnsAny ) bool {
-    cur_LnsEnv.valStack[ cur_LnsEnv.stackPos ] = val
+    cur_LnsEnv.valStack[ len( cur_LnsEnv.valStack ) - 1 ] = val
     return Lns_isCondTrue( val )
 }
 
@@ -437,8 +462,7 @@ func Lns_setStackVal( val LnsAny ) bool {
  * @return pop した値。
  */
 func Lns_popVal( dummy bool ) LnsAny {
-    val := cur_LnsEnv.valStack[ cur_LnsEnv.stackPos ]
-    cur_LnsEnv.stackPos--
-    cur_LnsEnv.valStack = cur_LnsEnv.valStack[:cur_LnsEnv.stackPos+1]
+    val := cur_LnsEnv.valStack[ len( cur_LnsEnv.valStack ) - 1 ]
+    cur_LnsEnv.valStack = cur_LnsEnv.valStack[:len(cur_LnsEnv.valStack) - 1]
     return val;
 }

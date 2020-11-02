@@ -69,6 +69,7 @@ pub class ProcessInfo {
    let mut idProvBase:IdProvider {pub};
    let mut idProvExt:IdProvider {pub};
    let mut typeInfo2Map:TypeInfo2Map!;
+   let validExtType:bool;
 
    local fn get_typeInfo2Map() mut : TypeInfo2Map {
       return unwrap self.typeInfo2Map;
@@ -77,8 +78,9 @@ pub class ProcessInfo {
       self.typeInfo2Map = typeInfo2Map;
    }
       
-   pri fn __init( idProvBase:IdProvider, typeInfo2Map:TypeInfo2Map! )
+   pri fn __init( idProvBase:IdProvider, validExtType:bool, typeInfo2Map:TypeInfo2Map! )
    {
+      self.validExtType = validExtType;
       self.idProvBase = idProvBase;
       self.idProvExt = new IdProvider( extStartId, extMaxId );
       self.idProv = self.idProvBase;
@@ -87,12 +89,16 @@ pub class ProcessInfo {
       self.typeInfo2Map = typeInfo2Map;
    }
 
-   local static fn createRoot() : ProcessInfo {
-      return new ProcessInfo( new IdProvider( 0, userStartId ), nil );
+   local static fn createRoot() : ProcessInfo
+   {
+      return new ProcessInfo( new IdProvider( 0, userStartId ), true, nil );
    }
 
-   local static fn createUser( typeInfo2Map:TypeInfo2Map! ) : ProcessInfo {
-      return new ProcessInfo( new IdProvider( userStartId, extStartId ), typeInfo2Map );
+   local static fn createUser(
+      validExtType:bool, typeInfo2Map:TypeInfo2Map! ) : ProcessInfo
+   {
+      return new ProcessInfo( new IdProvider( userStartId, extStartId ),
+                              validExtType, typeInfo2Map );    
    }
    
    pub fn switchIdProvier( idType:IdType ) mut {
@@ -105,20 +111,10 @@ pub class ProcessInfo {
       }
    }
 }
-let mut processInfoQueue:List<ProcessInfo> = [];
-fn getCurProcessInfo() : ProcessInfo {
-   if #processInfoQueue == 0 {
-      Util.err( "processInfoQueue is empty!!" );
-   }
-   return processInfoQueue[ #processInfoQueue ];
-}
-
 let mut rootProcessInfo = ProcessInfo.createRoot();
 pub fn getRootProcessInfo(): ProcessInfo {
    return rootProcessInfo;
 }
-processInfoQueue.insert( rootProcessInfo );
-let mut curProcessInfo = rootProcessInfo;
 
 
 pub let rootTypeId = rootProcessInfo.$idProv.getNewId();
@@ -956,7 +952,7 @@ pub alge LuavalResult {
    Err( mess:str ),
    OK( extType:&TypeInfo, pass:bool ),
 }
-pub fn ProcessInfo.createLuaval( luneType:&TypeInfo ) mut : LuavalResult;
+pub fn ProcessInfo.createLuaval( luneType:&TypeInfo, validToCheck:bool ) mut : LuavalResult;
 
 pub fn applyGenericDefault(
    typeInfo:&TypeInfo, alt2typeMap:&Map<&TypeInfo,&TypeInfo>,
@@ -2345,10 +2341,9 @@ pub class NilableTypeInfo extend TypeInfo {
    }
 
    pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
-      let parentId = self.getParentId();
       stream.write(
-         '{ skind = %d, parentId = %d, typeId = %d, nilable = true, orgTypeId = %d }\n' (
-            SerializeKind.Nilable, parentId, self.typeId, self.nonnilableType.$typeId ) );
+         '{ skind = %d, typeId = %d, orgTypeId = %d }\n' (
+            SerializeKind.Nilable, self.typeId, self.nonnilableType.$typeId ) );
    }
 
    pub override fn equals( processInfo:ProcessInfo,
@@ -2741,10 +2736,9 @@ pub class BoxTypeInfo extend TypeInfo {
    }
 
    pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
-      let parentId = self.getParentId();
       stream.write(
-         '{ skind = %d, parentId = %d, typeId = %d, accessMode = %d, boxingType = %d }\n' (
-            SerializeKind.Box, parentId, self.typeId,
+         '{ skind = %d, typeId = %d, accessMode = %d, boxingType = %d }\n' (
+            SerializeKind.Box, self.typeId,
             self.accessMode, self.boxingType.$typeId ) );
    }
 
@@ -2978,10 +2972,9 @@ pub class GenericTypeInfo extend TypeInfo {
    }
 
    pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
-      let parentId = self.getParentId();
       stream.write(
-         '{ skind = %d, parentId = %d, typeId = %d, genSrcTypeId = %d, genTypeList = {' (
-            SerializeKind.Generic, parentId, self.typeId, self.genSrcTypeInfo.$typeId ) );
+         '{ skind = %d, typeId = %d, genSrcTypeId = %d, genTypeList = {' (
+            SerializeKind.Generic, self.typeId, self.genSrcTypeInfo.$typeId ) );
       let count = 0;
       foreach genType in self.alt2typeMap {
          if count > 0 {
@@ -3051,10 +3044,9 @@ pub class ModifierTypeInfo extend TypeInfo {
    }
 
    pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
-      let parentId = self.getParentId();
       stream.write(
-         '{ skind = %d, parentId = %d, typeId = %d, srcTypeId = %d, mutMode = %d }\n' (
-            SerializeKind.Modifier, parentId, self.typeId, self.srcTypeInfo.$typeId,
+         '{ skind = %d, typeId = %d, srcTypeId = %d, mutMode = %d }\n' (
+            SerializeKind.Modifier, self.typeId, self.srcTypeInfo.$typeId,
             self.mutMode ) );
    }
 
@@ -3186,9 +3178,9 @@ pub class ModuleTypeInfo extend TypeInfo {
    pub override fn serialize(
       stream: oStream, validChildrenSet: Map<int,&TypeInfo>! )
    {
-      let txt = "{ skind = %d, parentId = %d, typeId = %d, txt = '%s', kind = %d, "
+      let txt = "{ skind = %d, parentId = %d, typeId = %d, txt = '%s', "
           ( SerializeKind.Module,
-            self.getParentId(), self.typeId, self.rawTxt, TypeInfoKind.Module );
+            self.getParentId(), self.typeId, self.rawTxt );
       stream.write( txt .. '\n' );
 
       stream.write( "children = {" );
@@ -3981,7 +3973,9 @@ pub fn ProcessInfo.createModifier(
    self.$idProv.increment();
    let modifier;
    if srcTypeInfo.$nonnilableType.$kind == .Ext {
-      _match self.createLuaval( self.createModifier( srcTypeInfo.$extedType, mutMode ) )
+      // 元々 Ext だったものは、 failCreateLuavalWith() を実行しない
+      _match self.createLuaval(
+         self.createModifier( srcTypeInfo.$extedType, mutMode ), false )
       {
          case .OK( workType, _ ) {
             if srcTypeInfo.$nilable {
@@ -4172,6 +4166,12 @@ pub override fn NormalSymbolInfo.set_typeInfo(typeInfo:&TypeInfo) {
    self.typeInfo = typeInfo;
 }
 
+enum LuavalConvKind {
+   /** Lua 内で型として利用できるか？ */
+   InLua,
+   /** Lua に渡す型として変換可能か？ */
+   ToLua,
+}
 
 /**
 typeInfo の Luaval を生成可能かどうかを調べる。
@@ -4179,10 +4179,12 @@ typeInfo の Luaval を生成可能かどうかを調べる。
 @param convFlag true の場合、Luaval と LuneScript との値の変換を自動で行なえるかどうか。
 @return 生成可能な場合は nil。 生成できない場合は メッセージを返す。
 */
-fn failCreateLuavalWith( typeInfo:&TypeInfo, convFlag:bool ) : str!, bool {
+fn failCreateLuavalWith(
+   typeInfo:&TypeInfo, convFlag:LuavalConvKind, validToCheck:bool ) : str!, bool
+{
    macro _checkItemType( itemTypeList:__exp ) {
       foreach itemType in ,,itemTypeList {
-         let err, work = failCreateLuavalWith( itemType, convFlag );
+         let err, work = failCreateLuavalWith( itemType, convFlag, validToCheck );
          when! err {
             return err, false;
          }
@@ -4197,20 +4199,30 @@ fn failCreateLuavalWith( typeInfo:&TypeInfo, convFlag:bool ) : str!, bool {
    let mess = "not support to use the type as Luaval -- %s" (typeInfo.getTxt(##));
    switch typeInfo.$kind {
       case .Nilable {
-         return failCreateLuavalWith( typeInfo.$nonnilableType, convFlag )**;
+         return failCreateLuavalWith(
+            typeInfo.$nonnilableType, convFlag, validToCheck )**;
       }
       case .Prim {
          return nil, true;
       }
-      case .Form, .IF, .Stem, .DDD {
-         if convFlag {
+      case .Form, .IF, .DDD {
+         if not validToCheck {
+            return nil, false;
+         }
+         if convFlag ~= .InLua {
             return mess, false;
          }
          return nil, false;
       }
+      case .Stem {
+         return nil, false;
+      }
       case .Class {
          if typeInfo ~= builtinTypeString {
-            if convFlag {
+            if not validToCheck {
+               return nil, false;
+            }
+            if convFlag ~= .InLua {
                return mess, false;
             }
             return nil, false;
@@ -4218,19 +4230,25 @@ fn failCreateLuavalWith( typeInfo:&TypeInfo, convFlag:bool ) : str!, bool {
          return nil, true;
       }
       case .Array, .List, .Map {
-         if isMutable( typeInfo.$mutMode ) {
+         if not validToCheck {
+            return nil, false;
+         }
+         if convFlag ~= .ToLua and isMutable( typeInfo.$mutMode ) {
             return "not support mutable collecion. " .. mess, false;
          }
-         if convFlag {
-            return mess, false;
-         }
+         // if convFlag {
+         //    return mess, false;
+         // }
          let mut canConv = true;
          _checkItemType( typeInfo.$itemTypeInfoList );
          canConv = false;
          return nil, canConv;
       }
       case .FormFunc {
-         if convFlag {
+         if not validToCheck {
+            return nil, false;
+         }
+         if convFlag ~= .InLua {
             return mess, false;
          }
          if #typeInfo.$itemTypeInfoList ~= 0 {
@@ -4658,12 +4676,12 @@ pub fn ProcessInfo.createDDD(
    if typeInfo.$kind == .DDD {
       typeInfo = typeInfo.$itemTypeInfoList[ 1 ];
    }
-   if not failCreateLuavalWith( typeInfo, true ) and extTypeFlag {
+   if not failCreateLuavalWith( typeInfo, .InLua, true ) and extTypeFlag {
       extTypeFlag = false;
    }
 
    if typeInfo.$nonnilableType.$kind ~= .Ext and extTypeFlag {
-      _match self.createLuaval( typeInfo ) {
+      _match self.createLuaval( typeInfo, true ) {
          case .OK( work, _ ) {
             typeInfo = work;
          }
@@ -4691,7 +4709,7 @@ pub fn ProcessInfo.createDDD(
    let dddType = new DDDTypeInfo(
       self, self.$idProv.getNewId(), typeInfo, externalFlag, nil );
 
-   if failCreateLuavalWith( typeInfo, true ) {
+   if failCreateLuavalWith( typeInfo, .InLua, true ) {
       // dddType 生成時に extTypeFlag の dddType を生成して map に登録しておく
       let extDDDType = new DDDTypeInfo(
          self, self.$idProv.getNewId(),
@@ -5242,7 +5260,7 @@ pub class ExtTypeInfo extend TypeInfo {
          return self.extedType.equals(
             processInfo, extTypeInfo.extedType, alt2type, checkModifer );
       }
-      if failCreateLuavalWith( self.extedType, true ) {
+      if failCreateLuavalWith( self.extedType, .InLua, false ) {
          return false;
       }
       return self.extedType.equals(
@@ -5264,7 +5282,7 @@ pub class ExtTypeInfo extend TypeInfo {
          return self.extedType.canEvalWith(
             processInfo, otherExtedType, canEvalType, alt2type )**;
       }
-      if! failCreateLuavalWith( other, true ) {
+      if! failCreateLuavalWith( other, .ToLua, true ) {
          return false, _exp;
       }
       return true, nil;
@@ -5275,10 +5293,9 @@ pub class ExtTypeInfo extend TypeInfo {
    }
 
    pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
-      let parentId = self.getParentId();
       stream.write(
-         '{ skind = %d, parentId = %d, typeId = %d, extedTypeId = %d }\n' (
-            SerializeKind.Ext, parentId, self.typeId, self.extedType.$typeId ) );
+         '{ skind = %d, typeId = %d, extedTypeId = %d }\n' (
+            SerializeKind.Ext, self.typeId, self.extedType.$typeId ) );
    }
 
    pub override fn get_display_stirng_with(
@@ -5320,8 +5337,14 @@ pub class ExtTypeInfo extend TypeInfo {
 
 
 //pub static fn NormalTypeInfo.createLuaval( luneType:&TypeInfo ) : LuavalResult
-pub fn ProcessInfo.createLuaval( luneType:&TypeInfo ) mut : LuavalResult
+pub fn ProcessInfo.createLuaval(
+   luneType:&TypeInfo, validToCheck:bool ) mut : LuavalResult
 {
+   if not self.validExtType {
+      return .OK( luneType, true );
+   }
+
+   
    if luneType.$kind == .Method {
       return .OK( luneType, true );
    }
@@ -5340,7 +5363,7 @@ pub fn ProcessInfo.createLuaval( luneType:&TypeInfo ) mut : LuavalResult
 
    fn process() : LuavalResult {
       if! let dddType = luneType@@@DDDTypeInfo {
-         _match self.createLuaval( dddType.$typeInfo ) {
+         _match self.createLuaval( dddType.$typeInfo, validToCheck ) {
             case .Err( mess ) {
                Util.err( mess );
             }
@@ -5350,8 +5373,8 @@ pub fn ProcessInfo.createLuaval( luneType:&TypeInfo ) mut : LuavalResult
             }
          }
       }
-
-      let err, canConv = failCreateLuavalWith( luneType, false );
+      let err:str!, canConv:bool;
+      err, canConv = failCreateLuavalWith( luneType, .InLua, validToCheck );
       when! err {
          return .Err( err );
       }
@@ -5378,7 +5401,7 @@ pub fn ProcessInfo.createLuaval( luneType:&TypeInfo ) mut : LuavalResult
 }
 
 pub let builtinTypeLua:TypeInfo;
-match rootProcessInfo.createLuaval( builtinTypeStem ) {
+match rootProcessInfo.createLuaval( builtinTypeStem, true ) {
    case .OK ( typeInfo, _ ) {
       builtinTypeLua = typeInfo;
    }
@@ -5396,7 +5419,7 @@ pub fn convToExtTypeList(
 {
    let mut extList:List<&TypeInfo> = [];
    foreach typeInfo in list {
-      _match processInfo.createLuaval( typeInfo ) {
+      _match processInfo.createLuaval( typeInfo, true ) {
          case .OK( extType, pass ) {
             extList.insert( extType );
          }
@@ -5783,7 +5806,8 @@ pub static fn TypeInfo.checkMatchType(
          not isExtType( dstType.$srcTypeInfo.$nonnilableType ) and
          isExtType( expType.$srcTypeInfo.$nonnilableType )
       {
-         warnMess = "%s <- %s" (dstType.getTxt(##), expType.getTxt(##));
+         warnMess = "exp(%d) luaval mismatch %s <- %s" (index, dstType.getTxt(##),
+                                                        expType.getTxt(##));
       }
    }
 
@@ -6109,7 +6133,7 @@ pub static fn TypeInfo.canEvalWithBase(
    }
    if! let extTypeInfo = otherSrc@@@ExtTypeInfo {
       if canEvalType ~= .SetEq and
-         not failCreateLuavalWith( extTypeInfo.$extedType, true )
+         not failCreateLuavalWith( extTypeInfo.$extedType, .ToLua, false )
       {
          otherSrc = extTypeInfo.$extedType;
       }
@@ -6474,8 +6498,8 @@ pub fn TypeInfo.getFullName(
 
 let builtinTypeInfo2Map = rootProcessInfo.$typeInfo2Map.clone();
 
-pub fn createProcessInfo() : ProcessInfo {
-   return ProcessInfo.createUser( builtinTypeInfo2Map.clone() );
+pub fn createProcessInfo( validExtType:bool ) : ProcessInfo {
+   return ProcessInfo.createUser( validExtType, builtinTypeInfo2Map.clone() );
 }
 
 pub enum BitOpKind {
@@ -6712,7 +6736,7 @@ pub fn TypeAnalyzer.analyzeTypeItemList(
             }
             case .Ext {
                _checkAlternateTypeCount( 1 );
-               match self.processInfo.createLuaval( genericList[1] ) {
+               match self.processInfo.createLuaval( genericList[1], true ) {
                   case .OK ( extTypeInfo, _ ) {
                      typeInfo = extTypeInfo;
                   }
@@ -6753,9 +6777,7 @@ pub fn TypeAnalyzer.analyzeTypeItemList(
 }
 
 __test case1(ctrl) {
-   foreach processInfo, index in processInfoQueue {
-      print( index, processInfo.$idProvBase.$id, processInfo.$idProvExt.$id );
-   }
+   print( rootProcessInfo.$idProvBase.$id, rootProcessInfo.$idProvExt.$id );
    
    let builtinMap = {
       "$$": headTypeInfo,
@@ -6774,7 +6796,7 @@ __test case1(ctrl) {
    }
    let mut alt2typeMap = CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
 
-   let mut processInfo = ProcessInfo.createUser( builtinTypeInfo2Map.clone() );
+   let mut processInfo = ProcessInfo.createUser( true, builtinTypeInfo2Map.clone() );
    let mut testScope = new Scope( processInfo, rootScope, false## );
 
 
@@ -6805,7 +6827,7 @@ __test case1(ctrl) {
    _checkTypeAnalyzer( "...<int>", processInfo.createDDD( builtinTypeInt, true, false ) );
    {
       let workType;
-      match processInfo.createLuaval( builtinTypeForm ) {
+      match processInfo.createLuaval( builtinTypeForm, true ) {
          case .OK ( extTypeInfo, _ ) {
             workType = extTypeInfo;
          }

@@ -102,7 +102,8 @@ exec:
 	$(LUA) lune/base/base.lua test/test.lns ast
 	$(LUA) lune/base/base.lua test/test.lns LUA
 
-COM_OPT := --use-ipairs -Werror
+EXE_OPT := --valid-luaval
+COM_OPT := --use-ipairs -Werror --valid-luaval
 ifeq ($(WITH_GO),y)
 COM_OPT += -langGo
 endif
@@ -161,6 +162,7 @@ endef
 define selfhost_buildOp
 	$(call $5,$1,$2,$3,$4,base/Async)
 	$(call $5,$1,$2,$3,$4,base/Str)
+	$(call $5,$1,$2,$3,$4,base/Types)
 	$(call $5,$1,$2,$3,$4,base/Ver)
 	$(call $5,$1,$2,$3,$4,base/LuaMod)
 	$(call $5,$1,$2,$3,$4,base/LuneControl)
@@ -265,7 +267,7 @@ define test-inst-from-luarocks
 	(cd work/8; $(LUAROCKS) make $1-main-1.rockspec --local)
 
 	$(LNSC)
-	(cd work/8; $(LNSC) test/start.lns exe) > work/test8.result
+	(cd work/8; $(LNSC) test/start.lns exe $(EXE_OPT)) > work/test8.result
 
 	($(LUAROCKS) remove $1 --local)
 endef
@@ -484,7 +486,7 @@ TEST_CASE_LOGS := $(addprefix $(LOG_DIR)/,$(addsuffix .log,$(TEST_CASE)))
 
 # テストケースを実行して、テストケース毎にログをログディレクトリに出力する
 $(LOG_DIR)/%.log: test/error/%
-	-$(call exeLune,$(LNSC),$(TEST_DIR),$<,exe,2>&1) | grep -e 'error:' -e 'warning:' > $@
+	-$(call exeLune,$(LNSC),$(TEST_DIR),$<,exe,$(EXE_OPT) 2>&1) | grep -e 'error:' -e 'warning:' > $@
 
 test-error-all: $(TEST_CASE_LOGS)
 	cat $(TEST_CASE_LOGS)
@@ -566,12 +568,12 @@ test-cmpl: $(COMP_TARGETS)
 
 # オリジナルの LuneScript のテストを行ない、結果を work/test1.resut に出力する
 test-org:
-	$(call exeLune,$(LNSC),.,test/start.lns,glue,work/glue 2>&1)
+	$(call exeLune,$(LNSC),.,test/start.lns,glue,work/glue $(EXE_OPT) 2>&1)
 	$(MAKE) build-glue
-	$(call exeLune,$(LNSC),.,test/start.lns,exe,2>&1) > work/test1.result
-	$(call exeLune,$(LNSC),.,test/start.lns,save,--depends work/1/start.dep)
+	$(call exeLune,$(LNSC),.,test/start.lns,exe,$(EXE_OPT) 2>&1) > work/test1.result
+	$(call exeLune,$(LNSC),.,test/start.lns,save,$(EXE_OPT) --depends work/1/start.dep)
 
-	$(call exeLune,$(LNSC),.,test/Sub2.lns,SAVE,work/1)
+	$(call exeLune,$(LNSC),.,test/Sub2.lns,SAVE,work/1 $(EXE_OPT))
 
 
 	grep -v 'warning:' work/test1.result > work/test.result
@@ -601,9 +603,9 @@ test-new:
 #	$(call exeLune,work/3,test/start.lns,glue, ../newglue 2>&1)
 #	$(MAKE) build-glue GLUE_DIR=work/newglue
 
-	$(call exeLune,$(LNSC),work/3,test/start.lns,ast,) > work/ast2.result
-	$(call exeLune,$(LNSC),work/3,test/start.lns,lua,) > work/lua.result
-	$(call exeLune,$(LNSC),work/3,test/start.lns,exe,2>&1) > work/test2.result
+	$(call exeLune,$(LNSC),work/3,test/start.lns,ast,$(EXE_OPT)) > work/ast2.result
+	$(call exeLune,$(LNSC),work/3,test/start.lns,lua,$(EXE_OPT)) > work/lua.result
+	$(call exeLune,$(LNSC),work/3,test/start.lns,exe,$(EXE_OPT) 2>&1) > work/test2.result
 
 
 	mkdir -p work/3/log/comp
@@ -644,13 +646,13 @@ test-new2:
 	mv work/backup/* work/3_2/lune/base/
 	rmdir work/backup
 
-	$(call exeLune,$(LNSC),work/3_2,test/start.lns,save,--depends start.dep)
+	$(call exeLune,$(LNSC),work/3_2,test/start.lns,save,$(EXE_OPT) --depends start.dep)
 
 # オプション -u 付きで save して実行テスト
 	$(call mk_lune_proj_dir,work/4)
 	cp -a test work/4
 	cp -a work/3_2/lune work/4
-	$(call exeLune,$(LNSC),work/3_2,test/start.lns,-u SAVE ../4,)
+	$(call exeLune,$(LNSC),work/3_2,test/start.lns,-u SAVE ../4 $(EXE_OPT),)
 	(cd work/4; $(LUA) test/start.lua) > work/test5.result
 
 
@@ -704,7 +706,7 @@ test-comp2-main:
 
 #	$(MAKE) test-new
 
-	$(call exeLune,$(LNSC),work/3,test/start.lns,glue, ../newglue 2>&1)
+	$(call exeLune,$(LNSC),work/3,test/start.lns,glue, ../newglue $(EXE_OPT) 2>&1)
 	$(MAKE) build-glue GLUE_DIR=work/newglue
 	mv test/glueTest.so work/3/test/glueTest.so 
 	cp -a work/3 work/3_2
@@ -774,7 +776,7 @@ define setup-lua51-test
 	cp -a test $1
 	$(MAKE) build-glue GLUE_DIR=work/newglue LUA_INC_DIR=$(LUA51_INC) LUA_GLUE=51
 	mv test/glueTest51.so $1/test/glueTest.so 
-	grep -v -e 'skip-lua51' $2 test/start.lns > $1/test/start.lns
+	grep -v -e 'skip-lua51' $2 test/start.lns $(EXE_OPT) > $1/test/start.lns
 endef
 
 define setup-lua51-test-cross
@@ -790,7 +792,7 @@ test-lua51:
 			FROM_DIR=../3 TO_DIR=../5 LNS_OPT="-ol 51"
 	$(MAKE) test-lua51-mkruntime LUA=$(LUA51)
 	$(call setup-lua51-test,work/5)
-	(cd work/5; LUA_PATH=./?.lua $(LUA51) lune/base/base.lua test/start.lns -u exe ) > work/test6.result
+	(cd work/5; LUA_PATH=./?.lua $(LUA51) lune/base/base.lua test/start.lns -u exe $(EXE_OPT)) > work/test6.result
 
 # 比較用にクロスコンパイル前のテスト結果を取得
 	$(MAKE) test-lua51-sub LANG_KIND=lua LUA=$(LUA51) 
@@ -804,7 +806,7 @@ ifeq ($(WITH_GO),y)
 	cp $(LNSC_GO) work/7
 endif
 	$(call setup-lua51-test-cross,work/7)
-	$(call exeLune,$(LNSC),work/7,test/start.lns,-u -ol 51 SAVE,)
+	$(call exeLune,$(LNSC),work/7,test/start.lns,-u -ol 51 SAVE,$(EXE_OPT))
 	(cd work/7; $(LUA51) test/start.lua) | sed 's/\.0//g' > work/test7-3.result
 
 	diff work/test6.result  work/test7.result 
@@ -819,12 +821,12 @@ test-lua51-sub:
 #	$(call selfhost_build,work/5,../6)
 	$(call setup-lua51-test,work/6)
 	$(call exeLune,$(LNSC),work/6,-mklunemod,lune/base/runtime.lua)
-	$(call exeLune,$(LNSC),work/6,test/start.lns,exe,) | sed 's/\.0//g' > work/test7.result
+	$(call exeLune,$(LNSC),work/6,test/start.lns,exe,$(EXE_OPT)) | sed 's/\.0//g' > work/test7.result
 
 	cp -a work/6 work/6_2
 	rm -rf work/6_2/test
 	$(call setup-lua51-test-cross,work/6_2)
-	$(call exeLune,$(LNSC),work/6_2,test/start.lns,exe,) | sed 's/\.0//g' > work/test7_2.result
+	$(call exeLune,$(LNSC),work/6_2,test/start.lns,exe,$(EXE_OPT)) | sed 's/\.0//g' > work/test7_2.result
 
 
 
@@ -841,10 +843,10 @@ endif
 	cp work/3/lune/base/*.lua $(ORG_DIR)lune/base/
 	cp work/3/lune/base/*.meta $(ORG_DIR)lune/base/
 	cp work/3/lune/*.* $(ORG_DIR)lune/
-ifeq ($(WITH_GO),y)
-	cp work/3/$(LNSC_GO) $(ORG_DIR).
-	cp work/3/lune/base/*.go $(ORG_DIR)lune/base/
-endif
+	if [ -f work/3/$(LNSC_GO) ]; then			\
+		cp work/3/$(LNSC_GO) $(ORG_DIR).;		\
+		cp work/3/lune/base/*.go $(ORG_DIR)lune/base/;	\
+	fi
 ifneq ($(ENABLE_LUA51),)
 	cp work/6/lune/base/*.lns $(ORG_DIR)legacy/lua51/lune/base/
 	cp work/6/lune/base/*.lua $(ORG_DIR)legacy/lua51/lune/base/
@@ -1168,7 +1170,7 @@ define setup-go
 	mkdir -p $1
 	rsync -a --include='*.lua' \
 			--include='*.lns' --exclude='*.*' lune $1
-	cp -au build.counter lune/base/runtime_go $1/lune/base/
+	cp -au lune/base/runtime_go $1/lune/base/
 	cp -au build.counter $1
 	-rm work/result-testGo.txt work/result-testGo2.txt
 endef
@@ -1271,6 +1273,7 @@ test-testGo:
 
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Testing,--testing,./test)
 #	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Str,lune/base,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Types,--testing,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Async,--testing,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Ver,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Code,lune/base,./test)
@@ -1320,6 +1323,7 @@ go-build:
 
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Testing,,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Async,,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Types,,./test)
 #	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Str,,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Ver,,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Code,,./test)

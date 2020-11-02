@@ -1774,3 +1774,7 @@ _section();
       }
    }
 }
+_section();
+{
+   print( (unwrap tonumber( "0xFFFD" ##) default 0)@@int );
+}
