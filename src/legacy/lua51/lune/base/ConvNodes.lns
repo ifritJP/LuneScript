@@ -1,0 +1,428 @@
+/*
+MIT License
+
+Copyright (c) 2019, 2020 ifritJP
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+import lune.base.Parser;
+import lune.base.Nodes;
+import lune.base.Util;
+
+pub abstract class Filter<T> {
+}
+
+pub proto abstract class Node;
+   
+pub form NodeVisitor(
+   node:&Node, parent:&Node, relation:str, depth:int ): Nodes.NodeVisitMode;
+
+pub abstract class Node {
+   pri let id: int { pub };
+   pri let pos: &Parser.Position { pub };
+   pri let kind: str {pub};
+   pub fn processFilter<OPT>( filter: Filter<OPT>, opt:OPT ) {
+   }
+   pub abstract fn visit( visitor:NodeVisitor, depth:int ): bool;
+}
+
+pub abstract class ExpNode extend Node {
+}
+
+form createFromFunc( node:&Nodes.Node ) : Node;
+let mut nodeKind2createFromFunc:Map<int,createFromFunc> = {};
+
+pub static fn Node.createFrom( node:&Nodes.Node ) : Node {
+   let! func = nodeKind2createFromFunc[ node.$kind ] {
+      Util.err( "not support -- %s" (Nodes.getNodeKindName( node.$kind ) ) );
+   };
+   return func( node );
+}
+
+static fn Node_createFromNode( node:&Nodes.Node ) : Node {
+   return Node.createFrom( node );
+}
+
+
+macro _declNode( name:str, hasOrg:bool, autoCreate:bool, fieldList:List<Map<str,str>> ) {
+   {
+      let className = "%sNode" (name);
+      let mut fieldStatList:List<stat> = [];
+      let mut visitStatList:List<stat> = [];
+      let mut createParamList:List<stat> = [];
+      let mut paramStatList:List<stat> = [];
+      let createFromName = "%s_createFromNode" ( className );
+
+      
+      foreach field in fieldList {
+         foreach typeName, workName in field {
+            let fieldName = workName.gsub( "^@", "" );
+            let bareTypeName = typeName.gsub( "[&!]", "" );
+            fieldStatList.insert( `{let ,,,fieldName:,,,typeName {pub}; } );
+
+
+            // 子 Node を列挙する処理
+            if typeName.find( "Node" ## ) and not workName.find( "^@"## ) {
+               {
+                  let oneVisitStat = `{
+                     switch visitor( child, self, ,,fieldName, depth ) {
+                        case .Child {
+                           if not child.visit( visitor, depth + 1 ) {
+                              return false;
+                           }
+                        }
+                        case .End {
+                           return false;
+                        }
+                     }
+                  };
+
+                  fn processNilable( varName:str, statVar:stat ) {
+                     if typeName.find( "!$" ## ) {
+                        visitStatList.insert( `{
+                           {
+                              if! let ,,,varName = self.,,,fieldName {
+                                 ,,statVar;
+                              }
+                           }
+                        });
+                     }
+                     else {
+                        visitStatList.insert( `{
+                           {
+                              let ,,,varName = self.,,,fieldName;
+                              ,,statVar;
+                           }
+                        } );
+                     }
+                  }
+                  
+                  if typeName.find( "List<" ## ) {
+                     let workStat = `{
+                        foreach child in list {
+                           ,,oneVisitStat;
+                        }
+                     };
+                     processNilable( "list", workStat );
+                  }
+                  else {
+                     processNilable( "child", oneVisitStat );
+                  }
+               }
+
+
+               {
+                  
+                  fn processNilable( varName:str, statVar:stat ) : stat {
+                     if typeName.find( "!$" ## ) {
+                        return `{
+                           let! ,,,varName = node.$,,,fieldName {
+                              return nil;
+                           };
+                           ,,statVar
+                        };
+                     }
+                     else {
+                        return `{
+                           let ,,,varName = node.$,,,fieldName;
+                           ,,statVar
+                        };
+                     }
+                  }
+
+                  let inStat:stat;
+                  if typeName.find( "List<" ## ) {
+                     let workStat = `{
+                        let mut expList:List<&Node> = [];
+                        foreach exp in list {
+                           expList.insert( Node.createFrom( exp ) );
+                        }
+                        return expList;
+                     };
+                     inStat = processNilable( "list", workStat );
+                  } else {
+                     inStat = processNilable(
+                        "child", `{ return ,,,"%s_createFromNode" ( bareTypeName )( child ); } );
+                  }
+                  let createName = "create%s" (fieldName);
+                  createParamList.insert(
+                     `{
+                        fn ,,,createName~~() : ,,,typeName {
+                           ,,inStat
+                        }
+                     }
+                  );
+                  paramStatList.insert( `{, ,,,createName~~() } );
+               }
+            }
+         }
+      }
+
+      
+
+      
+      let createFromStat;
+      let orgNodeStat;
+      if hasOrg {
+         orgNodeStat = `{let orgNode: &Nodes.,,,className {pub}};
+      } else {
+         orgNodeStat = `{};
+      }
+      if autoCreate {
+         createFromStat = `{
+            pub static fn ,,,createFromName~~(
+               workNode:&Nodes.Node ) : ,,,className
+            {
+               let! node = workNode@@@Nodes.,,,className {
+                  Util.err( "illegal node -- %s, %s"
+                            (Nodes.getNodeKindName( workNode.$kind ), ,,className) );
+               };
+               ,,createParamList;
+               
+               return new ,,,className~~( node.$id, node.$pos,
+                                          ,,className, node ,,paramStatList );      
+            }
+
+            nodeKind2createFromFunc[ Nodes.NodeKind.$,,,name ] =
+               fn ( node:&Nodes.Node ) : Node {
+                  return ,,,createFromName~~( node );
+               };
+            };
+      } else {
+         createFromStat = `{};
+      }
+      fieldStatList.insert( `{
+         pub override fn processFilter<OPT>( filter: Filter<OPT>, opt:OPT ) {
+            filter.,,,"process%s" (name) (self, opt );
+         } } );
+      let mut relateStat:List<stat> = [];
+      relateStat.insert( `{
+         pub abstract fn Filter. ,,,"process%s" (name) ( node: &,,,className, opt:T ) mut;
+      } );
+   }
+   pub proto class ,,,className extend ExpNode;
+   ,,relateStat;
+   pub class ,,,className extend ExpNode {
+      ,,orgNodeStat;
+      ,,fieldStatList;
+      pub override fn visit( visitor:NodeVisitor, depth:int ): bool {
+         ,,visitStatList;
+         return true;
+      }
+   }
+   ,,createFromStat;
+}
+
+_declNode( "ExpList", true, true,
+           [ { "expList": "&List<&Node>" } ] );
+_declNode( "ExpNew", true, true,
+           [ { "argList": "&ExpListNode!" } ] );
+_declNode( "ExpUnwrap", true, true,
+           [ { "exp": "&Node" },
+             { "default": "&Node!" } ] );
+_declNode( "ExpRef", true, true,
+           [  ] );
+_declNode( "ExpOp2", true, true,
+           [ { "exp1": "&Node" },
+                  { "exp2": "&Node" } ] );
+_declNode( "ExpCast", true, true,
+           [ { "exp": "&Node" } ] );
+_declNode( "ExpToDDD", true, true,
+           [ { "expList": "&ExpListNode" } ] );
+_declNode( "ExpSubDDD", true, true,
+           [ { "src": "&Node" } ] );
+_declNode( "ExpOp1", true, true,
+           [ { "exp": "&Node" } ] );
+_declNode( "ExpRefItem", true, true,
+           [ { "val": "&Node" },
+             { "index": "&Node!" } ] );
+_declNode( "ExpCall", true, true,
+           [ { "func": "&Node" },
+             { "argList": "&ExpListNode!" }] );
+_declNode( "ExpMRet", true, true,
+           [ { "mRet": "&Node" } ] );
+_declNode( "ExpAccessMRet", true, true,
+           [ { "mRet": "&Node" } ] );
+_declNode( "ExpMultiTo1", true, true,
+           [ { "exp": "&Node" } ] );
+_declNode( "ExpParen", true, true,
+           [ { "exp": "&Node" } ] );
+_declNode( "ExpOmitEnum", true, true,
+           [  ] );
+_declNode( "RefField", true, true,
+           [ { "prefix": "&Node" } ] );
+_declNode( "GetField", true, true,
+           [ { "prefix": "&Node" } ] );
+_declNode( "DeclFunc", true, true,
+           [  ] );
+_declNode( "NewAlgeVal", true, true,
+           [ { "paramList": "&List<&Node>" } ] );
+_declNode( "LuneKind", true, true,
+           [ { "exp": "&Node" } ] );
+_declNode( "LiteralChar", true, true,
+           [  ] );
+_declNode( "LiteralInt", true, true,
+           [  ] );
+_declNode( "LiteralReal", true, true,
+           [  ] );
+_declNode( "LiteralArray", true, true,
+           [ { "expList": "&ExpListNode!" } ] );
+_declNode( "LiteralList", true, true,
+           [ { "expList": "&ExpListNode!" } ] );
+_declNode( "LiteralSet", true, true,
+           [ { "expList": "&ExpListNode!" } ] );
+pub class PairItem {
+   pri let key: Node { pub };
+   pri let val: Node { pub };
+}
+_declNode( "LiteralMap", true, false,
+           [ { "pairList": "List<&PairItem>" } ] );
+pub static fn LiteralMapNode_createFromNode( workNode:&Nodes.Node ) : LiteralMapNode
+{
+   let! node = workNode@@@Nodes.LiteralMapNode {
+      Util.err( "illegal node -- %s -- %s"
+                (workNode.$kind, __func__));
+   };
+   let mut pairList:List<&PairItem> = [];
+   foreach item in node.$pairList {
+      let key = Node_createFromNode( item.$key );
+      let val = Node_createFromNode( item.$val );
+      pairList.insert( new PairItem( key, val ));
+   }
+   return new LiteralMapNode( node.$id, node.$pos, "LiteralMapNode", node, pairList );
+}
+nodeKind2createFromFunc[ Nodes.NodeKind.$LiteralMap ] = fn ( node:&Nodes.Node ) : Node {
+   return Node_createFromNode( node );
+};
+
+_declNode( "LiteralString", true, true,
+           [ { "dddParam": "&ExpListNode!" } ] );
+_declNode( "LiteralBool", true, true,
+           [  ] );
+_declNode( "LiteralSymbol", true, true,
+           [  ] );
+_declNode( "NilAccPush", false, false,
+           [ { "exp": "&Node" } ] );
+_declNode( "NilAccFin", false, false,
+           [ { "exp": "&Node" } ] );
+_declNode( "NilAccFinCall", false, false,
+           [ { "exp": "&Node" } ] );
+_declNode( "NilAccLast", false, false,
+           [ { "exp": "&Node" } ] );
+_declNode( "CallExt", false, false,
+           [ { "exp": "&Node" } ] );
+_declNode( "CondPopVal", false, false,
+           [ { "exp": "&Node" } ] );
+_declNode( "CondSetVal", false, false,
+           [ { "exp": "&Node" } ] );
+_declNode( "GetAt", false, false,
+           [ { "exp": "&Node" },
+             { "index": "&Node" }] );
+
+pub fn convertNodes( targetNode:&Nodes.Node ) {
+   targetNode.visit(
+      fn ( node:&Nodes.Node, parent:&Nodes.Node,
+           relation:str, depth:int ): Nodes.NodeVisitMode
+      {
+         print( "%s: %s: %d:%d"
+            ( string.rep( " ", depth * 3 ) .. relation,
+              Nodes.getNodeKindName( node.$kind ),
+              node.$pos.lineNo, node.$pos.column ) );
+         if! let createFunc = nodeKind2createFromFunc[ node.$kind ] {
+            let workNode = createFunc( node );
+            print( "%s: conved %s: %d:%d"
+               ( string.rep( " ", depth * 3 ) .. relation,
+                 workNode.$kind, workNode.$pos.lineNo, workNode.$pos.column ) );
+            workNode.visit(
+               fn ( convNode:&Node, convParent:&Node,
+                    convRelation:str, convDepth:int): Nodes.NodeVisitMode
+               {
+                  print( "%s: conved %s: %d:%d"
+                     ( string.rep( " ", convDepth * 3 ) .. convRelation,
+                       convNode.$kind, convNode.$pos.lineNo, convNode.$pos.column ) );
+                  return .Child;
+               }, depth );
+            if node.$kind == Nodes.NodeKind.$DeclFunc {
+               return .Child;
+            }
+            return .Next;
+         } else {
+            return .Child;
+         }
+      }, 0 );
+}
+
+__test {
+   import lune.base.LuaVer;
+   import lune.base.Option;
+   import lune.base.convLua;
+}
+
+
+__test case1(ctrl) {
+   LuaVer.setCurVer( 53 );
+
+   let code = ```
+class Test {
+  let val:int {pub};
+  let list:List<int> {pub};
+  pub fn __init() {
+    self.val = 0;
+    self.list = [ 1, 2, 3 ];
+  }
+}
+fn foo(): int, int {
+  return 1, 2;
+}
+fn sub( val:int, ... ) {
+   print( ... );
+}
+enum Val {
+  Val1,
+  Val2,
+}
+fn sub2( val:Val ) {
+}
+alge Bar {
+  Val1(int,int)
+}
+fn func( test:Test! ) {
+   let! test2 = test {
+      return;
+   };
+   let val = (unwrap test default test2).$val;
+   let val2 = val@@real;
+   let val3 = #test2.$list;
+   let val4 = test2.$list[1] + foo();
+   let bar = Bar.Val1( 1, 2 );
+   let kind = _kind( 1 );
+   print( test$.$val );
+   sub( foo() );
+   sub2( .Val1 );
+}
+func( new Test() );
+```;
+   
+   let scriptPath = "test.lns";
+   let option = Option.createDefaultOption( scriptPath );
+   let mut ast = convLua.createAst( scriptPath, code, option );
+
+   convertNodes( ast.$node );
+}

@@ -521,11 +521,6 @@ pub override fn FormatterFilter.processDeclArgDDD(
 {
    self.write( "..." );
 };
-pub override fn FormatterFilter.processExpDDD(
-   node: &Nodes.ExpDDDNode, opt:Opt ) mut
-{
-   self.write( "..." );
-};
 pub override fn FormatterFilter.processExpSubDDD(
    node: &Nodes.ExpSubDDDNode, opt:Opt ) mut
 {

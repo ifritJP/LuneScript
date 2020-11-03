@@ -752,6 +752,15 @@ fn TransUnit.checkMatchValType(
 Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
 {
    let mut argTypeList = funcTypeInfo.$argTypeInfoList;
+   if funcTypeInfo.$kind == .Ext {
+      let extTypeList, mess = Ast.convToExtTypeList( self.processInfo, argTypeList );
+      when! extTypeList {
+         argTypeList = extTypeList;
+      } else {
+         self.addErrMess( pos, "not support argType on Luaval -- %s" (mess));
+      }
+   }
+   
    switch funcTypeInfo {
       case builtinFunc.list_insert, builtinFunc.set_add, builtinFunc.set_del {
          //argTypeList = genericTypeList;
@@ -3443,7 +3452,7 @@ fn TransUnit.analyzeExpUnwrap( firstToken: &Parser.Token ) mut : Nodes.Node {
    self.helperInfo.useUnwrapExp = true;
 
    if Ast.isExtType( expType.$nonnilableType ) {
-      match self.processInfo.createLuaval( unwrapType ) {
+      match self.processInfo.createLuaval( unwrapType, false ) {
          case .OK( work, _ ) {
             unwrapType = work;
          }
@@ -3780,11 +3789,6 @@ fn TransUnit.analyzeExp(
          else {
             self.error( "illegal '.'" );
          }
-      }
-      elseif token.txt == "..." {
-         return Nodes.ExpDDDNode.create(
-            self.nodeManager, firstToken.pos,
-            self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], token );
       }
       elseif token.txt == '[' or token.txt == '[@' {
          exp = self.analyzeListConst( token, expectType );

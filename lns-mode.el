@@ -34,7 +34,6 @@
 
 
 (defvar lns-indent-level 3)
-(defvar lns-command-path "lns" )
 
 (defvar lns-no-token-pattern "[^a-zA-Z0-9_]")
 (defvar lns-no-space-pattern "[^\s \t]")
@@ -187,6 +186,7 @@
 (defvar lns-imenu-generic-expression
   '((nil "\\(\\_<fn\\_>\\|\\_<class\\_>\\)[ \t]*\\([A-Za-z0-9_\.]+\\)" 2)))
 
+(defvar lns-proj-file "lune.js")
 
 (defun lns-proj-search ()
   ""
@@ -194,7 +194,7 @@
     (when buffer-file-name
       (setq dir (file-name-directory (buffer-file-name))))
     (while (and dir
-		(not (file-exists-p (expand-file-name "lune.js" dir))))
+		(not (file-exists-p (expand-file-name lns-proj-file dir))))
       (if (equal dir "/")
 	  (setq dir nil)
 	(setq dir (file-name-directory (directory-file-name dir)))))
@@ -205,6 +205,24 @@
   (if (boundp 'lns-proj-dir)
       lns-proj-dir
     (lns-proj-search)))
+
+(defun lns-get-proj-info ()
+  (let ((proj-dir (lns-get-proj-dir)))
+    (with-temp-buffer
+      (insert-file-contents (expand-file-name lns-proj-file proj-dir))
+      (let ((json-object-type 'plist)
+	    (json-array-type 'list)
+	    obj)
+	(setq obj (json-read-from-string
+		   (buffer-substring-no-properties (point-min) (point-max))))
+	obj
+	)
+      )
+    ))
+
+(defun lns-proj-get-cmd-option (proj)
+  (plist-get proj :cmd_option)
+  )
 
 ;;;###autoload
 (define-derived-mode lns-mode lns--prog-mode "Lns"

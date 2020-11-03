@@ -680,7 +680,7 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
             do
                local val = getLiteralMacroVal( literal )
                if val ~= nil then
-                  argValMap[index] = val
+                  argValMap[index] = _moduleObj.toLuaval( val )
                   local declArgNode = macroArgNodeList[index]
                   
                   if argNode:get_expType() == Ast.builtinTypeSymbol then
@@ -733,7 +733,7 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
       if arg:get_typeInfo():get_kind() ~= Ast.TypeInfoKind.DDD then
          local argType = arg:get_typeInfo()
          local argName = arg:get_name()
-         self.symbol2ValueMapForMacro[argName] = Nodes.MacroValInfo.new(_moduleObj.toLuaval( argValMap[index] ), argType, macroArgName2ArgNode[argName])
+         self.symbol2ValueMapForMacro[argName] = Nodes.MacroValInfo.new(argValMap[index], argType, macroArgName2ArgNode[argName])
       else
        
          return nil, "not support ... in macro"

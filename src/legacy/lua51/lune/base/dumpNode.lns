@@ -168,7 +168,19 @@ pub override fn dumpFilter.processDeclEnum(
    let enumTypeInfo = unwrap (node.$expType@@@Ast.EnumTypeInfo);
    foreach name in node.$valueNameList {
       let valInfo = unwrap enumTypeInfo.getEnumValInfo( name.txt );
-      self.writeln( opt, "  %s: %s" ( name.txt, valInfo.$val.$_txt ) );
+      let val:stem;
+      _match valInfo.$val {
+         case .Int( x ) {
+            val = x;
+         }
+         case .Real( x ) {
+            val = x;
+         }
+         case .Str( x ) {
+            val = x;
+         }
+      }
+      self.writeln( opt, "  %s: %s, %s" ( name.txt, valInfo.$val.$_txt, val ) );
    }
 }
 
@@ -323,11 +335,6 @@ pub override fn dumpFilter.processDeclArg(
 };
 pub override fn dumpFilter.processDeclArgDDD(
    node: &Nodes.DeclArgDDDNode, opt:Opt ) mut
-{
-   self.dump( opt, node, "..." );
-};
-pub override fn dumpFilter.processExpDDD(
-   node: &Nodes.ExpDDDNode, opt:Opt ) mut
 {
    self.dump( opt, node, "..." );
 };

@@ -338,11 +338,6 @@ pub override fn dumpFilter.processDeclArgDDD(
 {
    self.dump( opt, node, "..." );
 };
-pub override fn dumpFilter.processExpDDD(
-   node: &Nodes.ExpDDDNode, opt:Opt ) mut
-{
-   self.dump( opt, node, "..." );
-};
 pub override fn dumpFilter.processExpSubDDD(
    node: &Nodes.ExpSubDDDNode, opt:Opt ) mut
 {

@@ -694,6 +694,10 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
    let mut listIndex = 1;
 
    fn outputDepend( typeInfo:&Ast.TypeInfo, moduleTypeInfo:&Ast.TypeInfo): bool {
+      if typeInfo.$nilable and typeInfo.$nonnilableType ~= typeInfo {
+         return false;
+      }
+      
       if! let moduleIndex = importModuleType2Index[ moduleTypeInfo ] {
          let moduleInfo = unwrap node.$importModule2moduleInfo[ moduleTypeInfo ];
          if! let extId = moduleInfo.$localTypeInfo2importIdMap[ typeInfo ] {
@@ -708,19 +712,23 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
    
    let mut wroteTypeIdSet:Set<int> = (@);
    fn outputTypeInfo( typeInfo: &Ast.TypeInfo ) {
-      let mut force = false;
-      if Ast.isExtId( typeInfo ) {
-
-         let moduleTypeInfo = typeInfo.getModule();
-         if! let moduleInfo = node.$importModule2moduleInfo[ moduleTypeInfo ] {
-            if moduleInfo.$localTypeInfo2importIdMap[ typeInfo ] {
-               return;
-            }
-         }
-         if moduleTypeInfo == self.moduleTypeInfo {
-            force = true;
-         }
+      if Ast.isBuiltin( typeInfo.$typeId) {
+         return;
       }
+      
+      // let mut force = false;
+      // if Ast.isExtId( typeInfo ) {
+
+      //    let moduleTypeInfo = typeInfo.getModule();
+      //    // if! let moduleInfo = node.$importModule2moduleInfo[ moduleTypeInfo ] {
+      //    //    if moduleInfo.$localTypeInfo2importIdMap[ typeInfo ] {
+      //    //       return;
+      //    //    }
+      //    // }
+      //    if moduleTypeInfo == self.moduleTypeInfo {
+      //       force = true;
+      //    }
+      // }
 
 
       switch typeInfo.$kind {
@@ -741,7 +749,7 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
          return;
       }
       wroteTypeIdSet.add( typeId );
-      if force or checkExportTypeInfo( typeInfo ) {
+      // if force or checkExportTypeInfo( typeInfo ) {
          self.write( "__typeInfoList[%d] = " (listIndex) );
          listIndex = listIndex + 1;
 
@@ -751,7 +759,7 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
          }
          typeInfo.serialize( self, validChildren );
          //self.writeln( "-- %s" (typeInfo.getTxt(##) ) );
-      }
+      // }
    }
 
    foreach typeInfo, typeId in self.pubEnumId2EnumTypeInfo {
@@ -847,6 +855,10 @@ pub override fn convFilter.processRoot(
    if self.needModuleObj {
       self.writeln( "local _moduleObj = {}" );
    }
+   if self.enableTest {
+      self.writeln( "_moduleObj.__enableTest = true" );
+   }
+
    // if self.enableTest {
    //    self.writeln( "_moduleObj.__testMap = {}" );
    // }
@@ -2172,12 +2184,6 @@ pub override fn convFilter.processDeclArgDDD(
    self.write( "..." );
 };
 
-pub override fn convFilter.processExpDDD(
-   node: Nodes.ExpDDDNode, opt: Opt ) mut
-{
-   self.write( "..." );
-};
-
 pub override fn convFilter.processDeclFunc(
    node: Nodes.DeclFuncNode, opt: Opt ) mut
 {
@@ -3441,11 +3447,10 @@ pub class MacroEvalImp extend Nodes.MacroEval {
 __test {
    import lune.base.frontInterface;
    import lune.base.Testing;
-   
-   pub fn createAst(
-      scriptPath:str, lnsCode:str, option:&Option.Option ) : TransUnit.ASTInfo
+
+   pub fn createAstFromStream(
+      scriptPath:str, stream:iStream, option:&Option.Option ) : TransUnit.ASTInfo
    {
-      let mut inStream = new Parser.TxtStream( lnsCode );
       let moduleId = frontInterface.ModuleId.createId( 0.0, 0 );
       let mut moduleInfo = new frontInterface.ImportModuleInfo();
       
@@ -3454,8 +3459,23 @@ __test {
          moduleId, moduleInfo, new MacroEvalImp(),
          nil, .Compile, nil, option.targetLuaVer, option.transCtrlInfo );
       
-      let mut parser = new Parser.StreamParser( inStream, scriptPath, false );
+      let mut parser = new Parser.StreamParser( stream, scriptPath, false );
       return transUnit.createAST( parser, false, mod );
+   }
+   
+   
+   pub fn createAstFromFile( scriptPath:str, option:&Option.Option ) : TransUnit.ASTInfo {
+      let! mut stream = io.open( scriptPath## ) {
+         Util.err( "not failed to open -- %s" (scriptPath) );
+      };
+      return createAstFromStream( scriptPath, stream, option );
+   }
+   
+   pub fn createAst(
+      scriptPath:str, lnsCode:str, option:&Option.Option ) : TransUnit.ASTInfo
+   {
+      return createAstFromStream(
+         scriptPath, new Parser.TxtStream( lnsCode ), option );
    }
    
    pub fn getTestLnsCode() : str {

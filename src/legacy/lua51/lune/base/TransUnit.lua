@@ -314,6 +314,7 @@ end
 
 
 
+local Types = _lune.loadModule( 'lune.base.Types' )
 local Meta = _lune.loadModule( 'lune.base.Meta' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Util = _lune.loadModule( 'lune.base.Util' )
@@ -1000,7 +1001,7 @@ function TransUnit.new( moduleId, importModuleInfo, macroEval, analyzeModule, mo
    return obj
 end
 function TransUnit:__init(moduleId, importModuleInfo, macroEval, analyzeModule, mode, pos, targetLuaVer, ctrl_info) 
-   self.processInfo = Ast.createProcessInfo(  )
+   self.processInfo = Ast.createProcessInfo( ctrl_info.validLuaval )
    self.accessSymbolSetQueue = AccessSymbolSetQueue.new()
    self.advertisedTypeSet = {}
    self.closureFunList = {}
@@ -1231,7 +1232,7 @@ function TransUnit:pushModule( externalFlag, name, mutable )
          local scope = self:pushScope( true )
          typeInfo = self.processInfo:createModule( scope, parentInfo, externalFlag, modName, mutable )
          
-         local _5733, existSym = parentScope:addClass( self.processInfo, modName, nil, typeInfo )
+         local _5714, existSym = parentScope:addClass( self.processInfo, modName, nil, typeInfo )
          if existSym ~= nil then
             self:addErrMess( self.parser:getLastPos(  ), string.format( "module symbols exist -- %s.%s -- %s.%s", existSym:get_namespaceTypeInfo():getFullName( self.typeNameCtrl, parentScope, false ), existSym:get_name(), parentInfo:getFullName( self.typeNameCtrl, parentScope, false ), modName) )
          end
@@ -1544,7 +1545,7 @@ end
 function TransUnit:createExtType( pos, typeInfo )
 
    do
-      local _matchExp = self.processInfo:createLuaval( typeInfo )
+      local _matchExp = self.processInfo:createLuaval( typeInfo, true )
       if _matchExp[1] == Ast.LuavalResult.OK[1] then
          local work = _matchExp[2][1]
          local _ = _matchExp[2][2]
@@ -1598,7 +1599,6 @@ function _TypeInfo.new(  )
    return obj
 end
 function _TypeInfo:__init() 
-   self.parentId = Ast.rootTypeId
    self.typeId = Ast.rootTypeId
    self.skind = Ast.SerializeKind.Normal
 end
@@ -1638,7 +1638,6 @@ end
 function _TypeInfo._fromMapSub( obj, val )
    local memInfo = {}
    table.insert( memInfo, { name = "skind", func = Ast.SerializeKind._from, nilable = false, child = {} } )
-   table.insert( memInfo, { name = "parentId", func = _lune._toInt, nilable = false, child = {} } )
    table.insert( memInfo, { name = "typeId", func = _lune._toInt, nilable = false, child = {} } )
    local result, mess = _lune._fromMap( obj, val, memInfo )
    if not result then
@@ -1685,18 +1684,17 @@ end
 function _TypeInfoNilable.setmeta( obj )
   setmetatable( obj, { __index = _TypeInfoNilable  } )
 end
-function _TypeInfoNilable.new( nilable, orgTypeId )
+function _TypeInfoNilable.new( orgTypeId )
    local obj = {}
    _TypeInfoNilable.setmeta( obj )
    if obj.__init then
-      obj:__init( nilable, orgTypeId )
+      obj:__init( orgTypeId )
    end
    return obj
 end
-function _TypeInfoNilable:__init( nilable, orgTypeId )
+function _TypeInfoNilable:__init( orgTypeId )
 
    _TypeInfo.__init( self)
-   self.nilable = nilable
    self.orgTypeId = orgTypeId
 end
 function _TypeInfoNilable:_toMap()
@@ -1720,7 +1718,6 @@ function _TypeInfoNilable._fromMapSub( obj, val )
    end
 
    local memInfo = {}
-   table.insert( memInfo, { name = "nilable", func = _lune._toBool, nilable = false, child = {} } )
    table.insert( memInfo, { name = "orgTypeId", func = _lune._toInt, nilable = false, child = {} } )
    local result, mess = _lune._fromMap( obj, val, memInfo )
    if not result then
@@ -1753,17 +1750,18 @@ end
 function _TypeInfoAlias.setmeta( obj )
   setmetatable( obj, { __index = _TypeInfoAlias  } )
 end
-function _TypeInfoAlias.new( rawTxt, srcTypeId )
+function _TypeInfoAlias.new( parentId, rawTxt, srcTypeId )
    local obj = {}
    _TypeInfoAlias.setmeta( obj )
    if obj.__init then
-      obj:__init( rawTxt, srcTypeId )
+      obj:__init( parentId, rawTxt, srcTypeId )
    end
    return obj
 end
-function _TypeInfoAlias:__init( rawTxt, srcTypeId )
+function _TypeInfoAlias:__init( parentId, rawTxt, srcTypeId )
 
    _TypeInfo.__init( self)
+   self.parentId = parentId
    self.rawTxt = rawTxt
    self.srcTypeId = srcTypeId
 end
@@ -1788,6 +1786,7 @@ function _TypeInfoAlias._fromMapSub( obj, val )
    end
 
    local memInfo = {}
+   table.insert( memInfo, { name = "parentId", func = _lune._toInt, nilable = false, child = {} } )
    table.insert( memInfo, { name = "rawTxt", func = _lune._toStr, nilable = false, child = {} } )
    table.insert( memInfo, { name = "srcTypeId", func = _lune._toInt, nilable = false, child = {} } )
    local result, mess = _lune._fromMap( obj, val, memInfo )
@@ -1810,17 +1809,18 @@ end
 function _TypeInfoDDD.setmeta( obj )
   setmetatable( obj, { __index = _TypeInfoDDD  } )
 end
-function _TypeInfoDDD.new( itemTypeId, extTypeFlag )
+function _TypeInfoDDD.new( parentId, itemTypeId, extTypeFlag )
    local obj = {}
    _TypeInfoDDD.setmeta( obj )
    if obj.__init then
-      obj:__init( itemTypeId, extTypeFlag )
+      obj:__init( parentId, itemTypeId, extTypeFlag )
    end
    return obj
 end
-function _TypeInfoDDD:__init( itemTypeId, extTypeFlag )
+function _TypeInfoDDD:__init( parentId, itemTypeId, extTypeFlag )
 
    _TypeInfo.__init( self)
+   self.parentId = parentId
    self.itemTypeId = itemTypeId
    self.extTypeFlag = extTypeFlag
 end
@@ -1845,6 +1845,7 @@ function _TypeInfoDDD._fromMapSub( obj, val )
    end
 
    local memInfo = {}
+   table.insert( memInfo, { name = "parentId", func = _lune._toInt, nilable = false, child = {} } )
    table.insert( memInfo, { name = "itemTypeId", func = _lune._toInt, nilable = false, child = {} } )
    table.insert( memInfo, { name = "extTypeFlag", func = _lune._toBool, nilable = false, child = {} } )
    local result, mess = _lune._fromMap( obj, val, memInfo )
@@ -1872,17 +1873,18 @@ end
 function _TypeInfoAlternate.setmeta( obj )
   setmetatable( obj, { __index = _TypeInfoAlternate  } )
 end
-function _TypeInfoAlternate.new( txt, accessMode, baseId, ifList, belongClassFlag, altIndex )
+function _TypeInfoAlternate.new( parentId, txt, accessMode, baseId, ifList, belongClassFlag, altIndex )
    local obj = {}
    _TypeInfoAlternate.setmeta( obj )
    if obj.__init then
-      obj:__init( txt, accessMode, baseId, ifList, belongClassFlag, altIndex )
+      obj:__init( parentId, txt, accessMode, baseId, ifList, belongClassFlag, altIndex )
    end
    return obj
 end
-function _TypeInfoAlternate:__init( txt, accessMode, baseId, ifList, belongClassFlag, altIndex )
+function _TypeInfoAlternate:__init( parentId, txt, accessMode, baseId, ifList, belongClassFlag, altIndex )
 
    _TypeInfo.__init( self)
+   self.parentId = parentId
    self.txt = txt
    self.accessMode = accessMode
    self.baseId = baseId
@@ -1911,6 +1913,7 @@ function _TypeInfoAlternate._fromMapSub( obj, val )
    end
 
    local memInfo = {}
+   table.insert( memInfo, { name = "parentId", func = _lune._toInt, nilable = false, child = {} } )
    table.insert( memInfo, { name = "txt", func = _lune._toStr, nilable = false, child = {} } )
    table.insert( memInfo, { name = "accessMode", func = Ast.AccessMode._from, nilable = false, child = {} } )
    table.insert( memInfo, { name = "baseId", func = _lune._toInt, nilable = false, child = {} } )
@@ -2052,7 +2055,7 @@ function _TypeInfoExt:createTypeInfo( param )
    local newTypeInfo
    
    do
-      local _matchExp = param.processInfo:createLuaval( extedType )
+      local _matchExp = param.processInfo:createLuaval( extedType, true )
       if _matchExp[1] == Ast.LuavalResult.OK[1] then
          local extType = _matchExp[2][1]
          local _ = _matchExp[2][2]
@@ -2122,7 +2125,7 @@ function _TypeInfoModifier:createTypeInfo( param )
    if  nil == srcTypeInfo then
       local _srcTypeInfo = srcTypeInfo
    
-      return nil, string.format( "not found srcType -- %d, %d", self.parentId, self.srcTypeId)
+      return nil, string.format( "not found srcType -- %d", self.srcTypeId)
    end
    
    local newTypeInfo = param.transUnit:createModifier( srcTypeInfo, self.mutMode )
@@ -2227,7 +2230,7 @@ function _TypeInfoModule:createTypeInfo( param )
          param.typeId2TypeInfo[self.typeId] = workTypeInfo
          parentScope:addClass( param.processInfo, self.txt, nil, workTypeInfo )
          
-         Log.log( Log.Level.Info, __func__, 1515, function (  )
+         Log.log( Log.Level.Info, __func__, 1518, function (  )
          
             return string.format( "new module -- %s, %s, %d, %d", self.txt, workTypeInfo:getFullName( Ast.defaultTypeNameCtrl, parentScope, false ), workTypeInfo:get_typeId(), parentScope:get_scopeId())
          end )
@@ -2240,17 +2243,18 @@ end
 function _TypeInfoModule.setmeta( obj )
   setmetatable( obj, { __index = _TypeInfoModule  } )
 end
-function _TypeInfoModule.new( txt )
+function _TypeInfoModule.new( parentId, txt )
    local obj = {}
    _TypeInfoModule.setmeta( obj )
    if obj.__init then
-      obj:__init( txt )
+      obj:__init( parentId, txt )
    end
    return obj
 end
-function _TypeInfoModule:__init( txt )
+function _TypeInfoModule:__init( parentId, txt )
 
    _TypeInfo.__init( self)
+   self.parentId = parentId
    self.txt = txt
 end
 function _TypeInfoModule:_toMap()
@@ -2274,6 +2278,7 @@ function _TypeInfoModule._fromMapSub( obj, val )
    end
 
    local memInfo = {}
+   table.insert( memInfo, { name = "parentId", func = _lune._toInt, nilable = false, child = {} } )
    table.insert( memInfo, { name = "txt", func = _lune._toStr, nilable = false, child = {} } )
    local result, mess = _lune._fromMap( obj, val, memInfo )
    if not result then
@@ -2361,7 +2366,7 @@ function _TypeInfoNormal:createTypeInfo( param )
       else
        
          if self.kind == Ast.TypeInfoKind.Class or self.kind == Ast.TypeInfoKind.IF then
-            Log.log( Log.Level.Debug, __func__, 1618, function (  )
+            Log.log( Log.Level.Debug, __func__, 1622, function (  )
             
                return string.format( "new type -- %d, %s -- %s, %d", self.parentId, self.txt, _lune.nilacc( parentScope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, parentScope, false ) or "nil", _lune.nilacc( parentScope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ) or -1)
             end )
@@ -2448,17 +2453,18 @@ end
 function _TypeInfoNormal.setmeta( obj )
   setmetatable( obj, { __index = _TypeInfoNormal  } )
 end
-function _TypeInfoNormal.new( abstractFlag, baseId, txt, staticFlag, accessMode, kind, mutMode, ifList, itemTypeId, argTypeId, retTypeId, children )
+function _TypeInfoNormal.new( parentId, abstractFlag, baseId, txt, staticFlag, accessMode, kind, mutMode, ifList, itemTypeId, argTypeId, retTypeId, children )
    local obj = {}
    _TypeInfoNormal.setmeta( obj )
    if obj.__init then
-      obj:__init( abstractFlag, baseId, txt, staticFlag, accessMode, kind, mutMode, ifList, itemTypeId, argTypeId, retTypeId, children )
+      obj:__init( parentId, abstractFlag, baseId, txt, staticFlag, accessMode, kind, mutMode, ifList, itemTypeId, argTypeId, retTypeId, children )
    end
    return obj
 end
-function _TypeInfoNormal:__init( abstractFlag, baseId, txt, staticFlag, accessMode, kind, mutMode, ifList, itemTypeId, argTypeId, retTypeId, children )
+function _TypeInfoNormal:__init( parentId, abstractFlag, baseId, txt, staticFlag, accessMode, kind, mutMode, ifList, itemTypeId, argTypeId, retTypeId, children )
 
    _TypeInfo.__init( self)
+   self.parentId = parentId
    self.abstractFlag = abstractFlag
    self.baseId = baseId
    self.txt = txt
@@ -2493,6 +2499,7 @@ function _TypeInfoNormal._fromMapSub( obj, val )
    end
 
    local memInfo = {}
+   table.insert( memInfo, { name = "parentId", func = _lune._toInt, nilable = false, child = {} } )
    table.insert( memInfo, { name = "abstractFlag", func = _lune._toBool, nilable = false, child = {} } )
    table.insert( memInfo, { name = "baseId", func = _lune._toInt, nilable = false, child = {} } )
    table.insert( memInfo, { name = "txt", func = _lune._toStr, nilable = false, child = {} } )
@@ -2561,17 +2568,18 @@ end
 function _TypeInfoEnum.setmeta( obj )
   setmetatable( obj, { __index = _TypeInfoEnum  } )
 end
-function _TypeInfoEnum.new( txt, accessMode, valTypeId, enumValList )
+function _TypeInfoEnum.new( parentId, txt, accessMode, valTypeId, enumValList )
    local obj = {}
    _TypeInfoEnum.setmeta( obj )
    if obj.__init then
-      obj:__init( txt, accessMode, valTypeId, enumValList )
+      obj:__init( parentId, txt, accessMode, valTypeId, enumValList )
    end
    return obj
 end
-function _TypeInfoEnum:__init( txt, accessMode, valTypeId, enumValList )
+function _TypeInfoEnum:__init( parentId, txt, accessMode, valTypeId, enumValList )
 
    _TypeInfo.__init( self)
+   self.parentId = parentId
    self.txt = txt
    self.accessMode = accessMode
    self.valTypeId = valTypeId
@@ -2598,6 +2606,7 @@ function _TypeInfoEnum._fromMapSub( obj, val )
    end
 
    local memInfo = {}
+   table.insert( memInfo, { name = "parentId", func = _lune._toInt, nilable = false, child = {} } )
    table.insert( memInfo, { name = "txt", func = _lune._toStr, nilable = false, child = {} } )
    table.insert( memInfo, { name = "accessMode", func = Ast.AccessMode._from, nilable = false, child = {} } )
    table.insert( memInfo, { name = "valTypeId", func = _lune._toInt, nilable = false, child = {} } )
@@ -2685,17 +2694,18 @@ end
 function _TypeInfoAlge.setmeta( obj )
   setmetatable( obj, { __index = _TypeInfoAlge  } )
 end
-function _TypeInfoAlge.new( txt, accessMode, algeValList )
+function _TypeInfoAlge.new( parentId, txt, accessMode, algeValList )
    local obj = {}
    _TypeInfoAlge.setmeta( obj )
    if obj.__init then
-      obj:__init( txt, accessMode, algeValList )
+      obj:__init( parentId, txt, accessMode, algeValList )
    end
    return obj
 end
-function _TypeInfoAlge:__init( txt, accessMode, algeValList )
+function _TypeInfoAlge:__init( parentId, txt, accessMode, algeValList )
 
    _TypeInfo.__init( self)
+   self.parentId = parentId
    self.txt = txt
    self.accessMode = accessMode
    self.algeValList = algeValList
@@ -2721,6 +2731,7 @@ function _TypeInfoAlge._fromMapSub( obj, val )
    end
 
    local memInfo = {}
+   table.insert( memInfo, { name = "parentId", func = _lune._toInt, nilable = false, child = {} } )
    table.insert( memInfo, { name = "txt", func = _lune._toStr, nilable = false, child = {} } )
    table.insert( memInfo, { name = "accessMode", func = Ast.AccessMode._from, nilable = false, child = {} } )
    table.insert( memInfo, { name = "algeValList", func = _lune._toList, nilable = false, child = { { func = _TypeInfoAlgeVal._fromMap, nilable = false, child = {} } } } )
@@ -3650,7 +3661,7 @@ function TransUnit:registBuiltInScope(  )
                   end
                   
                   do
-                     local _matchExp = self.processInfo:createLuaval( genTypeList[1] )
+                     local _matchExp = self.processInfo:createLuaval( genTypeList[1], true )
                      if _matchExp[1] == Ast.LuavalResult.OK[1] then
                         local workType = _matchExp[2][1]
                         local _ = _matchExp[2][2]
@@ -3688,7 +3699,7 @@ function TransUnit:registBuiltInScope(  )
       end
       
       local genTypeList = {}
-      local _6860, endIndex = typeName:find( "[%w%.]+<" )
+      local _6846, endIndex = typeName:find( "[%w%.]+<" )
       local suffix = ""
       if endIndex ~= nil then
          local genTypeName = typeName:sub( endIndex + 1 )
@@ -4538,7 +4549,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = '@lune.@base.@TransUnit.TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2928, function (  )
+   Log.log( Log.Level.Info, __func__, 2934, function (  )
    
       return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), modulePath)
    end )
@@ -4555,7 +4566,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2940, function (  )
+               Log.log( Log.Level.Info, __func__, 2946, function (  )
                
                   return string.format( "%s already", modulePath)
                end )
@@ -4587,7 +4598,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Debug, __func__, 2960, function (  )
+   Log.log( Log.Level.Debug, __func__, 2966, function (  )
    
       return string.format( "%s processing", modulePath)
    end )
@@ -4606,7 +4617,7 @@ function TransUnit:processImport( modulePath )
          do
             if dependInfo['use'] then
                local _
-               local _7249, metaTypeId2TypeInfoMap = self:processImport( dependName )
+               local _7235, metaTypeId2TypeInfoMap = self:processImport( dependName )
                local typeId = math.floor((_lune.unwrap( dependInfo['typeId']) ))
                dependLibId2DependInfo[typeId] = DependModuleInfo.new(typeId, metaTypeId2TypeInfoMap)
             end
@@ -4644,7 +4655,7 @@ function TransUnit:processImport( modulePath )
       moduleTypeInfo = self:pushModule( true, moduleName, mutable )
    end
    
-   for __index, _7267 in ipairs( nameList ) do
+   for __index, _7253 in ipairs( nameList ) do
       self:popModule(  )
    end
    
@@ -4870,7 +4881,7 @@ function TransUnit:processImport( modulePath )
             
          elseif _switchExp == Ast.TypeInfoKind.Module then
             self:pushModule( true, classTypeInfo:getTxt(  ), Ast.TypeInfo.isMut( classTypeInfo ) )
-            Log.log( Log.Level.Debug, __func__, 3224, function (  )
+            Log.log( Log.Level.Debug, __func__, 3230, function (  )
             
                return string.format( "push module -- %s, %s, %d, %d, %d", classTypeInfo:getTxt(  ), _lune.nilacc( self.scope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, self.scope, false ) or "nil", _lune.nilacc( self.scope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ) or -1, classTypeInfo:get_typeId(), self.scope:get_parent():get_scopeId())
             end )
@@ -4899,8 +4910,25 @@ function TransUnit:processImport( modulePath )
       
    end
    for __index, atomInfo in ipairs( _typeInfoList ) do
-      if atomInfo.parentId == Ast.rootTypeId and (atomInfo.skind == Ast.SerializeKind.Normal or atomInfo.skind == Ast.SerializeKind.Module ) then
-         registMember( atomInfo.typeId )
+      do
+         local workInfo = _lune.__Cast( atomInfo, 3, _TypeInfoNormal )
+         if workInfo ~= nil then
+            if workInfo.parentId == Ast.rootTypeId then
+               registMember( atomInfo.typeId )
+            end
+            
+         else
+            do
+               local workInfo = _lune.__Cast( atomInfo, 3, _TypeInfoModule )
+               if workInfo ~= nil then
+                  if workInfo.parentId == Ast.rootTypeId then
+                     registMember( atomInfo.typeId )
+                  end
+                  
+               end
+            end
+            
+         end
       end
       
    end
@@ -4934,7 +4962,7 @@ function TransUnit:processImport( modulePath )
    end
    
    
-   for __index, _7397 in ipairs( nameList ) do
+   for __index, _7389 in ipairs( nameList ) do
       self:popModule(  )
    end
    
@@ -4945,7 +4973,7 @@ function TransUnit:processImport( modulePath )
    
    self.importModuleInfo:remove(  )
    
-   Log.log( Log.Level.Info, __func__, 3310, function (  )
+   Log.log( Log.Level.Info, __func__, 3322, function (  )
    
       return string.format( "%s complete", modulePath)
    end )
@@ -6456,7 +6484,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
    
    
    if moduleName ~= nil then
-      for _8034 in string.gmatch( moduleName, '[^%.]+' ) do
+      for _8026 in string.gmatch( moduleName, '[^%.]+' ) do
          self:popModule(  )
       end
       
@@ -6466,7 +6494,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
    local function createId2proto( map )
    
       local id2proto = {}
-      for protoType, _8041 in pairs( map ) do
+      for protoType, _8033 in pairs( map ) do
          id2proto[protoType:get_typeId()] = protoType
       end
       
@@ -6657,7 +6685,7 @@ function TransUnit:analyzeDeclMacro( accessMode, firstToken )
    local node = self:analyzeDeclMacroSub( accessMode, firstToken, nameToken, scope, parentInfo, workArgList )
    self.scope = backScope
    
-   local _8108, existSym = self.scope:addMacro( self.processInfo, nameToken.pos, node:get_expType(), accessMode )
+   local _8100, existSym = self.scope:addMacro( self.processInfo, nameToken.pos, node:get_expType(), accessMode )
    if existSym then
       self:addErrMess( nameToken.pos, string.format( "multiple define symbol -- %s", nameToken.txt) )
    end
@@ -7024,7 +7052,7 @@ function TransUnit:analyzeDeclEnum( accessMode, firstToken )
    
    self:popScope(  )
    
-   local _8266, shadowing = self.scope:addEnum( self.processInfo, accessMode, name.txt, name.pos, enumTypeInfo )
+   local _8258, shadowing = self.scope:addEnum( self.processInfo, accessMode, name.txt, name.pos, enumTypeInfo )
    self:errorShadowing( name.pos, shadowing )
    
    return Nodes.DeclEnumNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {enumTypeInfo}, enumTypeInfo, accessMode, name, valueList, scope )
@@ -7044,7 +7072,7 @@ function TransUnit:analyzeDeclAlge( accessMode, firstToken )
    local algeScope = self:pushScope( true )
    
    local algeTypeInfo = self.processInfo:createAlge( algeScope, self:getCurrentNamespaceTypeInfo(  ), false, accessMode, name.txt )
-   local _8278, shadowing = scope:addAlge( self.processInfo, accessMode, name.txt, name.pos, algeTypeInfo )
+   local _8270, shadowing = scope:addAlge( self.processInfo, accessMode, name.txt, name.pos, algeTypeInfo )
    self:errorShadowing( name.pos, shadowing )
    
    local nextToken = self:getToken(  )
@@ -7061,7 +7089,7 @@ function TransUnit:analyzeDeclAlge( accessMode, firstToken )
       if nextToken.txt == "(" then
          while true do
             local _
-            local _8287 = self:getToken(  )
+            local _8279 = self:getToken(  )
             local workToken2 = self:getToken(  )
             if workToken2.txt ~= ":" then
                self:pushback(  )
@@ -7992,7 +8020,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
    end
    
    
-   local node, _8714, methodNameSet = self:analyzeClassBody( hasProto, classAccessMode, firstToken, mode, gluePrefix, classTypeInfo, name, moduleName, nextToken )
+   local node, _8706, methodNameSet = self:analyzeClassBody( hasProto, classAccessMode, firstToken, mode, gluePrefix, classTypeInfo, name, moduleName, nextToken )
    local parentInfo = classTypeInfo
    for __index, memberNode in ipairs( node:get_memberList() ) do
       local memberType = memberNode:get_expType()
@@ -8738,7 +8766,7 @@ function TransUnit:analyzeInitExp( firstPos, accessMode, unwrapFlag, letVarList,
       
       if unwrapFlag then
          local hasNilable = false
-         for index, _9032 in ipairs( letVarList ) do
+         for index, _9024 in ipairs( letVarList ) do
             if expList:getExpTypeAt( index ):get_nilable() then
                hasNilable = true
                break
@@ -9999,6 +10027,17 @@ end
 function TransUnit:checkMatchValType( pos, funcTypeInfo, expList, genericTypeList, genericsClass )
 
    local argTypeList = funcTypeInfo:get_argTypeInfoList()
+   if funcTypeInfo:get_kind() == Ast.TypeInfoKind.Ext then
+      local extTypeList, mess = Ast.convToExtTypeList( self.processInfo, argTypeList )
+      if extTypeList ~= nil then
+         argTypeList = extTypeList
+      else
+         self:addErrMess( pos, string.format( "not support argType on Luaval -- %s", mess) )
+      end
+      
+   end
+   
+   
    do
       local _switchExp = funcTypeInfo
       if _switchExp == builtinFunc.list_insert or _switchExp == builtinFunc.set_add or _switchExp == builtinFunc.set_del then
@@ -10086,7 +10125,7 @@ function TransUnit:analyzeListItems( firstPos, nextToken, termTxt, expectTypeLis
                   table.insert( expTypeList, expNode:get_expType() )
                else
                 
-                  for _9631 = 1, #expNode:get_expTypeList() do
+                  for _9629 = 1, #expNode:get_expTypeList() do
                      table.insert( expTypeList, itemTypeInfo )
                   end
                   
@@ -10101,7 +10140,7 @@ function TransUnit:analyzeListItems( firstPos, nextToken, termTxt, expectTypeLis
          
       end
       
-      local _9634, _9635, workExpList = self:checkMatchType( "List constructor", firstPos, expTypeList, expList, false, false, nil )
+      local _9632, _9633, workExpList = self:checkMatchType( "List constructor", firstPos, expTypeList, expList, false, false, nil )
       if workExpList ~= nil then
          expList = workExpList
       end
@@ -11706,7 +11745,7 @@ function TransUnit:analyzeNewAlge( firstToken, algeTypeInfo, prefix )
          
          
          do
-            local _10355, _10356, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, nil )
+            local _10353, _10354, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, nil )
             if newExpNodeList ~= nil then
                argList = newExpNodeList:get_expList()
             end
@@ -11923,7 +11962,7 @@ function TransUnit:analyzeExpOpSet( exp, opeToken, expectTypeList )
    end
    
    
-   local _10440, _10441, workList, expTypeList = self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), expList, true, false, nil )
+   local _10438, _10439, workList, expTypeList = self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), expList, true, false, nil )
    if workList ~= nil then
       expList = workList
    end
@@ -12597,7 +12636,7 @@ function TransUnit:analyzeExpUnwrap( firstToken )
    
    if Ast.isExtType( expType:get_nonnilableType() ) then
       do
-         local _matchExp = self.processInfo:createLuaval( unwrapType )
+         local _matchExp = self.processInfo:createLuaval( unwrapType, false )
          if _matchExp[1] == Ast.LuavalResult.OK[1] then
             local work = _matchExp[2][1]
             local _ = _matchExp[2][2]
@@ -12632,7 +12671,7 @@ function TransUnit:analyzeStrConst( firstToken, token )
          local argNodeList = self:analyzeExpList( false, false, false )
          param = argNodeList
          
-         local _10712, _10713, workExpList = self:checkMatchType( "str constructor", firstToken.pos, {Ast.builtinTypeDDD}, argNodeList, false, false, nil )
+         local _10710, _10711, workExpList = self:checkMatchType( "str constructor", firstToken.pos, {Ast.builtinTypeDDD}, argNodeList, false, false, nil )
          if workExpList ~= nil then
             dddParam = workExpList
          else
@@ -12780,7 +12819,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, canLeftExp, prevOpLev
       end
       
       
-      local _10772, alt2type, newArgList = self:checkMatchValType( exp:get_pos(), initTypeInfo, argList, classTypeInfo:get_itemTypeInfoList(), classTypeInfo )
+      local _10770, alt2type, newArgList = self:checkMatchValType( exp:get_pos(), initTypeInfo, argList, classTypeInfo:get_itemTypeInfoList(), classTypeInfo )
       
       if #classTypeInfo:get_itemTypeInfoList() > 0 then
          if classTypeInfo:get_itemTypeInfoList()[1]:get_kind() == Ast.TypeInfoKind.Alternate then
@@ -12924,8 +12963,6 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, canLeftExp, prevOpLev
             self:error( "illegal '.'" )
          end
          
-      elseif token.txt == "..." then
-         return Nodes.ExpDDDNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, token )
       elseif token.txt == '[' or token.txt == '[@' then
          exp = self:analyzeListConst( token, expectType )
       elseif token.txt == '(@' then
@@ -13066,7 +13103,7 @@ function TransUnit:analyzeReturn( token )
       local workList = expList
       if workList ~= nil then
          do
-            local _10877, _10878, newExpNodeList = self:checkMatchType( "return", token.pos, retTypeList, workList, false, not workList:get_followOn(), nil )
+            local _10874, _10875, newExpNodeList = self:checkMatchType( "return", token.pos, retTypeList, workList, false, not workList:get_followOn(), nil )
             if newExpNodeList ~= nil then
                expList = newExpNodeList
             end

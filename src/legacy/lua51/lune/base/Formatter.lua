@@ -331,7 +331,7 @@ end
 
 function FormatterFilter:processBlankLine( node, opt )
 
-   for _5015 = 1, node:get_lineNum() do
+   for _4994 = 1, node:get_lineNum() do
       self:writeln( "" )
    end
    
@@ -788,12 +788,6 @@ end
 
 
 function FormatterFilter:processDeclArgDDD( node, opt )
-
-   self:write( "..." )
-end
-
-
-function FormatterFilter:processExpDDD( node, opt )
 
    self:write( "..." )
 end

@@ -1233,6 +1233,10 @@ function convFilter:processRoot( node, opt )
       self:writeln( "local _moduleObj = {}" )
    end
    
+   if self.enableTest then
+      self:writeln( "_moduleObj.__enableTest = true" )
+   end
+   
    self:writeln( string.format( "local __mod__ = '%s'", node:get_moduleTypeInfo():getFullName( self:get_typeNameCtrl(), self:get_moduleInfoManager() )) )
    
    local luneSymbol = string.format( "_lune%d", Ver.luaModVersion)
@@ -1878,7 +1882,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _6081 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _6061 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -2683,13 +2687,6 @@ end
 
 
 function convFilter:processDeclArgDDD( node, opt )
-
-   self:write( "..." )
-end
-
-
-
-function convFilter:processExpDDD( node, opt )
 
    self:write( "..." )
 end
@@ -4074,7 +4071,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3404, function (  )
+   Log.log( Log.Level.Trace, __func__, 3402, function (  )
    
       return string.format( "macro: %s", code)
    end )

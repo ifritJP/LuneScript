@@ -483,7 +483,6 @@ type glueFilter_glueFilterMtd interface {
     ProcessExpCallSuper(arg1 *Nodes_ExpCallSuperNode, arg2 LnsAny)
     ProcessExpCallSuperCtor(arg1 *Nodes_ExpCallSuperCtorNode, arg2 LnsAny)
     ProcessExpCast(arg1 *Nodes_ExpCastNode, arg2 LnsAny)
-    ProcessExpDDD(arg1 *Nodes_ExpDDDNode, arg2 LnsAny)
     ProcessExpList(arg1 *Nodes_ExpListNode, arg2 LnsAny)
     ProcessExpMRet(arg1 *Nodes_ExpMRetNode, arg2 LnsAny)
     ProcessExpMacroArgExp(arg1 *Nodes_ExpMacroArgExpNode, arg2 LnsAny)

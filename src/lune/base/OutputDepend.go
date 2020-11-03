@@ -129,7 +129,6 @@ type OutputDepend_convFilterMtd interface {
     ProcessExpCallSuper(arg1 *Nodes_ExpCallSuperNode, arg2 LnsAny)
     ProcessExpCallSuperCtor(arg1 *Nodes_ExpCallSuperCtorNode, arg2 LnsAny)
     ProcessExpCast(arg1 *Nodes_ExpCastNode, arg2 LnsAny)
-    ProcessExpDDD(arg1 *Nodes_ExpDDDNode, arg2 LnsAny)
     ProcessExpList(arg1 *Nodes_ExpListNode, arg2 LnsAny)
     ProcessExpMRet(arg1 *Nodes_ExpMRetNode, arg2 LnsAny)
     ProcessExpMacroArgExp(arg1 *Nodes_ExpMacroArgExpNode, arg2 LnsAny)
@@ -328,9 +327,9 @@ func (self *OutputDepend_Front) LoadMeta(importModuleInfo *FrontInterface_Import
     var mess LnsAny
     loaded,mess = Lns_getVM().Loadfile(metaPath)
     if loaded != nil{
-        loaded_5496 := loaded.(*Lns_luaValue)
+        loaded_5477 := loaded.(*Lns_luaValue)
         var meta LnsAny
-        meta = OutputDepend_convExp487(Lns_2DDD(Lns_getVM().RunLoadedfunc(loaded_5496,Lns_2DDD([]LnsAny{}))[0]))
+        meta = OutputDepend_convExp487(Lns_2DDD(Lns_getVM().RunLoadedfunc(loaded_5477,Lns_2DDD([]LnsAny{}))[0]))
         return meta
     }
     Lns_print([]LnsAny{mess})

@@ -643,12 +643,6 @@ function dumpFilter:processDeclArgDDD( node, opt )
 end
 
 
-function dumpFilter:processExpDDD( node, opt )
-
-   self:dump( opt, node, "..." )
-end
-
-
 function dumpFilter:processExpSubDDD( node, opt )
 
    self:dump( opt, node, string.format( "... (%d)", node:get_remainIndex()) )

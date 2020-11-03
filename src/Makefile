@@ -155,7 +155,7 @@ endef
 
 define cmd_exec_ast
 	@echo -------- $5 ---------- > /dev/stderr
-	$(call exeLune,$1,$2,lune/$5.lns ast $3 $(LOG_OPT) $4)
+	$(call exeLune,$1,$2,lune/$5.lns ast $3 $(LOG_OPT) $(EXE_OPT) $4)
 endef
 
 
@@ -185,6 +185,7 @@ define selfhost_buildOp
 	$(call $5,$1,$2,$3,$4,base/TransUnit)
 	$(call $5,$1,$2,$3,$4,base/DependLuaOnLns)
 	$(call $5,$1,$2,$3,$4,base/convLua)
+	$(call $5,$1,$2,$3,$4,base/ConvNodes)
 	$(call $5,$1,$2,$3,$4,base/dumpNode)
 	$(call $5,$1,$2,$3,$4,base/convCC)
 	$(call $5,$1,$2,$3,$4,base/convGo)
@@ -776,7 +777,7 @@ define setup-lua51-test
 	cp -a test $1
 	$(MAKE) build-glue GLUE_DIR=work/newglue LUA_INC_DIR=$(LUA51_INC) LUA_GLUE=51
 	mv test/glueTest51.so $1/test/glueTest.so 
-	grep -v -e 'skip-lua51' $2 test/start.lns $(EXE_OPT) > $1/test/start.lns
+	grep -v -e 'skip-lua51' $2 test/start.lns > $1/test/start.lns
 endef
 
 define setup-lua51-test-cross
@@ -945,15 +946,8 @@ uninstall: check_lua_mod_dir
 # テストケースだけ修正した時に、通常のビルドチェックは重すぎるので、
 # Lua に変換した結果が同じになっているかどうかを確認し、同じなら OK にする
 build-testcase:
-	mkdir -p work/0
-	cp -a lune work/0
-	$(call selfhost_build,$(LNSC),.,work/0,)
-	diff -r lune work/0/lune -x '*.meta' -x '*.d' -x '*.*~' -x '*.h' -x '*.c' -x '*.tmp'
-	cp work/0/lune/base/*.lua lune/base/
-	cp work/0/lune/base/*.meta lune/base/
-	cp work/0/lune/*.* lune/
-
-	$(MAKE) test-testC
+	$(call cp_src_set,work/1,.)
+	$(call selfhost_build,$(LNSC),.,work/1,--testing)
 
 
 
@@ -1295,6 +1289,7 @@ test-testGo:
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),TransUnit,lune/base,./test)
 #	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),DependLuaOnLns,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),convLua,lune/base,./test)
+	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),ConvNodes,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),dumpNode,lune/base,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convCC,--testing,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),convGo,lune/base,./test)
@@ -1345,6 +1340,7 @@ go-build:
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/TransUnit,,./test)
 #	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/DependLuaOnLns,,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convLua,,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/ConvNodes,,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/dumpNode,,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convCC,,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convGo,,./test)

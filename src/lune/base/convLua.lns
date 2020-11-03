@@ -855,6 +855,10 @@ pub override fn convFilter.processRoot(
    if self.needModuleObj {
       self.writeln( "local _moduleObj = {}" );
    }
+   if self.enableTest {
+      self.writeln( "_moduleObj.__enableTest = true" );
+   }
+
    // if self.enableTest {
    //    self.writeln( "_moduleObj.__testMap = {}" );
    // }
@@ -2180,12 +2184,6 @@ pub override fn convFilter.processDeclArgDDD(
    self.write( "..." );
 };
 
-pub override fn convFilter.processExpDDD(
-   node: Nodes.ExpDDDNode, opt: Opt ) mut
-{
-   self.write( "..." );
-};
-
 pub override fn convFilter.processDeclFunc(
    node: Nodes.DeclFuncNode, opt: Opt ) mut
 {
@@ -3449,11 +3447,10 @@ pub class MacroEvalImp extend Nodes.MacroEval {
 __test {
    import lune.base.frontInterface;
    import lune.base.Testing;
-   
-   pub fn createAst(
-      scriptPath:str, lnsCode:str, option:&Option.Option ) : TransUnit.ASTInfo
+
+   pub fn createAstFromStream(
+      scriptPath:str, stream:iStream, option:&Option.Option ) : TransUnit.ASTInfo
    {
-      let mut inStream = new Parser.TxtStream( lnsCode );
       let moduleId = frontInterface.ModuleId.createId( 0.0, 0 );
       let mut moduleInfo = new frontInterface.ImportModuleInfo();
       
@@ -3462,8 +3459,23 @@ __test {
          moduleId, moduleInfo, new MacroEvalImp(),
          nil, .Compile, nil, option.targetLuaVer, option.transCtrlInfo );
       
-      let mut parser = new Parser.StreamParser( inStream, scriptPath, false );
+      let mut parser = new Parser.StreamParser( stream, scriptPath, false );
       return transUnit.createAST( parser, false, mod );
+   }
+   
+   
+   pub fn createAstFromFile( scriptPath:str, option:&Option.Option ) : TransUnit.ASTInfo {
+      let! mut stream = io.open( scriptPath## ) {
+         Util.err( "not failed to open -- %s" (scriptPath) );
+      };
+      return createAstFromStream( scriptPath, stream, option );
+   }
+   
+   pub fn createAst(
+      scriptPath:str, lnsCode:str, option:&Option.Option ) : TransUnit.ASTInfo
+   {
+      return createAstFromStream(
+         scriptPath, new Parser.TxtStream( lnsCode ), option );
    }
    
    pub fn getTestLnsCode() : str {

@@ -3790,11 +3790,6 @@ fn TransUnit.analyzeExp(
             self.error( "illegal '.'" );
          }
       }
-      elseif token.txt == "..." {
-         return Nodes.ExpDDDNode.create(
-            self.nodeManager, firstToken.pos,
-            self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], token );
-      }
       elseif token.txt == '[' or token.txt == '[@' {
          exp = self.analyzeListConst( token, expectType );
       }

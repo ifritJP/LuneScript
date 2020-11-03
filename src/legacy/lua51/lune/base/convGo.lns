@@ -2471,12 +2471,6 @@ pub override fn convFilter.processDeclArgDDD(
    self.write( "ddd []LnsAny" );
 }
 
-pub override fn convFilter.processExpDDD(
-   node: Nodes.ExpDDDNode, opt: Opt ) mut
-{
-   Util.err( "not support -- %s" (__func__) );
-}
-
 pub override fn convFilter.processExpSubDDD(
    node: Nodes.ExpSubDDDNode, opt:Opt ) mut
 {

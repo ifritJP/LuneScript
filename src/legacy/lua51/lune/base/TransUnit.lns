@@ -27,6 +27,7 @@ subfile use lune.base.TransUnitExp;
 subfile use lune.base.TransUnitStatementList;
 subfile use lune.base.TransUnitTest;
 
+import lune.base.Types;
 import lune.base.Meta;
 import lune.base.Parser;
 import lune.base.Util;
@@ -586,7 +587,7 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
    /** true の場合、 _ で始まるシンボル名チェックをしない */
    pri let mut ignoreToCheckSymbol_:bool;
 
-   pri let ctrl_info: &Option.TransCtrlInfo;
+   pri let ctrl_info: &Types.TransCtrlInfo;
 
    pri let mut macroCtrl:Macro.MacroCtrl;
    
@@ -610,9 +611,9 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
                   importModuleInfo:frontInterface.ImportModuleInfo,
                   macroEval: Nodes.MacroEval, analyzeModule:str!, mode:AnalyzeMode!,
                   pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
-                  ctrl_info: &Option.TransCtrlInfo )
+                  ctrl_info: &Types.TransCtrlInfo )
    {
-      self.processInfo = Ast.createProcessInfo();
+      self.processInfo = Ast.createProcessInfo( ctrl_info.validLuaval );
       self.accessSymbolSetQueue = new AccessSymbolSetQueue();
       self.advertisedTypeSet = (@);
       self.closureFunList = [];
@@ -1249,7 +1250,7 @@ pub fn TransUnit.createModifier(
 fn TransUnit.createExtType(
    pos:&Parser.Position, typeInfo:&Ast.TypeInfo ) mut :&Ast.TypeInfo
 {
-   _match self.processInfo.createLuaval( typeInfo ) {
+   _match self.processInfo.createLuaval( typeInfo, true ) {
       case .OK( work, _ ) {
          return work;
       }
@@ -1278,10 +1279,9 @@ class ImportParam {
 
 abstract class _TypeInfo extend (Mapping) {
    pub let skind: Ast.SerializeKind;
-   pub let parentId: int;
    pub let typeId: int;
    pub fn __init() {
-      self.parentId = Ast.rootTypeId;
+//      self.parentId = Ast.rootTypeId;
       self.typeId = Ast.rootTypeId;
       self.skind = .Normal;
    }
@@ -1322,7 +1322,6 @@ pub fn ImportParam.getTypeInfo(typeId:int) mut :&Ast.TypeInfo!, str! {
 }
 
 class _TypeInfoNilable extend _TypeInfo {
-   pub let nilable:bool;
    pub let orgTypeId:int;
 
    pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
@@ -1337,6 +1336,7 @@ class _TypeInfoNilable extend _TypeInfo {
 
 
 class _TypeInfoAlias extend _TypeInfo {
+   pub let parentId: int;
    pri let rawTxt:str;
    pri let srcTypeId:int;
 
@@ -1360,6 +1360,7 @@ class _TypeInfoAlias extend _TypeInfo {
 
 
 class _TypeInfoDDD extend _TypeInfo {
+   pub let parentId: int;
    pub let itemTypeId:int;
    pub let extTypeFlag:bool;
 
@@ -1376,6 +1377,7 @@ class _TypeInfoDDD extend _TypeInfo {
 
 
 class _TypeInfoAlternate extend _TypeInfo {
+   pub let parentId: int;
    pub let txt:str;
    pub let accessMode:Ast.AccessMode;
    pub let baseId:int;
@@ -1437,7 +1439,7 @@ class _TypeInfoExt extend _TypeInfo {
    {
       let extedType = unwrap param.getTypeInfo( self.extedTypeId );
       let newTypeInfo;
-      _match param.processInfo.createLuaval( extedType ) {
+      _match param.processInfo.createLuaval( extedType, true ) {
          case .OK( extType, _ ) {
             newTypeInfo = extType;
          }
@@ -1459,7 +1461,7 @@ class _TypeInfoModifier extend _TypeInfo {
    {
       //let! srcTypeInfo = param.typeId2TypeInfo[ self.srcTypeId ] {
       let! srcTypeInfo = param.getTypeInfo( self.srcTypeId ) {
-         return nil, "not found srcType -- %d, %d" ( self.parentId, self.srcTypeId );
+         return nil, "not found srcType -- %d" ( self.srcTypeId );
       };
       let newTypeInfo = param.transUnit.createModifier( srcTypeInfo, self.mutMode );
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
@@ -1468,6 +1470,7 @@ class _TypeInfoModifier extend _TypeInfo {
 }
 
 class _TypeInfoModule extend _TypeInfo {
+   pub let parentId: int;
    pub let txt:str;
 
    pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
@@ -1524,6 +1527,7 @@ class _TypeInfoModule extend _TypeInfo {
 }
 
 class _TypeInfoNormal extend _TypeInfo {
+   pub let parentId: int;
    pub let abstractFlag: bool;
    pub let baseId:int;
    pub let txt:str;
@@ -1711,6 +1715,7 @@ class _TypeInfoNormal extend _TypeInfo {
 }
 
 class _TypeInfoEnum extend _TypeInfo {
+   pub let parentId: int;
    pub let txt:str;
    pub let accessMode:Ast.AccessMode;
    pub let valTypeId:int;
@@ -1764,6 +1769,7 @@ class _TypeInfoAlgeVal extend (Mapping) {
 }
 
 class _TypeInfoAlge extend _TypeInfo {
+   pub let parentId: int;
    pub let txt:str;
    pub let accessMode:Ast.AccessMode;
    pub let algeValList: &List<&_TypeInfoAlgeVal>;
@@ -2140,7 +2146,7 @@ fn TransUnit.registBuiltInScope() mut {
                   if #genTypeList ~= 1 {
                      Util.err( "illegal param -- %d" (#genTypeList) );
                   }
-                  match self.processInfo.createLuaval( genTypeList[ 1 ] ) {
+                  match self.processInfo.createLuaval( genTypeList[ 1 ], true ) {
                      case .OK( workType, _ ) {
                         return workType;
                      }
@@ -3253,10 +3259,16 @@ fn TransUnit.processImport( modulePath:str ) mut :
       }
    }
    foreach atomInfo in _typeInfoList {
-      if atomInfo.parentId == Ast.rootTypeId and
-         ( atomInfo.skind == .Normal or atomInfo.skind == .Module )
-      {
-         registMember( atomInfo.typeId );
+      if! let workInfo = atomInfo@@@_TypeInfoNormal {
+         if workInfo.parentId == Ast.rootTypeId {
+            registMember( atomInfo.typeId );
+         }
+      } else {
+         if! let workInfo = atomInfo@@@_TypeInfoModule {
+            if workInfo.parentId == Ast.rootTypeId {
+               registMember( atomInfo.typeId );
+            }
+         }
       }
    }
 

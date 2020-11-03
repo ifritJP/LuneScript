@@ -42,6 +42,7 @@ import lune.base.Formatter;
 import lune.base.Testing;
 //import lune.base.TestCtrl;
 import lune.base.Meta;
+import lune.base.ConvNodes;
 
 _lune_control ignore_symbol_;
 
@@ -89,6 +90,11 @@ loadedMap で管理する前にシステムにロードされているため、
       foreach modval, mod in Depend.getLoadedMod() {
          // pending:
          if mod == "lune.base.Testing" {
+            loadedMap[ mod ] = modval;
+         }
+         if option.testing and modval.__enableTest or
+            not option.testing and modval.__enableTest
+         {
             loadedMap[ mod ] = modval;
          }
       }

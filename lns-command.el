@@ -55,7 +55,7 @@ function must return string.")
     (if (listp arg)
 	(setq command-list (lns-command-add-command command-list arg))
       (setq command-list (append command-list (list arg)))))
-  command-list)
+  (delq nil command-list))
     
 
 (defun lns-command-get-command (&rest args)
@@ -64,7 +64,8 @@ function must return string.")
 	(setq command (funcall lns-lua-command))
       (setq command lns-lua-command))
     (lns-command-add-command
-     (list command "-e" "require( 'lune.base.base' )" " ") args)))
+     (list command "-e" "require( 'lune.base.base' )" " ")
+     (append args (lns-proj-get-cmd-option (lns-get-proj-info)) ))))
 
 (defun lns-command-sync (&rest arg-list)
   (let (ver end-code)

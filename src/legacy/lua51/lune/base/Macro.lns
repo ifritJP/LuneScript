@@ -309,7 +309,7 @@ pub fn MacroCtrl.evalMacroOp(
    let macroInfo = unwrap self.typeId2MacroInfo[ macroTypeInfo.get_typeId() ];
 
    // マクロに渡す引数をセットする
-   let mut argValMap:Map<int,stem> = {};
+   let mut argValMap:Map<int,Luaval<&stem>> = {};
    let mut macroArgValMap:Map<str,&stem> = { "__var": self.macroLocalVarMap };
    let macroArgNodeList = macroInfo.getArgList();
    let mut macroArgName2ArgNode:Map<str,&Nodes.Node> = {};
@@ -318,7 +318,7 @@ pub fn MacroCtrl.evalMacroOp(
          let literal, mess = argNode.getLiteral();
          when! literal {
             if! let val = getLiteralMacroVal( literal ) {
-               argValMap[ index ] = val;
+               argValMap[ index ] = toLuaval(val);
                let declArgNode = macroArgNodeList[ index ];
 
                if argNode.$expType == Ast.builtinTypeSymbol {
@@ -374,7 +374,7 @@ pub fn MacroCtrl.evalMacroOp(
          let argName = arg.$name;
          //scope.add( argName, argType.expType );
          self.symbol2ValueMapForMacro[ argName ] =
-            new Nodes.MacroValInfo( toLuaval(argValMap[ index ]),
+            new Nodes.MacroValInfo( argValMap[ index ],
                                     argType, macroArgName2ArgNode[ argName ] );
       }
       else {

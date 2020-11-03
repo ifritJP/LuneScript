@@ -413,8 +413,27 @@ function dumpFilter:processDeclEnum( node, opt )
    local enumTypeInfo = _lune.unwrap( (_lune.__Cast( node:get_expType(), 3, Ast.EnumTypeInfo ) ))
    for __index, name in ipairs( node:get_valueNameList() ) do
       local valInfo = _lune.unwrap( enumTypeInfo:getEnumValInfo( name.txt ))
-      self:writeln( opt, string.format( "  %s: %s", name.txt, Ast.EnumLiteral:_getTxt( valInfo:get_val())
-      ) )
+      local val
+      
+      do
+         local _matchExp = valInfo:get_val()
+         if _matchExp[1] == Ast.EnumLiteral.Int[1] then
+            local x = _matchExp[2][1]
+         
+            val = x
+         elseif _matchExp[1] == Ast.EnumLiteral.Real[1] then
+            local x = _matchExp[2][1]
+         
+            val = x
+         elseif _matchExp[1] == Ast.EnumLiteral.Str[1] then
+            local x = _matchExp[2][1]
+         
+            val = x
+         end
+      end
+      
+      self:writeln( opt, string.format( "  %s: %s, %s", name.txt, Ast.EnumLiteral:_getTxt( valInfo:get_val())
+      , tostring( val)) )
    end
    
 end
@@ -619,12 +638,6 @@ end
 
 
 function dumpFilter:processDeclArgDDD( node, opt )
-
-   self:dump( opt, node, "..." )
-end
-
-
-function dumpFilter:processExpDDD( node, opt )
 
    self:dump( opt, node, "..." )
 end

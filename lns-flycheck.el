@@ -43,6 +43,8 @@ See URL `https://github.com/ifritJP/LuneScript'."
 	    "diag" "--nodebug"
 	    (eval (if lns-target-lua-ver "-ol" ""))
 	    (eval (if lns-target-lua-ver lns-target-lua-ver ""))
+	    (eval (or (nth 4 (lns-command-get-command))  ""))
+	    (eval (or (nth 5 (lns-command-get-command))  ""))
 	    )
   :error-patterns
   ((error line-start (file-name) ":" line ":" column ":" (message) line-end))

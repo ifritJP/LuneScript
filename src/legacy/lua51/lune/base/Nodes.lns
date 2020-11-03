@@ -508,66 +508,85 @@ macro _declNodeClass(
             }
 
             // 子 Node を列挙する処理
-            if typeName.find( "Node" ## ) and not workName.find( "^@"## ) {
-               let oneVisitStat = `{
-                  switch visitor( child, self, ,,fieldName, depth ) {
-                     case NodeVisitMode.Child {
-                        if not child.visit( visitor, depth + 1 ) {
+            if not workName.find( "^@"## ) {
+               if typeName.find( "DeclFuncInfo" ## ) {
+                  visitStatList.insert( `{
+                     {
+                        if! let body = self.,,,fieldName~~.$body {
+                           switch visitor( body, self, ,,fieldName, depth ) {
+                              case NodeVisitMode.Child {
+                                 if not body.visit( visitor, depth + 1 ) {
+                                    return false;
+                                 }
+                              }
+                              case NodeVisitMode.End {
+                                 return false;
+                              }
+                           }
+                        }
+                     }
+                  });
+               } elseif typeName.find( "Node" ## ) {
+                  let oneVisitStat = `{
+                     switch visitor( child, self, ,,fieldName, depth ) {
+                        case NodeVisitMode.Child {
+                           if not child.visit( visitor, depth + 1 ) {
+                              return false;
+                           }
+                        }
+                        case NodeVisitMode.End {
                            return false;
                         }
                      }
-                     case NodeVisitMode.End {
-                        return false;
-                     }
-                  }
-               };
+                  };
 
-               fn processNilable( varName:str, statVar:stat ) {
-                  if typeName.find( "!$" ## ) {
-                     visitStatList.insert( `{
-                        {
-                           if! let ,,,varName = self.,,,fieldName {
+                  fn processNilable( varName:str, statVar:stat ) {
+                     if typeName.find( "!$" ## ) {
+                        visitStatList.insert( `{
+                           {
+                              if! let ,,,varName = self.,,,fieldName {
+                                 ,,statVar;
+                              }
+                           }
+                        });
+                     }
+                     else {
+                        visitStatList.insert( `{
+                           {
+                              let ,,,varName = self.,,,fieldName;
                               ,,statVar;
                            }
+                        } );
+                     }
+                  }
+                  
+                  if typeName.find( "List<" ## ) {
+                     let workStat = `{
+                        foreach child in list {
+                           ,,oneVisitStat;
                         }
-                     });
+                     };
+                     processNilable( "list", workStat );
+                  }
+                  elseif typeName.find( "Map<" ## ) {
+                     let workStat = `{
+                        foreach val, key in map {
+                           {
+                              let child = key;
+                              ,,oneVisitStat;
+                           }
+                           {
+                              let child = val;
+                              ,,oneVisitStat;
+                           }
+                        }
+                     };
+                     processNilable( "map", workStat );
+                     
                   }
                   else {
-                     visitStatList.insert( `{
-                        {
-                           let ,,,varName = self.,,,fieldName;
-                           ,,statVar;
-                        }
-                     } );
+                     processNilable( "child", oneVisitStat );
                   }
-               }
-               
-               if typeName.find( "List<" ## ) {
-                  let workStat = `{
-                     foreach child in list {
-                        ,,oneVisitStat;
-                     }
-                  };
-                  processNilable( "list", workStat );
-               }
-               elseif typeName.find( "Map<" ## ) {
-                  let workStat = `{
-                     foreach val, key in map {
-                        {
-                           let child = key;
-                           ,,oneVisitStat;
-                        }
-                        {
-                           let child = val;
-                           ,,oneVisitStat;
-                        }
-                     }
-                  };
-                  processNilable( "map", workStat );
-                  
-               }
-               else {
-                  processNilable( "child", oneVisitStat );
                }
             }
          }
@@ -1419,10 +1438,6 @@ _declNodeClass( "ExpMultiTo1", Node, false, true, false,
 pub override fn ExpMultiTo1Node.getPrefix() : &Node! {
    return self.exp.getPrefix();
 }
-
-_declNodeClass( "ExpDDD", Node, false, true, false,
-                [ { "token": "&Parser.Token" } ]
-);
 
 _declNodeClass( "ExpParen", Node, false, true, false,
                 [ { "exp": "&Node" } ]
@@ -2758,7 +2773,7 @@ __test {
          new Parser.StreamParser(
             new Parser.TxtStream( "print( 'hoge' );" ), "test" ## ) );
 
-      let mut processInfo = Ast.createProcessInfo();
+      let mut processInfo = Ast.createProcessInfo( true );
       let mut scope = new Ast.Scope( processInfo, nil, false ##);
 
       let printToken = parser.getTokenNoErr(); // print
