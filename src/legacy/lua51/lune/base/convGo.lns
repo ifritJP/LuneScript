@@ -3925,6 +3925,8 @@ pub fn convFilter.outputCallPrefix(
    when! prefixNode {
       if node.hasNilAccess() {
          if #funcType.$retTypeInfoList >= 2 {
+            // 多値になるケースでは、
+            // prefixNode の hasNilAccess に関係なく必ず値の変換を行なう
             if #funcType.$retTypeInfoList <= MaxNilAccNum {
                self.write( "Lns_NilAccFinCall%d(" (#funcType.$retTypeInfoList) );
             }

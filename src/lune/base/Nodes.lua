@@ -516,6 +516,10 @@ NodeVisitMode.__allList[3] = NodeVisitMode.End
 
 
 _moduleObj.Node = Node
+function Node:get_effectivePos(  )
+
+   return self.pos
+end
 function Node:setLValue(  )
 
    self.isLValue = true
@@ -738,7 +742,7 @@ end
 function NodeManager:__init() 
    self.idSeed = 0
    self.nodeKind2NodeList = {}
-   for kind, _2528 in pairs( nodeKind2NameMap ) do
+   for kind, _2532 in pairs( nodeKind2NameMap ) do
       if not self.nodeKind2NodeList[kind] then
          self.nodeKind2NodeList[kind] = {}
       end
@@ -5893,6 +5897,11 @@ function ExpCallNode:get_argList()
 end
 
 
+function ExpCallNode:get_effectivePos(  )
+
+   return self.func:get_effectivePos()
+end
+
 function ExpCallNode:getPrefix(  )
 
    return self.func
@@ -7027,6 +7036,11 @@ function RefFieldNode:get_prefix()
 end
 
 
+function RefFieldNode:get_effectivePos(  )
+
+   return self.field.pos
+end
+
 function RefFieldNode:getPrefix(  )
 
    return self.prefix
@@ -7166,6 +7180,11 @@ function GetFieldNode:get_getterTypeInfo()
    return self.getterTypeInfo
 end
 
+
+function GetFieldNode:get_effectivePos(  )
+
+   return self.field.pos
+end
 
 function GetFieldNode:canBeLeft(  )
 
@@ -12204,7 +12223,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, _10331 in pairs( self.map ) do
+   for key, _10350 in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -12239,8 +12258,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, _10345 in ipairs( __sorted ) do
-         local key = __map[ _10345 ]
+      for __index, _10364 in ipairs( __sorted ) do
+         local key = __map[ _10364 ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false

@@ -82,8 +82,9 @@ class dumpFilter extend Nodes.Filter<Opt> {
       }
 
       self.writeln( opt,
-                    ": %s:%d %s %s %s"     
+                    ": %s:%d(%d:%d) %s %s %s"     
                     ( Nodes.getNodeKindName( node.get_kind() ), node.$id,
+                      node.$effectivePos.lineNo, node.$effectivePos.column,
                       txt, typeStr, comment ) );
    }
 }

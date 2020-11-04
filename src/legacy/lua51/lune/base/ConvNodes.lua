@@ -112,6 +112,48 @@ function _lune._toSet( val, toKeyInfo )
    return nil
 end
 
+function _lune.nilacc( val, fieldName, access, ... )
+   if not val then
+      return nil
+   end
+   if fieldName then
+      local field = val[ fieldName ]
+      if not field then
+         return nil
+      end
+      if access == "item" then
+         local typeId = type( field )
+         if typeId == "table" then
+            return field[ ... ]
+         elseif typeId == "string" then
+            return string.byte( field, ... )
+         end
+      elseif access == "call" then
+         return field( ... )
+      elseif access == "callmtd" then
+         return field( val, ... )
+      end
+      return field
+   end
+   if access == "item" then
+      local typeId = type( val )
+      if typeId == "table" then
+         return val[ ... ]
+      elseif typeId == "string" then
+         return string.byte( val, ... )
+      end
+   elseif access == "call" then
+      return val( ... )
+   elseif access == "list" then
+      local list, arg = ...
+      if not list then
+         return nil
+      end
+      return val( list, arg )
+   end
+   error( string.format( "illegal access -- %s", access ) )
+end
+
 function _lune.loadModule( mod )
    if __luneScript then
       return  __luneScript:loadModule( mod )
@@ -205,19 +247,21 @@ end
 function Node.setmeta( obj )
   setmetatable( obj, { __index = Node  } )
 end
-function Node.new( id, pos, kind )
+function Node.new( id, pos, kind, hasNilAcc, parent )
    local obj = {}
    Node.setmeta( obj )
    if obj.__init then
-      obj:__init( id, pos, kind )
+      obj:__init( id, pos, kind, hasNilAcc, parent )
    end
    return obj
 end
-function Node:__init( id, pos, kind )
+function Node:__init( id, pos, kind, hasNilAcc, parent )
 
    self.id = id
    self.pos = pos
    self.kind = kind
+   self.hasNilAcc = hasNilAcc
+   self.parent = parent
 end
 function Node:get_id()
    return self.id
@@ -228,32 +272,152 @@ end
 function Node:get_kind()
    return self.kind
 end
+function Node:get_hasNilAcc()
+   return self.hasNilAcc
+end
+function Node:get_parent()
+   return self.parent
+end
+function Node:set_parent( parent )
+   self.parent = parent
+end
 
 
 local ExpNode = {}
 setmetatable( ExpNode, { __index = Node } )
 _moduleObj.ExpNode = ExpNode
+function ExpNode:visit( visitor, depth )
+
+   return false
+end
 function ExpNode.setmeta( obj )
   setmetatable( obj, { __index = ExpNode  } )
 end
-function ExpNode.new( __superarg1, __superarg2, __superarg3 )
+function ExpNode.new( __superarg1, __superarg2, __superarg3, __superarg4, __superarg5 )
    local obj = {}
    ExpNode.setmeta( obj )
    if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3 )
+      obj:__init( __superarg1, __superarg2, __superarg3, __superarg4, __superarg5 )
    end
    return obj
 end
-function ExpNode:__init( __superarg1, __superarg2, __superarg3 )
+function ExpNode:__init( __superarg1, __superarg2, __superarg3, __superarg4, __superarg5 )
 
-   Node.__init( self, __superarg1, __superarg2, __superarg3 )
+   Node.__init( self, __superarg1, __superarg2, __superarg3, __superarg4, __superarg5 )
 end
+
+
+local DummyExpNode = {}
+setmetatable( DummyExpNode, { __index = ExpNode } )
+_moduleObj.DummyExpNode = DummyExpNode
+function DummyExpNode.new(  )
+   local obj = {}
+   DummyExpNode.setmeta( obj )
+   if obj.__init then obj:__init(  ); end
+   return obj
+end
+function DummyExpNode:__init() 
+   ExpNode.__init( self,0, Parser.getEofToken(  ).pos, "DummyExpNode", false, nil)
+   
+end
+function DummyExpNode.setmeta( obj )
+  setmetatable( obj, { __index = DummyExpNode  } )
+end
+
+local dummyExpNode = DummyExpNode.new()
+
+local NilAccNode = {}
+setmetatable( NilAccNode, { __index = ExpNode } )
+_moduleObj.NilAccNode = NilAccNode
+function NilAccNode.new( parent, prefix, acc )
+   local obj = {}
+   NilAccNode.setmeta( obj )
+   if obj.__init then obj:__init( parent, prefix, acc ); end
+   return obj
+end
+function NilAccNode:__init(parent, prefix, acc) 
+   ExpNode.__init( self,0, acc:get_pos(), "NicAccNode", false, parent)
+   
+   self.prefix = prefix
+   self.acc = acc
+end
+function NilAccNode:visit( visitor, depth )
+
+   do
+      local _switchExp = visitor( self.prefix, self, "prefix", depth )
+      if _switchExp == Nodes.NodeVisitMode.Child then
+         if not self.prefix:visit( visitor, depth + 1 ) then
+            return false
+         end
+         
+      elseif _switchExp == Nodes.NodeVisitMode.End then
+         return false
+      end
+   end
+   
+   do
+      local _switchExp = visitor( self.acc, self, "acc", depth )
+      if _switchExp == Nodes.NodeVisitMode.Child then
+         if not self.acc:visit( visitor, depth + 1 ) then
+            return false
+         end
+         
+      elseif _switchExp == Nodes.NodeVisitMode.End then
+         return false
+      end
+   end
+   
+   return true
+end
+function NilAccNode.setmeta( obj )
+  setmetatable( obj, { __index = NilAccNode  } )
+end
+function NilAccNode:get_prefix()
+   return self.prefix
+end
+function NilAccNode:get_acc()
+   return self.acc
+end
+function NilAccNode:set_acc( acc )
+   self.acc = acc
+end
+
+local State = {}
+_moduleObj.State = State
+function State.new( node )
+   local obj = {}
+   State.setmeta( obj )
+   if obj.__init then obj:__init( node ); end
+   return obj
+end
+function State:__init(node) 
+   self.topNode = node
+   self.nilAccNode = nil
+end
+function State:setNilAcc( node, parent )
+
+   if not self.nilAccNode then
+      if not node:get_hasNilAcc() and parent:get_hasNilAcc() then
+         self.nilAccNode = NilAccNode.new(parent, node, self.topNode)
+      end
+      
+   end
+   
+end
+function State.setmeta( obj )
+  setmetatable( obj, { __index = State  } )
+end
+function State:get_nilAccNode()
+   return self.nilAccNode
+end
+
+
 
 
 
 local nodeKind2createFromFunc = {}
 
-function Node.createFrom( node )
+local function Node_createFromNode( node, parent, state )
 
    local func = nodeKind2createFromFunc[node:get_kind()]
    if  nil == func then
@@ -262,14 +426,42 @@ function Node.createFrom( node )
       Util.err( string.format( "not support -- %s", Nodes.getNodeKindName( node:get_kind() )) )
    end
    
-   return func( node )
+   local convNode = func( node, parent, state )
+   
+   return convNode
 end
 
-
-local function Node_createFromNode( node )
-
-   return Node.createFrom( node )
+local FieldIndex = {}
+FieldIndex._val2NameMap = {}
+function FieldIndex:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "FieldIndex.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
 end
+function FieldIndex._from( val )
+   if FieldIndex._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+    
+FieldIndex.__allList = {}
+function FieldIndex.get__allList()
+   return FieldIndex.__allList
+end
+
+FieldIndex.Name = 1
+FieldIndex._val2NameMap[1] = 'Name'
+FieldIndex.__allList[1] = FieldIndex.Name
+FieldIndex.Type = 2
+FieldIndex._val2NameMap[2] = 'Type'
+FieldIndex.__allList[2] = FieldIndex.Type
+FieldIndex.Init = 3
+FieldIndex._val2NameMap[3] = 'Init'
+FieldIndex.__allList[3] = FieldIndex.Init
+
 
 
 
@@ -283,6 +475,20 @@ _moduleObj.ExpListNode = ExpListNode
 function ExpListNode:processFilter( filter, opt )
 
    filter:processExpList( self, opt )
+end
+function ExpListNode.new( id, pos, kind, hasNilAcc, parent, orgNode )
+   local obj = {}
+   ExpListNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent, orgNode ); end
+   return obj
+end
+function ExpListNode:__init(id, pos, kind, hasNilAcc, parent, orgNode) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.orgNode = orgNode
+   self.expList = {}
+   
+   
 end
 function ExpListNode:visit( visitor, depth )
 
@@ -314,28 +520,17 @@ end
 function ExpListNode.setmeta( obj )
   setmetatable( obj, { __index = ExpListNode  } )
 end
-function ExpListNode.new( __superarg1, __superarg2, __superarg3,orgNode, expList )
-   local obj = {}
-   ExpListNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,orgNode, expList )
-   end
-   return obj
-end
-function ExpListNode:__init( __superarg1, __superarg2, __superarg3,orgNode, expList )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.orgNode = orgNode
-   self.expList = expList
-end
 function ExpListNode:get_orgNode()
    return self.orgNode
 end
 function ExpListNode:get_expList()
    return self.expList
 end
+function ExpListNode:set_expList( expList )
+   self.expList = expList
+end
 
-local function ExpListNode_createFromNode( workNode )
+local function ExpListNode_createFromNode( workNode, parent, state )
 
    local node = _lune.__Cast( workNode, 3, Nodes.ExpListNode )
    if  nil == node then
@@ -344,23 +539,44 @@ local function ExpListNode_createFromNode( workNode )
       Util.err( string.format( "illegal node -- %s, %s", Nodes.getNodeKindName( workNode:get_kind() ), 'ExpListNode') )
    end
    
+   local convNode = ExpListNode.new(node:get_id(), node:get_effectivePos(), 'ExpListNode', workNode:hasNilAccess(  ), parent, node)
    local function createexpList(  )
    
       local list = node:get_expList()
       local expList = {}
       for __index, exp in ipairs( list ) do
-         table.insert( expList, Node.createFrom( exp ) )
+         local newConv
+         
+         
+         do
+            local newState = State.new(convNode)
+            local newNode = Node_createFromNode( exp, convNode, newState )
+            do
+               local nilAccNode = newState:get_nilAccNode()
+               if nilAccNode ~= nil then
+                  newConv = nilAccNode
+               else
+                  newConv = newNode
+               end
+            end
+            
+         end
+         
+         
+         table.insert( expList, newConv )
       end
       
       return expList
    end
+   convNode:set_expList( createexpList(  ) )
    
-   return ExpListNode.new(node:get_id(), node:get_pos(), 'ExpListNode', node, createexpList(  ))
+   state:setNilAcc( convNode, parent )
+   return convNode
 end
 _moduleObj.ExpListNode_createFromNode = ExpListNode_createFromNode
-nodeKind2createFromFunc[Nodes.NodeKind.get_ExpList()] = function ( node )
+nodeKind2createFromFunc[Nodes.NodeKind.get_ExpList()] = function ( node, workParent, state )
 
-   return ExpListNode_createFromNode( node )
+   return ExpListNode_createFromNode( node, workParent, state )
 end
 
 
@@ -375,6 +591,20 @@ _moduleObj.ExpNewNode = ExpNewNode
 function ExpNewNode:processFilter( filter, opt )
 
    filter:processExpNew( self, opt )
+end
+function ExpNewNode.new( id, pos, kind, hasNilAcc, parent, orgNode )
+   local obj = {}
+   ExpNewNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent, orgNode ); end
+   return obj
+end
+function ExpNewNode:__init(id, pos, kind, hasNilAcc, parent, orgNode) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.orgNode = orgNode
+   self.argList = nil
+   
+   
 end
 function ExpNewNode:visit( visitor, depth )
 
@@ -407,28 +637,17 @@ end
 function ExpNewNode.setmeta( obj )
   setmetatable( obj, { __index = ExpNewNode  } )
 end
-function ExpNewNode.new( __superarg1, __superarg2, __superarg3,orgNode, argList )
-   local obj = {}
-   ExpNewNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,orgNode, argList )
-   end
-   return obj
-end
-function ExpNewNode:__init( __superarg1, __superarg2, __superarg3,orgNode, argList )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.orgNode = orgNode
-   self.argList = argList
-end
 function ExpNewNode:get_orgNode()
    return self.orgNode
 end
 function ExpNewNode:get_argList()
    return self.argList
 end
+function ExpNewNode:set_argList( argList )
+   self.argList = argList
+end
 
-local function ExpNewNode_createFromNode( workNode )
+local function ExpNewNode_createFromNode( workNode, parent, state )
 
    local node = _lune.__Cast( workNode, 3, Nodes.ExpNewNode )
    if  nil == node then
@@ -437,6 +656,7 @@ local function ExpNewNode_createFromNode( workNode )
       Util.err( string.format( "illegal node -- %s, %s", Nodes.getNodeKindName( workNode:get_kind() ), 'ExpNewNode') )
    end
    
+   local convNode = ExpNewNode.new(node:get_id(), node:get_effectivePos(), 'ExpNewNode', workNode:hasNilAccess(  ), parent, node)
    local function createargList(  )
    
       local child = node:get_argList()
@@ -446,15 +666,18 @@ local function ExpNewNode_createFromNode( workNode )
          return nil
       end
       
-      return ExpListNode_createFromNode( child )
+      local paramNode = ExpListNode_createFromNode( child, convNode, state )
+      return paramNode
    end
+   convNode:set_argList( createargList(  ) )
    
-   return ExpNewNode.new(node:get_id(), node:get_pos(), 'ExpNewNode', node, createargList(  ))
+   state:setNilAcc( convNode, parent )
+   return convNode
 end
 _moduleObj.ExpNewNode_createFromNode = ExpNewNode_createFromNode
-nodeKind2createFromFunc[Nodes.NodeKind.get_ExpNew()] = function ( node )
+nodeKind2createFromFunc[Nodes.NodeKind.get_ExpNew()] = function ( node, workParent, state )
 
-   return ExpNewNode_createFromNode( node )
+   return ExpNewNode_createFromNode( node, workParent, state )
 end
 
 
@@ -469,6 +692,21 @@ _moduleObj.ExpUnwrapNode = ExpUnwrapNode
 function ExpUnwrapNode:processFilter( filter, opt )
 
    filter:processExpUnwrap( self, opt )
+end
+function ExpUnwrapNode.new( id, pos, kind, hasNilAcc, parent, orgNode )
+   local obj = {}
+   ExpUnwrapNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent, orgNode ); end
+   return obj
+end
+function ExpUnwrapNode:__init(id, pos, kind, hasNilAcc, parent, orgNode) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.orgNode = orgNode
+   self.exp = dummyExpNode
+   self.default = nil
+   
+   
 end
 function ExpUnwrapNode:visit( visitor, depth )
 
@@ -518,32 +756,23 @@ end
 function ExpUnwrapNode.setmeta( obj )
   setmetatable( obj, { __index = ExpUnwrapNode  } )
 end
-function ExpUnwrapNode.new( __superarg1, __superarg2, __superarg3,orgNode, exp, default )
-   local obj = {}
-   ExpUnwrapNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,orgNode, exp, default )
-   end
-   return obj
-end
-function ExpUnwrapNode:__init( __superarg1, __superarg2, __superarg3,orgNode, exp, default )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.orgNode = orgNode
-   self.exp = exp
-   self.default = default
-end
 function ExpUnwrapNode:get_orgNode()
    return self.orgNode
 end
 function ExpUnwrapNode:get_exp()
    return self.exp
 end
+function ExpUnwrapNode:set_exp( exp )
+   self.exp = exp
+end
 function ExpUnwrapNode:get_default()
    return self.default
 end
+function ExpUnwrapNode:set_default( default )
+   self.default = default
+end
 
-local function ExpUnwrapNode_createFromNode( workNode )
+local function ExpUnwrapNode_createFromNode( workNode, parent, state )
 
    local node = _lune.__Cast( workNode, 3, Nodes.ExpUnwrapNode )
    if  nil == node then
@@ -552,11 +781,14 @@ local function ExpUnwrapNode_createFromNode( workNode )
       Util.err( string.format( "illegal node -- %s, %s", Nodes.getNodeKindName( workNode:get_kind() ), 'ExpUnwrapNode') )
    end
    
+   local convNode = ExpUnwrapNode.new(node:get_id(), node:get_effectivePos(), 'ExpUnwrapNode', workNode:hasNilAccess(  ), parent, node)
    local function createexp(  )
    
       local child = node:get_exp()
-      return Node_createFromNode( child )
+      local paramNode = Node_createFromNode( child, convNode, state )
+      return paramNode
    end
+   convNode:set_exp( createexp(  ) )
    local function createdefault(  )
    
       local child = node:get_default()
@@ -566,15 +798,18 @@ local function ExpUnwrapNode_createFromNode( workNode )
          return nil
       end
       
-      return Node_createFromNode( child )
+      local paramNode = Node_createFromNode( child, convNode, state )
+      return paramNode
    end
+   convNode:set_default( createdefault(  ) )
    
-   return ExpUnwrapNode.new(node:get_id(), node:get_pos(), 'ExpUnwrapNode', node, createexp(  ), createdefault(  ))
+   state:setNilAcc( convNode, parent )
+   return convNode
 end
 _moduleObj.ExpUnwrapNode_createFromNode = ExpUnwrapNode_createFromNode
-nodeKind2createFromFunc[Nodes.NodeKind.get_ExpUnwrap()] = function ( node )
+nodeKind2createFromFunc[Nodes.NodeKind.get_ExpUnwrap()] = function ( node, workParent, state )
 
-   return ExpUnwrapNode_createFromNode( node )
+   return ExpUnwrapNode_createFromNode( node, workParent, state )
 end
 
 
@@ -590,6 +825,19 @@ function ExpRefNode:processFilter( filter, opt )
 
    filter:processExpRef( self, opt )
 end
+function ExpRefNode.new( id, pos, kind, hasNilAcc, parent, orgNode )
+   local obj = {}
+   ExpRefNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent, orgNode ); end
+   return obj
+end
+function ExpRefNode:__init(id, pos, kind, hasNilAcc, parent, orgNode) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.orgNode = orgNode
+   
+   
+end
 function ExpRefNode:visit( visitor, depth )
 
    
@@ -598,24 +846,11 @@ end
 function ExpRefNode.setmeta( obj )
   setmetatable( obj, { __index = ExpRefNode  } )
 end
-function ExpRefNode.new( __superarg1, __superarg2, __superarg3,orgNode )
-   local obj = {}
-   ExpRefNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,orgNode )
-   end
-   return obj
-end
-function ExpRefNode:__init( __superarg1, __superarg2, __superarg3,orgNode )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.orgNode = orgNode
-end
 function ExpRefNode:get_orgNode()
    return self.orgNode
 end
 
-local function ExpRefNode_createFromNode( workNode )
+local function ExpRefNode_createFromNode( workNode, parent, state )
 
    local node = _lune.__Cast( workNode, 3, Nodes.ExpRefNode )
    if  nil == node then
@@ -624,13 +859,15 @@ local function ExpRefNode_createFromNode( workNode )
       Util.err( string.format( "illegal node -- %s, %s", Nodes.getNodeKindName( workNode:get_kind() ), 'ExpRefNode') )
    end
    
+   local convNode = ExpRefNode.new(node:get_id(), node:get_effectivePos(), 'ExpRefNode', workNode:hasNilAccess(  ), parent, node)
    
-   return ExpRefNode.new(node:get_id(), node:get_pos(), 'ExpRefNode', node)
+   state:setNilAcc( convNode, parent )
+   return convNode
 end
 _moduleObj.ExpRefNode_createFromNode = ExpRefNode_createFromNode
-nodeKind2createFromFunc[Nodes.NodeKind.get_ExpRef()] = function ( node )
+nodeKind2createFromFunc[Nodes.NodeKind.get_ExpRef()] = function ( node, workParent, state )
 
-   return ExpRefNode_createFromNode( node )
+   return ExpRefNode_createFromNode( node, workParent, state )
 end
 
 
@@ -645,6 +882,21 @@ _moduleObj.ExpOp2Node = ExpOp2Node
 function ExpOp2Node:processFilter( filter, opt )
 
    filter:processExpOp2( self, opt )
+end
+function ExpOp2Node.new( id, pos, kind, hasNilAcc, parent, orgNode )
+   local obj = {}
+   ExpOp2Node.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent, orgNode ); end
+   return obj
+end
+function ExpOp2Node:__init(id, pos, kind, hasNilAcc, parent, orgNode) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.orgNode = orgNode
+   self.exp1 = dummyExpNode
+   self.exp2 = dummyExpNode
+   
+   
 end
 function ExpOp2Node:visit( visitor, depth )
 
@@ -689,32 +941,23 @@ end
 function ExpOp2Node.setmeta( obj )
   setmetatable( obj, { __index = ExpOp2Node  } )
 end
-function ExpOp2Node.new( __superarg1, __superarg2, __superarg3,orgNode, exp1, exp2 )
-   local obj = {}
-   ExpOp2Node.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,orgNode, exp1, exp2 )
-   end
-   return obj
-end
-function ExpOp2Node:__init( __superarg1, __superarg2, __superarg3,orgNode, exp1, exp2 )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.orgNode = orgNode
-   self.exp1 = exp1
-   self.exp2 = exp2
-end
 function ExpOp2Node:get_orgNode()
    return self.orgNode
 end
 function ExpOp2Node:get_exp1()
    return self.exp1
 end
+function ExpOp2Node:set_exp1( exp1 )
+   self.exp1 = exp1
+end
 function ExpOp2Node:get_exp2()
    return self.exp2
 end
+function ExpOp2Node:set_exp2( exp2 )
+   self.exp2 = exp2
+end
 
-local function ExpOp2Node_createFromNode( workNode )
+local function ExpOp2Node_createFromNode( workNode, parent, state )
 
    local node = _lune.__Cast( workNode, 3, Nodes.ExpOp2Node )
    if  nil == node then
@@ -723,23 +966,29 @@ local function ExpOp2Node_createFromNode( workNode )
       Util.err( string.format( "illegal node -- %s, %s", Nodes.getNodeKindName( workNode:get_kind() ), 'ExpOp2Node') )
    end
    
+   local convNode = ExpOp2Node.new(node:get_id(), node:get_effectivePos(), 'ExpOp2Node', workNode:hasNilAccess(  ), parent, node)
    local function createexp1(  )
    
       local child = node:get_exp1()
-      return Node_createFromNode( child )
+      local paramNode = Node_createFromNode( child, convNode, state )
+      return paramNode
    end
+   convNode:set_exp1( createexp1(  ) )
    local function createexp2(  )
    
       local child = node:get_exp2()
-      return Node_createFromNode( child )
+      local paramNode = Node_createFromNode( child, convNode, state )
+      return paramNode
    end
+   convNode:set_exp2( createexp2(  ) )
    
-   return ExpOp2Node.new(node:get_id(), node:get_pos(), 'ExpOp2Node', node, createexp1(  ), createexp2(  ))
+   state:setNilAcc( convNode, parent )
+   return convNode
 end
 _moduleObj.ExpOp2Node_createFromNode = ExpOp2Node_createFromNode
-nodeKind2createFromFunc[Nodes.NodeKind.get_ExpOp2()] = function ( node )
+nodeKind2createFromFunc[Nodes.NodeKind.get_ExpOp2()] = function ( node, workParent, state )
 
-   return ExpOp2Node_createFromNode( node )
+   return ExpOp2Node_createFromNode( node, workParent, state )
 end
 
 
@@ -754,6 +1003,20 @@ _moduleObj.ExpCastNode = ExpCastNode
 function ExpCastNode:processFilter( filter, opt )
 
    filter:processExpCast( self, opt )
+end
+function ExpCastNode.new( id, pos, kind, hasNilAcc, parent, orgNode )
+   local obj = {}
+   ExpCastNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent, orgNode ); end
+   return obj
+end
+function ExpCastNode:__init(id, pos, kind, hasNilAcc, parent, orgNode) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.orgNode = orgNode
+   self.exp = dummyExpNode
+   
+   
 end
 function ExpCastNode:visit( visitor, depth )
 
@@ -781,28 +1044,17 @@ end
 function ExpCastNode.setmeta( obj )
   setmetatable( obj, { __index = ExpCastNode  } )
 end
-function ExpCastNode.new( __superarg1, __superarg2, __superarg3,orgNode, exp )
-   local obj = {}
-   ExpCastNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,orgNode, exp )
-   end
-   return obj
-end
-function ExpCastNode:__init( __superarg1, __superarg2, __superarg3,orgNode, exp )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.orgNode = orgNode
-   self.exp = exp
-end
 function ExpCastNode:get_orgNode()
    return self.orgNode
 end
 function ExpCastNode:get_exp()
    return self.exp
 end
+function ExpCastNode:set_exp( exp )
+   self.exp = exp
+end
 
-local function ExpCastNode_createFromNode( workNode )
+local function ExpCastNode_createFromNode( workNode, parent, state )
 
    local node = _lune.__Cast( workNode, 3, Nodes.ExpCastNode )
    if  nil == node then
@@ -811,70 +1063,43 @@ local function ExpCastNode_createFromNode( workNode )
       Util.err( string.format( "illegal node -- %s, %s", Nodes.getNodeKindName( workNode:get_kind() ), 'ExpCastNode') )
    end
    
+   local convNode = ExpCastNode.new(node:get_id(), node:get_effectivePos(), 'ExpCastNode', workNode:hasNilAccess(  ), parent, node)
    local function createexp(  )
    
       local child = node:get_exp()
-      return Node_createFromNode( child )
+      local paramNode = Node_createFromNode( child, convNode, state )
+      return paramNode
    end
+   convNode:set_exp( createexp(  ) )
    
-   return ExpCastNode.new(node:get_id(), node:get_pos(), 'ExpCastNode', node, createexp(  ))
+   state:setNilAcc( convNode, parent )
+   return convNode
 end
 _moduleObj.ExpCastNode_createFromNode = ExpCastNode_createFromNode
-nodeKind2createFromFunc[Nodes.NodeKind.get_ExpCast()] = function ( node )
+nodeKind2createFromFunc[Nodes.NodeKind.get_ExpCast()] = function ( node, workParent, state )
 
-   return ExpCastNode_createFromNode( node )
+   return ExpCastNode_createFromNode( node, workParent, state )
 end
-
 
 
 
 local ExpToDDDNode = {}
-
-
-
 setmetatable( ExpToDDDNode, { __index = ExpNode } )
 _moduleObj.ExpToDDDNode = ExpToDDDNode
-function ExpToDDDNode:processFilter( filter, opt )
-
-   filter:processExpToDDD( self, opt )
-end
-function ExpToDDDNode:visit( visitor, depth )
-
-   do
-      local child = self.expList
-      do
-         local _switchExp = visitor( child, self, 'expList', depth )
-         if _switchExp == Nodes.NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1 ) then
-               return false
-            end
-            
-         elseif _switchExp == Nodes.NodeVisitMode.End then
-            return false
-         end
-      end
-      
-      
-   end
-   
-   
-   
-   return true
-end
 function ExpToDDDNode.setmeta( obj )
   setmetatable( obj, { __index = ExpToDDDNode  } )
 end
-function ExpToDDDNode.new( __superarg1, __superarg2, __superarg3,orgNode, expList )
+function ExpToDDDNode.new( __superarg1, __superarg2, __superarg3, __superarg4, __superarg5,orgNode, expList )
    local obj = {}
    ExpToDDDNode.setmeta( obj )
    if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,orgNode, expList )
+      obj:__init( __superarg1, __superarg2, __superarg3, __superarg4, __superarg5,orgNode, expList )
    end
    return obj
 end
-function ExpToDDDNode:__init( __superarg1, __superarg2, __superarg3,orgNode, expList )
+function ExpToDDDNode:__init( __superarg1, __superarg2, __superarg3, __superarg4, __superarg5,orgNode, expList )
 
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
+   ExpNode.__init( self, __superarg1, __superarg2, __superarg3, __superarg4, __superarg5 )
    self.orgNode = orgNode
    self.expList = expList
 end
@@ -884,31 +1109,35 @@ end
 function ExpToDDDNode:get_expList()
    return self.expList
 end
+function ExpToDDDNode:set_expList( expList )
+   self.expList = expList
+end
 
-local function ExpToDDDNode_createFromNode( workNode )
+
+local function ExpToDDDNode_createFromNode( workNode, parent, state )
+   local __func__ = '@lune.@base.@ConvNodes.ExpToDDDNode_createFromNode'
 
    local node = _lune.__Cast( workNode, 3, Nodes.ExpToDDDNode )
    if  nil == node then
       local _node = node
    
-      Util.err( string.format( "illegal node -- %s, %s", Nodes.getNodeKindName( workNode:get_kind() ), 'ExpToDDDNode') )
+      Util.err( string.format( "illegal node -- %s -- %s", tostring( workNode:get_kind()), __func__) )
    end
    
-   local function createexpList(  )
+   local expList = ExpListNode_createFromNode( node:get_expList(), dummyExpNode, state )
    
-      local child = node:get_expList()
-      return ExpListNode_createFromNode( child )
-   end
+   local convNode = ExpToDDDNode.new(node:get_id(), node:get_effectivePos(), "ExpToDDDNode", false, parent, node, expList)
+   expList:set_parent( convNode )
    
-   return ExpToDDDNode.new(node:get_id(), node:get_pos(), 'ExpToDDDNode', node, createexpList(  ))
+   state:setNilAcc( convNode, parent )
+   
+   return convNode
 end
 _moduleObj.ExpToDDDNode_createFromNode = ExpToDDDNode_createFromNode
-nodeKind2createFromFunc[Nodes.NodeKind.get_ExpToDDD()] = function ( node )
+nodeKind2createFromFunc[Nodes.NodeKind.get_ExpToDDD()] = function ( node, parent, state )
 
-   return ExpToDDDNode_createFromNode( node )
+   return ExpToDDDNode_createFromNode( node, parent, state )
 end
-
-
 
 
 local ExpSubDDDNode = {}
@@ -920,6 +1149,20 @@ _moduleObj.ExpSubDDDNode = ExpSubDDDNode
 function ExpSubDDDNode:processFilter( filter, opt )
 
    filter:processExpSubDDD( self, opt )
+end
+function ExpSubDDDNode.new( id, pos, kind, hasNilAcc, parent, orgNode )
+   local obj = {}
+   ExpSubDDDNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent, orgNode ); end
+   return obj
+end
+function ExpSubDDDNode:__init(id, pos, kind, hasNilAcc, parent, orgNode) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.orgNode = orgNode
+   self.src = dummyExpNode
+   
+   
 end
 function ExpSubDDDNode:visit( visitor, depth )
 
@@ -947,28 +1190,17 @@ end
 function ExpSubDDDNode.setmeta( obj )
   setmetatable( obj, { __index = ExpSubDDDNode  } )
 end
-function ExpSubDDDNode.new( __superarg1, __superarg2, __superarg3,orgNode, src )
-   local obj = {}
-   ExpSubDDDNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,orgNode, src )
-   end
-   return obj
-end
-function ExpSubDDDNode:__init( __superarg1, __superarg2, __superarg3,orgNode, src )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.orgNode = orgNode
-   self.src = src
-end
 function ExpSubDDDNode:get_orgNode()
    return self.orgNode
 end
 function ExpSubDDDNode:get_src()
    return self.src
 end
+function ExpSubDDDNode:set_src( src )
+   self.src = src
+end
 
-local function ExpSubDDDNode_createFromNode( workNode )
+local function ExpSubDDDNode_createFromNode( workNode, parent, state )
 
    local node = _lune.__Cast( workNode, 3, Nodes.ExpSubDDDNode )
    if  nil == node then
@@ -977,18 +1209,22 @@ local function ExpSubDDDNode_createFromNode( workNode )
       Util.err( string.format( "illegal node -- %s, %s", Nodes.getNodeKindName( workNode:get_kind() ), 'ExpSubDDDNode') )
    end
    
+   local convNode = ExpSubDDDNode.new(node:get_id(), node:get_effectivePos(), 'ExpSubDDDNode', workNode:hasNilAccess(  ), parent, node)
    local function createsrc(  )
    
       local child = node:get_src()
-      return Node_createFromNode( child )
+      local paramNode = Node_createFromNode( child, convNode, state )
+      return paramNode
    end
+   convNode:set_src( createsrc(  ) )
    
-   return ExpSubDDDNode.new(node:get_id(), node:get_pos(), 'ExpSubDDDNode', node, createsrc(  ))
+   state:setNilAcc( convNode, parent )
+   return convNode
 end
 _moduleObj.ExpSubDDDNode_createFromNode = ExpSubDDDNode_createFromNode
-nodeKind2createFromFunc[Nodes.NodeKind.get_ExpSubDDD()] = function ( node )
+nodeKind2createFromFunc[Nodes.NodeKind.get_ExpSubDDD()] = function ( node, workParent, state )
 
-   return ExpSubDDDNode_createFromNode( node )
+   return ExpSubDDDNode_createFromNode( node, workParent, state )
 end
 
 
@@ -1003,6 +1239,20 @@ _moduleObj.ExpOp1Node = ExpOp1Node
 function ExpOp1Node:processFilter( filter, opt )
 
    filter:processExpOp1( self, opt )
+end
+function ExpOp1Node.new( id, pos, kind, hasNilAcc, parent, orgNode )
+   local obj = {}
+   ExpOp1Node.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent, orgNode ); end
+   return obj
+end
+function ExpOp1Node:__init(id, pos, kind, hasNilAcc, parent, orgNode) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.orgNode = orgNode
+   self.exp = dummyExpNode
+   
+   
 end
 function ExpOp1Node:visit( visitor, depth )
 
@@ -1030,28 +1280,17 @@ end
 function ExpOp1Node.setmeta( obj )
   setmetatable( obj, { __index = ExpOp1Node  } )
 end
-function ExpOp1Node.new( __superarg1, __superarg2, __superarg3,orgNode, exp )
-   local obj = {}
-   ExpOp1Node.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,orgNode, exp )
-   end
-   return obj
-end
-function ExpOp1Node:__init( __superarg1, __superarg2, __superarg3,orgNode, exp )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.orgNode = orgNode
-   self.exp = exp
-end
 function ExpOp1Node:get_orgNode()
    return self.orgNode
 end
 function ExpOp1Node:get_exp()
    return self.exp
 end
+function ExpOp1Node:set_exp( exp )
+   self.exp = exp
+end
 
-local function ExpOp1Node_createFromNode( workNode )
+local function ExpOp1Node_createFromNode( workNode, parent, state )
 
    local node = _lune.__Cast( workNode, 3, Nodes.ExpOp1Node )
    if  nil == node then
@@ -1060,18 +1299,22 @@ local function ExpOp1Node_createFromNode( workNode )
       Util.err( string.format( "illegal node -- %s, %s", Nodes.getNodeKindName( workNode:get_kind() ), 'ExpOp1Node') )
    end
    
+   local convNode = ExpOp1Node.new(node:get_id(), node:get_effectivePos(), 'ExpOp1Node', workNode:hasNilAccess(  ), parent, node)
    local function createexp(  )
    
       local child = node:get_exp()
-      return Node_createFromNode( child )
+      local paramNode = Node_createFromNode( child, convNode, state )
+      return paramNode
    end
+   convNode:set_exp( createexp(  ) )
    
-   return ExpOp1Node.new(node:get_id(), node:get_pos(), 'ExpOp1Node', node, createexp(  ))
+   state:setNilAcc( convNode, parent )
+   return convNode
 end
 _moduleObj.ExpOp1Node_createFromNode = ExpOp1Node_createFromNode
-nodeKind2createFromFunc[Nodes.NodeKind.get_ExpOp1()] = function ( node )
+nodeKind2createFromFunc[Nodes.NodeKind.get_ExpOp1()] = function ( node, workParent, state )
 
-   return ExpOp1Node_createFromNode( node )
+   return ExpOp1Node_createFromNode( node, workParent, state )
 end
 
 
@@ -1086,6 +1329,21 @@ _moduleObj.ExpRefItemNode = ExpRefItemNode
 function ExpRefItemNode:processFilter( filter, opt )
 
    filter:processExpRefItem( self, opt )
+end
+function ExpRefItemNode.new( id, pos, kind, hasNilAcc, parent, orgNode )
+   local obj = {}
+   ExpRefItemNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent, orgNode ); end
+   return obj
+end
+function ExpRefItemNode:__init(id, pos, kind, hasNilAcc, parent, orgNode) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.orgNode = orgNode
+   self.val = dummyExpNode
+   self.index = nil
+   
+   
 end
 function ExpRefItemNode:visit( visitor, depth )
 
@@ -1135,32 +1393,23 @@ end
 function ExpRefItemNode.setmeta( obj )
   setmetatable( obj, { __index = ExpRefItemNode  } )
 end
-function ExpRefItemNode.new( __superarg1, __superarg2, __superarg3,orgNode, val, index )
-   local obj = {}
-   ExpRefItemNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,orgNode, val, index )
-   end
-   return obj
-end
-function ExpRefItemNode:__init( __superarg1, __superarg2, __superarg3,orgNode, val, index )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.orgNode = orgNode
-   self.val = val
-   self.index = index
-end
 function ExpRefItemNode:get_orgNode()
    return self.orgNode
 end
 function ExpRefItemNode:get_val()
    return self.val
 end
+function ExpRefItemNode:set_val( val )
+   self.val = val
+end
 function ExpRefItemNode:get_index()
    return self.index
 end
+function ExpRefItemNode:set_index( index )
+   self.index = index
+end
 
-local function ExpRefItemNode_createFromNode( workNode )
+local function ExpRefItemNode_createFromNode( workNode, parent, state )
 
    local node = _lune.__Cast( workNode, 3, Nodes.ExpRefItemNode )
    if  nil == node then
@@ -1169,11 +1418,14 @@ local function ExpRefItemNode_createFromNode( workNode )
       Util.err( string.format( "illegal node -- %s, %s", Nodes.getNodeKindName( workNode:get_kind() ), 'ExpRefItemNode') )
    end
    
+   local convNode = ExpRefItemNode.new(node:get_id(), node:get_effectivePos(), 'ExpRefItemNode', workNode:hasNilAccess(  ), parent, node)
    local function createval(  )
    
       local child = node:get_val()
-      return Node_createFromNode( child )
+      local paramNode = Node_createFromNode( child, convNode, state )
+      return paramNode
    end
+   convNode:set_val( createval(  ) )
    local function createindex(  )
    
       local child = node:get_index()
@@ -1183,15 +1435,18 @@ local function ExpRefItemNode_createFromNode( workNode )
          return nil
       end
       
-      return Node_createFromNode( child )
+      local paramNode = Node_createFromNode( child, convNode, state )
+      return paramNode
    end
+   convNode:set_index( createindex(  ) )
    
-   return ExpRefItemNode.new(node:get_id(), node:get_pos(), 'ExpRefItemNode', node, createval(  ), createindex(  ))
+   state:setNilAcc( convNode, parent )
+   return convNode
 end
 _moduleObj.ExpRefItemNode_createFromNode = ExpRefItemNode_createFromNode
-nodeKind2createFromFunc[Nodes.NodeKind.get_ExpRefItem()] = function ( node )
+nodeKind2createFromFunc[Nodes.NodeKind.get_ExpRefItem()] = function ( node, workParent, state )
 
-   return ExpRefItemNode_createFromNode( node )
+   return ExpRefItemNode_createFromNode( node, workParent, state )
 end
 
 
@@ -1206,6 +1461,21 @@ _moduleObj.ExpCallNode = ExpCallNode
 function ExpCallNode:processFilter( filter, opt )
 
    filter:processExpCall( self, opt )
+end
+function ExpCallNode.new( id, pos, kind, hasNilAcc, parent, orgNode )
+   local obj = {}
+   ExpCallNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent, orgNode ); end
+   return obj
+end
+function ExpCallNode:__init(id, pos, kind, hasNilAcc, parent, orgNode) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.orgNode = orgNode
+   self.func = dummyExpNode
+   self.argList = nil
+   
+   
 end
 function ExpCallNode:visit( visitor, depth )
 
@@ -1255,32 +1525,23 @@ end
 function ExpCallNode.setmeta( obj )
   setmetatable( obj, { __index = ExpCallNode  } )
 end
-function ExpCallNode.new( __superarg1, __superarg2, __superarg3,orgNode, func, argList )
-   local obj = {}
-   ExpCallNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,orgNode, func, argList )
-   end
-   return obj
-end
-function ExpCallNode:__init( __superarg1, __superarg2, __superarg3,orgNode, func, argList )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.orgNode = orgNode
-   self.func = func
-   self.argList = argList
-end
 function ExpCallNode:get_orgNode()
    return self.orgNode
 end
 function ExpCallNode:get_func()
    return self.func
 end
+function ExpCallNode:set_func( func )
+   self.func = func
+end
 function ExpCallNode:get_argList()
    return self.argList
 end
+function ExpCallNode:set_argList( argList )
+   self.argList = argList
+end
 
-local function ExpCallNode_createFromNode( workNode )
+local function ExpCallNode_createFromNode( workNode, parent, state )
 
    local node = _lune.__Cast( workNode, 3, Nodes.ExpCallNode )
    if  nil == node then
@@ -1289,11 +1550,14 @@ local function ExpCallNode_createFromNode( workNode )
       Util.err( string.format( "illegal node -- %s, %s", Nodes.getNodeKindName( workNode:get_kind() ), 'ExpCallNode') )
    end
    
+   local convNode = ExpCallNode.new(node:get_id(), node:get_effectivePos(), 'ExpCallNode', workNode:hasNilAccess(  ), parent, node)
    local function createfunc(  )
    
       local child = node:get_func()
-      return Node_createFromNode( child )
+      local paramNode = Node_createFromNode( child, convNode, state )
+      return paramNode
    end
+   convNode:set_func( createfunc(  ) )
    local function createargList(  )
    
       local child = node:get_argList()
@@ -1303,15 +1567,18 @@ local function ExpCallNode_createFromNode( workNode )
          return nil
       end
       
-      return ExpListNode_createFromNode( child )
+      local paramNode = ExpListNode_createFromNode( child, convNode, state )
+      return paramNode
    end
+   convNode:set_argList( createargList(  ) )
    
-   return ExpCallNode.new(node:get_id(), node:get_pos(), 'ExpCallNode', node, createfunc(  ), createargList(  ))
+   state:setNilAcc( convNode, parent )
+   return convNode
 end
 _moduleObj.ExpCallNode_createFromNode = ExpCallNode_createFromNode
-nodeKind2createFromFunc[Nodes.NodeKind.get_ExpCall()] = function ( node )
+nodeKind2createFromFunc[Nodes.NodeKind.get_ExpCall()] = function ( node, workParent, state )
 
-   return ExpCallNode_createFromNode( node )
+   return ExpCallNode_createFromNode( node, workParent, state )
 end
 
 
@@ -1326,6 +1593,20 @@ _moduleObj.ExpMRetNode = ExpMRetNode
 function ExpMRetNode:processFilter( filter, opt )
 
    filter:processExpMRet( self, opt )
+end
+function ExpMRetNode.new( id, pos, kind, hasNilAcc, parent, orgNode )
+   local obj = {}
+   ExpMRetNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent, orgNode ); end
+   return obj
+end
+function ExpMRetNode:__init(id, pos, kind, hasNilAcc, parent, orgNode) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.orgNode = orgNode
+   self.mRet = dummyExpNode
+   
+   
 end
 function ExpMRetNode:visit( visitor, depth )
 
@@ -1353,28 +1634,17 @@ end
 function ExpMRetNode.setmeta( obj )
   setmetatable( obj, { __index = ExpMRetNode  } )
 end
-function ExpMRetNode.new( __superarg1, __superarg2, __superarg3,orgNode, mRet )
-   local obj = {}
-   ExpMRetNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,orgNode, mRet )
-   end
-   return obj
-end
-function ExpMRetNode:__init( __superarg1, __superarg2, __superarg3,orgNode, mRet )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.orgNode = orgNode
-   self.mRet = mRet
-end
 function ExpMRetNode:get_orgNode()
    return self.orgNode
 end
 function ExpMRetNode:get_mRet()
    return self.mRet
 end
+function ExpMRetNode:set_mRet( mRet )
+   self.mRet = mRet
+end
 
-local function ExpMRetNode_createFromNode( workNode )
+local function ExpMRetNode_createFromNode( workNode, parent, state )
 
    local node = _lune.__Cast( workNode, 3, Nodes.ExpMRetNode )
    if  nil == node then
@@ -1383,18 +1653,22 @@ local function ExpMRetNode_createFromNode( workNode )
       Util.err( string.format( "illegal node -- %s, %s", Nodes.getNodeKindName( workNode:get_kind() ), 'ExpMRetNode') )
    end
    
+   local convNode = ExpMRetNode.new(node:get_id(), node:get_effectivePos(), 'ExpMRetNode', workNode:hasNilAccess(  ), parent, node)
    local function createmRet(  )
    
       local child = node:get_mRet()
-      return Node_createFromNode( child )
+      local paramNode = Node_createFromNode( child, convNode, state )
+      return paramNode
    end
+   convNode:set_mRet( createmRet(  ) )
    
-   return ExpMRetNode.new(node:get_id(), node:get_pos(), 'ExpMRetNode', node, createmRet(  ))
+   state:setNilAcc( convNode, parent )
+   return convNode
 end
 _moduleObj.ExpMRetNode_createFromNode = ExpMRetNode_createFromNode
-nodeKind2createFromFunc[Nodes.NodeKind.get_ExpMRet()] = function ( node )
+nodeKind2createFromFunc[Nodes.NodeKind.get_ExpMRet()] = function ( node, workParent, state )
 
-   return ExpMRetNode_createFromNode( node )
+   return ExpMRetNode_createFromNode( node, workParent, state )
 end
 
 
@@ -1409,6 +1683,20 @@ _moduleObj.ExpAccessMRetNode = ExpAccessMRetNode
 function ExpAccessMRetNode:processFilter( filter, opt )
 
    filter:processExpAccessMRet( self, opt )
+end
+function ExpAccessMRetNode.new( id, pos, kind, hasNilAcc, parent, orgNode )
+   local obj = {}
+   ExpAccessMRetNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent, orgNode ); end
+   return obj
+end
+function ExpAccessMRetNode:__init(id, pos, kind, hasNilAcc, parent, orgNode) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.orgNode = orgNode
+   self.mRet = dummyExpNode
+   
+   
 end
 function ExpAccessMRetNode:visit( visitor, depth )
 
@@ -1436,28 +1724,17 @@ end
 function ExpAccessMRetNode.setmeta( obj )
   setmetatable( obj, { __index = ExpAccessMRetNode  } )
 end
-function ExpAccessMRetNode.new( __superarg1, __superarg2, __superarg3,orgNode, mRet )
-   local obj = {}
-   ExpAccessMRetNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,orgNode, mRet )
-   end
-   return obj
-end
-function ExpAccessMRetNode:__init( __superarg1, __superarg2, __superarg3,orgNode, mRet )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.orgNode = orgNode
-   self.mRet = mRet
-end
 function ExpAccessMRetNode:get_orgNode()
    return self.orgNode
 end
 function ExpAccessMRetNode:get_mRet()
    return self.mRet
 end
+function ExpAccessMRetNode:set_mRet( mRet )
+   self.mRet = mRet
+end
 
-local function ExpAccessMRetNode_createFromNode( workNode )
+local function ExpAccessMRetNode_createFromNode( workNode, parent, state )
 
    local node = _lune.__Cast( workNode, 3, Nodes.ExpAccessMRetNode )
    if  nil == node then
@@ -1466,18 +1743,22 @@ local function ExpAccessMRetNode_createFromNode( workNode )
       Util.err( string.format( "illegal node -- %s, %s", Nodes.getNodeKindName( workNode:get_kind() ), 'ExpAccessMRetNode') )
    end
    
+   local convNode = ExpAccessMRetNode.new(node:get_id(), node:get_effectivePos(), 'ExpAccessMRetNode', workNode:hasNilAccess(  ), parent, node)
    local function createmRet(  )
    
       local child = node:get_mRet()
-      return Node_createFromNode( child )
+      local paramNode = Node_createFromNode( child, convNode, state )
+      return paramNode
    end
+   convNode:set_mRet( createmRet(  ) )
    
-   return ExpAccessMRetNode.new(node:get_id(), node:get_pos(), 'ExpAccessMRetNode', node, createmRet(  ))
+   state:setNilAcc( convNode, parent )
+   return convNode
 end
 _moduleObj.ExpAccessMRetNode_createFromNode = ExpAccessMRetNode_createFromNode
-nodeKind2createFromFunc[Nodes.NodeKind.get_ExpAccessMRet()] = function ( node )
+nodeKind2createFromFunc[Nodes.NodeKind.get_ExpAccessMRet()] = function ( node, workParent, state )
 
-   return ExpAccessMRetNode_createFromNode( node )
+   return ExpAccessMRetNode_createFromNode( node, workParent, state )
 end
 
 
@@ -1492,6 +1773,20 @@ _moduleObj.ExpMultiTo1Node = ExpMultiTo1Node
 function ExpMultiTo1Node:processFilter( filter, opt )
 
    filter:processExpMultiTo1( self, opt )
+end
+function ExpMultiTo1Node.new( id, pos, kind, hasNilAcc, parent, orgNode )
+   local obj = {}
+   ExpMultiTo1Node.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent, orgNode ); end
+   return obj
+end
+function ExpMultiTo1Node:__init(id, pos, kind, hasNilAcc, parent, orgNode) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.orgNode = orgNode
+   self.exp = dummyExpNode
+   
+   
 end
 function ExpMultiTo1Node:visit( visitor, depth )
 
@@ -1519,28 +1814,17 @@ end
 function ExpMultiTo1Node.setmeta( obj )
   setmetatable( obj, { __index = ExpMultiTo1Node  } )
 end
-function ExpMultiTo1Node.new( __superarg1, __superarg2, __superarg3,orgNode, exp )
-   local obj = {}
-   ExpMultiTo1Node.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,orgNode, exp )
-   end
-   return obj
-end
-function ExpMultiTo1Node:__init( __superarg1, __superarg2, __superarg3,orgNode, exp )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.orgNode = orgNode
-   self.exp = exp
-end
 function ExpMultiTo1Node:get_orgNode()
    return self.orgNode
 end
 function ExpMultiTo1Node:get_exp()
    return self.exp
 end
+function ExpMultiTo1Node:set_exp( exp )
+   self.exp = exp
+end
 
-local function ExpMultiTo1Node_createFromNode( workNode )
+local function ExpMultiTo1Node_createFromNode( workNode, parent, state )
 
    local node = _lune.__Cast( workNode, 3, Nodes.ExpMultiTo1Node )
    if  nil == node then
@@ -1549,18 +1833,22 @@ local function ExpMultiTo1Node_createFromNode( workNode )
       Util.err( string.format( "illegal node -- %s, %s", Nodes.getNodeKindName( workNode:get_kind() ), 'ExpMultiTo1Node') )
    end
    
+   local convNode = ExpMultiTo1Node.new(node:get_id(), node:get_effectivePos(), 'ExpMultiTo1Node', workNode:hasNilAccess(  ), parent, node)
    local function createexp(  )
    
       local child = node:get_exp()
-      return Node_createFromNode( child )
+      local paramNode = Node_createFromNode( child, convNode, state )
+      return paramNode
    end
+   convNode:set_exp( createexp(  ) )
    
-   return ExpMultiTo1Node.new(node:get_id(), node:get_pos(), 'ExpMultiTo1Node', node, createexp(  ))
+   state:setNilAcc( convNode, parent )
+   return convNode
 end
 _moduleObj.ExpMultiTo1Node_createFromNode = ExpMultiTo1Node_createFromNode
-nodeKind2createFromFunc[Nodes.NodeKind.get_ExpMultiTo1()] = function ( node )
+nodeKind2createFromFunc[Nodes.NodeKind.get_ExpMultiTo1()] = function ( node, workParent, state )
 
-   return ExpMultiTo1Node_createFromNode( node )
+   return ExpMultiTo1Node_createFromNode( node, workParent, state )
 end
 
 
@@ -1575,6 +1863,20 @@ _moduleObj.ExpParenNode = ExpParenNode
 function ExpParenNode:processFilter( filter, opt )
 
    filter:processExpParen( self, opt )
+end
+function ExpParenNode.new( id, pos, kind, hasNilAcc, parent, orgNode )
+   local obj = {}
+   ExpParenNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent, orgNode ); end
+   return obj
+end
+function ExpParenNode:__init(id, pos, kind, hasNilAcc, parent, orgNode) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.orgNode = orgNode
+   self.exp = dummyExpNode
+   
+   
 end
 function ExpParenNode:visit( visitor, depth )
 
@@ -1602,28 +1904,17 @@ end
 function ExpParenNode.setmeta( obj )
   setmetatable( obj, { __index = ExpParenNode  } )
 end
-function ExpParenNode.new( __superarg1, __superarg2, __superarg3,orgNode, exp )
-   local obj = {}
-   ExpParenNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,orgNode, exp )
-   end
-   return obj
-end
-function ExpParenNode:__init( __superarg1, __superarg2, __superarg3,orgNode, exp )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.orgNode = orgNode
-   self.exp = exp
-end
 function ExpParenNode:get_orgNode()
    return self.orgNode
 end
 function ExpParenNode:get_exp()
    return self.exp
 end
+function ExpParenNode:set_exp( exp )
+   self.exp = exp
+end
 
-local function ExpParenNode_createFromNode( workNode )
+local function ExpParenNode_createFromNode( workNode, parent, state )
 
    local node = _lune.__Cast( workNode, 3, Nodes.ExpParenNode )
    if  nil == node then
@@ -1632,18 +1923,22 @@ local function ExpParenNode_createFromNode( workNode )
       Util.err( string.format( "illegal node -- %s, %s", Nodes.getNodeKindName( workNode:get_kind() ), 'ExpParenNode') )
    end
    
+   local convNode = ExpParenNode.new(node:get_id(), node:get_effectivePos(), 'ExpParenNode', workNode:hasNilAccess(  ), parent, node)
    local function createexp(  )
    
       local child = node:get_exp()
-      return Node_createFromNode( child )
+      local paramNode = Node_createFromNode( child, convNode, state )
+      return paramNode
    end
+   convNode:set_exp( createexp(  ) )
    
-   return ExpParenNode.new(node:get_id(), node:get_pos(), 'ExpParenNode', node, createexp(  ))
+   state:setNilAcc( convNode, parent )
+   return convNode
 end
 _moduleObj.ExpParenNode_createFromNode = ExpParenNode_createFromNode
-nodeKind2createFromFunc[Nodes.NodeKind.get_ExpParen()] = function ( node )
+nodeKind2createFromFunc[Nodes.NodeKind.get_ExpParen()] = function ( node, workParent, state )
 
-   return ExpParenNode_createFromNode( node )
+   return ExpParenNode_createFromNode( node, workParent, state )
 end
 
 
@@ -1659,6 +1954,19 @@ function ExpOmitEnumNode:processFilter( filter, opt )
 
    filter:processExpOmitEnum( self, opt )
 end
+function ExpOmitEnumNode.new( id, pos, kind, hasNilAcc, parent, orgNode )
+   local obj = {}
+   ExpOmitEnumNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent, orgNode ); end
+   return obj
+end
+function ExpOmitEnumNode:__init(id, pos, kind, hasNilAcc, parent, orgNode) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.orgNode = orgNode
+   
+   
+end
 function ExpOmitEnumNode:visit( visitor, depth )
 
    
@@ -1667,24 +1975,11 @@ end
 function ExpOmitEnumNode.setmeta( obj )
   setmetatable( obj, { __index = ExpOmitEnumNode  } )
 end
-function ExpOmitEnumNode.new( __superarg1, __superarg2, __superarg3,orgNode )
-   local obj = {}
-   ExpOmitEnumNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,orgNode )
-   end
-   return obj
-end
-function ExpOmitEnumNode:__init( __superarg1, __superarg2, __superarg3,orgNode )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.orgNode = orgNode
-end
 function ExpOmitEnumNode:get_orgNode()
    return self.orgNode
 end
 
-local function ExpOmitEnumNode_createFromNode( workNode )
+local function ExpOmitEnumNode_createFromNode( workNode, parent, state )
 
    local node = _lune.__Cast( workNode, 3, Nodes.ExpOmitEnumNode )
    if  nil == node then
@@ -1693,13 +1988,15 @@ local function ExpOmitEnumNode_createFromNode( workNode )
       Util.err( string.format( "illegal node -- %s, %s", Nodes.getNodeKindName( workNode:get_kind() ), 'ExpOmitEnumNode') )
    end
    
+   local convNode = ExpOmitEnumNode.new(node:get_id(), node:get_effectivePos(), 'ExpOmitEnumNode', workNode:hasNilAccess(  ), parent, node)
    
-   return ExpOmitEnumNode.new(node:get_id(), node:get_pos(), 'ExpOmitEnumNode', node)
+   state:setNilAcc( convNode, parent )
+   return convNode
 end
 _moduleObj.ExpOmitEnumNode_createFromNode = ExpOmitEnumNode_createFromNode
-nodeKind2createFromFunc[Nodes.NodeKind.get_ExpOmitEnum()] = function ( node )
+nodeKind2createFromFunc[Nodes.NodeKind.get_ExpOmitEnum()] = function ( node, workParent, state )
 
-   return ExpOmitEnumNode_createFromNode( node )
+   return ExpOmitEnumNode_createFromNode( node, workParent, state )
 end
 
 
@@ -1714,6 +2011,20 @@ _moduleObj.RefFieldNode = RefFieldNode
 function RefFieldNode:processFilter( filter, opt )
 
    filter:processRefField( self, opt )
+end
+function RefFieldNode.new( id, pos, kind, hasNilAcc, parent, orgNode )
+   local obj = {}
+   RefFieldNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent, orgNode ); end
+   return obj
+end
+function RefFieldNode:__init(id, pos, kind, hasNilAcc, parent, orgNode) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.orgNode = orgNode
+   self.prefix = dummyExpNode
+   
+   
 end
 function RefFieldNode:visit( visitor, depth )
 
@@ -1741,28 +2052,17 @@ end
 function RefFieldNode.setmeta( obj )
   setmetatable( obj, { __index = RefFieldNode  } )
 end
-function RefFieldNode.new( __superarg1, __superarg2, __superarg3,orgNode, prefix )
-   local obj = {}
-   RefFieldNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,orgNode, prefix )
-   end
-   return obj
-end
-function RefFieldNode:__init( __superarg1, __superarg2, __superarg3,orgNode, prefix )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.orgNode = orgNode
-   self.prefix = prefix
-end
 function RefFieldNode:get_orgNode()
    return self.orgNode
 end
 function RefFieldNode:get_prefix()
    return self.prefix
 end
+function RefFieldNode:set_prefix( prefix )
+   self.prefix = prefix
+end
 
-local function RefFieldNode_createFromNode( workNode )
+local function RefFieldNode_createFromNode( workNode, parent, state )
 
    local node = _lune.__Cast( workNode, 3, Nodes.RefFieldNode )
    if  nil == node then
@@ -1771,18 +2071,22 @@ local function RefFieldNode_createFromNode( workNode )
       Util.err( string.format( "illegal node -- %s, %s", Nodes.getNodeKindName( workNode:get_kind() ), 'RefFieldNode') )
    end
    
+   local convNode = RefFieldNode.new(node:get_id(), node:get_effectivePos(), 'RefFieldNode', workNode:hasNilAccess(  ), parent, node)
    local function createprefix(  )
    
       local child = node:get_prefix()
-      return Node_createFromNode( child )
+      local paramNode = Node_createFromNode( child, convNode, state )
+      return paramNode
    end
+   convNode:set_prefix( createprefix(  ) )
    
-   return RefFieldNode.new(node:get_id(), node:get_pos(), 'RefFieldNode', node, createprefix(  ))
+   state:setNilAcc( convNode, parent )
+   return convNode
 end
 _moduleObj.RefFieldNode_createFromNode = RefFieldNode_createFromNode
-nodeKind2createFromFunc[Nodes.NodeKind.get_RefField()] = function ( node )
+nodeKind2createFromFunc[Nodes.NodeKind.get_RefField()] = function ( node, workParent, state )
 
-   return RefFieldNode_createFromNode( node )
+   return RefFieldNode_createFromNode( node, workParent, state )
 end
 
 
@@ -1797,6 +2101,20 @@ _moduleObj.GetFieldNode = GetFieldNode
 function GetFieldNode:processFilter( filter, opt )
 
    filter:processGetField( self, opt )
+end
+function GetFieldNode.new( id, pos, kind, hasNilAcc, parent, orgNode )
+   local obj = {}
+   GetFieldNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent, orgNode ); end
+   return obj
+end
+function GetFieldNode:__init(id, pos, kind, hasNilAcc, parent, orgNode) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.orgNode = orgNode
+   self.prefix = dummyExpNode
+   
+   
 end
 function GetFieldNode:visit( visitor, depth )
 
@@ -1824,28 +2142,17 @@ end
 function GetFieldNode.setmeta( obj )
   setmetatable( obj, { __index = GetFieldNode  } )
 end
-function GetFieldNode.new( __superarg1, __superarg2, __superarg3,orgNode, prefix )
-   local obj = {}
-   GetFieldNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,orgNode, prefix )
-   end
-   return obj
-end
-function GetFieldNode:__init( __superarg1, __superarg2, __superarg3,orgNode, prefix )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.orgNode = orgNode
-   self.prefix = prefix
-end
 function GetFieldNode:get_orgNode()
    return self.orgNode
 end
 function GetFieldNode:get_prefix()
    return self.prefix
 end
+function GetFieldNode:set_prefix( prefix )
+   self.prefix = prefix
+end
 
-local function GetFieldNode_createFromNode( workNode )
+local function GetFieldNode_createFromNode( workNode, parent, state )
 
    local node = _lune.__Cast( workNode, 3, Nodes.GetFieldNode )
    if  nil == node then
@@ -1854,18 +2161,22 @@ local function GetFieldNode_createFromNode( workNode )
       Util.err( string.format( "illegal node -- %s, %s", Nodes.getNodeKindName( workNode:get_kind() ), 'GetFieldNode') )
    end
    
+   local convNode = GetFieldNode.new(node:get_id(), node:get_effectivePos(), 'GetFieldNode', workNode:hasNilAccess(  ), parent, node)
    local function createprefix(  )
    
       local child = node:get_prefix()
-      return Node_createFromNode( child )
+      local paramNode = Node_createFromNode( child, convNode, state )
+      return paramNode
    end
+   convNode:set_prefix( createprefix(  ) )
    
-   return GetFieldNode.new(node:get_id(), node:get_pos(), 'GetFieldNode', node, createprefix(  ))
+   state:setNilAcc( convNode, parent )
+   return convNode
 end
 _moduleObj.GetFieldNode_createFromNode = GetFieldNode_createFromNode
-nodeKind2createFromFunc[Nodes.NodeKind.get_GetField()] = function ( node )
+nodeKind2createFromFunc[Nodes.NodeKind.get_GetField()] = function ( node, workParent, state )
 
-   return GetFieldNode_createFromNode( node )
+   return GetFieldNode_createFromNode( node, workParent, state )
 end
 
 
@@ -1881,6 +2192,19 @@ function DeclFuncNode:processFilter( filter, opt )
 
    filter:processDeclFunc( self, opt )
 end
+function DeclFuncNode.new( id, pos, kind, hasNilAcc, parent, orgNode )
+   local obj = {}
+   DeclFuncNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent, orgNode ); end
+   return obj
+end
+function DeclFuncNode:__init(id, pos, kind, hasNilAcc, parent, orgNode) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.orgNode = orgNode
+   
+   
+end
 function DeclFuncNode:visit( visitor, depth )
 
    
@@ -1889,24 +2213,11 @@ end
 function DeclFuncNode.setmeta( obj )
   setmetatable( obj, { __index = DeclFuncNode  } )
 end
-function DeclFuncNode.new( __superarg1, __superarg2, __superarg3,orgNode )
-   local obj = {}
-   DeclFuncNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,orgNode )
-   end
-   return obj
-end
-function DeclFuncNode:__init( __superarg1, __superarg2, __superarg3,orgNode )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.orgNode = orgNode
-end
 function DeclFuncNode:get_orgNode()
    return self.orgNode
 end
 
-local function DeclFuncNode_createFromNode( workNode )
+local function DeclFuncNode_createFromNode( workNode, parent, state )
 
    local node = _lune.__Cast( workNode, 3, Nodes.DeclFuncNode )
    if  nil == node then
@@ -1915,13 +2226,15 @@ local function DeclFuncNode_createFromNode( workNode )
       Util.err( string.format( "illegal node -- %s, %s", Nodes.getNodeKindName( workNode:get_kind() ), 'DeclFuncNode') )
    end
    
+   local convNode = DeclFuncNode.new(node:get_id(), node:get_effectivePos(), 'DeclFuncNode', workNode:hasNilAccess(  ), parent, node)
    
-   return DeclFuncNode.new(node:get_id(), node:get_pos(), 'DeclFuncNode', node)
+   state:setNilAcc( convNode, parent )
+   return convNode
 end
 _moduleObj.DeclFuncNode_createFromNode = DeclFuncNode_createFromNode
-nodeKind2createFromFunc[Nodes.NodeKind.get_DeclFunc()] = function ( node )
+nodeKind2createFromFunc[Nodes.NodeKind.get_DeclFunc()] = function ( node, workParent, state )
 
-   return DeclFuncNode_createFromNode( node )
+   return DeclFuncNode_createFromNode( node, workParent, state )
 end
 
 
@@ -1936,6 +2249,20 @@ _moduleObj.NewAlgeValNode = NewAlgeValNode
 function NewAlgeValNode:processFilter( filter, opt )
 
    filter:processNewAlgeVal( self, opt )
+end
+function NewAlgeValNode.new( id, pos, kind, hasNilAcc, parent, orgNode )
+   local obj = {}
+   NewAlgeValNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent, orgNode ); end
+   return obj
+end
+function NewAlgeValNode:__init(id, pos, kind, hasNilAcc, parent, orgNode) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.orgNode = orgNode
+   self.paramList = {}
+   
+   
 end
 function NewAlgeValNode:visit( visitor, depth )
 
@@ -1967,28 +2294,17 @@ end
 function NewAlgeValNode.setmeta( obj )
   setmetatable( obj, { __index = NewAlgeValNode  } )
 end
-function NewAlgeValNode.new( __superarg1, __superarg2, __superarg3,orgNode, paramList )
-   local obj = {}
-   NewAlgeValNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,orgNode, paramList )
-   end
-   return obj
-end
-function NewAlgeValNode:__init( __superarg1, __superarg2, __superarg3,orgNode, paramList )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.orgNode = orgNode
-   self.paramList = paramList
-end
 function NewAlgeValNode:get_orgNode()
    return self.orgNode
 end
 function NewAlgeValNode:get_paramList()
    return self.paramList
 end
+function NewAlgeValNode:set_paramList( paramList )
+   self.paramList = paramList
+end
 
-local function NewAlgeValNode_createFromNode( workNode )
+local function NewAlgeValNode_createFromNode( workNode, parent, state )
 
    local node = _lune.__Cast( workNode, 3, Nodes.NewAlgeValNode )
    if  nil == node then
@@ -1997,23 +2313,44 @@ local function NewAlgeValNode_createFromNode( workNode )
       Util.err( string.format( "illegal node -- %s, %s", Nodes.getNodeKindName( workNode:get_kind() ), 'NewAlgeValNode') )
    end
    
+   local convNode = NewAlgeValNode.new(node:get_id(), node:get_effectivePos(), 'NewAlgeValNode', workNode:hasNilAccess(  ), parent, node)
    local function createparamList(  )
    
       local list = node:get_paramList()
       local expList = {}
       for __index, exp in ipairs( list ) do
-         table.insert( expList, Node.createFrom( exp ) )
+         local newConv
+         
+         
+         do
+            local newState = State.new(convNode)
+            local newNode = Node_createFromNode( exp, convNode, newState )
+            do
+               local nilAccNode = newState:get_nilAccNode()
+               if nilAccNode ~= nil then
+                  newConv = nilAccNode
+               else
+                  newConv = newNode
+               end
+            end
+            
+         end
+         
+         
+         table.insert( expList, newConv )
       end
       
       return expList
    end
+   convNode:set_paramList( createparamList(  ) )
    
-   return NewAlgeValNode.new(node:get_id(), node:get_pos(), 'NewAlgeValNode', node, createparamList(  ))
+   state:setNilAcc( convNode, parent )
+   return convNode
 end
 _moduleObj.NewAlgeValNode_createFromNode = NewAlgeValNode_createFromNode
-nodeKind2createFromFunc[Nodes.NodeKind.get_NewAlgeVal()] = function ( node )
+nodeKind2createFromFunc[Nodes.NodeKind.get_NewAlgeVal()] = function ( node, workParent, state )
 
-   return NewAlgeValNode_createFromNode( node )
+   return NewAlgeValNode_createFromNode( node, workParent, state )
 end
 
 
@@ -2028,6 +2365,20 @@ _moduleObj.LuneKindNode = LuneKindNode
 function LuneKindNode:processFilter( filter, opt )
 
    filter:processLuneKind( self, opt )
+end
+function LuneKindNode.new( id, pos, kind, hasNilAcc, parent, orgNode )
+   local obj = {}
+   LuneKindNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent, orgNode ); end
+   return obj
+end
+function LuneKindNode:__init(id, pos, kind, hasNilAcc, parent, orgNode) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.orgNode = orgNode
+   self.exp = dummyExpNode
+   
+   
 end
 function LuneKindNode:visit( visitor, depth )
 
@@ -2055,28 +2406,17 @@ end
 function LuneKindNode.setmeta( obj )
   setmetatable( obj, { __index = LuneKindNode  } )
 end
-function LuneKindNode.new( __superarg1, __superarg2, __superarg3,orgNode, exp )
-   local obj = {}
-   LuneKindNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,orgNode, exp )
-   end
-   return obj
-end
-function LuneKindNode:__init( __superarg1, __superarg2, __superarg3,orgNode, exp )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.orgNode = orgNode
-   self.exp = exp
-end
 function LuneKindNode:get_orgNode()
    return self.orgNode
 end
 function LuneKindNode:get_exp()
    return self.exp
 end
+function LuneKindNode:set_exp( exp )
+   self.exp = exp
+end
 
-local function LuneKindNode_createFromNode( workNode )
+local function LuneKindNode_createFromNode( workNode, parent, state )
 
    local node = _lune.__Cast( workNode, 3, Nodes.LuneKindNode )
    if  nil == node then
@@ -2085,18 +2425,80 @@ local function LuneKindNode_createFromNode( workNode )
       Util.err( string.format( "illegal node -- %s, %s", Nodes.getNodeKindName( workNode:get_kind() ), 'LuneKindNode') )
    end
    
+   local convNode = LuneKindNode.new(node:get_id(), node:get_effectivePos(), 'LuneKindNode', workNode:hasNilAccess(  ), parent, node)
    local function createexp(  )
    
       local child = node:get_exp()
-      return Node_createFromNode( child )
+      local paramNode = Node_createFromNode( child, convNode, state )
+      return paramNode
    end
+   convNode:set_exp( createexp(  ) )
    
-   return LuneKindNode.new(node:get_id(), node:get_pos(), 'LuneKindNode', node, createexp(  ))
+   state:setNilAcc( convNode, parent )
+   return convNode
 end
 _moduleObj.LuneKindNode_createFromNode = LuneKindNode_createFromNode
-nodeKind2createFromFunc[Nodes.NodeKind.get_LuneKind()] = function ( node )
+nodeKind2createFromFunc[Nodes.NodeKind.get_LuneKind()] = function ( node, workParent, state )
 
-   return LuneKindNode_createFromNode( node )
+   return LuneKindNode_createFromNode( node, workParent, state )
+end
+
+
+
+
+local LiteralNilNode = {}
+
+
+
+setmetatable( LiteralNilNode, { __index = ExpNode } )
+_moduleObj.LiteralNilNode = LiteralNilNode
+function LiteralNilNode:processFilter( filter, opt )
+
+   filter:processLiteralNil( self, opt )
+end
+function LiteralNilNode.new( id, pos, kind, hasNilAcc, parent, orgNode )
+   local obj = {}
+   LiteralNilNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent, orgNode ); end
+   return obj
+end
+function LiteralNilNode:__init(id, pos, kind, hasNilAcc, parent, orgNode) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.orgNode = orgNode
+   
+   
+end
+function LiteralNilNode:visit( visitor, depth )
+
+   
+   return true
+end
+function LiteralNilNode.setmeta( obj )
+  setmetatable( obj, { __index = LiteralNilNode  } )
+end
+function LiteralNilNode:get_orgNode()
+   return self.orgNode
+end
+
+local function LiteralNilNode_createFromNode( workNode, parent, state )
+
+   local node = _lune.__Cast( workNode, 3, Nodes.LiteralNilNode )
+   if  nil == node then
+      local _node = node
+   
+      Util.err( string.format( "illegal node -- %s, %s", Nodes.getNodeKindName( workNode:get_kind() ), 'LiteralNilNode') )
+   end
+   
+   local convNode = LiteralNilNode.new(node:get_id(), node:get_effectivePos(), 'LiteralNilNode', workNode:hasNilAccess(  ), parent, node)
+   
+   state:setNilAcc( convNode, parent )
+   return convNode
+end
+_moduleObj.LiteralNilNode_createFromNode = LiteralNilNode_createFromNode
+nodeKind2createFromFunc[Nodes.NodeKind.get_LiteralNil()] = function ( node, workParent, state )
+
+   return LiteralNilNode_createFromNode( node, workParent, state )
 end
 
 
@@ -2112,6 +2514,19 @@ function LiteralCharNode:processFilter( filter, opt )
 
    filter:processLiteralChar( self, opt )
 end
+function LiteralCharNode.new( id, pos, kind, hasNilAcc, parent, orgNode )
+   local obj = {}
+   LiteralCharNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent, orgNode ); end
+   return obj
+end
+function LiteralCharNode:__init(id, pos, kind, hasNilAcc, parent, orgNode) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.orgNode = orgNode
+   
+   
+end
 function LiteralCharNode:visit( visitor, depth )
 
    
@@ -2120,24 +2535,11 @@ end
 function LiteralCharNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralCharNode  } )
 end
-function LiteralCharNode.new( __superarg1, __superarg2, __superarg3,orgNode )
-   local obj = {}
-   LiteralCharNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,orgNode )
-   end
-   return obj
-end
-function LiteralCharNode:__init( __superarg1, __superarg2, __superarg3,orgNode )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.orgNode = orgNode
-end
 function LiteralCharNode:get_orgNode()
    return self.orgNode
 end
 
-local function LiteralCharNode_createFromNode( workNode )
+local function LiteralCharNode_createFromNode( workNode, parent, state )
 
    local node = _lune.__Cast( workNode, 3, Nodes.LiteralCharNode )
    if  nil == node then
@@ -2146,13 +2548,15 @@ local function LiteralCharNode_createFromNode( workNode )
       Util.err( string.format( "illegal node -- %s, %s", Nodes.getNodeKindName( workNode:get_kind() ), 'LiteralCharNode') )
    end
    
+   local convNode = LiteralCharNode.new(node:get_id(), node:get_effectivePos(), 'LiteralCharNode', workNode:hasNilAccess(  ), parent, node)
    
-   return LiteralCharNode.new(node:get_id(), node:get_pos(), 'LiteralCharNode', node)
+   state:setNilAcc( convNode, parent )
+   return convNode
 end
 _moduleObj.LiteralCharNode_createFromNode = LiteralCharNode_createFromNode
-nodeKind2createFromFunc[Nodes.NodeKind.get_LiteralChar()] = function ( node )
+nodeKind2createFromFunc[Nodes.NodeKind.get_LiteralChar()] = function ( node, workParent, state )
 
-   return LiteralCharNode_createFromNode( node )
+   return LiteralCharNode_createFromNode( node, workParent, state )
 end
 
 
@@ -2168,6 +2572,19 @@ function LiteralIntNode:processFilter( filter, opt )
 
    filter:processLiteralInt( self, opt )
 end
+function LiteralIntNode.new( id, pos, kind, hasNilAcc, parent, orgNode )
+   local obj = {}
+   LiteralIntNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent, orgNode ); end
+   return obj
+end
+function LiteralIntNode:__init(id, pos, kind, hasNilAcc, parent, orgNode) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.orgNode = orgNode
+   
+   
+end
 function LiteralIntNode:visit( visitor, depth )
 
    
@@ -2176,24 +2593,11 @@ end
 function LiteralIntNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralIntNode  } )
 end
-function LiteralIntNode.new( __superarg1, __superarg2, __superarg3,orgNode )
-   local obj = {}
-   LiteralIntNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,orgNode )
-   end
-   return obj
-end
-function LiteralIntNode:__init( __superarg1, __superarg2, __superarg3,orgNode )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.orgNode = orgNode
-end
 function LiteralIntNode:get_orgNode()
    return self.orgNode
 end
 
-local function LiteralIntNode_createFromNode( workNode )
+local function LiteralIntNode_createFromNode( workNode, parent, state )
 
    local node = _lune.__Cast( workNode, 3, Nodes.LiteralIntNode )
    if  nil == node then
@@ -2202,13 +2606,15 @@ local function LiteralIntNode_createFromNode( workNode )
       Util.err( string.format( "illegal node -- %s, %s", Nodes.getNodeKindName( workNode:get_kind() ), 'LiteralIntNode') )
    end
    
+   local convNode = LiteralIntNode.new(node:get_id(), node:get_effectivePos(), 'LiteralIntNode', workNode:hasNilAccess(  ), parent, node)
    
-   return LiteralIntNode.new(node:get_id(), node:get_pos(), 'LiteralIntNode', node)
+   state:setNilAcc( convNode, parent )
+   return convNode
 end
 _moduleObj.LiteralIntNode_createFromNode = LiteralIntNode_createFromNode
-nodeKind2createFromFunc[Nodes.NodeKind.get_LiteralInt()] = function ( node )
+nodeKind2createFromFunc[Nodes.NodeKind.get_LiteralInt()] = function ( node, workParent, state )
 
-   return LiteralIntNode_createFromNode( node )
+   return LiteralIntNode_createFromNode( node, workParent, state )
 end
 
 
@@ -2224,6 +2630,19 @@ function LiteralRealNode:processFilter( filter, opt )
 
    filter:processLiteralReal( self, opt )
 end
+function LiteralRealNode.new( id, pos, kind, hasNilAcc, parent, orgNode )
+   local obj = {}
+   LiteralRealNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent, orgNode ); end
+   return obj
+end
+function LiteralRealNode:__init(id, pos, kind, hasNilAcc, parent, orgNode) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.orgNode = orgNode
+   
+   
+end
 function LiteralRealNode:visit( visitor, depth )
 
    
@@ -2232,24 +2651,11 @@ end
 function LiteralRealNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralRealNode  } )
 end
-function LiteralRealNode.new( __superarg1, __superarg2, __superarg3,orgNode )
-   local obj = {}
-   LiteralRealNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,orgNode )
-   end
-   return obj
-end
-function LiteralRealNode:__init( __superarg1, __superarg2, __superarg3,orgNode )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.orgNode = orgNode
-end
 function LiteralRealNode:get_orgNode()
    return self.orgNode
 end
 
-local function LiteralRealNode_createFromNode( workNode )
+local function LiteralRealNode_createFromNode( workNode, parent, state )
 
    local node = _lune.__Cast( workNode, 3, Nodes.LiteralRealNode )
    if  nil == node then
@@ -2258,13 +2664,15 @@ local function LiteralRealNode_createFromNode( workNode )
       Util.err( string.format( "illegal node -- %s, %s", Nodes.getNodeKindName( workNode:get_kind() ), 'LiteralRealNode') )
    end
    
+   local convNode = LiteralRealNode.new(node:get_id(), node:get_effectivePos(), 'LiteralRealNode', workNode:hasNilAccess(  ), parent, node)
    
-   return LiteralRealNode.new(node:get_id(), node:get_pos(), 'LiteralRealNode', node)
+   state:setNilAcc( convNode, parent )
+   return convNode
 end
 _moduleObj.LiteralRealNode_createFromNode = LiteralRealNode_createFromNode
-nodeKind2createFromFunc[Nodes.NodeKind.get_LiteralReal()] = function ( node )
+nodeKind2createFromFunc[Nodes.NodeKind.get_LiteralReal()] = function ( node, workParent, state )
 
-   return LiteralRealNode_createFromNode( node )
+   return LiteralRealNode_createFromNode( node, workParent, state )
 end
 
 
@@ -2279,6 +2687,20 @@ _moduleObj.LiteralArrayNode = LiteralArrayNode
 function LiteralArrayNode:processFilter( filter, opt )
 
    filter:processLiteralArray( self, opt )
+end
+function LiteralArrayNode.new( id, pos, kind, hasNilAcc, parent, orgNode )
+   local obj = {}
+   LiteralArrayNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent, orgNode ); end
+   return obj
+end
+function LiteralArrayNode:__init(id, pos, kind, hasNilAcc, parent, orgNode) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.orgNode = orgNode
+   self.expList = nil
+   
+   
 end
 function LiteralArrayNode:visit( visitor, depth )
 
@@ -2311,28 +2733,17 @@ end
 function LiteralArrayNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralArrayNode  } )
 end
-function LiteralArrayNode.new( __superarg1, __superarg2, __superarg3,orgNode, expList )
-   local obj = {}
-   LiteralArrayNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,orgNode, expList )
-   end
-   return obj
-end
-function LiteralArrayNode:__init( __superarg1, __superarg2, __superarg3,orgNode, expList )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.orgNode = orgNode
-   self.expList = expList
-end
 function LiteralArrayNode:get_orgNode()
    return self.orgNode
 end
 function LiteralArrayNode:get_expList()
    return self.expList
 end
+function LiteralArrayNode:set_expList( expList )
+   self.expList = expList
+end
 
-local function LiteralArrayNode_createFromNode( workNode )
+local function LiteralArrayNode_createFromNode( workNode, parent, state )
 
    local node = _lune.__Cast( workNode, 3, Nodes.LiteralArrayNode )
    if  nil == node then
@@ -2341,6 +2752,7 @@ local function LiteralArrayNode_createFromNode( workNode )
       Util.err( string.format( "illegal node -- %s, %s", Nodes.getNodeKindName( workNode:get_kind() ), 'LiteralArrayNode') )
    end
    
+   local convNode = LiteralArrayNode.new(node:get_id(), node:get_effectivePos(), 'LiteralArrayNode', workNode:hasNilAccess(  ), parent, node)
    local function createexpList(  )
    
       local child = node:get_expList()
@@ -2350,15 +2762,18 @@ local function LiteralArrayNode_createFromNode( workNode )
          return nil
       end
       
-      return ExpListNode_createFromNode( child )
+      local paramNode = ExpListNode_createFromNode( child, convNode, state )
+      return paramNode
    end
+   convNode:set_expList( createexpList(  ) )
    
-   return LiteralArrayNode.new(node:get_id(), node:get_pos(), 'LiteralArrayNode', node, createexpList(  ))
+   state:setNilAcc( convNode, parent )
+   return convNode
 end
 _moduleObj.LiteralArrayNode_createFromNode = LiteralArrayNode_createFromNode
-nodeKind2createFromFunc[Nodes.NodeKind.get_LiteralArray()] = function ( node )
+nodeKind2createFromFunc[Nodes.NodeKind.get_LiteralArray()] = function ( node, workParent, state )
 
-   return LiteralArrayNode_createFromNode( node )
+   return LiteralArrayNode_createFromNode( node, workParent, state )
 end
 
 
@@ -2373,6 +2788,20 @@ _moduleObj.LiteralListNode = LiteralListNode
 function LiteralListNode:processFilter( filter, opt )
 
    filter:processLiteralList( self, opt )
+end
+function LiteralListNode.new( id, pos, kind, hasNilAcc, parent, orgNode )
+   local obj = {}
+   LiteralListNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent, orgNode ); end
+   return obj
+end
+function LiteralListNode:__init(id, pos, kind, hasNilAcc, parent, orgNode) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.orgNode = orgNode
+   self.expList = nil
+   
+   
 end
 function LiteralListNode:visit( visitor, depth )
 
@@ -2405,28 +2834,17 @@ end
 function LiteralListNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralListNode  } )
 end
-function LiteralListNode.new( __superarg1, __superarg2, __superarg3,orgNode, expList )
-   local obj = {}
-   LiteralListNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,orgNode, expList )
-   end
-   return obj
-end
-function LiteralListNode:__init( __superarg1, __superarg2, __superarg3,orgNode, expList )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.orgNode = orgNode
-   self.expList = expList
-end
 function LiteralListNode:get_orgNode()
    return self.orgNode
 end
 function LiteralListNode:get_expList()
    return self.expList
 end
+function LiteralListNode:set_expList( expList )
+   self.expList = expList
+end
 
-local function LiteralListNode_createFromNode( workNode )
+local function LiteralListNode_createFromNode( workNode, parent, state )
 
    local node = _lune.__Cast( workNode, 3, Nodes.LiteralListNode )
    if  nil == node then
@@ -2435,6 +2853,7 @@ local function LiteralListNode_createFromNode( workNode )
       Util.err( string.format( "illegal node -- %s, %s", Nodes.getNodeKindName( workNode:get_kind() ), 'LiteralListNode') )
    end
    
+   local convNode = LiteralListNode.new(node:get_id(), node:get_effectivePos(), 'LiteralListNode', workNode:hasNilAccess(  ), parent, node)
    local function createexpList(  )
    
       local child = node:get_expList()
@@ -2444,15 +2863,18 @@ local function LiteralListNode_createFromNode( workNode )
          return nil
       end
       
-      return ExpListNode_createFromNode( child )
+      local paramNode = ExpListNode_createFromNode( child, convNode, state )
+      return paramNode
    end
+   convNode:set_expList( createexpList(  ) )
    
-   return LiteralListNode.new(node:get_id(), node:get_pos(), 'LiteralListNode', node, createexpList(  ))
+   state:setNilAcc( convNode, parent )
+   return convNode
 end
 _moduleObj.LiteralListNode_createFromNode = LiteralListNode_createFromNode
-nodeKind2createFromFunc[Nodes.NodeKind.get_LiteralList()] = function ( node )
+nodeKind2createFromFunc[Nodes.NodeKind.get_LiteralList()] = function ( node, workParent, state )
 
-   return LiteralListNode_createFromNode( node )
+   return LiteralListNode_createFromNode( node, workParent, state )
 end
 
 
@@ -2467,6 +2889,20 @@ _moduleObj.LiteralSetNode = LiteralSetNode
 function LiteralSetNode:processFilter( filter, opt )
 
    filter:processLiteralSet( self, opt )
+end
+function LiteralSetNode.new( id, pos, kind, hasNilAcc, parent, orgNode )
+   local obj = {}
+   LiteralSetNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent, orgNode ); end
+   return obj
+end
+function LiteralSetNode:__init(id, pos, kind, hasNilAcc, parent, orgNode) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.orgNode = orgNode
+   self.expList = nil
+   
+   
 end
 function LiteralSetNode:visit( visitor, depth )
 
@@ -2499,28 +2935,17 @@ end
 function LiteralSetNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralSetNode  } )
 end
-function LiteralSetNode.new( __superarg1, __superarg2, __superarg3,orgNode, expList )
-   local obj = {}
-   LiteralSetNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,orgNode, expList )
-   end
-   return obj
-end
-function LiteralSetNode:__init( __superarg1, __superarg2, __superarg3,orgNode, expList )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.orgNode = orgNode
-   self.expList = expList
-end
 function LiteralSetNode:get_orgNode()
    return self.orgNode
 end
 function LiteralSetNode:get_expList()
    return self.expList
 end
+function LiteralSetNode:set_expList( expList )
+   self.expList = expList
+end
 
-local function LiteralSetNode_createFromNode( workNode )
+local function LiteralSetNode_createFromNode( workNode, parent, state )
 
    local node = _lune.__Cast( workNode, 3, Nodes.LiteralSetNode )
    if  nil == node then
@@ -2529,6 +2954,7 @@ local function LiteralSetNode_createFromNode( workNode )
       Util.err( string.format( "illegal node -- %s, %s", Nodes.getNodeKindName( workNode:get_kind() ), 'LiteralSetNode') )
    end
    
+   local convNode = LiteralSetNode.new(node:get_id(), node:get_effectivePos(), 'LiteralSetNode', workNode:hasNilAccess(  ), parent, node)
    local function createexpList(  )
    
       local child = node:get_expList()
@@ -2538,15 +2964,18 @@ local function LiteralSetNode_createFromNode( workNode )
          return nil
       end
       
-      return ExpListNode_createFromNode( child )
+      local paramNode = ExpListNode_createFromNode( child, convNode, state )
+      return paramNode
    end
+   convNode:set_expList( createexpList(  ) )
    
-   return LiteralSetNode.new(node:get_id(), node:get_pos(), 'LiteralSetNode', node, createexpList(  ))
+   state:setNilAcc( convNode, parent )
+   return convNode
 end
 _moduleObj.LiteralSetNode_createFromNode = LiteralSetNode_createFromNode
-nodeKind2createFromFunc[Nodes.NodeKind.get_LiteralSet()] = function ( node )
+nodeKind2createFromFunc[Nodes.NodeKind.get_LiteralSet()] = function ( node, workParent, state )
 
-   return LiteralSetNode_createFromNode( node )
+   return LiteralSetNode_createFromNode( node, workParent, state )
 end
 
 
@@ -2587,6 +3016,20 @@ function LiteralMapNode:processFilter( filter, opt )
 
    filter:processLiteralMap( self, opt )
 end
+function LiteralMapNode.new( id, pos, kind, hasNilAcc, parent, orgNode )
+   local obj = {}
+   LiteralMapNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent, orgNode ); end
+   return obj
+end
+function LiteralMapNode:__init(id, pos, kind, hasNilAcc, parent, orgNode) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.orgNode = orgNode
+   self.pairList = {}
+   
+   
+end
 function LiteralMapNode:visit( visitor, depth )
 
    
@@ -2595,30 +3038,19 @@ end
 function LiteralMapNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralMapNode  } )
 end
-function LiteralMapNode.new( __superarg1, __superarg2, __superarg3,orgNode, pairList )
-   local obj = {}
-   LiteralMapNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,orgNode, pairList )
-   end
-   return obj
-end
-function LiteralMapNode:__init( __superarg1, __superarg2, __superarg3,orgNode, pairList )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.orgNode = orgNode
-   self.pairList = pairList
-end
 function LiteralMapNode:get_orgNode()
    return self.orgNode
 end
 function LiteralMapNode:get_pairList()
    return self.pairList
 end
+function LiteralMapNode:set_pairList( pairList )
+   self.pairList = pairList
+end
 
 
 
-local function LiteralMapNode_createFromNode( workNode )
+local function LiteralMapNode_createFromNode( workNode, parent, state )
    local __func__ = '@lune.@base.@ConvNodes.LiteralMapNode_createFromNode'
 
    local node = _lune.__Cast( workNode, 3, Nodes.LiteralMapNode )
@@ -2629,18 +3061,57 @@ local function LiteralMapNode_createFromNode( workNode )
    end
    
    local pairList = {}
+   local convNode = LiteralMapNode.new(node:get_id(), node:get_effectivePos(), "LiteralMapNode", false, parent, node)
    for __index, item in ipairs( node:get_pairList() ) do
-      local key = Node_createFromNode( item:get_key() )
-      local val = Node_createFromNode( item:get_val() )
+      local key
+      
+      
+      do
+         local newState = State.new(convNode)
+         local newNode = Node_createFromNode( item:get_key(), convNode, newState )
+         do
+            local nilAccNode = newState:get_nilAccNode()
+            if nilAccNode ~= nil then
+               key = nilAccNode
+            else
+               key = newNode
+            end
+         end
+         
+      end
+      
+      
+      local val
+      
+      
+      do
+         local newState = State.new(convNode)
+         local newNode = Node_createFromNode( item:get_val(), convNode, newState )
+         do
+            local nilAccNode = newState:get_nilAccNode()
+            if nilAccNode ~= nil then
+               val = nilAccNode
+            else
+               val = newNode
+            end
+         end
+         
+      end
+      
+      
       table.insert( pairList, PairItem.new(key, val) )
    end
    
-   return LiteralMapNode.new(node:get_id(), node:get_pos(), "LiteralMapNode", node, pairList)
+   convNode:set_pairList( pairList )
+   
+   state:setNilAcc( convNode, parent )
+   
+   return convNode
 end
 _moduleObj.LiteralMapNode_createFromNode = LiteralMapNode_createFromNode
-nodeKind2createFromFunc[Nodes.NodeKind.get_LiteralMap()] = function ( node )
+nodeKind2createFromFunc[Nodes.NodeKind.get_LiteralMap()] = function ( node, parent, state )
 
-   return Node_createFromNode( node )
+   return LiteralMapNode_createFromNode( node, parent, state )
 end
 
 
@@ -2653,6 +3124,20 @@ _moduleObj.LiteralStringNode = LiteralStringNode
 function LiteralStringNode:processFilter( filter, opt )
 
    filter:processLiteralString( self, opt )
+end
+function LiteralStringNode.new( id, pos, kind, hasNilAcc, parent, orgNode )
+   local obj = {}
+   LiteralStringNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent, orgNode ); end
+   return obj
+end
+function LiteralStringNode:__init(id, pos, kind, hasNilAcc, parent, orgNode) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.orgNode = orgNode
+   self.dddParam = nil
+   
+   
 end
 function LiteralStringNode:visit( visitor, depth )
 
@@ -2685,28 +3170,17 @@ end
 function LiteralStringNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralStringNode  } )
 end
-function LiteralStringNode.new( __superarg1, __superarg2, __superarg3,orgNode, dddParam )
-   local obj = {}
-   LiteralStringNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,orgNode, dddParam )
-   end
-   return obj
-end
-function LiteralStringNode:__init( __superarg1, __superarg2, __superarg3,orgNode, dddParam )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.orgNode = orgNode
-   self.dddParam = dddParam
-end
 function LiteralStringNode:get_orgNode()
    return self.orgNode
 end
 function LiteralStringNode:get_dddParam()
    return self.dddParam
 end
+function LiteralStringNode:set_dddParam( dddParam )
+   self.dddParam = dddParam
+end
 
-local function LiteralStringNode_createFromNode( workNode )
+local function LiteralStringNode_createFromNode( workNode, parent, state )
 
    local node = _lune.__Cast( workNode, 3, Nodes.LiteralStringNode )
    if  nil == node then
@@ -2715,6 +3189,7 @@ local function LiteralStringNode_createFromNode( workNode )
       Util.err( string.format( "illegal node -- %s, %s", Nodes.getNodeKindName( workNode:get_kind() ), 'LiteralStringNode') )
    end
    
+   local convNode = LiteralStringNode.new(node:get_id(), node:get_effectivePos(), 'LiteralStringNode', workNode:hasNilAccess(  ), parent, node)
    local function createdddParam(  )
    
       local child = node:get_dddParam()
@@ -2724,15 +3199,18 @@ local function LiteralStringNode_createFromNode( workNode )
          return nil
       end
       
-      return ExpListNode_createFromNode( child )
+      local paramNode = ExpListNode_createFromNode( child, convNode, state )
+      return paramNode
    end
+   convNode:set_dddParam( createdddParam(  ) )
    
-   return LiteralStringNode.new(node:get_id(), node:get_pos(), 'LiteralStringNode', node, createdddParam(  ))
+   state:setNilAcc( convNode, parent )
+   return convNode
 end
 _moduleObj.LiteralStringNode_createFromNode = LiteralStringNode_createFromNode
-nodeKind2createFromFunc[Nodes.NodeKind.get_LiteralString()] = function ( node )
+nodeKind2createFromFunc[Nodes.NodeKind.get_LiteralString()] = function ( node, workParent, state )
 
-   return LiteralStringNode_createFromNode( node )
+   return LiteralStringNode_createFromNode( node, workParent, state )
 end
 
 
@@ -2748,6 +3226,19 @@ function LiteralBoolNode:processFilter( filter, opt )
 
    filter:processLiteralBool( self, opt )
 end
+function LiteralBoolNode.new( id, pos, kind, hasNilAcc, parent, orgNode )
+   local obj = {}
+   LiteralBoolNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent, orgNode ); end
+   return obj
+end
+function LiteralBoolNode:__init(id, pos, kind, hasNilAcc, parent, orgNode) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.orgNode = orgNode
+   
+   
+end
 function LiteralBoolNode:visit( visitor, depth )
 
    
@@ -2756,24 +3247,11 @@ end
 function LiteralBoolNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralBoolNode  } )
 end
-function LiteralBoolNode.new( __superarg1, __superarg2, __superarg3,orgNode )
-   local obj = {}
-   LiteralBoolNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,orgNode )
-   end
-   return obj
-end
-function LiteralBoolNode:__init( __superarg1, __superarg2, __superarg3,orgNode )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.orgNode = orgNode
-end
 function LiteralBoolNode:get_orgNode()
    return self.orgNode
 end
 
-local function LiteralBoolNode_createFromNode( workNode )
+local function LiteralBoolNode_createFromNode( workNode, parent, state )
 
    local node = _lune.__Cast( workNode, 3, Nodes.LiteralBoolNode )
    if  nil == node then
@@ -2782,13 +3260,15 @@ local function LiteralBoolNode_createFromNode( workNode )
       Util.err( string.format( "illegal node -- %s, %s", Nodes.getNodeKindName( workNode:get_kind() ), 'LiteralBoolNode') )
    end
    
+   local convNode = LiteralBoolNode.new(node:get_id(), node:get_effectivePos(), 'LiteralBoolNode', workNode:hasNilAccess(  ), parent, node)
    
-   return LiteralBoolNode.new(node:get_id(), node:get_pos(), 'LiteralBoolNode', node)
+   state:setNilAcc( convNode, parent )
+   return convNode
 end
 _moduleObj.LiteralBoolNode_createFromNode = LiteralBoolNode_createFromNode
-nodeKind2createFromFunc[Nodes.NodeKind.get_LiteralBool()] = function ( node )
+nodeKind2createFromFunc[Nodes.NodeKind.get_LiteralBool()] = function ( node, workParent, state )
 
-   return LiteralBoolNode_createFromNode( node )
+   return LiteralBoolNode_createFromNode( node, workParent, state )
 end
 
 
@@ -2804,6 +3284,19 @@ function LiteralSymbolNode:processFilter( filter, opt )
 
    filter:processLiteralSymbol( self, opt )
 end
+function LiteralSymbolNode.new( id, pos, kind, hasNilAcc, parent, orgNode )
+   local obj = {}
+   LiteralSymbolNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent, orgNode ); end
+   return obj
+end
+function LiteralSymbolNode:__init(id, pos, kind, hasNilAcc, parent, orgNode) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.orgNode = orgNode
+   
+   
+end
 function LiteralSymbolNode:visit( visitor, depth )
 
    
@@ -2812,24 +3305,11 @@ end
 function LiteralSymbolNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralSymbolNode  } )
 end
-function LiteralSymbolNode.new( __superarg1, __superarg2, __superarg3,orgNode )
-   local obj = {}
-   LiteralSymbolNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,orgNode )
-   end
-   return obj
-end
-function LiteralSymbolNode:__init( __superarg1, __superarg2, __superarg3,orgNode )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.orgNode = orgNode
-end
 function LiteralSymbolNode:get_orgNode()
    return self.orgNode
 end
 
-local function LiteralSymbolNode_createFromNode( workNode )
+local function LiteralSymbolNode_createFromNode( workNode, parent, state )
 
    local node = _lune.__Cast( workNode, 3, Nodes.LiteralSymbolNode )
    if  nil == node then
@@ -2838,237 +3318,49 @@ local function LiteralSymbolNode_createFromNode( workNode )
       Util.err( string.format( "illegal node -- %s, %s", Nodes.getNodeKindName( workNode:get_kind() ), 'LiteralSymbolNode') )
    end
    
+   local convNode = LiteralSymbolNode.new(node:get_id(), node:get_effectivePos(), 'LiteralSymbolNode', workNode:hasNilAccess(  ), parent, node)
    
-   return LiteralSymbolNode.new(node:get_id(), node:get_pos(), 'LiteralSymbolNode', node)
+   state:setNilAcc( convNode, parent )
+   return convNode
 end
 _moduleObj.LiteralSymbolNode_createFromNode = LiteralSymbolNode_createFromNode
-nodeKind2createFromFunc[Nodes.NodeKind.get_LiteralSymbol()] = function ( node )
+nodeKind2createFromFunc[Nodes.NodeKind.get_LiteralSymbol()] = function ( node, workParent, state )
 
-   return LiteralSymbolNode_createFromNode( node )
+   return LiteralSymbolNode_createFromNode( node, workParent, state )
 end
 
 
 
 
-local NilAccPushNode = {}
+
+local NoneNilAccNode = {}
 
 
 
-setmetatable( NilAccPushNode, { __index = ExpNode } )
-_moduleObj.NilAccPushNode = NilAccPushNode
-function NilAccPushNode:processFilter( filter, opt )
+setmetatable( NoneNilAccNode, { __index = ExpNode } )
+_moduleObj.NoneNilAccNode = NoneNilAccNode
+function NoneNilAccNode:processFilter( filter, opt )
 
-   filter:processNilAccPush( self, opt )
+   filter:processNoneNilAcc( self, opt )
 end
-function NilAccPushNode:visit( visitor, depth )
+function NoneNilAccNode.new( id, pos, kind, hasNilAcc, parent )
+   local obj = {}
+   NoneNilAccNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent ); end
+   return obj
+end
+function NoneNilAccNode:__init(id, pos, kind, hasNilAcc, parent) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   
+end
+function NoneNilAccNode:visit( visitor, depth )
 
-   do
-      local child = self.exp
-      do
-         local _switchExp = visitor( child, self, 'exp', depth )
-         if _switchExp == Nodes.NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1 ) then
-               return false
-            end
-            
-         elseif _switchExp == Nodes.NodeVisitMode.End then
-            return false
-         end
-      end
-      
-      
-   end
-   
-   
    
    return true
 end
-function NilAccPushNode.setmeta( obj )
-  setmetatable( obj, { __index = NilAccPushNode  } )
-end
-function NilAccPushNode.new( __superarg1, __superarg2, __superarg3,exp )
-   local obj = {}
-   NilAccPushNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,exp )
-   end
-   return obj
-end
-function NilAccPushNode:__init( __superarg1, __superarg2, __superarg3,exp )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.exp = exp
-end
-function NilAccPushNode:get_exp()
-   return self.exp
-end
-
-
-
-
-local NilAccFinNode = {}
-
-
-
-setmetatable( NilAccFinNode, { __index = ExpNode } )
-_moduleObj.NilAccFinNode = NilAccFinNode
-function NilAccFinNode:processFilter( filter, opt )
-
-   filter:processNilAccFin( self, opt )
-end
-function NilAccFinNode:visit( visitor, depth )
-
-   do
-      local child = self.exp
-      do
-         local _switchExp = visitor( child, self, 'exp', depth )
-         if _switchExp == Nodes.NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1 ) then
-               return false
-            end
-            
-         elseif _switchExp == Nodes.NodeVisitMode.End then
-            return false
-         end
-      end
-      
-      
-   end
-   
-   
-   
-   return true
-end
-function NilAccFinNode.setmeta( obj )
-  setmetatable( obj, { __index = NilAccFinNode  } )
-end
-function NilAccFinNode.new( __superarg1, __superarg2, __superarg3,exp )
-   local obj = {}
-   NilAccFinNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,exp )
-   end
-   return obj
-end
-function NilAccFinNode:__init( __superarg1, __superarg2, __superarg3,exp )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.exp = exp
-end
-function NilAccFinNode:get_exp()
-   return self.exp
-end
-
-
-
-
-local NilAccFinCallNode = {}
-
-
-
-setmetatable( NilAccFinCallNode, { __index = ExpNode } )
-_moduleObj.NilAccFinCallNode = NilAccFinCallNode
-function NilAccFinCallNode:processFilter( filter, opt )
-
-   filter:processNilAccFinCall( self, opt )
-end
-function NilAccFinCallNode:visit( visitor, depth )
-
-   do
-      local child = self.exp
-      do
-         local _switchExp = visitor( child, self, 'exp', depth )
-         if _switchExp == Nodes.NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1 ) then
-               return false
-            end
-            
-         elseif _switchExp == Nodes.NodeVisitMode.End then
-            return false
-         end
-      end
-      
-      
-   end
-   
-   
-   
-   return true
-end
-function NilAccFinCallNode.setmeta( obj )
-  setmetatable( obj, { __index = NilAccFinCallNode  } )
-end
-function NilAccFinCallNode.new( __superarg1, __superarg2, __superarg3,exp )
-   local obj = {}
-   NilAccFinCallNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,exp )
-   end
-   return obj
-end
-function NilAccFinCallNode:__init( __superarg1, __superarg2, __superarg3,exp )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.exp = exp
-end
-function NilAccFinCallNode:get_exp()
-   return self.exp
-end
-
-
-
-
-local NilAccLastNode = {}
-
-
-
-setmetatable( NilAccLastNode, { __index = ExpNode } )
-_moduleObj.NilAccLastNode = NilAccLastNode
-function NilAccLastNode:processFilter( filter, opt )
-
-   filter:processNilAccLast( self, opt )
-end
-function NilAccLastNode:visit( visitor, depth )
-
-   do
-      local child = self.exp
-      do
-         local _switchExp = visitor( child, self, 'exp', depth )
-         if _switchExp == Nodes.NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1 ) then
-               return false
-            end
-            
-         elseif _switchExp == Nodes.NodeVisitMode.End then
-            return false
-         end
-      end
-      
-      
-   end
-   
-   
-   
-   return true
-end
-function NilAccLastNode.setmeta( obj )
-  setmetatable( obj, { __index = NilAccLastNode  } )
-end
-function NilAccLastNode.new( __superarg1, __superarg2, __superarg3,exp )
-   local obj = {}
-   NilAccLastNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,exp )
-   end
-   return obj
-end
-function NilAccLastNode:__init( __superarg1, __superarg2, __superarg3,exp )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.exp = exp
-end
-function NilAccLastNode:get_exp()
-   return self.exp
+function NoneNilAccNode.setmeta( obj )
+  setmetatable( obj, { __index = NoneNilAccNode  } )
 end
 
 
@@ -3083,6 +3375,19 @@ _moduleObj.CallExtNode = CallExtNode
 function CallExtNode:processFilter( filter, opt )
 
    filter:processCallExt( self, opt )
+end
+function CallExtNode.new( id, pos, kind, hasNilAcc, parent )
+   local obj = {}
+   CallExtNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent ); end
+   return obj
+end
+function CallExtNode:__init(id, pos, kind, hasNilAcc, parent) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.exp = dummyExpNode
+   
+   
 end
 function CallExtNode:visit( visitor, depth )
 
@@ -3110,37 +3415,40 @@ end
 function CallExtNode.setmeta( obj )
   setmetatable( obj, { __index = CallExtNode  } )
 end
-function CallExtNode.new( __superarg1, __superarg2, __superarg3,exp )
-   local obj = {}
-   CallExtNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,exp )
-   end
-   return obj
-end
-function CallExtNode:__init( __superarg1, __superarg2, __superarg3,exp )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.exp = exp
-end
 function CallExtNode:get_exp()
    return self.exp
 end
-
-
-
-
-local CondPopValNode = {}
-
-
-
-setmetatable( CondPopValNode, { __index = ExpNode } )
-_moduleObj.CondPopValNode = CondPopValNode
-function CondPopValNode:processFilter( filter, opt )
-
-   filter:processCondPopVal( self, opt )
+function CallExtNode:set_exp( exp )
+   self.exp = exp
 end
-function CondPopValNode:visit( visitor, depth )
+
+
+
+
+local CondStackValNode = {}
+
+
+
+setmetatable( CondStackValNode, { __index = ExpNode } )
+_moduleObj.CondStackValNode = CondStackValNode
+function CondStackValNode:processFilter( filter, opt )
+
+   filter:processCondStackVal( self, opt )
+end
+function CondStackValNode.new( id, pos, kind, hasNilAcc, parent )
+   local obj = {}
+   CondStackValNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent ); end
+   return obj
+end
+function CondStackValNode:__init(id, pos, kind, hasNilAcc, parent) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.exp = dummyExpNode
+   
+   
+end
+function CondStackValNode:visit( visitor, depth )
 
    do
       local child = self.exp
@@ -3163,80 +3471,14 @@ function CondPopValNode:visit( visitor, depth )
    
    return true
 end
-function CondPopValNode.setmeta( obj )
-  setmetatable( obj, { __index = CondPopValNode  } )
+function CondStackValNode.setmeta( obj )
+  setmetatable( obj, { __index = CondStackValNode  } )
 end
-function CondPopValNode.new( __superarg1, __superarg2, __superarg3,exp )
-   local obj = {}
-   CondPopValNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,exp )
-   end
-   return obj
-end
-function CondPopValNode:__init( __superarg1, __superarg2, __superarg3,exp )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.exp = exp
-end
-function CondPopValNode:get_exp()
+function CondStackValNode:get_exp()
    return self.exp
 end
-
-
-
-
-local CondSetValNode = {}
-
-
-
-setmetatable( CondSetValNode, { __index = ExpNode } )
-_moduleObj.CondSetValNode = CondSetValNode
-function CondSetValNode:processFilter( filter, opt )
-
-   filter:processCondSetVal( self, opt )
-end
-function CondSetValNode:visit( visitor, depth )
-
-   do
-      local child = self.exp
-      do
-         local _switchExp = visitor( child, self, 'exp', depth )
-         if _switchExp == Nodes.NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1 ) then
-               return false
-            end
-            
-         elseif _switchExp == Nodes.NodeVisitMode.End then
-            return false
-         end
-      end
-      
-      
-   end
-   
-   
-   
-   return true
-end
-function CondSetValNode.setmeta( obj )
-  setmetatable( obj, { __index = CondSetValNode  } )
-end
-function CondSetValNode.new( __superarg1, __superarg2, __superarg3,exp )
-   local obj = {}
-   CondSetValNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,exp )
-   end
-   return obj
-end
-function CondSetValNode:__init( __superarg1, __superarg2, __superarg3,exp )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
+function CondStackValNode:set_exp( exp )
    self.exp = exp
-end
-function CondSetValNode:get_exp()
-   return self.exp
 end
 
 
@@ -3251,6 +3493,20 @@ _moduleObj.GetAtNode = GetAtNode
 function GetAtNode:processFilter( filter, opt )
 
    filter:processGetAt( self, opt )
+end
+function GetAtNode.new( id, pos, kind, hasNilAcc, parent )
+   local obj = {}
+   GetAtNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, kind, hasNilAcc, parent ); end
+   return obj
+end
+function GetAtNode:__init(id, pos, kind, hasNilAcc, parent) 
+   ExpNode.__init( self,id, pos, kind, hasNilAcc, parent)
+   
+   self.exp = dummyExpNode
+   self.index = dummyExpNode
+   
+   
 end
 function GetAtNode:visit( visitor, depth )
 
@@ -3295,25 +3551,17 @@ end
 function GetAtNode.setmeta( obj )
   setmetatable( obj, { __index = GetAtNode  } )
 end
-function GetAtNode.new( __superarg1, __superarg2, __superarg3,exp, index )
-   local obj = {}
-   GetAtNode.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3,exp, index )
-   end
-   return obj
-end
-function GetAtNode:__init( __superarg1, __superarg2, __superarg3,exp, index )
-
-   ExpNode.__init( self, __superarg1, __superarg2, __superarg3 )
-   self.exp = exp
-   self.index = index
-end
 function GetAtNode:get_exp()
    return self.exp
 end
+function GetAtNode:set_exp( exp )
+   self.exp = exp
+end
 function GetAtNode:get_index()
    return self.index
+end
+function GetAtNode:set_index( index )
+   self.index = index
 end
 
 
@@ -3321,30 +3569,27 @@ end
 
 local function convertNodes( targetNode )
 
-   targetNode:visit( function ( node, parent, relation, depth )
-   
-      print( string.format( "%s: %s: %d:%d", string.rep( " ", depth * 3 ) .. relation, Nodes.getNodeKindName( node:get_kind() ), node:get_pos().lineNo, node:get_pos().column) )
-      do
-         local createFunc = nodeKind2createFromFunc[node:get_kind()]
-         if createFunc ~= nil then
-            local workNode = createFunc( node )
-            print( string.format( "%s: conved %s: %d:%d", string.rep( " ", depth * 3 ) .. relation, workNode:get_kind(), workNode:get_pos().lineNo, workNode:get_pos().column) )
-            workNode:visit( function ( convNode, convParent, convRelation, convDepth )
-            
-               print( string.format( "%s: conved %s: %d:%d", string.rep( " ", convDepth * 3 ) .. convRelation, convNode:get_kind(), convNode:get_pos().lineNo, convNode:get_pos().column) )
-               return Nodes.NodeVisitMode.Child
-            end, depth )
-            if node:get_kind() == Nodes.NodeKind.get_DeclFunc() then
-               return Nodes.NodeVisitMode.Child
+   do
+      local createFunc = nodeKind2createFromFunc[targetNode:get_kind()]
+      if createFunc ~= nil then
+         local state = State.new(dummyExpNode)
+         local workNode = createFunc( targetNode, dummyExpNode, state )
+         do
+            local nilAccNode = state:get_nilAccNode()
+            if nilAccNode ~= nil then
+               if nilAccNode:get_acc() == dummyExpNode then
+                  nilAccNode:set_acc( workNode )
+               end
+               
+               return nilAccNode
             end
-            
-            return Nodes.NodeVisitMode.Next
-         else
-            return Nodes.NodeVisitMode.Child
          end
+         
+         return workNode
       end
-      
-   end, 0 )
+   end
+   
+   return nil
 end
 _moduleObj.convertNodes = convertNodes
 

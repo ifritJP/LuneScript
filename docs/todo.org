@@ -8,6 +8,17 @@
 
 * バグ
 
+- [ ] 以下のエラーを検出できない
+
+abstract class Hoge {
+   pub abstract fn func();
+}
+abstract class Test extend Hoge {
+}
+class Sub extend Test { // func を override していないのでエラーにすべき
+}
+  
+  
 - [ ] 型パラメータを持つクラスを継承した時、
       そのクラスの継承元のコンストラクタに引数がある場合、
       デフォルトコンストラクタが正しく処理されない。

@@ -301,7 +301,7 @@ function dumpFilter:dump( opt, node, txt )
    end
    
    
-   self:writeln( opt, string.format( ": %s:%d %s %s %s", Nodes.getNodeKindName( node:get_kind(  ) ), node:get_id(), txt, typeStr, comment) )
+   self:writeln( opt, string.format( ": %s:%d(%d:%d) %s %s %s", Nodes.getNodeKindName( node:get_kind(  ) ), node:get_id(), node:get_effectivePos().lineNo, node:get_effectivePos().column, txt, typeStr, comment) )
 end
 function dumpFilter.setmeta( obj )
   setmetatable( obj, { __index = dumpFilter  } )

@@ -194,6 +194,7 @@ pub form NodeVisitor( node:&Node, parent:&Node, relation:str, depth:int ): NodeV
 pub abstract class Node {
    pri let id: int { pub };
    pri let kind: int { pub };
+   /** この Node の領域開始位置 */
    pri let pos: &Parser.Position { pub };
    pri let expTypeList: &List<&Ast.TypeInfo> { pub };
    let mut commentList: List<&Parser.Token>! { pub& };
@@ -203,6 +204,10 @@ pub abstract class Node {
    /** このノードがマクロの引数として使用される場合 */
    let macroArgFlag:bool {pub};
 
+   pub fn get_effectivePos(): &Parser.Position {
+      return self.pos;
+   }
+   
    pub fn setLValue() mut {
       self.isLValue = true;
    }
@@ -1393,6 +1398,9 @@ _declNodeClass( "ExpCall", Node, false, nil, true,
                   { "nilAccess": "bool" },
                   { "argList": "&ExpListNode!" } ]
 );
+pub override fn ExpCallNode.get_effectivePos(): &Parser.Position {
+   return self.func.$effectivePos;
+}
 pub override fn ExpCallNode.getPrefix() : &Node! {
    return self.func;
 }
@@ -1507,6 +1515,9 @@ _declNodeClass( "RefField", Node, nil, nil, false,
                   { "nilAccess": "bool" },
                   { "prefix": "&Node" }] 
 );
+pub override fn RefFieldNode.get_effectivePos(): &Parser.Position {
+   return self.field.pos;
+}
 pub override fn RefFieldNode.getPrefix() : &Node! {
    return self.prefix;
 }
@@ -1543,6 +1554,9 @@ _declNodeClass( "GetField", Node, nil, true, false,
                   { "prefix": "&Node" },
                   { "getterTypeInfo": "&Ast.TypeInfo" } ]               
 );
+pub override fn GetFieldNode.get_effectivePos(): &Parser.Position {
+   return self.field.pos;
+}
 pub override fn GetFieldNode.canBeLeft():bool {
    if! self.$symbolInfo {
       return _exp.$canBeLeft;

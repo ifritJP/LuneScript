@@ -2159,7 +2159,7 @@ fn TransUnit.checkSymbolComp( token:&Parser.Token )
 }
 
 fn TransUnit.analyzeExpField(
-   firstToken: &Parser.Token, token: &Parser.Token,
+   firstToken: &Parser.Token, fieldToken: &Parser.Token,
    mode: ExpSymbolMode, mut prefixExp: &Nodes.Node ) mut : Nodes.Node
 {
    if #prefixExp.$expTypeList > 1 {
@@ -2189,7 +2189,7 @@ fn TransUnit.analyzeExpField(
       return Nodes.RefFieldNode.create(
          self.nodeManager, firstToken.pos,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeSymbol ],
-         token, nil, accessNil, prefixExp );
+         fieldToken, nil, accessNil, prefixExp );
          //token, accessNil, unwrap prefixExp );
    }
 
@@ -2221,7 +2221,7 @@ fn TransUnit.analyzeExpField(
    }
 
    self.checkFieldComp(
-      mode == .Get or mode == .GetNil, token, prefixExp );
+      mode == .Get or mode == .GetNil, fieldToken, prefixExp );
    
    if accessNil {
       self.helperInfo.useNilAccess = true;
@@ -2243,7 +2243,7 @@ fn TransUnit.analyzeExpField(
       case .Class, .Module, .IF, .List, .Array, .Set, .Box, .Alternate {
          let mut getterFlag = false;
          typeInfo, symbolInfo, getterFlag =
-            self.analyzeAccessClassField( prefixExpType, mode, token );
+            self.analyzeAccessClassField( prefixExpType, mode, fieldToken );
          if getterFlag {
             if! symbolInfo {
                getterTypeInfo = _exp.$typeInfo;
@@ -2252,7 +2252,7 @@ fn TransUnit.analyzeExpField(
       }
       case .Enum, .Alge {
          let scope = unwrap prefixExpType.$scope;
-         let mut fieldName = token.txt;
+         let mut fieldName = fieldToken.txt;
          let symbolInfoList = prefixExp.getSymbolInfo();
          let mut isTypeSymbol = false;
          if #symbolInfoList > 0 {
@@ -2265,7 +2265,7 @@ fn TransUnit.analyzeExpField(
             if not moduleType.equals( self.processInfo, self.moduleType ##) and
                not self.scope.getModuleInfo( moduleType ) {
                   // enum の名前を取得するには、そのモジュールのインポートが必要
-                  self.addErrMess( token.pos, "need to import module -- %s"
+                  self.addErrMess( fieldToken.pos, "need to import module -- %s"
                                    ( prefixExpType.getModule().getTxt(##) ) );
                }
             fieldName = "get_" .. fieldName;
@@ -2282,7 +2282,7 @@ fn TransUnit.analyzeExpField(
                let retTypeList = funcType.$retTypeInfoList;
                if #retTypeList == 0 {
                   self.addErrMess(
-                     token.$pos,
+                     fieldToken.$pos,
                      "The func (%s) doesn't return value." (funcType.getTxt(##)) );
                }
                else {
@@ -2290,7 +2290,7 @@ fn TransUnit.analyzeExpField(
                }
             }
             else {
-               self.addErrMess( token.$pos, "not found -- %s." ( fieldName ) );
+               self.addErrMess( fieldToken.$pos, "not found -- %s." ( fieldName ) );
                typeInfo = Ast.builtinTypeNone;
             }
 
@@ -2301,13 +2301,14 @@ fn TransUnit.analyzeExpField(
                typeInfo = _exp;
                if typeInfo.$kind == .Enum or typeInfo.$kind == .Alge {
                   if not isTypeSymbol {
-                     self.addErrMess( token.pos, "can't access field -- %s" (token.txt));
+                     self.addErrMess( fieldToken.pos,
+                                      "can't access field -- %s" (fieldToken.txt));
                   }
                }
             }
             else {
-               self.addErrMess( token.pos,
-                                "not found field -- %s" (token.txt));
+               self.addErrMess( fieldToken.pos,
+                                "not found field -- %s" (fieldToken.txt));
                typeInfo = Ast.builtinTypeInt;
             }
          }
@@ -2316,7 +2317,7 @@ fn TransUnit.analyzeExpField(
          let work = prefixExpType.$itemTypeInfoList[1];
          if not work.equals( self.processInfo, Ast.builtinTypeString ##) {
             self.addErrMess(
-               token.pos,
+               fieldToken.pos,
                "map key type is not str. (%s)" (work.getTxt(##)) );
          }
          typeInfo = prefixExpType.$itemTypeInfoList[2];
@@ -2324,21 +2325,21 @@ fn TransUnit.analyzeExpField(
             typeInfo = typeInfo.$nilableTypeInfo;
          }
          if extFlag {
-            typeInfo = self.createExtType( token.pos, typeInfo );
+            typeInfo = self.createExtType( fieldToken.pos, typeInfo );
          }
          return Nodes.ExpRefItemNode.create(
-            self.nodeManager, token.pos, self.macroCtrl.isInAnalyzeArgMode(),
-            [ typeInfo ], prefixExp, accessNil, token.txt, nil );
+            self.nodeManager, fieldToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
+            [ typeInfo ], prefixExp, accessNil, fieldToken.txt, nil );
       }
       default {
          if prefixExpType.equals( self.processInfo, Ast.builtinTypeStem ##) {
             typeInfo = Ast.builtinTypeStem_;
             if extFlag {
-               typeInfo = self.createExtType( token.pos, typeInfo );
+               typeInfo = self.createExtType( fieldToken.pos, typeInfo );
             }
             return Nodes.ExpRefItemNode.create(
-               self.nodeManager, token.pos, self.macroCtrl.isInAnalyzeArgMode(),
-               [ typeInfo ], prefixExp, accessNil, token.txt, nil );
+               self.nodeManager, fieldToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
+               [ typeInfo ], prefixExp, accessNil, fieldToken.txt, nil );
          }
          else {
             self.error( "illegal type -- %s, %s"
@@ -2352,7 +2353,7 @@ fn TransUnit.analyzeExpField(
       let prefixScope = prefixExpType.$scope;
       if! prefixScope {
          symbolInfo = _exp.getSymbolInfoField(
-            token.txt, true, self.scope, self.scopeAccess );
+            fieldToken.txt, true, self.scope, self.scopeAccess );
       }
    }
    
@@ -2364,13 +2365,14 @@ fn TransUnit.analyzeExpField(
             {
                // クラスシンボルから、 static でないメンバにアクセスした場合エラー
                self.addErrMess(
-                  token.pos, "Type can't access this symbol. -- %s" (symbolInfo.$name) );
+                  fieldToken.pos,
+                  "Type can't access this symbol. -- %s" (symbolInfo.$name) );
             }
          }
          elseif symbolInfo.$staticFlag and symbolInfo.$typeInfo.$kind ~= .Method {
             // インスタンスから、 static メンバにアクセスした場合エラー
             self.addErrMess(
-               token.pos, "can't access this symbol. -- %s" (token.txt) );
+               fieldToken.pos, "can't access this symbol. -- %s" (fieldToken.txt) );
          }
       };
 
@@ -2380,9 +2382,9 @@ fn TransUnit.analyzeExpField(
          // オブジェクトが immutable で、
          // mutable な method へのアクセスはエラー
          self.addErrMess(
-            token.pos,
+            fieldToken.pos,
             "can't access mutable method. -- %s.%s"
-            (prefixExpType.getTxt(##), token.txt) );
+            (prefixExpType.getTxt(##), fieldToken.txt) );
       }  
    }
 
@@ -2466,14 +2468,14 @@ fn TransUnit.analyzeExpField(
       return Nodes.GetFieldNode.create(
          self.nodeManager, firstToken.pos,
          self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ],
-         token, accessSymbolInfo, accessNil, prefixExp, _exp );
+         fieldToken, accessSymbolInfo, accessNil, prefixExp, _exp );
          //token, canBeLeft, accessNil, prefixExp, _exp );
    }
    else {
       return Nodes.RefFieldNode.create(
          self.nodeManager, firstToken.pos,
          self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ],
-         token, accessSymbolInfo, accessNil, prefixExp );
+         fieldToken, accessSymbolInfo, accessNil, prefixExp );
    }
 }
 
