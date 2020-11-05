@@ -746,7 +746,7 @@ end
 function NodeManager:__init() 
    self.idSeed = 0
    self.nodeKind2NodeList = {}
-   for kind, _2532 in pairs( nodeKind2NameMap ) do
+   for kind, _2550 in pairs( nodeKind2NameMap ) do
       if not self.nodeKind2NodeList[kind] then
          self.nodeKind2NodeList[kind] = {}
       end
@@ -7250,26 +7250,26 @@ function AliasNode:canBeStatement(  )
 
    return true
 end
-function AliasNode.new( id, pos, macroArgFlag, typeList, newName, srcNode, typeInfo )
+function AliasNode.new( id, pos, macroArgFlag, typeList, newSymbol, srcNode, typeInfo )
    local obj = {}
    AliasNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, newName, srcNode, typeInfo ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, newSymbol, srcNode, typeInfo ); end
    return obj
 end
-function AliasNode:__init(id, pos, macroArgFlag, typeList, newName, srcNode, typeInfo) 
+function AliasNode:__init(id, pos, macroArgFlag, typeList, newSymbol, srcNode, typeInfo) 
    Node.__init( self,id, 48, pos, macroArgFlag, typeList)
    
    
    
-   self.newName = newName
+   self.newSymbol = newSymbol
    self.srcNode = srcNode
    self.typeInfo = typeInfo
    
    
 end
-function AliasNode.create( nodeMan, pos, macroArgFlag, typeList, newName, srcNode, typeInfo )
+function AliasNode.create( nodeMan, pos, macroArgFlag, typeList, newSymbol, srcNode, typeInfo )
 
-   local node = AliasNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, newName, srcNode, typeInfo)
+   local node = AliasNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, newSymbol, srcNode, typeInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -7299,8 +7299,8 @@ end
 function AliasNode.setmeta( obj )
   setmetatable( obj, { __index = AliasNode  } )
 end
-function AliasNode:get_newName()
-   return self.newName
+function AliasNode:get_newSymbol()
+   return self.newSymbol
 end
 function AliasNode:get_srcNode()
    return self.srcNode
@@ -12227,7 +12227,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, _10350 in pairs( self.map ) do
+   for key, _10368 in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -12262,8 +12262,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, _10364 in ipairs( __sorted ) do
-         local key = __map[ _10364 ]
+      for __index, _10382 in ipairs( __sorted ) do
+         local key = __map[ _10382 ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false
@@ -12396,9 +12396,9 @@ function RefFieldNode:getLiteral(  )
 
    local typeInfo = self:get_expType()
    do
-      local enumTypeInfo = _lune.__Cast( typeInfo, 3, Ast.EnumTypeInfo )
+      local enumTypeInfo = _lune.__Cast( typeInfo:get_aliasSrc(), 3, Ast.EnumTypeInfo )
       if enumTypeInfo ~= nil then
-         if _lune.__Cast( self.prefix:get_expType(), 3, Ast.EnumTypeInfo ) then
+         if _lune.__Cast( self.prefix:get_expType():get_aliasSrc(), 3, Ast.EnumTypeInfo ) then
             local enumval = _lune.unwrap( enumTypeInfo:getEnumValInfo( self.field.txt ))
             return enumLiteral2Literal( enumval:get_val() )
          end
@@ -12480,7 +12480,7 @@ function ExpRefNode:getLiteral(  )
 
    local typeInfo = self.symbolInfo:get_typeInfo()
    do
-      local enumTypeInfo = _lune.__Cast( typeInfo, 3, Ast.EnumTypeInfo )
+      local enumTypeInfo = _lune.__Cast( typeInfo:get_aliasSrc(), 3, Ast.EnumTypeInfo )
       if enumTypeInfo ~= nil then
          if self.symbolInfo:get_kind() == Ast.SymbolKind.Mbr and self.symbolInfo:get_namespaceTypeInfo():get_kind() == Ast.TypeInfoKind.Enum then
             local enumval = _lune.unwrap( enumTypeInfo:getEnumValInfo( self.symbolInfo:get_name() ))

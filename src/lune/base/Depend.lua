@@ -367,5 +367,10 @@ local function canUseChannel(  )
    return false
 end
 _moduleObj.canUseChannel = canUseChannel
+local function canUseAsync(  )
+
+   return false
+end
+_moduleObj.canUseAsync = canUseAsync
 
 return _moduleObj

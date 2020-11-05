@@ -932,7 +932,7 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
             end
             
          elseif macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKind.Enum then
-            local enumTypeInfo = _lune.unwrap( _lune.__Cast( macroVal.typeInfo, 3, Ast.EnumTypeInfo ))
+            local enumTypeInfo = _lune.unwrap( _lune.__Cast( macroVal.typeInfo:get_aliasSrc(), 3, Ast.EnumTypeInfo ))
             local fullname = macroVal.typeInfo:getFullName( typeNameCtrl, scope, true )
             local nameList = {}
             for name in fullname:gmatch( "[^%.]+" ) do

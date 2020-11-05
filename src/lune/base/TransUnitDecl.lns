@@ -88,6 +88,25 @@ fn TransUnit.analyzeRefTypeWithSymbol(
 {
    let mut typeInfo = symbolNode.$expType;
 
+   if! let aliasType = typeInfo@@@Ast.AliasTypeInfo {
+      let aliasSrc = aliasType.$aliasSrcTypeInfo;
+      if not self.importModuleSet.has( aliasSrc.getModule() ) and
+         self.moduleType.$parentInfo ~= aliasSrc.getModule().$parentInfo
+      {
+         // 本来は alias の定義元のモジュールのインポートは不要だが、
+         // 現状の go への変換では定義元のモジュールが必要になるため、
+         // 定義元のモジュールをインポートしていない場合、エラーとする。
+         // なお、 go は同じディレクトリ内はインポート不要なので、
+         // 異なるディレクトリの場合だけエラーとする。
+         self.addErrMess( symbolNode.$pos,
+                          "must import '%s' for this alias -- %s"
+                          ( aliasType.getModule().getFullName(
+                             self.typeNameCtrl, self.scope, false ),
+                            symbolNode.getSymbolInfo()[1].$name ) );
+      }
+   }
+   
+
    if parentPub and
       Ast.isPubToExternal( accessMode ) and
       not Ast.isPubToExternal( typeInfo.$accessMode )
@@ -1317,6 +1336,8 @@ fn TransUnit.analyzeAlias(
    let mut newTypeInfo = Ast.builtinTypeNone;
    let symbolInfoList = symbolNode.getSymbolInfo();
 
+   let mut newSymbolInfo:&Ast.SymbolInfo = Ast.dummySymbol;
+
    if #symbolInfoList >= 1 {
       let symbolInfo = symbolInfoList[ 1 ];
       if newToken.txt.find( "^_" ##) and not srcToken.txt.find( "^_" ##) or
@@ -1333,6 +1354,7 @@ fn TransUnit.analyzeAlias(
                   false, accessMode, self.moduleType, symbolInfo );
                when! aliasSymbolInfo {
                   newTypeInfo = aliasSymbolInfo.$typeInfo;
+                  newSymbolInfo = aliasSymbolInfo;
                }
                else {
                   self.errorShadowing( newToken.pos, shadowing );
@@ -1354,7 +1376,7 @@ fn TransUnit.analyzeAlias(
 
    return Nodes.AliasNode.create(
       self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
-      [ newTypeInfo ], newToken.txt, symbolNode, newTypeInfo );
+      [ newTypeInfo ], newSymbolInfo, symbolNode, newTypeInfo );
 }
 
 
@@ -2533,12 +2555,19 @@ fn TransUnit.processAddFunc(
             matched = false;
          }
       }
-      if not typeInfo.canEvalWith(
-         self.processInfo, prottype, .SetOp, alt2typeMap ) {
-         self.addErrMess( name.pos,
-                          "mismatch functype -- %s / %s"
-                          (typeInfo.$display_stirng, prottype.$display_stirng ) );
-         matched = false;
+      {
+         let matchFlag, err = typeInfo.canEvalWith(
+            self.processInfo, prottype, .SetOp, alt2typeMap );
+         if not matchFlag {
+            if err {
+               self.addErrMess( name.pos, "mismatch functype -- %s" (err ) );
+            } else {
+               self.addErrMess(
+                  name.pos, "mismatch functype -- %s / %s"
+                  ( typeInfo.$display_stirng, prottype.$display_stirng ) );
+            }
+            matched = false;
+         }
       }
 
       if self.protoFuncMap[ prottype ] {

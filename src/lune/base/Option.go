@@ -74,7 +74,7 @@ func Option_convExp424(arg1 []LnsAny) LnsAny {
 }
 // 47: decl @lune.@base.@Option.getBuildCount
 func Option_getBuildCount_1015_() LnsInt {
-    return 5678
+    return 5762
 }
 
 // 72: decl @lune.@base.@Option.getRuntimeModule
@@ -87,9 +87,9 @@ func Option_outputLuneMod(path LnsAny) LnsAny {
     var lune_path string
     lune_path = "runtime.lua"
     if path != nil{
-        path_2382 := path.(string)
-        if path_2382 != ""{
-            lune_path = path_2382
+        path_2401 := path.(string)
+        if path_2401 != ""{
+            lune_path = path_2401
             
         }
     }

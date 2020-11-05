@@ -23,9 +23,9 @@ func MetaLoader_loadFromStream(path string,stream Lns_iStream)(LnsAny, LnsAny) {
         return nil, err
     }
     if item != nil{
-        item_553 := item
+        item_554 := item
         var _map *LnsMap
-        _map = item_553.(*LnsMap)
+        _map = item_554.(*LnsMap)
         var formatVersion string
         {
             _workVal := _map.Items["__formatVersion"]
@@ -446,15 +446,15 @@ func (self *MetaLoader_Loader) analyzeTable()(LnsAny, LnsAny) {
                     return nil, work
                 }
                 if item != nil && val != nil{
-                    item_427 := item
-                    val_428 := val
-                    _map.Set(item_427,val_428)
+                    item_428 := item
+                    val_429 := val
+                    _map.Set(item_428,val_429)
                 }
             } else { 
                 self.parser.Pushback()
                 if item != nil{
-                    item_431 := item
-                    _map.Set(index,item_431)
+                    item_432 := item
+                    _map.Set(index,item_432)
                 }
                 index = index + 1
                 
@@ -598,11 +598,11 @@ func (self *MetaLoader_Loader) processExpSym(symToken *Parser_Token) LnsAny {
                 return err
             }
             if index != nil && exp != nil{
-                index_499 := index
-                exp_500 := exp
+                index_500 := index
+                exp_501 := exp
                 var _map *LnsMap
-                _map = exp_500.(*LnsMap)
-                _map.Set(index_499,val)
+                _map = exp_501.(*LnsMap)
+                _map.Set(index_500,val)
             }
             return nil
         }
@@ -667,10 +667,10 @@ func (self *MetaLoader_Loader) Process()(LnsAny, LnsAny) {
     var err LnsAny
     val,err = self.FP.processStmt()
     if err != nil{
-        err_529 := err.(string)
+        err_530 := err.(string)
         var pos *Parser_Position
         pos = self.parser.GetTokenNoErr().Pos
-        return nil, Lns_getVM().String_format("%d:%d:%s", []LnsAny{pos.LineNo, pos.Column, err_529})
+        return nil, Lns_getVM().String_format("%d:%d:%s", []LnsAny{pos.LineNo, pos.Column, err_530})
     }
     return val, err
 }

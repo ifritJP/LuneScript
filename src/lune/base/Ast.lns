@@ -667,6 +667,10 @@ pub class TypeInfo {
       //TypeManager.add( self );
    }
 
+   pub fn get_aliasSrc() : &TypeInfo {
+      return self;
+   }
+
    pub fn get_extedType() : &TypeInfo {
       return self;
    }
@@ -1363,6 +1367,25 @@ pub class AliasTypeInfo extend TypeInfo {
    pri let externalFlag:bool { pub };
    pri let typeId: int { pub };
 
+   pub override fn get_aliasSrc() : &TypeInfo {
+      return self.aliasSrcTypeInfo;
+   }
+   /** 非 nilable の型情報 */
+   pub override fn get_nonnilableType(): &TypeInfo {
+      return self;
+   }
+   /** Modifier の元となる型情報 */
+   pub override fn get_srcTypeInfo(): &TypeInfo {
+      return self;
+   }
+   pub override fn get_genSrcTypeInfo(): &TypeInfo {
+      return self;
+   }
+   /** この型が属しているモジュールを取得 */
+   pub override fn getModule(): &TypeInfo {
+      return self.$parentInfo.getModule();
+   }
+   
    /** この型の名前を取得する。 */
    pub override fn getTxt(
       typeNameCtrl:&TypeNameCtrl!, importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
@@ -1396,6 +1419,23 @@ pub class AliasTypeInfo extend TypeInfo {
       }
       return nil;
    }
+
+   pub override fn canEvalWith(
+      processInfo:ProcessInfo, other:&TypeInfo, canEvalType:CanEvalType,
+      alt2type:Map<&TypeInfo,&TypeInfo> ): bool, str!
+   {
+      return self.aliasSrcTypeInfo.canEvalWith(
+         processInfo, other.$aliasSrc, canEvalType, alt2type )**;
+   }
+
+   pub override fn equals( processInfo:ProcessInfo,
+                           typeInfo: &TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>!,
+                           checkModifer:bool! ): bool
+   {
+      return self.aliasSrcTypeInfo.equals(
+         processInfo, typeInfo.$aliasSrc, alt2type, checkModifer );
+   }
+
 
    advertise aliasSrcTypeInfo;
 }
@@ -2306,6 +2346,9 @@ pub class NilableTypeInfo extend TypeInfo {
    pub override fn get_kind(): TypeInfoKind {
       return .Nilable;
    }
+   pub override fn get_aliasSrc() : &TypeInfo {
+      return self;
+   }
    pub override fn get_srcTypeInfo(): &TypeInfo {
       return self;
    }
@@ -2698,6 +2741,9 @@ pub class BoxTypeInfo extend TypeInfo {
    pub override fn get_kind(): TypeInfoKind {
       return .Box;
    }
+   pub override fn get_aliasSrc() : &TypeInfo {
+      return self;
+   }
    pub override fn get_srcTypeInfo(): &TypeInfo {
       return self;
    }
@@ -2868,6 +2914,9 @@ pub class GenericTypeInfo extend TypeInfo {
       return true;
    }
 
+   pub override fn get_aliasSrc() : &TypeInfo {
+      return self;
+   }
    /** Modifier の元となる型情報 */
    pub override fn get_srcTypeInfo(): &TypeInfo {
       return self;
@@ -3311,7 +3360,7 @@ pub class EnumTypeInfo extend TypeInfo {
       processInfo:ProcessInfo, other:&TypeInfo,
       canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool, str!
    {
-      return self == other.$srcTypeInfo, nil;
+      return self == other.$srcTypeInfo.$aliasSrc, nil;
    }
 
    pub fn addEnumValInfo( valInfo:&EnumValInfo ) mut {
@@ -3415,7 +3464,7 @@ pub class AlgeTypeInfo extend TypeInfo {
       processInfo:ProcessInfo, other:&TypeInfo,
       canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool, str!
    {
-      return self == other.$srcTypeInfo, nil;
+      return self == other.$srcTypeInfo.$aliasSrc, nil;
    }
 
    pub override fn get_mutMode(): MutMode {
@@ -3783,6 +3832,11 @@ pub class NormalTypeInfo extend TypeInfo {
       if typeInfo.$kind == .Alternate {
          return typeInfo.equals( processInfo, self, alt2type, checkModifer );
       }
+
+      if! let aliasType = typeInfo@@@AliasTypeInfo {
+         return aliasType.equals( processInfo, self, alt2type, checkModifer );
+      }
+      
 
       // プリミティブな設定のチェック
       if self.kind ~= typeInfo.$kind or
@@ -4657,6 +4711,9 @@ pub class DDDTypeInfo extend TypeInfo {
    pub override fn get_mutMode(): MutMode {
       return self.$typeInfo.$mutMode;
    }
+   pub override fn get_aliasSrc() : &TypeInfo {
+      return self;
+   }
    pub override fn get_srcTypeInfo(): &TypeInfo {
       return self;
    }
@@ -5311,6 +5368,9 @@ pub class ExtTypeInfo extend TypeInfo {
    }
    pub override fn get_kind(): TypeInfoKind {
       return .Ext;
+   }
+   pub override fn get_aliasSrc() : &TypeInfo {
+      return self;
    }
    pub override fn get_srcTypeInfo(): &TypeInfo {
       return self;
@@ -5997,6 +6057,11 @@ pub static fn TypeInfo.canEvalWithBase(
    dest:&TypeInfo, destMut:bool, other:&TypeInfo, canEvalType:CanEvalType,
    alt2type:Map<&TypeInfo,&TypeInfo> ) : bool, str!
 {
+   if dest ~= dest.$aliasSrc {
+      return dest.$aliasSrc.canEvalWith(
+         processInfo, other, canEvalType, alt2type )**;
+   }
+   
    if dest == builtinTypeExp or dest == builtinTypeMultiExp {
       if other == builtinTypeMultiExp and dest ~= builtinTypeMultiExp {
          return false, "can't eval from '__exp' to '__exps'.";
@@ -6007,9 +6072,8 @@ pub static fn TypeInfo.canEvalWithBase(
       // とりあえず全て OK とする
       return true, nil;
    }
-   
    let otherMut = TypeInfo.isMut( other );
-   let mut otherSrc = other.$srcTypeInfo;
+   let mut otherSrc = other.$srcTypeInfo.$aliasSrc;
    if otherSrc.$kind == .DDD {
       if #otherSrc.$itemTypeInfoList > 0 {
          otherSrc = otherSrc.$itemTypeInfoList[ 1 ].$nilableTypeInfo;
@@ -6024,7 +6088,6 @@ pub static fn TypeInfo.canEvalWithBase(
          otherSrc = AlternateTypeInfo.getAssign( otherSrc, alt2type ).$srcTypeInfo;
       }
    }
-   
 
    switch canEvalType {
       case .SetEq, .SetOp, .SetOpIMut {

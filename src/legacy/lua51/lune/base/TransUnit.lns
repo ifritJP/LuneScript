@@ -537,10 +537,17 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
    /** 解析警告ーメッセージ */
    pri let mut warnMessList: str[] { pub };
 
-   /** インポートしているモジュールの TypeInfo -> シンボル情報 */
+   /**
+インポートしているモジュールの TypeInfo -> シンボル情報。
+import しているモジュールから、さらに import しているサブモジュールも含まれる。
+   */ 
    pri let mut importModule2ModuleInfo: Map<&Ast.TypeInfo,&Nodes.ModuleInfo>;
    pri let mut importModuleName2ModuleInfo: Map<str,&Nodes.ModuleInfo>;
 
+
+   /** このモジュール内から直接 import しているモジュールのセット */
+   pri let mut importModuleSet: Set<&Ast.TypeInfo>;
+   
    /** subfile 名のリスト */
    pri let mut subfileList: str[];
 
@@ -613,6 +620,7 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
                   pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
                   ctrl_info: &Types.TransCtrlInfo )
    {
+      self.importModuleSet = (@);
       self.processInfo = Ast.createProcessInfo( ctrl_info.validLuaval );
       self.accessSymbolSetQueue = new AccessSymbolSetQueue();
       self.advertisedTypeSet = (@);
@@ -3400,8 +3408,11 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Nodes.Node {
       nextToken = self.getToken(##);
    }
    self.checkToken( nextToken, ";" );
+
+   let mut node = self.analyzeImportFor( token.pos, modulePath, assignName.txt );
+   self.importModuleSet.add( node.$expType );
    
-   return self.analyzeImportFor( token.pos, modulePath, assignName.txt );
+   return node;
 }
 
 
@@ -3698,7 +3709,7 @@ fn TransUnit.analyzeSwitch( firstToken: &Parser.Token ) mut : Nodes.SwitchNode {
    }
 
    let mut caseKind:Nodes.CaseKind;
-   if! let enumType = exp.$expType.$srcTypeInfo@@@Ast.EnumTypeInfo {
+   if! let enumType = exp.$expType.$srcTypeInfo.$aliasSrc@@@Ast.EnumTypeInfo {
       // enum 値の switch の場合、全ての case をチェックしているかどうかを調べる
       let mut miss = false;
       foreach enumVal in enumType.$name2EnumValInfo {

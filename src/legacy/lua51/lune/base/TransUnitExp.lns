@@ -1171,7 +1171,7 @@ pub fn isMatchStringFormatType(
    opKind:str, mut argType:&Ast.TypeInfo, luaVer:&LuaVer.LuaVerInfo ):
    FormType, &Ast.TypeInfo
 {
-   if! let enumType = argType.$srcTypeInfo@@@Ast.EnumTypeInfo {
+   if! let enumType = argType.$srcTypeInfo.$aliasSrc@@@Ast.EnumTypeInfo {
       argType = enumType.$valTypeInfo;
    }
    switch opKind[ #opKind ] {
@@ -2636,6 +2636,24 @@ fn TransUnit.analyzeExpSymbol(
                let funcTypeInfo = self.getCurrentNamespaceTypeInfo();
                self.has__func__Symbol.add( funcTypeInfo );
             }
+            case "_G", "_ENV" {
+               let mut valid = false;
+               foreach pragma in self.helperInfo.pragmaSet {
+                  match pragma {
+                     case .limit_conv_code( codeSet ) {
+                        if codeSet.len() == 1 and codeSet.has( LuneControl.Code.Lua ) {
+                           valid = true;
+                           break;
+                        }
+                     }
+                  }
+               }
+               if not valid {
+                  self.addErrMess(
+                     firstToken.pos,
+                     "'_G' and '_ENV' only can access with transcompiling to lua." );
+               }
+            }
          }
          
          exp = Nodes.ExpRefNode.create(
@@ -2932,7 +2950,7 @@ fn TransUnit.analyzeExpOp2(
                }
 
                let mut expectType = Ast.builtinTypeNone;
-               if! prefixExpType.$srcTypeInfo@@@Ast.EnumTypeInfo {
+               if! prefixExpType.$srcTypeInfo.$aliasSrc@@@Ast.EnumTypeInfo {
                   expectType = _exp;
                }
                if! prefixExpType.$srcTypeInfo@@@Ast.AlgeTypeInfo {
@@ -3539,7 +3557,7 @@ fn TransUnit.analyzeExp(
    let firstToken = self.getToken(##);
    
    fn processsExpectExp( token:&Parser.Token, orgExpectType:&Ast.TypeInfo ): Nodes.Node {
-      if! let enumTyepInfo = orgExpectType.$srcTypeInfo@@@Ast.EnumTypeInfo {
+      if! let enumTyepInfo = orgExpectType.$srcTypeInfo.$aliasSrc@@@Ast.EnumTypeInfo {
          let nextToken = self.getToken(##);
          self.checkEnumComp( nextToken, enumTyepInfo );
          

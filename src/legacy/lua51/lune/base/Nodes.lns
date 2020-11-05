@@ -1573,7 +1573,7 @@ pub override fn GetFieldNode.getPrefix() : &Node! {
 
 
 _declNodeClass( "Alias", Node, false, false, true,
-                [ {"newName": "str" },
+                [ {"newSymbol": "&Ast.SymbolInfo" },
                   {"srcNode": "&Node" },
                   {"typeInfo": "&Ast.TypeInfo" } ] );
 
@@ -2449,8 +2449,8 @@ fn enumLiteral2Literal( obj:&Ast.EnumLiteral ) : Literal!, str! {
 
 pub override fn RefFieldNode.getLiteral(): Literal!, str! {
    let typeInfo = self.$expType;
-   if! let enumTypeInfo = typeInfo@@@Ast.EnumTypeInfo {
-      if self.prefix.$expType@@@Ast.EnumTypeInfo {
+   if! let enumTypeInfo = typeInfo.$aliasSrc@@@Ast.EnumTypeInfo {
+      if self.prefix.$expType.$aliasSrc@@@Ast.EnumTypeInfo {
          let enumval = unwrap enumTypeInfo.getEnumValInfo( self.field.txt );
          return enumLiteral2Literal( enumval.$val )**;
       }
@@ -2511,7 +2511,7 @@ pub override fn ExpMacroArgExpNode.getLiteral(): Literal!, str!
 
 pub override fn ExpRefNode.getLiteral(): Literal!, str! {
    let typeInfo = self.symbolInfo.$typeInfo;
-   if! let enumTypeInfo = typeInfo@@@Ast.EnumTypeInfo {
+   if! let enumTypeInfo = typeInfo.$aliasSrc@@@Ast.EnumTypeInfo {
       // この getLiteral() 処理は、次のケースのみ有効。
       // enum Hoge {
       //   Val0,

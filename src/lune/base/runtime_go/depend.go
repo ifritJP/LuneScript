@@ -78,12 +78,20 @@ func Depend_existFile( path string ) bool {
     if _, err := os.Stat( path ); err != nil {
         return false
     }
-    return true;
+    return true
 }
 
 func Depend_getLuaVersion() string {
     return "5.3"
 }
+
+func Depend_canUseChannel() bool {
+   return true
+}
+func Depend_canUseAsync() bool {
+   return false
+}
+
 
 type Depend_UpdateVer func ( ver LnsInt )
 

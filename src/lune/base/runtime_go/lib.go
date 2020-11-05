@@ -303,10 +303,10 @@ func Lns_NilAccPush( obj interface{} ) bool {
     return true
 }
 
-func Lns_NilAccLast( obj interface{} ) bool {
-    cur_LnsEnv.nilAccStack = append( cur_LnsEnv.nilAccStack, obj )
-    return true
-}
+// func Lns_NilAccLast( obj interface{} ) bool {
+//     cur_LnsEnv.nilAccStack = append( cur_LnsEnv.nilAccStack, obj )
+//     return true
+// }
 
 func Lns_NilAccPop() LnsAny {
     obj := cur_LnsEnv.nilAccStack[ len( cur_LnsEnv.nilAccStack ) - 1 ]

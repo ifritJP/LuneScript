@@ -155,3 +155,6 @@ pub fn existFile( path:str ): bool {
 pub fn canUseChannel() : bool {
    return false;
 }
+pub fn canUseAsync() : bool {
+   return false;
+}

@@ -31,11 +31,11 @@ func ConvLua_ConvMode_getTxt(arg1 LnsInt) string {
 var convLua_stepIndent LnsInt
 type convLua_outputMacroStmtBlock_1378_ func ()
 // for 3532
-func convLua_convExp17778(arg1 []LnsAny) LnsAny {
+func convLua_convExp17782(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 3319
-func convLua_convExp16552(arg1 []LnsAny) LnsInt {
+func convLua_convExp16556(arg1 []LnsAny) LnsInt {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt)
 }
 // for 254
@@ -43,15 +43,15 @@ func convLua_convExp970(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 2721
-func convLua_convExp13484(arg1 []LnsAny) LnsAny {
+func convLua_convExp13485(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 2736
-func convLua_convExp13559(arg1 []LnsAny) LnsInt {
+func convLua_convExp13560(arg1 []LnsAny) LnsInt {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt)
 }
 // for 3468
-func convLua_convExp17335(arg1 []LnsAny) LnsAny {
+func convLua_convExp17339(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // 73: decl @lune.@base.@convLua.getSymTxt
@@ -77,7 +77,7 @@ func convLua_isGenericType_1316_(typeInfo *Ast_TypeInfo) bool {
     if Ast_isGenericType(typeInfo){
         return true
     }
-    if _switch5074 := typeInfo.FP.Get_kind(); _switch5074 == Ast_TypeInfoKind__Class || _switch5074 == Ast_TypeInfoKind__IF {
+    if _switch5075 := typeInfo.FP.Get_kind(); _switch5075 == Ast_TypeInfoKind__Class || _switch5075 == Ast_TypeInfoKind__IF {
         if typeInfo.FP.Get_itemTypeInfoList().Len() > 0{
             return true
         }
@@ -100,12 +100,12 @@ func convLua_runLuaOnLns_1647_(code string)(LnsAny, string) {
     var err string
     loadFunc,err = DependLuaOnLns_runLuaOnLns(code)
     if loadFunc != nil{
-        loadFunc_7067 := loadFunc.(*Lns_luaValue)
+        loadFunc_7085 := loadFunc.(*Lns_luaValue)
         var mod LnsAny
-        mod = Lns_getVM().RunLoadedfunc(loadFunc_7067,[]LnsAny{})[0]
+        mod = Lns_getVM().RunLoadedfunc(loadFunc_7085,[]LnsAny{})[0]
         if mod != nil{
-            mod_7070 := mod
-            return mod_7070, ""
+            mod_7088 := mod
+            return mod_7088, ""
         }
         return nil, "load error"
     }
@@ -134,7 +134,7 @@ func ConvLua_createAstFromFile(scriptPath string,option *Option_Option) *TransUn
     var stream Lns_luaStream
     
     {
-        _stream := convLua_convExp17335(Lns_2DDD(Lns_io_open(scriptPath, nil)))
+        _stream := convLua_convExp17339(Lns_2DDD(Lns_io_open(scriptPath, nil)))
         if _stream == nil{
             Util_err(Lns_getVM().String_format("not failed to open -- %s", []LnsAny{scriptPath}))
         } else {
@@ -174,9 +174,9 @@ func ConvLua_runTestCode(ctrl *Testing_Ctrl,luaCode string) {
     var mess LnsAny
     loaded,mess = Lns_getVM().Load(luaCode, nil)
     if loaded != nil{
-        loaded_7154 := loaded.(*Lns_luaValue)
+        loaded_7172 := loaded.(*Lns_luaValue)
         {
-            _mod := convLua_convExp17778(Lns_2DDD(Lns_getVM().RunLoadedfunc(loaded_7154,Lns_2DDD([]LnsAny{}))[0]))
+            _mod := convLua_convExp17782(Lns_2DDD(Lns_getVM().RunLoadedfunc(loaded_7172,Lns_2DDD([]LnsAny{}))[0]))
             if _mod != nil {
                 mod := _mod
                 {
@@ -1462,7 +1462,7 @@ func (self *convLua_convFilter) ProcessDeclEnum(node *Nodes_DeclEnumNode,_opt Ln
     var enumFullName string
     enumFullName = node.FP.Get_name().Txt
     var typeInfo *Ast_EnumTypeInfo
-    typeInfo = Lns_unwrap( Ast_EnumTypeInfoDownCastF(node.FP.Get_expType().FP)).(*Ast_EnumTypeInfo)
+    typeInfo = Lns_unwrap( Ast_EnumTypeInfoDownCastF(node.FP.Get_expType().FP.Get_aliasSrc().FP)).(*Ast_EnumTypeInfo)
     var parentInfo *Ast_TypeInfo
     parentInfo = typeInfo.FP.Get_parentInfo()
     var isTopNS bool
@@ -1520,10 +1520,10 @@ func (self *convLua_convFilter) getMapInfo(typeInfo *Ast_TypeInfo)(string, bool,
     child = "{}"
     var funcTxt string
     funcTxt = ""
-    if _switch5528 := nonnilableType.FP.Get_kind(); _switch5528 == Ast_TypeInfoKind__Stem {
+    if _switch5529 := nonnilableType.FP.Get_kind(); _switch5529 == Ast_TypeInfoKind__Stem {
         funcTxt = "_lune._toStem"
         
-    } else if _switch5528 == Ast_TypeInfoKind__Class || _switch5528 == Ast_TypeInfoKind__IF {
+    } else if _switch5529 == Ast_TypeInfoKind__Class || _switch5529 == Ast_TypeInfoKind__IF {
         if Lns_op_not(nonnilableType.FP.Equals(self.processInfo, Ast_builtinTypeString, nil, nil)){
             funcTxt = Lns_getVM().String_format("%s._fromMap", []LnsAny{self.FP.getFullName(nonnilableType)})
             
@@ -1538,23 +1538,23 @@ func (self *convLua_convFilter) getMapInfo(typeInfo *Ast_TypeInfo)(string, bool,
             funcTxt = "_lune._toStr"
             
         }
-    } else if _switch5528 == Ast_TypeInfoKind__Enum || _switch5528 == Ast_TypeInfoKind__Alge {
+    } else if _switch5529 == Ast_TypeInfoKind__Enum || _switch5529 == Ast_TypeInfoKind__Alge {
         funcTxt = Lns_getVM().String_format("%s._from", []LnsAny{self.FP.getFullName(nonnilableType)})
         
-    } else if _switch5528 == Ast_TypeInfoKind__Prim {
-        if _switch5308 := nonnilableType; _switch5308 == Ast_builtinTypeInt {
+    } else if _switch5529 == Ast_TypeInfoKind__Prim {
+        if _switch5309 := nonnilableType; _switch5309 == Ast_builtinTypeInt {
             funcTxt = "_lune._toInt"
             
-        } else if _switch5308 == Ast_builtinTypeReal {
+        } else if _switch5309 == Ast_builtinTypeReal {
             funcTxt = "_lune._toReal"
             
-        } else if _switch5308 == Ast_builtinTypeBool {
+        } else if _switch5309 == Ast_builtinTypeBool {
             funcTxt = "_lune._toBool"
             
         } else {
             Util_err(Lns_getVM().String_format("unknown type -- %s", []LnsAny{nonnilableType.FP.GetTxt(nil, nil, nil)}))
         }
-    } else if _switch5528 == Ast_TypeInfoKind__Map {
+    } else if _switch5529 == Ast_TypeInfoKind__Map {
         funcTxt = "_lune._toMap"
         
         var itemList *LnsList
@@ -1569,7 +1569,7 @@ func (self *convLua_convFilter) getMapInfo(typeInfo *Ast_TypeInfo)(string, bool,
         valFuncTxt,valNilable,valChild = self.FP.getMapInfo(itemList.GetAt(2).(Ast_TypeInfoDownCast).ToAst_TypeInfo())
         child = Lns_getVM().String_format("{ { func = %s, nilable = %s, child = %s }, \n", []LnsAny{keyFuncTxt, keyNilable, keyChild}) + Lns_getVM().String_format("{ func = %s, nilable = %s, child = %s } }", []LnsAny{valFuncTxt, valNilable, valChild})
         
-    } else if _switch5528 == Ast_TypeInfoKind__Set {
+    } else if _switch5529 == Ast_TypeInfoKind__Set {
         funcTxt = "_lune._toSet"
         
         var itemList *LnsList
@@ -1580,7 +1580,7 @@ func (self *convLua_convFilter) getMapInfo(typeInfo *Ast_TypeInfo)(string, bool,
         valFuncTxt,valNilable,valChild = self.FP.getMapInfo(itemList.GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo())
         child = Lns_getVM().String_format("{ func = %s, nilable = %s, child = %s }", []LnsAny{valFuncTxt, valNilable, valChild})
         
-    } else if _switch5528 == Ast_TypeInfoKind__List || _switch5528 == Ast_TypeInfoKind__Array {
+    } else if _switch5529 == Ast_TypeInfoKind__List || _switch5529 == Ast_TypeInfoKind__Array {
         funcTxt = "_lune._toList"
         
         var itemList *LnsList
@@ -1591,7 +1591,7 @@ func (self *convLua_convFilter) getMapInfo(typeInfo *Ast_TypeInfo)(string, bool,
         valFuncTxt,valNilable,valChild = self.FP.getMapInfo(itemList.GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo())
         child = Lns_getVM().String_format("{ { func = %s, nilable = %s, child = %s } }", []LnsAny{valFuncTxt, valNilable, valChild})
         
-    } else if _switch5528 == Ast_TypeInfoKind__Alternate {
+    } else if _switch5529 == Ast_TypeInfoKind__Alternate {
         var prefix string
         prefix = Lns_getVM().String_format("obj.__alt2mapFunc.%s", []LnsAny{nonnilableType.FP.Get_rawTxt()})
         funcTxt = Lns_getVM().String_format("%s.func", []LnsAny{prefix})
@@ -1642,11 +1642,11 @@ func (self *convLua_convFilter) ProcessDeclAlge(node *Nodes_DeclAlgeNode,_opt Ln
     self.FP.writeln(Lns_getVM().String_format("function %s:_getTxt( val )\n   local name = val[ 1 ]\n   if name then\n      return string.format( \"%s.%%s\", name )\n   end\n   return string.format( \"illegal val -- %%s\", val )\nend\n", []LnsAny{algeFullName, algeFullName}))
     self.FP.writeln(Lns_getVM().String_format("function %s._from( val )\n   return _lune._AlgeFrom( %s, val )\nend\n", []LnsAny{algeFullName, algeFullName}))
     {
-        __collection5886 := node.FP.Get_algeType().FP.Get_valInfoMap()
-        __sorted5886 := __collection5886.CreateKeyListStr()
-        __sorted5886.Sort( LnsItemKindStr, nil )
-        for _, ___key5886 := range( __sorted5886.Items ) {
-            valInfo := __collection5886.Items[ ___key5886 ].(Ast_AlgeValInfoDownCast).ToAst_AlgeValInfo()
+        __collection5887 := node.FP.Get_algeType().FP.Get_valInfoMap()
+        __sorted5887 := __collection5887.CreateKeyListStr()
+        __sorted5887.Sort( LnsItemKindStr, nil )
+        for _, ___key5887 := range( __sorted5887.Items ) {
+            valInfo := __collection5887.Items[ ___key5887 ].(Ast_AlgeValInfoDownCast).ToAst_AlgeValInfo()
             self.FP.Write(Lns_getVM().String_format("%s.%s = { \"%s\"", []LnsAny{algeFullName, valInfo.FP.Get_name(), valInfo.FP.Get_name()}))
             if valInfo.FP.Get_typeList().Len() > 0{
                 self.FP.Write(", {")
@@ -1753,7 +1753,7 @@ func (self *convLua_convFilter) ProcessDeclClass(node *Nodes_DeclClassNode,_opt 
         if __exp != nil {
             _exp := __exp.(*Parser_Token)
             self.FP.Write(Lns_getVM().String_format("local %s = require( %s )", []LnsAny{className, _exp.Txt}))
-            if _switch6325 := node.FP.Get_accessMode(); _switch6325 == Ast_AccessMode__Pub || _switch6325 == Ast_AccessMode__Pro {
+            if _switch6326 := node.FP.Get_accessMode(); _switch6326 == Ast_AccessMode__Pub || _switch6326 == Ast_AccessMode__Pro {
                 if self.needModuleObj{
                     self.FP.writeln("")
                     self.FP.Write(Lns_getVM().String_format("_moduleObj.%s = %s", []LnsAny{className, className}))
@@ -2833,15 +2833,15 @@ func (self *convLua_convFilter) ProcessForeach(node *Nodes_ForeachNode,_opt LnsA
     }
     self.FP.Write("for ")
     if keySym != nil{
-        keySym_6540 := keySym.(*Ast_SymbolInfo)
-        self.FP.Write(convLua_getSymTxt_1068_(keySym_6540.FP.Get_name(), Lns_getVM().String_format("%d", []LnsAny{keySym_6540.FP.Get_symbolId()})))
+        keySym_6558 := keySym.(*Ast_SymbolInfo)
+        self.FP.Write(convLua_getSymTxt_1068_(keySym_6558.FP.Get_name(), Lns_getVM().String_format("%d", []LnsAny{keySym_6558.FP.Get_symbolId()})))
     } else {
         self.FP.Write("__index")
     }
     self.FP.Write(", ")
     if valSym != nil{
-        valSym_6543 := valSym.(*Ast_SymbolInfo)
-        self.FP.Write(convLua_getSymTxt_1068_(valSym_6543.FP.Get_name(), Lns_getVM().String_format("%d", []LnsAny{valSym_6543.FP.Get_symbolId()})))
+        valSym_6561 := valSym.(*Ast_SymbolInfo)
+        self.FP.Write(convLua_getSymTxt_1068_(valSym_6561.FP.Get_name(), Lns_getVM().String_format("%d", []LnsAny{valSym_6561.FP.Get_symbolId()})))
     } else {
         self.FP.Write("__val")
     }
@@ -2893,16 +2893,16 @@ func (self *convLua_convFilter) ProcessForsort(node *Nodes_ForsortNode,_opt LnsA
     var key string
     key = "__key"
     if keySym != nil{
-        keySym_6562 := keySym.(*Ast_SymbolInfo)
-        key = convLua_getSymTxt_1068_(keySym_6562.FP.Get_name(), Lns_getVM().String_format("%d", []LnsAny{keySym_6562.FP.Get_symbolId()}))
+        keySym_6580 := keySym.(*Ast_SymbolInfo)
+        key = convLua_getSymTxt_1068_(keySym_6580.FP.Get_name(), Lns_getVM().String_format("%d", []LnsAny{keySym_6580.FP.Get_symbolId()}))
         
     }
     self.FP.Write(key)
     self.FP.writeln(" in ipairs( __sorted ) do")
     self.FP.pushIndent(nil)
     if valSym != nil{
-        valSym_6564 := valSym.(*Ast_SymbolInfo)
-        self.FP.writeln(Lns_getVM().String_format("local %s = __map[ %s ]", []LnsAny{convLua_getSymTxt_1068_(valSym_6564.FP.Get_name(), Lns_getVM().String_format("%d", []LnsAny{valSym_6564.FP.Get_symbolId()})), key}))
+        valSym_6582 := valSym.(*Ast_SymbolInfo)
+        self.FP.writeln(Lns_getVM().String_format("local %s = __map[ %s ]", []LnsAny{convLua_getSymTxt_1068_(valSym_6582.FP.Get_name(), Lns_getVM().String_format("%d", []LnsAny{valSym_6582.FP.Get_symbolId()})), key}))
     }
     convLua_filter_1163_(&node.FP.Get_block().Nodes_Node, self, &node.Nodes_Node)
     self.FP.writeln("end")
@@ -2963,7 +2963,7 @@ func (self *convLua_convFilter) ProcessExpCall(node *Nodes_ExpCallNode,_opt LnsA
             
             wroteFuncFlag = true
             
-            if _switch12647 := fieldNode.FP.Get_field().Txt; _switch12647 == "add" || _switch12647 == "del" {
+            if _switch12648 := fieldNode.FP.Get_field().Txt; _switch12648 == "add" || _switch12648 == "del" {
                 convLua_filter_1163_(prefixNode, self, &fieldNode.Nodes_Node)
                 self.FP.Write("[")
                 {
@@ -2974,9 +2974,9 @@ func (self *convLua_convFilter) ProcessExpCall(node *Nodes_ExpCallNode,_opt LnsA
                     }
                 }
                 self.FP.Write("]")
-                if _switch12641 := fieldNode.FP.Get_field().Txt; _switch12641 == "add" {
+                if _switch12642 := fieldNode.FP.Get_field().Txt; _switch12642 == "add" {
                     self.FP.Write("= true")
-                } else if _switch12641 == "del" {
+                } else if _switch12642 == "del" {
                     self.FP.Write("= nil")
                 }
                 return false
@@ -3022,7 +3022,7 @@ func (self *convLua_convFilter) ProcessExpCall(node *Nodes_ExpCallNode,_opt LnsA
             
             setArgFlag = true
             
-            if _switch12901 := prefixType.FP.Get_kind(); _switch12901 == Ast_TypeInfoKind__List || _switch12901 == Ast_TypeInfoKind__Array {
+            if _switch12902 := prefixType.FP.Get_kind(); _switch12902 == Ast_TypeInfoKind__List || _switch12902 == Ast_TypeInfoKind__Array {
                 self.FP.Write(Lns_getVM().String_format("_lune.nilacc( table.%s, nil, 'list', ", []LnsAny{fieldNode.FP.Get_field().Txt}))
                 convLua_filter_1163_(prefixNode, self, &fieldNode.Nodes_Node)
             } else {
@@ -3031,24 +3031,24 @@ func (self *convLua_convFilter) ProcessExpCall(node *Nodes_ExpCallNode,_opt LnsA
                 self.FP.Write(Lns_getVM().String_format(", '%s', 'callmtd' ", []LnsAny{fieldNode.FP.Get_field().Txt}))
             }
         } else { 
-            if _switch13147 := prefixType.FP.Get_kind(); _switch13147 == Ast_TypeInfoKind__List || _switch13147 == Ast_TypeInfoKind__Array {
+            if _switch13148 := prefixType.FP.Get_kind(); _switch13148 == Ast_TypeInfoKind__List || _switch13148 == Ast_TypeInfoKind__Array {
                 setArgFlag = true
                 
                 wroteFuncFlag = true
                 
                 self.FP.Write(Lns_getVM().String_format("table.%s( ", []LnsAny{fieldNode.FP.Get_field().Txt}))
                 convLua_filter_1163_(prefixNode, self, &fieldNode.Nodes_Node)
-            } else if _switch13147 == Ast_TypeInfoKind__Set {
+            } else if _switch13148 == Ast_TypeInfoKind__Set {
                 if Lns_op_not(processSet()){
                     return false
                 }
-            } else if _switch13147 == Ast_TypeInfoKind__Enum || _switch13147 == Ast_TypeInfoKind__Alge {
+            } else if _switch13148 == Ast_TypeInfoKind__Enum || _switch13148 == Ast_TypeInfoKind__Alge {
                 processEnumAlge()
-            } else if _switch13147 == Ast_TypeInfoKind__Box {
+            } else if _switch13148 == Ast_TypeInfoKind__Box {
                 convLua_filter_1163_(prefixNode, self, &fieldNode.Nodes_Node)
                 self.FP.Write("[1]")
                 return false
-            } else if _switch13147 == Ast_TypeInfoKind__Class {
+            } else if _switch13148 == Ast_TypeInfoKind__Class {
                 if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
                     Lns_setStackVal( prefixType.FP.IsInheritFrom(self.processInfo, Ast_builtinTypeMapping, nil)) &&
                     Lns_setStackVal( convLua_isGenericType_1316_(prefixType)) &&
@@ -3156,12 +3156,12 @@ func (self *convLua_convFilter) ProcessExpCall(node *Nodes_ExpCallNode,_opt LnsA
                 opList = NewLnsList([]LnsAny{})
                 if expList.Len() > 0{
                     var literal LnsAny
-                    literal = convLua_convExp13484(Lns_2DDD(expList.GetAt(1).(Nodes_NodeDownCast).ToNodes_Node().FP.GetLiteral()))
+                    literal = convLua_convExp13485(Lns_2DDD(expList.GetAt(1).(Nodes_NodeDownCast).ToNodes_Node().FP.GetLiteral()))
                     if literal != nil{
-                        literal_6654 := literal
-                        switch _exp13503 := literal_6654.(type) {
+                        literal_6672 := literal
+                        switch _exp13504 := literal_6672.(type) {
                         case *Nodes_Literal__Str:
-                        txt := _exp13503.Val1
+                        txt := _exp13504.Val1
                             opList = TransUnit_findForm(txt)
                             
                         }
@@ -3176,7 +3176,7 @@ func (self *convLua_convFilter) ProcessExpCall(node *Nodes_ExpCallNode,_opt LnsA
                         self.FP.Write(", ")
                         if index - 1 <= opList.Len(){
                             var formType LnsInt
-                            formType = convLua_convExp13559(Lns_2DDD(TransUnit_isMatchStringFormatType(opList.GetAt(index - 1).(string), argNode.FP.Get_expType(), self.targetLuaVer)))
+                            formType = convLua_convExp13560(Lns_2DDD(TransUnit_isMatchStringFormatType(opList.GetAt(index - 1).(string), argNode.FP.Get_expType(), self.targetLuaVer)))
                             if formType == TransUnit_FormType__NeedConv{
                                 self.FP.Write("tostring( ")
                                 convLua_filter_1163_(argNode, self, &node.Nodes_Node)
@@ -3220,7 +3220,7 @@ func (self *convLua_convFilter) ProcessExpOp1(node *Nodes_ExpOp1Node,_opt LnsAny
             self.FP.Write(" )")
         }
     } else if op == ",,"{
-        if _switch13854 := node.FP.Get_exp().FP.Get_expType(); _switch13854 == Ast_builtinTypeInt || _switch13854 == Ast_builtinTypeReal || _switch13854 == Ast_builtinTypeBool {
+        if _switch13855 := node.FP.Get_exp().FP.Get_expType(); _switch13855 == Ast_builtinTypeInt || _switch13855 == Ast_builtinTypeReal || _switch13855 == Ast_builtinTypeBool {
             convLua_filter_1163_(node.FP.Get_exp(), self, &node.Nodes_Node)
         } else {
             self.FP.Write("__luneGetLocal( ")
@@ -3258,7 +3258,7 @@ func (self *convLua_convFilter) ProcessExpMultiTo1(node *Nodes_ExpMultiTo1Node,_
 
 // 2828: decl @lune.@base.@convLua.convFilter.processExpCast
 func (self *convLua_convFilter) ProcessExpCast(node *Nodes_ExpCastNode,_opt LnsAny) {
-    if _switch14273 := node.FP.Get_castKind(); _switch14273 == Nodes_CastKind__Force {
+    if _switch14274 := node.FP.Get_castKind(); _switch14274 == Nodes_CastKind__Force {
         if node.FP.Get_expType().FP.Equals(self.processInfo, Ast_builtinTypeInt, nil, nil){
             self.FP.Write("math.floor(")
             convLua_filter_1163_(node.FP.Get_exp(), self, &node.Nodes_Node)
@@ -3269,19 +3269,19 @@ func (self *convLua_convFilter) ProcessExpCast(node *Nodes_ExpCastNode,_opt LnsA
         } else { 
             convLua_filter_1163_(node.FP.Get_exp(), self, &node.Nodes_Node)
         }
-    } else if _switch14273 == Nodes_CastKind__Normal {
+    } else if _switch14274 == Nodes_CastKind__Normal {
         self.FP.Write("_lune.__Cast( ")
         convLua_filter_1163_(node.FP.Get_exp(), self, &node.Nodes_Node)
         var castKind LnsInt
         var classObj string
         classObj = "nil"
-        if _switch14237 := node.FP.Get_expType().FP.Get_nonnilableType(); _switch14237 == Ast_builtinTypeInt {
+        if _switch14238 := node.FP.Get_expType().FP.Get_nonnilableType(); _switch14238 == Ast_builtinTypeInt {
             castKind = LuaMod_CastKind__Int
             
-        } else if _switch14237 == Ast_builtinTypeReal {
+        } else if _switch14238 == Ast_builtinTypeReal {
             castKind = LuaMod_CastKind__Real
             
-        } else if _switch14237 == Ast_builtinTypeString {
+        } else if _switch14238 == Ast_builtinTypeString {
             castKind = LuaMod_CastKind__Str
             
         } else {
@@ -3291,7 +3291,7 @@ func (self *convLua_convFilter) ProcessExpCast(node *Nodes_ExpCastNode,_opt LnsA
             
         }
         self.FP.Write(Lns_getVM().String_format(", %d, %s )", []LnsAny{castKind, classObj}))
-    } else if _switch14273 == Nodes_CastKind__Implicit {
+    } else if _switch14274 == Nodes_CastKind__Implicit {
         convLua_filter_1163_(node.FP.Get_exp(), self, &node.Nodes_Node)
     }
 }
@@ -3314,12 +3314,12 @@ func (self *convLua_convFilter) ProcessExpSetVal(node *Nodes_ExpSetValNode,_opt 
 func (self *convLua_convFilter) ProcessExpSetItem(node *Nodes_ExpSetItemNode,_opt LnsAny) {
     convLua_filter_1163_(node.FP.Get_val(), self, &node.Nodes_Node)
     self.FP.Write("[")
-    switch _exp14431 := node.FP.Get_index().(type) {
+    switch _exp14432 := node.FP.Get_index().(type) {
     case *Nodes_IndexVal__NodeIdx:
-    index := _exp14431.Val1
+    index := _exp14432.Val1
         convLua_filter_1163_(index, self, &node.Nodes_Node)
     case *Nodes_IndexVal__SymIdx:
-    index := _exp14431.Val1
+    index := _exp14432.Val1
         self.FP.Write(Lns_getVM().String_format("'%s'", []LnsAny{index}))
     }
     self.FP.Write("]")
@@ -3345,10 +3345,10 @@ func (self *convLua_convFilter) ProcessExpOp2(node *Nodes_ExpOp2Node,_opt LnsAny
         if __exp != nil {
             _exp := __exp.(LnsInt)
             if self.targetLuaVer.FP.Get_hasBitOp() == LuaVer_BitOp__HasOp{
-                if _switch14561 := _exp; _switch14561 == Ast_BitOpKind__LShift {
+                if _switch14562 := _exp; _switch14562 == Ast_BitOpKind__LShift {
                     opTxt = "<<"
                     
-                } else if _switch14561 == Ast_BitOpKind__RShift {
+                } else if _switch14562 == Ast_BitOpKind__RShift {
                     opTxt = ">>"
                     
                 }
@@ -3360,19 +3360,19 @@ func (self *convLua_convFilter) ProcessExpOp2(node *Nodes_ExpOp2Node,_opt LnsAny
                 binfunc = ""
                 var exp2Mod string
                 exp2Mod = ""
-                if _switch14678 := _exp; _switch14678 == Ast_BitOpKind__And {
+                if _switch14679 := _exp; _switch14679 == Ast_BitOpKind__And {
                     binfunc = "band"
                     
-                } else if _switch14678 == Ast_BitOpKind__Or {
+                } else if _switch14679 == Ast_BitOpKind__Or {
                     binfunc = "bor"
                     
-                } else if _switch14678 == Ast_BitOpKind__Xor {
+                } else if _switch14679 == Ast_BitOpKind__Xor {
                     binfunc = "bxor"
                     
-                } else if _switch14678 == Ast_BitOpKind__LShift {
+                } else if _switch14679 == Ast_BitOpKind__LShift {
                     binfunc = "lshift"
                     
-                } else if _switch14678 == Ast_BitOpKind__RShift {
+                } else if _switch14679 == Ast_BitOpKind__RShift {
                     binfunc = "lshift"
                     
                     exp2Mod = "-"
@@ -3398,7 +3398,7 @@ func (self *convLua_convFilter) ProcessExpOp2(node *Nodes_ExpOp2Node,_opt LnsAny
 
 // 2979: decl @lune.@base.@convLua.convFilter.processExpRef
 func (self *convLua_convFilter) ProcessExpRef(node *Nodes_ExpRefNode,_opt LnsAny) {
-    if _switch14958 := node.FP.Get_symbolInfo().FP.Get_name(); _switch14958 == "super" {
+    if _switch14959 := node.FP.Get_symbolInfo().FP.Get_name(); _switch14959 == "super" {
         var funcType *Ast_TypeInfo
         funcType = node.FP.Get_expType()
         self.FP.Write(Lns_getVM().String_format("%s.%s", []LnsAny{self.FP.getFullName(funcType.FP.Get_parentInfo()), funcType.FP.Get_rawTxt()}))
@@ -3608,10 +3608,10 @@ func (self *convLua_convFilter) ProcessProvide(node *Nodes_ProvideNode,_opt LnsA
 
 // 3189: decl @lune.@base.@convLua.convFilter.processAlias
 func (self *convLua_convFilter) ProcessAlias(node *Nodes_AliasNode,_opt LnsAny) {
-    self.FP.Write(Lns_getVM().String_format("local %s = ", []LnsAny{node.FP.Get_newName()}))
+    self.FP.Write(Lns_getVM().String_format("local %s = ", []LnsAny{node.FP.Get_newSymbol().FP.Get_name()}))
     convLua_filter_1163_(node.FP.Get_srcNode(), self, &node.Nodes_Node)
     if Ast_isPubToExternal(node.FP.Get_expType().FP.Get_accessMode()){
-        self.FP.Write(Lns_getVM().String_format("\n_moduleObj.%s = %s", []LnsAny{node.FP.Get_newName(), node.FP.Get_newName()}))
+        self.FP.Write(Lns_getVM().String_format("\n_moduleObj.%s = %s", []LnsAny{node.FP.Get_newSymbol().FP.Get_name(), node.FP.Get_newSymbol().FP.Get_name()}))
     }
 }
 
@@ -3737,7 +3737,7 @@ func (self *convLua_convFilter) ProcessLiteralString(node *Nodes_LiteralStringNo
                 var matchFlag LnsInt
                 matchFlag = TransUnit_FormType__Match
                 if index <= opList.Len(){
-                    matchFlag = convLua_convExp16552(Lns_2DDD(TransUnit_isMatchStringFormatType(opList.GetAt(index).(string), val.FP.Get_expType(), self.targetLuaVer)))
+                    matchFlag = convLua_convExp16556(Lns_2DDD(TransUnit_isMatchStringFormatType(opList.GetAt(index).(string), val.FP.Get_expType(), self.targetLuaVer)))
                     
                 }
                 if matchFlag == TransUnit_FormType__NeedConv{
@@ -3838,8 +3838,8 @@ func (self *ConvLua_MacroEvalImp) evalFromMacroCode(code string) *Lns_luaValue {
     var err string
     _func,err = convLua_runLuaOnLns_1647_(code)
     if _func != nil{
-        func_7082 := _func
-        return func_7082.(*Lns_luaValue)
+        func_7100 := _func
+        return func_7100.(*Lns_luaValue)
     }
     Util_err(err)
 // insert a dummy
@@ -3854,8 +3854,8 @@ func (self *ConvLua_MacroEvalImp) EvalFromCode(processInfo *Ast_ProcessInfo,name
     conv = NewconvLua_convFilter("macro", stream.FP, stream.FP, ConvLua_ConvMode__Exec, true, Ast_headTypeInfo, processInfo, Ast_SymbolKind__Typ, nil, LuaVer_getCurVer(), false, true)
     conv.FP.OutputDeclMacro(name, argNameList, convLua_outputMacroStmtBlock_1378_(func() {
         if code != nil{
-            code_7096 := code.(string)
-            conv.FP.Write(code_7096)
+            code_7114 := code.(string)
+            conv.FP.Write(code_7114)
         }
     }))
     return self.FP.evalFromMacroCode(stream.FP.Get_txt())

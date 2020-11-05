@@ -982,8 +982,8 @@ func (self *dumpNode_dumpFilter) ProcessExpSetItem(node *Nodes_ExpSetItemNode,_o
     self.FP.dump(opt, &node.Nodes_Node, indexSym)
     dumpNode_filter_1049_(node.FP.Get_val(), self, opt.FP.NextOpt())
     if indexNode != nil{
-        indexNode_5520 := indexNode.(*Nodes_Node)
-        dumpNode_filter_1049_(indexNode_5520, self, opt.FP.NextOpt())
+        indexNode_5538 := indexNode.(*Nodes_Node)
+        dumpNode_filter_1049_(indexNode_5538, self, opt.FP.NextOpt())
     }
     dumpNode_filter_1049_(node.FP.Get_exp2(), self, opt.FP.NextOpt())
 }
@@ -1076,7 +1076,7 @@ func (self *dumpNode_dumpFilter) ProcessProvide(node *Nodes_ProvideNode,_opt Lns
 // 729: decl @lune.@base.@dumpNode.dumpFilter.processAlias
 func (self *dumpNode_dumpFilter) ProcessAlias(node *Nodes_AliasNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
-    self.FP.dump(opt, &node.Nodes_Node, Lns_getVM().String_format("%s = %s", []LnsAny{node.FP.Get_newName(), node.FP.Get_typeInfo().FP.GetTxt(nil, nil, nil)}))
+    self.FP.dump(opt, &node.Nodes_Node, Lns_getVM().String_format("%s = %s", []LnsAny{node.FP.Get_newSymbol(), node.FP.Get_typeInfo().FP.GetTxt(nil, nil, nil)}))
 }
 
 // 735: decl @lune.@base.@dumpNode.dumpFilter.processTestCase

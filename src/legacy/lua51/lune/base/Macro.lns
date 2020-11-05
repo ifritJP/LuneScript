@@ -629,7 +629,7 @@ pub fn MacroCtrl.expandMacroVal(
             }
          }
          elseif macroVal.typeInfo.get_kind() == .Enum {
-            let enumTypeInfo = unwrap macroVal.typeInfo@@@Ast.EnumTypeInfo;
+            let enumTypeInfo = unwrap macroVal.typeInfo.$aliasSrc@@@Ast.EnumTypeInfo;
             let fullname = macroVal.typeInfo.getFullName( typeNameCtrl, scope, true );
             let mut nameList:List<str> = [];
             apply name of fullname.gmatch( "[^%.]+" ) {

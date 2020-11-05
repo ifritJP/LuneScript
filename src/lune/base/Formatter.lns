@@ -1022,7 +1022,9 @@ pub override fn FormatterFilter.processProvide(
 pub override fn FormatterFilter.processAlias(
    node: &Nodes.AliasNode, opt:Opt ) mut
 {
-   
+   self.write( "alias %s = " (node.$newSymbol.$name) );
+   filter( node.$srcNode, self, opt.nextOpt( node ) );
+   self.writeln( ";" );
 }
 
 pub override fn FormatterFilter.processTestCase(

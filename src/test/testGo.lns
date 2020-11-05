@@ -1778,3 +1778,99 @@ _section();
 {
    print( (unwrap tonumber( "0xFFFD" ##) default 0)@@int );
 }
+_section();
+{
+   class Test {
+      let mut val:int {pub};
+      pub let mut test:Test! {pub};
+      pub let mut list:&List<Test>! {pub};
+      pub let mut map:&Map<int,Test>! {pub};
+      pub fn __init() {
+         self.test = self;
+         self.val = 0;
+         self.list = [ self ];
+         self.map = { 1:self };
+      }
+      pub fn func() mut :Test! {
+         self.val = self.val + 1;
+         return self;
+      }
+      pub fn clear() mut {
+         self.val = 0;
+      }
+   }
+
+   fn sub( lineNo:int, test:&Test! ) {
+      print( lineNo, test$.$val );
+   }
+
+   fn func(test:Test!) {
+      macro _sub( exp:__exp ) {
+         sub( __line__, ,,exp );
+         test$.clear$();
+      }
+      
+      // get, get, get
+      _sub( test$.$test$.$test$.$test );
+      // get, get, filed
+      _sub( test$.$test$.$test$.test );
+      // get, get, call
+      _sub( test$.$test$.$test$.func$() );
+      // get, get, call
+      _sub( test$.$test$.$test$.$list$[1] );
+      // get, get, call
+      _sub( test$.$test$.$test$.$map$[ 1 ] );
+      // get, field, get
+      _sub( test$.$test$.test$.$test );
+      // get, field, field
+      _sub( test$.$test$.test$.test );
+      // get, field, call
+      _sub( test$.$test$.test$.func$() );
+      // get, call, get
+      _sub( test$.$test$.func$()$.$test );
+      // get, call, filed
+      _sub( test$.$test$.func$()$.test );
+      // get, call, call
+      _sub( test$.$test$.func$()$.func$() );
+
+      // field, get, get
+      _sub( test$.test$.$test$.$test );
+      // field, get, filed
+      _sub( test$.test$.$test$.test );
+      // field, get, call
+      _sub( test$.test$.$test$.func$() );
+      // field, field, get
+      _sub( test$.test$.test$.$test );
+      // field, field, field
+      _sub( test$.test$.test$.test );
+      // field, field, call
+      _sub( test$.test$.test$.func$() );
+      // field, call, get
+      _sub( test$.test$.func$()$.$test );
+      // field, call, filed
+      _sub( test$.test$.func$()$.test );
+      // field, call, call
+      _sub( test$.test$.func$()$.func$() );
+
+      // field, get, get
+      _sub( test$.func$()$.$test$.$test );
+      // field, get, filed
+      _sub( test$.func$()$.$test$.test );
+      // field, get, call
+      _sub( test$.func$()$.$test$.func$() );
+      // field, field, get
+      _sub( test$.func$()$.test$.$test );
+      // field, field, field
+      _sub( test$.func$()$.test$.test );
+      // field, field, call
+      _sub( test$.func$()$.test$.func$() );
+      // field, call, get
+      _sub( test$.func$()$.func$()$.$test );
+      // field, call, filed
+      _sub( test$.func$()$.func$()$.test );
+      // field, call, call
+      _sub( test$.func$()$.func$()$.func$() );
+   }
+   func( new Test() );
+   func( nil );
+}

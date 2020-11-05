@@ -233,6 +233,7 @@ end
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Str = _lune.loadModule( 'lune.base.Str' )
 local Async = _lune.loadModule( 'lune.base.Async' )
+local Types = _lune.loadModule( 'lune.base.Types' )
 
 local luaKeywordSet = {["if"] = true, ["else"] = true, ["elseif"] = true, ["while"] = true, ["for"] = true, ["in"] = true, ["return"] = true, ["break"] = true, ["nil"] = true, ["true"] = true, ["false"] = true, ["{"] = true, ["}"] = true, ["do"] = true, ["require"] = true, ["function"] = true, ["then"] = true, ["end"] = true, ["repeat"] = true, ["until"] = true, ["goto"] = true, ["local"] = true}
 
@@ -523,7 +524,7 @@ end
 function Token:getLineCount(  )
 
    local count = 1
-   for _275 in self.txt:gmatch( "\n" ) do
+   for _301 in self.txt:gmatch( "\n" ) do
       count = count + 1
    end
    
@@ -562,7 +563,6 @@ function Token._fromMapSub( obj, val )
    end
    return obj
 end
-
 
 local Parser = {}
 _moduleObj.Parser = Parser
@@ -1064,7 +1064,7 @@ function StreamParser:parse(  )
       local comment = ""
       while true do
          do
-            local _563, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
+            local _589, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
             if termEndIndex ~= nil then
                comment = comment .. rawLine:sub( searchIndex, termEndIndex )
                return comment, termEndIndex + 1

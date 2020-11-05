@@ -390,6 +390,12 @@ fn convFilter.getSymbolSym( symbolInfo:&Ast.SymbolInfo ) : str {
          return self.getSymbol( .Member( Ast.isPubToExternal( symbolInfo.$accessMode ) ),
                                 symbolInfo.$name );
       }
+      case .Typ {
+         if symbolInfo.$typeInfo@@@Ast.AliasTypeInfo {
+            return self.getSymbol( .Var( symbolInfo ), symbolInfo.$name );
+         }
+         return self.getTypeSymbol( symbolInfo.$typeInfo );
+      }
       default {
          Util.err( "not support -- %s" (symbolInfo.$kind.$_txt) );
       }
@@ -432,7 +438,7 @@ fn str2gostr( txt:str ) : str {
 }
 
 fn getOrgTypeInfo( typeInfo:&Ast.TypeInfo ) : &Ast.TypeInfo {
-   if! let enumType = typeInfo.$srcTypeInfo.$nonnilableType@@@Ast.EnumTypeInfo {
+   if! let enumType = typeInfo.$srcTypeInfo.$nonnilableType.$aliasSrc@@@Ast.EnumTypeInfo {
       return enumType.$valTypeInfo;
    }
    return typeInfo.$srcTypeInfo.$nonnilableType;
@@ -1535,8 +1541,13 @@ pub override fn convFilter.processRoot(
                   self.processConvExp( workNode.$id, typeList, expList );
                }
             } );
+   _filter( node.$nodeManager.getAliasNodeList(),
+            fn ( workNode:&Nodes.AliasNode) {
+               self.writeln( "type %s = %s"
+                             ( self.getSymbolSym( workNode.$newSymbol ),
+                               self.getTypeSymbol( workNode.$typeInfo ) ) );
+            } );
    
-
    self.pushProcessMode( .NonClosureFuncDecl );
    _filter( node.$nodeManager.getDeclFuncNodeList(),
             fn ( workNode:&Nodes.Node ) {
@@ -3857,7 +3868,7 @@ alge CallKind {
 @param prefixNode メソッド呼び出し時のオブジェクトノード
 @param funcSymbol 呼び出し関数シンボル
 @return bool true の時、関数呼び出し処理に追加の ")" が必要
-@return bool true の時、
+@return CallKind 関数コールの種別
 */
 pub fn convFilter.outputCallPrefix(
    callId:int, node:&Nodes.Node,
@@ -3939,8 +3950,7 @@ pub fn convFilter.outputCallPrefix(
 
       let prefixType = prefixNode.$expType.$nonnilableType;
       
-      if prefixType == Ast.builtinTypeString
-      {
+      if prefixType == Ast.builtinTypeString {
          if node.hasNilAccess() {
             Util.err( "not support nilAccName" );
          }
@@ -3958,13 +3968,7 @@ pub fn convFilter.outputCallPrefix(
                   self.writeln( ") && " );
                } else {
                   filter( prefixNode, self, node );
-                  switch prefixNode.$kind {
-                     case Nodes.NodeKind.$RefField {
-                     }
-                     default {
-                        self.writeln( "&&" );
-                     }
-                  }
+                  self.writeln( "&&" );
                }
             } else {
                if extCallFlag {
@@ -4045,7 +4049,7 @@ pub override fn convFilter.processExpCall(
    {
       self.write( "%s("
                   (self.getEnumGetTxtSym(
-                     unwrap funcType.$parentInfo@@@Ast.EnumTypeInfo ) ));
+                     unwrap funcType.$parentInfo.$aliasSrc@@@Ast.EnumTypeInfo ) ));
       let! fieldNode = node.$func@@@Nodes.RefFieldNode {
          Util.err( "not support -- __func__" );
       };
@@ -4593,7 +4597,7 @@ pub override fn convFilter.processExpRefItem(
             self.write( "Lns_NilAccFin( Lns_NilAccPush( " );
             filter( node.$val, self, node );
             self.write( ") && " );
-            self.write( "Lns_NilAccLast( Lns_NilAccPop().(*Lns_luaValue)" );
+            self.write( "Lns_NilAccPush( Lns_NilAccPop().(*Lns_luaValue)" );
          } else {
             filter( node.$val, self, node );
             if prefixType.$extedType.$kind == .Stem {
@@ -4611,10 +4615,15 @@ pub override fn convFilter.processExpRefItem(
       }
       case .List, .Array {
          if node.$nilAccess {
-            self.write( "Lns_NilAccFin( Lns_NilAccPush( " );
-            filter( node.$val, self, node );
-            self.write( ") && " );
-            self.write( "Lns_NilAccLast( Lns_NilAccPop().(*LnsList)" );
+            if not node.$val.hasNilAccess() {
+               self.writeln( "Lns_NilAccFin( Lns_NilAccPush(" );
+               filter( node.$val, self, node );
+               self.writeln( ") && " );
+            } else {
+               filter( node.$val, self, node );
+               self.writeln( "&&" );
+            }
+            self.write( "Lns_NilAccPush( Lns_NilAccPop().(*LnsList)" );
             self.write( ".GetAt(" );
             filter( unwrap node.$index, self, node );
             self.write( ")" );
@@ -4630,10 +4639,15 @@ pub override fn convFilter.processExpRefItem(
       }
       case .Map {
          if node.$nilAccess {
-            self.write( "Lns_NilAccFin( Lns_NilAccPush( " );
-            filter( node.$val, self, node );
-            self.write( ") && " );
-            self.write( "Lns_NilAccLast( Lns_NilAccPop().(*LnsMap)" );
+            if not node.$val.hasNilAccess() {
+               self.writeln( "Lns_NilAccFin( Lns_NilAccPush(" );
+               filter( node.$val, self, node );
+               self.writeln( ") && " );
+            } else {
+               filter( node.$val, self, node );
+               self.writeln( "&&" );
+            }
+            self.write( "Lns_NilAccPush( Lns_NilAccPop().(*LnsMap)" );
          } else {
             filter( node.$val, self, node );
             if prefixType.$kind == .Stem {
@@ -4703,10 +4717,8 @@ pub override fn convFilter.processRefField(
    }
 
    let openParenNum;
-   let andOp;
    if not node.hasNilAccess() {
       openParenNum = 0;
-      andOp = false;
       if not node.$prefix.hasNilAccess() {
          filter( node.$prefix, self, node );
       } else {
@@ -4720,20 +4732,12 @@ pub override fn convFilter.processRefField(
          self.writeln( ") && " );
       } else {
          filter( node.$prefix, self, node );
-         switch Nodes.getUnwraped( node.$prefix ).$kind {
-            case Nodes.NodeKind.$ExpCall,
-                 Nodes.NodeKind.$GetField
-            {
-               self.writeln( "&&" );
-            }
-         }
+         self.writeln( "&&" );
       }
       self.write( "Lns_NilAccPush(" );
       if opt.parent.hasNilAccess() {
-         andOp = true;
          openParenNum = 1;
       } else {
-         andOp = false;
          openParenNum = 2;
       }
       self.write( "Lns_NilAccPop().(%s)"
@@ -4748,9 +4752,6 @@ pub override fn convFilter.processRefField(
          self.outputAny2Type( node.$expType );
       } else {
          self.write( self.getSymbolSym( symbol ) );
-         // self.outputSymbol(
-         //    .Member( Ast.isPubToExternal( symbol.$accessMode ) ), node.$field.txt );
-
          let orgSym = symbol.getOrg();
          if orgSym.$kind == .Mbr and orgSym.$typeInfo.$kind == .Alternate and
             isAnyType( orgSym.$typeInfo )
@@ -4765,9 +4766,6 @@ pub override fn convFilter.processRefField(
 
    for _ = 1, openParenNum {
       self.write( ")" );
-   }
-   if andOp {
-      self.writeln( "&&" );
    }
 }
 
@@ -4799,7 +4797,7 @@ pub override fn convFilter.processGetField(
          self.write( self.getSymbolSym( symbolInfo ) );
          self.write( "()" );
       } else {
-         self.outputCallPrefix(
+         let closeParen = self.outputCallPrefix(
             node.$id, node, node.$prefix, symbolInfo );
          self.write( "()" );
          let retType = symbolInfo.$typeInfo.$retTypeInfoList[1];
@@ -4810,16 +4808,14 @@ pub override fn convFilter.processGetField(
          
          if node.hasNilAccess() {
             self.write("})" );
-            switch opt.parent.$kind {
-               case Nodes.NodeKind.$GetField,
-                    Nodes.NodeKind.$RefField,
-                    Nodes.NodeKind.$ExpCall
-               {
-               }
-               default {
-                  self.write ( ")" );
-               }
+            if opt.parent.hasNilAccess() {
+               // self.writeln(" && // " );
+            } else {
+               self.write( ")" );
             }
+         }
+         if closeParen {
+            self.write( ")" );
          }
       }
    } else {
@@ -4873,7 +4869,6 @@ pub override fn convFilter.processProvide(
 pub override fn convFilter.processAlias(
    node: &Nodes.AliasNode, opt: Opt ) mut
 {
-   Util.err( "not support -- %s" (__func__) );
 }
 
 pub override fn convFilter.processBoxing(

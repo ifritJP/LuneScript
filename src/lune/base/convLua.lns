@@ -1046,7 +1046,7 @@ pub override fn convFilter.processDeclEnum(
 {
    let mut access = node.$accessMode == .Global and "" or "local ";
    let mut enumFullName = node.$name.txt;
-   let typeInfo = unwrap node.$expType@@@Ast.EnumTypeInfo;
+   let typeInfo = unwrap node.$expType.$aliasSrc@@@Ast.EnumTypeInfo;
    let parentInfo = typeInfo.$parentInfo;
    let mut isTopNS = true;
    if parentInfo ~= Ast.headTypeInfo and parentInfo.$kind == .Class {
@@ -3189,10 +3189,10 @@ pub override fn convFilter.processProvide(
 pub override fn convFilter.processAlias(
    node: &Nodes.AliasNode, opt: Opt ) mut
 {
-   self.write( "local %s = " (node.$newName) );
+   self.write( "local %s = " (node.$newSymbol.$name) );
    filter( node.$srcNode, self, node );
    if Ast.isPubToExternal( node.$expType.$accessMode ) {
-      self.write( "\n_moduleObj.%s = %s" (node.$newName, node.$newName) );
+      self.write( "\n_moduleObj.%s = %s" (node.$newSymbol.$name, node.$newSymbol.$name) );
    }
 }
 

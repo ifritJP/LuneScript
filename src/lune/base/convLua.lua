@@ -1429,7 +1429,7 @@ function convFilter:processDeclEnum( node, opt )
 
    local access = node:get_accessMode() == Ast.AccessMode.Global and "" or "local "
    local enumFullName = node:get_name().txt
-   local typeInfo = _lune.unwrap( _lune.__Cast( node:get_expType(), 3, Ast.EnumTypeInfo ))
+   local typeInfo = _lune.unwrap( _lune.__Cast( node:get_expType():get_aliasSrc(), 3, Ast.EnumTypeInfo ))
    local parentInfo = typeInfo:get_parentInfo()
    local isTopNS = true
    if parentInfo ~= Ast.headTypeInfo and parentInfo:get_kind() == Ast.TypeInfoKind.Class then
@@ -1882,7 +1882,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _6069 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _6087 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -3824,10 +3824,10 @@ end
 
 function convFilter:processAlias( node, opt )
 
-   self:write( string.format( "local %s = ", node:get_newName()) )
+   self:write( string.format( "local %s = ", node:get_newSymbol():get_name()) )
    filter( node:get_srcNode(), self, node )
    if Ast.isPubToExternal( node:get_expType():get_accessMode() ) then
-      self:write( string.format( "\n_moduleObj.%s = %s", node:get_newName(), node:get_newName()) )
+      self:write( string.format( "\n_moduleObj.%s = %s", node:get_newSymbol():get_name(), node:get_newSymbol():get_name()) )
    end
    
 end

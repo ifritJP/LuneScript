@@ -331,7 +331,7 @@ end
 
 function FormatterFilter:processBlankLine( node, opt )
 
-   for _5002 = 1, node:get_lineNum() do
+   for _5020 = 1, node:get_lineNum() do
       self:writeln( "" )
    end
    
@@ -1411,6 +1411,9 @@ end
 
 function FormatterFilter:processAlias( node, opt )
 
+   self:write( string.format( "alias %s = ", node:get_newSymbol():get_name()) )
+   filter( node:get_srcNode(), self, opt:nextOpt( node ) )
+   self:writeln( ";" )
 end
 
 

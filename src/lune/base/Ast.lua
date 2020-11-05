@@ -1187,6 +1187,10 @@ function TypeInfo:__init(scope, processInfo)
    self.processInfo = processInfo
    
 end
+function TypeInfo:get_aliasSrc(  )
+
+   return self
+end
 function TypeInfo:get_extedType(  )
 
    return self
@@ -1957,6 +1961,26 @@ end
 local AliasTypeInfo = {}
 setmetatable( AliasTypeInfo, { __index = TypeInfo } )
 _moduleObj.AliasTypeInfo = AliasTypeInfo
+function AliasTypeInfo:get_aliasSrc(  )
+
+   return self.aliasSrcTypeInfo
+end
+function AliasTypeInfo:get_nonnilableType(  )
+
+   return self
+end
+function AliasTypeInfo:get_srcTypeInfo(  )
+
+   return self
+end
+function AliasTypeInfo:get_genSrcTypeInfo(  )
+
+   return self
+end
+function AliasTypeInfo:getModule(  )
+
+   return self:get_parentInfo():getModule(  )
+end
 function AliasTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
 
    return self:getTxtWithRaw( self.rawTxt, typeNameCtrl, importInfo, localFlag )
@@ -1982,6 +2006,14 @@ function AliasTypeInfo:applyGeneric( alt2typeMap, moduleTypeInfo )
    end
    
    return nil
+end
+function AliasTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
+
+   return self.aliasSrcTypeInfo:canEvalWith( processInfo, other:get_aliasSrc(), canEvalType, alt2type )
+end
+function AliasTypeInfo:equals( processInfo, typeInfo, alt2type, checkModifer )
+
+   return self.aliasSrcTypeInfo:equals( processInfo, typeInfo:get_aliasSrc(), alt2type, checkModifer )
 end
 function AliasTypeInfo.setmeta( obj )
   setmetatable( obj, { __index = AliasTypeInfo  } )
@@ -2026,24 +2058,12 @@ function AliasTypeInfo:addChildren( ... )
    return self.aliasSrcTypeInfo:addChildren( ... )
 end
 
-function AliasTypeInfo:canEvalWith( ... )
-   return self.aliasSrcTypeInfo:canEvalWith( ... )
-end
-
 function AliasTypeInfo:createAlt2typeMap( ... )
    return self.aliasSrcTypeInfo:createAlt2typeMap( ... )
 end
 
-function AliasTypeInfo:equals( ... )
-   return self.aliasSrcTypeInfo:equals( ... )
-end
-
 function AliasTypeInfo:getFullName( ... )
    return self.aliasSrcTypeInfo:getFullName( ... )
-end
-
-function AliasTypeInfo:getModule( ... )
-   return self.aliasSrcTypeInfo:getModule( ... )
 end
 
 function AliasTypeInfo:getOverridingType( ... )
@@ -2094,10 +2114,6 @@ function AliasTypeInfo:get_extedType( ... )
    return self.aliasSrcTypeInfo:get_extedType( ... )
 end
 
-function AliasTypeInfo:get_genSrcTypeInfo( ... )
-   return self.aliasSrcTypeInfo:get_genSrcTypeInfo( ... )
-end
-
 function AliasTypeInfo:get_interfaceList( ... )
    return self.aliasSrcTypeInfo:get_interfaceList( ... )
 end
@@ -2122,10 +2138,6 @@ function AliasTypeInfo:get_nilableTypeInfo( ... )
    return self.aliasSrcTypeInfo:get_nilableTypeInfo( ... )
 end
 
-function AliasTypeInfo:get_nonnilableType( ... )
-   return self.aliasSrcTypeInfo:get_nonnilableType( ... )
-end
-
 function AliasTypeInfo:get_processInfo( ... )
    return self.aliasSrcTypeInfo:get_processInfo( ... )
 end
@@ -2136,10 +2148,6 @@ end
 
 function AliasTypeInfo:get_scope( ... )
    return self.aliasSrcTypeInfo:get_scope( ... )
-end
-
-function AliasTypeInfo:get_srcTypeInfo( ... )
-   return self.aliasSrcTypeInfo:get_srcTypeInfo( ... )
 end
 
 function AliasTypeInfo:get_staticFlag( ... )
@@ -3142,6 +3150,10 @@ function NilableTypeInfo:get_kind(  )
 
    return TypeInfoKind.Nilable
 end
+function NilableTypeInfo:get_aliasSrc(  )
+
+   return self
+end
 function NilableTypeInfo:get_srcTypeInfo(  )
 
    return self
@@ -3689,6 +3701,10 @@ function BoxTypeInfo:get_kind(  )
 
    return TypeInfoKind.Box
 end
+function BoxTypeInfo:get_aliasSrc(  )
+
+   return self
+end
 function BoxTypeInfo:get_srcTypeInfo(  )
 
    return self
@@ -3969,6 +3985,10 @@ function GenericTypeInfo:isInheritFrom( processInfo, other, alt2type )
    end
    
    return true
+end
+function GenericTypeInfo:get_aliasSrc(  )
+
+   return self
 end
 function GenericTypeInfo:get_srcTypeInfo(  )
 
@@ -4401,6 +4421,10 @@ function ModifierTypeInfo:get_accessMode( ... )
    return self.srcTypeInfo:get_accessMode( ... )
 end
 
+function ModifierTypeInfo:get_aliasSrc( ... )
+   return self.srcTypeInfo:get_aliasSrc( ... )
+end
+
 function ModifierTypeInfo:get_argTypeInfoList( ... )
    return self.srcTypeInfo:get_argTypeInfoList( ... )
 end
@@ -4748,7 +4772,7 @@ function EnumTypeInfo:get_display_stirng(  )
 end
 function EnumTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
 
-   return self == other:get_srcTypeInfo(), nil
+   return self == other:get_srcTypeInfo():get_aliasSrc(), nil
 end
 function EnumTypeInfo:addEnumValInfo( valInfo )
 
@@ -4865,7 +4889,7 @@ function AlgeTypeInfo:get_display_stirng(  )
 end
 function AlgeTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
 
-   return self == other:get_srcTypeInfo(), nil
+   return self == other:get_srcTypeInfo():get_aliasSrc(), nil
 end
 function AlgeTypeInfo:get_mutMode(  )
 
@@ -5283,6 +5307,14 @@ function NormalTypeInfo:equalsSub( processInfo, typeInfo, alt2type, checkModifer
    
    if typeInfo:get_kind() == TypeInfoKind.Alternate then
       return typeInfo:equals( processInfo, self, alt2type, checkModifer )
+   end
+   
+   
+   do
+      local aliasType = _lune.__Cast( typeInfo, 3, AliasTypeInfo )
+      if aliasType ~= nil then
+         return aliasType:equals( processInfo, self, alt2type, checkModifer )
+      end
    end
    
    
@@ -6337,6 +6369,10 @@ function DDDTypeInfo:get_mutMode(  )
 
    return self.typeInfo:get_mutMode()
 end
+function DDDTypeInfo:get_aliasSrc(  )
+
+   return self
+end
 function DDDTypeInfo:get_srcTypeInfo(  )
 
    return self
@@ -7055,6 +7091,10 @@ function ExtTypeInfo:get_kind(  )
 
    return TypeInfoKind.Ext
 end
+function ExtTypeInfo:get_aliasSrc(  )
+
+   return self
+end
 function ExtTypeInfo:get_srcTypeInfo(  )
 
    return self
@@ -7438,6 +7478,10 @@ end
 
 function AndExpTypeInfo:get_accessMode( ... )
    return self.result:get_accessMode( ... )
+end
+
+function AndExpTypeInfo:get_aliasSrc( ... )
+   return self.result:get_aliasSrc( ... )
 end
 
 function AndExpTypeInfo:get_argTypeInfoList( ... )
@@ -8122,6 +8166,11 @@ end
 
 function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalType, alt2type )
 
+   if dest ~= dest:get_aliasSrc() then
+      return dest:get_aliasSrc():canEvalWith( processInfo, other, canEvalType, alt2type )
+   end
+   
+   
    if dest == _moduleObj.builtinTypeExp or dest == _moduleObj.builtinTypeMultiExp then
       if other == _moduleObj.builtinTypeMultiExp and dest ~= _moduleObj.builtinTypeMultiExp then
          return false, "can't eval from '__exp' to '__exps'."
@@ -8134,9 +8183,8 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
       return true, nil
    end
    
-   
    local otherMut = TypeInfo.isMut( other )
-   local otherSrc = other:get_srcTypeInfo()
+   local otherSrc = other:get_srcTypeInfo():get_aliasSrc()
    if otherSrc:get_kind() == TypeInfoKind.DDD then
       if #otherSrc:get_itemTypeInfoList() > 0 then
          otherSrc = otherSrc:get_itemTypeInfoList()[1]:get_nilableTypeInfo()
