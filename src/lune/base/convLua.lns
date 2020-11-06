@@ -773,6 +773,14 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
          }
       }
    }
+   foreach workNode in node.$nodeManager.getAliasNodeList() {
+      if Ast.isPubToExternal( workNode.$expType.$accessMode ) {
+         let aliasType = unwrap workNode.$expType@@@Ast.AliasTypeInfo;
+         let aliasSrcType = aliasType.$aliasSrc;
+         typeId2TypeInfo[ aliasType.$typeId ] = aliasType;
+         typeId2TypeInfo[ aliasSrcType.$typeId ] = aliasSrcType;
+      }
+   }
 
    // 依存モジュールが公開している情報のマッピング情報処理。
    // このモジュールが公開するメソッドや変数が使用している型が、
@@ -3082,7 +3090,12 @@ pub override fn convFilter.processRefField(
 pub override fn convFilter.processExpOmitEnum(
    node: &Nodes.ExpOmitEnumNode, opt: Opt ) mut
 {
-   self.write( "%s.%s" ( self.getFullName( node.$expType ), node.$valToken.txt ) );
+   if! let aliasType = node.$aliasType {
+      self.write( self.getFullName( aliasType ) );
+   } else {
+      self.write( self.getFullName( node.$expType ) );
+   }
+   self.write( ".%s" ( node.$valToken.txt ) );
 };
 
 pub override fn convFilter.processGetField(

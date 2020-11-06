@@ -350,7 +350,7 @@ fn convFilter.getSymbol( kind:SymbolKind, name:str ) : str {
 }
 
 fn convFilter.getTypeSymbol( typeInfo:&Ast.TypeInfo ) : str {
-   let orgType = typeInfo.$srcTypeInfo.$nonnilableType;
+   let orgType = typeInfo.$srcTypeInfo.$nonnilableType.$aliasSrc;
    return self.getSymbol( .Type( orgType ), orgType.$rawTxt );
 }
 
@@ -1543,9 +1543,12 @@ pub override fn convFilter.processRoot(
             } );
    _filter( node.$nodeManager.getAliasNodeList(),
             fn ( workNode:&Nodes.AliasNode) {
-               self.writeln( "type %s = %s"
-                             ( self.getSymbolSym( workNode.$newSymbol ),
-                               self.getTypeSymbol( workNode.$typeInfo ) ) );
+               let aliasType = workNode.$typeInfo;
+               if aliasType.$kind ~= .Enum {
+                  self.writeln( "type %s = %s"
+                                ( self.getSymbolSym( workNode.$newSymbol ),
+                                  self.getTypeSymbol( workNode.$typeInfo.$aliasSrc ) ) );
+               }
             } );
    
    self.pushProcessMode( .NonClosureFuncDecl );
@@ -4772,7 +4775,7 @@ pub override fn convFilter.processRefField(
 pub override fn convFilter.processExpOmitEnum(
    node: &Nodes.ExpOmitEnumNode, opt: Opt ) mut
 {
-   self.write( self.getSymbol( .Static( node.$expType ), node.$valInfo.$name ) );
+   self.write( self.getSymbol( .Static( node.$expType.$aliasSrc ), node.$valInfo.$name ) );
 }
 
 pub override fn convFilter.processGetField(

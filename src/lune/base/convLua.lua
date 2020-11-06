@@ -1124,6 +1124,16 @@ function convFilter:outputMeta( node )
       end
    end
    
+   for __index, workNode in ipairs( node:get_nodeManager():getAliasNodeList(  ) ) do
+      if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
+         local aliasType = _lune.unwrap( _lune.__Cast( workNode:get_expType(), 3, Ast.AliasTypeInfo ))
+         local aliasSrcType = aliasType:get_aliasSrc()
+         typeId2TypeInfo[aliasType:get_typeId()] = aliasType
+         typeId2TypeInfo[aliasSrcType:get_typeId()] = aliasSrcType
+      end
+      
+   end
+   
    self:writeln( "local __dependIdMap = {}" )
    self:writeln( "_moduleObj.__dependIdMap = __dependIdMap" )
    local exportNeedModuleTypeInfo = {}
@@ -1882,7 +1892,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _6087 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _6094 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -3706,7 +3716,16 @@ end
 
 function convFilter:processExpOmitEnum( node, opt )
 
-   self:write( string.format( "%s.%s", self:getFullName( node:get_expType() ), node:get_valToken().txt) )
+   do
+      local aliasType = node:get_aliasType()
+      if aliasType ~= nil then
+         self:write( self:getFullName( aliasType ) )
+      else
+         self:write( self:getFullName( node:get_expType() ) )
+      end
+   end
+   
+   self:write( string.format( ".%s", node:get_valToken().txt) )
 end
 
 
@@ -4071,7 +4090,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3402, function (  )
+   Log.log( Log.Level.Trace, __func__, 3415, function (  )
    
       return string.format( "macro: %s", code)
    end )

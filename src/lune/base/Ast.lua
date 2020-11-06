@@ -1958,9 +1958,263 @@ do
 end
 
 
+local NilableTypeInfo = {}
+setmetatable( NilableTypeInfo, { __index = TypeInfo } )
+_moduleObj.NilableTypeInfo = NilableTypeInfo
+function NilableTypeInfo:get_kind(  )
+
+   return TypeInfoKind.Nilable
+end
+function NilableTypeInfo:get_aliasSrc(  )
+
+   return self
+end
+function NilableTypeInfo:get_srcTypeInfo(  )
+
+   return self
+end
+function NilableTypeInfo:get_nilable(  )
+
+   return true
+end
+function NilableTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
+
+   return self:getTxtWithRaw( self:get_rawTxt(), typeNameCtrl, importInfo, localFlag )
+end
+function NilableTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag )
+
+   return self.nonnilableType:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag ) .. "!"
+end
+function NilableTypeInfo:get_display_stirng_with( raw, alt2type )
+
+   if self.nonnilableType:get_kind() == TypeInfoKind.FormFunc then
+      return self.nonnilableType:get_display_stirng_with( raw .. "!", alt2type )
+   end
+   
+   return self.nonnilableType:get_display_stirng_with( raw, alt2type ) .. "!"
+end
+function NilableTypeInfo:get_display_stirng(  )
+
+   return self:get_display_stirng_with( self:get_rawTxt(), nil )
+end
+function NilableTypeInfo:serialize( stream, validChildrenSet )
+
+   stream:write( string.format( '{ skind = %d, typeId = %d, orgTypeId = %d }\n', SerializeKind.Nilable, self.typeId, self.nonnilableType:get_typeId()) )
+end
+function NilableTypeInfo:equals( processInfo, typeInfo, alt2type, checkModifer )
+
+   if not typeInfo:get_nilable() then
+      return false
+   end
+   
+   return self.nonnilableType:equals( processInfo, typeInfo:get_nonnilableType(), alt2type, checkModifer )
+end
+function NilableTypeInfo:applyGeneric( alt2typeMap, moduleTypeInfo )
+
+   local typeInfo = self.nonnilableType:applyGeneric( alt2typeMap, moduleTypeInfo )
+   if typeInfo == self.nonnilableType then
+      return self
+   end
+   
+   if typeInfo ~= nil then
+      return typeInfo:get_nilableTypeInfo()
+   end
+   
+   return nil
+end
+function NilableTypeInfo.setmeta( obj )
+  setmetatable( obj, { __index = NilableTypeInfo  } )
+end
+function NilableTypeInfo.new( __superarg1, __superarg2,nonnilableType, typeId )
+   local obj = {}
+   NilableTypeInfo.setmeta( obj )
+   if obj.__init then
+      obj:__init( __superarg1, __superarg2,nonnilableType, typeId )
+   end
+   return obj
+end
+function NilableTypeInfo:__init( __superarg1, __superarg2,nonnilableType, typeId )
+
+   TypeInfo.__init( self, __superarg1, __superarg2 )
+   self.nonnilableType = nonnilableType
+   self.typeId = typeId
+end
+function NilableTypeInfo:get_nonnilableType()
+   return self.nonnilableType
+end
+function NilableTypeInfo:get_typeId()
+   return self.typeId
+end
+function NilableTypeInfo:addChildren( ... )
+   return self.nonnilableType:addChildren( ... )
+end
+
+function NilableTypeInfo:createAlt2typeMap( ... )
+   return self.nonnilableType:createAlt2typeMap( ... )
+end
+
+function NilableTypeInfo:getFullName( ... )
+   return self.nonnilableType:getFullName( ... )
+end
+
+function NilableTypeInfo:getModule( ... )
+   return self.nonnilableType:getModule( ... )
+end
+
+function NilableTypeInfo:getOverridingType( ... )
+   return self.nonnilableType:getOverridingType( ... )
+end
+
+function NilableTypeInfo:getParentFullName( ... )
+   return self.nonnilableType:getParentFullName( ... )
+end
+
+function NilableTypeInfo:getParentId( ... )
+   return self.nonnilableType:getParentId( ... )
+end
+
+function NilableTypeInfo:getProcessInfo( ... )
+   return self.nonnilableType:getProcessInfo( ... )
+end
+
+function NilableTypeInfo:get_abstractFlag( ... )
+   return self.nonnilableType:get_abstractFlag( ... )
+end
+
+function NilableTypeInfo:get_accessMode( ... )
+   return self.nonnilableType:get_accessMode( ... )
+end
+
+function NilableTypeInfo:get_argTypeInfoList( ... )
+   return self.nonnilableType:get_argTypeInfoList( ... )
+end
+
+function NilableTypeInfo:get_autoFlag( ... )
+   return self.nonnilableType:get_autoFlag( ... )
+end
+
+function NilableTypeInfo:get_baseId( ... )
+   return self.nonnilableType:get_baseId( ... )
+end
+
+function NilableTypeInfo:get_baseTypeInfo( ... )
+   return self.nonnilableType:get_baseTypeInfo( ... )
+end
+
+function NilableTypeInfo:get_children( ... )
+   return self.nonnilableType:get_children( ... )
+end
+
+function NilableTypeInfo:get_extedType( ... )
+   return self.nonnilableType:get_extedType( ... )
+end
+
+function NilableTypeInfo:get_externalFlag( ... )
+   return self.nonnilableType:get_externalFlag( ... )
+end
+
+function NilableTypeInfo:get_genSrcTypeInfo( ... )
+   return self.nonnilableType:get_genSrcTypeInfo( ... )
+end
+
+function NilableTypeInfo:get_interfaceList( ... )
+   return self.nonnilableType:get_interfaceList( ... )
+end
+
+function NilableTypeInfo:get_itemTypeInfoList( ... )
+   return self.nonnilableType:get_itemTypeInfoList( ... )
+end
+
+function NilableTypeInfo:get_mutMode( ... )
+   return self.nonnilableType:get_mutMode( ... )
+end
+
+function NilableTypeInfo:get_nilableTypeInfo( ... )
+   return self.nonnilableType:get_nilableTypeInfo( ... )
+end
+
+function NilableTypeInfo:get_parentInfo( ... )
+   return self.nonnilableType:get_parentInfo( ... )
+end
+
+function NilableTypeInfo:get_processInfo( ... )
+   return self.nonnilableType:get_processInfo( ... )
+end
+
+function NilableTypeInfo:get_rawTxt( ... )
+   return self.nonnilableType:get_rawTxt( ... )
+end
+
+function NilableTypeInfo:get_retTypeInfoList( ... )
+   return self.nonnilableType:get_retTypeInfoList( ... )
+end
+
+function NilableTypeInfo:get_scope( ... )
+   return self.nonnilableType:get_scope( ... )
+end
+
+function NilableTypeInfo:get_staticFlag( ... )
+   return self.nonnilableType:get_staticFlag( ... )
+end
+
+function NilableTypeInfo:get_typeData( ... )
+   return self.nonnilableType:get_typeData( ... )
+end
+
+function NilableTypeInfo:hasBase( ... )
+   return self.nonnilableType:hasBase( ... )
+end
+
+function NilableTypeInfo:hasRouteNamespaceFrom( ... )
+   return self.nonnilableType:hasRouteNamespaceFrom( ... )
+end
+
+function NilableTypeInfo:isInheritFrom( ... )
+   return self.nonnilableType:isInheritFrom( ... )
+end
+
+function NilableTypeInfo:isModule( ... )
+   return self.nonnilableType:isModule( ... )
+end
+
+function NilableTypeInfo:serializeTypeInfoList( ... )
+   return self.nonnilableType:serializeTypeInfoList( ... )
+end
+
+function NilableTypeInfo:switchScope( ... )
+   return self.nonnilableType:switchScope( ... )
+end
+
+
+
 local AliasTypeInfo = {}
 setmetatable( AliasTypeInfo, { __index = TypeInfo } )
 _moduleObj.AliasTypeInfo = AliasTypeInfo
+function AliasTypeInfo.new( processInfo, rawTxt, accessMode, parentInfo, aliasSrcTypeInfo, externalFlag )
+   local obj = {}
+   AliasTypeInfo.setmeta( obj )
+   if obj.__init then obj:__init( processInfo, rawTxt, accessMode, parentInfo, aliasSrcTypeInfo, externalFlag ); end
+   return obj
+end
+function AliasTypeInfo:__init(processInfo, rawTxt, accessMode, parentInfo, aliasSrcTypeInfo, externalFlag) 
+   TypeInfo.__init( self,nil, processInfo)
+   
+   self.rawTxt = rawTxt
+   self.accessMode = accessMode
+   self.parentInfo = parentInfo
+   self.aliasSrcTypeInfo = aliasSrcTypeInfo
+   self.externalFlag = externalFlag
+   self.typeId = processInfo:get_idProv():getNewId(  )
+   self.nilableTypeInfo = NilableTypeInfo.new(nil, processInfo, self, processInfo:get_idProv():getNewId(  ))
+end
+function AliasTypeInfo:getParentFullName( typeNameCtrl, importInfo, localFlag )
+
+   return typeNameCtrl:getParentFullName( self, importInfo, localFlag )
+end
+function AliasTypeInfo:getFullName( typeNameCtrl, importInfo, localFlag )
+
+   return self:getParentFullName( typeNameCtrl, importInfo, localFlag ) .. self:get_rawTxt()
+end
 function AliasTypeInfo:get_aliasSrc(  )
 
    return self.aliasSrcTypeInfo
@@ -2018,24 +2272,6 @@ end
 function AliasTypeInfo.setmeta( obj )
   setmetatable( obj, { __index = AliasTypeInfo  } )
 end
-function AliasTypeInfo.new( __superarg1, __superarg2,rawTxt, accessMode, parentInfo, aliasSrcTypeInfo, externalFlag, typeId )
-   local obj = {}
-   AliasTypeInfo.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2,rawTxt, accessMode, parentInfo, aliasSrcTypeInfo, externalFlag, typeId )
-   end
-   return obj
-end
-function AliasTypeInfo:__init( __superarg1, __superarg2,rawTxt, accessMode, parentInfo, aliasSrcTypeInfo, externalFlag, typeId )
-
-   TypeInfo.__init( self, __superarg1, __superarg2 )
-   self.rawTxt = rawTxt
-   self.accessMode = accessMode
-   self.parentInfo = parentInfo
-   self.aliasSrcTypeInfo = aliasSrcTypeInfo
-   self.externalFlag = externalFlag
-   self.typeId = typeId
-end
 function AliasTypeInfo:get_rawTxt()
    return self.rawTxt
 end
@@ -2054,6 +2290,9 @@ end
 function AliasTypeInfo:get_typeId()
    return self.typeId
 end
+function AliasTypeInfo:get_nilableTypeInfo()
+   return self.nilableTypeInfo
+end
 function AliasTypeInfo:addChildren( ... )
    return self.aliasSrcTypeInfo:addChildren( ... )
 end
@@ -2062,16 +2301,8 @@ function AliasTypeInfo:createAlt2typeMap( ... )
    return self.aliasSrcTypeInfo:createAlt2typeMap( ... )
 end
 
-function AliasTypeInfo:getFullName( ... )
-   return self.aliasSrcTypeInfo:getFullName( ... )
-end
-
 function AliasTypeInfo:getOverridingType( ... )
    return self.aliasSrcTypeInfo:getOverridingType( ... )
-end
-
-function AliasTypeInfo:getParentFullName( ... )
-   return self.aliasSrcTypeInfo:getParentFullName( ... )
 end
 
 function AliasTypeInfo:getProcessInfo( ... )
@@ -2132,10 +2363,6 @@ end
 
 function AliasTypeInfo:get_nilable( ... )
    return self.aliasSrcTypeInfo:get_nilable( ... )
-end
-
-function AliasTypeInfo:get_nilableTypeInfo( ... )
-   return self.aliasSrcTypeInfo:get_nilableTypeInfo( ... )
 end
 
 function AliasTypeInfo:get_processInfo( ... )
@@ -3139,235 +3366,6 @@ end
 
 function AccessSymbolInfo:updateValue( ... )
    return self.symbolInfo:updateValue( ... )
-end
-
-
-
-local NilableTypeInfo = {}
-setmetatable( NilableTypeInfo, { __index = TypeInfo } )
-_moduleObj.NilableTypeInfo = NilableTypeInfo
-function NilableTypeInfo:get_kind(  )
-
-   return TypeInfoKind.Nilable
-end
-function NilableTypeInfo:get_aliasSrc(  )
-
-   return self
-end
-function NilableTypeInfo:get_srcTypeInfo(  )
-
-   return self
-end
-function NilableTypeInfo:get_nilable(  )
-
-   return true
-end
-function NilableTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
-
-   return self:getTxtWithRaw( self:get_rawTxt(), typeNameCtrl, importInfo, localFlag )
-end
-function NilableTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag )
-
-   return self.nonnilableType:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag ) .. "!"
-end
-function NilableTypeInfo:get_display_stirng_with( raw, alt2type )
-
-   if self.nonnilableType:get_kind() == TypeInfoKind.FormFunc then
-      return self.nonnilableType:get_display_stirng_with( raw .. "!", alt2type )
-   end
-   
-   return self.nonnilableType:get_display_stirng_with( raw, alt2type ) .. "!"
-end
-function NilableTypeInfo:get_display_stirng(  )
-
-   return self:get_display_stirng_with( self:get_rawTxt(), nil )
-end
-function NilableTypeInfo:serialize( stream, validChildrenSet )
-
-   stream:write( string.format( '{ skind = %d, typeId = %d, orgTypeId = %d }\n', SerializeKind.Nilable, self.typeId, self.nonnilableType:get_typeId()) )
-end
-function NilableTypeInfo:equals( processInfo, typeInfo, alt2type, checkModifer )
-
-   if not typeInfo:get_nilable() then
-      return false
-   end
-   
-   return self.nonnilableType:equals( processInfo, typeInfo:get_nonnilableType(), alt2type, checkModifer )
-end
-function NilableTypeInfo:applyGeneric( alt2typeMap, moduleTypeInfo )
-
-   local typeInfo = self.nonnilableType:applyGeneric( alt2typeMap, moduleTypeInfo )
-   if typeInfo == self.nonnilableType then
-      return self
-   end
-   
-   if typeInfo ~= nil then
-      return typeInfo:get_nilableTypeInfo()
-   end
-   
-   return nil
-end
-function NilableTypeInfo.setmeta( obj )
-  setmetatable( obj, { __index = NilableTypeInfo  } )
-end
-function NilableTypeInfo.new( __superarg1, __superarg2,nonnilableType, typeId )
-   local obj = {}
-   NilableTypeInfo.setmeta( obj )
-   if obj.__init then
-      obj:__init( __superarg1, __superarg2,nonnilableType, typeId )
-   end
-   return obj
-end
-function NilableTypeInfo:__init( __superarg1, __superarg2,nonnilableType, typeId )
-
-   TypeInfo.__init( self, __superarg1, __superarg2 )
-   self.nonnilableType = nonnilableType
-   self.typeId = typeId
-end
-function NilableTypeInfo:get_nonnilableType()
-   return self.nonnilableType
-end
-function NilableTypeInfo:get_typeId()
-   return self.typeId
-end
-function NilableTypeInfo:addChildren( ... )
-   return self.nonnilableType:addChildren( ... )
-end
-
-function NilableTypeInfo:createAlt2typeMap( ... )
-   return self.nonnilableType:createAlt2typeMap( ... )
-end
-
-function NilableTypeInfo:getFullName( ... )
-   return self.nonnilableType:getFullName( ... )
-end
-
-function NilableTypeInfo:getModule( ... )
-   return self.nonnilableType:getModule( ... )
-end
-
-function NilableTypeInfo:getOverridingType( ... )
-   return self.nonnilableType:getOverridingType( ... )
-end
-
-function NilableTypeInfo:getParentFullName( ... )
-   return self.nonnilableType:getParentFullName( ... )
-end
-
-function NilableTypeInfo:getParentId( ... )
-   return self.nonnilableType:getParentId( ... )
-end
-
-function NilableTypeInfo:getProcessInfo( ... )
-   return self.nonnilableType:getProcessInfo( ... )
-end
-
-function NilableTypeInfo:get_abstractFlag( ... )
-   return self.nonnilableType:get_abstractFlag( ... )
-end
-
-function NilableTypeInfo:get_accessMode( ... )
-   return self.nonnilableType:get_accessMode( ... )
-end
-
-function NilableTypeInfo:get_argTypeInfoList( ... )
-   return self.nonnilableType:get_argTypeInfoList( ... )
-end
-
-function NilableTypeInfo:get_autoFlag( ... )
-   return self.nonnilableType:get_autoFlag( ... )
-end
-
-function NilableTypeInfo:get_baseId( ... )
-   return self.nonnilableType:get_baseId( ... )
-end
-
-function NilableTypeInfo:get_baseTypeInfo( ... )
-   return self.nonnilableType:get_baseTypeInfo( ... )
-end
-
-function NilableTypeInfo:get_children( ... )
-   return self.nonnilableType:get_children( ... )
-end
-
-function NilableTypeInfo:get_extedType( ... )
-   return self.nonnilableType:get_extedType( ... )
-end
-
-function NilableTypeInfo:get_externalFlag( ... )
-   return self.nonnilableType:get_externalFlag( ... )
-end
-
-function NilableTypeInfo:get_genSrcTypeInfo( ... )
-   return self.nonnilableType:get_genSrcTypeInfo( ... )
-end
-
-function NilableTypeInfo:get_interfaceList( ... )
-   return self.nonnilableType:get_interfaceList( ... )
-end
-
-function NilableTypeInfo:get_itemTypeInfoList( ... )
-   return self.nonnilableType:get_itemTypeInfoList( ... )
-end
-
-function NilableTypeInfo:get_mutMode( ... )
-   return self.nonnilableType:get_mutMode( ... )
-end
-
-function NilableTypeInfo:get_nilableTypeInfo( ... )
-   return self.nonnilableType:get_nilableTypeInfo( ... )
-end
-
-function NilableTypeInfo:get_parentInfo( ... )
-   return self.nonnilableType:get_parentInfo( ... )
-end
-
-function NilableTypeInfo:get_processInfo( ... )
-   return self.nonnilableType:get_processInfo( ... )
-end
-
-function NilableTypeInfo:get_rawTxt( ... )
-   return self.nonnilableType:get_rawTxt( ... )
-end
-
-function NilableTypeInfo:get_retTypeInfoList( ... )
-   return self.nonnilableType:get_retTypeInfoList( ... )
-end
-
-function NilableTypeInfo:get_scope( ... )
-   return self.nonnilableType:get_scope( ... )
-end
-
-function NilableTypeInfo:get_staticFlag( ... )
-   return self.nonnilableType:get_staticFlag( ... )
-end
-
-function NilableTypeInfo:get_typeData( ... )
-   return self.nonnilableType:get_typeData( ... )
-end
-
-function NilableTypeInfo:hasBase( ... )
-   return self.nonnilableType:hasBase( ... )
-end
-
-function NilableTypeInfo:hasRouteNamespaceFrom( ... )
-   return self.nonnilableType:hasRouteNamespaceFrom( ... )
-end
-
-function NilableTypeInfo:isInheritFrom( ... )
-   return self.nonnilableType:isInheritFrom( ... )
-end
-
-function NilableTypeInfo:isModule( ... )
-   return self.nonnilableType:isModule( ... )
-end
-
-function NilableTypeInfo:serializeTypeInfoList( ... )
-   return self.nonnilableType:serializeTypeInfoList( ... )
-end
-
-function NilableTypeInfo:switchScope( ... )
-   return self.nonnilableType:switchScope( ... )
 end
 
 
@@ -6254,15 +6252,15 @@ function ModifierTypeInfo:get_nilableTypeInfo(  )
 end
 
 
-function ProcessInfo:createAlias( name, externalFlag, accessMode, parentInfo, typeInfo )
+function ProcessInfo:createAlias( processInfo, name, externalFlag, accessMode, parentInfo, typeInfo )
 
-   return AliasTypeInfo.new(nil, self, name, accessMode, parentInfo, typeInfo:get_srcTypeInfo(), externalFlag, self:get_idProv():getNewId(  ))
+   return AliasTypeInfo.new(processInfo, name, accessMode, parentInfo, typeInfo:get_srcTypeInfo(), externalFlag)
 end
 
 
 function Scope:addAlias( processInfo, name, pos, externalFlag, accessMode, parentInfo, symbolInfo )
 
-   local aliasType = self:getProcessInfo(  ):createAlias( name, externalFlag, accessMode, parentInfo, symbolInfo:get_typeInfo():get_srcTypeInfo() )
+   local aliasType = self:getProcessInfo(  ):createAlias( processInfo, name, externalFlag, accessMode, parentInfo, symbolInfo:get_typeInfo():get_srcTypeInfo() )
    return self:add( processInfo, symbolInfo:get_kind(), false, symbolInfo:get_canBeRight(), name, pos, aliasType, accessMode, true, MutMode.IMut, true )
 end
 

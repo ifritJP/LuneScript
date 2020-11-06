@@ -547,6 +547,12 @@ import しているモジュールから、さらに import しているサブ�
 
    /** このモジュール内から直接 import しているモジュールのセット */
    pri let mut importModuleSet: Set<&Ast.TypeInfo>;
+   /**
+インポートしているモジュール内で定義している alias 情報。
+
+alias で置き換えている元の Type → alias の型
+   */
+   pri let mut importedAliasMap: Map<&Ast.TypeInfo,&Ast.AliasTypeInfo>;
    
    /** subfile 名のリスト */
    pri let mut subfileList: str[];
@@ -620,6 +626,7 @@ import しているモジュールから、さらに import しているサブ�
                   pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
                   ctrl_info: &Types.TransCtrlInfo )
    {
+      self.importedAliasMap = {};
       self.importModuleSet = (@);
       self.processInfo = Ast.createProcessInfo( ctrl_info.validLuaval );
       self.accessSymbolSetQueue = new AccessSymbolSetQueue();
@@ -1277,6 +1284,7 @@ class ImportParam {
    pub let mut processInfo:Ast.ProcessInfo;
    pub let mut typeId2Scope:Map<int,Ast.Scope>;
    pub let mut typeId2TypeInfo:Map<int,&Ast.TypeInfo>;
+   pub let mut importedAliasMap: Map<&Ast.TypeInfo,&Ast.AliasTypeInfo>;
    pub let metaInfo:Luaval<&Meta._MetaInfo>;
    pub let scope:Ast.Scope;
    pub let moduleTypeInfo: &Ast.TypeInfo;
@@ -1352,7 +1360,7 @@ class _TypeInfoAlias extend _TypeInfo {
    {
       let srcTypeInfo = unwrap param.getTypeInfo( self.srcTypeId );
       let newTypeInfo = param.processInfo.createAlias(
-         self.rawTxt, true, .Pub, param.moduleTypeInfo, srcTypeInfo );
+         param.processInfo, self.rawTxt, true, .Pub, param.moduleTypeInfo, srcTypeInfo );
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
 
       let! mut parentScope = param.typeId2Scope[ self.parentId ] {
@@ -1360,7 +1368,7 @@ class _TypeInfoAlias extend _TypeInfo {
                                                      self.parentId, self.rawTxt );
       };
       parentScope.addAliasForType( param.processInfo, self.rawTxt, nil, newTypeInfo );
-
+      param.importedAliasMap[ srcTypeInfo ] = newTypeInfo;
 
       return newTypeInfo,nil;
    }
@@ -2936,7 +2944,7 @@ class DependModuleInfo {
 }
 
 
-fn TransUnit.processImport( modulePath:str ) mut :
+fn TransUnit.processImport( modulePath:str, depth:int ) mut :
    Luaval<&Meta._MetaInfo>, &Map<int,&Ast.TypeInfo>, &Nodes.ModuleInfo
 {
    Log._log( .Info, `{ return "%s -> %s start"
@@ -2979,7 +2987,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
    forsort dependInfo, dependName in metaInfo.__dependModuleMap {
       if dependInfo.use {
          let _, metaTypeId2TypeInfoMap =
-            self.processImport( dependName );
+            self.processImport( dependName, depth + 1 );
          let typeId = (unwrap dependInfo.typeId)@@int;
          dependLibId2DependInfo[ typeId ] =
             new DependModuleInfo( typeId, metaTypeId2TypeInfoMap );
@@ -3106,7 +3114,8 @@ fn TransUnit.processImport( modulePath:str ) mut :
 
    // 初めに child 以外で TypeInfo を登録
    let mut importParam = new ImportParam(
-      self.parser.getLastPos(), self, self.processInfo, typeId2Scope, typeId2TypeInfo,
+      self.parser.getLastPos(), self, self.processInfo, typeId2Scope,
+      typeId2TypeInfo, {},
       metaInfo, self.scope, moduleTypeInfo, self.scopeAccess, id2atomMap );
    foreach atomInfo in _typeInfoList {
       let newTypeInfo, errMess = atomInfo.createTypeInfoCache( importParam );
@@ -3311,13 +3320,17 @@ fn TransUnit.processImport( modulePath:str ) mut :
          unwrap orgId2MacroTypeInfo[ orgTypeId ], typeId2TypeInfo );
    }
 
-
    foreach _ in nameList {
       self.popModule();
    }
 
-
-   //dumpScope( self.rootScope, "" );
+   if depth == 1 {
+      // トランスコンパイル対象から直接インポートされている場合
+      foreach val, key in importParam.importedAliasMap {
+         self.importedAliasMap[key] = val;
+      }
+   }
+   
 
    let moduleInfo = new Nodes.ModuleInfo(
       modulePath, nameList[#nameList], newId2OldIdMap,
@@ -3342,7 +3355,7 @@ fn TransUnit.analyzeImportFor(
 
    self.processInfo.switchIdProvier( .Ext );
    
-   let metaInfo, typeId2TypeInfo, moduleInfo = self.processImport( modulePath );
+   let metaInfo, typeId2TypeInfo, moduleInfo = self.processImport( modulePath, 1 );
 
    self.processInfo.switchIdProvier( .Base );
 

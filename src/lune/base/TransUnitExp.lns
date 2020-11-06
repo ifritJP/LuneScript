@@ -3562,18 +3562,27 @@ fn TransUnit.analyzeExp(
          self.checkEnumComp( nextToken, enumTyepInfo );
          
          if! let valInfo = enumTyepInfo.getEnumValInfo( nextToken.txt ) {
-            if orgExpectType.$externalFlag and
-               not self.scope.getModuleInfo( orgExpectType.getModule().$srcTypeInfo )
-            {  
-               let fullname = orgExpectType.getFullName(
-                  self.typeNameCtrl, self.scope, true );
-               self.addErrMess( token.pos, "This module not import -- %s"
-                                ( fullname ) );
+
+            let mut aliasType:&Ast.AliasTypeInfo! = nil;
+            let mut expType:&Ast.TypeInfo = enumTyepInfo;
+            if orgExpectType.$externalFlag {
+               if not self.importModuleSet.has( orgExpectType.getModule() ) {
+                  // enum を宣言しているモジュールを import していない場合
+                  aliasType = self.importedAliasMap[ enumTyepInfo ];
+                  when! aliasType {
+                     expType = aliasType;
+                  } else {
+                     let fullname = orgExpectType.getFullName(
+                        self.typeNameCtrl, self.scope, true );
+                     self.addErrMess( token.pos, "This module not import -- %s"
+                                      ( fullname ) );
+                  }
+               }
             }  
             let mut exp:Nodes.Node = Nodes.ExpOmitEnumNode.create(
                self.nodeManager, token.pos,
-               self.macroCtrl.isInAnalyzeArgMode(), [ enumTyepInfo ],
-               nextToken, valInfo, enumTyepInfo );
+               self.macroCtrl.isInAnalyzeArgMode(), [ expType ],
+               nextToken, valInfo, aliasType, enumTyepInfo );
             return self.analyzeExpCont( firstToken, exp, false, canLeftExp );
          }
 

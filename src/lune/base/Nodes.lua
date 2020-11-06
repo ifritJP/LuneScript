@@ -6891,26 +6891,27 @@ function ExpOmitEnumNode:canBeStatement(  )
 
    return false
 end
-function ExpOmitEnumNode.new( id, pos, macroArgFlag, typeList, valToken, valInfo, enumTypeInfo )
+function ExpOmitEnumNode.new( id, pos, macroArgFlag, typeList, valToken, valInfo, aliasType, enumTypeInfo )
    local obj = {}
    ExpOmitEnumNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, valToken, valInfo, enumTypeInfo ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, valToken, valInfo, aliasType, enumTypeInfo ); end
    return obj
 end
-function ExpOmitEnumNode:__init(id, pos, macroArgFlag, typeList, valToken, valInfo, enumTypeInfo) 
+function ExpOmitEnumNode:__init(id, pos, macroArgFlag, typeList, valToken, valInfo, aliasType, enumTypeInfo) 
    Node.__init( self,id, 45, pos, macroArgFlag, typeList)
    
    
    
    self.valToken = valToken
    self.valInfo = valInfo
+   self.aliasType = aliasType
    self.enumTypeInfo = enumTypeInfo
    
    
 end
-function ExpOmitEnumNode.create( nodeMan, pos, macroArgFlag, typeList, valToken, valInfo, enumTypeInfo )
+function ExpOmitEnumNode.create( nodeMan, pos, macroArgFlag, typeList, valToken, valInfo, aliasType, enumTypeInfo )
 
-   local node = ExpOmitEnumNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, valToken, valInfo, enumTypeInfo)
+   local node = ExpOmitEnumNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, valToken, valInfo, aliasType, enumTypeInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -6927,6 +6928,9 @@ function ExpOmitEnumNode:get_valToken()
 end
 function ExpOmitEnumNode:get_valInfo()
    return self.valInfo
+end
+function ExpOmitEnumNode:get_aliasType()
+   return self.aliasType
 end
 function ExpOmitEnumNode:get_enumTypeInfo()
    return self.enumTypeInfo
@@ -12223,7 +12227,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, _10368 in pairs( self.map ) do
+   for key, _10372 in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -12258,8 +12262,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, _10382 in ipairs( __sorted ) do
-         local key = __map[ _10382 ]
+      for __index, _10386 in ipairs( __sorted ) do
+         local key = __map[ _10386 ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false
