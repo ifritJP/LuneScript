@@ -23,9 +23,9 @@ func MetaLoader_loadFromStream(path string,stream Lns_iStream)(LnsAny, LnsAny) {
         return nil, err
     }
     if item != nil{
-        item_554 := item
+        item_582 := item
         var _map *LnsMap
-        _map = item_554.(*LnsMap)
+        _map = item_582.(*LnsMap)
         var formatVersion string
         {
             _workVal := _map.Items["__formatVersion"]
@@ -342,7 +342,7 @@ type MetaLoader_LoaderMtd interface {
     analyzeTable()(LnsAny, LnsAny)
     Process()(LnsAny, LnsAny)
     processDeclVar() LnsAny
-    processExpSym(arg1 *Parser_Token) LnsAny
+    processExpSym(arg1 *Types_Token) LnsAny
     processStmt()(LnsAny, LnsAny)
 }
 type MetaLoader_Loader struct {
@@ -392,9 +392,9 @@ func (self *MetaLoader_Loader) analyzeTable()(LnsAny, LnsAny) {
     var index LnsInt
     index = 1
     for  {
-        var token *Parser_Token
+        var token *Types_Token
         token = self.parser.GetTokenNoErr()
-        if token.Kind == Parser_TokenKind__Eof{
+        if token.Kind == Types_TokenKind__Eof{
             return nil, "eof"
         }
         if _switch545 := token.Txt; _switch545 == "}" {
@@ -403,8 +403,8 @@ func (self *MetaLoader_Loader) analyzeTable()(LnsAny, LnsAny) {
         } else {
             var item LnsAny
             item = nil
-            if _switch445 := token.Kind; _switch445 == Parser_TokenKind__Symb {
-                var nextToken *Parser_Token
+            if _switch445 := token.Kind; _switch445 == Types_TokenKind__Symb {
+                var nextToken *Types_Token
                 nextToken = self.parser.GetTokenNoErr()
                 self.parser.PushbackToken(nextToken)
                 if nextToken.Txt == "="{
@@ -413,7 +413,7 @@ func (self *MetaLoader_Loader) analyzeTable()(LnsAny, LnsAny) {
                 } else { 
                     return nil, Lns_getVM().String_format("not support -- %s", []LnsAny{token.Txt})
                 }
-            } else if _switch445 == Parser_TokenKind__Dlmt {
+            } else if _switch445 == Types_TokenKind__Dlmt {
                 if token.Txt == "{"{
                     var err LnsAny
                     item, err = self.FP.analyzeTable()
@@ -436,7 +436,7 @@ func (self *MetaLoader_Loader) analyzeTable()(LnsAny, LnsAny) {
             if Lns_op_not(item){
                 self.parser.PushbackToken(token)
             }
-            var nextToken *Parser_Token
+            var nextToken *Types_Token
             nextToken = self.parser.GetTokenNoErr()
             if nextToken.Txt == "="{
                 var val LnsAny
@@ -446,15 +446,15 @@ func (self *MetaLoader_Loader) analyzeTable()(LnsAny, LnsAny) {
                     return nil, work
                 }
                 if item != nil && val != nil{
-                    item_428 := item
-                    val_429 := val
-                    _map.Set(item_428,val_429)
+                    item_456 := item
+                    val_457 := val
+                    _map.Set(item_456,val_457)
                 }
             } else { 
                 self.parser.Pushback()
                 if item != nil{
-                    item_432 := item
-                    _map.Set(index,item_432)
+                    item_460 := item
+                    _map.Set(index,item_460)
                 }
                 index = index + 1
                 
@@ -468,33 +468,33 @@ func (self *MetaLoader_Loader) analyzeTable()(LnsAny, LnsAny) {
 // 130: decl @lune.@base.@MetaLoader.Loader.analyzeExp
 func (self *MetaLoader_Loader) analyzeExp()(LnsAny, LnsAny) {
     for  {
-        var token *Parser_Token
+        var token *Types_Token
         token = self.parser.GetTokenNoErr()
-        if token.Kind == Parser_TokenKind__Eof{
+        if token.Kind == Types_TokenKind__Eof{
             return nil, "eof"
         }
         var txt string
         txt = token.Txt
-        if _switch874 := token.Kind; _switch874 == Parser_TokenKind__Dlmt {
+        if _switch874 := token.Kind; _switch874 == Types_TokenKind__Dlmt {
             if txt == "{"{
                 return self.FP.analyzeTable()
             }
             return nil, Lns_getVM().String_format("illegal delimit -- %s", []LnsAny{txt})
-        } else if _switch874 == Parser_TokenKind__Char {
+        } else if _switch874 == Types_TokenKind__Char {
             if len(txt) == 1{
                 return LnsInt(txt[1-1]), nil
             }
             return Lns_unwrap( MetaLoader_quotedChar2Code.Items[Lns_getVM().String_sub(txt,2, 2)]).(LnsInt), nil
-        } else if _switch874 == Parser_TokenKind__Int {
+        } else if _switch874 == Types_TokenKind__Int {
             return Lns_forceCastInt((Lns_unwrapDefault( Lns_tonumber(txt, nil), 0))), nil
-        } else if _switch874 == Parser_TokenKind__Real {
+        } else if _switch874 == Types_TokenKind__Real {
             return Lns_unwrapDefault( Lns_tonumber(txt, nil), 0.0).(LnsReal), nil
-        } else if _switch874 == Parser_TokenKind__Str {
+        } else if _switch874 == Types_TokenKind__Str {
             if LnsInt(txt[1-1]) == 96{
                 return Lns_getVM().String_sub(txt,4, -4), nil
             }
             return Lns_getVM().String_sub(txt,2, -2), nil
-        } else if _switch874 == Parser_TokenKind__Symb {
+        } else if _switch874 == Types_TokenKind__Symb {
             {
                 _symbolInfo := self.curScope.FP.Get(txt)
                 if _symbolInfo != nil {
@@ -503,17 +503,17 @@ func (self *MetaLoader_Loader) analyzeExp()(LnsAny, LnsAny) {
                 }
             }
             return nil, Lns_getVM().String_format("not found -- %s", []LnsAny{txt})
-        } else if _switch874 == Parser_TokenKind__Kywd {
+        } else if _switch874 == Types_TokenKind__Kywd {
             if _switch819 := token.Txt; _switch819 == "true" {
                 return true, nil
             } else if _switch819 == "false" {
                 return false, nil
             }
             return nil, Lns_getVM().String_format("illegal keyword -- %s", []LnsAny{token.Txt})
-        } else if _switch874 == Parser_TokenKind__Cmnt {
-        } else if _switch874 == Parser_TokenKind__Eof || _switch874 == Parser_TokenKind__Type {
-            return nil, Lns_getVM().String_format("illegal kind -- %s", []LnsAny{Parser_TokenKind_getTxt( token.Kind)})
-        } else if _switch874 == Parser_TokenKind__Ope {
+        } else if _switch874 == Types_TokenKind__Cmnt {
+        } else if _switch874 == Types_TokenKind__Eof || _switch874 == Types_TokenKind__Type {
+            return nil, Lns_getVM().String_format("illegal kind -- %s", []LnsAny{Types_TokenKind_getTxt( token.Kind)})
+        } else if _switch874 == Types_TokenKind__Ope {
             return nil, Lns_getVM().String_format("not support -- %s", []LnsAny{txt})
         }
     }
@@ -523,12 +523,12 @@ func (self *MetaLoader_Loader) analyzeExp()(LnsAny, LnsAny) {
 
 // 191: decl @lune.@base.@MetaLoader.Loader.processDeclVar
 func (self *MetaLoader_Loader) processDeclVar() LnsAny {
-    var token *Parser_Token
+    var token *Types_Token
     token = self.parser.GetTokenNoErr()
-    if token.Kind != Parser_TokenKind__Symb{
+    if token.Kind != Types_TokenKind__Symb{
         return Lns_getVM().String_format("no synbol -- %s", []LnsAny{token.Txt})
     }
-    var nextToken *Parser_Token
+    var nextToken *Types_Token
     nextToken = self.parser.GetTokenNoErr()
     if nextToken.Txt != "="{
         self.parser.Pushback()
@@ -545,7 +545,7 @@ func (self *MetaLoader_Loader) processDeclVar() LnsAny {
 }
 
 // 210: decl @lune.@base.@MetaLoader.Loader.processExpSym
-func (self *MetaLoader_Loader) processExpSym(symToken *Parser_Token) LnsAny {
+func (self *MetaLoader_Loader) processExpSym(symToken *Types_Token) LnsAny {
     var symbolInfo *MetaLoader_SymbolInfo
     
     {
@@ -556,18 +556,18 @@ func (self *MetaLoader_Loader) processExpSym(symToken *Parser_Token) LnsAny {
             symbolInfo = _symbolInfo.(*MetaLoader_SymbolInfo)
         }
     }
-    var nextToken *Parser_Token
+    var nextToken *Types_Token
     nextToken = self.parser.GetTokenNoErr()
     var exp LnsAny
     exp = symbolInfo.FP.Get_val()
     var index LnsAny
     index = nil
     for  {
-        if nextToken.Kind == Parser_TokenKind__Eof{
+        if nextToken.Kind == Types_TokenKind__Eof{
             return "eof"
         }
         if _switch1177 := nextToken.Txt; _switch1177 == "." {
-            var fieldToken *Parser_Token
+            var fieldToken *Types_Token
             fieldToken = self.parser.GetTokenNoErr()
             if exp != nil{
                 index = fieldToken.Txt
@@ -585,7 +585,7 @@ func (self *MetaLoader_Loader) processExpSym(symToken *Parser_Token) LnsAny {
             } else {
                 return Lns_getVM().String_format("illegal index -- %s", []LnsAny{err})
             }
-            var closeToken *Parser_Token
+            var closeToken *Types_Token
             closeToken = self.parser.GetTokenNoErr()
             if closeToken.Txt != "]"{
                 return Lns_getVM().String_format("illegal token -- %s", []LnsAny{closeToken.Txt})
@@ -598,11 +598,11 @@ func (self *MetaLoader_Loader) processExpSym(symToken *Parser_Token) LnsAny {
                 return err
             }
             if index != nil && exp != nil{
-                index_500 := index
-                exp_501 := exp
+                index_528 := index
+                exp_529 := exp
                 var _map *LnsMap
-                _map = exp_501.(*LnsMap)
-                _map.Set(index_500,val)
+                _map = exp_529.(*LnsMap)
+                _map.Set(index_528,val)
             }
             return nil
         }
@@ -616,12 +616,12 @@ func (self *MetaLoader_Loader) processExpSym(symToken *Parser_Token) LnsAny {
 // 259: decl @lune.@base.@MetaLoader.Loader.processStmt
 func (self *MetaLoader_Loader) processStmt()(LnsAny, LnsAny) {
     for  {
-        var token *Parser_Token
+        var token *Types_Token
         token = self.parser.GetTokenNoErr()
-        if token.Kind == Parser_TokenKind__Eof{
+        if token.Kind == Types_TokenKind__Eof{
             return nil, "eof"
         }
-        if _switch1325 := token.Kind; _switch1325 == Parser_TokenKind__Symb {
+        if _switch1325 := token.Kind; _switch1325 == Types_TokenKind__Symb {
             {
                 __exp := self.FP.processExpSym(token)
                 if __exp != nil {
@@ -629,7 +629,7 @@ func (self *MetaLoader_Loader) processStmt()(LnsAny, LnsAny) {
                     return nil, _exp
                 }
             }
-        } else if _switch1325 == Parser_TokenKind__Kywd {
+        } else if _switch1325 == Types_TokenKind__Kywd {
             if _switch1323 := token.Txt; _switch1323 == "local" {
                 {
                     _err := self.FP.processDeclVar()
@@ -667,10 +667,10 @@ func (self *MetaLoader_Loader) Process()(LnsAny, LnsAny) {
     var err LnsAny
     val,err = self.FP.processStmt()
     if err != nil{
-        err_530 := err.(string)
-        var pos *Parser_Position
+        err_558 := err.(string)
+        var pos *Types_Position
         pos = self.parser.GetTokenNoErr().Pos
-        return nil, Lns_getVM().String_format("%d:%d:%s", []LnsAny{pos.LineNo, pos.Column, err_530})
+        return nil, Lns_getVM().String_format("%d:%d:%s", []LnsAny{pos.LineNo, pos.Column, err_558})
     }
     return val, err
 }

@@ -74,7 +74,7 @@ func Option_convExp424(arg1 []LnsAny) LnsAny {
 }
 // 47: decl @lune.@base.@Option.getBuildCount
 func Option_getBuildCount_1015_() LnsInt {
-    return 5776
+    return 5801
 }
 
 // 72: decl @lune.@base.@Option.getRuntimeModule
@@ -87,9 +87,9 @@ func Option_outputLuneMod(path LnsAny) LnsAny {
     var lune_path string
     lune_path = "runtime.lua"
     if path != nil{
-        path_2401 := path.(string)
-        if path_2401 != ""{
-            lune_path = path_2401
+        path_2404 := path.(string)
+        if path_2404 != ""{
+            lune_path = path_2404
             
         }
     }
@@ -330,7 +330,7 @@ func Option_analyze(argList *LnsList) *Option_Option {
                     } else if Lns_op_not(column){
                         column = Lns_forceCastInt((Lns_unwrapDefault( Lns_tonumber(arg, nil), 0)))
                         
-                        option.AnalyzePos = NewParser_Position(Lns_unwrap( lineNo).(LnsInt), Lns_unwrap( column).(LnsInt), Util_scriptPath2Module(option.ScriptPath))
+                        option.AnalyzePos = NewTypes_Position(Lns_unwrap( lineNo).(LnsInt), Lns_unwrap( column).(LnsInt), Util_scriptPath2Module(option.ScriptPath))
                         
                     }
                 } else if _switch1345 == Option_ModeKind__Save || _switch1345 == Option_ModeKind__SaveMeta || _switch1345 == Option_ModeKind__Glue {

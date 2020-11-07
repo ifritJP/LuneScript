@@ -367,7 +367,7 @@ func (self *dumpNode_dumpFilter) ProcessDeclEnum(node *Nodes_DeclEnumNode,_opt L
     var enumTypeInfo *Ast_EnumTypeInfo
     enumTypeInfo = Lns_unwrap( (Ast_EnumTypeInfoDownCastF(node.FP.Get_expType().FP))).(*Ast_EnumTypeInfo)
     for _, _name := range( node.FP.Get_valueNameList().Items ) {
-        name := _name.(Parser_TokenDownCast).ToParser_Token()
+        name := _name.(Types_TokenDownCast).ToTypes_Token()
         var valInfo *Ast_EnumValInfo
         valInfo = Lns_unwrap( enumTypeInfo.FP.GetEnumValInfo(name.Txt)).(*Ast_EnumValInfo)
         var val LnsAny
@@ -605,7 +605,7 @@ func (self *dumpNode_dumpFilter) processDeclFuncInfo(node *Nodes_Node,declInfo *
     
     {
         _name := Lns_NilAccFin(Lns_NilAccPush(declInfo.FP.Get_name()) && 
-        Lns_NilAccPush(Lns_NilAccPop().(*Parser_Token).Txt))
+        Lns_NilAccPush(Lns_NilAccPop().(*Types_Token).Txt))
         if _name == nil{
             name = "<anonymous>"
             
@@ -982,8 +982,8 @@ func (self *dumpNode_dumpFilter) ProcessExpSetItem(node *Nodes_ExpSetItemNode,_o
     self.FP.dump(opt, &node.Nodes_Node, indexSym)
     dumpNode_filter_1049_(node.FP.Get_val(), self, opt.FP.NextOpt())
     if indexNode != nil{
-        indexNode_5540 := indexNode.(*Nodes_Node)
-        dumpNode_filter_1049_(indexNode_5540, self, opt.FP.NextOpt())
+        indexNode_5570 := indexNode.(*Nodes_Node)
+        dumpNode_filter_1049_(indexNode_5570, self, opt.FP.NextOpt())
     }
     dumpNode_filter_1049_(node.FP.Get_exp2(), self, opt.FP.NextOpt())
 }

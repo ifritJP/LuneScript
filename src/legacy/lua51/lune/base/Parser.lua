@@ -380,189 +380,12 @@ function TxtStream:get_lineNo()
 end
 
 
-local Position = {}
-setmetatable( Position, { ifList = {Mapping,} } )
+local Position = Types.Position
 _moduleObj.Position = Position
-function Position.setmeta( obj )
-  setmetatable( obj, { __index = Position  } )
-end
-function Position.new( lineNo, column, streamName )
-   local obj = {}
-   Position.setmeta( obj )
-   if obj.__init then
-      obj:__init( lineNo, column, streamName )
-   end
-   return obj
-end
-function Position:__init( lineNo, column, streamName )
-
-   self.lineNo = lineNo
-   self.column = column
-   self.streamName = streamName
-end
-function Position:_toMap()
-  return self
-end
-function Position._fromMap( val )
-  local obj, mes = Position._fromMapSub( {}, val )
-  if obj then
-     Position.setmeta( obj )
-  end
-  return obj, mes
-end
-function Position._fromStem( val )
-  return Position._fromMap( val )
-end
-
-function Position._fromMapSub( obj, val )
-   local memInfo = {}
-   table.insert( memInfo, { name = "lineNo", func = _lune._toInt, nilable = false, child = {} } )
-   table.insert( memInfo, { name = "column", func = _lune._toInt, nilable = false, child = {} } )
-   table.insert( memInfo, { name = "streamName", func = _lune._toStr, nilable = false, child = {} } )
-   local result, mess = _lune._fromMap( obj, val, memInfo )
-   if not result then
-      return nil, mess
-   end
-   return obj
-end
-
-
-local TokenKind = {}
+local TokenKind = Types.TokenKind
 _moduleObj.TokenKind = TokenKind
-TokenKind._val2NameMap = {}
-function TokenKind:_getTxt( val )
-   local name = self._val2NameMap[ val ]
-   if name then
-      return string.format( "TokenKind.%s", name )
-   end
-   return string.format( "illegal val -- %s", val )
-end
-function TokenKind._from( val )
-   if TokenKind._val2NameMap[ val ] then
-      return val
-   end
-   return nil
-end
-    
-TokenKind.__allList = {}
-function TokenKind.get__allList()
-   return TokenKind.__allList
-end
-
-TokenKind.Cmnt = 0
-TokenKind._val2NameMap[0] = 'Cmnt'
-TokenKind.__allList[1] = TokenKind.Cmnt
-TokenKind.Str = 1
-TokenKind._val2NameMap[1] = 'Str'
-TokenKind.__allList[2] = TokenKind.Str
-TokenKind.Int = 2
-TokenKind._val2NameMap[2] = 'Int'
-TokenKind.__allList[3] = TokenKind.Int
-TokenKind.Real = 3
-TokenKind._val2NameMap[3] = 'Real'
-TokenKind.__allList[4] = TokenKind.Real
-TokenKind.Char = 4
-TokenKind._val2NameMap[4] = 'Char'
-TokenKind.__allList[5] = TokenKind.Char
-TokenKind.Symb = 5
-TokenKind._val2NameMap[5] = 'Symb'
-TokenKind.__allList[6] = TokenKind.Symb
-TokenKind.Dlmt = 6
-TokenKind._val2NameMap[6] = 'Dlmt'
-TokenKind.__allList[7] = TokenKind.Dlmt
-TokenKind.Kywd = 7
-TokenKind._val2NameMap[7] = 'Kywd'
-TokenKind.__allList[8] = TokenKind.Kywd
-TokenKind.Ope = 8
-TokenKind._val2NameMap[8] = 'Ope'
-TokenKind.__allList[9] = TokenKind.Ope
-TokenKind.Type = 9
-TokenKind._val2NameMap[9] = 'Type'
-TokenKind.__allList[10] = TokenKind.Type
-TokenKind.Eof = 10
-TokenKind._val2NameMap[10] = 'Eof'
-TokenKind.__allList[11] = TokenKind.Eof
-
-
-local Token = {}
-setmetatable( Token, { ifList = {Mapping,} } )
+local Token = Types.Token
 _moduleObj.Token = Token
-function Token.new( kind, txt, pos, consecutive, commentList )
-   local obj = {}
-   Token.setmeta( obj )
-   if obj.__init then obj:__init( kind, txt, pos, consecutive, commentList ); end
-   return obj
-end
-function Token:__init(kind, txt, pos, consecutive, commentList) 
-   self.kind = kind
-   self.txt = txt
-   self.pos = pos
-   self.consecutive = consecutive
-   self.commentList = _lune.unwrapDefault( commentList, {})
-end
-function Token:getExcludedDelimitTxt(  )
-
-   if self.kind ~= TokenKind.Str then
-      return self.txt
-   end
-   
-   do
-      local _switchExp = string.byte( self.txt, 1 )
-      if _switchExp == 39 or _switchExp == 34 then
-         return self.txt:sub( 2, #self.txt - 1 )
-      elseif _switchExp == 96 then
-         return self.txt:sub( 1 + 3, #self.txt - 3 )
-      end
-   end
-   
-   error( string.format( "illegal delimit -- %s", self.txt) )
-end
-function Token:set_commentList( commentList )
-
-   self.commentList = commentList
-end
-function Token:getLineCount(  )
-
-   local count = 1
-   for _301 in self.txt:gmatch( "\n" ) do
-      count = count + 1
-   end
-   
-   return count
-end
-function Token.setmeta( obj )
-  setmetatable( obj, { __index = Token  } )
-end
-function Token:get_commentList()
-   return self.commentList
-end
-function Token:_toMap()
-  return self
-end
-function Token._fromMap( val )
-  local obj, mes = Token._fromMapSub( {}, val )
-  if obj then
-     Token.setmeta( obj )
-  end
-  return obj, mes
-end
-function Token._fromStem( val )
-  return Token._fromMap( val )
-end
-
-function Token._fromMapSub( obj, val )
-   local memInfo = {}
-   table.insert( memInfo, { name = "kind", func = TokenKind._from, nilable = false, child = {} } )
-   table.insert( memInfo, { name = "txt", func = _lune._toStr, nilable = false, child = {} } )
-   table.insert( memInfo, { name = "pos", func = Position._fromMap, nilable = false, child = {} } )
-   table.insert( memInfo, { name = "consecutive", func = _lune._toBool, nilable = false, child = {} } )
-   table.insert( memInfo, { name = "commentList", func = _lune._toList, nilable = false, child = { { func = Token._fromMap, nilable = false, child = {} } } } )
-   local result, mess = _lune._fromMap( obj, val, memInfo )
-   if not result then
-      return nil, mess
-   end
-   return obj
-end
 
 local Parser = {}
 _moduleObj.Parser = Parser
@@ -635,7 +458,7 @@ function WrapParser:__init( parser, name )
 end
 
 
-local noneToken = Token.new(TokenKind.Eof, "", Position.new(0, -1, "eof"), false, {})
+local noneToken = Token.new(Types.TokenKind.Eof, "", Position.new(0, -1, "eof"), false, {})
 _moduleObj.noneToken = noneToken
 
 local function convFromRawToStr( txt )
@@ -876,7 +699,7 @@ function DefaultPushbackParser:getTokenNoErr(  )
       
    end
    
-   if self.currentToken.kind ~= TokenKind.Eof then
+   if self.currentToken.kind ~= Types.TokenKind.Eof then
       table.insert( self.usedTokenList, self.currentToken )
    end
    
@@ -884,7 +707,7 @@ function DefaultPushbackParser:getTokenNoErr(  )
 end
 function DefaultPushbackParser:pushbackToken( token )
 
-   if token.kind ~= TokenKind.Eof then
+   if token.kind ~= Types.TokenKind.Eof then
       table.insert( self.pushbackedList, token )
    end
    
@@ -951,7 +774,7 @@ end
 function DefaultPushbackParser:getLastPos(  )
 
    local pos = self.parser:createPosition( 0, 0 )
-   if self.currentToken.kind ~= TokenKind.Eof then
+   if self.currentToken.kind ~= Types.TokenKind.Eof then
       pos = self.currentToken.pos
    else
     
@@ -1064,7 +887,7 @@ function StreamParser:parse(  )
       local comment = ""
       while true do
          do
-            local _589, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
+            local _576, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
             if termEndIndex ~= nil then
                comment = comment .. rawLine:sub( searchIndex, termEndIndex )
                return comment, termEndIndex + 1
@@ -1082,13 +905,13 @@ function StreamParser:parse(  )
    
       local function createInfo( tokenKind, token, tokenColumn )
       
-         if tokenKind == TokenKind.Symb then
+         if tokenKind == Types.TokenKind.Symb then
             if _lune._Set_has(self.keywordSet, token ) then
-               tokenKind = TokenKind.Kywd
+               tokenKind = Types.TokenKind.Kywd
             elseif _lune._Set_has(self.typeSet, token ) then
-               tokenKind = TokenKind.Type
+               tokenKind = Types.TokenKind.Type
             elseif _lune._Set_has(op2Set, token ) or _lune._Set_has(op1Set, token ) then
-               tokenKind = TokenKind.Ope
+               tokenKind = Types.TokenKind.Ope
             end
             
          end
@@ -1163,7 +986,7 @@ function StreamParser:parse(  )
          return nonNumIndex - 1, intFlag
       end
       
-      if kind == TokenKind.Symb then
+      if kind == Types.TokenKind.Symb then
          local searchIndex = 1
          while true do
             local tokenIndex, tokenEndIndex = string.find( val, "[%p%w]+", searchIndex )
@@ -1196,7 +1019,7 @@ function StreamParser:parse(  )
                      if _exp ~= nil then
                         local index = _exp
                         if index > subIndex then
-                           local info = createInfo( TokenKind.Symb, token:sub( subIndex, index - 1 ), columnIndex + subIndex )
+                           local info = createInfo( Types.TokenKind.Symb, token:sub( subIndex, index - 1 ), columnIndex + subIndex )
                            table.insert( list, info )
                         end
                         
@@ -1224,16 +1047,16 @@ function StreamParser:parse(  )
                         
                         local workKind = TokenKind.Dlmt
                         if _lune._Set_has(op2Set, delimit ) or _lune._Set_has(op1Set, delimit ) then
-                           workKind = TokenKind.Ope
+                           workKind = Types.TokenKind.Ope
                         end
                         
                         if delimit == "..." then
-                           workKind = TokenKind.Symb
+                           workKind = Types.TokenKind.Symb
                         end
                         
                         if delimit == "?" then
                            local nextChar = token:sub( index, subIndex )
-                           table.insert( list, createInfo( TokenKind.Char, nextChar, columnIndex + subIndex ) )
+                           table.insert( list, createInfo( Types.TokenKind.Char, nextChar, columnIndex + subIndex ) )
                            subIndex = subIndex + 1
                         else
                          
@@ -1242,7 +1065,7 @@ function StreamParser:parse(  )
                         
                      else
                         if subIndex <= #token then
-                           table.insert( list, createInfo( TokenKind.Symb, token:sub( subIndex ), columnIndex + subIndex ) )
+                           table.insert( list, createInfo( Types.TokenKind.Symb, token:sub( subIndex ), columnIndex + subIndex ) )
                         end
                         
                         break
@@ -1279,7 +1102,7 @@ function StreamParser:parse(  )
       if  nil == index then
          local _index = index
       
-         addVal( TokenKind.Symb, rawLine:sub( startIndex ), startIndex )
+         addVal( Types.TokenKind.Symb, rawLine:sub( startIndex ), startIndex )
          return list
       end
       
@@ -1292,7 +1115,7 @@ function StreamParser:parse(  )
       else
        
          if startIndex < index then
-            addVal( TokenKind.Symb, rawLine:sub( startIndex, index - 1 ), startIndex )
+            addVal( Types.TokenKind.Symb, rawLine:sub( startIndex, index - 1 ), startIndex )
          end
          
          if findChar == 39 or findChar == 34 then
@@ -1308,7 +1131,7 @@ function StreamParser:parse(  )
                
                local workChar = string.byte( rawLine, endIndex )
                if workChar == findChar then
-                  addVal( TokenKind.Str, rawLine:sub( index, endIndex ), index )
+                  addVal( Types.TokenKind.Str, rawLine:sub( index, endIndex ), index )
                   searchIndex = endIndex + 1
                   break
                elseif workChar == 92 then
@@ -1323,11 +1146,11 @@ function StreamParser:parse(  )
          elseif findChar == 96 then
             if (nextChar == findChar and string.byte( rawLine, index + 2 ) == 96 ) then
                local txt, nextIndex = multiComment( index + 3, '```' )
-               addVal( TokenKind.Str, '```' .. txt, index )
+               addVal( Types.TokenKind.Str, '```' .. txt, index )
                searchIndex = nextIndex
             else
              
-               addVal( TokenKind.Ope, '`', index )
+               addVal( Types.TokenKind.Ope, '`', index )
                searchIndex = index + 1
             end
             
@@ -1348,24 +1171,24 @@ function StreamParser:parse(  )
                searchIndex = index + 2
             end
             
-            addVal( TokenKind.Char, codeChar, index )
+            addVal( Types.TokenKind.Char, codeChar, index )
          else
           
             if self.luaMode and findChar == 45 and nextChar == 45 then
-               addVal( TokenKind.Cmnt, rawLine:sub( index ), index )
+               addVal( Types.TokenKind.Cmnt, rawLine:sub( index ), index )
                searchIndex = #rawLine + 1
                
             elseif findChar == 47 then
                if nextChar == 42 then
                   local comment, nextIndex = multiComment( index + 2, "*/" )
-                  addVal( TokenKind.Cmnt, "/*" .. comment, index )
+                  addVal( Types.TokenKind.Cmnt, "/*" .. comment, index )
                   searchIndex = nextIndex
                elseif nextChar == 47 then
-                  addVal( TokenKind.Cmnt, rawLine:sub( index ), index )
+                  addVal( Types.TokenKind.Cmnt, rawLine:sub( index ), index )
                   searchIndex = #rawLine + 1
                else
                 
-                  addVal( TokenKind.Ope, "/", index )
+                  addVal( Types.TokenKind.Ope, "/", index )
                   searchIndex = index + 1
                end
                
@@ -1413,7 +1236,7 @@ function StreamParser:getToken(  )
 end
 
 
-local eofToken = Token.new(TokenKind.Eof, "<EOF>", Position.new(0, 0, "eof"), false, {})
+local eofToken = Token.new(Types.TokenKind.Eof, "<EOF>", Position.new(0, 0, "eof"), false, {})
 local function getEofToken(  )
 
    return eofToken

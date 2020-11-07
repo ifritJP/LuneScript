@@ -2965,6 +2965,10 @@ fn TransUnit.processImport( modulePath:str, depth:int ) mut :
          let typeId2TypeInfo = moduleInfo.$importId2localTypeInfoMap;
          //let moduleTypeInfo = unwrap typeId2TypeInfo[ metaInfo.__moduleTypeId ];
          self.importModuleInfo.remove();
+
+         foreach val, key in moduleInfo.$importedAliasMap {
+            self.importedAliasMap[key] = val;
+         }
          return metaInfo, typeId2TypeInfo, moduleInfo;
       }
       self.error( "failed to load meta -- " .. modulePath );
@@ -3334,7 +3338,8 @@ fn TransUnit.processImport( modulePath:str, depth:int ) mut :
 
    let moduleInfo = new Nodes.ModuleInfo(
       modulePath, nameList[#nameList], newId2OldIdMap,
-      frontInterface.ModuleId.createIdFromTxt( metaInfo.__buildId ) );
+      frontInterface.ModuleId.createIdFromTxt( metaInfo.__buildId ),
+      importParam.importedAliasMap );
    self.importModule2ModuleInfo[ moduleTypeInfo ] = moduleInfo;
    self.importModuleName2ModuleInfo[ modulePath ] = moduleInfo;
 

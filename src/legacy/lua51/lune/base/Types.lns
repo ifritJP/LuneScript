@@ -55,68 +55,68 @@ pub static fn TransCtrlInfo.create_normal(): TransCtrlInfo {
 }
 
 
-// pub class Position extend (Mapping) {
-//    pub let lineNo: int;
-//    pub let column: int;
-//    pub let streamName: str;
-// }
+pub class Position extend (Mapping) {
+   pub let lineNo: int;
+   pub let column: int;
+   pub let streamName: str;
+}
 
-// pub enum TokenKind {
-//    Cmnt,
-//    Str,
-//    Int,
-//    Real,
-//    Char,
-//    Symb,
-//    Dlmt,
-//    Kywd,
-//    Ope,
-//    Type,
-//    Eof,
-// }
+pub enum TokenKind {
+   Cmnt,
+   Str,
+   Int,
+   Real,
+   Char,
+   Symb,
+   Dlmt,
+   Kywd,
+   Ope,
+   Type,
+   Eof,
+}
 
-// pub class Token extend (Mapping) {
-//    pub let kind: TokenKind;
-//    pub let txt: str;
-//    pub let pos: &Position;
-//    /** 直前のトークンと連続しているトークンかどうか。 true の場合連続。 */
-//    pub let consecutive: bool;
-//    pri let allmut commentList: &List<&Token> { pub& };
+pub class Token extend (Mapping) {
+   pub let kind: TokenKind;
+   pub let txt: str;
+   pub let pos: &Position;
+   /** 直前のトークンと連続しているトークンかどうか。 true の場合連続。 */
+   pub let consecutive: bool;
+   pri let allmut commentList: &List<&Token> { pub& };
 
-//    pub fn __init( kind: TokenKind, txt: str, pos: &Position,
-//                   consecutive:bool, commentList: Token[]! )
-//    {
-//       self.kind = kind;
-//       self.txt = txt;
-//       self.pos = pos;
-//       self.consecutive = consecutive;
-//       self.commentList = unwrap commentList default [];
-//    }
+   pub fn __init( kind: TokenKind, txt: str, pos: &Position,
+                  consecutive:bool, commentList: Token[]! )
+   {
+      self.kind = kind;
+      self.txt = txt;
+      self.pos = pos;
+      self.consecutive = consecutive;
+      self.commentList = unwrap commentList default [];
+   }
 
-//    pub fn getExcludedDelimitTxt() : str {
-//       if self.kind ~= .Str {
-//          return self.txt;
-//       }
-//       switch self.txt[1] {
-//          case ?\', ?\" {
-//             return self.txt.sub( 2, #self.txt - 1 );
-//          }
-//          case ?` {
-//             return self.txt.sub( 1 + 3, #self.txt - 3 );
-//          }
-//       }
-//       error( "illegal delimit -- %s" (self.txt) );
-//    }
+   pub fn getExcludedDelimitTxt() : str {
+      if self.kind ~= .Str {
+         return self.txt;
+      }
+      switch self.txt[1] {
+         case ?\', ?\" {
+            return self.txt.sub( 2, #self.txt - 1 );
+         }
+         case ?` {
+            return self.txt.sub( 1 + 3, #self.txt - 3 );
+         }
+      }
+      error( "illegal delimit -- %s" (self.txt) );
+   }
 
-//    pub fn set_commentList( commentList: &List<&Token> ) {
-//       self.commentList = commentList;
-//    }
+   pub fn set_commentList( commentList: &List<&Token> ) {
+      self.commentList = commentList;
+   }
 
-//    pub fn getLineCount():int {
-//       let mut count = 1;
-//       apply _ of self.txt.gmatch( "\n" ) {
-//          count = count + 1;
-//       }
-//       return count;
-//    }
-// }
+   pub fn getLineCount():int {
+      let mut count = 1;
+      apply _ of self.txt.gmatch( "\n" ) {
+         count = count + 1;
+      }
+      return count;
+   }
+}

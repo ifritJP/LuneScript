@@ -228,7 +228,7 @@ func (self *Formatter_FormatterFilter) InitFormatter_FormatterFilter(moduleTypeI
 // 58: decl @lune.@base.@Formatter.FormatterFilter.outputHeadComment
 func (self *Formatter_FormatterFilter) OutputHeadComment(node *Nodes_Node) {
     for _, _commentNode := range( Lns_unwrapDefault( node.FP.Get_commentList(), NewLnsList([]LnsAny{})).(*LnsList).Items ) {
-        commentNode := _commentNode.(Parser_TokenDownCast).ToParser_Token()
+        commentNode := _commentNode.(Types_TokenDownCast).ToTypes_Token()
         self.FP.Writeln(commentNode.Txt)
     }
 }
@@ -294,7 +294,7 @@ func (self *Formatter_FormatterFilter) ProcessStmtExp(node *Nodes_StmtExpNode,_o
     {
         _tailComment := node.FP.Get_tailComment()
         if _tailComment != nil {
-            tailComment := _tailComment.(*Parser_Token)
+            tailComment := _tailComment.(*Types_Token)
             self.FP.Write("; ")
             self.FP.Writeln(tailComment.Txt)
         } else {
@@ -308,7 +308,7 @@ func (self *Formatter_FormatterFilter) ProcessDeclEnum(node *Nodes_DeclEnumNode,
     self.FP.Writeln(Lns_getVM().String_format("enum %s {", []LnsAny{node.FP.Get_name().Txt}))
     self.FP.PushIndent(nil)
     for _, _name := range( node.FP.Get_valueNameList().Items ) {
-        name := _name.(Parser_TokenDownCast).ToParser_Token()
+        name := _name.(Types_TokenDownCast).ToTypes_Token()
         self.FP.Write(Lns_getVM().String_format("%s", []LnsAny{name.Txt}))
         self.FP.Writeln(",")
     }
@@ -357,13 +357,13 @@ func (self *Formatter_FormatterFilter) outputDeclClass(protoFlag bool,classType 
         self.FP.Write(">")
     }
     if moduleName != nil{
-        moduleName_5112 := moduleName.(*Parser_Token)
+        moduleName_5142 := moduleName.(*Types_Token)
         self.FP.Write(" require ")
-        self.FP.Write(Lns_getVM().String_format("%s ", []LnsAny{moduleName_5112.Txt}))
+        self.FP.Write(Lns_getVM().String_format("%s ", []LnsAny{moduleName_5142.Txt}))
         if gluePrefix != nil{
-            gluePrefix_5114 := gluePrefix.(string)
+            gluePrefix_5144 := gluePrefix.(string)
             self.FP.Write("glue ")
-            self.FP.Write(gluePrefix_5114)
+            self.FP.Write(gluePrefix_5144)
         }
     }
     if Lns_popVal( Lns_incStack() ||
@@ -650,7 +650,7 @@ func (self *Formatter_FormatterFilter) processDeclFuncInfo(node *Nodes_Node,decl
     if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
         Lns_setStackVal( declInfo.FP.Get_staticFlag()) &&
         Lns_setStackVal( Lns_NilAccFin(Lns_NilAccPush(declInfo.FP.Get_name()) && 
-        Lns_NilAccPush(Lns_NilAccPop().(*Parser_Token).Txt)) == "__init") ).(bool)){
+        Lns_NilAccPush(Lns_NilAccPop().(*Types_Token).Txt)) == "__init") ).(bool)){
         self.FP.Write("__init")
     } else { 
         self.FP.Write("fn ")
@@ -665,7 +665,7 @@ func (self *Formatter_FormatterFilter) processDeclFuncInfo(node *Nodes_Node,decl
         {
             _nameToken := declInfo.FP.Get_name()
             if _nameToken != nil {
-                nameToken := _nameToken.(*Parser_Token)
+                nameToken := _nameToken.(*Types_Token)
                 self.FP.Write(nameToken.Txt)
             }
         }

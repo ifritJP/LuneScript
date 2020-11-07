@@ -2263,11 +2263,14 @@ fn TransUnit.analyzeExpField(
          if mode == .Get {
             let moduleType = prefixExpType.getModule();
             if not moduleType.equals( self.processInfo, self.moduleType ##) and
-               not self.scope.getModuleInfo( moduleType ) {
+               not self.scope.getModuleInfo( moduleType )
+            {
+               if not self.importedAliasMap[ prefixExpType ] {
                   // enum の名前を取得するには、そのモジュールのインポートが必要
                   self.addErrMess( fieldToken.pos, "need to import module -- %s"
                                    ( prefixExpType.getModule().getTxt(##) ) );
                }
+            }
             fieldName = "get_" .. fieldName;
             if! let funcSymbol = scope.getSymbolInfoChild( fieldName ) {
                symbolInfo = funcSymbol;
@@ -3565,17 +3568,21 @@ fn TransUnit.analyzeExp(
 
             let mut aliasType:&Ast.AliasTypeInfo! = nil;
             let mut expType:&Ast.TypeInfo = enumTyepInfo;
+
+            aliasType = self.importedAliasMap[ enumTyepInfo ];
+            when! aliasType {
+               expType = aliasType;
+            }
             if orgExpectType.$externalFlag {
                if not self.importModuleSet.has( orgExpectType.getModule() ) {
                   // enum を宣言しているモジュールを import していない場合
-                  aliasType = self.importedAliasMap[ enumTyepInfo ];
-                  when! aliasType {
-                     expType = aliasType;
-                  } else {
+                  if not aliasType {
                      let fullname = orgExpectType.getFullName(
                         self.typeNameCtrl, self.scope, true );
-                     self.addErrMess( token.pos, "This module not import -- %s"
-                                      ( fullname ) );
+                     self.addErrMess(
+                        token.pos,              
+                        "need to import module -- %s (%s)"
+                        ( fullname, enumTyepInfo.getTxt(##) ) );
                   }
                }
             }  

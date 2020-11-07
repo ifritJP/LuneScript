@@ -20,9 +20,9 @@ func Macro_loadCode_1007_(code string) LnsAny {
     var mess LnsAny
     loaded,mess = Lns_getVM().Load(code, nil)
     if loaded != nil{
-        loaded_4973 := loaded.(*Lns_luaValue)
+        loaded_5003 := loaded.(*Lns_luaValue)
         {
-            _obj := Macro_convExp41(Lns_2DDD(Lns_getVM().RunLoadedfunc(loaded_4973,Lns_2DDD([]LnsAny{}))[0]))
+            _obj := Macro_convExp41(Lns_2DDD(Lns_getVM().RunLoadedfunc(loaded_5003,Lns_2DDD([]LnsAny{}))[0]))
             if _obj != nil {
                 obj := _obj
                 return obj
@@ -105,9 +105,9 @@ func Macro_getLiteralMacroVal_1122_(obj LnsAny) LnsAny {
             var valObj LnsAny
             valObj = Macro_getLiteralMacroVal_1122_(val)
             if keyObj != nil && valObj != nil{
-                keyObj_5067 := keyObj
-                valObj_5068 := valObj
-                newMap.Set(keyObj_5067,valObj_5068)
+                keyObj_5097 := keyObj
+                valObj_5098 := valObj
+                newMap.Set(keyObj_5097,valObj_5098)
             }
         }
         return newMap
@@ -122,29 +122,29 @@ func Macro_equalsType_1294_(typeInfo *Ast_TypeInfo,builtinType *Ast_TypeInfo) bo
 }
 
 // 480: decl @lune.@base.@Macro.expandVal
-func Macro_expandVal_1387_(tokenList *LnsList,workval LnsAny,pos *Parser_Position) LnsAny {
+func Macro_expandVal_1387_(tokenList *LnsList,workval LnsAny,pos *Types_Position) LnsAny {
     if workval != nil{
-        workval_5260 := workval
+        workval_5290 := workval
         var val LnsAny
-        val = workval_5260
+        val = workval_5290
         if _switch2229 := Lns_type(val); _switch2229 == "boolean" {
             var token string
             token = Lns_getVM().String_format("%s", []LnsAny{val})
             var kind LnsInt
-            kind = Parser_TokenKind__Kywd
-            tokenList.Insert(Parser_Token2Stem(NewParser_Token(kind, token, pos, false, nil)))
+            kind = Types_TokenKind__Kywd
+            tokenList.Insert(Types_Token2Stem(NewTypes_Token(kind, token, pos, false, nil)))
         } else if _switch2229 == "number" {
             var num string
             num = Lns_getVM().String_format("%g", []LnsAny{Lns_forceCastReal(val)})
             var kind LnsInt
-            kind = Parser_TokenKind__Int
+            kind = Types_TokenKind__Int
             if Lns_isCondTrue( Lns_car(Lns_getVM().String_find(num, ".", 1, true))){
-                kind = Parser_TokenKind__Real
+                kind = Types_TokenKind__Real
                 
             }
-            tokenList.Insert(Parser_Token2Stem(NewParser_Token(kind, num, pos, false, nil)))
+            tokenList.Insert(Types_Token2Stem(NewTypes_Token(kind, num, pos, false, nil)))
         } else if _switch2229 == "string" {
-            tokenList.Insert(Parser_Token2Stem(NewParser_Token(Parser_TokenKind__Str, Parser_quoteStr(val.(string)), pos, false, nil)))
+            tokenList.Insert(Types_Token2Stem(NewTypes_Token(Types_TokenKind__Str, Parser_quoteStr(val.(string)), pos, false, nil)))
         } else {
             return Lns_getVM().String_format("not support ,, List -- %s", []LnsAny{Lns_type(val)})
         }
@@ -153,7 +153,7 @@ func Macro_expandVal_1387_(tokenList *LnsList,workval LnsAny,pos *Parser_Positio
 }
 
 // 526: decl @lune.@base.@Macro.pushbackTxt
-func Macro_pushbackTxt_1394_(pushbackParser Parser_PushbackParser,txtList *LnsList,streamName string,pos *Parser_Position) {
+func Macro_pushbackTxt_1394_(pushbackParser Parser_PushbackParser,txtList *LnsList,streamName string,pos *Types_Position) {
     var tokenList *LnsList
     tokenList = NewLnsList([]LnsAny{})
     for _, _txt := range( txtList.Items ) {
@@ -165,12 +165,12 @@ func Macro_pushbackTxt_1394_(pushbackParser Parser_PushbackParser,txtList *LnsLi
         var workParser *Parser_DefaultPushbackParser
         workParser = NewParser_DefaultPushbackParser(&parser.Parser_Parser)
         for  {
-            var worktoken *Parser_Token
+            var worktoken *Types_Token
             worktoken = workParser.FP.GetTokenNoErr()
-            if worktoken.Kind == Parser_TokenKind__Eof{
+            if worktoken.Kind == Types_TokenKind__Eof{
                 break
             }
-            tokenList.Insert(Parser_Token2Stem(NewParser_Token(worktoken.Kind, worktoken.Txt, pos, false, nil)))
+            tokenList.Insert(Types_Token2Stem(NewTypes_Token(worktoken.Kind, worktoken.Txt, pos, false, nil)))
         }
     }
     {
@@ -185,7 +185,7 @@ func Macro_pushbackTxt_1394_(pushbackParser Parser_PushbackParser,txtList *LnsLi
                if _work2378 < _to2378 { break }
             }
             index := _work2378
-            pushbackParser.PushbackToken(tokenList.GetAt(index).(Parser_TokenDownCast).ToParser_Token())
+            pushbackParser.PushbackToken(tokenList.GetAt(index).(Types_TokenDownCast).ToTypes_Token())
             _work2378 += _delta2378
         }
     }
@@ -396,7 +396,7 @@ func Macro_MacroMetaInfo_FromMapMain( newObj *Macro_MacroMetaInfo, objMap *LnsMa
 
 // declaration Class -- MacroPaser
 type Macro_MacroPaserMtd interface {
-    CreatePosition(arg1 LnsInt, arg2 LnsInt) *Parser_Position
+    CreatePosition(arg1 LnsInt, arg2 LnsInt) *Types_Position
     GetStreamName() string
     GetToken() LnsAny
 }
@@ -450,8 +450,8 @@ func (self *Macro_MacroPaser) GetToken() LnsAny {
     if self.tokenList.Len() < self.pos{
         return nil
     }
-    var token *Parser_Token
-    token = self.tokenList.GetAt(self.pos).(Parser_TokenDownCast).ToParser_Token()
+    var token *Types_Token
+    token = self.tokenList.GetAt(self.pos).(Types_TokenDownCast).ToTypes_Token()
     self.pos = self.pos + 1
     
     return token
@@ -618,9 +618,9 @@ func (self *Macro_MacroAnalyzeInfo) IsAnalyzingExpArg() bool {
 
 // declaration Class -- MacroCtrl
 type Macro_MacroCtrlMtd interface {
-    EvalMacroOp(arg1 string, arg2 *Parser_Token, arg3 *Ast_TypeInfo, arg4 LnsAny)(LnsAny, LnsAny)
-    ExpandMacroVal(arg1 *Ast_TypeNameCtrl, arg2 *Ast_Scope, arg3 Parser_PushbackParser, arg4 *Parser_Token) *Parser_Token
-    ExpandSymbol(arg1 Parser_PushbackParser, arg2 *Parser_Token, arg3 *Nodes_Node, arg4 *Nodes_NodeManager, arg5 *LnsList) *Nodes_LiteralStringNode
+    EvalMacroOp(arg1 string, arg2 *Types_Token, arg3 *Ast_TypeInfo, arg4 LnsAny)(LnsAny, LnsAny)
+    ExpandMacroVal(arg1 *Ast_TypeNameCtrl, arg2 *Ast_Scope, arg3 Parser_PushbackParser, arg4 *Types_Token) *Types_Token
+    ExpandSymbol(arg1 Parser_PushbackParser, arg2 *Types_Token, arg3 *Nodes_Node, arg4 *Nodes_NodeManager, arg5 *LnsList) *Nodes_LiteralStringNode
     FinishMacroMode()
     Get_analyzeInfo() *Macro_MacroAnalyzeInfo
     Get_macroCallLineNo() LnsInt
@@ -703,11 +703,11 @@ func (self *Macro_MacroCtrl) InitMacro_MacroCtrl(macroEval *Nodes_MacroEval) {
 }
 
 // 271: decl @lune.@base.@Macro.MacroCtrl.evalMacroOp
-func (self *Macro_MacroCtrl) EvalMacroOp(streamName string,firstToken *Parser_Token,macroTypeInfo *Ast_TypeInfo,expList LnsAny)(LnsAny, LnsAny) {
+func (self *Macro_MacroCtrl) EvalMacroOp(streamName string,firstToken *Types_Token,macroTypeInfo *Ast_TypeInfo,expList LnsAny)(LnsAny, LnsAny) {
     self.useModuleMacroSet.Add(Ast_TypeInfo2Stem(macroTypeInfo.FP.GetModule()))
     if expList != nil{
-        expList_5161 := expList.(*Nodes_ExpListNode)
-        for _, _exp := range( expList_5161.FP.Get_expList().Items ) {
+        expList_5191 := expList.(*Nodes_ExpListNode)
+        for _, _exp := range( expList_5191.FP.Get_expList().Items ) {
             exp := _exp.(Nodes_NodeDownCast).ToNodes_Node()
             var kind LnsInt
             kind = exp.FP.Get_kind()
@@ -730,17 +730,17 @@ func (self *Macro_MacroCtrl) EvalMacroOp(streamName string,firstToken *Parser_To
     var macroArgName2ArgNode *LnsMap
     macroArgName2ArgNode = NewLnsMap( map[LnsAny]LnsAny{})
     if expList != nil{
-        expList_5174 := expList.(*Nodes_ExpListNode)
-        for _index, _argNode := range( expList_5174.FP.Get_expList().Items ) {
+        expList_5204 := expList.(*Nodes_ExpListNode)
+        for _index, _argNode := range( expList_5204.FP.Get_expList().Items ) {
             index := _index + 1
             argNode := _argNode.(Nodes_NodeDownCast).ToNodes_Node()
             var literal LnsAny
             var mess LnsAny
             literal,mess = argNode.FP.GetLiteral()
             if literal != nil{
-                literal_5181 := literal
+                literal_5211 := literal
                 {
-                    _val := Macro_getLiteralMacroVal_1122_(literal_5181)
+                    _val := Macro_getLiteralMacroVal_1122_(literal_5211)
                     if _val != nil {
                         val := _val
                         argValMap.Set(index,Lns_getVM().RunLoadedfunc(Macro_toLuaval,Lns_2DDD(val))[0])
@@ -819,21 +819,21 @@ func (self *Macro_MacroCtrl) ImportMacro(processInfo *Ast_ProcessInfo,macroInfoS
     var err LnsAny
     macroInfo,err = Macro_MacroMetaInfo__fromStem_1094_(macroInfoStem,nil)
     if macroInfo != nil{
-        macroInfo_5219 := macroInfo.(*Macro_MacroMetaInfo)
+        macroInfo_5249 := macroInfo.(*Macro_MacroMetaInfo)
         var argList *LnsList
         argList = NewLnsList([]LnsAny{})
         var argNameList *LnsList
         argNameList = NewLnsList([]LnsAny{})
         var symbol2MacroValInfoMap *LnsMap
         symbol2MacroValInfoMap = NewLnsMap( map[LnsAny]LnsAny{})
-        for _, _argInfo := range( macroInfo_5219.ArgList.Items ) {
+        for _, _argInfo := range( macroInfo_5249.ArgList.Items ) {
             argInfo := _argInfo.(Macro_MacroMetaArgInfoDownCast).ToMacro_MacroMetaArgInfo()
             var argTypeInfo *Ast_TypeInfo
             argTypeInfo = Lns_unwrap( typeId2TypeInfo.Items[argInfo.TypeId]).(*Ast_TypeInfo)
             argList.Insert(Nodes_MacroArgInfo2Stem(NewNodes_MacroArgInfo(argInfo.Name, argTypeInfo)))
             argNameList.Insert(argInfo.Name)
         }
-        for _, _symInfo := range( macroInfo_5219.SymList.Items ) {
+        for _, _symInfo := range( macroInfo_5249.SymList.Items ) {
             symInfo := _symInfo.(Macro_MacroMetaArgInfoDownCast).ToMacro_MacroMetaArgInfo()
             var symTypeInfo *Ast_TypeInfo
             symTypeInfo = Lns_unwrap( typeId2TypeInfo.Items[symInfo.TypeId]).(*Ast_TypeInfo)
@@ -845,7 +845,7 @@ func (self *Macro_MacroCtrl) ImportMacro(processInfo *Ast_ProcessInfo,macroInfoS
         lineNo = 0
         var column LnsInt
         column = 1
-        for _, _tokenInfo := range( macroInfo_5219.TokenList.Items ) {
+        for _, _tokenInfo := range( macroInfo_5249.TokenList.Items ) {
             tokenInfo := _tokenInfo.(*LnsList)
             var txt string
             txt = tokenInfo.GetAt(2).(string)
@@ -855,14 +855,14 @@ func (self *Macro_MacroCtrl) ImportMacro(processInfo *Ast_ProcessInfo,macroInfoS
                 column = 1
                 
             } else { 
-                var pos *Parser_Position
-                pos = NewParser_Position(lineNo, column, Lns_getVM().String_format("macro:%s", []LnsAny{macroInfo_5219.Name}))
-                tokenList.Insert(Parser_Token2Stem(NewParser_Token(Lns_unwrap( Parser_TokenKind__from(Lns_forceCastInt(tokenInfo.GetAt(1)))).(LnsInt), txt, pos, false, nil)))
+                var pos *Types_Position
+                pos = NewTypes_Position(lineNo, column, Lns_getVM().String_format("macro:%s", []LnsAny{macroInfo_5249.Name}))
+                tokenList.Insert(Types_Token2Stem(NewTypes_Token(Lns_unwrap( Types_TokenKind__from(Lns_forceCastInt(tokenInfo.GetAt(1)))).(LnsInt), txt, pos, false, nil)))
                 column = column + len(txt) + 1
                 
             }
         }
-        self.typeId2MacroInfo.Set(macroTypeInfo.FP.Get_typeId(),&NewMacro_ExtMacroInfo(macroInfo_5219.Name, self.macroEval.FP.EvalFromCode(processInfo, macroInfo_5219.Name, argNameList, macroInfo_5219.StmtBlock), symbol2MacroValInfoMap, argList, tokenList).Nodes_MacroInfo)
+        self.typeId2MacroInfo.Set(macroTypeInfo.FP.Get_typeId(),&NewMacro_ExtMacroInfo(macroInfo_5249.Name, self.macroEval.FP.EvalFromCode(processInfo, macroInfo_5249.Name, argNameList, macroInfo_5249.StmtBlock), symbol2MacroValInfoMap, argList, tokenList).Nodes_MacroInfo)
     } else {
         Util_errorLog(Lns_getVM().String_format("macro load fail -- %s: %s ", []LnsAny{macroTypeInfo.FP.GetTxt(nil, nil, nil), Lns_unwrapDefault( err, "").(string)}))
     }
@@ -891,15 +891,15 @@ func (self *Macro_MacroCtrl) Regist(processInfo *Ast_ProcessInfo,node *Nodes_Dec
 }
 
 // 556: decl @lune.@base.@Macro.MacroCtrl.expandMacroVal
-func (self *Macro_MacroCtrl) ExpandMacroVal(typeNameCtrl *Ast_TypeNameCtrl,scope *Ast_Scope,parser Parser_PushbackParser,token *Parser_Token) *Parser_Token {
+func (self *Macro_MacroCtrl) ExpandMacroVal(typeNameCtrl *Ast_TypeNameCtrl,scope *Ast_Scope,parser Parser_PushbackParser,token *Types_Token) *Types_Token {
     if self.tokenExpanding{
         return token
     }
-    var getToken func() *Parser_Token
-    getToken = func() *Parser_Token {
+    var getToken func() *Types_Token
+    getToken = func() *Types_Token {
         self.tokenExpanding = true
         
-        var work *Parser_Token
+        var work *Types_Token
         work = parser.GetTokenNoErr()
         self.tokenExpanding = false
         
@@ -911,7 +911,7 @@ func (self *Macro_MacroCtrl) ExpandMacroVal(typeNameCtrl *Ast_TypeNameCtrl,scope
         Lns_setStackVal( tokenTxt == ",,") ||
         Lns_setStackVal( tokenTxt == ",,,") ||
         Lns_setStackVal( tokenTxt == ",,,,") ).(bool){
-        var nextToken *Parser_Token
+        var nextToken *Types_Token
         nextToken = getToken()
         var macroVal *Nodes_MacroValInfo
         
@@ -999,28 +999,28 @@ func (self *Macro_MacroCtrl) ExpandMacroVal(typeNameCtrl *Ast_TypeNameCtrl,scope
                 }
                 var enumValInfo *Ast_EnumValInfo
                 enumValInfo = Lns_unwrap( enumTypeInfo.FP.Get_val2EnumValInfo().Items[Lns_unwrap( macroVal.Val)]).(*Ast_EnumValInfo)
-                nextToken = NewParser_Token(Parser_TokenKind__Symb, enumValInfo.FP.Get_name(), nextToken.Pos, false, nil)
+                nextToken = NewTypes_Token(Types_TokenKind__Symb, enumValInfo.FP.Get_name(), nextToken.Pos, false, nil)
                 
                 parser.PushbackToken(nextToken)
                 {
-                    var _from2949 LnsInt = nameList.Len()
-                    var _to2949 LnsInt = 1
-                    _work2949 := _from2949
-                    _delta2949 := -1
+                    var _from2955 LnsInt = nameList.Len()
+                    var _to2955 LnsInt = 1
+                    _work2955 := _from2955
+                    _delta2955 := -1
                     for {
-                        if _delta2949 > 0 {
-                           if _work2949 > _to2949 { break }
+                        if _delta2955 > 0 {
+                           if _work2955 > _to2955 { break }
                         } else {
-                           if _work2949 < _to2949 { break }
+                           if _work2955 < _to2955 { break }
                         }
-                        index := _work2949
-                        nextToken = NewParser_Token(Parser_TokenKind__Dlmt, ".", nextToken.Pos, false, nil)
+                        index := _work2955
+                        nextToken = NewTypes_Token(Types_TokenKind__Dlmt, ".", nextToken.Pos, false, nil)
                         
                         parser.PushbackToken(nextToken)
-                        nextToken = NewParser_Token(Parser_TokenKind__Symb, nameList.GetAt(index).(string), nextToken.Pos, false, nil)
+                        nextToken = NewTypes_Token(Types_TokenKind__Symb, nameList.GetAt(index).(string), nextToken.Pos, false, nil)
                         
                         parser.PushbackToken(nextToken)
-                        _work2949 += _delta2949
+                        _work2955 += _delta2955
                     }
                 }
             } else { 
@@ -1052,16 +1052,16 @@ func (self *Macro_MacroCtrl) ExpandMacroVal(typeNameCtrl *Ast_TypeNameCtrl,scope
                 var newToken string
                 newToken = ""
                 {
-                    _exp3137 := txtList
-                    _key3137, _val3137 := _exp3137.Get1stFromMap()
-                    for _key3137 != nil {
-                        txt := _val3137.(string)
+                    _exp3143 := txtList
+                    _key3143, _val3143 := _exp3143.Get1stFromMap()
+                    for _key3143 != nil {
+                        txt := _val3143.(string)
                         newToken = Lns_getVM().String_format("%s%s", []LnsAny{newToken, txt})
                         
-                        _key3137, _val3137 = _exp3137.NextFromMap( _key3137 )
+                        _key3143, _val3143 = _exp3143.NextFromMap( _key3143 )
                     }
                 }
-                nextToken = NewParser_Token(Parser_TokenKind__Str, Lns_getVM().String_format("'%s'", []LnsAny{newToken}), nextToken.Pos, false, nil)
+                nextToken = NewTypes_Token(Types_TokenKind__Str, Lns_getVM().String_format("'%s'", []LnsAny{newToken}), nextToken.Pos, false, nil)
                 
                 parser.PushbackToken(nextToken)
             } else if Lns_popVal( Lns_incStack() ||
@@ -1078,7 +1078,7 @@ func (self *Macro_MacroCtrl) ExpandMacroVal(typeNameCtrl *Ast_TypeNameCtrl,scope
                     rawTxt = Parser_quoteStr(txt)
                     
                 }
-                nextToken = NewParser_Token(Parser_TokenKind__Str, rawTxt, nextToken.Pos, false, nil)
+                nextToken = NewTypes_Token(Types_TokenKind__Str, rawTxt, nextToken.Pos, false, nil)
                 
                 parser.PushbackToken(nextToken)
             } else { 
@@ -1096,8 +1096,8 @@ func (self *Macro_MacroCtrl) ExpandMacroVal(typeNameCtrl *Ast_TypeNameCtrl,scope
 }
 
 // 724: decl @lune.@base.@Macro.MacroCtrl.expandSymbol
-func (self *Macro_MacroCtrl) ExpandSymbol(parser Parser_PushbackParser,prefixToken *Parser_Token,exp *Nodes_Node,nodeManager *Nodes_NodeManager,errMessList *LnsList) *Nodes_LiteralStringNode {
-    var nextToken *Parser_Token
+func (self *Macro_MacroCtrl) ExpandSymbol(parser Parser_PushbackParser,prefixToken *Types_Token,exp *Nodes_Node,nodeManager *Nodes_NodeManager,errMessList *LnsList) *Nodes_LiteralStringNode {
+    var nextToken *Types_Token
     nextToken = parser.GetTokenNoErr()
     if nextToken.Txt != "~~"{
         parser.PushbackToken(nextToken)
@@ -1117,9 +1117,9 @@ func (self *Macro_MacroCtrl) ExpandSymbol(parser Parser_PushbackParser,prefixTok
                 var macroInfo LnsAny
                 macroInfo = self.symbol2ValueMapForMacro.Items[symbolInfo.FP.Get_name()]
                 if macroInfo != nil{
-                    macroInfo_5377 := macroInfo.(*Nodes_MacroValInfo)
+                    macroInfo_5407 := macroInfo.(*Nodes_MacroValInfo)
                     var valType *Ast_TypeInfo
-                    valType = macroInfo_5377.TypeInfo
+                    valType = macroInfo_5407.TypeInfo
                     if Lns_popVal( Lns_incStack() ||
                         Lns_setStackVal( Macro_equalsType_1294_(valType, Ast_builtinTypeSymbol)) ||
                         Lns_setStackVal( Macro_equalsType_1294_(valType, Ast_builtinTypeExp)) ||
@@ -1141,7 +1141,7 @@ func (self *Macro_MacroCtrl) ExpandSymbol(parser Parser_PushbackParser,prefixTok
                         format = "' %s' "
                         
                     } else { 
-                        errMessList.Insert(Macro_ErrorMess2Stem(NewMacro_ErrorMess(Lns_unwrap( symbolInfo.FP.Get_pos()).(*Parser_Position), Lns_getVM().String_format("not support ,, -- %s", []LnsAny{valType.FP.GetTxt(nil, nil, nil)}))))
+                        errMessList.Insert(Macro_ErrorMess2Stem(NewMacro_ErrorMess(Lns_unwrap( symbolInfo.FP.Get_pos()).(*Types_Position), Lns_getVM().String_format("not support ,, -- %s", []LnsAny{valType.FP.GetTxt(nil, nil, nil)}))))
                     }
                 } else {
                     if Lns_popVal( Lns_incStack() ||
@@ -1161,8 +1161,8 @@ func (self *Macro_MacroCtrl) ExpandSymbol(parser Parser_PushbackParser,prefixTok
             }
         }
     }
-    var newToken *Parser_Token
-    newToken = NewParser_Token(Parser_TokenKind__Str, format, prefixToken.Pos, prefixToken.Consecutive, nil)
+    var newToken *Types_Token
+    newToken = NewTypes_Token(Types_TokenKind__Str, format, prefixToken.Pos, prefixToken.Consecutive, nil)
     var expListNode *Nodes_ExpListNode
     expListNode = Nodes_ExpListNode_create(nodeManager, exp.FP.Get_pos(), self.analyzeInfo.FP.Get_mode() == Nodes_MacroMode__AnalyzeArg, exp.FP.Get_expTypeList(), NewLnsList([]LnsAny{Nodes_Node2Stem(exp)}), nil, false)
     var dddNode *Nodes_ExpToDDDNode
@@ -1246,7 +1246,7 @@ func (self *Macro_MacroCtrl) IsInAnalyzeArgMode() bool {
 type Macro_ErrorMessMtd interface {
 }
 type Macro_ErrorMess struct {
-    Pos *Parser_Position
+    Pos *Types_Position
     Mess string
     FP Macro_ErrorMessMtd
 }
@@ -1270,13 +1270,13 @@ func Macro_ErrorMessDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Macro_ErrorMess) ToMacro_ErrorMess() *Macro_ErrorMess {
     return obj
 }
-func NewMacro_ErrorMess(arg1 *Parser_Position, arg2 string) *Macro_ErrorMess {
+func NewMacro_ErrorMess(arg1 *Types_Position, arg2 string) *Macro_ErrorMess {
     obj := &Macro_ErrorMess{}
     obj.FP = obj
     obj.InitMacro_ErrorMess(arg1, arg2)
     return obj
 }
-func (self *Macro_ErrorMess) InitMacro_ErrorMess(arg1 *Parser_Position, arg2 string) {
+func (self *Macro_ErrorMess) InitMacro_ErrorMess(arg1 *Types_Position, arg2 string) {
     self.Pos = arg1
     self.Mess = arg2
 }

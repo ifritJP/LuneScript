@@ -308,7 +308,7 @@ function Loader:analyzeExp(  )
             return nil, string.format( "illegal keyword -- %s", token.txt)
          elseif _switchExp == Parser.TokenKind.Cmnt then
          elseif _switchExp == Parser.TokenKind.Eof or _switchExp == Parser.TokenKind.Type then
-            return nil, string.format( "illegal kind -- %s", Parser.TokenKind:_getTxt( token.kind)
+            return nil, string.format( "illegal kind -- %s", @Types.TokenKind:_getTxt( token.kind)
             )
          elseif _switchExp == Parser.TokenKind.Ope then
             return nil, string.format( "not support -- %s", txt)

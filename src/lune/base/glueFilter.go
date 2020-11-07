@@ -225,7 +225,7 @@ func (self *glueFilter_glueGenerator) outputFuncReg(symbolName string,methodNode
         {
             _nameToken := glueFilter_getDeclFuncInfo_1028_(node).FP.Get_name()
             if _nameToken != nil {
-                nameToken := _nameToken.(*Parser_Token)
+                nameToken := _nameToken.(*Types_Token)
                 var name string
                 name = glueFilter_getFuncName_1034_(nameToken.Txt)
                 self.FP.write(Lns_getVM().String_format("  { \"%s\", lns_glue_%s },\n", []LnsAny{name, name}))
@@ -249,7 +249,7 @@ func (self *glueFilter_glueGenerator) outputMethod(node *Nodes_Node,gluePrefix s
     {
         __exp := declInfo.FP.Get_name()
         if __exp != nil {
-            _exp := __exp.(*Parser_Token)
+            _exp := __exp.(*Types_Token)
             name = gluePrefix + glueFilter_getFuncName_1034_(_exp.Txt)
             
         } else {
@@ -605,7 +605,7 @@ func (self *glueFilter_glueFilter) ProcessRoot(node *Nodes_RootNode,_dummy LnsAn
         {
             _moduleName := declClassNode.FP.Get_moduleName()
             if _moduleName != nil {
-                moduleName := _moduleName.(*Parser_Token)
+                moduleName := _moduleName.(*Types_Token)
                 var moduleSymbolName string
                 moduleSymbolName = glueFilter_convExp1553(Lns_2DDD(Lns_getVM().String_gsub(moduleName.FP.GetExcludedDelimitTxt(),"%.", "_")))
                 {

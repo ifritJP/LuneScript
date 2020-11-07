@@ -153,9 +153,23 @@ func (luaVM *Lns_luaVM) String_format( format string, ddd []LnsAny ) string {
         case *LnsMap:
             pVal := luaVM.pushAny( fmt.Sprintf("table:%v", val ) )
             defer pVal.free()
+        case LnsInt:
+            luaVM.pushAny( val )
+        case LnsReal:
+            luaVM.pushAny( val )
+        case bool:
+            luaVM.pushAny( val )
+        case string:
+            luaVM.pushAny( val )
+        case *Lns_luaValue:
+            luaVM.pushAny( val )
         default:
-            pVal := luaVM.pushAny( val )
-            defer pVal.free()
+            if Lns_IsNil( val ) {
+                luaVM.pushAny( val )
+            } else {
+                pVal := luaVM.pushAny( fmt.Sprintf("table:%v", val ) )
+                defer pVal.free()
+            }
         }
     }
 
