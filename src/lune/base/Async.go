@@ -75,7 +75,7 @@ func Async_PipeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Async_Pipe) ToAsync_Pipe() *Async_Pipe {
     return obj
 }
-// 33: DeclConstr
+// 35: DeclConstr
 func (self *Async_Pipe) InitAsync_Pipe(pipe LnsAny) {
     self.InitLnsThread()
     self.pipe = pipe
@@ -85,7 +85,7 @@ func (self *Async_Pipe) InitAsync_Pipe(pipe LnsAny) {
 }
 
 
-// 41: decl @lune.@base.@Async.Pipe.getNext
+// 43: decl @lune.@base.@Async.Pipe.getNext
 func (self *Async_Pipe) GetNext() LnsAny {
     if self.started{
         {
@@ -109,7 +109,7 @@ func (self *Async_Pipe) GetNext() LnsAny {
     return self.FP.Access()
 }
 
-// 53: decl @lune.@base.@Async.Pipe.loop
+// 55: decl @lune.@base.@Async.Pipe.loop
 func (self *Async_Pipe) Loop() {
     var pipe *Lns__pipe
     
@@ -136,7 +136,7 @@ func (self *Async_Pipe) Loop() {
     }
 }
 
-// 64: decl @lune.@base.@Async.Pipe.start
+// 66: decl @lune.@base.@Async.Pipe.start
 func (self *Async_Pipe) Start() {
     self.started = true
     

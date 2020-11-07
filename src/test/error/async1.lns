@@ -1,0 +1,6 @@
+_lune_control use_async;
+
+class Test extend LnsThread {
+   pro override fn loop() mut {
+   }
+}

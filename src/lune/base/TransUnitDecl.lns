@@ -1008,6 +1008,11 @@ fn TransUnit.analyzePushClass(
                   firstToken.pos, "The access mode of '__init' is 'pri'." );
             }
          };
+         if baseTypeInfo == builtinFunc.lnsthread_ and
+            not self.helperInfo.pragmaSet.has( LuneControl.Pragma.use_async )
+         {
+            self.addErrMess( nextToken.pos, "must set '_lune_control ues_async'" );
+         }
       }
    }
 

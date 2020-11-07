@@ -55,6 +55,73 @@ func Str_endsWith( txt, ptn string ) bool {
 }
 
 
+// ==== Builder
+type Str_BuilderMtd interface {
+    Get_txt() string
+    Add(arg1 string)
+    Len() LnsInt
+    Clear()
+}
+
+type Str_Builder struct {
+    txt strings.Builder
+    FP Str_BuilderMtd
+}
+
+func Str_Builder2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Str_Builder).FP
+}
+
+type Str_BuilderDownCast interface {
+    Str_ToBuilder() *Str_Builder
+}
+
+func Str_BuilderDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Str_BuilderDownCast)
+    if ok { return work.Str_ToBuilder() }
+    return nil
+}
+
+func (obj *Str_Builder) ToStr_Builder() *Str_Builder {
+    return obj
+}
+
+func NewStr_Builder() *Str_Builder {
+    obj := &Str_Builder{}
+    obj.FP = obj
+    obj.InitStr_Builder()
+    return obj
+}
+func (self *Str_Builder) InitStr_Builder() {
+    self.txt.Reset()
+}
+
+func (self *Str_Builder) Get_txt() string{
+    return self.txt.String()
+}
+
+// 106: decl @lune.@base.@Util.memStream.write
+func (self *Str_Builder) Add(val string) {
+    self.txt.Write( ([]byte)(val) )
+}
+
+func (self *Str_Builder) Len() LnsInt {
+    return self.txt.Len()
+}
+
+func (self *Str_Builder) Clear() {
+    self.txt.Reset()
+}
+
+
+
+
 
 var lns_c_ptr_string *C.char
 var lns_c_ptr_format *C.char

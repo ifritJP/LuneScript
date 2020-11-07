@@ -547,16 +547,17 @@ fn getTypeListTxt( typeList:&List<&Ast.TypeInfo> ): str {
 pub override fn dumpFilter.processExpCall(
    node: &Nodes.ExpCallNode, opt:Opt ) mut
 {
-   self.dump( opt, node,
-         "[nilacc:%s] -> %s" ( node.$nilAccess, getTypeListTxt( node.$expTypeList ) ) );
+   let mess = "[nilacc:%s,thread:%s] -> %s"
+       ( node.$nilAccess, node.$threading, getTypeListTxt( node.$expTypeList ) );
+   self.dump( opt, node, mess );
    filter( node.get_func(), self, opt.nextOpt() );
    if! node.get_argList() {
       filter( _exp, self, opt.nextOpt() );
    }	
 };
+
 pub override fn dumpFilter.processExpList(
    node: &Nodes.ExpListNode, opt:Opt ) mut
-
 {
    let mut mess;
    if! let mRetExp = node.$mRetExp {

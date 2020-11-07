@@ -70,6 +70,12 @@ var LuneControl_Pragma__run_async_pipe_Obj = &LuneControl_Pragma__run_async_pipe
 func (self *LuneControl_Pragma__run_async_pipe) GetTxt() string {
 return "Pragma.run_async_pipe"
 }
+type LuneControl_Pragma__use_async struct{
+}
+var LuneControl_Pragma__use_async_Obj = &LuneControl_Pragma__use_async{}
+func (self *LuneControl_Pragma__use_async) GetTxt() string {
+return "Pragma.use_async"
+}
 func Lns_LuneControl_init() {
     if init_LuneControl { return }
     init_LuneControl = true

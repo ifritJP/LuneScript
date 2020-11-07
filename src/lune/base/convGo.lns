@@ -53,6 +53,13 @@ enum ProcessMode {
    Main,
 }
 
+fn getLuavm( threading:bool ) : str {
+   return "Lns_getVM()";
+}
+fn getEnv( threading:bool ) : str {
+   return "Lns_GetEnv()";
+}
+
 class convFilter extend Nodes.Filter<Opt> {
    pri let mut stream:Util.SimpleSourceOStream;
    let mut processMode:ProcessMode;
@@ -87,6 +94,13 @@ class convFilter extend Nodes.Filter<Opt> {
          [ Ast.builtinTypeNone ] );
    }
 
+   fn getVM( threading:bool, typeInfo:&Ast.TypeInfo ) : str! {
+      let! txt = self.builtin2runtime[ typeInfo ] {
+         return nil;
+      };
+      return (txt.gsub( "GETVM", getLuavm( threading ) ));
+   }
+   
    fn pushProcessMode( mode:ProcessMode ) mut {
       self.processModeStack.insert( self.processMode );
       self.processMode = mode;
@@ -1254,9 +1268,9 @@ fn convFilter.outputConvToForm( node:&Nodes.ExpCastNode ) mut {
 ```      
 func %s( luaform LnsAny ) LnsForm {
     return func (argList []LnsAny) []LnsAny {
-        return Lns_getVM().RunLoadedfunc( luaform.(*Lns_luaValue), argList )
+        return %s.RunLoadedfunc( luaform.(*Lns_luaValue), argList )
     }
-}``` (self.getConv2formName( node ) ) );
+}``` (self.getConv2formName( node ), getLuavm( node.$exp.isThreading() ) ) );
       return;
    }
    
@@ -1404,12 +1418,12 @@ pub override fn convFilter.processRoot(
                   foreach name in nameList {
                      {
                         let fieldName = "str_%s" (name);
-                        let runtime = "Lns_getVM().String_%s" (name);
+                        let runtime = "GETVM.String_%s" (name);
                         itemStatList.insert( `{ builtinFuncs.,,,fieldName: ,,runtime, } );
                      }
                      {
                         let fieldName = "string_%s" (name);
-                        let runtime = "Lns_getVM().String_%s" (name);
+                        let runtime = "GETVM.String_%s" (name);
                         itemStatList.insert( `{ builtinFuncs.,,,fieldName: ,,runtime, } );
                      }
                   }
@@ -1430,24 +1444,24 @@ pub override fn convFilter.processRoot(
    builtin2runtime[ builtinFuncs.lns_type ] = "Lns_type";
    builtin2runtime[ builtinFuncs.lns_require ] = "Lns_require";
    builtin2runtime[ builtinFuncs.lns_tonumber ] = "Lns_tonumber";
-   builtin2runtime[ builtinFuncs.lns__load ] = "Lns_getVM().Load";
-   builtin2runtime[ builtinFuncs.lns_loadfile ] = "Lns_getVM().Loadfile";
-   builtin2runtime[ builtinFuncs.lns_expandLuavalMap ] = "Lns_getVM().ExpandLuavalMap";
+   builtin2runtime[ builtinFuncs.lns__load ] = "GETVM.Load";
+   builtin2runtime[ builtinFuncs.lns_loadfile ] = "GETVM.Loadfile";
+   builtin2runtime[ builtinFuncs.lns_expandLuavalMap ] = "GETVM.ExpandLuavalMap";
 
-   builtin2runtime[ builtinFuncs.string_dump ] = "Lns_getVM().String_dump";
+   builtin2runtime[ builtinFuncs.string_dump ] = "GETVM.String_dump";
    
    builtin2runtime[ builtinFuncs.io_open ] = "Lns_io_open";
-   builtin2runtime[ builtinFuncs.io_popen ] = "Lns_getVM().IO_popen";
-   builtin2runtime[ builtinFuncs.package_searchpath ] = "Lns_getVM().Package_searchpath";
-   builtin2runtime[ builtinFuncs.os_clock ] = "Lns_getVM().OS_clock";
-   builtin2runtime[ builtinFuncs.os_exit ] = "Lns_getVM().OS_exit";
-   builtin2runtime[ builtinFuncs.os_remove ] = "Lns_getVM().OS_remove";
-   builtin2runtime[ builtinFuncs.os_date ] = "Lns_getVM().OS_date";
-   builtin2runtime[ builtinFuncs.os_time ] = "Lns_getVM().OS_time";
-   builtin2runtime[ builtinFuncs.os_difftime ] = "Lns_getVM().OS_difftime";
-   builtin2runtime[ builtinFuncs.os_rename ]= "Lns_getVM().OS_rename";
-   builtin2runtime[ builtinFuncs.math_random ] = "Lns_getVM().Math_random";
-   builtin2runtime[ builtinFuncs.math_randomseed ] = "Lns_getVM().Math_randomseed";
+   builtin2runtime[ builtinFuncs.io_popen ] = "GETVM.IO_popen";
+   builtin2runtime[ builtinFuncs.package_searchpath ] = "GETVM.Package_searchpath";
+   builtin2runtime[ builtinFuncs.os_clock ] = "GETVM.OS_clock";
+   builtin2runtime[ builtinFuncs.os_exit ] = "GETVM.OS_exit";
+   builtin2runtime[ builtinFuncs.os_remove ] = "GETVM.OS_remove";
+   builtin2runtime[ builtinFuncs.os_date ] = "GETVM.OS_date";
+   builtin2runtime[ builtinFuncs.os_time ] = "GETVM.OS_time";
+   builtin2runtime[ builtinFuncs.os_difftime ] = "GETVM.OS_difftime";
+   builtin2runtime[ builtinFuncs.os_rename ]= "GETVM.OS_rename";
+   builtin2runtime[ builtinFuncs.math_random ] = "GETVM.Math_random";
+   builtin2runtime[ builtinFuncs.math_randomseed ] = "GETVM.Math_randomseed";
    
    
    self.builtin2runtime = builtin2runtime;
@@ -2846,7 +2860,9 @@ fn convFilter.outputForeachLua(
             tmpValName = "_";
          }
          if sortFlag {
-            self.writeln( "%s := Lns_getVM().SortMapKeyList( %s )" (sorted,tmpExp) );
+            self.writeln(
+               "%s := %s.SortMapKeyList( %s )"
+               (sorted, getLuavm( node.isThreading()), tmpExp) );
             self.writeln( "%s, %s := %s.Get1stFromMap()"
                (tmpIndex,tmpKey, sorted) );
             self.writeln( "for %s != nil {" (tmpIndex));
@@ -3897,7 +3913,8 @@ pub fn convFilter.outputCallPrefix(
    if extCallFlag {
       callKind = .LuaCall;
    }
-   
+
+   let getEnvTxt = getEnv( node.isThreading() );
    fn processNilAcc( workPrefixNode:&Nodes.Node ) {
       if not node.hasNilAccess() {
          return;
@@ -3905,11 +3922,11 @@ pub fn convFilter.outputCallPrefix(
       let retNum = #funcType.$retTypeInfoList;
       switch retNum {
          case 0 {
-            self.write( "Lns_NilAccCall0( Lns_GetEnv(), func () {" );
+            self.write( "Lns_NilAccCall0( %s, func () {" (getEnvTxt) );
          }
          case 1 {
 
-            self.write( "Lns_NilAccCall1( Lns_GetEnv(), func () LnsAny { return " );
+            self.write( "Lns_NilAccCall1( %s, func () LnsAny { return " (getEnvTxt));
          }
          default {
             if retNum <= MaxNilAccNum {
@@ -3918,8 +3935,8 @@ pub fn convFilter.outputCallPrefix(
                   anys = "%s,LnsAny" (anys);
                }
                self.write(
-                  "Lns_NilAccCall%d( Lns_GetEnv(), func () (%s) { return "
-                  (retNum, anys) );
+                  "Lns_NilAccCall%d( %s, func () (%s) { return "
+                  (retNum, getEnvTxt, anys) );
             }
             else {
                let mut args = "LnsAny";
@@ -3927,7 +3944,8 @@ pub fn convFilter.outputCallPrefix(
                   args = "%s,LnsAny" (args);
                }
                self.write(
-                  "lns_NilAccCall_%s( Lns_GetEnv(), func () (%s) { return " (nilAccName, args) );
+                  "lns_NilAccCall_%s( %s, func () (%s) { return "
+                  (nilAccName, getEnvTxt, args) );
             }
          }
       }
@@ -3937,8 +3955,9 @@ pub fn convFilter.outputCallPrefix(
          }
       }
 
-      self.write( "Lns_GetEnv().NilAccPop().(%s)"
-         (self.type2gotype( workPrefixNode.$expType.$nonnilableType ) ) );
+      self.write(
+         "%s.NilAccPop().(%s)"
+         (getEnvTxt, self.type2gotype( workPrefixNode.$expType.$nonnilableType ) ) );
    }
 
    let mut closeParen = false;
@@ -3963,7 +3982,7 @@ pub fn convFilter.outputCallPrefix(
          if node.hasNilAccess() {
             Util.err( "not support nilAccName" );
          }
-         if! let runtime = self.builtin2runtime[ funcType ] {
+         if! let runtime = self.getVM( node.isThreading(), funcType ) {
             callKind = .RuntimeCall( prefixNode );
             self.write( runtime );
          }
@@ -3971,8 +3990,8 @@ pub fn convFilter.outputCallPrefix(
          if not funcType.$staticFlag {
             if node.hasNilAccess() {
                if not prefixNode.hasNilAccess() {
-                  self.write( "Lns_GetEnv().NilAccFin(" );
-                  self.write( "Lns_GetEnv().NilAccPush(" );
+                  self.write( "%s.NilAccFin(" (getEnvTxt));
+                  self.write( "%s.NilAccPush(" (getEnvTxt) );
                   filter( prefixNode, self, node );
                   self.writeln( ") && " );
                } else {
@@ -4009,7 +4028,7 @@ pub fn convFilter.outputCallPrefix(
                   }
                   default {
                      let builtinFuncs = TransUnit.getBuiltinFunc();
-                     if! let runtime = self.builtin2runtime[ funcType ] {
+                     if! let runtime = self.getVM( node.isThreading(), funcType ) {
                         self.write ( runtime );
                      }
                      else {
@@ -4095,7 +4114,7 @@ pub override fn convFilter.processExpCall(
       if Ast.isBuiltin( funcType.$typeId ) {
          let builtinFuncs = TransUnit.getBuiltinFunc();
 
-         if! let runtime = self.builtin2runtime[ funcType ] {
+         if! let runtime = self.getVM( node.isThreading(), funcType ) {
             self.write( runtime );
          } else {
             switch funcType.$srcTypeInfo {
@@ -4115,7 +4134,7 @@ pub override fn convFilter.processExpCall(
          }
       } else {
          if funcType.$kind == .Ext {
-            self.write( "Lns_getVM().RunLoadedfunc" );
+            self.write( "%s.RunLoadedfunc" (getLuavm( node.isThreading() )) );
             callKind = .RunLoaded;
          } else {
             filter( node.$func, self, node );
@@ -4461,10 +4480,11 @@ fn convFilter.processAndOr( node: Nodes.ExpOp2Node,
       }
       return false;
    }
-   
+
+   let getEnvTxt = getEnv( node.isThreading() );
    let mut firstFlag = not isAndOr( parent );
    if firstFlag {
-      self.writeln( "Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||" );
+      self.writeln( "%s.PopVal( %s.IncStack() ||"  (getEnvTxt,getEnvTxt));
       self.pushIndent( ## );
    }
 
@@ -4480,7 +4500,7 @@ fn convFilter.processAndOr( node: Nodes.ExpOp2Node,
       filter( node.$exp1, self, node );
    }
    else {
-      self.write( "Lns_GetEnv().SetStackVal( " );
+      self.write( "%s.SetStackVal( " (getEnvTxt));
       filter( node.$exp1, self, node );
       self.write( ") " );
    }
@@ -4489,7 +4509,7 @@ fn convFilter.processAndOr( node: Nodes.ExpOp2Node,
       filter( node.$exp2, self, node );
    }
    else {
-      self.write( "Lns_GetEnv().SetStackVal( " );
+      self.write( "%s.SetStackVal( " (getEnvTxt));
       filter( node.$exp2, self, node );
       self.write( ") " );
    }
@@ -4599,14 +4619,17 @@ pub override fn convFilter.processExpRef(
 pub override fn convFilter.processExpRefItem(
    node: Nodes.ExpRefItemNode, opt: Opt ) mut
 {
+   let getEnvTxt = getEnv( node.isThreading());
    let prefixType = node.$val.$expType.$nonnilableType;
    switch prefixType.$kind {
       case .Ext {
          if node.$nilAccess {
-            self.write( "Lns_GetEnv().NilAccFin( Lns_GetEnv().NilAccPush( " );
+            self.write( "%s.NilAccFin( %s.NilAccPush( " (getEnvTxt, getEnvTxt) );
             filter( node.$val, self, node );
             self.write( ") && " );
-            self.write( "Lns_GetEnv().NilAccPush( Lns_GetEnv().NilAccPop().(*Lns_luaValue)" );
+            self.write(
+               "%s.NilAccPush( %s.NilAccPop().(*Lns_luaValue)"
+               (getEnvTxt, getEnvTxt ) );
          } else {
             filter( node.$val, self, node );
             if prefixType.$extedType.$kind == .Stem {
@@ -4625,14 +4648,15 @@ pub override fn convFilter.processExpRefItem(
       case .List, .Array {
          if node.$nilAccess {
             if not node.$val.hasNilAccess() {
-               self.writeln( "Lns_GetEnv().NilAccFin( Lns_GetEnv().NilAccPush(" );
+               self.writeln( "%s.NilAccFin( %s.NilAccPush(" (getEnvTxt, getEnvTxt) );
                filter( node.$val, self, node );
                self.writeln( ") && " );
             } else {
                filter( node.$val, self, node );
                self.writeln( "&&" );
             }
-            self.write( "Lns_GetEnv().NilAccPush( Lns_GetEnv().NilAccPop().(*LnsList)" );
+            self.write( "%s.NilAccPush( %s.NilAccPop().(*LnsList)"
+                        (getEnvTxt, getEnvTxt));
             self.write( ".GetAt(" );
             filter( unwrap node.$index, self, node );
             self.write( ")" );
@@ -4649,14 +4673,14 @@ pub override fn convFilter.processExpRefItem(
       case .Map {
          if node.$nilAccess {
             if not node.$val.hasNilAccess() {
-               self.writeln( "Lns_GetEnv().NilAccFin( Lns_GetEnv().NilAccPush(" );
+               self.writeln( "%s.NilAccFin( %s.NilAccPush(" (getEnvTxt,getEnvTxt));
                filter( node.$val, self, node );
                self.writeln( ") && " );
             } else {
                filter( node.$val, self, node );
                self.writeln( "&&" );
             }
-            self.write( "Lns_GetEnv().NilAccPush( Lns_GetEnv().NilAccPop().(*LnsMap)" );
+            self.write( "%s.NilAccPush( %s.NilAccPop().(*LnsMap)" (getEnvTxt,getEnvTxt));
          } else {
             filter( node.$val, self, node );
             if prefixType.$kind == .Stem {
@@ -4725,6 +4749,8 @@ pub override fn convFilter.processRefField(
       }
    }
 
+   let getEnvTxt = getEnv( node.isThreading() );
+
    let openParenNum;
    if not node.hasNilAccess() {
       openParenNum = 0;
@@ -4735,22 +4761,23 @@ pub override fn convFilter.processRefField(
       }
    } else {
       if not node.$prefix.hasNilAccess() {
-         self.write( "Lns_GetEnv().NilAccFin(" );
-         self.write( "Lns_GetEnv().NilAccPush(" );
+         self.write( "%s.NilAccFin(" (getEnvTxt));
+         self.write( "%s.NilAccPush(" (getEnvTxt));
          filter( node.$prefix, self, node );
          self.writeln( ") && " );
       } else {
          filter( node.$prefix, self, node );
          self.writeln( "&&" );
       }
-      self.write( "Lns_GetEnv().NilAccPush(" );
+      self.write( "%s.NilAccPush(" (getEnvTxt));
       if opt.parent.hasNilAccess() {
          openParenNum = 1;
       } else {
          openParenNum = 2;
       }
-      self.write( "Lns_GetEnv().NilAccPop().(%s)"
-         (self.type2gotype( node.$prefix.$expType.$nonnilableType ) ));
+      self.write(
+         "%s.NilAccPop().(%s)"
+         (getEnvTxt, self.type2gotype( node.$prefix.$expType.$nonnilableType ) ));
    }
 
    
@@ -4984,7 +5011,8 @@ pub override fn convFilter.processLiteralString(
 {
    let txt = node.$token.txt;
    if! let expList = node.$dddParam {
-      self.write( 'Lns_getVM().String_format(%s, ' (str2gostr(txt)));
+      self.write( '%s.String_format(%s, '
+                  (getLuavm( node.isThreading() ), str2gostr(txt)));
       self.processSetFromExpList(
          self.getConvExpName( node.$id, expList ),  [ Ast.builtinTypeDDD ], expList );
       self.write( ")" );
@@ -5033,6 +5061,8 @@ pub override fn convFilter.processLuneControl(
       case .load__lune_module {
       }
       case .limit_conv_code( _ ) {
+      }
+      case .use_async {
       }
       case .run_async_pipe {
          self.writeln( "go self.FP.Loop()" );

@@ -1,0 +1,5 @@
+class Test extend LnsThread {
+   pub fn start() {
+      _lune_control run_async_pipe;
+   }
+}

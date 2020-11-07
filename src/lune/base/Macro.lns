@@ -800,7 +800,7 @@ pub fn MacroCtrl.expandSymbol(
       expListNode,
       Nodes.ExpListNode.create(
          nodeManager, exp.$pos, self.analyzeInfo.$mode == .AnalyzeArg,
-         exp.$expTypeList, [ dddNode ], nil, false ));
+         exp.$expTypeList, [ dddNode ], nil, false ), false );
    return literalStr;
 }
 

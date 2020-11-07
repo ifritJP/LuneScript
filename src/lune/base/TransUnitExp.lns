@@ -396,11 +396,14 @@ fn TransUnit.analyzeExpRefItem(
          }
       }
    }
-   
-   
+
+   let mut threading = false;
+   if nilAccess {
+      threading = self.checkThreading( token.pos );
+   }   
    return Nodes.ExpRefItemNode.create(
       self.nodeManager, token.pos, self.macroCtrl.isInAnalyzeArgMode(),
-      [ typeInfo ], exp, nilAccess, nil, indexExp );
+      [ typeInfo ], exp, nilAccess, threading, nil, indexExp );
 }
 
 
@@ -1548,10 +1551,23 @@ fn TransUnit.processFunc(
          self.addErrMess( firstToken.pos, err );
       }
    }
-   
+
+   let threading;
+   if nilAccess or funcType.$kind == .Ext or
+      funcType.$parentInfo.$nonnilableType == Ast.builtinTypeString
+   {
+      threading = self.checkThreading( firstToken.pos );
+      if threading and funcType.$kind == .Ext {
+         // Luaval は VM を識別する必要がある。
+         // 現状は VM を識別しないので、 別スレッドでの luaval の使用はサポートしない。
+         self.addErrMess( firstToken.$pos, "not support to use Luaval on thread."  );
+      }
+   } else {
+      threading = false;
+   }
    return Nodes.ExpCallNode.create(
       self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
-      retTypeInfoList, funcExp, errorFuncFlag, nilAccess, argList );
+      retTypeInfoList, funcExp, errorFuncFlag, nilAccess, threading, argList );
 }
 
 
@@ -1625,6 +1641,9 @@ fn TransUnit.analyzeExpCall(
    if funcTypeInfo.get_kind() == .Macro {
       //self.macroCtrl.finishMacroMode();
       exp = self.evalMacro( firstToken, funcTypeInfo, argList );
+      if self.checkThreading( firstToken.pos ) {
+         self.addErrMess( firstToken.pos, "not support to use a macro" );
+      }
    }
    else {
       // processFunc
@@ -2168,7 +2187,8 @@ fn TransUnit.analyzeExpField(
          self.macroCtrl.isInAnalyzeArgMode(),
          [ prefixExp.$expType ], prefixExp );
    }
-   
+
+   let threading;
    let mut accessNil = false;
    if mode == .FieldNil or mode == .GetNil {
       accessNil = true;
@@ -2177,6 +2197,9 @@ fn TransUnit.analyzeExpField(
             prefixExp.$pos,
             "This is not nilable. -- %s" (prefixExp.$expType.getTxt(##)) ); 
       }
+      threading = self.checkThreading( firstToken.pos );
+   } else {
+      threading = false;
    }
    if self.macroCtrl.$analyzeInfo.isAnalyzingSymArg() {
       if accessNil {
@@ -2185,11 +2208,12 @@ fn TransUnit.analyzeExpField(
 
       // self.checkFieldComp(
       //    mode == .Get or mode == .GetNil, token, prefixExp );
+
       
       return Nodes.RefFieldNode.create(
          self.nodeManager, firstToken.pos,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeSymbol ],
-         fieldToken, nil, accessNil, prefixExp );
+         fieldToken, nil, accessNil, threading, prefixExp );
          //token, accessNil, unwrap prefixExp );
    }
 
@@ -2222,7 +2246,7 @@ fn TransUnit.analyzeExpField(
 
    self.checkFieldComp(
       mode == .Get or mode == .GetNil, fieldToken, prefixExp );
-   
+
    if accessNil {
       self.helperInfo.useNilAccess = true;
       switch prefixExpType.get_kind() {
@@ -2332,7 +2356,7 @@ fn TransUnit.analyzeExpField(
          }
          return Nodes.ExpRefItemNode.create(
             self.nodeManager, fieldToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
-            [ typeInfo ], prefixExp, accessNil, fieldToken.txt, nil );
+            [ typeInfo ], prefixExp, accessNil, threading, fieldToken.txt, nil );
       }
       default {
          if prefixExpType.equals( self.processInfo, Ast.builtinTypeStem ##) {
@@ -2342,7 +2366,7 @@ fn TransUnit.analyzeExpField(
             }
             return Nodes.ExpRefItemNode.create(
                self.nodeManager, fieldToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
-               [ typeInfo ], prefixExp, accessNil, fieldToken.txt, nil );
+               [ typeInfo ], prefixExp, accessNil, threading, fieldToken.txt, nil );
          }
          else {
             self.error( "illegal type -- %s, %s"
@@ -2466,19 +2490,28 @@ fn TransUnit.analyzeExpField(
    
    if extFlag {
       typeInfo = self.createExtType( firstToken.pos, typeInfo );
+
+      if self.checkThreading( firstToken.$pos ) {
+         // Luaval は VM を識別する必要がある。
+         // 現状は VM を識別しないので、 別スレッドでの luaval の使用はサポートしない。
+         self.addErrMess( firstToken.$pos, "not support to use Luaval on thread."  );
+      }
    }
+
+   
+
    if! getterTypeInfo {
       return Nodes.GetFieldNode.create(
          self.nodeManager, firstToken.pos,
          self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ],
-         fieldToken, accessSymbolInfo, accessNil, prefixExp, _exp );
+         fieldToken, accessSymbolInfo, accessNil, threading, prefixExp, _exp );
          //token, canBeLeft, accessNil, prefixExp, _exp );
    }
    else {
       return Nodes.RefFieldNode.create(
          self.nodeManager, firstToken.pos,
          self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ],
-         fieldToken, accessSymbolInfo, accessNil, prefixExp );
+         fieldToken, accessSymbolInfo, accessNil, threading, prefixExp );
    }
 }
 
@@ -2657,6 +2690,14 @@ fn TransUnit.analyzeExpSymbol(
                      "'_G' and '_ENV' only can access with transcompiling to lua." );
                }
             }
+         }
+
+         if typeInfo.$nonnilableType.$kind == .Ext and
+            self.checkThreading( symbolToken.$pos )
+         {
+            // Luaval は VM を識別する必要がある。
+            // 現状は VM を識別しないので、 別スレッドでの luaval の使用はサポートしない。
+            self.addErrMess( symbolToken.$pos, "not support to use Luaval on thread."  );
          }
          
          exp = Nodes.ExpRefNode.create(
@@ -2922,13 +2963,13 @@ fn TransUnit.analyzeExpOp2(
    firstToken: &Parser.Token, mut exp: Nodes.Node, prevOpLevel: int! ) mut : Nodes.Node
 {
    while true {
-      let nextToken = self.getTokenNoErr();
-      let opTxt = nextToken.txt;
+      let opToken = self.getTokenNoErr();
+      let opTxt = opToken.txt;
 
-      if nextToken.txt == "@@" or nextToken.txt == "@@@" or nextToken.txt ==  "@@=" {
+      if opToken.txt == "@@" or opToken.txt == "@@@" or opToken.txt ==  "@@=" {
          exp = self.analyzeExpCast( firstToken, opTxt, exp );
       }
-      elseif nextToken.kind == Parser.TokenKind.Ope {
+      elseif opToken.kind == Parser.TokenKind.Ope {
          if Parser.isOp2( opTxt ) {
             if opTxt ~= "=" and not exp.canBeRight( self.processInfo ) {
                self.addErrMess(
@@ -2963,7 +3004,7 @@ fn TransUnit.analyzeExpOp2(
             }
 
             if opTxt == "=" {
-               return self.analyzeExpOpSet( exp, nextToken, expectTypeList );
+               return self.analyzeExpOpSet( exp, opToken, expectTypeList );
             }
 
             exp = self.MultiTo1( exp );
@@ -3169,7 +3210,7 @@ fn TransUnit.analyzeExpOp2(
                   }
                   else {
                      self.addErrMess(
-                        nextToken.pos,
+                        opToken.pos,
                         "no numeric type '%s' or '%s'"
                         ( exp1Type.getTxt(self.typeNameCtrl## ),
                           exp2Type.getTxt(self.typeNameCtrl## ) ) );   
@@ -3178,12 +3219,12 @@ fn TransUnit.analyzeExpOp2(
                }
                case "~=", "==" {
                   exp, exp2 = self.analyzeExpOpEquals(
-                     firstToken.pos, nextToken, exp, exp2 );
+                     firstToken.pos, opToken, exp, exp2 );
                   retType = Ast.builtinTypeBool;
                }
                case "^", "|", "~", "&", "|<<", "|>>" {
                   if self.targetLuaVer.$hasBitOp == .Cant {
-                     self.addErrMess( nextToken.pos,
+                     self.addErrMess( opToken.pos,
                                       "this lua version can't use bit operand." );
                   }
                   
@@ -3193,7 +3234,7 @@ fn TransUnit.analyzeExpOp2(
                         self.processInfo, exp2Type, .Logical, {} )
                   {
                      self.addErrMess(
-                        nextToken.pos,
+                        opToken.pos,
                         "no int type '%s' or '%s'"
                         ( exp1Type.getTxt(##), exp2Type.getTxt(##) ) );
                   }
@@ -3204,7 +3245,7 @@ fn TransUnit.analyzeExpOp2(
                      not exp2Type.equals( self.processInfo, Ast.builtinTypeString ##)
                   {
                      self.addErrMess(
-                        nextToken.pos,
+                        opToken.pos,
                         "no string type '%s' or '%s'"
                         ( exp1Type.getTxt(##), exp2Type.getTxt(##) ) );
                   }
@@ -3221,7 +3262,7 @@ fn TransUnit.analyzeExpOp2(
                            self.processInfo, exp2Type, .Math, {} ) )   
                   {
                      self.addErrMess(
-                        nextToken.pos,
+                        opToken.pos,
                         "no numeric type '%s' or '%s'"
                         ( exp1Type.getTxt(##), exp2Type.getTxt(##) ) );
                   }
@@ -3252,9 +3293,20 @@ fn TransUnit.analyzeExpOp2(
             }
 
 
+            let threading;
+            switch opTxt {
+               case "and", "or" {
+                  threading = self.checkThreading( firstToken.pos );
+               }
+               default {
+                  threading = false;
+               }
+            }
+
+
             exp = Nodes.ExpOp2Node.create(
                self.nodeManager, firstToken.pos,
-               self.macroCtrl.isInAnalyzeArgMode(), [ retType ], nextToken,
+               self.macroCtrl.isInAnalyzeArgMode(), [ retType ], opToken, threading,
                self.nodeManager.MultiTo1( exp ), self.nodeManager.MultiTo1( exp2 ) );
          }
          else {
@@ -3316,7 +3368,7 @@ fn TransUnit.analyzeExpMacroStat( firstToken: &Parser.Token ) mut : Nodes.ExpMac
             token.kind, string.format( format, token.txt ), token.pos, consecutive ## );
          let literalStr = Nodes.LiteralStringNode.create(
             self.nodeManager, token.pos, self.macroCtrl.isInAnalyzeArgMode(),
-            [ Ast.builtinTypeString ], newToken, nil, nil );
+            [ Ast.builtinTypeString ], newToken, nil, nil, false );
          expStrList.insert( literalStr );
       }
       prevToken = token;
@@ -3534,7 +3586,8 @@ fn TransUnit.analyzeStrConst(
 
       let mut workExp:Nodes.Node = Nodes.LiteralStringNode.create(
          self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
-         [ Ast.builtinTypeString ], token, param, dddParam );
+         [ Ast.builtinTypeString ], token, param, dddParam,
+         self.checkThreading( firstToken.pos ) );
       if nextToken.txt == "[" or nextToken.txt == "$[" {
          exp = self.analyzeExpRefItem( nextToken, workExp, nextToken.txt == "$[" );
       }
@@ -3548,7 +3601,7 @@ fn TransUnit.analyzeStrConst(
    else {
       exp = Nodes.LiteralStringNode.create(
          self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
-         [ Ast.builtinTypeString ], token, nil, nil );
+         [ Ast.builtinTypeString ], token, nil, nil, false );
    }
    return exp;
 }

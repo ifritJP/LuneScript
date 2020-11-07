@@ -62,3 +62,19 @@ pub fn getLineList( txt:str ) : List<str> {
    // }
    return list;
 }
+
+pub class Builder {
+   let mut txt: str { pub };
+   pub fn __init() {
+      self.txt = "";
+   }
+   pub fn add( val: str ) mut {
+      self.txt = self.txt .. val;
+   }
+   pub fn len() : int {
+      return #self.txt;
+   }
+   pub fn clear() mut {
+      self.txt = "";
+   }
+}

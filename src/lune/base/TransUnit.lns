@@ -826,7 +826,6 @@ alias で置き換えている元の Type → alias の型
       return typeInfo;
    }
 
-
    pri fn getCurrentNamespaceTypeInfo() : &Ast.TypeInfo {
       // let typeInfo = Ast.headTypeInfo;
       // let mut scope = self.scope;
@@ -2119,6 +2118,21 @@ pub fn isStrFormFunc( typeInfo:&Ast.TypeInfo ):bool {
 }
 
 
+pri fn TransUnit.checkThreading( pos:&Parser.Position ) mut : bool {
+   let curClass = self.getCurrentClass();
+   if curClass ~= Ast.headTypeInfo {
+      if curClass.isInheritFrom( self.processInfo, builtinFunc.lnsthread_, nil ) {
+         return true;
+      }
+   }
+   if self.helperInfo.pragmaSet.has( LuneControl.Pragma.use_async ) {
+      // use_async を宣言していて、 threading でない場合はエラー
+      self.addErrMess( pos, "This operation need perform on thread" );
+   }
+   return false;
+}
+
+
 let mut readyBuiltin = false;
 
 fn TransUnit.registBuiltInScope() mut {
@@ -2825,7 +2839,14 @@ fn TransUnit.analyzeLuneControl(
          }
          pragma = LuneControl.Pragma.limit_conv_code( codeSet );
       }
+      case "use_async" {
+         pragma = LuneControl.Pragma.use_async;
+      }
       case "run_async_pipe" {
+         if not self.helperInfo.pragmaSet.has( LuneControl.Pragma.use_async ) {
+            self.addErrMess( nextToken.pos, "must set '_lune_control ues_async'" );
+         }
+         
          let nowMethod = self.getCurrentNamespaceTypeInfo();
          let nowClass = nowMethod.$parentInfo;
          let mut valid = false;
@@ -4224,17 +4245,24 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
 
    self.popScope();
 
+   let threading;
+   if exp.$expType.$kind == .Ext {
+      threading = self.checkThreading( token.pos );
+   } else {
+      threading = false;
+   }
+   
    if sortFlag {
       return Nodes.ForsortNode.create(
          self.nodeManager, token.pos,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
-         mainSym, subSym, exp, block, sortFlag );
+         mainSym, subSym, exp, threading, block, sortFlag );
    }
    else {
       return Nodes.ForeachNode.create(
          self.nodeManager, token.pos,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
-         mainSym, subSym, exp, block );
+         mainSym, subSym, exp, threading, block );
    }
 }
 

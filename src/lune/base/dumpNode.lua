@@ -912,7 +912,8 @@ end
 
 function dumpFilter:processExpCall( node, opt )
 
-   self:dump( opt, node, string.format( "[nilacc:%s] -> %s", node:get_nilAccess(), getTypeListTxt( node:get_expTypeList() )) )
+   local mess = string.format( "[nilacc:%s,thread:%s] -> %s", node:get_nilAccess(), node:get_threading(), getTypeListTxt( node:get_expTypeList() ))
+   self:dump( opt, node, mess )
    filter( node:get_func(  ), self, opt:nextOpt(  ) )
    do
       local _exp = node:get_argList(  )
@@ -922,6 +923,7 @@ function dumpFilter:processExpCall( node, opt )
    end
    
 end
+
 
 
 function dumpFilter:processExpList( node, opt )
