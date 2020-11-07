@@ -117,9 +117,9 @@ func (self *Testing_Result) IsTrue(val1 LnsAny,val1txt string,msg LnsAny,mod str
         
         return true
     }
-    self.FP.Err(Lns_getVM().String_format("not true -- %s:%s:[%s]\n", []LnsAny{Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( msg) ||
-        Lns_setStackVal( "") ).(string), val1txt, val1}), mod, lineNo)
+    self.FP.Err(Lns_getVM().String_format("not true -- %s:%s:[%s]\n", []LnsAny{Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( msg) ||
+        Lns_GetEnv().SetStackVal( "") ).(string), val1txt, val1}), mod, lineNo)
     return false
 }
 
@@ -130,9 +130,9 @@ func (self *Testing_Result) IsNotTrue(val1 LnsAny,val1txt string,msg LnsAny,mod 
         
         return true
     }
-    self.FP.Err(Lns_getVM().String_format("is true -- %s:%s:[%s]\n", []LnsAny{Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( msg) ||
-        Lns_setStackVal( "") ).(string), val1txt, val1}), mod, lineNo)
+    self.FP.Err(Lns_getVM().String_format("is true -- %s:%s:[%s]\n", []LnsAny{Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( msg) ||
+        Lns_GetEnv().SetStackVal( "") ).(string), val1txt, val1}), mod, lineNo)
     return false
 }
 
@@ -143,9 +143,9 @@ func (self *Testing_Result) IsNil(val1 LnsAny,val1txt string,msg LnsAny,mod stri
         
         return true
     }
-    self.FP.Err(Lns_getVM().String_format("is not nil -- %s:%s:[%s]\n", []LnsAny{Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( msg) ||
-        Lns_setStackVal( "") ).(string), val1txt, val1}), mod, lineNo)
+    self.FP.Err(Lns_getVM().String_format("is not nil -- %s:%s:[%s]\n", []LnsAny{Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( msg) ||
+        Lns_GetEnv().SetStackVal( "") ).(string), val1txt, val1}), mod, lineNo)
     return false
 }
 
@@ -156,9 +156,9 @@ func (self *Testing_Result) CheckEq(val1 LnsAny,val2 LnsAny,val1txt string,val2t
         
         return true
     }
-    self.FP.Err(Lns_getVM().String_format("not equal -- %s:%s:[%s] != %s:[%s]\n", []LnsAny{Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( msg) ||
-        Lns_setStackVal( "") ).(string), val1txt, val1, val2txt, val2}), mod, lineNo)
+    self.FP.Err(Lns_getVM().String_format("not equal -- %s:%s:[%s] != %s:[%s]\n", []LnsAny{Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( msg) ||
+        Lns_GetEnv().SetStackVal( "") ).(string), val1txt, val1, val2txt, val2}), mod, lineNo)
     return false
 }
 
@@ -169,9 +169,9 @@ func (self *Testing_Result) CheckNotEq(val1 LnsAny,val2 LnsAny,val1txt string,va
         
         return true
     }
-    self.FP.Err(Lns_getVM().String_format("equal -- %s:%s:[%s] == %s:[%s]\n", []LnsAny{Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( msg) ||
-        Lns_setStackVal( "") ).(string), val1txt, val1, val2txt, val2}), mod, lineNo)
+    self.FP.Err(Lns_getVM().String_format("equal -- %s:%s:[%s] == %s:[%s]\n", []LnsAny{Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( msg) ||
+        Lns_GetEnv().SetStackVal( "") ).(string), val1txt, val1, val2txt, val2}), mod, lineNo)
     return false
 }
 

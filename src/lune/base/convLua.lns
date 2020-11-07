@@ -1384,7 +1384,9 @@ pub override fn convFilter.processDeclClass(
 
    let baseInfo = classTypeInfo.get_baseTypeInfo();
    let mut baseTxt = "";
-   if baseInfo.get_typeId() ~= Ast.rootTypeId {
+   if baseInfo.get_typeId() ~= Ast.rootTypeId and
+      baseInfo ~= TransUnit.getBuiltinFunc().lnsthread_ 
+   {
       baseTxt = "__index = %s" ( self.getFullName( baseInfo ) );
    }
 
@@ -1512,7 +1514,9 @@ function %s:__init( %s )
               argTxt, className, argTxt ) );
       self.pushIndent(##);
 
-      if baseInfo ~= Ast.headTypeInfo {
+      if baseInfo ~= Ast.headTypeInfo and
+         baseInfo ~= TransUnit.getBuiltinFunc().lnsthread_ 
+      {
          // Super クラスを持つ場合、その Super クラスの __init をコールする。
          if(unwrap baseInfo.$scope).getSymbolInfoChild( "__init" ) {
             self.write( "%s.__init( self" ( self.getFullName( baseInfo ) ) );
@@ -1877,6 +1881,11 @@ pub override fn convFilter.processExpCallSuperCtor(
    node: Nodes.ExpCallSuperCtorNode, opt: Opt ) mut
 {
    let typeInfo:Ast.TypeInfo = node.$superType;
+
+   if typeInfo == TransUnit.getBuiltinFunc().lnsthread_ {
+      return;
+   }
+   
    self.write( "%s.%s( self"
       ( self.getFullName( typeInfo ), node.$methodType.$rawTxt ) );
 
@@ -1891,6 +1900,7 @@ pub override fn convFilter.processExpCallSuper(
    node: Nodes.ExpCallSuperNode, opt: Opt ) mut
 {
    let typeInfo:Ast.TypeInfo = node.$superType;
+
    self.write( "%s.%s( self"
       ( self.getFullName( typeInfo ), node.$methodType.$rawTxt ) );
 

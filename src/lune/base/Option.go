@@ -74,7 +74,7 @@ func Option_convExp424(arg1 []LnsAny) LnsAny {
 }
 // 47: decl @lune.@base.@Option.getBuildCount
 func Option_getBuildCount_1015_() LnsInt {
-    return 5801
+    return 5891
 }
 
 // 72: decl @lune.@base.@Option.getRuntimeModule
@@ -87,9 +87,9 @@ func Option_outputLuneMod(path LnsAny) LnsAny {
     var lune_path string
     lune_path = "runtime.lua"
     if path != nil{
-        path_2404 := path.(string)
-        if path_2404 != ""{
-            lune_path = path_2404
+        path_2403 := path.(string)
+        if path_2403 != ""{
+            lune_path = path_2403
             
         }
     }
@@ -344,15 +344,15 @@ func Option_analyze(argList *LnsList) *Option_Option {
         
     }
     if option.Mode != Option_ModeKind__Builtin{
-        if Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( option.ScriptPath == "") ||
-            Lns_setStackVal( option.Mode == Option_ModeKind__Unknown) ).(bool){
-            analyze__printUsage_1060_(Lns_popVal( Lns_incStack() ||
-                Lns_setStackVal( (Lns_popVal( Lns_incStack() ||
-                    Lns_setStackVal( argList.Len() == 0) ||
-                    Lns_setStackVal( argList.GetAt(1).(string) == "") ).(bool))) &&
-                Lns_setStackVal( 0) ||
-                Lns_setStackVal( 1) ).(LnsInt))
+        if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( option.ScriptPath == "") ||
+            Lns_GetEnv().SetStackVal( option.Mode == Option_ModeKind__Unknown) ).(bool){
+            analyze__printUsage_1060_(Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                Lns_GetEnv().SetStackVal( (Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                    Lns_GetEnv().SetStackVal( argList.Len() == 0) ||
+                    Lns_GetEnv().SetStackVal( argList.GetAt(1).(string) == "") ).(bool))) &&
+                Lns_GetEnv().SetStackVal( 0) ||
+                Lns_GetEnv().SetStackVal( 1) ).(LnsInt))
         }
     }
     if useStdInFlag{

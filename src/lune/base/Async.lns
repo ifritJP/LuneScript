@@ -26,16 +26,17 @@ pub class PipeItem<T> {
    let item:T {pub};
 }
 
-pub abstract class Pipe<T> {
+pub abstract class Pipe<T> extend LnsThread {
    let mut pipe:__pipe<T>!;
    let mut started:bool;
    
    pro fn __init( pipe:__pipe<T>! ) {
+      super();
       self.pipe = pipe;
       self.started = false;
    }
 
-   pub abstract fn access() mut : PipeItem<T>!;
+   pro abstract fn access() mut : PipeItem<T>!;
 
    pub fn getNext() mut : PipeItem<T>! {
       if self.started {
@@ -49,7 +50,7 @@ pub abstract class Pipe<T> {
       return self.access();
    }
    
-   pri fn loop() mut {
+   pro override fn loop() mut {
       let! mut pipe = self.pipe {
          return;
       };

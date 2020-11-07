@@ -797,9 +797,9 @@ func Nodes_getNodeKindName(kind LnsInt) string {
 
 // 937: decl @lune.@base.@Nodes.getBreakKindForStmtList
 func Nodes_getBreakKindForStmtList_2493_(checkMode LnsInt,stmtList *LnsList) LnsInt {
-    if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( checkMode != Nodes_CheckBreakMode__Normal) &&
-        Lns_setStackVal( checkMode != Nodes_CheckBreakMode__Return) ).(bool)){
+    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( checkMode != Nodes_CheckBreakMode__Normal) &&
+        Lns_GetEnv().SetStackVal( checkMode != Nodes_CheckBreakMode__Return) ).(bool)){
         var kind LnsInt
         kind = Nodes_BreakKind__None
         for _, _stmt := range( stmtList.Items ) {
@@ -816,17 +816,17 @@ func Nodes_getBreakKindForStmtList_2493_(checkMode LnsInt,stmtList *LnsList) Lns
                     }
                 } else { 
                     if _switch6373 := work; _switch6373 == Nodes_BreakKind__None {
-                        if Lns_popVal( Lns_incStack() ||
-                            Lns_setStackVal( checkMode == Nodes_CheckBreakMode__Normal) ||
-                            Lns_setStackVal( checkMode == Nodes_CheckBreakMode__Return) ).(bool){
+                        if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                            Lns_GetEnv().SetStackVal( checkMode == Nodes_CheckBreakMode__Normal) ||
+                            Lns_GetEnv().SetStackVal( checkMode == Nodes_CheckBreakMode__Return) ).(bool){
                             if false{
                                 return Nodes_BreakKind__None
                             }
                         }
                     } else {
-                        if Lns_popVal( Lns_incStack() ||
-                            Lns_setStackVal( kind == Nodes_BreakKind__None) ||
-                            Lns_setStackVal( kind > work) ).(bool){
+                        if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                            Lns_GetEnv().SetStackVal( kind == Nodes_BreakKind__None) ||
+                            Lns_GetEnv().SetStackVal( kind > work) ).(bool){
                             kind = work
                             
                         }
@@ -940,9 +940,9 @@ func Nodes_enumLiteral2Literal_9538_(obj LnsAny)(LnsAny, LnsAny) {
 
 // 2751: decl @lune.@base.@Nodes.hasMultiValNode
 func Nodes_hasMultiValNode(node *Nodes_Node) bool {
-    return Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( node.FP.Get_expTypeList().Len() > 1) ||
-        Lns_setStackVal( node.FP.Get_expType().FP.Get_kind() == Ast_TypeInfoKind__DDD) ).(bool)
+    return Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( node.FP.Get_expTypeList().Len() > 1) ||
+        Lns_GetEnv().SetStackVal( node.FP.Get_expType().FP.Get_kind() == Ast_TypeInfoKind__DDD) ).(bool)
 }
 
 // 2772: decl @lune.@base.@Nodes.getUnwraped
@@ -1019,8 +1019,8 @@ func (self *Nodes_SimpleModuleInfoManager) GetModuleInfo(arg1 *Ast_TypeInfo) Lns
 // 36: DeclConstr
 func (self *Nodes_SimpleModuleInfoManager) InitNodes_SimpleModuleInfoManager(moduleInfoManager LnsAny) {
     if moduleInfoManager != nil{
-        moduleInfoManager_2310 := moduleInfoManager.(Ast_ModuleInfoManager)
-        self.ModuleInfoManager = moduleInfoManager_2310
+        moduleInfoManager_2309 := moduleInfoManager.(Ast_ModuleInfoManager)
+        self.ModuleInfoManager = moduleInfoManager_2309
         
     } else {
         self.ModuleInfoManager = Ast_DummyModuleInfoManager_get_instance().FP
@@ -1186,8 +1186,8 @@ func (self *Nodes_Filter) InitNodes_Filter(errorOnDefault bool,moduleTypeInfo Ln
     var process func() *Ast_TypeNameCtrl
     process = func() *Ast_TypeNameCtrl {
         if moduleTypeInfo != nil{
-            moduleTypeInfo_2340 := moduleTypeInfo.(*Ast_TypeInfo)
-            return NewAst_TypeNameCtrl(moduleTypeInfo_2340)
+            moduleTypeInfo_2339 := moduleTypeInfo.(*Ast_TypeInfo)
+            return NewAst_TypeNameCtrl(moduleTypeInfo_2339)
         }
         return Ast_defaultTypeNameCtrl
     }
@@ -4908,17 +4908,17 @@ func (self *Nodes_IfNode) GetBreakKind(checkMode LnsInt) LnsInt {
             }
         } else { 
             if _switch6886 := work; _switch6886 == Nodes_BreakKind__None {
-                if Lns_popVal( Lns_incStack() ||
-                    Lns_setStackVal( checkMode == Nodes_CheckBreakMode__Normal) ||
-                    Lns_setStackVal( checkMode == Nodes_CheckBreakMode__Return) ).(bool){
+                if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                    Lns_GetEnv().SetStackVal( checkMode == Nodes_CheckBreakMode__Normal) ||
+                    Lns_GetEnv().SetStackVal( checkMode == Nodes_CheckBreakMode__Return) ).(bool){
                     if true{
                         return Nodes_BreakKind__None
                     }
                 }
             } else {
-                if Lns_popVal( Lns_incStack() ||
-                    Lns_setStackVal( kind == Nodes_BreakKind__None) ||
-                    Lns_setStackVal( kind > work) ).(bool){
+                if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                    Lns_GetEnv().SetStackVal( kind == Nodes_BreakKind__None) ||
+                    Lns_GetEnv().SetStackVal( kind > work) ).(bool){
                     kind = work
                     
                 }
@@ -4930,11 +4930,11 @@ func (self *Nodes_IfNode) GetBreakKind(checkMode LnsInt) LnsInt {
             
         }
     }
-    if Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( hasElseFlag) ||
-        Lns_setStackVal( (Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( checkMode != Nodes_CheckBreakMode__Normal) &&
-            Lns_setStackVal( checkMode != Nodes_CheckBreakMode__Return) ).(bool))) ).(bool){
+    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( hasElseFlag) ||
+        Lns_GetEnv().SetStackVal( (Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( checkMode != Nodes_CheckBreakMode__Normal) &&
+            Lns_GetEnv().SetStackVal( checkMode != Nodes_CheckBreakMode__Return) ).(bool))) ).(bool){
         return kind
     }
     return Nodes_BreakKind__None
@@ -5375,9 +5375,9 @@ func (self *Nodes_SwitchNode) GetBreakKind(checkMode LnsInt) LnsInt {
         var work LnsInt
         work = caseInfo.FP.Get_block().FP.GetBreakKind(checkMode)
         var goNext bool
-        goNext = Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( (work == Nodes_BreakKind__None)) ||
-            Lns_setStackVal( Lns_op_not(fullCase)) ).(bool)
+        goNext = Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( (work == Nodes_BreakKind__None)) ||
+            Lns_GetEnv().SetStackVal( Lns_op_not(fullCase)) ).(bool)
         if checkMode == Nodes_CheckBreakMode__IgnoreFlowReturn{
             if work == Nodes_BreakKind__Return{
                 return Nodes_BreakKind__Return
@@ -5387,17 +5387,17 @@ func (self *Nodes_SwitchNode) GetBreakKind(checkMode LnsInt) LnsInt {
             }
         } else { 
             if _switch8203 := work; _switch8203 == Nodes_BreakKind__None {
-                if Lns_popVal( Lns_incStack() ||
-                    Lns_setStackVal( checkMode == Nodes_CheckBreakMode__Normal) ||
-                    Lns_setStackVal( checkMode == Nodes_CheckBreakMode__Return) ).(bool){
+                if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                    Lns_GetEnv().SetStackVal( checkMode == Nodes_CheckBreakMode__Normal) ||
+                    Lns_GetEnv().SetStackVal( checkMode == Nodes_CheckBreakMode__Return) ).(bool){
                     if goNext{
                         return Nodes_BreakKind__None
                     }
                 }
             } else {
-                if Lns_popVal( Lns_incStack() ||
-                    Lns_setStackVal( kind == Nodes_BreakKind__None) ||
-                    Lns_setStackVal( kind > work) ).(bool){
+                if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                    Lns_GetEnv().SetStackVal( kind == Nodes_BreakKind__None) ||
+                    Lns_GetEnv().SetStackVal( kind > work) ).(bool){
                     kind = work
                     
                 }
@@ -5420,17 +5420,17 @@ func (self *Nodes_SwitchNode) GetBreakKind(checkMode LnsInt) LnsInt {
                 }
             } else { 
                 if _switch8315 := work; _switch8315 == Nodes_BreakKind__None {
-                    if Lns_popVal( Lns_incStack() ||
-                        Lns_setStackVal( checkMode == Nodes_CheckBreakMode__Normal) ||
-                        Lns_setStackVal( checkMode == Nodes_CheckBreakMode__Return) ).(bool){
+                    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                        Lns_GetEnv().SetStackVal( checkMode == Nodes_CheckBreakMode__Normal) ||
+                        Lns_GetEnv().SetStackVal( checkMode == Nodes_CheckBreakMode__Return) ).(bool){
                         if true{
                             return Nodes_BreakKind__None
                         }
                     }
                 } else {
-                    if Lns_popVal( Lns_incStack() ||
-                        Lns_setStackVal( kind == Nodes_BreakKind__None) ||
-                        Lns_setStackVal( kind > work) ).(bool){
+                    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                        Lns_GetEnv().SetStackVal( kind == Nodes_BreakKind__None) ||
+                        Lns_GetEnv().SetStackVal( kind > work) ).(bool){
                         kind = work
                         
                     }
@@ -5584,9 +5584,9 @@ func (self *Nodes_WhileNode) Visit(visitor Nodes_NodeVisitor,depth LnsInt) bool 
 
 // 2120: decl @lune.@base.@Nodes.WhileNode.getBreakKind
 func (self *Nodes_WhileNode) GetBreakKind(checkMode LnsInt) LnsInt {
-    if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( checkMode != Nodes_CheckBreakMode__Normal) &&
-        Lns_setStackVal( checkMode != Nodes_CheckBreakMode__Return) ).(bool)){
+    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( checkMode != Nodes_CheckBreakMode__Normal) &&
+        Lns_GetEnv().SetStackVal( checkMode != Nodes_CheckBreakMode__Return) ).(bool)){
         var kind LnsInt
         kind = Nodes_BreakKind__None
         for _, _stmt := range( self.block.FP.Get_stmtList().Items ) {
@@ -5603,17 +5603,17 @@ func (self *Nodes_WhileNode) GetBreakKind(checkMode LnsInt) LnsInt {
                     }
                 } else { 
                     if _switch41216 := work; _switch41216 == Nodes_BreakKind__None {
-                        if Lns_popVal( Lns_incStack() ||
-                            Lns_setStackVal( checkMode == Nodes_CheckBreakMode__Normal) ||
-                            Lns_setStackVal( checkMode == Nodes_CheckBreakMode__Return) ).(bool){
+                        if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                            Lns_GetEnv().SetStackVal( checkMode == Nodes_CheckBreakMode__Normal) ||
+                            Lns_GetEnv().SetStackVal( checkMode == Nodes_CheckBreakMode__Return) ).(bool){
                             if false{
                                 return Nodes_BreakKind__None
                             }
                         }
                     } else {
-                        if Lns_popVal( Lns_incStack() ||
-                            Lns_setStackVal( kind == Nodes_BreakKind__None) ||
-                            Lns_setStackVal( kind > work) ).(bool){
+                        if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                            Lns_GetEnv().SetStackVal( kind == Nodes_BreakKind__None) ||
+                            Lns_GetEnv().SetStackVal( kind > work) ).(bool){
                             kind = work
                             
                         }
@@ -5648,17 +5648,17 @@ func (self *Nodes_WhileNode) GetBreakKind(checkMode LnsInt) LnsInt {
                     }
                 } else { 
                     if _switch41375 := work; _switch41375 == Nodes_BreakKind__None {
-                        if Lns_popVal( Lns_incStack() ||
-                            Lns_setStackVal( mode == Nodes_CheckBreakMode__Normal) ||
-                            Lns_setStackVal( mode == Nodes_CheckBreakMode__Return) ).(bool){
+                        if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                            Lns_GetEnv().SetStackVal( mode == Nodes_CheckBreakMode__Normal) ||
+                            Lns_GetEnv().SetStackVal( mode == Nodes_CheckBreakMode__Return) ).(bool){
                             if false{
                                 return Nodes_BreakKind__None
                             }
                         }
                     } else {
-                        if Lns_popVal( Lns_incStack() ||
-                            Lns_setStackVal( kind == Nodes_BreakKind__None) ||
-                            Lns_setStackVal( kind > work) ).(bool){
+                        if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                            Lns_GetEnv().SetStackVal( kind == Nodes_BreakKind__None) ||
+                            Lns_GetEnv().SetStackVal( kind > work) ).(bool){
                             kind = work
                             
                         }
@@ -5812,9 +5812,9 @@ func (self *Nodes_RepeatNode) Visit(visitor Nodes_NodeVisitor,depth LnsInt) bool
 
 // 1128: decl @lune.@base.@Nodes.RepeatNode.getBreakKind
 func (self *Nodes_RepeatNode) GetBreakKind(checkMode LnsInt) LnsInt {
-    if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( checkMode != Nodes_CheckBreakMode__Normal) &&
-        Lns_setStackVal( checkMode != Nodes_CheckBreakMode__Return) ).(bool)){
+    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( checkMode != Nodes_CheckBreakMode__Normal) &&
+        Lns_GetEnv().SetStackVal( checkMode != Nodes_CheckBreakMode__Return) ).(bool)){
         return self.block.FP.GetBreakKind(checkMode)
     }
     return Nodes_BreakKind__None
@@ -5994,9 +5994,9 @@ func (self *Nodes_ForNode) Visit(visitor Nodes_NodeVisitor,depth LnsInt) bool {
 
 // 1128: decl @lune.@base.@Nodes.ForNode.getBreakKind
 func (self *Nodes_ForNode) GetBreakKind(checkMode LnsInt) LnsInt {
-    if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( checkMode != Nodes_CheckBreakMode__Normal) &&
-        Lns_setStackVal( checkMode != Nodes_CheckBreakMode__Return) ).(bool)){
+    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( checkMode != Nodes_CheckBreakMode__Normal) &&
+        Lns_GetEnv().SetStackVal( checkMode != Nodes_CheckBreakMode__Return) ).(bool)){
         return self.block.FP.GetBreakKind(checkMode)
     }
     return Nodes_BreakKind__None
@@ -6140,9 +6140,9 @@ func (self *Nodes_ApplyNode) Visit(visitor Nodes_NodeVisitor,depth LnsInt) bool 
 
 // 1128: decl @lune.@base.@Nodes.ApplyNode.getBreakKind
 func (self *Nodes_ApplyNode) GetBreakKind(checkMode LnsInt) LnsInt {
-    if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( checkMode != Nodes_CheckBreakMode__Normal) &&
-        Lns_setStackVal( checkMode != Nodes_CheckBreakMode__Return) ).(bool)){
+    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( checkMode != Nodes_CheckBreakMode__Normal) &&
+        Lns_GetEnv().SetStackVal( checkMode != Nodes_CheckBreakMode__Return) ).(bool)){
         return self.block.FP.GetBreakKind(checkMode)
     }
     return Nodes_BreakKind__None
@@ -6291,9 +6291,9 @@ func (self *Nodes_ForeachNode) Visit(visitor Nodes_NodeVisitor,depth LnsInt) boo
 
 // 1128: decl @lune.@base.@Nodes.ForeachNode.getBreakKind
 func (self *Nodes_ForeachNode) GetBreakKind(checkMode LnsInt) LnsInt {
-    if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( checkMode != Nodes_CheckBreakMode__Normal) &&
-        Lns_setStackVal( checkMode != Nodes_CheckBreakMode__Return) ).(bool)){
+    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( checkMode != Nodes_CheckBreakMode__Normal) &&
+        Lns_GetEnv().SetStackVal( checkMode != Nodes_CheckBreakMode__Return) ).(bool)){
         return self.block.FP.GetBreakKind(checkMode)
     }
     return Nodes_BreakKind__None
@@ -6447,9 +6447,9 @@ func (self *Nodes_ForsortNode) Visit(visitor Nodes_NodeVisitor,depth LnsInt) boo
 
 // 1128: decl @lune.@base.@Nodes.ForsortNode.getBreakKind
 func (self *Nodes_ForsortNode) GetBreakKind(checkMode LnsInt) LnsInt {
-    if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( checkMode != Nodes_CheckBreakMode__Normal) &&
-        Lns_setStackVal( checkMode != Nodes_CheckBreakMode__Return) ).(bool)){
+    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( checkMode != Nodes_CheckBreakMode__Normal) &&
+        Lns_GetEnv().SetStackVal( checkMode != Nodes_CheckBreakMode__Return) ).(bool)){
         return self.block.FP.GetBreakKind(checkMode)
     }
     return Nodes_BreakKind__None
@@ -7163,9 +7163,9 @@ func (self *Nodes_ExpRefNode) CanBeLeft() bool {
 
 // 1229: decl @lune.@base.@Nodes.ExpRefNode.canBeRight
 func (self *Nodes_ExpRefNode) CanBeRight(processInfo *Ast_ProcessInfo) bool {
-    return Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( self.FP.Get_symbolInfo().FP.Get_canBeRight()) &&
-        Lns_setStackVal( self.FP.Get_symbolInfo().FP.Get_hasValueFlag()) ).(bool)
+    return Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( self.FP.Get_symbolInfo().FP.Get_canBeRight()) &&
+        Lns_GetEnv().SetStackVal( self.FP.Get_symbolInfo().FP.Get_hasValueFlag()) ).(bool)
 }
 
 // 2517: decl @lune.@base.@Nodes.ExpRefNode.getLiteral
@@ -7176,9 +7176,9 @@ func (self *Nodes_ExpRefNode) GetLiteral()(LnsAny, LnsAny) {
         _enumTypeInfo := Ast_EnumTypeInfoDownCastF(typeInfo.FP.Get_aliasSrc().FP)
         if _enumTypeInfo != nil {
             enumTypeInfo := _enumTypeInfo.(*Ast_EnumTypeInfo)
-            if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-                Lns_setStackVal( self.symbolInfo.FP.Get_kind() == Ast_SymbolKind__Mbr) &&
-                Lns_setStackVal( self.symbolInfo.FP.Get_namespaceTypeInfo().FP.Get_kind() == Ast_TypeInfoKind__Enum) ).(bool)){
+            if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                Lns_GetEnv().SetStackVal( self.symbolInfo.FP.Get_kind() == Ast_SymbolKind__Mbr) &&
+                Lns_GetEnv().SetStackVal( self.symbolInfo.FP.Get_namespaceTypeInfo().FP.Get_kind() == Ast_TypeInfoKind__Enum) ).(bool)){
                 var enumval *Ast_EnumValInfo
                 enumval = Lns_unwrap( enumTypeInfo.FP.GetEnumValInfo(self.symbolInfo.FP.Get_name())).(*Ast_EnumValInfo)
                 return Nodes_enumLiteral2Literal_9538_(enumval.FP.Get_val())
@@ -7654,8 +7654,8 @@ func (self *Nodes_ExpOp2Node) SetupLiteralTokenList(list *LnsList) bool {
     var literal LnsAny
     literal = Nodes_convExp43346(Lns_2DDD(self.FP.GetLiteral()))
     if literal != nil{
-        literal_10577 := literal
-        switch _exp43414 := literal_10577.(type) {
+        literal_10576 := literal
+        switch _exp43414 := literal_10576.(type) {
         case *Nodes_Literal__Int:
         val := _exp43414.Val1
             self.FP.AddTokenList(list, Types_TokenKind__Int, Lns_getVM().String_format("%d", []LnsAny{val}))
@@ -7696,18 +7696,18 @@ func (self *Nodes_ExpOp2Node) GetLiteral()(LnsAny, LnsAny) {
     if Lns_op_not(ret2){
         return nil, Lns_getVM().String_format("not support literal -- %s", []LnsAny{Nodes_getNodeKindName(self.FP.Get_exp2().FP.Get_kind())})
     }
-    if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( (Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( type1 == Ast_builtinTypeInt) ||
-            Lns_setStackVal( type1 == Ast_builtinTypeReal) ).(bool))) &&
-        Lns_setStackVal( (Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( type2 == Ast_builtinTypeInt) ||
-            Lns_setStackVal( type2 == Ast_builtinTypeReal) ).(bool))) ).(bool)){
+    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( (Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( type1 == Ast_builtinTypeInt) ||
+            Lns_GetEnv().SetStackVal( type1 == Ast_builtinTypeReal) ).(bool))) &&
+        Lns_GetEnv().SetStackVal( (Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( type2 == Ast_builtinTypeInt) ||
+            Lns_GetEnv().SetStackVal( type2 == Ast_builtinTypeReal) ).(bool))) ).(bool)){
         var retType *Ast_TypeInfo
         retType = Ast_builtinTypeInt
-        if Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( type1 == Ast_builtinTypeReal) ||
-            Lns_setStackVal( type2 == Ast_builtinTypeReal) ).(bool){
+        if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( type1 == Ast_builtinTypeReal) ||
+            Lns_GetEnv().SetStackVal( type2 == Ast_builtinTypeReal) ).(bool){
             retType = Ast_builtinTypeReal
             
         }
@@ -7732,9 +7732,9 @@ func (self *Nodes_ExpOp2Node) GetLiteral()(LnsAny, LnsAny) {
             }
             return &Nodes_Literal__Real{real1 / real2}, nil
         }
-    } else if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( type1 == Ast_builtinTypeString) &&
-        Lns_setStackVal( type2 == Ast_builtinTypeString) ).(bool)){
+    } else if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( type1 == Ast_builtinTypeString) &&
+        Lns_GetEnv().SetStackVal( type2 == Ast_builtinTypeString) ).(bool)){
         if self.op.Txt == ".."{
             return &Nodes_Literal__Str{str1 + str2}, nil
         }
@@ -8066,17 +8066,17 @@ func (self *Nodes_IfUnwrapNode) GetBreakKind(checkMode LnsInt) LnsInt {
         }
     } else { 
         if _switch16281 := work; _switch16281 == Nodes_BreakKind__None {
-            if Lns_popVal( Lns_incStack() ||
-                Lns_setStackVal( checkMode == Nodes_CheckBreakMode__Normal) ||
-                Lns_setStackVal( checkMode == Nodes_CheckBreakMode__Return) ).(bool){
+            if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                Lns_GetEnv().SetStackVal( checkMode == Nodes_CheckBreakMode__Normal) ||
+                Lns_GetEnv().SetStackVal( checkMode == Nodes_CheckBreakMode__Return) ).(bool){
                 if true{
                     return Nodes_BreakKind__None
                 }
             }
         } else {
-            if Lns_popVal( Lns_incStack() ||
-                Lns_setStackVal( kind == Nodes_BreakKind__None) ||
-                Lns_setStackVal( kind > work) ).(bool){
+            if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                Lns_GetEnv().SetStackVal( kind == Nodes_BreakKind__None) ||
+                Lns_GetEnv().SetStackVal( kind > work) ).(bool){
                 kind = work
                 
             }
@@ -8098,17 +8098,17 @@ func (self *Nodes_IfUnwrapNode) GetBreakKind(checkMode LnsInt) LnsInt {
                 }
             } else { 
                 if _switch16394 := work; _switch16394 == Nodes_BreakKind__None {
-                    if Lns_popVal( Lns_incStack() ||
-                        Lns_setStackVal( checkMode == Nodes_CheckBreakMode__Normal) ||
-                        Lns_setStackVal( checkMode == Nodes_CheckBreakMode__Return) ).(bool){
+                    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                        Lns_GetEnv().SetStackVal( checkMode == Nodes_CheckBreakMode__Normal) ||
+                        Lns_GetEnv().SetStackVal( checkMode == Nodes_CheckBreakMode__Return) ).(bool){
                         if true{
                             return Nodes_BreakKind__None
                         }
                     }
                 } else {
-                    if Lns_popVal( Lns_incStack() ||
-                        Lns_setStackVal( kind == Nodes_BreakKind__None) ||
-                        Lns_setStackVal( kind > work) ).(bool){
+                    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                        Lns_GetEnv().SetStackVal( kind == Nodes_BreakKind__None) ||
+                        Lns_GetEnv().SetStackVal( kind > work) ).(bool){
                         kind = work
                         
                     }
@@ -8319,17 +8319,17 @@ func (self *Nodes_WhenNode) GetBreakKind(checkMode LnsInt) LnsInt {
         }
     } else { 
         if _switch16998 := work; _switch16998 == Nodes_BreakKind__None {
-            if Lns_popVal( Lns_incStack() ||
-                Lns_setStackVal( checkMode == Nodes_CheckBreakMode__Normal) ||
-                Lns_setStackVal( checkMode == Nodes_CheckBreakMode__Return) ).(bool){
+            if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                Lns_GetEnv().SetStackVal( checkMode == Nodes_CheckBreakMode__Normal) ||
+                Lns_GetEnv().SetStackVal( checkMode == Nodes_CheckBreakMode__Return) ).(bool){
                 if true{
                     return Nodes_BreakKind__None
                 }
             }
         } else {
-            if Lns_popVal( Lns_incStack() ||
-                Lns_setStackVal( kind == Nodes_BreakKind__None) ||
-                Lns_setStackVal( kind > work) ).(bool){
+            if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                Lns_GetEnv().SetStackVal( kind == Nodes_BreakKind__None) ||
+                Lns_GetEnv().SetStackVal( kind > work) ).(bool){
                 kind = work
                 
             }
@@ -8351,17 +8351,17 @@ func (self *Nodes_WhenNode) GetBreakKind(checkMode LnsInt) LnsInt {
                 }
             } else { 
                 if _switch17111 := work; _switch17111 == Nodes_BreakKind__None {
-                    if Lns_popVal( Lns_incStack() ||
-                        Lns_setStackVal( checkMode == Nodes_CheckBreakMode__Normal) ||
-                        Lns_setStackVal( checkMode == Nodes_CheckBreakMode__Return) ).(bool){
+                    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                        Lns_GetEnv().SetStackVal( checkMode == Nodes_CheckBreakMode__Normal) ||
+                        Lns_GetEnv().SetStackVal( checkMode == Nodes_CheckBreakMode__Return) ).(bool){
                         if true{
                             return Nodes_BreakKind__None
                         }
                     }
                 } else {
-                    if Lns_popVal( Lns_incStack() ||
-                        Lns_setStackVal( kind == Nodes_BreakKind__None) ||
-                        Lns_setStackVal( kind > work) ).(bool){
+                    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                        Lns_GetEnv().SetStackVal( kind == Nodes_BreakKind__None) ||
+                        Lns_GetEnv().SetStackVal( kind > work) ).(bool){
                         kind = work
                         
                     }
@@ -9029,9 +9029,9 @@ func (self *Nodes_ExpRefItemNode) CanBeLeft() bool {
     if self.val.FP.Get_expType() == Ast_builtinTypeStem{
         return false
     }
-    return Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( Ast_TypeInfo_isMut(self.FP.Get_val().FP.Get_expType())) &&
-        Lns_setStackVal( Lns_op_not(self.nilAccess)) ).(bool)
+    return Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( Ast_TypeInfo_isMut(self.FP.Get_val().FP.Get_expType())) &&
+        Lns_GetEnv().SetStackVal( Lns_op_not(self.nilAccess)) ).(bool)
 }
 
 
@@ -9193,9 +9193,9 @@ func (self *Nodes_ExpCallNode) GetPrefix() LnsAny {
 func (self *Nodes_ExpCallNode) CanBeRight(processInfo *Ast_ProcessInfo) bool {
     var expType *Ast_TypeInfo
     expType = self.FP.Get_expType()
-    if Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( expType.FP.Equals(processInfo, Ast_builtinTypeNone, nil, nil)) ||
-        Lns_setStackVal( expType.FP.Equals(processInfo, Ast_builtinTypeNeverRet, nil, nil)) ).(bool){
+    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( expType.FP.Equals(processInfo, Ast_builtinTypeNone, nil, nil)) ||
+        Lns_GetEnv().SetStackVal( expType.FP.Equals(processInfo, Ast_builtinTypeNeverRet, nil, nil)) ).(bool){
         return false
     }
     return true
@@ -9949,8 +9949,8 @@ func (self *Nodes_ExpMacroStatNode) GetLiteral()(LnsAny, LnsAny) {
         var literal LnsAny
         literal = Nodes_convExp42939(Lns_2DDD(token.FP.GetLiteral()))
         if literal != nil{
-            literal_10518 := literal
-            switch _exp42961 := literal_10518.(type) {
+            literal_10517 := literal
+            switch _exp42961 := literal_10517.(type) {
             case *Nodes_Literal__Str:
             work := _exp42961.Val1
                 txt = Lns_getVM().String_format("%s%s", []LnsAny{txt, work})
@@ -10622,8 +10622,8 @@ func (self *Nodes_RefFieldNode) GetLiteral()(LnsAny, LnsAny) {
     var mess LnsAny
     literal,mess = self.prefix.FP.GetLiteral()
     if literal != nil{
-        literal_10498 := literal
-        switch _exp42860 := literal_10498.(type) {
+        literal_10497 := literal
+        switch _exp42860 := literal_10497.(type) {
         case *Nodes_Literal__Symbol:
         symbol := _exp42860.Val1
             tokenList.Insert(symbol)
@@ -10634,7 +10634,7 @@ func (self *Nodes_RefFieldNode) GetLiteral()(LnsAny, LnsAny) {
                 tokenList.Insert(symbol)
             }
         default:
-            return nil, Lns_getVM().String_format("not support -- %s", []LnsAny{literal_10498.(LnsAlgeVal).GetTxt()})
+            return nil, Lns_getVM().String_format("not support -- %s", []LnsAny{literal_10497.(LnsAlgeVal).GetTxt()})
         }
         if self.nilAccess{
             tokenList.Insert("$.")
@@ -11216,17 +11216,17 @@ func (self *Nodes_DeclVarNode) GetBreakKind(checkMode LnsInt) LnsInt {
                 }
             } else { 
                 if _switch25790 := work; _switch25790 == Nodes_BreakKind__None {
-                    if Lns_popVal( Lns_incStack() ||
-                        Lns_setStackVal( checkMode == Nodes_CheckBreakMode__Normal) ||
-                        Lns_setStackVal( checkMode == Nodes_CheckBreakMode__Return) ).(bool){
+                    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                        Lns_GetEnv().SetStackVal( checkMode == Nodes_CheckBreakMode__Normal) ||
+                        Lns_GetEnv().SetStackVal( checkMode == Nodes_CheckBreakMode__Return) ).(bool){
                         if true{
                             return Nodes_BreakKind__None
                         }
                     }
                 } else {
-                    if Lns_popVal( Lns_incStack() ||
-                        Lns_setStackVal( kind == Nodes_BreakKind__None) ||
-                        Lns_setStackVal( kind > work) ).(bool){
+                    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                        Lns_GetEnv().SetStackVal( kind == Nodes_BreakKind__None) ||
+                        Lns_GetEnv().SetStackVal( kind > work) ).(bool){
                         kind = work
                         
                     }
@@ -11248,17 +11248,17 @@ func (self *Nodes_DeclVarNode) GetBreakKind(checkMode LnsInt) LnsInt {
                         }
                     } else { 
                         if _switch25903 := work; _switch25903 == Nodes_BreakKind__None {
-                            if Lns_popVal( Lns_incStack() ||
-                                Lns_setStackVal( checkMode == Nodes_CheckBreakMode__Normal) ||
-                                Lns_setStackVal( checkMode == Nodes_CheckBreakMode__Return) ).(bool){
+                            if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                                Lns_GetEnv().SetStackVal( checkMode == Nodes_CheckBreakMode__Normal) ||
+                                Lns_GetEnv().SetStackVal( checkMode == Nodes_CheckBreakMode__Return) ).(bool){
                                 if true{
                                     return Nodes_BreakKind__None
                                 }
                             }
                         } else {
-                            if Lns_popVal( Lns_incStack() ||
-                                Lns_setStackVal( kind == Nodes_BreakKind__None) ||
-                                Lns_setStackVal( kind > work) ).(bool){
+                            if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                                Lns_GetEnv().SetStackVal( kind == Nodes_BreakKind__None) ||
+                                Lns_GetEnv().SetStackVal( kind > work) ).(bool){
                                 kind = work
                                 
                             }
@@ -11280,17 +11280,17 @@ func (self *Nodes_DeclVarNode) GetBreakKind(checkMode LnsInt) LnsInt {
                                 }
                             } else { 
                                 if _switch26016 := work; _switch26016 == Nodes_BreakKind__None {
-                                    if Lns_popVal( Lns_incStack() ||
-                                        Lns_setStackVal( checkMode == Nodes_CheckBreakMode__Normal) ||
-                                        Lns_setStackVal( checkMode == Nodes_CheckBreakMode__Return) ).(bool){
+                                    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                                        Lns_GetEnv().SetStackVal( checkMode == Nodes_CheckBreakMode__Normal) ||
+                                        Lns_GetEnv().SetStackVal( checkMode == Nodes_CheckBreakMode__Return) ).(bool){
                                         if true{
                                             return Nodes_BreakKind__None
                                         }
                                     }
                                 } else {
-                                    if Lns_popVal( Lns_incStack() ||
-                                        Lns_setStackVal( kind == Nodes_BreakKind__None) ||
-                                        Lns_setStackVal( kind > work) ).(bool){
+                                    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                                        Lns_GetEnv().SetStackVal( kind == Nodes_BreakKind__None) ||
+                                        Lns_GetEnv().SetStackVal( kind > work) ).(bool){
                                         kind = work
                                         
                                     }
@@ -11302,9 +11302,9 @@ func (self *Nodes_DeclVarNode) GetBreakKind(checkMode LnsInt) LnsInt {
                     return kind
                 }
             }
-            if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-                Lns_setStackVal( checkMode != Nodes_CheckBreakMode__Normal) &&
-                Lns_setStackVal( checkMode != Nodes_CheckBreakMode__Return) ).(bool)){
+            if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                Lns_GetEnv().SetStackVal( checkMode != Nodes_CheckBreakMode__Normal) &&
+                Lns_GetEnv().SetStackVal( checkMode != Nodes_CheckBreakMode__Return) ).(bool)){
                 return kind
             }
         }
@@ -14054,9 +14054,9 @@ func (self *Nodes_MatchNode) GetBreakKind(checkMode LnsInt) LnsInt {
         var work LnsInt
         work = caseInfo.FP.Get_block().FP.GetBreakKind(checkMode)
         var goNext bool
-        goNext = Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( (work == Nodes_BreakKind__None)) ||
-            Lns_setStackVal( Lns_op_not(fullCase)) ).(bool)
+        goNext = Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( (work == Nodes_BreakKind__None)) ||
+            Lns_GetEnv().SetStackVal( Lns_op_not(fullCase)) ).(bool)
         if checkMode == Nodes_CheckBreakMode__IgnoreFlowReturn{
             if work == Nodes_BreakKind__Return{
                 return Nodes_BreakKind__Return
@@ -14066,17 +14066,17 @@ func (self *Nodes_MatchNode) GetBreakKind(checkMode LnsInt) LnsInt {
             }
         } else { 
             if _switch34457 := work; _switch34457 == Nodes_BreakKind__None {
-                if Lns_popVal( Lns_incStack() ||
-                    Lns_setStackVal( checkMode == Nodes_CheckBreakMode__Normal) ||
-                    Lns_setStackVal( checkMode == Nodes_CheckBreakMode__Return) ).(bool){
+                if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                    Lns_GetEnv().SetStackVal( checkMode == Nodes_CheckBreakMode__Normal) ||
+                    Lns_GetEnv().SetStackVal( checkMode == Nodes_CheckBreakMode__Return) ).(bool){
                     if goNext{
                         return Nodes_BreakKind__None
                     }
                 }
             } else {
-                if Lns_popVal( Lns_incStack() ||
-                    Lns_setStackVal( kind == Nodes_BreakKind__None) ||
-                    Lns_setStackVal( kind > work) ).(bool){
+                if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                    Lns_GetEnv().SetStackVal( kind == Nodes_BreakKind__None) ||
+                    Lns_GetEnv().SetStackVal( kind > work) ).(bool){
                     kind = work
                     
                 }
@@ -14099,17 +14099,17 @@ func (self *Nodes_MatchNode) GetBreakKind(checkMode LnsInt) LnsInt {
                 }
             } else { 
                 if _switch34569 := work; _switch34569 == Nodes_BreakKind__None {
-                    if Lns_popVal( Lns_incStack() ||
-                        Lns_setStackVal( checkMode == Nodes_CheckBreakMode__Normal) ||
-                        Lns_setStackVal( checkMode == Nodes_CheckBreakMode__Return) ).(bool){
+                    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                        Lns_GetEnv().SetStackVal( checkMode == Nodes_CheckBreakMode__Normal) ||
+                        Lns_GetEnv().SetStackVal( checkMode == Nodes_CheckBreakMode__Return) ).(bool){
                         if true{
                             return Nodes_BreakKind__None
                         }
                     }
                 } else {
-                    if Lns_popVal( Lns_incStack() ||
-                        Lns_setStackVal( kind == Nodes_BreakKind__None) ||
-                        Lns_setStackVal( kind > work) ).(bool){
+                    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                        Lns_GetEnv().SetStackVal( kind == Nodes_BreakKind__None) ||
+                        Lns_GetEnv().SetStackVal( kind > work) ).(bool){
                         kind = work
                         
                     }
@@ -14639,11 +14639,11 @@ func (self *Nodes_TestBlockNode) Visit(visitor Nodes_NodeVisitor,depth LnsInt) b
 
 // 1987: decl @lune.@base.@Nodes.TestBlockNode.isInnerPos
 func (self *Nodes_TestBlockNode) IsInnerPos(pos *Types_Position) bool {
-    if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( self.FP.Get_pos().StreamName == pos.StreamName) &&
-        Lns_setStackVal( self.FP.Get_pos().LineNo < pos.LineNo) &&
-        Lns_setStackVal( self.FP.Get_stmtList().Len() > 0) &&
-        Lns_setStackVal( self.FP.Get_stmtList().GetAt(1).(Nodes_NodeDownCast).ToNodes_Node().FP.Get_pos().LineNo >= pos.LineNo) ).(bool)){
+    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( self.FP.Get_pos().StreamName == pos.StreamName) &&
+        Lns_GetEnv().SetStackVal( self.FP.Get_pos().LineNo < pos.LineNo) &&
+        Lns_GetEnv().SetStackVal( self.FP.Get_stmtList().Len() > 0) &&
+        Lns_GetEnv().SetStackVal( self.FP.Get_stmtList().GetAt(1).(Nodes_NodeDownCast).ToNodes_Node().FP.Get_pos().LineNo >= pos.LineNo) ).(bool)){
         return true
     }
     return false
@@ -15581,8 +15581,8 @@ func (self *Nodes_LiteralArrayNode) GetLiteral()(LnsAny, LnsAny) {
                 var mess LnsAny
                 literal,mess = node.FP.GetLiteral()
                 if literal != nil{
-                    literal_10305 := literal
-                    literalList.Insert(literal_10305)
+                    literal_10304 := literal
+                    literalList.Insert(literal_10304)
                 } else {
                     return nil, mess
                 }
@@ -15748,8 +15748,8 @@ func (self *Nodes_LiteralListNode) GetLiteral()(LnsAny, LnsAny) {
                 var mess LnsAny
                 literal,mess = node.FP.GetLiteral()
                 if literal != nil{
-                    literal_10333 := literal
-                    literalList.Insert(literal_10333)
+                    literal_10332 := literal
+                    literalList.Insert(literal_10332)
                 } else {
                     return nil, mess
                 }
@@ -15915,8 +15915,8 @@ func (self *Nodes_LiteralSetNode) GetLiteral()(LnsAny, LnsAny) {
                 var mess LnsAny
                 literal,mess = node.FP.GetLiteral()
                 if literal != nil{
-                    literal_10361 := literal
-                    literalList.Insert(literal_10361)
+                    literal_10360 := literal
+                    literalList.Insert(literal_10360)
                 } else {
                     return nil, mess
                 }
@@ -16145,9 +16145,9 @@ func (self *Nodes_LiteralMapNode) GetLiteral()(LnsAny, LnsAny) {
         var valMess LnsAny
         valLiteral,valMess = val.FP.GetLiteral()
         if keyLiteral != nil && valLiteral != nil{
-            keyLiteral_10390 := keyLiteral
-            valLiteral_10391 := valLiteral
-            litMap.Set(keyLiteral_10390,valLiteral_10391)
+            keyLiteral_10389 := keyLiteral
+            valLiteral_10390 := valLiteral
+            litMap.Set(keyLiteral_10389,valLiteral_10390)
         } else {
             if Lns_op_not(keyLiteral){
                 return nil, keyMess
@@ -16170,8 +16170,8 @@ func (self *Nodes_LiteralMapNode) SetupLiteralTokenList(list *LnsList) bool {
         var literal LnsAny
         literal = Nodes_convExp42214(Lns_2DDD(key.FP.GetLiteral()))
         if literal != nil{
-            literal_10407 := literal
-            switch _exp42258 := literal_10407.(type) {
+            literal_10406 := literal
+            switch _exp42258 := literal_10406.(type) {
             case *Nodes_Literal__Int:
             param := _exp42258.Val1
                 lit2valNode.Set(param,key)
@@ -16196,8 +16196,8 @@ func (self *Nodes_LiteralMapNode) SetupLiteralTokenList(list *LnsList) bool {
                 return false
             }
             self.FP.AddTokenList(list, Types_TokenKind__Dlmt, ":")
-            if Lns_op_not(Lns_NilAccFin(Lns_NilAccPush(self._map.Items[key]) && 
-            Lns_NilAccCall1( func () LnsAny { return Lns_NilAccPop().(*Nodes_Node).FP.SetupLiteralTokenList(list)})/* 2363:14 */)){
+            if Lns_op_not(Lns_GetEnv().NilAccFin(Lns_GetEnv().NilAccPush(self._map.Items[key]) && 
+            Lns_NilAccCall1( Lns_GetEnv(), func () LnsAny { return Lns_GetEnv().NilAccPop().(*Nodes_Node).FP.SetupLiteralTokenList(list)})/* 2363:14 */)){
                 return false
             }
             self.FP.AddTokenList(list, Types_TokenKind__Dlmt, ",")
@@ -16376,8 +16376,8 @@ func (self *Nodes_LiteralStringNode) GetLiteral()(LnsAny, LnsAny) {
                 var mess LnsAny
                 arg,mess = argNode.FP.GetLiteral()
                 if arg != nil{
-                    arg_10437 := arg
-                    paramList.Set(paramList.Len() + 1,Nodes_getLiteralObj(arg_10437))
+                    arg_10436 := arg
+                    paramList.Set(paramList.Len() + 1,Nodes_getLiteralObj(arg_10436))
                 } else {
                     return nil, mess
                 }

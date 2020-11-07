@@ -271,10 +271,10 @@ func (self *Writer_JSON) startLayer(arrayFlag bool,madeByArrayFlag bool) {
     var info *Writer_JsonLayer
     info = NewWriter_JsonLayer("none", arrayFlag, self.prevName, madeByArrayFlag, NewLnsSet([]LnsAny{}), true, false)
     self.layerQueue.Insert(Writer_JsonLayer2Stem(info))
-    self.stream.Write(Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( arrayFlag) &&
-        Lns_setStackVal( "[") ||
-        Lns_setStackVal( "{") ).(string))
+    self.stream.Write(Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( arrayFlag) &&
+        Lns_GetEnv().SetStackVal( "[") ||
+        Lns_GetEnv().SetStackVal( "{") ).(string))
 }
 
 // 126: DeclConstr
@@ -312,8 +312,8 @@ func (self *Writer_JSON) EndLayer() {
         self.layerQueue.Remove(nil)
         var parentInfo LnsAny
         parentInfo = self.FP.getLayerInfo()
-        if Lns_op_not(Lns_NilAccFin(Lns_NilAccPush(parentInfo) && 
-        Lns_NilAccPush(Lns_NilAccPop().(*Writer_JsonLayer).MadeByArrayFlag))){
+        if Lns_op_not(Lns_GetEnv().NilAccFin(Lns_GetEnv().NilAccPush(parentInfo) && 
+        Lns_GetEnv().NilAccPush(Lns_GetEnv().NilAccPop().(*Writer_JsonLayer).MadeByArrayFlag))){
             break
         }
     }
@@ -349,9 +349,9 @@ func (self *Writer_JSON) AddElementName(name string) {
     info = Lns_unwrap( self.FP.getLayerInfo()).(*Writer_JsonLayer)
     var nameSet *LnsSet
     nameSet = info.ElementNameSet
-    if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( Lns_op_not(info.ArrayFlag)) &&
-        Lns_setStackVal( nameSet.Has(name)) ).(bool)){
+    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( Lns_op_not(info.ArrayFlag)) &&
+        Lns_GetEnv().SetStackVal( nameSet.Has(name)) ).(bool)){
         Util_err("exist same name: " + name)
     }
     nameSet.Add(name)
@@ -360,19 +360,19 @@ func (self *Writer_JSON) AddElementName(name string) {
 // 189: decl @lune.@base.@Writer.JSON.startParent
 func (self *Writer_JSON) StartParent(name string,arrayFlag bool) {
     self.FP.AddElementName(name)
-    if Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( self.FP.EqualLayerState("termed")) ||
-        Lns_setStackVal( self.FP.EqualLayerState("named")) ||
-        Lns_setStackVal( self.FP.EqualLayerState("valued")) ).(bool){
+    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( self.FP.EqualLayerState("termed")) ||
+        Lns_GetEnv().SetStackVal( self.FP.EqualLayerState("named")) ||
+        Lns_GetEnv().SetStackVal( self.FP.EqualLayerState("valued")) ).(bool){
         self.stream.Write(",")
     } else if self.FP.EqualLayerState("none"){
     }
     var parentInfo LnsAny
     parentInfo = self.FP.getLayerInfo()
-    if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( Lns_op_not(arrayFlag)) &&
-        Lns_setStackVal( Lns_NilAccFin(Lns_NilAccPush(parentInfo) && 
-        Lns_NilAccPush(Lns_NilAccPop().(*Writer_JsonLayer).ArrayFlag))) )){
+    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( Lns_op_not(arrayFlag)) &&
+        Lns_GetEnv().SetStackVal( Lns_GetEnv().NilAccFin(Lns_GetEnv().NilAccPush(parentInfo) && 
+        Lns_GetEnv().NilAccPush(Lns_GetEnv().NilAccPop().(*Writer_JsonLayer).ArrayFlag))) )){
         self.FP.startLayer(false, true)
     }
     self.stream.Write(Lns_getVM().String_format("\"%s\": ", []LnsAny{name}))
@@ -408,9 +408,9 @@ func (self *Writer_JSON) StartElement(name string) {
 
 // 240: decl @lune.@base.@Writer.JSON.endElement
 func (self *Writer_JSON) EndElement() {
-    if Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( self.FP.EqualLayerState("none")) ||
-        Lns_setStackVal( self.FP.EqualLayerState("termed")) ).(bool){
+    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( self.FP.EqualLayerState("none")) ||
+        Lns_GetEnv().SetStackVal( self.FP.EqualLayerState("termed")) ).(bool){
         self.FP.EndLayer()
     } else if self.FP.EqualLayerState("valued"){
         var info *Writer_JsonLayer
@@ -419,8 +419,8 @@ func (self *Writer_JSON) EndElement() {
             info.OpenElement = false
             
         }
-        if Lns_isCondTrue( Lns_NilAccFin(Lns_NilAccPush(self.FP.getLayerInfo()) && 
-        Lns_NilAccPush(Lns_NilAccPop().(*Writer_JsonLayer).MadeByArrayFlag))){
+        if Lns_isCondTrue( Lns_GetEnv().NilAccFin(Lns_GetEnv().NilAccPush(self.FP.getLayerInfo()) && 
+        Lns_GetEnv().NilAccPush(Lns_GetEnv().NilAccPop().(*Writer_JsonLayer).MadeByArrayFlag))){
             self.FP.EndLayer()
         }
     } else { 
@@ -453,10 +453,10 @@ func (self *Writer_JSON) WriteValue(val LnsAny) {
         txt = Lns_getVM().String_format("%g", []LnsAny{Lns_forceCastReal(val)})
         
     } else if typeId == "boolean"{
-        txt = Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( val) &&
-            Lns_setStackVal( "true") ||
-            Lns_setStackVal( "false") ).(string)
+        txt = Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( val) &&
+            Lns_GetEnv().SetStackVal( "true") ||
+            Lns_GetEnv().SetStackVal( "false") ).(string)
         
     } else { 
         txt = Lns_getVM().String_format("\"%s\"", []LnsAny{Writer_JSON_convertJsonTxt_1142_(Lns_getVM().String_format("%s", []LnsAny{val}))})
@@ -475,9 +475,9 @@ func (self *Writer_JSON) Write(name string,val LnsAny) {
 
 // 293: decl @lune.@base.@Writer.JSON.fin
 func (self *Writer_JSON) Fin() {
-    if Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( self.FP.EqualLayerState("none")) ||
-        Lns_setStackVal( self.FP.EqualLayerState("termed")) ).(bool){
+    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( self.FP.EqualLayerState("none")) ||
+        Lns_GetEnv().SetStackVal( self.FP.EqualLayerState("termed")) ).(bool){
         self.FP.EndLayer()
     } else { 
         Util_err("illegal")

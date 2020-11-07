@@ -46,10 +46,11 @@ func (self *Async_PipeItem) Get_item() LnsAny{ return self.item }
 type Async_PipeMtd interface {
     Access() LnsAny
     GetNext() LnsAny
-    loop()
+    Loop()
     Start()
 }
 type Async_Pipe struct {
+    LnsThread
     pipe LnsAny
     started bool
     FP Async_PipeMtd
@@ -76,6 +77,7 @@ func (obj *Async_Pipe) ToAsync_Pipe() *Async_Pipe {
 }
 // 33: DeclConstr
 func (self *Async_Pipe) InitAsync_Pipe(pipe LnsAny) {
+    self.InitLnsThread()
     self.pipe = pipe
     
     self.started = false
@@ -83,7 +85,7 @@ func (self *Async_Pipe) InitAsync_Pipe(pipe LnsAny) {
 }
 
 
-// 40: decl @lune.@base.@Async.Pipe.getNext
+// 41: decl @lune.@base.@Async.Pipe.getNext
 func (self *Async_Pipe) GetNext() LnsAny {
     if self.started{
         {
@@ -107,8 +109,8 @@ func (self *Async_Pipe) GetNext() LnsAny {
     return self.FP.Access()
 }
 
-// 52: decl @lune.@base.@Async.Pipe.loop
-func (self *Async_Pipe) loop() {
+// 53: decl @lune.@base.@Async.Pipe.loop
+func (self *Async_Pipe) Loop() {
     var pipe *Lns__pipe
     
     {
@@ -134,11 +136,11 @@ func (self *Async_Pipe) loop() {
     }
 }
 
-// 63: decl @lune.@base.@Async.Pipe.start
+// 64: decl @lune.@base.@Async.Pipe.start
 func (self *Async_Pipe) Start() {
     self.started = true
     
-    go self.FP.loop()
+    go self.FP.Loop()
 }
 
 

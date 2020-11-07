@@ -432,3 +432,10 @@ class Test9 extend Super7 {
    pub fn Hoge.func() { // error
    }
 }
+{
+   abstract class Hoge {
+      pub abstract fn func();
+   }
+   class Test extend Hoge { // error
+   }
+}

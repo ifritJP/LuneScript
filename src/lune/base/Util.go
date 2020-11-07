@@ -345,9 +345,9 @@ func (self *Util_SimpleSourceOStream) Write(txt string) {
             self.needIndent = false
             
         }
-        if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( len(line) > 0) &&
-            Lns_setStackVal( LnsInt(line[len(line)-1]) == 10) ).(bool)){
+        if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( len(line) > 0) &&
+            Lns_GetEnv().SetStackVal( LnsInt(line[len(line)-1]) == 10) ).(bool)){
             self.curLineNo = self.curLineNo + 1
             
         }

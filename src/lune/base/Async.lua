@@ -89,6 +89,7 @@ function Pipe.new( pipe )
    return obj
 end
 function Pipe:__init(pipe) 
+   
    self.pipe = pipe
    self.started = false
 end

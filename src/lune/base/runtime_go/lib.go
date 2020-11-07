@@ -45,6 +45,22 @@ type LnsEnv struct {
 }
 var cur_LnsEnv *LnsEnv
 
+func Lns_GetEnv () *LnsEnv {
+    return cur_LnsEnv
+}
+
+type LnsThreadMtd interface {
+    Loop()
+}
+
+type LnsThread struct {
+    env *LnsEnv
+    FP LnsThreadMtd
+}
+func (self *LnsThread) InitLnsThread() {
+    self.env = createEnv()
+}
+
 
 
 /**
@@ -58,14 +74,20 @@ import エラーを回避するため、
 func Lns_InitMod() {
 }
 
+func createEnv() *LnsEnv {
+    env := &LnsEnv{}
+    env.valStack = []LnsAny{}
+    env.nilAccStack = []LnsAny{}
+    env.luaVM = createVM()
+
+    return env
+}
+
 /**
 各モジュールを初期化する際に実行する関数。
 */
 func Lns_InitModOnce() {
-    cur_LnsEnv = &LnsEnv{}
-    cur_LnsEnv.valStack = []LnsAny{}
-    cur_LnsEnv.nilAccStack = []LnsAny{}
-    cur_LnsEnv.luaVM = createVM()
+    cur_LnsEnv = createEnv()
     
     Lns_package_path = cur_LnsEnv.luaVM.GetPackagePath()
 }
@@ -295,41 +317,41 @@ func Lns_getFromMulti( multi []LnsAny, index LnsInt ) LnsAny {
     return nil;
 }
 
-func Lns_NilAccPush( obj interface{} ) bool {
+func (self *LnsEnv) NilAccPush( obj interface{} ) bool {
     if Lns_IsNil( obj )  {
         return false
     }
-    cur_LnsEnv.nilAccStack = append( cur_LnsEnv.nilAccStack, obj )
+    self.nilAccStack = append( self.nilAccStack, obj )
     return true
 }
 
 // func Lns_NilAccLast( obj interface{} ) bool {
-//     cur_LnsEnv.nilAccStack = append( cur_LnsEnv.nilAccStack, obj )
+//     self.nilAccStack = append( self.nilAccStack, obj )
 //     return true
 // }
 
-func Lns_NilAccPop() LnsAny {
-    obj := cur_LnsEnv.nilAccStack[ len( cur_LnsEnv.nilAccStack ) - 1 ]
-    cur_LnsEnv.nilAccStack = cur_LnsEnv.nilAccStack[ : len( cur_LnsEnv.nilAccStack ) - 1 ]
+func (self *LnsEnv) NilAccPop() LnsAny {
+    obj := self.nilAccStack[ len( self.nilAccStack ) - 1 ]
+    self.nilAccStack = self.nilAccStack[ : len( self.nilAccStack ) - 1 ]
     return obj
 }
 
-func Lns_NilAccFin( ret bool) LnsAny {
+func (self *LnsEnv) NilAccFin( ret bool) LnsAny {
     if ret {
-        return Lns_NilAccPop()
+        return self.NilAccPop()
     }
     return nil
 }
 
-func Lns_NilAccCall0( call func () ) bool {
+func Lns_NilAccCall0( self *LnsEnv, call func () ) bool {
     call()
-    return Lns_NilAccPush( true )
+    return self.NilAccPush( true )
 }
-func Lns_NilAccCall1( call func () LnsAny ) bool {
-    return Lns_NilAccPush( call() )
+func Lns_NilAccCall1( self *LnsEnv, call func () LnsAny ) bool {
+    return self.NilAccPush( call() )
 }
-func Lns_NilAccCall2( call func () (LnsAny,LnsAny) ) bool {
-    return Lns_NilAccPush( Lns_2DDD( call() ) )
+func Lns_NilAccCall2( self *LnsEnv, call func () (LnsAny,LnsAny) ) bool {
+    return self.NilAccPush( Lns_2DDD( call() ) )
 }
 func Lns_NilAccFinCall2( ret LnsAny ) (LnsAny,LnsAny) {
     if Lns_IsNil( ret ) {
@@ -338,15 +360,15 @@ func Lns_NilAccFinCall2( ret LnsAny ) (LnsAny,LnsAny) {
     list := ret.([]LnsAny)
     return list[0], list[1]
 }
-func Lns_NilAccCall3( call func () (LnsAny,LnsAny,LnsAny) ) bool {
-    return Lns_NilAccPush( Lns_2DDD( call() ) )
+func Lns_NilAccCall3( self *LnsEnv, call func () (LnsAny,LnsAny,LnsAny) ) bool {
+    return self.NilAccPush( Lns_2DDD( call() ) )
 }
 func Lns_NilAccFinCall3( ret LnsAny ) (LnsAny,LnsAny,LnsAny) {
     if Lns_IsNil( ret ) {
         return nil, nil, nil
     }
     list := ret.([]LnsAny)
-    return list[0], list[1],list[2]
+    return list[0], list[1], list[2]
 }
 
 
@@ -437,8 +459,8 @@ func Lns_ToString( val LnsAny ) string {
 /**
  * スタックを一段上げる
  */
-func Lns_incStack() bool {
-    cur_LnsEnv.valStack = append( cur_LnsEnv.valStack, nil )
+func (self *LnsEnv) IncStack() bool {
+    self.valStack = append( self.valStack, nil )
     return false;
 }
 
@@ -451,8 +473,8 @@ func Lns_incStack() bool {
  * @param pVal スタックに詰む値
  * @return pVal の条件判定結果。 lns_isCondTrue()。
  */
-func Lns_setStackVal( val LnsAny ) bool {
-    cur_LnsEnv.valStack[ len( cur_LnsEnv.valStack ) - 1 ] = val
+func (self *LnsEnv) SetStackVal( val LnsAny ) bool {
+    self.valStack[ len( self.valStack ) - 1 ] = val
     return Lns_isCondTrue( val )
 }
 
@@ -461,8 +483,8 @@ func Lns_setStackVal( val LnsAny ) bool {
  *
  * @return pop した値。
  */
-func Lns_popVal( dummy bool ) LnsAny {
-    val := cur_LnsEnv.valStack[ len( cur_LnsEnv.valStack ) - 1 ]
-    cur_LnsEnv.valStack = cur_LnsEnv.valStack[:len(cur_LnsEnv.valStack) - 1]
+func (self *LnsEnv) PopVal( dummy bool ) LnsAny {
+    val := self.valStack[ len( self.valStack ) - 1 ]
+    self.valStack = self.valStack[:len(self.valStack) - 1]
     return val;
 }

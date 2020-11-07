@@ -99,6 +99,7 @@ func Types_TokenKind__from(arg1 LnsInt) LnsAny{
 func Types_TokenKind_getTxt(arg1 LnsInt) string {
     return Types_TokenKindMap_[arg1];
 }
+var Types_noneToken *Types_Token
 // declaration Class -- TransCtrlInfo
 type Types_TransCtrlInfoMtd interface {
 }
@@ -403,6 +404,7 @@ func Lns_Types_init() {
     init_Types = true
     Types__mod__ = "@lune.@base.@Types"
     Lns_InitMod()
+    Types_noneToken = NewTypes_Token(Types_TokenKind__Eof, "", NewTypes_Position(0, -1, "eof"), false, NewLnsList([]LnsAny{}))
 }
 func init() {
     init_Types = false

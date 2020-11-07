@@ -271,10 +271,10 @@ func (self *dumpNode_dumpFilter) dump(opt *DumpNode_Opt,node *Nodes_Node,txt str
         _commentList := node.FP.Get_commentList()
         if _commentList != nil {
             commentList := _commentList.(*LnsList)
-            comment = Lns_getVM().String_format("comment:%d,%d", []LnsAny{commentList.Len(), Lns_popVal( Lns_incStack() ||
-                Lns_setStackVal( node.FP.Get_tailComment()) &&
-                Lns_setStackVal( 1) ||
-                Lns_setStackVal( 0) ).(LnsInt)})
+            comment = Lns_getVM().String_format("comment:%d,%d", []LnsAny{commentList.Len(), Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                Lns_GetEnv().SetStackVal( node.FP.Get_tailComment()) &&
+                Lns_GetEnv().SetStackVal( 1) ||
+                Lns_GetEnv().SetStackVal( 0) ).(LnsInt)})
             
         } else {
             if Lns_isCondTrue( node.FP.Get_tailComment()){
@@ -604,8 +604,8 @@ func (self *dumpNode_dumpFilter) processDeclFuncInfo(node *Nodes_Node,declInfo *
     var name string
     
     {
-        _name := Lns_NilAccFin(Lns_NilAccPush(declInfo.FP.Get_name()) && 
-        Lns_NilAccPush(Lns_NilAccPop().(*Types_Token).Txt))
+        _name := Lns_GetEnv().NilAccFin(Lns_GetEnv().NilAccPush(declInfo.FP.Get_name()) && 
+        Lns_GetEnv().NilAccPush(Lns_GetEnv().NilAccPop().(*Types_Token).Txt))
         if _name == nil{
             name = "<anonymous>"
             
@@ -620,8 +620,8 @@ func (self *dumpNode_dumpFilter) processDeclFuncInfo(node *Nodes_Node,declInfo *
         
     }
     {
-        __exp := Lns_NilAccFin(Lns_NilAccPush(node.FP.Get_expType().FP.Get_scope()) && 
-        Lns_NilAccCall1( func () LnsAny { return Lns_NilAccPop().(*Ast_Scope).FP.Get_closureSymList()}))
+        __exp := Lns_GetEnv().NilAccFin(Lns_GetEnv().NilAccPush(node.FP.Get_expType().FP.Get_scope()) && 
+        Lns_NilAccCall1( Lns_GetEnv(), func () LnsAny { return Lns_GetEnv().NilAccPop().(*Ast_Scope).FP.Get_closureSymList()}))
         if __exp != nil {
             _exp := __exp.(*LnsList)
             if _exp.Len() > 0{
@@ -695,13 +695,13 @@ func (self *dumpNode_dumpFilter) ProcessExpCallSuper(node *Nodes_ExpCallSuperNod
 // 417: decl @lune.@base.@dumpNode.dumpFilter.processRefType
 func (self *dumpNode_dumpFilter) ProcessRefType(node *Nodes_RefTypeNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
-    self.FP.dump(opt, &node.Nodes_Node, (Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( node.FP.Get_refFlag()) &&
-        Lns_setStackVal( "&") ||
-        Lns_setStackVal( "") ).(string)) + (Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( node.FP.Get_mutFlag()) &&
-        Lns_setStackVal( "mut ") ||
-        Lns_setStackVal( "") ).(string)))
+    self.FP.dump(opt, &node.Nodes_Node, (Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( node.FP.Get_refFlag()) &&
+        Lns_GetEnv().SetStackVal( "&") ||
+        Lns_GetEnv().SetStackVal( "") ).(string)) + (Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( node.FP.Get_mutFlag()) &&
+        Lns_GetEnv().SetStackVal( "mut ") ||
+        Lns_GetEnv().SetStackVal( "") ).(string)))
     dumpNode_filter_1049_(node.FP.Get_name(), self, opt.FP.NextOpt())
 }
 
@@ -982,8 +982,8 @@ func (self *dumpNode_dumpFilter) ProcessExpSetItem(node *Nodes_ExpSetItemNode,_o
     self.FP.dump(opt, &node.Nodes_Node, indexSym)
     dumpNode_filter_1049_(node.FP.Get_val(), self, opt.FP.NextOpt())
     if indexNode != nil{
-        indexNode_5570 := indexNode.(*Nodes_Node)
-        dumpNode_filter_1049_(indexNode_5570, self, opt.FP.NextOpt())
+        indexNode_5569 := indexNode.(*Nodes_Node)
+        dumpNode_filter_1049_(indexNode_5569, self, opt.FP.NextOpt())
     }
     dumpNode_filter_1049_(node.FP.Get_exp2(), self, opt.FP.NextOpt())
 }
@@ -1033,11 +1033,11 @@ func (self *dumpNode_dumpFilter) ProcessExpRefItem(node *Nodes_ExpRefItemNode,_o
 // 689: decl @lune.@base.@dumpNode.dumpFilter.processRefField
 func (self *dumpNode_dumpFilter) ProcessRefField(node *Nodes_RefFieldNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
-    self.FP.dump(opt, &node.Nodes_Node, Lns_getVM().String_format("%s:%s:%s", []LnsAny{node.FP.Get_field().Txt, Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( Lns_NilAccFin(Lns_NilAccPush(node.FP.Get_symbolInfo()) && 
-        Lns_NilAccCall1( func () LnsAny { return Lns_NilAccPop().(*Ast_SymbolInfo).FP.Get_mutable()}))) &&
-        Lns_setStackVal( "mut") ||
-        Lns_setStackVal( "imut") ).(string), node.FP.Get_expType().FP.GetTxt(nil, nil, nil)}))
+    self.FP.dump(opt, &node.Nodes_Node, Lns_getVM().String_format("%s:%s:%s", []LnsAny{node.FP.Get_field().Txt, Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( Lns_GetEnv().NilAccFin(Lns_GetEnv().NilAccPush(node.FP.Get_symbolInfo()) && 
+        Lns_NilAccCall1( Lns_GetEnv(), func () LnsAny { return Lns_GetEnv().NilAccPop().(*Ast_SymbolInfo).FP.Get_mutable()}))) &&
+        Lns_GetEnv().SetStackVal( "mut") ||
+        Lns_GetEnv().SetStackVal( "imut") ).(string), node.FP.Get_expType().FP.GetTxt(nil, nil, nil)}))
     dumpNode_filter_1049_(node.FP.Get_prefix(), self, opt.FP.NextOpt())
 }
 
@@ -1076,7 +1076,7 @@ func (self *dumpNode_dumpFilter) ProcessProvide(node *Nodes_ProvideNode,_opt Lns
 // 729: decl @lune.@base.@dumpNode.dumpFilter.processAlias
 func (self *dumpNode_dumpFilter) ProcessAlias(node *Nodes_AliasNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
-    self.FP.dump(opt, &node.Nodes_Node, Lns_getVM().String_format("%s = %s", []LnsAny{node.FP.Get_newSymbol(), node.FP.Get_typeInfo().FP.GetTxt(nil, nil, nil)}))
+    self.FP.dump(opt, &node.Nodes_Node, Lns_getVM().String_format("%s = %s", []LnsAny{node.FP.Get_newSymbol().FP.Get_name(), node.FP.Get_typeInfo().FP.GetTxt(nil, nil, nil)}))
 }
 
 // 735: decl @lune.@base.@dumpNode.dumpFilter.processTestCase
@@ -1199,10 +1199,10 @@ func (self *dumpNode_dumpFilter) ProcessLiteralString(node *Nodes_LiteralStringN
 // 828: decl @lune.@base.@dumpNode.dumpFilter.processLiteralBool
 func (self *dumpNode_dumpFilter) ProcessLiteralBool(node *Nodes_LiteralBoolNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
-    self.FP.dump(opt, &node.Nodes_Node, Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( node.FP.Get_token().Txt == "true") &&
-        Lns_setStackVal( "true") ||
-        Lns_setStackVal( "false") ).(string))
+    self.FP.dump(opt, &node.Nodes_Node, Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( node.FP.Get_token().Txt == "true") &&
+        Lns_GetEnv().SetStackVal( "true") ||
+        Lns_GetEnv().SetStackVal( "false") ).(string))
 }
 
 // 834: decl @lune.@base.@dumpNode.dumpFilter.processLiteralNil

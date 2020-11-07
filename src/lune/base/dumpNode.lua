@@ -1121,7 +1121,7 @@ end
 
 function dumpFilter:processAlias( node, opt )
 
-   self:dump( opt, node, string.format( "%s = %s", node:get_newSymbol(), node:get_typeInfo():getTxt(  )) )
+   self:dump( opt, node, string.format( "%s = %s", node:get_newSymbol():get_name(), node:get_typeInfo():getTxt(  )) )
 end
 
 

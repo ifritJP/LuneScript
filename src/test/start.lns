@@ -1887,3 +1887,8 @@ _ = 1;
    }
    sub();
 }
+{
+   Macro._section();
+   let test = new SUB2.Test5( "aaa" );
+   print( test.$val );
+}

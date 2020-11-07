@@ -239,8 +239,14 @@ fn getModuleName( typeInfo:&Ast.TypeInfo ) : str {
 }
 
 fn convFilter.concatSymWithType( name:str, typeInfo:&Ast.TypeInfo ) : str {
-   return concatGLSym(
-      "%s_" (getModuleName( typeInfo.getModule())) .. name, self.isPubType( typeInfo ) );
+   let modName = getModuleName( typeInfo.getModule());
+   let typeName;
+   if modName == "" {
+      typeName = name;
+   } else {
+      typeName = "%s_%s" (modName, name );
+   }
+   return concatGLSym( typeName, self.isPubType( typeInfo ) );
 }
 
 fn convFilter.getSymbol( kind:SymbolKind, name:str ) : str {
@@ -332,7 +338,7 @@ fn convFilter.getSymbol( kind:SymbolKind, name:str ) : str {
             return self.getSymbol( .Func( typeInfo ), symbolName );
          }
          let mut workName;
-         if isInnerDeclType( typeInfo ) {
+         if isInnerDeclType( typeInfo ) and not Ast.isBuiltin( typeInfo.$typeId ) {
             workName = "%s%d" (name, typeInfo.$typeId );
          } else {
             workName = symbolName;
@@ -1016,8 +1022,8 @@ fn convFilter.outputNilAccCall( node: &Nodes.ExpCallNode ) mut {
       let name = "%s_%d" (self.moduleTypeInfo.$rawTxt.gsub( "@", "" ), node.$id);
       self.write(
       ```
-func lns_NilAccCall_%s( call func () (%s) ) bool {
-    return Lns_NilAccPush( Lns_2DDD( call() ) )
+func lns_NilAccCall_%s( env *LnsEnv, call func () (%s) ) bool {
+    return env.NilAccPush( Lns_2DDD( call() ) )
 }
 func lns_NilAccFinCall_%s( ret LnsAny ) (%s) {
     if Lns_IsNil( ret ) {
@@ -3899,11 +3905,11 @@ pub fn convFilter.outputCallPrefix(
       let retNum = #funcType.$retTypeInfoList;
       switch retNum {
          case 0 {
-            self.write( "Lns_NilAccCall0( func () {" );
+            self.write( "Lns_NilAccCall0( Lns_GetEnv(), func () {" );
          }
          case 1 {
 
-            self.write( "Lns_NilAccCall1( func () LnsAny { return " );
+            self.write( "Lns_NilAccCall1( Lns_GetEnv(), func () LnsAny { return " );
          }
          default {
             if retNum <= MaxNilAccNum {
@@ -3912,7 +3918,7 @@ pub fn convFilter.outputCallPrefix(
                   anys = "%s,LnsAny" (anys);
                }
                self.write(
-                  "Lns_NilAccCall%d( func () (%s) { return "
+                  "Lns_NilAccCall%d( Lns_GetEnv(), func () (%s) { return "
                   (retNum, anys) );
             }
             else {
@@ -3921,7 +3927,7 @@ pub fn convFilter.outputCallPrefix(
                   args = "%s,LnsAny" (args);
                }
                self.write(
-                  "lns_NilAccCall_%s( func () (%s) { return " (nilAccName, args) );
+                  "lns_NilAccCall_%s( Lns_GetEnv(), func () (%s) { return " (nilAccName, args) );
             }
          }
       }
@@ -3931,7 +3937,7 @@ pub fn convFilter.outputCallPrefix(
          }
       }
 
-      self.write( "Lns_NilAccPop().(%s)"
+      self.write( "Lns_GetEnv().NilAccPop().(%s)"
          (self.type2gotype( workPrefixNode.$expType.$nonnilableType ) ) );
    }
 
@@ -3942,7 +3948,7 @@ pub fn convFilter.outputCallPrefix(
             // 多値になるケースでは、
             // prefixNode の hasNilAccess に関係なく必ず値の変換を行なう
             if #funcType.$retTypeInfoList <= MaxNilAccNum {
-               self.write( "Lns_NilAccFinCall%d(" (#funcType.$retTypeInfoList) );
+               self.write( "Lns_NilAccFinCall%d( " (#funcType.$retTypeInfoList) );
             }
             else {
                self.write( "lns_NilAccFinCall_%s(" (nilAccName) );
@@ -3965,8 +3971,8 @@ pub fn convFilter.outputCallPrefix(
          if not funcType.$staticFlag {
             if node.hasNilAccess() {
                if not prefixNode.hasNilAccess() {
-                  self.write( "Lns_NilAccFin(" );
-                  self.write( "Lns_NilAccPush(" );
+                  self.write( "Lns_GetEnv().NilAccFin(" );
+                  self.write( "Lns_GetEnv().NilAccPush(" );
                   filter( prefixNode, self, node );
                   self.writeln( ") && " );
                } else {
@@ -4458,7 +4464,7 @@ fn convFilter.processAndOr( node: Nodes.ExpOp2Node,
    
    let mut firstFlag = not isAndOr( parent );
    if firstFlag {
-      self.writeln( "Lns_popVal( Lns_incStack() ||" );
+      self.writeln( "Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||" );
       self.pushIndent( ## );
    }
 
@@ -4474,7 +4480,7 @@ fn convFilter.processAndOr( node: Nodes.ExpOp2Node,
       filter( node.$exp1, self, node );
    }
    else {
-      self.write( "Lns_setStackVal( " );
+      self.write( "Lns_GetEnv().SetStackVal( " );
       filter( node.$exp1, self, node );
       self.write( ") " );
    }
@@ -4483,7 +4489,7 @@ fn convFilter.processAndOr( node: Nodes.ExpOp2Node,
       filter( node.$exp2, self, node );
    }
    else {
-      self.write( "Lns_setStackVal( " );
+      self.write( "Lns_GetEnv().SetStackVal( " );
       filter( node.$exp2, self, node );
       self.write( ") " );
    }
@@ -4597,10 +4603,10 @@ pub override fn convFilter.processExpRefItem(
    switch prefixType.$kind {
       case .Ext {
          if node.$nilAccess {
-            self.write( "Lns_NilAccFin( Lns_NilAccPush( " );
+            self.write( "Lns_GetEnv().NilAccFin( Lns_GetEnv().NilAccPush( " );
             filter( node.$val, self, node );
             self.write( ") && " );
-            self.write( "Lns_NilAccPush( Lns_NilAccPop().(*Lns_luaValue)" );
+            self.write( "Lns_GetEnv().NilAccPush( Lns_GetEnv().NilAccPop().(*Lns_luaValue)" );
          } else {
             filter( node.$val, self, node );
             if prefixType.$extedType.$kind == .Stem {
@@ -4619,14 +4625,14 @@ pub override fn convFilter.processExpRefItem(
       case .List, .Array {
          if node.$nilAccess {
             if not node.$val.hasNilAccess() {
-               self.writeln( "Lns_NilAccFin( Lns_NilAccPush(" );
+               self.writeln( "Lns_GetEnv().NilAccFin( Lns_GetEnv().NilAccPush(" );
                filter( node.$val, self, node );
                self.writeln( ") && " );
             } else {
                filter( node.$val, self, node );
                self.writeln( "&&" );
             }
-            self.write( "Lns_NilAccPush( Lns_NilAccPop().(*LnsList)" );
+            self.write( "Lns_GetEnv().NilAccPush( Lns_GetEnv().NilAccPop().(*LnsList)" );
             self.write( ".GetAt(" );
             filter( unwrap node.$index, self, node );
             self.write( ")" );
@@ -4643,14 +4649,14 @@ pub override fn convFilter.processExpRefItem(
       case .Map {
          if node.$nilAccess {
             if not node.$val.hasNilAccess() {
-               self.writeln( "Lns_NilAccFin( Lns_NilAccPush(" );
+               self.writeln( "Lns_GetEnv().NilAccFin( Lns_GetEnv().NilAccPush(" );
                filter( node.$val, self, node );
                self.writeln( ") && " );
             } else {
                filter( node.$val, self, node );
                self.writeln( "&&" );
             }
-            self.write( "Lns_NilAccPush( Lns_NilAccPop().(*LnsMap)" );
+            self.write( "Lns_GetEnv().NilAccPush( Lns_GetEnv().NilAccPop().(*LnsMap)" );
          } else {
             filter( node.$val, self, node );
             if prefixType.$kind == .Stem {
@@ -4729,21 +4735,21 @@ pub override fn convFilter.processRefField(
       }
    } else {
       if not node.$prefix.hasNilAccess() {
-         self.write( "Lns_NilAccFin(" );
-         self.write( "Lns_NilAccPush(" );
+         self.write( "Lns_GetEnv().NilAccFin(" );
+         self.write( "Lns_GetEnv().NilAccPush(" );
          filter( node.$prefix, self, node );
          self.writeln( ") && " );
       } else {
          filter( node.$prefix, self, node );
          self.writeln( "&&" );
       }
-      self.write( "Lns_NilAccPush(" );
+      self.write( "Lns_GetEnv().NilAccPush(" );
       if opt.parent.hasNilAccess() {
          openParenNum = 1;
       } else {
          openParenNum = 2;
       }
-      self.write( "Lns_NilAccPop().(%s)"
+      self.write( "Lns_GetEnv().NilAccPop().(%s)"
          (self.type2gotype( node.$prefix.$expType.$nonnilableType ) ));
    }
 
@@ -5029,7 +5035,7 @@ pub override fn convFilter.processLuneControl(
       case .limit_conv_code( _ ) {
       }
       case .run_async_pipe {
-         self.writeln( "go self.FP.loop()" );
+         self.writeln( "go self.FP.Loop()" );
       }
    }
 }

@@ -20,9 +20,9 @@ func Macro_loadCode_1007_(code string) LnsAny {
     var mess LnsAny
     loaded,mess = Lns_getVM().Load(code, nil)
     if loaded != nil{
-        loaded_5003 := loaded.(*Lns_luaValue)
+        loaded_5002 := loaded.(*Lns_luaValue)
         {
-            _obj := Macro_convExp41(Lns_2DDD(Lns_getVM().RunLoadedfunc(loaded_5003,Lns_2DDD([]LnsAny{}))[0]))
+            _obj := Macro_convExp41(Lns_2DDD(Lns_getVM().RunLoadedfunc(loaded_5002,Lns_2DDD([]LnsAny{}))[0]))
             if _obj != nil {
                 obj := _obj
                 return obj
@@ -105,9 +105,9 @@ func Macro_getLiteralMacroVal_1122_(obj LnsAny) LnsAny {
             var valObj LnsAny
             valObj = Macro_getLiteralMacroVal_1122_(val)
             if keyObj != nil && valObj != nil{
-                keyObj_5097 := keyObj
-                valObj_5098 := valObj
-                newMap.Set(keyObj_5097,valObj_5098)
+                keyObj_5096 := keyObj
+                valObj_5097 := valObj
+                newMap.Set(keyObj_5096,valObj_5097)
             }
         }
         return newMap
@@ -124,9 +124,9 @@ func Macro_equalsType_1294_(typeInfo *Ast_TypeInfo,builtinType *Ast_TypeInfo) bo
 // 480: decl @lune.@base.@Macro.expandVal
 func Macro_expandVal_1387_(tokenList *LnsList,workval LnsAny,pos *Types_Position) LnsAny {
     if workval != nil{
-        workval_5290 := workval
+        workval_5289 := workval
         var val LnsAny
-        val = workval_5290
+        val = workval_5289
         if _switch2229 := Lns_type(val); _switch2229 == "boolean" {
             var token string
             token = Lns_getVM().String_format("%s", []LnsAny{val})
@@ -603,16 +603,16 @@ func (self *Macro_MacroAnalyzeInfo) NextArg() {
 
 // 203: decl @lune.@base.@Macro.MacroAnalyzeInfo.isAnalyzingSymArg
 func (self *Macro_MacroAnalyzeInfo) IsAnalyzingSymArg() bool {
-    return Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( self.mode == Nodes_MacroMode__AnalyzeArg) &&
-        Lns_setStackVal( self.FP.GetCurArgType() == Ast_builtinTypeSymbol) ).(bool)
+    return Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( self.mode == Nodes_MacroMode__AnalyzeArg) &&
+        Lns_GetEnv().SetStackVal( self.FP.GetCurArgType() == Ast_builtinTypeSymbol) ).(bool)
 }
 
 // 216: decl @lune.@base.@Macro.MacroAnalyzeInfo.isAnalyzingExpArg
 func (self *Macro_MacroAnalyzeInfo) IsAnalyzingExpArg() bool {
-    return Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( self.mode == Nodes_MacroMode__AnalyzeArg) &&
-        Lns_setStackVal( self.FP.GetCurArgType() == Ast_builtinTypeExp) ).(bool)
+    return Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( self.mode == Nodes_MacroMode__AnalyzeArg) &&
+        Lns_GetEnv().SetStackVal( self.FP.GetCurArgType() == Ast_builtinTypeExp) ).(bool)
 }
 
 
@@ -706,8 +706,8 @@ func (self *Macro_MacroCtrl) InitMacro_MacroCtrl(macroEval *Nodes_MacroEval) {
 func (self *Macro_MacroCtrl) EvalMacroOp(streamName string,firstToken *Types_Token,macroTypeInfo *Ast_TypeInfo,expList LnsAny)(LnsAny, LnsAny) {
     self.useModuleMacroSet.Add(Ast_TypeInfo2Stem(macroTypeInfo.FP.GetModule()))
     if expList != nil{
-        expList_5191 := expList.(*Nodes_ExpListNode)
-        for _, _exp := range( expList_5191.FP.Get_expList().Items ) {
+        expList_5190 := expList.(*Nodes_ExpListNode)
+        for _, _exp := range( expList_5190.FP.Get_expList().Items ) {
             exp := _exp.(Nodes_NodeDownCast).ToNodes_Node()
             var kind LnsInt
             kind = exp.FP.Get_kind()
@@ -730,17 +730,17 @@ func (self *Macro_MacroCtrl) EvalMacroOp(streamName string,firstToken *Types_Tok
     var macroArgName2ArgNode *LnsMap
     macroArgName2ArgNode = NewLnsMap( map[LnsAny]LnsAny{})
     if expList != nil{
-        expList_5204 := expList.(*Nodes_ExpListNode)
-        for _index, _argNode := range( expList_5204.FP.Get_expList().Items ) {
+        expList_5203 := expList.(*Nodes_ExpListNode)
+        for _index, _argNode := range( expList_5203.FP.Get_expList().Items ) {
             index := _index + 1
             argNode := _argNode.(Nodes_NodeDownCast).ToNodes_Node()
             var literal LnsAny
             var mess LnsAny
             literal,mess = argNode.FP.GetLiteral()
             if literal != nil{
-                literal_5211 := literal
+                literal_5210 := literal
                 {
-                    _val := Macro_getLiteralMacroVal_1122_(literal_5211)
+                    _val := Macro_getLiteralMacroVal_1122_(literal_5210)
                     if _val != nil {
                         val := _val
                         argValMap.Set(index,Lns_getVM().RunLoadedfunc(Macro_toLuaval,Lns_2DDD(val))[0])
@@ -819,21 +819,21 @@ func (self *Macro_MacroCtrl) ImportMacro(processInfo *Ast_ProcessInfo,macroInfoS
     var err LnsAny
     macroInfo,err = Macro_MacroMetaInfo__fromStem_1094_(macroInfoStem,nil)
     if macroInfo != nil{
-        macroInfo_5249 := macroInfo.(*Macro_MacroMetaInfo)
+        macroInfo_5248 := macroInfo.(*Macro_MacroMetaInfo)
         var argList *LnsList
         argList = NewLnsList([]LnsAny{})
         var argNameList *LnsList
         argNameList = NewLnsList([]LnsAny{})
         var symbol2MacroValInfoMap *LnsMap
         symbol2MacroValInfoMap = NewLnsMap( map[LnsAny]LnsAny{})
-        for _, _argInfo := range( macroInfo_5249.ArgList.Items ) {
+        for _, _argInfo := range( macroInfo_5248.ArgList.Items ) {
             argInfo := _argInfo.(Macro_MacroMetaArgInfoDownCast).ToMacro_MacroMetaArgInfo()
             var argTypeInfo *Ast_TypeInfo
             argTypeInfo = Lns_unwrap( typeId2TypeInfo.Items[argInfo.TypeId]).(*Ast_TypeInfo)
             argList.Insert(Nodes_MacroArgInfo2Stem(NewNodes_MacroArgInfo(argInfo.Name, argTypeInfo)))
             argNameList.Insert(argInfo.Name)
         }
-        for _, _symInfo := range( macroInfo_5249.SymList.Items ) {
+        for _, _symInfo := range( macroInfo_5248.SymList.Items ) {
             symInfo := _symInfo.(Macro_MacroMetaArgInfoDownCast).ToMacro_MacroMetaArgInfo()
             var symTypeInfo *Ast_TypeInfo
             symTypeInfo = Lns_unwrap( typeId2TypeInfo.Items[symInfo.TypeId]).(*Ast_TypeInfo)
@@ -845,7 +845,7 @@ func (self *Macro_MacroCtrl) ImportMacro(processInfo *Ast_ProcessInfo,macroInfoS
         lineNo = 0
         var column LnsInt
         column = 1
-        for _, _tokenInfo := range( macroInfo_5249.TokenList.Items ) {
+        for _, _tokenInfo := range( macroInfo_5248.TokenList.Items ) {
             tokenInfo := _tokenInfo.(*LnsList)
             var txt string
             txt = tokenInfo.GetAt(2).(string)
@@ -856,13 +856,13 @@ func (self *Macro_MacroCtrl) ImportMacro(processInfo *Ast_ProcessInfo,macroInfoS
                 
             } else { 
                 var pos *Types_Position
-                pos = NewTypes_Position(lineNo, column, Lns_getVM().String_format("macro:%s", []LnsAny{macroInfo_5249.Name}))
+                pos = NewTypes_Position(lineNo, column, Lns_getVM().String_format("macro:%s", []LnsAny{macroInfo_5248.Name}))
                 tokenList.Insert(Types_Token2Stem(NewTypes_Token(Lns_unwrap( Types_TokenKind__from(Lns_forceCastInt(tokenInfo.GetAt(1)))).(LnsInt), txt, pos, false, nil)))
                 column = column + len(txt) + 1
                 
             }
         }
-        self.typeId2MacroInfo.Set(macroTypeInfo.FP.Get_typeId(),&NewMacro_ExtMacroInfo(macroInfo_5249.Name, self.macroEval.FP.EvalFromCode(processInfo, macroInfo_5249.Name, argNameList, macroInfo_5249.StmtBlock), symbol2MacroValInfoMap, argList, tokenList).Nodes_MacroInfo)
+        self.typeId2MacroInfo.Set(macroTypeInfo.FP.Get_typeId(),&NewMacro_ExtMacroInfo(macroInfo_5248.Name, self.macroEval.FP.EvalFromCode(processInfo, macroInfo_5248.Name, argNameList, macroInfo_5248.StmtBlock), symbol2MacroValInfoMap, argList, tokenList).Nodes_MacroInfo)
     } else {
         Util_errorLog(Lns_getVM().String_format("macro load fail -- %s: %s ", []LnsAny{macroTypeInfo.FP.GetTxt(nil, nil, nil), Lns_unwrapDefault( err, "").(string)}))
     }
@@ -907,10 +907,10 @@ func (self *Macro_MacroCtrl) ExpandMacroVal(typeNameCtrl *Ast_TypeNameCtrl,scope
     }
     var tokenTxt string
     tokenTxt = token.Txt
-    if Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( tokenTxt == ",,") ||
-        Lns_setStackVal( tokenTxt == ",,,") ||
-        Lns_setStackVal( tokenTxt == ",,,,") ).(bool){
+    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( tokenTxt == ",,") ||
+        Lns_GetEnv().SetStackVal( tokenTxt == ",,,") ||
+        Lns_GetEnv().SetStackVal( tokenTxt == ",,,,") ).(bool){
         var nextToken *Types_Token
         nextToken = getToken()
         var macroVal *Nodes_MacroValInfo
@@ -937,14 +937,14 @@ func (self *Macro_MacroCtrl) ExpandMacroVal(typeNameCtrl *Ast_TypeNameCtrl,scope
                     }
                 }
                 Macro_pushbackTxt_1394_(parser, txtList, nextToken.Txt, nextToken.Pos)
-            } else if Lns_popVal( Lns_incStack() ||
-                Lns_setStackVal( Macro_equalsType_1294_(macroVal.TypeInfo, Ast_builtinTypeStat)) ||
-                Lns_setStackVal( Macro_equalsType_1294_(macroVal.TypeInfo, Ast_builtinTypeExp)) ||
-                Lns_setStackVal( Macro_equalsType_1294_(macroVal.TypeInfo, Ast_builtinTypeMultiExp)) ).(bool){
+            } else if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                Lns_GetEnv().SetStackVal( Macro_equalsType_1294_(macroVal.TypeInfo, Ast_builtinTypeStat)) ||
+                Lns_GetEnv().SetStackVal( Macro_equalsType_1294_(macroVal.TypeInfo, Ast_builtinTypeExp)) ||
+                Lns_GetEnv().SetStackVal( Macro_equalsType_1294_(macroVal.TypeInfo, Ast_builtinTypeMultiExp)) ).(bool){
                 parser.PushbackStr(Lns_getVM().String_format("macroVal %s", []LnsAny{nextToken.Txt}), (Lns_unwrap( macroVal.Val)).(string))
-            } else if Lns_popVal( Lns_incStack() ||
-                Lns_setStackVal( macroVal.TypeInfo.FP.Get_kind() == Ast_TypeInfoKind__Array) ||
-                Lns_setStackVal( macroVal.TypeInfo.FP.Get_kind() == Ast_TypeInfoKind__List) ).(bool){
+            } else if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                Lns_GetEnv().SetStackVal( macroVal.TypeInfo.FP.Get_kind() == Ast_TypeInfoKind__Array) ||
+                Lns_GetEnv().SetStackVal( macroVal.TypeInfo.FP.Get_kind() == Ast_TypeInfoKind__List) ).(bool){
                 if Macro_equalsType_1294_(macroVal.TypeInfo.FP.Get_itemTypeInfoList().GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), Ast_builtinTypeStat){
                     var strList *Lns_luaValue
                     strList = (Lns_unwrap( macroVal.Val)).(*Lns_luaValue)
@@ -1064,10 +1064,10 @@ func (self *Macro_MacroCtrl) ExpandMacroVal(typeNameCtrl *Ast_TypeNameCtrl,scope
                 nextToken = NewTypes_Token(Types_TokenKind__Str, Lns_getVM().String_format("'%s'", []LnsAny{newToken}), nextToken.Pos, false, nil)
                 
                 parser.PushbackToken(nextToken)
-            } else if Lns_popVal( Lns_incStack() ||
-                Lns_setStackVal( Macro_equalsType_1294_(macroVal.TypeInfo, Ast_builtinTypeStat)) ||
-                Lns_setStackVal( Macro_equalsType_1294_(macroVal.TypeInfo, Ast_builtinTypeExp)) ||
-                Lns_setStackVal( Macro_equalsType_1294_(macroVal.TypeInfo, Ast_builtinTypeMultiExp)) ).(bool){
+            } else if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                Lns_GetEnv().SetStackVal( Macro_equalsType_1294_(macroVal.TypeInfo, Ast_builtinTypeStat)) ||
+                Lns_GetEnv().SetStackVal( Macro_equalsType_1294_(macroVal.TypeInfo, Ast_builtinTypeExp)) ||
+                Lns_GetEnv().SetStackVal( Macro_equalsType_1294_(macroVal.TypeInfo, Ast_builtinTypeMultiExp)) ).(bool){
                 var txt string
                 txt = (Lns_unwrap( macroVal.Val)).(string)
                 var rawTxt string
@@ -1103,10 +1103,10 @@ func (self *Macro_MacroCtrl) ExpandSymbol(parser Parser_PushbackParser,prefixTok
         parser.PushbackToken(nextToken)
     }
     var format string
-    format = Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( prefixToken.Txt == ",,,") &&
-        Lns_setStackVal( "' %s '") ||
-        Lns_setStackVal( "\"'%s'\"") ).(string)
+    format = Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( prefixToken.Txt == ",,,") &&
+        Lns_GetEnv().SetStackVal( "' %s '") ||
+        Lns_GetEnv().SetStackVal( "\"'%s'\"") ).(string)
     if prefixToken.Txt == ",,"{
         {
             _refNode := Nodes_ExpRefNodeDownCastF(exp.FP)
@@ -1117,43 +1117,43 @@ func (self *Macro_MacroCtrl) ExpandSymbol(parser Parser_PushbackParser,prefixTok
                 var macroInfo LnsAny
                 macroInfo = self.symbol2ValueMapForMacro.Items[symbolInfo.FP.Get_name()]
                 if macroInfo != nil{
-                    macroInfo_5407 := macroInfo.(*Nodes_MacroValInfo)
+                    macroInfo_5406 := macroInfo.(*Nodes_MacroValInfo)
                     var valType *Ast_TypeInfo
-                    valType = macroInfo_5407.TypeInfo
-                    if Lns_popVal( Lns_incStack() ||
-                        Lns_setStackVal( Macro_equalsType_1294_(valType, Ast_builtinTypeSymbol)) ||
-                        Lns_setStackVal( Macro_equalsType_1294_(valType, Ast_builtinTypeExp)) ||
-                        Lns_setStackVal( Macro_equalsType_1294_(valType, Ast_builtinTypeMultiExp)) ||
-                        Lns_setStackVal( Macro_equalsType_1294_(valType, Ast_builtinTypeStat)) ).(bool){
+                    valType = macroInfo_5406.TypeInfo
+                    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                        Lns_GetEnv().SetStackVal( Macro_equalsType_1294_(valType, Ast_builtinTypeSymbol)) ||
+                        Lns_GetEnv().SetStackVal( Macro_equalsType_1294_(valType, Ast_builtinTypeExp)) ||
+                        Lns_GetEnv().SetStackVal( Macro_equalsType_1294_(valType, Ast_builtinTypeMultiExp)) ||
+                        Lns_GetEnv().SetStackVal( Macro_equalsType_1294_(valType, Ast_builtinTypeStat)) ).(bool){
                         format = "' %s '"
                         
-                    } else if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-                        Lns_setStackVal( valType.FP.Get_kind() == Ast_TypeInfoKind__List) &&
-                        Lns_setStackVal( Macro_equalsType_1294_(valType.FP.Get_itemTypeInfoList().GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), Ast_builtinTypeStat)) ).(bool)){
+                    } else if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                        Lns_GetEnv().SetStackVal( valType.FP.Get_kind() == Ast_TypeInfoKind__List) &&
+                        Lns_GetEnv().SetStackVal( Macro_equalsType_1294_(valType.FP.Get_itemTypeInfoList().GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), Ast_builtinTypeStat)) ).(bool)){
                         format = "' %s '"
                         
                         exp = &Nodes_ExpMacroStatListNode_create(nodeManager, prefixToken.Pos, self.analyzeInfo.FP.Get_mode() == Nodes_MacroMode__AnalyzeArg, NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeString)}), exp).Nodes_Node
                         
                     } else if Macro_equalsType_1294_(Ast_builtinTypeString, valType){
-                    } else if Lns_popVal( Lns_incStack() ||
-                        Lns_setStackVal( Macro_equalsType_1294_(valType, Ast_builtinTypeInt)) ||
-                        Lns_setStackVal( Macro_equalsType_1294_(valType, Ast_builtinTypeReal)) ).(bool){
+                    } else if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                        Lns_GetEnv().SetStackVal( Macro_equalsType_1294_(valType, Ast_builtinTypeInt)) ||
+                        Lns_GetEnv().SetStackVal( Macro_equalsType_1294_(valType, Ast_builtinTypeReal)) ).(bool){
                         format = "' %s' "
                         
                     } else { 
                         errMessList.Insert(Macro_ErrorMess2Stem(NewMacro_ErrorMess(Lns_unwrap( symbolInfo.FP.Get_pos()).(*Types_Position), Lns_getVM().String_format("not support ,, -- %s", []LnsAny{valType.FP.GetTxt(nil, nil, nil)}))))
                     }
                 } else {
-                    if Lns_popVal( Lns_incStack() ||
-                        Lns_setStackVal( Macro_equalsType_1294_(exp.FP.Get_expType(), Ast_builtinTypeInt)) ||
-                        Lns_setStackVal( Macro_equalsType_1294_(exp.FP.Get_expType(), Ast_builtinTypeReal)) ).(bool){
+                    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                        Lns_GetEnv().SetStackVal( Macro_equalsType_1294_(exp.FP.Get_expType(), Ast_builtinTypeInt)) ||
+                        Lns_GetEnv().SetStackVal( Macro_equalsType_1294_(exp.FP.Get_expType(), Ast_builtinTypeReal)) ).(bool){
                         format = "' %s' "
                         
-                    } else if Lns_popVal( Lns_incStack() ||
-                        Lns_setStackVal( Macro_equalsType_1294_(exp.FP.Get_expType(), Ast_builtinTypeSymbol)) ||
-                        Lns_setStackVal( Macro_equalsType_1294_(exp.FP.Get_expType(), Ast_builtinTypeExp)) ||
-                        Lns_setStackVal( Macro_equalsType_1294_(exp.FP.Get_expType(), Ast_builtinTypeMultiExp)) ||
-                        Lns_setStackVal( Macro_equalsType_1294_(exp.FP.Get_expType(), Ast_builtinTypeStat)) ).(bool){
+                    } else if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                        Lns_GetEnv().SetStackVal( Macro_equalsType_1294_(exp.FP.Get_expType(), Ast_builtinTypeSymbol)) ||
+                        Lns_GetEnv().SetStackVal( Macro_equalsType_1294_(exp.FP.Get_expType(), Ast_builtinTypeExp)) ||
+                        Lns_GetEnv().SetStackVal( Macro_equalsType_1294_(exp.FP.Get_expType(), Ast_builtinTypeMultiExp)) ||
+                        Lns_GetEnv().SetStackVal( Macro_equalsType_1294_(exp.FP.Get_expType(), Ast_builtinTypeStat)) ).(bool){
                         format = "' %s '"
                         
                     }

@@ -729,7 +729,7 @@ pub override fn dumpFilter.processProvide(
 pub override fn dumpFilter.processAlias(
    node: &Nodes.AliasNode, opt:Opt ) mut
 {
-   self.dump( opt, node, "%s = %s" (node.$newSymbol, node.$typeInfo.getTxt(##) ) );
+   self.dump( opt, node, "%s = %s" (node.$newSymbol.$name, node.$typeInfo.getTxt(##) ) );
 }
 
 pub override fn dumpFilter.processTestCase(

@@ -689,18 +689,18 @@ func Ast_getAllNameForKind(classInfo *Ast_TypeInfo,kind LnsInt,symbolKind LnsInt
             for _, ___key2732 := range( __sorted2732.Items ) {
                 symbolInfo := __collection2732.Items[ ___key2732 ].(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
                 if _switch2730 := symbolInfo.FP.Get_kind(); _switch2730 == symbolKind {
-                    if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-                        Lns_setStackVal( symbolKind == Ast_SymbolKind__Mtd) &&
-                        Lns_setStackVal( symbolInfo.FP.Get_name() == "__init") ).(bool)){
+                    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                        Lns_GetEnv().SetStackVal( symbolKind == Ast_SymbolKind__Mtd) &&
+                        Lns_GetEnv().SetStackVal( symbolInfo.FP.Get_name() == "__init") ).(bool)){
                     } else { 
                         var staticFlag bool
                         staticFlag = symbolInfo.FP.Get_staticFlag()
-                        if Lns_popVal( Lns_incStack() ||
-                            Lns_setStackVal( kind == Ast_MethodKind__All) ||
-                            Lns_setStackVal( kind == Ast_MethodKind__Static) &&
-                            Lns_setStackVal( staticFlag) ||
-                            Lns_setStackVal( kind == Ast_MethodKind__Object) &&
-                            Lns_setStackVal( Lns_op_not(staticFlag)) ).(bool){
+                        if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                            Lns_GetEnv().SetStackVal( kind == Ast_MethodKind__All) ||
+                            Lns_GetEnv().SetStackVal( kind == Ast_MethodKind__Static) &&
+                            Lns_GetEnv().SetStackVal( staticFlag) ||
+                            Lns_GetEnv().SetStackVal( kind == Ast_MethodKind__Object) &&
+                            Lns_GetEnv().SetStackVal( Lns_op_not(staticFlag)) ).(bool){
                             nameSet.FP.Add(symbolInfo.FP.Get_name())
                         }
                     }
@@ -804,11 +804,11 @@ func Ast_getEnumLiteralVal(obj LnsAny) LnsAny {
 
 // 4009: decl @lune.@base.@Ast.isExtType
 func Ast_isExtType(typeInfo *Ast_TypeInfo) bool {
-    return Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( typeInfo.FP.Get_kind() == Ast_TypeInfoKind__Ext) ||
-        Lns_setStackVal( (Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( typeInfo.FP.Get_kind() == Ast_TypeInfoKind__DDD) &&
-            Lns_setStackVal( typeInfo.FP.Get_extedType() != typeInfo) ).(bool))) ).(bool)
+    return Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( typeInfo.FP.Get_kind() == Ast_TypeInfoKind__Ext) ||
+        Lns_GetEnv().SetStackVal( (Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( typeInfo.FP.Get_kind() == Ast_TypeInfoKind__DDD) &&
+            Lns_GetEnv().SetStackVal( typeInfo.FP.Get_extedType() != typeInfo) ).(bool))) ).(bool)
 }
 
 // 4016: decl @lune.@base.@Ast.isMutableType
@@ -882,9 +882,9 @@ func Ast_failCreateLuavalWith_4158_(typeInfo *Ast_TypeInfo,convFlag LnsInt,valid
         if Lns_op_not(validToCheck){
             return nil, false
         }
-        if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( convFlag != Ast_LuavalConvKind__ToLua) &&
-            Lns_setStackVal( Ast_isMutable(typeInfo.FP.Get_mutMode())) ).(bool)){
+        if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( convFlag != Ast_LuavalConvKind__ToLua) &&
+            Lns_GetEnv().SetStackVal( Ast_isMutable(typeInfo.FP.Get_mutMode())) ).(bool)){
             return "not support mutable collecion. " + mess, false
         }
         var canConv bool
@@ -895,8 +895,8 @@ func Ast_failCreateLuavalWith_4158_(typeInfo *Ast_TypeInfo,convFlag LnsInt,valid
             var work bool
             err,work = Ast_failCreateLuavalWith_4158_(itemType, convFlag, validToCheck)
             if err != nil{
-                err_3747 := err.(string)
-                return err_3747, false
+                err_3746 := err.(string)
+                return err_3746, false
             }
             if Lns_op_not(work){
                 canConv = false
@@ -925,8 +925,8 @@ func Ast_failCreateLuavalWith_4158_(typeInfo *Ast_TypeInfo,convFlag LnsInt,valid
             var work bool
             err,work = Ast_failCreateLuavalWith_4158_(itemType, convFlag, validToCheck)
             if err != nil{
-                err_3759 := err.(string)
-                return err_3759, false
+                err_3758 := err.(string)
+                return err_3758, false
             }
             if Lns_op_not(work){
                 canConv = false
@@ -940,8 +940,8 @@ func Ast_failCreateLuavalWith_4158_(typeInfo *Ast_TypeInfo,convFlag LnsInt,valid
             var work bool
             err,work = Ast_failCreateLuavalWith_4158_(itemType, convFlag, validToCheck)
             if err != nil{
-                err_3766 := err.(string)
-                return err_3766, false
+                err_3765 := err.(string)
+                return err_3765, false
             }
             if Lns_op_not(work){
                 canConv = false
@@ -958,9 +958,9 @@ func Ast_failCreateLuavalWith_4158_(typeInfo *Ast_TypeInfo,convFlag LnsInt,valid
 
 // 4353: decl @lune.@base.@Ast.isClass
 func Ast_isClass(typeInfo *Ast_TypeInfo) bool {
-    return Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( typeInfo.FP.Get_kind() == Ast_TypeInfoKind__Class) &&
-        Lns_setStackVal( typeInfo != Ast_builtinTypeString) ).(bool)
+    return Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( typeInfo.FP.Get_kind() == Ast_TypeInfoKind__Class) &&
+        Lns_GetEnv().SetStackVal( typeInfo != Ast_builtinTypeString) ).(bool)
 }
 
 // 4383: decl @lune.@base.@Ast.isStruct
@@ -969,10 +969,10 @@ func Ast_isStruct(typeInfo *Ast_TypeInfo) bool {
         if typeInfo == Ast_builtinTypeString{
             return false
         }
-        if Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( typeInfo.FP.Get_baseTypeInfo() != Ast_headTypeInfo) ||
-            Lns_setStackVal( typeInfo.FP.Get_interfaceList().Len() != 0) ||
-            Lns_setStackVal( typeInfo.FP.Get_children().Len() != 1) ).(bool){
+        if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( typeInfo.FP.Get_baseTypeInfo() != Ast_headTypeInfo) ||
+            Lns_GetEnv().SetStackVal( typeInfo.FP.Get_interfaceList().Len() != 0) ||
+            Lns_GetEnv().SetStackVal( typeInfo.FP.Get_children().Len() != 1) ).(bool){
             return false
         }
         return true
@@ -982,9 +982,9 @@ func Ast_isStruct(typeInfo *Ast_TypeInfo) bool {
 
 // 4406: decl @lune.@base.@Ast.isConditionalbe
 func Ast_isConditionalbe(processInfo *Ast_ProcessInfo,typeInfo *Ast_TypeInfo) bool {
-    if Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( typeInfo.FP.Get_nilable()) ||
-        Lns_setStackVal( typeInfo.FP.Equals(processInfo, Ast_builtinTypeBool, nil, nil)) ).(bool){
+    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( typeInfo.FP.Get_nilable()) ||
+        Lns_GetEnv().SetStackVal( typeInfo.FP.Equals(processInfo, Ast_builtinTypeBool, nil, nil)) ).(bool){
         return true
     }
     return false
@@ -1475,25 +1475,25 @@ func (self *Ast_ProcessInfo) CreateClass(classFlag bool,abstractFlag bool,scope 
         Util_err(Lns_getVM().String_format("This symbol can not use for a class or script file. -- %s", []LnsAny{className}))
     }
     var info *Ast_NormalTypeInfo
-    info = NewAst_NormalTypeInfo(self, abstractFlag, scope, baseInfo, interfaceList, false, externalFlag, false, accessMode, className, parentInfo, self.FP.Get_idProv().FP.GetNewId(), Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( classFlag) &&
-        Lns_setStackVal( Ast_TypeInfoKind__Class) ||
-        Lns_setStackVal( Ast_TypeInfoKind__IF) ).(LnsInt), genTypeList, nil, nil, Ast_MutMode__Mut)
+    info = NewAst_NormalTypeInfo(self, abstractFlag, scope, baseInfo, interfaceList, false, externalFlag, false, accessMode, className, parentInfo, self.FP.Get_idProv().FP.GetNewId(), Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( classFlag) &&
+        Lns_GetEnv().SetStackVal( Ast_TypeInfoKind__Class) ||
+        Lns_GetEnv().SetStackVal( Ast_TypeInfoKind__IF) ).(LnsInt), genTypeList, nil, nil, Ast_MutMode__Mut)
     return &info.Ast_TypeInfo
 }
 
 // 4565: decl @lune.@base.@Ast.ProcessInfo.createFunc
 func (self *Ast_ProcessInfo) CreateFunc(abstractFlag bool,builtinFlag bool,scope LnsAny,kind LnsInt,parentInfo *Ast_TypeInfo,autoFlag bool,externalFlag bool,staticFlag bool,accessMode LnsInt,funcName string,altTypeList LnsAny,argTypeList LnsAny,retTypeInfoList LnsAny,mutable LnsAny) *Ast_TypeInfo {
-    if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( Lns_op_not(builtinFlag)) &&
-        Lns_setStackVal( Parser_isLuaKeyword(funcName)) ).(bool)){
+    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( Lns_op_not(builtinFlag)) &&
+        Lns_GetEnv().SetStackVal( Parser_isLuaKeyword(funcName)) ).(bool)){
         Util_err(Lns_getVM().String_format("This symbol can not use for a function. -- %s", []LnsAny{funcName}))
     }
     var info *Ast_NormalTypeInfo
-    info = NewAst_NormalTypeInfo(self, abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, self.FP.Get_idProv().FP.GetNewId(), kind, Lns_unwrapDefault( altTypeList, NewLnsList([]LnsAny{})).(*LnsList), Lns_unwrapDefault( argTypeList, NewLnsList([]LnsAny{})).(*LnsList), Lns_unwrapDefault( retTypeInfoList, NewLnsList([]LnsAny{})).(*LnsList), Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( mutable) &&
-        Lns_setStackVal( Ast_MutMode__Mut) ||
-        Lns_setStackVal( Ast_MutMode__IMut) ).(LnsInt))
+    info = NewAst_NormalTypeInfo(self, abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, self.FP.Get_idProv().FP.GetNewId(), kind, Lns_unwrapDefault( altTypeList, NewLnsList([]LnsAny{})).(*LnsList), Lns_unwrapDefault( argTypeList, NewLnsList([]LnsAny{})).(*LnsList), Lns_unwrapDefault( retTypeInfoList, NewLnsList([]LnsAny{})).(*LnsList), Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( mutable) &&
+        Lns_GetEnv().SetStackVal( Ast_MutMode__Mut) ||
+        Lns_GetEnv().SetStackVal( Ast_MutMode__IMut) ).(LnsInt))
     return &info.Ast_TypeInfo
 }
 
@@ -1513,15 +1513,15 @@ func (self *Ast_ProcessInfo) CreateDDD(typeInfo *Ast_TypeInfo,externalFlag bool,
         typeInfo = typeInfo.FP.Get_itemTypeInfoList().GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo()
         
     }
-    if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( Lns_op_not(Lns_car(Ast_failCreateLuavalWith_4158_(typeInfo, Ast_LuavalConvKind__InLua, true)))) &&
-        Lns_setStackVal( extTypeFlag) ).(bool)){
+    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( Lns_op_not(Lns_car(Ast_failCreateLuavalWith_4158_(typeInfo, Ast_LuavalConvKind__InLua, true)))) &&
+        Lns_GetEnv().SetStackVal( extTypeFlag) ).(bool)){
         extTypeFlag = false
         
     }
-    if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( typeInfo.FP.Get_nonnilableType().FP.Get_kind() != Ast_TypeInfoKind__Ext) &&
-        Lns_setStackVal( extTypeFlag) ).(bool)){
+    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( typeInfo.FP.Get_nonnilableType().FP.Get_kind() != Ast_TypeInfoKind__Ext) &&
+        Lns_GetEnv().SetStackVal( extTypeFlag) ).(bool)){
         switch _exp19057 := self.FP.CreateLuaval(typeInfo, true).(type) {
         case *Ast_LuavalResult__OK:
         work := _exp19057.Val1
@@ -1544,9 +1544,9 @@ func (self *Ast_ProcessInfo) CreateDDD(typeInfo *Ast_TypeInfo,externalFlag bool,
         __exp := dddMap.Items[typeInfo]
         if __exp != nil {
             _exp := __exp.(*Ast_DDDTypeInfo)
-            if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-                Lns_setStackVal( _exp.FP.Get_typeId() < Ast_userStartId) &&
-                Lns_setStackVal( typeInfo.FP.Get_typeId() >= Ast_userStartId) ).(bool)){
+            if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                Lns_GetEnv().SetStackVal( _exp.FP.Get_typeId() < Ast_userStartId) &&
+                Lns_GetEnv().SetStackVal( typeInfo.FP.Get_typeId() >= Ast_userStartId) ).(bool)){
                 Util_err("on cache")
             }
             return _exp
@@ -1585,9 +1585,9 @@ func (self *Ast_ProcessInfo) CreateLuaval(luneType *Ast_TypeInfo,validToCheck bo
         _extType := self.FP.get_typeInfo2Map().ExtMap.Items[luneType]
         if _extType != nil {
             extType := _extType.(*Ast_TypeInfo)
-            if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-                Lns_setStackVal( extType.FP.Get_typeId() < Ast_userStartId) &&
-                Lns_setStackVal( luneType.FP.Get_typeId() >= Ast_userStartId) ).(bool)){
+            if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                Lns_GetEnv().SetStackVal( extType.FP.Get_typeId() < Ast_userStartId) &&
+                Lns_GetEnv().SetStackVal( luneType.FP.Get_typeId() >= Ast_userStartId) ).(bool)){
                 Util_err("on cache")
             }
             if extType.FP.Get_kind() == Ast_TypeInfoKind__Ext{
@@ -1617,8 +1617,8 @@ func (self *Ast_ProcessInfo) CreateLuaval(luneType *Ast_TypeInfo,validToCheck bo
         err, canConv = Ast_failCreateLuavalWith_4158_(luneType, Ast_LuavalConvKind__InLua, validToCheck)
         
         if err != nil{
-            err_4636 := err.(string)
-            return &Ast_LuavalResult__Err{err_4636}
+            err_4635 := err.(string)
+            return &Ast_LuavalResult__Err{err_4635}
         }
         if canConv{
             return &Ast_LuavalResult__OK{luneType, true}
@@ -1995,9 +1995,9 @@ func (self *Ast_SymbolInfo) InitAst_SymbolInfo() {
 
 // 395: decl @lune.@base.@Ast.SymbolInfo.hasAccess
 func (self *Ast_SymbolInfo) HasAccess() bool {
-    if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( self.FP.Get_posForModToRef()) ||
-        Lns_setStackVal( self.FP.Get_posForLatestMod() != self.FP.Get_pos()) )){
+    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( self.FP.Get_posForModToRef()) ||
+        Lns_GetEnv().SetStackVal( self.FP.Get_posForLatestMod() != self.FP.Get_pos()) )){
         return true
     }
     return false
@@ -2503,9 +2503,9 @@ func (self *Ast_Scope) GetSymbolInfo(name string,fromScope *Ast_Scope,onlySameNs
             }
         }
     }
-    if Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( Lns_op_not(onlySameNsFlag)) ||
-        Lns_setStackVal( Lns_op_not(self.ownerTypeInfo)) ).(bool){
+    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( Lns_op_not(onlySameNsFlag)) ||
+        Lns_GetEnv().SetStackVal( Lns_op_not(self.ownerTypeInfo)) ).(bool){
         if self.parent != self{
             return self.parent.FP.GetSymbolInfo(name, fromScope, onlySameNsFlag, access)
         }
@@ -2513,11 +2513,11 @@ func (self *Ast_Scope) GetSymbolInfo(name string,fromScope *Ast_Scope,onlySameNs
         var workScope *Ast_Scope
         workScope = self.parent
         for workScope.parent != workScope {
-            if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-                Lns_setStackVal( Lns_NilAccFin(Lns_NilAccPush(workScope.ownerTypeInfo) && 
-                Lns_NilAccCall1( func () LnsAny { return Lns_NilAccPop().(*Ast_TypeInfo).FP.Get_kind()})) != Ast_TypeInfoKind__Class) &&
-                Lns_setStackVal( Lns_NilAccFin(Lns_NilAccPush(workScope.ownerTypeInfo) && 
-                Lns_NilAccCall1( func () LnsAny { return Lns_NilAccPop().(*Ast_TypeInfo).FP.Get_kind()})) != Ast_TypeInfoKind__Module) ).(bool)){
+            if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                Lns_GetEnv().SetStackVal( Lns_GetEnv().NilAccFin(Lns_GetEnv().NilAccPush(workScope.ownerTypeInfo) && 
+                Lns_NilAccCall1( Lns_GetEnv(), func () LnsAny { return Lns_GetEnv().NilAccPop().(*Ast_TypeInfo).FP.Get_kind()})) != Ast_TypeInfoKind__Class) &&
+                Lns_GetEnv().SetStackVal( Lns_GetEnv().NilAccFin(Lns_GetEnv().NilAccPush(workScope.ownerTypeInfo) && 
+                Lns_NilAccCall1( Lns_GetEnv(), func () LnsAny { return Lns_GetEnv().NilAccPop().(*Ast_TypeInfo).FP.Get_kind()})) != Ast_TypeInfoKind__Module) ).(bool)){
                 return workScope.FP.GetSymbolInfo(name, fromScope, onlySameNsFlag, access)
             }
             workScope = workScope.parent
@@ -2559,24 +2559,24 @@ func (self *Ast_Scope) GetSymbolTypeInfo(name string,fromScope *Ast_Scope,module
         __exp := self.ownerTypeInfo
         if __exp != nil {
             _exp := __exp.(*Ast_TypeInfo)
-            if Lns_popVal( Lns_incStack() ||
-                Lns_setStackVal( _exp.FP.Get_kind() == Ast_TypeInfoKind__Func) ||
-                Lns_setStackVal( _exp.FP.Get_kind() == Ast_TypeInfoKind__Method) ||
-                Lns_setStackVal( self == moduleScope) ||
-                Lns_setStackVal( self == Ast_rootScope) ).(bool){
+            if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                Lns_GetEnv().SetStackVal( _exp.FP.Get_kind() == Ast_TypeInfoKind__Func) ||
+                Lns_GetEnv().SetStackVal( _exp.FP.Get_kind() == Ast_TypeInfoKind__Method) ||
+                Lns_GetEnv().SetStackVal( self == moduleScope) ||
+                Lns_GetEnv().SetStackVal( self == Ast_rootScope) ).(bool){
                 validThisScope = true
                 
-            } else if Lns_popVal( Lns_incStack() ||
-                Lns_setStackVal( _exp.FP.Get_kind() == Ast_TypeInfoKind__IF) ||
-                Lns_setStackVal( _exp.FP.Get_kind() == Ast_TypeInfoKind__Class) ||
-                Lns_setStackVal( _exp.FP.Get_kind() == Ast_TypeInfoKind__Module) ).(bool){
+            } else if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                Lns_GetEnv().SetStackVal( _exp.FP.Get_kind() == Ast_TypeInfoKind__IF) ||
+                Lns_GetEnv().SetStackVal( _exp.FP.Get_kind() == Ast_TypeInfoKind__Class) ||
+                Lns_GetEnv().SetStackVal( _exp.FP.Get_kind() == Ast_TypeInfoKind__Module) ).(bool){
                 limitSymbol = true
                 
                 validThisScope = true
                 
-            } else if Lns_popVal( Lns_incStack() ||
-                Lns_setStackVal( _exp.FP.Get_kind() == Ast_TypeInfoKind__Enum) ||
-                Lns_setStackVal( _exp.FP.Get_kind() == Ast_TypeInfoKind__Alge) ).(bool){
+            } else if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                Lns_GetEnv().SetStackVal( _exp.FP.Get_kind() == Ast_TypeInfoKind__Enum) ||
+                Lns_GetEnv().SetStackVal( _exp.FP.Get_kind() == Ast_TypeInfoKind__Alge) ).(bool){
                 validThisScope = true
                 
             }
@@ -2590,12 +2590,12 @@ func (self *Ast_Scope) GetSymbolTypeInfo(name string,fromScope *Ast_Scope,module
             _symbolInfo := self.symbol2SymbolInfoMap.Items[name]
             if _symbolInfo != nil {
                 symbolInfo := _symbolInfo.(*Ast_SymbolInfo)
-                if Lns_popVal( Lns_incStack() ||
-                    Lns_setStackVal( Lns_op_not(limitSymbol)) ||
-                    Lns_setStackVal( name == "self") ||
-                    Lns_setStackVal( (Lns_popVal( Lns_incStack() ||
-                        Lns_setStackVal( symbolInfo.FP.Get_typeInfo().FP.Get_kind() == Ast_TypeInfoKind__Alternate) &&
-                        Lns_setStackVal( symbolInfo.FP.Get_kind() == Ast_SymbolKind__Typ) ).(bool))) ).(bool){
+                if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                    Lns_GetEnv().SetStackVal( Lns_op_not(limitSymbol)) ||
+                    Lns_GetEnv().SetStackVal( name == "self") ||
+                    Lns_GetEnv().SetStackVal( (Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                        Lns_GetEnv().SetStackVal( symbolInfo.FP.Get_typeInfo().FP.Get_kind() == Ast_TypeInfoKind__Alternate) &&
+                        Lns_GetEnv().SetStackVal( symbolInfo.FP.Get_kind() == Ast_SymbolKind__Typ) ).(bool))) ).(bool){
                     return symbolInfo.FP.CanAccess(fromScope, access)
                 }
             }
@@ -2618,10 +2618,10 @@ func (self *Ast_Scope) FilterSymbolTypeInfo(fromScope *Ast_Scope,moduleScope *As
             }
         }
     }
-    if Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( moduleScope == fromScope) ||
-        Lns_setStackVal( moduleScope == self) ||
-        Lns_setStackVal( Lns_op_not(self.classFlag)) ).(bool){
+    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( moduleScope == fromScope) ||
+        Lns_GetEnv().SetStackVal( moduleScope == self) ||
+        Lns_GetEnv().SetStackVal( Lns_op_not(self.classFlag)) ).(bool){
         for _, _symbolInfo := range( self.symbol2SymbolInfoMap.Items ) {
             symbolInfo := _symbolInfo.(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
             if Lns_op_not(callback(symbolInfo)){
@@ -2639,8 +2639,8 @@ func (self *Ast_Scope) Add(processInfo *Ast_ProcessInfo,kind LnsInt,canBeLeft bo
     if _switch5853 := kind; _switch5853 == Ast_SymbolKind__Typ || _switch5853 == Ast_SymbolKind__Fun || _switch5853 == Ast_SymbolKind__Mac {
         var existSymbol LnsAny
         if _switch5819 := typeInfo.FP.Get_kind(); _switch5819 == Ast_TypeInfoKind__Enum {
-            if Lns_NilAccFin(Lns_NilAccPush(self.ownerTypeInfo) && 
-            Lns_NilAccCall1( func () LnsAny { return Lns_NilAccPop().(*Ast_TypeInfo).FP.Get_kind()})) == Ast_TypeInfoKind__Class{
+            if Lns_GetEnv().NilAccFin(Lns_GetEnv().NilAccPush(self.ownerTypeInfo) && 
+            Lns_NilAccCall1( Lns_GetEnv(), func () LnsAny { return Lns_GetEnv().NilAccPop().(*Ast_TypeInfo).FP.Get_kind()})) == Ast_TypeInfoKind__Class{
                 existSymbol = self.FP.GetSymbolInfoField(name, true, self, Ast_ScopeAccess__Full)
                 
             } else { 
@@ -2655,11 +2655,11 @@ func (self *Ast_Scope) Add(processInfo *Ast_ProcessInfo,kind LnsInt,canBeLeft bo
             
         }
         if existSymbol != nil{
-            existSymbol_1824 := existSymbol.(*Ast_SymbolInfo)
-            if Lns_popVal( Lns_incStack() ||
-                Lns_setStackVal( typeInfo.FP.Get_kind() != existSymbol_1824.FP.Get_typeInfo().FP.Get_kind()) ||
-                Lns_setStackVal( Lns_op_not(Ast_isBuiltin(existSymbol_1824.FP.Get_typeInfo().FP.Get_typeId()))) ).(bool){
-                return nil, existSymbol_1824
+            existSymbol_1823 := existSymbol.(*Ast_SymbolInfo)
+            if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                Lns_GetEnv().SetStackVal( typeInfo.FP.Get_kind() != existSymbol_1823.FP.Get_typeInfo().FP.Get_kind()) ||
+                Lns_GetEnv().SetStackVal( Lns_op_not(Ast_isBuiltin(existSymbol_1823.FP.Get_typeInfo().FP.Get_typeId()))) ).(bool){
+                return nil, existSymbol_1823
             }
         }
     }
@@ -2671,26 +2671,26 @@ func (self *Ast_Scope) Add(processInfo *Ast_ProcessInfo,kind LnsInt,canBeLeft bo
 
 // 1883: decl @lune.@base.@Ast.Scope.addLocalVar
 func (self *Ast_Scope) AddLocalVar(processInfo *Ast_ProcessInfo,argFlag bool,canBeLeft bool,name string,pos LnsAny,typeInfo *Ast_TypeInfo,mutable LnsInt)(LnsAny, LnsAny) {
-    return self.FP.Add(processInfo, Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( argFlag) &&
-        Lns_setStackVal( Ast_SymbolKind__Arg) ||
-        Lns_setStackVal( Ast_SymbolKind__Var) ).(LnsInt), canBeLeft, name != "_", name, pos, typeInfo, Ast_AccessMode__Local, false, mutable, true)
+    return self.FP.Add(processInfo, Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( argFlag) &&
+        Lns_GetEnv().SetStackVal( Ast_SymbolKind__Arg) ||
+        Lns_GetEnv().SetStackVal( Ast_SymbolKind__Var) ).(LnsInt), canBeLeft, name != "_", name, pos, typeInfo, Ast_AccessMode__Local, false, mutable, true)
 }
 
 // 1896: decl @lune.@base.@Ast.Scope.addUnwrapedVar
 func (self *Ast_Scope) AddUnwrapedVar(processInfo *Ast_ProcessInfo,argFlag bool,canBeLeft bool,name string,pos LnsAny,typeInfo *Ast_TypeInfo,mutable LnsInt)(LnsAny, LnsAny) {
-    return self.FP.Add(processInfo, Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( argFlag) &&
-        Lns_setStackVal( Ast_SymbolKind__Arg) ||
-        Lns_setStackVal( Ast_SymbolKind__Var) ).(LnsInt), canBeLeft, true, name, pos, typeInfo, Ast_AccessMode__Local, false, mutable, true)
+    return self.FP.Add(processInfo, Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( argFlag) &&
+        Lns_GetEnv().SetStackVal( Ast_SymbolKind__Arg) ||
+        Lns_GetEnv().SetStackVal( Ast_SymbolKind__Var) ).(LnsInt), canBeLeft, true, name, pos, typeInfo, Ast_AccessMode__Local, false, mutable, true)
 }
 
 // 1907: decl @lune.@base.@Ast.Scope.addStaticVar
 func (self *Ast_Scope) AddStaticVar(processInfo *Ast_ProcessInfo,argFlag bool,canBeLeft bool,name string,pos LnsAny,typeInfo *Ast_TypeInfo,mutable LnsInt)(LnsAny, LnsAny) {
-    return self.FP.Add(processInfo, Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( argFlag) &&
-        Lns_setStackVal( Ast_SymbolKind__Arg) ||
-        Lns_setStackVal( Ast_SymbolKind__Var) ).(LnsInt), canBeLeft, true, name, pos, typeInfo, Ast_AccessMode__Local, true, mutable, true)
+    return self.FP.Add(processInfo, Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( argFlag) &&
+        Lns_GetEnv().SetStackVal( Ast_SymbolKind__Arg) ||
+        Lns_GetEnv().SetStackVal( Ast_SymbolKind__Var) ).(LnsInt), canBeLeft, true, name, pos, typeInfo, Ast_AccessMode__Local, true, mutable, true)
 }
 
 // 1917: decl @lune.@base.@Ast.Scope.addVar
@@ -2730,18 +2730,18 @@ func (self *Ast_Scope) AddMember(processInfo *Ast_ProcessInfo,name string,pos Ln
 
 // 1990: decl @lune.@base.@Ast.Scope.addMethod
 func (self *Ast_Scope) AddMethod(processInfo *Ast_ProcessInfo,pos LnsAny,typeInfo *Ast_TypeInfo,accessMode LnsInt,staticFlag bool,mutable bool)(LnsAny, LnsAny) {
-    return self.FP.Add(processInfo, Ast_SymbolKind__Mtd, true, staticFlag, typeInfo.FP.Get_rawTxt(), pos, typeInfo, accessMode, staticFlag, Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( mutable) &&
-        Lns_setStackVal( Ast_MutMode__Mut) ||
-        Lns_setStackVal( Ast_MutMode__IMut) ).(LnsInt), true)
+    return self.FP.Add(processInfo, Ast_SymbolKind__Mtd, true, staticFlag, typeInfo.FP.Get_rawTxt(), pos, typeInfo, accessMode, staticFlag, Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( mutable) &&
+        Lns_GetEnv().SetStackVal( Ast_MutMode__Mut) ||
+        Lns_GetEnv().SetStackVal( Ast_MutMode__IMut) ).(LnsInt), true)
 }
 
 // 2000: decl @lune.@base.@Ast.Scope.addFunc
 func (self *Ast_Scope) AddFunc(processInfo *Ast_ProcessInfo,pos LnsAny,typeInfo *Ast_TypeInfo,accessMode LnsInt,staticFlag bool,mutable bool)(LnsAny, LnsAny) {
-    return self.FP.Add(processInfo, Ast_SymbolKind__Fun, true, true, typeInfo.FP.Get_rawTxt(), pos, typeInfo, accessMode, staticFlag, Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( mutable) &&
-        Lns_setStackVal( Ast_MutMode__Mut) ||
-        Lns_setStackVal( Ast_MutMode__IMut) ).(LnsInt), true)
+    return self.FP.Add(processInfo, Ast_SymbolKind__Fun, true, true, typeInfo.FP.Get_rawTxt(), pos, typeInfo, accessMode, staticFlag, Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( mutable) &&
+        Lns_GetEnv().SetStackVal( Ast_MutMode__Mut) ||
+        Lns_GetEnv().SetStackVal( Ast_MutMode__IMut) ).(LnsInt), true)
 }
 
 // 2011: decl @lune.@base.@Ast.Scope.addForm
@@ -2793,9 +2793,9 @@ func (self *Ast_Scope) IsClosureAccess(moduleScope *Ast_Scope,symbol *Ast_Symbol
     var processInfo *Ast_ProcessInfo
     processInfo = moduleScope.FP.GetModule().FP.getProcessInfo()
     if _switch7174 := symbol.FP.Get_kind(); _switch7174 == Ast_SymbolKind__Var || _switch7174 == Ast_SymbolKind__Arg || _switch7174 == Ast_SymbolKind__Fun {
-        if Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( symbol.FP.Get_scope() == moduleScope) ||
-            Lns_setStackVal( symbol.FP.Get_scope() == Ast_rootScope) ).(bool){
+        if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( symbol.FP.Get_scope() == moduleScope) ||
+            Lns_GetEnv().SetStackVal( symbol.FP.Get_scope() == Ast_rootScope) ).(bool){
         } else if symbol.FP.Get_name() == "self"{
             var funcType *Ast_TypeInfo
             funcType = self.FP.GetNamespaceTypeInfo()
@@ -2816,9 +2816,9 @@ func (self *Ast_Scope) IsClosureAccess(moduleScope *Ast_Scope,symbol *Ast_Symbol
 
 // 2145: decl @lune.@base.@Ast.Scope.accessSymbol
 func (self *Ast_Scope) AccessSymbol(moduleScope *Ast_Scope,symbol *Ast_SymbolInfo) {
-    if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( symbol.FP.Get_kind() == Ast_SymbolKind__Fun) &&
-        Lns_setStackVal( self.FP.GetNamespaceTypeInfo() == symbol.FP.Get_typeInfo()) ).(bool)){
+    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( symbol.FP.Get_kind() == Ast_SymbolKind__Fun) &&
+        Lns_GetEnv().SetStackVal( self.FP.GetNamespaceTypeInfo() == symbol.FP.Get_typeInfo()) ).(bool)){
         return 
     }
     if self.FP.IsClosureAccess(moduleScope, symbol){
@@ -3292,9 +3292,9 @@ func (self *Ast_TypeInfo) SerializeTypeInfoList(name string,list *LnsList,onlyPu
     work = name
     for _, _typeInfo := range( list.Items ) {
         typeInfo := _typeInfo.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
-        if Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( Lns_op_not(onlyPub)) ||
-            Lns_setStackVal( typeInfo.FP.Get_accessMode() == Ast_AccessMode__Pub) ).(bool){
+        if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( Lns_op_not(onlyPub)) ||
+            Lns_GetEnv().SetStackVal( typeInfo.FP.Get_accessMode() == Ast_AccessMode__Pub) ).(bool){
             if len(work) != len(name){
                 work = work + ", "
                 
@@ -3311,15 +3311,15 @@ func Ast_TypeInfo_createScope(processInfo *Ast_ProcessInfo,parent LnsAny,classFl
     var inheritScope LnsAny
     inheritScope = nil
     if baseInfo != nil{
-        baseInfo_1067 := baseInfo.(*Ast_TypeInfo)
-        inheritScope = Lns_unwrap( baseInfo_1067.scope).(*Ast_Scope)
+        baseInfo_1066 := baseInfo.(*Ast_TypeInfo)
+        inheritScope = Lns_unwrap( baseInfo_1066.scope).(*Ast_Scope)
         
     }
     var ifScopeList *LnsList
     ifScopeList = NewLnsList([]LnsAny{})
     if interfaceList != nil{
-        interfaceList_1070 := interfaceList.(*LnsList)
-        for _, _ifType := range( interfaceList_1070.Items ) {
+        interfaceList_1069 := interfaceList.(*LnsList)
+        for _, _ifType := range( interfaceList_1069.Items ) {
             ifType := _ifType.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
             ifScopeList.Insert(Ast_Scope2Stem(Lns_unwrap( ifType.scope).(*Ast_Scope)))
         }
@@ -3388,15 +3388,15 @@ func Ast_TypeInfo_getCommonTypeCombo(processInfo *Ast_ProcessInfo,commonType Lns
     }
     var getType func(workType *Ast_TypeInfo) LnsAny
     getType = func(workType *Ast_TypeInfo) LnsAny {
-        if Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( typeInfo.FP.Get_nilable()) ||
-            Lns_setStackVal( other.FP.Get_nilable()) ).(bool){
+        if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( typeInfo.FP.Get_nilable()) ||
+            Lns_GetEnv().SetStackVal( other.FP.Get_nilable()) ).(bool){
             workType = workType.FP.Get_nilableTypeInfo()
             
         }
-        if Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( Lns_op_not(Ast_TypeInfo_isMut(typeInfo))) ||
-            Lns_setStackVal( Lns_op_not(Ast_TypeInfo_isMut(other))) ).(bool){
+        if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( Lns_op_not(Ast_TypeInfo_isMut(typeInfo))) ||
+            Lns_GetEnv().SetStackVal( Lns_op_not(Ast_TypeInfo_isMut(other))) ).(bool){
             workType = processInfo.FP.CreateModifier(workType, Ast_MutMode__IMut)
             
         }
@@ -3425,9 +3425,9 @@ func Ast_TypeInfo_getCommonTypeCombo(processInfo *Ast_ProcessInfo,commonType Lns
         return getType(type2)
     }
     var mutMode LnsInt
-    if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( Ast_TypeInfo_isMut(typeInfo)) &&
-        Lns_setStackVal( Ast_TypeInfo_isMut(other)) ).(bool)){
+    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( Ast_TypeInfo_isMut(typeInfo)) &&
+        Lns_GetEnv().SetStackVal( Ast_TypeInfo_isMut(other)) ).(bool)){
         mutMode = Ast_MutMode__Mut
         
     } else { 
@@ -3462,9 +3462,9 @@ func Ast_TypeInfo_getCommonTypeCombo(processInfo *Ast_ProcessInfo,commonType Lns
     work = type1.FP.Get_baseTypeInfo()
     for work != Ast_headTypeInfo {
         if Lns_car(work.FP.CanEvalWith(processInfo, type2, Ast_CanEvalType__SetOp, alt2type)).(bool){
-            if Lns_popVal( Lns_incStack() ||
-                Lns_setStackVal( typeInfo.FP.Get_nilable()) ||
-                Lns_setStackVal( other.FP.Get_nilable()) ).(bool){
+            if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                Lns_GetEnv().SetStackVal( typeInfo.FP.Get_nilable()) ||
+                Lns_GetEnv().SetStackVal( other.FP.Get_nilable()) ).(bool){
                 work = work.FP.Get_nilableTypeInfo()
                 
             }
@@ -3543,26 +3543,26 @@ func Ast_TypeInfo_checkMatchType(processInfo *Ast_ProcessInfo,dstTypeList *LnsLi
                         checkType = Ast_builtinTypeStem_
                         
                     }
-                } else if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-                    Lns_setStackVal( srcIndex > index) &&
-                    Lns_setStackVal( expType.FP.Get_kind() == Ast_TypeInfoKind__Abbr) ).(bool)){
+                } else if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                    Lns_GetEnv().SetStackVal( srcIndex > index) &&
+                    Lns_GetEnv().SetStackVal( expType.FP.Get_kind() == Ast_TypeInfoKind__Abbr) ).(bool)){
                     return Ast_MatchType__Error, "must not use '##'"
                 }
                 if Lns_op_not(Lns_car(dstType.FP.CanEvalWith(processInfo, checkType, Ast_CanEvalType__SetOp, alt2type)).(bool)){
                     return Ast_MatchType__Error, Lns_getVM().String_format("exp(%d) type mismatch %s <- %s: src: %d", []LnsAny{srcIndex, dstType.FP.GetTxt(Ast_defaultTypeNameCtrl, nil, nil), expType.FP.GetTxt(Ast_defaultTypeNameCtrl, nil, nil), srcIndex})
                 }
                 if warnForFollowSrcIndex != nil{
-                    warnForFollowSrcIndex_4928 := warnForFollowSrcIndex.(LnsInt)
-                    if warnForFollowSrcIndex_4928 <= srcIndex{
+                    warnForFollowSrcIndex_4927 := warnForFollowSrcIndex.(LnsInt)
+                    if warnForFollowSrcIndex_4927 <= srcIndex{
                         var workMess string
                         workMess = Lns_getVM().String_format("use '**' at arg(%d). %s <- %s", []LnsAny{srcIndex, dstType.FP.GetTxt(Ast_defaultTypeNameCtrl, nil, nil), expType.FP.GetTxt(Ast_defaultTypeNameCtrl, nil, nil)})
                         return Ast_MatchType__Warn, workMess
                     }
                 }
-                if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-                    Lns_setStackVal( dstType != Ast_builtinTypeEmpty) &&
-                    Lns_setStackVal( Lns_op_not(Ast_isExtType(dstType.FP.Get_srcTypeInfo().FP.Get_nonnilableType()))) &&
-                    Lns_setStackVal( Ast_isExtType(expType.FP.Get_srcTypeInfo().FP.Get_nonnilableType())) ).(bool)){
+                if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                    Lns_GetEnv().SetStackVal( dstType != Ast_builtinTypeEmpty) &&
+                    Lns_GetEnv().SetStackVal( Lns_op_not(Ast_isExtType(dstType.FP.Get_srcTypeInfo().FP.Get_nonnilableType()))) &&
+                    Lns_GetEnv().SetStackVal( Ast_isExtType(expType.FP.Get_srcTypeInfo().FP.Get_nonnilableType())) ).(bool)){
                     warnMess = Lns_getVM().String_format("exp(%d) luaval mismatch %s <- %s", []LnsAny{index, dstType.FP.GetTxt(nil, nil, nil), expType.FP.GetTxt(nil, nil, nil)})
                     
                 }
@@ -3586,14 +3586,14 @@ func Ast_TypeInfo_checkMatchType(processInfo *Ast_ProcessInfo,dstTypeList *LnsLi
                     var msg LnsAny
                     isMatch,msg = dstType.FP.CanEvalWith(processInfo, expType, Ast_CanEvalType__SetOp, alt2type)
                     if Lns_op_not(isMatch){
-                        return Ast_MatchType__Error, Lns_getVM().String_format("exp(%d) type mismatch %s <- %s: index %d%s", []LnsAny{index, Ast_applyGenericDefault(dstType, alt2type, dstType.FP.GetModule()).FP.GetTxt(Ast_defaultTypeNameCtrl, nil, nil), expType.FP.GetTxt(Ast_defaultTypeNameCtrl, nil, nil), index, Lns_popVal( Lns_incStack() ||
-                            Lns_setStackVal( msg) &&
-                            Lns_setStackVal( Lns_getVM().String_format(" -- %s", []LnsAny{msg})) ||
-                            Lns_setStackVal( "") ).(string)})
+                        return Ast_MatchType__Error, Lns_getVM().String_format("exp(%d) type mismatch %s <- %s: index %d%s", []LnsAny{index, Ast_applyGenericDefault(dstType, alt2type, dstType.FP.GetModule()).FP.GetTxt(Ast_defaultTypeNameCtrl, nil, nil), expType.FP.GetTxt(Ast_defaultTypeNameCtrl, nil, nil), index, Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                            Lns_GetEnv().SetStackVal( msg) &&
+                            Lns_GetEnv().SetStackVal( Lns_getVM().String_format(" -- %s", []LnsAny{msg})) ||
+                            Lns_GetEnv().SetStackVal( "") ).(string)})
                     }
-                    if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-                        Lns_setStackVal( Lns_op_not(allowDstShort)) &&
-                        Lns_setStackVal( dstTypeList.Len() < expTypeList.Len()) ).(bool)){
+                    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                        Lns_GetEnv().SetStackVal( Lns_op_not(allowDstShort)) &&
+                        Lns_GetEnv().SetStackVal( dstTypeList.Len() < expTypeList.Len()) ).(bool)){
                         return Ast_MatchType__Error, Lns_getVM().String_format("over exp. expect: %d: actual: %d", []LnsAny{dstTypeList.Len(), expTypeList.Len()})
                     }
                 } else { 
@@ -3611,17 +3611,17 @@ func Ast_TypeInfo_checkMatchType(processInfo *Ast_ProcessInfo,dstTypeList *LnsLi
                     }
                 }
                 if warnForFollowSrcIndex != nil{
-                    warnForFollowSrcIndex_4951 := warnForFollowSrcIndex.(LnsInt)
-                    if warnForFollowSrcIndex_4951 <= index{
+                    warnForFollowSrcIndex_4950 := warnForFollowSrcIndex.(LnsInt)
+                    if warnForFollowSrcIndex_4950 <= index{
                         var workMess string
                         workMess = Lns_getVM().String_format("use '**' at arg(%d). %s <- %s", []LnsAny{index, dstType.FP.GetTxt(Ast_defaultTypeNameCtrl, nil, nil), expType.FP.GetTxt(Ast_defaultTypeNameCtrl, nil, nil)})
                         return Ast_MatchType__Warn, workMess
                     }
                 }
-                if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-                    Lns_setStackVal( dstType != Ast_builtinTypeEmpty) &&
-                    Lns_setStackVal( Lns_op_not(Ast_isExtType(dstType.FP.Get_srcTypeInfo().FP.Get_nonnilableType()))) &&
-                    Lns_setStackVal( Ast_isExtType(expType.FP.Get_srcTypeInfo().FP.Get_nonnilableType())) ).(bool)){
+                if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                    Lns_GetEnv().SetStackVal( dstType != Ast_builtinTypeEmpty) &&
+                    Lns_GetEnv().SetStackVal( Lns_op_not(Ast_isExtType(dstType.FP.Get_srcTypeInfo().FP.Get_nonnilableType()))) &&
+                    Lns_GetEnv().SetStackVal( Ast_isExtType(expType.FP.Get_srcTypeInfo().FP.Get_nonnilableType())) ).(bool)){
                     warnMess = Lns_getVM().String_format("exp(%d) luaval mismatch %s <- %s", []LnsAny{index, dstType.FP.GetTxt(nil, nil, nil), expType.FP.GetTxt(nil, nil, nil)})
                     
                 }
@@ -3654,17 +3654,17 @@ func Ast_TypeInfo_checkMatchType(processInfo *Ast_ProcessInfo,dstTypeList *LnsLi
                     return result, mess
                 }
                 if warnForFollowSrcIndex != nil{
-                    warnForFollowSrcIndex_4965 := warnForFollowSrcIndex.(LnsInt)
-                    if warnForFollowSrcIndex_4965 <= index{
+                    warnForFollowSrcIndex_4964 := warnForFollowSrcIndex.(LnsInt)
+                    if warnForFollowSrcIndex_4964 <= index{
                         var workMess string
                         workMess = Lns_getVM().String_format("use '**' at arg(%d). %s <- %s", []LnsAny{index, dstType.FP.GetTxt(Ast_defaultTypeNameCtrl, nil, nil), expType.FP.GetTxt(Ast_defaultTypeNameCtrl, nil, nil)})
                         return Ast_MatchType__Warn, workMess
                     }
                 }
-                if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-                    Lns_setStackVal( dstType != Ast_builtinTypeEmpty) &&
-                    Lns_setStackVal( Lns_op_not(Ast_isExtType(dstType.FP.Get_srcTypeInfo().FP.Get_nonnilableType()))) &&
-                    Lns_setStackVal( Ast_isExtType(expType.FP.Get_srcTypeInfo().FP.Get_nonnilableType())) ).(bool)){
+                if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                    Lns_GetEnv().SetStackVal( dstType != Ast_builtinTypeEmpty) &&
+                    Lns_GetEnv().SetStackVal( Lns_op_not(Ast_isExtType(dstType.FP.Get_srcTypeInfo().FP.Get_nonnilableType()))) &&
+                    Lns_GetEnv().SetStackVal( Ast_isExtType(expType.FP.Get_srcTypeInfo().FP.Get_nonnilableType())) ).(bool)){
                     warnMess = Lns_getVM().String_format("exp(%d) luaval mismatch %s <- %s", []LnsAny{index, dstType.FP.GetTxt(nil, nil, nil), expType.FP.GetTxt(nil, nil, nil)})
                     
                 }
@@ -3675,17 +3675,17 @@ func Ast_TypeInfo_checkMatchType(processInfo *Ast_ProcessInfo,dstTypeList *LnsLi
                     return Ast_MatchType__Error, Lns_getVM().String_format("exp(%d) type mismatch %s(%d) <- %s(%d)", []LnsAny{index, dstType.FP.GetTxt(Ast_defaultTypeNameCtrl, nil, nil), dstType.FP.Get_typeId(), expType.FP.GetTxt(Ast_defaultTypeNameCtrl, nil, nil), expType.FP.Get_typeId()})
                 }
                 if warnForFollowSrcIndex != nil{
-                    warnForFollowSrcIndex_4972 := warnForFollowSrcIndex.(LnsInt)
-                    if warnForFollowSrcIndex_4972 <= index{
+                    warnForFollowSrcIndex_4971 := warnForFollowSrcIndex.(LnsInt)
+                    if warnForFollowSrcIndex_4971 <= index{
                         var workMess string
                         workMess = Lns_getVM().String_format("use '**' at arg(%d). %s <- %s", []LnsAny{index, dstType.FP.GetTxt(Ast_defaultTypeNameCtrl, nil, nil), expType.FP.GetTxt(Ast_defaultTypeNameCtrl, nil, nil)})
                         return Ast_MatchType__Warn, workMess
                     }
                 }
-                if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-                    Lns_setStackVal( dstType != Ast_builtinTypeEmpty) &&
-                    Lns_setStackVal( Lns_op_not(Ast_isExtType(dstType.FP.Get_srcTypeInfo().FP.Get_nonnilableType()))) &&
-                    Lns_setStackVal( Ast_isExtType(expType.FP.Get_srcTypeInfo().FP.Get_nonnilableType())) ).(bool)){
+                if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                    Lns_GetEnv().SetStackVal( dstType != Ast_builtinTypeEmpty) &&
+                    Lns_GetEnv().SetStackVal( Lns_op_not(Ast_isExtType(dstType.FP.Get_srcTypeInfo().FP.Get_nonnilableType()))) &&
+                    Lns_GetEnv().SetStackVal( Ast_isExtType(expType.FP.Get_srcTypeInfo().FP.Get_nonnilableType())) ).(bool)){
                     warnMess = Lns_getVM().String_format("exp(%d) luaval mismatch %s <- %s", []LnsAny{index, dstType.FP.GetTxt(nil, nil, nil), expType.FP.GetTxt(nil, nil, nil)})
                     
                 }
@@ -3703,8 +3703,8 @@ func Ast_TypeInfo_checkMatchType(processInfo *Ast_ProcessInfo,dstTypeList *LnsLi
         }
     }
     if warnMess != nil{
-        warnMess_4982 := warnMess.(string)
-        return Ast_MatchType__Warn, warnMess_4982
+        warnMess_4981 := warnMess.(string)
+        return Ast_MatchType__Warn, warnMess_4981
     }
     return Ast_MatchType__Match, ""
 }
@@ -3714,12 +3714,12 @@ func Ast_TypeInfo_canEvalWithBase(processInfo *Ast_ProcessInfo,dest *Ast_TypeInf
     if dest != dest.FP.Get_aliasSrc(){
         return dest.FP.Get_aliasSrc().FP.CanEvalWith(processInfo, other, canEvalType, alt2type)
     }
-    if Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( dest == Ast_builtinTypeExp) ||
-        Lns_setStackVal( dest == Ast_builtinTypeMultiExp) ).(bool){
-        if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( other == Ast_builtinTypeMultiExp) &&
-            Lns_setStackVal( dest != Ast_builtinTypeMultiExp) ).(bool)){
+    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( dest == Ast_builtinTypeExp) ||
+        Lns_GetEnv().SetStackVal( dest == Ast_builtinTypeMultiExp) ).(bool){
+        if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( other == Ast_builtinTypeMultiExp) &&
+            Lns_GetEnv().SetStackVal( dest != Ast_builtinTypeMultiExp) ).(bool)){
             return false, "can't eval from '__exp' to '__exps'."
         }
         if other.FP.Equals(processInfo, Ast_builtinTypeAbbr, nil, nil){
@@ -3755,9 +3755,9 @@ func Ast_TypeInfo_canEvalWithBase(processInfo *Ast_ProcessInfo,dest *Ast_TypeInf
                 return false, nil
             }
             return true, nil
-        } else if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( Lns_op_not(otherMut)) &&
-            Lns_setStackVal( destMut) ).(bool)){
+        } else if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( Lns_op_not(otherMut)) &&
+            Lns_GetEnv().SetStackVal( destMut) ).(bool)){
             var nonNilOtherType *Ast_TypeInfo
             nonNilOtherType = otherSrc.FP.Get_nonnilableType()
             if _switch25559 := nonNilOtherType.FP.Get_kind(); _switch25559 == Ast_TypeInfoKind__Set || _switch25559 == Ast_TypeInfoKind__Map || _switch25559 == Ast_TypeInfoKind__List || _switch25559 == Ast_TypeInfoKind__IF {
@@ -3772,21 +3772,21 @@ func Ast_TypeInfo_canEvalWithBase(processInfo *Ast_ProcessInfo,dest *Ast_TypeInf
                 }
             }
         }
-        if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( otherSrc != Ast_builtinTypeNil) &&
-            Lns_setStackVal( otherSrc != Ast_builtinTypeString) &&
-            Lns_setStackVal( otherSrc.FP.Get_kind() != Ast_TypeInfoKind__Prim) &&
-            Lns_setStackVal( otherSrc.FP.Get_kind() != Ast_TypeInfoKind__Func) &&
-            Lns_setStackVal( otherSrc.FP.Get_kind() != Ast_TypeInfoKind__Method) &&
-            Lns_setStackVal( otherSrc.FP.Get_kind() != Ast_TypeInfoKind__Form) &&
-            Lns_setStackVal( otherSrc.FP.Get_kind() != Ast_TypeInfoKind__FormFunc) &&
-            Lns_setStackVal( otherSrc.FP.Get_kind() != Ast_TypeInfoKind__Enum) &&
-            Lns_setStackVal( otherSrc.FP.Get_kind() != Ast_TypeInfoKind__Abbr) &&
-            Lns_setStackVal( otherSrc.FP.Get_kind() != Ast_TypeInfoKind__Alternate) &&
-            Lns_setStackVal( otherSrc.FP.Get_kind() != Ast_TypeInfoKind__Box) &&
-            Lns_setStackVal( Lns_op_not(Ast_isGenericType(otherSrc))) &&
-            Lns_setStackVal( destMut) &&
-            Lns_setStackVal( Lns_op_not(otherMut)) ).(bool)){
+        if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( otherSrc != Ast_builtinTypeNil) &&
+            Lns_GetEnv().SetStackVal( otherSrc != Ast_builtinTypeString) &&
+            Lns_GetEnv().SetStackVal( otherSrc.FP.Get_kind() != Ast_TypeInfoKind__Prim) &&
+            Lns_GetEnv().SetStackVal( otherSrc.FP.Get_kind() != Ast_TypeInfoKind__Func) &&
+            Lns_GetEnv().SetStackVal( otherSrc.FP.Get_kind() != Ast_TypeInfoKind__Method) &&
+            Lns_GetEnv().SetStackVal( otherSrc.FP.Get_kind() != Ast_TypeInfoKind__Form) &&
+            Lns_GetEnv().SetStackVal( otherSrc.FP.Get_kind() != Ast_TypeInfoKind__FormFunc) &&
+            Lns_GetEnv().SetStackVal( otherSrc.FP.Get_kind() != Ast_TypeInfoKind__Enum) &&
+            Lns_GetEnv().SetStackVal( otherSrc.FP.Get_kind() != Ast_TypeInfoKind__Abbr) &&
+            Lns_GetEnv().SetStackVal( otherSrc.FP.Get_kind() != Ast_TypeInfoKind__Alternate) &&
+            Lns_GetEnv().SetStackVal( otherSrc.FP.Get_kind() != Ast_TypeInfoKind__Box) &&
+            Lns_GetEnv().SetStackVal( Lns_op_not(Ast_isGenericType(otherSrc))) &&
+            Lns_GetEnv().SetStackVal( destMut) &&
+            Lns_GetEnv().SetStackVal( Lns_op_not(otherMut)) ).(bool)){
             return false, nil
         }
     }
@@ -3799,9 +3799,9 @@ func Ast_TypeInfo_canEvalWithBase(processInfo *Ast_ProcessInfo,dest *Ast_TypeInf
         }
         return true, nil
     }
-    if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( Lns_op_not(dest.FP.Get_nilable())) &&
-        Lns_setStackVal( otherSrc.FP.Get_nilable()) ).(bool)){
+    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( Lns_op_not(dest.FP.Get_nilable())) &&
+        Lns_GetEnv().SetStackVal( otherSrc.FP.Get_nilable()) ).(bool)){
         if canEvalType != Ast_CanEvalType__Equal{
             if dest.FP.Get_kind() == Ast_TypeInfoKind__Box{
                 return dest.FP.CanEvalWith(processInfo, otherSrc, canEvalType, alt2type)
@@ -3812,22 +3812,22 @@ func Ast_TypeInfo_canEvalWithBase(processInfo *Ast_ProcessInfo,dest *Ast_TypeInf
             
         }
     }
-    if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( dest == Ast_builtinTypeStem) &&
-        Lns_setStackVal( Lns_op_not(otherSrc.FP.Get_nilable())) ).(bool)){
+    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( dest == Ast_builtinTypeStem) &&
+        Lns_GetEnv().SetStackVal( Lns_op_not(otherSrc.FP.Get_nilable())) ).(bool)){
         return true, nil
     }
-    if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( dest == Ast_builtinTypeForm) &&
-        Lns_setStackVal( (Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( otherSrc.FP.Get_kind() == Ast_TypeInfoKind__Func) ||
-            Lns_setStackVal( otherSrc.FP.Get_kind() == Ast_TypeInfoKind__Form) ||
-            Lns_setStackVal( otherSrc.FP.Get_kind() == Ast_TypeInfoKind__FormFunc) ).(bool))) ).(bool)){
+    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( dest == Ast_builtinTypeForm) &&
+        Lns_GetEnv().SetStackVal( (Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( otherSrc.FP.Get_kind() == Ast_TypeInfoKind__Func) ||
+            Lns_GetEnv().SetStackVal( otherSrc.FP.Get_kind() == Ast_TypeInfoKind__Form) ||
+            Lns_GetEnv().SetStackVal( otherSrc.FP.Get_kind() == Ast_TypeInfoKind__FormFunc) ).(bool))) ).(bool)){
         return Ast_isSettableToForm_5096_(processInfo, otherSrc), nil
     }
-    if Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( otherSrc == Ast_builtinTypeNil) ||
-        Lns_setStackVal( otherSrc.FP.Get_kind() == Ast_TypeInfoKind__Abbr) ).(bool){
+    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( otherSrc == Ast_builtinTypeNil) ||
+        Lns_GetEnv().SetStackVal( otherSrc.FP.Get_kind() == Ast_TypeInfoKind__Abbr) ).(bool){
         if dest.FP.Get_kind() != Ast_TypeInfoKind__Nilable{
             return false, nil
         }
@@ -3843,18 +3843,18 @@ func Ast_TypeInfo_canEvalWithBase(processInfo *Ast_ProcessInfo,dest *Ast_TypeInf
         _extTypeInfo := Ast_ExtTypeInfoDownCastF(otherSrc.FP)
         if _extTypeInfo != nil {
             extTypeInfo := _extTypeInfo.(*Ast_ExtTypeInfo)
-            if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-                Lns_setStackVal( canEvalType != Ast_CanEvalType__SetEq) &&
-                Lns_setStackVal( Lns_op_not(Lns_car(Ast_failCreateLuavalWith_4158_(extTypeInfo.FP.Get_extedType(), Ast_LuavalConvKind__ToLua, false)))) ).(bool)){
+            if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                Lns_GetEnv().SetStackVal( canEvalType != Ast_CanEvalType__SetEq) &&
+                Lns_GetEnv().SetStackVal( Lns_op_not(Lns_car(Ast_failCreateLuavalWith_4158_(extTypeInfo.FP.Get_extedType(), Ast_LuavalConvKind__ToLua, false)))) ).(bool)){
                 otherSrc = extTypeInfo.FP.Get_extedType()
                 
             }
         }
     }
     if dest.FP.Get_kind() != otherSrc.FP.Get_kind(){
-        if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( otherSrc.FP.Get_kind() == Ast_TypeInfoKind__Alternate) &&
-            Lns_setStackVal( otherSrc.FP.HasBase()) ).(bool)){
+        if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( otherSrc.FP.Get_kind() == Ast_TypeInfoKind__Alternate) &&
+            Lns_GetEnv().SetStackVal( otherSrc.FP.HasBase()) ).(bool)){
             return Ast_TypeInfo_canEvalWithBase(processInfo, dest, destMut, otherSrc.FP.Get_baseTypeInfo(), canEvalType, alt2type)
         }
         if dest.FP.Get_kind() == Ast_TypeInfoKind__Nilable{
@@ -3875,16 +3875,16 @@ func Ast_TypeInfo_canEvalWithBase(processInfo *Ast_ProcessInfo,dest *Ast_TypeInf
             return dstNonNil.FP.CanEvalWith(processInfo, otherSrc, canEvalType, alt2type)
         } else if Ast_isGenericType(dest){
             return dest.FP.CanEvalWith(processInfo, otherSrc, canEvalType, alt2type)
-        } else if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( (Lns_popVal( Lns_incStack() ||
-                Lns_setStackVal( dest.FP.Get_kind() == Ast_TypeInfoKind__Class) ||
-                Lns_setStackVal( dest.FP.Get_kind() == Ast_TypeInfoKind__IF) ).(bool))) &&
-            Lns_setStackVal( (Lns_popVal( Lns_incStack() ||
-                Lns_setStackVal( otherSrc.FP.Get_kind() == Ast_TypeInfoKind__Class) ||
-                Lns_setStackVal( otherSrc.FP.Get_kind() == Ast_TypeInfoKind__IF) ).(bool))) ).(bool)){
-            if Lns_popVal( Lns_incStack() ||
-                Lns_setStackVal( canEvalType == Ast_CanEvalType__SetOp) ||
-                Lns_setStackVal( canEvalType == Ast_CanEvalType__SetOpIMut) ).(bool){
+        } else if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( (Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                Lns_GetEnv().SetStackVal( dest.FP.Get_kind() == Ast_TypeInfoKind__Class) ||
+                Lns_GetEnv().SetStackVal( dest.FP.Get_kind() == Ast_TypeInfoKind__IF) ).(bool))) &&
+            Lns_GetEnv().SetStackVal( (Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                Lns_GetEnv().SetStackVal( otherSrc.FP.Get_kind() == Ast_TypeInfoKind__Class) ||
+                Lns_GetEnv().SetStackVal( otherSrc.FP.Get_kind() == Ast_TypeInfoKind__IF) ).(bool))) ).(bool)){
+            if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                Lns_GetEnv().SetStackVal( canEvalType == Ast_CanEvalType__SetOp) ||
+                Lns_GetEnv().SetStackVal( canEvalType == Ast_CanEvalType__SetOpIMut) ).(bool){
                 return otherSrc.FP.IsInheritFrom(processInfo, dest, alt2type), nil
             }
             return false, nil
@@ -3945,11 +3945,11 @@ func Ast_TypeInfo_canEvalWithBase(processInfo *Ast_ProcessInfo,dest *Ast_TypeInf
         return false, nil
     }
     if _switch27495 := dest.FP.Get_kind(); _switch27495 == Ast_TypeInfoKind__Prim {
-        if Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( dest == Ast_builtinTypeInt) &&
-            Lns_setStackVal( otherSrc == Ast_builtinTypeChar) ||
-            Lns_setStackVal( dest == Ast_builtinTypeChar) &&
-            Lns_setStackVal( otherSrc == Ast_builtinTypeInt) ).(bool){
+        if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( dest == Ast_builtinTypeInt) &&
+            Lns_GetEnv().SetStackVal( otherSrc == Ast_builtinTypeChar) ||
+            Lns_GetEnv().SetStackVal( dest == Ast_builtinTypeChar) &&
+            Lns_GetEnv().SetStackVal( otherSrc == Ast_builtinTypeInt) ).(bool){
             return true, nil
         }
         return false, nil
@@ -3957,15 +3957,15 @@ func Ast_TypeInfo_canEvalWithBase(processInfo *Ast_ProcessInfo,dest *Ast_TypeInf
         if otherSrc.FP.Get_itemTypeInfoList().GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo() == Ast_builtinTypeNone{
             return true, nil
         }
-        if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( dest.FP.Get_itemTypeInfoList().Len() >= 1) &&
-            Lns_setStackVal( otherSrc.FP.Get_itemTypeInfoList().Len() >= 1) ).(bool)){
+        if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( dest.FP.Get_itemTypeInfoList().Len() >= 1) &&
+            Lns_GetEnv().SetStackVal( otherSrc.FP.Get_itemTypeInfoList().Len() >= 1) ).(bool)){
             var ret bool
             var mess LnsAny
-            ret,mess = (dest.FP.Get_itemTypeInfoList().GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo()).FP.CanEvalWith(processInfo, otherSrc.FP.Get_itemTypeInfoList().GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), Lns_popVal( Lns_incStack() ||
-                Lns_setStackVal( destMut) &&
-                Lns_setStackVal( Ast_CanEvalType__SetEq) ||
-                Lns_setStackVal( Ast_CanEvalType__SetOpIMut) ).(LnsInt), alt2type)
+            ret,mess = (dest.FP.Get_itemTypeInfoList().GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo()).FP.CanEvalWith(processInfo, otherSrc.FP.Get_itemTypeInfoList().GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                Lns_GetEnv().SetStackVal( destMut) &&
+                Lns_GetEnv().SetStackVal( Ast_CanEvalType__SetEq) ||
+                Lns_GetEnv().SetStackVal( Ast_CanEvalType__SetOpIMut) ).(LnsInt), alt2type)
             if Lns_op_not(ret){
                 return false, mess
             }
@@ -3975,21 +3975,21 @@ func Ast_TypeInfo_canEvalWithBase(processInfo *Ast_ProcessInfo,dest *Ast_TypeInf
         
         return true, nil
     } else if _switch27495 == Ast_TypeInfoKind__Map {
-        if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( otherSrc.FP.Get_itemTypeInfoList().GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo() == Ast_builtinTypeNone) &&
-            Lns_setStackVal( otherSrc.FP.Get_itemTypeInfoList().GetAt(2).(Ast_TypeInfoDownCast).ToAst_TypeInfo() == Ast_builtinTypeNone) ).(bool)){
+        if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( otherSrc.FP.Get_itemTypeInfoList().GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo() == Ast_builtinTypeNone) &&
+            Lns_GetEnv().SetStackVal( otherSrc.FP.Get_itemTypeInfoList().GetAt(2).(Ast_TypeInfoDownCast).ToAst_TypeInfo() == Ast_builtinTypeNone) ).(bool)){
             return true, nil
         }
         var check1 func() LnsAny
         check1 = func() LnsAny {
-            if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-                Lns_setStackVal( dest.FP.Get_itemTypeInfoList().Len() >= 1) &&
-                Lns_setStackVal( otherSrc.FP.Get_itemTypeInfoList().Len() >= 1) ).(bool)){
+            if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                Lns_GetEnv().SetStackVal( dest.FP.Get_itemTypeInfoList().Len() >= 1) &&
+                Lns_GetEnv().SetStackVal( otherSrc.FP.Get_itemTypeInfoList().Len() >= 1) ).(bool)){
                 var ret bool
-                ret,_ = (dest.FP.Get_itemTypeInfoList().GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo()).FP.CanEvalWith(processInfo, otherSrc.FP.Get_itemTypeInfoList().GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), Lns_popVal( Lns_incStack() ||
-                    Lns_setStackVal( destMut) &&
-                    Lns_setStackVal( Ast_CanEvalType__SetEq) ||
-                    Lns_setStackVal( Ast_CanEvalType__SetOpIMut) ).(LnsInt), alt2type)
+                ret,_ = (dest.FP.Get_itemTypeInfoList().GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo()).FP.CanEvalWith(processInfo, otherSrc.FP.Get_itemTypeInfoList().GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                    Lns_GetEnv().SetStackVal( destMut) &&
+                    Lns_GetEnv().SetStackVal( Ast_CanEvalType__SetEq) ||
+                    Lns_GetEnv().SetStackVal( Ast_CanEvalType__SetOpIMut) ).(LnsInt), alt2type)
                 if Lns_op_not(ret){
                     return false
                 }
@@ -4001,14 +4001,14 @@ func Ast_TypeInfo_canEvalWithBase(processInfo *Ast_ProcessInfo,dest *Ast_TypeInf
         }
         var check2 func() bool
         check2 = func() bool {
-            if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-                Lns_setStackVal( dest.FP.Get_itemTypeInfoList().Len() >= 2) &&
-                Lns_setStackVal( otherSrc.FP.Get_itemTypeInfoList().Len() >= 2) ).(bool)){
+            if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                Lns_GetEnv().SetStackVal( dest.FP.Get_itemTypeInfoList().Len() >= 2) &&
+                Lns_GetEnv().SetStackVal( otherSrc.FP.Get_itemTypeInfoList().Len() >= 2) ).(bool)){
                 var ret bool
-                ret,_ = (dest.FP.Get_itemTypeInfoList().GetAt(2).(Ast_TypeInfoDownCast).ToAst_TypeInfo()).FP.CanEvalWith(processInfo, otherSrc.FP.Get_itemTypeInfoList().GetAt(2).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), Lns_popVal( Lns_incStack() ||
-                    Lns_setStackVal( destMut) &&
-                    Lns_setStackVal( Ast_CanEvalType__SetEq) ||
-                    Lns_setStackVal( Ast_CanEvalType__SetOpIMut) ).(LnsInt), alt2type)
+                ret,_ = (dest.FP.Get_itemTypeInfoList().GetAt(2).(Ast_TypeInfoDownCast).ToAst_TypeInfo()).FP.CanEvalWith(processInfo, otherSrc.FP.Get_itemTypeInfoList().GetAt(2).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                    Lns_GetEnv().SetStackVal( destMut) &&
+                    Lns_GetEnv().SetStackVal( Ast_CanEvalType__SetEq) ||
+                    Lns_GetEnv().SetStackVal( Ast_CanEvalType__SetOpIMut) ).(LnsInt), alt2type)
                 if Lns_op_not(ret){
                     return false
                 }
@@ -4022,16 +4022,16 @@ func Ast_TypeInfo_canEvalWithBase(processInfo *Ast_ProcessInfo,dest *Ast_TypeInf
         result1 = check1()
         var result2 bool
         result2 = check2()
-        if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( result1) &&
-            Lns_setStackVal( result2) )){
+        if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( result1) &&
+            Lns_GetEnv().SetStackVal( result2) )){
             return true, nil
         }
-        if Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( Lns_op_not(result1)) &&
-            Lns_setStackVal( otherSrc.FP.Get_itemTypeInfoList().GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo() == Ast_builtinTypeNone) ||
-            Lns_setStackVal( Lns_op_not(result2)) &&
-            Lns_setStackVal( otherSrc.FP.Get_itemTypeInfoList().GetAt(2).(Ast_TypeInfoDownCast).ToAst_TypeInfo() == Ast_builtinTypeNone) ).(bool){
+        if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( Lns_op_not(result1)) &&
+            Lns_GetEnv().SetStackVal( otherSrc.FP.Get_itemTypeInfoList().GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo() == Ast_builtinTypeNone) ||
+            Lns_GetEnv().SetStackVal( Lns_op_not(result2)) &&
+            Lns_GetEnv().SetStackVal( otherSrc.FP.Get_itemTypeInfoList().GetAt(2).(Ast_TypeInfoDownCast).ToAst_TypeInfo() == Ast_builtinTypeNone) ).(bool){
             return true, nil
         }
         return false, nil
@@ -4039,9 +4039,9 @@ func Ast_TypeInfo_canEvalWithBase(processInfo *Ast_ProcessInfo,dest *Ast_TypeInf
         if Ast_isGenericType(dest){
             return dest.FP.CanEvalWith(processInfo, otherSrc, canEvalType, alt2type)
         }
-        if Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( canEvalType == Ast_CanEvalType__SetOp) ||
-            Lns_setStackVal( canEvalType == Ast_CanEvalType__SetOpIMut) ).(bool){
+        if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( canEvalType == Ast_CanEvalType__SetOp) ||
+            Lns_GetEnv().SetStackVal( canEvalType == Ast_CanEvalType__SetOpIMut) ).(bool){
             return otherSrc.FP.IsInheritFrom(processInfo, dest, alt2type), nil
         }
         return false, nil
@@ -4065,9 +4065,9 @@ func Ast_TypeInfo_canEvalWithBase(processInfo *Ast_ProcessInfo,dest *Ast_TypeInf
         }
         return true, nil
     } else if _switch27495 == Ast_TypeInfoKind__Method {
-        if Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( dest.FP.Get_argTypeInfoList().Len() != otherSrc.FP.Get_argTypeInfoList().Len()) ||
-            Lns_setStackVal( dest.FP.Get_retTypeInfoList().Len() != otherSrc.FP.Get_retTypeInfoList().Len()) ).(bool){
+        if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( dest.FP.Get_argTypeInfoList().Len() != otherSrc.FP.Get_argTypeInfoList().Len()) ||
+            Lns_GetEnv().SetStackVal( dest.FP.Get_retTypeInfoList().Len() != otherSrc.FP.Get_retTypeInfoList().Len()) ).(bool){
             return false, nil
         }
         for _index, _argType := range( dest.FP.Get_argTypeInfoList().Items ) {
@@ -4121,9 +4121,9 @@ func Ast_TypeInfo_canEvalWithBase(processInfo *Ast_ProcessInfo,dest *Ast_TypeInf
 
 // 6581: decl @lune.@base.@Ast.TypeInfo.getFullName
 func (self *Ast_TypeInfo) GetFullName(typeNameCtrl *Ast_TypeNameCtrl,importInfo Ast_ModuleInfoManager,localFlag LnsAny) string {
-    if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( localFlag) &&
-        Lns_setStackVal( self.FP.IsModule()) )){
+    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( localFlag) &&
+        Lns_GetEnv().SetStackVal( self.FP.IsModule()) )){
         return typeNameCtrl.FP.GetModuleName(self, "", importInfo)
     }
     return self.FP.GetParentFullName(typeNameCtrl, importInfo, localFlag) + self.FP.Get_rawTxt()
@@ -4919,8 +4919,8 @@ func (self *Ast_NilableTypeInfo) ApplyGeneric(alt2typeMap *LnsMap,moduleTypeInfo
         return &self.Ast_TypeInfo
     }
     if typeInfo != nil{
-        typeInfo_1460 := typeInfo.(*Ast_TypeInfo)
-        return typeInfo_1460.FP.Get_nilableTypeInfo()
+        typeInfo_1459 := typeInfo.(*Ast_TypeInfo)
+        return typeInfo_1459.FP.Get_nilableTypeInfo()
     }
     return nil
 }
@@ -4932,9 +4932,9 @@ func (self *Ast_NilableTypeInfo) CanEvalWith(processInfo *Ast_ProcessInfo,other 
     if &self.Ast_TypeInfo == Ast_builtinTypeStem_{
         return true, nil
     }
-    if Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( otherSrc == Ast_builtinTypeNil) ||
-        Lns_setStackVal( otherSrc.FP.Get_kind() == Ast_TypeInfoKind__Abbr) ).(bool){
+    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( otherSrc == Ast_builtinTypeNil) ||
+        Lns_GetEnv().SetStackVal( otherSrc.FP.Get_kind() == Ast_TypeInfoKind__Abbr) ).(bool){
         if self.FP.Get_nonnilableType().FP.Get_kind() == Ast_TypeInfoKind__Box{
             return self.FP.Get_nonnilableType().FP.CanEvalWith(processInfo, otherSrc, canEvalType, alt2type)
         }
@@ -5564,18 +5564,18 @@ func (self *Ast_AccessSymbolInfo) InitAst_AccessSymbolInfo(symbolInfo *Ast_Symbo
         
     case *Ast_OverrideMut__Prefix:
     prefixTypeInfo := _exp7908.Val1
-        if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( self.symbolInfo.FP.Get_kind() == Ast_SymbolKind__Mbr) &&
-            Lns_setStackVal( symType.FP.Get_kind() == Ast_TypeInfoKind__Alternate) &&
-            Lns_setStackVal( prefixTypeInfo.FP.Get_kind() == Ast_TypeInfoKind__Class) &&
-            Lns_setStackVal( prefixTypeInfo.FP.Get_itemTypeInfoList().Len() > 0) ).(bool)){
+        if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( self.symbolInfo.FP.Get_kind() == Ast_SymbolKind__Mbr) &&
+            Lns_GetEnv().SetStackVal( symType.FP.Get_kind() == Ast_TypeInfoKind__Alternate) &&
+            Lns_GetEnv().SetStackVal( prefixTypeInfo.FP.Get_kind() == Ast_TypeInfoKind__Class) &&
+            Lns_GetEnv().SetStackVal( prefixTypeInfo.FP.Get_itemTypeInfoList().Len() > 0) ).(bool)){
             var alt2TypeMap *LnsMap
             alt2TypeMap = prefixTypeInfo.FP.CreateAlt2typeMap(false)
             var typeInfo LnsAny
             typeInfo = symType.FP.ApplyGeneric(alt2TypeMap, symType.FP.GetModule())
             if typeInfo != nil{
-                typeInfo_2192 := typeInfo.(*Ast_TypeInfo)
-                work = typeInfo_2192
+                typeInfo_2191 := typeInfo.(*Ast_TypeInfo)
+                work = typeInfo_2191
                 
             } else {
                 work = symType
@@ -5817,17 +5817,17 @@ func (self *Ast_AlternateTypeInfo) canSetFrom(processInfo *Ast_ProcessInfo,other
         if _genType != nil {
             genType := _genType.(*Ast_TypeInfo)
             if canEvalType != nil{
-                canEvalType_2335 := canEvalType.(LnsInt)
-                return Lns_car(genType.FP.CanEvalWith(processInfo, otherWork, canEvalType_2335, alt2type)).(bool)
+                canEvalType_2334 := canEvalType.(LnsInt)
+                return Lns_car(genType.FP.CanEvalWith(processInfo, otherWork, canEvalType_2334, alt2type)).(bool)
             }
             return genType.FP.Equals(processInfo, otherWork, alt2type, nil)
         }
     }
     var workAlt2type *LnsMap
     if Lns_op_not(Ast_CanEvalCtrlTypeInfo_isValidApply(alt2type)){
-        if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( otherWork.FP.Get_kind() != Ast_TypeInfoKind__Class) &&
-            Lns_setStackVal( otherWork.FP.Get_kind() != Ast_TypeInfoKind__IF) ).(bool)){
+        if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( otherWork.FP.Get_kind() != Ast_TypeInfoKind__Class) &&
+            Lns_GetEnv().SetStackVal( otherWork.FP.Get_kind() != Ast_TypeInfoKind__IF) ).(bool)){
             return false
         }
         workAlt2type = Ast_CanEvalCtrlTypeInfo_createDefaultAlt2typeMap(false)
@@ -5855,24 +5855,24 @@ func (self *Ast_AlternateTypeInfo) canSetFrom(processInfo *Ast_ProcessInfo,other
 func (self *Ast_AlternateTypeInfo) IsInheritFrom(processInfo *Ast_ProcessInfo,other *Ast_TypeInfo,alt2type LnsAny) bool {
     var workAlt2type LnsAny
     if alt2type != nil{
-        alt2type_2355 := alt2type.(*LnsMap)
+        alt2type_2354 := alt2type.(*LnsMap)
         var otherWork *Ast_TypeInfo
-        otherWork = Ast_AlternateTypeInfo_getAssign(other, alt2type_2355)
+        otherWork = Ast_AlternateTypeInfo_getAssign(other, alt2type_2354)
         if &self.Ast_TypeInfo == otherWork.FP.Get_srcTypeInfo(){
             return true
         }
         {
-            _genType := alt2type_2355.Items[&self.Ast_TypeInfo]
+            _genType := alt2type_2354.Items[&self.Ast_TypeInfo]
             if _genType != nil {
                 genType := _genType.(*Ast_TypeInfo)
-                return genType.FP.IsInheritFrom(processInfo, otherWork, alt2type_2355)
+                return genType.FP.IsInheritFrom(processInfo, otherWork, alt2type_2354)
             }
         }
-        if Lns_op_not(Ast_CanEvalCtrlTypeInfo_isValidApply(alt2type_2355)){
+        if Lns_op_not(Ast_CanEvalCtrlTypeInfo_isValidApply(alt2type_2354)){
             workAlt2type = nil
             
         } else { 
-            workAlt2type = alt2type_2355
+            workAlt2type = alt2type_2354
             
         }
     } else {
@@ -5899,8 +5899,8 @@ func (self *Ast_AlternateTypeInfo) IsInheritFrom(processInfo *Ast_ProcessInfo,ot
     }
     if check(){
         if workAlt2type != nil{
-            workAlt2type_2374 := workAlt2type.(*LnsMap)
-            workAlt2type_2374.Set(&self.Ast_TypeInfo,other)
+            workAlt2type_2373 := workAlt2type.(*LnsMap)
+            workAlt2type_2373.Set(&self.Ast_TypeInfo,other)
         }
         return true
     }
@@ -5920,9 +5920,9 @@ func (self *Ast_AlternateTypeInfo) CanEvalWith(processInfo *Ast_ProcessInfo,othe
             _altType := Ast_AlternateTypeInfoDownCastF(other.FP)
             if _altType != nil {
                 altType := _altType.(*Ast_AlternateTypeInfo)
-                if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-                    Lns_setStackVal( Lns_op_not(altType.belongClassFlag)) &&
-                    Lns_setStackVal( altType.altIndex == self.altIndex) ).(bool)){
+                if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                    Lns_GetEnv().SetStackVal( Lns_op_not(altType.belongClassFlag)) &&
+                    Lns_GetEnv().SetStackVal( altType.altIndex == self.altIndex) ).(bool)){
                     return true, nil
                 }
             }
@@ -5934,12 +5934,12 @@ func (self *Ast_AlternateTypeInfo) CanEvalWith(processInfo *Ast_ProcessInfo,othe
 // 2651: decl @lune.@base.@Ast.AlternateTypeInfo.get_display_stirng_with
 func (self *Ast_AlternateTypeInfo) Get_display_stirng_with(raw string,alt2type LnsAny) string {
     if alt2type != nil{
-        alt2type_2398 := alt2type.(*LnsMap)
+        alt2type_2397 := alt2type.(*LnsMap)
         {
-            _genType := alt2type_2398.Items[&self.Ast_TypeInfo]
+            _genType := alt2type_2397.Items[&self.Ast_TypeInfo]
             if _genType != nil {
                 genType := _genType.(*Ast_TypeInfo)
-                return genType.FP.Get_display_stirng_with(genType.FP.Get_rawTxt(), alt2type_2398)
+                return genType.FP.Get_display_stirng_with(genType.FP.Get_rawTxt(), alt2type_2397)
             }
         }
     }
@@ -5961,17 +5961,17 @@ func (self *Ast_AlternateTypeInfo) Equals(processInfo *Ast_ProcessInfo,typeInfo 
             _altType := Ast_AlternateTypeInfoDownCastF(typeInfo.FP)
             if _altType != nil {
                 altType := _altType.(*Ast_AlternateTypeInfo)
-                if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-                    Lns_setStackVal( Lns_op_not(altType.belongClassFlag)) &&
-                    Lns_setStackVal( altType.altIndex == self.altIndex) ).(bool)){
+                if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                    Lns_GetEnv().SetStackVal( Lns_op_not(altType.belongClassFlag)) &&
+                    Lns_GetEnv().SetStackVal( altType.altIndex == self.altIndex) ).(bool)){
                     return true
                 }
             }
         }
     }
     if alt2type != nil{
-        alt2type_2421 := alt2type.(*LnsMap)
-        return self.FP.canSetFrom(processInfo, typeInfo, nil, alt2type_2421)
+        alt2type_2420 := alt2type.(*LnsMap)
+        return self.FP.canSetFrom(processInfo, typeInfo, nil, alt2type_2420)
     }
     return false
 }
@@ -6335,8 +6335,8 @@ func (self *Ast_BoxTypeInfo) ApplyGeneric(alt2typeMap *LnsMap,moduleTypeInfo *As
         return &self.Ast_TypeInfo
     }
     if typeInfo != nil{
-        typeInfo_3818 := typeInfo.(*Ast_TypeInfo)
-        return moduleTypeInfo.FP.getProcessInfo().FP.CreateBox(self.accessMode, typeInfo_3818)
+        typeInfo_3817 := typeInfo.(*Ast_TypeInfo)
+        return moduleTypeInfo.FP.getProcessInfo().FP.CreateBox(self.accessMode, typeInfo_3817)
     }
     return nil
 }
@@ -6685,9 +6685,9 @@ func (self *Ast_GenericTypeInfo) CanEvalWith(processInfo *Ast_ProcessInfo,other 
     if other.FP.Get_nilable(){
         return false, nil
     }
-    if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( Ast_TypeInfo_isMut(&self.Ast_TypeInfo)) &&
-        Lns_setStackVal( Lns_op_not(Ast_TypeInfo_isMut(other))) ).(bool)){
+    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( Ast_TypeInfo_isMut(&self.Ast_TypeInfo)) &&
+        Lns_GetEnv().SetStackVal( Lns_op_not(Ast_TypeInfo_isMut(other))) ).(bool)){
         return false, nil
     }
     var otherSrc *Ast_TypeInfo
@@ -6752,9 +6752,9 @@ func (self *Ast_GenericTypeInfo) Equals(processInfo *Ast_ProcessInfo,other *Ast_
     if &self.Ast_TypeInfo == other{
         return true
     }
-    if Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( self.FP.Get_kind() != self.FP.Get_kind()) ||
-        Lns_setStackVal( self.itemTypeInfoList.Len() != other.FP.Get_itemTypeInfoList().Len()) ).(bool){
+    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( self.FP.Get_kind() != self.FP.Get_kind()) ||
+        Lns_GetEnv().SetStackVal( self.itemTypeInfoList.Len() != other.FP.Get_itemTypeInfoList().Len()) ).(bool){
         return false
     }
     if Lns_op_not((Ast_GenericTypeInfoDownCastF(other.FP))){
@@ -6809,9 +6809,9 @@ func (self *Ast_GenericTypeInfo) ApplyGeneric(alt2typeMap *LnsMap,moduleTypeInfo
         var newFlag bool
         itemTypeInfoList,newFlag = Ast_applyGenericList_4524_(self.FP.Get_itemTypeInfoList(), alt2typeMap, moduleTypeInfo)
         if itemTypeInfoList != nil{
-            itemTypeInfoList_4355 := itemTypeInfoList.(*LnsList)
+            itemTypeInfoList_4354 := itemTypeInfoList.(*LnsList)
             if newFlag{
-                return &moduleTypeInfo.FP.getProcessInfo().FP.CreateGeneric(self.genSrcTypeInfo, itemTypeInfoList_4355, moduleTypeInfo).Ast_TypeInfo
+                return &moduleTypeInfo.FP.getProcessInfo().FP.CreateGeneric(self.genSrcTypeInfo, itemTypeInfoList_4354, moduleTypeInfo).Ast_TypeInfo
             }
         }
     }
@@ -7102,9 +7102,9 @@ func (self *Ast_ModifierTypeInfo) Equals(processInfo *Ast_ProcessInfo,typeInfo *
 func (self *Ast_ModifierTypeInfo) Get_nonnilableType() *Ast_TypeInfo {
     var orgType *Ast_TypeInfo
     orgType = self.srcTypeInfo.FP.Get_nonnilableType()
-    if Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( Ast_TypeInfo_isMut(&self.Ast_TypeInfo)) ||
-        Lns_setStackVal( Lns_op_not(Ast_TypeInfo_isMut(orgType))) ).(bool){
+    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( Ast_TypeInfo_isMut(&self.Ast_TypeInfo)) ||
+        Lns_GetEnv().SetStackVal( Lns_op_not(Ast_TypeInfo_isMut(orgType))) ).(bool){
         return orgType
     }
     return self.FP.getProcessInfo().FP.CreateModifier(orgType, Ast_MutMode__IMut)
@@ -7128,8 +7128,8 @@ func (self *Ast_ModifierTypeInfo) ApplyGeneric(alt2typeMap *LnsMap,moduleTypeInf
         return &self.Ast_TypeInfo
     }
     if typeInfo != nil{
-        typeInfo_5166 := typeInfo.(*Ast_TypeInfo)
-        return moduleTypeInfo.FP.getProcessInfo().FP.CreateModifier(typeInfo_5166, Ast_MutMode__IMut)
+        typeInfo_5165 := typeInfo.(*Ast_TypeInfo)
+        return moduleTypeInfo.FP.getProcessInfo().FP.CreateModifier(typeInfo_5165, Ast_MutMode__IMut)
     }
     return nil
 }
@@ -7318,11 +7318,11 @@ func (self *Ast_ModuleTypeInfo) Serialize(stream Lns_oStream,validChildrenSet Ln
     if Lns_isCondTrue( validChildrenSet){
         for _, _child := range( self.FP.Get_children().Items ) {
             child := _child.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
-            if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-                Lns_setStackVal( set.Items[child.FP.Get_typeId()]) &&
-                Lns_setStackVal( (Lns_popVal( Lns_incStack() ||
-                    Lns_setStackVal( child.FP.Get_accessMode() == Ast_AccessMode__Pub) ||
-                    Lns_setStackVal( child.FP.Get_accessMode() == Ast_AccessMode__Global) ).(bool))) )){
+            if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                Lns_GetEnv().SetStackVal( set.Items[child.FP.Get_typeId()]) &&
+                Lns_GetEnv().SetStackVal( (Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                    Lns_GetEnv().SetStackVal( child.FP.Get_accessMode() == Ast_AccessMode__Pub) ||
+                    Lns_GetEnv().SetStackVal( child.FP.Get_accessMode() == Ast_AccessMode__Global) ).(bool))) )){
                 stream.Write(Lns_getVM().String_format("%d, ", []LnsAny{child.FP.Get_typeId()}))
             }
         }
@@ -8048,10 +8048,10 @@ func (self *Ast_NormalTypeInfo) InitAst_NormalTypeInfo(processInfo *Ast_ProcessI
     if Lns_type(kind) != "number"{
         Util_printStackTrace()
     }
-    if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( kind == Ast_TypeInfoKind__Method) &&
-        Lns_setStackVal( Lns_NilAccFin(Lns_NilAccPush(parentInfo) && 
-        Lns_NilAccCall1( func () LnsAny { return Lns_NilAccPop().(*Ast_TypeInfo).FP.HasBase()})/* 3625:30 */)) )){
+    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( kind == Ast_TypeInfoKind__Method) &&
+        Lns_GetEnv().SetStackVal( Lns_GetEnv().NilAccFin(Lns_GetEnv().NilAccPush(parentInfo) && 
+        Lns_NilAccCall1( Lns_GetEnv(), func () LnsAny { return Lns_GetEnv().NilAccPop().(*Ast_TypeInfo).FP.HasBase()})/* 3625:30 */)) )){
         self.overridingType = Ast_OverridingType__NoReady_Obj
         
     } else { 
@@ -8088,9 +8088,9 @@ func (self *Ast_NormalTypeInfo) InitAst_NormalTypeInfo(processInfo *Ast_ProcessI
     
     var setupAlt2typeMap func() *LnsMap
     setupAlt2typeMap = func() *LnsMap {
-        if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( self.baseTypeInfo == Ast_headTypeInfo) &&
-            Lns_setStackVal( self.interfaceList.Len() == 0) ).(bool)){
+        if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( self.baseTypeInfo == Ast_headTypeInfo) &&
+            Lns_GetEnv().SetStackVal( self.interfaceList.Len() == 0) ).(bool)){
             return NewLnsMap( map[LnsAny]LnsAny{})
         }
         var alt2typeMap *LnsMap
@@ -8131,8 +8131,8 @@ func (self *Ast_NormalTypeInfo) InitAst_NormalTypeInfo(processInfo *Ast_ProcessI
     if kind == Ast_TypeInfoKind__Root{
     } else { 
         if parentInfo != nil{
-            parentInfo_3360 := parentInfo.(*Ast_TypeInfo)
-            parentInfo_3360.FP.AddChildren(&self.Ast_TypeInfo)
+            parentInfo_3359 := parentInfo.(*Ast_TypeInfo)
+            parentInfo_3359.FP.AddChildren(&self.Ast_TypeInfo)
         }
         var hasNilable bool
         hasNilable = false
@@ -8197,8 +8197,8 @@ func (self *Ast_NormalTypeInfo) GetTxtWithRaw(raw string,typeNameCtrl LnsAny,imp
     var parentTxt string
     parentTxt = ""
     if typeNameCtrl != nil{
-        typeNameCtrl_3415 := typeNameCtrl.(*Ast_TypeNameCtrl)
-        parentTxt = self.FP.GetParentFullName(typeNameCtrl_3415, importInfo, localFlag)
+        typeNameCtrl_3414 := typeNameCtrl.(*Ast_TypeNameCtrl)
+        parentTxt = self.FP.GetParentFullName(typeNameCtrl_3414, importInfo, localFlag)
         
     }
     var name string
@@ -8332,14 +8332,14 @@ func (self *Ast_NormalTypeInfo) EqualsSub(processInfo *Ast_ProcessInfo,typeInfo 
             return aliasType.FP.Equals(processInfo, &self.Ast_TypeInfo, alt2type, checkModifer)
         }
     }
-    if Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( self.kind != typeInfo.FP.Get_kind()) ||
-        Lns_setStackVal( self.staticFlag != typeInfo.FP.Get_staticFlag()) ||
-        Lns_setStackVal( self.autoFlag != typeInfo.FP.Get_autoFlag()) ||
-        Lns_setStackVal( self.FP.Get_nilable() != typeInfo.FP.Get_nilable()) ||
-        Lns_setStackVal( self.rawTxt != typeInfo.FP.Get_rawTxt()) ||
-        Lns_setStackVal( self.parentInfo != typeInfo.FP.Get_parentInfo()) ||
-        Lns_setStackVal( self.baseTypeInfo != typeInfo.FP.Get_baseTypeInfo()) ).(bool){
+    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( self.kind != typeInfo.FP.Get_kind()) ||
+        Lns_GetEnv().SetStackVal( self.staticFlag != typeInfo.FP.Get_staticFlag()) ||
+        Lns_GetEnv().SetStackVal( self.autoFlag != typeInfo.FP.Get_autoFlag()) ||
+        Lns_GetEnv().SetStackVal( self.FP.Get_nilable() != typeInfo.FP.Get_nilable()) ||
+        Lns_GetEnv().SetStackVal( self.rawTxt != typeInfo.FP.Get_rawTxt()) ||
+        Lns_GetEnv().SetStackVal( self.parentInfo != typeInfo.FP.Get_parentInfo()) ||
+        Lns_GetEnv().SetStackVal( self.baseTypeInfo != typeInfo.FP.Get_baseTypeInfo()) ).(bool){
         return false
     }
     if self.accessMode != typeInfo.FP.Get_accessMode(){
@@ -8425,13 +8425,13 @@ func Ast_NormalTypeInfo_createBuiltin(idName string,typeTxt string,kind LnsInt,t
     var scope LnsAny
     scope = nil
     if _switch15529 := kind; _switch15529 == Ast_TypeInfoKind__Array || _switch15529 == Ast_TypeInfoKind__List || _switch15529 == Ast_TypeInfoKind__Set || _switch15529 == Ast_TypeInfoKind__Class || _switch15529 == Ast_TypeInfoKind__Module || _switch15529 == Ast_TypeInfoKind__IF || _switch15529 == Ast_TypeInfoKind__Form || _switch15529 == Ast_TypeInfoKind__FormFunc || _switch15529 == Ast_TypeInfoKind__Func || _switch15529 == Ast_TypeInfoKind__Method || _switch15529 == Ast_TypeInfoKind__Macro {
-        scope = NewAst_Scope(Ast_rootProcessInfo, Ast_rootScope, Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( kind == Ast_TypeInfoKind__Class) ||
-            Lns_setStackVal( kind == Ast_TypeInfoKind__Module) ||
-            Lns_setStackVal( kind == Ast_TypeInfoKind__IF) ||
-            Lns_setStackVal( kind == Ast_TypeInfoKind__List) ||
-            Lns_setStackVal( kind == Ast_TypeInfoKind__Array) ||
-            Lns_setStackVal( kind == Ast_TypeInfoKind__Set) ).(bool), nil, nil)
+        scope = NewAst_Scope(Ast_rootProcessInfo, Ast_rootScope, Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( kind == Ast_TypeInfoKind__Class) ||
+            Lns_GetEnv().SetStackVal( kind == Ast_TypeInfoKind__Module) ||
+            Lns_GetEnv().SetStackVal( kind == Ast_TypeInfoKind__IF) ||
+            Lns_GetEnv().SetStackVal( kind == Ast_TypeInfoKind__List) ||
+            Lns_GetEnv().SetStackVal( kind == Ast_TypeInfoKind__Array) ||
+            Lns_GetEnv().SetStackVal( kind == Ast_TypeInfoKind__Set) ).(bool), nil, nil)
         
     }
     var genTypeList *LnsList
@@ -8482,10 +8482,10 @@ func Ast_NormalTypeInfo_isAvailableMapping(processInfo *Ast_ProcessInfo,typeInfo
             if Ast_NormalTypeInfo_isAvailableMapping(processInfo, typeInfo.FP.Get_itemTypeInfoList().GetAt(2).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), checkedTypeMap){
                 var keyType *Ast_TypeInfo
                 keyType = typeInfo.FP.Get_itemTypeInfoList().GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo()
-                if Lns_popVal( Lns_incStack() ||
-                    Lns_setStackVal( keyType.FP.Equals(processInfo, Ast_builtinTypeString, nil, nil)) ||
-                    Lns_setStackVal( keyType.FP.Get_kind() == Ast_TypeInfoKind__Prim) ||
-                    Lns_setStackVal( keyType.FP.Get_kind() == Ast_TypeInfoKind__Enum) ).(bool){
+                if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                    Lns_GetEnv().SetStackVal( keyType.FP.Equals(processInfo, Ast_builtinTypeString, nil, nil)) ||
+                    Lns_GetEnv().SetStackVal( keyType.FP.Get_kind() == Ast_TypeInfoKind__Prim) ||
+                    Lns_GetEnv().SetStackVal( keyType.FP.Get_kind() == Ast_TypeInfoKind__Enum) ).(bool){
                     return true
                 }
             }
@@ -8519,13 +8519,13 @@ func (self *Ast_NormalTypeInfo) IsInheritFrom(processInfo *Ast_ProcessInfo,other
     if self.FP.Get_typeId() == other.FP.Get_typeId(){
         return true
     }
-    if Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( (Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( self.FP.Get_kind() != Ast_TypeInfoKind__Class) &&
-            Lns_setStackVal( self.FP.Get_kind() != Ast_TypeInfoKind__IF) ).(bool))) ||
-        Lns_setStackVal( (Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( other.FP.Get_kind() != Ast_TypeInfoKind__Class) &&
-            Lns_setStackVal( other.FP.Get_kind() != Ast_TypeInfoKind__IF) ).(bool))) ).(bool){
+    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( (Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( self.FP.Get_kind() != Ast_TypeInfoKind__Class) &&
+            Lns_GetEnv().SetStackVal( self.FP.Get_kind() != Ast_TypeInfoKind__IF) ).(bool))) ||
+        Lns_GetEnv().SetStackVal( (Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( other.FP.Get_kind() != Ast_TypeInfoKind__Class) &&
+            Lns_GetEnv().SetStackVal( other.FP.Get_kind() != Ast_TypeInfoKind__IF) ).(bool))) ).(bool){
         if other == Ast_builtinTypeMapping{
             return Ast_NormalTypeInfo_isAvailableMapping(processInfo, &self.Ast_TypeInfo, NewLnsMap( map[LnsAny]LnsAny{}))
         }
@@ -8600,10 +8600,10 @@ func (self *Ast_NormalTypeInfo) ApplyGeneric(alt2typeMap *LnsMap,moduleTypeInfo 
                 workRet = _workRet
             }
         }
-        if Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( needNew) ||
-            Lns_setStackVal( workArg) ||
-            Lns_setStackVal( workRet) ).(bool){
+        if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( needNew) ||
+            Lns_GetEnv().SetStackVal( workArg) ||
+            Lns_GetEnv().SetStackVal( workRet) ).(bool){
             return processInfo.FP.CreateFunc(self.abstractFlag, false, Ast_getScope(&self.Ast_TypeInfo), self.kind, self.parentInfo, self.autoFlag, self.externalFlag, self.staticFlag, self.accessMode, self.rawTxt, itemTypeInfoList, argTypeInfoList, retTypeInfoList, Ast_TypeInfo_isMut(&self.Ast_TypeInfo))
         }
         return &self.Ast_TypeInfo
@@ -8847,8 +8847,8 @@ func (self *Ast_DDDTypeInfo) InitAst_DDDTypeInfo(processInfo *Ast_ProcessInfo,ty
     
     var extOrgType *Ast_DDDTypeInfo
     if extOrgDDType != nil{
-        extOrgDDType_4035 := extOrgDDType.(*Ast_DDDTypeInfo)
-        extOrgType = extOrgDDType_4035
+        extOrgDDType_4034 := extOrgDDType.(*Ast_DDDTypeInfo)
+        extOrgType = extOrgDDType_4034
         
         processInfo.FP.get_typeInfo2Map().ExtDDDMap.Set(typeInfo,self)
     } else {
@@ -10045,17 +10045,17 @@ func (self *Ast_TypeAnalyzer) analyzeTypeSub(allowDDD bool)(LnsAny, LnsAny, LnsA
 
 // 6724: decl @lune.@base.@Ast.TypeAnalyzer.analyzeTypeItemList
 func (self *Ast_TypeAnalyzer) AnalyzeTypeItemList(allowDDD bool,refFlag bool,mutFlag bool,typeInfo *Ast_TypeInfo,pos *Types_Position)(LnsAny, LnsAny, LnsAny) {
-    if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( self.parentPub) &&
-        Lns_setStackVal( Ast_isPubToExternal(self.accessMode)) &&
-        Lns_setStackVal( Lns_op_not(Ast_isPubToExternal(typeInfo.FP.Get_accessMode()))) ).(bool)){
+    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( self.parentPub) &&
+        Lns_GetEnv().SetStackVal( Ast_isPubToExternal(self.accessMode)) &&
+        Lns_GetEnv().SetStackVal( Lns_op_not(Ast_isPubToExternal(typeInfo.FP.Get_accessMode()))) ).(bool)){
         return nil, pos, Lns_getVM().String_format("This type must be public. -- %s", []LnsAny{typeInfo.FP.GetTxt(nil, nil, nil)})
     }
     var token *Types_Token
     token = self.parser.GetTokenNoErr()
-    if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( token.Consecutive) &&
-        Lns_setStackVal( token.Txt == "!") ).(bool)){
+    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( token.Consecutive) &&
+        Lns_GetEnv().SetStackVal( token.Txt == "!") ).(bool)){
         typeInfo = typeInfo.FP.Get_nilableTypeInfo()
         
         token = self.parser.GetTokenNoErr()
@@ -10064,9 +10064,9 @@ func (self *Ast_TypeAnalyzer) AnalyzeTypeItemList(allowDDD bool,refFlag bool,mut
     var genericRefList *LnsList
     genericRefList = NewLnsList([]LnsAny{})
     for  {
-        if Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( token.Txt == "[") ||
-            Lns_setStackVal( token.Txt == "[@") ).(bool){
+        if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( token.Txt == "[") ||
+            Lns_GetEnv().SetStackVal( token.Txt == "[@") ).(bool){
             if token.Txt == "["{
                 typeInfo = self.processInfo.FP.CreateList(self.accessMode, self.parentInfo, NewLnsList([]LnsAny{Ast_TypeInfo2Stem(typeInfo)}), Ast_MutMode__Mut)
                 
@@ -10089,9 +10089,9 @@ func (self *Ast_TypeAnalyzer) AnalyzeTypeItemList(allowDDD bool,refFlag bool,mut
                 var refType LnsAny
                 refType = Ast_convExp28895(Lns_2DDD(self.FP.analyzeTypeSub(false)))
                 if refType != nil{
-                    refType_5333 := refType.(*Ast_RefTypeInfo)
-                    genericRefList.Insert(Ast_RefTypeInfo2Stem(refType_5333))
-                    genericList.Insert(Ast_TypeInfo2Stem(refType_5333.FP.Get_typeInfo()))
+                    refType_5332 := refType.(*Ast_RefTypeInfo)
+                    genericRefList.Insert(Ast_RefTypeInfo2Stem(refType_5332))
+                    genericList.Insert(Ast_TypeInfo2Stem(refType_5332.FP.Get_typeInfo()))
                 }
                 nextToken = self.parser.GetTokenNoErr()
                 

@@ -120,3 +120,5 @@ pub class Token extend (Mapping) {
       return count;
    }
 }
+
+pub let noneToken = new Token( .Eof, "", new Position( 0, -1, "eof" ), false, [] );

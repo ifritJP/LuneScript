@@ -1740,9 +1740,9 @@ _section();
       let val:int {pub};
    }
 
-   class Async {
+   class Async extend LnsThread {
       let mut pipe:__pipe<Test>!;
-      pri fn loop() mut {
+      pro override fn loop() mut {
          print( "hoge:" );
          while true {
             if! let mut pipe = self.pipe {

@@ -1431,6 +1431,7 @@ class _TypeInfoGeneric extend _TypeInfo {
       let newTypeInfo = param.processInfo.createGeneric(
          genSrcTypeInfo, genTypeList, param.moduleTypeInfo );
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
+      param.typeId2Scope[ self.typeId ] = Ast.getScope( newTypeInfo );
       return newTypeInfo, nil;
    }
 }
@@ -1993,6 +1994,12 @@ _DefBuiltinFuncType( [
       },
    },
    {
+      "LnsThread": {
+         "__init": { "type": [ "method"], "arg": [], "ret": [ ] },
+         "loop": { "type": [ "abstract" ], "arg": [ ], "ret": [] },
+      },
+   },
+   {
       "io": {
          "__attrib": { "type": [ "module" ] },
          "stdin": { "type": [ "var" ], "typeInfo": [ "iStream" ] },
@@ -2263,39 +2270,61 @@ fn TransUnit.registBuiltInScope() mut {
             }
 
             let funcType = info.type$[1];
-            let mutable = funcType == "mut";
+            let mutable;
 
             let staticFlag;
             let kind:Ast.TypeInfoKind;
             let symbolKind:Ast.SymbolKind;
+            let abstractFlag:bool;
+            let accessMode:Ast.AccessMode;
             switch funcType {
                case "method", "mut" {
                   staticFlag = false;
                   kind = .Method;
                   symbolKind = .Mtd;
+                  abstractFlag = false;
+                  accessMode = .Pub;
+                  mutable = funcType == "mut";
+               }
+               case "abstract" {
+                  staticFlag = false;
+                  kind = .Method;
+                  symbolKind = .Mtd;
+                  abstractFlag = true;
+                  accessMode = .Pro;
+                  mutable = true;
                }
                case "macro" {
                   staticFlag = true;
                   kind = .Macro;
                   symbolKind = .Mac;
+                  abstractFlag = false;
+                  accessMode = .Pub;
+                  mutable = false;
                }
                case "formfunc" {
                   staticFlag = true;
                   kind = .FormFunc;
                   symbolKind = .Typ;
+                  abstractFlag = false;
+                  accessMode = .Pub;
+                  mutable = false;
                }
                default {
                   staticFlag = true;
                   kind = .Func;
                   symbolKind = .Fun;
+                  abstractFlag = false;
+                  accessMode = .Pub;
+                  mutable = false;
                }
             }
             
             self.pushScope( false ## );
 
             let typeInfo = self.processInfo.createFunc(
-               false, true, self.scope, kind,
-               parentInfo, false, true, staticFlag, .Pub,
+               abstractFlag, true, self.scope, kind,
+               parentInfo, false, true, staticFlag, accessMode,
                fieldName, nil, argTypeList, retTypeList, mutable );
 
             self.popScope();
@@ -2306,7 +2335,7 @@ fn TransUnit.registBuiltInScope() mut {
             }
             let symInfo = unwrap self.scope.add(
                self.processInfo, symbolKind, false, kind == .Func,
-               fieldName, nil, typeInfo, .Pub, staticFlag,
+               fieldName, nil, typeInfo, accessMode, staticFlag,
                mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true );
 
             setupBuiltinTypeInfo( name, fieldName, symInfo );
@@ -3006,7 +3035,10 @@ fn TransUnit.processImport( modulePath:str, depth:int ) mut :
    let mut typeId2Scope: Map<int,Ast.Scope> = {};
    typeId2Scope[ Ast.rootTypeId ] = self.scope;
 
+   typeId2TypeInfo[ builtinFunc.lnsthread_.$typeId ] = builtinFunc.lnsthread_;
+   typeId2Scope[ builtinFunc.lnsthread_.$typeId ] = builtinFunc.lnsthread_.$scope;
 
+   
    // 依存するモジュールの typeInfo と、 meta 情報内の typeId との紐付け
    foreach dependIdInfo, typeId in metaInfo.__dependIdMap {
       let dependInfo = unwrap dependLibId2DependInfo[ unwrap dependIdInfo[ 1 ] ];

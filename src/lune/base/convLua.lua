@@ -1786,7 +1786,7 @@ function convFilter:processDeclClass( node, opt )
    
    local baseInfo = classTypeInfo:get_baseTypeInfo(  )
    local baseTxt = ""
-   if baseInfo:get_typeId(  ) ~= Ast.rootTypeId then
+   if baseInfo:get_typeId(  ) ~= Ast.rootTypeId and baseInfo ~= TransUnit.getBuiltinFunc(  ).lnsthread_ then
       baseTxt = string.format( "__index = %s", self:getFullName( baseInfo ))
    end
    
@@ -1892,7 +1892,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _6099 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _6103 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -1938,7 +1938,7 @@ function %s:__init( %s )
 ]==], className, argTxt, className, argTxt, className, argTxt) )
       self:pushIndent(  )
       
-      if baseInfo ~= Ast.headTypeInfo then
+      if baseInfo ~= Ast.headTypeInfo and baseInfo ~= TransUnit.getBuiltinFunc(  ).lnsthread_ then
          if (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" ) then
             self:write( string.format( "%s.__init( self", self:getFullName( baseInfo )) )
             if #superArgTxt > 0 then
@@ -2324,6 +2324,12 @@ end
 function convFilter:processExpCallSuperCtor( node, opt )
 
    local typeInfo = node:get_superType()
+   
+   if typeInfo == TransUnit.getBuiltinFunc(  ).lnsthread_ then
+      return 
+   end
+   
+   
    self:write( string.format( "%s.%s( self", self:getFullName( typeInfo ), node:get_methodType():get_rawTxt()) )
    
    do
@@ -2342,6 +2348,7 @@ end
 function convFilter:processExpCallSuper( node, opt )
 
    local typeInfo = node:get_superType()
+   
    self:write( string.format( "%s.%s( self", self:getFullName( typeInfo ), node:get_methodType():get_rawTxt()) )
    
    do
@@ -4090,7 +4097,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3415, function (  )
+   Log.log( Log.Level.Trace, __func__, 3425, function (  )
    
       return string.format( "macro: %s", code)
    end )

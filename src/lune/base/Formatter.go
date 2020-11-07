@@ -357,18 +357,18 @@ func (self *Formatter_FormatterFilter) outputDeclClass(protoFlag bool,classType 
         self.FP.Write(">")
     }
     if moduleName != nil{
-        moduleName_5142 := moduleName.(*Types_Token)
+        moduleName_5141 := moduleName.(*Types_Token)
         self.FP.Write(" require ")
-        self.FP.Write(Lns_getVM().String_format("%s ", []LnsAny{moduleName_5142.Txt}))
+        self.FP.Write(Lns_getVM().String_format("%s ", []LnsAny{moduleName_5141.Txt}))
         if gluePrefix != nil{
-            gluePrefix_5144 := gluePrefix.(string)
+            gluePrefix_5143 := gluePrefix.(string)
             self.FP.Write("glue ")
-            self.FP.Write(gluePrefix_5144)
+            self.FP.Write(gluePrefix_5143)
         }
     }
-    if Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( classType.FP.HasBase()) ||
-        Lns_setStackVal( classType.FP.Get_interfaceList().Len() > 0) ).(bool){
+    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( classType.FP.HasBase()) ||
+        Lns_GetEnv().SetStackVal( classType.FP.Get_interfaceList().Len() > 0) ).(bool){
         self.FP.Write(" extend ")
         if classType.FP.HasBase(){
             self.FP.Write(classType.FP.Get_baseTypeInfo().FP.GetTxt(nil, nil, nil))
@@ -647,16 +647,16 @@ func (self *Formatter_FormatterFilter) processDeclFuncInfo(node *Nodes_Node,decl
     if funcType.FP.Get_accessMode() == Ast_AccessMode__Pub{
         self.FP.Write("pub ")
     }
-    if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( declInfo.FP.Get_staticFlag()) &&
-        Lns_setStackVal( Lns_NilAccFin(Lns_NilAccPush(declInfo.FP.Get_name()) && 
-        Lns_NilAccPush(Lns_NilAccPop().(*Types_Token).Txt)) == "__init") ).(bool)){
+    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( declInfo.FP.Get_staticFlag()) &&
+        Lns_GetEnv().SetStackVal( Lns_GetEnv().NilAccFin(Lns_GetEnv().NilAccPush(declInfo.FP.Get_name()) && 
+        Lns_GetEnv().NilAccPush(Lns_GetEnv().NilAccPop().(*Types_Token).Txt)) == "__init") ).(bool)){
         self.FP.Write("__init")
     } else { 
         self.FP.Write("fn ")
-        if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-            Lns_setStackVal( opt.FP.Get_parent().FP.Get_kind() != Nodes_NodeKind_get_DeclClass()) &&
-            Lns_setStackVal( funcType.FP.Get_kind() == Ast_TypeInfoKind__Method) ).(bool)){
+        if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+            Lns_GetEnv().SetStackVal( opt.FP.Get_parent().FP.Get_kind() != Nodes_NodeKind_get_DeclClass()) &&
+            Lns_GetEnv().SetStackVal( funcType.FP.Get_kind() == Ast_TypeInfoKind__Method) ).(bool)){
             var classType *Ast_TypeInfo
             classType = funcType.FP.Get_parentInfo()
             self.FP.Write(classType.FP.Get_rawTxt())
@@ -688,9 +688,9 @@ func (self *Formatter_FormatterFilter) processDeclFuncInfo(node *Nodes_Node,decl
         }
         self.FP.Write(")")
     }
-    if Lns_isCondTrue( Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( Ast_TypeInfo_isMut(funcType)) &&
-        Lns_setStackVal( declInfo.FP.Get_kind() == Nodes_FuncKind__Mtd) ).(bool)){
+    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( Ast_TypeInfo_isMut(funcType)) &&
+        Lns_GetEnv().SetStackVal( declInfo.FP.Get_kind() == Nodes_FuncKind__Mtd) ).(bool)){
         self.FP.Write(" mut")
     }
     if funcType.FP.Get_retTypeInfoList().Len() != 0{

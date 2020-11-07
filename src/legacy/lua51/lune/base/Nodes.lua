@@ -746,7 +746,7 @@ end
 function NodeManager:__init() 
    self.idSeed = 0
    self.nodeKind2NodeList = {}
-   for kind, _2578 in pairs( nodeKind2NameMap ) do
+   for kind, _2577 in pairs( nodeKind2NameMap ) do
       if not self.nodeKind2NodeList[kind] then
          self.nodeKind2NodeList[kind] = {}
       end
@@ -12235,7 +12235,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, _10403 in pairs( self.map ) do
+   for key, _10402 in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -12270,8 +12270,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, _10417 in ipairs( __sorted ) do
-         local key = __map[ _10417 ]
+      for __index, _10416 in ipairs( __sorted ) do
+         local key = __map[ _10416 ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false

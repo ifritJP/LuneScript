@@ -237,3 +237,8 @@ pub let test3 = new Test3( new Hoge3( 100 ) );
 pub macro _Test():int {
    1
 }
+pub class Test4<T> {
+   let val:T {pub};
+}
+pub class Test5 extend Test4<str> {
+}

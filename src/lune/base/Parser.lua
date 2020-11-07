@@ -88,88 +88,6 @@ function _lune.unwrapDefault( val, defval )
    return val
 end
 
-function _lune._toStem( val )
-   return val
-end
-function _lune._toInt( val )
-   if type( val ) == "number" then
-      return math.floor( val )
-   end
-   return nil
-end
-function _lune._toReal( val )
-   if type( val ) == "number" then
-      return val
-   end
-   return nil
-end
-function _lune._toBool( val )
-   if type( val ) == "boolean" then
-      return val
-   end
-   return nil
-end
-function _lune._toStr( val )
-   if type( val ) == "string" then
-      return val
-   end
-   return nil
-end
-function _lune._toList( val, toValInfoList )
-   if type( val ) == "table" then
-      local tbl = {}
-      local toValInfo = toValInfoList[ 1 ]
-      for index, mem in ipairs( val ) do
-         local memval, mess = toValInfo.func( mem, toValInfo.child )
-         if memval == nil and not toValInfo.nilable then
-            if mess then
-              return nil, string.format( "%d.%s", index, mess )
-            end
-            return nil, index
-         end
-         tbl[ index ] = memval
-      end
-      return tbl
-   end
-   return nil
-end
-function _lune._toMap( val, toValInfoList )
-   if type( val ) == "table" then
-      local tbl = {}
-      local toKeyInfo = toValInfoList[ 1 ]
-      local toValInfo = toValInfoList[ 2 ]
-      for key, mem in pairs( val ) do
-         local mapKey, keySub = toKeyInfo.func( key, toKeyInfo.child )
-         local mapVal, valSub = toValInfo.func( mem, toValInfo.child )
-         if mapKey == nil or mapVal == nil then
-            if mapKey == nil then
-               return nil
-            end
-            if keySub == nil then
-               return nil, mapKey
-            end
-            return nil, string.format( "%s.%s", mapKey, keySub)
-         end
-         tbl[ mapKey ] = mapVal
-      end
-      return tbl
-   end
-   return nil
-end
-function _lune._fromMap( obj, map, memInfoList )
-   if type( map ) ~= "table" then
-      return false
-   end
-   for index, memInfo in ipairs( memInfoList ) do
-      local val, key = memInfo.func( map[ memInfo.name ], memInfo.child )
-      if val == nil and not memInfo.nilable then
-         return false, key and string.format( "%s.%s", memInfo.name, key) or memInfo.name
-      end
-      obj[ memInfo.name ] = val
-   end
-   return true
-end
-
 function _lune.loadModule( mod )
    if __luneScript then
       return  __luneScript:loadModule( mod )
@@ -232,92 +150,16 @@ if not _lune2 then
 end
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Str = _lune.loadModule( 'lune.base.Str' )
-local Async = _lune.loadModule( 'lune.base.Async' )
 local Types = _lune.loadModule( 'lune.base.Types' )
-
-local luaKeywordSet = {["if"] = true, ["else"] = true, ["elseif"] = true, ["while"] = true, ["for"] = true, ["in"] = true, ["return"] = true, ["break"] = true, ["nil"] = true, ["true"] = true, ["false"] = true, ["{"] = true, ["}"] = true, ["do"] = true, ["require"] = true, ["function"] = true, ["then"] = true, ["end"] = true, ["repeat"] = true, ["until"] = true, ["goto"] = true, ["local"] = true}
+local Async = _lune.loadModule( 'lune.base.Async' )
+local AsyncParser = _lune.loadModule( 'lune.base.AsyncParser' )
 
 local function isLuaKeyword( txt )
 
-   return _lune._Set_has(luaKeywordSet, txt )
+   return AsyncParser.isLuaKeyword( txt )
 end
 _moduleObj.isLuaKeyword = isLuaKeyword
 
-local function createReserveInfo( luaMode )
-
-   local keywordSet = {}
-   local typeSet = {}
-   local builtInSet = {}
-   
-   builtInSet["require"]= true
-   for key, __val in pairs( luaKeywordSet ) do
-      if not _lune._Set_has(builtInSet, key ) then
-         keywordSet[key]= true
-      end
-      
-   end
-   
-   
-   if not luaMode then
-      keywordSet["null"]= true
-      keywordSet["let"]= true
-      keywordSet["mut"]= true
-      keywordSet["pub"]= true
-      keywordSet["pro"]= true
-      keywordSet["pri"]= true
-      keywordSet["fn"]= true
-      keywordSet["each"]= true
-      keywordSet["form"]= true
-      keywordSet["class"]= true
-      builtInSet["super"]= true
-      keywordSet["static"]= true
-      keywordSet["advertise"]= true
-      keywordSet["import"]= true
-      keywordSet["new"]= true
-      keywordSet["!"]= true
-      keywordSet["unwrap"]= true
-      keywordSet["sync"]= true
-      
-      typeSet["int"]= true
-      typeSet["real"]= true
-      typeSet["stem"]= true
-      typeSet["str"]= true
-      typeSet["Map"]= true
-      typeSet["bool"]= true
-   end
-   
-   local multiCharDelimitMap = {}
-   multiCharDelimitMap["="] = {"=="}
-   multiCharDelimitMap["<"] = {"<="}
-   multiCharDelimitMap[">"] = {">="}
-   
-   if not luaMode then
-      multiCharDelimitMap["|"] = {"|<", "|>"}
-      multiCharDelimitMap["|<"] = {"|<<"}
-      multiCharDelimitMap["|>"] = {"|>>"}
-      multiCharDelimitMap["["] = {"[@"}
-      multiCharDelimitMap["("] = {"(@"}
-      multiCharDelimitMap["~"] = {"~=", "~~"}
-      multiCharDelimitMap["$"] = {"$[", "$.", "$("}
-      multiCharDelimitMap["$."] = {"$.$"}
-      multiCharDelimitMap["."] = {"..", ".$"}
-      multiCharDelimitMap[".."] = {"..."}
-      multiCharDelimitMap[","] = {",,"}
-      multiCharDelimitMap[",,"] = {",,,"}
-      multiCharDelimitMap[",,,"] = {",,,,"}
-      multiCharDelimitMap["@"] = {"@@"}
-      multiCharDelimitMap["@@"] = {"@@@", "@@="}
-      multiCharDelimitMap["#"] = {"##"}
-      multiCharDelimitMap["*"] = {"**"}
-   else
-    
-      multiCharDelimitMap["."] = {".."}
-      multiCharDelimitMap["~"] = {"~="}
-   end
-   
-   
-   return keywordSet, typeSet, builtInSet, multiCharDelimitMap
-end
 local TxtStream = {}
 setmetatable( TxtStream, { ifList = {iStream,} } )
 _moduleObj.TxtStream = TxtStream
@@ -458,7 +300,7 @@ function WrapParser:__init( parser, name )
 end
 
 
-local noneToken = Token.new(Types.TokenKind.Eof, "", Position.new(0, -1, "eof"), false, {})
+local noneToken = Types.noneToken
 _moduleObj.noneToken = noneToken
 
 local function convFromRawToStr( txt )
@@ -516,69 +358,7 @@ local function convFromRawToStr( txt )
    
 end
 _moduleObj.convFromRawToStr = convFromRawToStr
-
 local StreamParser = {}
-
-local AsyncItem = {}
-setmetatable( AsyncItem, { ifList = {__AsyncItem,Mapping,} } )
-function AsyncItem.setmeta( obj )
-  setmetatable( obj, { __index = AsyncItem  } )
-end
-function AsyncItem.new( list )
-   local obj = {}
-   AsyncItem.setmeta( obj )
-   if obj.__init then
-      obj:__init( list )
-   end
-   return obj
-end
-function AsyncItem:__init( list )
-
-   self.list = list
-end
-function AsyncItem:_toMap()
-  return self
-end
-function AsyncItem._fromMap( val )
-  local obj, mes = AsyncItem._fromMapSub( {}, val )
-  if obj then
-     AsyncItem.setmeta( obj )
-  end
-  return obj, mes
-end
-function AsyncItem._fromStem( val )
-  return AsyncItem._fromMap( val )
-end
-
-function AsyncItem._fromMapSub( obj, val )
-   local memInfo = {}
-   table.insert( memInfo, { name = "list", func = _lune._toList, nilable = false, child = { { func = Token._fromMap, nilable = false, child = {} } } } )
-   local result, mess = _lune._fromMap( obj, val, memInfo )
-   if not result then
-      return nil, mess
-   end
-   return obj
-end
-
-
-local AsyncStreamParser = {}
-setmetatable( AsyncStreamParser, { __index = Async.Pipe } )
-function AsyncStreamParser.new( pipe, streamParser )
-   local obj = {}
-   AsyncStreamParser.setmeta( obj )
-   if obj.__init then obj:__init( pipe, streamParser ); end
-   return obj
-end
-function AsyncStreamParser:__init(pipe, streamParser) 
-   Async.Pipe.__init( self,pipe)
-   
-   self.streamParser = streamParser
-end
-function AsyncStreamParser.setmeta( obj )
-  setmetatable( obj, { __index = AsyncStreamParser  } )
-end
-
-
 setmetatable( StreamParser, { __index = Parser } )
 _moduleObj.StreamParser = StreamParser
 function StreamParser.setStdinStream( moduleName )
@@ -595,24 +375,12 @@ end
 function StreamParser:__init(stream, name, luaMode) 
    Parser.__init( self)
    
-   self.pipe = AsyncStreamParser.new(nil, self)
    
-   self.eof = false
-   self.stream = stream
    self.streamName = name
-   self.lineNo = 0
    self.pos = 1
    self.lineTokenList = {}
-   self.prevToken = _moduleObj.noneToken
-   self.luaMode = _lune.unwrapDefault( luaMode, false)
    
-   local keywordSet, typeSet, builtInSet, multiCharDelimitMap = createReserveInfo( luaMode )
-   
-   self.keywordSet = keywordSet
-   self.typeSet = typeSet
-   self.builtInSet = builtInSet
-   self.multiCharDelimitMap = multiCharDelimitMap
-   
+   self.asyncParser = AsyncParser.Parser.new(stream, name, luaMode)
    
 end
 function StreamParser:getStreamName(  )
@@ -639,25 +407,36 @@ function StreamParser.create( path, luaMode, moduleName )
    
    return StreamParser.new(stream, path, luaMode or Str.endsWith( path, ".lua" ) and true)
 end
+function StreamParser:getToken(  )
+
+   if #self.lineTokenList < self.pos then
+      self.pos = 1
+      self.lineTokenList = {}
+      while #self.lineTokenList == 0 do
+         local pipeItem = self.asyncParser:getNext(  )
+         if  nil == pipeItem then
+            local _pipeItem = pipeItem
+         
+            return nil
+         end
+         
+         self.lineTokenList = pipeItem:get_item().list
+      end
+      
+   end
+   
+   
+   local token = self.lineTokenList[self.pos]
+   self.pos = self.pos + 1
+   
+   return token
+end
 function StreamParser.setmeta( obj )
   setmetatable( obj, { __index = StreamParser  } )
 end
 do
    StreamParser.stdinStreamModuleName = nil
    StreamParser.stdinTxt = ""
-end
-
-
-function AsyncStreamParser:access(  )
-
-   local tokenList = self.streamParser:parse(  )
-   if  nil == tokenList then
-      local _tokenList = tokenList
-   
-      return nil
-   end
-   
-   return Async.PipeItem.new(AsyncItem.new(tokenList))
 end
 
 
@@ -674,7 +453,7 @@ function DefaultPushbackParser:__init(parser)
    self.parser = parser
    self.pushbackedList = {}
    self.usedTokenList = {}
-   self.currentToken = _moduleObj.noneToken
+   self.currentToken = Types.noneToken
 end
 function DefaultPushbackParser:createPosition( lineNo, column )
 
@@ -692,7 +471,7 @@ function DefaultPushbackParser:getTokenNoErr(  )
          if token ~= nil then
             self.currentToken = token
          else
-            self.currentToken = _moduleObj.noneToken
+            self.currentToken = Types.noneToken
          end
       end
       
@@ -722,12 +501,12 @@ function DefaultPushbackParser:pushbackToken( token )
             self.currentToken = self.usedTokenList[#self.usedTokenList]
          else
           
-            self.currentToken = _moduleObj.noneToken
+            self.currentToken = Types.noneToken
          end
          
       else
        
-         self.currentToken = _moduleObj.noneToken
+         self.currentToken = Types.noneToken
       end
       
    end
@@ -819,423 +598,17 @@ function DefaultPushbackParser:get_currentToken()
 end
 
 
-local quotedCharSet = {['a'] = true, ['b'] = true, ['f'] = true, ['n'] = true, ['r'] = true, ['t'] = true, ['v'] = true, ['\\'] = true, ['"'] = true, ["'"] = true}
-
-local op2Set = {['+'] = true, ['-'] = true, ['*'] = true, ['/'] = true, ['^'] = true, ['%'] = true, ['&'] = true, ['~'] = true, ['|'] = true, ['|>>'] = true, ['|<<'] = true, ['..'] = true, ['<'] = true, ['<='] = true, ['>'] = true, ['>='] = true, ['=='] = true, ['~='] = true, ['and'] = true, ['or'] = true, ['@'] = true, ['@@'] = true, ['@@@'] = true, ['='] = true}
-
-local op1Set = {['-'] = true, ['not'] = true, ['#'] = true, ['~'] = true, ['*'] = true, ['`'] = true, [',,'] = true, [',,,'] = true, [',,,,'] = true}
-
 local function isOp2( ope )
 
-   return _lune._Set_has(op2Set, ope )
+   return AsyncParser.isOp2( ope )
 end
 _moduleObj.isOp2 = isOp2
 
 local function isOp1( ope )
 
-   return _lune._Set_has(op1Set, ope )
+   return AsyncParser.isOp1( ope )
 end
 _moduleObj.isOp1 = isOp1
-
-local TokenList = {}
-function TokenList.setmeta( obj )
-  setmetatable( obj, { __index = TokenList  } )
-end
-function TokenList.new( list )
-   local obj = {}
-   TokenList.setmeta( obj )
-   if obj.__init then
-      obj:__init( list )
-   end
-   return obj
-end
-function TokenList:__init( list )
-
-   self.list = list
-end
-
-
-function StreamParser:parse(  )
-
-   local function readLine(  )
-   
-      if self.eof then
-         return nil
-      end
-      
-      self.lineNo = self.lineNo + 1
-      local line = self.stream:read( '*l' )
-      if not line then
-         self.eof = true
-      end
-      
-      return line
-   end
-   local rawLine = readLine(  )
-   if  nil == rawLine then
-      local _rawLine = rawLine
-   
-      return nil
-   end
-   
-   
-   local list = {}
-   local startIndex = 1
-   local function multiComment( comIndex, termStr )
-   
-      local searchIndex = comIndex
-      local comment = ""
-      while true do
-         do
-            local _576, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
-            if termEndIndex ~= nil then
-               comment = comment .. rawLine:sub( searchIndex, termEndIndex )
-               return comment, termEndIndex + 1
-            end
-         end
-         
-         comment = comment .. rawLine:sub( searchIndex ) .. "\n"
-         searchIndex = 1
-         rawLine = _lune.unwrap( readLine(  ))
-      end
-      
-   end
-   
-   local function addVal( kind, val, column )
-   
-      local function createInfo( tokenKind, token, tokenColumn )
-      
-         if tokenKind == Types.TokenKind.Symb then
-            if _lune._Set_has(self.keywordSet, token ) then
-               tokenKind = Types.TokenKind.Kywd
-            elseif _lune._Set_has(self.typeSet, token ) then
-               tokenKind = Types.TokenKind.Type
-            elseif _lune._Set_has(op2Set, token ) or _lune._Set_has(op1Set, token ) then
-               tokenKind = Types.TokenKind.Ope
-            end
-            
-         end
-         
-         local consecutive = false
-         if self.prevToken.pos.lineNo == self.lineNo and self.prevToken.pos.column + #self.prevToken.txt == tokenColumn then
-            consecutive = true
-         end
-         
-         local newToken = Token.new(tokenKind, token, self:createPosition( self.lineNo, tokenColumn ), consecutive, {})
-         self.prevToken = newToken
-         return newToken
-      end
-      local function analyzeNumber( token, beginIndex )
-      
-         local nonNumIndex = token:find( '[^%d]', beginIndex )
-         if  nil == nonNumIndex then
-            local _nonNumIndex = nonNumIndex
-         
-            return #token, true
-         end
-         
-         local intFlag = true
-         local nonNumChar = string.byte( token, nonNumIndex )
-         if nonNumChar == 46 then
-            intFlag = false
-            nonNumIndex = token:find( '[^%d]', nonNumIndex + 1 )
-            if  nil == nonNumIndex then
-               local _nonNumIndex = nonNumIndex
-            
-               return #token, intFlag
-            end
-            
-            nonNumChar = string.byte( token, nonNumIndex )
-         end
-         
-         if nonNumChar == 88 or nonNumChar == 120 then
-            nonNumIndex = token:find( '[^%da-fA-F]', nonNumIndex + 1 )
-            if  nil == nonNumIndex then
-               local _nonNumIndex = nonNumIndex
-            
-               return #token, intFlag
-            end
-            
-            nonNumChar = string.byte( token, nonNumIndex )
-         end
-         
-         if nonNumChar == 69 or nonNumChar == 101 then
-            intFlag = false
-            local nextChar = string.byte( token, nonNumIndex + 1 )
-            if nextChar == 45 or nextChar == 43 then
-               nonNumIndex = token:find( '[^%d]', nonNumIndex + 2 )
-               if  nil == nonNumIndex then
-                  local _nonNumIndex = nonNumIndex
-               
-                  return #token, intFlag
-               end
-               
-            else
-             
-               nonNumIndex = token:find( '[^%d]', nonNumIndex + 1 )
-               if  nil == nonNumIndex then
-                  local _nonNumIndex = nonNumIndex
-               
-                  return #token, intFlag
-               end
-               
-            end
-            
-         end
-         
-         return nonNumIndex - 1, intFlag
-      end
-      
-      if kind == Types.TokenKind.Symb then
-         local searchIndex = 1
-         while true do
-            local tokenIndex, tokenEndIndex = string.find( val, "[%p%w]+", searchIndex )
-            if  nil == tokenIndex or  nil == tokenEndIndex then
-               local _tokenIndex = tokenIndex
-               local _tokenEndIndex = tokenEndIndex
-            
-               break
-            end
-            
-            local columnIndex = column + tokenIndex - 2
-            searchIndex = tokenEndIndex + 1
-            local token = val:sub( tokenIndex, tokenEndIndex )
-            local subIndex = 1
-            while #token >= subIndex do
-               if token:find( '^[%d]', subIndex ) or string.byte( token, subIndex ) == 45 and token:find( '^[%d]', subIndex + 1 ) then
-                  local checkIndex = subIndex
-                  if string.byte( token, checkIndex ) == 45 then
-                     checkIndex = checkIndex + 1
-                  end
-                  
-                  local endIndex, intFlag = analyzeNumber( token, checkIndex )
-                  local info = createInfo( intFlag and TokenKind.Int or TokenKind.Real, token:sub( subIndex, endIndex ), columnIndex + subIndex )
-                  table.insert( list, info )
-                  subIndex = endIndex + 1
-               else
-                
-                  do
-                     local _exp = string.find( token, '[^%w_]', subIndex )
-                     if _exp ~= nil then
-                        local index = _exp
-                        if index > subIndex then
-                           local info = createInfo( Types.TokenKind.Symb, token:sub( subIndex, index - 1 ), columnIndex + subIndex )
-                           table.insert( list, info )
-                        end
-                        
-                        local delimit = token:sub( index, index )
-                        local candidateList = self.multiCharDelimitMap[delimit]
-                        while candidateList do
-                           local findFlag = false
-                           for __index, candidate in pairs( _lune.unwrap( (candidateList )) ) do
-                              if candidate == token:sub( index, index + #candidate - 1 ) then
-                                 delimit = candidate
-                                 candidateList = self.multiCharDelimitMap[delimit]
-                                 findFlag = true
-                                 break
-                              end
-                              
-                           end
-                           
-                           if not findFlag then
-                              break
-                           end
-                           
-                        end
-                        
-                        subIndex = index + #delimit
-                        
-                        local workKind = TokenKind.Dlmt
-                        if _lune._Set_has(op2Set, delimit ) or _lune._Set_has(op1Set, delimit ) then
-                           workKind = Types.TokenKind.Ope
-                        end
-                        
-                        if delimit == "..." then
-                           workKind = Types.TokenKind.Symb
-                        end
-                        
-                        if delimit == "?" then
-                           local nextChar = token:sub( index, subIndex )
-                           table.insert( list, createInfo( Types.TokenKind.Char, nextChar, columnIndex + subIndex ) )
-                           subIndex = subIndex + 1
-                        else
-                         
-                           table.insert( list, createInfo( workKind, delimit, columnIndex + index ) )
-                        end
-                        
-                     else
-                        if subIndex <= #token then
-                           table.insert( list, createInfo( Types.TokenKind.Symb, token:sub( subIndex ), columnIndex + subIndex ) )
-                        end
-                        
-                        break
-                     end
-                  end
-                  
-               end
-               
-            end
-            
-         end
-         
-      else
-       
-         table.insert( list, createInfo( kind, val, column ) )
-      end
-      
-   end
-   
-   local searchIndex = startIndex
-   
-   local function getChar( index )
-   
-      if #rawLine >= index then
-         return string.byte( rawLine, index )
-      end
-      
-      return 0
-   end
-   while true do
-      local syncIndexFlag = true
-      local pattern = [==[[/%-%?"%'%`].]==]
-      local index = string.find( rawLine, pattern, searchIndex )
-      if  nil == index then
-         local _index = index
-      
-         addVal( Types.TokenKind.Symb, rawLine:sub( startIndex ), startIndex )
-         return list
-      end
-      
-      local findChar = getChar( index )
-      local nextChar = getChar( index + 1 )
-      
-      if findChar == 45 and nextChar ~= 45 then
-         searchIndex = index + 1
-         syncIndexFlag = false
-      else
-       
-         if startIndex < index then
-            addVal( Types.TokenKind.Symb, rawLine:sub( startIndex, index - 1 ), startIndex )
-         end
-         
-         if findChar == 39 or findChar == 34 then
-            local workIndex = index + 1
-            local workPattern = '["\'\\]'
-            while true do
-               local endIndex = string.find( rawLine, workPattern, workIndex )
-               if  nil == endIndex then
-                  local _endIndex = endIndex
-               
-                  Util.err( string.format( "%s:%d:%d: error: illegal string -- %s", self:getStreamName(  ), self.lineNo, index, rawLine) )
-               end
-               
-               local workChar = string.byte( rawLine, endIndex )
-               if workChar == findChar then
-                  addVal( Types.TokenKind.Str, rawLine:sub( index, endIndex ), index )
-                  searchIndex = endIndex + 1
-                  break
-               elseif workChar == 92 then
-                  workIndex = endIndex + 2
-               else
-                
-                  workIndex = endIndex + 1
-               end
-               
-            end
-            
-         elseif findChar == 96 then
-            if (nextChar == findChar and string.byte( rawLine, index + 2 ) == 96 ) then
-               local txt, nextIndex = multiComment( index + 3, '```' )
-               addVal( Types.TokenKind.Str, '```' .. txt, index )
-               searchIndex = nextIndex
-            else
-             
-               addVal( Types.TokenKind.Ope, '`', index )
-               searchIndex = index + 1
-            end
-            
-         elseif findChar == 63 then
-            local codeChar = rawLine:sub( index + 1, index + 1 )
-            if nextChar == 92 then
-               local quoted = rawLine:sub( index + 2, index + 2 )
-               if _lune._Set_has(quotedCharSet, quoted ) then
-                  codeChar = rawLine:sub( index + 1, index + 2 )
-               else
-                
-                  codeChar = quoted
-               end
-               
-               searchIndex = index + 3
-            else
-             
-               searchIndex = index + 2
-            end
-            
-            addVal( Types.TokenKind.Char, codeChar, index )
-         else
-          
-            if self.luaMode and findChar == 45 and nextChar == 45 then
-               addVal( Types.TokenKind.Cmnt, rawLine:sub( index ), index )
-               searchIndex = #rawLine + 1
-               
-            elseif findChar == 47 then
-               if nextChar == 42 then
-                  local comment, nextIndex = multiComment( index + 2, "*/" )
-                  addVal( Types.TokenKind.Cmnt, "/*" .. comment, index )
-                  searchIndex = nextIndex
-               elseif nextChar == 47 then
-                  addVal( Types.TokenKind.Cmnt, rawLine:sub( index ), index )
-                  searchIndex = #rawLine + 1
-               else
-                
-                  addVal( Types.TokenKind.Ope, "/", index )
-                  searchIndex = index + 1
-               end
-               
-            else
-             
-               Util.err( string.format( "%s:%d:%d: error: illegal syntax -- %s", self:getStreamName(  ), self.lineNo, index, rawLine) )
-            end
-            
-         end
-         
-      end
-      
-      if syncIndexFlag then
-         startIndex = searchIndex
-      end
-      
-   end
-   
-end
-
-
-function StreamParser:getToken(  )
-
-   if #self.lineTokenList < self.pos then
-      self.pos = 1
-      self.lineTokenList = {}
-      while #self.lineTokenList == 0 do
-         local pipeItem = self.pipe:getNext(  )
-         if  nil == pipeItem then
-            local _pipeItem = pipeItem
-         
-            return nil
-         end
-         
-         self.lineTokenList = pipeItem:get_item().list
-      end
-      
-   end
-   
-   
-   local token = self.lineTokenList[self.pos]
-   self.pos = self.pos + 1
-   
-   return token
-end
-
-
 local eofToken = Token.new(Types.TokenKind.Eof, "<EOF>", Position.new(0, 0, "eof"), false, {})
 local function getEofToken(  )
 

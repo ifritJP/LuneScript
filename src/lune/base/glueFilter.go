@@ -128,10 +128,10 @@ func (self *glueFilter_glueGenerator) getArgInfo(argNode *Nodes_Node)(string, st
     var argType *Ast_TypeInfo
     argType = argNode.FP.Get_expType()
     var orgType *Ast_TypeInfo
-    orgType = (Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( argType.FP.Get_nilable()) &&
-        Lns_setStackVal( argType.FP.Get_nonnilableType()) ||
-        Lns_setStackVal( argType) ).(*Ast_TypeInfo)).FP.Get_srcTypeInfo()
+    orgType = (Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( argType.FP.Get_nilable()) &&
+        Lns_GetEnv().SetStackVal( argType.FP.Get_nonnilableType()) ||
+        Lns_GetEnv().SetStackVal( argType) ).(*Ast_TypeInfo)).FP.Get_srcTypeInfo()
     var typeTxt string
     typeTxt = ""
     var nilableTypeTxt string
@@ -162,10 +162,10 @@ func (self *glueFilter_glueGenerator) getArgInfo(argNode *Nodes_Node)(string, st
             
         }
     }
-    return typeTxt, Lns_popVal( Lns_incStack() ||
-        Lns_setStackVal( argType.FP.Get_nilable()) &&
-        Lns_setStackVal( nilableTypeTxt) ||
-        Lns_setStackVal( typeTxt) ).(string), orgType, argName
+    return typeTxt, Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+        Lns_GetEnv().SetStackVal( argType.FP.Get_nilable()) &&
+        Lns_GetEnv().SetStackVal( nilableTypeTxt) ||
+        Lns_GetEnv().SetStackVal( typeTxt) ).(string), orgType, argName
 }
 
 // 92: decl @lune.@base.@glueFilter.glueGenerator.outputPrototype
@@ -270,10 +270,10 @@ func (self *glueFilter_glueGenerator) outputMethod(node *Nodes_Node,gluePrefix s
         typeTxt,argTypeTxt,argType,argName = self.FP.getArgInfo(argNode)
         if typeTxt != ""{
             var addVal LnsInt
-            addVal = Lns_popVal( Lns_incStack() ||
-                Lns_setStackVal( declInfo.FP.Get_staticFlag()) &&
-                Lns_setStackVal( 0) ||
-                Lns_setStackVal( 1) ).(LnsInt)
+            addVal = Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                Lns_GetEnv().SetStackVal( declInfo.FP.Get_staticFlag()) &&
+                Lns_GetEnv().SetStackVal( 0) ||
+                Lns_GetEnv().SetStackVal( 1) ).(LnsInt)
             var callArgName string
             callArgName = argName
             self.FP.write(Lns_getVM().String_format("  %s %s = ", []LnsAny{typeTxt, argName}))

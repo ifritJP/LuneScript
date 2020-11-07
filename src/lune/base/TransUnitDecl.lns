@@ -448,22 +448,32 @@ fn TransUnit.checkOverriededMethodOfAllClass() mut
             if symbolInfo.$name == "__init" {
                return true;
             }
+            let mut implimented = true;
             if symbolInfo.$typeInfo.$kind == .Method {
                if! let impMethodType = classScope.getTypeInfoField(
                   symbolInfo.$name, true, classScope, self.scopeAccess )
                {
-                  foreach err in self.checkOverrideMethod(
-                     symbolInfo.$typeInfo, impMethodType )
-                  {
-                     self.addErrMess( pos, err );
+                  if impMethodType == symbolInfo.$typeInfo {
+                     if symbolInfo.$typeInfo.$abstractFlag and classScope ~= superScope {
+                        implimented = false;
+                     }
+                  } else {
+                     foreach err in self.checkOverrideMethod(
+                        symbolInfo.$typeInfo, impMethodType )
+                     {
+                        self.addErrMess( pos, err );
+                     }
                   }
                } else {
-                  self.addErrMess( pos, "not implements method -- %s.%s at %s"
-                                   ( superScope.$ownerTypeInfo$.getTxt$(##),
-                                     symbolInfo.$name,
-                                     classScope.$ownerTypeInfo$.getTxt$(##) ) );
+                  implimented = false;
                }
-            } 
+            }
+            if not implimented {
+               self.addErrMess( pos, "not implements method -- %s.%s at %s"
+                                ( superScope.$ownerTypeInfo$.getTxt$(##),
+                                  symbolInfo.$name,
+                                  classScope.$ownerTypeInfo$.getTxt$(##) ) );
+            }
             return true;
          } );
    }
@@ -2946,7 +2956,9 @@ fn TransUnit.analyzeDeclFunc(
 
       if isCtorFlag {
          when! classTypeInfo {
-            if classTypeInfo.$baseTypeInfo ~= Ast.headTypeInfo {
+            if classTypeInfo.$baseTypeInfo ~= Ast.headTypeInfo and
+               classTypeInfo.$baseTypeInfo ~= builtinFunc.lnsthread_
+            {
                // Super クラスを持っている場合、
                // 先頭の処理で super() をコールしているか調べる
                let mut needCall = true;
