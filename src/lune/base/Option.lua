@@ -200,7 +200,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 6002
+   return 6034
 end
 
 
@@ -306,8 +306,29 @@ function Option:__init()
    self.analyzePos = nil
    self.dependsPath = nil
 end
-function Option:openDepend(  )
+function Option:openDepend( relPath )
 
+   do
+      local path = self.dependsPath
+      if path ~= nil then
+         local filePath
+         
+         if relPath ~= nil then
+            if path:find( "/$" ) then
+               filePath = string.format( "%s%s", path, relPath)
+            else
+             
+               filePath = string.format( "%s/%s", path, relPath)
+            end
+            
+         else
+            filePath = path
+         end
+         
+         return (io.open( filePath, "w" ) )
+      end
+   end
+   
    do
       local path = self.dependsPath
       if path ~= nil then
@@ -656,7 +677,7 @@ usage:
    end
    
    
-   Log.log( Log.Level.Log, __func__, 441, function (  )
+   Log.log( Log.Level.Log, __func__, 454, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

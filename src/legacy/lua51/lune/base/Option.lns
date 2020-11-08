@@ -131,7 +131,20 @@ pub class Option {
       self.dependsPath = nil;
    }
 
-   pub fn openDepend(): mut oStream! {
+   pub fn openDepend( relPath:str! ): mut oStream! {
+      if! let path = self.dependsPath {
+         let filePath;
+         when! relPath {
+            if path.find( "/$" ## ) {
+               filePath = "%s%s" (path, relPath );
+            } else {
+               filePath = "%s/%s" (path, relPath );
+            }
+         }else {
+            filePath = path;
+         }
+         return (io.open( filePath, "w" ));
+      }
       if! let path = self.dependsPath {
          return (io.open( path, "w" ));
       }

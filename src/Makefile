@@ -159,6 +159,49 @@ define cmd_exec_ast
 endef
 
 
+LNS_SRCS :=
+LNS_SRCS += base/Async
+LNS_SRCS += base/Str
+LNS_SRCS += base/Types
+LNS_SRCS += base/Ver
+LNS_SRCS += base/LuaMod
+LNS_SRCS += base/LuneControl
+LNS_SRCS += base/Meta
+LNS_SRCS += base/Testing
+LNS_SRCS += base/Code
+LNS_SRCS += base/Log
+LNS_SRCS += base/LuaVer
+LNS_SRCS += base/Depend
+LNS_SRCS += base/Util
+LNS_SRCS += base/frontInterface
+LNS_SRCS += base/Writer
+LNS_SRCS += base/AsyncParser
+LNS_SRCS += base/Parser
+#LNS_SRCS += base/MetaLoader
+LNS_SRCS += base/Ast
+LNS_SRCS += base/Option
+LNS_SRCS += base/Nodes
+LNS_SRCS += base/Formatter
+LNS_SRCS += base/Macro
+LNS_SRCS += base/TransUnit
+LNS_SRCS += base/DependLuaOnLns
+LNS_SRCS += base/convLua
+#LNS_SRCS += base/ConvNodes
+LNS_SRCS += base/dumpNode
+LNS_SRCS += base/convCC
+LNS_SRCS += base/convGo
+LNS_SRCS += base/OutputDepend
+LNS_SRCS += base/glueFilter
+LNS_SRCS += base/front
+LNS_SRCS += Util
+LNS_SRCS := $(addprefix "lune/",$(LNS_SRCS))
+
+define selfhost_buildOp_batch
+	echo $(LNS_SRCS) | sed 's/$$/.lns\n/g' | sed 's/ /.lns\n/g' | \
+		(cd $1; $2 @- SAVE $3 $4 $(BYTECOMP) $(COM_OPT) $(LOG_OPT))
+endef
+
+
 define selfhost_buildOp
 	$(call $5,$1,$2,$3,$4,base/Async)
 	$(call $5,$1,$2,$3,$4,base/Str)
@@ -378,7 +421,13 @@ test-comp:
 	mkdir -p work/1/test
 	mkdir -p work/newglue
 	$(call cp_src_set,work/1,.)
+ifeq ($(LANG_KIND),lua)
+# lua は batch 処理が何故か遅いので、通常処理で行なう
 	$(call selfhost_build_dep,$(LNSC),.,work/1,)
+else
+	$(call selfhost_buildOp_batch,.,$(LNSC_GO),work/1,--depends work/1/ )
+endif
+
 ifeq ($(WITH_GO),y)
 	$(call go-build-lns,work/1)
 endif
@@ -1393,8 +1442,13 @@ endef
 # lns ソースの変換を行ない。同じ結果になることを確認する。
 test-govslua:
 	-rm work/go.time work/lua.time
+ifdef BATCH
+	/usr/bin/time -f 'go:%e/%U/%S:$2' -o work/go.time --append		\
+		$(MAKE) test-govslua-go-batch
+else
 	/usr/bin/time -f 'go:%e/%U/%S:$2' -o work/go.time --append		\
 		$(MAKE) test-govslua-go
+endif
 	/usr/bin/time -f 'lua:%e/%U/%S:$2' -o work/lua.time --append		\
 		$(MAKE) test-govslua-lua
 	cat work/go.time work/lua.time
@@ -1428,6 +1482,13 @@ else
 endif
 	$(call test-buildlns-run,/usr/bin/time -f 'go:%e/%U/%S:$2' -o work/go.time --append work/2/$(LNSC_GO),work/2,go)
 
+
+test-govslua-lua-batch:
+	$(call test-buildlns-setup,work/2)
+	$(call selfhost_buildOp_batch,.,$(LNSC),work/2,--depends work/2/ -langGo )
+test-govslua-go-batch:
+	$(call test-buildlns-setup,work/2)
+	$(call selfhost_buildOp_batch,.,$(LNSC_GO),work/2,--depends work/2/ -langGo )
 
 
 goprof:
