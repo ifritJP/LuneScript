@@ -613,6 +613,10 @@ function Node:hasNilAccess(  )
 
    return false
 end
+function Node:isThreading(  )
+
+   return false
+end
 function Node.setmeta( obj )
   setmetatable( obj, { __index = Node  } )
 end
@@ -746,7 +750,7 @@ end
 function NodeManager:__init() 
    self.idSeed = 0
    self.nodeKind2NodeList = {}
-   for kind, _2577 in pairs( nodeKind2NameMap ) do
+   for kind, _2584 in pairs( nodeKind2NameMap ) do
       if not self.nodeKind2NodeList[kind] then
          self.nodeKind2NodeList[kind] = {}
       end
@@ -3320,6 +3324,10 @@ end
 
 setmetatable( ForeachNode, { __index = Node } )
 _moduleObj.ForeachNode = ForeachNode
+function ForeachNode:isThreading(  )
+
+   return self.threading
+end
 function ForeachNode:processFilter( filter, opt )
 
    filter:processForeach( self, opt )
@@ -3336,13 +3344,13 @@ function ForeachNode:canBeStatement(  )
 
    return true
 end
-function ForeachNode.new( id, pos, macroArgFlag, typeList, val, key, exp, block )
+function ForeachNode.new( id, pos, macroArgFlag, typeList, val, key, exp, threading, block )
    local obj = {}
    ForeachNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, val, key, exp, block ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, val, key, exp, threading, block ); end
    return obj
 end
-function ForeachNode:__init(id, pos, macroArgFlag, typeList, val, key, exp, block) 
+function ForeachNode:__init(id, pos, macroArgFlag, typeList, val, key, exp, threading, block) 
    Node.__init( self,id, 16, pos, macroArgFlag, typeList)
    
    
@@ -3350,13 +3358,14 @@ function ForeachNode:__init(id, pos, macroArgFlag, typeList, val, key, exp, bloc
    self.val = val
    self.key = key
    self.exp = exp
+   self.threading = threading
    self.block = block
    
    
 end
-function ForeachNode.create( nodeMan, pos, macroArgFlag, typeList, val, key, exp, block )
+function ForeachNode.create( nodeMan, pos, macroArgFlag, typeList, val, key, exp, threading, block )
 
-   local node = ForeachNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, val, key, exp, block)
+   local node = ForeachNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, val, key, exp, threading, block)
    nodeMan:addNode( node )
    return node
 end
@@ -3412,6 +3421,9 @@ end
 function ForeachNode:get_exp()
    return self.exp
 end
+function ForeachNode:get_threading()
+   return self.threading
+end
 function ForeachNode:get_block()
    return self.block
 end
@@ -3457,6 +3469,10 @@ end
 
 setmetatable( ForsortNode, { __index = Node } )
 _moduleObj.ForsortNode = ForsortNode
+function ForsortNode:isThreading(  )
+
+   return self.threading
+end
 function ForsortNode:processFilter( filter, opt )
 
    filter:processForsort( self, opt )
@@ -3473,13 +3489,13 @@ function ForsortNode:canBeStatement(  )
 
    return true
 end
-function ForsortNode.new( id, pos, macroArgFlag, typeList, val, key, exp, block, sort )
+function ForsortNode.new( id, pos, macroArgFlag, typeList, val, key, exp, threading, block, sort )
    local obj = {}
    ForsortNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, val, key, exp, block, sort ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, val, key, exp, threading, block, sort ); end
    return obj
 end
-function ForsortNode:__init(id, pos, macroArgFlag, typeList, val, key, exp, block, sort) 
+function ForsortNode:__init(id, pos, macroArgFlag, typeList, val, key, exp, threading, block, sort) 
    Node.__init( self,id, 17, pos, macroArgFlag, typeList)
    
    
@@ -3487,14 +3503,15 @@ function ForsortNode:__init(id, pos, macroArgFlag, typeList, val, key, exp, bloc
    self.val = val
    self.key = key
    self.exp = exp
+   self.threading = threading
    self.block = block
    self.sort = sort
    
    
 end
-function ForsortNode.create( nodeMan, pos, macroArgFlag, typeList, val, key, exp, block, sort )
+function ForsortNode.create( nodeMan, pos, macroArgFlag, typeList, val, key, exp, threading, block, sort )
 
-   local node = ForsortNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, val, key, exp, block, sort)
+   local node = ForsortNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, val, key, exp, threading, block, sort)
    nodeMan:addNode( node )
    return node
 end
@@ -3549,6 +3566,9 @@ function ForsortNode:get_key()
 end
 function ForsortNode:get_exp()
    return self.exp
+end
+function ForsortNode:get_threading()
+   return self.threading
 end
 function ForsortNode:get_block()
    return self.block
@@ -4451,6 +4471,10 @@ end
 
 setmetatable( ExpOp2Node, { __index = Node } )
 _moduleObj.ExpOp2Node = ExpOp2Node
+function ExpOp2Node:isThreading(  )
+
+   return self.threading
+end
 function ExpOp2Node:processFilter( filter, opt )
 
    filter:processExpOp2( self, opt )
@@ -4467,26 +4491,27 @@ function ExpOp2Node:canBeStatement(  )
 
    return false
 end
-function ExpOp2Node.new( id, pos, macroArgFlag, typeList, op, exp1, exp2 )
+function ExpOp2Node.new( id, pos, macroArgFlag, typeList, op, threading, exp1, exp2 )
    local obj = {}
    ExpOp2Node.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, op, exp1, exp2 ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, op, threading, exp1, exp2 ); end
    return obj
 end
-function ExpOp2Node:__init(id, pos, macroArgFlag, typeList, op, exp1, exp2) 
+function ExpOp2Node:__init(id, pos, macroArgFlag, typeList, op, threading, exp1, exp2) 
    Node.__init( self,id, 26, pos, macroArgFlag, typeList)
    
    
    
    self.op = op
+   self.threading = threading
    self.exp1 = exp1
    self.exp2 = exp2
    
    
 end
-function ExpOp2Node.create( nodeMan, pos, macroArgFlag, typeList, op, exp1, exp2 )
+function ExpOp2Node.create( nodeMan, pos, macroArgFlag, typeList, op, threading, exp1, exp2 )
 
-   local node = ExpOp2Node.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, op, exp1, exp2)
+   local node = ExpOp2Node.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, op, threading, exp1, exp2)
    nodeMan:addNode( node )
    return node
 end
@@ -4535,6 +4560,9 @@ function ExpOp2Node.setmeta( obj )
 end
 function ExpOp2Node:get_op()
    return self.op
+end
+function ExpOp2Node:get_threading()
+   return self.threading
 end
 function ExpOp2Node:get_exp1()
    return self.exp1
@@ -5664,6 +5692,10 @@ function ExpRefItemNode:hasNilAccess(  )
 
    return self.nilAccess
 end
+function ExpRefItemNode:isThreading(  )
+
+   return self.threading
+end
 function ExpRefItemNode:processFilter( filter, opt )
 
    filter:processExpRefItem( self, opt )
@@ -5676,27 +5708,28 @@ function ExpRefItemNode:canBeStatement(  )
 
    return false
 end
-function ExpRefItemNode.new( id, pos, macroArgFlag, typeList, val, nilAccess, symbol, index )
+function ExpRefItemNode.new( id, pos, macroArgFlag, typeList, val, nilAccess, threading, symbol, index )
    local obj = {}
    ExpRefItemNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, val, nilAccess, symbol, index ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, val, nilAccess, threading, symbol, index ); end
    return obj
 end
-function ExpRefItemNode:__init(id, pos, macroArgFlag, typeList, val, nilAccess, symbol, index) 
+function ExpRefItemNode:__init(id, pos, macroArgFlag, typeList, val, nilAccess, threading, symbol, index) 
    Node.__init( self,id, 34, pos, macroArgFlag, typeList)
    
    
    
    self.val = val
    self.nilAccess = nilAccess
+   self.threading = threading
    self.symbol = symbol
    self.index = index
    
    
 end
-function ExpRefItemNode.create( nodeMan, pos, macroArgFlag, typeList, val, nilAccess, symbol, index )
+function ExpRefItemNode.create( nodeMan, pos, macroArgFlag, typeList, val, nilAccess, threading, symbol, index )
 
-   local node = ExpRefItemNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, val, nilAccess, symbol, index)
+   local node = ExpRefItemNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, val, nilAccess, threading, symbol, index)
    nodeMan:addNode( node )
    return node
 end
@@ -5754,6 +5787,9 @@ end
 function ExpRefItemNode:get_nilAccess()
    return self.nilAccess
 end
+function ExpRefItemNode:get_threading()
+   return self.threading
+end
 function ExpRefItemNode:get_symbol()
    return self.symbol
 end
@@ -5807,6 +5843,10 @@ function ExpCallNode:hasNilAccess(  )
 
    return self.nilAccess
 end
+function ExpCallNode:isThreading(  )
+
+   return self.threading
+end
 function ExpCallNode:processFilter( filter, opt )
 
    filter:processExpCall( self, opt )
@@ -5819,13 +5859,13 @@ function ExpCallNode:canBeStatement(  )
 
    return true
 end
-function ExpCallNode.new( id, pos, macroArgFlag, typeList, func, errorFunc, nilAccess, argList )
+function ExpCallNode.new( id, pos, macroArgFlag, typeList, func, errorFunc, nilAccess, threading, argList )
    local obj = {}
    ExpCallNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, func, errorFunc, nilAccess, argList ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, func, errorFunc, nilAccess, threading, argList ); end
    return obj
 end
-function ExpCallNode:__init(id, pos, macroArgFlag, typeList, func, errorFunc, nilAccess, argList) 
+function ExpCallNode:__init(id, pos, macroArgFlag, typeList, func, errorFunc, nilAccess, threading, argList) 
    Node.__init( self,id, 35, pos, macroArgFlag, typeList)
    
    
@@ -5833,13 +5873,14 @@ function ExpCallNode:__init(id, pos, macroArgFlag, typeList, func, errorFunc, ni
    self.func = func
    self.errorFunc = errorFunc
    self.nilAccess = nilAccess
+   self.threading = threading
    self.argList = argList
    
    
 end
-function ExpCallNode.create( nodeMan, pos, macroArgFlag, typeList, func, errorFunc, nilAccess, argList )
+function ExpCallNode.create( nodeMan, pos, macroArgFlag, typeList, func, errorFunc, nilAccess, threading, argList )
 
-   local node = ExpCallNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, func, errorFunc, nilAccess, argList)
+   local node = ExpCallNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, func, errorFunc, nilAccess, threading, argList)
    nodeMan:addNode( node )
    return node
 end
@@ -5899,6 +5940,9 @@ function ExpCallNode:get_errorFunc()
 end
 function ExpCallNode:get_nilAccess()
    return self.nilAccess
+end
+function ExpCallNode:get_threading()
+   return self.threading
 end
 function ExpCallNode:get_argList()
    return self.argList
@@ -6976,6 +7020,10 @@ function RefFieldNode:hasNilAccess(  )
 
    return self.nilAccess
 end
+function RefFieldNode:isThreading(  )
+
+   return self.threading
+end
 function RefFieldNode:processFilter( filter, opt )
 
    filter:processRefField( self, opt )
@@ -6984,13 +7032,13 @@ function RefFieldNode:canBeStatement(  )
 
    return false
 end
-function RefFieldNode.new( id, pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix )
+function RefFieldNode.new( id, pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, threading, prefix )
    local obj = {}
    RefFieldNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, threading, prefix ); end
    return obj
 end
-function RefFieldNode:__init(id, pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix) 
+function RefFieldNode:__init(id, pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, threading, prefix) 
    Node.__init( self,id, 46, pos, macroArgFlag, typeList)
    
    
@@ -6998,13 +7046,14 @@ function RefFieldNode:__init(id, pos, macroArgFlag, typeList, field, symbolInfo,
    self.field = field
    self.symbolInfo = symbolInfo
    self.nilAccess = nilAccess
+   self.threading = threading
    self.prefix = prefix
    
    
 end
-function RefFieldNode.create( nodeMan, pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix )
+function RefFieldNode.create( nodeMan, pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, threading, prefix )
 
-   local node = RefFieldNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix)
+   local node = RefFieldNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, threading, prefix)
    nodeMan:addNode( node )
    return node
 end
@@ -7042,6 +7091,9 @@ function RefFieldNode:get_symbolInfo()
 end
 function RefFieldNode:get_nilAccess()
    return self.nilAccess
+end
+function RefFieldNode:get_threading()
+   return self.threading
 end
 function RefFieldNode:get_prefix()
    return self.prefix
@@ -7113,6 +7165,10 @@ function GetFieldNode:hasNilAccess(  )
 
    return self.nilAccess
 end
+function GetFieldNode:isThreading(  )
+
+   return self.threading
+end
 function GetFieldNode:processFilter( filter, opt )
 
    filter:processGetField( self, opt )
@@ -7125,13 +7181,13 @@ function GetFieldNode:canBeStatement(  )
 
    return false
 end
-function GetFieldNode.new( id, pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo )
+function GetFieldNode.new( id, pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, threading, prefix, getterTypeInfo )
    local obj = {}
    GetFieldNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, threading, prefix, getterTypeInfo ); end
    return obj
 end
-function GetFieldNode:__init(id, pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo) 
+function GetFieldNode:__init(id, pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, threading, prefix, getterTypeInfo) 
    Node.__init( self,id, 47, pos, macroArgFlag, typeList)
    
    
@@ -7139,14 +7195,15 @@ function GetFieldNode:__init(id, pos, macroArgFlag, typeList, field, symbolInfo,
    self.field = field
    self.symbolInfo = symbolInfo
    self.nilAccess = nilAccess
+   self.threading = threading
    self.prefix = prefix
    self.getterTypeInfo = getterTypeInfo
    
    
 end
-function GetFieldNode.create( nodeMan, pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo )
+function GetFieldNode.create( nodeMan, pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, threading, prefix, getterTypeInfo )
 
-   local node = GetFieldNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo)
+   local node = GetFieldNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, threading, prefix, getterTypeInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -7184,6 +7241,9 @@ function GetFieldNode:get_symbolInfo()
 end
 function GetFieldNode:get_nilAccess()
    return self.nilAccess
+end
+function GetFieldNode:get_threading()
+   return self.threading
 end
 function GetFieldNode:get_prefix()
    return self.prefix
@@ -11573,6 +11633,10 @@ end
 
 setmetatable( LiteralStringNode, { __index = Node } )
 _moduleObj.LiteralStringNode = LiteralStringNode
+function LiteralStringNode:isThreading(  )
+
+   return self.threading
+end
 function LiteralStringNode:processFilter( filter, opt )
 
    filter:processLiteralString( self, opt )
@@ -11589,13 +11653,13 @@ function LiteralStringNode:canBeStatement(  )
 
    return false
 end
-function LiteralStringNode.new( id, pos, macroArgFlag, typeList, token, orgParam, dddParam )
+function LiteralStringNode.new( id, pos, macroArgFlag, typeList, token, orgParam, dddParam, threading )
    local obj = {}
    LiteralStringNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, token, orgParam, dddParam ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, token, orgParam, dddParam, threading ); end
    return obj
 end
-function LiteralStringNode:__init(id, pos, macroArgFlag, typeList, token, orgParam, dddParam) 
+function LiteralStringNode:__init(id, pos, macroArgFlag, typeList, token, orgParam, dddParam, threading) 
    Node.__init( self,id, 84, pos, macroArgFlag, typeList)
    
    
@@ -11603,12 +11667,13 @@ function LiteralStringNode:__init(id, pos, macroArgFlag, typeList, token, orgPar
    self.token = token
    self.orgParam = orgParam
    self.dddParam = dddParam
+   self.threading = threading
    
    
 end
-function LiteralStringNode.create( nodeMan, pos, macroArgFlag, typeList, token, orgParam, dddParam )
+function LiteralStringNode.create( nodeMan, pos, macroArgFlag, typeList, token, orgParam, dddParam, threading )
 
-   local node = LiteralStringNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, token, orgParam, dddParam)
+   local node = LiteralStringNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, token, orgParam, dddParam, threading)
    nodeMan:addNode( node )
    return node
 end
@@ -11673,6 +11738,9 @@ function LiteralStringNode:get_orgParam()
 end
 function LiteralStringNode:get_dddParam()
    return self.dddParam
+end
+function LiteralStringNode:get_threading()
+   return self.threading
 end
 
 
@@ -12235,7 +12303,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, _10402 in pairs( self.map ) do
+   for key, _10482 in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -12270,8 +12338,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, _10416 in ipairs( __sorted ) do
-         local key = __map[ _10416 ]
+      for __index, _10496 in ipairs( __sorted ) do
+         local key = __map[ _10496 ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false

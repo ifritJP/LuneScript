@@ -294,6 +294,10 @@ pub abstract class Node {
    pub fn hasNilAccess(): bool {
       return false;
    }
+   /** このノードは別 Thread で動作するか */
+   pub fn isThreading(): bool {
+      return false;
+   }
    
 
    pub abstract fn visit( visitor:NodeVisitor, depth:int ): bool;
@@ -504,13 +508,24 @@ macro _declNodeClass(
             argSymList.insert( `{, ,,,fieldName } );
             initStatList.insert( `{ self.,,,fieldName = ,,,fieldName; } );
 
-            if fieldName == "nilAccess" {
-               fieldStatList.insert( `{
-                  pub override fn hasNilAccess():bool {
-                     return self.nilAccess;
-                  }
-               });
+            switch fieldName {
+               case "nilAccess" {
+                  fieldStatList.insert( `{
+                     pub override fn hasNilAccess():bool {
+                        return self.nilAccess;
+                     }
+                  });
+               }
+               case "threading" {
+                  fieldStatList.insert( `{
+                     pub override fn isThreading(): bool {
+                        return self.threading;
+                     }
+                  } );
+               }
             }
+               
+            
 
             // 子 Node を列挙する処理
             if not workName.find( "^@"## ) {
@@ -1172,6 +1187,7 @@ _declNodeClass( "Foreach", Node, false, false, true,
                 [ { "val": "&Ast.SymbolInfo" },
                   { "key": "&Ast.SymbolInfo!" },
                   { "exp": "&Node" },
+                  { "threading": "bool" },
                   { "block": "&BlockNode" } ]
 );
 
@@ -1182,6 +1198,7 @@ _declNodeClass( "Forsort", Node, false, false, true,
                 [ { "val": "&Ast.SymbolInfo" },
                   { "key": "&Ast.SymbolInfo!" },
                   { "exp": "&Node" },
+                  { "threading": "bool" },
                   { "block": "&BlockNode" },
                   { "sort": "bool" } ]
 );
@@ -1263,6 +1280,7 @@ _declNodeClass( "ExpSetItem", Node, false, false, true,
 
 _declNodeClass( "ExpOp2", Node, false, true, false,
                 [ { "op": "&Parser.Token" },
+                  { "threading": "bool" },
                   { "exp1": "&Node" },
                   { "exp2": "&Node" } ]
 );
@@ -1382,6 +1400,7 @@ _declNodeClass( "ExpOp1", Node, false, true, false,
 _declNodeClass( "ExpRefItem", Node, nil, true, false,
                 [ { "val": "&Node" },
                   { "nilAccess": "bool" },
+                  { "threading": "bool" },
                   { "symbol": "str!" },
                   { "index": "&Node!" } ]
 );
@@ -1400,6 +1419,7 @@ _declNodeClass( "ExpCall", Node, false, nil, true,
                 [ { "func": "&Node" },
                   { "errorFunc": "bool" },
                   { "nilAccess": "bool" },
+                  { "threading": "bool" },
                   { "argList": "&ExpListNode!" } ]
 );
 pub override fn ExpCallNode.get_effectivePos(): &Parser.Position {
@@ -1518,6 +1538,7 @@ _declNodeClass( "RefField", Node, nil, nil, false,
                   //{ "overrideCanBeLeft": "bool!" },
                   { "symbolInfo": "&Ast.SymbolInfo!" },
                   { "nilAccess": "bool" },
+                  { "threading": "bool" },
                   { "prefix": "&Node" }] 
 );
 pub override fn RefFieldNode.get_effectivePos(): &Parser.Position {
@@ -1556,6 +1577,7 @@ _declNodeClass( "GetField", Node, nil, true, false,
                   //{ "overrideCanBeLeft": "bool!" },
                   { "symbolInfo": "&Ast.SymbolInfo!" },
                   { "nilAccess": "bool" },
+                  { "threading": "bool" },
                   { "prefix": "&Node" },
                   { "getterTypeInfo": "&Ast.TypeInfo" } ]               
 );
@@ -2049,7 +2071,8 @@ _declNodeClass( "LiteralString", Node, false, true, false,
                   // 文字列リテラルの %s に対する各パラメータ
                   { "orgParam": "&ExpListNode!" },
                   // 上記 orgParam を ... に変換した時のパラメータ
-                  { "dddParam": "&ExpListNode!" } ]
+                  { "dddParam": "&ExpListNode!" },
+                  { "threading": "bool" } ]
 );
 
 _declNodeClass( "LiteralBool", Node, false, true, false,
@@ -2808,7 +2831,7 @@ __test {
 
       let strNode = LiteralStringNode.create( 
          nodeManager, hogeToken.pos, false,
-         [ Ast.builtinTypeString ], hogeToken, nil, nil );
+         [ Ast.builtinTypeString ], hogeToken, nil, nil, false );
       let argListNode = ExpListNode.create(
          nodeManager, hogeToken.pos, false, strNode.$expTypeList,
          [ strNode ], nil, false );
@@ -2816,7 +2839,7 @@ __test {
          nodeManager, printToken.pos, false, [ symbol.$typeInfo ], symbol );
       let callNode = ExpCallNode.create(
          nodeManager, printToken.pos, false, [ Ast.builtinTypeNone ],
-         refNode, false, false, argListNode );
+         refNode, false, false, false, argListNode );
       let stmtExp = StmtExpNode.create(
          nodeManager, callNode.$pos, false, [ Ast.builtinTypeNone ], callNode );
 

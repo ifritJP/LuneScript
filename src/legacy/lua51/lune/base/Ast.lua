@@ -373,6 +373,9 @@ end
 function ProcessInfo:get_idProvExt()
    return self.idProvExt
 end
+function ProcessInfo:get_validExtType()
+   return self.validExtType
+end
 
 local rootProcessInfo = ProcessInfo.createRoot(  )
 local function getRootProcessInfo(  )

@@ -118,10 +118,6 @@ func (luaValue *Lns_luaValue) NextFromMap( prev LnsAny ) (LnsAny, LnsAny) {
 
 
 //===============
-func (luaVM *Lns_luaVM) IO_open( path string, opt LnsAny ) LnsAny {
-    ret := luaVM.CallStatic( "io", "open", []LnsAny{ path, opt } )
-    return Lns_getFromMulti( ret, 0 )
-}
 func (luaVM *Lns_luaVM) IO_popen( path string ) LnsAny {
     ret := luaVM.CallStatic( "io", "popen", []LnsAny{ path } )
     return Lns_getFromMulti( ret, 0 )

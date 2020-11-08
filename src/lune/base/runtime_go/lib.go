@@ -41,7 +41,7 @@ var Lns_package_path string
 type LnsEnv struct {
     valStack []LnsAny
     nilAccStack []LnsAny
-    luaVM *Lns_luaVM
+    LuaVM *Lns_luaVM
 }
 var cur_LnsEnv *LnsEnv
 
@@ -54,11 +54,11 @@ type LnsThreadMtd interface {
 }
 
 type LnsThread struct {
-    env *LnsEnv
+    LnsEnv *LnsEnv
     FP LnsThreadMtd
 }
 func (self *LnsThread) InitLnsThread() {
-    self.env = createEnv()
+    self.LnsEnv = createEnv()
 }
 
 
@@ -78,7 +78,7 @@ func createEnv() *LnsEnv {
     env := &LnsEnv{}
     env.valStack = []LnsAny{}
     env.nilAccStack = []LnsAny{}
-    env.luaVM = createVM()
+    env.LuaVM = createVM()
 
     return env
 }
@@ -89,7 +89,7 @@ func createEnv() *LnsEnv {
 func Lns_InitModOnce() {
     cur_LnsEnv = createEnv()
     
-    Lns_package_path = cur_LnsEnv.luaVM.GetPackagePath()
+    Lns_package_path = cur_LnsEnv.LuaVM.GetPackagePath()
 }
 
 

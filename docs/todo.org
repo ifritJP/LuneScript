@@ -8,6 +8,21 @@
 
 * バグ
 
+- [ ] 次の self.test.func( "aa" ) でエラーにならない。
+  
+class Test<T> {
+   pub fn func( val:&T ) {
+   }
+}
+class Hoge<T> {
+   let test:Test<T>;
+   pub fn foo() {
+      self.test.func( "aa" );  // 本来はエラーすべき
+   }
+}
+  
+
+  
 - [ ] alias は、同じディレクトリ内のモジュールに限定する。
   
 - [ ] 以下のエラーを検出できない

@@ -54,6 +54,9 @@ func Str_endsWith( txt, ptn string ) bool {
     return strings.HasSuffix( txt, ptn )
 }
 
+func Str_isValidStrBuilder() bool {
+    return true
+}
 
 // ==== Builder
 type Str_BuilderMtd interface {
@@ -143,8 +146,6 @@ func init() {
     lns_c_ptr_reverse = C.CString( "reverse" )
     lns_c_ptr_gmatch = C.CString( "gmatch" )
     lns_c_ptr_dump = C.CString( "dump" )
-
-    regexpCache = lru.New( 20 )
 }
 
 type lns_callInfoString struct {
@@ -257,11 +258,16 @@ func (luaVM *Lns_luaVM) String_gsub(
     return ret[0].(string), LnsInt(ret[1].(int))
 }
 
-var regexpCache *lru.Cache
+type RegexpCache struct {
+    cache *lru.Cache
+}
+func newRegexpCache( num LnsInt ) *RegexpCache {
+    return &RegexpCache{ lru.New( num ) }
+}
 
-func createRegexp( src string ) *regexp.Regexp {
+func (self *RegexpCache) createRegexp( src string ) *regexp.Regexp {
 
-    if exp, ok := regexpCache.Get( src ); ok {
+    if exp, ok := self.cache.Get( src ); ok {
         return exp.(*regexp.Regexp);
     }
     
@@ -374,17 +380,17 @@ func createRegexp( src string ) *regexp.Regexp {
     }
 
     re := regexp.MustCompile( reg )
-    regexpCache.Add( src, re )
+    self.cache.Add( src, re )
     
     return re
 }
 
 
-func goFind( txt string, src string, index LnsInt ) (bool, []LnsAny) {
+func (self *RegexpCache) goFind( txt string, src string, index LnsInt ) (bool, []LnsAny) {
 
     dummyRet := []LnsAny{ nil }
 
-    re := createRegexp( src )
+    re := self.createRegexp( src )
     if re == nil {
         return false, dummyRet
     }
@@ -426,7 +432,7 @@ func (luaVM *Lns_luaVM) String_find(
         return []LnsAny{ offset + findIndex, offset + findIndex + len( src ) - 1 }
     }
     var goResult []LnsAny
-    if ok, result := goFind( target, src, offset ); ok {
+    if ok, result := luaVM.regexCache.goFind( target, src, offset ); ok {
         if !checkFindResult {
             return result;
         }

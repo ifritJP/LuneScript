@@ -58,9 +58,10 @@ pub abstract class Pipe<T> extend LnsThread {
       };
       while true {
          let! mut val = self.access() {
+            pipe.put( nil );
             break;
          };
-         pipe.put( val );
+         pipe.put( val.$item );
       }
    }
    pub fn start() mut {

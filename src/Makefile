@@ -1170,21 +1170,40 @@ define setup-go
 	-rm work/result-testGo.txt work/result-testGo2.txt
 endef
 
-define test-go-one
-#	cp -au lune/base/runtime_go/main/* $1
+define test-go-one-setup
+	mkdir -p $1/mod
+	cp -au test $1
+	-rm $1/mod/*
+endef
+
+define test-go-one-exec
 	cat lune/base/runtime_go/main/runtime_main.go |		\
 		sed 's/Lns_init/Lns_$3_init/;' |		\
 		sed 's@//IMPORT@import . "$(GO_MOD)/mod"@' > $2/runtime_main.go
-	mkdir -p $2/mod
-	-rm $2/mod/*
-	cp -au $4/$3.lns $2/mod
-	$(call convGo,$1,$2,mod/$3)
+	cp -au $4/$3.lns $2
+	$(call convGo,$1,$2,$3,mod)
 	$(call buildGo,$2) >> work/result-testGo.txt
 	if test "${NO_LUA_DIFF}" = ""; then					\
-		$(call exeLune,$1,$2,mod/$3.lns,exe) >> work/result-testGo2.txt;	\
+		$(call exeLune,$1,$2,$3.lns,exe) >> work/result-testGo2.txt &&	\
 		diff -C 2 -I 'ONLY_LUA'						\
 				work/result-testGo.txt work/result-testGo2.txt;	\
 	fi
+endef
+
+
+define test-go-one
+	$(call test-go-one-setup,$2)
+	$(call test-go-one-exec,$1,$2,$3,$4)
+endef
+
+define test-go-some-setup
+	cp -au $4/$3.lns $2/mod
+	$(call convGo,$1,$2,mod/$3)
+endef
+
+
+define test-go-some
+	$(call test-go-one-exec,$1,$2,$3,$4)
 endef
 
 
@@ -1206,7 +1225,9 @@ miniGo-go:
 test-go:
 	$(call cmd_exec_trans,$(LNSC),.,.,,base/convGo)
 	$(call setup-go,$(GO_WORK_DIR))
-	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),testGo,test)
+	$(call test-go-one-setup,$(GO_WORK_DIR))
+	$(call test-go-some-setup,$(LNSC),$(GO_WORK_DIR),SubGo,test)
+	$(call test-go-some,$(LNSC),$(GO_WORK_DIR),testGo,test)
 
 
 test-tutorial-go:
@@ -1261,10 +1282,11 @@ define test-convGo-test
 endef
 
 test-testGo:
-	$(call cmd_exec_trans,$(LNSC),.,.,,base/convGo)
 	rm -rf $(GO_WORK_DIR)/*.* $(GO_WORK_DIR)/lune $(GO_WORK_DIR)/test
 	$(call setup-go,$(GO_WORK_DIR))
 	$(call setup-go,$(GO_WORK_DIR)/test)
+
+	$(call cmd_exec_trans,$(LNSC),.,.,,base/convGo)
 
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Testing,--testing,./test)
 #	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Str,lune/base,./test)
@@ -1399,7 +1421,11 @@ test-govslua-lua:
 
 test-govslua-go:
 	$(call test-buildlns-setup,work/2)
+ifdef TEST_MAIN_GO
+	cp $(LNSC_GO) work/2
+else
 	cp $(GO_WORK_DIR)/test/$(LNSC_GO) work/2
+endif
 	$(call test-buildlns-run,/usr/bin/time -f 'go:%e/%U/%S:$2' -o work/go.time --append work/2/$(LNSC_GO),work/2,go)
 
 

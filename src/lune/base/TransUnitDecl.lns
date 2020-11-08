@@ -1008,10 +1008,11 @@ fn TransUnit.analyzePushClass(
                   firstToken.pos, "The access mode of '__init' is 'pri'." );
             }
          };
-         if baseTypeInfo == builtinFunc.lnsthread_ and
+         if baseTypeInfo.isInheritFrom( self.processInfo,
+                                        builtinFunc.lnsthread_, nil ) and
             not self.helperInfo.pragmaSet.has( LuneControl.Pragma.use_async )
          {
-            self.addErrMess( nextToken.pos, "must set '_lune_control ues_async'" );
+            self.addErrMess( nextToken.pos, "must set '_lune_control use_async'" );
          }
       }
    }
@@ -1612,7 +1613,7 @@ fn TransUnit.analyzeDeclMember(
             let mut mode = Ast.AccessMode.None;
             let mut workToken = self.getToken(##);
             switch workToken.txt {
-               case "pub", "pri", "pro" {
+               case "pub", "pri", "pro", "local" {
                   mode = unwrap Ast.txt2AccessMode( workToken.txt );
                   workToken = self.getToken(##);
                   if workToken.txt == "&" {
@@ -2961,9 +2962,7 @@ fn TransUnit.analyzeDeclFunc(
 
       if isCtorFlag {
          when! classTypeInfo {
-            if classTypeInfo.$baseTypeInfo ~= Ast.headTypeInfo and
-               classTypeInfo.$baseTypeInfo ~= builtinFunc.lnsthread_
-            {
+            if classTypeInfo.$baseTypeInfo ~= Ast.headTypeInfo {
                // Super クラスを持っている場合、
                // 先頭の処理で super() をコールしているか調べる
                let mut needCall = true;

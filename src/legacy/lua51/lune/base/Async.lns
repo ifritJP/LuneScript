@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+_lune_control use_async;
+
 pub class PipeItem<T> {
    let item:T {pub};
 }
@@ -56,9 +58,10 @@ pub abstract class Pipe<T> extend LnsThread {
       };
       while true {
          let! mut val = self.access() {
+            pipe.put( nil );
             break;
          };
-         pipe.put( val );
+         pipe.put( val.$item );
       }
    }
    pub fn start() mut {

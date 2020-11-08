@@ -127,16 +127,17 @@ func (self *Async_Pipe) Loop() {
         {
             _val := self.FP.Access()
             if _val == nil{
+                pipe.FP.Put(nil)
                 break
             } else {
                 val = _val.(*Async_PipeItem)
             }
         }
-        pipe.FP.Put(Async_PipeItem2Stem(val))
+        pipe.FP.Put(val.FP.Get_item())
     }
 }
 
-// 66: decl @lune.@base.@Async.Pipe.start
+// 67: decl @lune.@base.@Async.Pipe.start
 func (self *Async_Pipe) Start() {
     self.started = true
     

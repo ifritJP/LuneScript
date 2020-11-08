@@ -111,7 +111,6 @@ func lns_luaValChanProc( luaVM *Lns_luaVM ) {
     }
 }
 
-var aaaa = 0
 func createVM() *Lns_luaVM {
     luaVM := &Lns_luaVM{}
     luaVM.vm = luaL_newstate()
@@ -120,6 +119,7 @@ func createVM() *Lns_luaVM {
     luaVM.lns_luaValChan = make(chan *Lns_luaValueCore, 1000)
     luaVM.lns_luvValueCoreFreeList = []*Lns_luaValueCoreList{}
     luaVM.lns_hasLuvValueCoreFree = false
+    luaVM.regexCache = newRegexpCache( 20 )
 
     lua_createtable( luaVM.vm )
     lua_setglobal( luaVM.vm, lns_globalValSym )
@@ -131,7 +131,7 @@ func createVM() *Lns_luaVM {
 }
 
 func Lns_getVM() *Lns_luaVM {
-    luaVM := cur_LnsEnv.luaVM
+    luaVM := cur_LnsEnv.LuaVM
     if luaVM.lns_hasLuvValueCoreFree {
         lns_luvValueCoreFreeListMutex.Lock()
         luaVM.lns_hasLuvValueCoreFree = false
@@ -192,8 +192,8 @@ type StemToLuaConv struct {
     luaVM *Lns_luaVM
 }
 
-func NewStemToLuaConv() *StemToLuaConv {
-    return &StemToLuaConv{ &strings.Builder{}, Lns_getVM() }
+func (luaVM *Lns_luaVM) NewStemToLuaConv() *StemToLuaConv {
+    return &StemToLuaConv{ &strings.Builder{}, luaVM }
 }
 
 func (self *StemToLuaConv) write( txt string ) {
@@ -254,7 +254,7 @@ func (luaVM *Lns_luaVM) pushAny( val LnsAny ) *lns_pushedVal {
         case *Lns_luaValue:
             val.(*Lns_luaValue).core.pushValFromGlobalValMap()
         default:
-            conv := NewStemToLuaConv()
+            conv := luaVM.NewStemToLuaConv()
             conv.write( "return " )
             conv.conv( val )
 

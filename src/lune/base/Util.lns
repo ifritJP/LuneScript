@@ -99,12 +99,15 @@ pub class OrderedSet<T> {
 }
 
 pub class memStream extend (oStream) {
-   let mut txt: str { pub };
+   let mut txt: Str.Builder;
    pub fn __init() {
-      self.txt = "";
+      self.txt = new Str.Builder();
+   }
+   pub fn get_txt() : str {
+      return self.txt.$txt;
    }
    pub fn write( val: str ) mut : stem!, str! {
-      self.txt = self.txt .. val;
+      self.txt.add( val );
       return self, nil;
    }
    pub fn close() mut {

@@ -81,11 +81,22 @@ class dumpFilter extend Nodes.Filter<Opt> {
          }
       }
 
+      let mut attrib = "";
+      if node.hasNilAccess() {
+         attrib = "%s %s" (attrib, "nilacc" );
+      }
+      if node.isThreading() {
+         attrib = "%s %s" (attrib, "thread" );
+      }
+      if #attrib ~= 0 {
+         attrib = "[%s]" (attrib);
+      }
+
       self.writeln( opt,
-                    ": %s:%d(%d:%d) %s %s %s"     
+                    ": %s:%d(%d:%d) %s %s %s %s"     
                     ( Nodes.getNodeKindName( node.get_kind() ), node.$id,
                       node.$effectivePos.lineNo, node.$effectivePos.column,
-                      txt, typeStr, comment ) );
+                      attrib, txt, typeStr, comment ) );
    }
 }
 
@@ -547,16 +558,16 @@ fn getTypeListTxt( typeList:&List<&Ast.TypeInfo> ): str {
 pub override fn dumpFilter.processExpCall(
    node: &Nodes.ExpCallNode, opt:Opt ) mut
 {
-   self.dump( opt, node,
-         "[nilacc:%s] -> %s" ( node.$nilAccess, getTypeListTxt( node.$expTypeList ) ) );
+   let mess = getTypeListTxt( node.$expTypeList );
+   self.dump( opt, node, mess );
    filter( node.get_func(), self, opt.nextOpt() );
    if! node.get_argList() {
       filter( _exp, self, opt.nextOpt() );
    }	
 };
+
 pub override fn dumpFilter.processExpList(
    node: &Nodes.ExpListNode, opt:Opt ) mut
-
 {
    let mut mess;
    if! let mRetExp = node.$mRetExp {

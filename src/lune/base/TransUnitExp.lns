@@ -1554,7 +1554,7 @@ fn TransUnit.processFunc(
 
    let threading;
    if nilAccess or funcType.$kind == .Ext or
-      funcType.$parentInfo.$nonnilableType == Ast.builtinTypeString
+      builtinFunc.$needThreadingTypes.has( funcType.$nonnilableType.$srcTypeInfo )
    {
       threading = self.checkThreading( firstToken.pos );
       if threading and funcType.$kind == .Ext {
@@ -3584,10 +3584,16 @@ fn TransUnit.analyzeStrConst(
          dddParam = nil;
       }
 
+      let threading;
+      if param {
+         threading = self.checkThreading( firstToken.pos );
+      } else {
+         threading = false;
+      }
+      
       let mut workExp:Nodes.Node = Nodes.LiteralStringNode.create(
          self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
-         [ Ast.builtinTypeString ], token, param, dddParam,
-         self.checkThreading( firstToken.pos ) );
+         [ Ast.builtinTypeString ], token, param, dddParam, threading );
       if nextToken.txt == "[" or nextToken.txt == "$[" {
          exp = self.analyzeExpRefItem( nextToken, workExp, nextToken.txt == "$[" );
       }

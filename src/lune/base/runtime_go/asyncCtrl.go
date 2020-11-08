@@ -31,6 +31,7 @@ type Lns_pipeMtd interface {
 }
 type Lns__pipe struct {
     ch chan LnsAny
+    end bool
     FP Lns_pipeMtd
 }
 
@@ -38,12 +39,19 @@ func NewLnspipe( count int ) *Lns__pipe {
     pipe := &Lns__pipe{}
     pipe.ch = make(chan LnsAny,count)
     pipe.FP = pipe
+    pipe.end = false
     return pipe
 }
 
 func (self *Lns__pipe) Put( val LnsAny ) {
+    if Lns_IsNil( val ) {
+        self.end = true
+    }
     self.ch<- val
 }
 func (self *Lns__pipe) Get() LnsAny {
+    if len( self.ch ) == 0 && self.end {
+        return nil
+    }
     return <-self.ch
 }

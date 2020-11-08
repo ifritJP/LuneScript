@@ -78,3 +78,7 @@ pub class Builder {
       self.txt = "";
    }
 }
+
+pub fn isValidStrBuilder() : bool {
+   return false;
+}

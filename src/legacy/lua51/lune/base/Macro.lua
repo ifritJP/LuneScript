@@ -1091,7 +1091,7 @@ function MacroCtrl:expandSymbol( parser, prefixToken, exp, nodeManager, errMessL
    local expListNode = Nodes.ExpListNode.create( nodeManager, exp:get_pos(), self.analyzeInfo:get_mode() == Nodes.MacroMode.AnalyzeArg, exp:get_expTypeList(), {exp}, nil, false )
    local dddNode = Nodes.ExpToDDDNode.create( nodeManager, exp:get_pos(), self.analyzeInfo:get_mode() == Nodes.MacroMode.AnalyzeArg, exp:get_expTypeList(), expListNode )
    
-   local literalStr = Nodes.LiteralStringNode.create( nodeManager, prefixToken.pos, self.analyzeInfo:get_mode() == Nodes.MacroMode.AnalyzeArg, {Ast.builtinTypeString}, newToken, expListNode, Nodes.ExpListNode.create( nodeManager, exp:get_pos(), self.analyzeInfo:get_mode() == Nodes.MacroMode.AnalyzeArg, exp:get_expTypeList(), {dddNode}, nil, false ) )
+   local literalStr = Nodes.LiteralStringNode.create( nodeManager, prefixToken.pos, self.analyzeInfo:get_mode() == Nodes.MacroMode.AnalyzeArg, {Ast.builtinTypeString}, newToken, expListNode, Nodes.ExpListNode.create( nodeManager, exp:get_pos(), self.analyzeInfo:get_mode() == Nodes.MacroMode.AnalyzeArg, exp:get_expTypeList(), {dddNode}, nil, false ), false )
    return literalStr
 end
 

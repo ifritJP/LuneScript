@@ -1894,7 +1894,9 @@ builtin 関数の TypeInfo を保持するクラス。
       let mut allSymbol:List<&Ast.SymbolInfo> {pub};
       let mut allClass:List<&Ast.TypeInfo> {pub};
 
+      let mut allFuncTypeSet:Set<&Ast.TypeInfo> {pub};
       let mut allSymbolSet:Set<&Ast.SymbolInfo> {pub};
+      let mut needThreadingTypes:Set<&Ast.TypeInfo> {pub};
       
       pub fn __init() {
          ,,initMemberList;
@@ -1902,6 +1904,8 @@ builtin 関数の TypeInfo を保持するクラス。
          self.allSymbol = [];
          self.allClass = [];
          self.allSymbolSet = (@);
+         self.allFuncTypeSet = (@);
+         self.needThreadingTypes = (@);
       }
 
       pub fn register( symbolInfo:&Ast.SymbolInfo ) mut {
@@ -2185,7 +2189,14 @@ fn TransUnit.registBuiltInScope() mut {
                   }
                   match self.processInfo.createLuaval( genTypeList[ 1 ], true ) {
                      case .OK( workType, _ ) {
-                        return workType;
+                        if self.ctrl_info.validLuaval {
+                           return workType;
+                        }
+                        // luaval が無効な場合は、元の型を返す。
+                        // self.processInfo.createLuaval() を実行しないと、
+                        // builtin 関数の typeId が変ってしまうので、
+                        // luaval が無効でもダミーで実行する。
+                        return genTypeList[ 1 ];
                      }
                      case .Err( mess ) {
                         Util.err( mess );
@@ -2343,6 +2354,8 @@ fn TransUnit.registBuiltInScope() mut {
 
             self.popScope();
 
+            builtinFunc.$allFuncTypeSet.add( typeInfo );
+
             Ast.addBuiltin( typeInfo );
             if typeInfo.$nilableTypeInfo ~= Ast.headTypeInfo {
                Ast.addBuiltin( typeInfo.$nilableTypeInfo );
@@ -2488,6 +2501,25 @@ fn TransUnit.registBuiltInScope() mut {
       }
    }
 
+   // スレッド毎に処理を分ける必要がある builtin 関数を登録する
+   let threadSafeSet =
+       (@
+         builtinFunc.lns_error,
+         builtinFunc.lns_print,
+         builtinFunc.lns_type,
+         builtinFunc.lns_tonumber,
+         builtinFunc.io_open,
+
+         // 以下はとりあえず ok とする
+         builtinFunc.set_has,
+         builtinFunc.set_add
+       );
+   
+   foreach typeInfo in builtinFunc.$allFuncTypeSet {
+      if not threadSafeSet.has( typeInfo ) {
+         builtinFunc.$needThreadingTypes.add( typeInfo );
+      }
+   }
 
    self.scope = self.topScope;
 }
@@ -2844,7 +2876,7 @@ fn TransUnit.analyzeLuneControl(
       }
       case "run_async_pipe" {
          if not self.helperInfo.pragmaSet.has( LuneControl.Pragma.use_async ) {
-            self.addErrMess( nextToken.pos, "must set '_lune_control ues_async'" );
+            self.addErrMess( nextToken.pos, "must set '_lune_control use_async'" );
          }
          
          let nowMethod = self.getCurrentNamespaceTypeInfo();

@@ -69,7 +69,7 @@ pub class ProcessInfo {
    let mut idProvBase:IdProvider {pub};
    let mut idProvExt:IdProvider {pub};
    let mut typeInfo2Map:TypeInfo2Map!;
-   let validExtType:bool;
+   let mut validExtType:bool {pub};
 
    local fn get_typeInfo2Map() mut : TypeInfo2Map {
       return unwrap self.typeInfo2Map;

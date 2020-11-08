@@ -116,4 +116,10 @@ function Builder:get_txt()
 end
 
 
+local function isValidStrBuilder(  )
+
+   return false
+end
+_moduleObj.isValidStrBuilder = isValidStrBuilder
+
 return _moduleObj

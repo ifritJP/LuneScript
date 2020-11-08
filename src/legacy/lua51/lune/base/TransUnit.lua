@@ -1234,7 +1234,7 @@ function TransUnit:pushModule( externalFlag, name, mutable )
          local scope = self:pushScope( true )
          typeInfo = self.processInfo:createModule( scope, parentInfo, externalFlag, modName, mutable )
          
-         local _5748, existSym = parentScope:addClass( self.processInfo, modName, nil, typeInfo )
+         local _5785, existSym = parentScope:addClass( self.processInfo, modName, nil, typeInfo )
          if existSym ~= nil then
             self:addErrMess( self.parser:getLastPos(  ), string.format( "module symbols exist -- %s.%s -- %s.%s", existSym:get_namespaceTypeInfo():getFullName( self.typeNameCtrl, parentScope, false ), existSym:get_name(), parentInfo:getFullName( self.typeNameCtrl, parentScope, false ), modName) )
          end
@@ -2235,7 +2235,7 @@ function _TypeInfoModule:createTypeInfo( param )
          param.typeId2TypeInfo[self.typeId] = workTypeInfo
          parentScope:addClass( param.processInfo, self.txt, nil, workTypeInfo )
          
-         Log.log( Log.Level.Info, __func__, 1535, function (  )
+         Log.log( Log.Level.Info, __func__, 1534, function (  )
          
             return string.format( "new module -- %s, %s, %d, %d", self.txt, workTypeInfo:getFullName( Ast.defaultTypeNameCtrl, parentScope, false ), workTypeInfo:get_typeId(), parentScope:get_scopeId())
          end )
@@ -2371,7 +2371,7 @@ function _TypeInfoNormal:createTypeInfo( param )
       else
        
          if self.kind == Ast.TypeInfoKind.Class or self.kind == Ast.TypeInfoKind.IF then
-            Log.log( Log.Level.Debug, __func__, 1639, function (  )
+            Log.log( Log.Level.Debug, __func__, 1638, function (  )
             
                return string.format( "new type -- %d, %s -- %s, %d", self.parentId, self.txt, _lune.nilacc( parentScope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, parentScope, false ) or "nil", _lune.nilacc( parentScope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ) or -1)
             end )
@@ -2972,6 +2972,8 @@ function BuiltinFuncType:__init()
    self.allSymbol = {}
    self.allClass = {}
    self.allSymbolSet = {}
+   self.allFuncTypeSet = {}
+   self.needThreadingTypes = {}
 end
 function BuiltinFuncType:register( symbolInfo )
 
@@ -3032,8 +3034,14 @@ end
 function BuiltinFuncType:get_allClass()
    return self.allClass
 end
+function BuiltinFuncType:get_allFuncTypeSet()
+   return self.allFuncTypeSet
+end
 function BuiltinFuncType:get_allSymbolSet()
    return self.allSymbolSet
+end
+function BuiltinFuncType:get_needThreadingTypes()
+   return self.needThreadingTypes
 end
 
 
@@ -3630,6 +3638,24 @@ local function isStrFormFunc( typeInfo )
 end
 _moduleObj.isStrFormFunc = isStrFormFunc
 
+function TransUnit:checkThreading( pos )
+
+   local curClass = self:getCurrentClass(  )
+   if curClass ~= Ast.headTypeInfo then
+      if curClass:isInheritFrom( self.processInfo, builtinFunc.lnsthread_, nil ) then
+         return true
+      end
+      
+   end
+   
+   if _lune._Set_has(self.helperInfo.pragmaSet, _lune.newAlge( LuneControl.Pragma.use_async) ) then
+      self:addErrMess( pos, "This operation need perform on thread" )
+   end
+   
+   return false
+end
+
+
 local readyBuiltin = false
 
 function TransUnit:registBuiltInScope(  )
@@ -3696,7 +3722,11 @@ function TransUnit:registBuiltInScope(  )
                         local workType = _matchExp[2][1]
                         local _ = _matchExp[2][2]
                      
-                        return workType
+                        if self.ctrl_info.validLuaval then
+                           return workType
+                        end
+                        
+                        return genTypeList[1]
                      elseif _matchExp[1] == Ast.LuavalResult.Err[1] then
                         local mess = _matchExp[2][1]
                      
@@ -3729,7 +3759,7 @@ function TransUnit:registBuiltInScope(  )
       end
       
       local genTypeList = {}
-      local _6893, endIndex = typeName:find( "[%w%.]+<" )
+      local _6944, endIndex = typeName:find( "[%w%.]+<" )
       local suffix = ""
       if endIndex ~= nil then
          local genTypeName = typeName:sub( endIndex + 1 )
@@ -3868,6 +3898,8 @@ function TransUnit:registBuiltInScope(  )
             local typeInfo = self.processInfo:createFunc( abstractFlag, true, self.scope, kind, parentInfo, false, true, staticFlag, accessMode, fieldName, nil, argTypeList, retTypeList, mutable )
             
             self:popScope(  )
+            
+            builtinFunc:get_allFuncTypeSet()[typeInfo]= true
             
             Ast.addBuiltin( typeInfo )
             if typeInfo:get_nilableTypeInfo() ~= Ast.headTypeInfo then
@@ -4021,6 +4053,15 @@ function TransUnit:registBuiltInScope(  )
             self:popClass(  )
          end
          
+      end
+      
+   end
+   
+   local threadSafeSet = {[builtinFunc.lns_error] = true, [builtinFunc.lns_print] = true, [builtinFunc.lns_type] = true, [builtinFunc.lns_tonumber] = true, [builtinFunc.io_open] = true, [builtinFunc.set_has] = true, [builtinFunc.set_add] = true}
+   
+   for typeInfo, __val in pairs( builtinFunc:get_allFuncTypeSet() ) do
+      if not _lune._Set_has(threadSafeSet, typeInfo ) then
+         builtinFunc:get_needThreadingTypes()[typeInfo]= true
       end
       
    end
@@ -4418,7 +4459,14 @@ function TransUnit:analyzeLuneControl( firstToken )
          end
          
          pragma = _lune.newAlge( LuneControl.Pragma.limit_conv_code, {codeSet})
+      elseif _switchExp == "use_async" then
+         pragma = _lune.newAlge( LuneControl.Pragma.use_async)
       elseif _switchExp == "run_async_pipe" then
+         if not _lune._Set_has(self.helperInfo.pragmaSet, _lune.newAlge( LuneControl.Pragma.use_async) ) then
+            self:addErrMess( nextToken.pos, "must set '_lune_control use_async'" )
+         end
+         
+         
          local nowMethod = self:getCurrentNamespaceTypeInfo(  )
          local nowClass = nowMethod:get_parentInfo()
          local valid = false
@@ -4603,7 +4651,7 @@ end
 function TransUnit:processImport( modulePath, depth )
    local __func__ = '@lune.@base.@TransUnit.TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2979, function (  )
+   Log.log( Log.Level.Info, __func__, 3032, function (  )
    
       return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), modulePath)
    end )
@@ -4620,7 +4668,7 @@ function TransUnit:processImport( modulePath, depth )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2991, function (  )
+               Log.log( Log.Level.Info, __func__, 3044, function (  )
                
                   return string.format( "%s already", modulePath)
                end )
@@ -4657,7 +4705,7 @@ function TransUnit:processImport( modulePath, depth )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Debug, __func__, 3015, function (  )
+   Log.log( Log.Level.Debug, __func__, 3068, function (  )
    
       return string.format( "%s processing", modulePath)
    end )
@@ -4676,7 +4724,7 @@ function TransUnit:processImport( modulePath, depth )
          do
             if dependInfo['use'] then
                local _
-               local _7289, metaTypeId2TypeInfoMap = self:processImport( dependName, depth + 1 )
+               local _7346, metaTypeId2TypeInfoMap = self:processImport( dependName, depth + 1 )
                local typeId = math.floor((_lune.unwrap( dependInfo['typeId']) ))
                dependLibId2DependInfo[typeId] = DependModuleInfo.new(typeId, metaTypeId2TypeInfoMap)
             end
@@ -4717,7 +4765,7 @@ function TransUnit:processImport( modulePath, depth )
       moduleTypeInfo = self:pushModule( true, moduleName, mutable )
    end
    
-   for __index, _7307 in ipairs( nameList ) do
+   for __index, _7364 in ipairs( nameList ) do
       self:popModule(  )
    end
    
@@ -4943,7 +4991,7 @@ function TransUnit:processImport( modulePath, depth )
             
          elseif _switchExp == Ast.TypeInfoKind.Module then
             self:pushModule( true, classTypeInfo:getTxt(  ), Ast.TypeInfo.isMut( classTypeInfo ) )
-            Log.log( Log.Level.Debug, __func__, 3283, function (  )
+            Log.log( Log.Level.Debug, __func__, 3336, function (  )
             
                return string.format( "push module -- %s, %s, %d, %d, %d", classTypeInfo:getTxt(  ), _lune.nilacc( self.scope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, self.scope, false ) or "nil", _lune.nilacc( self.scope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ) or -1, classTypeInfo:get_typeId(), self.scope:get_parent():get_scopeId())
             end )
@@ -5024,7 +5072,7 @@ function TransUnit:processImport( modulePath, depth )
    end
    
    
-   for __index, _7443 in ipairs( nameList ) do
+   for __index, _7500 in ipairs( nameList ) do
       self:popModule(  )
    end
    
@@ -5043,7 +5091,7 @@ function TransUnit:processImport( modulePath, depth )
    
    self.importModuleInfo:remove(  )
    
-   Log.log( Log.Level.Info, __func__, 3380, function (  )
+   Log.log( Log.Level.Info, __func__, 3433, function (  )
    
       return string.format( "%s complete", modulePath)
    end )
@@ -5885,11 +5933,21 @@ function TransUnit:analyzeForeach( token, sortFlag )
    
    self:popScope(  )
    
-   if sortFlag then
-      return Nodes.ForsortNode.create( self.nodeManager, token.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, mainSym, subSym, exp, block, sortFlag )
+   local threading
+   
+   if exp:get_expType():get_kind() == Ast.TypeInfoKind.Ext then
+      threading = self:checkThreading( token.pos )
    else
     
-      return Nodes.ForeachNode.create( self.nodeManager, token.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, mainSym, subSym, exp, block )
+      threading = false
+   end
+   
+   
+   if sortFlag then
+      return Nodes.ForsortNode.create( self.nodeManager, token.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, mainSym, subSym, exp, threading, block, sortFlag )
+   else
+    
+      return Nodes.ForeachNode.create( self.nodeManager, token.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, mainSym, subSym, exp, threading, block )
    end
    
 end
@@ -6583,7 +6641,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
    
    
    if moduleName ~= nil then
-      for _8094 in string.gmatch( moduleName, '[^%.]+' ) do
+      for _8154 in string.gmatch( moduleName, '[^%.]+' ) do
          self:popModule(  )
       end
       
@@ -6593,7 +6651,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
    local function createId2proto( map )
    
       local id2proto = {}
-      for protoType, _8101 in pairs( map ) do
+      for protoType, _8161 in pairs( map ) do
          id2proto[protoType:get_typeId()] = protoType
       end
       
@@ -6784,7 +6842,7 @@ function TransUnit:analyzeDeclMacro( accessMode, firstToken )
    local node = self:analyzeDeclMacroSub( accessMode, firstToken, nameToken, scope, parentInfo, workArgList )
    self.scope = backScope
    
-   local _8168, existSym = self.scope:addMacro( self.processInfo, nameToken.pos, node:get_expType(), accessMode )
+   local _8228, existSym = self.scope:addMacro( self.processInfo, nameToken.pos, node:get_expType(), accessMode )
    if existSym then
       self:addErrMess( nameToken.pos, string.format( "multiple define symbol -- %s", nameToken.txt) )
    end
@@ -6920,6 +6978,10 @@ function TransUnit:analyzePushClass( classFlag, abstractFlag, firstToken, name, 
             end
          end
          
+         
+         if baseTypeInfo:isInheritFrom( self.processInfo, builtinFunc.lnsthread_, nil ) and not _lune._Set_has(self.helperInfo.pragmaSet, _lune.newAlge( LuneControl.Pragma.use_async) ) then
+            self:addErrMess( nextToken.pos, "must set '_lune_control use_async'" )
+         end
          
       end
       
@@ -7151,7 +7213,7 @@ function TransUnit:analyzeDeclEnum( accessMode, firstToken )
    
    self:popScope(  )
    
-   local _8326, shadowing = self.scope:addEnum( self.processInfo, accessMode, name.txt, name.pos, enumTypeInfo )
+   local _8387, shadowing = self.scope:addEnum( self.processInfo, accessMode, name.txt, name.pos, enumTypeInfo )
    self:errorShadowing( name.pos, shadowing )
    
    return Nodes.DeclEnumNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {enumTypeInfo}, enumTypeInfo, accessMode, name, valueList, scope )
@@ -7171,7 +7233,7 @@ function TransUnit:analyzeDeclAlge( accessMode, firstToken )
    local algeScope = self:pushScope( true )
    
    local algeTypeInfo = self.processInfo:createAlge( algeScope, self:getCurrentNamespaceTypeInfo(  ), false, accessMode, name.txt )
-   local _8338, shadowing = scope:addAlge( self.processInfo, accessMode, name.txt, name.pos, algeTypeInfo )
+   local _8399, shadowing = scope:addAlge( self.processInfo, accessMode, name.txt, name.pos, algeTypeInfo )
    self:errorShadowing( name.pos, shadowing )
    
    local nextToken = self:getToken(  )
@@ -7188,7 +7250,7 @@ function TransUnit:analyzeDeclAlge( accessMode, firstToken )
       if nextToken.txt == "(" then
          while true do
             local _
-            local _8347 = self:getToken(  )
+            local _8408 = self:getToken(  )
             local workToken2 = self:getToken(  )
             if workToken2.txt ~= ":" then
                self:pushback(  )
@@ -7479,7 +7541,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          local workToken = self:getToken(  )
          do
             local _switchExp = workToken.txt
-            if _switchExp == "pub" or _switchExp == "pri" or _switchExp == "pro" then
+            if _switchExp == "pub" or _switchExp == "pri" or _switchExp == "pro" or _switchExp == "local" then
                mode = _lune.unwrap( Ast.txt2AccessMode( workToken.txt ))
                workToken = self:getToken(  )
                if workToken.txt == "&" then
@@ -7526,7 +7588,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
             self:addErrMess( varName.pos, string.format( "This member can't have setter, this member is immutable. -- %s", varName.txt) )
          end
          
-         Log.log( Log.Level.Debug, __func__, 1661, function (  )
+         Log.log( Log.Level.Debug, __func__, 1667, function (  )
          
             return string.format( "%s", tostring( dummyRetType))
          end )
@@ -8122,7 +8184,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
    end
    
    
-   local node, _8775, methodNameSet = self:analyzeClassBody( hasProto, classAccessMode, firstToken, mode, gluePrefix, classTypeInfo, name, moduleName, nextToken )
+   local node, _8836, methodNameSet = self:analyzeClassBody( hasProto, classAccessMode, firstToken, mode, gluePrefix, classTypeInfo, name, moduleName, nextToken )
    local parentInfo = classTypeInfo
    for __index, memberNode in ipairs( node:get_memberList() ) do
       local memberType = memberNode:get_expType()
@@ -8686,7 +8748,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
       
       if isCtorFlag then
          if classTypeInfo ~= nil then
-            if classTypeInfo:get_baseTypeInfo() ~= Ast.headTypeInfo and classTypeInfo:get_baseTypeInfo() ~= builtinFunc.lnsthread_ then
+            if classTypeInfo:get_baseTypeInfo() ~= Ast.headTypeInfo then
                local needCall = true
                for __index, stmt in ipairs( workBody:get_stmtList() ) do
                   do
@@ -8878,7 +8940,7 @@ function TransUnit:analyzeInitExp( firstPos, accessMode, unwrapFlag, letVarList,
       
       if unwrapFlag then
          local hasNilable = false
-         for index, _9098 in ipairs( letVarList ) do
+         for index, _9159 in ipairs( letVarList ) do
             if expList:getExpTypeAt( index ):get_nilable() then
                hasNilable = true
                break
@@ -9848,7 +9910,12 @@ function TransUnit:analyzeExpRefItem( token, exp, nilAccess )
    end
    
    
-   return Nodes.ExpRefItemNode.create( self.nodeManager, token.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, exp, nilAccess, nil, indexExp )
+   local threading = false
+   if nilAccess then
+      threading = self:checkThreading( token.pos )
+   end
+   
+   return Nodes.ExpRefItemNode.create( self.nodeManager, token.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, exp, nilAccess, threading, nil, indexExp )
 end
 
 
@@ -10237,7 +10304,7 @@ function TransUnit:analyzeListItems( firstPos, nextToken, termTxt, expectTypeLis
                   table.insert( expTypeList, expNode:get_expType() )
                else
                 
-                  for _9703 = 1, #expNode:get_expTypeList() do
+                  for _9766 = 1, #expNode:get_expTypeList() do
                      table.insert( expTypeList, itemTypeInfo )
                   end
                   
@@ -10252,7 +10319,7 @@ function TransUnit:analyzeListItems( firstPos, nextToken, termTxt, expectTypeLis
          
       end
       
-      local _9706, _9707, workExpList = self:checkMatchType( "List constructor", firstPos, expTypeList, expList, false, false, nil )
+      local _9769, _9770, workExpList = self:checkMatchType( "List constructor", firstPos, expTypeList, expList, false, false, nil )
       if workExpList ~= nil then
          expList = workExpList
       end
@@ -10926,7 +10993,20 @@ function TransUnit:processFunc( firstToken, nextToken, refFieldNode, funcExp, fu
    end
    
    
-   return Nodes.ExpCallNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), retTypeInfoList, funcExp, errorFuncFlag, nilAccess, argList )
+   local threading
+   
+   if nilAccess or funcType:get_kind() == Ast.TypeInfoKind.Ext or _lune._Set_has(builtinFunc:get_needThreadingTypes(), funcType:get_nonnilableType():get_srcTypeInfo() ) then
+      threading = self:checkThreading( firstToken.pos )
+      if threading and funcType:get_kind() == Ast.TypeInfoKind.Ext then
+         self:addErrMess( firstToken.pos, "not support to use Luaval on thread." )
+      end
+      
+   else
+    
+      threading = false
+   end
+   
+   return Nodes.ExpCallNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), retTypeInfoList, funcExp, errorFuncFlag, nilAccess, threading, argList )
 end
 
 
@@ -10993,6 +11073,10 @@ function TransUnit:analyzeExpCall( firstToken, funcExp, nextToken )
    
    if funcTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Macro then
       exp = self:evalMacro( firstToken, funcTypeInfo, argList )
+      if self:checkThreading( firstToken.pos ) then
+         self:addErrMess( firstToken.pos, "not support to use a macro" )
+      end
+      
    else
     
       exp = self:processFunc( firstToken, nextToken, refFieldNode, funcExp, funcTypeInfo, alt2typeMap, genericTypeList, genericsClass, argList )
@@ -11519,6 +11603,8 @@ function TransUnit:analyzeExpField( firstToken, fieldToken, mode, prefixExp )
    end
    
    
+   local threading
+   
    local accessNil = false
    if mode == ExpSymbolMode.FieldNil or mode == ExpSymbolMode.GetNil then
       accessNil = true
@@ -11526,6 +11612,10 @@ function TransUnit:analyzeExpField( firstToken, fieldToken, mode, prefixExp )
          self:addWarnMess( prefixExp:get_pos(), string.format( "This is not nilable. -- %s", prefixExp:get_expType():getTxt(  )) )
       end
       
+      threading = self:checkThreading( firstToken.pos )
+   else
+    
+      threading = false
    end
    
    if self.macroCtrl:get_analyzeInfo():isAnalyzingSymArg(  ) then
@@ -11534,7 +11624,7 @@ function TransUnit:analyzeExpField( firstToken, fieldToken, mode, prefixExp )
       end
       
       
-      return Nodes.RefFieldNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeSymbol}, fieldToken, nil, accessNil, prefixExp )
+      return Nodes.RefFieldNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeSymbol}, fieldToken, nil, accessNil, threading, prefixExp )
       
    end
    
@@ -11686,7 +11776,7 @@ function TransUnit:analyzeExpField( firstToken, fieldToken, mode, prefixExp )
             typeInfo = self:createExtType( fieldToken.pos, typeInfo )
          end
          
-         return Nodes.ExpRefItemNode.create( self.nodeManager, fieldToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, prefixExp, accessNil, fieldToken.txt, nil )
+         return Nodes.ExpRefItemNode.create( self.nodeManager, fieldToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, prefixExp, accessNil, threading, fieldToken.txt, nil )
       else 
          
             if prefixExpType:equals( self.processInfo, Ast.builtinTypeStem ) then
@@ -11695,7 +11785,7 @@ function TransUnit:analyzeExpField( firstToken, fieldToken, mode, prefixExp )
                   typeInfo = self:createExtType( fieldToken.pos, typeInfo )
                end
                
-               return Nodes.ExpRefItemNode.create( self.nodeManager, fieldToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, prefixExp, accessNil, fieldToken.txt, nil )
+               return Nodes.ExpRefItemNode.create( self.nodeManager, fieldToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, prefixExp, accessNil, threading, fieldToken.txt, nil )
             else
              
                self:error( string.format( "illegal type -- %s, %s", prefixExpType:getTxt(  ), Ast.TypeInfoKind:_getTxt( prefixExpType:get_kind(  ))
@@ -11821,15 +11911,21 @@ function TransUnit:analyzeExpField( firstToken, fieldToken, mode, prefixExp )
    
    if extFlag then
       typeInfo = self:createExtType( firstToken.pos, typeInfo )
+      
+      if self:checkThreading( firstToken.pos ) then
+         self:addErrMess( firstToken.pos, "not support to use Luaval on thread." )
+      end
+      
    end
+   
    
    do
       local _exp = getterTypeInfo
       if _exp ~= nil then
-         return Nodes.GetFieldNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, fieldToken, accessSymbolInfo, accessNil, prefixExp, _exp )
+         return Nodes.GetFieldNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, fieldToken, accessSymbolInfo, accessNil, threading, prefixExp, _exp )
          
       else
-         return Nodes.RefFieldNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, fieldToken, accessSymbolInfo, accessNil, prefixExp )
+         return Nodes.RefFieldNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, fieldToken, accessSymbolInfo, accessNil, threading, prefixExp )
       end
    end
    
@@ -11860,7 +11956,7 @@ function TransUnit:analyzeNewAlge( firstToken, algeTypeInfo, prefix )
          
          
          do
-            local _10428, _10429, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, nil )
+            local _10499, _10500, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, nil )
             if newExpNodeList ~= nil then
                argList = newExpNodeList:get_expList()
             end
@@ -12019,6 +12115,11 @@ function TransUnit:analyzeExpSymbol( firstToken, symbolToken, mode, prefixExp, s
          end
          
          
+         if typeInfo:get_nonnilableType():get_kind() == Ast.TypeInfoKind.Ext and self:checkThreading( symbolToken.pos ) then
+            self:addErrMess( symbolToken.pos, "not support to use Luaval on thread." )
+         end
+         
+         
          exp = Nodes.ExpRefNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, Ast.AccessSymbolInfo.new(symbolInfo, _lune.newAlge( Ast.OverrideMut.None), true) )
       end
       
@@ -12099,7 +12200,7 @@ function TransUnit:analyzeExpOpSet( exp, opeToken, expectTypeList )
    end
    
    
-   local _10521, _10522, workList, expTypeList = self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), expList, true, false, nil )
+   local _10593, _10594, workList, expTypeList = self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), expList, true, false, nil )
    if workList ~= nil then
       expList = workList
    end
@@ -12271,12 +12372,12 @@ end
 function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
 
    while true do
-      local nextToken = self:getTokenNoErr(  )
-      local opTxt = nextToken.txt
+      local opToken = self:getTokenNoErr(  )
+      local opTxt = opToken.txt
       
-      if nextToken.txt == "@@" or nextToken.txt == "@@@" or nextToken.txt == "@@=" then
+      if opToken.txt == "@@" or opToken.txt == "@@@" or opToken.txt == "@@=" then
          exp = self:analyzeExpCast( firstToken, opTxt, exp )
-      elseif nextToken.kind == Parser.TokenKind.Ope then
+      elseif opToken.kind == Parser.TokenKind.Ope then
          if Parser.isOp2( opTxt ) then
             if opTxt ~= "=" and not exp:canBeRight( self.processInfo ) then
                self:addErrMess( exp:get_pos(), string.format( "This can't evaluate for '%s' -- %s", opTxt, Nodes.getNodeKindName( exp:get_kind() )) )
@@ -12329,7 +12430,7 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
             
             
             if opTxt == "=" then
-               return self:analyzeExpOpSet( exp, nextToken, expectTypeList )
+               return self:analyzeExpOpSet( exp, opToken, expectTypeList )
             end
             
             
@@ -12492,33 +12593,33 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
                      
                   else
                    
-                     self:addErrMess( nextToken.pos, string.format( "no numeric type '%s' or '%s'", exp1Type:getTxt( self.typeNameCtrl ), exp2Type:getTxt( self.typeNameCtrl )) )
+                     self:addErrMess( opToken.pos, string.format( "no numeric type '%s' or '%s'", exp1Type:getTxt( self.typeNameCtrl ), exp2Type:getTxt( self.typeNameCtrl )) )
                   end
                   
                   retType = Ast.builtinTypeBool
                elseif _switchExp == "~=" or _switchExp == "==" then
-                  exp, exp2 = self:analyzeExpOpEquals( firstToken.pos, nextToken, exp, exp2 )
+                  exp, exp2 = self:analyzeExpOpEquals( firstToken.pos, opToken, exp, exp2 )
                   retType = Ast.builtinTypeBool
                elseif _switchExp == "^" or _switchExp == "|" or _switchExp == "~" or _switchExp == "&" or _switchExp == "|<<" or _switchExp == "|>>" then
                   if self.targetLuaVer:get_hasBitOp() == LuaVer.BitOp.Cant then
-                     self:addErrMess( nextToken.pos, "this lua version can't use bit operand." )
+                     self:addErrMess( opToken.pos, "this lua version can't use bit operand." )
                   end
                   
                   
                   if not Ast.builtinTypeInt:canEvalWith( self.processInfo, exp1Type, Ast.CanEvalType.Logical, {} ) or not Ast.builtinTypeInt:canEvalWith( self.processInfo, exp2Type, Ast.CanEvalType.Logical, {} ) then
-                     self:addErrMess( nextToken.pos, string.format( "no int type '%s' or '%s'", exp1Type:getTxt(  ), exp2Type:getTxt(  )) )
+                     self:addErrMess( opToken.pos, string.format( "no int type '%s' or '%s'", exp1Type:getTxt(  ), exp2Type:getTxt(  )) )
                   end
                   
                   retType = Ast.builtinTypeInt
                elseif _switchExp == ".." then
                   if not exp1Type:equals( self.processInfo, Ast.builtinTypeString ) or not exp2Type:equals( self.processInfo, Ast.builtinTypeString ) then
-                     self:addErrMess( nextToken.pos, string.format( "no string type '%s' or '%s'", exp1Type:getTxt(  ), exp2Type:getTxt(  )) )
+                     self:addErrMess( opToken.pos, string.format( "no string type '%s' or '%s'", exp1Type:getTxt(  ), exp2Type:getTxt(  )) )
                   end
                   
                   retType = Ast.builtinTypeString
                elseif _switchExp == "+" or _switchExp == "-" or _switchExp == "*" or _switchExp == "/" or _switchExp == "%" then
                   if (not Ast.builtinTypeInt:canEvalWith( self.processInfo, exp1Type, Ast.CanEvalType.Math, {} ) and not Ast.builtinTypeReal:canEvalWith( self.processInfo, exp1Type, Ast.CanEvalType.Math, {} ) ) or (not Ast.builtinTypeInt:canEvalWith( self.processInfo, exp2Type, Ast.CanEvalType.Math, {} ) and not Ast.builtinTypeReal:canEvalWith( self.processInfo, exp2Type, Ast.CanEvalType.Math, {} ) ) then
-                     self:addErrMess( nextToken.pos, string.format( "no numeric type '%s' or '%s'", exp1Type:getTxt(  ), exp2Type:getTxt(  )) )
+                     self:addErrMess( opToken.pos, string.format( "no numeric type '%s' or '%s'", exp1Type:getTxt(  ), exp2Type:getTxt(  )) )
                   end
                   
                   
@@ -12542,7 +12643,20 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
             end
             
             
-            exp = Nodes.ExpOp2Node.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {retType}, nextToken, self.nodeManager:MultiTo1( exp ), self.nodeManager:MultiTo1( exp2 ) )
+            local threading
+            
+            do
+               local _switchExp = opTxt
+               if _switchExp == "and" or _switchExp == "or" then
+                  threading = self:checkThreading( firstToken.pos )
+               else 
+                  
+                     threading = false
+               end
+            end
+            
+            
+            exp = Nodes.ExpOp2Node.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {retType}, opToken, threading, self.nodeManager:MultiTo1( exp ), self.nodeManager:MultiTo1( exp2 ) )
          else
           
             self:error( "illegal op" )
@@ -12608,7 +12722,7 @@ function TransUnit:analyzeExpMacroStat( firstToken )
          end
          
          local newToken = Parser.Token.new(token.kind, string.format( format, token.txt ), token.pos, consecutive)
-         local literalStr = Nodes.LiteralStringNode.create( self.nodeManager, token.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeString}, newToken, nil, nil )
+         local literalStr = Nodes.LiteralStringNode.create( self.nodeManager, token.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeString}, newToken, nil, nil, false )
          table.insert( expStrList, literalStr )
       end
       
@@ -12808,7 +12922,7 @@ function TransUnit:analyzeStrConst( firstToken, token )
          local argNodeList = self:analyzeExpList( false, false, false )
          param = argNodeList
          
-         local _10793, _10794, workExpList = self:checkMatchType( "str constructor", firstToken.pos, {Ast.builtinTypeDDD}, argNodeList, false, false, nil )
+         local _10868, _10869, workExpList = self:checkMatchType( "str constructor", firstToken.pos, {Ast.builtinTypeDDD}, argNodeList, false, false, nil )
          if workExpList ~= nil then
             dddParam = workExpList
          else
@@ -12830,7 +12944,17 @@ function TransUnit:analyzeStrConst( firstToken, token )
       end
       
       
-      local workExp = Nodes.LiteralStringNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeString}, token, param, dddParam )
+      local threading
+      
+      if param then
+         threading = self:checkThreading( firstToken.pos )
+      else
+       
+         threading = false
+      end
+      
+      
+      local workExp = Nodes.LiteralStringNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeString}, token, param, dddParam, threading )
       if nextToken.txt == "[" or nextToken.txt == "$[" then
          exp = self:analyzeExpRefItem( nextToken, workExp, nextToken.txt == "$[" )
       else
@@ -12844,7 +12968,7 @@ function TransUnit:analyzeStrConst( firstToken, token )
       
    else
     
-      exp = Nodes.LiteralStringNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeString}, token, nil, nil )
+      exp = Nodes.LiteralStringNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeString}, token, nil, nil, false )
    end
    
    return exp
@@ -12971,7 +13095,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, canLeftExp, prevOpLev
       end
       
       
-      local _10859, alt2type, newArgList = self:checkMatchValType( exp:get_pos(), initTypeInfo, argList, classTypeInfo:get_itemTypeInfoList(), classTypeInfo )
+      local _10937, alt2type, newArgList = self:checkMatchValType( exp:get_pos(), initTypeInfo, argList, classTypeInfo:get_itemTypeInfoList(), classTypeInfo )
       
       if #classTypeInfo:get_itemTypeInfoList() > 0 then
          if classTypeInfo:get_itemTypeInfoList()[1]:get_kind() == Ast.TypeInfoKind.Alternate then
@@ -13255,7 +13379,7 @@ function TransUnit:analyzeReturn( token )
       local workList = expList
       if workList ~= nil then
          do
-            local _10963, _10964, newExpNodeList = self:checkMatchType( "return", token.pos, retTypeList, workList, false, not workList:get_followOn(), nil )
+            local _11041, _11042, newExpNodeList = self:checkMatchType( "return", token.pos, retTypeList, workList, false, not workList:get_followOn(), nil )
             if newExpNodeList ~= nil then
                expList = newExpNodeList
             end

@@ -230,6 +230,8 @@ end
 if not _lune2 then
    _lune2 = _lune
 end
+
+
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Types = _lune.loadModule( 'lune.base.Types' )
 local Async = _lune.loadModule( 'lune.base.Async' )
@@ -417,7 +419,7 @@ function Parser:__init(stream, name, luaMode)
    end
    
    self.lineList = lineList
-   
+   self:start(  )
 end
 function Parser:access(  )
 
@@ -459,7 +461,7 @@ function Parser:createInfo( tokenKind, token, tokenColumn )
 end
 
 
-local function analyzeNumber( token, beginIndex )
+function Parser:analyzeNumber( token, beginIndex )
 
    local nonNumIndex = token:find( '[^%d]', beginIndex )
    if  nil == nonNumIndex then
@@ -520,6 +522,7 @@ local function analyzeNumber( token, beginIndex )
    return nonNumIndex - 1, intFlag
 end
 
+
 function Parser:readLine(  )
 
    if self.lineNo >= #self.lineList then
@@ -559,7 +562,7 @@ function Parser:addVal( list, kind, val, column )
                checkIndex = checkIndex + 1
             end
             
-            local endIndex, intFlag = analyzeNumber( token, checkIndex )
+            local endIndex, intFlag = self:analyzeNumber( token, checkIndex )
             local info = self:createInfo( intFlag and Types.TokenKind.Int or Types.TokenKind.Real, token:sub( subIndex, endIndex ), columnIndex + subIndex )
             table.insert( list, info )
             subIndex = endIndex + 1
@@ -648,7 +651,7 @@ function Parser:parse(  )
       local comment = ""
       while true do
          do
-            local _408, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
+            local _409, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
             if termEndIndex ~= nil then
                comment = comment .. rawLine:sub( searchIndex, termEndIndex )
                return comment, termEndIndex + 1

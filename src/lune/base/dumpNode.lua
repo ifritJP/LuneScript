@@ -301,7 +301,21 @@ function dumpFilter:dump( opt, node, txt )
    end
    
    
-   self:writeln( opt, string.format( ": %s:%d(%d:%d) %s %s %s", Nodes.getNodeKindName( node:get_kind(  ) ), node:get_id(), node:get_effectivePos().lineNo, node:get_effectivePos().column, txt, typeStr, comment) )
+   local attrib = ""
+   if node:hasNilAccess(  ) then
+      attrib = string.format( "%s %s", attrib, "nilacc")
+   end
+   
+   if node:isThreading(  ) then
+      attrib = string.format( "%s %s", attrib, "thread")
+   end
+   
+   if #attrib ~= 0 then
+      attrib = string.format( "[%s]", attrib)
+   end
+   
+   
+   self:writeln( opt, string.format( ": %s:%d(%d:%d) %s %s %s %s", Nodes.getNodeKindName( node:get_kind(  ) ), node:get_id(), node:get_effectivePos().lineNo, node:get_effectivePos().column, attrib, txt, typeStr, comment) )
 end
 function dumpFilter.setmeta( obj )
   setmetatable( obj, { __index = dumpFilter  } )
@@ -912,7 +926,7 @@ end
 
 function dumpFilter:processExpCall( node, opt )
 
-   local mess = string.format( "[nilacc:%s,thread:%s] -> %s", node:get_nilAccess(), node:get_threading(), getTypeListTxt( node:get_expTypeList() ))
+   local mess = getTypeListTxt( node:get_expTypeList() )
    self:dump( opt, node, mess )
    filter( node:get_func(  ), self, opt:nextOpt(  ) )
    do

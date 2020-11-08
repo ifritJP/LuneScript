@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 import lune.base.Types;
+import lune.base.Str;
 import lune.base.frontInterface;
 import lune.base.Parser;
 import lune.base.convLua;
@@ -851,7 +852,25 @@ pub fn Front.convertLuaToStreamFromScript(
       moduleId, uptodate = frontInterface.ModuleId.tempId, ModuleUptodate.NeedUpdate;
    }
 
-   let mut stream, mut metaStream, mut dependsStream = openOStream( uptodate );
+   let mut streamDst, mut metaStreamDst, mut dependsStreamDst = openOStream( uptodate );
+   let mut streamMem = new Util.memStream();
+   let mut metaStreamMem = new Util.memStream();
+   let mut dependsStreamMem = new Util.memStream();
+
+   let mut stream:oStream!;
+   let mut metaStream:oStream!;
+   let mut dependsStream:oStream!;
+   
+   if Str.isValidStrBuilder() {
+      stream = streamMem;
+      metaStream = metaStreamMem;
+      dependsStream = dependsStreamMem;
+   } else {
+      stream = streamDst;
+      metaStream = metaStreamDst;
+      dependsStream = dependsStreamDst;
+   }
+   
 
    match uptodate {
       case .Uptodate( metaInfo ) {
@@ -914,6 +933,22 @@ pub fn Front.convertLuaToStreamFromScript(
       }
    }
 
+   if Str.isValidStrBuilder() {
+      macro _write( streamName:str) {
+         {
+            let dstStream = "%sDst" (streamName);
+            let memStream = "%sMem" (streamName);
+         }
+         when! ,,,dstStream {
+            ,,,dstStream.write( ,,,memStream.$txt );
+         }
+      }
+      _write( "stream" );
+      _write( "metaStream" );
+      _write( "dependsStream" );
+   }
+
+   
    when! closeOStream {
       closeOStream( stream, metaStream, dependsStream );
    }
@@ -966,10 +1001,21 @@ pub fn Front.saveToGo( ast:TransUnit.ASTInfo ) mut {
    let! mut file = io.open( path, "w" ) {
       return;
    };
+   let mut memStream = new Util.memStream();
+   let mut dstStream:oStream;
+   if Str.isValidStrBuilder() {
+      dstStream = memStream;
+   } else {
+      dstStream = file;
+   }
 
    let mut conv = convGo.createFilter(
-      self.option.testing, path, file, ast );
+      self.option.testing, path, dstStream, ast );
    ast.$node.processFilter( conv, new convGo.Opt( ast.$node ) );
+
+   if Str.isValidStrBuilder() {
+      file.write( memStream.$txt );
+   }
 
    file.close();
 }

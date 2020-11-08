@@ -85,4 +85,41 @@ local function getLineList( txt )
 end
 _moduleObj.getLineList = getLineList
 
+local Builder = {}
+_moduleObj.Builder = Builder
+function Builder.new(  )
+   local obj = {}
+   Builder.setmeta( obj )
+   if obj.__init then obj:__init(  ); end
+   return obj
+end
+function Builder:__init() 
+   self.txt = ""
+end
+function Builder:add( val )
+
+   self.txt = self.txt .. val
+end
+function Builder:len(  )
+
+   return #self.txt
+end
+function Builder:clear(  )
+
+   self.txt = ""
+end
+function Builder.setmeta( obj )
+  setmetatable( obj, { __index = Builder  } )
+end
+function Builder:get_txt()
+   return self.txt
+end
+
+
+local function isValidStrBuilder(  )
+
+   return false
+end
+_moduleObj.isValidStrBuilder = isValidStrBuilder
+
 return _moduleObj

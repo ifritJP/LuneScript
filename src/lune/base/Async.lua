@@ -130,10 +130,11 @@ function Pipe:loop(  )
       if  nil == val then
          local _val = val
       
+         pipe:put( nil )
          break
       end
       
-      pipe:put( val )
+      pipe:put( val:get_item() )
    end
    
 end

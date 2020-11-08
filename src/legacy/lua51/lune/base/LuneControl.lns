@@ -35,5 +35,6 @@ pub alge Pragma {
    ignore_symbol_,
    load__lune_module,
    limit_conv_code( codeSet:&Set<Code> ),
+   use_async,
    run_async_pipe,
 }

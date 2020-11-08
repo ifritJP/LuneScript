@@ -255,11 +255,15 @@ function memStream.new(  )
    return obj
 end
 function memStream:__init() 
-   self.txt = ""
+   self.txt = Str.Builder.new()
+end
+function memStream:get_txt(  )
+
+   return self.txt:get_txt()
 end
 function memStream:write( val )
 
-   self.txt = self.txt .. val
+   self.txt:add( val )
    return self, nil
 end
 function memStream:close(  )
@@ -270,9 +274,6 @@ function memStream:flush(  )
 end
 function memStream.setmeta( obj )
   setmetatable( obj, { __index = memStream  } )
-end
-function memStream:get_txt()
-   return self.txt
 end
 
 
@@ -400,7 +401,7 @@ local function getReadyCode( depPath, tgtPath )
       return true
    end
    
-   Log.log( Log.Level.Warn, __func__, 244, function (  )
+   Log.log( Log.Level.Warn, __func__, 247, function (  )
    
       return string.format( "not ready %g < %g : %s, %s", tgtTime, depTime, tgtPath, depPath)
    end )

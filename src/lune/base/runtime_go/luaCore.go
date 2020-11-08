@@ -66,6 +66,8 @@ type Lns_luaVM struct {
 
     lns_luvValueCoreFreeList []*Lns_luaValueCoreList
     lns_hasLuvValueCoreFree bool
+
+    regexCache *RegexpCache
 }
 
 // luaL api ======================

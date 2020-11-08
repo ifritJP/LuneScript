@@ -58,6 +58,8 @@ end
 if not _lune2 then
    _lune2 = _lune
 end
+
+
 local PipeItem = {}
 _moduleObj.PipeItem = PipeItem
 function PipeItem.setmeta( obj )
@@ -128,10 +130,11 @@ function Pipe:loop(  )
       if  nil == val then
          local _val = val
       
+         pipe:put( nil )
          break
       end
       
-      pipe:put( val )
+      pipe:put( val:get_item() )
    end
    
 end
