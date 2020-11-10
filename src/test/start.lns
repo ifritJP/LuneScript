@@ -1790,15 +1790,6 @@ class Test_ccc {
 }
 {
    Macro._section();
-   class Test22<T> {
-      pub static fn func(val:T) : T {
-         return val;
-      }
-   }
-   print( Test22.func(1) );
-}
-{
-   Macro._section();
    class Super {
       let val:int {pub};
    }

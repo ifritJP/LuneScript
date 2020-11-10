@@ -2531,44 +2531,8 @@ pub class AlternateTypeInfo extend TypeInfo {
    
 
    pri fn canSetFrom(
-      processInfo:ProcessInfo,
-      other:&TypeInfo, canEvalType:CanEvalType!, alt2type:Map<&TypeInfo,&TypeInfo> ): bool
-   {
-      let otherWork = AlternateTypeInfo.getAssign( other, alt2type );
-      if self == otherWork {
-         return true;
-      }
-
-      if! let genType = alt2type[ self ] {
-         when! canEvalType {
-            return (genType.canEvalWith( processInfo, otherWork, canEvalType, alt2type ));
-         }
-         return genType.equals( processInfo, otherWork, alt2type ## );
-      }
-      let workAlt2type;
-      if not CanEvalCtrlTypeInfo.isValidApply( alt2type ) {
-         if otherWork.$kind ~= .Class and otherWork.$kind ~= .IF {
-            return false;
-         }
-         workAlt2type = CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
-      } else {
-         workAlt2type = alt2type;
-      }
-
-      if self.hasBase() {
-         if not other.isInheritFrom( processInfo, self.baseTypeInfo, workAlt2type ) {
-            return false;
-         }
-      };
-      foreach ifType in self.interfaceList {
-         if not other.isInheritFrom( processInfo, ifType, workAlt2type ) {
-            return false;
-         }
-      }
-
-      workAlt2type[ self ] = otherWork;
-      return true;
-   }
+      processInfo:ProcessInfo, other:&TypeInfo,
+      canEvalType:CanEvalType!, alt2type:Map<&TypeInfo,&TypeInfo> ): bool;
 
    /** この型が other を継承しているかどうか */
    pub override fn isInheritFrom(
@@ -4240,9 +4204,54 @@ immutableTypeSet.add( builtinTypeReal );
 immutableTypeSet.add( builtinTypeChar );
 immutableTypeSet.add( builtinTypeString );
 
+pub fn isClass( typeInfo:&TypeInfo ) : bool {
+   return typeInfo.$kind == .Class and typeInfo ~= builtinTypeString;
+}
+
 pub fn Scope.addIgnoredVar( processInfo:ProcessInfo ) mut {
    self.addLocalVar( processInfo, false, true, "_", nil, builtinTypeEmpty, .Mut );
 }
+
+pri fn AlternateTypeInfo.canSetFrom(
+   processInfo:ProcessInfo,
+   other:&TypeInfo, canEvalType:CanEvalType!, alt2type:Map<&TypeInfo,&TypeInfo> ): bool
+{
+   let otherWork = AlternateTypeInfo.getAssign( other, alt2type );
+   if self == otherWork {
+      return true;
+   }
+
+   if! let genType = alt2type[ self ] {
+      when! canEvalType {
+         return (genType.canEvalWith( processInfo, otherWork, canEvalType, alt2type ));
+      }
+      return genType.equals( processInfo, otherWork, alt2type ## );
+   }
+   let workAlt2type;
+   if not CanEvalCtrlTypeInfo.isValidApply( alt2type ) {
+      if not isClass( otherWork ) and otherWork.$kind ~= .IF {
+         return false;
+      }
+      workAlt2type = CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
+   } else {
+      workAlt2type = alt2type;
+   }
+
+   if self.hasBase() {
+      if not other.isInheritFrom( processInfo, self.baseTypeInfo, workAlt2type ) {
+         return false;
+      }
+   };
+   foreach ifType in self.interfaceList {
+      if not other.isInheritFrom( processInfo, ifType, workAlt2type ) {
+         return false;
+      }
+   }
+
+   workAlt2type[ self ] = otherWork;
+   return true;
+}
+
 
 pub override fn NormalSymbolInfo.set_typeInfo(typeInfo:&TypeInfo) {
    if self.name == "_" {
@@ -4347,11 +4356,6 @@ fn failCreateLuavalWith(
       }
    }
    return "not support -- %s" (typeInfo.getTxt(##)), false;
-}
-
-
-pub fn isClass( typeInfo:&TypeInfo ) : bool {
-   return typeInfo.$kind == .Class and typeInfo ~= builtinTypeString;
 }
 
 

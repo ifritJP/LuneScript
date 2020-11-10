@@ -8,33 +8,8 @@
 
 * バグ
 
-- [ ] 次の self.test.func( "aa" ) でエラーにならない。
-  
-class Test<T> {
-   pub fn func( val:&T ) {
-   }
-}
-class Hoge<T> {
-   let test:Test<T>;
-   pub fn foo() {
-      self.test.func( "aa" );  // 本来はエラーすべき
-   }
-}
-  
-
   
 - [ ] alias は、同じディレクトリ内のモジュールに限定する。
-  
-- [ ] 以下のエラーを検出できない
-
-abstract class Hoge {
-   pub abstract fn func();
-}
-abstract class Test extend Hoge {
-}
-class Sub extend Test { // func を override していないのでエラーにすべき
-}
-  
   
 - [ ] 型パラメータを持つクラスを継承した時、
       そのクラスの継承元のコンストラクタに引数がある場合、
@@ -48,7 +23,7 @@ abstract class Test<T> {
    let mut val:T!;
    
    pro fn __init( val:T! ) {
-      self.val = val
+      self.val = val;
    }
 }
 
@@ -81,7 +56,7 @@ macro _hoge( list:List<int> ) {
 - [ ]
 class Test6<T> {
    let val:T {pub};
-   pub fn func():T { // ここでエラーを出すべき
+   pub fn func():T { // ここでエラーを出すべき。 mut メソッドでないのに mut オブジェクトを返している。
       return self.val;
    }
 }
@@ -111,19 +86,6 @@ func( list.unpack() );
 - [ ] サイズ 0 の lua ファイルがあると、 uptodate になっている？
       uptodate になって生成しなおさずに import してしまい、バグっているっぽい。
   
-- [ ] imuttable のメンバに代入できてしまう。
-class Hoge {
-   pub let val:int!;
-   pub fn __init() {
-   }
-}
-
-let mut hoge = new Hoge();
-
-while true {
-   hoge.val = 1; // ここで代入できてしまう。
-   break;
-}
 
   
 - [ ] 次の flow 解析が NG。
@@ -875,6 +837,44 @@ fn func( val:SubC ) {
       flow チェックが出来ていなかった。
 - [X] アクセスされていないシンボルの警告と '_' シンボルの対応。
 
+- [X] 次の self.test.func( "aa" ) でエラーにならない。
+  
+class Test<T> {
+   pub fn func( val:&T ) {
+   }
+}
+class Hoge<T> {
+   let test:Test<T>;
+   pub fn foo() {
+      self.test.func( "aa" );  // 本来はエラーすべき
+   }
+}
+
+- [X] 以下のエラーを検出できない
+
+abstract class Hoge {
+   pub abstract fn func();
+}
+abstract class Test extend Hoge {
+}
+class Sub extend Test { // func を override していないのでエラーにすべき
+}
+
+- [X] imuttable のメンバに代入できてしまう。
+class Hoge {
+   pub let val:int!;
+   pub fn __init() {
+   }
+}
+
+let mut hoge = new Hoge();
+
+while true {
+   hoge.val = 1; // ここで代入できてしまう。
+   break;
+}
+
+  
   
 - [ ] macro に与えられたリテラルな List/Array/Map/Set を、そのまま展開して変数に格納する。
 - [ ] import すると、モジュールのシンボルがスコープに追加される。

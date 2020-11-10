@@ -589,14 +589,16 @@ fn TransUnit.checkImplicitCast(
 @param expListNode 設定する値の型リスト
 @param allowDstShort dstTypeList の要素数が expNodeList よりも少ないことを許容する場合 true
 @param warnForFollow true の場合、値を省略している時に警告を出力する
-@param
+@param genericsClassType dstTypeList のメソッドが属するクラス
+@param altDetectFlag genericsClassType の createAlt2typeMap() をコールする際の引数。
 @return Map<&Ast.TypeInfo,&Ast.TypeInfo>  AlternateTypeInfo → 実型パラメータのマップ
 @return 
 */
 fn TransUnit.checkMatchType(
    mut message:str, pos: &Parser.Position, dstTypeList: &List<&Ast.TypeInfo>,
    expListNode: &Nodes.ExpListNode!, allowDstShort:bool, warnForFollow:bool,
-   genericsClassType:&Ast.TypeInfo! ) mut :
+   workAlt2typeMap:Map<&Ast.TypeInfo,&Ast.TypeInfo>! ) mut :
+   //genericsClassType:&Ast.TypeInfo!, altDetectFlag:bool ) mut :
 Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, Nodes.ExpListNode!, &List<&Ast.TypeInfo>
 {
    let! expNodeList:&List<&Nodes.Node> = expListNode$.$expList {
@@ -651,10 +653,17 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, Nodes.ExpListNode!, &List<&Ast.
       expTypeList.insert( Ast.builtinTypeAbbr );
    }
 
-   let mut alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
-   when! genericsClassType {
-      alt2typeMap = genericsClassType.createAlt2typeMap( true );
+   let mut alt2typeMap;
+   when! workAlt2typeMap {
+      alt2typeMap = workAlt2typeMap;
+   } else {
+      alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
    }
+
+   // let mut alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
+   // when! genericsClassType {
+   //    alt2typeMap = genericsClassType.createAlt2typeMap( altDetectFlag );
+   // }
 
    Ast.CanEvalCtrlTypeInfo.setupNeedAutoBoxing( alt2typeMap, self.processInfo );
    
@@ -789,9 +798,35 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
       }
    }
 
-   let matchResult, mut alt2typeMap, newExpNodeList = self.checkMatchType(
+   let mut alt2typeMap;
+   if funcTypeInfo.$kind == .Method {
+      when! genericsClass {
+         if funcTypeInfo.$rawTxt == "__init" {
+            alt2typeMap = genericsClass.createAlt2typeMap( true );
+         } else {
+            if #funcTypeInfo.$itemTypeInfoList == 0 {
+               alt2typeMap = genericsClass.createAlt2typeMap( false );
+            }
+            else {
+               alt2typeMap = genericsClass.createAlt2typeMap( true );
+               foreach itemType in genericsClass.$itemTypeInfoList {
+                  // 下手に型推論が働かないように、ダミーの型をセットする
+                  if itemType.$kind == .Alternate and not alt2typeMap[ itemType ] {
+                     alt2typeMap[ itemType ] = Ast.builtinTypeNone;
+                  }
+               }
+            }
+         }
+      } else {
+         self.error( "none class" );
+      }
+   } else {
+      alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap(
+         #funcTypeInfo.$itemTypeInfoList > 0 ); 
+   }
+   let matchResult, _, newExpNodeList = self.checkMatchType(
       funcTypeInfo.getTxt(##), pos,
-      argTypeList, expList, false, warnForFollow, genericsClass );
+      argTypeList, expList, false, warnForFollow, alt2typeMap );
    
    if expList and newExpNodeList {
       return matchResult, alt2typeMap, newExpNodeList;
@@ -2538,7 +2573,8 @@ fn TransUnit.analyzeNewAlge(
       }
 
       if! let _, _, newExpNodeList = self.checkMatchType(
-         "call", symbolToken.pos, valInfo.$typeList, argListNode, false, true, nil )
+         "call", symbolToken.pos, valInfo.$typeList,
+         argListNode, false, true, nil )
       {
          argList = newExpNodeList.$expList;
       }

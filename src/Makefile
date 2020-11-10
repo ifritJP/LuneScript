@@ -425,7 +425,7 @@ ifeq ($(LANG_KIND),lua)
 # lua は batch 処理が何故か遅いので、通常処理で行なう
 	$(call selfhost_build_dep,$(LNSC),.,work/1,)
 else
-	$(call selfhost_buildOp_batch,.,$(LNSC_GO),work/1,--depends work/1/ )
+	$(call selfhost_buildOp_batch,.,/usr/bin/time -f 'first:%e/%U/%S' $(LNSC_GO),work/1,--depends work/1/ )
 endif
 
 ifeq ($(WITH_GO),y)
@@ -746,8 +746,8 @@ test-comp2-main:
 
 
 # 新しいトランコンパイラで再度自分自身をコンパイルした結果が同じになることを確認する。
-	$(MAKE) -C work/2 build_from_d depend_on=y FROM_DIR=../1 TO_DIR=../2
-	$(MAKE) -C work/3 build_from_d depend_on=y FROM_DIR=../2 TO_DIR=../3
+	/usr/bin/time -f 'work1:%e/%U/%S' $(MAKE) -C work/2 build_from_d depend_on=y FROM_DIR=../1 TO_DIR=../2
+	/usr/bin/time -f 'work2:%e/%U/%S' $(MAKE) -C work/3 build_from_d depend_on=y FROM_DIR=../2 TO_DIR=../3
 	diff -r -I '_moduleObj.__buildId.*' -I '.*buildId = .*' \
 			-x $(notdir $(LNSC_GO)) work/2 work/3
 

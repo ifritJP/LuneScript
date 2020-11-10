@@ -3424,58 +3424,6 @@ function AlternateTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFl
 
    return self.txt
 end
-function AlternateTypeInfo:canSetFrom( processInfo, other, canEvalType, alt2type )
-
-   local otherWork = AlternateTypeInfo.getAssign( other, alt2type )
-   if self == otherWork then
-      return true
-   end
-   
-   
-   do
-      local genType = alt2type[self]
-      if genType ~= nil then
-         if canEvalType ~= nil then
-            return (genType:canEvalWith( processInfo, otherWork, canEvalType, alt2type ) )
-         end
-         
-         return genType:equals( processInfo, otherWork, alt2type )
-      end
-   end
-   
-   local workAlt2type
-   
-   if not CanEvalCtrlTypeInfo.isValidApply( alt2type ) then
-      if otherWork:get_kind() ~= TypeInfoKind.Class and otherWork:get_kind() ~= TypeInfoKind.IF then
-         return false
-      end
-      
-      workAlt2type = CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false )
-   else
-    
-      workAlt2type = alt2type
-   end
-   
-   
-   if self:hasBase(  ) then
-      if not other:isInheritFrom( processInfo, self.baseTypeInfo, workAlt2type ) then
-         return false
-      end
-      
-   end
-   
-   
-   for __index, ifType in ipairs( self.interfaceList ) do
-      if not other:isInheritFrom( processInfo, ifType, workAlt2type ) then
-         return false
-      end
-      
-   end
-   
-   
-   workAlt2type[self] = otherWork
-   return true
-end
 function AlternateTypeInfo:isInheritFrom( processInfo, other, alt2type )
 
    local workAlt2type
@@ -5786,9 +5734,69 @@ immutableTypeSet[_moduleObj.builtinTypeReal]= true
 immutableTypeSet[_moduleObj.builtinTypeChar]= true
 immutableTypeSet[_moduleObj.builtinTypeString]= true
 
+local function isClass( typeInfo )
+
+   return typeInfo:get_kind() == TypeInfoKind.Class and typeInfo ~= _moduleObj.builtinTypeString
+end
+_moduleObj.isClass = isClass
+
 function Scope:addIgnoredVar( processInfo )
 
    self:addLocalVar( processInfo, false, true, "_", nil, _moduleObj.builtinTypeEmpty, MutMode.Mut )
+end
+
+
+function AlternateTypeInfo:canSetFrom( processInfo, other, canEvalType, alt2type )
+
+   local otherWork = AlternateTypeInfo.getAssign( other, alt2type )
+   if self == otherWork then
+      return true
+   end
+   
+   
+   do
+      local genType = alt2type[self]
+      if genType ~= nil then
+         if canEvalType ~= nil then
+            return (genType:canEvalWith( processInfo, otherWork, canEvalType, alt2type ) )
+         end
+         
+         return genType:equals( processInfo, otherWork, alt2type )
+      end
+   end
+   
+   local workAlt2type
+   
+   if not CanEvalCtrlTypeInfo.isValidApply( alt2type ) then
+      if not isClass( otherWork ) and otherWork:get_kind() ~= TypeInfoKind.IF then
+         return false
+      end
+      
+      workAlt2type = CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false )
+   else
+    
+      workAlt2type = alt2type
+   end
+   
+   
+   if self:hasBase(  ) then
+      if not other:isInheritFrom( processInfo, self.baseTypeInfo, workAlt2type ) then
+         return false
+      end
+      
+   end
+   
+   
+   for __index, ifType in ipairs( self.interfaceList ) do
+      if not other:isInheritFrom( processInfo, ifType, workAlt2type ) then
+         return false
+      end
+      
+   end
+   
+   
+   workAlt2type[self] = otherWork
+   return true
 end
 
 
@@ -5946,12 +5954,6 @@ local function failCreateLuavalWith( typeInfo, convFlag, validToCheck )
    
    return string.format( "not support -- %s", typeInfo:getTxt(  )), false
 end
-
-local function isClass( typeInfo )
-
-   return typeInfo:get_kind() == TypeInfoKind.Class and typeInfo ~= _moduleObj.builtinTypeString
-end
-_moduleObj.isClass = isClass
 
 function AlternateTypeInfo.getAssign( typeInfo, alt2type )
 

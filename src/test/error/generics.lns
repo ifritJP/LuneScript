@@ -66,6 +66,27 @@
    }
 }
 {
+   class Test<T> {
+      let mut val:T {pub};
+      pub fn func( val:&T ) mut {
+      }
+   }
+   class Hoge<T> {
+      let mut test:Test<T> {pub};
+      pub fn foo() mut {
+         self.test.func( "aa" );  // error
+      }
+   }
+}
+{
+   class Test22<T> {
+      pub static fn func(val:T) : T {
+         return val;
+      }
+   }
+   print( Test22.func(1) ); // error
+}
+{
    class Test<T,T> { // error
       pub fn func<T>(val:T ) { // error
          print( val );

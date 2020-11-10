@@ -10060,7 +10060,7 @@ function TransUnit:checkImplicitCast( alt2typeMap, validCastToGen, dstTypeList, 
 end
 
 
-function TransUnit:checkMatchType( message, pos, dstTypeList, expListNode, allowDstShort, warnForFollow, genericsClassType )
+function TransUnit:checkMatchType( message, pos, dstTypeList, expListNode, allowDstShort, warnForFollow, workAlt2typeMap )
 
    local expNodeList = _lune.nilacc( expListNode, 'get_expList', 'callmtd' )
    if  nil == expNodeList then
@@ -10120,11 +10120,13 @@ function TransUnit:checkMatchType( message, pos, dstTypeList, expListNode, allow
    end
    
    
-   local alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false )
-   if genericsClassType ~= nil then
-      alt2typeMap = genericsClassType:createAlt2typeMap( true )
-   end
+   local alt2typeMap
    
+   if workAlt2typeMap ~= nil then
+      alt2typeMap = workAlt2typeMap
+   else
+      alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false )
+   end
    
    Ast.CanEvalCtrlTypeInfo.setupNeedAutoBoxing( alt2typeMap, self.processInfo )
    
@@ -10205,6 +10207,7 @@ end
 
 function TransUnit:checkMatchValType( pos, funcTypeInfo, expList, genericTypeList, genericsClass )
 
+   local _
    local argTypeList = funcTypeInfo:get_argTypeInfoList()
    if funcTypeInfo:get_kind() == Ast.TypeInfoKind.Ext then
       local extTypeList, mess = Ast.convToExtTypeList( self.processInfo, argTypeList )
@@ -10240,7 +10243,40 @@ function TransUnit:checkMatchValType( pos, funcTypeInfo, expList, genericTypeLis
    end
    
    
-   local matchResult, alt2typeMap, newExpNodeList = self:checkMatchType( funcTypeInfo:getTxt(  ), pos, argTypeList, expList, false, warnForFollow, genericsClass )
+   local alt2typeMap
+   
+   if funcTypeInfo:get_kind() == Ast.TypeInfoKind.Method then
+      if genericsClass ~= nil then
+         if funcTypeInfo:get_rawTxt() == "__init" then
+            alt2typeMap = genericsClass:createAlt2typeMap( true )
+         else
+          
+            if #funcTypeInfo:get_itemTypeInfoList() == 0 then
+               alt2typeMap = genericsClass:createAlt2typeMap( false )
+            else
+             
+               alt2typeMap = genericsClass:createAlt2typeMap( true )
+               for __index, itemType in ipairs( genericsClass:get_itemTypeInfoList() ) do
+                  if itemType:get_kind() == Ast.TypeInfoKind.Alternate and not alt2typeMap[itemType] then
+                     alt2typeMap[itemType] = Ast.builtinTypeNone
+                  end
+                  
+               end
+               
+            end
+            
+         end
+         
+      else
+         self:error( "none class" )
+      end
+      
+   else
+    
+      alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( #funcTypeInfo:get_itemTypeInfoList() > 0 )
+   end
+   
+   local matchResult, _9745, newExpNodeList = self:checkMatchType( funcTypeInfo:getTxt(  ), pos, argTypeList, expList, false, warnForFollow, alt2typeMap )
    
    if expList and newExpNodeList then
       return matchResult, alt2typeMap, newExpNodeList
@@ -10304,7 +10340,7 @@ function TransUnit:analyzeListItems( firstPos, nextToken, termTxt, expectTypeLis
                   table.insert( expTypeList, expNode:get_expType() )
                else
                 
-                  for _9766 = 1, #expNode:get_expTypeList() do
+                  for _9780 = 1, #expNode:get_expTypeList() do
                      table.insert( expTypeList, itemTypeInfo )
                   end
                   
@@ -10319,7 +10355,7 @@ function TransUnit:analyzeListItems( firstPos, nextToken, termTxt, expectTypeLis
          
       end
       
-      local _9769, _9770, workExpList = self:checkMatchType( "List constructor", firstPos, expTypeList, expList, false, false, nil )
+      local _9783, _9784, workExpList = self:checkMatchType( "List constructor", firstPos, expTypeList, expList, false, false, nil )
       if workExpList ~= nil then
          expList = workExpList
       end
@@ -11956,7 +11992,7 @@ function TransUnit:analyzeNewAlge( firstToken, algeTypeInfo, prefix )
          
          
          do
-            local _10499, _10500, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, nil )
+            local _10513, _10514, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, nil )
             if newExpNodeList ~= nil then
                argList = newExpNodeList:get_expList()
             end
@@ -12200,7 +12236,7 @@ function TransUnit:analyzeExpOpSet( exp, opeToken, expectTypeList )
    end
    
    
-   local _10593, _10594, workList, expTypeList = self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), expList, true, false, nil )
+   local _10607, _10608, workList, expTypeList = self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), expList, true, false, nil )
    if workList ~= nil then
       expList = workList
    end
@@ -12922,7 +12958,7 @@ function TransUnit:analyzeStrConst( firstToken, token )
          local argNodeList = self:analyzeExpList( false, false, false )
          param = argNodeList
          
-         local _10868, _10869, workExpList = self:checkMatchType( "str constructor", firstToken.pos, {Ast.builtinTypeDDD}, argNodeList, false, false, nil )
+         local _10882, _10883, workExpList = self:checkMatchType( "str constructor", firstToken.pos, {Ast.builtinTypeDDD}, argNodeList, false, false, nil )
          if workExpList ~= nil then
             dddParam = workExpList
          else
@@ -13095,7 +13131,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, canLeftExp, prevOpLev
       end
       
       
-      local _10937, alt2type, newArgList = self:checkMatchValType( exp:get_pos(), initTypeInfo, argList, classTypeInfo:get_itemTypeInfoList(), classTypeInfo )
+      local _10951, alt2type, newArgList = self:checkMatchValType( exp:get_pos(), initTypeInfo, argList, classTypeInfo:get_itemTypeInfoList(), classTypeInfo )
       
       if #classTypeInfo:get_itemTypeInfoList() > 0 then
          if classTypeInfo:get_itemTypeInfoList()[1]:get_kind() == Ast.TypeInfoKind.Alternate then
@@ -13379,7 +13415,7 @@ function TransUnit:analyzeReturn( token )
       local workList = expList
       if workList ~= nil then
          do
-            local _11041, _11042, newExpNodeList = self:checkMatchType( "return", token.pos, retTypeList, workList, false, not workList:get_followOn(), nil )
+            local _11055, _11056, newExpNodeList = self:checkMatchType( "return", token.pos, retTypeList, workList, false, not workList:get_followOn(), nil )
             if newExpNodeList ~= nil then
                expList = newExpNodeList
             end
