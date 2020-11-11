@@ -76,6 +76,7 @@ help:
 	@echo usage:
 	@echo "  make install"
 	@echo "  make test-comp"
+	@echo "  make test-global"
 	@echo "  make release-check"
 	@echo "  make accept-package"
 	@echo "  make build-glue [LUA_INC_DIR=path]"
@@ -389,6 +390,16 @@ define cp_src_set
 	cp -au $2/lune/base/runtime_go $1/lune/base/runtime_go
 endef
 
+test-global:
+# 意図しないシンボルが global になっていないか調べる
+	find lune/base/ -iname '*.lua' | \
+		xargs ~/.luarocks/bin/luacheck | grep global | \
+		grep -v _lune | \
+		grep -v -e 'field.*unpack.*of.*global.*table' && exit 1 || echo ok
+	find work/3/test/ -iname '*.lua' | \
+		xargs ~/.luarocks/bin/luacheck | grep global | \
+		grep -v _lune | \
+		grep -v -e 'field.*unpack.*of.*global.*table' && exit 1 || echo ok
 
 # LuneScript 自身のソースを Lua に変換する。
 #
