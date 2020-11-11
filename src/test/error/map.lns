@@ -65,6 +65,22 @@
    val2[ 1 ] = "str"; // error
 }
 
+{
+   enum Val {
+      Val1,
+      Val2,
+   }
+   enum Hoge {
+      Val1,
+      Val2,
+   }
+
+   // map コンストラクタで、key, あるいは val に、異なる種類の enum を指定すると、
+   // 解析が無限ループした不具合があったので、その再発防止
+   let map = { Val.Val1: Val.Val2,   
+               Hoge.Val1: Hoge.Val2 };
+}
+
 
 {
    let mut val:Map<str,int> = {};

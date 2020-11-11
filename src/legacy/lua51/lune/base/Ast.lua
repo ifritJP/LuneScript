@@ -1282,10 +1282,6 @@ function TypeInfo:get_retTypeInfoList(  )
 
    return dummyList
 end
-function TypeInfo:get_parentInfo(  )
-
-   return self
-end
 function TypeInfo:hasRouteNamespaceFrom( other )
 
    while true do
@@ -1331,10 +1327,6 @@ function TypeInfo:get_autoFlag(  )
    return false
 end
 function TypeInfo:get_nonnilableType(  )
-
-   return self
-end
-function TypeInfo:get_baseTypeInfo(  )
 
    return self
 end
@@ -1625,7 +1617,42 @@ local function isExtId( typeInfo )
 end
 _moduleObj.isExtId = isExtId
 
-local headTypeInfo = TypeInfo.new(_moduleObj.rootScope, rootProcessInfo)
+local RootTypeInfo = {}
+setmetatable( RootTypeInfo, { __index = TypeInfo } )
+_moduleObj.RootTypeInfo = RootTypeInfo
+function RootTypeInfo.new(  )
+   local obj = {}
+   RootTypeInfo.setmeta( obj )
+   if obj.__init then obj:__init(  ); end
+   return obj
+end
+function RootTypeInfo:__init() 
+   TypeInfo.__init( self,_moduleObj.rootScope, rootProcessInfo)
+   
+   
+   self.typeId = rootProcessInfo:get_idProv():get_id()
+end
+function RootTypeInfo:get_baseTypeInfo(  )
+
+   return self
+end
+function RootTypeInfo:get_parentInfo(  )
+
+   return self
+end
+function RootTypeInfo.create(  )
+
+   return RootTypeInfo.new()
+end
+function RootTypeInfo.setmeta( obj )
+  setmetatable( obj, { __index = RootTypeInfo  } )
+end
+function RootTypeInfo:get_typeId()
+   return self.typeId
+end
+
+
+local headTypeInfo = RootTypeInfo.create(  )
 _moduleObj.headTypeInfo = headTypeInfo
 
 local defaultTypeNameCtrl = TypeNameCtrl.new(_moduleObj.headTypeInfo)
@@ -1821,6 +1848,14 @@ function AutoBoxingInfo:__init(processInfo)
    self.count = 0
    AutoBoxingInfo.allObj[self] = self
 end
+function AutoBoxingInfo:get_baseTypeInfo(  )
+
+   return _moduleObj.headTypeInfo
+end
+function AutoBoxingInfo:get_parentInfo(  )
+
+   return _moduleObj.headTypeInfo
+end
 function AutoBoxingInfo:get_kind(  )
 
    return TypeInfoKind.Etc
@@ -1865,6 +1900,14 @@ end
 function CanEvalCtrlTypeInfo:get_typeId(  )
 
    return -1
+end
+function CanEvalCtrlTypeInfo:get_baseTypeInfo(  )
+
+   return _moduleObj.headTypeInfo
+end
+function CanEvalCtrlTypeInfo:get_parentInfo(  )
+
+   return _moduleObj.headTypeInfo
 end
 function CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( detectFlag )
 
@@ -4503,6 +4546,10 @@ function ModuleTypeInfo:__init(processInfo, scope, externalFlag, txt, parentInfo
    
    scope:set_ownerTypeInfo( self )
 end
+function ModuleTypeInfo:get_baseTypeInfo(  )
+
+   return _moduleObj.headTypeInfo
+end
 function ModuleTypeInfo:isModule(  )
 
    return true
@@ -4699,6 +4746,10 @@ function EnumTypeInfo:get_kind(  )
 
    return TypeInfoKind.Enum
 end
+function EnumTypeInfo:get_baseTypeInfo(  )
+
+   return _moduleObj.headTypeInfo
+end
 function EnumTypeInfo:getParentId(  )
 
    return self.parentInfo:get_typeId()
@@ -4773,6 +4824,10 @@ local AlgeValInfo = {}
 local AlgeTypeInfo = {}
 setmetatable( AlgeTypeInfo, { __index = TypeInfo } )
 _moduleObj.AlgeTypeInfo = AlgeTypeInfo
+function AlgeTypeInfo:get_baseTypeInfo(  )
+
+   return _moduleObj.headTypeInfo
+end
 function AlgeTypeInfo.new( processInfo, scope, externalFlag, accessMode, txt, parentInfo, typeId )
    local obj = {}
    AlgeTypeInfo.setmeta( obj )
@@ -6301,6 +6356,14 @@ function DDDTypeInfo:get_scope(  )
 
    return nil
 end
+function DDDTypeInfo:get_baseTypeInfo(  )
+
+   return _moduleObj.headTypeInfo
+end
+function DDDTypeInfo:get_parentInfo(  )
+
+   return _moduleObj.headTypeInfo
+end
 function DDDTypeInfo.new( processInfo, typeId, typeInfo, externalFlag, extOrgDDType )
    local obj = {}
    DDDTypeInfo.setmeta( obj )
@@ -6915,6 +6978,14 @@ _moduleObj.AbbrTypeInfo = AbbrTypeInfo
 function AbbrTypeInfo:get_scope(  )
 
    return nil
+end
+function AbbrTypeInfo:get_baseTypeInfo(  )
+
+   return _moduleObj.headTypeInfo
+end
+function AbbrTypeInfo:get_parentInfo(  )
+
+   return _moduleObj.headTypeInfo
 end
 function AbbrTypeInfo.new( processInfo, rawTxt )
    local obj = {}
