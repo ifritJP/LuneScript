@@ -3,6 +3,8 @@
 #+STARTUP: nofold
 #+OPTIONS: ^:{}
 
+[[https://github.com/ifritJP/LuneScript/workflows/Test/badge.svg]]
+
 #+TITLE: LuneScript
 
 Latest document (for Japanese)
