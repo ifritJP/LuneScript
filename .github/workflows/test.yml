@@ -27,8 +27,8 @@ jobs:
         hererocks here --lua=5.3 -r latest
         pwd
         source here/bin/activate
-#        luarocks install luacheck
+        luarocks install luacheck
     - name: Test
       run: |
-        make -C src -j test-comp LUA=${PWD}/here/bin/lua LUA_INC_DIR=/here/include LUA51=
-        make -C src LUACHECK=luacheck test-global
+        make -C src -j test-comp LUA=${PWD}/here/bin/lua LUA_INC_DIR=${PWD}/here/include LUA51=
+        make -C src LUACHECK=${PWD}/here/bin/luacheck test-global
