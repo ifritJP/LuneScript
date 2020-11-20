@@ -25,9 +25,10 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install hererocks
         hererocks here --lua=5.3 -r latest
-        source /here/bin/activate
+        pwd
+        source here/bin/activate
 #        luarocks install luacheck
     - name: Test
       run: |
-        make -C src -j test-comp LUA=/here/bin/lua LUA_INC_DIR=/here/include LUA51=
+        make -C src -j test-comp LUA=${PWD}/here/bin/lua LUA_INC_DIR=/here/include LUA51=
         make -C src LUACHECK=luacheck test-global
