@@ -2,6 +2,7 @@ LUA=lua5.3
 #LUA=lua5.2
 
 
+LUACHECK=~/.luarocks/bin/luacheck
 
 LUA51=lua5.1
 LUA51_INC=/usr/include/lua5.1
@@ -21,7 +22,6 @@ endif
 LNSC_LUA=$(LUA) lune/base/base.lua
 LNSC_GO=./lnsc
 LNSC_LUAROCKS=~/.luarocks/bin/lnsc
-
 
 # make のパラメータで言語を切り替える場合、
 # LNSC_CMD や LNSC を直接変更するのではなく LANG_KIND を変更する。
@@ -393,11 +393,11 @@ endef
 test-global:
 # 意図しないシンボルが global になっていないか調べる
 	find lune/base/ -iname '*.lua' | \
-		xargs ~/.luarocks/bin/luacheck | grep global | \
+		xargs $(LUACHECK) | grep global | \
 		grep -v _lune | \
 		grep -v -e 'field.*unpack.*of.*global.*table' && exit 1 || echo ok
 	find work/3/test/ -iname '*.lua' | \
-		xargs ~/.luarocks/bin/luacheck | grep global | \
+		xargs $(LUACHECK) | grep global | \
 		grep -v _lune | \
 		grep -v -e 'field.*unpack.*of.*global.*table' && exit 1 || echo ok
 
