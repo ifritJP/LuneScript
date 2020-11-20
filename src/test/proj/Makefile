@@ -21,7 +21,7 @@ endif
 
 define comp
 	@echo "$1 -> $2"
-	@(cd ../..; lua5.3 lune/base/base.lua $(PROJ_DIR)/$1 --depends $(PROJ_DIR)/depends/$1.d.tmp SAVE $(LOG_OP) )
+	@(cd ../..; $(LUA) lune/base/base.lua $(PROJ_DIR)/$1 --depends $(PROJ_DIR)/depends/$1.d.tmp SAVE $(LOG_OP) )
 	@cat depends/$1.d.tmp | sed 's@$(PROJ_DIR)/@@g' > depends/$1.d
 	@rm depends/$1.d.tmp
 endef
@@ -57,7 +57,7 @@ setup:
 build: $(META_LIST)
 
 exe: build
-	@(cd ../..; lua5.3 $(PROJ_DIR)/Mod1.lua)
+	@(cd ../..; $(LUA) $(PROJ_DIR)/Mod1.lua)
 
 
 clean:

@@ -650,7 +650,7 @@ test-org:
 
 test-org-proj:
 ifndef SKIP_PROJ_TEST
-	$(MAKE) -C test/proj/ test MKFILE=Makefile SRC_DIR= 2>&1 | \
+	$(MAKE) -C test/proj/ test MKFILE=Makefile LUA=$(LUA) SRC_DIR= 2>&1 | \
 		grep -v /test/proj > work/0/log/proj
 else
 	@echo skip
@@ -680,7 +680,7 @@ test-new:
 
 test-new-proj:
 ifndef SKIP_PROJ_TEST
-	$(MAKE) -C work/3/test/proj/ test MKFILE=Makefile SRC_DIR= 2>&1 | \
+	$(MAKE) -C work/3/test/proj/ test MKFILE=Makefile LUA=$(LUA) SRC_DIR= 2>&1 | \
 		grep -v /test/proj > work/3/log/proj
 else
 	@echo skip
@@ -818,7 +818,7 @@ endif
 
 diff-result:
 	(cd work/1; find test/ -iname '*.lua' -exec diff {} ../4/{} \; )
-	diff -r work/1/test/proj/  work/3/test/proj/ \
+	diff -r test/proj/  work/3/test/proj/ \
 		-I '_moduleObj.__buildId.*' -I '.*buildId = .*'
 ifneq ($(LANG_KIND),lua)
 	diff -r -I '_moduleObj.__buildId' -I '.*buildId = .*'		\
