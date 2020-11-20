@@ -32,7 +32,7 @@ jobs:
         pwd
         source here/bin/activate
         luarocks install luacheck
-        sudo apt-get install -y liblua5.3-dev
+        sudo apt-get install -y liblua5.3-dev lua5.3
     - name: Test
       run: |
         source here/bin/activate
