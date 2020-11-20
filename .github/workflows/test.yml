@@ -30,5 +30,6 @@ jobs:
         luarocks install luacheck
     - name: Test
       run: |
-        make -C src -j test-comp LUA=${PWD}/here/bin/lua LUA_INC_DIR=${PWD}/here/include LUA51=
-        make -C src LUACHECK=${PWD}/here/bin/luacheck test-global
+        source here/bin/activate
+        make -C src -j test-comp LUA=lua LUA_INC_DIR=${PWD}/here/include LUA51=
+        make -C src LUACHECK=luacheck test-global
