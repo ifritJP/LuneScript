@@ -3,7 +3,7 @@
 #+STARTUP: nofold
 #+OPTIONS: ^:{}
 
-[[https://github.com/ifritJP/LuneScript/workflows/Test/badge.svg]]
+[[https://github.com/ifritJP/LuneScript/actions][https://github.com/ifritJP/LuneScript/workflows/Test/badge.svg]]
 
 #+TITLE: LuneScript
 
