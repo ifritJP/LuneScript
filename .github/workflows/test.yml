@@ -33,3 +33,9 @@ jobs:
         source here/bin/activate
         make -C src -j test-comp LUA=lua LUA_INC_DIR=${PWD}/here/include LUA51=
         make -C src LUACHECK=luacheck test-global
+    - name: 'Upload Artifact'
+      uses: actions/upload-artifact@v2
+      with:
+        name: test-result
+        path: src/work/test*.result
+        retention-days: 5
