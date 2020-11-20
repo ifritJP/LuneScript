@@ -650,7 +650,7 @@ test-org:
 
 test-org-proj:
 ifndef SKIP_PROJ_TEST
-	$(MAKE) -C test/proj/ test MKFILE=Makefile LUA=$(LUA) SRC_DIR= 2>&1 | \
+	$(MAKE) -j0 -C test/proj/ test MKFILE=Makefile LUA=$(LUA) SRC_DIR= 2>&1 | \
 		grep -v /test/proj > work/0/log/proj
 else
 	@echo skip
@@ -680,7 +680,7 @@ test-new:
 
 test-new-proj:
 ifndef SKIP_PROJ_TEST
-	$(MAKE) -C work/3/test/proj/ test MKFILE=Makefile LUA=$(LUA) SRC_DIR= 2>&1 | \
+	$(MAKE) -j0 -C work/3/test/proj/ test MKFILE=Makefile LUA=$(LUA) SRC_DIR= 2>&1 | \
 		grep -v /test/proj > work/3/log/proj
 else
 	@echo skip
