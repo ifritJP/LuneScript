@@ -275,6 +275,7 @@ define build-testcode
 	$(call exeLune,$1,$2,test/Sub4.lns,$3 save,$4) > /dev/null
 	$(call exeLune,$1,$2,test/Sub5.lns,$3 save,$4) > /dev/null
 	$(call exeLune,$1,$2,test/Sub6.lns,$3 save,$4) > /dev/null
+	$(call exeLune,$1,$2,test/Sub8.lns,$3 save,$4) > /dev/null
 	$(call exeLune,$1,$2,test/simple.lns,$3 save,$4) > /dev/null
 	$(call exeLune,$1,$2,test/Class1.lns,$3 save,$4) > /dev/null
 	$(call exeLune,$1,$2,test/Class2.lns,$3 save,$4) > /dev/null
@@ -435,13 +436,17 @@ test-comp:
 ifeq ($(LANG_KIND),lua)
 # lua は batch 処理が何故か遅いので、通常処理で行なう
 	$(call selfhost_build_dep,$(LNSC),.,work/1,)
-else
-	$(call selfhost_buildOp_batch,.,/usr/bin/time -f 'first:%e/%U/%S' $(LNSC_GO),work/1,--depends work/1/ )
-endif
-
 ifeq ($(WITH_GO),y)
 	$(call go-build-lns,work/1)
 endif
+else
+	$(call selfhost_buildOp_batch,.,/usr/bin/time -f 'first:%e/%U/%S' $(LNSC_GO),work/1,--depends work/1/ )
+ifeq ($(WITH_GO),y)
+	$(call go-build-lns,work/1)
+endif
+	$(call mk_runtime,$(LNSC),work/1,.,)
+endif
+
 
 	cp -au test work/1
 	$(call build-testcode,$(LNSC),.,,work/1)

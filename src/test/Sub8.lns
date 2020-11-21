@@ -1,0 +1,8 @@
+print( __mod__ );
+pub __module Sub9 require "test.Sub9" {
+   pub static fn func(val:int);
+}
+pub fn sub() {
+   print( __func__ );
+   Sub9.func( 10 );
+}

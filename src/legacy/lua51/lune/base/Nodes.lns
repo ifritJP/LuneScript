@@ -708,8 +708,14 @@ _declNodeClass( "BlankLine", Node, false, false, true,
 );
 _declNodeClass( "Subfile", Node, false, false, true,
                 [ { "usePath": "str!" } ]);
+pub enum LazyLoad {
+   Off,
+   On,
+   Auto,
+}
 _declNodeClass( "Import", Node, false, false, true,
                 [ { "modulePath": "str" },
+                  { "lazy": "LazyLoad" },
                   { "assignName": "str" },
                   { "symbolInfo": "&Ast.SymbolInfo" },
                   { "moduleTypeInfo": "&Ast.TypeInfo" } ]
@@ -728,6 +734,8 @@ pub class LuneHelperInfo {
    pub let mut useSet:bool;
    pub let mut callAnonymous:bool;
    pub let mut pragmaSet:Set<LuneControl.Pragma>;
+   pub let mut useLazyLoad:bool;
+   pub let mut useLazyRequire:bool;
 
    pub fn __init() {
       self.useNilAccess = false;
@@ -739,6 +747,8 @@ pub class LuneHelperInfo {
       self.useSet = false;
       self.callAnonymous = false;
       self.pragmaSet = (@);
+      self.useLazyLoad = false;
+      self.useLazyRequire = false;
    }
 }
 
@@ -1835,6 +1845,7 @@ _declNodeClass( "DeclClass", Node, false, false, true,
                   { "hasPrototype": "bool" },
                   { "gluePrefix": "str!" },
                   { "moduleName": "&Parser.Token!" },
+                  { "lazyLoad": "LazyLoad" },
                   // default__init_old で、旧形式のコンストラクタが使用されている場合 true
                   { "hasOldCtor": "bool" },
                   /**

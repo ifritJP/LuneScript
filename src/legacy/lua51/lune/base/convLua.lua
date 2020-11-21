@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@convLua'
 local _lune = {}
-if _lune2 then
-   _lune = _lune2
+if _lune3 then
+   _lune = _lune3
 end
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -232,8 +232,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune2 then
-   _lune2 = _lune
+if not _lune3 then
+   _lune3 = _lune
 end
 local Ver = _lune.loadModule( 'lune.base.Ver' )
 local Str = _lune.loadModule( 'lune.base.Str' )
@@ -525,11 +525,20 @@ end
 
 function convFilter:processImport( node, opt )
 
-   local module = node:get_modulePath(  )
-   local moduleName = module:gsub( ".*%.", "" )
-   moduleName = node:get_assignName()
-   self:write( string.format( "local %s = _lune.loadModule( '%s' )", moduleName, module) )
+   local modulePath = node:get_modulePath(  )
+   local modSym = modulePath:gsub( ".*%.", "" )
+   modSym = node:get_assignName()
+   self:write( string.format( "local %s = _lune.", modSym) )
+   do
+      local _switchExp = node:get_lazy()
+      if _switchExp == Nodes.LazyLoad.Off then
+         self:write( "loadModule" )
+      elseif _switchExp == Nodes.LazyLoad.On or _switchExp == Nodes.LazyLoad.Auto then
+         self:write( "_lazyImport" )
+      end
+   end
    
+   self:write( string.format( "( '%s' )", modulePath) )
 end
 
 
@@ -555,6 +564,27 @@ function convFilter:outputMeta( node )
    self:writeln( string.format( "_moduleObj.__buildId = %q", node:get_moduleId():getNextModuleId(  ):get_idStr()) )
    self:writeln( string.format( "_moduleObj.__enableTest = %s", tostring( self.enableTest)) )
    self:writeln( string.format( "_moduleObj.__hasTest = %s", tostring( #node:get_nodeManager():getTestCaseNodeList(  ) ~= 0)) )
+   
+   self:writeln( "_moduleObj.__lazyModuleList = {" )
+   do
+      local firstFlag = true
+      for __index, declClass in ipairs( node:get_nodeManager():getDeclClassNodeList(  ) ) do
+         if declClass:get_lazyLoad() ~= Nodes.LazyLoad.Off and Ast.isPubToExternal( declClass:get_accessMode() ) then
+            if not firstFlag then
+               self:writeln( "," )
+            else
+             
+               firstFlag = true
+            end
+            
+            self:writeln( string.format( "%d", declClass:get_expType():get_typeId()) )
+         end
+         
+      end
+      
+   end
+   
+   self:writeln( "}" )
    
    local importModuleType2Index = {}
    local importNameMap = {}
@@ -1302,6 +1332,14 @@ end]==], luneSymbol, luneSymbol) )
             self:writeln( LuaMod.getCode( LuaMod.CodeKind.Cast ) )
          end
          
+         if node:get_luneHelperInfo().useLazyLoad then
+            self:writeln( LuaMod.getCode( LuaMod.CodeKind.LazyLoad ) )
+         end
+         
+         if node:get_luneHelperInfo().useLazyRequire then
+            self:writeln( LuaMod.getCode( LuaMod.CodeKind.LazyRequire ) )
+         end
+         
       end
    end
    
@@ -1754,7 +1792,15 @@ function convFilter:processDeclClass( node, opt )
    do
       local _exp = node:get_moduleName()
       if _exp ~= nil then
-         self:write( string.format( "local %s = require( %s )", className, _exp.txt ) )
+         self:write( string.format( "local %s = ", className) )
+         if node:get_lazyLoad() == Nodes.LazyLoad.Off then
+            self:write( "require" )
+         else
+          
+            self:write( "_lune._lazyRequire" )
+         end
+         
+         self:write( string.format( "( %s )", _exp.txt) )
          do
             local _switchExp = node:get_accessMode()
             if _switchExp == Ast.AccessMode.Pub or _switchExp == Ast.AccessMode.Pro then
@@ -1893,7 +1939,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _6172 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _6209 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -3627,6 +3673,10 @@ function convFilter:processExpRef( node, opt )
                end
                
                self:write( node:get_symbolInfo():get_name() )
+               if node:get_symbolInfo():get_isLazyLoad() then
+                  self:write( "()" )
+               end
+               
             end
             
       end
@@ -3702,7 +3752,6 @@ function convFilter:processRefField( node, opt )
    else
     
       filter( prefix, self, node )
-      
       local delimit = "."
       if parent:get_kind() == Nodes.NodeKind.get_ExpCall() then
          if node:get_expType(  ):get_kind(  ) == Ast.TypeInfoKind.Method then
@@ -3716,6 +3765,16 @@ function convFilter:processRefField( node, opt )
       
       local fieldToken = node:get_field(  )
       self:write( delimit .. fieldToken.txt )
+      do
+         local symbolInfo = node:get_symbolInfo()
+         if symbolInfo ~= nil then
+            if symbolInfo:get_isLazyLoad() then
+               self:write( "()" )
+            end
+            
+         end
+      end
+      
    end
    
 end
@@ -4098,7 +4157,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3425, function (  )
+   Log.log( Log.Level.Trace, __func__, 3463, function (  )
    
       return string.format( "macro: %s", code)
    end )

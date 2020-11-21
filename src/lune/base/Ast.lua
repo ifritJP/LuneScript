@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@Ast'
 local _lune = {}
-if _lune2 then
-   _lune = _lune2
+if _lune3 then
+   _lune = _lune3
 end
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -224,8 +224,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune2 then
-   _lune2 = _lune
+if not _lune3 then
+   _lune3 = _lune
 end
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Util = _lune.loadModule( 'lune.base.Util' )
@@ -1706,13 +1706,13 @@ function NormalSymbolInfo:getOrg(  )
 
    return self
 end
-function NormalSymbolInfo.new( processInfo, kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, pos, typeInfo, mutMode, hasValueFlag )
+function NormalSymbolInfo.new( processInfo, kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, pos, typeInfo, mutMode, hasValueFlag, isLazyLoad )
    local obj = {}
    NormalSymbolInfo.setmeta( obj )
-   if obj.__init then obj:__init( processInfo, kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, pos, typeInfo, mutMode, hasValueFlag ); end
+   if obj.__init then obj:__init( processInfo, kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, pos, typeInfo, mutMode, hasValueFlag, isLazyLoad ); end
    return obj
 end
-function NormalSymbolInfo:__init(processInfo, kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, pos, typeInfo, mutMode, hasValueFlag) 
+function NormalSymbolInfo:__init(processInfo, kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, pos, typeInfo, mutMode, hasValueFlag, isLazyLoad) 
    SymbolInfo.__init( self)
    
    self.convModuleParam = nil
@@ -1737,6 +1737,7 @@ function NormalSymbolInfo:__init(processInfo, kind, canBeLeft, canBeRight, scope
    self.typeInfo = typeInfo
    self.mutMode = _lune.unwrapDefault( mutMode, MutMode.IMut)
    self.hasValueFlag = hasValueFlag
+   self.isLazyLoad = isLazyLoad
 end
 function NormalSymbolInfo.setmeta( obj )
   setmetatable( obj, { __index = NormalSymbolInfo  } )
@@ -1758,6 +1759,9 @@ function NormalSymbolInfo:get_accessMode()
 end
 function NormalSymbolInfo:get_staticFlag()
    return self.staticFlag
+end
+function NormalSymbolInfo:get_isLazyLoad()
+   return self.isLazyLoad
 end
 function NormalSymbolInfo:get_name()
    return self.name
@@ -2757,7 +2761,7 @@ function Scope:filterSymbolTypeInfo( fromScope, moduleScope, access, callback )
 end
 
 
-function Scope:add( processInfo, kind, canBeLeft, canBeRight, name, pos, typeInfo, accessMode, staticFlag, mutMode, hasValueFlag )
+function Scope:add( processInfo, kind, canBeLeft, canBeRight, name, pos, typeInfo, accessMode, staticFlag, mutMode, hasValueFlag, isLazyLoad )
 
    do
       local _switchExp = kind
@@ -2793,7 +2797,7 @@ function Scope:add( processInfo, kind, canBeLeft, canBeRight, name, pos, typeInf
    end
    
    
-   local symbolInfo = NormalSymbolInfo.new(processInfo, kind, canBeLeft, canBeRight, self, accessMode, staticFlag, name, pos, typeInfo, mutMode, hasValueFlag)
+   local symbolInfo = NormalSymbolInfo.new(processInfo, kind, canBeLeft, canBeRight, self, accessMode, staticFlag, name, pos, typeInfo, mutMode, hasValueFlag, isLazyLoad)
    self.symbol2SymbolInfoMap[name] = symbolInfo
    return symbolInfo, nil
 end
@@ -2801,7 +2805,7 @@ end
 
 function Scope:addLocalVar( processInfo, argFlag, canBeLeft, name, pos, typeInfo, mutable )
 
-   return self:add( processInfo, argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, name ~= "_", name, pos, typeInfo, AccessMode.Local, false, mutable, true )
+   return self:add( processInfo, argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, name ~= "_", name, pos, typeInfo, AccessMode.Local, false, mutable, true, false )
 end
 
 
@@ -2811,87 +2815,92 @@ _moduleObj.dummySymbol = dummySymbol
 
 function Scope:addUnwrapedVar( processInfo, argFlag, canBeLeft, name, pos, typeInfo, mutable )
 
-   return self:add( processInfo, argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, pos, typeInfo, AccessMode.Local, false, mutable, true )
+   return self:add( processInfo, argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, pos, typeInfo, AccessMode.Local, false, mutable, true, false )
 end
 
 
 function Scope:addStaticVar( processInfo, argFlag, canBeLeft, name, pos, typeInfo, mutable )
 
-   return self:add( processInfo, argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, pos, typeInfo, AccessMode.Local, true, mutable, true )
+   return self:add( processInfo, argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, pos, typeInfo, AccessMode.Local, true, mutable, true, false )
 end
 
 
 function Scope:addVar( processInfo, accessMode, name, pos, typeInfo, mutable, hasValueFlag )
 
-   return self:add( processInfo, SymbolKind.Var, true, true, name, pos, typeInfo, accessMode, false, mutable, hasValueFlag )
+   return self:add( processInfo, SymbolKind.Var, true, true, name, pos, typeInfo, accessMode, false, mutable, hasValueFlag, false )
 end
 
 
 function Scope:addEnumVal( processInfo, name, pos, typeInfo )
 
-   return self:add( processInfo, SymbolKind.Mbr, false, true, name, pos, typeInfo, AccessMode.Pub, true, MutMode.Mut, true )
+   return self:add( processInfo, SymbolKind.Mbr, false, true, name, pos, typeInfo, AccessMode.Pub, true, MutMode.Mut, true, false )
 end
 
 
 function Scope:addEnum( processInfo, accessMode, name, pos, typeInfo )
 
-   return self:add( processInfo, SymbolKind.Typ, false, false, name, pos, typeInfo, accessMode, true, MutMode.Mut, true )
+   return self:add( processInfo, SymbolKind.Typ, false, false, name, pos, typeInfo, accessMode, true, MutMode.Mut, true, false )
 end
 
 
 function Scope:addAlgeVal( processInfo, name, pos, typeInfo )
 
-   return self:add( processInfo, SymbolKind.Mbr, false, true, name, pos, typeInfo, AccessMode.Pub, true, MutMode.Mut, true )
+   return self:add( processInfo, SymbolKind.Mbr, false, true, name, pos, typeInfo, AccessMode.Pub, true, MutMode.Mut, true, false )
 end
 
 
 function Scope:addAlge( processInfo, accessMode, name, pos, typeInfo )
 
-   return self:add( processInfo, SymbolKind.Typ, false, false, name, pos, typeInfo, accessMode, true, MutMode.Mut, true )
+   return self:add( processInfo, SymbolKind.Typ, false, false, name, pos, typeInfo, accessMode, true, MutMode.Mut, true, false )
 end
 
 
 function Scope:addAlternate( processInfo, accessMode, name, pos, typeInfo )
 
-   self:add( processInfo, SymbolKind.Typ, false, false, name, pos, typeInfo, accessMode, true, MutMode.Mut, true )
+   self:add( processInfo, SymbolKind.Typ, false, false, name, pos, typeInfo, accessMode, true, MutMode.Mut, true, false )
 end
 
 
 function Scope:addMember( processInfo, name, pos, typeInfo, accessMode, staticFlag, mutMode )
 
-   return self:add( processInfo, SymbolKind.Mbr, true, true, name, pos, typeInfo, accessMode, staticFlag, mutMode, true )
+   return self:add( processInfo, SymbolKind.Mbr, true, true, name, pos, typeInfo, accessMode, staticFlag, mutMode, true, false )
 end
 
 
 function Scope:addMethod( processInfo, pos, typeInfo, accessMode, staticFlag, mutable )
 
-   return self:add( processInfo, SymbolKind.Mtd, true, staticFlag, typeInfo:get_rawTxt(), pos, typeInfo, accessMode, staticFlag, mutable and MutMode.Mut or MutMode.IMut, true )
+   return self:add( processInfo, SymbolKind.Mtd, true, staticFlag, typeInfo:get_rawTxt(), pos, typeInfo, accessMode, staticFlag, mutable and MutMode.Mut or MutMode.IMut, true, false )
 end
 
 
 function Scope:addFunc( processInfo, pos, typeInfo, accessMode, staticFlag, mutable )
 
-   return self:add( processInfo, SymbolKind.Fun, true, true, typeInfo:get_rawTxt(), pos, typeInfo, accessMode, staticFlag, mutable and MutMode.Mut or MutMode.IMut, true )
+   return self:add( processInfo, SymbolKind.Fun, true, true, typeInfo:get_rawTxt(), pos, typeInfo, accessMode, staticFlag, mutable and MutMode.Mut or MutMode.IMut, true, false )
 end
 
 
 function Scope:addForm( processInfo, pos, typeInfo, accessMode )
 
-   self:add( processInfo, SymbolKind.Typ, false, false, typeInfo:get_rawTxt(), pos, typeInfo, accessMode, true, MutMode.IMut, false )
+   self:add( processInfo, SymbolKind.Typ, false, false, typeInfo:get_rawTxt(), pos, typeInfo, accessMode, true, MutMode.IMut, false, false )
 end
 
 
 function Scope:addMacro( processInfo, pos, typeInfo, accessMode )
 
-   return self:add( processInfo, SymbolKind.Mac, false, false, typeInfo:get_rawTxt(), pos, typeInfo, accessMode, true, MutMode.IMut, true )
+   return self:add( processInfo, SymbolKind.Mac, false, false, typeInfo:get_rawTxt(), pos, typeInfo, accessMode, true, MutMode.IMut, true, false )
+end
+
+
+function Scope:addClassLazy( processInfo, name, pos, typeInfo, lazyLoad )
+
+   return self:add( processInfo, SymbolKind.Typ, false, false, name, pos, typeInfo, typeInfo:get_accessMode(), true, MutMode.Mut, true, lazyLoad )
 end
 
 
 function Scope:addClass( processInfo, name, pos, typeInfo )
 
-   return self:add( processInfo, SymbolKind.Typ, false, false, name, pos, typeInfo, typeInfo:get_accessMode(), true, MutMode.Mut, true )
+   return self:addClassLazy( processInfo, name, pos, typeInfo, false )
 end
-
 
 local function dumpScope( workscope, workprefix )
 
@@ -3344,6 +3353,10 @@ end
 
 function AccessSymbolInfo:get_hasValueFlag( ... )
    return self.symbolInfo:get_hasValueFlag( ... )
+end
+
+function AccessSymbolInfo:get_isLazyLoad( ... )
+   return self.symbolInfo:get_isLazyLoad( ... )
 end
 
 function AccessSymbolInfo:get_kind( ... )
@@ -5665,9 +5678,9 @@ _moduleObj.addBuiltin = addBuiltin
 
 local function registBuiltin( idName, typeTxt, kind, typeInfo, nilableTypeInfo, registScope )
 
-   sym2builtInTypeMap[typeTxt] = NormalSymbolInfo.new(rootProcessInfo, SymbolKind.Typ, false, false, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, nil, typeInfo, MutMode.IMut, true)
+   sym2builtInTypeMap[typeTxt] = NormalSymbolInfo.new(rootProcessInfo, SymbolKind.Typ, false, false, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, nil, typeInfo, MutMode.IMut, true, false)
    if nilableTypeInfo ~= _moduleObj.headTypeInfo then
-      sym2builtInTypeMap[typeTxt .. "!"] = NormalSymbolInfo.new(rootProcessInfo, SymbolKind.Typ, false, kind == TypeInfoKind.Func, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, nil, nilableTypeInfo, MutMode.IMut, true)
+      sym2builtInTypeMap[typeTxt .. "!"] = NormalSymbolInfo.new(rootProcessInfo, SymbolKind.Typ, false, kind == TypeInfoKind.Func, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, nil, nilableTypeInfo, MutMode.IMut, true, false)
    end
    
    addBuiltin( typeInfo )
@@ -6321,7 +6334,7 @@ end
 function Scope:addAlias( processInfo, name, pos, externalFlag, accessMode, parentInfo, symbolInfo )
 
    local aliasType = self:getProcessInfo(  ):createAlias( processInfo, name, externalFlag, accessMode, parentInfo, symbolInfo:get_typeInfo():get_srcTypeInfo() )
-   return self:add( processInfo, symbolInfo:get_kind(), false, symbolInfo:get_canBeRight(), name, pos, aliasType, accessMode, true, MutMode.IMut, true )
+   return self:add( processInfo, symbolInfo:get_kind(), false, symbolInfo:get_canBeRight(), name, pos, aliasType, accessMode, true, MutMode.IMut, true, false )
 end
 
 
@@ -6342,7 +6355,7 @@ function Scope:addAliasForType( processInfo, name, pos, typeInfo )
    end
    
    
-   return self:add( processInfo, skind, false, canBeRight, name, pos, typeInfo, typeInfo:get_accessMode(), true, MutMode.IMut, true )
+   return self:add( processInfo, skind, false, canBeRight, name, pos, typeInfo, typeInfo:get_accessMode(), true, MutMode.IMut, true, false )
 end
 
 

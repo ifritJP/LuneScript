@@ -196,6 +196,8 @@ pub interface LowSymbol {
    pub fn get_convModuleParam():stem!;
    /** */
    pub fn get_staticFlag(): bool;
+   /** */
+   pub fn get_isLazyLoad(): bool;
 }
 
 pub proto abstract class SymbolInfo extend (LowSymbol) ;
@@ -362,6 +364,8 @@ pub abstract class SymbolInfo extend (LowSymbol) {
    pub abstract fn get_accessMode(): AccessMode;
    /** */
    pub abstract fn get_staticFlag(): bool;
+   /** */
+   pub abstract fn get_isLazyLoad(): bool;
    /** シンボルの名前 */
    pub abstract fn get_name(): str;
    /**
@@ -1159,6 +1163,8 @@ pub class NormalSymbolInfo extend SymbolInfo {
    pri let accessMode: AccessMode { pub };
    /** */
    pri let staticFlag: bool { pub };
+   /** */
+   pri let isLazyLoad: bool { pub };
    /** シンボルの名前 */
    pri let name: str { pub };
    /** シンボルの名前 */
@@ -1194,7 +1200,7 @@ pub class NormalSymbolInfo extend SymbolInfo {
       processInfo:ProcessInfo,
       kind:SymbolKind, canBeLeft:bool, canBeRight:bool, scope: Scope,
       accessMode: AccessMode, staticFlag: bool, name: str, pos:&Parser.Position!,
-      typeInfo: &TypeInfo, mutMode: MutMode!, hasValueFlag: bool )
+      typeInfo: &TypeInfo, mutMode: MutMode!, hasValueFlag: bool, isLazyLoad:bool )
    {
       super();
       self.convModuleParam = nil;
@@ -1221,6 +1227,7 @@ pub class NormalSymbolInfo extend SymbolInfo {
       self.typeInfo = typeInfo;
       self.mutMode = unwrap mutMode default MutMode.IMut;
       self.hasValueFlag = hasValueFlag;
+      self.isLazyLoad = isLazyLoad;
    }
 
    /**
@@ -1880,7 +1887,7 @@ pub fn Scope.add(
    processInfo:ProcessInfo,
    kind: SymbolKind, canBeLeft:bool, canBeRight:bool, name:str, pos:&Parser.Position!,
    typeInfo: &TypeInfo, accessMode:AccessMode, staticFlag:bool,
-   mutMode:MutMode, hasValueFlag:bool ) mut : SymbolInfo!, &SymbolInfo!
+   mutMode:MutMode, hasValueFlag:bool, isLazyLoad:bool ) mut : SymbolInfo!, &SymbolInfo!
 {
    switch kind {
       case .Typ, .Fun, .Mac {
@@ -1913,7 +1920,7 @@ pub fn Scope.add(
    
    let mut symbolInfo = new NormalSymbolInfo(
       processInfo, kind, canBeLeft, canBeRight, self, accessMode, staticFlag,
-      name, pos, typeInfo, mutMode, hasValueFlag );
+      name, pos, typeInfo, mutMode, hasValueFlag, isLazyLoad );
    self.symbol2SymbolInfoMap[ name ] = symbolInfo;
    return symbolInfo, nil;
 }
@@ -1924,8 +1931,8 @@ pub fn Scope.addLocalVar(
    typeInfo: &TypeInfo, mutable:MutMode ) mut : SymbolInfo!, &SymbolInfo!
 {
    return self.add(
-      processInfo, argFlag and SymbolKind.Arg or SymbolKind.Var,
-      canBeLeft, name ~= "_", name, pos, typeInfo, .Local, false, mutable, true )**;
+      processInfo, argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft,
+      name ~= "_", name, pos, typeInfo, .Local, false, mutable, true, false )**;
 }
 
 pub let dummySymbol = unwrap rootScope.addLocalVar(
@@ -1938,7 +1945,7 @@ pub fn Scope.addUnwrapedVar(
 {
    return self.add(
       processInfo, argFlag and SymbolKind.Arg or SymbolKind.Var,
-      canBeLeft, true, name, pos, typeInfo, .Local, false, mutable, true )**;
+      canBeLeft, true, name, pos, typeInfo, .Local, false, mutable, true, false )**;
 }
 
 
@@ -1949,7 +1956,7 @@ pub fn Scope.addStaticVar(
 {
    return self.add(
       processInfo, argFlag and SymbolKind.Arg or SymbolKind.Var,
-      canBeLeft, true, name, pos, typeInfo, .Local, true, mutable, true )**;
+      canBeLeft, true, name, pos, typeInfo, .Local, true, mutable, true, false )**;
 }
 
 pub fn Scope.addVar(
@@ -1960,7 +1967,7 @@ pub fn Scope.addVar(
 {
    return self.add(
       processInfo, SymbolKind.Var, true, true, name, pos, typeInfo,
-      accessMode, false, mutable, hasValueFlag )**;
+      accessMode, false, mutable, hasValueFlag, false )**;
 }
 
 
@@ -1973,7 +1980,7 @@ pub fn Scope.addEnumVal(
 {
    return self.add(
       processInfo, SymbolKind.Mbr, false, true,
-      name, pos, typeInfo, .Pub, true, .Mut, true )**;
+      name, pos, typeInfo, .Pub, true, .Mut, true, false )**;
 }
 
 pub fn Scope.addEnum(
@@ -1983,7 +1990,7 @@ pub fn Scope.addEnum(
 {
    return self.add(
       processInfo, SymbolKind.Typ, false, false,
-      name, pos, typeInfo, accessMode, true, .Mut, true )**;
+      name, pos, typeInfo, accessMode, true, .Mut, true, false )**;
 }
 
 pub fn Scope.addAlgeVal(
@@ -1993,7 +2000,7 @@ pub fn Scope.addAlgeVal(
 {
    return self.add(
       processInfo, SymbolKind.Mbr, false, true,
-      name, pos, typeInfo, .Pub, true, .Mut, true )**;
+      name, pos, typeInfo, .Pub, true, .Mut, true, false )**;
 }
 
 pub fn Scope.addAlge(
@@ -2003,7 +2010,7 @@ pub fn Scope.addAlge(
 {
    return self.add(
       processInfo, SymbolKind.Typ, false, false,
-      name, pos, typeInfo, accessMode, true, .Mut, true )**;
+      name, pos, typeInfo, accessMode, true, .Mut, true, false )**;
 }
 
 pub fn Scope.addAlternate(
@@ -2012,7 +2019,7 @@ pub fn Scope.addAlternate(
 {
    self.add(
       processInfo, SymbolKind.Typ, false, false,
-      name, pos, typeInfo, accessMode, true, .Mut, true );
+      name, pos, typeInfo, accessMode, true, .Mut, true, false );
 }
 
 pub fn Scope.addMember(
@@ -2022,7 +2029,7 @@ pub fn Scope.addMember(
 {
    return self.add(
       processInfo, SymbolKind.Mbr, true, true, name, pos,
-      typeInfo, accessMode, staticFlag, mutMode, true )**;
+      typeInfo, accessMode, staticFlag, mutMode, true, false )**;
 }
 
 pub fn Scope.addMethod(
@@ -2032,7 +2039,7 @@ pub fn Scope.addMethod(
 {
    return self.add(
       processInfo, SymbolKind.Mtd, true, staticFlag, typeInfo.$rawTxt, pos, typeInfo,
-      accessMode,staticFlag, mutable and MutMode.Mut or MutMode.IMut, true )**;
+      accessMode,staticFlag, mutable and MutMode.Mut or MutMode.IMut, true, false )**;
 }
 
 pub fn Scope.addFunc(
@@ -2043,7 +2050,7 @@ pub fn Scope.addFunc(
 {
    return self.add(
       processInfo, SymbolKind.Fun, true, true, typeInfo.$rawTxt, pos, typeInfo,
-      accessMode, staticFlag, mutable and MutMode.Mut or MutMode.IMut, true )**;
+      accessMode, staticFlag, mutable and MutMode.Mut or MutMode.IMut, true, false )**;
 }
 
 pub fn Scope.addForm(
@@ -2052,7 +2059,7 @@ pub fn Scope.addForm(
 {
    self.add(
       processInfo, .Typ, false, false, typeInfo.$rawTxt, pos,
-      typeInfo, accessMode, true, .IMut, false );
+      typeInfo, accessMode, true, .IMut, false, false );
 }
 
 pub fn Scope.addMacro(
@@ -2062,19 +2069,25 @@ pub fn Scope.addMacro(
 {
    return self.add(
       processInfo, SymbolKind.Mac, false, false, typeInfo.$rawTxt, pos,
-      typeInfo, accessMode, true, .IMut, true )**;
+      typeInfo, accessMode, true, .IMut, true, false )**;
 }
 
+
+pub fn Scope.addClassLazy(
+   processInfo:ProcessInfo, name:str, pos:&Parser.Position!,
+   typeInfo: &TypeInfo, lazyLoad:bool ) mut : &SymbolInfo!, &SymbolInfo!
+{
+   return self.add(
+      processInfo, SymbolKind.Typ, false, false, name, pos, typeInfo,
+      typeInfo.$accessMode, true, .Mut, true, lazyLoad )**;
+}
 
 pub fn Scope.addClass(
    processInfo:ProcessInfo, name:str, pos:&Parser.Position!,
    typeInfo: &TypeInfo ) mut : &SymbolInfo!, &SymbolInfo!
 {
-   return self.add(
-      processInfo, SymbolKind.Typ, false, false, name, pos, typeInfo,
-      typeInfo.$accessMode, true, .Mut, true )**;
+   return self.addClassLazy( processInfo, name, pos, typeInfo, false )**;
 }
-
 
 /**
 デバッグ用。 scope 内のシンボル情報を出力する。
@@ -4141,12 +4154,12 @@ fn registBuiltin( idName: str, typeTxt: str, kind: TypeInfoKind,
    //typeInfoKind[ idName ] = typeInfo;
    sym2builtInTypeMap[ typeTxt ] = new NormalSymbolInfo(
       rootProcessInfo, SymbolKind.Typ, false, false,
-      rootScope, AccessMode.Pub, false, typeTxt, nil, typeInfo, .IMut, true );
+      rootScope, AccessMode.Pub, false, typeTxt, nil, typeInfo, .IMut, true, false );
    if nilableTypeInfo ~= headTypeInfo {
       sym2builtInTypeMap[ typeTxt .. "!" ] = new NormalSymbolInfo(
          rootProcessInfo,
          SymbolKind.Typ, false, kind == .Func, rootScope,
-         AccessMode.Pub, false, typeTxt, nil, nilableTypeInfo, .IMut, true );
+         AccessMode.Pub, false, typeTxt, nil, nilableTypeInfo, .IMut, true, false );
    }
    addBuiltin( typeInfo );
    // builtIn は modifier も作成しておく
@@ -4686,7 +4699,7 @@ pub fn Scope.addAlias(
       parentInfo, symbolInfo.$typeInfo.$srcTypeInfo );
    return self.add(
       processInfo, symbolInfo.$kind, false, symbolInfo.$canBeRight,
-      name, pos, aliasType, accessMode, true, .IMut, true )**;
+      name, pos, aliasType, accessMode, true, .IMut, true, false )**;
 }
 
 pub fn Scope.addAliasForType(
@@ -4710,7 +4723,7 @@ pub fn Scope.addAliasForType(
 
    return self.add(
       processInfo, skind, false, canBeRight, name, pos,
-      typeInfo, typeInfo.$accessMode, true, .IMut, true )**;
+      typeInfo, typeInfo.$accessMode, true, .IMut, true, false )**;
 }
 
 

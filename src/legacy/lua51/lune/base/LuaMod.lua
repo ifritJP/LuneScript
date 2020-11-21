@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@LuaMod'
 local _lune = {}
-if _lune2 then
-   _lune = _lune2
+if _lune3 then
+   _lune = _lune3
 end
 function _lune.unwrap( val )
    if val == nil then
@@ -75,8 +75,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune2 then
-   _lune2 = _lune
+if not _lune3 then
+   _lune3 = _lune
 end
 local CodeKind = {}
 _moduleObj.CodeKind = CodeKind
@@ -142,9 +142,15 @@ CodeKind.__allList[13] = CodeKind.InstanceOf
 CodeKind.Cast = 13
 CodeKind._val2NameMap[13] = 'Cast'
 CodeKind.__allList[14] = CodeKind.Cast
-CodeKind.Finalize = 14
-CodeKind._val2NameMap[14] = 'Finalize'
-CodeKind.__allList[15] = CodeKind.Finalize
+CodeKind.LazyLoad = 14
+CodeKind._val2NameMap[14] = 'LazyLoad'
+CodeKind.__allList[15] = CodeKind.LazyLoad
+CodeKind.LazyRequire = 15
+CodeKind._val2NameMap[15] = 'LazyRequire'
+CodeKind.__allList[16] = CodeKind.LazyRequire
+CodeKind.Finalize = 16
+CodeKind._val2NameMap[16] = 'Finalize'
+CodeKind.__allList[17] = CodeKind.Finalize
 
 
 local codeMap = {}
@@ -534,6 +540,32 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 ]==], CastKind.Int, CastKind.Real, CastKind.Str, CastKind.Class)
+
+codeMap[CodeKind.LazyLoad] = [==[
+function _lune._lazyImport( modName )
+  local mod
+  return function()
+    if mod then
+       return mod
+    end
+    mod = _lune.loadModule( modName )
+    return mod
+  end
+end
+]==]
+
+codeMap[CodeKind.LazyRequire] = [==[
+function _lune._lazyRequire( modName )
+  local mod
+  return function()
+    if mod then
+       return mod
+    end
+    mod = require( modName )
+    return mod
+  end
+end
+]==]
 
 codeMap[CodeKind.Finalize] = [==[
 return _lune

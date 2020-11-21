@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@LuaVer'
 local _lune = {}
-if _lune2 then
-   _lune = _lune2
+if _lune3 then
+   _lune = _lune3
 end
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
@@ -145,8 +145,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune2 then
-   _lune2 = _lune
+if not _lune3 then
+   _lune3 = _lune
 end
 local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
 

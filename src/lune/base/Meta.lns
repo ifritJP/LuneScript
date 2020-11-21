@@ -28,6 +28,7 @@ pub class _MetaInfo {
    pub let __formatVersion:str;
    pub let __enableTest:bool;
    pub let __buildId:str;
+   pub let __lazyModuleList: &Map<int,int>;
    pub let __typeId2ClassInfoMap: &Map<int,&Map<str,&stem>>;
    pub let __typeInfoList: &Map<int,&Map<str,&stem>>;
    pub let __varName2InfoMap: &Map<str,&Map<str,&stem>>;

@@ -2,11 +2,11 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@Meta'
 local _lune = {}
-if _lune2 then
-   _lune = _lune2
+if _lune3 then
+   _lune = _lune3
 end
-if not _lune2 then
-   _lune2 = _lune
+if not _lune3 then
+   _lune3 = _lune
 end
 
 
@@ -15,19 +15,20 @@ _moduleObj._MetaInfo = _MetaInfo
 function _MetaInfo.setmeta( obj )
   setmetatable( obj, { __index = _MetaInfo  } )
 end
-function _MetaInfo.new( __formatVersion, __enableTest, __buildId, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap, __hasTest, __subModuleMap )
+function _MetaInfo.new( __formatVersion, __enableTest, __buildId, __lazyModuleList, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap, __hasTest, __subModuleMap )
    local obj = {}
    _MetaInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( __formatVersion, __enableTest, __buildId, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap, __hasTest, __subModuleMap )
+      obj:__init( __formatVersion, __enableTest, __buildId, __lazyModuleList, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap, __hasTest, __subModuleMap )
    end
    return obj
 end
-function _MetaInfo:__init( __formatVersion, __enableTest, __buildId, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap, __hasTest, __subModuleMap )
+function _MetaInfo:__init( __formatVersion, __enableTest, __buildId, __lazyModuleList, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap, __hasTest, __subModuleMap )
 
    self.__formatVersion = __formatVersion
    self.__enableTest = __enableTest
    self.__buildId = __buildId
+   self.__lazyModuleList = __lazyModuleList
    self.__typeId2ClassInfoMap = __typeId2ClassInfoMap
    self.__typeInfoList = __typeInfoList
    self.__varName2InfoMap = __varName2InfoMap

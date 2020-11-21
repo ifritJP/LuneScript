@@ -74,7 +74,7 @@ func Option_convExp505(arg1 []LnsAny) LnsAny {
 }
 // 47: decl @lune.@base.@Option.getBuildCount
 func Option_getBuildCount_1015_() LnsInt {
-    return 6091
+    return 6165
 }
 
 // 72: decl @lune.@base.@Option.getRuntimeModule
@@ -87,9 +87,9 @@ func Option_outputLuneMod(path LnsAny) LnsAny {
     var lune_path string
     lune_path = "runtime.lua"
     if path != nil{
-        path_2434 := path.(string)
-        if path_2434 != ""{
-            lune_path = path_2434
+        path_2446 := path.(string)
+        if path_2446 != ""{
+            lune_path = path_2446
             
         }
     }
@@ -480,12 +480,12 @@ func (self *Option_Option) OpenDepend(relPath LnsAny) LnsAny {
             path := _path.(string)
             var filePath string
             if relPath != nil{
-                relPath_2422 := relPath.(string)
+                relPath_2434 := relPath.(string)
                 if Lns_isCondTrue( Lns_car(Lns_getVM().String_find(path,"/$", nil, nil))){
-                    filePath = Lns_getVM().String_format("%s%s", []LnsAny{path, relPath_2422})
+                    filePath = Lns_getVM().String_format("%s%s", []LnsAny{path, relPath_2434})
                     
                 } else { 
-                    filePath = Lns_getVM().String_format("%s/%s", []LnsAny{path, relPath_2422})
+                    filePath = Lns_getVM().String_format("%s/%s", []LnsAny{path, relPath_2434})
                     
                 }
             } else {

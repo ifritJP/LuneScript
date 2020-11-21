@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@Option'
 local _lune = {}
-if _lune2 then
-   _lune = _lune2
+if _lune3 then
+   _lune = _lune3
 end
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -182,8 +182,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune2 then
-   _lune2 = _lune
+if not _lune3 then
+   _lune3 = _lune
 end
 local Types = _lune.loadModule( 'lune.base.Types' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
@@ -200,7 +200,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 6086
+   return 6165
 end
 
 

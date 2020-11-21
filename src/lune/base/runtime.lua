@@ -329,4 +329,24 @@ function _lune.__Cast( obj, kind, class )
    end
    return nil
 end
+function _lune._lazyImport( modName )
+  local mod
+  return function()
+    if mod then
+       return mod
+    end
+    mod = _lune.loadModule( modName )
+    return mod
+  end
+end
+function _lune._lazyRequire( modName )
+  local mod
+  return function()
+    if mod then
+       return mod
+    end
+    mod = require( modName )
+    return mod
+  end
+end
 return _lune

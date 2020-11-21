@@ -11,6 +11,7 @@ import test.Class3; // skip-lua51
 import test.Class4; // skip-lua51
 import test.mapping;
 import test.test2.test2.test as TESTSUB;
+__import test.Sub8;
 
 macro _print( symbol2:stat, format:str! ) {
    {
@@ -1882,4 +1883,8 @@ _ = 1;
    Macro._section();
    let test = new SUB2.Test5( "aaa" );
    print( test.$val );
+}
+{
+   Macro._section();
+   Sub8.sub();
 }

@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@convCC'
 local _lune = {}
-if _lune2 then
-   _lune = _lune2
+if _lune3 then
+   _lune = _lune3
 end
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -224,8 +224,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune2 then
-   _lune2 = _lune
+if not _lune3 then
+   _lune3 = _lune
 end
 local Ver = _lune.loadModule( 'lune.base.Ver' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
@@ -1104,6 +1104,10 @@ function WorkSymbol:get_mutable(  )
 
    return false
 end
+function WorkSymbol:get_isLazyLoad(  )
+
+   return false
+end
 function WorkSymbol:get_symbolId(  )
 
    return invalidSymbolId
@@ -1428,7 +1432,7 @@ function ScopeMgr:getSymbolParam( symbol )
    end
    
    Util.err( string.format( "illegal symbol -- %s %s %s %d", symbol:get_name(), Ast.SymbolKind:_getTxt( symbol:get_kind())
-   , self.moduleCtrl:getCanonicalName( symbol:get_scope():getNamespaceTypeInfo(  ) ), 952) )
+   , self.moduleCtrl:getCanonicalName( symbol:get_scope():getNamespaceTypeInfo(  ) ), 954) )
 end
 function ScopeMgr:getSymbolValKind( symbol )
 
@@ -1842,6 +1846,10 @@ function BuiltinArgSymbolInfo:get_staticFlag(  )
 
    return false
 end
+function BuiltinArgSymbolInfo:get_isLazyLoad(  )
+
+   return false
+end
 function BuiltinArgSymbolInfo:get_kind(  )
 
    return Ast.SymbolKind.Arg
@@ -1952,7 +1960,7 @@ local function registerBuiltin(  )
             param = createSymbolParam( symbol:get_name(), getValKind( symbol:get_typeInfo() ), getCType( symbol:get_typeInfo() ) )
          else 
             
-               Util.err( string.format( "illeal symbol -- %s %d", symbol:get_name(), 1505) )
+               Util.err( string.format( "illeal symbol -- %s %d", symbol:get_name(), 1510) )
          end
       end
       
@@ -2019,7 +2027,7 @@ function convFilter:processBuiltin(  )
                   
                   local fieldList = {}
                   
-                  Nodes.DeclClassNode.create( nodeManager, dummyPos, false, {classInfo}, Ast.AccessMode.Pub, Parser.Token.new(Parser.TokenKind.Symb, classInfo:get_rawTxt(), dummyPos, false), false, classInfo:get_rawTxt(), nil, false, fieldList, {}, fieldList, {}, classScope, Nodes.ClassInitBlockInfo.new(nil), {}, {}, {}, {} )
+                  Nodes.DeclClassNode.create( nodeManager, dummyPos, false, {classInfo}, Ast.AccessMode.Pub, Parser.Token.new(Parser.TokenKind.Symb, classInfo:get_rawTxt(), dummyPos, false), false, classInfo:get_rawTxt(), nil, Nodes.LazyLoad.Off, false, fieldList, {}, fieldList, {}, classScope, Nodes.ClassInitBlockInfo.new(nil), {}, {}, {}, {} )
                   
                   do
                      local __sorted = {}
@@ -4001,7 +4009,7 @@ local function processDeclCallMethodWrapper( stream, moduleCtrl, scopeMgr, paren
             stream:write( "pObj " )
          end
          
-         for index, _7125 in ipairs( funcTypeInfo:get_argTypeInfoList() ) do
+         for index, _7157 in ipairs( funcTypeInfo:get_argTypeInfoList() ) do
             stream:write( string.format( ", arg%d", index) )
          end
          
@@ -4090,7 +4098,7 @@ local function processAdvertise( stream, moduleCtrl, scopeMgr, processMode, node
                      end
                      
                      stream:write( string.format( "%s( _pEnv, pVal", getAccessMethod( memberClassName, "pVal", name )) )
-                     for index, _7175 in ipairs( methodType:get_argTypeInfoList() ) do
+                     for index, _7207 in ipairs( methodType:get_argTypeInfoList() ) do
                         stream:write( string.format( ", arg%d", index) )
                      end
                      
@@ -4178,14 +4186,14 @@ local function processDefaultCtor( stream, moduleCtrl, scopeMgr, node )
             
             if #ctorType:get_argTypeInfoList() >= #superInitType:get_argTypeInfoList() + memberNum then
                superArgNum = #superInitType:get_argTypeInfoList()
-               for index, _7217 in ipairs( superInitType:get_argTypeInfoList() ) do
+               for index, _7249 in ipairs( superInitType:get_argTypeInfoList() ) do
                   stream:write( string.format( ", _arg%d", index) )
                end
                
             else
              
                superArgNum = 0
-               for _7222, _7221 in ipairs( superInitType:get_argTypeInfoList() ) do
+               for _7254, _7253 in ipairs( superInitType:get_argTypeInfoList() ) do
                   stream:write( string.format( ", %s", cValNil) )
                end
                
@@ -4215,7 +4223,7 @@ local function processDefaultCtor( stream, moduleCtrl, scopeMgr, node )
                else 
                   
                      Util.err( string.format( "no support -- %s:%s:%d", member:get_name().txt, ValKind:_getTxt( valKind)
-                     , 3705) )
+                     , 3711) )
                end
             end
             
@@ -4269,7 +4277,7 @@ function convFilter:processNewInsance( classType, callInit )
       local scope = _lune.unwrap( classType:get_scope())
       if not self.outputBuiltinFlag then
          local initFuncType = _lune.unwrap( scope:getTypeInfoField( "__init", true, scope, scopeAccess ))
-         for index, _7266 in ipairs( initFuncType:get_argTypeInfoList() ) do
+         for index, _7298 in ipairs( initFuncType:get_argTypeInfoList() ) do
             self:write( string.format( ", arg%d", index) )
          end
          
@@ -4601,7 +4609,7 @@ function convFilter:processMapping( node, classType, out2HMode )
          
          if #genType:get_itemTypeInfoList() > 0 then
             self:write( ", { " )
-            for subIndex, _7385 in ipairs( genType:get_itemTypeInfoList() ) do
+            for subIndex, _7417 in ipairs( genType:get_itemTypeInfoList() ) do
                if subIndex > 1 then
                   self:write( ", " )
                end
@@ -4918,7 +4926,7 @@ function convFilter:processDeclClassDef( node )
                else 
                   
                      Util.err( string.format( "no support -- %s:%s:%d", member:get_symbolInfo():get_name(), ValKind:_getTxt( valKind)
-                     , 4412) )
+                     , 4418) )
                end
             end
             
@@ -5625,7 +5633,7 @@ function convFilter:accessPrimVal( exp, parent )
          filter( exp, self, parent )
       else 
          
-            Util.err( string.format( "not support -- %d", 5289) )
+            Util.err( string.format( "not support -- %d", 5295) )
       end
    end
    
@@ -5659,7 +5667,7 @@ function convFilter:processSym2Any( symbol )
       else 
          
             Util.err( string.format( "not suppport -- %s, %d", ValKind:_getTxt( valKind)
-            , 5346) )
+            , 5352) )
       end
    end
    
@@ -5682,7 +5690,7 @@ function convFilter:processVal2any( node, parent )
       else 
          
             Util.err( string.format( "not suppport -- %d, %s, %s, %d", node:get_pos().lineNo, ValKind:_getTxt( valKind)
-            , Nodes.getNodeKindName( node:get_kind() ), 5371) )
+            , Nodes.getNodeKindName( node:get_kind() ), 5377) )
       end
    end
    
@@ -5730,7 +5738,7 @@ function convFilter:processSetValSingleDirect( parent, node, var, initFlag, expV
       
       Util.err( string.format( "illegal %s %s %s -- %d", var:get_name(), ValKind:_getTxt( valKind)
       , ValKind:_getTxt( expValKind)
-      , 5430) )
+      , 5436) )
    end
    
    
@@ -7315,7 +7323,7 @@ function convFilter:processApply( node, opt )
          else 
             
                Util.err( string.format( "no support -- %s:%s:%d", varSym:get_name(), ValKind:_getTxt( valKind)
-               , 7268) )
+               , 7274) )
          end
       end
       
@@ -7735,7 +7743,7 @@ function convFilter:processExpUnwrap( node, opt )
                else 
                   
                      Util.err( string.format( "no support -- %s: %d", ValKind:_getTxt( self:getValKindOfNode( node ))
-                     , 7689) )
+                     , 7695) )
                end
             end
             
@@ -7968,7 +7976,7 @@ function convFilter:processCallWithMRet( parent, mRetFuncName, retTypeName, mRet
                         local expList = toDDDNode:get_expList():get_expList()
                         local lastExp = expList[#expList]
                         self:write( string.format( "( _pEnv, %s, %d", tostring( Nodes.hasMultiValNode( lastExp )), #expList) )
-                        for workIndex, _8887 in ipairs( expList ) do
+                        for workIndex, _8919 in ipairs( expList ) do
                            self:write( string.format( ", lns_getMRet( _pEnv, %d )", workIndex + index - 2) )
                         end
                         
@@ -8832,7 +8840,7 @@ function convFilter:processFuncCast( node )
       else 
          
             Util.err( string.format( "illegal kind -- %s, %d", Ast.TypeInfoKind:_getTxt( orgFunc:get_nonnilableType():get_kind())
-            , 9153) )
+            , 9159) )
       end
    end
    
@@ -8914,7 +8922,7 @@ function convFilter:processFuncCast( node )
       self:write( ", _pForm" )
    end
    
-   for index, _9238 in ipairs( orgFunc:get_argTypeInfoList() ) do
+   for index, _9270 in ipairs( orgFunc:get_argTypeInfoList() ) do
       self:write( string.format( ", var%s", tostring( index)) )
    end
    
@@ -9480,7 +9488,7 @@ function convFilter:processExpRefItem( node, opt )
             else 
                
                   Util.err( string.format( "not support:%s -- %d:%d", Ast.TypeInfoKind:_getTxt( valType:get_kind())
-                  , 9842, node:get_pos().lineNo) )
+                  , 9848, node:get_pos().lineNo) )
             end
          end
          
@@ -9623,7 +9631,7 @@ function convFilter:processGetField( node, opt )
       local _switchExp = prefixType:get_kind()
       if _switchExp == Ast.TypeInfoKind.Enum then
          if node:get_nilAccess() then
-            Util.err( string.format( "not support -- %d:%d:%s", 9998, node:get_pos().lineNo, fieldTxt) )
+            Util.err( string.format( "not support -- %d:%d:%s", 10004, node:get_pos().lineNo, fieldTxt) )
          end
          
          local enumFullName = self.moduleCtrl:getEnumTypeName( prefixType )
@@ -9637,13 +9645,13 @@ function convFilter:processGetField( node, opt )
                self:write( ")" )
             else 
                
-                  Util.err( string.format( "not support -- %d:%d:%s", 10012, node:get_pos().lineNo, fieldTxt) )
+                  Util.err( string.format( "not support -- %d:%d:%s", 10018, node:get_pos().lineNo, fieldTxt) )
             end
          end
          
       elseif _switchExp == Ast.TypeInfoKind.Alge then
          if node:get_nilAccess() then
-            Util.err( string.format( "not support -- %d:%d:%s", 10019, node:get_pos().lineNo, fieldTxt) )
+            Util.err( string.format( "not support -- %d:%d:%s", 10025, node:get_pos().lineNo, fieldTxt) )
          end
          
          local algeName = self.moduleCtrl:getAlgeCName( prefixType )
@@ -9655,7 +9663,7 @@ function convFilter:processGetField( node, opt )
                self:write( ")" )
             else 
                
-                  Util.err( string.format( "not support -- %d:%d:%s", 10030, node:get_pos().lineNo, fieldTxt) )
+                  Util.err( string.format( "not support -- %d:%d:%s", 10036, node:get_pos().lineNo, fieldTxt) )
             end
          end
          
@@ -9680,7 +9688,7 @@ function convFilter:processGetField( node, opt )
                      self:write( "l_nil_mtd_getter( _pEnv, " )
                   else 
                      
-                        Util.err( string.format( "not support -- %d:%d:%s", 10059, node:get_pos().lineNo, fieldTxt) )
+                        Util.err( string.format( "not support -- %d:%d:%s", 10065, node:get_pos().lineNo, fieldTxt) )
                   end
                end
                
@@ -9712,7 +9720,7 @@ function convFilter:processGetField( node, opt )
          
       else 
          
-            Util.err( string.format( "not support -- %d:%d:%s", 10092, node:get_pos().lineNo, Ast.TypeInfoKind:_getTxt( prefixType:get_kind())
+            Util.err( string.format( "not support -- %d:%d:%s", 10098, node:get_pos().lineNo, Ast.TypeInfoKind:_getTxt( prefixType:get_kind())
             ) )
       end
    end
@@ -9752,7 +9760,7 @@ function convFilter:processReturn( node, opt )
                   filter( expList[1], self, node )
                else 
                   
-                     Util.err( string.format( "no support -- %d", 10150) )
+                     Util.err( string.format( "no support -- %d", 10156) )
                end
             end
             
@@ -9784,7 +9792,7 @@ function convFilter:processReturn( node, opt )
                elseif _switchExp == ValKind.Prim then
                else 
                   
-                     Util.err( string.format( "no support -- %d", 10183) )
+                     Util.err( string.format( "no support -- %d", 10189) )
                end
             end
             
@@ -9887,7 +9895,7 @@ function convFilter:processLiteralVal( exp, parent )
       local symbolList = exp:getSymbolInfo(  )
       if #symbolList > 0 then
          local _
-         local _9636, valKind = self.scopeMgr:getCTypeForSym( symbolList[1] )
+         local _9668, valKind = self.scopeMgr:getCTypeForSym( symbolList[1] )
          if valKind ~= ValKind.Prim then
             self:processVal2stem( exp, parent )
             return 
@@ -10285,7 +10293,7 @@ function convFilter:processLiteralString( node, opt )
                else
                 
                   self:write( string.format( "static %s lns_litstr_%d( %s _pEnv", cTypeAnyP, node:get_id(), cTypeEnvP) )
-                  for index, _9818 in ipairs( expListNode:get_expList() ) do
+                  for index, _9850 in ipairs( expListNode:get_expList() ) do
                      self:write( string.format( ", %s arg%d", cTypeStem, index) )
                   end
                   
@@ -10305,7 +10313,7 @@ function convFilter:processLiteralString( node, opt )
                else
                 
                   self:write( string.format( "static %s lns_litstr_%d( %s _pEnv", cTypeAnyP, node:get_id(), cTypeEnvP) )
-                  for index, _9826 in ipairs( expListNode:get_expList() ) do
+                  for index, _9858 in ipairs( expListNode:get_expList() ) do
                      self:write( string.format( ", %s arg%d", cTypeStem, index) )
                   end
                   

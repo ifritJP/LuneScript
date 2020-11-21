@@ -37,6 +37,8 @@ pub enum CodeKind {
    SetOp,
    InstanceOf,
    Cast,
+   LazyLoad,
+   LazyRequire,
 
 
    // 最後
@@ -404,6 +406,32 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 ``` ( CastKind.Int, CastKind.Real, CastKind.Str, CastKind.Class );
+
+codeMap[ .LazyLoad ] = ```
+function _lune._lazyImport( modName )
+  local mod
+  return function()
+    if mod then
+       return mod
+    end
+    mod = _lune.loadModule( modName )
+    return mod
+  end
+end
+```;
+
+codeMap[ .LazyRequire ] = ```
+function _lune._lazyRequire( modName )
+  local mod
+  return function()
+    if mod then
+       return mod
+    end
+    mod = require( modName )
+    return mod
+  end
+end
+```;
 
 codeMap[ .Finalize ] = ```
 return _lune

@@ -974,13 +974,12 @@ fn TransUnit.analyzeExtend( accessMode:Ast.AccessMode, firstPos: &Parser.Positio
 }
 
 fn TransUnit.analyzePushClass(
-   classFlag: bool, abstractFlag: bool, firstToken:&Parser.Token, name:&Parser.Token,
+   mode:DeclClassMode, abstractFlag: bool, firstToken:&Parser.Token, name:&Parser.Token,
    allowMultiple:bool,
    accessMode:Ast.AccessMode, altTypeList:&List<&Ast.AlternateTypeInfo> ) mut :
    &Parser.Token, &Ast.TypeInfo
 {
-   if classFlag and Ast.isPubToExternal( accessMode ) and
-      self.moduleScope ~= self.scope
+   if Ast.isPubToExternal( accessMode ) and self.moduleScope ~= self.scope
    {
       self.addErrMess( firstToken.pos, "The public class must declare at top scope." );
    }
@@ -1023,7 +1022,7 @@ fn TransUnit.analyzePushClass(
 
 
    let classTypeInfo = self.pushClass(
-      firstToken.pos, classFlag, abstractFlag, baseTypeInfo,
+      firstToken.pos, mode, abstractFlag, baseTypeInfo,
       interfaceList, altTypeList, false, name.txt, allowMultiple, accessMode ## );
 
    return nextToken, classTypeInfo;
@@ -1110,9 +1109,15 @@ fn TransUnit.analyzeDeclProto(
          accessMode = .Pri;
       }
 
+      let declMode;
+      if nextToken.txt == "class" {
+         declMode = DeclClassMode.Class;
+      } else {
+         declMode = .Interface;
+      }
       let classTypeInfo:&Ast.TypeInfo;
       nextToken, classTypeInfo = self.analyzePushClass(
-         nextToken.txt ~= "interface", abstractFlag,
+         declMode, abstractFlag,
          firstToken, name, false, accessMode, altTypeList );
 
       self.protoClassMap[ classTypeInfo ] = firstToken.pos;
@@ -1530,6 +1535,10 @@ fn TransUnit.analyzeDecl(
    elseif token.txt == "module" {
       return self.analyzeDeclClass( false, accessMode, firstToken, .Module );
    }
+   elseif token.txt == "__module" {
+      self.helperInfo.useLazyRequire = true;
+      return self.analyzeDeclClass( false, accessMode, firstToken, .LazyModule );
+   }
    elseif token.txt == "proto" {
       return self.analyzeDeclProto( accessMode, firstToken );
    }
@@ -1817,7 +1826,7 @@ fn TransUnit.analyzeFuncBlock(
          {
             if not overrideType.$abstractFlag {
                funcBodyScope.add( self.processInfo, .Fun, false, false, "super", nil,
-                                  overrideType, .Local, false, .IMut, true );
+                                  overrideType, .Local, false, .IMut, true, false );
             }
          }
       }
@@ -1871,7 +1880,8 @@ fn TransUnit.analyzeFuncBlock(
 fn TransUnit.analyzeClassBody(
    hasProto:bool, classAccessMode: Ast.AccessMode, firstToken: &Parser.Token,
    mode:DeclClassMode, gluePrefix:str!, classTypeInfo: &Ast.TypeInfo,
-   name:&Parser.Token, moduleName: &Parser.Token!, mut nextToken:&Parser.Token ) mut :
+   name:&Parser.Token, moduleName: &Parser.Token!, lazyLoad:Nodes.LazyLoad,
+   mut nextToken:&Parser.Token ) mut :
    Nodes.DeclClassNode, &Parser.Token, Set<str>
 {
    let mut memberName2Node: Map<str,&Nodes.DeclMemberNode> = {};
@@ -1888,7 +1898,8 @@ fn TransUnit.analyzeClassBody(
    let mut node = Nodes.DeclClassNode.create(
       self.nodeManager, firstToken.pos,
       self.macroCtrl.isInAnalyzeArgMode(), [ classTypeInfo ],
-      classAccessMode, name, hasProto, gluePrefix, moduleName, false, allStmtList,
+      classAccessMode, name, hasProto, gluePrefix, moduleName,
+      lazyLoad, false, allStmtList,
       declStmtList, fieldList, memberList, self.scope, initBlockInfo,
       advertiseList, trustList, uninitMemberList, (@) );
    self.typeInfo2ClassNode[ classTypeInfo ] = node;
@@ -1958,7 +1969,7 @@ nil の場合、メンバの宣言位置。
                  abstractFlag:bool, overrideFlag:bool ) {
       let nameToken = self.getSymbolToken( .MustNot_ );
       let mut declFuncMode = DeclFuncMode.Class;
-      if mode == .Module {
+      if mode == .Module or mode == .LazyModule {
          if gluePrefix {
             declFuncMode = .Glue;
          }
@@ -2245,19 +2256,23 @@ fn TransUnit.analyzeDeclClass(
    classAbstructFlag: bool,  mut classAccessMode: Ast.AccessMode,
    firstToken: &Parser.Token, mode:DeclClassMode ) mut : Nodes.DeclClassNode
 {
-   if mode ~= .Module {
-      switch self.getCurrentNamespaceTypeInfo().$kind {
-         case .IF, .Class, .Module {
-         }
-         case .Func, .Method {
-            switch classAccessMode {
-               case .Pub, .Global {
-                  self.addErrMess( firstToken.pos, "Class can't declare on here." );
+   switch mode {
+      case .Module, .LazyModule {
+      }
+      default {
+         switch self.getCurrentNamespaceTypeInfo().$kind {
+            case .IF, .Class, .Module {
+            }
+            case .Func, .Method {
+               switch classAccessMode {
+                  case .Pub, .Global {
+                     self.addErrMess( firstToken.pos, "Class can't declare on here." );
+                  }
                }
             }
-         }
-         default {
-            self.addErrMess( firstToken.pos, "Class can't declare on here." );
+            default {
+               self.addErrMess( firstToken.pos, "Class can't declare on here." );
+            }
          }
       }
    }
@@ -2289,7 +2304,7 @@ fn TransUnit.analyzeDeclClass(
 
    let mut moduleName: &Parser.Token! = nil;
    let mut gluePrefix:str! = nil;
-   if mode == .Module {
+   if mode == .Module or mode == .LazyModule {
       self.checkNextToken( "require" );
       moduleName = self.getToken(##);
       let nextToken = self.getToken(##);
@@ -2305,7 +2320,7 @@ fn TransUnit.analyzeDeclClass(
       name.txt, self.scope, self.scope, self.scopeAccess );
 
    let mut nextToken, classTypeInfo = self.analyzePushClass(
-      mode ~= .Interface, classAbstructFlag,
+      mode, classAbstructFlag,
       firstToken, name, true, classAccessMode, altTypeList );
 
    let hasProto;
@@ -2349,11 +2364,19 @@ fn TransUnit.analyzeDeclClass(
    }
 
 
-
+   let mut lazyLoad;
+   _switch mode {
+      case .LazyModule {
+         lazyLoad = Nodes.LazyLoad.On;
+      }
+      case .Module, .Class, .Interface {
+         lazyLoad = Nodes.LazyLoad.Off;
+      }
+   }
 
    let mut node, _, mut methodNameSet = self.analyzeClassBody(
       hasProto, classAccessMode, firstToken, mode, gluePrefix,
-      classTypeInfo, name, moduleName, nextToken );
+      classTypeInfo, name, moduleName, lazyLoad, nextToken );
    //nextToken = workNextToken;
 
 
@@ -2805,7 +2828,7 @@ fn TransUnit.analyzeDeclFunc(
             self.scope.add(
                self.processInfo, .Arg, false, true, "self", nil,
                workClass, .Pri, false,
-               mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true );
+               mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true, false );
          }
 
          if not workClass.$abstractFlag and abstractFlag {

@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@Nodes'
 local _lune = {}
-if _lune2 then
-   _lune = _lune2
+if _lune3 then
+   _lune = _lune3
 end
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -228,8 +228,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune2 then
-   _lune2 = _lune
+if not _lune3 then
+   _lune3 = _lune
 end
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Util = _lune.loadModule( 'lune.base.Util' )
@@ -750,7 +750,7 @@ end
 function NodeManager:__init() 
    self.idSeed = 0
    self.nodeKind2NodeList = {}
-   for kind, _2605 in pairs( nodeKind2NameMap ) do
+   for kind, _2615 in pairs( nodeKind2NameMap ) do
       if not self.nodeKind2NodeList[kind] then
          self.nodeKind2NodeList[kind] = {}
       end
@@ -1135,6 +1135,38 @@ function SubfileNode:get_usePath()
 end
 
 
+local LazyLoad = {}
+_moduleObj.LazyLoad = LazyLoad
+LazyLoad._val2NameMap = {}
+function LazyLoad:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "LazyLoad.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+function LazyLoad._from( val )
+   if LazyLoad._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+    
+LazyLoad.__allList = {}
+function LazyLoad.get__allList()
+   return LazyLoad.__allList
+end
+
+LazyLoad.Off = 0
+LazyLoad._val2NameMap[0] = 'Off'
+LazyLoad.__allList[1] = LazyLoad.Off
+LazyLoad.On = 1
+LazyLoad._val2NameMap[1] = 'On'
+LazyLoad.__allList[2] = LazyLoad.On
+LazyLoad.Auto = 2
+LazyLoad._val2NameMap[2] = 'Auto'
+LazyLoad.__allList[3] = LazyLoad.Auto
+
 
 function NodeKind.get_Import(  )
 
@@ -1177,27 +1209,28 @@ function ImportNode:canBeStatement(  )
 
    return true
 end
-function ImportNode.new( id, pos, macroArgFlag, typeList, modulePath, assignName, symbolInfo, moduleTypeInfo )
+function ImportNode.new( id, pos, macroArgFlag, typeList, modulePath, lazy, assignName, symbolInfo, moduleTypeInfo )
    local obj = {}
    ImportNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, modulePath, assignName, symbolInfo, moduleTypeInfo ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, modulePath, lazy, assignName, symbolInfo, moduleTypeInfo ); end
    return obj
 end
-function ImportNode:__init(id, pos, macroArgFlag, typeList, modulePath, assignName, symbolInfo, moduleTypeInfo) 
+function ImportNode:__init(id, pos, macroArgFlag, typeList, modulePath, lazy, assignName, symbolInfo, moduleTypeInfo) 
    Node.__init( self,id, 4, pos, macroArgFlag, typeList)
    
    
    
    self.modulePath = modulePath
+   self.lazy = lazy
    self.assignName = assignName
    self.symbolInfo = symbolInfo
    self.moduleTypeInfo = moduleTypeInfo
    
    
 end
-function ImportNode.create( nodeMan, pos, macroArgFlag, typeList, modulePath, assignName, symbolInfo, moduleTypeInfo )
+function ImportNode.create( nodeMan, pos, macroArgFlag, typeList, modulePath, lazy, assignName, symbolInfo, moduleTypeInfo )
 
-   local node = ImportNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, modulePath, assignName, symbolInfo, moduleTypeInfo)
+   local node = ImportNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, modulePath, lazy, assignName, symbolInfo, moduleTypeInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -1211,6 +1244,9 @@ function ImportNode.setmeta( obj )
 end
 function ImportNode:get_modulePath()
    return self.modulePath
+end
+function ImportNode:get_lazy()
+   return self.lazy
 end
 function ImportNode:get_assignName()
    return self.assignName
@@ -1244,6 +1280,8 @@ function LuneHelperInfo:__init()
    self.useSet = false
    self.callAnonymous = false
    self.pragmaSet = {}
+   self.useLazyLoad = false
+   self.useLazyRequire = false
 end
 function LuneHelperInfo.setmeta( obj )
   setmetatable( obj, { __index = LuneHelperInfo  } )
@@ -9273,13 +9311,13 @@ function DeclClassNode:canBeStatement(  )
 
    return true
 end
-function DeclClassNode.new( id, pos, macroArgFlag, typeList, accessMode, name, hasPrototype, gluePrefix, moduleName, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet )
+function DeclClassNode.new( id, pos, macroArgFlag, typeList, accessMode, name, hasPrototype, gluePrefix, moduleName, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet )
    local obj = {}
    DeclClassNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, accessMode, name, hasPrototype, gluePrefix, moduleName, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, accessMode, name, hasPrototype, gluePrefix, moduleName, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet ); end
    return obj
 end
-function DeclClassNode:__init(id, pos, macroArgFlag, typeList, accessMode, name, hasPrototype, gluePrefix, moduleName, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet) 
+function DeclClassNode:__init(id, pos, macroArgFlag, typeList, accessMode, name, hasPrototype, gluePrefix, moduleName, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet) 
    Node.__init( self,id, 63, pos, macroArgFlag, typeList)
    
    
@@ -9289,6 +9327,7 @@ function DeclClassNode:__init(id, pos, macroArgFlag, typeList, accessMode, name,
    self.hasPrototype = hasPrototype
    self.gluePrefix = gluePrefix
    self.moduleName = moduleName
+   self.lazyLoad = lazyLoad
    self.hasOldCtor = hasOldCtor
    self.allStmtList = allStmtList
    self.declStmtList = declStmtList
@@ -9303,9 +9342,9 @@ function DeclClassNode:__init(id, pos, macroArgFlag, typeList, accessMode, name,
    
    
 end
-function DeclClassNode.create( nodeMan, pos, macroArgFlag, typeList, accessMode, name, hasPrototype, gluePrefix, moduleName, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet )
+function DeclClassNode.create( nodeMan, pos, macroArgFlag, typeList, accessMode, name, hasPrototype, gluePrefix, moduleName, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet )
 
-   local node = DeclClassNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, accessMode, name, hasPrototype, gluePrefix, moduleName, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet)
+   local node = DeclClassNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, accessMode, name, hasPrototype, gluePrefix, moduleName, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet)
    nodeMan:addNode( node )
    return node
 end
@@ -9416,6 +9455,9 @@ function DeclClassNode:get_gluePrefix()
 end
 function DeclClassNode:get_moduleName()
    return self.moduleName
+end
+function DeclClassNode:get_lazyLoad()
+   return self.lazyLoad
 end
 function DeclClassNode:get_hasOldCtor()
    return self.hasOldCtor
@@ -12303,7 +12345,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, _10503 in pairs( self.map ) do
+   for key, _10530 in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -12338,8 +12380,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, _10517 in ipairs( __sorted ) do
-         local key = __map[ _10517 ]
+      for __index, _10544 in ipairs( __sorted ) do
+         local key = __map[ _10544 ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false

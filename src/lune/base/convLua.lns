@@ -250,17 +250,19 @@ pub override fn convFilter.processNone(
 pub override fn convFilter.processImport(
    node: Nodes.ImportNode, opt: Opt ) mut
 {
-   let module = node.get_modulePath();
-   let mut moduleName = module.gsub( ".*%.", "" );
-   moduleName = node.$assignName;
-   self.write( "local %s = _lune.loadModule( '%s' )" ( moduleName, module ) );
-   //if self.convMode == "exe" or self.convMode == "ast" {
-   // if self.convMode == .Exec {
-   //    self.write( "local %s = _lune.loadModule( '%s' )" ( moduleName, module ) );
-   // }
-   // else {
-   //    self.write( "local %s = require( '%s' )" ( moduleName, module ) );
-   // }
+   let modulePath = node.get_modulePath();
+   let mut modSym = modulePath.gsub( ".*%.", "" );
+   modSym = node.$assignName;
+   self.write( "local %s = _lune." ( modSym ) );
+   _switch node.$lazy {
+      case .Off {
+         self.write( "loadModule" );
+      }
+      case .On, .Auto {
+         self.write( "_lazyImport" );
+      }
+   }
+   self.write( "( '%s' )" ( modulePath ) );
 };
 
 
@@ -307,6 +309,23 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
    self.writeln( "_moduleObj.__enableTest = %s" (self.enableTest ) );
    self.writeln( "_moduleObj.__hasTest = %s"
                  (#node.$nodeManager.getTestCaseNodeList() ~= 0) );
+
+   
+   self.writeln( "_moduleObj.__lazyModuleList = {" );
+   {
+      let mut firstFlag = true;
+      foreach declClass in node.$nodeManager.getDeclClassNodeList() {
+         if declClass.$lazyLoad ~= .Off and Ast.isPubToExternal( declClass.$accessMode ) {
+            if not firstFlag {
+               self.writeln( "," );
+            } else {
+               firstFlag = true;
+            }
+            self.writeln( "%d" (declClass.$expType.$typeId) );
+         }
+      }
+   }
+   self.writeln( "}" );
 
    let mut importModuleType2Index:Map<&Ast.TypeInfo,int> = {};
    let mut importNameMap:Map<str,&Ast.TypeInfo> = {};
@@ -917,12 +936,19 @@ end``` (luneSymbol, luneSymbol) );
          self.writeln( LuaMod.getCode( .InstanceOf ) );
          self.writeln( LuaMod.getCode( .Cast ) );
       }
+      if node.$luneHelperInfo.useLazyLoad {
+         self.writeln( LuaMod.getCode( .LazyLoad ) );
+      }
+      if node.$luneHelperInfo.useLazyRequire {
+         self.writeln( LuaMod.getCode( .LazyRequire ) );
+      }
    }
    self.writeln( ```
 if not %s then
    %s = _lune
 end``` (luneSymbol, luneSymbol) );
 
+   
 
    if node.$moduleScope.getSymbolInfoChild( "_" )$.$posForLatestMod {
       self.writeln( "local _" );
@@ -1358,8 +1384,13 @@ pub override fn convFilter.processDeclClass(
    self.classId2MemberList[ classTypeId ] = nodeInfo.get_memberList();
 
    if! node.$moduleName {
-      self.write(
-         string.format( "local %s = require( %s )", className, _exp.txt ) );
+      self.write( "local %s = " ( className ) );
+      if node.$lazyLoad == .Off {
+         self.write( "require" );
+      } else {
+         self.write( "_lune._lazyRequire" );
+      }
+      self.write( "( %s )" ( _exp.txt ) );
       switch node.$accessMode {
          case .Pub, .Pro {
             if self.needModuleObj {
@@ -3022,6 +3053,9 @@ pub override fn convFilter.processExpRef(
                }
             }
             self.write( node.$symbolInfo.$name );
+            if node.$symbolInfo.$isLazyLoad {
+               self.write( "()" );
+            }
          }
       }
    }
@@ -3082,7 +3116,6 @@ pub override fn convFilter.processRefField(
    }
    else {
       filter( prefix,  self, node );
-
       let mut delimit = ".";
       if parent.$kind == Nodes.NodeKind.$ExpCall {
          if node.get_expType().get_kind() == Ast.TypeInfoKind.Method {
@@ -3094,6 +3127,11 @@ pub override fn convFilter.processRefField(
       }
       let fieldToken = node.get_field();
       self.write( delimit .. fieldToken.txt );
+      if! let symbolInfo = node.$symbolInfo {
+         if symbolInfo.$isLazyLoad {
+            self.write( "()" );
+         }
+      }
    }
 };
 

@@ -7,9 +7,11 @@ var LuaMod__mod__ string
 const LuaMod_CodeKind__Alge = 8
 const LuaMod_CodeKind__AlgeMapping = 9
 const LuaMod_CodeKind__Cast = 13
-const LuaMod_CodeKind__Finalize = 14
+const LuaMod_CodeKind__Finalize = 16
 const LuaMod_CodeKind__Init = 0
 const LuaMod_CodeKind__InstanceOf = 12
+const LuaMod_CodeKind__LazyLoad = 14
+const LuaMod_CodeKind__LazyRequire = 15
 const LuaMod_CodeKind__LoadModule = 4
 const LuaMod_CodeKind__LoadStr51 = 5
 const LuaMod_CodeKind__LoadStr52 = 6
@@ -34,6 +36,8 @@ var LuaMod_CodeKindList_ = NewLnsList( []LnsAny {
   LuaMod_CodeKind__SetOp,
   LuaMod_CodeKind__InstanceOf,
   LuaMod_CodeKind__Cast,
+  LuaMod_CodeKind__LazyLoad,
+  LuaMod_CodeKind__LazyRequire,
   LuaMod_CodeKind__Finalize,
 })
 func LuaMod_CodeKind_get__allList() *LnsList{
@@ -46,6 +50,8 @@ var LuaMod_CodeKindMap_ = map[LnsInt]string {
   LuaMod_CodeKind__Finalize: "CodeKind.Finalize",
   LuaMod_CodeKind__Init: "CodeKind.Init",
   LuaMod_CodeKind__InstanceOf: "CodeKind.InstanceOf",
+  LuaMod_CodeKind__LazyLoad: "CodeKind.LazyLoad",
+  LuaMod_CodeKind__LazyRequire: "CodeKind.LazyRequire",
   LuaMod_CodeKind__LoadModule: "CodeKind.LoadModule",
   LuaMod_CodeKind__LoadStr51: "CodeKind.LoadStr51",
   LuaMod_CodeKind__LoadStr52: "CodeKind.LoadStr52",
@@ -93,7 +99,7 @@ func LuaMod_CastKind_getTxt(arg1 LnsInt) string {
     return LuaMod_CastKindMap_[arg1];
 }
 var LuaMod_codeMap *LnsMap
-// 413: decl @lune.@base.@LuaMod.getCode
+// 441: decl @lune.@base.@LuaMod.getCode
 func LuaMod_getCode(kind LnsInt) string {
     return Lns_unwrap( LuaMod_codeMap.Items[kind]).(string)
 }
@@ -118,6 +124,8 @@ func Lns_LuaMod_init() {
     LuaMod_codeMap.Set(LuaMod_CodeKind__Alge,"function _lune.newAlge( kind, vals )\n   local memInfoList = kind[ 2 ]\n   if not memInfoList then\n      return kind\n   end\n   return { kind[ 1 ], vals }\nend\n")
     LuaMod_codeMap.Set(LuaMod_CodeKind__InstanceOf,"function _lune.__isInstanceOf( obj, class )\n   while obj do\n      local meta = getmetatable( obj )\n      if not meta then\n\t return false\n      end\n      local indexTbl = meta.__index\n      if indexTbl == class then\n\t return true\n      end\n      if meta.ifList then\n         for index, ifType in ipairs( meta.ifList ) do\n            if ifType == class then\n               return true\n            end\n            if _lune.__isInstanceOf( ifType, class ) then\n               return true\n            end\n         end\n      end\n      obj = indexTbl\n   end\n   return false\nend\n")
     LuaMod_codeMap.Set(LuaMod_CodeKind__Cast,Lns_getVM().String_format("function _lune.__Cast( obj, kind, class )\n   if kind == %d then -- int\n      if type( obj ) ~= \"number\" then\n         return nil\n      end\n      if math.floor( obj ) ~= obj then\n         return nil\n      end\n      return obj\n   elseif kind == %d then -- real\n      if type( obj ) ~= \"number\" then\n         return nil\n      end\n      return obj\n   elseif kind == %d then -- str\n      if type( obj ) ~= \"string\" then\n         return nil\n      end\n      return obj\n   elseif kind == %d then -- class\n      return _lune.__isInstanceOf( obj, class ) and obj or nil\n   end\n   return nil\nend\n", []LnsAny{LuaMod_CastKind__Int, LuaMod_CastKind__Real, LuaMod_CastKind__Str, LuaMod_CastKind__Class}))
+    LuaMod_codeMap.Set(LuaMod_CodeKind__LazyLoad,"function _lune._lazyImport( modName )\n  local mod\n  return function()\n    if mod then\n       return mod\n    end\n    mod = _lune.loadModule( modName )\n    return mod\n  end\nend\n")
+    LuaMod_codeMap.Set(LuaMod_CodeKind__LazyRequire,"function _lune._lazyRequire( modName )\n  local mod\n  return function()\n    if mod then\n       return mod\n    end\n    mod = require( modName )\n    return mod\n  end\nend\n")
     LuaMod_codeMap.Set(LuaMod_CodeKind__Finalize,"return _lune\n")
 }
 func init() {

@@ -50,7 +50,8 @@ _lune_control ignore_symbol_;
 enum DeclClassMode {
    Class,
    Interface,
-   Module
+   Module,
+   LazyModule,
 }
 
 enum DeclFuncMode {
@@ -922,8 +923,8 @@ alias で置き換えている元の Type → alias の型
 
 クラスが生成済みの場合は baseInfo, interfaceList, genTypeList に nil を指定する。
    */
-   pub fn pushClass(
-      errPos:&Parser.Position, classFlag:bool, abstractFlag: bool,
+   fn pushClass(
+      errPos:&Parser.Position, mode:DeclClassMode, abstractFlag: bool,
       baseInfo: &Ast.TypeInfo!, interfaceList: &List<&Ast.TypeInfo>!,
       genTypeList: &List<&Ast.AlternateTypeInfo>!, externalFlag: bool, name:str,
       allowMultiple:bool,
@@ -1013,7 +1014,7 @@ alias で置き換えている元の Type → alias の型
          self.scope = unwrap Ast.getScope( typeInfo );
          switch ( typeInfo.$kind ) {
             case .Class {
-               if not classFlag {
+               if mode == .Interface {
                   self.addErrMess(
                      errPos,
                      "define interface already -- %s" (name) );
@@ -1021,7 +1022,7 @@ alias で置き換えている元の Type → alias の型
                }
             }
             case .IF {
-               if classFlag {
+               if mode ~= .Interface {
                   self.addErrMess(
                      errPos,
                      "define class already -- %s" (name) );
@@ -1043,10 +1044,11 @@ alias で置き換えている元の Type → alias の型
             workGenTypeList = [];
          }
          typeInfo = self.processInfo.createClass(
-            classFlag, abstractFlag, scope, baseInfo, interfaceList,
+            mode ~= .Interface, abstractFlag, scope, baseInfo, interfaceList,
             workGenTypeList, parentInfo, externalFlag, accessMode, name );
          
-         parentScope.addClass( self.processInfo, name, errPos, typeInfo );
+         parentScope.addClassLazy(
+            self.processInfo, name, errPos, typeInfo, mode == .LazyModule );
       }
       when! genTypeList {
          foreach genType in genTypeList {
@@ -1284,6 +1286,7 @@ class ImportParam {
    pub let mut typeId2Scope:Map<int,Ast.Scope>;
    pub let mut typeId2TypeInfo:Map<int,&Ast.TypeInfo>;
    pub let mut importedAliasMap: Map<&Ast.TypeInfo,&Ast.AliasTypeInfo>;
+   pub let lazyModuleSet:&Set<int>;
    pub let metaInfo:Luaval<&Meta._MetaInfo>;
    pub let scope:Ast.Scope;
    pub let moduleTypeInfo: &Ast.TypeInfo;
@@ -1662,7 +1665,9 @@ class _TypeInfoNormal extend _TypeInfo {
                   self.kind == Ast.TypeInfoKind.Class, self.abstractFlag,
                   scope, baseInfo, interfaceList, altTypeList,
                   parentInfo, true, .Pub, self.txt );
-               parentScope.addClass( param.processInfo, self.txt, nil, workTypeInfo );
+               parentScope.addClassLazy(
+                  param.processInfo, self.txt, nil,
+                  workTypeInfo, param.lazyModuleSet.has( self.typeId ) );
                
                newTypeInfo = workTypeInfo;
 
@@ -1709,7 +1714,7 @@ class _TypeInfoNormal extend _TypeInfo {
                      workParentScope.add(
                         param.processInfo, symbolKind, false, self.kind == .Func,
                         self.txt, nil, workTypeInfo, accessMode,
-                        self.staticFlag, .IMut, true );
+                        self.staticFlag, .IMut, true, false );
                      param.typeId2Scope[ self.typeId ] = scope;
                   }
                }
@@ -2278,7 +2283,7 @@ fn TransUnit.registBuiltInScope() mut {
             let symbol = unwrap self.scope.add(
                self.processInfo, .Var, false, true, fieldName, nil,
                getTypeInfo( unwrap info.typeInfo$[1] ), .Pub,
-               true, .Mut, true );
+               true, .Mut, true, false );
             //builtinFunc.register( symbol );
             setupBuiltinTypeInfo( name, fieldName, symbol );
          }
@@ -2363,7 +2368,7 @@ fn TransUnit.registBuiltInScope() mut {
             let symInfo = unwrap self.scope.add(
                self.processInfo, symbolKind, false, kind == .Func,
                fieldName, nil, typeInfo, accessMode, staticFlag,
-               mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true );
+               mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true, false );
 
             setupBuiltinTypeInfo( name, fieldName, symInfo );
          }
@@ -2460,9 +2465,15 @@ fn TransUnit.registBuiltInScope() mut {
             }
             switch classKind {
                case .Class, .Interface {
+                  let declMode;
+                  if classKind == .Class {
+                     declMode = DeclClassMode.Class;
+                  } else {
+                     declMode = .Interface;
+                  }
                   parentInfo = self.pushClass(
                      self.parser.$currentToken.pos,
-                     classKind == .Class, false, nil, interfaceList,
+                     declMode, false, nil, interfaceList,
                      genTypeList, true, name, true, .Pub ## );
                   builtinFunc.registerClass( parentInfo );
                }
@@ -2471,7 +2482,7 @@ fn TransUnit.registBuiltInScope() mut {
 
                   self.scope.$parent.add(
                      self.processInfo, .Typ , false, false, name, nil,
-                     parentInfo, .Local, true, Ast.MutMode.Mut, true );
+                     parentInfo, .Local, true, Ast.MutMode.Mut, true, false );
                }
             }
 
@@ -3091,7 +3102,6 @@ fn TransUnit.processImport( modulePath:str, depth:int ) mut :
    typeId2TypeInfo[ builtinFunc.lnsthread_.$typeId ] = builtinFunc.lnsthread_;
    typeId2Scope[ builtinFunc.lnsthread_.$typeId ] = builtinFunc.lnsthread_.$scope;
 
-   
    // 依存するモジュールの typeInfo と、 meta 情報内の typeId との紐付け
    foreach dependIdInfo, typeId in metaInfo.__dependIdMap {
       let dependInfo = unwrap dependLibId2DependInfo[ unwrap dependIdInfo[ 1 ] ];
@@ -3201,10 +3211,16 @@ fn TransUnit.processImport( modulePath:str, depth:int ) mut :
 
    let mut orgId2MacroTypeInfo:Map<int,&Ast.TypeInfo> = {};
 
+   let mut lazyModuleSet:Set<int> = (@);
+   foreach typeId in metaInfo.__lazyModuleList {
+      lazyModuleSet.add( typeId );
+   }
+
+   
    // 初めに child 以外で TypeInfo を登録
    let mut importParam = new ImportParam(
       self.parser.getLastPos(), self, self.processInfo, typeId2Scope,
-      typeId2TypeInfo, {},
+      typeId2TypeInfo, {}, lazyModuleSet,
       metaInfo, self.scope, moduleTypeInfo, self.scopeAccess, id2atomMap );
    foreach atomInfo in _typeInfoList {
       let newTypeInfo, errMess = atomInfo.createTypeInfoCache( importParam );
@@ -3281,7 +3297,7 @@ fn TransUnit.processImport( modulePath:str, depth:int ) mut :
                scope.add(
                   self.processInfo, symbolKind, false, typeInfo.$kind == .Func,
                   typeInfo.getTxt(##), nil, typeInfo, typeInfo.$accessMode,
-                  typeInfo.$staticFlag, typeInfo.$mutMode, true );
+                  typeInfo.$staticFlag, typeInfo.$mutMode, true, false );
             }
          }
       }
@@ -3437,7 +3453,8 @@ fn TransUnit.processImport( modulePath:str, depth:int ) mut :
 
 
 fn TransUnit.analyzeImportFor(
-   pos: &Parser.Position, modulePath:str, assignName:str ) mut : Nodes.Node
+   pos: &Parser.Position, modulePath:str,
+   assignName:str, lazyLoad:Nodes.LazyLoad ) mut : Nodes.Node
 {
    let mut backupScope = self.scope;
    // スコープをルートに変更
@@ -3465,7 +3482,8 @@ fn TransUnit.analyzeImportFor(
    let moduleSymbolInfo, shadowing = self.scope.add(
       self.processInfo, moduleSymbolKind, false, false, assignName, pos,
       moduleTypeInfo, .Local, true,
-      metaInfo.__moduleMutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true );
+      metaInfo.__moduleMutable and Ast.MutMode.Mut or Ast.MutMode.IMut,
+      true, lazyLoad ~= .Off );
 
   
    when! moduleSymbolInfo {
@@ -3477,7 +3495,7 @@ fn TransUnit.analyzeImportFor(
       return Nodes.ImportNode.create(
          self.nodeManager, pos,
          self.macroCtrl.isInAnalyzeArgMode(), [ moduleTypeInfo ],
-         modulePath, assignName, moduleSymbolInfo, moduleTypeInfo );
+         modulePath, lazyLoad, assignName, moduleSymbolInfo, moduleTypeInfo );
    }
 
    self.errorShadowing( pos, shadowing );
@@ -3485,7 +3503,7 @@ fn TransUnit.analyzeImportFor(
 }
 
 
-fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Nodes.Node {
+fn TransUnit.analyzeImport( opeToken: &Parser.Token ) mut : Nodes.Node {
    // if self.moduleScope ~= self.scope {
    //    self.error( "'import' must call at top scope." );
    // }
@@ -3512,7 +3530,18 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Nodes.Node {
    }
    self.checkToken( nextToken, ";" );
 
-   let mut node = self.analyzeImportFor( token.pos, modulePath, assignName.txt );
+   let lazyLoad;
+   if opeToken.txt == "import" {
+      lazyLoad = Nodes.LazyLoad.Off;
+   } else {
+      lazyLoad = Nodes.LazyLoad.On;
+   }
+   if lazyLoad ~= .Off {
+      self.helperInfo.useLazyLoad = true;
+   }
+   
+   let mut node = self.analyzeImportFor(
+      opeToken.pos, modulePath, assignName.txt, lazyLoad );
    self.importModuleSet.add( node.$expType );
    
    return node;
@@ -3523,7 +3552,8 @@ fn TransUnit.analyzeTestCase( firstToken:&Parser.Token ) mut : Nodes.TestCaseNod
 {
    let mut newScope = self.pushScope( false ## );
    
-   let importNode = self.analyzeImportFor( firstToken.pos, "lune.base.Testing", "__t" );
+   let importNode = self.analyzeImportFor(
+      firstToken.pos, "lune.base.Testing", "__t", .Off );
    
    let nameToken = self.getSymbolToken( .MustNot_ );
 
