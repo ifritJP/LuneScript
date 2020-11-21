@@ -1535,10 +1535,9 @@ fn TransUnit.analyzeDecl(
    elseif token.txt == "module" {
       return self.analyzeDeclClass( false, accessMode, firstToken, .Module );
    }
-   elseif token.txt == "__module" {
-      self.helperInfo.useLazyRequire = true;
-      return self.analyzeDeclClass( false, accessMode, firstToken, .LazyModule );
-   }
+   // elseif token.txt == "__module" {
+   //    return self.analyzeDeclClass( false, accessMode, firstToken, .LazyModule );
+   // }
    elseif token.txt == "proto" {
       return self.analyzeDeclProto( accessMode, firstToken );
    }
@@ -2225,28 +2224,18 @@ nil の場合、メンバの宣言位置。
 
    processClassFields( false );
 
-   if mode ~= .Module {
-      // when! declCtorNode {
-      //    foreach memberNode, memberName in memberName2Node {
-      //       if not memberNode.$staticFlag {
-      //          let symbolInfo = unwrap self.scope.getSymbolInfoChild( memberName );
-      //          let typeInfo = symbolInfo.$typeInfo;
-      //          if not symbolInfo.$hasValueFlag and not typeInfo.$nilable {
-      //             self.addErrMess( declCtorNode.$pos,
-      //                              "Set member -- %s.%s"
-      //                              ( name.txt, memberName ) );
-      //          }
-      //       }
-      //    }
-      // }
-
-      if hasStaticMember and not hasInitBlock {
-         self.addErrMess(
-            node.$pos,
-            "This class (%s) need __init block for initialize static members." ( name.txt ) );
+   switch mode {
+      case .Module, .LazyModule {
       }
+      default {
+         if hasStaticMember and not hasInitBlock {
+            self.addErrMess(
+               node.$pos,
+               "This class (%s) need __init block for initialize static members." ( name.txt ) );
+         }
 
-      checkInitializeMember( true, nil );
+         checkInitializeMember( true, nil );
+      }
    }
 
    return node, nextToken, methodNameSet;
@@ -2254,8 +2243,30 @@ nil の場合、メンバの宣言位置。
 
 fn TransUnit.analyzeDeclClass(
    classAbstructFlag: bool,  mut classAccessMode: Ast.AccessMode,
-   firstToken: &Parser.Token, mode:DeclClassMode ) mut : Nodes.DeclClassNode
+   firstToken: &Parser.Token, mut mode:DeclClassMode ) mut : Nodes.DeclClassNode
 {
+   if mode == .Module {
+      if self.getToken(##).txt == "." {
+         switch self.getToken(##).txt {
+            case "l" {
+               mode = .LazyModule;
+            }
+            case "d" {
+               mode = .Module;
+            }
+         }
+      } else {
+         self.pushback();
+         if self.ctrl_info.defaultLazy {
+            mode = .LazyModule;
+         }
+      }
+   }
+   if mode == .LazyModule {
+      self.helperInfo.useLazyRequire = true;
+   }
+
+   
    switch mode {
       case .Module, .LazyModule {
       }

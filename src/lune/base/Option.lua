@@ -200,7 +200,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 6165
+   return 6200
 end
 
 
@@ -536,6 +536,8 @@ usage:
                option.transCtrlInfo.warningShadowing = true
             elseif _switchExp == "--valid-luaval" then
                option.transCtrlInfo.validLuaval = true
+            elseif _switchExp == "--default-lazy" then
+               option.transCtrlInfo.defaultLazy = true
             elseif _switchExp == "--log" then
                do
                   local txt = getNextOp(  )
@@ -677,7 +679,7 @@ usage:
    end
    
    
-   Log.log( Log.Level.Log, __func__, 454, function (  )
+   Log.log( Log.Level.Log, __func__, 457, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

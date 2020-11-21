@@ -3,6 +3,7 @@ import test.Sub3;
 import test.Sub3_2;
 import test.Sub4;
 
+print( Sub2.sub2val );
 print( "sub2globalfun", sub2globalfun() );
 let mut enumVal3 = Sub2.enumTestSub.val3;
 print( "enumTestSub.val3", enumVal3, enumVal3 + 10 );

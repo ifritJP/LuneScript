@@ -3504,9 +3504,33 @@ fn TransUnit.analyzeImportFor(
 
 
 fn TransUnit.analyzeImport( opeToken: &Parser.Token ) mut : Nodes.Node {
-   // if self.moduleScope ~= self.scope {
-   //    self.error( "'import' must call at top scope." );
-   // }
+   let lazyLoad:Nodes.LazyLoad;
+   if self.getToken(##).txt == "." {
+      let modeToken = self.getToken(##);
+      switch modeToken.txt {
+         case "l" {
+            lazyLoad = .On;
+         }
+         case "d" {
+            lazyLoad = .Off;
+         }
+         default {
+            lazyLoad = .Off;
+            self.error( "illegal import mode -- %s" (modeToken.txt) );
+         }
+      }
+   } else {
+      self.pushback();
+      if self.ctrl_info.defaultLazy {
+         lazyLoad = .Auto;
+      } else {
+         lazyLoad = .Off;
+      }
+   }
+   if lazyLoad ~= .Off {
+      self.helperInfo.useLazyLoad = true;
+   }
+   
 
    let mut moduleToken = self.getToken(##);
    let mut modulePath = moduleToken.txt;
@@ -3530,16 +3554,6 @@ fn TransUnit.analyzeImport( opeToken: &Parser.Token ) mut : Nodes.Node {
    }
    self.checkToken( nextToken, ";" );
 
-   let lazyLoad;
-   if opeToken.txt == "import" {
-      lazyLoad = Nodes.LazyLoad.Off;
-   } else {
-      lazyLoad = Nodes.LazyLoad.On;
-   }
-   if lazyLoad ~= .Off {
-      self.helperInfo.useLazyLoad = true;
-   }
-   
    let mut node = self.analyzeImportFor(
       opeToken.pos, modulePath, assignName.txt, lazyLoad );
    self.importModuleSet.add( node.$expType );
@@ -4268,10 +4282,6 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
             subSym = self.addLocalVar(
                _exp.pos, false, false, _exp.txt, Ast.builtinTypeInt, .IMut## );
          }
-//          else {
-//             self.addLocalVar(
-//                token.pos, false, false, "__index", Ast.builtinTypeInt, .IMut, true );
-//          }
       }
       default {
          self.errorAt(

@@ -11,7 +11,8 @@ import test.Class3; // skip-lua51
 import test.Class4; // skip-lua51
 import test.mapping;
 import test.test2.test2.test as TESTSUB;
-__import test.Sub8;
+import.l test.Sub8;
+import.d test.Sub10;
 
 macro _print( symbol2:stat, format:str! ) {
    {

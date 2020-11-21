@@ -1,5 +1,5 @@
 print( __mod__ );
-pub __module Sub9 require "test.Sub9" {
+pub module.l Sub9 require "test.Sub9" {
    pub static fn func(val:int);
 }
 pub fn sub() {

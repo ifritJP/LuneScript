@@ -387,6 +387,7 @@ end
 function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest, useIpairs) 
    Nodes.Filter.__init( self,true, moduleTypeInfo, moduleTypeInfo:get_scope())
    
+   self.moduleType2SymbolMap = {}
    self.processInfo = processInfo
    self.enableTest = enableTest
    self.macroVarSymSet = {}
@@ -424,7 +425,20 @@ end
 function convFilter:getCanonicalName( typeInfo, localFlag )
 
    local enumName = typeInfo:getFullName( self:get_typeNameCtrl(), self:get_moduleInfoManager(), localFlag )
-   return string.format( "%s", (enumName:gsub( "&", "" ) ))
+   local moduleType = typeInfo:get_genSrcTypeInfo():get_srcTypeInfo():getModule(  )
+   local canonical = (enumName:gsub( "&", "" ) )
+   do
+      local assignSym = self.moduleType2SymbolMap[moduleType]
+      if assignSym ~= nil then
+         if assignSym:get_isLazyLoad() then
+            local index = _lune.unwrap( canonical:find( ".", 1, true ))
+            return string.format( "%s().%s", canonical:sub( 1, index - 1 ), canonical:sub( index + 1 ))
+         end
+         
+      end
+   end
+   
+   return canonical
 end
 function convFilter:getFullName( typeInfo )
 
@@ -1348,6 +1362,14 @@ if not %s then
    %s = _lune
 end]==], luneSymbol, luneSymbol) )
    
+   for __index, importNode in ipairs( node:get_nodeManager():getImportNodeList(  ) ) do
+      if importNode:get_lazy() ~= Nodes.LazyLoad.Off then
+         self.moduleType2SymbolMap[importNode:get_moduleTypeInfo()] = importNode:get_symbolInfo()
+      end
+      
+   end
+   
+   
    if _lune.nilacc( node:get_moduleScope():getSymbolInfoChild( "_" ), 'get_posForLatestMod', 'callmtd' ) then
       self:writeln( "local _" )
    end
@@ -1939,7 +1961,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _6209 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _6220 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -4157,7 +4179,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3463, function (  )
+   Log.log( Log.Level.Trace, __func__, 3478, function (  )
    
       return string.format( "macro: %s", code)
    end )

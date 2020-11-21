@@ -109,6 +109,7 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
    pri let enableTest:bool;
    pri let useIpairs:bool;
    let allmut processInfo:Ast.ProcessInfo;
+   let mut moduleType2SymbolMap:Map<&Ast.TypeInfo,&Ast.SymbolInfo>;
 
 
    pub fn __init( streamName: str, stream: oStream, metaStream: oStream,
@@ -118,6 +119,7 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
                   targetLuaVer:&LuaVer.LuaVerInfo, enableTest:bool, useIpairs:bool )
    {
       super(true, moduleTypeInfo, moduleTypeInfo.$scope);
+      self.moduleType2SymbolMap = {};
       self.processInfo = processInfo;
       self.enableTest = enableTest;
       self.macroVarSymSet = (@);
@@ -155,7 +157,16 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
    fn getCanonicalName( typeInfo:&Ast.TypeInfo, localFlag:bool ): str {
       let mut enumName = typeInfo.getFullName(
          self.$typeNameCtrl, self.$moduleInfoManager, localFlag );
-      return "%s" ( (enumName.gsub( "&", "" )) );
+      let moduleType = typeInfo.$genSrcTypeInfo.$srcTypeInfo.getModule();
+      let canonical = (enumName.gsub( "&", "" ));
+      if! let assignSym = self.moduleType2SymbolMap[ moduleType ] {
+         if assignSym.$isLazyLoad {
+            let index = unwrap canonical.find( ".", 1, true );
+            return "%s().%s" (canonical.sub( 1, index - 1 ),
+                               canonical.sub( index + 1 ## ) );
+         }
+      }
+      return canonical;
    }
 
    fn getFullName( typeInfo:&Ast.TypeInfo ): str {
@@ -948,7 +959,11 @@ if not %s then
    %s = _lune
 end``` (luneSymbol, luneSymbol) );
 
-   
+   foreach importNode in node.$nodeManager.getImportNodeList() {
+      if importNode.$lazy ~= .Off {
+         self.moduleType2SymbolMap[ importNode.$moduleTypeInfo ] = importNode.$symbolInfo;
+      }
+   }
 
    if node.$moduleScope.getSymbolInfoChild( "_" )$.$posForLatestMod {
       self.writeln( "local _" );

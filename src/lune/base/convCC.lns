@@ -114,6 +114,8 @@ class ModuleInfo extend (Ast.ModuleInfoIF){
    let assignName:str {pub};
    /** モジュールのパス */
    let modulePath:str {pub};
+   /** */
+   let isLazyLoad:bool {pub};
 }
 
 /** 出力に使用するパラメータ */

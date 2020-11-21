@@ -172,7 +172,7 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
       elseif token.txt == "__scope" {
          statement = self.analyzeScope( token );
       }
-      elseif token.txt == "import" or token.txt == "__import" {
+      elseif token.txt == "import"  {
          statement = self.analyzeImport( token );
       }
       elseif token.txt == "subfile" {

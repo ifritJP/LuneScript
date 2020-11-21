@@ -276,6 +276,7 @@ define build-testcode
 	$(call exeLune,$1,$2,test/Sub5.lns,$3 save,$4) > /dev/null
 	$(call exeLune,$1,$2,test/Sub6.lns,$3 save,$4) > /dev/null
 	$(call exeLune,$1,$2,test/Sub8.lns,$3 save,$4) > /dev/null
+	$(call exeLune,$1,$2,test/Sub10.lns,$3 save,$4) > /dev/null
 	$(call exeLune,$1,$2,test/simple.lns,$3 save,$4) > /dev/null
 	$(call exeLune,$1,$2,test/Class1.lns,$3 save,$4) > /dev/null
 	$(call exeLune,$1,$2,test/Class2.lns,$3 save,$4) > /dev/null
@@ -697,6 +698,12 @@ test-new2:
 ## テストスクリプトを lua 化して、 lunescript なしで動かすテスト。
 	$(call build-testcode,$(LNSC),work/3_2)
 	(cd work/3_2; $(LUA) test/start.lua) > work/test3.result
+
+# テストスクリプトを default-lazy を指定してテスト。
+	$(call build-testcode,$(LNSC),work/3_2,--default-lazy)
+	(cd work/3_2; $(LUA) test/start.lua) > work/test3_2.result
+# default-lazy を有効にすると、遅延ロードによって結果が異なる
+	diff work/test3.result work/test3_2.result && exit 1 || echo ok
 
 # テストスクリプトを lua 化して、 runtime をロードしてテスト。
 	$(call build-testcode,$(LNSC),work/3_2,-r)

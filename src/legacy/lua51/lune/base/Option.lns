@@ -329,6 +329,9 @@ usage:
             case "--valid-luaval" {
                option.transCtrlInfo.validLuaval = true;
             }
+            case "--default-lazy" {
+               option.transCtrlInfo.defaultLazy = true;
+            }
             case "--log" {
                if! let txt = getNextOp() {
                   if! let level = Log.str2level( txt ) {

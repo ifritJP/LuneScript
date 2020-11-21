@@ -48,10 +48,12 @@ pub class TransCtrlInfo {
    pub let mut stopByWarning:bool;
    pub let mut uptodateMode:CheckingUptodateMode;
    pub let mut validLuaval:bool;
+   /** 指定しない場合のモードを lazy にする */
+   pub let mut defaultLazy:bool;
 }
 
 pub static fn TransCtrlInfo.create_normal(): TransCtrlInfo {
-   return new TransCtrlInfo( false, false, true, false, .Touch, false );
+   return new TransCtrlInfo( false, false, true, false, .Touch, false, false );
 }
 
 

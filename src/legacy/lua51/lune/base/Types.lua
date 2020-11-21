@@ -220,15 +220,15 @@ _moduleObj.TransCtrlInfo = TransCtrlInfo
 function TransCtrlInfo.setmeta( obj )
   setmetatable( obj, { __index = TransCtrlInfo  } )
 end
-function TransCtrlInfo.new( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode, validLuaval )
+function TransCtrlInfo.new( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode, validLuaval, defaultLazy )
    local obj = {}
    TransCtrlInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode, validLuaval )
+      obj:__init( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode, validLuaval, defaultLazy )
    end
    return obj
 end
-function TransCtrlInfo:__init( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode, validLuaval )
+function TransCtrlInfo:__init( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode, validLuaval, defaultLazy )
 
    self.warningShadowing = warningShadowing
    self.compatComment = compatComment
@@ -236,12 +236,13 @@ function TransCtrlInfo:__init( warningShadowing, compatComment, checkingDefineAb
    self.stopByWarning = stopByWarning
    self.uptodateMode = uptodateMode
    self.validLuaval = validLuaval
+   self.defaultLazy = defaultLazy
 end
 
 
 function TransCtrlInfo.create_normal(  )
 
-   return TransCtrlInfo.new(false, false, true, false, CheckingUptodateMode.Touch, false)
+   return TransCtrlInfo.new(false, false, true, false, CheckingUptodateMode.Touch, false, false)
 end
 
 
@@ -389,7 +390,7 @@ end
 function Token:getLineCount(  )
 
    local count = 1
-   for _86 in self.txt:gmatch( "\n" ) do
+   for _87 in self.txt:gmatch( "\n" ) do
       count = count + 1
    end
    
