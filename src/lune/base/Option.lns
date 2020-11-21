@@ -237,7 +237,8 @@ usage:
             none: skip process when file is uptodate.
             touch: touch meta file when file is uptodate.  (default)
     --use-ipairs: use ipairs for foreach with List value.
-    
+    --default-lazy: set lazy-loading at default.
+    --valid-luaval: enable luaval when transcompie to lua.
 
 * type2
   dir: output directory.

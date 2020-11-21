@@ -200,7 +200,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 6200
+   return 6201
 end
 
 
@@ -440,7 +440,8 @@ usage:
             none: skip process when file is uptodate.
             touch: touch meta file when file is uptodate.  (default)
     --use-ipairs: use ipairs for foreach with List value.
-    
+    --default-lazy: set lazy-loading at default.
+    --valid-luaval: enable luaval when transcompie to lua.
 
 * type2
   dir: output directory.
@@ -679,7 +680,7 @@ usage:
    end
    
    
-   Log.log( Log.Level.Log, __func__, 457, function (  )
+   Log.log( Log.Level.Log, __func__, 458, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )
