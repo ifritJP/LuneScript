@@ -178,6 +178,7 @@ LNS_SRCS += base/frontInterface
 LNS_SRCS += base/Writer
 LNS_SRCS += base/AsyncParser
 LNS_SRCS += base/Parser
+LNS_SRCS += base/Json
 #LNS_SRCS += base/MetaLoader
 LNS_SRCS += base/Ast
 LNS_SRCS += base/Option
@@ -221,6 +222,7 @@ define selfhost_buildOp
 	$(call $5,$1,$2,$3,$4,base/Writer)
 	$(call $5,$1,$2,$3,$4,base/AsyncParser)
 	$(call $5,$1,$2,$3,$4,base/Parser)
+	$(call $5,$1,$2,$3,$4,base/Json)
 #	$(call $5,$1,$2,$3,$4,base/MetaLoader)
 	$(call $5,$1,$2,$3,$4,base/Ast)
 	$(call $5,$1,$2,$3,$4,base/Option)
@@ -1374,6 +1376,7 @@ test-testGo:
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Util,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),AsyncParser,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Parser,lune/base,./test)
+	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Json,lune/base,./test)
 #	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),MetaLoader,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Writer,lune/base,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/frontInterface,--testing,./test)
@@ -1426,6 +1429,7 @@ go-build:
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Util,,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/AsyncParser,,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Parser,,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Json,,./test)
 #	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/MetaLoader,,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Writer,,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/frontInterface,,./test)

@@ -125,6 +125,88 @@ function _lune.unwrapDefault( val, defval )
    return val
 end
 
+function _lune._toStem( val )
+   return val
+end
+function _lune._toInt( val )
+   if type( val ) == "number" then
+      return math.floor( val )
+   end
+   return nil
+end
+function _lune._toReal( val )
+   if type( val ) == "number" then
+      return val
+   end
+   return nil
+end
+function _lune._toBool( val )
+   if type( val ) == "boolean" then
+      return val
+   end
+   return nil
+end
+function _lune._toStr( val )
+   if type( val ) == "string" then
+      return val
+   end
+   return nil
+end
+function _lune._toList( val, toValInfoList )
+   if type( val ) == "table" then
+      local tbl = {}
+      local toValInfo = toValInfoList[ 1 ]
+      for index, mem in ipairs( val ) do
+         local memval, mess = toValInfo.func( mem, toValInfo.child )
+         if memval == nil and not toValInfo.nilable then
+            if mess then
+              return nil, string.format( "%d.%s", index, mess )
+            end
+            return nil, index
+         end
+         tbl[ index ] = memval
+      end
+      return tbl
+   end
+   return nil
+end
+function _lune._toMap( val, toValInfoList )
+   if type( val ) == "table" then
+      local tbl = {}
+      local toKeyInfo = toValInfoList[ 1 ]
+      local toValInfo = toValInfoList[ 2 ]
+      for key, mem in pairs( val ) do
+         local mapKey, keySub = toKeyInfo.func( key, toKeyInfo.child )
+         local mapVal, valSub = toValInfo.func( mem, toValInfo.child )
+         if mapKey == nil or mapVal == nil then
+            if mapKey == nil then
+               return nil
+            end
+            if keySub == nil then
+               return nil, mapKey
+            end
+            return nil, string.format( "%s.%s", mapKey, keySub)
+         end
+         tbl[ mapKey ] = mapVal
+      end
+      return tbl
+   end
+   return nil
+end
+function _lune._fromMap( obj, map, memInfoList )
+   if type( map ) ~= "table" then
+      return false
+   end
+   for index, memInfo in ipairs( memInfoList ) do
+      local val, key = memInfo.func( map[ memInfo.name ], memInfo.child )
+      if val == nil and not memInfo.nilable then
+         return false, key and string.format( "%s.%s", memInfo.name, key) or memInfo.name
+      end
+      obj[ memInfo.name ] = val
+   end
+   return true
+end
+
 function _lune.loadModule( mod )
    if __luneScript then
       return  __luneScript:loadModule( mod )
@@ -187,6 +269,7 @@ if not _lune3 then
 end
 local Types = _lune.loadModule( 'lune.base.Types' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
+local Json = _lune.loadModule( 'lune.base.Json' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
 local Ver = _lune.loadModule( 'lune.base.Ver' )
@@ -200,7 +283,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 6201
+   return 6214
 end
 
 
@@ -456,6 +539,70 @@ usage:
    
    local index = 1
    
+   do
+      local file = io.open( "lune.js", "r" )
+      if file ~= nil then
+         local ProjInfo = {}
+         setmetatable( ProjInfo, { ifList = {Mapping,} } )
+         function ProjInfo.setmeta( obj )
+  setmetatable( obj, { __index = ProjInfo  } )
+end
+         function ProjInfo.new( cmd_option )
+   local obj = {}
+   ProjInfo.setmeta( obj )
+   if obj.__init then
+      obj:__init( cmd_option )
+   end
+   return obj
+end
+function ProjInfo:__init( cmd_option )
+
+            self.cmd_option = cmd_option
+         end
+         function ProjInfo:_toMap()
+  return self
+end
+function ProjInfo._fromMap( val )
+  local obj, mes = ProjInfo._fromMapSub( {}, val )
+  if obj then
+     ProjInfo.setmeta( obj )
+  end
+  return obj, mes
+end
+function ProjInfo._fromStem( val )
+  return ProjInfo._fromMap( val )
+end
+
+         function ProjInfo._fromMapSub( obj, val )
+            local memInfo = {}
+            table.insert( memInfo, { name = "cmd_option", func = _lune._toList, nilable = false, child = { { func = _lune._toStr, nilable = false, child = {} } } } )
+            local result, mess = _lune._fromMap( obj, val, memInfo )
+   if not result then
+      return nil, mess
+   end
+   return obj
+end
+         
+         do
+            local projInfo = ProjInfo._fromStem( (Json.fromStr( file:read( "*a" ) or "" ) ) )
+            if projInfo ~= nil then
+               local workArgList = {}
+               for __index, arg in ipairs( argList ) do
+                  table.insert( workArgList, arg )
+               end
+               
+               for __index, arg in ipairs( projInfo.cmd_option ) do
+                  table.insert( workArgList, arg )
+               end
+               
+               argList = workArgList
+            end
+         end
+         
+      end
+   end
+   
+   
    local function getNextOp(  )
    
       if #argList <= index then
@@ -680,7 +827,7 @@ usage:
    end
    
    
-   Log.log( Log.Level.Log, __func__, 458, function (  )
+   Log.log( Log.Level.Log, __func__, 478, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

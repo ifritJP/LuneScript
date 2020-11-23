@@ -64,39 +64,47 @@ func Option_ModeKind__from(arg1 string) LnsAny{
 func Option_ModeKind_getTxt(arg1 string) string {
     return Option_ModeKindMap_[arg1];
 }
-// for 38
-func Option_convExp59(arg1 []LnsAny) LnsAny {
+// for 39
+func Option_convExp60(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 162
-func Option_convExp505(arg1 []LnsAny) LnsAny {
+// for 263
+func Option_convExp704(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// 47: decl @lune.@base.@Option.getBuildCount
+// for 258
+func Option_convExp706(arg1 []LnsAny) LnsAny {
+    return Lns_getFromMulti( arg1, 0 )
+}
+// for 163
+func Option_convExp506(arg1 []LnsAny) LnsAny {
+    return Lns_getFromMulti( arg1, 0 )
+}
+// 48: decl @lune.@base.@Option.getBuildCount
 func Option_getBuildCount_1015_() LnsInt {
-    return 6201
+    return 6214
 }
 
-// 72: decl @lune.@base.@Option.getRuntimeModule
+// 73: decl @lune.@base.@Option.getRuntimeModule
 func Option_getRuntimeModule() string {
     return Lns_getVM().String_format("lune.base.runtime%d", []LnsAny{Ver_luaModVersion})
 }
 
-// 155: decl @lune.@base.@Option.outputLuneMod
+// 156: decl @lune.@base.@Option.outputLuneMod
 func Option_outputLuneMod(path LnsAny) LnsAny {
     var lune_path string
     lune_path = "runtime.lua"
     if path != nil{
-        path_2447 := path.(string)
-        if path_2447 != ""{
-            lune_path = path_2447
+        path_2457 := path.(string)
+        if path_2457 != ""{
+            lune_path = path_2457
             
         }
     }
     var fileObj Lns_luaStream
     
     {
-        _fileObj := Option_convExp505(Lns_2DDD(Lns_io_open(lune_path, "w")))
+        _fileObj := Option_convExp506(Lns_2DDD(Lns_io_open(lune_path, "w")))
         if _fileObj == nil{
             return Lns_getVM().String_format("failed to open -- %s", []LnsAny{lune_path})
         } else {
@@ -112,7 +120,7 @@ func Option_outputLuneMod(path LnsAny) LnsAny {
     return nil
 }
 
-// 202: decl @lune.@base.@Option.analyze.printUsage
+// 203: decl @lune.@base.@Option.analyze.printUsage
 func analyze__printUsage_1060_(code LnsInt) {
     Lns_print([]LnsAny{"usage:\n  <type1> [-prof] [-r] src.lns mode [mode-option]\n  <type2> -mklunemod path\n  <type3> --version\n\n* type1\n  - src.lns [common_op] ast\n  - src.lns [common_op] comp [-i] module line column\n  - src.lns [common_op] inq [-i] module line column\n  - src.lns [common_op] [-ol ver] [-ob<0|1>] [-dmr] <lua|LUA>\n  - src.lns [common_op] [-ol ver] [-ob<0|1>] [-dmr] [--depends dependfile] <save|SAVE> output-dir\n  - src.lns [common_op] exe\n\n  -r: use 'require( \"lune.base.runtime\" )'\n  -ol: output lua version. ver = 51 or 52 or 53.\n  -ob: output bytecompiled-code.\n      -ob0 is without debug information.\n      -ob1 is with debug information.\n  -langC: transcompile to c-lang.\n  -langGo: transcompile to golang.\n  -oc: output path of the source code transcompiled to c-lang .\n  --depends: output dependfile\n\n  common_op:\n    -u: update meta and lua on load.\n    -Werror: error by warrning.\n    --log <mode>: set log level.\n         mode: fatal, error, warn, log, info, debug, trace\n    --warning-shadowing: shadowing error convert to warning.\n    --compat-comment: backward compatibility to process the comment.\n    --disable-checking-define-abbr: disable checking for ##.\n    --uptodate <mode>: checking uptodate mode.\n            mode: skip check.\n            none: skip process when file is uptodate.\n            touch: touch meta file when file is uptodate.  (default)\n    --use-ipairs: use ipairs for foreach with List value.\n    --default-lazy: set lazy-loading at default.\n    --valid-luaval: enable luaval when transcompie to lua.\n\n* type2\n  dir: output directory.\n"})
     Lns_getVM().OS_exit(code)
@@ -120,7 +128,7 @@ func analyze__printUsage_1060_(code LnsInt) {
 
 
 
-// 200: decl @lune.@base.@Option.analyze
+// 201: decl @lune.@base.@Option.analyze
 func Option_analyze(argList *LnsList) *Option_Option {
     __func__ := "@lune.@base.@Option.analyze"
     var option *Option_Option
@@ -133,6 +141,32 @@ func Option_analyze(argList *LnsList) *Option_Option {
     column = nil
     var index LnsInt
     index = 1
+    {
+        _file := Option_convExp706(Lns_2DDD(Lns_io_open("lune.js", "r")))
+        if _file != nil {
+            file := _file.(Lns_luaStream)
+            {
+                _projInfo := Option_convExp704(Lns_2DDD(Option_ProjInfo1063__fromStem_1084_(Lns_car(Json_fromStr(Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                    Lns_GetEnv().SetStackVal( file.Read("*a")) ||
+                    Lns_GetEnv().SetStackVal( "") ).(string))),nil)))
+                if _projInfo != nil {
+                    projInfo := _projInfo.(*Option_ProjInfo1063)
+                    var workArgList *LnsList
+                    workArgList = NewLnsList([]LnsAny{})
+                    for _, _arg := range( argList.Items ) {
+                        arg := _arg.(string)
+                        workArgList.Insert(arg)
+                    }
+                    for _, _arg := range( projInfo.Cmd_option.Items ) {
+                        arg := _arg.(string)
+                        workArgList.Insert(arg)
+                    }
+                    argList = workArgList
+                    
+                }
+            }
+        }
+    }
     var getNextOp func() LnsAny
     getNextOp = func() LnsAny {
         if argList.Len() <= index{
@@ -146,30 +180,30 @@ func Option_analyze(argList *LnsList) *Option_Option {
         var arg string
         arg = argList.GetAt(index).(string)
         if Lns_isCondTrue( Lns_car(Lns_getVM().String_find(arg,"^-", nil, nil))){
-            if _switch1256 := (arg); _switch1256 == "-i" {
+            if _switch1355 := (arg); _switch1355 == "-i" {
                 useStdInFlag = true
                 
-            } else if _switch1256 == "-prof" {
+            } else if _switch1355 == "-prof" {
                 option.ValidProf = true
                 
-            } else if _switch1256 == "--nodebug" {
+            } else if _switch1355 == "--nodebug" {
                 Util_setDebugFlag(false)
-            } else if _switch1256 == "--version" {
+            } else if _switch1355 == "--version" {
                 Lns_print([]LnsAny{Lns_getVM().String_format("LuneScript: version %s (%d:%s) [%s]", []LnsAny{Ver_version, Option_getBuildCount_1015_(), Depend_getLuaVersion(), Ver_metaVersion})})
                 Lns_getVM().OS_exit(0)
-            } else if _switch1256 == "--builtin" {
+            } else if _switch1355 == "--builtin" {
                 {
-                    __collection771 := Ast_getBuiltInTypeIdMap()
-                    __sorted771 := __collection771.CreateKeyListInt()
-                    __sorted771.Sort( LnsItemKindInt, nil )
-                    for _, _typeId := range( __sorted771.Items ) {
-                        typeInfo := __collection771.Items[ _typeId ].(Ast_TypeInfoDownCast).ToAst_TypeInfo()
+                    __collection870 := Ast_getBuiltInTypeIdMap()
+                    __sorted870 := __collection870.CreateKeyListInt()
+                    __sorted870.Sort( LnsItemKindInt, nil )
+                    for _, _typeId := range( __sorted870.Items ) {
+                        typeInfo := __collection870.Items[ _typeId ].(Ast_TypeInfoDownCast).ToAst_TypeInfo()
                         typeId := _typeId.(LnsInt)
                         Lns_print([]LnsAny{typeId, typeInfo.FP.GetTxt(nil, nil, nil)})
                     }
                 }
                 Lns_getVM().OS_exit(0)
-            } else if _switch1256 == "-mklunemod" {
+            } else if _switch1355 == "-mklunemod" {
                 var path LnsAny
                 path = getNextOp()
                 {
@@ -181,7 +215,7 @@ func Option_analyze(argList *LnsList) *Option_Option {
                     }
                 }
                 Lns_getVM().OS_exit(0)
-            } else if _switch1256 == "--mkbuiltin" {
+            } else if _switch1355 == "--mkbuiltin" {
                 var path string
                 
                 {
@@ -197,37 +231,37 @@ func Option_analyze(argList *LnsList) *Option_Option {
                 
                 option.Mode = Option_ModeKind__Builtin
                 
-            } else if _switch1256 == "-r" {
+            } else if _switch1355 == "-r" {
                 option.UseLuneModule = Option_getRuntimeModule()
                 
-            } else if _switch1256 == "--runtime" {
+            } else if _switch1355 == "--runtime" {
                 option.UseLuneModule = getNextOp()
                 
-            } else if _switch1256 == "-oc" {
+            } else if _switch1355 == "-oc" {
                 option.BootPath = getNextOp()
                 
-            } else if _switch1256 == "-u" {
+            } else if _switch1355 == "-u" {
                 option.UpdateOnLoad = true
                 
-            } else if _switch1256 == "-Werror" {
+            } else if _switch1355 == "-Werror" {
                 option.TransCtrlInfo.StopByWarning = true
                 
-            } else if _switch1256 == "--disable-checking-define-abbr" {
+            } else if _switch1355 == "--disable-checking-define-abbr" {
                 option.TransCtrlInfo.CheckingDefineAbbr = false
                 
-            } else if _switch1256 == "--compat-comment" {
+            } else if _switch1355 == "--compat-comment" {
                 option.TransCtrlInfo.CompatComment = true
                 
-            } else if _switch1256 == "--warning-shadowing" {
+            } else if _switch1355 == "--warning-shadowing" {
                 option.TransCtrlInfo.WarningShadowing = true
                 
-            } else if _switch1256 == "--valid-luaval" {
+            } else if _switch1355 == "--valid-luaval" {
                 option.TransCtrlInfo.ValidLuaval = true
                 
-            } else if _switch1256 == "--default-lazy" {
+            } else if _switch1355 == "--default-lazy" {
                 option.TransCtrlInfo.DefaultLazy = true
                 
-            } else if _switch1256 == "--log" {
+            } else if _switch1355 == "--log" {
                 {
                     _txt := getNextOp()
                     if _txt != nil {
@@ -243,16 +277,16 @@ func Option_analyze(argList *LnsList) *Option_Option {
                         }
                     }
                 }
-            } else if _switch1256 == "--testing" {
+            } else if _switch1355 == "--testing" {
                 option.Testing = true
                 
-            } else if _switch1256 == "--depends" {
+            } else if _switch1355 == "--depends" {
                 option.DependsPath = getNextOp()
                 
-            } else if _switch1256 == "--use-ipairs" {
+            } else if _switch1355 == "--use-ipairs" {
                 option.UseIpairs = true
                 
-            } else if _switch1256 == "--uptodate" {
+            } else if _switch1355 == "--uptodate" {
                 {
                     _txt := getNextOp()
                     if _txt != nil {
@@ -269,34 +303,34 @@ func Option_analyze(argList *LnsList) *Option_Option {
                         }
                     }
                 }
-            } else if _switch1256 == "-langC" {
+            } else if _switch1355 == "-langC" {
                 option.ConvTo = Types_Conv__C
                 
                 option.TransCtrlInfo.ValidLuaval = true
                 
-            } else if _switch1256 == "-langGo" {
+            } else if _switch1355 == "-langGo" {
                 option.ConvTo = Types_Conv__Go
                 
                 option.TransCtrlInfo.ValidLuaval = true
                 
-            } else if _switch1256 == "-ol" {
+            } else if _switch1355 == "-ol" {
                 {
                     _txt := getNextOp()
                     if _txt != nil {
                         txt := _txt.(string)
-                        if _switch1200 := txt; _switch1200 == "51" {
+                        if _switch1299 := txt; _switch1299 == "51" {
                             option.TargetLuaVer = LuaVer_ver51
                             
-                        } else if _switch1200 == "52" {
+                        } else if _switch1299 == "52" {
                             option.TargetLuaVer = LuaVer_ver52
                             
-                        } else if _switch1200 == "53" {
+                        } else if _switch1299 == "53" {
                             option.TargetLuaVer = LuaVer_ver53
                             
                         }
                     }
                 }
-            } else if _switch1256 == "-ob0" || _switch1256 == "-ob1" {
+            } else if _switch1355 == "-ob0" || _switch1355 == "-ob1" {
                 option.ByteCompile = true
                 
                 if arg == "-ob0"{
@@ -323,7 +357,7 @@ func Option_analyze(argList *LnsList) *Option_Option {
                     }
                 }
             } else { 
-                if _switch1439 := (option.Mode); _switch1439 == Option_ModeKind__Complete || _switch1439 == Option_ModeKind__Inquire {
+                if _switch1538 := (option.Mode); _switch1538 == Option_ModeKind__Complete || _switch1538 == Option_ModeKind__Inquire {
                     if Lns_op_not(option.AnalyzeModule){
                         option.AnalyzeModule = arg
                         
@@ -336,7 +370,7 @@ func Option_analyze(argList *LnsList) *Option_Option {
                         option.AnalyzePos = NewTypes_Position(Lns_unwrap( lineNo).(LnsInt), Lns_unwrap( column).(LnsInt), Util_scriptPath2Module(option.ScriptPath))
                         
                     }
-                } else if _switch1439 == Option_ModeKind__Save || _switch1439 == Option_ModeKind__SaveMeta || _switch1439 == Option_ModeKind__Glue {
+                } else if _switch1538 == Option_ModeKind__Save || _switch1538 == Option_ModeKind__SaveMeta || _switch1538 == Option_ModeKind__Glue {
                     option.OutputDir = arg
                     
                 } else {
@@ -367,14 +401,14 @@ func Option_analyze(argList *LnsList) *Option_Option {
             }
         }
     }
-    Log_log(Log_Level__Log, __func__, 458, Log_CreateMessage(func() string {
+    Log_log(Log_Level__Log, __func__, 478, Log_CreateMessage(func() string {
         return Lns_getVM().String_format("mode is '%s'", []LnsAny{Option_ModeKind_getTxt( option.Mode)})
     }))
     
     return option
 }
 
-// 463: decl @lune.@base.@Option.createDefaultOption
+// 483: decl @lune.@base.@Option.createDefaultOption
 func Option_createDefaultOption(path string) *Option_Option {
     var option *Option_Option
     option = NewOption_Option()
@@ -437,7 +471,7 @@ func NewOption_Option() *Option_Option {
     obj.InitOption_Option()
     return obj
 }
-// 114: DeclConstr
+// 115: DeclConstr
 func (self *Option_Option) InitOption_Option() {
     self.Testing = false
     
@@ -475,7 +509,7 @@ func (self *Option_Option) InitOption_Option() {
     
 }
 
-// 134: decl @lune.@base.@Option.Option.openDepend
+// 135: decl @lune.@base.@Option.Option.openDepend
 func (self *Option_Option) OpenDepend(relPath LnsAny) LnsAny {
     {
         _path := self.DependsPath
@@ -483,12 +517,12 @@ func (self *Option_Option) OpenDepend(relPath LnsAny) LnsAny {
             path := _path.(string)
             var filePath string
             if relPath != nil{
-                relPath_2435 := relPath.(string)
+                relPath_2445 := relPath.(string)
                 if Lns_isCondTrue( Lns_car(Lns_getVM().String_find(path,"/$", nil, nil))){
-                    filePath = Lns_getVM().String_format("%s%s", []LnsAny{path, relPath_2435})
+                    filePath = Lns_getVM().String_format("%s%s", []LnsAny{path, relPath_2445})
                     
                 } else { 
-                    filePath = Lns_getVM().String_format("%s/%s", []LnsAny{path, relPath_2435})
+                    filePath = Lns_getVM().String_format("%s/%s", []LnsAny{path, relPath_2445})
                     
                 }
             } else {
@@ -509,6 +543,81 @@ func (self *Option_Option) OpenDepend(relPath LnsAny) LnsAny {
 }
 
 
+// declaration Class -- ProjInfo
+type Option_ProjInfo1063Mtd interface {
+    ToMap() *LnsMap
+}
+type Option_ProjInfo1063 struct {
+    Cmd_option *LnsList
+    FP Option_ProjInfo1063Mtd
+}
+func Option_ProjInfo10632Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Option_ProjInfo1063).FP
+}
+type Option_ProjInfo1063DownCast interface {
+    ToOption_ProjInfo1063() *Option_ProjInfo1063
+}
+func Option_ProjInfo1063DownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Option_ProjInfo1063DownCast)
+    if ok { return work.ToOption_ProjInfo1063() }
+    return nil
+}
+func (obj *Option_ProjInfo1063) ToOption_ProjInfo1063() *Option_ProjInfo1063 {
+    return obj
+}
+func NewOption_ProjInfo1063(arg1 *LnsList) *Option_ProjInfo1063 {
+    obj := &Option_ProjInfo1063{}
+    obj.FP = obj
+    obj.InitOption_ProjInfo1063(arg1)
+    return obj
+}
+func (self *Option_ProjInfo1063) InitOption_ProjInfo1063(arg1 *LnsList) {
+    self.Cmd_option = arg1
+}
+func (self *Option_ProjInfo1063) ToMapSetup( obj *LnsMap ) *LnsMap {
+    obj.Items["cmd_option"] = Lns_ToCollection( self.Cmd_option )
+    return obj
+}
+func (self *Option_ProjInfo1063) ToMap() *LnsMap {
+    return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
+}
+func Option_ProjInfo1063__fromMap_1081_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+   return Option_ProjInfo1063_FromMap( arg1, paramList )
+}
+func Option_ProjInfo1063__fromStem_1084_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+   return Option_ProjInfo1063_FromMap( arg1, paramList )
+}
+func Option_ProjInfo1063_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
+    _,conv,mess := Option_ProjInfo1063_FromMapSub(obj,false, paramList);
+    return conv,mess
+}
+func Option_ProjInfo1063_FromMapSub( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
+    var objMap *LnsMap
+    if work, ok := obj.(*LnsMap); !ok {
+       return false, nil, "no map -- " + Lns_ToString(obj)
+    } else {
+       objMap = work
+    }
+    newObj := &Option_ProjInfo1063{}
+    newObj.FP = newObj
+    return Option_ProjInfo1063_FromMapMain( newObj, objMap, paramList )
+}
+func Option_ProjInfo1063_FromMapMain( newObj *Option_ProjInfo1063, objMap *LnsMap, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
+    if ok,conv,mess := Lns_ToListSub( objMap.Items["cmd_option"], false, []Lns_ToObjParam{Lns_ToObjParam{
+            Lns_ToStrSub, false,nil}}); !ok {
+       return false,nil,"cmd_option:" + mess.(string)
+    } else {
+       newObj.Cmd_option = conv.(*LnsList)
+    }
+    return true, newObj, nil
+}
+
 func Lns_Option_init() {
     if init_Option { return }
     init_Option = true
@@ -516,6 +625,7 @@ func Lns_Option_init() {
     Lns_InitMod()
     Lns_Types_init()
     Lns_Parser_init()
+    Lns_Json_init()
     Lns_Util_init()
     Lns_LuaMod_init()
     Lns_Ver_init()

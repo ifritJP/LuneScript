@@ -99,6 +99,16 @@ function Result:isNil( val1, val1txt, msg, mod, lineNo )
    self:err( string.format( "is not nil -- %s:%s:[%s]\n", msg or "", val1txt, val1), mod, lineNo )
    return false
 end
+function Result:isNotNil( val1, val1txt, msg, mod, lineNo )
+
+   if val1 ~= nil then
+      self.okNum = self.okNum + 1
+      return true
+   end
+   
+   self:err( string.format( "is nil -- %s:%s:[%s]\n", msg or "", val1txt, val1), mod, lineNo )
+   return false
+end
 function Result:checkEq( val1, val2, val1txt, val2txt, msg, mod, lineNo )
 
    if val1 == val2 then
@@ -172,6 +182,10 @@ end
 
 function Ctrl:isNil( ... )
    return self.result:isNil( ... )
+end
+
+function Ctrl:isNotNil( ... )
+   return self.result:isNotNil( ... )
 end
 
 function Ctrl:isNotTrue( ... )
@@ -310,6 +324,12 @@ local function outputAllResult( stream )
    
 end
 _moduleObj.outputAllResult = outputAllResult
+
+
+
+
+
+
 
 
 

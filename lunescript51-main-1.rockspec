@@ -52,6 +52,7 @@ build = {
       [ "lune.base.Writer" ] = "src/legacy/lua51/lune/base/Writer.lua",
       [ "lune.base.AsyncParser" ] = "src/legacy/lua51/lune/base/AsyncParser.lua",
       [ "lune.base.Parser" ] = "src/legacy/lua51/lune/base/Parser.lua",
+      [ "lune.base.Json" ] = "src/legacy/lua51/lune/base/Json.lua",
       [ "lune.base.Option" ] = "src/legacy/lua51/lune/base/Option.lua",
       [ "lune.base.Ast" ] = "src/legacy/lua51/lune/base/Ast.lua",
       [ "lune.base.Nodes" ] = "src/legacy/lua51/lune/base/Nodes.lua",

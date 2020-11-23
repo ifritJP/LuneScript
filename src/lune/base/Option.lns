@@ -24,6 +24,7 @@ SOFTWARE.
 
 import lune.base.Types;
 import lune.base.Parser;
+import lune.base.Json;
 import lune.base.Util;
 import lune.base.LuaMod;
 import lune.base.Ver;
@@ -197,7 +198,7 @@ SOFTWARE.
    return nil;
 }
 
-pub fn analyze( argList: &List<str> ) : Option {
+pub fn analyze( mut argList: &List<str> ) : Option {
 
    fn printUsage(code:int) {
       print( ```
@@ -254,6 +255,25 @@ usage:
   
    let mut index = 1;
 
+   if! let mut file = io.open( "lune.js", "r" ) {
+      // プロジェクトファイルから追加のコマンドオプションを取得。
+      class ProjInfo extend (Mapping) {
+         pub let cmd_option:&List<str>;
+      }
+      if! let projInfo = ProjInfo._fromStem(
+         (Json.fromStr( file.read( "*a" ) or "" )) )
+      {
+         let mut workArgList:List<str> = [];
+         foreach arg in argList {
+            workArgList.insert( arg );
+         }
+         foreach arg in projInfo.cmd_option {
+            workArgList.insert( arg );
+         }
+         argList = workArgList;
+      }
+   }
+   
    fn getNextOp():str! {
       if #argList <= index {
          return nil;

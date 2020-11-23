@@ -68,9 +68,10 @@ function must return string.")
      (append args (lns-proj-get-cmd-option (lns-get-proj-info)) ))))
 
 (defun lns-command-sync (&rest arg-list)
-  (let (ver end-code)
+  (let ((dir default-directory)
+	ver end-code)
     (with-temp-buffer
-      (setq buffer-file-name "test")
+      (setq buffer-file-name (expand-file-name "test" dir))
       (setq end-code (apply 'lns-execute-command nil (current-buffer) nil arg-list))
       (setq ver (buffer-string))
       (setq buffer-file-name nil))

@@ -1,0 +1,214 @@
+import lune.base.Parser;
+import lune.base.Types;
+
+fn getRawTxt( token:Parser.Token ) : str {
+   return token.txt.sub( 2, -2 );
+}
+
+fn getVal( parser:Parser.DefaultPushbackParser ) : stem!, bool {
+   let token = parser.getTokenNoErr();
+   switch token.kind {
+      case .Dlmt {
+         switch token.txt {
+            case "{" {
+               let mut map:Map<str,stem> = {};
+               while true {
+                  let mut key = parser.getTokenNoErr();
+                  switch key.kind {
+                     case .Str {
+                     }
+                     case .Dlmt {
+                        switch key.txt {
+                           case "}" {
+                              return map, true;
+                           }
+                           case "," {
+                              key = parser.getTokenNoErr();
+                              if key.kind ~= .Str {
+                                 return nil, false;
+                              }
+                           }
+                           default {
+                              return nil, false;
+                           }
+                        }
+                     }
+                     default {
+                        return nil, false;
+                     }
+                  }
+                  if parser.getTokenNoErr().txt ~= ":" {
+                     return nil, false;
+                  }
+                  let mut val, ok = getVal( parser );
+                  if not ok {
+                     return nil, false;
+                  }
+                  map[ getRawTxt( key ) ] = val;
+               }
+            }
+            case "[" {
+               let mut list:List<stem!> = [];
+               let mut count = 1;
+               while true {
+                  let nextToken = parser.getTokenNoErr();
+                  switch nextToken.txt {
+                     case "]" {
+                        return list, true;
+                     }
+                     case "," {
+                     }
+                     default {
+                        parser.pushback();
+                     }
+                  }
+                  let mut val, ok = getVal( parser );
+                  if not ok {
+                     return nil, false;
+                  }
+                  list[ count ] = val;
+                  count = count + 1;
+               }
+            }
+         }
+         return nil, false;
+      }
+      case .Int {
+         let! num = tonumber( token.txt ## ) {
+            return nil, false;
+         };
+         return num@@int, true;
+      }
+      case .Real {
+         let! num = tonumber( token.txt ## ) {
+            return nil, false;
+         };
+         return num, true;
+      }
+      case .Str {
+         return getRawTxt( token ), true;
+      }
+      case .Kywd {
+         switch token.txt {
+            case "true" {
+               return true, true;
+            }
+            case "false" {
+               return false, true;
+            }
+            case "nil", "null" {
+               return nil, true;
+            }
+         }
+         return nil, false;
+      }
+   }
+   return nil, false;
+}
+
+
+/**
+txt に与えた JSON 文字列からデータを解析して返す。
+
+@param txt JSON 文字列
+@return stem! 解析データ
+@return Types.Position! 解析エラーした際の位置情報。 解析成功した場合は nil。
+*/
+pub fn fromStr(txt:str) : stem!, &Types.Position! {
+   let mut stream = new Parser.TxtStream( txt );
+   let mut parser = new Parser.DefaultPushbackParser(
+      new Parser.StreamParser( stream, "json", false ) );
+   let val, ok = getVal( parser );
+   if not ok {
+      return nil, parser.getLastPos();
+   }
+   return val, nil;
+}
+
+
+__test case1(ctrl) {
+
+   fn lenMap( map:&stem! ) : int {
+      when! map {
+         let mut count = 0;
+         foreach _, _ in map@@Map<str,stem>{
+            count = count + 1;
+         }
+         return count;
+      }
+      return -1;
+   }
+   {
+      let val, errPos = fromStr( "" );
+      __t._isNotNil( ctrl, errPos );
+      __t._isNil( ctrl, val );
+   }
+   {
+      let val, errPos = fromStr( "true" );
+      __t._isNil( ctrl, errPos );
+      __t._isT( ctrl, val );
+   }
+   {
+      let val, errPos = fromStr( "false" );
+      __t._isNil( ctrl, errPos );
+      __t._isF( ctrl, val );
+   }
+   {
+      let val, errPos = fromStr( "null" );
+      __t._isNil( ctrl, errPos );
+      __t._isNil( ctrl, val );
+   }
+   {
+      let val, errPos = fromStr( "1" );
+      __t._isNil( ctrl, errPos );
+      __t._eq( ctrl, val, 1 );
+   }
+   {
+      let val, errPos = fromStr( "-1" );
+      __t._isNil( ctrl, errPos );
+      __t._eq( ctrl, val, -1 );
+   }
+   {
+      let val, errPos = fromStr( '"abc"' );
+      __t._isNil( ctrl, errPos );
+      __t._eq( ctrl, val, "abc" );
+   }
+   {
+      let val, errPos = fromStr( "[]" );
+      __t._isNil( ctrl, errPos );
+      __t._isNotNil( ctrl, val );
+   }
+   {
+      let val, errPos = fromStr( '[1,"abc",false,nil,[10]]' );
+      __t._isNil( ctrl, errPos );
+      __t._isNotNil( ctrl, val );
+      when! val {
+         foreach item, index in [1,"abc",false,nil,[10]] {
+            __t._eq( ctrl, type(val[index]),type(item));
+            if type( item ) == "table" {
+               __t._eq( ctrl, ((unwrap val[ index ])@@List<stem>)[1], 10 );
+            } else {
+               __t._eq( ctrl, val[ index ], item );
+            }
+         }
+      }
+   }
+   {
+      let val, errPos = fromStr( "{}" );
+      __t._isNil( ctrl, errPos );
+      __t._isNotNil( ctrl, val );
+      when! val {
+         __t._eq( ctrl, lenMap( val ), 0 );
+      }
+   }
+   {
+      let val, errPos = fromStr( '{"abc":1,"xyz":false}' );
+      __t._isNil( ctrl, errPos );
+      __t._isNotNil( ctrl, val );
+      when! val {
+         foreach item, key in {"abc":1,"xyz":false} {
+            __t._eq( ctrl, val[key],item);
+         }
+      }
+   }
+}
