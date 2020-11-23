@@ -390,6 +390,7 @@ define cp_src_set
 #	@cp lune/base/base*.lua lune/base/*.lns lune/base/*.d $1/lune/base
 	$(call cp_src_set_sub,$2/lune,'*.lns',$1/lune)
 	$(call cp_src_set_sub,$2/lune,'*.d',$1/lune)
+	cp $2/lune.js  $1
 
 	cp -au $2/lune/base/runtime_go $1/lune/base/runtime_go
 endef
