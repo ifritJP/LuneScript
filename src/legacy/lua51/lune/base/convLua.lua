@@ -579,19 +579,19 @@ function convFilter:outputMeta( node )
    self:writeln( string.format( "_moduleObj.__enableTest = %s", tostring( self.enableTest)) )
    self:writeln( string.format( "_moduleObj.__hasTest = %s", tostring( #node:get_nodeManager():getTestCaseNodeList(  ) ~= 0)) )
    
-   self:writeln( "_moduleObj.__lazyModuleList = {" )
+   self:write( "_moduleObj.__lazyModuleList = {" )
    do
       local firstFlag = true
       for __index, declClass in ipairs( node:get_nodeManager():getDeclClassNodeList(  ) ) do
          if declClass:get_lazyLoad() ~= Nodes.LazyLoad.Off and Ast.isPubToExternal( declClass:get_accessMode() ) then
             if not firstFlag then
-               self:writeln( "," )
+               self:write( "," )
             else
              
-               firstFlag = true
+               firstFlag = false
             end
             
-            self:writeln( string.format( "%d", declClass:get_expType():get_typeId()) )
+            self:write( string.format( "%d", declClass:get_expType():get_typeId()) )
          end
          
       end
@@ -1961,7 +1961,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _6220 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _6227 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end

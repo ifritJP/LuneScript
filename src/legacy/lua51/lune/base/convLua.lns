@@ -322,17 +322,17 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
                  (#node.$nodeManager.getTestCaseNodeList() ~= 0) );
 
    
-   self.writeln( "_moduleObj.__lazyModuleList = {" );
+   self.write( "_moduleObj.__lazyModuleList = {" );
    {
       let mut firstFlag = true;
       foreach declClass in node.$nodeManager.getDeclClassNodeList() {
          if declClass.$lazyLoad ~= .Off and Ast.isPubToExternal( declClass.$accessMode ) {
             if not firstFlag {
-               self.writeln( "," );
+               self.write( "," );
             } else {
-               firstFlag = true;
+               firstFlag = false;
             }
-            self.writeln( "%d" (declClass.$expType.$typeId) );
+            self.write( "%d" (declClass.$expType.$typeId) );
          }
       }
    }

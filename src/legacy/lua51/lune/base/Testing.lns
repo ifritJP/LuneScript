@@ -67,6 +67,16 @@ pub class Result {
       self.err( "is not nil -- %s:%s:[%s]\n" ( msg or "", val1txt, val1 ), mod, lineNo );
       return false;
    }
+
+   pub fn isNotNil( val1:&stem!, val1txt:str, msg:str!, mod:str, lineNo:int ) mut : bool
+   {
+      if val1 ~= nil {
+         self.okNum = self.okNum + 1;
+         return true;
+      }
+      self.err( "is nil -- %s:%s:[%s]\n" ( msg or "", val1txt, val1 ), mod, lineNo );
+      return false;
+   }
    
    pub fn checkEq( val1:&stem!, val2:&stem!, val1txt:str, val2txt:str,
                    msg:str!, mod:str, lineNo:int ) mut : bool
@@ -184,7 +194,7 @@ pub macro _eq( ctrl:sym, val1:__exp, val2:__exp ): bool {
 }
 
 pub macro _neq( ctrl:sym, val1:__exp, val2:__exp ): bool {
-   ,,ctrl.checkEq( ,,val1, ,,val2, ,,,,val1, ,,,,val2, nil, __mod__, __line__ )
+   ,,ctrl.checkNotEq( ,,val1, ,,val2, ,,,,val1, ,,,,val2, nil, __mod__, __line__ )
 }
 
 pub macro _isT( ctrl:sym, val:__exp ): bool {
@@ -195,8 +205,20 @@ pub macro _isNotT( ctrl:sym, val:__exp ): bool {
    ,,ctrl.isNotTrue( ,,val, ,,,,val, nil, __mod__, __line__ )
 }
 
+pub macro _isF( ctrl:sym, val:__exp ): bool {
+   ,,ctrl.checkEq( ,,val, false, ,,,,val, "false", nil, __mod__, __line__ )
+}
+
+pub macro _isNotF( ctrl:sym, val:__exp ): bool {
+   ,,ctrl.checkNotEq( ,,val, false, ,,,,val, "false", nil, __mod__, __line__ )
+}
+
 pub macro _isNil( ctrl:sym, val:__exp ): bool {
    ,,ctrl.isNil( ,,val, ,,,,val, nil, __mod__, __line__ )
+}
+
+pub macro _isNotNil( ctrl:sym, val:__exp ): bool {
+   ,,ctrl.isNotNil( ,,val, ,,,,val, nil, __mod__, __line__ )
 }
 
 pub macro _err( ctrl:sym, mes:__exp ) {

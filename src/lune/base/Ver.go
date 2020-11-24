@@ -12,7 +12,7 @@ func Lns_Ver_init() {
     Ver__mod__ = "@lune.@base.@Ver"
     Lns_InitMod()
     Ver_version = "1.1.11"
-    Ver_metaVersion = "1.0.87"
+    Ver_metaVersion = "1.0.88"
     Ver_luaModVersion = 3
 }
 func init() {

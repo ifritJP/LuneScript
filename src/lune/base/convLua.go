@@ -730,7 +730,7 @@ func (self *convLua_convFilter) outputMeta(node *Nodes_RootNode) {
     self.FP.writeln(Lns_getVM().String_format("_moduleObj.__buildId = %q", []LnsAny{node.FP.Get_moduleId().FP.GetNextModuleId().FP.Get_idStr()}))
     self.FP.writeln(Lns_getVM().String_format("_moduleObj.__enableTest = %s", []LnsAny{self.enableTest}))
     self.FP.writeln(Lns_getVM().String_format("_moduleObj.__hasTest = %s", []LnsAny{node.FP.Get_nodeManager().FP.GetTestCaseNodeList().Len() != 0}))
-    self.FP.writeln("_moduleObj.__lazyModuleList = {")
+    self.FP.Write("_moduleObj.__lazyModuleList = {")
     {
         var firstFlag bool
         firstFlag = true
@@ -740,12 +740,12 @@ func (self *convLua_convFilter) outputMeta(node *Nodes_RootNode) {
                 Lns_GetEnv().SetStackVal( declClass.FP.Get_lazyLoad() != Nodes_LazyLoad__Off) &&
                 Lns_GetEnv().SetStackVal( Ast_isPubToExternal(declClass.FP.Get_accessMode())) ).(bool)){
                 if Lns_op_not(firstFlag){
-                    self.FP.writeln(",")
+                    self.FP.Write(",")
                 } else { 
-                    firstFlag = true
+                    firstFlag = false
                     
                 }
-                self.FP.writeln(Lns_getVM().String_format("%d", []LnsAny{declClass.FP.Get_expType().FP.Get_typeId()}))
+                self.FP.Write(Lns_getVM().String_format("%d", []LnsAny{declClass.FP.Get_expType().FP.Get_typeId()}))
             }
         }
     }
