@@ -28,7 +28,7 @@
 
 (require 'cl)
 
-(setq flycheck-lunescript-executable lns-lua-command)
+(setq flycheck-lunescript-executable (car (lns-command-get-command nil)))
 
 (flycheck-define-checker lunescript
   "A LuneScript syntax checker.

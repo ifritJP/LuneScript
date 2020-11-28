@@ -200,7 +200,7 @@ LNS_SRCS := $(addprefix "lune/",$(LNS_SRCS))
 
 define selfhost_buildOp_batch
 	echo $(LNS_SRCS) | sed 's/$$/.lns\n/g' | sed 's/ /.lns\n/g' | \
-		(cd $1; $2 @- SAVE $3 $4 $(BYTECOMP) $(COM_OPT) $(LOG_OPT))
+		(cd $1; $2 @- SAVE $3 $4 $(BYTECOMP) --package lnsc $(COM_OPT) $(LOG_OPT))
 endef
 
 
@@ -390,7 +390,7 @@ define cp_src_set
 #	@cp lune/base/base*.lua lune/base/*.lns lune/base/*.d $1/lune/base
 	$(call cp_src_set_sub,$2/lune,'*.lns',$1/lune)
 	$(call cp_src_set_sub,$2/lune,'*.d',$1/lune)
-	cp $2/lune.js  $1
+	cp $2/lune.js $1
 
 	cp -au $2/lune/base/runtime_go $1/lune/base/runtime_go
 endef
@@ -765,15 +765,18 @@ test-comp2-sub:
 # 同じ出力結果になることを確認する
 test-comp2-sub-2:
 	$(call cp_src_set,work/13,work/1)
-	$(MAKE) -C work/13 build_from_d depend_on=y FROM_DIR=../1 TO_DIR=../13
+	$(MAKE) -C work/13 build_from_d depend_on=y \
+		FROM_DIR=../1 TO_DIR=../13 LNS_OPT="--package lnsc"
 
 test-comp2-main:
 #	$(MAKE) test-org
 
 
 # 新しいトランコンパイラで再度自分自身をコンパイルした結果が同じになることを確認する。
-	/usr/bin/time -f 'work1:%e/%U/%S' $(MAKE) -C work/2 build_from_d depend_on=y FROM_DIR=../1 TO_DIR=../2
-	/usr/bin/time -f 'work2:%e/%U/%S' $(MAKE) -C work/3 build_from_d depend_on=y FROM_DIR=../2 TO_DIR=../3
+	/usr/bin/time -f 'work1:%e/%U/%S' $(MAKE) -C work/2 build_from_d \
+		depend_on=y FROM_DIR=../1 TO_DIR=../2 LNS_OPT="--package lnsc"
+	/usr/bin/time -f 'work2:%e/%U/%S' $(MAKE) -C work/3 build_from_d \
+		depend_on=y FROM_DIR=../2 TO_DIR=../3 LNS_OPT="--package lnsc"
 	diff -r -I '_moduleObj.__buildId.*' -I '.*buildId = .*' \
 			-x $(notdir $(LNSC_GO)) work/2 work/3
 
@@ -866,7 +869,7 @@ test-lua51-mkruntime:
 test-lua51:
 # LuneScript を Lua 5.1 にクロスコンパイルして実行
 	$(MAKE) -C work/5 build_from_d depend_on=y \
-			FROM_DIR=../3 TO_DIR=../5 LNS_OPT="-ol 51"
+			FROM_DIR=../3 TO_DIR=../5 LNS_OPT="-ol 51 --package lnsc"
 	$(MAKE) test-lua51-mkruntime LUA=$(LUA51)
 	$(call setup-lua51-test,work/5)
 	(cd work/5; LUA_PATH=./?.lua $(LUA51) lune/base/base.lua test/start.lns -u exe $(EXE_OPT)) > work/test6.result
@@ -894,7 +897,8 @@ endif
 test-lua51-sub:
 	$(call mk_lune_proj_dir,work/6)
 	$(call cp_src_set,work/6,work/1)
-	$(MAKE) -C work/6 build_from_d depend_on=y FROM_DIR=../5 TO_DIR=../6
+	$(MAKE) -C work/6 build_from_d depend_on=y \
+		FROM_DIR=../5 TO_DIR=../6 LNS_OPT="--package lnsc"
 #	$(call selfhost_build,work/5,../6)
 	$(call setup-lua51-test,work/6)
 	$(call exeLune,$(LNSC),work/6,-mklunemod,lune/base/runtime.lua)
@@ -1246,17 +1250,14 @@ define setup-go
 endef
 
 define test-go-one-setup
-	mkdir -p $1/mod
 	cp -au test $1
-	-rm $1/mod/*
 endef
 
 define test-go-one-exec
 	cat lune/base/runtime_go/main/runtime_main.go |		\
-		sed 's/Lns_init/Lns_$3_init/;' |		\
-		sed 's@//IMPORT@import . "$(GO_MOD)/mod"@' > $2/runtime_main.go
+		sed 's/Lns_init/Lns_$3_init/;' > $2/runtime_main.go
 	cp -au $4/$3.lns $2
-	$(call convGo,$1,$2,$3,mod)
+	$(call convGo,$1,$2,$3)
 	$(call buildGo,$2) >> work/result-testGo.txt
 	if test "${NO_LUA_DIFF}" = ""; then					\
 		$(call exeLune,$1,$2,$3.lns,exe) >> work/result-testGo2.txt &&	\
@@ -1272,8 +1273,8 @@ define test-go-one
 endef
 
 define test-go-some-setup
-	cp -au $4/$3.lns $2/mod
-	$(call convGo,$1,$2,mod/$3)
+	cp -au $4/$3.lns $2
+	$(call convGo,$1,$2,$3,$4)
 endef
 
 
@@ -1350,7 +1351,7 @@ define test-convGo-test
 		sed 's/run( "" )/run( "lune.base.$3" )/' |				\
 		sed 's@//IMPORT@import . "$(GO_MOD)/lune/base"@' > $2/$5/runtime_main.go
 
-	$(call convGo,$1,$2,$4/$3,--testing,$5)
+	$(call convGo,$1,$2,$4/$3,--testing --package lnsc,$5)
 	$(call buildGo,$2/$5) >> work/result-testGo.txt
 	$(call test-lns-test,$2/$5,$3) >> work/result-testGo2.txt
 	diff -C 2 -I 'ONLY_LUA' work/result-testGo.txt work/result-testGo2.txt
@@ -1363,24 +1364,24 @@ test-testGo:
 
 	$(call cmd_exec_trans,$(LNSC),.,.,,base/convGo)
 
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Testing,--testing,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Testing,--testing --package lnsc,./test)
 #	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Str,lune/base,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Types,--testing,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Async,--testing,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Types,--testing --package lnsc,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Async,--testing --package lnsc,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Ver,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Code,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),LuaMod,lune/base,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/LuaVer,--testing,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/LuneControl,--testing,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Meta,--testing,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Log,--testing,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/LuaVer,--testing --package lnsc,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/LuneControl,--testing --package lnsc,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Meta,--testing --package lnsc,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Log,--testing --package lnsc,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Util,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),AsyncParser,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Parser,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Json,lune/base,./test)
 #	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),MetaLoader,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Writer,lune/base,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/frontInterface,--testing,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/frontInterface,--testing --package lnsc,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Ast,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Option,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Nodes,lune/base,./test)
@@ -1391,10 +1392,10 @@ test-testGo:
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),convLua,lune/base,./test)
 #	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),ConvNodes,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),dumpNode,lune/base,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convCC,--testing,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convCC,--testing --package lnsc,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),convGo,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),OutputDepend,lune/base,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/glueFilter,--testing,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/glueFilter,--testing --package lnsc,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),front,lune/base,./test)
 
 test-subgo:
@@ -1493,7 +1494,7 @@ define test-buildlns-setup
 endef
 
 define test-buildlns-run
-	$(call selfhost_build_dep,$1,.,$2,-langGo -ol 53)
+	$(call selfhost_build_dep,$1,.,$2,-langGo --package lnsc -ol 53)
 	test "$(ONLY_CONV)" = "" && LANG= $(MAKE) -C $2 LANG_KIND=$3 tgt_dump_ast > $2/ast || echo skip
 endef
 
@@ -1513,10 +1514,10 @@ endif
 
 test-govslua-lua-batch:
 	$(call test-buildlns-setup,work/2)
-	$(call selfhost_buildOp_batch,.,$(LNSC),work/2,--depends work/2/ -langGo )
+	$(call selfhost_buildOp_batch,.,$(LNSC),work/2,--depends work/2/ -langGo --package lnsc)
 test-govslua-go-batch:
 	$(call test-buildlns-setup,work/2)
-	$(call selfhost_buildOp_batch,.,$(LNSC_GO),work/2,--depends work/2/ -langGo )
+	$(call selfhost_buildOp_batch,.,$(LNSC_GO),work/2,--depends work/2/ -langGo --package lnsc)
 
 
 goprof:

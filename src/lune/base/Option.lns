@@ -103,6 +103,8 @@ pub class Option {
    pub let mut bootPath:str!;
    /** List の foreach に ipairs を使う。 */
    pub let mut useIpairs:bool;
+   /** パッケージ名 */
+   pub let mut packageName:str!;
 
    pub let mut transCtrlInfo:Types.TransCtrlInfo;
 
@@ -113,6 +115,7 @@ pub class Option {
    pub let mut testing:bool;
 
    pub fn __init() {
+      self.packageName = nil;
       self.testing = false;
       self.convTo = nil;
       self.validProf = false;
@@ -240,6 +243,7 @@ usage:
     --use-ipairs: use ipairs for foreach with List value.
     --default-lazy: set lazy-loading at default.
     --valid-luaval: enable luaval when transcompie to lua.
+    --package <name>: set the package name for the go-lang.
 
 * type2
   dir: output directory.
@@ -352,6 +356,9 @@ usage:
             }
             case "--default-lazy" {
                option.transCtrlInfo.defaultLazy = true;
+            }
+            case "--package" {
+               option.packageName = getNextOp();
             }
             case "--log" {
                if! let txt = getNextOp() {

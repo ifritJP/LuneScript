@@ -68,6 +68,10 @@ fn getEnv( threading:bool ) : str {
    }
 }
 
+pub class Option {
+   local let packageName:str {pub};
+}
+
 class convFilter extend Nodes.Filter<Opt> {
    pri let mut stream:Util.SimpleSourceOStream;
    let mut processMode:ProcessMode;
@@ -80,12 +84,14 @@ class convFilter extend Nodes.Filter<Opt> {
    pri let mut enableTest:bool;
    let mut processInfo:Ast.ProcessInfo;
    pri let noneNode:Nodes.NoneNode;
+   let option:&Option;
 
    pub fn __init( enableTest:bool, streamName: str, stream: oStream,
-                  ast:TransUnit.ASTInfo )
+                  ast:TransUnit.ASTInfo, option:&Option )
    {
       super(true, ast.$moduleTypeInfo, ast.$moduleTypeInfo.$scope);
 
+      self.option = option;
       self.processInfo = ast.$processInfo;
       self.stream = new Util.SimpleSourceOStream( stream, nil, 4 );
       self.processMode = .Main;
@@ -1386,7 +1392,7 @@ pub override fn convFilter.processRoot(
          case .limit_conv_code( codeSet ) {
             if not codeSet.has( LuneControl.Code.Go ) {
                self.writeln( "// This code is transcompiled by LuneScript." );
-               self.writeln( "package lnsc" );
+               self.writeln( "package %s" (self.option.packageName) );
                return;
             }
          }
@@ -5087,12 +5093,11 @@ pub override fn convFilter.processAbbr(
       (__func__, node.$pos.lineNo ) );
 }
 
-
 pub fn createFilter(
    enableTest:bool, streamName: str,
-   stream: oStream, ast:TransUnit.ASTInfo ) : Nodes.Filter<Opt>
+   stream: oStream, ast:TransUnit.ASTInfo, option:&Option ) : Nodes.Filter<Opt>
 {
-   return new convFilter( enableTest, streamName, stream, ast );
+   return new convFilter( enableTest, streamName, stream, ast, option );
 }
 
 __test {
@@ -5102,7 +5107,8 @@ __test {
    {
       let mut stream = new Util.memStream();
 
-      let mut conv = createFilter( false, streamName, stream, ast );
+      let mut conv = createFilter( false, streamName, stream, ast,
+                                   new Option( "lns" ) );
 
       ast.$node.processFilter( conv, new Opt( ast.$node ));
 

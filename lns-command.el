@@ -25,6 +25,12 @@
   "lua command. This var can set string and function.
 function must return string.")
 
+(defvar lns-lnsc-command nil
+  "lnsc command. This var can set string and function.
+function must return string."
+  )
+
+
 (defvar lns-target-lua-ver nil
   "target lua version. 51 or 52 or 53.")
 
@@ -56,16 +62,33 @@ function must return string.")
 	(setq command-list (lns-command-add-command command-list arg))
       (setq command-list (append command-list (list arg)))))
   (delq nil command-list))
-    
+
+(defun lns-command-get-lnsc ()
+  (let (command)
+    (cond ((not lns-lnsc-command)
+	   )
+	  ((functionp lns-lnsc-command)
+	   (setq command (lns-lnsc-command)))
+	  ((stringp lns-lnsc-command)
+	   (setq command lns-lnsc-command))
+	  (t
+	   (error "lns-lnsc-command is illegal")))
+    command))
 
 (defun lns-command-get-command (&rest args)
-  (let (command)
-    (if (functionp lns-lua-command)
-	(setq command (funcall lns-lua-command))
-      (setq command lns-lua-command))
+  (let ((lnsc t)
+	(command (lns-command-get-lnsc))
+	command-list)
+    (when (not command)
+      (setq lnsc nil)
+      (if (functionp lns-lua-command)
+	  (setq command (funcall lns-lua-command))
+	(setq command lns-lua-command)))
+    (if lnsc
+	(setq command-list (list command))
+      (setq command-list (list command "-e" "require( 'lune.base.base' )" " ")))
     (lns-command-add-command
-     (list command "-e" "require( 'lune.base.base' )" " ")
-     (append args (lns-proj-get-cmd-option (lns-get-proj-info)) ))))
+     command-list args)))
 
 (defun lns-command-sync (&rest arg-list)
   (let ((dir default-directory)

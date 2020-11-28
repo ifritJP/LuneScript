@@ -489,7 +489,7 @@ function Front:loadFromLnsTxt( importModuleInfo, name, txt )
    
    local ast = transUnit:createAST( parser, false, nil )
    
-   local _5787, luaTxt = self:convertFromAst( ast, name, convLua.ConvMode.Exec )
+   local _5794, luaTxt = self:convertFromAst( ast, name, convLua.ConvMode.Exec )
    return _lune.unwrap( loadFromLuaTxt( luaTxt ))
 end
 
@@ -816,7 +816,7 @@ function Front:convertLns2LuaCode( importModuleInfo, stream, streamName )
    local mod = scriptPath2Module( streamName )
    local ast = self:createAst( importModuleInfo, Parser.StreamParser.new(stream, streamName, false), mod, frontInterface.ModuleId.createId( 0.0, 0 ), nil, TransUnit.AnalyzeMode.Compile )
    
-   local _5932, luaTxt = self:convertFromAst( ast, streamName, convLua.ConvMode.Exec )
+   local _5939, luaTxt = self:convertFromAst( ast, streamName, convLua.ConvMode.Exec )
    
    return luaTxt
 end
@@ -954,7 +954,7 @@ function Front:checkUptodateMeta( metaPath, addSearchPath )
    end
    
    
-   for moduleFullName, _6010 in pairs( meta.__dependModuleMap ) do
+   for moduleFullName, _6017 in pairs( meta.__dependModuleMap ) do
       do
          local lnsPath = self:searchModule( moduleFullName )
          if lnsPath ~= nil then
@@ -1249,7 +1249,7 @@ function Front:convertLuaToStreamFromScript( parser, moduleId, uptodate, convMod
       if stream ~= nil then
          if metaInfo ~= nil then
             local dependInfo = OutputDepend.DependInfo.new(mod)
-            for dependMod, _6183 in pairs( metaInfo.__dependModuleMap ) do
+            for dependMod, _6190 in pairs( metaInfo.__dependModuleMap ) do
                dependInfo:addImpotModule( dependMod )
             end
             
@@ -1387,6 +1387,40 @@ function Front:convertLuaToStreamFromScript( parser, moduleId, uptodate, convMod
 end
 
 
+function Front:createGoOption( scriptPath )
+
+   local packageName
+   
+   do
+      local _exp = self.option.packageName
+      if _exp ~= nil then
+         packageName = _exp
+      else
+         if not scriptPath:find( "/" ) then
+            packageName = "main"
+         else
+          
+            local parentPath = scriptPath:gsub( "/[^/]+$", "" )
+            if #parentPath == 0 then
+               packageName = "main"
+            elseif parentPath == "." then
+               packageName = "main"
+            elseif parentPath == ".." then
+               packageName = "main"
+            else
+             
+               packageName = parentPath:gsub( "%w", "" )
+            end
+            
+         end
+         
+      end
+   end
+   
+   return convGo.Option.new(packageName)
+end
+
+
 function Front:convertToLua( scriptPath )
 
    local mod = scriptPath2Module( scriptPath )
@@ -1412,7 +1446,7 @@ function Front:convertToLua( scriptPath )
       do
          local _switchExp = self.option.convTo
          if _switchExp == Types.Conv.Go then
-            local conv = convGo.createFilter( self.option.testing, "stdout", io.stdout, ast )
+            local conv = convGo.createFilter( self.option.testing, "stdout", io.stdout, ast, self:createGoOption( scriptPath ) )
             ast:get_node():processFilter( conv, convGo.Opt.new(ast:get_node()) )
          end
       end
@@ -1450,7 +1484,7 @@ function Front:saveToGo( scriptPath, ast )
    end
    
    
-   local conv = convGo.createFilter( self.option.testing, path, dstStream, ast )
+   local conv = convGo.createFilter( self.option.testing, path, dstStream, ast, self:createGoOption( scriptPath ) )
    ast:get_node():processFilter( conv, convGo.Opt.new(ast:get_node()) )
    
    if Str.isValidStrBuilder(  ) then
@@ -1611,7 +1645,7 @@ function Front:saveToLua( updateInfo )
             end
             
             if not cont then
-               Log.log( Log.Level.Debug, __func__, 1142, function (  )
+               Log.log( Log.Level.Debug, __func__, 1169, function (  )
                
                   return string.format( "<%s>, <%s>", tostring( oldLine), tostring( newLine))
                end )
@@ -1852,7 +1886,7 @@ _moduleObj.convertLnsCode2LuaCode = convertLnsCode2LuaCode
 function Front:exec(  )
    local __func__ = '@lune.@base.@front.Front.exec'
 
-   Log.log( Log.Level.Trace, __func__, 1351, function (  )
+   Log.log( Log.Level.Trace, __func__, 1378, function (  )
    
       return Option.ModeKind:_getTxt( self.option.mode)
       

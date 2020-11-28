@@ -8,6 +8,14 @@
 
 * バグ
 
+- [ ] go に変換したとき、次のループが lua と動作が異なる。
+
+foreach val in [ 1, nil, 3 ] {
+}
+
+lua の場合 val に nil が入らないが、 go では入る。
+  
+  
 - [ ] meta format version が変っても、 .meta が .lns より新しいと更新されない。
   
 - [ ] alias は、同じディレクトリ内のモジュールに限定する。

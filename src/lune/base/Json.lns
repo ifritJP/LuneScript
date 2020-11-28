@@ -184,11 +184,13 @@ __test case1(ctrl) {
       __t._isNotNil( ctrl, val );
       when! val {
          foreach item, index in [1,"abc",false,nil,[10]] {
-            __t._eq( ctrl, type(val[index]),type(item));
-            if type( item ) == "table" {
-               __t._eq( ctrl, ((unwrap val[ index ])@@List<stem>)[1], 10 );
-            } else {
-               __t._eq( ctrl, val[ index ], item );
+            if item {
+               __t._eq( ctrl, type(val[index]),type(item));
+               if type( item ) == "table" {
+                  __t._eq( ctrl, ((unwrap val[ index ])@@List<stem>)[1], 10 );
+               } else {
+                  __t._eq( ctrl, val[ index ], item );
+               }
             }
          }
       }

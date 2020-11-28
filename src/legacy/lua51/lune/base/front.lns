@@ -951,6 +951,32 @@ pub fn Front.convertLuaToStreamFromScript(
    return retAst;
 }
 
+fn Front.createGoOption( scriptPath:str ) : &convGo.Option {
+   let packageName;
+   if! self.option.packageName {
+      packageName = _exp;
+   } else {
+      if not scriptPath.find( "/" ## ) {
+         // "/" がない場合は main
+         packageName = "main";
+      }
+      else {
+         let parentPath = scriptPath.gsub( "/[^/]+$", "" );
+         if #parentPath == 0 {
+            // root ファイルの場合
+            packageName = "main";
+         } elseif parentPath == "." {
+            packageName = "main";
+         } elseif parentPath == ".." {
+            packageName = "main";
+         } else {
+            packageName = parentPath.gsub( "%w", "" );
+         }
+      }
+   }
+   return new convGo.Option( packageName );
+}
+
 fn Front.convertToLua( scriptPath:str ) mut {
    //frontInterface.setFront( self );
 
@@ -979,7 +1005,8 @@ fn Front.convertToLua( scriptPath:str ) mut {
       switch self.option.convTo {
          case .Go {
             let mut conv = convGo.createFilter(
-               self.option.testing, "stdout", io.stdout, ast );
+               self.option.testing, "stdout", io.stdout, ast,
+               self.createGoOption( scriptPath ) );
             ast.$node.processFilter( conv, new convGo.Opt( ast.$node ) );
          }
       }
@@ -1007,7 +1034,7 @@ pub fn Front.saveToGo( scriptPath:str, ast:TransUnit.ASTInfo ) mut {
    }
 
    let mut conv = convGo.createFilter(
-      self.option.testing, path, dstStream, ast );
+      self.option.testing, path, dstStream, ast, self.createGoOption( scriptPath ) );
    ast.$node.processFilter( conv, new convGo.Opt( ast.$node ) );
 
    if Str.isValidStrBuilder() {

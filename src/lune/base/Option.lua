@@ -283,7 +283,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 6220
+   return 6237
 end
 
 
@@ -371,6 +371,7 @@ function Option.new(  )
    return obj
 end
 function Option:__init() 
+   self.packageName = nil
    self.testing = false
    self.convTo = nil
    self.validProf = false
@@ -525,6 +526,7 @@ usage:
     --use-ipairs: use ipairs for foreach with List value.
     --default-lazy: set lazy-loading at default.
     --valid-luaval: enable luaval when transcompie to lua.
+    --package <name>: set the package name for the go-lang.
 
 * type2
   dir: output directory.
@@ -686,6 +688,8 @@ end
                option.transCtrlInfo.validLuaval = true
             elseif _switchExp == "--default-lazy" then
                option.transCtrlInfo.defaultLazy = true
+            elseif _switchExp == "--package" then
+               option.packageName = getNextOp(  )
             elseif _switchExp == "--log" then
                do
                   local txt = getNextOp(  )
@@ -827,7 +831,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 478, function (  )
+   Log.log( Log.Level.Log, __func__, 485, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

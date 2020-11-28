@@ -1,4 +1,4 @@
-import test.SubGo;
+import.d test.SubGo;
 
 macro _section() {
    print( "----%s-----" (__line__) );
