@@ -961,7 +961,7 @@ fn Front.createGoOption( scriptPath:str ) : &convGo.Option {
          packageName = "main";
       }
       else {
-         let parentPath = scriptPath.gsub( "/[^/]+$", "" );
+         let parentPath = scriptPath.gsub( "/[^/]+$", "" ).gsub( ".*/", "" );
          if #parentPath == 0 {
             // root ファイルの場合
             packageName = "main";
@@ -970,7 +970,7 @@ fn Front.createGoOption( scriptPath:str ) : &convGo.Option {
          } elseif parentPath == ".." {
             packageName = "main";
          } else {
-            packageName = parentPath.gsub( "%w", "" );
+            packageName = parentPath.gsub( "[^%w]", "" );
          }
       }
    }

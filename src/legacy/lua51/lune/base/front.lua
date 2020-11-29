@@ -1400,7 +1400,7 @@ function Front:createGoOption( scriptPath )
             packageName = "main"
          else
           
-            local parentPath = scriptPath:gsub( "/[^/]+$", "" )
+            local parentPath = scriptPath:gsub( "/[^/]+$", "" ):gsub( ".*/", "" )
             if #parentPath == 0 then
                packageName = "main"
             elseif parentPath == "." then
@@ -1409,7 +1409,7 @@ function Front:createGoOption( scriptPath )
                packageName = "main"
             else
              
-               packageName = parentPath:gsub( "%w", "" )
+               packageName = parentPath:gsub( "[^%w]", "" )
             end
             
          end

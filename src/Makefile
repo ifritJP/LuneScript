@@ -4,14 +4,17 @@ LUA=lua5.3
 
 LUACHECK=~/.luarocks/bin/luacheck
 
-LUA51=lua5.1
-LUA51_INC=/usr/include/lua5.1
-
-LUA_LIB=-llua5.3
-LUA_INC_DIR=/usr/include/lua5.3
+PKG_NAME=lua-5.3
+LUA_LIB=$(shell pkg-config --libs $(PKG_NAME))
+LUA_INC_DIR=$(shell pkg-config --cflags-only-I $(PKG_NAME) | sed 's/^-I//')
 ifneq ($(LUA_INC_DIR),)
 LUA_CFLAGS=-I$(LUA_INC_DIR)
 endif
+
+PKG_NAME_51=lua-5.1
+LUA51=lua5.1
+LUA51_INC=$(shell pkg-config --cflags-only-I $(PKG_NAME_51) | sed 's/^-I//')
+
 
 LUAROCKS=luarocks
 
@@ -1216,10 +1219,6 @@ GO_LUA_LINK = $(GO_RUNTIME)/lua_link
 GO_MOD = lnsc
 
 define buildGoSetup
-	mkdir -p $1/$(GO_LUA_LINK)
-	if [ ! -h $1/$(GO_LUA_LINK)/inc ]; then				\
-		ln -s $(LUA_INC_DIR) $1/$(GO_LUA_LINK)/inc;		\
-	fi
 	(cd $1; if [ ! -f go.mod ]; then go mod init $(GO_MOD); fi)
 endef
 

@@ -1982,9 +1982,7 @@ function convFilter:processRoot( node, opt )
    self.type2gotypeMap = {[Ast.builtinTypeInt] = "LnsInt", [Ast.builtinTypeReal] = "LnsReal", [Ast.builtinTypeStem] = "LnsAny", [Ast.builtinTypeString] = "string", [Ast.builtinTypeBool] = "bool", [builtinFuncs.ostream_] = "Lns_oStream", [builtinFuncs.istream_] = "Lns_iStream", [builtinFuncs.luastream_] = "Lns_luaStream"}
    
    self:writeln( "// This code is transcompiled by LuneScript." )
-   
-   self:writeln( "package lnsc" )
-   
+   self:writeln( string.format( "package %s", self.option.packageName) )
    self:writeln( 'import . "lnsc/lune/base/runtime_go"' )
    
    local initModVar = string.format( "init_%s", getModuleName( node:get_moduleTypeInfo() ))
