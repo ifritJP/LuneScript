@@ -99,6 +99,7 @@ help:
 	@echo "  make scratch-go"
 	@echo "  make test-tutorial-go"
 	@echo "  make go-build"
+	@echo "  make setup-pkg-lua"
 
 
 exec:
