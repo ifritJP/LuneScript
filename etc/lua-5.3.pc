@@ -1,0 +1,16 @@
+prefix=/usr
+major_version=5.3
+version=5.3.4
+lib_name_include=lua5.3
+
+lib_name=lua${major_version}
+lib_dir=${prefix}/lib64
+includedir=${prefix}/include/${lib_name_include}
+
+Name: Lua
+Description: Lua language engine
+Version: ${version}
+Requires:
+Libs: -L${lib_dir} -l${lib_name}
+#Libs.private: -lm -ldl
+Cflags: -I${includedir}

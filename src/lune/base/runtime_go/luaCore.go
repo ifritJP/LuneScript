@@ -28,7 +28,6 @@ package runtimelns
 
 // #include <string.h>
 // #include <stdlib.h>
-// #cgo CFLAGS: -Ilua_link/inc
 // #cgo pkg-config: lua-5.3
 // #include <lauxlib.h>
 // #include <lualib.h>

@@ -1215,28 +1215,35 @@ test-gc:
 
 
 GO_RUNTIME = lune/base/runtime_go
-GO_LUA_LINK = $(GO_RUNTIME)/lua_link
 GO_MOD = lnsc
 
 LUA_URL=https://www.lua.org/ftp/lua-5.3.6.tar.gz
 
-setuplua:
+setup-pkg-lua-sub:
 	mkdir -p work
 	curl $(LUA_URL) -o work/lua.tar.gz
 	(cd work; tar xvfz lua.tar.gz;mv lua-* lua)
+	make -j -C work/lua/src linux
+	cat ../etc/lua-5.3.pc |							\
+		sed 's@^includedir=.*@includedir=$(PWD)/work/lua/src/@' |	\
+		sed 's@^Libs:.*@Libs: -lm -ldl $(PWD)/work/lua/src/liblua.a@' > lua-5.3.pc
+
+
+setup-pkg-lua:
+	@if ! pkg-config lua-5.3; then			\
+		$(MAKE) setup-pkg-lua-sub;		\
+	else						\
+		echo ready lua-5.3;			\
+	fi
 
 
 define buildGoSetup
-	if [ -d work/lua/src ] && [ ! -h $1/$(GO_LUA_LINK)/inc ]; then	\
-		mkdir -p $1/$(GO_LUA_LINK);				\
-		ln -s $(PWD)/work/lua/src $1/$(GO_LUA_LINK)/inc;	\
-	fi
 	(cd $1; if [ ! -f go.mod ]; then go mod init $(GO_MOD); fi)
 endef
 
 define buildGo
 	$(call buildGoSetup,$1)
-	(cd $1; go build && $(LNSC_GO))
+	(cd $1; PKG_CONFIG_PATH=$(PWD) go build && $(LNSC_GO))
 endef
 
 GO_WORK_DIR = work/go
@@ -1419,7 +1426,7 @@ test-subgo:
 define go-build-lns
 	cp lune/base/runtime_go/main/lnsc_main.go $1
 	$(call buildGoSetup,$1)
-	(cd $1; time go build)
+	(cd $1; PKG_CONFIG_PATH=$(PWD) time go build)
 endef
 
 # セルフホストのソースを go に変換し、 go 版 lns をビルドする
