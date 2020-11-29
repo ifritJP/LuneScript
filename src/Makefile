@@ -1222,7 +1222,7 @@ LUA_URL=https://www.lua.org/ftp/lua-5.3.6.tar.gz
 
 setuplua:
 	mkdir -p work
-	wget $(LUA_URL) -O work/lua.tar.gz
+	curl $(LUA_URL) -o work/lua.tar.gz
 	(cd work; tar xvfz lua.tar.gz;mv lua-* lua)
 
 
