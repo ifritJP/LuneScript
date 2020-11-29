@@ -1218,7 +1218,19 @@ GO_RUNTIME = lune/base/runtime_go
 GO_LUA_LINK = $(GO_RUNTIME)/lua_link
 GO_MOD = lnsc
 
+LUA_URL=https://www.lua.org/ftp/lua-5.3.6.tar.gz
+
+setuplua:
+	mkdir -p work
+	wget $(LUA_URL) -O work/lua.tar.gz
+	(cd work; tar xvfz lua.tar.gz;mv lua-* lua)
+
+
 define buildGoSetup
+	if [ -d work/lua/src ] && [ ! -h $1/$(GO_LUA_LINK)/inc ]; then	\
+		mkdir -p $1/$(GO_LUA_LINK);				\
+		ln -s $(PWD)/work/lua/src $1/$(GO_LUA_LINK)/inc;	\
+	fi
 	(cd $1; if [ ! -f go.mod ]; then go mod init $(GO_MOD); fi)
 endef
 
