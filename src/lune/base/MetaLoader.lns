@@ -338,6 +338,7 @@ pub fn loadFromStream( path:str, stream:iStream ) : &Meta._MetaInfo!, str! {
       _getItem( formatVersion, "str" );
       _getItem( enableTest, "bool" );
       _getItem( buildId, "str" );
+      _getItem( lazyModuleList, "&Map<int,int>" );
       _getItem( typeId2ClassInfoMap, "&Map<int,&Map<str,&stem>>" );
       _getItem( typeInfoList, "&Map<int,&Map<str,&stem>>" );
       _getItem( varName2InfoMap, "&Map<str,&Map<str,&stem>>" );
@@ -353,7 +354,8 @@ pub fn loadFromStream( path:str, stream:iStream ) : &Meta._MetaInfo!, str! {
       return new Meta._MetaInfo(
          formatVersion,
          enableTest,
-         buildId, 
+         buildId,
+         lazyModuleList,
          typeId2ClassInfoMap,
          typeInfoList,
          varName2InfoMap,
