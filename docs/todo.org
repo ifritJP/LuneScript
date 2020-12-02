@@ -8,6 +8,8 @@
 
 * バグ
 
+- [ ] go 版 lnsc で、 exe --testing でテストケースが動かない。
+  
 - [ ] go に変換したとき、次のループが lua と動作が異なる。
 
 foreach val in [ 1, nil, 3 ] {

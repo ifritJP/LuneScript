@@ -126,6 +126,8 @@ func createVM() *Lns_luaVM {
     lua_createtable( luaVM.vm )
     lua_setglobal( luaVM.vm, lns_globalValSym )
     lua_checkstack( luaVM.vm, 300 )
+
+    Lns_initPreload( luaVM.vm )
     
     go lns_luaValChanProc( luaVM )
 

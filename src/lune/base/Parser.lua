@@ -358,6 +358,7 @@ local function convFromRawToStr( txt )
    
 end
 _moduleObj.convFromRawToStr = convFromRawToStr
+
 local StreamParser = {}
 setmetatable( StreamParser, { __index = Parser } )
 _moduleObj.StreamParser = StreamParser
@@ -381,7 +382,6 @@ function StreamParser:__init(stream, name, luaMode)
    self.lineTokenList = {}
    
    self.asyncParser = AsyncParser.Parser.new(stream, name, luaMode)
-   
 end
 function StreamParser:getStreamName(  )
 

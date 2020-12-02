@@ -31,9 +31,54 @@ package runtimelns
 // #cgo pkg-config: lua-5.3
 // #include <lauxlib.h>
 // #include <lualib.h>
+//
+// extern int LnsPreload( lua_State * pVM );
+// static void registPreload( lua_State * pVM, char * pName ) {
+//    int top = lua_gettop( pVM );
+//    // package.preload を push
+//    lua_getglobal( pVM, "package");
+//    lua_getfield( pVM, -1, "preload" );
+//    // LnsPreload を push
+//    lua_pushcfunction( pVM, LnsPreload );
+//    // package.preload[ pName ] に LnsPreload をセット
+//    lua_setfield( pVM, -2, pName );
+//    lua_settop( pVM, top );
+// }
 import "C"
 import "unsafe"
 //import "sync"
+//import "fmt"
+
+//export LnsPreload
+func LnsPreload( vm *C.lua_State ) C.int {
+    mod := lua_tolstring( vm, 1 );
+
+    srcInfo := lnsSrcMap[ mod ]
+
+    pModule := C.CString( mod )
+    defer C.free( unsafe.Pointer( pModule ))
+    pMode := C.CString( "bt" )
+    defer C.free( unsafe.Pointer( pMode ))
+    
+    if code := C.luaL_loadbufferx(
+        vm, srcInfo.codeC, C.ulong( srcInfo.len ), pModule, pMode ); code != C.LUA_OK {
+        panic( lua_tolstring( vm, -1 ))
+    }
+    if code := C.lua_pcallk( vm, 0, 1, 0, 0, nil ); code != C.LUA_OK {
+        panic( lua_tolstring( vm, -1 ));
+    }
+    return 1;
+}
+func Lns_initPreload( vm *C.lua_State ) {
+    for key := range( lnsSrcMap ) {
+        pKey := C.CString( key )
+        defer C.free( unsafe.Pointer( pKey ) )
+        C.registPreload( vm, pKey )
+    }
+}
+
+//func Lns_initPreload( vm *C.lua_State ) {}
+
 
 type lua_int = C.longlong
 type lua_num = C.double

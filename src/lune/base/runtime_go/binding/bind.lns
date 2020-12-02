@@ -1,0 +1,101 @@
+import lune.base.Ver;
+
+fn getSrcList( path:str ): &List<str>! {
+   let! mut mkstream = io.open( path ## ) {
+      return nil;
+   };
+   let mut list:List<str> = [];
+   while true {
+      let! line = mkstream.read( '*l' ) {
+         break;
+      };
+      if line.find( "^LNS_SRCS%s*%+=%s*base/" ## ) {
+         let src = line.gsub( ".*= base/" , "" ).gsub( "%s", "" );
+         list.insert( src );
+      }
+   }
+   mkstream.close();
+
+   list.insert( "runtime%d" (Ver.luaModVersion ) );
+   return list;
+}
+fn compile( src:str ): str! {
+   let! mut stream = io.open( "lune/base/%s.lua" (src) ## ) {
+      print( "failed to open -- ", src );
+      return nil;
+   };
+   let! code = stream.read( "*a" ) {
+      print( "failed to read -- ", src );
+      return nil;
+   };
+   stream.close();
+   
+   let loaded, err = _load( code, nil );
+   when! loaded {
+      return string.dump( loaded, true );
+   }
+   print( "failed to load -- ", src, err );
+   return nil;
+   // return code;
+}
+fn str2GoStr( bytecode:str ) : List<str> {
+   let mut list:List<str> = [];
+   let mut gostr = '';
+   for index = 1, #bytecode {
+      gostr = gostr .. "0x%02x," (bytecode[index]);
+      if #gostr > 500 {
+         list.insert( gostr );
+         gostr = "";
+      }
+   }
+   list.insert( gostr );
+   return list;
+}
+fn output( stream:oStream, src:str, codeList:&List<str> ) : bool {
+   stream.write( '{\n' );
+   stream.write( 'code := []byte{' );
+   foreach code in codeList {
+      stream.write( code );
+      stream.write( '\n' );
+   }
+   stream.write( "}\n" );
+   stream.write( 'key := "lune.base.%s"\n' (src) );
+   stream.write(
+      'lnsSrcMap[ key ] = &lnsSrcInfo{ C.CString( string(code) ), len( code ) }\n' );
+   stream.write( "}\n" );
+
+   return true;
+}
+
+pub fn createBinding( makePath:str ) {
+
+   if! let list = getSrcList( makePath ) {
+      if! let mut ostream = io.open( "output.go", "w" ) {
+         ostream.write( "package runtimelns\n" );
+         ostream.write( 'import "C"\n' );
+         ostream.write( 'type lnsSrcInfo struct {\n' );
+         ostream.write( '  codeC *C.char\n' );
+         ostream.write( '  len int\n' );
+         ostream.write( '}\n' );
+         ostream.write( "var lnsSrcMap map[string] *lnsSrcInfo\n" );
+         ostream.write( "func init() {\n" );
+         ostream.write( "lnsSrcMap = map[string] *lnsSrcInfo{}\n" );
+         let mut total = 0;
+         foreach path in list {
+            print( path );
+            if! let bytecode = compile( path ) {
+               total = total + #bytecode;
+               print( "size = ", #bytecode, total );
+               let gostrList = str2GoStr( bytecode );
+               output( ostream, path, gostrList );
+            }
+         }
+         ostream.write( "}\n" );
+         ostream.close();
+      }
+   }
+}
+
+__test case1(ctrl) {
+   createBinding( "Makefile" );
+}

@@ -186,6 +186,7 @@ LNS_SRCS += base/Json
 #LNS_SRCS += base/MetaLoader
 LNS_SRCS += base/Ast
 LNS_SRCS += base/Option
+#LNS_SRCS += base/bind
 LNS_SRCS += base/Nodes
 LNS_SRCS += base/Formatter
 LNS_SRCS += base/Macro
@@ -230,6 +231,7 @@ define selfhost_buildOp
 #	$(call $5,$1,$2,$3,$4,base/MetaLoader)
 	$(call $5,$1,$2,$3,$4,base/Ast)
 	$(call $5,$1,$2,$3,$4,base/Option)
+#	$(call $5,$1,$2,$3,$4,base/bind)
 	$(call $5,$1,$2,$3,$4,base/Nodes)
 	$(call $5,$1,$2,$3,$4,base/Formatter)
 	$(call $5,$1,$2,$3,$4,base/Macro)
@@ -445,11 +447,13 @@ ifeq ($(LANG_KIND),lua)
 # lua は batch 処理が何故か遅いので、通常処理で行なう
 	$(call selfhost_build_dep,$(LNSC),.,work/1,)
 ifeq ($(WITH_GO),y)
+	$(call binding-lns-go,work/1)
 	$(call go-build-lns,work/1)
 endif
 else
 	$(call selfhost_buildOp_batch,.,/usr/bin/time -f 'first:%e/%U/%S' $(LNSC_GO),work/1,--depends work/1/ )
 ifeq ($(WITH_GO),y)
+	$(call binding-lns-go,work/1)
 	$(call go-build-lns,work/1)
 endif
 	$(call mk_runtime,$(LNSC),work/1,.,)
@@ -1403,6 +1407,7 @@ test-testGo:
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/frontInterface,--testing --package lnsc,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Ast,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Option,lune/base,./test)
+#	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),bind,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Nodes,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Formatter,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Macro,lune/base,./test)
@@ -1423,6 +1428,11 @@ test-subgo:
 
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),front,lune/base,./test)
 
+
+define binding-lns-go
+	$(LNSC_LUA) lune/base/runtime_go/binding/bind.lns exe --testing
+	mv output.go $1/lune/base/runtime_go/binding.go 
+endef
 
 define go-build-lns
 	cp lune/base/runtime_go/main/lnsc_main.go $1
@@ -1456,6 +1466,7 @@ go-build:
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/frontInterface,,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Ast,,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Option,,./test)
+#	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/bind,,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Nodes,,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Formatter,,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Macro,,./test)
