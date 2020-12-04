@@ -1229,8 +1229,8 @@ setup-pkg-lua-sub:
 	(cd work; tar xvfz lua.tar.gz;mv lua-* lua)
 	make -j -C work/lua/src linux
 	cat ../etc/lua-5.3.pc |							\
-		sed 's@^includedir=.*@includedir=$(PWD)/work/lua/src/@' |	\
-		sed 's@^Libs:.*@Libs: -lm -ldl $(PWD)/work/lua/src/liblua.a@' > lua-5.3.pc
+		sed 's@^includedir=.*@includedir=$(shell pwd)/work/lua/src/@' |	\
+		sed 's@^Libs:.*@Libs: -lm -ldl $(shell pwd)/work/lua/src/liblua.a@' > lua-5.3.pc
 
 
 setup-pkg-lua:
@@ -1247,7 +1247,7 @@ endef
 
 define buildGo
 	$(call buildGoSetup,$1)
-	(cd $1; PKG_CONFIG_PATH=$(PWD) go build && $(LNSC_GO))
+	(cd $1; PKG_CONFIG_PATH=$(shell pwd) go build && $(LNSC_GO))
 endef
 
 GO_WORK_DIR = work/go
@@ -1433,7 +1433,7 @@ endef
 define go-build-lns
 	cp lune/base/runtime_go/main/lnsc_main.go $1
 	$(call buildGoSetup,$1)
-	(cd $1; PKG_CONFIG_PATH=$(PWD) time go build)
+	(cd $1; PKG_CONFIG_PATH=$(shell pwd) time go build)
 endef
 
 # セルフホストのソースを go に変換し、 go 版 lns をビルドする
@@ -1476,12 +1476,13 @@ go-build:
 
 ifndef NO_TEST
 	$(MAKE) test-govslua
-	$(MAKE) LNSC=$(PWD)/$(GO_WORK_DIR)/test/$(LNSC_GO) test-lnsc-go
+	$(MAKE) LNSC=$(shell pwd)/$(GO_WORK_DIR)/test/$(LNSC_GO) test-lnsc-go
 endif
 	cp $(GO_WORK_DIR)/test/$(LNSC_GO) .
 
 test-lnsc-go:
 	-$(MAKE) test-go
+# LuneScript のソース lune/base にアクセスできなくても lnsc コマンドが動くか確認する
 	(cd $(GO_WORK_DIR); $(LNSC) test/testGo.lns exe) > work/result-testGo3.txt
 	diff -I 'fib_l' work/result-testGo2.txt work/result-testGo3.txt 
 
@@ -1570,4 +1571,6 @@ test-reference:
 test-reference-sample:
 	$(call exeLune,$(LNSC),.,test/checkReference.lns exe)
 
+aaaaa:
+	@echo $(shell pwd)
 
