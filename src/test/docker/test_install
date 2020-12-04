@@ -3,14 +3,14 @@
 FROM alpine:3.11.2
 
 RUN apk --no-cache add \
-      git \
-      make \
-      diffutils \
-      gcc \
-      libc-dev \
-      lua5.3-dev
+	git \
+	make \
+	diffutils \
+	gcc \
+	libc-dev \
+	lua5.3-dev
 RUN git clone --depth 1 https://github.com/ifritJP/LuneScript.git
 WORKDIR LuneScript/src
 RUN lua5.3 setup.lua -d && \
- 	make install
+	make install
 

@@ -1571,9 +1571,3 @@ test-reference:
 test-reference-sample:
 	$(call exeLune,$(LNSC),.,test/checkReference.lns exe)
 
-build-stand-alone-lnsc:
-	$(MAKE) setup-pkg-lua
-	PKG_CONFIG_PATH=$(shell pwd) $(MAKE) go-build \
-					LUA=/LuneScript/src/work/lua/src/lua
-
-

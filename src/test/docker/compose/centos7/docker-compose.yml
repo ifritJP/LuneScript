@@ -1,0 +1,7 @@
+version: '3'
+services:
+
+  LuneScript:
+    image: centos:7
+    container_name: centos7_lns
+    restart: always
