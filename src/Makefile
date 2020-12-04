@@ -1281,11 +1281,12 @@ endef
 define test-go-one-exec
 	cat lune/base/runtime_go/main/runtime_main.go |		\
 		sed 's/Lns_init/Lns_$3_init/;' > $2/runtime_main.go
-	cp -au $4/$3.lns $2
-	$(call convGo,$1,$2,$3)
+	cp -au $4/$3.lns $2/$4
+	$(call convGo,$1,$2,$4/$3,--package main)
+	mv $2/$4/$3.go $2
 	$(call buildGo,$2) >> work/result-testGo.txt
 	if test "${NO_LUA_DIFF}" = ""; then					\
-		$(call exeLune,$1,$2,$3.lns,exe) >> work/result-testGo2.txt &&	\
+		$(call exeLune,$1,$2,$4/$3.lns,exe) >> work/result-testGo2.txt &&	\
 		diff -C 2 -I 'ONLY_LUA'						\
 				work/result-testGo.txt work/result-testGo2.txt;	\
 	fi
@@ -1298,8 +1299,9 @@ define test-go-one
 endef
 
 define test-go-some-setup
-	cp -au $4/$3.lns $2
-	$(call convGo,$1,$2,$3,$4)
+	cp -au $4/$3.lns $2/$4
+	$(call convGo,$1,$2,$4/$3,--package main)
+	mv $2/$4/$3.go $2
 endef
 
 
@@ -1324,6 +1326,7 @@ miniGo-go:
 	$(call buildGo,$(GO_WORK_DIR))
 
 test-go:
+	rm -rf $(GO_WORK_DIR)
 	$(call cmd_exec_trans,$(LNSC),.,.,,base/convGo)
 	$(call setup-go,$(GO_WORK_DIR))
 	$(call test-go-one-setup,$(GO_WORK_DIR))
@@ -1487,8 +1490,14 @@ go-build:
 
 ifndef NO_TEST
 	$(MAKE) test-govslua
+	$(MAKE) LNSC=$(PWD)/$(GO_WORK_DIR)/test/$(LNSC_GO) test-lnsc
 endif
 	cp $(GO_WORK_DIR)/test/$(LNSC_GO) .
+
+test-lnsc-go:
+	-$(MAKE) test-go
+	(cd $(GO_WORK_DIR); $(LNSC) test/testGo.lns exe) > work/result-testGo3.txt
+	diff -I 'fib_l' work/result-testGo2.txt work/result-testGo3.txt 
 
 
 define test-govslua-comp
