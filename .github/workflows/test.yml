@@ -39,15 +39,33 @@ jobs:
         make -C src -j test-comp LUA=lua5.3 LUA_INC_DIR=/usr/include/lua5.3 LUA51=
         make -C src go-build LUA=lua5.3 LUA_INC_DIR=/usr/include/lua5.3 LUA51=
         make -C src LUACHECK=luacheck test-global
-    - name: Build the Docker image
-      run: |
-        docker build src/test/docker/compose/centos8/docker --tag cent8_lns
-        docker image rm cent8_lns
-        docker build src/test/docker/compose/centos7/docker --tag cent7_lns
-        docker image rm cent7_lns
     - name: 'Upload Artifact'
       uses: actions/upload-artifact@v2
       with:
         name: test-result
         path: src/work/test*.result
         retention-days: 5
+
+  docker-cent8:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build the Docker image
+      run: |
+        docker build src/test/docker/compose/centos8/docker --tag cent8_lns
+        docker image rm cent8_lns
+
+
+  docker-cent7:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build the Docker image
+      run: |
+        docker build src/test/docker/compose/centos7/docker --tag cent7_lns
+        docker image rm cent7_lns
+        
