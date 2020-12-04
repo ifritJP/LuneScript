@@ -935,6 +935,8 @@ endif
 	if [ -f work/3/$(LNSC_GO) ]; then			\
 		cp work/3/$(LNSC_GO) $(ORG_DIR).;		\
 		cp work/3/lune/base/*.go $(ORG_DIR)lune/base/;	\
+		cp work/3/lune/base/runtime_go/binding.go	\
+				$(ORG_DIR)lune/base/runtime_go;	\
 	fi
 ifneq ($(ENABLE_LUA51),)
 	cp work/6/lune/base/*.lns $(ORG_DIR)legacy/lua51/lune/base/
