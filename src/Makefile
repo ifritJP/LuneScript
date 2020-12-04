@@ -1490,7 +1490,7 @@ go-build:
 
 ifndef NO_TEST
 	$(MAKE) test-govslua
-	$(MAKE) LNSC=$(PWD)/$(GO_WORK_DIR)/test/$(LNSC_GO) test-lnsc
+	$(MAKE) LNSC=$(PWD)/$(GO_WORK_DIR)/test/$(LNSC_GO) test-lnsc-go
 endif
 	cp $(GO_WORK_DIR)/test/$(LNSC_GO) .
 
