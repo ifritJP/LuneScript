@@ -1326,7 +1326,6 @@ miniGo-go:
 	$(call buildGo,$(GO_WORK_DIR))
 
 test-go:
-	rm -rf $(GO_WORK_DIR)
 	$(call cmd_exec_trans,$(LNSC),.,.,,base/convGo)
 	$(call setup-go,$(GO_WORK_DIR))
 	$(call test-go-one-setup,$(GO_WORK_DIR))
