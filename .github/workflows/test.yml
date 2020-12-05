@@ -11,7 +11,6 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -36,8 +35,8 @@ jobs:
     - name: Test
       run: |
         source here/bin/activate
-        make -C src -j test-comp LUA=lua5.3 LUA_INC_DIR=/usr/include/lua5.3 LUA51=
-        make -C src go-build LUA=lua5.3 LUA_INC_DIR=/usr/include/lua5.3 LUA51=
+        make -C src -j test-comp LUA=lua5.3 LUA51=
+        make -C src go-build LUA=lua5.3 LUA51=
         make -C src LUACHECK=luacheck test-global
     - name: 'Upload Artifact'
       uses: actions/upload-artifact@v2
@@ -47,7 +46,6 @@ jobs:
         retention-days: 5
 
   docker-cent8:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -59,7 +57,6 @@ jobs:
 
 
   docker-cent7:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -68,4 +65,23 @@ jobs:
       run: |
         docker build src/test/docker/compose/centos7/docker --tag cent7_lns
         docker image rm cent7_lns
-        
+
+  docker-alpine:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build the Docker image
+      run: |
+        docker build src/test/docker/compose/alpine/docker --tag alpine_lns
+        docker image rm alpine_lns
+
+  docker-ubuntu:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build the Docker image
+      run: |
+        docker build src/test/docker/compose/ubuntu/docker --tag ubuntu_lns
+        docker image rm ubuntu_lns
