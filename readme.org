@@ -11,7 +11,6 @@ Latest document (for Japanese)
 
 https://ifritjp.github.io/documents/lunescript/
 
-
 ** What's LuneScript
 
 LuneScript is a transcompiler for Lua.
@@ -35,6 +34,20 @@ LuneScript is a transcompiler for Lua.
  - LuneScript is developed by self hosting.
 
 ** Setup LuneScript
+
+LuneScript provides 2 version.
+
+- go version
+- lua script version
+
+*** go version
+
+- download lnsc file.
+  - [[https://drive.google.com/drive/folders/1S5NgeM6qIOIUC0rkBHqnWZcuhmsTqB2w][google drive]]  (latest release)
+- chmod +x lnsc
+- sudo install lnsc /usr/local/bin
+   
+*** lua script version    
 
  - In case of lua5.1
   
