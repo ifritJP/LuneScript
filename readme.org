@@ -44,8 +44,10 @@ LuneScript provides 2 version.
 
 - download lnsc file.
   - [[https://drive.google.com/drive/folders/1S5NgeM6qIOIUC0rkBHqnWZcuhmsTqB2w][google drive]]  (latest release)
-- chmod +x lnsc
-- sudo install lnsc /usr/local/bin
+- execute the following commands.
+
+: $ chmod +x lnsc
+: $ sudo install lnsc /usr/local/bin
    
 *** lua script version    
 
