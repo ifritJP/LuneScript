@@ -1500,13 +1500,13 @@ endef
 test-govslua:
 	-rm work/go.time work/lua.time
 ifdef BATCH
-	/usr/bin/time -f 'go:%e/%U/%S:$2' -o work/go.time --append		\
+	/usr/bin/time -f 'go:%e/%U/%S:$2' -o work/go.time -a		\
 		$(MAKE) test-govslua-go-batch
 else
-	/usr/bin/time -f 'go:%e/%U/%S:$2' -o work/go.time --append		\
+	/usr/bin/time -f 'go:%e/%U/%S:$2' -o work/go.time -a		\
 		$(MAKE) test-govslua-go
 endif
-	/usr/bin/time -f 'lua:%e/%U/%S:$2' -o work/lua.time --append		\
+	/usr/bin/time -f 'lua:%e/%U/%S:$2' -o work/lua.time -a		\
 		$(MAKE) test-govslua-lua
 	cat work/go.time work/lua.time
 	diff -r work/1 work/2 -I buildId				\
@@ -1537,7 +1537,7 @@ ifdef TEST_MAIN_GO
 else
 	cp $(GO_WORK_DIR)/test/$(LNSC_GO) work/2
 endif
-	$(call test-buildlns-run,/usr/bin/time -f 'go:%e/%U/%S:$2' -o work/go.time --append work/2/$(LNSC_GO),work/2,go)
+	$(call test-buildlns-run,/usr/bin/time -f 'go:%e/%U/%S:$2' -o work/go.time -a work/2/$(LNSC_GO),work/2,go)
 
 
 test-govslua-lua-batch:
