@@ -1230,7 +1230,7 @@ setup-pkg-lua-sub:
 	make -j -C work/lua/src linux
 	cat ../etc/lua-5.3.pc |							\
 		sed 's@^includedir=.*@includedir=$(shell pwd)/work/lua/src/@' |	\
-		sed 's@^Libs:.*@Libs: -lm -ldl $(shell pwd)/work/lua/src/liblua.a@' > lua-5.3.pc
+		sed 's@^Libs:.*@Libs: $(shell pwd)/work/lua/src/liblua.a -lm -ldl@' > lua-5.3.pc
 
 
 setup-pkg-lua:
