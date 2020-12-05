@@ -18,4 +18,3 @@ RUN git log
 RUN make setup-pkg-lua && make go-build LUA=/LuneScript/src/work/lua/src/lua
 RUN install lnsc /usr/bin
 RUN lnsc --version
-

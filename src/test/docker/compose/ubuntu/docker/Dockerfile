@@ -1,5 +1,6 @@
 FROM ubuntu:latest
 
+# apt-get で入力待ちにならないようにするためセット
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt update
