@@ -67,7 +67,7 @@ jobs:
       uses: satackey/action-google-drive@v1
       with:
         skicka-tokencache-json: ${{ secrets.SKICKA_TOKENCACHE_JSON }}
-        upload-from: export/*
+        upload-from: export/lnsc_cent8
         upload-to: /lns_release/
 
         # For those who set up Google Drive API client ID and secret themselves
@@ -96,7 +96,7 @@ jobs:
   #     uses: satackey/action-google-drive@v1
   #     with:
   #       skicka-tokencache-json: ${{ secrets.SKICKA_TOKENCACHE_JSON }}
-  #       upload-from: export/*
+  #       upload-from: export/lnsc_cent7
   #       upload-to: /lns_release/
 
   #       # For those who set up Google Drive API client ID and secret themselves
@@ -124,7 +124,7 @@ jobs:
       uses: satackey/action-google-drive@v1
       with:
         skicka-tokencache-json: ${{ secrets.SKICKA_TOKENCACHE_JSON }}
-        upload-from: export/*
+        upload-from: export/lnsc_alpine
         upload-to: /lns_release/
 
         # For those who set up Google Drive API client ID and secret themselves
@@ -152,7 +152,7 @@ jobs:
       uses: satackey/action-google-drive@v1
       with:
         skicka-tokencache-json: ${{ secrets.SKICKA_TOKENCACHE_JSON }}
-        upload-from: export/*
+        upload-from: export/lnsc_ubuntu
         upload-to: /lns_release/
 
         # For those who set up Google Drive API client ID and secret themselves
