@@ -13,6 +13,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    timeout-minutes: 8 # 8分で強制停止
+    
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.8
@@ -48,6 +50,8 @@ jobs:
   docker-cent8:
     runs-on: ubuntu-latest
 
+    timeout-minutes: 8 # 8分で強制停止
+    
     steps:
     - uses: actions/checkout@v2
     - name: Build the Docker image
@@ -59,6 +63,8 @@ jobs:
   docker-cent7:
     runs-on: ubuntu-latest
 
+    timeout-minutes: 8 # 8分で強制停止
+    
     steps:
     - uses: actions/checkout@v2
     - name: Build the Docker image
@@ -68,6 +74,8 @@ jobs:
 
   docker-alpine:
     runs-on: ubuntu-latest
+
+    timeout-minutes: 8 # 8分で強制停止
 
     steps:
     - uses: actions/checkout@v2
@@ -79,6 +87,8 @@ jobs:
   docker-ubuntu:
     runs-on: ubuntu-latest
 
+    timeout-minutes: 8 # 8分で強制停止
+    
     steps:
     - uses: actions/checkout@v2
     - name: Build the Docker image
