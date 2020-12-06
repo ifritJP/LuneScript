@@ -98,36 +98,40 @@ class Test8 {
 }
 
 
-class Super1 {
-   pri let val:int;
-   pub fn func() {
+{
+   class Super1 {
+      pri let val:int;
+      pub fn func() {
+      }
+      pub override fn func() { // error
+      }
    }
-   pub override fn func() { // error
-   }
-}
 
-class Sub1 extend Super1 { // error: no __init
-}
+   class Sub1 extend Super1 { // error: no __init
+   }
 
-abstract class Super2 {
-   pri let val:int!;
-   pub fn func1() {
+   abstract class Super2 {
+      pri let val:int!;
+      pub fn func1() {
+      }
+      pub fn func2() {
+      }
+      pub fn func3() {
+      }
+      pub abstract fn func4() { // error
+      }
    }
-   pub fn func2() {
-   }
-   pub fn func3() {
-   }
-   pub abstract fn func4() { // error
-   }
-}
 
-class Sub2__a extend Super2 { // error
-   pub override fn func1() mut { // error
-   }
-   pub override fn func2(arg:int) mut { // error
-   }
-   pub override fn func3() mut : int { // error
-      return 1;
+   // error
+   class Sub2__a extend Super2 {
+      pub override fn func1() mut { // error
+      }
+      pub override fn func2(arg:int) mut { // error
+      }
+      // error 
+      pub override fn func3() mut : int {
+         return 1;                                                      
+      }
    }
 }
 
@@ -448,3 +452,28 @@ class Test9 extend Super7 {
    class Sub extend Test { // func を override していないのでエラーにすべき
    }
 }
+{
+   abstract class Super {
+      pub abstract fn func(): str;
+   }
+   class Sub1 extend Super {
+      pub override fn func(): str {
+         return __func__;
+      }
+   }
+   class Sub2 extend Super {
+      pub override fn func(): str {
+         return __func__;
+      }
+   }
+   fn func( list:List<Super> ) {
+      list.insert( new Sub2() );
+   }
+   let mut list:List<Sub1> = [];
+   func( list ); // List<Sub1> に Sub2 のインスタンスが入ってしまう。。。
+   foreach obj in list {
+      print( obj.func() );
+   }
+   
+}
+

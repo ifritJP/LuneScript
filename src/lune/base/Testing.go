@@ -26,28 +26,43 @@ func Testing_registerTestcase(modName string,caseName string,testcase Testing_Te
 
 // 173: decl @lune.@base.@Testing.run
 func Testing_run(modPath string) {
-    for _name, _info := range( Testing_testModuleMap.Items ) {
-        name := _name.(string)
-        info := _info.(Testing_TestModuleInfoDownCast).ToTesting_TestModuleInfo()
-        if name == modPath{
-            info.FP.Run()
+    {
+        __collection866 := Testing_testModuleMap
+        __sorted866 := __collection866.CreateKeyListStr()
+        __sorted866.Sort( LnsItemKindStr, nil )
+        for _, _name := range( __sorted866.Items ) {
+            info := __collection866.Items[ _name ].(Testing_TestModuleInfoDownCast).ToTesting_TestModuleInfo()
+            name := _name.(string)
+            if name == modPath{
+                info.FP.Run()
+            }
         }
     }
 }
 
 // 180: decl @lune.@base.@Testing.runAll
 func Testing_runAll() {
-    for _, _info := range( Testing_testModuleMap.Items ) {
-        info := _info.(Testing_TestModuleInfoDownCast).ToTesting_TestModuleInfo()
-        info.FP.Run()
+    {
+        __collection879 := Testing_testModuleMap
+        __sorted879 := __collection879.CreateKeyListStr()
+        __sorted879.Sort( LnsItemKindStr, nil )
+        for _, ___key879 := range( __sorted879.Items ) {
+            info := __collection879.Items[ ___key879 ].(Testing_TestModuleInfoDownCast).ToTesting_TestModuleInfo()
+            info.FP.Run()
+        }
     }
 }
 
 // 186: decl @lune.@base.@Testing.outputAllResult
 func Testing_outputAllResult(stream Lns_oStream) {
-    for _, _info := range( Testing_testModuleMap.Items ) {
-        info := _info.(Testing_TestModuleInfoDownCast).ToTesting_TestModuleInfo()
-        info.FP.OutputResult(stream)
+    {
+        __collection897 := Testing_testModuleMap
+        __sorted897 := __collection897.CreateKeyListStr()
+        __sorted897.Sort( LnsItemKindStr, nil )
+        for _, ___key897 := range( __sorted897.Items ) {
+            info := __collection897.Items[ ___key897 ].(Testing_TestModuleInfoDownCast).ToTesting_TestModuleInfo()
+            info.FP.OutputResult(stream)
+        }
     }
 }
 
@@ -368,11 +383,16 @@ func (self *Testing_TestModuleInfo) Run() {
     self.runned = true
     
     Lns_print([]LnsAny{Lns_getVM().String_format("module: %s %s", []LnsAny{self.name, Lns_getVM().String_rep("=", 30)})})
-    for _name, _testcase := range( self.testcaseMap.Items ) {
-        name := _name.(string)
-        testcase := _testcase.(Testing_TestCaseDownCast).ToTesting_TestCase()
-        Lns_print([]LnsAny{Lns_getVM().String_format("%s: %s", []LnsAny{name, Lns_getVM().String_rep("-", 15)})})
-        testcase.FP.Get_func()(NewTesting_Ctrl(testcase.FP.Get_result()))
+    {
+        __collection702 := self.testcaseMap
+        __sorted702 := __collection702.CreateKeyListStr()
+        __sorted702.Sort( LnsItemKindStr, nil )
+        for _, _name := range( __sorted702.Items ) {
+            testcase := __collection702.Items[ _name ].(Testing_TestCaseDownCast).ToTesting_TestCase()
+            name := _name.(string)
+            Lns_print([]LnsAny{Lns_getVM().String_format("%s: %s", []LnsAny{name, Lns_getVM().String_rep("-", 15)})})
+            testcase.FP.Get_func()(NewTesting_Ctrl(testcase.FP.Get_result()))
+        }
     }
 }
 
@@ -382,9 +402,14 @@ func (self *Testing_TestModuleInfo) OutputResult(stream Lns_oStream) {
         return 
     }
     Lns_print([]LnsAny{Lns_getVM().String_format("module: %s %s", []LnsAny{self.name, Lns_getVM().String_rep("=", 30)})})
-    for _, _testcase := range( self.testcaseMap.Items ) {
-        testcase := _testcase.(Testing_TestCaseDownCast).ToTesting_TestCase()
-        testcase.FP.Get_result().FP.OutputResult(stream)
+    {
+        __collection756 := self.testcaseMap
+        __sorted756 := __collection756.CreateKeyListStr()
+        __sorted756.Sort( LnsItemKindStr, nil )
+        for _, ___key756 := range( __sorted756.Items ) {
+            testcase := __collection756.Items[ ___key756 ].(Testing_TestCaseDownCast).ToTesting_TestCase()
+            testcase.FP.Get_result().FP.OutputResult(stream)
+        }
     }
 }
 

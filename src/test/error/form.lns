@@ -38,3 +38,6 @@
    Test(); // error
    (Test)(); // error
 }
+{
+   pub form Test(); // error
+}

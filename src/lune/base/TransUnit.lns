@@ -784,9 +784,9 @@ alias で置き換えている元の Type → alias の型
             }
          }
          forsort symbolInfo in errSymMap {
-            self.addWarnMess(
+            self.addErrMess(
                self.parser.getLastPos(),
-               "It exists the case no initialized value for '%s'"
+               "There is the case no initialized value for '%s'"
                (symbolInfo.$name) );
          }
       }

@@ -143,7 +143,7 @@ class TestModuleInfo {
    pub fn run() mut {
       self.runned = true;
       print( "module: %s %s" (self.name, string.rep( "=", 30 )) );
-      foreach testcase, name in self.testcaseMap {
+      forsort testcase, name in self.testcaseMap {
          print( "%s: %s" (name, string.rep( "-", 15 )) );
          testcase.$func( new Ctrl( testcase.$result) );
       }
@@ -154,7 +154,7 @@ class TestModuleInfo {
          return;
       }
       print( "module: %s %s" (self.name, string.rep( "=", 30 )) );
-      foreach testcase in self.testcaseMap {
+      forsort testcase in self.testcaseMap {
          testcase.$result.outputResult( stream );
       }
    }
@@ -171,20 +171,20 @@ pub fn registerTestcase( modName:str, caseName:str, testcase:TestcaseFunc ) {
 }
 
 pub fn run( modPath:str ) {
-   foreach info, name in testModuleMap {
+   forsort info, name in testModuleMap {
       if name == modPath {
          info.run();
       }
    }
 }
 pub fn runAll() {
-   foreach info in testModuleMap {
+   forsort info in testModuleMap {
       info.run();
    }
 }
 
 pub fn outputAllResult( stream:oStream ) {
-   foreach info in testModuleMap {
+   forsort info in testModuleMap {
       info.outputResult( stream );
    }
 }

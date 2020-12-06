@@ -1451,9 +1451,21 @@ pub fn Front.exec() mut
          let modObj = self.loadModule( scriptPath2Module( self.option.scriptPath ) );
 
          if self.option.testing {
-            Testing.run( scriptPath2Module( self.option.scriptPath ));
-
-            Testing.outputAllResult( io.stdout );
+            let code = ```
+local Testing = require( "lune.base.Testing" )
+return function( path )
+  Testing.run( path );
+  Testing.outputAllResult( io.stdout );
+end
+```;
+            let loaded, mess = _load( code ## );
+            when! loaded {
+               if! let mod = loaded(##) {
+                  (mod@@form)( scriptPath2Module( self.option.scriptPath ) );
+               }
+            } else {
+               print( mess );
+            }
          }
       }
       case .BootC {

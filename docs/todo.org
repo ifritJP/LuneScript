@@ -8,8 +8,8 @@
 
 * バグ
 
-- [ ] go 版 lnsc で、 exe --testing でテストケースが動かない。
-  
+- [ ] import しているモジュールが更新されていると、 exe --testing が動かない  
+
 - [ ] go に変換したとき、次のループが lua と動作が異なる。
 
 foreach val in [ 1, nil, 3 ] {
@@ -85,31 +85,12 @@ let list = [ 1, 2 ];
 func( list.unpack() );
 
   
-- [ ] enum がトップスコープではない場所で pub 宣言できてしまう。
-- [ ] form がトップスコープではない場所で pub 宣言できてしまう。
-{
-   pub form CreateMessage(): str;
-}
-  
-- [ ] getter アクセス $ で関数コールする時、関数の引数チェックをしていない。
-      本来は引数なしでなければならないが、引数ありがコールできてしまう。
-  
 - [ ] サイズ 0 の lua ファイルがあると、 uptodate になっている？
       uptodate になって生成しなおさずに import してしまい、バグっているっぽい。
   
 
   
-- [ ] 次の flow 解析が NG。
-fn func(val:int) {
-   let test;
-   if val == 0 {
-      test = 1;
-   }
-   test = 2; // test は imut なのに、ここで代入が出来てしまう。 
-   print( test );
-}
-  
-  
+ 
 - [ ] 次のマクロの呼び出しが出来ない。
   __exp に指定する引数が多値返却の場合エラーになる。
 
@@ -164,10 +145,6 @@ _hoge( func() );
       stem! を int! へのキャストはサポートするべき。
 - [ ] accessor/method のアクセス制限に local を指定できない。
 - [ ] class/method の final 対応。
-  
-- [ ] let の変数名に _ を対応する。
-      _ は、値を捨てるシンボル名。
-        これにより、不要な変数の代入処理などを削減できる。
   
 - [ ] let list:List<Super> = [ Sub ]; が出来ない。
       List<Super> <- List<Sub> の代入になり、
@@ -238,32 +215,6 @@ _hoge( func() );
   
 - [ ] let list = [ new Hoge() ]; の c-lang へ変換が出来ない
 
-  
-- [ ] 次が出来てしまう。
-  
-abstract class Super {
-   pub abstract fn func(): str;
-}
-class Sub1 extend Super {
-   pub override fn func(): str {
-      return __func__;
-   }
-}
-class Sub2 extend Super {
-   pub override fn func(): str {
-      return __func__;
-   }
-}
-fn func( list:List<Super> ) {
-   list.insert( new Sub2() );
-}
-let mut list:List<Sub1> = [];
-func( list ); // List<Sub1> に Sub2 のインスタンスが入ってしまう。。。
-foreach obj in list {
-   print( obj.func() );
-}
-
-  
   
 - [ ] form<T> を対応する。 これは fn (...<T>) : ...<T> のシンタックスシュガー
 
@@ -884,6 +835,50 @@ while true {
    hoge.val = 1; // ここで代入できてしまう。
    break;
 }
+- [X] go 版 lnsc で、 exe --testing でテストケースが動かない。
+- [X] getter アクセス $ で関数コールする時、関数の引数チェックをしていない。
+      本来は引数なしでなければならないが、引数ありがコールできてしまう。
+- [X] enum がトップスコープではない場所で pub 宣言できてしまう。
+- [X] form がトップスコープではない場所で pub 宣言できてしまう。
+{
+   pub form CreateMessage(): str;
+}
+- [X] 次の flow 解析が NG。
+fn func(val:int) {
+   let test;
+   if val == 0 {
+      test = 1;
+   }
+   test = 2; // test は imut なのに、ここで代入が出来てしまう。 
+   print( test );
+}
+- [X] 次が出来てしまう。
+  
+abstract class Super {
+   pub abstract fn func(): str;
+}
+class Sub1 extend Super {
+   pub override fn func(): str {
+      return __func__;
+   }
+}
+class Sub2 extend Super {
+   pub override fn func(): str {
+      return __func__;
+   }
+}
+fn func( list:List<Super> ) {
+   list.insert( new Sub2() );
+}
+let mut list:List<Sub1> = [];
+func( list ); // List<Sub1> に Sub2 のインスタンスが入ってしまう。。。
+foreach obj in list {
+   print( obj.func() );
+}
+
+  
+  
+  
 
   
   
@@ -956,6 +951,10 @@ while true {
       また、モジュールのパスを変更できるようにする。
       これは、モジュールを生成した LuneScript のバージョンが異なる場合に、
       正常動作するように対応するため。
+- [X] let の変数名に _ を対応する。
+      _ は、値を捨てるシンボル名。
+        これにより、不要な変数の代入処理などを削減できる。
+  
       
 
 - [ ] 値を扱えるマクロを定義できるようにする。

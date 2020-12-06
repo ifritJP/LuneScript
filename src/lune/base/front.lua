@@ -1972,9 +1972,26 @@ function Front:exec(  )
          local modObj = self:loadModule( scriptPath2Module( self.option.scriptPath ) )
          
          if self.option.testing then
-            Testing.run( scriptPath2Module( self.option.scriptPath ) )
+            local code = [==[
+local Testing = require( "lune.base.Testing" )
+return function( path )
+  Testing.run( path );
+  Testing.outputAllResult( io.stdout );
+end
+]==]
+            local loaded, mess = _lune.loadstring52( code )
+            if loaded ~= nil then
+               do
+                  local mod = loaded(  )
+                  if mod ~= nil then
+                     (mod )( scriptPath2Module( self.option.scriptPath ) )
+                  end
+               end
+               
+            else
+               print( mess )
+            end
             
-            Testing.outputAllResult( io.stdout )
          end
          
       elseif _switchExp == Option.ModeKind.BootC then

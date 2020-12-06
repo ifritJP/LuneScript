@@ -1,0 +1,8 @@
+print( "hoge" );
+
+__test case1( ctrl ) {
+   print( "case1" );
+}
+__test case2( ctrl ) {
+   print( "case2" );
+}

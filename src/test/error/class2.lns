@@ -1,9 +1,14 @@
 class TestAcc {
    let val:int { non, pub }; // error
    let mut val2:int { non, pub };
+   pub fn get_val3( aa:int ): int {
+      return 1;
+   }
 }
 {
    let test = new TestAcc( 1 );
    test.set_val( 1 ); // error
+   print( test.get_val3( 1 ) );
+   print( test.$val3 );  // error
    print( test.$val );  // error
 }

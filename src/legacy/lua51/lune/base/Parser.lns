@@ -176,22 +176,6 @@ pub fn convFromRawToStr( txt:str ) : str {
    }
 }
 
-// class AsyncPipe extend Async.Pipe<AsyncParser.AsyncItem> {
-//    let mut asyncParser:AsyncParser.Parser;
-   
-//    pub fn __init( asyncParser:AsyncParser.Parser ) {
-//       super( AsyncParser.AsyncItem._createPipe( 100 ) );
-
-//       self.asyncParser = asyncParser;
-//    }
-//    pub override fn access() mut : Async.PipeItem<AsyncParser.AsyncItem>! {
-//       let! tokenList = self.asyncParser.parse() {
-//          return nil;
-//       };
-//       return new Async.PipeItem( new AsyncParser.AsyncItem( tokenList ) );
-//    }
-// }
-
 pub class StreamParser extend Parser {
    /** stdin に紐付けている*/
    static let mut stdinStreamModuleName: str!;
@@ -221,12 +205,6 @@ pub class StreamParser extend Parser {
       self.lineTokenList = [];
       
       self.asyncParser = new AsyncParser.Parser( stream, name, luaMode );
-
-      // self.pipe = new AsyncPipe(self.asyncParser);
-      
-
-      // 最後に start を呼ぶ
-      // self.pipe.start();
    }
 
    pub override fn getStreamName(): str {

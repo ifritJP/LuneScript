@@ -283,7 +283,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 6252
+   return 6303
 end
 
 
@@ -615,6 +615,8 @@ end
       return argList[index]
    end
    
+   Util.setDebugFlag( false )
+   
    while #argList >= index do
       local arg = argList[index]
       
@@ -627,6 +629,8 @@ end
                option.validProf = true
             elseif _switchExp == "--nodebug" then
                Util.setDebugFlag( false )
+            elseif _switchExp == "--debug" then
+               Util.setDebugFlag( true )
             elseif _switchExp == "--version" then
                print( string.format( "LuneScript: version %s (%d:%s) [%s]", Ver.version, getBuildCount(  ), Depend.getLuaVersion(  ), Ver.metaVersion) )
                os.exit( 0 )
@@ -831,7 +835,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 485, function (  )
+   Log.log( Log.Level.Log, __func__, 490, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

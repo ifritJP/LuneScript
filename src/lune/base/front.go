@@ -39,6 +39,13 @@ func conv2Form7446( src func ()) LnsForm {
         return []LnsAny{}
     }
 }
+// for 1464: ExpCast
+func conv2Form7507( src func ()) LnsForm {
+    return func (argList []LnsAny) []LnsAny {
+        src()
+        return []LnsAny{}
+    }
+}
 // for 193
 func front_convExp773(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
@@ -65,6 +72,10 @@ func front_convExp6687(arg1 []LnsAny) LnsAny {
 }
 // for 1313
 func front_convExp6768(arg1 []LnsAny) LnsAny {
+    return Lns_getFromMulti( arg1, 0 )
+}
+// for 1463
+func front_convExp7524(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 280
@@ -368,7 +379,7 @@ func Front_convertLnsCode2LuaCode(lnsCode string,path string) string {
 
 
 
-// 1471: decl @lune.@base.@front.exec
+// 1483: decl @lune.@base.@front.exec
 func Front_exec(args *LnsList) {
     var version LnsReal
     version = Lns_unwrapDefault( Lns_tonumber(Lns_car(Lns_getVM().String_gsub(Depend_getLuaVersion(),"^[^%d]+", "")).(string), nil), 0.0).(LnsReal)
@@ -383,7 +394,7 @@ func Front_exec(args *LnsList) {
     front.FP.Exec()
 }
 
-// 1488: decl @lune.@base.@front.setFront
+// 1500: decl @lune.@base.@front.setFront
 func Front_setFront() {
     var option *Option_Option
     option = Option_createDefaultOption("dummy.lns")
@@ -1770,23 +1781,23 @@ func (self *front_Front) Exec() {
         return Option_ModeKind_getTxt( self.option.Mode)
     }))
     
-    if _switch7543 := self.option.Mode; _switch7543 == Option_ModeKind__Token {
+    if _switch7581 := self.option.Mode; _switch7581 == Option_ModeKind__Token {
         self.FP.DumpTokenize(self.option.ScriptPath)
-    } else if _switch7543 == Option_ModeKind__Ast {
+    } else if _switch7581 == Option_ModeKind__Ast {
         self.FP.DumpAst(self.option.ScriptPath)
-    } else if _switch7543 == Option_ModeKind__Format {
+    } else if _switch7581 == Option_ModeKind__Format {
         self.FP.Format(self.option.ScriptPath)
-    } else if _switch7543 == Option_ModeKind__Diag {
+    } else if _switch7581 == Option_ModeKind__Diag {
         self.FP.CheckDiag(self.option.ScriptPath)
-    } else if _switch7543 == Option_ModeKind__Complete {
+    } else if _switch7581 == Option_ModeKind__Complete {
         self.FP.Complete(self.option.ScriptPath)
-    } else if _switch7543 == Option_ModeKind__Inquire {
+    } else if _switch7581 == Option_ModeKind__Inquire {
         self.FP.Inquire(self.option.ScriptPath)
-    } else if _switch7543 == Option_ModeKind__Glue {
+    } else if _switch7581 == Option_ModeKind__Glue {
         self.FP.CreateGlue(self.option.ScriptPath)
-    } else if _switch7543 == Option_ModeKind__Lua || _switch7543 == Option_ModeKind__LuaMeta {
+    } else if _switch7581 == Option_ModeKind__Lua || _switch7581 == Option_ModeKind__LuaMeta {
         self.FP.convertToLua(self.option.ScriptPath)
-    } else if _switch7543 == Option_ModeKind__Save || _switch7543 == Option_ModeKind__SaveMeta {
+    } else if _switch7581 == Option_ModeKind__Save || _switch7581 == Option_ModeKind__SaveMeta {
         var createUpdateInfo func(scriptPath string,dependsPath LnsAny) *front_UpdateInfo
         createUpdateInfo = func(scriptPath string,dependsPath LnsAny) *front_UpdateInfo {
             var mod string
@@ -1838,15 +1849,30 @@ func (self *front_Front) Exec() {
                 self.FP.SaveToLua(createUpdateInfo(self.option.ScriptPath, nil))
             }
         }), self.option.ScriptPath + ".profi")
-    } else if _switch7543 == Option_ModeKind__Exec {
+    } else if _switch7581 == Option_ModeKind__Exec {
         _ = front_convExp7471(Lns_2DDD(self.FP.LoadModule(Front_scriptPath2Module(self.option.ScriptPath))))
         if self.option.Testing{
-            Testing_run(Front_scriptPath2Module(self.option.ScriptPath))
-            Testing_outputAllResult(Lns_io_stdout)
+            var code string
+            code = "local Testing = require( \"lune.base.Testing\" )\nreturn function( path )\n  Testing.run( path );\n  Testing.outputAllResult( io.stdout );\nend\n"
+            var loaded LnsAny
+            var mess LnsAny
+            loaded,mess = Lns_getVM().Load(code, nil)
+            if loaded != nil{
+                loaded_6543 := loaded.(*Lns_luaValue)
+                {
+                    _mod := front_convExp7524(Lns_2DDD(Lns_getVM().RunLoadedfunc(loaded_6543,Lns_2DDD([]LnsAny{}))[0]))
+                    if _mod != nil {
+                        mod := _mod
+                        Lns_getVM().RunLoadedfunc((mod.(*Lns_luaValue)),Lns_2DDD([]LnsAny{Front_scriptPath2Module(self.option.ScriptPath)}))
+                    }
+                }
+            } else {
+                Lns_print([]LnsAny{mess})
+            }
         }
-    } else if _switch7543 == Option_ModeKind__BootC {
+    } else if _switch7581 == Option_ModeKind__BootC {
         self.FP.outputBootC(self.option.ScriptPath)
-    } else if _switch7543 == Option_ModeKind__Builtin {
+    } else if _switch7581 == Option_ModeKind__Builtin {
         self.FP.OutputBuiltin(self.option.ScriptPath)
     } else {
         Lns_print([]LnsAny{"illegal mode"})

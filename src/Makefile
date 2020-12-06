@@ -661,6 +661,7 @@ test-org:
 		grep -e 'error:' -e 'warning:' >> work/test1.result
 	$(MAKE) TEST_DIR=. test-etc >> work/test1.result
 	$(call exeFront,.) >> work/test1.result
+	$(call exeLune,$(LNSC),.,test/testing.lns,exe, --testing $(EXE_OPT) 2>&1) >> work/test1.result
 
 test-org-proj:
 ifndef SKIP_PROJ_TEST
@@ -691,6 +692,8 @@ test-new:
 		grep -e 'error:' -e 'warning:' >> work/test2.result
 	$(MAKE) TEST_DIR=work/3 test-etc >> work/test2.result
 	$(call exeFront,work/3) >> work/test2.result
+	$(call exeLune,$(LNSC),work/3,test/testing.lns,exe,--testing $(EXE_OPT) 2>&1) >> work/test2.result
+
 
 test-new-proj:
 ifndef SKIP_PROJ_TEST
@@ -1426,7 +1429,7 @@ test-subgo:
 
 
 define binding-lns-go
-	$(LNSC_LUA) lune/base/runtime_go/binding/bind.lns exe --testing
+	$(LNSC) lune/base/runtime_go/binding/bind.lns exe --testing
 	mv output.go $1/lune/base/runtime_go/binding.go 
 endef
 

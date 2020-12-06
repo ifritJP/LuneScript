@@ -1135,13 +1135,19 @@ fn TransUnit.analyzeDeclProto(
 fn TransUnit.analyzeDeclEnum(
    accessMode: Ast.AccessMode, firstToken: &Parser.Token ) mut : Nodes.DeclEnumNode
 {
+   if Ast.isPubToExternal( accessMode ) and
+      self.scope ~= self.moduleScope and
+      self.scope.$ownerTypeInfo$.$kind ~= .Class
+   {
+      self.addErrMess( firstToken.pos, "can't external at inner scope." );
+   }
+   
    let name = self.getSymbolToken( .MustNot_ );
 
    self.checkNextToken( "{" );
 
    let mut valueList:List<&Parser.Token> = [];
    //let mut valueName2Info:Map<str,Ast.EnumValInfo> = {};
-
 
    let mut scope = self.pushScope( true ## );
 

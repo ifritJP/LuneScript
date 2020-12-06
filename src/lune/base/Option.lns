@@ -285,6 +285,8 @@ usage:
       index = index + 1;
       return argList[ index ];
    }
+
+   Util.setDebugFlag( false );
    
    while #argList >= index {
       let arg = argList[ index ];
@@ -299,6 +301,9 @@ usage:
             }
             case "--nodebug" {
                Util.setDebugFlag( false );
+            }
+            case "--debug" {
+               Util.setDebugFlag( true );
             }
             case "--version" {
                print( "LuneScript: version %s (%d:%s) [%s]"

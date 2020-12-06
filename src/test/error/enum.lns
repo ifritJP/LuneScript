@@ -113,6 +113,11 @@ class Test2 {
    testEnum._from( "1" ); // error
 }
 
+{
+   pub enum AAA {
+   }
+}
+
 
 enum Foo {
    "hoge",  // error

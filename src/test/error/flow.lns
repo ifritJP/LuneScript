@@ -251,3 +251,13 @@
       print( val + 1 );
    }
 }
+{
+   fn func(val:int) {
+      let test;
+      if val == 0 {
+         test = 1;
+      }
+      test = 2; // error
+      print( test );
+   }
+}

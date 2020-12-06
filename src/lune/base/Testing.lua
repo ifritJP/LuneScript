@@ -248,9 +248,20 @@ function TestModuleInfo:run(  )
 
    self.runned = true
    print( string.format( "module: %s %s", self.name, string.rep( "=", 30 )) )
-   for name, testcase in pairs( self.testcaseMap ) do
-      print( string.format( "%s: %s", name, string.rep( "-", 15 )) )
-      testcase:get_func()( Ctrl.new(testcase:get_result()) )
+   do
+      local __sorted = {}
+      local __map = self.testcaseMap
+      for __key in pairs( __map ) do
+         table.insert( __sorted, __key )
+      end
+      table.sort( __sorted )
+      for __index, name in ipairs( __sorted ) do
+         local testcase = __map[ name ]
+         do
+            print( string.format( "%s: %s", name, string.rep( "-", 15 )) )
+            testcase:get_func()( Ctrl.new(testcase:get_result()) )
+         end
+      end
    end
    
 end
@@ -261,8 +272,19 @@ function TestModuleInfo:outputResult( stream )
    end
    
    print( string.format( "module: %s %s", self.name, string.rep( "=", 30 )) )
-   for __index, testcase in pairs( self.testcaseMap ) do
-      testcase:get_result():outputResult( stream )
+   do
+      local __sorted = {}
+      local __map = self.testcaseMap
+      for __key in pairs( __map ) do
+         table.insert( __sorted, __key )
+      end
+      table.sort( __sorted )
+      for __index, __key in ipairs( __sorted ) do
+         local testcase = __map[ __key ]
+         do
+            testcase:get_result():outputResult( stream )
+         end
+      end
    end
    
 end
@@ -298,19 +320,41 @@ _moduleObj.registerTestcase = registerTestcase
 
 local function run( modPath )
 
-   for name, info in pairs( testModuleMap ) do
-      if name == modPath then
-         info:run(  )
+   do
+      local __sorted = {}
+      local __map = testModuleMap
+      for __key in pairs( __map ) do
+         table.insert( __sorted, __key )
       end
-      
+      table.sort( __sorted )
+      for __index, name in ipairs( __sorted ) do
+         local info = __map[ name ]
+         do
+            if name == modPath then
+               info:run(  )
+            end
+            
+         end
+      end
    end
    
 end
 _moduleObj.run = run
 local function runAll(  )
 
-   for __index, info in pairs( testModuleMap ) do
-      info:run(  )
+   do
+      local __sorted = {}
+      local __map = testModuleMap
+      for __key in pairs( __map ) do
+         table.insert( __sorted, __key )
+      end
+      table.sort( __sorted )
+      for __index, __key in ipairs( __sorted ) do
+         local info = __map[ __key ]
+         do
+            info:run(  )
+         end
+      end
    end
    
 end
@@ -318,8 +362,19 @@ _moduleObj.runAll = runAll
 
 local function outputAllResult( stream )
 
-   for __index, info in pairs( testModuleMap ) do
-      info:outputResult( stream )
+   do
+      local __sorted = {}
+      local __map = testModuleMap
+      for __key in pairs( __map ) do
+         table.insert( __sorted, __key )
+      end
+      table.sort( __sorted )
+      for __index, __key in ipairs( __sorted ) do
+         local info = __map[ __key ]
+         do
+            info:outputResult( stream )
+         end
+      end
    end
    
 end
