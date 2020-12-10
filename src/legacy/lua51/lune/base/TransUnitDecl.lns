@@ -677,8 +677,13 @@ fn TransUnit.analyzeDeclMacroSub(
    macroScope:Ast.Scope, parentType:&Ast.TypeInfo,
    workArgList: List<&Nodes.Node> ) mut : Nodes.DeclMacroNode
 {
+   if self.macroCtrl.$isDeclaringMacro {
+      // macro 定義内に、別のマクロ定義はサポート外
+      self.error( "can't declare macro in the macro." );
+   }
+   
    self.macroCtrl.startDecl();
-
+   
    
    let mut pubFlag = false;
    switch accessMode {
@@ -726,13 +731,6 @@ fn TransUnit.analyzeDeclMacroSub(
    let mut stmtNode : Nodes.BlockNode! = nil;
    if nextToken.txt == "{" {
       // macro-statement の解析
-      
-      
-      //let mut parser = new Parser.WrapParser( self.parser, self.parser.getStreamName() );
-
-      // foreach symbolInfo, symbol in macroScope.$symbol2SymbolInfoMap {
-      //    macroScope.add( symbol, symbolInfo.$typeInfo, "local", false );
-      // }
 
       self.macroScope = macroScope;
 
@@ -755,9 +753,6 @@ fn TransUnit.analyzeDeclMacroSub(
          self.processInfo, false, true, "__var", nil, macroLocalVarType, .IMut );
 
       
-
-      // let mut bakParser = self.parser;
-      // self.parser = parser;
 
       let mut stmtList:List<&Nodes.Node> = [];
       self.prepareTentativeSymbol( self.scope, false, nil );

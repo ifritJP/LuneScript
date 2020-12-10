@@ -185,6 +185,7 @@ fn TransUnit.analyzeExpList(
    repeat {
       // 期待値の確定
       let mut expectType:&Ast.TypeInfo! = nil;
+      let mut allowNoneTypeOne = allowNoneType;
       when! expectTypeList {
          if #expectTypeList > 0 {
             let mut checkIndex = index;
@@ -193,8 +194,12 @@ fn TransUnit.analyzeExpList(
             }
             if checkIndex <= #expectTypeList and
                expectTypeList[ checkIndex ] ~= Ast.builtinTypeNone
-            {           
-               expectType = expectTypeList[ checkIndex ];
+            {
+               let worktype = expectTypeList[ checkIndex ];
+               expectType = worktype;
+               if worktype == Ast.builtinTypeExp {
+                  allowNoneTypeOne = true;
+               }
             }
          }
       }
@@ -205,15 +210,17 @@ fn TransUnit.analyzeExpList(
          ( expectType == Ast.builtinTypeExp or expectType == Ast.builtinTypeMultiExp )
       {
          self.macroCtrl.switchMacroMode();
-         exp = self.analyzeExp( allowNoneType, skipOp2Flag, canLeftExp, 0, expectType );
+         exp = self.analyzeExp(
+            allowNoneTypeOne, skipOp2Flag, canLeftExp, 0, expectType );
          self.macroCtrl.restoreMacroMode();
       }
       else {
-         exp = self.analyzeExp( allowNoneType, skipOp2Flag, canLeftExp, 0, expectType );
+         exp = self.analyzeExp(
+            allowNoneTypeOne, skipOp2Flag, canLeftExp, 0, expectType );
       }
 
       
-      if not allowNoneType and not exp.canBeRight( self.processInfo ) {
+      if not allowNoneTypeOne and not exp.canBeRight( self.processInfo ) {
          self.addErrMess(
             exp.$pos,
             "This arg can't be r-value. -- %s" ( Nodes.getNodeKindName( exp.$kind) ) );

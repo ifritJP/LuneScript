@@ -612,6 +612,7 @@ function MacroCtrl.new( macroEval )
    return obj
 end
 function MacroCtrl:__init(macroEval) 
+   self.isDeclaringMacro = false
    self.tokenExpanding = false
    self.useModuleMacroSet = {}
    self.typeId2MacroInfo = {}
@@ -639,6 +640,9 @@ function MacroCtrl:get_tokenExpanding()
 end
 function MacroCtrl:get_macroCallLineNo()
    return self.macroCallLineNo
+end
+function MacroCtrl:get_isDeclaringMacro()
+   return self.isDeclaringMacro
 end
 
 
@@ -707,7 +711,13 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
    local macroVars = func( macroArgValMap )
    self.macroLocalVarMap = _lune.unwrap( macroVars['__var'])
    for __index, name in pairs( (_lune.unwrap( macroVars['__names']) ) ) do
-      local valInfo = _lune.unwrap( macroInfo.symbol2MacroValInfoMap[name])
+      local valInfo = macroInfo.symbol2MacroValInfoMap[name]
+      if  nil == valInfo then
+         local _valInfo = valInfo
+      
+         Util.err( string.format( "not found macro symbol -- %s", name) )
+      end
+      
       local typeInfo = valInfo.typeInfo
       local valList
       
@@ -797,7 +807,15 @@ function MacroCtrl:regist( processInfo, node, macroScope )
    local remap = {}
    for name, macroValInfo in pairs( self.symbol2ValueMapForMacro ) do
       if equalsType( macroValInfo.typeInfo, Ast.builtinTypeEmpty ) then
-         remap[name] = Nodes.MacroValInfo.new(macroValInfo.val, _lune.unwrap( macroScope:getTypeInfoChild( name )), macroValInfo.argNode)
+         do
+            local typeInfo = macroScope:getTypeInfoChild( name )
+            if typeInfo ~= nil then
+               remap[name] = Nodes.MacroValInfo.new(macroValInfo.val, typeInfo, macroValInfo.argNode)
+            else
+               remap[name] = macroValInfo
+            end
+         end
+         
       else
        
          remap[name] = macroValInfo
@@ -805,10 +823,10 @@ function MacroCtrl:regist( processInfo, node, macroScope )
       
    end
    
-   self.symbol2ValueMapForMacro = remap
-   self.typeId2MacroInfo[node:get_expType():get_typeId(  )] = Nodes.DefMacroInfo.new(macroObj, node:get_declInfo(), self.symbol2ValueMapForMacro)
+   self.typeId2MacroInfo[node:get_expType():get_typeId(  )] = Nodes.DefMacroInfo.new(macroObj, node:get_declInfo(), remap)
    
    self.symbol2ValueMapForMacro = {}
+   self.isDeclaringMacro = false
 end
 
 
@@ -1108,6 +1126,7 @@ end
 function MacroCtrl:startDecl(  )
 
    self.symbol2ValueMapForMacro = {}
+   self.isDeclaringMacro = true
 end
 
 
@@ -1117,7 +1136,6 @@ function MacroCtrl:finishMacroMode(  )
 
    table.remove( self.macroAnalyzeInfoStack )
    self.analyzeInfo = self.macroAnalyzeInfoStack[#self.macroAnalyzeInfoStack]
-   
 end
 
 
@@ -1137,7 +1155,6 @@ function MacroCtrl:startAnalyzeArgMode( macroFuncType )
 
    self.analyzeInfo = MacroAnalyzeInfo.new(macroFuncType, Nodes.MacroMode.AnalyzeArg)
    table.insert( self.macroAnalyzeInfoStack, self.analyzeInfo )
-   
 end
 
 

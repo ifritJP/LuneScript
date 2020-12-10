@@ -8311,7 +8311,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             local nonNilOtherType = otherSrc:get_nonnilableType()
             do
                local _switchExp = nonNilOtherType:get_kind()
-               if _switchExp == TypeInfoKind.Set or _switchExp == TypeInfoKind.Map or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.IF then
+               if _switchExp == TypeInfoKind.Set or _switchExp == TypeInfoKind.Map or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.IF or _switchExp == TypeInfoKind.Alternate then
                   return false, nil
                elseif _switchExp == TypeInfoKind.Class then
                   if _moduleObj.builtinTypeString ~= nonNilOtherType then

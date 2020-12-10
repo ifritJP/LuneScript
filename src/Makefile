@@ -100,6 +100,7 @@ help:
 	@echo "  make test-tutorial-go"
 	@echo "  make go-build"
 	@echo "  make setup-pkg-lua"
+	@echo "  make test-govslua [BATCH=y] [ONLY_CONV=y]" 
 
 
 exec:
@@ -549,6 +550,7 @@ TEST_CASE += macro.lns
 TEST_CASE += macro2.lns
 TEST_CASE += macro3.lns
 TEST_CASE += macro4.lns
+TEST_CASE += macro5.lns
 TEST_CASE += apply.lns
 TEST_CASE += multiple-class.lns
 TEST_CASE += multiple-if.lns

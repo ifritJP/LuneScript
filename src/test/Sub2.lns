@@ -155,7 +155,7 @@ pub fn DDDfunc2( ...<str!> ): ...<str!> {
 }
 
 
-pub fn dump( ...<stem> ) {
+pub fn dump( ...<&stem> ) {
    foreach val in [ ... ] {
       io.stdout.write( "%s," (val) );
    }

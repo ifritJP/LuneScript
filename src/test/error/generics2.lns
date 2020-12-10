@@ -7,7 +7,7 @@ fn dump( ...<stem> ) {
 class Test<T> {
    let val:T {pub};
    pub fn func( val:T! ) {
-      dump( self.val, unwrap val default 0 );
+      dump( self.val, unwrap val default 0 ); // error
    }
 }
 pub fn Test.func2( val:T ) {

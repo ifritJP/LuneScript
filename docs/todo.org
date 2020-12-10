@@ -22,56 +22,8 @@ lua の場合 val に nil が入らないが、 go では入る。
   
 - [ ] alias は、同じディレクトリ内のモジュールに限定する。
   
-- [ ] 型パラメータを持つクラスを継承した時、
-      そのクラスの継承元のコンストラクタに引数がある場合、
-      デフォルトコンストラクタが正しく処理されない。
-
-class Hoge<T> {
-   let item:T {pub};
-}
-
-abstract class Test<T> {
-   let mut val:T!;
-   
-   pro fn __init( val:T! ) {
-      self.val = val;
-   }
-}
-
-class Sub extend Test<int> {
-}
-      
-
   
-- [ ] 以下のマクロ呼び出しができない。 print() が値を返さないので __exp にセットできない。
-      しかし、 __exp の用途的に、セットできるべき。
-         
-macro _hoge( val:__exp) {
-   ,,val;
-}
-_hoge( print("hoge") );
-  
-  
-- [ ] 以下のマクロがエラーする。
-      valName 変数の型推論が出来ていないのと、そもそも valName は expand-block には登録しないはず。
-macro _hoge( list:List<int> ) {
-   {
-      foreach val in list {
-         let valName;
-         valName = "%s" (val);
-      }
-   }
-}
-
-  
-- [ ]
-class Test6<T> {
-   let val:T {pub};
-   pub fn func():T { // ここでエラーを出すべき。 mut メソッドでないのに mut オブジェクトを返している。
-      return self.val;
-   }
-}
-  
+ 
 - [ ] string の enum で .. が利用できない。
   
 - [ ] subfile で emacs からシンボル情報が参照できない。
@@ -91,16 +43,6 @@ func( list.unpack() );
 
   
  
-- [ ] 次のマクロの呼び出しが出来ない。
-  __exp に指定する引数が多値返却の場合エラーになる。
-
-macro _hoge( func:__exp ) {
-  ,,func;
-}
-fn func() : int, int {
-  return 1, 2;
-}
-_hoge( func() );
 
   
 - [ ] Mapping を implement するクラスは、 abstract/interface のメンバは持てないようにする
@@ -875,6 +817,58 @@ func( list ); // List<Sub1> に Sub2 のインスタンスが入ってしまう�
 foreach obj in list {
    print( obj.func() );
 }
+- [X] 以下のマクロ呼び出しができない。 print() が値を返さないので __exp にセットできない。
+      しかし、 __exp の用途的に、セットできるべき。
+         
+macro _hoge( val:__exp) {
+   ,,val;
+}
+_hoge( print("hoge") );
+
+- [X] 型パラメータを持つクラスを継承した時、
+      そのクラスの継承元のコンストラクタに引数がある場合、
+      デフォルトコンストラクタが正しく処理されない。
+
+abstract class Test<T> {
+   let mut val:T!;
+   
+   pro fn __init( val:T! ) {
+      self.val = val;
+   }
+}
+
+class Sub extend Test<int> {
+}
+
+- [X] 以下のマクロがエラーする。
+      valName 変数の型推論が出来ていないのと、そもそも valName は expand-block には登録しないはず。
+macro _hoge( list:List<int> ) {
+   {
+      foreach val in list {
+         let valName;
+         valName = "%s" (val);
+      }
+   }
+}
+
+- [X] 型パラメータの immutable チェックができてない
+class Test6<T> {
+   let val:T {pub};
+   pub fn func():T { // ここでエラーを出すべき。 mut メソッドでないのに mut オブジェクトを返している。
+      return self.val;
+   }
+}
+- [X] 次のマクロの呼び出しが出来ない。
+  __exp に指定する引数が多値返却の場合エラーになる。
+
+macro _hoge( func:__exp ) {
+  ,,func;
+}
+fn func() : int, int {
+  return 1, 2;
+}
+_hoge( func() );
+  
 
   
   

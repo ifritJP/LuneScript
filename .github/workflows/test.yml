@@ -56,7 +56,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Build the Docker image
       run: |
-        docker build src/test/docker/compose/centos8/docker --tag cent8_lns
+        docker build src/test/docker/compose/centos8/build --tag cent8_lns
         mkdir -p export
         docker run --rm -v $(pwd)/export:/export \
                         --name cent8_lns cent8_lns \
@@ -85,7 +85,7 @@ jobs:
   #   - uses: actions/checkout@v2
   #   - name: Build the Docker image
   #     run: |
-  #       docker build src/test/docker/compose/centos7/docker --tag cent7_lns
+  #       docker build src/test/docker/compose/centos7/build --tag cent7_lns
   #       mkdir -p export
   #       docker run --rm -v $(pwd)/export:/export \
   #                       --name cent7_lns cent7_lns \
@@ -113,7 +113,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Build the Docker image
       run: |
-        docker build src/test/docker/compose/alpine/docker --tag alpine_lns
+        docker build src/test/docker/compose/alpine/build --tag alpine_lns
         mkdir -p export
         docker run --rm -v $(pwd)/export:/export \
                         --name alpine_lns alpine_lns \
@@ -141,7 +141,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Build the Docker image
       run: |
-        docker build src/test/docker/compose/ubuntu/docker --tag ubuntu_lns
+        docker build src/test/docker/compose/ubuntu/build --tag ubuntu_lns
         mkdir -p export
         docker run --rm -v $(pwd)/export:/export \
                         --name ubuntu_lns ubuntu_lns \

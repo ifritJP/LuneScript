@@ -1889,3 +1889,61 @@ _ = 1;
    Macro._section();
    Sub8.sub();
 }
+{
+   Macro._section();
+   macro _hoge( val:__exp) {
+      ,,val;
+   }
+   _hoge( print("hoge") );
+}
+{
+   Macro._section();
+   abstract class Test<T> {
+      let mut val:T! {pub};
+      pro fn __init( val:T! ) {
+         self.val = val;
+      }
+   }
+
+   class Sub extend Test<int> {
+   }
+
+   let sub = new Sub( 1 );
+   print( sub.$val );
+}
+{
+   Macro._section();
+   macro _hoge( list:List<int> ) {
+      {
+         foreach val in list {
+            let valName;
+            valName = "%s" (val);
+         }
+      }
+   }
+}
+{
+   Macro._section();
+   macro _hoge( val:int ) {
+      {
+         let mut hoge;
+         {
+            let valName;
+            valName = "%s" (val);
+            hoge = valName;
+         }
+      }
+      print( ,,hoge .. "a" );
+   }
+   _hoge( 10 );
+}
+{
+   Macro._section();
+   macro _hoge( func:__exps ) {
+      print( ,,func** );
+   }
+   fn func() : int, int {
+      return 1, 2;
+   }
+   _hoge( func() );
+}

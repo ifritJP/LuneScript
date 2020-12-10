@@ -225,7 +225,10 @@ pub class MacroCtrl
    pri let macroEval: Nodes.MacroEval;
    /** マクロの TypeId -> マクロ情報 */
    let mut typeId2MacroInfo: Map<int,Nodes.MacroInfo> {pub&};
-   /** 現在展開中の macro-expand 内で利用できるシンボルと値の紐付けマップ */
+   /**
+   * 現在展開中の macro-expand 内で利用できるシンボルと値の紐付けマップ。
+   * macro-statment 内の stat の展開でも利用する。
+   */
    pri let mut symbol2ValueMapForMacro: Map<str,Nodes.MacroValInfo>;
    /** マクロのモード */
    pri let mut analyzeInfo: MacroAnalyzeInfo {pub};
@@ -239,9 +242,12 @@ pub class MacroCtrl
    * マクロ横断で共通。
    */
    pri let mut macroLocalVarMap:Luaval<&stem>;
+   /** マクロ定義中の場合 true */
+   pri let mut isDeclaringMacro:bool {pub};
 
    pub fn __init( macroEval: Nodes.MacroEval )
    {
+      self.isDeclaringMacro = false;
       self.tokenExpanding = false;
       self.useModuleMacroSet = (@);
       self.typeId2MacroInfo = {};
@@ -349,7 +355,9 @@ pub fn MacroCtrl.evalMacroOp(
    // macro-statment の実行結果から、
    // symbol2ValueMapForMacro にシンボル名と値を紐付け
    foreach name in (unwrap macroVars.__names)@@List<str> {
-      let valInfo = unwrap macroInfo.symbol2MacroValInfoMap[ name ];
+      let! valInfo = macroInfo.symbol2MacroValInfoMap[ name ] {
+         Util.err( "not found macro symbol -- %s" (name) );
+      };
       let typeInfo = valInfo.typeInfo;
       let mut valList:Luaval<&stem>;
       if! let mut val = macroVars[ name ] {
@@ -452,29 +460,30 @@ pub fn MacroCtrl.importMacro(
 
 
 pub fn MacroCtrl.regist(
-   processInfo:Ast.ProcessInfo, node:Nodes.DeclMacroNode, macroScope:&Ast.Scope ) mut {
+   processInfo:Ast.ProcessInfo, node:Nodes.DeclMacroNode, macroScope:&Ast.Scope ) mut
+{
    let macroObj = self.macroEval.eval( processInfo, node );
 
    // registVar() した時に確定していない変数の型を、ここで確定する。
    let mut remap:Map<str,Nodes.MacroValInfo> = {};
    foreach macroValInfo, name in self.symbol2ValueMapForMacro {
       if equalsType( macroValInfo.typeInfo, Ast.builtinTypeEmpty ) {
-         remap[ name ] = new Nodes.MacroValInfo(
-            macroValInfo.val, unwrap macroScope.getTypeInfoChild( name ),
-            macroValInfo.argNode );
-      }
-      else {
+         if! let typeInfo = macroScope.getTypeInfoChild( name ) {
+            remap[ name ] = new Nodes.MacroValInfo(
+               macroValInfo.val, typeInfo, macroValInfo.argNode );
+         } else {
+            remap[ name ] = macroValInfo;
+         }
+      } else {
          remap[ name ] = macroValInfo;
       }
    }
-   self.symbol2ValueMapForMacro = remap;
-
    // マクロ情報を登録
    self.typeId2MacroInfo[ node.$expType.get_typeId() ] =
-      new Nodes.DefMacroInfo( macroObj, node.$declInfo,
-                              self.symbol2ValueMapForMacro );
+      new Nodes.DefMacroInfo( macroObj, node.$declInfo, remap );
 
    self.symbol2ValueMapForMacro = {};
+   self.isDeclaringMacro = false;
 }
 
 fn expandVal( tokenList:List<&Parser.Token>,
@@ -814,7 +823,8 @@ macro-statment 内で定義している変数を登録する。
 
 @param symbolList 変数一覧
 */
-pub fn MacroCtrl.registVar( symbolList:&List<&Ast.SymbolInfo> ) mut {
+pub fn MacroCtrl.registVar( symbolList:&List<&Ast.SymbolInfo> ) mut
+{
    foreach symbolInfo in symbolList {
       let mut info = new Nodes.MacroValInfo( nil, symbolInfo.$typeInfo, nil);
       self.symbol2ValueMapForMacro[ symbolInfo.$name ] = info;
@@ -823,6 +833,7 @@ pub fn MacroCtrl.registVar( symbolList:&List<&Ast.SymbolInfo> ) mut {
 
 pub fn MacroCtrl.startDecl() mut {
    self.symbol2ValueMapForMacro = {};
+   self.isDeclaringMacro = true;   
 }
 
 pub form EvalMacroCallback();
@@ -830,7 +841,6 @@ pub form EvalMacroCallback();
 pub fn MacroCtrl.finishMacroMode() mut {
    self.macroAnalyzeInfoStack.remove(##);
    self.analyzeInfo = self.macroAnalyzeInfoStack[ #self.macroAnalyzeInfoStack ];
-   // self.symbol2ValueMapForMacro = {};
 }
 
 
@@ -849,21 +859,14 @@ pub fn MacroCtrl.startExpandMode(
 pub fn MacroCtrl.startAnalyzeArgMode( macroFuncType:&Ast.TypeInfo ) mut {
    self.analyzeInfo = new MacroAnalyzeInfo( macroFuncType, .AnalyzeArg );
    self.macroAnalyzeInfoStack.insert( self.analyzeInfo );
-   // let mut map:Map<str,Nodes.MacroValInfo> = {};
-   // foreach val, key in self.symbol2ValueMapForMacro {
-   //    map[ key ] = val;
-   // }
-   // self.symbol2ValueMapForMacro = map;
 }
 
 pub fn MacroCtrl.switchMacroMode() mut {
-   //   self.analyzeInfo.$mode = .None;
    self.analyzeInfo = self.macroAnalyzeInfoStack[ #self.macroAnalyzeInfoStack - 1 ];
    self.macroAnalyzeInfoStack.insert( self.analyzeInfo );
 }
 
 pub fn MacroCtrl.restoreMacroMode() mut {
-   //self.analyzeInfo.$mode = .AnalyzeArg;
    self.macroAnalyzeInfoStack.remove(##);
    self.analyzeInfo = self.macroAnalyzeInfoStack[ #self.macroAnalyzeInfoStack ];
 }

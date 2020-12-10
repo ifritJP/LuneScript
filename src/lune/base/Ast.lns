@@ -6230,7 +6230,7 @@ pub static fn TypeInfo.canEvalWithBase(
             // imut/mut が一致していないものはエラー
             let nonNilOtherType = otherSrc.$nonnilableType;
             switch nonNilOtherType.$kind {
-               case .Set, .Map, .List, .IF {
+               case .Set, .Map, .List, .IF, .Alternate {
                   return false, nil;
                }
                case .Class {

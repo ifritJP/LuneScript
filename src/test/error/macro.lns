@@ -17,5 +17,3 @@ macro _Test( val:int ) {
    print( _hoge() ); // error
 }
 _Test( 1, 2 ); // error
-
-

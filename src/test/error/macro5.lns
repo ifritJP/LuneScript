@@ -1,0 +1,6 @@
+macro _hoge() {
+   {
+      macro _foo() {
+      }
+   }
+}
