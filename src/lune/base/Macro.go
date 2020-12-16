@@ -1,6 +1,6 @@
 // This code is transcompiled by LuneScript.
 package lnsc
-import . "github.com/ifritJP/LuneScript/lune/base/runtime_go"
+import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_Macro bool
 var Macro__mod__ string
 var Macro_toList *Lns_luaValue

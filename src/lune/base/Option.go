@@ -1,6 +1,6 @@
 // This code is transcompiled by LuneScript.
 package lnsc
-import . "github.com/ifritJP/LuneScript/lune/base/runtime_go"
+import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_Option bool
 var Option__mod__ string
 // decl enum -- ModeKind 
@@ -82,7 +82,7 @@ func Option_convExp528(arg1 []LnsAny) LnsAny {
 }
 // 48: decl @lune.@base.@Option.getBuildCount
 func Option_getBuildCount_1015_() LnsInt {
-    return 6378
+    return 6385
 }
 
 // 73: decl @lune.@base.@Option.getRuntimeModule

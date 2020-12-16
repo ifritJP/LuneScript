@@ -1,6 +1,6 @@
 // This code is transcompiled by LuneScript.
 package lnsc
-import . "github.com/ifritJP/LuneScript/lune/base/runtime_go"
+import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_convCC bool
 var convCC__mod__ string
 // decl enum -- ConvMode 

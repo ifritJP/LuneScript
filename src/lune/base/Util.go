@@ -1,6 +1,6 @@
 // This code is transcompiled by LuneScript.
 package lnsc
-import . "github.com/ifritJP/LuneScript/lune/base/runtime_go"
+import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_Util bool
 var Util__mod__ string
 var Util_debugFlag bool

@@ -1,6 +1,6 @@
 // This code is transcompiled by LuneScript.
 package lnsc
-import . "github.com/ifritJP/LuneScript/lune/base/runtime_go"
+import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_convGo bool
 var convGo__mod__ string
 // decl enum -- ProcessMode 
@@ -2048,7 +2048,7 @@ func (self *convGo_convFilter) ProcessRoot(node *Nodes_RootNode,_opt LnsAny) {
     
     self.FP.Writeln("// This code is transcompiled by LuneScript.")
     self.FP.Writeln(Lns_getVM().String_format("package %s", []LnsAny{self.option.packageName}))
-    self.FP.Writeln("import . \"github.com/ifritJP/LuneScript/lune/base/runtime_go\"")
+    self.FP.Writeln("import . \"github.com/ifritJP/LuneScript/src/lune/base/runtime_go\"")
     for _, _workNode := range( node.FP.Get_nodeManager().FP.GetImportNodeList().Items ) {
         workNode := _workNode.(Nodes_ImportNodeDownCast).ToNodes_ImportNode()
         self.FP.outputImport(workNode)

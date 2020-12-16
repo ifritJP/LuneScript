@@ -26,8 +26,8 @@ package main
 
 import "os"
 
-import . "github.com/ifritJP/LuneScript/lune/base/runtime_go"
-import lnsc "github.com/ifritJP/LuneScript/lune/base"
+import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
+import lnsc "github.com/ifritJP/LuneScript/src/lune/base"
 
 func exec( args []LnsAny ) error {
     Lns_InitModOnce()

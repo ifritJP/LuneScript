@@ -24,7 +24,7 @@ SOFTWARE.
 
 package main
 
-import . "github.com/ifritJP/LuneScript/lune/base/runtime_go"
+import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 
 // import "runtime"
 // import "time"

@@ -2056,7 +2056,7 @@ function convFilter:processRoot( node, opt )
    
    self:writeln( "// This code is transcompiled by LuneScript." )
    self:writeln( string.format( "package %s", self.option.packageName) )
-   self:writeln( 'import . "github.com/ifritJP/LuneScript/lune/base/runtime_go"' )
+   self:writeln( 'import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"' )
    
    for __index, workNode in ipairs( node:get_nodeManager():getImportNodeList(  ) ) do
       self:outputImport( workNode )

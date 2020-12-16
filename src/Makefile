@@ -376,7 +376,7 @@ endef
 # 第3引数のディレクトリにコピーする
 define cp_src_set_sub
 	@find $1 -maxdepth 1 -type f \
-		-iname $2 -exec cp {} $3 \;
+		-iname $2 -exec cp -p {} $3 \;
 endef
 
 # lns のビルドに必要なソース群をコピーする
@@ -1231,7 +1231,7 @@ test-gc:
 
 
 GO_RUNTIME = lune/base/runtime_go
-GO_MOD = github.com/ifritJP/LuneScript
+GO_MOD = github.com/ifritJP/LuneScript/src
 
 LUA_URL=https://www.lua.org/ftp/lua-5.3.6.tar.gz
 
@@ -1385,7 +1385,7 @@ define test-convGo-test
 		sed 's/Lns_init/Lns_$3_init/' |			\
 		sed 's@//TEST:@@' |				\
 		sed 's/run( "" )/run( "lune.base.$3" )/' |				\
-		sed 's@//IMPORT@import . "$(GO_MOD)/lune/base"@' > $2/$5/runtime_main.go
+		sed 's@//IMPORT@import . "$(GO_MOD)/src/lune/base"@' > $2/$5/runtime_main.go
 
 	$(call convGo,$1,$2,$4/$3,--testing --package lnsc,$5)
 	$(call buildGo,$2/$5,test.exe) >> work/result-testGo.txt
