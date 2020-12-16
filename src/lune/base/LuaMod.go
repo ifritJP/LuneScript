@@ -1,6 +1,6 @@
 // This code is transcompiled by LuneScript.
 package lnsc
-import . "lnsc/lune/base/runtime_go"
+import . "github.com/ifritJP/LuneScript/lune/base/runtime_go"
 var init_LuaMod bool
 var LuaMod__mod__ string
 // decl enum -- CodeKind 

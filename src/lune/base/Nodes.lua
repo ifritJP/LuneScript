@@ -1205,13 +1205,13 @@ function ImportNode:canBeStatement(  )
 
    return true
 end
-function ImportNode.new( id, pos, macroArgFlag, typeList, modulePath, lazy, assignName, symbolInfo, moduleTypeInfo )
+function ImportNode.new( id, pos, macroArgFlag, typeList, modulePath, lazy, assignName, assigned, symbolInfo, moduleTypeInfo )
    local obj = {}
    ImportNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, modulePath, lazy, assignName, symbolInfo, moduleTypeInfo ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, modulePath, lazy, assignName, assigned, symbolInfo, moduleTypeInfo ); end
    return obj
 end
-function ImportNode:__init(id, pos, macroArgFlag, typeList, modulePath, lazy, assignName, symbolInfo, moduleTypeInfo) 
+function ImportNode:__init(id, pos, macroArgFlag, typeList, modulePath, lazy, assignName, assigned, symbolInfo, moduleTypeInfo) 
    Node.__init( self,id, 4, pos, macroArgFlag, typeList)
    
    
@@ -1219,14 +1219,15 @@ function ImportNode:__init(id, pos, macroArgFlag, typeList, modulePath, lazy, as
    self.modulePath = modulePath
    self.lazy = lazy
    self.assignName = assignName
+   self.assigned = assigned
    self.symbolInfo = symbolInfo
    self.moduleTypeInfo = moduleTypeInfo
    
    
 end
-function ImportNode.create( nodeMan, pos, macroArgFlag, typeList, modulePath, lazy, assignName, symbolInfo, moduleTypeInfo )
+function ImportNode.create( nodeMan, pos, macroArgFlag, typeList, modulePath, lazy, assignName, assigned, symbolInfo, moduleTypeInfo )
 
-   local node = ImportNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, modulePath, lazy, assignName, symbolInfo, moduleTypeInfo)
+   local node = ImportNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, modulePath, lazy, assignName, assigned, symbolInfo, moduleTypeInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -1246,6 +1247,9 @@ function ImportNode:get_lazy()
 end
 function ImportNode:get_assignName()
    return self.assignName
+end
+function ImportNode:get_assigned()
+   return self.assigned
 end
 function ImportNode:get_symbolInfo()
    return self.symbolInfo
@@ -12341,7 +12345,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, _10538 in pairs( self.map ) do
+   for key, _10542 in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -12376,8 +12380,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, _10552 in ipairs( __sorted ) do
-         local key = __map[ _10552 ]
+      for __index, _10556 in ipairs( __sorted ) do
+         local key = __map[ _10556 ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false

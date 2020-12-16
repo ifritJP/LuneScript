@@ -1,6 +1,6 @@
 // This code is transcompiled by LuneScript.
 package lnsc
-import . "lnsc/lune/base/runtime_go"
+import . "github.com/ifritJP/LuneScript/lune/base/runtime_go"
 var init_dumpNode bool
 var dumpNode__mod__ string
 // for 59
@@ -998,8 +998,8 @@ func (self *dumpNode_dumpFilter) ProcessExpSetItem(node *Nodes_ExpSetItemNode,_o
     self.FP.dump(opt, &node.Nodes_Node, indexSym)
     dumpNode_filter_1049_(node.FP.Get_val(), self, opt.FP.NextOpt())
     if indexNode != nil{
-        indexNode_5662 := indexNode.(*Nodes_Node)
-        dumpNode_filter_1049_(indexNode_5662, self, opt.FP.NextOpt())
+        indexNode_5664 := indexNode.(*Nodes_Node)
+        dumpNode_filter_1049_(indexNode_5664, self, opt.FP.NextOpt())
     }
     dumpNode_filter_1049_(node.FP.Get_exp2(), self, opt.FP.NextOpt())
 }

@@ -1,6 +1,6 @@
 // This code is transcompiled by LuneScript.
 package lnsc
-import . "lnsc/lune/base/runtime_go"
+import . "github.com/ifritJP/LuneScript/lune/base/runtime_go"
 var init_Ver bool
 var Ver__mod__ string
 var Ver_version string

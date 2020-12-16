@@ -283,7 +283,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 6331
+   return 6378
 end
 
 
@@ -371,6 +371,7 @@ function Option.new(  )
    return obj
 end
 function Option:__init() 
+   self.appName = "lnsc"
    self.packageName = nil
    self.testing = false
    self.convTo = nil
@@ -527,6 +528,7 @@ usage:
     --default-lazy: set lazy-loading at default.
     --valid-luaval: enable luaval when transcompie to lua.
     --package <name>: set the package name for the go-lang.
+    --app <name>: set the application name for the go-lang.
 
 * type2
   dir: output directory.
@@ -694,6 +696,14 @@ end
                option.transCtrlInfo.defaultLazy = true
             elseif _switchExp == "--package" then
                option.packageName = getNextOp(  )
+            elseif _switchExp == "--app" then
+               do
+                  local _exp = getNextOp(  )
+                  if _exp ~= nil then
+                     option.appName = _exp
+                  end
+               end
+               
             elseif _switchExp == "--log" then
                do
                   local txt = getNextOp(  )
@@ -835,7 +845,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 490, function (  )
+   Log.log( Log.Level.Log, __func__, 499, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

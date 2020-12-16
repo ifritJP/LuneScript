@@ -70,6 +70,7 @@ fn getEnv( threading:bool ) : str {
 
 pub class Option {
    local let packageName:str {pub};
+   local let appName:str {pub};
 }
 
 class convFilter extend Nodes.Filter<Opt> {
@@ -85,6 +86,8 @@ class convFilter extend Nodes.Filter<Opt> {
    let mut processInfo:Ast.ProcessInfo;
    pri let noneNode:Nodes.NoneNode;
    let option:&Option;
+   let modDir:str;
+   let mut module2PackSym:Map<&Ast.TypeInfo,str>;
 
    pub fn __init( enableTest:bool, streamName: str, stream: oStream,
                   ast:TransUnit.ASTInfo, option:&Option )
@@ -102,6 +105,11 @@ class convFilter extend Nodes.Filter<Opt> {
       self.type2gotypeMap = {};
       self.nodeManager = new Nodes.NodeManager();
       self.enableTest = enableTest;
+      self.module2PackSym = {};
+
+      let modDir = self.moduleTypeInfo.getParentFullName(
+         self.$typeNameCtrl, self.$moduleInfoManager, false );
+      self.modDir = modDir.gsub( "@", "" ).gsub( "%.$", "" );
 
       self.noneNode = Nodes.NoneNode.create(
          self.nodeManager, Parser.noneToken.pos, false,
@@ -1384,6 +1392,56 @@ fn convFilter.outputConvExt( funcNode:&Nodes.Node ) {
    self.writeln( "}" );
 }
 
+fn convFilter.isSameModDir( moduleTypeInfo:&Ast.TypeInfo ) : bool {
+   if moduleTypeInfo.$parentInfo == self.moduleTypeInfo.$parentInfo {
+      return true;
+   }
+   return false;
+}
+fn convFilter.outputModule( moduleTypeInfo:&Ast.TypeInfo, addDot:bool ) {
+   if! let packSym = self.module2PackSym[ moduleTypeInfo ] {
+      self.write( packSym );
+      if addDot {
+         self.write( "." );
+      }
+   }
+}
+
+fn getModulePrefix( node:&Nodes.ImportNode ) : str {
+   if node.$assigned {
+      return "%s." (node.$assignName);
+   }
+   let mod = node.$moduleTypeInfo.$parentInfo.$rawTxt.gsub("@", "");
+   if mod == "" {
+      return "main.";
+   }
+   return "%s." (mod);
+}
+
+fn convFilter.outputImport( node:&Nodes.ImportNode ) mut {
+   if self.isSameModDir( node.$moduleTypeInfo ) or
+      Ast.isBuiltin( node.$moduleTypeInfo.$typeId )
+   {
+      return;
+   }
+   
+
+   self.write( "import " );
+   let modulePath, count = node.$modulePath.gsub( "([^%.]+)%.[^%.]+$", "/%1" );
+   let packSym;
+   if count == 0 {
+      packSym = "_P%d_main" (node.$id);
+      self.writeln( '%s "%s"' (packSym,self.option.appName));
+   } else {
+      let modDir = modulePath.gsub( "/", "" );
+      packSym = "_P%d_%s" (node.$id,(modDir.gsub( ".*%.", "" )));
+      self.writeln(
+         '%s "%s/%s"' (packSym, self.option.appName, (modDir.gsub( "%.", "/" )) ) );
+   }
+
+   self.module2PackSym[ node.$moduleTypeInfo ] = packSym;
+}
+
 pub override fn convFilter.processRoot(
    node: Nodes.RootNode, opt: Opt ) mut
 {
@@ -1495,7 +1553,11 @@ pub override fn convFilter.processRoot(
    
    self.writeln( "// This code is transcompiled by LuneScript." );
    self.writeln( "package %s" (self.option.packageName) );
-   self.writeln( 'import . "lnsc/lune/base/runtime_go"' );
+   self.writeln( 'import . "github.com/ifritJP/LuneScript/lune/base/runtime_go"');
+
+   foreach workNode in node.$nodeManager.getImportNodeList() {
+      self.outputImport( workNode );
+   }
 
 
    let initModVar = "init_%s" (getModuleName(node.$moduleTypeInfo));
@@ -4018,6 +4080,8 @@ pub fn convFilter.outputCallPrefix(
                }
                filter( prefixNode, self, node );
             }
+         } else {
+            self.outputModule( funcType.getModule(), true );
          }
 
          processNilAcc( prefixNode );
@@ -4757,6 +4821,7 @@ pub override fn convFilter.processRefField(
       }
 
       if symbol.$staticFlag {
+         self.outputModule( symbol.getModule(), true );
          self.write( self.getSymbolSym( symbol ) );
          return;
       }
@@ -5106,7 +5171,7 @@ __test {
       let mut stream = new Util.memStream();
 
       let mut conv = createFilter( false, streamName, stream, ast,
-                                   new Option( "lns" ) );
+                                   new Option( "lns", "lnsgo" ) );
 
       ast.$node.processFilter( conv, new Opt( ast.$node ));
 

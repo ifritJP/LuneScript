@@ -488,7 +488,7 @@ function Front:loadFromLnsTxt( importModuleInfo, name, txt )
    
    local ast = transUnit:createAST( parser, false, nil )
    
-   local _5794, luaTxt = self:convertFromAst( ast, name, convLua.ConvMode.Exec )
+   local _5800, luaTxt = self:convertFromAst( ast, name, convLua.ConvMode.Exec )
    return _lune.unwrap( loadFromLuaTxt( luaTxt ))
 end
 
@@ -815,7 +815,7 @@ function Front:convertLns2LuaCode( importModuleInfo, stream, streamName )
    local mod = scriptPath2Module( streamName )
    local ast = self:createAst( importModuleInfo, Parser.StreamParser.new(stream, streamName, false), mod, frontInterface.ModuleId.createId( 0.0, 0 ), nil, TransUnit.AnalyzeMode.Compile )
    
-   local _5939, luaTxt = self:convertFromAst( ast, streamName, convLua.ConvMode.Exec )
+   local _5945, luaTxt = self:convertFromAst( ast, streamName, convLua.ConvMode.Exec )
    
    return luaTxt
 end
@@ -953,7 +953,7 @@ function Front:checkUptodateMeta( metaPath, addSearchPath )
    end
    
    
-   for moduleFullName, _6017 in pairs( meta.__dependModuleMap ) do
+   for moduleFullName, _6023 in pairs( meta.__dependModuleMap ) do
       do
          local lnsPath = self:searchModule( moduleFullName )
          if lnsPath ~= nil then
@@ -1248,7 +1248,7 @@ function Front:convertLuaToStreamFromScript( parser, moduleId, uptodate, convMod
       if stream ~= nil then
          if metaInfo ~= nil then
             local dependInfo = OutputDepend.DependInfo.new(mod)
-            for dependMod, _6190 in pairs( metaInfo.__dependModuleMap ) do
+            for dependMod, _6196 in pairs( metaInfo.__dependModuleMap ) do
                dependInfo:addImpotModule( dependMod )
             end
             
@@ -1416,7 +1416,7 @@ function Front:createGoOption( scriptPath )
       end
    end
    
-   return convGo.Option.new(packageName)
+   return convGo.Option.new(packageName, self.option.appName)
 end
 
 

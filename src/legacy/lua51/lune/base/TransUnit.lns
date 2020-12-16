@@ -3454,7 +3454,7 @@ fn TransUnit.processImport( modulePath:str, depth:int ) mut :
 
 fn TransUnit.analyzeImportFor(
    pos: &Parser.Position, modulePath:str,
-   assignName:str, lazyLoad:Nodes.LazyLoad ) mut : Nodes.Node
+   assignName:str, assigned:bool, lazyLoad:Nodes.LazyLoad ) mut : Nodes.Node
 {
    let mut backupScope = self.scope;
    // スコープをルートに変更
@@ -3495,7 +3495,7 @@ fn TransUnit.analyzeImportFor(
       return Nodes.ImportNode.create(
          self.nodeManager, pos,
          self.macroCtrl.isInAnalyzeArgMode(), [ moduleTypeInfo ],
-         modulePath, lazyLoad, assignName, moduleSymbolInfo, moduleTypeInfo );
+         modulePath, lazyLoad, assignName, assigned, moduleSymbolInfo, moduleTypeInfo );
    }
 
    self.errorShadowing( pos, shadowing );
@@ -3548,14 +3548,18 @@ fn TransUnit.analyzeImport( opeToken: &Parser.Token ) mut : Nodes.Node {
       }
    }
    let mut assignName = moduleToken;
+   let assigned;
    if nextToken.txt == "as" {
       assignName = self.getSymbolToken( .MustNot_ );
       nextToken = self.getToken(##);
+      assigned = true;
+   } else {
+      assigned = false;
    }
    self.checkToken( nextToken, ";" );
 
    let mut node = self.analyzeImportFor(
-      opeToken.pos, modulePath, assignName.txt, lazyLoad );
+      opeToken.pos, modulePath, assignName.txt, assigned, lazyLoad );
    self.importModuleSet.add( node.$expType );
    
    return node;
@@ -3567,7 +3571,7 @@ fn TransUnit.analyzeTestCase( firstToken:&Parser.Token ) mut : Nodes.TestCaseNod
    let mut newScope = self.pushScope( false ## );
    
    let importNode = self.analyzeImportFor(
-      firstToken.pos, "lune.base.Testing", "__t", .Off );
+      firstToken.pos, "lune.base.Testing", "__t", false, .Off );
    
    let nameToken = self.getSymbolToken( .MustNot_ );
 

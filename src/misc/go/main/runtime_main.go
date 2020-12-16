@@ -24,26 +24,21 @@ SOFTWARE.
 
 package main
 
-import "os"
+import . "github.com/ifritJP/LuneScript/lune/base/runtime_go"
 
-import . "lnsc/lune/base/runtime_go"
-import lnsc "lnsc/lune/base"
+// import "runtime"
+// import "time"
+//IMPORT
+////TEST:import . "lns/lune/base"
 
-func exec( args []LnsAny ) error {
-    Lns_InitModOnce()
-    lnsc.Lns_front_init()
-    
-    lnsc.Front_exec( NewLnsList( args[ 1:] ) )
-
-    return nil
-}
 
 
 func main() {
-    args := []LnsAny{}
-    for _, arg := range( os.Args ) {
-        args = append( args, arg )
-    }
-
-    exec( args )
+    Lns_InitModOnce()
+    //TEST:Lns_Testing_init()
+    Lns_init()
+    //TEST:Testing_run( "" )
+    //TEST:Testing_outputAllResult(Lns_io_stdout)
+    // runtime.GC()
+    // time.Sleep(1 * time.Second)
 }

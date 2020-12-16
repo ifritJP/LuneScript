@@ -105,6 +105,8 @@ pub class Option {
    pub let mut useIpairs:bool;
    /** パッケージ名 */
    pub let mut packageName:str!;
+   /** アプリ名 */
+   pub let mut appName:str;
 
    pub let mut transCtrlInfo:Types.TransCtrlInfo;
 
@@ -115,6 +117,7 @@ pub class Option {
    pub let mut testing:bool;
 
    pub fn __init() {
+      self.appName = "lnsc";
       self.packageName = nil;
       self.testing = false;
       self.convTo = nil;
@@ -244,6 +247,7 @@ usage:
     --default-lazy: set lazy-loading at default.
     --valid-luaval: enable luaval when transcompie to lua.
     --package <name>: set the package name for the go-lang.
+    --app <name>: set the application name for the go-lang.
 
 * type2
   dir: output directory.
@@ -364,6 +368,11 @@ usage:
             }
             case "--package" {
                option.packageName = getNextOp();
+            }
+            case "--app" {
+               if! getNextOp() {
+                  option.appName = _exp;
+               }
             }
             case "--log" {
                if! let txt = getNextOp() {

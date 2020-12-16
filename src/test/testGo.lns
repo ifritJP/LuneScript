@@ -1065,7 +1065,7 @@ return fib
       {}
       {
          let prev = os.clock();
-         print( "%s = %d: step = %d: time = %g"
+         print( "%s = %d: step = %d: time = %g: DIFF_IGNORE"
                 (,,,,exec, ,,exec, step, os.clock() - prev ) );
       }
    }

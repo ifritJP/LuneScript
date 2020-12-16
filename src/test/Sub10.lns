@@ -1,1 +1,4 @@
 print( "Sub10" );
+pub fn func() {
+   print( __func__ );
+}

@@ -1,12 +1,12 @@
 // This code is transcompiled by LuneScript.
 package lnsc
-import . "lnsc/lune/base/runtime_go"
+import . "github.com/ifritJP/LuneScript/lune/base/runtime_go"
 var init_Util bool
 var Util__mod__ string
 var Util_debugFlag bool
 var Util_errorCode LnsInt
 // for 256
-func Util_convExp949(arg1 []LnsAny) string {
+func Util_convExp955(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // 30: decl @lune.@base.@Util.setDebugFlag
@@ -96,7 +96,7 @@ func Util_scriptPath2Module(path string) string {
         Util_err("script must be relative-path -- " + path)
     }
     var mod string
-    mod = Util_convExp949(Lns_2DDD(Lns_getVM().String_gsub(path, "/", ".")))
+    mod = Util_convExp955(Lns_2DDD(Lns_getVM().String_gsub(Lns_car(Lns_getVM().String_gsub(path,"^./", "")).(string),"/", ".")))
     return Lns_car(Lns_getVM().String_gsub(mod, "%.lns$", "")).(string)
 }
 

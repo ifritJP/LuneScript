@@ -416,7 +416,7 @@ local function scriptPath2Module( path )
       err( "script must be relative-path -- " .. path )
    end
    
-   local mod = string.gsub( path, "/", "." )
+   local mod = path:gsub( "^./", "" ):gsub( "/", "." )
    return (string.gsub( mod, "%.lns$", "" ) )
 end
 _moduleObj.scriptPath2Module = scriptPath2Module

@@ -1,6 +1,6 @@
 // This code is transcompiled by LuneScript.
 package lnsc
-import . "lnsc/lune/base/runtime_go"
+import . "github.com/ifritJP/LuneScript/lune/base/runtime_go"
 var init_Formatter bool
 var Formatter__mod__ string
 // 54: decl @lune.@base.@Formatter.createFilter
@@ -357,13 +357,13 @@ func (self *Formatter_FormatterFilter) outputDeclClass(protoFlag bool,classType 
         self.FP.Write(">")
     }
     if moduleName != nil{
-        moduleName_5229 := moduleName.(*Types_Token)
+        moduleName_5231 := moduleName.(*Types_Token)
         self.FP.Write(" require ")
-        self.FP.Write(Lns_getVM().String_format("%s ", []LnsAny{moduleName_5229.Txt}))
+        self.FP.Write(Lns_getVM().String_format("%s ", []LnsAny{moduleName_5231.Txt}))
         if gluePrefix != nil{
-            gluePrefix_5231 := gluePrefix.(string)
+            gluePrefix_5233 := gluePrefix.(string)
             self.FP.Write("glue ")
-            self.FP.Write(gluePrefix_5231)
+            self.FP.Write(gluePrefix_5233)
         }
     }
     if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||

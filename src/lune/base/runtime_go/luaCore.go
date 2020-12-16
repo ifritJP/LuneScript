@@ -33,6 +33,7 @@ package runtimelns
 // #include <lualib.h>
 //
 // extern int LnsPreload( lua_State * pVM );
+// // pName のパッケージをロードする関数に LnsPreload をセットする
 // static void registPreload( lua_State * pVM, char * pName ) {
 //    int top = lua_gettop( pVM );
 //    // package.preload を push
@@ -49,6 +50,9 @@ import "unsafe"
 //import "sync"
 //import "fmt"
 
+// lua の package.preload に登録される関数。
+// lua の第一引数にロードするモジュール名が渡される。
+// 戻り値として、ロード後の値を push する。
 //export LnsPreload
 func LnsPreload( vm *C.lua_State ) C.int {
     mod := lua_tolstring( vm, 1 );

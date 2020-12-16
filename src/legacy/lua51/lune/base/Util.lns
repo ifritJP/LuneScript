@@ -253,7 +253,7 @@ pub fn scriptPath2Module( path:str ):str {
    if path.find( "^/" ## ) {
       err( "script must be relative-path -- " .. path );
    }
-   let mod = string.gsub( path, "/", "." );
+   let mod = path.gsub( "^./", "" ).gsub( "/", "." );
    return ( string.gsub( mod, "%.lns$", "" ) );
 }
 

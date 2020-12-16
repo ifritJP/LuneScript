@@ -717,6 +717,7 @@ _declNodeClass( "Import", Node, false, false, true,
                 [ { "modulePath": "str" },
                   { "lazy": "LazyLoad" },
                   { "assignName": "str" },
+                  { "assigned": "bool" },
                   { "symbolInfo": "&Ast.SymbolInfo" },
                   { "moduleTypeInfo": "&Ast.TypeInfo" } ]
 );

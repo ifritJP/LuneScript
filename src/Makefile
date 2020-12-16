@@ -397,6 +397,7 @@ define cp_src_set
 	cp $2/lune.js $1
 
 	cp -au $2/lune/base/runtime_go $1/lune/base/runtime_go
+	cp -au $2/misc $1/misc
 endef
 
 test-global:
@@ -1230,7 +1231,7 @@ test-gc:
 
 
 GO_RUNTIME = lune/base/runtime_go
-GO_MOD = lnsc
+GO_MOD = github.com/ifritJP/LuneScript
 
 LUA_URL=https://www.lua.org/ftp/lua-5.3.6.tar.gz
 
@@ -1258,7 +1259,7 @@ endef
 
 define buildGo
 	$(call buildGoSetup,$1)
-	(cd $1; PKG_CONFIG_PATH=$(shell pwd) go build && $(LNSC_GO))
+	(cd $1; PKG_CONFIG_PATH=$(shell pwd) go build -o $2 && ./$2)
 endef
 
 GO_WORK_DIR = work/go
@@ -1287,15 +1288,15 @@ define test-go-one-setup
 endef
 
 define test-go-one-exec
-	cat lune/base/runtime_go/main/runtime_main.go |		\
+	cat misc/go/main/runtime_main.go |		\
 		sed 's/Lns_init/Lns_$3_init/;' > $2/runtime_main.go
 	cp -au $4/$3.lns $2/$4
 	$(call convGo,$1,$2,$4/$3,--package main)
-	mv $2/$4/$3.go $2
-	$(call buildGo,$2) >> work/result-testGo.txt
+	if [ $4 != "." ]; then mv $2/$4/$3.go $2; fi
+	$(call buildGo,$2,test.exe) >> work/result-testGo.txt
 	if test "${NO_LUA_DIFF}" = ""; then					\
 		$(call exeLune,$1,$2,$4/$3.lns,exe) >> work/result-testGo2.txt &&	\
-		diff -C 2 -I 'ONLY_LUA'						\
+		diff -C 2 -I 'ONLY_LUA' -I 'DIFF_IGNORE'			\
 				work/result-testGo.txt work/result-testGo2.txt;	\
 	fi
 endef
@@ -1331,7 +1332,7 @@ ifndef NO_TEST
 endif
 
 miniGo-go:
-	$(call buildGo,$(GO_WORK_DIR))
+	$(call buildGo,$(GO_WORK_DIR),miniGo.exe)
 
 test-go:
 	$(call cmd_exec_trans,$(LNSC),.,.,,base/convGo)
@@ -1380,14 +1381,14 @@ endef
 
 
 define test-convGo-test
-	cat lune/base/runtime_go/main/runtime_main.go |		\
+	cat misc/go/main/runtime_main.go |		\
 		sed 's/Lns_init/Lns_$3_init/' |			\
 		sed 's@//TEST:@@' |				\
 		sed 's/run( "" )/run( "lune.base.$3" )/' |				\
 		sed 's@//IMPORT@import . "$(GO_MOD)/lune/base"@' > $2/$5/runtime_main.go
 
 	$(call convGo,$1,$2,$4/$3,--testing --package lnsc,$5)
-	$(call buildGo,$2/$5) >> work/result-testGo.txt
+	$(call buildGo,$2/$5,test.exe) >> work/result-testGo.txt
 	$(call test-lns-test,$2/$5,$3) >> work/result-testGo2.txt
 	diff -C 2 -I 'ONLY_LUA' work/result-testGo.txt work/result-testGo2.txt
 endef
@@ -1437,14 +1438,14 @@ test-subgo:
 
 
 define binding-lns-go
-	$(LNSC) lune/base/runtime_go/binding/bind.lns exe --testing
+	$(LNSC) misc/go/binding/bind.lns exe --testing
 	mv output.go $1/lune/base/runtime_go/binding.go 
 endef
 
 define go-build-lns
-	cp lune/base/runtime_go/main/lnsc_main.go $1
+	cp misc/go/main/lnsc_main.go $1
 	$(call buildGoSetup,$1)
-	(cd $1; PKG_CONFIG_PATH=$(shell pwd) time go build)
+	(cd $1; PKG_CONFIG_PATH=$(shell pwd) time go build -o lnsc)
 endef
 
 # セルフホストのソースを go に変換し、 go 版 lns をビルドする
