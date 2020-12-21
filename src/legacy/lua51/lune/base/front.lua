@@ -489,7 +489,7 @@ function Front:loadFromLnsTxt( importModuleInfo, name, txt )
    
    local ast = transUnit:createAST( parser, false, nil )
    
-   local _5800, luaTxt = self:convertFromAst( ast, name, convLua.ConvMode.Exec )
+   local _5802, luaTxt = self:convertFromAst( ast, name, convLua.ConvMode.Exec )
    return _lune.unwrap( loadFromLuaTxt( luaTxt ))
 end
 
@@ -816,7 +816,7 @@ function Front:convertLns2LuaCode( importModuleInfo, stream, streamName )
    local mod = scriptPath2Module( streamName )
    local ast = self:createAst( importModuleInfo, Parser.StreamParser.new(stream, streamName, false), mod, frontInterface.ModuleId.createId( 0.0, 0 ), nil, TransUnit.AnalyzeMode.Compile )
    
-   local _5945, luaTxt = self:convertFromAst( ast, streamName, convLua.ConvMode.Exec )
+   local _5947, luaTxt = self:convertFromAst( ast, streamName, convLua.ConvMode.Exec )
    
    return luaTxt
 end
@@ -954,7 +954,7 @@ function Front:checkUptodateMeta( metaPath, addSearchPath )
    end
    
    
-   for moduleFullName, _6023 in pairs( meta.__dependModuleMap ) do
+   for moduleFullName, _6025 in pairs( meta.__dependModuleMap ) do
       do
          local lnsPath = self:searchModule( moduleFullName )
          if lnsPath ~= nil then
@@ -1249,7 +1249,7 @@ function Front:convertLuaToStreamFromScript( parser, moduleId, uptodate, convMod
       if stream ~= nil then
          if metaInfo ~= nil then
             local dependInfo = OutputDepend.DependInfo.new(mod)
-            for dependMod, _6196 in pairs( metaInfo.__dependModuleMap ) do
+            for dependMod, _6198 in pairs( metaInfo.__dependModuleMap ) do
                dependInfo:addImpotModule( dependMod )
             end
             
@@ -1883,10 +1883,68 @@ local function convertLnsCode2LuaCode( lnsCode, path )
 end
 _moduleObj.convertLnsCode2LuaCode = convertLnsCode2LuaCode
 
+local function outputGoMain( scriptPath, testing, path )
+
+   local mod = scriptPath2Module( scriptPath )
+   
+   local lune_path = "main.go"
+   if path ~= nil then
+      if path ~= "" then
+         lune_path = path
+      end
+      
+   end
+   
+   local fileObj = io.open( lune_path, "w" )
+   if  nil == fileObj then
+      local _fileObj = fileObj
+   
+      return string.format( "failed to open -- %s", lune_path)
+   end
+   
+   
+   local base_mainCode = [==[
+package main
+
+import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
+//IMPORT_MAIN:
+
+//IMPORT:
+////TEST:import . "lns/lune/base"
+
+func main() {
+    Lns_InitModOnce()
+    //TEST:Lns_Testing_init()
+    Lns_init()
+    //TEST:Testing_run( "" )
+    //TEST:Testing_outputAllResult(Lns_io_stdout)
+}
+]==]
+   
+   local mainMod = mod:gsub( ".*%.", "" )
+   local code = base_mainCode:gsub( "Lns_init", string.format( "Lns_%s_init", mainMod) )
+   if mod ~= mainMod then
+      local importPath = mod:gsub( "%.[^%.]+$", "" ):gsub( "%.", "/" )
+      code = code:gsub( "//IMPORT_MAIN:", string.format( 'import . "%s"', importPath) )
+   end
+   
+   
+   if testing then
+      code = code:gsub( "//TEST:", "" )
+      code = code:gsub( 'run%( "" %)', string.format( 'run( "lune.base.%s" )', mainMod) )
+      code = code:gsub( '//IMPORT:', 'import . "github.com/ifritJP/LuneScript/src/lune/base"' )
+   end
+   
+   
+   fileObj:write( code )
+   
+   return nil
+end
+
 function Front:exec(  )
    local __func__ = '@lune.@base.@front.Front.exec'
 
-   Log.log( Log.Level.Trace, __func__, 1378, function (  )
+   Log.log( Log.Level.Trace, __func__, 1430, function (  )
    
       return Option.ModeKind:_getTxt( self.option.mode)
       
@@ -1999,6 +2057,14 @@ end
          self:outputBootC( self.option.scriptPath )
       elseif _switchExp == Option.ModeKind.Builtin then
          self:outputBuiltin( self.option.scriptPath )
+      elseif _switchExp == Option.ModeKind.MkMain then
+         do
+            local mess = outputGoMain( self.option.scriptPath, self.option.testing, self.option.outputPath )
+            if mess ~= nil then
+               Util.errorLog( mess )
+            end
+         end
+         
       else 
          
             print( "illegal mode" )

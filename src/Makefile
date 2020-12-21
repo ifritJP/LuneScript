@@ -320,7 +320,7 @@ define test-inst-from-luarocks
 	cp -a ../docs work/8
 	(cd work/8; $(LUAROCKS) make $1-main-1.rockspec --local)
 
-	$(LNSC)
+	-$(LNSC)
 	(cd work/8; $(LNSC) test/start.lns exe $(EXE_OPT)) > work/test8.result
 
 	($(LUAROCKS) remove $1 --local)
@@ -1288,8 +1288,7 @@ define test-go-one-setup
 endef
 
 define test-go-one-exec
-	cat misc/go/main/runtime_main.go |		\
-		sed 's/Lns_init/Lns_$3_init/;' > $2/runtime_main.go
+	$(LNSC) $3 mkmain $2/main.go
 	cp -au $4/$3.lns $2/$4
 	$(call convGo,$1,$2,$4/$3,--package main)
 	if [ $4 != "." ]; then mv $2/$4/$3.go $2; fi
@@ -1309,6 +1308,7 @@ endef
 
 define test-go-some-setup
 	cp -au $4/$3.lns $2/$4
+	touch $2/$4/$3.lns
 	$(call convGo,$1,$2,$4/$3,--package main)
 	mv $2/$4/$3.go $2
 endef
@@ -1381,11 +1381,13 @@ endef
 
 
 define test-convGo-test
-	cat misc/go/main/runtime_main.go |		\
-		sed 's/Lns_init/Lns_$3_init/' |			\
-		sed 's@//TEST:@@' |				\
-		sed 's/run( "" )/run( "lune.base.$3" )/' |				\
-		sed 's@//IMPORT@import . "$(GO_MOD)/src/lune/base"@' > $2/$5/runtime_main.go
+#	cat misc/go/main/runtime_main.go |		\
+#		sed 's/Lns_init/Lns_$3_init/' |			\
+#		sed 's@//TEST:@@' |				\
+#		sed 's/run( "" )/run( "lune.base.$3" )/' |				\
+#		sed 's@//IMPORT@import . "$(GO_MOD)/src/lune/base"@' > $2/$5/runtime_main.go
+	$(LNSC) --testing $3 mkmain $2/$5/runtime_main.go
+
 
 	$(call convGo,$1,$2,$4/$3,--testing --package lnsc,$5)
 	$(call buildGo,$2/$5,test.exe) >> work/result-testGo.txt

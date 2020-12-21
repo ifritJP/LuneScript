@@ -68,6 +68,7 @@ pub enum ModeKind {
    Format = "format",
    Builtin = "builtin",
    Inquire = "inq",
+   MkMain = "mkmain",
 }
 
 pub fn getRuntimeModule(): str {
@@ -116,7 +117,10 @@ pub class Option {
    /** テストする時 true */
    pub let mut testing:bool;
 
+   pub let mut outputPath:str!;
+
    pub fn __init() {
+      self.outputPath = nil;
       self.appName = "lnsc";
       self.packageName = nil;
       self.testing = false;
@@ -206,12 +210,13 @@ SOFTWARE.
 
 pub fn analyze( mut argList: &List<str> ) : Option {
 
-   fn printUsage(code:int) {
+   fn printUsage(code:int) : __ {
       print( ```
 usage:
   <type1> [-prof] [-r] src.lns mode [mode-option]
   <type2> -mklunemod path
-  <type3> --version
+  <type3> -mkmain mainMod [path]
+  <type4> --version
 
 * type1
   - src.lns [common_op] ast
@@ -250,7 +255,7 @@ usage:
     --app <name>: set the application name for the go-lang.
 
 * type2
-  dir: output directory.
+  path: output file path.
 ``` );
       os.exit( code );
    }
@@ -272,10 +277,10 @@ usage:
          (Json.fromStr( file.read( "*a" ) or "" )) )
       {
          let mut workArgList:List<str> = [];
-         foreach arg in argList {
+         foreach arg in projInfo.cmd_option {
             workArgList.insert( arg );
          }
-         foreach arg in projInfo.cmd_option {
+         foreach arg in argList {
             workArgList.insert( arg );
          }
          argList = workArgList;
@@ -470,6 +475,7 @@ usage:
                   option.outputDir = arg;
                }
                default {
+                  option.outputPath = arg;
                }
             }
          }

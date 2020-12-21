@@ -1,5 +1,9 @@
 import lune.base.Ver;
 
+/**
+path で指定されている makefile から 'LNS_SRCS +=' のパターンを見つけて
+lns を構成するファイルリストを取得する。
+*/
 fn getSrcList( path:str ): &List<str>! {
    let! mut mkstream = io.open( path ## ) {
       return nil;
@@ -19,17 +23,30 @@ fn getSrcList( path:str ): &List<str>! {
    list.insert( "runtime%d" (Ver.luaModVersion ) );
    return list;
 }
-fn compile( src:str ): str! {
-   let! mut stream = io.open( "lune/base/%s.lua" (src) ## ) {
-      print( "failed to open -- ", src );
+
+/**
+指定の path のファイルを読み取り、内容を返す。
+*/
+fn readFile( path:str ): str! {
+   let! mut stream = io.open( path ## ) {
+      print( "failed to open -- ", path );
       return nil;
    };
    let! code = stream.read( "*a" ) {
-      print( "failed to read -- ", src );
+      print( "failed to read -- ", path );
       return nil;
    };
    stream.close();
-   
+   return code;
+}
+
+/**
+"lune/base/%s.lua" (src) のファイルを byte compile した結果を返す。
+*/
+fn compile( src:str ): str! {
+   let! code = readFile( "lune/base/%s.lua" (src) ) {
+      return nil; 
+   };
    let loaded, err = _load( code, nil );
    when! loaded {
       return string.dump( loaded, true );
@@ -38,11 +55,19 @@ fn compile( src:str ): str! {
    return nil;
    // return code;
 }
-fn str2GoStr( bytecode:str ) : List<str> {
+
+/**
+bin で指定した文字列を go のbyte slice 宣言文字列に置き換える。
+
+戻り値は byte slice 宣言文字列を、一定サイズごとに分割した list。
+一定サイズごとに分割するのは、 文字列連携を繰り返すと連結処理に掛るパフォーマンスが
+非常に悪くなるため、適当な長さで連結せずに list で管理する。
+*/
+fn str2GoStr( bin:str ) : List<str> {
    let mut list:List<str> = [];
    let mut gostr = '';
-   for index = 1, #bytecode {
-      gostr = gostr .. "0x%02x," (bytecode[index]);
+   for index = 1, #bin {
+      gostr = gostr .. "0x%02x," (bin[index]);
       if #gostr > 500 {
          list.insert( gostr );
          gostr = "";
@@ -51,7 +76,11 @@ fn str2GoStr( bytecode:str ) : List<str> {
    list.insert( gostr );
    return list;
 }
-fn output( stream:oStream, src:str, codeList:&List<str> ) : bool {
+
+/**
+stream で指定した出力先に、 byte slice 宣言の codeList を key に紐付けて出力する。
+*/
+fn output( stream:oStream, key:str, codeList:&List<str> ) : bool {
    stream.write( '{\n' );
    stream.write( 'code := []byte{' );
    foreach code in codeList {
@@ -59,7 +88,7 @@ fn output( stream:oStream, src:str, codeList:&List<str> ) : bool {
       stream.write( '\n' );
    }
    stream.write( "}\n" );
-   stream.write( 'key := "lune.base.%s"\n' (src) );
+   stream.write( 'key := "%s"\n' (key) );
    stream.write(
       'lnsSrcMap[ key ] = &lnsSrcInfo{ C.CString( string(code) ), len( code ) }\n' );
    stream.write( "}\n" );
@@ -67,6 +96,10 @@ fn output( stream:oStream, src:str, codeList:&List<str> ) : bool {
    return true;
 }
 
+/**
+指定した LuneScript の Makefile の情報をもとに、
+LuneScript を構成する .lua ファイルをバンドルするための .go を生成する。
+*/
 pub fn createBinding( makePath:str ) {
 
    if! let list = getSrcList( makePath ) {
@@ -87,7 +120,7 @@ pub fn createBinding( makePath:str ) {
                total = total + #bytecode;
                print( "size = ", #bytecode, total );
                let gostrList = str2GoStr( bytecode );
-               output( ostream, path, gostrList );
+               output( ostream, "lune.base.%s" (path), gostrList );
             }
          }
          ostream.write( "}\n" );

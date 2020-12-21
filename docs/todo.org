@@ -8,6 +8,13 @@
 
 * バグ
 
+- [ ] 次の module 宣言が go へのビルドでエラーする
+
+module Math require 'math' {
+   pub static let pi:real;
+   pub static fn sin(x:real):real;
+}
+
 - [ ] import しているモジュールが更新されていると、 exe --testing が動かない  
 
 - [ ] go に変換したとき、次のループが lua と動作が異なる。

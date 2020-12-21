@@ -283,7 +283,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 6385
+   return 6424
 end
 
 
@@ -354,6 +354,9 @@ ModeKind.__allList[14] = ModeKind.Builtin
 ModeKind.Inquire = 'inq'
 ModeKind._val2NameMap['inq'] = 'Inquire'
 ModeKind.__allList[15] = ModeKind.Inquire
+ModeKind.MkMain = 'mkmain'
+ModeKind._val2NameMap['mkmain'] = 'MkMain'
+ModeKind.__allList[16] = ModeKind.MkMain
 
 
 local function getRuntimeModule(  )
@@ -371,6 +374,7 @@ function Option.new(  )
    return obj
 end
 function Option:__init() 
+   self.outputPath = nil
    self.appName = "lnsc"
    self.packageName = nil
    self.testing = false
@@ -492,7 +496,8 @@ local function analyze( argList )
 usage:
   <type1> [-prof] [-r] src.lns mode [mode-option]
   <type2> -mklunemod path
-  <type3> --version
+  <type3> -mkmain mainMod [path]
+  <type4> --version
 
 * type1
   - src.lns [common_op] ast
@@ -531,7 +536,7 @@ usage:
     --app <name>: set the application name for the go-lang.
 
 * type2
-  dir: output directory.
+  path: output file path.
 ]==] )
       os.exit( code )
    end
@@ -591,11 +596,11 @@ end
             local projInfo = ProjInfo._fromStem( (Json.fromStr( file:read( "*a" ) or "" ) ) )
             if projInfo ~= nil then
                local workArgList = {}
-               for __index, arg in ipairs( argList ) do
+               for __index, arg in ipairs( projInfo.cmd_option ) do
                   table.insert( workArgList, arg )
                end
                
-               for __index, arg in ipairs( projInfo.cmd_option ) do
+               for __index, arg in ipairs( argList ) do
                   table.insert( workArgList, arg )
                end
                
@@ -811,6 +816,7 @@ end
                   option.outputDir = arg
                else 
                   
+                     option.outputPath = arg
                end
             end
             
@@ -845,7 +851,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 499, function (  )
+   Log.log( Log.Level.Log, __func__, 505, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

@@ -1373,6 +1373,58 @@ pub fn convertLnsCode2LuaCode( lnsCode:str, path:str ) : str
       new Parser.TxtStream( lnsCode ), path );
 }
 
+fn outputGoMain( scriptPath:str, testing:bool, path:str! ):str! {
+   let mod = scriptPath2Module( scriptPath );
+   
+   let mut lune_path = "main.go";
+   when! path {
+      if path ~= "" {
+         lune_path = path;
+      }
+   }
+   let! mut fileObj = io.open( lune_path, "w" ) {
+      return "failed to open -- %s" ( lune_path );
+   };
+
+   let base_mainCode = ```
+package main
+
+import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
+//IMPORT_MAIN:
+
+//IMPORT:
+////TEST:import . "lns/lune/base"
+
+func main() {
+    Lns_InitModOnce()
+    //TEST:Lns_Testing_init()
+    Lns_init()
+    //TEST:Testing_run( "" )
+    //TEST:Testing_outputAllResult(Lns_io_stdout)
+}
+```;
+
+   let mainMod = mod.gsub( ".*%.", "" );
+   let mut code = base_mainCode.gsub( "Lns_init", "Lns_%s_init" (mainMod));
+   if mod ~= mainMod {
+      // 実行するメインモジュールが別ディレクトリの場合、
+      // そのパッケージを import する。
+      let importPath = mod.gsub( "%.[^%.]+$", "" ).gsub( "%.", "/" );
+      code = code.gsub( "//IMPORT_MAIN:", 'import . "%s"' (importPath) );
+   }
+   
+   if testing {
+      code = code.gsub( "//TEST:", "" );
+      code = code.gsub( 'run%( "" %)', 'run( "lune.base.%s" )' (mainMod) );
+      code = code.gsub(
+         '//IMPORT:', 'import . "github.com/ifritJP/LuneScript/src/lune/base"' );
+   }
+   
+   fileObj.write( code );
+
+   return nil;
+}
+
 pub fn Front.exec() mut
 {
    Log._log( .Trace, `{ return self.option.mode.$_txt; } );
@@ -1473,6 +1525,13 @@ end
       }
       case .Builtin {
          self.outputBuiltin( self.option.scriptPath );
+      }
+      case .MkMain {
+         if! let mess = outputGoMain(
+            self.option.scriptPath, self.option.testing, self.option.outputPath )
+         {
+            Util.errorLog( mess );
+         }
       }
       default {
          print( "illegal mode" );
