@@ -63,16 +63,16 @@ jobs:
                         cp /usr/bin/lnsc /export/lnsc_cent8
         docker image rm cent8_lns
 
-    - name: Upload to Google Drive
-      uses: satackey/action-google-drive@v1
-      with:
-        skicka-tokencache-json: ${{ secrets.SKICKA_TOKENCACHE_JSON }}
-        upload-from: export/lnsc_cent8
-        upload-to: /lns_release/
-
-        # For those who set up Google Drive API client ID and secret themselves
-        google-client-id: ${{ secrets.GOOGLE_CLIENT_ID }}
-        google-client-secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+#    - name: Upload to Google Drive
+#      uses: satackey/action-google-drive@v1
+#      with:
+#        skicka-tokencache-json: ${{ secrets.SKICKA_TOKENCACHE_JSON }}
+#        upload-from: export/lnsc_cent8
+#        upload-to: /lns_release/
+#
+#        # For those who set up Google Drive API client ID and secret themselves
+#        google-client-id: ${{ secrets.GOOGLE_CLIENT_ID }}
+#        google-client-secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
       
 
 
@@ -120,16 +120,16 @@ jobs:
                         cp /usr/bin/lnsc /export/lnsc_alpine
         docker image rm alpine_lns
 
-    - name: Upload to Google Drive
-      uses: satackey/action-google-drive@v1
-      with:
-        skicka-tokencache-json: ${{ secrets.SKICKA_TOKENCACHE_JSON }}
-        upload-from: export/lnsc_alpine
-        upload-to: /lns_release/
-
-        # For those who set up Google Drive API client ID and secret themselves
-        google-client-id: ${{ secrets.GOOGLE_CLIENT_ID }}
-        google-client-secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+#    - name: Upload to Google Drive
+#      uses: satackey/action-google-drive@v1
+#      with:
+#        skicka-tokencache-json: ${{ secrets.SKICKA_TOKENCACHE_JSON }}
+#        upload-from: export/lnsc_alpine
+#        upload-to: /lns_release/
+#
+#        # For those who set up Google Drive API client ID and secret themselves
+#        google-client-id: ${{ secrets.GOOGLE_CLIENT_ID }}
+#        google-client-secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
       
 
   docker-ubuntu:
@@ -148,14 +148,14 @@ jobs:
                         cp /usr/bin/lnsc /export/lnsc_ubuntu
         docker image rm ubuntu_lns
 
-    - name: Upload to Google Drive
-      uses: satackey/action-google-drive@v1
-      with:
-        skicka-tokencache-json: ${{ secrets.SKICKA_TOKENCACHE_JSON }}
-        upload-from: export/lnsc_ubuntu
-        upload-to: /lns_release/
-
-        # For those who set up Google Drive API client ID and secret themselves
-        google-client-id: ${{ secrets.GOOGLE_CLIENT_ID }}
-        google-client-secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+#    - name: Upload to Google Drive
+#      uses: satackey/action-google-drive@v1
+#      with:
+#        skicka-tokencache-json: ${{ secrets.SKICKA_TOKENCACHE_JSON }}
+#        upload-from: export/lnsc_ubuntu
+#        upload-to: /lns_release/
+#
+#        # For those who set up Google Drive API client ID and secret themselves
+#        google-client-id: ${{ secrets.GOOGLE_CLIENT_ID }}
+#        google-client-secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
       
