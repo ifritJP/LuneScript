@@ -135,7 +135,16 @@ func createVM() *Lns_luaVM {
 }
 
 func Lns_getVM() *Lns_luaVM {
-    luaVM := cur_LnsEnv.LuaVM
+    return Lns_getVMMain( cur_LnsEnv )
+}
+
+func Lns_getVMSync() *Lns_luaVM {
+    return Lns_getVMMain( sync_LnsEnv )
+}
+
+
+func Lns_getVMMain( lnsEnv *LnsEnv ) *Lns_luaVM {
+    luaVM := lnsEnv.LuaVM
     if luaVM.lns_hasLuvValueCoreFree {
         lns_luvValueCoreFreeListMutex.Lock()
         luaVM.lns_hasLuvValueCoreFree = false
@@ -151,6 +160,7 @@ func Lns_getVM() *Lns_luaVM {
     
     return luaVM
 }
+
 
 func Lns_runLuaScript( script string ) {
     vm := luaL_newstate()

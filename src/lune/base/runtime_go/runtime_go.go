@@ -28,6 +28,7 @@ import "fmt"
 import "math"
 import "reflect"
 import "strconv"
+import "sync"
 
 type LnsInt = int
 type LnsReal = float64
@@ -43,11 +44,31 @@ type LnsEnv struct {
     nilAccStack []LnsAny
     LuaVM *Lns_luaVM
 }
+// デフォルトのシングルタスクで使用する LnsEnv
 var cur_LnsEnv *LnsEnv
+// 排他して使用する LnsEnv
+var sync_LnsEnv *LnsEnv
+/// sync_LnsEnv を排他するための mutex
+var sync_LnsEnvMutex sync.Mutex
 
 func Lns_GetEnv () *LnsEnv {
     return cur_LnsEnv
 }
+
+func Lns_GetEnvSync () *LnsEnv {
+    return sync_LnsEnv
+}
+func Lns_LockEnvSync() {
+    sync_LnsEnvMutex.Lock()
+    if sync_LnsEnv == nil {
+        sync_LnsEnv = createEnv()
+    }
+    
+}
+func Lns_UnlockEnvSync() {
+    sync_LnsEnvMutex.Unlock()
+}
+
 
 type LnsThreadMtd interface {
     Loop()

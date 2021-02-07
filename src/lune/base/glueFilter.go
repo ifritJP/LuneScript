@@ -478,6 +478,7 @@ type glueFilter_glueFilterMtd interface {
     ProcessDeclMember(arg1 *Nodes_DeclMemberNode, arg2 LnsAny)
     ProcessDeclMethod(arg1 *Nodes_DeclMethodNode, arg2 LnsAny)
     ProcessDeclVar(arg1 *Nodes_DeclVarNode, arg2 LnsAny)
+    ProcessEnv(arg1 *Nodes_EnvNode, arg2 LnsAny)
     ProcessExpAccessMRet(arg1 *Nodes_ExpAccessMRetNode, arg2 LnsAny)
     ProcessExpCall(arg1 *Nodes_ExpCallNode, arg2 LnsAny)
     ProcessExpCallSuper(arg1 *Nodes_ExpCallSuperNode, arg2 LnsAny)

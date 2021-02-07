@@ -150,6 +150,14 @@ pub override fn dumpFilter.processSubfile(
 {
    self.dump( opt, node, "" );
 }
+
+pub override fn dumpFilter.processEnv(
+   node: &Nodes.EnvNode, opt:Opt ) mut
+{
+   self.dump( opt, node, "" );
+   filter( node.$block, self, opt.nextOpt() );
+};
+
 pub override fn dumpFilter.processBlockSub(
    node: &Nodes.BlockNode, opt:Opt ) mut
 {

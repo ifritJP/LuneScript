@@ -1836,3 +1836,12 @@ _section();
    func( new Test() );
    func( nil );
 }
+_section();
+{
+   form testFunc();
+   class Hoge {
+      pub let test:testFunc;
+   }
+   let hoge = new Hoge( fn() { print( "hoge" ); } );
+   hoge.test();
+}

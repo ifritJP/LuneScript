@@ -995,6 +995,12 @@ pub override fn convFilter.processSubfile(
 {
 }
 
+pub override fn convFilter.processEnv(
+   node: Nodes.EnvNode, opt: Opt ) mut
+{
+   filter( node.$block, self, node );
+}
+
 
 pub override fn convFilter.processBlockSub(
    node: Nodes.BlockNode, opt: Opt ) mut
@@ -1031,7 +1037,7 @@ pub override fn convFilter.processBlockSub(
       case .Default {
          word = "";
       }
-      case .Block {
+      case .Block, .Env {
          word = "do";
       }
       case .LetUnwrap {
@@ -1059,8 +1065,10 @@ pub override fn convFilter.processBlockSub(
    }
 
    self.popIndent();
-   if node.get_blockKind() == .Block {
-      self.writeln( "end" );
+   switch node.get_blockKind() {
+      case .Block, .Env {
+         self.writeln( "end" );
+      }
    }
 };
 

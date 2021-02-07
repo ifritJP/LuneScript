@@ -8,6 +8,13 @@
 
 * バグ
 
+- [ ] __envLock を多重に行なうとデッドロックする。
+  __envLock 内では、__envLock を使用できないようにする。
+  __envLock を使用する関数に属性を追加して、
+  __envLock ブロックからは、その属性のある関数をコールできないように変更する。
+  
+
+  
 - [ ] 次の module 宣言が go へのビルドでエラーする
 
 module Math require 'math' {

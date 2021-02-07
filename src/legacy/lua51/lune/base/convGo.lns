@@ -53,20 +53,41 @@ enum ProcessMode {
    Main,
 }
 
-fn getLuavm( threading:bool ) : str {
-   if threading {
-      return "self.LnsEnv.LuaVM";
-   } else {
-      return "Lns_getVM()";
+class Env {
+   pri let mut stack:List<&Nodes.Node>;
+   pub fn __init() {
+      self.stack = [];
+   }
+   pub fn push( node:&Nodes.Node ) mut {
+      self.stack.insert( node );
+   }
+   pub fn pop() mut {
+      self.stack.remove(##);
+   }
+   pub fn getLuavm( threading:bool ) : str {
+      if #self.stack == 0 {
+         if threading {
+            return "self.LnsEnv.LuaVM";
+         } else {
+            return "Lns_getVM()";
+         }
+      } else {
+         return "Lns_getVMSync()";
+      }
+   }
+   pub fn getEnv( threading:bool ) : str {
+      if #self.stack == 0 {
+         if threading {
+            return "self.LnsEnv";
+         } else {
+            return "Lns_GetEnv()";
+         }
+      } else {
+            return "Lns_GetEnvSync()";
+      }
    }
 }
-fn getEnv( threading:bool ) : str {
-   if threading {
-      return "self.LnsEnv";
-   } else {
-      return "Lns_GetEnv()";
-   }
-}
+
 
 pub class Option {
    local let packageName:str {pub};
@@ -88,12 +109,14 @@ class convFilter extend Nodes.Filter<Opt> {
    let option:&Option;
    let modDir:str;
    let mut module2PackSym:Map<&Ast.TypeInfo,str>;
+   let mut env:Env;
 
    pub fn __init( enableTest:bool, streamName: str, stream: oStream,
                   ast:TransUnit.ASTInfo, option:&Option )
    {
       super(true, ast.$moduleTypeInfo, ast.$moduleTypeInfo.$scope);
-
+      
+      self.env = new Env();
       self.option = option;
       self.processInfo = ast.$processInfo;
       self.stream = new Util.SimpleSourceOStream( stream, nil, 4 );
@@ -120,7 +143,7 @@ class convFilter extend Nodes.Filter<Opt> {
       let! txt = self.builtin2runtime[ typeInfo ] {
          return nil;
       };
-      return (txt.gsub( "GETVM", getLuavm( threading ) ));
+      return (txt.gsub( "GETVM", self.env.getLuavm( threading ) ));
    }
    
    fn pushProcessMode( mode:ProcessMode ) mut {
@@ -1292,7 +1315,7 @@ func %s( luaform LnsAny ) LnsForm {
     return func (argList []LnsAny) []LnsAny {
         return %s.RunLoadedfunc( luaform.(*Lns_luaValue), argList )
     }
-}``` (self.getConv2formName( node ), getLuavm( node.$exp.isThreading() ) ) );
+}``` (self.getConv2formName( node ), self.env.getLuavm( node.$exp.isThreading() ) ) );
       return;
    }
    
@@ -1711,11 +1734,34 @@ pub override fn convFilter.processSubfile(
    //Util.err( "not support -- %s" (__func__) );
 }
 
+pub override fn convFilter.processEnv(
+   node: Nodes.EnvNode, opt: Opt ) mut
+{
+   self.writeln( "{" );
+   self.pushIndent(##);
+   self.writeln( "Lns_LockEnvSync()" );
+   self.popIndent();
+
+   self.env.push( node );
+   
+   filter( node.$block, self, node );
+
+
+   self.env.pop();
+   
+   self.pushIndent(##);
+   self.writeln( "Lns_UnlockEnvSync()" );
+   self.popIndent();
+   self.writeln( "}" );
+}
+
 pub override fn convFilter.processBlockSub(
    node: Nodes.BlockNode, opt: Opt ) mut
 {
-   if node.$blockKind == .Block {
-      self.writeln( "{" );
+   switch node.$blockKind {
+      case .Block {
+         self.writeln( "{" );
+      }
    }
 
    self.pushProcessMode( .Main );
@@ -1728,8 +1774,10 @@ pub override fn convFilter.processBlockSub(
    self.popIndent();
    self.popProcessMode();
 
-   if node.$blockKind == .Block {
-      self.writeln( "}" );
+   switch node.$blockKind {
+      case .Block {
+         self.writeln( "}" );
+      }
    }
 }
 
@@ -2936,7 +2984,7 @@ fn convFilter.outputForeachLua(
          if sortFlag {
             self.writeln(
                "%s := %s.SortMapKeyList( %s )"
-               (sorted, getLuavm( node.isThreading()), tmpExp) );
+               (sorted, self.env.getLuavm( node.isThreading()), tmpExp) );
             self.writeln( "%s, %s := %s.Get1stFromMap()"
                (tmpIndex,tmpKey, sorted) );
             self.writeln( "for %s != nil {" (tmpIndex));
@@ -3888,6 +3936,9 @@ pub override fn convFilter.processProtoClass(
 pub override fn convFilter.processDeclClass(
    node: Nodes.DeclClassNode, opt: Opt ) mut
 {
+   if node.isModule() {
+      return;
+   }
    if self.processMode == .DeclClass {
       switch node.$expType.$kind {
          case .Class {
@@ -3988,7 +4039,7 @@ pub fn convFilter.outputCallPrefix(
       callKind = .LuaCall;
    }
 
-   let getEnvTxt = getEnv( threading );
+   let getEnvTxt = self.env.getEnv( threading );
    fn processNilAcc( workPrefixNode:&Nodes.Node ) {
       if not node.hasNilAccess() {
          return;
@@ -4061,7 +4112,8 @@ pub fn convFilter.outputCallPrefix(
             self.write( runtime );
          }
       } else {
-         if not funcType.$staticFlag {
+         if not funcType.$staticFlag or funcSymbol.$kind == .Mbr
+         {
             if node.hasNilAccess() {
                if not prefixNode.hasNilAccess() {
                   self.write( "%s.NilAccFin(" (getEnvTxt));
@@ -4131,6 +4183,9 @@ pub fn convFilter.outputCallPrefix(
                      }
                   }
                   default {
+                     if funcSymbol.$kind == .Mbr {
+                        self.write( "." );
+                     }
                      self.write( self.getSymbolSym( funcSymbol ) );
                   }
                }
@@ -4211,7 +4266,7 @@ pub override fn convFilter.processExpCall(
          }
       } else {
          if funcType.$kind == .Ext {
-            self.write( "%s.RunLoadedfunc" (getLuavm( node.isThreading() )) );
+            self.write( "%s.RunLoadedfunc" (self.env.getLuavm( node.isThreading() )) );
             callKind = .RunLoaded;
          } else {
             filter( node.$func, self, node );
@@ -4558,7 +4613,7 @@ fn convFilter.processAndOr( node: Nodes.ExpOp2Node,
       return false;
    }
 
-   let getEnvTxt = getEnv( node.isThreading() );
+   let getEnvTxt = self.env.getEnv( node.isThreading() );
    let mut firstFlag = not isAndOr( parent );
    if firstFlag {
       self.writeln( "%s.PopVal( %s.IncStack() ||"  (getEnvTxt,getEnvTxt));
@@ -4696,7 +4751,7 @@ pub override fn convFilter.processExpRef(
 pub override fn convFilter.processExpRefItem(
    node: Nodes.ExpRefItemNode, opt: Opt ) mut
 {
-   let getEnvTxt = getEnv( node.isThreading());
+   let getEnvTxt = self.env.getEnv( node.isThreading());
    let prefixType = node.$val.$expType.$nonnilableType;
    switch prefixType.$kind {
       case .Ext {
@@ -4827,7 +4882,7 @@ pub override fn convFilter.processRefField(
       }
    }
 
-   let getEnvTxt = getEnv( node.isThreading() );
+   let getEnvTxt = self.env.getEnv( node.isThreading() );
 
    let openParenNum;
    if not node.hasNilAccess() {
@@ -5090,7 +5145,7 @@ pub override fn convFilter.processLiteralString(
    let txt = node.$token.txt;
    if! let expList = node.$dddParam {
       self.write( '%s.String_format(%s, '
-                  (getLuavm( node.isThreading() ), str2gostr(txt)));
+                  (self.env.getLuavm( node.isThreading() ), str2gostr(txt)));
       self.processSetFromExpList(
          self.getConvExpName( node.$id, expList ),  [ Ast.builtinTypeDDD ], expList );
       self.write( ")" );

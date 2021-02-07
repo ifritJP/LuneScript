@@ -105,6 +105,12 @@ pub override fn FormatterFilter.processSubfile(
 {
    
 }
+pub override fn FormatterFilter.processEnv(
+   node: &Nodes.EnvNode, opt:Opt ) mut
+{
+   self.write( "__envLock" );
+   filter( node.$block, self, opt.nextOpt( node ) );
+}
 pub override fn FormatterFilter.processBlockSub(
    node: &Nodes.BlockNode, opt:Opt ) mut
 {

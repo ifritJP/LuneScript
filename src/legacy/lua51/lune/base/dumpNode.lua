@@ -394,6 +394,15 @@ function dumpFilter:processSubfile( node, opt )
    self:dump( opt, node, "" )
 end
 
+
+function dumpFilter:processEnv( node, opt )
+
+   self:dump( opt, node, "" )
+   filter( node:get_block(), self, opt:nextOpt(  ) )
+end
+
+
+
 function dumpFilter:processBlockSub( node, opt )
 
    self:dump( opt, node, "" )

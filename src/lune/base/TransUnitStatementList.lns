@@ -119,6 +119,9 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
       elseif token.txt == "super" {
          statement = self.analyzeSuper( token );
       }
+      elseif token.txt == "__envLock" {
+         statement = self.analyzeEnvLock( token );
+      }
       elseif token.txt == "if" {
          statement = self.analyzeIf( token );
       }

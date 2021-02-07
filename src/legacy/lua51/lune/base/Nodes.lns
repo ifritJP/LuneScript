@@ -905,12 +905,17 @@ pub enum BlockKind {
    IfUnwrap,
    When,
    Test,
+   Env,
 }
 
 _declNodeClass( "Block", Node, false, false, true,
                 [ { "blockKind": "BlockKind" },
                   { "scope": "&Ast.Scope" },
                   { "stmtList": "List<&Node>" } ]
+);
+
+_declNodeClass( "Env", Node, false, false, true,
+                [ { "block": "BlockNode" } ]
 );
 
 pub enum ScopeKind {
@@ -1878,6 +1883,10 @@ _declNodeClass( "DeclClass", Node, false, false, true,
                    */                 
                   { "outerMethodSet": "Set<str>" } ]
 );
+
+pub fn DeclClassNode.isModule() : bool {
+   return self.moduleName ~= nil;
+}
 
 /**
 このクラスで定義しているメソッド名のセットを返す。 advertise を除く。

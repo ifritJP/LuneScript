@@ -3674,6 +3674,12 @@ fn TransUnit.analyzeSubfile( token: &Parser.Token ) mut : Nodes.SubfileNode {
       [ Ast.builtinTypeNone ], usePath );
 }
 
+fn TransUnit.analyzeEnvLock( token: &Parser.Token ) mut : Nodes.Node {
+   return Nodes.EnvNode.create(
+      self.nodeManager, token.pos, self.macroCtrl.isInAnalyzeArgMode(),
+      [ Ast.builtinTypeNone ], self.analyzeBlock( .Env, .Simple ## ) );
+}
+
 fn TransUnit.analyzeIf( token: &Parser.Token ) mut : Nodes.Node {
    let mut nextToken, continueFlag = self.getContinueToken();
    if continueFlag and nextToken.txt == "!" {

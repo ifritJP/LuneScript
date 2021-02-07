@@ -331,7 +331,7 @@ end
 
 function FormatterFilter:processBlankLine( node, opt )
 
-   for _5141 = 1, node:get_lineNum() do
+   for _5165 = 1, node:get_lineNum() do
       self:writeln( "" )
    end
    
@@ -361,6 +361,12 @@ end
 
 function FormatterFilter:processSubfile( node, opt )
 
+end
+
+function FormatterFilter:processEnv( node, opt )
+
+   self:write( "__envLock" )
+   filter( node:get_block(), self, opt:nextOpt( node ) )
 end
 
 function FormatterFilter:processBlockSub( node, opt )

@@ -1404,6 +1404,12 @@ function convFilter:processSubfile( node, opt )
 end
 
 
+function convFilter:processEnv( node, opt )
+
+   filter( node:get_block(), self, node )
+end
+
+
 function convFilter:processBlockSub( node, opt )
 
    local word = ""
@@ -1429,7 +1435,7 @@ function convFilter:processBlockSub( node, opt )
          word = ""
       elseif _switchExp == Nodes.BlockKind.Default then
          word = ""
-      elseif _switchExp == Nodes.BlockKind.Block then
+      elseif _switchExp == Nodes.BlockKind.Block or _switchExp == Nodes.BlockKind.Env then
          word = "do"
       elseif _switchExp == Nodes.BlockKind.LetUnwrap then
          word = ""
@@ -1456,8 +1462,11 @@ function convFilter:processBlockSub( node, opt )
    
    
    self:popIndent(  )
-   if node:get_blockKind(  ) == Nodes.BlockKind.Block then
-      self:writeln( "end" )
+   do
+      local _switchExp = node:get_blockKind(  )
+      if _switchExp == Nodes.BlockKind.Block or _switchExp == Nodes.BlockKind.Env then
+         self:writeln( "end" )
+      end
    end
    
 end
@@ -1960,7 +1969,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _6233 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _6264 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -4178,7 +4187,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3478, function (  )
+   Log.log( Log.Level.Trace, __func__, 3486, function (  )
    
       return string.format( "macro: %s", code)
    end )
