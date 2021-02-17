@@ -970,7 +970,7 @@ fn TransUnit.analyzeExtend( accessMode:Ast.AccessMode, firstPos: &Parser.Positio
 
 fn TransUnit.analyzePushClass(
    mode:DeclClassMode, abstractFlag: bool, firstToken:&Parser.Token, name:&Parser.Token,
-   allowMultiple:bool,
+   allowMultiple:bool, requirePath:&Parser.Token!,
    accessMode:Ast.AccessMode, altTypeList:&List<&Ast.AlternateTypeInfo> ) mut :
    &Parser.Token, &Ast.TypeInfo
 {
@@ -1016,9 +1016,19 @@ fn TransUnit.analyzePushClass(
    self.popScope();
 
 
-   let classTypeInfo = self.pushClass(
-      firstToken.pos, mode, abstractFlag, baseTypeInfo,
-      interfaceList, altTypeList, false, name.txt, allowMultiple, accessMode ## );
+   let classTypeInfo;
+   _switch mode {
+      case .Module, .LazyModule {
+         let mut parentScope = self.scope;
+         classTypeInfo = self.pushExtModule( false, name.txt, accessMode,
+                                             name.pos, mode == .LazyModule );                                      
+      }
+      case .Class, .Interface {
+         classTypeInfo = self.pushClass(
+            firstToken.pos, mode, abstractFlag, baseTypeInfo,
+            interfaceList, altTypeList, false, name.txt, allowMultiple, accessMode ## );
+      }
+   }
 
    return nextToken, classTypeInfo;
 }
@@ -1113,7 +1123,7 @@ fn TransUnit.analyzeDeclProto(
       let classTypeInfo:&Ast.TypeInfo;
       nextToken, classTypeInfo = self.analyzePushClass(
          declMode, abstractFlag,
-         firstToken, name, false, accessMode, altTypeList );
+         firstToken, name, false, nil, accessMode, altTypeList );
 
       self.protoClassMap[ classTypeInfo ] = firstToken.pos;
 
@@ -2333,7 +2343,7 @@ fn TransUnit.analyzeDeclClass(
 
    let mut nextToken, classTypeInfo = self.analyzePushClass(
       mode, classAbstructFlag,
-      firstToken, name, true, classAccessMode, altTypeList );
+      firstToken, name, true, moduleName, classAccessMode, altTypeList );
 
    let hasProto;
    if self.protoClassMap[ classTypeInfo ] {

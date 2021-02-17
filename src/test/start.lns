@@ -571,7 +571,7 @@ collectgarbage();
 
 module GlueTest require 'test.glueTest' glue 'hoge_' {
    pub static fn create(val:int): GlueTest;
-   pub static fn func1( val:int, txt:str, list:int[] ) : int;
+   pub static fn func1( val:int, txt:str, list:&List<int> ) : int;
    pub fn func2( val:int, val2:int!, val3:real!, val4:str! ): str;
    //pub fn func2( val:int ): str;
 }

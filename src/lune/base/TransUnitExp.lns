@@ -2306,7 +2306,7 @@ fn TransUnit.analyzeExpField(
    let mut getterTypeInfo:&Ast.TypeInfo! = nil;
    let mut symbolInfo:&Ast.SymbolInfo! = nil;
    switch prefixExpType.$kind {
-      case .Class, .Module, .IF, .List, .Array, .Set, .Box, .Alternate {
+      case .Class, .Module, .ExtModule, .IF, .List, .Array, .Set, .Box, .Alternate {
          let mut getterFlag = false;
          typeInfo, symbolInfo, getterFlag =
             self.analyzeAccessClassField( prefixExpType, mode, fieldToken );

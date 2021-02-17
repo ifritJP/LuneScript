@@ -130,6 +130,12 @@ pub interface ModuleInfoIF {
    pub fn get_modulePath():str;
 }
 
+pub class SimpleModuleInfo extend (ModuleInfoIF) {
+   let assignName:str {pub};
+   let modulePath:str {pub};
+}
+
+
 /** 所定の TypeInfo が属するモジュールの ModuleInfoIF の問い合わせを行なう */
 pub interface ModuleInfoManager {
    pub fn getModuleInfo( typeInfo:&TypeInfo ) : &ModuleInfoIF!;
@@ -265,6 +271,8 @@ pub enum TypeInfoKind {
    * getCommonType() のためだけで使用。他の処理で使用したときは動作を保証しない。
    */ 
    CombineIF,
+   // module宣言
+   ExtModule,
 }
 
 pub fn isBuiltin( typeId: int ) : bool {
@@ -2087,6 +2095,23 @@ pub fn Scope.addClass(
    typeInfo: &TypeInfo ) mut : &SymbolInfo!, &SymbolInfo!
 {
    return self.addClassLazy( processInfo, name, pos, typeInfo, false )**;
+}
+
+pub fn Scope.addExtModule(
+   processInfo:ProcessInfo, name:str, pos:&Parser.Position!,
+   mut typeInfo: &TypeInfo, lazy:bool ) mut : &SymbolInfo!, &SymbolInfo!
+{
+   _match processInfo.createLuaval( typeInfo, true ) {
+      case .Err( mess ) {
+         Util.err( mess );
+      }
+      case .OK( luavalTypeInfo, _ ) {
+         typeInfo = luavalTypeInfo;
+      }
+   }
+   return self.add(
+      processInfo, .Typ, false, false, name, pos, typeInfo,
+      typeInfo.$accessMode, false, .Mut, true, lazy )**;
 }
 
 /**
@@ -4335,6 +4360,8 @@ enum LuavalConvKind {
 typeInfo の Luaval を生成可能かどうかを調べる。
 
 @param convFlag true の場合、Luaval と LuneScript との値の変換を自動で行なえるかどうか。
+@param validToCheck true の場合、 convFlag を利用して typeInfo の型を Luaval として生成可能かどうか調べる。
+       通常は true を指定する。 false を指定するのは、例外。
 @return 生成可能な場合は nil。 生成できない場合は メッセージを返す。
 */
 fn failCreateLuavalWith(
@@ -4363,7 +4390,7 @@ fn failCreateLuavalWith(
       case .Prim {
          return nil, true;
       }
-      case .Form, .IF, .DDD {
+      case .Form, .IF, .DDD, .ExtModule {
          if not validToCheck {
             return nil, false;
          }
@@ -4402,7 +4429,7 @@ fn failCreateLuavalWith(
          canConv = false;
          return nil, canConv;
       }
-      case .FormFunc {
+      case .FormFunc, .Func {
          if not validToCheck {
             return nil, false;
          }
@@ -4419,7 +4446,7 @@ fn failCreateLuavalWith(
          return nil, canConv;
       }
    }
-   return "not support -- %s" (typeInfo.getTxt(##)), false;
+   return "not support -- %s:%s" (typeInfo.getTxt(##), typeInfo.$kind.$_txt), false;
 }
 
 
@@ -4625,6 +4652,31 @@ pub fn ProcessInfo.createClass(
       externalFlag, false, accessMode,
       className, parentInfo, self.$idProv.getNewId(),
       classFlag and TypeInfoKind.Class or TypeInfoKind.IF, genTypeList, nil, nil, .Mut );
+   return info;
+}
+
+
+pub fn ProcessInfo.createExtModule(
+   scope: Scope!, parentInfo: &TypeInfo, externalFlag: bool,
+   accessMode: AccessMode, className: str ) mut : &TypeInfo
+{
+   // if className == "str" {
+   //     return sym2builtInTypeMap[ className ]@TypeInfo;
+   // }
+   if! sym2builtInTypeMap[ className ] {
+      return _exp.$typeInfo;
+   }
+
+   if Parser.isLuaKeyword( className ) {
+      Util.err( "This symbol can not use for a class or script file. -- %s"
+                  (className) );
+   }
+
+   let mut info = new NormalTypeInfo(
+      self, false, scope, nil, nil, false,
+      externalFlag, false, accessMode,
+      className, parentInfo, self.$idProv.getNewId(),
+      .ExtModule, nil, nil, nil, .Mut );
    return info;
 }
 

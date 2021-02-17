@@ -407,6 +407,34 @@ function ModuleInfoIF:__init(  )
 
 end
 
+
+local SimpleModuleInfo = {}
+setmetatable( SimpleModuleInfo, { ifList = {ModuleInfoIF,} } )
+_moduleObj.SimpleModuleInfo = SimpleModuleInfo
+function SimpleModuleInfo.setmeta( obj )
+  setmetatable( obj, { __index = SimpleModuleInfo  } )
+end
+function SimpleModuleInfo.new( assignName, modulePath )
+   local obj = {}
+   SimpleModuleInfo.setmeta( obj )
+   if obj.__init then
+      obj:__init( assignName, modulePath )
+   end
+   return obj
+end
+function SimpleModuleInfo:__init( assignName, modulePath )
+
+   self.assignName = assignName
+   self.modulePath = modulePath
+end
+function SimpleModuleInfo:get_assignName()
+   return self.assignName
+end
+function SimpleModuleInfo:get_modulePath()
+   return self.modulePath
+end
+
+
 local ModuleInfoManager = {}
 _moduleObj.ModuleInfoManager = ModuleInfoManager
 function ModuleInfoManager.setmeta( obj )
@@ -733,6 +761,9 @@ TypeInfoKind.__allList[25] = TypeInfoKind.Ext
 TypeInfoKind.CombineIF = 25
 TypeInfoKind._val2NameMap[25] = 'CombineIF'
 TypeInfoKind.__allList[26] = TypeInfoKind.CombineIF
+TypeInfoKind.ExtModule = 26
+TypeInfoKind._val2NameMap[26] = 'ExtModule'
+TypeInfoKind.__allList[27] = TypeInfoKind.ExtModule
 
 
 local function isBuiltin( typeId )
@@ -2900,6 +2931,26 @@ end
 function Scope:addClass( processInfo, name, pos, typeInfo )
 
    return self:addClassLazy( processInfo, name, pos, typeInfo, false )
+end
+
+
+function Scope:addExtModule( processInfo, name, pos, typeInfo, lazy )
+
+   do
+      local _matchExp = processInfo:createLuaval( typeInfo, true )
+      if _matchExp[1] == LuavalResult.Err[1] then
+         local mess = _matchExp[2][1]
+      
+         Util.err( mess )
+      elseif _matchExp[1] == LuavalResult.OK[1] then
+         local luavalTypeInfo = _matchExp[2][1]
+         local _ = _matchExp[2][2]
+      
+         typeInfo = luavalTypeInfo
+      end
+   end
+   
+   return self:add( processInfo, SymbolKind.Typ, false, false, name, pos, typeInfo, typeInfo:get_accessMode(), false, MutMode.Mut, true, lazy )
 end
 
 local function dumpScope( workscope, workprefix )
@@ -5921,7 +5972,7 @@ local function failCreateLuavalWith( typeInfo, convFlag, validToCheck )
          return failCreateLuavalWith( typeInfo:get_nonnilableType(), convFlag, validToCheck )
       elseif _switchExp == TypeInfoKind.Prim then
          return nil, true
-      elseif _switchExp == TypeInfoKind.Form or _switchExp == TypeInfoKind.IF or _switchExp == TypeInfoKind.DDD then
+      elseif _switchExp == TypeInfoKind.Form or _switchExp == TypeInfoKind.IF or _switchExp == TypeInfoKind.DDD or _switchExp == TypeInfoKind.ExtModule then
          if not validToCheck then
             return nil, false
          end
@@ -5973,7 +6024,7 @@ local function failCreateLuavalWith( typeInfo, convFlag, validToCheck )
          
          canConv = false
          return nil, canConv
-      elseif _switchExp == TypeInfoKind.FormFunc then
+      elseif _switchExp == TypeInfoKind.FormFunc or _switchExp == TypeInfoKind.Func then
          if not validToCheck then
             return nil, false
          end
@@ -6020,7 +6071,8 @@ local function failCreateLuavalWith( typeInfo, convFlag, validToCheck )
       end
    end
    
-   return string.format( "not support -- %s", typeInfo:getTxt(  )), false
+   return string.format( "not support -- %s:%s", typeInfo:getTxt(  ), TypeInfoKind:_getTxt( typeInfo:get_kind())
+   ), false
 end
 
 function AlternateTypeInfo.getAssign( typeInfo, alt2type )
@@ -6282,6 +6334,26 @@ function ProcessInfo:createClass( classFlag, abstractFlag, scope, baseInfo, inte
    
    
    local info = NormalTypeInfo.new(self, abstractFlag, scope, baseInfo, interfaceList, false, externalFlag, false, accessMode, className, parentInfo, self:get_idProv():getNewId(  ), classFlag and TypeInfoKind.Class or TypeInfoKind.IF, genTypeList, nil, nil, MutMode.Mut)
+   return info
+end
+
+
+function ProcessInfo:createExtModule( scope, parentInfo, externalFlag, accessMode, className )
+
+   do
+      local _exp = sym2builtInTypeMap[className]
+      if _exp ~= nil then
+         return _exp:get_typeInfo()
+      end
+   end
+   
+   
+   if Parser.isLuaKeyword( className ) then
+      Util.err( string.format( "This symbol can not use for a class or script file. -- %s", className) )
+   end
+   
+   
+   local info = NormalTypeInfo.new(self, false, scope, nil, nil, false, externalFlag, false, accessMode, className, parentInfo, self:get_idProv():getNewId(  ), TypeInfoKind.ExtModule, nil, nil, nil, MutMode.Mut)
    return info
 end
 
