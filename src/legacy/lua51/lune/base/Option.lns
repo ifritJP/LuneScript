@@ -112,7 +112,7 @@ pub class Option {
    pub let mut transCtrlInfo:Types.TransCtrlInfo;
 
    /** true の場合 C への変換を行なう */
-   pub let mut convTo:Types.Conv!;
+   pub let mut convTo:Types.Lang!;
 
    /** テストする時 true */
    pub let mut testing:bool;

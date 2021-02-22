@@ -290,7 +290,7 @@ local function getStackTrace(  )
       do
          local debugInfo = debug.getinfo( level )
          if debugInfo ~= nil then
-            txt = txt .. string.format( "-- %s %s", debugInfo['short_src'], debugInfo['currentline'])
+            txt = txt .. string.format( "-- %s %s %s\n", debugInfo['short_src'], debugInfo['currentline'], debugInfo['name'])
          end
       end
       

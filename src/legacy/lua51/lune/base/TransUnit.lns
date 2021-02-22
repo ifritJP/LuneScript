@@ -891,6 +891,35 @@ alias で置き換えている元の Type → alias の型
       self.popScope();
    }
 
+   pri fn pushExtModule(
+      externalFlag: bool, name:str, accessMode:Ast.AccessMode,
+      pos:&Parser.Position, lazy:bool, lang:Types.Lang ) mut : &Ast.TypeInfo
+   {
+      let mut typeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
+
+      let modName = name;
+      if! self.scope.getTypeInfoChild( modName ) {
+         self.addErrMess( pos, "multiple define -- %s" (name) );
+         return _exp;
+      }
+      else {
+         let parentInfo = self.getCurrentNamespaceTypeInfo();
+         let mut parentScope = self.scope;
+         let mut scope = self.pushScope( true ## );
+         typeInfo = self.processInfo.createExtModule(
+            scope, parentInfo, externalFlag,
+            accessMode, name, lang );
+
+         parentScope.addExtModule( self.processInfo, name, pos, typeInfo, lazy, lang );
+      }
+      if not self.typeId2ClassMap[ typeInfo.$typeId ] {
+         let namespace = new Nodes.NamespaceInfo( modName, self.scope, typeInfo );
+         self.typeId2ClassMap[ typeInfo.$typeId ] = namespace;
+      }
+      return typeInfo;
+   }
+
+
    /**
 既存クラスの Scope を push する。
    */
@@ -1043,6 +1072,7 @@ alias で置き換えている元の Type → alias の型
          else {
             workGenTypeList = [];
          }
+         
          typeInfo = self.processInfo.createClass(
             mode ~= .Interface, abstractFlag, scope, baseInfo, interfaceList,
             workGenTypeList, parentInfo, externalFlag, accessMode, name );
@@ -1559,6 +1589,7 @@ class _TypeInfoNormal extend _TypeInfo {
    pub let argTypeId: &List<int>;
    pub let retTypeId: &List<int>;
    pub let children: &List<int>;
+   pub let moduleLang:Types.Lang!;
 
    pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
@@ -1621,6 +1652,7 @@ class _TypeInfoNormal extend _TypeInfo {
             newTypeInfo = parentScope.getTypeInfoChild( self.txt );
          }
          if newTypeInfo and ( self.kind == Ast.TypeInfoKind.Class or
+                              self.kind == Ast.TypeInfoKind.ExtModule or
                               self.kind == Ast.TypeInfoKind.IF )
          {
             if! newTypeInfo {
@@ -1674,7 +1706,30 @@ class _TypeInfoNormal extend _TypeInfo {
                param.typeId2Scope[ self.typeId ] = scope;
                param.typeId2TypeInfo[ self.typeId ] = workTypeInfo;
             }
-            else {
+            elseif self.kind == Ast.TypeInfoKind.ExtModule {
+               Log._log(
+                  .Debug,         
+                  `{ return "new type -- %d, %s -- %s, %d"
+                     (self.parentId, self.txt, 
+                       parentScope.$ownerTypeInfo$.getFullName$(
+                          Ast.defaultTypeNameCtrl, parentScope, false ) or "nil",
+                       parentScope.$ownerTypeInfo$.$typeId or -1 ); } );
+            
+               
+               let mut scope = new Ast.Scope(
+                  param.processInfo, parentScope, true, nil, [] );
+
+               let workTypeInfo = param.processInfo.createExtModule(
+                  scope, parentInfo, true, .Pub, self.txt, unwrap self.moduleLang );
+               parentScope.addExtModule(
+                  param.processInfo, self.txt, nil, workTypeInfo,
+                  param.lazyModuleSet.has( self.typeId ), unwrap self.moduleLang );
+               
+               newTypeInfo = workTypeInfo;
+
+               param.typeId2Scope[ self.typeId ] = scope;
+               param.typeId2TypeInfo[ self.typeId ] = workTypeInfo;
+            } else {
                let mut scope:Ast.Scope! = nil;
 
                if self.kind == Ast.TypeInfoKind.Func or
@@ -1690,7 +1745,8 @@ class _TypeInfoNormal extend _TypeInfo {
                   param.processInfo, accessMode,
                   self.abstractFlag, scope, baseInfo,
                   interfaceList, parentInfo, self.staticFlag, typeInfoKind,
-                  self.txt, itemTypeInfo, argTypeInfo, retTypeInfo, self.mutMode );
+                  self.txt, itemTypeInfo, argTypeInfo,
+                  retTypeInfo, self.mutMode, self.moduleLang );
                newTypeInfo = workTypeInfo;
 
                param.typeId2TypeInfo[ self.typeId ] = workTypeInfo;
@@ -3318,7 +3374,7 @@ fn TransUnit.processImport( modulePath:str, depth:int ) mut :
       //let mut backupScope = self.scope;
       
       switch ( classTypeInfo.$kind ) {
-         case .Class {
+         case .Class, .ExtModule {
             // self.pushClass( self.currentToken.pos, true, classTypeInfo.$abstractFlag,
             //                 nil, nil, nil, true, classTypeInfo.getTxt(##), .Pub ## );
             self.pushClassScope( self.parser.getLastPos(), classTypeInfo );
@@ -3363,6 +3419,7 @@ fn TransUnit.processImport( modulePath:str, depth:int ) mut :
 
       foreach child in classTypeInfo.get_children() {
          if child.get_kind() == .Class or
+            child.get_kind() == .ExtModule or
             child.get_kind() == .Module or
             child.get_kind() == .IF
          {
@@ -3373,11 +3430,13 @@ fn TransUnit.processImport( modulePath:str, depth:int ) mut :
          }
       }
 
-      if classTypeInfo.$kind == .Class {
-         self.popClass();
-      }
-      elseif classTypeInfo.$kind == .Module {
-         self.popModule();
+      switch classTypeInfo.$kind {
+         case .Class, .ExtModule {
+            self.popClass();
+         }
+         case .Module {
+            self.popModule();
+         }
       }
    }
    foreach atomInfo in _typeInfoList {

@@ -153,34 +153,40 @@ end
 if not _lune3 then
    _lune3 = _lune
 end
-local Conv = {}
-_moduleObj.Conv = Conv
-Conv._val2NameMap = {}
-function Conv:_getTxt( val )
+local Lang = {}
+_moduleObj.Lang = Lang
+Lang._val2NameMap = {}
+function Lang:_getTxt( val )
    local name = self._val2NameMap[ val ]
    if name then
-      return string.format( "Conv.%s", name )
+      return string.format( "Lang.%s", name )
    end
    return string.format( "illegal val -- %s", val )
 end
-function Conv._from( val )
-   if Conv._val2NameMap[ val ] then
+function Lang._from( val )
+   if Lang._val2NameMap[ val ] then
       return val
    end
    return nil
 end
     
-Conv.__allList = {}
-function Conv.get__allList()
-   return Conv.__allList
+Lang.__allList = {}
+function Lang.get__allList()
+   return Lang.__allList
 end
 
-Conv.C = 0
-Conv._val2NameMap[0] = 'C'
-Conv.__allList[1] = Conv.C
-Conv.Go = 1
-Conv._val2NameMap[1] = 'Go'
-Conv.__allList[2] = Conv.Go
+Lang.Same = 0
+Lang._val2NameMap[0] = 'Same'
+Lang.__allList[1] = Lang.Same
+Lang.Lua = 1
+Lang._val2NameMap[1] = 'Lua'
+Lang.__allList[2] = Lang.Lua
+Lang.Go = 2
+Lang._val2NameMap[2] = 'Go'
+Lang.__allList[3] = Lang.Go
+Lang.C = 3
+Lang._val2NameMap[3] = 'C'
+Lang.__allList[4] = Lang.C
 
 local CheckingUptodateMode = {}
 _moduleObj.CheckingUptodateMode = CheckingUptodateMode
@@ -390,7 +396,7 @@ end
 function Token:getLineCount(  )
 
    local count = 1
-   for _87 in self.txt:gmatch( "\n" ) do
+   for _89 in self.txt:gmatch( "\n" ) do
       count = count + 1
    end
    

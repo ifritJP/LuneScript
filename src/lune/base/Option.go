@@ -85,7 +85,7 @@ func Option_convExp541(arg1 []LnsAny) LnsAny {
 }
 // 48: decl @lune.@base.@Option.getBuildCount
 func Option_getBuildCount_1015_() LnsInt {
-    return 6494
+    return 6539
 }
 
 // 74: decl @lune.@base.@Option.getRuntimeModule
@@ -98,9 +98,9 @@ func Option_outputLuneMod(path LnsAny) LnsAny {
     var lune_path string
     lune_path = "runtime.lua"
     if path != nil{
-        path_2473 := path.(string)
-        if path_2473 != ""{
-            lune_path = path_2473
+        path_2475 := path.(string)
+        if path_2475 != ""{
+            lune_path = path_2475
             
         }
     }
@@ -322,12 +322,12 @@ func Option_analyze(argList *LnsList) *Option_Option {
                     }
                 }
             } else if _switch1444 == "-langC" {
-                option.ConvTo = Types_Conv__C
+                option.ConvTo = Types_Lang__C
                 
                 option.TransCtrlInfo.ValidLuaval = true
                 
             } else if _switch1444 == "-langGo" {
-                option.ConvTo = Types_Conv__Go
+                option.ConvTo = Types_Lang__Go
                 
                 option.TransCtrlInfo.ValidLuaval = true
                 
@@ -546,12 +546,12 @@ func (self *Option_Option) OpenDepend(relPath LnsAny) LnsAny {
             path := _path.(string)
             var filePath string
             if relPath != nil{
-                relPath_2461 := relPath.(string)
+                relPath_2463 := relPath.(string)
                 if Lns_isCondTrue( Lns_car(Lns_getVM().String_find(path,"/$", nil, nil))){
-                    filePath = Lns_getVM().String_format("%s%s", []LnsAny{path, relPath_2461})
+                    filePath = Lns_getVM().String_format("%s%s", []LnsAny{path, relPath_2463})
                     
                 } else { 
-                    filePath = Lns_getVM().String_format("%s/%s", []LnsAny{path, relPath_2461})
+                    filePath = Lns_getVM().String_format("%s/%s", []LnsAny{path, relPath_2463})
                     
                 }
             } else {

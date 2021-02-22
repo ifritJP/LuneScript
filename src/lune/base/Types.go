@@ -3,27 +3,33 @@ package lnsc
 import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_Types bool
 var Types__mod__ string
-// decl enum -- Conv 
-const Types_Conv__C = 0
-const Types_Conv__Go = 1
-var Types_ConvList_ = NewLnsList( []LnsAny {
-  Types_Conv__C,
-  Types_Conv__Go,
+// decl enum -- Lang 
+const Types_Lang__C = 3
+const Types_Lang__Go = 2
+const Types_Lang__Lua = 1
+const Types_Lang__Same = 0
+var Types_LangList_ = NewLnsList( []LnsAny {
+  Types_Lang__Same,
+  Types_Lang__Lua,
+  Types_Lang__Go,
+  Types_Lang__C,
 })
-func Types_Conv_get__allList() *LnsList{
-    return Types_ConvList_
+func Types_Lang_get__allList() *LnsList{
+    return Types_LangList_
 }
-var Types_ConvMap_ = map[LnsInt]string {
-  Types_Conv__C: "Conv.C",
-  Types_Conv__Go: "Conv.Go",
+var Types_LangMap_ = map[LnsInt]string {
+  Types_Lang__C: "Lang.C",
+  Types_Lang__Go: "Lang.Go",
+  Types_Lang__Lua: "Lang.Lua",
+  Types_Lang__Same: "Lang.Same",
 }
-func Types_Conv__from(arg1 LnsInt) LnsAny{
-    if _, ok := Types_ConvMap_[arg1]; ok { return arg1 }
+func Types_Lang__from(arg1 LnsInt) LnsAny{
+    if _, ok := Types_LangMap_[arg1]; ok { return arg1 }
     return nil
 }
 
-func Types_Conv_getTxt(arg1 LnsInt) string {
-    return Types_ConvMap_[arg1];
+func Types_Lang_getTxt(arg1 LnsInt) string {
+    return Types_LangMap_[arg1];
 }
 // decl enum -- CheckingUptodateMode 
 const Types_CheckingUptodateMode__Force = "force"
@@ -148,7 +154,7 @@ func (self *Types_TransCtrlInfo) InitTypes_TransCtrlInfo(arg1 bool, arg2 bool, a
     self.ValidLuaval = arg6
     self.DefaultLazy = arg7
 }
-// 55: decl @lune.@base.@Types.TransCtrlInfo.create_normal
+// 58: decl @lune.@base.@Types.TransCtrlInfo.create_normal
 func Types_TransCtrlInfo_create_normal() *Types_TransCtrlInfo {
     return NewTypes_TransCtrlInfo(false, false, true, false, Types_CheckingUptodateMode__Touch, false, false)
 }
@@ -348,7 +354,7 @@ func Types_Token_FromMapMain( newObj *Types_Token, objMap *LnsMap, paramList []L
     }
     return true, newObj, nil
 }
-// 88: DeclConstr
+// 91: DeclConstr
 func (self *Types_Token) InitTypes_Token(kind LnsInt,txt string,pos *Types_Position,consecutive bool,commentList LnsAny) {
     self.Kind = kind
     
@@ -362,7 +368,7 @@ func (self *Types_Token) InitTypes_Token(kind LnsInt,txt string,pos *Types_Posit
     
 }
 
-// 98: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
+// 101: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
 func (self *Types_Token) GetExcludedDelimitTxt() string {
     if self.Kind != Types_TokenKind__Str{
         return self.Txt
@@ -377,13 +383,13 @@ func (self *Types_Token) GetExcludedDelimitTxt() string {
     return ""
 }
 
-// 113: decl @lune.@base.@Types.Token.set_commentList
+// 116: decl @lune.@base.@Types.Token.set_commentList
 func (self *Types_Token) Set_commentList(commentList *LnsList) {
     self.commentList = commentList
     
 }
 
-// 117: decl @lune.@base.@Types.Token.getLineCount
+// 120: decl @lune.@base.@Types.Token.getLineCount
 func (self *Types_Token) GetLineCount() LnsInt {
     var count LnsInt
     count = 1

@@ -27,6 +27,7 @@ package runtimelns
 
 import "fmt"
 import "sort"
+import "reflect"
 
 type Lns_ToMap interface {
     ToMap() *LnsMap
@@ -68,6 +69,93 @@ func Lns_FromStemGetAt( obj LnsAny, index LnsAny, nilAccess bool ) LnsAny {
     return obj.(*LnsList).Items[ index.(LnsInt) - 1 ]
 }
 
+func Lns_valFromGo( goObj reflect.Value ) LnsAny {
+    kind := goObj.Kind()
+    if kind == reflect.Bool {
+        return goObj.Bool()
+    }
+    if kind == reflect.Int ||
+        kind == reflect.Int8 ||
+        kind == reflect.Int16 ||
+        kind == reflect.Int32 ||
+        kind == reflect.Int64 ||
+        kind == reflect.Uint ||
+        kind == reflect.Uint8 ||
+        kind == reflect.Uint16 ||
+        kind == reflect.Uint32 ||
+        kind == reflect.Uint64 ||
+        kind == reflect.Uintptr {
+        return LnsInt(goObj.Int())
+    }
+    if kind == reflect.Float32 ||
+        kind == reflect.Float64 {
+        return LnsReal(goObj.Float())
+    }
+    if kind == reflect.String {
+        return goObj.String()
+    }
+    
+    if kind == reflect.Array || kind == reflect.Slice {
+        list := make([]LnsAny,goObj.Len())
+        for index := 0; index < goObj.Len(); index++ {
+            list[index] = Lns_valFromGo( goObj.Index( index ) )
+        }
+        return NewLnsList( list );
+    }
+    if kind == reflect.Map {
+        mapObj := NewLnsMap( map[LnsAny]LnsAny{} )
+        iter := goObj.MapRange()
+        for iter.Next() {
+            key := Lns_valFromGo( iter.Key() )
+            mapObj.Items[ key ] = Lns_valFromGo( iter.Value() )
+        }
+        return mapObj
+    }
+    // kind == reflect.Struct
+    return goObj.Interface()
+}
+
+func Lns_valToGo( val LnsAny, jsonMode bool ) LnsAny {
+    if Lns_IsNil( val ) {
+        return nil
+    } else {
+        switch val.(type) {
+        case LnsInt:
+            return val
+        case LnsReal:
+            return val
+        case bool:
+            return val
+        case string:
+            return val
+        case *LnsList:
+            lnsList := val.(*LnsList)
+            list := make( []LnsAny, len( lnsList.Items ) )
+            for index := 0; index < len( lnsList.Items ); index++ {
+                list[index] = Lns_valToGo( lnsList.Items[index], jsonMode )
+            }
+            return list
+        case *LnsMap:
+            lnsMap := val.(*LnsMap)
+            if jsonMode {
+                mapObj := map[string]LnsAny{}
+                for key, val := range( lnsMap.Items ) {
+                    mapObj[ key.(string) ] = Lns_valToGo( val, jsonMode )
+                }
+                return mapObj
+            } else {
+                mapObj := map[LnsAny]LnsAny{}
+                for key, val := range( lnsMap.Items ) {
+                    mapObj[ Lns_valToGo( key, jsonMode ) ] = Lns_valToGo( val, jsonMode )
+                }
+                return mapObj
+            }
+        default:
+            return val
+        }
+    }
+}
+
 
 // ======== list ========
 
@@ -82,6 +170,13 @@ const (
 type LnsList struct {
     Items []LnsAny
     lnsItemKind int
+}
+
+func Lns_listFromGo( goObj LnsAny ) *LnsList {
+    if Lns_IsNil( goObj ) {
+        return nil
+    }
+    return Lns_valFromGo( reflect.ValueOf( goObj ) ).(*LnsList)
 }
 
 func Lns_ToListSub(
@@ -431,6 +526,13 @@ func (self *LnsSet) Len() LnsInt {
 
 type LnsMap struct {
     Items map[LnsAny]LnsAny
+}
+
+func Lns_mapFromGo( goObj LnsAny ) *LnsMap {
+    if Lns_IsNil( goObj ) {
+        return nil
+    }
+    return Lns_valFromGo( reflect.ValueOf( goObj ) ).(*LnsMap)
 }
 
 func Lns_ToLnsMapSub(

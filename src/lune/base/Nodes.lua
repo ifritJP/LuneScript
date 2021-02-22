@@ -232,6 +232,7 @@ local Util = _lune.loadModule( 'lune.base.Util' )
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
+local Types = _lune.loadModule( 'lune.base.Types' )
 
 local SimpleModuleInfoManager = {}
 setmetatable( SimpleModuleInfoManager, { ifList = {Ast.ModuleInfoManager,} } )
@@ -746,7 +747,7 @@ end
 function NodeManager:__init() 
    self.idSeed = 0
    self.nodeKind2NodeList = {}
-   for kind, _2635 in pairs( nodeKind2NameMap ) do
+   for kind, _2638 in pairs( nodeKind2NameMap ) do
       if not self.nodeKind2NodeList[kind] then
          self.nodeKind2NodeList[kind] = {}
       end
@@ -9409,13 +9410,13 @@ function DeclClassNode:canBeStatement(  )
 
    return true
 end
-function DeclClassNode.new( id, pos, macroArgFlag, typeList, accessMode, name, hasPrototype, gluePrefix, moduleName, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet )
+function DeclClassNode.new( id, pos, macroArgFlag, typeList, accessMode, name, hasPrototype, gluePrefix, moduleName, lang, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet )
    local obj = {}
    DeclClassNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, accessMode, name, hasPrototype, gluePrefix, moduleName, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, accessMode, name, hasPrototype, gluePrefix, moduleName, lang, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet ); end
    return obj
 end
-function DeclClassNode:__init(id, pos, macroArgFlag, typeList, accessMode, name, hasPrototype, gluePrefix, moduleName, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet) 
+function DeclClassNode:__init(id, pos, macroArgFlag, typeList, accessMode, name, hasPrototype, gluePrefix, moduleName, lang, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet) 
    Node.__init( self,id, 64, pos, macroArgFlag, typeList)
    
    
@@ -9425,6 +9426,7 @@ function DeclClassNode:__init(id, pos, macroArgFlag, typeList, accessMode, name,
    self.hasPrototype = hasPrototype
    self.gluePrefix = gluePrefix
    self.moduleName = moduleName
+   self.lang = lang
    self.lazyLoad = lazyLoad
    self.hasOldCtor = hasOldCtor
    self.allStmtList = allStmtList
@@ -9440,9 +9442,9 @@ function DeclClassNode:__init(id, pos, macroArgFlag, typeList, accessMode, name,
    
    
 end
-function DeclClassNode.create( nodeMan, pos, macroArgFlag, typeList, accessMode, name, hasPrototype, gluePrefix, moduleName, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet )
+function DeclClassNode.create( nodeMan, pos, macroArgFlag, typeList, accessMode, name, hasPrototype, gluePrefix, moduleName, lang, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet )
 
-   local node = DeclClassNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, accessMode, name, hasPrototype, gluePrefix, moduleName, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet)
+   local node = DeclClassNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, accessMode, name, hasPrototype, gluePrefix, moduleName, lang, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet)
    nodeMan:addNode( node )
    return node
 end
@@ -9553,6 +9555,9 @@ function DeclClassNode:get_gluePrefix()
 end
 function DeclClassNode:get_moduleName()
    return self.moduleName
+end
+function DeclClassNode:get_lang()
+   return self.lang
 end
 function DeclClassNode:get_lazyLoad()
    return self.lazyLoad
@@ -12449,7 +12454,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, _10629 in pairs( self.map ) do
+   for key, _10636 in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -12484,8 +12489,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, _10643 in ipairs( __sorted ) do
-         local key = __map[ _10643 ]
+      for __index, _10650 in ipairs( __sorted ) do
+         local key = __map[ _10650 ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false

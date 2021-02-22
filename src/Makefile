@@ -1254,7 +1254,7 @@ setup-pkg-lua:
 
 
 define buildGoSetup
-	(cd $1; if [ ! -f go.mod ]; then go mod init $(GO_MOD); fi)
+	(cd $1; if [ ! -f go.mod ]; then go mod init $(GO_MOD); go mod tidy; fi)
 endef
 
 define buildGo
@@ -1324,6 +1324,9 @@ test-miniGo:
 	$(call setup-go,$(GO_WORK_DIR))
 	-rm $(GO_WORK_DIR)/*.*
 	cp build.counter $(GO_WORK_DIR)
+ifdef OTHER_GO
+	cp $(OTHER_GO) $(GO_WORK_DIR)
+endif
 	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),miniGo,.)
 	cat work/result-testGo.txt
 

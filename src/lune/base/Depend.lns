@@ -98,7 +98,8 @@ pub fn getStackTrace():str {
    let mut txt = "";
    for level = 2, 10 {
       if! let debugInfo = debug.getinfo( level ) {
-         txt = txt .. "-- %s %s" ( debugInfo.short_src, debugInfo.currentline );
+         txt = txt .. "-- %s %s %s\n" ( debugInfo.short_src,
+                                        debugInfo.currentline, debugInfo.name );
       }
    }
    return txt;

@@ -283,7 +283,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 6494
+   return 6539
 end
 
 
@@ -748,10 +748,10 @@ end
                end
                
             elseif _switchExp == "-langC" then
-               option.convTo = Types.Conv.C
+               option.convTo = Types.Lang.C
                option.transCtrlInfo.validLuaval = true
             elseif _switchExp == "-langGo" then
-               option.convTo = Types.Conv.Go
+               option.convTo = Types.Lang.Go
                option.transCtrlInfo.validLuaval = true
             elseif _switchExp == "-ol" then
                do

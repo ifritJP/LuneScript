@@ -22,9 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-pub enum Conv {
-   C,
+pub enum Lang {
+   // 変換先言語と同じ。
+   Same,
+   Lua,
    Go,
+   C,
 }
 
 /** meta ファイルの更新必要性チェックモード */

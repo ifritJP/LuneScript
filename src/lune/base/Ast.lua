@@ -231,6 +231,7 @@ local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Code = _lune.loadModule( 'lune.base.Code' )
 local Log = _lune.loadModule( 'lune.base.Log' )
+local Types = _lune.loadModule( 'lune.base.Types' )
 
 local IdProvider = {}
 _moduleObj.IdProvider = IdProvider
@@ -342,7 +343,7 @@ end
 function ProcessInfo:switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.ProcessInfo.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 105, function (  )
+   Log.log( Log.Level.Trace, __func__, 106, function (  )
    
       return "start"
    end )
@@ -2934,20 +2935,23 @@ function Scope:addClass( processInfo, name, pos, typeInfo )
 end
 
 
-function Scope:addExtModule( processInfo, name, pos, typeInfo, lazy )
+function Scope:addExtModule( processInfo, name, pos, typeInfo, lazy, lang )
 
-   do
-      local _matchExp = processInfo:createLuaval( typeInfo, true )
-      if _matchExp[1] == LuavalResult.Err[1] then
-         local mess = _matchExp[2][1]
-      
-         Util.err( mess )
-      elseif _matchExp[1] == LuavalResult.OK[1] then
-         local luavalTypeInfo = _matchExp[2][1]
-         local _ = _matchExp[2][2]
-      
-         typeInfo = luavalTypeInfo
+   if lang ~= Types.Lang.Same then
+      do
+         local _matchExp = processInfo:createLuaval( typeInfo, true )
+         if _matchExp[1] == LuavalResult.Err[1] then
+            local mess = _matchExp[2][1]
+         
+            Util.err( mess )
+         elseif _matchExp[1] == LuavalResult.OK[1] then
+            local luavalTypeInfo = _matchExp[2][1]
+            local _ = _matchExp[2][2]
+         
+            typeInfo = luavalTypeInfo
+         end
       end
+      
    end
    
    return self:add( processInfo, SymbolKind.Typ, false, false, name, pos, typeInfo, typeInfo:get_accessMode(), false, MutMode.Mut, true, lazy )
@@ -5108,13 +5112,13 @@ function NormalTypeInfo:switchScopeTo( scope )
 
    self:switchScope( scope )
 end
-function NormalTypeInfo.new( processInfo, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode )
+function NormalTypeInfo.new( processInfo, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode, moduleLang )
    local obj = {}
    NormalTypeInfo.setmeta( obj )
-   if obj.__init then obj:__init( processInfo, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode ); end
+   if obj.__init then obj:__init( processInfo, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode, moduleLang ); end
    return obj
 end
-function NormalTypeInfo:__init(processInfo, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode) 
+function NormalTypeInfo:__init(processInfo, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode, moduleLang) 
    TypeInfo.__init( self,scope, processInfo)
    
    
@@ -5131,6 +5135,7 @@ function NormalTypeInfo:__init(processInfo, abstractFlag, scope, baseTypeInfo, i
    end
    
    
+   self.moduleLang = moduleLang
    self.abstractFlag = abstractFlag
    self.baseTypeInfo = _lune.unwrapDefault( baseTypeInfo, _moduleObj.headTypeInfo)
    self.interfaceList = _lune.unwrapDefault( interfaceList, {})
@@ -5347,6 +5352,13 @@ function NormalTypeInfo:serialize( stream, validChildrenSet )
    
    local txt = string.format( [==[{ skind=%d, parentId = %d, typeId = %d, baseId = %d, txt = '%s',
         abstractFlag = %s, staticFlag = %s, accessMode = %d, kind = %d, mutMode = %d, ]==], SerializeKind.Normal, parentId, self.typeId, self:get_baseId(  ), self.rawTxt, self.abstractFlag, self.staticFlag, self.accessMode, self.kind, self.mutMode)
+   do
+      local _exp = self.moduleLang
+      if _exp ~= nil then
+         txt = txt .. string.format( "moduleLang = %d,", _exp)
+      end
+   end
+   
    
    local children = {}
    local set = validChildrenSet
@@ -5441,7 +5453,7 @@ function NormalTypeInfo:equals( processInfo, typeInfo, alt2type, checkModifer )
 
    return self:equalsSub( processInfo, typeInfo, alt2type, checkModifer )
 end
-function NormalTypeInfo.create( processInfo, accessMode, abstractFlag, scope, baseInfo, interfaceList, parentInfo, staticFlag, kind, txt, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode )
+function NormalTypeInfo.create( processInfo, accessMode, abstractFlag, scope, baseInfo, interfaceList, parentInfo, staticFlag, kind, txt, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode, moduleLang )
 
    if kind == TypeInfoKind.Prim then
       do
@@ -5455,7 +5467,7 @@ function NormalTypeInfo.create( processInfo, accessMode, abstractFlag, scope, ba
    end
    
    processInfo:get_idProv():increment(  )
-   local info = NormalTypeInfo.new(processInfo, abstractFlag, scope, baseInfo, interfaceList, false, true, staticFlag, accessMode, txt, parentInfo, processInfo:get_idProv():get_id(), kind, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode)
+   local info = NormalTypeInfo.new(processInfo, abstractFlag, scope, baseInfo, interfaceList, false, true, staticFlag, accessMode, txt, parentInfo, processInfo:get_idProv():get_id(), kind, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode, moduleLang)
    return info
 end
 function NormalTypeInfo.setmeta( obj )
@@ -5790,7 +5802,7 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD, ifList )
       end
    end
    
-   local info = NormalTypeInfo.new(rootProcessInfo, false, scope, nil, ifList, false, false, false, AccessMode.Pub, typeTxt, _moduleObj.headTypeInfo, typeId, kind, genTypeList, argTypeList, retTypeList, MutMode.Mut)
+   local info = NormalTypeInfo.new(rootProcessInfo, false, scope, nil, ifList, false, false, false, AccessMode.Pub, typeTxt, _moduleObj.headTypeInfo, typeId, kind, genTypeList, argTypeList, retTypeList, MutMode.Mut, nil)
    
    registBuiltin( idName, typeTxt, kind, info, _moduleObj.headTypeInfo, scope ~= nil )
    return info
@@ -6189,7 +6201,7 @@ function ProcessInfo:createSet( accessMode, parentInfo, itemTypeInfo, mutMode )
    self:get_idProv():increment(  )
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeSet ), _moduleObj.builtinTypeSet, nil, false, false, false, AccessMode.Pub, "Set", _moduleObj.headTypeInfo, self:get_idProv():get_id(), TypeInfoKind.Set, itemTypeInfo, nil, nil, workMutMode)
+      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeSet ), _moduleObj.builtinTypeSet, nil, false, false, false, AccessMode.Pub, "Set", _moduleObj.headTypeInfo, self:get_idProv():get_id(), TypeInfoKind.Set, itemTypeInfo, nil, nil, workMutMode, nil)
    end
    
    
@@ -6220,7 +6232,7 @@ function ProcessInfo:createList( accessMode, parentInfo, itemTypeInfo, mutMode )
    self:get_idProv():increment(  )
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeList ), _moduleObj.builtinTypeList, nil, false, false, false, AccessMode.Pub, "List", _moduleObj.headTypeInfo, self:get_idProv():get_id(), TypeInfoKind.List, itemTypeInfo, nil, nil, workMutMode)
+      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeList ), _moduleObj.builtinTypeList, nil, false, false, false, AccessMode.Pub, "List", _moduleObj.headTypeInfo, self:get_idProv():get_id(), TypeInfoKind.List, itemTypeInfo, nil, nil, workMutMode, nil)
    end
    
    
@@ -6251,7 +6263,7 @@ function ProcessInfo:createArray( accessMode, parentInfo, itemTypeInfo, mutMode 
    self:get_idProv():increment(  )
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeArray ), _moduleObj.builtinTypeArray, nil, false, false, false, AccessMode.Pub, "Array", _moduleObj.headTypeInfo, self:get_idProv():get_id(), TypeInfoKind.Array, itemTypeInfo, nil, nil, workMutMode)
+      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeArray ), _moduleObj.builtinTypeArray, nil, false, false, false, AccessMode.Pub, "Array", _moduleObj.headTypeInfo, self:get_idProv():get_id(), TypeInfoKind.Array, itemTypeInfo, nil, nil, workMutMode, nil)
    end
    
    
@@ -6282,7 +6294,7 @@ function ProcessInfo:createMap( accessMode, parentInfo, keyTypeInfo, valTypeInfo
    self:get_idProv():increment(  )
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeMap ), _moduleObj.builtinTypeMap, nil, false, false, false, AccessMode.Pub, "Map", _moduleObj.headTypeInfo, self:get_idProv():get_id(), TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, workMutMode)
+      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeMap ), _moduleObj.builtinTypeMap, nil, false, false, false, AccessMode.Pub, "Map", _moduleObj.headTypeInfo, self:get_idProv():get_id(), TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, workMutMode, nil)
    end
    
    
@@ -6333,12 +6345,12 @@ function ProcessInfo:createClass( classFlag, abstractFlag, scope, baseInfo, inte
    end
    
    
-   local info = NormalTypeInfo.new(self, abstractFlag, scope, baseInfo, interfaceList, false, externalFlag, false, accessMode, className, parentInfo, self:get_idProv():getNewId(  ), classFlag and TypeInfoKind.Class or TypeInfoKind.IF, genTypeList, nil, nil, MutMode.Mut)
+   local info = NormalTypeInfo.new(self, abstractFlag, scope, baseInfo, interfaceList, false, externalFlag, false, accessMode, className, parentInfo, self:get_idProv():getNewId(  ), classFlag and TypeInfoKind.Class or TypeInfoKind.IF, genTypeList, nil, nil, MutMode.Mut, nil)
    return info
 end
 
 
-function ProcessInfo:createExtModule( scope, parentInfo, externalFlag, accessMode, className )
+function ProcessInfo:createExtModule( scope, parentInfo, externalFlag, accessMode, className, moduleLang )
 
    do
       local _exp = sym2builtInTypeMap[className]
@@ -6353,7 +6365,7 @@ function ProcessInfo:createExtModule( scope, parentInfo, externalFlag, accessMod
    end
    
    
-   local info = NormalTypeInfo.new(self, false, scope, nil, nil, false, externalFlag, false, accessMode, className, parentInfo, self:get_idProv():getNewId(  ), TypeInfoKind.ExtModule, nil, nil, nil, MutMode.Mut)
+   local info = NormalTypeInfo.new(self, false, scope, nil, nil, false, externalFlag, false, accessMode, className, parentInfo, self:get_idProv():getNewId(  ), TypeInfoKind.ExtModule, nil, nil, nil, MutMode.Mut, moduleLang)
    return info
 end
 
@@ -6365,7 +6377,7 @@ function ProcessInfo:createFunc( abstractFlag, builtinFlag, scope, kind, parentI
    end
    
    
-   local info = NormalTypeInfo.new(self, abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, self:get_idProv():getNewId(  ), kind, _lune.unwrapDefault( altTypeList, {}), _lune.unwrapDefault( argTypeList, {}), _lune.unwrapDefault( retTypeInfoList, {}), mutable and MutMode.Mut or MutMode.IMut)
+   local info = NormalTypeInfo.new(self, abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, self:get_idProv():getNewId(  ), kind, _lune.unwrapDefault( altTypeList, {}), _lune.unwrapDefault( argTypeList, {}), _lune.unwrapDefault( retTypeInfoList, {}), mutable and MutMode.Mut or MutMode.IMut, nil)
    return info
 end
 

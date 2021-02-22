@@ -26,6 +26,7 @@ import lune.base.Parser;
 import lune.base.Util;
 import lune.base.Code;
 import lune.base.Log;
+import lune.base.Types;
 
 pub class IdProvider {
    let mut id:int {pub};
@@ -129,6 +130,12 @@ pub interface ModuleInfoIF {
    /** import したモジュールのパス */
    pub fn get_modulePath():str;
 }
+
+pub class SimpleModuleInfo extend (ModuleInfoIF) {
+   let assignName:str {pub};
+   let modulePath:str {pub};
+}
+
 
 /** 所定の TypeInfo が属するモジュールの ModuleInfoIF の問い合わせを行なう */
 pub interface ModuleInfoManager {
@@ -265,6 +272,8 @@ pub enum TypeInfoKind {
    * getCommonType() のためだけで使用。他の処理で使用したときは動作を保証しない。
    */ 
    CombineIF,
+   // module宣言
+   ExtModule,
 }
 
 pub fn isBuiltin( typeId: int ) : bool {
@@ -2089,6 +2098,25 @@ pub fn Scope.addClass(
    return self.addClassLazy( processInfo, name, pos, typeInfo, false )**;
 }
 
+pub fn Scope.addExtModule(
+   processInfo:ProcessInfo, name:str, pos:&Parser.Position!, mut typeInfo: &TypeInfo,
+   lazy:bool, lang:Types.Lang ) mut : &SymbolInfo!, &SymbolInfo!
+{
+   if lang ~= .Same {
+      _match processInfo.createLuaval( typeInfo, true ) {
+         case .Err( mess ) {
+            Util.err( mess );
+         }
+         case .OK( luavalTypeInfo, _ ) {
+            typeInfo = luavalTypeInfo;
+         }
+      }
+   }
+   return self.add(
+      processInfo, .Typ, false, false, name, pos, typeInfo,
+      typeInfo.$accessMode, false, .Mut, true, lazy )**;
+}
+
 /**
 デバッグ用。 scope 内のシンボル情報を出力する。
 */
@@ -3597,6 +3625,7 @@ pub class NormalTypeInfo extend TypeInfo {
    pri let mut mutMode: MutMode {pub,pub};
 
    pri let alt2typeMap:Map<&TypeInfo,&TypeInfo>;
+   pri let moduleLang:Types.Lang!;
 
    /**
    オーバーライド元の TypeInfo。
@@ -3642,7 +3671,7 @@ pub class NormalTypeInfo extend TypeInfo {
       accessMode: AccessMode,
       txt: str, parentInfo: &TypeInfo!, typeId: int, kind: TypeInfoKind,
       itemTypeInfoList: &List<&TypeInfo>!, argTypeInfoList:&List<&TypeInfo>!,
-      retTypeInfoList: &List<&TypeInfo>!, mutMode: MutMode! )
+      retTypeInfoList: &List<&TypeInfo>!, mutMode: MutMode!, moduleLang:Types.Lang! )
    {
       super( scope, processInfo );
 
@@ -3656,6 +3685,7 @@ pub class NormalTypeInfo extend TypeInfo {
          self.overridingType = .NotOverride;
       }
 
+      self.moduleLang = moduleLang;
       self.abstractFlag = abstractFlag;
       self.baseTypeInfo = unwrap baseTypeInfo default headTypeInfo;
       self.interfaceList = unwrap interfaceList default [];
@@ -3857,10 +3887,15 @@ pub class NormalTypeInfo extend TypeInfo {
 
       let parentId = self.getParentId();
 
-      let txt = ```{ skind=%d, parentId = %d, typeId = %d, baseId = %d, txt = '%s',
+      let mut txt = ```{ skind=%d, parentId = %d, typeId = %d, baseId = %d, txt = '%s',
         abstractFlag = %s, staticFlag = %s, accessMode = %d, kind = %d, mutMode = %d, ```
           ( SerializeKind.Normal, parentId, self.typeId, self.get_baseId(), self.rawTxt,
-            self.abstractFlag, self.staticFlag, self.accessMode, self.kind, self.mutMode );
+            self.abstractFlag, self.staticFlag, self.accessMode,
+            self.kind, self.mutMode );
+      if! self.moduleLang {
+         txt = txt .. "moduleLang = %d," (_exp);
+      }
+      
 
       let mut children:List<&TypeInfo> = [];
       let! set = validChildrenSet {
@@ -3965,7 +4000,7 @@ pub class NormalTypeInfo extend TypeInfo {
       interfaceList: List<&TypeInfo>, parentInfo: &TypeInfo, staticFlag: bool,
       kind: TypeInfoKind, txt: str, itemTypeInfo: List<&TypeInfo>,
       argTypeInfoList: List<&TypeInfo>, retTypeInfoList: List<&TypeInfo>,
-      mutMode: MutMode! ): &TypeInfo
+      mutMode: MutMode!, moduleLang:Types.Lang! ): &TypeInfo
    {
       if kind == .Prim {
          if! sym2builtInTypeMap[ txt ] {
@@ -3977,7 +4012,7 @@ pub class NormalTypeInfo extend TypeInfo {
       let mut info = new NormalTypeInfo(
          processInfo, abstractFlag, scope, baseInfo, interfaceList, false, true,
          staticFlag, accessMode, txt, parentInfo, processInfo.$idProv.$id, kind,
-         itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode );
+         itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode, moduleLang );
       return info;
    }
 
@@ -4222,7 +4257,7 @@ pub static fn NormalTypeInfo.createBuiltin(
    let mut info = new NormalTypeInfo(
       rootProcessInfo, false, scope, nil, ifList, false, false, false,
       AccessMode.Pub, typeTxt, headTypeInfo, typeId,
-      kind, genTypeList, argTypeList, retTypeList, .Mut );
+      kind, genTypeList, argTypeList, retTypeList, .Mut, nil );
 
    registBuiltin( idName, typeTxt, kind, info, headTypeInfo, scope ~= nil );
    return info;
@@ -4335,6 +4370,8 @@ enum LuavalConvKind {
 typeInfo の Luaval を生成可能かどうかを調べる。
 
 @param convFlag true の場合、Luaval と LuneScript との値の変換を自動で行なえるかどうか。
+@param validToCheck true の場合、 convFlag を利用して typeInfo の型を Luaval として生成可能かどうか調べる。
+       通常は true を指定する。 false を指定するのは、例外。
 @return 生成可能な場合は nil。 生成できない場合は メッセージを返す。
 */
 fn failCreateLuavalWith(
@@ -4363,7 +4400,7 @@ fn failCreateLuavalWith(
       case .Prim {
          return nil, true;
       }
-      case .Form, .IF, .DDD {
+      case .Form, .IF, .DDD, .ExtModule {
          if not validToCheck {
             return nil, false;
          }
@@ -4402,7 +4439,7 @@ fn failCreateLuavalWith(
          canConv = false;
          return nil, canConv;
       }
-      case .FormFunc {
+      case .FormFunc, .Func {
          if not validToCheck {
             return nil, false;
          }
@@ -4419,7 +4456,7 @@ fn failCreateLuavalWith(
          return nil, canConv;
       }
    }
-   return "not support -- %s" (typeInfo.getTxt(##)), false;
+   return "not support -- %s:%s" (typeInfo.getTxt(##), typeInfo.$kind.$_txt), false;
 }
 
 
@@ -4535,7 +4572,7 @@ pub fn ProcessInfo.createSet(
          self, false, getScope( builtinTypeSet ), builtinTypeSet,
          nil, false, false, false, AccessMode.Pub,
          "Set", headTypeInfo, self.$idProv.$id, .Set, itemTypeInfo,
-         nil, nil, workMutMode ); } );
+         nil, nil, workMutMode, nil ); } );
 }
 
 //pub static fn NormalTypeInfo.createList(
@@ -4548,7 +4585,7 @@ pub fn ProcessInfo.createList(
          self, false, getScope( builtinTypeList ), builtinTypeList,
          nil, false, false, false, AccessMode.Pub,
          "List", headTypeInfo, self.$idProv.$id, .List, itemTypeInfo,
-         nil, nil, workMutMode ); } );
+         nil, nil, workMutMode, nil ); } );
 }
 
 //pub static fn NormalTypeInfo.createArray(
@@ -4561,7 +4598,7 @@ pub fn ProcessInfo.createArray(
          self, false, getScope( builtinTypeArray ), builtinTypeArray,
          nil, false, false, false, AccessMode.Pub,
          "Array", headTypeInfo, self.$idProv.$id, .Array, itemTypeInfo,
-         nil, nil, workMutMode ); } );
+         nil, nil, workMutMode, nil ); } );
 }
 
 //pub static fn NormalTypeInfo.createMap(
@@ -4574,7 +4611,7 @@ pub fn ProcessInfo.createMap(
          self, false, getScope( builtinTypeMap ), builtinTypeMap,
          nil, false, false, false, AccessMode.Pub,
          "Map", headTypeInfo, self.$idProv.$id, .Map,
-         [ keyTypeInfo, valTypeInfo ], nil, nil, workMutMode );
+         [ keyTypeInfo, valTypeInfo ], nil, nil, workMutMode, nil );
    });
 }
 
@@ -4624,7 +4661,33 @@ pub fn ProcessInfo.createClass(
       self, abstractFlag, scope, baseInfo, interfaceList, false,
       externalFlag, false, accessMode,
       className, parentInfo, self.$idProv.getNewId(),
-      classFlag and TypeInfoKind.Class or TypeInfoKind.IF, genTypeList, nil, nil, .Mut );
+      classFlag and TypeInfoKind.Class or TypeInfoKind.IF,
+      genTypeList, nil, nil, .Mut, nil );
+   return info;
+}
+
+
+pub fn ProcessInfo.createExtModule(
+   scope: Scope!, parentInfo: &TypeInfo, externalFlag: bool,
+   accessMode: AccessMode, className: str, moduleLang:Types.Lang ) mut : &TypeInfo
+{
+   // if className == "str" {
+   //     return sym2builtInTypeMap[ className ]@TypeInfo;
+   // }
+   if! sym2builtInTypeMap[ className ] {
+      return _exp.$typeInfo;
+   }
+
+   if Parser.isLuaKeyword( className ) {
+      Util.err( "This symbol can not use for a class or script file. -- %s"
+                  (className) );
+   }
+
+   let mut info = new NormalTypeInfo(
+      self, false, scope, nil, nil, false,
+      externalFlag, false, accessMode,
+      className, parentInfo, self.$idProv.getNewId(),
+      .ExtModule, nil, nil, nil, .Mut, moduleLang );
    return info;
 }
 
@@ -4646,7 +4709,7 @@ pub fn ProcessInfo.createFunc(
       accessMode, funcName, parentInfo, self.$idProv.getNewId(),
       kind, unwrap altTypeList default [], unwrap argTypeList default [],
       unwrap retTypeInfoList default [],
-      mutable and MutMode.Mut or MutMode.IMut );
+      mutable and MutMode.Mut or MutMode.IMut, nil );
    return info;
 }
 

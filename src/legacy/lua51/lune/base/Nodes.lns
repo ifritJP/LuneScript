@@ -27,6 +27,7 @@ import lune.base.Util;
 import lune.base.frontInterface;
 import lune.base.Ast;
 import lune.base.LuneControl;
+import lune.base.Types;
 
 class SimpleModuleInfoManager extend (Ast.ModuleInfoManager)
 {
@@ -1851,6 +1852,8 @@ _declNodeClass( "DeclClass", Node, false, false, true,
                   { "hasPrototype": "bool" },
                   { "gluePrefix": "str!" },
                   { "moduleName": "&Parser.Token!" },
+                  // module を定義している言語。 nil の場合、変換先の言語と同じ。
+                  { "lang": "Types.Lang!" },
                   { "lazyLoad": "LazyLoad" },
                   // default__init_old で、旧形式のコンストラクタが使用されている場合 true
                   { "hasOldCtor": "bool" },

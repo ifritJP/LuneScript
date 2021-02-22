@@ -26,6 +26,7 @@ import lune.base.Parser;
 import lune.base.Util;
 import lune.base.Code;
 import lune.base.Log;
+import lune.base.Types;
 
 pub class IdProvider {
    let mut id:int {pub};
@@ -2098,15 +2099,17 @@ pub fn Scope.addClass(
 }
 
 pub fn Scope.addExtModule(
-   processInfo:ProcessInfo, name:str, pos:&Parser.Position!,
-   mut typeInfo: &TypeInfo, lazy:bool ) mut : &SymbolInfo!, &SymbolInfo!
+   processInfo:ProcessInfo, name:str, pos:&Parser.Position!, mut typeInfo: &TypeInfo,
+   lazy:bool, lang:Types.Lang ) mut : &SymbolInfo!, &SymbolInfo!
 {
-   _match processInfo.createLuaval( typeInfo, true ) {
-      case .Err( mess ) {
-         Util.err( mess );
-      }
-      case .OK( luavalTypeInfo, _ ) {
-         typeInfo = luavalTypeInfo;
+   if lang ~= .Same {
+      _match processInfo.createLuaval( typeInfo, true ) {
+         case .Err( mess ) {
+            Util.err( mess );
+         }
+         case .OK( luavalTypeInfo, _ ) {
+            typeInfo = luavalTypeInfo;
+         }
       }
    }
    return self.add(
@@ -3622,6 +3625,7 @@ pub class NormalTypeInfo extend TypeInfo {
    pri let mut mutMode: MutMode {pub,pub};
 
    pri let alt2typeMap:Map<&TypeInfo,&TypeInfo>;
+   pri let moduleLang:Types.Lang!;
 
    /**
    オーバーライド元の TypeInfo。
@@ -3667,7 +3671,7 @@ pub class NormalTypeInfo extend TypeInfo {
       accessMode: AccessMode,
       txt: str, parentInfo: &TypeInfo!, typeId: int, kind: TypeInfoKind,
       itemTypeInfoList: &List<&TypeInfo>!, argTypeInfoList:&List<&TypeInfo>!,
-      retTypeInfoList: &List<&TypeInfo>!, mutMode: MutMode! )
+      retTypeInfoList: &List<&TypeInfo>!, mutMode: MutMode!, moduleLang:Types.Lang! )
    {
       super( scope, processInfo );
 
@@ -3681,6 +3685,7 @@ pub class NormalTypeInfo extend TypeInfo {
          self.overridingType = .NotOverride;
       }
 
+      self.moduleLang = moduleLang;
       self.abstractFlag = abstractFlag;
       self.baseTypeInfo = unwrap baseTypeInfo default headTypeInfo;
       self.interfaceList = unwrap interfaceList default [];
@@ -3882,10 +3887,15 @@ pub class NormalTypeInfo extend TypeInfo {
 
       let parentId = self.getParentId();
 
-      let txt = ```{ skind=%d, parentId = %d, typeId = %d, baseId = %d, txt = '%s',
+      let mut txt = ```{ skind=%d, parentId = %d, typeId = %d, baseId = %d, txt = '%s',
         abstractFlag = %s, staticFlag = %s, accessMode = %d, kind = %d, mutMode = %d, ```
           ( SerializeKind.Normal, parentId, self.typeId, self.get_baseId(), self.rawTxt,
-            self.abstractFlag, self.staticFlag, self.accessMode, self.kind, self.mutMode );
+            self.abstractFlag, self.staticFlag, self.accessMode,
+            self.kind, self.mutMode );
+      if! self.moduleLang {
+         txt = txt .. "moduleLang = %d," (_exp);
+      }
+      
 
       let mut children:List<&TypeInfo> = [];
       let! set = validChildrenSet {
@@ -3990,7 +4000,7 @@ pub class NormalTypeInfo extend TypeInfo {
       interfaceList: List<&TypeInfo>, parentInfo: &TypeInfo, staticFlag: bool,
       kind: TypeInfoKind, txt: str, itemTypeInfo: List<&TypeInfo>,
       argTypeInfoList: List<&TypeInfo>, retTypeInfoList: List<&TypeInfo>,
-      mutMode: MutMode! ): &TypeInfo
+      mutMode: MutMode!, moduleLang:Types.Lang! ): &TypeInfo
    {
       if kind == .Prim {
          if! sym2builtInTypeMap[ txt ] {
@@ -4002,7 +4012,7 @@ pub class NormalTypeInfo extend TypeInfo {
       let mut info = new NormalTypeInfo(
          processInfo, abstractFlag, scope, baseInfo, interfaceList, false, true,
          staticFlag, accessMode, txt, parentInfo, processInfo.$idProv.$id, kind,
-         itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode );
+         itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode, moduleLang );
       return info;
    }
 
@@ -4247,7 +4257,7 @@ pub static fn NormalTypeInfo.createBuiltin(
    let mut info = new NormalTypeInfo(
       rootProcessInfo, false, scope, nil, ifList, false, false, false,
       AccessMode.Pub, typeTxt, headTypeInfo, typeId,
-      kind, genTypeList, argTypeList, retTypeList, .Mut );
+      kind, genTypeList, argTypeList, retTypeList, .Mut, nil );
 
    registBuiltin( idName, typeTxt, kind, info, headTypeInfo, scope ~= nil );
    return info;
@@ -4562,7 +4572,7 @@ pub fn ProcessInfo.createSet(
          self, false, getScope( builtinTypeSet ), builtinTypeSet,
          nil, false, false, false, AccessMode.Pub,
          "Set", headTypeInfo, self.$idProv.$id, .Set, itemTypeInfo,
-         nil, nil, workMutMode ); } );
+         nil, nil, workMutMode, nil ); } );
 }
 
 //pub static fn NormalTypeInfo.createList(
@@ -4575,7 +4585,7 @@ pub fn ProcessInfo.createList(
          self, false, getScope( builtinTypeList ), builtinTypeList,
          nil, false, false, false, AccessMode.Pub,
          "List", headTypeInfo, self.$idProv.$id, .List, itemTypeInfo,
-         nil, nil, workMutMode ); } );
+         nil, nil, workMutMode, nil ); } );
 }
 
 //pub static fn NormalTypeInfo.createArray(
@@ -4588,7 +4598,7 @@ pub fn ProcessInfo.createArray(
          self, false, getScope( builtinTypeArray ), builtinTypeArray,
          nil, false, false, false, AccessMode.Pub,
          "Array", headTypeInfo, self.$idProv.$id, .Array, itemTypeInfo,
-         nil, nil, workMutMode ); } );
+         nil, nil, workMutMode, nil ); } );
 }
 
 //pub static fn NormalTypeInfo.createMap(
@@ -4601,7 +4611,7 @@ pub fn ProcessInfo.createMap(
          self, false, getScope( builtinTypeMap ), builtinTypeMap,
          nil, false, false, false, AccessMode.Pub,
          "Map", headTypeInfo, self.$idProv.$id, .Map,
-         [ keyTypeInfo, valTypeInfo ], nil, nil, workMutMode );
+         [ keyTypeInfo, valTypeInfo ], nil, nil, workMutMode, nil );
    });
 }
 
@@ -4651,14 +4661,15 @@ pub fn ProcessInfo.createClass(
       self, abstractFlag, scope, baseInfo, interfaceList, false,
       externalFlag, false, accessMode,
       className, parentInfo, self.$idProv.getNewId(),
-      classFlag and TypeInfoKind.Class or TypeInfoKind.IF, genTypeList, nil, nil, .Mut );
+      classFlag and TypeInfoKind.Class or TypeInfoKind.IF,
+      genTypeList, nil, nil, .Mut, nil );
    return info;
 }
 
 
 pub fn ProcessInfo.createExtModule(
    scope: Scope!, parentInfo: &TypeInfo, externalFlag: bool,
-   accessMode: AccessMode, className: str ) mut : &TypeInfo
+   accessMode: AccessMode, className: str, moduleLang:Types.Lang ) mut : &TypeInfo
 {
    // if className == "str" {
    //     return sym2builtInTypeMap[ className ]@TypeInfo;
@@ -4676,7 +4687,7 @@ pub fn ProcessInfo.createExtModule(
       self, false, scope, nil, nil, false,
       externalFlag, false, accessMode,
       className, parentInfo, self.$idProv.getNewId(),
-      .ExtModule, nil, nil, nil, .Mut );
+      .ExtModule, nil, nil, nil, .Mut, moduleLang );
    return info;
 }
 
@@ -4698,7 +4709,7 @@ pub fn ProcessInfo.createFunc(
       accessMode, funcName, parentInfo, self.$idProv.getNewId(),
       kind, unwrap altTypeList default [], unwrap argTypeList default [],
       unwrap retTypeInfoList default [],
-      mutable and MutMode.Mut or MutMode.IMut );
+      mutable and MutMode.Mut or MutMode.IMut, nil );
    return info;
 }
 

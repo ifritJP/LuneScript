@@ -264,7 +264,11 @@ alge SymbolKind {
 
 fn concatGLSym( name:str, external:bool ) : str {
    if external {
-      return name.sub( 1, 1 ).upper() .. name.sub( 2## );
+      let mut front = name.sub( 1, 1 );
+      if front.upper() ~= front {
+         front = front.upper();
+      }
+      return front .. name.sub( 2## );
    }
    return name;  
    //return (external and "G" or "l") .. name;
@@ -384,10 +388,14 @@ fn convFilter.getSymbol( kind:SymbolKind, name:str ) : str {
                      symbolName = "%s_%d_" (symbolName, typeInfo.$typeId);
                   }
                }
+               case .ExtModule {
+                  symbolName = concatGLSym( symbolName, true );
+               }
                default {
-                  Util.err( "%s: not support -- %s"
+                  Util.err( "%s: not support -- %s:%s"
                             ( __func__,  typeInfo.getFullName(
-                               self.$typeNameCtrl, self.$moduleInfoManager, true ) ) );
+                               self.$typeNameCtrl, self.$moduleInfoManager, true ),
+                              typeInfo.$parentInfo.$kind.$_txt ) );
                }
             }
          }

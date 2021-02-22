@@ -970,7 +970,7 @@ fn TransUnit.analyzeExtend( accessMode:Ast.AccessMode, firstPos: &Parser.Positio
 
 fn TransUnit.analyzePushClass(
    mode:DeclClassMode, abstractFlag: bool, firstToken:&Parser.Token, name:&Parser.Token,
-   allowMultiple:bool, requirePath:&Parser.Token!,
+   allowMultiple:bool, requirePath:&Parser.Token!, moduleLang:Types.Lang!,
    accessMode:Ast.AccessMode, altTypeList:&List<&Ast.AlternateTypeInfo> ) mut :
    &Parser.Token, &Ast.TypeInfo
 {
@@ -1020,8 +1020,9 @@ fn TransUnit.analyzePushClass(
    _switch mode {
       case .Module, .LazyModule {
          let mut parentScope = self.scope;
-         classTypeInfo = self.pushExtModule( false, name.txt, accessMode,
-                                             name.pos, mode == .LazyModule );                                      
+         classTypeInfo = self.pushExtModule(
+            false, name.txt, accessMode, name.pos, mode == .LazyModule,
+            unwrap moduleLang );
       }
       case .Class, .Interface {
          classTypeInfo = self.pushClass(
@@ -1123,7 +1124,7 @@ fn TransUnit.analyzeDeclProto(
       let classTypeInfo:&Ast.TypeInfo;
       nextToken, classTypeInfo = self.analyzePushClass(
          declMode, abstractFlag,
-         firstToken, name, false, nil, accessMode, altTypeList );
+         firstToken, name, false, nil, nil, accessMode, altTypeList );
 
       self.protoClassMap[ classTypeInfo ] = firstToken.pos;
 
@@ -1890,7 +1891,8 @@ fn TransUnit.analyzeFuncBlock(
 fn TransUnit.analyzeClassBody(
    hasProto:bool, classAccessMode: Ast.AccessMode, firstToken: &Parser.Token,
    mode:DeclClassMode, gluePrefix:str!, classTypeInfo: &Ast.TypeInfo,
-   name:&Parser.Token, moduleName: &Parser.Token!, lazyLoad:Nodes.LazyLoad,
+   name:&Parser.Token, moduleLang:Types.Lang!,
+   moduleName: &Parser.Token!, lazyLoad:Nodes.LazyLoad,
    mut nextToken:&Parser.Token ) mut :
    Nodes.DeclClassNode, &Parser.Token, Set<str>
 {
@@ -1908,7 +1910,7 @@ fn TransUnit.analyzeClassBody(
    let mut node = Nodes.DeclClassNode.create(
       self.nodeManager, firstToken.pos,
       self.macroCtrl.isInAnalyzeArgMode(), [ classTypeInfo ],
-      classAccessMode, name, hasProto, gluePrefix, moduleName,
+      classAccessMode, name, hasProto, gluePrefix, moduleName, moduleLang,
       lazyLoad, false, allStmtList,
       declStmtList, fieldList, memberList, self.scope, initBlockInfo,
       advertiseList, trustList, uninitMemberList, (@) );
@@ -2326,10 +2328,31 @@ fn TransUnit.analyzeDeclClass(
 
    let mut moduleName: &Parser.Token! = nil;
    let mut gluePrefix:str! = nil;
+   let mut moduleLang:Types.Lang! = nil;
    if mode == .Module or mode == .LazyModule {
       self.checkNextToken( "require" );
       moduleName = self.getToken(##);
-      let nextToken = self.getToken(##);
+      let mut nextToken = self.getToken(##);
+      if nextToken.txt == "of" {
+         let langToken = self.getToken(##);
+         if langToken.kind ~= .Str {
+            self.error( "it's not a string -- %s" ( langToken.txt ) );
+         }
+         if langToken.txt ~= "" {
+            foreach langId in Types.Lang.$_allList {
+               if! Types.Lang._from( langId ) {
+                  if _exp.$_txt == langToken.txt {
+                     moduleLang = _exp;
+                     break;
+                  }
+               }
+            }
+         } else {
+            moduleLang = .Same;
+         }
+         
+         nextToken = self.getToken(##);
+      }
       if nextToken.txt == "glue" {
          gluePrefix = self.getToken(##).getExcludedDelimitTxt();
       }
@@ -2342,8 +2365,8 @@ fn TransUnit.analyzeDeclClass(
       name.txt, self.scope, self.scope, self.scopeAccess );
 
    let mut nextToken, classTypeInfo = self.analyzePushClass(
-      mode, classAbstructFlag,
-      firstToken, name, true, moduleName, classAccessMode, altTypeList );
+      mode, classAbstructFlag, firstToken, name, true, moduleName,
+      moduleLang or Types.Lang.Same, classAccessMode, altTypeList );
 
    let hasProto;
    if self.protoClassMap[ classTypeInfo ] {
@@ -2398,7 +2421,7 @@ fn TransUnit.analyzeDeclClass(
 
    let mut node, _, mut methodNameSet = self.analyzeClassBody(
       hasProto, classAccessMode, firstToken, mode, gluePrefix,
-      classTypeInfo, name, moduleName, lazyLoad, nextToken );
+      classTypeInfo, name, moduleLang, moduleName, lazyLoad, nextToken );
    //nextToken = workNextToken;
 
 
