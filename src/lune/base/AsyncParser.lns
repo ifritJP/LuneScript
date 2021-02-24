@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+
 _lune_control use_async;
 
 import lune.base.Util;
@@ -218,10 +219,12 @@ pub class Parser extend Async.Pipe<AsyncItem> {
    let multiCharDelimitMap : Map<str,Array<str>>;
    let luaMode:bool;
    let lineList:&List<str>;
+   let mut firstLine:bool;
 
    pub fn __init( stream: iStream, name: str, luaMode: bool! ) {
       super( AsyncItem._createPipe( 100 ) );
       
+      self.firstLine = true;
       self.streamName = name;
       self.lineNo = 0;
       self.prevToken = Types.noneToken;
@@ -459,6 +462,16 @@ pub fn Parser.parse() mut : Types.Token[]! {
    let! mut rawLine = self.readLine() {
       return nil;
    };
+   if self.firstLine {
+      self.firstLine = false;
+      if rawLine.find( "^#!" ## ) {
+         let mut token = new Types.Token(
+            .Sheb, rawLine,
+            new Types.Position( self.lineNo, 1, self.streamName ),
+            false, [] );
+         return [ token ];
+      }
+   }
 
    /*
     複数行コメントの処理。

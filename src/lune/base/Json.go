@@ -129,10 +129,10 @@ func Json_fromStr(txt string)(LnsAny, LnsAny) {
 // 131: decl @lune.@base.@Json.lenMap
 func _lenMap_1029_(_map LnsAny) LnsInt {
     if _map != nil{
-        map_335 := _map
+        map_336 := _map
         var count LnsInt
         count = 0
-        for range( map_335.(*LnsMap).Items ) {
+        for range( map_336.(*LnsMap).Items ) {
             count = count + 1
             
         }

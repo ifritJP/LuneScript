@@ -89,7 +89,8 @@ func Lns_valFromGo( goObj reflect.Value ) LnsAny {
     }
     if kind == reflect.Float32 ||
         kind == reflect.Float64 {
-        return LnsReal(goObj.Float())
+        ret := goObj.Float()
+        return LnsReal(ret)
     }
     if kind == reflect.String {
         return goObj.String()
@@ -98,7 +99,8 @@ func Lns_valFromGo( goObj reflect.Value ) LnsAny {
     if kind == reflect.Array || kind == reflect.Slice {
         list := make([]LnsAny,goObj.Len())
         for index := 0; index < goObj.Len(); index++ {
-            list[index] = Lns_valFromGo( goObj.Index( index ) )
+            val := Lns_valFromGo( goObj.Index( index ) )
+            list[index] = val
         }
         return NewLnsList( list );
     }
@@ -107,9 +109,13 @@ func Lns_valFromGo( goObj reflect.Value ) LnsAny {
         iter := goObj.MapRange()
         for iter.Next() {
             key := Lns_valFromGo( iter.Key() )
-            mapObj.Items[ key ] = Lns_valFromGo( iter.Value() )
+            val:= Lns_valFromGo( iter.Value() )
+            mapObj.Items[ key ] = val
         }
         return mapObj
+    }
+    if kind == reflect.Interface {
+        return Lns_valFromGo( reflect.ValueOf( goObj.Interface() ) )
     }
     // kind == reflect.Struct
     return goObj.Interface()

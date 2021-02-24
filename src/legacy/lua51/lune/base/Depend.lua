@@ -374,4 +374,15 @@ local function canUseAsync(  )
 end
 _moduleObj.canUseAsync = canUseAsync
 
+local function runMain( mainFunc, argList )
+
+   
+   if mainFunc ~= nil then
+      return (mainFunc )( argList )
+   end
+   
+   return -1
+end
+_moduleObj.runMain = runMain
+
 return _moduleObj

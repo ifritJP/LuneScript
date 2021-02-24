@@ -116,6 +116,11 @@ pub override fn dumpFilter.processNone(
 {
    self.dump( opt, node, "" );
 };
+pub override fn dumpFilter.processShebang(
+   node: &Nodes.ShebangNode, opt:Opt ) mut
+{
+   self.dump( opt, node, node.$cmd );
+};
 pub override fn dumpFilter.processLuneControl(
    node: &Nodes.LuneControlNode, opt:Opt ) mut
 {

@@ -535,6 +535,11 @@ function convFilter:processNone( node, opt )
 end
 
 
+function convFilter:processShebang( node, opt )
+
+end
+
+
 
 function convFilter:processImport( node, opt )
 
@@ -1969,7 +1974,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _6280 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _6311 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -4187,7 +4192,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3486, function (  )
+   Log.log( Log.Level.Trace, __func__, 3490, function (  )
    
       return string.format( "macro: %s", code)
    end )

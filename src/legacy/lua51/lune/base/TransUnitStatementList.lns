@@ -74,14 +74,23 @@ fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Nodes.ReturnNode {
 fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
 {
    self.commentCtrl.push();
-   
+
    let token = self.getTokenNoErr();
+   let mut statement:Nodes.Node! = nil;
+   if token.kind == .Sheb {
+      statement = Nodes.ShebangNode.create(
+         self.nodeManager, token.pos,
+         self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
+         token.txt );
+      
+   }
    if token == Parser.getEofToken() {
       return nil;
    };
 
-
-   let mut statement = self.analyzeDecl( .Local, false, token, token );
+   if not statement {
+      statement = self.analyzeDecl( .Local, false, token, token );
+   }
 
    if not statement {
       if token.txt == termTxt {

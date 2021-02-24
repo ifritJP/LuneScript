@@ -535,6 +535,7 @@ type glueFilter_glueFilterMtd interface {
     ProcessReturn(arg1 *Nodes_ReturnNode, arg2 LnsAny)
     ProcessRoot(arg1 *Nodes_RootNode, arg2 LnsAny)
     ProcessScope(arg1 *Nodes_ScopeNode, arg2 LnsAny)
+    ProcessShebang(arg1 *Nodes_ShebangNode, arg2 LnsAny)
     ProcessStmtExp(arg1 *Nodes_StmtExpNode, arg2 LnsAny)
     ProcessSubfile(arg1 *Nodes_SubfileNode, arg2 LnsAny)
     ProcessSwitch(arg1 *Nodes_SwitchNode, arg2 LnsAny)

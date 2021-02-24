@@ -60,11 +60,12 @@ func Types_CheckingUptodateMode_getTxt(arg1 string) string {
 const Types_TokenKind__Char = 4
 const Types_TokenKind__Cmnt = 0
 const Types_TokenKind__Dlmt = 6
-const Types_TokenKind__Eof = 10
+const Types_TokenKind__Eof = 11
 const Types_TokenKind__Int = 2
 const Types_TokenKind__Kywd = 7
 const Types_TokenKind__Ope = 8
 const Types_TokenKind__Real = 3
+const Types_TokenKind__Sheb = 10
 const Types_TokenKind__Str = 1
 const Types_TokenKind__Symb = 5
 const Types_TokenKind__Type = 9
@@ -79,6 +80,7 @@ var Types_TokenKindList_ = NewLnsList( []LnsAny {
   Types_TokenKind__Kywd,
   Types_TokenKind__Ope,
   Types_TokenKind__Type,
+  Types_TokenKind__Sheb,
   Types_TokenKind__Eof,
 })
 func Types_TokenKind_get__allList() *LnsList{
@@ -93,6 +95,7 @@ var Types_TokenKindMap_ = map[LnsInt]string {
   Types_TokenKind__Kywd: "TokenKind.Kywd",
   Types_TokenKind__Ope: "TokenKind.Ope",
   Types_TokenKind__Real: "TokenKind.Real",
+  Types_TokenKind__Sheb: "TokenKind.Sheb",
   Types_TokenKind__Str: "TokenKind.Str",
   Types_TokenKind__Symb: "TokenKind.Symb",
   Types_TokenKind__Type: "TokenKind.Type",
@@ -354,7 +357,7 @@ func Types_Token_FromMapMain( newObj *Types_Token, objMap *LnsMap, paramList []L
     }
     return true, newObj, nil
 }
-// 91: DeclConstr
+// 92: DeclConstr
 func (self *Types_Token) InitTypes_Token(kind LnsInt,txt string,pos *Types_Position,consecutive bool,commentList LnsAny) {
     self.Kind = kind
     
@@ -368,7 +371,7 @@ func (self *Types_Token) InitTypes_Token(kind LnsInt,txt string,pos *Types_Posit
     
 }
 
-// 101: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
+// 102: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
 func (self *Types_Token) GetExcludedDelimitTxt() string {
     if self.Kind != Types_TokenKind__Str{
         return self.Txt
@@ -383,13 +386,13 @@ func (self *Types_Token) GetExcludedDelimitTxt() string {
     return ""
 }
 
-// 116: decl @lune.@base.@Types.Token.set_commentList
+// 117: decl @lune.@base.@Types.Token.set_commentList
 func (self *Types_Token) Set_commentList(commentList *LnsList) {
     self.commentList = commentList
     
 }
 
-// 120: decl @lune.@base.@Types.Token.getLineCount
+// 121: decl @lune.@base.@Types.Token.getLineCount
 func (self *Types_Token) GetLineCount() LnsInt {
     var count LnsInt
     count = 1

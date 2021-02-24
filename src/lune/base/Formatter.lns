@@ -76,6 +76,12 @@ pub override fn FormatterFilter.processNone(
    
 };
 
+pub override fn FormatterFilter.processShebang(
+   node: &Nodes.ShebangNode, opt:Opt ) mut
+{
+   self.writeln( node.$cmd );
+};
+
 pub override fn FormatterFilter.processBlankLine(
    node: &Nodes.BlankLineNode, opt:Opt ) mut
 {

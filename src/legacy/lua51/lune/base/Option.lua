@@ -283,7 +283,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 6537
+   return 6589
 end
 
 
@@ -357,6 +357,9 @@ ModeKind.__allList[15] = ModeKind.Inquire
 ModeKind.MkMain = 'mkmain'
 ModeKind._val2NameMap['mkmain'] = 'MkMain'
 ModeKind.__allList[16] = ModeKind.MkMain
+ModeKind.Shebang = 'shebang'
+ModeKind._val2NameMap['shebang'] = 'Shebang'
+ModeKind.__allList[17] = ModeKind.Shebang
 
 
 local function getRuntimeModule(  )
@@ -374,6 +377,7 @@ function Option.new(  )
    return obj
 end
 function Option:__init() 
+   self.shebangArgList = {}
    self.outputPath = nil
    self.appName = "lnsc"
    self.packageName = nil
@@ -497,6 +501,7 @@ usage:
   <type1> [-prof] [-r] src.lns mode [mode-option]
   <type2> -mklunemod path
   <type3> -mkmain mainMod [path]
+  <type3> -shebang path
   <type4> --version
 
 * type1
@@ -638,6 +643,8 @@ end
                Util.setDebugFlag( false )
             elseif _switchExp == "--debug" then
                Util.setDebugFlag( true )
+            elseif _switchExp == "-shebang" then
+               option.mode = ModeKind.Shebang
             elseif _switchExp == "--version" then
                print( string.format( "LuneScript: version %s (%d:%s) [%s]", Ver.version, getBuildCount(  ), Depend.getLuaVersion(  ), Ver.metaVersion) )
                os.exit( 0 )
@@ -779,7 +786,7 @@ end
                
             else 
                
-                  Util.log( string.format( "unknown option -- %s", arg) )
+                  Util.log( string.format( "unknown option -- '%s'", arg) )
                   os.exit( 1 )
             end
          end
@@ -788,6 +795,10 @@ end
        
          if option.scriptPath == "" then
             option.scriptPath = arg
+            if option.mode == ModeKind.Shebang then
+               table.insert( option.shebangArgList, option.scriptPath )
+            end
+            
          elseif option.mode == "" then
             do
                local mode = ModeKind._from( arg )
@@ -814,6 +825,8 @@ end
                   
                elseif _switchExp == ModeKind.Save or _switchExp == ModeKind.SaveMeta or _switchExp == ModeKind.Glue then
                   option.outputDir = arg
+               elseif _switchExp == ModeKind.Shebang then
+                  table.insert( option.shebangArgList, arg )
                else 
                   
                      option.outputPath = arg
@@ -851,7 +864,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 505, function (  )
+   Log.log( Log.Level.Log, __func__, 520, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

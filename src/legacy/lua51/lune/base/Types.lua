@@ -351,9 +351,12 @@ TokenKind.__allList[9] = TokenKind.Ope
 TokenKind.Type = 9
 TokenKind._val2NameMap[9] = 'Type'
 TokenKind.__allList[10] = TokenKind.Type
-TokenKind.Eof = 10
-TokenKind._val2NameMap[10] = 'Eof'
-TokenKind.__allList[11] = TokenKind.Eof
+TokenKind.Sheb = 10
+TokenKind._val2NameMap[10] = 'Sheb'
+TokenKind.__allList[11] = TokenKind.Sheb
+TokenKind.Eof = 11
+TokenKind._val2NameMap[11] = 'Eof'
+TokenKind.__allList[12] = TokenKind.Eof
 
 
 local Token = {}
@@ -396,7 +399,7 @@ end
 function Token:getLineCount(  )
 
    local count = 1
-   for _89 in self.txt:gmatch( "\n" ) do
+   for _90 in self.txt:gmatch( "\n" ) do
       count = count + 1
    end
    

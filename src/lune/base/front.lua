@@ -488,7 +488,7 @@ function Front:loadFromLnsTxt( importModuleInfo, name, txt )
    
    local ast = transUnit:createAST( parser, false, nil )
    
-   local _5842, luaTxt = self:convertFromAst( ast, name, convLua.ConvMode.Exec )
+   local _5867, luaTxt = self:convertFromAst( ast, name, convLua.ConvMode.Exec )
    return _lune.unwrap( loadFromLuaTxt( luaTxt ))
 end
 
@@ -815,7 +815,7 @@ function Front:convertLns2LuaCode( importModuleInfo, stream, streamName )
    local mod = scriptPath2Module( streamName )
    local ast = self:createAst( importModuleInfo, Parser.StreamParser.new(stream, streamName, false), mod, frontInterface.ModuleId.createId( 0.0, 0 ), nil, TransUnit.AnalyzeMode.Compile )
    
-   local _5987, luaTxt = self:convertFromAst( ast, streamName, convLua.ConvMode.Exec )
+   local _6012, luaTxt = self:convertFromAst( ast, streamName, convLua.ConvMode.Exec )
    
    return luaTxt
 end
@@ -953,7 +953,7 @@ function Front:checkUptodateMeta( metaPath, addSearchPath )
    end
    
    
-   for moduleFullName, _6065 in pairs( meta.__dependModuleMap ) do
+   for moduleFullName, _6090 in pairs( meta.__dependModuleMap ) do
       do
          local lnsPath = self:searchModule( moduleFullName )
          if lnsPath ~= nil then
@@ -1128,7 +1128,7 @@ function Front:loadMeta( importModuleInfo, mod )
                            
                         else
                          
-                           Log.log( Log.Level.Warn, __func__, 700, function (  )
+                           Log.log( Log.Level.Warn, __func__, 706, function (  )
                            
                               return string.format( "%s not ready meta %s, %s", mod, lnsPath, metaPath)
                            end )
@@ -1137,7 +1137,7 @@ function Front:loadMeta( importModuleInfo, mod )
                         
                      else
                       
-                        Log.log( Log.Level.Warn, __func__, 704, function (  )
+                        Log.log( Log.Level.Warn, __func__, 710, function (  )
                         
                            return string.format( "%s not ready lua %s, %s", mod, lnsPath, luaPath)
                         end )
@@ -1145,7 +1145,7 @@ function Front:loadMeta( importModuleInfo, mod )
                      end
                      
                   else
-                     Log.log( Log.Level.Warn, __func__, 708, function (  )
+                     Log.log( Log.Level.Warn, __func__, 714, function (  )
                      
                         return string.format( "%s not found lua in %s", mod, self.option.outputDir)
                      end )
@@ -1248,7 +1248,7 @@ function Front:convertLuaToStreamFromScript( parser, moduleId, uptodate, convMod
       if stream ~= nil then
          if metaInfo ~= nil then
             local dependInfo = OutputDepend.DependInfo.new(mod)
-            for dependMod, _6238 in pairs( metaInfo.__dependModuleMap ) do
+            for dependMod, _6263 in pairs( metaInfo.__dependModuleMap ) do
                dependInfo:addImpotModule( dependMod )
             end
             
@@ -1644,7 +1644,7 @@ function Front:saveToLua( updateInfo )
             end
             
             if not cont then
-               Log.log( Log.Level.Debug, __func__, 1169, function (  )
+               Log.log( Log.Level.Debug, __func__, 1175, function (  )
                
                   return string.format( "<%s>, <%s>", oldLine, newLine)
                end )
@@ -1943,7 +1943,7 @@ end
 function Front:exec(  )
    local __func__ = '@lune.@base.@front.Front.exec'
 
-   Log.log( Log.Level.Trace, __func__, 1430, function (  )
+   Log.log( Log.Level.Trace, __func__, 1436, function (  )
    
       return Option.ModeKind:_getTxt( self.option.mode)
       
@@ -2026,6 +2026,15 @@ function Front:exec(  )
             end
             
          end, self.option.scriptPath .. ".profi" )
+      elseif _switchExp == Option.ModeKind.Shebang then
+         do
+            local modObj = self:loadModule( scriptPath2Module( self.option.scriptPath ) )
+            if modObj ~= nil then
+               local code = Depend.runMain( modObj['__main'], self.option.shebangArgList )
+               os.exit( code )
+            end
+         end
+         
       elseif _switchExp == Option.ModeKind.Exec then
          local modObj = self:loadModule( scriptPath2Module( self.option.scriptPath ) )
          

@@ -159,3 +159,11 @@ pub fn canUseChannel() : bool {
 pub fn canUseAsync() : bool {
    return false;
 }
+
+pub fn runMain( mainFunc: &Luaval<stem>!, argList:&List<str> ) : int {
+   form MainFunc( list:&List<str> ) : int;
+   when! mainFunc {
+      return (mainFunc@@MainFunc)( argList );
+   }
+   return -1;
+}

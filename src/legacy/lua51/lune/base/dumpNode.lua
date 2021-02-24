@@ -353,6 +353,12 @@ function dumpFilter:processNone( node, opt )
 end
 
 
+function dumpFilter:processShebang( node, opt )
+
+   self:dump( opt, node, node:get_cmd() )
+end
+
+
 function dumpFilter:processLuneControl( node, opt )
 
    self:dump( opt, node, LuneControl.Pragma:_getTxt( node:get_pragma())

@@ -257,6 +257,10 @@ pub override fn convFilter.processNone(
 {
    //self.writeln( "-- none" );
 };
+pub override fn convFilter.processShebang(
+   node: Nodes.ShebangNode, opt: Opt ) mut
+{
+};
 
 pub override fn convFilter.processImport(
    node: Nodes.ImportNode, opt: Opt ) mut

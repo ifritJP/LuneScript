@@ -395,12 +395,13 @@ function Parser:__init(stream, name, luaMode)
    Async.Pipe.__init( self,nil)
    
    
+   self.firstLine = true
    self.streamName = name
    self.lineNo = 0
    self.prevToken = Types.noneToken
    self.luaMode = _lune.unwrapDefault( luaMode, false)
    
-   local keywordSet, typeSet, _293, multiCharDelimitMap = createReserveInfo( luaMode )
+   local keywordSet, typeSet, _295, multiCharDelimitMap = createReserveInfo( luaMode )
    
    self.keywordSet = keywordSet
    self.typeSet = typeSet
@@ -645,13 +646,22 @@ function Parser:parse(  )
       return nil
    end
    
+   if self.firstLine then
+      self.firstLine = false
+      if rawLine:find( "^#!" ) then
+         local token = Types.Token.new(Types.TokenKind.Sheb, rawLine, Types.Position.new(self.lineNo, 1, self.streamName), false, {})
+         return {token}
+      end
+      
+   end
+   
    local function multiComment( comIndex, termStr )
    
       local searchIndex = comIndex
       local comment = ""
       while true do
          do
-            local _416, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
+            local _421, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
             if termEndIndex ~= nil then
                comment = comment .. rawLine:sub( searchIndex, termEndIndex )
                return comment, termEndIndex + 1

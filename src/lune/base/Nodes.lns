@@ -697,6 +697,10 @@ macro _declNodeClass(
 
 _declNodeClass( "None", Node, false, false, true, []);
 
+_declNodeClass( "Shebang", Node, false, false, true,
+                [ { "cmd": "str" } ]
+);
+
 /** AST からソースに変換する際に、動的にノードを生成する際に使用する */
 _declNodeClass( "ConvStat", Node, false, false, false,
                 [ { "txt": "str" } ]

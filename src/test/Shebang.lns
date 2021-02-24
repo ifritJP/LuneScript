@@ -1,0 +1,12 @@
+#! lnsc -shebang
+
+pub fn __main( argList:List<str> ) : int {
+   foreach val in argList {
+      print( val );
+   }
+   if #argList == 1 {
+      return 1;
+   }
+   return 0;
+}
+print( "hoge:" );

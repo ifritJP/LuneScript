@@ -1714,10 +1714,13 @@ fn TransUnit.analyzeExpCast(
    if castType.$kind == .Form and
       exp.$expType.$nonnilableType.$kind == .Stem
    {
-      // Stem から form へのキャストは、C のトランスコンパイルではサポートしない
-      self.addWarnMess(
-         castTypeNode.$pos,
-         "not support cast from stem to form for transcompiling to c-lang." );
+      if self.supportLang( .C ) {
+         // Stem から form へのキャストは、
+         // C のトランスコンパイルではサポートしない
+         self.addWarnMess(
+            castTypeNode.$pos,
+            "not support cast from stem to form for transcompiling to c-lang." );
+      }
    }
 
    let expType = exp.$expType;

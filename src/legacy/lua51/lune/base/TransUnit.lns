@@ -2902,6 +2902,17 @@ fn TransUnit.analyzeStatementListSubfile( stmtList: List<&Nodes.Node> ) mut : &N
    return (self.analyzeStatementList( stmtList ## ));
 }
 
+fn TransUnit.supportLang( lang:LuneControl.Code ) : bool {
+   foreach pragma in self.helperInfo.pragmaSet {
+      match pragma {
+         case .limit_conv_code( codeSet ) {
+            return codeSet.has( lang );
+         }
+      }
+   }
+   return true;
+}
+
 fn TransUnit.analyzeLuneControl(
    firstToken: &Parser.Token ) mut : Nodes.LuneControlNode!
 {

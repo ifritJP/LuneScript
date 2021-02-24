@@ -288,7 +288,13 @@ func Lns_ToIntSub(
     if _, ok := obj.(LnsInt); ok {
         return true, obj, nil
     }
-    return false, nil, "no int"
+    if val, ok := obj.(LnsReal); ok {
+        if math.Ceil( val ) == val {
+            return true, LnsInt(val), nil
+        }
+        return true, val, nil
+    }
+    return false, nil, fmt.Sprintf( "no int: %s", reflect.ValueOf( obj ).Kind() )
 }
 func Lns_ToRealSub( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
     if Lns_IsNil( obj ) {

@@ -180,3 +180,12 @@ return DependLuaOnLns.runLuaOnLns( txt )
 }
 func Lns_DependLuaOnLns_init() {
 }
+
+func Depend_runMain( mainFunc LnsAny, argList *LnsList ) LnsInt {
+    if !Lns_IsNil( mainFunc ) {
+        luaVM := Lns_getVM()
+        ret := luaVM.RunLoadedfunc( mainFunc.(*Lns_luaValue), []LnsAny{ argList } );
+        return ret[ 0 ].(LnsInt);
+    }
+    return -1;
+}

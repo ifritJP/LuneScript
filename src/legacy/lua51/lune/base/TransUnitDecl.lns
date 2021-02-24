@@ -2710,11 +2710,17 @@ fn TransUnit.analyzeDeclFunc(
 {
    let mut token = self.getToken(##);
    if! name {
-      name = self.checkSymbol( _exp, .MustNot_ );
+      if _exp.txt ~= "__main" {
+         name = self.checkSymbol( _exp, .MustNot_ );
+      }
    }
    else {
       if token.txt ~= "(" {
-         name = self.checkSymbol( token, .MustNot_ );
+         if token.txt ~= "__main" {
+            name = self.checkSymbol( token, .MustNot_ );
+         } else {
+            name = token;
+         }
          token = self.getToken(##);
       }
    }
@@ -2922,6 +2928,19 @@ fn TransUnit.analyzeDeclFunc(
             funcBodyScope.$parent, name, workTypeInfo, alt2typeMap );
          typeInfo = workSym.$typeInfo;
          funcSym = workSym;
+
+         if name.txt == "__main" {
+            if #typeInfo.$argTypeInfoList ~= 1 or
+               typeInfo.$argTypeInfoList[1].$kind ~= .List or
+               typeInfo.$argTypeInfoList[1].$itemTypeInfoList[1] ~=
+               Ast.builtinTypeString or
+               #typeInfo.$retTypeInfoList ~= 1 or
+               typeInfo.$retTypeInfoList[1] ~= Ast.builtinTypeInt
+            {
+               let mess = "'__main' function's type has to be __main( argList:List<str> ) : int -- %s" (typeInfo.$display_stirng );
+               self.addErrMess( name.pos, mess );
+            }
+         }
       } else {
          typeInfo = workTypeInfo;
          funcSym = nil;

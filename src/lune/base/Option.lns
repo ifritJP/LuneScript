@@ -69,6 +69,7 @@ pub enum ModeKind {
    Builtin = "builtin",
    Inquire = "inq",
    MkMain = "mkmain",
+   Shebang = "shebang",
 }
 
 pub fn getRuntimeModule(): str {
@@ -119,7 +120,11 @@ pub class Option {
 
    pub let mut outputPath:str!;
 
+   // shebang で利用する引数リスト
+   pub let mut shebangArgList:List<str>;
+
    pub fn __init() {
+      self.shebangArgList = [];
       self.outputPath = nil;
       self.appName = "lnsc";
       self.packageName = nil;
@@ -216,6 +221,7 @@ usage:
   <type1> [-prof] [-r] src.lns mode [mode-option]
   <type2> -mklunemod path
   <type3> -mkmain mainMod [path]
+  <type3> -shebang path
   <type4> --version
 
 * type1
@@ -313,6 +319,9 @@ usage:
             }
             case "--debug" {
                Util.setDebugFlag( true );
+            }
+            case "-shebang" {
+               option.mode = .Shebang;
             }
             case "--version" {
                print( "LuneScript: version %s (%d:%s) [%s]"
@@ -438,7 +447,7 @@ usage:
                }
             }
             default {
-               Util.log( "unknown option -- %s" (arg) );
+               Util.log( "unknown option -- '%s'" (arg) );
                os.exit( 1 );
             }
          }
@@ -446,6 +455,9 @@ usage:
       else {
          if option.scriptPath == "" {
             option.scriptPath = arg;
+            if option.mode == .Shebang {
+               option.shebangArgList.insert( option.scriptPath );
+            }
          }
          elseif option.mode == "" {
             if! let mode = ModeKind._from( arg ) {
@@ -473,6 +485,9 @@ usage:
                }
                case .Save, .SaveMeta, .Glue {
                   option.outputDir = arg;
+               }
+               case .Shebang {
+                  option.shebangArgList.insert( arg );
                }
                default {
                   option.outputPath = arg;

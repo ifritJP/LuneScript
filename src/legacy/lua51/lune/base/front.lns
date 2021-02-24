@@ -612,6 +612,12 @@ fn Front.checkUptodateMeta( metaPath:str, addSearchPath:str! ): Luaval<&stem>! {
 }
 
 
+/**
+mod のモジュールをロードする。
+
+@return Luaval<&stem>! モジュール情報
+@return Luaval<&stem> META 情報
+*/
 fn Front.loadModule( mod:str ) mut : Luaval<&stem>!, Luaval<&stem> {
    if not self.getLoadInfo( mod ) {
       if! let luaTxt = self.convertedMap[ mod ] {
@@ -1498,6 +1504,13 @@ pub fn Front.exec() mut
                }
             }, self.option.scriptPath .. ".profi" );
          
+      }
+      case .Shebang {
+         if! let modObj = self.loadModule( scriptPath2Module( self.option.scriptPath ) )
+         {
+            let code = Depend.runMain( modObj.__main, self.option.shebangArgList );
+            os.exit( code );
+         }
       }
       case .Exec {
          let modObj = self.loadModule( scriptPath2Module( self.option.scriptPath ) );
