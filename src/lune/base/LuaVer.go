@@ -4,6 +4,7 @@ import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_LuaVer bool
 var LuaVer__mod__ string
 // decl enum -- BitOp 
+type LuaVer_BitOp = LnsInt
 const LuaVer_BitOp__Cant = 2
 const LuaVer_BitOp__HasMod = 1
 const LuaVer_BitOp__HasOp = 0
@@ -29,6 +30,7 @@ func LuaVer_BitOp_getTxt(arg1 LnsInt) string {
     return LuaVer_BitOpMap_[arg1];
 }
 // decl enum -- VerKind 
+type LuaVer_VerKind = LnsInt
 const LuaVer_VerKind__v51 = 51
 const LuaVer_VerKind__v52 = 52
 const LuaVer_VerKind__v53 = 53

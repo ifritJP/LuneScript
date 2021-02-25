@@ -4,6 +4,7 @@ import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_Types bool
 var Types__mod__ string
 // decl enum -- Lang 
+type Types_Lang = LnsInt
 const Types_Lang__C = 3
 const Types_Lang__Go = 2
 const Types_Lang__Lua = 1
@@ -32,6 +33,7 @@ func Types_Lang_getTxt(arg1 LnsInt) string {
     return Types_LangMap_[arg1];
 }
 // decl enum -- CheckingUptodateMode 
+type Types_CheckingUptodateMode = string
 const Types_CheckingUptodateMode__Force = "force"
 const Types_CheckingUptodateMode__Normal = "none"
 const Types_CheckingUptodateMode__Touch = "touch"
@@ -57,6 +59,7 @@ func Types_CheckingUptodateMode_getTxt(arg1 string) string {
     return Types_CheckingUptodateModeMap_[arg1];
 }
 // decl enum -- TokenKind 
+type Types_TokenKind = LnsInt
 const Types_TokenKind__Char = 4
 const Types_TokenKind__Cmnt = 0
 const Types_TokenKind__Dlmt = 6

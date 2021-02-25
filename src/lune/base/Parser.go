@@ -14,6 +14,7 @@ func Parser_convExp849(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 type Parser_Position = Types_Position
+type Parser_TokenKind = Types_TokenKind
 type Parser_Token = Types_Token
 // 31: decl @lune.@base.@Parser.isLuaKeyword
 func Parser_isLuaKeyword(txt string) bool {

@@ -4,6 +4,7 @@ import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_Option bool
 var Option__mod__ string
 // decl enum -- ModeKind 
+type Option_ModeKind = string
 const Option_ModeKind__Ast = "ast"
 const Option_ModeKind__BootC = "bootC"
 const Option_ModeKind__Builtin = "builtin"
@@ -88,7 +89,7 @@ func Option_convExp558(arg1 []LnsAny) LnsAny {
 }
 // 48: decl @lune.@base.@Option.getBuildCount
 func Option_getBuildCount_1015_() LnsInt {
-    return 6589
+    return 6653
 }
 
 // 75: decl @lune.@base.@Option.getRuntimeModule
@@ -101,9 +102,9 @@ func Option_outputLuneMod(path LnsAny) LnsAny {
     var lune_path string
     lune_path = "runtime.lua"
     if path != nil{
-        path_2479 := path.(string)
-        if path_2479 != ""{
-            lune_path = path_2479
+        path_2481 := path.(string)
+        if path_2481 != ""{
+            lune_path = path_2481
             
         }
     }
@@ -560,12 +561,12 @@ func (self *Option_Option) OpenDepend(relPath LnsAny) LnsAny {
             path := _path.(string)
             var filePath string
             if relPath != nil{
-                relPath_2467 := relPath.(string)
+                relPath_2469 := relPath.(string)
                 if Lns_isCondTrue( Lns_car(Lns_getVM().String_find(path,"/$", nil, nil))){
-                    filePath = Lns_getVM().String_format("%s%s", []LnsAny{path, relPath_2467})
+                    filePath = Lns_getVM().String_format("%s%s", []LnsAny{path, relPath_2469})
                     
                 } else { 
-                    filePath = Lns_getVM().String_format("%s/%s", []LnsAny{path, relPath_2467})
+                    filePath = Lns_getVM().String_format("%s/%s", []LnsAny{path, relPath_2469})
                     
                 }
             } else {

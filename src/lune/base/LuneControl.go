@@ -4,6 +4,7 @@ import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_LuneControl bool
 var LuneControl__mod__ string
 // decl enum -- Code 
+type LuneControl_Code = string
 const LuneControl_Code__C = "c"
 const LuneControl_Code__Go = "go"
 const LuneControl_Code__Lua = "lua"
@@ -28,6 +29,8 @@ func LuneControl_Code__from(arg1 string) LnsAny{
 func LuneControl_Code_getTxt(arg1 string) string {
     return LuneControl_CodeMap_[arg1];
 }
+// decl alge -- Pragma
+type LuneControl_Pragma = LnsAny
 type LuneControl_Pragma__default__init struct{
 }
 var LuneControl_Pragma__default__init_Obj = &LuneControl_Pragma__default__init{}

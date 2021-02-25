@@ -5135,6 +5135,7 @@ function NormalTypeInfo:__init(processInfo, abstractFlag, scope, baseTypeInfo, i
    end
    
    
+   self.requirePath = ""
    self.moduleLang = moduleLang
    self.abstractFlag = abstractFlag
    self.baseTypeInfo = _lune.unwrapDefault( baseTypeInfo, _moduleObj.headTypeInfo)
@@ -5355,8 +5356,12 @@ function NormalTypeInfo:serialize( stream, validChildrenSet )
    do
       local _exp = self.moduleLang
       if _exp ~= nil then
-         txt = txt .. string.format( "moduleLang = %d,", _exp)
+         txt = txt .. string.format( 'moduleLang = %d, ', _exp)
       end
+   end
+   
+   if self.requirePath ~= "" then
+      txt = txt .. string.format( 'requirePath = "%s", ', self.requirePath)
    end
    
    
@@ -5453,8 +5458,15 @@ function NormalTypeInfo:equals( processInfo, typeInfo, alt2type, checkModifer )
 
    return self:equalsSub( processInfo, typeInfo, alt2type, checkModifer )
 end
-function NormalTypeInfo.create( processInfo, accessMode, abstractFlag, scope, baseInfo, interfaceList, parentInfo, staticFlag, kind, txt, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode, moduleLang )
+function NormalTypeInfo.create( processInfo, accessMode, abstractFlag, scope, baseInfo, parentInfo, staticFlag, kind, txt, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode )
 
+   do
+      local _switchExp = kind
+      if _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.ExtModule or _switchExp == TypeInfoKind.IF then
+         Util.err( "can't use create() method. use createClass(), createExtModule()." )
+      end
+   end
+   
    if kind == TypeInfoKind.Prim then
       do
          local _exp = sym2builtInTypeMap[txt]
@@ -5467,7 +5479,7 @@ function NormalTypeInfo.create( processInfo, accessMode, abstractFlag, scope, ba
    end
    
    processInfo:get_idProv():increment(  )
-   local info = NormalTypeInfo.new(processInfo, abstractFlag, scope, baseInfo, interfaceList, false, true, staticFlag, accessMode, txt, parentInfo, processInfo:get_idProv():get_id(), kind, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode, moduleLang)
+   local info = NormalTypeInfo.new(processInfo, abstractFlag, scope, baseInfo, nil, false, true, staticFlag, accessMode, txt, parentInfo, processInfo:get_idProv():get_id(), kind, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode, nil)
    return info
 end
 function NormalTypeInfo.setmeta( obj )
@@ -5523,6 +5535,12 @@ function NormalTypeInfo:get_mutMode()
 end
 function NormalTypeInfo:set_mutMode( mutMode )
    self.mutMode = mutMode
+end
+function NormalTypeInfo:get_requirePath()
+   return self.requirePath
+end
+function NormalTypeInfo:set_requirePath( requirePath )
+   self.requirePath = requirePath
 end
 
 
@@ -6350,7 +6368,7 @@ function ProcessInfo:createClass( classFlag, abstractFlag, scope, baseInfo, inte
 end
 
 
-function ProcessInfo:createExtModule( scope, parentInfo, externalFlag, accessMode, className, moduleLang )
+function ProcessInfo:createExtModule( scope, parentInfo, externalFlag, accessMode, className, moduleLang, requirePath )
 
    do
       local _exp = sym2builtInTypeMap[className]
@@ -6366,6 +6384,7 @@ function ProcessInfo:createExtModule( scope, parentInfo, externalFlag, accessMod
    
    
    local info = NormalTypeInfo.new(self, false, scope, nil, nil, false, externalFlag, false, accessMode, className, parentInfo, self:get_idProv():getNewId(  ), TypeInfoKind.ExtModule, nil, nil, nil, MutMode.Mut, moduleLang)
+   info:set_requirePath( requirePath )
    return info
 end
 

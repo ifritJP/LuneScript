@@ -89,6 +89,10 @@ pub class Filter<T>  {
    pro fn get_moduleInfoManager() : &Ast.ModuleInfoManager {
       return self.moduleInfoManager;
    }
+
+   pro fn getFull( typeInfo:&Ast.TypeInfo, localFlag:bool ) : str {
+      return typeInfo.getFullName( self.typeNameCtrl, self.moduleInfoManager, localFlag );
+   }
 }
 
 /**

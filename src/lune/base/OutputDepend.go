@@ -98,6 +98,7 @@ func (self *OutputDepend_DependInfo) Output(stream Lns_oStream) {
 // declaration Class -- convFilter
 type OutputDepend_convFilterMtd interface {
     DefaultProcess(arg1 *Nodes_Node, arg2 LnsAny)
+    GetFull(arg1 *Ast_TypeInfo, arg2 bool) string
     Get_moduleInfoManager() Ast_ModuleInfoManager
     Get_optStack() *LnsList
     Get_typeNameCtrl() *Ast_TypeNameCtrl
@@ -329,9 +330,9 @@ func (self *OutputDepend_Front) LoadMeta(importModuleInfo *FrontInterface_Import
     var mess LnsAny
     loaded,mess = Lns_getVM().Loadfile(metaPath)
     if loaded != nil{
-        loaded_5672 := loaded.(*Lns_luaValue)
+        loaded_5675 := loaded.(*Lns_luaValue)
         var meta LnsAny
-        meta = OutputDepend_convExp487(Lns_2DDD(Lns_getVM().RunLoadedfunc(loaded_5672,Lns_2DDD([]LnsAny{}))[0]))
+        meta = OutputDepend_convExp487(Lns_2DDD(Lns_getVM().RunLoadedfunc(loaded_5675,Lns_2DDD([]LnsAny{}))[0]))
         return meta
     }
     Lns_print([]LnsAny{mess})

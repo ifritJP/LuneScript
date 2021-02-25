@@ -4,6 +4,7 @@ import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_LuaMod bool
 var LuaMod__mod__ string
 // decl enum -- CodeKind 
+type LuaMod_CodeKind = LnsInt
 const LuaMod_CodeKind__Alge = 8
 const LuaMod_CodeKind__AlgeMapping = 9
 const LuaMod_CodeKind__Cast = 13
@@ -71,6 +72,7 @@ func LuaMod_CodeKind_getTxt(arg1 LnsInt) string {
     return LuaMod_CodeKindMap_[arg1];
 }
 // decl enum -- CastKind 
+type LuaMod_CastKind = LnsInt
 const LuaMod_CastKind__Class = 3
 const LuaMod_CastKind__Int = 0
 const LuaMod_CastKind__Real = 1

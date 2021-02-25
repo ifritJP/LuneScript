@@ -4,6 +4,7 @@ import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_Code bool
 var Code__mod__ string
 // decl enum -- ID 
+type Code_ID = LnsInt
 const Code_ID__nothing_define_abbr = 0
 var Code_IDList_ = NewLnsList( []LnsAny {
   Code_ID__nothing_define_abbr,

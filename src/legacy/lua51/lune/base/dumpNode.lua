@@ -509,7 +509,7 @@ end
 
 function dumpFilter:processDeclClass( node, opt )
 
-   self:dump( opt, node, node:get_name(  ).txt )
+   self:dump( opt, node, string.format( "%s (%s)", node:get_name(  ).txt, self:getFull( node:get_expType(), false )) )
    for __index, field in ipairs( node:get_fieldList(  ) ) do
       filter( field, self, opt:nextOpt(  ) )
    end

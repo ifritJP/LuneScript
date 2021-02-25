@@ -237,7 +237,9 @@ pub override fn dumpFilter.processProtoClass(
 pub override fn dumpFilter.processDeclClass(
    node: &Nodes.DeclClassNode, opt:Opt ) mut
 {
-   self.dump( opt, node, node.get_name().txt );
+   self.dump(
+      opt, node,
+      "%s (%s)" ( node.get_name().txt, self.getFull( node.$expType, false ) ) );
    foreach field in node.get_fieldList() {
       filter( field, self, opt.nextOpt() );
    }	

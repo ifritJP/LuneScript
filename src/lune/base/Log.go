@@ -4,6 +4,7 @@ import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_Log bool
 var Log__mod__ string
 // decl enum -- Level 
+type Log_Level = LnsInt
 const Log_Level__Debug = 5
 const Log_Level__Err = 1
 const Log_Level__Fatal = 0

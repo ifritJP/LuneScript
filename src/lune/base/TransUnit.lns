@@ -893,7 +893,7 @@ alias で置き換えている元の Type → alias の型
 
    pri fn pushExtModule(
       externalFlag: bool, name:str, accessMode:Ast.AccessMode,
-      pos:&Parser.Position, lazy:bool, lang:Types.Lang ) mut : &Ast.TypeInfo
+      pos:&Parser.Position, lazy:bool, lang:Types.Lang, requirePath:str ) mut : &Ast.TypeInfo
    {
       let mut typeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
 
@@ -908,7 +908,7 @@ alias で置き換えている元の Type → alias の型
          let mut scope = self.pushScope( true ## );
          typeInfo = self.processInfo.createExtModule(
             scope, parentInfo, externalFlag,
-            accessMode, name, lang );
+            accessMode, name, lang, requirePath );
 
          parentScope.addExtModule( self.processInfo, name, pos, typeInfo, lazy, lang );
       }
@@ -1590,6 +1590,7 @@ class _TypeInfoNormal extend _TypeInfo {
    pub let retTypeId: &List<int>;
    pub let children: &List<int>;
    pub let moduleLang:Types.Lang!;
+   pub let requirePath:str!;
 
    pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
@@ -1720,7 +1721,8 @@ class _TypeInfoNormal extend _TypeInfo {
                   param.processInfo, parentScope, true, nil, [] );
 
                let workTypeInfo = param.processInfo.createExtModule(
-                  scope, parentInfo, true, .Pub, self.txt, unwrap self.moduleLang );
+                  scope, parentInfo, true, .Pub, self.txt,
+                  unwrap self.moduleLang, unwrap self.requirePath );
                parentScope.addExtModule(
                   param.processInfo, self.txt, nil, workTypeInfo,
                   param.lazyModuleSet.has( self.typeId ), unwrap self.moduleLang );
@@ -1744,9 +1746,9 @@ class _TypeInfoNormal extend _TypeInfo {
                let workTypeInfo = Ast.NormalTypeInfo.create(
                   param.processInfo, accessMode,
                   self.abstractFlag, scope, baseInfo,
-                  interfaceList, parentInfo, self.staticFlag, typeInfoKind,
+                  parentInfo, self.staticFlag, typeInfoKind,
                   self.txt, itemTypeInfo, argTypeInfo,
-                  retTypeInfo, self.mutMode, self.moduleLang );
+                  retTypeInfo, self.mutMode );
                newTypeInfo = workTypeInfo;
 
                param.typeId2TypeInfo[ self.typeId ] = workTypeInfo;

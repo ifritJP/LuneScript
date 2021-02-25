@@ -3626,6 +3626,7 @@ pub class NormalTypeInfo extend TypeInfo {
 
    pri let alt2typeMap:Map<&TypeInfo,&TypeInfo>;
    pri let moduleLang:Types.Lang!;
+   pri let mut requirePath:str {pub,local};
 
    /**
    オーバーライド元の TypeInfo。
@@ -3685,6 +3686,7 @@ pub class NormalTypeInfo extend TypeInfo {
          self.overridingType = .NotOverride;
       }
 
+      self.requirePath = "";
       self.moduleLang = moduleLang;
       self.abstractFlag = abstractFlag;
       self.baseTypeInfo = unwrap baseTypeInfo default headTypeInfo;
@@ -3893,7 +3895,10 @@ pub class NormalTypeInfo extend TypeInfo {
             self.abstractFlag, self.staticFlag, self.accessMode,
             self.kind, self.mutMode );
       if! self.moduleLang {
-         txt = txt .. "moduleLang = %d," (_exp);
+         txt = txt .. 'moduleLang = %d, ' (_exp );
+      }
+      if self.requirePath ~= "" {
+         txt = txt .. 'requirePath = "%s", ' (self.requirePath );
       }
       
 
@@ -3994,14 +3999,25 @@ pub class NormalTypeInfo extend TypeInfo {
    }
 
 
+   /**
+NormalTypeInfo インスタンスを生成する。
+
+クラス用、インタフェース用、モジュール用は専用の create 関数を利用すること。
+
+   */
    pub static fn create(
       processInfo:ProcessInfo, accessMode:AccessMode, abstractFlag: bool,
       scope: Scope!, baseInfo: &TypeInfo,
-      interfaceList: List<&TypeInfo>, parentInfo: &TypeInfo, staticFlag: bool,
+      parentInfo: &TypeInfo, staticFlag: bool,
       kind: TypeInfoKind, txt: str, itemTypeInfo: List<&TypeInfo>,
       argTypeInfoList: List<&TypeInfo>, retTypeInfoList: List<&TypeInfo>,
-      mutMode: MutMode!, moduleLang:Types.Lang! ): &TypeInfo
+      mutMode: MutMode! ): &TypeInfo
    {
+      switch kind {
+         case .Class, .ExtModule, .IF {
+            Util.err( "can't use create() method. use createClass(), createExtModule()." );
+         }
+      }
       if kind == .Prim {
          if! sym2builtInTypeMap[ txt ] {
             return _exp.$typeInfo;
@@ -4010,9 +4026,9 @@ pub class NormalTypeInfo extend TypeInfo {
       }
       processInfo.$idProv.increment();
       let mut info = new NormalTypeInfo(
-         processInfo, abstractFlag, scope, baseInfo, interfaceList, false, true,
+         processInfo, abstractFlag, scope, baseInfo, nil, false, true,
          staticFlag, accessMode, txt, parentInfo, processInfo.$idProv.$id, kind,
-         itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode, moduleLang );
+         itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode, nil );
       return info;
    }
 
@@ -4669,7 +4685,8 @@ pub fn ProcessInfo.createClass(
 
 pub fn ProcessInfo.createExtModule(
    scope: Scope!, parentInfo: &TypeInfo, externalFlag: bool,
-   accessMode: AccessMode, className: str, moduleLang:Types.Lang ) mut : &TypeInfo
+   accessMode: AccessMode, className: str,
+   moduleLang:Types.Lang, requirePath:str ) mut : &TypeInfo
 {
    // if className == "str" {
    //     return sym2builtInTypeMap[ className ]@TypeInfo;
@@ -4688,6 +4705,7 @@ pub fn ProcessInfo.createExtModule(
       externalFlag, false, accessMode,
       className, parentInfo, self.$idProv.getNewId(),
       .ExtModule, nil, nil, nil, .Mut, moduleLang );
+   info.set_requirePath(requirePath);
    return info;
 }
 

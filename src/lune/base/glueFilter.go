@@ -452,6 +452,7 @@ func (self *glueFilter_GlueArgInfo) Get_typeInfo() *Ast_TypeInfo{ return self.ty
 // declaration Class -- glueFilter
 type glueFilter_glueFilterMtd interface {
     DefaultProcess(arg1 *Nodes_Node, arg2 LnsAny)
+    GetFull(arg1 *Ast_TypeInfo, arg2 bool) string
     Get_moduleInfoManager() Ast_ModuleInfoManager
     Get_optStack() *LnsList
     Get_typeNameCtrl() *Ast_TypeNameCtrl

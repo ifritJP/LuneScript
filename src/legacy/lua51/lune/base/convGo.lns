@@ -31,6 +31,7 @@ import lune.base.TransUnit;
 import lune.base.LuaVer;
 import lune.base.Parser;
 import lune.base.LuneControl;
+import lune.base.Types;
 
 let MaxNilAccNum = 3;
 
@@ -264,9 +265,14 @@ alge SymbolKind {
 
 fn concatGLSym( name:str, external:bool ) : str {
    if external {
-      let mut front = name.sub( 1, 1 );
-      if front.upper() ~= front {
-         front = front.upper();
+      let mut frontChar = name[ 1 ];
+      let front;
+      if frontChar >= ?a and frontChar <= ?z {
+         front = "%c" ( ?A + frontChar - ?a );
+      } elseif frontChar >= ?A and frontChar <= ?Z {
+         front = name.sub( 1, 1 );
+      } else {
+         front = "G%c" ( frontChar );
       }
       return front .. name.sub( 2## );
    }
@@ -311,6 +317,33 @@ fn convFilter.concatSymWithType( name:str, typeInfo:&Ast.TypeInfo ) : str {
    }
    return concatGLSym( typeName, self.isPubType( typeInfo ) );
 }
+
+fn convFilter.isSamePackageExtModule( typeInfo:&Ast.TypeInfo ) : bool {
+   let! extModuleType =
+      typeInfo.$srcTypeInfo.$nonnilableType.$aliasSrc@@@Ast.NormalTypeInfo
+   {
+      Util.err( "illegal type -- %s" (typeInfo.getTxt(##)) );
+   };
+   let requireParent = extModuleType.$requirePath.gsub( "[^%.]+$", "" );
+   let moduleParent = self.getFull( self.moduleTypeInfo, false ).
+      gsub( "[^@%.]+$", "" ).gsub( "@", "" );
+   return requireParent == moduleParent;
+}
+
+fn convFilter.isSameModDir( moduleTypeInfo:&Ast.TypeInfo ) : bool {
+   if moduleTypeInfo.$parentInfo == self.moduleTypeInfo.$parentInfo {
+      return true;
+   }
+   return false;
+}
+
+fn convFilter.isSamePackage( typeInfo:&Ast.TypeInfo ) : bool {
+   if typeInfo.$kind == .ExtModule {
+      return self.isSamePackageExtModule( typeInfo );
+   }
+   return self.isSameModDir( typeInfo.getModule() );
+}
+
 
 fn convFilter.getSymbol( kind:SymbolKind, name:str ) : str {
    let mut symbolName;
@@ -390,6 +423,9 @@ fn convFilter.getSymbol( kind:SymbolKind, name:str ) : str {
                }
                case .ExtModule {
                   symbolName = concatGLSym( symbolName, true );
+                  if not self.isSamePackageExtModule( typeInfo.$parentInfo ) {
+                     symbolName = "%s.%s" ( typeInfo.$parentInfo.$rawTxt, symbolName );
+                  }
                }
                default {
                   Util.err( "%s: not support -- %s:%s"
@@ -517,7 +553,7 @@ fn getOrgTypeInfo( typeInfo:&Ast.TypeInfo ) : &Ast.TypeInfo {
    return typeInfo.$srcTypeInfo.$nonnilableType;
 }
 
-fn convFilter.type2gotype( typeInfo:&Ast.TypeInfo ) : str {
+fn convFilter.type2gotypeOrg( typeInfo:&Ast.TypeInfo, addClassAster:bool ) : str {
    if typeInfo.$kind == .DDD {
       return "[]LnsAny";
    }
@@ -558,17 +594,26 @@ fn convFilter.type2gotype( typeInfo:&Ast.TypeInfo ) : str {
          if typeInfo.$genSrcTypeInfo == TransUnit.getBuiltinFunc().__pipe_ {
             return "*Lns__pipe";
          }
-         return "*" .. self.getTypeSymbol( typeInfo );
+         let symbol = self.getTypeSymbol( typeInfo );
+         if addClassAster {
+            return "*" .. symbol;
+         }
+         return symbol;
       }
       case .IF {
          return self.getTypeSymbol( typeInfo );
       }
       case .Alternate {
-         return self.type2gotype( typeInfo.$baseTypeInfo );
+         return self.type2gotypeOrg( typeInfo.$baseTypeInfo, addClassAster );
       }
    }
    Util.err( "not support yet -- %s" (typeInfo.getTxt(##) ) );
 }
+
+fn convFilter.type2gotype( typeInfo:&Ast.TypeInfo ) : str {
+   return self.type2gotypeOrg( typeInfo, true );
+}
+
 
 fn getExpType( expListNode:&Nodes.ExpListNode, index:int ) : &Ast.TypeInfo {
    let list = expListNode.$expTypeList;
@@ -1423,12 +1468,6 @@ fn convFilter.outputConvExt( funcNode:&Nodes.Node ) {
    self.writeln( "}" );
 }
 
-fn convFilter.isSameModDir( moduleTypeInfo:&Ast.TypeInfo ) : bool {
-   if moduleTypeInfo.$parentInfo == self.moduleTypeInfo.$parentInfo {
-      return true;
-   }
-   return false;
-}
 fn convFilter.outputModule( moduleTypeInfo:&Ast.TypeInfo, addDot:bool ) {
    if! let packSym = self.module2PackSym[ moduleTypeInfo ] {
       self.write( packSym );
@@ -1449,6 +1488,21 @@ fn getModulePrefix( node:&Nodes.ImportNode ) : str {
    return "%s." (mod);
 }
 
+fn convFilter.outputModuleImport( node:&Nodes.DeclClassNode ) mut {
+   if node.$expType.$kind ~= .ExtModule or
+      ( node.$lang ~= .Go and node.$lang ~= .Same ) or
+      self.isSamePackageExtModule( node.$expType )
+   {
+      return;
+   }
+
+   let normalType = unwrap node.$expType@@@Ast.NormalTypeInfo;
+   self.write( "import %s " ( node.$expType.$rawTxt ) );
+   let path = normalType.$requirePath.gsub( "%.", "/" ).gsub( "/[^/]+$", "" );
+   self.writeln( '"%s/%s"' ( self.option.$appName, path ) );
+}
+
+
 fn convFilter.outputImport( node:&Nodes.ImportNode ) mut {
    if self.isSameModDir( node.$moduleTypeInfo ) or
       Ast.isBuiltin( node.$moduleTypeInfo.$typeId )
@@ -1459,13 +1513,11 @@ fn convFilter.outputImport( node:&Nodes.ImportNode ) mut {
 
    self.write( "import " );
    let modulePath, count = node.$modulePath.gsub( "([^%.]+)%.[^%.]+$", "/%1" );
-   let packSym;
+   let packSym = node.$assignName;
    if count == 0 {
-      packSym = "_P%d_main" (node.$id);
       self.writeln( '%s "%s"' (packSym,self.option.appName));
    } else {
       let modDir = modulePath.gsub( "/", "" );
-      packSym = "_P%d_%s" (node.$id,(modDir.gsub( ".*%.", "" )));
       self.writeln(
          '%s "%s/%s"' (packSym, self.option.appName, (modDir.gsub( "%.", "/" )) ) );
    }
@@ -1589,10 +1641,14 @@ pub override fn convFilter.processRoot(
    foreach workNode in node.$nodeManager.getImportNodeList() {
       self.outputImport( workNode );
    }
+   foreach workNode in node.$nodeManager.getDeclClassNodeList() {
+      self.outputModuleImport( workNode );
+   }
 
 
    let initModVar = "init_%s" (getModuleName(node.$moduleTypeInfo));
    self.writeln( "var %s bool" (initModVar) );
+
    
    self.pushProcessMode( .DeclTopScopeVar );
    let modSym = unwrap self.moduleScope.getSymbolInfoChild( "__mod__" );
@@ -1668,12 +1724,9 @@ pub override fn convFilter.processRoot(
             } );
    _filter( node.$nodeManager.getAliasNodeList(),
             fn ( workNode:&Nodes.AliasNode) {
-               let aliasType = workNode.$typeInfo;
-               if aliasType.$kind ~= .Enum {
-                  self.writeln( "type %s = %s"
-                                ( self.getSymbolSym( workNode.$newSymbol ),
-                                  self.getTypeSymbol( workNode.$typeInfo.$aliasSrc ) ) );
-               }
+               self.writeln( "type %s = %s"
+                             ( self.getSymbolSym( workNode.$newSymbol ),
+                               self.getTypeSymbol( workNode.$typeInfo.$aliasSrc ) ) );
             } );
    
    self.pushProcessMode( .NonClosureFuncDecl );
@@ -1964,6 +2017,9 @@ pub override fn convFilter.processStmtExp(
 pub override fn convFilter.processDeclAlge(
    node: Nodes.DeclAlgeNode, opt: Opt ) mut
 {
+   self.writeln( "// decl alge -- %s" (node.$expType.getTxt(##) ) );
+   self.writeln( "type %s = LnsAny" ( self.getTypeSymbol( node.$algeType ) ) );
+                                  
    forsort valInfo in node.$algeType.$valInfoMap {
       let algeSym = self.getAlgeSymbol( valInfo );
       self.writeln( "type %s struct{" (algeSym) );
@@ -2222,6 +2278,9 @@ pub override fn convFilter.processDeclEnum(
    switch self.processMode {
       case .DeclTopScopeVar {
          self.writeln( "// decl enum -- %s " (node.$enumType.getTxt(##)) );
+         self.writeln( "type %s = %s" ( self.getTypeSymbol( node.$enumType ),
+                                        self.type2gotype( node.$enumType ) ) );
+         
          forsort valInfo in node.$enumType.$name2EnumValInfo {
             self.write( "const %s = "
                         (self.getSymbol( .Static( node.$enumType ), valInfo.$name )) );
@@ -2686,7 +2745,22 @@ pub override fn convFilter.processDeclFunc(
 pub override fn convFilter.processRefType(
    node: Nodes.RefTypeNode, opt: Opt ) mut
 {
-   self.write( self.type2gotype( node.$expType ) );
+   // 型名出力は、元々 self.type2gotype() を使用していたが、
+   // これだと 外部パッケージ の型にアクセスしているケースに対応できない。
+   // そこで、外部パッケージにアクセスする型 (prefix が nil でないもの) は、
+   // node.$name を処理する。
+   // 一方で、 node.name は nilable の情報を含まないため、
+   // nilable の場合は self.type2gotype() を利用する。
+   
+   if node.$expType.$nilable or not node.$name.getPrefix() {
+      self.write( self.type2gotype( node.$expType ) );
+      return;
+   }
+
+   if node.$name.$expType.$kind == .Class {
+      self.write( "*" );
+   }
+   filter( node.$name, self, node );
 }
 
 fn convFilter.processCond( node:&Nodes.Node, parent:&Nodes.Node ) mut {
@@ -3274,7 +3348,17 @@ pub override fn convFilter.processExpNew(
    node: Nodes.ExpNewNode, opt: Opt ) mut
 {
    let className = self.getTypeSymbol( node.$expType );
-   self.write( "New%s(" ( className ) );
+   if self.isSamePackage( node.$expType ) {
+      self.write( "New%s(" ( className ) );
+   } else {
+      if! let refTypeNode = node.$symbol@@@Nodes.RefTypeNode {
+         if! let refNode = refTypeNode.$name@@@Nodes.RefFieldNode {
+            filter( refNode.$prefix, self, node );
+            self.write( "." );
+         }
+      }
+      self.write( "New%s(" ( className ) );
+   }
    if! let argList = node.$argList {
       let scope = unwrap node.$expType.$scope;
       let initFuncType = unwrap scope.getTypeInfoField( "__init", true, scope, .Normal );
@@ -4746,7 +4830,12 @@ pub override fn convFilter.processExpRef(
                }
             }
             case .Typ {
-               self.write( self.getTypeSymbol( node.$expType ));
+               if node.$expType.$kind == .Module {
+                  self.write( node.$symbolInfo.$name );
+               } else {
+                  //self.write( self.getTypeSymbol( node.$expType ));
+                  self.write( self.type2gotypeOrg( node.$expType, false ) );
+               }
             }
             default {
                self.write( node.$symbolInfo.$name );

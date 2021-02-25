@@ -7,21 +7,21 @@ var Meta__mod__ string
 type Meta__MetaInfoMtd interface {
 }
 type Meta__MetaInfo struct {
-    __formatVersion string
-    __enableTest bool
-    __buildId string
-    __lazyModuleList *LnsMap
-    __typeId2ClassInfoMap *LnsMap
-    __typeInfoList *LnsMap
-    __varName2InfoMap *LnsMap
-    __moduleTypeId LnsInt
-    __moduleSymbolKind LnsInt
-    __moduleMutable bool
-    __dependModuleMap *LnsMap
-    __dependIdMap *LnsMap
-    __macroName2InfoMap *LnsMap
-    __hasTest bool
-    __subModuleMap *LnsMap
+    G__formatVersion string
+    G__enableTest bool
+    G__buildId string
+    G__lazyModuleList *LnsMap
+    G__typeId2ClassInfoMap *LnsMap
+    G__typeInfoList *LnsMap
+    G__varName2InfoMap *LnsMap
+    G__moduleTypeId LnsInt
+    G__moduleSymbolKind LnsInt
+    G__moduleMutable bool
+    G__dependModuleMap *LnsMap
+    G__dependIdMap *LnsMap
+    G__macroName2InfoMap *LnsMap
+    G__hasTest bool
+    G__subModuleMap *LnsMap
     FP Meta__MetaInfoMtd
 }
 func Meta__MetaInfo2Stem( obj LnsAny ) LnsAny {
@@ -51,21 +51,21 @@ func NewMeta__MetaInfo(arg1 string, arg2 bool, arg3 string, arg4 *LnsMap, arg5 *
     return obj
 }
 func (self *Meta__MetaInfo) InitMeta__MetaInfo(arg1 string, arg2 bool, arg3 string, arg4 *LnsMap, arg5 *LnsMap, arg6 *LnsMap, arg7 *LnsMap, arg8 LnsInt, arg9 LnsInt, arg10 bool, arg11 *LnsMap, arg12 *LnsMap, arg13 *LnsMap, arg14 bool, arg15 *LnsMap) {
-    self.__formatVersion = arg1
-    self.__enableTest = arg2
-    self.__buildId = arg3
-    self.__lazyModuleList = arg4
-    self.__typeId2ClassInfoMap = arg5
-    self.__typeInfoList = arg6
-    self.__varName2InfoMap = arg7
-    self.__moduleTypeId = arg8
-    self.__moduleSymbolKind = arg9
-    self.__moduleMutable = arg10
-    self.__dependModuleMap = arg11
-    self.__dependIdMap = arg12
-    self.__macroName2InfoMap = arg13
-    self.__hasTest = arg14
-    self.__subModuleMap = arg15
+    self.G__formatVersion = arg1
+    self.G__enableTest = arg2
+    self.G__buildId = arg3
+    self.G__lazyModuleList = arg4
+    self.G__typeId2ClassInfoMap = arg5
+    self.G__typeInfoList = arg6
+    self.G__varName2InfoMap = arg7
+    self.G__moduleTypeId = arg8
+    self.G__moduleSymbolKind = arg9
+    self.G__moduleMutable = arg10
+    self.G__dependModuleMap = arg11
+    self.G__dependIdMap = arg12
+    self.G__macroName2InfoMap = arg13
+    self.G__hasTest = arg14
+    self.G__subModuleMap = arg15
 }
 
 func Lns_Meta_init() {

@@ -1022,7 +1022,7 @@ fn TransUnit.analyzePushClass(
          let mut parentScope = self.scope;
          classTypeInfo = self.pushExtModule(
             false, name.txt, accessMode, name.pos, mode == .LazyModule,
-            unwrap moduleLang );
+            unwrap moduleLang, (unwrap requirePath).getExcludedDelimitTxt() );
       }
       case .Class, .Interface {
          classTypeInfo = self.pushClass(
@@ -2338,7 +2338,7 @@ fn TransUnit.analyzeDeclClass(
          if langToken.kind ~= .Str {
             self.error( "it's not a string -- %s" ( langToken.txt ) );
          }
-         if langToken.txt ~= "" {
+         if langToken.getExcludedDelimitTxt() ~= "" {
             foreach langId in Types.Lang.$_allList {
                if! Types.Lang._from( langId ) {
                   if _exp.$_txt == langToken.txt {
