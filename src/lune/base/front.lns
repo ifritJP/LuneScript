@@ -285,16 +285,24 @@ fn getMetaInfo( lnsPath:str, mod:str, outdir:str! ): &MetaForBuildId!, str, str 
 }
 
 fn Front.searchModuleFile( mod:str, suffix:str, addPath:str! ): str! {
+
+   if mod.find( "^go/" ## ) {
+      let workMod = mod.gsub( "^go/", "" ).gsub( "%.", "/").gsub( ":", "." ) .. suffix;
+      let path = Util.pathJoin( "vendor", workMod );
+      if! let mut fileObj = io.open( path## ) {
+         fileObj.close();
+         return path;
+      }
+      return nil;
+   }
+   
    let mut lnsSearchPath = package.path;
-   //lnsSearchPath = string.gsub( lnsSearchPath, "%.lua", ".lns" );
    when! addPath {
       lnsSearchPath = string.format( "%s/?%s;%s", addPath, suffix, package.path );
    }
-
    lnsSearchPath = lnsSearchPath.gsub( "%.lua$", suffix );
    lnsSearchPath = lnsSearchPath.gsub( "%.lua;", suffix .. ";" );
 
-   //let! foundPath = package.searchpath( mod, lnsSearchPath ) {
    let! foundPath = Depend.searchpath( mod, lnsSearchPath ) {
       return nil;
    };

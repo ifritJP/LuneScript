@@ -100,6 +100,17 @@ func Util_scriptPath2Module(path string) string {
     return Lns_car(Lns_getVM().String_gsub(mod, "%.lns$", "")).(string)
 }
 
+// 260: decl @lune.@base.@Util.pathJoin
+func Util_pathJoin(dir string,path string) string {
+    if Lns_isCondTrue( Lns_car(Lns_getVM().String_find(path,"^/", nil, nil))){
+        return path
+    }
+    if Lns_isCondTrue( Lns_car(Lns_getVM().String_find(dir,"/$", nil, nil))){
+        return Lns_getVM().String_format("%s%s", []LnsAny{dir, path})
+    }
+    return Lns_getVM().String_format("%s/%s", []LnsAny{dir, path})
+}
+
 // declaration Class -- OrderedSet
 type Util_OrderedSetMtd interface {
     Add(arg1 LnsAny) bool

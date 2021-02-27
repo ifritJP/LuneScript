@@ -4,7 +4,7 @@ import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_Json bool
 var Json__mod__ string
 // 4: decl @lune.@base.@Json.getRawTxt
-func Json_getRawTxt_1007_(token *Parser_Token) string {
+func Json_getRawTxt_1007_(token *Types_Token) string {
     return Lns_getVM().String_sub(token.Txt,2, -2)
 }
 

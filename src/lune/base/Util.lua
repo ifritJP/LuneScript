@@ -421,6 +421,20 @@ local function scriptPath2Module( path )
 end
 _moduleObj.scriptPath2Module = scriptPath2Module
 
+local function pathJoin( dir, path )
+
+   if path:find( "^/" ) then
+      return path
+   end
+   
+   if dir:find( "/$" ) then
+      return string.format( "%s%s", dir, path)
+   end
+   
+   return string.format( "%s/%s", dir, path)
+end
+_moduleObj.pathJoin = pathJoin
+
 
 
 return _moduleObj

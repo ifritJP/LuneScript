@@ -1163,6 +1163,8 @@ alias で置き換えている元の Type → alias の型
       writer.startParent( "inquire", false );
       writer.write( "name", name );
       writer.write( "type", typeInfo.getTxt( self.typeNameCtrl## ) );
+      writer.write( "typeKind", typeInfo.$kind.$_txt );
+      writer.write( "static", "%s" (typeInfo.$staticFlag) );
       writer.write( "display", typeInfo.$get_display_stirng_with( typeInfo.$rawTxt, nil ) );
       writer.endElement();
       writer.endElement();
@@ -3137,7 +3139,7 @@ fn TransUnit.processImport( modulePath:str, depth:int ) mut :
    }
 
    let mut nameList:str[] = [];
-   apply txt of string.gmatch( modulePath, '[^%.]+' ) {
+   apply txt of string.gmatch( modulePath, '[^%./:]+' ) {
       nameList.insert( txt );
    }
 
@@ -3610,13 +3612,16 @@ fn TransUnit.analyzeImport( opeToken: &Parser.Token ) mut : Nodes.Node {
 
    while true {
       nextToken = self.getToken(##);
-      if nextToken.txt == "." {
-         nextToken = self.getToken(##);
-         moduleToken = nextToken;
-         modulePath = "%s.%s" ( modulePath, moduleToken.txt );
-      }
-      else {
-         break;
+      switch nextToken.txt {
+         case ".", "/", ":" {
+            let demilit = nextToken.txt;
+            nextToken = self.getToken(##);
+            moduleToken = nextToken;
+            modulePath = "%s%s%s" ( modulePath, demilit, moduleToken.txt );
+         }
+         default {
+            break;
+         }
       }
    }
    let mut assignName = moduleToken;

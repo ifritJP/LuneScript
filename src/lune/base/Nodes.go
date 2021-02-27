@@ -974,7 +974,7 @@ func Node_getSymbolInfo__processExpNode_9631_(node *Nodes_Node) *LnsList {
 }
 
 // 2495: decl @lune.@base.@Nodes.enumLiteral2Literal
-func Nodes_enumLiteral2Literal_9794_(obj Ast_EnumLiteral)(LnsAny, LnsAny) {
+func Nodes_enumLiteral2Literal_9794_(obj LnsAny)(LnsAny, LnsAny) {
     switch _exp43884 := obj.(type) {
     case *Ast_EnumLiteral__Int:
     val := _exp43884.Val1
@@ -1071,8 +1071,8 @@ func (self *Nodes_SimpleModuleInfoManager) GetModuleInfo(arg1 *Ast_TypeInfo) Lns
 // 37: DeclConstr
 func (self *Nodes_SimpleModuleInfoManager) InitNodes_SimpleModuleInfoManager(moduleInfoManager LnsAny) {
     if moduleInfoManager != nil{
-        moduleInfoManager_2369 := moduleInfoManager.(Ast_ModuleInfoManager)
-        self.ModuleInfoManager = moduleInfoManager_2369
+        moduleInfoManager_2374 := moduleInfoManager.(Ast_ModuleInfoManager)
+        self.ModuleInfoManager = moduleInfoManager_2374
         
     } else {
         self.ModuleInfoManager = Ast_DummyModuleInfoManager_get_instance().FP
@@ -1241,8 +1241,8 @@ func (self *Nodes_Filter) InitNodes_Filter(errorOnDefault bool,moduleTypeInfo Ln
     var process func() *Ast_TypeNameCtrl
     process = func() *Ast_TypeNameCtrl {
         if moduleTypeInfo != nil{
-            moduleTypeInfo_2399 := moduleTypeInfo.(*Ast_TypeInfo)
-            return NewAst_TypeNameCtrl(moduleTypeInfo_2399)
+            moduleTypeInfo_2404 := moduleTypeInfo.(*Ast_TypeInfo)
+            return NewAst_TypeNameCtrl(moduleTypeInfo_2404)
         }
         return Ast_defaultTypeNameCtrl
     }
@@ -2084,7 +2084,7 @@ func (self *Nodes_Node) GetPrefix() LnsAny {
 }
 
 // 224: DeclConstr
-func (self *Nodes_Node) InitNodes_Node(id LnsInt,kind LnsInt,pos *Parser_Position,macroArgFlag bool,expTypeList *LnsList) {
+func (self *Nodes_Node) InitNodes_Node(id LnsInt,kind LnsInt,pos *Types_Position,macroArgFlag bool,expTypeList *LnsList) {
     self.IsLValue = false
     
     self.id = id
@@ -2136,7 +2136,7 @@ func (self *Nodes_Node) Get_expType() *Ast_TypeInfo {
 }
 
 // 260: decl @lune.@base.@Nodes.Node.addTokenList
-func (self *Nodes_Node) AddTokenList(list *LnsList,kind Parser_TokenKind,txt string) {
+func (self *Nodes_Node) AddTokenList(list *LnsList,kind LnsInt,txt string) {
     list.Insert(Types_Token2Stem(NewTypes_Token(kind, txt, self.pos, false, nil)))
 }
 
@@ -3517,12 +3517,12 @@ func (self *Nodes_NoneNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_NoneNode) InitNodes_NoneNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList) {
+func (self *Nodes_NoneNode) InitNodes_NoneNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList) {
     self.InitNodes_Node(id, 0, pos, macroArgFlag, typeList)
 }
 
 // 686: decl @lune.@base.@Nodes.NoneNode.create
-func Nodes_NoneNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList) *Nodes_NoneNode {
+func Nodes_NoneNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList) *Nodes_NoneNode {
     var node *Nodes_NoneNode
     node = NewNodes_NoneNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -3620,14 +3620,14 @@ func (self *Nodes_ShebangNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ShebangNode) InitNodes_ShebangNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,cmd string) {
+func (self *Nodes_ShebangNode) InitNodes_ShebangNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,cmd string) {
     self.InitNodes_Node(id, 1, pos, macroArgFlag, typeList)
     self.cmd = cmd
     
 }
 
 // 686: decl @lune.@base.@Nodes.ShebangNode.create
-func Nodes_ShebangNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,cmd string) *Nodes_ShebangNode {
+func Nodes_ShebangNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,cmd string) *Nodes_ShebangNode {
     var node *Nodes_ShebangNode
     node = NewNodes_ShebangNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, cmd)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -3725,14 +3725,14 @@ func (self *Nodes_ConvStatNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ConvStatNode) InitNodes_ConvStatNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,txt string) {
+func (self *Nodes_ConvStatNode) InitNodes_ConvStatNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,txt string) {
     self.InitNodes_Node(id, 2, pos, macroArgFlag, typeList)
     self.txt = txt
     
 }
 
 // 686: decl @lune.@base.@Nodes.ConvStatNode.create
-func Nodes_ConvStatNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,txt string) *Nodes_ConvStatNode {
+func Nodes_ConvStatNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,txt string) *Nodes_ConvStatNode {
     var node *Nodes_ConvStatNode
     node = NewNodes_ConvStatNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, txt)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -3830,14 +3830,14 @@ func (self *Nodes_BlankLineNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_BlankLineNode) InitNodes_BlankLineNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,lineNum LnsInt) {
+func (self *Nodes_BlankLineNode) InitNodes_BlankLineNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,lineNum LnsInt) {
     self.InitNodes_Node(id, 3, pos, macroArgFlag, typeList)
     self.lineNum = lineNum
     
 }
 
 // 686: decl @lune.@base.@Nodes.BlankLineNode.create
-func Nodes_BlankLineNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,lineNum LnsInt) *Nodes_BlankLineNode {
+func Nodes_BlankLineNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,lineNum LnsInt) *Nodes_BlankLineNode {
     var node *Nodes_BlankLineNode
     node = NewNodes_BlankLineNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, lineNum)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -3935,14 +3935,14 @@ func (self *Nodes_SubfileNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_SubfileNode) InitNodes_SubfileNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,usePath LnsAny) {
+func (self *Nodes_SubfileNode) InitNodes_SubfileNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,usePath LnsAny) {
     self.InitNodes_Node(id, 4, pos, macroArgFlag, typeList)
     self.usePath = usePath
     
 }
 
 // 686: decl @lune.@base.@Nodes.SubfileNode.create
-func Nodes_SubfileNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,usePath LnsAny) *Nodes_SubfileNode {
+func Nodes_SubfileNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,usePath LnsAny) *Nodes_SubfileNode {
     var node *Nodes_SubfileNode
     node = NewNodes_SubfileNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, usePath)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -4055,7 +4055,7 @@ func (self *Nodes_ImportNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ImportNode) InitNodes_ImportNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,modulePath string,lazy LnsInt,assignName string,assigned bool,symbolInfo *Ast_SymbolInfo,moduleTypeInfo *Ast_TypeInfo) {
+func (self *Nodes_ImportNode) InitNodes_ImportNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,modulePath string,lazy LnsInt,assignName string,assigned bool,symbolInfo *Ast_SymbolInfo,moduleTypeInfo *Ast_TypeInfo) {
     self.InitNodes_Node(id, 5, pos, macroArgFlag, typeList)
     self.modulePath = modulePath
     
@@ -4072,7 +4072,7 @@ func (self *Nodes_ImportNode) InitNodes_ImportNode(id LnsInt,pos *Parser_Positio
 }
 
 // 686: decl @lune.@base.@Nodes.ImportNode.create
-func Nodes_ImportNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,modulePath string,lazy LnsInt,assignName string,assigned bool,symbolInfo *Ast_SymbolInfo,moduleTypeInfo *Ast_TypeInfo) *Nodes_ImportNode {
+func Nodes_ImportNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,modulePath string,lazy LnsInt,assignName string,assigned bool,symbolInfo *Ast_SymbolInfo,moduleTypeInfo *Ast_TypeInfo) *Nodes_ImportNode {
     var node *Nodes_ImportNode
     node = NewNodes_ImportNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, modulePath, lazy, assignName, assigned, symbolInfo, moduleTypeInfo)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -4481,7 +4481,7 @@ func (self *Nodes_RootNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_RootNode) InitNodes_RootNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,children *LnsList,moduleScope *Ast_Scope,useModuleMacroSet *LnsSet,moduleId *FrontInterface_ModuleId,processInfo *Ast_ProcessInfo,moduleTypeInfo *Ast_TypeInfo,provideNode LnsAny,luneHelperInfo *Nodes_LuneHelperInfo,nodeManager *Nodes_NodeManager,importModule2moduleInfo *LnsMap,typeId2MacroInfo *LnsMap,typeId2ClassMap *LnsMap) {
+func (self *Nodes_RootNode) InitNodes_RootNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,children *LnsList,moduleScope *Ast_Scope,useModuleMacroSet *LnsSet,moduleId *FrontInterface_ModuleId,processInfo *Ast_ProcessInfo,moduleTypeInfo *Ast_TypeInfo,provideNode LnsAny,luneHelperInfo *Nodes_LuneHelperInfo,nodeManager *Nodes_NodeManager,importModule2moduleInfo *LnsMap,typeId2MacroInfo *LnsMap,typeId2ClassMap *LnsMap) {
     self.InitNodes_Node(id, 6, pos, macroArgFlag, typeList)
     self.children = children
     
@@ -4510,7 +4510,7 @@ func (self *Nodes_RootNode) InitNodes_RootNode(id LnsInt,pos *Parser_Position,ma
 }
 
 // 686: decl @lune.@base.@Nodes.RootNode.create
-func Nodes_RootNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,children *LnsList,moduleScope *Ast_Scope,useModuleMacroSet *LnsSet,moduleId *FrontInterface_ModuleId,processInfo *Ast_ProcessInfo,moduleTypeInfo *Ast_TypeInfo,provideNode LnsAny,luneHelperInfo *Nodes_LuneHelperInfo,nodeManager *Nodes_NodeManager,importModule2moduleInfo *LnsMap,typeId2MacroInfo *LnsMap,typeId2ClassMap *LnsMap) *Nodes_RootNode {
+func Nodes_RootNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,children *LnsList,moduleScope *Ast_Scope,useModuleMacroSet *LnsSet,moduleId *FrontInterface_ModuleId,processInfo *Ast_ProcessInfo,moduleTypeInfo *Ast_TypeInfo,provideNode LnsAny,luneHelperInfo *Nodes_LuneHelperInfo,nodeManager *Nodes_NodeManager,importModule2moduleInfo *LnsMap,typeId2MacroInfo *LnsMap,typeId2ClassMap *LnsMap) *Nodes_RootNode {
     var node *Nodes_RootNode
     node = NewNodes_RootNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, children, moduleScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -4655,7 +4655,7 @@ func (self *Nodes_RefTypeNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_RefTypeNode) InitNodes_RefTypeNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,name *Nodes_Node,itemNodeList *LnsList,refFlag bool,mutFlag bool,array string) {
+func (self *Nodes_RefTypeNode) InitNodes_RefTypeNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,name *Nodes_Node,itemNodeList *LnsList,refFlag bool,mutFlag bool,array string) {
     self.InitNodes_Node(id, 7, pos, macroArgFlag, typeList)
     self.name = name
     
@@ -4670,7 +4670,7 @@ func (self *Nodes_RefTypeNode) InitNodes_RefTypeNode(id LnsInt,pos *Parser_Posit
 }
 
 // 686: decl @lune.@base.@Nodes.RefTypeNode.create
-func Nodes_RefTypeNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,name *Nodes_Node,itemNodeList *LnsList,refFlag bool,mutFlag bool,array string) *Nodes_RefTypeNode {
+func Nodes_RefTypeNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,name *Nodes_Node,itemNodeList *LnsList,refFlag bool,mutFlag bool,array string) *Nodes_RefTypeNode {
     var node *Nodes_RefTypeNode
     node = NewNodes_RefTypeNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, name, itemNodeList, refFlag, mutFlag, array)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -4799,7 +4799,7 @@ func (self *Nodes_BlockNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_BlockNode) InitNodes_BlockNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,blockKind LnsInt,scope *Ast_Scope,stmtList *LnsList) {
+func (self *Nodes_BlockNode) InitNodes_BlockNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,blockKind LnsInt,scope *Ast_Scope,stmtList *LnsList) {
     self.InitNodes_Node(id, 8, pos, macroArgFlag, typeList)
     self.blockKind = blockKind
     
@@ -4810,7 +4810,7 @@ func (self *Nodes_BlockNode) InitNodes_BlockNode(id LnsInt,pos *Parser_Position,
 }
 
 // 686: decl @lune.@base.@Nodes.BlockNode.create
-func Nodes_BlockNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,blockKind LnsInt,scope *Ast_Scope,stmtList *LnsList) *Nodes_BlockNode {
+func Nodes_BlockNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,blockKind LnsInt,scope *Ast_Scope,stmtList *LnsList) *Nodes_BlockNode {
     var node *Nodes_BlockNode
     node = NewNodes_BlockNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, blockKind, scope, stmtList)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -4927,14 +4927,14 @@ func (self *Nodes_EnvNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_EnvNode) InitNodes_EnvNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,block *Nodes_BlockNode) {
+func (self *Nodes_EnvNode) InitNodes_EnvNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,block *Nodes_BlockNode) {
     self.InitNodes_Node(id, 9, pos, macroArgFlag, typeList)
     self.block = block
     
 }
 
 // 686: decl @lune.@base.@Nodes.EnvNode.create
-func Nodes_EnvNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,block *Nodes_BlockNode) *Nodes_EnvNode {
+func Nodes_EnvNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,block *Nodes_BlockNode) *Nodes_EnvNode {
     var node *Nodes_EnvNode
     node = NewNodes_EnvNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, block)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -5052,7 +5052,7 @@ func (self *Nodes_ScopeNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ScopeNode) InitNodes_ScopeNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,scopeKind LnsInt,scope *Ast_Scope,symbolList *LnsList,block *Nodes_BlockNode) {
+func (self *Nodes_ScopeNode) InitNodes_ScopeNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,scopeKind LnsInt,scope *Ast_Scope,symbolList *LnsList,block *Nodes_BlockNode) {
     self.InitNodes_Node(id, 10, pos, macroArgFlag, typeList)
     self.scopeKind = scopeKind
     
@@ -5065,7 +5065,7 @@ func (self *Nodes_ScopeNode) InitNodes_ScopeNode(id LnsInt,pos *Parser_Position,
 }
 
 // 686: decl @lune.@base.@Nodes.ScopeNode.create
-func Nodes_ScopeNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,scopeKind LnsInt,scope *Ast_Scope,symbolList *LnsList,block *Nodes_BlockNode) *Nodes_ScopeNode {
+func Nodes_ScopeNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,scopeKind LnsInt,scope *Ast_Scope,symbolList *LnsList,block *Nodes_BlockNode) *Nodes_ScopeNode {
     var node *Nodes_ScopeNode
     node = NewNodes_ScopeNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, scopeKind, scope, symbolList, block)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -5221,14 +5221,14 @@ func (self *Nodes_IfNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_IfNode) InitNodes_IfNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,stmtList *LnsList) {
+func (self *Nodes_IfNode) InitNodes_IfNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,stmtList *LnsList) {
     self.InitNodes_Node(id, 11, pos, macroArgFlag, typeList)
     self.stmtList = stmtList
     
 }
 
 // 686: decl @lune.@base.@Nodes.IfNode.create
-func Nodes_IfNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,stmtList *LnsList) *Nodes_IfNode {
+func Nodes_IfNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,stmtList *LnsList) *Nodes_IfNode {
     var node *Nodes_IfNode
     node = NewNodes_IfNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, stmtList)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -5418,7 +5418,7 @@ func (self *Nodes_ExpListNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ExpListNode) InitNodes_ExpListNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,expList *LnsList,mRetExp LnsAny,followOn bool) {
+func (self *Nodes_ExpListNode) InitNodes_ExpListNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,expList *LnsList,mRetExp LnsAny,followOn bool) {
     self.InitNodes_Node(id, 12, pos, macroArgFlag, typeList)
     self.expList = expList
     
@@ -5429,7 +5429,7 @@ func (self *Nodes_ExpListNode) InitNodes_ExpListNode(id LnsInt,pos *Parser_Posit
 }
 
 // 686: decl @lune.@base.@Nodes.ExpListNode.create
-func Nodes_ExpListNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,expList *LnsList,mRetExp LnsAny,followOn bool) *Nodes_ExpListNode {
+func Nodes_ExpListNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,expList *LnsList,mRetExp LnsAny,followOn bool) *Nodes_ExpListNode {
     var node *Nodes_ExpListNode
     node = NewNodes_ExpListNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, expList, mRetExp, followOn)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -5664,7 +5664,7 @@ func (self *Nodes_SwitchNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_SwitchNode) InitNodes_SwitchNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,caseList *LnsList,_default LnsAny,caseKind LnsInt,failSafeDefault bool) {
+func (self *Nodes_SwitchNode) InitNodes_SwitchNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,caseList *LnsList,_default LnsAny,caseKind LnsInt,failSafeDefault bool) {
     self.InitNodes_Node(id, 13, pos, macroArgFlag, typeList)
     self.exp = exp
     
@@ -5679,7 +5679,7 @@ func (self *Nodes_SwitchNode) InitNodes_SwitchNode(id LnsInt,pos *Parser_Positio
 }
 
 // 686: decl @lune.@base.@Nodes.SwitchNode.create
-func Nodes_SwitchNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,caseList *LnsList,_default LnsAny,caseKind LnsInt,failSafeDefault bool) *Nodes_SwitchNode {
+func Nodes_SwitchNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,caseList *LnsList,_default LnsAny,caseKind LnsInt,failSafeDefault bool) *Nodes_SwitchNode {
     var node *Nodes_SwitchNode
     node = NewNodes_SwitchNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, exp, caseList, _default, caseKind, failSafeDefault)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -5891,7 +5891,7 @@ func (self *Nodes_WhileNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_WhileNode) InitNodes_WhileNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,infinit bool,block *Nodes_BlockNode) {
+func (self *Nodes_WhileNode) InitNodes_WhileNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,infinit bool,block *Nodes_BlockNode) {
     self.InitNodes_Node(id, 14, pos, macroArgFlag, typeList)
     self.exp = exp
     
@@ -5902,7 +5902,7 @@ func (self *Nodes_WhileNode) InitNodes_WhileNode(id LnsInt,pos *Parser_Position,
 }
 
 // 686: decl @lune.@base.@Nodes.WhileNode.create
-func Nodes_WhileNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,infinit bool,block *Nodes_BlockNode) *Nodes_WhileNode {
+func Nodes_WhileNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,infinit bool,block *Nodes_BlockNode) *Nodes_WhileNode {
     var node *Nodes_WhileNode
     node = NewNodes_WhileNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, exp, infinit, block)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -6122,7 +6122,7 @@ func (self *Nodes_RepeatNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_RepeatNode) InitNodes_RepeatNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,block *Nodes_BlockNode,exp *Nodes_Node) {
+func (self *Nodes_RepeatNode) InitNodes_RepeatNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,block *Nodes_BlockNode,exp *Nodes_Node) {
     self.InitNodes_Node(id, 15, pos, macroArgFlag, typeList)
     self.block = block
     
@@ -6131,7 +6131,7 @@ func (self *Nodes_RepeatNode) InitNodes_RepeatNode(id LnsInt,pos *Parser_Positio
 }
 
 // 686: decl @lune.@base.@Nodes.RepeatNode.create
-func Nodes_RepeatNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,block *Nodes_BlockNode,exp *Nodes_Node) *Nodes_RepeatNode {
+func Nodes_RepeatNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,block *Nodes_BlockNode,exp *Nodes_Node) *Nodes_RepeatNode {
     var node *Nodes_RepeatNode
     node = NewNodes_RepeatNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, block, exp)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -6273,7 +6273,7 @@ func (self *Nodes_ForNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ForNode) InitNodes_ForNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,block *Nodes_BlockNode,val *Ast_SymbolInfo,init *Nodes_Node,to *Nodes_Node,delta LnsAny) {
+func (self *Nodes_ForNode) InitNodes_ForNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,block *Nodes_BlockNode,val *Ast_SymbolInfo,init *Nodes_Node,to *Nodes_Node,delta LnsAny) {
     self.InitNodes_Node(id, 16, pos, macroArgFlag, typeList)
     self.block = block
     
@@ -6288,7 +6288,7 @@ func (self *Nodes_ForNode) InitNodes_ForNode(id LnsInt,pos *Parser_Position,macr
 }
 
 // 686: decl @lune.@base.@Nodes.ForNode.create
-func Nodes_ForNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,block *Nodes_BlockNode,val *Ast_SymbolInfo,init *Nodes_Node,to *Nodes_Node,delta LnsAny) *Nodes_ForNode {
+func Nodes_ForNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,block *Nodes_BlockNode,val *Ast_SymbolInfo,init *Nodes_Node,to *Nodes_Node,delta LnsAny) *Nodes_ForNode {
     var node *Nodes_ForNode
     node = NewNodes_ForNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, block, val, init, to, delta)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -6450,7 +6450,7 @@ func (self *Nodes_ApplyNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ApplyNode) InitNodes_ApplyNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,varList *LnsList,expList *Nodes_ExpListNode,block *Nodes_BlockNode) {
+func (self *Nodes_ApplyNode) InitNodes_ApplyNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,varList *LnsList,expList *Nodes_ExpListNode,block *Nodes_BlockNode) {
     self.InitNodes_Node(id, 17, pos, macroArgFlag, typeList)
     self.varList = varList
     
@@ -6461,7 +6461,7 @@ func (self *Nodes_ApplyNode) InitNodes_ApplyNode(id LnsInt,pos *Parser_Position,
 }
 
 // 686: decl @lune.@base.@Nodes.ApplyNode.create
-func Nodes_ApplyNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,varList *LnsList,expList *Nodes_ExpListNode,block *Nodes_BlockNode) *Nodes_ApplyNode {
+func Nodes_ApplyNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,varList *LnsList,expList *Nodes_ExpListNode,block *Nodes_BlockNode) *Nodes_ApplyNode {
     var node *Nodes_ApplyNode
     node = NewNodes_ApplyNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, varList, expList, block)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -6608,7 +6608,7 @@ func (self *Nodes_ForeachNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ForeachNode) InitNodes_ForeachNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,val *Ast_SymbolInfo,key LnsAny,exp *Nodes_Node,threading bool,block *Nodes_BlockNode) {
+func (self *Nodes_ForeachNode) InitNodes_ForeachNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,val *Ast_SymbolInfo,key LnsAny,exp *Nodes_Node,threading bool,block *Nodes_BlockNode) {
     self.InitNodes_Node(id, 18, pos, macroArgFlag, typeList)
     self.val = val
     
@@ -6623,7 +6623,7 @@ func (self *Nodes_ForeachNode) InitNodes_ForeachNode(id LnsInt,pos *Parser_Posit
 }
 
 // 686: decl @lune.@base.@Nodes.ForeachNode.create
-func Nodes_ForeachNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,val *Ast_SymbolInfo,key LnsAny,exp *Nodes_Node,threading bool,block *Nodes_BlockNode) *Nodes_ForeachNode {
+func Nodes_ForeachNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,val *Ast_SymbolInfo,key LnsAny,exp *Nodes_Node,threading bool,block *Nodes_BlockNode) *Nodes_ForeachNode {
     var node *Nodes_ForeachNode
     node = NewNodes_ForeachNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, val, key, exp, threading, block)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -6773,7 +6773,7 @@ func (self *Nodes_ForsortNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ForsortNode) InitNodes_ForsortNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,val *Ast_SymbolInfo,key LnsAny,exp *Nodes_Node,threading bool,block *Nodes_BlockNode,sort bool) {
+func (self *Nodes_ForsortNode) InitNodes_ForsortNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,val *Ast_SymbolInfo,key LnsAny,exp *Nodes_Node,threading bool,block *Nodes_BlockNode,sort bool) {
     self.InitNodes_Node(id, 19, pos, macroArgFlag, typeList)
     self.val = val
     
@@ -6790,7 +6790,7 @@ func (self *Nodes_ForsortNode) InitNodes_ForsortNode(id LnsInt,pos *Parser_Posit
 }
 
 // 686: decl @lune.@base.@Nodes.ForsortNode.create
-func Nodes_ForsortNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,val *Ast_SymbolInfo,key LnsAny,exp *Nodes_Node,threading bool,block *Nodes_BlockNode,sort bool) *Nodes_ForsortNode {
+func Nodes_ForsortNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,val *Ast_SymbolInfo,key LnsAny,exp *Nodes_Node,threading bool,block *Nodes_BlockNode,sort bool) *Nodes_ForsortNode {
     var node *Nodes_ForsortNode
     node = NewNodes_ForsortNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, val, key, exp, threading, block, sort)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -6920,14 +6920,14 @@ func (self *Nodes_ReturnNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ReturnNode) InitNodes_ReturnNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,expList LnsAny) {
+func (self *Nodes_ReturnNode) InitNodes_ReturnNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,expList LnsAny) {
     self.InitNodes_Node(id, 20, pos, macroArgFlag, typeList)
     self.expList = expList
     
 }
 
 // 686: decl @lune.@base.@Nodes.ReturnNode.create
-func Nodes_ReturnNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,expList LnsAny) *Nodes_ReturnNode {
+func Nodes_ReturnNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,expList LnsAny) *Nodes_ReturnNode {
     var node *Nodes_ReturnNode
     node = NewNodes_ReturnNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, expList)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -7042,12 +7042,12 @@ func (self *Nodes_BreakNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_BreakNode) InitNodes_BreakNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList) {
+func (self *Nodes_BreakNode) InitNodes_BreakNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList) {
     self.InitNodes_Node(id, 21, pos, macroArgFlag, typeList)
 }
 
 // 686: decl @lune.@base.@Nodes.BreakNode.create
-func Nodes_BreakNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList) *Nodes_BreakNode {
+func Nodes_BreakNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList) *Nodes_BreakNode {
     var node *Nodes_BreakNode
     node = NewNodes_BreakNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -7150,14 +7150,14 @@ func (self *Nodes_ProvideNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ProvideNode) InitNodes_ProvideNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,symbol *Ast_SymbolInfo) {
+func (self *Nodes_ProvideNode) InitNodes_ProvideNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,symbol *Ast_SymbolInfo) {
     self.InitNodes_Node(id, 22, pos, macroArgFlag, typeList)
     self.symbol = symbol
     
 }
 
 // 686: decl @lune.@base.@Nodes.ProvideNode.create
-func Nodes_ProvideNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,symbol *Ast_SymbolInfo) *Nodes_ProvideNode {
+func Nodes_ProvideNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,symbol *Ast_SymbolInfo) *Nodes_ProvideNode {
     var node *Nodes_ProvideNode
     node = NewNodes_ProvideNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, symbol)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -7261,7 +7261,7 @@ func (self *Nodes_ExpNewNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ExpNewNode) InitNodes_ExpNewNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,symbol *Nodes_Node,ctorTypeInfo *Ast_TypeInfo,argList LnsAny) {
+func (self *Nodes_ExpNewNode) InitNodes_ExpNewNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,symbol *Nodes_Node,ctorTypeInfo *Ast_TypeInfo,argList LnsAny) {
     self.InitNodes_Node(id, 23, pos, macroArgFlag, typeList)
     self.symbol = symbol
     
@@ -7272,7 +7272,7 @@ func (self *Nodes_ExpNewNode) InitNodes_ExpNewNode(id LnsInt,pos *Parser_Positio
 }
 
 // 686: decl @lune.@base.@Nodes.ExpNewNode.create
-func Nodes_ExpNewNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,symbol *Nodes_Node,ctorTypeInfo *Ast_TypeInfo,argList LnsAny) *Nodes_ExpNewNode {
+func Nodes_ExpNewNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,symbol *Nodes_Node,ctorTypeInfo *Ast_TypeInfo,argList LnsAny) *Nodes_ExpNewNode {
     var node *Nodes_ExpNewNode
     node = NewNodes_ExpNewNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, symbol, ctorTypeInfo, argList)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -7399,7 +7399,7 @@ func (self *Nodes_ExpUnwrapNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ExpUnwrapNode) InitNodes_ExpUnwrapNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,_default LnsAny) {
+func (self *Nodes_ExpUnwrapNode) InitNodes_ExpUnwrapNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,_default LnsAny) {
     self.InitNodes_Node(id, 24, pos, macroArgFlag, typeList)
     self.exp = exp
     
@@ -7408,7 +7408,7 @@ func (self *Nodes_ExpUnwrapNode) InitNodes_ExpUnwrapNode(id LnsInt,pos *Parser_P
 }
 
 // 686: decl @lune.@base.@Nodes.ExpUnwrapNode.create
-func Nodes_ExpUnwrapNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,_default LnsAny) *Nodes_ExpUnwrapNode {
+func Nodes_ExpUnwrapNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,_default LnsAny) *Nodes_ExpUnwrapNode {
     var node *Nodes_ExpUnwrapNode
     node = NewNodes_ExpUnwrapNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, exp, _default)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -7522,14 +7522,14 @@ func (self *Nodes_ExpRefNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ExpRefNode) InitNodes_ExpRefNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,symbolInfo *Ast_SymbolInfo) {
+func (self *Nodes_ExpRefNode) InitNodes_ExpRefNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,symbolInfo *Ast_SymbolInfo) {
     self.InitNodes_Node(id, 25, pos, macroArgFlag, typeList)
     self.symbolInfo = symbolInfo
     
 }
 
 // 686: decl @lune.@base.@Nodes.ExpRefNode.create
-func Nodes_ExpRefNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,symbolInfo *Ast_SymbolInfo) *Nodes_ExpRefNode {
+func Nodes_ExpRefNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,symbolInfo *Ast_SymbolInfo) *Nodes_ExpRefNode {
     var node *Nodes_ExpRefNode
     node = NewNodes_ExpRefNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, symbolInfo)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -7668,7 +7668,7 @@ func (self *Nodes_ExpSetValNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ExpSetValNode) InitNodes_ExpSetValNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,exp1 *Nodes_Node,exp2 *Nodes_ExpListNode,LeftSymList *LnsList,initSymSet *LnsSet) {
+func (self *Nodes_ExpSetValNode) InitNodes_ExpSetValNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,exp1 *Nodes_Node,exp2 *Nodes_ExpListNode,LeftSymList *LnsList,initSymSet *LnsSet) {
     self.InitNodes_Node(id, 26, pos, macroArgFlag, typeList)
     self.exp1 = exp1
     
@@ -7681,7 +7681,7 @@ func (self *Nodes_ExpSetValNode) InitNodes_ExpSetValNode(id LnsInt,pos *Parser_P
 }
 
 // 686: decl @lune.@base.@Nodes.ExpSetValNode.create
-func Nodes_ExpSetValNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,exp1 *Nodes_Node,exp2 *Nodes_ExpListNode,LeftSymList *LnsList,initSymSet *LnsSet) *Nodes_ExpSetValNode {
+func Nodes_ExpSetValNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,exp1 *Nodes_Node,exp2 *Nodes_ExpListNode,LeftSymList *LnsList,initSymSet *LnsSet) *Nodes_ExpSetValNode {
     var node *Nodes_ExpSetValNode
     node = NewNodes_ExpSetValNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, exp1, exp2, LeftSymList, initSymSet)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -7807,7 +7807,7 @@ func (self *Nodes_ExpSetItemNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ExpSetItemNode) InitNodes_ExpSetItemNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,val *Nodes_Node,index LnsAny,exp2 *Nodes_Node) {
+func (self *Nodes_ExpSetItemNode) InitNodes_ExpSetItemNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,val *Nodes_Node,index LnsAny,exp2 *Nodes_Node) {
     self.InitNodes_Node(id, 27, pos, macroArgFlag, typeList)
     self.val = val
     
@@ -7818,7 +7818,7 @@ func (self *Nodes_ExpSetItemNode) InitNodes_ExpSetItemNode(id LnsInt,pos *Parser
 }
 
 // 686: decl @lune.@base.@Nodes.ExpSetItemNode.create
-func Nodes_ExpSetItemNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,val *Nodes_Node,index LnsAny,exp2 *Nodes_Node) *Nodes_ExpSetItemNode {
+func Nodes_ExpSetItemNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,val *Nodes_Node,index LnsAny,exp2 *Nodes_Node) *Nodes_ExpSetItemNode {
     var node *Nodes_ExpSetItemNode
     node = NewNodes_ExpSetItemNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, val, index, exp2)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -7953,7 +7953,7 @@ func (self *Nodes_ExpOp2Node) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ExpOp2Node) InitNodes_ExpOp2Node(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,op *Parser_Token,threading bool,exp1 *Nodes_Node,exp2 *Nodes_Node) {
+func (self *Nodes_ExpOp2Node) InitNodes_ExpOp2Node(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,op *Types_Token,threading bool,exp1 *Nodes_Node,exp2 *Nodes_Node) {
     self.InitNodes_Node(id, 28, pos, macroArgFlag, typeList)
     self.op = op
     
@@ -7966,7 +7966,7 @@ func (self *Nodes_ExpOp2Node) InitNodes_ExpOp2Node(id LnsInt,pos *Parser_Positio
 }
 
 // 686: decl @lune.@base.@Nodes.ExpOp2Node.create
-func Nodes_ExpOp2Node_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,op *Parser_Token,threading bool,exp1 *Nodes_Node,exp2 *Nodes_Node) *Nodes_ExpOp2Node {
+func Nodes_ExpOp2Node_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,op *Types_Token,threading bool,exp1 *Nodes_Node,exp2 *Nodes_Node) *Nodes_ExpOp2Node {
     var node *Nodes_ExpOp2Node
     node = NewNodes_ExpOp2Node(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, op, threading, exp1, exp2)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -8052,8 +8052,8 @@ func (self *Nodes_ExpOp2Node) SetupLiteralTokenList(list *LnsList) bool {
     var literal LnsAny
     literal = Nodes_convExp44494(Lns_2DDD(self.FP.GetLiteral()))
     if literal != nil{
-        literal_10884 := literal
-        switch _exp44562 := literal_10884.(type) {
+        literal_10889 := literal
+        switch _exp44562 := literal_10889.(type) {
         case *Nodes_Literal__Int:
         val := _exp44562.Val1
             self.FP.AddTokenList(list, Types_TokenKind__Int, Lns_getVM().String_format("%d", []LnsAny{val}))
@@ -8234,7 +8234,7 @@ func (self *Nodes_UnwrapSetNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_UnwrapSetNode) InitNodes_UnwrapSetNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,dstExpList *Nodes_ExpListNode,srcExpList *Nodes_ExpListNode,unwrapBlock LnsAny) {
+func (self *Nodes_UnwrapSetNode) InitNodes_UnwrapSetNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,dstExpList *Nodes_ExpListNode,srcExpList *Nodes_ExpListNode,unwrapBlock LnsAny) {
     self.InitNodes_Node(id, 29, pos, macroArgFlag, typeList)
     self.dstExpList = dstExpList
     
@@ -8245,7 +8245,7 @@ func (self *Nodes_UnwrapSetNode) InitNodes_UnwrapSetNode(id LnsInt,pos *Parser_P
 }
 
 // 686: decl @lune.@base.@Nodes.UnwrapSetNode.create
-func Nodes_UnwrapSetNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,dstExpList *Nodes_ExpListNode,srcExpList *Nodes_ExpListNode,unwrapBlock LnsAny) *Nodes_UnwrapSetNode {
+func Nodes_UnwrapSetNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,dstExpList *Nodes_ExpListNode,srcExpList *Nodes_ExpListNode,unwrapBlock LnsAny) *Nodes_UnwrapSetNode {
     var node *Nodes_UnwrapSetNode
     node = NewNodes_UnwrapSetNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, dstExpList, srcExpList, unwrapBlock)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -8389,7 +8389,7 @@ func (self *Nodes_IfUnwrapNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_IfUnwrapNode) InitNodes_IfUnwrapNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,varSymList *LnsList,expList *Nodes_ExpListNode,block *Nodes_BlockNode,nilBlock LnsAny) {
+func (self *Nodes_IfUnwrapNode) InitNodes_IfUnwrapNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,varSymList *LnsList,expList *Nodes_ExpListNode,block *Nodes_BlockNode,nilBlock LnsAny) {
     self.InitNodes_Node(id, 30, pos, macroArgFlag, typeList)
     self.varSymList = varSymList
     
@@ -8402,7 +8402,7 @@ func (self *Nodes_IfUnwrapNode) InitNodes_IfUnwrapNode(id LnsInt,pos *Parser_Pos
 }
 
 // 686: decl @lune.@base.@Nodes.IfUnwrapNode.create
-func Nodes_IfUnwrapNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,varSymList *LnsList,expList *Nodes_ExpListNode,block *Nodes_BlockNode,nilBlock LnsAny) *Nodes_IfUnwrapNode {
+func Nodes_IfUnwrapNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,varSymList *LnsList,expList *Nodes_ExpListNode,block *Nodes_BlockNode,nilBlock LnsAny) *Nodes_IfUnwrapNode {
     var node *Nodes_IfUnwrapNode
     node = NewNodes_IfUnwrapNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, varSymList, expList, block, nilBlock)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -8656,7 +8656,7 @@ func (self *Nodes_WhenNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_WhenNode) InitNodes_WhenNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,symPairList *LnsList,block *Nodes_BlockNode,elseBlock LnsAny) {
+func (self *Nodes_WhenNode) InitNodes_WhenNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,symPairList *LnsList,block *Nodes_BlockNode,elseBlock LnsAny) {
     self.InitNodes_Node(id, 31, pos, macroArgFlag, typeList)
     self.symPairList = symPairList
     
@@ -8667,7 +8667,7 @@ func (self *Nodes_WhenNode) InitNodes_WhenNode(id LnsInt,pos *Parser_Position,ma
 }
 
 // 686: decl @lune.@base.@Nodes.WhenNode.create
-func Nodes_WhenNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,symPairList *LnsList,block *Nodes_BlockNode,elseBlock LnsAny) *Nodes_WhenNode {
+func Nodes_WhenNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,symPairList *LnsList,block *Nodes_BlockNode,elseBlock LnsAny) *Nodes_WhenNode {
     var node *Nodes_WhenNode
     node = NewNodes_WhenNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, symPairList, block, elseBlock)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -8867,7 +8867,7 @@ func (self *Nodes_ExpCastNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ExpCastNode) InitNodes_ExpCastNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,castType *Ast_TypeInfo,castKind LnsInt) {
+func (self *Nodes_ExpCastNode) InitNodes_ExpCastNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,castType *Ast_TypeInfo,castKind LnsInt) {
     self.InitNodes_Node(id, 32, pos, macroArgFlag, typeList)
     self.exp = exp
     
@@ -8878,7 +8878,7 @@ func (self *Nodes_ExpCastNode) InitNodes_ExpCastNode(id LnsInt,pos *Parser_Posit
 }
 
 // 686: decl @lune.@base.@Nodes.ExpCastNode.create
-func Nodes_ExpCastNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,castType *Ast_TypeInfo,castKind LnsInt) *Nodes_ExpCastNode {
+func Nodes_ExpCastNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,castType *Ast_TypeInfo,castKind LnsInt) *Nodes_ExpCastNode {
     var node *Nodes_ExpCastNode
     node = NewNodes_ExpCastNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, exp, castType, castKind)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -9002,14 +9002,14 @@ func (self *Nodes_ExpToDDDNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ExpToDDDNode) InitNodes_ExpToDDDNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,expList *Nodes_ExpListNode) {
+func (self *Nodes_ExpToDDDNode) InitNodes_ExpToDDDNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,expList *Nodes_ExpListNode) {
     self.InitNodes_Node(id, 33, pos, macroArgFlag, typeList)
     self.expList = expList
     
 }
 
 // 686: decl @lune.@base.@Nodes.ExpToDDDNode.create
-func Nodes_ExpToDDDNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,expList *Nodes_ExpListNode) *Nodes_ExpToDDDNode {
+func Nodes_ExpToDDDNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,expList *Nodes_ExpListNode) *Nodes_ExpToDDDNode {
     var node *Nodes_ExpToDDDNode
     node = NewNodes_ExpToDDDNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, expList)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -9121,7 +9121,7 @@ func (self *Nodes_ExpSubDDDNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ExpSubDDDNode) InitNodes_ExpSubDDDNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,src *Nodes_Node,remainIndex LnsInt) {
+func (self *Nodes_ExpSubDDDNode) InitNodes_ExpSubDDDNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,src *Nodes_Node,remainIndex LnsInt) {
     self.InitNodes_Node(id, 34, pos, macroArgFlag, typeList)
     self.src = src
     
@@ -9130,7 +9130,7 @@ func (self *Nodes_ExpSubDDDNode) InitNodes_ExpSubDDDNode(id LnsInt,pos *Parser_P
 }
 
 // 686: decl @lune.@base.@Nodes.ExpSubDDDNode.create
-func Nodes_ExpSubDDDNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,src *Nodes_Node,remainIndex LnsInt) *Nodes_ExpSubDDDNode {
+func Nodes_ExpSubDDDNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,src *Nodes_Node,remainIndex LnsInt) *Nodes_ExpSubDDDNode {
     var node *Nodes_ExpSubDDDNode
     node = NewNodes_ExpSubDDDNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, src, remainIndex)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -9245,7 +9245,7 @@ func (self *Nodes_ExpOp1Node) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ExpOp1Node) InitNodes_ExpOp1Node(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,op *Parser_Token,macroMode LnsInt,exp *Nodes_Node) {
+func (self *Nodes_ExpOp1Node) InitNodes_ExpOp1Node(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,op *Types_Token,macroMode LnsInt,exp *Nodes_Node) {
     self.InitNodes_Node(id, 35, pos, macroArgFlag, typeList)
     self.op = op
     
@@ -9256,7 +9256,7 @@ func (self *Nodes_ExpOp1Node) InitNodes_ExpOp1Node(id LnsInt,pos *Parser_Positio
 }
 
 // 686: decl @lune.@base.@Nodes.ExpOp1Node.create
-func Nodes_ExpOp1Node_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,op *Parser_Token,macroMode LnsInt,exp *Nodes_Node) *Nodes_ExpOp1Node {
+func Nodes_ExpOp1Node_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,op *Types_Token,macroMode LnsInt,exp *Nodes_Node) *Nodes_ExpOp1Node {
     var node *Nodes_ExpOp1Node
     node = NewNodes_ExpOp1Node(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, op, macroMode, exp)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -9382,7 +9382,7 @@ func (self *Nodes_ExpRefItemNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ExpRefItemNode) InitNodes_ExpRefItemNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,val *Nodes_Node,nilAccess bool,threading bool,symbol LnsAny,index LnsAny) {
+func (self *Nodes_ExpRefItemNode) InitNodes_ExpRefItemNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,val *Nodes_Node,nilAccess bool,threading bool,symbol LnsAny,index LnsAny) {
     self.InitNodes_Node(id, 36, pos, macroArgFlag, typeList)
     self.val = val
     
@@ -9397,7 +9397,7 @@ func (self *Nodes_ExpRefItemNode) InitNodes_ExpRefItemNode(id LnsInt,pos *Parser
 }
 
 // 686: decl @lune.@base.@Nodes.ExpRefItemNode.create
-func Nodes_ExpRefItemNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,val *Nodes_Node,nilAccess bool,threading bool,symbol LnsAny,index LnsAny) *Nodes_ExpRefItemNode {
+func Nodes_ExpRefItemNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,val *Nodes_Node,nilAccess bool,threading bool,symbol LnsAny,index LnsAny) *Nodes_ExpRefItemNode {
     var node *Nodes_ExpRefItemNode
     node = NewNodes_ExpRefItemNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, val, nilAccess, threading, symbol, index)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -9553,7 +9553,7 @@ func (self *Nodes_ExpCallNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ExpCallNode) InitNodes_ExpCallNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,_func *Nodes_Node,errorFunc bool,nilAccess bool,threading bool,argList LnsAny) {
+func (self *Nodes_ExpCallNode) InitNodes_ExpCallNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,_func *Nodes_Node,errorFunc bool,nilAccess bool,threading bool,argList LnsAny) {
     self.InitNodes_Node(id, 37, pos, macroArgFlag, typeList)
     self._func = _func
     
@@ -9568,7 +9568,7 @@ func (self *Nodes_ExpCallNode) InitNodes_ExpCallNode(id LnsInt,pos *Parser_Posit
 }
 
 // 686: decl @lune.@base.@Nodes.ExpCallNode.create
-func Nodes_ExpCallNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,_func *Nodes_Node,errorFunc bool,nilAccess bool,threading bool,argList LnsAny) *Nodes_ExpCallNode {
+func Nodes_ExpCallNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,_func *Nodes_Node,errorFunc bool,nilAccess bool,threading bool,argList LnsAny) *Nodes_ExpCallNode {
     var node *Nodes_ExpCallNode
     node = NewNodes_ExpCallNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, _func, errorFunc, nilAccess, threading, argList)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -9722,14 +9722,14 @@ func (self *Nodes_ExpMRetNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ExpMRetNode) InitNodes_ExpMRetNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,mRet *Nodes_Node) {
+func (self *Nodes_ExpMRetNode) InitNodes_ExpMRetNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,mRet *Nodes_Node) {
     self.InitNodes_Node(id, 38, pos, macroArgFlag, typeList)
     self.mRet = mRet
     
 }
 
 // 686: decl @lune.@base.@Nodes.ExpMRetNode.create
-func Nodes_ExpMRetNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,mRet *Nodes_Node) *Nodes_ExpMRetNode {
+func Nodes_ExpMRetNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,mRet *Nodes_Node) *Nodes_ExpMRetNode {
     var node *Nodes_ExpMRetNode
     node = NewNodes_ExpMRetNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, mRet)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -9846,7 +9846,7 @@ func (self *Nodes_ExpAccessMRetNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ExpAccessMRetNode) InitNodes_ExpAccessMRetNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,mRet *Nodes_Node,index LnsInt) {
+func (self *Nodes_ExpAccessMRetNode) InitNodes_ExpAccessMRetNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,mRet *Nodes_Node,index LnsInt) {
     self.InitNodes_Node(id, 39, pos, macroArgFlag, typeList)
     self.mRet = mRet
     
@@ -9855,7 +9855,7 @@ func (self *Nodes_ExpAccessMRetNode) InitNodes_ExpAccessMRetNode(id LnsInt,pos *
 }
 
 // 686: decl @lune.@base.@Nodes.ExpAccessMRetNode.create
-func Nodes_ExpAccessMRetNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,mRet *Nodes_Node,index LnsInt) *Nodes_ExpAccessMRetNode {
+func Nodes_ExpAccessMRetNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,mRet *Nodes_Node,index LnsInt) *Nodes_ExpAccessMRetNode {
     var node *Nodes_ExpAccessMRetNode
     node = NewNodes_ExpAccessMRetNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, mRet, index)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -9969,14 +9969,14 @@ func (self *Nodes_ExpMultiTo1Node) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ExpMultiTo1Node) InitNodes_ExpMultiTo1Node(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
+func (self *Nodes_ExpMultiTo1Node) InitNodes_ExpMultiTo1Node(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
     self.InitNodes_Node(id, 40, pos, macroArgFlag, typeList)
     self.exp = exp
     
 }
 
 // 686: decl @lune.@base.@Nodes.ExpMultiTo1Node.create
-func Nodes_ExpMultiTo1Node_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) *Nodes_ExpMultiTo1Node {
+func Nodes_ExpMultiTo1Node_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) *Nodes_ExpMultiTo1Node {
     var node *Nodes_ExpMultiTo1Node
     node = NewNodes_ExpMultiTo1Node(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, exp)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -10090,14 +10090,14 @@ func (self *Nodes_ExpParenNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ExpParenNode) InitNodes_ExpParenNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
+func (self *Nodes_ExpParenNode) InitNodes_ExpParenNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
     self.InitNodes_Node(id, 41, pos, macroArgFlag, typeList)
     self.exp = exp
     
 }
 
 // 686: decl @lune.@base.@Nodes.ExpParenNode.create
-func Nodes_ExpParenNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) *Nodes_ExpParenNode {
+func Nodes_ExpParenNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) *Nodes_ExpParenNode {
     var node *Nodes_ExpParenNode
     node = NewNodes_ExpParenNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, exp)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -10211,14 +10211,14 @@ func (self *Nodes_ExpMacroExpNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ExpMacroExpNode) InitNodes_ExpMacroExpNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,stmtList *LnsList) {
+func (self *Nodes_ExpMacroExpNode) InitNodes_ExpMacroExpNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,stmtList *LnsList) {
     self.InitNodes_Node(id, 42, pos, macroArgFlag, typeList)
     self.stmtList = stmtList
     
 }
 
 // 686: decl @lune.@base.@Nodes.ExpMacroExpNode.create
-func Nodes_ExpMacroExpNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,stmtList *LnsList) *Nodes_ExpMacroExpNode {
+func Nodes_ExpMacroExpNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,stmtList *LnsList) *Nodes_ExpMacroExpNode {
     var node *Nodes_ExpMacroExpNode
     node = NewNodes_ExpMacroExpNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, stmtList)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -10340,14 +10340,14 @@ func (self *Nodes_ExpMacroStatNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ExpMacroStatNode) InitNodes_ExpMacroStatNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,expStrList *LnsList) {
+func (self *Nodes_ExpMacroStatNode) InitNodes_ExpMacroStatNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,expStrList *LnsList) {
     self.InitNodes_Node(id, 43, pos, macroArgFlag, typeList)
     self.expStrList = expStrList
     
 }
 
 // 686: decl @lune.@base.@Nodes.ExpMacroStatNode.create
-func Nodes_ExpMacroStatNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,expStrList *LnsList) *Nodes_ExpMacroStatNode {
+func Nodes_ExpMacroStatNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,expStrList *LnsList) *Nodes_ExpMacroStatNode {
     var node *Nodes_ExpMacroStatNode
     node = NewNodes_ExpMacroStatNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, expStrList)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -10382,8 +10382,8 @@ func (self *Nodes_ExpMacroStatNode) GetLiteral()(LnsAny, LnsAny) {
         var literal LnsAny
         literal = Nodes_convExp44087(Lns_2DDD(token.FP.GetLiteral()))
         if literal != nil{
-            literal_10825 := literal
-            switch _exp44109 := literal_10825.(type) {
+            literal_10830 := literal
+            switch _exp44109 := literal_10830.(type) {
             case *Nodes_Literal__Str:
             work := _exp44109.Val1
                 txt = Lns_getVM().String_format("%s%s", []LnsAny{txt, work})
@@ -10482,14 +10482,14 @@ func (self *Nodes_ExpMacroArgExpNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ExpMacroArgExpNode) InitNodes_ExpMacroArgExpNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,codeTxt string) {
+func (self *Nodes_ExpMacroArgExpNode) InitNodes_ExpMacroArgExpNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,codeTxt string) {
     self.InitNodes_Node(id, 44, pos, macroArgFlag, typeList)
     self.codeTxt = codeTxt
     
 }
 
 // 686: decl @lune.@base.@Nodes.ExpMacroArgExpNode.create
-func Nodes_ExpMacroArgExpNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,codeTxt string) *Nodes_ExpMacroArgExpNode {
+func Nodes_ExpMacroArgExpNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,codeTxt string) *Nodes_ExpMacroArgExpNode {
     var node *Nodes_ExpMacroArgExpNode
     node = NewNodes_ExpMacroArgExpNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, codeTxt)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -10587,14 +10587,14 @@ func (self *Nodes_StmtExpNode) CanBeLeft() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_StmtExpNode) InitNodes_StmtExpNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
+func (self *Nodes_StmtExpNode) InitNodes_StmtExpNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
     self.InitNodes_Node(id, 45, pos, macroArgFlag, typeList)
     self.exp = exp
     
 }
 
 // 686: decl @lune.@base.@Nodes.StmtExpNode.create
-func Nodes_StmtExpNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) *Nodes_StmtExpNode {
+func Nodes_StmtExpNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) *Nodes_StmtExpNode {
     var node *Nodes_StmtExpNode
     node = NewNodes_StmtExpNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, exp)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -10713,14 +10713,14 @@ func (self *Nodes_ExpMacroStatListNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ExpMacroStatListNode) InitNodes_ExpMacroStatListNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
+func (self *Nodes_ExpMacroStatListNode) InitNodes_ExpMacroStatListNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
     self.InitNodes_Node(id, 46, pos, macroArgFlag, typeList)
     self.exp = exp
     
 }
 
 // 686: decl @lune.@base.@Nodes.ExpMacroStatListNode.create
-func Nodes_ExpMacroStatListNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) *Nodes_ExpMacroStatListNode {
+func Nodes_ExpMacroStatListNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) *Nodes_ExpMacroStatListNode {
     var node *Nodes_ExpMacroStatListNode
     node = NewNodes_ExpMacroStatListNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, exp)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -10838,7 +10838,7 @@ func (self *Nodes_ExpOmitEnumNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ExpOmitEnumNode) InitNodes_ExpOmitEnumNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,valToken *Parser_Token,valInfo *Ast_EnumValInfo,aliasType LnsAny,enumTypeInfo *Ast_EnumTypeInfo) {
+func (self *Nodes_ExpOmitEnumNode) InitNodes_ExpOmitEnumNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,valToken *Types_Token,valInfo *Ast_EnumValInfo,aliasType LnsAny,enumTypeInfo *Ast_EnumTypeInfo) {
     self.InitNodes_Node(id, 47, pos, macroArgFlag, typeList)
     self.valToken = valToken
     
@@ -10851,7 +10851,7 @@ func (self *Nodes_ExpOmitEnumNode) InitNodes_ExpOmitEnumNode(id LnsInt,pos *Pars
 }
 
 // 686: decl @lune.@base.@Nodes.ExpOmitEnumNode.create
-func Nodes_ExpOmitEnumNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,valToken *Parser_Token,valInfo *Ast_EnumValInfo,aliasType LnsAny,enumTypeInfo *Ast_EnumTypeInfo) *Nodes_ExpOmitEnumNode {
+func Nodes_ExpOmitEnumNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,valToken *Types_Token,valInfo *Ast_EnumValInfo,aliasType LnsAny,enumTypeInfo *Ast_EnumTypeInfo) *Nodes_ExpOmitEnumNode {
     var node *Nodes_ExpOmitEnumNode
     node = NewNodes_ExpOmitEnumNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, valToken, valInfo, aliasType, enumTypeInfo)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -10977,7 +10977,7 @@ func (self *Nodes_RefFieldNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_RefFieldNode) InitNodes_RefFieldNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,field *Parser_Token,symbolInfo LnsAny,nilAccess bool,threading bool,prefix *Nodes_Node) {
+func (self *Nodes_RefFieldNode) InitNodes_RefFieldNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,field *Types_Token,symbolInfo LnsAny,nilAccess bool,threading bool,prefix *Nodes_Node) {
     self.InitNodes_Node(id, 48, pos, macroArgFlag, typeList)
     self.field = field
     
@@ -10992,7 +10992,7 @@ func (self *Nodes_RefFieldNode) InitNodes_RefFieldNode(id LnsInt,pos *Parser_Pos
 }
 
 // 686: decl @lune.@base.@Nodes.RefFieldNode.create
-func Nodes_RefFieldNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,field *Parser_Token,symbolInfo LnsAny,nilAccess bool,threading bool,prefix *Nodes_Node) *Nodes_RefFieldNode {
+func Nodes_RefFieldNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,field *Types_Token,symbolInfo LnsAny,nilAccess bool,threading bool,prefix *Nodes_Node) *Nodes_RefFieldNode {
     var node *Nodes_RefFieldNode
     node = NewNodes_RefFieldNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, threading, prefix)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -11070,8 +11070,8 @@ func (self *Nodes_RefFieldNode) GetLiteral()(LnsAny, LnsAny) {
     var mess LnsAny
     literal,mess = self.prefix.FP.GetLiteral()
     if literal != nil{
-        literal_10805 := literal
-        switch _exp44008 := literal_10805.(type) {
+        literal_10810 := literal
+        switch _exp44008 := literal_10810.(type) {
         case *Nodes_Literal__Symbol:
         symbol := _exp44008.Val1
             tokenList.Insert(symbol)
@@ -11082,7 +11082,7 @@ func (self *Nodes_RefFieldNode) GetLiteral()(LnsAny, LnsAny) {
                 tokenList.Insert(symbol)
             }
         default:
-            return nil, Lns_getVM().String_format("not support -- %s", []LnsAny{literal_10805.(LnsAlgeVal).GetTxt()})
+            return nil, Lns_getVM().String_format("not support -- %s", []LnsAny{literal_10810.(LnsAlgeVal).GetTxt()})
         }
         if self.nilAccess{
             tokenList.Insert("$.")
@@ -11201,7 +11201,7 @@ func (self *Nodes_GetFieldNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_GetFieldNode) InitNodes_GetFieldNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,field *Parser_Token,symbolInfo LnsAny,nilAccess bool,threading bool,prefix *Nodes_Node,getterTypeInfo *Ast_TypeInfo) {
+func (self *Nodes_GetFieldNode) InitNodes_GetFieldNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,field *Types_Token,symbolInfo LnsAny,nilAccess bool,threading bool,prefix *Nodes_Node,getterTypeInfo *Ast_TypeInfo) {
     self.InitNodes_Node(id, 49, pos, macroArgFlag, typeList)
     self.field = field
     
@@ -11218,7 +11218,7 @@ func (self *Nodes_GetFieldNode) InitNodes_GetFieldNode(id LnsInt,pos *Parser_Pos
 }
 
 // 686: decl @lune.@base.@Nodes.GetFieldNode.create
-func Nodes_GetFieldNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,field *Parser_Token,symbolInfo LnsAny,nilAccess bool,threading bool,prefix *Nodes_Node,getterTypeInfo *Ast_TypeInfo) *Nodes_GetFieldNode {
+func Nodes_GetFieldNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,field *Types_Token,symbolInfo LnsAny,nilAccess bool,threading bool,prefix *Nodes_Node,getterTypeInfo *Ast_TypeInfo) *Nodes_GetFieldNode {
     var node *Nodes_GetFieldNode
     node = NewNodes_GetFieldNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, threading, prefix, getterTypeInfo)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -11355,7 +11355,7 @@ func (self *Nodes_AliasNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_AliasNode) InitNodes_AliasNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,newSymbol *Ast_SymbolInfo,srcNode *Nodes_Node,typeInfo *Ast_TypeInfo) {
+func (self *Nodes_AliasNode) InitNodes_AliasNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,newSymbol *Ast_SymbolInfo,srcNode *Nodes_Node,typeInfo *Ast_TypeInfo) {
     self.InitNodes_Node(id, 50, pos, macroArgFlag, typeList)
     self.newSymbol = newSymbol
     
@@ -11366,7 +11366,7 @@ func (self *Nodes_AliasNode) InitNodes_AliasNode(id LnsInt,pos *Parser_Position,
 }
 
 // 686: decl @lune.@base.@Nodes.AliasNode.create
-func Nodes_AliasNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,newSymbol *Ast_SymbolInfo,srcNode *Nodes_Node,typeInfo *Ast_TypeInfo) *Nodes_AliasNode {
+func Nodes_AliasNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,newSymbol *Ast_SymbolInfo,srcNode *Nodes_Node,typeInfo *Ast_TypeInfo) *Nodes_AliasNode {
     var node *Nodes_AliasNode
     node = NewNodes_AliasNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, newSymbol, srcNode, typeInfo)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -11555,7 +11555,7 @@ func (self *Nodes_DeclVarNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_DeclVarNode) InitNodes_DeclVarNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,mode LnsInt,accessMode Ast_AccessMode,staticFlag bool,varList *LnsList,expList LnsAny,symbolInfoList *LnsList,typeInfoList *LnsList,unwrapFlag bool,unwrapBlock LnsAny,thenBlock LnsAny,syncVarList *LnsList,syncBlock LnsAny) {
+func (self *Nodes_DeclVarNode) InitNodes_DeclVarNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,mode LnsInt,accessMode LnsInt,staticFlag bool,varList *LnsList,expList LnsAny,symbolInfoList *LnsList,typeInfoList *LnsList,unwrapFlag bool,unwrapBlock LnsAny,thenBlock LnsAny,syncVarList *LnsList,syncBlock LnsAny) {
     self.InitNodes_Node(id, 51, pos, macroArgFlag, typeList)
     self.mode = mode
     
@@ -11584,7 +11584,7 @@ func (self *Nodes_DeclVarNode) InitNodes_DeclVarNode(id LnsInt,pos *Parser_Posit
 }
 
 // 686: decl @lune.@base.@Nodes.DeclVarNode.create
-func Nodes_DeclVarNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,mode LnsInt,accessMode Ast_AccessMode,staticFlag bool,varList *LnsList,expList LnsAny,symbolInfoList *LnsList,typeInfoList *LnsList,unwrapFlag bool,unwrapBlock LnsAny,thenBlock LnsAny,syncVarList *LnsList,syncBlock LnsAny) *Nodes_DeclVarNode {
+func Nodes_DeclVarNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,mode LnsInt,accessMode LnsInt,staticFlag bool,varList *LnsList,expList LnsAny,symbolInfoList *LnsList,typeInfoList *LnsList,unwrapFlag bool,unwrapBlock LnsAny,thenBlock LnsAny,syncVarList *LnsList,syncBlock LnsAny) *Nodes_DeclVarNode {
     var node *Nodes_DeclVarNode
     node = NewNodes_DeclVarNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -11859,14 +11859,14 @@ func (self *Nodes_DeclFormNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_DeclFormNode) InitNodes_DeclFormNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,argList *LnsList) {
+func (self *Nodes_DeclFormNode) InitNodes_DeclFormNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,argList *LnsList) {
     self.InitNodes_Node(id, 52, pos, macroArgFlag, typeList)
     self.argList = argList
     
 }
 
 // 686: decl @lune.@base.@Nodes.DeclFormNode.create
-func Nodes_DeclFormNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,argList *LnsList) *Nodes_DeclFormNode {
+func Nodes_DeclFormNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,argList *LnsList) *Nodes_DeclFormNode {
     var node *Nodes_DeclFormNode
     node = NewNodes_DeclFormNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, argList)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -11976,7 +11976,7 @@ func (self *Nodes_DeclFuncInfo) Get_retTypeInfoList() *LnsList{ return self.retT
 func (self *Nodes_DeclFuncInfo) Get_has__func__Symbol() bool{ return self.has__func__Symbol }
 func (self *Nodes_DeclFuncInfo) Get_overrideFlag() bool{ return self.overrideFlag }
 // 1766: decl @lune.@base.@Nodes.DeclFuncInfo.createFrom
-func Nodes_DeclFuncInfo_createFrom(info *Nodes_DeclFuncInfo,name *Parser_Token,symbol *Ast_SymbolInfo) *Nodes_DeclFuncInfo {
+func Nodes_DeclFuncInfo_createFrom(info *Nodes_DeclFuncInfo,name *Types_Token,symbol *Ast_SymbolInfo) *Nodes_DeclFuncInfo {
     return NewNodes_DeclFuncInfo(info.FP.Get_kind(), info.classTypeInfo, info.declClassNode, name, symbol, info.argList, info.staticFlag, info.accessMode, info.body, info.retTypeInfoList, info.has__func__Symbol, info.overrideFlag)
 }
 
@@ -12056,14 +12056,14 @@ func (self *Nodes_DeclFuncNode) CanBeLeft() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_DeclFuncNode) InitNodes_DeclFuncNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
+func (self *Nodes_DeclFuncNode) InitNodes_DeclFuncNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
     self.InitNodes_Node(id, 53, pos, macroArgFlag, typeList)
     self.declInfo = declInfo
     
 }
 
 // 686: decl @lune.@base.@Nodes.DeclFuncNode.create
-func Nodes_DeclFuncNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) *Nodes_DeclFuncNode {
+func Nodes_DeclFuncNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) *Nodes_DeclFuncNode {
     var node *Nodes_DeclFuncNode
     node = NewNodes_DeclFuncNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, declInfo)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -12186,14 +12186,14 @@ func (self *Nodes_DeclMethodNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_DeclMethodNode) InitNodes_DeclMethodNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
+func (self *Nodes_DeclMethodNode) InitNodes_DeclMethodNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
     self.InitNodes_Node(id, 54, pos, macroArgFlag, typeList)
     self.declInfo = declInfo
     
 }
 
 // 686: decl @lune.@base.@Nodes.DeclMethodNode.create
-func Nodes_DeclMethodNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) *Nodes_DeclMethodNode {
+func Nodes_DeclMethodNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) *Nodes_DeclMethodNode {
     var node *Nodes_DeclMethodNode
     node = NewNodes_DeclMethodNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, declInfo)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -12306,14 +12306,14 @@ func (self *Nodes_ProtoMethodNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ProtoMethodNode) InitNodes_ProtoMethodNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
+func (self *Nodes_ProtoMethodNode) InitNodes_ProtoMethodNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
     self.InitNodes_Node(id, 55, pos, macroArgFlag, typeList)
     self.declInfo = declInfo
     
 }
 
 // 686: decl @lune.@base.@Nodes.ProtoMethodNode.create
-func Nodes_ProtoMethodNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) *Nodes_ProtoMethodNode {
+func Nodes_ProtoMethodNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) *Nodes_ProtoMethodNode {
     var node *Nodes_ProtoMethodNode
     node = NewNodes_ProtoMethodNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, declInfo)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -12426,14 +12426,14 @@ func (self *Nodes_DeclConstrNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_DeclConstrNode) InitNodes_DeclConstrNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
+func (self *Nodes_DeclConstrNode) InitNodes_DeclConstrNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
     self.InitNodes_Node(id, 56, pos, macroArgFlag, typeList)
     self.declInfo = declInfo
     
 }
 
 // 686: decl @lune.@base.@Nodes.DeclConstrNode.create
-func Nodes_DeclConstrNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) *Nodes_DeclConstrNode {
+func Nodes_DeclConstrNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) *Nodes_DeclConstrNode {
     var node *Nodes_DeclConstrNode
     node = NewNodes_DeclConstrNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, declInfo)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -12546,14 +12546,14 @@ func (self *Nodes_DeclDestrNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_DeclDestrNode) InitNodes_DeclDestrNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
+func (self *Nodes_DeclDestrNode) InitNodes_DeclDestrNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
     self.InitNodes_Node(id, 57, pos, macroArgFlag, typeList)
     self.declInfo = declInfo
     
 }
 
 // 686: decl @lune.@base.@Nodes.DeclDestrNode.create
-func Nodes_DeclDestrNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) *Nodes_DeclDestrNode {
+func Nodes_DeclDestrNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) *Nodes_DeclDestrNode {
     var node *Nodes_DeclDestrNode
     node = NewNodes_DeclDestrNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, declInfo)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -12672,7 +12672,7 @@ func (self *Nodes_ExpCallSuperCtorNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ExpCallSuperCtorNode) InitNodes_ExpCallSuperCtorNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,superType *Ast_TypeInfo,methodType *Ast_TypeInfo,expList LnsAny) {
+func (self *Nodes_ExpCallSuperCtorNode) InitNodes_ExpCallSuperCtorNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,superType *Ast_TypeInfo,methodType *Ast_TypeInfo,expList LnsAny) {
     self.InitNodes_Node(id, 58, pos, macroArgFlag, typeList)
     self.superType = superType
     
@@ -12683,7 +12683,7 @@ func (self *Nodes_ExpCallSuperCtorNode) InitNodes_ExpCallSuperCtorNode(id LnsInt
 }
 
 // 686: decl @lune.@base.@Nodes.ExpCallSuperCtorNode.create
-func Nodes_ExpCallSuperCtorNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,superType *Ast_TypeInfo,methodType *Ast_TypeInfo,expList LnsAny) *Nodes_ExpCallSuperCtorNode {
+func Nodes_ExpCallSuperCtorNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,superType *Ast_TypeInfo,methodType *Ast_TypeInfo,expList LnsAny) *Nodes_ExpCallSuperCtorNode {
     var node *Nodes_ExpCallSuperCtorNode
     node = NewNodes_ExpCallSuperCtorNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, superType, methodType, expList)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -12797,7 +12797,7 @@ func (self *Nodes_ExpCallSuperNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ExpCallSuperNode) InitNodes_ExpCallSuperNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,superType *Ast_TypeInfo,methodType *Ast_TypeInfo,expList LnsAny) {
+func (self *Nodes_ExpCallSuperNode) InitNodes_ExpCallSuperNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,superType *Ast_TypeInfo,methodType *Ast_TypeInfo,expList LnsAny) {
     self.InitNodes_Node(id, 59, pos, macroArgFlag, typeList)
     self.superType = superType
     
@@ -12808,7 +12808,7 @@ func (self *Nodes_ExpCallSuperNode) InitNodes_ExpCallSuperNode(id LnsInt,pos *Pa
 }
 
 // 686: decl @lune.@base.@Nodes.ExpCallSuperNode.create
-func Nodes_ExpCallSuperNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,superType *Ast_TypeInfo,methodType *Ast_TypeInfo,expList LnsAny) *Nodes_ExpCallSuperNode {
+func Nodes_ExpCallSuperNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,superType *Ast_TypeInfo,methodType *Ast_TypeInfo,expList LnsAny) *Nodes_ExpCallSuperNode {
     var node *Nodes_ExpCallSuperNode
     node = NewNodes_ExpCallSuperNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, superType, methodType, expList)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -12953,7 +12953,7 @@ func (self *Nodes_DeclMemberNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_DeclMemberNode) InitNodes_DeclMemberNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,name *Parser_Token,refType *Nodes_RefTypeNode,symbolInfo *Ast_SymbolInfo,classType *Ast_TypeInfo,staticFlag bool,accessMode Ast_AccessMode,getterMutable bool,getterMode Ast_AccessMode,getterRetType *Ast_TypeInfo,setterMode Ast_AccessMode) {
+func (self *Nodes_DeclMemberNode) InitNodes_DeclMemberNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,name *Types_Token,refType *Nodes_RefTypeNode,symbolInfo *Ast_SymbolInfo,classType *Ast_TypeInfo,staticFlag bool,accessMode LnsInt,getterMutable bool,getterMode LnsInt,getterRetType *Ast_TypeInfo,setterMode LnsInt) {
     self.InitNodes_Node(id, 60, pos, macroArgFlag, typeList)
     self.name = name
     
@@ -12978,7 +12978,7 @@ func (self *Nodes_DeclMemberNode) InitNodes_DeclMemberNode(id LnsInt,pos *Parser
 }
 
 // 686: decl @lune.@base.@Nodes.DeclMemberNode.create
-func Nodes_DeclMemberNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,name *Parser_Token,refType *Nodes_RefTypeNode,symbolInfo *Ast_SymbolInfo,classType *Ast_TypeInfo,staticFlag bool,accessMode Ast_AccessMode,getterMutable bool,getterMode Ast_AccessMode,getterRetType *Ast_TypeInfo,setterMode Ast_AccessMode) *Nodes_DeclMemberNode {
+func Nodes_DeclMemberNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,name *Types_Token,refType *Nodes_RefTypeNode,symbolInfo *Ast_SymbolInfo,classType *Ast_TypeInfo,staticFlag bool,accessMode LnsInt,getterMutable bool,getterMode LnsInt,getterRetType *Ast_TypeInfo,setterMode LnsInt) *Nodes_DeclMemberNode {
     var node *Nodes_DeclMemberNode
     node = NewNodes_DeclMemberNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, name, refType, symbolInfo, classType, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -13093,7 +13093,7 @@ func (self *Nodes_DeclArgNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_DeclArgNode) InitNodes_DeclArgNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,name *Parser_Token,symbolInfo *Ast_SymbolInfo,argType LnsAny) {
+func (self *Nodes_DeclArgNode) InitNodes_DeclArgNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,name *Types_Token,symbolInfo *Ast_SymbolInfo,argType LnsAny) {
     self.InitNodes_Node(id, 61, pos, macroArgFlag, typeList)
     self.name = name
     
@@ -13104,7 +13104,7 @@ func (self *Nodes_DeclArgNode) InitNodes_DeclArgNode(id LnsInt,pos *Parser_Posit
 }
 
 // 686: decl @lune.@base.@Nodes.DeclArgNode.create
-func Nodes_DeclArgNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,name *Parser_Token,symbolInfo *Ast_SymbolInfo,argType LnsAny) *Nodes_DeclArgNode {
+func Nodes_DeclArgNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,name *Types_Token,symbolInfo *Ast_SymbolInfo,argType LnsAny) *Nodes_DeclArgNode {
     var node *Nodes_DeclArgNode
     node = NewNodes_DeclArgNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, name, symbolInfo, argType)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -13214,12 +13214,12 @@ func (self *Nodes_DeclArgDDDNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_DeclArgDDDNode) InitNodes_DeclArgDDDNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList) {
+func (self *Nodes_DeclArgDDDNode) InitNodes_DeclArgDDDNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList) {
     self.InitNodes_Node(id, 62, pos, macroArgFlag, typeList)
 }
 
 // 686: decl @lune.@base.@Nodes.DeclArgDDDNode.create
-func Nodes_DeclArgDDDNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList) *Nodes_DeclArgDDDNode {
+func Nodes_DeclArgDDDNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList) *Nodes_DeclArgDDDNode {
     var node *Nodes_DeclArgDDDNode
     node = NewNodes_DeclArgDDDNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -13364,14 +13364,14 @@ func (self *Nodes_DeclAdvertiseNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_DeclAdvertiseNode) InitNodes_DeclAdvertiseNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,advInfo *Nodes_AdvertiseInfo) {
+func (self *Nodes_DeclAdvertiseNode) InitNodes_DeclAdvertiseNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,advInfo *Nodes_AdvertiseInfo) {
     self.InitNodes_Node(id, 63, pos, macroArgFlag, typeList)
     self.advInfo = advInfo
     
 }
 
 // 686: decl @lune.@base.@Nodes.DeclAdvertiseNode.create
-func Nodes_DeclAdvertiseNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,advInfo *Nodes_AdvertiseInfo) *Nodes_DeclAdvertiseNode {
+func Nodes_DeclAdvertiseNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,advInfo *Nodes_AdvertiseInfo) *Nodes_DeclAdvertiseNode {
     var node *Nodes_DeclAdvertiseNode
     node = NewNodes_DeclAdvertiseNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, advInfo)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -13469,14 +13469,14 @@ func (self *Nodes_ProtoClassNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_ProtoClassNode) InitNodes_ProtoClassNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,name *Parser_Token) {
+func (self *Nodes_ProtoClassNode) InitNodes_ProtoClassNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,name *Types_Token) {
     self.InitNodes_Node(id, 64, pos, macroArgFlag, typeList)
     self.name = name
     
 }
 
 // 686: decl @lune.@base.@Nodes.ProtoClassNode.create
-func Nodes_ProtoClassNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,name *Parser_Token) *Nodes_ProtoClassNode {
+func Nodes_ProtoClassNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,name *Types_Token) *Nodes_ProtoClassNode {
     var node *Nodes_ProtoClassNode
     node = NewNodes_ProtoClassNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, name)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -13670,7 +13670,7 @@ func (self *Nodes_DeclClassNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_DeclClassNode) InitNodes_DeclClassNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,accessMode Ast_AccessMode,name *Parser_Token,hasPrototype bool,gluePrefix LnsAny,moduleName LnsAny,lang LnsAny,lazyLoad LnsInt,hasOldCtor bool,allStmtList *LnsList,declStmtList *LnsList,fieldList *LnsList,memberList *LnsList,scope *Ast_Scope,initBlock *Nodes_ClassInitBlockInfo,advertiseList *LnsList,trustList *LnsList,uninitMemberList *LnsList,outerMethodSet *LnsSet) {
+func (self *Nodes_DeclClassNode) InitNodes_DeclClassNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,accessMode LnsInt,name *Types_Token,hasPrototype bool,gluePrefix LnsAny,moduleName LnsAny,lang LnsAny,lazyLoad LnsInt,hasOldCtor bool,allStmtList *LnsList,declStmtList *LnsList,fieldList *LnsList,memberList *LnsList,scope *Ast_Scope,initBlock *Nodes_ClassInitBlockInfo,advertiseList *LnsList,trustList *LnsList,uninitMemberList *LnsList,outerMethodSet *LnsSet) {
     self.InitNodes_Node(id, 65, pos, macroArgFlag, typeList)
     self.accessMode = accessMode
     
@@ -13711,7 +13711,7 @@ func (self *Nodes_DeclClassNode) InitNodes_DeclClassNode(id LnsInt,pos *Parser_P
 }
 
 // 686: decl @lune.@base.@Nodes.DeclClassNode.create
-func Nodes_DeclClassNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,accessMode Ast_AccessMode,name *Parser_Token,hasPrototype bool,gluePrefix LnsAny,moduleName LnsAny,lang LnsAny,lazyLoad LnsInt,hasOldCtor bool,allStmtList *LnsList,declStmtList *LnsList,fieldList *LnsList,memberList *LnsList,scope *Ast_Scope,initBlock *Nodes_ClassInitBlockInfo,advertiseList *LnsList,trustList *LnsList,uninitMemberList *LnsList,outerMethodSet *LnsSet) *Nodes_DeclClassNode {
+func Nodes_DeclClassNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,accessMode LnsInt,name *Types_Token,hasPrototype bool,gluePrefix LnsAny,moduleName LnsAny,lang LnsAny,lazyLoad LnsInt,hasOldCtor bool,allStmtList *LnsList,declStmtList *LnsList,fieldList *LnsList,memberList *LnsList,scope *Ast_Scope,initBlock *Nodes_ClassInitBlockInfo,advertiseList *LnsList,trustList *LnsList,uninitMemberList *LnsList,outerMethodSet *LnsSet) *Nodes_DeclClassNode {
     var node *Nodes_DeclClassNode
     node = NewNodes_DeclClassNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, accessMode, name, hasPrototype, gluePrefix, moduleName, lang, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -13935,7 +13935,7 @@ func (self *Nodes_DeclEnumNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_DeclEnumNode) InitNodes_DeclEnumNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,enumType *Ast_EnumTypeInfo,accessMode Ast_AccessMode,name *Parser_Token,valueNameList *LnsList,scope *Ast_Scope) {
+func (self *Nodes_DeclEnumNode) InitNodes_DeclEnumNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,enumType *Ast_EnumTypeInfo,accessMode LnsInt,name *Types_Token,valueNameList *LnsList,scope *Ast_Scope) {
     self.InitNodes_Node(id, 66, pos, macroArgFlag, typeList)
     self.enumType = enumType
     
@@ -13950,7 +13950,7 @@ func (self *Nodes_DeclEnumNode) InitNodes_DeclEnumNode(id LnsInt,pos *Parser_Pos
 }
 
 // 686: decl @lune.@base.@Nodes.DeclEnumNode.create
-func Nodes_DeclEnumNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,enumType *Ast_EnumTypeInfo,accessMode Ast_AccessMode,name *Parser_Token,valueNameList *LnsList,scope *Ast_Scope) *Nodes_DeclEnumNode {
+func Nodes_DeclEnumNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,enumType *Ast_EnumTypeInfo,accessMode LnsInt,name *Types_Token,valueNameList *LnsList,scope *Ast_Scope) *Nodes_DeclEnumNode {
     var node *Nodes_DeclEnumNode
     node = NewNodes_DeclEnumNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, enumType, accessMode, name, valueNameList, scope)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -14054,7 +14054,7 @@ func (self *Nodes_DeclAlgeNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_DeclAlgeNode) InitNodes_DeclAlgeNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,accessMode Ast_AccessMode,algeType *Ast_AlgeTypeInfo,scope *Ast_Scope) {
+func (self *Nodes_DeclAlgeNode) InitNodes_DeclAlgeNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,accessMode LnsInt,algeType *Ast_AlgeTypeInfo,scope *Ast_Scope) {
     self.InitNodes_Node(id, 67, pos, macroArgFlag, typeList)
     self.accessMode = accessMode
     
@@ -14065,7 +14065,7 @@ func (self *Nodes_DeclAlgeNode) InitNodes_DeclAlgeNode(id LnsInt,pos *Parser_Pos
 }
 
 // 686: decl @lune.@base.@Nodes.DeclAlgeNode.create
-func Nodes_DeclAlgeNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,accessMode Ast_AccessMode,algeType *Ast_AlgeTypeInfo,scope *Ast_Scope) *Nodes_DeclAlgeNode {
+func Nodes_DeclAlgeNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,accessMode LnsInt,algeType *Ast_AlgeTypeInfo,scope *Ast_Scope) *Nodes_DeclAlgeNode {
     var node *Nodes_DeclAlgeNode
     node = NewNodes_DeclAlgeNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, accessMode, algeType, scope)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -14175,7 +14175,7 @@ func (self *Nodes_NewAlgeValNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_NewAlgeValNode) InitNodes_NewAlgeValNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,name *Parser_Token,prefix LnsAny,algeTypeInfo *Ast_AlgeTypeInfo,valInfo *Ast_AlgeValInfo,paramList *LnsList) {
+func (self *Nodes_NewAlgeValNode) InitNodes_NewAlgeValNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,name *Types_Token,prefix LnsAny,algeTypeInfo *Ast_AlgeTypeInfo,valInfo *Ast_AlgeValInfo,paramList *LnsList) {
     self.InitNodes_Node(id, 68, pos, macroArgFlag, typeList)
     self.name = name
     
@@ -14190,7 +14190,7 @@ func (self *Nodes_NewAlgeValNode) InitNodes_NewAlgeValNode(id LnsInt,pos *Parser
 }
 
 // 686: decl @lune.@base.@Nodes.NewAlgeValNode.create
-func Nodes_NewAlgeValNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,name *Parser_Token,prefix LnsAny,algeTypeInfo *Ast_AlgeTypeInfo,valInfo *Ast_AlgeValInfo,paramList *LnsList) *Nodes_NewAlgeValNode {
+func Nodes_NewAlgeValNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,name *Types_Token,prefix LnsAny,algeTypeInfo *Ast_AlgeTypeInfo,valInfo *Ast_AlgeValInfo,paramList *LnsList) *Nodes_NewAlgeValNode {
     var node *Nodes_NewAlgeValNode
     node = NewNodes_NewAlgeValNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, name, prefix, algeTypeInfo, valInfo, paramList)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -14317,14 +14317,14 @@ func (self *Nodes_LuneControlNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_LuneControlNode) InitNodes_LuneControlNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,pragma LuneControl_Pragma) {
+func (self *Nodes_LuneControlNode) InitNodes_LuneControlNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,pragma LnsAny) {
     self.InitNodes_Node(id, 69, pos, macroArgFlag, typeList)
     self.pragma = pragma
     
 }
 
 // 686: decl @lune.@base.@Nodes.LuneControlNode.create
-func Nodes_LuneControlNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,pragma LuneControl_Pragma) *Nodes_LuneControlNode {
+func Nodes_LuneControlNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,pragma LnsAny) *Nodes_LuneControlNode {
     var node *Nodes_LuneControlNode
     node = NewNodes_LuneControlNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, pragma)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -14484,7 +14484,7 @@ func (self *Nodes_MatchNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_MatchNode) InitNodes_MatchNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,val *Nodes_Node,algeTypeInfo *Ast_AlgeTypeInfo,caseList *LnsList,defaultBlock LnsAny,caseKind LnsInt,failSafeDefault bool) {
+func (self *Nodes_MatchNode) InitNodes_MatchNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,val *Nodes_Node,algeTypeInfo *Ast_AlgeTypeInfo,caseList *LnsList,defaultBlock LnsAny,caseKind LnsInt,failSafeDefault bool) {
     self.InitNodes_Node(id, 70, pos, macroArgFlag, typeList)
     self.val = val
     
@@ -14501,7 +14501,7 @@ func (self *Nodes_MatchNode) InitNodes_MatchNode(id LnsInt,pos *Parser_Position,
 }
 
 // 686: decl @lune.@base.@Nodes.MatchNode.create
-func Nodes_MatchNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,val *Nodes_Node,algeTypeInfo *Ast_AlgeTypeInfo,caseList *LnsList,defaultBlock LnsAny,caseKind LnsInt,failSafeDefault bool) *Nodes_MatchNode {
+func Nodes_MatchNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,val *Nodes_Node,algeTypeInfo *Ast_AlgeTypeInfo,caseList *LnsList,defaultBlock LnsAny,caseKind LnsInt,failSafeDefault bool) *Nodes_MatchNode {
     var node *Nodes_MatchNode
     node = NewNodes_MatchNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -14707,14 +14707,14 @@ func (self *Nodes_LuneKindNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_LuneKindNode) InitNodes_LuneKindNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
+func (self *Nodes_LuneKindNode) InitNodes_LuneKindNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
     self.InitNodes_Node(id, 71, pos, macroArgFlag, typeList)
     self.exp = exp
     
 }
 
 // 686: decl @lune.@base.@Nodes.LuneKindNode.create
-func Nodes_LuneKindNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) *Nodes_LuneKindNode {
+func Nodes_LuneKindNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) *Nodes_LuneKindNode {
     var node *Nodes_LuneKindNode
     node = NewNodes_LuneKindNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, exp)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -14823,14 +14823,14 @@ func (self *Nodes_DeclMacroNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_DeclMacroNode) InitNodes_DeclMacroNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclMacroInfo) {
+func (self *Nodes_DeclMacroNode) InitNodes_DeclMacroNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclMacroInfo) {
     self.InitNodes_Node(id, 72, pos, macroArgFlag, typeList)
     self.declInfo = declInfo
     
 }
 
 // 686: decl @lune.@base.@Nodes.DeclMacroNode.create
-func Nodes_DeclMacroNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclMacroInfo) *Nodes_DeclMacroNode {
+func Nodes_DeclMacroNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclMacroInfo) *Nodes_DeclMacroNode {
     var node *Nodes_DeclMacroNode
     node = NewNodes_DeclMacroNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, declInfo)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -14970,7 +14970,7 @@ func (self *Nodes_TestCaseNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_TestCaseNode) InitNodes_TestCaseNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,name *Parser_Token,impNode *Nodes_Node,ctrlName string,block *Nodes_BlockNode) {
+func (self *Nodes_TestCaseNode) InitNodes_TestCaseNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,name *Types_Token,impNode *Nodes_Node,ctrlName string,block *Nodes_BlockNode) {
     self.InitNodes_Node(id, 73, pos, macroArgFlag, typeList)
     self.name = name
     
@@ -14983,7 +14983,7 @@ func (self *Nodes_TestCaseNode) InitNodes_TestCaseNode(id LnsInt,pos *Parser_Pos
 }
 
 // 686: decl @lune.@base.@Nodes.TestCaseNode.create
-func Nodes_TestCaseNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,name *Parser_Token,impNode *Nodes_Node,ctrlName string,block *Nodes_BlockNode) *Nodes_TestCaseNode {
+func Nodes_TestCaseNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,name *Types_Token,impNode *Nodes_Node,ctrlName string,block *Nodes_BlockNode) *Nodes_TestCaseNode {
     var node *Nodes_TestCaseNode
     node = NewNodes_TestCaseNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, name, impNode, ctrlName, block)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -15104,14 +15104,14 @@ func (self *Nodes_TestBlockNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_TestBlockNode) InitNodes_TestBlockNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,stmtList *LnsList) {
+func (self *Nodes_TestBlockNode) InitNodes_TestBlockNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,stmtList *LnsList) {
     self.InitNodes_Node(id, 74, pos, macroArgFlag, typeList)
     self.stmtList = stmtList
     
 }
 
 // 686: decl @lune.@base.@Nodes.TestBlockNode.create
-func Nodes_TestBlockNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,stmtList *LnsList) *Nodes_TestBlockNode {
+func Nodes_TestBlockNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,stmtList *LnsList) *Nodes_TestBlockNode {
     var node *Nodes_TestBlockNode
     node = NewNodes_TestBlockNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, stmtList)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -15138,7 +15138,7 @@ func (self *Nodes_TestBlockNode) Visit(visitor Nodes_NodeVisitor,depth LnsInt) b
 }
 
 // 2041: decl @lune.@base.@Nodes.TestBlockNode.isInnerPos
-func (self *Nodes_TestBlockNode) IsInnerPos(pos *Parser_Position) bool {
+func (self *Nodes_TestBlockNode) IsInnerPos(pos *Types_Position) bool {
     if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
         Lns_GetEnv().SetStackVal( self.FP.Get_pos().StreamName == pos.StreamName) &&
         Lns_GetEnv().SetStackVal( self.FP.Get_pos().LineNo < pos.LineNo) &&
@@ -15232,12 +15232,12 @@ func (self *Nodes_AbbrNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_AbbrNode) InitNodes_AbbrNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList) {
+func (self *Nodes_AbbrNode) InitNodes_AbbrNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList) {
     self.InitNodes_Node(id, 75, pos, macroArgFlag, typeList)
 }
 
 // 686: decl @lune.@base.@Nodes.AbbrNode.create
-func Nodes_AbbrNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList) *Nodes_AbbrNode {
+func Nodes_AbbrNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList) *Nodes_AbbrNode {
     var node *Nodes_AbbrNode
     node = NewNodes_AbbrNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -15335,14 +15335,14 @@ func (self *Nodes_BoxingNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_BoxingNode) InitNodes_BoxingNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,src *Nodes_Node) {
+func (self *Nodes_BoxingNode) InitNodes_BoxingNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,src *Nodes_Node) {
     self.InitNodes_Node(id, 76, pos, macroArgFlag, typeList)
     self.src = src
     
 }
 
 // 686: decl @lune.@base.@Nodes.BoxingNode.create
-func Nodes_BoxingNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,src *Nodes_Node) *Nodes_BoxingNode {
+func Nodes_BoxingNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,src *Nodes_Node) *Nodes_BoxingNode {
     var node *Nodes_BoxingNode
     node = NewNodes_BoxingNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, src)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -15451,14 +15451,14 @@ func (self *Nodes_UnboxingNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_UnboxingNode) InitNodes_UnboxingNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,src *Nodes_Node) {
+func (self *Nodes_UnboxingNode) InitNodes_UnboxingNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,src *Nodes_Node) {
     self.InitNodes_Node(id, 77, pos, macroArgFlag, typeList)
     self.src = src
     
 }
 
 // 686: decl @lune.@base.@Nodes.UnboxingNode.create
-func Nodes_UnboxingNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,src *Nodes_Node) *Nodes_UnboxingNode {
+func Nodes_UnboxingNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,src *Nodes_Node) *Nodes_UnboxingNode {
     var node *Nodes_UnboxingNode
     node = NewNodes_UnboxingNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, src)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -15564,12 +15564,12 @@ func (self *Nodes_LiteralNilNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_LiteralNilNode) InitNodes_LiteralNilNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList) {
+func (self *Nodes_LiteralNilNode) InitNodes_LiteralNilNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList) {
     self.InitNodes_Node(id, 78, pos, macroArgFlag, typeList)
 }
 
 // 686: decl @lune.@base.@Nodes.LiteralNilNode.create
-func Nodes_LiteralNilNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList) *Nodes_LiteralNilNode {
+func Nodes_LiteralNilNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList) *Nodes_LiteralNilNode {
     var node *Nodes_LiteralNilNode
     node = NewNodes_LiteralNilNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -15681,7 +15681,7 @@ func (self *Nodes_LiteralCharNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_LiteralCharNode) InitNodes_LiteralCharNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,token *Parser_Token,num LnsInt) {
+func (self *Nodes_LiteralCharNode) InitNodes_LiteralCharNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,token *Types_Token,num LnsInt) {
     self.InitNodes_Node(id, 79, pos, macroArgFlag, typeList)
     self.token = token
     
@@ -15690,7 +15690,7 @@ func (self *Nodes_LiteralCharNode) InitNodes_LiteralCharNode(id LnsInt,pos *Pars
 }
 
 // 686: decl @lune.@base.@Nodes.LiteralCharNode.create
-func Nodes_LiteralCharNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,token *Parser_Token,num LnsInt) *Nodes_LiteralCharNode {
+func Nodes_LiteralCharNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,token *Types_Token,num LnsInt) *Nodes_LiteralCharNode {
     var node *Nodes_LiteralCharNode
     node = NewNodes_LiteralCharNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, token, num)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -15802,7 +15802,7 @@ func (self *Nodes_LiteralIntNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_LiteralIntNode) InitNodes_LiteralIntNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,token *Parser_Token,num LnsInt) {
+func (self *Nodes_LiteralIntNode) InitNodes_LiteralIntNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,token *Types_Token,num LnsInt) {
     self.InitNodes_Node(id, 80, pos, macroArgFlag, typeList)
     self.token = token
     
@@ -15811,7 +15811,7 @@ func (self *Nodes_LiteralIntNode) InitNodes_LiteralIntNode(id LnsInt,pos *Parser
 }
 
 // 686: decl @lune.@base.@Nodes.LiteralIntNode.create
-func Nodes_LiteralIntNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,token *Parser_Token,num LnsInt) *Nodes_LiteralIntNode {
+func Nodes_LiteralIntNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,token *Types_Token,num LnsInt) *Nodes_LiteralIntNode {
     var node *Nodes_LiteralIntNode
     node = NewNodes_LiteralIntNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, token, num)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -15923,7 +15923,7 @@ func (self *Nodes_LiteralRealNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_LiteralRealNode) InitNodes_LiteralRealNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,token *Parser_Token,num LnsReal) {
+func (self *Nodes_LiteralRealNode) InitNodes_LiteralRealNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,token *Types_Token,num LnsReal) {
     self.InitNodes_Node(id, 81, pos, macroArgFlag, typeList)
     self.token = token
     
@@ -15932,7 +15932,7 @@ func (self *Nodes_LiteralRealNode) InitNodes_LiteralRealNode(id LnsInt,pos *Pars
 }
 
 // 686: decl @lune.@base.@Nodes.LiteralRealNode.create
-func Nodes_LiteralRealNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,token *Parser_Token,num LnsReal) *Nodes_LiteralRealNode {
+func Nodes_LiteralRealNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,token *Types_Token,num LnsReal) *Nodes_LiteralRealNode {
     var node *Nodes_LiteralRealNode
     node = NewNodes_LiteralRealNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, token, num)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -16041,14 +16041,14 @@ func (self *Nodes_LiteralArrayNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_LiteralArrayNode) InitNodes_LiteralArrayNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,expList LnsAny) {
+func (self *Nodes_LiteralArrayNode) InitNodes_LiteralArrayNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,expList LnsAny) {
     self.InitNodes_Node(id, 82, pos, macroArgFlag, typeList)
     self.expList = expList
     
 }
 
 // 686: decl @lune.@base.@Nodes.LiteralArrayNode.create
-func Nodes_LiteralArrayNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,expList LnsAny) *Nodes_LiteralArrayNode {
+func Nodes_LiteralArrayNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,expList LnsAny) *Nodes_LiteralArrayNode {
     var node *Nodes_LiteralArrayNode
     node = NewNodes_LiteralArrayNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, expList)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -16089,8 +16089,8 @@ func (self *Nodes_LiteralArrayNode) GetLiteral()(LnsAny, LnsAny) {
                 var mess LnsAny
                 literal,mess = node.FP.GetLiteral()
                 if literal != nil{
-                    literal_10612 := literal
-                    literalList.Insert(literal_10612)
+                    literal_10617 := literal
+                    literalList.Insert(literal_10617)
                 } else {
                     return nil, mess
                 }
@@ -16209,14 +16209,14 @@ func (self *Nodes_LiteralListNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_LiteralListNode) InitNodes_LiteralListNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,expList LnsAny) {
+func (self *Nodes_LiteralListNode) InitNodes_LiteralListNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,expList LnsAny) {
     self.InitNodes_Node(id, 83, pos, macroArgFlag, typeList)
     self.expList = expList
     
 }
 
 // 686: decl @lune.@base.@Nodes.LiteralListNode.create
-func Nodes_LiteralListNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,expList LnsAny) *Nodes_LiteralListNode {
+func Nodes_LiteralListNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,expList LnsAny) *Nodes_LiteralListNode {
     var node *Nodes_LiteralListNode
     node = NewNodes_LiteralListNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, expList)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -16257,8 +16257,8 @@ func (self *Nodes_LiteralListNode) GetLiteral()(LnsAny, LnsAny) {
                 var mess LnsAny
                 literal,mess = node.FP.GetLiteral()
                 if literal != nil{
-                    literal_10640 := literal
-                    literalList.Insert(literal_10640)
+                    literal_10645 := literal
+                    literalList.Insert(literal_10645)
                 } else {
                     return nil, mess
                 }
@@ -16377,14 +16377,14 @@ func (self *Nodes_LiteralSetNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_LiteralSetNode) InitNodes_LiteralSetNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,expList LnsAny) {
+func (self *Nodes_LiteralSetNode) InitNodes_LiteralSetNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,expList LnsAny) {
     self.InitNodes_Node(id, 84, pos, macroArgFlag, typeList)
     self.expList = expList
     
 }
 
 // 686: decl @lune.@base.@Nodes.LiteralSetNode.create
-func Nodes_LiteralSetNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,expList LnsAny) *Nodes_LiteralSetNode {
+func Nodes_LiteralSetNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,expList LnsAny) *Nodes_LiteralSetNode {
     var node *Nodes_LiteralSetNode
     node = NewNodes_LiteralSetNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, expList)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -16425,8 +16425,8 @@ func (self *Nodes_LiteralSetNode) GetLiteral()(LnsAny, LnsAny) {
                 var mess LnsAny
                 literal,mess = node.FP.GetLiteral()
                 if literal != nil{
-                    literal_10668 := literal
-                    literalList.Insert(literal_10668)
+                    literal_10673 := literal
+                    literalList.Insert(literal_10673)
                 } else {
                     return nil, mess
                 }
@@ -16591,7 +16591,7 @@ func (self *Nodes_LiteralMapNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_LiteralMapNode) InitNodes_LiteralMapNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,_map *LnsMap,pairList *LnsList) {
+func (self *Nodes_LiteralMapNode) InitNodes_LiteralMapNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,_map *LnsMap,pairList *LnsList) {
     self.InitNodes_Node(id, 85, pos, macroArgFlag, typeList)
     self._map = _map
     
@@ -16600,7 +16600,7 @@ func (self *Nodes_LiteralMapNode) InitNodes_LiteralMapNode(id LnsInt,pos *Parser
 }
 
 // 686: decl @lune.@base.@Nodes.LiteralMapNode.create
-func Nodes_LiteralMapNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,_map *LnsMap,pairList *LnsList) *Nodes_LiteralMapNode {
+func Nodes_LiteralMapNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,_map *LnsMap,pairList *LnsList) *Nodes_LiteralMapNode {
     var node *Nodes_LiteralMapNode
     node = NewNodes_LiteralMapNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, _map, pairList)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -16656,9 +16656,9 @@ func (self *Nodes_LiteralMapNode) GetLiteral()(LnsAny, LnsAny) {
         var valMess LnsAny
         valLiteral,valMess = val.FP.GetLiteral()
         if keyLiteral != nil && valLiteral != nil{
-            keyLiteral_10697 := keyLiteral
-            valLiteral_10698 := valLiteral
-            litMap.Set(keyLiteral_10697,valLiteral_10698)
+            keyLiteral_10702 := keyLiteral
+            valLiteral_10703 := valLiteral
+            litMap.Set(keyLiteral_10702,valLiteral_10703)
         } else {
             if Lns_op_not(keyLiteral){
                 return nil, keyMess
@@ -16681,8 +16681,8 @@ func (self *Nodes_LiteralMapNode) SetupLiteralTokenList(list *LnsList) bool {
         var literal LnsAny
         literal = Nodes_convExp43362(Lns_2DDD(key.FP.GetLiteral()))
         if literal != nil{
-            literal_10714 := literal
-            switch _exp43406 := literal_10714.(type) {
+            literal_10719 := literal
+            switch _exp43406 := literal_10719.(type) {
             case *Nodes_Literal__Int:
             param := _exp43406.Val1
                 lit2valNode.Set(param,key)
@@ -16818,7 +16818,7 @@ func (self *Nodes_LiteralStringNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_LiteralStringNode) InitNodes_LiteralStringNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,token *Parser_Token,orgParam LnsAny,dddParam LnsAny,threading bool) {
+func (self *Nodes_LiteralStringNode) InitNodes_LiteralStringNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,token *Types_Token,orgParam LnsAny,dddParam LnsAny,threading bool) {
     self.InitNodes_Node(id, 86, pos, macroArgFlag, typeList)
     self.token = token
     
@@ -16831,7 +16831,7 @@ func (self *Nodes_LiteralStringNode) InitNodes_LiteralStringNode(id LnsInt,pos *
 }
 
 // 686: decl @lune.@base.@Nodes.LiteralStringNode.create
-func Nodes_LiteralStringNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,token *Parser_Token,orgParam LnsAny,dddParam LnsAny,threading bool) *Nodes_LiteralStringNode {
+func Nodes_LiteralStringNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,token *Types_Token,orgParam LnsAny,dddParam LnsAny,threading bool) *Nodes_LiteralStringNode {
     var node *Nodes_LiteralStringNode
     node = NewNodes_LiteralStringNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, token, orgParam, dddParam, threading)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -16898,8 +16898,8 @@ func (self *Nodes_LiteralStringNode) GetLiteral()(LnsAny, LnsAny) {
                 var mess LnsAny
                 arg,mess = argNode.FP.GetLiteral()
                 if arg != nil{
-                    arg_10744 := arg
-                    paramList.Set(paramList.Len() + 1,Nodes_getLiteralObj(arg_10744))
+                    arg_10749 := arg
+                    paramList.Set(paramList.Len() + 1,Nodes_getLiteralObj(arg_10749))
                 } else {
                     return nil, mess
                 }
@@ -17021,14 +17021,14 @@ func (self *Nodes_LiteralBoolNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_LiteralBoolNode) InitNodes_LiteralBoolNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,token *Parser_Token) {
+func (self *Nodes_LiteralBoolNode) InitNodes_LiteralBoolNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,token *Types_Token) {
     self.InitNodes_Node(id, 87, pos, macroArgFlag, typeList)
     self.token = token
     
 }
 
 // 686: decl @lune.@base.@Nodes.LiteralBoolNode.create
-func Nodes_LiteralBoolNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,token *Parser_Token) *Nodes_LiteralBoolNode {
+func Nodes_LiteralBoolNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,token *Types_Token) *Nodes_LiteralBoolNode {
     var node *Nodes_LiteralBoolNode
     node = NewNodes_LiteralBoolNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, token)
     nodeMan.FP.AddNode(&node.Nodes_Node)
@@ -17137,14 +17137,14 @@ func (self *Nodes_LiteralSymbolNode) CanBeStatement() bool {
 }
 
 // 681: DeclConstr
-func (self *Nodes_LiteralSymbolNode) InitNodes_LiteralSymbolNode(id LnsInt,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,token *Parser_Token) {
+func (self *Nodes_LiteralSymbolNode) InitNodes_LiteralSymbolNode(id LnsInt,pos *Types_Position,macroArgFlag bool,typeList *LnsList,token *Types_Token) {
     self.InitNodes_Node(id, 88, pos, macroArgFlag, typeList)
     self.token = token
     
 }
 
 // 686: decl @lune.@base.@Nodes.LiteralSymbolNode.create
-func Nodes_LiteralSymbolNode_create(nodeMan *Nodes_NodeManager,pos *Parser_Position,macroArgFlag bool,typeList *LnsList,token *Parser_Token) *Nodes_LiteralSymbolNode {
+func Nodes_LiteralSymbolNode_create(nodeMan *Nodes_NodeManager,pos *Types_Position,macroArgFlag bool,typeList *LnsList,token *Types_Token) *Nodes_LiteralSymbolNode {
     var node *Nodes_LiteralSymbolNode
     node = NewNodes_LiteralSymbolNode(nodeMan.FP.NextId(), pos, macroArgFlag, typeList, token)
     nodeMan.FP.AddNode(&node.Nodes_Node)

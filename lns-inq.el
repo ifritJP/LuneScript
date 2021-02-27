@@ -59,6 +59,8 @@
 	  (insert "not support")
 	(insert (format "name: %s\n" (lns-json-val info :name)))
 	(insert (format "type: %s\n" (lns-json-val info :type)))
+	(insert (format "typeKind: %s\n" (lns-json-val info :typeKind)))
+	(insert (format "static: %s\n" (lns-json-val info :static)))
 	(insert (format "display: %s" (lns-json-val info :display))))
       (beginning-of-buffer)
       (fit-window-to-buffer)

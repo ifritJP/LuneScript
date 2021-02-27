@@ -558,7 +558,7 @@ SymbolKind.Normal = { "Normal"}
 SymbolKind._name2Val["Normal"] = SymbolKind.Normal
 SymbolKind.Static = { "Static", {{ func=Ast.TypeInfo._fromMap, nilable=false, child={} }}}
 SymbolKind._name2Val["Static"] = SymbolKind.Static
-SymbolKind.Type = { "Type", {{ func=Ast.TypeInfo._fromMap, nilable=false, child={} }}}
+SymbolKind.Type = { "Type", {{ func=Ast.TypeInfo._fromMap, nilable=false, child={} },{ func=_lune._toBool, nilable=false, child={} }}}
 SymbolKind._name2Val["Type"] = SymbolKind.Type
 SymbolKind.Var = { "Var", {{ func=Ast.SymbolInfo._fromMap, nilable=false, child={} }}}
 SymbolKind._name2Val["Var"] = SymbolKind.Var
@@ -608,6 +608,10 @@ end
 
 local function getModuleName( typeInfo )
 
+   if typeInfo == Ast.headTypeInfo then
+      return ""
+   end
+   
    return (typeInfo:getModule(  ):get_rawTxt():gsub( "@", "" ) )
 end
 
@@ -658,7 +662,17 @@ function convFilter:isSamePackage( typeInfo )
       return self:isSamePackageExtModule( typeInfo )
    end
    
-   return self:isSameModDir( typeInfo:getModule(  ) )
+   return self:isSameModDir( typeInfo )
+end
+
+
+function convFilter:needPrefix( typeInfo )
+
+   if Ast.isBuiltin( typeInfo:get_typeId() ) then
+      return false
+   end
+   
+   return not self:isSamePackage( typeInfo )
 end
 
 
@@ -697,6 +711,10 @@ function convFilter:getSymbol( kind, name )
             
          end
          
+         if self:needPrefix( symbolInfo:getModule(  ) ) then
+            symbolName = string.format( "%s.%s", getModuleName( symbolInfo:getModule(  ) ), symbolName)
+         end
+         
       elseif _matchExp[1] == SymbolKind.Member[1] then
          local external = _matchExp[2][1]
       
@@ -717,6 +735,7 @@ function convFilter:getSymbol( kind, name )
             
          else
           
+            local prefix = nil
             do
                local _switchExp = typeInfo:get_parentInfo():get_kind()
                if _switchExp == Ast.TypeInfoKind.Module or _switchExp == Ast.TypeInfoKind.Func or _switchExp == Ast.TypeInfoKind.Method then
@@ -737,7 +756,7 @@ function convFilter:getSymbol( kind, name )
                   
                elseif _switchExp == Ast.TypeInfoKind.Enum or _switchExp == Ast.TypeInfoKind.Class then
                   local parentInfo = typeInfo:get_parentInfo()
-                  symbolName = string.format( "%s_%s", self:getSymbol( _lune.newAlge( SymbolKind.Type, {parentInfo}), parentInfo:get_rawTxt() ), symbolName)
+                  symbolName = string.format( "%s_%s", self:getSymbol( _lune.newAlge( SymbolKind.Type, {parentInfo,false}), parentInfo:get_rawTxt() ), symbolName)
                   if not self:isPubType( typeInfo ) then
                      symbolName = string.format( "%s_%d_", symbolName, typeInfo:get_typeId())
                   end
@@ -745,7 +764,7 @@ function convFilter:getSymbol( kind, name )
                elseif _switchExp == Ast.TypeInfoKind.ExtModule then
                   symbolName = concatGLSym( symbolName, true )
                   if not self:isSamePackageExtModule( typeInfo:get_parentInfo() ) then
-                     symbolName = string.format( "%s.%s", typeInfo:get_parentInfo():get_rawTxt(), symbolName)
+                     prefix = typeInfo:get_parentInfo():get_rawTxt()
                   end
                   
                else 
@@ -755,10 +774,22 @@ function convFilter:getSymbol( kind, name )
                end
             end
             
+            if not prefix then
+               if self:needPrefix( typeInfo:getModule(  ) ) then
+                  prefix = getModuleName( typeInfo )
+               end
+               
+            end
+            
+            if prefix ~= nil then
+               symbolName = string.format( "%s.%s", prefix, symbolName)
+            end
+            
          end
          
       elseif _matchExp[1] == SymbolKind.Type[1] then
          local typeInfo = _matchExp[2][1]
+         local needPrefix = _matchExp[2][2]
       
          if typeInfo:get_kind() == Ast.TypeInfoKind.FormFunc then
             return self:getSymbol( _lune.newAlge( SymbolKind.Func, {typeInfo}), symbolName )
@@ -774,15 +805,20 @@ function convFilter:getSymbol( kind, name )
          end
          
          symbolName = self:concatSymWithType( workName, typeInfo )
+         if needPrefix and self:needPrefix( typeInfo:getModule(  ) ) then
+            symbolName = string.format( "%s.%s", getModuleName( typeInfo ), symbolName)
+         end
+         
       elseif _matchExp[1] == SymbolKind.Static[1] then
          local typeInfo = _matchExp[2][1]
       
-         local workName = self:getSymbol( _lune.newAlge( SymbolKind.Type, {typeInfo}), typeInfo:get_rawTxt() )
+         local workName = self:getSymbol( _lune.newAlge( SymbolKind.Type, {typeInfo,true}), typeInfo:get_rawTxt() )
          symbolName = string.format( "%s__%s", workName, name)
       elseif _matchExp[1] == SymbolKind.Normal[1] then
       
       end
    end
+   
    
    return symbolName
 end
@@ -791,7 +827,14 @@ end
 function convFilter:getTypeSymbol( typeInfo )
 
    local orgType = typeInfo:get_srcTypeInfo():get_nonnilableType():get_aliasSrc()
-   return self:getSymbol( _lune.newAlge( SymbolKind.Type, {orgType}), orgType:get_rawTxt() )
+   return self:getSymbol( _lune.newAlge( SymbolKind.Type, {orgType,false}), orgType:get_rawTxt() )
+end
+
+
+function convFilter:getTypeSymbolWithPrefix( typeInfo )
+
+   local orgType = typeInfo:get_srcTypeInfo():get_nonnilableType():get_aliasSrc()
+   return self:getSymbol( _lune.newAlge( SymbolKind.Type, {orgType,true}), orgType:get_rawTxt() )
 end
 
 
@@ -873,6 +916,22 @@ function convFilter:getConvGenericsName( node )
 end
 
 
+function convFilter:getModuleSym( moduleTypeInfo, addDot )
+
+   do
+      local packSym = self.module2PackSym[moduleTypeInfo]
+      if packSym ~= nil then
+         if addDot then
+            return string.format( "%s.", packSym)
+         end
+         
+         return packSym
+      end
+   end
+   
+   return ""
+end
+
 local function str2gostr( txt )
 
    local work = txt
@@ -942,14 +1001,14 @@ function convFilter:type2gotypeOrg( typeInfo, addClassAster )
             return "*Lns__pipe"
          end
          
-         local symbol = self:getTypeSymbol( typeInfo )
+         local symbol = self:getTypeSymbolWithPrefix( typeInfo )
          if addClassAster then
             return "*" .. symbol
          end
          
          return symbol
       elseif _switchExp == Ast.TypeInfoKind.IF then
-         return self:getTypeSymbol( typeInfo )
+         return self:getTypeSymbolWithPrefix( typeInfo )
       elseif _switchExp == Ast.TypeInfoKind.Alternate then
          return self:type2gotypeOrg( typeInfo:get_baseTypeInfo(), addClassAster )
       end
@@ -1015,6 +1074,11 @@ function convFilter:processImport( node, opt )
 
    if node:get_modulePath() == "lune.base.Depend" then
       self:writeln( "Lns_LuaVer_init()" )
+   end
+   
+   
+   if not self:isSameModDir( node:get_moduleTypeInfo() ) and not Ast.isBuiltin( node:get_moduleTypeInfo():get_typeId() ) then
+      self:write( string.format( "%s.", getModuleName( node:get_moduleTypeInfo() )) )
    end
    
    self:writeln( string.format( "Lns_%s_init()", getModuleName( node:get_moduleTypeInfo() )) )
@@ -1157,7 +1221,7 @@ function convFilter:outputImplicitCast( castType, node, parent )
       elseif _switchExp == Ast.TypeInfoKind.Alternate then
          if not castType:hasBase(  ) then
             if Ast.isClass( node:get_expType():get_nonnilableType() ) then
-               self:write( string.format( "%s2Stem(", self:getTypeSymbol( node:get_expType():get_nonnilableType() )) )
+               self:write( string.format( "%s2Stem(", self:getTypeSymbolWithPrefix( node:get_expType():get_nonnilableType() )) )
                filter( node, self, parent )
                self:write( ")" )
             else
@@ -1200,7 +1264,7 @@ function convFilter:outputImplicitCast( castType, node, parent )
       else 
          
             if node:get_expType():get_nilable() and Ast.isClass( node:get_expType():get_nonnilableType() ) then
-               self:write( string.format( "%s2Stem(", self:getTypeSymbol( node:get_expType():get_nonnilableType() )) )
+               self:write( string.format( "%s2Stem(", self:getTypeSymbolWithPrefix( node:get_expType():get_nonnilableType() )) )
                filter( node, self, parent )
                self:write( ")" )
             else
@@ -1507,7 +1571,7 @@ function convFilter:processConvExp( nodeId, dstTypeList, argListNode )
       
       if restIndex ~= nil then
          self:write( "Lns_2DDD( " )
-         for index, _6133 in ipairs( expList ) do
+         for index, _6169 in ipairs( expList ) do
             if index >= restIndex then
                if index < #expList then
                   self:write( string.format( "arg%d", index) )
@@ -1527,7 +1591,7 @@ function convFilter:processConvExp( nodeId, dstTypeList, argListNode )
       end
       
    else
-      for index, _6141 in ipairs( retTypeList ) do
+      for index, _6177 in ipairs( retTypeList ) do
          if index ~= 1 then
             self:write( ", " )
          end
@@ -2007,7 +2071,7 @@ function convFilter:outputConvExt( funcNode )
    
    self:writeln( ") {" )
    self:write( "    return " )
-   for index, _6333 in ipairs( funcNode:get_expType():get_retTypeInfoList() ) do
+   for index, _6369 in ipairs( funcNode:get_expType():get_retTypeInfoList() ) do
       if index > 1 then
          self:write( "," )
       end
@@ -2022,17 +2086,7 @@ end
 
 function convFilter:outputModule( moduleTypeInfo, addDot )
 
-   do
-      local packSym = self.module2PackSym[moduleTypeInfo]
-      if packSym ~= nil then
-         self:write( packSym )
-         if addDot then
-            self:write( "." )
-         end
-         
-      end
-   end
-   
+   self:write( self:getModuleSym( moduleTypeInfo, addDot ) )
 end
 
 
@@ -2059,8 +2113,17 @@ function convFilter:outputModuleImport( node )
    
    local normalType = _lune.unwrap( _lune.__Cast( node:get_expType(), 3, Ast.NormalTypeInfo ))
    self:write( string.format( "import %s ", node:get_expType():get_rawTxt()) )
-   local path = normalType:get_requirePath():gsub( "%.", "/" ):gsub( "/[^/]+$", "" )
-   self:writeln( string.format( '"%s/%s"', self.option:get_appName(), path) )
+   
+   local mod = normalType:get_requirePath():gsub( "%.[^%.]+$", "" )
+   if mod:find( "^go/" ) then
+      local workMod = mod:gsub( "^go/", "" ):gsub( "%.", "/" ):gsub( ":", "." )
+      self:writeln( string.format( '"%s"', workMod) )
+   else
+    
+      local path = normalType:get_requirePath():gsub( "%.", "/" ):gsub( ":", "." )
+      self:writeln( string.format( '"%s/%s"', self.option:get_appName(), path) )
+   end
+   
 end
 
 
@@ -2072,14 +2135,21 @@ function convFilter:outputImport( node )
    
    
    self:write( "import " )
-   local modulePath, count = node:get_modulePath():gsub( "([^%.]+)%.[^%.]+$", "/%1" )
    local packSym = node:get_assignName()
-   if count == 0 then
-      self:writeln( string.format( '%s "%s"', packSym, self.option.appName) )
+   if node:get_modulePath():find( "^go/" ) then
+      local workMod = node:get_modulePath():gsub( "^go/", "" ):gsub( "%.", "/" ):gsub( ":", "." )
+      self:writeln( string.format( '%s "%s"', packSym, (workMod:gsub( "/[^/]+$", "" ) )) )
    else
     
-      local modDir = modulePath:gsub( "/", "" )
-      self:writeln( string.format( '%s "%s/%s"', packSym, self.option.appName, (modDir:gsub( "%.", "/" ) )) )
+      local modulePath, count = node:get_modulePath():gsub( "([^%.]+)%.[^%.]+$", "/%1" )
+      if count == 0 then
+         self:writeln( string.format( '%s "%s"', packSym, self.option.appName) )
+      else
+       
+         local modDir = modulePath:gsub( "/", "" )
+         self:writeln( string.format( '%s "%s/%s"', packSym, self.option.appName, (modDir:gsub( "%.", "/" ) )) )
+      end
+      
    end
    
    
@@ -2298,7 +2368,7 @@ function convFilter:processRoot( node, opt )
       local function procNode( workNode )
       
          local symTypeList = {}
-         for _6505 = 1, #workNode:get_varSymList() do
+         for _6545 = 1, #workNode:get_varSymList() do
             table.insert( symTypeList, Ast.builtinTypeStem_ )
          end
          
@@ -2557,7 +2627,7 @@ function convFilter:expList2Slice( subList, toStem )
    local function processExp( exp )
    
       if toStem and Ast.isClass( exp:get_expType() ) then
-         self:write( string.format( "%s2Stem(", self:getTypeSymbol( exp:get_expType():get_nonnilableType() )) )
+         self:write( string.format( "%s2Stem(", self:getTypeSymbolWithPrefix( exp:get_expType():get_nonnilableType() )) )
          filter( Nodes.getCastUnwraped( exp ), self, subList )
          self:write( ")" )
       else
@@ -3181,7 +3251,7 @@ function convFilter:processIfUnwrap( node, opt )
    end
    
    if getExpListKind( tempTypeList, node:get_expList() ) == ExpListKind.Direct then
-      for _6933 = #node:get_varSymList() + 1, #node:get_expList():get_expTypeList() do
+      for _6973 = #node:get_varSymList() + 1, #node:get_expList():get_expTypeList() do
          self:write( ", _" )
       end
       
@@ -3283,13 +3353,13 @@ function convFilter:outputLetVar( node )
             
             
             local tmpVarTypeList = {}
-            for index, _6971 in ipairs( node:get_symbolInfoList() ) do
+            for index, _7011 in ipairs( node:get_symbolInfoList() ) do
                table.insert( tmpVarTypeList, expList:getExpTypeNoDDDAt( index ) )
             end
             
             
             if getExpListKind( tmpVarTypeList, expList ) == ExpListKind.Direct then
-               for _6975 = #tmpVarTypeList + 1, #expList:get_expTypeList() do
+               for _7015 = #tmpVarTypeList + 1, #expList:get_expTypeList() do
                   self:write( ", _" )
                end
                
@@ -3381,7 +3451,7 @@ function convFilter:outputLetVar( node )
             
             
             if getExpListKind( varTypeList, expList ) == ExpListKind.Direct then
-               for _7005 = #varTypeList + 1, #expList:get_expTypeList() do
+               for _7045 = #varTypeList + 1, #expList:get_expTypeList() do
                   self:write( ", _" )
                end
                
@@ -3444,7 +3514,7 @@ function convFilter:processDeclVar( node, opt )
          end
          
          if getExpListKind( typeList, expList ) == ExpListKind.Direct then
-            for _7034 = #node:get_symbolInfoList() + 1, #expList:get_expTypeList() do
+            for _7074 = #node:get_symbolInfoList() + 1, #expList:get_expTypeList() do
                self:write( ",_" )
             end
             
@@ -3610,17 +3680,8 @@ end
 
 function convFilter:processRefType( node, opt )
 
-   if node:get_expType():get_nilable() or not node:get_name():getPrefix(  ) then
-      self:write( self:type2gotype( node:get_expType() ) )
-      return 
-   end
+   self:write( self:type2gotype( node:get_expType() ) )
    
-   
-   if node:get_name():get_expType():get_kind() == Ast.TypeInfoKind.Class then
-      self:write( "*" )
-   end
-   
-   filter( node:get_name(), self, node )
 end
 
 
@@ -3710,7 +3771,7 @@ function convFilter:processMatch( node, opt )
    local function hasAccessing(  )
    
       for __index, caseInfo in ipairs( node:get_caseList() ) do
-         for _7167, symbol in ipairs( caseInfo:get_valParamNameList() ) do
+         for _7205, symbol in ipairs( caseInfo:get_valParamNameList() ) do
             if symbol:get_posForModToRef() then
                return true
             end
@@ -3895,7 +3956,7 @@ function convFilter:processApply( node, opt )
       local workSym = string.format( "_work%d", node:get_id())
       self:writeln( string.format( "%s := %s.(*Lns_luaValue).Call( Lns_2DDD( %s, %s ) )", workSym, formSym, paramSym, prevSym) )
       self:write( string.format( "%s = ", setTxt) )
-      for index, _7231 in ipairs( node:get_varList() ) do
+      for index, _7269 in ipairs( node:get_varList() ) do
          if index > 1 then
             self:write( "," )
          end
@@ -4331,7 +4392,7 @@ end
 function convFilter:processExpNew( node, opt )
 
    local className = self:getTypeSymbol( node:get_expType() )
-   if self:isSamePackage( node:get_expType() ) then
+   if self:isSamePackage( node:get_expType():getModule(  ) ) then
       self:write( string.format( "New%s(", className) )
    else
     
@@ -4475,7 +4536,7 @@ end
 
 function convFilter:outputToStem( node )
 
-   self:writeln( string.format( "func %s2Stem( obj LnsAny ) LnsAny {", self:getTypeSymbol( node:get_expType() )) )
+   self:writeln( string.format( "func %s2Stem( obj LnsAny ) LnsAny {", self:getTypeSymbolWithPrefix( node:get_expType() )) )
    self:pushIndent(  )
    self:writeln( "if obj == nil {" )
    self:writeln( "    return nil" )
@@ -4564,7 +4625,7 @@ function convFilter:outputConstructor( node )
       self:pushIndent(  )
       self:outputNewSetup( "obj", node:get_expType() )
       self:write( string.format( "obj.%s(", ctorName) )
-      for index, _7471 in ipairs( initFuncType:get_argTypeInfoList() ) do
+      for index, _7509 in ipairs( initFuncType:get_argTypeInfoList() ) do
          if index ~= 1 then
             self:write( ", " )
          end
@@ -5064,7 +5125,7 @@ function convFilter:outputAdvertise( node )
                   end
                   
                   self:write( string.format( "%s( ", self:getSymbolSym( symbol )) )
-                  for index, _7674 in ipairs( funcType:get_argTypeInfoList() ) do
+                  for index, _7712 in ipairs( funcType:get_argTypeInfoList() ) do
                      if index > 1 then
                         self:write( "," )
                      end
@@ -5220,7 +5281,7 @@ function convFilter:outputCallPrefix( threading, callId, node, prefixNode, funcS
             
                if retNum <= MaxNilAccNum then
                   local anys = "LnsAny"
-                  for _7742 = 2, retNum do
+                  for _7780 = 2, retNum do
                      anys = string.format( "%s,LnsAny", anys)
                   end
                   
@@ -5228,7 +5289,7 @@ function convFilter:outputCallPrefix( threading, callId, node, prefixNode, funcS
                else
                 
                   local args = "LnsAny"
-                  for _7746 = 2, retNum do
+                  for _7784 = 2, retNum do
                      args = string.format( "%s,LnsAny", args)
                   end
                   
@@ -5804,7 +5865,7 @@ function convFilter:processExpSetVal( node, opt )
 
    filter( node:get_exp1(), self, node )
    if getExpListKind( node:get_exp1():get_expTypeList(), node:get_exp2() ) == ExpListKind.Direct then
-      for _7956 = #node:get_exp1():get_expTypeList() + 1, #node:get_exp2():get_expTypeList() do
+      for _7994 = #node:get_exp1():get_expTypeList() + 1, #node:get_exp2():get_expTypeList() do
          self:write( ",_" )
       end
       
@@ -5997,7 +6058,8 @@ function convFilter:processExpRef( node, opt )
                   self:write( node:get_symbolInfo():get_name() )
                else
                 
-                  self:write( self:type2gotypeOrg( node:get_expType(), false ) )
+                  self:write( self:getTypeSymbol( node:get_expType() ) )
+                  
                end
                
             else 
@@ -6237,7 +6299,7 @@ function convFilter:processRefField( node, opt )
    end
    
    
-   for _8105 = 1, openParenNum do
+   for _8143 = 1, openParenNum do
       self:write( ")" )
    end
    

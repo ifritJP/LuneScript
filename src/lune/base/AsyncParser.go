@@ -326,7 +326,7 @@ func (self *AsyncParser_Parser) Access() LnsAny {
 }
 
 // 266: decl @lune.@base.@AsyncParser.Parser.createInfo
-func (self *AsyncParser_Parser) createInfo(tokenKind Types_TokenKind,token string,tokenColumn LnsInt) *Types_Token {
+func (self *AsyncParser_Parser) createInfo(tokenKind LnsInt,token string,tokenColumn LnsInt) *Types_Token {
     if tokenKind == Types_TokenKind__Symb{
         if self.keywordSet.Has(token){
             tokenKind = Types_TokenKind__Kywd
@@ -443,7 +443,7 @@ func (self *AsyncParser_Parser) readLine() LnsAny {
 }
 
 // 363: decl @lune.@base.@AsyncParser.Parser.addVal
-func (self *AsyncParser_Parser) addVal(list *LnsList,kind Types_TokenKind,val string,column LnsInt) {
+func (self *AsyncParser_Parser) addVal(list *LnsList,kind LnsInt,val string,column LnsInt) {
     if kind != Types_TokenKind__Symb{
         list.Insert(Types_Token2Stem(self.FP.createInfo(kind, val, column)))
         return 

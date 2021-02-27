@@ -100,7 +100,7 @@ fn output( stream:oStream, key:str, codeList:&List<str> ) : bool {
 指定した LuneScript の Makefile の情報をもとに、
 LuneScript を構成する .lua ファイルをバンドルするための .go を生成する。
 */
-pub fn createBinding( makePath:str ) {
+pub fn createBinding( makePath:str ) : bool {
 
    if! let list = getSrcList( makePath ) {
       if! let mut ostream = io.open( "output.go", "w" ) {
@@ -125,10 +125,15 @@ pub fn createBinding( makePath:str ) {
          }
          ostream.write( "}\n" );
          ostream.close();
+         return true;
       }
    }
+   return false;
 }
 
-__test case1(ctrl) {
-   createBinding( "Makefile" );
+pub fn __main(args:&List<str> ):int {
+   if not createBinding( "Makefile" ) {
+      return 1;
+   }
+   return 0;
 }

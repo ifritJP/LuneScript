@@ -257,6 +257,15 @@ pub fn scriptPath2Module( path:str ):str {
    return ( string.gsub( mod, "%.lns$", "" ) );
 }
 
+pub fn pathJoin( dir:str, path:str ) : str {
+   if path.find( "^/" ## ) {
+      return path;
+   }
+   if dir.find( "/$" ## ) {
+      return "%s%s" (dir, path);
+   }
+   return "%s/%s" (dir, path);
+}
 
 __test case1(ctrl) {
    {

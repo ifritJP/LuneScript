@@ -1676,6 +1676,14 @@ function RootTypeInfo.create(  )
 
    return RootTypeInfo.new()
 end
+function RootTypeInfo:get_rawTxt(  )
+
+   return "<head>"
+end
+function RootTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
+
+   return "<head>"
+end
 function RootTypeInfo.setmeta( obj )
   setmetatable( obj, { __index = RootTypeInfo  } )
 end
@@ -5756,6 +5764,7 @@ local function addBuiltin( typeInfo )
    builtInTypeIdSet[typeInfo:get_typeId()] = typeInfo
 end
 _moduleObj.addBuiltin = addBuiltin
+addBuiltin( _moduleObj.headTypeInfo )
 
 local function registBuiltin( idName, typeTxt, kind, typeInfo, nilableTypeInfo, registScope )
 

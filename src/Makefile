@@ -1455,7 +1455,7 @@ test-subgo:
 
 
 define binding-lns-go
-	$(LNSC_LUA) misc/go/binding/bind.lns exe --testing
+	$(LNSC_LUA) misc/go/binding/bind.lns shebang
 	mv output.go $1/lune/base/runtime_go/binding.go 
 endef
 

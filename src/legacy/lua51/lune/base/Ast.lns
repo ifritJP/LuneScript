@@ -1117,6 +1117,16 @@ pub class RootTypeInfo extend TypeInfo {
    local static fn create() : RootTypeInfo {
       return new RootTypeInfo();
    }
+
+   pub override fn get_rawTxt(): str {
+      return "<head>";
+   }
+   
+   pub override fn getTxt(
+      typeNameCtrl:&TypeNameCtrl!, importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
+   {
+      return "<head>";
+   }
 }
 
 
@@ -4198,6 +4208,8 @@ rootProcessInfo.$idProv.increment();
 pub fn addBuiltin( typeInfo:&TypeInfo ) {
    builtInTypeIdSet[ typeInfo.$typeId ] = typeInfo;
 }
+addBuiltin( headTypeInfo );
+
 
 fn registBuiltin( idName: str, typeTxt: str, kind: TypeInfoKind,
                   typeInfo:&TypeInfo, nilableTypeInfo:&TypeInfo, registScope:bool )
