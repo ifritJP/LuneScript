@@ -113,7 +113,7 @@ pub fn getLuaVersion():str {
    }
    let loaded = _load( "return _VERSION"## )$(##);
    let version = (unwrap loaded)@@str;
-   lua_version = version;
+   lua_version = version.gsub( "^[^%d]+", "" );
    return version;
 }
 

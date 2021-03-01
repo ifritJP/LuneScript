@@ -1,26 +1,49 @@
 import lune.base.Ver;
 
+class BindInfo {
+   let src:str {pub};
+   let modPath:str {pub};
+   let bytePath:str {pub};
+   let embedPath:str {pub};
+   let varSym:str {pub};
+   pub fn __init( dir:str, mod:str, enableByteCompile:bool ) {
+      self.src = "%s/lune/base/%s.lua" (dir,mod);
+      self.modPath = "lune.base.%s" (mod);
+      self.bytePath = "%s/lune/base/%s.luac" (dir,mod);
+      let embedPath;
+      if enableByteCompile {
+         embedPath = "base/%s.luac" (mod);
+      } else {
+         embedPath = "base/%s.lua" (mod);
+      }
+      self.embedPath = embedPath;
+      self.varSym = "lune_base_%s" (mod);
+   }
+}
+
 /**
 path で指定されている makefile から 'LNS_SRCS +=' のパターンを見つけて
 lns を構成するファイルリストを取得する。
 */
-fn getSrcList( path:str ): &List<str>! {
+fn getSrcList( dir:str, enableByteCompile:bool ): &List<BindInfo>! {
+   let path = dir .. "/Makefile";
    let! mut mkstream = io.open( path ## ) {
       return nil;
    };
-   let mut list:List<str> = [];
+   let mut list:List<BindInfo> = [];
    while true {
       let! line = mkstream.read( '*l' ) {
          break;
       };
       if line.find( "^LNS_SRCS%s*%+=%s*base/" ## ) {
          let src = line.gsub( ".*= base/" , "" ).gsub( "%s", "" );
-         list.insert( src );
+         list.insert( new BindInfo(dir,src,enableByteCompile) );
       }
    }
    mkstream.close();
 
-   list.insert( "runtime%d" (Ver.luaModVersion ) );
+   list.insert( new BindInfo( dir, "runtime%d" (Ver.luaModVersion ),
+                              enableByteCompile ) );
    return list;
 }
 
@@ -44,7 +67,7 @@ fn readFile( path:str ): str! {
 "lune/base/%s.lua" (src) のファイルを byte compile した結果を返す。
 */
 fn compile( src:str ): str! {
-   let! code = readFile( "lune/base/%s.lua" (src) ) {
+   let! code = readFile( src ) {
       return nil; 
    };
    let loaded, err = _load( code, nil );
@@ -56,42 +79,13 @@ fn compile( src:str ): str! {
    // return code;
 }
 
-/**
-bin で指定した文字列を go のbyte slice 宣言文字列に置き換える。
-
-戻り値は byte slice 宣言文字列を、一定サイズごとに分割した list。
-一定サイズごとに分割するのは、 文字列連携を繰り返すと連結処理に掛るパフォーマンスが
-非常に悪くなるため、適当な長さで連結せずに list で管理する。
-*/
-fn str2GoStr( bin:str ) : List<str> {
-   let mut list:List<str> = [];
-   let mut gostr = '';
-   for index = 1, #bin {
-      gostr = gostr .. "0x%02x," (bin[index]);
-      if #gostr > 500 {
-         list.insert( gostr );
-         gostr = "";
-      }
-   }
-   list.insert( gostr );
-   return list;
-}
 
 /**
-stream で指定した出力先に、 byte slice 宣言の codeList を key に紐付けて出力する。
+stream で指定した出力先に、 code を key に紐付けて出力する。
 */
-fn output( stream:oStream, key:str, codeList:&List<str> ) : bool {
-   stream.write( '{\n' );
-   stream.write( 'code := []byte{' );
-   foreach code in codeList {
-      stream.write( code );
-      stream.write( '\n' );
-   }
-   stream.write( "}\n" );
-   stream.write( 'key := "%s"\n' (key) );
-   stream.write(
-      'lnsSrcMap[ key ] = &lnsSrcInfo{ C.CString( string(code) ), len( code ) }\n' );
-   stream.write( "}\n" );
+fn output( stream:oStream, key:str ) : bool {
+   let varName = key.gsub( "%.", "_" );
+   stream.write( 'AddlnsSrcInfo( "%s", %s )\n' (key,varName) );
 
    return true;
 }
@@ -100,28 +94,39 @@ fn output( stream:oStream, key:str, codeList:&List<str> ) : bool {
 指定した LuneScript の Makefile の情報をもとに、
 LuneScript を構成する .lua ファイルをバンドルするための .go を生成する。
 */
-pub fn createBinding( makePath:str ) : bool {
+pub fn createBinding( makeDir:str, enableByteCompile:bool ) : bool {
 
-   if! let list = getSrcList( makePath ) {
+   if! let list = getSrcList( makeDir, enableByteCompile ) {
       if! let mut ostream = io.open( "output.go", "w" ) {
-         ostream.write( "package runtimelns\n" );
+         ostream.write( "package lnsc\n" );
+         ostream.write(
+            'import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"\n' );
+         ostream.write( 'import _ "embed"\n' );
          ostream.write( 'import "C"\n' );
-         ostream.write( 'type lnsSrcInfo struct {\n' );
-         ostream.write( '  codeC *C.char\n' );
-         ostream.write( '  len int\n' );
-         ostream.write( '}\n' );
-         ostream.write( "var lnsSrcMap map[string] *lnsSrcInfo\n" );
-         ostream.write( "func init() {\n" );
-         ostream.write( "lnsSrcMap = map[string] *lnsSrcInfo{}\n" );
          let mut total = 0;
          foreach path in list {
-            print( path );
-            if! let bytecode = compile( path ) {
-               total = total + #bytecode;
-               print( "size = ", #bytecode, total );
-               let gostrList = str2GoStr( bytecode );
-               output( ostream, "lune.base.%s" (path), gostrList );
+            ostream.write( "//go:embed %s\n" ( path.$embedPath ) );
+            ostream.write( "var %s []byte\n" (path.$varSym) );
+         }
+
+         ostream.write( "func Setup() {\n" );
+         foreach path in list {
+            print( path.$src );
+            if enableByteCompile {
+               if! let bytecode = compile( path.$src ) {
+                  let! mut bytefile = io.open( path.$bytePath, "w" ) {
+                     print( "failed to open file -- %s" (path.$bytePath) );
+                     return false;
+                  };
+                  bytefile.write( bytecode );
+                  total = total + #bytecode;
+                  print( "size = ", #bytecode, total );
+               } else {
+                  print( "failed to bytecompile -- %s" (path.$src) );
+                  return false;
+               }
             }
+            output( ostream, path.$modPath );
          }
          ostream.write( "}\n" );
          ostream.close();
@@ -132,7 +137,27 @@ pub fn createBinding( makePath:str ) : bool {
 }
 
 pub fn __main(args:&List<str> ):int {
-   if not createBinding( "Makefile" ) {
+   if #args == 1 {
+      print( "usage: %s [-b] makefile_dir" ( args[1] ) );
+      print( "  -b: byte compile" );
+      return 1;
+   }
+   let mut enableByteCompile = false;
+   let mut dir = "";
+   foreach arg, index in args {
+      if index > 1 {
+         if arg == "-b" {
+            enableByteCompile = true;
+         } else {
+            dir = arg;
+         }
+      }
+   }
+   if dir == "" {
+      print( "dir is empty" );
+      return 1;
+   }
+   if not createBinding( dir, enableByteCompile ) {
       return 1;
    }
    return 0;

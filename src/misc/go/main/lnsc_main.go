@@ -28,8 +28,10 @@ import "os"
 
 import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 import lnsc "github.com/ifritJP/LuneScript/src/lune/base"
+import bind "github.com/ifritJP/LuneScript/src/lune"
 
 func exec( args []LnsAny ) error {
+    bind.Setup()
     Lns_InitModOnce()
     lnsc.Lns_front_init()
     

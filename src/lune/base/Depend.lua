@@ -309,7 +309,7 @@ local function getLuaVersion(  )
    
    local loaded = _lune.nilacc( _lune.loadstring52( "return _VERSION" ), nil, 'call' )
    local version = (_lune.unwrap( loaded) )
-   lua_version = version
+   lua_version = version:gsub( "^[^%d]+", "" )
    return version
 end
 _moduleObj.getLuaVersion = getLuaVersion

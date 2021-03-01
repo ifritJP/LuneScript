@@ -307,149 +307,156 @@ usage:
       let arg = argList[ index ];
 
       if arg.find( "^-" ## ) {
-         switch ( arg ) {
-            case "-i" {
-               useStdInFlag = true;
-            }
-            case "-prof" {
-               option.validProf = true;
-            }
-            case "--nodebug" {
-               Util.setDebugFlag( false );
-            }
-            case "--debug" {
-               Util.setDebugFlag( true );
-            }
-            case "-shebang" {
-               option.mode = .Shebang;
-            }
-            case "--version" {
-               print( "LuneScript: version %s (%d:%s) [%s]"
-                  ( Ver.version, getBuildCount(),
-                    Depend.getLuaVersion(), Ver.metaVersion) );
-               os.exit( 0 );
-            }
-            case "--builtin" {
-               forsort typeInfo, typeId in Ast.getBuiltInTypeIdMap() {
-                  print( typeId, typeInfo.getTxt( ## ) );
+         if option.mode ~= .Shebang {
+            switch ( arg ) {
+               case "-i" {
+                  useStdInFlag = true;
                }
-               os.exit( 0 );
-            }
-            case "-mklunemod" {
-               let path = getNextOp();
-               if! let mess = outputLuneMod( path ) {
-                  Util.errorLog( mess );
+               case "-prof" {
+                  option.validProf = true;
+               }
+               case "--nodebug" {
+                  Util.setDebugFlag( false );
+               }
+               case "--debug" {
+                  Util.setDebugFlag( true );
+               }
+               case "-shebang" {
+                  option.mode = .Shebang;
+               }
+               case "--version" {
+                  print( "LuneScript: version %s (%d:Lua%s) [%s]"
+                     ( Ver.version, getBuildCount(),
+                       Depend.getLuaVersion(), Ver.metaVersion) );
+                  os.exit( 0 );
+               }
+               case "--builtin" {
+                  forsort typeInfo, typeId in Ast.getBuiltInTypeIdMap() {
+                     print( typeId, typeInfo.getTxt( ## ) );
+                  }
+                  os.exit( 0 );
+               }
+               case "-mklunemod" {
+                  let path = getNextOp();
+                  if! let mess = outputLuneMod( path ) {
+                     Util.errorLog( mess );
+                     os.exit( 1 );
+                  }
+                  os.exit( 0 );
+               }
+               case "--mkbuiltin" {
+                  let! path = getNextOp() {
+                     path = ".";
+                  };
+                  option.scriptPath = path .. "/lns_builtin.lns";
+                  option.mode = .Builtin;
+               }
+               case "-r" {
+                  option.useLuneModule = getRuntimeModule();
+               }
+               case "--runtime" {
+                  option.useLuneModule = getNextOp();
+               }
+               case "-oc" {
+                  option.bootPath = getNextOp();
+               }
+               case "-u" {
+                  option.updateOnLoad = true;
+               }
+               case "-Werror" {
+                  option.transCtrlInfo.stopByWarning = true;
+               }
+               case "--disable-checking-define-abbr" {
+                  option.transCtrlInfo.checkingDefineAbbr = false;
+               }
+               case "--compat-comment" {
+                  option.transCtrlInfo.compatComment = true;
+               }
+               case "--warning-shadowing" {
+                  option.transCtrlInfo.warningShadowing = true;
+               }
+               case "--valid-luaval" {
+                  option.transCtrlInfo.validLuaval = true;
+               }
+               case "--default-lazy" {
+                  option.transCtrlInfo.defaultLazy = true;
+               }
+               case "--package" {
+                  option.packageName = getNextOp();
+               }
+               case "--app" {
+                  if! getNextOp() {
+                     option.appName = _exp;
+                  }
+               }
+               case "--log" {
+                  if! let txt = getNextOp() {
+                     if! let level = Log.str2level( txt ) {
+                        Log.setLevel( level );
+                     }
+                     else {
+                        Util.errorLog( "illegal level -- %s" ( txt ) );
+                     }
+                  }
+               }
+               case "--testing" {
+                  option.testing = true;
+               }
+               case "--depends" {
+                  option.dependsPath = getNextOp();
+               }
+               case "--use-ipairs" {
+                  option.useIpairs = true;
+               }
+               case "--uptodate" {
+                  if! let txt = getNextOp() {
+                     if! let mode = Types.CheckingUptodateMode._from( txt ) {
+                        option.transCtrlInfo.uptodateMode = mode;
+                     }
+                     else {
+                        Util.errorLog( "illegal mode -- " .. txt );
+                     }
+                  }
+               }
+               case "-langC" {
+                  option.convTo = .C;
+                  option.transCtrlInfo.validLuaval = true;
+               }
+               case "-langGo" {
+                  option.convTo = .Go;
+                  option.transCtrlInfo.validLuaval = true;
+               }
+               case "-ol" {
+                  if! let txt = getNextOp() {
+                     switch txt {
+                        case "51" {
+                           option.targetLuaVer = LuaVer.ver51;
+                        }
+                        case "52" {
+                           option.targetLuaVer = LuaVer.ver52;
+                        }
+                        case "53" {
+                           option.targetLuaVer = LuaVer.ver53;
+                        }
+                     }
+                  }
+               }
+               case "-ob0", "-ob1" {
+                  option.byteCompile = true;
+                  if arg == "-ob0" {
+                     option.stripDebugInfo = true;
+                  }
+               }
+               default {
+                  Util.log( "unknown option -- '%s'" (arg) );
                   os.exit( 1 );
                }
-               os.exit( 0 );
             }
-            case "--mkbuiltin" {
-               let! path = getNextOp() {
-                  path = ".";
-               };
-               option.scriptPath = path .. "/lns_builtin.lns";
-               option.mode = .Builtin;
+         } else {
+            if #option.shebangArgList == 0 {
+               option.shebangArgList.insert( option.scriptPath );
             }
-            case "-r" {
-               option.useLuneModule = getRuntimeModule();
-            }
-            case "--runtime" {
-               option.useLuneModule = getNextOp();
-            }
-            case "-oc" {
-               option.bootPath = getNextOp();
-            }
-            case "-u" {
-               option.updateOnLoad = true;
-            }
-            case "-Werror" {
-               option.transCtrlInfo.stopByWarning = true;
-            }
-            case "--disable-checking-define-abbr" {
-               option.transCtrlInfo.checkingDefineAbbr = false;
-            }
-            case "--compat-comment" {
-               option.transCtrlInfo.compatComment = true;
-            }
-            case "--warning-shadowing" {
-               option.transCtrlInfo.warningShadowing = true;
-            }
-            case "--valid-luaval" {
-               option.transCtrlInfo.validLuaval = true;
-            }
-            case "--default-lazy" {
-               option.transCtrlInfo.defaultLazy = true;
-            }
-            case "--package" {
-               option.packageName = getNextOp();
-            }
-            case "--app" {
-               if! getNextOp() {
-                  option.appName = _exp;
-               }
-            }
-            case "--log" {
-               if! let txt = getNextOp() {
-                  if! let level = Log.str2level( txt ) {
-                     Log.setLevel( level );
-                  }
-                  else {
-                     Util.errorLog( "illegal level -- %s" ( txt ) );
-                  }
-               }
-            }
-            case "--testing" {
-               option.testing = true;
-            }
-            case "--depends" {
-               option.dependsPath = getNextOp();
-            }
-            case "--use-ipairs" {
-               option.useIpairs = true;
-            }
-            case "--uptodate" {
-               if! let txt = getNextOp() {
-                  if! let mode = Types.CheckingUptodateMode._from( txt ) {
-                     option.transCtrlInfo.uptodateMode = mode;
-                  }
-                  else {
-                     Util.errorLog( "illegal mode -- " .. txt );
-                  }
-               }
-            }
-            case "-langC" {
-               option.convTo = .C;
-               option.transCtrlInfo.validLuaval = true;
-            }
-            case "-langGo" {
-               option.convTo = .Go;
-               option.transCtrlInfo.validLuaval = true;
-            }
-            case "-ol" {
-               if! let txt = getNextOp() {
-                  switch txt {
-                     case "51" {
-                        option.targetLuaVer = LuaVer.ver51;
-                     }
-                     case "52" {
-                        option.targetLuaVer = LuaVer.ver52;
-                     }
-                     case "53" {
-                        option.targetLuaVer = LuaVer.ver53;
-                     }
-                  }
-               }
-            }
-            case "-ob0", "-ob1" {
-               option.byteCompile = true;
-               if arg == "-ob0" {
-                  option.stripDebugInfo = true;
-               }
-            }
-            default {
-               Util.log( "unknown option -- '%s'" (arg) );
-               os.exit( 1 );
-            }
+            option.shebangArgList.insert( arg );
          }
       }
       else {
@@ -487,6 +494,9 @@ usage:
                   option.outputDir = arg;
                }
                case .Shebang {
+                  if #option.shebangArgList == 0 {
+                     option.shebangArgList.insert( option.scriptPath );
+                  }
                   option.shebangArgList.insert( arg );
                }
                default {

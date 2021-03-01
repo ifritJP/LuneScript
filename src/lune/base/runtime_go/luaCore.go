@@ -50,6 +50,19 @@ import "unsafe"
 //import "sync"
 //import "fmt"
 
+type lnsSrcInfo struct {
+  codeC *C.char
+  len int
+}
+var lnsSrcMap map[string] *lnsSrcInfo
+func init() {
+    lnsSrcMap = map[string] *lnsSrcInfo{}
+}
+
+func AddlnsSrcInfo( key string, code []byte ) {
+    lnsSrcMap[ key ] = &lnsSrcInfo{ C.CString( string( code ) ), len( code ) }
+}
+
 // lua の package.preload に登録される関数。
 // lua の第一引数にロードするモジュール名が渡される。
 // 戻り値として、ロード後の値を push する。

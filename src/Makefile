@@ -26,6 +26,8 @@ LNSC_LUA=$(LUA) lune/base/base.lua
 LNSC_GO=./lnsc
 LNSC_LUAROCKS=~/.luarocks/bin/lnsc
 
+LNSC_LUA51=$(LUA51) lune/base/base.lua
+
 # make のパラメータで言語を切り替える場合、
 # LNSC_CMD や LNSC を直接変更するのではなく LANG_KIND を変更する。
 LANG_KIND=lua
@@ -129,6 +131,7 @@ $(DEPENDS_META):
 
 build_from_d: $(DEPENDS_META)
 ifeq ($(WITH_GO),y)
+	$(call binding-lns-go,.)
 	$(call go-build-lns,.)
 endif
 
@@ -379,6 +382,17 @@ define cp_src_set_sub
 		-iname $2 -exec cp -p {} $3 \;
 endef
 
+ifeq ($(WITH_GO),y)
+define dump-lns-lua-ver
+	-($1 --version | sed 's/.*Lua\([0-9\.]*\).*/\1/g') > $2
+endef
+else
+define dump-lns-lua-ver
+	echo skip dump-lns-lua-ver
+endef
+endif
+
+
 # lns のビルドに必要なソース群をコピーする
 #
 # $1: コピー先ディレクトリ
@@ -398,6 +412,9 @@ define cp_src_set
 
 	cp -au $2/lune/base/runtime_go $1/lune/base/runtime_go
 	cp -au $2/misc $1/misc
+
+	$(call dump-lns-lua-ver,$(LNSC_GO),$1/ver_lns_lua)
+	$(call dump-lns-lua-ver,$(LNSC_LUA),$1/ver_lua)
 endef
 
 test-global:
@@ -470,6 +487,9 @@ endif
 
 	@echo finish to build 
 	@LANG= date
+
+
+
 
 test-comp-with-go:
 	$(MAKE) test-comp LANG_KIND=go WITH_GO=y LANG_KIND=go
@@ -833,7 +853,7 @@ endif
 
 ifdef LUA51
 ifneq ($(shell which $(LUA51)),)
-	$(MAKE) test-lua51
+	$(MAKE) test-lua51 WITH_GO=
 endif
 endif
 
@@ -893,7 +913,7 @@ define setup-lua51-test-cross
 endef
 
 test-lua51-mkruntime:
-	$(call exeLune,$(LNSC),work/5,-mklunemod,lune/base/runtime.lua)
+	$(call exeLune,$(LNSC_LUA51),work/5,-mklunemod,lune/base/runtime.lua)
 
 test-lua51:
 # LuneScript を Lua 5.1 にクロスコンパイルして実行
@@ -915,7 +935,7 @@ ifeq ($(WITH_GO),y)
 	cp $(LNSC_GO) work/7
 endif
 	$(call setup-lua51-test-cross,work/7)
-	$(call exeLune,$(LNSC),work/7,test/start.lns,-u -ol 51 SAVE,$(EXE_OPT))
+	$(call exeLune,$(LNSC_LUA),work/7,test/start.lns,-u -ol 51 SAVE,$(EXE_OPT))
 	(cd work/7; $(LUA51) test/start.lua) | sed 's/\.0//g' > work/test7-3.result
 
 	diff work/test6.result  work/test7.result 
@@ -956,8 +976,7 @@ endif
 	if [ -f work/3/$(LNSC_GO) ]; then			\
 		cp work/3/$(LNSC_GO) $(ORG_DIR).;		\
 		cp work/3/lune/base/*.go $(ORG_DIR)lune/base/;	\
-		cp work/3/lune/base/runtime_go/binding.go	\
-				$(ORG_DIR)lune/base/runtime_go;	\
+		cp work/3/lune/binding.go $(ORG_DIR)lune;	\
 	fi
 ifneq ($(ENABLE_LUA51),)
 	cp work/6/lune/base/*.lns $(ORG_DIR)legacy/lua51/lune/base/
@@ -1453,10 +1472,14 @@ test-subgo:
 
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),front,lune/base,./test)
 
-
 define binding-lns-go
-	$(LNSC_LUA) misc/go/binding/bind.lns shebang
-	mv output.go $1/lune/base/runtime_go/binding.go 
+	if diff $1/ver_lns_lua $1/ver_lua; then					\
+		$(LNSC_LUA) misc/go/binding/bind.lns shebang -b $1;		\
+	else									\
+		$(LNSC_LUA) misc/go/binding/bind.lns shebang $1;		\
+	fi
+
+	mv output.go $1/lune/binding.go
 endef
 
 define go-build-lns
@@ -1470,6 +1493,7 @@ go-build:
 	rm -rf $(GO_WORK_DIR)
 	$(call setup-go,$(GO_WORK_DIR))
 	$(call setup-go,$(GO_WORK_DIR)/test)
+	$(call cp_src_set,$(GO_WORK_DIR)/test,.)
 
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Testing,,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Async,,./test)
@@ -1500,6 +1524,8 @@ go-build:
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/OutputDepend,,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/glueFilter,,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/front,,./test)
+
+	$(call binding-lns-go,$(GO_WORK_DIR)/test)
 
 	$(call go-build-lns,$(GO_WORK_DIR)/test)
 
@@ -1540,7 +1566,7 @@ endif
 	cat work/go.time work/lua.time
 	diff -r work/1 work/2 -I buildId				\
 		-I ': Entering directory'				\
-		-I ': Leaving directory' -x '$(notdir $(LNSC_GO))'
+		-I ': Leaving directory' -x '$(notdir $(LNSC_GO))' -x ast
 
 
 define test-buildlns-setup

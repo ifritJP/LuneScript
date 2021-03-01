@@ -283,7 +283,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 6717
+   return 6793
 end
 
 
@@ -633,162 +633,172 @@ end
       local arg = argList[index]
       
       if arg:find( "^-" ) then
-         do
-            local _switchExp = (arg )
-            if _switchExp == "-i" then
-               useStdInFlag = true
-            elseif _switchExp == "-prof" then
-               option.validProf = true
-            elseif _switchExp == "--nodebug" then
-               Util.setDebugFlag( false )
-            elseif _switchExp == "--debug" then
-               Util.setDebugFlag( true )
-            elseif _switchExp == "-shebang" then
-               option.mode = ModeKind.Shebang
-            elseif _switchExp == "--version" then
-               print( string.format( "LuneScript: version %s (%d:%s) [%s]", Ver.version, getBuildCount(  ), Depend.getLuaVersion(  ), Ver.metaVersion) )
-               os.exit( 0 )
-            elseif _switchExp == "--builtin" then
-               do
-                  local __sorted = {}
-                  local __map = Ast.getBuiltInTypeIdMap(  )
-                  for __key in pairs( __map ) do
-                     table.insert( __sorted, __key )
-                  end
-                  table.sort( __sorted )
-                  for __index, typeId in ipairs( __sorted ) do
-                     local typeInfo = __map[ typeId ]
-                     do
-                        print( typeId, typeInfo:getTxt(  ) )
+         if option.mode ~= ModeKind.Shebang then
+            do
+               local _switchExp = (arg )
+               if _switchExp == "-i" then
+                  useStdInFlag = true
+               elseif _switchExp == "-prof" then
+                  option.validProf = true
+               elseif _switchExp == "--nodebug" then
+                  Util.setDebugFlag( false )
+               elseif _switchExp == "--debug" then
+                  Util.setDebugFlag( true )
+               elseif _switchExp == "-shebang" then
+                  option.mode = ModeKind.Shebang
+               elseif _switchExp == "--version" then
+                  print( string.format( "LuneScript: version %s (%d:Lua%s) [%s]", Ver.version, getBuildCount(  ), Depend.getLuaVersion(  ), Ver.metaVersion) )
+                  os.exit( 0 )
+               elseif _switchExp == "--builtin" then
+                  do
+                     local __sorted = {}
+                     local __map = Ast.getBuiltInTypeIdMap(  )
+                     for __key in pairs( __map ) do
+                        table.insert( __sorted, __key )
+                     end
+                     table.sort( __sorted )
+                     for __index, typeId in ipairs( __sorted ) do
+                        local typeInfo = __map[ typeId ]
+                        do
+                           print( typeId, typeInfo:getTxt(  ) )
+                        end
                      end
                   end
-               end
-               
-               os.exit( 0 )
-            elseif _switchExp == "-mklunemod" then
-               local path = getNextOp(  )
-               do
-                  local mess = outputLuneMod( path )
-                  if mess ~= nil then
-                     Util.errorLog( mess )
+                  
+                  os.exit( 0 )
+               elseif _switchExp == "-mklunemod" then
+                  local path = getNextOp(  )
+                  do
+                     local mess = outputLuneMod( path )
+                     if mess ~= nil then
+                        Util.errorLog( mess )
+                        os.exit( 1 )
+                     end
+                  end
+                  
+                  os.exit( 0 )
+               elseif _switchExp == "--mkbuiltin" then
+                  local path = getNextOp(  )
+                  if  nil == path then
+                     local _path = path
+                  
+                     path = "."
+                  end
+                  
+                  option.scriptPath = path .. "/lns_builtin.lns"
+                  option.mode = ModeKind.Builtin
+               elseif _switchExp == "-r" then
+                  option.useLuneModule = getRuntimeModule(  )
+               elseif _switchExp == "--runtime" then
+                  option.useLuneModule = getNextOp(  )
+               elseif _switchExp == "-oc" then
+                  option.bootPath = getNextOp(  )
+               elseif _switchExp == "-u" then
+                  option.updateOnLoad = true
+               elseif _switchExp == "-Werror" then
+                  option.transCtrlInfo.stopByWarning = true
+               elseif _switchExp == "--disable-checking-define-abbr" then
+                  option.transCtrlInfo.checkingDefineAbbr = false
+               elseif _switchExp == "--compat-comment" then
+                  option.transCtrlInfo.compatComment = true
+               elseif _switchExp == "--warning-shadowing" then
+                  option.transCtrlInfo.warningShadowing = true
+               elseif _switchExp == "--valid-luaval" then
+                  option.transCtrlInfo.validLuaval = true
+               elseif _switchExp == "--default-lazy" then
+                  option.transCtrlInfo.defaultLazy = true
+               elseif _switchExp == "--package" then
+                  option.packageName = getNextOp(  )
+               elseif _switchExp == "--app" then
+                  do
+                     local _exp = getNextOp(  )
+                     if _exp ~= nil then
+                        option.appName = _exp
+                     end
+                  end
+                  
+               elseif _switchExp == "--log" then
+                  do
+                     local txt = getNextOp(  )
+                     if txt ~= nil then
+                        do
+                           local level = Log.str2level( txt )
+                           if level ~= nil then
+                              Log.setLevel( level )
+                           else
+                              Util.errorLog( string.format( "illegal level -- %s", txt) )
+                           end
+                        end
+                        
+                     end
+                  end
+                  
+               elseif _switchExp == "--testing" then
+                  option.testing = true
+               elseif _switchExp == "--depends" then
+                  option.dependsPath = getNextOp(  )
+               elseif _switchExp == "--use-ipairs" then
+                  option.useIpairs = true
+               elseif _switchExp == "--uptodate" then
+                  do
+                     local txt = getNextOp(  )
+                     if txt ~= nil then
+                        do
+                           local mode = Types.CheckingUptodateMode._from( txt )
+                           if mode ~= nil then
+                              option.transCtrlInfo.uptodateMode = mode
+                           else
+                              Util.errorLog( "illegal mode -- " .. txt )
+                           end
+                        end
+                        
+                     end
+                  end
+                  
+               elseif _switchExp == "-langC" then
+                  option.convTo = Types.Lang.C
+                  option.transCtrlInfo.validLuaval = true
+               elseif _switchExp == "-langGo" then
+                  option.convTo = Types.Lang.Go
+                  option.transCtrlInfo.validLuaval = true
+               elseif _switchExp == "-ol" then
+                  do
+                     local txt = getNextOp(  )
+                     if txt ~= nil then
+                        do
+                           local _switchExp = txt
+                           if _switchExp == "51" then
+                              option.targetLuaVer = LuaVer.ver51
+                           elseif _switchExp == "52" then
+                              option.targetLuaVer = LuaVer.ver52
+                           elseif _switchExp == "53" then
+                              option.targetLuaVer = LuaVer.ver53
+                           end
+                        end
+                        
+                     end
+                  end
+                  
+               elseif _switchExp == "-ob0" or _switchExp == "-ob1" then
+                  option.byteCompile = true
+                  if arg == "-ob0" then
+                     option.stripDebugInfo = true
+                  end
+                  
+               else 
+                  
+                     Util.log( string.format( "unknown option -- '%s'", arg) )
                      os.exit( 1 )
-                  end
                end
-               
-               os.exit( 0 )
-            elseif _switchExp == "--mkbuiltin" then
-               local path = getNextOp(  )
-               if  nil == path then
-                  local _path = path
-               
-                  path = "."
-               end
-               
-               option.scriptPath = path .. "/lns_builtin.lns"
-               option.mode = ModeKind.Builtin
-            elseif _switchExp == "-r" then
-               option.useLuneModule = getRuntimeModule(  )
-            elseif _switchExp == "--runtime" then
-               option.useLuneModule = getNextOp(  )
-            elseif _switchExp == "-oc" then
-               option.bootPath = getNextOp(  )
-            elseif _switchExp == "-u" then
-               option.updateOnLoad = true
-            elseif _switchExp == "-Werror" then
-               option.transCtrlInfo.stopByWarning = true
-            elseif _switchExp == "--disable-checking-define-abbr" then
-               option.transCtrlInfo.checkingDefineAbbr = false
-            elseif _switchExp == "--compat-comment" then
-               option.transCtrlInfo.compatComment = true
-            elseif _switchExp == "--warning-shadowing" then
-               option.transCtrlInfo.warningShadowing = true
-            elseif _switchExp == "--valid-luaval" then
-               option.transCtrlInfo.validLuaval = true
-            elseif _switchExp == "--default-lazy" then
-               option.transCtrlInfo.defaultLazy = true
-            elseif _switchExp == "--package" then
-               option.packageName = getNextOp(  )
-            elseif _switchExp == "--app" then
-               do
-                  local _exp = getNextOp(  )
-                  if _exp ~= nil then
-                     option.appName = _exp
-                  end
-               end
-               
-            elseif _switchExp == "--log" then
-               do
-                  local txt = getNextOp(  )
-                  if txt ~= nil then
-                     do
-                        local level = Log.str2level( txt )
-                        if level ~= nil then
-                           Log.setLevel( level )
-                        else
-                           Util.errorLog( string.format( "illegal level -- %s", txt) )
-                        end
-                     end
-                     
-                  end
-               end
-               
-            elseif _switchExp == "--testing" then
-               option.testing = true
-            elseif _switchExp == "--depends" then
-               option.dependsPath = getNextOp(  )
-            elseif _switchExp == "--use-ipairs" then
-               option.useIpairs = true
-            elseif _switchExp == "--uptodate" then
-               do
-                  local txt = getNextOp(  )
-                  if txt ~= nil then
-                     do
-                        local mode = Types.CheckingUptodateMode._from( txt )
-                        if mode ~= nil then
-                           option.transCtrlInfo.uptodateMode = mode
-                        else
-                           Util.errorLog( "illegal mode -- " .. txt )
-                        end
-                     end
-                     
-                  end
-               end
-               
-            elseif _switchExp == "-langC" then
-               option.convTo = Types.Lang.C
-               option.transCtrlInfo.validLuaval = true
-            elseif _switchExp == "-langGo" then
-               option.convTo = Types.Lang.Go
-               option.transCtrlInfo.validLuaval = true
-            elseif _switchExp == "-ol" then
-               do
-                  local txt = getNextOp(  )
-                  if txt ~= nil then
-                     do
-                        local _switchExp = txt
-                        if _switchExp == "51" then
-                           option.targetLuaVer = LuaVer.ver51
-                        elseif _switchExp == "52" then
-                           option.targetLuaVer = LuaVer.ver52
-                        elseif _switchExp == "53" then
-                           option.targetLuaVer = LuaVer.ver53
-                        end
-                     end
-                     
-                  end
-               end
-               
-            elseif _switchExp == "-ob0" or _switchExp == "-ob1" then
-               option.byteCompile = true
-               if arg == "-ob0" then
-                  option.stripDebugInfo = true
-               end
-               
-            else 
-               
-                  Util.log( string.format( "unknown option -- '%s'", arg) )
-                  os.exit( 1 )
             end
+            
+         else
+          
+            if #option.shebangArgList == 0 then
+               table.insert( option.shebangArgList, option.scriptPath )
+            end
+            
+            table.insert( option.shebangArgList, arg )
          end
          
       else
@@ -826,6 +836,10 @@ end
                elseif _switchExp == ModeKind.Save or _switchExp == ModeKind.SaveMeta or _switchExp == ModeKind.Glue then
                   option.outputDir = arg
                elseif _switchExp == ModeKind.Shebang then
+                  if #option.shebangArgList == 0 then
+                     table.insert( option.shebangArgList, option.scriptPath )
+                  end
+                  
                   table.insert( option.shebangArgList, arg )
                else 
                   
@@ -864,7 +878,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 520, function (  )
+   Log.log( Log.Level.Log, __func__, 530, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )
