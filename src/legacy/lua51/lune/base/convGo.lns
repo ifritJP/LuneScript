@@ -89,10 +89,20 @@ class Env {
    }
 }
 
+fn isMain(funcType:&Ast.TypeInfo) : bool {
+   if funcType.$kind == .Func and funcType.$rawTxt == "__main" and
+      funcType.$accessMode == .Pub
+   {
+      return true;
+   }
+   return false;
+}
+
 
 pub class Option {
    local let packageName:str {pub};
    local let appName:str {pub};
+   local let mainModule:str {pub};
 }
 
 class convFilter extend Nodes.Filter<Opt> {
@@ -1696,6 +1706,7 @@ pub override fn convFilter.processRoot(
    self.writeln( "package %s" (self.option.packageName) );
    self.writeln( 'import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"');
 
+
    foreach workNode in node.$nodeManager.getImportNodeList() {
       self.outputImport( workNode );
    }
@@ -1839,6 +1850,26 @@ pub override fn convFilter.processRoot(
 
    self.popIndent();
    self.writeln( "}" );
+
+   if self.option.mainModule == self.getCanonicalName( self.moduleTypeInfo, false ) {
+      // このモジュールが main の場合
+      let mut hasMain = false;
+      foreach workNode in node.$nodeManager.getDeclFuncNodeList() {
+         if isMain( workNode.$expType ) {
+            hasMain = true;
+            break;
+         }
+      }
+      if not hasMain {
+         // main 関数を定義していない場合
+         self.writeln(
+            "func %s___main(args *LnsList) LnsInt {"
+            ( getModuleName( self.moduleTypeInfo )) );
+         self.writeln( "Lns_%s_init()" (getModuleName( self.$moduleTypeInfo )) );
+         self.writeln( "return 0" );
+         self.writeln( "}" );
+      }
+   }
 
    self.writeln( "func init() {" );
    self.pushIndent( ## );
@@ -2252,6 +2283,10 @@ pub fn convFilter.outputDeclFuncInfo(
    self.writeln( " {" );
 
    self.pushIndent(##);
+
+   if isMain( funcType ) {
+      self.writeln( "Lns_%s_init()" (getModuleName( self.$moduleTypeInfo )) );
+   }
    
    if declInfo.$has__func__Symbol {
       let mut nameSpace = self.getCanonicalName( funcType.$parentInfo, false );
@@ -5382,7 +5417,7 @@ __test {
       let mut stream = new Util.memStream();
 
       let mut conv = createFilter( false, streamName, stream, ast,
-                                   new Option( "lns", "lnsgo" ) );
+                                   new Option( "lns", "lnsgo", "" ) );
 
       ast.$node.processFilter( conv, new Opt( ast.$node ));
 

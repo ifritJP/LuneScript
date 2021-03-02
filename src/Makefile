@@ -615,7 +615,7 @@ endef
 
 define test-shebang
 	cat test/Shebang.lns | \
-		sed 's@^#!.*@#! /usr/bin/env -S $(LNSC) -shebang@g' > $1/test/Shebang2.lns
+		sed 's@^#!.*@#! ./lnsc -shebang@g' > $1/test/Shebang2.lns
 	chmod +x $1/test/Shebang2.lns
 	(cd $1; ./test/Shebang2.lns $2 && echo OK || echo __ok)
 endef
@@ -691,8 +691,10 @@ test-org:
 		grep -e 'error:' -e 'warning:' >> work/test1.result
 	$(MAKE) TEST_DIR=. test-etc >> work/test1.result
 	$(call exeFront,.) >> work/test1.result
+ifeq ($(WITH_GO),y)
 	$(call test-shebang,.,a b c) >> work/test1.result
 	$(call test-shebang,.,) >> work/test1.result
+endif
 ifndef SKIP_CHECKING_TESTING
 # 現状、CI 環境では --testing が正常が動かないので、ここは skip する
 	$(call exeLune,$(LNSC),.,test/testing.lns,exe, --testing $(EXE_OPT) 2>&1) >> work/test1.result
@@ -727,8 +729,10 @@ test-new:
 		grep -e 'error:' -e 'warning:' >> work/test2.result
 	$(MAKE) TEST_DIR=work/3 test-etc >> work/test2.result
 	$(call exeFront,work/3) >> work/test2.result
+ifeq ($(WITH_GO),y)
 	$(call test-shebang,work/3,a b c) >> work/test2.result
 	$(call test-shebang,work/3,) >> work/test2.result
+endif
 
 ifndef SKIP_CHECKING_TESTING
 # 現状、CI 環境では --testing が正常が動かないので、ここは skip する

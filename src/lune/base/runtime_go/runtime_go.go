@@ -25,6 +25,7 @@ SOFTWARE.
 package runtimelns
 
 import "fmt"
+import "os"
 import "math"
 import "reflect"
 import "strconv"
@@ -111,6 +112,15 @@ func Lns_InitModOnce() {
     cur_LnsEnv = createEnv()
     
     Lns_package_path = cur_LnsEnv.LuaVM.GetPackagePath()
+}
+
+func Lns_RunMain( mainFunc func (args *LnsList) LnsInt ) {
+    args := []LnsAny{}
+    for _, arg := range( os.Args ) {
+        args = append( args, arg )
+    }
+
+    os.Exit( mainFunc( NewLnsList( args ) ) )
 }
 
 

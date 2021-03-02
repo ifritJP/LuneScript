@@ -109,6 +109,7 @@ pub class Option {
    pub let mut packageName:str!;
    /** アプリ名 */
    pub let mut appName:str;
+   pub let mut mainModule:str;
 
    pub let mut transCtrlInfo:Types.TransCtrlInfo;
 
@@ -126,6 +127,7 @@ pub class Option {
    pub fn __init() {
       self.shebangArgList = [];
       self.outputPath = nil;
+      self.mainModule = "";
       self.appName = "lnsc";
       self.packageName = nil;
       self.testing = false;
@@ -387,6 +389,11 @@ usage:
                case "--app" {
                   if! getNextOp() {
                      option.appName = _exp;
+                  }
+               }
+               case "--main" {
+                  if! getNextOp() {
+                     option.mainModule = _exp;
                   }
                }
                case "--log" {

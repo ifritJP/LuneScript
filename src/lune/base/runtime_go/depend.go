@@ -25,6 +25,7 @@ SOFTWARE.
 package runtimelns
 
 import "os"
+import "path"
 import "fmt"
 import "runtime/pprof"
 
@@ -188,4 +189,16 @@ func Depend_runMain( mainFunc LnsAny, argList *LnsList ) LnsInt {
         return ret[ 0 ].(LnsInt);
     }
     return -1;
+}
+
+func Depend_getGOPATH() LnsAny {
+    val, exist := os.LookupEnv( "GOPATH" )
+    if !exist {
+        val, exist = os.LookupEnv( "HOME" )
+        if !exist {
+            return nil;
+        }
+        return path.Join( val, "go" );
+    }
+    return val;
 }

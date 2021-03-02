@@ -385,4 +385,25 @@ local function runMain( mainFunc, argList )
 end
 _moduleObj.runMain = runMain
 
+local function getGOPATH(  )
+
+   local OS = require( "os" )
+   do
+      local path = OS.getenv( "GOPATH" )
+      if path ~= nil then
+         return path
+      end
+   end
+   
+   do
+      local home = OS.getenv( "HOME" )
+      if home ~= nil then
+         return home .. "/go"
+      end
+   end
+   
+   return nil
+end
+_moduleObj.getGOPATH = getGOPATH
+
 return _moduleObj

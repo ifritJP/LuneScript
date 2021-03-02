@@ -283,7 +283,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 6793
+   return 6840
 end
 
 
@@ -379,6 +379,7 @@ end
 function Option:__init() 
    self.shebangArgList = {}
    self.outputPath = nil
+   self.mainModule = ""
    self.appName = "lnsc"
    self.packageName = nil
    self.testing = false
@@ -717,6 +718,14 @@ end
                      end
                   end
                   
+               elseif _switchExp == "--main" then
+                  do
+                     local _exp = getNextOp(  )
+                     if _exp ~= nil then
+                        option.mainModule = _exp
+                     end
+                  end
+                  
                elseif _switchExp == "--log" then
                   do
                      local txt = getNextOp(  )
@@ -878,7 +887,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 530, function (  )
+   Log.log( Log.Level.Log, __func__, 537, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

@@ -167,3 +167,16 @@ pub fn runMain( mainFunc: &Luaval<stem>!, argList:&List<str> ) : int {
    }
    return -1;
 }
+
+pub fn getGOPATH() : str! {
+   module OS require "os" {
+      pub static fn getenv(name:str):str!;
+   }
+   if! let path = OS.getenv( "GOPATH" ) {
+      return path;
+   }
+   if! let home = OS.getenv( "HOME" ) {
+      return home .. "/go";
+   }
+   return nil;
+}
