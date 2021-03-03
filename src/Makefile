@@ -1329,7 +1329,7 @@ define test-go-one-exec
 	if [ $4 != "." ]; then mv $2/$4/$3.go $2; fi
 	$(call buildGo,$2,test.exe) >> work/result-testGo.txt
 	if test "${NO_LUA_DIFF}" = ""; then					\
-		$(call exeLune,$1,$2,$4/$3.lns,exe) >> work/result-testGo2.txt &&	\
+		$(call exeLune,$1,$2,$4/$3.lns,shebang) >> work/result-testGo2.txt &&	\
 		diff -C 2 -I 'ONLY_LUA' -I 'DIFF_IGNORE'			\
 				work/result-testGo.txt work/result-testGo2.txt;	\
 	fi
