@@ -290,7 +290,7 @@ fn concatGLSym( name:str, external:bool ) : str {
    //return (external and "G" or "l") .. name;
 }
 
-pub fn outputGoMain( mod:str, testing:bool, path:str! ):str! {
+pub fn outputGoMain( appName:str, mod:str, testing:bool, path:str! ):str! {
   
    let mut lune_path = "main.go";
    when! path {
@@ -326,17 +326,17 @@ func main() {
       // 実行するメインモジュールが別ディレクトリの場合、
       // そのパッケージを import する。
       let importPath = mod.gsub( "%.[^%.]+$", "" ).gsub( "%.", "/" );
-      code = code.gsub( "//IMPORT_MAIN:", 'import . "%s"' (importPath) );
+      code = code.gsub( "//IMPORT_MAIN:", 'import . "%s/%s"' (appName,importPath) );
    } 
 
    if testing {
-      code = base_mainCode.gsub( "Lns_init", "Lns_%s_init" (mainMod));
+      code = code.gsub( "Lns_init", "Lns_%s_init" (mainMod));
       code = code.gsub( "//TEST:", "" );
       code = code.gsub( 'run%( "" %)', 'run( "lune.base.%s" )' (mainMod) );
       code = code.gsub(
          '//IMPORT:', 'import . "github.com/ifritJP/LuneScript/src/lune/base"' );
    } else {
-      code = base_mainCode.gsub(
+      code = code.gsub(
          "Lns_init%(%)", "Lns_RunMain( %s___main )" (concatGLSym( mainMod, true )));
    }
    
@@ -1907,7 +1907,8 @@ pub override fn convFilter.processRoot(
    self.popIndent();
    self.writeln( "}" );
 
-   if self.option.mainModule == self.getCanonicalName( self.moduleTypeInfo, false ) {
+   if self.option.mainModule ==
+      self.getCanonicalName( self.moduleTypeInfo, false ).gsub( "@", "" ) {
       // このモジュールが main の場合
       let mut hasMain = false;
       foreach workNode in node.$nodeManager.getDeclFuncNodeList() {
@@ -1918,10 +1919,11 @@ pub override fn convFilter.processRoot(
       }
       if not hasMain {
          // main 関数を定義していない場合
+         let moduleSym = getModuleName( self.moduleTypeInfo );
          self.writeln(
             "func %s___main(args *LnsList) LnsInt {"
-            ( getModuleName( self.moduleTypeInfo )) );
-         self.writeln( "Lns_%s_init()" (getModuleName( self.$moduleTypeInfo )) );
+            ( concatGLSym( moduleSym, true ) ) );
+         self.writeln( "Lns_%s_init()" (moduleSym) );
          self.writeln( "return 0" );
          self.writeln( "}" );
       }

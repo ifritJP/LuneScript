@@ -2126,7 +2126,7 @@ end
       elseif _switchExp == Option.ModeKind.MkMain then
          local mod = scriptPath2Module( self.option.scriptPath )
          do
-            local mess = convGo.outputGoMain( mod, self.option.testing, self.option.outputPath )
+            local mess = convGo.outputGoMain( self.option.appName, mod, self.option.testing, self.option.outputPath )
             if mess ~= nil then
                Util.errorLog( mess )
             end

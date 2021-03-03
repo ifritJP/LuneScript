@@ -1323,10 +1323,10 @@ define test-go-one-setup
 endef
 
 define test-go-one-exec
-	$(LNSC) $3 mkmain $2/main.go
+	$(LNSC) $5 mkmain $2/main.go $6
 	cp -au $4/$3.lns $2/$4
-	$(call convGo,$1,$2,$4/$3,--package main)
-	if [ $4 != "." ]; then mv $2/$4/$3.go $2; fi
+	$(call convGo,$1,$2,$4/$3,--main $5)
+#	if [ $4 != "." ]; then mv $2/$4/$3.go $2; fi
 	$(call buildGo,$2,test.exe) >> work/result-testGo.txt
 	if test "${NO_LUA_DIFF}" = ""; then					\
 		$(call exeLune,$1,$2,$4/$3.lns,shebang) >> work/result-testGo2.txt &&	\
@@ -1344,13 +1344,13 @@ endef
 define test-go-some-setup
 	cp -au $4/$3.lns $2/$4
 	touch $2/$4/$3.lns
-	$(call convGo,$1,$2,$4/$3,--package main)
-	mv $2/$4/$3.go $2
+	$(call convGo,$1,$2,$4/$3)
+#	mv $2/$4/$3.go $2
 endef
 
 
 define test-go-some
-	$(call test-go-one-exec,$1,$2,$3,$4)
+	$(call test-go-one-exec,$1,$2,$3,$4,$5,$6)
 endef
 
 
@@ -1376,8 +1376,9 @@ test-go:
 	$(call cmd_exec_trans,$(LNSC),.,.,,base/convGo)
 	$(call setup-go,$(GO_WORK_DIR))
 	$(call test-go-one-setup,$(GO_WORK_DIR))
+	rm $(GO_WORK_DIR)/test/*.c
 	$(call test-go-some-setup,$(LNSC),$(GO_WORK_DIR),SubGo,test)
-	$(call test-go-some,$(LNSC),$(GO_WORK_DIR),testGo,test)
+	$(call test-go-some,$(LNSC),$(GO_WORK_DIR),testGo,test,test.testGo,--app github.com/ifritJP/LuneScript/src)
 
 
 test-tutorial-go:
@@ -1496,48 +1497,48 @@ endef
 go-build:
 	rm -rf $(GO_WORK_DIR)
 	$(call setup-go,$(GO_WORK_DIR))
-	$(call setup-go,$(GO_WORK_DIR)/test)
-	$(call cp_src_set,$(GO_WORK_DIR)/test,.)
+	$(call setup-go,$(GO_WORK_DIR)/build)
+	$(call cp_src_set,$(GO_WORK_DIR)/build,.)
 
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Testing,,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Async,,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Types,,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Ver,,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Code,,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/LuaMod,,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/LuaVer,,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/LuneControl,,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Meta,,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Log,,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Util,,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/AsyncParser,,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Parser,,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Json,,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Writer,,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/frontInterface,,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Ast,,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Option,,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Nodes,,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Formatter,,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Macro,,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/TransUnit,,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convLua,,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/dumpNode,,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convCC,,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convGo,,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/OutputDepend,,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/glueFilter,,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/front,,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Testing,,./build)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Async,,./build)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Types,,./build)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Ver,,./build)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Code,,./build)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/LuaMod,,./build)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/LuaVer,,./build)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/LuneControl,,./build)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Meta,,./build)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Log,,./build)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Util,,./build)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/AsyncParser,,./build)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Parser,,./build)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Json,,./build)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Writer,,./build)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/frontInterface,,./build)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Ast,,./build)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Option,,./build)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Nodes,,./build)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Formatter,,./build)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Macro,,./build)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/TransUnit,,./build)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convLua,,./build)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/dumpNode,,./build)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convCC,,./build)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convGo,,./build)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/OutputDepend,,./build)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/glueFilter,,./build)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/front,,./build)
 
-	$(call binding-lns-go,$(GO_WORK_DIR)/test)
+	$(call binding-lns-go,$(GO_WORK_DIR)/build)
 
-	$(call go-build-lns,$(GO_WORK_DIR)/test)
+	$(call go-build-lns,$(GO_WORK_DIR)/build)
 
 ifndef NO_TEST
 	$(MAKE) test-govslua
-	$(MAKE) LNSC=$(shell pwd)/$(GO_WORK_DIR)/test/$(LNSC_GO) test-lnsc-go
+	$(MAKE) LNSC=$(shell pwd)/$(GO_WORK_DIR)/build/$(LNSC_GO) test-lnsc-go
 endif
-	cp $(GO_WORK_DIR)/test/$(LNSC_GO) .
+	cp $(GO_WORK_DIR)/build/$(LNSC_GO) .
 
 test-lnsc-go:
 	-$(MAKE) test-go
@@ -1594,7 +1595,7 @@ test-govslua-go:
 ifdef TEST_MAIN_GO
 	cp $(LNSC_GO) work/2
 else
-	cp $(GO_WORK_DIR)/test/$(LNSC_GO) work/2
+	cp $(GO_WORK_DIR)/build/$(LNSC_GO) work/2
 endif
 	$(call test-buildlns-run,/usr/bin/time -f 'go:%e/%U/%S:$2' -o work/go.time -a work/2/$(LNSC_GO),work/2,go)
 
@@ -1608,7 +1609,7 @@ test-govslua-go-batch:
 
 
 goprof:
-	(cd work/go/test/; go tool pprof -dot cpu.pprof  ) | dot -Tsvg -odump.svg
+	(cd work/go/build/; go tool pprof -dot cpu.pprof  ) | dot -Tsvg -odump.svg
 
 
 

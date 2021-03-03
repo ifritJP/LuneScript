@@ -1565,7 +1565,7 @@ end
       case .MkMain {
          let mod = scriptPath2Module( self.option.scriptPath );
          if! let mess = convGo.outputGoMain(
-            mod, self.option.testing, self.option.outputPath )
+            self.option.appName, mod, self.option.testing, self.option.outputPath )
          {
             Util.errorLog( mess );
          }

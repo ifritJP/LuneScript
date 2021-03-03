@@ -1917,23 +1917,23 @@ func (self *front_Front) Exec() {
         return Option_ModeKind_getTxt( self.option.Mode)
     }))
     
-    if _switch8200 := self.option.Mode; _switch8200 == Option_ModeKind__Token {
+    if _switch8204 := self.option.Mode; _switch8204 == Option_ModeKind__Token {
         self.FP.DumpTokenize(self.option.ScriptPath)
-    } else if _switch8200 == Option_ModeKind__Ast {
+    } else if _switch8204 == Option_ModeKind__Ast {
         self.FP.DumpAst(self.option.ScriptPath)
-    } else if _switch8200 == Option_ModeKind__Format {
+    } else if _switch8204 == Option_ModeKind__Format {
         self.FP.Format(self.option.ScriptPath)
-    } else if _switch8200 == Option_ModeKind__Diag {
+    } else if _switch8204 == Option_ModeKind__Diag {
         self.FP.CheckDiag(self.option.ScriptPath)
-    } else if _switch8200 == Option_ModeKind__Complete {
+    } else if _switch8204 == Option_ModeKind__Complete {
         self.FP.Complete(self.option.ScriptPath)
-    } else if _switch8200 == Option_ModeKind__Inquire {
+    } else if _switch8204 == Option_ModeKind__Inquire {
         self.FP.Inquire(self.option.ScriptPath)
-    } else if _switch8200 == Option_ModeKind__Glue {
+    } else if _switch8204 == Option_ModeKind__Glue {
         self.FP.CreateGlue(self.option.ScriptPath)
-    } else if _switch8200 == Option_ModeKind__Lua || _switch8200 == Option_ModeKind__LuaMeta {
+    } else if _switch8204 == Option_ModeKind__Lua || _switch8204 == Option_ModeKind__LuaMeta {
         self.FP.convertToLua(self.option.ScriptPath)
-    } else if _switch8200 == Option_ModeKind__Save || _switch8200 == Option_ModeKind__SaveMeta {
+    } else if _switch8204 == Option_ModeKind__Save || _switch8204 == Option_ModeKind__SaveMeta {
         var createUpdateInfo func(scriptPath string,dependsPath LnsAny) *front_UpdateInfo
         createUpdateInfo = func(scriptPath string,dependsPath LnsAny) *front_UpdateInfo {
             var mod string
@@ -1985,7 +1985,7 @@ func (self *front_Front) Exec() {
                 self.FP.SaveToLua(createUpdateInfo(self.option.ScriptPath, nil))
             }
         }), self.option.ScriptPath + ".profi")
-    } else if _switch8200 == Option_ModeKind__Shebang {
+    } else if _switch8204 == Option_ModeKind__Shebang {
         {
             _modObj := front_convExp8029(Lns_2DDD(self.FP.LoadModule(Front_scriptPath2Module(self.option.ScriptPath))))
             if _modObj != nil {
@@ -1995,7 +1995,7 @@ func (self *front_Front) Exec() {
                 Lns_getVM().OS_exit(code)
             }
         }
-    } else if _switch8200 == Option_ModeKind__Exec {
+    } else if _switch8204 == Option_ModeKind__Exec {
         _ = front_convExp8050(Lns_2DDD(self.FP.LoadModule(Front_scriptPath2Module(self.option.ScriptPath))))
         if self.option.Testing{
             var code string
@@ -2016,15 +2016,15 @@ func (self *front_Front) Exec() {
                 Lns_print([]LnsAny{mess})
             }
         }
-    } else if _switch8200 == Option_ModeKind__BootC {
+    } else if _switch8204 == Option_ModeKind__BootC {
         self.FP.outputBootC(self.option.ScriptPath)
-    } else if _switch8200 == Option_ModeKind__Builtin {
+    } else if _switch8204 == Option_ModeKind__Builtin {
         self.FP.OutputBuiltin(self.option.ScriptPath)
-    } else if _switch8200 == Option_ModeKind__MkMain {
+    } else if _switch8204 == Option_ModeKind__MkMain {
         var mod string
         mod = Front_scriptPath2Module(self.option.ScriptPath)
         {
-            _mess := ConvGo_outputGoMain(mod, self.option.Testing, self.option.OutputPath)
+            _mess := ConvGo_outputGoMain(self.option.AppName, mod, self.option.Testing, self.option.OutputPath)
             if _mess != nil {
                 mess := _mess.(string)
                 Util_errorLog(mess)
