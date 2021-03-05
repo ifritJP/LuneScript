@@ -2091,7 +2091,7 @@ _DefBuiltinFuncType( [
          "clock": { "arg": [], "ret": ["real"] },
          "exit": { "arg": [ "int!" ], "ret": [ "__" ] },
          "remove": {"arg": [ "str" ], "ret": [ "bool!", "str!"] },
-         "date": {"arg": [ "str!", "stem!" ], "ret": [ "stem!"] },
+         "date": {"arg": [ "str!", "stem!" ], "ret": [ "Luaval<stem>!"] },
          "time": {"arg": [ "stem!" ], "ret": [ "stem!"] },
          "difftime": {"arg": [ "&stem", "&stem" ], "ret": [ "int"] },
          "rename": {"arg": [ "str", "str" ], "ret": [ "stem!", "str!"] },

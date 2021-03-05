@@ -2341,11 +2341,16 @@ fn TransUnit.analyzeDeclClass(
          if langToken.getExcludedDelimitTxt() ~= "" {
             foreach langId in Types.Lang.$_allList {
                if! Types.Lang._from( langId ) {
-                  if _exp.$_txt == langToken.txt {
+                  let ldName = _exp.$_txt.gsub( ".*%.", "");
+                  if ldName == langToken.txt {
                      moduleLang = _exp;
                      break;
                   }
                }
+            }
+            if moduleLang == nil {
+               self.errorAt(
+                  langToken.pos, "invalid lang -- %s" (langToken.txt) );
             }
          } else {
             moduleLang = .Same;
