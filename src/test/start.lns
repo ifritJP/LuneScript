@@ -1947,3 +1947,27 @@ _ = 1;
    }
    _hoge( func() );
 }
+{
+   Macro._section();
+   class Hoge{
+      let mut val:int{non,pri};
+      pub fn __init() {
+         self.val = 1;
+      }
+      pub fn func() mut {
+         self.set_val(1);
+      }
+   }
+   pub fn Hoge.func2() mut {
+      self.set_val(2);
+   }
+   pub fn Hoge.get() : int {
+      return self.val;
+   }
+
+   let mut hoge2 = new Hoge();
+   hoge2.func();
+   print( hoge2.get() );
+   hoge2.func2();
+   print( hoge2.get() );
+}

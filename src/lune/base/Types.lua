@@ -399,7 +399,7 @@ end
 function Token:getLineCount(  )
 
    local count = 1
-   for _90 in self.txt:gmatch( "\n" ) do
+   for _91 in self.txt:gmatch( "\n" ) do
       count = count + 1
    end
    

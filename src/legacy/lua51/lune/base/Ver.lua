@@ -18,7 +18,7 @@ end
 local version = "1.1.13"
 _moduleObj.version = version
 
-local metaVersion = "1.0.96"
+local metaVersion = "1.0.98"
 _moduleObj.metaVersion = metaVersion
 
 local luaModVersion = 3

@@ -2964,7 +2964,7 @@ func (self *convCC_ScopeMgr) InitconvCC_ScopeMgr(moduleCtrl *convCC_ModuleCtrl) 
 }
 
 // 792: decl @lune.@base.@convCC.ScopeMgr.setSymbolParam
-func convCC_ScopeMgr_setSymbolParam_1456_(scopeInfo *convCC_ScopeInfo,symbol *Ast_SymbolInfo) *convCC_SymbolParam {
+func convCC_ScopeMgr_setSymbolParam_1459_(scopeInfo *convCC_ScopeInfo,symbol *Ast_SymbolInfo) *convCC_SymbolParam {
     var param *convCC_SymbolParam
     if _switch3686 := convCC_getValKind_1167_(symbol.FP.Get_typeInfo()); _switch3686 == convCC_ValKind__Stem {
         param = NewconvCC_SymbolParam(convCC_ValKind__Stem, scopeInfo.StemNum, convCC_cTypeStem)
@@ -3037,7 +3037,7 @@ func (self *convCC_ScopeMgr) setupScopeParamSub(scope *Ast_Scope) *convCC_ScopeI
                             scopeInfo.VarNum = scopeInfo.VarNum + 1
                             
                         } else { 
-                            param = convCC_ScopeMgr_setSymbolParam_1456_(scopeInfo, symbol)
+                            param = convCC_ScopeMgr_setSymbolParam_1459_(scopeInfo, symbol)
                             
                         }
                     } else if _switch3998 == Ast_SymbolKind__Fun {
@@ -3091,13 +3091,13 @@ func (self *convCC_ScopeMgr) Setup(scope *Ast_Scope,declMemberList *LnsList) {
         var symbol *Ast_SymbolInfo
         symbol = declMember.FP.Get_symbolInfo()
         if convCC_isClassMember_1216_(symbol.FP){
-            symbol.FP.Set_convModuleParam(convCC_ScopeMgr_setSymbolParam_1456_(scopeInfo, symbol).FP)
+            symbol.FP.Set_convModuleParam(convCC_ScopeMgr_setSymbolParam_1459_(scopeInfo, symbol).FP)
         }
     }
 }
 
 // 926: decl @lune.@base.@convCC.ScopeMgr.create
-func convCC_ScopeMgr_create_1469_(moduleCtrl *convCC_ModuleCtrl,initBlockScope *Ast_Scope) *convCC_ScopeMgr {
+func convCC_ScopeMgr_create_1472_(moduleCtrl *convCC_ModuleCtrl,initBlockScope *Ast_Scope) *convCC_ScopeMgr {
     var scopeMgr *convCC_ScopeMgr
     scopeMgr = NewconvCC_ScopeMgr(moduleCtrl)
     var param *convCC_ScopeInfo
@@ -3475,7 +3475,7 @@ func (self *convCC_convFilter) InitconvCC_convFilter(enableTest bool,outputBuilt
     
     self.moduleCtrl = NewconvCC_ModuleCtrl(self.FP.Get_typeNameCtrl(), self.FP.Get_moduleInfoManager())
     
-    self.scopeMgr = convCC_ScopeMgr_create_1469_(self.moduleCtrl, Lns_unwrap( ast.FP.Get_moduleTypeInfo().FP.Get_scope()).(*Ast_Scope))
+    self.scopeMgr = convCC_ScopeMgr_create_1472_(self.moduleCtrl, Lns_unwrap( ast.FP.Get_moduleTypeInfo().FP.Get_scope()).(*Ast_Scope))
     
     self.stream = NewUtil_SimpleSourceOStream(stream, headerStream, convCC_stepIndent)
     

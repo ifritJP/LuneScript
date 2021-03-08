@@ -553,8 +553,8 @@ end
 function DefaultPushbackParser:getLastPos(  )
 
    local pos = self.parser:createPosition( 0, 0 )
-   if self.currentToken.kind ~= Types.TokenKind.Eof then
-      pos = self.currentToken.pos
+   if self:get_currentToken().kind ~= Types.TokenKind.Eof then
+      pos = self:get_currentToken().pos
    else
     
       if #self.usedTokenList > 0 then

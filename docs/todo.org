@@ -8,29 +8,6 @@
 
 * バグ
 
-- [ ] Luaval<stem> の値を _fromMap() に代入してもエラーにならない。
-
-expandLuavalMap() をするべき。
-  
-  
-  
-- [ ]
-クラス定義内からアクセッサにアクセスできない。
-  
-class Hoge{
-   let val:int{non,pri};
-   pub fn __init() {
-      self.val = 1;
-   }
-   pub fn func() mut {
-      self.set_val(1); // error
-   }
-}
-pub fn Hoge.func2() mut {
-   self.set_val(1); // ok
-}
-  
-
 - [ ] __envLock を多重に行なうとデッドロックする。
   __envLock 内では、__envLock を使用できないようにする。
   __envLock を使用する関数に属性を追加して、
@@ -66,14 +43,6 @@ lua の場合 val に nil が入らないが、 go では入る。
 - [ ] subfile で emacs からシンボル情報が参照できない。
 
 
-- [ ] 次がエラーしない。
-fn func( val1:int, val2:int, val3:int ) {
-   print( val1, val2, val3 );
-}
-let list = [ 1, 2 ];
-func( list.unpack() );
-
-  
 - [ ] サイズ 0 の lua ファイルがあると、 uptodate になっている？
       uptodate になって生成しなおさずに import してしまい、バグっているっぽい。
   
@@ -82,7 +51,6 @@ func( list.unpack() );
  
 
   
-- [ ] Mapping を implement するクラスは、 abstract/interface のメンバは持てないようにする
 - [ ] 型パラメータを持つクラスの proto 宣言が出来ない。
   
 - [ ] 文字列中の . を編集すると company-mode がエラーする
@@ -905,6 +873,31 @@ fn func() : int, int {
   return 1, 2;
 }
 _hoge( func() );
+
+- [X] クラス定義内からアクセッサにアクセスできない。
+  
+class Hoge{
+   let val:int{non,pri};
+   pub fn __init() {
+      self.val = 1;
+   }
+   pub fn func() mut {
+      self.set_val(1); // error
+   }
+}
+pub fn Hoge.func2() mut {
+   self.set_val(1); // ok
+}
+
+- [X] Mapping を implement するクラスは、 abstract/interface のメンバは持てないようにする
+
+- [X] 次がエラーしない。
+fn func( val1:int, val2:int, val3:int ) {
+   print( val1, val2, val3 );
+}
+let list = [ 1, 2 ];
+func( list.unpack() );
+
   
 
   

@@ -476,4 +476,15 @@ class Test9 extend Super7 {
    }
    
 }
+{
+   interface IF2 extend (Mapping) {
+   }
+   abstract class Hoge extend (Mapping) {
+   }
+   class Test extend (Mapping) {
+      let val:IF2; // error
+      let val2:Hoge; // error
+   }
+   
+}
 

@@ -613,7 +613,7 @@ function TentativeSymbol:regist( symbolInfo, pos )
    self.initSymSet[symbolInfo:getOrg(  )]= true
    symbolInfo:set_hasValueFlag( true )
    
-   if self.scope:isInnerOf( symbolInfo:get_scope() ) then
+   if self:get_scope():isInnerOf( symbolInfo:get_scope() ) then
       if not symbolInfo:get_mutable() then
          local work = self
          while true do
@@ -1237,7 +1237,7 @@ function TransUnit:pushModule( externalFlag, name, mutable )
          local scope = self:pushScope( true )
          typeInfo = self.processInfo:createModule( scope, parentInfo, externalFlag, modName, mutable )
          
-         local _5918, existSym = parentScope:addClass( self.processInfo, modName, nil, typeInfo )
+         local _5920, existSym = parentScope:addClass( self.processInfo, modName, nil, typeInfo )
          if existSym ~= nil then
             self:addErrMess( self.parser:getLastPos(  ), string.format( "module symbols exist -- %s.%s -- %s.%s", existSym:get_namespaceTypeInfo():getFullName( self.typeNameCtrl, parentScope, false ), existSym:get_name(), parentInfo:getFullName( self.typeNameCtrl, parentScope, false ), modName) )
          end
@@ -7930,6 +7930,67 @@ function TransUnit:analyzeFuncBlock( analyzingState, firstToken, classTypeInfo, 
 end
 
 
+function TransUnit:addAccessor( memberNode, methodNameSet, classScope, classTypeInfo )
+
+   local memberType = memberNode:get_expType()
+   local memberName = memberNode:get_name()
+   local getterName = "get_" .. memberName.txt
+   local accessMode = memberNode:get_getterMode()
+   local typeKind
+   
+   if memberNode:get_staticFlag() then
+      typeKind = Ast.TypeInfoKind.Func
+   else
+    
+      typeKind = Ast.TypeInfoKind.Method
+   end
+   
+   if accessMode ~= Ast.AccessMode.None then
+      if classScope:getTypeInfoChild( getterName ) then
+         self:addErrMess( memberName.pos, string.format( "exist -- %s.%s", classTypeInfo:get_rawTxt(), getterName) )
+      else
+       
+         local mutable = memberNode:get_getterMutable()
+         local getterMemberType = memberNode:get_getterRetType()
+         if Ast.TypeInfo.isMut( getterMemberType ) and not mutable then
+            getterMemberType = self:createModifier( getterMemberType, Ast.MutMode.IMut )
+         end
+         
+         local retTypeInfo = self.processInfo:createFunc( false, false, self:pushScope( false ), typeKind, classTypeInfo, false, false, memberNode:get_staticFlag(), accessMode, getterName, nil, {}, {getterMemberType} )
+         self:popScope(  )
+         
+         classScope:addMethod( self.processInfo, memberName.pos, retTypeInfo, accessMode, memberNode:get_staticFlag(), false )
+         methodNameSet[getterName]= true
+      end
+      
+   end
+   
+   local setterName = "set_" .. memberName.txt
+   accessMode = memberNode:get_setterMode()
+   if memberNode:get_setterMode() ~= Ast.AccessMode.None then
+      if classScope:getTypeInfoChild( setterName ) then
+         self:addErrMess( memberName.pos, string.format( "exist -- %s.%s", classTypeInfo:get_rawTxt(), setterName) )
+      else
+       
+         local mutable
+         
+         if memberNode:get_symbolInfo():get_mutMode() ~= Ast.MutMode.AllMut then
+            mutable = true
+         else
+          
+            mutable = false
+         end
+         
+         classScope:addMethod( self.processInfo, memberName.pos, self.processInfo:createFunc( false, false, self:pushScope( false ), typeKind, classTypeInfo, false, false, memberNode:get_staticFlag(), accessMode, setterName, nil, {memberType}, nil, mutable ), accessMode, memberNode:get_staticFlag(), true )
+         self:popScope(  )
+         methodNameSet[setterName]= true
+      end
+      
+   end
+   
+end
+
+
 function TransUnit:analyzeClassBody( hasProto, classAccessMode, firstToken, mode, gluePrefix, classTypeInfo, name, moduleLang, moduleName, lazyLoad, nextToken )
 
    local memberName2Node = {}
@@ -7947,6 +8008,7 @@ function TransUnit:analyzeClassBody( hasProto, classAccessMode, firstToken, mode
    local alreadyCtorFlag = false
    local hasInitBlock = false
    local hasStaticMember = false
+   local classScope = self.scope
    
    local function processLet( token, staticFlag, accessMode, alreadyFlag )
    
@@ -7969,6 +8031,7 @@ function TransUnit:analyzeClassBody( hasProto, classAccessMode, firstToken, mode
       table.insert( fieldList, memberNode )
       table.insert( memberList, memberNode )
       memberName2Node[memberNode:get_name().txt] = memberNode
+      self:addAccessor( memberNode, methodNameSet, classScope, classTypeInfo )
    end
    local function checkInitializeMember( staticFlag, pos )
    
@@ -8441,67 +8504,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
    end
    
    
-   local node, _9070, methodNameSet = self:analyzeClassBody( hasProto, classAccessMode, firstToken, mode, gluePrefix, classTypeInfo, name, moduleLang, moduleName, lazyLoad, nextToken )
-   local parentInfo = classTypeInfo
-   for __index, memberNode in ipairs( node:get_memberList() ) do
-      local memberType = memberNode:get_expType()
-      local memberName = memberNode:get_name()
-      local getterName = "get_" .. memberName.txt
-      local accessMode = memberNode:get_getterMode()
-      local typeKind
-      
-      if memberNode:get_staticFlag() then
-         typeKind = Ast.TypeInfoKind.Func
-      else
-       
-         typeKind = Ast.TypeInfoKind.Method
-      end
-      
-      if accessMode ~= Ast.AccessMode.None then
-         if classScope:getTypeInfoChild( getterName ) then
-            self:addErrMess( memberName.pos, string.format( "exist -- %s.%s", classTypeInfo:get_rawTxt(), getterName) )
-         else
-          
-            local mutable = memberNode:get_getterMutable()
-            local getterMemberType = memberNode:get_getterRetType()
-            if Ast.TypeInfo.isMut( getterMemberType ) and not mutable then
-               getterMemberType = self:createModifier( getterMemberType, Ast.MutMode.IMut )
-            end
-            
-            local retTypeInfo = self.processInfo:createFunc( false, false, self:pushScope( false ), typeKind, parentInfo, false, false, memberNode:get_staticFlag(), accessMode, getterName, nil, {}, {getterMemberType} )
-            self:popScope(  )
-            
-            classScope:addMethod( self.processInfo, memberName.pos, retTypeInfo, accessMode, memberNode:get_staticFlag(), false )
-            methodNameSet[getterName]= true
-         end
-         
-      end
-      
-      local setterName = "set_" .. memberName.txt
-      accessMode = memberNode:get_setterMode()
-      if memberNode:get_setterMode() ~= Ast.AccessMode.None then
-         if classScope:getTypeInfoChild( setterName ) then
-            self:addErrMess( memberName.pos, string.format( "exist -- %s.%s", classTypeInfo:get_rawTxt(), setterName) )
-         else
-          
-            local mutable
-            
-            if memberNode:get_symbolInfo():get_mutMode() ~= Ast.MutMode.AllMut then
-               mutable = true
-            else
-             
-               mutable = false
-            end
-            
-            classScope:addMethod( self.processInfo, memberName.pos, self.processInfo:createFunc( false, false, self:pushScope( false ), typeKind, parentInfo, false, false, memberNode:get_staticFlag(), accessMode, setterName, nil, {memberType}, nil, mutable ), accessMode, memberNode:get_staticFlag(), true )
-            self:popScope(  )
-            methodNameSet[setterName]= true
-         end
-         
-      end
-      
-   end
-   
+   local node, _9100, methodNameSet = self:analyzeClassBody( hasProto, classAccessMode, firstToken, mode, gluePrefix, classTypeInfo, name, moduleLang, moduleName, lazyLoad, nextToken )
    local ctorAccessMode = Ast.AccessMode.Pub
    do
       local ctorTypeInfo = classScope:getTypeInfoChild( "__init" )
@@ -8547,6 +8550,10 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
          local memberType = memberNode:get_expType()
          if not Ast.NormalTypeInfo.isAvailableMapping( self.processInfo, memberType, checkedTypeMap ) then
             self:addErrMess( memberNode:get_pos(), string.format( "member type is not Mapping -- %s", memberType:getTxt(  )) )
+         elseif memberType:get_kind() == Ast.TypeInfoKind.IF then
+            self:addErrMess( memberNode:get_pos(), string.format( "Mapping class has not the interface type member. -- %s", memberNode:get_name().txt) )
+         elseif memberType:get_abstractFlag() then
+            self:addErrMess( memberNode:get_pos(), string.format( "Mapping class has not the abstract class member. -- %s", memberNode:get_name().txt) )
          end
          
       end
@@ -9215,7 +9222,7 @@ function TransUnit:analyzeInitExp( firstPos, accessMode, unwrapFlag, letVarList,
       
       if unwrapFlag then
          local hasNilable = false
-         for index, _9399 in ipairs( letVarList ) do
+         for index, _9407 in ipairs( letVarList ) do
             if expList:getExpTypeAt( index ):get_nilable() then
                hasNilable = true
                break
@@ -9788,8 +9795,16 @@ function TransUnit:analyzeIfUnwrap( firstToken )
    
    
    for __index, varSym in ipairs( varList ) do
-      if varSym:get_name() ~= "_" and not varSym:get_posForModToRef() then
-         self:addWarnMess( _lune.unwrap( varSym:get_pos()), string.format( "This symbol has no referer -- %s", varSym:get_name()) )
+      do
+         local _switchExp = varSym:get_name()
+         if _switchExp == "_" or _switchExp == "_exp" then
+         else 
+            
+               if not varSym:get_posForModToRef() then
+                  self:addWarnMess( _lune.unwrap( varSym:get_pos()), string.format( "This symbol has no referer -- %s", varSym:get_name()) )
+               end
+               
+         end
       end
       
    end
@@ -10557,7 +10572,7 @@ function TransUnit:checkMatchValType( pos, funcTypeInfo, expList, genericTypeLis
       alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( #funcTypeInfo:get_itemTypeInfoList() > 0 )
    end
    
-   local matchResult, _9988, newExpNodeList = self:checkMatchType( funcTypeInfo:getTxt(  ), pos, argTypeList, expList, false, warnForFollow, alt2typeMap )
+   local matchResult, _9998, newExpNodeList = self:checkMatchType( funcTypeInfo:getTxt(  ), pos, argTypeList, expList, false, warnForFollow, alt2typeMap )
    
    if expList and newExpNodeList then
       return matchResult, alt2typeMap, newExpNodeList
@@ -10621,7 +10636,7 @@ function TransUnit:analyzeListItems( firstPos, nextToken, termTxt, expectTypeLis
                   table.insert( expTypeList, expNode:get_expType() )
                else
                 
-                  for _10023 = 1, #expNode:get_expTypeList() do
+                  for _10033 = 1, #expNode:get_expTypeList() do
                      table.insert( expTypeList, itemTypeInfo )
                   end
                   
@@ -10636,7 +10651,7 @@ function TransUnit:analyzeListItems( firstPos, nextToken, termTxt, expectTypeLis
          
       end
       
-      local _10026, _10027, workExpList = self:checkMatchType( "List constructor", firstPos, expTypeList, expList, false, false, nil )
+      local _10036, _10037, workExpList = self:checkMatchType( "List constructor", firstPos, expTypeList, expList, false, false, nil )
       if workExpList ~= nil then
          expList = workExpList
       end
@@ -12276,7 +12291,7 @@ function TransUnit:analyzeNewAlge( firstToken, algeTypeInfo, prefix )
          
          
          do
-            local _10757, _10758, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, nil )
+            local _10767, _10768, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, nil )
             if newExpNodeList ~= nil then
                argList = newExpNodeList:get_expList()
             end
@@ -12520,7 +12535,7 @@ function TransUnit:analyzeExpOpSet( exp, opeToken, expectTypeList )
    end
    
    
-   local _10851, _10852, workList, expTypeList = self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), expList, true, false, nil )
+   local _10861, _10862, workList, expTypeList = self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), expList, true, false, nil )
    if workList ~= nil then
       expList = workList
    end
@@ -13242,7 +13257,7 @@ function TransUnit:analyzeStrConst( firstToken, token )
          local argNodeList = self:analyzeExpList( false, false, false )
          param = argNodeList
          
-         local _11126, _11127, workExpList = self:checkMatchType( "str constructor", firstToken.pos, {Ast.builtinTypeDDD}, argNodeList, false, false, nil )
+         local _11136, _11137, workExpList = self:checkMatchType( "str constructor", firstToken.pos, {Ast.builtinTypeDDD}, argNodeList, false, false, nil )
          if workExpList ~= nil then
             dddParam = workExpList
          else
@@ -13415,7 +13430,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, canLeftExp, prevOpLev
       end
       
       
-      local _11195, alt2type, newArgList = self:checkMatchValType( exp:get_pos(), initTypeInfo, argList, classTypeInfo:get_itemTypeInfoList(), classTypeInfo )
+      local _11205, alt2type, newArgList = self:checkMatchValType( exp:get_pos(), initTypeInfo, argList, classTypeInfo:get_itemTypeInfoList(), classTypeInfo )
       
       if #classTypeInfo:get_itemTypeInfoList() > 0 then
          if classTypeInfo:get_itemTypeInfoList()[1]:get_kind() == Ast.TypeInfoKind.Alternate then
@@ -13699,7 +13714,7 @@ function TransUnit:analyzeReturn( token )
       local workList = expList
       if workList ~= nil then
          do
-            local _11299, _11300, newExpNodeList = self:checkMatchType( "return", token.pos, retTypeList, workList, false, not workList:get_followOn(), nil )
+            local _11309, _11310, newExpNodeList = self:checkMatchType( "return", token.pos, retTypeList, workList, false, not workList:get_followOn(), nil )
             if newExpNodeList ~= nil then
                expList = newExpNodeList
             end

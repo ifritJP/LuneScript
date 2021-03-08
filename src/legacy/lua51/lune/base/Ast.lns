@@ -6189,7 +6189,7 @@ pub static fn TypeInfo.checkMatchType(
                srcType = builtinTypeStem_;
                srcType2nd = builtinTypeStem_;
                if #expType.$itemTypeInfoList > 0 {
-                  srcType = expType.$itemTypeInfoList[ 1 ];
+                  srcType = expType.$itemTypeInfoList[ 1 ].$nilableTypeInfo;
                   srcType2nd = srcType;
                }
             }

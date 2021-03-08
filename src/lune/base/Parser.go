@@ -669,8 +669,8 @@ func (self *Parser_DefaultPushbackParser) Error(message string) {
 func (self *Parser_DefaultPushbackParser) GetLastPos() *Types_Position {
     var pos *Types_Position
     pos = self.parser.FP.CreatePosition(0, 0)
-    if self.currentToken.Kind != Types_TokenKind__Eof{
-        pos = self.currentToken.Pos
+    if self.FP.Get_currentToken().Kind != Types_TokenKind__Eof{
+        pos = self.FP.Get_currentToken().Pos
         
     } else { 
         if self.usedTokenList.Len() > 0{

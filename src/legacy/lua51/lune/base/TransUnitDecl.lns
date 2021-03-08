@@ -1872,6 +1872,73 @@ fn TransUnit.analyzeFuncBlock(
    return body;
 }
 
+fn TransUnit.addAccessor(
+   memberNode:&Nodes.DeclMemberNode, methodNameSet: Set<str>,
+   classScope:Ast.Scope, classTypeInfo:&Ast.TypeInfo ) mut
+{
+   let memberType = memberNode.$expType;
+   let memberName = memberNode.$name;
+   // getter
+   let getterName = "get_" .. memberName.txt;
+   let mut accessMode = memberNode.$getterMode;
+   let typeKind:Ast.TypeInfoKind;
+   if memberNode.$staticFlag {
+      typeKind = .Func;
+   }
+   else {
+      typeKind = .Method;
+   }
+   if accessMode ~= .None {
+      if classScope.getTypeInfoChild( getterName ) {
+         self.addErrMess( memberName.$pos,
+                          "exist -- %s.%s" (classTypeInfo.$rawTxt, getterName) );
+      } else {
+         let mutable = memberNode.$getterMutable;
+         let mut getterMemberType = memberNode.$getterRetType;
+         if Ast.TypeInfo.isMut( getterMemberType ) and not mutable {
+            getterMemberType = self.createModifier( getterMemberType, .IMut );
+         }
+         let retTypeInfo = self.processInfo.createFunc(
+            false, false, self.pushScope( false ## ),
+            typeKind, classTypeInfo, false, false, memberNode.$staticFlag, accessMode,
+            getterName, nil, [], [ getterMemberType ] ## );
+         self.popScope();
+
+         classScope.addMethod(
+            self.processInfo, 
+            memberName.pos, retTypeInfo, accessMode, memberNode.$staticFlag, false );
+         methodNameSet.add( getterName );
+      }
+   }
+   // setter
+   let setterName = "set_" .. memberName.txt;
+   accessMode = memberNode.$setterMode;
+   if memberNode.$setterMode ~= .None {
+      if classScope.getTypeInfoChild( setterName ) {
+         self.addErrMess( memberName.$pos,
+                          "exist -- %s.%s" (classTypeInfo.$rawTxt, setterName) );
+      } else {
+         let mutable;
+         //if memberType.$mutMode == .Mut {
+         if memberNode.$symbolInfo.$mutMode ~= .AllMut {
+            mutable = true;
+         }
+         else {
+            mutable = false;
+         }
+         classScope.addMethod(
+            self.processInfo, memberName.pos,
+            self.processInfo.createFunc(
+               false, false, self.pushScope( false ## ),
+               typeKind, classTypeInfo, false, false, memberNode.$staticFlag, accessMode,
+               setterName, nil, [ memberType ], nil, mutable ),
+            accessMode, memberNode.$staticFlag, true );
+         self.popScope();
+         methodNameSet.add( setterName );
+      }
+   }
+}
+
 
 /**
 クラスの本体部の解析。
@@ -1918,6 +1985,7 @@ fn TransUnit.analyzeClassBody(
    let mut alreadyCtorFlag = false;
    let mut hasInitBlock = false;
    let mut hasStaticMember = false;
+   let mut classScope = self.scope;
 
    fn processLet( token:&Parser.Token, staticFlag:bool,
                   accessMode:Ast.AccessMode, alreadyFlag:bool )
@@ -1942,6 +2010,7 @@ fn TransUnit.analyzeClassBody(
       fieldList.insert( memberNode );
       memberList.insert( memberNode );
       memberName2Node[ memberNode.$name.txt ] = memberNode;
+      self.addAccessor( memberNode, methodNameSet, classScope, classTypeInfo );
    }
 
    /**
@@ -2430,73 +2499,6 @@ fn TransUnit.analyzeDeclClass(
    //nextToken = workNextToken;
 
 
-   let parentInfo = classTypeInfo;
-
-   // accessor の生成
-   foreach memberNode in node.$memberList {
-      let memberType = memberNode.$expType;
-      let memberName = memberNode.$name;
-      // getter
-      let getterName = "get_" .. memberName.txt;
-      let mut accessMode = memberNode.$getterMode;
-      let typeKind:Ast.TypeInfoKind;
-      if memberNode.$staticFlag {
-         typeKind = .Func;
-      }
-      else {
-         typeKind = .Method;
-      }
-      if accessMode ~= .None {
-         if classScope.getTypeInfoChild( getterName ) {
-            self.addErrMess( memberName.$pos,
-                             "exist -- %s.%s" (classTypeInfo.$rawTxt, getterName) );
-         } else {
-            let mutable = memberNode.$getterMutable;
-            let mut getterMemberType = memberNode.$getterRetType;
-            if Ast.TypeInfo.isMut( getterMemberType ) and not mutable {
-               getterMemberType = self.createModifier( getterMemberType, .IMut );
-            }
-            let retTypeInfo = self.processInfo.createFunc(
-               false, false, self.pushScope( false ## ),
-               typeKind, parentInfo, false, false, memberNode.$staticFlag, accessMode,
-               getterName, nil, [], [ getterMemberType ] ## );
-            self.popScope();
-
-            classScope.addMethod(
-               self.processInfo, 
-               memberName.pos, retTypeInfo, accessMode, memberNode.$staticFlag, false );
-            methodNameSet.add( getterName );
-         }
-      }
-      // setter
-      let setterName = "set_" .. memberName.txt;
-      accessMode = memberNode.$setterMode;
-      if memberNode.$setterMode ~= .None {
-         if classScope.getTypeInfoChild( setterName ) {
-            self.addErrMess( memberName.$pos,
-                             "exist -- %s.%s" (classTypeInfo.$rawTxt, setterName) );
-         } else {
-            let mutable;
-            //if memberType.$mutMode == .Mut {
-            if memberNode.$symbolInfo.$mutMode ~= .AllMut {
-               mutable = true;
-            }
-            else {
-               mutable = false;
-            }
-            classScope.addMethod(
-               self.processInfo, memberName.pos,
-               self.processInfo.createFunc(
-                  false, false, self.pushScope( false ## ),
-                  typeKind, parentInfo, false, false, memberNode.$staticFlag, accessMode,
-                  setterName, nil, [ memberType ], nil, mutable ),
-               accessMode, memberNode.$staticFlag, true );
-            self.popScope();
-            methodNameSet.add( setterName );
-         }
-      }
-   }
-
    // デフォルトコンストタクタ設定
    let mut ctorAccessMode = Ast.AccessMode.Pub;
    if! let ctorTypeInfo = classScope.getTypeInfoChild( "__init" ) {
@@ -2538,17 +2540,28 @@ fn TransUnit.analyzeDeclClass(
 
 
    if classTypeInfo.isInheritFrom(
-      self.processInfo, Ast.builtinTypeMapping, nil ) {
+      self.processInfo, Ast.builtinTypeMapping, nil )
+   {
       // Mapping の制限チェック
       let mut checkedTypeMap:Map<&Ast.TypeInfo,bool> = {};
       foreach memberNode in node.$memberList {
          let memberType = memberNode.$expType;
-         //if not isAvailableMapping( memberType, checkedTypeMap ) {
          if not Ast.NormalTypeInfo.isAvailableMapping(
-            self.processInfo, memberType, checkedTypeMap ) {
+            self.processInfo, memberType, checkedTypeMap )
+         {
             self.addErrMess(
                memberNode.$pos,
                "member type is not Mapping -- %s" ( memberType.getTxt(##)) );
+         } elseif memberType.$kind == .IF {
+            self.addErrMess(
+               memberNode.$pos,
+               "Mapping class has not the interface type member. -- %s"
+               (memberNode.$name.txt) );
+         } elseif memberType.$abstractFlag {
+            self.addErrMess(
+               memberNode.$pos,
+               "Mapping class has not the abstract class member. -- %s"
+               (memberNode.$name.txt) );
          }
       }
 
@@ -3876,9 +3889,16 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
    }
 
    foreach varSym in varList {
-      if varSym.$name ~= "_" and not varSym.$posForModToRef {
-         self.addWarnMess(
-            unwrap varSym.$pos, "This symbol has no referer -- %s" ( varSym.$name) );
+      switch varSym.$name {
+         case "_", "_exp" {
+         }
+         default {
+            if not varSym.$posForModToRef {
+               self.addWarnMess(
+                  unwrap varSym.$pos,
+                  "This symbol has no referer -- %s" ( varSym.$name) );
+            }
+         }
       }
    }
 

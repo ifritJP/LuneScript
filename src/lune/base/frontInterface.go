@@ -37,7 +37,7 @@ func FrontInterface_searchModule(mod string) LnsAny {
 // declaration Class -- ModuleId
 var FrontInterface_ModuleId__tempId *FrontInterface_ModuleId
 // 32: decl @lune.@base.@frontInterface.ModuleId.___init
-func FrontInterface_ModuleId____init_1021_() {
+func FrontInterface_ModuleId____init_1030_() {
     FrontInterface_ModuleId__tempId = NewFrontInterface_ModuleId(0.0, 0)
     
 }
@@ -280,7 +280,7 @@ func Lns_frontInterface_init() {
     frontInterface__mod__ = "@lune.@base.@frontInterface"
     Lns_InitMod()
     Lns_Util_init()
-    FrontInterface_ModuleId____init_1021_()
+    FrontInterface_ModuleId____init_1030_()
     FrontInterface___luneScript = NewfrontInterface_dummyFront().FP
 }
 func init() {

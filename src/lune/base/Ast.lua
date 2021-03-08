@@ -1418,13 +1418,13 @@ function TypeInfo.createScope( processInfo, parent, classFlag, baseInfo, interfa
 
    local inheritScope = nil
    if baseInfo ~= nil then
-      inheritScope = _lune.unwrap( baseInfo.scope)
+      inheritScope = _lune.unwrap( baseInfo:get_scope())
    end
    
    local ifScopeList = {}
    if interfaceList ~= nil then
       for __index, ifType in ipairs( interfaceList ) do
-         table.insert( ifScopeList, _lune.unwrap( ifType.scope) )
+         table.insert( ifScopeList, _lune.unwrap( ifType:get_scope()) )
       end
       
    end
@@ -6538,7 +6538,7 @@ function DDDTypeInfo:get_display_stirng(  )
 end
 function DDDTypeInfo:getModule(  )
 
-   return self.typeInfo:getModule(  )
+   return self:get_typeInfo():getModule(  )
 end
 function DDDTypeInfo:get_rawTxt(  )
 
@@ -6558,7 +6558,7 @@ function DDDTypeInfo:get_nilableTypeInfo(  )
 end
 function DDDTypeInfo:get_mutMode(  )
 
-   return self.typeInfo:get_mutMode()
+   return self:get_typeInfo():get_mutMode()
 end
 function DDDTypeInfo:get_aliasSrc(  )
 
@@ -8262,7 +8262,7 @@ function TypeInfo.checkMatchType( processInfo, dstTypeList, expTypeList, allowDs
                srcType = _moduleObj.builtinTypeStem_
                srcType2nd = _moduleObj.builtinTypeStem_
                if #expType:get_itemTypeInfoList() > 0 then
-                  srcType = expType:get_itemTypeInfoList()[1]
+                  srcType = expType:get_itemTypeInfoList()[1]:get_nilableTypeInfo()
                   srcType2nd = srcType
                end
                

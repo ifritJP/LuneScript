@@ -39,3 +39,15 @@
       print( ... );
    } );
 }
+
+{
+   fn sub() : ...<int> {
+      return 1;
+   }
+   fn func( val1:int, val2:int, val3:int ) {
+      print( val1, val2, val3 );
+   }
+   let list = [ 1, 2 ];
+   func( list.unpack() ); // error
+   func( sub()) ; // error
+}
