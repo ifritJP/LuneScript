@@ -21,11 +21,11 @@ _section();
       }
       
       pro override fn loop() mut {
-         print( "hoge:" );
+         print( "DIFF_IGNORE, hoge:" );
          while true {
             if! let mut pipe = self.pipe {
                let! val = pipe.get() {
-                  print( "hoge:" );
+                  print( "DIFF_IGNORE, hoge:" );
                   break;
                };
                val.$val.find( "%d" (self.count) ## );
@@ -52,5 +52,5 @@ _section();
       async.put( new Test( "abcdefg" ) );
       async2.put( new Test( "abcdefg" ) );
    }
-   print( async.$count, async2.$count );
+   print( "DIFF_IGNORE", async.$count, async2.$count );
 }

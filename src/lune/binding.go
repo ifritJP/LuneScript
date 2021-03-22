@@ -1,3 +1,4 @@
+// +build !gopherlua
 package lnsc
 import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 import _ "embed"

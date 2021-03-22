@@ -1,0 +1,56 @@
+local _moduleObj = {}
+----- meta -----
+_moduleObj.__version = '1.1.10'
+_moduleObj.__formatVersion = '1.0.72'
+_moduleObj.__buildId = "1602333411.000000:1"
+_moduleObj.__enableTest = false
+_moduleObj.__hasTest = false
+local __typeId2ClassInfoMap = {}
+_moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap
+do
+   local __classInfo1010 = {}
+   __typeId2ClassInfoMap[ 1010 ] = __classInfo1010
+end
+do
+   local __classInfo1001 = {}
+   __typeId2ClassInfoMap[ 1001 ] = __classInfo1001
+end
+do
+   local __classInfo1003 = {}
+   __typeId2ClassInfoMap[ 1003 ] = __classInfo1003
+end
+do
+   local __classInfo1005 = {}
+   __typeId2ClassInfoMap[ 1005 ] = __classInfo1005
+end
+local __macroName2InfoMap = {}
+_moduleObj.__macroName2InfoMap = __macroName2InfoMap
+local __varName2InfoMap = {}
+_moduleObj.__varName2InfoMap = __varName2InfoMap
+local __typeInfoList = {}
+_moduleObj.__typeInfoList = __typeInfoList
+local __dependIdMap = {}
+_moduleObj.__dependIdMap = __dependIdMap
+__typeInfoList[1] = { skind = 2, parentId = 1, typeId = 1001, txt = '@lune', kind = 12, 
+children = {1003, } }
+__typeInfoList[2] = { skind = 2, parentId = 1001, typeId = 1003, txt = '@base', kind = 12, 
+children = {1005, } }
+__typeInfoList[3] = { skind = 2, parentId = 1003, typeId = 1005, txt = '@TestCtrl', kind = 12, 
+children = {1010, } }
+__typeInfoList[4] = { skind=3, parentId = 1005, typeId = 1010, baseId = 1, txt = 'Ctrl',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {1021, 1028}, }
+__typeInfoList[5] = { skind = 0, parentId = 1005, typeId = 1011, nilable = true, orgTypeId = 1010 }
+__typeInfoList[6] = { skind = 1, parentId = 1005, typeId = 1017, srcTypeId = 1010, mutMode = 0 }
+__typeInfoList[7] = { skind=3, parentId = 1010, typeId = 1021, baseId = 1, txt = 'run',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {22}, retTypeId = {}, children = {}, }
+__typeInfoList[8] = { skind=3, parentId = 1010, typeId = 1028, baseId = 1, txt = '__init',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+local __dependModuleMap = {}
+_moduleObj.__dependModuleMap = __dependModuleMap
+__dependModuleMap[ 'lune.base.Meta' ] = { typeId = 1, use = false, buildId = "1602333411.000000:1" }
+_moduleObj.__subModuleMap = {}
+_moduleObj.__moduleTypeId = 1005
+_moduleObj.__moduleSymbolKind = 0
+_moduleObj.__moduleMutable = true
+----- meta -----
+return _moduleObj

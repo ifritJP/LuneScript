@@ -24,9 +24,6 @@ SOFTWARE.
 
 package runtimelns
 
-// #include <stdlib.h>
-import "C"
-
 func (luaVM *Lns_luaVM) RunCode( code string ) (bool,[]LnsAny, LnsAny) {
     loaded, mess := luaVM.Load( code, nil )
     if loaded == nil {

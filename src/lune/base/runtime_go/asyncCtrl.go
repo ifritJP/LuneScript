@@ -24,7 +24,6 @@ SOFTWARE.
 
 package runtimelns
 
-
 type Lns_pipeMtd interface {
     Put( val LnsAny )
     Get() LnsAny

@@ -1,0 +1,57 @@
+local _moduleObj = {}
+----- meta -----
+_moduleObj.__version = '1.1.13'
+_moduleObj.__formatVersion = '1.0.100'
+_moduleObj.__buildId = "1616421976.000000:1"
+_moduleObj.__enableTest = false
+_moduleObj.__hasTest = true
+_moduleObj.__lazyModuleList = {}
+local __typeId2ClassInfoMap = {}
+_moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap
+do
+   local __classInfo1001 = {}
+   __typeId2ClassInfoMap[ 1001 ] = __classInfo1001
+end
+do
+   local __classInfo1003 = {}
+   __typeId2ClassInfoMap[ 1003 ] = __classInfo1003
+end
+do
+   local __classInfo1005 = {}
+   __typeId2ClassInfoMap[ 1005 ] = __classInfo1005
+   __classInfo1005.luaModVersion = {
+     name='luaModVersion', staticFlag = false, accessMode = 1, typeId = 30 }
+   __classInfo1005.metaVersion = {
+     name='metaVersion', staticFlag = false, accessMode = 1, typeId = 55 }
+   __classInfo1005.version = {
+     name='version', staticFlag = false, accessMode = 1, typeId = 55 }
+end
+local __macroName2InfoMap = {}
+_moduleObj.__macroName2InfoMap = __macroName2InfoMap
+local __varName2InfoMap = {}
+_moduleObj.__varName2InfoMap = __varName2InfoMap
+__varName2InfoMap.luaModVersion = {
+  name='luaModVersion', accessMode = 1, typeId = 30, mutable = true }
+__varName2InfoMap.metaVersion = {
+  name='metaVersion', accessMode = 1, typeId = 55, mutable = true }
+__varName2InfoMap.version = {
+  name='version', accessMode = 1, typeId = 55, mutable = true }
+local __typeInfoList = {}
+_moduleObj.__typeInfoList = __typeInfoList
+local __dependIdMap = {}
+_moduleObj.__dependIdMap = __dependIdMap
+__typeInfoList[1] = { skind = 2, parentId = 1, typeId = 1001, txt = '@lune', 
+children = {1003, } }
+__typeInfoList[2] = { skind = 2, parentId = 1001, typeId = 1003, txt = '@base', 
+children = {1005, } }
+__typeInfoList[3] = { skind = 2, parentId = 1003, typeId = 1005, txt = '@Ver', 
+children = {} }
+local __dependModuleMap = {}
+_moduleObj.__dependModuleMap = __dependModuleMap
+__dependModuleMap[ 'lune.base.Testing' ] = { typeId = 1, use = false, buildId = "1616421705.000000:1" }
+_moduleObj.__subModuleMap = {}
+_moduleObj.__moduleTypeId = 1005
+_moduleObj.__moduleSymbolKind = 0
+_moduleObj.__moduleMutable = true
+----- meta -----
+return _moduleObj

@@ -476,10 +476,7 @@ func Lns_ToString( val LnsAny ) string {
     case LnsInt:
         return fmt.Sprintf( "%d", val )
     case LnsReal:
-        if digit, frac := math.Modf( val.(LnsReal) ); frac == 0 {
-            return fmt.Sprintf( "%g.0", digit )
-        }
-        return fmt.Sprintf( "%g", val )
+        return lns_ToStringFromRead( val.(LnsReal) )
     case bool:
         return fmt.Sprintf( "%v", val )
     case string:

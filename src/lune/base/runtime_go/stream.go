@@ -31,7 +31,6 @@ import "strings"
 import "fmt"
 import "bufio"
 
-
 type Lns_iStream interface {
     Read( arg LnsAny ) LnsAny
     Close()

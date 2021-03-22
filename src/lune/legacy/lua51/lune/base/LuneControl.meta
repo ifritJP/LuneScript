@@ -1,0 +1,52 @@
+local _moduleObj = {}
+----- meta -----
+_moduleObj.__version = '1.1.13'
+_moduleObj.__formatVersion = '1.0.100'
+_moduleObj.__buildId = "1616421706.000000:1"
+_moduleObj.__enableTest = false
+_moduleObj.__hasTest = false
+_moduleObj.__lazyModuleList = {}
+local __typeId2ClassInfoMap = {}
+_moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap
+do
+   local __classInfo1001 = {}
+   __typeId2ClassInfoMap[ 1001 ] = __classInfo1001
+end
+do
+   local __classInfo1003 = {}
+   __typeId2ClassInfoMap[ 1003 ] = __classInfo1003
+end
+do
+   local __classInfo1005 = {}
+   __typeId2ClassInfoMap[ 1005 ] = __classInfo1005
+end
+local __macroName2InfoMap = {}
+_moduleObj.__macroName2InfoMap = __macroName2InfoMap
+local __varName2InfoMap = {}
+_moduleObj.__varName2InfoMap = __varName2InfoMap
+local __typeInfoList = {}
+_moduleObj.__typeInfoList = __typeInfoList
+local __dependIdMap = {}
+_moduleObj.__dependIdMap = __dependIdMap
+__typeInfoList[1] = { skind = 2, parentId = 1, typeId = 1001, txt = '@lune', 
+children = {1003, } }
+__typeInfoList[2] = { skind = 2, parentId = 1001, typeId = 1003, txt = '@base', 
+children = {1005, } }
+__typeInfoList[3] = { skind = 2, parentId = 1003, typeId = 1005, txt = '@LuneControl', 
+children = {1007, 1022, } }
+__typeInfoList[4] = { skind = 4, parentId = 1005, typeId = 1007, txt = 'Code',
+accessMode = 1, kind = 11, valTypeId = 55, enumValList = {C = "c",Go = "go",Lua = "lua",} }
+__typeInfoList[5] = { skind = 5, parentId = 1005, typeId = 1022, txt = 'Pragma',
+accessMode = 1, kind = 14, algeValList = {{ name = 'default__init', typeList = {} },{ name = 'default__init_old', typeList = {} },{ name = 'disable_mut_control', typeList = {} },{ name = 'ignore_symbol_', typeList = {} },{ name = 'limit_conv_code', typeList = {1030} },{ name = 'load__lune_module', typeList = {} },{ name = 'run_async_pipe', typeList = {} },{ name = 'use_async', typeList = {} }} }
+__typeInfoList[6] = { skind=3, parentId = 1, typeId = 1027, baseId = 69, txt = 'Set',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 17, mutMode = 2, itemTypeId = {1007}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+__typeInfoList[7] = { skind = 0, typeId = 1028, orgTypeId = 1027 }
+__typeInfoList[8] = { skind = 1, typeId = 1030, srcTypeId = 1027, mutMode = 0 }
+local __dependModuleMap = {}
+_moduleObj.__dependModuleMap = __dependModuleMap
+_moduleObj.__subModuleMap = {}
+_moduleObj.__moduleTypeId = 1005
+_moduleObj.__moduleSymbolKind = 0
+_moduleObj.__moduleMutable = true
+----- meta -----
+return _moduleObj

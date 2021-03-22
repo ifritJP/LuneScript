@@ -1,0 +1,263 @@
+local _moduleObj = {}
+----- meta -----
+_moduleObj.__version = '1.1.13'
+_moduleObj.__formatVersion = '1.0.100'
+_moduleObj.__buildId = "1616421705.000000:1"
+_moduleObj.__enableTest = false
+_moduleObj.__hasTest = false
+_moduleObj.__lazyModuleList = {}
+local __typeId2ClassInfoMap = {}
+_moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap
+do
+   local __classInfo1007 = {}
+   __typeId2ClassInfoMap[ 1007 ] = __classInfo1007
+end
+do
+   local __classInfo1042 = {}
+   __typeId2ClassInfoMap[ 1042 ] = __classInfo1042
+end
+do
+   local __classInfo1001 = {}
+   __typeId2ClassInfoMap[ 1001 ] = __classInfo1001
+end
+do
+   local __classInfo1003 = {}
+   __typeId2ClassInfoMap[ 1003 ] = __classInfo1003
+end
+do
+   local __classInfo1005 = {}
+   __typeId2ClassInfoMap[ 1005 ] = __classInfo1005
+end
+local __macroName2InfoMap = {}
+_moduleObj.__macroName2InfoMap = __macroName2InfoMap
+do
+   local info = {}
+   __macroName2InfoMap[ 1153 ] = info
+   info.name = "_eq"
+   info.argList = {{name="ctrl",typeId=103},{name="val1",typeId=113},{name="val2",typeId=113}}
+   info.symList = {}
+   info.tokenList = {
+   {8,",,"},{5,"ctrl"},{6,"."},{5,"checkEq"},{6,"("},{8,",,"},{5,"val1"},{6,","},{8,",,"},{5,"val2"},{6,","},{8,",,,,"},{5,"val1"},{6,","},{8,",,,,"},{5,"val2"},{6,","},{7,"nil"},{6,","},{5,"__mod__"},{6,","},{5,"__line__"},{6,")"}}
+end
+do
+   local info = {}
+   __macroName2InfoMap[ 1155 ] = info
+   info.name = "_neq"
+   info.argList = {{name="ctrl",typeId=103},{name="val1",typeId=113},{name="val2",typeId=113}}
+   info.symList = {}
+   info.tokenList = {
+   {8,",,"},{5,"ctrl"},{6,"."},{5,"checkNotEq"},{6,"("},{8,",,"},{5,"val1"},{6,","},{8,",,"},{5,"val2"},{6,","},{8,",,,,"},{5,"val1"},{6,","},{8,",,,,"},{5,"val2"},{6,","},{7,"nil"},{6,","},{5,"__mod__"},{6,","},{5,"__line__"},{6,")"}}
+end
+do
+   local info = {}
+   __macroName2InfoMap[ 1157 ] = info
+   info.name = "_isT"
+   info.argList = {{name="ctrl",typeId=103},{name="val",typeId=113}}
+   info.symList = {}
+   info.tokenList = {
+   {8,",,"},{5,"ctrl"},{6,"."},{5,"isTrue"},{6,"("},{8,",,"},{5,"val"},{6,","},{8,",,,,"},{5,"val"},{6,","},{7,"nil"},{6,","},{5,"__mod__"},{6,","},{5,"__line__"},{6,")"}}
+end
+do
+   local info = {}
+   __macroName2InfoMap[ 1159 ] = info
+   info.name = "_isNotT"
+   info.argList = {{name="ctrl",typeId=103},{name="val",typeId=113}}
+   info.symList = {}
+   info.tokenList = {
+   {8,",,"},{5,"ctrl"},{6,"."},{5,"isNotTrue"},{6,"("},{8,",,"},{5,"val"},{6,","},{8,",,,,"},{5,"val"},{6,","},{7,"nil"},{6,","},{5,"__mod__"},{6,","},{5,"__line__"},{6,")"}}
+end
+do
+   local info = {}
+   __macroName2InfoMap[ 1161 ] = info
+   info.name = "_isF"
+   info.argList = {{name="ctrl",typeId=103},{name="val",typeId=113}}
+   info.symList = {}
+   info.tokenList = {
+   {8,",,"},{5,"ctrl"},{6,"."},{5,"checkEq"},{6,"("},{8,",,"},{5,"val"},{6,","},{7,"false"},{6,","},{8,",,,,"},{5,"val"},{6,","},{1,"\"false\""},{6,","},{7,"nil"},{6,","},{5,"__mod__"},{6,","},{5,"__line__"},{6,")"}}
+end
+do
+   local info = {}
+   __macroName2InfoMap[ 1163 ] = info
+   info.name = "_isNotF"
+   info.argList = {{name="ctrl",typeId=103},{name="val",typeId=113}}
+   info.symList = {}
+   info.tokenList = {
+   {8,",,"},{5,"ctrl"},{6,"."},{5,"checkNotEq"},{6,"("},{8,",,"},{5,"val"},{6,","},{7,"false"},{6,","},{8,",,,,"},{5,"val"},{6,","},{1,"\"false\""},{6,","},{7,"nil"},{6,","},{5,"__mod__"},{6,","},{5,"__line__"},{6,")"}}
+end
+do
+   local info = {}
+   __macroName2InfoMap[ 1165 ] = info
+   info.name = "_isNil"
+   info.argList = {{name="ctrl",typeId=103},{name="val",typeId=113}}
+   info.symList = {}
+   info.tokenList = {
+   {8,",,"},{5,"ctrl"},{6,"."},{5,"isNil"},{6,"("},{8,",,"},{5,"val"},{6,","},{8,",,,,"},{5,"val"},{6,","},{7,"nil"},{6,","},{5,"__mod__"},{6,","},{5,"__line__"},{6,")"}}
+end
+do
+   local info = {}
+   __macroName2InfoMap[ 1167 ] = info
+   info.name = "_isNotNil"
+   info.argList = {{name="ctrl",typeId=103},{name="val",typeId=113}}
+   info.symList = {}
+   info.tokenList = {
+   {8,",,"},{5,"ctrl"},{6,"."},{5,"isNotNil"},{6,"("},{8,",,"},{5,"val"},{6,","},{8,",,,,"},{5,"val"},{6,","},{7,"nil"},{6,","},{5,"__mod__"},{6,","},{5,"__line__"},{6,")"}}
+end
+do
+   local info = {}
+   __macroName2InfoMap[ 1169 ] = info
+   info.name = "_err"
+   info.argList = {{name="ctrl",typeId=103},{name="mes",typeId=113}}
+   info.symList = {}
+   info.tokenList = {
+   {8,",,"},{5,"ctrl"},{6,"."},{5,"err"},{6,"("},{8,",,"},{5,"mes"},{6,","},{5,"__mod__"},{6,","},{5,"__line__"},{6,")"},{6,";"}}
+end
+do
+   local info = {}
+   __macroName2InfoMap[ 1171 ] = info
+   info.name = "_eqM"
+   info.argList = {{name="ctrl",typeId=103},{name="msg",typeId=55},{name="val1",typeId=113},{name="val2",typeId=113}}
+   info.symList = {}
+   info.tokenList = {
+   {8,",,"},{5,"ctrl"},{6,"."},{5,"checkEq"},{6,"("},{8,",,"},{5,"val1"},{6,","},{8,",,"},{5,"val2"},{6,","},{8,",,,,"},{5,"val1"},{6,","},{8,",,,,"},{5,"val2"},{6,","},{8,",,"},{5,"msg"},{6,","},{5,"__mod__"},{6,","},{5,"__line__"},{6,")"}}
+end
+do
+   local info = {}
+   __macroName2InfoMap[ 1173 ] = info
+   info.name = "_neqM"
+   info.argList = {{name="ctrl",typeId=103},{name="msg",typeId=55},{name="val1",typeId=113},{name="val2",typeId=113}}
+   info.symList = {}
+   info.tokenList = {
+   {8,",,"},{5,"ctrl"},{6,"."},{5,"checkEq"},{6,"("},{8,",,"},{5,"val1"},{6,","},{8,",,"},{5,"val2"},{6,","},{8,",,,,"},{5,"val1"},{6,","},{8,",,,,"},{5,"val2"},{6,","},{8,",,"},{5,"msg"},{6,","},{5,"__mod__"},{6,","},{5,"__line__"},{6,")"}}
+end
+do
+   local info = {}
+   __macroName2InfoMap[ 1175 ] = info
+   info.name = "_isTM"
+   info.argList = {{name="ctrl",typeId=103},{name="msg",typeId=55},{name="val",typeId=113}}
+   info.symList = {}
+   info.tokenList = {
+   {8,",,"},{5,"ctrl"},{6,"."},{5,"isTrue"},{6,"("},{8,",,"},{5,"val"},{6,","},{8,",,,,"},{5,"val"},{6,","},{8,",,"},{5,"msg"},{6,","},{5,"__mod__"},{6,","},{5,"__line__"},{6,")"}}
+end
+do
+   local info = {}
+   __macroName2InfoMap[ 1177 ] = info
+   info.name = "_isNotTM"
+   info.argList = {{name="ctrl",typeId=103},{name="msg",typeId=55},{name="val",typeId=113}}
+   info.symList = {}
+   info.tokenList = {
+   {8,",,"},{5,"ctrl"},{6,"."},{5,"isNotTrue"},{6,"("},{8,",,"},{5,"val"},{6,","},{8,",,,,"},{5,"val"},{6,","},{8,",,"},{5,"msg"},{6,","},{5,"__mod__"},{6,","},{5,"__line__"},{6,")"}}
+end
+do
+   local info = {}
+   __macroName2InfoMap[ 1179 ] = info
+   info.name = "_isNilM"
+   info.argList = {{name="ctrl",typeId=103},{name="msg",typeId=55},{name="val",typeId=113}}
+   info.symList = {}
+   info.tokenList = {
+   {8,",,"},{5,"ctrl"},{6,"."},{5,"isNil"},{6,"("},{8,",,"},{5,"val"},{6,","},{8,",,,,"},{5,"val"},{6,","},{8,",,"},{5,"msg"},{6,","},{5,"__mod__"},{6,","},{5,"__line__"},{6,")"}}
+end
+local __varName2InfoMap = {}
+_moduleObj.__varName2InfoMap = __varName2InfoMap
+local __typeInfoList = {}
+_moduleObj.__typeInfoList = __typeInfoList
+local __dependIdMap = {}
+_moduleObj.__dependIdMap = __dependIdMap
+__typeInfoList[1] = { skind = 2, parentId = 1, typeId = 1001, txt = '@lune', 
+children = {1003, } }
+__typeInfoList[2] = { skind = 2, parentId = 1001, typeId = 1003, txt = '@base', 
+children = {1005, } }
+__typeInfoList[3] = { skind = 2, parentId = 1003, typeId = 1005, txt = '@Testing', 
+children = {1007, 1042, 1079, 1140, 1143, 1147, 1150, 1153, 1155, 1157, 1159, 1161, 1163, 1165, 1167, 1169, 1171, 1173, 1175, 1177, 1179, } }
+__typeInfoList[4] = { skind=3, parentId = 1005, typeId = 1007, baseId = 1, txt = 'Result',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {1015, 1018, 1021, 1024, 1027, 1030, 1033, 1036, 1039}, }
+__typeInfoList[5] = { skind = 0, typeId = 1008, orgTypeId = 1007 }
+__typeInfoList[6] = { skind = 1, typeId = 1014, srcTypeId = 1007, mutMode = 0 }
+__typeInfoList[7] = { skind=3, parentId = 1007, typeId = 1015, baseId = 1, txt = 'outputResult',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {184}, retTypeId = {}, children = {}, }
+__typeInfoList[8] = { skind=3, parentId = 1007, typeId = 1018, baseId = 1, txt = 'err',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {55, 55, 30}, retTypeId = {}, children = {}, }
+__typeInfoList[9] = { skind=3, parentId = 1007, typeId = 1021, baseId = 1, txt = 'isTrue',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {24, 55, 56, 55, 30}, retTypeId = {25}, children = {}, }
+__typeInfoList[10] = { skind=3, parentId = 1007, typeId = 1024, baseId = 1, txt = 'isNotTrue',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {24, 55, 56, 55, 30}, retTypeId = {25}, children = {}, }
+__typeInfoList[11] = { skind=3, parentId = 1007, typeId = 1027, baseId = 1, txt = 'isNil',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {24, 55, 56, 55, 30}, retTypeId = {25}, children = {}, }
+__typeInfoList[12] = { skind=3, parentId = 1007, typeId = 1030, baseId = 1, txt = 'isNotNil',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {24, 55, 56, 55, 30}, retTypeId = {25}, children = {}, }
+__typeInfoList[13] = { skind=3, parentId = 1007, typeId = 1033, baseId = 1, txt = 'checkEq',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {24, 24, 55, 55, 56, 55, 30}, retTypeId = {25}, children = {}, }
+__typeInfoList[14] = { skind=3, parentId = 1007, typeId = 1036, baseId = 1, txt = 'checkNotEq',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {24, 24, 55, 55, 56, 55, 30}, retTypeId = {25}, children = {}, }
+__typeInfoList[15] = { skind=3, parentId = 1007, typeId = 1039, baseId = 1, txt = '__init',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {55, 30, 30}, retTypeId = {}, children = {}, }
+__typeInfoList[16] = { skind=3, parentId = 1005, typeId = 1042, baseId = 1, txt = 'Ctrl',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {1049, 1052, 1055, 1058, 1061, 1064, 1067, 1070, 1073, 1076}, }
+__typeInfoList[17] = { skind = 0, typeId = 1043, orgTypeId = 1042 }
+__typeInfoList[18] = { skind=3, parentId = 1042, typeId = 1049, baseId = 1, txt = 'get_result',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {1007}, children = {}, }
+__typeInfoList[19] = { skind=3, parentId = 1042, typeId = 1052, baseId = 1, txt = '__init',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {1007}, retTypeId = {}, children = {}, }
+__typeInfoList[20] = { skind=3, parentId = 1042, typeId = 1055, baseId = 1, txt = 'checkEq',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {24, 24, 55, 55, 56, 55, 30}, retTypeId = {25}, children = {}, }
+__typeInfoList[21] = { skind=3, parentId = 1042, typeId = 1058, baseId = 1, txt = 'checkNotEq',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {24, 24, 55, 55, 56, 55, 30}, retTypeId = {25}, children = {}, }
+__typeInfoList[22] = { skind=3, parentId = 1042, typeId = 1061, baseId = 1, txt = 'err',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {55, 55, 30}, retTypeId = {}, children = {}, }
+__typeInfoList[23] = { skind=3, parentId = 1042, typeId = 1064, baseId = 1, txt = 'isNil',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {24, 55, 56, 55, 30}, retTypeId = {25}, children = {}, }
+__typeInfoList[24] = { skind=3, parentId = 1042, typeId = 1067, baseId = 1, txt = 'isNotNil',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {24, 55, 56, 55, 30}, retTypeId = {25}, children = {}, }
+__typeInfoList[25] = { skind=3, parentId = 1042, typeId = 1070, baseId = 1, txt = 'isNotTrue',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {24, 55, 56, 55, 30}, retTypeId = {25}, children = {}, }
+__typeInfoList[26] = { skind=3, parentId = 1042, typeId = 1073, baseId = 1, txt = 'isTrue',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {24, 55, 56, 55, 30}, retTypeId = {25}, children = {}, }
+__typeInfoList[27] = { skind=3, parentId = 1042, typeId = 1076, baseId = 1, txt = 'outputResult',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {184}, retTypeId = {}, children = {}, }
+__typeInfoList[28] = { skind=3, parentId = 1005, typeId = 1079, baseId = 1, txt = 'TestcaseFunc',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 23, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {1042}, retTypeId = {}, children = {}, }
+__typeInfoList[29] = { skind = 0, typeId = 1080, orgTypeId = 1079 }
+__typeInfoList[30] = { skind=3, parentId = 1005, typeId = 1140, baseId = 1, txt = 'registerTestcase',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {55, 55, 1079}, retTypeId = {}, children = {}, }
+__typeInfoList[31] = { skind=3, parentId = 1005, typeId = 1143, baseId = 1, txt = 'run',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {55}, retTypeId = {}, children = {}, }
+__typeInfoList[32] = { skind=3, parentId = 1005, typeId = 1147, baseId = 1, txt = 'runAll',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+__typeInfoList[33] = { skind=3, parentId = 1005, typeId = 1150, baseId = 1, txt = 'outputAllResult',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {184}, retTypeId = {}, children = {}, }
+__typeInfoList[34] = { skind=3, parentId = 1005, typeId = 1153, baseId = 1, txt = '_eq',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 1, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {103, 113, 113}, retTypeId = {25}, children = {}, }
+__typeInfoList[35] = { skind=3, parentId = 1005, typeId = 1155, baseId = 1, txt = '_neq',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 1, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {103, 113, 113}, retTypeId = {25}, children = {}, }
+__typeInfoList[36] = { skind=3, parentId = 1005, typeId = 1157, baseId = 1, txt = '_isT',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 1, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {103, 113}, retTypeId = {25}, children = {}, }
+__typeInfoList[37] = { skind=3, parentId = 1005, typeId = 1159, baseId = 1, txt = '_isNotT',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 1, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {103, 113}, retTypeId = {25}, children = {}, }
+__typeInfoList[38] = { skind=3, parentId = 1005, typeId = 1161, baseId = 1, txt = '_isF',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 1, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {103, 113}, retTypeId = {25}, children = {}, }
+__typeInfoList[39] = { skind=3, parentId = 1005, typeId = 1163, baseId = 1, txt = '_isNotF',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 1, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {103, 113}, retTypeId = {25}, children = {}, }
+__typeInfoList[40] = { skind=3, parentId = 1005, typeId = 1165, baseId = 1, txt = '_isNil',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 1, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {103, 113}, retTypeId = {25}, children = {}, }
+__typeInfoList[41] = { skind=3, parentId = 1005, typeId = 1167, baseId = 1, txt = '_isNotNil',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 1, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {103, 113}, retTypeId = {25}, children = {}, }
+__typeInfoList[42] = { skind=3, parentId = 1005, typeId = 1169, baseId = 1, txt = '_err',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 1, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {103, 113}, retTypeId = {}, children = {}, }
+__typeInfoList[43] = { skind=3, parentId = 1005, typeId = 1171, baseId = 1, txt = '_eqM',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 1, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {103, 55, 113, 113}, retTypeId = {25}, children = {}, }
+__typeInfoList[44] = { skind=3, parentId = 1005, typeId = 1173, baseId = 1, txt = '_neqM',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 1, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {103, 55, 113, 113}, retTypeId = {25}, children = {}, }
+__typeInfoList[45] = { skind=3, parentId = 1005, typeId = 1175, baseId = 1, txt = '_isTM',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 1, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {103, 55, 113}, retTypeId = {25}, children = {}, }
+__typeInfoList[46] = { skind=3, parentId = 1005, typeId = 1177, baseId = 1, txt = '_isNotTM',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 1, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {103, 55, 113}, retTypeId = {25}, children = {}, }
+__typeInfoList[47] = { skind=3, parentId = 1005, typeId = 1179, baseId = 1, txt = '_isNilM',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 1, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {103, 55, 113}, retTypeId = {25}, children = {}, }
+__typeInfoList[48] = { skind = 1, typeId = 1181, srcTypeId = 1042, mutMode = 0 }
+local __dependModuleMap = {}
+_moduleObj.__dependModuleMap = __dependModuleMap
+_moduleObj.__subModuleMap = {}
+_moduleObj.__moduleTypeId = 1005
+_moduleObj.__moduleSymbolKind = 0
+_moduleObj.__moduleMutable = true
+----- meta -----
+return _moduleObj

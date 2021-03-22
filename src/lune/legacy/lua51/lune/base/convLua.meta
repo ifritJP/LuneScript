@@ -1,0 +1,221 @@
+local _moduleObj = {}
+----- meta -----
+_moduleObj.__version = '1.1.13'
+_moduleObj.__formatVersion = '1.0.100'
+_moduleObj.__buildId = "1616421706.000000:1"
+_moduleObj.__enableTest = false
+_moduleObj.__hasTest = true
+_moduleObj.__lazyModuleList = {}
+local __typeId2ClassInfoMap = {}
+_moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap
+do
+   local __classInfo1058 = {}
+   __typeId2ClassInfoMap[ 1058 ] = __classInfo1058
+   __classInfo1058.node = {
+     name='node', staticFlag = false, mutMode = 0,accessMode = 1, typeId = 104671 }
+end
+do
+   local __classInfo1663 = {}
+   __typeId2ClassInfoMap[ 1663 ] = __classInfo1663
+end
+do
+   local __classInfo1001 = {}
+   __typeId2ClassInfoMap[ 1001 ] = __classInfo1001
+end
+do
+   local __classInfo1003 = {}
+   __typeId2ClassInfoMap[ 1003 ] = __classInfo1003
+end
+do
+   local __classInfo1005 = {}
+   __typeId2ClassInfoMap[ 1005 ] = __classInfo1005
+end
+do
+   local __classInfo1655 = {}
+   __typeId2ClassInfoMap[ 1655 ] = __classInfo1655
+end
+local __macroName2InfoMap = {}
+_moduleObj.__macroName2InfoMap = __macroName2InfoMap
+local __varName2InfoMap = {}
+_moduleObj.__varName2InfoMap = __varName2InfoMap
+local __typeInfoList = {}
+_moduleObj.__typeInfoList = __typeInfoList
+local __dependIdMap = {}
+_moduleObj.__dependIdMap = __dependIdMap
+__typeInfoList[1] = { skind = 2, parentId = 1, typeId = 1001, txt = '@lune', 
+children = {1003, } }
+__typeInfoList[2] = { skind = 2, parentId = 1001, typeId = 1003, txt = '@base', 
+children = {1005, } }
+__typeInfoList[3] = { skind = 2, parentId = 1003, typeId = 1005, txt = '@convLua', 
+children = {1027, 1058, 1657, 1663, 1693, 1696, 1699, 1702, 1708, } }
+__typeInfoList[4] = { skind = 4, parentId = 1005, typeId = 1027, txt = 'ConvMode',
+accessMode = 1, kind = 11, valTypeId = 30, enumValList = {ConvMeta = 2,Convert = 1,Exec = 0,} }
+__typeInfoList[5] = { skind = 0, typeId = 1028, orgTypeId = 1027 }
+__typeInfoList[6] = { skind=3, parentId = 1005, typeId = 1058, baseId = 1, txt = 'Opt',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {1065}, }
+__typeInfoList[7] = { skind = 0, typeId = 1059, orgTypeId = 1058 }
+__typeInfoList[8] = { skind=3, parentId = 1058, typeId = 1065, baseId = 1, txt = '__init',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {104671}, retTypeId = {}, children = {}, }
+__typeInfoList[9] = { skind = 9, typeId = 1655, genSrcTypeId = 104545, genTypeList = {1058} }
+__typeInfoList[10] = { skind=3, parentId = 1005, typeId = 1657, baseId = 1, txt = 'createFilter',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {55, 184, 184, 1027, 25, 100787, 100728, 100834, 56, 111889, 25, 25}, retTypeId = {1655}, children = {}, }
+__typeInfoList[11] = { skind=3, parentId = 1005, typeId = 1663, baseId = 104794, txt = 'MacroEvalImp',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {1681, 1687, 1690}, }
+__typeInfoList[12] = { skind = 0, typeId = 1664, orgTypeId = 1663 }
+__typeInfoList[13] = { skind = 1, typeId = 1670, srcTypeId = 1663, mutMode = 0 }
+__typeInfoList[14] = { skind=3, parentId = 1, typeId = 1677, baseId = 76, txt = 'List',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutMode = 2, itemTypeId = {55}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+__typeInfoList[15] = { skind = 0, typeId = 1678, orgTypeId = 1677 }
+__typeInfoList[16] = { skind = 1, typeId = 1680, srcTypeId = 1677, mutMode = 0 }
+__typeInfoList[17] = { skind=3, parentId = 1663, typeId = 1681, baseId = 1, txt = 'evalFromCode',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {100728, 55, 1680, 56}, retTypeId = {105336}, children = {}, }
+__typeInfoList[18] = { skind=3, parentId = 1663, typeId = 1687, baseId = 1, txt = 'eval',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {100728, 110334}, retTypeId = {105336}, children = {}, }
+__typeInfoList[19] = { skind=3, parentId = 1663, typeId = 1690, baseId = 1, txt = '__init',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+__typeInfoList[20] = { skind=3, parentId = 1005, typeId = 1693, baseId = 1, txt = 'createAstFromStream',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {55, 175, 112137}, retTypeId = {112040}, children = {}, }
+__typeInfoList[21] = { skind=3, parentId = 1005, typeId = 1696, baseId = 1, txt = 'createAstFromFile',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {55, 112137}, retTypeId = {112040}, children = {}, }
+__typeInfoList[22] = { skind=3, parentId = 1005, typeId = 1699, baseId = 1, txt = 'createAst',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {55, 55, 112137}, retTypeId = {112040}, children = {}, }
+__typeInfoList[23] = { skind=3, parentId = 1005, typeId = 1702, baseId = 1, txt = 'getTestLnsCode',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {55}, children = {}, }
+__typeInfoList[24] = { skind=3, parentId = 1005, typeId = 1708, baseId = 1, txt = 'runTestCode',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {100106, 55}, retTypeId = {}, children = {}, }
+__typeInfoList[25] = { skind = 1, typeId = 1724, srcTypeId = 1058, mutMode = 0 }
+__dependIdMap[ 100106 ] = { 11, 1042 } -- Ctrl
+__dependIdMap[ 100728 ] = { 1, 1044 } -- ProcessInfo
+__dependIdMap[ 100756 ] = { 1, 1094 } -- TypeInfo
+__dependIdMap[ 100787 ] = { 1, 1137 } -- &TypeInfo
+__dependIdMap[ 100834 ] = { 1, 1181 } -- SymbolKind
+__dependIdMap[ 104541 ] = { 7, 1005 } -- @Nodes
+__dependIdMap[ 104545 ] = { 7, 1034 } -- Filter<T>
+__dependIdMap[ 104548 ] = { 7, 1041 } -- get_typeNameCtrl
+__dependIdMap[ 104555 ] = { 7, 1048 } -- get_optStack
+__dependIdMap[ 104640 ] = { 7, 1133 } -- Node
+__dependIdMap[ 104671 ] = { 7, 1151 } -- &Node
+__dependIdMap[ 104794 ] = { 7, 1285 } -- MacroEval
+__dependIdMap[ 104883 ] = { 7, 1481 } -- processNone
+__dependIdMap[ 104934 ] = { 7, 1546 } -- processShebang
+__dependIdMap[ 104988 ] = { 7, 1614 } -- processConvStat
+__dependIdMap[ 105042 ] = { 7, 1682 } -- processBlankLine
+__dependIdMap[ 105096 ] = { 7, 1750 } -- processSubfile
+__dependIdMap[ 105178 ] = { 7, 1848 } -- processImport
+__dependIdMap[ 105329 ] = { 7, 2029 } -- macroStatmentProc
+__typeInfoList[26] = { skind = 11, typeId = 105336, extedTypeId = 105329 }
+__dependIdMap[ 105371 ] = { 7, 2114 } -- processRoot
+__dependIdMap[ 105525 ] = { 7, 2294 } -- processRefType
+__dependIdMap[ 105628 ] = { 7, 2404 } -- processBlock
+__dependIdMap[ 105698 ] = { 7, 2488 } -- processEnv
+__dependIdMap[ 105780 ] = { 7, 2580 } -- processScope
+__dependIdMap[ 105901 ] = { 7, 2715 } -- processIf
+__dependIdMap[ 105978 ] = { 7, 2816 } -- processExpList
+__dependIdMap[ 106101 ] = { 7, 2956 } -- processSwitch
+__dependIdMap[ 106181 ] = { 7, 3058 } -- processWhile
+__dependIdMap[ 106241 ] = { 7, 3135 } -- processRepeat
+__dependIdMap[ 106301 ] = { 7, 3221 } -- processFor
+__dependIdMap[ 106370 ] = { 7, 3310 } -- processApply
+__dependIdMap[ 106445 ] = { 7, 3411 } -- processForeach
+__dependIdMap[ 106517 ] = { 7, 3512 } -- processForsort
+__dependIdMap[ 106592 ] = { 7, 3601 } -- processReturn
+__dependIdMap[ 106650 ] = { 7, 3670 } -- processBreak
+__dependIdMap[ 106700 ] = { 7, 3734 } -- processProvide
+__dependIdMap[ 106754 ] = { 7, 3808 } -- processExpNew
+__dependIdMap[ 106814 ] = { 7, 3885 } -- processExpUnwrap
+__dependIdMap[ 106871 ] = { 7, 3956 } -- processExpRef
+__dependIdMap[ 106925 ] = { 7, 4033 } -- processExpSetVal
+__dependIdMap[ 107020 ] = { 7, 4145 } -- processExpSetItem
+__dependIdMap[ 107080 ] = { 7, 4228 } -- processExpOp2
+__dependIdMap[ 107146 ] = { 7, 4314 } -- processUnwrapSet
+__dependIdMap[ 107206 ] = { 7, 4397 } -- processIfUnwrap
+__dependIdMap[ 107296 ] = { 7, 4511 } -- processWhen
+__dependIdMap[ 107397 ] = { 7, 4619 } -- processExpCast
+__dependIdMap[ 107469 ] = { 7, 4705 } -- processExpToDDD
+__dependIdMap[ 107523 ] = { 7, 4776 } -- processExpSubDDD
+__dependIdMap[ 107608 ] = { 7, 4868 } -- processExpOp1
+__dependIdMap[ 107668 ] = { 7, 4954 } -- processExpRefItem
+__dependIdMap[ 107743 ] = { 7, 5055 } -- processExpCall
+__dependIdMap[ 107824 ] = { 7, 5150 } -- processExpMRet
+__dependIdMap[ 107881 ] = { 7, 5224 } -- processExpAccessMRet
+__dependIdMap[ 107941 ] = { 7, 5298 } -- processExpMultiTo1
+__dependIdMap[ 107998 ] = { 7, 5369 } -- processExpParen
+__dependIdMap[ 108062 ] = { 7, 5447 } -- processExpMacroExp
+__dependIdMap[ 108144 ] = { 7, 5543 } -- processExpMacroStat
+__dependIdMap[ 108208 ] = { 7, 5621 } -- processExpMacroArgExp
+__dependIdMap[ 108262 ] = { 7, 5689 } -- processStmtExp
+__dependIdMap[ 108319 ] = { 7, 5760 } -- processExpMacroStatList
+__dependIdMap[ 108373 ] = { 7, 5837 } -- processExpOmitEnum
+__dependIdMap[ 108437 ] = { 7, 5927 } -- processRefField
+__dependIdMap[ 108515 ] = { 7, 6034 } -- processGetField
+__dependIdMap[ 108596 ] = { 7, 6135 } -- processAlias
+__dependIdMap[ 108700 ] = { 7, 6277 } -- processDeclVar
+__dependIdMap[ 108839 ] = { 7, 6430 } -- processDeclForm
+__dependIdMap[ 108988 ] = { 7, 6584 } -- processDeclFunc
+__dependIdMap[ 109042 ] = { 7, 6652 } -- processDeclMethod
+__dependIdMap[ 109096 ] = { 7, 6720 } -- processProtoMethod
+__dependIdMap[ 109150 ] = { 7, 6788 } -- processDeclConstr
+__dependIdMap[ 109204 ] = { 7, 6856 } -- processDeclDestr
+__dependIdMap[ 109258 ] = { 7, 6930 } -- processExpCallSuperCtor
+__dependIdMap[ 109318 ] = { 7, 7010 } -- processExpCallSuper
+__dependIdMap[ 109378 ] = { 7, 7111 } -- processDeclMember
+__dependIdMap[ 109455 ] = { 7, 7208 } -- processDeclArg
+__dependIdMap[ 109515 ] = { 7, 7279 } -- processDeclArgDDD
+__dependIdMap[ 109581 ] = { 7, 7363 } -- processDeclAdvertise
+__dependIdMap[ 109636 ] = { 7, 7432 } -- processProtoClass
+__dependIdMap[ 109700 ] = { 7, 7565 } -- processDeclClass
+__dependIdMap[ 109913 ] = { 7, 7810 } -- processDeclEnum
+__dependIdMap[ 109988 ] = { 7, 7905 } -- processDeclAlge
+__dependIdMap[ 110048 ] = { 7, 7991 } -- processNewAlgeVal
+__dependIdMap[ 110126 ] = { 7, 8083 } -- processLuneControl
+__dependIdMap[ 110199 ] = { 7, 8189 } -- processMatch
+__dependIdMap[ 110284 ] = { 7, 8288 } -- processLuneKind
+__dependIdMap[ 110334 ] = { 7, 8352 } -- DeclMacroNode
+__dependIdMap[ 110338 ] = { 7, 8356 } -- processDeclMacro
+__dependIdMap[ 110406 ] = { 7, 8451 } -- processTestCase
+__dependIdMap[ 110469 ] = { 7, 8528 } -- processTestBlock
+__dependIdMap[ 110536 ] = { 7, 8609 } -- processAbbr
+__dependIdMap[ 110587 ] = { 7, 8674 } -- processBoxing
+__dependIdMap[ 110641 ] = { 7, 8742 } -- processUnboxing
+__dependIdMap[ 110695 ] = { 7, 8807 } -- processLiteralNil
+__dependIdMap[ 110746 ] = { 7, 8875 } -- processLiteralChar
+__dependIdMap[ 110803 ] = { 7, 8949 } -- processLiteralInt
+__dependIdMap[ 110860 ] = { 7, 9023 } -- processLiteralReal
+__dependIdMap[ 110917 ] = { 7, 9094 } -- processLiteralArray
+__dependIdMap[ 110971 ] = { 7, 9162 } -- processLiteralList
+__dependIdMap[ 111025 ] = { 7, 9230 } -- processLiteralSet
+__dependIdMap[ 111091 ] = { 7, 9317 } -- processLiteralMap
+__dependIdMap[ 111168 ] = { 7, 9417 } -- processLiteralString
+__dependIdMap[ 111234 ] = { 7, 9497 } -- processLiteralBool
+__dependIdMap[ 111288 ] = { 7, 9565 } -- processLiteralSymbol
+__dependIdMap[ 111505 ] = { 7, 9882 } -- processBlockSub
+__dependIdMap[ 111508 ] = { 7, 9885 } -- processBlock
+__dependIdMap[ 111861 ] = { 5, 1037 } -- LuaVerInfo
+__dependIdMap[ 111889 ] = { 5, 1069 } -- &LuaVerInfo
+__dependIdMap[ 112040 ] = { 12, 5260 } -- ASTInfo
+__dependIdMap[ 112128 ] = { 8, 1036 } -- Option
+__dependIdMap[ 112137 ] = { 8, 1052 } -- &Option
+local __dependModuleMap = {}
+_moduleObj.__dependModuleMap = __dependModuleMap
+__dependModuleMap[ 'lune.base.Ast' ] = { typeId = 1, use = true, buildId = "1616421706.000000:1" }
+__dependModuleMap[ 'lune.base.DependLuaOnLns' ] = { typeId = 2, use = false, buildId = "1616421706.000000:1" }
+__dependModuleMap[ 'lune.base.Log' ] = { typeId = 3, use = true, buildId = "1616421706.000000:1" }
+__dependModuleMap[ 'lune.base.LuaMod' ] = { typeId = 4, use = false, buildId = "1616421706.000000:1" }
+__dependModuleMap[ 'lune.base.LuaVer' ] = { typeId = 5, use = true, buildId = "1616421705.000000:1" }
+__dependModuleMap[ 'lune.base.LuneControl' ] = { typeId = 6, use = false, buildId = "1616421706.000000:1" }
+__dependModuleMap[ 'lune.base.Nodes' ] = { typeId = 7, use = true, buildId = "1616421706.000000:1" }
+__dependModuleMap[ 'lune.base.Option' ] = { typeId = 8, use = true, buildId = "1616421706.000000:1" }
+__dependModuleMap[ 'lune.base.Parser' ] = { typeId = 9, use = false, buildId = "1616421706.000000:1" }
+__dependModuleMap[ 'lune.base.Str' ] = { typeId = 10, use = false, buildId = "1616421706.000000:1" }
+__dependModuleMap[ 'lune.base.Testing' ] = { typeId = 11, use = true, buildId = "1616421705.000000:1" }
+__dependModuleMap[ 'lune.base.TransUnit' ] = { typeId = 12, use = true, buildId = "1616421706.000000:1" }
+__dependModuleMap[ 'lune.base.Types' ] = { typeId = 13, use = false, buildId = "1616421706.000000:1" }
+__dependModuleMap[ 'lune.base.Util' ] = { typeId = 14, use = false, buildId = "1616421706.000000:1" }
+__dependModuleMap[ 'lune.base.Ver' ] = { typeId = 15, use = false, buildId = "1616421976.000000:1" }
+__dependModuleMap[ 'lune.base.frontInterface' ] = { typeId = 16, use = false, buildId = "1616421706.000000:1" }
+_moduleObj.__subModuleMap = {}
+_moduleObj.__moduleTypeId = 1005
+_moduleObj.__moduleSymbolKind = 0
+_moduleObj.__moduleMutable = true
+----- meta -----
+return _moduleObj

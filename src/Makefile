@@ -60,7 +60,9 @@ endif
 ifneq ($(findstring $(MAKECMDGOALS),"install" "uninstall"),)
 # LUA_DIR_SCRIPT='for path in string.gmatch( package.path, "[^;]+" ) do if not path:find( "^%./" ) then print( (path:gsub( "/%?%.lua", "" )) ); break end end'
 # LUA_MOD_DIR=$(shell echo $(LUA_DIR_SCRIPT) | $(LUA) 2> /dev/null)
+ifneq "$(wildcard lune.mk)" ""
 include lune.mk
+endif
 endif
 
 INSTALL=/usr/bin/install -c
@@ -883,7 +885,7 @@ endef
 check-rockspec:
 	$(call check-rockspec-op,lunescript-main-1.rockspec,work/3,)
 ifdef LUA51
-	$(call check-rockspec-op,lunescript51-main-1.rockspec,work/6,legacy/lua51/)
+	$(call check-rockspec-op,lunescript51-main-1.rockspec,work/6,lune/legacy/lua51/)
 endif
 
 
@@ -931,6 +933,9 @@ test-lua51:
 	$(MAKE) test-lua51-sub LANG_KIND=lua LUA=$(LUA51) 
 
 	diff -r work/5/lune work/6/lune
+
+# gopher-lua で test-go 実行
+	(cd work/6; $(MAKE) test-go LUA=$(LUA51) LNSC="$(LNSC_LUA51)" GOTAG=gopherlua)
 
 # サンプルを lua5.1 にクロスコンパイルして実行テスト
 	$(call mk_lune_proj_dir,work/7)
@@ -983,10 +988,10 @@ endif
 		cp work/3/lune/binding.go $(ORG_DIR)lune;	\
 	fi
 ifneq ($(ENABLE_LUA51),)
-	cp work/6/lune/base/*.lns $(ORG_DIR)legacy/lua51/lune/base/
-	cp work/6/lune/base/*.lua $(ORG_DIR)legacy/lua51/lune/base/
-	cp work/6/lune/base/*.meta $(ORG_DIR)legacy/lua51/lune/base/
-	cp work/6/lune/*.* $(ORG_DIR)legacy/lua51/lune/
+	cp work/6/lune/base/*.lns $(ORG_DIR)lune/legacy/lua51/lune/base/
+	cp work/6/lune/base/*.lua $(ORG_DIR)lune/legacy/lua51/lune/base/
+	cp work/6/lune/base/*.meta $(ORG_DIR)lune/legacy/lua51/lune/base/
+	cp work/6/lune/*.* $(ORG_DIR)lune/legacy/lua51/lune/
 endif
 
 
@@ -1292,10 +1297,23 @@ define buildGoSetup
 	(cd $1; if [ ! -f go.mod ]; then go mod init $(GO_MOD); go mod tidy; fi)
 endef
 
+GOBUILD_TAG=
+ifdef GOTAG
+GOBUILD_TAG=-tags $(GOTAG)
+endif
+
+
+ifdef GOTAG
 define buildGo
 	$(call buildGoSetup,$1)
-	(cd $1; PKG_CONFIG_PATH=$(shell pwd) go build -o $2 && ./$2)
+	(cd $1; go build $(GOBUILD_TAG) -o $2 && ./$2)
 endef
+else
+define buildGo
+	$(call buildGoSetup,$1)
+	(cd $1; PKG_CONFIG_PATH=$(shell pwd) go build $(GOBUILD_TAG) -o $2 && ./$2)
+endef
+endif
 
 GO_WORK_DIR = work/go
 
@@ -1376,7 +1394,11 @@ test-go:
 	$(call cmd_exec_trans,$(LNSC),.,.,,base/convGo)
 	$(call setup-go,$(GO_WORK_DIR))
 	$(call test-go-one-setup,$(GO_WORK_DIR))
-	rm $(GO_WORK_DIR)/test/*.c
+ifeq ($(GOTAG),gopherlua)
+# gopherlua は lua 5.1 互換なので lua51 依存のテストは除外
+	sed -i.bak 's@/.nolua51./@//@g' $(GO_WORK_DIR)/test/testGo.lns
+endif
+	-rm $(GO_WORK_DIR)/test/*.c
 	$(call test-go-some-setup,$(LNSC),$(GO_WORK_DIR),SubGo,test)
 	$(call test-go-some,$(LNSC),$(GO_WORK_DIR),testGo,test,test.testGo,--app github.com/ifritJP/LuneScript/src)
 

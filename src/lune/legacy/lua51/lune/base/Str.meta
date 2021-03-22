@@ -1,0 +1,74 @@
+local _moduleObj = {}
+----- meta -----
+_moduleObj.__version = '1.1.13'
+_moduleObj.__formatVersion = '1.0.100'
+_moduleObj.__buildId = "1616421706.000000:1"
+_moduleObj.__enableTest = false
+_moduleObj.__hasTest = false
+_moduleObj.__lazyModuleList = {}
+local __typeId2ClassInfoMap = {}
+_moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap
+do
+   local __classInfo1025 = {}
+   __typeId2ClassInfoMap[ 1025 ] = __classInfo1025
+end
+do
+   local __classInfo1001 = {}
+   __typeId2ClassInfoMap[ 1001 ] = __classInfo1001
+end
+do
+   local __classInfo1003 = {}
+   __typeId2ClassInfoMap[ 1003 ] = __classInfo1003
+end
+do
+   local __classInfo1005 = {}
+   __typeId2ClassInfoMap[ 1005 ] = __classInfo1005
+end
+local __macroName2InfoMap = {}
+_moduleObj.__macroName2InfoMap = __macroName2InfoMap
+local __varName2InfoMap = {}
+_moduleObj.__varName2InfoMap = __varName2InfoMap
+local __typeInfoList = {}
+_moduleObj.__typeInfoList = __typeInfoList
+local __dependIdMap = {}
+_moduleObj.__dependIdMap = __dependIdMap
+__typeInfoList[1] = { skind = 2, parentId = 1, typeId = 1001, txt = '@lune', 
+children = {1003, } }
+__typeInfoList[2] = { skind = 2, parentId = 1001, typeId = 1003, txt = '@base', 
+children = {1005, } }
+__typeInfoList[3] = { skind = 2, parentId = 1003, typeId = 1005, txt = '@Str', 
+children = {1007, 1010, 1016, 1025, 1048, } }
+__typeInfoList[4] = { skind=3, parentId = 1005, typeId = 1007, baseId = 1, txt = 'startsWith',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {55, 55}, retTypeId = {25}, children = {}, }
+__typeInfoList[5] = { skind=3, parentId = 1005, typeId = 1010, baseId = 1, txt = 'endsWith',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {55, 55}, retTypeId = {25}, children = {}, }
+__typeInfoList[6] = { skind=3, parentId = 1, typeId = 1013, baseId = 76, txt = 'List',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutMode = 2, itemTypeId = {55}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+__typeInfoList[7] = { skind = 0, typeId = 1014, orgTypeId = 1013 }
+__typeInfoList[8] = { skind=3, parentId = 1005, typeId = 1016, baseId = 1, txt = 'getLineList',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {55}, retTypeId = {1013}, children = {}, }
+__typeInfoList[9] = { skind=3, parentId = 1005, typeId = 1025, baseId = 1, txt = 'Builder',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {1032, 1035, 1038, 1042, 1045}, }
+__typeInfoList[10] = { skind = 0, typeId = 1026, orgTypeId = 1025 }
+__typeInfoList[11] = { skind=3, parentId = 1025, typeId = 1032, baseId = 1, txt = 'get_txt',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {55}, children = {}, }
+__typeInfoList[12] = { skind=3, parentId = 1025, typeId = 1035, baseId = 1, txt = '__init',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+__typeInfoList[13] = { skind=3, parentId = 1025, typeId = 1038, baseId = 1, txt = 'add',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {55}, retTypeId = {}, children = {}, }
+__typeInfoList[14] = { skind = 1, typeId = 1041, srcTypeId = 1025, mutMode = 0 }
+__typeInfoList[15] = { skind=3, parentId = 1025, typeId = 1042, baseId = 1, txt = 'len',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {30}, children = {}, }
+__typeInfoList[16] = { skind=3, parentId = 1025, typeId = 1045, baseId = 1, txt = 'clear',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+__typeInfoList[17] = { skind=3, parentId = 1005, typeId = 1048, baseId = 1, txt = 'isValidStrBuilder',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {25}, children = {}, }
+__typeInfoList[18] = { skind = 1, typeId = 1051, srcTypeId = 1013, mutMode = 0 }
+local __dependModuleMap = {}
+_moduleObj.__dependModuleMap = __dependModuleMap
+_moduleObj.__subModuleMap = {}
+_moduleObj.__moduleTypeId = 1005
+_moduleObj.__moduleSymbolKind = 0
+_moduleObj.__moduleMutable = true
+----- meta -----
+return _moduleObj

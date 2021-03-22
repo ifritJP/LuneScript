@@ -29,6 +29,8 @@ import "path"
 import "fmt"
 import "runtime/pprof"
 
+
+
 func Lns_Depend_init() {
 }
 
@@ -82,9 +84,14 @@ func Depend_existFile( path string ) bool {
     return true
 }
 
-func Depend_getLuaVersion() string {
-    return "5.3"
-}
+// func Depend_getLuaVersion() string {
+//     return "5.3"
+// }
+// type Depend_UpdateVer func ( ver LnsInt )
+// func Depend_setup( callback Depend_UpdateVer) {
+//     callback( 53 );
+// }
+
 
 func Depend_canUseChannel() bool {
    return true
@@ -93,12 +100,6 @@ func Depend_canUseAsync() bool {
    return false
 }
 
-
-type Depend_UpdateVer func ( ver LnsInt )
-
-func Depend_setup( callback Depend_UpdateVer) {
-    callback( 53 );
-}
 
 
 var DependLuaOnLns_runLuaOnLnsFunc func(luaCode string) (LnsAny,string) = nil

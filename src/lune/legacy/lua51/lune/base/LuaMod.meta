@@ -1,0 +1,52 @@
+local _moduleObj = {}
+----- meta -----
+_moduleObj.__version = '1.1.13'
+_moduleObj.__formatVersion = '1.0.100'
+_moduleObj.__buildId = "1616421706.000000:1"
+_moduleObj.__enableTest = false
+_moduleObj.__hasTest = true
+_moduleObj.__lazyModuleList = {}
+local __typeId2ClassInfoMap = {}
+_moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap
+do
+   local __classInfo1001 = {}
+   __typeId2ClassInfoMap[ 1001 ] = __classInfo1001
+end
+do
+   local __classInfo1003 = {}
+   __typeId2ClassInfoMap[ 1003 ] = __classInfo1003
+end
+do
+   local __classInfo1005 = {}
+   __typeId2ClassInfoMap[ 1005 ] = __classInfo1005
+end
+local __macroName2InfoMap = {}
+_moduleObj.__macroName2InfoMap = __macroName2InfoMap
+local __varName2InfoMap = {}
+_moduleObj.__varName2InfoMap = __varName2InfoMap
+local __typeInfoList = {}
+_moduleObj.__typeInfoList = __typeInfoList
+local __dependIdMap = {}
+_moduleObj.__dependIdMap = __dependIdMap
+__typeInfoList[1] = { skind = 2, parentId = 1, typeId = 1001, txt = '@lune', 
+children = {1003, } }
+__typeInfoList[2] = { skind = 2, parentId = 1001, typeId = 1003, txt = '@base', 
+children = {1005, } }
+__typeInfoList[3] = { skind = 2, parentId = 1003, typeId = 1005, txt = '@LuaMod', 
+children = {1007, 1028, 1043, } }
+__typeInfoList[4] = { skind = 4, parentId = 1005, typeId = 1007, txt = 'CodeKind',
+accessMode = 1, kind = 11, valTypeId = 30, enumValList = {Alge = 8,AlgeMapping = 9,Cast = 13,Finalize = 16,Init = 0,InstanceOf = 12,LazyLoad = 14,LazyRequire = 15,LoadModule = 4,LoadStr51 = 5,LoadStr52 = 6,Mapping = 7,NilAcc = 2,SetMapping = 10,SetOp = 11,Unpack = 1,Unwrap = 3,} }
+__typeInfoList[5] = { skind = 0, typeId = 1008, orgTypeId = 1007 }
+__typeInfoList[6] = { skind = 4, parentId = 1005, typeId = 1028, txt = 'CastKind',
+accessMode = 1, kind = 11, valTypeId = 30, enumValList = {Class = 3,Int = 0,Real = 1,Str = 2,} }
+__typeInfoList[7] = { skind=3, parentId = 1005, typeId = 1043, baseId = 1, txt = 'getCode',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {1007}, retTypeId = {55}, children = {}, }
+local __dependModuleMap = {}
+_moduleObj.__dependModuleMap = __dependModuleMap
+__dependModuleMap[ 'lune.base.Testing' ] = { typeId = 1, use = true, buildId = "1616421705.000000:1" }
+_moduleObj.__subModuleMap = {}
+_moduleObj.__moduleTypeId = 1005
+_moduleObj.__moduleSymbolKind = 0
+_moduleObj.__moduleMutable = true
+----- meta -----
+return _moduleObj

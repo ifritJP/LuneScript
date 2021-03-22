@@ -1,0 +1,654 @@
+local _moduleObj = {}
+----- meta -----
+_moduleObj.__version = '1.1.13'
+_moduleObj.__formatVersion = '1.0.100'
+_moduleObj.__buildId = "1616421706.000000:1"
+_moduleObj.__enableTest = false
+_moduleObj.__hasTest = true
+_moduleObj.__lazyModuleList = {}
+local __typeId2ClassInfoMap = {}
+_moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap
+do
+   local __classInfo1369 = {}
+   __typeId2ClassInfoMap[ 1369 ] = __classInfo1369
+end
+do
+   local __classInfo1383 = {}
+   __typeId2ClassInfoMap[ 1383 ] = __classInfo1383
+   __classInfo1383.processInfo = {
+     name='processInfo', staticFlag = false, mutMode = 3,accessMode = 4, typeId = 1444 }
+end
+do
+   local __classInfo3370 = {}
+   __typeId2ClassInfoMap[ 3370 ] = __classInfo3370
+   __classInfo3370.lns_ = {
+     name='lns_', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.lns__fcall = {
+     name='lns__fcall', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.lns__fcall_sym = {
+     name='lns__fcall_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.lns__kind = {
+     name='lns__kind', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.lns__kind_sym = {
+     name='lns__kind_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.lns__load = {
+     name='lns__load', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.lns__load_sym = {
+     name='lns__load_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.lns_collectgarbage = {
+     name='lns_collectgarbage', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.lns_collectgarbage_sym = {
+     name='lns_collectgarbage_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.lns_error = {
+     name='lns_error', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.lns_error_sym = {
+     name='lns_error_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.lns_expandLuavalMap = {
+     name='lns_expandLuavalMap', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.lns_expandLuavalMap_sym = {
+     name='lns_expandLuavalMap_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.lns_loadfile = {
+     name='lns_loadfile', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.lns_loadfile_sym = {
+     name='lns_loadfile_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.lns_print = {
+     name='lns_print', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.lns_print_sym = {
+     name='lns_print_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.lns_require = {
+     name='lns_require', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.lns_require_sym = {
+     name='lns_require_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.lns_tonumber = {
+     name='lns_tonumber', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.lns_tonumber_sym = {
+     name='lns_tonumber_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.lns_tostring = {
+     name='lns_tostring', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.lns_tostring_sym = {
+     name='lns_tostring_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.lns_type = {
+     name='lns_type', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.lns_type_sym = {
+     name='lns_type_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.istream_ = {
+     name='istream_', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.istream___attrib = {
+     name='istream___attrib', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.istream___attrib_sym = {
+     name='istream___attrib_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.istream_close = {
+     name='istream_close', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.istream_close_sym = {
+     name='istream_close_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.istream_read = {
+     name='istream_read', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.istream_read_sym = {
+     name='istream_read_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.ostream_ = {
+     name='ostream_', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.ostream___attrib = {
+     name='ostream___attrib', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.ostream___attrib_sym = {
+     name='ostream___attrib_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.ostream_close = {
+     name='ostream_close', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.ostream_close_sym = {
+     name='ostream_close_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.ostream_flush = {
+     name='ostream_flush', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.ostream_flush_sym = {
+     name='ostream_flush_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.ostream_write = {
+     name='ostream_write', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.ostream_write_sym = {
+     name='ostream_write_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.luastream_ = {
+     name='luastream_', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.luastream___attrib = {
+     name='luastream___attrib', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.luastream___attrib_sym = {
+     name='luastream___attrib_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.luastream_close = {
+     name='luastream_close', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.luastream_close_sym = {
+     name='luastream_close_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.luastream_flush = {
+     name='luastream_flush', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.luastream_flush_sym = {
+     name='luastream_flush_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.luastream_read = {
+     name='luastream_read', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.luastream_read_sym = {
+     name='luastream_read_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.luastream_seek = {
+     name='luastream_seek', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.luastream_seek_sym = {
+     name='luastream_seek_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.luastream_write = {
+     name='luastream_write', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.luastream_write_sym = {
+     name='luastream_write_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.mapping_ = {
+     name='mapping_', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.mapping___attrib = {
+     name='mapping___attrib', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.mapping___attrib_sym = {
+     name='mapping___attrib_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.mapping__toMap = {
+     name='mapping__toMap', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.mapping__toMap_sym = {
+     name='mapping__toMap_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.__pipe_ = {
+     name='__pipe_', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.__pipe_get = {
+     name='__pipe_get', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.__pipe_get_sym = {
+     name='__pipe_get_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.__pipe_put = {
+     name='__pipe_put', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.__pipe_put_sym = {
+     name='__pipe_put_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.lnsthread_ = {
+     name='lnsthread_', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.lnsthread___init = {
+     name='lnsthread___init', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.lnsthread___init_sym = {
+     name='lnsthread___init_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.lnsthread_loop = {
+     name='lnsthread_loop', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.lnsthread_loop_sym = {
+     name='lnsthread_loop_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.io_ = {
+     name='io_', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.io___attrib = {
+     name='io___attrib', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.io___attrib_sym = {
+     name='io___attrib_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.io_open = {
+     name='io_open', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.io_open_sym = {
+     name='io_open_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.io_popen = {
+     name='io_popen', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.io_popen_sym = {
+     name='io_popen_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.io_stderr = {
+     name='io_stderr', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.io_stderr_sym = {
+     name='io_stderr_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.io_stdin = {
+     name='io_stdin', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.io_stdin_sym = {
+     name='io_stdin_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.io_stdout = {
+     name='io_stdout', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.io_stdout_sym = {
+     name='io_stdout_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.package_ = {
+     name='package_', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.package___attrib = {
+     name='package___attrib', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.package___attrib_sym = {
+     name='package___attrib_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.package_path = {
+     name='package_path', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.package_path_sym = {
+     name='package_path_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.package_searchpath = {
+     name='package_searchpath', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.package_searchpath_sym = {
+     name='package_searchpath_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.os_ = {
+     name='os_', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.os___attrib = {
+     name='os___attrib', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.os___attrib_sym = {
+     name='os___attrib_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.os_clock = {
+     name='os_clock', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.os_clock_sym = {
+     name='os_clock_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.os_date = {
+     name='os_date', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.os_date_sym = {
+     name='os_date_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.os_difftime = {
+     name='os_difftime', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.os_difftime_sym = {
+     name='os_difftime_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.os_exit = {
+     name='os_exit', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.os_exit_sym = {
+     name='os_exit_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.os_remove = {
+     name='os_remove', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.os_remove_sym = {
+     name='os_remove_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.os_rename = {
+     name='os_rename', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.os_rename_sym = {
+     name='os_rename_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.os_time = {
+     name='os_time', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.os_time_sym = {
+     name='os_time_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.string_ = {
+     name='string_', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.string___attrib = {
+     name='string___attrib', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.string___attrib_sym = {
+     name='string___attrib_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.string_byte = {
+     name='string_byte', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.string_byte_sym = {
+     name='string_byte_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.string_dump = {
+     name='string_dump', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.string_dump_sym = {
+     name='string_dump_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.string_find = {
+     name='string_find', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.string_find_sym = {
+     name='string_find_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.string_format = {
+     name='string_format', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.string_format_sym = {
+     name='string_format_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.string_gmatch = {
+     name='string_gmatch', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.string_gmatch_sym = {
+     name='string_gmatch_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.string_gsub = {
+     name='string_gsub', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.string_gsub_sym = {
+     name='string_gsub_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.string_lower = {
+     name='string_lower', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.string_lower_sym = {
+     name='string_lower_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.string_rep = {
+     name='string_rep', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.string_rep_sym = {
+     name='string_rep_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.string_reverse = {
+     name='string_reverse', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.string_reverse_sym = {
+     name='string_reverse_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.string_sub = {
+     name='string_sub', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.string_sub_sym = {
+     name='string_sub_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.string_upper = {
+     name='string_upper', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.string_upper_sym = {
+     name='string_upper_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.str_ = {
+     name='str_', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.str___attrib = {
+     name='str___attrib', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.str___attrib_sym = {
+     name='str___attrib_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.str_byte = {
+     name='str_byte', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.str_byte_sym = {
+     name='str_byte_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.str_find = {
+     name='str_find', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.str_find_sym = {
+     name='str_find_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.str_format = {
+     name='str_format', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.str_format_sym = {
+     name='str_format_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.str_gmatch = {
+     name='str_gmatch', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.str_gmatch_sym = {
+     name='str_gmatch_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.str_gsub = {
+     name='str_gsub', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.str_gsub_sym = {
+     name='str_gsub_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.str_lower = {
+     name='str_lower', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.str_lower_sym = {
+     name='str_lower_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.str_rep = {
+     name='str_rep', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.str_rep_sym = {
+     name='str_rep_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.str_reverse = {
+     name='str_reverse', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.str_reverse_sym = {
+     name='str_reverse_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.str_sub = {
+     name='str_sub', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.str_sub_sym = {
+     name='str_sub_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.str_upper = {
+     name='str_upper', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.str_upper_sym = {
+     name='str_upper_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.list_ = {
+     name='list_', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.list___less = {
+     name='list___less', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.list___less_sym = {
+     name='list___less_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.list_insert = {
+     name='list_insert', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.list_insert_sym = {
+     name='list_insert_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.list_remove = {
+     name='list_remove', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.list_remove_sym = {
+     name='list_remove_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.list_sort = {
+     name='list_sort', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.list_sort_sym = {
+     name='list_sort_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.list_unpack = {
+     name='list_unpack', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.list_unpack_sym = {
+     name='list_unpack_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.array_ = {
+     name='array_', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.array___less = {
+     name='array___less', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.array___less_sym = {
+     name='array___less_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.array_sort = {
+     name='array_sort', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.array_sort_sym = {
+     name='array_sort_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.array_unpack = {
+     name='array_unpack', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.array_unpack_sym = {
+     name='array_unpack_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.set_ = {
+     name='set_', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.set_add = {
+     name='set_add', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.set_add_sym = {
+     name='set_add_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.set_and = {
+     name='set_and', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.set_and_sym = {
+     name='set_and_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.set_clone = {
+     name='set_clone', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.set_clone_sym = {
+     name='set_clone_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.set_del = {
+     name='set_del', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.set_del_sym = {
+     name='set_del_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.set_has = {
+     name='set_has', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.set_has_sym = {
+     name='set_has_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.set_len = {
+     name='set_len', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.set_len_sym = {
+     name='set_len_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.set_or = {
+     name='set_or', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.set_or_sym = {
+     name='set_or_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.set_sub = {
+     name='set_sub', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.set_sub_sym = {
+     name='set_sub_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.math_ = {
+     name='math_', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.math___attrib = {
+     name='math___attrib', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.math___attrib_sym = {
+     name='math___attrib_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.math_random = {
+     name='math_random', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.math_random_sym = {
+     name='math_random_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.math_randomseed = {
+     name='math_randomseed', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.math_randomseed_sym = {
+     name='math_randomseed_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.debug_ = {
+     name='debug_', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.debug___attrib = {
+     name='debug___attrib', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.debug___attrib_sym = {
+     name='debug___attrib_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.debug_getinfo = {
+     name='debug_getinfo', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.debug_getinfo_sym = {
+     name='debug_getinfo_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.debug_getlocal = {
+     name='debug_getlocal', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.debug_getlocal_sym = {
+     name='debug_getlocal_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+   __classInfo3370.nilable_ = {
+     name='nilable_', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.nilable_val = {
+     name='nilable_val', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 100809 }
+   __classInfo3370.nilable_val_sym = {
+     name='nilable_val_sym', staticFlag = false, mutMode = 2,accessMode = 1, typeId = 101067 }
+end
+do
+   local __classInfo5260 = {}
+   __typeId2ClassInfoMap[ 5260 ] = __classInfo5260
+end
+do
+   local __classInfo1001 = {}
+   __typeId2ClassInfoMap[ 1001 ] = __classInfo1001
+end
+do
+   local __classInfo1003 = {}
+   __typeId2ClassInfoMap[ 1003 ] = __classInfo1003
+end
+do
+   local __classInfo1005 = {}
+   __typeId2ClassInfoMap[ 1005 ] = __classInfo1005
+end
+local __macroName2InfoMap = {}
+_moduleObj.__macroName2InfoMap = __macroName2InfoMap
+local __varName2InfoMap = {}
+_moduleObj.__varName2InfoMap = __varName2InfoMap
+local __typeInfoList = {}
+_moduleObj.__typeInfoList = __typeInfoList
+local __dependIdMap = {}
+_moduleObj.__dependIdMap = __dependIdMap
+__typeInfoList[1] = { skind = 2, parentId = 1, typeId = 1001, txt = '@lune', 
+children = {1003, } }
+__typeInfoList[2] = { skind = 2, parentId = 1001, typeId = 1003, txt = '@base', 
+children = {1005, } }
+__typeInfoList[3] = { skind = 2, parentId = 1003, typeId = 1005, txt = '@TransUnit', 
+children = {1052, 1369, 1383, 3370, 3432, 4568, 5260, 6301, 6310, 6325, } }
+__typeInfoList[4] = { skind = 4, parentId = 1005, typeId = 1052, txt = 'AnalyzeMode',
+accessMode = 1, kind = 11, valTypeId = 30, enumValList = {Compile = 0,Complete = 2,Diag = 1,Inquire = 3,} }
+__typeInfoList[5] = { skind = 0, typeId = 1053, orgTypeId = 1052 }
+__typeInfoList[6] = { skind=3, parentId = 1005, typeId = 1369, baseId = 1, txt = 'TransUnitIF',
+        abstractFlag = true, staticFlag = false, accessMode = 1, kind = 7, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {1377, 1380}, }
+__typeInfoList[7] = { skind = 0, typeId = 1370, orgTypeId = 1369 }
+__typeInfoList[8] = { skind = 1, typeId = 1376, srcTypeId = 1369, mutMode = 0 }
+__typeInfoList[9] = { skind=3, parentId = 1369, typeId = 1377, baseId = 1, txt = 'createModifier',
+        abstractFlag = true, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {100809, 101001}, retTypeId = {100809}, children = {}, }
+__typeInfoList[10] = { skind=3, parentId = 1369, typeId = 1380, baseId = 1, txt = '__init',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+__typeInfoList[11] = { skind=3, parentId = 1005, typeId = 1383, baseId = 1, txt = 'TransUnit',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutMode = 2, itemTypeId = {}, ifList = {1369, 100346}, argTypeId = {}, retTypeId = {}, children = {1402, 1408, 1445, 1496, 1499, 1615, 1652, 1769, 4651, 4654, 4663, 4669, 4672, 4675, 4690, 5282}, }
+__typeInfoList[12] = { skind = 0, typeId = 1384, orgTypeId = 1383 }
+__typeInfoList[13] = { skind=3, parentId = 1, typeId = 1399, baseId = 76, txt = 'List',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutMode = 2, itemTypeId = {55}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+__typeInfoList[14] = { skind = 0, typeId = 1400, orgTypeId = 1399 }
+__typeInfoList[15] = { skind=3, parentId = 1383, typeId = 1402, baseId = 1, txt = 'get_errMessList',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {1399}, children = {}, }
+__typeInfoList[16] = { skind=3, parentId = 1, typeId = 1405, baseId = 76, txt = 'List',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutMode = 2, itemTypeId = {55}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+__typeInfoList[17] = { skind = 0, typeId = 1406, orgTypeId = 1405 }
+__typeInfoList[18] = { skind=3, parentId = 1383, typeId = 1408, baseId = 1, txt = 'get_warnMessList',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {1405}, children = {}, }
+__typeInfoList[19] = { skind = 1, typeId = 1444, srcTypeId = 100750, mutMode = 3 }
+__typeInfoList[20] = { skind=3, parentId = 1383, typeId = 1445, baseId = 1, txt = '__init',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {104497, 104510, 104816, 56, 1053, 101092, 112006, 100039}, retTypeId = {}, children = {}, }
+__typeInfoList[21] = { skind=3, parentId = 1383, typeId = 1496, baseId = 1, txt = 'error',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {55}, retTypeId = {15}, children = {}, }
+__typeInfoList[22] = { skind=3, parentId = 1383, typeId = 1499, baseId = 1, txt = 'errorAt',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {100339, 55}, retTypeId = {15}, children = {}, }
+__typeInfoList[23] = { skind = 1, typeId = 1508, srcTypeId = 1383, mutMode = 0 }
+__typeInfoList[24] = { skind=3, parentId = 1383, typeId = 1615, baseId = 1, txt = 'pushbackStr',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {55, 55}, retTypeId = {}, children = {}, }
+__typeInfoList[25] = { skind=3, parentId = 1383, typeId = 1652, baseId = 1, txt = 'getTokenNoErr',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {100349}, children = {}, }
+__typeInfoList[26] = { skind=3, parentId = 1383, typeId = 1769, baseId = 1, txt = 'createModifier',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {100809, 101001}, retTypeId = {100809}, children = {}, }
+__typeInfoList[27] = { skind=3, parentId = 1005, typeId = 3370, baseId = 1, txt = 'BuiltinFuncType',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {3380, 3386, 3392, 3398, 3404, 3407, 3425, 3428}, }
+__typeInfoList[28] = { skind = 0, typeId = 3371, orgTypeId = 3370 }
+__typeInfoList[29] = { skind=3, parentId = 1, typeId = 3377, baseId = 76, txt = 'List',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutMode = 2, itemTypeId = {101067}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+__typeInfoList[30] = { skind = 0, typeId = 3378, orgTypeId = 3377 }
+__typeInfoList[31] = { skind=3, parentId = 3370, typeId = 3380, baseId = 1, txt = 'get_allSymbol',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {3377}, children = {}, }
+__typeInfoList[32] = { skind=3, parentId = 1, typeId = 3383, baseId = 76, txt = 'List',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutMode = 2, itemTypeId = {100809}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+__typeInfoList[33] = { skind = 0, typeId = 3384, orgTypeId = 3383 }
+__typeInfoList[34] = { skind=3, parentId = 3370, typeId = 3386, baseId = 1, txt = 'get_allClass',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {3383}, children = {}, }
+__typeInfoList[35] = { skind=3, parentId = 1, typeId = 3389, baseId = 69, txt = 'Set',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 17, mutMode = 2, itemTypeId = {100809}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+__typeInfoList[36] = { skind = 0, typeId = 3390, orgTypeId = 3389 }
+__typeInfoList[37] = { skind=3, parentId = 3370, typeId = 3392, baseId = 1, txt = 'get_allFuncTypeSet',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {3389}, children = {}, }
+__typeInfoList[38] = { skind=3, parentId = 1, typeId = 3395, baseId = 69, txt = 'Set',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 17, mutMode = 2, itemTypeId = {101067}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+__typeInfoList[39] = { skind = 0, typeId = 3396, orgTypeId = 3395 }
+__typeInfoList[40] = { skind=3, parentId = 3370, typeId = 3398, baseId = 1, txt = 'get_allSymbolSet',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {3395}, children = {}, }
+__typeInfoList[41] = { skind=3, parentId = 1, typeId = 3401, baseId = 69, txt = 'Set',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 17, mutMode = 2, itemTypeId = {100809}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+__typeInfoList[42] = { skind = 0, typeId = 3402, orgTypeId = 3401 }
+__typeInfoList[43] = { skind=3, parentId = 3370, typeId = 3404, baseId = 1, txt = 'get_needThreadingTypes',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {3401}, children = {}, }
+__typeInfoList[44] = { skind=3, parentId = 3370, typeId = 3407, baseId = 1, txt = '__init',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+__typeInfoList[45] = { skind=3, parentId = 3370, typeId = 3425, baseId = 1, txt = 'register',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {101067}, retTypeId = {}, children = {}, }
+__typeInfoList[46] = { skind=3, parentId = 3370, typeId = 3428, baseId = 1, txt = 'registerClass',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {100809}, retTypeId = {}, children = {}, }
+__typeInfoList[47] = { skind = 1, typeId = 3431, srcTypeId = 3370, mutMode = 0 }
+__typeInfoList[48] = { skind=3, parentId = 1005, typeId = 3432, baseId = 1, txt = 'getBuiltinFunc',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {3431}, children = {}, }
+__typeInfoList[49] = { skind=3, parentId = 1005, typeId = 4568, baseId = 1, txt = 'isStrFormFunc',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {100809}, retTypeId = {25}, children = {}, }
+__typeInfoList[50] = { skind=3, parentId = 1383, typeId = 4651, baseId = 1, txt = 'errorAt',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {100339, 55}, retTypeId = {15}, children = {}, }
+__typeInfoList[51] = { skind=3, parentId = 1383, typeId = 4654, baseId = 1, txt = 'error',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {55}, retTypeId = {15}, children = {}, }
+__typeInfoList[52] = { skind=3, parentId = 1383, typeId = 4663, baseId = 1, txt = 'pushbackToken',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {100349}, retTypeId = {}, children = {}, }
+__typeInfoList[53] = { skind=3, parentId = 1, typeId = 4666, baseId = 76, txt = 'List',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutMode = 2, itemTypeId = {100349}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+__typeInfoList[54] = { skind = 0, typeId = 4667, orgTypeId = 4666 }
+__typeInfoList[55] = { skind=3, parentId = 1383, typeId = 4669, baseId = 1, txt = 'newPushback',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {4666}, retTypeId = {}, children = {}, }
+__typeInfoList[56] = { skind=3, parentId = 1383, typeId = 4672, baseId = 1, txt = 'getStreamName',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {55}, children = {}, }
+__typeInfoList[57] = { skind=3, parentId = 1383, typeId = 4675, baseId = 1, txt = 'createPosition',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {30, 30}, retTypeId = {100339}, children = {}, }
+__typeInfoList[58] = { skind=3, parentId = 1383, typeId = 4690, baseId = 1, txt = 'pushback',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+__typeInfoList[59] = { skind=3, parentId = 1005, typeId = 5260, baseId = 1, txt = 'ASTInfo',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {5267, 5270, 5273, 5276, 5279}, }
+__typeInfoList[60] = { skind = 0, typeId = 5261, orgTypeId = 5260 }
+__typeInfoList[61] = { skind=3, parentId = 5260, typeId = 5267, baseId = 1, txt = 'get_node',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {104693}, children = {}, }
+__typeInfoList[62] = { skind=3, parentId = 5260, typeId = 5270, baseId = 1, txt = 'get_moduleTypeInfo',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {100809}, children = {}, }
+__typeInfoList[63] = { skind=3, parentId = 5260, typeId = 5273, baseId = 1, txt = 'get_moduleSymbolKind',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {100856}, children = {}, }
+__typeInfoList[64] = { skind=3, parentId = 5260, typeId = 5276, baseId = 1, txt = 'get_processInfo',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {100750}, children = {}, }
+__typeInfoList[65] = { skind=3, parentId = 5260, typeId = 5279, baseId = 1, txt = '__init',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {104693, 100809, 100856, 100750}, retTypeId = {}, children = {}, }
+__typeInfoList[66] = { skind=3, parentId = 1383, typeId = 5282, baseId = 1, txt = 'createAST',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 2, itemTypeId = {}, ifList = {}, argTypeId = {100328, 25, 56}, retTypeId = {5260}, children = {}, }
+__typeInfoList[67] = { skind=3, parentId = 1, typeId = 6298, baseId = 76, txt = 'List',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutMode = 2, itemTypeId = {55}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+__typeInfoList[68] = { skind = 0, typeId = 6299, orgTypeId = 6298 }
+__typeInfoList[69] = { skind=3, parentId = 1005, typeId = 6301, baseId = 1, txt = 'findForm',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {55}, retTypeId = {6298}, children = {}, }
+__typeInfoList[70] = { skind = 4, parentId = 1005, typeId = 6310, txt = 'FormType',
+accessMode = 1, kind = 11, valTypeId = 30, enumValList = {Match = 0,NeedConv = 1,Unmatch = 2,} }
+__typeInfoList[71] = { skind = 0, typeId = 6311, orgTypeId = 6310 }
+__typeInfoList[72] = { skind=3, parentId = 6310, typeId = 6312, baseId = 1, txt = 'get__txt',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {55}, children = {}, }
+__typeInfoList[73] = { skind=3, parentId = 6310, typeId = 6315, baseId = 1, txt = '_from',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {30}, retTypeId = {6311}, children = {}, }
+__typeInfoList[74] = { skind=3, parentId = 1, typeId = 6318, baseId = 76, txt = 'List',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutMode = 2, itemTypeId = {6310}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+__typeInfoList[75] = { skind = 0, typeId = 6319, orgTypeId = 6318 }
+__typeInfoList[76] = { skind = 1, typeId = 6321, srcTypeId = 6318, mutMode = 0 }
+__typeInfoList[77] = { skind=3, parentId = 6310, typeId = 6322, baseId = 1, txt = 'get__allList',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {6321}, children = {}, }
+__typeInfoList[78] = { skind=3, parentId = 1005, typeId = 6325, baseId = 1, txt = 'isMatchStringFormatType',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutMode = 0, itemTypeId = {}, ifList = {}, argTypeId = {55, 100809, 112006}, retTypeId = {6310, 100809}, children = {}, }
+__typeInfoList[79] = { skind = 1, typeId = 6335, srcTypeId = 6298, mutMode = 1 }
+__typeInfoList[80] = { skind = 1, typeId = 6796, srcTypeId = 1399, mutMode = 0 }
+__typeInfoList[81] = { skind = 1, typeId = 6797, srcTypeId = 1405, mutMode = 0 }
+__typeInfoList[82] = { skind = 1, typeId = 6798, srcTypeId = 4666, mutMode = 0 }
+__typeInfoList[83] = { skind = 1, typeId = 6799, srcTypeId = 5260, mutMode = 0 }
+__typeInfoList[84] = { skind = 1, typeId = 6800, srcTypeId = 3377, mutMode = 0 }
+__typeInfoList[85] = { skind = 1, typeId = 6801, srcTypeId = 3383, mutMode = 0 }
+__typeInfoList[86] = { skind = 1, typeId = 6802, srcTypeId = 3389, mutMode = 0 }
+__typeInfoList[87] = { skind = 1, typeId = 6803, srcTypeId = 3395, mutMode = 0 }
+__typeInfoList[88] = { skind = 1, typeId = 6804, srcTypeId = 3401, mutMode = 0 }
+__dependIdMap[ 100033 ] = { 13, 1037 } -- TransCtrlInfo
+__dependIdMap[ 100039 ] = { 13, 1047 } -- &TransCtrlInfo
+__dependIdMap[ 100322 ] = { 11, 1040 } -- Position
+__typeInfoList[89] = { skind = 0, typeId = 100323, orgTypeId = 100322 }
+__dependIdMap[ 100326 ] = { 11, 1044 } -- Token
+__dependIdMap[ 100328 ] = { 11, 1046 } -- Parser
+__dependIdMap[ 100339 ] = { 11, 1061 } -- &Position
+__dependIdMap[ 100346 ] = { 11, 1068 } -- PushbackParser
+__dependIdMap[ 100349 ] = { 11, 1075 } -- &Token
+__dependIdMap[ 100750 ] = { 1, 1044 } -- ProcessInfo
+__dependIdMap[ 100778 ] = { 1, 1094 } -- TypeInfo
+__dependIdMap[ 100809 ] = { 1, 1137 } -- &TypeInfo
+__dependIdMap[ 100856 ] = { 1, 1181 } -- SymbolKind
+__dependIdMap[ 100928 ] = { 1, 1244 } -- SymbolInfo
+__dependIdMap[ 101001 ] = { 1, 1328 } -- MutMode
+__dependIdMap[ 101067 ] = { 1, 1389 } -- &SymbolInfo
+__typeInfoList[90] = { skind = 1, typeId = 101092, srcTypeId = 100323, mutMode = 0 }
+__dependIdMap[ 104485 ] = { 16, 1007 } -- ModuleId
+__dependIdMap[ 104497 ] = { 16, 1023 } -- &ModuleId
+__dependIdMap[ 104510 ] = { 16, 1039 } -- ImportModuleInfo
+__dependIdMap[ 104662 ] = { 9, 1133 } -- Node
+__dependIdMap[ 104693 ] = { 9, 1151 } -- &Node
+__dependIdMap[ 104816 ] = { 9, 1285 } -- MacroEval
+__dependIdMap[ 111978 ] = { 5, 1037 } -- LuaVerInfo
+__dependIdMap[ 112006 ] = { 5, 1069 } -- &LuaVerInfo
+local __dependModuleMap = {}
+_moduleObj.__dependModuleMap = __dependModuleMap
+__dependModuleMap[ 'lune.base.Ast' ] = { typeId = 1, use = true, buildId = "1616421706.000000:1" }
+__dependModuleMap[ 'lune.base.Code' ] = { typeId = 2, use = false, buildId = "1616421706.000000:1" }
+__dependModuleMap[ 'lune.base.Log' ] = { typeId = 3, use = true, buildId = "1616421706.000000:1" }
+__dependModuleMap[ 'lune.base.LuaMod' ] = { typeId = 4, use = false, buildId = "1616421706.000000:1" }
+__dependModuleMap[ 'lune.base.LuaVer' ] = { typeId = 5, use = true, buildId = "1616421705.000000:1" }
+__dependModuleMap[ 'lune.base.LuneControl' ] = { typeId = 6, use = false, buildId = "1616421706.000000:1" }
+__dependModuleMap[ 'lune.base.Macro' ] = { typeId = 7, use = false, buildId = "1616421706.000000:1" }
+__dependModuleMap[ 'lune.base.Meta' ] = { typeId = 8, use = false, buildId = "1616421706.000000:1" }
+__dependModuleMap[ 'lune.base.Nodes' ] = { typeId = 9, use = true, buildId = "1616421706.000000:1" }
+__dependModuleMap[ 'lune.base.Option' ] = { typeId = 10, use = false, buildId = "1616421706.000000:1" }
+__dependModuleMap[ 'lune.base.Parser' ] = { typeId = 11, use = true, buildId = "1616421706.000000:1" }
+__dependModuleMap[ 'lune.base.Testing' ] = { typeId = 12, use = false, buildId = "1616421705.000000:1" }
+__dependModuleMap[ 'lune.base.Types' ] = { typeId = 13, use = true, buildId = "1616421706.000000:1" }
+__dependModuleMap[ 'lune.base.Util' ] = { typeId = 14, use = false, buildId = "1616421706.000000:1" }
+__dependModuleMap[ 'lune.base.Writer' ] = { typeId = 15, use = false, buildId = "1616421705.000000:1" }
+__dependModuleMap[ 'lune.base.frontInterface' ] = { typeId = 16, use = true, buildId = "1616421706.000000:1" }
+_moduleObj.__subModuleMap = {"lune.base.TransUnitDecl","lune.base.TransUnitExp","lune.base.TransUnitStatementList","lune.base.TransUnitTest"}
+_moduleObj.__moduleTypeId = 1005
+_moduleObj.__moduleSymbolKind = 0
+_moduleObj.__moduleMutable = true
+----- meta -----
+return _moduleObj

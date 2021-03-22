@@ -26,23 +26,19 @@ SOFTWARE.
 
 package runtimelns
 
-// #include <stdlib.h>
-import "C"
-
-import "unsafe"
 import "fmt"
 import "runtime"
 import "strings"
 import "sync"
 
-var lns_globalValSym *C.char
+var lns_globalValSym lua_rawstr
 const lns_globalValMapName = "lns_globalValMap"
 
 var lns_luvValueCoreFreeListMutex sync.Mutex 
 
 type Lns_luaValueCore struct {
     // lua VM の lns_globalValMap に格納しているシンボル名
-    sym *C.char
+    sym lua_rawstr
     luaVM *Lns_luaVM
     typeId int
 }
@@ -77,16 +73,29 @@ func (core *Lns_luaValueCore) free() {
     
 
 
-    C.free( unsafe.Pointer( core.sym ) )
-    core.sym = nil
+    Lns_freeRawStr( core.sym )
+    core.sym = Lns_zeroRawStr()
 }
 
 func (core *Lns_luaValueCore) getKey() string {
     return fmt.Sprintf( "%p", core )
 }
 
+type Lns_luaVM struct {
+    vm lua_state
+
+    lns_luvValueCoreMap map[*Lns_luaValueCore]bool
+    lns_luaValChan chan *Lns_luaValueCore
+
+    lns_luvValueCoreFreeList []*Lns_luaValueCoreList
+    lns_hasLuvValueCoreFree bool
+
+    regexCache *RegexpCache
+}
+
+
 func init() {
-    lns_globalValSym = C.CString( lns_globalValMapName )
+    lns_globalValSym = Lns_toRawStr( lns_globalValMapName )
     lns_defaultPushedVal = &lns_pushedVal{}
 }
 
@@ -115,8 +124,8 @@ func lns_luaValChanProc( luaVM *Lns_luaVM ) {
 
 func createVM() *Lns_luaVM {
     luaVM := &Lns_luaVM{}
-    luaVM.vm = luaL_newstate()
-    luaL_openlibs( luaVM.vm )
+    luaVM.vm = LuaL_newstate( 300 )
+    LuaL_openlibs( luaVM.vm )
     luaVM.lns_luvValueCoreMap = map[*Lns_luaValueCore]bool{}
     luaVM.lns_luaValChan = make(chan *Lns_luaValueCore, 1000)
     luaVM.lns_luvValueCoreFreeList = []*Lns_luaValueCoreList{}
@@ -125,7 +134,6 @@ func createVM() *Lns_luaVM {
 
     lua_createtable( luaVM.vm )
     lua_setglobal( luaVM.vm, lns_globalValSym )
-    lua_checkstack( luaVM.vm, 300 )
 
     Lns_initPreload( luaVM.vm )
     
@@ -162,31 +170,18 @@ func Lns_getVMMain( lnsEnv *LnsEnv ) *Lns_luaVM {
 }
 
 
-func Lns_runLuaScript( script string ) {
-    vm := luaL_newstate()
-    if vm == nil {
-        return
-    }
-    defer lua_close( vm )
-    luaL_openlibs( vm )
-
-    luaL_loadstring( vm, script )
-    lua_pcallk( vm, 0, cLUA_MULTRET )
-}
-
 type lns_pushedString struct {
-    str *C.char
+    str lua_rawstr
 }
 
 func (self *lns_pushedString) free() {
-    C.free( unsafe.Pointer( self.str ) )
+    Lns_freeRawStr( self.str )
 }
 
 func (luaVM *Lns_luaVM) pushStr( txt string ) *lns_pushedString {
-    pStr := C.CBytes([]byte(txt))
-    lua_pushlstring( luaVM.vm, (*C.char)(pStr), len( txt ) )
-    ret := &lns_pushedString{ (*C.char)(pStr) }
-    //runtime.SetFinalizer( ret, func (obj *lns_pushedString) { obj.free() } )
+    pStr := Lns_toRawStr(txt)
+    lua_pushlstring( luaVM.vm, pStr, len( txt ) )
+    ret := &lns_pushedString{ pStr }
     return ret
 }
 
@@ -288,7 +283,7 @@ func (luaVM *Lns_luaVM) newLuaValue( index int, typeId int ) *Lns_luaValue {
     // print( fmt.Sprintf( "xxx:%d\n", lua_gettop( luaVM.vm ) ) )
 
     core := &Lns_luaValueCore{ luaVM: luaVM, typeId: typeId }
-    core.sym = C.CString( core.getKey() )
+    core.sym = Lns_toRawStr( core.getKey() )
     luaVM.lns_luvValueCoreMap[ core ] = true
     
     val := &Lns_luaValue{ core }
@@ -466,15 +461,15 @@ func (luaVM *Lns_luaVM) CallStatic(
     var argPos int
     if packName == "" {
         argPos = 1
-        pFuncname := C.CString( funcname )
-        defer C.free( unsafe.Pointer( pFuncname ) )
+        pFuncname := Lns_toRawStr( funcname )
+        defer Lns_freeRawStr( pFuncname )
         lua_getglobal( vm, pFuncname )
     } else {
         argPos = 2
-        pPackName := C.CString( packName )
-        defer C.free( unsafe.Pointer( pPackName ) )
-        pFuncname := C.CString( funcname )
-        defer C.free( unsafe.Pointer( pFuncname ) )
+        pPackName := Lns_toRawStr( packName )
+        defer Lns_freeRawStr( pPackName )
+        pFuncname := Lns_toRawStr( funcname )
+        defer Lns_freeRawStr( pFuncname )
         lua_getglobal( vm, pPackName )
         lua_getfield(vm, -1, pFuncname )
     }
@@ -484,8 +479,8 @@ func (luaVM *Lns_luaVM) CallStatic(
         pVal := luaVM.pushAny( val )
         defer pVal.free()
     }
-    if lua_pcallk( vm, len( args ), cLUA_MULTRET ) != cLUA_OK {
-        panic( lua_tolstring( vm, -1 ) )
+    if err := lua_pcallk( vm, len( args ), cLUA_MULTRET ); err != nil {
+        panic( err.Error() )
     }
     ret := []LnsAny{}
     nowTop := lua_gettop( vm )
@@ -503,8 +498,8 @@ func (obj *Lns_luaValue) CallMethod( funcname string, args[] LnsAny ) []LnsAny {
     top := lua_gettop( vm )
     defer lua_settop( vm, top )
 
-    pFuncname := C.CString( funcname )
-    defer C.free( unsafe.Pointer( pFuncname ) )
+    pFuncname := Lns_toRawStr( funcname )
+    defer Lns_freeRawStr( pFuncname )
 
     obj.core.pushValFromGlobalValMap() // obj を push
     lua_getfield(vm, -1, pFuncname ) // obj の pFuncname のメソッドを取得
@@ -514,8 +509,8 @@ func (obj *Lns_luaValue) CallMethod( funcname string, args[] LnsAny ) []LnsAny {
         pVal := luaVM.pushAny( val ) // arg を push
         defer pVal.free()
     }
-    if lua_pcallk( vm, len( args ) + 1, cLUA_MULTRET ) != cLUA_OK {
-        panic( lua_tolstring( vm, -1 ) )
+    if err:= lua_pcallk( vm, len( args ) + 1, cLUA_MULTRET ); err != nil {
+        panic( err.Error() )
     }
     ret := []LnsAny{}
     nowTop := lua_gettop( vm )
@@ -547,6 +542,7 @@ func (obj *Lns_luaValue) Len() LnsInt {
     defer lua_settop( vm, top )
     obj.core.pushValFromGlobalValMap() // obj を push
 
-    lua_len( vm, -1 )
-    return lua_tointegerx(vm, -1 )
+    len := lua_len( vm, -1 )
+
+    return len
 }

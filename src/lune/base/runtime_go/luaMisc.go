@@ -24,10 +24,6 @@ SOFTWARE.
 
 package runtimelns
 
-// #include <stdlib.h>
-import "C"
-
-//import "unsafe"
 //import "log"
 //import "runtime"
 //import "fmt"
@@ -56,7 +52,7 @@ func (luaVM *Lns_luaVM) Loadfile( path string ) (LnsAny, LnsAny) {
 
 func (luaVM *Lns_luaVM) Load( txt string, opt LnsAny ) (LnsAny, LnsAny) {
 
-    ret := luaVM.CallStatic( "", "load", []LnsAny{ txt, opt } )
+    ret := luaVM.CallStatic( "", Lns_getLoadFuncName(), []LnsAny{ txt, opt } )
     if len( ret ) == 1 {
         return ret[ 0 ], nil
     }

@@ -661,20 +661,20 @@ _section();
       let val = func();
    }
 }
-_section();
-{
-   print( string.format( "%s = %s", "abcd", 123 ) );
-   if! let luafn = _load( 'print( "hoge:" )' ## ) {
-      luafn(##);
-      let bin = string.dump( luafn ## );
-      let fn2, mess =  _load( bin ## );
-      when! fn2 {
-         fn2(##);
-      } else {
-         print( mess );
-      }
-   }
-}
+/*nolua51*/_section();
+/*nolua51*/{
+/*nolua51*/   print( string.format( "%s = %s", "abcd", 123 ) );
+/*nolua51*/   if! let luafn = _load( 'print( "hoge:" )' ## ) {
+/*nolua51*/      luafn(##);
+/*nolua51*/      let bin = string.dump( luafn ## );
+/*nolua51*/      let fn2, mess =  _load( bin ## );
+/*nolua51*/      when! fn2 {
+/*nolua51*/         fn2(##);
+/*nolua51*/      } else {
+/*nolua51*/         print( mess );
+/*nolua51*/      }
+/*nolua51*/   }
+/*nolua51*/}
 _section();
 {
    if! let mut fileObj = io.open( "testGo.lns" ##) {
@@ -1844,4 +1844,7 @@ _section();
    }
    let hoge = new Hoge( fn() { print( "hoge" ); } );
    hoge.test();
+}
+pub fn __main( args:&List<str> ):int {
+   return 0;
 }

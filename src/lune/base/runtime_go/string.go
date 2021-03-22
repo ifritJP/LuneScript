@@ -24,10 +24,6 @@ SOFTWARE.
 
 package runtimelns
 
-// #include <stdlib.h>
-import "C"
-
-import "unsafe"
 import "fmt"
 import "strings"
 import "regexp"
@@ -126,34 +122,34 @@ func (self *Str_Builder) Clear() {
 
 
 
-var lns_c_ptr_string *C.char
-var lns_c_ptr_format *C.char
-var lns_c_ptr_gsub *C.char
-var lns_c_ptr_find *C.char
-var lns_c_ptr_byte *C.char
-var lns_c_ptr_sub *C.char
-var lns_c_ptr_reverse *C.char
-var lns_c_ptr_gmatch *C.char
-var lns_c_ptr_dump *C.char
+var lns_c_ptr_string lua_rawstr
+var lns_c_ptr_format lua_rawstr
+var lns_c_ptr_gsub lua_rawstr
+var lns_c_ptr_find lua_rawstr
+var lns_c_ptr_byte lua_rawstr
+var lns_c_ptr_sub lua_rawstr
+var lns_c_ptr_reverse lua_rawstr
+var lns_c_ptr_gmatch lua_rawstr
+var lns_c_ptr_dump lua_rawstr
 
 func init() {
-    lns_c_ptr_string = C.CString( "string" )
-    lns_c_ptr_format = C.CString( "format" )
-    lns_c_ptr_gsub = C.CString( "gsub" )
-    lns_c_ptr_find = C.CString( "find" )
-    lns_c_ptr_byte = C.CString( "byte" )
-    lns_c_ptr_sub = C.CString( "sub" )
-    lns_c_ptr_reverse = C.CString( "reverse" )
-    lns_c_ptr_gmatch = C.CString( "gmatch" )
-    lns_c_ptr_dump = C.CString( "dump" )
+    lns_c_ptr_string = Lns_toRawStr( "string" )
+    lns_c_ptr_format = Lns_toRawStr( "format" )
+    lns_c_ptr_gsub = Lns_toRawStr( "gsub" )
+    lns_c_ptr_find = Lns_toRawStr( "find" )
+    lns_c_ptr_byte = Lns_toRawStr( "byte" )
+    lns_c_ptr_sub = Lns_toRawStr( "sub" )
+    lns_c_ptr_reverse = Lns_toRawStr( "reverse" )
+    lns_c_ptr_gmatch = Lns_toRawStr( "gmatch" )
+    lns_c_ptr_dump = Lns_toRawStr( "dump" )
 }
 
 type lns_callInfoString struct {
     top int
-    string *C.char
+    rawstr lua_rawstr
 }
 
-func (luaVM *Lns_luaVM) string_static_call_setup( funcName *C.char ) int {
+func (luaVM *Lns_luaVM) string_static_call_setup( funcName lua_rawstr ) int {
     vm := luaVM.vm
     top := int(lua_gettop( vm ))
 
@@ -165,16 +161,16 @@ func (luaVM *Lns_luaVM) string_static_call_setup( funcName *C.char ) int {
 
 
 func (luaVM *Lns_luaVM) string_call_setup(
-    funcName *C.char, txt string ) *lns_callInfoString {
+    funcName lua_rawstr, txt string ) *lns_callInfoString {
 
     callInfo := &lns_callInfoString{}
 
     vm := luaVM.vm
     callInfo.top = luaVM.string_static_call_setup( funcName )
 
-    callInfo.string = C.CString( txt )
-    lua_pushlstring( vm, callInfo.string, len( txt ) )
-    C.free( unsafe.Pointer( callInfo.string ) )
+    callInfo.rawstr = Lns_toRawStr( txt )
+    lua_pushlstring( vm, callInfo.rawstr, len( txt ) )
+    Lns_freeRawStr( callInfo.rawstr )
 
     //runtime.SetFinalizer( callInfo, func (obj *lns_callInfoString) { obj.end() } )
     
