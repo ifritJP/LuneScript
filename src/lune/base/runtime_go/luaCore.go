@@ -1,4 +1,4 @@
-// +build cgo,!gopherlua
+// +build cgo,!gopherlua,!azuregolua
 
 /*
 MIT License
@@ -178,8 +178,9 @@ func lua_callk( vm *C.lua_State, argNum int, retNum int ) {
 func lua_close(vm *C.lua_State) {
     C.lua_close( vm )
 }
-func lua_copy(vm *C.lua_State, from int, to int ) {
-    C.lua_copy(vm, C.int(from), C.int(to))
+func lua_replace(vm *C.lua_State, index int ) {
+    C.lua_copy( vm, C.int( -1 ), C.int( index ) )
+    lua_pop( vm, 1 )
 }
 func lua_createtable(vm *C.lua_State) {
     C.lua_createtable(vm,C.int(0), C.int(0))

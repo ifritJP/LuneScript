@@ -1,4 +1,4 @@
-// +build gopherlua
+// +build azuregolua
 
 /*
 MIT License
@@ -26,14 +26,16 @@ SOFTWARE.
 
 package runtimelns
 
-import "github.com/yuin/gopher-lua"
+import "github.com/Azure/golua/lua"
+import "github.com/Azure/golua/std"
 
 //import "sync"
 import "fmt"
+import "math"
 
 
 type lua_rawstr = string
-type lua_state = *lua.LState
+type lua_state = *lua.State
 
 
 func Lns_toRawStr( str string ) lua_rawstr {
@@ -97,53 +99,49 @@ var cLUA_TSTRING int
 
 func init() {
     lnsSrcMap = map[string] *lnsSrcInfo{}
-    cLUA_MULTRET = int(lua.MultRet)
-    cLUA_TBOOLEAN = int(lua.LTBool)
-    cLUA_TFUNCTION = int(lua.LTFunction)
-    cLUA_TTABLE = int(lua.LTTable)
-    cLUA_TNIL = int(lua.LTNil)
-    cLUA_TNUMBER = int(lua.LTNumber)
-    cLUA_TSTRING = int(lua.LTString)
+    cLUA_MULTRET = int(lua.MultRets)
+    cLUA_TBOOLEAN = int(lua.BoolType)
+    cLUA_TFUNCTION = int(lua.FuncType)
+    cLUA_TTABLE = int(lua.TableType)
+    cLUA_TNIL = int(lua.NilType)
+    cLUA_TNUMBER = int(lua.NumberType)
+    cLUA_TSTRING = int(lua.StringType)
 }
 
 func Lns_getLoadFuncName() string {
-    return "loadstring"
+    return "load"
 }
 
 func Depend_getLuaVersion() string {
-    return "5.1"
+    return "5.3"
 }
 type Depend_UpdateVer func ( ver LnsInt )
 func Depend_setup( callback Depend_UpdateVer) {
-    callback( 51 );
+    callback( 53 );
 }
 
 func lns_ToStringFromRead( val LnsReal ) string {
+    if digit, frac := math.Modf( val ); frac == 0 {
+        return fmt.Sprintf( "%g.0", digit )
+    }
     return fmt.Sprintf( "%g", val )
 }
 
-
-func lua_popGet( vm lua_state ) lua.LValue {
-    val := vm.Get( -1 )
-    vm.Pop( 1 )
-    return val
+func lua_popGet( vm lua_state ) lua.Value {
+    return vm.Pop()
 }
 
 // luaL api ======================
 func LuaL_loadstring( vm lua_state, txt string ) error {
-    if fn, err := vm.LoadString( txt ); err != nil {
-        return err
-    } else {
-        vm.Push(fn)
-    }
-    return nil
+    return vm.LoadText( txt )
 }
 func LuaL_newstate( stackSize int ) lua_state {
-    return lua.NewState( lua.Options{
-        CallStackSize: stackSize, RegistrySize: stackSize } )
+    vm := lua.NewState()
+    vm.CheckStack( stackSize )
+    return vm
 }
 func LuaL_openlibs( vm lua_state ) {
-    vm.OpenLibs()
+    std.Open( vm )
 }
 
 // lua api ======================
@@ -155,70 +153,61 @@ func lua_close(vm lua_state) {
     vm.Close()
 }
 func lua_replace(vm lua_state, index int ) {
-    vm.Replace( index, lua_popGet( vm ) )
+    vm.Replace( index )
 }
 func lua_createtable(vm lua_state) {
-    vm.Push( vm.NewTable() )
+    vm.NewTable()
 }
 func lua_gettable(vm lua_state, index int ) {
-    obj := vm.Get( index )
-    key := lua_popGet( vm )
-    vm.Push( vm.GetTable( obj, key ) )
+    vm.GetTable( index )
 }
 func lua_getfield(vm lua_state, index int, pSym lua_rawstr ) {
-    vm.Push( vm.GetField( vm.Get( index ), pSym ) )
+    vm.GetField( index, pSym )
 }
 func lua_getglobal(vm lua_state, pSym lua_rawstr) {
-    vm.Push( vm.GetGlobal( pSym ) )
+    vm.GetGlobal( pSym )
 }
 func lua_gettop(vm lua_state) int {
-    return vm.GetTop()
+    return vm.Top()
 }
 func lua_pcallk(vm lua_state, argNum int, retNum int ) error {
-    return vm.PCall( argNum, retNum, nil )
+    return vm.PCall( argNum, retNum, 0 )
 }
 func lua_pushboolean(vm lua_state, flag bool ) {
-    if flag {
-        vm.Push( lua.LTrue )
-    } else {
-        vm.Push( lua.LFalse )
-    }
+    vm.Push( flag )
 }
 func lua_pushinteger(vm lua_state, val LnsInt ) {
-    vm.Push( lua.LNumber( val ))
+    vm.Push( val )
 }
 func lua_pushnil(vm lua_state) {
-    vm.Push( lua.LNil )
+    vm.Push( nil )
 }
 func lua_pushnumber(vm lua_state, val LnsReal ) {
-    vm.Push( lua.LNumber( val ) )
+    vm.Push( val )
 }
 func lua_pushlstring(vm lua_state, pSym lua_rawstr, len int ) {
-    vm.Push( lua.LString( pSym ) )
+    vm.Push( pSym )
 }
 func lua_pushvalue(vm lua_state, index int ) {
-    vm.Push( vm.Get( index ) )
+    vm.PushIndex( index )
 }
 func lua_setfield(vm lua_state, index int, pSym lua_rawstr ) {
-    obj := vm.Get( index )
-    val := lua_popGet( vm )
-    vm.SetField( obj, pSym, val )
+    vm.SetField( index, pSym )
 }
 func lua_setglobal(vm lua_state, pSym lua_rawstr ) {
-    val := lua_popGet( vm )
-    vm.SetGlobal( pSym, val )
+    vm.SetGlobal( pSym )
 }
 func lua_settop(vm lua_state, index int) {
     vm.SetTop( index )
 }
 func lua_pop(vm lua_state, num int) {
-    vm.Pop( num )
+    vm.PopN( num )
 }
 func lua_toboolean(vm lua_state, index int) bool {
     return vm.ToBool( index )
 }
 func lua_tointegerx(vm lua_state, index int) LnsInt {
-    return vm.ToInt( index )
+    return LnsInt(vm.ToInt( index ))
 }
 func lua_tolstring(vm lua_state, index int ) string {
     return vm.ToString( index )
@@ -227,19 +216,22 @@ func lua_tonumberx(vm lua_state, index int) LnsReal {
     return LnsReal(vm.ToNumber( index ))
 }
 func lua_type(vm lua_state, index int) int {
-    return int(vm.Get( index ).Type())
+    val := vm.CheckAny(index)
+    return int(val.Type())
 }
 func lua_next(vm lua_state, index int) int {
-    tbl := vm.ToTable( index )
-    key := lua_popGet( vm )
-    nextKey, nextVal := tbl.Next( key )
-    if nextKey == nil {
-        return 0
+    if vm.Next( index ) {
+        return 1
     }
-    vm.Push( nextKey )
-    vm.Push( nextVal )
-    return 1
+    return 0
 }
 func lua_len( vm lua_state, index int) LnsInt {
-    return vm.ObjLen( vm.Get( index ) )
+    val := vm.CheckAny(index)
+    switch val.Type() {
+    case lua.StringType:
+        return len( val.String() )
+    case lua.TableType:
+        return vm.ToTable( index ).Length()
+    }
+    return 0
 }

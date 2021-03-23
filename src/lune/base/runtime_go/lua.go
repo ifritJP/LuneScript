@@ -432,8 +432,9 @@ func (core *Lns_luaValueCore) pushValFromGlobalValMap() {
     // globalVal[ symbol ] をスタックトップに push
     lua_getfield( vm, -1, core.sym )
     // globalVal をスタックから除外
-    lua_copy( vm, -1, -2 )
-    lua_pop( vm, 1 )
+    // lua_copy( vm, -1, -2 )
+    // lua_pop( vm, 1 )
+    lua_replace( vm, lua_gettop( vm ) - 1 )
 
     // 本来なら不要だが念の為のチェック。
     // どこかでバグがあると、
