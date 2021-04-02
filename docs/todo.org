@@ -8,6 +8,18 @@
 
 * バグ
 
+- [ ] _ のシンボルにアクセスしてエラーにならない。
+本来は、 下記 print( _ ) の箇所でエラーすべき。
+fn sub(): int, int {
+   return 1, 2;
+}
+fn func() {
+   let _, val2 = sub();
+   print( _ ); // error
+   print( val2 );
+}
+
+
 - [ ] __envLock を多重に行なうとデッドロックする。
   __envLock 内では、__envLock を使用できないようにする。
   __envLock を使用する関数に属性を追加して、

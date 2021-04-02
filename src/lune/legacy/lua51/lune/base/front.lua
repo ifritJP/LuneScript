@@ -539,7 +539,7 @@ function Front:loadFromLnsTxt( importModuleInfo, name, txt )
    
    local ast = transUnit:createAST( parser, false, nil )
    
-   local _5904, luaTxt = self:convertFromAst( ast, name, convLua.ConvMode.Exec )
+   local _5920, luaTxt = self:convertFromAst( ast, name, convLua.ConvMode.Exec )
    return _lune.unwrap( loadFromLuaTxt( luaTxt ))
 end
 
@@ -932,7 +932,7 @@ function Front:convertLns2LuaCode( importModuleInfo, stream, streamName )
    local mod = scriptPath2Module( streamName )
    local ast = self:createAst( importModuleInfo, Parser.StreamParser.new(stream, streamName, false), mod, frontInterface.ModuleId.createId( 0.0, 0 ), nil, TransUnit.AnalyzeMode.Compile )
    
-   local _6078, luaTxt = self:convertFromAst( ast, streamName, convLua.ConvMode.Exec )
+   local _6094, luaTxt = self:convertFromAst( ast, streamName, convLua.ConvMode.Exec )
    
    return luaTxt
 end
@@ -1070,7 +1070,7 @@ function Front:checkUptodateMeta( metaPath, addSearchPath )
    end
    
    
-   for moduleFullName, _6156 in pairs( meta.__dependModuleMap ) do
+   for moduleFullName, _6172 in pairs( meta.__dependModuleMap ) do
       do
          local lnsPath = self:searchModule( moduleFullName )
          if lnsPath ~= nil then
@@ -1365,7 +1365,7 @@ function Front:convertLuaToStreamFromScript( parser, moduleId, uptodate, convMod
       if stream ~= nil then
          if metaInfo ~= nil then
             local dependInfo = OutputDepend.DependInfo.new(mod)
-            for dependMod, _6329 in pairs( metaInfo.__dependModuleMap ) do
+            for dependMod, _6345 in pairs( metaInfo.__dependModuleMap ) do
                dependInfo:addImpotModule( dependMod )
             end
             
@@ -2127,7 +2127,7 @@ end
       elseif _switchExp == Option.ModeKind.MkMain then
          local mod = scriptPath2Module( self.option.scriptPath )
          do
-            local mess = convGo.outputGoMain( self.option.appName, mod, self.option.testing, self.option.outputPath )
+            local mess = convGo.outputGoMain( self.option.appName, mod, self.option.testing, self.option.outputPath, self.option:get_runtimeOpt() )
             if mess ~= nil then
                Util.errorLog( mess )
             end

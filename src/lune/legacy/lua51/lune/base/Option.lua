@@ -283,7 +283,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 7000
+   return 7014
 end
 
 
@@ -368,6 +368,57 @@ local function getRuntimeModule(  )
 end
 _moduleObj.getRuntimeModule = getRuntimeModule
 
+local Int2strMode = {}
+_moduleObj.Int2strMode = Int2strMode
+Int2strMode._val2NameMap = {}
+function Int2strMode:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "Int2strMode.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+function Int2strMode._from( val )
+   if Int2strMode._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+    
+Int2strMode.__allList = {}
+function Int2strMode.get__allList()
+   return Int2strMode.__allList
+end
+
+Int2strMode.Int2strModeDepend = 0
+Int2strMode._val2NameMap[0] = 'Int2strModeDepend'
+Int2strMode.__allList[1] = Int2strMode.Int2strModeDepend
+Int2strMode.Int2strModeNeed0 = 1
+Int2strMode._val2NameMap[1] = 'Int2strModeNeed0'
+Int2strMode.__allList[2] = Int2strMode.Int2strModeNeed0
+Int2strMode.Int2strModeUnneed0 = 2
+Int2strMode._val2NameMap[2] = 'Int2strModeUnneed0'
+Int2strMode.__allList[3] = Int2strMode.Int2strModeUnneed0
+
+local RuntimeOpt = {}
+_moduleObj.RuntimeOpt = RuntimeOpt
+function RuntimeOpt.new(  )
+   local obj = {}
+   RuntimeOpt.setmeta( obj )
+   if obj.__init then obj:__init(  ); end
+   return obj
+end
+function RuntimeOpt:__init() 
+   self.int2strMode = Int2strMode.Int2strModeDepend
+end
+function RuntimeOpt.setmeta( obj )
+  setmetatable( obj, { __index = RuntimeOpt  } )
+end
+function RuntimeOpt:get_int2strMode()
+   return self.int2strMode
+end
+
+
 local Option = {}
 _moduleObj.Option = Option
 function Option.new(  )
@@ -377,6 +428,7 @@ function Option.new(  )
    return obj
 end
 function Option:__init() 
+   self.runtimeOpt = RuntimeOpt.new()
    self.shebangArgList = {}
    self.outputPath = nil
    self.mainModule = ""
@@ -434,6 +486,9 @@ function Option:openDepend( relPath )
 end
 function Option.setmeta( obj )
   setmetatable( obj, { __index = Option  } )
+end
+function Option:get_runtimeOpt()
+   return self.runtimeOpt
 end
 
 
@@ -501,7 +556,6 @@ local function analyze( argList )
 usage:
   <type1> [-prof] [-r] src.lns mode [mode-option]
   <type2> -mklunemod path
-  <type3> -mkmain mainMod [path]
   <type3> -shebang path
   <type4> --version
 
@@ -522,6 +576,10 @@ usage:
   -langGo: transcompile to golang.
   -oc: output path of the source code transcompiled to c-lang .
   --depends: output dependfile
+  --int2str mode: mode of int to str.
+     - depend: depends the lua version.
+     - need0: with '.0'.
+     - unneed0: without '.0'.
 
   common_op:
     -u: update meta and lua on load.
@@ -710,6 +768,23 @@ end
                   option.transCtrlInfo.defaultLazy = true
                elseif _switchExp == "--package" then
                   option.packageName = getNextOp(  )
+               elseif _switchExp == "--int2str" then
+                  local opt = getNextOp(  )
+                  do
+                     local _switchExp = opt
+                     if _switchExp == "depend" then
+                        option:get_runtimeOpt().int2strMode = Int2strMode.Int2strModeDepend
+                     elseif _switchExp == "need0" then
+                        option:get_runtimeOpt().int2strMode = Int2strMode.Int2strModeNeed0
+                     elseif _switchExp == "unneed0" then
+                        option:get_runtimeOpt().int2strMode = Int2strMode.Int2strModeUnneed0
+                     else 
+                        
+                           Util.errorLog( string.format( "unknown mode -- %s", tostring( opt)) )
+                           os.exit( 1 )
+                     end
+                  end
+                  
                elseif _switchExp == "--app" then
                   do
                      local _exp = getNextOp(  )
@@ -887,7 +962,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 537, function (  )
+   Log.log( Log.Level.Log, __func__, 579, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

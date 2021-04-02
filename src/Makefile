@@ -1298,9 +1298,18 @@ define buildGoSetup
 endef
 
 GOBUILD_TAG=
+INT2STR=
 ifdef GOTAG
 GOBUILD_TAG=-tags $(GOTAG)
 endif
+ifeq ($(GOTAG),gopherlua)
+ifeq ($(LNSC),$(LNSC_LUA51))
+INT2STR=--int2str unneed0
+else
+INT2STR=--int2str need0
+endif
+endif
+
 
 
 ifdef GOTAG
@@ -1345,9 +1354,9 @@ define test-go-one-exec
 	cp -au $4/$3.lns $2/$4
 	$(call convGo,$1,$2,$4/$3,--main $5)
 #	if [ $4 != "." ]; then mv $2/$4/$3.go $2; fi
-	$(call buildGo,$2,test.exe) >> work/result-testGo.txt
+	$(call buildGo,$2,test.exe) > work/result-testGo.txt
 	if test "${NO_LUA_DIFF}" = ""; then					\
-		$(call exeLune,$1,$2,$4/$3.lns,shebang) >> work/result-testGo2.txt &&	\
+		$(call exeLune,$1,$2,$4/$3.lns,shebang) > work/result-testGo2.txt &&	\
 		diff -C 2 -I 'ONLY_LUA' -I 'DIFF_IGNORE'			\
 				work/result-testGo.txt work/result-testGo2.txt;	\
 	fi
@@ -1356,7 +1365,7 @@ endef
 
 define test-go-one
 	$(call test-go-one-setup,$2)
-	$(call test-go-one-exec,$1,$2,$3,$4)
+	$(call test-go-one-exec,$1,$2,$3,$4,$5,$6)
 endef
 
 define test-go-some-setup
@@ -1380,7 +1389,7 @@ test-miniGo:
 ifdef OTHER_GO
 	cp $(OTHER_GO) $(GO_WORK_DIR)
 endif
-	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),miniGo,.)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),miniGo,.,miniGo,$(INT2STR))
 	cat work/result-testGo.txt
 
 ifndef NO_TEST
@@ -1400,33 +1409,33 @@ ifeq ($(GOTAG),gopherlua)
 endif
 	-rm $(GO_WORK_DIR)/test/*.c
 	$(call test-go-some-setup,$(LNSC),$(GO_WORK_DIR),SubGo,test)
-	$(call test-go-some,$(LNSC),$(GO_WORK_DIR),testGo,test,test.testGo,--app github.com/ifritJP/LuneScript/src)
+	$(call test-go-some,$(LNSC),$(GO_WORK_DIR),testGo,test,test.testGo,--app github.com/ifritJP/LuneScript/src $(INT2STR))
 
 
 test-tutorial-go:
 	$(call cmd_exec_trans,$(LNSC),.,.,,base/convGo)
 	$(call setup-go,$(GO_WORK_DIR))
 
-	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),match,test/tutorial)
-	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),loop,test/tutorial)
-	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),interface,test/tutorial)
-	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),generics,test/tutorial)
-	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),enum,test/tutorial)
-	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),classOverride,test/tutorial)
-	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),classMapping,test/tutorial)
-	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),classInherit,test/tutorial)
-	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),class2accessor,test/tutorial)
-	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),class1,test/tutorial)
-	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),cast,test/tutorial)
-	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),branch,test/tutorial)
-	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),nilable,test/tutorial)
-	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),defaultArg,test/tutorial)
-	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),multipleRetVal,test/tutorial)
-	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),arg,test/tutorial)
-	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),func,test/tutorial)
-	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),variable,test/tutorial)
-	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),set,test/tutorial)
-	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),value,test/tutorial)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),match,test/tutorial,match)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),loop,test/tutorial,loop)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),interface,test/tutorial,interface)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),generics,test/tutorial,generics)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),enum,test/tutorial,enum)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),classOverride,test/tutorial,classOverride)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),classMapping,test/tutorial,classMapping)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),classInherit,test/tutorial,classInherit)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),class2accessor,test/tutorial,class2accessor)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),class1,test/tutorial,class1)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),cast,test/tutorial,cast)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),branch,test/tutorial,branch)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),nilable,test/tutorial,nilable)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),defaultArg,test/tutorial,defaultArg)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),multipleRetVal,test/tutorial,multipleRetVal)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),arg,test/tutorial,arg)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),func,test/tutorial,func)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),variable,test/tutorial,variable)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),set,test/tutorial,set)
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),value,test/tutorial,value)
 
 	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),ccc,.)
 

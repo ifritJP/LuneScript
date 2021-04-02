@@ -1,4 +1,12 @@
-FROM alpine:latest
+FROM golang:1.16-alpine
+
+ARG PROXY=""
+
+# proxy 設定
+ENV HTTP_PROXY=$PROXY
+ENV http_proxy=$PROXY
+ENV https_proxy=$PROXY
+ENV HTTPS_PROXY=$PROXY
 
 RUN apk --no-cache add \
 	git \
@@ -10,8 +18,10 @@ RUN apk --no-cache add \
 	readline-dev \
 	rsync \
 	go
+	
+WORKDIR /
 RUN git clone --depth 1 https://github.com/ifritJP/LuneScript.git
-WORKDIR LuneScript/src
+WORKDIR /LuneScript/src
 RUN git reset --hard HEAD
 RUN git pull
 RUN git log

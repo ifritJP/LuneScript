@@ -32,6 +32,7 @@ import lune.base.LuaVer;
 import lune.base.Parser;
 import lune.base.LuneControl;
 import lune.base.Types;
+import lune.base.Option as LnsOpt;
 
 let MaxNilAccNum = 3;
 
@@ -290,7 +291,9 @@ fn concatGLSym( name:str, external:bool ) : str {
    //return (external and "G" or "l") .. name;
 }
 
-pub fn outputGoMain( appName:str, mod:str, testing:bool, path:str! ):str! {
+pub fn outputGoMain( appName:str, mod:str, testing:bool, path:str!,
+                     opt:&LnsOpt.RuntimeOpt ):str!
+{
   
    let mut lune_path = "main.go";
    when! path {
@@ -312,7 +315,7 @@ import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 ////TEST:import . "lns/lune/base"
 
 func main() {
-    Lns_InitModOnce()
+    Lns_InitModOnce($opt)
     //TEST:Lns_Testing_init()
     Lns_init()
     //TEST:Testing_run( "" )
@@ -338,6 +341,17 @@ func main() {
    } else {
       code = code.gsub(
          "Lns_init%(%)", "Lns_RunMain( %s___main )" (concatGLSym( mainMod, true )));
+   }
+   _switch opt.$int2strMode {
+      case .Int2strModeNeed0 {
+         code = code.gsub( "$opt", "LnsRuntimeOpt{ Int2strModeNeed0 }" );
+      }
+      case .Int2strModeUnneed0 {
+         code = code.gsub( "$opt", "LnsRuntimeOpt{ Int2strModeUnneed0 }" );
+      }
+      case .Int2strModeDepend {
+         code = code.gsub( "$opt", "LnsRuntimeOpt{ Int2strModeDepend }" );
+      }
    }
    
    fileObj.write( code );

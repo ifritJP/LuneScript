@@ -105,10 +105,36 @@ func createEnv() *LnsEnv {
     return env
 }
 
+// 整数を文字列に変換する場合、 .0 を付加するかどうかのモード
+type Int2strMode_t int
+const (
+    // Lua のバージョンに依存。
+    // lua5.1 は .0 不要。
+    // lua5.3 は .0 必要。
+    Int2strModeDepend Int2strMode_t = iota
+    // .0 を付加する
+    Int2strModeNeed0
+    // .0 不要
+    Int2strModeUnneed0
+)
+
+type LnsRuntimeOpt struct {
+    Int2strMode Int2strMode_t
+}
+
+var lnsRuntimeOpt LnsRuntimeOpt
+
 /**
 各モジュールを初期化する際に実行する関数。
 */
-func Lns_InitModOnce() {
+func Lns_InitModOnce( opts... LnsRuntimeOpt ) {
+
+    if len( opts ) == 0 {
+        lnsRuntimeOpt = LnsRuntimeOpt { Int2strMode: Int2strModeDepend }
+    } else {
+        lnsRuntimeOpt = opts[ 0 ]
+    }
+    
     cur_LnsEnv = createEnv()
     
     Lns_package_path = cur_LnsEnv.LuaVM.GetPackagePath()
@@ -476,6 +502,16 @@ func Lns_ToString( val LnsAny ) string {
     case LnsInt:
         return fmt.Sprintf( "%d", val )
     case LnsReal:
+        real := val.(LnsReal)
+        switch lnsRuntimeOpt.Int2strMode {
+        case Int2strModeUnneed0:
+            return fmt.Sprintf( "%g", real )
+        case Int2strModeNeed0:
+            if digit, frac := math.Modf( real ); frac == 0 {
+                return fmt.Sprintf( "%g.0", digit )
+            }
+            return fmt.Sprintf( "%g", real )
+        }
         return lns_ToStringFromRead( val.(LnsReal) )
     case bool:
         return fmt.Sprintf( "%v", val )

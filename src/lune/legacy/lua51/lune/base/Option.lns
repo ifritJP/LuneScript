@@ -76,6 +76,24 @@ pub fn getRuntimeModule(): str {
    return "lune.base.runtime%d" (Ver.luaModVersion);
 }
 
+pub enum Int2strMode {
+   // Lua のバージョンに依存。
+   // lua5.1 は .0 不要。
+   // lua5.3 は .0 必要。
+   Int2strModeDepend,
+   // .0 を付加する
+   Int2strModeNeed0,
+   // .0 不要
+   Int2strModeUnneed0
+}
+pub class RuntimeOpt {
+   local let mut int2strMode:Int2strMode {pub};
+
+   pub fn __init() {
+      self.int2strMode = .Int2strModeDepend;
+   }
+}
+
 pub class Option {
    pub let mut mode:ModeKind;
    /** 解析対象のモジール名。 comp モードの時に使用。 */
@@ -124,7 +142,10 @@ pub class Option {
    // shebang で利用する引数リスト
    pub let mut shebangArgList:List<str>;
 
+   let mut runtimeOpt:RuntimeOpt {pub};
+
    pub fn __init() {
+      self.runtimeOpt = new RuntimeOpt();
       self.shebangArgList = [];
       self.outputPath = nil;
       self.mainModule = "";
@@ -222,7 +243,6 @@ pub fn analyze( mut argList: &List<str> ) : Option {
 usage:
   <type1> [-prof] [-r] src.lns mode [mode-option]
   <type2> -mklunemod path
-  <type3> -mkmain mainMod [path]
   <type3> -shebang path
   <type4> --version
 
@@ -243,6 +263,10 @@ usage:
   -langGo: transcompile to golang.
   -oc: output path of the source code transcompiled to c-lang .
   --depends: output dependfile
+  --int2str mode: mode of int to str.
+     - depend: depends the lua version.
+     - need0: with '.0'.
+     - unneed0: without '.0'.
 
   common_op:
     -u: update meta and lua on load.
@@ -385,6 +409,24 @@ usage:
                }
                case "--package" {
                   option.packageName = getNextOp();
+               }
+               case "--int2str" {
+                  let opt = getNextOp();
+                  switch opt {
+                     case "depend" {
+                        option.$runtimeOpt.int2strMode = .Int2strModeDepend;
+                     }
+                     case "need0" {
+                        option.$runtimeOpt.int2strMode = .Int2strModeNeed0;
+                     }
+                     case "unneed0" {
+                        option.$runtimeOpt.int2strMode = .Int2strModeUnneed0;
+                     }
+                     default {
+                        Util.errorLog( "unknown mode -- %s" ( opt ) );
+                        os.exit( 1 );
+                     }
+                  }
                }
                case "--app" {
                   if! getNextOp() {
