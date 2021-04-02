@@ -48,6 +48,52 @@ jobs:
         path: src/work/test*.result
         retention-days: 5
 
+  docker-linux:
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 8 # 8分で強制停止
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build the Docker image
+      run: |
+        docker build src/test/docker/compose/linux/build --tag linux_lns
+        mkdir -p export
+        docker run --rm -v $(pwd)/export:/export \
+                        --name linux_lns linux_lns \
+                        cp /usr/bin/lnsc /export/lnsc_linux
+        docker image rm linux_lns
+
+
+
+  docker-alpine:
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 8 # 8分で強制停止
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build the Docker image
+      run: |
+        docker build src/test/docker/compose/alpine/build --tag alpine_lns
+        mkdir -p export
+        docker run --rm -v $(pwd)/export:/export \
+                        --name alpine_lns alpine_lns \
+                        cp /usr/bin/lnsc /export/lnsc_alpine
+        docker image rm alpine_lns
+ 
+# #    - name: Upload to Google Drive
+# #      uses: satackey/action-google-drive@v1
+# #      with:
+# #        skicka-tokencache-json: ${{ secrets.SKICKA_TOKENCACHE_JSON }}
+# #        upload-from: export/lnsc_alpine
+# #        upload-to: /lns_release/
+# #
+# #        # For those who set up Google Drive API client ID and secret themselves
+# #        google-client-id: ${{ secrets.GOOGLE_CLIENT_ID }}
+# #        google-client-secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+
+
 #   docker-cent8:
 #     runs-on: ubuntu-latest
 # 
@@ -103,31 +149,3 @@ jobs:
   #       # For those who set up Google Drive API client ID and secret themselves
   #       google-client-id: ${{ secrets.GOOGLE_CLIENT_ID }}
   #       google-client-secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-      
-
-  docker-alpine:
-    runs-on: ubuntu-latest
-
-    timeout-minutes: 8 # 8分で強制停止
-
-    steps:
-    - uses: actions/checkout@v2
-    - name: Build the Docker image
-      run: |
-        docker build src/test/docker/compose/alpine/test --tag alpine_lns
-        mkdir -p export
-        docker run --rm -v $(pwd)/export:/export \
-                        --name alpine_lns alpine_lns \
-                        cp /usr/bin/lnsc /export/lnsc_alpine
-        docker image rm alpine_lns
- 
-# #    - name: Upload to Google Drive
-# #      uses: satackey/action-google-drive@v1
-# #      with:
-# #        skicka-tokencache-json: ${{ secrets.SKICKA_TOKENCACHE_JSON }}
-# #        upload-from: export/lnsc_alpine
-# #        upload-to: /lns_release/
-# #
-# #        # For those who set up Google Drive API client ID and secret themselves
-# #        google-client-id: ${{ secrets.GOOGLE_CLIENT_ID }}
-# #        google-client-secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
