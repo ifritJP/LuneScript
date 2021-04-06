@@ -1120,6 +1120,7 @@ fn TransUnit.analyzeDeclProto(
          declMode = DeclClassMode.Class;
       } else {
          declMode = .Interface;
+         abstractFlag = true;
       }
       let classTypeInfo:&Ast.TypeInfo;
       nextToken, classTypeInfo = self.analyzePushClass(
@@ -2730,6 +2731,9 @@ fn TransUnit.analyzeDeclFunc(
    if! name {
       if _exp.txt ~= "__main" {
          name = self.checkSymbol( _exp, .MustNot_ );
+      }
+      if declFuncMode == .Func and _exp.txt == "main" {
+         self.addWarnMess( _exp.pos, "LuneScript's main function is __main." );
       }
    }
    else {

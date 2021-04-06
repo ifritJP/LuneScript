@@ -2736,6 +2736,11 @@ fn TransUnit.analyzeExpSymbol(
                      "'_G' and '_ENV' only can access with transcompiling to lua." );
                }
             }
+            case "_" {
+               if not canLeftExp {
+                  self.addErrMess( firstToken.pos, "It can't access the symbol '_'." );
+               }
+            }
          }
 
          if typeInfo.$nonnilableType.$kind == .Ext and

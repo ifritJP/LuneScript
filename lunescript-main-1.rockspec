@@ -54,6 +54,7 @@ build = {
       [ "lune.base.Parser" ] = "src/lune/base/Parser.lua",
       [ "lune.base.Json" ] = "src/lune/base/Json.lua",
       [ "lune.base.Option" ] = "src/lune/base/Option.lua",
+      [ "lune.base.GoMod" ] = "src/lune/base/GoMod.lua",
       [ "lune.base.Ast" ] = "src/lune/base/Ast.lua",
       [ "lune.base.Nodes" ] = "src/lune/base/Nodes.lua",
       [ "lune.base.Macro" ] = "src/lune/base/Macro.lua",

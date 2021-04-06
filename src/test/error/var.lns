@@ -23,6 +23,8 @@
 {
    let _, val = 0, 1;
    print( _, val );   // error
+   let val2 = _; // error
+   print( val2 );
 }
 {
    let mut val = 1; // warn

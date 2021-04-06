@@ -54,6 +54,7 @@ build = {
       [ "lune.base.Parser" ] = "src/lune/legacy/lua51/lune/base/Parser.lua",
       [ "lune.base.Json" ] = "src/lune/legacy/lua51/lune/base/Json.lua",
       [ "lune.base.Option" ] = "src/lune/legacy/lua51/lune/base/Option.lua",
+      [ "lune.base.GoMod" ] = "src/lune/legacy/lua51/lune/base/GoMod.lua",
       [ "lune.base.Ast" ] = "src/lune/legacy/lua51/lune/base/Ast.lua",
       [ "lune.base.Nodes" ] = "src/lune/legacy/lua51/lune/base/Nodes.lua",
       [ "lune.base.Macro" ] = "src/lune/legacy/lua51/lune/base/Macro.lua",

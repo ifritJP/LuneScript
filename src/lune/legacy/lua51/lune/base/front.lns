@@ -41,6 +41,7 @@ import lune.base.LuaVer;
 import lune.base.Log;
 import lune.base.Formatter;
 import lune.base.Testing;
+import lune.base.GoMod;
 //import lune.base.TestCtrl;
 import lune.base.Meta;
 //import lune.base.ConvNodes;
@@ -68,7 +69,7 @@ class Front extend (frontInterface.frontInterface) {
    let mut loadedMapTest:Map<str,LoadInfo>;
    let mut loadedMetaMap:Map<str,Luaval<&stem>>;
    let mut convertedMap:Map<str,str>;
-   let gomodMap:&Map<str,str>;
+   let gomodMap:&GoMod.ModInfo;
 
    /**
 front で import しているものは、
@@ -78,41 +79,41 @@ loadedMap で管理する前にシステムにロードされているため、
 */
    let preloadedModMap:&Map<str,Luaval<&stem>>;
 
-   static fn getGoMap( option:&Option.Option ) : &Map<str,str> {
-      let mut map:Map<str,str> = {};
-      if option.convTo ~= .Go {
-         return map;
-      }
-      if! let mut file = io.open( "go.mod"## ) {
-         let mut inReq = false;
-         while true {
-            let! line = file.read( "*l" ) {
-               break;
-            };
-            if inReq {
-               if line.find( "^%)"## ) {
-                  inReq = false;
-               } else {
-                  let items = Util.splitStr( line.gsub( "^[ \t+]", "" ), "[^ ]+" );
-                  map[ items[ 1 ] ] = items[ 2 ];
-               }
-            } else {
-               if line.find( "^require +[^%(]"## ) {
-                  let items = Util.splitStr( line, "[^ ]+" );
-                  if #items == 3 {
-                     map[ items[ 2 ] ] = items[ 3 ];
-                  }
-               } elseif line.find( "^require +%("## ) {
-                  inReq = true;
-               }
-            }
-         }
-      }
-      return map;
-   }
+   // static fn getGoMap( option:&Option.Option ) : &Map<str,str> {
+   //    let mut map:Map<str,str> = {};
+   //    if option.convTo ~= .Go {
+   //       return map;
+   //    }
+   //    if! let mut file = io.open( "go.mod"## ) {
+   //       let mut inReq = false;
+   //       while true {
+   //          let! line = file.read( "*l" ) {
+   //             break;
+   //          };
+   //          if inReq {
+   //             if line.find( "^%)"## ) {
+   //                inReq = false;
+   //             } else {
+   //                let items = Util.splitStr( line.gsub( "^[ \t+]", "" ), "[^ ]+" );
+   //                map[ items[ 1 ] ] = items[ 2 ];
+   //             }
+   //          } else {
+   //             if line.find( "^require +[^%(]"## ) {
+   //                let items = Util.splitStr( line, "[^ ]+" );
+   //                if #items == 3 {
+   //                   map[ items[ 2 ] ] = items[ 3 ];
+   //                }
+   //             } elseif line.find( "^require +%("## ) {
+   //                inReq = true;
+   //             }
+   //          }
+   //       }
+   //    }
+   //    return map;
+   // }
    
    pub fn __init( option:&Option.Option ) {
-      self.gomodMap = Front.getGoMap( option );
+      self.gomodMap = GoMod.getGoMap( option );
       self.option = option;
       self.loadedMap = {};
       self.loadedMapTest = {};
@@ -319,39 +320,16 @@ fn getMetaInfo( lnsPath:str, mod:str, outdir:str! ): &MetaForBuildId!, str, str 
    return nil, moduleMetaPath, "";
 }
 
-fn Front.matchFromGoMod( path:str ) : str! {
-   foreach ver, mod in self.gomodMap {
-      if path.find( mod, 1, true ) == 1 {
-         let mut gomod = "";
-         foreach aChar in [ mod.byte(1,#mod) ] {
-            when! aChar {
-               if aChar >= ?A and aChar <= ?Z {
-                  gomod = "%s!%c" (gomod, aChar - ?A + ?a);
-               } else {
-                  gomod = "%s%c" (gomod, aChar);
-               }
-            }
-         }
-         gomod = "%s@%s" (gomod,ver);
-         if! let gopath = Depend.getGOPATH() {
-            let modpath = Util.pathJoin( gopath, "pkg/mod/%s" (gomod) );
-            return Util.pathJoin( modpath, path.sub( #mod + 2 ## ) );
-         }
-      }
-   }
-   return nil;
-}
-
 fn Front.searchModuleFile( mod:str, suffix:str, addPath:str! ): str! {
 
    if mod.find( "^go/" ## ) {
-      if self.option.convTo ~= .Go {
-         Util.err( "use '-langGo' option, when using go import. -- %s" (mod) );
-      }
+      // if self.option.convTo ~= .Go {
+      //    Util.err( "use '-langGo' option, when using go import. -- %s" (mod) );
+      // }
 
       let workMod = mod.gsub( "^go/", "" ).gsub( "%.", "/").gsub( ":", "." ) .. suffix;
       let mut pathList = [ Util.pathJoin( "vendor", workMod ) ];
-      if! let gopath = self.matchFromGoMod( workMod ) {
+      if! let gopath = self.gomodMap.getModulePath( workMod ) {
          pathList.insert( gopath );
       }
       foreach path in pathList {

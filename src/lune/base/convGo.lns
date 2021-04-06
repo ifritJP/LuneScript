@@ -805,8 +805,8 @@ pub override fn convFilter.processImport(
    self.writeln( "Lns_%s_init()" (getModuleName( node.$moduleTypeInfo )) );
 }
 
-fn needConvFormFunc( node:&Nodes.ExpCastNode ) : bool {
-   let castType = node.$castType.$extedType;
+fn convFilter.needConvFormFunc( node:&Nodes.ExpCastNode ) mut : bool {
+   let castType = node.$castType.$extedType.$nonnilableType;
    if castType.$kind ~= .FormFunc {
       return false;
    }
@@ -818,12 +818,14 @@ fn needConvFormFunc( node:&Nodes.ExpCastNode ) : bool {
       return true;
    }
    foreach argType, index in castType.$argTypeInfoList {
-      if argType ~= funcType.$argTypeInfoList[ index ] {
+      if not argType.equals( self.processInfo, funcType.$argTypeInfoList[ index ] ## )
+      {
          return true;
       }
    }
    foreach retType, index in castType.$retTypeInfoList {
-      if retType ~= funcType.$retTypeInfoList[ index ] {
+      if not retType.equals( self.processInfo, funcType.$retTypeInfoList[ index ] ## )
+      {
          return true;
       }
    }
@@ -931,7 +933,7 @@ fn convFilter.outputImplicitCast(
       }
       case .FormFunc {
          let expType = node.$expType;
-         if needConvFormFunc( parent ) {
+         if self.needConvFormFunc( parent ) {
             self.write( "%s(" (self.getConv2formName( parent )) );
             filter( node, self, parent );
             self.write( ")");
@@ -4391,7 +4393,7 @@ pub fn convFilter.outputCallPrefix(
                filter( prefixNode, self, node );
             }
          } else {
-            self.outputModule( funcType.getModule(), true );
+            // self.outputModule( funcType.getModule(), true );
          }
 
          processNilAcc( prefixNode );

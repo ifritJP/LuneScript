@@ -8,18 +8,9 @@
 
 * バグ
 
-- [ ] _ のシンボルにアクセスしてエラーにならない。
-本来は、 下記 print( _ ) の箇所でエラーすべき。
-fn sub(): int, int {
-   return 1, 2;
-}
-fn func() {
-   let _, val2 = sub();
-   print( _ ); // error
-   print( val2 );
-}
-
-
+- [ ] go の module 内で、 user form 型を使用すると、 lns は form 型名を使用するが、
+  go 側は func 宣言を使用するので、型がミスマッチする。
+  
 - [ ] __envLock を多重に行なうとデッドロックする。
   __envLock 内では、__envLock を使用できないようにする。
   __envLock を使用する関数に属性を追加して、
@@ -909,6 +900,18 @@ fn func( val1:int, val2:int, val3:int ) {
 }
 let list = [ 1, 2 ];
 func( list.unpack() );
+
+- [X] _ のシンボルにアクセスしてエラーにならない。
+本来は、 下記 print( _ ) の箇所でエラーすべき。
+fn sub(): int, int {
+   return 1, 2;
+}
+fn func() {
+   let _, val2 = sub();
+   print( _ ); // error
+   print( val2 );
+}
+
 
   
 

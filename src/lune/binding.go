@@ -43,6 +43,8 @@ var lune_base_Json []byte
 var lune_base_Ast []byte
 //go:embed base/Option.luac
 var lune_base_Option []byte
+//go:embed base/GoMod.luac
+var lune_base_GoMod []byte
 //go:embed base/Nodes.luac
 var lune_base_Nodes []byte
 //go:embed base/Formatter.luac
@@ -90,6 +92,7 @@ AddlnsSrcInfo( "lune.base.Parser", lune_base_Parser )
 AddlnsSrcInfo( "lune.base.Json", lune_base_Json )
 AddlnsSrcInfo( "lune.base.Ast", lune_base_Ast )
 AddlnsSrcInfo( "lune.base.Option", lune_base_Option )
+AddlnsSrcInfo( "lune.base.GoMod", lune_base_GoMod )
 AddlnsSrcInfo( "lune.base.Nodes", lune_base_Nodes )
 AddlnsSrcInfo( "lune.base.Formatter", lune_base_Formatter )
 AddlnsSrcInfo( "lune.base.Macro", lune_base_Macro )

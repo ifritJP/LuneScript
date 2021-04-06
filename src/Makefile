@@ -192,6 +192,7 @@ LNS_SRCS += base/Json
 #LNS_SRCS += base/MetaLoader
 LNS_SRCS += base/Ast
 LNS_SRCS += base/Option
+LNS_SRCS += base/GoMod
 #LNS_SRCS += base/bind
 LNS_SRCS += base/Nodes
 LNS_SRCS += base/Formatter
@@ -236,6 +237,7 @@ define selfhost_buildOp
 	$(call $5,$1,$2,$3,$4,base/Json)
 	$(call $5,$1,$2,$3,$4,base/Ast)
 	$(call $5,$1,$2,$3,$4,base/Option)
+	$(call $5,$1,$2,$3,$4,base/GoMod)
 	$(call $5,$1,$2,$3,$4,base/Nodes)
 	$(call $5,$1,$2,$3,$4,base/Formatter)
 	$(call $5,$1,$2,$3,$4,base/Macro)
