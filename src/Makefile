@@ -1551,6 +1551,7 @@ go-build:
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/frontInterface,,./build)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Ast,,./build)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Option,,./build)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/GoMod,,./build)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Nodes,,./build)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Formatter,,./build)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Macro,,./build)
