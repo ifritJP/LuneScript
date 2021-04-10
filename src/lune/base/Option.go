@@ -115,7 +115,7 @@ func Option_convExp599(arg1 []LnsAny) LnsAny {
 }
 // 48: decl @lune.@base.@Option.getBuildCount
 func Option_getBuildCount_1015_() LnsInt {
-    return 7080
+    return 7103
 }
 
 // 75: decl @lune.@base.@Option.getRuntimeModule
@@ -577,7 +577,7 @@ type Option_Option struct {
     BootPath LnsAny
     UseIpairs bool
     PackageName LnsAny
-    AppName string
+    AppName LnsAny
     MainModule string
     TransCtrlInfo *Types_TransCtrlInfo
     ConvTo LnsAny
@@ -624,7 +624,7 @@ func (self *Option_Option) InitOption_Option() {
     
     self.MainModule = ""
     
-    self.AppName = "lnsc"
+    self.AppName = nil
     
     self.PackageName = nil
     

@@ -283,7 +283,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 7080
+   return 7103
 end
 
 
@@ -432,7 +432,7 @@ function Option:__init()
    self.shebangArgList = {}
    self.outputPath = nil
    self.mainModule = ""
-   self.appName = "lnsc"
+   self.appName = nil
    self.packageName = nil
    self.testing = false
    self.convTo = nil

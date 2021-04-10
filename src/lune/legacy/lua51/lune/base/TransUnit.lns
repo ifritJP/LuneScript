@@ -1568,10 +1568,10 @@ class _TypeInfoModule extend _TypeInfo {
          
          Log._log(
             .Info,
-            `{ return "new module -- %s, %s, %d, %d"
+            `{ return "new module -- %s, %s, %d, %d, %d"
                ( self.txt,
                  workTypeInfo.getFullName( Ast.defaultTypeNameCtrl, parentScope, false ),
-                 workTypeInfo.$typeId, parentScope.$scopeId ); } );
+                 self.typeId, workTypeInfo.$typeId, parentScope.$scopeId ); } );
       }
       return newTypeInfo, nil;
    }
@@ -3741,7 +3741,7 @@ fn TransUnit.analyzeSubfile( token: &Parser.Token ) mut : Nodes.SubfileNode {
          }
       }
       elseif mode.txt == "owner" {
-         if self.moduleName ~= moduleName {
+         if frontInterface.getLuaModulePath( self.moduleName ) ~= moduleName {
             self.addErrMess(
                token.pos,
                "illegal owner module -- %s, %s"

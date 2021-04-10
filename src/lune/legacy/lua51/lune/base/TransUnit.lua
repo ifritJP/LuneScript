@@ -2272,7 +2272,7 @@ function _TypeInfoModule:createTypeInfo( param )
          
          Log.log( Log.Level.Info, __func__, 1569, function (  )
          
-            return string.format( "new module -- %s, %s, %d, %d", self.txt, workTypeInfo:getFullName( Ast.defaultTypeNameCtrl, parentScope, false ), workTypeInfo:get_typeId(), parentScope:get_scopeId())
+            return string.format( "new module -- %s, %s, %d, %d, %d", self.txt, workTypeInfo:getFullName( Ast.defaultTypeNameCtrl, parentScope, false ), self.typeId, workTypeInfo:get_typeId(), parentScope:get_scopeId())
          end )
          
       end
@@ -5396,7 +5396,7 @@ function TransUnit:analyzeSubfile( token )
          end
          
       elseif mode.txt == "owner" then
-         if self.moduleName ~= moduleName then
+         if frontInterface.getLuaModulePath( self.moduleName ) ~= moduleName then
             self:addErrMess( token.pos, string.format( "illegal owner module -- %s, %s", moduleName, self.moduleName) )
          end
          
@@ -6695,7 +6695,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
    local moduleSymbolKind = Ast.SymbolKind.Typ
    
    if moduleName ~= nil then
-      for txt in string.gmatch( moduleName, '[^%.]+' ) do
+      for txt in string.gmatch( frontInterface.getLuaModulePath( moduleName ), '[^%.]+' ) do
          moduleTypeInfo = self:pushModule( false, txt, true )
       end
       

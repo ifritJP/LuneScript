@@ -1,4 +1,3 @@
-import lune.base.Option;
 import lune.base.Types;
 import lune.base.Util;
 import lune.base.Depend;
@@ -20,6 +19,8 @@ pub alge GoModResult {
 }
 
 pub class ModInfo {
+   /** モジュール名 */
+   let name:str {pub};
    /** モジュールパス → バージョン */
    let moduleMap:&Map<str,str> {pub};
    /** モジュールパス → replace 先 */
@@ -29,9 +30,10 @@ pub class ModInfo {
    let allmut path2modProjInfo:Map<str,&ModProjInfo>;
 
    /** convLocalModulePath() で最後にマッチしたパス */
-   let mut latestModProjInfo:ModProjInfo!;
+   let mut latestModProjInfo:&ModProjInfo!;
 
-   pub fn __init( moduleMap:&Map<str,str>, replaceMap:&Map<str,str> ) {
+   pub fn __init( name:str, moduleMap:&Map<str,str>, replaceMap:&Map<str,str> ) {
+      self.name = name;
       self.moduleMap = moduleMap;
       self.replaceMap = replaceMap;
       self.path2modProjInfo = {};
@@ -115,13 +117,14 @@ pub class ModInfo {
 go/github:com.ifritJP. 等の go 用のモジュールパスを、
 ローカルのファイルパスに変換する
    */ 
-   pub fn convLocalModulePath( mod:str, suffix:str ) : GoModResult {
+   pub fn convLocalModulePath( mod:str, suffix:str ) mut : GoModResult {
       if not mod.find( "^go/" ## ) {
          return .NotGo;
       }
       let workMod = self.convPath( mod, suffix );
 
       if! self.path2modProjInfo[ workMod ] {
+         self.latestModProjInfo = _exp;
          return .Found( _exp );
       }
       
@@ -137,6 +140,7 @@ go/github:com.ifritJP. 等の go 用のモジュールパスを、
             let projRoot, convMod = self.getProjRootPath( mod, path );
             let projInfo = new ModProjInfo( path, projRoot, convMod );
             self.path2modProjInfo[ workMod ] = projInfo;
+            self.latestModProjInfo = projInfo;
             return .Found( projInfo );
          } else {
             Log._log2( .Log, "not found %s" (path) );
@@ -156,7 +160,7 @@ lune.base.Nodes に変換する。
 - lune.js のあるディレクトリ
 - github.com の場合、 github.com/XXXXX/YYYYY ディレクトリ
 */
-   pub fn getLuaModulePath( mod:str ) : str {
+   pub fn getLuaModulePath( mod:str ) mut : str {
       let info;
       _match self.convLocalModulePath( mod, ".lns" ) {
          case .NotGo {
@@ -170,36 +174,6 @@ lune.base.Nodes に変換する。
          }
       };
       return info.$mod;
-      
-      // let mut convPath =
-      //    self.convPath( mod, ".lns" ).gsub( "github%.com/[^/]+/[^/]+/", "" );
-      // let mut projRoot = path.sub( 1, #path - #convPath );
-      // if projRoot ~= "/" {
-      //    projRoot = projRoot.gsub( "/$", "" );
-      // }
-
-      // // path から projRoot までの間に lune.js があるディレクトリを探し、
-      // // そこを起点としたモジュールパスを返す。
-      // path = Util.parentPath( path );
-      // let mut modList = Util.splitStr( mod, "[^%.]+" );
-      // for modIndex = 1, #modList {
-      //    if Depend.existFile( Util.pathJoin( path, "lune.js" ) ) {
-      //       let mut convMod = "";
-      //       for index = #modList - modIndex + 1, #modList {
-      //          if convMod ~= "" {
-      //             convMod = "%s." (convMod);
-      //          } 
-      //          convMod = convMod .. modList[index];
-      //       }
-      //       return convMod;
-      //    }
-      //    if path == projRoot {
-      //       break;
-      //    }
-         
-      //    path = Util.parentPath( path );
-      // }
-      // return mod;
    }
 }
 
@@ -221,13 +195,10 @@ fn getReplace( map:Map<str,str>, tokenList:&List<str>, modIndex:int ) {
    }
 }
 
-pub fn getGoMap( option:&Option.Option ) : &ModInfo {
+pub fn getGoMap() : ModInfo {
    let mut requireMap:Map<str,str> = {};
    let mut replaceMap:Map<str,str> = {};
-   let modInfo = new ModInfo( requireMap, replaceMap );
-   // if option.convTo ~= .Go {
-   //    return modInfo;
-   // }
+   let mut name = "lnsc";
    if! let mut file = io.open( "go.mod"## ) {
       let mut inBlock = BlockKind.None;
       while true {
@@ -252,7 +223,9 @@ pub fn getGoMap( option:&Option.Option ) : &ModInfo {
                }
             }
             case .None {
-               if line.find( "^require%s+[^%(]"## ) {
+               if line.find( "^module%s+" ## ) {
+                  name = tokenList[ 2 ];
+               } elseif line.find( "^require%s+[^%(]"## ) {
                   if #tokenList == 3 {
                      requireMap[ tokenList[ 2 ] ] = tokenList[ 3 ];
                   }
@@ -267,5 +240,6 @@ pub fn getGoMap( option:&Option.Option ) : &ModInfo {
          }
       }
    }
+   let mut modInfo = new ModInfo( name, requireMap, replaceMap );
    return modInfo;
 }

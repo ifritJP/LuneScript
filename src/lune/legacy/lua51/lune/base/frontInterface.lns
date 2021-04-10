@@ -132,8 +132,8 @@ go/github:com.ifritJP. 等の go 用のパスを、
 
 詳しくは、GoMod.lns を参照。
    */
-   pub fn getLuaModulePath( mod:str ) : str;
-   pub fn searchModule( mod:str ): str!;
+   pub fn getLuaModulePath( mod:str ) mut : str;
+   pub fn searchModule( mod:str ) mut: str!;
    pub fn error( message:str );
 }
 
@@ -157,10 +157,10 @@ class dummyFront extend (frontInterface) {
    {
       error( "not implements" );
    }
-   pub fn getLuaModulePath( mod:str ) : str {
+   pub fn getLuaModulePath( mod:str ) mut : str {
       error( "not implements" );
    }
-   pub fn searchModule( mod:str ): str! {
+   pub fn searchModule( mod:str ) mut: str! {
       error( "not implements" );
    }
    pub fn error( message:str ) {

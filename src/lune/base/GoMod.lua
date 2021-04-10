@@ -42,76 +42,6 @@ function _lune._AlgeFrom( Alge, val )
    return { work[ 1 ], paramList }
 end
 
-function _lune._Set_or( setObj, otherSet )
-   for val in pairs( otherSet ) do
-      setObj[ val ] = true
-   end
-   return setObj
-end
-function _lune._Set_and( setObj, otherSet )
-   local delValList = {}
-   for val in pairs( setObj ) do
-      if not otherSet[ val ] then
-         table.insert( delValList, val )
-      end
-   end
-   for index, val in ipairs( delValList ) do
-      setObj[ val ] = nil
-   end
-   return setObj
-end
-function _lune._Set_has( setObj, val )
-   return setObj[ val ] ~= nil
-end
-function _lune._Set_sub( setObj, otherSet )
-   local delValList = {}
-   for val in pairs( setObj ) do
-      if otherSet[ val ] then
-         table.insert( delValList, val )
-      end
-   end
-   for index, val in ipairs( delValList ) do
-      setObj[ val ] = nil
-   end
-   return setObj
-end
-function _lune._Set_len( setObj )
-   local total = 0
-   for val in pairs( setObj ) do
-      total = total + 1
-   end
-   return total
-end
-function _lune._Set_clone( setObj )
-   local obj = {}
-   for val in pairs( setObj ) do
-      obj[ val ] = true
-   end
-   return obj
-end
-
-function _lune._toSet( val, toKeyInfo )
-   if type( val ) == "table" then
-      local tbl = {}
-      for key, mem in pairs( val ) do
-         local mapKey, keySub = toKeyInfo.func( key, toKeyInfo.child )
-         local mapVal = _lune._toBool( mem )
-         if mapKey == nil or mapVal == nil then
-            if mapKey == nil then
-               return nil
-            end
-            if keySub == nil then
-               return nil, mapKey
-            end
-            return nil, string.format( "%s.%s", mapKey, keySub)
-         end
-         tbl[ mapKey ] = mapVal
-      end
-      return tbl
-   end
-   return nil
-end
-
 function _lune.nilacc( val, fieldName, access, ... )
    if not val then
       return nil
@@ -214,7 +144,6 @@ end
 if not _lune3 then
    _lune3 = _lune
 end
-local Option = _lune.loadModule( 'lune.base.Option' )
 local Types = _lune.loadModule( 'lune.base.Types' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Depend = _lune.loadModule( 'lune.base.Depend' )
@@ -275,13 +204,14 @@ GoModResult._name2Val["NotGo"] = GoModResult.NotGo
 
 local ModInfo = {}
 _moduleObj.ModInfo = ModInfo
-function ModInfo.new( moduleMap, replaceMap )
+function ModInfo.new( name, moduleMap, replaceMap )
    local obj = {}
    ModInfo.setmeta( obj )
-   if obj.__init then obj:__init( moduleMap, replaceMap ); end
+   if obj.__init then obj:__init( name, moduleMap, replaceMap ); end
    return obj
 end
-function ModInfo:__init(moduleMap, replaceMap) 
+function ModInfo:__init(name, moduleMap, replaceMap) 
+   self.name = name
    self.moduleMap = moduleMap
    self.replaceMap = replaceMap
    self.path2modProjInfo = {}
@@ -387,6 +317,7 @@ function ModInfo:convLocalModulePath( mod, suffix )
    do
       local _exp = self.path2modProjInfo[workMod]
       if _exp ~= nil then
+         self.latestModProjInfo = _exp
          return _lune.newAlge( GoModResult.Found, {_exp})
       end
    end
@@ -408,10 +339,11 @@ function ModInfo:convLocalModulePath( mod, suffix )
          local projRoot, convMod = self:getProjRootPath( mod, path )
          local projInfo = ModProjInfo.new(path, projRoot, convMod)
          self.path2modProjInfo[workMod] = projInfo
+         self.latestModProjInfo = projInfo
          return _lune.newAlge( GoModResult.Found, {projInfo})
       else
        
-         Log.log( Log.Level.Log, __func__, 142, function (  )
+         Log.log( Log.Level.Log, __func__, 146, function (  )
          
             return string.format( "not found %s", path)
          end )
@@ -443,10 +375,12 @@ function ModInfo:getLuaModulePath( mod )
    
    
    return info:get_mod()
-   
 end
 function ModInfo.setmeta( obj )
   setmetatable( obj, { __index = ModInfo  } )
+end
+function ModInfo:get_name()
+   return self.name
 end
 function ModInfo:get_moduleMap()
    return self.moduleMap
@@ -503,11 +437,11 @@ local function getReplace( map, tokenList, modIndex )
    
 end
 
-local function getGoMap( option )
+local function getGoMap(  )
 
    local requireMap = {}
    local replaceMap = {}
-   local modInfo = ModInfo.new(requireMap, replaceMap)
+   local name = "lnsc"
    do
       local file = io.open( "go.mod" )
       if file ~= nil then
@@ -541,7 +475,9 @@ local function getGoMap( option )
                   end
                   
                elseif _switchExp == BlockKind.None then
-                  if line:find( "^require%s+[^%(]" ) then
+                  if line:find( "^module%s+" ) then
+                     name = tokenList[2]
+                  elseif line:find( "^require%s+[^%(]" ) then
                      if #tokenList == 3 then
                         requireMap[tokenList[2]] = tokenList[3]
                      end
@@ -562,6 +498,7 @@ local function getGoMap( option )
       end
    end
    
+   local modInfo = ModInfo.new(name, requireMap, replaceMap)
    return modInfo
 end
 _moduleObj.getGoMap = getGoMap

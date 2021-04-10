@@ -126,7 +126,7 @@ pub class Option {
    /** パッケージ名 */
    pub let mut packageName:str!;
    /** アプリ名 */
-   pub let mut appName:str;
+   pub let mut appName:str!;
    pub let mut mainModule:str;
 
    pub let mut transCtrlInfo:Types.TransCtrlInfo;
@@ -149,7 +149,7 @@ pub class Option {
       self.shebangArgList = [];
       self.outputPath = nil;
       self.mainModule = "";
-      self.appName = "lnsc";
+      self.appName = nil;
       self.packageName = nil;
       self.testing = false;
       self.convTo = nil;

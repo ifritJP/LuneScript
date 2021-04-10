@@ -530,9 +530,9 @@ pub fn TransUnit.createAST(
    let mut moduleSymbolKind = Ast.SymbolKind.Typ;
 
    when! moduleName {
-      apply txt of string.gmatch( moduleName, '[^%.]+' ) {
-         // moduleTypeInfo = unwrap self.pushClass(
-         //    true, false, nil, nil, false, txt@@str, "pub" );
+      apply txt of string.gmatch(
+         frontInterface.getLuaModulePath( moduleName ), '[^%.]+' )
+      {
          moduleTypeInfo = self.pushModule( false, txt, true );
       }
    }

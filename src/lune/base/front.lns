@@ -70,7 +70,7 @@ class Front extend (frontInterface.frontInterface) {
    let mut loadedMapTest:Map<str,LoadInfo>;
    let mut loadedMetaMap:Map<str,Luaval<&stem>>;
    let mut convertedMap:Map<str,str>;
-   let gomodMap:&GoMod.ModInfo;
+   let mut gomodMap:GoMod.ModInfo;
 
    /**
 front で import しているものは、
@@ -82,7 +82,7 @@ loadedMap で管理する前にシステムにロードされているため、
 
    
    pub fn __init( option:&Option.Option ) {
-      self.gomodMap = GoMod.getGoMap( option );
+      self.gomodMap = GoMod.getGoMap();
       self.option = option;
       self.loadedMap = {};
       self.loadedMapTest = {};
@@ -127,8 +127,8 @@ loadedMap で管理する前にシステムにロードされているため、
       importModuleInfo:frontInterface.ImportModuleInfo, mod:str ) mut: Luaval<&stem>!;
    pub fn loadFromLnsTxt( importModuleInfo:frontInterface.ImportModuleInfo,
                           name:str, txt:str ): Luaval<&stem>;
-   pub fn getLuaModulePath( mod:str ) : str;
-   pub fn searchModule( mod:str ): str!;
+   pub fn getLuaModulePath( mod:str ) mut : str;
+   pub fn searchModule( mod:str ) mut: str!;
    pub fn error( message:str );
 }
 
@@ -290,7 +290,7 @@ fn getMetaInfo( lnsPath:str, mod:str, outdir:str! ): &MetaForBuildId!, str, str 
    return nil, moduleMetaPath, "";
 }
 
-fn Front.searchModuleFile( mod:str, suffix:str, addPath:str! ): str!
+fn Front.searchModuleFile( mod:str, suffix:str, addPath:str! ) mut : str!
 {
    _match self.gomodMap.convLocalModulePath( mod, suffix ) {
       case .NotGo {
@@ -316,9 +316,11 @@ fn Front.searchModuleFile( mod:str, suffix:str, addPath:str! ): str!
       let! latestProjRoot = self.gomodMap.getLatestProjRoot() {
          return nil;
       };
-      if! Depend.searchpath( mod, Util.pathJoin( latestProjRoot, "%" .. suffix ) ) {
+      let latestProjSearchPath = Util.pathJoin( latestProjRoot, "?" .. suffix );
+      if! Depend.searchpath( mod, latestProjSearchPath ) {
          foundPath = _exp;
       } else {
+         Log._log2( .Err, "not found at %s" (latestProjSearchPath) );
          return nil;
       }
    };
@@ -378,7 +380,7 @@ lnsPath で指定する lns ファイルを更新する必要があるかどう�
 @return &MetaForBuildId! lnsPath ファイルに対応するメタ情報
 @return str メタ情報内容そのものの文字列
 */
-fn Front.getModuleIdAndCheckUptodate( lnsPath:str, mod:str ):
+fn Front.getModuleIdAndCheckUptodate( lnsPath:str, mod:str ) mut :
 &frontInterface.ModuleId, ModuleUptodate
 {
    let mut uptodate = ModuleUptodate.NeedUpdate;
@@ -562,11 +564,11 @@ fn Front.loadFile(
 
 
 
-fn Front.searchModule( mod:str ): str! {
+fn Front.searchModule( mod:str ) mut : str! {
    return self.searchModuleFile( mod, ".lns", nil );
 }
 
-fn Front.searchLuaFile( moduleFullName:str, addSearchPath:str! ) : str! {
+fn Front.searchLuaFile( moduleFullName:str, addSearchPath:str! ) mut : str! {
    return self.searchModuleFile( moduleFullName, ".lua", addSearchPath );
    // let mut luaSearchPath = package.path;
    // when! addSearchPath {
@@ -586,7 +588,7 @@ fn Front.searchLuaFile( moduleFullName:str, addSearchPath:str! ) : str! {
 @param metaPath メタファイルのパス
 @return stem! 最新の場合、ロードしたメタ情報。 最新でない場合は nil。
 */
-fn Front.checkUptodateMeta( metaPath:str, addSearchPath:str! ): Luaval<&stem>! {
+fn Front.checkUptodateMeta( metaPath:str, addSearchPath:str! ) mut : Luaval<&stem>! {
    let! metaObj = self.loadLua( metaPath ) {
       Log._log( .Warn, `{ return "load error -- %s" ( metaPath ); } );
       return nil;
@@ -704,7 +706,7 @@ fn Front.loadModule( mut mod:str ) mut : Luaval<&stem>!, Luaval<&stem> {
 }
 
 
-pub fn Front.getLuaModulePath( mod:str ) : str {
+pub fn Front.getLuaModulePath( mod:str ) mut : str {
    return self.gomodMap.getLuaModulePath( mod );
 }
 
@@ -991,6 +993,13 @@ pub fn Front.convertLuaToStreamFromScript(
    return retAst;
 }
 
+fn Front.getGoAppName(): str {
+   let! appName = self.option.appName {
+      appName = self.gomodMap.$name;
+   };
+   return appName;
+}
+
 fn Front.createGoOption( scriptPath:str ) : &convGo.Option {
    let packageName;
    if! self.option.packageName {
@@ -1014,7 +1023,7 @@ fn Front.createGoOption( scriptPath:str ) : &convGo.Option {
          }
       }
    }
-   return new convGo.Option( packageName, self.option.appName, self.option.mainModule );
+   return new convGo.Option( packageName, self.getGoAppName(), self.option.mainModule );
 }
 
 fn Front.convertToLua( scriptPath:str ) mut {
@@ -1538,7 +1547,7 @@ end
       case .MkMain {
          let mod = scriptPath2Module( self.option.scriptPath );
          if! let mess = convGo.outputGoMain(
-            self.option.appName, mod, self.option.testing,
+            self.getGoAppName(), mod, self.option.testing,
             self.option.outputPath, self.option.$runtimeOpt )
          {
             Util.errorLog( mess );
