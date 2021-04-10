@@ -298,8 +298,8 @@ fn Front.searchModuleFile( mod:str, suffix:str, addPath:str! ): str!
       case .NotFound {
          return nil;
       }
-      case .Found( path ) {
-         return path;
+      case .Found( info ) {
+         return info.$path;
       }
    }
    
@@ -311,7 +311,16 @@ fn Front.searchModuleFile( mod:str, suffix:str, addPath:str! ): str!
    lnsSearchPath = lnsSearchPath.gsub( "%.lua;", suffix .. ";" );
 
    let! foundPath = Depend.searchpath( mod, lnsSearchPath ) {
-      return nil;
+      // 通常パスで検索してない場合、
+      // gomodMap でアクセスした最後の proj からの相対で見つける
+      let! latestProjRoot = self.gomodMap.getLatestProjRoot() {
+         return nil;
+      };
+      if! Depend.searchpath( mod, Util.pathJoin( latestProjRoot, "%" .. suffix ) ) {
+         foundPath = _exp;
+      } else {
+         return nil;
+      }
    };
    return (foundPath.gsub( "^./", "" ));
 }
@@ -634,6 +643,7 @@ mod のモジュールをロードする。
 @return Luaval<&stem> META 情報
 */
 fn Front.loadModule( mut mod:str ) mut : Luaval<&stem>!, Luaval<&stem> {
+   let orgMod = mod;
    mod = self.gomodMap.getLuaModulePath( mod );
    
    if not self.getLoadInfo( mod ) {
@@ -647,11 +657,11 @@ fn Front.loadModule( mut mod:str ) mut : Luaval<&stem>!, Luaval<&stem> {
          }
       }
       else {
-         if! let lnsPath = self.searchModule( mod ) {
+         if! let lnsPath = self.searchModule( orgMod ) {
             let mut luaPath:str! = string.gsub( lnsPath, "%.lns$", ".lua" );
 
             if! let dir = self.option.outputDir {
-               luaPath = self.searchLuaFile( mod, dir );
+               luaPath = self.searchLuaFile( orgMod, dir );
             }
 
             let mut loadVal:Luaval<&stem>! = nil;
@@ -701,6 +711,7 @@ pub fn Front.getLuaModulePath( mod:str ) : str {
 fn Front.loadMeta(
    importModuleInfo:frontInterface.ImportModuleInfo, mut mod:str ) mut : Luaval<&stem>!
 {
+   let orgMod = mod;
    mod = self.gomodMap.getLuaModulePath( mod );
    
    if self.loadedMetaMap[ mod ] == nil {
@@ -708,11 +719,11 @@ fn Front.loadMeta(
          self.loadedMetaMap[ mod ] = _exp.meta;
       }
       else {
-         if! let lnsPath = self.searchModule( mod ) {
+         if! let lnsPath = self.searchModule( orgMod ) {
             let mut luaPath:str! = string.gsub( lnsPath, "%.lns$", ".lua" );
 
             if! let dir = self.option.outputDir {
-               luaPath = self.searchLuaFile( mod, dir );
+               luaPath = self.searchLuaFile( orgMod, dir );
             }
 
             let mut meta:Luaval<&stem>! = nil;
@@ -727,19 +738,19 @@ fn Front.loadMeta(
                      }
                   } else {
                      Log._log( .Warn, `{ return "%s not ready meta %s, %s"
-                                         ( mod, lnsPath, metaPath ); } );
+                                         ( orgMod, lnsPath, metaPath ); } );
                   }
                } else {
                      Log._log( .Warn, `{ return "%s not ready lua %s, %s"
-                                         ( mod, lnsPath, luaPath ); } );
+                                         ( orgMod, lnsPath, luaPath ); } );
                }
             } else {
                Log._log( .Warn, `{ return "%s not found lua in %s"
-                                   ( mod, self.option.outputDir ); } );
+                                   ( orgMod, self.option.outputDir ); } );
             }
             if meta == nil {
 	       let metawork, luaTxt =
-                  self.loadFileToLuaCode( importModuleInfo, lnsPath, mod );
+                  self.loadFileToLuaCode( importModuleInfo, lnsPath, orgMod );
 	       self.loadedMetaMap[ mod ] = metawork;
                self.convertedMap[ mod ] = luaTxt;
             }

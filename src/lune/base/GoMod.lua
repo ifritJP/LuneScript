@@ -112,6 +112,48 @@ function _lune._toSet( val, toKeyInfo )
    return nil
 end
 
+function _lune.nilacc( val, fieldName, access, ... )
+   if not val then
+      return nil
+   end
+   if fieldName then
+      local field = val[ fieldName ]
+      if not field then
+         return nil
+      end
+      if access == "item" then
+         local typeId = type( field )
+         if typeId == "table" then
+            return field[ ... ]
+         elseif typeId == "string" then
+            return string.byte( field, ... )
+         end
+      elseif access == "call" then
+         return field( ... )
+      elseif access == "callmtd" then
+         return field( val, ... )
+      end
+      return field
+   end
+   if access == "item" then
+      local typeId = type( val )
+      if typeId == "table" then
+         return val[ ... ]
+      elseif typeId == "string" then
+         return string.byte( val, ... )
+      end
+   elseif access == "call" then
+      return val( ... )
+   elseif access == "list" then
+      local list, arg = ...
+      if not list then
+         return nil
+      end
+      return val( list, arg )
+   end
+   error( string.format( "illegal access -- %s", access ) )
+end
+
 function _lune.loadModule( mod )
    if __luneScript then
       return  __luneScript:loadModule( mod )
@@ -176,6 +218,37 @@ local Option = _lune.loadModule( 'lune.base.Option' )
 local Types = _lune.loadModule( 'lune.base.Types' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Depend = _lune.loadModule( 'lune.base.Depend' )
+local Log = _lune.loadModule( 'lune.base.Log' )
+
+local ModProjInfo = {}
+_moduleObj.ModProjInfo = ModProjInfo
+function ModProjInfo.setmeta( obj )
+  setmetatable( obj, { __index = ModProjInfo  } )
+end
+function ModProjInfo.new( path, projRoot, mod )
+   local obj = {}
+   ModProjInfo.setmeta( obj )
+   if obj.__init then
+      obj:__init( path, projRoot, mod )
+   end
+   return obj
+end
+function ModProjInfo:__init( path, projRoot, mod )
+
+   self.path = path
+   self.projRoot = projRoot
+   self.mod = mod
+end
+function ModProjInfo:get_path()
+   return self.path
+end
+function ModProjInfo:get_projRoot()
+   return self.projRoot
+end
+function ModProjInfo:get_mod()
+   return self.mod
+end
+
 
 local GoModResult = {}
 GoModResult._name2Val = {}
@@ -192,7 +265,7 @@ function GoModResult._from( val )
    return _lune._AlgeFrom( GoModResult, val )
 end
 
-GoModResult.Found = { "Found", {{ func=_lune._toStr, nilable=false, child={} }}}
+GoModResult.Found = { "Found", {{ func=ModProjInfo._fromMap, nilable=false, child={} }}}
 GoModResult._name2Val["Found"] = GoModResult.Found
 GoModResult.NotFound = { "NotFound"}
 GoModResult._name2Val["NotFound"] = GoModResult.NotFound
@@ -211,7 +284,12 @@ end
 function ModInfo:__init(moduleMap, replaceMap) 
    self.moduleMap = moduleMap
    self.replaceMap = replaceMap
-   self.workPath2convPath = {}
+   self.path2modProjInfo = {}
+   self.latestModProjInfo = nil
+end
+function ModInfo:getLatestProjRoot(  )
+
+   return _lune.nilacc( self.latestModProjInfo, 'get_projRoot', 'callmtd' )
 end
 function ModInfo:getLocalModulePath( path )
 
@@ -260,7 +338,45 @@ function ModInfo:convPath( mod, suffix )
 
    return mod:gsub( "^go/", "" ):gsub( "%.", "/" ):gsub( ":", "." ) .. suffix
 end
+function ModInfo:getProjRootPath( mod, path )
+
+   local convPath = self:convPath( mod, ".lns" ):gsub( "github%.com/[^/]+/[^/]+/", "" )
+   local projRoot = path:sub( 1, #path - #convPath )
+   if projRoot ~= "/" then
+      projRoot = projRoot:gsub( "/$", "" )
+   end
+   
+   path = Util.parentPath( path )
+   local modList = Util.splitStr( mod, "[^%.]+" )
+   local startIndex = #modList
+   for modIndex = 1, #modList do
+      if Depend.existFile( Util.pathJoin( path, "lune.js" ) ) then
+         startIndex = modIndex
+         break
+      end
+      
+      if path == projRoot then
+         startIndex = modIndex
+         break
+      end
+      
+      
+      path = Util.parentPath( path )
+   end
+   
+   local convMod = ""
+   for index = #modList - startIndex + 1, #modList do
+      if convMod ~= "" then
+         convMod = string.format( "%s.", convMod)
+      end
+      
+      convMod = convMod .. modList[index]
+   end
+   
+   return path, convMod
+end
 function ModInfo:convLocalModulePath( mod, suffix )
+   local __func__ = '@lune.@base.@GoMod.ModInfo.convLocalModulePath'
 
    if not mod:find( "^go/" ) then
       return _lune.newAlge( GoModResult.NotGo)
@@ -269,14 +385,14 @@ function ModInfo:convLocalModulePath( mod, suffix )
    local workMod = self:convPath( mod, suffix )
    
    do
-      local _exp = self.workPath2convPath[workMod]
+      local _exp = self.path2modProjInfo[workMod]
       if _exp ~= nil then
          return _lune.newAlge( GoModResult.Found, {_exp})
       end
    end
    
    
-   local pathList = {Util.pathJoin( "vendor", workMod )}
+   local pathList = {}
    
    do
       local _exp = self:getLocalModulePath( workMod )
@@ -285,11 +401,21 @@ function ModInfo:convLocalModulePath( mod, suffix )
       end
    end
    
+   table.insert( pathList, Util.pathJoin( "vendor", workMod ) )
    
    for __index, path in ipairs( pathList ) do
       if Depend.existFile( path ) then
-         self.workPath2convPath[workMod] = path
-         return _lune.newAlge( GoModResult.Found, {path})
+         local projRoot, convMod = self:getProjRootPath( mod, path )
+         local projInfo = ModProjInfo.new(path, projRoot, convMod)
+         self.path2modProjInfo[workMod] = projInfo
+         return _lune.newAlge( GoModResult.Found, {projInfo})
+      else
+       
+         Log.log( Log.Level.Log, __func__, 142, function (  )
+         
+            return string.format( "not found %s", path)
+         end )
+         
       end
       
    end
@@ -298,7 +424,7 @@ function ModInfo:convLocalModulePath( mod, suffix )
 end
 function ModInfo:getLuaModulePath( mod )
 
-   local path
+   local info
    
    do
       local _matchExp = self:convLocalModulePath( mod, ".lns" )
@@ -309,44 +435,15 @@ function ModInfo:getLuaModulePath( mod )
       
          return mod
       elseif _matchExp[1] == GoModResult.Found[1] then
-         local workPath = _matchExp[2][1]
+         local workInfo = _matchExp[2][1]
       
-         path = workPath
+         info = workInfo
       end
    end
    
    
-   local convPath = self:convPath( mod, ".lns" ):gsub( "github%.com/[^/]+/[^/]+/", "" )
-   local projRoot = path:sub( 1, #path - #convPath )
-   if projRoot ~= "/" then
-      projRoot = projRoot:gsub( "/$", "" )
-   end
+   return info:get_mod()
    
-   path = Util.parentPath( path )
-   local modList = Util.splitStr( mod, "[^%.]+" )
-   for modIndex = 1, #modList do
-      if Depend.existFile( Util.pathJoin( path, "lune.js" ) ) then
-         local convMod = ""
-         for index = #modList - modIndex + 1, #modList do
-            if convMod ~= "" then
-               convMod = string.format( "%s.", convMod)
-            end
-            
-            convMod = convMod .. modList[index]
-         end
-         
-         return convMod
-      end
-      
-      if path == projRoot then
-         break
-      end
-      
-      
-      path = Util.parentPath( path )
-   end
-   
-   return mod
 end
 function ModInfo.setmeta( obj )
   setmetatable( obj, { __index = ModInfo  } )
