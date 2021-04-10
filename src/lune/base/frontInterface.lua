@@ -208,6 +208,10 @@ function dummyFront:loadFromLnsTxt( importModuleInfo, name, txt )
 
    error( "not implements" )
 end
+function dummyFront:getLuaModulePath( mod )
+
+   error( "not implements" )
+end
 function dummyFront:searchModule( mod )
 
    error( "not implements" )
@@ -263,5 +267,11 @@ local function searchModule( mod )
    return __luneScript:searchModule( mod )
 end
 _moduleObj.searchModule = searchModule
+
+local function getLuaModulePath( mod )
+
+   return __luneScript:getLuaModulePath( mod )
+end
+_moduleObj.getLuaModulePath = getLuaModulePath
 
 return _moduleObj

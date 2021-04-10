@@ -3108,22 +3108,28 @@ class DependModuleInfo {
 }
 
 
-fn TransUnit.processImport( modulePath:str, depth:int ) mut :
+fn TransUnit.processImport( mut modulePath:str, depth:int ) mut :
    Luaval<&Meta._MetaInfo>, &Map<int,&Ast.TypeInfo>, &Nodes.ModuleInfo
 {
+   let orgModulePath = modulePath;
+   modulePath = frontInterface.getLuaModulePath( modulePath );
+   
    Log._log( .Info, `{ return "%s -> %s start"
-                       ( self.moduleType.getTxt( self.typeNameCtrl## ), modulePath); } );
+                       ( self.moduleType.getTxt( self.typeNameCtrl## ),
+                         orgModulePath); } );
 
-   if not self.importModuleInfo.add( modulePath ) {
+
+   if not self.importModuleInfo.add( orgModulePath ) {
       self.error( "recursive import: %s -> %s"
-                  ( self.importModuleInfo.getFull(), modulePath ) );
+                  ( self.importModuleInfo.getFull(), orgModulePath ) );
    }
 
 
    if! let moduleInfo = self.importModuleName2ModuleInfo[ modulePath ] {
-      if! let metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
+      if! let metaInfoStem = frontInterface.loadMeta(
+         self.importModuleInfo, orgModulePath )
       {
-         Log._log( .Info, `{ return "%s already" (modulePath); } );
+         Log._log( .Info, `{ return "%s already" (orgModulePath); } );
 
          let metaInfo = metaInfoStem@@=Meta._MetaInfo;
          let typeId2TypeInfo = moduleInfo.$importId2localTypeInfoMap;
@@ -3135,7 +3141,7 @@ fn TransUnit.processImport( modulePath:str, depth:int ) mut :
          }
          return metaInfo, typeId2TypeInfo, moduleInfo;
       }
-      self.error( "failed to load meta -- " .. modulePath );
+      self.error( "failed to load meta -- " .. orgModulePath );
    }
 
    let mut nameList:str[] = [];
@@ -3143,11 +3149,11 @@ fn TransUnit.processImport( modulePath:str, depth:int ) mut :
       nameList.insert( txt );
    }
 
-   let! metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath ) {
-      self.error( "failed to load meta -- " .. modulePath );
+   let! metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, orgModulePath ) {
+      self.error( "failed to load meta -- " .. orgModulePath );
    };
    let metaInfo = metaInfoStem@@=Meta._MetaInfo;
-   Log._log( .Debug, `{ return "%s processing" (modulePath); } );
+   Log._log( .Debug, `{ return "%s processing" (orgModulePath); } );
 
 
    // 依存するモジュールのメタ情報を読み込み
@@ -3195,7 +3201,7 @@ fn TransUnit.processImport( modulePath:str, depth:int ) mut :
       self.popModule();
    }
 
-   //self.moduleName2Info[ modulePath ] = metaInfo;
+   //self.moduleName2Info[ orgModulePath ] = metaInfo;
 
    foreach symbolInfo in Ast.getSym2builtInTypeMap() {
       typeId2TypeInfo[ symbolInfo.$typeInfo.get_typeId() ] = symbolInfo.$typeInfo;
@@ -3297,7 +3303,7 @@ fn TransUnit.processImport( modulePath:str, depth:int ) mut :
       let newTypeInfo, errMess = atomInfo.createTypeInfoCache( importParam );
       if! errMess {
          Util.err( "Failed to createType -- %s: %s(%d): %s"
-                   ( modulePath, atomInfo.skind.$_txt, atomInfo.typeId, _exp ) );
+                   ( orgModulePath, atomInfo.skind.$_txt, atomInfo.typeId, _exp ) );
       }
       when! newTypeInfo {
          if newTypeInfo.$kind == .Macro {
@@ -3341,7 +3347,7 @@ fn TransUnit.processImport( modulePath:str, depth:int ) mut :
          foreach childId in atomInfo.children {
             let! typeInfo = typeId2TypeInfo[ childId ] {
                Util.err( "not found childId -- %s, %d, %s(%d)"
-                         (modulePath, childId, atomInfo.txt, atomInfo.typeId ) );
+                         (orgModulePath, childId, atomInfo.txt, atomInfo.typeId ) );
             };
             let mut symbolKind = Ast.SymbolKind.Typ;
             let mut addFlag = true;
@@ -3414,7 +3420,7 @@ fn TransUnit.processImport( modulePath:str, depth:int ) mut :
             }
             else {
                self.error( "not found class -- %s: %d, %s"
-                           (modulePath, classTypeId, classTypeInfo.getTxt(##)) );
+                           (orgModulePath, classTypeId, classTypeInfo.getTxt(##)) );
             }
          }
          case .Module {
@@ -3512,7 +3518,7 @@ fn TransUnit.processImport( modulePath:str, depth:int ) mut :
    
 
    let moduleInfo = new Nodes.ModuleInfo(
-      modulePath, nameList[#nameList], newId2OldIdMap,
+      orgModulePath, nameList[#nameList], newId2OldIdMap,
       frontInterface.ModuleId.createIdFromTxt( metaInfo.__buildId ),
       importParam.importedAliasMap );
    self.importModule2ModuleInfo[ moduleTypeInfo ] = moduleInfo;
@@ -3520,7 +3526,7 @@ fn TransUnit.processImport( modulePath:str, depth:int ) mut :
 
    self.importModuleInfo.remove();
 
-   Log._log( .Info, `{ return "%s complete" (modulePath); } );
+   Log._log( .Info, `{ return "%s complete" (orgModulePath); } );
 
    return metaInfo, typeId2TypeInfo, moduleInfo;
 }

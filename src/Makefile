@@ -1492,6 +1492,7 @@ test-testGo:
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/frontInterface,--testing --package lnsc,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Ast,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Option,lune/base,./test)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/GoMod,--testing --package lnsc,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Nodes,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Formatter,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Macro,lune/base,./test)

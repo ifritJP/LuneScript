@@ -5,6 +5,10 @@ var init_Util bool
 var Util__mod__ string
 var Util_debugFlag bool
 var Util_errorCode LnsInt
+// for 272
+func Util_convExp1065(arg1 []LnsAny) string {
+    return Lns_getFromMulti( arg1, 0 ).(string)
+}
 // for 256
 func Util_convExp955(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
@@ -109,6 +113,15 @@ func Util_pathJoin(dir string,path string) string {
         return Lns_getVM().String_format("%s%s", []LnsAny{dir, path})
     }
     return Lns_getVM().String_format("%s/%s", []LnsAny{dir, path})
+}
+
+// 270: decl @lune.@base.@Util.parentPath
+func Util_parentPath(path string) string {
+    if Lns_isCondTrue( Lns_car(Lns_getVM().String_find(path,"/$", nil, nil))){
+        path = Util_convExp1065(Lns_2DDD(Lns_getVM().String_gsub(path,"/$", "")))
+        
+    }
+    return Lns_car(Lns_getVM().String_gsub(path,"/[^/]+$", "")).(string)
 }
 
 // declaration Class -- OrderedSet

@@ -108,6 +108,9 @@ __test {
       {
          Util.err( "not implements" );
       }
+      pub fn getLuaModulePath( mod:str ) : str {
+         return mod;
+      }
       pub fn searchModule( mod:str ): str! {
          Util.err( "not implements" );
       }

@@ -435,6 +435,16 @@ local function pathJoin( dir, path )
 end
 _moduleObj.pathJoin = pathJoin
 
+local function parentPath( path )
+
+   if path:find( "/$" ) then
+      path = path:gsub( "/$", "" )
+   end
+   
+   return (path:gsub( "/[^/]+$", "" ) )
+end
+_moduleObj.parentPath = parentPath
+
 
 
 return _moduleObj

@@ -3453,7 +3453,10 @@ pub class EnumTypeInfo extend TypeInfo {
       processInfo:ProcessInfo, other:&TypeInfo,
       canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool, str!
    {
-      return self == other.$srcTypeInfo.$aliasSrc, nil;
+      if self == other.$srcTypeInfo.$aliasSrc {
+         return true, nil;
+      }
+      return false, "%d != %d" (self.$typeId, other.$srcTypeInfo.$aliasSrc.$typeId );
    }
 
    pub fn addEnumValInfo( valInfo:&EnumValInfo ) mut {
@@ -6082,7 +6085,14 @@ pub static fn TypeInfo.checkMatchType(
       }
    }
 
+
+   macro _evalMess( evalMess:__exp ) : str {
+      (evalMess and " -- %s" (evalMess) or "")
+   }
+   
    let mut warnMess:str! = nil;
+
+   
 
    // index 番以降の dstTypeList の要素が srcType, srcType2nd と等しいか調べる。
    // index 番目と srcType, index + 1 以降と srcType2nd を調べる。
@@ -6094,10 +6104,13 @@ pub static fn TypeInfo.checkMatchType(
       let mut workExpType = srcType;
       for dstIndex = index, #dstTypeList {
          let workDstType = dstTypeList[ dstIndex ];
-         if not workDstType.canEvalWith( processInfo, workExpType, .SetOp, alt2type ) {
-            let message = "exp(%d) type mismatch %s <- %s: dst %d"
+         let canEval, evalMess = workDstType.canEvalWith(
+            processInfo, workExpType, .SetOp, alt2type );
+         if not canEval {
+            let message = "exp(%d) type mismatch %s <- %s: dst %d%s"
                 ( dstIndex, workDstType.getTxt( defaultTypeNameCtrl## ),
-                  workExpType.getTxt( defaultTypeNameCtrl## ), dstIndex );
+                  workExpType.getTxt( defaultTypeNameCtrl## ), dstIndex,
+                  _evalMess( evalMess ) );
             return .Error, message;
          }
          elseif workExpType == builtinTypeAbbrNone {
@@ -6128,11 +6141,14 @@ pub static fn TypeInfo.checkMatchType(
             // 
             return .Error, "must not use '##'";
          }
-            
-         if not dstType.canEvalWith( processInfo, checkType, .SetOp, alt2type ) {
-            return .Error, "exp(%d) type mismatch %s <- %s: src: %d"
+
+         let canEval, evalMess = dstType.canEvalWith(
+            processInfo, checkType, .SetOp, alt2type );
+         if not canEval {
+            return .Error, "exp(%d) type mismatch %s <- %s: src: %d%s"
             ( srcIndex, dstType.getTxt( defaultTypeNameCtrl## ),
-              expType.getTxt( defaultTypeNameCtrl## ), srcIndex );
+              expType.getTxt( defaultTypeNameCtrl## ), srcIndex,
+              _evalMess( evalMess )  );
          }
 
          _checkWarnForFollow( srcIndex, dstType, expType );
@@ -6158,7 +6174,7 @@ pub static fn TypeInfo.checkMatchType(
                        dstType, alt2type, dstType.getModule() ).getTxt(
                           defaultTypeNameCtrl## ),  
                     expType.getTxt(defaultTypeNameCtrl## ), index,
-                    msg and " -- %s" (msg) or "");               
+                    msg and " -- %s" (msg) or "");
                }
                if not allowDstShort and #dstTypeList < #expTypeList {
                   return .Error, "over exp. expect: %d: actual: %d"
@@ -6205,11 +6221,15 @@ pub static fn TypeInfo.checkMatchType(
             break;
          }
          else {
-            if not dstType.canEvalWith( processInfo, expType, .SetOp, alt2type ) {
-               return .Error, "exp(%d) type mismatch %s(%d) <- %s(%d)"
+            let canEval, evalMess = dstType.canEvalWith(
+               processInfo, expType, .SetOp, alt2type );
+               
+            if not canEval {
+               return .Error, "exp(%d) type mismatch %s(%d) <- %s(%d)%s"
                ( index,
                  dstType.getTxt( defaultTypeNameCtrl## ), dstType.$typeId,
-                 expType.getTxt( defaultTypeNameCtrl## ), expType.$typeId);
+                 expType.getTxt( defaultTypeNameCtrl## ), expType.$typeId,
+                 _evalMess( evalMess ) );
             }
             _checkWarnForFollow( index, dstType, expType );
          }

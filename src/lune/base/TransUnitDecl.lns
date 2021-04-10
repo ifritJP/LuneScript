@@ -517,6 +517,8 @@ pub class ASTInfo {
 pub fn TransUnit.createAST(
    parser: Parser.Parser, macroFlag: bool, moduleName: str! ) mut : ASTInfo
 {
+   Log._log2( .Log, "%s start -- %s" (__func__, parser.getStreamName()) );
+   
    self.moduleName = unwrap moduleName default "";
 
    let mut backProcessInfo = self.processInfo;

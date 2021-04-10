@@ -3,8 +3,8 @@ package lnsc
 import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_OutputDepend bool
 var OutputDepend__mod__ string
-// for 125
-func OutputDepend_convExp487(arg1 []LnsAny) LnsAny {
+// for 128
+func OutputDepend_convExp499(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // 92: decl @lune.@base.@OutputDepend.createFilter
@@ -12,8 +12,8 @@ func OutputDepend_createFilter(stream Lns_oStream) *Nodes_Filter {
     return &NewOutputDepend_convFilter(stream).Nodes_Filter
 }
 
-// 134: decl @lune.@base.@OutputDepend.Ast2Depend
-func OutputDepend_Ast2Depend_1094_(ast *TransUnit_ASTInfo) string {
+// 137: decl @lune.@base.@OutputDepend.Ast2Depend
+func OutputDepend_Ast2Depend_1097_(ast *TransUnit_ASTInfo) string {
     var stream *Util_memStream
     stream = NewUtil_memStream()
     var conv *Nodes_Filter
@@ -259,6 +259,7 @@ func (self *OutputDepend_convFilter) ProcessRoot(node *Nodes_RootNode,_dummy Lns
 // declaration Class -- Front
 type OutputDepend_FrontMtd interface {
     Error(arg1 string)
+    GetLuaModulePath(arg1 string) string
     LoadFromLnsTxt(arg1 *FrontInterface_ImportModuleInfo, arg2 string, arg3 string) LnsAny
     LoadMeta(arg1 *FrontInterface_ImportModuleInfo, arg2 string) LnsAny
     LoadModule(arg1 string)(LnsAny, LnsAny)
@@ -309,19 +310,24 @@ func (self *OutputDepend_Front) LoadFromLnsTxt(importModuleInfo *FrontInterface_
     return nil
 }
 
-// 111: decl @lune.@base.@OutputDepend.Front.searchModule
+// 111: decl @lune.@base.@OutputDepend.Front.getLuaModulePath
+func (self *OutputDepend_Front) GetLuaModulePath(mod string) string {
+    return mod
+}
+
+// 114: decl @lune.@base.@OutputDepend.Front.searchModule
 func (self *OutputDepend_Front) SearchModule(mod string) LnsAny {
     Util_err("not implements")
 // insert a dummy
     return nil
 }
 
-// 114: decl @lune.@base.@OutputDepend.Front.error
+// 117: decl @lune.@base.@OutputDepend.Front.error
 func (self *OutputDepend_Front) Error(message string) {
     Util_err(message)
 }
 
-// 118: decl @lune.@base.@OutputDepend.Front.loadMeta
+// 121: decl @lune.@base.@OutputDepend.Front.loadMeta
 func (self *OutputDepend_Front) LoadMeta(importModuleInfo *FrontInterface_ImportModuleInfo,mod string) LnsAny {
     var metaPath string
     metaPath = Lns_car(Lns_getVM().String_gsub(mod,"%.", "/")).(string) + ".meta"
@@ -330,9 +336,9 @@ func (self *OutputDepend_Front) LoadMeta(importModuleInfo *FrontInterface_Import
     var mess LnsAny
     loaded,mess = Lns_getVM().Loadfile(metaPath)
     if loaded != nil{
-        loaded_5697 := loaded.(*Lns_luaValue)
+        loaded_5706 := loaded.(*Lns_luaValue)
         var meta LnsAny
-        meta = OutputDepend_convExp487(Lns_2DDD(Lns_getVM().RunLoadedfunc(loaded_5697,Lns_2DDD([]LnsAny{}))[0]))
+        meta = OutputDepend_convExp499(Lns_2DDD(Lns_getVM().RunLoadedfunc(loaded_5706,Lns_2DDD([]LnsAny{}))[0]))
         return meta
     }
     Lns_print([]LnsAny{mess})

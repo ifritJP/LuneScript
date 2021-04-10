@@ -125,6 +125,14 @@ LuneScript のコード文字列からロードする。
    */
    pub fn loadFromLnsTxt(
       importModuleInfo:ImportModuleInfo, name:str, txt:str ): Luaval<&stem>;
+
+   /**
+go/github:com.ifritJP. 等の go 用のパスを、
+そのモジュールのプロジェクトを起点としたモジュールパスに変換する。
+
+詳しくは、GoMod.lns を参照。
+   */
+   pub fn getLuaModulePath( mod:str ) : str;
    pub fn searchModule( mod:str ): str!;
    pub fn error( message:str );
 }
@@ -147,6 +155,9 @@ class dummyFront extend (frontInterface) {
    pub fn loadFromLnsTxt(
       importModuleInfo:ImportModuleInfo, name:str, txt:str ): Luaval<&stem>
    {
+      error( "not implements" );
+   }
+   pub fn getLuaModulePath( mod:str ) : str {
       error( "not implements" );
    }
    pub fn searchModule( mod:str ): str! {
@@ -179,4 +190,8 @@ pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ): Luaval<&stem>! {
 
 pub fn searchModule( mod:str ): str! {
    return __luneScript.searchModule( mod );
+}
+
+pub fn getLuaModulePath( mod:str ): str {
+   return __luneScript.getLuaModulePath( mod );
 }

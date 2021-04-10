@@ -3,13 +3,28 @@ import lune.base.Types;
 import lune.base.Util;
 import lune.base.Depend;
 
+pub alge GoModResult {
+   NotGo,
+   NotFound,
+   Found(path:str),
+}
+
 pub class ModInfo {
    /** モジュールパス → バージョン */
    let moduleMap:&Map<str,str> {pub};
    /** モジュールパス → replace 先 */
    let replaceMap:&Map<str,str> {pub};
 
-   pub fn getModulePath( path:str ) : str! {
+   /** convPath で変換した path → 対応するローカルパス */
+   let allmut workPath2convPath:Map<str,str>;
+
+   pub fn __init( moduleMap:&Map<str,str>, replaceMap:&Map<str,str> ) {
+      self.moduleMap = moduleMap;
+      self.replaceMap = replaceMap;
+      self.workPath2convPath = {};
+   }
+
+   fn getLocalModulePath( path:str ) : str! {
       foreach ver, mod in self.moduleMap {
          if path.find( mod, 1, true ) == 1 {
             let relativeName = path.sub( #mod + 2 ## );
@@ -36,6 +51,94 @@ pub class ModInfo {
          }
       }
       return nil;
+   }
+
+   fn convPath( mod:str, suffix:str ):str {
+      return mod.gsub( "^go/", "" ).gsub( "%.", "/").gsub( ":", "." ) .. suffix;
+   }
+   
+   /**
+go/github:com.ifritJP. 等の go 用のモジュールパスを、
+ローカルのファイルパスに変換する
+   */ 
+   pub fn convLocalModulePath( mod:str, suffix:str ) : GoModResult {
+      if not mod.find( "^go/" ## ) {
+         return .NotGo;
+      }
+      let workMod = self.convPath( mod, suffix );
+
+      if! self.workPath2convPath[ workMod ] {
+         return .Found( _exp );
+      }
+      
+      let mut pathList = [ Util.pathJoin( "vendor", workMod ) ];
+
+      if! self.getLocalModulePath( workMod ) {
+         pathList.insert( _exp );
+      }
+
+      foreach path in pathList {
+         if Depend.existFile( path ) {
+            self.workPath2convPath[ workMod ] = path;
+            return .Found( path );
+         }
+      }
+      return .NotFound;
+   }
+
+   /**
+go/github:com.ifritJP. 等の go 用のパスを、
+そのモジュールのプロジェクトを起点としたモジュールパスに変換する。
+ 
+例えば go/github:com.ifritJP.LuneScript.src.lune.base.Nodes を、
+lune.base.Nodes に変換する。
+
+プロジェクトの起点は、以下の場所を探す。
+- lune.js のあるディレクトリ
+- github.com の場合、 github.com/XXXXX/YYYYY ディレクトリ
+*/
+   pub fn getLuaModulePath( mod:str ) : str {
+      let mut path;
+      _match self.convLocalModulePath( mod, ".lns" ) {
+         case .NotGo {
+            return mod;
+         }
+         case .NotFound {
+            return mod;
+         }
+         case .Found( workPath ) {
+            path = workPath;
+         }
+      };
+      let mut convPath =
+         self.convPath( mod, ".lns" ).gsub( "github%.com/[^/]+/[^/]+/", "" );
+      let mut projRoot = path.sub( 1, #path - #convPath );
+      if projRoot ~= "/" {
+         projRoot = projRoot.gsub( "/$", "" );
+      }
+
+      // path から projRoot までの間に lune.js があるディレクトリを探し、
+      // そこを起点としたモジュールパスを返す。
+      path = Util.parentPath( path );
+      let mut modList = Util.splitStr( mod, "[^%.]+" );
+      for modIndex = 1, #modList {
+         if Depend.existFile( Util.pathJoin( path, "lune.js" ) ) {
+            let mut convMod = "";
+            for index = #modList - modIndex + 1, #modList {
+               if convMod ~= "" {
+                  convMod = "%s." (convMod);
+               } 
+               convMod = convMod .. modList[index];
+            }
+            return convMod;
+         }
+         if path == projRoot {
+            break;
+         }
+         
+         path = Util.parentPath( path );
+      }
+      return mod;
    }
 }
 
@@ -97,7 +200,7 @@ pub fn getGoMap( option:&Option.Option ) : &ModInfo {
                } elseif line.find( "^replace%s+[^%(]"## ) {
                   getReplace( replaceMap, tokenList, 2 );
                } elseif line.find( "^replace%s+%("## ) {
-                  inBlock = .Require;
+                  inBlock = .Replace;
                }
             }
          }

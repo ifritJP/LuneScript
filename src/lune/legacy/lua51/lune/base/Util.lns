@@ -267,6 +267,13 @@ pub fn pathJoin( dir:str, path:str ) : str {
    return "%s/%s" (dir, path);
 }
 
+pub fn parentPath( mut path:str ) : str {
+   if path.find( "/$" ## ) {
+      path = path.gsub( "/$", "" );
+   }
+   return (path.gsub( "/[^/]+$", "" ));
+}
+
 __test case1(ctrl) {
    {
       // splitStr のテスト

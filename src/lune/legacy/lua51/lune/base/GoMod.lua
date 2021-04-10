@@ -5,6 +5,43 @@ local _lune = {}
 if _lune3 then
    _lune = _lune3
 end
+function _lune.newAlge( kind, vals )
+   local memInfoList = kind[ 2 ]
+   if not memInfoList then
+      return kind
+   end
+   return { kind[ 1 ], vals }
+end
+
+function _lune._fromList( obj, list, memInfoList )
+   if type( list ) ~= "table" then
+      return false
+   end
+   for index, memInfo in ipairs( memInfoList ) do
+      local val, key = memInfo.func( list[ index ], memInfo.child )
+      if val == nil and not memInfo.nilable then
+         return false, key and string.format( "%s[%s]", memInfo.name, key) or memInfo.name
+      end
+      obj[ index ] = val
+   end
+   return true
+end
+function _lune._AlgeFrom( Alge, val )
+   local work = Alge._name2Val[ val[ 1 ] ]
+   if not work then
+      return nil
+   end
+   if #work == 1 then
+     return work
+   end
+   local paramList = {}
+   local result, mess = _lune._fromList( paramList, val[ 2 ], work[ 2 ] )
+   if not result then
+      return nil, mess
+   end
+   return { work[ 1 ], paramList }
+end
+
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
       setObj[ val ] = true
@@ -140,9 +177,43 @@ local Types = _lune.loadModule( 'lune.base.Types' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Depend = _lune.loadModule( 'lune.base.Depend' )
 
+local GoModResult = {}
+GoModResult._name2Val = {}
+_moduleObj.GoModResult = GoModResult
+function GoModResult:_getTxt( val )
+   local name = val[ 1 ]
+   if name then
+      return string.format( "GoModResult.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+
+function GoModResult._from( val )
+   return _lune._AlgeFrom( GoModResult, val )
+end
+
+GoModResult.Found = { "Found", {{ func=_lune._toStr, nilable=false, child={} }}}
+GoModResult._name2Val["Found"] = GoModResult.Found
+GoModResult.NotFound = { "NotFound"}
+GoModResult._name2Val["NotFound"] = GoModResult.NotFound
+GoModResult.NotGo = { "NotGo"}
+GoModResult._name2Val["NotGo"] = GoModResult.NotGo
+
+
 local ModInfo = {}
 _moduleObj.ModInfo = ModInfo
-function ModInfo:getModulePath( path )
+function ModInfo.new( moduleMap, replaceMap )
+   local obj = {}
+   ModInfo.setmeta( obj )
+   if obj.__init then obj:__init( moduleMap, replaceMap ); end
+   return obj
+end
+function ModInfo:__init(moduleMap, replaceMap) 
+   self.moduleMap = moduleMap
+   self.replaceMap = replaceMap
+   self.workPath2convPath = {}
+end
+function ModInfo:getLocalModulePath( path )
 
    for mod, ver in pairs( self.moduleMap ) do
       if path:find( mod, 1, true ) == 1 then
@@ -185,21 +256,100 @@ function ModInfo:getModulePath( path )
    
    return nil
 end
+function ModInfo:convPath( mod, suffix )
+
+   return mod:gsub( "^go/", "" ):gsub( "%.", "/" ):gsub( ":", "." ) .. suffix
+end
+function ModInfo:convLocalModulePath( mod, suffix )
+
+   if not mod:find( "^go/" ) then
+      return _lune.newAlge( GoModResult.NotGo)
+   end
+   
+   local workMod = self:convPath( mod, suffix )
+   
+   do
+      local _exp = self.workPath2convPath[workMod]
+      if _exp ~= nil then
+         return _lune.newAlge( GoModResult.Found, {_exp})
+      end
+   end
+   
+   
+   local pathList = {Util.pathJoin( "vendor", workMod )}
+   
+   do
+      local _exp = self:getLocalModulePath( workMod )
+      if _exp ~= nil then
+         table.insert( pathList, _exp )
+      end
+   end
+   
+   
+   for __index, path in ipairs( pathList ) do
+      if Depend.existFile( path ) then
+         self.workPath2convPath[workMod] = path
+         return _lune.newAlge( GoModResult.Found, {path})
+      end
+      
+   end
+   
+   return _lune.newAlge( GoModResult.NotFound)
+end
+function ModInfo:getLuaModulePath( mod )
+
+   local path
+   
+   do
+      local _matchExp = self:convLocalModulePath( mod, ".lns" )
+      if _matchExp[1] == GoModResult.NotGo[1] then
+      
+         return mod
+      elseif _matchExp[1] == GoModResult.NotFound[1] then
+      
+         return mod
+      elseif _matchExp[1] == GoModResult.Found[1] then
+         local workPath = _matchExp[2][1]
+      
+         path = workPath
+      end
+   end
+   
+   
+   local convPath = self:convPath( mod, ".lns" ):gsub( "github%.com/[^/]+/[^/]+/", "" )
+   local projRoot = path:sub( 1, #path - #convPath )
+   if projRoot ~= "/" then
+      projRoot = projRoot:gsub( "/$", "" )
+   end
+   
+   path = Util.parentPath( path )
+   local modList = Util.splitStr( mod, "[^%.]+" )
+   for modIndex = 1, #modList do
+      if Depend.existFile( Util.pathJoin( path, "lune.js" ) ) then
+         local convMod = ""
+         for index = #modList - modIndex + 1, #modList do
+            if convMod ~= "" then
+               convMod = string.format( "%s.", convMod)
+            end
+            
+            convMod = convMod .. modList[index]
+         end
+         
+         return convMod
+      end
+      
+      if path == projRoot then
+         break
+      end
+      
+      
+      path = Util.parentPath( path )
+   end
+   
+   return mod
+end
 function ModInfo.setmeta( obj )
   setmetatable( obj, { __index = ModInfo  } )
-end
-function ModInfo.new( moduleMap, replaceMap )
-   local obj = {}
-   ModInfo.setmeta( obj )
-   if obj.__init then
-      obj:__init( moduleMap, replaceMap )
-   end
-   return obj
-end
-function ModInfo:__init( moduleMap, replaceMap )
-
-   self.moduleMap = moduleMap
-   self.replaceMap = replaceMap
 end
 function ModInfo:get_moduleMap()
    return self.moduleMap
@@ -304,7 +454,7 @@ local function getGoMap( option )
                   elseif line:find( "^replace%s+[^%(]" ) then
                      getReplace( replaceMap, tokenList, 2 )
                   elseif line:find( "^replace%s+%(" ) then
-                     inBlock = BlockKind.Require
+                     inBlock = BlockKind.Replace
                   end
                   
                end

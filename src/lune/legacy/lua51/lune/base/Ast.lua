@@ -4848,7 +4848,11 @@ function EnumTypeInfo:get_display_stirng(  )
 end
 function EnumTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
 
-   return self == other:get_srcTypeInfo():get_aliasSrc(), nil
+   if self == other:get_srcTypeInfo():get_aliasSrc() then
+      return true, nil
+   end
+   
+   return false, string.format( "%d != %d", self:get_typeId(), other:get_srcTypeInfo():get_aliasSrc():get_typeId())
 end
 function EnumTypeInfo:addEnumValInfo( valInfo )
 
@@ -8143,14 +8147,19 @@ function TypeInfo.checkMatchType( processInfo, dstTypeList, expTypeList, allowDs
    
    
    
+   
+   
    local warnMess = nil
+   
    local function checkDstTypeFrom( index, srcType, srcType2nd )
    
       local workExpType = srcType
       for dstIndex = index, #dstTypeList do
          local workDstType = dstTypeList[dstIndex]
-         if not workDstType:canEvalWith( processInfo, workExpType, CanEvalType.SetOp, alt2type ) then
-            local message = string.format( "exp(%d) type mismatch %s <- %s: dst %d", dstIndex, workDstType:getTxt( _moduleObj.defaultTypeNameCtrl ), workExpType:getTxt( _moduleObj.defaultTypeNameCtrl ), dstIndex)
+         local canEval, evalMess = workDstType:canEvalWith( processInfo, workExpType, CanEvalType.SetOp, alt2type )
+         if not canEval then
+            local message = string.format( "exp(%d) type mismatch %s <- %s: dst %d%s", dstIndex, workDstType:getTxt( _moduleObj.defaultTypeNameCtrl ), workExpType:getTxt( _moduleObj.defaultTypeNameCtrl ), dstIndex, (evalMess and string.format( " -- %s", tostring( evalMess)) or "" )
+            )
             return MatchType.Error, message
          elseif workExpType == _moduleObj.builtinTypeAbbrNone then
             return MatchType.Warn, Code.format( Code.ID.nothing_define_abbr, string.format( "use '##', instate of '%s'.", workDstType:getTxt( _moduleObj.defaultTypeNameCtrl )) )
@@ -8181,8 +8190,10 @@ function TypeInfo.checkMatchType( processInfo, dstTypeList, expTypeList, allowDs
          end
          
          
-         if not dstType:canEvalWith( processInfo, checkType, CanEvalType.SetOp, alt2type ) then
-            return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s: src: %d", srcIndex, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:getTxt( _moduleObj.defaultTypeNameCtrl ), srcIndex)
+         local canEval, evalMess = dstType:canEvalWith( processInfo, checkType, CanEvalType.SetOp, alt2type )
+         if not canEval then
+            return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s: src: %d%s", srcIndex, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:getTxt( _moduleObj.defaultTypeNameCtrl ), srcIndex, (evalMess and string.format( " -- %s", tostring( evalMess)) or "" )
+            )
          end
          
          
@@ -8294,8 +8305,11 @@ function TypeInfo.checkMatchType( processInfo, dstTypeList, expTypeList, allowDs
             break
          else
           
-            if not dstType:canEvalWith( processInfo, expType, CanEvalType.SetOp, alt2type ) then
-               return MatchType.Error, string.format( "exp(%d) type mismatch %s(%d) <- %s(%d)", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), dstType:get_typeId(), expType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:get_typeId())
+            local canEval, evalMess = dstType:canEvalWith( processInfo, expType, CanEvalType.SetOp, alt2type )
+            
+            if not canEval then
+               return MatchType.Error, string.format( "exp(%d) type mismatch %s(%d) <- %s(%d)%s", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), dstType:get_typeId(), expType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:get_typeId(), (evalMess and string.format( " -- %s", tostring( evalMess)) or "" )
+               )
             end
             
             
