@@ -58,33 +58,18 @@ func AddlnsSrcInfo( key string, code []byte ) {
     lnsSrcMap[ key ] = &lnsSrcInfo{ string( code ), len( code ) }
 }
 
-// lua の package.preload に登録される関数。
-// lua の第一引数にロードするモジュール名が渡される。
-// 戻り値として、ロード後の値を push する。
-func LnsPreload( vm lua_state ) int {
-    lua_pushnil( vm )
-    return 1
-    
-    // mod := lua_tolstring( vm, 1 );
-
-    // if srcInfo, ok := lnsSrcMap[ mod ]; !ok {
-    //     lua_pushnil( vm )
-    //     return 1
-    // }
-
-    // if code := lua.luaL_loadbufferx(
-    //     vm, srcInfo.codeC, srcInfo.len, mod, "bt" ); code != lua.LUA_OK {
-    //     panic( lua_tolstring( vm, -1 ))
-    // }
-    // if code := C.lua_pcallk( vm, 0, 1, 0, 0, nil ); code != C.LUA_OK {
-    //     panic( lua_tolstring( vm, -1 ));
-    // }
-    // return 1;
-}
 func Lns_initPreload( vm lua_state ) {
-    // for key := range( lnsSrcMap ) {
-    //     lua.registPreload( vm, key )
-    // }
+    init_bind()
+    for key := range( lnsSrcMap ) {
+        code := lnsSrcMap[ key ]
+        vm.PreloadModule( key, func( vms lua_state ) int {
+            if err := LuaL_loadstring( vms, code.codeC ); err != nil {
+                panic( err )
+            }
+            lua_callk( vms, 0, cLUA_MULTRET )
+            return 1;
+        } )
+    }
 }
 
 var cLUA_MULTRET int

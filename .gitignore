@@ -7,8 +7,7 @@ src/test/glueTest*.so
 src.bak
 src/lune/*.meta
 src/lune/base/*.meta
-src/lune/legacy/lua51/lune/*.meta
-src/lune/legacy/lua51/lune/base/*.meta
+src/lune/base/runtime_go/legacy/lua51/lune/base/*.meta
 *main-1.src.rock
 src/mini*
 *~

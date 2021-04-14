@@ -410,6 +410,7 @@ define cp_src_set
 #	@cp lune/base/base*.lua lune/base/*.lns lune/base/*.d $1/lune/base
 	$(call cp_src_set_sub,$2/lune,'*.lns',$1/lune)
 	$(call cp_src_set_sub,$2/lune,'*.d',$1/lune)
+	$(call cp_src_set_sub,$2/lune,'go.*',$1/lune)
 	cp $2/lune.js $1
 
 	cp -au $2/lune/base/runtime_go $1/lune/base/runtime_go
@@ -877,7 +878,7 @@ endif
 
 define check-rockspec-op
 	@grep 'lune\.' ../$1 | sed 's@.*src/@@g' | sed 's@\.lua.*@.lua@g' | sort > work/$1.list
-	@(cd $2; find lune -iname '*.lua' ) | sed 's@^@$3@g' | sort > work/$1.2.list
+	@(cd $2; find lune -iname '*.lua' ) | grep -v runtime_go | sed 's@^@$3@g' | sort > work/$1.2.list
 	diff work/$1.list work/$1.2.list
 	@rm work/$1.list work/$1.2.list
 endef
@@ -885,7 +886,7 @@ endef
 check-rockspec:
 	$(call check-rockspec-op,lunescript-main-1.rockspec,work/3,)
 ifdef LUA51
-	$(call check-rockspec-op,lunescript51-main-1.rockspec,work/6,lune/legacy/lua51/)
+	$(call check-rockspec-op,lunescript51-main-1.rockspec,work/6,lune/base/runtime_go/legacy/lua51/)
 endif
 
 
@@ -932,7 +933,7 @@ test-lua51:
 # 比較用にクロスコンパイル前のテスト結果を取得
 	$(MAKE) test-lua51-sub LANG_KIND=lua LUA=$(LUA51) 
 
-	diff -r work/5/lune work/6/lune
+	diff -r work/5/lune work/6/lune -x binding.go
 
 # gopher-lua で test-go 実行
 	(cd work/6; $(MAKE) test-go LUA=$(LUA51) LNSC="$(LNSC_LUA51)" GOTAG=gopherlua)
@@ -957,6 +958,7 @@ test-lua51-sub:
 	$(call cp_src_set,work/6,work/1)
 	$(MAKE) -C work/6 build_from_d depend_on=y \
 		FROM_DIR=../5 TO_DIR=../6 LNS_OPT="--package lnsc"
+	$(MAKE) -C work/6 binding-lns-go-tgt
 #	$(call selfhost_build,work/5,../6)
 	$(call setup-lua51-test,work/6)
 	$(call exeLune,$(LNSC),work/6,-mklunemod,lune/base/runtime.lua)
@@ -987,10 +989,15 @@ endif
 		cp work/3/lune/base/*.go $(ORG_DIR)lune/base/;	\
 	fi
 ifneq ($(ENABLE_LUA51),)
-	cp work/6/lune/base/*.lns $(ORG_DIR)lune/legacy/lua51/lune/base/
-	cp work/6/lune/base/*.lua $(ORG_DIR)lune/legacy/lua51/lune/base/
-	cp work/6/lune/base/*.meta $(ORG_DIR)lune/legacy/lua51/lune/base/
-#	cp work/6/lune/*.* $(ORG_DIR)lune/legacy/lua51/lune/
+	cp work/6/lune/base/*.lns $(ORG_DIR)lune/base/runtime_go/legacy/lua51/lune/base
+	cp work/6/lune/base/*.lua $(ORG_DIR)lune/base/runtime_go/legacy/lua51/lune/base
+	cat work/6/lune/base/binding.go | sed 's@!gopherlua@gopherlua@g' |	\
+		sed 's/package lnsc/package runtimelns/g'		|	\
+		sed 's/func init/func init_bind/g'			|	\
+		sed 's@import \.@//import .@g'				|	\
+		sed 's@:embed @:embed legacy/lua51/lune/base/@g' >		\
+		$(ORG_DIR)lune/base/runtime_go/binding51.go
+#	cp work/6/lune/*.* $(ORG_DIR)lune/legacy/lua51/lune/ 
 endif
 
 
@@ -1314,11 +1321,13 @@ endif
 ifdef GOTAG
 define buildGo
 	$(call buildGoSetup,$1,$3)
+	@echo "replace github.com/ifritJP/LuneScript/src/lune => ./lune" >> $1/go.mod
 	(cd $1; go build $(GOBUILD_TAG) -o $2 && ./$2)
 endef
 else
 define buildGo
 	$(call buildGoSetup,$1,$3)
+	@echo "replace github.com/ifritJP/LuneScript/src/lune => ./lune" >> $1/go.mod
 	(cd $1; PKG_CONFIG_PATH=$(shell pwd) go build $(GOBUILD_TAG) -o $2 && ./$2)
 endef
 endif
@@ -1340,6 +1349,7 @@ define setup-go
 	mkdir -p $1
 	rsync -a --include='*.lua' \
 			--include='*.lns' --exclude='*.*' lune $1
+	cp -au lune/go.* $1/lune
 	cp -au lune/base/runtime_go $1/lune/base/
 	cp -au build.counter $1
 	-rm work/result-testGo.txt work/result-testGo2.txt
@@ -1523,6 +1533,9 @@ define binding-lns-go
 
 	mv output.go $1/lune/base/binding.go
 endef
+
+binding-lns-go-tgt:
+	$(call binding-lns-go,.)
 
 define go-build-lns
 	cp misc/go/main/lnsc_main.go $1
