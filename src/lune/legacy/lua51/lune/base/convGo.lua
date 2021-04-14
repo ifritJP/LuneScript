@@ -918,7 +918,6 @@ function convFilter:getTypeSymbol( typeInfo )
    return self:getSymbol( _lune.newAlge( SymbolKind.Type, {orgType,false}), orgType:get_rawTxt() )
 end
 
-
 function convFilter:getTypeSymbolWithPrefix( typeInfo )
 
    local orgType = typeInfo:get_srcTypeInfo():get_nonnilableType():get_aliasSrc()
@@ -1135,7 +1134,7 @@ function convFilter:outputStem2Type( dstType )
    if dstType:get_kind() == Ast.TypeInfoKind.Alternate and dstType:hasBase(  ) then
       self:write( string.format( ".(%s)", self:type2gotype( dstType )) )
    elseif dstType:get_kind() == Ast.TypeInfoKind.Class and dstType ~= Ast.builtinTypeString then
-      self:write( string.format( ".(%sDownCast).To%s()", self:getTypeSymbol( dstType ), self:getTypeSymbol( dstType )) )
+      self:write( string.format( ".(%sDownCast).To%s()", self:getTypeSymbolWithPrefix( dstType ), self:getTypeSymbol( dstType )) )
    else
     
       self:outputAny2Type( dstType )
@@ -1276,7 +1275,7 @@ function convFilter:outputImplicitCast( castType, node, parent )
          else
           
             if isAnyType( node:get_expType() ) then
-               self:write( string.format( "%sDownCastF(", self:getTypeSymbol( castType )) )
+               self:write( string.format( "%sDownCastF(", self:getTypeSymbolWithPrefix( castType )) )
                filter( node, self, parent )
                self:write( ")" )
             else
@@ -4631,7 +4630,7 @@ function convFilter:outputClassType( node )
    
    if node:get_expType():hasBase(  ) then
       local superClassType = node:get_expType():get_baseTypeInfo()
-      self:writeln( self:getTypeSymbol( superClassType ) )
+      self:writeln( self:getTypeSymbolWithPrefix( superClassType ) )
    end
    
    
@@ -4669,9 +4668,9 @@ function convFilter:outputDownCast( node )
    self:writeln( string.format( "%sDownCast interface {", symbol) )
    self:pushIndent(  )
    self:write( "To" )
-   self:write( self:getTypeSymbol( node:get_expType() ) )
+   self:write( symbol )
    self:write( "() *" )
-   self:write( self:getTypeSymbol( node:get_expType() ) )
+   self:write( symbol )
    self:writeln( "" )
    self:popIndent(  )
    self:writeln( "}" )
@@ -4681,7 +4680,7 @@ function convFilter:outputDownCast( node )
    self:writeln( "if len( multi ) == 0 { return nil }" )
    self:writeln( "obj := multi[ 0 ]" )
    self:writeln( "if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }" )
-   self:writeln( string.format( "work, ok := obj.(%sDownCast)", symbol) )
+   self:writeln( string.format( "work, ok := obj.(%sDownCast)", self:getTypeSymbolWithPrefix( node:get_expType() )) )
    self:writeln( string.format( "if ok { return work.To%s() }", symbol) )
    self:writeln( "return nil" )
    self:popIndent(  )
@@ -5936,7 +5935,7 @@ function convFilter:processExpCast( node, opt )
          end
          
       elseif _switchExp == Nodes.CastKind.Normal then
-         local typeName = self:getTypeSymbol( node:get_castType() )
+         local typeName = self:getTypeSymbolWithPrefix( node:get_castType() )
          local castType = node:get_castType():get_nonnilableType()
          if castType:get_kind() == Ast.TypeInfoKind.Class and castType ~= Ast.builtinTypeString then
             self:write( string.format( "%sDownCastF(", typeName) )

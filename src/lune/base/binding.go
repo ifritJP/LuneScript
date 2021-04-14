@@ -2,76 +2,75 @@
 package lnsc
 import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 import _ "embed"
-import "C"
-//go:embed base/Async.luac
+//go:embed Async.lua
 var lune_base_Async []byte
-//go:embed base/Str.luac
+//go:embed Str.lua
 var lune_base_Str []byte
-//go:embed base/Types.luac
+//go:embed Types.lua
 var lune_base_Types []byte
-//go:embed base/Ver.luac
+//go:embed Ver.lua
 var lune_base_Ver []byte
-//go:embed base/LuaMod.luac
+//go:embed LuaMod.lua
 var lune_base_LuaMod []byte
-//go:embed base/LuneControl.luac
+//go:embed LuneControl.lua
 var lune_base_LuneControl []byte
-//go:embed base/Meta.luac
+//go:embed Meta.lua
 var lune_base_Meta []byte
-//go:embed base/Testing.luac
+//go:embed Testing.lua
 var lune_base_Testing []byte
-//go:embed base/Code.luac
+//go:embed Code.lua
 var lune_base_Code []byte
-//go:embed base/Log.luac
+//go:embed Log.lua
 var lune_base_Log []byte
-//go:embed base/LuaVer.luac
+//go:embed LuaVer.lua
 var lune_base_LuaVer []byte
-//go:embed base/Depend.luac
+//go:embed Depend.lua
 var lune_base_Depend []byte
-//go:embed base/Util.luac
+//go:embed Util.lua
 var lune_base_Util []byte
-//go:embed base/frontInterface.luac
+//go:embed frontInterface.lua
 var lune_base_frontInterface []byte
-//go:embed base/Writer.luac
+//go:embed Writer.lua
 var lune_base_Writer []byte
-//go:embed base/AsyncParser.luac
+//go:embed AsyncParser.lua
 var lune_base_AsyncParser []byte
-//go:embed base/Parser.luac
+//go:embed Parser.lua
 var lune_base_Parser []byte
-//go:embed base/Json.luac
+//go:embed Json.lua
 var lune_base_Json []byte
-//go:embed base/Ast.luac
+//go:embed Ast.lua
 var lune_base_Ast []byte
-//go:embed base/Option.luac
+//go:embed Option.lua
 var lune_base_Option []byte
-//go:embed base/GoMod.luac
+//go:embed GoMod.lua
 var lune_base_GoMod []byte
-//go:embed base/Nodes.luac
+//go:embed Nodes.lua
 var lune_base_Nodes []byte
-//go:embed base/Formatter.luac
+//go:embed Formatter.lua
 var lune_base_Formatter []byte
-//go:embed base/Macro.luac
+//go:embed Macro.lua
 var lune_base_Macro []byte
-//go:embed base/TransUnit.luac
+//go:embed TransUnit.lua
 var lune_base_TransUnit []byte
-//go:embed base/DependLuaOnLns.luac
+//go:embed DependLuaOnLns.lua
 var lune_base_DependLuaOnLns []byte
-//go:embed base/convLua.luac
+//go:embed convLua.lua
 var lune_base_convLua []byte
-//go:embed base/dumpNode.luac
+//go:embed dumpNode.lua
 var lune_base_dumpNode []byte
-//go:embed base/convCC.luac
+//go:embed convCC.lua
 var lune_base_convCC []byte
-//go:embed base/convGo.luac
+//go:embed convGo.lua
 var lune_base_convGo []byte
-//go:embed base/OutputDepend.luac
+//go:embed OutputDepend.lua
 var lune_base_OutputDepend []byte
-//go:embed base/glueFilter.luac
+//go:embed glueFilter.lua
 var lune_base_glueFilter []byte
-//go:embed base/front.luac
+//go:embed front.lua
 var lune_base_front []byte
-//go:embed base/runtime3.luac
+//go:embed runtime3.lua
 var lune_base_runtime3 []byte
-func Setup() {
+func init() {
 AddlnsSrcInfo( "lune.base.Async", lune_base_Async )
 AddlnsSrcInfo( "lune.base.Str", lune_base_Str )
 AddlnsSrcInfo( "lune.base.Types", lune_base_Types )

@@ -68,7 +68,6 @@ build = {
       [ "lune.base.OutputDepend" ] = "src/lune/base/OutputDepend.lua",
       [ "lune.base.front" ] = "src/lune/base/front.lua",
       [ "lune.base.glueFilter" ] = "src/lune/base/glueFilter.lua",
-      [ "lune.Util" ] = "src/lune/Util.lua"
    },
    install = {
       bin = {

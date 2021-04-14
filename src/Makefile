@@ -207,7 +207,6 @@ LNS_SRCS += base/convGo
 LNS_SRCS += base/OutputDepend
 LNS_SRCS += base/glueFilter
 LNS_SRCS += base/front
-LNS_SRCS += Util
 LNS_SRCS := $(addprefix "lune/",$(LNS_SRCS))
 
 define selfhost_buildOp_batch
@@ -250,7 +249,6 @@ define selfhost_buildOp
 	$(call $5,$1,$2,$3,$4,base/OutputDepend)
 	$(call $5,$1,$2,$3,$4,base/glueFilter)
 	$(call $5,$1,$2,$3,$4,base/front)
-	$(call $5,$1,$2,$3,$4,Util)
 endef
 
 define mk_runtime
@@ -983,17 +981,16 @@ endif
 #	rm lune/base/*.lua
 	cp work/3/lune/base/*.lua $(ORG_DIR)lune/base/
 	cp work/3/lune/base/*.meta $(ORG_DIR)lune/base/
-	cp work/3/lune/*.* $(ORG_DIR)lune/
+#	cp work/3/lune/*.* $(ORG_DIR)lune/
 	if [ -f work/3/$(LNSC_GO) ]; then			\
 		cp work/3/$(LNSC_GO) $(ORG_DIR).;		\
 		cp work/3/lune/base/*.go $(ORG_DIR)lune/base/;	\
-		cp work/3/lune/binding.go $(ORG_DIR)lune;	\
 	fi
 ifneq ($(ENABLE_LUA51),)
 	cp work/6/lune/base/*.lns $(ORG_DIR)lune/legacy/lua51/lune/base/
 	cp work/6/lune/base/*.lua $(ORG_DIR)lune/legacy/lua51/lune/base/
 	cp work/6/lune/base/*.meta $(ORG_DIR)lune/legacy/lua51/lune/base/
-	cp work/6/lune/*.* $(ORG_DIR)lune/legacy/lua51/lune/
+#	cp work/6/lune/*.* $(ORG_DIR)lune/legacy/lua51/lune/
 endif
 
 
@@ -1296,7 +1293,7 @@ setup-pkg-lua:
 
 
 define buildGoSetup
-	(cd $1; if [ ! -f go.mod ]; then go mod init $(GO_MOD); go mod tidy; fi)
+	(cd $1; if [ ! -f go.mod ]; then go mod init $2; go mod tidy; fi)
 endef
 
 GOBUILD_TAG=
@@ -1316,12 +1313,12 @@ endif
 
 ifdef GOTAG
 define buildGo
-	$(call buildGoSetup,$1)
+	$(call buildGoSetup,$1,$3)
 	(cd $1; go build $(GOBUILD_TAG) -o $2 && ./$2)
 endef
 else
 define buildGo
-	$(call buildGoSetup,$1)
+	$(call buildGoSetup,$1,$3)
 	(cd $1; PKG_CONFIG_PATH=$(shell pwd) go build $(GOBUILD_TAG) -o $2 && ./$2)
 endef
 endif
@@ -1334,6 +1331,7 @@ GO_WORK_DIR = work/go
 # $2: トランスコンパイルする lns ソースのパス
 # $3: lnsc のオプション
 # $4: 出力先ディレクトリ
+# $5: その他オプション
 define convGo
 	$(call exeLune,$1,$2,$3.lns,SAVE -langGo,$4 $5)
 endef
@@ -1354,9 +1352,9 @@ endef
 define test-go-one-exec
 	$(LNSC) $5 mkmain $2/main.go $6
 	cp -au $4/$3.lns $2/$4
-	$(call convGo,$1,$2,$4/$3,--main $5)
+	$(call convGo,$1,$2,$4/$3,--main $5 $6)
 #	if [ $4 != "." ]; then mv $2/$4/$3.go $2; fi
-	$(call buildGo,$2,test.exe) > work/result-testGo.txt
+	$(call buildGo,$2,test.exe,testgo) > work/result-testGo.txt
 	if test "${NO_LUA_DIFF}" = ""; then					\
 		$(call exeLune,$1,$2,$4/$3.lns,shebang) > work/result-testGo2.txt &&	\
 		diff -C 2 -I 'ONLY_LUA' -I 'DIFF_IGNORE'			\
@@ -1373,7 +1371,7 @@ endef
 define test-go-some-setup
 	cp -au $4/$3.lns $2/$4
 	touch $2/$4/$3.lns
-	$(call convGo,$1,$2,$4/$3)
+	$(call convGo,$1,$2,$4/$3,$5)
 #	mv $2/$4/$3.go $2
 endef
 
@@ -1399,7 +1397,7 @@ ifndef NO_TEST
 endif
 
 miniGo-go:
-	$(call buildGo,$(GO_WORK_DIR),miniGo.exe)
+	$(call buildGo,$(GO_WORK_DIR),miniGo.exe,minigo)
 
 test-go:
 	$(call cmd_exec_trans,$(LNSC),.,.,,base/convGo)
@@ -1410,8 +1408,9 @@ ifeq ($(GOTAG),gopherlua)
 	sed -i.bak 's@/.nolua51./@//@g' $(GO_WORK_DIR)/test/testGo.lns
 endif
 	-rm $(GO_WORK_DIR)/test/*.c
-	$(call test-go-some-setup,$(LNSC),$(GO_WORK_DIR),SubGo,test)
-	$(call test-go-some,$(LNSC),$(GO_WORK_DIR),testGo,test,test.testGo,--app github.com/ifritJP/LuneScript/src $(INT2STR))
+	$(call test-go-some-setup,$(LNSC),$(GO_WORK_DIR),SubGo,test,--app testgo)
+	$(call test-go-some-setup,$(LNSC),$(GO_WORK_DIR),SubPkg,test/subGoPkg,--app testgo)
+	$(call test-go-some,$(LNSC),$(GO_WORK_DIR),testGo,test,test.testGo,--app testgo $(INT2STR))
 
 
 test-tutorial-go:
@@ -1462,7 +1461,7 @@ define test-convGo-test
 
 
 	$(call convGo,$1,$2,$4/$3,--testing --package lnsc,$5)
-	$(call buildGo,$2/$5,test.exe) >> work/result-testGo.txt
+	$(call buildGo,$2/$5,test.exe,$(GO_MOD)) >> work/result-testGo.txt
 	$(call test-lns-test,$2/$5,$3) >> work/result-testGo2.txt
 	diff -C 2 -I 'ONLY_LUA' work/result-testGo.txt work/result-testGo2.txt
 endef
@@ -1512,18 +1511,22 @@ test-subgo:
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),front,lune/base,./test)
 
 define binding-lns-go
-	if diff $1/ver_lns_lua $1/ver_lua; then					\
-		$(LNSC_LUA) misc/go/binding/bind.lns shebang -b $1;		\
-	else									\
-		$(LNSC_LUA) misc/go/binding/bind.lns shebang $1;		\
-	fi
+#	if diff $1/ver_lns_lua $1/ver_lua; then					\
+#		$(LNSC_LUA) misc/go/binding/bind.lns shebang -b $1;		\
+#	else									\
+#		$(LNSC_LUA) misc/go/binding/bind.lns shebang $1;		\
+#	fi
+# luac は bind するように binding.go を生成すると、
+# git に luac を登録しないといけなくなる。
+# luac は扱い難いので bytecompile はしない。
+	$(LNSC_LUA) misc/go/binding/bind.lns shebang $1
 
-	mv output.go $1/lune/binding.go
+	mv output.go $1/lune/base/binding.go
 endef
 
 define go-build-lns
 	cp misc/go/main/lnsc_main.go $1
-	$(call buildGoSetup,$1)
+	$(call buildGoSetup,$1,$(GO_MOD))
 	(cd $1; PKG_CONFIG_PATH=$(shell pwd) time go build -o lnsc)
 endef
 
@@ -1534,36 +1537,36 @@ go-build:
 	$(call setup-go,$(GO_WORK_DIR)/build)
 	$(call cp_src_set,$(GO_WORK_DIR)/build,.)
 
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Testing,,./build)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Async,,./build)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Types,,./build)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Ver,,./build)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Code,,./build)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/LuaMod,,./build)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/LuaVer,,./build)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/LuneControl,,./build)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Meta,,./build)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Log,,./build)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Util,,./build)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/AsyncParser,,./build)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Parser,,./build)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Json,,./build)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Writer,,./build)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/frontInterface,,./build)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Ast,,./build)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Option,,./build)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/GoMod,,./build)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Nodes,,./build)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Formatter,,./build)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Macro,,./build)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/TransUnit,,./build)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convLua,,./build)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/dumpNode,,./build)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convCC,,./build)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convGo,,./build)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/OutputDepend,,./build)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/glueFilter,,./build)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/front,,./build)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Testing,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Async,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Types,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Ver,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Code,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/LuaMod,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/LuaVer,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/LuneControl,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Meta,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Log,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Util,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/AsyncParser,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Parser,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Json,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Writer,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/frontInterface,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Ast,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Option,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/GoMod,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Nodes,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Formatter,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Macro,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/TransUnit,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convLua,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/dumpNode,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convCC,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convGo,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/OutputDepend,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/glueFilter,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/front,./build, --package lnsc)
 
 	$(call binding-lns-go,$(GO_WORK_DIR)/build)
 

@@ -44,6 +44,7 @@ import lune.base.Testing;
 import lune.base.GoMod;
 //import lune.base.TestCtrl;
 import lune.base.Meta;
+import lune.base.LuneControl;
 import lune.base.Nodes;
 //import lune.base.ConvNodes;
 
@@ -1066,6 +1067,19 @@ fn Front.convertToLua( scriptPath:str ) mut {
 Go に変換しファイルに書き込む
 */
 pub fn Front.saveToGo( scriptPath:str, ast:TransUnit.ASTInfo ) mut {
+   let! rootNode = ast.$node@@@Nodes.RootNode {
+      return;
+   };
+   foreach pragma in rootNode.$luneHelperInfo.pragmaSet {
+      match pragma {
+         case .limit_conv_code( codeSet ) {
+            if not codeSet.has( LuneControl.Code.Go ) {
+               return;
+            }
+         }
+      }
+   }
+   
    let mut path = scriptPath.gsub( "%.lns$", ".go" );
 
    if! let dir = self.option.outputDir {

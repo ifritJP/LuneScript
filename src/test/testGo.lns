@@ -1,4 +1,9 @@
 import.d test.SubGo;
+import test.subGoPkg.SubPkg;
+
+pub fn __main( args:&List<str> ):int {
+   return 0;
+}
 
 macro _section() {
    print( "----%s-----" (__line__) );
@@ -1845,6 +1850,8 @@ _section();
    let hoge = new Hoge( fn() { print( "hoge" ); } );
    hoge.test();
 }
-pub fn __main( args:&List<str> ):int {
-   return 0;
+_section();
+{
+   let val:stem = 1;
+   print( val@@@SubPkg.Hoge );
 }

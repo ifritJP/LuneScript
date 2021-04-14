@@ -570,6 +570,11 @@ fn convFilter.getTypeSymbol( typeInfo:&Ast.TypeInfo ) : str {
    return self.getSymbol( .Type( orgType, false ), orgType.$rawTxt );
 }
 
+/**
+typeInfo のシンボルを取得する。
+
+typeInfo が外部モジュールで定義されている場合、その外部モジュール名を付加する。
+*/
 fn convFilter.getTypeSymbolWithPrefix( typeInfo:&Ast.TypeInfo ) : str {
    let orgType = typeInfo.$srcTypeInfo.$nonnilableType.$aliasSrc;
    return self.getSymbol( .Type( orgType, true ), orgType.$rawTxt );
@@ -760,7 +765,8 @@ fn convFilter.outputStem2Type( dstType:&Ast.TypeInfo ) {
       self.write( ".(%s)" (self.type2gotype( dstType )) );
    } elseif dstType.$kind == .Class and dstType ~= Ast.builtinTypeString {
       self.write( ".(%sDownCast).To%s()"
-                  (self.getTypeSymbol( dstType ), self.getTypeSymbol( dstType )) );
+                  (self.getTypeSymbolWithPrefix( dstType ),
+                    self.getTypeSymbol( dstType )) );
    } else {
       self.outputAny2Type( dstType );
    }
@@ -914,7 +920,7 @@ fn convFilter.outputImplicitCast(
             filter( node, self, parent );
          } else {
             if isAnyType( node.$expType ) {
-               self.write( "%sDownCastF(" (self.getTypeSymbol( castType ) ) );
+               self.write( "%sDownCastF(" (self.getTypeSymbolWithPrefix( castType ) ) );
                filter( node, self, parent );
                self.write( ")" );
             }
@@ -3617,7 +3623,7 @@ fn convFilter.outputClassType( node: Nodes.DeclClassNode ) mut {
 
    if node.$expType.hasBase() {
       let superClassType = node.$expType.$baseTypeInfo;
-      self.writeln( self.getTypeSymbol( superClassType ) );
+      self.writeln( self.getTypeSymbolWithPrefix( superClassType ) );
    }
    
    foreach memberNode in node.$memberList {
@@ -3651,9 +3657,9 @@ fn convFilter.outputDownCast( node: Nodes.DeclClassNode ) mut {
    self.writeln( "%sDownCast interface {" (symbol) );
    self.pushIndent( ## );
    self.write( "To" );
-   self.write( self.getTypeSymbol( node.$expType ) );
+   self.write( symbol );
    self.write( "() *" );
-   self.write( self.getTypeSymbol( node.$expType ) );
+   self.write( symbol );
    self.writeln( "" );
    self.popIndent();
    self.writeln( "}" );
@@ -3663,7 +3669,8 @@ fn convFilter.outputDownCast( node: Nodes.DeclClassNode ) mut {
    self.writeln( "if len( multi ) == 0 { return nil }" );
    self.writeln( "obj := multi[ 0 ]" );
    self.writeln( "if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }" );
-   self.writeln( "work, ok := obj.(%sDownCast)" (symbol) );
+   self.writeln( "work, ok := obj.(%sDownCast)"
+                 (self.getTypeSymbolWithPrefix( node.$expType )) );
    self.writeln( "if ok { return work.To%s() }" (symbol) );
    self.writeln( "return nil" );
    self.popIndent();
@@ -4786,7 +4793,7 @@ pub override fn convFilter.processExpCast(
          }
       }
       case .Normal {
-         let typeName = self.getTypeSymbol( node.$castType );
+         let typeName = self.getTypeSymbolWithPrefix( node.$castType );
          let castType = node.$castType.$nonnilableType;
          if castType.$kind == .Class and
             castType ~= Ast.builtinTypeString

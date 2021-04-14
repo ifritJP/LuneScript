@@ -6,15 +6,16 @@ class BindInfo {
    let bytePath:str {pub};
    let embedPath:str {pub};
    let varSym:str {pub};
-   pub fn __init( dir:str, mod:str, enableByteCompile:bool, legacyFlag:bool ) {
-      self.src = "%s/lune/base/%s.lua" (dir,mod);
+   pub fn __init( dir:str, path:str, enableByteCompile:bool, legacyFlag:bool ) {
+      let mod = path.gsub( "/", "." );
+      self.src = "%s/lune/base/%s.lua" (dir,path);
       self.modPath = "lune.base.%s" (mod);
-      self.bytePath = "%s/lune/base/%s.luac" (dir,mod);
+      self.bytePath = "%s/lune/base/%s.luac" (dir,path);
       let embedPath;
       if enableByteCompile {
-         embedPath = "base/%s.luac" (mod);
+         embedPath = "%s.luac" (path);
       } else {
-         embedPath = "base/%s.lua" (mod);
+         embedPath = "%s.lua" (path);
       }
       let embParent;
       if legacyFlag {
@@ -23,7 +24,7 @@ class BindInfo {
          embParent = "";
       }
       self.embedPath = "%s%s" (embParent,embedPath);
-      self.varSym = "lune_base_%s" (mod);
+      self.varSym = "lune_base_%s" ( (mod.gsub( "%.", "_" )) );
    }
 }
 
@@ -42,7 +43,7 @@ fn getSrcList( dir:str, basaDir:str, enableByteCompile:bool ): &List<BindInfo>! 
       let! line = mkstream.read( '*l' ) {
          break;
       };
-      if line.find( "^LNS_SRCS%s*%+=%s*base/" ## ) {
+      if line.find( "^LNS_SRCS%s*%+=%s*" ## ) {
          let src = line.gsub( ".*= base/" , "" ).gsub( "%s", "" );
          list.insert( new BindInfo(basaDir,src,enableByteCompile, legacyFlag) );
       }
@@ -71,7 +72,7 @@ fn readFile( path:str ): str! {
 }
 
 /**
-"lune/base/%s.lua" (src) のファイルを byte compile した結果を返す。
+"lune/%s.lua" (src) のファイルを byte compile した結果を返す。
 */
 fn compile( src:str ): str! {
    let! code = readFile( src ) {
@@ -114,14 +115,15 @@ pub fn createBinding( makeDir:str, baseDir:str, enableByteCompile:bool ) : bool 
          ostream.write(
             'import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"\n' );
          ostream.write( 'import _ "embed"\n' );
-         ostream.write( 'import "C"\n' );
+         //ostream.write( 'import "C"\n' );
          let mut total = 0;
          foreach path in list {
             ostream.write( "//go:embed %s\n" ( path.$embedPath ) );
             ostream.write( "var %s []byte\n" (path.$varSym) );
          }
 
-         ostream.write( "func Setup() {\n" );
+         
+         ostream.write( "func init() {\n" );
          foreach path in list {
             print( path.$src );
             if enableByteCompile {
