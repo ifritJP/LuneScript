@@ -123,29 +123,20 @@ jobs:
       
 
 
-  docker-cent7:
-    runs-on: ubuntu-latest
-
-    timeout-minutes: 8 # 8分で強制停止
-    
-    steps:
-    - uses: actions/checkout@v2
-    - name: Build the Docker image
-      run: |
-        docker build src/test/docker/compose/centos7/test --tag cent7_lns
-        mkdir -p export
-        docker run --rm -v $(pwd)/export:/export \
-                        --name cent7_lns cent7_lns \
-                        cp /usr/bin/lnsc /export/lnsc_cent7
-        docker image rm cent7_lns
-
-  #   - name: Upload to Google Drive
-  #     uses: satackey/action-google-drive@v1
-  #     with:
-  #       skicka-tokencache-json: ${{ secrets.SKICKA_TOKENCACHE_JSON }}
-  #       upload-from: export/lnsc_cent7
-  #       upload-to: /lns_release/
-
-  #       # For those who set up Google Drive API client ID and secret themselves
-  #       google-client-id: ${{ secrets.GOOGLE_CLIENT_ID }}
-  #       google-client-secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+#  go 1.16 以降がないと embed がなくてビルドできない。
+#  今は cent7 の go が古いままなので、 cent7 のテストは skip。
+#  docker-cent7:
+#    runs-on: ubuntu-latest
+#
+#    timeout-minutes: 8 # 8分で強制停止
+#    
+#    steps:
+#    - uses: actions/checkout@v2
+#    - name: Build the Docker image
+#      run: |
+#        docker build src/test/docker/compose/centos7/test --tag cent7_lns
+#        mkdir -p export
+#        docker run --rm -v $(pwd)/export:/export \
+#                        --name cent7_lns cent7_lns \
+#                        cp /usr/bin/lnsc /export/lnsc_cent7
+#        docker image rm cent7_lns
