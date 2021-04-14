@@ -8,6 +8,8 @@
 
 * バグ
 
+- [ ] gopherlua で、 lunescript の preload 対応できていない。
+      これが出来ないと、lnstags の gopherlua 版が動かない。
 - [ ] go では、キャスト先の型を定義しているモジュールのインポートが必要。
       
 - [ ] go の go.mod が読み込めてなく、 --app を指定しないといけない。
