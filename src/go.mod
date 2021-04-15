@@ -1,4 +1,4 @@
-module github.com/ifritJP/LuneScript/src/lune
+module github.com/ifritJP/LuneScript/src
 
 go 1.16
 
