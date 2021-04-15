@@ -936,7 +936,7 @@ test-lua51:
 	diff -r work/5/lune work/6/lune -x binding.go
 
 # gopher-lua で test-go 実行
-#	(cd work/6; $(MAKE) test-go LUA=$(LUA51) LNSC="$(LNSC_LUA51)" GOTAG=gopherlua)
+	(cd work/6; $(MAKE) test-go LUA=$(LUA51) LNSC="$(LNSC_LUA51)" GOTAG=gopherlua)
 
 # サンプルを lua5.1 にクロスコンパイルして実行テスト
 	$(call mk_lune_proj_dir,work/7)
@@ -1299,9 +1299,10 @@ setup-pkg-lua:
 	fi
 
 
+GOMODPAT="s@LuneScript/src/lune@LuneScript/src@g"
 define buildGoSetup
 #	(cd $1; if [ ! -f go.mod ]; then go mod init $2; go mod tidy; fi)
-	(cd $1; go mod init $2; go mod tidy;)
+	(cd $1; go mod init $2; sed -i $(GOMODPAT) go.mod; go mod tidy;)
 endef
 
 GOBUILD_TAG=
@@ -1322,13 +1323,13 @@ endif
 ifdef GOTAG
 define buildGo
 	$(call buildGoSetup,$1,$3)
-	@echo "replace github.com/ifritJP/LuneScript/src/lune => ./lune" >> $1/go.mod
+	@echo "replace github.com/ifritJP/LuneScript/src => ./" >> $1/go.mod
 	(cd $1; go build $(GOBUILD_TAG) -o $2 && ./$2)
 endef
 else
 define buildGo
 	$(call buildGoSetup,$1,$3)
-	@echo "replace github.com/ifritJP/LuneScript/src/lune => ./lune" >> $1/go.mod
+	@echo "replace github.com/ifritJP/LuneScript/src => ./" >> $1/go.mod
 	(cd $1; PKG_CONFIG_PATH=$(shell pwd) go build $(GOBUILD_TAG) -o $2 && ./$2)
 endef
 endif
@@ -1588,10 +1589,10 @@ go-build:
 
 	$(call go-build-lns,$(GO_WORK_DIR)/build)
 
-# ifndef NO_TEST
-# 	$(MAKE) test-govslua
-# 	$(MAKE) LNSC=$(shell pwd)/$(GO_WORK_DIR)/build/$(LNSC_GO) test-lnsc-go
-# endif
+ifndef NO_TEST
+	$(MAKE) test-govslua
+	$(MAKE) LNSC=$(shell pwd)/$(GO_WORK_DIR)/build/$(LNSC_GO) test-lnsc-go
+endif
 	cp $(GO_WORK_DIR)/build/$(LNSC_GO) .
 
 test-lnsc-go:
