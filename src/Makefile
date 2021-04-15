@@ -1298,7 +1298,8 @@ setup-pkg-lua:
 		echo ready lua-5.3;			\
 	fi
 
-
+# go mod tidy すると、 github.com/ifritJP/LuneScript/src/lune が取ってこれてしまうので、
+# 強制的に github.com/ifritJP/LuneScript/src/lune に置き換え。
 GOMODPAT="s@LuneScript/src/lune@LuneScript/src@g"
 define buildGoSetup
 #	(cd $1; if [ ! -f go.mod ]; then go mod init $2; go mod tidy; fi)

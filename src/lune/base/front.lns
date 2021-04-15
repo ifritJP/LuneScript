@@ -210,6 +210,12 @@ fn loadFromLuaTxt( txt:str ): Luaval<&stem>! {
    return loadFromChunk( _load( txt ## )** );
 }
 
+pub static fn LoadInfo.FromLuaAndMeta( luaCode:str, metaTxt:str ) : LoadInfo {
+   let mut meta = unwrap loadFromLuaTxt( metaTxt );
+   let mut code = unwrap loadFromLuaTxt( luaCode );
+   return new LoadInfo( code, meta );
+}
+
 fn byteCompileFromLuaTxt( txt:str, stripDebugInfo:bool ): str {
    let chunk, err = _load( txt ## );
    when! chunk {
@@ -505,6 +511,8 @@ fn Front.loadFileToLuaCode(
                                  mod, getModuleId( path, mod ## ), nil, .Compile, nil );
 
    let mut metaTxt, luaTxt = self.convertFromAst( ast, path, convLua.ConvMode.Exec );
+   Log._log2( .Trace, "Meta = %s" (metaTxt) );
+
 
    if self.option.updateOnLoad {
       fn saveFile( suffix:str, txt:str, byteCompile:bool,
@@ -1277,10 +1285,10 @@ oldStream, newStream に格納されているモジュールのメタ情報が�
       Util.errorLog( "%s is illegal filename." (luaPath) );
    }
    else {
-      let mut convMode = convLua.ConvMode.Convert;
-      if self.option.mode == .SaveMeta {
-         convMode = .ConvMeta;
-      }
+      // Meta 出力モードで変換する。
+      // Meta は memStream 上に出力し、不要な場合は保存せずに破棄する。
+      let convMode = convLua.ConvMode.ConvMeta;
+      let mut metaMemStream = new Util.memStream();
 
       // .meta ファイルを更新すると、このモジュールを import している
       // モジュール全てを更新する必要がある。
@@ -1311,19 +1319,15 @@ oldStream, newStream に格納されているモジュールのメタ情報が�
 	          stream = openLuaStream();
                }
 
-               let mut metaStream = stream;
-               //let mut metaConvMode = convLua.ConvMode.Convert;
                if self.option.mode == .SaveMeta {
-                  //metaConvMode = .ConvMeta;
                   if! io.open( tempMetaPath, "w+" ) {
                      metaFileObj = _exp;
-		     metaStream = _exp;
                   }
                   else {
                      error( "write open error -- %s" (metaPath) );
                   }
                }
-               return stream, metaStream;
+               return stream, metaMemStream;
             }
 	    let mut stream:oStream! = nil;
 	    let mut metaStream = stream;
@@ -1349,16 +1353,10 @@ oldStream, newStream に格納されているモジュールのメタ情報が�
             }
 
 	    when! metaFileObj {
-	       // metaFileObj.close();
-               // os.rename( tempMetaPath, metaPath );
-
                // メタファイルが変っているかどうかを確認し、
                // 変更がない場合はビルド情報だけ更新する。
-               metaFileObj.flush();
-               metaFileObj.seek( "set", 0 );
-               let! newMetaTxt = metaFileObj.read( "*a" ) {
-                  Util.err( "faled to read meta. -- %s." (tempMetaPath) );
-               };
+               let newMetaTxt = metaMemStream.$txt;
+               metaFileObj.write( newMetaTxt );
 	       metaFileObj.close();
                let mut oldMetaTxt = "";
                if! let mut oldFileObj = io.open( metaPath ## ) {

@@ -728,10 +728,6 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
    let mut listIndex = 1;
 
    fn outputDepend( typeInfo:&Ast.TypeInfo, moduleTypeInfo:&Ast.TypeInfo): bool {
-      if typeInfo.$nilable and typeInfo.$nonnilableType ~= typeInfo {
-         return false;
-      }
-      
       if! let moduleIndex = importModuleType2Index[ moduleTypeInfo ] {
          let moduleInfo = unwrap node.$importModule2moduleInfo[ moduleTypeInfo ];
          if! let extId = moduleInfo.$localTypeInfo2importIdMap[ typeInfo ] {

@@ -1071,11 +1071,6 @@ function convFilter:outputMeta( node )
    
    local function outputDepend( typeInfo, moduleTypeInfo )
    
-      if typeInfo:get_nilable() and typeInfo:get_nonnilableType() ~= typeInfo then
-         return false
-      end
-      
-      
       do
          local moduleIndex = importModuleType2Index[moduleTypeInfo]
          if moduleIndex ~= nil then
@@ -1974,7 +1969,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _6340 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _6339 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -4192,7 +4187,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3490, function (  )
+   Log.log( Log.Level.Trace, __func__, 3486, function (  )
    
       return string.format( "macro: %s", code)
    end )

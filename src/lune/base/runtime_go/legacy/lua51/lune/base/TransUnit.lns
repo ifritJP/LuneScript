@@ -1376,8 +1376,9 @@ class _TypeInfoNilable extend _TypeInfo {
 
    pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
-      //let orgTypeInfo = unwrap param.typeId2TypeInfo[ self.orgTypeId ];
-      let orgTypeInfo = unwrap param.getTypeInfo( self.orgTypeId );
+      let! orgTypeInfo = param.getTypeInfo( self.orgTypeId ) {
+         Util.err( "failed to createTypeInfo -- self.orgTypeId = %d" ( self.orgTypeId ) );
+      };
       let newTypeInfo = orgTypeInfo.get_nilableTypeInfo();
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
       return newTypeInfo,nil;
