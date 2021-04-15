@@ -1588,10 +1588,10 @@ go-build:
 
 	$(call go-build-lns,$(GO_WORK_DIR)/build)
 
-ifndef NO_TEST
-	$(MAKE) test-govslua
-	$(MAKE) LNSC=$(shell pwd)/$(GO_WORK_DIR)/build/$(LNSC_GO) test-lnsc-go
-endif
+# ifndef NO_TEST
+# 	$(MAKE) test-govslua
+# 	$(MAKE) LNSC=$(shell pwd)/$(GO_WORK_DIR)/build/$(LNSC_GO) test-lnsc-go
+# endif
 	cp $(GO_WORK_DIR)/build/$(LNSC_GO) .
 
 test-lnsc-go:
