@@ -936,7 +936,7 @@ test-lua51:
 	diff -r work/5/lune work/6/lune -x binding.go
 
 # gopher-lua で test-go 実行
-	(cd work/6; $(MAKE) test-go LUA=$(LUA51) LNSC="$(LNSC_LUA51)" GOTAG=gopherlua)
+#	(cd work/6; $(MAKE) test-go LUA=$(LUA51) LNSC="$(LNSC_LUA51)" GOTAG=gopherlua)
 
 # サンプルを lua5.1 にクロスコンパイルして実行テスト
 	$(call mk_lune_proj_dir,work/7)
@@ -1300,7 +1300,8 @@ setup-pkg-lua:
 
 
 define buildGoSetup
-	(cd $1; if [ ! -f go.mod ]; then go mod init $2; go mod tidy; fi)
+#	(cd $1; if [ ! -f go.mod ]; then go mod init $2; go mod tidy; fi)
+	(cd $1; go mod init $2; go mod tidy;)
 endef
 
 GOBUILD_TAG=
@@ -1349,7 +1350,7 @@ define setup-go
 	mkdir -p $1
 	rsync -a --include='*.lua' \
 			--include='*.lns' --exclude='*.*' lune $1
-	cp -au lune/go.* $1/lune
+#	cp -au go.mod $1
 	cp -au lune/base/runtime_go $1/lune/base/
 	cp -au build.counter $1
 	-rm work/result-testGo.txt work/result-testGo2.txt
@@ -1394,6 +1395,7 @@ endef
 test-miniGo:
 	$(call cmd_exec_trans,$(LNSC),.,.,,base/convGo)
 	$(call setup-go,$(GO_WORK_DIR))
+#	rm $(GO_WORK_DIR)/go.mod
 	-rm $(GO_WORK_DIR)/*.*
 	cp build.counter $(GO_WORK_DIR)
 ifdef OTHER_GO
@@ -1412,6 +1414,7 @@ miniGo-go:
 test-go:
 	$(call cmd_exec_trans,$(LNSC),.,.,,base/convGo)
 	$(call setup-go,$(GO_WORK_DIR))
+#	rm $(GO_WORK_DIR)/go.mod
 	$(call test-go-one-setup,$(GO_WORK_DIR))
 ifeq ($(GOTAG),gopherlua)
 # gopherlua は lua 5.1 互換なので lua51 依存のテストは除外
