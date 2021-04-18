@@ -104,7 +104,7 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
          self.commentCtrl.pop();
          return statement;
       }
-      elseif token.txt == "pub" or token.txt == "pro" or
+      elseif token.txt == "pub" or token.txt == "pro" or token.txt == "local" or
          token.txt == "pri" or token.txt == "global" or token.txt == "static"
       {
          let! mut accessMode = Ast.txt2AccessMode( token.txt ) {

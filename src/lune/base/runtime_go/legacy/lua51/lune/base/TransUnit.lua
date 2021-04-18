@@ -13794,7 +13794,7 @@ function TransUnit:analyzeStatement( termTxt )
          self:pushback(  )
          self.commentCtrl:pop(  )
          return statement
-      elseif token.txt == "pub" or token.txt == "pro" or token.txt == "pri" or token.txt == "global" or token.txt == "static" then
+      elseif token.txt == "pub" or token.txt == "pro" or token.txt == "local" or token.txt == "pri" or token.txt == "global" or token.txt == "static" then
          local accessMode = Ast.txt2AccessMode( token.txt )
          if  nil == accessMode then
             local _accessMode = accessMode

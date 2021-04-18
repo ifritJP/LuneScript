@@ -2781,9 +2781,9 @@ fn TransUnit.analyzeDeclFunc(
       name = self.getSymbolToken( .MustNot_ );
       token = self.getToken(##);
 
-      if accessMode == .Local {
-         accessMode = .Pri;
-      }
+      // if accessMode == .Local {
+      //    accessMode = .Pri;
+      // }
    }
 
 
