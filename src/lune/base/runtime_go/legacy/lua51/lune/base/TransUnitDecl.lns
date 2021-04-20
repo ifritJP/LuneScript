@@ -2410,11 +2410,12 @@ fn TransUnit.analyzeDeclClass(
          if langToken.kind ~= .Str {
             self.error( "it's not a string -- %s" ( langToken.txt ) );
          }
-         if langToken.getExcludedDelimitTxt() ~= "" {
+         let langIdToken = langToken.getExcludedDelimitTxt();
+         if langIdToken ~= "" {
             foreach langId in Types.Lang.$_allList {
                if! Types.Lang._from( langId ) {
                   let ldName = _exp.$_txt.gsub( ".*%.", "");
-                  if ldName == langToken.txt {
+                  if ldName == langIdToken {
                      moduleLang = _exp;
                      break;
                   }
@@ -2781,9 +2782,9 @@ fn TransUnit.analyzeDeclFunc(
       name = self.getSymbolToken( .MustNot_ );
       token = self.getToken(##);
 
-      if accessMode == .Local {
-         accessMode = .Pri;
-      }
+      // if accessMode == .Local {
+      //    accessMode = .Pri;
+      // }
    }
 
 

@@ -8434,14 +8434,15 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
             self:error( string.format( "it's not a string -- %s", langToken.txt) )
          end
          
-         if langToken:getExcludedDelimitTxt(  ) ~= "" then
+         local langIdToken = langToken:getExcludedDelimitTxt(  )
+         if langIdToken ~= "" then
             for __index, langId in ipairs( Types.Lang.get__allList() ) do
                do
                   local _exp = Types.Lang._from( langId )
                   if _exp ~= nil then
                      local ldName = Types.Lang:_getTxt( _exp)
                      :gsub( ".*%.", "" )
-                     if ldName == langToken.txt then
+                     if ldName == langIdToken then
                         moduleLang = _exp
                         break
                      end
@@ -8522,7 +8523,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
    end
    
    
-   local node, _9125, methodNameSet = self:analyzeClassBody( hasProto, classAccessMode, firstToken, mode, gluePrefix, classTypeInfo, name, moduleLang, moduleName, lazyLoad, nextToken )
+   local node, _9126, methodNameSet = self:analyzeClassBody( hasProto, classAccessMode, firstToken, mode, gluePrefix, classTypeInfo, name, moduleLang, moduleName, lazyLoad, nextToken )
    local ctorAccessMode = Ast.AccessMode.Pub
    do
       local ctorTypeInfo = classScope:getTypeInfoChild( "__init" )
@@ -8765,10 +8766,6 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
       
       name = self:getSymbolToken( SymbolMode.MustNot_ )
       token = self:getToken(  )
-      
-      if accessMode == Ast.AccessMode.Local then
-         accessMode = Ast.AccessMode.Pri
-      end
       
    end
    

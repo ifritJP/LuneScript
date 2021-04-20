@@ -122,12 +122,14 @@ class convFilter extend Nodes.Filter<Opt> {
    let modDir:str;
    let mut module2PackSym:Map<&Ast.TypeInfo,str>;
    let mut env:Env;
+   let mut moduleType2SymbolMap:Map<&Ast.TypeInfo,&Ast.SymbolInfo>;
 
    pub fn __init( enableTest:bool, streamName: str, stream: oStream,
                   ast:TransUnit.ASTInfo, option:&Option )
    {
       super(true, ast.$moduleTypeInfo, ast.$moduleTypeInfo.$scope);
-      
+
+      self.moduleType2SymbolMap = {};
       self.env = new Env();
       self.option = option;
       self.processInfo = ast.$processInfo;
@@ -383,15 +385,21 @@ fn convFilter.getCanonicalName( typeInfo:&Ast.TypeInfo, localFlag:bool ): str {
 }
 
 
-fn getModuleName( typeInfo:&Ast.TypeInfo ) : str {
+fn convFilter.getModuleName( typeInfo:&Ast.TypeInfo, assign:bool ) : str {
    if typeInfo == Ast.headTypeInfo {
       return "";
    }
-   return (typeInfo.getModule().$rawTxt.gsub( "@", "" ));
+   let moduleType = typeInfo.getModule();
+   if assign {
+      if! let symbolInfo = self.moduleType2SymbolMap[ moduleType ] {
+         return symbolInfo.$name;
+      }
+   }
+   return (moduleType.$rawTxt.gsub( "@", "" ));
 }
 
 fn convFilter.concatSymWithType( name:str, typeInfo:&Ast.TypeInfo ) : str {
-   let modName = getModuleName( typeInfo.getModule());
+   let modName = self.getModuleName( typeInfo.getModule(), false );
    let typeName;
    if modName == "" {
       typeName = name;
@@ -451,7 +459,7 @@ fn convFilter.getSymbol( kind:SymbolKind, name:str ) : str {
       case .Var( symbolInfo ) {
          let modName = self.moduleTypeInfo.$rawTxt.gsub( "@", "" );
          if symbolInfo.getModule() ~= self.moduleTypeInfo and symbolInfo.$staticFlag {
-            symbolName = "%s_%s" (getModuleName(symbolInfo.getModule()),
+            symbolName = "%s_%s" (self.getModuleName(symbolInfo.getModule(), false),
                                    symbolInfo.$name );
          }
          elseif name == "__mod__" {
@@ -465,7 +473,7 @@ fn convFilter.getSymbol( kind:SymbolKind, name:str ) : str {
             }
          }
          if self.needPrefix( symbolInfo.getModule() ) {
-            symbolName = "%s.%s" ( getModuleName( symbolInfo.getModule() ),
+            symbolName = "%s.%s" ( self.getModuleName( symbolInfo.getModule(), true ),
                                    symbolName );                      
          }
       }
@@ -531,7 +539,7 @@ fn convFilter.getSymbol( kind:SymbolKind, name:str ) : str {
             }
             if not prefix {
                if self.needPrefix( typeInfo.getModule() ) {
-                  prefix = getModuleName( typeInfo );
+                  prefix = self.getModuleName( typeInfo, true );
                }
             }
             when! prefix {
@@ -551,7 +559,7 @@ fn convFilter.getSymbol( kind:SymbolKind, name:str ) : str {
          }
          symbolName = self.concatSymWithType( workName, typeInfo );
          if needPrefix and self.needPrefix( typeInfo.getModule() ) {
-            symbolName = "%s.%s" ( getModuleName( typeInfo ), symbolName );
+            symbolName = "%s.%s" ( self.getModuleName( typeInfo, true ), symbolName );
          }
       }
       case .Static( typeInfo ) {
@@ -806,9 +814,9 @@ pub override fn convFilter.processImport(
    if not self.isSameModDir( node.$moduleTypeInfo ) and
       not Ast.isBuiltin( node.$moduleTypeInfo.$typeId )
    {
-      self.write( "%s." (getModuleName( node.$moduleTypeInfo )) );
+      self.write( "%s." (self.getModuleName( node.$moduleTypeInfo, true )) );
    } 
-   self.writeln( "Lns_%s_init()" (getModuleName( node.$moduleTypeInfo )) );
+   self.writeln( "Lns_%s_init()" (self.getModuleName( node.$moduleTypeInfo, false )) );
 }
 
 fn convFilter.needConvFormFunc( node:&Nodes.ExpCastNode ) mut : bool {
@@ -1674,6 +1682,10 @@ fn convFilter.outputImport( node:&Nodes.ImportNode ) mut {
 pub override fn convFilter.processRoot(
    node: Nodes.RootNode, opt: Opt ) mut
 {
+   foreach importNode in node.$nodeManager.getImportNodeList() {
+      self.moduleType2SymbolMap[ importNode.$moduleTypeInfo ] = importNode.$symbolInfo;
+   }
+   
    foreach pragma in node.$luneHelperInfo.pragmaSet {
       match pragma {
          case .limit_conv_code( codeSet ) {
@@ -1793,7 +1805,7 @@ pub override fn convFilter.processRoot(
    }
 
 
-   let initModVar = "init_%s" (getModuleName(node.$moduleTypeInfo));
+   let initModVar = "init_%s" (self.getModuleName(node.$moduleTypeInfo, false));
    self.writeln( "var %s bool" (initModVar) );
 
    
@@ -1894,7 +1906,7 @@ pub override fn convFilter.processRoot(
 
 
    self.writeln(
-      "func Lns_%s_init() {" (getModuleName( node.$moduleTypeInfo)) );
+      "func Lns_%s_init() {" (self.getModuleName( node.$moduleTypeInfo, false)) );
    self.pushIndent( ## );
 
    self.writeln( "if %s { return }" (initModVar) );
@@ -1909,7 +1921,7 @@ pub override fn convFilter.processRoot(
 
    let modulePath = node.$moduleTypeInfo.getFullName(
       self.$typeNameCtrl, self.$moduleInfoManager ##).gsub( "@", "" );
-   let moduleName = getModuleName( node.$moduleTypeInfo);
+   let moduleName = self.getModuleName( node.$moduleTypeInfo, false );
    
    
    if self.enableTest {
@@ -1941,7 +1953,7 @@ pub override fn convFilter.processRoot(
       }
       if not hasMain {
          // main 関数を定義していない場合
-         let moduleSym = getModuleName( self.moduleTypeInfo );
+         let moduleSym = self.getModuleName( self.moduleTypeInfo, false );
          self.writeln(
             "func %s___main(args *LnsList) LnsInt {"
             ( concatGLSym( moduleSym, true ) ) );
@@ -2365,7 +2377,7 @@ pub fn convFilter.outputDeclFuncInfo(
    self.pushIndent(##);
 
    if isMain( funcType ) {
-      self.writeln( "Lns_%s_init()" (getModuleName( self.$moduleTypeInfo )) );
+      self.writeln( "Lns_%s_init()" (self.getModuleName( self.$moduleTypeInfo, false )) );
    }
    
    if declInfo.$has__func__Symbol {
@@ -5282,7 +5294,8 @@ pub override fn convFilter.processTestCase( node: Nodes.TestCaseNode, opt: Opt )
    }
    self.writeln(
       "func lns_test_%s_%s( %s *Testing_Ctrl ) {"
-      ( getModuleName( self.$moduleTypeInfo), node.$name.txt, node.$ctrlName ) );
+      ( self.getModuleName( self.$moduleTypeInfo, false),
+        node.$name.txt, node.$ctrlName ) );
 
    filter( node.$block, self, node );
    
