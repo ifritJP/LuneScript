@@ -72,6 +72,7 @@ class Front extend (frontInterface.frontInterface) {
    let mut loadedMetaMap:Map<str,Luaval<&stem>>;
    let mut convertedMap:Map<str,str>;
    let mut gomodMap:GoMod.ModInfo;
+   let allmut mod2ast:Map<str,&TransUnit.ASTInfo>;
 
    /**
 front で import しているものは、
@@ -83,6 +84,7 @@ loadedMap で管理する前にシステムにロードされているため、
 
    
    pub fn __init( option:&Option.Option ) {
+      self.mod2ast = {};
       self.gomodMap = GoMod.getGoMap();
       self.option = option;
       self.loadedMap = {};
@@ -507,8 +509,12 @@ fn Front.loadFileToLuaCode(
    importModuleInfo:frontInterface.ImportModuleInfo,
    path:str, mod:str ): Luaval<&stem>, str
 {
+   Log._log2( .Log, "%s: %s" (__func__, mod ) );
+   
    let mut ast = self.createAst( importModuleInfo, createPaser( path, mod ),
                                  mod, getModuleId( path, mod ## ), nil, .Compile, nil );
+   self.mod2ast[ mod ] = ast;
+   
 
    let mut metaTxt, luaTxt = self.convertFromAst( ast, path, convLua.ConvMode.Exec );
    Log._log2( .Trace, "Meta = %s" (metaTxt) );
@@ -1163,7 +1169,7 @@ pub form AstCallback( ast: &TransUnit.ASTInfo );
 /**
 Lua に変換しファイルに書き込む
 */
-pub fn Front.saveToLua( updateInfo:UpdateInfo, astCallback:AstCallback! ) mut : bool
+pub fn Front.saveToLua( updateInfo:UpdateInfo ) mut : bool
 {
    let scriptPath = updateInfo.$scriptPath;
    let dependsPath = updateInfo.$dependsPath;
@@ -1399,9 +1405,7 @@ oldStream, newStream に格納されているモジュールのメタ情報が�
             self.saveToGo( scriptPath, ast );
          }
       }
-      when! astCallback {
-         astCallback( ast );
-      }
+      self.mod2ast[ mod ] = ast;
    }
 
    return updateFlag;
@@ -1461,6 +1465,7 @@ pub fn Front.build( astCallback:AstCallback! ) mut {
    Depend.profile(
       self.option.validProf,
       fn () {
+         self.mod2ast = {};
          if self.option.scriptPath == "@-" {
             let mut updateList:List<UpdateInfo> = [];
             while true {
@@ -1475,12 +1480,17 @@ pub fn Front.build( astCallback:AstCallback! ) mut {
 
             foreach updateInfo in updateList {
                let prev = os.clock();
-               self.saveToLua( updateInfo, astCallback );
+               self.saveToLua( updateInfo );
                print( "%s:%g" ( updateInfo.$scriptPath, os.clock() - prev));
             }
          } else {
-            self.saveToLua( createUpdateInfo( self.option.scriptPath, nil ),
-                            astCallback );
+            self.saveToLua( createUpdateInfo( self.option.scriptPath, nil ) );
+         }
+
+         when! astCallback {
+            forsort ast in self.mod2ast {
+               astCallback( ast );
+            }
          }
       }, self.option.scriptPath .. ".profi" );
 }

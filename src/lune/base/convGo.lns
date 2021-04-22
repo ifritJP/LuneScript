@@ -5160,7 +5160,7 @@ pub override fn convFilter.processRefField(
       }
 
       if symbol.$staticFlag {
-         self.outputModule( symbol.getModule(), true );
+         //self.outputModule( symbol.getModule(), true );
          self.write( self.getSymbolSym( symbol ) );
          return;
       }

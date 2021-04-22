@@ -1300,10 +1300,10 @@ setup-pkg-lua:
 
 # go mod tidy すると、 github.com/ifritJP/LuneScript/src/lune が取ってこれてしまうので、
 # 強制的に github.com/ifritJP/LuneScript/src/lune に置き換え。
-GOMODPAT="s@LuneScript/src/lune@LuneScript/src@g"
+GOMODPAT="s@LuneScript/src/lune.*@LuneScript/src master@g"
 define buildGoSetup
 #	(cd $1; if [ ! -f go.mod ]; then go mod init $2; go mod tidy; fi)
-	(cd $1; go mod init $2; sed -i $(GOMODPAT) go.mod; go mod tidy;)
+	(cd $1; go mod init $2; go mod tidy;sed -i $(GOMODPAT) go.mod; go mod tidy)
 endef
 
 GOBUILD_TAG=

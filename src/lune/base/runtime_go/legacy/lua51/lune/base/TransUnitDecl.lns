@@ -100,7 +100,7 @@ fn TransUnit.analyzeRefTypeWithSymbol(
          // 異なるディレクトリの場合だけエラーとする。
          self.addErrMess( symbolNode.$pos,
                           "must import '%s' for this alias -- %s"
-                          ( aliasType.getModule().getFullName(
+                          ( aliasSrc.getModule().getFullName(
                              self.typeNameCtrl, self.scope, false ),
                             symbolNode.getSymbolInfo()[1].$name ) );
       }
@@ -512,6 +512,7 @@ pub class ASTInfo {
    pri let moduleTypeInfo: Ast.TypeInfo { pub };
    pri let moduleSymbolKind: Ast.SymbolKind { pub };
    pri let mut processInfo: Ast.ProcessInfo {pub};
+   pri let streamName:str {pub};
 }
 
 pub fn TransUnit.createAST(
@@ -669,7 +670,8 @@ pub fn TransUnit.createAST(
       }
    }
 
-   return new ASTInfo( ast, moduleTypeInfo, moduleSymbolKind, self.processInfo );
+   return new ASTInfo( ast, moduleTypeInfo, moduleSymbolKind, self.processInfo,
+                       parser.getStreamName() );
 }
 
 

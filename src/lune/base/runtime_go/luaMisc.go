@@ -27,6 +27,8 @@ package runtimelns
 //import "log"
 //import "runtime"
 //import "fmt"
+import "strings"
+import "os"
 
 func (luaVM *Lns_luaVM) ExpandLuavalMap( stem LnsAny ) LnsAny {
     if Lns_IsNil( stem ) {
@@ -118,9 +120,17 @@ func (luaVM *Lns_luaVM) IO_popen( path string ) LnsAny {
     ret := luaVM.CallStatic( "io", "popen", []LnsAny{ path } )
     return Lns_getFromMulti( ret, 0 )
 }
-func (luaVM *Lns_luaVM) Package_searchpath( name string, path string ) LnsAny {
-    ret := luaVM.CallStatic( "package", "searchpath", []LnsAny{ name, path } )
-    return Lns_getFromMulti( ret, 0 )
+func (luaVM *Lns_luaVM) Package_searchpath( name string, pathPattern string ) LnsAny {
+    modPath := strings.ReplaceAll( name, ".", "/" )
+    for _, path := range( strings.Split( pathPattern, ";" ) ) {
+        checkPath := strings.ReplaceAll( path, "?", modPath )
+        if _, err := os.Stat( checkPath ); err == nil {
+            return checkPath
+        }        
+    }
+    return nil
+    // ret := luaVM.CallStatic( "package", "searchpath", []LnsAny{ name, pathPattern } )
+    // return Lns_getFromMulti( ret, 0 )
 }
 func (luaVM *Lns_luaVM) OS_clock() LnsReal {
     ret := luaVM.CallStatic( "os", "clock", []LnsAny{} )
