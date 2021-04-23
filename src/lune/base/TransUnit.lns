@@ -1172,22 +1172,26 @@ alias で置き換えている元の Type → alias の型
       os.exit( 0 );
    }
 
-   
-   fn errorShadowing( pos:&Parser.Position, symbolInfo:&Ast.SymbolInfo! ) mut {
+   fn errorShadowingOp(
+      pos:&Parser.Position, symbolInfo:&Ast.SymbolInfo!, errFlag:bool ) mut
+   {
       when! symbolInfo {
          let symPos = symbolInfo.$pos;
          when! symPos {
             let mess = "This symbol is shadowed from %d:%d -- %s"
                 (pos.lineNo, pos.column, symbolInfo.$name );
-            self.addWarnErrMess(
-               symPos, not self.ctrl_info.warningShadowing, mess );
+            self.addWarnErrMess( symPos, errFlag, mess );
          }
          let mess = "shadowing symbol of %s -- %s"
             (symPos and "%s:%s" (symPos$.lineNo, symPos$.column) or "external",
               symbolInfo.$name );
-         self.addWarnErrMess(
-            pos, not self.ctrl_info.warningShadowing, mess );
+         self.addWarnErrMess( pos, errFlag, mess );
       }
+   }
+   
+   
+   fn errorShadowing( pos:&Parser.Position, symbolInfo:&Ast.SymbolInfo! ) mut {
+      self.errorShadowingOp( pos, symbolInfo,not self.ctrl_info.warningShadowing );
    }
    
    pri fn checkShadowing( pos:&Parser.Position, name:str, scope:&Ast.Scope ) mut {
@@ -3579,7 +3583,9 @@ fn TransUnit.analyzeImportFor(
          modulePath, lazyLoad, assignName, assigned, moduleSymbolInfo, moduleTypeInfo );
    }
 
-   self.errorShadowing( pos, shadowing );
+   when! shadowing {
+      self.errorShadowingOp( pos, shadowing, shadowing.$typeInfo ~= moduleTypeInfo );
+   }
    return self.createNoneNode( pos );
 }
 

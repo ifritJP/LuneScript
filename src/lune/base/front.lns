@@ -72,7 +72,7 @@ class Front extend (frontInterface.frontInterface) {
    let mut loadedMetaMap:Map<str,Luaval<&stem>>;
    let mut convertedMap:Map<str,str>;
    let mut gomodMap:GoMod.ModInfo;
-   let allmut mod2ast:Map<str,&TransUnit.ASTInfo>;
+   let allmut mod2ast:Util.OrderdMap<str,TransUnit.ASTInfo>;
 
    /**
 front で import しているものは、
@@ -84,7 +84,7 @@ loadedMap で管理する前にシステムにロードされているため、
 
    
    pub fn __init( option:&Option.Option ) {
-      self.mod2ast = {};
+      self.mod2ast = new Util.OrderdMap<str,TransUnit.ASTInfo>();
       self.gomodMap = GoMod.getGoMap();
       self.option = option;
       self.loadedMap = {};
@@ -513,7 +513,7 @@ fn Front.loadFileToLuaCode(
    
    let mut ast = self.createAst( importModuleInfo, createPaser( path, mod ),
                                  mod, getModuleId( path, mod ## ), nil, .Compile, nil );
-   self.mod2ast[ mod ] = ast;
+   self.mod2ast.add( mod, ast );
    
 
    let mut metaTxt, luaTxt = self.convertFromAst( ast, path, convLua.ConvMode.Exec );
@@ -733,9 +733,9 @@ fn Front.loadMeta(
    
    if self.loadedMetaMap[ mod ] == nil {
       if! self.getLoadInfo( mod ) {
+         // ロード済みのものを使用する
          self.loadedMetaMap[ mod ] = _exp.meta;
-      }
-      else {
+      } else {
          if! let lnsPath = self.searchModule( orgMod ) {
             let mut luaPath:str! = string.gsub( lnsPath, "%.lns$", ".lua" );
 
@@ -745,27 +745,33 @@ fn Front.loadMeta(
 
             let mut meta:Luaval<&stem>! = nil;
             when! luaPath {
-               if Util.getReadyCode( lnsPath, luaPath ) {
-	          let metaPath = string.gsub( luaPath, "%.lua$", ".meta" );
-	          if Util.getReadyCode( lnsPath, metaPath ) {
-                     meta = self.checkUptodateMeta(
-                        metaPath, self.option.outputDir );
-                     when! meta {
-	                self.loadedMetaMap[ mod ] = meta;
+               // .lua, .meta ファイルが更新済みか調べ
+               // 更新済みならそれをロードする
+               if self.option.transCtrlInfo.uptodateMode ~= .Force {
+                  if Util.getReadyCode( lnsPath, luaPath ) {
+	             let metaPath = string.gsub( luaPath, "%.lua$", ".meta" );
+	             if Util.getReadyCode( lnsPath, metaPath ) {
+                        meta = self.checkUptodateMeta(
+                           metaPath, self.option.outputDir );
+                     } else {
+                        Log._log( .Warn, `{ return "%s not ready meta %s, %s"
+                                            ( orgMod, lnsPath, metaPath ); } );
                      }
                   } else {
-                     Log._log( .Warn, `{ return "%s not ready meta %s, %s"
-                                         ( orgMod, lnsPath, metaPath ); } );
-                  }
-               } else {
                      Log._log( .Warn, `{ return "%s not ready lua %s, %s"
                                          ( orgMod, lnsPath, luaPath ); } );
+                  }
+               } else {
+                  Log._log2( .Warn, "force analyze -- %s" ( orgMod ) );
                }
             } else {
                Log._log( .Warn, `{ return "%s not found lua in %s"
                                    ( orgMod, self.option.outputDir ); } );
             }
-            if meta == nil {
+            when! meta {
+	       self.loadedMetaMap[ mod ] = meta;
+            }
+            else {
 	       let metawork, luaTxt =
                   self.loadFileToLuaCode( importModuleInfo, lnsPath, orgMod );
 	       self.loadedMetaMap[ mod ] = metawork;
@@ -1164,7 +1170,7 @@ class UpdateInfo {
    let uptodate: ModuleUptodate {pub};
 }
 
-pub form AstCallback( ast: &TransUnit.ASTInfo );
+pub form AstCallback( ast: TransUnit.ASTInfo );
 
 /**
 Lua に変換しファイルに書き込む
@@ -1405,7 +1411,7 @@ oldStream, newStream に格納されているモジュールのメタ情報が�
             self.saveToGo( scriptPath, ast );
          }
       }
-      self.mod2ast[ mod ] = ast;
+      self.mod2ast.add( mod, ast );
    }
 
    return updateFlag;
@@ -1465,7 +1471,7 @@ pub fn Front.build( astCallback:AstCallback! ) mut {
    Depend.profile(
       self.option.validProf,
       fn () {
-         self.mod2ast = {};
+         self.mod2ast.clear();
          if self.option.scriptPath == "@-" {
             let mut updateList:List<UpdateInfo> = [];
             while true {
@@ -1488,8 +1494,8 @@ pub fn Front.build( astCallback:AstCallback! ) mut {
          }
 
          when! astCallback {
-            forsort ast in self.mod2ast {
-               astCallback( ast );
+            foreach key in self.mod2ast.$keyList {
+               astCallback( unwrap self.mod2ast.$map[ key ] );
             }
          }
       }, self.option.scriptPath .. ".profi" );

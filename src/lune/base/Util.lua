@@ -245,6 +245,43 @@ function OrderedSet:get_list()
 end
 
 
+local OrderdMap = {}
+_moduleObj.OrderdMap = OrderdMap
+function OrderdMap.new(  )
+   local obj = {}
+   OrderdMap.setmeta( obj )
+   if obj.__init then obj:__init(  ); end
+   return obj
+end
+function OrderdMap:__init() 
+   self.map = {}
+   self.keyList = {}
+end
+function OrderdMap:clear(  )
+
+   self.map = {}
+   self.keyList = {}
+end
+function OrderdMap:add( key, val )
+
+   if self.map[key] then
+      return 
+   end
+   
+   self.map[key] = val
+   table.insert( self.keyList, key )
+end
+function OrderdMap.setmeta( obj )
+  setmetatable( obj, { __index = OrderdMap  } )
+end
+function OrderdMap:get_map()
+   return self.map
+end
+function OrderdMap:get_keyList()
+   return self.keyList
+end
+
+
 local memStream = {}
 setmetatable( memStream, { ifList = {oStream,} } )
 _moduleObj.memStream = memStream
@@ -401,7 +438,7 @@ local function getReadyCode( depPath, tgtPath )
       return true
    end
    
-   Log.log( Log.Level.Warn, __func__, 247, function (  )
+   Log.log( Log.Level.Warn, __func__, 270, function (  )
    
       return string.format( "not ready %g < %g : %s, %s", tgtTime, depTime, tgtPath, depPath)
    end )

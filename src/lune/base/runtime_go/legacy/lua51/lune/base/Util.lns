@@ -98,6 +98,29 @@ pub class OrderedSet<T> {
    }
 }
 
+pub class OrderdMap<KEY,VAL> {
+   let mut map:Map<KEY,VAL> {pub&};
+   let mut keyList:List<KEY> {pub&};
+
+   pub fn __init() {
+      self.map = {};
+      self.keyList = [];
+   }
+
+   pub fn clear() mut {
+      self.map = {};
+      self.keyList = [];
+   }
+
+   pub fn add( key:KEY, val:VAL ) mut {
+      if self.map[ key ] {
+         return;
+      }
+      self.map[ key ] = val;
+      self.keyList.insert( key );
+   }
+}
+
 pub class memStream extend (oStream) {
    let mut txt: Str.Builder;
    pub fn __init() {
