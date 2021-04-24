@@ -2654,6 +2654,69 @@ function Scope:getTypeInfoField( name, includeSelfFlag, fromScope, access )
 end
 
 
+function Scope:filterTypeInfoFieldAndIF( includeSelfFlag, fromScope, access, callback )
+
+   if self.classFlag then
+      if includeSelfFlag then
+         do
+            local __sorted = {}
+            local __map = self.symbol2SymbolInfoMap
+            for __key in pairs( __map ) do
+               table.insert( __sorted, __key )
+            end
+            table.sort( __sorted )
+            for __index, __key in ipairs( __sorted ) do
+               local symbolInfo = __map[ __key ]
+               do
+                  if symbolInfo:canAccess( fromScope, access ) then
+                     if not callback( symbolInfo ) then
+                        return false
+                     end
+                     
+                  end
+                  
+               end
+            end
+         end
+         
+      end
+      
+      do
+         local scope = self.inherit
+         if scope ~= nil then
+            if not scope:filterTypeInfoField( true, fromScope, access, callback ) then
+               return false
+            end
+            
+         end
+      end
+      
+   end
+   
+   
+   for __index, scope in ipairs( self.ifScopeList ) do
+      if not scope:filterTypeInfoField( true, fromScope, access, callback ) then
+         return false
+      end
+      
+   end
+   
+   
+   do
+      local scope = self.inherit
+      if scope ~= nil then
+         if not scope:filterSymbolInfoIfField( fromScope, access, callback ) then
+            return false
+         end
+         
+      end
+   end
+   
+   
+   return true
+end
+
+
 function Scope:getSymbolInfo( name, fromScope, onlySameNsFlag, access )
 
    do

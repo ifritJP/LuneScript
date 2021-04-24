@@ -1714,7 +1714,7 @@ pub fn Scope.getSymbolInfoIfField(
 /**
 このスコープからアクセス可能なフィールドを列挙し callback を実行する。
 
-インタフェースを含む。
+インタフェースのみ。
 */
 pub fn Scope.filterSymbolInfoIfField(
    fromScope:&Scope, access:ScopeAccess, callback:filterForm ) : bool
@@ -1749,6 +1749,57 @@ pub fn Scope.getTypeInfoField(
    }
    return nil;
 }
+
+
+/**
+このスコープからアクセス可能なフィールドを列挙し callback を実行する。
+
+クラスと IF 両方を列挙する。
+
+@param includeSelfFlag true の場合、
+自分自身のスコープに登録されているシンボルを列挙対象にする。
+@param fromScope アクセスを開始しているスコープ。
+@param callback コールバック。
+@return bool 列挙を続ける場合 true
+*/
+pub fn Scope.filterTypeInfoFieldAndIF(
+   includeSelfFlag: bool!, fromScope:&Scope,
+   access:ScopeAccess, callback:filterForm ):bool
+{
+   if self.classFlag {
+      if includeSelfFlag {
+         forsort symbolInfo in self.symbol2SymbolInfoMap {
+            if symbolInfo.canAccess( fromScope, access ) {
+               if not callback( symbolInfo ) {
+                  return false;
+               }
+            }
+         }
+      }
+      if! let scope = self.inherit {
+         if not scope.filterTypeInfoField( true, fromScope, access, callback ) {
+            return false;
+         }
+      }
+   }
+
+   foreach scope in self.ifScopeList {
+      if not scope.filterTypeInfoField(
+         true, fromScope, access, callback ) {
+         return false;
+      }
+   }
+
+   if! let scope = self.inherit {
+      if not scope.filterSymbolInfoIfField(
+         fromScope, access, callback ) {
+         return false;
+      }
+   }
+
+   return true;
+}
+
 
 
 /**
