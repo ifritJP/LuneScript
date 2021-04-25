@@ -121,6 +121,8 @@ pub fn createBinding( makeDir:str, baseDir:str, enableByteCompile:bool ) : bool 
             ostream.write( "//go:embed %s\n" ( path.$embedPath ) );
             ostream.write( "var %s []byte\n" (path.$varSym) );
          }
+         ostream.write( "//go:embed Testing.meta\n"  );
+         ostream.write( "var meta_lune_base_Testing string\n" );
 
          
          ostream.write( "func init() {\n" );
@@ -142,6 +144,9 @@ pub fn createBinding( makeDir:str, baseDir:str, enableByteCompile:bool ) : bool 
             }
             output( ostream, path.$modPath );
          }
+         // Testing モジュールが使えるように、 Testing の Meta を入れておく
+         ostream.write(
+            'AddlnsMetaInfo( "lune.base.Testing", meta_lune_base_Testing )' );
          ostream.write( "}\n" );
          ostream.close();
          return true;

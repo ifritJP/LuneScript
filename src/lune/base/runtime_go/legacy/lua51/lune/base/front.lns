@@ -74,6 +74,10 @@ class Front extend (frontInterface.frontInterface) {
    let mut gomodMap:GoMod.ModInfo;
    let allmut mod2ast:Util.OrderdMap<str,TransUnit.ASTInfo>;
 
+   let mut bindModuleSet:Set<str>;
+
+   
+
    /**
 front で import しているものは、
 loadedMap で管理する前にシステムにロードされているため、
@@ -83,7 +87,13 @@ loadedMap で管理する前にシステムにロードされているため、
    let preloadedModMap:&Map<str,Luaval<&stem>>;
 
    
-   pub fn __init( option:&Option.Option ) {
+   pub fn __init( option:&Option.Option, bindModuleList:&List<str>! ) {
+      self.bindModuleSet = (@);
+      when! bindModuleList {
+         foreach mod in bindModuleList {
+            self.bindModuleSet.add( mod );
+         }
+      }
       self.mod2ast = new Util.OrderdMap<str,TransUnit.ASTInfo>();
       self.gomodMap = GoMod.getGoMap();
       self.option = option;
@@ -207,7 +217,7 @@ fn loadFromChunk( chunk:Luaval<form>!, err:str! ): Luaval<&stem>! {
    error( "failed to error" );
 }
 
-fn loadFromLuaTxt( txt:str ): Luaval<&stem>! {
+pub fn loadFromLuaTxt( txt:str ): Luaval<&stem>! {
    //--print( txt )
    return loadFromChunk( _load( txt ## )** );
 }
@@ -575,6 +585,7 @@ fn Front.loadFile(
       return meta, preLoadInfo;
    }
    return meta, unwrap loadFromLuaTxt( luaTxt );
+   //return meta, unwrap convLua.runLuaOnLns( luaTxt );
 }
 
 
@@ -652,7 +663,6 @@ fn Front.checkUptodateMeta( metaPath:str, addSearchPath:str! ) mut : Luaval<&ste
    return meta;
 }
 
-
 /**
 mod のモジュールをロードする。
 
@@ -709,6 +719,16 @@ fn Front.loadModule( mut mod:str ) mut : Luaval<&stem>!, Luaval<&stem> {
 	       let meta, mut workVal = self.loadFile(
                   new frontInterface.ImportModuleInfo(), lnsPath, mod );
 	       self.setLoadInfo( mod, new LoadInfo( workVal, meta ) );
+            }
+         } else {
+            // lns ファイルがない場合、 binding からロードする。
+            if self.bindModuleSet.has( mod ) {
+               // require( mod ) することで、 bind しているモジュールをロードする。
+               let workMod = require( mod );
+               // meta は使用しないのでダミーで生成する。
+               // 将来 meta を利用することになった場合は、修正が必要。             
+               let meta = unwrap loadFromLuaTxt( "return {}" );
+	       self.setLoadInfo( mod, new LoadInfo( workMod, meta ) );
             }
          }
       }
@@ -777,10 +797,18 @@ fn Front.loadMeta(
 	       self.loadedMetaMap[ mod ] = metawork;
                self.convertedMap[ mod ] = luaTxt;
             }
+         } else {
+            if! let metaTxt = Depend.getBindMeta( mod ) {
+	       self.loadedMetaMap[ mod ] = unwrap loadFromLuaTxt( metaTxt );
+            }
          }
       }
    }
-   return self.loadedMetaMap[ mod ];
+
+   if! let meta = self.loadedMetaMap[ mod ] {
+      return meta;
+   }
+   return nil;
 }
 
 pub fn Front.dumpTokenize( scriptPath:str ) mut {
@@ -1442,7 +1470,7 @@ pub fn convertLnsCode2LuaCode( lnsCode:str, path:str ) : str
    option.scriptPath = path;
    option.useLuneModule = Option.getRuntimeModule();
    option.useIpairs = true;
-   let mut front = new Front( option );
+   let mut front = new Front( option ## );
    
    return front.convertLns2LuaCode(
       new frontInterface.ImportModuleInfo(),
@@ -1502,7 +1530,7 @@ pub fn Front.build( astCallback:AstCallback! ) mut {
 }
 
 pub fn build( option:Option.Option, astCallback:AstCallback ) mut {
-   let mut front = new Front( option );
+   let mut front = new Front( option ## );
    front.build( astCallback );
 }
 
@@ -1546,6 +1574,13 @@ pub fn Front.exec() mut
          }
       }
       case .Exec {
+         // let _, luaCode = self.loadFileToLuaCode(
+         //    new frontInterface.ImportModuleInfo(),
+         //    self.option.scriptPath, scriptPath2Module( self.option.scriptPath ) );
+         // let! modObj, errMess = convLua.runLuaOnLns( luaCode ) {
+         //    print( errMess );
+         //    os.exit( 1 );
+         // };
          let modObj = self.loadModule( scriptPath2Module( self.option.scriptPath ) );
 
          if self.option.testing {
@@ -1599,16 +1634,16 @@ pub fn exec( args: &List<str> ) {
    }
 
    let mut option = Option.analyze( args );
-   let mut front = new Front( option );
+   let mut front = new Front( option ## );
 
    front.exec();
 }
 
 // frontInterface.setFront( self ); で front を確定させるため
 // go の runtime_go/depend.go から、初期化処理として呼ぶ。
-pub fn setFront() {
+pub fn setFront( bindModuleList:&List<str> ) {
    let mut option = Option.createDefaultOption( "dummy.lns" );
-   new Front( option );
+   new Front( option, bindModuleList );
 }
 
 __test case1(ctrl) {

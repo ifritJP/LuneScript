@@ -96,7 +96,7 @@ func ConvLua_createFilter(streamName string,stream Lns_oStream,metaStream Lns_oS
 }
 
 // 3470: decl @lune.@base.@convLua.runLuaOnLns
-func convLua_runLuaOnLns_1660_(code string)(LnsAny, string) {
+func ConvLua_runLuaOnLns(code string)(LnsAny, string) {
     var loadFunc LnsAny
     var err string
     loadFunc,err = DependLuaOnLns_runLuaOnLns(code)
@@ -3945,7 +3945,7 @@ func (self *ConvLua_MacroEvalImp) evalFromMacroCode(code string) *Lns_luaValue {
     
     var _func LnsAny
     var err string
-    _func,err = convLua_runLuaOnLns_1660_(code)
+    _func,err = ConvLua_runLuaOnLns(code)
     if _func != nil{
         func_7375 := _func
         return func_7375.(*Lns_luaValue)

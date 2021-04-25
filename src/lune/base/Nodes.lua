@@ -7395,6 +7395,10 @@ function GetFieldNode:canBeRight( processInfo )
 
    return true
 end
+function GetFieldNode:canBeLeft(  )
+
+   return false
+end
 function GetFieldNode:canBeStatement(  )
 
    return false
@@ -7474,18 +7478,6 @@ end
 function GetFieldNode:get_effectivePos(  )
 
    return self.field.pos
-end
-
-function GetFieldNode:canBeLeft(  )
-
-   do
-      local _exp = self:get_symbolInfo()
-      if _exp ~= nil then
-         return _exp:get_canBeLeft()
-      end
-   end
-   
-   return false
 end
 
 function GetFieldNode:getPrefix(  )
@@ -12535,7 +12527,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, _10732 in pairs( self.map ) do
+   for key, _10730 in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -12570,8 +12562,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, _10746 in ipairs( __sorted ) do
-         local key = __map[ _10746 ]
+      for __index, _10744 in ipairs( __sorted ) do
+         local key = __map[ _10744 ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false

@@ -1597,7 +1597,7 @@ pub override fn RefFieldNode.canBeRight( processInfo:Ast.ProcessInfo ):bool {
    return true;
 }
 
-_declNodeClass( "GetField", Node, nil, true, false,
+_declNodeClass( "GetField", Node, false, true, false,
                 [ { "field": "&Parser.Token" },
                   //{ "overrideCanBeLeft": "bool!" },
                   { "symbolInfo": "&Ast.SymbolInfo!" },
@@ -1608,15 +1608,6 @@ _declNodeClass( "GetField", Node, nil, true, false,
 );
 pub override fn GetFieldNode.get_effectivePos(): &Parser.Position {
    return self.field.pos;
-}
-pub override fn GetFieldNode.canBeLeft():bool {
-   if! self.$symbolInfo {
-      return _exp.$canBeLeft;
-   }
-   // if! self.overrideCanBeLeft {
-   //    return _exp;
-   // }
-   return false;
 }
 pub override fn GetFieldNode.getPrefix() : &Node! {
    return self.prefix;

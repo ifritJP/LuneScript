@@ -105,8 +105,20 @@ func Depend_canUseAsync() bool {
 var DependLuaOnLns_runLuaOnLnsFunc func(luaCode string) (LnsAny,string) = nil
 
 func DependLuaOnLns_runLuaOnLns( luaCode string ) (LnsAny,string) {
+
+    setBindListStr := ""
+    for key, _ := range( lnsSrcMap ) {
+        setBindListStr = fmt.Sprintf(
+            "%s\ntable.insert( bindModuleList, '%s' )", setBindListStr, key )
+    }
+    
     txt := fmt.Sprintf(`
 local DependLuaOnLns = require( 'lune.base.DependLuaOnLns' )
+local Depend = require( 'lune.base.Depend' )
+
+local bindModuleList = {}
+%s
+
 
 -- 高速性最重視のため、 __luneScript に直接アクセスする
 local WrapFront = {}
@@ -120,7 +132,7 @@ function WrapFront:setupFront()
    __luneScript = nil
    self.readyFront = true
    local Front = require( 'lune.base.front' )
-   Front.setFront()
+   Front.setFront( bindModuleList )
 end
 function WrapFront:loadModule( mod )
    self:setupFront()
@@ -143,7 +155,7 @@ function WrapFront:error( message )
    return __luneScript:error( message )
 end
 function WrapFront.setmeta( obj )
-  setmetatable( obj, { __index = WrapFront  } )
+  setmetatable( obj, { __index = WrapFront } )
 end
 function WrapFront.new(  )
    local obj = {}
@@ -157,7 +169,7 @@ _lnsLoad = function( name, code )
    __luneScript = nil
    local frontInterface = require( 'lune.base.frontInterface' )
    local Front = require( 'lune.base.front' )
-   Front.setFront()
+   Front.setFront( bindModuleList )
    local importModuleInfo = frontInterface.ImportModuleInfo.new();
    return frontInterface.loadFromLnsTxt( importModuleInfo, name, code )
 end
@@ -167,12 +179,14 @@ local txt=[==[
 ]==]
 
 return DependLuaOnLns.runLuaOnLns( txt )
-`, luaCode);
+    `, setBindListStr, luaCode);
+
+    
 
     luaVM := Lns_getVM()
     loaded, err := luaVM.Load( txt, nil )
     if loaded != nil {
-        ret := luaVM.RunLoadedfunc( loaded.(*Lns_luaValue), []LnsAny{} );
+        ret := luaVM.RunLoadedfunc( loaded.(*Lns_luaValue), []LnsAny{} )
         return ret[ 0 ], ""
     }
     if err != nil {
@@ -186,10 +200,10 @@ func Lns_DependLuaOnLns_init() {
 func Depend_runMain( mainFunc LnsAny, argList *LnsList ) LnsInt {
     if !Lns_IsNil( mainFunc ) {
         luaVM := Lns_getVM()
-        ret := luaVM.RunLoadedfunc( mainFunc.(*Lns_luaValue), []LnsAny{ argList } );
-        return ret[ 0 ].(LnsInt);
+        ret := luaVM.RunLoadedfunc( mainFunc.(*Lns_luaValue), []LnsAny{ argList } )
+        return ret[ 0 ].(LnsInt)
     }
-    return -1;
+    return -1
 }
 
 func Depend_getGOPATH() LnsAny {
@@ -197,9 +211,9 @@ func Depend_getGOPATH() LnsAny {
     if !exist {
         val, exist = os.LookupEnv( "HOME" )
         if !exist {
-            return nil;
+            return nil
         }
-        return path.Join( val, "go" );
+        return path.Join( val, "go" )
     }
-    return val;
+    return val
 }

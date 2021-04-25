@@ -2021,7 +2021,7 @@ _DefBuiltinFuncType( [
          "tostring": { "arg": [ "&stem" ], "ret": ["str"] },
          //"load": { "arg": [ "str", "str!", "str!", "stem!" ], "ret": ["form!", "str!"] },
          "loadfile": { "arg": [ "str" ], "ret": ["Luaval<form>!", "str!"] },
-         "require": { "arg": [ "str" ], "ret": ["Luaval<stem>!"] },
+         "require": { "arg": [ "str" ], "ret": ["Luaval<stem>"] },
          "collectgarbage": { "arg": [ ], "ret": [] },
          "_fcall": { "arg": [ "form", "&..." ], "ret": [""] },
          "_load": { "arg": [ "str", "stem!" ], "ret": ["Luaval<form>!", "str!"] },

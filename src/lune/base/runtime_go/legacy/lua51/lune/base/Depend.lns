@@ -180,3 +180,7 @@ pub fn getGOPATH() : str! {
    }
    return nil;
 }
+
+pub fn getBindMeta( mod:str ) : str! {
+   return nil;
+}

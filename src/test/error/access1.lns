@@ -1,25 +1,24 @@
 class Super {
-    pri let val1: int;
-    pro let val2: int;
-    pub let val3: int;
+   pri let val1: int {pub};
+   pro let val2: int;
+   pub let val3: int;
 
-    pri fn func1() {
-    }
-    pro fn func2() {
-    }
-    pub fn func3() {
-    }
+   pri fn func1() {
+   }
+   pro fn func2() {
+   }
+   pub fn func3() {
+   }
 }
 
 class Sub extend Super {
-    pub fn __init() {
-        super( 1, 2, 3 );
-    }
-    pub fn test() {
-        self.func3();
-        self.func2();
-        self.func1();
-    }
+   pub fn __init() {
+      super( 1, 2, 3 );
+   }
+   pub fn test() {
+      self.$val1 = 1; // error
+      self.func3();
+      self.func2();
+      self.func1(); // error
+   }
 }
-
-

@@ -4179,6 +4179,7 @@ local function runLuaOnLns( code )
    
    return nil, err
 end
+_moduleObj.runLuaOnLns = runLuaOnLns
 
 local MacroEvalImp = {}
 setmetatable( MacroEvalImp, { __index = Nodes.MacroEval } )

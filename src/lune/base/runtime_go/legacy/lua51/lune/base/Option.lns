@@ -269,6 +269,7 @@ usage:
      - unneed0: without '.0'.
 
   common_op:
+    --testing: enable test.
     -u: update meta and lua on load.
     -Werror: error by warrning.
     --log <mode>: set log level.

@@ -283,7 +283,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 7242
+   return 7309
 end
 
 
@@ -582,6 +582,7 @@ usage:
      - unneed0: without '.0'.
 
   common_op:
+    --testing: enable test.
     -u: update meta and lua on load.
     -Werror: error by warrning.
     --log <mode>: set log level.
@@ -962,7 +963,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 579, function (  )
+   Log.log( Log.Level.Log, __func__, 580, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

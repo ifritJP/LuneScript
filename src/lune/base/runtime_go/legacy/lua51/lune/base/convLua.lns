@@ -3467,7 +3467,7 @@ pub fn createFilter(
       moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest, useIpairs );
 }
 
-fn runLuaOnLns( code:str ): Luaval<&stem>!, str {
+pub fn runLuaOnLns( code:str ): Luaval<&stem>!, str {
    let loadFunc, err = DependLuaOnLns.runLuaOnLns( code );
    when! loadFunc {
       let mod = loadFunc();

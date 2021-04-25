@@ -93,8 +93,20 @@ type Lns_luaVM struct {
     regexCache *RegexpCache
 }
 
+var lnsMetaMap map[string] string
+func AddlnsMetaInfo( key string, code string ) {
+    lnsMetaMap[ key ] = code
+}
+func Depend_getBindMeta( mod string ) LnsAny {
+    if code, has := lnsMetaMap[ mod ]; has {
+        return code;
+    }
+    return nil;
+}
+
 
 func init() {
+    lnsMetaMap = map[string] string {}
     lns_globalValSym = Lns_toRawStr( lns_globalValMapName )
     lns_defaultPushedVal = &lns_pushedVal{}
 }

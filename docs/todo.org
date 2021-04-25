@@ -8,14 +8,6 @@
 
 * バグ
 
-- [ ] getter への代入がエラーしない
-class Hoge {
-   local let mut val:int {pub};
-}
-let hoge = new Hoge( 1 );
-hoge.$val = 2; // error しない
-  
-  
 - [ ] gopherlua で、 lunescript の preload 対応できていない。
       これが出来ないと、lnstags の gopherlua 版が動かない。
 - [ ] go では、キャスト先の型を定義しているモジュールのインポートが必要。
@@ -925,6 +917,13 @@ fn func() {
    print( _ ); // error
    print( val2 );
 }
+
+- [X] getter への代入がエラーしない
+class Hoge {
+   local let mut val:int {pub};
+}
+let hoge = new Hoge( 1 );
+hoge.$val = 2; // error しない
 
 
   

@@ -140,6 +140,20 @@ endif
 endif
 
 
+ifeq ($(WITH_GO),y)
+# lnsc がシングルファイルでも、バインドしているコードがロードされることを確認する
+define check_singleBin
+	mkdir -p work/$3
+	cp $1 work/$3
+	cp -a test work/$3
+	(cd work/$3; ./lnsc test/testing.lns exe --testing 2>&1) >> $2
+endef
+else
+define check_singleBin
+endef
+endif
+
+
 
 define cutMeta
 	(cd work/$2/lune/base; cat $1.lua | awk '/^----- meta/{META++;}; //{if (META != 1) {print $$0}} ' > $1.cut.lua )
@@ -702,6 +716,7 @@ ifndef SKIP_CHECKING_TESTING
 # 現状、CI 環境では --testing が正常が動かないので、ここは skip する
 	$(call exeLune,$(LNSC),.,test/testing.lns,exe, --testing $(EXE_OPT) 2>&1) >> work/test1.result
 endif
+	$(call check_singleBin,lnsc,work/test1.result,testpack1) 
 
 test-org-proj:
 ifndef SKIP_PROJ_TEST
@@ -741,6 +756,7 @@ ifndef SKIP_CHECKING_TESTING
 # 現状、CI 環境では --testing が正常が動かないので、ここは skip する
 	$(call exeLune,$(LNSC),work/3,test/testing.lns,exe,--testing $(EXE_OPT) 2>&1) >> work/test2.result
 endif
+	$(call check_singleBin,work/3/lnsc,work/test2.result,testpack2) 
 
 
 test-new-proj:
