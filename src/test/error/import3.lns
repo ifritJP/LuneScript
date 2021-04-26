@@ -3,7 +3,7 @@ fn func() {
    import test.error.Sub6 as FOO;
    
    print( Sub5.Sub5enum.val1.$_txt );
-   let test = new FOO.Test();
+   let test = new FOO.Test( 1 );
 }
 
 func();

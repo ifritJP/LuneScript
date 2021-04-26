@@ -827,7 +827,7 @@ function convFilter:outputMeta( node )
                self:writeln( string.format( "__typeId2ClassInfoMap[ %d ] = __classInfo%d", classTypeId, classTypeId) )
                
                for __index, memberNode in ipairs( _lune.unwrap( self.classId2MemberList[classTypeId]) ) do
-                  if memberNode:get_accessMode() ~= Ast.AccessMode.Pri then
+                  if Ast.isPubToExternal( memberNode:get_accessMode() ) then
                      local memberName = memberNode:get_name().txt
                      local memberTypeInfo = memberNode:get_expType(  )
                      self:writeln( string.format( "__classInfo%d.%s = {", classTypeId, memberName) )
@@ -1969,7 +1969,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _6354 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _6382 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end

@@ -90,7 +90,7 @@ pub class Filter<T>  {
       return self.moduleInfoManager;
    }
 
-   pro fn getFull( typeInfo:&Ast.TypeInfo, localFlag:bool ) : str {
+   pub fn getFull( typeInfo:&Ast.TypeInfo, localFlag:bool ) : str {
       return typeInfo.getFullName( self.typeNameCtrl, self.moduleInfoManager, localFlag );
    }
 }
@@ -303,8 +303,19 @@ pub abstract class Node {
    pub fn isThreading(): bool {
       return false;
    }
-   
 
+   /**
+_declNodeClass ではカバーできない visit() のカスタマイズ用
+
+@param visitor コールバック
+@param depth 階層
+@return visit を継続する場合 true
+   */ 
+   pub fn visitSub( visitor:NodeVisitor, depth:int ) : bool {
+      return true;
+   }
+
+   /** _declNodeClass で自動で定義される。 */
    pub abstract fn visit( visitor:NodeVisitor, depth:int ): bool;
 }
 
@@ -694,7 +705,7 @@ macro _declNodeClass(
 
       pub override fn visit( visitor:NodeVisitor, depth:int ): bool {
          ,,visitStatList;
-         return true;
+         return self.visitSub( visitor, depth );
       }
    }
 }
@@ -1510,7 +1521,8 @@ pub override fn ExpParenNode.getSymbolInfo(): &List<&Ast.SymbolInfo> {
 
 /** マクロ展開後のノード */
 _declNodeClass( "ExpMacroExp", Node, false, nil, true,
-                [ { "stmtList": "List<&Node>" } ]
+                [ { "macroType": "&Ast.TypeInfo" },
+                  { "stmtList": "List<&Node>" } ]
 );
 
 pub override fn ExpMacroExpNode.canBeRight( processInfo:Ast.ProcessInfo ):bool {
@@ -1719,6 +1731,18 @@ pub override fn DeclVarNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
    return .None;
 }
 
+pub override fn DeclVarNode.visitSub( visitor:NodeVisitor, depth:int ) : bool {
+   foreach varInfo in self.varList {
+      if! let refTypeNode = varInfo.$refType {
+         if not refTypeNode.visit( visitor, depth + 1 ) {
+            return false;
+         }
+      }
+   }
+   return true;
+}
+
+
 
 _declNodeClass( "DeclForm", Node, false, false, true,
                 [ { "argList": "&List<&Node>" } ]
@@ -1839,15 +1863,41 @@ pub class AdvertiseInfo {
 _declNodeClass( "DeclAdvertise", Node, false, false, false,
                 [ { "advInfo" : "&AdvertiseInfo" } ] );
 
-_declNodeClass( "ProtoClass", Node, false, false, true,
-                [ { "name": "&Parser.Token" } ] );
 
+pub class ClassInheritInfo {
+   let base: &RefTypeNode! {pub};
+   let impliments: &List<&RefTypeNode> {pub};
+
+   pub fn visit( visitor:NodeVisitor, depth:int ) : bool {
+      if! let base = self.base {
+         if not base.visit( visitor, depth + 1 ) {
+            return false;
+         }
+      }
+      foreach ifTypeNode in self.impliments {
+         if not ifTypeNode.visit( visitor, depth + 1 ) {
+            return false;
+         }
+      }
+      return true;
+   }
+}
+
+_declNodeClass( "ProtoClass", Node, false, false, true,
+                [ { "name": "&Parser.Token" },
+                  { "inheritInfo": "&ClassInheritInfo" } ] );
+
+pub override fn ProtoClassNode.visitSub( visitor:NodeVisitor, depth:int ) : bool {
+   return self.inheritInfo.visit( visitor, depth );
+}
+   
 pub class ClassInitBlockInfo {
    pri let mut func: &DeclMethodNode! {pub,pub};
 }
 _declNodeClass( "DeclClass", Node, false, false, true,
                 [ { "accessMode": "Ast.AccessMode" },
                   { "name": "&Parser.Token" },
+                  { "inheritInfo": "&ClassInheritInfo" },
                   { "hasPrototype": "bool" },
                   { "gluePrefix": "str!" },
                   { "moduleName": "&Parser.Token!" },
@@ -1885,6 +1935,10 @@ _declNodeClass( "DeclClass", Node, false, false, true,
                    */                 
                   { "outerMethodSet": "Set<str>" } ]
 );
+
+pub override fn DeclClassNode.visitSub( visitor:NodeVisitor, depth:int ) : bool {
+   return self.inheritInfo.visit( visitor, depth );
+}
 
 pub fn DeclClassNode.isModule() : bool {
    return self.moduleName ~= nil;
@@ -1942,6 +1996,7 @@ _declNodeClass( "DeclEnum", Node, false, false, true,
 _declNodeClass( "DeclAlge", Node, false, false, true,
                 [ { "accessMode": "Ast.AccessMode" },
                   { "algeType": "&Ast.AlgeTypeInfo"},
+                  { "name": "&Parser.Token" },
                   { "scope": "&Ast.Scope" } ]
 );
 

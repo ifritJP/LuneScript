@@ -1590,8 +1590,9 @@ fn convFilter.processBuiltin() mut : &Nodes.NodeManager
                
                Nodes.DeclClassNode.create(
                   nodeManager, dummyPos, false, [ classInfo ], .Pub,
-                  new Parser.Token( .Symb, classInfo.$rawTxt, dummyPos, false## ), false,
-                  classInfo.$rawTxt, nil, nil, .Off,
+                  new Parser.Token( .Symb, classInfo.$rawTxt, dummyPos, false## ),
+                  new Nodes.ClassInheritInfo( nil, [] ),
+                  false, classInfo.$rawTxt, nil, nil, .Off,
                   false, fieldList, [], fieldList, [], classScope,
                   new Nodes.ClassInitBlockInfo( nil ), [], [], [], (@));
 

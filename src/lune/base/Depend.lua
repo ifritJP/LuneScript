@@ -405,10 +405,10 @@ local function getGOPATH(  )
 end
 _moduleObj.getGOPATH = getGOPATH
 
-local function getBindMeta( mod )
+local function getBindLns( mod )
 
    return nil
 end
-_moduleObj.getBindMeta = getBindMeta
+_moduleObj.getBindLns = getBindLns
 
 return _moduleObj

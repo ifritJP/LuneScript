@@ -57,6 +57,7 @@
       (switch-to-buffer (lns-get-buffer "*lns-inq*" t))
       (if (not info)
 	  (insert "not support")
+	(insert (format "access: %s\n" (lns-json-val info :access)))
 	(insert (format "name: %s\n" (lns-json-val info :name)))
 	(insert (format "type: %s\n" (lns-json-val info :type)))
 	(insert (format "typeKind: %s\n" (lns-json-val info :typeKind)))

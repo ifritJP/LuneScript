@@ -2026,7 +2026,7 @@ pub fn Scope.addStaticVar(
 {
    return self.add(
       processInfo, argFlag and SymbolKind.Arg or SymbolKind.Var,
-      canBeLeft, true, name, pos, typeInfo, .Local, true, mutable, true, false )**;
+      canBeLeft, true, name, pos, typeInfo, .Pub, true, mutable, true, false )**;
 }
 
 pub fn Scope.addVar(
@@ -2456,7 +2456,12 @@ pub override fn NormalSymbolInfo.canAccess(
          return nil;
       }
       case .Local {
-         return self;
+         if isBuiltin( self.$typeInfo.$typeId ) or 
+            self.getModule() == fromScope.getModule()
+         {
+            return self;
+         }
+         return nil;
       }
       case .Pri {
          // let nsClass = self.scope.getClassTypeInfo();
@@ -3412,6 +3417,7 @@ pub fn getEnumLiteralVal( obj:EnumLiteral ) : stem {
 pub class EnumValInfo {
    pri let name: str {pub};
    pri let val:EnumLiteral {pub};
+   pri let symbolInfo: &SymbolInfo {pub};
 }
 
 pub class EnumTypeInfo extend TypeInfo {
@@ -3627,6 +3633,7 @@ pub class AlgeValInfo {
    pri let name: str {pub};
    pri let typeList:&List<&TypeInfo> {pub};
    pri let algeTpye:&AlgeTypeInfo {pub};
+   pri let symbolInfo:&SymbolInfo {pub};
 
    pub fn serialize( stream: oStream ) {
       stream.write( "{ name = '%s', typeList = {" (self.name) );

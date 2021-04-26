@@ -618,6 +618,10 @@ function Node:isThreading(  )
 
    return false
 end
+function Node:visitSub( visitor, depth )
+
+   return true
+end
 function Node.setmeta( obj )
   setmetatable( obj, { __index = Node  } )
 end
@@ -751,7 +755,7 @@ end
 function NodeManager:__init() 
    self.idSeed = 0
    self.nodeKind2NodeList = {}
-   for kind, _2669 in pairs( nodeKind2NameMap ) do
+   for kind, _2679 in pairs( nodeKind2NameMap ) do
       if not self.nodeKind2NodeList[kind] then
          self.nodeKind2NodeList[kind] = {}
       end
@@ -899,7 +903,7 @@ end
 function NoneNode:visit( visitor, depth )
 
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function NoneNode.setmeta( obj )
   setmetatable( obj, { __index = NoneNode  } )
@@ -973,7 +977,7 @@ end
 function ShebangNode:visit( visitor, depth )
 
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ShebangNode.setmeta( obj )
   setmetatable( obj, { __index = ShebangNode  } )
@@ -1050,7 +1054,7 @@ end
 function ConvStatNode:visit( visitor, depth )
 
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ConvStatNode.setmeta( obj )
   setmetatable( obj, { __index = ConvStatNode  } )
@@ -1127,7 +1131,7 @@ end
 function BlankLineNode:visit( visitor, depth )
 
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function BlankLineNode.setmeta( obj )
   setmetatable( obj, { __index = BlankLineNode  } )
@@ -1203,7 +1207,7 @@ end
 function SubfileNode:visit( visitor, depth )
 
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function SubfileNode.setmeta( obj )
   setmetatable( obj, { __index = SubfileNode  } )
@@ -1316,7 +1320,7 @@ end
 function ImportNode:visit( visitor, depth )
 
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ImportNode.setmeta( obj )
   setmetatable( obj, { __index = ImportNode  } )
@@ -1610,7 +1614,7 @@ function RootNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function RootNode.setmeta( obj )
   setmetatable( obj, { __index = RootNode  } )
@@ -1769,7 +1773,7 @@ function RefTypeNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function RefTypeNode.setmeta( obj )
   setmetatable( obj, { __index = RefTypeNode  } )
@@ -1962,7 +1966,7 @@ function BlockNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function BlockNode.setmeta( obj )
   setmetatable( obj, { __index = BlockNode  } )
@@ -2063,7 +2067,7 @@ function EnvNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function EnvNode.setmeta( obj )
   setmetatable( obj, { __index = EnvNode  } )
@@ -2187,7 +2191,7 @@ function ScopeNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ScopeNode.setmeta( obj )
   setmetatable( obj, { __index = ScopeNode  } )
@@ -2406,7 +2410,7 @@ end
 function IfNode:visit( visitor, depth )
 
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function IfNode.setmeta( obj )
   setmetatable( obj, { __index = IfNode  } )
@@ -2580,7 +2584,7 @@ function ExpListNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ExpListNode.setmeta( obj )
   setmetatable( obj, { __index = ExpListNode  } )
@@ -2835,7 +2839,7 @@ function SwitchNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function SwitchNode.setmeta( obj )
   setmetatable( obj, { __index = SwitchNode  } )
@@ -3057,7 +3061,7 @@ function WhileNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function WhileNode.setmeta( obj )
   setmetatable( obj, { __index = WhileNode  } )
@@ -3176,7 +3180,7 @@ function RepeatNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function RepeatNode.setmeta( obj )
   setmetatable( obj, { __index = RepeatNode  } )
@@ -3347,7 +3351,7 @@ function ForNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ForNode.setmeta( obj )
   setmetatable( obj, { __index = ForNode  } )
@@ -3486,7 +3490,7 @@ function ApplyNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ApplyNode.setmeta( obj )
   setmetatable( obj, { __index = ApplyNode  } )
@@ -3625,7 +3629,7 @@ function ForeachNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ForeachNode.setmeta( obj )
   setmetatable( obj, { __index = ForeachNode  } )
@@ -3771,7 +3775,7 @@ function ForsortNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ForsortNode.setmeta( obj )
   setmetatable( obj, { __index = ForsortNode  } )
@@ -3899,7 +3903,7 @@ function ReturnNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ReturnNode.setmeta( obj )
   setmetatable( obj, { __index = ReturnNode  } )
@@ -3979,7 +3983,7 @@ end
 function BreakNode:visit( visitor, depth )
 
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function BreakNode.setmeta( obj )
   setmetatable( obj, { __index = BreakNode  } )
@@ -4059,7 +4063,7 @@ end
 function ProvideNode:visit( visitor, depth )
 
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ProvideNode.setmeta( obj )
   setmetatable( obj, { __index = ProvideNode  } )
@@ -4178,7 +4182,7 @@ function ExpNewNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ExpNewNode.setmeta( obj )
   setmetatable( obj, { __index = ExpNewNode  } )
@@ -4302,7 +4306,7 @@ function ExpUnwrapNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ExpUnwrapNode.setmeta( obj )
   setmetatable( obj, { __index = ExpUnwrapNode  } )
@@ -4374,7 +4378,7 @@ end
 function ExpRefNode:visit( visitor, depth )
 
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ExpRefNode.setmeta( obj )
   setmetatable( obj, { __index = ExpRefNode  } )
@@ -4502,7 +4506,7 @@ function ExpSetValNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ExpSetValNode.setmeta( obj )
   setmetatable( obj, { __index = ExpSetValNode  } )
@@ -4646,7 +4650,7 @@ function ExpSetItemNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ExpSetItemNode.setmeta( obj )
   setmetatable( obj, { __index = ExpSetItemNode  } )
@@ -4771,7 +4775,7 @@ function ExpOp2Node:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ExpOp2Node.setmeta( obj )
   setmetatable( obj, { __index = ExpOp2Node  } )
@@ -4916,7 +4920,7 @@ function UnwrapSetNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function UnwrapSetNode.setmeta( obj )
   setmetatable( obj, { __index = UnwrapSetNode  } )
@@ -5059,7 +5063,7 @@ function IfUnwrapNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function IfUnwrapNode.setmeta( obj )
   setmetatable( obj, { __index = IfUnwrapNode  } )
@@ -5297,7 +5301,7 @@ function WhenNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function WhenNode.setmeta( obj )
   setmetatable( obj, { __index = WhenNode  } )
@@ -5517,7 +5521,7 @@ function ExpCastNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ExpCastNode.setmeta( obj )
   setmetatable( obj, { __index = ExpCastNode  } )
@@ -5634,7 +5638,7 @@ function ExpToDDDNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ExpToDDDNode.setmeta( obj )
   setmetatable( obj, { __index = ExpToDDDNode  } )
@@ -5730,7 +5734,7 @@ function ExpSubDDDNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ExpSubDDDNode.setmeta( obj )
   setmetatable( obj, { __index = ExpSubDDDNode  } )
@@ -5863,7 +5867,7 @@ function ExpOp1Node:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ExpOp1Node.setmeta( obj )
   setmetatable( obj, { __index = ExpOp1Node  } )
@@ -5994,7 +5998,7 @@ function ExpRefItemNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ExpRefItemNode.setmeta( obj )
   setmetatable( obj, { __index = ExpRefItemNode  } )
@@ -6145,7 +6149,7 @@ function ExpCallNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ExpCallNode.setmeta( obj )
   setmetatable( obj, { __index = ExpCallNode  } )
@@ -6283,7 +6287,7 @@ function ExpMRetNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ExpMRetNode.setmeta( obj )
   setmetatable( obj, { __index = ExpMRetNode  } )
@@ -6384,7 +6388,7 @@ function ExpAccessMRetNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ExpAccessMRetNode.setmeta( obj )
   setmetatable( obj, { __index = ExpAccessMRetNode  } )
@@ -6487,7 +6491,7 @@ function ExpMultiTo1Node:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ExpMultiTo1Node.setmeta( obj )
   setmetatable( obj, { __index = ExpMultiTo1Node  } )
@@ -6587,7 +6591,7 @@ function ExpParenNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ExpParenNode.setmeta( obj )
   setmetatable( obj, { __index = ExpParenNode  } )
@@ -6647,24 +6651,25 @@ function ExpMacroExpNode:canBeStatement(  )
 
    return true
 end
-function ExpMacroExpNode.new( id, pos, macroArgFlag, typeList, stmtList )
+function ExpMacroExpNode.new( id, pos, macroArgFlag, typeList, macroType, stmtList )
    local obj = {}
    ExpMacroExpNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, stmtList ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, macroType, stmtList ); end
    return obj
 end
-function ExpMacroExpNode:__init(id, pos, macroArgFlag, typeList, stmtList) 
+function ExpMacroExpNode:__init(id, pos, macroArgFlag, typeList, macroType, stmtList) 
    Node.__init( self,id, 42, pos, macroArgFlag, typeList)
    
    
    
+   self.macroType = macroType
    self.stmtList = stmtList
    
    
 end
-function ExpMacroExpNode.create( nodeMan, pos, macroArgFlag, typeList, stmtList )
+function ExpMacroExpNode.create( nodeMan, pos, macroArgFlag, typeList, macroType, stmtList )
 
-   local node = ExpMacroExpNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, stmtList)
+   local node = ExpMacroExpNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, macroType, stmtList)
    nodeMan:addNode( node )
    return node
 end
@@ -6693,10 +6698,13 @@ function ExpMacroExpNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ExpMacroExpNode.setmeta( obj )
   setmetatable( obj, { __index = ExpMacroExpNode  } )
+end
+function ExpMacroExpNode:get_macroType()
+   return self.macroType
 end
 function ExpMacroExpNode:get_stmtList()
    return self.stmtList
@@ -6834,7 +6842,7 @@ function ExpMacroStatNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ExpMacroStatNode.setmeta( obj )
   setmetatable( obj, { __index = ExpMacroStatNode  } )
@@ -6911,7 +6919,7 @@ end
 function ExpMacroArgExpNode:visit( visitor, depth )
 
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ExpMacroArgExpNode.setmeta( obj )
   setmetatable( obj, { __index = ExpMacroArgExpNode  } )
@@ -7002,7 +7010,7 @@ function StmtExpNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function StmtExpNode.setmeta( obj )
   setmetatable( obj, { __index = StmtExpNode  } )
@@ -7108,7 +7116,7 @@ function ExpMacroStatListNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ExpMacroStatListNode.setmeta( obj )
   setmetatable( obj, { __index = ExpMacroStatListNode  } )
@@ -7188,7 +7196,7 @@ end
 function ExpOmitEnumNode:visit( visitor, depth )
 
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ExpOmitEnumNode.setmeta( obj )
   setmetatable( obj, { __index = ExpOmitEnumNode  } )
@@ -7296,7 +7304,7 @@ function RefFieldNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function RefFieldNode.setmeta( obj )
   setmetatable( obj, { __index = RefFieldNode  } )
@@ -7450,7 +7458,7 @@ function GetFieldNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function GetFieldNode.setmeta( obj )
   setmetatable( obj, { __index = GetFieldNode  } )
@@ -7572,7 +7580,7 @@ function AliasNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function AliasNode.setmeta( obj )
   setmetatable( obj, { __index = AliasNode  } )
@@ -7818,7 +7826,7 @@ function DeclVarNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function DeclVarNode.setmeta( obj )
   setmetatable( obj, { __index = DeclVarNode  } )
@@ -7998,6 +8006,25 @@ function DeclVarNode:getBreakKind( checkMode )
 end
 
 
+function DeclVarNode:visitSub( visitor, depth )
+
+   for __index, varInfo in ipairs( self.varList ) do
+      do
+         local refTypeNode = varInfo:get_refType()
+         if refTypeNode ~= nil then
+            if not refTypeNode:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         end
+      end
+      
+   end
+   
+   return true
+end
+
+
 
 function NodeKind.get_DeclForm(  )
 
@@ -8086,7 +8113,7 @@ function DeclFormNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function DeclFormNode.setmeta( obj )
   setmetatable( obj, { __index = DeclFormNode  } )
@@ -8288,7 +8315,7 @@ function DeclFuncNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function DeclFuncNode.setmeta( obj )
   setmetatable( obj, { __index = DeclFuncNode  } )
@@ -8397,7 +8424,7 @@ function DeclMethodNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function DeclMethodNode.setmeta( obj )
   setmetatable( obj, { __index = DeclMethodNode  } )
@@ -8496,7 +8523,7 @@ function ProtoMethodNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ProtoMethodNode.setmeta( obj )
   setmetatable( obj, { __index = ProtoMethodNode  } )
@@ -8595,7 +8622,7 @@ function DeclConstrNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function DeclConstrNode.setmeta( obj )
   setmetatable( obj, { __index = DeclConstrNode  } )
@@ -8694,7 +8721,7 @@ function DeclDestrNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function DeclDestrNode.setmeta( obj )
   setmetatable( obj, { __index = DeclDestrNode  } )
@@ -8796,7 +8823,7 @@ function ExpCallSuperCtorNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ExpCallSuperCtorNode.setmeta( obj )
   setmetatable( obj, { __index = ExpCallSuperCtorNode  } )
@@ -8900,7 +8927,7 @@ function ExpCallSuperNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ExpCallSuperNode.setmeta( obj )
   setmetatable( obj, { __index = ExpCallSuperNode  } )
@@ -9015,7 +9042,7 @@ function DeclMemberNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function DeclMemberNode.setmeta( obj )
   setmetatable( obj, { __index = DeclMemberNode  } )
@@ -9144,7 +9171,7 @@ function DeclArgNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function DeclArgNode.setmeta( obj )
   setmetatable( obj, { __index = DeclArgNode  } )
@@ -9225,7 +9252,7 @@ end
 function DeclArgDDDNode:visit( visitor, depth )
 
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function DeclArgDDDNode.setmeta( obj )
   setmetatable( obj, { __index = DeclArgDDDNode  } )
@@ -9329,7 +9356,7 @@ end
 function DeclAdvertiseNode:visit( visitor, depth )
 
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function DeclAdvertiseNode.setmeta( obj )
   setmetatable( obj, { __index = DeclAdvertiseNode  } )
@@ -9338,6 +9365,53 @@ function DeclAdvertiseNode:get_advInfo()
    return self.advInfo
 end
 
+
+
+local ClassInheritInfo = {}
+_moduleObj.ClassInheritInfo = ClassInheritInfo
+function ClassInheritInfo:visit( visitor, depth )
+
+   do
+      local base = self.base
+      if base ~= nil then
+         if not base:visit( visitor, depth + 1 ) then
+            return false
+         end
+         
+      end
+   end
+   
+   for __index, ifTypeNode in ipairs( self.impliments ) do
+      if not ifTypeNode:visit( visitor, depth + 1 ) then
+         return false
+      end
+      
+   end
+   
+   return true
+end
+function ClassInheritInfo.setmeta( obj )
+  setmetatable( obj, { __index = ClassInheritInfo  } )
+end
+function ClassInheritInfo.new( base, impliments )
+   local obj = {}
+   ClassInheritInfo.setmeta( obj )
+   if obj.__init then
+      obj:__init( base, impliments )
+   end
+   return obj
+end
+function ClassInheritInfo:__init( base, impliments )
+
+   self.base = base
+   self.impliments = impliments
+end
+function ClassInheritInfo:get_base()
+   return self.base
+end
+function ClassInheritInfo:get_impliments()
+   return self.impliments
+end
 
 
 
@@ -9382,31 +9456,32 @@ function ProtoClassNode:canBeStatement(  )
 
    return true
 end
-function ProtoClassNode.new( id, pos, macroArgFlag, typeList, name )
+function ProtoClassNode.new( id, pos, macroArgFlag, typeList, name, inheritInfo )
    local obj = {}
    ProtoClassNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, name ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, name, inheritInfo ); end
    return obj
 end
-function ProtoClassNode:__init(id, pos, macroArgFlag, typeList, name) 
+function ProtoClassNode:__init(id, pos, macroArgFlag, typeList, name, inheritInfo) 
    Node.__init( self,id, 64, pos, macroArgFlag, typeList)
    
    
    
    self.name = name
+   self.inheritInfo = inheritInfo
    
    
 end
-function ProtoClassNode.create( nodeMan, pos, macroArgFlag, typeList, name )
+function ProtoClassNode.create( nodeMan, pos, macroArgFlag, typeList, name, inheritInfo )
 
-   local node = ProtoClassNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, name)
+   local node = ProtoClassNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, name, inheritInfo)
    nodeMan:addNode( node )
    return node
 end
 function ProtoClassNode:visit( visitor, depth )
 
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function ProtoClassNode.setmeta( obj )
   setmetatable( obj, { __index = ProtoClassNode  } )
@@ -9414,7 +9489,16 @@ end
 function ProtoClassNode:get_name()
    return self.name
 end
+function ProtoClassNode:get_inheritInfo()
+   return self.inheritInfo
+end
 
+
+
+function ProtoClassNode:visitSub( visitor, depth )
+
+   return self.inheritInfo:visit( visitor, depth )
+end
 
 
 local ClassInitBlockInfo = {}
@@ -9483,19 +9567,20 @@ function DeclClassNode:canBeStatement(  )
 
    return true
 end
-function DeclClassNode.new( id, pos, macroArgFlag, typeList, accessMode, name, hasPrototype, gluePrefix, moduleName, lang, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet )
+function DeclClassNode.new( id, pos, macroArgFlag, typeList, accessMode, name, inheritInfo, hasPrototype, gluePrefix, moduleName, lang, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet )
    local obj = {}
    DeclClassNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, accessMode, name, hasPrototype, gluePrefix, moduleName, lang, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, accessMode, name, inheritInfo, hasPrototype, gluePrefix, moduleName, lang, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet ); end
    return obj
 end
-function DeclClassNode:__init(id, pos, macroArgFlag, typeList, accessMode, name, hasPrototype, gluePrefix, moduleName, lang, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet) 
+function DeclClassNode:__init(id, pos, macroArgFlag, typeList, accessMode, name, inheritInfo, hasPrototype, gluePrefix, moduleName, lang, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet) 
    Node.__init( self,id, 65, pos, macroArgFlag, typeList)
    
    
    
    self.accessMode = accessMode
    self.name = name
+   self.inheritInfo = inheritInfo
    self.hasPrototype = hasPrototype
    self.gluePrefix = gluePrefix
    self.moduleName = moduleName
@@ -9515,9 +9600,9 @@ function DeclClassNode:__init(id, pos, macroArgFlag, typeList, accessMode, name,
    
    
 end
-function DeclClassNode.create( nodeMan, pos, macroArgFlag, typeList, accessMode, name, hasPrototype, gluePrefix, moduleName, lang, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet )
+function DeclClassNode.create( nodeMan, pos, macroArgFlag, typeList, accessMode, name, inheritInfo, hasPrototype, gluePrefix, moduleName, lang, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet )
 
-   local node = DeclClassNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, accessMode, name, hasPrototype, gluePrefix, moduleName, lang, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet)
+   local node = DeclClassNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, accessMode, name, inheritInfo, hasPrototype, gluePrefix, moduleName, lang, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet)
    nodeMan:addNode( node )
    return node
 end
@@ -9609,7 +9694,7 @@ function DeclClassNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function DeclClassNode.setmeta( obj )
   setmetatable( obj, { __index = DeclClassNode  } )
@@ -9619,6 +9704,9 @@ function DeclClassNode:get_accessMode()
 end
 function DeclClassNode:get_name()
    return self.name
+end
+function DeclClassNode:get_inheritInfo()
+   return self.inheritInfo
 end
 function DeclClassNode:get_hasPrototype()
    return self.hasPrototype
@@ -9669,6 +9757,12 @@ function DeclClassNode:get_outerMethodSet()
    return self.outerMethodSet
 end
 
+
+
+function DeclClassNode:visitSub( visitor, depth )
+
+   return self.inheritInfo:visit( visitor, depth )
+end
 
 
 function DeclClassNode:isModule(  )
@@ -9801,7 +9895,7 @@ end
 function DeclEnumNode:visit( visitor, depth )
 
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function DeclEnumNode.setmeta( obj )
   setmetatable( obj, { __index = DeclEnumNode  } )
@@ -9866,33 +9960,34 @@ function DeclAlgeNode:canBeStatement(  )
 
    return true
 end
-function DeclAlgeNode.new( id, pos, macroArgFlag, typeList, accessMode, algeType, scope )
+function DeclAlgeNode.new( id, pos, macroArgFlag, typeList, accessMode, algeType, name, scope )
    local obj = {}
    DeclAlgeNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, accessMode, algeType, scope ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, accessMode, algeType, name, scope ); end
    return obj
 end
-function DeclAlgeNode:__init(id, pos, macroArgFlag, typeList, accessMode, algeType, scope) 
+function DeclAlgeNode:__init(id, pos, macroArgFlag, typeList, accessMode, algeType, name, scope) 
    Node.__init( self,id, 67, pos, macroArgFlag, typeList)
    
    
    
    self.accessMode = accessMode
    self.algeType = algeType
+   self.name = name
    self.scope = scope
    
    
 end
-function DeclAlgeNode.create( nodeMan, pos, macroArgFlag, typeList, accessMode, algeType, scope )
+function DeclAlgeNode.create( nodeMan, pos, macroArgFlag, typeList, accessMode, algeType, name, scope )
 
-   local node = DeclAlgeNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, accessMode, algeType, scope)
+   local node = DeclAlgeNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, accessMode, algeType, name, scope)
    nodeMan:addNode( node )
    return node
 end
 function DeclAlgeNode:visit( visitor, depth )
 
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function DeclAlgeNode.setmeta( obj )
   setmetatable( obj, { __index = DeclAlgeNode  } )
@@ -9902,6 +9997,9 @@ function DeclAlgeNode:get_accessMode()
 end
 function DeclAlgeNode:get_algeType()
    return self.algeType
+end
+function DeclAlgeNode:get_name()
+   return self.name
 end
 function DeclAlgeNode:get_scope()
    return self.scope
@@ -10023,7 +10121,7 @@ function NewAlgeValNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function NewAlgeValNode.setmeta( obj )
   setmetatable( obj, { __index = NewAlgeValNode  } )
@@ -10112,7 +10210,7 @@ end
 function LuneControlNode:visit( visitor, depth )
 
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function LuneControlNode.setmeta( obj )
   setmetatable( obj, { __index = LuneControlNode  } )
@@ -10264,7 +10362,7 @@ function MatchNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function MatchNode.setmeta( obj )
   setmetatable( obj, { __index = MatchNode  } )
@@ -10467,7 +10565,7 @@ function LuneKindNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function LuneKindNode.setmeta( obj )
   setmetatable( obj, { __index = LuneKindNode  } )
@@ -10544,7 +10642,7 @@ end
 function DeclMacroNode:visit( visitor, depth )
 
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function DeclMacroNode.setmeta( obj )
   setmetatable( obj, { __index = DeclMacroNode  } )
@@ -10676,7 +10774,7 @@ function TestCaseNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function TestCaseNode.setmeta( obj )
   setmetatable( obj, { __index = TestCaseNode  } )
@@ -10784,7 +10882,7 @@ function TestBlockNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function TestBlockNode.setmeta( obj )
   setmetatable( obj, { __index = TestBlockNode  } )
@@ -10869,7 +10967,7 @@ end
 function AbbrNode:visit( visitor, depth )
 
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function AbbrNode.setmeta( obj )
   setmetatable( obj, { __index = AbbrNode  } )
@@ -10961,7 +11059,7 @@ function BoxingNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function BoxingNode.setmeta( obj )
   setmetatable( obj, { __index = BoxingNode  } )
@@ -11056,7 +11154,7 @@ function UnboxingNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function UnboxingNode.setmeta( obj )
   setmetatable( obj, { __index = UnboxingNode  } )
@@ -11131,7 +11229,7 @@ end
 function LiteralNilNode:visit( visitor, depth )
 
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function LiteralNilNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralNilNode  } )
@@ -11206,7 +11304,7 @@ end
 function LiteralCharNode:visit( visitor, depth )
 
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function LiteralCharNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralCharNode  } )
@@ -11287,7 +11385,7 @@ end
 function LiteralIntNode:visit( visitor, depth )
 
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function LiteralIntNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralIntNode  } )
@@ -11368,7 +11466,7 @@ end
 function LiteralRealNode:visit( visitor, depth )
 
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function LiteralRealNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralRealNode  } )
@@ -11471,7 +11569,7 @@ function LiteralArrayNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function LiteralArrayNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralArrayNode  } )
@@ -11571,7 +11669,7 @@ function LiteralListNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function LiteralListNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralListNode  } )
@@ -11671,7 +11769,7 @@ function LiteralSetNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function LiteralSetNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralSetNode  } )
@@ -11817,7 +11915,7 @@ function LiteralMapNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function LiteralMapNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralMapNode  } )
@@ -11949,7 +12047,7 @@ function LiteralStringNode:visit( visitor, depth )
    
    
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function LiteralStringNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralStringNode  } )
@@ -12035,7 +12133,7 @@ end
 function LiteralBoolNode:visit( visitor, depth )
 
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function LiteralBoolNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralBoolNode  } )
@@ -12112,7 +12210,7 @@ end
 function LiteralSymbolNode:visit( visitor, depth )
 
    
-   return true
+   return self:visitSub( visitor, depth )
 end
 function LiteralSymbolNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralSymbolNode  } )
@@ -12527,7 +12625,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, _10730 in pairs( self.map ) do
+   for key, _10800 in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -12562,8 +12660,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, _10744 in ipairs( __sorted ) do
-         local key = __map[ _10744 ]
+      for __index, _10814 in ipairs( __sorted ) do
+         local key = __map[ _10814 ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false

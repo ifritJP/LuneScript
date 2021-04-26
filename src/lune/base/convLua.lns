@@ -537,7 +537,7 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
 
 
          foreach memberNode in unwrap self.classId2MemberList[ classTypeId ] {
-            if memberNode.$accessMode ~= .Pri {
+            if Ast.isPubToExternal( memberNode.$accessMode ) {
                let memberName = memberNode.$name.txt;
                let memberTypeInfo:Ast.TypeInfo = memberNode.get_expType();
                self.writeln( "__classInfo%d.%s = {" ( classTypeId, memberName ) );

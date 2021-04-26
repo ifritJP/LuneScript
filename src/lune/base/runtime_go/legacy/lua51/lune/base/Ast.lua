@@ -2924,7 +2924,7 @@ end
 
 function Scope:addStaticVar( processInfo, argFlag, canBeLeft, name, pos, typeInfo, mutable )
 
-   return self:add( processInfo, argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, pos, typeInfo, AccessMode.Local, true, mutable, true, false )
+   return self:add( processInfo, argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, pos, typeInfo, AccessMode.Pub, true, mutable, true, false )
 end
 
 
@@ -3297,7 +3297,11 @@ function NormalSymbolInfo:canAccess( fromScope, access )
          
          return nil
       elseif _switchExp == AccessMode.Local then
-         return self
+         if isBuiltin( self:get_typeInfo():get_typeId() ) or self:getModule(  ) == fromScope:getModule(  ) then
+            return self
+         end
+         
+         return nil
       elseif _switchExp == AccessMode.Pri then
          if fromScope:isInnerOf( self.scope ) then
             return self
@@ -4820,24 +4824,28 @@ _moduleObj.EnumValInfo = EnumValInfo
 function EnumValInfo.setmeta( obj )
   setmetatable( obj, { __index = EnumValInfo  } )
 end
-function EnumValInfo.new( name, val )
+function EnumValInfo.new( name, val, symbolInfo )
    local obj = {}
    EnumValInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( name, val )
+      obj:__init( name, val, symbolInfo )
    end
    return obj
 end
-function EnumValInfo:__init( name, val )
+function EnumValInfo:__init( name, val, symbolInfo )
 
    self.name = name
    self.val = val
+   self.symbolInfo = symbolInfo
 end
 function EnumValInfo:get_name()
    return self.name
 end
 function EnumValInfo:get_val()
    return self.val
+end
+function EnumValInfo:get_symbolInfo()
+   return self.symbolInfo
 end
 
 
@@ -5088,19 +5096,20 @@ end
 function AlgeValInfo.setmeta( obj )
   setmetatable( obj, { __index = AlgeValInfo  } )
 end
-function AlgeValInfo.new( name, typeList, algeTpye )
+function AlgeValInfo.new( name, typeList, algeTpye, symbolInfo )
    local obj = {}
    AlgeValInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( name, typeList, algeTpye )
+      obj:__init( name, typeList, algeTpye, symbolInfo )
    end
    return obj
 end
-function AlgeValInfo:__init( name, typeList, algeTpye )
+function AlgeValInfo:__init( name, typeList, algeTpye, symbolInfo )
 
    self.name = name
    self.typeList = typeList
    self.algeTpye = algeTpye
+   self.symbolInfo = symbolInfo
 end
 function AlgeValInfo:get_name()
    return self.name
@@ -5110,6 +5119,9 @@ function AlgeValInfo:get_typeList()
 end
 function AlgeValInfo:get_algeTpye()
    return self.algeTpye
+end
+function AlgeValInfo:get_symbolInfo()
+   return self.symbolInfo
 end
 
 

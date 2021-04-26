@@ -116,13 +116,22 @@ pub fn createBinding( makeDir:str, baseDir:str, enableByteCompile:bool ) : bool 
             'import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"\n' );
          ostream.write( 'import _ "embed"\n' );
          //ostream.write( 'import "C"\n' );
+
+         let lnsBindSet = (@ "Testing" );
+         let mut lnsBindSym2Mod:Map<str,str> = {};
+         
          let mut total = 0;
          foreach path in list {
             ostream.write( "//go:embed %s\n" ( path.$embedPath ) );
             ostream.write( "var %s []byte\n" (path.$varSym) );
+            if lnsBindSet.has( (path.$modPath.gsub( ".*%.", "" )) ) {
+               ostream.write(
+                  "//go:embed %s\n" (( path.$embedPath.gsub( "%.lua", ".lns" ) )) );
+               let bindSymbol = "lns_%s" (path.$varSym);
+               ostream.write( "var %s string\n" (bindSymbol) );
+               lnsBindSym2Mod[ path.$modPath ] = bindSymbol;
+            }
          }
-         ostream.write( "//go:embed Testing.meta\n"  );
-         ostream.write( "var meta_lune_base_Testing string\n" );
 
          
          ostream.write( "func init() {\n" );
@@ -145,8 +154,9 @@ pub fn createBinding( makeDir:str, baseDir:str, enableByteCompile:bool ) : bool 
             output( ostream, path.$modPath );
          }
          // Testing モジュールが使えるように、 Testing の Meta を入れておく
-         ostream.write(
-            'AddlnsMetaInfo( "lune.base.Testing", meta_lune_base_Testing )' );
+         foreach bindSym, modPath in lnsBindSym2Mod {
+            ostream.write( 'AddlnsLnsInfo( "%s", %s )' (modPath,bindSym) );
+         }
          ostream.write( "}\n" );
          ostream.close();
          return true;

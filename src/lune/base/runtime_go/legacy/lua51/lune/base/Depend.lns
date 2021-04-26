@@ -181,6 +181,6 @@ pub fn getGOPATH() : str! {
    return nil;
 }
 
-pub fn getBindMeta( mod:str ) : str! {
+pub fn getBindLns( mod:str ) : str! {
    return nil;
 }

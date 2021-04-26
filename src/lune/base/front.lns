@@ -513,16 +513,19 @@ pub fn Front.convertLns2LuaCode(
 
 
 /**
-指定 path の LuneScript をロードし、 meta 情報と変換した Lua コードを取得する。
+parser から Lns を AST 解析し、 meta 情報と変換後の Lua コード返す。
+
+@return Luaval<&stem> meta 情報
+@return str Lua コード
 */
-fn Front.loadFileToLuaCode(
+fn Front.loadParserToLuaCode(
    importModuleInfo:frontInterface.ImportModuleInfo,
-   path:str, mod:str ): Luaval<&stem>, str
+   parser:Parser.Parser, mod:str ): Luaval<&stem>, str
 {
-   Log._log2( .Log, "%s: %s" (__func__, mod ) );
+   let path = parser.getStreamName();
    
-   let mut ast = self.createAst( importModuleInfo, createPaser( path, mod ),
-                                 mod, getModuleId( path, mod ## ), nil, .Compile, nil );
+   let mut ast = self.createAst(
+      importModuleInfo, parser, mod, getModuleId( path, mod ## ), nil, .Compile, nil );
    self.mod2ast.add( mod, ast );
    
 
@@ -565,6 +568,19 @@ fn Front.loadFileToLuaCode(
 
    let mut meta = unwrap loadFromLuaTxt( metaTxt );
    return meta, luaTxt;
+}
+
+
+/**
+指定 path の LuneScript をロードし、 meta 情報と変換した Lua コードを取得する。
+*/
+fn Front.loadFileToLuaCode(
+   importModuleInfo:frontInterface.ImportModuleInfo,
+   path:str, mod:str ): Luaval<&stem>, str
+{
+   Log._log2( .Log, "%s: %s" (__func__, mod ) );
+
+   return self.loadParserToLuaCode( importModuleInfo, createPaser( path, mod ), mod )**;
 }
 
 
@@ -723,6 +739,7 @@ fn Front.loadModule( mut mod:str ) mut : Luaval<&stem>!, Luaval<&stem> {
          } else {
             // lns ファイルがない場合、 binding からロードする。
             if self.bindModuleSet.has( mod ) {
+               Log._log2( .Warn, "load from the binding -- %s" (mod) );
                // require( mod ) することで、 bind しているモジュールをロードする。
                let workMod = require( mod );
                // meta は使用しないのでダミーで生成する。
@@ -798,8 +815,14 @@ fn Front.loadMeta(
                self.convertedMap[ mod ] = luaTxt;
             }
          } else {
-            if! let metaTxt = Depend.getBindMeta( mod ) {
-	       self.loadedMetaMap[ mod ] = unwrap loadFromLuaTxt( metaTxt );
+            if! let lnsCode = Depend.getBindLns( mod ) {
+               let path = mod.gsub( "%.", "/" ) .. ".lns";
+               let mut parser = new Parser.StreamParser(
+                  new Parser.TxtStream( lnsCode ), path, false );
+               let meta, luaTxt = self.loadParserToLuaCode(
+                  importModuleInfo, parser, mod );
+	       self.loadedMetaMap[ mod ] = meta;
+               self.convertedMap[ mod ] = luaTxt;
             }
          }
       }

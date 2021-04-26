@@ -8,6 +8,7 @@ pub fn func2( val:Sub5.Sub5enum ) {
 }
 
 pub class Test {
+   local let val:int;
 }
 
 pub fn func3( val:Test ) {

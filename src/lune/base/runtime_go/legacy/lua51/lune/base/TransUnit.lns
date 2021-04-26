@@ -1157,10 +1157,11 @@ alias で置き換えている元の Type → alias の型
       return self.isTargetTokenPos( token.txt, token.pos );
    }
 
-   fn dumpSymbolType( name:str, typeInfo:&Ast.TypeInfo ) {
+   fn dumpSymbolType( accessMode:Ast.AccessMode, name:str, typeInfo:&Ast.TypeInfo ) {
       let mut writer = new Writer.JSON( io.stdout );
       writer.startParent( "lunescript", false );
       writer.startParent( "inquire", false );
+      writer.write( "access", Ast.accessMode2txt( accessMode ) );
       writer.write( "name", name );
       writer.write( "type", typeInfo.getTxt( self.typeNameCtrl## ) );
       writer.write( "typeKind", typeInfo.$kind.$_txt );
@@ -1223,7 +1224,7 @@ alias で置き換えている元の Type → alias の型
       }
 
       if self.analyzeMode == .Inquire and self.isTargetTokenPos( name, pos ) {
-         self.dumpSymbolType( name, typeInfo );
+         self.dumpSymbolType( .Local, name, typeInfo );
       }
       
       return unwrap self.scope.addLocalVar(
@@ -1841,8 +1842,9 @@ class _TypeInfoEnum extend _TypeInfo {
          let! val = getEnumLiteral( valData ) {
             return nil, "unknown enum val type -- %s" (valTypeInfo.getTxt(##));
          };
-         enumTypeInfo.addEnumValInfo( new Ast.EnumValInfo( valName, val ) );
-         scope.addEnumVal( param.processInfo, valName, nil, enumTypeInfo );
+         let evalValSym = unwrap scope.addEnumVal(
+            param.processInfo, valName, nil, enumTypeInfo );
+         enumTypeInfo.addEnumValInfo( new Ast.EnumValInfo( valName, val, evalValSym ) );
       }
       parentScope.addEnum( param.processInfo, accessMode, self.txt, nil, enumTypeInfo );
       return newTypeInfo, nil;
@@ -1881,8 +1883,10 @@ class _TypeInfoAlge extend _TypeInfo {
             //typeInfoList.insert( unwrap param.typeId2TypeInfo[ orgTypeId ] );
             typeInfoList.insert( unwrap param.getTypeInfo( orgTypeId ) );
          }
-         let algeVal = new Ast.AlgeValInfo( valInfo.name, typeInfoList, algeTypeInfo );
-         scope.addAlgeVal( param.processInfo, valInfo.name, nil, algeTypeInfo );
+         let algeValSym = scope.addAlgeVal(
+            param.processInfo, valInfo.name, nil, algeTypeInfo );
+         let algeVal = new Ast.AlgeValInfo(
+            valInfo.name, typeInfoList, algeTypeInfo, unwrap algeValSym );
          algeTypeInfo.addValInfo( algeVal );
       }
       parentScope.addAlge( param.processInfo, accessMode, self.txt, nil, algeTypeInfo );

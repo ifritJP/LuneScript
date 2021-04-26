@@ -1,0 +1,4 @@
+import test.error.Sub6;
+
+let hoge = new Sub6.Test(0);
+print( hoge.val );

@@ -1174,7 +1174,7 @@ fn TransUnit.evalMacro(
    
    return Nodes.ExpMacroExpNode.create(
       self.nodeManager, firstToken.pos,
-      self.macroCtrl.isInAnalyzeArgMode(), expTypeList, stmtList );
+      self.macroCtrl.isInAnalyzeArgMode(), expTypeList, macroTypeInfo, stmtList );
 }
 
 /**
@@ -2597,19 +2597,20 @@ fn TransUnit.analyzeNewAlge(
                           ( fullname ) );
       }
 
-      
       return Nodes.NewAlgeValNode.create(
          self.nodeManager, firstToken.pos,
          self.macroCtrl.isInAnalyzeArgMode(), [ algeTypeInfo ],
          symbolToken, prefix, algeTypeInfo, valInfo, argList );
    }
    else {
+      let dummySymbol =
+         algeTypeInfo.$parentInfo.$scope$.getSymbolInfoChild$( algeTypeInfo.$rawTxt );
       self.addErrMess( symbolToken.pos, "not found Alge -- %s" (symbolToken.txt) );
       return Nodes.NewAlgeValNode.create(
          self.nodeManager, firstToken.pos,
          self.macroCtrl.isInAnalyzeArgMode(), [ algeTypeInfo ],
          symbolToken, prefix, algeTypeInfo,
-         new Ast.AlgeValInfo("", [], algeTypeInfo), [] );
+         new Ast.AlgeValInfo("", [], algeTypeInfo, unwrap dummySymbol ), [] );
    }
 }
 
@@ -2766,7 +2767,11 @@ fn TransUnit.analyzeExpSymbol(
    }
 
    if self.analyzeMode == .Inquire and self.isTargetToken ( symbolToken ) {
-      self.dumpSymbolType( symbolToken.txt, exp.$expType );
+      let mut accessMode = Ast.AccessMode.None;
+      foreach symbolInfo in exp.getSymbolInfo() {
+         accessMode = symbolInfo.$accessMode;
+      }
+      self.dumpSymbolType( accessMode, symbolToken.txt, exp.$expType );
    }
    
    return self.analyzeExpCont( firstToken, exp, skipFlag, canLeftExp );
@@ -3670,16 +3675,16 @@ fn TransUnit.analyzeExp(
    let firstToken = self.getToken(##);
    
    fn processsExpectExp( token:&Parser.Token, orgExpectType:&Ast.TypeInfo ): Nodes.Node {
-      if! let enumTyepInfo = orgExpectType.$srcTypeInfo.$aliasSrc@@@Ast.EnumTypeInfo {
+      if! let enumTypeInfo = orgExpectType.$srcTypeInfo.$aliasSrc@@@Ast.EnumTypeInfo {
          let nextToken = self.getToken(##);
-         self.checkEnumComp( nextToken, enumTyepInfo );
+         self.checkEnumComp( nextToken, enumTypeInfo );
          
-         if! let valInfo = enumTyepInfo.getEnumValInfo( nextToken.txt ) {
+         if! let valInfo = enumTypeInfo.getEnumValInfo( nextToken.txt ) {
 
             let mut aliasType:&Ast.AliasTypeInfo! = nil;
-            let mut expType:&Ast.TypeInfo = enumTyepInfo;
+            let mut expType:&Ast.TypeInfo = enumTypeInfo;
 
-            aliasType = self.importedAliasMap[ enumTyepInfo ];
+            aliasType = self.importedAliasMap[ enumTypeInfo ];
             when! aliasType {
                expType = aliasType;
             }
@@ -3692,14 +3697,14 @@ fn TransUnit.analyzeExp(
                      self.addErrMess(
                         token.pos,              
                         "need to import module -- %s (%s)"
-                        ( fullname, enumTyepInfo.getTxt(##) ) );
+                        ( fullname, enumTypeInfo.getTxt(##) ) );
                   }
                }
             }  
             let mut exp:Nodes.Node = Nodes.ExpOmitEnumNode.create(
                self.nodeManager, token.pos,
                self.macroCtrl.isInAnalyzeArgMode(), [ expType ],
-               nextToken, valInfo, aliasType, enumTyepInfo );
+               nextToken, valInfo, aliasType, enumTypeInfo );
             return self.analyzeExpCont( firstToken, exp, false, canLeftExp );
          }
 
