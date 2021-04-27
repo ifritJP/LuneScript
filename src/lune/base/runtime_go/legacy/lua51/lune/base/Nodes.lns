@@ -196,6 +196,24 @@ pub enum NodeVisitMode {
 */
 pub form NodeVisitor( node:&Node, parent:&Node, relation:str, depth:int ): NodeVisitMode;
 
+macro _procVisitor( child:__exp, parent:__exp, name:str ) {
+   {}
+    _switch visitor( ,,child, ,,parent, ,,name, depth ) {
+       case .Child {
+          if not ,,child.visit( visitor, depth, alreadySet ) {
+             return false;
+          }
+       }
+       case .End {
+          return false;
+       }
+       case .Next {
+          // pass
+       }
+    }
+}
+
+
 pub abstract class Node {
    pri let id: int { pub };
    pri let kind: int { pub };
@@ -311,12 +329,12 @@ _declNodeClass ではカバーできない visit() のカスタマイズ用
 @param depth 階層
 @return visit を継続する場合 true
    */ 
-   pub fn visitSub( visitor:NodeVisitor, depth:int ) : bool {
+   pub fn visitSub( visitor:NodeVisitor, depth:int, alreadySet:Set<&Node> ) : bool {
       return true;
    }
 
    /** _declNodeClass で自動で定義される。 */
-   pub abstract fn visit( visitor:NodeVisitor, depth:int ): bool;
+   pub abstract fn visit( visitor:NodeVisitor, depth:int, alreadySet:Set<&Node> ): bool;
 }
 
 
@@ -548,10 +566,13 @@ macro _declNodeClass(
                if typeName.find( "DeclFuncInfo" ## ) {
                   visitStatList.insert( `{
                      {
+                        foreach argNode in self.,,,fieldName~~.$argList {
+                           _procVisitor( argNode, self, "arg" );
+                        }
                         if! let body = self.,,,fieldName~~.$body {
                            switch visitor( body, self, ,,fieldName, depth ) {
                               case NodeVisitMode.Child {
-                                 if not body.visit( visitor, depth + 1 ) {
+                                 if not body.visit( visitor, depth + 1, alreadySet ) {
                                     return false;
                                  }
                               }
@@ -566,7 +587,7 @@ macro _declNodeClass(
                   let oneVisitStat = `{
                      switch visitor( child, self, ,,fieldName, depth ) {
                         case NodeVisitMode.Child {
-                           if not child.visit( visitor, depth + 1 ) {
+                           if not child.visit( visitor, depth + 1, alreadySet ) {
                               return false;
                            }
                         }
@@ -703,9 +724,13 @@ macro _declNodeClass(
          return node;
       }
 
-      pub override fn visit( visitor:NodeVisitor, depth:int ): bool {
+      pub override fn visit( visitor:NodeVisitor, depth:int, alreadySet:Set<&Node> ): bool {
+         if alreadySet.has( self ) {
+            return true;
+         }
+         alreadySet.add( self );
          ,,visitStatList;
-         return self.visitSub( visitor, depth );
+         return self.visitSub( visitor, depth + 1, alreadySet );
       }
    }
 }
@@ -1171,6 +1196,16 @@ pub override fn SwitchNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
       return kind;
    }
    return .None;
+}
+
+pub override fn SwitchNode.visitSub(
+   visitor:NodeVisitor, depth:int, alreadySet:Set<&Node> ) : bool
+{
+   foreach caseInfo in self.caseList {
+      _procVisitor( caseInfo.$expList, self, "expList" );
+      _procVisitor( caseInfo.$block, self, "block" );
+   }
+   return true;
 }
 
 
@@ -1731,12 +1766,12 @@ pub override fn DeclVarNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
    return .None;
 }
 
-pub override fn DeclVarNode.visitSub( visitor:NodeVisitor, depth:int ) : bool {
+pub override fn DeclVarNode.visitSub(
+   visitor:NodeVisitor, depth:int, alreadySet:Set<&Node> ) : bool
+{
    foreach varInfo in self.varList {
       if! let refTypeNode = varInfo.$refType {
-         if not refTypeNode.visit( visitor, depth + 1 ) {
-            return false;
-         }
+         _procVisitor( refTypeNode, self, "refType" ); 
       }
    }
    return true;
@@ -1868,16 +1903,14 @@ pub class ClassInheritInfo {
    let base: &RefTypeNode! {pub};
    let impliments: &List<&RefTypeNode> {pub};
 
-   pub fn visit( visitor:NodeVisitor, depth:int ) : bool {
+   pub fn visit( parent:&Node, visitor:NodeVisitor,
+                 depth:int, alreadySet:Set<&Node> ) : bool
+   {
       if! let base = self.base {
-         if not base.visit( visitor, depth + 1 ) {
-            return false;
-         }
+         _procVisitor( base, parent, "base" );
       }
       foreach ifTypeNode in self.impliments {
-         if not ifTypeNode.visit( visitor, depth + 1 ) {
-            return false;
-         }
+         _procVisitor( ifTypeNode, parent, "ifTypeNode" );
       }
       return true;
    }
@@ -1887,8 +1920,10 @@ _declNodeClass( "ProtoClass", Node, false, false, true,
                 [ { "name": "&Parser.Token" },
                   { "inheritInfo": "&ClassInheritInfo" } ] );
 
-pub override fn ProtoClassNode.visitSub( visitor:NodeVisitor, depth:int ) : bool {
-   return self.inheritInfo.visit( visitor, depth );
+pub override fn ProtoClassNode.visitSub(
+   visitor:NodeVisitor, depth:int, alreadySet:Set<&Node> ) : bool
+{
+   return self.inheritInfo.visit( self, visitor, depth, alreadySet );
 }
    
 pub class ClassInitBlockInfo {
@@ -1936,8 +1971,10 @@ _declNodeClass( "DeclClass", Node, false, false, true,
                   { "outerMethodSet": "Set<str>" } ]
 );
 
-pub override fn DeclClassNode.visitSub( visitor:NodeVisitor, depth:int ) : bool {
-   return self.inheritInfo.visit( visitor, depth );
+pub override fn DeclClassNode.visitSub(
+   visitor:NodeVisitor, depth:int, alreadySet:Set<&Node> ) : bool
+{
+   return self.inheritInfo.visit( self, visitor, depth, alreadySet );
 }
 
 pub fn DeclClassNode.isModule() : bool {
@@ -2016,6 +2053,7 @@ _declNodeClass( "LuneControl", Node, false, false, true,
 
 pub class MatchCase {
    pri let valInfo: &Ast.AlgeValInfo {pub};
+   pri let valExpRef: &ExpRefNode {pub};
    pri let valParamNameList: &List<&Ast.SymbolInfo> {pub};
    pri let block: &BlockNode {pub};
 }
@@ -2051,6 +2089,17 @@ pub override fn MatchNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
    }
    return .None;
 }
+
+pub override fn MatchNode.visitSub(
+   visitor:NodeVisitor, depth:int, alreadySet:Set<&Node> ) : bool
+{
+   foreach caseInfo in self.caseList {
+      _procVisitor( caseInfo.$valExpRef, self, "valExpRef" ); 
+      _procVisitor( caseInfo.$block, self, "block" ); 
+   }
+   return true;
+}
+
 
 
 

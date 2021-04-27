@@ -482,6 +482,7 @@ pub override fn dumpFilter.processMatch(
    filter( node.$val, self, opt.nextOpt() );
    let caseList = node.$caseList;
    foreach caseInfo in caseList {
+      filter( caseInfo.$valExpRef, self, opt.nextOpt() );
       filter( caseInfo.$block, self,
               new Opt( prefix .. "  " .. caseInfo.$valInfo.$name, depth + 1 ) );
    }

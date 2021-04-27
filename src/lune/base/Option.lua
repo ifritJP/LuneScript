@@ -283,7 +283,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 7362
+   return 7400
 end
 
 
@@ -689,6 +689,7 @@ end
    
    Util.setDebugFlag( false )
    
+   local uptodateOpt = nil
    while #argList >= index do
       local arg = argList[index]
       
@@ -825,21 +826,7 @@ end
                elseif _switchExp == "--use-ipairs" then
                   option.useIpairs = true
                elseif _switchExp == "--uptodate" then
-                  do
-                     local txt = getNextOp(  )
-                     if txt ~= nil then
-                        do
-                           local mode = Types.CheckingUptodateMode._from( txt )
-                           if mode ~= nil then
-                              option.transCtrlInfo.uptodateMode = mode
-                           else
-                              Util.errorLog( "illegal mode -- " .. txt )
-                           end
-                        end
-                        
-                     end
-                  end
-                  
+                  uptodateOpt = getNextOp(  )
                elseif _switchExp == "-langC" then
                   option.convTo = Types.Lang.C
                   option.transCtrlInfo.validLuaval = true
@@ -941,6 +928,26 @@ end
    end
    
    
+   if uptodateOpt ~= nil then
+      do
+         local _switchExp = uptodateOpt
+         if _switchExp == "force" then
+            option.transCtrlInfo.uptodateMode = _lune.newAlge( Types.CheckingUptodateMode.Force1, {Util.scriptPath2Module( option.scriptPath )})
+         elseif _switchExp == "forceAll" then
+            option.transCtrlInfo.uptodateMode = _lune.newAlge( Types.CheckingUptodateMode.ForceAll)
+         elseif _switchExp == "normal" then
+            option.transCtrlInfo.uptodateMode = _lune.newAlge( Types.CheckingUptodateMode.Normal)
+         elseif _switchExp == "touch" then
+            option.transCtrlInfo.uptodateMode = _lune.newAlge( Types.CheckingUptodateMode.Touch)
+         else 
+            
+               Util.errorLog( "illegal mode -- " .. uptodateOpt )
+         end
+      end
+      
+   end
+   
+   
    if option.mode ~= ModeKind.Builtin then
       if option.scriptPath == "" or option.mode == ModeKind.Unknown then
          printUsage( (#argList == 0 or argList[1] == "" ) and 0 or 1 )
@@ -963,7 +970,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 580, function (  )
+   Log.log( Log.Level.Log, __func__, 595, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

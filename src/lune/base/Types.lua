@@ -5,6 +5,43 @@ local _lune = {}
 if _lune3 then
    _lune = _lune3
 end
+function _lune.newAlge( kind, vals )
+   local memInfoList = kind[ 2 ]
+   if not memInfoList then
+      return kind
+   end
+   return { kind[ 1 ], vals }
+end
+
+function _lune._fromList( obj, list, memInfoList )
+   if type( list ) ~= "table" then
+      return false
+   end
+   for index, memInfo in ipairs( memInfoList ) do
+      local val, key = memInfo.func( list[ index ], memInfo.child )
+      if val == nil and not memInfo.nilable then
+         return false, key and string.format( "%s[%s]", memInfo.name, key) or memInfo.name
+      end
+      obj[ index ] = val
+   end
+   return true
+end
+function _lune._AlgeFrom( Alge, val )
+   local work = Alge._name2Val[ val[ 1 ] ]
+   if not work then
+      return nil
+   end
+   if #work == 1 then
+     return work
+   end
+   local paramList = {}
+   local result, mess = _lune._fromList( paramList, val[ 2 ], work[ 2 ] )
+   if not result then
+      return nil, mess
+   end
+   return { work[ 1 ], paramList }
+end
+
 function _lune.unwrap( val )
    if val == nil then
       __luneScript:error( 'unwrap val is nil' )
@@ -189,36 +226,28 @@ Lang._val2NameMap[3] = 'C'
 Lang.__allList[4] = Lang.C
 
 local CheckingUptodateMode = {}
+CheckingUptodateMode._name2Val = {}
 _moduleObj.CheckingUptodateMode = CheckingUptodateMode
-CheckingUptodateMode._val2NameMap = {}
 function CheckingUptodateMode:_getTxt( val )
-   local name = self._val2NameMap[ val ]
+   local name = val[ 1 ]
    if name then
       return string.format( "CheckingUptodateMode.%s", name )
    end
    return string.format( "illegal val -- %s", val )
 end
+
 function CheckingUptodateMode._from( val )
-   if CheckingUptodateMode._val2NameMap[ val ] then
-      return val
-   end
-   return nil
-end
-    
-CheckingUptodateMode.__allList = {}
-function CheckingUptodateMode.get__allList()
-   return CheckingUptodateMode.__allList
+   return _lune._AlgeFrom( CheckingUptodateMode, val )
 end
 
-CheckingUptodateMode.Force = 'force'
-CheckingUptodateMode._val2NameMap['force'] = 'Force'
-CheckingUptodateMode.__allList[1] = CheckingUptodateMode.Force
-CheckingUptodateMode.Normal = 'none'
-CheckingUptodateMode._val2NameMap['none'] = 'Normal'
-CheckingUptodateMode.__allList[2] = CheckingUptodateMode.Normal
-CheckingUptodateMode.Touch = 'touch'
-CheckingUptodateMode._val2NameMap['touch'] = 'Touch'
-CheckingUptodateMode.__allList[3] = CheckingUptodateMode.Touch
+CheckingUptodateMode.Force1 = { "Force1", {{ func=_lune._toStr, nilable=false, child={} }}}
+CheckingUptodateMode._name2Val["Force1"] = CheckingUptodateMode.Force1
+CheckingUptodateMode.ForceAll = { "ForceAll"}
+CheckingUptodateMode._name2Val["ForceAll"] = CheckingUptodateMode.ForceAll
+CheckingUptodateMode.Normal = { "Normal"}
+CheckingUptodateMode._name2Val["Normal"] = CheckingUptodateMode.Normal
+CheckingUptodateMode.Touch = { "Touch"}
+CheckingUptodateMode._name2Val["Touch"] = CheckingUptodateMode.Touch
 
 
 local TransCtrlInfo = {}
@@ -248,7 +277,7 @@ end
 
 function TransCtrlInfo.create_normal(  )
 
-   return TransCtrlInfo.new(false, false, true, false, CheckingUptodateMode.Touch, false, false)
+   return TransCtrlInfo.new(false, false, true, false, _lune.newAlge( CheckingUptodateMode.Touch), false, false)
 end
 
 
@@ -399,7 +428,7 @@ end
 function Token:getLineCount(  )
 
    local count = 1
-   for _91 in self.txt:gmatch( "\n" ) do
+   for _90 in self.txt:gmatch( "\n" ) do
       count = count + 1
    end
    

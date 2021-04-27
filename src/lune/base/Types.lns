@@ -31,13 +31,15 @@ pub enum Lang {
 }
 
 /** meta ファイルの更新必要性チェックモード */
-pub enum CheckingUptodateMode {
+pub alge CheckingUptodateMode {
+   /** mod のモジュールは必ずビルドしなおす */
+   Force1 (mod:str),
    /** uptodate チェックせずに必ずビルドしなおす */
-   Force = "force",
+   ForceAll,
    /** uptodate チェックし、 uptodate だった場合なにもしない */
-   Normal = "none",
+   Normal,
    /** uptodate チェックし、 uptodate だった場合 touch だけ行なう */
-   Touch = "touch",
+   Touch,
 }
 
 pub class TransCtrlInfo {

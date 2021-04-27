@@ -216,7 +216,7 @@ LNS_SRCS += base/DependLuaOnLns
 LNS_SRCS += base/convLua
 #LNS_SRCS += base/ConvNodes
 LNS_SRCS += base/dumpNode
-LNS_SRCS += base/convCC
+#LNS_SRCS += base/convCC
 LNS_SRCS += base/convGo
 LNS_SRCS += base/OutputDepend
 LNS_SRCS += base/glueFilter
@@ -258,7 +258,7 @@ define selfhost_buildOp
 	$(call $5,$1,$2,$3,$4,base/DependLuaOnLns)
 	$(call $5,$1,$2,$3,$4,base/convLua)
 	$(call $5,$1,$2,$3,$4,base/dumpNode)
-	$(call $5,$1,$2,$3,$4,base/convCC)
+#	$(call $5,$1,$2,$3,$4,base/convCC)
 	$(call $5,$1,$2,$3,$4,base/convGo)
 	$(call $5,$1,$2,$3,$4,base/OutputDepend)
 	$(call $5,$1,$2,$3,$4,base/glueFilter)
@@ -1530,7 +1530,7 @@ test-testGo:
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),TransUnit,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),convLua,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),dumpNode,lune/base,./test)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convCC,--testing --package lnsc,./test)
+#	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convCC,--testing --package lnsc,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),convGo,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),OutputDepend,lune/base,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/glueFilter,--testing --package lnsc,./test)
@@ -1597,7 +1597,7 @@ go-build:
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/TransUnit,./build, --package lnsc)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convLua,./build, --package lnsc)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/dumpNode,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convCC,./build, --package lnsc)
+#	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convCC,./build, --package lnsc)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convGo,./build, --package lnsc)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/OutputDepend,./build, --package lnsc)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/glueFilter,./build, --package lnsc)

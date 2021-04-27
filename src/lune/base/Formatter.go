@@ -372,13 +372,13 @@ func (self *Formatter_FormatterFilter) outputDeclClass(protoFlag bool,classType 
         self.FP.Write(">")
     }
     if moduleName != nil{
-        moduleName_5362 := moduleName.(*Types_Token)
+        moduleName_5371 := moduleName.(*Types_Token)
         self.FP.Write(" require ")
-        self.FP.Write(Lns_getVM().String_format("%s ", []LnsAny{moduleName_5362.Txt}))
+        self.FP.Write(Lns_getVM().String_format("%s ", []LnsAny{moduleName_5371.Txt}))
         if gluePrefix != nil{
-            gluePrefix_5364 := gluePrefix.(string)
+            gluePrefix_5373 := gluePrefix.(string)
             self.FP.Write("glue ")
-            self.FP.Write(gluePrefix_5364)
+            self.FP.Write(gluePrefix_5373)
         }
     }
     if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
@@ -1077,14 +1077,14 @@ func (self *Formatter_FormatterFilter) ProcessExpSetVal(node *Nodes_ExpSetValNod
 func (self *Formatter_FormatterFilter) ProcessExpSetItem(node *Nodes_ExpSetItemNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
     Formatter_filter_1066_(node.FP.Get_val(), self, opt.FP.NextOpt(&node.Nodes_Node))
-    switch _exp4611 := node.FP.Get_index().(type) {
+    switch _exp4613 := node.FP.Get_index().(type) {
     case *Nodes_IndexVal__NodeIdx:
-    index := _exp4611.Val1
+    index := _exp4613.Val1
         self.FP.Write("[")
         Formatter_filter_1066_(index, self, opt.FP.NextOpt(&node.Nodes_Node))
         self.FP.Write("]")
     case *Nodes_IndexVal__SymIdx:
-    index := _exp4611.Val1
+    index := _exp4613.Val1
         self.FP.Write(Lns_getVM().String_format(".%s", []LnsAny{index}))
     }
     self.FP.Write(" = ")

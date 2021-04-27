@@ -819,6 +819,7 @@ function dumpFilter:processMatch( node, opt )
    filter( node:get_val(), self, opt:nextOpt(  ) )
    local caseList = node:get_caseList()
    for __index, caseInfo in ipairs( caseList ) do
+      filter( caseInfo:get_valExpRef(), self, opt:nextOpt(  ) )
       filter( caseInfo:get_block(), self, Opt.new(prefix .. "  " .. caseInfo:get_valInfo():get_name(), depth + 1) )
    end
    

@@ -329,7 +329,8 @@ usage:
    }
 
    Util.setDebugFlag( false );
-   
+
+   let mut uptodateOpt:str! = nil;
    while #argList >= index {
       let arg = argList[ index ];
 
@@ -459,14 +460,7 @@ usage:
                   option.useIpairs = true;
                }
                case "--uptodate" {
-                  if! let txt = getNextOp() {
-                     if! let mode = Types.CheckingUptodateMode._from( txt ) {
-                        option.transCtrlInfo.uptodateMode = mode;
-                     }
-                     else {
-                        Util.errorLog( "illegal mode -- " .. txt );
-                     }
-                  }
+                  uptodateOpt = getNextOp();
                }
                case "-langC" {
                   option.convTo = .C;
@@ -557,6 +551,27 @@ usage:
       }
 
       index = index + 1;
+   }
+
+   when! uptodateOpt {
+      switch uptodateOpt {
+         case "force" {
+            option.transCtrlInfo.uptodateMode = .Force1(
+               Util.scriptPath2Module( option.scriptPath ) );
+         }
+         case "forceAll" {
+            option.transCtrlInfo.uptodateMode = .ForceAll;
+         }
+         case "normal" {
+            option.transCtrlInfo.uptodateMode = .Normal;
+         }
+         case "touch" {
+            option.transCtrlInfo.uptodateMode = .Touch;
+         }
+         default {
+            Util.errorLog( "illegal mode -- " .. uptodateOpt );
+         }
+      }
    }
 
    if option.mode ~= .Builtin {

@@ -60,8 +60,6 @@ var lune_base_DependLuaOnLns []byte
 var lune_base_convLua []byte
 //go:embed dumpNode.lua
 var lune_base_dumpNode []byte
-//go:embed convCC.lua
-var lune_base_convCC []byte
 //go:embed convGo.lua
 var lune_base_convGo []byte
 //go:embed OutputDepend.lua
@@ -101,7 +99,6 @@ AddlnsSrcInfo( "lune.base.TransUnit", lune_base_TransUnit )
 AddlnsSrcInfo( "lune.base.DependLuaOnLns", lune_base_DependLuaOnLns )
 AddlnsSrcInfo( "lune.base.convLua", lune_base_convLua )
 AddlnsSrcInfo( "lune.base.dumpNode", lune_base_dumpNode )
-AddlnsSrcInfo( "lune.base.convCC", lune_base_convCC )
 AddlnsSrcInfo( "lune.base.convGo", lune_base_convGo )
 AddlnsSrcInfo( "lune.base.OutputDepend", lune_base_OutputDepend )
 AddlnsSrcInfo( "lune.base.glueFilter", lune_base_glueFilter )

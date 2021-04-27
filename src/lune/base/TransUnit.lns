@@ -4064,7 +4064,11 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
          firstFlag = false;
       }
       self.popScope();
-      let matchCase = new Nodes.MatchCase( valInfo, valParamNameList, block );
+      let valRefNode = Nodes.ExpRefNode.create(
+         self.nodeManager, valNameToken.pos,
+         self.macroCtrl.isInAnalyzeArgMode(), [ valInfo.$algeTpye ],
+         valInfo.$symbolInfo );
+      let matchCase = new Nodes.MatchCase( valInfo, valRefNode, valParamNameList, block );
 
       caseList.insert( matchCase );
       nextToken = self.getToken(##);

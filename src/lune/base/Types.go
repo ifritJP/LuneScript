@@ -32,32 +32,6 @@ func Types_Lang__from(arg1 LnsInt) LnsAny{
 func Types_Lang_getTxt(arg1 LnsInt) string {
     return Types_LangMap_[arg1];
 }
-// decl enum -- CheckingUptodateMode 
-type Types_CheckingUptodateMode = string
-const Types_CheckingUptodateMode__Force = "force"
-const Types_CheckingUptodateMode__Normal = "none"
-const Types_CheckingUptodateMode__Touch = "touch"
-var Types_CheckingUptodateModeList_ = NewLnsList( []LnsAny {
-  Types_CheckingUptodateMode__Force,
-  Types_CheckingUptodateMode__Normal,
-  Types_CheckingUptodateMode__Touch,
-})
-func Types_CheckingUptodateMode_get__allList() *LnsList{
-    return Types_CheckingUptodateModeList_
-}
-var Types_CheckingUptodateModeMap_ = map[string]string {
-  Types_CheckingUptodateMode__Force: "CheckingUptodateMode.Force",
-  Types_CheckingUptodateMode__Normal: "CheckingUptodateMode.Normal",
-  Types_CheckingUptodateMode__Touch: "CheckingUptodateMode.Touch",
-}
-func Types_CheckingUptodateMode__from(arg1 string) LnsAny{
-    if _, ok := Types_CheckingUptodateModeMap_[arg1]; ok { return arg1 }
-    return nil
-}
-
-func Types_CheckingUptodateMode_getTxt(arg1 string) string {
-    return Types_CheckingUptodateModeMap_[arg1];
-}
 // decl enum -- TokenKind 
 type Types_TokenKind = LnsInt
 const Types_TokenKind__Char = 4
@@ -112,6 +86,32 @@ func Types_TokenKind_getTxt(arg1 LnsInt) string {
     return Types_TokenKindMap_[arg1];
 }
 var Types_noneToken *Types_Token
+// decl alge -- CheckingUptodateMode
+type Types_CheckingUptodateMode = LnsAny
+type Types_CheckingUptodateMode__Force1 struct{
+Val1 string
+}
+func (self *Types_CheckingUptodateMode__Force1) GetTxt() string {
+return "CheckingUptodateMode.Force1"
+}
+type Types_CheckingUptodateMode__ForceAll struct{
+}
+var Types_CheckingUptodateMode__ForceAll_Obj = &Types_CheckingUptodateMode__ForceAll{}
+func (self *Types_CheckingUptodateMode__ForceAll) GetTxt() string {
+return "CheckingUptodateMode.ForceAll"
+}
+type Types_CheckingUptodateMode__Normal struct{
+}
+var Types_CheckingUptodateMode__Normal_Obj = &Types_CheckingUptodateMode__Normal{}
+func (self *Types_CheckingUptodateMode__Normal) GetTxt() string {
+return "CheckingUptodateMode.Normal"
+}
+type Types_CheckingUptodateMode__Touch struct{
+}
+var Types_CheckingUptodateMode__Touch_Obj = &Types_CheckingUptodateMode__Touch{}
+func (self *Types_CheckingUptodateMode__Touch) GetTxt() string {
+return "CheckingUptodateMode.Touch"
+}
 // declaration Class -- TransCtrlInfo
 type Types_TransCtrlInfoMtd interface {
 }
@@ -120,7 +120,7 @@ type Types_TransCtrlInfo struct {
     CompatComment bool
     CheckingDefineAbbr bool
     StopByWarning bool
-    UptodateMode string
+    UptodateMode LnsAny
     ValidLuaval bool
     DefaultLazy bool
     FP Types_TransCtrlInfoMtd
@@ -145,13 +145,13 @@ func Types_TransCtrlInfoDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Types_TransCtrlInfo) ToTypes_TransCtrlInfo() *Types_TransCtrlInfo {
     return obj
 }
-func NewTypes_TransCtrlInfo(arg1 bool, arg2 bool, arg3 bool, arg4 bool, arg5 string, arg6 bool, arg7 bool) *Types_TransCtrlInfo {
+func NewTypes_TransCtrlInfo(arg1 bool, arg2 bool, arg3 bool, arg4 bool, arg5 LnsAny, arg6 bool, arg7 bool) *Types_TransCtrlInfo {
     obj := &Types_TransCtrlInfo{}
     obj.FP = obj
     obj.InitTypes_TransCtrlInfo(arg1, arg2, arg3, arg4, arg5, arg6, arg7)
     return obj
 }
-func (self *Types_TransCtrlInfo) InitTypes_TransCtrlInfo(arg1 bool, arg2 bool, arg3 bool, arg4 bool, arg5 string, arg6 bool, arg7 bool) {
+func (self *Types_TransCtrlInfo) InitTypes_TransCtrlInfo(arg1 bool, arg2 bool, arg3 bool, arg4 bool, arg5 LnsAny, arg6 bool, arg7 bool) {
     self.WarningShadowing = arg1
     self.CompatComment = arg2
     self.CheckingDefineAbbr = arg3
@@ -160,9 +160,9 @@ func (self *Types_TransCtrlInfo) InitTypes_TransCtrlInfo(arg1 bool, arg2 bool, a
     self.ValidLuaval = arg6
     self.DefaultLazy = arg7
 }
-// 58: decl @lune.@base.@Types.TransCtrlInfo.create_normal
+// 60: decl @lune.@base.@Types.TransCtrlInfo.create_normal
 func Types_TransCtrlInfo_create_normal() *Types_TransCtrlInfo {
-    return NewTypes_TransCtrlInfo(false, false, true, false, Types_CheckingUptodateMode__Touch, false, false)
+    return NewTypes_TransCtrlInfo(false, false, true, false, Types_CheckingUptodateMode__Touch_Obj, false, false)
 }
 
 
@@ -360,7 +360,7 @@ func Types_Token_FromMapMain( newObj *Types_Token, objMap *LnsMap, paramList []L
     }
     return true, newObj, nil
 }
-// 92: DeclConstr
+// 94: DeclConstr
 func (self *Types_Token) InitTypes_Token(kind LnsInt,txt string,pos *Types_Position,consecutive bool,commentList LnsAny) {
     self.Kind = kind
     
@@ -374,14 +374,14 @@ func (self *Types_Token) InitTypes_Token(kind LnsInt,txt string,pos *Types_Posit
     
 }
 
-// 102: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
+// 104: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
 func (self *Types_Token) GetExcludedDelimitTxt() string {
     if self.Kind != Types_TokenKind__Str{
         return self.Txt
     }
-    if _switch227 := LnsInt(self.Txt[1-1]); _switch227 == 39 || _switch227 == 34 {
+    if _switch223 := LnsInt(self.Txt[1-1]); _switch223 == 39 || _switch223 == 34 {
         return Lns_getVM().String_sub(self.Txt,2, len(self.Txt) - 1)
-    } else if _switch227 == 96 {
+    } else if _switch223 == 96 {
         return Lns_getVM().String_sub(self.Txt,1 + 3, len(self.Txt) - 3)
     }
     panic(Lns_getVM().String_format("illegal delimit -- %s", []LnsAny{self.Txt}))
@@ -389,22 +389,22 @@ func (self *Types_Token) GetExcludedDelimitTxt() string {
     return ""
 }
 
-// 117: decl @lune.@base.@Types.Token.set_commentList
+// 119: decl @lune.@base.@Types.Token.set_commentList
 func (self *Types_Token) Set_commentList(commentList *LnsList) {
     self.commentList = commentList
     
 }
 
-// 121: decl @lune.@base.@Types.Token.getLineCount
+// 123: decl @lune.@base.@Types.Token.getLineCount
 func (self *Types_Token) GetLineCount() LnsInt {
     var count LnsInt
     count = 1
     {
-        _form290, _param290, _prev290 := Lns_getVM().String_gmatch(self.Txt,"\n")
+        _form286, _param286, _prev286 := Lns_getVM().String_gmatch(self.Txt,"\n")
         for {
-            _work290 := _form290.(*Lns_luaValue).Call( Lns_2DDD( _param290, _prev290 ) )
-            _prev290 = Lns_getFromMulti(_work290,0)
-            if Lns_IsNil( _prev290 ) { break }
+            _work286 := _form286.(*Lns_luaValue).Call( Lns_2DDD( _param286, _prev286 ) )
+            _prev286 = Lns_getFromMulti(_work286,0)
+            if Lns_IsNil( _prev286 ) { break }
             count = count + 1
             
         }
