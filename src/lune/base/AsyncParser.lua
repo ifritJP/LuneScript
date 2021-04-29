@@ -421,24 +421,25 @@ end
 local Parser = {}
 setmetatable( Parser, { __index = Async.Pipe } )
 _moduleObj.Parser = Parser
-function Parser.new( stream, name, luaMode )
+function Parser.new( stream, name, luaMode, overridePos )
    local obj = {}
    Parser.setmeta( obj )
-   if obj.__init then obj:__init( stream, name, luaMode ); end
+   if obj.__init then obj:__init( stream, name, luaMode, overridePos ); end
    return obj
 end
-function Parser:__init(stream, name, luaMode) 
+function Parser:__init(stream, name, luaMode, overridePos) 
    local _
    Async.Pipe.__init( self,nil)
    
    
+   self.overridePos = overridePos
    self.firstLine = true
    self.streamName = name
    self.lineNo = 0
    self.prevToken = Types.noneToken
    self.luaMode = _lune.unwrapDefault( luaMode, false)
    
-   local keywordSet, typeSet, _307, multiCharDelimitMap = createReserveInfo( luaMode )
+   local keywordSet, typeSet, _322, multiCharDelimitMap = createReserveInfo( luaMode )
    
    self.keywordSet = keywordSet
    self.typeSet = typeSet
@@ -493,7 +494,7 @@ function Parser:createInfo( tokenKind, token, tokenColumn )
       consecutive = true
    end
    
-   local newToken = Types.Token.new(tokenKind, token, Types.Position.new(self.lineNo, tokenColumn, self.streamName), consecutive, {})
+   local newToken = Types.Token.new(tokenKind, token, Types.Position.create( self.lineNo, tokenColumn, self.streamName, self.overridePos ), consecutive, {})
    self.prevToken = newToken
    return newToken
 end
@@ -698,7 +699,7 @@ function Parser:parse(  )
       local comment = ""
       while true do
          do
-            local _433, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
+            local _448, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
             if termEndIndex ~= nil then
                comment = comment .. rawLine:sub( searchIndex, termEndIndex )
                return comment, termEndIndex + 1

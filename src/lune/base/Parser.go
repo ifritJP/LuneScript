@@ -6,11 +6,11 @@ var Parser__mod__ string
 var Parser_noneToken *Types_Token
 var Parser_eofToken *Types_Token
 // for 152
-func Parser_convExp521(arg1 []LnsAny) LnsAny {
+func Parser_convExp525(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 217
-func Parser_convExp849(arg1 []LnsAny) LnsAny {
+// for 219
+func Parser_convExp871(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 type Parser_Position = Types_Position
@@ -26,7 +26,7 @@ func Parser_convFromRawToStr(txt string) string {
     if len(txt) == 0{
         return txt
     }
-    if _switch462 := LnsInt(txt[1-1]); _switch462 == 39 || _switch462 == 34 {
+    if _switch466 := LnsInt(txt[1-1]); _switch466 == 39 || _switch466 == 34 {
     } else {
         return Lns_getVM().String_sub(txt,4, len(txt) - 3)
     }
@@ -46,7 +46,7 @@ func Parser_convFromRawToStr(txt string) string {
         var endIndex LnsInt
         
         {
-            _endIndex := Parser_convExp521(Lns_2DDD(Lns_getVM().String_find(workTxt, workPattern, workIndex, nil)))
+            _endIndex := Parser_convExp525(Lns_2DDD(Lns_getVM().String_find(workTxt, workPattern, workIndex, nil)))
             if _endIndex == nil{
                 Util_err(Lns_getVM().String_format("error: illegal string -- %s", []LnsAny{workTxt}))
             } else {
@@ -60,7 +60,7 @@ func Parser_convFromRawToStr(txt string) string {
         } else if workChar == 92{
             var quote LnsInt
             quote = LnsInt(workTxt[endIndex + 1-1])
-            if _switch628 := quote; _switch628 == 39 || _switch628 == 34 {
+            if _switch632 := quote; _switch632 == 39 || _switch632 == 34 {
                 retTxt = Lns_getVM().String_format("%s%s%c", []LnsAny{retTxt, Lns_getVM().String_sub(workTxt,setIndex, endIndex - 1), quote})
                 
             } else {
@@ -80,47 +80,47 @@ func Parser_convFromRawToStr(txt string) string {
     return ""
 }
 
-// 372: decl @lune.@base.@Parser.isOp2
+// 374: decl @lune.@base.@Parser.isOp2
 func Parser_isOp2(ope string) bool {
     return AsyncParser_isOp2(ope)
 }
 
-// 376: decl @lune.@base.@Parser.isOp1
+// 378: decl @lune.@base.@Parser.isOp1
 func Parser_isOp1(ope string) bool {
     return AsyncParser_isOp1(ope)
 }
 
-// 385: decl @lune.@base.@Parser.getEofToken
+// 387: decl @lune.@base.@Parser.getEofToken
 func Parser_getEofToken() *Types_Token {
     return Parser_eofToken
 }
 
-// 472: decl @lune.@base.@Parser.quoteStr
+// 474: decl @lune.@base.@Parser.quoteStr
 func Parser_quoteStr(txt string) string {
     var work string
     work = txt
     var part string
     part = "\""
     {
-        var _from2116 LnsInt = 1
-        var _to2116 LnsInt = len(work)
-        for _work2116 := _from2116; _work2116 <= _to2116; _work2116++ {
-            index := _work2116
+        var _from2146 LnsInt = 1
+        var _to2146 LnsInt = len(work)
+        for _work2146 := _from2146; _work2146 <= _to2146; _work2146++ {
+            index := _work2146
             var char LnsInt
             char = LnsInt(work[index-1])
-            if _switch2114 := char; _switch2114 == 10 {
+            if _switch2144 := char; _switch2144 == 10 {
                 part = part + "\\n"
                 
-            } else if _switch2114 == 13 {
+            } else if _switch2144 == 13 {
                 part = part + "\\r"
                 
-            } else if _switch2114 == 9 {
+            } else if _switch2144 == 9 {
                 part = part + "\\t"
                 
-            } else if _switch2114 == 34 {
+            } else if _switch2144 == 34 {
                 part = part + "\\\""
                 
-            } else if _switch2114 == 92 {
+            } else if _switch2144 == 92 {
                 part = part + "\\\\"
                 
             } else {
@@ -284,7 +284,7 @@ type Parser_PushbackParser interface {
         GetTokenNoErr() *Types_Token
         NewPushback(arg1 *LnsList)
         Pushback()
-        PushbackStr(arg1 string, arg2 string)
+        PushbackStr(arg1 string, arg2 string, arg3 *Types_Position)
         PushbackToken(arg1 *Types_Token)
 }
 func Lns_cast2Parser_PushbackParser( obj LnsAny ) LnsAny {
@@ -375,6 +375,7 @@ type Parser_StreamParser struct {
     pos LnsInt
     lineTokenList *LnsList
     asyncParser *AsyncParser_Parser
+    overridePos LnsAny
     FP Parser_StreamParserMtd
 }
 func Parser_StreamParser2Stem( obj LnsAny ) LnsAny {
@@ -397,11 +398,11 @@ func Parser_StreamParserDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Parser_StreamParser) ToParser_StreamParser() *Parser_StreamParser {
     return obj
 }
-func NewParser_StreamParser(arg1 Lns_iStream, arg2 string, arg3 LnsAny) *Parser_StreamParser {
+func NewParser_StreamParser(arg1 Lns_iStream, arg2 string, arg3 LnsAny, arg4 LnsAny) *Parser_StreamParser {
     obj := &Parser_StreamParser{}
     obj.FP = obj
     obj.Parser_Parser.FP = obj
-    obj.InitParser_StreamParser(arg1, arg2, arg3)
+    obj.InitParser_StreamParser(arg1, arg2, arg3, arg4)
     return obj
 }
 // 188: decl @lune.@base.@Parser.StreamParser.setStdinStream
@@ -412,8 +413,8 @@ func Parser_StreamParser_setStdinStream(moduleName string) {
     
 }
 
-// 199: DeclConstr
-func (self *Parser_StreamParser) InitParser_StreamParser(stream Lns_iStream,name string,luaMode LnsAny) {
+// 200: DeclConstr
+func (self *Parser_StreamParser) InitParser_StreamParser(stream Lns_iStream,name string,luaMode LnsAny,pos LnsAny) {
     self.InitParser_Parser()
     self.streamName = name
     
@@ -421,22 +422,24 @@ func (self *Parser_StreamParser) InitParser_StreamParser(stream Lns_iStream,name
     
     self.lineTokenList = NewLnsList([]LnsAny{})
     
-    self.asyncParser = NewAsyncParser_Parser(stream, name, luaMode)
+    self.overridePos = pos
+    
+    self.asyncParser = NewAsyncParser_Parser(stream, name, luaMode, pos)
     
 }
 
-// 210: decl @lune.@base.@Parser.StreamParser.getStreamName
+// 212: decl @lune.@base.@Parser.StreamParser.getStreamName
 func (self *Parser_StreamParser) GetStreamName() string {
     return self.streamName
 }
 
-// 214: decl @lune.@base.@Parser.StreamParser.create
+// 216: decl @lune.@base.@Parser.StreamParser.create
 func Parser_StreamParser_create(path string,luaMode bool,moduleName string) LnsAny {
     var stream Lns_iStream
     if Parser_StreamParser__stdinStreamModuleName != moduleName{
         {
             var _stream LnsAny
-            _stream = Parser_convExp849(Lns_2DDD(Lns_io_open(path, "r")))
+            _stream = Parser_convExp871(Lns_2DDD(Lns_io_open(path, "r")))
             if _stream == nil {
                 return nil
             }
@@ -449,10 +452,10 @@ func Parser_StreamParser_create(path string,luaMode bool,moduleName string) LnsA
     return NewParser_StreamParser(stream, path, Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
         Lns_GetEnv().SetStackVal( luaMode) ||
         Lns_GetEnv().SetStackVal( Str_endsWith(path, ".lua")) &&
-        Lns_GetEnv().SetStackVal( true) ).(bool))
+        Lns_GetEnv().SetStackVal( true) ).(bool), nil)
 }
 
-// 228: decl @lune.@base.@Parser.StreamParser.getToken
+// 230: decl @lune.@base.@Parser.StreamParser.getToken
 func (self *Parser_StreamParser) GetToken() LnsAny {
     if self.lineTokenList.Len() < self.pos{
         self.pos = 1
@@ -493,7 +496,7 @@ type Parser_DefaultPushbackParserMtd interface {
     Get_currentToken() *Types_Token
     NewPushback(arg1 *LnsList)
     Pushback()
-    PushbackStr(arg1 string, arg2 string)
+    PushbackStr(arg1 string, arg2 string, arg3 *Types_Position)
     PushbackToken(arg1 *Types_Token)
 }
 type Parser_DefaultPushbackParser struct {
@@ -530,7 +533,7 @@ func NewParser_DefaultPushbackParser(arg1 *Parser_Parser) *Parser_DefaultPushbac
     return obj
 }
 func (self *Parser_DefaultPushbackParser) Get_currentToken() *Types_Token{ return self.currentToken }
-// 254: DeclConstr
+// 256: DeclConstr
 func (self *Parser_DefaultPushbackParser) InitParser_DefaultPushbackParser(parser *Parser_Parser) {
     self.parser = parser
     
@@ -542,12 +545,12 @@ func (self *Parser_DefaultPushbackParser) InitParser_DefaultPushbackParser(parse
     
 }
 
-// 261: decl @lune.@base.@Parser.DefaultPushbackParser.createPosition
+// 263: decl @lune.@base.@Parser.DefaultPushbackParser.createPosition
 func (self *Parser_DefaultPushbackParser) CreatePosition(lineNo LnsInt,column LnsInt) *Types_Position {
     return self.parser.FP.CreatePosition(lineNo, column)
 }
 
-// 265: decl @lune.@base.@Parser.DefaultPushbackParser.getTokenNoErr
+// 267: decl @lune.@base.@Parser.DefaultPushbackParser.getTokenNoErr
 func (self *Parser_DefaultPushbackParser) GetTokenNoErr() *Types_Token {
     if self.pushbackedList.Len() > 0{
         self.currentToken = self.pushbackedList.GetAt(self.pushbackedList.Len()).(Types_TokenDownCast).ToTypes_Token()
@@ -572,7 +575,7 @@ func (self *Parser_DefaultPushbackParser) GetTokenNoErr() *Types_Token {
     return self.currentToken
 }
 
-// 283: decl @lune.@base.@Parser.DefaultPushbackParser.pushbackToken
+// 285: decl @lune.@base.@Parser.DefaultPushbackParser.pushbackToken
 func (self *Parser_DefaultPushbackParser) PushbackToken(token *Types_Token) {
     if token.Kind != Types_TokenKind__Eof{
         self.pushbackedList.Insert(Types_Token2Stem(token))
@@ -598,17 +601,17 @@ func (self *Parser_DefaultPushbackParser) PushbackToken(token *Types_Token) {
     }
 }
 
-// 306: decl @lune.@base.@Parser.DefaultPushbackParser.pushback
+// 308: decl @lune.@base.@Parser.DefaultPushbackParser.pushback
 func (self *Parser_DefaultPushbackParser) Pushback() {
     self.FP.PushbackToken(self.currentToken)
 }
 
-// 309: decl @lune.@base.@Parser.DefaultPushbackParser.pushbackStr
-func (self *Parser_DefaultPushbackParser) PushbackStr(name string,statement string) {
+// 311: decl @lune.@base.@Parser.DefaultPushbackParser.pushbackStr
+func (self *Parser_DefaultPushbackParser) PushbackStr(name string,statement string,pos *Types_Position) {
     var memStream *Parser_TxtStream
     memStream = NewParser_TxtStream(statement)
     var parser *Parser_StreamParser
-    parser = NewParser_StreamParser(memStream.FP, name, false)
+    parser = NewParser_StreamParser(memStream.FP, name, false, pos)
     var list *LnsList
     list = NewLnsList([]LnsAny{})
     for  {
@@ -623,49 +626,49 @@ func (self *Parser_DefaultPushbackParser) PushbackStr(name string,statement stri
         }
     }
     {
-        var _from1385 LnsInt = list.Len()
-        var _to1385 LnsInt = 1
-        _work1385 := _from1385
-        _delta1385 := -1
+        var _from1415 LnsInt = list.Len()
+        var _to1415 LnsInt = 1
+        _work1415 := _from1415
+        _delta1415 := -1
         for {
-            if _delta1385 > 0 {
-               if _work1385 > _to1385 { break }
+            if _delta1415 > 0 {
+               if _work1415 > _to1415 { break }
             } else {
-               if _work1385 < _to1385 { break }
+               if _work1415 < _to1415 { break }
             }
-            index := _work1385
+            index := _work1415
             self.FP.PushbackToken(list.GetAt(index).(Types_TokenDownCast).ToTypes_Token())
-            _work1385 += _delta1385
+            _work1415 += _delta1415
         }
     }
 }
 
-// 326: decl @lune.@base.@Parser.DefaultPushbackParser.newPushback
+// 328: decl @lune.@base.@Parser.DefaultPushbackParser.newPushback
 func (self *Parser_DefaultPushbackParser) NewPushback(tokenList *LnsList) {
     {
-        var _from1414 LnsInt = tokenList.Len()
-        var _to1414 LnsInt = 1
-        _work1414 := _from1414
-        _delta1414 := -1
+        var _from1444 LnsInt = tokenList.Len()
+        var _to1444 LnsInt = 1
+        _work1444 := _from1444
+        _delta1444 := -1
         for {
-            if _delta1414 > 0 {
-               if _work1414 > _to1414 { break }
+            if _delta1444 > 0 {
+               if _work1444 > _to1444 { break }
             } else {
-               if _work1414 < _to1414 { break }
+               if _work1444 < _to1444 { break }
             }
-            index := _work1414
+            index := _work1444
             self.FP.PushbackToken(tokenList.GetAt(index).(Types_TokenDownCast).ToTypes_Token())
-            _work1414 += _delta1414
+            _work1444 += _delta1444
         }
     }
 }
 
-// 331: decl @lune.@base.@Parser.DefaultPushbackParser.error
+// 333: decl @lune.@base.@Parser.DefaultPushbackParser.error
 func (self *Parser_DefaultPushbackParser) Error(message string) {
     Util_err(message)
 }
 
-// 336: decl @lune.@base.@Parser.DefaultPushbackParser.getLastPos
+// 338: decl @lune.@base.@Parser.DefaultPushbackParser.getLastPos
 func (self *Parser_DefaultPushbackParser) GetLastPos() *Types_Position {
     var pos *Types_Position
     pos = self.parser.FP.CreatePosition(0, 0)
@@ -683,15 +686,15 @@ func (self *Parser_DefaultPushbackParser) GetLastPos() *Types_Position {
     return pos
 }
 
-// 352: decl @lune.@base.@Parser.DefaultPushbackParser.getNearCode
+// 354: decl @lune.@base.@Parser.DefaultPushbackParser.getNearCode
 func (self *Parser_DefaultPushbackParser) GetNearCode() string {
     var code string
     code = ""
     {
-        var _from1589 LnsInt = self.usedTokenList.Len() - 30
-        var _to1589 LnsInt = self.usedTokenList.Len()
-        for _work1589 := _from1589; _work1589 <= _to1589; _work1589++ {
-            index := _work1589
+        var _from1619 LnsInt = self.usedTokenList.Len() - 30
+        var _to1619 LnsInt = self.usedTokenList.Len()
+        for _work1619 := _from1619; _work1619 <= _to1619; _work1619++ {
+            index := _work1619
             if index > 1{
                 var token *Types_Token
                 token = self.usedTokenList.GetAt(index).(Types_TokenDownCast).ToTypes_Token()
@@ -708,7 +711,7 @@ func (self *Parser_DefaultPushbackParser) GetNearCode() string {
     return Lns_getVM().String_format("%s -- current '%s'", []LnsAny{code, self.currentToken.Txt})
 }
 
-// 367: decl @lune.@base.@Parser.DefaultPushbackParser.getStreamName
+// 369: decl @lune.@base.@Parser.DefaultPushbackParser.getStreamName
 func (self *Parser_DefaultPushbackParser) GetStreamName() string {
     return self.parser.FP.GetStreamName()
 }
@@ -754,12 +757,12 @@ func NewParser_DummyParser() *Parser_DummyParser {
 func (self *Parser_DummyParser) InitParser_DummyParser() {
     self.Parser_Parser.InitParser_Parser( )
 }
-// 389: decl @lune.@base.@Parser.DummyParser.getToken
+// 391: decl @lune.@base.@Parser.DummyParser.getToken
 func (self *Parser_DummyParser) GetToken() LnsAny {
     return Parser_eofToken
 }
 
-// 392: decl @lune.@base.@Parser.DummyParser.getStreamName
+// 394: decl @lune.@base.@Parser.DummyParser.getStreamName
 func (self *Parser_DummyParser) GetStreamName() string {
     return "dummy"
 }
@@ -806,7 +809,7 @@ func NewParser_CommentLayer() *Parser_CommentLayer {
     return obj
 }
 func (self *Parser_CommentLayer) Get_commentList() *LnsList{ return self.commentList }
-// 405: DeclConstr
+// 407: DeclConstr
 func (self *Parser_CommentLayer) InitParser_CommentLayer() {
     self.commentList = NewLnsList([]LnsAny{})
     
@@ -816,7 +819,7 @@ func (self *Parser_CommentLayer) InitParser_CommentLayer() {
     
 }
 
-// 411: decl @lune.@base.@Parser.CommentLayer.addDirect
+// 413: decl @lune.@base.@Parser.CommentLayer.addDirect
 func (self *Parser_CommentLayer) AddDirect(commentList *LnsList) {
     for _, _comment := range( commentList.Items ) {
         comment := _comment.(Types_TokenDownCast).ToTypes_Token()
@@ -824,7 +827,7 @@ func (self *Parser_CommentLayer) AddDirect(commentList *LnsList) {
     }
 }
 
-// 417: decl @lune.@base.@Parser.CommentLayer.add
+// 419: decl @lune.@base.@Parser.CommentLayer.add
 func (self *Parser_CommentLayer) Add(token *Types_Token) {
     if Lns_op_not(self.tokenSet.Has(Types_Token2Stem(token))){
         self.tokenSet.Add(Types_Token2Stem(token))
@@ -833,7 +836,7 @@ func (self *Parser_CommentLayer) Add(token *Types_Token) {
     }
 }
 
-// 426: decl @lune.@base.@Parser.CommentLayer.clear
+// 428: decl @lune.@base.@Parser.CommentLayer.clear
 func (self *Parser_CommentLayer) Clear() {
     if self.commentList.Len() != 0{
         self.commentList = NewLnsList([]LnsAny{})
@@ -845,7 +848,7 @@ func (self *Parser_CommentLayer) Clear() {
     }
 }
 
-// 442: decl @lune.@base.@Parser.CommentLayer.hasInvalidComment
+// 444: decl @lune.@base.@Parser.CommentLayer.hasInvalidComment
 func (self *Parser_CommentLayer) HasInvalidComment() LnsAny {
     return Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
         Lns_GetEnv().SetStackVal( self.tokenList.Len() > 1) &&
@@ -910,7 +913,7 @@ func (self *Parser_CommentCtrl) Get_commentList() *LnsList {
 func (self *Parser_CommentCtrl) HasInvalidComment() LnsAny {
     return self.layer. FP.HasInvalidComment( )
 }
-// 451: DeclConstr
+// 453: DeclConstr
 func (self *Parser_CommentCtrl) InitParser_CommentCtrl() {
     self.layer = NewParser_CommentLayer()
     
@@ -918,14 +921,14 @@ func (self *Parser_CommentCtrl) InitParser_CommentCtrl() {
     
 }
 
-// 456: decl @lune.@base.@Parser.CommentCtrl.push
+// 458: decl @lune.@base.@Parser.CommentCtrl.push
 func (self *Parser_CommentCtrl) Push() {
     self.layer = NewParser_CommentLayer()
     
     self.layerStack.Insert(Parser_CommentLayer2Stem(self.layer))
 }
 
-// 461: decl @lune.@base.@Parser.CommentCtrl.pop
+// 463: decl @lune.@base.@Parser.CommentCtrl.pop
 func (self *Parser_CommentCtrl) Pop() {
     self.layer = self.layerStack.GetAt(self.layerStack.Len()).(Parser_CommentLayerDownCast).ToParser_CommentLayer()
     

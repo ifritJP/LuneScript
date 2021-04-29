@@ -1562,7 +1562,7 @@ binding-lns-go-tgt:
 define go-build-lns
 	cp misc/go/main/lnsc_main.go $1
 	$(call buildGoSetup,$1,$(GO_MOD))
-	(cd $1; PKG_CONFIG_PATH=$(shell pwd) time go build -o lnsc)
+	(cd $1; PKG_CONFIG_PATH=$(shell pwd) time go build -o lnsc $(GOBUILD_TAG))
 endef
 
 # セルフホストのソースを go に変換し、 go 版 lns をビルドする

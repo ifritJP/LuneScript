@@ -99,7 +99,7 @@ __test {
    import lune.base.frontInterface;
 
    class Front extend (frontInterface.frontInterface) {
-      pub fn loadModule( mod:str ) mut: Luaval<&stem>!, Luaval<&stem> {
+      pub fn loadModule( mod:str ) mut: Luaval<&stem>!, &frontInterface.ModuleMeta {
          Util.err( "not implements" );
       }
       pub fn loadFromLnsTxt(
@@ -118,15 +118,18 @@ __test {
          Util.err( message );
       }
 
-      pub fn loadMeta(
-         importModuleInfo:frontInterface.ImportModuleInfo, mod:str ) mut: Luaval<&stem>!
+      pub fn loadMeta( importModuleInfo:frontInterface.ImportModuleInfo, mod:str ) mut:
+         frontInterface.ModuleMeta!
       {
          let metaPath = mod.gsub( "%.", "/" ) .. ".meta";
          print( metaPath );
          let loaded, mess = loadfile( metaPath );
          when! loaded {
-            let meta = loaded(##);
-            return meta;
+            let! meta = loaded(##) {
+               return nil;
+            };
+            return new frontInterface.ModuleMeta(
+               meta, (metaPath.gsub( "%.meta$", ".lns" )) );
          }
          print( mess );
          return nil;

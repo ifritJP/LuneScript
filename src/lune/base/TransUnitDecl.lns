@@ -1640,15 +1640,18 @@ fn TransUnit.analyzeDeclMember(
       // accessor
       let mut getterMode = Ast.AccessMode.None;
       let mut getterRetType = refType.$expType;
+      let mut getterToken:&Types.Token! = nil;
       let mut getterMutable = true;
       let mut setterMode = Ast.AccessMode.None;
+      let mut setterToken:&Types.Token! = nil;
       if token.txt == "{" {
 
-         fn analyzeAccessorMode(): Ast.AccessMode, &Ast.TypeInfo, &Parser.Token
+         fn analyzeAccessorMode(): Ast.AccessMode, &Ast.TypeInfo, &Parser.Token, &Parser.Token
          {
             let mut retType = Ast.headTypeInfo;
             let mut mode = Ast.AccessMode.None;
-            let mut workToken = self.getToken(##);
+            let mut accessorToken = self.getToken(##);
+            let mut workToken = accessorToken;
             switch workToken.txt {
                case "pub", "pri", "pro", "local" {
                   mode = unwrap Ast.txt2AccessMode( workToken.txt );
@@ -1672,12 +1675,12 @@ fn TransUnit.analyzeDeclMember(
                                    "access mode is invalid -- %s" (workToken.txt) );
                }
             }
-            return mode, retType, workToken;
+            return mode, retType, accessorToken, workToken;
          }
 
          {
             let workRetType;
-            getterMode, workRetType, nextToken = analyzeAccessorMode();
+            getterMode, workRetType, getterToken, nextToken = analyzeAccessorMode();
             if workRetType ~= Ast.headTypeInfo {
                if not workRetType.canEvalWith(
                   self.processInfo, getterRetType, .SetOp,
@@ -1692,7 +1695,7 @@ fn TransUnit.analyzeDeclMember(
          }
          if nextToken.txt == "," {
             let dummyRetType;
-            setterMode, dummyRetType, nextToken = analyzeAccessorMode();
+            setterMode, dummyRetType, setterToken, nextToken = analyzeAccessorMode();
             if setterMode ~= .None and mutMode == .IMut {
                // immutable なメンバに setter 宣言は出来ない
                self.addErrMess(
@@ -1742,7 +1745,8 @@ fn TransUnit.analyzeDeclMember(
          self.nodeManager, firstToken.pos,
          self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ],
          varName, refType, workSym, classTypeInfo, 
-         staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode );
+         staticFlag, accessMode, getterMutable,
+         getterMode, getterToken, getterRetType, setterMode, setterToken );
    }
 
 fn TransUnit.analyzeDeclMethod(

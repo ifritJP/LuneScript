@@ -26,6 +26,11 @@ import lune.base.Util;
 
 _lune_control ignore_symbol_;
 
+pub class ModuleMeta {
+   let metaInfo:Luaval<&stem> {pub};
+   let lnsPath:str {pub};
+}
+
 /**
 モジュールの識別情報を管理する。
 */
@@ -105,7 +110,7 @@ Lua からも利用される。
 @return stem! ロードしたモジュール。 失敗した場合 nil
 @return &stem ロードしたモジュールのメタ情報。
    */
-   pub fn loadModule( mod:str ) mut: Luaval<&stem>!, Luaval<&stem>;
+   pub fn loadModule( mod:str ) mut: Luaval<&stem>!, &ModuleMeta;
 
    /**
 指定の LuneScript のモジュールからメタ情報をロードする。
@@ -114,7 +119,8 @@ Lua からも利用される。
 @param mod モジュール (foo.bar)
 @return &stem ロードしたモジュールのメタ情報。
    */
-   pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ) mut: Luaval<&stem>!;
+   pub fn loadMeta(
+      importModuleInfo:ImportModuleInfo, mod:str ) mut: &ModuleMeta!;
    /**
 LuneScript のコード文字列からロードする。
 
@@ -138,7 +144,7 @@ go/github:com.ifritJP. 等の go 用のパスを、
 }
 
 class dummyFront extend (frontInterface) {
-   pub fn loadModule( mod:str ) mut: Luaval<&stem>!, Luaval<&stem> {
+   pub fn loadModule( mod:str ) mut: Luaval<&stem>!, &ModuleMeta {
       // error( "not implements" );
       let loaded = _load( "return {}" ## );
       let emptyTable;
@@ -147,9 +153,10 @@ class dummyFront extend (frontInterface) {
       } else {
          error( "load error" );
       }
-      return require( mod ), emptyTable;
+      let meta = new ModuleMeta( emptyTable, mod.gsub( "%.", "/" ) .. ".lns" );
+      return require( mod ), meta;
    }
-   pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ) mut : Luaval<&stem>! {
+   pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ) mut : &ModuleMeta! {
       error( "not implements" );
    }
    pub fn loadFromLnsTxt(
@@ -174,7 +181,7 @@ pub fn setFront( newFront:frontInterface ) {
    __luneScript = newFront;
 }
 
-pub fn loadModule( mod:str ): Luaval<&stem>!, Luaval<&stem> {
+pub fn loadModule( mod:str ): Luaval<&stem>!, &ModuleMeta {
    return __luneScript.loadModule( mod )**;
 }
 
@@ -184,7 +191,7 @@ pub fn loadFromLnsTxt(
    return __luneScript.loadFromLnsTxt( importModuleInfo, name, txt );
 }
 
-pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ): Luaval<&stem>! {
+pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ): &ModuleMeta! {
    return __luneScript.loadMeta( importModuleInfo, mod );
 }
 

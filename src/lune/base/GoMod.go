@@ -287,14 +287,14 @@ func (self *GoMod_ModInfo) getLocalModulePath(path string) LnsAny {
             for _, _aChar := range( NewLnsList(Lns_getVM().String_byte(mod,1, len(mod))).Items ) {
                 aChar := _aChar
                 if aChar != nil{
-                    aChar_300 := aChar.(LnsInt)
+                    aChar_313 := aChar.(LnsInt)
                     if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
-                        Lns_GetEnv().SetStackVal( aChar_300 >= 65) &&
-                        Lns_GetEnv().SetStackVal( aChar_300 <= 90) ).(bool)){
-                        gomod = Lns_getVM().String_format("%s!%c", []LnsAny{gomod, aChar_300 - 65 + 97})
+                        Lns_GetEnv().SetStackVal( aChar_313 >= 65) &&
+                        Lns_GetEnv().SetStackVal( aChar_313 <= 90) ).(bool)){
+                        gomod = Lns_getVM().String_format("%s!%c", []LnsAny{gomod, aChar_313 - 65 + 97})
                         
                     } else { 
-                        gomod = Lns_getVM().String_format("%s%c", []LnsAny{gomod, aChar_300})
+                        gomod = Lns_getVM().String_format("%s%c", []LnsAny{gomod, aChar_313})
                         
                     }
                 }

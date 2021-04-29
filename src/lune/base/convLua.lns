@@ -633,6 +633,8 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
          self.pushIndent(##);
          self.writeln( "local info = {}" );
          self.writeln( "__macroName2InfoMap[ %d ] = info" (macroTypeInfo.$typeId) );
+         let pos = macroDeclNode.$pos.$orgPos;
+         self.writeln( "info.pos = {%d,%d}" (pos.lineNo, pos.column) );
          self.writeln( "info.name = %q" (declInfo.$name.txt));
          self.write( "info.argList = {" );
          foreach argNode, index in declInfo.$argList {
@@ -1196,12 +1198,18 @@ fn convFilter.getMapInfo(
       }
       case .Class, .IF {
          if not nonnilableType.equals( self.processInfo, Ast.builtinTypeString ##) {
-            funcTxt = '%s._fromMap' (self.getFullName(nonnilableType));
-            if isGenericType( nonnilableType ) {
-               let mut memStream = new Util.memStream();
-               self.outputAlter2MapFunc(
-                  memStream, nonnilableType.createAlt2typeMap(false) );
-               child = memStream.$txt;
+            if Ast.NormalTypeInfo.isAvailableMapping(
+               self.processInfo, nonnilableType, {} )
+            {
+               funcTxt = '%s._fromMap' (self.getFullName(nonnilableType));
+               if isGenericType( nonnilableType ) {
+                  let mut memStream = new Util.memStream();
+                  self.outputAlter2MapFunc(
+                     memStream, nonnilableType.createAlt2typeMap(false) );
+                  child = memStream.$txt;
+               }
+            } else {
+               funcTxt = "nil";
             }
          }
          else {
@@ -1314,8 +1322,15 @@ end
             if index > 1 {
                self.write( "," );
             }
-            let funcTxt, nilable, child = self.getMapInfo( paramType );
-            self.write( "{ func=%s, nilable=%s, child=%s }" (funcTxt, nilable, child) );
+            if Ast.NormalTypeInfo.isAvailableMapping(
+               self.processInfo, node.$algeType, {} )
+            {
+               let funcTxt, nilable, child = self.getMapInfo( paramType );
+               self.write( "{ func=%s, nilable=%s, child=%s }"
+                  (funcTxt, nilable, child) );
+            } else {
+               self.write( "{}" );
+            }
          }
          self.write( "}" );
       }
@@ -3543,7 +3558,7 @@ __test {
          moduleId, moduleInfo, new MacroEvalImp(),
          nil, .Compile, nil, option.targetLuaVer, option.transCtrlInfo );
       
-      let mut parser = new Parser.StreamParser( stream, scriptPath, false );
+      let mut parser = new Parser.StreamParser( stream, scriptPath, false, nil );
       return transUnit.createAST( parser, false, mod );
    }
    

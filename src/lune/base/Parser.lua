@@ -404,21 +404,22 @@ function StreamParser.setStdinStream( moduleName )
    StreamParser.stdinStreamModuleName = moduleName
    StreamParser.stdinTxt = _lune.unwrapDefault( io.stdin:read( '*a' ), "")
 end
-function StreamParser.new( stream, name, luaMode )
+function StreamParser.new( stream, name, luaMode, pos )
    local obj = {}
    StreamParser.setmeta( obj )
-   if obj.__init then obj:__init( stream, name, luaMode ); end
+   if obj.__init then obj:__init( stream, name, luaMode, pos ); end
    return obj
 end
-function StreamParser:__init(stream, name, luaMode) 
+function StreamParser:__init(stream, name, luaMode, pos) 
    Parser.__init( self)
    
    
    self.streamName = name
    self.pos = 1
    self.lineTokenList = {}
+   self.overridePos = pos
    
-   self.asyncParser = AsyncParser.Parser.new(stream, name, luaMode)
+   self.asyncParser = AsyncParser.Parser.new(stream, name, luaMode, pos)
 end
 function StreamParser:getStreamName(  )
 
@@ -442,7 +443,7 @@ function StreamParser.create( path, luaMode, moduleName )
    end
    
    
-   return StreamParser.new(stream, path, luaMode or Str.endsWith( path, ".lua" ) and true)
+   return StreamParser.new(stream, path, luaMode or Str.endsWith( path, ".lua" ) and true, nil)
 end
 function StreamParser:getToken(  )
 
@@ -553,10 +554,10 @@ function DefaultPushbackParser:pushback(  )
 
    self:pushbackToken( self.currentToken )
 end
-function DefaultPushbackParser:pushbackStr( name, statement )
+function DefaultPushbackParser:pushbackStr( name, statement, pos )
 
    local memStream = TxtStream.new(statement)
-   local parser = StreamParser.new(memStream, name, false)
+   local parser = StreamParser.new(memStream, name, false, pos)
    
    local list = {}
    while true do

@@ -117,7 +117,7 @@ txt に与えた JSON 文字列からデータを解析して返す。
 pub fn fromStr(txt:str) : stem!, &Types.Position! {
    let mut stream = new Parser.TxtStream( txt );
    let mut parser = new Parser.DefaultPushbackParser(
-      new Parser.StreamParser( stream, "json", false ) );
+      new Parser.StreamParser( stream, "json", false, nil ) );
    let val, ok = getVal( parser );
    if not ok {
       return nil, parser.getLastPos();

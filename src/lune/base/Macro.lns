@@ -26,6 +26,7 @@ import lune.base.Util;
 import lune.base.Nodes;
 import lune.base.Ast;
 import lune.base.Parser;
+import lune.base.Types;
 import lune.base.Formatter;
 //import lune.base.Depend;
 
@@ -56,6 +57,7 @@ class MacroMetaArgInfo extend (Mapping) {
 }
 class MacroMetaInfo extend (Mapping) {
    pub let name:str;
+   pub let pos:&List<int>;
    pub let argList:&List<MacroMetaArgInfo>;
    pub let symList:&List<MacroMetaArgInfo>;
    pub let stmtBlock:str!;
@@ -403,11 +405,19 @@ pub fn MacroCtrl.evalMacroOp(
 
 
 pub fn MacroCtrl.importMacro(
-   processInfo:Ast.ProcessInfo, macroInfoStem:&stem!, macroTypeInfo:&Ast.TypeInfo,
+   processInfo:Ast.ProcessInfo, lnsPath:str, 
+   macroInfoStem:&stem!, macroTypeInfo:&Ast.TypeInfo,
    typeId2TypeInfo: &Map<int,&Ast.TypeInfo> ) mut
 {
    let macroInfo, err = MacroMetaInfo._fromStem( macroInfoStem );
    when! macroInfo {
+      let orgPos;
+      if #macroInfo.pos == 2 {
+         orgPos = new Types.Position(
+            macroInfo.pos[ 1 ], macroInfo.pos[ 2 ], lnsPath );
+      } else {
+         Util.err( "macroInfo.pos is illegal" );
+      }
       let mut argList:List<&Nodes.MacroArgInfo> = [];
       let mut argNameList:List<str> = [];
       let mut symbol2MacroValInfoMap:Map<str,Nodes.MacroValInfo> = {};
@@ -435,7 +445,8 @@ pub fn MacroCtrl.importMacro(
             column = 1;
          }
          else {
-            let pos = new Parser.Position( lineNo, column, "macro:%s" (macroInfo.name) );
+            let pos = Types.Position.create(
+               lineNo, column, "macro:%s" (macroInfo.name), orgPos );
             tokenList.insert(
                new Parser.Token(
                   unwrap Parser.TokenKind._from( tokenInfo[1]@@int ),
@@ -606,8 +617,9 @@ pub fn MacroCtrl.expandMacroVal(
             equalsType( macroVal.typeInfo, Ast.builtinTypeExp ) or
             equalsType( macroVal.typeInfo, Ast.builtinTypeMultiExp ) 
          {
+            let pos = macroVal.argNode$.$pos$.$orgPos or nextToken.pos.$orgPos;
             parser.pushbackStr( "macroVal %s" (nextToken.txt),
-                                (unwrap macroVal.val)@@str );
+                                (unwrap macroVal.val)@@str, pos );
          }
          elseif macroVal.typeInfo.$kind == .Array or
             macroVal.typeInfo.get_kind() == .List
@@ -615,11 +627,12 @@ pub fn MacroCtrl.expandMacroVal(
             if equalsType( macroVal.typeInfo.$itemTypeInfoList[ 1 ],
                            Ast.builtinTypeStat )
             {
+               let pos = macroVal.argNode$.$pos$.$orgPos or nextToken.pos.$orgPos;
                let strList = (unwrap macroVal.val)@@str[];
                for index = #strList, 1, -1 {
                   parser.pushbackStr(
                      "macroVal %s[%d]" (nextToken.txt, index),
-                     strList[ index ] );
+                     strList[ index ], pos );
                }
             }
             else {

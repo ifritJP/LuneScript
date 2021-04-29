@@ -119,6 +119,48 @@ function _lune.loadstring52( txt, env )
    return load( txt, "", "bt", env )
 end
 
+function _lune.nilacc( val, fieldName, access, ... )
+   if not val then
+      return nil
+   end
+   if fieldName then
+      local field = val[ fieldName ]
+      if not field then
+         return nil
+      end
+      if access == "item" then
+         local typeId = type( field )
+         if typeId == "table" then
+            return field[ ... ]
+         elseif typeId == "string" then
+            return string.byte( field, ... )
+         end
+      elseif access == "call" then
+         return field( ... )
+      elseif access == "callmtd" then
+         return field( val, ... )
+      end
+      return field
+   end
+   if access == "item" then
+      local typeId = type( val )
+      if typeId == "table" then
+         return val[ ... ]
+      elseif typeId == "string" then
+         return string.byte( val, ... )
+      end
+   elseif access == "call" then
+      return val( ... )
+   elseif access == "list" then
+      local list, arg = ...
+      if not list then
+         return nil
+      end
+      return val( list, arg )
+   end
+   error( string.format( "illegal access -- %s", access ) )
+end
+
 function _lune.unwrap( val )
    if val == nil then
       __luneScript:error( 'unwrap val is nil' )
@@ -278,6 +320,7 @@ local Util = _lune.loadModule( 'lune.base.Util' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
+local Types = _lune.loadModule( 'lune.base.Types' )
 local Formatter = _lune.loadModule( 'lune.base.Formatter' )
 local function loadCode( code )
 
@@ -357,17 +400,18 @@ setmetatable( MacroMetaInfo, { ifList = {Mapping,} } )
 function MacroMetaInfo.setmeta( obj )
   setmetatable( obj, { __index = MacroMetaInfo  } )
 end
-function MacroMetaInfo.new( name, argList, symList, stmtBlock, tokenList )
+function MacroMetaInfo.new( name, pos, argList, symList, stmtBlock, tokenList )
    local obj = {}
    MacroMetaInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( name, argList, symList, stmtBlock, tokenList )
+      obj:__init( name, pos, argList, symList, stmtBlock, tokenList )
    end
    return obj
 end
-function MacroMetaInfo:__init( name, argList, symList, stmtBlock, tokenList )
+function MacroMetaInfo:__init( name, pos, argList, symList, stmtBlock, tokenList )
 
    self.name = name
+   self.pos = pos
    self.argList = argList
    self.symList = symList
    self.stmtBlock = stmtBlock
@@ -390,6 +434,7 @@ end
 function MacroMetaInfo._fromMapSub( obj, val )
    local memInfo = {}
    table.insert( memInfo, { name = "name", func = _lune._toStr, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "pos", func = _lune._toList, nilable = false, child = { { func = _lune._toInt, nilable = false, child = {} } } } )
    table.insert( memInfo, { name = "argList", func = _lune._toList, nilable = false, child = { { func = MacroMetaArgInfo._fromMap, nilable = false, child = {} } } } )
    table.insert( memInfo, { name = "symList", func = _lune._toList, nilable = false, child = { { func = MacroMetaArgInfo._fromMap, nilable = false, child = {} } } } )
    table.insert( memInfo, { name = "stmtBlock", func = _lune._toStr, nilable = true, child = {} } )
@@ -754,10 +799,19 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
 end
 
 
-function MacroCtrl:importMacro( processInfo, macroInfoStem, macroTypeInfo, typeId2TypeInfo )
+function MacroCtrl:importMacro( processInfo, lnsPath, macroInfoStem, macroTypeInfo, typeId2TypeInfo )
 
    local macroInfo, err = MacroMetaInfo._fromStem( macroInfoStem )
    if macroInfo ~= nil then
+      local orgPos
+      
+      if #macroInfo.pos == 2 then
+         orgPos = Types.Position.new(macroInfo.pos[1], macroInfo.pos[2], lnsPath)
+      else
+       
+         Util.err( "macroInfo.pos is illegal" )
+      end
+      
       local argList = {}
       local argNameList = {}
       local symbol2MacroValInfoMap = {}
@@ -784,7 +838,7 @@ function MacroCtrl:importMacro( processInfo, macroInfoStem, macroTypeInfo, typeI
             column = 1
          else
           
-            local pos = Parser.Position.new(lineNo, column, string.format( "macro:%s", macroInfo.name))
+            local pos = Types.Position.create( lineNo, column, string.format( "macro:%s", macroInfo.name), orgPos )
             table.insert( tokenList, Parser.Token.new(_lune.unwrap( Parser.TokenKind._from( math.floor(tokenInfo[1]) )), txt, pos, false) )
             column = column + #txt + 1
          end
@@ -921,12 +975,14 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
             
             pushbackTxt( parser, txtList, nextToken.txt, nextToken.pos )
          elseif equalsType( macroVal.typeInfo, Ast.builtinTypeStat ) or equalsType( macroVal.typeInfo, Ast.builtinTypeExp ) or equalsType( macroVal.typeInfo, Ast.builtinTypeMultiExp ) then
-            parser:pushbackStr( string.format( "macroVal %s", nextToken.txt), (_lune.unwrap( macroVal.val) ) )
+            local pos = _lune.nilacc( _lune.nilacc( macroVal.argNode, 'get_pos', 'callmtd' ), 'get_orgPos', 'callmtd' ) or nextToken.pos:get_orgPos()
+            parser:pushbackStr( string.format( "macroVal %s", nextToken.txt), (_lune.unwrap( macroVal.val) ), pos )
          elseif macroVal.typeInfo:get_kind() == Ast.TypeInfoKind.Array or macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKind.List then
             if equalsType( macroVal.typeInfo:get_itemTypeInfoList()[1], Ast.builtinTypeStat ) then
+               local pos = _lune.nilacc( _lune.nilacc( macroVal.argNode, 'get_pos', 'callmtd' ), 'get_orgPos', 'callmtd' ) or nextToken.pos:get_orgPos()
                local strList = (_lune.unwrap( macroVal.val) )
                for index = #strList, 1, -1 do
-                  parser:pushbackStr( string.format( "macroVal %s[%d]", nextToken.txt, index), strList[index] )
+                  parser:pushbackStr( string.format( "macroVal %s[%d]", nextToken.txt, index), strList[index], pos )
                end
                
             else

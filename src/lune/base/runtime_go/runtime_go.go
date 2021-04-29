@@ -83,6 +83,17 @@ func (self *LnsThread) InitLnsThread() {
     self.LnsEnv = createEnv()
 }
 
+func (self *LnsThread) LoopMain() {
+    self.FP.Loop()
+
+    // スレッド処理が終ったら、
+    // メモリ削減のため LnsEnv を共通に戻し、VM を close する。
+    oldEnv := self.LnsEnv
+    self.LnsEnv = Lns_GetEnv()
+    oldEnv.LuaVM.closeVM()
+}
+
+
 
 
 /**

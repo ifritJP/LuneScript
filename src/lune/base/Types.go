@@ -169,11 +169,13 @@ func Types_TransCtrlInfo_create_normal() *Types_TransCtrlInfo {
 // declaration Class -- Position
 type Types_PositionMtd interface {
     ToMap() *LnsMap
+    Get_orgPos() *Types_Position
 }
 type Types_Position struct {
     LineNo LnsInt
     Column LnsInt
     StreamName string
+    OrgPos LnsAny
     FP Types_PositionMtd
 }
 func Types_Position2Stem( obj LnsAny ) LnsAny {
@@ -202,15 +204,11 @@ func NewTypes_Position(arg1 LnsInt, arg2 LnsInt, arg3 string) *Types_Position {
     obj.InitTypes_Position(arg1, arg2, arg3)
     return obj
 }
-func (self *Types_Position) InitTypes_Position(arg1 LnsInt, arg2 LnsInt, arg3 string) {
-    self.LineNo = arg1
-    self.Column = arg2
-    self.StreamName = arg3
-}
 func (self *Types_Position) ToMapSetup( obj *LnsMap ) *LnsMap {
     obj.Items["lineNo"] = Lns_ToCollection( self.LineNo )
     obj.Items["column"] = Lns_ToCollection( self.Column )
     obj.Items["streamName"] = Lns_ToCollection( self.StreamName )
+    obj.Items["orgPos"] = Lns_ToCollection( self.OrgPos )
     return obj
 }
 func (self *Types_Position) ToMap() *LnsMap {
@@ -253,8 +251,46 @@ func Types_Position_FromMapMain( newObj *Types_Position, objMap *LnsMap, paramLi
     } else {
        newObj.StreamName = conv.(string)
     }
+    if ok,conv,mess := Types_Position_FromMapSub( objMap.Items["orgPos"], true, nil); !ok {
+       return false,nil,"orgPos:" + mess.(string)
+    } else {
+       newObj.OrgPos = conv
+    }
     return true, newObj, nil
 }
+// 71: DeclConstr
+func (self *Types_Position) InitTypes_Position(lineNo LnsInt,column LnsInt,streamName string) {
+    self.LineNo = lineNo
+    
+    self.Column = column
+    
+    self.StreamName = streamName
+    
+    self.OrgPos = nil
+    
+}
+
+// 78: decl @lune.@base.@Types.Position.get_orgPos
+func (self *Types_Position) Get_orgPos() *Types_Position {
+    {
+        __exp := self.OrgPos
+        if __exp != nil {
+            _exp := __exp.(*Types_Position)
+            return _exp.FP.Get_orgPos()
+        }
+    }
+    return self
+}
+
+// 85: decl @lune.@base.@Types.Position.create
+func Types_Position_create(lineNo LnsInt,column LnsInt,streamName string,orgPos LnsAny) *Types_Position {
+    var pos *Types_Position
+    pos = NewTypes_Position(lineNo, column, streamName)
+    pos.OrgPos = orgPos
+    
+    return pos
+}
+
 
 // declaration Class -- Token
 type Types_TokenMtd interface {
@@ -360,7 +396,7 @@ func Types_Token_FromMapMain( newObj *Types_Token, objMap *LnsMap, paramList []L
     }
     return true, newObj, nil
 }
-// 94: DeclConstr
+// 118: DeclConstr
 func (self *Types_Token) InitTypes_Token(kind LnsInt,txt string,pos *Types_Position,consecutive bool,commentList LnsAny) {
     self.Kind = kind
     
@@ -374,14 +410,14 @@ func (self *Types_Token) InitTypes_Token(kind LnsInt,txt string,pos *Types_Posit
     
 }
 
-// 104: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
+// 128: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
 func (self *Types_Token) GetExcludedDelimitTxt() string {
     if self.Kind != Types_TokenKind__Str{
         return self.Txt
     }
-    if _switch223 := LnsInt(self.Txt[1-1]); _switch223 == 39 || _switch223 == 34 {
+    if _switch332 := LnsInt(self.Txt[1-1]); _switch332 == 39 || _switch332 == 34 {
         return Lns_getVM().String_sub(self.Txt,2, len(self.Txt) - 1)
-    } else if _switch223 == 96 {
+    } else if _switch332 == 96 {
         return Lns_getVM().String_sub(self.Txt,1 + 3, len(self.Txt) - 3)
     }
     panic(Lns_getVM().String_format("illegal delimit -- %s", []LnsAny{self.Txt}))
@@ -389,22 +425,22 @@ func (self *Types_Token) GetExcludedDelimitTxt() string {
     return ""
 }
 
-// 119: decl @lune.@base.@Types.Token.set_commentList
+// 143: decl @lune.@base.@Types.Token.set_commentList
 func (self *Types_Token) Set_commentList(commentList *LnsList) {
     self.commentList = commentList
     
 }
 
-// 123: decl @lune.@base.@Types.Token.getLineCount
+// 147: decl @lune.@base.@Types.Token.getLineCount
 func (self *Types_Token) GetLineCount() LnsInt {
     var count LnsInt
     count = 1
     {
-        _form286, _param286, _prev286 := Lns_getVM().String_gmatch(self.Txt,"\n")
+        _form395, _param395, _prev395 := Lns_getVM().String_gmatch(self.Txt,"\n")
         for {
-            _work286 := _form286.(*Lns_luaValue).Call( Lns_2DDD( _param286, _prev286 ) )
-            _prev286 = Lns_getFromMulti(_work286,0)
-            if Lns_IsNil( _prev286 ) { break }
+            _work395 := _form395.(*Lns_luaValue).Call( Lns_2DDD( _param395, _prev395 ) )
+            _prev395 = Lns_getFromMulti(_work395,0)
+            if Lns_IsNil( _prev395 ) { break }
             count = count + 1
             
         }

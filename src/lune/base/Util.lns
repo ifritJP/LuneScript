@@ -139,6 +139,17 @@ pub class memStream extend (oStream) {
    }
 }
 
+pub class NullOStream extend (oStream) {
+   pub fn write( val: str ) mut : stem!, str! {
+      return self, nil;
+   }
+   pub fn close() mut {
+   }
+   pub fn flush() mut {
+   }
+}
+
+
 pub interface SourceStream {
    pub abstract fn write( txt: str ) mut;
    pub abstract fn writeln( txt: str ) mut;

@@ -283,7 +283,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 7400
+   return 7473
 end
 
 
@@ -591,7 +591,8 @@ usage:
     --compat-comment: backward compatibility to process the comment.
     --disable-checking-define-abbr: disable checking for ##.
     --uptodate <mode>: checking uptodate mode.
-            mode: skip check.
+            force: skip check for target lns file.
+            forceAll: skip check for all.
             none: skip process when file is uptodate.
             touch: touch meta file when file is uptodate.  (default)
     --use-ipairs: use ipairs for foreach with List value.
@@ -970,7 +971,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 595, function (  )
+   Log.log( Log.Level.Log, __func__, 596, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

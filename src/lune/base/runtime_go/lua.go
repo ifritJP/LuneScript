@@ -154,6 +154,10 @@ func createVM() *Lns_luaVM {
     return luaVM
 }
 
+func (self *Lns_luaVM) closeVM() {
+    lua_close( self.vm )
+}
+
 func Lns_getVM() *Lns_luaVM {
     return Lns_getVMMain( cur_LnsEnv )
 }

@@ -314,6 +314,35 @@ function memStream.setmeta( obj )
 end
 
 
+local NullOStream = {}
+setmetatable( NullOStream, { ifList = {oStream,} } )
+_moduleObj.NullOStream = NullOStream
+function NullOStream:write( val )
+
+   return self, nil
+end
+function NullOStream:close(  )
+
+end
+function NullOStream:flush(  )
+
+end
+function NullOStream.setmeta( obj )
+  setmetatable( obj, { __index = NullOStream  } )
+end
+function NullOStream.new(  )
+   local obj = {}
+   NullOStream.setmeta( obj )
+   if obj.__init then
+      obj:__init(  )
+   end
+   return obj
+end
+function NullOStream:__init(  )
+
+end
+
+
 local SourceStream = {}
 _moduleObj.SourceStream = SourceStream
 function SourceStream.setmeta( obj )
@@ -438,7 +467,7 @@ local function getReadyCode( depPath, tgtPath )
       return true
    end
    
-   Log.log( Log.Level.Warn, __func__, 270, function (  )
+   Log.log( Log.Level.Warn, __func__, 281, function (  )
    
       return string.format( "not ready %g < %g : %s, %s", tgtTime, depTime, tgtPath, depPath)
    end )

@@ -141,7 +141,7 @@ func (self *Async_Pipe) Loop() {
 func (self *Async_Pipe) Start() {
     self.started = true
     
-    go self.FP.Loop()
+    go self.LoopMain()
 }
 
 

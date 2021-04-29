@@ -58,8 +58,12 @@ func AddlnsSrcInfo( key string, code []byte ) {
     lnsSrcMap[ key ] = &lnsSrcInfo{ string( code ), len( code ) }
 }
 
+var readyBind bool
 func Lns_initPreload( vm lua_state ) {
-    init_bind()
+    if !readyBind {
+        init_bind()
+        readyBind = true
+    }
     for key := range( lnsSrcMap ) {
         code := lnsSrcMap[ key ]
         vm.PreloadModule( key, func( vms lua_state ) int {
@@ -81,6 +85,7 @@ var cLUA_TNUMBER int
 var cLUA_TSTRING int
 
 func init() {
+    readyBind = false
     lnsSrcMap = map[string] *lnsSrcInfo{}
     cLUA_MULTRET = int(lua.MultRet)
     cLUA_TBOOLEAN = int(lua.LTBool)

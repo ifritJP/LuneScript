@@ -194,7 +194,7 @@ function GoModResult._from( val )
    return _lune._AlgeFrom( GoModResult, val )
 end
 
-GoModResult.Found = { "Found", {{ func=ModProjInfo._fromMap, nilable=false, child={} }}}
+GoModResult.Found = { "Found", {{}}}
 GoModResult._name2Val["Found"] = GoModResult.Found
 GoModResult.NotFound = { "NotFound"}
 GoModResult._name2Val["NotFound"] = GoModResult.NotFound

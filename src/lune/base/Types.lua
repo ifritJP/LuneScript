@@ -284,22 +284,37 @@ end
 local Position = {}
 setmetatable( Position, { ifList = {Mapping,} } )
 _moduleObj.Position = Position
-function Position.setmeta( obj )
-  setmetatable( obj, { __index = Position  } )
-end
 function Position.new( lineNo, column, streamName )
    local obj = {}
    Position.setmeta( obj )
-   if obj.__init then
-      obj:__init( lineNo, column, streamName )
-   end
+   if obj.__init then obj:__init( lineNo, column, streamName ); end
    return obj
 end
-function Position:__init( lineNo, column, streamName )
-
+function Position:__init(lineNo, column, streamName) 
    self.lineNo = lineNo
    self.column = column
    self.streamName = streamName
+   self.orgPos = nil
+end
+function Position:get_orgPos(  )
+
+   do
+      local _exp = self.orgPos
+      if _exp ~= nil then
+         return _exp:get_orgPos()
+      end
+   end
+   
+   return self
+end
+function Position.create( lineNo, column, streamName, orgPos )
+
+   local pos = Position.new(lineNo, column, streamName)
+   pos.orgPos = orgPos
+   return pos
+end
+function Position.setmeta( obj )
+  setmetatable( obj, { __index = Position  } )
 end
 function Position:_toMap()
   return self
@@ -320,6 +335,7 @@ function Position._fromMapSub( obj, val )
    table.insert( memInfo, { name = "lineNo", func = _lune._toInt, nilable = false, child = {} } )
    table.insert( memInfo, { name = "column", func = _lune._toInt, nilable = false, child = {} } )
    table.insert( memInfo, { name = "streamName", func = _lune._toStr, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "orgPos", func = Position._fromMap, nilable = true, child = {} } )
    local result, mess = _lune._fromMap( obj, val, memInfo )
    if not result then
       return nil, mess
@@ -428,7 +444,7 @@ end
 function Token:getLineCount(  )
 
    local count = 1
-   for _90 in self.txt:gmatch( "\n" ) do
+   for _111 in self.txt:gmatch( "\n" ) do
       count = count + 1
    end
    

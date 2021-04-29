@@ -1892,9 +1892,25 @@ _declNodeClass( "DeclMember", Node, false, false, true,
                   { "accessMode": "Ast.AccessMode" },
                   { "getterMutable": "bool" },
                   { "getterMode": "Ast.AccessMode" },
+                  { "getterToken": "&Types.Token!" },
                   { "getterRetType": "&Ast.TypeInfo" },
-                  { "setterMode": "Ast.AccessMode" } ]
+                  { "setterMode": "Ast.AccessMode" },
+                  { "setterToken": "&Types.Token!" } ]
 );
+
+pub fn DeclMemberNode.getGetterSym() : &Ast.SymbolInfo! {
+   if self.getterMode ~= .None {
+      return self.classType.$scope$.getSymbolInfoChild$( "get_%s" (self.name.txt) );
+   }
+   return nil;
+}
+
+pub fn DeclMemberNode.getSetterSym() : &Ast.SymbolInfo! {
+   if self.setterMode ~= .None {
+      return self.classType.$scope$.getSymbolInfoChild$( "set_%s" (self.name.txt) );
+   }
+   return nil;
+}
 
 _declNodeClass( "DeclArg", Node, false, false, false,
                 [ { "name": "&Parser.Token" },

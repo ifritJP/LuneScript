@@ -66,6 +66,30 @@ pub class Position extend (Mapping) {
    pub let lineNo: int;
    pub let column: int;
    pub let streamName: str;
+   pub let mut orgPos: &Position!;
+
+   pub fn __init( lineNo: int, column: int, streamName: str ) {
+      self.lineNo = lineNo;
+      self.column = column;
+      self.streamName = streamName;
+      self.orgPos = nil;
+   }
+
+   pub fn get_orgPos() : &Position {
+      if! self.orgPos {
+         return _exp.$orgPos;
+      }
+      return self;
+   }
+
+   pub static fn create( lineNo: int, column: int,
+                         streamName: str, orgPos:&Position! ) : Position
+   {
+      let mut pos = new Position( lineNo, column, streamName );
+      pos.orgPos = orgPos;
+      return pos;
+   }
+
 }
 
 pub enum TokenKind {

@@ -244,7 +244,7 @@ end
 local function fromStr( txt )
 
    local stream = Parser.TxtStream.new(txt)
-   local parser = Parser.DefaultPushbackParser.new(Parser.StreamParser.new(stream, "json", false))
+   local parser = Parser.DefaultPushbackParser.new(Parser.StreamParser.new(stream, "json", false, nil))
    local val, ok = getVal( parser )
    if not ok then
       return nil, parser:getLastPos(  )

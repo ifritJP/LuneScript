@@ -116,7 +116,7 @@ func Json_fromStr(txt string)(LnsAny, LnsAny) {
     var stream *Parser_TxtStream
     stream = NewParser_TxtStream(txt)
     var parser *Parser_DefaultPushbackParser
-    parser = NewParser_DefaultPushbackParser(&NewParser_StreamParser(stream.FP, "json", false).Parser_Parser)
+    parser = NewParser_DefaultPushbackParser(&NewParser_StreamParser(stream.FP, "json", false, nil).Parser_Parser)
     var val LnsAny
     var ok bool
     val,ok = Json_getVal_1010_(parser)
@@ -127,12 +127,12 @@ func Json_fromStr(txt string)(LnsAny, LnsAny) {
 }
 
 // 131: decl @lune.@base.@Json.lenMap
-func _lenMap_1029_(_map LnsAny) LnsInt {
+func _lenMap_1028_(_map LnsAny) LnsInt {
     if _map != nil{
-        map_335 := _map
+        map_339 := _map
         var count LnsInt
         count = 0
-        for range( map_335.(*LnsMap).Items ) {
+        for range( map_339.(*LnsMap).Items ) {
             count = count + 1
             
         }
