@@ -283,7 +283,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 7387
+   return 7486
 end
 
 
@@ -428,6 +428,7 @@ function Option.new(  )
    return obj
 end
 function Option:__init() 
+   self.projDir = nil
    self.runtimeOpt = RuntimeOpt.new()
    self.shebangArgList = {}
    self.outputPath = nil
@@ -489,6 +490,9 @@ function Option.setmeta( obj )
 end
 function Option:get_runtimeOpt()
    return self.runtimeOpt
+end
+function Option:get_projDir()
+   return self.projDir
 end
 
 
@@ -583,6 +587,7 @@ usage:
 
   common_op:
     --testing: enable test.
+    --projDir <dir>: set the project dir.
     -u: update meta and lua on load.
     -Werror: error by warrning.
     --log <mode>: set log level.
@@ -591,7 +596,8 @@ usage:
     --compat-comment: backward compatibility to process the comment.
     --disable-checking-define-abbr: disable checking for ##.
     --uptodate <mode>: checking uptodate mode.
-            mode: skip check.
+            force: skip check for target lns file.
+            forceAll: skip check for all.
             none: skip process when file is uptodate.
             touch: touch meta file when file is uptodate.  (default)
     --use-ipairs: use ipairs for foreach with List value.
@@ -689,6 +695,7 @@ end
    
    Util.setDebugFlag( false )
    
+   local uptodateOpt = nil
    while #argList >= index do
       local arg = argList[index]
       
@@ -709,6 +716,8 @@ end
                elseif _switchExp == "--version" then
                   print( string.format( "LuneScript: version %s (%d:Lua%s) [%s]", Ver.version, getBuildCount(  ), Depend.getLuaVersion(  ), Ver.metaVersion) )
                   os.exit( 0 )
+               elseif _switchExp == "--projDir" then
+                  option.projDir = getNextOp(  )
                elseif _switchExp == "--builtin" then
                   do
                      local __sorted = {}
@@ -825,21 +834,7 @@ end
                elseif _switchExp == "--use-ipairs" then
                   option.useIpairs = true
                elseif _switchExp == "--uptodate" then
-                  do
-                     local txt = getNextOp(  )
-                     if txt ~= nil then
-                        do
-                           local mode = Types.CheckingUptodateMode._from( txt )
-                           if mode ~= nil then
-                              option.transCtrlInfo.uptodateMode = mode
-                           else
-                              Util.errorLog( "illegal mode -- " .. txt )
-                           end
-                        end
-                        
-                     end
-                  end
-                  
+                  uptodateOpt = getNextOp(  )
                elseif _switchExp == "-langC" then
                   option.convTo = Types.Lang.C
                   option.transCtrlInfo.validLuaval = true
@@ -941,6 +936,26 @@ end
    end
    
    
+   if uptodateOpt ~= nil then
+      do
+         local _switchExp = uptodateOpt
+         if _switchExp == "force" then
+            option.transCtrlInfo.uptodateMode = _lune.newAlge( Types.CheckingUptodateMode.Force1, {Util.scriptPath2Module( option.scriptPath )})
+         elseif _switchExp == "forceAll" then
+            option.transCtrlInfo.uptodateMode = _lune.newAlge( Types.CheckingUptodateMode.ForceAll)
+         elseif _switchExp == "normal" then
+            option.transCtrlInfo.uptodateMode = _lune.newAlge( Types.CheckingUptodateMode.Normal)
+         elseif _switchExp == "touch" then
+            option.transCtrlInfo.uptodateMode = _lune.newAlge( Types.CheckingUptodateMode.Touch)
+         else 
+            
+               Util.errorLog( "illegal mode -- " .. uptodateOpt )
+         end
+      end
+      
+   end
+   
+   
    if option.mode ~= ModeKind.Builtin then
       if option.scriptPath == "" or option.mode == ModeKind.Unknown then
          printUsage( (#argList == 0 or argList[1] == "" ) and 0 or 1 )
@@ -963,7 +978,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 580, function (  )
+   Log.log( Log.Level.Log, __func__, 604, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )
@@ -974,12 +989,25 @@ end
 end
 _moduleObj.analyze = analyze
 
-local function createDefaultOption( path )
+local function createDefaultOption( path, projDir )
 
    local option = Option.new()
    option.scriptPath = path
    option.useLuneModule = getRuntimeModule(  )
    option.useIpairs = true
+   if projDir ~= nil then
+      if projDir ~= "/" then
+         if not projDir:find( "/$" ) then
+            option.projDir = projDir .. "/"
+         else
+          
+            option.projDir = projDir
+         end
+         
+      end
+      
+   end
+   
    return option
 end
 _moduleObj.createDefaultOption = createDefaultOption

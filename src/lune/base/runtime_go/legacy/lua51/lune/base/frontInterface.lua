@@ -89,6 +89,32 @@ end
 local Util = _lune.loadModule( 'lune.base.Util' )
 
 
+
+local ModuleMeta = {}
+_moduleObj.ModuleMeta = ModuleMeta
+function ModuleMeta.setmeta( obj )
+  setmetatable( obj, { __index = ModuleMeta  } )
+end
+function ModuleMeta.new( metaInfo, lnsPath )
+   local obj = {}
+   ModuleMeta.setmeta( obj )
+   if obj.__init then
+      obj:__init( metaInfo, lnsPath )
+   end
+   return obj
+end
+function ModuleMeta:__init( metaInfo, lnsPath )
+
+   self.metaInfo = metaInfo
+   self.lnsPath = lnsPath
+end
+function ModuleMeta:get_metaInfo()
+   return self.metaInfo
+end
+function ModuleMeta:get_lnsPath()
+   return self.lnsPath
+end
+
 local ModuleId = {}
 _moduleObj.ModuleId = ModuleId
 function ModuleId.new( modTime, buildCount )
@@ -199,7 +225,8 @@ function dummyFront:loadModule( mod )
       error( "load error" )
    end
    
-   return require( mod ), emptyTable
+   local meta = ModuleMeta.new(emptyTable, mod:gsub( "%.", "/" ) .. ".lns")
+   return require( mod ), meta
 end
 function dummyFront:loadMeta( importModuleInfo, mod )
 

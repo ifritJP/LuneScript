@@ -288,8 +288,8 @@ func (self *frontInterface_dummyFront) LoadModule(mod string)(LnsAny, *FrontInte
     loaded = frontInterface_convExp361(Lns_2DDD(Lns_getVM().Load("return {}", nil)))
     var emptyTable LnsAny
     if loaded != nil{
-        loaded_261 := loaded.(*Lns_luaValue)
-        emptyTable = Lns_unwrap( Lns_car(Lns_getVM().RunLoadedfunc(loaded_261,Lns_2DDD([]LnsAny{}))[0]))
+        loaded_263 := loaded.(*Lns_luaValue)
+        emptyTable = Lns_unwrap( Lns_car(Lns_getVM().RunLoadedfunc(loaded_263,Lns_2DDD([]LnsAny{}))[0]))
         
     } else {
         panic("load error")

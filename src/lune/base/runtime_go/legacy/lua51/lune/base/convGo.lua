@@ -565,17 +565,17 @@ end
 
 SymbolKind.Arg = { "Arg"}
 SymbolKind._name2Val["Arg"] = SymbolKind.Arg
-SymbolKind.Func = { "Func", {{ func=Ast.TypeInfo._fromMap, nilable=false, child={} }}}
+SymbolKind.Func = { "Func", {{}}}
 SymbolKind._name2Val["Func"] = SymbolKind.Func
-SymbolKind.Member = { "Member", {{ func=_lune._toBool, nilable=false, child={} }}}
+SymbolKind.Member = { "Member", {{}}}
 SymbolKind._name2Val["Member"] = SymbolKind.Member
 SymbolKind.Normal = { "Normal"}
 SymbolKind._name2Val["Normal"] = SymbolKind.Normal
-SymbolKind.Static = { "Static", {{ func=Ast.TypeInfo._fromMap, nilable=false, child={} }}}
+SymbolKind.Static = { "Static", {{}}}
 SymbolKind._name2Val["Static"] = SymbolKind.Static
-SymbolKind.Type = { "Type", {{ func=Ast.TypeInfo._fromMap, nilable=false, child={} },{ func=_lune._toBool, nilable=false, child={} }}}
+SymbolKind.Type = { "Type", {{},{}}}
 SymbolKind._name2Val["Type"] = SymbolKind.Type
-SymbolKind.Var = { "Var", {{ func=Ast.SymbolInfo._fromMap, nilable=false, child={} }}}
+SymbolKind.Var = { "Var", {{}}}
 SymbolKind._name2Val["Var"] = SymbolKind.Var
 
 
@@ -1672,7 +1672,7 @@ function convFilter:processConvExp( nodeId, dstTypeList, argListNode )
       
       if restIndex ~= nil then
          self:write( "Lns_2DDD( " )
-         for index, _6332 in ipairs( expList ) do
+         for index, _6367 in ipairs( expList ) do
             if index >= restIndex then
                if index < #expList then
                   self:write( string.format( "arg%d", index) )
@@ -1692,7 +1692,7 @@ function convFilter:processConvExp( nodeId, dstTypeList, argListNode )
       end
       
    else
-      for index, _6340 in ipairs( retTypeList ) do
+      for index, _6375 in ipairs( retTypeList ) do
          if index ~= 1 then
             self:write( ", " )
          end
@@ -1822,11 +1822,11 @@ function FuncInfo._from( val )
    return _lune._AlgeFrom( FuncInfo, val )
 end
 
-FuncInfo.DeclInfo = { "DeclInfo", {{ func=Nodes.Node._fromMap, nilable=false, child={} },{ func=Nodes.DeclFuncInfo._fromMap, nilable=false, child={} }}}
+FuncInfo.DeclInfo = { "DeclInfo", {{},{}}}
 FuncInfo._name2Val["DeclInfo"] = FuncInfo.DeclInfo
-FuncInfo.Type = { "Type", {{ func=Ast.TypeInfo._fromMap, nilable=false, child={} }}}
+FuncInfo.Type = { "Type", {{}}}
 FuncInfo._name2Val["Type"] = FuncInfo.Type
-FuncInfo.WithClass = { "WithClass", {{ func=Ast.TypeInfo._fromMap, nilable=false, child={} },{ func=Ast.TypeInfo._fromMap, nilable=false, child={} }}}
+FuncInfo.WithClass = { "WithClass", {{},{}}}
 FuncInfo._name2Val["WithClass"] = FuncInfo.WithClass
 
 
@@ -2172,7 +2172,7 @@ function convFilter:outputConvExt( funcNode )
    
    self:writeln( ") {" )
    self:write( "    return " )
-   for index, _6532 in ipairs( funcNode:get_expType():get_retTypeInfoList() ) do
+   for index, _6567 in ipairs( funcNode:get_expType():get_retTypeInfoList() ) do
       if index > 1 then
          self:write( "," )
       end
@@ -2474,7 +2474,7 @@ function convFilter:processRoot( node, opt )
       local function procNode( workNode )
       
          local symTypeList = {}
-         for _6710 = 1, #workNode:get_varSymList() do
+         for _6745 = 1, #workNode:get_varSymList() do
             table.insert( symTypeList, Ast.builtinTypeStem_ )
          end
          
@@ -3383,7 +3383,7 @@ function convFilter:processIfUnwrap( node, opt )
    end
    
    if getExpListKind( tempTypeList, node:get_expList() ) == ExpListKind.Direct then
-      for _7146 = #node:get_varSymList() + 1, #node:get_expList():get_expTypeList() do
+      for _7181 = #node:get_varSymList() + 1, #node:get_expList():get_expTypeList() do
          self:write( ", _" )
       end
       
@@ -3485,13 +3485,13 @@ function convFilter:outputLetVar( node )
             
             
             local tmpVarTypeList = {}
-            for index, _7184 in ipairs( node:get_symbolInfoList() ) do
+            for index, _7219 in ipairs( node:get_symbolInfoList() ) do
                table.insert( tmpVarTypeList, expList:getExpTypeNoDDDAt( index ) )
             end
             
             
             if getExpListKind( tmpVarTypeList, expList ) == ExpListKind.Direct then
-               for _7188 = #tmpVarTypeList + 1, #expList:get_expTypeList() do
+               for _7223 = #tmpVarTypeList + 1, #expList:get_expTypeList() do
                   self:write( ", _" )
                end
                
@@ -3583,7 +3583,7 @@ function convFilter:outputLetVar( node )
             
             
             if getExpListKind( varTypeList, expList ) == ExpListKind.Direct then
-               for _7218 = #varTypeList + 1, #expList:get_expTypeList() do
+               for _7253 = #varTypeList + 1, #expList:get_expTypeList() do
                   self:write( ", _" )
                end
                
@@ -3646,7 +3646,7 @@ function convFilter:processDeclVar( node, opt )
          end
          
          if getExpListKind( typeList, expList ) == ExpListKind.Direct then
-            for _7247 = #node:get_symbolInfoList() + 1, #expList:get_expTypeList() do
+            for _7282 = #node:get_symbolInfoList() + 1, #expList:get_expTypeList() do
                self:write( ",_" )
             end
             
@@ -3903,7 +3903,7 @@ function convFilter:processMatch( node, opt )
    local function hasAccessing(  )
    
       for __index, caseInfo in ipairs( node:get_caseList() ) do
-         for _7378, symbol in ipairs( caseInfo:get_valParamNameList() ) do
+         for _7413, symbol in ipairs( caseInfo:get_valParamNameList() ) do
             if symbol:get_posForModToRef() then
                return true
             end
@@ -4088,7 +4088,7 @@ function convFilter:processApply( node, opt )
       local workSym = string.format( "_work%d", node:get_id())
       self:writeln( string.format( "%s := %s.(*Lns_luaValue).Call( Lns_2DDD( %s, %s ) )", workSym, formSym, paramSym, prevSym) )
       self:write( string.format( "%s = ", setTxt) )
-      for index, _7442 in ipairs( node:get_varList() ) do
+      for index, _7477 in ipairs( node:get_varList() ) do
          if index > 1 then
             self:write( "," )
          end
@@ -4757,7 +4757,7 @@ function convFilter:outputConstructor( node )
       self:pushIndent(  )
       self:outputNewSetup( "obj", node:get_expType() )
       self:write( string.format( "obj.%s(", ctorName) )
-      for index, _7682 in ipairs( initFuncType:get_argTypeInfoList() ) do
+      for index, _7717 in ipairs( initFuncType:get_argTypeInfoList() ) do
          if index ~= 1 then
             self:write( ", " )
          end
@@ -5257,7 +5257,7 @@ function convFilter:outputAdvertise( node )
                   end
                   
                   self:write( string.format( "%s( ", self:getSymbolSym( symbol )) )
-                  for index, _7885 in ipairs( funcType:get_argTypeInfoList() ) do
+                  for index, _7920 in ipairs( funcType:get_argTypeInfoList() ) do
                      if index > 1 then
                         self:write( "," )
                      end
@@ -5359,7 +5359,7 @@ function CallKind._from( val )
    return _lune._AlgeFrom( CallKind, val )
 end
 
-CallKind.BuiltinCall = { "BuiltinCall", {{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toStr, nilable=false, child={} }}}
+CallKind.BuiltinCall = { "BuiltinCall", {{},{}}}
 CallKind._name2Val["BuiltinCall"] = CallKind.BuiltinCall
 CallKind.FormCall = { "FormCall"}
 CallKind._name2Val["FormCall"] = CallKind.FormCall
@@ -5369,9 +5369,9 @@ CallKind.Normal = { "Normal"}
 CallKind._name2Val["Normal"] = CallKind.Normal
 CallKind.RunLoaded = { "RunLoaded"}
 CallKind._name2Val["RunLoaded"] = CallKind.RunLoaded
-CallKind.RuntimeCall = { "RuntimeCall", {{ func=Nodes.Node._fromMap, nilable=false, child={} }}}
+CallKind.RuntimeCall = { "RuntimeCall", {{}}}
 CallKind._name2Val["RuntimeCall"] = CallKind.RuntimeCall
-CallKind.SortCall = { "SortCall", {{ func=Ast.TypeInfo._fromMap, nilable=false, child={} }}}
+CallKind.SortCall = { "SortCall", {{}}}
 CallKind._name2Val["SortCall"] = CallKind.SortCall
 
 function convFilter:outputCallPrefix( threading, callId, node, prefixNode, funcSymbol )
@@ -5413,7 +5413,7 @@ function convFilter:outputCallPrefix( threading, callId, node, prefixNode, funcS
             
                if retNum <= MaxNilAccNum then
                   local anys = "LnsAny"
-                  for _7953 = 2, retNum do
+                  for _7988 = 2, retNum do
                      anys = string.format( "%s,LnsAny", anys)
                   end
                   
@@ -5421,7 +5421,7 @@ function convFilter:outputCallPrefix( threading, callId, node, prefixNode, funcS
                else
                 
                   local args = "LnsAny"
-                  for _7957 = 2, retNum do
+                  for _7992 = 2, retNum do
                      args = string.format( "%s,LnsAny", args)
                   end
                   
@@ -5997,7 +5997,7 @@ function convFilter:processExpSetVal( node, opt )
 
    filter( node:get_exp1(), self, node )
    if getExpListKind( node:get_exp1():get_expTypeList(), node:get_exp2() ) == ExpListKind.Direct then
-      for _8167 = #node:get_exp1():get_expTypeList() + 1, #node:get_exp2():get_expTypeList() do
+      for _8202 = #node:get_exp1():get_expTypeList() + 1, #node:get_exp2():get_expTypeList() do
          self:write( ",_" )
       end
       
@@ -6430,7 +6430,7 @@ function convFilter:processRefField( node, opt )
    end
    
    
-   for _8316 = 1, openParenNum do
+   for _8351 = 1, openParenNum do
       self:write( ")" )
    end
    
@@ -6734,7 +6734,7 @@ function convFilter:processLuneControl( node, opt )
       
       elseif _matchExp[1] == LuneControl.Pragma.run_async_pipe[1] then
       
-         self:writeln( "go self.FP.Loop()" )
+         self:writeln( "go self.LoopMain()" )
       end
    end
    

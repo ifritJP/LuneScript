@@ -283,7 +283,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 7473
+   return 7486
 end
 
 
@@ -428,6 +428,7 @@ function Option.new(  )
    return obj
 end
 function Option:__init() 
+   self.projDir = nil
    self.runtimeOpt = RuntimeOpt.new()
    self.shebangArgList = {}
    self.outputPath = nil
@@ -489,6 +490,9 @@ function Option.setmeta( obj )
 end
 function Option:get_runtimeOpt()
    return self.runtimeOpt
+end
+function Option:get_projDir()
+   return self.projDir
 end
 
 
@@ -583,6 +587,7 @@ usage:
 
   common_op:
     --testing: enable test.
+    --projDir <dir>: set the project dir.
     -u: update meta and lua on load.
     -Werror: error by warrning.
     --log <mode>: set log level.
@@ -711,6 +716,8 @@ end
                elseif _switchExp == "--version" then
                   print( string.format( "LuneScript: version %s (%d:Lua%s) [%s]", Ver.version, getBuildCount(  ), Depend.getLuaVersion(  ), Ver.metaVersion) )
                   os.exit( 0 )
+               elseif _switchExp == "--projDir" then
+                  option.projDir = getNextOp(  )
                elseif _switchExp == "--builtin" then
                   do
                      local __sorted = {}
@@ -971,7 +978,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 596, function (  )
+   Log.log( Log.Level.Log, __func__, 604, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )
@@ -982,12 +989,25 @@ end
 end
 _moduleObj.analyze = analyze
 
-local function createDefaultOption( path )
+local function createDefaultOption( path, projDir )
 
    local option = Option.new()
    option.scriptPath = path
    option.useLuneModule = getRuntimeModule(  )
    option.useIpairs = true
+   if projDir ~= nil then
+      if projDir ~= "/" then
+         if not projDir:find( "/$" ) then
+            option.projDir = projDir .. "/"
+         else
+          
+            option.projDir = projDir
+         end
+         
+      end
+      
+   end
+   
    return option
 end
 _moduleObj.createDefaultOption = createDefaultOption

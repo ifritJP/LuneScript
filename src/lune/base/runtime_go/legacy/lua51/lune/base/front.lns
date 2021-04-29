@@ -27,7 +27,7 @@ import lune.base.Str;
 import lune.base.frontInterface;
 import lune.base.Parser;
 import lune.base.convLua;
-import lune.base.convCC;
+//import lune.base.convCC;
 import lune.base.convGo;
 import lune.base.TransUnit;
 import lune.base.Util;
@@ -60,7 +60,7 @@ let forceUpdateMeta = true;
 
 class LoadInfo {
    pub let mut mod:Luaval<&stem>;
-   pub let mut meta:Luaval<&stem>;
+   pub let mut meta:&frontInterface.ModuleMeta;
 }
 
 class Front extend (frontInterface.frontInterface) {
@@ -69,7 +69,7 @@ class Front extend (frontInterface.frontInterface) {
    let mut loadedMap:Map<str,LoadInfo>;
    /** import 済みの Test ビルド用モジュールと、その LoadInfoの紐付け。 */ 
    let mut loadedMapTest:Map<str,LoadInfo>;
-   let mut loadedMetaMap:Map<str,Luaval<&stem>>;
+   let mut loadedMetaMap:Map<str,&frontInterface.ModuleMeta>;
    let mut convertedMap:Map<str,str>;
    let mut gomodMap:GoMod.ModInfo;
    let allmut mod2ast:Util.OrderdMap<str,TransUnit.ASTInfo>;
@@ -135,9 +135,9 @@ loadedMap で管理する前にシステムにロードされているため、
    }
    
 
-   pub fn loadModule( mod:str ) mut: Luaval<&stem>!, Luaval<&stem>;
+   pub fn loadModule( mod:str ) mut: Luaval<&stem>!, &frontInterface.ModuleMeta;
    pub fn loadMeta(
-      importModuleInfo:frontInterface.ImportModuleInfo, mod:str ) mut: Luaval<&stem>!;
+      importModuleInfo:frontInterface.ImportModuleInfo, mod:str ) mut: &frontInterface.ModuleMeta!;
    pub fn loadFromLnsTxt( importModuleInfo:frontInterface.ImportModuleInfo,
                           name:str, txt:str ): Luaval<&stem>;
    pub fn getLuaModulePath( mod:str ) mut : str;
@@ -169,13 +169,13 @@ fn createPaser( path:str, mod:str ): Parser.Parser
    error( "failed to open " .. path );
 }
 
-pub fn scriptPath2Module( path:str ):str {
-   return Util.scriptPath2Module( path );
+fn Front.scriptPath2Module( path:str ):str {
+   return Util.scriptPath2ModuleFromProjDir( path, self.option.$projDir );
 }
 
 fn Front.createPaser( scriptPath:str ): Parser.Parser
 {
-   let mod = scriptPath2Module( scriptPath );
+   let mod = self.scriptPath2Module( scriptPath );
    return createPaser( scriptPath, mod );
 }
 
@@ -222,10 +222,12 @@ pub fn loadFromLuaTxt( txt:str ): Luaval<&stem>! {
    return loadFromChunk( _load( txt ## )** );
 }
 
-pub static fn LoadInfo.FromLuaAndMeta( luaCode:str, metaTxt:str ) : LoadInfo {
+pub static fn LoadInfo.FromLuaAndMeta(
+   lnsPath:str, luaCode:str, metaTxt:str ) : LoadInfo
+{
    let mut meta = unwrap loadFromLuaTxt( metaTxt );
    let mut code = unwrap loadFromLuaTxt( luaCode );
-   return new LoadInfo( code, meta );
+   return new LoadInfo( code, new frontInterface.ModuleMeta( meta, lnsPath ) );
 }
 
 fn byteCompileFromLuaTxt( txt:str, stripDebugInfo:bool ): str {
@@ -259,7 +261,7 @@ fn Front.loadFromLnsTxt(
       importModuleInfo, new convLua.MacroEvalImp(),
       nil, nil, nil, self.option.targetLuaVer, self.option.transCtrlInfo );
    let mut stream = new Parser.TxtStream( txt );
-   let mut parser = new Parser.StreamParser( stream, name, false );
+   let mut parser = new Parser.StreamParser( stream, name, false, nil );
 
    let mut ast = transUnit.createAST( parser, false, nil );
 
@@ -404,9 +406,22 @@ fn Front.getModuleIdAndCheckUptodate( lnsPath:str, mod:str ) mut :
 {
    let mut uptodate = ModuleUptodate.NeedUpdate;
 
-   if self.option.transCtrlInfo.uptodateMode == .Force {
-      // 必ず NeedUpdate にする
-      return frontInterface.ModuleId.tempId, uptodate;
+   _match self.option.transCtrlInfo.uptodateMode {
+      case .ForceAll {
+         // 必ず NeedUpdate にする
+         return frontInterface.ModuleId.tempId, uptodate;
+      }
+      case .Force1( forceMod ) {
+         if mod == forceMod {
+            return frontInterface.ModuleId.tempId, uptodate;
+         }
+      }
+      case .Normal {
+         // pass
+      }
+      case .Touch {
+         // pass
+      }
    }
 
    /**
@@ -500,10 +515,10 @@ pub fn Front.convertLns2LuaCode(
    importModuleInfo:frontInterface.ImportModuleInfo,
    stream:iStream, streamName:str ): str
 {
-   let mod = scriptPath2Module( streamName );
+   let mod = self.scriptPath2Module( streamName );
    let mut ast = self.createAst(
       importModuleInfo,
-      new Parser.StreamParser( stream, streamName, false ), mod,
+      new Parser.StreamParser( stream, streamName, false, nil ), mod,
       frontInterface.ModuleId.createId( 0.0, 0 ), nil, .Compile ## );
 
    let _, luaTxt = self.convertFromAst( ast, streamName, convLua.ConvMode.Exec );
@@ -520,7 +535,7 @@ parser から Lns を AST 解析し、 meta 情報と変換後の Lua コード�
 */
 fn Front.loadParserToLuaCode(
    importModuleInfo:frontInterface.ImportModuleInfo,
-   parser:Parser.Parser, mod:str ): Luaval<&stem>, str
+   parser:Parser.Parser, mod:str ): &frontInterface.ModuleMeta, str
 {
    let path = parser.getStreamName();
    
@@ -566,7 +581,8 @@ fn Front.loadParserToLuaCode(
       saveFile( ".meta", metaTxt, self.option.byteCompile, true, true );
    }
 
-   let mut meta = unwrap loadFromLuaTxt( metaTxt );
+   let mut meta = new frontInterface.ModuleMeta(
+      unwrap loadFromLuaTxt( metaTxt ), path );
    return meta, luaTxt;
 }
 
@@ -576,7 +592,7 @@ fn Front.loadParserToLuaCode(
 */
 fn Front.loadFileToLuaCode(
    importModuleInfo:frontInterface.ImportModuleInfo,
-   path:str, mod:str ): Luaval<&stem>, str
+   path:str, mod:str ): &frontInterface.ModuleMeta, str
 {
    Log._log2( .Log, "%s: %s" (__func__, mod ) );
 
@@ -591,7 +607,7 @@ fn Front.loadFileToLuaCode(
 */
 fn Front.loadFile(
    importModuleInfo:frontInterface.ImportModuleInfo,
-   path:str, mod:str ): Luaval<&stem>, Luaval<&stem>
+   path:str, mod:str ): &frontInterface.ModuleMeta, Luaval<&stem>
 {
    Log._log2( .Info, "start %s:%s" ( __func__, mod ) );
    
@@ -630,7 +646,9 @@ fn Front.searchLuaFile( moduleFullName:str, addSearchPath:str! ) mut : str! {
 @param metaPath メタファイルのパス
 @return stem! 最新の場合、ロードしたメタ情報。 最新でない場合は nil。
 */
-fn Front.checkUptodateMeta( metaPath:str, addSearchPath:str! ) mut : Luaval<&stem>! {
+fn Front.checkUptodateMeta(
+   lnsPath:str, metaPath:str, addSearchPath:str! ) mut : frontInterface.ModuleMeta!
+{
    let! metaObj = self.loadLua( metaPath ) {
       Log._log( .Warn, `{ return "load error -- %s" ( metaPath ); } );
       return nil;
@@ -649,13 +667,13 @@ fn Front.checkUptodateMeta( metaPath:str, addSearchPath:str! ) mut : Luaval<&ste
    }
    
    foreach _, moduleFullName in meta.__dependModuleMap {
-      if! let lnsPath = self.searchModule( moduleFullName ) {
+      if! let moduleLnsPath = self.searchModule( moduleFullName ) {
          if! let moduleLuaPath = self.searchLuaFile( moduleFullName, addSearchPath ) {
-            if not Util.getReadyCode( lnsPath, metaPath ) {
+            if not Util.getReadyCode( moduleLnsPath, metaPath ) {
                // 依存するモジュールが更新されている場合、
                // 作成済みのメタファイルは使えないので nil を返す。
                Log._log( .Warn, `{ return "not ready -- %s, %s"
-                                  ( lnsPath, metaPath ); } );
+                                  ( moduleLnsPath, metaPath ); } );
                return nil;
             }
             let moduleMetaPath = moduleLuaPath.gsub( "%.lua$", ".meta" );
@@ -676,7 +694,7 @@ fn Front.checkUptodateMeta( metaPath:str, addSearchPath:str! ) mut : Luaval<&ste
          return nil;
       }
    }
-   return meta;
+   return new frontInterface.ModuleMeta( meta, lnsPath );
 }
 
 /**
@@ -685,7 +703,7 @@ mod のモジュールをロードする。
 @return Luaval<&stem>! モジュール情報
 @return Luaval<&stem> META 情報
 */
-fn Front.loadModule( mut mod:str ) mut : Luaval<&stem>!, Luaval<&stem> {
+fn Front.loadModule( mut mod:str ) mut : Luaval<&stem>!, &frontInterface.ModuleMeta {
    let orgMod = mod;
    mod = self.gomodMap.getLuaModulePath( mod );
    
@@ -719,8 +737,8 @@ fn Front.loadModule( mut mod:str ) mut : Luaval<&stem>!, Luaval<&stem> {
 	                loadVal = self.loadLua( luaPath );
                      }
                      if! loadVal {
-                        if! let meta =
-                           self.checkUptodateMeta( metaPath, self.option.outputDir )
+                        if! let meta = self.checkUptodateMeta(
+                           lnsPath, metaPath, self.option.outputDir )
                         {
 	                   self.setLoadInfo( mod, new LoadInfo( _exp, meta ) );
                         }
@@ -744,7 +762,9 @@ fn Front.loadModule( mut mod:str ) mut : Luaval<&stem>!, Luaval<&stem> {
                let workMod = require( mod );
                // meta は使用しないのでダミーで生成する。
                // 将来 meta を利用することになった場合は、修正が必要。             
-               let meta = unwrap loadFromLuaTxt( "return {}" );
+               let meta = new frontInterface.ModuleMeta(
+                  unwrap loadFromLuaTxt( "return {}" ),
+                  mod.gsub( "%.", "/" ) .. ".lns" );
 	       self.setLoadInfo( mod, new LoadInfo( workMod, meta ) );
             }
          }
@@ -763,7 +783,8 @@ pub fn Front.getLuaModulePath( mod:str ) mut : str {
 }
 
 fn Front.loadMeta(
-   importModuleInfo:frontInterface.ImportModuleInfo, mut mod:str ) mut : Luaval<&stem>!
+   importModuleInfo:frontInterface.ImportModuleInfo,
+   mut mod:str ) mut : &frontInterface.ModuleMeta!
 {
    let orgMod = mod;
    mod = self.gomodMap.getLuaModulePath( mod );
@@ -780,16 +801,31 @@ fn Front.loadMeta(
                luaPath = self.searchLuaFile( orgMod, dir );
             }
 
-            let mut meta:Luaval<&stem>! = nil;
+            let mut meta:&frontInterface.ModuleMeta! = nil;
             when! luaPath {
                // .lua, .meta ファイルが更新済みか調べ
                // 更新済みならそれをロードする
-               if self.option.transCtrlInfo.uptodateMode ~= .Force {
+               let forceFlag;
+               _match self.option.transCtrlInfo.uptodateMode {
+                  case .ForceAll {
+                     forceFlag = true;
+                  }
+                  case .Force1( forceMod ) {
+                     forceFlag = mod == forceMod;
+                  }
+                  case .Normal {
+                     forceFlag = false;
+                  }
+                  case .Touch {
+                     forceFlag = false;
+                  }
+               }
+               if not forceFlag {
                   if Util.getReadyCode( lnsPath, luaPath ) {
 	             let metaPath = string.gsub( luaPath, "%.lua$", ".meta" );
 	             if Util.getReadyCode( lnsPath, metaPath ) {
                         meta = self.checkUptodateMeta(
-                           metaPath, self.option.outputDir );
+                           lnsPath, metaPath, self.option.outputDir );
                      } else {
                         Log._log( .Warn, `{ return "%s not ready meta %s, %s"
                                             ( orgMod, lnsPath, metaPath ); } );
@@ -818,7 +854,7 @@ fn Front.loadMeta(
             if! let lnsCode = Depend.getBindLns( mod ) {
                let path = mod.gsub( "%.", "/" ) .. ".lns";
                let mut parser = new Parser.StreamParser(
-                  new Parser.TxtStream( lnsCode ), path, false );
+                  new Parser.TxtStream( lnsCode ), path, false, nil );
                let meta, luaTxt = self.loadParserToLuaCode(
                   importModuleInfo, parser, mod );
 	       self.loadedMetaMap[ mod ] = meta;
@@ -849,7 +885,7 @@ pub fn Front.dumpTokenize( scriptPath:str ) mut {
 pub fn Front.dumpAst( scriptPath:str ) mut {
    //frontInterface.setFront( self );
 
-   let mod = scriptPath2Module( scriptPath );
+   let mod = self.scriptPath2Module( scriptPath );
    Depend.profile(
       self.option.validProf,
       fn() {
@@ -866,7 +902,7 @@ pub fn Front.dumpAst( scriptPath:str ) mut {
 pub fn Front.format( scriptPath:str ) mut {
    //frontInterface.setFront( self );
 
-   let mod = scriptPath2Module( scriptPath );
+   let mod = self.scriptPath2Module( scriptPath );
 
    let mut ast = self.createAst(
       new frontInterface.ImportModuleInfo(),
@@ -879,7 +915,7 @@ pub fn Front.format( scriptPath:str ) mut {
 pub fn Front.checkDiag( scriptPath:str ) mut {
    //frontInterface.setFront( self );
 
-   let mod = scriptPath2Module( scriptPath );
+   let mod = self.scriptPath2Module( scriptPath );
    Util.setErrorCode( 0 );
    self.createAst( new frontInterface.ImportModuleInfo(),
                    self.createPaser( scriptPath ), mod,
@@ -887,7 +923,7 @@ pub fn Front.checkDiag( scriptPath:str ) mut {
 }
 
 pub fn Front.complete( scriptPath:str ) mut {
-   let mod = scriptPath2Module( scriptPath );
+   let mod = self.scriptPath2Module( scriptPath );
    self.createAst( new frontInterface.ImportModuleInfo(),
                    self.createPaser( scriptPath ), mod,
                    getModuleId( scriptPath, mod ## ),
@@ -895,7 +931,7 @@ pub fn Front.complete( scriptPath:str ) mut {
 }
 
 pub fn Front.inquire( scriptPath:str ) mut {
-   let mod = scriptPath2Module( scriptPath );
+   let mod = self.scriptPath2Module( scriptPath );
    self.createAst( new frontInterface.ImportModuleInfo(),
                    self.createPaser( scriptPath ), mod,
                    getModuleId( scriptPath, mod ## ),
@@ -906,7 +942,7 @@ pub fn Front.inquire( scriptPath:str ) mut {
 pub fn Front.createGlue(scriptPath:str) mut {
    //frontInterface.setFront( self );
 
-   let mod = scriptPath2Module( scriptPath );
+   let mod = self.scriptPath2Module( scriptPath );
    let mut ast = self.createAst(
       new frontInterface.ImportModuleInfo(), self.createPaser( scriptPath ), mod,
       getModuleId( scriptPath, mod ## ), nil, .Compile ## );
@@ -1098,10 +1134,10 @@ fn Front.createGoOption( scriptPath:str ) : &convGo.Option {
    return new convGo.Option( packageName, self.getGoAppName(), self.option.mainModule );
 }
 
-fn Front.convertToLua( scriptPath:str ) mut {
+fn Front.convertToLua( scriptPath:str, stream:oStream ) mut {
    //frontInterface.setFront( self );
 
-   let mod = scriptPath2Module( scriptPath );
+   let mod = self.scriptPath2Module( scriptPath );
    let mut convMode = convLua.ConvMode.Convert;
    if self.option.mode == .LuaMeta {
       convMode = .ConvMeta;
@@ -1113,9 +1149,9 @@ fn Front.convertToLua( scriptPath:str ) mut {
       ModuleUptodate.NeedUpdate, convMode, scriptPath, mod,
       self.option.byteCompile, self.option.stripDebugInfo,
       fn ( mode:ModuleUptodate ): oStream!, oStream!, oStream! {
-         return io.stdout, io.stdout, self.option.openDepend( nil );
+         return stream, stream, self.option.openDepend( nil );
       },
-      fn ( stream:oStream!, metaStream:oStream!, dependStream:oStream! ) {
+      fn ( luaCodeStream:oStream!, metaStream:oStream!, dependStream:oStream! ) {
          when! dependStream {
             dependStream.close();
          }
@@ -1126,11 +1162,12 @@ fn Front.convertToLua( scriptPath:str ) mut {
       switch self.option.convTo {
          case .Go {
             let mut conv = convGo.createFilter(
-               self.option.testing, "stdout", io.stdout, ast,
+               self.option.testing, "stdout", stream, ast,
                self.createGoOption( scriptPath ) );
             ast.$node.processFilter( conv, new convGo.Opt( ast.$node ) );
          }
       }
+      self.mod2ast.add( mod, ast );
    }
 }
 
@@ -1194,16 +1231,16 @@ pub fn Front.saveToC( scriptPath:str, ast:TransUnit.ASTInfo ) mut {
       return;
    };
 
-   let mut conv = convCC.createFilter(
-      self.option.testing, self.option.mode == .Builtin , cPath, file, hFile, ast );
-   ast.$node.processFilter( conv, new convCC.Opt( ast.$node ) );
+   // let mut conv = convCC.createFilter(
+   //    self.option.testing, self.option.mode == .Builtin , cPath, file, hFile, ast );
+   // ast.$node.processFilter( conv, new convCC.Opt( ast.$node ) );
 
    file.close();
    hFile.close();
 }
 
 pub fn Front.outputBuiltin( scriptPath:str ) mut {
-   let mod = scriptPath2Module( "lns_builtin" );
+   let mod = self.scriptPath2Module( "lns_builtin" );
 
    let mut ast = self.createAst(
       new frontInterface.ImportModuleInfo(),
@@ -1335,7 +1372,7 @@ oldStream, newStream に格納されているモジュールのメタ情報が�
    let mut updateFlag = true;
    let mut ast:TransUnit.ASTInfo! = nil;
    
-   let mod = scriptPath2Module( scriptPath );
+   let mod = self.scriptPath2Module( scriptPath );
    let mut luaPath = scriptPath.gsub( "%.lns$", ".lua" );
    let mut metaPath = scriptPath.gsub( "%.lns$", ".meta" );
    if self.option.outputDir {
@@ -1471,20 +1508,20 @@ oldStream, newStream に格納されているモジュールのメタ情報が�
 
 fn Front.outputBootC( scriptPath:str )
 {
-   let mut stream:oStream;
-   if! let path = self.option.bootPath {
-      let cPath = path.gsub( "%.lns$", ".c" );
-      let! mut file = io.open( cPath, "w" ) {
-         print( "failed to open file -- %s" (cPath) );
-         return;
-      };
-      stream = file;
-   }
-   else {
-      stream = io.stdout;
-   }
-   let initModule = scriptPath2Module( scriptPath );
-   convCC.outputBootcode( stream, initModule );
+   // let mut stream:oStream;
+   // if! let path = self.option.bootPath {
+   //    let cPath = path.gsub( "%.lns$", ".c" );
+   //    let! mut file = io.open( cPath, "w" ) {
+   //       print( "failed to open file -- %s" (cPath) );
+   //       return;
+   //    };
+   //    stream = file;
+   // }
+   // else {
+   //    stream = io.stdout;
+   // }
+   // let initModule = scriptPath2Module( scriptPath );
+   // convCC.outputBootcode( stream, initModule );
 }
 
 pub fn convertLnsCode2LuaCode( lnsCode:str, path:str ) : str
@@ -1500,9 +1537,15 @@ pub fn convertLnsCode2LuaCode( lnsCode:str, path:str ) : str
       new Parser.TxtStream( lnsCode ), path );
 }
 
-pub fn Front.build( astCallback:AstCallback! ) mut {
+alge BuildMode {
+   Save,
+   CreateAst,
+   Output(oStream),
+}
+
+pub fn Front.build( buildMode:BuildMode, astCallback:AstCallback! ) mut {
    fn createUpdateInfo( scriptPath:str, dependsPath:str! ) : UpdateInfo {
-      let mod = scriptPath2Module( scriptPath );
+      let mod = self.scriptPath2Module( scriptPath );
       let moduleId, uptodate = self.getModuleIdAndCheckUptodate( scriptPath, mod );
       let mut parser:Parser.Parser!;
       _match uptodate {
@@ -1517,6 +1560,20 @@ pub fn Front.build( astCallback:AstCallback! ) mut {
          }
       }
       return new UpdateInfo( scriptPath, dependsPath, parser, moduleId, uptodate );
+   }
+
+   fn process( updateInfo:UpdateInfo ) {
+      _match buildMode {
+         case .Save {
+            self.saveToLua( updateInfo );
+         }
+         case .Output( stream ) {
+            self.convertToLua( updateInfo.$scriptPath, stream );
+         }
+         case .CreateAst {
+            self.convertToLua( updateInfo.$scriptPath, new Util.NullOStream() );
+         }
+      }
    }
 
    Depend.profile(
@@ -1537,11 +1594,11 @@ pub fn Front.build( astCallback:AstCallback! ) mut {
 
             foreach updateInfo in updateList {
                let prev = os.clock();
-               self.saveToLua( updateInfo );
+               process( updateInfo );
                print( "%s:%g" ( updateInfo.$scriptPath, os.clock() - prev));
             }
          } else {
-            self.saveToLua( createUpdateInfo( self.option.scriptPath, nil ) );
+            process( createUpdateInfo( self.option.scriptPath, nil ) );
          }
 
          when! astCallback {
@@ -1554,7 +1611,7 @@ pub fn Front.build( astCallback:AstCallback! ) mut {
 
 pub fn build( option:Option.Option, astCallback:AstCallback ) mut {
    let mut front = new Front( option ## );
-   front.build( astCallback );
+   front.build( .CreateAst, astCallback );
 }
 
 pub fn Front.exec() mut
@@ -1584,13 +1641,14 @@ pub fn Front.exec() mut
          self.createGlue( self.option.scriptPath );
       }
       case .Lua, .LuaMeta {
-         self.convertToLua( self.option.scriptPath );
+         self.convertToLua( self.option.scriptPath, io.stdout );
       }
       case .Save, .SaveMeta {
-         self.build( nil );
+         self.build( .Save, nil );
       }
       case .Shebang {
-         if! let modObj = self.loadModule( scriptPath2Module( self.option.scriptPath ) )
+         if! let modObj =
+            self.loadModule( self.scriptPath2Module( self.option.scriptPath ) )
          {
             let code = Depend.runMain( modObj.__main, self.option.shebangArgList );
             os.exit( code );
@@ -1604,7 +1662,7 @@ pub fn Front.exec() mut
          //    print( errMess );
          //    os.exit( 1 );
          // };
-         let modObj = self.loadModule( scriptPath2Module( self.option.scriptPath ) );
+         let modObj = self.loadModule( self.scriptPath2Module( self.option.scriptPath ) );
 
          if self.option.testing {
             let code = ```
@@ -1617,7 +1675,7 @@ end
             let loaded, mess = _load( code ## );
             when! loaded {
                if! let mod = loaded(##) {
-                  (mod@@form)( scriptPath2Module( self.option.scriptPath ) );
+                  (mod@@form)( self.scriptPath2Module( self.option.scriptPath ) );
                }
             } else {
                print( mess );
@@ -1631,7 +1689,7 @@ end
          self.outputBuiltin( self.option.scriptPath );
       }
       case .MkMain {
-         let mod = scriptPath2Module( self.option.scriptPath );
+         let mod = self.scriptPath2Module( self.option.scriptPath );
          if! let mess = convGo.outputGoMain(
             self.getGoAppName(), mod, self.option.testing,
             self.option.outputPath, self.option.$runtimeOpt )
@@ -1665,7 +1723,7 @@ pub fn exec( args: &List<str> ) {
 // frontInterface.setFront( self ); で front を確定させるため
 // go の runtime_go/depend.go から、初期化処理として呼ぶ。
 pub fn setFront( bindModuleList:&List<str> ) {
-   let mut option = Option.createDefaultOption( "dummy.lns" );
+   let mut option = Option.createDefaultOption( "dummy.lns", nil );
    new Front( option, bindModuleList );
 }
 

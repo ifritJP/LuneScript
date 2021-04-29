@@ -105,7 +105,7 @@ pub interface PushbackParser {
    pub fn getTokenNoErr() mut : &Token;
    pub fn pushback() mut;
    pub fn pushbackToken( token: &Token ) mut;
-   pub fn pushbackStr( name:str, statement: str ) mut;
+   pub fn pushbackStr( name:str, statement: str, pos:&Types.Position ) mut;
    pub fn newPushback( tokenList: List<&Token> ) mut;
    pub fn getStreamName(): str;
    pub fn error( message:str ) mut :__;
@@ -194,17 +194,19 @@ pub class StreamParser extend Parser {
    let mut pos : int;
    let mut lineTokenList : &List<&Token>;
    let mut asyncParser:AsyncParser.Parser;
+   let overridePos:&Types.Position!;
    // let mut pipe:AsyncPipe;
 
-   pub fn __init( stream: iStream, name: str, luaMode: bool! ) {
+   pub fn __init( stream: iStream, name: str, luaMode: bool!, pos:&Types.Position! ) {
       super();
 
       
       self.streamName = name;
       self.pos = 1;
       self.lineTokenList = [];
-      
-      self.asyncParser = new AsyncParser.Parser( stream, name, luaMode );
+      self.overridePos = pos;
+
+      self.asyncParser = new AsyncParser.Parser( stream, name, luaMode, pos );
    }
 
    pub override fn getStreamName(): str {
@@ -222,7 +224,7 @@ pub class StreamParser extend Parser {
       }
 
       return new StreamParser(
-         stream, path, luaMode or Str.endsWith( path, ".lua" ) and true );
+         stream, path, luaMode or Str.endsWith( path, ".lua" ) and true, nil );
    }
 
    pub override fn getToken() mut : &Token! {
@@ -306,9 +308,9 @@ pub class DefaultPushbackParser extend (PushbackParser) {
    pub fn pushback() mut {
       self.pushbackToken( self.currentToken );
    }
-   pub fn pushbackStr( name:str, statement: str ) mut {
+   pub fn pushbackStr( name:str, statement: str, pos:&Types.Position ) mut {
       let mut memStream = new TxtStream( statement );
-      let mut parser = new StreamParser( memStream, name, false );
+      let mut parser = new StreamParser( memStream, name, false, pos );
 
       let mut list:List<&Token> = [];
       while true {
@@ -559,7 +561,7 @@ fn func():int {
       __t._eq( ctrl, parser.getTokenNoErr().txt, "2" );
       __t._eq( ctrl, parser.getTokenNoErr().txt, "3" );
       __t._eq( ctrl, parser.getTokenNoErr().txt, "4" );
-      parser.pushbackStr( "dummy", "a b" );
+      parser.pushbackStr( "dummy", "a b", parser.createPosition( 0, -1 ) );
       __t._eq( ctrl, parser.getTokenNoErr().txt, "a" );
       __t._eq( ctrl, parser.getTokenNoErr().txt, "b" );
       parser.pushback(); // b

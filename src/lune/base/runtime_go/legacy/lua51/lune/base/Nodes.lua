@@ -410,28 +410,27 @@ function Literal._from( val )
    return _lune._AlgeFrom( Literal, val )
 end
 
-Literal.ARRAY = { "ARRAY", {{ func=_lune._toList, nilable=false, child={ { func = Literal._from, nilable = false, child = {} } } }}}
+Literal.ARRAY = { "ARRAY", {{}}}
 Literal._name2Val["ARRAY"] = Literal.ARRAY
-Literal.Bool = { "Bool", {{ func=_lune._toBool, nilable=false, child={} }}}
+Literal.Bool = { "Bool", {{}}}
 Literal._name2Val["Bool"] = Literal.Bool
-Literal.Field = { "Field", {{ func=_lune._toList, nilable=false, child={ { func = _lune._toStr, nilable = false, child = {} } } }}}
+Literal.Field = { "Field", {{}}}
 Literal._name2Val["Field"] = Literal.Field
-Literal.Int = { "Int", {{ func=_lune._toInt, nilable=false, child={} }}}
+Literal.Int = { "Int", {{}}}
 Literal._name2Val["Int"] = Literal.Int
-Literal.LIST = { "LIST", {{ func=_lune._toList, nilable=false, child={ { func = Literal._from, nilable = false, child = {} } } }}}
+Literal.LIST = { "LIST", {{}}}
 Literal._name2Val["LIST"] = Literal.LIST
-Literal.MAP = { "MAP", {{ func=_lune._toMap, nilable=false, child={ { func = Literal._from, nilable = false, child = {} }, 
-{ func = Literal._from, nilable = false, child = {} } } }}}
+Literal.MAP = { "MAP", {{}}}
 Literal._name2Val["MAP"] = Literal.MAP
 Literal.Nil = { "Nil"}
 Literal._name2Val["Nil"] = Literal.Nil
-Literal.Real = { "Real", {{ func=_lune._toReal, nilable=false, child={} }}}
+Literal.Real = { "Real", {{}}}
 Literal._name2Val["Real"] = Literal.Real
-Literal.SET = { "SET", {{ func=_lune._toList, nilable=false, child={ { func = Literal._from, nilable = false, child = {} } } }}}
+Literal.SET = { "SET", {{}}}
 Literal._name2Val["SET"] = Literal.SET
-Literal.Str = { "Str", {{ func=_lune._toStr, nilable=false, child={} }}}
+Literal.Str = { "Str", {{}}}
 Literal._name2Val["Str"] = Literal.Str
-Literal.Symbol = { "Symbol", {{ func=_lune._toStr, nilable=false, child={} }}}
+Literal.Symbol = { "Symbol", {{}}}
 Literal._name2Val["Symbol"] = Literal.Symbol
 
 
@@ -761,7 +760,7 @@ end
 function NodeManager:__init() 
    self.idSeed = 0
    self.nodeKind2NodeList = {}
-   for kind, _2688 in pairs( nodeKind2NameMap ) do
+   for kind, _2709 in pairs( nodeKind2NameMap ) do
       if not self.nodeKind2NodeList[kind] then
          self.nodeKind2NodeList[kind] = {}
       end
@@ -2539,6 +2538,45 @@ function IfNode:getBreakKind( checkMode )
    
    
    return BreakKind.None
+end
+
+
+function IfNode:visitSub( visitor, depth, alreadySet )
+
+   for __index, stmt in ipairs( self:get_stmtList() ) do
+      
+      do
+         local _switchExp = visitor( stmt:get_exp(), self, "exp", depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not stmt:get_exp():visit( visitor, depth, alreadySet ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         elseif _switchExp == NodeVisitMode.Next then
+         end
+      end
+      
+      
+      
+      do
+         local _switchExp = visitor( stmt:get_block(), self, "block", depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not stmt:get_block():visit( visitor, depth, alreadySet ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         elseif _switchExp == NodeVisitMode.Next then
+         end
+      end
+      
+      
+   end
+   
+   return true
 end
 
 
@@ -4721,9 +4759,9 @@ function IndexVal._from( val )
    return _lune._AlgeFrom( IndexVal, val )
 end
 
-IndexVal.NodeIdx = { "NodeIdx", {{ func=Node._fromMap, nilable=false, child={} }}}
+IndexVal.NodeIdx = { "NodeIdx", {{}}}
 IndexVal._name2Val["NodeIdx"] = IndexVal.NodeIdx
-IndexVal.SymIdx = { "SymIdx", {{ func=_lune._toStr, nilable=false, child={} }}}
+IndexVal.SymIdx = { "SymIdx", {{}}}
 IndexVal._name2Val["SymIdx"] = IndexVal.SymIdx
 
 
@@ -8489,15 +8527,15 @@ _moduleObj.DeclFuncInfo = DeclFuncInfo
 function DeclFuncInfo.setmeta( obj )
   setmetatable( obj, { __index = DeclFuncInfo  } )
 end
-function DeclFuncInfo.new( kind, classTypeInfo, declClassNode, name, symbol, argList, staticFlag, accessMode, body, retTypeInfoList, has__func__Symbol, overrideFlag )
+function DeclFuncInfo.new( kind, classTypeInfo, declClassNode, name, symbol, argList, staticFlag, accessMode, body, retTypeInfoList, retTypeNodeList, has__func__Symbol, overrideFlag )
    local obj = {}
    DeclFuncInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( kind, classTypeInfo, declClassNode, name, symbol, argList, staticFlag, accessMode, body, retTypeInfoList, has__func__Symbol, overrideFlag )
+      obj:__init( kind, classTypeInfo, declClassNode, name, symbol, argList, staticFlag, accessMode, body, retTypeInfoList, retTypeNodeList, has__func__Symbol, overrideFlag )
    end
    return obj
 end
-function DeclFuncInfo:__init( kind, classTypeInfo, declClassNode, name, symbol, argList, staticFlag, accessMode, body, retTypeInfoList, has__func__Symbol, overrideFlag )
+function DeclFuncInfo:__init( kind, classTypeInfo, declClassNode, name, symbol, argList, staticFlag, accessMode, body, retTypeInfoList, retTypeNodeList, has__func__Symbol, overrideFlag )
 
    self.kind = kind
    self.classTypeInfo = classTypeInfo
@@ -8509,6 +8547,7 @@ function DeclFuncInfo:__init( kind, classTypeInfo, declClassNode, name, symbol, 
    self.accessMode = accessMode
    self.body = body
    self.retTypeInfoList = retTypeInfoList
+   self.retTypeNodeList = retTypeNodeList
    self.has__func__Symbol = has__func__Symbol
    self.overrideFlag = overrideFlag
 end
@@ -8542,6 +8581,9 @@ end
 function DeclFuncInfo:get_retTypeInfoList()
    return self.retTypeInfoList
 end
+function DeclFuncInfo:get_retTypeNodeList()
+   return self.retTypeNodeList
+end
 function DeclFuncInfo:get_has__func__Symbol()
    return self.has__func__Symbol
 end
@@ -8552,7 +8594,7 @@ end
 
 function DeclFuncInfo.createFrom( info, name, symbol )
 
-   return DeclFuncInfo.new(info:get_kind(), info.classTypeInfo, info.declClassNode, name, symbol, info.argList, info.staticFlag, info.accessMode, info.body, info.retTypeInfoList, info.has__func__Symbol, info.overrideFlag)
+   return DeclFuncInfo.new(info:get_kind(), info.classTypeInfo, info.declClassNode, name, symbol, info.argList, info.staticFlag, info.accessMode, info.body, info.retTypeInfoList, info.retTypeNodeList, info.has__func__Symbol, info.overrideFlag)
 end
 
 
@@ -8625,6 +8667,24 @@ function DeclFuncNode:visit( visitor, depth, alreadySet )
             local _switchExp = visitor( argNode, self, "arg", depth )
             if _switchExp == NodeVisitMode.Child then
                if not argNode:visit( visitor, depth, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
+               return false
+            elseif _switchExp == NodeVisitMode.Next then
+            end
+         end
+         
+         
+      end
+      
+      for __index, retTypeNode in ipairs( self.declInfo:get_retTypeNodeList() ) do
+         
+         do
+            local _switchExp = visitor( retTypeNode, self, "retType", depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not retTypeNode:visit( visitor, depth, alreadySet ) then
                   return false
                end
                
@@ -8769,6 +8829,24 @@ function DeclMethodNode:visit( visitor, depth, alreadySet )
          
       end
       
+      for __index, retTypeNode in ipairs( self.declInfo:get_retTypeNodeList() ) do
+         
+         do
+            local _switchExp = visitor( retTypeNode, self, "retType", depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not retTypeNode:visit( visitor, depth, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
+               return false
+            elseif _switchExp == NodeVisitMode.Next then
+            end
+         end
+         
+         
+      end
+      
       do
          local body = self.declInfo:get_body()
          if body ~= nil then
@@ -8879,6 +8957,24 @@ function ProtoMethodNode:visit( visitor, depth, alreadySet )
             local _switchExp = visitor( argNode, self, "arg", depth )
             if _switchExp == NodeVisitMode.Child then
                if not argNode:visit( visitor, depth, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
+               return false
+            elseif _switchExp == NodeVisitMode.Next then
+            end
+         end
+         
+         
+      end
+      
+      for __index, retTypeNode in ipairs( self.declInfo:get_retTypeNodeList() ) do
+         
+         do
+            local _switchExp = visitor( retTypeNode, self, "retType", depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not retTypeNode:visit( visitor, depth, alreadySet ) then
                   return false
                end
                
@@ -9013,6 +9109,24 @@ function DeclConstrNode:visit( visitor, depth, alreadySet )
          
       end
       
+      for __index, retTypeNode in ipairs( self.declInfo:get_retTypeNodeList() ) do
+         
+         do
+            local _switchExp = visitor( retTypeNode, self, "retType", depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not retTypeNode:visit( visitor, depth, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
+               return false
+            elseif _switchExp == NodeVisitMode.Next then
+            end
+         end
+         
+         
+      end
+      
       do
          local body = self.declInfo:get_body()
          if body ~= nil then
@@ -9123,6 +9237,24 @@ function DeclDestrNode:visit( visitor, depth, alreadySet )
             local _switchExp = visitor( argNode, self, "arg", depth )
             if _switchExp == NodeVisitMode.Child then
                if not argNode:visit( visitor, depth, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
+               return false
+            elseif _switchExp == NodeVisitMode.Next then
+            end
+         end
+         
+         
+      end
+      
+      for __index, retTypeNode in ipairs( self.declInfo:get_retTypeNodeList() ) do
+         
+         do
+            local _switchExp = visitor( retTypeNode, self, "retType", depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not retTypeNode:visit( visitor, depth, alreadySet ) then
                   return false
                end
                
@@ -9437,13 +9569,13 @@ function DeclMemberNode:canBeStatement(  )
 
    return true
 end
-function DeclMemberNode.new( id, pos, macroArgFlag, typeList, name, refType, symbolInfo, classType, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode )
+function DeclMemberNode.new( id, pos, macroArgFlag, typeList, name, refType, symbolInfo, classType, staticFlag, accessMode, getterMutable, getterMode, getterToken, getterRetType, setterMode, setterToken )
    local obj = {}
    DeclMemberNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, name, refType, symbolInfo, classType, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, name, refType, symbolInfo, classType, staticFlag, accessMode, getterMutable, getterMode, getterToken, getterRetType, setterMode, setterToken ); end
    return obj
 end
-function DeclMemberNode:__init(id, pos, macroArgFlag, typeList, name, refType, symbolInfo, classType, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode) 
+function DeclMemberNode:__init(id, pos, macroArgFlag, typeList, name, refType, symbolInfo, classType, staticFlag, accessMode, getterMutable, getterMode, getterToken, getterRetType, setterMode, setterToken) 
    Node.__init( self,id, 60, pos, macroArgFlag, typeList)
    
    
@@ -9456,14 +9588,16 @@ function DeclMemberNode:__init(id, pos, macroArgFlag, typeList, name, refType, s
    self.accessMode = accessMode
    self.getterMutable = getterMutable
    self.getterMode = getterMode
+   self.getterToken = getterToken
    self.getterRetType = getterRetType
    self.setterMode = setterMode
+   self.setterToken = setterToken
    
    
 end
-function DeclMemberNode.create( nodeMan, pos, macroArgFlag, typeList, name, refType, symbolInfo, classType, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode )
+function DeclMemberNode.create( nodeMan, pos, macroArgFlag, typeList, name, refType, symbolInfo, classType, staticFlag, accessMode, getterMutable, getterMode, getterToken, getterRetType, setterMode, setterToken )
 
-   local node = DeclMemberNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, name, refType, symbolInfo, classType, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode)
+   local node = DeclMemberNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, name, refType, symbolInfo, classType, staticFlag, accessMode, getterMutable, getterMode, getterToken, getterRetType, setterMode, setterToken)
    nodeMan:addNode( node )
    return node
 end
@@ -9522,13 +9656,39 @@ end
 function DeclMemberNode:get_getterMode()
    return self.getterMode
 end
+function DeclMemberNode:get_getterToken()
+   return self.getterToken
+end
 function DeclMemberNode:get_getterRetType()
    return self.getterRetType
 end
 function DeclMemberNode:get_setterMode()
    return self.setterMode
 end
+function DeclMemberNode:get_setterToken()
+   return self.setterToken
+end
 
+
+
+function DeclMemberNode:getGetterSym(  )
+
+   if self.getterMode ~= Ast.AccessMode.None then
+      return _lune.nilacc( self.classType:get_scope(), 'getSymbolInfoChild', 'callmtd' , string.format( "get_%s", self.name.txt) )
+   end
+   
+   return nil
+end
+
+
+function DeclMemberNode:getSetterSym(  )
+
+   if self.setterMode ~= Ast.AccessMode.None then
+      return _lune.nilacc( self.classType:get_scope(), 'getSymbolInfoChild', 'callmtd' , string.format( "set_%s", self.name.txt) )
+   end
+   
+   return nil
+end
 
 
 
@@ -13281,7 +13441,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, _11069 in pairs( self.map ) do
+   for key, _11158 in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -13316,8 +13476,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, _11083 in ipairs( __sorted ) do
-         local key = __map[ _11083 ]
+      for __index, _11172 in ipairs( __sorted ) do
+         local key = __map[ _11172 ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false

@@ -291,6 +291,13 @@ pub fn scriptPath2Module( path:str ):str {
    return ( string.gsub( mod, "%.lns$", "" ) );
 }
 
+pub fn scriptPath2ModuleFromProjDir( mut path:str, projDir:str! ):str {
+   when! projDir {
+      path = path.gsub( projDir, "" );
+   }
+   return scriptPath2Module( path );
+}
+
 pub fn pathJoin( dir:str, path:str ) : str {
    if path.find( "^/" ## ) {
       return path;
@@ -307,6 +314,18 @@ pub fn parentPath( mut path:str ) : str {
    }
    return (path.gsub( "/[^/]+$", "" ));
 }
+
+pub fn searchProjDir( dir:str ) : str! {
+   let mut work = dir;
+   while work ~= "" {
+      if Depend.existFile( pathJoin( work, "lune.js" ) ) {
+         return work;
+      }
+      work = work.gsub( "/[^/]+$", "" );
+   }
+   return nil;
+}
+
 
 __test case1(ctrl) {
    {

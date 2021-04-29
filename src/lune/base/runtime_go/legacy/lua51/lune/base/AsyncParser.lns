@@ -220,10 +220,14 @@ pub class Parser extend Async.Pipe<AsyncItem> {
    let luaMode:bool;
    let lineList:&List<str>;
    let mut firstLine:bool;
+   let overridePos:&Types.Position!;
 
-   pub fn __init( stream: iStream, name: str, luaMode: bool! ) {
+   pub fn __init( stream: iStream, name: str,
+                  luaMode: bool!, overridePos:&Types.Position! )
+   {
       super( AsyncItem._createPipe( 100 ) );
-      
+
+      self.overridePos = overridePos;
       self.firstLine = true;
       self.streamName = name;
       self.lineNo = 0;
@@ -285,7 +289,8 @@ fn Parser.createInfo( mut tokenKind: Types.TokenKind,
    }
    let mut newToken = new Types.Token(
       tokenKind, token,
-      new Types.Position( self.lineNo, tokenColumn, self.streamName ),
+      Types.Position.create(
+         self.lineNo, tokenColumn, self.streamName, self.overridePos ),
       consecutive, [] );
    self.prevToken = newToken;
    return newToken;

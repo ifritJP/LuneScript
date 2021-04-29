@@ -5,8 +5,16 @@ var init_Util bool
 var Util__mod__ string
 var Util_debugFlag bool
 var Util_errorCode LnsInt
-// for 306
-func Util_convExp1193(arg1 []LnsAny) string {
+// for 296
+func Util_convExp1128(arg1 []LnsAny) string {
+    return Lns_getFromMulti( arg1, 0 ).(string)
+}
+// for 313
+func Util_convExp1234(arg1 []LnsAny) string {
+    return Lns_getFromMulti( arg1, 0 ).(string)
+}
+// for 324
+func Util_convExp1302(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 290
@@ -104,7 +112,17 @@ func Util_scriptPath2Module(path string) string {
     return Lns_car(Lns_getVM().String_gsub(mod, "%.lns$", "")).(string)
 }
 
-// 294: decl @lune.@base.@Util.pathJoin
+// 294: decl @lune.@base.@Util.scriptPath2ModuleFromProjDir
+func Util_scriptPath2ModuleFromProjDir(path string,projDir LnsAny) string {
+    if projDir != nil{
+        projDir_283 := projDir.(string)
+        path = Util_convExp1128(Lns_2DDD(Lns_getVM().String_gsub(path,projDir_283, "")))
+        
+    }
+    return Util_scriptPath2Module(path)
+}
+
+// 301: decl @lune.@base.@Util.pathJoin
 func Util_pathJoin(dir string,path string) string {
     if Lns_isCondTrue( Lns_car(Lns_getVM().String_find(path,"^/", nil, nil))){
         return path
@@ -115,13 +133,27 @@ func Util_pathJoin(dir string,path string) string {
     return Lns_getVM().String_format("%s/%s", []LnsAny{dir, path})
 }
 
-// 304: decl @lune.@base.@Util.parentPath
+// 311: decl @lune.@base.@Util.parentPath
 func Util_parentPath(path string) string {
     if Lns_isCondTrue( Lns_car(Lns_getVM().String_find(path,"/$", nil, nil))){
-        path = Util_convExp1193(Lns_2DDD(Lns_getVM().String_gsub(path,"/$", "")))
+        path = Util_convExp1234(Lns_2DDD(Lns_getVM().String_gsub(path,"/$", "")))
         
     }
     return Lns_car(Lns_getVM().String_gsub(path,"/[^/]+$", "")).(string)
+}
+
+// 318: decl @lune.@base.@Util.searchProjDir
+func Util_searchProjDir(dir string) LnsAny {
+    var work string
+    work = dir
+    for work != "" {
+        if Depend_existFile(Util_pathJoin(work, "lune.js")){
+            return work
+        }
+        work = Util_convExp1302(Lns_2DDD(Lns_getVM().String_gsub(work,"/[^/]+$", "")))
+        
+    }
+    return nil
 }
 
 // declaration Class -- OrderedSet

@@ -419,15 +419,15 @@ local function createPaser( path, mod )
    error( "failed to open " .. path )
 end
 
-local function scriptPath2Module( path )
+function Front:scriptPath2Module( path )
 
-   return Util.scriptPath2Module( path )
+   return Util.scriptPath2ModuleFromProjDir( path, self.option:get_projDir() )
 end
-_moduleObj.scriptPath2Module = scriptPath2Module
+
 
 function Front:createPaser( scriptPath )
 
-   local mod = scriptPath2Module( scriptPath )
+   local mod = self:scriptPath2Module( scriptPath )
    return createPaser( scriptPath, mod )
 end
 
@@ -509,7 +509,7 @@ function Front:loadFromLnsTxt( importModuleInfo, name, txt )
    
    local ast = transUnit:createAST( parser, false, nil )
    
-   local _6019, luaTxt = self:convertFromAst( ast, name, convLua.ConvMode.Exec )
+   local _6024, luaTxt = self:convertFromAst( ast, name, convLua.ConvMode.Exec )
    return _lune.unwrap( loadFromLuaTxt( luaTxt ))
 end
 
@@ -888,10 +888,10 @@ end
 function Front:convertLns2LuaCode( importModuleInfo, stream, streamName )
 
    local _
-   local mod = scriptPath2Module( streamName )
+   local mod = self:scriptPath2Module( streamName )
    local ast = self:createAst( importModuleInfo, Parser.StreamParser.new(stream, streamName, false, nil), mod, frontInterface.ModuleId.createId( 0.0, 0 ), nil, TransUnit.AnalyzeMode.Compile )
    
-   local _6182, luaTxt = self:convertFromAst( ast, streamName, convLua.ConvMode.Exec )
+   local _6187, luaTxt = self:convertFromAst( ast, streamName, convLua.ConvMode.Exec )
    
    return luaTxt
 end
@@ -1053,7 +1053,7 @@ function Front:checkUptodateMeta( lnsPath, metaPath, addSearchPath )
    end
    
    
-   for moduleFullName, _6273 in pairs( meta.__dependModuleMap ) do
+   for moduleFullName, _6278 in pairs( meta.__dependModuleMap ) do
       do
          local moduleLnsPath = self:searchModule( moduleFullName )
          if moduleLnsPath ~= nil then
@@ -1365,7 +1365,7 @@ end
 
 function Front:dumpAst( scriptPath )
 
-   local mod = scriptPath2Module( scriptPath )
+   local mod = self:scriptPath2Module( scriptPath )
    Depend.profile( self.option.validProf, function (  )
    
       local ast = self:createAst( frontInterface.ImportModuleInfo.new(), self:createPaser( scriptPath ), mod, getModuleId( scriptPath, mod ), nil, TransUnit.AnalyzeMode.Compile )
@@ -1376,7 +1376,7 @@ end
 
 function Front:format( scriptPath )
 
-   local mod = scriptPath2Module( scriptPath )
+   local mod = self:scriptPath2Module( scriptPath )
    
    local ast = self:createAst( frontInterface.ImportModuleInfo.new(), self:createPaser( scriptPath ), mod, getModuleId( scriptPath, mod ), nil, TransUnit.AnalyzeMode.Compile )
    ast:get_node():processFilter( Formatter.createFilter( ast:get_moduleTypeInfo(), io.stdout ), Formatter.Opt.new(ast:get_node()) )
@@ -1385,7 +1385,7 @@ end
 
 function Front:checkDiag( scriptPath )
 
-   local mod = scriptPath2Module( scriptPath )
+   local mod = self:scriptPath2Module( scriptPath )
    Util.setErrorCode( 0 )
    self:createAst( frontInterface.ImportModuleInfo.new(), self:createPaser( scriptPath ), mod, getModuleId( scriptPath, mod ), nil, TransUnit.AnalyzeMode.Diag )
 end
@@ -1393,21 +1393,21 @@ end
 
 function Front:complete( scriptPath )
 
-   local mod = scriptPath2Module( scriptPath )
+   local mod = self:scriptPath2Module( scriptPath )
    self:createAst( frontInterface.ImportModuleInfo.new(), self:createPaser( scriptPath ), mod, getModuleId( scriptPath, mod ), self.option.analyzeModule, TransUnit.AnalyzeMode.Complete, self.option.analyzePos )
 end
 
 
 function Front:inquire( scriptPath )
 
-   local mod = scriptPath2Module( scriptPath )
+   local mod = self:scriptPath2Module( scriptPath )
    self:createAst( frontInterface.ImportModuleInfo.new(), self:createPaser( scriptPath ), mod, getModuleId( scriptPath, mod ), self.option.analyzeModule, TransUnit.AnalyzeMode.Inquire, self.option.analyzePos )
 end
 
 
 function Front:createGlue( scriptPath )
 
-   local mod = scriptPath2Module( scriptPath )
+   local mod = self:scriptPath2Module( scriptPath )
    local ast = self:createAst( frontInterface.ImportModuleInfo.new(), self:createPaser( scriptPath ), mod, getModuleId( scriptPath, mod ), nil, TransUnit.AnalyzeMode.Compile )
    local filter = glueFilter.createFilter( self.option.outputDir )
    ast:get_node():processFilter( filter, 0 )
@@ -1423,7 +1423,7 @@ function Front:convertLuaToStreamFromScript( parser, moduleId, uptodate, convMod
       if stream ~= nil then
          if metaInfo ~= nil then
             local dependInfo = OutputDepend.DependInfo.new(mod)
-            for dependMod, _6478 in pairs( metaInfo.__dependModuleMap ) do
+            for dependMod, _6483 in pairs( metaInfo.__dependModuleMap ) do
                dependInfo:addImpotModule( dependMod )
             end
             
@@ -1610,7 +1610,7 @@ end
 
 function Front:convertToLua( scriptPath, stream )
 
-   local mod = scriptPath2Module( scriptPath )
+   local mod = self:scriptPath2Module( scriptPath )
    local convMode = convLua.ConvMode.Convert
    if self.option.mode == Option.ModeKind.LuaMeta then
       convMode = convLua.ConvMode.ConvMeta
@@ -1734,7 +1734,7 @@ end
 
 function Front:outputBuiltin( scriptPath )
 
-   local mod = scriptPath2Module( "lns_builtin" )
+   local mod = self:scriptPath2Module( "lns_builtin" )
    
    local ast = self:createAst( frontInterface.ImportModuleInfo.new(), Parser.DummyParser.new(), mod, frontInterface.ModuleId.createId( 0.0, 0 ), nil, TransUnit.AnalyzeMode.Compile )
    
@@ -1892,7 +1892,7 @@ function Front:saveToLua( updateInfo )
    local updateFlag = true
    local ast = nil
    
-   local mod = scriptPath2Module( scriptPath )
+   local mod = self:scriptPath2Module( scriptPath )
    local luaPath = scriptPath:gsub( "%.lns$", ".lua" )
    local metaPath = scriptPath:gsub( "%.lns$", ".meta" )
    if self.option.outputDir then
@@ -2086,7 +2086,7 @@ function Front:build( buildMode, astCallback )
 
    local function createUpdateInfo( scriptPath, dependsPath )
    
-      local mod = scriptPath2Module( scriptPath )
+      local mod = self:scriptPath2Module( scriptPath )
       local moduleId, uptodate = self:getModuleIdAndCheckUptodate( scriptPath, mod )
       local parser
       
@@ -2211,7 +2211,7 @@ function Front:exec(  )
          self:build( _lune.newAlge( BuildMode.Save), nil )
       elseif _switchExp == Option.ModeKind.Shebang then
          do
-            local modObj = self:loadModule( scriptPath2Module( self.option.scriptPath ) )
+            local modObj = self:loadModule( self:scriptPath2Module( self.option.scriptPath ) )
             if modObj ~= nil then
                local code = Depend.runMain( modObj['__main'], self.option.shebangArgList )
                os.exit( code )
@@ -2219,7 +2219,7 @@ function Front:exec(  )
          end
          
       elseif _switchExp == Option.ModeKind.Exec then
-         local modObj = self:loadModule( scriptPath2Module( self.option.scriptPath ) )
+         local modObj = self:loadModule( self:scriptPath2Module( self.option.scriptPath ) )
          
          if self.option.testing then
             local code = [==[
@@ -2234,7 +2234,7 @@ end
                do
                   local mod = loaded(  )
                   if mod ~= nil then
-                     (mod )( scriptPath2Module( self.option.scriptPath ) )
+                     (mod )( self:scriptPath2Module( self.option.scriptPath ) )
                   end
                end
                
@@ -2249,7 +2249,7 @@ end
       elseif _switchExp == Option.ModeKind.Builtin then
          self:outputBuiltin( self.option.scriptPath )
       elseif _switchExp == Option.ModeKind.MkMain then
-         local mod = scriptPath2Module( self.option.scriptPath )
+         local mod = self:scriptPath2Module( self.option.scriptPath )
          do
             local mess = convGo.outputGoMain( self:getGoAppName(  ), mod, self.option.testing, self.option.outputPath, self.option:get_runtimeOpt() )
             if mess ~= nil then
@@ -2284,7 +2284,7 @@ end
 _moduleObj.exec = exec
 local function setFront( bindModuleList )
 
-   local option = Option.createDefaultOption( "dummy.lns" )
+   local option = Option.createDefaultOption( "dummy.lns", nil )
    Front.new(option, bindModuleList)
 end
 _moduleObj.setFront = setFront

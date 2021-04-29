@@ -1098,7 +1098,7 @@ alias で置き換えている元の Type → alias の型
       self.popScope();
    }
 
-   pub fn pushbackStr( name: str, statement: str ) mut;
+   pub fn pushbackStr( name: str, statement: str, pos:&Types.Position ) mut;
    pri fn analyzeDecl( accessMode: Ast.AccessMode, staticFlag:
                        bool, firstToken: &Parser.Token,
                        token: &Parser.Token ) mut: Nodes.Node!;
@@ -2700,8 +2700,8 @@ pub fn TransUnit.pushback() mut {
    self.parser.pushback();
 }
 
-fn TransUnit.pushbackStr( name: str, statement: str ) mut {
-   self.parser.pushbackStr( name, statement );
+fn TransUnit.pushbackStr( name: str, statement: str, pos:&Types.Position ) mut {
+   self.parser.pushbackStr( name, statement, pos );
 }
 
 enum SymbolMode {
@@ -3135,12 +3135,12 @@ fn TransUnit.processImport( mut modulePath:str, depth:int ) mut :
 
 
    if! let moduleInfo = self.importModuleName2ModuleInfo[ modulePath ] {
-      if! let metaInfoStem = frontInterface.loadMeta(
+      if! let moduleMeta = frontInterface.loadMeta(
          self.importModuleInfo, orgModulePath )
       {
          Log._log( .Info, `{ return "%s already" (orgModulePath); } );
 
-         let metaInfo = metaInfoStem@@=Meta._MetaInfo;
+         let metaInfo = moduleMeta.$metaInfo@@=Meta._MetaInfo;
          let typeId2TypeInfo = moduleInfo.$importId2localTypeInfoMap;
          //let moduleTypeInfo = unwrap typeId2TypeInfo[ metaInfo.__moduleTypeId ];
          self.importModuleInfo.remove();
@@ -3158,10 +3158,10 @@ fn TransUnit.processImport( mut modulePath:str, depth:int ) mut :
       nameList.insert( txt );
    }
 
-   let! metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, orgModulePath ) {
+   let! moduleMeta = frontInterface.loadMeta( self.importModuleInfo, orgModulePath ) {
       self.error( "failed to load meta -- " .. orgModulePath );
    };
-   let metaInfo = metaInfoStem@@=Meta._MetaInfo;
+   let metaInfo = moduleMeta.$metaInfo@@=Meta._MetaInfo;
    Log._log( .Debug, `{ return "%s processing" (orgModulePath); } );
 
 
@@ -3510,7 +3510,8 @@ fn TransUnit.processImport( mut modulePath:str, depth:int ) mut :
    foreach macroInfoStem, orgTypeId in metaInfo.__macroName2InfoMap {
 
       self.macroCtrl.importMacro(
-         self.processInfo, expandLuavalMap( macroInfoStem ),
+         self.processInfo, moduleMeta.$lnsPath,
+         expandLuavalMap( macroInfoStem ),
          unwrap orgId2MacroTypeInfo[ orgTypeId ], typeId2TypeInfo );
    }
 

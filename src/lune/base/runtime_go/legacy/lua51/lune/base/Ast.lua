@@ -1460,9 +1460,9 @@ function LuavalResult._from( val )
    return _lune._AlgeFrom( LuavalResult, val )
 end
 
-LuavalResult.Err = { "Err", {{ func=_lune._toStr, nilable=false, child={} }}}
+LuavalResult.Err = { "Err", {{}}}
 LuavalResult._name2Val["Err"] = LuavalResult.Err
-LuavalResult.OK = { "OK", {{ func=TypeInfo._fromMap, nilable=false, child={} },{ func=_lune._toBool, nilable=false, child={} }}}
+LuavalResult.OK = { "OK", {{},{}}}
 LuavalResult._name2Val["OK"] = LuavalResult.OK
 
 
@@ -3330,11 +3330,11 @@ function OverrideMut._from( val )
    return _lune._AlgeFrom( OverrideMut, val )
 end
 
-OverrideMut.IMut = { "IMut", {{ func=TypeInfo._fromMap, nilable=false, child={} }}}
+OverrideMut.IMut = { "IMut", {{}}}
 OverrideMut._name2Val["IMut"] = OverrideMut.IMut
 OverrideMut.None = { "None"}
 OverrideMut._name2Val["None"] = OverrideMut.None
-OverrideMut.Prefix = { "Prefix", {{ func=TypeInfo._fromMap, nilable=false, child={} }}}
+OverrideMut.Prefix = { "Prefix", {{}}}
 OverrideMut._name2Val["Prefix"] = OverrideMut.Prefix
 
 
@@ -5150,7 +5150,7 @@ OverridingType.NoReady = { "NoReady"}
 OverridingType._name2Val["NoReady"] = OverridingType.NoReady
 OverridingType.NotOverride = { "NotOverride"}
 OverridingType._name2Val["NotOverride"] = OverridingType.NotOverride
-OverridingType.Override = { "Override", {{ func=TypeInfo._fromMap, nilable=false, child={} }}}
+OverridingType.Override = { "Override", {{}}}
 OverridingType._name2Val["Override"] = OverridingType.Override
 
 
@@ -6872,9 +6872,9 @@ function CommonType._from( val )
    return _lune._AlgeFrom( CommonType, val )
 end
 
-CommonType.Combine = { "Combine", {{ func=CombineType._fromMap, nilable=false, child={} }}}
+CommonType.Combine = { "Combine", {{}}}
 CommonType._name2Val["Combine"] = CommonType.Combine
-CommonType.Normal = { "Normal", {{ func=TypeInfo._fromMap, nilable=false, child={} }}}
+CommonType.Normal = { "Normal", {{}}}
 CommonType._name2Val["Normal"] = CommonType.Normal
 
 

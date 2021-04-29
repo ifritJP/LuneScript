@@ -144,7 +144,11 @@ pub class Option {
 
    let mut runtimeOpt:RuntimeOpt {pub};
 
+   // 指定ソースのプロジェクトディレクトリ
+   local let mut projDir:str! {pub};
+
    pub fn __init() {
+      self.projDir = nil;
       self.runtimeOpt = new RuntimeOpt();
       self.shebangArgList = [];
       self.outputPath = nil;
@@ -270,6 +274,7 @@ usage:
 
   common_op:
     --testing: enable test.
+    --projDir <dir>: set the project dir.
     -u: update meta and lua on load.
     -Werror: error by warrning.
     --log <mode>: set log level.
@@ -278,7 +283,8 @@ usage:
     --compat-comment: backward compatibility to process the comment.
     --disable-checking-define-abbr: disable checking for ##.
     --uptodate <mode>: checking uptodate mode.
-            mode: skip check.
+            force: skip check for target lns file.
+            forceAll: skip check for all.
             none: skip process when file is uptodate.
             touch: touch meta file when file is uptodate.  (default)
     --use-ipairs: use ipairs for foreach with List value.
@@ -329,7 +335,8 @@ usage:
    }
 
    Util.setDebugFlag( false );
-   
+
+   let mut uptodateOpt:str! = nil;
    while #argList >= index {
       let arg = argList[ index ];
 
@@ -356,6 +363,9 @@ usage:
                      ( Ver.version, getBuildCount(),
                        Depend.getLuaVersion(), Ver.metaVersion) );
                   os.exit( 0 );
+               }
+               case "--projDir" {
+                  option.projDir = getNextOp();
                }
                case "--builtin" {
                   forsort typeInfo, typeId in Ast.getBuiltInTypeIdMap() {
@@ -459,14 +469,7 @@ usage:
                   option.useIpairs = true;
                }
                case "--uptodate" {
-                  if! let txt = getNextOp() {
-                     if! let mode = Types.CheckingUptodateMode._from( txt ) {
-                        option.transCtrlInfo.uptodateMode = mode;
-                     }
-                     else {
-                        Util.errorLog( "illegal mode -- " .. txt );
-                     }
-                  }
+                  uptodateOpt = getNextOp();
                }
                case "-langC" {
                   option.convTo = .C;
@@ -559,6 +562,27 @@ usage:
       index = index + 1;
    }
 
+   when! uptodateOpt {
+      switch uptodateOpt {
+         case "force" {
+            option.transCtrlInfo.uptodateMode = .Force1(
+               Util.scriptPath2Module( option.scriptPath ) );
+         }
+         case "forceAll" {
+            option.transCtrlInfo.uptodateMode = .ForceAll;
+         }
+         case "normal" {
+            option.transCtrlInfo.uptodateMode = .Normal;
+         }
+         case "touch" {
+            option.transCtrlInfo.uptodateMode = .Touch;
+         }
+         default {
+            Util.errorLog( "illegal mode -- " .. uptodateOpt );
+         }
+      }
+   }
+
    if option.mode ~= .Builtin {
       if option.scriptPath == "" or option.mode == .Unknown {
          printUsage( (#argList == 0 or argList[1] == "") and 0 or 1 );
@@ -582,11 +606,20 @@ usage:
    return option;
 }
 
-pub fn createDefaultOption( path:str ) : Option {
+pub fn createDefaultOption( path:str, projDir:str! ) : Option {
    let mut option = new Option();
    option.scriptPath = path;
    option.useLuneModule = getRuntimeModule();
    option.useIpairs = true;
+   when! projDir {
+      if projDir ~= "/" {
+         if not projDir.find( "/$" ## ) {
+            option.projDir = projDir .. "/";
+         } else {
+            option.projDir = projDir;
+         }
+      }
+   }
    return option;
 }
 

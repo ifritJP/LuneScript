@@ -5483,7 +5483,8 @@ pub override fn convFilter.processLuneControl(
       case .use_async {
       }
       case .run_async_pipe {
-         self.writeln( "go self.FP.Loop()" );
+         //self.writeln( "go self.FP.Loop()" );
+         self.writeln( "go self.LoopMain()" );
       }
    }
 }
@@ -5525,7 +5526,7 @@ __test case1(ctrl ) {
    LuaVer.setCurVer( 53 );
    
    let scriptPath = "test.lns";
-   let option = Option.createDefaultOption( scriptPath );
+   let option = Option.createDefaultOption( scriptPath, nil );
    let mut ast = convLua.createAst( scriptPath, convLua.getTestLnsCode(), option );
    let goCode = Ast2Code( scriptPath, ast);
    print( goCode );

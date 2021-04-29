@@ -618,7 +618,7 @@ __test case1(ctrl) {
 ```;
    
    let scriptPath = "test.lns";
-   let option = Option.createDefaultOption( scriptPath );
+   let option = Option.createDefaultOption( scriptPath, nil );
    let mut ast = convLua.createAst( scriptPath, code, option );
 
    conv( ast.$node );

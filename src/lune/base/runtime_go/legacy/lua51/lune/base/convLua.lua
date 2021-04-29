@@ -946,6 +946,8 @@ function convFilter:outputMeta( node )
          self:pushIndent(  )
          self:writeln( "local info = {}" )
          self:writeln( string.format( "__macroName2InfoMap[ %d ] = info", macroTypeInfo:get_typeId()) )
+         local pos = macroDeclNode:get_pos():get_orgPos()
+         self:writeln( string.format( "info.pos = {%d,%d}", pos.lineNo, pos.column) )
          self:writeln( string.format( "info.name = %q", declInfo:get_name().txt) )
          self:write( "info.argList = {" )
          for index, argNode in ipairs( declInfo:get_argList() ) do
@@ -1606,11 +1608,17 @@ function convFilter:getMapInfo( typeInfo )
          funcTxt = '_lune._toStem'
       elseif _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
          if not nonnilableType:equals( self.processInfo, Ast.builtinTypeString ) then
-            funcTxt = string.format( '%s._fromMap', self:getFullName( nonnilableType ))
-            if isGenericType( nonnilableType ) then
-               local memStream = Util.memStream.new()
-               self:outputAlter2MapFunc( memStream, nonnilableType:createAlt2typeMap( false ) )
-               child = memStream:get_txt()
+            if Ast.NormalTypeInfo.isAvailableMapping( self.processInfo, nonnilableType, {} ) then
+               funcTxt = string.format( '%s._fromMap', self:getFullName( nonnilableType ))
+               if isGenericType( nonnilableType ) then
+                  local memStream = Util.memStream.new()
+                  self:outputAlter2MapFunc( memStream, nonnilableType:createAlt2typeMap( false ) )
+                  child = memStream:get_txt()
+               end
+               
+            else
+             
+               funcTxt = "nil"
             end
             
          else
@@ -1725,8 +1733,14 @@ end
                      self:write( "," )
                   end
                   
-                  local funcTxt, nilable, child = self:getMapInfo( paramType )
-                  self:write( string.format( "{ func=%s, nilable=%s, child=%s }", funcTxt, tostring( nilable), child) )
+                  if Ast.NormalTypeInfo.isAvailableMapping( self.processInfo, node:get_algeType(), {} ) then
+                     local funcTxt, nilable, child = self:getMapInfo( paramType )
+                     self:write( string.format( "{ func=%s, nilable=%s, child=%s }", funcTxt, tostring( nilable), child) )
+                  else
+                   
+                     self:write( "{}" )
+                  end
+                  
                end
                
                self:write( "}" )
@@ -1970,7 +1984,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _6388 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _6428 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -4189,7 +4203,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3486, function (  )
+   Log.log( Log.Level.Trace, __func__, 3501, function (  )
    
       return string.format( "macro: %s", code)
    end )

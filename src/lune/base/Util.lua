@@ -487,6 +487,16 @@ local function scriptPath2Module( path )
 end
 _moduleObj.scriptPath2Module = scriptPath2Module
 
+local function scriptPath2ModuleFromProjDir( path, projDir )
+
+   if projDir ~= nil then
+      path = path:gsub( projDir, "" )
+   end
+   
+   return scriptPath2Module( path )
+end
+_moduleObj.scriptPath2ModuleFromProjDir = scriptPath2ModuleFromProjDir
+
 local function pathJoin( dir, path )
 
    if path:find( "^/" ) then
@@ -510,6 +520,21 @@ local function parentPath( path )
    return (path:gsub( "/[^/]+$", "" ) )
 end
 _moduleObj.parentPath = parentPath
+
+local function searchProjDir( dir )
+
+   local work = dir
+   while work ~= "" do
+      if Depend.existFile( pathJoin( work, "lune.js" ) ) then
+         return work
+      end
+      
+      work = work:gsub( "/[^/]+$", "" )
+   end
+   
+   return nil
+end
+_moduleObj.searchProjDir = searchProjDir
 
 
 

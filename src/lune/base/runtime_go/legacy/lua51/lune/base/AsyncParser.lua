@@ -5,6 +5,43 @@ local _lune = {}
 if _lune3 then
    _lune = _lune3
 end
+function _lune.newAlge( kind, vals )
+   local memInfoList = kind[ 2 ]
+   if not memInfoList then
+      return kind
+   end
+   return { kind[ 1 ], vals }
+end
+
+function _lune._fromList( obj, list, memInfoList )
+   if type( list ) ~= "table" then
+      return false
+   end
+   for index, memInfo in ipairs( memInfoList ) do
+      local val, key = memInfo.func( list[ index ], memInfo.child )
+      if val == nil and not memInfo.nilable then
+         return false, key and string.format( "%s[%s]", memInfo.name, key) or memInfo.name
+      end
+      obj[ index ] = val
+   end
+   return true
+end
+function _lune._AlgeFrom( Alge, val )
+   local work = Alge._name2Val[ val[ 1 ] ]
+   if not work then
+      return nil
+   end
+   if #work == 1 then
+     return work
+   end
+   local paramList = {}
+   local result, mess = _lune._fromList( paramList, val[ 2 ], work[ 2 ] )
+   if not result then
+      return nil, mess
+   end
+   return { work[ 1 ], paramList }
+end
+
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
       setObj[ val ] = true
@@ -384,24 +421,25 @@ end
 local Parser = {}
 setmetatable( Parser, { __index = Async.Pipe } )
 _moduleObj.Parser = Parser
-function Parser.new( stream, name, luaMode )
+function Parser.new( stream, name, luaMode, overridePos )
    local obj = {}
    Parser.setmeta( obj )
-   if obj.__init then obj:__init( stream, name, luaMode ); end
+   if obj.__init then obj:__init( stream, name, luaMode, overridePos ); end
    return obj
 end
-function Parser:__init(stream, name, luaMode) 
+function Parser:__init(stream, name, luaMode, overridePos) 
    local _
    Async.Pipe.__init( self,nil)
    
    
+   self.overridePos = overridePos
    self.firstLine = true
    self.streamName = name
    self.lineNo = 0
    self.prevToken = Types.noneToken
    self.luaMode = _lune.unwrapDefault( luaMode, false)
    
-   local keywordSet, typeSet, _308, multiCharDelimitMap = createReserveInfo( luaMode )
+   local keywordSet, typeSet, _324, multiCharDelimitMap = createReserveInfo( luaMode )
    
    self.keywordSet = keywordSet
    self.typeSet = typeSet
@@ -456,7 +494,7 @@ function Parser:createInfo( tokenKind, token, tokenColumn )
       consecutive = true
    end
    
-   local newToken = Types.Token.new(tokenKind, token, Types.Position.new(self.lineNo, tokenColumn, self.streamName), consecutive, {})
+   local newToken = Types.Token.new(tokenKind, token, Types.Position.create( self.lineNo, tokenColumn, self.streamName, self.overridePos ), consecutive, {})
    self.prevToken = newToken
    return newToken
 end
@@ -661,7 +699,7 @@ function Parser:parse(  )
       local comment = ""
       while true do
          do
-            local _434, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
+            local _450, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
             if termEndIndex ~= nil then
                comment = comment .. rawLine:sub( searchIndex, termEndIndex )
                return comment, termEndIndex + 1

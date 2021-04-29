@@ -569,6 +569,9 @@ macro _declNodeClass(
                         foreach argNode in self.,,,fieldName~~.$argList {
                            _procVisitor( argNode, self, "arg" );
                         }
+                        foreach retTypeNode in self.,,,fieldName~~.$retTypeNodeList {
+                           _procVisitor( retTypeNode, self, "retType" );
+                        }
                         if! let body = self.,,,fieldName~~.$body {
                            switch visitor( body, self, ,,fieldName, depth ) {
                               case NodeVisitMode.Child {
@@ -1072,6 +1075,16 @@ pub override fn IfNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
    return .None;
 }
 
+pub override fn IfNode.visitSub(
+   visitor:NodeVisitor, depth:int, alreadySet:Set<&Node> ) : bool
+{
+   foreach stmt in self.$stmtList {
+      _procVisitor( stmt.$exp, self, "exp" );
+      _procVisitor( stmt.$block, self, "block" );
+   }
+   return true;
+}
+ 
 pub class MRetExp {
    /** 多値のノード */
    let exp:&Node {pub};
@@ -1809,6 +1822,7 @@ pub class DeclFuncInfo {
    let accessMode: Ast.AccessMode { pub };
    let body: &BlockNode! { pub };
    let retTypeInfoList: &List<&Ast.TypeInfo> { pub };
+   let retTypeNodeList: &List<&RefTypeNode> { pub };
    let has__func__Symbol:bool { pub };
    let overrideFlag: bool { pub };
 }
@@ -1819,7 +1833,7 @@ pub static fn DeclFuncInfo.createFrom(
    return new DeclFuncInfo(
       info.$kind, info.classTypeInfo, info.declClassNode,
       name, symbol, info.argList, info.staticFlag,
-      info.accessMode, info.body, info.retTypeInfoList,
+      info.accessMode, info.body, info.retTypeInfoList, info.retTypeNodeList,
       info.has__func__Symbol, info.overrideFlag );
 }
 
@@ -1878,9 +1892,25 @@ _declNodeClass( "DeclMember", Node, false, false, true,
                   { "accessMode": "Ast.AccessMode" },
                   { "getterMutable": "bool" },
                   { "getterMode": "Ast.AccessMode" },
+                  { "getterToken": "&Types.Token!" },
                   { "getterRetType": "&Ast.TypeInfo" },
-                  { "setterMode": "Ast.AccessMode" } ]
+                  { "setterMode": "Ast.AccessMode" },
+                  { "setterToken": "&Types.Token!" } ]
 );
+
+pub fn DeclMemberNode.getGetterSym() : &Ast.SymbolInfo! {
+   if self.getterMode ~= .None {
+      return self.classType.$scope$.getSymbolInfoChild$( "get_%s" (self.name.txt) );
+   }
+   return nil;
+}
+
+pub fn DeclMemberNode.getSetterSym() : &Ast.SymbolInfo! {
+   if self.setterMode ~= .None {
+      return self.classType.$scope$.getSymbolInfoChild$( "set_%s" (self.name.txt) );
+   }
+   return nil;
+}
 
 _declNodeClass( "DeclArg", Node, false, false, false,
                 [ { "name": "&Parser.Token" },
