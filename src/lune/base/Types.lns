@@ -66,6 +66,14 @@ pub class Position extend (Mapping) {
    pub let lineNo: int;
    pub let column: int;
    pub let streamName: str;
+   /**
+マクロ展開では、 streamName, lineNo, column が擬似的なものになる。
+TransUnit においては 擬似的な値にする必要がある。
+一方で、 lnstags のように token の位置情報を記録する場合は、
+擬似的な値では扱い難い。
+そこで、擬似的な値に対応する、元のソースの位置情報を記録する。
+マクロ展開等ではない通常の token 位置の場合、orgPos が nil。
+*/
    pub let mut orgPos: &Position!;
 
    pub fn __init( lineNo: int, column: int, streamName: str ) {
@@ -80,6 +88,10 @@ pub class Position extend (Mapping) {
          return _exp.$orgPos;
       }
       return self;
+   }
+
+   pub fn get_RawOrgPos() : &Position! {
+      return self.orgPos;      
    }
 
    pub static fn create( lineNo: int, column: int,

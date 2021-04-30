@@ -169,6 +169,7 @@ func Types_TransCtrlInfo_create_normal() *Types_TransCtrlInfo {
 // declaration Class -- Position
 type Types_PositionMtd interface {
     ToMap() *LnsMap
+    Get_RawOrgPos() LnsAny
     Get_orgPos() *Types_Position
 }
 type Types_Position struct {
@@ -258,7 +259,7 @@ func Types_Position_FromMapMain( newObj *Types_Position, objMap *LnsMap, paramLi
     }
     return true, newObj, nil
 }
-// 71: DeclConstr
+// 79: DeclConstr
 func (self *Types_Position) InitTypes_Position(lineNo LnsInt,column LnsInt,streamName string) {
     self.LineNo = lineNo
     
@@ -270,7 +271,7 @@ func (self *Types_Position) InitTypes_Position(lineNo LnsInt,column LnsInt,strea
     
 }
 
-// 78: decl @lune.@base.@Types.Position.get_orgPos
+// 86: decl @lune.@base.@Types.Position.get_orgPos
 func (self *Types_Position) Get_orgPos() *Types_Position {
     {
         __exp := self.OrgPos
@@ -282,7 +283,12 @@ func (self *Types_Position) Get_orgPos() *Types_Position {
     return self
 }
 
-// 85: decl @lune.@base.@Types.Position.create
+// 93: decl @lune.@base.@Types.Position.get_RawOrgPos
+func (self *Types_Position) Get_RawOrgPos() LnsAny {
+    return self.OrgPos
+}
+
+// 97: decl @lune.@base.@Types.Position.create
 func Types_Position_create(lineNo LnsInt,column LnsInt,streamName string,orgPos LnsAny) *Types_Position {
     var pos *Types_Position
     pos = NewTypes_Position(lineNo, column, streamName)
@@ -396,7 +402,7 @@ func Types_Token_FromMapMain( newObj *Types_Token, objMap *LnsMap, paramList []L
     }
     return true, newObj, nil
 }
-// 118: DeclConstr
+// 130: DeclConstr
 func (self *Types_Token) InitTypes_Token(kind LnsInt,txt string,pos *Types_Position,consecutive bool,commentList LnsAny) {
     self.Kind = kind
     
@@ -410,14 +416,14 @@ func (self *Types_Token) InitTypes_Token(kind LnsInt,txt string,pos *Types_Posit
     
 }
 
-// 128: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
+// 140: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
 func (self *Types_Token) GetExcludedDelimitTxt() string {
     if self.Kind != Types_TokenKind__Str{
         return self.Txt
     }
-    if _switch332 := LnsInt(self.Txt[1-1]); _switch332 == 39 || _switch332 == 34 {
+    if _switch342 := LnsInt(self.Txt[1-1]); _switch342 == 39 || _switch342 == 34 {
         return Lns_getVM().String_sub(self.Txt,2, len(self.Txt) - 1)
-    } else if _switch332 == 96 {
+    } else if _switch342 == 96 {
         return Lns_getVM().String_sub(self.Txt,1 + 3, len(self.Txt) - 3)
     }
     panic(Lns_getVM().String_format("illegal delimit -- %s", []LnsAny{self.Txt}))
@@ -425,22 +431,22 @@ func (self *Types_Token) GetExcludedDelimitTxt() string {
     return ""
 }
 
-// 143: decl @lune.@base.@Types.Token.set_commentList
+// 155: decl @lune.@base.@Types.Token.set_commentList
 func (self *Types_Token) Set_commentList(commentList *LnsList) {
     self.commentList = commentList
     
 }
 
-// 147: decl @lune.@base.@Types.Token.getLineCount
+// 159: decl @lune.@base.@Types.Token.getLineCount
 func (self *Types_Token) GetLineCount() LnsInt {
     var count LnsInt
     count = 1
     {
-        _form395, _param395, _prev395 := Lns_getVM().String_gmatch(self.Txt,"\n")
+        _form405, _param405, _prev405 := Lns_getVM().String_gmatch(self.Txt,"\n")
         for {
-            _work395 := _form395.(*Lns_luaValue).Call( Lns_2DDD( _param395, _prev395 ) )
-            _prev395 = Lns_getFromMulti(_work395,0)
-            if Lns_IsNil( _prev395 ) { break }
+            _work405 := _form405.(*Lns_luaValue).Call( Lns_2DDD( _param405, _prev405 ) )
+            _prev405 = Lns_getFromMulti(_work405,0)
+            if Lns_IsNil( _prev405 ) { break }
             count = count + 1
             
         }

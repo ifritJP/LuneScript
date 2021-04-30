@@ -490,7 +490,16 @@ _moduleObj.scriptPath2Module = scriptPath2Module
 local function scriptPath2ModuleFromProjDir( path, projDir )
 
    if projDir ~= nil then
-      path = path:gsub( projDir, "" )
+      local workpath
+      
+      if not projDir:find( "/$" ) then
+         workpath = projDir .. "/"
+      else
+       
+         workpath = projDir
+      end
+      
+      path = path:gsub( "^" .. workpath, "" )
    end
    
    return scriptPath2Module( path )

@@ -2984,7 +2984,7 @@ end
 
 function Scope:addForm( processInfo, pos, typeInfo, accessMode )
 
-   self:add( processInfo, SymbolKind.Typ, false, false, typeInfo:get_rawTxt(), pos, typeInfo, accessMode, true, MutMode.IMut, false, false )
+   return self:add( processInfo, SymbolKind.Typ, false, false, typeInfo:get_rawTxt(), pos, typeInfo, accessMode, true, MutMode.IMut, false, false )
 end
 
 

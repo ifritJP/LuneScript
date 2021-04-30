@@ -293,7 +293,13 @@ pub fn scriptPath2Module( path:str ):str {
 
 pub fn scriptPath2ModuleFromProjDir( mut path:str, projDir:str! ):str {
    when! projDir {
-      path = path.gsub( projDir, "" );
+      let workpath;
+      if not projDir.find( "/$" ## ) {
+         workpath = projDir .. "/";
+      } else {
+         workpath = projDir;
+      }
+      path = path.gsub( "^" .. workpath, "" );
    }
    return scriptPath2Module( path );
 }

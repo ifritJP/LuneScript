@@ -96,9 +96,10 @@ pub alias Token = Types.Token;
 pub abstract class Parser {
    pub abstract fn getToken() mut : &Token!;
    pub abstract fn getStreamName(): str;
-   pub fn createPosition( lineNo: int, column: int ) : &Position {
-      return new Position( lineNo, column, self.getStreamName() );
-   }
+   pub abstract fn createPosition( lineNo: int, column: int ) : &Position;
+   // pub fn createPosition( lineNo: int, column: int ) : &Position {
+   //    return Position.create( lineNo, column, self.getStreamName(), nil );
+   // }
 }
 
 pub interface PushbackParser {
@@ -110,18 +111,6 @@ pub interface PushbackParser {
    pub fn getStreamName(): str;
    pub fn error( message:str ) mut :__;
    pub fn createPosition( lineNo: int, column: int ) : &Position;
-}
-
-pub class WrapParser extend Parser {
-   let mut parser: Parser;
-   let name: str;
-   pub override fn getToken() mut : &Token! {
-      let mut token = self.parser.getToken();
-      return token;
-   }
-   pub override fn getStreamName(): str {
-      return self.name;
-   }
 }
 
 pub let noneToken = Types.noneToken;
@@ -208,6 +197,11 @@ pub class StreamParser extend Parser {
 
       self.asyncParser = new AsyncParser.Parser( stream, name, luaMode, pos );
    }
+
+   pub override fn createPosition( lineNo: int, column: int ) : &Position {
+      return Position.create( lineNo, column, self.getStreamName(), self.overridePos );
+   }
+   
 
    pub override fn getStreamName(): str {
       return self.streamName;
@@ -393,6 +387,9 @@ pub class DummyParser extend Parser {
    }
    pub override fn getStreamName(): str {
       return "dummy";
+   }
+   pub override fn createPosition( lineNo: int, column: int ) : &Position {
+      return Position.create( lineNo, column, self.getStreamName(), nil );
    }
 }
 

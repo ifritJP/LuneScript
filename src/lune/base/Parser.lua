@@ -268,10 +268,6 @@ _moduleObj.Token = Token
 
 local Parser = {}
 _moduleObj.Parser = Parser
-function Parser:createPosition( lineNo, column )
-
-   return Position.new(lineNo, column, self:getStreamName(  ))
-end
 function Parser.setmeta( obj )
   setmetatable( obj, { __index = Parser  } )
 end
@@ -303,37 +299,6 @@ function PushbackParser.new(  )
 end
 function PushbackParser:__init(  )
 
-end
-
-
-local WrapParser = {}
-setmetatable( WrapParser, { __index = Parser } )
-_moduleObj.WrapParser = WrapParser
-function WrapParser:getToken(  )
-
-   local token = self.parser:getToken(  )
-   return token
-end
-function WrapParser:getStreamName(  )
-
-   return self.name
-end
-function WrapParser.setmeta( obj )
-  setmetatable( obj, { __index = WrapParser  } )
-end
-function WrapParser.new( parser, name )
-   local obj = {}
-   WrapParser.setmeta( obj )
-   if obj.__init then
-      obj:__init( parser, name )
-   end
-   return obj
-end
-function WrapParser:__init( parser, name )
-
-   Parser.__init( self)
-   self.parser = parser
-   self.name = name
 end
 
 
@@ -420,6 +385,10 @@ function StreamParser:__init(stream, name, luaMode, pos)
    self.overridePos = pos
    
    self.asyncParser = AsyncParser.Parser.new(stream, name, luaMode, pos)
+end
+function StreamParser:createPosition( lineNo, column )
+
+   return Position.create( lineNo, column, self:getStreamName(  ), self.overridePos )
 end
 function StreamParser:getStreamName(  )
 
@@ -663,6 +632,10 @@ end
 function DummyParser:getStreamName(  )
 
    return "dummy"
+end
+function DummyParser:createPosition( lineNo, column )
+
+   return Position.create( lineNo, column, self:getStreamName(  ), nil )
 end
 function DummyParser.setmeta( obj )
   setmetatable( obj, { __index = DummyParser  } )

@@ -283,7 +283,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 7486
+   return 7531
 end
 
 
@@ -991,8 +991,7 @@ _moduleObj.analyze = analyze
 
 local function createDefaultOption( path, projDir )
 
-   local option = Option.new()
-   option.scriptPath = path
+   local option = analyze( {path, "save"} )
    option.useLuneModule = getRuntimeModule(  )
    option.useIpairs = true
    if projDir ~= nil then

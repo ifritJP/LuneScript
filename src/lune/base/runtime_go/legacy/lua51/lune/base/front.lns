@@ -328,6 +328,9 @@ fn Front.searchModuleFile( mod:str, suffix:str, addPath:str! ) mut : str!
    when! addPath {
       lnsSearchPath = string.format( "%s/?%s;%s", addPath, suffix, package.path );
    }
+   if! let projDir = self.option.$projDir {
+      lnsSearchPath = "%s;%s" ( Util.pathJoin( projDir, "?%s" (suffix)), package.path );
+   }
    lnsSearchPath = lnsSearchPath.gsub( "%.lua$", suffix );
    lnsSearchPath = lnsSearchPath.gsub( "%.lua;", suffix .. ";" );
 

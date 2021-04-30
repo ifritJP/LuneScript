@@ -307,6 +307,10 @@ function Position:get_orgPos(  )
    
    return self
 end
+function Position:get_RawOrgPos(  )
+
+   return self.orgPos
+end
 function Position.create( lineNo, column, streamName, orgPos )
 
    local pos = Position.new(lineNo, column, streamName)
@@ -444,7 +448,7 @@ end
 function Token:getLineCount(  )
 
    local count = 1
-   for _111 in self.txt:gmatch( "\n" ) do
+   for _115 in self.txt:gmatch( "\n" ) do
       count = count + 1
    end
    

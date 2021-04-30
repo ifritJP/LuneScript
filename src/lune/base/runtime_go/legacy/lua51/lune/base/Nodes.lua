@@ -760,7 +760,7 @@ end
 function NodeManager:__init() 
    self.idSeed = 0
    self.nodeKind2NodeList = {}
-   for kind, _2709 in pairs( nodeKind2NameMap ) do
+   for kind, _2708 in pairs( nodeKind2NameMap ) do
       if not self.nodeKind2NodeList[kind] then
          self.nodeKind2NodeList[kind] = {}
       end
@@ -907,11 +907,6 @@ function NoneNode.create( nodeMan, pos, macroArgFlag, typeList )
 end
 function NoneNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
@@ -986,11 +981,6 @@ function ShebangNode.create( nodeMan, pos, macroArgFlag, typeList, cmd )
 end
 function ShebangNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
@@ -1068,11 +1058,6 @@ function ConvStatNode.create( nodeMan, pos, macroArgFlag, typeList, txt )
 end
 function ConvStatNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
@@ -1150,11 +1135,6 @@ function BlankLineNode.create( nodeMan, pos, macroArgFlag, typeList, lineNum )
 end
 function BlankLineNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
@@ -1231,11 +1211,6 @@ function SubfileNode.create( nodeMan, pos, macroArgFlag, typeList, usePath )
 end
 function SubfileNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
@@ -1349,11 +1324,6 @@ function ImportNode.create( nodeMan, pos, macroArgFlag, typeList, modulePath, la
 end
 function ImportNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
@@ -1604,25 +1574,27 @@ function RootNode.create( nodeMan, pos, macroArgFlag, typeList, children, module
 end
 function RootNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local list = self.children
       for __index, child in ipairs( list ) do
-         do
-            local _switchExp = visitor( child, self, 'children', depth )
-            if _switchExp == NodeVisitMode.Child then
-               if not child:visit( visitor, depth + 1, alreadySet ) then
+         
+         if not _lune._Set_has(alreadySet, child ) then
+            alreadySet[child]= true
+            do
+               local _switchExp = visitor( child, self, 'children', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1, alreadySet ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
                   return false
+               elseif _switchExp == NodeVisitMode.Next then
                end
-               
-            elseif _switchExp == NodeVisitMode.End then
-               return false
             end
+            
          end
+         
          
          
       end
@@ -1634,17 +1606,24 @@ function RootNode:visit( visitor, depth, alreadySet )
       do
          local child = self.provideNode
          if child ~= nil then
-            do
-               local _switchExp = visitor( child, self, 'provideNode', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not child:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, child ) then
+               alreadySet[child]= true
+               do
+                  local _switchExp = visitor( child, self, 'provideNode', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not child:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
             
          end
@@ -1773,33 +1752,13 @@ function RefTypeNode.create( nodeMan, pos, macroArgFlag, typeList, name, itemNod
 end
 function RefTypeNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.name
-      do
-         local _switchExp = visitor( child, self, 'name', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
-               return false
-            end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
-         end
-      end
       
-      
-   end
-   
-   do
-      local list = self.itemNodeList
-      for __index, child in ipairs( list ) do
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
          do
-            local _switchExp = visitor( child, self, 'itemNodeList', depth )
+            local _switchExp = visitor( child, self, 'name', depth )
             if _switchExp == NodeVisitMode.Child then
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
@@ -1807,8 +1766,37 @@ function RefTypeNode:visit( visitor, depth, alreadySet )
                
             elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
          end
+         
+      end
+      
+      
+      
+   end
+   
+   do
+      local list = self.itemNodeList
+      for __index, child in ipairs( list ) do
+         
+         if not _lune._Set_has(alreadySet, child ) then
+            alreadySet[child]= true
+            do
+               local _switchExp = visitor( child, self, 'itemNodeList', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1, alreadySet ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
+                  return false
+               elseif _switchExp == NodeVisitMode.Next then
+               end
+            end
+            
+         end
+         
          
          
       end
@@ -1988,25 +1976,27 @@ function BlockNode.create( nodeMan, pos, macroArgFlag, typeList, blockKind, scop
 end
 function BlockNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local list = self.stmtList
       for __index, child in ipairs( list ) do
-         do
-            local _switchExp = visitor( child, self, 'stmtList', depth )
-            if _switchExp == NodeVisitMode.Child then
-               if not child:visit( visitor, depth + 1, alreadySet ) then
+         
+         if not _lune._Set_has(alreadySet, child ) then
+            alreadySet[child]= true
+            do
+               local _switchExp = visitor( child, self, 'stmtList', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1, alreadySet ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
                   return false
+               elseif _switchExp == NodeVisitMode.Next then
                end
-               
-            elseif _switchExp == NodeVisitMode.End then
-               return false
             end
+            
          end
+         
          
          
       end
@@ -2098,24 +2088,26 @@ function EnvNode.create( nodeMan, pos, macroArgFlag, typeList, block )
 end
 function EnvNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.block
-      do
-         local _switchExp = visitor( child, self, 'block', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'block', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -2227,24 +2219,26 @@ function ScopeNode.create( nodeMan, pos, macroArgFlag, typeList, scopeKind, scop
 end
 function ScopeNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.block
-      do
-         local _switchExp = visitor( child, self, 'block', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'block', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -2469,11 +2463,6 @@ function IfNode.create( nodeMan, pos, macroArgFlag, typeList, stmtList )
 end
 function IfNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
@@ -2545,32 +2534,40 @@ function IfNode:visitSub( visitor, depth, alreadySet )
 
    for __index, stmt in ipairs( self:get_stmtList() ) do
       
-      do
-         local _switchExp = visitor( stmt:get_exp(), self, "exp", depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not stmt:get_exp():visit( visitor, depth, alreadySet ) then
+      if not _lune._Set_has(alreadySet, stmt:get_exp() ) then
+         alreadySet[stmt:get_exp()]= true
+         do
+            local _switchExp = visitor( stmt:get_exp(), self, "exp", depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not stmt:get_exp():visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
-         elseif _switchExp == NodeVisitMode.Next then
          end
+         
       end
       
       
       
-      do
-         local _switchExp = visitor( stmt:get_block(), self, "block", depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not stmt:get_block():visit( visitor, depth, alreadySet ) then
+      if not _lune._Set_has(alreadySet, stmt:get_block() ) then
+         alreadySet[stmt:get_block()]= true
+         do
+            local _switchExp = visitor( stmt:get_block(), self, "block", depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not stmt:get_block():visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
-         elseif _switchExp == NodeVisitMode.Next then
          end
+         
       end
       
       
@@ -2665,25 +2662,27 @@ function ExpListNode.create( nodeMan, pos, macroArgFlag, typeList, expList, mRet
 end
 function ExpListNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local list = self.expList
       for __index, child in ipairs( list ) do
-         do
-            local _switchExp = visitor( child, self, 'expList', depth )
-            if _switchExp == NodeVisitMode.Child then
-               if not child:visit( visitor, depth + 1, alreadySet ) then
+         
+         if not _lune._Set_has(alreadySet, child ) then
+            alreadySet[child]= true
+            do
+               local _switchExp = visitor( child, self, 'expList', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1, alreadySet ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
                   return false
+               elseif _switchExp == NodeVisitMode.Next then
                end
-               
-            elseif _switchExp == NodeVisitMode.End then
-               return false
             end
+            
          end
+         
          
          
       end
@@ -2907,24 +2906,26 @@ function SwitchNode.create( nodeMan, pos, macroArgFlag, typeList, exp, caseList,
 end
 function SwitchNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.exp
-      do
-         local _switchExp = visitor( child, self, 'exp', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'exp', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -2933,17 +2934,24 @@ function SwitchNode:visit( visitor, depth, alreadySet )
       do
          local child = self.default
          if child ~= nil then
-            do
-               local _switchExp = visitor( child, self, 'default', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not child:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, child ) then
+               alreadySet[child]= true
+               do
+                  local _switchExp = visitor( child, self, 'default', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not child:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
             
          end
@@ -3074,32 +3082,40 @@ function SwitchNode:visitSub( visitor, depth, alreadySet )
 
    for __index, caseInfo in ipairs( self.caseList ) do
       
-      do
-         local _switchExp = visitor( caseInfo:get_expList(), self, "expList", depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not caseInfo:get_expList():visit( visitor, depth, alreadySet ) then
+      if not _lune._Set_has(alreadySet, caseInfo:get_expList() ) then
+         alreadySet[caseInfo:get_expList()]= true
+         do
+            local _switchExp = visitor( caseInfo:get_expList(), self, "expList", depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not caseInfo:get_expList():visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
-         elseif _switchExp == NodeVisitMode.Next then
          end
+         
       end
       
       
       
-      do
-         local _switchExp = visitor( caseInfo:get_block(), self, "block", depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not caseInfo:get_block():visit( visitor, depth, alreadySet ) then
+      if not _lune._Set_has(alreadySet, caseInfo:get_block() ) then
+         alreadySet[caseInfo:get_block()]= true
+         do
+            local _switchExp = visitor( caseInfo:get_block(), self, "block", depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not caseInfo:get_block():visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
-         elseif _switchExp == NodeVisitMode.Next then
          end
+         
       end
       
       
@@ -3178,41 +3194,50 @@ function WhileNode.create( nodeMan, pos, macroArgFlag, typeList, exp, infinit, b
 end
 function WhileNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.exp
-      do
-         local _switchExp = visitor( child, self, 'exp', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'exp', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
    
    do
       local child = self.block
-      do
-         local _switchExp = visitor( child, self, 'block', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'block', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -3302,41 +3327,50 @@ function RepeatNode.create( nodeMan, pos, macroArgFlag, typeList, block, exp )
 end
 function RepeatNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.block
-      do
-         local _switchExp = visitor( child, self, 'block', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'block', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
    
    do
       local child = self.exp
-      do
-         local _switchExp = visitor( child, self, 'exp', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'exp', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -3439,58 +3473,74 @@ function ForNode.create( nodeMan, pos, macroArgFlag, typeList, block, val, init,
 end
 function ForNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.block
-      do
-         local _switchExp = visitor( child, self, 'block', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'block', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
    
    do
       local child = self.init
-      do
-         local _switchExp = visitor( child, self, 'init', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'init', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
    
    do
       local child = self.to
-      do
-         local _switchExp = visitor( child, self, 'to', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'to', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -3499,17 +3549,24 @@ function ForNode:visit( visitor, depth, alreadySet )
       do
          local child = self.delta
          if child ~= nil then
-            do
-               local _switchExp = visitor( child, self, 'delta', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not child:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, child ) then
+               alreadySet[child]= true
+               do
+                  local _switchExp = visitor( child, self, 'delta', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not child:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
             
          end
@@ -3622,41 +3679,50 @@ function ApplyNode.create( nodeMan, pos, macroArgFlag, typeList, varList, expLis
 end
 function ApplyNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.expList
-      do
-         local _switchExp = visitor( child, self, 'expList', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'expList', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
    
    do
       local child = self.block
-      do
-         local _switchExp = visitor( child, self, 'block', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'block', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -3766,41 +3832,50 @@ function ForeachNode.create( nodeMan, pos, macroArgFlag, typeList, val, key, exp
 end
 function ForeachNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.exp
-      do
-         local _switchExp = visitor( child, self, 'exp', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'exp', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
    
    do
       local child = self.block
-      do
-         local _switchExp = visitor( child, self, 'block', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'block', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -3917,41 +3992,50 @@ function ForsortNode.create( nodeMan, pos, macroArgFlag, typeList, val, key, exp
 end
 function ForsortNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.exp
-      do
-         local _switchExp = visitor( child, self, 'exp', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'exp', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
    
    do
       local child = self.block
-      do
-         local _switchExp = visitor( child, self, 'block', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'block', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -4062,26 +4146,28 @@ function ReturnNode.create( nodeMan, pos, macroArgFlag, typeList, expList )
 end
 function ReturnNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       do
          local child = self.expList
          if child ~= nil then
-            do
-               local _switchExp = visitor( child, self, 'expList', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not child:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, child ) then
+               alreadySet[child]= true
+               do
+                  local _switchExp = visitor( child, self, 'expList', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not child:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
             
          end
@@ -4170,11 +4256,6 @@ function BreakNode.create( nodeMan, pos, macroArgFlag, typeList )
 end
 function BreakNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
@@ -4255,11 +4336,6 @@ function ProvideNode.create( nodeMan, pos, macroArgFlag, typeList, symbol )
 end
 function ProvideNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
@@ -4339,24 +4415,26 @@ function ExpNewNode.create( nodeMan, pos, macroArgFlag, typeList, symbol, ctorTy
 end
 function ExpNewNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.symbol
-      do
-         local _switchExp = visitor( child, self, 'symbol', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'symbol', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -4365,17 +4443,24 @@ function ExpNewNode:visit( visitor, depth, alreadySet )
       do
          local child = self.argList
          if child ~= nil then
-            do
-               local _switchExp = visitor( child, self, 'argList', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not child:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, child ) then
+               alreadySet[child]= true
+               do
+                  local _switchExp = visitor( child, self, 'argList', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not child:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
             
          end
@@ -4468,24 +4553,26 @@ function ExpUnwrapNode.create( nodeMan, pos, macroArgFlag, typeList, exp, defaul
 end
 function ExpUnwrapNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.exp
-      do
-         local _switchExp = visitor( child, self, 'exp', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'exp', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -4494,17 +4581,24 @@ function ExpUnwrapNode:visit( visitor, depth, alreadySet )
       do
          local child = self.default
          if child ~= nil then
-            do
-               local _switchExp = visitor( child, self, 'default', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not child:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, child ) then
+               alreadySet[child]= true
+               do
+                  local _switchExp = visitor( child, self, 'default', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not child:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
             
          end
@@ -4585,11 +4679,6 @@ function ExpRefNode.create( nodeMan, pos, macroArgFlag, typeList, symbolInfo )
 end
 function ExpRefNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
@@ -4683,41 +4772,50 @@ function ExpSetValNode.create( nodeMan, pos, macroArgFlag, typeList, exp1, exp2,
 end
 function ExpSetValNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.exp1
-      do
-         local _switchExp = visitor( child, self, 'exp1', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'exp1', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
    
    do
       local child = self.exp2
-      do
-         local _switchExp = visitor( child, self, 'exp2', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'exp2', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -4832,41 +4930,50 @@ function ExpSetItemNode.create( nodeMan, pos, macroArgFlag, typeList, val, index
 end
 function ExpSetItemNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.val
-      do
-         local _switchExp = visitor( child, self, 'val', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'val', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
    
    do
       local child = self.exp2
-      do
-         local _switchExp = visitor( child, self, 'exp2', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'exp2', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -4962,41 +5069,50 @@ function ExpOp2Node.create( nodeMan, pos, macroArgFlag, typeList, op, threading,
 end
 function ExpOp2Node:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.exp1
-      do
-         local _switchExp = visitor( child, self, 'exp1', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'exp1', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
    
    do
       local child = self.exp2
-      do
-         local _switchExp = visitor( child, self, 'exp2', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'exp2', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -5090,41 +5206,50 @@ function UnwrapSetNode.create( nodeMan, pos, macroArgFlag, typeList, dstExpList,
 end
 function UnwrapSetNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.dstExpList
-      do
-         local _switchExp = visitor( child, self, 'dstExpList', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'dstExpList', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
    
    do
       local child = self.srcExpList
-      do
-         local _switchExp = visitor( child, self, 'srcExpList', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'srcExpList', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -5133,17 +5258,24 @@ function UnwrapSetNode:visit( visitor, depth, alreadySet )
       do
          local child = self.unwrapBlock
          if child ~= nil then
-            do
-               local _switchExp = visitor( child, self, 'unwrapBlock', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not child:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, child ) then
+               alreadySet[child]= true
+               do
+                  local _switchExp = visitor( child, self, 'unwrapBlock', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not child:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
             
          end
@@ -5238,41 +5370,50 @@ function IfUnwrapNode.create( nodeMan, pos, macroArgFlag, typeList, varSymList, 
 end
 function IfUnwrapNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.expList
-      do
-         local _switchExp = visitor( child, self, 'expList', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'expList', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
    
    do
       local child = self.block
-      do
-         local _switchExp = visitor( child, self, 'block', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'block', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -5281,17 +5422,24 @@ function IfUnwrapNode:visit( visitor, depth, alreadySet )
       do
          local child = self.nilBlock
          if child ~= nil then
-            do
-               local _switchExp = visitor( child, self, 'nilBlock', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not child:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, child ) then
+               alreadySet[child]= true
+               do
+                  local _switchExp = visitor( child, self, 'nilBlock', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not child:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
             
          end
@@ -5498,24 +5646,26 @@ function WhenNode.create( nodeMan, pos, macroArgFlag, typeList, symPairList, blo
 end
 function WhenNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.block
-      do
-         local _switchExp = visitor( child, self, 'block', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'block', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -5524,17 +5674,24 @@ function WhenNode:visit( visitor, depth, alreadySet )
       do
          local child = self.elseBlock
          if child ~= nil then
-            do
-               local _switchExp = visitor( child, self, 'elseBlock', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not child:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, child ) then
+               alreadySet[child]= true
+               do
+                  local _switchExp = visitor( child, self, 'elseBlock', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not child:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
             
          end
@@ -5745,24 +5902,26 @@ function ExpCastNode.create( nodeMan, pos, macroArgFlag, typeList, exp, castType
 end
 function ExpCastNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.exp
-      do
-         local _switchExp = visitor( child, self, 'exp', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'exp', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -5867,24 +6026,26 @@ function ExpToDDDNode.create( nodeMan, pos, macroArgFlag, typeList, expList )
 end
 function ExpToDDDNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.expList
-      do
-         local _switchExp = visitor( child, self, 'expList', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'expList', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -5968,24 +6129,26 @@ function ExpSubDDDNode.create( nodeMan, pos, macroArgFlag, typeList, src, remain
 end
 function ExpSubDDDNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.src
-      do
-         local _switchExp = visitor( child, self, 'src', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'src', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -6106,24 +6269,26 @@ function ExpOp1Node.create( nodeMan, pos, macroArgFlag, typeList, op, macroMode,
 end
 function ExpOp1Node:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.exp
-      do
-         local _switchExp = visitor( child, self, 'exp', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'exp', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -6220,24 +6385,26 @@ function ExpRefItemNode.create( nodeMan, pos, macroArgFlag, typeList, val, nilAc
 end
 function ExpRefItemNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.val
-      do
-         local _switchExp = visitor( child, self, 'val', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'val', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -6246,17 +6413,24 @@ function ExpRefItemNode:visit( visitor, depth, alreadySet )
       do
          local child = self.index
          if child ~= nil then
-            do
-               local _switchExp = visitor( child, self, 'index', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not child:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, child ) then
+               alreadySet[child]= true
+               do
+                  local _switchExp = visitor( child, self, 'index', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not child:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
             
          end
@@ -6376,24 +6550,26 @@ function ExpCallNode.create( nodeMan, pos, macroArgFlag, typeList, func, errorFu
 end
 function ExpCallNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.func
-      do
-         local _switchExp = visitor( child, self, 'func', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'func', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -6402,17 +6578,24 @@ function ExpCallNode:visit( visitor, depth, alreadySet )
       do
          local child = self.argList
          if child ~= nil then
-            do
-               local _switchExp = visitor( child, self, 'argList', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not child:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, child ) then
+               alreadySet[child]= true
+               do
+                  local _switchExp = visitor( child, self, 'argList', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not child:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
             
          end
@@ -6541,24 +6724,26 @@ function ExpMRetNode.create( nodeMan, pos, macroArgFlag, typeList, mRet )
 end
 function ExpMRetNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.mRet
-      do
-         local _switchExp = visitor( child, self, 'mRet', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'mRet', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -6647,24 +6832,26 @@ function ExpAccessMRetNode.create( nodeMan, pos, macroArgFlag, typeList, mRet, i
 end
 function ExpAccessMRetNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.mRet
-      do
-         local _switchExp = visitor( child, self, 'mRet', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'mRet', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -6755,24 +6942,26 @@ function ExpMultiTo1Node.create( nodeMan, pos, macroArgFlag, typeList, exp )
 end
 function ExpMultiTo1Node:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.exp
-      do
-         local _switchExp = visitor( child, self, 'exp', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'exp', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -6860,24 +7049,26 @@ function ExpParenNode.create( nodeMan, pos, macroArgFlag, typeList, exp )
 end
 function ExpParenNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.exp
-      do
-         local _switchExp = visitor( child, self, 'exp', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'exp', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -6968,25 +7159,27 @@ function ExpMacroExpNode.create( nodeMan, pos, macroArgFlag, typeList, macroType
 end
 function ExpMacroExpNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local list = self.stmtList
       for __index, child in ipairs( list ) do
-         do
-            local _switchExp = visitor( child, self, 'stmtList', depth )
-            if _switchExp == NodeVisitMode.Child then
-               if not child:visit( visitor, depth + 1, alreadySet ) then
+         
+         if not _lune._Set_has(alreadySet, child ) then
+            alreadySet[child]= true
+            do
+               local _switchExp = visitor( child, self, 'stmtList', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1, alreadySet ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
                   return false
+               elseif _switchExp == NodeVisitMode.Next then
                end
-               
-            elseif _switchExp == NodeVisitMode.End then
-               return false
             end
+            
          end
+         
          
          
       end
@@ -7117,25 +7310,27 @@ function ExpMacroStatNode.create( nodeMan, pos, macroArgFlag, typeList, expStrLi
 end
 function ExpMacroStatNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local list = self.expStrList
       for __index, child in ipairs( list ) do
-         do
-            local _switchExp = visitor( child, self, 'expStrList', depth )
-            if _switchExp == NodeVisitMode.Child then
-               if not child:visit( visitor, depth + 1, alreadySet ) then
+         
+         if not _lune._Set_has(alreadySet, child ) then
+            alreadySet[child]= true
+            do
+               local _switchExp = visitor( child, self, 'expStrList', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1, alreadySet ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
                   return false
+               elseif _switchExp == NodeVisitMode.Next then
                end
-               
-            elseif _switchExp == NodeVisitMode.End then
-               return false
             end
+            
          end
+         
          
          
       end
@@ -7221,11 +7416,6 @@ function ExpMacroArgExpNode.create( nodeMan, pos, macroArgFlag, typeList, codeTx
 end
 function ExpMacroArgExpNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
@@ -7299,24 +7489,26 @@ function StmtExpNode.create( nodeMan, pos, macroArgFlag, typeList, exp )
 end
 function StmtExpNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.exp
-      do
-         local _switchExp = visitor( child, self, 'exp', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'exp', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -7410,24 +7602,26 @@ function ExpMacroStatListNode.create( nodeMan, pos, macroArgFlag, typeList, exp 
 end
 function ExpMacroStatListNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.exp
-      do
-         local _switchExp = visitor( child, self, 'exp', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'exp', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -7513,11 +7707,6 @@ function ExpOmitEnumNode.create( nodeMan, pos, macroArgFlag, typeList, valToken,
 end
 function ExpOmitEnumNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
@@ -7608,24 +7797,26 @@ function RefFieldNode.create( nodeMan, pos, macroArgFlag, typeList, field, symbo
 end
 function RefFieldNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.prefix
-      do
-         local _switchExp = visitor( child, self, 'prefix', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'prefix', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -7767,24 +7958,26 @@ function GetFieldNode.create( nodeMan, pos, macroArgFlag, typeList, field, symbo
 end
 function GetFieldNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.prefix
-      do
-         local _switchExp = visitor( child, self, 'prefix', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'prefix', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -7894,24 +8087,26 @@ function AliasNode.create( nodeMan, pos, macroArgFlag, typeList, newSymbol, srcN
 end
 function AliasNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.srcNode
-      do
-         local _switchExp = visitor( child, self, 'srcNode', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'srcNode', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -8074,26 +8269,28 @@ function DeclVarNode.create( nodeMan, pos, macroArgFlag, typeList, mode, accessM
 end
 function DeclVarNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       do
          local child = self.expList
          if child ~= nil then
-            do
-               local _switchExp = visitor( child, self, 'expList', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not child:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, child ) then
+               alreadySet[child]= true
+               do
+                  local _switchExp = visitor( child, self, 'expList', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not child:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
             
          end
@@ -8105,17 +8302,24 @@ function DeclVarNode:visit( visitor, depth, alreadySet )
       do
          local child = self.unwrapBlock
          if child ~= nil then
-            do
-               local _switchExp = visitor( child, self, 'unwrapBlock', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not child:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, child ) then
+               alreadySet[child]= true
+               do
+                  local _switchExp = visitor( child, self, 'unwrapBlock', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not child:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
             
          end
@@ -8127,17 +8331,24 @@ function DeclVarNode:visit( visitor, depth, alreadySet )
       do
          local child = self.thenBlock
          if child ~= nil then
-            do
-               local _switchExp = visitor( child, self, 'thenBlock', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not child:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, child ) then
+               alreadySet[child]= true
+               do
+                  local _switchExp = visitor( child, self, 'thenBlock', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not child:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
             
          end
@@ -8149,17 +8360,24 @@ function DeclVarNode:visit( visitor, depth, alreadySet )
       do
          local child = self.syncBlock
          if child ~= nil then
-            do
-               local _switchExp = visitor( child, self, 'syncBlock', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not child:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, child ) then
+               alreadySet[child]= true
+               do
+                  local _switchExp = visitor( child, self, 'syncBlock', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not child:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
             
          end
@@ -8356,131 +8574,31 @@ function DeclVarNode:visitSub( visitor, depth, alreadySet )
          local refTypeNode = varInfo:get_refType()
          if refTypeNode ~= nil then
             
-            do
-               local _switchExp = visitor( refTypeNode, self, "refType", depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not refTypeNode:visit( visitor, depth, alreadySet ) then
+            if not _lune._Set_has(alreadySet, refTypeNode ) then
+               alreadySet[refTypeNode]= true
+               do
+                  local _switchExp = visitor( refTypeNode, self, "refType", depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not refTypeNode:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
-               elseif _switchExp == NodeVisitMode.Next then
-               end
-            end
-            
-            
-         end
-      end
-      
-   end
-   
-   return true
-end
-
-
-
-function NodeKind.get_DeclForm(  )
-
-   return 52
-end
-
-
-local DeclFormNode = {}
-regKind( "DeclForm" )
-function Filter:processDeclForm( node, opt )
-
-   self:pushOpt( opt )
-   self:defaultProcess( node, opt )
-   self:popOpt( opt )
-end
-
-
-function NodeManager:getDeclFormNodeList(  )
-
-   return self:getList( 52 )
-end
-
-
-
-setmetatable( DeclFormNode, { __index = Node } )
-_moduleObj.DeclFormNode = DeclFormNode
-function DeclFormNode:processFilter( filter, opt )
-
-   filter:processDeclForm( self, opt )
-end
-function DeclFormNode:canBeRight( processInfo )
-
-   return false
-end
-function DeclFormNode:canBeLeft(  )
-
-   return false
-end
-function DeclFormNode:canBeStatement(  )
-
-   return true
-end
-function DeclFormNode.new( id, pos, macroArgFlag, typeList, argList )
-   local obj = {}
-   DeclFormNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, argList ); end
-   return obj
-end
-function DeclFormNode:__init(id, pos, macroArgFlag, typeList, argList) 
-   Node.__init( self,id, 52, pos, macroArgFlag, typeList)
-   
-   
-   
-   self.argList = argList
-   
-   
-end
-function DeclFormNode.create( nodeMan, pos, macroArgFlag, typeList, argList )
-
-   local node = DeclFormNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, argList)
-   nodeMan:addNode( node )
-   return node
-end
-function DeclFormNode:visit( visitor, depth, alreadySet )
-
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
-   do
-      local list = self.argList
-      for __index, child in ipairs( list ) do
-         do
-            local _switchExp = visitor( child, self, 'argList', depth )
-            if _switchExp == NodeVisitMode.Child then
-               if not child:visit( visitor, depth + 1, alreadySet ) then
-                  return false
                end
                
-            elseif _switchExp == NodeVisitMode.End then
-               return false
             end
+            
+            
          end
-         
-         
       end
-      
       
    end
    
-   
-   
-   return self:visitSub( visitor, depth + 1, alreadySet )
+   return true
 end
-function DeclFormNode.setmeta( obj )
-  setmetatable( obj, { __index = DeclFormNode  } )
-end
-function DeclFormNode:get_argList()
-   return self.argList
-end
-
 
 
 local FuncKind = {}
@@ -8520,6 +8638,9 @@ FuncKind.__allList[4] = FuncKind.Dstr
 FuncKind.InitBlock = 4
 FuncKind._val2NameMap[4] = 'InitBlock'
 FuncKind.__allList[5] = FuncKind.InitBlock
+FuncKind.Form = 5
+FuncKind._val2NameMap[5] = 'Form'
+FuncKind.__allList[6] = FuncKind.Form
 
 
 local DeclFuncInfo = {}
@@ -8599,6 +8720,156 @@ end
 
 
 
+function NodeKind.get_DeclForm(  )
+
+   return 52
+end
+
+
+local DeclFormNode = {}
+regKind( "DeclForm" )
+function Filter:processDeclForm( node, opt )
+
+   self:pushOpt( opt )
+   self:defaultProcess( node, opt )
+   self:popOpt( opt )
+end
+
+
+function NodeManager:getDeclFormNodeList(  )
+
+   return self:getList( 52 )
+end
+
+
+
+setmetatable( DeclFormNode, { __index = Node } )
+_moduleObj.DeclFormNode = DeclFormNode
+function DeclFormNode:processFilter( filter, opt )
+
+   filter:processDeclForm( self, opt )
+end
+function DeclFormNode:canBeRight( processInfo )
+
+   return false
+end
+function DeclFormNode:canBeLeft(  )
+
+   return false
+end
+function DeclFormNode:canBeStatement(  )
+
+   return true
+end
+function DeclFormNode.new( id, pos, macroArgFlag, typeList, declInfo )
+   local obj = {}
+   DeclFormNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, declInfo ); end
+   return obj
+end
+function DeclFormNode:__init(id, pos, macroArgFlag, typeList, declInfo) 
+   Node.__init( self,id, 52, pos, macroArgFlag, typeList)
+   
+   
+   
+   self.declInfo = declInfo
+   
+   
+end
+function DeclFormNode.create( nodeMan, pos, macroArgFlag, typeList, declInfo )
+
+   local node = DeclFormNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, declInfo)
+   nodeMan:addNode( node )
+   return node
+end
+function DeclFormNode:visit( visitor, depth, alreadySet )
+
+   do
+      for __index, argNode in ipairs( self.declInfo:get_argList() ) do
+         
+         if not _lune._Set_has(alreadySet, argNode ) then
+            alreadySet[argNode]= true
+            do
+               local _switchExp = visitor( argNode, self, "arg", depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not argNode:visit( visitor, depth + 1, alreadySet ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
+                  return false
+               elseif _switchExp == NodeVisitMode.Next then
+               end
+            end
+            
+         end
+         
+         
+      end
+      
+      for __index, retTypeNode in ipairs( self.declInfo:get_retTypeNodeList() ) do
+         
+         if not _lune._Set_has(alreadySet, retTypeNode ) then
+            alreadySet[retTypeNode]= true
+            do
+               local _switchExp = visitor( retTypeNode, self, "retType", depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not retTypeNode:visit( visitor, depth + 1, alreadySet ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
+                  return false
+               elseif _switchExp == NodeVisitMode.Next then
+               end
+            end
+            
+         end
+         
+         
+      end
+      
+      do
+         local body = self.declInfo:get_body()
+         if body ~= nil then
+            
+            if not _lune._Set_has(alreadySet, body ) then
+               alreadySet[body]= true
+               do
+                  local _switchExp = visitor( body, self, 'declInfo', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not body:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
+                     return false
+                  elseif _switchExp == NodeVisitMode.Next then
+                  end
+               end
+               
+            end
+            
+            
+         end
+      end
+      
+   end
+   
+   
+   
+   return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function DeclFormNode.setmeta( obj )
+  setmetatable( obj, { __index = DeclFormNode  } )
+end
+function DeclFormNode:get_declInfo()
+   return self.declInfo
+end
+
+
+
+
 function NodeKind.get_DeclFunc(  )
 
    return 53
@@ -8655,25 +8926,24 @@ function DeclFuncNode.create( nodeMan, pos, macroArgFlag, typeList, declInfo )
 end
 function DeclFuncNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       for __index, argNode in ipairs( self.declInfo:get_argList() ) do
          
-         do
-            local _switchExp = visitor( argNode, self, "arg", depth )
-            if _switchExp == NodeVisitMode.Child then
-               if not argNode:visit( visitor, depth, alreadySet ) then
+         if not _lune._Set_has(alreadySet, argNode ) then
+            alreadySet[argNode]= true
+            do
+               local _switchExp = visitor( argNode, self, "arg", depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not argNode:visit( visitor, depth + 1, alreadySet ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
                   return false
+               elseif _switchExp == NodeVisitMode.Next then
                end
-               
-            elseif _switchExp == NodeVisitMode.End then
-               return false
-            elseif _switchExp == NodeVisitMode.Next then
             end
+            
          end
          
          
@@ -8681,17 +8951,21 @@ function DeclFuncNode:visit( visitor, depth, alreadySet )
       
       for __index, retTypeNode in ipairs( self.declInfo:get_retTypeNodeList() ) do
          
-         do
-            local _switchExp = visitor( retTypeNode, self, "retType", depth )
-            if _switchExp == NodeVisitMode.Child then
-               if not retTypeNode:visit( visitor, depth, alreadySet ) then
+         if not _lune._Set_has(alreadySet, retTypeNode ) then
+            alreadySet[retTypeNode]= true
+            do
+               local _switchExp = visitor( retTypeNode, self, "retType", depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not retTypeNode:visit( visitor, depth + 1, alreadySet ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
                   return false
+               elseif _switchExp == NodeVisitMode.Next then
                end
-               
-            elseif _switchExp == NodeVisitMode.End then
-               return false
-            elseif _switchExp == NodeVisitMode.Next then
             end
+            
          end
          
          
@@ -8700,17 +8974,24 @@ function DeclFuncNode:visit( visitor, depth, alreadySet )
       do
          local body = self.declInfo:get_body()
          if body ~= nil then
-            do
-               local _switchExp = visitor( body, self, 'declInfo', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not body:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, body ) then
+               alreadySet[body]= true
+               do
+                  local _switchExp = visitor( body, self, 'declInfo', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not body:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
          end
       end
@@ -8805,25 +9086,24 @@ function DeclMethodNode.create( nodeMan, pos, macroArgFlag, typeList, declInfo )
 end
 function DeclMethodNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       for __index, argNode in ipairs( self.declInfo:get_argList() ) do
          
-         do
-            local _switchExp = visitor( argNode, self, "arg", depth )
-            if _switchExp == NodeVisitMode.Child then
-               if not argNode:visit( visitor, depth, alreadySet ) then
+         if not _lune._Set_has(alreadySet, argNode ) then
+            alreadySet[argNode]= true
+            do
+               local _switchExp = visitor( argNode, self, "arg", depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not argNode:visit( visitor, depth + 1, alreadySet ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
                   return false
+               elseif _switchExp == NodeVisitMode.Next then
                end
-               
-            elseif _switchExp == NodeVisitMode.End then
-               return false
-            elseif _switchExp == NodeVisitMode.Next then
             end
+            
          end
          
          
@@ -8831,17 +9111,21 @@ function DeclMethodNode:visit( visitor, depth, alreadySet )
       
       for __index, retTypeNode in ipairs( self.declInfo:get_retTypeNodeList() ) do
          
-         do
-            local _switchExp = visitor( retTypeNode, self, "retType", depth )
-            if _switchExp == NodeVisitMode.Child then
-               if not retTypeNode:visit( visitor, depth, alreadySet ) then
+         if not _lune._Set_has(alreadySet, retTypeNode ) then
+            alreadySet[retTypeNode]= true
+            do
+               local _switchExp = visitor( retTypeNode, self, "retType", depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not retTypeNode:visit( visitor, depth + 1, alreadySet ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
                   return false
+               elseif _switchExp == NodeVisitMode.Next then
                end
-               
-            elseif _switchExp == NodeVisitMode.End then
-               return false
-            elseif _switchExp == NodeVisitMode.Next then
             end
+            
          end
          
          
@@ -8850,17 +9134,24 @@ function DeclMethodNode:visit( visitor, depth, alreadySet )
       do
          local body = self.declInfo:get_body()
          if body ~= nil then
-            do
-               local _switchExp = visitor( body, self, 'declInfo', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not body:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, body ) then
+               alreadySet[body]= true
+               do
+                  local _switchExp = visitor( body, self, 'declInfo', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not body:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
          end
       end
@@ -8945,25 +9236,24 @@ function ProtoMethodNode.create( nodeMan, pos, macroArgFlag, typeList, declInfo 
 end
 function ProtoMethodNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       for __index, argNode in ipairs( self.declInfo:get_argList() ) do
          
-         do
-            local _switchExp = visitor( argNode, self, "arg", depth )
-            if _switchExp == NodeVisitMode.Child then
-               if not argNode:visit( visitor, depth, alreadySet ) then
+         if not _lune._Set_has(alreadySet, argNode ) then
+            alreadySet[argNode]= true
+            do
+               local _switchExp = visitor( argNode, self, "arg", depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not argNode:visit( visitor, depth + 1, alreadySet ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
                   return false
+               elseif _switchExp == NodeVisitMode.Next then
                end
-               
-            elseif _switchExp == NodeVisitMode.End then
-               return false
-            elseif _switchExp == NodeVisitMode.Next then
             end
+            
          end
          
          
@@ -8971,17 +9261,21 @@ function ProtoMethodNode:visit( visitor, depth, alreadySet )
       
       for __index, retTypeNode in ipairs( self.declInfo:get_retTypeNodeList() ) do
          
-         do
-            local _switchExp = visitor( retTypeNode, self, "retType", depth )
-            if _switchExp == NodeVisitMode.Child then
-               if not retTypeNode:visit( visitor, depth, alreadySet ) then
+         if not _lune._Set_has(alreadySet, retTypeNode ) then
+            alreadySet[retTypeNode]= true
+            do
+               local _switchExp = visitor( retTypeNode, self, "retType", depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not retTypeNode:visit( visitor, depth + 1, alreadySet ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
                   return false
+               elseif _switchExp == NodeVisitMode.Next then
                end
-               
-            elseif _switchExp == NodeVisitMode.End then
-               return false
-            elseif _switchExp == NodeVisitMode.Next then
             end
+            
          end
          
          
@@ -8990,17 +9284,24 @@ function ProtoMethodNode:visit( visitor, depth, alreadySet )
       do
          local body = self.declInfo:get_body()
          if body ~= nil then
-            do
-               local _switchExp = visitor( body, self, 'declInfo', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not body:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, body ) then
+               alreadySet[body]= true
+               do
+                  local _switchExp = visitor( body, self, 'declInfo', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not body:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
          end
       end
@@ -9085,25 +9386,24 @@ function DeclConstrNode.create( nodeMan, pos, macroArgFlag, typeList, declInfo )
 end
 function DeclConstrNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       for __index, argNode in ipairs( self.declInfo:get_argList() ) do
          
-         do
-            local _switchExp = visitor( argNode, self, "arg", depth )
-            if _switchExp == NodeVisitMode.Child then
-               if not argNode:visit( visitor, depth, alreadySet ) then
+         if not _lune._Set_has(alreadySet, argNode ) then
+            alreadySet[argNode]= true
+            do
+               local _switchExp = visitor( argNode, self, "arg", depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not argNode:visit( visitor, depth + 1, alreadySet ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
                   return false
+               elseif _switchExp == NodeVisitMode.Next then
                end
-               
-            elseif _switchExp == NodeVisitMode.End then
-               return false
-            elseif _switchExp == NodeVisitMode.Next then
             end
+            
          end
          
          
@@ -9111,17 +9411,21 @@ function DeclConstrNode:visit( visitor, depth, alreadySet )
       
       for __index, retTypeNode in ipairs( self.declInfo:get_retTypeNodeList() ) do
          
-         do
-            local _switchExp = visitor( retTypeNode, self, "retType", depth )
-            if _switchExp == NodeVisitMode.Child then
-               if not retTypeNode:visit( visitor, depth, alreadySet ) then
+         if not _lune._Set_has(alreadySet, retTypeNode ) then
+            alreadySet[retTypeNode]= true
+            do
+               local _switchExp = visitor( retTypeNode, self, "retType", depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not retTypeNode:visit( visitor, depth + 1, alreadySet ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
                   return false
+               elseif _switchExp == NodeVisitMode.Next then
                end
-               
-            elseif _switchExp == NodeVisitMode.End then
-               return false
-            elseif _switchExp == NodeVisitMode.Next then
             end
+            
          end
          
          
@@ -9130,17 +9434,24 @@ function DeclConstrNode:visit( visitor, depth, alreadySet )
       do
          local body = self.declInfo:get_body()
          if body ~= nil then
-            do
-               local _switchExp = visitor( body, self, 'declInfo', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not body:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, body ) then
+               alreadySet[body]= true
+               do
+                  local _switchExp = visitor( body, self, 'declInfo', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not body:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
          end
       end
@@ -9225,25 +9536,24 @@ function DeclDestrNode.create( nodeMan, pos, macroArgFlag, typeList, declInfo )
 end
 function DeclDestrNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       for __index, argNode in ipairs( self.declInfo:get_argList() ) do
          
-         do
-            local _switchExp = visitor( argNode, self, "arg", depth )
-            if _switchExp == NodeVisitMode.Child then
-               if not argNode:visit( visitor, depth, alreadySet ) then
+         if not _lune._Set_has(alreadySet, argNode ) then
+            alreadySet[argNode]= true
+            do
+               local _switchExp = visitor( argNode, self, "arg", depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not argNode:visit( visitor, depth + 1, alreadySet ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
                   return false
+               elseif _switchExp == NodeVisitMode.Next then
                end
-               
-            elseif _switchExp == NodeVisitMode.End then
-               return false
-            elseif _switchExp == NodeVisitMode.Next then
             end
+            
          end
          
          
@@ -9251,17 +9561,21 @@ function DeclDestrNode:visit( visitor, depth, alreadySet )
       
       for __index, retTypeNode in ipairs( self.declInfo:get_retTypeNodeList() ) do
          
-         do
-            local _switchExp = visitor( retTypeNode, self, "retType", depth )
-            if _switchExp == NodeVisitMode.Child then
-               if not retTypeNode:visit( visitor, depth, alreadySet ) then
+         if not _lune._Set_has(alreadySet, retTypeNode ) then
+            alreadySet[retTypeNode]= true
+            do
+               local _switchExp = visitor( retTypeNode, self, "retType", depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not retTypeNode:visit( visitor, depth + 1, alreadySet ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
                   return false
+               elseif _switchExp == NodeVisitMode.Next then
                end
-               
-            elseif _switchExp == NodeVisitMode.End then
-               return false
-            elseif _switchExp == NodeVisitMode.Next then
             end
+            
          end
          
          
@@ -9270,17 +9584,24 @@ function DeclDestrNode:visit( visitor, depth, alreadySet )
       do
          local body = self.declInfo:get_body()
          if body ~= nil then
-            do
-               local _switchExp = visitor( body, self, 'declInfo', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not body:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, body ) then
+               alreadySet[body]= true
+               do
+                  local _switchExp = visitor( body, self, 'declInfo', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not body:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
          end
       end
@@ -9367,26 +9688,28 @@ function ExpCallSuperCtorNode.create( nodeMan, pos, macroArgFlag, typeList, supe
 end
 function ExpCallSuperCtorNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       do
          local child = self.expList
          if child ~= nil then
-            do
-               local _switchExp = visitor( child, self, 'expList', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not child:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, child ) then
+               alreadySet[child]= true
+               do
+                  local _switchExp = visitor( child, self, 'expList', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not child:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
             
          end
@@ -9476,26 +9799,28 @@ function ExpCallSuperNode.create( nodeMan, pos, macroArgFlag, typeList, superTyp
 end
 function ExpCallSuperNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       do
          local child = self.expList
          if child ~= nil then
-            do
-               local _switchExp = visitor( child, self, 'expList', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not child:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, child ) then
+               alreadySet[child]= true
+               do
+                  local _switchExp = visitor( child, self, 'expList', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not child:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
             
          end
@@ -9603,24 +9928,26 @@ function DeclMemberNode.create( nodeMan, pos, macroArgFlag, typeList, name, refT
 end
 function DeclMemberNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.refType
-      do
-         local _switchExp = visitor( child, self, 'refType', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'refType', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -9758,26 +10085,28 @@ function DeclArgNode.create( nodeMan, pos, macroArgFlag, typeList, name, symbolI
 end
 function DeclArgNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       do
          local child = self.argType
          if child ~= nil then
-            do
-               local _switchExp = visitor( child, self, 'argType', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not child:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, child ) then
+               alreadySet[child]= true
+               do
+                  local _switchExp = visitor( child, self, 'argType', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not child:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
             
          end
@@ -9867,11 +10196,6 @@ function DeclArgDDDNode.create( nodeMan, pos, macroArgFlag, typeList )
 end
 function DeclArgDDDNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
@@ -9976,11 +10300,6 @@ function DeclAdvertiseNode.create( nodeMan, pos, macroArgFlag, typeList, advInfo
 end
 function DeclAdvertiseNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
@@ -10001,10 +10320,35 @@ function ClassInheritInfo:visit( parent, visitor, depth, alreadySet )
       local base = self.base
       if base ~= nil then
          
+         if not _lune._Set_has(alreadySet, base ) then
+            alreadySet[base]= true
+            do
+               local _switchExp = visitor( base, parent, "base", depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not base:visit( visitor, depth + 1, alreadySet ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
+                  return false
+               elseif _switchExp == NodeVisitMode.Next then
+               end
+            end
+            
+         end
+         
+         
+      end
+   end
+   
+   for __index, ifTypeNode in ipairs( self.impliments ) do
+      
+      if not _lune._Set_has(alreadySet, ifTypeNode ) then
+         alreadySet[ifTypeNode]= true
          do
-            local _switchExp = visitor( base, parent, "base", depth )
+            local _switchExp = visitor( ifTypeNode, parent, "ifTypeNode", depth )
             if _switchExp == NodeVisitMode.Child then
-               if not base:visit( visitor, depth, alreadySet ) then
+               if not ifTypeNode:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
                
@@ -10014,23 +10358,6 @@ function ClassInheritInfo:visit( parent, visitor, depth, alreadySet )
             end
          end
          
-         
-      end
-   end
-   
-   for __index, ifTypeNode in ipairs( self.impliments ) do
-      
-      do
-         local _switchExp = visitor( ifTypeNode, parent, "ifTypeNode", depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not ifTypeNode:visit( visitor, depth, alreadySet ) then
-               return false
-            end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
-         elseif _switchExp == NodeVisitMode.Next then
-         end
       end
       
       
@@ -10128,11 +10455,6 @@ function ProtoClassNode.create( nodeMan, pos, macroArgFlag, typeList, name, inhe
 end
 function ProtoClassNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
@@ -10261,25 +10583,27 @@ function DeclClassNode.create( nodeMan, pos, macroArgFlag, typeList, accessMode,
 end
 function DeclClassNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local list = self.allStmtList
       for __index, child in ipairs( list ) do
-         do
-            local _switchExp = visitor( child, self, 'allStmtList', depth )
-            if _switchExp == NodeVisitMode.Child then
-               if not child:visit( visitor, depth + 1, alreadySet ) then
+         
+         if not _lune._Set_has(alreadySet, child ) then
+            alreadySet[child]= true
+            do
+               local _switchExp = visitor( child, self, 'allStmtList', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1, alreadySet ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
                   return false
+               elseif _switchExp == NodeVisitMode.Next then
                end
-               
-            elseif _switchExp == NodeVisitMode.End then
-               return false
             end
+            
          end
+         
          
          
       end
@@ -10290,17 +10614,24 @@ function DeclClassNode:visit( visitor, depth, alreadySet )
    do
       local list = self.declStmtList
       for __index, child in ipairs( list ) do
-         do
-            local _switchExp = visitor( child, self, 'declStmtList', depth )
-            if _switchExp == NodeVisitMode.Child then
-               if not child:visit( visitor, depth + 1, alreadySet ) then
+         
+         if not _lune._Set_has(alreadySet, child ) then
+            alreadySet[child]= true
+            do
+               local _switchExp = visitor( child, self, 'declStmtList', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1, alreadySet ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
                   return false
+               elseif _switchExp == NodeVisitMode.Next then
                end
-               
-            elseif _switchExp == NodeVisitMode.End then
-               return false
             end
+            
          end
+         
          
          
       end
@@ -10311,17 +10642,24 @@ function DeclClassNode:visit( visitor, depth, alreadySet )
    do
       local list = self.fieldList
       for __index, child in ipairs( list ) do
-         do
-            local _switchExp = visitor( child, self, 'fieldList', depth )
-            if _switchExp == NodeVisitMode.Child then
-               if not child:visit( visitor, depth + 1, alreadySet ) then
+         
+         if not _lune._Set_has(alreadySet, child ) then
+            alreadySet[child]= true
+            do
+               local _switchExp = visitor( child, self, 'fieldList', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1, alreadySet ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
                   return false
+               elseif _switchExp == NodeVisitMode.Next then
                end
-               
-            elseif _switchExp == NodeVisitMode.End then
-               return false
             end
+            
          end
+         
          
          
       end
@@ -10332,17 +10670,24 @@ function DeclClassNode:visit( visitor, depth, alreadySet )
    do
       local list = self.memberList
       for __index, child in ipairs( list ) do
-         do
-            local _switchExp = visitor( child, self, 'memberList', depth )
-            if _switchExp == NodeVisitMode.Child then
-               if not child:visit( visitor, depth + 1, alreadySet ) then
+         
+         if not _lune._Set_has(alreadySet, child ) then
+            alreadySet[child]= true
+            do
+               local _switchExp = visitor( child, self, 'memberList', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1, alreadySet ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
                   return false
+               elseif _switchExp == NodeVisitMode.Next then
                end
-               
-            elseif _switchExp == NodeVisitMode.End then
-               return false
             end
+            
          end
+         
          
          
       end
@@ -10552,11 +10897,6 @@ function DeclEnumNode.create( nodeMan, pos, macroArgFlag, typeList, enumType, ac
 end
 function DeclEnumNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
@@ -10580,6 +10920,56 @@ function DeclEnumNode:get_scope()
 end
 
 
+
+local AlgeValParamInfo = {}
+_moduleObj.AlgeValParamInfo = AlgeValParamInfo
+function AlgeValParamInfo.setmeta( obj )
+  setmetatable( obj, { __index = AlgeValParamInfo  } )
+end
+function AlgeValParamInfo.new( name, typeRef )
+   local obj = {}
+   AlgeValParamInfo.setmeta( obj )
+   if obj.__init then
+      obj:__init( name, typeRef )
+   end
+   return obj
+end
+function AlgeValParamInfo:__init( name, typeRef )
+
+   self.name = name
+   self.typeRef = typeRef
+end
+function AlgeValParamInfo:get_name()
+   return self.name
+end
+function AlgeValParamInfo:get_typeRef()
+   return self.typeRef
+end
+
+local DeclAlgeValInfo = {}
+_moduleObj.DeclAlgeValInfo = DeclAlgeValInfo
+function DeclAlgeValInfo.setmeta( obj )
+  setmetatable( obj, { __index = DeclAlgeValInfo  } )
+end
+function DeclAlgeValInfo.new( valSym, paramList )
+   local obj = {}
+   DeclAlgeValInfo.setmeta( obj )
+   if obj.__init then
+      obj:__init( valSym, paramList )
+   end
+   return obj
+end
+function DeclAlgeValInfo:__init( valSym, paramList )
+
+   self.valSym = valSym
+   self.paramList = paramList
+end
+function DeclAlgeValInfo:get_valSym()
+   return self.valSym
+end
+function DeclAlgeValInfo:get_paramList()
+   return self.paramList
+end
 
 
 function NodeKind.get_DeclAlge(  )
@@ -10623,13 +11013,13 @@ function DeclAlgeNode:canBeStatement(  )
 
    return true
 end
-function DeclAlgeNode.new( id, pos, macroArgFlag, typeList, accessMode, algeType, name, scope )
+function DeclAlgeNode.new( id, pos, macroArgFlag, typeList, accessMode, algeType, name, algeValList, scope )
    local obj = {}
    DeclAlgeNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, accessMode, algeType, name, scope ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, accessMode, algeType, name, algeValList, scope ); end
    return obj
 end
-function DeclAlgeNode:__init(id, pos, macroArgFlag, typeList, accessMode, algeType, name, scope) 
+function DeclAlgeNode:__init(id, pos, macroArgFlag, typeList, accessMode, algeType, name, algeValList, scope) 
    Node.__init( self,id, 67, pos, macroArgFlag, typeList)
    
    
@@ -10637,23 +11027,19 @@ function DeclAlgeNode:__init(id, pos, macroArgFlag, typeList, accessMode, algeTy
    self.accessMode = accessMode
    self.algeType = algeType
    self.name = name
+   self.algeValList = algeValList
    self.scope = scope
    
    
 end
-function DeclAlgeNode.create( nodeMan, pos, macroArgFlag, typeList, accessMode, algeType, name, scope )
+function DeclAlgeNode.create( nodeMan, pos, macroArgFlag, typeList, accessMode, algeType, name, algeValList, scope )
 
-   local node = DeclAlgeNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, accessMode, algeType, name, scope)
+   local node = DeclAlgeNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, accessMode, algeType, name, algeValList, scope)
    nodeMan:addNode( node )
    return node
 end
 function DeclAlgeNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
@@ -10669,10 +11055,44 @@ end
 function DeclAlgeNode:get_name()
    return self.name
 end
+function DeclAlgeNode:get_algeValList()
+   return self.algeValList
+end
 function DeclAlgeNode:get_scope()
    return self.scope
 end
 
+
+
+function DeclAlgeNode:visitSub( visitor, depth, alreadySet )
+
+   for __index, valInfo in ipairs( self.algeValList ) do
+      for __index, paramInfo in ipairs( valInfo:get_paramList() ) do
+         
+         if not _lune._Set_has(alreadySet, paramInfo:get_typeRef() ) then
+            alreadySet[paramInfo:get_typeRef()]= true
+            do
+               local _switchExp = visitor( paramInfo:get_typeRef(), self, "typeRef", depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not paramInfo:get_typeRef():visit( visitor, depth + 1, alreadySet ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
+                  return false
+               elseif _switchExp == NodeVisitMode.Next then
+               end
+            end
+            
+         end
+         
+         
+      end
+      
+   end
+   
+   return true
+end
 
 
 
@@ -10744,26 +11164,28 @@ function NewAlgeValNode.create( nodeMan, pos, macroArgFlag, typeList, name, pref
 end
 function NewAlgeValNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       do
          local child = self.prefix
          if child ~= nil then
-            do
-               local _switchExp = visitor( child, self, 'prefix', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not child:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, child ) then
+               alreadySet[child]= true
+               do
+                  local _switchExp = visitor( child, self, 'prefix', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not child:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
             
          end
@@ -10774,17 +11196,24 @@ function NewAlgeValNode:visit( visitor, depth, alreadySet )
    do
       local list = self.paramList
       for __index, child in ipairs( list ) do
-         do
-            local _switchExp = visitor( child, self, 'paramList', depth )
-            if _switchExp == NodeVisitMode.Child then
-               if not child:visit( visitor, depth + 1, alreadySet ) then
+         
+         if not _lune._Set_has(alreadySet, child ) then
+            alreadySet[child]= true
+            do
+               local _switchExp = visitor( child, self, 'paramList', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1, alreadySet ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
                   return false
+               elseif _switchExp == NodeVisitMode.Next then
                end
-               
-            elseif _switchExp == NodeVisitMode.End then
-               return false
             end
+            
          end
+         
          
          
       end
@@ -10882,11 +11311,6 @@ function LuneControlNode.create( nodeMan, pos, macroArgFlag, typeList, pragma )
 end
 function LuneControlNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
@@ -11003,24 +11427,26 @@ function MatchNode.create( nodeMan, pos, macroArgFlag, typeList, val, algeTypeIn
 end
 function MatchNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.val
-      do
-         local _switchExp = visitor( child, self, 'val', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'val', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -11029,17 +11455,24 @@ function MatchNode:visit( visitor, depth, alreadySet )
       do
          local child = self.defaultBlock
          if child ~= nil then
-            do
-               local _switchExp = visitor( child, self, 'defaultBlock', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not child:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, child ) then
+               alreadySet[child]= true
+               do
+                  local _switchExp = visitor( child, self, 'defaultBlock', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not child:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
             
          end
@@ -11172,32 +11605,40 @@ function MatchNode:visitSub( visitor, depth, alreadySet )
 
    for __index, caseInfo in ipairs( self.caseList ) do
       
-      do
-         local _switchExp = visitor( caseInfo:get_valExpRef(), self, "valExpRef", depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not caseInfo:get_valExpRef():visit( visitor, depth, alreadySet ) then
+      if not _lune._Set_has(alreadySet, caseInfo:get_valExpRef() ) then
+         alreadySet[caseInfo:get_valExpRef()]= true
+         do
+            local _switchExp = visitor( caseInfo:get_valExpRef(), self, "valExpRef", depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not caseInfo:get_valExpRef():visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
-         elseif _switchExp == NodeVisitMode.Next then
          end
+         
       end
       
       
       
-      do
-         local _switchExp = visitor( caseInfo:get_block(), self, "block", depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not caseInfo:get_block():visit( visitor, depth, alreadySet ) then
+      if not _lune._Set_has(alreadySet, caseInfo:get_block() ) then
+         alreadySet[caseInfo:get_block()]= true
+         do
+            local _switchExp = visitor( caseInfo:get_block(), self, "block", depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not caseInfo:get_block():visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
-         elseif _switchExp == NodeVisitMode.Next then
          end
+         
       end
       
       
@@ -11272,24 +11713,26 @@ function LuneKindNode.create( nodeMan, pos, macroArgFlag, typeList, exp )
 end
 function LuneKindNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.exp
-      do
-         local _switchExp = visitor( child, self, 'exp', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'exp', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -11372,11 +11815,6 @@ function DeclMacroNode.create( nodeMan, pos, macroArgFlag, typeList, declInfo )
 end
 function DeclMacroNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
@@ -11474,41 +11912,50 @@ function TestCaseNode.create( nodeMan, pos, macroArgFlag, typeList, name, impNod
 end
 function TestCaseNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.impNode
-      do
-         local _switchExp = visitor( child, self, 'impNode', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'impNode', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
    
    do
       local child = self.block
-      do
-         local _switchExp = visitor( child, self, 'block', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'block', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -11600,25 +12047,27 @@ function TestBlockNode.create( nodeMan, pos, macroArgFlag, typeList, stmtList )
 end
 function TestBlockNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local list = self.stmtList
       for __index, child in ipairs( list ) do
-         do
-            local _switchExp = visitor( child, self, 'stmtList', depth )
-            if _switchExp == NodeVisitMode.Child then
-               if not child:visit( visitor, depth + 1, alreadySet ) then
+         
+         if not _lune._Set_has(alreadySet, child ) then
+            alreadySet[child]= true
+            do
+               local _switchExp = visitor( child, self, 'stmtList', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1, alreadySet ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
                   return false
+               elseif _switchExp == NodeVisitMode.Next then
                end
-               
-            elseif _switchExp == NodeVisitMode.End then
-               return false
             end
+            
          end
+         
          
          
       end
@@ -11712,11 +12161,6 @@ function AbbrNode.create( nodeMan, pos, macroArgFlag, typeList )
 end
 function AbbrNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
@@ -11791,24 +12235,26 @@ function BoxingNode.create( nodeMan, pos, macroArgFlag, typeList, src )
 end
 function BoxingNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.src
-      do
-         local _switchExp = visitor( child, self, 'src', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'src', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -11891,24 +12337,26 @@ function UnboxingNode.create( nodeMan, pos, macroArgFlag, typeList, src )
 end
 function UnboxingNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local child = self.src
-      do
-         local _switchExp = visitor( child, self, 'src', depth )
-         if _switchExp == NodeVisitMode.Child then
-            if not child:visit( visitor, depth + 1, alreadySet ) then
+      
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'src', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
                return false
+            elseif _switchExp == NodeVisitMode.Next then
             end
-            
-         elseif _switchExp == NodeVisitMode.End then
-            return false
          end
+         
       end
+      
       
       
    end
@@ -11989,11 +12437,6 @@ function LiteralNilNode.create( nodeMan, pos, macroArgFlag, typeList )
 end
 function LiteralNilNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
@@ -12069,11 +12512,6 @@ function LiteralCharNode.create( nodeMan, pos, macroArgFlag, typeList, token, nu
 end
 function LiteralCharNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
@@ -12155,11 +12593,6 @@ function LiteralIntNode.create( nodeMan, pos, macroArgFlag, typeList, token, num
 end
 function LiteralIntNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
@@ -12241,11 +12674,6 @@ function LiteralRealNode.create( nodeMan, pos, macroArgFlag, typeList, token, nu
 end
 function LiteralRealNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
@@ -12326,26 +12754,28 @@ function LiteralArrayNode.create( nodeMan, pos, macroArgFlag, typeList, expList 
 end
 function LiteralArrayNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       do
          local child = self.expList
          if child ~= nil then
-            do
-               local _switchExp = visitor( child, self, 'expList', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not child:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, child ) then
+               alreadySet[child]= true
+               do
+                  local _switchExp = visitor( child, self, 'expList', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not child:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
             
          end
@@ -12431,26 +12861,28 @@ function LiteralListNode.create( nodeMan, pos, macroArgFlag, typeList, expList )
 end
 function LiteralListNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       do
          local child = self.expList
          if child ~= nil then
-            do
-               local _switchExp = visitor( child, self, 'expList', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not child:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, child ) then
+               alreadySet[child]= true
+               do
+                  local _switchExp = visitor( child, self, 'expList', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not child:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
             
          end
@@ -12536,26 +12968,28 @@ function LiteralSetNode.create( nodeMan, pos, macroArgFlag, typeList, expList )
 end
 function LiteralSetNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       do
          local child = self.expList
          if child ~= nil then
-            do
-               local _switchExp = visitor( child, self, 'expList', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not child:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, child ) then
+               alreadySet[child]= true
+               do
+                  local _switchExp = visitor( child, self, 'expList', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not child:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
             
          end
@@ -12667,44 +13101,53 @@ function LiteralMapNode.create( nodeMan, pos, macroArgFlag, typeList, map, pairL
 end
 function LiteralMapNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       local map = self.map
       for key, val in pairs( map ) do
          do
             local child = key
-            do
-               local _switchExp = visitor( child, self, 'map', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not child:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, child ) then
+               alreadySet[child]= true
+               do
+                  local _switchExp = visitor( child, self, 'map', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not child:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
             
          end
          
          do
             local child = val
-            do
-               local _switchExp = visitor( child, self, 'map', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not child:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, child ) then
+               alreadySet[child]= true
+               do
+                  local _switchExp = visitor( child, self, 'map', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not child:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
             
          end
@@ -12802,26 +13245,28 @@ function LiteralStringNode.create( nodeMan, pos, macroArgFlag, typeList, token, 
 end
 function LiteralStringNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    do
       do
          local child = self.orgParam
          if child ~= nil then
-            do
-               local _switchExp = visitor( child, self, 'orgParam', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not child:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, child ) then
+               alreadySet[child]= true
+               do
+                  local _switchExp = visitor( child, self, 'orgParam', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not child:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
             
          end
@@ -12833,17 +13278,24 @@ function LiteralStringNode:visit( visitor, depth, alreadySet )
       do
          local child = self.dddParam
          if child ~= nil then
-            do
-               local _switchExp = visitor( child, self, 'dddParam', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not child:visit( visitor, depth + 1, alreadySet ) then
+            
+            if not _lune._Set_has(alreadySet, child ) then
+               alreadySet[child]= true
+               do
+                  local _switchExp = visitor( child, self, 'dddParam', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not child:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
                      return false
+                  elseif _switchExp == NodeVisitMode.Next then
                   end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
                end
+               
             end
+            
             
             
          end
@@ -12938,11 +13390,6 @@ function LiteralBoolNode.create( nodeMan, pos, macroArgFlag, typeList, token )
 end
 function LiteralBoolNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
@@ -13020,11 +13467,6 @@ function LiteralSymbolNode.create( nodeMan, pos, macroArgFlag, typeList, token )
 end
 function LiteralSymbolNode:visit( visitor, depth, alreadySet )
 
-   if _lune._Set_has(alreadySet, self ) then
-      return true
-   end
-   
-   alreadySet[self]= true
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
@@ -13441,7 +13883,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, _11158 in pairs( self.map ) do
+   for key, _11328 in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -13476,8 +13918,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, _11172 in ipairs( __sorted ) do
-         local key = __map[ _11172 ]
+      for __index, _11342 in ipairs( __sorted ) do
+         local key = __map[ _11342 ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false

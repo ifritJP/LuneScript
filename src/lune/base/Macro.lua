@@ -449,18 +449,23 @@ end
 
 local MacroPaser = {}
 setmetatable( MacroPaser, { __index = Parser.Parser } )
-function MacroPaser.new( tokenList, name )
+function MacroPaser.new( tokenList, name, overridePos )
    local obj = {}
    MacroPaser.setmeta( obj )
-   if obj.__init then obj:__init( tokenList, name ); end
+   if obj.__init then obj:__init( tokenList, name, overridePos ); end
    return obj
 end
-function MacroPaser:__init(tokenList, name) 
+function MacroPaser:__init(tokenList, name, overridePos) 
    Parser.Parser.__init( self)
    
    self.pos = 1
    self.tokenList = tokenList
    self.name = name
+   self.overridePos = overridePos
+end
+function MacroPaser:createPosition( lineNo, column )
+
+   return Types.Position.create( lineNo, column, self:getStreamName(  ), self.overridePos )
 end
 function MacroPaser:getToken(  )
 
@@ -795,7 +800,7 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
       
    end
    
-   return MacroPaser.new(macroInfo:getTokenList(  ), string.format( "%s:%d:%d: (macro %s)", streamName, firstToken.pos.lineNo, firstToken.pos.column, macroTypeInfo:getTxt(  ))), nil
+   return MacroPaser.new(macroInfo:getTokenList(  ), string.format( "%s:%d:%d: (macro %s)", streamName, firstToken.pos.lineNo, firstToken.pos.column, macroTypeInfo:getTxt(  )), firstToken.pos:get_orgPos()), nil
 end
 
 
@@ -920,7 +925,7 @@ local function pushbackTxt( pushbackParser, txtList, streamName, pos )
    local tokenList = {}
    for __index, txt in ipairs( txtList ) do
       local stream = Parser.TxtStream.new(txt)
-      local parser = Parser.StreamParser.new(stream, string.format( "macro symbol -- %s", streamName))
+      local parser = Parser.StreamParser.new(stream, string.format( "macro symbol -- %s", streamName), false, pos)
       local workParser = Parser.DefaultPushbackParser.new(parser)
       while true do
          local worktoken = workParser:getTokenNoErr(  )
@@ -973,13 +978,13 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
                table.insert( txtList, txt )
             end
             
-            pushbackTxt( parser, txtList, nextToken.txt, nextToken.pos )
+            pushbackTxt( parser, txtList, nextToken.txt, nextToken.pos:get_orgPos() )
          elseif equalsType( macroVal.typeInfo, Ast.builtinTypeStat ) or equalsType( macroVal.typeInfo, Ast.builtinTypeExp ) or equalsType( macroVal.typeInfo, Ast.builtinTypeMultiExp ) then
-            local pos = _lune.nilacc( _lune.nilacc( macroVal.argNode, 'get_pos', 'callmtd' ), 'get_orgPos', 'callmtd' ) or nextToken.pos:get_orgPos()
+            local pos = _lune.nilacc( _lune.nilacc( macroVal.argNode, 'get_pos', 'callmtd' ), 'get_RawOrgPos', 'callmtd' ) or nextToken.pos:get_RawOrgPos() or token.pos:get_orgPos()
             parser:pushbackStr( string.format( "macroVal %s", nextToken.txt), (_lune.unwrap( macroVal.val) ), pos )
          elseif macroVal.typeInfo:get_kind() == Ast.TypeInfoKind.Array or macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKind.List then
             if equalsType( macroVal.typeInfo:get_itemTypeInfoList()[1], Ast.builtinTypeStat ) then
-               local pos = _lune.nilacc( _lune.nilacc( macroVal.argNode, 'get_pos', 'callmtd' ), 'get_orgPos', 'callmtd' ) or nextToken.pos:get_orgPos()
+               local pos = _lune.nilacc( _lune.nilacc( macroVal.argNode, 'get_pos', 'callmtd' ), 'get_RawOrgPos', 'callmtd' ) or nextToken.pos:get_RawOrgPos() or token.pos:get_orgPos()
                local strList = (_lune.unwrap( macroVal.val) )
                for index = #strList, 1, -1 do
                   parser:pushbackStr( string.format( "macroVal %s[%d]", nextToken.txt, index), strList[index], pos )
@@ -1045,7 +1050,7 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
          
       elseif tokenTxt == ',,,' then
          if equalsType( macroVal.typeInfo, Ast.builtinTypeString ) then
-            pushbackTxt( parser, {(_lune.unwrap( macroVal.val) )}, nextToken.txt, nextToken.pos )
+            pushbackTxt( parser, {(_lune.unwrap( macroVal.val) )}, nextToken.txt, nextToken.pos:get_orgPos() )
          else
           
             parser:error( string.format( "',,,' does not support this type -- %s", macroVal.typeInfo:getTxt(  )) )

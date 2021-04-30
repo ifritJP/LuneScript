@@ -69,14 +69,23 @@ class MacroPaser extend Parser.Parser {
    let tokenList: &List<&Parser.Token>;
    let mut pos: int;
    let name: str;
+   let overridePos:&Types.Position!;
 
-   pub fn __init( tokenList: &List<&Parser.Token>, name: str ) {
+   pub fn __init( tokenList: &List<&Parser.Token>,
+                  name: str, overridePos:&Types.Position! )
+   {
       super();
       self.pos = 1;
       self.tokenList = tokenList;
       self.name = name;
+      self.overridePos = overridePos;
    }
 
+   pub override fn createPosition( lineNo: int, column: int ) : &Types.Position {
+      return Types.Position.create( lineNo, column,
+                                    self.getStreamName(), self.overridePos );
+   }
+   
    pub override fn getToken() mut : &Parser.Token! {
       if #self.tokenList < self.pos {
          return nil;
@@ -400,7 +409,8 @@ pub fn MacroCtrl.evalMacroOp(
    return new MacroPaser(
       macroInfo.getTokenList(),
       "%s:%d:%d: (macro %s)" ( streamName, firstToken.pos.lineNo, firstToken.pos.column,
-                               macroTypeInfo.getTxt(##)) ), nil;
+                               macroTypeInfo.getTxt(##)),
+      firstToken.pos.$orgPos ), nil;
 }
 
 
@@ -550,7 +560,7 @@ fn pushbackTxt( pushbackParser:Parser.PushbackParser,
    foreach txt in txtList {
       let mut stream = new Parser.TxtStream( txt );
       let mut parser = new Parser.StreamParser(
-         stream, "macro symbol -- %s" (streamName) ## );
+         stream, "macro symbol -- %s" (streamName), false, pos );
       let mut workParser = new Parser.DefaultPushbackParser( parser );
       while true {
          let worktoken = workParser.getTokenNoErr();
@@ -611,13 +621,14 @@ pub fn MacroCtrl.expandMacroVal(
             foreach txt in (unwrap macroVal.val)@@str[] {
                txtList.insert( txt );
             }
-            pushbackTxt( parser, txtList, nextToken.txt, nextToken.pos );
+            pushbackTxt( parser, txtList, nextToken.txt, nextToken.pos.$orgPos );
          }
          elseif equalsType( macroVal.typeInfo, Ast.builtinTypeStat ) or
             equalsType( macroVal.typeInfo, Ast.builtinTypeExp ) or
             equalsType( macroVal.typeInfo, Ast.builtinTypeMultiExp ) 
          {
-            let pos = macroVal.argNode$.$pos$.$orgPos or nextToken.pos.$orgPos;
+            let pos = macroVal.argNode$.$pos$.$RawOrgPos or
+               nextToken.pos.$RawOrgPos or token.$pos.$orgPos;
             parser.pushbackStr( "macroVal %s" (nextToken.txt),
                                 (unwrap macroVal.val)@@str, pos );
          }
@@ -627,7 +638,8 @@ pub fn MacroCtrl.expandMacroVal(
             if equalsType( macroVal.typeInfo.$itemTypeInfoList[ 1 ],
                            Ast.builtinTypeStat )
             {
-               let pos = macroVal.argNode$.$pos$.$orgPos or nextToken.pos.$orgPos;
+               let pos = macroVal.argNode$.$pos$.$RawOrgPos or
+                  nextToken.pos.$RawOrgPos or token.$pos.$orgPos;
                let strList = (unwrap macroVal.val)@@str[];
                for index = #strList, 1, -1 {
                   parser.pushbackStr(
@@ -687,7 +699,7 @@ pub fn MacroCtrl.expandMacroVal(
       elseif tokenTxt == ',,,' {
          if equalsType( macroVal.typeInfo, Ast.builtinTypeString ) {
             pushbackTxt( parser, [ (unwrap macroVal.val)@@str ],
-                         nextToken.txt, nextToken.pos );
+                         nextToken.txt, nextToken.pos.$orgPos );
          }
          else {
             parser.error( "',,,' does not support this type -- %s"

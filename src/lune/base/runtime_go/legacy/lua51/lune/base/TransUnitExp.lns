@@ -415,16 +415,6 @@ fn TransUnit.analyzeExpRefItem(
 
 
 /**
-expNode から dstType に代入する際に、
-暗黙型キャストが必要かどうかをチェックする。
-
-必要な場合は、 変換を行なう ExpCastNode を返す。
-
-*/
-form checkImplicitCastCallback( dstType:&Ast.TypeInfo, expNode:&Nodes.Node ): &Nodes.Node!;
-
-
-/**
 expListNode の値を dstTypeList へ代入する際に、
 暗黙キャストされるかどうかをチェックし、
 暗黙キャストされる場合、そのノードを ExpCastNode に変換した
@@ -1181,7 +1171,7 @@ fn TransUnit.evalMacro(
 format の書式から %? を検索して、リストを返す。
 */
 pub fn findForm( format:str ): List<str> {
-   let mut remain = format;
+   let mut remain = format.gsub( "%%%%", "" );
    let mut opList:List<str> = [];
 
    while true {
