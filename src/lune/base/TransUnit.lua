@@ -10963,7 +10963,7 @@ end
 
 local function findForm( format )
 
-   local remain = format
+   local remain = format:gsub( "%%%%", "" )
    local opList = {}
    
    while true do

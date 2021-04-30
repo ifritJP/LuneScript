@@ -1171,7 +1171,7 @@ fn TransUnit.evalMacro(
 format の書式から %? を検索して、リストを返す。
 */
 pub fn findForm( format:str ): List<str> {
-   let mut remain = format;
+   let mut remain = format.gsub( "%%%%", "" );
    let mut opList:List<str> = [];
 
    while true {
