@@ -5,16 +5,16 @@ var init_Util bool
 var Util__mod__ string
 var Util_debugFlag bool
 var Util_errorCode LnsInt
-// for 296
-func Util_convExp1128(arg1 []LnsAny) string {
+// for 302
+func Util_convExp1164(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 313
-func Util_convExp1234(arg1 []LnsAny) string {
+// for 319
+func Util_convExp1270(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 324
-func Util_convExp1302(arg1 []LnsAny) string {
+// for 330
+func Util_convExp1338(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 290
@@ -116,13 +116,21 @@ func Util_scriptPath2Module(path string) string {
 func Util_scriptPath2ModuleFromProjDir(path string,projDir LnsAny) string {
     if projDir != nil{
         projDir_283 := projDir.(string)
-        path = Util_convExp1128(Lns_2DDD(Lns_getVM().String_gsub(path,projDir_283, "")))
+        var workpath string
+        if Lns_op_not(Lns_car(Lns_getVM().String_find(projDir_283,"/$", nil, nil))){
+            workpath = projDir_283 + "/"
+            
+        } else { 
+            workpath = projDir_283
+            
+        }
+        path = Util_convExp1164(Lns_2DDD(Lns_getVM().String_gsub(path,"^" + workpath, "")))
         
     }
     return Util_scriptPath2Module(path)
 }
 
-// 301: decl @lune.@base.@Util.pathJoin
+// 307: decl @lune.@base.@Util.pathJoin
 func Util_pathJoin(dir string,path string) string {
     if Lns_isCondTrue( Lns_car(Lns_getVM().String_find(path,"^/", nil, nil))){
         return path
@@ -133,16 +141,16 @@ func Util_pathJoin(dir string,path string) string {
     return Lns_getVM().String_format("%s/%s", []LnsAny{dir, path})
 }
 
-// 311: decl @lune.@base.@Util.parentPath
+// 317: decl @lune.@base.@Util.parentPath
 func Util_parentPath(path string) string {
     if Lns_isCondTrue( Lns_car(Lns_getVM().String_find(path,"/$", nil, nil))){
-        path = Util_convExp1234(Lns_2DDD(Lns_getVM().String_gsub(path,"/$", "")))
+        path = Util_convExp1270(Lns_2DDD(Lns_getVM().String_gsub(path,"/$", "")))
         
     }
     return Lns_car(Lns_getVM().String_gsub(path,"/[^/]+$", "")).(string)
 }
 
-// 318: decl @lune.@base.@Util.searchProjDir
+// 324: decl @lune.@base.@Util.searchProjDir
 func Util_searchProjDir(dir string) LnsAny {
     var work string
     work = dir
@@ -150,7 +158,7 @@ func Util_searchProjDir(dir string) LnsAny {
         if Depend_existFile(Util_pathJoin(work, "lune.js")){
             return work
         }
-        work = Util_convExp1302(Lns_2DDD(Lns_getVM().String_gsub(work,"/[^/]+$", "")))
+        work = Util_convExp1338(Lns_2DDD(Lns_getVM().String_gsub(work,"/[^/]+$", "")))
         
     }
     return nil

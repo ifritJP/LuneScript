@@ -2125,11 +2125,12 @@ pub fn Scope.addFunc(
 
 pub fn Scope.addForm(
    processInfo:ProcessInfo,
-   pos:&Parser.Position!, typeInfo: &TypeInfo, accessMode:AccessMode ) mut
+   pos:&Parser.Position!, typeInfo: &TypeInfo, accessMode:AccessMode ) mut :
+   &SymbolInfo!, &SymbolInfo!
 {
-   self.add(
+   return self.add(
       processInfo, .Typ, false, false, typeInfo.$rawTxt, pos,
-      typeInfo, accessMode, true, .IMut, false, false );
+      typeInfo, accessMode, true, .IMut, false, false )**;
 }
 
 pub fn Scope.addMacro(

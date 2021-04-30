@@ -384,6 +384,13 @@ enum AnalyzingState {
    Func,
 }
 
+/**
+expNode から dstType に代入する際に、
+暗黙型キャストが必要かどうかをチェックする。
+
+必要な場合は、 変換を行なう ExpCastNode を返す。
+
+*/
 form checkImplicitCastCallback( dstType:&Ast.TypeInfo, expNode:&Nodes.Node ): &Nodes.Node!;
 
 class ClosureFun {

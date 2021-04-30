@@ -607,8 +607,9 @@ usage:
 }
 
 pub fn createDefaultOption( path:str, projDir:str! ) : Option {
-   let mut option = new Option();
-   option.scriptPath = path;
+   //let mut option = new Option();
+   //option.scriptPath = path;
+   let mut option = analyze( [ path, "save" ] );
    option.useLuneModule = getRuntimeModule();
    option.useIpairs = true;
    when! projDir {

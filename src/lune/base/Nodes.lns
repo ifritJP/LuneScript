@@ -198,17 +198,20 @@ pub form NodeVisitor( node:&Node, parent:&Node, relation:str, depth:int ): NodeV
 
 macro _procVisitor( child:__exp, parent:__exp, name:str ) {
    {}
-    _switch visitor( ,,child, ,,parent, ,,name, depth ) {
-       case .Child {
-          if not ,,child.visit( visitor, depth, alreadySet ) {
+    if not alreadySet.has( ,,child ) {
+       alreadySet.add( ,,child );
+       _switch visitor( ,,child, ,,parent, ,,name, depth ) {
+          case .Child {
+             if not ,,child.visit( visitor, depth + 1, alreadySet ) {
+                return false;
+             }
+          }
+          case .End {
              return false;
           }
-       }
-       case .End {
-          return false;
-       }
-       case .Next {
-          // pass
+          case .Next {
+             // pass
+          }
        }
     }
 }
@@ -573,31 +576,13 @@ macro _declNodeClass(
                            _procVisitor( retTypeNode, self, "retType" );
                         }
                         if! let body = self.,,,fieldName~~.$body {
-                           switch visitor( body, self, ,,fieldName, depth ) {
-                              case NodeVisitMode.Child {
-                                 if not body.visit( visitor, depth + 1, alreadySet ) {
-                                    return false;
-                                 }
-                              }
-                              case NodeVisitMode.End {
-                                 return false;
-                              }
-                           }
+                           _procVisitor( body, self, ,,fieldName );
                         }
                      }
                   });
                } elseif typeName.find( "Node" ## ) {
                   let oneVisitStat = `{
-                     switch visitor( child, self, ,,fieldName, depth ) {
-                        case NodeVisitMode.Child {
-                           if not child.visit( visitor, depth + 1, alreadySet ) {
-                              return false;
-                           }
-                        }
-                        case NodeVisitMode.End {
-                           return false;
-                        }
-                     }
+                     _procVisitor( child, self, ,,fieldName );
                   };
 
                   fn processNilable( varName:str, statVar:stat ) {
@@ -728,10 +713,6 @@ macro _declNodeClass(
       }
 
       pub override fn visit( visitor:NodeVisitor, depth:int, alreadySet:Set<&Node> ): bool {
-         if alreadySet.has( self ) {
-            return true;
-         }
-         alreadySet.add( self );
          ,,visitStatList;
          return self.visitSub( visitor, depth + 1, alreadySet );
       }
@@ -1792,10 +1773,6 @@ pub override fn DeclVarNode.visitSub(
 
 
 
-_declNodeClass( "DeclForm", Node, false, false, true,
-                [ { "argList": "&List<&Node>" } ]
-);
-
 pub enum FuncKind {
    /** 関数定義 */
    Func,
@@ -1807,6 +1784,8 @@ pub enum FuncKind {
    Dstr,
    /** クラスの __init ブロック */
    InitBlock,
+   /** from 宣言 */
+   Form,
 }
 
 pub class DeclFuncInfo {
@@ -1836,6 +1815,10 @@ pub static fn DeclFuncInfo.createFrom(
       info.accessMode, info.body, info.retTypeInfoList, info.retTypeNodeList,
       info.has__func__Symbol, info.overrideFlag );
 }
+
+_declNodeClass( "DeclForm", Node, false, false, true,
+                [ { "declInfo": "&DeclFuncInfo" } ]
+);
 
 _declNodeClass( "DeclFunc", Node, false, nil, nil,
                 [ { "declInfo": "&DeclFuncInfo" } ]
@@ -2060,12 +2043,33 @@ _declNodeClass( "DeclEnum", Node, false, false, true,
                   { "scope": "&Ast.Scope" } ]
 );
 
+pub class AlgeValParamInfo {
+   let name:&Types.Token! {pub};
+   let typeRef:&RefTypeNode {pub};
+}
+pub class DeclAlgeValInfo {
+   let valSym:&Ast.SymbolInfo {pub};
+   let paramList:&List<&AlgeValParamInfo> {pub};
+}
 _declNodeClass( "DeclAlge", Node, false, false, true,
                 [ { "accessMode": "Ast.AccessMode" },
                   { "algeType": "&Ast.AlgeTypeInfo"},
                   { "name": "&Parser.Token" },
+                  { "algeValList": "&List<&DeclAlgeValInfo>" },
                   { "scope": "&Ast.Scope" } ]
 );
+
+pub override fn DeclAlgeNode.visitSub(
+   visitor:NodeVisitor, depth:int, alreadySet:Set<&Node> ) : bool
+{
+   foreach valInfo in self.algeValList {
+      foreach paramInfo in valInfo.$paramList {
+         _procVisitor( paramInfo.$typeRef, self, "typeRef" );
+      }
+   }
+   return true;
+}
+
 
 
 _declNodeClass( "NewAlgeVal", Node, false, true, false,

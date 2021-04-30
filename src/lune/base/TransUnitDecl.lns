@@ -1305,6 +1305,8 @@ fn TransUnit.analyzeDeclAlge(
       self.processInfo, accessMode, name.txt, name.pos, algeTypeInfo );
    self.errorShadowing( name.pos, shadowing );
 
+   let mut algeValList: List<Nodes.DeclAlgeValInfo> = [];
+
    let mut nextToken = self.getToken(##);
    while nextToken.txt ~= "}" {
       let valName = self.checkSymbol( nextToken, .MustNot_ );
@@ -1314,17 +1316,23 @@ fn TransUnit.analyzeDeclAlge(
 
       nextToken = self.getToken(##);
 
+      let mut paramList:List<&Nodes.AlgeValParamInfo> = [];
+      
       let mut typeInfoList:List<&Ast.TypeInfo> = [];
       if nextToken.txt == "(" {
          // パラメータの宣言
          while true {
             // パラメータ名の確認
-            let _ = self.getToken(##);
+            let paramNameToken:&Types.Token!;
+            let workToken1 = self.getToken(##);
             let workToken2 = self.getToken(##);
             if workToken2.txt ~= ":" {
                // パラメータ名を省略している場合は戻す
                self.pushback();
                self.pushback();
+               paramNameToken = nil;
+            } else {
+               paramNameToken = workToken1;
             }
             
             let typeNode = self.analyzeRefType(
@@ -1335,6 +1343,8 @@ fn TransUnit.analyzeDeclAlge(
                   "can't use the prototype class -- %s" ( typeNode.$expType.getTxt(##)) );
             }
             typeInfoList.insert( typeNode.$expType );
+            paramList.insert( new Nodes.AlgeValParamInfo( paramNameToken, typeNode ) );
+            
             nextToken = self.getToken(##);
             if nextToken.txt ~= "," {
                self.checkToken( nextToken, ")" );
@@ -1344,11 +1354,15 @@ fn TransUnit.analyzeDeclAlge(
          }
       }
 
-      let algeValSym = algeScope.addAlgeVal(
+      let workAlgeValSym, algeValSymShadow = algeScope.addAlgeVal(
          self.processInfo, valName.txt, valName.pos, algeTypeInfo );
+      self.errorShadowing( valName.pos, algeValSymShadow );
+      let algeValSym = unwrap (workAlgeValSym or shadowing);
       let algeValInfo = new Ast.AlgeValInfo(
-         valName.txt, typeInfoList, algeTypeInfo, unwrap algeValSym );
+         valName.txt, typeInfoList, algeTypeInfo, algeValSym );
       algeTypeInfo.addValInfo( algeValInfo );
+
+      algeValList.insert( new Nodes.DeclAlgeValInfo( algeValSym, paramList ) );
 
       if nextToken.txt == "}" {
          break;
@@ -1362,7 +1376,7 @@ fn TransUnit.analyzeDeclAlge(
 
    return Nodes.DeclAlgeNode.create(
       self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
-      [ algeTypeInfo ], accessMode, algeTypeInfo, name, algeScope );
+      [ algeTypeInfo ], accessMode, algeTypeInfo, name, algeValList, algeScope );
 }
 
 fn TransUnit.analyzeAlias(
@@ -1378,7 +1392,7 @@ fn TransUnit.analyzeAlias(
    let srcToken = self.getToken(##);
 
    let symbolNode = self.analyzeExpSymbol(
-      firstToken, srcToken, .Symbol, nil, true, false );
+      srcToken, srcToken, .Symbol, nil, true, false );
 
 
    let mut newTypeInfo = Ast.builtinTypeNone;
@@ -1488,7 +1502,8 @@ mut : Nodes.DeclFormNode
 
    let mut retTypeList:List<&Ast.TypeInfo> = [];
    nextToken = self.getToken(##);
-   retTypeList, nextToken = self.analyzeRetTypeList(
+   let retNodeList;
+   retTypeList, nextToken, retNodeList = self.analyzeRetTypeList(
       Ast.isPubToExternal( accessMode ), accessMode, nextToken,
       Ast.isPubToExternal( accessMode ) );
 
@@ -1506,13 +1521,17 @@ mut : Nodes.DeclFormNode
       self.getCurrentNamespaceTypeInfo(), false, false,
       true, accessMode, name.txt, nil, argTypeInfoList, retTypeList, false );
 
-   self.scope.addForm( self.processInfo, name.pos, formType, accessMode );
-   // self.scope.add(
-   //    .Typ, false, false, name.txt, formType, accessMode, true, .IMut, false );
+   let formSymbol, shadowing = self.scope.addForm(
+      self.processInfo, name.pos, formType, accessMode );
+   self.errorShadowing( name.pos, shadowing );
 
+   let declFuncInfo = new Nodes.DeclFuncInfo(
+      .Form, nil, nil, name, formSymbol or shadowing, argList, false,
+      accessMode, nil, retTypeList, retNodeList, false, false );
+   
    return Nodes.DeclFormNode.create(
       self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
-      [ formType ], argList );
+      [ formType ], declFuncInfo );
 }
 
 fn TransUnit.analyzeDecl(

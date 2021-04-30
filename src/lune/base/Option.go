@@ -115,7 +115,7 @@ func Option_convExp610(arg1 []LnsAny) LnsAny {
 }
 // 48: decl @lune.@base.@Option.getBuildCount
 func Option_getBuildCount_1015_() LnsInt {
-    return 7486
+    return 7505
 }
 
 // 75: decl @lune.@base.@Option.getRuntimeModule
@@ -513,9 +513,7 @@ func Option_analyze(argList *LnsList) *Option_Option {
 // 609: decl @lune.@base.@Option.createDefaultOption
 func Option_createDefaultOption(path string,projDir LnsAny) *Option_Option {
     var option *Option_Option
-    option = NewOption_Option()
-    option.ScriptPath = path
-    
+    option = Option_analyze(NewLnsList([]LnsAny{path, "save"}))
     option.UseLuneModule = Option_getRuntimeModule()
     
     option.UseIpairs = true

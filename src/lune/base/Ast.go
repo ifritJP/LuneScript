@@ -588,48 +588,48 @@ func (self *Ast_CommonType__Normal) GetTxt() string {
 return "CommonType.Normal"
 }
 type Ast_filterForm func (arg1 *Ast_SymbolInfo) bool
-// for 5614
-func Ast_convExp22511(arg1 []LnsAny) LnsAny {
+// for 5615
+func Ast_convExp22518(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 7027
-func Ast_convExp29893(arg1 []LnsAny) LnsAny {
+// for 7028
+func Ast_convExp29900(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 7162
-func Ast_convExp30864(arg1 []LnsAny) LnsAny {
+// for 7163
+func Ast_convExp30871(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 7162
-func Ast_convExp31022(arg1 []LnsAny) LnsAny {
+// for 7163
+func Ast_convExp31029(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 7162
-func Ast_convExp31188(arg1 []LnsAny) LnsAny {
+// for 7163
+func Ast_convExp31195(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 7162
-func Ast_convExp31359(arg1 []LnsAny) LnsAny {
+// for 7163
+func Ast_convExp31366(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 7162
-func Ast_convExp31525(arg1 []LnsAny) LnsAny {
+// for 7163
+func Ast_convExp31532(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 7162
-func Ast_convExp31733(arg1 []LnsAny) LnsAny {
+// for 7163
+func Ast_convExp31740(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 7162
-func Ast_convExp31910(arg1 []LnsAny) LnsAny {
+// for 7163
+func Ast_convExp31917(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 7162
-func Ast_convExp32068(arg1 []LnsAny) LnsAny {
+// for 7163
+func Ast_convExp32075(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 7201
-func Ast_convExp32223(arg1 []LnsAny) LnsAny {
+// for 7202
+func Ast_convExp32230(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 func ProcessInfo_switchIdProvier___anonymous_1088_() string {
@@ -761,7 +761,7 @@ func Ast_isExtId(typeInfo *Ast_TypeInfo) bool {
     return false
 }
 
-// 2189: decl @lune.@base.@Ast.dumpScope.dumpScopeSub
+// 2190: decl @lune.@base.@Ast.dumpScope.dumpScopeSub
 func dumpScope__dumpScopeSub_2648_(scope LnsAny,prefix string,readyIdSet *LnsSet) {
     {
         __exp := scope
@@ -775,11 +775,11 @@ func dumpScope__dumpScopeSub_2648_(scope LnsAny,prefix string,readyIdSet *LnsSet
                 Util_err("illegal")
             }
             {
-                __collection7393 := _exp.FP.Get_symbol2SymbolInfoMap()
-                __sorted7393 := __collection7393.CreateKeyListStr()
-                __sorted7393.Sort( LnsItemKindStr, nil )
-                for _, _symbol := range( __sorted7393.Items ) {
-                    symbolInfo := __collection7393.Items[ _symbol ].(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
+                __collection7400 := _exp.FP.Get_symbol2SymbolInfoMap()
+                __sorted7400 := __collection7400.CreateKeyListStr()
+                __sorted7400.Sort( LnsItemKindStr, nil )
+                for _, _symbol := range( __sorted7400.Items ) {
+                    symbolInfo := __collection7400.Items[ _symbol ].(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
                     symbol := _symbol.(string)
                     Util_log(Lns_getVM().String_format("scope: %s, %s, %s", []LnsAny{prefix, _exp, symbol}))
                     {
@@ -795,13 +795,13 @@ func dumpScope__dumpScopeSub_2648_(scope LnsAny,prefix string,readyIdSet *LnsSet
     }
 }
 
-// 2184: decl @lune.@base.@Ast.dumpScope
+// 2185: decl @lune.@base.@Ast.dumpScope
 func Ast_dumpScope(workscope LnsAny,workprefix string) {
     dumpScope__dumpScopeSub_2648_(workscope, workprefix, NewLnsSet([]LnsAny{}))
 }
 
 
-// 3189: decl @lune.@base.@Ast.isGenericType
+// 3190: decl @lune.@base.@Ast.isGenericType
 func Ast_isGenericType(typeInfo *Ast_TypeInfo) bool {
     if Lns_isCondTrue( Ast_GenericTypeInfoDownCastF(typeInfo.FP)){
         return true
@@ -809,17 +809,17 @@ func Ast_isGenericType(typeInfo *Ast_TypeInfo) bool {
     return false
 }
 
-// 3402: decl @lune.@base.@Ast.getEnumLiteralVal
+// 3403: decl @lune.@base.@Ast.getEnumLiteralVal
 func Ast_getEnumLiteralVal(obj LnsAny) LnsAny {
-    switch _exp11903 := obj.(type) {
+    switch _exp11910 := obj.(type) {
     case *Ast_EnumLiteral__Int:
-    val := _exp11903.Val1
+    val := _exp11910.Val1
         return val
     case *Ast_EnumLiteral__Real:
-    val := _exp11903.Val1
+    val := _exp11910.Val1
         return val
     case *Ast_EnumLiteral__Str:
-    val := _exp11903.Val1
+    val := _exp11910.Val1
         return val
     }
 // insert a dummy
@@ -827,7 +827,7 @@ func Ast_getEnumLiteralVal(obj LnsAny) LnsAny {
 }
 
 
-// 4159: decl @lune.@base.@Ast.isExtType
+// 4160: decl @lune.@base.@Ast.isExtType
 func Ast_isExtType(typeInfo *Ast_TypeInfo) bool {
     return Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
         Lns_GetEnv().SetStackVal( typeInfo.FP.Get_kind() == Ast_TypeInfoKind__Ext) ||
@@ -836,25 +836,25 @@ func Ast_isExtType(typeInfo *Ast_TypeInfo) bool {
             Lns_GetEnv().SetStackVal( typeInfo.FP.Get_extedType() != typeInfo) ).(bool))) ).(bool)
 }
 
-// 4166: decl @lune.@base.@Ast.isMutableType
+// 4167: decl @lune.@base.@Ast.isMutableType
 func Ast_isMutableType(typeInfo *Ast_TypeInfo) bool {
     typeInfo = typeInfo.FP.Get_nonnilableType()
     
     if Ast_immutableTypeSet.Has(Ast_TypeInfo2Stem(typeInfo)){
         return false
     }
-    if _switch15289 := typeInfo.FP.Get_kind(); _switch15289 == Ast_TypeInfoKind__FormFunc || _switch15289 == Ast_TypeInfoKind__Enum {
+    if _switch15296 := typeInfo.FP.Get_kind(); _switch15296 == Ast_TypeInfoKind__FormFunc || _switch15296 == Ast_TypeInfoKind__Enum {
         return false
     }
     return true
 }
 
-// 4269: decl @lune.@base.@Ast.addBuiltin
+// 4270: decl @lune.@base.@Ast.addBuiltin
 func Ast_addBuiltin(typeInfo *Ast_TypeInfo) {
     Ast_builtInTypeIdSet.Set(typeInfo.FP.Get_typeId(),typeInfo)
 }
 
-// 4275: decl @lune.@base.@Ast.registBuiltin
+// 4276: decl @lune.@base.@Ast.registBuiltin
 func Ast_registBuiltin_4203_(idName string,typeTxt string,kind LnsInt,typeInfo *Ast_TypeInfo,nilableTypeInfo *Ast_TypeInfo,registScope bool) {
     Ast_sym2builtInTypeMap.Set(typeTxt,&NewAst_NormalSymbolInfo(Ast_rootProcessInfo, Ast_SymbolKind__Typ, false, false, Ast_rootScope, Ast_AccessMode__Pub, false, typeTxt, nil, typeInfo, Ast_MutMode__IMut, true, false).Ast_SymbolInfo)
     if nilableTypeInfo != Ast_headTypeInfo{
@@ -871,25 +871,25 @@ func Ast_registBuiltin_4203_(idName string,typeTxt string,kind LnsInt,typeInfo *
     }
 }
 
-// 4395: decl @lune.@base.@Ast.isClass
+// 4396: decl @lune.@base.@Ast.isClass
 func Ast_isClass(typeInfo *Ast_TypeInfo) bool {
     return Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
         Lns_GetEnv().SetStackVal( typeInfo.FP.Get_kind() == Ast_TypeInfoKind__Class) &&
         Lns_GetEnv().SetStackVal( typeInfo != Ast_builtinTypeString) ).(bool)
 }
 
-// 4466: decl @lune.@base.@Ast.failCreateLuavalWith
+// 4467: decl @lune.@base.@Ast.failCreateLuavalWith
 func Ast_failCreateLuavalWith_4271_(typeInfo *Ast_TypeInfo,convFlag LnsInt,validToCheck bool)(LnsAny, bool) {
     if Ast_isExtType(typeInfo){
         return nil, true
     }
     var mess string
     mess = Lns_getVM().String_format("not support to use the type as Luaval -- %s", []LnsAny{typeInfo.FP.GetTxt(nil, nil, nil)})
-    if _switch17231 := typeInfo.FP.Get_kind(); _switch17231 == Ast_TypeInfoKind__Nilable {
+    if _switch17238 := typeInfo.FP.Get_kind(); _switch17238 == Ast_TypeInfoKind__Nilable {
         return Ast_failCreateLuavalWith_4271_(typeInfo.FP.Get_nonnilableType(), convFlag, validToCheck)
-    } else if _switch17231 == Ast_TypeInfoKind__Prim {
+    } else if _switch17238 == Ast_TypeInfoKind__Prim {
         return nil, true
-    } else if _switch17231 == Ast_TypeInfoKind__Form || _switch17231 == Ast_TypeInfoKind__IF || _switch17231 == Ast_TypeInfoKind__DDD || _switch17231 == Ast_TypeInfoKind__ExtModule {
+    } else if _switch17238 == Ast_TypeInfoKind__Form || _switch17238 == Ast_TypeInfoKind__IF || _switch17238 == Ast_TypeInfoKind__DDD || _switch17238 == Ast_TypeInfoKind__ExtModule {
         if Lns_op_not(validToCheck){
             return nil, false
         }
@@ -897,9 +897,9 @@ func Ast_failCreateLuavalWith_4271_(typeInfo *Ast_TypeInfo,convFlag LnsInt,valid
             return mess, false
         }
         return nil, false
-    } else if _switch17231 == Ast_TypeInfoKind__Stem {
+    } else if _switch17238 == Ast_TypeInfoKind__Stem {
         return nil, false
-    } else if _switch17231 == Ast_TypeInfoKind__Class {
+    } else if _switch17238 == Ast_TypeInfoKind__Class {
         if typeInfo != Ast_builtinTypeString{
             if Lns_op_not(validToCheck){
                 return nil, false
@@ -910,7 +910,7 @@ func Ast_failCreateLuavalWith_4271_(typeInfo *Ast_TypeInfo,convFlag LnsInt,valid
             return nil, false
         }
         return nil, true
-    } else if _switch17231 == Ast_TypeInfoKind__Array || _switch17231 == Ast_TypeInfoKind__List || _switch17231 == Ast_TypeInfoKind__Map {
+    } else if _switch17238 == Ast_TypeInfoKind__Array || _switch17238 == Ast_TypeInfoKind__List || _switch17238 == Ast_TypeInfoKind__Map {
         if Lns_op_not(validToCheck){
             return nil, false
         }
@@ -939,7 +939,7 @@ func Ast_failCreateLuavalWith_4271_(typeInfo *Ast_TypeInfo,convFlag LnsInt,valid
         canConv = false
         
         return nil, canConv
-    } else if _switch17231 == Ast_TypeInfoKind__FormFunc || _switch17231 == Ast_TypeInfoKind__Func {
+    } else if _switch17238 == Ast_TypeInfoKind__FormFunc || _switch17238 == Ast_TypeInfoKind__Func {
         if Lns_op_not(validToCheck){
             return nil, false
         }
@@ -988,9 +988,9 @@ func Ast_failCreateLuavalWith_4271_(typeInfo *Ast_TypeInfo,convFlag LnsInt,valid
     return Lns_getVM().String_format("not support -- %s:%s", []LnsAny{typeInfo.FP.GetTxt(nil, nil, nil), Ast_TypeInfoKind_getTxt( typeInfo.FP.Get_kind())}), false
 }
 
-// 4577: decl @lune.@base.@Ast.isStruct
+// 4578: decl @lune.@base.@Ast.isStruct
 func Ast_isStruct(typeInfo *Ast_TypeInfo) bool {
-    if _switch17385 := typeInfo.FP.Get_kind(); _switch17385 == Ast_TypeInfoKind__Class {
+    if _switch17392 := typeInfo.FP.Get_kind(); _switch17392 == Ast_TypeInfoKind__Class {
         if typeInfo == Ast_builtinTypeString{
             return false
         }
@@ -1005,7 +1005,7 @@ func Ast_isStruct(typeInfo *Ast_TypeInfo) bool {
     return false
 }
 
-// 4600: decl @lune.@base.@Ast.isConditionalbe
+// 4601: decl @lune.@base.@Ast.isConditionalbe
 func Ast_isConditionalbe(processInfo *Ast_ProcessInfo,typeInfo *Ast_TypeInfo) bool {
     if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
         Lns_GetEnv().SetStackVal( typeInfo.FP.Get_nilable()) ||
@@ -1025,7 +1025,7 @@ func Ast_isConditionalbe(processInfo *Ast_ProcessInfo,typeInfo *Ast_TypeInfo) bo
 
 
 
-// 5406: decl @lune.@base.@Ast.applyGenericList
+// 5407: decl @lune.@base.@Ast.applyGenericList
 func Ast_applyGenericList_4644_(typeList *LnsList,alt2typeMap *LnsMap,moduleTypeInfo *Ast_TypeInfo)(LnsAny, bool) {
     var typeInfoList *LnsList
     typeInfoList = NewLnsList([]LnsAny{})
@@ -1051,25 +1051,25 @@ func Ast_applyGenericList_4644_(typeList *LnsList,alt2typeMap *LnsMap,moduleType
 }
 
 
-// 5749: decl @lune.@base.@Ast.convToExtTypeList
+// 5750: decl @lune.@base.@Ast.convToExtTypeList
 func Ast_convToExtTypeList(processInfo *Ast_ProcessInfo,list *LnsList)(LnsAny, string) {
     var extList *LnsList
     extList = NewLnsList([]LnsAny{})
     for _, _typeInfo := range( list.Items ) {
         typeInfo := _typeInfo.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
-        switch _exp23179 := processInfo.FP.CreateLuaval(typeInfo, true).(type) {
+        switch _exp23186 := processInfo.FP.CreateLuaval(typeInfo, true).(type) {
         case *Ast_LuavalResult__OK:
-        extType := _exp23179.Val1
+        extType := _exp23186.Val1
             extList.Insert(Ast_TypeInfo2Stem(extType))
         case *Ast_LuavalResult__Err:
-        err := _exp23179.Val1
+        err := _exp23186.Val1
             return nil, err
         }
     }
     return extList, ""
 }
 
-// 5793: decl @lune.@base.@Ast.isNumberType
+// 5794: decl @lune.@base.@Ast.isNumberType
 func Ast_isNumberType(typeInfo *Ast_TypeInfo) bool {
     return Ast_numberTypeSet.Has(Ast_TypeInfo2Stem(typeInfo.FP.Get_srcTypeInfo()))
 }
@@ -1077,7 +1077,7 @@ func Ast_isNumberType(typeInfo *Ast_TypeInfo) bool {
 
 
 
-// 6324: decl @lune.@base.@Ast.isSettableToForm
+// 6325: decl @lune.@base.@Ast.isSettableToForm
 func Ast_isSettableToForm_5224_(processInfo *Ast_ProcessInfo,typeInfo *Ast_TypeInfo) bool {
     if typeInfo.FP.Get_argTypeInfoList().Len() > 0{
         for _, _argType := range( typeInfo.FP.Get_argTypeInfoList().Items ) {
@@ -1102,7 +1102,7 @@ func Ast_isSettableToForm_5224_(processInfo *Ast_ProcessInfo,typeInfo *Ast_TypeI
 
 
 
-// 6853: decl @lune.@base.@Ast.createProcessInfo
+// 6854: decl @lune.@base.@Ast.createProcessInfo
 func Ast_createProcessInfo(validExtType bool) *Ast_ProcessInfo {
     return Ast_ProcessInfo_createUser_1082_(validExtType, Ast_builtinTypeInfo2Map.FP.Clone())
 }
@@ -1296,19 +1296,19 @@ func (self *Ast_ProcessInfo) SwitchIdProvier(idType LnsInt) {
 }
 
 
-// 4108: decl @lune.@base.@Ast.ProcessInfo.createAlternate
+// 4109: decl @lune.@base.@Ast.ProcessInfo.createAlternate
 func (self *Ast_ProcessInfo) CreateAlternate(belongClassFlag bool,altIndex LnsInt,txt string,accessMode LnsInt,moduleTypeInfo *Ast_TypeInfo,baseTypeInfo LnsAny,interfaceList LnsAny) *Ast_AlternateTypeInfo {
     return NewAst_AlternateTypeInfo(self, belongClassFlag, altIndex, txt, accessMode, moduleTypeInfo, baseTypeInfo, interfaceList)
 }
 
-// 4179: decl @lune.@base.@Ast.ProcessInfo.createModifier
+// 4180: decl @lune.@base.@Ast.ProcessInfo.createModifier
 func (self *Ast_ProcessInfo) CreateModifier(srcTypeInfo *Ast_TypeInfo,mutMode LnsInt) *Ast_TypeInfo {
     srcTypeInfo = srcTypeInfo.FP.Get_srcTypeInfo()
     
     if Lns_op_not(Ast_isMutableType(srcTypeInfo)){
         return srcTypeInfo
     }
-    if _switch15369 := mutMode; _switch15369 == Ast_MutMode__IMut || _switch15369 == Ast_MutMode__IMutRe {
+    if _switch15376 := mutMode; _switch15376 == Ast_MutMode__IMut || _switch15376 == Ast_MutMode__IMutRe {
         {
             __exp := self.FP.get_typeInfo2Map().ImutModifierMap.Items[srcTypeInfo]
             if __exp != nil {
@@ -1316,7 +1316,7 @@ func (self *Ast_ProcessInfo) CreateModifier(srcTypeInfo *Ast_TypeInfo,mutMode Ln
                 return _exp
             }
         }
-    } else if _switch15369 == Ast_MutMode__AllMut {
+    } else if _switch15376 == Ast_MutMode__AllMut {
         {
             __exp := self.FP.get_typeInfo2Map().MutModifierMap.Items[srcTypeInfo]
             if __exp != nil {
@@ -1328,9 +1328,9 @@ func (self *Ast_ProcessInfo) CreateModifier(srcTypeInfo *Ast_TypeInfo,mutMode Ln
     self.FP.Get_idProv().FP.Increment()
     var modifier *Ast_TypeInfo
     if srcTypeInfo.FP.Get_nonnilableType().FP.Get_kind() == Ast_TypeInfoKind__Ext{
-        switch _exp15437 := self.FP.CreateLuaval(self.FP.CreateModifier(srcTypeInfo.FP.Get_extedType(), mutMode), false).(type) {
+        switch _exp15444 := self.FP.CreateLuaval(self.FP.CreateModifier(srcTypeInfo.FP.Get_extedType(), mutMode), false).(type) {
         case *Ast_LuavalResult__OK:
-        workType := _exp15437.Val1
+        workType := _exp15444.Val1
             if srcTypeInfo.FP.Get_nilable(){
                 modifier = workType.FP.Get_nilableTypeInfo()
                 
@@ -1339,22 +1339,22 @@ func (self *Ast_ProcessInfo) CreateModifier(srcTypeInfo *Ast_TypeInfo,mutMode Ln
                 
             }
         case *Ast_LuavalResult__Err:
-        err := _exp15437.Val1
+        err := _exp15444.Val1
             Util_err(err)
         }
     } else { 
         modifier = &NewAst_ModifierTypeInfo(nil, self, srcTypeInfo, self.FP.Get_idProv().FP.Get_id(), mutMode).Ast_TypeInfo
         
     }
-    if _switch15504 := mutMode; _switch15504 == Ast_MutMode__IMut || _switch15504 == Ast_MutMode__IMutRe {
+    if _switch15511 := mutMode; _switch15511 == Ast_MutMode__IMut || _switch15511 == Ast_MutMode__IMutRe {
         self.FP.get_typeInfo2Map().ImutModifierMap.Set(srcTypeInfo,modifier)
-    } else if _switch15504 == Ast_MutMode__AllMut {
+    } else if _switch15511 == Ast_MutMode__AllMut {
         self.FP.get_typeInfo2Map().MutModifierMap.Set(srcTypeInfo,modifier)
     }
     return modifier
 }
 
-// 4609: decl @lune.@base.@Ast.ProcessInfo.createBox
+// 4610: decl @lune.@base.@Ast.ProcessInfo.createBox
 func (self *Ast_ProcessInfo) CreateBox(accessMode LnsInt,nonnilableType *Ast_TypeInfo) *Ast_TypeInfo {
     {
         _boxType := self.FP.get_typeInfo2Map().BoxMap.Items[nonnilableType]
@@ -1369,7 +1369,7 @@ func (self *Ast_ProcessInfo) CreateBox(accessMode LnsInt,nonnilableType *Ast_Typ
     return &boxType.Ast_TypeInfo
 }
 
-// 4655: decl @lune.@base.@Ast.ProcessInfo.createSet
+// 4656: decl @lune.@base.@Ast.ProcessInfo.createSet
 func (self *Ast_ProcessInfo) CreateSet(accessMode LnsInt,parentInfo *Ast_TypeInfo,itemTypeInfo *LnsList,mutMode LnsInt) *Ast_TypeInfo {
     var tmpMutMode LnsInt
     if Ast_isMutable(mutMode){
@@ -1395,7 +1395,7 @@ func (self *Ast_ProcessInfo) CreateSet(accessMode LnsInt,parentInfo *Ast_TypeInf
     return nil
 }
 
-// 4668: decl @lune.@base.@Ast.ProcessInfo.createList
+// 4669: decl @lune.@base.@Ast.ProcessInfo.createList
 func (self *Ast_ProcessInfo) CreateList(accessMode LnsInt,parentInfo *Ast_TypeInfo,itemTypeInfo *LnsList,mutMode LnsInt) *Ast_TypeInfo {
     var tmpMutMode LnsInt
     if Ast_isMutable(mutMode){
@@ -1421,7 +1421,7 @@ func (self *Ast_ProcessInfo) CreateList(accessMode LnsInt,parentInfo *Ast_TypeIn
     return nil
 }
 
-// 4681: decl @lune.@base.@Ast.ProcessInfo.createArray
+// 4682: decl @lune.@base.@Ast.ProcessInfo.createArray
 func (self *Ast_ProcessInfo) CreateArray(accessMode LnsInt,parentInfo *Ast_TypeInfo,itemTypeInfo *LnsList,mutMode LnsInt) *Ast_TypeInfo {
     var tmpMutMode LnsInt
     if Ast_isMutable(mutMode){
@@ -1447,7 +1447,7 @@ func (self *Ast_ProcessInfo) CreateArray(accessMode LnsInt,parentInfo *Ast_TypeI
     return nil
 }
 
-// 4694: decl @lune.@base.@Ast.ProcessInfo.createMap
+// 4695: decl @lune.@base.@Ast.ProcessInfo.createMap
 func (self *Ast_ProcessInfo) CreateMap(accessMode LnsInt,parentInfo *Ast_TypeInfo,keyTypeInfo *Ast_TypeInfo,valTypeInfo *Ast_TypeInfo,mutMode LnsInt) *Ast_TypeInfo {
     var tmpMutMode LnsInt
     if Ast_isMutable(mutMode){
@@ -1473,7 +1473,7 @@ func (self *Ast_ProcessInfo) CreateMap(accessMode LnsInt,parentInfo *Ast_TypeInf
     return nil
 }
 
-// 4709: decl @lune.@base.@Ast.ProcessInfo.createModule
+// 4710: decl @lune.@base.@Ast.ProcessInfo.createModule
 func (self *Ast_ProcessInfo) CreateModule(scope *Ast_Scope,parentInfo *Ast_TypeInfo,externalFlag bool,moduleName string,mutable bool) *Ast_TypeInfo {
     {
         __exp := Ast_sym2builtInTypeMap.Items[moduleName]
@@ -1490,7 +1490,7 @@ func (self *Ast_ProcessInfo) CreateModule(scope *Ast_Scope,parentInfo *Ast_TypeI
     return &info.Ast_TypeInfo
 }
 
-// 4730: decl @lune.@base.@Ast.ProcessInfo.createClass
+// 4731: decl @lune.@base.@Ast.ProcessInfo.createClass
 func (self *Ast_ProcessInfo) CreateClass(classFlag bool,abstractFlag bool,scope LnsAny,baseInfo LnsAny,interfaceList LnsAny,genTypeList *LnsList,parentInfo *Ast_TypeInfo,externalFlag bool,accessMode LnsInt,className string) *Ast_TypeInfo {
     {
         __exp := Ast_sym2builtInTypeMap.Items[className]
@@ -1510,7 +1510,7 @@ func (self *Ast_ProcessInfo) CreateClass(classFlag bool,abstractFlag bool,scope 
     return &info.Ast_TypeInfo
 }
 
-// 4759: decl @lune.@base.@Ast.ProcessInfo.createExtModule
+// 4760: decl @lune.@base.@Ast.ProcessInfo.createExtModule
 func (self *Ast_ProcessInfo) CreateExtModule(scope LnsAny,parentInfo *Ast_TypeInfo,externalFlag bool,accessMode LnsInt,className string,moduleLang LnsInt,requirePath string) *Ast_TypeInfo {
     {
         __exp := Ast_sym2builtInTypeMap.Items[className]
@@ -1528,7 +1528,7 @@ func (self *Ast_ProcessInfo) CreateExtModule(scope LnsAny,parentInfo *Ast_TypeIn
     return &info.Ast_TypeInfo
 }
 
-// 4787: decl @lune.@base.@Ast.ProcessInfo.createFunc
+// 4788: decl @lune.@base.@Ast.ProcessInfo.createFunc
 func (self *Ast_ProcessInfo) CreateFunc(abstractFlag bool,builtinFlag bool,scope LnsAny,kind LnsInt,parentInfo *Ast_TypeInfo,autoFlag bool,externalFlag bool,staticFlag bool,accessMode LnsInt,funcName string,altTypeList LnsAny,argTypeList LnsAny,retTypeInfoList LnsAny,mutable LnsAny) *Ast_TypeInfo {
     if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
         Lns_GetEnv().SetStackVal( Lns_op_not(builtinFlag)) &&
@@ -1543,17 +1543,17 @@ func (self *Ast_ProcessInfo) CreateFunc(abstractFlag bool,builtinFlag bool,scope
     return &info.Ast_TypeInfo
 }
 
-// 4808: decl @lune.@base.@Ast.ProcessInfo.createAdvertiseMethodFrom
+// 4809: decl @lune.@base.@Ast.ProcessInfo.createAdvertiseMethodFrom
 func (self *Ast_ProcessInfo) CreateAdvertiseMethodFrom(classTypeInfo *Ast_TypeInfo,typeInfo *Ast_TypeInfo) *Ast_TypeInfo {
     return self.FP.CreateFunc(false, false, Ast_getScope(typeInfo), typeInfo.FP.Get_kind(), classTypeInfo, true, false, false, typeInfo.FP.Get_accessMode(), typeInfo.FP.Get_rawTxt(), typeInfo.FP.Get_itemTypeInfoList(), typeInfo.FP.Get_argTypeInfoList(), typeInfo.FP.Get_retTypeInfoList(), Ast_TypeInfo_isMut(typeInfo))
 }
 
-// 4837: decl @lune.@base.@Ast.ProcessInfo.createAlias
+// 4838: decl @lune.@base.@Ast.ProcessInfo.createAlias
 func (self *Ast_ProcessInfo) CreateAlias(processInfo *Ast_ProcessInfo,name string,externalFlag bool,accessMode LnsInt,parentInfo *Ast_TypeInfo,typeInfo *Ast_TypeInfo) *Ast_AliasTypeInfo {
     return NewAst_AliasTypeInfo(processInfo, name, accessMode, parentInfo, typeInfo.FP.Get_srcTypeInfo(), externalFlag)
 }
 
-// 4993: decl @lune.@base.@Ast.ProcessInfo.createDDD
+// 4994: decl @lune.@base.@Ast.ProcessInfo.createDDD
 func (self *Ast_ProcessInfo) CreateDDD(typeInfo *Ast_TypeInfo,externalFlag bool,extTypeFlag bool) *Ast_DDDTypeInfo {
     if typeInfo.FP.Get_kind() == Ast_TypeInfoKind__DDD{
         typeInfo = typeInfo.FP.Get_itemTypeInfoList().GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo()
@@ -1568,13 +1568,13 @@ func (self *Ast_ProcessInfo) CreateDDD(typeInfo *Ast_TypeInfo,externalFlag bool,
     if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
         Lns_GetEnv().SetStackVal( typeInfo.FP.Get_nonnilableType().FP.Get_kind() != Ast_TypeInfoKind__Ext) &&
         Lns_GetEnv().SetStackVal( extTypeFlag) ).(bool)){
-        switch _exp19916 := self.FP.CreateLuaval(typeInfo, true).(type) {
+        switch _exp19923 := self.FP.CreateLuaval(typeInfo, true).(type) {
         case *Ast_LuavalResult__OK:
-        work := _exp19916.Val1
+        work := _exp19923.Val1
             typeInfo = work
             
         case *Ast_LuavalResult__Err:
-        mess := _exp19916.Val1
+        mess := _exp19923.Val1
             Util_err(mess)
         }
     }
@@ -1610,13 +1610,13 @@ func (self *Ast_ProcessInfo) CreateDDD(typeInfo *Ast_TypeInfo,externalFlag bool,
     return dddType
 }
 
-// 5397: decl @lune.@base.@Ast.ProcessInfo.createGeneric
+// 5398: decl @lune.@base.@Ast.ProcessInfo.createGeneric
 func (self *Ast_ProcessInfo) CreateGeneric(genSrcTypeInfo *Ast_TypeInfo,itemTypeInfoList *LnsList,moduleTypeInfo *Ast_TypeInfo) *Ast_GenericTypeInfo {
     self.FP.Get_idProv().FP.Increment()
     return NewAst_GenericTypeInfo(self, genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo)
 }
 
-// 5672: decl @lune.@base.@Ast.ProcessInfo.createLuaval
+// 5673: decl @lune.@base.@Ast.ProcessInfo.createLuaval
 func (self *Ast_ProcessInfo) CreateLuaval(luneType *Ast_TypeInfo,validToCheck bool) LnsAny {
     if Lns_op_not(self.validExtType){
         return &Ast_LuavalResult__OK{luneType, true}
@@ -1648,12 +1648,12 @@ func (self *Ast_ProcessInfo) CreateLuaval(luneType *Ast_TypeInfo,validToCheck bo
             _dddType := Ast_DDDTypeInfoDownCastF(luneType.FP)
             if _dddType != nil {
                 dddType := _dddType.(*Ast_DDDTypeInfo)
-                switch _exp22893 := self.FP.CreateLuaval(dddType.FP.Get_typeInfo(), validToCheck).(type) {
+                switch _exp22900 := self.FP.CreateLuaval(dddType.FP.Get_typeInfo(), validToCheck).(type) {
                 case *Ast_LuavalResult__Err:
-                mess := _exp22893.Val1
+                mess := _exp22900.Val1
                     Util_err(mess)
                 case *Ast_LuavalResult__OK:
-                workType := _exp22893.Val1
+                workType := _exp22900.Val1
                     return &Ast_LuavalResult__OK{&self.FP.CreateDDD(workType, dddType.FP.Get_externalFlag(), true).Ast_TypeInfo, false}
                 }
             }
@@ -1679,16 +1679,16 @@ func (self *Ast_ProcessInfo) CreateLuaval(luneType *Ast_TypeInfo,validToCheck bo
     }
     var result LnsAny
     result = process()
-    switch _exp23032 := result.(type) {
+    switch _exp23039 := result.(type) {
     case *Ast_LuavalResult__OK:
-    typeInfo := _exp23032.Val1
+    typeInfo := _exp23039.Val1
         self.FP.get_typeInfo2Map().ExtMap.Set(luneType.FP.Get_nonnilableType(),typeInfo.FP.Get_nonnilableType())
         self.FP.get_typeInfo2Map().ExtMap.Set(luneType.FP.Get_nilableTypeInfo(),typeInfo.FP.Get_nilableTypeInfo())
     }
     return result
 }
 
-// 5799: decl @lune.@base.@Ast.ProcessInfo.createEnum
+// 5800: decl @lune.@base.@Ast.ProcessInfo.createEnum
 func (self *Ast_ProcessInfo) CreateEnum(scope *Ast_Scope,parentInfo *Ast_TypeInfo,externalFlag bool,accessMode LnsInt,enumName string,valTypeInfo *Ast_TypeInfo) *Ast_EnumTypeInfo {
     if Parser_isLuaKeyword(enumName){
         Util_err(Lns_getVM().String_format("This symbol can not use for a enum. -- %s", []LnsAny{enumName}))
@@ -1709,7 +1709,7 @@ func (self *Ast_ProcessInfo) CreateEnum(scope *Ast_Scope,parentInfo *Ast_TypeInf
     return info
 }
 
-// 5866: decl @lune.@base.@Ast.ProcessInfo.createAlge
+// 5867: decl @lune.@base.@Ast.ProcessInfo.createAlge
 func (self *Ast_ProcessInfo) CreateAlge(scope *Ast_Scope,parentInfo *Ast_TypeInfo,externalFlag bool,accessMode LnsInt,algeName string) *Ast_AlgeTypeInfo {
     if Parser_isLuaKeyword(algeName){
         Util_err(Lns_getVM().String_format("This symbol can not use for a alge. -- %s", []LnsAny{algeName}))
@@ -2190,7 +2190,7 @@ type Ast_ScopeMtd interface {
     AddEnum(arg1 *Ast_ProcessInfo, arg2 LnsInt, arg3 string, arg4 LnsAny, arg5 *Ast_TypeInfo)(LnsAny, LnsAny)
     AddEnumVal(arg1 *Ast_ProcessInfo, arg2 string, arg3 LnsAny, arg4 *Ast_TypeInfo)(LnsAny, LnsAny)
     AddExtModule(arg1 *Ast_ProcessInfo, arg2 string, arg3 LnsAny, arg4 *Ast_TypeInfo, arg5 bool, arg6 LnsInt)(LnsAny, LnsAny)
-    AddForm(arg1 *Ast_ProcessInfo, arg2 LnsAny, arg3 *Ast_TypeInfo, arg4 LnsInt)
+    AddForm(arg1 *Ast_ProcessInfo, arg2 LnsAny, arg3 *Ast_TypeInfo, arg4 LnsInt)(LnsAny, LnsAny)
     AddFunc(arg1 *Ast_ProcessInfo, arg2 LnsAny, arg3 *Ast_TypeInfo, arg4 LnsInt, arg5 bool, arg6 bool)(LnsAny, LnsAny)
     AddIgnoredVar(arg1 *Ast_ProcessInfo)
     AddLocalVar(arg1 *Ast_ProcessInfo, arg2 bool, arg3 bool, arg4 string, arg5 LnsAny, arg6 *Ast_TypeInfo, arg7 LnsInt)(LnsAny, LnsAny)
@@ -2890,34 +2890,34 @@ func (self *Ast_Scope) AddFunc(processInfo *Ast_ProcessInfo,pos LnsAny,typeInfo 
 }
 
 // 2126: decl @lune.@base.@Ast.Scope.addForm
-func (self *Ast_Scope) AddForm(processInfo *Ast_ProcessInfo,pos LnsAny,typeInfo *Ast_TypeInfo,accessMode LnsInt) {
-    self.FP.Add(processInfo, Ast_SymbolKind__Typ, false, false, typeInfo.FP.Get_rawTxt(), pos, typeInfo, accessMode, true, Ast_MutMode__IMut, false, false)
+func (self *Ast_Scope) AddForm(processInfo *Ast_ProcessInfo,pos LnsAny,typeInfo *Ast_TypeInfo,accessMode LnsInt)(LnsAny, LnsAny) {
+    return self.FP.Add(processInfo, Ast_SymbolKind__Typ, false, false, typeInfo.FP.Get_rawTxt(), pos, typeInfo, accessMode, true, Ast_MutMode__IMut, false, false)
 }
 
-// 2135: decl @lune.@base.@Ast.Scope.addMacro
+// 2136: decl @lune.@base.@Ast.Scope.addMacro
 func (self *Ast_Scope) AddMacro(processInfo *Ast_ProcessInfo,pos LnsAny,typeInfo *Ast_TypeInfo,accessMode LnsInt)(LnsAny, LnsAny) {
     return self.FP.Add(processInfo, Ast_SymbolKind__Mac, false, false, typeInfo.FP.Get_rawTxt(), pos, typeInfo, accessMode, true, Ast_MutMode__IMut, true, false)
 }
 
-// 2146: decl @lune.@base.@Ast.Scope.addClassLazy
+// 2147: decl @lune.@base.@Ast.Scope.addClassLazy
 func (self *Ast_Scope) AddClassLazy(processInfo *Ast_ProcessInfo,name string,pos LnsAny,typeInfo *Ast_TypeInfo,lazyLoad bool)(LnsAny, LnsAny) {
     return self.FP.Add(processInfo, Ast_SymbolKind__Typ, false, false, name, pos, typeInfo, typeInfo.FP.Get_accessMode(), true, Ast_MutMode__Mut, true, lazyLoad)
 }
 
-// 2155: decl @lune.@base.@Ast.Scope.addClass
+// 2156: decl @lune.@base.@Ast.Scope.addClass
 func (self *Ast_Scope) AddClass(processInfo *Ast_ProcessInfo,name string,pos LnsAny,typeInfo *Ast_TypeInfo)(LnsAny, LnsAny) {
     return self.FP.AddClassLazy(processInfo, name, pos, typeInfo, false)
 }
 
-// 2162: decl @lune.@base.@Ast.Scope.addExtModule
+// 2163: decl @lune.@base.@Ast.Scope.addExtModule
 func (self *Ast_Scope) AddExtModule(processInfo *Ast_ProcessInfo,name string,pos LnsAny,typeInfo *Ast_TypeInfo,lazy bool,lang LnsInt)(LnsAny, LnsAny) {
     if lang != Types_Lang__Same{
-        switch _exp7249 := processInfo.FP.CreateLuaval(typeInfo, true).(type) {
+        switch _exp7256 := processInfo.FP.CreateLuaval(typeInfo, true).(type) {
         case *Ast_LuavalResult__Err:
-        mess := _exp7249.Val1
+        mess := _exp7256.Val1
             Util_err(mess)
         case *Ast_LuavalResult__OK:
-        luavalTypeInfo := _exp7249.Val1
+        luavalTypeInfo := _exp7256.Val1
             typeInfo = luavalTypeInfo
             
         }
@@ -2925,7 +2925,7 @@ func (self *Ast_Scope) AddExtModule(processInfo *Ast_ProcessInfo,name string,pos
     return self.FP.Add(processInfo, Ast_SymbolKind__Typ, false, false, name, pos, typeInfo, typeInfo.FP.Get_accessMode(), false, Ast_MutMode__Mut, true, lazy)
 }
 
-// 2216: decl @lune.@base.@Ast.Scope.setClosure
+// 2217: decl @lune.@base.@Ast.Scope.setClosure
 func (self *Ast_Scope) SetClosure(workSymbol *Ast_SymbolInfo) {
     var symbol *Ast_SymbolInfo
     symbol = workSymbol.FP.GetOrg()
@@ -2954,11 +2954,11 @@ func (self *Ast_Scope) SetClosure(workSymbol *Ast_SymbolInfo) {
     }
 }
 
-// 2245: decl @lune.@base.@Ast.Scope.isClosureAccess
+// 2246: decl @lune.@base.@Ast.Scope.isClosureAccess
 func (self *Ast_Scope) IsClosureAccess(moduleScope *Ast_Scope,symbol *Ast_SymbolInfo) bool {
     var processInfo *Ast_ProcessInfo
     processInfo = moduleScope.FP.GetModule().FP.getProcessInfo()
-    if _switch7635 := symbol.FP.Get_kind(); _switch7635 == Ast_SymbolKind__Var || _switch7635 == Ast_SymbolKind__Arg || _switch7635 == Ast_SymbolKind__Fun {
+    if _switch7642 := symbol.FP.Get_kind(); _switch7642 == Ast_SymbolKind__Var || _switch7642 == Ast_SymbolKind__Arg || _switch7642 == Ast_SymbolKind__Fun {
         if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
             Lns_GetEnv().SetStackVal( symbol.FP.Get_scope() == moduleScope) ||
             Lns_GetEnv().SetStackVal( symbol.FP.Get_scope() == Ast_rootScope) ).(bool){
@@ -2980,7 +2980,7 @@ func (self *Ast_Scope) IsClosureAccess(moduleScope *Ast_Scope,symbol *Ast_Symbol
     return false
 }
 
-// 2285: decl @lune.@base.@Ast.Scope.accessSymbol
+// 2286: decl @lune.@base.@Ast.Scope.accessSymbol
 func (self *Ast_Scope) AccessSymbol(moduleScope *Ast_Scope,symbol *Ast_SymbolInfo) {
     if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
         Lns_GetEnv().SetStackVal( symbol.FP.Get_kind() == Ast_SymbolKind__Fun) &&
@@ -2992,7 +2992,7 @@ func (self *Ast_Scope) AccessSymbol(moduleScope *Ast_Scope,symbol *Ast_SymbolInf
     }
 }
 
-// 2410: decl @lune.@base.@Ast.Scope.getClassTypeInfo
+// 2411: decl @lune.@base.@Ast.Scope.getClassTypeInfo
 func (self *Ast_Scope) GetClassTypeInfo() *Ast_TypeInfo {
     var scope *Ast_Scope
     scope = self
@@ -3001,7 +3001,7 @@ func (self *Ast_Scope) GetClassTypeInfo() *Ast_TypeInfo {
             _owner := scope.ownerTypeInfo
             if _owner != nil {
                 owner := _owner.(*Ast_TypeInfo)
-                if _switch8020 := owner.FP.Get_kind(); _switch8020 == Ast_TypeInfoKind__Class || _switch8020 == Ast_TypeInfoKind__IF || _switch8020 == Ast_TypeInfoKind__Module {
+                if _switch8027 := owner.FP.Get_kind(); _switch8027 == Ast_TypeInfoKind__Class || _switch8027 == Ast_TypeInfoKind__IF || _switch8027 == Ast_TypeInfoKind__Module {
                     return owner
                 }
             }
@@ -3015,7 +3015,7 @@ func (self *Ast_Scope) GetClassTypeInfo() *Ast_TypeInfo {
     return Ast_headTypeInfo
 }
 
-// 4248: decl @lune.@base.@Ast.Scope.addOverrideImut
+// 4249: decl @lune.@base.@Ast.Scope.addOverrideImut
 func (self *Ast_Scope) AddOverrideImut(symbolInfo *Ast_SymbolInfo) {
     var typeInfo *Ast_TypeInfo
     if Ast_TypeInfo_isMut(symbolInfo.FP.Get_typeInfo()){
@@ -3030,33 +3030,33 @@ func (self *Ast_Scope) AddOverrideImut(symbolInfo *Ast_SymbolInfo) {
     self.symbol2SymbolInfoMap.Set(symbolInfo.FP.Get_name(),&NewAst_AccessSymbolInfo(symbolInfo, &Ast_OverrideMut__IMut{typeInfo}, false).Ast_SymbolInfo)
 }
 
-// 4399: decl @lune.@base.@Ast.Scope.addIgnoredVar
+// 4400: decl @lune.@base.@Ast.Scope.addIgnoredVar
 func (self *Ast_Scope) AddIgnoredVar(processInfo *Ast_ProcessInfo) {
     self.FP.AddLocalVar(processInfo, false, true, "_", nil, Ast_builtinTypeEmpty, Ast_MutMode__Mut)
 }
 
-// 4846: decl @lune.@base.@Ast.Scope.addAlias
+// 4847: decl @lune.@base.@Ast.Scope.addAlias
 func (self *Ast_Scope) AddAlias(processInfo *Ast_ProcessInfo,name string,pos *Types_Position,externalFlag bool,accessMode LnsInt,parentInfo *Ast_TypeInfo,symbolInfo *Ast_SymbolInfo)(LnsAny, LnsAny) {
     var aliasType *Ast_AliasTypeInfo
     aliasType = self.FP.GetProcessInfo().FP.CreateAlias(processInfo, name, externalFlag, accessMode, parentInfo, symbolInfo.FP.Get_typeInfo().FP.Get_srcTypeInfo())
     return self.FP.Add(processInfo, symbolInfo.FP.Get_kind(), false, symbolInfo.FP.Get_canBeRight(), name, pos, &aliasType.Ast_TypeInfo, accessMode, true, Ast_MutMode__IMut, true, false)
 }
 
-// 4859: decl @lune.@base.@Ast.Scope.addAliasForType
+// 4860: decl @lune.@base.@Ast.Scope.addAliasForType
 func (self *Ast_Scope) AddAliasForType(processInfo *Ast_ProcessInfo,name string,pos LnsAny,typeInfo *Ast_TypeInfo)(LnsAny, LnsAny) {
     var skind LnsInt
     skind = Ast_SymbolKind__Typ
     var canBeRight bool
     canBeRight = false
-    if _switch19366 := typeInfo.FP.Get_kind(); _switch19366 == Ast_TypeInfoKind__Func {
+    if _switch19373 := typeInfo.FP.Get_kind(); _switch19373 == Ast_TypeInfoKind__Func {
         skind = Ast_SymbolKind__Fun
         
         canBeRight = true
         
-    } else if _switch19366 == Ast_TypeInfoKind__Form || _switch19366 == Ast_TypeInfoKind__FormFunc {
+    } else if _switch19373 == Ast_TypeInfoKind__Form || _switch19373 == Ast_TypeInfoKind__FormFunc {
         canBeRight = true
         
-    } else if _switch19366 == Ast_TypeInfoKind__Macro {
+    } else if _switch19373 == Ast_TypeInfoKind__Macro {
         skind = Ast_SymbolKind__Mac
         
     }
@@ -3509,32 +3509,32 @@ func Ast_TypeInfo_isInherit(processInfo *Ast_ProcessInfo,typeInfo *Ast_TypeInfo,
     return false
 }
 
-// 2305: decl @lune.@base.@Ast.TypeInfo.createAlt2typeMap
+// 2306: decl @lune.@base.@Ast.TypeInfo.createAlt2typeMap
 func (self *Ast_TypeInfo) CreateAlt2typeMap(detectFlag bool) *LnsMap {
     return Ast_CanEvalCtrlTypeInfo_createDefaultAlt2typeMap(detectFlag)
 }
 
-// 5201: decl @lune.@base.@Ast.TypeInfo.getCommonTypeCombo
+// 5202: decl @lune.@base.@Ast.TypeInfo.getCommonTypeCombo
 func Ast_TypeInfo_getCommonTypeCombo(processInfo *Ast_ProcessInfo,commonType LnsAny,otherType LnsAny,alt2type *LnsMap) LnsAny {
     var typeInfo *Ast_TypeInfo
     typeInfo = Ast_builtinTypeNone
-    switch _exp20778 := commonType.(type) {
+    switch _exp20785 := commonType.(type) {
     case *Ast_CommonType__Combine:
-    comb := _exp20778.Val1
+    comb := _exp20785.Val1
         return comb.FP.AndType(processInfo, otherType, alt2type)
     case *Ast_CommonType__Normal:
-    workTypeInfo := _exp20778.Val1
+    workTypeInfo := _exp20785.Val1
         typeInfo = workTypeInfo
         
     }
     var other *Ast_TypeInfo
     other = Ast_builtinTypeNone
-    switch _exp20811 := otherType.(type) {
+    switch _exp20818 := otherType.(type) {
     case *Ast_CommonType__Combine:
-    comb := _exp20811.Val1
+    comb := _exp20818.Val1
         return comb.FP.AndType(processInfo, commonType, alt2type)
     case *Ast_CommonType__Normal:
-    workTypeInfo := _exp20811.Val1
+    workTypeInfo := _exp20818.Val1
         other = workTypeInfo
         
     }
@@ -3589,24 +3589,24 @@ func Ast_TypeInfo_getCommonTypeCombo(processInfo *Ast_ProcessInfo,commonType Lns
     if type1.FP.Get_kind() == type2.FP.Get_kind(){
         var getCommon func(workTypeInfo *Ast_TypeInfo,workOther *Ast_TypeInfo,workAlt2type *LnsMap) *Ast_TypeInfo
         getCommon = func(workTypeInfo *Ast_TypeInfo,workOther *Ast_TypeInfo,workAlt2type *LnsMap) *Ast_TypeInfo {
-            switch _exp21092 := Ast_TypeInfo_getCommonTypeCombo(processInfo, &Ast_CommonType__Normal{workTypeInfo}, &Ast_CommonType__Normal{workOther}, workAlt2type).(type) {
+            switch _exp21099 := Ast_TypeInfo_getCommonTypeCombo(processInfo, &Ast_CommonType__Normal{workTypeInfo}, &Ast_CommonType__Normal{workOther}, workAlt2type).(type) {
             case *Ast_CommonType__Normal:
-            info := _exp21092.Val1
+            info := _exp21099.Val1
                 return info
             case *Ast_CommonType__Combine:
-            combine := _exp21092.Val1
+            combine := _exp21099.Val1
                 return combine.FP.Get_typeInfo(processInfo)
             }
         // insert a dummy
             return nil
         }
-        if _switch21282 := type1.FP.Get_kind(); _switch21282 == Ast_TypeInfoKind__List {
+        if _switch21289 := type1.FP.Get_kind(); _switch21289 == Ast_TypeInfoKind__List {
             return getType(processInfo.FP.CreateList(Ast_AccessMode__Local, Ast_headTypeInfo, NewLnsList([]LnsAny{Ast_TypeInfo2Stem(getCommon(type1.FP.Get_itemTypeInfoList().GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), type2.FP.Get_itemTypeInfoList().GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), alt2type))}), mutMode))
-        } else if _switch21282 == Ast_TypeInfoKind__Array {
+        } else if _switch21289 == Ast_TypeInfoKind__Array {
             return getType(processInfo.FP.CreateArray(Ast_AccessMode__Local, Ast_headTypeInfo, NewLnsList([]LnsAny{Ast_TypeInfo2Stem(getCommon(type1.FP.Get_itemTypeInfoList().GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), type2.FP.Get_itemTypeInfoList().GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), alt2type))}), mutMode))
-        } else if _switch21282 == Ast_TypeInfoKind__Set {
+        } else if _switch21289 == Ast_TypeInfoKind__Set {
             return getType(processInfo.FP.CreateSet(Ast_AccessMode__Local, Ast_headTypeInfo, NewLnsList([]LnsAny{Ast_TypeInfo2Stem(getCommon(type1.FP.Get_itemTypeInfoList().GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), type2.FP.Get_itemTypeInfoList().GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), alt2type))}), mutMode))
-        } else if _switch21282 == Ast_TypeInfoKind__Map {
+        } else if _switch21289 == Ast_TypeInfoKind__Map {
             return getType(processInfo.FP.CreateMap(Ast_AccessMode__Local, Ast_headTypeInfo, getCommon(type1.FP.Get_itemTypeInfoList().GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), type2.FP.Get_itemTypeInfoList().GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), alt2type), getCommon(type1.FP.Get_itemTypeInfoList().GetAt(2).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), type2.FP.Get_itemTypeInfoList().GetAt(2).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), alt2type), mutMode))
         }
     }
@@ -3634,21 +3634,21 @@ func Ast_TypeInfo_getCommonTypeCombo(processInfo *Ast_ProcessInfo,commonType Lns
     return combine.FP.AndType(processInfo, &Ast_CommonType__Normal{other}, alt2type)
 }
 
-// 5346: decl @lune.@base.@Ast.TypeInfo.getCommonType
+// 5347: decl @lune.@base.@Ast.TypeInfo.getCommonType
 func Ast_TypeInfo_getCommonType(processInfo *Ast_ProcessInfo,typeInfo *Ast_TypeInfo,other *Ast_TypeInfo,alt2type *LnsMap) *Ast_TypeInfo {
-    switch _exp21456 := Ast_TypeInfo_getCommonTypeCombo(processInfo, &Ast_CommonType__Normal{typeInfo}, &Ast_CommonType__Normal{other}, alt2type).(type) {
+    switch _exp21463 := Ast_TypeInfo_getCommonTypeCombo(processInfo, &Ast_CommonType__Normal{typeInfo}, &Ast_CommonType__Normal{other}, alt2type).(type) {
     case *Ast_CommonType__Normal:
-    info := _exp21456.Val1
+    info := _exp21463.Val1
         return info
     case *Ast_CommonType__Combine:
-    combine := _exp21456.Val1
+    combine := _exp21463.Val1
         return combine.FP.Get_typeInfo(processInfo)
     }
 // insert a dummy
     return nil
 }
 
-// 6122: decl @lune.@base.@Ast.TypeInfo.checkMatchType
+// 6123: decl @lune.@base.@Ast.TypeInfo.checkMatchType
 func Ast_TypeInfo_checkMatchType(processInfo *Ast_ProcessInfo,dstTypeList *LnsList,expTypeList *LnsList,allowDstShort bool,warnForFollowSrcIndex LnsAny,alt2type *LnsMap)(LnsInt, string) {
     var warnMess LnsAny
     warnMess = nil
@@ -3657,10 +3657,10 @@ func Ast_TypeInfo_checkMatchType(processInfo *Ast_ProcessInfo,dstTypeList *LnsLi
         var workExpType *Ast_TypeInfo
         workExpType = srcType
         {
-            var _from25021 LnsInt = index
-            var _to25021 LnsInt = dstTypeList.Len()
-            for _work25021 := _from25021; _work25021 <= _to25021; _work25021++ {
-                dstIndex := _work25021
+            var _from25028 LnsInt = index
+            var _to25028 LnsInt = dstTypeList.Len()
+            for _work25028 := _from25028; _work25028 <= _to25028; _work25028++ {
+                dstIndex := _work25028
                 var workDstType *Ast_TypeInfo
                 workDstType = dstTypeList.GetAt(dstIndex).(Ast_TypeInfoDownCast).ToAst_TypeInfo()
                 var canEval bool
@@ -3685,10 +3685,10 @@ func Ast_TypeInfo_checkMatchType(processInfo *Ast_ProcessInfo,dstTypeList *LnsLi
     var checkSrcTypeFrom func(index LnsInt,dstType *Ast_TypeInfo)(LnsInt, string)
     checkSrcTypeFrom = func(index LnsInt,dstType *Ast_TypeInfo)(LnsInt, string) {
         {
-            var _from25308 LnsInt = index
-            var _to25308 LnsInt = expTypeList.Len()
-            for _work25308 := _from25308; _work25308 <= _to25308; _work25308++ {
-                srcIndex := _work25308
+            var _from25315 LnsInt = index
+            var _to25315 LnsInt = expTypeList.Len()
+            for _work25315 := _from25315; _work25315 <= _to25315; _work25315++ {
+                srcIndex := _work25315
                 var expType *Ast_TypeInfo
                 expType = expTypeList.GetAt(srcIndex).(Ast_TypeInfoDownCast).ToAst_TypeInfo()
                 var checkType *Ast_TypeInfo
@@ -3879,7 +3879,7 @@ func Ast_TypeInfo_checkMatchType(processInfo *Ast_ProcessInfo,dstTypeList *LnsLi
     return Ast_MatchType__Match, ""
 }
 
-// 6344: decl @lune.@base.@Ast.TypeInfo.canEvalWithBase
+// 6345: decl @lune.@base.@Ast.TypeInfo.canEvalWithBase
 func Ast_TypeInfo_canEvalWithBase(processInfo *Ast_ProcessInfo,dest *Ast_TypeInfo,destMut bool,other *Ast_TypeInfo,canEvalType LnsInt,alt2type *LnsMap)(bool, LnsAny) {
     if dest != dest.FP.Get_aliasSrc(){
         return dest.FP.Get_aliasSrc().FP.CanEvalWith(processInfo, other, canEvalType, alt2type)
@@ -3916,9 +3916,9 @@ func Ast_TypeInfo_canEvalWithBase(processInfo *Ast_ProcessInfo,dest *Ast_TypeInf
             
         }
     }
-    if _switch26661 := canEvalType; _switch26661 == Ast_CanEvalType__SetEq || _switch26661 == Ast_CanEvalType__SetOp || _switch26661 == Ast_CanEvalType__SetOpIMut {
+    if _switch26668 := canEvalType; _switch26668 == Ast_CanEvalType__SetEq || _switch26668 == Ast_CanEvalType__SetOp || _switch26668 == Ast_CanEvalType__SetOpIMut {
         if dest == Ast_builtinTypeEmpty{
-            if _switch26468 := otherSrc; _switch26468 == Ast_builtinTypeAbbr || _switch26468 == Ast_builtinTypeAbbrNone {
+            if _switch26475 := otherSrc; _switch26475 == Ast_builtinTypeAbbr || _switch26475 == Ast_builtinTypeAbbrNone {
                 return false, nil
             }
             if otherSrc.FP.Get_kind() == Ast_TypeInfoKind__Func{
@@ -3930,13 +3930,13 @@ func Ast_TypeInfo_canEvalWithBase(processInfo *Ast_ProcessInfo,dest *Ast_TypeInf
             Lns_GetEnv().SetStackVal( destMut) ).(bool)){
             var nonNilOtherType *Ast_TypeInfo
             nonNilOtherType = otherSrc.FP.Get_nonnilableType()
-            if _switch26557 := nonNilOtherType.FP.Get_kind(); _switch26557 == Ast_TypeInfoKind__Set || _switch26557 == Ast_TypeInfoKind__Map || _switch26557 == Ast_TypeInfoKind__List || _switch26557 == Ast_TypeInfoKind__IF || _switch26557 == Ast_TypeInfoKind__Alternate {
+            if _switch26564 := nonNilOtherType.FP.Get_kind(); _switch26564 == Ast_TypeInfoKind__Set || _switch26564 == Ast_TypeInfoKind__Map || _switch26564 == Ast_TypeInfoKind__List || _switch26564 == Ast_TypeInfoKind__IF || _switch26564 == Ast_TypeInfoKind__Alternate {
                 return false, nil
-            } else if _switch26557 == Ast_TypeInfoKind__Class {
+            } else if _switch26564 == Ast_TypeInfoKind__Class {
                 if Ast_builtinTypeString != nonNilOtherType{
                     return false, nil
                 }
-            } else if _switch26557 == Ast_TypeInfoKind__Prim {
+            } else if _switch26564 == Ast_TypeInfoKind__Prim {
                 if Ast_builtinTypeStem == nonNilOtherType{
                     return false, nil
                 }
@@ -4067,13 +4067,13 @@ func Ast_TypeInfo_canEvalWithBase(processInfo *Ast_ProcessInfo,dest *Ast_TypeInf
         } else if dest.FP.Get_kind() == Ast_TypeInfoKind__Box{
             return dest.FP.CanEvalWith(processInfo, otherSrc, canEvalType, alt2type)
         } else if dest.FP.Get_kind() == Ast_TypeInfoKind__Form{
-            if _switch27317 := otherSrc.FP.Get_kind(); _switch27317 == Ast_TypeInfoKind__Form {
+            if _switch27324 := otherSrc.FP.Get_kind(); _switch27324 == Ast_TypeInfoKind__Form {
                 return true, nil
-            } else if _switch27317 == Ast_TypeInfoKind__FormFunc || _switch27317 == Ast_TypeInfoKind__Func {
+            } else if _switch27324 == Ast_TypeInfoKind__FormFunc || _switch27324 == Ast_TypeInfoKind__Func {
                 return Ast_isSettableToForm_5224_(processInfo, otherSrc), nil
             }
         } else if dest.FP.Get_kind() == Ast_TypeInfoKind__FormFunc{
-            if _switch27522 := otherSrc.FP.Get_kind(); _switch27522 == Ast_TypeInfoKind__FormFunc || _switch27522 == Ast_TypeInfoKind__Func {
+            if _switch27529 := otherSrc.FP.Get_kind(); _switch27529 == Ast_TypeInfoKind__FormFunc || _switch27529 == Ast_TypeInfoKind__Func {
                 {
                     var result LnsInt
                     var mess string
@@ -4114,7 +4114,7 @@ func Ast_TypeInfo_canEvalWithBase(processInfo *Ast_ProcessInfo,dest *Ast_TypeInf
         }
         return false, nil
     }
-    if _switch28493 := dest.FP.Get_kind(); _switch28493 == Ast_TypeInfoKind__Prim {
+    if _switch28500 := dest.FP.Get_kind(); _switch28500 == Ast_TypeInfoKind__Prim {
         if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
             Lns_GetEnv().SetStackVal( dest == Ast_builtinTypeInt) &&
             Lns_GetEnv().SetStackVal( otherSrc == Ast_builtinTypeChar) ||
@@ -4123,7 +4123,7 @@ func Ast_TypeInfo_canEvalWithBase(processInfo *Ast_ProcessInfo,dest *Ast_TypeInf
             return true, nil
         }
         return false, nil
-    } else if _switch28493 == Ast_TypeInfoKind__List || _switch28493 == Ast_TypeInfoKind__Array || _switch28493 == Ast_TypeInfoKind__Set {
+    } else if _switch28500 == Ast_TypeInfoKind__List || _switch28500 == Ast_TypeInfoKind__Array || _switch28500 == Ast_TypeInfoKind__Set {
         if otherSrc.FP.Get_itemTypeInfoList().GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo() == Ast_builtinTypeNone{
             return true, nil
         }
@@ -4144,7 +4144,7 @@ func Ast_TypeInfo_canEvalWithBase(processInfo *Ast_ProcessInfo,dest *Ast_TypeInf
         }
         
         return true, nil
-    } else if _switch28493 == Ast_TypeInfoKind__Map {
+    } else if _switch28500 == Ast_TypeInfoKind__Map {
         if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
             Lns_GetEnv().SetStackVal( otherSrc.FP.Get_itemTypeInfoList().GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo() == Ast_builtinTypeNone) &&
             Lns_GetEnv().SetStackVal( otherSrc.FP.Get_itemTypeInfoList().GetAt(2).(Ast_TypeInfoDownCast).ToAst_TypeInfo() == Ast_builtinTypeNone) ).(bool)){
@@ -4205,7 +4205,7 @@ func Ast_TypeInfo_canEvalWithBase(processInfo *Ast_ProcessInfo,dest *Ast_TypeInf
             return true, nil
         }
         return false, nil
-    } else if _switch28493 == Ast_TypeInfoKind__Class || _switch28493 == Ast_TypeInfoKind__IF {
+    } else if _switch28500 == Ast_TypeInfoKind__Class || _switch28500 == Ast_TypeInfoKind__IF {
         if Ast_isGenericType(dest){
             return dest.FP.CanEvalWith(processInfo, otherSrc, canEvalType, alt2type)
         }
@@ -4215,9 +4215,9 @@ func Ast_TypeInfo_canEvalWithBase(processInfo *Ast_ProcessInfo,dest *Ast_TypeInf
             return otherSrc.FP.IsInheritFrom(processInfo, dest, alt2type), nil
         }
         return false, nil
-    } else if _switch28493 == Ast_TypeInfoKind__Form {
+    } else if _switch28500 == Ast_TypeInfoKind__Form {
         return Ast_isSettableToForm_5224_(processInfo, otherSrc), nil
-    } else if _switch28493 == Ast_TypeInfoKind__Func || _switch28493 == Ast_TypeInfoKind__FormFunc {
+    } else if _switch28500 == Ast_TypeInfoKind__Func || _switch28500 == Ast_TypeInfoKind__FormFunc {
         if dest.FP.Get_retTypeInfoList().Len() != otherSrc.FP.Get_retTypeInfoList().Len(){
             return false, Lns_getVM().String_format("argNum %d != %d", []LnsAny{dest.FP.Get_retTypeInfoList().Len(), otherSrc.FP.Get_retTypeInfoList().Len()})
         }
@@ -4234,7 +4234,7 @@ func Ast_TypeInfo_canEvalWithBase(processInfo *Ast_ProcessInfo,dest *Ast_TypeInf
             return false, retMess
         }
         return true, nil
-    } else if _switch28493 == Ast_TypeInfoKind__Method {
+    } else if _switch28500 == Ast_TypeInfoKind__Method {
         if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
             Lns_GetEnv().SetStackVal( dest.FP.Get_argTypeInfoList().Len() != otherSrc.FP.Get_argTypeInfoList().Len()) ||
             Lns_GetEnv().SetStackVal( dest.FP.Get_retTypeInfoList().Len() != otherSrc.FP.Get_retTypeInfoList().Len()) ).(bool){
@@ -4268,7 +4268,7 @@ func Ast_TypeInfo_canEvalWithBase(processInfo *Ast_ProcessInfo,dest *Ast_TypeInf
             return false, mess
         }
         return true, nil
-    } else if _switch28493 == Ast_TypeInfoKind__Nilable {
+    } else if _switch28500 == Ast_TypeInfoKind__Nilable {
         var dstNonNil *Ast_TypeInfo
         if destMut{
             dstNonNil = dest.FP.Get_nonnilableType()
@@ -4278,9 +4278,9 @@ func Ast_TypeInfo_canEvalWithBase(processInfo *Ast_ProcessInfo,dest *Ast_TypeInf
             
         }
         return dstNonNil.FP.CanEvalWith(processInfo, otherSrc.FP.Get_nonnilableType(), canEvalType, alt2type)
-    } else if _switch28493 == Ast_TypeInfoKind__Alternate {
+    } else if _switch28500 == Ast_TypeInfoKind__Alternate {
         return dest.FP.CanEvalWith(processInfo, otherSrc, canEvalType, alt2type)
-    } else if _switch28493 == Ast_TypeInfoKind__Box {
+    } else if _switch28500 == Ast_TypeInfoKind__Box {
         return dest.FP.CanEvalWith(processInfo, otherSrc, canEvalType, alt2type)
     } else {
         return false, nil
@@ -4289,7 +4289,7 @@ func Ast_TypeInfo_canEvalWithBase(processInfo *Ast_ProcessInfo,dest *Ast_TypeInf
     return false,nil
 }
 
-// 6838: decl @lune.@base.@Ast.TypeInfo.getFullName
+// 6839: decl @lune.@base.@Ast.TypeInfo.getFullName
 func (self *Ast_TypeInfo) GetFullName(typeNameCtrl *Ast_TypeNameCtrl,importInfo Ast_ModuleInfoManager,localFlag LnsAny) string {
     if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
         Lns_GetEnv().SetStackVal( localFlag) &&
@@ -4577,7 +4577,7 @@ func (self *Ast_NormalSymbolInfo) InitAst_NormalSymbolInfo(processInfo *Ast_Proc
 }
 
 
-// 2432: decl @lune.@base.@Ast.NormalSymbolInfo.canAccess
+// 2433: decl @lune.@base.@Ast.NormalSymbolInfo.canAccess
 func (self *Ast_NormalSymbolInfo) CanAccess(fromScope *Ast_Scope,access LnsInt) LnsAny {
     if access == Ast_ScopeAccess__Full{
         return &self.Ast_SymbolInfo
@@ -4587,9 +4587,9 @@ func (self *Ast_NormalSymbolInfo) CanAccess(fromScope *Ast_Scope,access LnsInt) 
     }
     var processInfo *Ast_ProcessInfo
     processInfo = fromScope.FP.GetProcessInfo()
-    if _switch8205 := self.FP.Get_accessMode(); _switch8205 == Ast_AccessMode__Pub || _switch8205 == Ast_AccessMode__Global {
+    if _switch8212 := self.FP.Get_accessMode(); _switch8212 == Ast_AccessMode__Pub || _switch8212 == Ast_AccessMode__Global {
         return &self.Ast_SymbolInfo
-    } else if _switch8205 == Ast_AccessMode__Pro {
+    } else if _switch8212 == Ast_AccessMode__Pro {
         var nsClass *Ast_TypeInfo
         nsClass = self.scope.FP.GetClassTypeInfo()
         var fromClass *Ast_TypeInfo
@@ -4598,14 +4598,14 @@ func (self *Ast_NormalSymbolInfo) CanAccess(fromScope *Ast_Scope,access LnsInt) 
             return &self.Ast_SymbolInfo
         }
         return nil
-    } else if _switch8205 == Ast_AccessMode__Local {
+    } else if _switch8212 == Ast_AccessMode__Local {
         if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
             Lns_GetEnv().SetStackVal( Ast_isBuiltin(self.FP.Get_typeInfo().FP.Get_typeId())) ||
             Lns_GetEnv().SetStackVal( self.FP.GetModule() == fromScope.FP.GetModule()) ).(bool){
             return &self.Ast_SymbolInfo
         }
         return nil
-    } else if _switch8205 == Ast_AccessMode__Pri {
+    } else if _switch8212 == Ast_AccessMode__Pri {
         if fromScope.FP.IsInnerOf(self.scope){
             return &self.Ast_SymbolInfo
         }
@@ -4616,7 +4616,7 @@ func (self *Ast_NormalSymbolInfo) CanAccess(fromScope *Ast_Scope,access LnsInt) 
     return nil
 }
 
-// 4444: decl @lune.@base.@Ast.NormalSymbolInfo.set_typeInfo
+// 4445: decl @lune.@base.@Ast.NormalSymbolInfo.set_typeInfo
 func (self *Ast_NormalSymbolInfo) Set_typeInfo(typeInfo *Ast_TypeInfo) {
     if self.name == "_"{
         return 
@@ -5243,7 +5243,7 @@ func (self *Ast_NilableTypeInfo) ApplyGeneric(alt2typeMap *LnsMap,moduleTypeInfo
     return nil
 }
 
-// 5949: decl @lune.@base.@Ast.NilableTypeInfo.canEvalWith
+// 5950: decl @lune.@base.@Ast.NilableTypeInfo.canEvalWith
 func (self *Ast_NilableTypeInfo) CanEvalWith(processInfo *Ast_ProcessInfo,other *Ast_TypeInfo,canEvalType LnsInt,alt2type *LnsMap)(bool, LnsAny) {
     var otherSrc *Ast_TypeInfo
     otherSrc = other
@@ -5638,7 +5638,7 @@ func NewAst_NilTypeInfo(arg1 *Ast_ProcessInfo) *Ast_NilTypeInfo {
     return obj
 }
 func (self *Ast_NilTypeInfo) Get_typeId() LnsInt{ return self.typeId }
-// 2313: DeclConstr
+// 2314: DeclConstr
 func (self *Ast_NilTypeInfo) InitAst_NilTypeInfo(processInfo *Ast_ProcessInfo) {
     self.InitAst_TypeInfo(nil, processInfo)
     processInfo.FP.Get_idProv().FP.Increment()
@@ -5646,77 +5646,77 @@ func (self *Ast_NilTypeInfo) InitAst_NilTypeInfo(processInfo *Ast_ProcessInfo) {
     
 }
 
-// 2321: decl @lune.@base.@Ast.NilTypeInfo.isModule
+// 2322: decl @lune.@base.@Ast.NilTypeInfo.isModule
 func (self *Ast_NilTypeInfo) IsModule() bool {
     return false
 }
 
-// 2326: decl @lune.@base.@Ast.NilTypeInfo.getTxt
+// 2327: decl @lune.@base.@Ast.NilTypeInfo.getTxt
 func (self *Ast_NilTypeInfo) GetTxt(typeNameCtrl LnsAny,importInfo LnsAny,localFlag LnsAny) string {
     return self.FP.GetTxtWithRaw(self.FP.Get_rawTxt(), typeNameCtrl, importInfo, localFlag)
 }
 
-// 2332: decl @lune.@base.@Ast.NilTypeInfo.getTxtWithRaw
+// 2333: decl @lune.@base.@Ast.NilTypeInfo.getTxtWithRaw
 func (self *Ast_NilTypeInfo) GetTxtWithRaw(raw string,typeNameCtrl LnsAny,importInfo LnsAny,localFlag LnsAny) string {
     return "nil"
 }
 
-// 2341: decl @lune.@base.@Ast.NilTypeInfo.canEvalWith
+// 2342: decl @lune.@base.@Ast.NilTypeInfo.canEvalWith
 func (self *Ast_NilTypeInfo) CanEvalWith(processInfo *Ast_ProcessInfo,other *Ast_TypeInfo,canEvalType LnsInt,alt2type *LnsMap)(bool, LnsAny) {
     return other.FP.Get_nilable(), nil
 }
 
-// 2349: decl @lune.@base.@Ast.NilTypeInfo.get_display_stirng_with
+// 2350: decl @lune.@base.@Ast.NilTypeInfo.get_display_stirng_with
 func (self *Ast_NilTypeInfo) Get_display_stirng_with(raw string,alt2type LnsAny) string {
     return self.FP.GetTxtWithRaw(raw, nil, nil, nil)
 }
 
-// 2353: decl @lune.@base.@Ast.NilTypeInfo.get_display_stirng
+// 2354: decl @lune.@base.@Ast.NilTypeInfo.get_display_stirng
 func (self *Ast_NilTypeInfo) Get_display_stirng() string {
     return self.FP.Get_display_stirng_with("nil", nil)
 }
 
-// 2359: decl @lune.@base.@Ast.NilTypeInfo.equals
+// 2360: decl @lune.@base.@Ast.NilTypeInfo.equals
 func (self *Ast_NilTypeInfo) Equals(processInfo *Ast_ProcessInfo,typeInfo *Ast_TypeInfo,alt2type LnsAny,checkModifer LnsAny) bool {
     return &self.Ast_TypeInfo == typeInfo
 }
 
-// 2367: decl @lune.@base.@Ast.NilTypeInfo.get_parentInfo
+// 2368: decl @lune.@base.@Ast.NilTypeInfo.get_parentInfo
 func (self *Ast_NilTypeInfo) Get_parentInfo() *Ast_TypeInfo {
     return Ast_headTypeInfo
 }
 
-// 2375: decl @lune.@base.@Ast.NilTypeInfo.hasRouteNamespaceFrom
+// 2376: decl @lune.@base.@Ast.NilTypeInfo.hasRouteNamespaceFrom
 func (self *Ast_NilTypeInfo) HasRouteNamespaceFrom(other *Ast_TypeInfo) bool {
     return true
 }
 
-// 2380: decl @lune.@base.@Ast.NilTypeInfo.get_rawTxt
+// 2381: decl @lune.@base.@Ast.NilTypeInfo.get_rawTxt
 func (self *Ast_NilTypeInfo) Get_rawTxt() string {
     return "nil"
 }
 
-// 2384: decl @lune.@base.@Ast.NilTypeInfo.get_kind
+// 2385: decl @lune.@base.@Ast.NilTypeInfo.get_kind
 func (self *Ast_NilTypeInfo) Get_kind() LnsInt {
     return Ast_TypeInfoKind__Prim
 }
 
-// 2388: decl @lune.@base.@Ast.NilTypeInfo.get_baseTypeInfo
+// 2389: decl @lune.@base.@Ast.NilTypeInfo.get_baseTypeInfo
 func (self *Ast_NilTypeInfo) Get_baseTypeInfo() *Ast_TypeInfo {
     return Ast_headTypeInfo
 }
 
-// 2392: decl @lune.@base.@Ast.NilTypeInfo.get_nilable
+// 2393: decl @lune.@base.@Ast.NilTypeInfo.get_nilable
 func (self *Ast_NilTypeInfo) Get_nilable() bool {
     return true
 }
 
-// 2396: decl @lune.@base.@Ast.NilTypeInfo.get_mutMode
+// 2397: decl @lune.@base.@Ast.NilTypeInfo.get_mutMode
 func (self *Ast_NilTypeInfo) Get_mutMode() LnsInt {
     return Ast_MutMode__IMut
 }
 
-// 2401: decl @lune.@base.@Ast.NilTypeInfo.getParentFullName
+// 2402: decl @lune.@base.@Ast.NilTypeInfo.getParentFullName
 func (self *Ast_NilTypeInfo) GetParentFullName(typeNameCtrl *Ast_TypeNameCtrl,importInfo LnsAny,localFlag LnsAny) string {
     return ""
 }
@@ -5868,7 +5868,7 @@ self.symbolInfo. FP.Set_typeInfo( arg1)
 func (self *Ast_AccessSymbolInfo) UpdateValue(arg1 LnsAny) {
 self.symbolInfo. FP.UpdateValue( arg1)
 }
-// 2496: DeclConstr
+// 2497: DeclConstr
 func (self *Ast_AccessSymbolInfo) InitAst_AccessSymbolInfo(symbolInfo *Ast_SymbolInfo,overrideMut LnsAny,overrideCanBeLeft bool) {
     self.InitAst_SymbolInfo()
     self.symbolInfo = symbolInfo
@@ -5880,12 +5880,12 @@ func (self *Ast_AccessSymbolInfo) InitAst_AccessSymbolInfo(symbolInfo *Ast_Symbo
     var symType *Ast_TypeInfo
     symType = symbolInfo.FP.Get_typeInfo()
     var work *Ast_TypeInfo
-    switch _exp8396 := self.overrideMut.(type) {
+    switch _exp8403 := self.overrideMut.(type) {
     case *Ast_OverrideMut__None:
         work = symType
         
     case *Ast_OverrideMut__Prefix:
-    prefixTypeInfo := _exp8396.Val1
+    prefixTypeInfo := _exp8403.Val1
         if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
             Lns_GetEnv().SetStackVal( self.symbolInfo.FP.Get_kind() == Ast_SymbolKind__Mbr) &&
             Lns_GetEnv().SetStackVal( symType.FP.Get_kind() == Ast_TypeInfoKind__Alternate) &&
@@ -5908,7 +5908,7 @@ func (self *Ast_AccessSymbolInfo) InitAst_AccessSymbolInfo(symbolInfo *Ast_Symbo
             
         }
     case *Ast_OverrideMut__IMut:
-    typeInfo := _exp8396.Val1
+    typeInfo := _exp8403.Val1
         work = typeInfo
         
     }
@@ -5916,12 +5916,12 @@ func (self *Ast_AccessSymbolInfo) InitAst_AccessSymbolInfo(symbolInfo *Ast_Symbo
     
 }
 
-// 2535: decl @lune.@base.@Ast.AccessSymbolInfo.getOrg
+// 2536: decl @lune.@base.@Ast.AccessSymbolInfo.getOrg
 func (self *Ast_AccessSymbolInfo) GetOrg() *Ast_SymbolInfo {
     return self.symbolInfo.FP.GetOrg()
 }
 
-// 2539: decl @lune.@base.@Ast.AccessSymbolInfo.canAccess
+// 2540: decl @lune.@base.@Ast.AccessSymbolInfo.canAccess
 func (self *Ast_AccessSymbolInfo) CanAccess(fromScope *Ast_Scope,access LnsInt) LnsAny {
     if Lns_isCondTrue( self.symbolInfo.FP.CanAccess(fromScope, access)){
         return &self.Ast_SymbolInfo
@@ -5929,23 +5929,23 @@ func (self *Ast_AccessSymbolInfo) CanAccess(fromScope *Ast_Scope,access LnsInt) 
     return nil
 }
 
-// 2548: decl @lune.@base.@Ast.AccessSymbolInfo.get_typeInfo
+// 2549: decl @lune.@base.@Ast.AccessSymbolInfo.get_typeInfo
 func (self *Ast_AccessSymbolInfo) Get_typeInfo() *Ast_TypeInfo {
     return self.overrideTypeInfo
 }
 
-// 2552: decl @lune.@base.@Ast.AccessSymbolInfo.get_mutMode
+// 2553: decl @lune.@base.@Ast.AccessSymbolInfo.get_mutMode
 func (self *Ast_AccessSymbolInfo) Get_mutMode() LnsInt {
-    switch _exp8527 := self.overrideMut.(type) {
+    switch _exp8534 := self.overrideMut.(type) {
     case *Ast_OverrideMut__None:
     case *Ast_OverrideMut__Prefix:
-    prefixTypeInfo := _exp8527.Val1
-        if _switch8518 := self.symbolInfo.FP.Get_mutMode(); _switch8518 == Ast_MutMode__AllMut || _switch8518 == Ast_MutMode__IMut || _switch8518 == Ast_MutMode__IMutRe {
+    prefixTypeInfo := _exp8534.Val1
+        if _switch8525 := self.symbolInfo.FP.Get_mutMode(); _switch8525 == Ast_MutMode__AllMut || _switch8525 == Ast_MutMode__IMut || _switch8525 == Ast_MutMode__IMutRe {
             return self.symbolInfo.FP.Get_mutMode()
-        } else if _switch8518 == Ast_MutMode__Mut {
-            if _switch8516 := prefixTypeInfo.FP.Get_mutMode(); _switch8516 == Ast_MutMode__AllMut {
+        } else if _switch8525 == Ast_MutMode__Mut {
+            if _switch8523 := prefixTypeInfo.FP.Get_mutMode(); _switch8523 == Ast_MutMode__AllMut {
                 return Ast_MutMode__Mut
-            } else if _switch8516 == Ast_MutMode__Mut || _switch8516 == Ast_MutMode__IMut || _switch8516 == Ast_MutMode__IMutRe {
+            } else if _switch8523 == Ast_MutMode__Mut || _switch8523 == Ast_MutMode__IMut || _switch8523 == Ast_MutMode__IMutRe {
                 return prefixTypeInfo.FP.Get_mutMode()
             }
         }
@@ -5955,12 +5955,12 @@ func (self *Ast_AccessSymbolInfo) Get_mutMode() LnsInt {
     return self.symbolInfo.FP.Get_mutMode()
 }
 
-// 2581: decl @lune.@base.@Ast.AccessSymbolInfo.get_mutable
+// 2582: decl @lune.@base.@Ast.AccessSymbolInfo.get_mutable
 func (self *Ast_AccessSymbolInfo) Get_mutable() bool {
     return Ast_isMutable(self.FP.Get_mutMode())
 }
 
-// 2585: decl @lune.@base.@Ast.AccessSymbolInfo.get_canBeLeft
+// 2586: decl @lune.@base.@Ast.AccessSymbolInfo.get_canBeLeft
 func (self *Ast_AccessSymbolInfo) Get_canBeLeft() bool {
     if Lns_op_not(self.overrideCanBeLeft){
         return false
@@ -6071,7 +6071,7 @@ func (self *Ast_AlternateTypeInfo) Get_accessMode() LnsInt{ return self.accessMo
 func (self *Ast_AlternateTypeInfo) Get_baseTypeInfo() *Ast_TypeInfo{ return self.baseTypeInfo }
 func (self *Ast_AlternateTypeInfo) Get_interfaceList() *LnsList{ return self.interfaceList }
 func (self *Ast_AlternateTypeInfo) Get_altIndex() LnsInt{ return self.altIndex }
-// 2619: DeclConstr
+// 2620: DeclConstr
 func (self *Ast_AlternateTypeInfo) InitAst_AlternateTypeInfo(processInfo *Ast_ProcessInfo,belongClassFlag bool,altIndex LnsInt,txt string,accessMode LnsInt,moduleTypeInfo *Ast_TypeInfo,baseTypeInfo LnsAny,interfaceList LnsAny) {
     self.InitAst_TypeInfo(Ast_TypeInfo_createScope(processInfo, nil, true, baseTypeInfo, interfaceList), processInfo)
     processInfo.FP.Get_idProv().FP.Increment()
@@ -6096,39 +6096,39 @@ func (self *Ast_AlternateTypeInfo) InitAst_AlternateTypeInfo(processInfo *Ast_Pr
     
 }
 
-// 2643: decl @lune.@base.@Ast.AlternateTypeInfo.isModule
+// 2644: decl @lune.@base.@Ast.AlternateTypeInfo.isModule
 func (self *Ast_AlternateTypeInfo) IsModule() bool {
     return false
 }
 
-// 2648: decl @lune.@base.@Ast.AlternateTypeInfo.getParentId
+// 2649: decl @lune.@base.@Ast.AlternateTypeInfo.getParentId
 func (self *Ast_AlternateTypeInfo) GetParentId() LnsInt {
     return self.moduleTypeInfo.FP.Get_typeId()
 }
 
-// 2652: decl @lune.@base.@Ast.AlternateTypeInfo.get_baseId
+// 2653: decl @lune.@base.@Ast.AlternateTypeInfo.get_baseId
 func (self *Ast_AlternateTypeInfo) Get_baseId() LnsInt {
     return self.baseTypeInfo.FP.Get_typeId()
 }
 
-// 2656: decl @lune.@base.@Ast.AlternateTypeInfo.get_parentInfo
+// 2657: decl @lune.@base.@Ast.AlternateTypeInfo.get_parentInfo
 func (self *Ast_AlternateTypeInfo) Get_parentInfo() *Ast_TypeInfo {
     return self.moduleTypeInfo
 }
 
-// 2661: decl @lune.@base.@Ast.AlternateTypeInfo.getTxt
+// 2662: decl @lune.@base.@Ast.AlternateTypeInfo.getTxt
 func (self *Ast_AlternateTypeInfo) GetTxt(typeNameCtrl LnsAny,importInfo LnsAny,localFlag LnsAny) string {
     return self.FP.GetTxtWithRaw(self.FP.Get_rawTxt(), typeNameCtrl, importInfo, localFlag)
 }
 
-// 2667: decl @lune.@base.@Ast.AlternateTypeInfo.getTxtWithRaw
+// 2668: decl @lune.@base.@Ast.AlternateTypeInfo.getTxtWithRaw
 func (self *Ast_AlternateTypeInfo) GetTxtWithRaw(raw string,typeNameCtrl LnsAny,importInfo LnsAny,localFlag LnsAny) string {
     return self.txt
 }
 
 
 
-// 2683: decl @lune.@base.@Ast.AlternateTypeInfo.isInheritFrom
+// 2684: decl @lune.@base.@Ast.AlternateTypeInfo.isInheritFrom
 func (self *Ast_AlternateTypeInfo) IsInheritFrom(processInfo *Ast_ProcessInfo,other *Ast_TypeInfo,alt2type LnsAny) bool {
     var workAlt2type LnsAny
     if alt2type != nil{
@@ -6184,7 +6184,7 @@ func (self *Ast_AlternateTypeInfo) IsInheritFrom(processInfo *Ast_ProcessInfo,ot
     return false
 }
 
-// 2734: decl @lune.@base.@Ast.AlternateTypeInfo.canEvalWith
+// 2735: decl @lune.@base.@Ast.AlternateTypeInfo.canEvalWith
 func (self *Ast_AlternateTypeInfo) CanEvalWith(processInfo *Ast_ProcessInfo,other *Ast_TypeInfo,canEvalType LnsInt,alt2type *LnsMap)(bool, LnsAny) {
     if &self.Ast_TypeInfo == other.FP.Get_srcTypeInfo(){
         return true, nil
@@ -6208,7 +6208,7 @@ func (self *Ast_AlternateTypeInfo) CanEvalWith(processInfo *Ast_ProcessInfo,othe
     return self.FP.canSetFrom(processInfo, other, canEvalType, alt2type), nil
 }
 
-// 2760: decl @lune.@base.@Ast.AlternateTypeInfo.get_display_stirng_with
+// 2761: decl @lune.@base.@Ast.AlternateTypeInfo.get_display_stirng_with
 func (self *Ast_AlternateTypeInfo) Get_display_stirng_with(raw string,alt2type LnsAny) string {
     if alt2type != nil{
         alt2type_2529 := alt2type.(*LnsMap)
@@ -6223,12 +6223,12 @@ func (self *Ast_AlternateTypeInfo) Get_display_stirng_with(raw string,alt2type L
     return self.FP.GetTxtWithRaw(raw, nil, nil, nil)
 }
 
-// 2770: decl @lune.@base.@Ast.AlternateTypeInfo.get_display_stirng
+// 2771: decl @lune.@base.@Ast.AlternateTypeInfo.get_display_stirng
 func (self *Ast_AlternateTypeInfo) Get_display_stirng() string {
     return self.FP.Get_display_stirng_with(self.txt, nil)
 }
 
-// 2776: decl @lune.@base.@Ast.AlternateTypeInfo.equals
+// 2777: decl @lune.@base.@Ast.AlternateTypeInfo.equals
 func (self *Ast_AlternateTypeInfo) Equals(processInfo *Ast_ProcessInfo,typeInfo *Ast_TypeInfo,alt2type LnsAny,checkModifer LnsAny) bool {
     if &self.Ast_TypeInfo == typeInfo{
         return true
@@ -6253,37 +6253,37 @@ func (self *Ast_AlternateTypeInfo) Equals(processInfo *Ast_ProcessInfo,typeInfo 
     return false
 }
 
-// 2804: decl @lune.@base.@Ast.AlternateTypeInfo.hasRouteNamespaceFrom
+// 2805: decl @lune.@base.@Ast.AlternateTypeInfo.hasRouteNamespaceFrom
 func (self *Ast_AlternateTypeInfo) HasRouteNamespaceFrom(other *Ast_TypeInfo) bool {
     return true
 }
 
-// 2809: decl @lune.@base.@Ast.AlternateTypeInfo.get_rawTxt
+// 2810: decl @lune.@base.@Ast.AlternateTypeInfo.get_rawTxt
 func (self *Ast_AlternateTypeInfo) Get_rawTxt() string {
     return self.txt
 }
 
-// 2813: decl @lune.@base.@Ast.AlternateTypeInfo.get_kind
+// 2814: decl @lune.@base.@Ast.AlternateTypeInfo.get_kind
 func (self *Ast_AlternateTypeInfo) Get_kind() LnsInt {
     return Ast_TypeInfoKind__Alternate
 }
 
-// 2817: decl @lune.@base.@Ast.AlternateTypeInfo.get_nilable
+// 2818: decl @lune.@base.@Ast.AlternateTypeInfo.get_nilable
 func (self *Ast_AlternateTypeInfo) Get_nilable() bool {
     return false
 }
 
-// 2821: decl @lune.@base.@Ast.AlternateTypeInfo.get_mutMode
+// 2822: decl @lune.@base.@Ast.AlternateTypeInfo.get_mutMode
 func (self *Ast_AlternateTypeInfo) Get_mutMode() LnsInt {
     return Ast_MutMode__Mut
 }
 
-// 2826: decl @lune.@base.@Ast.AlternateTypeInfo.getParentFullName
+// 2827: decl @lune.@base.@Ast.AlternateTypeInfo.getParentFullName
 func (self *Ast_AlternateTypeInfo) GetParentFullName(typeNameCtrl *Ast_TypeNameCtrl,importInfo LnsAny,localFlag LnsAny) string {
     return ""
 }
 
-// 2833: decl @lune.@base.@Ast.AlternateTypeInfo.serialize
+// 2834: decl @lune.@base.@Ast.AlternateTypeInfo.serialize
 func (self *Ast_AlternateTypeInfo) Serialize(stream Lns_oStream,validChildrenSet LnsAny) {
     var parentId LnsInt
     parentId = self.FP.GetParentId()
@@ -6292,12 +6292,12 @@ func (self *Ast_AlternateTypeInfo) Serialize(stream Lns_oStream,validChildrenSet
     stream.Write("}\n")
 }
 
-// 2845: decl @lune.@base.@Ast.AlternateTypeInfo.applyGeneric
+// 2846: decl @lune.@base.@Ast.AlternateTypeInfo.applyGeneric
 func (self *Ast_AlternateTypeInfo) ApplyGeneric(alt2typeMap *LnsMap,moduleTypeInfo *Ast_TypeInfo) LnsAny {
     return Ast_AlternateTypeInfo_getAssign(&self.Ast_TypeInfo, alt2typeMap)
 }
 
-// 4403: decl @lune.@base.@Ast.AlternateTypeInfo.canSetFrom
+// 4404: decl @lune.@base.@Ast.AlternateTypeInfo.canSetFrom
 func (self *Ast_AlternateTypeInfo) canSetFrom(processInfo *Ast_ProcessInfo,other *Ast_TypeInfo,canEvalType LnsAny,alt2type *LnsMap) bool {
     var otherWork *Ast_TypeInfo
     otherWork = Ast_AlternateTypeInfo_getAssign(other, alt2type)
@@ -6343,7 +6343,7 @@ func (self *Ast_AlternateTypeInfo) canSetFrom(processInfo *Ast_ProcessInfo,other
     return true
 }
 
-// 4552: decl @lune.@base.@Ast.AlternateTypeInfo.getAssign
+// 4553: decl @lune.@base.@Ast.AlternateTypeInfo.getAssign
 func Ast_AlternateTypeInfo_getAssign(typeInfo *Ast_TypeInfo,alt2type *LnsMap) *Ast_TypeInfo {
     if typeInfo.FP.Get_kind() != Ast_TypeInfoKind__Alternate{
         return typeInfo
@@ -6552,7 +6552,7 @@ func (self *Ast_BoxTypeInfo) SerializeTypeInfoList(arg1 string,arg2 *LnsList,arg
 func (self *Ast_BoxTypeInfo) SwitchScope(arg1 *Ast_Scope) {
 self.boxingType. FP.SwitchScope( arg1)
 }
-// 2863: DeclConstr
+// 2864: DeclConstr
 func (self *Ast_BoxTypeInfo) InitAst_BoxTypeInfo(processInfo *Ast_ProcessInfo,typeId LnsInt,accessMode LnsInt,boxingType *Ast_TypeInfo) {
     self.InitAst_TypeInfo(Ast_boxRootScope, processInfo)
     self.boxingType = boxingType
@@ -6568,67 +6568,67 @@ func (self *Ast_BoxTypeInfo) InitAst_BoxTypeInfo(processInfo *Ast_ProcessInfo,ty
     
 }
 
-// 2877: decl @lune.@base.@Ast.BoxTypeInfo.get_scope
+// 2878: decl @lune.@base.@Ast.BoxTypeInfo.get_scope
 func (self *Ast_BoxTypeInfo) Get_scope() LnsAny {
     return self.Ast_TypeInfo.Get_scope()
 }
 
-// 2881: decl @lune.@base.@Ast.BoxTypeInfo.get_kind
+// 2882: decl @lune.@base.@Ast.BoxTypeInfo.get_kind
 func (self *Ast_BoxTypeInfo) Get_kind() LnsInt {
     return Ast_TypeInfoKind__Box
 }
 
-// 2884: decl @lune.@base.@Ast.BoxTypeInfo.get_aliasSrc
+// 2885: decl @lune.@base.@Ast.BoxTypeInfo.get_aliasSrc
 func (self *Ast_BoxTypeInfo) Get_aliasSrc() *Ast_TypeInfo {
     return &self.Ast_TypeInfo
 }
 
-// 2887: decl @lune.@base.@Ast.BoxTypeInfo.get_srcTypeInfo
+// 2888: decl @lune.@base.@Ast.BoxTypeInfo.get_srcTypeInfo
 func (self *Ast_BoxTypeInfo) Get_srcTypeInfo() *Ast_TypeInfo {
     return &self.Ast_TypeInfo
 }
 
-// 2890: decl @lune.@base.@Ast.BoxTypeInfo.get_nonnilableType
+// 2891: decl @lune.@base.@Ast.BoxTypeInfo.get_nonnilableType
 func (self *Ast_BoxTypeInfo) Get_nonnilableType() *Ast_TypeInfo {
     return &self.Ast_TypeInfo
 }
 
-// 2893: decl @lune.@base.@Ast.BoxTypeInfo.get_nilable
+// 2894: decl @lune.@base.@Ast.BoxTypeInfo.get_nilable
 func (self *Ast_BoxTypeInfo) Get_nilable() bool {
     return false
 }
 
-// 2896: decl @lune.@base.@Ast.BoxTypeInfo.get_extedType
+// 2897: decl @lune.@base.@Ast.BoxTypeInfo.get_extedType
 func (self *Ast_BoxTypeInfo) Get_extedType() *Ast_TypeInfo {
     return &self.Ast_TypeInfo
 }
 
-// 2902: decl @lune.@base.@Ast.BoxTypeInfo.getTxt
+// 2903: decl @lune.@base.@Ast.BoxTypeInfo.getTxt
 func (self *Ast_BoxTypeInfo) GetTxt(typeNameCtrl LnsAny,importInfo LnsAny,localFlag LnsAny) string {
     return self.FP.GetTxtWithRaw(self.FP.Get_rawTxt(), typeNameCtrl, importInfo, localFlag)
 }
 
-// 2907: decl @lune.@base.@Ast.BoxTypeInfo.getTxtWithRaw
+// 2908: decl @lune.@base.@Ast.BoxTypeInfo.getTxtWithRaw
 func (self *Ast_BoxTypeInfo) GetTxtWithRaw(raw string,typeNameCtrl LnsAny,importInfo LnsAny,localFlag LnsAny) string {
     return "Nilable<" + self.boxingType.FP.GetTxtWithRaw(raw, typeNameCtrl, importInfo, localFlag) + ">"
 }
 
-// 2915: decl @lune.@base.@Ast.BoxTypeInfo.get_display_stirng
+// 2916: decl @lune.@base.@Ast.BoxTypeInfo.get_display_stirng
 func (self *Ast_BoxTypeInfo) Get_display_stirng() string {
     return self.FP.Get_display_stirng_with(self.FP.Get_rawTxt(), nil)
 }
 
-// 2919: decl @lune.@base.@Ast.BoxTypeInfo.get_display_stirng_with
+// 2920: decl @lune.@base.@Ast.BoxTypeInfo.get_display_stirng_with
 func (self *Ast_BoxTypeInfo) Get_display_stirng_with(raw string,alt2type LnsAny) string {
     return Lns_getVM().String_format("Nilable<%s>", []LnsAny{self.boxingType.FP.Get_display_stirng_with(raw, alt2type)})
 }
 
-// 2924: decl @lune.@base.@Ast.BoxTypeInfo.serialize
+// 2925: decl @lune.@base.@Ast.BoxTypeInfo.serialize
 func (self *Ast_BoxTypeInfo) Serialize(stream Lns_oStream,validChildrenSet LnsAny) {
     stream.Write(Lns_getVM().String_format("{ skind = %d, typeId = %d, accessMode = %d, boxingType = %d }\n", []LnsAny{Ast_SerializeKind__Box, self.typeId, self.accessMode, self.boxingType.FP.Get_typeId()}))
 }
 
-// 2931: decl @lune.@base.@Ast.BoxTypeInfo.equals
+// 2932: decl @lune.@base.@Ast.BoxTypeInfo.equals
 func (self *Ast_BoxTypeInfo) Equals(processInfo *Ast_ProcessInfo,typeInfo *Ast_TypeInfo,alt2type LnsAny,checkModifer LnsAny) bool {
     {
         _boxType := Ast_BoxTypeInfoDownCastF(typeInfo.FP)
@@ -6640,7 +6640,7 @@ func (self *Ast_BoxTypeInfo) Equals(processInfo *Ast_ProcessInfo,typeInfo *Ast_T
     return false
 }
 
-// 2942: decl @lune.@base.@Ast.BoxTypeInfo.createAlt2typeMap
+// 2943: decl @lune.@base.@Ast.BoxTypeInfo.createAlt2typeMap
 func (self *Ast_BoxTypeInfo) CreateAlt2typeMap(detectFlag bool) *LnsMap {
     var _map *LnsMap
     _map = Ast_CanEvalCtrlTypeInfo_createDefaultAlt2typeMap(detectFlag)
@@ -6650,7 +6650,7 @@ func (self *Ast_BoxTypeInfo) CreateAlt2typeMap(detectFlag bool) *LnsMap {
     return _map
 }
 
-// 4622: decl @lune.@base.@Ast.BoxTypeInfo.applyGeneric
+// 4623: decl @lune.@base.@Ast.BoxTypeInfo.applyGeneric
 func (self *Ast_BoxTypeInfo) ApplyGeneric(alt2typeMap *LnsMap,moduleTypeInfo *Ast_TypeInfo) LnsAny {
     var typeInfo LnsAny
     typeInfo = self.boxingType.FP.ApplyGeneric(alt2typeMap, moduleTypeInfo)
@@ -6664,12 +6664,12 @@ func (self *Ast_BoxTypeInfo) ApplyGeneric(alt2typeMap *LnsMap,moduleTypeInfo *As
     return nil
 }
 
-// 5913: decl @lune.@base.@Ast.BoxTypeInfo.canEvalWith
+// 5914: decl @lune.@base.@Ast.BoxTypeInfo.canEvalWith
 func (self *Ast_BoxTypeInfo) CanEvalWith(processInfo *Ast_ProcessInfo,other *Ast_TypeInfo,canEvalType LnsInt,alt2type *LnsMap)(bool, LnsAny) {
     if &self.Ast_TypeInfo == other{
         return true, nil
     }
-    if _switch24048 := canEvalType; _switch24048 == Ast_CanEvalType__SetOp || _switch24048 == Ast_CanEvalType__SetOpIMut || _switch24048 == Ast_CanEvalType__SetEq {
+    if _switch24055 := canEvalType; _switch24055 == Ast_CanEvalType__SetOp || _switch24055 == Ast_CanEvalType__SetOpIMut || _switch24055 == Ast_CanEvalType__SetEq {
     } else {
         return false, nil
     }
@@ -6888,12 +6888,12 @@ func (self *Ast_GenericTypeInfo) SerializeTypeInfoList(arg1 string,arg2 *LnsList
 func (self *Ast_GenericTypeInfo) SwitchScope(arg1 *Ast_Scope) {
 self.genSrcTypeInfo. FP.SwitchScope( arg1)
 }
-// 2969: decl @lune.@base.@Ast.GenericTypeInfo.get_display_stirng_with
+// 2970: decl @lune.@base.@Ast.GenericTypeInfo.get_display_stirng_with
 func (self *Ast_GenericTypeInfo) Get_display_stirng_with(raw string,alt2type LnsAny) string {
     return self.genSrcTypeInfo.FP.Get_display_stirng_with(raw, self.alt2typeMap)
 }
 
-// 2975: DeclConstr
+// 2976: DeclConstr
 func (self *Ast_GenericTypeInfo) InitAst_GenericTypeInfo(processInfo *Ast_ProcessInfo,genSrcTypeInfo *Ast_TypeInfo,itemTypeInfoList *LnsList,moduleTypeInfo *Ast_TypeInfo) {
     self.InitAst_TypeInfo(Ast_TypeInfo_createScope(processInfo, (Lns_unwrap( genSrcTypeInfo.FP.Get_scope()).(*Ast_Scope)).FP.Get_parent(), true, genSrcTypeInfo, nil), processInfo)
     processInfo.FP.Get_idProv().FP.Increment()
@@ -6934,12 +6934,12 @@ func (self *Ast_GenericTypeInfo) InitAst_GenericTypeInfo(processInfo *Ast_Proces
     
 }
 
-// 3012: decl @lune.@base.@Ast.GenericTypeInfo.getModule
+// 3013: decl @lune.@base.@Ast.GenericTypeInfo.getModule
 func (self *Ast_GenericTypeInfo) GetModule() *Ast_TypeInfo {
     return self.moduleTypeInfo
 }
 
-// 3017: decl @lune.@base.@Ast.GenericTypeInfo.isInheritFrom
+// 3018: decl @lune.@base.@Ast.GenericTypeInfo.isInheritFrom
 func (self *Ast_GenericTypeInfo) IsInheritFrom(processInfo *Ast_ProcessInfo,other *Ast_TypeInfo,alt2type LnsAny) bool {
     var otherSrc *Ast_TypeInfo
     otherSrc = other.FP.Get_genSrcTypeInfo()
@@ -6988,22 +6988,22 @@ func (self *Ast_GenericTypeInfo) IsInheritFrom(processInfo *Ast_ProcessInfo,othe
     return true
 }
 
-// 3057: decl @lune.@base.@Ast.GenericTypeInfo.get_aliasSrc
+// 3058: decl @lune.@base.@Ast.GenericTypeInfo.get_aliasSrc
 func (self *Ast_GenericTypeInfo) Get_aliasSrc() *Ast_TypeInfo {
     return &self.Ast_TypeInfo
 }
 
-// 3061: decl @lune.@base.@Ast.GenericTypeInfo.get_srcTypeInfo
+// 3062: decl @lune.@base.@Ast.GenericTypeInfo.get_srcTypeInfo
 func (self *Ast_GenericTypeInfo) Get_srcTypeInfo() *Ast_TypeInfo {
     return &self.Ast_TypeInfo
 }
 
-// 3064: decl @lune.@base.@Ast.GenericTypeInfo.get_extedType
+// 3065: decl @lune.@base.@Ast.GenericTypeInfo.get_extedType
 func (self *Ast_GenericTypeInfo) Get_extedType() *Ast_TypeInfo {
     return &self.Ast_TypeInfo
 }
 
-// 3069: decl @lune.@base.@Ast.GenericTypeInfo.canEvalWith
+// 3070: decl @lune.@base.@Ast.GenericTypeInfo.canEvalWith
 func (self *Ast_GenericTypeInfo) CanEvalWith(processInfo *Ast_ProcessInfo,other *Ast_TypeInfo,canEvalType LnsInt,alt2type *LnsMap)(bool, LnsAny) {
     if other.FP.Get_nilable(){
         return false, nil
@@ -7070,7 +7070,7 @@ func (self *Ast_GenericTypeInfo) CanEvalWith(processInfo *Ast_ProcessInfo,other 
     return true, nil
 }
 
-// 3130: decl @lune.@base.@Ast.GenericTypeInfo.equals
+// 3131: decl @lune.@base.@Ast.GenericTypeInfo.equals
 func (self *Ast_GenericTypeInfo) Equals(processInfo *Ast_ProcessInfo,other *Ast_TypeInfo,alt2type LnsAny,checkModifer LnsAny) bool {
     if &self.Ast_TypeInfo == other{
         return true
@@ -7098,7 +7098,7 @@ func (self *Ast_GenericTypeInfo) Equals(processInfo *Ast_ProcessInfo,other *Ast_
     return true
 }
 
-// 3163: decl @lune.@base.@Ast.GenericTypeInfo.serialize
+// 3164: decl @lune.@base.@Ast.GenericTypeInfo.serialize
 func (self *Ast_GenericTypeInfo) Serialize(stream Lns_oStream,validChildrenSet LnsAny) {
     stream.Write(Lns_getVM().String_format("{ skind = %d, typeId = %d, genSrcTypeId = %d, genTypeList = {", []LnsAny{Ast_SerializeKind__Generic, self.typeId, self.genSrcTypeInfo.FP.Get_typeId()}))
     var count LnsInt
@@ -7113,7 +7113,7 @@ func (self *Ast_GenericTypeInfo) Serialize(stream Lns_oStream,validChildrenSet L
     stream.Write("} }\n")
 }
 
-// 3177: decl @lune.@base.@Ast.GenericTypeInfo.createAlt2typeMap
+// 3178: decl @lune.@base.@Ast.GenericTypeInfo.createAlt2typeMap
 func (self *Ast_GenericTypeInfo) CreateAlt2typeMap(detectFlag bool) *LnsMap {
     var _map *LnsMap
     _map = self.genSrcTypeInfo.FP.CreateAlt2typeMap(detectFlag)
@@ -7125,7 +7125,7 @@ func (self *Ast_GenericTypeInfo) CreateAlt2typeMap(detectFlag bool) *LnsMap {
     return _map
 }
 
-// 5427: decl @lune.@base.@Ast.GenericTypeInfo.applyGeneric
+// 5428: decl @lune.@base.@Ast.GenericTypeInfo.applyGeneric
 func (self *Ast_GenericTypeInfo) ApplyGeneric(alt2typeMap *LnsMap,moduleTypeInfo *Ast_TypeInfo) LnsAny {
     if self.genSrcTypeInfo.FP.Get_kind() == Ast_TypeInfoKind__Class{
         var itemTypeInfoList LnsAny
@@ -7351,17 +7351,17 @@ func (self *Ast_ModifierTypeInfo) SerializeTypeInfoList(arg1 string,arg2 *LnsLis
 func (self *Ast_ModifierTypeInfo) SwitchScope(arg1 *Ast_Scope) {
 self.srcTypeInfo. FP.SwitchScope( arg1)
 }
-// 3201: decl @lune.@base.@Ast.ModifierTypeInfo.get_extedType
+// 3202: decl @lune.@base.@Ast.ModifierTypeInfo.get_extedType
 func (self *Ast_ModifierTypeInfo) Get_extedType() *Ast_TypeInfo {
     return &self.Ast_TypeInfo
 }
 
-// 3206: decl @lune.@base.@Ast.ModifierTypeInfo.getTxt
+// 3207: decl @lune.@base.@Ast.ModifierTypeInfo.getTxt
 func (self *Ast_ModifierTypeInfo) GetTxt(typeNameCtrl LnsAny,importInfo LnsAny,localFlag LnsAny) string {
     return self.FP.GetTxtWithRaw(self.FP.Get_rawTxt(), typeNameCtrl, importInfo, localFlag)
 }
 
-// 3211: decl @lune.@base.@Ast.ModifierTypeInfo.getTxtWithRaw
+// 3212: decl @lune.@base.@Ast.ModifierTypeInfo.getTxtWithRaw
 func (self *Ast_ModifierTypeInfo) GetTxtWithRaw(raw string,typeNameCtrl LnsAny,importInfo LnsAny,localFlag LnsAny) string {
     var txt string
     txt = self.srcTypeInfo.FP.GetTxtWithRaw(raw, typeNameCtrl, importInfo, localFlag)
@@ -7372,7 +7372,7 @@ func (self *Ast_ModifierTypeInfo) GetTxtWithRaw(raw string,typeNameCtrl LnsAny,i
     return txt
 }
 
-// 3223: decl @lune.@base.@Ast.ModifierTypeInfo.get_display_stirng_with
+// 3224: decl @lune.@base.@Ast.ModifierTypeInfo.get_display_stirng_with
 func (self *Ast_ModifierTypeInfo) Get_display_stirng_with(raw string,alt2type LnsAny) string {
     var txt string
     txt = self.srcTypeInfo.FP.Get_display_stirng_with(raw, alt2type)
@@ -7383,21 +7383,21 @@ func (self *Ast_ModifierTypeInfo) Get_display_stirng_with(raw string,alt2type Ln
     return txt
 }
 
-// 3231: decl @lune.@base.@Ast.ModifierTypeInfo.get_display_stirng
+// 3232: decl @lune.@base.@Ast.ModifierTypeInfo.get_display_stirng
 func (self *Ast_ModifierTypeInfo) Get_display_stirng() string {
     return self.FP.Get_display_stirng_with(self.FP.Get_rawTxt(), nil)
 }
 
-// 3235: decl @lune.@base.@Ast.ModifierTypeInfo.serialize
+// 3236: decl @lune.@base.@Ast.ModifierTypeInfo.serialize
 func (self *Ast_ModifierTypeInfo) Serialize(stream Lns_oStream,validChildrenSet LnsAny) {
     stream.Write(Lns_getVM().String_format("{ skind = %d, typeId = %d, srcTypeId = %d, mutMode = %d }\n", []LnsAny{Ast_SerializeKind__Modifier, self.typeId, self.srcTypeInfo.FP.Get_typeId(), self.mutMode}))
 }
 
-// 3242: decl @lune.@base.@Ast.ModifierTypeInfo.canEvalWith
+// 3243: decl @lune.@base.@Ast.ModifierTypeInfo.canEvalWith
 func (self *Ast_ModifierTypeInfo) CanEvalWith(processInfo *Ast_ProcessInfo,other *Ast_TypeInfo,canEvalType LnsInt,alt2type *LnsMap)(bool, LnsAny) {
     var evalType LnsInt
     if self.srcTypeInfo.FP.Get_itemTypeInfoList().Len() >= 1{
-        if _switch11328 := canEvalType; _switch11328 == Ast_CanEvalType__SetEq || _switch11328 == Ast_CanEvalType__SetOp {
+        if _switch11335 := canEvalType; _switch11335 == Ast_CanEvalType__SetEq || _switch11335 == Ast_CanEvalType__SetOp {
             evalType = Ast_CanEvalType__SetOpIMut
             
         } else {
@@ -7411,7 +7411,7 @@ func (self *Ast_ModifierTypeInfo) CanEvalWith(processInfo *Ast_ProcessInfo,other
     return Ast_TypeInfo_canEvalWithBase(processInfo, self.srcTypeInfo, Ast_TypeInfo_isMut(&self.Ast_TypeInfo), other.FP.Get_srcTypeInfo(), evalType, alt2type)
 }
 
-// 3272: decl @lune.@base.@Ast.ModifierTypeInfo.equals
+// 3273: decl @lune.@base.@Ast.ModifierTypeInfo.equals
 func (self *Ast_ModifierTypeInfo) Equals(processInfo *Ast_ProcessInfo,typeInfo *Ast_TypeInfo,alt2type LnsAny,checkModifer LnsAny) bool {
     if Lns_isCondTrue( checkModifer){
         if Ast_TypeInfo_isMut(&self.Ast_TypeInfo) != Ast_TypeInfo_isMut(typeInfo){
@@ -7421,7 +7421,7 @@ func (self *Ast_ModifierTypeInfo) Equals(processInfo *Ast_ProcessInfo,typeInfo *
     return self.srcTypeInfo.FP.Equals(processInfo, typeInfo.FP.Get_srcTypeInfo(), alt2type, checkModifer)
 }
 
-// 4819: decl @lune.@base.@Ast.ModifierTypeInfo.get_nonnilableType
+// 4820: decl @lune.@base.@Ast.ModifierTypeInfo.get_nonnilableType
 func (self *Ast_ModifierTypeInfo) Get_nonnilableType() *Ast_TypeInfo {
     var orgType *Ast_TypeInfo
     orgType = self.srcTypeInfo.FP.Get_nonnilableType()
@@ -7433,7 +7433,7 @@ func (self *Ast_ModifierTypeInfo) Get_nonnilableType() *Ast_TypeInfo {
     return self.FP.getProcessInfo().FP.CreateModifier(orgType, Ast_MutMode__IMut)
 }
 
-// 4827: decl @lune.@base.@Ast.ModifierTypeInfo.get_nilableTypeInfo
+// 4828: decl @lune.@base.@Ast.ModifierTypeInfo.get_nilableTypeInfo
 func (self *Ast_ModifierTypeInfo) Get_nilableTypeInfo() *Ast_TypeInfo {
     var orgType *Ast_TypeInfo
     orgType = self.srcTypeInfo.FP.Get_nilableTypeInfo()
@@ -7443,7 +7443,7 @@ func (self *Ast_ModifierTypeInfo) Get_nilableTypeInfo() *Ast_TypeInfo {
     return self.FP.getProcessInfo().FP.CreateModifier(orgType, Ast_MutMode__IMut)
 }
 
-// 6754: decl @lune.@base.@Ast.ModifierTypeInfo.applyGeneric
+// 6755: decl @lune.@base.@Ast.ModifierTypeInfo.applyGeneric
 func (self *Ast_ModifierTypeInfo) ApplyGeneric(alt2typeMap *LnsMap,moduleTypeInfo *Ast_TypeInfo) LnsAny {
     var typeInfo LnsAny
     typeInfo = self.srcTypeInfo.FP.ApplyGeneric(alt2typeMap, moduleTypeInfo)
@@ -7552,7 +7552,7 @@ func (self *Ast_ModuleTypeInfo) Get_parentInfo() *Ast_TypeInfo{ return self.pare
 func (self *Ast_ModuleTypeInfo) Get_typeId() LnsInt{ return self.typeId }
 func (self *Ast_ModuleTypeInfo) Get_rawTxt() string{ return self.rawTxt }
 func (self *Ast_ModuleTypeInfo) Get_mutable() bool{ return self.mutable }
-// 3302: DeclConstr
+// 3303: DeclConstr
 func (self *Ast_ModuleTypeInfo) InitAst_ModuleTypeInfo(processInfo *Ast_ProcessInfo,scope *Ast_Scope,externalFlag bool,txt string,parentInfo LnsAny,typeId LnsInt,mutable bool) {
     self.InitAst_TypeInfo(scope, processInfo)
     self.externalFlag = externalFlag
@@ -7576,57 +7576,57 @@ func (self *Ast_ModuleTypeInfo) InitAst_ModuleTypeInfo(processInfo *Ast_ProcessI
     scope.FP.Set_ownerTypeInfo(&self.Ast_TypeInfo)
 }
 
-// 3324: decl @lune.@base.@Ast.ModuleTypeInfo.get_baseTypeInfo
+// 3325: decl @lune.@base.@Ast.ModuleTypeInfo.get_baseTypeInfo
 func (self *Ast_ModuleTypeInfo) Get_baseTypeInfo() *Ast_TypeInfo {
     return Ast_headTypeInfo
 }
 
-// 3328: decl @lune.@base.@Ast.ModuleTypeInfo.isModule
+// 3329: decl @lune.@base.@Ast.ModuleTypeInfo.isModule
 func (self *Ast_ModuleTypeInfo) IsModule() bool {
     return true
 }
 
-// 3332: decl @lune.@base.@Ast.ModuleTypeInfo.get_accessMode
+// 3333: decl @lune.@base.@Ast.ModuleTypeInfo.get_accessMode
 func (self *Ast_ModuleTypeInfo) Get_accessMode() LnsInt {
     return Ast_AccessMode__Pub
 }
 
-// 3336: decl @lune.@base.@Ast.ModuleTypeInfo.get_kind
+// 3337: decl @lune.@base.@Ast.ModuleTypeInfo.get_kind
 func (self *Ast_ModuleTypeInfo) Get_kind() LnsInt {
     return Ast_TypeInfoKind__Module
 }
 
-// 3340: decl @lune.@base.@Ast.ModuleTypeInfo.getParentId
+// 3341: decl @lune.@base.@Ast.ModuleTypeInfo.getParentId
 func (self *Ast_ModuleTypeInfo) GetParentId() LnsInt {
     return self.parentInfo.FP.Get_typeId()
 }
 
-// 3345: decl @lune.@base.@Ast.ModuleTypeInfo.getTxt
+// 3346: decl @lune.@base.@Ast.ModuleTypeInfo.getTxt
 func (self *Ast_ModuleTypeInfo) GetTxt(typeNameCtrl LnsAny,importInfo LnsAny,localFlag LnsAny) string {
     return self.FP.GetTxtWithRaw(self.FP.Get_rawTxt(), typeNameCtrl, importInfo, localFlag)
 }
 
-// 3351: decl @lune.@base.@Ast.ModuleTypeInfo.getTxtWithRaw
+// 3352: decl @lune.@base.@Ast.ModuleTypeInfo.getTxtWithRaw
 func (self *Ast_ModuleTypeInfo) GetTxtWithRaw(rawTxt string,typeNameCtrl LnsAny,importInfo LnsAny,localFlag LnsAny) string {
     return rawTxt
 }
 
-// 3358: decl @lune.@base.@Ast.ModuleTypeInfo.get_display_stirng_with
+// 3359: decl @lune.@base.@Ast.ModuleTypeInfo.get_display_stirng_with
 func (self *Ast_ModuleTypeInfo) Get_display_stirng_with(raw string,alt2type LnsAny) string {
     return self.FP.GetTxtWithRaw(raw, nil, nil, nil)
 }
 
-// 3362: decl @lune.@base.@Ast.ModuleTypeInfo.get_display_stirng
+// 3363: decl @lune.@base.@Ast.ModuleTypeInfo.get_display_stirng
 func (self *Ast_ModuleTypeInfo) Get_display_stirng() string {
     return self.FP.Get_display_stirng_with(self.FP.Get_rawTxt(), nil)
 }
 
-// 3365: decl @lune.@base.@Ast.ModuleTypeInfo.canEvalWith
+// 3366: decl @lune.@base.@Ast.ModuleTypeInfo.canEvalWith
 func (self *Ast_ModuleTypeInfo) CanEvalWith(processInfo *Ast_ProcessInfo,other *Ast_TypeInfo,canEvalType LnsInt,alt2type *LnsMap)(bool, LnsAny) {
     return false, nil
 }
 
-// 3372: decl @lune.@base.@Ast.ModuleTypeInfo.serialize
+// 3373: decl @lune.@base.@Ast.ModuleTypeInfo.serialize
 func (self *Ast_ModuleTypeInfo) Serialize(stream Lns_oStream,validChildrenSet LnsAny) {
     var txt string
     txt = Lns_getVM().String_format("{ skind = %d, parentId = %d, typeId = %d, txt = '%s', ", []LnsAny{Ast_SerializeKind__Module, self.FP.GetParentId(), self.typeId, self.rawTxt})
@@ -7812,7 +7812,7 @@ func (self *Ast_EnumTypeInfo) Get_nilableTypeInfo() *Ast_TypeInfo{ return self.n
 func (self *Ast_EnumTypeInfo) Get_valTypeInfo() *Ast_TypeInfo{ return self.valTypeInfo }
 func (self *Ast_EnumTypeInfo) Get_name2EnumValInfo() *LnsMap{ return self.name2EnumValInfo }
 func (self *Ast_EnumTypeInfo) Get_val2EnumValInfo() *LnsMap{ return self.val2EnumValInfo }
-// 3444: DeclConstr
+// 3445: DeclConstr
 func (self *Ast_EnumTypeInfo) InitAst_EnumTypeInfo(processInfo *Ast_ProcessInfo,scope *Ast_Scope,externalFlag bool,accessMode LnsInt,txt string,parentInfo LnsAny,typeId LnsInt,valTypeInfo *Ast_TypeInfo) {
     self.InitAst_TypeInfo(scope, processInfo)
     self.externalFlag = externalFlag
@@ -7844,47 +7844,47 @@ func (self *Ast_EnumTypeInfo) InitAst_EnumTypeInfo(processInfo *Ast_ProcessInfo,
     scope.FP.Set_ownerTypeInfo(&self.Ast_TypeInfo)
 }
 
-// 3471: decl @lune.@base.@Ast.EnumTypeInfo.isModule
+// 3472: decl @lune.@base.@Ast.EnumTypeInfo.isModule
 func (self *Ast_EnumTypeInfo) IsModule() bool {
     return false
 }
 
-// 3475: decl @lune.@base.@Ast.EnumTypeInfo.get_kind
+// 3476: decl @lune.@base.@Ast.EnumTypeInfo.get_kind
 func (self *Ast_EnumTypeInfo) Get_kind() LnsInt {
     return Ast_TypeInfoKind__Enum
 }
 
-// 3480: decl @lune.@base.@Ast.EnumTypeInfo.get_baseTypeInfo
+// 3481: decl @lune.@base.@Ast.EnumTypeInfo.get_baseTypeInfo
 func (self *Ast_EnumTypeInfo) Get_baseTypeInfo() *Ast_TypeInfo {
     return Ast_headTypeInfo
 }
 
-// 3483: decl @lune.@base.@Ast.EnumTypeInfo.getParentId
+// 3484: decl @lune.@base.@Ast.EnumTypeInfo.getParentId
 func (self *Ast_EnumTypeInfo) GetParentId() LnsInt {
     return self.parentInfo.FP.Get_typeId()
 }
 
-// 3488: decl @lune.@base.@Ast.EnumTypeInfo.getTxt
+// 3489: decl @lune.@base.@Ast.EnumTypeInfo.getTxt
 func (self *Ast_EnumTypeInfo) GetTxt(typeNameCtrl LnsAny,importInfo LnsAny,localFlag LnsAny) string {
     return self.FP.GetTxtWithRaw(self.FP.Get_rawTxt(), typeNameCtrl, importInfo, localFlag)
 }
 
-// 3494: decl @lune.@base.@Ast.EnumTypeInfo.getTxtWithRaw
+// 3495: decl @lune.@base.@Ast.EnumTypeInfo.getTxtWithRaw
 func (self *Ast_EnumTypeInfo) GetTxtWithRaw(rawTxt string,typeNameCtrl LnsAny,importInfo LnsAny,localFlag LnsAny) string {
     return rawTxt
 }
 
-// 3501: decl @lune.@base.@Ast.EnumTypeInfo.get_display_stirng_with
+// 3502: decl @lune.@base.@Ast.EnumTypeInfo.get_display_stirng_with
 func (self *Ast_EnumTypeInfo) Get_display_stirng_with(raw string,alt2type LnsAny) string {
     return self.FP.GetTxtWithRaw(raw, nil, nil, nil)
 }
 
-// 3505: decl @lune.@base.@Ast.EnumTypeInfo.get_display_stirng
+// 3506: decl @lune.@base.@Ast.EnumTypeInfo.get_display_stirng
 func (self *Ast_EnumTypeInfo) Get_display_stirng() string {
     return self.FP.Get_display_stirng_with(self.FP.Get_rawTxt(), nil)
 }
 
-// 3509: decl @lune.@base.@Ast.EnumTypeInfo.canEvalWith
+// 3510: decl @lune.@base.@Ast.EnumTypeInfo.canEvalWith
 func (self *Ast_EnumTypeInfo) CanEvalWith(processInfo *Ast_ProcessInfo,other *Ast_TypeInfo,canEvalType LnsInt,alt2type *LnsMap)(bool, LnsAny) {
     if &self.Ast_TypeInfo == other.FP.Get_srcTypeInfo().FP.Get_aliasSrc(){
         return true, nil
@@ -7892,44 +7892,44 @@ func (self *Ast_EnumTypeInfo) CanEvalWith(processInfo *Ast_ProcessInfo,other *As
     return false, Lns_getVM().String_format("%d != %d", []LnsAny{self.FP.Get_typeId(), other.FP.Get_srcTypeInfo().FP.Get_aliasSrc().FP.Get_typeId()})
 }
 
-// 3519: decl @lune.@base.@Ast.EnumTypeInfo.addEnumValInfo
+// 3520: decl @lune.@base.@Ast.EnumTypeInfo.addEnumValInfo
 func (self *Ast_EnumTypeInfo) AddEnumValInfo(valInfo *Ast_EnumValInfo) {
     self.name2EnumValInfo.Set(valInfo.FP.Get_name(),valInfo)
     self.val2EnumValInfo.Set(Ast_getEnumLiteralVal(valInfo.FP.Get_val()),valInfo)
 }
 
-// 3524: decl @lune.@base.@Ast.EnumTypeInfo.getEnumValInfo
+// 3525: decl @lune.@base.@Ast.EnumTypeInfo.getEnumValInfo
 func (self *Ast_EnumTypeInfo) GetEnumValInfo(name string) LnsAny {
     return self.name2EnumValInfo.Items[name]
 }
 
-// 3528: decl @lune.@base.@Ast.EnumTypeInfo.get_mutMode
+// 3529: decl @lune.@base.@Ast.EnumTypeInfo.get_mutMode
 func (self *Ast_EnumTypeInfo) Get_mutMode() LnsInt {
     return Ast_MutMode__Mut
 }
 
-// 5836: decl @lune.@base.@Ast.EnumTypeInfo.serialize
+// 5837: decl @lune.@base.@Ast.EnumTypeInfo.serialize
 func (self *Ast_EnumTypeInfo) Serialize(stream Lns_oStream,validChildrenSet LnsAny) {
     var txt string
     txt = Lns_getVM().String_format("{ skind = %d, parentId = %d, typeId = %d, txt = '%s',\naccessMode = %d, kind = %d, valTypeId = %d, ", []LnsAny{Ast_SerializeKind__Enum, self.FP.GetParentId(), self.typeId, self.rawTxt, self.accessMode, Ast_TypeInfoKind__Enum, self.valTypeInfo.FP.Get_typeId()})
     stream.Write(txt)
     stream.Write("enumValList = {")
     {
-        __collection23743 := self.name2EnumValInfo
-        __sorted23743 := __collection23743.CreateKeyListStr()
-        __sorted23743.Sort( LnsItemKindStr, nil )
-        for _, ___key23743 := range( __sorted23743.Items ) {
-            enumValInfo := __collection23743.Items[ ___key23743 ].(Ast_EnumValInfoDownCast).ToAst_EnumValInfo()
+        __collection23750 := self.name2EnumValInfo
+        __sorted23750 := __collection23750.CreateKeyListStr()
+        __sorted23750.Sort( LnsItemKindStr, nil )
+        for _, ___key23750 := range( __sorted23750.Items ) {
+            enumValInfo := __collection23750.Items[ ___key23750 ].(Ast_EnumValInfoDownCast).ToAst_EnumValInfo()
             stream.Write(Lns_getVM().String_format("%s = ", []LnsAny{enumValInfo.FP.Get_name()}))
-            switch _exp23741 := enumValInfo.FP.Get_val().(type) {
+            switch _exp23748 := enumValInfo.FP.Get_val().(type) {
             case *Ast_EnumLiteral__Int:
-            val := _exp23741.Val1
+            val := _exp23748.Val1
                 stream.Write(Lns_getVM().String_format("%d,", []LnsAny{val}))
             case *Ast_EnumLiteral__Real:
-            val := _exp23741.Val1
+            val := _exp23748.Val1
                 stream.Write(Lns_getVM().String_format("%g,", []LnsAny{val}))
             case *Ast_EnumLiteral__Str:
-            val := _exp23741.Val1
+            val := _exp23748.Val1
                 stream.Write(Lns_getVM().String_format("%q,", []LnsAny{val}))
             }
         }
@@ -8041,12 +8041,12 @@ func (self *Ast_AlgeTypeInfo) Get_accessMode() LnsInt{ return self.accessMode }
 func (self *Ast_AlgeTypeInfo) Get_nilableTypeInfo() *Ast_TypeInfo{ return self.nilableTypeInfo }
 func (self *Ast_AlgeTypeInfo) Get_valInfoMap() *LnsMap{ return self.valInfoMap }
 func (self *Ast_AlgeTypeInfo) Get_valInfoNum() LnsInt{ return self.valInfoNum }
-// 3554: decl @lune.@base.@Ast.AlgeTypeInfo.get_baseTypeInfo
+// 3555: decl @lune.@base.@Ast.AlgeTypeInfo.get_baseTypeInfo
 func (self *Ast_AlgeTypeInfo) Get_baseTypeInfo() *Ast_TypeInfo {
     return Ast_headTypeInfo
 }
 
-// 3558: DeclConstr
+// 3559: DeclConstr
 func (self *Ast_AlgeTypeInfo) InitAst_AlgeTypeInfo(processInfo *Ast_ProcessInfo,scope *Ast_Scope,externalFlag bool,accessMode LnsInt,txt string,parentInfo LnsAny,typeId LnsInt) {
     self.InitAst_TypeInfo(scope, processInfo)
     self.externalFlag = externalFlag
@@ -8076,64 +8076,64 @@ func (self *Ast_AlgeTypeInfo) InitAst_AlgeTypeInfo(processInfo *Ast_ProcessInfo,
     scope.FP.Set_ownerTypeInfo(&self.Ast_TypeInfo)
 }
 
-// 3582: decl @lune.@base.@Ast.AlgeTypeInfo.getValInfo
+// 3583: decl @lune.@base.@Ast.AlgeTypeInfo.getValInfo
 func (self *Ast_AlgeTypeInfo) GetValInfo(name string) LnsAny {
     return self.valInfoMap.Items[name]
 }
 
-// 3586: decl @lune.@base.@Ast.AlgeTypeInfo.isModule
+// 3587: decl @lune.@base.@Ast.AlgeTypeInfo.isModule
 func (self *Ast_AlgeTypeInfo) IsModule() bool {
     return false
 }
 
-// 3590: decl @lune.@base.@Ast.AlgeTypeInfo.get_kind
+// 3591: decl @lune.@base.@Ast.AlgeTypeInfo.get_kind
 func (self *Ast_AlgeTypeInfo) Get_kind() LnsInt {
     return Ast_TypeInfoKind__Alge
 }
 
-// 3594: decl @lune.@base.@Ast.AlgeTypeInfo.getParentId
+// 3595: decl @lune.@base.@Ast.AlgeTypeInfo.getParentId
 func (self *Ast_AlgeTypeInfo) GetParentId() LnsInt {
     return self.parentInfo.FP.Get_typeId()
 }
 
-// 3599: decl @lune.@base.@Ast.AlgeTypeInfo.getTxt
+// 3600: decl @lune.@base.@Ast.AlgeTypeInfo.getTxt
 func (self *Ast_AlgeTypeInfo) GetTxt(typeNameCtrl LnsAny,importInfo LnsAny,localFlag LnsAny) string {
     return self.FP.GetTxtWithRaw(self.FP.Get_rawTxt(), typeNameCtrl, importInfo, localFlag)
 }
 
-// 3605: decl @lune.@base.@Ast.AlgeTypeInfo.getTxtWithRaw
+// 3606: decl @lune.@base.@Ast.AlgeTypeInfo.getTxtWithRaw
 func (self *Ast_AlgeTypeInfo) GetTxtWithRaw(rawTxt string,typeNameCtrl LnsAny,importInfo LnsAny,localFlag LnsAny) string {
     return rawTxt
 }
 
-// 3612: decl @lune.@base.@Ast.AlgeTypeInfo.get_display_stirng_with
+// 3613: decl @lune.@base.@Ast.AlgeTypeInfo.get_display_stirng_with
 func (self *Ast_AlgeTypeInfo) Get_display_stirng_with(raw string,alt2type LnsAny) string {
     return self.FP.GetTxtWithRaw(raw, nil, nil, nil)
 }
 
-// 3616: decl @lune.@base.@Ast.AlgeTypeInfo.get_display_stirng
+// 3617: decl @lune.@base.@Ast.AlgeTypeInfo.get_display_stirng
 func (self *Ast_AlgeTypeInfo) Get_display_stirng() string {
     return self.FP.Get_display_stirng_with(self.FP.Get_rawTxt(), nil)
 }
 
-// 3620: decl @lune.@base.@Ast.AlgeTypeInfo.canEvalWith
+// 3621: decl @lune.@base.@Ast.AlgeTypeInfo.canEvalWith
 func (self *Ast_AlgeTypeInfo) CanEvalWith(processInfo *Ast_ProcessInfo,other *Ast_TypeInfo,canEvalType LnsInt,alt2type *LnsMap)(bool, LnsAny) {
     return &self.Ast_TypeInfo == other.FP.Get_srcTypeInfo().FP.Get_aliasSrc(), nil
 }
 
-// 3627: decl @lune.@base.@Ast.AlgeTypeInfo.get_mutMode
+// 3628: decl @lune.@base.@Ast.AlgeTypeInfo.get_mutMode
 func (self *Ast_AlgeTypeInfo) Get_mutMode() LnsInt {
     return Ast_MutMode__Mut
 }
 
-// 3650: decl @lune.@base.@Ast.AlgeTypeInfo.addValInfo
+// 3651: decl @lune.@base.@Ast.AlgeTypeInfo.addValInfo
 func (self *Ast_AlgeTypeInfo) AddValInfo(valInfo *Ast_AlgeValInfo) {
     self.valInfoMap.Set(valInfo.FP.Get_name(),valInfo)
     self.valInfoNum = self.valInfoNum + 1
     
 }
 
-// 5888: decl @lune.@base.@Ast.AlgeTypeInfo.serialize
+// 5889: decl @lune.@base.@Ast.AlgeTypeInfo.serialize
 func (self *Ast_AlgeTypeInfo) Serialize(stream Lns_oStream,validChildrenSet LnsAny) {
     var txt string
     txt = Lns_getVM().String_format("{ skind = %d, parentId = %d, typeId = %d, txt = '%s',\naccessMode = %d, kind = %d, ", []LnsAny{Ast_SerializeKind__Alge, self.FP.GetParentId(), self.typeId, self.rawTxt, self.accessMode, Ast_TypeInfoKind__Alge})
@@ -8142,11 +8142,11 @@ func (self *Ast_AlgeTypeInfo) Serialize(stream Lns_oStream,validChildrenSet LnsA
     var firstFlag bool
     firstFlag = true
     {
-        __collection23984 := self.valInfoMap
-        __sorted23984 := __collection23984.CreateKeyListStr()
-        __sorted23984.Sort( LnsItemKindStr, nil )
-        for _, ___key23984 := range( __sorted23984.Items ) {
-            algeValInfo := __collection23984.Items[ ___key23984 ].(Ast_AlgeValInfoDownCast).ToAst_AlgeValInfo()
+        __collection23991 := self.valInfoMap
+        __sorted23991 := __collection23991.CreateKeyListStr()
+        __sorted23991.Sort( LnsItemKindStr, nil )
+        for _, ___key23991 := range( __sorted23991.Items ) {
+            algeValInfo := __collection23991.Items[ ___key23991 ].(Ast_AlgeValInfoDownCast).ToAst_AlgeValInfo()
             if Lns_op_not(firstFlag){
                 stream.Write(",")
             } else { 
@@ -8211,7 +8211,7 @@ func (self *Ast_AlgeValInfo) Get_name() string{ return self.name }
 func (self *Ast_AlgeValInfo) Get_typeList() *LnsList{ return self.typeList }
 func (self *Ast_AlgeValInfo) Get_algeTpye() *Ast_AlgeTypeInfo{ return self.algeTpye }
 func (self *Ast_AlgeValInfo) Get_symbolInfo() *Ast_SymbolInfo{ return self.symbolInfo }
-// 3638: decl @lune.@base.@Ast.AlgeValInfo.serialize
+// 3639: decl @lune.@base.@Ast.AlgeValInfo.serialize
 func (self *Ast_AlgeValInfo) Serialize(stream Lns_oStream) {
     stream.Write(Lns_getVM().String_format("{ name = '%s', typeList = {", []LnsAny{self.name}))
     for _index, _typeInfo := range( self.typeList.Items ) {
@@ -8353,13 +8353,13 @@ func (self *Ast_NormalTypeInfo) Get_mutMode() LnsInt{ return self.mutMode }
 func (self *Ast_NormalTypeInfo) Set_mutMode(arg1 LnsInt){ self.mutMode = arg1 }
 func (self *Ast_NormalTypeInfo) Get_requirePath() string{ return self.requirePath }
 func (self *Ast_NormalTypeInfo) set_requirePath(arg1 string){ self.requirePath = arg1 }
-// 3707: decl @lune.@base.@Ast.NormalTypeInfo.getOverridingType
+// 3708: decl @lune.@base.@Ast.NormalTypeInfo.getOverridingType
 func (self *Ast_NormalTypeInfo) GetOverridingType() LnsAny {
-    switch _exp13039 := self.overridingType.(type) {
+    switch _exp13046 := self.overridingType.(type) {
     case *Ast_OverridingType__NotOverride:
         return nil
     case *Ast_OverridingType__Override:
-    typeInfo := _exp13039.Val1
+    typeInfo := _exp13046.Val1
         return typeInfo
     case *Ast_OverridingType__NoReady:
         var scope *Ast_Scope
@@ -8392,12 +8392,12 @@ func (self *Ast_NormalTypeInfo) GetOverridingType() LnsAny {
     return nil
 }
 
-// 3735: decl @lune.@base.@Ast.NormalTypeInfo.switchScopeTo
+// 3736: decl @lune.@base.@Ast.NormalTypeInfo.switchScopeTo
 func (self *Ast_NormalTypeInfo) SwitchScopeTo(scope *Ast_Scope) {
     self.FP.SwitchScope(scope)
 }
 
-// 3739: DeclConstr
+// 3740: DeclConstr
 func (self *Ast_NormalTypeInfo) InitAst_NormalTypeInfo(processInfo *Ast_ProcessInfo,abstractFlag bool,scope LnsAny,baseTypeInfo LnsAny,interfaceList LnsAny,autoFlag bool,externalFlag bool,staticFlag bool,accessMode LnsInt,txt string,parentInfo LnsAny,typeId LnsInt,kind LnsInt,itemTypeInfoList LnsAny,argTypeInfoList LnsAny,retTypeInfoList LnsAny,mutMode LnsAny,moduleLang LnsAny) {
     self.InitAst_TypeInfo(scope, processInfo)
     if Lns_type(kind) != "number"{
@@ -8406,7 +8406,7 @@ func (self *Ast_NormalTypeInfo) InitAst_NormalTypeInfo(processInfo *Ast_ProcessI
     if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
         Lns_GetEnv().SetStackVal( kind == Ast_TypeInfoKind__Method) &&
         Lns_GetEnv().SetStackVal( Lns_GetEnv().NilAccFin(Lns_GetEnv().NilAccPush(parentInfo) && 
-        Lns_NilAccCall1( Lns_GetEnv(), func () LnsAny { return Lns_GetEnv().NilAccPop().(*Ast_TypeInfo).FP.HasBase()})/* 3754:30 */)) )){
+        Lns_NilAccCall1( Lns_GetEnv(), func () LnsAny { return Lns_GetEnv().NilAccPop().(*Ast_TypeInfo).FP.HasBase()})/* 3755:30 */)) )){
         self.overridingType = Ast_OverridingType__NoReady_Obj
         
     } else { 
@@ -8454,7 +8454,7 @@ func (self *Ast_NormalTypeInfo) InitAst_NormalTypeInfo(processInfo *Ast_ProcessI
         }
         var alt2typeMap *LnsMap
         alt2typeMap = NewLnsMap( map[LnsAny]LnsAny{})
-        if _switch13492 := kind; _switch13492 == Ast_TypeInfoKind__Set || _switch13492 == Ast_TypeInfoKind__Map || _switch13492 == Ast_TypeInfoKind__List || _switch13492 == Ast_TypeInfoKind__Array || _switch13492 == Ast_TypeInfoKind__Box {
+        if _switch13499 := kind; _switch13499 == Ast_TypeInfoKind__Set || _switch13499 == Ast_TypeInfoKind__Map || _switch13499 == Ast_TypeInfoKind__List || _switch13499 == Ast_TypeInfoKind__Array || _switch13499 == Ast_TypeInfoKind__Box {
             if self.itemTypeInfoList.Len() != self.baseTypeInfo.FP.Get_itemTypeInfoList().Len(){
                 Util_err(Lns_getVM().String_format("unmatch generic type number -- %d, %d", []LnsAny{self.itemTypeInfoList.Len(), self.baseTypeInfo.FP.Get_itemTypeInfoList().Len()}))
             }
@@ -8465,7 +8465,7 @@ func (self *Ast_NormalTypeInfo) InitAst_NormalTypeInfo(processInfo *Ast_ProcessI
                 genType = self.baseTypeInfo.FP.Get_itemTypeInfoList().GetAt(index).(Ast_TypeInfoDownCast).ToAst_TypeInfo()
                 alt2typeMap.Set(genType,appyType)
             }
-        } else if _switch13492 == Ast_TypeInfoKind__Class || _switch13492 == Ast_TypeInfoKind__IF {
+        } else if _switch13499 == Ast_TypeInfoKind__Class || _switch13499 == Ast_TypeInfoKind__IF {
             for _, _ifType := range( self.interfaceList.Items ) {
                 ifType := _ifType.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
                 {
@@ -8495,10 +8495,10 @@ func (self *Ast_NormalTypeInfo) InitAst_NormalTypeInfo(processInfo *Ast_ProcessI
         }
         var hasNilable bool
         hasNilable = false
-        if _switch13594 := (kind); _switch13594 == Ast_TypeInfoKind__Prim || _switch13594 == Ast_TypeInfoKind__List || _switch13594 == Ast_TypeInfoKind__Array || _switch13594 == Ast_TypeInfoKind__Set || _switch13594 == Ast_TypeInfoKind__Map || _switch13594 == Ast_TypeInfoKind__Class || _switch13594 == Ast_TypeInfoKind__Stem || _switch13594 == Ast_TypeInfoKind__Module || _switch13594 == Ast_TypeInfoKind__IF {
+        if _switch13601 := (kind); _switch13601 == Ast_TypeInfoKind__Prim || _switch13601 == Ast_TypeInfoKind__List || _switch13601 == Ast_TypeInfoKind__Array || _switch13601 == Ast_TypeInfoKind__Set || _switch13601 == Ast_TypeInfoKind__Map || _switch13601 == Ast_TypeInfoKind__Class || _switch13601 == Ast_TypeInfoKind__Stem || _switch13601 == Ast_TypeInfoKind__Module || _switch13601 == Ast_TypeInfoKind__IF {
             hasNilable = true
             
-        } else if _switch13594 == Ast_TypeInfoKind__Func || _switch13594 == Ast_TypeInfoKind__Method || _switch13594 == Ast_TypeInfoKind__Form || _switch13594 == Ast_TypeInfoKind__FormFunc {
+        } else if _switch13601 == Ast_TypeInfoKind__Func || _switch13601 == Ast_TypeInfoKind__Method || _switch13601 == Ast_TypeInfoKind__Form || _switch13601 == Ast_TypeInfoKind__FormFunc {
             hasNilable = true
             
         }
@@ -8514,7 +8514,7 @@ func (self *Ast_NormalTypeInfo) InitAst_NormalTypeInfo(processInfo *Ast_ProcessI
     }
 }
 
-// 3845: decl @lune.@base.@Ast.NormalTypeInfo.createAlt2typeMap
+// 3846: decl @lune.@base.@Ast.NormalTypeInfo.createAlt2typeMap
 func (self *Ast_NormalTypeInfo) CreateAlt2typeMap(detectFlag bool) *LnsMap {
     var _map *LnsMap
     _map = self.baseTypeInfo.FP.CreateAlt2typeMap(detectFlag)
@@ -8526,32 +8526,32 @@ func (self *Ast_NormalTypeInfo) CreateAlt2typeMap(detectFlag bool) *LnsMap {
     return _map
 }
 
-// 3855: decl @lune.@base.@Ast.NormalTypeInfo.get_nilable
+// 3856: decl @lune.@base.@Ast.NormalTypeInfo.get_nilable
 func (self *Ast_NormalTypeInfo) Get_nilable() bool {
     return false
 }
 
-// 3859: decl @lune.@base.@Ast.NormalTypeInfo.isModule
+// 3860: decl @lune.@base.@Ast.NormalTypeInfo.isModule
 func (self *Ast_NormalTypeInfo) IsModule() bool {
     return false
 }
 
-// 3863: decl @lune.@base.@Ast.NormalTypeInfo.getParentId
+// 3864: decl @lune.@base.@Ast.NormalTypeInfo.getParentId
 func (self *Ast_NormalTypeInfo) GetParentId() LnsInt {
     return self.parentInfo.FP.Get_typeId()
 }
 
-// 3867: decl @lune.@base.@Ast.NormalTypeInfo.get_baseId
+// 3868: decl @lune.@base.@Ast.NormalTypeInfo.get_baseId
 func (self *Ast_NormalTypeInfo) Get_baseId() LnsInt {
     return self.baseTypeInfo.FP.Get_typeId()
 }
 
-// 3872: decl @lune.@base.@Ast.NormalTypeInfo.getTxt
+// 3873: decl @lune.@base.@Ast.NormalTypeInfo.getTxt
 func (self *Ast_NormalTypeInfo) GetTxt(typeNameCtrl LnsAny,importInfo LnsAny,localFlag LnsAny) string {
     return self.FP.GetTxtWithRaw(self.FP.Get_rawTxt(), typeNameCtrl, importInfo, localFlag)
 }
 
-// 3878: decl @lune.@base.@Ast.NormalTypeInfo.getTxtWithRaw
+// 3879: decl @lune.@base.@Ast.NormalTypeInfo.getTxtWithRaw
 func (self *Ast_NormalTypeInfo) GetTxtWithRaw(raw string,typeNameCtrl LnsAny,importInfo LnsAny,localFlag LnsAny) string {
     var parentTxt string
     parentTxt = ""
@@ -8583,9 +8583,9 @@ func (self *Ast_NormalTypeInfo) GetTxtWithRaw(raw string,typeNameCtrl LnsAny,imp
     return name
 }
 
-// 3906: decl @lune.@base.@Ast.NormalTypeInfo.get_display_stirng_with
+// 3907: decl @lune.@base.@Ast.NormalTypeInfo.get_display_stirng_with
 func (self *Ast_NormalTypeInfo) Get_display_stirng_with(raw string,alt2type LnsAny) string {
-    if _switch14031 := self.kind; _switch14031 == Ast_TypeInfoKind__Func || _switch14031 == Ast_TypeInfoKind__Form || _switch14031 == Ast_TypeInfoKind__FormFunc || _switch14031 == Ast_TypeInfoKind__Method || _switch14031 == Ast_TypeInfoKind__Macro {
+    if _switch14038 := self.kind; _switch14038 == Ast_TypeInfoKind__Func || _switch14038 == Ast_TypeInfoKind__Form || _switch14038 == Ast_TypeInfoKind__FormFunc || _switch14038 == Ast_TypeInfoKind__Method || _switch14038 == Ast_TypeInfoKind__Macro {
         var txt string
         txt = raw + "("
         for _index, _argType := range( self.argTypeInfoList.Items ) {
@@ -8640,12 +8640,12 @@ func (self *Ast_NormalTypeInfo) Get_display_stirng_with(raw string,alt2type LnsA
     return name
 }
 
-// 3951: decl @lune.@base.@Ast.NormalTypeInfo.get_display_stirng
+// 3952: decl @lune.@base.@Ast.NormalTypeInfo.get_display_stirng
 func (self *Ast_NormalTypeInfo) Get_display_stirng() string {
     return self.FP.Get_display_stirng_with(self.FP.Get_rawTxt(), nil)
 }
 
-// 3956: decl @lune.@base.@Ast.NormalTypeInfo.serialize
+// 3957: decl @lune.@base.@Ast.NormalTypeInfo.serialize
 func (self *Ast_NormalTypeInfo) Serialize(stream Lns_oStream,validChildrenSet LnsAny) {
     if self.typeId == Ast_rootTypeId{
         return 
@@ -8688,7 +8688,7 @@ func (self *Ast_NormalTypeInfo) Serialize(stream Lns_oStream,validChildrenSet Ln
     stream.Write(txt + self.FP.SerializeTypeInfoList("itemTypeId = {", self.itemTypeInfoList, nil) + self.FP.SerializeTypeInfoList("ifList = {", self.interfaceList, nil) + self.FP.SerializeTypeInfoList("argTypeId = {", self.argTypeInfoList, nil) + self.FP.SerializeTypeInfoList("retTypeId = {", self.retTypeInfoList, nil) + self.FP.SerializeTypeInfoList("children = {", children, true) + "}\n")
 }
 
-// 3995: decl @lune.@base.@Ast.NormalTypeInfo.equalsSub
+// 3996: decl @lune.@base.@Ast.NormalTypeInfo.equalsSub
 func (self *Ast_NormalTypeInfo) EqualsSub(processInfo *Ast_ProcessInfo,typeInfo *Ast_TypeInfo,alt2type LnsAny,checkModifer LnsAny) bool {
     if self.typeId == typeInfo.FP.Get_typeId(){
         return true
@@ -8714,7 +8714,7 @@ func (self *Ast_NormalTypeInfo) EqualsSub(processInfo *Ast_ProcessInfo,typeInfo 
         return false
     }
     if self.accessMode != typeInfo.FP.Get_accessMode(){
-        if _switch14552 := self.kind; _switch14552 == Ast_TypeInfoKind__List || _switch14552 == Ast_TypeInfoKind__Map || _switch14552 == Ast_TypeInfoKind__Array || _switch14552 == Ast_TypeInfoKind__Set {
+        if _switch14559 := self.kind; _switch14559 == Ast_TypeInfoKind__List || _switch14559 == Ast_TypeInfoKind__Map || _switch14559 == Ast_TypeInfoKind__Array || _switch14559 == Ast_TypeInfoKind__Set {
         } else {
             return false
         }
@@ -8746,14 +8746,14 @@ func (self *Ast_NormalTypeInfo) EqualsSub(processInfo *Ast_ProcessInfo,typeInfo 
     return true
 }
 
-// 4065: decl @lune.@base.@Ast.NormalTypeInfo.equals
+// 4066: decl @lune.@base.@Ast.NormalTypeInfo.equals
 func (self *Ast_NormalTypeInfo) Equals(processInfo *Ast_ProcessInfo,typeInfo *Ast_TypeInfo,alt2type LnsAny,checkModifer LnsAny) bool {
     return self.FP.EqualsSub(processInfo, typeInfo, alt2type, checkModifer)
 }
 
-// 4079: decl @lune.@base.@Ast.NormalTypeInfo.create
+// 4080: decl @lune.@base.@Ast.NormalTypeInfo.create
 func Ast_NormalTypeInfo_create(processInfo *Ast_ProcessInfo,accessMode LnsInt,abstractFlag bool,scope LnsAny,baseInfo *Ast_TypeInfo,parentInfo *Ast_TypeInfo,staticFlag bool,kind LnsInt,txt string,itemTypeInfo *LnsList,argTypeInfoList *LnsList,retTypeInfoList *LnsList,mutMode LnsAny) *Ast_TypeInfo {
-    if _switch14763 := kind; _switch14763 == Ast_TypeInfoKind__Class || _switch14763 == Ast_TypeInfoKind__ExtModule || _switch14763 == Ast_TypeInfoKind__IF {
+    if _switch14770 := kind; _switch14770 == Ast_TypeInfoKind__Class || _switch14770 == Ast_TypeInfoKind__ExtModule || _switch14770 == Ast_TypeInfoKind__IF {
         Util_err("can't use create() method. use createClass(), createExtModule().")
     }
     if kind == Ast_TypeInfoKind__Prim{
@@ -8772,7 +8772,7 @@ func Ast_NormalTypeInfo_create(processInfo *Ast_ProcessInfo,accessMode LnsInt,ab
     return &info.Ast_TypeInfo
 }
 
-// 4304: decl @lune.@base.@Ast.NormalTypeInfo.createBuiltin
+// 4305: decl @lune.@base.@Ast.NormalTypeInfo.createBuiltin
 func Ast_NormalTypeInfo_createBuiltin(idName string,typeTxt string,kind LnsInt,typeDDD LnsAny,ifList LnsAny) *Ast_TypeInfo {
     var typeId LnsInt
     typeId = Ast_rootProcessInfo.FP.Get_idProv().FP.GetNewId()
@@ -8798,7 +8798,7 @@ func Ast_NormalTypeInfo_createBuiltin(idName string,typeTxt string,kind LnsInt,t
     }
     var scope LnsAny
     scope = nil
-    if _switch15994 := kind; _switch15994 == Ast_TypeInfoKind__Array || _switch15994 == Ast_TypeInfoKind__List || _switch15994 == Ast_TypeInfoKind__Set || _switch15994 == Ast_TypeInfoKind__Class || _switch15994 == Ast_TypeInfoKind__Module || _switch15994 == Ast_TypeInfoKind__IF || _switch15994 == Ast_TypeInfoKind__Form || _switch15994 == Ast_TypeInfoKind__FormFunc || _switch15994 == Ast_TypeInfoKind__Func || _switch15994 == Ast_TypeInfoKind__Method || _switch15994 == Ast_TypeInfoKind__Macro {
+    if _switch16001 := kind; _switch16001 == Ast_TypeInfoKind__Array || _switch16001 == Ast_TypeInfoKind__List || _switch16001 == Ast_TypeInfoKind__Set || _switch16001 == Ast_TypeInfoKind__Class || _switch16001 == Ast_TypeInfoKind__Module || _switch16001 == Ast_TypeInfoKind__IF || _switch16001 == Ast_TypeInfoKind__Form || _switch16001 == Ast_TypeInfoKind__FormFunc || _switch16001 == Ast_TypeInfoKind__Func || _switch16001 == Ast_TypeInfoKind__Method || _switch16001 == Ast_TypeInfoKind__Macro {
         scope = NewAst_Scope(Ast_rootProcessInfo, Ast_rootScope, Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
             Lns_GetEnv().SetStackVal( kind == Ast_TypeInfoKind__Class) ||
             Lns_GetEnv().SetStackVal( kind == Ast_TypeInfoKind__Module) ||
@@ -8810,9 +8810,9 @@ func Ast_NormalTypeInfo_createBuiltin(idName string,typeTxt string,kind LnsInt,t
     }
     var genTypeList *LnsList
     genTypeList = NewLnsList([]LnsAny{})
-    if _switch16092 := kind; _switch16092 == Ast_TypeInfoKind__Array || _switch16092 == Ast_TypeInfoKind__List || _switch16092 == Ast_TypeInfoKind__Set {
+    if _switch16099 := kind; _switch16099 == Ast_TypeInfoKind__Array || _switch16099 == Ast_TypeInfoKind__List || _switch16099 == Ast_TypeInfoKind__Set {
         genTypeList.Insert(Ast_AlternateTypeInfo2Stem(Ast_rootProcessInfo.FP.CreateAlternate(true, 1, "T", Ast_AccessMode__Pri, Ast_headTypeInfo, nil, nil)))
-    } else if _switch16092 == Ast_TypeInfoKind__Map {
+    } else if _switch16099 == Ast_TypeInfoKind__Map {
         genTypeList.Insert(Ast_AlternateTypeInfo2Stem(Ast_rootProcessInfo.FP.CreateAlternate(true, 1, "K", Ast_AccessMode__Pri, Ast_headTypeInfo, nil, nil)))
         genTypeList.Insert(Ast_AlternateTypeInfo2Stem(Ast_rootProcessInfo.FP.CreateAlternate(true, 2, "V", Ast_AccessMode__Pri, Ast_headTypeInfo, nil, nil)))
     }
@@ -8822,13 +8822,13 @@ func Ast_NormalTypeInfo_createBuiltin(idName string,typeTxt string,kind LnsInt,t
     return &info.Ast_TypeInfo
 }
 
-// 6015: decl @lune.@base.@Ast.NormalTypeInfo.isAvailableMapping
+// 6016: decl @lune.@base.@Ast.NormalTypeInfo.isAvailableMapping
 func Ast_NormalTypeInfo_isAvailableMapping(processInfo *Ast_ProcessInfo,typeInfo *Ast_TypeInfo,checkedTypeMap *LnsMap) bool {
     var isAvailableMappingSub func() bool
     isAvailableMappingSub = func() bool {
-        if _switch24643 := typeInfo.FP.Get_kind(); _switch24643 == Ast_TypeInfoKind__Prim || _switch24643 == Ast_TypeInfoKind__Enum {
+        if _switch24650 := typeInfo.FP.Get_kind(); _switch24650 == Ast_TypeInfoKind__Prim || _switch24650 == Ast_TypeInfoKind__Enum {
             return true
-        } else if _switch24643 == Ast_TypeInfoKind__Alge {
+        } else if _switch24650 == Ast_TypeInfoKind__Alge {
             var algeTypeInfo *Ast_AlgeTypeInfo
             algeTypeInfo = Lns_unwrap( (Ast_AlgeTypeInfoDownCastF(typeInfo.FP))).(*Ast_AlgeTypeInfo)
             for _, _valInfo := range( algeTypeInfo.FP.Get_valInfoMap().Items ) {
@@ -8841,18 +8841,18 @@ func Ast_NormalTypeInfo_isAvailableMapping(processInfo *Ast_ProcessInfo,typeInfo
                 }
             }
             return true
-        } else if _switch24643 == Ast_TypeInfoKind__Stem {
+        } else if _switch24650 == Ast_TypeInfoKind__Stem {
             return true
-        } else if _switch24643 == Ast_TypeInfoKind__Class || _switch24643 == Ast_TypeInfoKind__IF {
+        } else if _switch24650 == Ast_TypeInfoKind__Class || _switch24650 == Ast_TypeInfoKind__IF {
             if typeInfo.FP.Equals(processInfo, Ast_builtinTypeString, nil, nil){
                 return true
             }
             return typeInfo.FP.IsInheritFrom(processInfo, Ast_builtinTypeMapping, nil)
-        } else if _switch24643 == Ast_TypeInfoKind__Alternate {
+        } else if _switch24650 == Ast_TypeInfoKind__Alternate {
             return typeInfo.FP.IsInheritFrom(processInfo, Ast_builtinTypeMapping, nil)
-        } else if _switch24643 == Ast_TypeInfoKind__List || _switch24643 == Ast_TypeInfoKind__Array || _switch24643 == Ast_TypeInfoKind__Set {
+        } else if _switch24650 == Ast_TypeInfoKind__List || _switch24650 == Ast_TypeInfoKind__Array || _switch24650 == Ast_TypeInfoKind__Set {
             return Ast_NormalTypeInfo_isAvailableMapping(processInfo, typeInfo.FP.Get_itemTypeInfoList().GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), checkedTypeMap)
-        } else if _switch24643 == Ast_TypeInfoKind__Map {
+        } else if _switch24650 == Ast_TypeInfoKind__Map {
             if Ast_NormalTypeInfo_isAvailableMapping(processInfo, typeInfo.FP.Get_itemTypeInfoList().GetAt(2).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), checkedTypeMap){
                 var keyType *Ast_TypeInfo
                 keyType = typeInfo.FP.Get_itemTypeInfoList().GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo()
@@ -8864,7 +8864,7 @@ func Ast_NormalTypeInfo_isAvailableMapping(processInfo *Ast_ProcessInfo,typeInfo
                 }
             }
             return false
-        } else if _switch24643 == Ast_TypeInfoKind__Nilable {
+        } else if _switch24650 == Ast_TypeInfoKind__Nilable {
             return Ast_NormalTypeInfo_isAvailableMapping(processInfo, typeInfo.FP.Get_nonnilableType(), checkedTypeMap)
         } else {
             return false
@@ -8888,7 +8888,7 @@ func Ast_NormalTypeInfo_isAvailableMapping(processInfo *Ast_ProcessInfo,typeInfo
     return result
 }
 
-// 6089: decl @lune.@base.@Ast.NormalTypeInfo.isInheritFrom
+// 6090: decl @lune.@base.@Ast.NormalTypeInfo.isInheritFrom
 func (self *Ast_NormalTypeInfo) IsInheritFrom(processInfo *Ast_ProcessInfo,other *Ast_TypeInfo,alt2type LnsAny) bool {
     if self.FP.Get_typeId() == other.FP.Get_typeId(){
         return true
@@ -8908,12 +8908,12 @@ func (self *Ast_NormalTypeInfo) IsInheritFrom(processInfo *Ast_ProcessInfo,other
     return Ast_TypeInfo_isInherit(processInfo, &self.Ast_TypeInfo, other, alt2type)
 }
 
-// 6744: decl @lune.@base.@Ast.NormalTypeInfo.canEvalWith
+// 6745: decl @lune.@base.@Ast.NormalTypeInfo.canEvalWith
 func (self *Ast_NormalTypeInfo) CanEvalWith(processInfo *Ast_ProcessInfo,other *Ast_TypeInfo,canEvalType LnsInt,alt2type *LnsMap)(bool, LnsAny) {
     return Ast_TypeInfo_canEvalWithBase(processInfo, &self.Ast_TypeInfo, Ast_TypeInfo_isMut(&self.Ast_TypeInfo), other, canEvalType, alt2type)
 }
 
-// 6768: decl @lune.@base.@Ast.NormalTypeInfo.applyGeneric
+// 6769: decl @lune.@base.@Ast.NormalTypeInfo.applyGeneric
 func (self *Ast_NormalTypeInfo) ApplyGeneric(alt2typeMap *LnsMap,moduleTypeInfo *Ast_TypeInfo) LnsAny {
     var itemTypeInfoList *LnsList
     var needNew bool
@@ -8929,27 +8929,27 @@ func (self *Ast_NormalTypeInfo) ApplyGeneric(alt2typeMap *LnsMap,moduleTypeInfo 
     }
     var processInfo *Ast_ProcessInfo
     processInfo = moduleTypeInfo.FP.getProcessInfo()
-    if _switch28942 := self.FP.Get_kind(); _switch28942 == Ast_TypeInfoKind__Set {
+    if _switch28949 := self.FP.Get_kind(); _switch28949 == Ast_TypeInfoKind__Set {
         if Lns_op_not(needNew){
             return &self.Ast_TypeInfo
         }
         return processInfo.FP.CreateSet(self.accessMode, self.parentInfo, itemTypeInfoList, self.mutMode)
-    } else if _switch28942 == Ast_TypeInfoKind__List {
+    } else if _switch28949 == Ast_TypeInfoKind__List {
         if Lns_op_not(needNew){
             return &self.Ast_TypeInfo
         }
         return processInfo.FP.CreateList(self.accessMode, self.parentInfo, itemTypeInfoList, self.mutMode)
-    } else if _switch28942 == Ast_TypeInfoKind__Array {
+    } else if _switch28949 == Ast_TypeInfoKind__Array {
         if Lns_op_not(needNew){
             return &self.Ast_TypeInfo
         }
         return processInfo.FP.CreateArray(self.accessMode, self.parentInfo, itemTypeInfoList, self.mutMode)
-    } else if _switch28942 == Ast_TypeInfoKind__Map {
+    } else if _switch28949 == Ast_TypeInfoKind__Map {
         if Lns_op_not(needNew){
             return &self.Ast_TypeInfo
         }
         return processInfo.FP.CreateMap(self.accessMode, self.parentInfo, itemTypeInfoList.GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), itemTypeInfoList.GetAt(2).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), self.mutMode)
-    } else if _switch28942 == Ast_TypeInfoKind__Func || _switch28942 == Ast_TypeInfoKind__Form || _switch28942 == Ast_TypeInfoKind__FormFunc {
+    } else if _switch28949 == Ast_TypeInfoKind__Func || _switch28949 == Ast_TypeInfoKind__Form || _switch28949 == Ast_TypeInfoKind__FormFunc {
         var argTypeInfoList *LnsList
         var workArg bool
         
@@ -9043,7 +9043,7 @@ func (self *Ast_TypeInfo2Map) Get_BoxMap() *LnsMap{ return self.BoxMap }
 func (self *Ast_TypeInfo2Map) Get_DDDMap() *LnsMap{ return self.DDDMap }
 func (self *Ast_TypeInfo2Map) Get_ExtDDDMap() *LnsMap{ return self.ExtDDDMap }
 func (self *Ast_TypeInfo2Map) Get_ExtMap() *LnsMap{ return self.ExtMap }
-// 4128: DeclConstr
+// 4129: DeclConstr
 func (self *Ast_TypeInfo2Map) InitAst_TypeInfo2Map() {
     self.ImutModifierMap = NewLnsMap( map[LnsAny]LnsAny{})
     
@@ -9059,7 +9059,7 @@ func (self *Ast_TypeInfo2Map) InitAst_TypeInfo2Map() {
     
 }
 
-// 4137: decl @lune.@base.@Ast.TypeInfo2Map.clone
+// 4138: decl @lune.@base.@Ast.TypeInfo2Map.clone
 func (self *Ast_TypeInfo2Map) Clone() *Ast_TypeInfo2Map {
     var obj *Ast_TypeInfo2Map
     obj = NewAst_TypeInfo2Map()
@@ -9198,27 +9198,27 @@ func (self *Ast_DDDTypeInfo) Get_typeId() LnsInt{ return self.typeId }
 func (self *Ast_DDDTypeInfo) Get_externalFlag() bool{ return self.externalFlag }
 func (self *Ast_DDDTypeInfo) Get_itemTypeInfoList() *LnsList{ return self.itemTypeInfoList }
 func (self *Ast_DDDTypeInfo) Get_extedType() *Ast_TypeInfo{ return self.extedType }
-// 4892: decl @lune.@base.@Ast.DDDTypeInfo.get_extTypeFlag
+// 4893: decl @lune.@base.@Ast.DDDTypeInfo.get_extTypeFlag
 func (self *Ast_DDDTypeInfo) Get_extTypeFlag() bool {
     return self.extedType != &self.Ast_TypeInfo
 }
 
-// 4896: decl @lune.@base.@Ast.DDDTypeInfo.get_scope
+// 4897: decl @lune.@base.@Ast.DDDTypeInfo.get_scope
 func (self *Ast_DDDTypeInfo) Get_scope() LnsAny {
     return nil
 }
 
-// 4901: decl @lune.@base.@Ast.DDDTypeInfo.get_baseTypeInfo
+// 4902: decl @lune.@base.@Ast.DDDTypeInfo.get_baseTypeInfo
 func (self *Ast_DDDTypeInfo) Get_baseTypeInfo() *Ast_TypeInfo {
     return Ast_headTypeInfo
 }
 
-// 4905: decl @lune.@base.@Ast.DDDTypeInfo.get_parentInfo
+// 4906: decl @lune.@base.@Ast.DDDTypeInfo.get_parentInfo
 func (self *Ast_DDDTypeInfo) Get_parentInfo() *Ast_TypeInfo {
     return Ast_headTypeInfo
 }
 
-// 4909: DeclConstr
+// 4910: DeclConstr
 func (self *Ast_DDDTypeInfo) InitAst_DDDTypeInfo(processInfo *Ast_ProcessInfo,typeId LnsInt,typeInfo *Ast_TypeInfo,externalFlag bool,extOrgDDType LnsAny) {
     self.InitAst_TypeInfo(nil, processInfo)
     self.typeId = typeId
@@ -9244,86 +9244,86 @@ func (self *Ast_DDDTypeInfo) InitAst_DDDTypeInfo(processInfo *Ast_ProcessInfo,ty
     
 }
 
-// 4929: decl @lune.@base.@Ast.DDDTypeInfo.isModule
+// 4930: decl @lune.@base.@Ast.DDDTypeInfo.isModule
 func (self *Ast_DDDTypeInfo) IsModule() bool {
     return false
 }
 
-// 4933: decl @lune.@base.@Ast.DDDTypeInfo.canEvalWith
+// 4934: decl @lune.@base.@Ast.DDDTypeInfo.canEvalWith
 func (self *Ast_DDDTypeInfo) CanEvalWith(processInfo *Ast_ProcessInfo,other *Ast_TypeInfo,canEvalType LnsInt,alt2type *LnsMap)(bool, LnsAny) {
     return self.typeInfo.FP.CanEvalWith(processInfo, other, canEvalType, alt2type)
 }
 
-// 4940: decl @lune.@base.@Ast.DDDTypeInfo.serialize
+// 4941: decl @lune.@base.@Ast.DDDTypeInfo.serialize
 func (self *Ast_DDDTypeInfo) Serialize(stream Lns_oStream,validChildrenSet LnsAny) {
     stream.Write(Lns_getVM().String_format("{ skind=%d, typeId = %d, itemTypeId = %d, parentId = %d, extTypeFlag = %s }\n", []LnsAny{Ast_SerializeKind__DDD, self.typeId, self.typeInfo.FP.Get_typeId(), Ast_headTypeInfo.FP.Get_typeId(), self.FP.Get_extTypeFlag()}))
 }
 
-// 4947: decl @lune.@base.@Ast.DDDTypeInfo.get_display_stirng_with
+// 4948: decl @lune.@base.@Ast.DDDTypeInfo.get_display_stirng_with
 func (self *Ast_DDDTypeInfo) Get_display_stirng_with(raw string,alt2type LnsAny) string {
     var txt string
     txt = self.FP.GetTxtWithRaw(raw, nil, nil, nil)
     return txt
 }
 
-// 4953: decl @lune.@base.@Ast.DDDTypeInfo.get_display_stirng
+// 4954: decl @lune.@base.@Ast.DDDTypeInfo.get_display_stirng
 func (self *Ast_DDDTypeInfo) Get_display_stirng() string {
     var txt string
     txt = self.FP.Get_display_stirng_with(self.FP.Get_rawTxt(), nil)
     return txt
 }
 
-// 4958: decl @lune.@base.@Ast.DDDTypeInfo.getModule
+// 4959: decl @lune.@base.@Ast.DDDTypeInfo.getModule
 func (self *Ast_DDDTypeInfo) GetModule() *Ast_TypeInfo {
     return self.FP.Get_typeInfo().FP.GetModule()
 }
 
-// 4961: decl @lune.@base.@Ast.DDDTypeInfo.get_rawTxt
+// 4962: decl @lune.@base.@Ast.DDDTypeInfo.get_rawTxt
 func (self *Ast_DDDTypeInfo) Get_rawTxt() string {
     return self.FP.GetTxt(nil, nil, nil)
 }
 
-// 4964: decl @lune.@base.@Ast.DDDTypeInfo.get_kind
+// 4965: decl @lune.@base.@Ast.DDDTypeInfo.get_kind
 func (self *Ast_DDDTypeInfo) Get_kind() LnsInt {
     return Ast_TypeInfoKind__DDD
 }
 
-// 4967: decl @lune.@base.@Ast.DDDTypeInfo.get_nilable
+// 4968: decl @lune.@base.@Ast.DDDTypeInfo.get_nilable
 func (self *Ast_DDDTypeInfo) Get_nilable() bool {
     return true
 }
 
-// 4971: decl @lune.@base.@Ast.DDDTypeInfo.get_nilableTypeInfo
+// 4972: decl @lune.@base.@Ast.DDDTypeInfo.get_nilableTypeInfo
 func (self *Ast_DDDTypeInfo) Get_nilableTypeInfo() *Ast_TypeInfo {
     return &self.Ast_TypeInfo
 }
 
-// 4974: decl @lune.@base.@Ast.DDDTypeInfo.get_mutMode
+// 4975: decl @lune.@base.@Ast.DDDTypeInfo.get_mutMode
 func (self *Ast_DDDTypeInfo) Get_mutMode() LnsInt {
     return self.FP.Get_typeInfo().FP.Get_mutMode()
 }
 
-// 4977: decl @lune.@base.@Ast.DDDTypeInfo.get_aliasSrc
+// 4978: decl @lune.@base.@Ast.DDDTypeInfo.get_aliasSrc
 func (self *Ast_DDDTypeInfo) Get_aliasSrc() *Ast_TypeInfo {
     return &self.Ast_TypeInfo
 }
 
-// 4980: decl @lune.@base.@Ast.DDDTypeInfo.get_srcTypeInfo
+// 4981: decl @lune.@base.@Ast.DDDTypeInfo.get_srcTypeInfo
 func (self *Ast_DDDTypeInfo) Get_srcTypeInfo() *Ast_TypeInfo {
     return &self.Ast_TypeInfo
 }
 
-// 4983: decl @lune.@base.@Ast.DDDTypeInfo.get_accessMode
+// 4984: decl @lune.@base.@Ast.DDDTypeInfo.get_accessMode
 func (self *Ast_DDDTypeInfo) Get_accessMode() LnsInt {
     return Ast_AccessMode__Pub
 }
 
-// 5363: decl @lune.@base.@Ast.DDDTypeInfo.getTxt
+// 5364: decl @lune.@base.@Ast.DDDTypeInfo.getTxt
 func (self *Ast_DDDTypeInfo) GetTxt(typeNameCtrl LnsAny,importInfo LnsAny,localFlag LnsAny) string {
     return self.FP.GetTxtWithRaw("...", typeNameCtrl, importInfo, localFlag)
 }
 
-// 5369: decl @lune.@base.@Ast.DDDTypeInfo.getTxtWithRaw
+// 5370: decl @lune.@base.@Ast.DDDTypeInfo.getTxtWithRaw
 func (self *Ast_DDDTypeInfo) GetTxtWithRaw(raw string,typeNameCtrl LnsAny,importInfo LnsAny,localFlag LnsAny) string {
     if self.typeInfo == Ast_builtinTypeStem_{
         if self.FP.Get_extTypeFlag(){
@@ -9388,7 +9388,7 @@ func NewAst_CombineType(arg1 *Ast_TypeInfo) *Ast_CombineType {
     obj.InitAst_CombineType(arg1)
     return obj
 }
-// 5075: DeclConstr
+// 5076: DeclConstr
 func (self *Ast_CombineType) InitAst_CombineType(typeInfo *Ast_TypeInfo) {
     self.ifSet = NewLnsSet([]LnsAny{})
     
@@ -9402,7 +9402,7 @@ func (self *Ast_CombineType) InitAst_CombineType(typeInfo *Ast_TypeInfo) {
     
 }
 
-// 5084: decl @lune.@base.@Ast.CombineType.isInheritFrom
+// 5085: decl @lune.@base.@Ast.CombineType.isInheritFrom
 func (self *Ast_CombineType) IsInheritFrom(processInfo *Ast_ProcessInfo,other *Ast_TypeInfo,alt2type LnsAny) bool {
     for _ifType := range( self.ifSet.Items ) {
         ifType := _ifType.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
@@ -9413,7 +9413,7 @@ func (self *Ast_CombineType) IsInheritFrom(processInfo *Ast_ProcessInfo,other *A
     return false
 }
 
-// 5096: decl @lune.@base.@Ast.CombineType.andIfSet
+// 5097: decl @lune.@base.@Ast.CombineType.andIfSet
 func (self *Ast_CombineType) andIfSet(processInfo *Ast_ProcessInfo,ifSet *LnsSet,alt2type *LnsMap) {
     var workSet *LnsSet
     workSet = NewLnsSet([]LnsAny{})
@@ -9434,7 +9434,7 @@ func (self *Ast_CombineType) andIfSet(processInfo *Ast_ProcessInfo,ifSet *LnsSet
     
 }
 
-// 5115: decl @lune.@base.@Ast.CombineType.createStem
+// 5116: decl @lune.@base.@Ast.CombineType.createStem
 func (self *Ast_CombineType) CreateStem(processInfo *Ast_ProcessInfo) *Ast_TypeInfo {
     var retType *Ast_TypeInfo
     if self.nilable{
@@ -9450,7 +9450,7 @@ func (self *Ast_CombineType) CreateStem(processInfo *Ast_ProcessInfo) *Ast_TypeI
     return processInfo.FP.CreateModifier(retType, self.mutMode)
 }
 
-// 5129: decl @lune.@base.@Ast.CombineType.get_typeInfo
+// 5130: decl @lune.@base.@Ast.CombineType.get_typeInfo
 func (self *Ast_CombineType) Get_typeInfo(processInfo *Ast_ProcessInfo) *Ast_TypeInfo {
     if self.ifSet.Len() != 1{
         return self.FP.CreateStem(processInfo)
@@ -9473,11 +9473,11 @@ func (self *Ast_CombineType) Get_typeInfo(processInfo *Ast_ProcessInfo) *Ast_Typ
     return nil
 }
 
-// 5160: decl @lune.@base.@Ast.CombineType.andType
+// 5161: decl @lune.@base.@Ast.CombineType.andType
 func (self *Ast_CombineType) AndType(processInfo *Ast_ProcessInfo,other LnsAny,alt2type *LnsMap) LnsAny {
-    switch _exp20725 := other.(type) {
+    switch _exp20732 := other.(type) {
     case *Ast_CommonType__Combine:
-    comboInfo := _exp20725.Val1
+    comboInfo := _exp20732.Val1
         self.FP.andIfSet(processInfo, comboInfo.ifSet, alt2type)
         if Lns_op_not(Ast_isMutable(comboInfo.mutMode)){
             self.mutMode = comboInfo.mutMode
@@ -9485,7 +9485,7 @@ func (self *Ast_CombineType) AndType(processInfo *Ast_ProcessInfo,other LnsAny,a
         }
         return &Ast_CommonType__Combine{self}
     case *Ast_CommonType__Normal:
-    typeInfo := _exp20725.Val1
+    typeInfo := _exp20732.Val1
         if Lns_op_not(Ast_isMutable(typeInfo.FP.Get_mutMode())){
             self.mutMode = typeInfo.FP.Get_mutMode()
             
@@ -9598,22 +9598,22 @@ func NewAst_AbbrTypeInfo(arg1 *Ast_ProcessInfo, arg2 string) *Ast_AbbrTypeInfo {
 }
 func (self *Ast_AbbrTypeInfo) Get_typeId() LnsInt{ return self.typeId }
 func (self *Ast_AbbrTypeInfo) Get_rawTxt() string{ return self.rawTxt }
-// 5461: decl @lune.@base.@Ast.AbbrTypeInfo.get_scope
+// 5462: decl @lune.@base.@Ast.AbbrTypeInfo.get_scope
 func (self *Ast_AbbrTypeInfo) Get_scope() LnsAny {
     return nil
 }
 
-// 5466: decl @lune.@base.@Ast.AbbrTypeInfo.get_baseTypeInfo
+// 5467: decl @lune.@base.@Ast.AbbrTypeInfo.get_baseTypeInfo
 func (self *Ast_AbbrTypeInfo) Get_baseTypeInfo() *Ast_TypeInfo {
     return Ast_headTypeInfo
 }
 
-// 5470: decl @lune.@base.@Ast.AbbrTypeInfo.get_parentInfo
+// 5471: decl @lune.@base.@Ast.AbbrTypeInfo.get_parentInfo
 func (self *Ast_AbbrTypeInfo) Get_parentInfo() *Ast_TypeInfo {
     return Ast_headTypeInfo
 }
 
-// 5474: DeclConstr
+// 5475: DeclConstr
 func (self *Ast_AbbrTypeInfo) InitAst_AbbrTypeInfo(processInfo *Ast_ProcessInfo,rawTxt string) {
     self.InitAst_TypeInfo(nil, processInfo)
     var typeId LnsInt
@@ -9625,67 +9625,67 @@ func (self *Ast_AbbrTypeInfo) InitAst_AbbrTypeInfo(processInfo *Ast_ProcessInfo,
     
 }
 
-// 5485: decl @lune.@base.@Ast.AbbrTypeInfo.isModule
+// 5486: decl @lune.@base.@Ast.AbbrTypeInfo.isModule
 func (self *Ast_AbbrTypeInfo) IsModule() bool {
     return false
 }
 
-// 5490: decl @lune.@base.@Ast.AbbrTypeInfo.getTxt
+// 5491: decl @lune.@base.@Ast.AbbrTypeInfo.getTxt
 func (self *Ast_AbbrTypeInfo) GetTxt(typeNameCtrl LnsAny,importInfo LnsAny,localFlag LnsAny) string {
     return self.FP.GetTxtWithRaw(self.FP.Get_rawTxt(), typeNameCtrl, importInfo, localFlag)
 }
 
-// 5496: decl @lune.@base.@Ast.AbbrTypeInfo.getTxtWithRaw
+// 5497: decl @lune.@base.@Ast.AbbrTypeInfo.getTxtWithRaw
 func (self *Ast_AbbrTypeInfo) GetTxtWithRaw(rawTxt string,typeNameCtrl LnsAny,importInfo LnsAny,localFlag LnsAny) string {
     return rawTxt
 }
 
-// 5503: decl @lune.@base.@Ast.AbbrTypeInfo.canEvalWith
+// 5504: decl @lune.@base.@Ast.AbbrTypeInfo.canEvalWith
 func (self *Ast_AbbrTypeInfo) CanEvalWith(processInfo *Ast_ProcessInfo,other *Ast_TypeInfo,canEvalType LnsInt,alt2type *LnsMap)(bool, LnsAny) {
     return false, nil
 }
 
-// 5510: decl @lune.@base.@Ast.AbbrTypeInfo.serialize
+// 5511: decl @lune.@base.@Ast.AbbrTypeInfo.serialize
 func (self *Ast_AbbrTypeInfo) Serialize(stream Lns_oStream,validChildrenSet LnsAny) {
     Util_err("illegal call")
 }
 
-// 5514: decl @lune.@base.@Ast.AbbrTypeInfo.get_display_stirng_with
+// 5515: decl @lune.@base.@Ast.AbbrTypeInfo.get_display_stirng_with
 func (self *Ast_AbbrTypeInfo) Get_display_stirng_with(raw string,alt2type LnsAny) string {
     return self.FP.GetTxtWithRaw(raw, nil, nil, nil)
 }
 
-// 5518: decl @lune.@base.@Ast.AbbrTypeInfo.get_display_stirng
+// 5519: decl @lune.@base.@Ast.AbbrTypeInfo.get_display_stirng
 func (self *Ast_AbbrTypeInfo) Get_display_stirng() string {
     return self.FP.Get_display_stirng_with(self.FP.Get_rawTxt(), nil)
 }
 
-// 5522: decl @lune.@base.@Ast.AbbrTypeInfo.getModule
+// 5523: decl @lune.@base.@Ast.AbbrTypeInfo.getModule
 func (self *Ast_AbbrTypeInfo) GetModule() *Ast_TypeInfo {
     return Ast_headTypeInfo
 }
 
-// 5525: decl @lune.@base.@Ast.AbbrTypeInfo.get_kind
+// 5526: decl @lune.@base.@Ast.AbbrTypeInfo.get_kind
 func (self *Ast_AbbrTypeInfo) Get_kind() LnsInt {
     return Ast_TypeInfoKind__Abbr
 }
 
-// 5528: decl @lune.@base.@Ast.AbbrTypeInfo.get_nilable
+// 5529: decl @lune.@base.@Ast.AbbrTypeInfo.get_nilable
 func (self *Ast_AbbrTypeInfo) Get_nilable() bool {
     return true
 }
 
-// 5531: decl @lune.@base.@Ast.AbbrTypeInfo.get_nilableTypeInfo
+// 5532: decl @lune.@base.@Ast.AbbrTypeInfo.get_nilableTypeInfo
 func (self *Ast_AbbrTypeInfo) Get_nilableTypeInfo() *Ast_TypeInfo {
     return &self.Ast_TypeInfo
 }
 
-// 5534: decl @lune.@base.@Ast.AbbrTypeInfo.get_mutMode
+// 5535: decl @lune.@base.@Ast.AbbrTypeInfo.get_mutMode
 func (self *Ast_AbbrTypeInfo) Get_mutMode() LnsInt {
     return Ast_MutMode__IMut
 }
 
-// 5537: decl @lune.@base.@Ast.AbbrTypeInfo.get_accessMode
+// 5538: decl @lune.@base.@Ast.AbbrTypeInfo.get_accessMode
 func (self *Ast_AbbrTypeInfo) Get_accessMode() LnsInt {
     return Ast_AccessMode__Local
 }
@@ -9876,7 +9876,7 @@ func (self *Ast_ExtTypeInfo) SerializeTypeInfoList(arg1 string,arg2 *LnsList,arg
 func (self *Ast_ExtTypeInfo) SwitchScope(arg1 *Ast_Scope) {
 self.extedType. FP.SwitchScope( arg1)
 }
-// 5554: DeclConstr
+// 5555: DeclConstr
 func (self *Ast_ExtTypeInfo) InitAst_ExtTypeInfo(processInfo *Ast_ProcessInfo,extedType *Ast_TypeInfo) {
     self.InitAst_TypeInfo(extedType.FP.Get_scope(), processInfo)
     var typeId LnsInt
@@ -9891,17 +9891,17 @@ func (self *Ast_ExtTypeInfo) InitAst_ExtTypeInfo(processInfo *Ast_ProcessInfo,ex
     processInfo.FP.Get_idProv().FP.Increment()
 }
 
-// 5570: decl @lune.@base.@Ast.ExtTypeInfo.getTxt
+// 5571: decl @lune.@base.@Ast.ExtTypeInfo.getTxt
 func (self *Ast_ExtTypeInfo) GetTxt(typeNameCtrl LnsAny,importInfo LnsAny,localFlag LnsAny) string {
     return self.FP.GetTxtWithRaw(self.FP.Get_rawTxt(), typeNameCtrl, importInfo, localFlag)
 }
 
-// 5576: decl @lune.@base.@Ast.ExtTypeInfo.getTxtWithRaw
+// 5577: decl @lune.@base.@Ast.ExtTypeInfo.getTxtWithRaw
 func (self *Ast_ExtTypeInfo) GetTxtWithRaw(rawTxt string,typeNameCtrl LnsAny,importInfo LnsAny,localFlag LnsAny) string {
     return Lns_getVM().String_format("Luaval<%s>", []LnsAny{self.extedType.FP.GetTxtWithRaw(rawTxt, typeNameCtrl, importInfo, localFlag)})
 }
 
-// 5584: decl @lune.@base.@Ast.ExtTypeInfo.equals
+// 5585: decl @lune.@base.@Ast.ExtTypeInfo.equals
 func (self *Ast_ExtTypeInfo) Equals(processInfo *Ast_ProcessInfo,typeInfo *Ast_TypeInfo,alt2type LnsAny,checkModifer LnsAny) bool {
     {
         _extTypeInfo := Ast_ExtTypeInfoDownCastF(typeInfo.FP)
@@ -9916,7 +9916,7 @@ func (self *Ast_ExtTypeInfo) Equals(processInfo *Ast_ProcessInfo,typeInfo *Ast_T
     return self.extedType.FP.Equals(processInfo, typeInfo, alt2type, checkModifer)
 }
 
-// 5600: decl @lune.@base.@Ast.ExtTypeInfo.canEvalWith
+// 5601: decl @lune.@base.@Ast.ExtTypeInfo.canEvalWith
 func (self *Ast_ExtTypeInfo) CanEvalWith(processInfo *Ast_ProcessInfo,other *Ast_TypeInfo,canEvalType LnsInt,alt2type *LnsMap)(bool, LnsAny) {
     {
         _extTypeInfo := Ast_ExtTypeInfoDownCastF(other.FP.Get_nonnilableType().FP)
@@ -9934,7 +9934,7 @@ func (self *Ast_ExtTypeInfo) CanEvalWith(processInfo *Ast_ProcessInfo,other *Ast
         }
     }
     {
-        __exp := Ast_convExp22511(Lns_2DDD(Ast_failCreateLuavalWith_4271_(other, Ast_LuavalConvKind__ToLua, true)))
+        __exp := Ast_convExp22518(Lns_2DDD(Ast_failCreateLuavalWith_4271_(other, Ast_LuavalConvKind__ToLua, true)))
         if __exp != nil {
             _exp := __exp.(string)
             return false, _exp
@@ -9943,52 +9943,52 @@ func (self *Ast_ExtTypeInfo) CanEvalWith(processInfo *Ast_ProcessInfo,other *Ast
     return true, nil
 }
 
-// 5624: decl @lune.@base.@Ast.ExtTypeInfo.serialize
+// 5625: decl @lune.@base.@Ast.ExtTypeInfo.serialize
 func (self *Ast_ExtTypeInfo) Serialize(stream Lns_oStream,validChildrenSet LnsAny) {
     stream.Write(Lns_getVM().String_format("{ skind = %d, typeId = %d, extedTypeId = %d }\n", []LnsAny{Ast_SerializeKind__Ext, self.typeId, self.extedType.FP.Get_typeId()}))
 }
 
-// 5630: decl @lune.@base.@Ast.ExtTypeInfo.get_display_stirng_with
+// 5631: decl @lune.@base.@Ast.ExtTypeInfo.get_display_stirng_with
 func (self *Ast_ExtTypeInfo) Get_display_stirng_with(raw string,alt2type LnsAny) string {
     return self.FP.GetTxtWithRaw(raw, nil, nil, nil)
 }
 
-// 5634: decl @lune.@base.@Ast.ExtTypeInfo.get_display_stirng
+// 5635: decl @lune.@base.@Ast.ExtTypeInfo.get_display_stirng
 func (self *Ast_ExtTypeInfo) Get_display_stirng() string {
     return self.FP.Get_display_stirng_with(self.FP.Get_rawTxt(), nil)
 }
 
-// 5638: decl @lune.@base.@Ast.ExtTypeInfo.getModule
+// 5639: decl @lune.@base.@Ast.ExtTypeInfo.getModule
 func (self *Ast_ExtTypeInfo) GetModule() *Ast_TypeInfo {
     return Ast_headTypeInfo
 }
 
-// 5641: decl @lune.@base.@Ast.ExtTypeInfo.get_kind
+// 5642: decl @lune.@base.@Ast.ExtTypeInfo.get_kind
 func (self *Ast_ExtTypeInfo) Get_kind() LnsInt {
     return Ast_TypeInfoKind__Ext
 }
 
-// 5644: decl @lune.@base.@Ast.ExtTypeInfo.get_aliasSrc
+// 5645: decl @lune.@base.@Ast.ExtTypeInfo.get_aliasSrc
 func (self *Ast_ExtTypeInfo) Get_aliasSrc() *Ast_TypeInfo {
     return &self.Ast_TypeInfo
 }
 
-// 5647: decl @lune.@base.@Ast.ExtTypeInfo.get_srcTypeInfo
+// 5648: decl @lune.@base.@Ast.ExtTypeInfo.get_srcTypeInfo
 func (self *Ast_ExtTypeInfo) Get_srcTypeInfo() *Ast_TypeInfo {
     return &self.Ast_TypeInfo
 }
 
-// 5650: decl @lune.@base.@Ast.ExtTypeInfo.get_nonnilableType
+// 5651: decl @lune.@base.@Ast.ExtTypeInfo.get_nonnilableType
 func (self *Ast_ExtTypeInfo) Get_nonnilableType() *Ast_TypeInfo {
     return &self.Ast_TypeInfo
 }
 
-// 5653: decl @lune.@base.@Ast.ExtTypeInfo.get_nilable
+// 5654: decl @lune.@base.@Ast.ExtTypeInfo.get_nilable
 func (self *Ast_ExtTypeInfo) Get_nilable() bool {
     return false
 }
 
-// 5656: decl @lune.@base.@Ast.ExtTypeInfo.applyGeneric
+// 5657: decl @lune.@base.@Ast.ExtTypeInfo.applyGeneric
 func (self *Ast_ExtTypeInfo) ApplyGeneric(alt2typeMap *LnsMap,moduleTypeInfo *Ast_TypeInfo) LnsAny {
     var typeInfo LnsAny
     typeInfo = self.extedType.FP.ApplyGeneric(alt2typeMap, moduleTypeInfo)
@@ -10238,7 +10238,7 @@ func (self *Ast_AndExpTypeInfo) SerializeTypeInfoList(arg1 string,arg2 *LnsList,
 func (self *Ast_AndExpTypeInfo) SwitchScope(arg1 *Ast_Scope) {
 self.result. FP.SwitchScope( arg1)
 }
-// 5775: DeclConstr
+// 5776: DeclConstr
 func (self *Ast_AndExpTypeInfo) InitAst_AndExpTypeInfo(processInfo *Ast_ProcessInfo,exp1 *Ast_TypeInfo,exp2 *Ast_TypeInfo,result *Ast_TypeInfo) {
     self.InitAst_TypeInfo(result.FP.Get_scope(), processInfo)
     self.exp1 = exp1
@@ -10343,7 +10343,7 @@ func NewAst_TypeAnalyzer(arg1 *Ast_ProcessInfo, arg2 *Ast_TypeInfo, arg3 *Ast_Ty
     obj.InitAst_TypeAnalyzer(arg1, arg2, arg3, arg4, arg5, arg6)
     return obj
 }
-// 6894: DeclConstr
+// 6895: DeclConstr
 func (self *Ast_TypeAnalyzer) InitAst_TypeAnalyzer(processInfo *Ast_ProcessInfo,parentInfo *Ast_TypeInfo,moduleType *Ast_TypeInfo,moduleScope *Ast_Scope,scopeAccess LnsInt,validMutControl bool) {
     self.processInfo = processInfo
     
@@ -10369,7 +10369,7 @@ func (self *Ast_TypeAnalyzer) InitAst_TypeAnalyzer(processInfo *Ast_ProcessInfo,
 
 
 
-// 6919: decl @lune.@base.@Ast.TypeAnalyzer.analyzeType
+// 6920: decl @lune.@base.@Ast.TypeAnalyzer.analyzeType
 func (self *Ast_TypeAnalyzer) AnalyzeType(scope *Ast_Scope,parser Parser_PushbackParser,accessMode LnsInt,allowDDD bool,parentPub bool)(LnsAny, LnsAny, LnsAny) {
     self.scope = scope
     
@@ -10382,7 +10382,7 @@ func (self *Ast_TypeAnalyzer) AnalyzeType(scope *Ast_Scope,parser Parser_Pushbac
     return self.FP.analyzeTypeSub(allowDDD)
 }
 
-// 6930: decl @lune.@base.@Ast.TypeAnalyzer.analyzeTypeFromTxt
+// 6931: decl @lune.@base.@Ast.TypeAnalyzer.analyzeTypeFromTxt
 func (self *Ast_TypeAnalyzer) AnalyzeTypeFromTxt(txt string,scope *Ast_Scope,accessMode LnsInt,parentPub bool)(LnsAny, LnsAny, LnsAny) {
     var stream *Parser_TxtStream
     stream = NewParser_TxtStream(txt)
@@ -10391,7 +10391,7 @@ func (self *Ast_TypeAnalyzer) AnalyzeTypeFromTxt(txt string,scope *Ast_Scope,acc
     return self.FP.AnalyzeType(scope, parser.FP, accessMode, true, parentPub)
 }
 
-// 6941: decl @lune.@base.@Ast.TypeAnalyzer.analyzeTypeSub
+// 6942: decl @lune.@base.@Ast.TypeAnalyzer.analyzeTypeSub
 func (self *Ast_TypeAnalyzer) analyzeTypeSub(allowDDD bool)(LnsAny, LnsAny, LnsAny) {
     var firstToken *Types_Token
     firstToken = self.parser.GetTokenNoErr()
@@ -10437,7 +10437,7 @@ func (self *Ast_TypeAnalyzer) analyzeTypeSub(allowDDD bool)(LnsAny, LnsAny, LnsA
     return self.FP.AnalyzeTypeItemList(allowDDD, refFlag, mutFlag, typeInfo, token.Pos)
 }
 
-// 6981: decl @lune.@base.@Ast.TypeAnalyzer.analyzeTypeItemList
+// 6982: decl @lune.@base.@Ast.TypeAnalyzer.analyzeTypeItemList
 func (self *Ast_TypeAnalyzer) AnalyzeTypeItemList(allowDDD bool,refFlag bool,mutFlag bool,typeInfo *Ast_TypeInfo,pos *Types_Position)(LnsAny, LnsAny, LnsAny) {
     if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
         Lns_GetEnv().SetStackVal( self.parentPub) &&
@@ -10481,7 +10481,7 @@ func (self *Ast_TypeAnalyzer) AnalyzeTypeItemList(allowDDD bool,refFlag bool,mut
             nextToken = Parser_getEofToken()
             for {
                 var refType LnsAny
-                refType = Ast_convExp29893(Lns_2DDD(self.FP.analyzeTypeSub(false)))
+                refType = Ast_convExp29900(Lns_2DDD(self.FP.analyzeTypeSub(false)))
                 if refType != nil{
                     refType_5545 := refType.(*Ast_RefTypeInfo)
                     genericRefList.Insert(Ast_RefTypeInfo2Stem(refType_5545))
@@ -10495,42 +10495,42 @@ func (self *Ast_TypeAnalyzer) AnalyzeTypeItemList(allowDDD bool,refFlag bool,mut
                 return nil, nextToken.Pos, "not found -- ']'"
             }
             
-            if _switch30522 := typeInfo.FP.Get_kind(); _switch30522 == Ast_TypeInfoKind__Map {
+            if _switch30529 := typeInfo.FP.Get_kind(); _switch30529 == Ast_TypeInfoKind__Map {
                 if genericList.Len() != 2{
                     return nil, pos, "Key or value type is unknown"
                 } else { 
                     typeInfo = self.processInfo.FP.CreateMap(self.accessMode, self.parentInfo, genericList.GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), genericList.GetAt(2).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), Ast_MutMode__Mut)
                     
                 }
-            } else if _switch30522 == Ast_TypeInfoKind__List {
+            } else if _switch30529 == Ast_TypeInfoKind__List {
                 if genericList.Len() != 1{
                     return nil, pos, Lns_getVM().String_format("generic type count is unmatch. -- %d", []LnsAny{genericList.Len()})
                 }
                 
                 typeInfo = self.processInfo.FP.CreateList(self.accessMode, self.parentInfo, genericList, Ast_MutMode__Mut)
                 
-            } else if _switch30522 == Ast_TypeInfoKind__Array {
+            } else if _switch30529 == Ast_TypeInfoKind__Array {
                 if genericList.Len() != 1{
                     return nil, pos, Lns_getVM().String_format("generic type count is unmatch. -- %d", []LnsAny{genericList.Len()})
                 }
                 
                 typeInfo = self.processInfo.FP.CreateArray(self.accessMode, self.parentInfo, genericList, Ast_MutMode__Mut)
                 
-            } else if _switch30522 == Ast_TypeInfoKind__Set {
+            } else if _switch30529 == Ast_TypeInfoKind__Set {
                 if genericList.Len() != 1{
                     return nil, pos, Lns_getVM().String_format("generic type count is unmatch. -- %d", []LnsAny{genericList.Len()})
                 }
                 
                 typeInfo = self.processInfo.FP.CreateSet(self.accessMode, self.parentInfo, genericList, Ast_MutMode__Mut)
                 
-            } else if _switch30522 == Ast_TypeInfoKind__DDD {
+            } else if _switch30529 == Ast_TypeInfoKind__DDD {
                 if genericList.Len() != 1{
                     return nil, pos, Lns_getVM().String_format("generic type count is unmatch. -- %d", []LnsAny{genericList.Len()})
                 }
                 
                 typeInfo = &self.processInfo.FP.CreateDDD(genericList.GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), false, false).Ast_TypeInfo
                 
-            } else if _switch30522 == Ast_TypeInfoKind__Class || _switch30522 == Ast_TypeInfoKind__IF {
+            } else if _switch30529 == Ast_TypeInfoKind__Class || _switch30529 == Ast_TypeInfoKind__IF {
                 if genericList.Len() != typeInfo.FP.Get_itemTypeInfoList().Len(){
                     return nil, pos, Lns_getVM().String_format("generic type count is unmatch. -- %d", []LnsAny{genericList.Len()})
                 }
@@ -10545,25 +10545,25 @@ func (self *Ast_TypeAnalyzer) AnalyzeTypeItemList(allowDDD bool,refFlag bool,mut
                 }
                 typeInfo = &self.processInfo.FP.CreateGeneric(typeInfo, genericList, self.moduleType).Ast_TypeInfo
                 
-            } else if _switch30522 == Ast_TypeInfoKind__Box {
+            } else if _switch30529 == Ast_TypeInfoKind__Box {
                 if genericList.Len() != 1{
                     return nil, pos, Lns_getVM().String_format("generic type count is unmatch. -- %d", []LnsAny{genericList.Len()})
                 }
                 
                 typeInfo = self.processInfo.FP.CreateBox(self.accessMode, genericList.GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo())
                 
-            } else if _switch30522 == Ast_TypeInfoKind__Ext {
+            } else if _switch30529 == Ast_TypeInfoKind__Ext {
                 if genericList.Len() != 1{
                     return nil, pos, Lns_getVM().String_format("generic type count is unmatch. -- %d", []LnsAny{genericList.Len()})
                 }
                 
-                switch _exp30500 := self.processInfo.FP.CreateLuaval(genericList.GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), true).(type) {
+                switch _exp30507 := self.processInfo.FP.CreateLuaval(genericList.GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), true).(type) {
                 case *Ast_LuavalResult__OK:
-                extTypeInfo := _exp30500.Val1
+                extTypeInfo := _exp30507.Val1
                     typeInfo = extTypeInfo
                     
                 case *Ast_LuavalResult__Err:
-                err := _exp30500.Val1
+                err := _exp30507.Val1
                     return nil, pos, err
                 }
             } else {
@@ -10677,9 +10677,9 @@ func Lns_Ast_init() {
     Ast_builtinTypeMultiExp = Ast_NormalTypeInfo_createBuiltin("Exps", "__exps", Ast_TypeInfoKind__Prim, nil, nil)
     Ast_builtinTypeAbbr = &NewAst_AbbrTypeInfo(Ast_rootProcessInfo, "##").Ast_TypeInfo
     Ast_builtinTypeAbbrNone = &NewAst_AbbrTypeInfo(Ast_rootProcessInfo, "[##]").Ast_TypeInfo
-    switch _exp23071 := Ast_rootProcessInfo.FP.CreateLuaval(Ast_builtinTypeStem, true).(type) {
+    switch _exp23078 := Ast_rootProcessInfo.FP.CreateLuaval(Ast_builtinTypeStem, true).(type) {
     case *Ast_LuavalResult__OK:
-    typeInfo := _exp23071.Val1
+    typeInfo := _exp23078.Val1
         Ast_builtinTypeLua = typeInfo
         
     default:
