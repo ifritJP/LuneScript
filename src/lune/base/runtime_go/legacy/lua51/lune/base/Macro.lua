@@ -476,6 +476,13 @@ function MacroPaser:getToken(  )
    
    local token = self.tokenList[self.pos]
    self.pos = self.pos + 1
+   do
+      local _exp = self.overridePos
+      if _exp ~= nil then
+         return Types.Token.new(token.kind, token.txt, self:createPosition( token.pos.lineNo, token.pos.column ), token.consecutive, token:get_commentList())
+      end
+   end
+   
    return token
 end
 function MacroPaser:getStreamName(  )
@@ -926,7 +933,7 @@ local function pushbackTxt( pushbackParser, txtList, streamName, pos )
    local tokenList = {}
    for __index, txt in ipairs( txtList ) do
       local stream = Parser.TxtStream.new(txt)
-      local parser = Parser.StreamParser.new(stream, string.format( "macro symbol -- %s", streamName), false, pos)
+      local parser = Parser.StreamParser.new(stream, string.format( "macro symbol -- %s", streamName), false, pos:get_RawOrgPos())
       local workParser = Parser.DefaultPushbackParser.new(parser)
       while true do
          local worktoken = workParser:getTokenNoErr(  )
@@ -979,7 +986,7 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
                table.insert( txtList, txt )
             end
             
-            pushbackTxt( parser, txtList, nextToken.txt, nextToken.pos:get_orgPos() )
+            pushbackTxt( parser, txtList, nextToken.txt, nextToken.pos )
          elseif equalsType( macroVal.typeInfo, Ast.builtinTypeStat ) or equalsType( macroVal.typeInfo, Ast.builtinTypeExp ) or equalsType( macroVal.typeInfo, Ast.builtinTypeMultiExp ) then
             local pos = _lune.nilacc( _lune.nilacc( macroVal.argNode, 'get_pos', 'callmtd' ), 'get_RawOrgPos', 'callmtd' ) or nextToken.pos:get_RawOrgPos() or token.pos:get_orgPos()
             parser:pushbackStr( string.format( "macroVal %s", nextToken.txt), (_lune.unwrap( macroVal.val) ), pos )
@@ -1051,7 +1058,7 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
          
       elseif tokenTxt == ',,,' then
          if equalsType( macroVal.typeInfo, Ast.builtinTypeString ) then
-            pushbackTxt( parser, {(_lune.unwrap( macroVal.val) )}, nextToken.txt, nextToken.pos:get_orgPos() )
+            pushbackTxt( parser, {(_lune.unwrap( macroVal.val) )}, nextToken.txt, nextToken.pos )
          else
           
             parser:error( string.format( "',,,' does not support this type -- %s", macroVal.typeInfo:getTxt(  )) )

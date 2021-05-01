@@ -128,7 +128,7 @@ pub class Token extend (Mapping) {
    pri let allmut commentList: &List<&Token> { pub& };
 
    pub fn __init( kind: TokenKind, txt: str, pos: &Position,
-                  consecutive:bool, commentList: Token[]! )
+                  consecutive:bool, commentList: &List<&Token>! )
    {
       self.kind = kind;
       self.txt = txt;

@@ -1057,7 +1057,7 @@ fn TransUnit.analyzeDeclAlternateType(
       altIndex = altIndex + 1;
       let genericSymToken = self.getSymbolToken( .MustNot_ );
       if self.scope.getTypeInfo(
-         genericSymToken.txt, self.scope, true, self.scopeAccess)
+         genericSymToken.txt, self.scope, false, self.scopeAccess)
       {
          self.addErrMess( genericSymToken.pos,
                           "shadowing Type -- %s" (genericSymToken.txt) );

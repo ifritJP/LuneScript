@@ -3562,13 +3562,13 @@ end
 local AlternateTypeInfo = {}
 setmetatable( AlternateTypeInfo, { __index = TypeInfo } )
 _moduleObj.AlternateTypeInfo = AlternateTypeInfo
-function AlternateTypeInfo.new( processInfo, belongClassFlag, altIndex, txt, accessMode, moduleTypeInfo, baseTypeInfo, interfaceList )
+function AlternateTypeInfo.new( processInfo, belongClassFlag, altIndex, txt, accessMode, parentInfo, baseTypeInfo, interfaceList )
    local obj = {}
    AlternateTypeInfo.setmeta( obj )
-   if obj.__init then obj:__init( processInfo, belongClassFlag, altIndex, txt, accessMode, moduleTypeInfo, baseTypeInfo, interfaceList ); end
+   if obj.__init then obj:__init( processInfo, belongClassFlag, altIndex, txt, accessMode, parentInfo, baseTypeInfo, interfaceList ); end
    return obj
 end
-function AlternateTypeInfo:__init(processInfo, belongClassFlag, altIndex, txt, accessMode, moduleTypeInfo, baseTypeInfo, interfaceList) 
+function AlternateTypeInfo:__init(processInfo, belongClassFlag, altIndex, txt, accessMode, parentInfo, baseTypeInfo, interfaceList) 
    TypeInfo.__init( self,TypeInfo.createScope( processInfo, nil, true, baseTypeInfo, interfaceList ), processInfo)
    
    
@@ -3577,7 +3577,7 @@ function AlternateTypeInfo:__init(processInfo, belongClassFlag, altIndex, txt, a
    
    self.txt = txt
    self.accessMode = accessMode
-   self.moduleTypeInfo = moduleTypeInfo
+   self.parentInfo = parentInfo
    self.baseTypeInfo = _lune.unwrapDefault( baseTypeInfo, _moduleObj.headTypeInfo)
    self.interfaceList = _lune.unwrapDefault( interfaceList, {})
    self.belongClassFlag = belongClassFlag
@@ -3586,13 +3586,17 @@ function AlternateTypeInfo:__init(processInfo, belongClassFlag, altIndex, txt, a
    processInfo:get_idProv():increment(  )
    self.nilableTypeInfo = NilableTypeInfo.new(nil, processInfo, self, processInfo:get_idProv():get_id())
 end
+function AlternateTypeInfo:updateParentInfo( typeInfo )
+
+   self.parentInfo = typeInfo
+end
 function AlternateTypeInfo:isModule(  )
 
    return false
 end
 function AlternateTypeInfo:getParentId(  )
 
-   return self.moduleTypeInfo:get_typeId()
+   return self.parentInfo:get_typeId()
 end
 function AlternateTypeInfo:get_baseId(  )
 
@@ -3600,7 +3604,7 @@ function AlternateTypeInfo:get_baseId(  )
 end
 function AlternateTypeInfo:get_parentInfo(  )
 
-   return self.moduleTypeInfo
+   return self.parentInfo
 end
 function AlternateTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
 
@@ -3762,10 +3766,6 @@ end
 function AlternateTypeInfo:get_mutMode(  )
 
    return MutMode.Mut
-end
-function AlternateTypeInfo:getParentFullName( typeNameCtrl, importInfo, localFlag )
-
-   return ""
 end
 function AlternateTypeInfo:serialize( stream, validChildrenSet )
 
@@ -5631,9 +5631,9 @@ function NormalTypeInfo:set_requirePath( requirePath )
 end
 
 
-function ProcessInfo:createAlternate( belongClassFlag, altIndex, txt, accessMode, moduleTypeInfo, baseTypeInfo, interfaceList )
+function ProcessInfo:createAlternate( belongClassFlag, altIndex, txt, accessMode, parentInfo, baseTypeInfo, interfaceList )
 
-   return AlternateTypeInfo.new(self, belongClassFlag, altIndex, txt, accessMode, moduleTypeInfo, baseTypeInfo, interfaceList)
+   return AlternateTypeInfo.new(self, belongClassFlag, altIndex, txt, accessMode, parentInfo, baseTypeInfo, interfaceList)
 end
 
 
@@ -6452,6 +6452,12 @@ function ProcessInfo:createClass( classFlag, abstractFlag, scope, baseInfo, inte
    
    
    local info = NormalTypeInfo.new(self, abstractFlag, scope, baseInfo, interfaceList, false, externalFlag, false, accessMode, className, parentInfo, self:get_idProv():getNewId(  ), classFlag and TypeInfoKind.Class or TypeInfoKind.IF, genTypeList, nil, nil, MutMode.Mut, nil)
+   
+   for __index, genType in ipairs( genTypeList ) do
+      genType:updateParentInfo( info )
+   end
+   
+   
    return info
 end
 
@@ -6485,6 +6491,21 @@ function ProcessInfo:createFunc( abstractFlag, builtinFlag, scope, kind, parentI
    
    
    local info = NormalTypeInfo.new(self, abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, self:get_idProv():getNewId(  ), kind, _lune.unwrapDefault( altTypeList, {}), _lune.unwrapDefault( argTypeList, {}), _lune.unwrapDefault( retTypeInfoList, {}), mutable and MutMode.Mut or MutMode.IMut, nil)
+   
+   if altTypeList ~= nil then
+      for __index, genType in ipairs( altTypeList ) do
+         do
+            local _exp = _lune.__Cast( genType, 3, AlternateTypeInfo )
+            if _exp ~= nil then
+               _exp:updateParentInfo( info )
+            end
+         end
+         
+      end
+      
+   end
+   
+   
    return info
 end
 

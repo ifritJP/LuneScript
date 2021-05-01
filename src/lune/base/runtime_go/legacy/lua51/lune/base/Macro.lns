@@ -95,6 +95,12 @@ class MacroPaser extend Parser.Parser {
 
       // Util.errorLog( "getToken: %s" (token.txt) );
 
+      if! self.overridePos {
+         return new Types.Token(
+            token.kind, token.txt,
+            self.createPosition( token.pos.lineNo, token.pos.column ),
+            token.consecutive, token.$commentList );
+      }
       return token;
    }
    pub override fn getStreamName(): str {
@@ -560,7 +566,7 @@ fn pushbackTxt( pushbackParser:Parser.PushbackParser,
    foreach txt in txtList {
       let mut stream = new Parser.TxtStream( txt );
       let mut parser = new Parser.StreamParser(
-         stream, "macro symbol -- %s" (streamName), false, pos );
+         stream, "macro symbol -- %s" (streamName), false, pos.$RawOrgPos );
       let mut workParser = new Parser.DefaultPushbackParser( parser );
       while true {
          let worktoken = workParser.getTokenNoErr();
@@ -621,7 +627,7 @@ pub fn MacroCtrl.expandMacroVal(
             foreach txt in (unwrap macroVal.val)@@str[] {
                txtList.insert( txt );
             }
-            pushbackTxt( parser, txtList, nextToken.txt, nextToken.pos.$orgPos );
+            pushbackTxt( parser, txtList, nextToken.txt, nextToken.pos ); 
          }
          elseif equalsType( macroVal.typeInfo, Ast.builtinTypeStat ) or
             equalsType( macroVal.typeInfo, Ast.builtinTypeExp ) or
@@ -699,7 +705,7 @@ pub fn MacroCtrl.expandMacroVal(
       elseif tokenTxt == ',,,' {
          if equalsType( macroVal.typeInfo, Ast.builtinTypeString ) {
             pushbackTxt( parser, [ (unwrap macroVal.val)@@str ],
-                         nextToken.txt, nextToken.pos.$orgPos );
+                         nextToken.txt, nextToken.pos );
          }
          else {
             parser.error( "',,,' does not support this type -- %s"
