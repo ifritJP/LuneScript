@@ -311,15 +311,12 @@ function ConvMode.get__allList()
    return ConvMode.__allList
 end
 
-ConvMode.Exec = 0
-ConvMode._val2NameMap[0] = 'Exec'
-ConvMode.__allList[1] = ConvMode.Exec
-ConvMode.Convert = 1
-ConvMode._val2NameMap[1] = 'Convert'
-ConvMode.__allList[2] = ConvMode.Convert
-ConvMode.ConvMeta = 2
-ConvMode._val2NameMap[2] = 'ConvMeta'
-ConvMode.__allList[3] = ConvMode.ConvMeta
+ConvMode.Convert = 0
+ConvMode._val2NameMap[0] = 'Convert'
+ConvMode.__allList[1] = ConvMode.Convert
+ConvMode.ConvMeta = 1
+ConvMode._val2NameMap[1] = 'ConvMeta'
+ConvMode.__allList[2] = ConvMode.ConvMeta
 
 
 local ModuleInfo = {}
@@ -4202,7 +4199,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3501, function (  )
+   Log.log( Log.Level.Trace, __func__, 3499, function (  )
    
       return string.format( "macro: %s", code)
    end )
@@ -4218,7 +4215,7 @@ end
 function MacroEvalImp:evalFromCode( processInfo, name, argNameList, code )
 
    local stream = Util.memStream.new()
-   local conv = convFilter.new("macro", stream, stream, ConvMode.Exec, true, Ast.headTypeInfo, processInfo, Ast.SymbolKind.Typ, nil, LuaVer.getCurVer(  ), false, true)
+   local conv = convFilter.new("macro", stream, stream, ConvMode.ConvMeta, true, Ast.headTypeInfo, processInfo, Ast.SymbolKind.Typ, nil, LuaVer.getCurVer(  ), false, true)
    
    conv:outputDeclMacro( name, argNameList, function (  )
    
@@ -4233,7 +4230,7 @@ end
 function MacroEvalImp:eval( processInfo, node )
 
    local stream = Util.memStream.new()
-   local conv = convFilter.new("macro", stream, stream, ConvMode.Exec, true, Ast.headTypeInfo, processInfo, Ast.SymbolKind.Typ, nil, LuaVer.getCurVer(  ), false, true)
+   local conv = convFilter.new("macro", stream, stream, ConvMode.ConvMeta, true, Ast.headTypeInfo, processInfo, Ast.SymbolKind.Typ, nil, LuaVer.getCurVer(  ), false, true)
    
    conv:processDeclMacro( node, Opt.new(node) )
    

@@ -104,6 +104,7 @@ pub class Option {
    pub let mut outputDir:str!;
    /** 処理対象のスクリプトファイルパス */
    pub let mut scriptPath: str;
+   pub let mut batchList:List<str>;
    /** プロファイルする場合 true */
    pub let mut validProf:bool;
    /** true の場合 require( 'lune.base._lune' ) する */
@@ -160,6 +161,7 @@ pub class Option {
       self.validProf = false;
       self.mode = .Unknown;
       self.scriptPath = "";
+      self.batchList = [];
       self.useLuneModule = nil;
       self.updateOnLoad = false;
       self.byteCompile = false;
@@ -601,15 +603,34 @@ usage:
       }
    }
 
+   if option.scriptPath == "@-" {
+      while true {
+         let! line = io.stdin.read( "*l" ) {
+            break;
+         };
+         if #line > 0 {
+            option.batchList.insert( line );
+         }
+      }
+   }
+   
+
    Log._log2( .Log, "mode is '%s'" (option.mode.$_txt) );
 
    return option;
 }
 
-pub fn createDefaultOption( path:str, projDir:str! ) : Option {
-   //let mut option = new Option();
-   //option.scriptPath = path;
-   let mut option = analyze( [ path, "save" ] );
+pub fn createDefaultOption( pathList:&List<str>, projDir:str! ) : Option {
+   let mut option = new Option();
+   if #pathList == 1 {
+      option.scriptPath = pathList[1];
+   } else {
+      option.scriptPath = "@-";
+      foreach path in pathList {
+         option.batchList.insert( path );
+      }
+   }
+   // let mut option = analyze( [ path, "save" ] );
    option.useLuneModule = getRuntimeModule();
    option.useIpairs = true;
    when! projDir {

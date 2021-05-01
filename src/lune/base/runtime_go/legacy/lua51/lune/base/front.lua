@@ -510,7 +510,7 @@ function Front:loadFromLnsTxt( importModuleInfo, name, txt )
    
    local ast = transUnit:createAST( parser, false, nil )
    
-   local _6040, luaTxt = self:convertFromAst( ast, name, convLua.ConvMode.Exec )
+   local _6041, luaTxt = self:convertFromAst( ast, name, convLua.ConvMode.Exec )
    return _lune.unwrap( loadFromLuaTxt( luaTxt ))
 end
 
@@ -899,7 +899,7 @@ function Front:convertLns2LuaCode( importModuleInfo, stream, streamName )
    local mod = self:scriptPath2Module( streamName )
    local ast = self:createAst( importModuleInfo, Parser.StreamParser.new(stream, streamName, false, nil), mod, frontInterface.ModuleId.createId( 0.0, 0 ), nil, TransUnit.AnalyzeMode.Compile )
    
-   local _6205, luaTxt = self:convertFromAst( ast, streamName, convLua.ConvMode.Exec )
+   local _6206, luaTxt = self:convertFromAst( ast, streamName, convLua.ConvMode.Exec )
    
    return luaTxt
 end
@@ -1061,7 +1061,7 @@ function Front:checkUptodateMeta( lnsPath, metaPath, addSearchPath )
    end
    
    
-   for moduleFullName, _6296 in pairs( meta.__dependModuleMap ) do
+   for moduleFullName, _6297 in pairs( meta.__dependModuleMap ) do
       do
          local moduleLnsPath = self:searchModule( moduleFullName )
          if moduleLnsPath ~= nil then
@@ -1431,7 +1431,7 @@ function Front:convertLuaToStreamFromScript( parser, moduleId, uptodate, convMod
       if stream ~= nil then
          if metaInfo ~= nil then
             local dependInfo = OutputDepend.DependInfo.new(mod)
-            for dependMod, _6501 in pairs( metaInfo.__dependModuleMap ) do
+            for dependMod, _6502 in pairs( metaInfo.__dependModuleMap ) do
                dependInfo:addImpotModule( dependMod )
             end
             
@@ -2141,23 +2141,8 @@ function Front:build( buildMode, astCallback )
    
       self.mod2ast:clear(  )
       if self.option.scriptPath == "@-" then
-         local updateList = {}
-         while true do
-            local line = io.stdin:read( "*l" )
-            if  nil == line then
-               local _line = line
-            
-               break
-            end
-            
-            if #line > 0 then
-               table.insert( updateList, createUpdateInfo( line, (line:gsub( ".lns$", ".d" ) ) ) )
-            end
-            
-         end
-         
-         
-         for __index, updateInfo in ipairs( updateList ) do
+         for __index, path in ipairs( self.option.batchList ) do
+            local updateInfo = createUpdateInfo( path, (path:gsub( ".lns$", ".d" ) ) )
             local prev = os.clock(  )
             process( updateInfo )
             print( string.format( "%s:%g", updateInfo:get_scriptPath(), os.clock(  ) - prev) )
@@ -2190,7 +2175,7 @@ _moduleObj.build = build
 function Front:exec(  )
    local __func__ = '@lune.@base.@front.Front.exec'
 
-   Log.log( Log.Level.Trace, __func__, 1622, function (  )
+   Log.log( Log.Level.Trace, __func__, 1624, function (  )
    
       return Option.ModeKind:_getTxt( self.option.mode)
       
@@ -2292,7 +2277,7 @@ end
 _moduleObj.exec = exec
 local function setFront( bindModuleList )
 
-   local option = Option.createDefaultOption( "dummy.lns", nil )
+   local option = Option.createDefaultOption( {"dummy.lns"}, nil )
    Front.new(option, bindModuleList)
 end
 _moduleObj.setFront = setFront

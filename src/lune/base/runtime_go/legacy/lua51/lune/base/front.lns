@@ -1584,18 +1584,20 @@ pub fn Front.build( buildMode:BuildMode, astCallback:AstCallback! ) mut {
       fn () {
          self.mod2ast.clear();
          if self.option.scriptPath == "@-" {
-            let mut updateList:List<UpdateInfo> = [];
-            while true {
-               let! line = io.stdin.read( "*l" ) {
-                  break;
-               };
-               if #line > 0 {
-                  updateList.insert(
-                     createUpdateInfo( line, (line.gsub( ".lns$", ".d" )) ) );
-               }
-            }
+            // let mut updateList:List<UpdateInfo> = [];
+            // while true {
+            //    let! line = io.stdin.read( "*l" ) {
+            //       break;
+            //    };
+            //    if #line > 0 {
+            //       updateList.insert(
+            //          createUpdateInfo( line, (line.gsub( ".lns$", ".d" )) ) );
+            //    }
+            // }
 
-            foreach updateInfo in updateList {
+            foreach path in self.option.batchList {
+               let mut updateInfo =
+                  createUpdateInfo( path, (path.gsub( ".lns$", ".d" )) );
                let prev = os.clock();
                process( updateInfo );
                print( "%s:%g" ( updateInfo.$scriptPath, os.clock() - prev));
@@ -1726,7 +1728,7 @@ pub fn exec( args: &List<str> ) {
 // frontInterface.setFront( self ); で front を確定させるため
 // go の runtime_go/depend.go から、初期化処理として呼ぶ。
 pub fn setFront( bindModuleList:&List<str> ) {
-   let mut option = Option.createDefaultOption( "dummy.lns", nil );
+   let mut option = Option.createDefaultOption( ["dummy.lns"], nil );
    new Front( option, bindModuleList );
 }
 

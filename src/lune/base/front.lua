@@ -509,7 +509,7 @@ function Front:loadFromLnsTxt( importModuleInfo, name, txt )
    
    local ast = transUnit:createAST( parser, false, nil )
    
-   local _6040, luaTxt = self:convertFromAst( ast, name, convLua.ConvMode.Exec )
+   local _6040, luaTxt = self:convertFromAst( ast, name, convLua.ConvMode.ConvMeta )
    return _lune.unwrap( loadFromLuaTxt( luaTxt ))
 end
 
@@ -898,7 +898,7 @@ function Front:convertLns2LuaCode( importModuleInfo, stream, streamName )
    local mod = self:scriptPath2Module( streamName )
    local ast = self:createAst( importModuleInfo, Parser.StreamParser.new(stream, streamName, false, nil), mod, frontInterface.ModuleId.createId( 0.0, 0 ), nil, TransUnit.AnalyzeMode.Compile )
    
-   local _6205, luaTxt = self:convertFromAst( ast, streamName, convLua.ConvMode.Exec )
+   local _6205, luaTxt = self:convertFromAst( ast, streamName, convLua.ConvMode.ConvMeta )
    
    return luaTxt
 end
@@ -912,7 +912,7 @@ function Front:loadParserToLuaCode( importModuleInfo, parser, mod )
    local ast = self:createAst( importModuleInfo, parser, mod, getModuleId( path, mod ), nil, TransUnit.AnalyzeMode.Compile, nil )
    self.mod2ast:add( mod, ast )
    
-   local metaTxt, luaTxt = self:convertFromAst( ast, path, convLua.ConvMode.Exec )
+   local metaTxt, luaTxt = self:convertFromAst( ast, path, convLua.ConvMode.ConvMeta )
    Log.log( Log.Level.Trace, __func__, 551, function (  )
    
       return string.format( "Meta = %s", metaTxt)
@@ -1615,19 +1615,14 @@ function Front:createGoOption( scriptPath )
 end
 
 
-function Front:convertToLua( scriptPath, stream )
+function Front:convertToLua( scriptPath, convMode, streamLua, streamMeta )
 
    local mod = self:scriptPath2Module( scriptPath )
-   local convMode = convLua.ConvMode.Convert
-   if self.option.mode == Option.ModeKind.LuaMeta then
-      convMode = convLua.ConvMode.ConvMeta
-   end
-   
    
    local parser = createPaser( scriptPath, mod )
    local ast = self:convertLuaToStreamFromScript( parser, frontInterface.ModuleId.tempId, _lune.newAlge( ModuleUptodate.NeedUpdate), convMode, scriptPath, mod, self.option.byteCompile, self.option.stripDebugInfo, function ( mode )
    
-      return stream, stream, self.option:openDepend( nil )
+      return streamLua, streamMeta, self.option:openDepend( nil )
    end, function ( luaCodeStream, metaStream, dependStream )
    
       if dependStream ~= nil then
@@ -1640,7 +1635,7 @@ function Front:convertToLua( scriptPath, stream )
       do
          local _switchExp = self.option.convTo
          if _switchExp == Types.Lang.Go then
-            local conv = convGo.createFilter( self.option.testing, "stdout", stream, ast, self:createGoOption( scriptPath ) )
+            local conv = convGo.createFilter( self.option.testing, "stdout", streamLua, ast, self:createGoOption( scriptPath ) )
             ast:get_node():processFilter( conv, convGo.Opt.new(ast:get_node()) )
          end
       end
@@ -1861,7 +1856,7 @@ function Front:saveToLua( updateInfo )
             end
             
             if not cont then
-               Log.log( Log.Level.Debug, __func__, 1345, function (  )
+               Log.log( Log.Level.Debug, __func__, 1342, function (  )
                
                   return string.format( "<%s>, <%s>", oldLine, newLine)
                end )
@@ -2083,7 +2078,7 @@ end
 
 BuildMode.CreateAst = { "CreateAst"}
 BuildMode._name2Val["CreateAst"] = BuildMode.CreateAst
-BuildMode.Output = { "Output", {{}}}
+BuildMode.Output = { "Output", {{},{}}}
 BuildMode._name2Val["Output"] = BuildMode.Output
 BuildMode.Save = { "Save"}
 BuildMode._name2Val["Save"] = BuildMode.Save
@@ -2119,18 +2114,27 @@ function Front:build( buildMode, astCallback )
    
    local function process( updateInfo )
    
+      local mod = self:scriptPath2Module( updateInfo:get_scriptPath() )
+      if self.mod2ast:get_map()[mod] then
+         return 
+      end
+      
       do
          local _matchExp = buildMode
          if _matchExp[1] == BuildMode.Save[1] then
          
             self:saveToLua( updateInfo )
          elseif _matchExp[1] == BuildMode.Output[1] then
-            local stream = _matchExp[2][1]
+            local streamLua = _matchExp[2][1]
+            local streamMeta = _matchExp[2][2]
          
-            self:convertToLua( updateInfo:get_scriptPath(), stream )
+            self:convertToLua( updateInfo:get_scriptPath(), convLua.ConvMode.ConvMeta, streamLua, streamMeta )
          elseif _matchExp[1] == BuildMode.CreateAst[1] then
          
-            self:convertToLua( updateInfo:get_scriptPath(), Util.NullOStream.new() )
+            local streamMeta = Util.memStream.new()
+            self:convertToLua( updateInfo:get_scriptPath(), convLua.ConvMode.ConvMeta, Util.NullOStream.new(), streamMeta )
+            local metaInfo = frontInterface.ModuleMeta.new(_lune.unwrap( loadFromLuaTxt( streamMeta:get_txt() )), updateInfo:get_scriptPath())
+            self.loadedMetaMap[mod] = metaInfo
          end
       end
       
@@ -2140,23 +2144,8 @@ function Front:build( buildMode, astCallback )
    
       self.mod2ast:clear(  )
       if self.option.scriptPath == "@-" then
-         local updateList = {}
-         while true do
-            local line = io.stdin:read( "*l" )
-            if  nil == line then
-               local _line = line
-            
-               break
-            end
-            
-            if #line > 0 then
-               table.insert( updateList, createUpdateInfo( line, (line:gsub( ".lns$", ".d" ) ) ) )
-            end
-            
-         end
-         
-         
-         for __index, updateInfo in ipairs( updateList ) do
+         for __index, path in ipairs( self.option.batchList ) do
+            local updateInfo = createUpdateInfo( path, (path:gsub( ".lns$", ".d" ) ) )
             local prev = os.clock(  )
             process( updateInfo )
             print( string.format( "%s:%g", updateInfo:get_scriptPath(), os.clock(  ) - prev) )
@@ -2189,7 +2178,7 @@ _moduleObj.build = build
 function Front:exec(  )
    local __func__ = '@lune.@base.@front.Front.exec'
 
-   Log.log( Log.Level.Trace, __func__, 1622, function (  )
+   Log.log( Log.Level.Trace, __func__, 1631, function (  )
    
       return Option.ModeKind:_getTxt( self.option.mode)
       
@@ -2213,7 +2202,16 @@ function Front:exec(  )
       elseif _switchExp == Option.ModeKind.Glue then
          self:createGlue( self.option.scriptPath )
       elseif _switchExp == Option.ModeKind.Lua or _switchExp == Option.ModeKind.LuaMeta then
-         self:convertToLua( self.option.scriptPath, io.stdout )
+         local convMode
+         
+         if self.option.mode == Option.ModeKind.Lua then
+            convMode = convLua.ConvMode.Convert
+         else
+          
+            convMode = convLua.ConvMode.ConvMeta
+         end
+         
+         self:convertToLua( self.option.scriptPath, convMode, io.stdout, io.stdout )
       elseif _switchExp == Option.ModeKind.Save or _switchExp == Option.ModeKind.SaveMeta then
          self:build( _lune.newAlge( BuildMode.Save), nil )
       elseif _switchExp == Option.ModeKind.Shebang then
@@ -2291,7 +2289,7 @@ end
 _moduleObj.exec = exec
 local function setFront( bindModuleList )
 
-   local option = Option.createDefaultOption( "dummy.lns", nil )
+   local option = Option.createDefaultOption( {"dummy.lns"}, nil )
    Front.new(option, bindModuleList)
 end
 _moduleObj.setFront = setFront

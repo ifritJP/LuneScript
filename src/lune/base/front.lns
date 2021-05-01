@@ -265,7 +265,7 @@ fn Front.loadFromLnsTxt(
 
    let mut ast = transUnit.createAST( parser, false, nil );
 
-   let _, luaTxt = self.convertFromAst( ast, name, .Exec );
+   let _, luaTxt = self.convertFromAst( ast, name, .ConvMeta );
    return unwrap loadFromLuaTxt( luaTxt );
 }
 
@@ -524,7 +524,7 @@ pub fn Front.convertLns2LuaCode(
       new Parser.StreamParser( stream, streamName, false, nil ), mod,
       frontInterface.ModuleId.createId( 0.0, 0 ), nil, .Compile ## );
 
-   let _, luaTxt = self.convertFromAst( ast, streamName, convLua.ConvMode.Exec );
+   let _, luaTxt = self.convertFromAst( ast, streamName, .ConvMeta );
 
    return luaTxt;
 }
@@ -547,7 +547,7 @@ fn Front.loadParserToLuaCode(
    self.mod2ast.add( mod, ast );
    
 
-   let mut metaTxt, luaTxt = self.convertFromAst( ast, path, convLua.ConvMode.Exec );
+   let mut metaTxt, luaTxt = self.convertFromAst( ast, path, .ConvMeta );
    Log._log2( .Trace, "Meta = %s" (metaTxt) );
 
 
@@ -1137,14 +1137,11 @@ fn Front.createGoOption( scriptPath:str ) : &convGo.Option {
    return new convGo.Option( packageName, self.getGoAppName(), self.option.mainModule );
 }
 
-fn Front.convertToLua( scriptPath:str, stream:oStream ) mut {
+fn Front.convertToLua( scriptPath:str, convMode:convLua.ConvMode,
+                       streamLua:oStream, streamMeta:oStream ) mut {
    //frontInterface.setFront( self );
 
    let mod = self.scriptPath2Module( scriptPath );
-   let mut convMode = convLua.ConvMode.Convert;
-   if self.option.mode == .LuaMeta {
-      convMode = .ConvMeta;
-   }
 
    let mut parser = createPaser( scriptPath, mod );
    let mut ast = self.convertLuaToStreamFromScript(
@@ -1152,7 +1149,7 @@ fn Front.convertToLua( scriptPath:str, stream:oStream ) mut {
       ModuleUptodate.NeedUpdate, convMode, scriptPath, mod,
       self.option.byteCompile, self.option.stripDebugInfo,
       fn ( mode:ModuleUptodate ): oStream!, oStream!, oStream! {
-         return stream, stream, self.option.openDepend( nil );
+         return streamLua, streamMeta, self.option.openDepend( nil );
       },
       fn ( luaCodeStream:oStream!, metaStream:oStream!, dependStream:oStream! ) {
          when! dependStream {
@@ -1165,7 +1162,7 @@ fn Front.convertToLua( scriptPath:str, stream:oStream ) mut {
       switch self.option.convTo {
          case .Go {
             let mut conv = convGo.createFilter(
-               self.option.testing, "stdout", stream, ast,
+               self.option.testing, "stdout", streamLua, ast,
                self.createGoOption( scriptPath ) );
             ast.$node.processFilter( conv, new convGo.Opt( ast.$node ) );
          }
@@ -1543,7 +1540,7 @@ pub fn convertLnsCode2LuaCode( lnsCode:str, path:str ) : str
 alge BuildMode {
    Save,
    CreateAst,
-   Output(oStream),
+   Output(streamLua:oStream, streamMeta:oStream),
 }
 
 pub fn Front.build( buildMode:BuildMode, astCallback:AstCallback! ) mut {
@@ -1566,15 +1563,25 @@ pub fn Front.build( buildMode:BuildMode, astCallback:AstCallback! ) mut {
    }
 
    fn process( updateInfo:UpdateInfo ) {
+      let mod = self.scriptPath2Module( updateInfo.$scriptPath );
+      if self.mod2ast.$map[ mod ] {
+         return;
+      }
       _match buildMode {
          case .Save {
             self.saveToLua( updateInfo );
          }
-         case .Output( stream ) {
-            self.convertToLua( updateInfo.$scriptPath, stream );
+         case .Output( streamLua, streamMeta ) {
+            self.convertToLua(
+               updateInfo.$scriptPath, .ConvMeta, streamLua, streamMeta );       
          }
          case .CreateAst {
-            self.convertToLua( updateInfo.$scriptPath, new Util.NullOStream() );
+            let mut streamMeta = new Util.memStream();
+            self.convertToLua( updateInfo.$scriptPath, .ConvMeta,
+                               new Util.NullOStream(), streamMeta );
+            let metaInfo = new frontInterface.ModuleMeta(
+               unwrap loadFromLuaTxt( streamMeta.$txt ), updateInfo.$scriptPath );
+            self.loadedMetaMap[ mod ] = metaInfo;
          }
       }
    }
@@ -1584,18 +1591,20 @@ pub fn Front.build( buildMode:BuildMode, astCallback:AstCallback! ) mut {
       fn () {
          self.mod2ast.clear();
          if self.option.scriptPath == "@-" {
-            let mut updateList:List<UpdateInfo> = [];
-            while true {
-               let! line = io.stdin.read( "*l" ) {
-                  break;
-               };
-               if #line > 0 {
-                  updateList.insert(
-                     createUpdateInfo( line, (line.gsub( ".lns$", ".d" )) ) );
-               }
-            }
+            // let mut updateList:List<UpdateInfo> = [];
+            // while true {
+            //    let! line = io.stdin.read( "*l" ) {
+            //       break;
+            //    };
+            //    if #line > 0 {
+            //       updateList.insert(
+            //          createUpdateInfo( line, (line.gsub( ".lns$", ".d" )) ) );
+            //    }
+            // }
 
-            foreach updateInfo in updateList {
+            foreach path in self.option.batchList {
+               let mut updateInfo =
+                  createUpdateInfo( path, (path.gsub( ".lns$", ".d" )) );
                let prev = os.clock();
                process( updateInfo );
                print( "%s:%g" ( updateInfo.$scriptPath, os.clock() - prev));
@@ -1644,7 +1653,14 @@ pub fn Front.exec() mut
          self.createGlue( self.option.scriptPath );
       }
       case .Lua, .LuaMeta {
-         self.convertToLua( self.option.scriptPath, io.stdout );
+         let convMode:convLua.ConvMode;
+         if self.option.mode == .Lua {
+            convMode = .Convert;
+         } else {
+            convMode = .ConvMeta;
+         }
+         self.convertToLua(
+            self.option.scriptPath, convMode, io.stdout, io.stdout );     
       }
       case .Save, .SaveMeta {
          self.build( .Save, nil );
@@ -1726,7 +1742,7 @@ pub fn exec( args: &List<str> ) {
 // frontInterface.setFront( self ); で front を確定させるため
 // go の runtime_go/depend.go から、初期化処理として呼ぶ。
 pub fn setFront( bindModuleList:&List<str> ) {
-   let mut option = Option.createDefaultOption( "dummy.lns", nil );
+   let mut option = Option.createDefaultOption( ["dummy.lns"], nil );
    new Front( option, bindModuleList );
 }
 

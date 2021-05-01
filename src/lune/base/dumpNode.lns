@@ -904,7 +904,7 @@ __test case1(ctrl) {
    LuaVer.setCurVer( 53 );
 
    let scriptPath = "test.lns";
-   let option = Option.createDefaultOption( scriptPath, nil );
+   let option = Option.createDefaultOption( [scriptPath], nil );
    let mut ast = convLua.createAst( scriptPath, convLua.getTestLnsCode(), option );
    let dump = Ast2Dump( ast );
    print( dump );

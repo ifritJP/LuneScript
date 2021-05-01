@@ -169,7 +169,7 @@ print( Ver.version );
 print( Code.ID.nothing_define_abbr );
 ```;
    let scriptPath = "test.lns";
-   let option = Option.createDefaultOption( scriptPath, nil );
+   let option = Option.createDefaultOption( [scriptPath], nil );
    let ast = convLua.createAst( scriptPath, code, option );
    let depend = Ast2Depend( ast );
    print( depend );

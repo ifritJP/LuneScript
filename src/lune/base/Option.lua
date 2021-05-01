@@ -283,7 +283,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 7560
+   return 7578
 end
 
 
@@ -440,6 +440,7 @@ function Option:__init()
    self.validProf = false
    self.mode = ModeKind.Unknown
    self.scriptPath = ""
+   self.batchList = {}
    self.useLuneModule = nil
    self.updateOnLoad = false
    self.byteCompile = false
@@ -978,7 +979,25 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 604, function (  )
+   if option.scriptPath == "@-" then
+      while true do
+         local line = io.stdin:read( "*l" )
+         if  nil == line then
+            local _line = line
+         
+            break
+         end
+         
+         if #line > 0 then
+            table.insert( option.batchList, line )
+         end
+         
+      end
+      
+   end
+   
+   
+   Log.log( Log.Level.Log, __func__, 618, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )
@@ -989,9 +1008,20 @@ end
 end
 _moduleObj.analyze = analyze
 
-local function createDefaultOption( path, projDir )
+local function createDefaultOption( pathList, projDir )
 
-   local option = analyze( {path, "save"} )
+   local option = Option.new()
+   if #pathList == 1 then
+      option.scriptPath = pathList[1]
+   else
+    
+      option.scriptPath = "@-"
+      for __index, path in ipairs( pathList ) do
+         table.insert( option.batchList, path )
+      end
+      
+   end
+   
    option.useLuneModule = getRuntimeModule(  )
    option.useIpairs = true
    if projDir ~= nil then
