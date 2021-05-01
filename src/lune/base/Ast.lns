@@ -2603,7 +2603,7 @@ Set<T> の T を表わす型情報。
 pub class AlternateTypeInfo extend TypeInfo {
    pri let typeId:int {pub};
    pri let txt:str {pub};
-   pri let moduleTypeInfo:&TypeInfo;
+   pri let allmut parentInfo:&TypeInfo {non};
    pri let nilableTypeInfo: NilableTypeInfo {pub:&TypeInfo};
    pri let accessMode: AccessMode {pub};
    // 基底クラス。 無効な場合は headTypeInfo。
@@ -2618,7 +2618,7 @@ pub class AlternateTypeInfo extend TypeInfo {
 
 
    pub fn __init( processInfo:ProcessInfo, belongClassFlag:bool, altIndex:int,
-                  txt:str, accessMode:AccessMode, moduleTypeInfo:&TypeInfo,
+                  txt:str, accessMode:AccessMode, parentInfo:&TypeInfo,
                   baseTypeInfo: &TypeInfo!, interfaceList: &List<&TypeInfo>! )
    {
       super( TypeInfo.createScope( processInfo, nil, true, baseTypeInfo, interfaceList ),
@@ -2629,7 +2629,7 @@ pub class AlternateTypeInfo extend TypeInfo {
 
       self.txt = txt;
       self.accessMode = accessMode;
-      self.moduleTypeInfo = moduleTypeInfo;
+      self.parentInfo = parentInfo;
       self.baseTypeInfo = unwrap baseTypeInfo default headTypeInfo;
       self.interfaceList = unwrap interfaceList default [];
       self.belongClassFlag = belongClassFlag;
@@ -2640,6 +2640,10 @@ pub class AlternateTypeInfo extend TypeInfo {
          nil, processInfo, self, processInfo.$idProv.$id );
    }
 
+   local fn updateParentInfo( typeInfo:&TypeInfo ) {
+      self.parentInfo = typeInfo;
+   }
+
    /** この型がモジュールを示す型の場合 true  */
    pub override fn isModule(): bool {
       return false;
@@ -2647,7 +2651,7 @@ pub class AlternateTypeInfo extend TypeInfo {
 
    /** 親の typeId  */
    pub override fn getParentId(): int {
-      return self.moduleTypeInfo.$typeId;
+      return self.parentInfo.$typeId;
    }
 
    pub override fn get_baseId(): int {
@@ -2655,7 +2659,7 @@ pub class AlternateTypeInfo extend TypeInfo {
    }
 
    pub override fn get_parentInfo(): &TypeInfo {
-      return self.moduleTypeInfo;
+      return self.parentInfo;
    }
 
    /** この型の名前を取得する。 */
@@ -2823,13 +2827,13 @@ pub class AlternateTypeInfo extend TypeInfo {
       return .Mut;
    }
 
-   /** 親の完全限定名を取得する */
-   pub override fn getParentFullName(
-      typeNameCtrl:&TypeNameCtrl, 
-      importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
-   {
-      return "";
-   }
+   // /** 親の完全限定名を取得する */
+   // pub override fn getParentFullName(
+   //    typeNameCtrl:&TypeNameCtrl, 
+   //    importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
+   // {
+   //    return "";
+   // }
 
    pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
       let parentId = self.getParentId();
@@ -3775,7 +3779,6 @@ pub class NormalTypeInfo extend TypeInfo {
       self.parentInfo = unwrap parentInfo default headTypeInfo;
       self.mutMode = unwrap mutMode default MutMode.IMut;
 
-
       fn setupAlt2typeMap(): Map<&TypeInfo,&TypeInfo> {
 
          if self.baseTypeInfo == headTypeInfo and #self.interfaceList == 0 {
@@ -4108,12 +4111,12 @@ NormalTypeInfo インスタンスを生成する。
 
 pub fn ProcessInfo.createAlternate(
    belongClassFlag:bool, altIndex:int,
-   txt:str, accessMode:AccessMode, moduleTypeInfo:&TypeInfo,
-   baseTypeInfo: &TypeInfo!, interfaceList: &List<&TypeInfo>! ) mut : &AlternateTypeInfo
+   txt:str, accessMode:AccessMode, parentInfo:&TypeInfo,
+   baseTypeInfo: &TypeInfo!, interfaceList: &List<&TypeInfo>! ) mut : AlternateTypeInfo
 {
    return new AlternateTypeInfo(
       self, belongClassFlag, altIndex, txt,
-      accessMode, moduleTypeInfo, baseTypeInfo, interfaceList );
+      accessMode, parentInfo, baseTypeInfo, interfaceList );
 }
 
 pub proto class DDDTypeInfo extend TypeInfo;
@@ -4753,6 +4756,11 @@ pub fn ProcessInfo.createClass(
       className, parentInfo, self.$idProv.getNewId(),
       classFlag and TypeInfoKind.Class or TypeInfoKind.IF,
       genTypeList, nil, nil, .Mut, nil );
+
+   foreach genType in genTypeList {
+      genType.updateParentInfo( info );
+   }
+   
    return info;
 }
 
@@ -4790,7 +4798,7 @@ pub fn ProcessInfo.createFunc(
    parentInfo: &TypeInfo, autoFlag: bool, externalFlag: bool,
    staticFlag: bool, accessMode: AccessMode, funcName: str,
    altTypeList: &List<&TypeInfo>!, argTypeList: &List<&TypeInfo>!,
-   retTypeInfoList: &List<&TypeInfo>!, mutable: bool! ) mut : &TypeInfo
+   retTypeInfoList: &List<&TypeInfo>!, mutable: bool! ) mut : NormalTypeInfo
 {
    if not builtinFlag and Parser.isLuaKeyword( funcName ) {
       Util.err( "This symbol can not use for a function. -- %s" (funcName) );
@@ -4802,6 +4810,15 @@ pub fn ProcessInfo.createFunc(
       kind, unwrap altTypeList default [], unwrap argTypeList default [],
       unwrap retTypeInfoList default [],
       mutable and MutMode.Mut or MutMode.IMut, nil );
+
+   when! altTypeList {
+      foreach genType in altTypeList {
+         if! genType@@@AlternateTypeInfo {
+            _exp.updateParentInfo( info );
+         }
+      }
+   }
+   
    return info;
 }
 
@@ -7327,8 +7344,8 @@ __test case1(ctrl) {
 
 
    // Hoge<int> と Hoge<int> の canEvalWith
-   let mut genTypeList:List<&AlternateTypeInfo> = [];
-   let alter = processInfo.createAlternate( true, 1, "T", .Pri, headTypeInfo ## );
+   let mut genTypeList:List<AlternateTypeInfo> = [];
+   let mut alter = processInfo.createAlternate( true, 1, "T", .Pri, headTypeInfo ## );
    genTypeList.insert( alter );
    let hogeType = processInfo.createClass(
       true, false, new Scope( processInfo, rootScope, true ## ),

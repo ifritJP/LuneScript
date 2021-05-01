@@ -336,11 +336,11 @@ func (self *OutputDepend_Front) LoadMeta(importModuleInfo *FrontInterface_Import
     var mess LnsAny
     loaded,mess = Lns_getVM().Loadfile(metaPath)
     if loaded != nil{
-        loaded_5809 := loaded.(*Lns_luaValue)
+        loaded_5807 := loaded.(*Lns_luaValue)
         var meta LnsAny
         
         {
-            _meta := OutputDepend_convExp502(Lns_2DDD(Lns_getVM().RunLoadedfunc(loaded_5809,Lns_2DDD([]LnsAny{}))[0]))
+            _meta := OutputDepend_convExp502(Lns_2DDD(Lns_getVM().RunLoadedfunc(loaded_5807,Lns_2DDD([]LnsAny{}))[0]))
             if _meta == nil{
                 return nil
             } else {
