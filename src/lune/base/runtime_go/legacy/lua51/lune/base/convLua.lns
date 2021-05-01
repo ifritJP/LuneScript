@@ -49,8 +49,6 @@ class PubFuncInfo {
 }
 
 pub enum ConvMode {
-   /** lns ソースを実行する */
-   Exec,
    /** lua への変換を行なう */
    Convert,
    /** lua への変換と、 Meta 情報生成を行なう */
@@ -3513,7 +3511,7 @@ pub class MacroEvalImp extend Nodes.MacroEval {
    {
       let mut stream = new Util.memStream();
       let mut conv = new convFilter(
-         "macro", stream, stream, .Exec, true, Ast.headTypeInfo,
+         "macro", stream, stream, .ConvMeta, true, Ast.headTypeInfo,
          processInfo, .Typ, nil, LuaVer.getCurVer(), false, true );
 
       conv.outputDeclMacro(
@@ -3533,7 +3531,7 @@ pub class MacroEvalImp extend Nodes.MacroEval {
    {
       let mut stream = new Util.memStream();
       let mut conv = new convFilter(
-         "macro", stream, stream, .Exec, true, Ast.headTypeInfo,
+         "macro", stream, stream, .ConvMeta, true, Ast.headTypeInfo,
          processInfo, .Typ, nil, LuaVer.getCurVer(), false, true );
 
       conv.processDeclMacro( node, new Opt( node ) );

@@ -221,8 +221,9 @@ function ModInfo:getLatestProjRoot(  )
 
    return _lune.nilacc( self.latestModProjInfo, 'get_projRoot', 'callmtd' )
 end
-function ModInfo:getLocalModulePath( path )
+function ModInfo:getLocalModulePathList( path )
 
+   local pathList = {}
    for mod, ver in pairs( self.moduleMap ) do
       if path:find( mod, 1, true ) == 1 then
          local relativeName = path:sub( #mod + 2 )
@@ -230,39 +231,43 @@ function ModInfo:getLocalModulePath( path )
          do
             local replacePath = self.replaceMap[mod]
             if replacePath ~= nil then
-               return Util.pathJoin( replacePath, relativeName )
+               table.insert( pathList, Util.pathJoin( replacePath, relativeName ) )
+               break
             end
          end
          
          
-         local gomod = ""
-         for __index, aChar in pairs( {mod:byte( 1, #mod )} ) do
-            if aChar ~= nil then
-               if aChar >= 65 and aChar <= 90 then
-                  gomod = string.format( "%s!%c", gomod, aChar - 65 + 97)
-               else
-                
-                  gomod = string.format( "%s%c", gomod, aChar)
-               end
-               
-            end
-            
-         end
-         
-         gomod = string.format( "%s@%s", gomod, ver)
          do
             local gopath = Depend.getGOPATH(  )
             if gopath ~= nil then
-               local modpath = Util.pathJoin( gopath, string.format( "pkg/mod/%s", gomod) )
-               return Util.pathJoin( modpath, relativeName )
+               table.insert( pathList, Util.pathJoin( gopath, string.format( "src/%s", path) ) )
+               
+               local gomod = ""
+               for __index, aChar in pairs( {mod:byte( 1, #mod )} ) do
+                  if aChar ~= nil then
+                     if aChar >= 65 and aChar <= 90 then
+                        gomod = string.format( "%s!%c", gomod, aChar - 65 + 97)
+                     else
+                      
+                        gomod = string.format( "%s%c", gomod, aChar)
+                     end
+                     
+                  end
+                  
+               end
+               
+               gomod = string.format( "%s@%s", gomod, ver)
+               
+               table.insert( pathList, Util.pathJoin( gopath, string.format( "pkg/mod/%s/%s", gomod, relativeName) ) )
             end
          end
          
+         break
       end
       
    end
    
-   return nil
+   return pathList
 end
 function ModInfo:convPath( mod, suffix )
 
@@ -323,15 +328,7 @@ function ModInfo:convLocalModulePath( mod, suffix )
    end
    
    
-   local pathList = {}
-   
-   do
-      local _exp = self:getLocalModulePath( workMod )
-      if _exp ~= nil then
-         table.insert( pathList, _exp )
-      end
-   end
-   
+   local pathList = self:getLocalModulePathList( workMod )
    table.insert( pathList, Util.pathJoin( "vendor", workMod ) )
    
    for __index, path in ipairs( pathList ) do
@@ -343,7 +340,7 @@ function ModInfo:convLocalModulePath( mod, suffix )
          return _lune.newAlge( GoModResult.Found, {projInfo})
       else
        
-         Log.log( Log.Level.Log, __func__, 146, function (  )
+         Log.log( Log.Level.Log, __func__, 151, function (  )
          
             return string.format( "not found %s", path)
          end )

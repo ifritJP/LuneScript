@@ -44,33 +44,42 @@ pub class ModInfo {
       return self.latestModProjInfo$.$projRoot;
    }
 
-   fn getLocalModulePath( path:str ) : str! {
+   fn getLocalModulePathList( path:str ) : List<str> {
+      let mut pathList:List<str> = [];
       foreach ver, mod in self.moduleMap {
          if path.find( mod, 1, true ) == 1 {
             let relativeName = path.sub( #mod + 2 ## );
             
             if! let replacePath = self.replaceMap[ mod ] {
-               return Util.pathJoin( replacePath, relativeName );
+               // replace が指定されている場合、
+               // パスを replace に置き換え
+               pathList.insert( Util.pathJoin( replacePath, relativeName ) );
+               break;
             }
             
-            let mut gomod = "";
-            foreach aChar in [ mod.byte(1,#mod) ] {
-               when! aChar {
-                  if aChar >= ?A and aChar <= ?Z {
-                     gomod = "%s!%c" (gomod, aChar - ?A + ?a);
-                  } else {
-                     gomod = "%s%c" (gomod, aChar);
+            if! let gopath = Depend.getGOPATH() {
+               pathList.insert( Util.pathJoin( gopath, "src/%s" ( path ) ) );
+
+
+               let mut gomod = "";
+               foreach aChar in [ mod.byte(1,#mod) ] {
+                  when! aChar {
+                     if aChar >= ?A and aChar <= ?Z {
+                        gomod = "%s!%c" (gomod, aChar - ?A + ?a);
+                     } else {
+                        gomod = "%s%c" (gomod, aChar);
+                     }
                   }
                }
+               gomod = "%s@%s" (gomod,ver);
+               
+               pathList.insert(
+                  Util.pathJoin( gopath, "pkg/mod/%s/%s" (gomod, relativeName) ) );
             }
-            gomod = "%s@%s" (gomod,ver);
-            if! let gopath = Depend.getGOPATH() {
-               let modpath = Util.pathJoin( gopath, "pkg/mod/%s" (gomod) );
-               return Util.pathJoin( modpath, relativeName );
-            }
+            break;
          }
       }
-      return nil;
+      return pathList;
    }
 
    fn convPath( mod:str, suffix:str ):str {
@@ -128,12 +137,8 @@ go/github:com.ifritJP. 等の go 用のモジュールパスを、
          return .Found( _exp );
       }
       
-      let mut pathList:List<str> = [];
-
-      if! self.getLocalModulePath( workMod ) {
-         pathList.insert( _exp );
-      }
-      pathList.insert(  Util.pathJoin( "vendor", workMod ) );
+      let mut pathList = self.getLocalModulePathList( workMod );
+      pathList.insert( Util.pathJoin( "vendor", workMod ) );
 
       foreach path in pathList {
          if Depend.existFile( path ) {

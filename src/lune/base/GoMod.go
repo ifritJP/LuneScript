@@ -13,7 +13,7 @@ var GoMod_BlockKindList_ = NewLnsList( []LnsAny {
   GoMod_BlockKind__Require,
   GoMod_BlockKind__Replace,
 })
-func GoMod_BlockKind_get__allList_1119_() *LnsList{
+func GoMod_BlockKind_get__allList_1122_() *LnsList{
     return GoMod_BlockKindList_
 }
 var GoMod_BlockKindMap_ = map[LnsInt]string {
@@ -21,7 +21,7 @@ var GoMod_BlockKindMap_ = map[LnsInt]string {
   GoMod_BlockKind__Replace: "BlockKind.Replace",
   GoMod_BlockKind__Require: "BlockKind.Require",
 }
-func GoMod_BlockKind__from_1112_(arg1 LnsInt) LnsAny{
+func GoMod_BlockKind__from_1115_(arg1 LnsInt) LnsAny{
     if _, ok := GoMod_BlockKindMap_[arg1]; ok { return arg1 }
     return nil
 }
@@ -49,25 +49,25 @@ var GoMod_GoModResult__NotGo_Obj = &GoMod_GoModResult__NotGo{}
 func (self *GoMod_GoModResult__NotGo) GetTxt() string {
 return "GoModResult.NotGo"
 }
-// for 202
-func GoMod_convExp1214(arg1 []LnsAny) LnsAny {
+// for 207
+func GoMod_convExp1234(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 85
-func GoMod_convExp430(arg1 []LnsAny) string {
+// for 94
+func GoMod_convExp472(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 82
-func GoMod_convExp392(arg1 []LnsAny) string {
+// for 91
+func GoMod_convExp434(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 208
-func GoMod_convExp1004(arg1 []LnsAny) string {
+// for 213
+func GoMod_convExp1024(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 
-// 186: decl @lune.@base.@GoMod.getReplace
-func GoMod_getReplace_1129_(_map *LnsMap,tokenList *LnsList,modIndex LnsInt) {
+// 191: decl @lune.@base.@GoMod.getReplace
+func GoMod_getReplace_1132_(_map *LnsMap,tokenList *LnsList,modIndex LnsInt) {
     var prevArrow bool
     prevArrow = false
     for _, _token := range( tokenList.Items ) {
@@ -82,7 +82,7 @@ func GoMod_getReplace_1129_(_map *LnsMap,tokenList *LnsList,modIndex LnsInt) {
     }
 }
 
-// 198: decl @lune.@base.@GoMod.getGoMap
+// 203: decl @lune.@base.@GoMod.getGoMap
 func GoMod_getGoMap() *GoMod_ModInfo {
     var requireMap *LnsMap
     requireMap = NewLnsMap( map[LnsAny]LnsAny{})
@@ -91,7 +91,7 @@ func GoMod_getGoMap() *GoMod_ModInfo {
     var name string
     name = "lnsc"
     {
-        _file := GoMod_convExp1214(Lns_2DDD(Lns_io_open("go.mod", nil)))
+        _file := GoMod_convExp1234(Lns_2DDD(Lns_io_open("go.mod", nil)))
         if _file != nil {
             file := _file.(Lns_luaStream)
             var inBlock LnsInt
@@ -108,24 +108,24 @@ func GoMod_getGoMap() *GoMod_ModInfo {
                     }
                 }
                 var trimedLine string
-                trimedLine = GoMod_convExp1004(Lns_2DDD(Lns_getVM().String_gsub(line,"^%s", "")))
+                trimedLine = GoMod_convExp1024(Lns_2DDD(Lns_getVM().String_gsub(line,"^%s", "")))
                 var tokenList *LnsList
                 tokenList = Util_splitStr(trimedLine, "[^%s]+")
-                if _switch1210 := inBlock; _switch1210 == GoMod_BlockKind__Require {
+                if _switch1230 := inBlock; _switch1230 == GoMod_BlockKind__Require {
                     if Lns_isCondTrue( Lns_car(Lns_getVM().String_find(line,"^%)", nil, nil))){
                         inBlock = GoMod_BlockKind__None
                         
                     } else { 
                         requireMap.Set(tokenList.GetAt(1).(string),tokenList.GetAt(2).(string))
                     }
-                } else if _switch1210 == GoMod_BlockKind__Replace {
+                } else if _switch1230 == GoMod_BlockKind__Replace {
                     if Lns_isCondTrue( Lns_car(Lns_getVM().String_find(line,"^%)", nil, nil))){
                         inBlock = GoMod_BlockKind__None
                         
                     } else { 
-                        GoMod_getReplace_1129_(replaceMap, tokenList, 1)
+                        GoMod_getReplace_1132_(replaceMap, tokenList, 1)
                     }
-                } else if _switch1210 == GoMod_BlockKind__None {
+                } else if _switch1230 == GoMod_BlockKind__None {
                     if Lns_isCondTrue( Lns_car(Lns_getVM().String_find(line,"^module%s+", nil, nil))){
                         name = tokenList.GetAt(2).(string)
                         
@@ -137,7 +137,7 @@ func GoMod_getGoMap() *GoMod_ModInfo {
                         inBlock = GoMod_BlockKind__Require
                         
                     } else if Lns_isCondTrue( Lns_car(Lns_getVM().String_find(line,"^replace%s+[^%(]", nil, nil))){
-                        GoMod_getReplace_1129_(replaceMap, tokenList, 2)
+                        GoMod_getReplace_1132_(replaceMap, tokenList, 2)
                     } else if Lns_isCondTrue( Lns_car(Lns_getVM().String_find(line,"^replace%s+%(", nil, nil))){
                         inBlock = GoMod_BlockKind__Replace
                         
@@ -203,7 +203,7 @@ type GoMod_ModInfoMtd interface {
     ConvLocalModulePath(arg1 string, arg2 string) LnsAny
     convPath(arg1 string, arg2 string) string
     GetLatestProjRoot() LnsAny
-    getLocalModulePath(arg1 string) LnsAny
+    getLocalModulePathList(arg1 string) *LnsList
     GetLuaModulePath(arg1 string) string
     getProjRootPath(arg1 string, arg2 string)(string, string)
     Get_moduleMap() *LnsMap
@@ -267,8 +267,10 @@ func (self *GoMod_ModInfo) GetLatestProjRoot() LnsAny {
     Lns_NilAccCall1( Lns_GetEnv(), func () LnsAny { return Lns_GetEnv().NilAccPop().(*GoMod_ModProjInfo).FP.Get_projRoot()}))
 }
 
-// 47: decl @lune.@base.@GoMod.ModInfo.getLocalModulePath
-func (self *GoMod_ModInfo) getLocalModulePath(path string) LnsAny {
+// 47: decl @lune.@base.@GoMod.ModInfo.getLocalModulePathList
+func (self *GoMod_ModInfo) getLocalModulePathList(path string) *LnsList {
+    var pathList *LnsList
+    pathList = NewLnsList([]LnsAny{})
     for _mod, _ver := range( self.moduleMap.Items ) {
         mod := _mod.(string)
         ver := _ver.(string)
@@ -279,55 +281,56 @@ func (self *GoMod_ModInfo) getLocalModulePath(path string) LnsAny {
                 _replacePath := self.replaceMap.Items[mod]
                 if _replacePath != nil {
                     replacePath := _replacePath.(string)
-                    return Util_pathJoin(replacePath, relativeName)
+                    pathList.Insert(Util_pathJoin(replacePath, relativeName))
+                    break
                 }
             }
-            var gomod string
-            gomod = ""
-            for _, _aChar := range( NewLnsList(Lns_getVM().String_byte(mod,1, len(mod))).Items ) {
-                aChar := _aChar
-                if aChar != nil{
-                    aChar_317 := aChar.(LnsInt)
-                    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
-                        Lns_GetEnv().SetStackVal( aChar_317 >= 65) &&
-                        Lns_GetEnv().SetStackVal( aChar_317 <= 90) ).(bool)){
-                        gomod = Lns_getVM().String_format("%s!%c", []LnsAny{gomod, aChar_317 - 65 + 97})
-                        
-                    } else { 
-                        gomod = Lns_getVM().String_format("%s%c", []LnsAny{gomod, aChar_317})
-                        
-                    }
-                }
-            }
-            gomod = Lns_getVM().String_format("%s@%s", []LnsAny{gomod, ver})
-            
             {
                 _gopath := Depend_getGOPATH()
                 if _gopath != nil {
                     gopath := _gopath.(string)
-                    var modpath string
-                    modpath = Util_pathJoin(gopath, Lns_getVM().String_format("pkg/mod/%s", []LnsAny{gomod}))
-                    return Util_pathJoin(modpath, relativeName)
+                    pathList.Insert(Util_pathJoin(gopath, Lns_getVM().String_format("src/%s", []LnsAny{path})))
+                    var gomod string
+                    gomod = ""
+                    for _, _aChar := range( NewLnsList(Lns_getVM().String_byte(mod,1, len(mod))).Items ) {
+                        aChar := _aChar
+                        if aChar != nil{
+                            aChar_320 := aChar.(LnsInt)
+                            if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                                Lns_GetEnv().SetStackVal( aChar_320 >= 65) &&
+                                Lns_GetEnv().SetStackVal( aChar_320 <= 90) ).(bool)){
+                                gomod = Lns_getVM().String_format("%s!%c", []LnsAny{gomod, aChar_320 - 65 + 97})
+                                
+                            } else { 
+                                gomod = Lns_getVM().String_format("%s%c", []LnsAny{gomod, aChar_320})
+                                
+                            }
+                        }
+                    }
+                    gomod = Lns_getVM().String_format("%s@%s", []LnsAny{gomod, ver})
+                    
+                    pathList.Insert(Util_pathJoin(gopath, Lns_getVM().String_format("pkg/mod/%s/%s", []LnsAny{gomod, relativeName})))
                 }
             }
+            break
         }
     }
-    return nil
+    return pathList
 }
 
-// 76: decl @lune.@base.@GoMod.ModInfo.convPath
+// 85: decl @lune.@base.@GoMod.ModInfo.convPath
 func (self *GoMod_ModInfo) convPath(mod string,suffix string) string {
     return Lns_car(Lns_getVM().String_gsub(Lns_car(Lns_getVM().String_gsub(Lns_car(Lns_getVM().String_gsub(mod,"^go/", "")).(string),"%.", "/")).(string),":", ".")).(string) + suffix
 }
 
-// 80: decl @lune.@base.@GoMod.ModInfo.getProjRootPath
+// 89: decl @lune.@base.@GoMod.ModInfo.getProjRootPath
 func (self *GoMod_ModInfo) getProjRootPath(mod string,path string)(string, string) {
     var convPath string
-    convPath = GoMod_convExp392(Lns_2DDD(Lns_getVM().String_gsub(self.FP.convPath(mod, ".lns"),"github%.com/[^/]+/[^/]+/", "")))
+    convPath = GoMod_convExp434(Lns_2DDD(Lns_getVM().String_gsub(self.FP.convPath(mod, ".lns"),"github%.com/[^/]+/[^/]+/", "")))
     var projRoot string
     projRoot = Lns_getVM().String_sub(path,1, len(path) - len(convPath))
     if projRoot != "/"{
-        projRoot = GoMod_convExp430(Lns_2DDD(Lns_getVM().String_gsub(projRoot,"/$", "")))
+        projRoot = GoMod_convExp472(Lns_2DDD(Lns_getVM().String_gsub(projRoot,"/$", "")))
         
     }
     path = Util_parentPath(path)
@@ -337,10 +340,10 @@ func (self *GoMod_ModInfo) getProjRootPath(mod string,path string)(string, strin
     var startIndex LnsInt
     startIndex = modList.Len()
     {
-        var _from522 LnsInt = 1
-        var _to522 LnsInt = modList.Len()
-        for _work522 := _from522; _work522 <= _to522; _work522++ {
-            modIndex := _work522
+        var _from564 LnsInt = 1
+        var _to564 LnsInt = modList.Len()
+        for _work564 := _from564; _work564 <= _to564; _work564++ {
+            modIndex := _work564
             if Depend_existFile(Util_pathJoin(path, "lune.js")){
                 startIndex = modIndex
                 
@@ -358,10 +361,10 @@ func (self *GoMod_ModInfo) getProjRootPath(mod string,path string)(string, strin
     var convMod string
     convMod = ""
     {
-        var _from575 LnsInt = modList.Len() - startIndex + 1
-        var _to575 LnsInt = modList.Len()
-        for _work575 := _from575; _work575 <= _to575; _work575++ {
-            index := _work575
+        var _from617 LnsInt = modList.Len() - startIndex + 1
+        var _to617 LnsInt = modList.Len()
+        for _work617 := _from617; _work617 <= _to617; _work617++ {
+            index := _work617
             if convMod != ""{
                 convMod = Lns_getVM().String_format("%s.", []LnsAny{convMod})
                 
@@ -373,7 +376,7 @@ func (self *GoMod_ModInfo) getProjRootPath(mod string,path string)(string, strin
     return path, convMod
 }
 
-// 120: decl @lune.@base.@GoMod.ModInfo.convLocalModulePath
+// 129: decl @lune.@base.@GoMod.ModInfo.convLocalModulePath
 func (self *GoMod_ModInfo) ConvLocalModulePath(mod string,suffix string) LnsAny {
     __func__ := "@lune.@base.@GoMod.ModInfo.convLocalModulePath"
     if Lns_op_not(Lns_car(Lns_getVM().String_find(mod,"^go/", nil, nil))){
@@ -391,14 +394,7 @@ func (self *GoMod_ModInfo) ConvLocalModulePath(mod string,suffix string) LnsAny 
         }
     }
     var pathList *LnsList
-    pathList = NewLnsList([]LnsAny{})
-    {
-        __exp := self.FP.getLocalModulePath(workMod)
-        if __exp != nil {
-            _exp := __exp.(string)
-            pathList.Insert(_exp)
-        }
-    }
+    pathList = self.FP.getLocalModulePathList(workMod)
     pathList.Insert(Util_pathJoin("vendor", workMod))
     for _, _path := range( pathList.Items ) {
         path := _path.(string)
@@ -413,7 +409,7 @@ func (self *GoMod_ModInfo) ConvLocalModulePath(mod string,suffix string) LnsAny 
             
             return &GoMod_GoModResult__Found{projInfo}
         } else { 
-            Log_log(Log_Level__Log, __func__, 146, Log_CreateMessage(func() string {
+            Log_log(Log_Level__Log, __func__, 151, Log_CreateMessage(func() string {
                 return Lns_getVM().String_format("not found %s", []LnsAny{path})
             }))
             
@@ -422,16 +418,16 @@ func (self *GoMod_ModInfo) ConvLocalModulePath(mod string,suffix string) LnsAny 
     return GoMod_GoModResult__NotFound_Obj
 }
 
-// 163: decl @lune.@base.@GoMod.ModInfo.getLuaModulePath
+// 168: decl @lune.@base.@GoMod.ModInfo.getLuaModulePath
 func (self *GoMod_ModInfo) GetLuaModulePath(mod string) string {
     var info *GoMod_ModProjInfo
-    switch _exp859 := self.FP.ConvLocalModulePath(mod, ".lns").(type) {
+    switch _exp879 := self.FP.ConvLocalModulePath(mod, ".lns").(type) {
     case *GoMod_GoModResult__NotGo:
         return mod
     case *GoMod_GoModResult__NotFound:
         return mod
     case *GoMod_GoModResult__Found:
-    workInfo := _exp859.Val1
+    workInfo := _exp879.Val1
         info = workInfo
         
     }
