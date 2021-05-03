@@ -18,7 +18,7 @@ class Sub extend Test {
 
    let test2 = test@@Test; // error
 
-   let obj:stem = test;
+   let obj:&stem = test;
    let test3 = obj@@=Test; // error
    let test4 = obj@@=Sub; // error
 }

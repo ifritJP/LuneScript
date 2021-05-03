@@ -71,6 +71,7 @@ pub class ProcessInfo {
    let mut idProvExt:IdProvider {pub};
    let mut typeInfo2Map:TypeInfo2Map!;
    let mut validExtType:bool {pub};
+   let validCheckingMutable:bool {pub};
 
    local fn get_typeInfo2Map() mut : TypeInfo2Map {
       return unwrap self.typeInfo2Map;
@@ -79,8 +80,11 @@ pub class ProcessInfo {
       self.typeInfo2Map = typeInfo2Map;
    }
       
-   pri fn __init( idProvBase:IdProvider, validExtType:bool, typeInfo2Map:TypeInfo2Map! )
+   pri fn __init(
+      validCheckingMutable:bool, idProvBase:IdProvider,
+      validExtType:bool, typeInfo2Map:TypeInfo2Map! )
    {
+      self.validCheckingMutable = validCheckingMutable;
       self.validExtType = validExtType;
       self.idProvBase = idProvBase;
       self.idProvExt = new IdProvider( extStartId, extMaxId );
@@ -92,14 +96,16 @@ pub class ProcessInfo {
 
    local static fn createRoot() : ProcessInfo
    {
-      return new ProcessInfo( new IdProvider( 0, userStartId ), true, nil );
+      return new ProcessInfo( true, new IdProvider( 0, userStartId ), true, nil );
    }
 
    local static fn createUser(
+      validCheckingMutable:bool,
       validExtType:bool, typeInfo2Map:TypeInfo2Map! ) : ProcessInfo
    {
-      return new ProcessInfo( new IdProvider( userStartId, extStartId ),
-                              validExtType, typeInfo2Map );    
+      return new ProcessInfo(
+         validCheckingMutable, new IdProvider( userStartId, extStartId ),
+         validExtType, typeInfo2Map );    
    }
    
    pub fn switchIdProvier( idType:IdType ) mut {
@@ -1131,7 +1137,7 @@ pub class RootTypeInfo extend TypeInfo {
 
 
 /** TypeInfo の head。 */
-pub let headTypeInfo:TypeInfo = RootTypeInfo.create();
+pub let headTypeInfo:&TypeInfo = RootTypeInfo.create();
 //pub let headTypeInfo:TypeInfo = new TypeInfo( rootScope, rootProcessInfo );
 //let rootTypeInfo:TypeInfo = new TypeInfo( rootScope );
 
@@ -3275,7 +3281,7 @@ pub class ModifierTypeInfo extend TypeInfo {
    }
 
    pub override fn equals(
-      processInfo:ProcessInfo, typeInfo: TypeInfo,
+      processInfo:ProcessInfo, typeInfo: &TypeInfo,
       alt2type:Map<&TypeInfo,&TypeInfo>!, checkModifer:bool! ): bool
    {
       if checkModifer {
@@ -3668,11 +3674,11 @@ pub class NormalTypeInfo extend TypeInfo {
    // 外部モジュールで定義した TypeInfo かどうか
    pri let externalFlag: bool { pub };
    // generic のタイプ
-   pri let itemTypeInfoList: List<&TypeInfo> { pub };
+   pri let itemTypeInfoList: &List<&TypeInfo> { pub };
    // 引数のタイプ
-   pri let argTypeInfoList: List<&TypeInfo> { pub };
+   pri let argTypeInfoList: &List<&TypeInfo> { pub };
    // 戻り値のタイプ
-   pri let retTypeInfoList: List<&TypeInfo> { pub };
+   pri let retTypeInfoList: &List<&TypeInfo> { pub };
    // 親のタイプ。メソッドの親はクラスとなる。
    pri let mut parentInfo: &TypeInfo { pub };
    // タイプ ID
@@ -3693,14 +3699,14 @@ pub class NormalTypeInfo extend TypeInfo {
    // 基底クラス。 無効な場合は headTypeInfo。
    pri let baseTypeInfo: &TypeInfo { pub };
    // インタフェースのリスト。
-   pri let interfaceList: List<&TypeInfo> { pub };
+   pri let interfaceList: &List<&TypeInfo> { pub };
 
    // この型の nilable 版の TypeInfo。 無効な場合は headTypeInfo。
    pri let mut nilableTypeInfo: &TypeInfo { pub };
    // このメソッドの mutMode。
    pri let mut mutMode: MutMode {pub,pub};
 
-   pri let alt2typeMap:Map<&TypeInfo,&TypeInfo>;
+   pri let alt2typeMap:&Map<&TypeInfo,&TypeInfo>;
    pri let moduleLang:Types.Lang!;
    pri let mut requirePath:str {pub,local};
 
@@ -4067,7 +4073,7 @@ pub class NormalTypeInfo extend TypeInfo {
    }
 
    pub override fn equals(
-      processInfo:ProcessInfo, typeInfo: TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>!,
+      processInfo:ProcessInfo, typeInfo: &TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>!,
       checkModifer:bool! ): bool
    {
       return self.equalsSub( processInfo, typeInfo, alt2type, checkModifer );
@@ -4356,38 +4362,38 @@ pub static fn NormalTypeInfo.createBuiltin(
    return info;
 }
 
-pub let builtinTypeNone:TypeInfo =
+pub let builtinTypeNone:&TypeInfo =
    NormalTypeInfo.createBuiltin( "__None", "", .Prim## );
 // 型が確定していない変数の型は、 builtinTypeEmpty とする
-pub let builtinTypeEmpty:TypeInfo =
+pub let builtinTypeEmpty:&TypeInfo =
    NormalTypeInfo.createBuiltin( "__Empty", "::", .Prim## );
-pub let builtinTypeNeverRet:TypeInfo =
+pub let builtinTypeNeverRet:&TypeInfo =
    NormalTypeInfo.createBuiltin( "__NRet", "__", .Prim## );
-pub let builtinTypeStem:TypeInfo =
+pub let builtinTypeStem:&TypeInfo =
    NormalTypeInfo.createBuiltin( "Stem", "stem" , .Stem## );
 pub let builtinTypeStem_ = builtinTypeStem.$nilableTypeInfo;
 
-pub let builtinTypeBool:TypeInfo =
+pub let builtinTypeBool:&TypeInfo =
    NormalTypeInfo.createBuiltin( "Bool", "bool" , .Prim## );
-pub let builtinTypeInt:TypeInfo =
+pub let builtinTypeInt:&TypeInfo =
    NormalTypeInfo.createBuiltin( "Int", "int" , .Prim## );
-pub let builtinTypeReal:TypeInfo =
+pub let builtinTypeReal:&TypeInfo =
    NormalTypeInfo.createBuiltin( "Real", "real" , .Prim## );
-pub let builtinTypeChar:TypeInfo =
+pub let builtinTypeChar:&TypeInfo =
    NormalTypeInfo.createBuiltin( "char", "__char" , .Prim## );
-pub let builtinTypeMapping:TypeInfo =
+pub let builtinTypeMapping:&TypeInfo =
    NormalTypeInfo.createBuiltin( "Mapping", "Mapping" , .IF## );
-pub let builtinTypeAsyncItem:TypeInfo =
+pub let builtinTypeAsyncItem:&TypeInfo =
    NormalTypeInfo.createBuiltin( "__AsyncItem", "__AsyncItem" , .IF## );
-pub let builtinTypeString:TypeInfo =
+pub let builtinTypeString:&TypeInfo =
    NormalTypeInfo.createBuiltin( "String", "str" , .Class, nil, [ builtinTypeMapping ] );
-pub let builtinTypeMap:TypeInfo =
+pub let builtinTypeMap:&TypeInfo =
    NormalTypeInfo.createBuiltin( "Map", "Map" , .Map## );
-pub let builtinTypeSet:TypeInfo =
+pub let builtinTypeSet:&TypeInfo =
    NormalTypeInfo.createBuiltin( "Set", "Set" , .Set## );
-pub let builtinTypeList:TypeInfo =
+pub let builtinTypeList:&TypeInfo =
    NormalTypeInfo.createBuiltin( "List", "List" , .List## );
-pub let builtinTypeArray:TypeInfo =
+pub let builtinTypeArray:&TypeInfo =
    NormalTypeInfo.createBuiltin( "Array", "Array" , .Array## );
 
 immutableTypeSet.add( builtinTypeBool );
@@ -5063,25 +5069,25 @@ pub fn ProcessInfo.createDDD(
 
 
 
-pub let builtinTypeNil:TypeInfo = new NilTypeInfo( rootProcessInfo );
+pub let builtinTypeNil:&TypeInfo = new NilTypeInfo( rootProcessInfo );
 registBuiltin( "Nil", "nil", .Prim, builtinTypeNil, headTypeInfo, false );
 
-pub let builtinTypeDDD:TypeInfo =
+pub let builtinTypeDDD:&TypeInfo =
    rootProcessInfo.createDDD( builtinTypeStem_, true, false );
 registBuiltin( "DDD", "...", .DDD, builtinTypeDDD, headTypeInfo, false );
 
 
-pub let builtinTypeForm:TypeInfo =
+pub let builtinTypeForm:&TypeInfo =
    NormalTypeInfo.createBuiltin( "Form", "form" , .Form, builtinTypeDDD ## );
 immutableTypeSet.add( builtinTypeForm );
 
-pub let builtinTypeSymbol:TypeInfo =
+pub let builtinTypeSymbol:&TypeInfo =
    NormalTypeInfo.createBuiltin( "Symbol", "sym" , .Prim## );
-pub let builtinTypeStat:TypeInfo =
+pub let builtinTypeStat:&TypeInfo =
    NormalTypeInfo.createBuiltin( "Stat", "stat" , .Prim## );
-pub let builtinTypeExp:TypeInfo =
+pub let builtinTypeExp:&TypeInfo =
    NormalTypeInfo.createBuiltin( "Exp", "__exp" , .Prim## );
-pub let builtinTypeMultiExp:TypeInfo =
+pub let builtinTypeMultiExp:&TypeInfo =
    NormalTypeInfo.createBuiltin( "Exps", "__exps" , .Prim## );
 
 
@@ -5557,8 +5563,8 @@ pub class AbbrTypeInfo extend TypeInfo {
    }
 }
 
-pub let builtinTypeAbbr:TypeInfo = new AbbrTypeInfo( rootProcessInfo, "##" );
-pub let builtinTypeAbbrNone:TypeInfo = new AbbrTypeInfo( rootProcessInfo, "[##]" );
+pub let builtinTypeAbbr:&TypeInfo = new AbbrTypeInfo( rootProcessInfo, "##" );
+pub let builtinTypeAbbrNone:&TypeInfo = new AbbrTypeInfo( rootProcessInfo, "[##]" );
 
 
 
@@ -5750,7 +5756,7 @@ pub fn ProcessInfo.createLuaval(
    return result;
 }
 
-pub let builtinTypeLua:TypeInfo;
+pub let builtinTypeLua:&TypeInfo;
 match rootProcessInfo.createLuaval( builtinTypeStem, true ) {
    case .OK ( typeInfo, _ ) {
       builtinTypeLua = typeInfo;
@@ -5760,7 +5766,7 @@ match rootProcessInfo.createLuaval( builtinTypeStem, true ) {
    }
 }
 registBuiltin( "Luaval", "Luaval", .Ext, builtinTypeLua, headTypeInfo, false );
-pub let builtinTypeDDDLua:TypeInfo =
+pub let builtinTypeDDDLua:&TypeInfo =
    rootProcessInfo.createDDD( builtinTypeStem_, true, true );
 registBuiltin( "__LuaDDD", "__LuaDDD", .Ext, builtinTypeDDDLua, headTypeInfo, false );
 
@@ -6416,20 +6422,22 @@ pub static fn TypeInfo.canEvalWithBase(
             return true, nil;
          }
          elseif not otherMut and destMut {
-            // imut/mut が一致していないものはエラー
-            let nonNilOtherType = otherSrc.$nonnilableType;
-            switch nonNilOtherType.$kind {
-               case .Set, .Map, .List, .IF, .Alternate {
-                  return false, nil;
-               }
-               case .Class {
-                  if builtinTypeString ~= nonNilOtherType {
+            if processInfo.$validCheckingMutable {
+               // imut/mut が一致していないものはエラー
+               let nonNilOtherType = otherSrc.$nonnilableType;
+               switch nonNilOtherType.$kind {
+                  case .Set, .Map, .List, .IF, .Alternate {
                      return false, nil;
                   }
-               }
-               case .Prim {
-                  if builtinTypeStem == nonNilOtherType {
-                     return false, nil;
+                  case .Class {
+                     if builtinTypeString ~= nonNilOtherType {
+                        return false, nil;
+                     }
+                  }
+                  case .Prim {
+                     if builtinTypeStem == nonNilOtherType {
+                        return false, nil;
+                     }
                   }
                }
             }
@@ -6449,7 +6457,9 @@ pub static fn TypeInfo.canEvalWithBase(
             not isGenericType( otherSrc ) and
             destMut and not otherMut
          {
-            return false, nil;
+            if processInfo.$validCheckingMutable {
+               return false, nil;
+            }
          }
       }
    }
@@ -6868,8 +6878,11 @@ pub fn TypeInfo.getFullName(
 
 let builtinTypeInfo2Map = rootProcessInfo.$typeInfo2Map.clone();
 
-pub fn createProcessInfo( validExtType:bool ) : ProcessInfo {
-   return ProcessInfo.createUser( validExtType, builtinTypeInfo2Map.clone() );
+pub fn createProcessInfo(
+   validCheckingMutable:bool,  validExtType:bool ) : ProcessInfo
+{
+   return ProcessInfo.createUser(
+      validCheckingMutable, validExtType, builtinTypeInfo2Map.clone() );
 }
 
 pub enum BitOpKind {
@@ -6974,7 +6987,7 @@ pub fn TypeAnalyzer.analyzeTypeSub( allowDDD:bool ) mut :
    // builtin の型名などは _ で始まることもあるので、シンボル名チェックしない
    // self.checkSymbol( token, .MustNot_ );
 
-   let typeInfo:TypeInfo;
+   let typeInfo:&TypeInfo;
    if token.txt == "..." {
       // ... は変数シンボルとしても使用するので
       // analyzeExpSymbol で解析すると意図しないシンボルを取ってくる可能性があるため、
@@ -7166,7 +7179,8 @@ __test case1(ctrl) {
    }
    let mut alt2typeMap = CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
 
-   let mut processInfo = ProcessInfo.createUser( true, builtinTypeInfo2Map.clone() );
+   let mut processInfo = ProcessInfo.createUser(
+      true, true, builtinTypeInfo2Map.clone() );
    let mut testScope = new Scope( processInfo, rootScope, false## );
 
 

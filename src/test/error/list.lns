@@ -31,7 +31,7 @@
    val.remove(##);    // warn
 }
 {
-   let val:int![] = [];
+   let val:&List<int>! = [];
    val.insert( 1 ); // error
    val.remove( 1 ); // error
 }

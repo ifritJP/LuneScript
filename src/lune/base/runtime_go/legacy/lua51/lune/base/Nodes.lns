@@ -784,11 +784,11 @@ pub class LuneHelperInfo {
 
 pub class ModuleInfo extend (Ast.ModuleInfoIF) {
    pri let fullName:str{ pub };
-   pri let localTypeInfo2importIdMap:Map<&Ast.TypeInfo,int> { pub };
+   pri let localTypeInfo2importIdMap:&Map<&Ast.TypeInfo,int> { pub };
    pri let mut importId2localTypeInfoMap:Map<int,&Ast.TypeInfo> { pub& };
    pri let assignName:str{ pub };
    pri let moduleId:&frontInterface.ModuleId {pub};
-   pri let importedAliasMap: Map<&Ast.TypeInfo,&Ast.AliasTypeInfo> {pub};
+   pri let importedAliasMap: &Map<&Ast.TypeInfo,&Ast.AliasTypeInfo> {pub};
 
    pub fn __init( fullName:str, assignName:str, idMap:&Map<&Ast.TypeInfo,int>,
                   moduleId:&frontInterface.ModuleId,
@@ -854,7 +854,7 @@ let workList:List<stat> = [ stat ];
 ここで workList に対応する MacroValInfo.val には List<List<str>> のデータが格納される。
 
 */
-   pub let val: Luaval<stem>!;
+   pub let val: Luaval<&stem>!;
    //pub let val: stem!;
    /** マクロ内での変数の型 */
    pub let typeInfo: &Ast.TypeInfo;
@@ -1031,8 +1031,8 @@ pub enum IfKind {
 
 pub class IfStmtInfo {
    pri let kind: IfKind { pub };
-   pri let exp: Node { pub };
-   pri let block: BlockNode { pub };
+   pri let exp: &Node { pub };
+   pri let block: &BlockNode { pub };
 }
 _declNodeClass( "If", Node, false, false, true,
                 [{ "stmtList": "List<&IfStmtInfo>" } ]
@@ -1149,8 +1149,8 @@ pub fn ExpListNode.getExpTypeNoDDDAt( index:int ) : &Ast.TypeInfo {
 }
 
 pub class CaseInfo {
-   pri let expList: ExpListNode { pub };
-   pri let block: BlockNode { pub };
+   pri let expList: &ExpListNode { pub };
+   pri let block: &BlockNode { pub };
 }
 pub enum CaseKind {
    /** 全ての条件を網羅していない */
@@ -1664,9 +1664,9 @@ _declNodeClass( "Alias", Node, false, false, true,
 pub class VarInfo {
    pri let name: &Parser.Token { pub };
    // 宣言している型。 宣言していない場合は nil
-   pri let refType: RefTypeNode! { pub };
+   pri let refType: &RefTypeNode! { pub };
    // 実際の型。
-   pri let actualType: Ast.TypeInfo { pub };
+   pri let actualType: &Ast.TypeInfo { pub };
 }
 
 pub enum DeclVarMode {
@@ -2219,8 +2219,8 @@ _declNodeClass( "LiteralSet", Node, false, true, false,
 );
 
 pub class PairItem {
-   pri let key: Node { pub };
-   pri let val: Node { pub };
+   pri let key: &Node { pub };
+   pri let val: &Node { pub };
 }
 _declNodeClass( "LiteralMap", Node, false, true, false,
                 [ { "map": "Map<&Node,&Node>" },
@@ -2976,7 +2976,7 @@ __test {
          new Parser.StreamParser(
             new Parser.TxtStream( "print( 'hoge' );" ), "test" ## ) );
 
-      let mut processInfo = Ast.createProcessInfo( true );
+      let mut processInfo = Ast.createProcessInfo( true, true );
       let mut scope = new Ast.Scope( processInfo, nil, false ##);
 
       let printToken = parser.getTokenNoErr(); // print

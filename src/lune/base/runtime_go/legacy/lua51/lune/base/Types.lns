@@ -55,10 +55,18 @@ pub class TransCtrlInfo {
    pub let mut validLuaval:bool;
    /** 指定しない場合のモードを lazy にする */
    pub let mut defaultLazy:bool;
+   /** mutable の型チェックを有効にするかどうか。 */
+   pub let mut validCheckingMutable:bool;
+   /**
+   以前の mutable 制御モードかどうか。
+   mut 宣言しないと、変数の型が immutable になる。
+   */ 
+   pub let mut legacyMutableControl:bool;
 }
 
 pub static fn TransCtrlInfo.create_normal(): TransCtrlInfo {
-   return new TransCtrlInfo( false, false, true, false, .Touch, false, false );
+   return new TransCtrlInfo(
+      false, false, true, false, .Touch, false, false, true, false );
 }
 
 

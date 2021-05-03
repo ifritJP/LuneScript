@@ -843,7 +843,7 @@ fn TransUnit.analyzeListItems(
       expList = self.analyzeExpList(
          false, false, false, nil, expectTypeList, expectTypeList ~= nil );
       self.checkNextToken( termTxt );
-      let nodeList: List<&Nodes.Node> = (unwrap expList).$expList;
+      let nodeList: &List<&Nodes.Node> = (unwrap expList).$expList;
       foreach exp in nodeList {
          itemCommonType = Ast.TypeInfo.getCommonTypeCombo(
             self.processInfo, itemCommonType, Ast.CommonType.Normal( exp.$expType ),

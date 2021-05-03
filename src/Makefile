@@ -112,7 +112,7 @@ exec:
 	$(LUA) lune/base/base.lua test/test.lns ast
 	$(LUA) lune/base/base.lua test/test.lns LUA
 
-EXE_OPT := --valid-luaval
+EXE_OPT := --valid-luaval 
 COM_OPT := --use-ipairs -Werror --valid-luaval
 ifeq ($(WITH_GO),y)
 COM_OPT += -langGo

@@ -1327,8 +1327,8 @@ _section();
             return;
          };
          class Test {
-            pub let val1:List<str>;
-            pub let val2:List<int>;
+            pub let val1:&List<str>;
+            pub let val2:&List<int>;
          }
          let test = obj@@=Test;
          foreach val, index in test.val1 {

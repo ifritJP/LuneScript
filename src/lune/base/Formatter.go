@@ -372,13 +372,13 @@ func (self *Formatter_FormatterFilter) outputDeclClass(protoFlag bool,classType 
         self.FP.Write(">")
     }
     if moduleName != nil{
-        moduleName_5417 := moduleName.(*Types_Token)
+        moduleName_5421 := moduleName.(*Types_Token)
         self.FP.Write(" require ")
-        self.FP.Write(Lns_getVM().String_format("%s ", []LnsAny{moduleName_5417.Txt}))
+        self.FP.Write(Lns_getVM().String_format("%s ", []LnsAny{moduleName_5421.Txt}))
         if gluePrefix != nil{
-            gluePrefix_5419 := gluePrefix.(string)
+            gluePrefix_5423 := gluePrefix.(string)
             self.FP.Write("glue ")
-            self.FP.Write(gluePrefix_5419)
+            self.FP.Write(gluePrefix_5423)
         }
     }
     if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||

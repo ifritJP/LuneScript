@@ -15,10 +15,10 @@ end
 if not _lune3 then
    _lune3 = _lune
 end
-local version = "1.1.13"
+local version = "1.2.0"
 _moduleObj.version = version
 
-local metaVersion = "1.0.104"
+local metaVersion = "1.0.105"
 _moduleObj.metaVersion = metaVersion
 
 local luaModVersion = 3

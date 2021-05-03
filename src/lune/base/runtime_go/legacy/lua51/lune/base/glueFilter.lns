@@ -221,7 +221,7 @@ class GlueArgInfo {
    let callArgName:str {pub};
    let callTxt:str {pub};
    let setTxt:str {pub};
-   let typeInfo&Ast.TypeInfo {pub};
+   let typeInfo: &Ast.TypeInfo {pub};
 }
 
 fn glueGenerator.outputMethod( node:&Nodes.Node, gluePrefix:str ) mut {

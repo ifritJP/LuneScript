@@ -408,6 +408,12 @@ usage:
                case "--disable-checking-define-abbr" {
                   option.transCtrlInfo.checkingDefineAbbr = false;
                }
+               case "--disable-checking-mutable" {
+                  option.transCtrlInfo.validCheckingMutable = false;
+               }
+               case "--legacy-mutable-control" {
+                  option.transCtrlInfo.legacyMutableControl = true;
+               }
                case "--compat-comment" {
                   option.transCtrlInfo.compatComment = true;
                }

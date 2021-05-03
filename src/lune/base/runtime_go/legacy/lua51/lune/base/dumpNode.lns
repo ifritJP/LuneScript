@@ -431,13 +431,13 @@ pub override fn dumpFilter.processDeclDestr(
 pub override fn dumpFilter.processExpCallSuperCtor(
    node: &Nodes.ExpCallSuperCtorNode, opt:Opt ) mut
 {
-   let typeInfo:Ast.TypeInfo = node.get_superType();
+   let typeInfo:&Ast.TypeInfo = node.get_superType();
    self.dump( opt, node, typeInfo.getTxt(##) );
 };
 pub override fn dumpFilter.processExpCallSuper(
    node: &Nodes.ExpCallSuperNode, opt:Opt ) mut
 {
-   let typeInfo:Ast.TypeInfo = node.get_superType();
+   let typeInfo:&Ast.TypeInfo = node.get_superType();
    self.dump( opt, node, typeInfo.getTxt(##) );
 };
 pub override fn dumpFilter.processRefType(

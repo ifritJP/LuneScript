@@ -145,7 +145,7 @@ if のブロックを解析終了時に symbolSet を oldSymbolSet にセット�
    pri let mut accessSymSet:Set<&Ast.SymbolInfo>;
 
    /** このブロック処理直前のアクセス可能なローカル変数の posForModToRef を保持。 */
-   pri let sym2posForModToRef:List<RefAccessSymPos>;
+   pri let sym2posForModToRef:&List<RefAccessSymPos>;
 
    pub fn __init( parent:TentativeSymbol!, scope:&Ast.Scope, moduleScope:&Ast.Scope,
                   loopFlag:bool, refAccessSymPosList:&List<RefAccessSymPos>! )
@@ -603,7 +603,7 @@ alias で置き換えている元の Type → alias の型
    */
    pri let targetLuaVer:&LuaVer.LuaVerInfo;
 
-   pri let moduleId:frontInterface.ModuleId;
+   pri let moduleId:&frontInterface.ModuleId;
 
    /** true の場合、 _ で始まるシンボル名チェックをしない */
    pri let mut ignoreToCheckSymbol_:bool;
@@ -636,7 +636,8 @@ alias で置き換えている元の Type → alias の型
    {
       self.importedAliasMap = {};
       self.importModuleSet = (@);
-      self.processInfo = Ast.createProcessInfo( ctrl_info.validLuaval );
+      self.processInfo = Ast.createProcessInfo(
+         ctrl_info.validCheckingMutable, ctrl_info.validLuaval );
       self.accessSymbolSetQueue = new AccessSymbolSetQueue();
       self.advertisedTypeSet = (@);
       self.closureFunList = [];
@@ -718,7 +719,10 @@ alias で置き換えている元の Type → alias の型
       return false;
    }
 
-   pri fn addErrMess( pos: &Parser.Position, mess: str ) mut {
+   pri fn addErrMess( pos: &Parser.Position, mut mess: str ) mut {
+      if mess.find( "type mismatch.*<- &" ##) {
+         mess = mess .. ". if your code is the old style, use the opiton '--legacy-mutable-control'.";
+      }
       self.errMessList.insert(
          "%s:%d:%d: error: %s" ( pos.streamName,
                                  pos.lineNo, pos.column, mess ) );
@@ -3116,7 +3120,7 @@ modulePath で指定されたモジュールからメタ情報を読み込み、
 */
 class DependModuleInfo {
    let id:int;
-   let metaTypeId2TypeInfoMap:Map<int,&Ast.TypeInfo>;
+   let metaTypeId2TypeInfoMap:&Map<int,&Ast.TypeInfo>;
 
    pub fn getTypeInfo( metaTypeId:int ):&Ast.TypeInfo {
       return unwrap self.metaTypeId2TypeInfoMap[ metaTypeId ];

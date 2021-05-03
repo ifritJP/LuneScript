@@ -508,8 +508,8 @@ fn TransUnit.checkOverriededMethodOfAllClass() mut
 }
 
 pub class ASTInfo {
-   pri let node: Nodes.Node { pub };
-   pri let moduleTypeInfo: Ast.TypeInfo { pub };
+   pri let node: &Nodes.Node { pub };
+   pri let moduleTypeInfo: &Ast.TypeInfo { pub };
    pri let moduleSymbolKind: Ast.SymbolKind { pub };
    pri let mut processInfo: Ast.ProcessInfo {pub};
    pri let streamName:str {pub};
@@ -1735,7 +1735,9 @@ fn TransUnit.analyzeDeclMember(
       // if Ast.TypeInfo.isMut( typeInfo ) and mutMode == .IMut {
       //    typeInfo = self.createModifier( typeInfo, .IMut );
       // }
-      if Ast.TypeInfo.isMut( typeInfo ) and typeInfo.$mutMode ~= mutMode {
+      if Ast.TypeInfo.isMut( typeInfo ) and typeInfo.$mutMode ~= mutMode and
+         self.ctrl_info.legacyMutableControl
+      {
          typeInfo = self.createModifier( typeInfo, mutMode );
       }
       if Ast.TypeInfo.isMut( getterRetType ) and getterRetType.$mutMode ~= mutMode {
@@ -3284,7 +3286,7 @@ fn TransUnit.accessSymbol( symbolInfo:&Ast.SymbolInfo, canLeftExp:bool ) mut {
 class LetVarInfo {
    pub let mutable:Ast.MutMode;
    pub let varName: &Parser.Token;
-   pub let varType:Nodes.RefTypeNode!;
+   pub let varType:&Nodes.RefTypeNode!;
 }
 
 
@@ -3491,7 +3493,7 @@ fn TransUnit.analyzeInitExp(
                workPos = letVar.varName.pos;
                workName = letVar.varName.txt;
                if Ast.TypeInfo.isMut( typeInfo ) and
-               not Ast.isMutable( letVar.mutable )
+                  not Ast.isMutable( letVar.mutable ) 
                {
                   workType = self.createModifier( typeInfo, .IMutRe );
                }
@@ -3588,7 +3590,8 @@ fn TransUnit.analyzeLetAndInitExp(
                                varName, nil ) );
          }
          if not typeInfo.equals( self.processInfo, Ast.builtinTypeEmpty ## ) and
-            Ast.TypeInfo.isMut( typeInfo ) and not Ast.isMutable( mutable )
+            Ast.TypeInfo.isMut( typeInfo ) and not Ast.isMutable( mutable ) and         
+            self.ctrl_info.legacyMutableControl            
          {
             typeInfo = self.createModifier( typeInfo, .IMutRe );
          }

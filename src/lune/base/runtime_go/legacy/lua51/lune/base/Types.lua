@@ -255,15 +255,15 @@ _moduleObj.TransCtrlInfo = TransCtrlInfo
 function TransCtrlInfo.setmeta( obj )
   setmetatable( obj, { __index = TransCtrlInfo  } )
 end
-function TransCtrlInfo.new( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode, validLuaval, defaultLazy )
+function TransCtrlInfo.new( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode, validLuaval, defaultLazy, validCheckingMutable, legacyMutableControl )
    local obj = {}
    TransCtrlInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode, validLuaval, defaultLazy )
+      obj:__init( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode, validLuaval, defaultLazy, validCheckingMutable, legacyMutableControl )
    end
    return obj
 end
-function TransCtrlInfo:__init( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode, validLuaval, defaultLazy )
+function TransCtrlInfo:__init( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode, validLuaval, defaultLazy, validCheckingMutable, legacyMutableControl )
 
    self.warningShadowing = warningShadowing
    self.compatComment = compatComment
@@ -272,12 +272,14 @@ function TransCtrlInfo:__init( warningShadowing, compatComment, checkingDefineAb
    self.uptodateMode = uptodateMode
    self.validLuaval = validLuaval
    self.defaultLazy = defaultLazy
+   self.validCheckingMutable = validCheckingMutable
+   self.legacyMutableControl = legacyMutableControl
 end
 
 
 function TransCtrlInfo.create_normal(  )
 
-   return TransCtrlInfo.new(false, false, true, false, _lune.newAlge( CheckingUptodateMode.Touch), false, false)
+   return TransCtrlInfo.new(false, false, true, false, _lune.newAlge( CheckingUptodateMode.Touch), false, false, true, false)
 end
 
 
@@ -448,7 +450,7 @@ end
 function Token:getLineCount(  )
 
    local count = 1
-   for _115 in self.txt:gmatch( "\n" ) do
+   for _117 in self.txt:gmatch( "\n" ) do
       count = count + 1
    end
    

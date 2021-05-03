@@ -47,7 +47,7 @@ class Test {
    pub let mut val2:int;
    pub let mut val3:int{pub,pub};
    pri let mut list:int[] {pub};
-   pri let list2:int[] {pub};
+   pri let list2:&List<int> {pub};
    pri let mut list3:int[] {pub&};
    pri let mut map:Map<int,int> {pub};
    pub static let mut val3:int;
@@ -124,7 +124,7 @@ test.$map[ 1 ] = 1; // error
    val[1].insert( 1 ); // error
 }
 {
-   let val:List<List<int>> = [ [1, 2] ];
+   let val:&List<&List<int>> = [ [1, 2] ];
    let mut val2:List<int> = val[1]; // error
    val2.insert( 1 );
    val[1].insert( 1 ); // error

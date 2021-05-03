@@ -317,13 +317,14 @@ function ProcessInfo:set_typeInfo2Map( typeInfo2Map )
 
    self.typeInfo2Map = typeInfo2Map
 end
-function ProcessInfo.new( idProvBase, validExtType, typeInfo2Map )
+function ProcessInfo.new( validCheckingMutable, idProvBase, validExtType, typeInfo2Map )
    local obj = {}
    ProcessInfo.setmeta( obj )
-   if obj.__init then obj:__init( idProvBase, validExtType, typeInfo2Map ); end
+   if obj.__init then obj:__init( validCheckingMutable, idProvBase, validExtType, typeInfo2Map ); end
    return obj
 end
-function ProcessInfo:__init(idProvBase, validExtType, typeInfo2Map) 
+function ProcessInfo:__init(validCheckingMutable, idProvBase, validExtType, typeInfo2Map) 
+   self.validCheckingMutable = validCheckingMutable
    self.validExtType = validExtType
    self.idProvBase = idProvBase
    self.idProvExt = IdProvider.new(extStartId, extMaxId)
@@ -334,16 +335,16 @@ function ProcessInfo:__init(idProvBase, validExtType, typeInfo2Map)
 end
 function ProcessInfo.createRoot(  )
 
-   return ProcessInfo.new(IdProvider.new(0, userStartId), true, nil)
+   return ProcessInfo.new(true, IdProvider.new(0, userStartId), true, nil)
 end
-function ProcessInfo.createUser( validExtType, typeInfo2Map )
+function ProcessInfo.createUser( validCheckingMutable, validExtType, typeInfo2Map )
 
-   return ProcessInfo.new(IdProvider.new(userStartId, extStartId), validExtType, typeInfo2Map)
+   return ProcessInfo.new(validCheckingMutable, IdProvider.new(userStartId, extStartId), validExtType, typeInfo2Map)
 end
 function ProcessInfo:switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.ProcessInfo.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 106, function (  )
+   Log.log( Log.Level.Trace, __func__, 112, function (  )
    
       return "start"
    end )
@@ -376,6 +377,9 @@ function ProcessInfo:get_idProvExt()
 end
 function ProcessInfo:get_validExtType()
    return self.validExtType
+end
+function ProcessInfo:get_validCheckingMutable()
+   return self.validCheckingMutable
 end
 
 local rootProcessInfo = ProcessInfo.createRoot(  )
@@ -8530,29 +8534,35 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             
             return true, nil
          elseif not otherMut and destMut then
-            local nonNilOtherType = otherSrc:get_nonnilableType()
-            do
-               local _switchExp = nonNilOtherType:get_kind()
-               if _switchExp == TypeInfoKind.Set or _switchExp == TypeInfoKind.Map or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.IF or _switchExp == TypeInfoKind.Alternate then
-                  return false, nil
-               elseif _switchExp == TypeInfoKind.Class then
-                  if _moduleObj.builtinTypeString ~= nonNilOtherType then
+            if processInfo:get_validCheckingMutable() then
+               local nonNilOtherType = otherSrc:get_nonnilableType()
+               do
+                  local _switchExp = nonNilOtherType:get_kind()
+                  if _switchExp == TypeInfoKind.Set or _switchExp == TypeInfoKind.Map or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.IF or _switchExp == TypeInfoKind.Alternate then
                      return false, nil
+                  elseif _switchExp == TypeInfoKind.Class then
+                     if _moduleObj.builtinTypeString ~= nonNilOtherType then
+                        return false, nil
+                     end
+                     
+                  elseif _switchExp == TypeInfoKind.Prim then
+                     if _moduleObj.builtinTypeStem == nonNilOtherType then
+                        return false, nil
+                     end
+                     
                   end
-                  
-               elseif _switchExp == TypeInfoKind.Prim then
-                  if _moduleObj.builtinTypeStem == nonNilOtherType then
-                     return false, nil
-                  end
-                  
                end
+               
             end
             
          end
          
          
          if otherSrc ~= _moduleObj.builtinTypeNil and otherSrc ~= _moduleObj.builtinTypeString and otherSrc:get_kind() ~= TypeInfoKind.Prim and otherSrc:get_kind() ~= TypeInfoKind.Func and otherSrc:get_kind() ~= TypeInfoKind.Method and otherSrc:get_kind() ~= TypeInfoKind.Form and otherSrc:get_kind() ~= TypeInfoKind.FormFunc and otherSrc:get_kind() ~= TypeInfoKind.Enum and otherSrc:get_kind() ~= TypeInfoKind.Abbr and otherSrc:get_kind() ~= TypeInfoKind.Alternate and otherSrc:get_kind() ~= TypeInfoKind.Box and not isGenericType( otherSrc ) and destMut and not otherMut then
-            return false, nil
+            if processInfo:get_validCheckingMutable() then
+               return false, nil
+            end
+            
          end
          
       end
@@ -8991,9 +9001,9 @@ end
 
 local builtinTypeInfo2Map = rootProcessInfo:get_typeInfo2Map():clone(  )
 
-local function createProcessInfo( validExtType )
+local function createProcessInfo( validCheckingMutable, validExtType )
 
-   return ProcessInfo.createUser( validExtType, builtinTypeInfo2Map:clone(  ) )
+   return ProcessInfo.createUser( validCheckingMutable, validExtType, builtinTypeInfo2Map:clone(  ) )
 end
 _moduleObj.createProcessInfo = createProcessInfo
 

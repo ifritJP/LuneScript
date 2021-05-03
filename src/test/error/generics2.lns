@@ -5,7 +5,7 @@ fn dump( ...<stem> ) {
    io.stdout.write( "\n" );
 }
 class Test<T> {
-   let val:T {pub};
+   let val:&T {pub};
    pub fn func( val:T! ) {
       dump( self.val, unwrap val default 0 ); // error
    }

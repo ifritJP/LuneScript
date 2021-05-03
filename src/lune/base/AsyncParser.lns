@@ -214,9 +214,9 @@ pub class Parser extend Async.Pipe<AsyncItem> {
    let streamName: str;
    let mut lineNo : int;
    let mut prevToken: &Types.Token;
-   let keywordSet : Set<str>;
-   let typeSet : Set<str>;
-   let multiCharDelimitMap : Map<str,Array<str>>;
+   let keywordSet : &Set<str>;
+   let typeSet : &Set<str>;
+   let multiCharDelimitMap : &Map<str,&Array<str>>;
    let luaMode:bool;
    let lineList:&List<str>;
    let mut firstLine:bool;

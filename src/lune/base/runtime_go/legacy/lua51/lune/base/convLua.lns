@@ -537,7 +537,7 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
          foreach memberNode in unwrap self.classId2MemberList[ classTypeId ] {
             if Ast.isPubToExternal( memberNode.$accessMode ) {
                let memberName = memberNode.$name.txt;
-               let memberTypeInfo:Ast.TypeInfo = memberNode.get_expType();
+               let memberTypeInfo:&Ast.TypeInfo = memberNode.get_expType();
                self.writeln( "__classInfo%d.%s = {" ( classTypeId, memberName ) );
                self.writeln(
                   "  name='%s', staticFlag = %s, mutMode = %d,"
@@ -969,7 +969,7 @@ end``` (luneSymbol, luneSymbol) );
       self.writeln( "local _" );
    }
    
-   let children:List<&Nodes.Node> = node.get_children();
+   let children:&List<&Nodes.Node> = node.get_children();
 
    foreach child in children {
       filter( child, self, node );
@@ -1947,7 +1947,7 @@ pub override fn convFilter.processDeclDestr(
 pub override fn convFilter.processExpCallSuperCtor(
    node: Nodes.ExpCallSuperCtorNode, opt: Opt ) mut
 {
-   let typeInfo:Ast.TypeInfo = node.$superType;
+   let typeInfo:&Ast.TypeInfo = node.$superType;
 
    if typeInfo == TransUnit.getBuiltinFunc().lnsthread_ {
       return;
@@ -1966,7 +1966,7 @@ pub override fn convFilter.processExpCallSuperCtor(
 pub override fn convFilter.processExpCallSuper(
    node: Nodes.ExpCallSuperNode, opt: Opt ) mut
 {
-   let typeInfo:Ast.TypeInfo = node.$superType;
+   let typeInfo:&Ast.TypeInfo = node.$superType;
 
    self.write( "%s.%s( self"
       ( self.getFullName( typeInfo ), node.$methodType.$rawTxt ) );
@@ -2298,7 +2298,7 @@ pub override fn convFilter.processDeclFunc(
    self.write( "end" );
 
    //if declInfo.get_accessMode() == .Pub {
-   let expType: Ast.TypeInfo = node.get_expType();
+   let expType: &Ast.TypeInfo = node.get_expType();
    if expType.get_accessMode() == .Pub {
       if self.needModuleObj {
          self.writeln( "" );

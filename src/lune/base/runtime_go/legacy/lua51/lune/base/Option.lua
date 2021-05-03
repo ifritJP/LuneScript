@@ -283,7 +283,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 7586
+   return 7622
 end
 
 
@@ -769,6 +769,10 @@ end
                   option.transCtrlInfo.stopByWarning = true
                elseif _switchExp == "--disable-checking-define-abbr" then
                   option.transCtrlInfo.checkingDefineAbbr = false
+               elseif _switchExp == "--disable-checking-mutable" then
+                  option.transCtrlInfo.validCheckingMutable = false
+               elseif _switchExp == "--legacy-mutable-control" then
+                  option.transCtrlInfo.legacyMutableControl = true
                elseif _switchExp == "--compat-comment" then
                   option.transCtrlInfo.compatComment = true
                elseif _switchExp == "--warning-shadowing" then
@@ -997,7 +1001,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 618, function (  )
+   Log.log( Log.Level.Log, __func__, 624, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )
