@@ -95,49 +95,81 @@ fn Test.exeBlock( block:str, expect:Expect ): TestResult {
    return .OK;
 }
 
+pub fn Test.getSrcList( path:str ) : &List<str>! {
+   let! mut stream = self.openFile( path ) {
+      print( "failed to load -- " .. path );
+      return nil;
+   };
+
+   let list:List<str> = [];
+   while true {
+      let! line = stream.read( '*l' ) {
+         break;
+      };
+      if line.find( "^SRCS %+= " ## ) {
+         let src = line.gsub( ".*= (.*%.org)%s*", "%1" );
+         list.insert( "/content/LuneScript/" .. src );
+      }
+   }
+   return list;
+}
+
 pub fn Test.check( path:str ) mut: bool {
-   let! mut stream = self.openFile( path .. "all.org" ) {
+   let! list = self.getSrcList( path .. "makefile" ) {
       return false;
    };
 
    let mut total = 0;
-   while true {
-      let! block = self.getLnsSrcBlock( stream ) {
-         print( "total = %d" (total) );
-         return true;
-      };
-      total = total + 1;
-      print( "test -- %d" ( total ) );
-
-      let expect:Expect;
-      if block.find( "@lnsFront: error" ## ) {
-         expect = .NG;
-      }
-      elseif block.find( "@lnsFront: ok" ## ) {
-         expect = .OK;
-      }
-      elseif block.find( "@lnsFront: skip" ## ) {
-         expect = .Skip;
-      }
-      else {
-         print( "%d: not found @lnsFront" (self.lineNo));
+   foreach item in list {
+      print( "check -- " .. item );
+      
+      let! mut stream = self.openFile( path .. item ) {
+         print( "failed to load -- " .. path .. item );
          return false;
-      }
+      };
 
-      if expect ~= .Skip {
-         match self.exeBlock( block, expect ) {
-            case .NG(lineNo,mess) {
-               print( "error:%d:%s" (lineNo, mess ) );
-               return false;
+      self.lineNo = 1;
+      
+      while true {
+         let! block = self.getLnsSrcBlock( stream ) {
+            break;
+         };
+         total = total + 1;
+         print( "test -- %d" ( total ) );
+
+         let expect:Expect;
+         if block.find( "@lnsFront: error" ## ) {
+            expect = .NG;
+         }
+         elseif block.find( "@lnsFront: ok" ## ) {
+            expect = .OK;
+         }
+         elseif block.find( "@lnsFront: skip" ## ) {
+            expect = .Skip;
+         }
+         else {
+            print( "%d: not found @lnsFront" (self.lineNo));
+            return false;
+         }
+
+         if expect ~= .Skip {
+            match self.exeBlock( block, expect ) {
+               case .NG(lineNo,mess) {
+                  print( "error:%d:%s" (lineNo, mess ) );
+                  return false;
+               }
             }
          }
       }
    }
+   print( "total = %d" (total) );
+   return true;
 }
 
-   
-let mut test = new Test();
-if not test.check( "work/ifritJP.github.io/hugo/content/LuneScript/" ) {
-   os.exit( 1 );
+pub fn __main( argList:&List<str> ) : int {
+   let mut test = new Test();
+   if not test.check( "../../ifritJP.github.io/hugo/" ) {
+      return 1;
+   }
+   return 0;
 }
-

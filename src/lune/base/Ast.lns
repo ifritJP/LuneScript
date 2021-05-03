@@ -6721,7 +6721,7 @@ pub static fn TypeInfo.canEvalWithBase(
          }
          foreach argType, index in dest.$argTypeInfoList {
             let otherArgType = otherSrc.$argTypeInfoList[ index ];
-            if not argType.equals( processInfo, otherArgType, alt2type ## ) {
+            if not argType.equals( processInfo, otherArgType, alt2type, true ) {
                let mess = "unmatch arg(%d) type -- %s, %s"
                    ( index, argType.getTxt(##), otherArgType.getTxt(##) );
                return false, mess;
@@ -6729,7 +6729,7 @@ pub static fn TypeInfo.canEvalWithBase(
          }
          foreach retType, index in dest.$retTypeInfoList {
             let otherRetType = otherSrc.$retTypeInfoList[ index ];
-            if not retType.equals( processInfo, otherRetType, alt2type ## ) {
+            if not retType.equals( processInfo, otherRetType, alt2type, true ) {
                let mess = "unmatch ret(%d) type -- %s, %s, %s"
                    (index, retType.getTxt(##), otherRetType.getTxt(##), dest.getTxt(##) );
                return false, mess;

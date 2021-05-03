@@ -8849,7 +8849,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
          
          for index, argType in ipairs( dest:get_argTypeInfoList() ) do
             local otherArgType = otherSrc:get_argTypeInfoList()[index]
-            if not argType:equals( processInfo, otherArgType, alt2type ) then
+            if not argType:equals( processInfo, otherArgType, alt2type, true ) then
                local mess = string.format( "unmatch arg(%d) type -- %s, %s", index, argType:getTxt(  ), otherArgType:getTxt(  ))
                return false, mess
             end
@@ -8858,7 +8858,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
          
          for index, retType in ipairs( dest:get_retTypeInfoList() ) do
             local otherRetType = otherSrc:get_retTypeInfoList()[index]
-            if not retType:equals( processInfo, otherRetType, alt2type ) then
+            if not retType:equals( processInfo, otherRetType, alt2type, true ) then
                local mess = string.format( "unmatch ret(%d) type -- %s, %s, %s", index, retType:getTxt(  ), otherRetType:getTxt(  ), dest:getTxt(  ))
                return false, mess
             end

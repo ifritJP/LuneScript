@@ -477,6 +477,18 @@ class Test9 extend Super7 {
    
 }
 {
+   class Val {
+   }
+   class Hoge {
+      pub fn func( val:&Val ) {
+      }
+   }
+   class Sub extend Hoge {
+      pub override fn func( val:Val ) { // error
+      }
+   }
+}
+{
    interface IF2 extend (Mapping) {
    }
    abstract class Hoge extend (Mapping) {

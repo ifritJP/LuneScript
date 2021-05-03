@@ -155,7 +155,7 @@ func ConvLua_getTestLnsCode() string {
 }
 
 // 3610: decl @lune.@base.@convLua.Ast2Code
-func convLua_Ast2Code_1711_(option *Option_Option,ast *TransUnit_ASTInfo,streamName string)(string, string) {
+func convLua_Ast2Code_1712_(option *Option_Option,ast *TransUnit_ASTInfo,streamName string)(string, string) {
     var stream *Util_memStream
     stream = NewUtil_memStream()
     var metaStream *Util_memStream

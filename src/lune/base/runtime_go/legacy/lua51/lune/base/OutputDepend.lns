@@ -71,7 +71,7 @@ class convFilter extend Nodes.Filter<int> {
 }
 
 pub override fn convFilter.processRoot(
-   node: Nodes.RootNode, dummy: int ) mut
+   node: &Nodes.RootNode, dummy: int ) mut
 {
    let moduleFull = node.$moduleTypeInfo.getFullName(
       self.$typeNameCtrl, Ast.DummyModuleInfoManager.$instance ## );
@@ -119,7 +119,7 @@ __test {
       }
 
       pub fn loadMeta( importModuleInfo:frontInterface.ImportModuleInfo, mod:str ) mut:
-         frontInterface.ModuleMeta!
+         &frontInterface.ModuleMeta!
       {
          let metaPath = mod.gsub( "%.", "/" ) .. ".meta";
          print( metaPath );

@@ -8,7 +8,6 @@
 
 * バグ
 
-- [ ] override 時の、引数の mutable チェックが抜けている。
 - [ ] gopherlua で、 lunescript の preload 対応できていない。
       これが出来ないと、lnstags の gopherlua 版が動かない。
 - [ ] go では、キャスト先の型を定義しているモジュールのインポートが必要。
@@ -927,9 +926,7 @@ class Hoge {
 let hoge = new Hoge( 1 );
 hoge.$val = 2; // error しない
 
-
-  
-
+- [X] override 時の、引数の mutable チェックが抜けている。
   
   
   

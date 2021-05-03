@@ -1702,5 +1702,5 @@ test-reference:
 
 
 test-reference-sample:
-	$(call exeLune,$(LNSC),.,test/checkReference.lns exe)
+	$(call exeLune,$(LNSC),.,test/checkReference.lns shebang)
 

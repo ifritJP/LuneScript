@@ -890,14 +890,14 @@ pub override fn FormatterFilter.processExpOp1(
 };
 
 pub override fn FormatterFilter.processExpToDDD(
-   node: Nodes.ExpToDDDNode, opt: Opt ) mut
+   node: &Nodes.ExpToDDDNode, opt: Opt ) mut
 {
    
    filter( node.$expList, self, opt.nextOpt( node ) );
 }
 
 pub override fn FormatterFilter.processExpMultiTo1(
-   node: Nodes.ExpMultiTo1Node, opt: Opt ) mut
+   node: &Nodes.ExpMultiTo1Node, opt: Opt ) mut
 {
    
    filter( node.$exp, self, opt.nextOpt( node ) );
@@ -1163,7 +1163,7 @@ pub override fn FormatterFilter.processLiteralSymbol(
 };
 
 pub override fn FormatterFilter.processAbbr(
-   node: Nodes.AbbrNode, opt: Opt ) mut
+   node: &Nodes.AbbrNode, opt: Opt ) mut
 {
    self.write( "##" );
 };

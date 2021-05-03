@@ -214,7 +214,7 @@ macro _declIgnoreNode( name:sym )
       let nodeName = "%sNode" (,,,,name);
    }
    pub override fn convFilter.,,,methodName (
-      node: Nodes.,,,nodeName, opt: Opt ) mut
+      node: &Nodes.,,,nodeName, opt: Opt ) mut
    {
    }
 }
@@ -251,17 +251,17 @@ fn convFilter.writeln( txt: str ) mut {
 }
 
 pub override fn convFilter.processNone(
-   node: Nodes.NoneNode, opt: Opt ) mut
+   node: &Nodes.NoneNode, opt: Opt ) mut
 {
    //self.writeln( "-- none" );
 };
 pub override fn convFilter.processShebang(
-   node: Nodes.ShebangNode, opt: Opt ) mut
+   node: &Nodes.ShebangNode, opt: Opt ) mut
 {
 };
 
 pub override fn convFilter.processImport(
-   node: Nodes.ImportNode, opt: Opt ) mut
+   node: &Nodes.ImportNode, opt: Opt ) mut
 {
    let modulePath = node.get_modulePath();
    let mut modSym = modulePath.gsub( ".*%.", "" );
@@ -296,7 +296,7 @@ pub override fn convFilter.processImport(
 
 @param node RootNode
 */
-fn convFilter.outputMeta( node: Nodes.RootNode ) mut
+fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
 {
    if self.convMode == .Convert {
       return;
@@ -884,7 +884,7 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
 }
 
 pub override fn convFilter.processRoot(
-   node: Nodes.RootNode, opt: Opt ) mut
+   node: &Nodes.RootNode, opt: Opt ) mut
 {
    self.writeln( "--%s" ( self.streamName ) );
 
@@ -991,19 +991,19 @@ end``` (luneSymbol, luneSymbol) );
 };
 
 pub override fn convFilter.processSubfile(
-   node: Nodes.SubfileNode, opt: Opt ) mut
+   node: &Nodes.SubfileNode, opt: Opt ) mut
 {
 }
 
 pub override fn convFilter.processEnv(
-   node: Nodes.EnvNode, opt: Opt ) mut
+   node: &Nodes.EnvNode, opt: Opt ) mut
 {
    filter( node.$block, self, node );
 }
 
 
 pub override fn convFilter.processBlockSub(
-   node: Nodes.BlockNode, opt: Opt ) mut
+   node: &Nodes.BlockNode, opt: Opt ) mut
 {
    let mut word = "";
    switch node.get_blockKind() {
@@ -1093,13 +1093,13 @@ pub override fn convFilter.processScope(
 
 
 pub override fn convFilter.processStmtExp(
-   node: Nodes.StmtExpNode, opt: Opt ) mut
+   node: &Nodes.StmtExpNode, opt: Opt ) mut
 {
    filter( node.get_exp(),  self, node );
 };
 
 pub override fn convFilter.processDeclEnum(
-   node: Nodes.DeclEnumNode, opt: Opt ) mut
+   node: &Nodes.DeclEnumNode, opt: Opt ) mut
 {
    let mut access = node.$accessMode == .Global and "" or "local ";
    let mut enumFullName = node.$name.txt;
@@ -1271,7 +1271,7 @@ fn convFilter.getMapInfo(
 
 
 pub override fn convFilter.processDeclAlge(
-   node: Nodes.DeclAlgeNode, opt: Opt ) mut
+   node: &Nodes.DeclAlgeNode, opt: Opt ) mut
 {
    let mut access = node.$accessMode == .Global and "" or "local ";
    let mut algeFullName = node.$algeType.$rawTxt;
@@ -1339,7 +1339,7 @@ end
 }
 
 pub override fn convFilter.processNewAlgeVal(
-   node: Nodes.NewAlgeValNode, opt: Opt ) mut
+   node: &Nodes.NewAlgeValNode, opt: Opt ) mut
 {
    let valInfo = node.$valInfo;
    self.write( '_lune.newAlge( %s.%s'
@@ -1398,13 +1398,13 @@ fn convFilter.outputAlter2MapFunc(
 
 
 pub override fn convFilter.processProtoClass(
-   node: Nodes.ProtoClassNode, opt: Opt ) mut
+   node: &Nodes.ProtoClassNode, opt: Opt ) mut
 {
    self.write( "local %s = {}" ( node.$name.txt) );
 }
 
 pub override fn convFilter.processDeclClass(
-   node: Nodes.DeclClassNode, opt: Opt ) mut
+   node: &Nodes.DeclClassNode, opt: Opt ) mut
 {
    let nodeInfo = node;
    let classNameToken = nodeInfo.get_name();
@@ -1737,14 +1737,14 @@ end```);
 };
 
 pub override fn convFilter.processDeclMember(
-   node: Nodes.DeclMemberNode, opt: Opt ) mut
+   node: &Nodes.DeclMemberNode, opt: Opt ) mut
 {
    // dump( baseIndent, node, node.info.name.txt )
    // node.info.refType.filter( self, prefix .. "  ", depth + 1 )
 };
 
 pub override fn convFilter.processExpMacroExp(
-   node: Nodes.ExpMacroExpNode, opt: Opt ) mut
+   node: &Nodes.ExpMacroExpNode, opt: Opt ) mut
 {
    foreach stmt in node.$stmtList {
       filter( stmt, self, node );
@@ -1800,7 +1800,7 @@ end
 }
 
 pub override fn convFilter.processExpMacroStatList(
-   node: Nodes.ExpMacroStatListNode, opt: Opt ) mut
+   node: &Nodes.ExpMacroStatListNode, opt: Opt ) mut
 {
    self.write( "__expStatList(" );
    filter( node.$exp, self, node );
@@ -1808,7 +1808,7 @@ pub override fn convFilter.processExpMacroStatList(
 }
 
 pub override fn convFilter.processDeclMacro(
-   node: Nodes.DeclMacroNode, opt: Opt ) mut
+   node: &Nodes.DeclMacroNode, opt: Opt ) mut
 {
    if self.inMacro {
       let macroInfo = node.get_declInfo();
@@ -1827,7 +1827,7 @@ pub override fn convFilter.processDeclMacro(
 };
 
 pub override fn convFilter.processExpMacroStat(
-   node: Nodes.ExpMacroStatNode, opt: Opt ) mut
+   node: &Nodes.ExpMacroStatNode, opt: Opt ) mut
 {
    if #node.$expStrList == 0 {
       self.write( "''" );
@@ -1845,7 +1845,7 @@ pub override fn convFilter.processExpMacroStat(
 
 
 pub override fn convFilter.processExpNew(
-   node: Nodes.ExpNewNode, opt: Opt ) mut
+   node: &Nodes.ExpNewNode, opt: Opt ) mut
 {
    filter( node.get_symbol(), self, node );
    self.write( ".new(" );
@@ -1870,7 +1870,7 @@ fn convFilter.process__func__symbol(
 }
 
 pub override fn convFilter.processDeclConstr(
-   node: Nodes.DeclConstrNode, opt: Opt ) mut
+   node: &Nodes.DeclConstrNode, opt: Opt ) mut
 {
    let declInfo = node.get_declInfo();
    let classTypeInfo = unwrap declInfo.$classTypeInfo;
@@ -1925,7 +1925,7 @@ pub override fn convFilter.processDeclConstr(
 };
 
 pub override fn convFilter.processDeclDestr(
-   node: Nodes.DeclDestrNode, opt: Opt ) mut
+   node: &Nodes.DeclDestrNode, opt: Opt ) mut
 {
    self.writeln( "function %s.__free( self )"
       ( node.$declInfo.$classTypeInfo$.getTxt$(##) ) );
@@ -1945,7 +1945,7 @@ pub override fn convFilter.processDeclDestr(
 
 
 pub override fn convFilter.processExpCallSuperCtor(
-   node: Nodes.ExpCallSuperCtorNode, opt: Opt ) mut
+   node: &Nodes.ExpCallSuperCtorNode, opt: Opt ) mut
 {
    let typeInfo:&Ast.TypeInfo = node.$superType;
 
@@ -1964,7 +1964,7 @@ pub override fn convFilter.processExpCallSuperCtor(
 };
 
 pub override fn convFilter.processExpCallSuper(
-   node: Nodes.ExpCallSuperNode, opt: Opt ) mut
+   node: &Nodes.ExpCallSuperNode, opt: Opt ) mut
 {
    let typeInfo:&Ast.TypeInfo = node.$superType;
 
@@ -1980,7 +1980,7 @@ pub override fn convFilter.processExpCallSuper(
 
 
 pub override fn convFilter.processDeclMethod(
-   node: Nodes.DeclMethodNode, opt: Opt ) mut
+   node: &Nodes.DeclMethodNode, opt: Opt ) mut
 {
    let declInfo = node.get_declInfo();
    let classTypeInfo = unwrap declInfo.$classTypeInfo;
@@ -2013,7 +2013,7 @@ pub override fn convFilter.processDeclMethod(
 
 
 pub override fn convFilter.processUnwrapSet(
-   node: Nodes.UnwrapSetNode, opt: Opt ) mut
+   node: &Nodes.UnwrapSetNode, opt: Opt ) mut
 {
    let dstExpList = node.$dstExpList;
    filter( dstExpList, self, node );
@@ -2073,13 +2073,13 @@ fn convFilter.processExpListSub(
 }
 
 pub override fn convFilter.processExpMRet(
-   node: Nodes.ExpMRetNode, opt: Opt ) mut
+   node: &Nodes.ExpMRetNode, opt: Opt ) mut
 {
    filter( node.$mRet, self, node );
 }
 
 pub override fn convFilter.processIfUnwrap(
-   node: Nodes.IfUnwrapNode, opt: Opt ) mut
+   node: &Nodes.IfUnwrapNode, opt: Opt ) mut
 {
    self.writeln( "do" );
    self.pushIndent(##);
@@ -2122,7 +2122,7 @@ pub override fn convFilter.processIfUnwrap(
 
 
 pub override fn convFilter.processWhen(
-   node: Nodes.WhenNode, opt: Opt ) mut
+   node: &Nodes.WhenNode, opt: Opt ) mut
 {
    self.write( "if " );
    foreach symPair, index in node.$symPairList {
@@ -2144,7 +2144,7 @@ pub override fn convFilter.processWhen(
 
 
 pub override fn convFilter.processDeclVar(
-   node: Nodes.DeclVarNode, opt: Opt ) mut
+   node: &Nodes.DeclVarNode, opt: Opt ) mut
 {
    if node.$syncBlock {
       self.writeln( "do" );
@@ -2256,7 +2256,7 @@ pub override fn convFilter.processDeclVar(
 };
 
 pub override fn convFilter.processDeclArg(
-   node: Nodes.DeclArgNode, opt: Opt ) mut
+   node: &Nodes.DeclArgNode, opt: Opt ) mut
 {
    self.write( string.format( "%s", node.get_name().txt ) );
 
@@ -2264,13 +2264,13 @@ pub override fn convFilter.processDeclArg(
 };
 
 pub override fn convFilter.processDeclArgDDD(
-   node: Nodes.DeclArgDDDNode, opt: Opt ) mut
+   node: &Nodes.DeclArgDDDNode, opt: Opt ) mut
 {
    self.write( "..." );
 };
 
 pub override fn convFilter.processDeclFunc(
-   node: Nodes.DeclFuncNode, opt: Opt ) mut
+   node: &Nodes.DeclFuncNode, opt: Opt ) mut
 {
    let declInfo = node.get_declInfo();
    let nameToken = declInfo.get_name();
@@ -2311,7 +2311,7 @@ pub override fn convFilter.processDeclFunc(
 };
 
 pub override fn convFilter.processRefType(
-   node: Nodes.RefTypeNode, opt: Opt ) mut
+   node: &Nodes.RefTypeNode, opt: Opt ) mut
 {
    self.write( (node.get_refFlag() and "&" or "") ..
                (node.get_mutFlag() and "mut " or "") );
@@ -2325,7 +2325,7 @@ pub override fn convFilter.processRefType(
 };
 
 pub override fn convFilter.processIf(
-   node: Nodes.IfNode, opt: Opt ) mut
+   node: &Nodes.IfNode, opt: Opt ) mut
 {
    let valList = node.get_stmtList();
    foreach val, index in valList {
@@ -2347,7 +2347,7 @@ pub override fn convFilter.processIf(
 };
 
 pub override fn convFilter.processSwitch(
-   node: Nodes.SwitchNode, opt: Opt ) mut
+   node: &Nodes.SwitchNode, opt: Opt ) mut
 {
    self.writeln( "do" );
    self.pushIndent(##);
@@ -2390,7 +2390,7 @@ pub override fn convFilter.processSwitch(
 
 
 pub override fn convFilter.processMatch(
-   node: Nodes.MatchNode, opt: Opt ) mut
+   node: &Nodes.MatchNode, opt: Opt ) mut
 {
    self.writeln( "do" );
    self.pushIndent(##);
@@ -2429,7 +2429,7 @@ pub override fn convFilter.processMatch(
 
 
 pub override fn convFilter.processWhile(
-   node: Nodes.WhileNode, opt: Opt ) mut
+   node: &Nodes.WhileNode, opt: Opt ) mut
 {
    self.write( "while " );
 
@@ -2440,7 +2440,7 @@ pub override fn convFilter.processWhile(
 };
 
 pub override fn convFilter.processRepeat(
-   node: Nodes.RepeatNode, opt: Opt ) mut
+   node: &Nodes.RepeatNode, opt: Opt ) mut
 {
    self.write( "repeat " );
    filter( node.get_block(),  self, node );
@@ -2449,7 +2449,7 @@ pub override fn convFilter.processRepeat(
 };
 
 pub override fn convFilter.processFor(
-   node: Nodes.ForNode, opt: Opt ) mut
+   node: &Nodes.ForNode, opt: Opt ) mut
 {
    self.write( "for %s = " ( getSymTxt( node.$val.$name, "%d" (node.$val.$symbolId) ) ) );
    filter( node.get_init(),  self, node );
@@ -2465,7 +2465,7 @@ pub override fn convFilter.processFor(
 };
 
 pub override fn convFilter.processApply(
-   node: Nodes.ApplyNode, opt: Opt ) mut
+   node: &Nodes.ApplyNode, opt: Opt ) mut
 {
    self.write( "for " );
    let varList = node.get_varList();
@@ -2483,7 +2483,7 @@ pub override fn convFilter.processApply(
 };
 
 pub override fn convFilter.processForeach(
-   node: Nodes.ForeachNode, opt: Opt ) mut
+   node: &Nodes.ForeachNode, opt: Opt ) mut
 {
    let keySym:&Ast.SymbolInfo!;
    let valSym:&Ast.SymbolInfo!;
@@ -2533,7 +2533,7 @@ pub override fn convFilter.processForeach(
 };
 
 pub override fn convFilter.processForsort(
-   node: Nodes.ForsortNode, opt: Opt ) mut
+   node: &Nodes.ForsortNode, opt: Opt ) mut
 {
    let keySym:&Ast.SymbolInfo!;
    let valSym:&Ast.SymbolInfo!;
@@ -2586,7 +2586,7 @@ pub override fn convFilter.processForsort(
 
 
 pub override fn convFilter.processExpUnwrap(
-   node: Nodes.ExpUnwrapNode, opt: Opt ) mut
+   node: &Nodes.ExpUnwrapNode, opt: Opt ) mut
 {
    if! node.$default {
       self.write( '_lune.unwrapDefault( ' );
@@ -2604,7 +2604,7 @@ pub override fn convFilter.processExpUnwrap(
 
 
 pub override fn convFilter.processExpCall(
-   node: Nodes.ExpCallNode, opt: Opt ) mut
+   node: &Nodes.ExpCallNode, opt: Opt ) mut
 {
    let mut wroteFuncFlag = false;
    let mut setArgFlag = false;
@@ -2841,7 +2841,7 @@ pub override fn convFilter.processExpCall(
 };
 
 pub override fn convFilter.processExpList(
-   node: Nodes.ExpListNode, opt: Opt ) mut
+   node: &Nodes.ExpListNode, opt: Opt ) mut
 {
    let expList = node.$expList;
 
@@ -2850,7 +2850,7 @@ pub override fn convFilter.processExpList(
 
 
 pub override fn convFilter.processExpOp1(
-   node: Nodes.ExpOp1Node, opt: Opt ) mut
+   node: &Nodes.ExpOp1Node, opt: Opt ) mut
 {
    let mut op = node.$op.txt;
    if op == ",,," {
@@ -2899,19 +2899,19 @@ pub override fn convFilter.processExpOp1(
 };
 
 pub override fn convFilter.processExpToDDD(
-   node: Nodes.ExpToDDDNode, opt: Opt ) mut
+   node: &Nodes.ExpToDDDNode, opt: Opt ) mut
 {
    self.processExpListSub( node, node.$expList.$expList, node.$expList.$mRetExp );
 }
 
 pub override fn convFilter.processExpMultiTo1(
-   node: Nodes.ExpMultiTo1Node, opt: Opt ) mut
+   node: &Nodes.ExpMultiTo1Node, opt: Opt ) mut
 {
    filter( node.$exp, self, node );
 }
    
 pub override fn convFilter.processExpCast(
-   node: Nodes.ExpCastNode, opt: Opt ) mut
+   node: &Nodes.ExpCastNode, opt: Opt ) mut
 {
    switch node.$castKind {
       case .Force {
@@ -2958,7 +2958,7 @@ pub override fn convFilter.processExpCast(
 
 
 pub override fn convFilter.processExpParen(
-   node: Nodes.ExpParenNode, opt: Opt ) mut
+   node: &Nodes.ExpParenNode, opt: Opt ) mut
 {
    self.write( "(" );
    filter( node.$exp, self, node );
@@ -2992,7 +2992,7 @@ pub override fn convFilter.processExpSetItem(
 }
 
 pub override fn convFilter.processExpOp2(
-   node: Nodes.ExpOp2Node, opt: Opt ) mut
+   node: &Nodes.ExpOp2Node, opt: Opt ) mut
 {
    let mut intCast = false;
    if node.$expType.equals( self.processInfo, Ast.builtinTypeInt ##) and
@@ -3062,7 +3062,7 @@ pub override fn convFilter.processExpOp2(
 };
 
 pub override fn convFilter.processExpRef(
-   node: Nodes.ExpRefNode, opt: Opt ) mut
+   node: &Nodes.ExpRefNode, opt: Opt ) mut
 {
    switch node.$symbolInfo.$name {
       case "super" {
@@ -3098,7 +3098,7 @@ pub override fn convFilter.processExpRef(
 };
 
 pub override fn convFilter.processExpRefItem(
-   node: Nodes.ExpRefItemNode, opt: Opt ) mut
+   node: &Nodes.ExpRefItemNode, opt: Opt ) mut
 {
    if node.$nilAccess {
       self.write( "_lune.nilacc( " );
@@ -3140,7 +3140,7 @@ pub override fn convFilter.processExpRefItem(
 };
 
 pub override fn convFilter.processRefField(
-   node: Nodes.RefFieldNode, opt: Opt ) mut
+   node: &Nodes.RefFieldNode, opt: Opt ) mut
 {
    let parent = opt.node;
    let prefix = node.get_prefix();
@@ -3183,7 +3183,7 @@ pub override fn convFilter.processExpOmitEnum(
 };
 
 pub override fn convFilter.processGetField(
-   node: Nodes.GetFieldNode, opt: Opt ) mut
+   node: &Nodes.GetFieldNode, opt: Opt ) mut
 {
    let prefixNode = node.get_prefix();
    let prefixType = prefixNode.$expType;
@@ -3223,7 +3223,7 @@ pub override fn convFilter.processGetField(
 
 
 pub override fn convFilter.processReturn(
-   node: Nodes.ReturnNode, opt: Opt ) mut
+   node: &Nodes.ReturnNode, opt: Opt ) mut
 {
    self.write( "return " );
 
@@ -3232,7 +3232,7 @@ pub override fn convFilter.processReturn(
    }
 };
 
-pub override fn convFilter.processLuneKind( node: Nodes.LuneKindNode, opt: Opt ) mut
+pub override fn convFilter.processLuneKind( node: &Nodes.LuneKindNode, opt: Opt ) mut
 {
    if! let workNode = node.$exp@@@Nodes.ExpCastNode {
       if workNode.$castKind == .Implicit {
@@ -3245,7 +3245,7 @@ pub override fn convFilter.processLuneKind( node: Nodes.LuneKindNode, opt: Opt )
 }
 
 
-pub override fn convFilter.processTestCase( node: Nodes.TestCaseNode, opt: Opt ) mut
+pub override fn convFilter.processTestCase( node: &Nodes.TestCaseNode, opt: Opt ) mut
 {
    if self.enableTest {
       self.writeln( "do" );
@@ -3268,7 +3268,7 @@ pub override fn convFilter.processTestCase( node: Nodes.TestCaseNode, opt: Opt )
 }
 
 pub override fn convFilter.processTestBlock(
-   node: Nodes.TestBlockNode, opt: Opt ) mut
+   node: &Nodes.TestBlockNode, opt: Opt ) mut
 {
    if self.enableTest {
       foreach statement in node.$stmtList {
@@ -3279,7 +3279,7 @@ pub override fn convFilter.processTestBlock(
 };
 
 pub override fn convFilter.processProvide(
-   node: Nodes.ProvideNode, opt: Opt ) mut
+   node: &Nodes.ProvideNode, opt: Opt ) mut
 {
 }
 
@@ -3294,7 +3294,7 @@ pub override fn convFilter.processAlias(
 }
 
 pub override fn convFilter.processBoxing(
-   node: Nodes.BoxingNode, opt: Opt ) mut
+   node: &Nodes.BoxingNode, opt: Opt ) mut
 {
    self.write( "{" );
 
@@ -3304,7 +3304,7 @@ pub override fn convFilter.processBoxing(
 }
 
 pub override fn convFilter.processUnboxing(
-   node: Nodes.UnboxingNode, opt: Opt ) mut
+   node: &Nodes.UnboxingNode, opt: Opt ) mut
 {
    filter( node.$src, self, node );
    self.write( "[1]" );
@@ -3312,7 +3312,7 @@ pub override fn convFilter.processUnboxing(
 
 
 pub override fn convFilter.processLiteralList(
-   node: Nodes.LiteralListNode, opt: Opt ) mut
+   node: &Nodes.LiteralListNode, opt: Opt ) mut
 {
    self.write( "{" );
 
@@ -3324,7 +3324,7 @@ pub override fn convFilter.processLiteralList(
 };
 
 pub override fn convFilter.processLiteralSet(
-   node: Nodes.LiteralSetNode, opt: Opt ) mut
+   node: &Nodes.LiteralSetNode, opt: Opt ) mut
 {
    self.write( "{" );
    if! let expListNode = node.$expList {
@@ -3342,7 +3342,7 @@ pub override fn convFilter.processLiteralSet(
 };
 
 pub override fn convFilter.processLiteralMap(
-   node: Nodes.LiteralMapNode, opt: Opt ) mut
+   node: &Nodes.LiteralMapNode, opt: Opt ) mut
 {
    self.write( "{" );
    let pairList = node.$pairList;
@@ -3360,7 +3360,7 @@ pub override fn convFilter.processLiteralMap(
 };
 
 pub override fn convFilter.processLiteralArray(
-   node: Nodes.LiteralArrayNode, opt: Opt ) mut
+   node: &Nodes.LiteralArrayNode, opt: Opt ) mut
 {
    self.write( "{" );
 
@@ -3373,13 +3373,13 @@ pub override fn convFilter.processLiteralArray(
 
 
 pub override fn convFilter.processLiteralChar(
-   node: Nodes.LiteralCharNode, opt: Opt ) mut
+   node: &Nodes.LiteralCharNode, opt: Opt ) mut
 {
    self.write( string.format( "%d", node.$num ) );
 };
 
 pub override fn convFilter.processLiteralInt(
-   node: Nodes.LiteralIntNode, opt: Opt ) mut
+   node: &Nodes.LiteralIntNode, opt: Opt ) mut
 {
    //self.write( string.format( "%d", node.$num ) );
    self.write( node.$token.txt );
@@ -3387,14 +3387,14 @@ pub override fn convFilter.processLiteralInt(
 };
 
 pub override fn convFilter.processLiteralReal(
-   node: Nodes.LiteralRealNode, opt: Opt ) mut
+   node: &Nodes.LiteralRealNode, opt: Opt ) mut
 {
    //self.write( string.format( "%s", node.$num ) );
    self.write( node.$token.txt );
 };
 
 pub override fn convFilter.processLiteralString(
-   node: Nodes.LiteralStringNode, opt: Opt ) mut
+   node: &Nodes.LiteralStringNode, opt: Opt ) mut
 {
    let mut txt = node.get_token().txt;
    if string.find( txt, '^```' ## ) {
@@ -3436,31 +3436,31 @@ pub override fn convFilter.processLiteralString(
 };
 
 pub override fn convFilter.processLiteralBool(
-   node: Nodes.LiteralBoolNode, opt: Opt ) mut
+   node: &Nodes.LiteralBoolNode, opt: Opt ) mut
 {
    self.write( node.$token.txt );
 };
 
 pub override fn convFilter.processLiteralNil(
-   node: Nodes.LiteralNilNode, opt: Opt ) mut
+   node: &Nodes.LiteralNilNode, opt: Opt ) mut
 {
    self.write( "nil" );
 };
 
 pub override fn convFilter.processBreak(
-   node: Nodes.BreakNode, opt: Opt ) mut
+   node: &Nodes.BreakNode, opt: Opt ) mut
 {
    self.write( "break" );
 };
 
 pub override fn convFilter.processLiteralSymbol(
-   node: Nodes.LiteralSymbolNode, opt: Opt ) mut
+   node: &Nodes.LiteralSymbolNode, opt: Opt ) mut
 {
    self.write( '%s' ( node.$token.txt ) );
 };
 
 pub override fn convFilter.processLuneControl(
-   node: Nodes.LuneControlNode, opt: Opt ) mut
+   node: &Nodes.LuneControlNode, opt: Opt ) mut
 {
    match node.$pragma {
       case .load__lune_module {

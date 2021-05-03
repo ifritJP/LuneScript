@@ -623,14 +623,14 @@ pub override fn dumpFilter.processExpOp1(
 };
 
 pub override fn dumpFilter.processExpToDDD(
-   node: Nodes.ExpToDDDNode, opt: Opt ) mut
+   node: &Nodes.ExpToDDDNode, opt: Opt ) mut
 {
    self.dump( opt, node, "" );
    filter( node.$expList, self, opt.nextOpt() );
 }
 
 pub override fn dumpFilter.processExpMultiTo1(
-   node: Nodes.ExpMultiTo1Node, opt: Opt ) mut
+   node: &Nodes.ExpMultiTo1Node, opt: Opt ) mut
 {
    self.dump( opt, node, "" );
    filter( node.$exp, self, opt.nextOpt() );
@@ -654,7 +654,7 @@ pub override fn dumpFilter.processExpParen(
    filter( node.get_exp(), self, opt.nextOpt() );
 };
 pub override fn dumpFilter.processExpSetVal(
-   node: Nodes.ExpSetValNode, opt: Opt ) mut
+   node: &Nodes.ExpSetValNode, opt: Opt ) mut
 {
    self.dump( opt, node, "= %s" (node.$expType.getTxt( self.$typeNameCtrl## )) );
    filter( node.get_exp1(), self, opt.nextOpt() );
@@ -875,7 +875,7 @@ pub override fn dumpFilter.processLiteralSymbol(
 };
 
 pub override fn dumpFilter.processAbbr(
-   node: Nodes.AbbrNode, opt: Opt ) mut
+   node: &Nodes.AbbrNode, opt: Opt ) mut
 {
    self.dump( opt, node, "##" );
 };
