@@ -5674,6 +5674,7 @@ function convFilter:processExpCall( node, opt )
    
    self:write( "(" )
    
+   local skipArg = false
    local closeTxt = nil
    do
       local _matchExp = callKind
@@ -5704,6 +5705,23 @@ function convFilter:processExpCall( node, opt )
          local typeInfo = _matchExp[2][1]
       
          self:write( string.format( "%s, ", getLnsItemKind( typeInfo )) )
+         do
+            local argList = node:get_argList()
+            if argList ~= nil then
+               if #argList:get_expType():get_argTypeInfoList() == 2 then
+                  skipArg = true
+                  
+                  self:write( "LnsComp(func ( val1, val2 LnsAny ) bool {" )
+                  self:write( "return " )
+                  self:processSetFromExpList( self:getConvExpName( node:get_id(), argList ), funcType:get_argTypeInfoList(), argList )
+                  local argType = self:type2gotype( argList:get_expType():get_argTypeInfoList()[1] )
+                  self:write( string.format( "( val1.(%s), val2.(%s) )", argType, argType) )
+                  self:write( "})" )
+               end
+               
+            end
+         end
+         
       elseif _matchExp[1] == CallKind.BuiltinCall[1] then
          local packName = _matchExp[2][1]
          local funcname = _matchExp[2][2]
@@ -5721,11 +5739,14 @@ function convFilter:processExpCall( node, opt )
    end
    
    
-   do
-      local argList = node:get_argList()
-      if argList ~= nil then
-         self:processSetFromExpList( self:getConvExpName( node:get_id(), argList ), funcType:get_argTypeInfoList(), argList )
+   if not skipArg then
+      do
+         local argList = node:get_argList()
+         if argList ~= nil then
+            self:processSetFromExpList( self:getConvExpName( node:get_id(), argList ), funcType:get_argTypeInfoList(), argList )
+         end
       end
+      
    end
    
    
@@ -5998,7 +6019,7 @@ function convFilter:processExpSetVal( node, opt )
 
    filter( node:get_exp1(), self, node )
    if getExpListKind( node:get_exp1():get_expTypeList(), node:get_exp2() ) == ExpListKind.Direct then
-      for _8236 = #node:get_exp1():get_expTypeList() + 1, #node:get_exp2():get_expTypeList() do
+      for _8242 = #node:get_exp1():get_expTypeList() + 1, #node:get_exp2():get_expTypeList() do
          self:write( ",_" )
       end
       
@@ -6431,7 +6452,7 @@ function convFilter:processRefField( node, opt )
    end
    
    
-   for _8385 = 1, openParenNum do
+   for _8391 = 1, openParenNum do
       self:write( ")" )
    end
    

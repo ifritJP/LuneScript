@@ -1971,3 +1971,27 @@ _ = 1;
    hoge2.func2();
    print( hoge2.get() );
 }
+{
+   class Hoge {
+      let val:int {pub};
+   }
+   let mut paramList:List<int> = [];
+   for index = 1, 10 {
+      paramList.insert( index );
+   }
+   let seed = (os.clock() * 1000000)@@int;
+   math.randomseed( seed );
+   let mut list:List<&Hoge> = [];
+   for _ = 1, #paramList {
+      let index = math.random(1,#paramList)@@int;
+      let val = paramList[ index ];
+      paramList.remove( index );
+      list.insert( new Hoge( val ) );
+   }
+   list.sort( fn ( val1:Hoge, val2:Hoge): bool {
+      return val1.$val < val2.$val;
+   });
+   foreach val in list {
+      print( val.$val );
+   }
+}

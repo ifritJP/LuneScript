@@ -219,4 +219,11 @@ return 1;  // error
    apply val of string.gmatch( "aaa", "a" ) { // error
    }
 }
-
+{
+   class Hoge {
+   }
+   forsort _ in { new Hoge(): 1 } { // error
+   }
+   forsort _ in (@ new Hoge() ) { // error
+   }
+}

@@ -4557,6 +4557,7 @@ pub override fn convFilter.processExpCall(
 
    self.write( "(" );
 
+   let mut skipArg = false;
    let mut closeTxt:str! = nil;
    match callKind {
       case .RuntimeCall(prefixNode) {
@@ -4580,6 +4581,20 @@ pub override fn convFilter.processExpCall(
       }
       case .SortCall( typeInfo ) {
          self.write( "%s, " (getLnsItemKind( typeInfo )) );
+         if! let argList = node.$argList {
+            if #argList.$expType.$argTypeInfoList == 2 {
+               skipArg = true;
+               
+               self.write( "LnsComp(func ( val1, val2 LnsAny ) bool {" );
+               self.write( "return " );
+               self.processSetFromExpList(
+                  self.getConvExpName( node.$id, argList ), 
+                  funcType.$argTypeInfoList, argList );
+               let argType = self.type2gotype( argList.$expType.$argTypeInfoList[1]);
+               self.write( "( val1.(%s), val2.(%s) )" (argType,argType ) );
+               self.write( "})" );
+            }
+         }
       }
       case .BuiltinCall( packName, funcname ) {
          closeTxt = "}";
@@ -4593,10 +4608,12 @@ pub override fn convFilter.processExpCall(
       }
    }
 
-   if! let argList = node.$argList {
-      self.processSetFromExpList(
-         self.getConvExpName( node.$id, argList ), 
-         funcType.$argTypeInfoList, argList );
+   if not skipArg {
+      if! let argList = node.$argList {
+         self.processSetFromExpList(
+            self.getConvExpName( node.$id, argList ), 
+            funcType.$argTypeInfoList, argList );
+      }
    }
 
    if funcType.$kind == .Func and
