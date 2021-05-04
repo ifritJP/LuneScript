@@ -436,21 +436,21 @@ fn convFilter.isSamePackage( typeInfo:&Ast.TypeInfo ) : bool {
 }
 
 fn convFilter.needPrefix( typeInfo:&Ast.TypeInfo ) : bool {
-   if Ast.isBuiltin( typeInfo.$typeId ) {
+   if Ast.isBuiltin( typeInfo.$typeId.id ) {
       return false;
    }
    return not self.isSamePackage( typeInfo );
 }
 
+fn normalizeSym( name:str ) : str {
+   if golanKeywordSet.has( name ) {
+      return "_%s" (name);
+   }
+   return name;
+}
 
 fn convFilter.getSymbol( kind:SymbolKind, name:str ) : str {
-   let mut symbolName;
-   if golanKeywordSet.has( name ) {
-      symbolName = "_%s" (name);
-   }
-   else {
-      symbolName = name;
-   }
+   let mut symbolName = normalizeSym( name );
 
    _match kind {
       case .Arg {
@@ -504,13 +504,13 @@ fn convFilter.getSymbol( kind:SymbolKind, name:str ) : str {
                            self.$typeNameCtrl, self.$moduleInfoManager, true );
                         symbolName = "%s_%s_%d_"
                             (parentName.gsub( "[%.@]", "_" ), symbolName,
-                              typeInfo.$typeId );
+                              typeInfo.$typeId.id );
                      }
                   } else {
-                     if not Ast.isBuiltin( typeInfo.$typeId ) and
+                     if not Ast.isBuiltin( typeInfo.$typeId.id ) and
                         not self.isPubType( typeInfo )
                      {
-                        symbolName = "%s_%d_" (symbolName, typeInfo.$typeId);
+                        symbolName = "%s_%d_" (symbolName, typeInfo.$typeId.id);
                      }
                      symbolName = self.concatSymWithType( symbolName, typeInfo );
                   }
@@ -521,7 +521,7 @@ fn convFilter.getSymbol( kind:SymbolKind, name:str ) : str {
                       ( self.getSymbol( .Type( parentInfo, false ), parentInfo.$rawTxt ),
                         symbolName );
                   if not self.isPubType( typeInfo ) {
-                     symbolName = "%s_%d_" (symbolName, typeInfo.$typeId);
+                     symbolName = "%s_%d_" (symbolName, typeInfo.$typeId.id);
                   }
                }
                case .ExtModule {
@@ -552,8 +552,8 @@ fn convFilter.getSymbol( kind:SymbolKind, name:str ) : str {
             return self.getSymbol( .Func( typeInfo ), symbolName );
          }
          let mut workName;
-         if isInnerDeclType( typeInfo ) and not Ast.isBuiltin( typeInfo.$typeId ) {
-            workName = "%s%d" (name, typeInfo.$typeId );
+         if isInnerDeclType( typeInfo ) and not Ast.isBuiltin( typeInfo.$typeId.id ) {
+            workName = "%s%d" (name, typeInfo.$typeId.id );
          } else {
             workName = symbolName;
          }
@@ -812,7 +812,7 @@ pub override fn convFilter.processImport(
    }
 
    if not self.isSameModDir( node.$moduleTypeInfo ) and
-      not Ast.isBuiltin( node.$moduleTypeInfo.$typeId )
+      not Ast.isBuiltin( node.$moduleTypeInfo.$typeId.id )
    {
       self.write( "%s." (self.getModuleName( node.$moduleTypeInfo, true )) );
    } 
@@ -1654,7 +1654,7 @@ fn convFilter.outputModuleImport( node:&Nodes.DeclClassNode ) mut {
 
 fn convFilter.outputImport( node:&Nodes.ImportNode ) mut {
    if self.isSameModDir( node.$moduleTypeInfo ) or
-      Ast.isBuiltin( node.$moduleTypeInfo.$typeId )
+      Ast.isBuiltin( node.$moduleTypeInfo.$typeId.id )
    {
       return;
    }
@@ -2580,7 +2580,7 @@ pub override fn convFilter.processIfUnwrap(
          if hasSym {
             self.write( " && " );
          }
-         self.write( "_%s != nil" ( self.getSymbolSym( varSym ) ) );
+         self.write( "!Lns_IsNil( _%s )" ( self.getSymbolSym( varSym ) ) );
          hasSym = true;
       }
    }
@@ -2650,7 +2650,7 @@ fn convFilter.outputLetVar( node: &Nodes.DeclVarNode ) mut {
             if index ~= 1 {
                self.write( ", " );
             }
-            self.write( "_%s" ( varInfo.$name.txt ) );
+            self.write( "_%s" ( normalizeSym( varInfo.$name.txt )) );
          }
 
          let mut tmpVarTypeList:List<&Ast.TypeInfo> = [];
@@ -2676,7 +2676,7 @@ fn convFilter.outputLetVar( node: &Nodes.DeclVarNode ) mut {
                if hasCond {
                   self.write( " || " );
                }
-               self.write( "_%s == nil" (varInfo.$name.txt) );
+               self.write( "_%s == nil" (normalizeSym(varInfo.$name.txt)) );
                hasCond = true;
             }
          }
@@ -2688,7 +2688,8 @@ fn convFilter.outputLetVar( node: &Nodes.DeclVarNode ) mut {
             self.writeln( "} else {" );
             self.pushIndent(##);
             foreach varInfo, index in node.$symbolInfoList {
-               self.write( "%s = _%s" (self.getSymbolSym( varInfo ), varInfo.$name) );
+               self.write( "%s = _%s" (self.getSymbolSym( varInfo ),
+                                        normalizeSym( varInfo.$name) ) );
                if expList.getExpTypeNoDDDAt( index ).$nilable {
                   self.outputAny2Type( varInfo.$typeInfo );
                }
@@ -2702,7 +2703,8 @@ fn convFilter.outputLetVar( node: &Nodes.DeclVarNode ) mut {
             self.writeln( "} else {" );
             self.pushIndent(##);
             foreach varInfo, index in node.$symbolInfoList {
-               self.write( "%s = _%s" (self.getSymbolSym( varInfo ), varInfo.$name) );
+               self.write( "%s = _%s" (self.getSymbolSym( varInfo ),
+                                        normalizeSym( varInfo.$name )) );
                if expList.getExpTypeNoDDDAt( index ).$nilable {
                   self.outputAny2Type( varInfo.$typeInfo );
                }
@@ -2800,7 +2802,7 @@ pub override fn convFilter.processDeclVar(
                if hasCond {
                   self.write( " || " );
                }
-               self.write( "_%s == nil" (varSym.$name) );
+               self.write( "Lns_IsNil( _%s )" (varSym.$name) );
                hasCond = true;
             }
          }
@@ -4427,7 +4429,7 @@ pub fn convFilter.outputCallPrefix(
                prefixKind = prefixType.$kind;
             }
             
-            if Ast.isBuiltin( funcType.$typeId ) {
+            if Ast.isBuiltin( funcType.$typeId.id ) {
                switch prefixKind {
                   case .Class {
                      // class は継承があるので FP 経由で実行する
@@ -4522,7 +4524,7 @@ pub override fn convFilter.processExpCall(
          fieldNode, fieldNode.$prefix, unwrap fieldNode.$symbolInfo );
    } else {
       withPrefix = false;
-      if Ast.isBuiltin( funcType.$typeId ) {
+      if Ast.isBuiltin( funcType.$typeId.id ) {
          let builtinFuncs = TransUnit.getBuiltinFunc();
 
          if! let runtime = self.getVM( node.isThreading(), funcType ) {
@@ -5000,7 +5002,7 @@ pub override fn convFilter.processExpRef(
                self.write( self.getSymbolSym( node.$symbolInfo ) );
             }
             case .Fun {
-               if Ast.isBuiltin( node.$expType.$typeId ) {
+               if Ast.isBuiltin( node.$expType.$typeId.id ) {
                   let builtinFunc = TransUnit.getBuiltinFunc();
                   switch node.$expType {
                      case builtinFunc.lns_print {
@@ -5103,13 +5105,13 @@ pub override fn convFilter.processExpRefItem(
                self.write( ".(*LnsMap)" );
             }
          }
-         self.write( ".Items[" );
+         self.write( ".Get(" );
          if! let index = node.$index {
             filter( index, self, node );
          } else {
             self.write( '"%s"' (str2gostr( unwrap node.$symbol)) );
          }
-         self.write( "]" );
+         self.write( ")" );
          self.outputStem2Type( node.$expType );
          if node.$nilAccess {
             self.write( "))" );

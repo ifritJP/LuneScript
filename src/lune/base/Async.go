@@ -90,7 +90,7 @@ func (self *Async_Pipe) GetNext() LnsAny {
     if self.started{
         {
             _pipe := self.pipe
-            if _pipe != nil {
+            if !Lns_IsNil( _pipe ) {
                 pipe := _pipe.(*Lns__pipe)
                 var val LnsAny
                 

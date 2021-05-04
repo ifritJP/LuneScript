@@ -311,7 +311,7 @@ func (self *Util_OrderdMap) Clear() {
 func (self *Util_OrderdMap) Add(_key LnsAny,_val LnsAny) {
     key := _key
     val := _val
-    if Lns_isCondTrue( self._map.Items[key]){
+    if Lns_isCondTrue( self._map.Get(key)){
         return 
     }
     self._map.Set(key,val)

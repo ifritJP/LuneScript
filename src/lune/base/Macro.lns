@@ -241,7 +241,7 @@ pub class MacroCtrl
    /** マクロを展開する際にマクロを評価する MacroEval のオブジェクト */
    pri let macroEval: Nodes.MacroEval;
    /** マクロの TypeId -> マクロ情報 */
-   let mut typeId2MacroInfo: Map<int,Nodes.MacroInfo> {pub&};
+   let mut typeId2MacroInfo: Map<&Ast.IdInfo,Nodes.MacroInfo> {pub&};
    /**
    * 現在展開中の macro-expand 内で利用できるシンボルと値の紐付けマップ。
    * macro-statment 内の stat の展開でも利用する。
@@ -329,7 +329,7 @@ pub fn MacroCtrl.evalMacroOp(
       }
    }
 
-   let macroInfo = unwrap self.typeId2MacroInfo[ macroTypeInfo.get_typeId() ];
+   let macroInfo = unwrap self.typeId2MacroInfo[ macroTypeInfo.$typeId ];
 
    // マクロに渡す引数をセットする
    let mut argValMap:Map<int,Luaval<&stem>> = {};
@@ -506,7 +506,7 @@ pub fn MacroCtrl.regist(
       }
    }
    // マクロ情報を登録
-   self.typeId2MacroInfo[ node.$expType.get_typeId() ] =
+   self.typeId2MacroInfo[ node.$expType.$typeId ] =
       new Nodes.DefMacroInfo( macroObj, node.$declInfo, remap );
 
    self.symbol2ValueMapForMacro = {};

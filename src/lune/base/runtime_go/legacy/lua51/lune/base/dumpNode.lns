@@ -63,9 +63,8 @@ class dumpFilter extend Nodes.Filter<Opt> {
       let mut typeStr = "";
       let expType = node.get_expType();
       if expType.equals( self.processInfo, Ast.builtinTypeNone ##) {
-         typeStr = "(%d:%s:%s)" ( expType.get_typeId(),
-                                  expType.getTxt(##),
-                                  expType.get_kind() );
+         typeStr = "(%d:%s:%s)" ( expType.$typeId.id,
+                                  expType.getTxt(##), expType.$kind );
       }
 
       let comment;
@@ -642,9 +641,9 @@ pub override fn dumpFilter.processExpCast(
    self.dump(
       opt, node,
       "%s(%d) -> %s(%d)" ( node.$exp.$expType.getTxt( self.$typeNameCtrl ##),
-                           node.$exp.$expType.$typeId,
+                           node.$exp.$expType.$typeId.id,
                            node.$castType.getTxt( self.$typeNameCtrl ## ),
-                           node.$castType.$typeId) );
+                           node.$castType.$typeId.id) );
    filter( node.get_exp(), self, opt.nextOpt() );
 };
 pub override fn dumpFilter.processExpParen(

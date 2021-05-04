@@ -897,8 +897,8 @@ _declNodeClass( "Root", Node, false, false, false,
                   { "luneHelperInfo": "&LuneHelperInfo" },
                   { "@nodeManager": "&NodeManager" },
                   { "importModule2moduleInfo": "&Map<&Ast.TypeInfo,&ModuleInfo>" },
-                  { "typeId2MacroInfo": "&Map<int,&MacroInfo>" },
-                  { "typeId2ClassMap": "&Map<int,&NamespaceInfo>" } ]
+                  { "typeId2MacroInfo": "&Map<&Ast.IdInfo,&MacroInfo>" },
+                  { "typeId2ClassMap": "&Map<&Ast.IdInfo,&NamespaceInfo>" } ]
 );
 
 pub fn RootNode.set_provide( node: ProvideNode ) mut {

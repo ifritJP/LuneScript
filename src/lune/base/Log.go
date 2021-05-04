@@ -47,7 +47,7 @@ var Log_logStream Lns_oStream
 type Log_CreateMessage func () string
 // 44: decl @lune.@base.@Log.str2level
 func Log_str2level(txt string) LnsAny {
-    return Log_name2levelMap.Items[txt]
+    return Log_name2levelMap.Get(txt)
 }
 
 // 50: decl @lune.@base.@Log.setLevel

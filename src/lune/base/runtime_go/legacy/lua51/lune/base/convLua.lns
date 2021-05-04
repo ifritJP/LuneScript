@@ -85,13 +85,13 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
    pri let mut indentQueue: List<int>;
    pri let mut curLineNo: int;
    // クラス TypeId → TypeInfo
-   pri let mut classId2TypeInfo: Map<int,&Ast.TypeInfo>;
+   pri let mut classId2TypeInfo: Map<&Ast.IdInfo,&Ast.TypeInfo>;
    // クラス TypeId → Member Node List
-   pri let mut classId2MemberList: Map<int,&List<&Nodes.DeclMemberNode>>;
+   pri let mut classId2MemberList: Map<&Ast.IdInfo,&List<&Nodes.DeclMemberNode>>;
    // enum TypeId -> EnumTypeInfo
-   pri let mut pubEnumId2EnumTypeInfo: Map<int,&Ast.EnumTypeInfo>;
+   pri let mut pubEnumId2EnumTypeInfo: Map<&Ast.IdInfo,&Ast.EnumTypeInfo>;
    // enum TypeId -> AlgeTypeInfo
-   pri let mut pubAlgeId2AlgeTypeInfo: Map<int,&Ast.AlgeTypeInfo>;
+   pri let mut pubAlgeId2AlgeTypeInfo: Map<&Ast.IdInfo,&Ast.AlgeTypeInfo>;
    // public 変数名 → 変数情報
    pri let mut pubVarName2InfoMap: Map<str,PubVerInfo>;
    // public 関数名 → 関数情報
@@ -334,7 +334,7 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
             } else {
                firstFlag = false;
             }
-            self.write( "%d" (declClass.$expType.$typeId) );
+            self.write( "%d" (declClass.$expType.$typeId.id) );
          }
       }
    }
@@ -358,14 +358,22 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
       }
    }
 
-   let mut typeId2TypeInfo: Map<int,&Ast.TypeInfo> = {};
+   let mut typeId2TypeInfo: Map<&Ast.IdInfo,&Ast.TypeInfo> = {};
+   {
+      let mut work = node.$moduleTypeInfo.$parentInfo;
+      while work.$parentInfo ~= work {
+         typeId2TypeInfo[ work.$typeId ] = work;
+         work = work.$parentInfo;
+      }
+   }
 
-   let mut pickupClassMap: Map<int,&Ast.TypeInfo> = {};
+
+   let mut pickupClassMap: Map<&Ast.IdInfo,&Ast.TypeInfo> = {};
 
    fn checkExportTypeInfo( typeInfo:&Ast.TypeInfo ): bool! {
       let moduleTypeInfo = typeInfo.getModule();
       let typeId = typeInfo.$typeId;
-      return typeId2TypeInfo[ typeId ] and not Ast.isBuiltin( typeId ) and
+      return typeId2TypeInfo[ typeId ] and not Ast.isBuiltin( typeId.id ) and
           ( moduleTypeInfo.hasRouteNamespaceFrom( node.$moduleTypeInfo ) or
             typeInfo.$srcTypeInfo ~= typeInfo or
             moduleTypeInfo.equals( self.processInfo, Ast.headTypeInfo ##) );
@@ -381,7 +389,7 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
    // 公開される型情報を typeId2TypeInfo にピックアップする
    fn pickupTypeId( typeInfo: &Ast.TypeInfo, forceFlag: bool!, pickupChildFlag: bool! ) {
 
-      if typeInfo.get_typeId() == Ast.rootTypeId {
+      if typeInfo.$typeId == Ast.rootTypeIdInfo {
          return;
       }
       // if not forceFlag and typeInfo.get_accessMode() ~= .Pub {
@@ -417,7 +425,7 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
       if typeInfo.isModule() {
          return;
       }
-      if Ast.isBuiltin( typeInfo.$srcTypeInfo.$typeId ) {
+      if Ast.isBuiltin( typeInfo.$srcTypeInfo.$typeId.id ) {
          return;
       }
 
@@ -463,7 +471,7 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
          pickupTypeId( typeInfo.$genSrcTypeInfo, true, false );
 
          let baseInfo = typeInfo.$baseTypeInfo;
-         if baseInfo.$typeId ~= Ast.rootTypeId {
+         if baseInfo.$typeId ~= Ast.rootTypeIdInfo {
             pickupTypeId( baseInfo, true, true );
          }
 	 foreach itemTypeInfo in typeInfo.$interfaceList {
@@ -493,9 +501,8 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
       }
    }
 
-   let mut classId2TypeInfo:Map<int,&Ast.TypeInfo> = {};
 
-   let mut validChildrenSet:Map<&Ast.TypeInfo, Map<int,&Ast.TypeInfo>> = {};
+   let mut validChildrenSet:Map<&Ast.TypeInfo, Map<&Ast.IdInfo,&Ast.TypeInfo>> = {};
 
    {
       let mut typeInfo = self.moduleTypeInfo;
@@ -514,7 +521,11 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
          pickupClassMap[ namespaceInfo.typeInfo.$typeId ] = namespaceInfo.typeInfo;
       }
    }
-   classId2TypeInfo = self.classId2TypeInfo;
+
+   let mut classId2TypeInfo:Map<int,&Ast.TypeInfo> = {};
+   foreach classTypeInfo, idInfo in self.classId2TypeInfo {
+      classId2TypeInfo[ idInfo.id ] = classTypeInfo;
+   }
 
    // 公開クラス情報処理
    self.writeln( "local __typeId2ClassInfoMap = {}" );
@@ -525,7 +536,7 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
          pickupTypeId( classTypeInfo, true,
                        validChildrenSet[ classTypeInfo ] == nil and
                        not classTypeInfo.$externalFlag );
-         pickupClassMap[ classTypeId ] = nil;
+         pickupClassMap[ classTypeInfo.$typeId ] = nil;
 
          self.writeln( "do" );
          self.pushIndent(##);
@@ -534,7 +545,7 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
                        (classTypeId, classTypeId) );
 
 
-         foreach memberNode in unwrap self.classId2MemberList[ classTypeId ] {
+         foreach memberNode in unwrap self.classId2MemberList[ classTypeInfo.$typeId ] {
             if Ast.isPubToExternal( memberNode.$accessMode ) {
                let memberName = memberNode.$name.txt;
                let memberTypeInfo:&Ast.TypeInfo = memberNode.get_expType();
@@ -544,7 +555,7 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
                   ( memberName, memberNode.$staticFlag,
                     memberNode.$symbolInfo.$mutMode ) ..
                   "accessMode = %d, typeId = %d }"
-                  ( memberNode.$accessMode, memberTypeInfo.get_typeId() ) );
+                  ( memberNode.$accessMode, memberTypeInfo.$typeId.id ) );
 
                pickupTypeId( memberTypeInfo, true ## );
             }
@@ -557,15 +568,17 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
 
 
    // 公開クラスから、各メンバ、メソッドの公開情報登録
-   let mut pickupedClassMap: Map<int,&Ast.TypeInfo> = {};
+   let mut pickupedClassMap: Map<&Ast.IdInfo,&Ast.TypeInfo> = {};
    while true {
       let mut workClassMap: Map<int,&Ast.TypeInfo> = {};
       let mut hasWorkClassFlag = false;
       foreach classTypeInfo, classTypeId in pickupClassMap {
          if not pickupedClassMap[ classTypeId ] {
             pickupedClassMap[ classTypeId ] = classTypeInfo;
-            workClassMap[ classTypeId ] = classTypeInfo;
-            hasWorkClassFlag = true;
+            if checkExportTypeInfo( classTypeInfo ) {
+               workClassMap[ classTypeId.id ] = classTypeInfo;
+               hasWorkClassFlag = true;
+            }
          }
       }
 
@@ -586,7 +599,7 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
                //let className = classTypeInfo.getTxt(##);
                self.writeln( "do" );
                self.pushIndent(##);
-               self.writeln( "local __classInfo%s = {}" (classTypeId) );
+               self.writeln( "local __classInfo%d = {}" (classTypeId) );
                self.writeln( "__typeId2ClassInfoMap[ %d ] = __classInfo%d"
                              ( classTypeId, classTypeId) );
 
@@ -602,7 +615,7 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
                            "  name='%s', staticFlag = %s, "
                            ( fieldName,  symbolInfo.$staticFlag ) ..
                            "accessMode = %d, typeId = %d }"
-                           ( symbolInfo.$accessMode, typeInfo.get_typeId() ) );
+                           ( symbolInfo.$accessMode, typeInfo.$typeId.id ) );
                         pickupTypeId( typeInfo ## );
                      }
                   }
@@ -630,7 +643,7 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
          self.writeln( "do" );
          self.pushIndent(##);
          self.writeln( "local info = {}" );
-         self.writeln( "__macroName2InfoMap[ %d ] = info" (macroTypeInfo.$typeId) );
+         self.writeln( "__macroName2InfoMap[ %d ] = info" (macroTypeInfo.$typeId.id) );
          let pos = macroDeclNode.$pos.$orgPos;
          self.writeln( "info.pos = {%d,%d}" (pos.lineNo, pos.column) );
          self.writeln( "info.name = %q" (declInfo.$name.txt));
@@ -640,7 +653,7 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
                self.write( "," );
             }
             self.write( "{name=%q,typeId=%d}"
-                        (argNode.$name.txt, argNode.$expType.$typeId ) );
+                        (argNode.$name.txt, argNode.$expType.$typeId.id ) );
          }
          self.writeln( "}" );
          self.write( "info.symList = {" );
@@ -653,7 +666,7 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
                self.write( "," );
             }
             self.write( "{name=%q,typeId=%d}"
-                        ( name, symInfo.typeInfo.$typeId ) );
+                        ( name, symInfo.typeInfo.$typeId.id ) );
             pickupTypeId( symInfo.typeInfo, true ## );
          }
          self.writeln( "}" );
@@ -706,7 +719,7 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
       self.writeln( string.format( "__varName2InfoMap.%s = {", varName ) );
       self.writeln(
          "  name='%s', accessMode = %d, typeId = %d, mutable = %s }"
-         ( varName, varInfo.accessMode, varInfo.typeInfo.$typeId, true ) );
+         ( varName, varInfo.accessMode, varInfo.typeInfo.$typeId.id, true ) );
       pickupTypeId( varInfo.$typeInfo, true ## );
    }
 
@@ -733,16 +746,16 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
          if! let extId = moduleInfo.$localTypeInfo2importIdMap[ typeInfo ] {
             self.writeln(
                "__dependIdMap[ %d ] = { %d, %d } -- %s"
-               ( typeInfo.$typeId, moduleIndex, extId, typeInfo.getTxt(##) ) );
+               ( typeInfo.$typeId.id, moduleIndex, extId, typeInfo.getTxt(##) ) );
             return true;
          }
       }
       return false;
    }
    
-   let mut wroteTypeIdSet:Set<int> = (@);
+   let mut wroteTypeIdSet:Set<&Ast.IdInfo> = (@);
    fn outputTypeInfo( typeInfo: &Ast.TypeInfo ) {
-      if Ast.isBuiltin( typeInfo.$typeId) {
+      if Ast.isBuiltin( typeInfo.$typeId.id) {
          return;
       }
       
@@ -795,7 +808,7 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
    foreach typeInfo, typeId in self.pubEnumId2EnumTypeInfo {
       typeId2TypeInfo[ typeId ] = typeInfo;
    }
-   forsort typeInfo, typeId in self.pubAlgeId2AlgeTypeInfo {
+   foreach typeInfo, typeId in self.pubAlgeId2AlgeTypeInfo {
       typeId2TypeInfo[ typeId ] = typeInfo;
       forsort valInfo in typeInfo.$valInfoMap {
          foreach valType in valInfo.$typeList {
@@ -819,15 +832,29 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
    self.writeln( "local __dependIdMap = {}" );
    self.writeln( "_moduleObj.__dependIdMap = __dependIdMap" );
    let mut exportNeedModuleTypeInfo:Set<&Ast.TypeInfo> = (@);
-   forsort typeInfo in typeId2TypeInfo {
-      let mut valid = false;
-      let moduleTypeInfo = typeInfo.getModule();
-      exportNeedModuleTypeInfo.add( moduleTypeInfo );
-      if outputDepend( typeInfo, moduleTypeInfo ) {
-         valid = true;
+
+   {
+      let mut module2TypeList:Map<str,Map<int,&Ast.TypeInfo>> = {};
+      foreach typeInfo in typeId2TypeInfo {
+         let moduleType = typeInfo.getModule();
+         let! mut map = module2TypeList[ moduleType.$rawTxt ] {
+            map = {};
+            module2TypeList[ moduleType.$rawTxt ] = map;
+         };
+         map[ typeInfo.$typeId.id ] = typeInfo;
       }
-      if not valid {
-         outputTypeInfo( typeInfo );
+      forsort map in module2TypeList {
+         forsort typeInfo in map {
+            let mut valid = false;
+            let moduleTypeInfo = typeInfo.getModule();
+            exportNeedModuleTypeInfo.add( moduleTypeInfo );
+            if outputDepend( typeInfo, moduleTypeInfo ) {
+               valid = true;
+            }
+            if not valid {
+               outputTypeInfo( typeInfo );
+            }
+         }
       }
    }
 
@@ -870,7 +897,7 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
       moduleTypeInfo = _exp.$symbol.$typeInfo;
       moduleSymbolKind = _exp.$symbol.$kind;
    }
-   self.writeln( "_moduleObj.__moduleTypeId = %d" (moduleTypeInfo.$typeId ) );
+   self.writeln( "_moduleObj.__moduleTypeId = %d" (moduleTypeInfo.$typeId.id ) );
    self.writeln( "_moduleObj.__moduleSymbolKind = %d" (moduleSymbolKind) );
    self.writeln( "_moduleObj.__moduleMutable = %s" (Ast.TypeInfo.isMut( moduleTypeInfo ) ) );
 
@@ -1451,7 +1478,7 @@ pub override fn convFilter.processDeclClass(
 
    let baseInfo = classTypeInfo.get_baseTypeInfo();
    let mut baseTxt = "";
-   if baseInfo.get_typeId() ~= Ast.rootTypeId and
+   if baseInfo.get_typeId() ~= Ast.rootTypeIdInfo and
       baseInfo ~= TransUnit.getBuiltinFunc().lnsthread_ 
    {
       baseTxt = "__index = %s" ( self.getFullName( baseInfo ) );

@@ -525,7 +525,7 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
    /** */
    pri let mut tentativeSymbol:TentativeSymbol;
    /** クラスの TypeId -> NamespaceInfo */
-   pri let mut typeId2ClassMap: Map<int,&Nodes.NamespaceInfo>;
+   pri let mut typeId2ClassMap: Map<&Ast.IdInfo,&Nodes.NamespaceInfo>;
 
    /** クラスの型情報 -> そのクラスを宣言しているノード */
    pri let mut typeInfo2ClassNode: Map<&Ast.TypeInfo,Nodes.DeclClassNode>;
@@ -945,15 +945,15 @@ alias で置き換えている元の Type → alias の型
          }
          else {
             classParentName = "nil";
-            classParentTypeId = -1;
+            classParentTypeId = Ast.dummyIdInfo;
          }
          self.addErrMess(
             errPos, "This class does not exist in this scope. -- %s -- %s(%d), %s(%d)"
             ( classTypeInfo.getTxt( ## ),
               self.scope.$ownerTypeInfo$.getFullName$(
                  self.typeNameCtrl, self.scope, false ),
-              self.scope.$ownerTypeInfo$.$typeId or -1,
-              classParentName, classParentTypeId ) );
+              self.scope.$ownerTypeInfo$.$typeId$.id or -1,
+              classParentName, classParentTypeId.id ) );
       }
       self.scope = unwrap Ast.getScope( classTypeInfo );
    }
@@ -1414,6 +1414,13 @@ class _TypeInfoAlias extend _TypeInfo {
          param.processInfo, self.rawTxt, true, .Pub, param.moduleTypeInfo, srcTypeInfo );
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
 
+      // param.typeId2Scope で親のスコースを取得するために、
+      // param.getTypeInfo() しておく。
+      if not param.getTypeInfo( self.parentId ) {
+         return nil, "%s: not found parentInfo %s %s" ( __func__,
+                                                        self.parentId, self.rawTxt );
+      };
+
       let! mut parentScope = param.typeId2Scope[ self.parentId ] {
          return nil, "%s: not found parentScope %s %s" ( __func__,
                                                      self.parentId, self.rawTxt );
@@ -1588,7 +1595,7 @@ class _TypeInfoModule extend _TypeInfo {
             `{ return "new module -- %s, %s, %d, %d, %d"
                ( self.txt,
                  workTypeInfo.getFullName( Ast.defaultTypeNameCtrl, parentScope, false ),
-                 self.typeId, workTypeInfo.$typeId, parentScope.$scopeId ); } );
+                 self.typeId, workTypeInfo.$typeId.id, parentScope.$scopeId ); } );
       }
       return newTypeInfo, nil;
    }
@@ -1696,7 +1703,7 @@ class _TypeInfoNormal extend _TypeInfo {
                      (self.parentId, self.txt, 
                        parentScope.$ownerTypeInfo$.getFullName$(
                           Ast.defaultTypeNameCtrl, parentScope, false ) or "nil",
-                       parentScope.$ownerTypeInfo$.$typeId or -1 ); } );
+                       parentScope.$ownerTypeInfo$.$typeId$.id or -1 ); } );
             
                
                let baseScope = unwrap param.typeId2Scope[ self.baseId ];
@@ -1733,7 +1740,7 @@ class _TypeInfoNormal extend _TypeInfo {
                      (self.parentId, self.txt, 
                        parentScope.$ownerTypeInfo$.getFullName$(
                           Ast.defaultTypeNameCtrl, parentScope, false ) or "nil",
-                       parentScope.$ownerTypeInfo$.$typeId or -1 ); } );
+                       parentScope.$ownerTypeInfo$.$typeId$.id or -1 ); } );
             
                
                let mut scope = new Ast.Scope(
@@ -3196,8 +3203,8 @@ fn TransUnit.processImport( mut modulePath:str, depth:int ) mut :
    let mut typeId2Scope: Map<int,Ast.Scope> = {};
    typeId2Scope[ Ast.rootTypeId ] = self.scope;
 
-   typeId2TypeInfo[ builtinFunc.lnsthread_.$typeId ] = builtinFunc.lnsthread_;
-   typeId2Scope[ builtinFunc.lnsthread_.$typeId ] = builtinFunc.lnsthread_.$scope;
+   typeId2TypeInfo[ builtinFunc.lnsthread_.$typeId.id ] = builtinFunc.lnsthread_;
+   typeId2Scope[ builtinFunc.lnsthread_.$typeId.id ] = builtinFunc.lnsthread_.$scope;
 
    // 依存するモジュールの typeInfo と、 meta 情報内の typeId との紐付け
    foreach dependIdInfo, typeId in metaInfo.__dependIdMap {
@@ -3224,10 +3231,10 @@ fn TransUnit.processImport( mut modulePath:str, depth:int ) mut :
    //self.moduleName2Info[ orgModulePath ] = metaInfo;
 
    foreach symbolInfo in Ast.getSym2builtInTypeMap() {
-      typeId2TypeInfo[ symbolInfo.$typeInfo.get_typeId() ] = symbolInfo.$typeInfo;
+      typeId2TypeInfo[ symbolInfo.$typeInfo.get_typeId().id ] = symbolInfo.$typeInfo;
    }
    foreach builtinTypeInfo in Ast.getBuiltInTypeIdMap() {
-      typeId2TypeInfo[ builtinTypeInfo.$typeId ] = builtinTypeInfo;
+      typeId2TypeInfo[ builtinTypeInfo.$typeId.id ] = builtinTypeInfo;
    }
 
 
@@ -3317,8 +3324,9 @@ fn TransUnit.processImport( mut modulePath:str, depth:int ) mut :
    // 初めに child 以外で TypeInfo を登録
    let mut importParam = new ImportParam(
       self.parser.getLastPos(), self, self.processInfo, typeId2Scope,
-      typeId2TypeInfo, {}, lazyModuleSet,
+      typeId2TypeInfo, {}, lazyModuleSet, 
       metaInfo, self.scope, moduleTypeInfo, self.scopeAccess, id2atomMap );
+   
    foreach atomInfo in _typeInfoList {
       let newTypeInfo, errMess = atomInfo.createTypeInfoCache( importParam );
       if! errMess {
@@ -3452,8 +3460,8 @@ fn TransUnit.processImport( mut modulePath:str, depth:int ) mut :
                   ( classTypeInfo.getTxt(##),
                     self.scope.$ownerTypeInfo$.getFullName$(
                      Ast.defaultTypeNameCtrl, self.scope, false ) or "nil",
-                    self.scope.$ownerTypeInfo$.$typeId or -1,
-                    classTypeInfo.$typeId,
+                    self.scope.$ownerTypeInfo$.$typeId$.id or -1,
+                    classTypeInfo.$typeId.id,
                     self.scope.$parent.$scopeId ); } );
          }
       }

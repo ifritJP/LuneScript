@@ -118,13 +118,29 @@ pub class ProcessInfo {
       }
    }
 }
+
+pub class IdInfo {
+   pub let id:int;
+   pub let processInfo:&ProcessInfo;
+
+   pub fn equals( idInfo:&IdInfo ) : bool {
+      return (self.id == idInfo.id) and (self.processInfo == idInfo.processInfo);
+   }
+}
+
 let mut rootProcessInfo = ProcessInfo.createRoot();
 pub fn getRootProcessInfo(): ProcessInfo {
    return rootProcessInfo;
 }
 
+pub fn ProcessInfo.newId() mut : IdInfo {
+   let id = self.idProv.getNewId();
+   return new IdInfo( id, self );
+}
 
-pub let rootTypeId = rootProcessInfo.$idProv.getNewId();
+
+pub let rootTypeIdInfo = rootProcessInfo.newId();
+pub let rootTypeId = rootTypeIdInfo.id;
 
 
 pub proto abstract class TypeInfo;
@@ -704,13 +720,13 @@ pub abstract class TypeInfo {
    }
 
    /** 親の typeId  */
-   pub fn getParentId(): int {
-      return rootTypeId;
+   pub fn getParentId(): &IdInfo {
+      return rootTypeIdInfo;
    }
 
    /** スーパークラスの typeId */
-   pub fn get_baseId(): int {
-      return rootTypeId;
+   pub fn get_baseId(): &IdInfo {
+      return rootTypeIdInfo;
    }
 
    /** この型が other を継承しているかどうか */
@@ -769,7 +785,7 @@ pub abstract class TypeInfo {
    }
 
    /** この型情報を oStream にシリアライズする */
-   pub fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
+   pub fn serialize( stream: oStream, validChildrenSet: Map<&IdInfo,&TypeInfo>! ) {
       return;
    }
 
@@ -849,8 +865,8 @@ pub abstract class TypeInfo {
       return self.$parentInfo.getModule();
    }
    /** typeId を取得 */
-   pub fn get_typeId(): int {
-      return rootTypeId;
+   pub fn get_typeId(): &IdInfo {
+      return rootTypeIdInfo;
    }
    /** 型の種別 */
    pub fn get_kind(): TypeInfoKind {
@@ -937,7 +953,7 @@ static な型か。
             if #work ~=  #name {
                work = work .. ", ";
             }
-            work = "%s%d" (work, typeInfo.$typeId );
+            work = "%s%d" (work, typeInfo.$typeId.id );
          }
       }
       return work .. "}, ";
@@ -1096,7 +1112,7 @@ pub fn getScope( typeInfo:&TypeInfo ): Scope! {
 
 
 pub fn isExtId(typeInfo:&TypeInfo): bool {
-   if typeInfo.$typeId >= extStartId {
+   if typeInfo.$typeId.id >= extStartId {
       return true;
    }
    return false;
@@ -1104,12 +1120,13 @@ pub fn isExtId(typeInfo:&TypeInfo): bool {
 
 
 pub class RootTypeInfo extend TypeInfo {
-   pri let typeId:int {pub};
+   pri let typeId:&IdInfo {pub};
 
    pub fn __init() {
       super( rootScope, rootProcessInfo );
 
-      self.typeId = rootProcessInfo.$idProv.$id;
+      //self.typeId = rootProcessInfo.$idProv.$id;
+      self.typeId = rootTypeIdInfo;
    }
    /** super クラス。 継承していない場合は headTypeInfo。 */
    pub override fn get_baseTypeInfo(): &TypeInfo {
@@ -1327,6 +1344,7 @@ pub class AutoBoxingInfo extend TypeInfo {
    }
 }
 
+pub let dummyIdInfo = new IdInfo( 1, rootProcessInfo );
 pub class CanEvalCtrlTypeInfo extend TypeInfo {
    pub static let detectAlt:CanEvalCtrlTypeInfo;
    pub static let needAutoBoxing:CanEvalCtrlTypeInfo;
@@ -1345,8 +1363,9 @@ pub class CanEvalCtrlTypeInfo extend TypeInfo {
       return .CanEvalCtrl;
    }
 
-   pub override fn get_typeId(): int {
-      return -1;
+   pub override fn get_typeId(): &IdInfo {
+      return dummyIdInfo;
+      //return -1;
    }
 
    /** super クラス。 継承していない場合は headTypeInfo。 */
@@ -1431,7 +1450,7 @@ dst に対して autoBoxing 可能かどうか調べる。
 
 pub class NilableTypeInfo extend TypeInfo {
    pri let nonnilableType: &TypeInfo { pub };
-   pri let typeId: int { pub };
+   pri let typeId: &IdInfo { pub };
 
    pub override fn get_kind(): TypeInfoKind {
       return .Nilable;
@@ -1473,10 +1492,10 @@ pub class NilableTypeInfo extend TypeInfo {
       return self.get_display_stirng_with( self.$rawTxt, nil );
    }
 
-   pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
+   pub override fn serialize( stream: oStream, validChildrenSet: Map<&IdInfo,&TypeInfo>! ) {
       stream.write(
          '{ skind = %d, typeId = %d, orgTypeId = %d }\n' (
-            SerializeKind.Nilable, self.typeId, self.nonnilableType.$typeId ) );
+            SerializeKind.Nilable, self.typeId.id, self.nonnilableType.$typeId.id ) );
    }
 
    pub override fn equals( processInfo:ProcessInfo,
@@ -1513,7 +1532,7 @@ pub class AliasTypeInfo extend TypeInfo {
    pri let parentInfo: &TypeInfo { pub };
    pri let aliasSrcTypeInfo: &TypeInfo { pub };
    pri let externalFlag:bool { pub };
-   pri let typeId: int { pub };
+   pri let typeId: &IdInfo { pub };
    pri let nilableTypeInfo: &TypeInfo {pub};
 
    pub fn __init( processInfo:ProcessInfo,
@@ -1526,9 +1545,9 @@ pub class AliasTypeInfo extend TypeInfo {
       self.parentInfo = parentInfo;
       self.aliasSrcTypeInfo = aliasSrcTypeInfo;
       self.externalFlag = externalFlag;
-      self.typeId = processInfo.$idProv.getNewId();
+      self.typeId = processInfo.newId();
       self.nilableTypeInfo = new NilableTypeInfo(
-         nil, processInfo, self, processInfo.$idProv.getNewId() );
+         nil, processInfo, self, processInfo.newId() );
    }
 
    pub override fn getParentFullName(
@@ -1572,12 +1591,12 @@ pub class AliasTypeInfo extend TypeInfo {
       return self.getTxtWithRaw( self.rawTxt, typeNameCtrl, importInfo, localFlag );
    }
 
-   pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
+   pub override fn serialize( stream: oStream, validChildrenSet: Map<&IdInfo,&TypeInfo>! ) {
       let parentId = self.getParentId();
       stream.write(
          '{ skind = %d, parentId = %d, typeId = %d, rawTxt = %q, srcTypeId = %d }\n' (
-            SerializeKind.Alias, parentId, self.typeId, self.rawTxt,
-            self.aliasSrcTypeInfo.$typeId ) );
+            SerializeKind.Alias, parentId.id, self.typeId.id, self.rawTxt,
+            self.aliasSrcTypeInfo.$typeId.id ) );
    }
 
    pub override fn get_display_stirng(): str {
@@ -1585,7 +1604,7 @@ pub class AliasTypeInfo extend TypeInfo {
    }
 
    /** 親の typeId  */
-   pub override fn getParentId(): int {
+   pub override fn getParentId(): &IdInfo {
       return self.parentInfo.$typeId;
    }
 
@@ -1986,7 +2005,7 @@ pub fn Scope.add(
          }
          when! existSymbol {
             if typeInfo.$kind ~= existSymbol.$typeInfo.$kind or
-               not isBuiltin( existSymbol.$typeInfo.$typeId )
+               not isBuiltin( existSymbol.$typeInfo.$typeId.id )
             {
                return nil, existSymbol;
             }
@@ -2315,13 +2334,12 @@ pub fn TypeInfo.createAlt2typeMap( detectFlag:bool ): Map<&TypeInfo,&TypeInfo> {
 
 
 pub class NilTypeInfo extend TypeInfo {
-   pri let typeId:int {pub};
+   pri let typeId:&IdInfo {pub};
 
    pub fn __init( processInfo:ProcessInfo ) {
       super( nil, processInfo );
 
-      processInfo.$idProv.increment();
-      self.typeId = processInfo.$idProv.$id;
+      self.typeId = processInfo.newId();
    }
 
    /** この型がモジュールを示す型の場合 true  */
@@ -2463,7 +2481,7 @@ pub override fn NormalSymbolInfo.canAccess(
          return nil;
       }
       case .Local {
-         if isBuiltin( self.$typeInfo.$typeId ) or 
+         if isBuiltin( self.$typeInfo.$typeId.id ) or 
             self.getModule() == fromScope.getModule()
          {
             return self;
@@ -2607,7 +2625,7 @@ Generic クラスや関数で利用する代用型。
 Set<T> の T を表わす型情報。
 */
 pub class AlternateTypeInfo extend TypeInfo {
-   pri let typeId:int {pub};
+   pri let typeId:&IdInfo {pub};
    pri let txt:str {pub};
    pri let allmut parentInfo:&TypeInfo {non};
    pri let nilableTypeInfo: NilableTypeInfo {pub:&TypeInfo};
@@ -2630,8 +2648,9 @@ pub class AlternateTypeInfo extend TypeInfo {
       super( TypeInfo.createScope( processInfo, nil, true, baseTypeInfo, interfaceList ),
              processInfo );
 
-      processInfo.$idProv.increment();
-      self.typeId = processInfo.$idProv.$id;
+      // processInfo.$idProv.increment();
+      // self.typeId = processInfo.$idProv.$id;
+      self.typeId = processInfo.newId();
 
       self.txt = txt;
       self.accessMode = accessMode;
@@ -2641,9 +2660,9 @@ pub class AlternateTypeInfo extend TypeInfo {
       self.belongClassFlag = belongClassFlag;
       self.altIndex = altIndex;
 
-      processInfo.$idProv.increment();
+      //processInfo.$idProv.increment();
       self.nilableTypeInfo = new NilableTypeInfo(
-         nil, processInfo, self, processInfo.$idProv.$id );
+         nil, processInfo, self, processInfo.newId() );
    }
 
    local fn updateParentInfo( typeInfo:&TypeInfo ) {
@@ -2656,11 +2675,11 @@ pub class AlternateTypeInfo extend TypeInfo {
    }
 
    /** 親の typeId  */
-   pub override fn getParentId(): int {
+   pub override fn getParentId(): &IdInfo {
       return self.parentInfo.$typeId;
    }
 
-   pub override fn get_baseId(): int {
+   pub override fn get_baseId(): &IdInfo {
       return self.baseTypeInfo.$typeId;
    }
 
@@ -2841,12 +2860,12 @@ pub class AlternateTypeInfo extend TypeInfo {
    //    return "";
    // }
 
-   pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
+   pub override fn serialize( stream: oStream, validChildrenSet: Map<&IdInfo,&TypeInfo>! ) {
       let parentId = self.getParentId();
       stream.write(
          '{ skind = %d, parentId = %d, typeId = %d, txt = %q, '
-         ( SerializeKind.Alternate, parentId, self.typeId, self.txt ) ..
-         'accessMode = %d, baseId = %d, ' ( self.accessMode, self.$baseId ) ..
+         ( SerializeKind.Alternate, parentId.id, self.typeId.id, self.txt ) ..
+         'accessMode = %d, baseId = %d, ' ( self.accessMode, self.$baseId.id ) ..
          'belongClassFlag = %s, altIndex = %d, ' (self.belongClassFlag, self.altIndex ));
 
       stream.write( self.serializeTypeInfoList( "ifList = {", self.interfaceList## ) );
@@ -2866,12 +2885,12 @@ let mut boxRootScope = new Scope( rootProcessInfo, rootScope, true, nil## );
 
 pub class BoxTypeInfo extend TypeInfo {
    pri let boxingType: &TypeInfo {pub};
-   pri let typeId: int { pub };
+   pri let typeId: &IdInfo { pub };
    pri let itemTypeInfoList: &List<&TypeInfo> {pub};
    pri let accessMode: AccessMode {pub};
    pri let nilableTypeInfo: NilableTypeInfo {pub:&TypeInfo};
 
-   pub fn __init( processInfo:ProcessInfo, typeId: int,
+   pub fn __init( processInfo:ProcessInfo, typeId: &IdInfo,
                   accessMode:AccessMode, boxingType: &TypeInfo )
    {
       super( boxRootScope, processInfo );
@@ -2880,9 +2899,9 @@ pub class BoxTypeInfo extend TypeInfo {
       self.itemTypeInfoList = [ boxingType ];
       self.accessMode = accessMode;
 
-      processInfo.$idProv.increment();
+      //processInfo.$idProv.increment();
       self.nilableTypeInfo = new NilableTypeInfo(
-         nil, processInfo, self, processInfo.$idProv.$id );
+         nil, processInfo, self, processInfo.newId() );
    }
 
    pub override fn get_scope(): Scope! {
@@ -2932,11 +2951,11 @@ pub class BoxTypeInfo extend TypeInfo {
       return "Nilable<%s>" (self.boxingType.get_display_stirng_with( raw, alt2type ) );
    }
 
-   pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
+   pub override fn serialize( stream: oStream, validChildrenSet: Map<&IdInfo,&TypeInfo>! ) {
       stream.write(
          '{ skind = %d, typeId = %d, accessMode = %d, boxingType = %d }\n' (
-            SerializeKind.Box, self.typeId,
-            self.accessMode, self.boxingType.$typeId ) );
+            SerializeKind.Box, self.typeId.id,
+            self.accessMode, self.boxingType.$typeId.id ) );
    }
 
    pub override fn equals(
@@ -2969,7 +2988,7 @@ Generic クラスの型確定後の型情報。
 Set<T> の Set<int> を表わす型情報。
 */
 pub class GenericTypeInfo extend TypeInfo {
-   pri let typeId:int {pub};
+   pri let typeId:&IdInfo {pub};
    pri let itemTypeInfoList:&List<&TypeInfo> {pub};
    pri let nilableTypeInfo: NilableTypeInfo {pub:&TypeInfo};
    pri let genSrcTypeInfo:&TypeInfo {pub};
@@ -2990,8 +3009,8 @@ pub class GenericTypeInfo extend TypeInfo {
                                    true, genSrcTypeInfo, nil ),
              processInfo );
 
-      processInfo.$idProv.increment();
-      self.typeId = processInfo.$idProv.$id;
+      //processInfo.$idProv.increment();
+      self.typeId = processInfo.newId();
       self.moduleTypeInfo = moduleTypeInfo;
 
       self.itemTypeInfoList = itemTypeInfoList;
@@ -3015,9 +3034,9 @@ pub class GenericTypeInfo extend TypeInfo {
       self.hasAlter = hasAlter;
       self.alt2typeMap = alt2typeMap;
 
-      processInfo.$idProv.increment();
+      //processInfo.$idProv.increment();
       self.nilableTypeInfo = new NilableTypeInfo(
-         nil, processInfo, self, processInfo.$idProv.$id );
+         nil, processInfo, self, processInfo.newId() );
    }
 
    pub override fn getModule(): &TypeInfo {
@@ -3171,16 +3190,16 @@ pub class GenericTypeInfo extend TypeInfo {
       return true;
    }
 
-   pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
+   pub override fn serialize( stream: oStream, validChildrenSet: Map<&IdInfo,&TypeInfo>! ) {
       stream.write(
          '{ skind = %d, typeId = %d, genSrcTypeId = %d, genTypeList = {' (
-            SerializeKind.Generic, self.typeId, self.genSrcTypeInfo.$typeId ) );
+            SerializeKind.Generic, self.typeId.id, self.genSrcTypeInfo.$typeId.id ) );
       let count = 0;
       foreach genType in self.alt2typeMap {
          if count > 0 {
             stream.write( "," );
          }
-         stream.write( "%d" (genType.$typeId) );
+         stream.write( "%d" (genType.$typeId.id) );
       }
       stream.write( '} }\n' );
    }
@@ -3206,7 +3225,7 @@ pub fn isGenericType( typeInfo: &TypeInfo ) : bool {
 
 pub class ModifierTypeInfo extend TypeInfo {
    pri let srcTypeInfo: &TypeInfo { pub };
-   pri let typeId: int { pub };
+   pri let typeId: &IdInfo { pub };
    pri let mutMode: MutMode { pub };
 
    pub override fn get_extedType() : &TypeInfo {
@@ -3243,10 +3262,10 @@ pub class ModifierTypeInfo extend TypeInfo {
       return self.get_display_stirng_with( self.$rawTxt, nil );
    }
 
-   pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
+   pub override fn serialize( stream: oStream, validChildrenSet: Map<&IdInfo,&TypeInfo>! ) {
       stream.write(
          '{ skind = %d, typeId = %d, srcTypeId = %d, mutMode = %d }\n' (
-            SerializeKind.Modifier, self.typeId, self.srcTypeInfo.$typeId,
+            SerializeKind.Modifier, self.typeId.id, self.srcTypeInfo.$typeId.id,
             self.mutMode ) );
    }
 
@@ -3304,14 +3323,14 @@ pub class ModuleTypeInfo extend TypeInfo {
    // 親のタイプ。メソッドの親はクラスとなる。
    pri let mut parentInfo: &TypeInfo { pub };
    // タイプ ID
-   pri let typeId: int { pub };
+   pri let typeId: &IdInfo { pub };
    // タイプ名の文字列。配列などの [] は含まない。
    pri let rawTxt: str { pub };
    //
    pri let mutable: bool {pub};
 
    pub fn __init( processInfo:ProcessInfo, scope: Scope, externalFlag: bool,
-                  txt: str, mut parentInfo: &TypeInfo!, typeId: int, mutable:bool )
+                  txt: str, mut parentInfo: &TypeInfo!, typeId: &IdInfo, mutable:bool )
    {
       super( scope, processInfo );
 
@@ -3348,7 +3367,7 @@ pub class ModuleTypeInfo extend TypeInfo {
       return .Module;
    }
 
-   pub override fn getParentId(): int {
+   pub override fn getParentId(): &IdInfo {
       return self.parentInfo.$typeId;
    }
 
@@ -3381,11 +3400,11 @@ pub class ModuleTypeInfo extend TypeInfo {
    }
 
    pub override fn serialize(
-      stream: oStream, validChildrenSet: Map<int,&TypeInfo>! )
+      stream: oStream, validChildrenSet: Map<&IdInfo,&TypeInfo>! )
    {
       let txt = "{ skind = %d, parentId = %d, typeId = %d, txt = '%s', "
           ( SerializeKind.Module,
-            self.getParentId(), self.typeId, self.rawTxt );
+            self.getParentId().id, self.typeId.id, self.rawTxt );
       stream.write( txt .. '\n' );
 
       stream.write( "children = {" );
@@ -3397,7 +3416,7 @@ pub class ModuleTypeInfo extend TypeInfo {
          foreach child in self.$children {
             if set[ child.$typeId ] and
                ( child.$accessMode == .Pub or child.$accessMode == .Global ) {
-               stream.write( "%d, " ( child.$typeId ) );
+               stream.write( "%d, " ( child.$typeId.id ) );
             }
          }
       }
@@ -3437,7 +3456,7 @@ pub class EnumTypeInfo extend TypeInfo {
    // 親のタイプ。メソッドの親はクラスとなる。
    pri let mut parentInfo: &TypeInfo { pub };
    // タイプ ID
-   pri let typeId: int { pub };
+   pri let typeId: &IdInfo { pub };
    // タイプ名の文字列。配列などの [] は含まない。
    pri let rawTxt: str { pub };
    // アクセスモード "pub", "pro", "pri"
@@ -3454,7 +3473,7 @@ pub class EnumTypeInfo extend TypeInfo {
 
    pub fn __init( processInfo:ProcessInfo, scope: Scope, externalFlag:
                   bool, accessMode: AccessMode, txt: str, parentInfo: &TypeInfo!,
-                  typeId: int, valTypeInfo:&TypeInfo )
+                  valTypeInfo:&TypeInfo )
    {
       super( scope, processInfo );
 
@@ -3462,7 +3481,7 @@ pub class EnumTypeInfo extend TypeInfo {
       self.accessMode = accessMode;
       self.rawTxt = txt;
       self.parentInfo = unwrap parentInfo default headTypeInfo;
-      self.typeId = typeId;
+      self.typeId = processInfo.newId();
       self.name2EnumValInfo = {};
       self.valTypeInfo = valTypeInfo;
 
@@ -3473,8 +3492,8 @@ pub class EnumTypeInfo extend TypeInfo {
          _exp.addChildren( self );
       }
 
-      self.nilableTypeInfo = new NilableTypeInfo( nil, processInfo, self, typeId + 1 );
-      processInfo.$idProv.increment();
+      self.nilableTypeInfo = new NilableTypeInfo(
+         nil, processInfo, self, processInfo.newId() );
 
       scope.set_ownerTypeInfo( self );
    }
@@ -3491,7 +3510,7 @@ pub class EnumTypeInfo extend TypeInfo {
    pub override fn get_baseTypeInfo(): &TypeInfo {
       return headTypeInfo;
    }
-   pub override fn getParentId(): int {
+   pub override fn getParentId(): &IdInfo {
       return self.parentInfo.$typeId;
    }
 
@@ -3524,7 +3543,8 @@ pub class EnumTypeInfo extend TypeInfo {
       if self == other.$srcTypeInfo.$aliasSrc {
          return true, nil;
       }
-      return false, "%d != %d" (self.$typeId, other.$srcTypeInfo.$aliasSrc.$typeId );
+      return false, "%d != %d" (self.$typeId.id,
+                                 other.$srcTypeInfo.$aliasSrc.$typeId.id );
    }
 
    pub fn addEnumValInfo( valInfo:&EnumValInfo ) mut {
@@ -3551,7 +3571,7 @@ pub class AlgeTypeInfo extend TypeInfo {
    // 親のタイプ。メソッドの親はクラスとなる。
    pri let mut parentInfo: &TypeInfo { pub };
    // タイプ ID
-   pri let typeId: int { pub };
+   pri let typeId: &IdInfo { pub };
    // タイプ名の文字列。配列などの [] は含まない。
    pri let rawTxt: str { pub };
    // アクセスモード "pub", "pro", "pri"
@@ -3567,8 +3587,7 @@ pub class AlgeTypeInfo extend TypeInfo {
    }
 
    pub fn __init( processInfo:ProcessInfo, scope: Scope, externalFlag: bool,
-                  accessMode: AccessMode,
-                  txt: str, parentInfo: &TypeInfo!, typeId: int )
+                  accessMode: AccessMode, txt: str, parentInfo: &TypeInfo! )
    {
       super( scope, processInfo );
 
@@ -3576,7 +3595,7 @@ pub class AlgeTypeInfo extend TypeInfo {
       self.accessMode = accessMode;
       self.rawTxt = txt;
       self.parentInfo = unwrap parentInfo default headTypeInfo;
-      self.typeId = typeId;
+      self.typeId = processInfo.newId();
       self.valInfoMap = {};
       self.valInfoNum = 0;
 
@@ -3584,8 +3603,8 @@ pub class AlgeTypeInfo extend TypeInfo {
          _exp.addChildren( self );
       }
 
-      self.nilableTypeInfo = new NilableTypeInfo( nil, processInfo, self, typeId + 1 );
-      processInfo.$idProv.increment();
+      self.nilableTypeInfo = new NilableTypeInfo(
+         nil, processInfo, self, processInfo.newId() );
 
       scope.set_ownerTypeInfo( self );
    }
@@ -3602,7 +3621,7 @@ pub class AlgeTypeInfo extend TypeInfo {
       return .Alge;
    }
 
-   pub override fn getParentId(): int {
+   pub override fn getParentId(): &IdInfo {
       return self.parentInfo.$typeId;
    }
 
@@ -3652,7 +3671,7 @@ pub class AlgeValInfo {
          if index > 1 {
             stream.write( ", " );
          }
-         stream.write( "%d" ( typeInfo.$typeId ) );
+         stream.write( "%d" ( typeInfo.$typeId.id ) );
       }
       stream.write( "} }" );
    }
@@ -3682,7 +3701,7 @@ pub class NormalTypeInfo extend TypeInfo {
    // 親のタイプ。メソッドの親はクラスとなる。
    pri let mut parentInfo: &TypeInfo { pub };
    // タイプ ID
-   pri let typeId: int { pub };
+   pri let typeId: &IdInfo { pub };
    // タイプ名の文字列。配列などの [] は含まない。
    pri let rawTxt: str { pub };
    // タイプの種別
@@ -3752,7 +3771,7 @@ pub class NormalTypeInfo extend TypeInfo {
       baseTypeInfo: &TypeInfo!, interfaceList: &List<&TypeInfo>!,
       autoFlag: bool, externalFlag: bool, staticFlag: bool,
       accessMode: AccessMode,
-      txt: str, parentInfo: &TypeInfo!, typeId: int, kind: TypeInfoKind,
+      txt: str, parentInfo: &TypeInfo!, typeId: &IdInfo, kind: TypeInfoKind,
       itemTypeInfoList: &List<&TypeInfo>!, argTypeInfoList:&List<&TypeInfo>!,
       retTypeInfoList: &List<&TypeInfo>!, mutMode: MutMode!, moduleLang:Types.Lang! )
    {
@@ -3842,8 +3861,7 @@ pub class NormalTypeInfo extend TypeInfo {
          }
          if hasNilable {
             self.nilableTypeInfo = new NilableTypeInfo(
-               nil, processInfo, self, typeId + 1 );
-            processInfo.$idProv.increment();
+               nil, processInfo, self, processInfo.newId() );
          }
          else {
             self.nilableTypeInfo = headTypeInfo;
@@ -3870,11 +3888,11 @@ pub class NormalTypeInfo extend TypeInfo {
       return false;
    }
 
-   pub override fn getParentId(): int {
+   pub override fn getParentId(): &IdInfo {
       return self.parentInfo.$typeId;
    }
 
-   pub override fn get_baseId(): int {
+   pub override fn get_baseId(): &IdInfo {
       return self.baseTypeInfo.$typeId;
    }
 
@@ -3963,8 +3981,8 @@ pub class NormalTypeInfo extend TypeInfo {
    }
 
 
-   pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
-      if self.typeId == rootTypeId {
+   pub override fn serialize( stream: oStream, validChildrenSet: Map<&IdInfo,&TypeInfo>! ) {
+      if self.typeId.id == rootTypeId {
          return;
       }
 
@@ -3972,7 +3990,8 @@ pub class NormalTypeInfo extend TypeInfo {
 
       let mut txt = ```{ skind=%d, parentId = %d, typeId = %d, baseId = %d, txt = '%s',
         abstractFlag = %s, staticFlag = %s, accessMode = %d, kind = %d, mutMode = %d, ```
-          ( SerializeKind.Normal, parentId, self.typeId, self.get_baseId(), self.rawTxt,
+          ( SerializeKind.Normal, parentId.id, self.typeId.id,
+            self.$baseId.id, self.rawTxt,
             self.abstractFlag, self.staticFlag, self.accessMode,
             self.kind, self.mutMode );
       if! self.moduleLang {
@@ -4105,10 +4124,9 @@ NormalTypeInfo インスタンスを生成する。
          }
          Util.err( "not found symbol -- %s" (txt ) );
       }
-      processInfo.$idProv.increment();
       let mut info = new NormalTypeInfo(
          processInfo, abstractFlag, scope, baseInfo, nil, false, true,
-         staticFlag, accessMode, txt, parentInfo, processInfo.$idProv.$id, kind,
+         staticFlag, accessMode, txt, parentInfo, processInfo.newId(), kind,
          itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode, nil );
       return info;
    }
@@ -4215,7 +4233,6 @@ pub fn ProcessInfo.createModifier(
       }
    }
 
-   self.$idProv.increment();
    let modifier;
    if srcTypeInfo.$nonnilableType.$kind == .Ext {
       // 元々 Ext だったものは、 failCreateLuavalWith() を実行しない
@@ -4235,7 +4252,7 @@ pub fn ProcessInfo.createModifier(
       }
    } else {
       modifier = new ModifierTypeInfo(
-         nil, self, srcTypeInfo, self.$idProv.$id, mutMode );
+         nil, self, srcTypeInfo, self.newId(), mutMode );
    }
    switch mutMode {
       case .IMut, .IMutRe {
@@ -4277,7 +4294,7 @@ pub fn Scope.addOverrideImut( symbolInfo:&SymbolInfo ) mut {
 rootProcessInfo.$idProv.increment();
 
 pub fn addBuiltin( typeInfo:&TypeInfo ) {
-   builtInTypeIdSet[ typeInfo.$typeId ] = typeInfo;
+   builtInTypeIdSet[ typeInfo.$typeId.id ] = typeInfo;
 }
 addBuiltin( headTypeInfo );
 
@@ -4311,14 +4328,10 @@ fn registBuiltin( idName: str, typeTxt: str, kind: TypeInfoKind,
    }
 }
 
-pub static fn NormalTypeInfo.createBuiltin(
+local static fn NormalTypeInfo.createBuiltin(
    idName: str, typeTxt: str, kind: TypeInfoKind,
    typeDDD: &TypeInfo!, ifList:&List<&TypeInfo>! ) mut : &TypeInfo
 {
-   let mut typeId = rootProcessInfo.$idProv.getNewId();
-   if kind == .Root {
-      typeId = rootTypeId;
-   }
    let mut argTypeList:List<&TypeInfo> = [];
    let mut retTypeList:List<&TypeInfo> = [];
    if typeTxt == "form" {
@@ -4355,7 +4368,7 @@ pub static fn NormalTypeInfo.createBuiltin(
    }
    let mut info = new NormalTypeInfo(
       rootProcessInfo, false, scope, nil, ifList, false, false, false,
-      AccessMode.Pub, typeTxt, headTypeInfo, typeId,
+      AccessMode.Pub, typeTxt, headTypeInfo, rootProcessInfo.newId(),
       kind, genTypeList, argTypeList, retTypeList, .Mut, nil );
 
    registBuiltin( idName, typeTxt, kind, info, headTypeInfo, scope ~= nil );
@@ -4603,7 +4616,7 @@ pub fn isStruct( typeInfo:&TypeInfo ): bool {
 }
 
 pub let builtinTypeBox = new BoxTypeInfo(
-   rootProcessInfo, rootProcessInfo.$idProv.getNewId(), .Pub, boxRootAltType );
+   rootProcessInfo, rootProcessInfo.newId(), .Pub, boxRootAltType );
 registBuiltin( "Nilable", "Nilable", .Box, builtinTypeBox, headTypeInfo, true );
 
 
@@ -4624,7 +4637,7 @@ pub fn ProcessInfo.createBox(
    }
 
    let boxType = new BoxTypeInfo(
-      self, self.$idProv.getNewId(), accessMode, nonnilableType );     
+      self, self.newId(), accessMode, nonnilableType );     
    self.$typeInfo2Map.BoxMap[ nonnilableType ] = boxType;
    return boxType;
 }
@@ -4650,7 +4663,6 @@ macro _createType( newType:__exp ) {
       tmpMutMode = .Mut;
    }
    
-   self.$idProv.increment();
    let newTypeFunc = ,,newType;
    let typeInfo = newTypeFunc( tmpMutMode );
 
@@ -4670,7 +4682,7 @@ pub fn ProcessInfo.createSet(
       return new NormalTypeInfo(
          self, false, getScope( builtinTypeSet ), builtinTypeSet,
          nil, false, false, false, AccessMode.Pub,
-         "Set", headTypeInfo, self.$idProv.$id, .Set, itemTypeInfo,
+         "Set", headTypeInfo, self.newId(), .Set, itemTypeInfo,
          nil, nil, workMutMode, nil ); } );
 }
 
@@ -4683,7 +4695,7 @@ pub fn ProcessInfo.createList(
       return new NormalTypeInfo(
          self, false, getScope( builtinTypeList ), builtinTypeList,
          nil, false, false, false, AccessMode.Pub,
-         "List", headTypeInfo, self.$idProv.$id, .List, itemTypeInfo,
+         "List", headTypeInfo, self.newId(), .List, itemTypeInfo,
          nil, nil, workMutMode, nil ); } );
 }
 
@@ -4696,7 +4708,7 @@ pub fn ProcessInfo.createArray(
       return new NormalTypeInfo(
          self, false, getScope( builtinTypeArray ), builtinTypeArray,
          nil, false, false, false, AccessMode.Pub,
-         "Array", headTypeInfo, self.$idProv.$id, .Array, itemTypeInfo,
+         "Array", headTypeInfo, self.newId(), .Array, itemTypeInfo,
          nil, nil, workMutMode, nil ); } );
 }
 
@@ -4709,7 +4721,7 @@ pub fn ProcessInfo.createMap(
       return new NormalTypeInfo(
          self, false, getScope( builtinTypeMap ), builtinTypeMap,
          nil, false, false, false, AccessMode.Pub,
-         "Map", headTypeInfo, self.$idProv.$id, .Map,
+         "Map", headTypeInfo, self.newId(), .Map,
          [ keyTypeInfo, valTypeInfo ], nil, nil, workMutMode, nil );
    });
 }
@@ -4731,7 +4743,7 @@ pub fn ProcessInfo.createModule(
 
    let mut info = new ModuleTypeInfo(
       self, scope, externalFlag, moduleName,
-      parentInfo, self.$idProv.getNewId(), mutable );
+      parentInfo, self.newId(), mutable );
    return info;
 }
 
@@ -4759,7 +4771,7 @@ pub fn ProcessInfo.createClass(
    let mut info = new NormalTypeInfo(
       self, abstractFlag, scope, baseInfo, interfaceList, false,
       externalFlag, false, accessMode,
-      className, parentInfo, self.$idProv.getNewId(),
+      className, parentInfo, self.newId(),
       classFlag and TypeInfoKind.Class or TypeInfoKind.IF,
       genTypeList, nil, nil, .Mut, nil );
 
@@ -4791,7 +4803,7 @@ pub fn ProcessInfo.createExtModule(
    let mut info = new NormalTypeInfo(
       self, false, scope, nil, nil, false,
       externalFlag, false, accessMode,
-      className, parentInfo, self.$idProv.getNewId(),
+      className, parentInfo, self.newId(),
       .ExtModule, nil, nil, nil, .Mut, moduleLang );
    info.set_requirePath(requirePath);
    return info;
@@ -4812,7 +4824,7 @@ pub fn ProcessInfo.createFunc(
 
    let mut info = new NormalTypeInfo(
       self, abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag,
-      accessMode, funcName, parentInfo, self.$idProv.getNewId(),
+      accessMode, funcName, parentInfo, self.newId(),
       kind, unwrap altTypeList default [], unwrap argTypeList default [],
       unwrap retTypeInfoList default [],
       mutable and MutMode.Mut or MutMode.IMut, nil );
@@ -4908,7 +4920,7 @@ pub fn Scope.addAliasForType(
 
 pub class DDDTypeInfo extend TypeInfo {
    pri let typeInfo: &TypeInfo { pub };
-   pri let typeId: int { pub };
+   pri let typeId: &IdInfo { pub };
    pri let externalFlag: bool {pub};
    pri let itemTypeInfoList: &List<&TypeInfo> {pub};
    pri let extedType:&TypeInfo {pub};
@@ -4930,7 +4942,7 @@ pub class DDDTypeInfo extend TypeInfo {
       return headTypeInfo;
    }
 
-   pub fn __init( processInfo:ProcessInfo, typeId:int, typeInfo:&TypeInfo,
+   pub fn __init( processInfo:ProcessInfo, typeId:&IdInfo, typeInfo:&TypeInfo,
                   externalFlag:bool, extOrgDDType:&DDDTypeInfo! )   
    {
       super( nil, processInfo );
@@ -4961,11 +4973,11 @@ pub class DDDTypeInfo extend TypeInfo {
       return self.typeInfo.canEvalWith( processInfo, other, canEvalType, alt2type )**;
    }
 
-   pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
+   pub override fn serialize( stream: oStream, validChildrenSet: Map<&IdInfo,&TypeInfo>! ) {
       stream.write(
          '{ skind=%d, typeId = %d, itemTypeId = %d, parentId = %d, extTypeFlag = %s }\n'
-         ( SerializeKind.DDD, self.typeId,
-           self.typeInfo.$typeId, headTypeInfo.$typeId, self.$extTypeFlag ) );
+         ( SerializeKind.DDD, self.typeId.id,
+           self.typeInfo.$typeId.id, headTypeInfo.$typeId.id, self.$extTypeFlag ) );
    }
 
    pub override fn get_display_stirng_with(
@@ -5044,20 +5056,19 @@ pub fn ProcessInfo.createDDD(
       dddMap = self.$typeInfo2Map.DDDMap;
    }
    if! dddMap[ typeInfo ] {
-      if _exp.$typeId < userStartId and typeInfo.$typeId >= userStartId {
+      if _exp.$typeId.id < userStartId and typeInfo.$typeId.id >= userStartId {
          Util.err( "on cache" );
       }
       return _exp;
    }
 
    let dddType = new DDDTypeInfo(
-      self, self.$idProv.getNewId(), typeInfo, externalFlag, nil );
+      self, self.newId(), typeInfo, externalFlag, nil );
 
    if failCreateLuavalWith( typeInfo, .InLua, true ) {
       // dddType 生成時に extTypeFlag の dddType を生成して map に登録しておく
       let extDDDType = new DDDTypeInfo(
-         self, self.$idProv.getNewId(),
-         typeInfo, externalFlag, dddType );
+         self, self.newId(), typeInfo, externalFlag, dddType );
 
       if extTypeFlag {
          return extDDDType;
@@ -5479,7 +5490,7 @@ pub override fn GenericTypeInfo.applyGeneric(
 
 
 pub class AbbrTypeInfo extend TypeInfo {
-   pri let typeId: int { pub };
+   pri let typeId: &IdInfo { pub };
    pri let rawTxt:str { pub };
 
    pub override fn get_scope(): Scope! {
@@ -5499,10 +5510,7 @@ pub class AbbrTypeInfo extend TypeInfo {
    {
       super( nil, processInfo );
 
-      let typeId = processInfo.$idProv.$id + 1;
-      processInfo.$idProv.increment();
-
-      self.typeId = typeId;
+      self.typeId = processInfo.newId();
       self.rawTxt = rawTxt;
    }
 
@@ -5531,7 +5539,7 @@ pub class AbbrTypeInfo extend TypeInfo {
       return false, nil;
    }
 
-   pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
+   pub override fn serialize( stream: oStream, validChildrenSet: Map<&IdInfo,&TypeInfo>! ) {
       Util.err( "illegal call" );
    }
 
@@ -5570,7 +5578,7 @@ pub let builtinTypeAbbrNone:&TypeInfo = new AbbrTypeInfo( rootProcessInfo, "[##]
 
 
 pub class ExtTypeInfo extend TypeInfo {
-   pri let typeId: int { pub };
+   pri let typeId: &IdInfo { pub };
    /** 対応する LuneScript のタイプ。 必ず no-nolable になる。 */
    pri let extedType: &TypeInfo { pub };
    pri let nilableTypeInfo: &TypeInfo { pub };
@@ -5579,15 +5587,11 @@ pub class ExtTypeInfo extend TypeInfo {
    {
       super( extedType.$scope, processInfo );
 
-      let typeId = processInfo.$idProv.$id + 1;
-      processInfo.$idProv.increment();
-      self.typeId = typeId;
+      self.typeId = processInfo.newId();
       self.extedType = extedType;
 
-      self.nilableTypeInfo = new NilableTypeInfo( nil, processInfo, self, typeId + 1 );
-      processInfo.$idProv.increment();
-      
-
+      self.nilableTypeInfo = new NilableTypeInfo(
+         nil, processInfo, self, processInfo.newId() );
    }
 
    /** この型の名前を取得する。 */
@@ -5645,10 +5649,10 @@ pub class ExtTypeInfo extend TypeInfo {
       // return self.extedType.canEvalWith( other, canEvalType, alt2type )**;
    }
 
-   pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
+   pub override fn serialize( stream: oStream, validChildrenSet: Map<&IdInfo,&TypeInfo>! ) {
       stream.write(
          '{ skind = %d, typeId = %d, extedTypeId = %d }\n' (
-            SerializeKind.Ext, self.typeId, self.extedType.$typeId ) );
+            SerializeKind.Ext, self.typeId.id, self.extedType.$typeId.id ) );
    }
 
    pub override fn get_display_stirng_with(
@@ -5708,7 +5712,7 @@ pub fn ProcessInfo.createLuaval(
       return .OK( luneType, true );
    }
    if! let extType = self.$typeInfo2Map.ExtMap[ luneType ] {
-      if extType.$typeId < userStartId and luneType.$typeId >= userStartId {
+      if extType.$typeId.id < userStartId and luneType.$typeId.id >= userStartId {
          Util.err( "on cache" );
       }
       if extType.$kind == .Ext {
@@ -5831,7 +5835,7 @@ pub fn ProcessInfo.createEnum(
 
    let mut info = new EnumTypeInfo(
       self, scope, externalFlag, accessMode, enumName,
-      parentInfo, self.$idProv.getNewId(), valTypeInfo );
+      parentInfo, valTypeInfo );
 
    let mut getEnumName = self.createFunc(
       false, true, nil, .Method, info,
@@ -5858,12 +5862,12 @@ pub fn ProcessInfo.createEnum(
 }
 
 pub override fn EnumTypeInfo.serialize(
-   stream: oStream, validChildrenSet: Map<int,&TypeInfo>! )
+   stream: oStream, validChildrenSet: Map<&IdInfo,&TypeInfo>! )
 {
    let txt = ```{ skind = %d, parentId = %d, typeId = %d, txt = '%s',
 accessMode = %d, kind = %d, valTypeId = %d, ```
-       ( SerializeKind.Enum, self.getParentId(), self.typeId, self.rawTxt,
-         self.accessMode, TypeInfoKind.Enum, self.valTypeInfo.$typeId );
+       ( SerializeKind.Enum, self.getParentId().id, self.typeId.id, self.rawTxt,
+         self.accessMode, TypeInfoKind.Enum, self.valTypeInfo.$typeId.id );
    stream.write( txt );
 
    stream.write( "enumValList = {" );
@@ -5897,8 +5901,7 @@ pub fn ProcessInfo.createAlge(
    }
 
    let mut info = new AlgeTypeInfo(
-      self, scope, externalFlag, accessMode, algeName, parentInfo,
-      self.$idProv.getNewId() );
+      self, scope, externalFlag, accessMode, algeName, parentInfo );
 
    let mut getAlgeName = self.createFunc(
       false, true, nil, .Method, info,
@@ -5910,11 +5913,11 @@ pub fn ProcessInfo.createAlge(
 }
 
 pub override fn AlgeTypeInfo.serialize(
-   stream: oStream, validChildrenSet: Map<int,&TypeInfo>! )
+   stream: oStream, validChildrenSet: Map<&IdInfo,&TypeInfo>! )
 {
    let txt = ```{ skind = %d, parentId = %d, typeId = %d, txt = '%s',
 accessMode = %d, kind = %d, ```
-       ( SerializeKind.Alge, self.getParentId(), self.typeId, self.rawTxt,
+       ( SerializeKind.Alge, self.getParentId().id, self.typeId.id, self.rawTxt,
          self.accessMode, TypeInfoKind.Alge );
    stream.write( txt );
 
@@ -6309,8 +6312,8 @@ pub static fn TypeInfo.checkMatchType(
             if not canEval {
                return .Error, "exp(%d) type mismatch %s(%d) <- %s(%d)%s"
                ( index,
-                 dstType.getTxt( defaultTypeNameCtrl## ), dstType.$typeId,
-                 expType.getTxt( defaultTypeNameCtrl## ), expType.$typeId,
+                 dstType.getTxt( defaultTypeNameCtrl## ), dstType.$typeId.id,
+                 expType.getTxt( defaultTypeNameCtrl## ), expType.$typeId.id,
                  _evalMess( evalMess ) );
             }
             _checkWarnForFollow( index, dstType, expType );

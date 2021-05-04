@@ -92,7 +92,7 @@ func GoMod_getGoMap() *GoMod_ModInfo {
     name = "lnsc"
     {
         _file := GoMod_convExp1234(Lns_2DDD(Lns_io_open("go.mod", nil)))
-        if _file != nil {
+        if !Lns_IsNil( _file ) {
             file := _file.(Lns_luaStream)
             var inBlock LnsInt
             inBlock = GoMod_BlockKind__None
@@ -278,8 +278,8 @@ func (self *GoMod_ModInfo) getLocalModulePathList(path string) *LnsList {
             var relativeName string
             relativeName = Lns_getVM().String_sub(path,len(mod) + 2, nil)
             {
-                _replacePath := self.replaceMap.Items[mod]
-                if _replacePath != nil {
+                _replacePath := self.replaceMap.Get(mod)
+                if !Lns_IsNil( _replacePath ) {
                     replacePath := _replacePath.(string)
                     pathList.Insert(Util_pathJoin(replacePath, relativeName))
                     break
@@ -287,7 +287,7 @@ func (self *GoMod_ModInfo) getLocalModulePathList(path string) *LnsList {
             }
             {
                 _gopath := Depend_getGOPATH()
-                if _gopath != nil {
+                if !Lns_IsNil( _gopath ) {
                     gopath := _gopath.(string)
                     pathList.Insert(Util_pathJoin(gopath, Lns_getVM().String_format("src/%s", []LnsAny{path})))
                     var gomod string
@@ -385,8 +385,8 @@ func (self *GoMod_ModInfo) ConvLocalModulePath(mod string,suffix string) LnsAny 
     var workMod string
     workMod = self.FP.convPath(mod, suffix)
     {
-        __exp := self.path2modProjInfo.Items[workMod]
-        if __exp != nil {
+        __exp := self.path2modProjInfo.Get(workMod)
+        if !Lns_IsNil( __exp ) {
             _exp := __exp.(*GoMod_ModProjInfo)
             self.latestModProjInfo = _exp
             

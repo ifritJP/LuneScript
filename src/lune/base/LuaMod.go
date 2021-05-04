@@ -103,7 +103,7 @@ func LuaMod_CastKind_getTxt(arg1 LnsInt) string {
 var LuaMod_codeMap *LnsMap
 // 441: decl @lune.@base.@LuaMod.getCode
 func LuaMod_getCode(kind LnsInt) string {
-    return Lns_unwrap( LuaMod_codeMap.Items[kind]).(string)
+    return Lns_unwrap( LuaMod_codeMap.Get(kind)).(string)
 }
 
 func Lns_LuaMod_init() {

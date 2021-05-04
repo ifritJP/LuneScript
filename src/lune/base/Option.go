@@ -115,7 +115,7 @@ func Option_convExp625(arg1 []LnsAny) LnsAny {
 }
 // 48: decl @lune.@base.@Option.getBuildCount
 func Option_getBuildCount_1015_() LnsInt {
-    return 7633
+    return 7688
 }
 
 // 75: decl @lune.@base.@Option.getRuntimeModule
@@ -128,9 +128,9 @@ func Option_outputLuneMod(path LnsAny) LnsAny {
     var lune_path string
     lune_path = "runtime.lua"
     if path != nil{
-        path_2541 := path.(string)
-        if path_2541 != ""{
-            lune_path = path_2541
+        path_2551 := path.(string)
+        if path_2551 != ""{
+            lune_path = path_2551
             
         }
     }
@@ -176,13 +176,13 @@ func Option_analyze(argList *LnsList) *Option_Option {
     index = 1
     {
         _file := Option_convExp827(Lns_2DDD(Lns_io_open("lune.js", "r")))
-        if _file != nil {
+        if !Lns_IsNil( _file ) {
             file := _file.(Lns_luaStream)
             {
                 _projInfo := Option_convExp825(Lns_2DDD(Option_ProjInfo1109__fromStem_1130_(Lns_car(Json_fromStr(Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
                     Lns_GetEnv().SetStackVal( file.Read("*a")) ||
                     Lns_GetEnv().SetStackVal( "") ).(string))),nil)))
-                if _projInfo != nil {
+                if !Lns_IsNil( _projInfo ) {
                     projInfo := _projInfo.(*Option_ProjInfo1109)
                     var workArgList *LnsList
                     workArgList = NewLnsList([]LnsAny{})
@@ -253,7 +253,7 @@ func Option_analyze(argList *LnsList) *Option_Option {
                     path = getNextOp()
                     {
                         _mess := Option_outputLuneMod(path)
-                        if _mess != nil {
+                        if !Lns_IsNil( _mess ) {
                             mess := _mess.(string)
                             Util_errorLog(mess)
                             Lns_getVM().OS_exit(1)
@@ -334,7 +334,7 @@ func Option_analyze(argList *LnsList) *Option_Option {
                 } else if _switch1654 == "--app" {
                     {
                         __exp := getNextOp()
-                        if __exp != nil {
+                        if !Lns_IsNil( __exp ) {
                             _exp := __exp.(string)
                             option.AppName = _exp
                             
@@ -343,7 +343,7 @@ func Option_analyze(argList *LnsList) *Option_Option {
                 } else if _switch1654 == "--main" {
                     {
                         __exp := getNextOp()
-                        if __exp != nil {
+                        if !Lns_IsNil( __exp ) {
                             _exp := __exp.(string)
                             option.MainModule = _exp
                             
@@ -352,11 +352,11 @@ func Option_analyze(argList *LnsList) *Option_Option {
                 } else if _switch1654 == "--log" {
                     {
                         _txt := getNextOp()
-                        if _txt != nil {
+                        if !Lns_IsNil( _txt ) {
                             txt := _txt.(string)
                             {
                                 _level := Log_str2level(txt)
-                                if _level != nil {
+                                if !Lns_IsNil( _level ) {
                                     level := _level.(LnsInt)
                                     Log_setLevel(level)
                                 } else {
@@ -390,7 +390,7 @@ func Option_analyze(argList *LnsList) *Option_Option {
                 } else if _switch1654 == "-ol" {
                     {
                         _txt := getNextOp()
-                        if _txt != nil {
+                        if !Lns_IsNil( _txt ) {
                             txt := _txt.(string)
                             if _switch1598 := txt; _switch1598 == "51" {
                                 option.TargetLuaVer = LuaVer_ver51
@@ -431,7 +431,7 @@ func Option_analyze(argList *LnsList) *Option_Option {
             } else if option.Mode == ""{
                 {
                     _mode := Option_ModeKind__from(arg)
-                    if _mode != nil {
+                    if !Lns_IsNil( _mode ) {
                         mode := _mode.(string)
                         option.Mode = mode
                         
@@ -471,8 +471,8 @@ func Option_analyze(argList *LnsList) *Option_Option {
         
     }
     if uptodateOpt != nil{
-        uptodateOpt_2669 := uptodateOpt.(string)
-        if _switch2036 := uptodateOpt_2669; _switch2036 == "force" {
+        uptodateOpt_2679 := uptodateOpt.(string)
+        if _switch2036 := uptodateOpt_2679; _switch2036 == "force" {
             option.TransCtrlInfo.UptodateMode = &Types_CheckingUptodateMode__Force1{Util_scriptPath2Module(option.ScriptPath)}
             
         } else if _switch2036 == "forceAll" {
@@ -485,7 +485,7 @@ func Option_analyze(argList *LnsList) *Option_Option {
             option.TransCtrlInfo.UptodateMode = Types_CheckingUptodateMode__Touch_Obj
             
         } else {
-            Util_errorLog("illegal mode -- " + uptodateOpt_2669)
+            Util_errorLog("illegal mode -- " + uptodateOpt_2679)
         }
     }
     if option.Mode != Option_ModeKind__Builtin{
@@ -553,13 +553,13 @@ func Option_createDefaultOption(pathList *LnsList,projDir LnsAny) *Option_Option
     option.UseIpairs = true
     
     if projDir != nil{
-        projDir_2700 := projDir.(string)
-        if projDir_2700 != "/"{
-            if Lns_op_not(Lns_car(Lns_getVM().String_find(projDir_2700,"/$", nil, nil))){
-                option.projDir = projDir_2700 + "/"
+        projDir_2710 := projDir.(string)
+        if projDir_2710 != "/"{
+            if Lns_op_not(Lns_car(Lns_getVM().String_find(projDir_2710,"/$", nil, nil))){
+                option.projDir = projDir_2710 + "/"
                 
             } else { 
-                option.projDir = projDir_2700
+                option.projDir = projDir_2710
                 
             }
         }
@@ -729,16 +729,16 @@ func (self *Option_Option) InitOption_Option() {
 func (self *Option_Option) OpenDepend(relPath LnsAny) LnsAny {
     {
         _path := self.DependsPath
-        if _path != nil {
+        if !Lns_IsNil( _path ) {
             path := _path.(string)
             var filePath string
             if relPath != nil{
-                relPath_2529 := relPath.(string)
+                relPath_2539 := relPath.(string)
                 if Lns_isCondTrue( Lns_car(Lns_getVM().String_find(path,"/$", nil, nil))){
-                    filePath = Lns_getVM().String_format("%s%s", []LnsAny{path, relPath_2529})
+                    filePath = Lns_getVM().String_format("%s%s", []LnsAny{path, relPath_2539})
                     
                 } else { 
-                    filePath = Lns_getVM().String_format("%s/%s", []LnsAny{path, relPath_2529})
+                    filePath = Lns_getVM().String_format("%s/%s", []LnsAny{path, relPath_2539})
                     
                 }
             } else {
@@ -750,7 +750,7 @@ func (self *Option_Option) OpenDepend(relPath LnsAny) LnsAny {
     }
     {
         _path := self.DependsPath
-        if _path != nil {
+        if !Lns_IsNil( _path ) {
             path := _path.(string)
             return Lns_car(Lns_io_open(path, "w"))
         }

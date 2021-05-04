@@ -480,7 +480,7 @@ fn TransUnit.checkOverriededMethodOfAllClass() mut
 
    let mut typeId2DeclClassNode:Map<int,&Nodes.DeclClassNode> = {};
    foreach classNode, classTypeInfo in self.typeInfo2ClassNode {
-      typeId2DeclClassNode[ classTypeInfo.$typeId ] = classNode;
+      typeId2DeclClassNode[ classTypeInfo.$typeId.id ] = classNode;
    }
 
    forsort classNode in typeId2DeclClassNode {
@@ -632,10 +632,12 @@ pub fn TransUnit.createAST(
       }
    }
 
-   fn createId2proto( map:Map<&Ast.TypeInfo,&Parser.Position> ) :&Map<int,&Ast.TypeInfo> {
+   fn createId2proto(
+      map:Map<&Ast.TypeInfo,&Parser.Position> ) : &Map<int,&Ast.TypeInfo>
+   {
       let mut id2proto:Map<int,&Ast.TypeInfo> = {};
       foreach _, protoType in map {
-         id2proto[ protoType.$typeId ] = protoType;
+         id2proto[ protoType.$typeId.id ] = protoType;
       }
       return id2proto;
    }

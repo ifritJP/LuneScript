@@ -593,7 +593,7 @@ function convFilter:outputMeta( node )
                firstFlag = false
             end
             
-            self:write( string.format( "%d", declClass:get_expType():get_typeId()) )
+            self:write( string.format( "%d", declClass:get_expType():get_typeId().id) )
          end
          
       end
@@ -631,6 +631,15 @@ function convFilter:outputMeta( node )
    
    
    local typeId2TypeInfo = {}
+   do
+      local work = node:get_moduleTypeInfo():get_parentInfo()
+      while work:get_parentInfo() ~= work do
+         typeId2TypeInfo[work:get_typeId()] = work
+         work = work:get_parentInfo()
+      end
+      
+   end
+   
    
    local pickupClassMap = {}
    
@@ -638,7 +647,7 @@ function convFilter:outputMeta( node )
    
       local moduleTypeInfo = typeInfo:getModule(  )
       local typeId = typeInfo:get_typeId()
-      return typeId2TypeInfo[typeId] and not Ast.isBuiltin( typeId ) and (moduleTypeInfo:hasRouteNamespaceFrom( node:get_moduleTypeInfo() ) or typeInfo:get_srcTypeInfo() ~= typeInfo or moduleTypeInfo:equals( self.processInfo, Ast.headTypeInfo ) )
+      return typeId2TypeInfo[typeId] and not Ast.isBuiltin( typeId.id ) and (moduleTypeInfo:hasRouteNamespaceFrom( node:get_moduleTypeInfo() ) or typeInfo:get_srcTypeInfo() ~= typeInfo or moduleTypeInfo:equals( self.processInfo, Ast.headTypeInfo ) )
    end
    
    local function isDependOnExt( typeInfo )
@@ -652,7 +661,7 @@ function convFilter:outputMeta( node )
    local function pickupTypeId( typeInfo, forceFlag, pickupChildFlag )
    
       
-      if typeInfo:get_typeId(  ) == Ast.rootTypeId then
+      if typeInfo:get_typeId() == Ast.rootTypeIdInfo then
          return 
       end
       
@@ -692,7 +701,7 @@ function convFilter:outputMeta( node )
          return 
       end
       
-      if Ast.isBuiltin( typeInfo:get_srcTypeInfo():get_typeId() ) then
+      if Ast.isBuiltin( typeInfo:get_srcTypeInfo():get_typeId().id ) then
          return 
       end
       
@@ -737,7 +746,7 @@ function convFilter:outputMeta( node )
          pickupTypeId( typeInfo:get_genSrcTypeInfo(), true, false )
          
          local baseInfo = typeInfo:get_baseTypeInfo()
-         if baseInfo:get_typeId() ~= Ast.rootTypeId then
+         if baseInfo:get_typeId() ~= Ast.rootTypeIdInfo then
             pickupTypeId( baseInfo, true, true )
          end
          
@@ -778,8 +787,6 @@ function convFilter:outputMeta( node )
       
    end
    
-   local classId2TypeInfo = {}
-   
    local validChildrenSet = {}
    
    do
@@ -801,7 +808,12 @@ function convFilter:outputMeta( node )
       
    end
    
-   classId2TypeInfo = self.classId2TypeInfo
+   
+   local classId2TypeInfo = {}
+   for idInfo, classTypeInfo in pairs( self.classId2TypeInfo ) do
+      classId2TypeInfo[idInfo.id] = classTypeInfo
+   end
+   
    self:writeln( "local __typeId2ClassInfoMap = {}" )
    self:writeln( "_moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap" )
    
@@ -817,19 +829,19 @@ function convFilter:outputMeta( node )
          do
             if classTypeInfo:get_accessMode() == Ast.AccessMode.Pub then
                pickupTypeId( classTypeInfo, true, validChildrenSet[classTypeInfo] == nil and not classTypeInfo:get_externalFlag() )
-               pickupClassMap[classTypeId] = nil
+               pickupClassMap[classTypeInfo:get_typeId()] = nil
                
                self:writeln( "do" )
                self:pushIndent(  )
                self:writeln( string.format( "local __classInfo%d = {}", classTypeId) )
                self:writeln( string.format( "__typeId2ClassInfoMap[ %d ] = __classInfo%d", classTypeId, classTypeId) )
                
-               for __index, memberNode in ipairs( _lune.unwrap( self.classId2MemberList[classTypeId]) ) do
+               for __index, memberNode in ipairs( _lune.unwrap( self.classId2MemberList[classTypeInfo:get_typeId()]) ) do
                   if Ast.isPubToExternal( memberNode:get_accessMode() ) then
                      local memberName = memberNode:get_name().txt
                      local memberTypeInfo = memberNode:get_expType(  )
                      self:writeln( string.format( "__classInfo%d.%s = {", classTypeId, memberName) )
-                     self:writeln( string.format( "  name='%s', staticFlag = %s, mutMode = %d,", memberName, tostring( memberNode:get_staticFlag()), memberNode:get_symbolInfo():get_mutMode()) .. string.format( "accessMode = %d, typeId = %d }", memberNode:get_accessMode(), memberTypeInfo:get_typeId(  )) )
+                     self:writeln( string.format( "  name='%s', staticFlag = %s, mutMode = %d,", memberName, tostring( memberNode:get_staticFlag()), memberNode:get_symbolInfo():get_mutMode()) .. string.format( "accessMode = %d, typeId = %d }", memberNode:get_accessMode(), memberTypeInfo:get_typeId().id) )
                      
                      pickupTypeId( memberTypeInfo, true )
                   end
@@ -853,8 +865,11 @@ function convFilter:outputMeta( node )
       for classTypeId, classTypeInfo in pairs( pickupClassMap ) do
          if not pickupedClassMap[classTypeId] then
             pickupedClassMap[classTypeId] = classTypeInfo
-            workClassMap[classTypeId] = classTypeInfo
-            hasWorkClassFlag = true
+            if checkExportTypeInfo( classTypeInfo ) then
+               workClassMap[classTypeId.id] = classTypeInfo
+               hasWorkClassFlag = true
+            end
+            
          end
          
       end
@@ -888,7 +903,7 @@ function convFilter:outputMeta( node )
                   if checkExportTypeInfo( classTypeInfo ) then
                      self:writeln( "do" )
                      self:pushIndent(  )
-                     self:writeln( string.format( "local __classInfo%s = {}", tostring( classTypeId)) )
+                     self:writeln( string.format( "local __classInfo%d = {}", classTypeId) )
                      self:writeln( string.format( "__typeId2ClassInfoMap[ %d ] = __classInfo%d", classTypeId, classTypeId) )
                      
                      do
@@ -905,7 +920,7 @@ function convFilter:outputMeta( node )
                               if symbolInfo:get_kind() == Ast.SymbolKind.Mbr or symbolInfo:get_kind() == Ast.SymbolKind.Var then
                                  if symbolInfo:get_accessMode() == Ast.AccessMode.Pub then
                                     self:writeln( string.format( "__classInfo%d.%s = {", classTypeId, fieldName) )
-                                    self:writeln( string.format( "  name='%s', staticFlag = %s, ", fieldName, tostring( symbolInfo:get_staticFlag())) .. string.format( "accessMode = %d, typeId = %d }", symbolInfo:get_accessMode(), typeInfo:get_typeId(  )) )
+                                    self:writeln( string.format( "  name='%s', staticFlag = %s, ", fieldName, tostring( symbolInfo:get_staticFlag())) .. string.format( "accessMode = %d, typeId = %d }", symbolInfo:get_accessMode(), typeInfo:get_typeId().id) )
                                     pickupTypeId( typeInfo )
                                  end
                                  
@@ -942,7 +957,7 @@ function convFilter:outputMeta( node )
          self:writeln( "do" )
          self:pushIndent(  )
          self:writeln( "local info = {}" )
-         self:writeln( string.format( "__macroName2InfoMap[ %d ] = info", macroTypeInfo:get_typeId()) )
+         self:writeln( string.format( "__macroName2InfoMap[ %d ] = info", macroTypeInfo:get_typeId().id) )
          local pos = macroDeclNode:get_pos():get_orgPos()
          self:writeln( string.format( "info.pos = {%d,%d}", pos.lineNo, pos.column) )
          self:writeln( string.format( "info.name = %q", declInfo:get_name().txt) )
@@ -952,7 +967,7 @@ function convFilter:outputMeta( node )
                self:write( "," )
             end
             
-            self:write( string.format( "{name=%q,typeId=%d}", argNode:get_name().txt, argNode:get_expType():get_typeId()) )
+            self:write( string.format( "{name=%q,typeId=%d}", argNode:get_name().txt, argNode:get_expType():get_typeId().id) )
          end
          
          self:writeln( "}" )
@@ -975,7 +990,7 @@ function convFilter:outputMeta( node )
                      self:write( "," )
                   end
                   
-                  self:write( string.format( "{name=%q,typeId=%d}", name, symInfo.typeInfo:get_typeId()) )
+                  self:write( string.format( "{name=%q,typeId=%d}", name, symInfo.typeInfo:get_typeId().id) )
                   pickupTypeId( symInfo.typeInfo, true )
                end
             end
@@ -1038,7 +1053,7 @@ function convFilter:outputMeta( node )
          local varInfo = __map[ varName ]
          do
             self:writeln( string.format( "__varName2InfoMap.%s = {", varName ) )
-            self:writeln( string.format( "  name='%s', accessMode = %d, typeId = %d, mutable = %s }", varName, varInfo.accessMode, varInfo.typeInfo:get_typeId(), tostring( true)) )
+            self:writeln( string.format( "  name='%s', accessMode = %d, typeId = %d, mutable = %s }", varName, varInfo.accessMode, varInfo.typeInfo:get_typeId().id, tostring( true)) )
             pickupTypeId( varInfo.typeInfo, true )
          end
       end
@@ -1078,7 +1093,7 @@ function convFilter:outputMeta( node )
             do
                local extId = moduleInfo:get_localTypeInfo2importIdMap()[typeInfo]
                if extId ~= nil then
-                  self:writeln( string.format( "__dependIdMap[ %d ] = { %d, %d } -- %s", typeInfo:get_typeId(), moduleIndex, extId, typeInfo:getTxt(  )) )
+                  self:writeln( string.format( "__dependIdMap[ %d ] = { %d, %d } -- %s", typeInfo:get_typeId().id, moduleIndex, extId, typeInfo:getTxt(  )) )
                   return true
                end
             end
@@ -1092,7 +1107,7 @@ function convFilter:outputMeta( node )
    local wroteTypeIdSet = {}
    local function outputTypeInfo( typeInfo )
    
-      if Ast.isBuiltin( typeInfo:get_typeId() ) then
+      if Ast.isBuiltin( typeInfo:get_typeId().id ) then
          return 
       end
       
@@ -1135,37 +1150,26 @@ function convFilter:outputMeta( node )
       typeId2TypeInfo[typeId] = typeInfo
    end
    
-   do
-      local __sorted = {}
-      local __map = self.pubAlgeId2AlgeTypeInfo
-      for __key in pairs( __map ) do
-         table.insert( __sorted, __key )
-      end
-      table.sort( __sorted )
-      for __index, typeId in ipairs( __sorted ) do
-         local typeInfo = __map[ typeId ]
-         do
-            typeId2TypeInfo[typeId] = typeInfo
+   for typeId, typeInfo in pairs( self.pubAlgeId2AlgeTypeInfo ) do
+      typeId2TypeInfo[typeId] = typeInfo
+      do
+         local __sorted = {}
+         local __map = typeInfo:get_valInfoMap()
+         for __key in pairs( __map ) do
+            table.insert( __sorted, __key )
+         end
+         table.sort( __sorted )
+         for __index, __key in ipairs( __sorted ) do
+            local valInfo = __map[ __key ]
             do
-               local __sorted = {}
-               local __map = typeInfo:get_valInfoMap()
-               for __key in pairs( __map ) do
-                  table.insert( __sorted, __key )
+               for __index, valType in ipairs( valInfo:get_typeList() ) do
+                  pickupTypeId( valType, true )
                end
-               table.sort( __sorted )
-               for __index, __key in ipairs( __sorted ) do
-                  local valInfo = __map[ __key ]
-                  do
-                     for __index, valType in ipairs( valInfo:get_typeList() ) do
-                        pickupTypeId( valType, true )
-                     end
-                     
-                  end
-               end
+               
             end
-            
          end
       end
+      
    end
    
    for __index, workNode in ipairs( node:get_nodeManager():getAliasNodeList(  ) ) do
@@ -1181,29 +1185,61 @@ function convFilter:outputMeta( node )
    self:writeln( "local __dependIdMap = {}" )
    self:writeln( "_moduleObj.__dependIdMap = __dependIdMap" )
    local exportNeedModuleTypeInfo = {}
+   
    do
-      local __sorted = {}
-      local __map = typeId2TypeInfo
-      for __key in pairs( __map ) do
-         table.insert( __sorted, __key )
+      local module2TypeList = {}
+      for __index, typeInfo in pairs( typeId2TypeInfo ) do
+         local moduleType = typeInfo:getModule(  )
+         local map = module2TypeList[moduleType:get_rawTxt()]
+         if  nil == map then
+            local _map = map
+         
+            map = {}
+            module2TypeList[moduleType:get_rawTxt()] = map
+         end
+         
+         map[typeInfo:get_typeId().id] = typeInfo
       end
-      table.sort( __sorted )
-      for __index, __key in ipairs( __sorted ) do
-         local typeInfo = __map[ __key ]
-         do
-            local valid = false
-            local moduleTypeInfo = typeInfo:getModule(  )
-            exportNeedModuleTypeInfo[moduleTypeInfo]= true
-            if outputDepend( typeInfo, moduleTypeInfo ) then
-               valid = true
+      
+      do
+         local __sorted = {}
+         local __map = module2TypeList
+         for __key in pairs( __map ) do
+            table.insert( __sorted, __key )
+         end
+         table.sort( __sorted )
+         for __index, __key in ipairs( __sorted ) do
+            local map = __map[ __key ]
+            do
+               do
+                  local __sorted = {}
+                  local __map = map
+                  for __key in pairs( __map ) do
+                     table.insert( __sorted, __key )
+                  end
+                  table.sort( __sorted )
+                  for __index, __key in ipairs( __sorted ) do
+                     local typeInfo = __map[ __key ]
+                     do
+                        local valid = false
+                        local moduleTypeInfo = typeInfo:getModule(  )
+                        exportNeedModuleTypeInfo[moduleTypeInfo]= true
+                        if outputDepend( typeInfo, moduleTypeInfo ) then
+                           valid = true
+                        end
+                        
+                        if not valid then
+                           outputTypeInfo( typeInfo )
+                        end
+                        
+                     end
+                  end
+               end
+               
             end
-            
-            if not valid then
-               outputTypeInfo( typeInfo )
-            end
-            
          end
       end
+      
    end
    
    
@@ -1262,7 +1298,7 @@ function convFilter:outputMeta( node )
       end
    end
    
-   self:writeln( string.format( "_moduleObj.__moduleTypeId = %d", moduleTypeInfo:get_typeId()) )
+   self:writeln( string.format( "_moduleObj.__moduleTypeId = %d", moduleTypeInfo:get_typeId().id) )
    self:writeln( string.format( "_moduleObj.__moduleSymbolKind = %d", moduleSymbolKind) )
    self:writeln( string.format( "_moduleObj.__moduleMutable = %s", tostring( Ast.TypeInfo.isMut( moduleTypeInfo ))) )
    
@@ -1875,7 +1911,7 @@ function convFilter:processDeclClass( node, opt )
    
    local baseInfo = classTypeInfo:get_baseTypeInfo(  )
    local baseTxt = ""
-   if baseInfo:get_typeId(  ) ~= Ast.rootTypeId and baseInfo ~= TransUnit.getBuiltinFunc(  ).lnsthread_ then
+   if baseInfo:get_typeId(  ) ~= Ast.rootTypeIdInfo and baseInfo ~= TransUnit.getBuiltinFunc(  ).lnsthread_ then
       baseTxt = string.format( "__index = %s", self:getFullName( baseInfo ))
    end
    
@@ -1981,7 +2017,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _6448 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _6475 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -4200,7 +4236,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3499, function (  )
+   Log.log( Log.Level.Trace, __func__, 3526, function (  )
    
       return string.format( "macro: %s", code)
    end )

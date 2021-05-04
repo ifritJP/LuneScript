@@ -384,7 +384,7 @@ func Parser_StreamParser_create(path string,luaMode bool,moduleName string) LnsA
         {
             var _stream LnsAny
             _stream = Parser_convExp848(Lns_2DDD(Lns_io_open(path, "r")))
-            if _stream == nil {
+            if Lns_IsNil( _stream ) {
                 return nil
             }
             stream = _stream.(Lns_iStream)
@@ -503,7 +503,7 @@ func (self *Parser_DefaultPushbackParser) GetTokenNoErr() *Types_Token {
     } else { 
         {
             _token := self.parser.FP.GetToken()
-            if _token != nil {
+            if !Lns_IsNil( _token ) {
                 token := _token.(*Types_Token)
                 self.currentToken = token
                 
@@ -561,7 +561,7 @@ func (self *Parser_DefaultPushbackParser) PushbackStr(name string,statement stri
     for  {
         {
             __exp := parser.FP.GetToken()
-            if __exp != nil {
+            if !Lns_IsNil( __exp ) {
                 _exp := __exp.(*Types_Token)
                 list.Insert(Types_Token2Stem(_exp))
             } else {

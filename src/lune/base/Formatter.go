@@ -308,7 +308,7 @@ func (self *Formatter_FormatterFilter) ProcessStmtExp(node *Nodes_StmtExpNode,_o
     Formatter_filter_1066_(node.FP.Get_exp(), self, opt.FP.NextOpt(&node.Nodes_Node))
     {
         _tailComment := node.FP.Get_tailComment()
-        if _tailComment != nil {
+        if !Lns_IsNil( _tailComment ) {
             tailComment := _tailComment.(*Types_Token)
             self.FP.Write("; ")
             self.FP.Writeln(tailComment.Txt)
@@ -372,13 +372,13 @@ func (self *Formatter_FormatterFilter) outputDeclClass(protoFlag bool,classType 
         self.FP.Write(">")
     }
     if moduleName != nil{
-        moduleName_5421 := moduleName.(*Types_Token)
+        moduleName_5431 := moduleName.(*Types_Token)
         self.FP.Write(" require ")
-        self.FP.Write(Lns_getVM().String_format("%s ", []LnsAny{moduleName_5421.Txt}))
+        self.FP.Write(Lns_getVM().String_format("%s ", []LnsAny{moduleName_5431.Txt}))
         if gluePrefix != nil{
-            gluePrefix_5423 := gluePrefix.(string)
+            gluePrefix_5433 := gluePrefix.(string)
             self.FP.Write("glue ")
-            self.FP.Write(gluePrefix_5423)
+            self.FP.Write(gluePrefix_5433)
         }
     }
     if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
@@ -545,7 +545,7 @@ func (self *Formatter_FormatterFilter) ProcessWhen(node *Nodes_WhenNode,_opt Lns
     Formatter_filter_1066_(&node.FP.Get_block().Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
     {
         __exp := node.FP.Get_elseBlock()
-        if __exp != nil {
+        if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_BlockNode)
             self.FP.Write("else ")
             Formatter_filter_1066_(&_exp.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
@@ -583,7 +583,7 @@ func (self *Formatter_FormatterFilter) ProcessDeclVar(node *Nodes_DeclVarNode,_o
             varInfo = node.FP.Get_varList().GetAt(index).(Nodes_VarInfoDownCast).ToNodes_VarInfo()
             {
                 _varType := varInfo.FP.Get_refType()
-                if _varType != nil {
+                if !Lns_IsNil( _varType ) {
                     varType := _varType.(*Nodes_RefTypeNode)
                     self.FP.Write(":")
                     Formatter_filter_1066_(&varType.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
@@ -593,7 +593,7 @@ func (self *Formatter_FormatterFilter) ProcessDeclVar(node *Nodes_DeclVarNode,_o
     }
     {
         __exp := node.FP.Get_expList()
-        if __exp != nil {
+        if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_ExpListNode)
             self.FP.Write(" = ")
             Formatter_filter_1066_(&_exp.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
@@ -601,7 +601,7 @@ func (self *Formatter_FormatterFilter) ProcessDeclVar(node *Nodes_DeclVarNode,_o
     }
     {
         __exp := node.FP.Get_unwrapBlock()
-        if __exp != nil {
+        if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_BlockNode)
             self.FP.Write(" ")
             Formatter_filter_1066_(&_exp.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
@@ -609,7 +609,7 @@ func (self *Formatter_FormatterFilter) ProcessDeclVar(node *Nodes_DeclVarNode,_o
     }
     {
         __exp := node.FP.Get_thenBlock()
-        if __exp != nil {
+        if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_BlockNode)
             self.FP.Write("then")
             Formatter_filter_1066_(&_exp.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
@@ -617,7 +617,7 @@ func (self *Formatter_FormatterFilter) ProcessDeclVar(node *Nodes_DeclVarNode,_o
     }
     {
         __exp := node.FP.Get_syncBlock()
-        if __exp != nil {
+        if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_BlockNode)
             self.FP.Write("do")
             Formatter_filter_1066_(&_exp.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
@@ -633,7 +633,7 @@ func (self *Formatter_FormatterFilter) ProcessDeclArg(node *Nodes_DeclArgNode,_o
     self.FP.Write(":")
     {
         _refType := node.FP.Get_argType()
-        if _refType != nil {
+        if !Lns_IsNil( _refType ) {
             refType := _refType.(*Nodes_RefTypeNode)
             Formatter_filter_1066_(&refType.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
         } else {
@@ -679,7 +679,7 @@ func (self *Formatter_FormatterFilter) processDeclFuncInfo(node *Nodes_Node,decl
         }
         {
             _nameToken := declInfo.FP.Get_name()
-            if _nameToken != nil {
+            if !Lns_IsNil( _nameToken ) {
                 nameToken := _nameToken.(*Types_Token)
                 self.FP.Write(nameToken.Txt)
             }
@@ -721,7 +721,7 @@ func (self *Formatter_FormatterFilter) processDeclFuncInfo(node *Nodes_Node,decl
     }
     {
         __exp := declInfo.FP.Get_body()
-        if __exp != nil {
+        if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_BlockNode)
             self.FP.Write(" ")
             Formatter_filter_1066_(&_exp.Nodes_Node, self, opt.FP.NextOpt(node))
@@ -761,7 +761,7 @@ func (self *Formatter_FormatterFilter) ProcessExpCallSuperCtor(node *Nodes_ExpCa
     self.FP.Write("super(")
     {
         _expListNode := node.FP.Get_expList()
-        if _expListNode != nil {
+        if !Lns_IsNil( _expListNode ) {
             expListNode := _expListNode.(*Nodes_ExpListNode)
             Formatter_filter_1066_(&expListNode.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
         }
@@ -775,7 +775,7 @@ func (self *Formatter_FormatterFilter) ProcessExpCallSuper(node *Nodes_ExpCallSu
     self.FP.Write("super(")
     {
         _expListNode := node.FP.Get_expList()
-        if _expListNode != nil {
+        if !Lns_IsNil( _expListNode ) {
             expListNode := _expListNode.(*Nodes_ExpListNode)
             Formatter_filter_1066_(&expListNode.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
         }
@@ -841,7 +841,7 @@ func (self *Formatter_FormatterFilter) ProcessSwitch(node *Nodes_SwitchNode,_opt
     }
     {
         __exp := node.FP.Get_default()
-        if __exp != nil {
+        if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_BlockNode)
             Formatter_filter_1066_(&_exp.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
         }
@@ -860,7 +860,7 @@ func (self *Formatter_FormatterFilter) ProcessMatch(node *Nodes_MatchNode,_opt L
     }
     {
         __exp := node.FP.Get_defaultBlock()
-        if __exp != nil {
+        if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_Node)
             Formatter_filter_1066_(_exp, self, opt.FP.NextOpt(&node.Nodes_Node))
         }
@@ -895,7 +895,7 @@ func (self *Formatter_FormatterFilter) ProcessFor(node *Nodes_ForNode,_opt LnsAn
     Formatter_filter_1066_(node.FP.Get_to(), self, opt.FP.NextOpt(&node.Nodes_Node))
     {
         __exp := node.FP.Get_delta()
-        if __exp != nil {
+        if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_Node)
             self.FP.Write(", ")
             Formatter_filter_1066_(_exp, self, opt.FP.NextOpt(&node.Nodes_Node))
@@ -930,7 +930,7 @@ func (self *Formatter_FormatterFilter) ProcessForeach(node *Nodes_ForeachNode,_o
     self.FP.Write(node.FP.Get_val().FP.Get_name())
     {
         _key := node.FP.Get_key()
-        if _key != nil {
+        if !Lns_IsNil( _key ) {
             key := _key.(*Ast_SymbolInfo)
             self.FP.Write(", ")
             self.FP.Write(key.FP.Get_name())
@@ -949,7 +949,7 @@ func (self *Formatter_FormatterFilter) ProcessForsort(node *Nodes_ForsortNode,_o
     self.FP.Write(node.FP.Get_val().FP.Get_name())
     {
         _key := node.FP.Get_key()
-        if _key != nil {
+        if !Lns_IsNil( _key ) {
             key := _key.(*Ast_SymbolInfo)
             self.FP.Write(", ")
             self.FP.Write(key.FP.Get_name())
@@ -968,7 +968,7 @@ func (self *Formatter_FormatterFilter) ProcessExpUnwrap(node *Nodes_ExpUnwrapNod
     Formatter_filter_1066_(node.FP.Get_exp(), self, opt.FP.NextOpt(&node.Nodes_Node))
     {
         __exp := node.FP.Get_default()
-        if __exp != nil {
+        if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_Node)
             self.FP.Write(" default ")
             Formatter_filter_1066_(_exp, self, opt.FP.NextOpt(&node.Nodes_Node))
@@ -987,7 +987,7 @@ func (self *Formatter_FormatterFilter) ProcessExpCall(node *Nodes_ExpCallNode,_o
     }
     {
         __exp := node.FP.Get_argList()
-        if __exp != nil {
+        if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_ExpListNode)
             self.FP.Write(" ")
             Formatter_filter_1066_(&_exp.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
@@ -1107,7 +1107,7 @@ func (self *Formatter_FormatterFilter) ProcessExpNew(node *Nodes_ExpNewNode,_opt
     self.FP.Write("(")
     {
         __exp := node.FP.Get_argList()
-        if __exp != nil {
+        if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_ExpListNode)
             Formatter_filter_1066_(&_exp.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
         }
@@ -1129,7 +1129,7 @@ func (self *Formatter_FormatterFilter) ProcessExpRefItem(node *Nodes_ExpRefItemN
     }
     {
         __exp := node.FP.Get_index()
-        if __exp != nil {
+        if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_Node)
             self.FP.Write("[ ")
             Formatter_filter_1066_(_exp, self, opt.FP.NextOpt(&node.Nodes_Node))
@@ -1137,7 +1137,7 @@ func (self *Formatter_FormatterFilter) ProcessExpRefItem(node *Nodes_ExpRefItemN
         } else {
             {
                 __exp := node.FP.Get_symbol()
-                if __exp != nil {
+                if !Lns_IsNil( __exp ) {
                     _exp := __exp.(string)
                     self.FP.Write(".")
                     self.FP.Write(_exp)
@@ -1182,7 +1182,7 @@ func (self *Formatter_FormatterFilter) ProcessReturn(node *Nodes_ReturnNode,_opt
     self.FP.Write("return")
     {
         __exp := node.FP.Get_expList()
-        if __exp != nil {
+        if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_ExpListNode)
             self.FP.Write(" ")
             Formatter_filter_1066_(&_exp.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
@@ -1229,7 +1229,7 @@ func (self *Formatter_FormatterFilter) ProcessLiteralList(node *Nodes_LiteralLis
     self.FP.Write("[")
     {
         __exp := node.FP.Get_expList()
-        if __exp != nil {
+        if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_ExpListNode)
             self.FP.Write(" ")
             Formatter_filter_1066_(&_exp.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
@@ -1245,7 +1245,7 @@ func (self *Formatter_FormatterFilter) ProcessLiteralSet(node *Nodes_LiteralSetN
     self.FP.Write("(@")
     {
         __exp := node.FP.Get_expList()
-        if __exp != nil {
+        if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_ExpListNode)
             self.FP.Write(" ")
             Formatter_filter_1066_(&_exp.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
@@ -1279,7 +1279,7 @@ func (self *Formatter_FormatterFilter) ProcessLiteralArray(node *Nodes_LiteralAr
     opt := _opt.(*Formatter_Opt)
     {
         __exp := node.FP.Get_expList()
-        if __exp != nil {
+        if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_ExpListNode)
             Formatter_filter_1066_(&_exp.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
         }
@@ -1307,7 +1307,7 @@ func (self *Formatter_FormatterFilter) ProcessLiteralString(node *Nodes_LiteralS
     self.FP.Write(node.FP.Get_token().Txt)
     {
         _expList := node.FP.Get_orgParam()
-        if _expList != nil {
+        if !Lns_IsNil( _expList ) {
             expList := _expList.(*Nodes_ExpListNode)
             self.FP.Write(" ( ")
             Formatter_filter_1066_(&expList.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))

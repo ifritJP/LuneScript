@@ -258,7 +258,6 @@ define selfhost_buildOp
 	$(call $5,$1,$2,$3,$4,base/DependLuaOnLns)
 	$(call $5,$1,$2,$3,$4,base/convLua)
 	$(call $5,$1,$2,$3,$4,base/dumpNode)
-#	$(call $5,$1,$2,$3,$4,base/convCC)
 	$(call $5,$1,$2,$3,$4,base/convGo)
 	$(call $5,$1,$2,$3,$4,base/OutputDepend)
 	$(call $5,$1,$2,$3,$4,base/glueFilter)
@@ -1610,6 +1609,13 @@ go-build:
 ifndef NO_TEST
 	$(MAKE) test-govslua
 	$(MAKE) LNSC=$(shell pwd)/$(GO_WORK_DIR)/build/$(LNSC_GO) test-lnsc-go
+
+	$(MAKE) -s TEST_DIR=$(GO_WORK_DIR) LOG_DIR=work/0/log test-error | \
+		grep -e 'error:' -e 'warning:' > work/test1.result
+	$(MAKE) -s TEST_DIR=$(GO_WORK_DIR) LOG_DIR=work/1/log \
+		LNSC=./build/$(LNSC_GO) test-error | \
+			grep -e 'error:' -e 'warning:' > work/test2.result
+	diff work/test1.result work/test2.result
 endif
 	cp $(GO_WORK_DIR)/build/$(LNSC_GO) .
 

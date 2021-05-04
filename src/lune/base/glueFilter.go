@@ -19,28 +19,28 @@ func glueFilter_convExp1553(arg1 []LnsAny) string {
 func glueFilter_getDeclFuncInfo_1028_(node *Nodes_Node) *Nodes_DeclFuncInfo {
     {
         _work := Nodes_DeclConstrNodeDownCastF(node.FP)
-        if _work != nil {
+        if !Lns_IsNil( _work ) {
             work := _work.(*Nodes_DeclConstrNode)
             return work.FP.Get_declInfo()
         }
     }
     {
         _work := Nodes_DeclDestrNodeDownCastF(node.FP)
-        if _work != nil {
+        if !Lns_IsNil( _work ) {
             work := _work.(*Nodes_DeclDestrNode)
             return work.FP.Get_declInfo()
         }
     }
     {
         _work := Nodes_DeclMethodNodeDownCastF(node.FP)
-        if _work != nil {
+        if !Lns_IsNil( _work ) {
             work := _work.(*Nodes_DeclMethodNode)
             return work.FP.Get_declInfo()
         }
     }
     {
         _work := Nodes_DeclFuncNodeDownCastF(node.FP)
-        if _work != nil {
+        if !Lns_IsNil( _work ) {
             work := _work.(*Nodes_DeclFuncNode)
             return work.FP.Get_declInfo()
         }
@@ -156,7 +156,7 @@ func (self *glueFilter_glueGenerator) getArgInfo(argNode *Nodes_Node)(string, st
     argName = ""
     {
         __exp := Nodes_DeclArgNodeDownCastF(argNode.FP)
-        if __exp != nil {
+        if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_DeclArgNode)
             argName = _exp.FP.Get_name().Txt
             
@@ -224,7 +224,7 @@ func (self *glueFilter_glueGenerator) outputFuncReg(symbolName string,methodNode
         node := _node.(Nodes_NodeDownCast).ToNodes_Node()
         {
             _nameToken := glueFilter_getDeclFuncInfo_1028_(node).FP.Get_name()
-            if _nameToken != nil {
+            if !Lns_IsNil( _nameToken ) {
                 nameToken := _nameToken.(*Types_Token)
                 var name string
                 name = glueFilter_getFuncName_1034_(nameToken.Txt)
@@ -248,7 +248,7 @@ func (self *glueFilter_glueGenerator) outputMethod(node *Nodes_Node,gluePrefix s
     var name string
     {
         __exp := declInfo.FP.Get_name()
-        if __exp != nil {
+        if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Types_Token)
             name = gluePrefix + glueFilter_getFuncName_1034_(_exp.Txt)
             
@@ -351,7 +351,7 @@ func (self *glueFilter_glueGenerator) OutputClass(moduleFullName string,node *No
         fieldNode := _fieldNode.(Nodes_NodeDownCast).ToNodes_Node()
         {
             _methodNode := Nodes_DeclMethodNodeDownCastF(fieldNode.FP)
-            if _methodNode != nil {
+            if !Lns_IsNil( _methodNode ) {
                 methodNode := _methodNode.(*Nodes_DeclMethodNode)
                 if methodNode.FP.Get_declInfo().FP.Get_staticFlag(){
                     staticMethodNodeList.Insert(Nodes_DeclMethodNode2Stem(methodNode))
@@ -361,7 +361,7 @@ func (self *glueFilter_glueGenerator) OutputClass(moduleFullName string,node *No
             } else {
                 {
                     _methodNode := Nodes_DeclDestrNodeDownCastF(fieldNode.FP)
-                    if _methodNode != nil {
+                    if !Lns_IsNil( _methodNode ) {
                         methodNode := _methodNode.(*Nodes_DeclDestrNode)
                         methodNodeList.Insert(Nodes_DeclDestrNode2Stem(methodNode))
                     }
@@ -594,7 +594,7 @@ func (self *glueFilter_glueFilter) ProcessRoot(node *Nodes_RootNode,_dummy LnsAn
         filePath = Lns_getVM().String_format("%s/%s", []LnsAny{Lns_unwrapDefault( self.outputDir, ".").(string), filename})
         {
             __exp := glueFilter_convExp1514(Lns_2DDD(Lns_io_open(filePath, "w")))
-            if __exp != nil {
+            if !Lns_IsNil( __exp ) {
                 _exp := __exp.(Lns_luaStream)
                 return _exp
             }
@@ -607,13 +607,13 @@ func (self *glueFilter_glueFilter) ProcessRoot(node *Nodes_RootNode,_dummy LnsAn
         declClassNode := _declClassNode.(Nodes_DeclClassNodeDownCast).ToNodes_DeclClassNode()
         {
             _moduleName := declClassNode.FP.Get_moduleName()
-            if _moduleName != nil {
+            if !Lns_IsNil( _moduleName ) {
                 moduleName := _moduleName.(*Types_Token)
                 var moduleSymbolName string
                 moduleSymbolName = glueFilter_convExp1553(Lns_2DDD(Lns_getVM().String_gsub(moduleName.FP.GetExcludedDelimitTxt(),"%.", "_")))
                 {
                     __exp := declClassNode.FP.Get_gluePrefix()
-                    if __exp != nil {
+                    if !Lns_IsNil( __exp ) {
                         _exp := __exp.(string)
                         var glue *glueFilter_glueGenerator
                         glue = NewglueFilter_glueGenerator(createFile(moduleSymbolName + "_glue.c"), createFile(moduleSymbolName + "_glue.h"))

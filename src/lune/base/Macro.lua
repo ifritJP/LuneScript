@@ -728,7 +728,7 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
    end
    
    
-   local macroInfo = _lune.unwrap( self.typeId2MacroInfo[macroTypeInfo:get_typeId(  )])
+   local macroInfo = _lune.unwrap( self.typeId2MacroInfo[macroTypeInfo:get_typeId()])
    local argValMap = {}
    local macroArgValMap = {["__var"] = self.macroLocalVarMap}
    local macroArgNodeList = macroInfo:getArgList(  )
@@ -888,7 +888,7 @@ function MacroCtrl:regist( processInfo, node, macroScope )
       
    end
    
-   self.typeId2MacroInfo[node:get_expType():get_typeId(  )] = Nodes.DefMacroInfo.new(macroObj, node:get_declInfo(), remap)
+   self.typeId2MacroInfo[node:get_expType():get_typeId()] = Nodes.DefMacroInfo.new(macroObj, node:get_declInfo(), remap)
    
    self.symbol2ValueMapForMacro = {}
    self.isDeclaringMacro = false

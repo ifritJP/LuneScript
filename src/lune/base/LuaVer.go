@@ -72,7 +72,7 @@ func LuaVer_setCurVer(ver LnsInt) {
             verKind = _verKind.(LnsInt)
         }
     }
-    LuaVer_curVer = Lns_unwrap( LuaVer_kind2verMap.Items[verKind]).(*LuaVer_LuaVerInfo)
+    LuaVer_curVer = Lns_unwrap( LuaVer_kind2verMap.Get(verKind)).(*LuaVer_LuaVerInfo)
     
 }
 

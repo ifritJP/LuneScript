@@ -382,6 +382,31 @@ function ProcessInfo:get_validCheckingMutable()
    return self.validCheckingMutable
 end
 
+
+local IdInfo = {}
+_moduleObj.IdInfo = IdInfo
+function IdInfo:equals( idInfo )
+
+   return (self.id == idInfo.id ) and (self.processInfo == idInfo.processInfo )
+end
+function IdInfo.setmeta( obj )
+  setmetatable( obj, { __index = IdInfo  } )
+end
+function IdInfo.new( id, processInfo )
+   local obj = {}
+   IdInfo.setmeta( obj )
+   if obj.__init then
+      obj:__init( id, processInfo )
+   end
+   return obj
+end
+function IdInfo:__init( id, processInfo )
+
+   self.id = id
+   self.processInfo = processInfo
+end
+
+
 local rootProcessInfo = ProcessInfo.createRoot(  )
 local function getRootProcessInfo(  )
 
@@ -389,7 +414,17 @@ local function getRootProcessInfo(  )
 end
 _moduleObj.getRootProcessInfo = getRootProcessInfo
 
-local rootTypeId = rootProcessInfo:get_idProv():getNewId(  )
+function ProcessInfo:newId(  )
+
+   local id = self.idProv:getNewId(  )
+   return IdInfo.new(id, self)
+end
+
+
+local rootTypeIdInfo = rootProcessInfo:newId(  )
+_moduleObj.rootTypeIdInfo = rootTypeIdInfo
+
+local rootTypeId = _moduleObj.rootTypeIdInfo.id
 _moduleObj.rootTypeId = rootTypeId
 
 
@@ -1244,11 +1279,11 @@ function TypeInfo:isModule(  )
 end
 function TypeInfo:getParentId(  )
 
-   return _moduleObj.rootTypeId
+   return _moduleObj.rootTypeIdInfo
 end
 function TypeInfo:get_baseId(  )
 
-   return _moduleObj.rootTypeId
+   return _moduleObj.rootTypeIdInfo
 end
 function TypeInfo:isInheritFrom( processInfo, other, alt2type )
 
@@ -1344,7 +1379,7 @@ function TypeInfo:getModule(  )
 end
 function TypeInfo:get_typeId(  )
 
-   return _moduleObj.rootTypeId
+   return _moduleObj.rootTypeIdInfo
 end
 function TypeInfo:get_kind(  )
 
@@ -1411,7 +1446,7 @@ function TypeInfo:serializeTypeInfoList( name, list, onlyPub )
             work = work .. ", "
          end
          
-         work = string.format( "%s%d", work, typeInfo:get_typeId())
+         work = string.format( "%s%d", work, typeInfo:get_typeId().id)
       end
       
    end
@@ -1645,7 +1680,7 @@ _moduleObj.getScope = getScope
 
 local function isExtId( typeInfo )
 
-   if typeInfo:get_typeId() >= extStartId then
+   if typeInfo:get_typeId().id >= extStartId then
       return true
    end
    
@@ -1665,8 +1700,7 @@ end
 function RootTypeInfo:__init() 
    TypeInfo.__init( self,_moduleObj.rootScope, rootProcessInfo)
    
-   
-   self.typeId = rootProcessInfo:get_idProv():get_id()
+   self.typeId = _moduleObj.rootTypeIdInfo
 end
 function RootTypeInfo:get_baseTypeInfo(  )
 
@@ -1928,6 +1962,9 @@ do
 end
 
 
+local dummyIdInfo = IdInfo.new(1, rootProcessInfo)
+_moduleObj.dummyIdInfo = dummyIdInfo
+
 local CanEvalCtrlTypeInfo = {}
 setmetatable( CanEvalCtrlTypeInfo, { __index = TypeInfo } )
 _moduleObj.CanEvalCtrlTypeInfo = CanEvalCtrlTypeInfo
@@ -1947,7 +1984,8 @@ function CanEvalCtrlTypeInfo:get_kind(  )
 end
 function CanEvalCtrlTypeInfo:get_typeId(  )
 
-   return -1
+   return _moduleObj.dummyIdInfo
+   
 end
 function CanEvalCtrlTypeInfo:get_baseTypeInfo(  )
 
@@ -2093,7 +2131,7 @@ function NilableTypeInfo:get_display_stirng(  )
 end
 function NilableTypeInfo:serialize( stream, validChildrenSet )
 
-   stream:write( string.format( '{ skind = %d, typeId = %d, orgTypeId = %d }\n', SerializeKind.Nilable, self.typeId, self.nonnilableType:get_typeId()) )
+   stream:write( string.format( '{ skind = %d, typeId = %d, orgTypeId = %d }\n', SerializeKind.Nilable, self.typeId.id, self.nonnilableType:get_typeId().id) )
 end
 function NilableTypeInfo:equals( processInfo, typeInfo, alt2type, checkModifer )
 
@@ -2298,8 +2336,8 @@ function AliasTypeInfo:__init(processInfo, rawTxt, accessMode, parentInfo, alias
    self.parentInfo = parentInfo
    self.aliasSrcTypeInfo = aliasSrcTypeInfo
    self.externalFlag = externalFlag
-   self.typeId = processInfo:get_idProv():getNewId(  )
-   self.nilableTypeInfo = NilableTypeInfo.new(nil, processInfo, self, processInfo:get_idProv():getNewId(  ))
+   self.typeId = processInfo:newId(  )
+   self.nilableTypeInfo = NilableTypeInfo.new(nil, processInfo, self, processInfo:newId(  ))
 end
 function AliasTypeInfo:getParentFullName( typeNameCtrl, importInfo, localFlag )
 
@@ -2336,7 +2374,7 @@ end
 function AliasTypeInfo:serialize( stream, validChildrenSet )
 
    local parentId = self:getParentId(  )
-   stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, rawTxt = %q, srcTypeId = %d }\n', SerializeKind.Alias, parentId, self.typeId, self.rawTxt, self.aliasSrcTypeInfo:get_typeId()) )
+   stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, rawTxt = %q, srcTypeId = %d }\n', SerializeKind.Alias, parentId.id, self.typeId.id, self.rawTxt, self.aliasSrcTypeInfo:get_typeId().id) )
 end
 function AliasTypeInfo:get_display_stirng(  )
 
@@ -2894,7 +2932,7 @@ function Scope:add( processInfo, kind, canBeLeft, canBeRight, name, pos, typeInf
          end
          
          if existSymbol ~= nil then
-            if typeInfo:get_kind() ~= existSymbol:get_typeInfo():get_kind() or not isBuiltin( existSymbol:get_typeInfo():get_typeId() ) then
+            if typeInfo:get_kind() ~= existSymbol:get_typeInfo():get_kind() or not isBuiltin( existSymbol:get_typeInfo():get_typeId().id ) then
                return nil, existSymbol
             end
             
@@ -3176,8 +3214,7 @@ function NilTypeInfo:__init(processInfo)
    TypeInfo.__init( self,nil, processInfo)
    
    
-   processInfo:get_idProv():increment(  )
-   self.typeId = processInfo:get_idProv():get_id()
+   self.typeId = processInfo:newId(  )
 end
 function NilTypeInfo:isModule(  )
 
@@ -3301,7 +3338,7 @@ function NormalSymbolInfo:canAccess( fromScope, access )
          
          return nil
       elseif _switchExp == AccessMode.Local then
-         if isBuiltin( self:get_typeInfo():get_typeId() ) or self:getModule(  ) == fromScope:getModule(  ) then
+         if isBuiltin( self:get_typeInfo():get_typeId().id ) or self:getModule(  ) == fromScope:getModule(  ) then
             return self
          end
          
@@ -3575,9 +3612,7 @@ end
 function AlternateTypeInfo:__init(processInfo, belongClassFlag, altIndex, txt, accessMode, parentInfo, baseTypeInfo, interfaceList) 
    TypeInfo.__init( self,TypeInfo.createScope( processInfo, nil, true, baseTypeInfo, interfaceList ), processInfo)
    
-   
-   processInfo:get_idProv():increment(  )
-   self.typeId = processInfo:get_idProv():get_id()
+   self.typeId = processInfo:newId(  )
    
    self.txt = txt
    self.accessMode = accessMode
@@ -3586,9 +3621,7 @@ function AlternateTypeInfo:__init(processInfo, belongClassFlag, altIndex, txt, a
    self.interfaceList = _lune.unwrapDefault( interfaceList, {})
    self.belongClassFlag = belongClassFlag
    self.altIndex = altIndex
-   
-   processInfo:get_idProv():increment(  )
-   self.nilableTypeInfo = NilableTypeInfo.new(nil, processInfo, self, processInfo:get_idProv():get_id())
+   self.nilableTypeInfo = NilableTypeInfo.new(nil, processInfo, self, processInfo:newId(  ))
 end
 function AlternateTypeInfo:updateParentInfo( typeInfo )
 
@@ -3774,7 +3807,7 @@ end
 function AlternateTypeInfo:serialize( stream, validChildrenSet )
 
    local parentId = self:getParentId(  )
-   stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, txt = %q, ', SerializeKind.Alternate, parentId, self.typeId, self.txt) .. string.format( 'accessMode = %d, baseId = %d, ', self.accessMode, self:get_baseId()) .. string.format( 'belongClassFlag = %s, altIndex = %d, ', tostring( self.belongClassFlag), self.altIndex) )
+   stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, txt = %q, ', SerializeKind.Alternate, parentId.id, self.typeId.id, self.txt) .. string.format( 'accessMode = %d, baseId = %d, ', self.accessMode, self:get_baseId().id) .. string.format( 'belongClassFlag = %s, altIndex = %d, ', tostring( self.belongClassFlag), self.altIndex) )
    
    stream:write( self:serializeTypeInfoList( "ifList = {", self.interfaceList ) )
    stream:write( "}\n" )
@@ -3828,9 +3861,7 @@ function BoxTypeInfo:__init(processInfo, typeId, accessMode, boxingType)
    self.typeId = typeId
    self.itemTypeInfoList = {boxingType}
    self.accessMode = accessMode
-   
-   processInfo:get_idProv():increment(  )
-   self.nilableTypeInfo = NilableTypeInfo.new(nil, processInfo, self, processInfo:get_idProv():get_id())
+   self.nilableTypeInfo = NilableTypeInfo.new(nil, processInfo, self, processInfo:newId(  ))
 end
 function BoxTypeInfo:get_scope(  )
 
@@ -3878,7 +3909,7 @@ function BoxTypeInfo:get_display_stirng_with( raw, alt2type )
 end
 function BoxTypeInfo:serialize( stream, validChildrenSet )
 
-   stream:write( string.format( '{ skind = %d, typeId = %d, accessMode = %d, boxingType = %d }\n', SerializeKind.Box, self.typeId, self.accessMode, self.boxingType:get_typeId()) )
+   stream:write( string.format( '{ skind = %d, typeId = %d, accessMode = %d, boxingType = %d }\n', SerializeKind.Box, self.typeId.id, self.accessMode, self.boxingType:get_typeId().id) )
 end
 function BoxTypeInfo:equals( processInfo, typeInfo, alt2type, checkModifer )
 
@@ -4052,9 +4083,7 @@ end
 function GenericTypeInfo:__init(processInfo, genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo) 
    TypeInfo.__init( self,TypeInfo.createScope( processInfo, (_lune.unwrap( genSrcTypeInfo:get_scope()) ):get_parent(), true, genSrcTypeInfo, nil ), processInfo)
    
-   
-   processInfo:get_idProv():increment(  )
-   self.typeId = processInfo:get_idProv():get_id()
+   self.typeId = processInfo:newId(  )
    self.moduleTypeInfo = moduleTypeInfo
    
    self.itemTypeInfoList = itemTypeInfoList
@@ -4078,9 +4107,7 @@ function GenericTypeInfo:__init(processInfo, genSrcTypeInfo, itemTypeInfoList, m
    
    self.hasAlter = hasAlter
    self.alt2typeMap = alt2typeMap
-   
-   processInfo:get_idProv():increment(  )
-   self.nilableTypeInfo = NilableTypeInfo.new(nil, processInfo, self, processInfo:get_idProv():get_id())
+   self.nilableTypeInfo = NilableTypeInfo.new(nil, processInfo, self, processInfo:newId(  ))
 end
 function GenericTypeInfo:getModule(  )
 
@@ -4238,14 +4265,14 @@ function GenericTypeInfo:equals( processInfo, other, alt2type, checkModifer )
 end
 function GenericTypeInfo:serialize( stream, validChildrenSet )
 
-   stream:write( string.format( '{ skind = %d, typeId = %d, genSrcTypeId = %d, genTypeList = {', SerializeKind.Generic, self.typeId, self.genSrcTypeInfo:get_typeId()) )
+   stream:write( string.format( '{ skind = %d, typeId = %d, genSrcTypeId = %d, genTypeList = {', SerializeKind.Generic, self.typeId.id, self.genSrcTypeInfo:get_typeId().id) )
    local count = 0
    for __index, genType in pairs( self.alt2typeMap ) do
       if count > 0 then
          stream:write( "," )
       end
       
-      stream:write( string.format( "%d", genType:get_typeId()) )
+      stream:write( string.format( "%d", genType:get_typeId().id) )
    end
    
    stream:write( '} }\n' )
@@ -4457,7 +4484,7 @@ function ModifierTypeInfo:get_display_stirng(  )
 end
 function ModifierTypeInfo:serialize( stream, validChildrenSet )
 
-   stream:write( string.format( '{ skind = %d, typeId = %d, srcTypeId = %d, mutMode = %d }\n', SerializeKind.Modifier, self.typeId, self.srcTypeInfo:get_typeId(), self.mutMode) )
+   stream:write( string.format( '{ skind = %d, typeId = %d, srcTypeId = %d, mutMode = %d }\n', SerializeKind.Modifier, self.typeId.id, self.srcTypeInfo:get_typeId().id, self.mutMode) )
 end
 function ModifierTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
 
@@ -4735,7 +4762,7 @@ function ModuleTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
 end
 function ModuleTypeInfo:serialize( stream, validChildrenSet )
 
-   local txt = string.format( "{ skind = %d, parentId = %d, typeId = %d, txt = '%s', ", SerializeKind.Module, self:getParentId(  ), self.typeId, self.rawTxt)
+   local txt = string.format( "{ skind = %d, parentId = %d, typeId = %d, txt = '%s', ", SerializeKind.Module, self:getParentId(  ).id, self.typeId.id, self.rawTxt)
    stream:write( txt .. '\n' )
    
    stream:write( "children = {" )
@@ -4750,7 +4777,7 @@ function ModuleTypeInfo:serialize( stream, validChildrenSet )
    if validChildrenSet then
       for __index, child in ipairs( self:get_children() ) do
          if set[child:get_typeId()] and (child:get_accessMode() == AccessMode.Pub or child:get_accessMode() == AccessMode.Global ) then
-            stream:write( string.format( "%d, ", child:get_typeId()) )
+            stream:write( string.format( "%d, ", child:get_typeId().id) )
          end
          
       end
@@ -4856,13 +4883,13 @@ end
 local EnumTypeInfo = {}
 setmetatable( EnumTypeInfo, { __index = TypeInfo } )
 _moduleObj.EnumTypeInfo = EnumTypeInfo
-function EnumTypeInfo.new( processInfo, scope, externalFlag, accessMode, txt, parentInfo, typeId, valTypeInfo )
+function EnumTypeInfo.new( processInfo, scope, externalFlag, accessMode, txt, parentInfo, valTypeInfo )
    local obj = {}
    EnumTypeInfo.setmeta( obj )
-   if obj.__init then obj:__init( processInfo, scope, externalFlag, accessMode, txt, parentInfo, typeId, valTypeInfo ); end
+   if obj.__init then obj:__init( processInfo, scope, externalFlag, accessMode, txt, parentInfo, valTypeInfo ); end
    return obj
 end
-function EnumTypeInfo:__init(processInfo, scope, externalFlag, accessMode, txt, parentInfo, typeId, valTypeInfo) 
+function EnumTypeInfo:__init(processInfo, scope, externalFlag, accessMode, txt, parentInfo, valTypeInfo) 
    TypeInfo.__init( self,scope, processInfo)
    
    
@@ -4870,7 +4897,7 @@ function EnumTypeInfo:__init(processInfo, scope, externalFlag, accessMode, txt, 
    self.accessMode = accessMode
    self.rawTxt = txt
    self.parentInfo = _lune.unwrapDefault( parentInfo, _moduleObj.headTypeInfo)
-   self.typeId = typeId
+   self.typeId = processInfo:newId(  )
    self.name2EnumValInfo = {}
    self.valTypeInfo = valTypeInfo
    
@@ -4884,8 +4911,7 @@ function EnumTypeInfo:__init(processInfo, scope, externalFlag, accessMode, txt, 
    end
    
    
-   self.nilableTypeInfo = NilableTypeInfo.new(nil, processInfo, self, typeId + 1)
-   processInfo:get_idProv():increment(  )
+   self.nilableTypeInfo = NilableTypeInfo.new(nil, processInfo, self, processInfo:newId(  ))
    
    scope:set_ownerTypeInfo( self )
 end
@@ -4927,7 +4953,7 @@ function EnumTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
       return true, nil
    end
    
-   return false, string.format( "%d != %d", self:get_typeId(), other:get_srcTypeInfo():get_aliasSrc():get_typeId())
+   return false, string.format( "%d != %d", self:get_typeId().id, other:get_srcTypeInfo():get_aliasSrc():get_typeId().id)
 end
 function EnumTypeInfo:addEnumValInfo( valInfo )
 
@@ -4983,13 +5009,13 @@ function AlgeTypeInfo:get_baseTypeInfo(  )
 
    return _moduleObj.headTypeInfo
 end
-function AlgeTypeInfo.new( processInfo, scope, externalFlag, accessMode, txt, parentInfo, typeId )
+function AlgeTypeInfo.new( processInfo, scope, externalFlag, accessMode, txt, parentInfo )
    local obj = {}
    AlgeTypeInfo.setmeta( obj )
-   if obj.__init then obj:__init( processInfo, scope, externalFlag, accessMode, txt, parentInfo, typeId ); end
+   if obj.__init then obj:__init( processInfo, scope, externalFlag, accessMode, txt, parentInfo ); end
    return obj
 end
-function AlgeTypeInfo:__init(processInfo, scope, externalFlag, accessMode, txt, parentInfo, typeId) 
+function AlgeTypeInfo:__init(processInfo, scope, externalFlag, accessMode, txt, parentInfo) 
    TypeInfo.__init( self,scope, processInfo)
    
    
@@ -4997,7 +5023,7 @@ function AlgeTypeInfo:__init(processInfo, scope, externalFlag, accessMode, txt, 
    self.accessMode = accessMode
    self.rawTxt = txt
    self.parentInfo = _lune.unwrapDefault( parentInfo, _moduleObj.headTypeInfo)
-   self.typeId = typeId
+   self.typeId = processInfo:newId(  )
    self.valInfoMap = {}
    self.valInfoNum = 0
    
@@ -5009,8 +5035,7 @@ function AlgeTypeInfo:__init(processInfo, scope, externalFlag, accessMode, txt, 
    end
    
    
-   self.nilableTypeInfo = NilableTypeInfo.new(nil, processInfo, self, typeId + 1)
-   processInfo:get_idProv():increment(  )
+   self.nilableTypeInfo = NilableTypeInfo.new(nil, processInfo, self, processInfo:newId(  ))
    
    scope:set_ownerTypeInfo( self )
 end
@@ -5092,7 +5117,7 @@ function AlgeValInfo:serialize( stream )
          stream:write( ", " )
       end
       
-      stream:write( string.format( "%d", typeInfo:get_typeId()) )
+      stream:write( string.format( "%d", typeInfo:get_typeId().id) )
    end
    
    stream:write( "} }" )
@@ -5306,8 +5331,7 @@ function NormalTypeInfo:__init(processInfo, abstractFlag, scope, baseTypeInfo, i
       end
       
       if hasNilable then
-         self.nilableTypeInfo = NilableTypeInfo.new(nil, processInfo, self, typeId + 1)
-         processInfo:get_idProv():increment(  )
+         self.nilableTypeInfo = NilableTypeInfo.new(nil, processInfo, self, processInfo:newId(  ))
       else
        
          self.nilableTypeInfo = _moduleObj.headTypeInfo
@@ -5435,7 +5459,7 @@ function NormalTypeInfo:get_display_stirng(  )
 end
 function NormalTypeInfo:serialize( stream, validChildrenSet )
 
-   if self.typeId == _moduleObj.rootTypeId then
+   if self.typeId.id == _moduleObj.rootTypeId then
       return 
    end
    
@@ -5443,7 +5467,7 @@ function NormalTypeInfo:serialize( stream, validChildrenSet )
    local parentId = self:getParentId(  )
    
    local txt = string.format( [==[{ skind=%d, parentId = %d, typeId = %d, baseId = %d, txt = '%s',
-        abstractFlag = %s, staticFlag = %s, accessMode = %d, kind = %d, mutMode = %d, ]==], SerializeKind.Normal, parentId, self.typeId, self:get_baseId(  ), self.rawTxt, tostring( self.abstractFlag), tostring( self.staticFlag), self.accessMode, self.kind, self.mutMode)
+        abstractFlag = %s, staticFlag = %s, accessMode = %d, kind = %d, mutMode = %d, ]==], SerializeKind.Normal, parentId.id, self.typeId.id, self:get_baseId().id, self.rawTxt, tostring( self.abstractFlag), tostring( self.staticFlag), self.accessMode, self.kind, self.mutMode)
    do
       local _exp = self.moduleLang
       if _exp ~= nil then
@@ -5569,8 +5593,7 @@ function NormalTypeInfo.create( processInfo, accessMode, abstractFlag, scope, ba
       Util.err( string.format( "not found symbol -- %s", txt) )
    end
    
-   processInfo:get_idProv():increment(  )
-   local info = NormalTypeInfo.new(processInfo, abstractFlag, scope, baseInfo, nil, false, true, staticFlag, accessMode, txt, parentInfo, processInfo:get_idProv():get_id(), kind, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode, nil)
+   local info = NormalTypeInfo.new(processInfo, abstractFlag, scope, baseInfo, nil, false, true, staticFlag, accessMode, txt, parentInfo, processInfo:newId(  ), kind, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode, nil)
    return info
 end
 function NormalTypeInfo.setmeta( obj )
@@ -5781,7 +5804,6 @@ function ProcessInfo:createModifier( srcTypeInfo, mutMode )
    end
    
    
-   self:get_idProv():increment(  )
    local modifier
    
    if srcTypeInfo:get_nonnilableType():get_kind() == TypeInfoKind.Ext then
@@ -5807,7 +5829,7 @@ function ProcessInfo:createModifier( srcTypeInfo, mutMode )
       
    else
     
-      modifier = ModifierTypeInfo.new(nil, self, srcTypeInfo, self:get_idProv():get_id(), mutMode)
+      modifier = ModifierTypeInfo.new(nil, self, srcTypeInfo, self:newId(  ), mutMode)
    end
    
    do
@@ -5844,7 +5866,7 @@ rootProcessInfo:get_idProv():increment(  )
 
 local function addBuiltin( typeInfo )
 
-   builtInTypeIdSet[typeInfo:get_typeId()] = typeInfo
+   builtInTypeIdSet[typeInfo:get_typeId().id] = typeInfo
 end
 _moduleObj.addBuiltin = addBuiltin
 addBuiltin( _moduleObj.headTypeInfo )
@@ -5873,11 +5895,6 @@ end
 
 function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD, ifList )
 
-   local typeId = rootProcessInfo:get_idProv():getNewId(  )
-   if kind == TypeInfoKind.Root then
-      typeId = _moduleObj.rootTypeId
-   end
-   
    local argTypeList = {}
    local retTypeList = {}
    if typeTxt == "form" then
@@ -5912,7 +5929,7 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD, ifList )
       end
    end
    
-   local info = NormalTypeInfo.new(rootProcessInfo, false, scope, nil, ifList, false, false, false, AccessMode.Pub, typeTxt, _moduleObj.headTypeInfo, typeId, kind, genTypeList, argTypeList, retTypeList, MutMode.Mut, nil)
+   local info = NormalTypeInfo.new(rootProcessInfo, false, scope, nil, ifList, false, false, false, AccessMode.Pub, typeTxt, _moduleObj.headTypeInfo, rootProcessInfo:newId(  ), kind, genTypeList, argTypeList, retTypeList, MutMode.Mut, nil)
    
    registBuiltin( idName, typeTxt, kind, info, _moduleObj.headTypeInfo, scope ~= nil )
    return info
@@ -6247,7 +6264,7 @@ local function isStruct( typeInfo )
 end
 _moduleObj.isStruct = isStruct
 
-local builtinTypeBox = BoxTypeInfo.new(rootProcessInfo, rootProcessInfo:get_idProv():getNewId(  ), AccessMode.Pub, boxRootAltType)
+local builtinTypeBox = BoxTypeInfo.new(rootProcessInfo, rootProcessInfo:newId(  ), AccessMode.Pub, boxRootAltType)
 _moduleObj.builtinTypeBox = builtinTypeBox
 
 registBuiltin( "Nilable", "Nilable", TypeInfoKind.Box, _moduleObj.builtinTypeBox, _moduleObj.headTypeInfo, true )
@@ -6272,7 +6289,7 @@ function ProcessInfo:createBox( accessMode, nonnilableType )
    end
    
    
-   local boxType = BoxTypeInfo.new(self, self:get_idProv():getNewId(  ), accessMode, nonnilableType)
+   local boxType = BoxTypeInfo.new(self, self:newId(  ), accessMode, nonnilableType)
    self:get_typeInfo2Map().BoxMap[nonnilableType] = boxType
    return boxType
 end
@@ -6307,11 +6324,9 @@ function ProcessInfo:createSet( accessMode, parentInfo, itemTypeInfo, mutMode )
       tmpMutMode = MutMode.Mut
    end
    
-   
-   self:get_idProv():increment(  )
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeSet ), _moduleObj.builtinTypeSet, nil, false, false, false, AccessMode.Pub, "Set", _moduleObj.headTypeInfo, self:get_idProv():get_id(), TypeInfoKind.Set, itemTypeInfo, nil, nil, workMutMode, nil)
+      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeSet ), _moduleObj.builtinTypeSet, nil, false, false, false, AccessMode.Pub, "Set", _moduleObj.headTypeInfo, self:newId(  ), TypeInfoKind.Set, itemTypeInfo, nil, nil, workMutMode, nil)
    end
    
    
@@ -6338,11 +6353,9 @@ function ProcessInfo:createList( accessMode, parentInfo, itemTypeInfo, mutMode )
       tmpMutMode = MutMode.Mut
    end
    
-   
-   self:get_idProv():increment(  )
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeList ), _moduleObj.builtinTypeList, nil, false, false, false, AccessMode.Pub, "List", _moduleObj.headTypeInfo, self:get_idProv():get_id(), TypeInfoKind.List, itemTypeInfo, nil, nil, workMutMode, nil)
+      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeList ), _moduleObj.builtinTypeList, nil, false, false, false, AccessMode.Pub, "List", _moduleObj.headTypeInfo, self:newId(  ), TypeInfoKind.List, itemTypeInfo, nil, nil, workMutMode, nil)
    end
    
    
@@ -6369,11 +6382,9 @@ function ProcessInfo:createArray( accessMode, parentInfo, itemTypeInfo, mutMode 
       tmpMutMode = MutMode.Mut
    end
    
-   
-   self:get_idProv():increment(  )
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeArray ), _moduleObj.builtinTypeArray, nil, false, false, false, AccessMode.Pub, "Array", _moduleObj.headTypeInfo, self:get_idProv():get_id(), TypeInfoKind.Array, itemTypeInfo, nil, nil, workMutMode, nil)
+      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeArray ), _moduleObj.builtinTypeArray, nil, false, false, false, AccessMode.Pub, "Array", _moduleObj.headTypeInfo, self:newId(  ), TypeInfoKind.Array, itemTypeInfo, nil, nil, workMutMode, nil)
    end
    
    
@@ -6400,11 +6411,9 @@ function ProcessInfo:createMap( accessMode, parentInfo, keyTypeInfo, valTypeInfo
       tmpMutMode = MutMode.Mut
    end
    
-   
-   self:get_idProv():increment(  )
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeMap ), _moduleObj.builtinTypeMap, nil, false, false, false, AccessMode.Pub, "Map", _moduleObj.headTypeInfo, self:get_idProv():get_id(), TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, workMutMode, nil)
+      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeMap ), _moduleObj.builtinTypeMap, nil, false, false, false, AccessMode.Pub, "Map", _moduleObj.headTypeInfo, self:newId(  ), TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, workMutMode, nil)
    end
    
    
@@ -6434,7 +6443,7 @@ function ProcessInfo:createModule( scope, parentInfo, externalFlag, moduleName, 
    end
    
    
-   local info = ModuleTypeInfo.new(self, scope, externalFlag, moduleName, parentInfo, self:get_idProv():getNewId(  ), mutable)
+   local info = ModuleTypeInfo.new(self, scope, externalFlag, moduleName, parentInfo, self:newId(  ), mutable)
    return info
 end
 
@@ -6455,7 +6464,7 @@ function ProcessInfo:createClass( classFlag, abstractFlag, scope, baseInfo, inte
    end
    
    
-   local info = NormalTypeInfo.new(self, abstractFlag, scope, baseInfo, interfaceList, false, externalFlag, false, accessMode, className, parentInfo, self:get_idProv():getNewId(  ), classFlag and TypeInfoKind.Class or TypeInfoKind.IF, genTypeList, nil, nil, MutMode.Mut, nil)
+   local info = NormalTypeInfo.new(self, abstractFlag, scope, baseInfo, interfaceList, false, externalFlag, false, accessMode, className, parentInfo, self:newId(  ), classFlag and TypeInfoKind.Class or TypeInfoKind.IF, genTypeList, nil, nil, MutMode.Mut, nil)
    
    for __index, genType in ipairs( genTypeList ) do
       genType:updateParentInfo( info )
@@ -6481,7 +6490,7 @@ function ProcessInfo:createExtModule( scope, parentInfo, externalFlag, accessMod
    end
    
    
-   local info = NormalTypeInfo.new(self, false, scope, nil, nil, false, externalFlag, false, accessMode, className, parentInfo, self:get_idProv():getNewId(  ), TypeInfoKind.ExtModule, nil, nil, nil, MutMode.Mut, moduleLang)
+   local info = NormalTypeInfo.new(self, false, scope, nil, nil, false, externalFlag, false, accessMode, className, parentInfo, self:newId(  ), TypeInfoKind.ExtModule, nil, nil, nil, MutMode.Mut, moduleLang)
    info:set_requirePath( requirePath )
    return info
 end
@@ -6494,7 +6503,7 @@ function ProcessInfo:createFunc( abstractFlag, builtinFlag, scope, kind, parentI
    end
    
    
-   local info = NormalTypeInfo.new(self, abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, self:get_idProv():getNewId(  ), kind, _lune.unwrapDefault( altTypeList, {}), _lune.unwrapDefault( argTypeList, {}), _lune.unwrapDefault( retTypeInfoList, {}), mutable and MutMode.Mut or MutMode.IMut, nil)
+   local info = NormalTypeInfo.new(self, abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, self:newId(  ), kind, _lune.unwrapDefault( altTypeList, {}), _lune.unwrapDefault( argTypeList, {}), _lune.unwrapDefault( retTypeInfoList, {}), mutable and MutMode.Mut or MutMode.IMut, nil)
    
    if altTypeList ~= nil then
       for __index, genType in ipairs( altTypeList ) do
@@ -6628,7 +6637,7 @@ function DDDTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
 end
 function DDDTypeInfo:serialize( stream, validChildrenSet )
 
-   stream:write( string.format( '{ skind=%d, typeId = %d, itemTypeId = %d, parentId = %d, extTypeFlag = %s }\n', SerializeKind.DDD, self.typeId, self.typeInfo:get_typeId(), _moduleObj.headTypeInfo:get_typeId(), tostring( self:get_extTypeFlag())) )
+   stream:write( string.format( '{ skind=%d, typeId = %d, itemTypeId = %d, parentId = %d, extTypeFlag = %s }\n', SerializeKind.DDD, self.typeId.id, self.typeInfo:get_typeId().id, _moduleObj.headTypeInfo:get_typeId().id, tostring( self:get_extTypeFlag())) )
 end
 function DDDTypeInfo:get_display_stirng_with( raw, alt2type )
 
@@ -6737,7 +6746,7 @@ function ProcessInfo:createDDD( typeInfo, externalFlag, extTypeFlag )
    do
       local _exp = dddMap[typeInfo]
       if _exp ~= nil then
-         if _exp:get_typeId() < userStartId and typeInfo:get_typeId() >= userStartId then
+         if _exp:get_typeId().id < userStartId and typeInfo:get_typeId().id >= userStartId then
             Util.err( "on cache" )
          end
          
@@ -6746,10 +6755,10 @@ function ProcessInfo:createDDD( typeInfo, externalFlag, extTypeFlag )
    end
    
    
-   local dddType = DDDTypeInfo.new(self, self:get_idProv():getNewId(  ), typeInfo, externalFlag, nil)
+   local dddType = DDDTypeInfo.new(self, self:newId(  ), typeInfo, externalFlag, nil)
    
    if failCreateLuavalWith( typeInfo, LuavalConvKind.InLua, true ) then
-      local extDDDType = DDDTypeInfo.new(self, self:get_idProv():getNewId(  ), typeInfo, externalFlag, dddType)
+      local extDDDType = DDDTypeInfo.new(self, self:newId(  ), typeInfo, externalFlag, dddType)
       
       if extTypeFlag then
          return extDDDType
@@ -7226,10 +7235,7 @@ function AbbrTypeInfo:__init(processInfo, rawTxt)
    TypeInfo.__init( self,nil, processInfo)
    
    
-   local typeId = processInfo:get_idProv():get_id() + 1
-   processInfo:get_idProv():increment(  )
-   
-   self.typeId = typeId
+   self.typeId = processInfo:newId(  )
    self.rawTxt = rawTxt
 end
 function AbbrTypeInfo:isModule(  )
@@ -7315,13 +7321,10 @@ function ExtTypeInfo:__init(processInfo, extedType)
    TypeInfo.__init( self,extedType:get_scope(), processInfo)
    
    
-   local typeId = processInfo:get_idProv():get_id() + 1
-   processInfo:get_idProv():increment(  )
-   self.typeId = typeId
+   self.typeId = processInfo:newId(  )
    self.extedType = extedType
    
-   self.nilableTypeInfo = NilableTypeInfo.new(nil, processInfo, self, typeId + 1)
-   processInfo:get_idProv():increment(  )
+   self.nilableTypeInfo = NilableTypeInfo.new(nil, processInfo, self, processInfo:newId(  ))
 end
 function ExtTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
 
@@ -7376,7 +7379,7 @@ function ExtTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
 end
 function ExtTypeInfo:serialize( stream, validChildrenSet )
 
-   stream:write( string.format( '{ skind = %d, typeId = %d, extedTypeId = %d }\n', SerializeKind.Ext, self.typeId, self.extedType:get_typeId()) )
+   stream:write( string.format( '{ skind = %d, typeId = %d, extedTypeId = %d }\n', SerializeKind.Ext, self.typeId.id, self.extedType:get_typeId().id) )
 end
 function ExtTypeInfo:get_display_stirng_with( raw, alt2type )
 
@@ -7579,7 +7582,7 @@ function ProcessInfo:createLuaval( luneType, validToCheck )
    do
       local extType = self:get_typeInfo2Map().ExtMap[luneType]
       if extType ~= nil then
-         if extType:get_typeId() < userStartId and luneType:get_typeId() >= userStartId then
+         if extType:get_typeId().id < userStartId and luneType:get_typeId().id >= userStartId then
             Util.err( "on cache" )
          end
          
@@ -7939,7 +7942,7 @@ function ProcessInfo:createEnum( scope, parentInfo, externalFlag, accessMode, en
    end
    
    
-   local info = EnumTypeInfo.new(self, scope, externalFlag, accessMode, enumName, parentInfo, self:get_idProv():getNewId(  ), valTypeInfo)
+   local info = EnumTypeInfo.new(self, scope, externalFlag, accessMode, enumName, parentInfo, valTypeInfo)
    
    local getEnumName = self:createFunc( false, true, nil, TypeInfoKind.Method, info, true, externalFlag, false, AccessMode.Pub, "get__txt", nil, nil, {_moduleObj.builtinTypeString}, false )
    scope:addMethod( self, nil, getEnumName, AccessMode.Pub, false, false )
@@ -7958,7 +7961,7 @@ end
 function EnumTypeInfo:serialize( stream, validChildrenSet )
 
    local txt = string.format( [==[{ skind = %d, parentId = %d, typeId = %d, txt = '%s',
-accessMode = %d, kind = %d, valTypeId = %d, ]==], SerializeKind.Enum, self:getParentId(  ), self.typeId, self.rawTxt, self.accessMode, TypeInfoKind.Enum, self.valTypeInfo:get_typeId())
+accessMode = %d, kind = %d, valTypeId = %d, ]==], SerializeKind.Enum, self:getParentId(  ).id, self.typeId.id, self.rawTxt, self.accessMode, TypeInfoKind.Enum, self.valTypeInfo:get_typeId().id)
    stream:write( txt )
    
    stream:write( "enumValList = {" )
@@ -8005,7 +8008,7 @@ function ProcessInfo:createAlge( scope, parentInfo, externalFlag, accessMode, al
    end
    
    
-   local info = AlgeTypeInfo.new(self, scope, externalFlag, accessMode, algeName, parentInfo, self:get_idProv():getNewId(  ))
+   local info = AlgeTypeInfo.new(self, scope, externalFlag, accessMode, algeName, parentInfo)
    
    local getAlgeName = self:createFunc( false, true, nil, TypeInfoKind.Method, info, true, externalFlag, false, AccessMode.Pub, "get__txt", nil, nil, {_moduleObj.builtinTypeString}, false )
    scope:addMethod( self, nil, getAlgeName, AccessMode.Pub, false, false )
@@ -8017,7 +8020,7 @@ end
 function AlgeTypeInfo:serialize( stream, validChildrenSet )
 
    local txt = string.format( [==[{ skind = %d, parentId = %d, typeId = %d, txt = '%s',
-accessMode = %d, kind = %d, ]==], SerializeKind.Alge, self:getParentId(  ), self.typeId, self.rawTxt, self.accessMode, TypeInfoKind.Alge)
+accessMode = %d, kind = %d, ]==], SerializeKind.Alge, self:getParentId(  ).id, self.typeId.id, self.rawTxt, self.accessMode, TypeInfoKind.Alge)
    stream:write( txt )
    
    stream:write( "algeValList = {" )
@@ -8408,7 +8411,7 @@ function TypeInfo.checkMatchType( processInfo, dstTypeList, expTypeList, allowDs
             local canEval, evalMess = dstType:canEvalWith( processInfo, expType, CanEvalType.SetOp, alt2type )
             
             if not canEval then
-               return MatchType.Error, string.format( "exp(%d) type mismatch %s(%d) <- %s(%d)%s", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), dstType:get_typeId(), expType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:get_typeId(), (evalMess and string.format( " -- %s", tostring( evalMess)) or "" )
+               return MatchType.Error, string.format( "exp(%d) type mismatch %s(%d) <- %s(%d)%s", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), dstType:get_typeId().id, expType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:get_typeId().id, (evalMess and string.format( " -- %s", tostring( evalMess)) or "" )
                )
             end
             

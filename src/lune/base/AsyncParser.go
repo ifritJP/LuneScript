@@ -381,7 +381,7 @@ func (self *AsyncParser_Parser) analyzeNumber(token string,beginIndex LnsInt)(Ln
         {
             var _nonNumIndex LnsAny
             _nonNumIndex = AsyncParser_convExp1460(Lns_2DDD(self.LnsEnv.LuaVM.String_find(token,"[^%d]", nonNumIndex + 1, nil)))
-            if _nonNumIndex == nil {
+            if Lns_IsNil( _nonNumIndex ) {
                 return len(token), intFlag
             }
             nonNumIndex = _nonNumIndex.(LnsInt)
@@ -395,7 +395,7 @@ func (self *AsyncParser_Parser) analyzeNumber(token string,beginIndex LnsInt)(Ln
         {
             var _nonNumIndex LnsAny
             _nonNumIndex = AsyncParser_convExp1510(Lns_2DDD(self.LnsEnv.LuaVM.String_find(token,"[^%da-fA-F]", nonNumIndex + 1, nil)))
-            if _nonNumIndex == nil {
+            if Lns_IsNil( _nonNumIndex ) {
                 return len(token), intFlag
             }
             nonNumIndex = _nonNumIndex.(LnsInt)
@@ -416,7 +416,7 @@ func (self *AsyncParser_Parser) analyzeNumber(token string,beginIndex LnsInt)(Ln
             {
                 var _nonNumIndex LnsAny
                 _nonNumIndex = AsyncParser_convExp1588(Lns_2DDD(self.LnsEnv.LuaVM.String_find(token,"[^%d]", nonNumIndex + 2, nil)))
-                if _nonNumIndex == nil {
+                if Lns_IsNil( _nonNumIndex ) {
                     return len(token), intFlag
                 }
                 nonNumIndex = _nonNumIndex.(LnsInt)
@@ -425,7 +425,7 @@ func (self *AsyncParser_Parser) analyzeNumber(token string,beginIndex LnsInt)(Ln
             {
                 var _nonNumIndex LnsAny
                 _nonNumIndex = AsyncParser_convExp1617(Lns_2DDD(self.LnsEnv.LuaVM.String_find(token,"[^%d]", nonNumIndex + 1, nil)))
-                if _nonNumIndex == nil {
+                if Lns_IsNil( _nonNumIndex ) {
                     return len(token), intFlag
                 }
                 nonNumIndex = _nonNumIndex.(LnsInt)
@@ -499,7 +499,7 @@ func (self *AsyncParser_Parser) addVal(list *LnsList,kind LnsInt,val string,colu
             } else { 
                 {
                     __exp := AsyncParser_convExp2243(Lns_2DDD(self.LnsEnv.LuaVM.String_find(token, "[^%w_]", subIndex, nil)))
-                    if __exp != nil {
+                    if !Lns_IsNil( __exp ) {
                         _exp := __exp.(LnsInt)
                         var index LnsInt
                         index = _exp
@@ -511,7 +511,7 @@ func (self *AsyncParser_Parser) addVal(list *LnsList,kind LnsInt,val string,colu
                         var delimit string
                         delimit = self.LnsEnv.LuaVM.String_sub(token,index, index)
                         var candidateList LnsAny
-                        candidateList = self.multiCharDelimitMap.Items[delimit]
+                        candidateList = self.multiCharDelimitMap.Get(delimit)
                         for Lns_isCondTrue( candidateList) {
                             var findFlag bool
                             findFlag = false
@@ -520,7 +520,7 @@ func (self *AsyncParser_Parser) addVal(list *LnsList,kind LnsInt,val string,colu
                                 if candidate == self.LnsEnv.LuaVM.String_sub(token,index, index + len(candidate) - 1){
                                     delimit = candidate
                                     
-                                    candidateList = self.multiCharDelimitMap.Items[delimit]
+                                    candidateList = self.multiCharDelimitMap.Get(delimit)
                                     
                                     findFlag = true
                                     
@@ -596,7 +596,7 @@ func (self *AsyncParser_Parser) Parse() LnsAny {
         for  {
             {
                 _, _termEndIndex := AsyncParser_convExp2394(Lns_2DDD(self.LnsEnv.LuaVM.String_find(rawLine, termStr, searchIndex, true)))
-                if _termEndIndex != nil {
+                if !Lns_IsNil( _termEndIndex ) {
                     termEndIndex := _termEndIndex.(LnsInt)
                     comment = comment + self.LnsEnv.LuaVM.String_sub(rawLine,searchIndex, termEndIndex)
                     

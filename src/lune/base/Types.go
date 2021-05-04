@@ -279,7 +279,7 @@ func (self *Types_Position) InitTypes_Position(lineNo LnsInt,column LnsInt,strea
 func (self *Types_Position) Get_orgPos() *Types_Position {
     {
         __exp := self.OrgPos
-        if __exp != nil {
+        if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Types_Position)
             return _exp.FP.Get_orgPos()
         }

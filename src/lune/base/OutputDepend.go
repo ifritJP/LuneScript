@@ -13,7 +13,7 @@ func OutputDepend_createFilter(stream Lns_oStream) *Nodes_Filter {
 }
 
 // 140: decl @lune.@base.@OutputDepend.Ast2Depend
-func OutputDepend_Ast2Depend_1097_(ast *TransUnit_ASTInfo) string {
+func OutputDepend_Ast2Depend_1096_(ast *TransUnit_ASTInfo) string {
     var stream *Util_memStream
     stream = NewUtil_memStream()
     var conv *Nodes_Filter
@@ -246,7 +246,7 @@ func (self *OutputDepend_convFilter) ProcessRoot(node *Nodes_RootNode,_dummy Lns
         subfileNode := _subfileNode.(Nodes_SubfileNodeDownCast).ToNodes_SubfileNode()
         {
             _usePath := subfileNode.FP.Get_usePath()
-            if _usePath != nil {
+            if !Lns_IsNil( _usePath ) {
                 usePath := _usePath.(string)
                 dependInfo.FP.AddSubMod(usePath)
             }
@@ -336,11 +336,11 @@ func (self *OutputDepend_Front) LoadMeta(importModuleInfo *FrontInterface_Import
     var mess LnsAny
     loaded,mess = Lns_getVM().Loadfile(metaPath)
     if loaded != nil{
-        loaded_5811 := loaded.(*Lns_luaValue)
+        loaded_5821 := loaded.(*Lns_luaValue)
         var meta LnsAny
         
         {
-            _meta := OutputDepend_convExp502(Lns_2DDD(Lns_getVM().RunLoadedfunc(loaded_5811,Lns_2DDD([]LnsAny{}))[0]))
+            _meta := OutputDepend_convExp502(Lns_2DDD(Lns_getVM().RunLoadedfunc(loaded_5821,Lns_2DDD([]LnsAny{}))[0]))
             if _meta == nil{
                 return nil
             } else {

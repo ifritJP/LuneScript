@@ -10,7 +10,7 @@ func Testing_registerTestcase(modName string,caseName string,testcase Testing_Te
     var info *Testing_TestModuleInfo
     
     {
-        _info := Testing_testModuleMap.Items[modName]
+        _info := Testing_testModuleMap.Get(modName)
         if _info == nil{
             info = NewTesting_TestModuleInfo(modName)
             
