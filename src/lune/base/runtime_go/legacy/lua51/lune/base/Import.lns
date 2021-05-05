@@ -177,23 +177,27 @@ class _TypeInfoNilable extend _TypeInfo {
    }
 }
 
+class _IdInfo extend (Mapping) {
+   pub let id:int;
+   pub let mod:int;
+}
 
 class _TypeInfoAlias extend _TypeInfo {
-   pub let parentId: int;
+   pub let parentId:int;
    pri let rawTxt:str;
-   pri let srcTypeId:int;
+   pri let srcTypeId:&_IdInfo;
 
    pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
-      let srcTypeInfo = unwrap param.getTypeInfo( self.srcTypeId );
+      let srcTypeInfo = unwrap param.getTypeInfo( self.srcTypeId.id );
       let newTypeInfo = param.processInfo.createAlias(
          param.processInfo, self.rawTxt, true, .Pub, param.moduleTypeInfo, srcTypeInfo );
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
 
       // param.typeId2Scope で親のスコースを取得するために、
       // param.getTypeInfo() しておく。
-      if not param.getTypeInfo( self.parentId ) {
-         return nil, "%s: not found parentInfo %s %s" ( __func__,
+      let! _ = param.getTypeInfo( self.parentId ) {
+         return nil, "%s: not found parentInfo %d %s" ( __func__,
                                                         self.parentId, self.rawTxt );
       };
 
@@ -210,14 +214,14 @@ class _TypeInfoAlias extend _TypeInfo {
 
 
 class _TypeInfoDDD extend _TypeInfo {
-   pub let parentId: int;
-   pub let itemTypeId:int;
+   pub let parentId:int;
+   pub let itemTypeId: &_IdInfo;
    pub let extTypeFlag:bool;
 
    pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
       //let itemTypeInfo = unwrap param.typeId2TypeInfo[ self.itemTypeId ];
-      let itemTypeInfo = unwrap param.getTypeInfo( self.itemTypeId );
+      let itemTypeInfo = unwrap param.getTypeInfo( self.itemTypeId.id );
       let newTypeInfo = param.processInfo.createDDD(
          itemTypeInfo, true, self.extTypeFlag );
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
@@ -227,21 +231,21 @@ class _TypeInfoDDD extend _TypeInfo {
 
 
 class _TypeInfoAlternate extend _TypeInfo {
-   pub let parentId: int;
+   pub let parentId:int;
    pub let txt:str;
    pub let accessMode:Ast.AccessMode;
-   pub let baseId:int;
-   pub let ifList:&List<int>;
+   pub let baseId: &_IdInfo;
+   pub let ifList:&List<&_IdInfo>;
    pub let belongClassFlag:bool;
    pub let altIndex:int;
 
    pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
-      let baseInfo = unwrap param.getTypeInfo( self.baseId );
+      let baseInfo = unwrap param.getTypeInfo( self.baseId.id );
       let mut interfaceList:List<&Ast.TypeInfo> = [];
       foreach ifTypeId in self.ifList {
          //interfaceList.insert( unwrap param.typeId2TypeInfo[ ifTypeId ] );
-         interfaceList.insert( unwrap param.getTypeInfo( ifTypeId ) );
+         interfaceList.insert( unwrap param.getTypeInfo( ifTypeId.id ) );
       }
       let newTypeInfo = param.processInfo.createAlternate(
          self.belongClassFlag, self.altIndex,
@@ -252,15 +256,15 @@ class _TypeInfoAlternate extend _TypeInfo {
 }
 
 class _TypeInfoGeneric extend _TypeInfo {
-   pub let genSrcTypeId:int;
-   pub let genTypeList:&List<int>;
+   pub let genSrcTypeId:&_IdInfo;
+   pub let genTypeList:&List<&_IdInfo>;
 
    pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
-      let genSrcTypeInfo = unwrap param.getTypeInfo( self.genSrcTypeId );
+      let genSrcTypeInfo = unwrap param.getTypeInfo( self.genSrcTypeId.id );
       let mut genTypeList:List<&Ast.TypeInfo> = [];
       foreach typeId in self.genTypeList {
-         genTypeList.insert( unwrap param.getTypeInfo( typeId ) );
+         genTypeList.insert( unwrap param.getTypeInfo( typeId.id ) );
       }
       let newTypeInfo = param.processInfo.createGeneric(
          genSrcTypeInfo, genTypeList, param.moduleTypeInfo );
@@ -284,11 +288,11 @@ class _TypeInfoBox extend _TypeInfo {
 }
 
 class _TypeInfoExt extend _TypeInfo {
-   pub let extedTypeId:int;
+   pub let extedTypeId:&_IdInfo;
 
    pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
-      let extedType = unwrap param.getTypeInfo( self.extedTypeId );
+      let extedType = unwrap param.getTypeInfo( self.extedTypeId.id );
       let newTypeInfo;
       _match param.processInfo.createLuaval( extedType, true ) {
          case .OK( extType, _ ) {
@@ -305,14 +309,14 @@ class _TypeInfoExt extend _TypeInfo {
 
 
 class _TypeInfoModifier extend _TypeInfo {
-   pub let srcTypeId:int;
+   pub let srcTypeId:&_IdInfo;
    pub let mutMode:Ast.MutMode;
 
    pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
       //let! srcTypeInfo = param.typeId2TypeInfo[ self.srcTypeId ] {
-      let! srcTypeInfo = param.getTypeInfo( self.srcTypeId ) {
-         return nil, "not found srcType -- %d" ( self.srcTypeId );
+      let! srcTypeInfo = param.getTypeInfo( self.srcTypeId.id ) {
+         return nil, "not found srcType -- %d" ( self.srcTypeId.id );
       };
       let newTypeInfo = param.modifier.createModifier( srcTypeInfo, self.mutMode );
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
@@ -321,7 +325,7 @@ class _TypeInfoModifier extend _TypeInfo {
 }
 
 class _TypeInfoModule extend _TypeInfo {
-   pub let parentId: int;
+   pub let parentId:int;
    pub let txt:str;
 
    pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
@@ -330,7 +334,7 @@ class _TypeInfoModule extend _TypeInfo {
       if self.parentId ~= Ast.rootTypeId {
          //let! workTypeInfo = param.typeId2TypeInfo[ self.parentId ] {
          let! workTypeInfo = param.getTypeInfo( self.parentId ) {
-            Util.err( "not found parentInfo %s %s"
+            Util.err( "not found parentInfo %d %s"
                       ( self.parentId, self.txt ) );
          };
          parentInfo = workTypeInfo;
@@ -344,7 +348,7 @@ class _TypeInfoModule extend _TypeInfo {
       if! newTypeInfo {
          param.typeId2Scope[ self.typeId ] = Ast.getScope( _exp );
          if not _exp.$scope {
-            return nil, "not found scope %s %s %s %s %s" ( parentScope, self.parentId,
+            return nil, "not found scope %s %d %s %s %s" ( parentScope, self.parentId,
                                                            self.typeId,
                                                            self.txt, _exp.getTxt(##) );
          }
@@ -378,19 +382,19 @@ class _TypeInfoModule extend _TypeInfo {
 }
 
 class _TypeInfoNormal extend _TypeInfo {
-   pub let parentId: int;
+   pub let parentId:int;
    pub let abstractFlag: bool;
-   pub let baseId:int;
+   pub let baseId: &_IdInfo;
    pub let txt:str;
    pub let staticFlag:bool;
    pub let accessMode:Ast.AccessMode;
    pub let kind:Ast.TypeInfoKind;
    pub let mutMode: Ast.MutMode;
-   pub let ifList: &List<int>;
-   pub let itemTypeId: &List<int>;
-   pub let argTypeId: &List<int>;
-   pub let retTypeId: &List<int>;
-   pub let children: &List<int>;
+   pub let ifList: &List<&_IdInfo>;
+   pub let itemTypeId: &List<&_IdInfo>;
+   pub let argTypeId: &List<&_IdInfo>;
+   pub let retTypeId: &List<&_IdInfo>;
+   pub let children: &List<&_IdInfo>;
    pub let moduleLang:Types.Lang!;
    pub let requirePath:str!;
 
@@ -408,7 +412,7 @@ class _TypeInfoNormal extend _TypeInfo {
          if self.parentId ~= Ast.rootTypeId {
             //let! workTypeInfo = param.typeId2TypeInfo[ self.parentId ] {
             let! workTypeInfo = param.getTypeInfo( self.parentId ) {
-               return nil, "not found parentInfo %s %s" ( self.parentId, self.txt );
+               return nil, "not found parentInfo %d %s" ( self.parentId, self.txt );
             };
             parentInfo = workTypeInfo;
          }
@@ -416,18 +420,18 @@ class _TypeInfoNormal extend _TypeInfo {
          let mut itemTypeInfo:List<&Ast.TypeInfo> = [];
          foreach typeId in self.itemTypeId {
             //itemTypeInfo.insert( unwrap param.typeId2TypeInfo[ typeId ] );
-            itemTypeInfo.insert( unwrap param.getTypeInfo( typeId ) );
+            itemTypeInfo.insert( unwrap param.getTypeInfo( typeId.id ) );
          }
          let mut argTypeInfo:List<&Ast.TypeInfo> = [];
          foreach typeId, index in self.argTypeId {
             //if! let argType = param.typeId2TypeInfo[ typeId ] {
-            let argType, mess = param.getTypeInfo( typeId );
+            let argType, mess = param.getTypeInfo( typeId.id );
             when! argType {
                argTypeInfo.insert( argType );
             }
             else {
                let errmess = "not found arg (index:%d) -- %s.%s, %d, %d. %s"
-                   ( index, parentInfo.getTxt(##), self.txt, typeId,
+                   ( index, parentInfo.getTxt(##), self.txt, typeId.id,
                      #self.argTypeId, mess );
                return nil, errmess;
             }
@@ -435,15 +439,15 @@ class _TypeInfoNormal extend _TypeInfo {
          let mut retTypeInfo:List<&Ast.TypeInfo> = [];
          foreach typeId in self.retTypeId {
             //retTypeInfo.insert( unwrap param.typeId2TypeInfo[ typeId ] );
-            retTypeInfo.insert( unwrap param.getTypeInfo( typeId ) );
+            retTypeInfo.insert( unwrap param.getTypeInfo( typeId.id ) );
          }
 
          //let baseInfo = unwrap param.typeId2TypeInfo[ self.baseId ];
-         let baseInfo = unwrap param.getTypeInfo( self.baseId );
+         let baseInfo = unwrap param.getTypeInfo( self.baseId.id );
          let mut interfaceList:List<&Ast.TypeInfo> = [];
          foreach ifTypeId in self.ifList {
             //interfaceList.insert( unwrap param.typeId2TypeInfo[ ifTypeId ] );
-            interfaceList.insert( unwrap param.getTypeInfo( ifTypeId ) );
+            interfaceList.insert( unwrap param.getTypeInfo( ifTypeId.id ) );
          }
 
          let! mut parentScope = param.typeId2Scope[ self.parentId ] {
@@ -482,7 +486,7 @@ class _TypeInfoNormal extend _TypeInfo {
                        parentScope.$ownerTypeInfo$.$typeId$.id or -1 ); } );
             
                
-               let baseScope = unwrap param.typeId2Scope[ self.baseId ];
+               let baseScope = unwrap param.typeId2Scope[ self.baseId.id ];
                let mut ifScopeList:List<Ast.Scope> = [];
                foreach ifType in interfaceList {
                   ifScopeList.insert( unwrap ifType.$scope );
@@ -947,9 +951,9 @@ pub fn Import.processImport( mut modulePath:str, depth:int ) mut :
       if #atomInfo.children > 0 {
          let mut scope = unwrap typeId2Scope[ atomInfo.typeId ];
          foreach childId in atomInfo.children {
-            let! typeInfo = typeId2TypeInfo[ childId ] {
+            let! typeInfo = typeId2TypeInfo[ childId.id ] {
                Util.err( "not found childId -- %s, %d, %s(%d)"
-                         (orgModulePath, childId, atomInfo.txt, atomInfo.typeId ) );
+                         (orgModulePath, childId.id, atomInfo.txt, atomInfo.typeId ) );
             };
             let mut symbolKind = Ast.SymbolKind.Typ;
             let mut addFlag = true;

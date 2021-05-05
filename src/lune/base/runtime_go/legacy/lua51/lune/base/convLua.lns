@@ -342,6 +342,10 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
 
    let mut importModuleType2Index:Map<&Ast.TypeInfo,int> = {};
    let mut importProcessInfo2Index:Map<&Ast.ProcessInfo,int> = {};
+
+   importProcessInfo2Index[ Ast.getRootProcessInfo() ] = -1;
+   importProcessInfo2Index[ self.processInfo ] = 0;
+   
    let mut importNameMap:Map<str,&Ast.TypeInfo> = {};
    {
       // foreach importName, typeInfo in self.typeInfo2ModuleName {

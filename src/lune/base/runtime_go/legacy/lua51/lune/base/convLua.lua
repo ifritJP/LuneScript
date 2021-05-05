@@ -604,6 +604,10 @@ function convFilter:outputMeta( node )
    
    local importModuleType2Index = {}
    local importProcessInfo2Index = {}
+   
+   importProcessInfo2Index[Ast.getRootProcessInfo(  )] = -1
+   importProcessInfo2Index[self.processInfo] = 0
+   
    local importNameMap = {}
    do
       for typeInfo, moduleInfo in pairs( node:get_importModule2moduleInfo() ) do
@@ -4240,7 +4244,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3511, function (  )
+   Log.log( Log.Level.Trace, __func__, 3515, function (  )
    
       return string.format( "macro: %s", code)
    end )
