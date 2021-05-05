@@ -660,6 +660,19 @@ pub enum CanEvalType {
    Logical,
 }
 
+pub class SerializeInfo {
+   let processInfo2Id: &Map<&ProcessInfo,int>;
+   let validChildrenMap: &Map<&IdInfo,&TypeInfo> {pub};
+
+   pub fn isValidChildren( idInfo:&IdInfo ) : bool {
+      return not self.validChildrenMap[ idInfo ];
+   }
+   pub fn serializeId(idInfo:&IdInfo) : str {
+      let processId = unwrap self.processInfo2Id[ idInfo.processInfo ];
+      return "{ id = %d, mod = %d }" ( idInfo.id, processId );
+   }
+}
+
 pub abstract class TypeInfo {
 
    // この TypeInfo のスコープ。
@@ -785,7 +798,7 @@ pub abstract class TypeInfo {
    }
 
    /** この型情報を oStream にシリアライズする */
-   pub fn serialize( stream: oStream, validChildrenSet: Map<&IdInfo,&TypeInfo>! ) {
+   pub fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
       return;
    }
 
@@ -1492,7 +1505,7 @@ pub class NilableTypeInfo extend TypeInfo {
       return self.get_display_stirng_with( self.$rawTxt, nil );
    }
 
-   pub override fn serialize( stream: oStream, validChildrenSet: Map<&IdInfo,&TypeInfo>! ) {
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
       stream.write(
          '{ skind = %d, typeId = %d, orgTypeId = %d }\n' (
             SerializeKind.Nilable, self.typeId.id, self.nonnilableType.$typeId.id ) );
@@ -1591,7 +1604,7 @@ pub class AliasTypeInfo extend TypeInfo {
       return self.getTxtWithRaw( self.rawTxt, typeNameCtrl, importInfo, localFlag );
    }
 
-   pub override fn serialize( stream: oStream, validChildrenSet: Map<&IdInfo,&TypeInfo>! ) {
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
       let parentId = self.getParentId();
       stream.write(
          '{ skind = %d, parentId = %d, typeId = %d, rawTxt = %q, srcTypeId = %d }\n' (
@@ -2860,7 +2873,7 @@ pub class AlternateTypeInfo extend TypeInfo {
    //    return "";
    // }
 
-   pub override fn serialize( stream: oStream, validChildrenSet: Map<&IdInfo,&TypeInfo>! ) {
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
       let parentId = self.getParentId();
       stream.write(
          '{ skind = %d, parentId = %d, typeId = %d, txt = %q, '
@@ -2951,7 +2964,7 @@ pub class BoxTypeInfo extend TypeInfo {
       return "Nilable<%s>" (self.boxingType.get_display_stirng_with( raw, alt2type ) );
    }
 
-   pub override fn serialize( stream: oStream, validChildrenSet: Map<&IdInfo,&TypeInfo>! ) {
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
       stream.write(
          '{ skind = %d, typeId = %d, accessMode = %d, boxingType = %d }\n' (
             SerializeKind.Box, self.typeId.id,
@@ -3190,7 +3203,7 @@ pub class GenericTypeInfo extend TypeInfo {
       return true;
    }
 
-   pub override fn serialize( stream: oStream, validChildrenSet: Map<&IdInfo,&TypeInfo>! ) {
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
       stream.write(
          '{ skind = %d, typeId = %d, genSrcTypeId = %d, genTypeList = {' (
             SerializeKind.Generic, self.typeId.id, self.genSrcTypeInfo.$typeId.id ) );
@@ -3262,7 +3275,7 @@ pub class ModifierTypeInfo extend TypeInfo {
       return self.get_display_stirng_with( self.$rawTxt, nil );
    }
 
-   pub override fn serialize( stream: oStream, validChildrenSet: Map<&IdInfo,&TypeInfo>! ) {
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
       stream.write(
          '{ skind = %d, typeId = %d, srcTypeId = %d, mutMode = %d }\n' (
             SerializeKind.Modifier, self.typeId.id, self.srcTypeInfo.$typeId.id,
@@ -3400,27 +3413,13 @@ pub class ModuleTypeInfo extend TypeInfo {
    }
 
    pub override fn serialize(
-      stream: oStream, validChildrenSet: Map<&IdInfo,&TypeInfo>! )
+      stream: oStream, serializeInfo: &SerializeInfo )
    {
       let txt = "{ skind = %d, parentId = %d, typeId = %d, txt = '%s', "
           ( SerializeKind.Module,
             self.getParentId().id, self.typeId.id, self.rawTxt );
       stream.write( txt .. '\n' );
-
-      stream.write( "children = {" );
-
-      let! set = validChildrenSet {
-         set = {};
-      };
-      if validChildrenSet {
-         foreach child in self.$children {
-            if set[ child.$typeId ] and
-               ( child.$accessMode == .Pub or child.$accessMode == .Global ) {
-               stream.write( "%d, " ( child.$typeId.id ) );
-            }
-         }
-      }
-      stream.write( "} }\n" );
+      stream.write( "}\n" );
    }
 }
 
@@ -3981,7 +3980,7 @@ pub class NormalTypeInfo extend TypeInfo {
    }
 
 
-   pub override fn serialize( stream: oStream, validChildrenSet: Map<&IdInfo,&TypeInfo>! ) {
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
       if self.typeId.id == rootTypeId {
          return;
       }
@@ -4003,11 +4002,8 @@ pub class NormalTypeInfo extend TypeInfo {
       
 
       let mut children:List<&TypeInfo> = [];
-      let! set = validChildrenSet {
-         set = {};
-      };
       foreach child in self.$children {
-         if set[ child.$typeId ] {
+         if serializeInfo.isValidChildren( child.$typeId ) {
             children.insert( child );
          }
       }
@@ -4973,7 +4969,7 @@ pub class DDDTypeInfo extend TypeInfo {
       return self.typeInfo.canEvalWith( processInfo, other, canEvalType, alt2type )**;
    }
 
-   pub override fn serialize( stream: oStream, validChildrenSet: Map<&IdInfo,&TypeInfo>! ) {
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
       stream.write(
          '{ skind=%d, typeId = %d, itemTypeId = %d, parentId = %d, extTypeFlag = %s }\n'
          ( SerializeKind.DDD, self.typeId.id,
@@ -5539,7 +5535,7 @@ pub class AbbrTypeInfo extend TypeInfo {
       return false, nil;
    }
 
-   pub override fn serialize( stream: oStream, validChildrenSet: Map<&IdInfo,&TypeInfo>! ) {
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
       Util.err( "illegal call" );
    }
 
@@ -5649,7 +5645,7 @@ pub class ExtTypeInfo extend TypeInfo {
       // return self.extedType.canEvalWith( other, canEvalType, alt2type )**;
    }
 
-   pub override fn serialize( stream: oStream, validChildrenSet: Map<&IdInfo,&TypeInfo>! ) {
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
       stream.write(
          '{ skind = %d, typeId = %d, extedTypeId = %d }\n' (
             SerializeKind.Ext, self.typeId.id, self.extedType.$typeId.id ) );
@@ -5862,7 +5858,7 @@ pub fn ProcessInfo.createEnum(
 }
 
 pub override fn EnumTypeInfo.serialize(
-   stream: oStream, validChildrenSet: Map<&IdInfo,&TypeInfo>! )
+   stream: oStream, serializeInfo: &SerializeInfo )
 {
    let txt = ```{ skind = %d, parentId = %d, typeId = %d, txt = '%s',
 accessMode = %d, kind = %d, valTypeId = %d, ```
@@ -5912,8 +5908,7 @@ pub fn ProcessInfo.createAlge(
    return info;
 }
 
-pub override fn AlgeTypeInfo.serialize(
-   stream: oStream, validChildrenSet: Map<&IdInfo,&TypeInfo>! )
+pub override fn AlgeTypeInfo.serialize( stream: oStream, serializeInfo: &SerializeInfo )
 {
    let txt = ```{ skind = %d, parentId = %d, typeId = %d, txt = '%s',
 accessMode = %d, kind = %d, ```

@@ -139,7 +139,7 @@ loadedMap で管理する前にシステムにロードされているため、
    pub fn loadMeta(
       importModuleInfo:frontInterface.ImportModuleInfo, mod:str ) mut: &frontInterface.ModuleMeta!;
    pub fn loadFromLnsTxt( importModuleInfo:frontInterface.ImportModuleInfo,
-                          name:str, txt:str ): Luaval<&stem>;
+                          name:str, txt:str ) mut : Luaval<&stem>;
    pub fn getLuaModulePath( mod:str ) mut : str;
    pub fn searchModule( mod:str ) mut: str!;
    pub fn error( message:str );
@@ -183,13 +183,21 @@ fn Front.createPaser( scriptPath:str ): Parser.Parser
 fn Front.createAst(
    importModuleInfo:frontInterface.ImportModuleInfo,
    parser:Parser.Parser, mod:str, moduleId:&frontInterface.ModuleId, analyzeModule:str!,
-   analyzeMode:TransUnit.AnalyzeMode, pos:&Parser.Position! ): TransUnit.ASTInfo
+   analyzeMode:TransUnit.AnalyzeMode, pos:&Parser.Position! ) mut : TransUnit.ASTInfo
 {
+   if! self.mod2ast.$map[ mod ] {
+      return _exp;
+   }
+   
    let mut transUnit = new TransUnit.TransUnit(
       moduleId, importModuleInfo, new convLua.MacroEvalImp(),
       analyzeModule, analyzeMode, pos, self.option.targetLuaVer,
       self.option.transCtrlInfo );
-   return transUnit.createAST( parser, false, mod );
+
+   let mut ast = transUnit.createAST( parser, false, mod );
+   self.mod2ast.add( mod, ast );
+   
+   return ast;
 }
 
 fn Front.convert(
@@ -254,7 +262,8 @@ fn Front.convertFromAst(
 マクロ解析用
 */
 fn Front.loadFromLnsTxt(
-   importModuleInfo:frontInterface.ImportModuleInfo, name:str, txt:str ): Luaval<&stem>
+   importModuleInfo:frontInterface.ImportModuleInfo,
+   name:str, txt:str ) mut : Luaval<&stem>
 {
    let mut transUnit = new TransUnit.TransUnit(
       frontInterface.ModuleId.tempId,
@@ -516,7 +525,7 @@ metaTime
 */
 pub fn Front.convertLns2LuaCode(
    importModuleInfo:frontInterface.ImportModuleInfo,
-   stream:iStream, streamName:str ): str
+   stream:iStream, streamName:str ) mut : str
 {
    let mod = self.scriptPath2Module( streamName );
    let mut ast = self.createAst(
@@ -538,13 +547,13 @@ parser から Lns を AST 解析し、 meta 情報と変換後の Lua コード�
 */
 fn Front.loadParserToLuaCode(
    importModuleInfo:frontInterface.ImportModuleInfo,
-   parser:Parser.Parser, mod:str ): &frontInterface.ModuleMeta, str
+   parser:Parser.Parser, mod:str ) mut : &frontInterface.ModuleMeta, str
 {
    let path = parser.getStreamName();
    
    let mut ast = self.createAst(
       importModuleInfo, parser, mod, getModuleId( path, mod ## ), nil, .Compile, nil );
-   self.mod2ast.add( mod, ast );
+   //self.mod2ast.add( mod, ast );
    
 
    let mut metaTxt, luaTxt = self.convertFromAst( ast, path, .ConvMeta );
@@ -595,7 +604,7 @@ fn Front.loadParserToLuaCode(
 */
 fn Front.loadFileToLuaCode(
    importModuleInfo:frontInterface.ImportModuleInfo,
-   path:str, mod:str ): &frontInterface.ModuleMeta, str
+   path:str, mod:str ) mut : &frontInterface.ModuleMeta, str
 {
    Log._log2( .Log, "%s: %s" (__func__, mod ) );
 
@@ -610,7 +619,7 @@ fn Front.loadFileToLuaCode(
 */
 fn Front.loadFile(
    importModuleInfo:frontInterface.ImportModuleInfo,
-   path:str, mod:str ): &frontInterface.ModuleMeta, Luaval<&stem>
+   path:str, mod:str ) mut : &frontInterface.ModuleMeta, Luaval<&stem>
 {
    Log._log2( .Info, "start %s:%s" ( __func__, mod ) );
    
@@ -981,6 +990,8 @@ pub fn Front.convertLuaToStreamFromScript(
    byteCompile:bool, stripDebugInfo:bool, openOStream:OpenOStreamForConvert,
    closeOStream:CloseOStreamForConvert! ) mut : TransUnit.ASTInfo!
 {
+   Log._log2( .Log, path );
+   
    fn outputDependInfo( stream:oStream!, metaInfo:&MetaForBuildId! ) {
       when! stream {
          when! metaInfo {
@@ -1167,7 +1178,7 @@ fn Front.convertToLua( scriptPath:str, convMode:convLua.ConvMode,
             ast.$node.processFilter( conv, new convGo.Opt( ast.$node ) );
          }
       }
-      self.mod2ast.add( mod, ast );
+      //self.mod2ast.add( mod, ast );
    }
 }
 
@@ -1499,7 +1510,7 @@ oldStream, newStream に格納されているモジュールのメタ情報が�
             self.saveToGo( scriptPath, ast );
          }
       }
-      self.mod2ast.add( mod, ast );
+      //self.mod2ast.add( mod, ast );
    }
 
    return updateFlag;
@@ -1563,10 +1574,6 @@ pub fn Front.build( buildMode:BuildMode, astCallback:AstCallback! ) mut {
    }
 
    fn process( updateInfo:UpdateInfo ) {
-      let mod = self.scriptPath2Module( updateInfo.$scriptPath );
-      if self.mod2ast.$map[ mod ] {
-         return;
-      }
       _match buildMode {
          case .Save {
             self.saveToLua( updateInfo );
@@ -1576,6 +1583,10 @@ pub fn Front.build( buildMode:BuildMode, astCallback:AstCallback! ) mut {
                updateInfo.$scriptPath, .ConvMeta, streamLua, streamMeta );       
          }
          case .CreateAst {
+            let mod = self.scriptPath2Module( updateInfo.$scriptPath );
+            if self.mod2ast.$map[ mod ] {
+               return;
+            }
             let mut streamMeta = new Util.memStream();
             self.convertToLua( updateInfo.$scriptPath, .ConvMeta,
                                new Util.NullOStream(), streamMeta );

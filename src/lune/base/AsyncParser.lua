@@ -439,7 +439,7 @@ function Parser:__init(stream, name, luaMode, overridePos)
    self.prevToken = Types.noneToken
    self.luaMode = _lune.unwrapDefault( luaMode, false)
    
-   local keywordSet, typeSet, _328, multiCharDelimitMap = createReserveInfo( luaMode )
+   local keywordSet, typeSet, _260, multiCharDelimitMap = createReserveInfo( luaMode )
    
    self.keywordSet = keywordSet
    self.typeSet = typeSet
@@ -699,7 +699,7 @@ function Parser:parse(  )
       local comment = ""
       while true do
          do
-            local _454, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
+            local _386, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
             if termEndIndex ~= nil then
                comment = comment .. rawLine:sub( searchIndex, termEndIndex )
                return comment, termEndIndex + 1

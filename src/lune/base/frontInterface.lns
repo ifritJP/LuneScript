@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 import lune.base.Util;
+import lune.base.Ast;
 
 _lune_control ignore_symbol_;
 
@@ -130,7 +131,7 @@ LuneScript のコード文字列からロードする。
 @return stem ロードしたモジュール。
    */
    pub fn loadFromLnsTxt(
-      importModuleInfo:ImportModuleInfo, name:str, txt:str ): Luaval<&stem>;
+      importModuleInfo:ImportModuleInfo, name:str, txt:str ) mut : Luaval<&stem>;
 
    /**
 go/github:com.ifritJP. 等の go 用のパスを、
@@ -160,7 +161,7 @@ class dummyFront extend (frontInterface) {
       error( "not implements" );
    }
    pub fn loadFromLnsTxt(
-      importModuleInfo:ImportModuleInfo, name:str, txt:str ): Luaval<&stem>
+      importModuleInfo:ImportModuleInfo, name:str, txt:str ) mut : Luaval<&stem>
    {
       error( "not implements" );
    }

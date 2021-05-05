@@ -115,13 +115,13 @@ func Util_scriptPath2Module(path string) string {
 // 294: decl @lune.@base.@Util.scriptPath2ModuleFromProjDir
 func Util_scriptPath2ModuleFromProjDir(path string,projDir LnsAny) string {
     if projDir != nil{
-        projDir_283 := projDir.(string)
+        projDir_278 := projDir.(string)
         var workpath string
-        if Lns_op_not(Lns_car(Lns_getVM().String_find(projDir_283,"/$", nil, nil))){
-            workpath = projDir_283 + "/"
+        if Lns_op_not(Lns_car(Lns_getVM().String_find(projDir_278,"/$", nil, nil))){
+            workpath = projDir_278 + "/"
             
         } else { 
-            workpath = projDir_283
+            workpath = projDir_278
             
         }
         path = Util_convExp1164(Lns_2DDD(Lns_getVM().String_gsub(path,"^" + workpath, "")))

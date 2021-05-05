@@ -1,0 +1,744 @@
+/*
+MIT License
+
+Copyright (c) 2018, 2019 ifritJP
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+import lune.base.Types;
+import lune.base.Parser;
+import lune.base.Util;
+import lune.base.Ast;
+import lune.base.LuaVer;
+import lune.base.Log;
+
+import lune.base.TransUnitIF;
+
+_lune_control ignore_symbol_;
+
+pub class Builtin {
+   let transUnitIF:TransUnitIF.TransUnitIF;
+   /**
+トランスコンパイル先の lua バージョン
+   */
+   let targetLuaVer:&LuaVer.LuaVerInfo;
+   let ctrl_info: &Types.TransCtrlInfo;
+   let processInfo:Ast.ProcessInfo;
+   let modifier:TransUnitIF.Modifier;
+
+   pub fn __init( transUnitIF:TransUnitIF.TransUnitIF,
+                  targetLuaVer:&LuaVer.LuaVerInfo,
+                  ctrl_info: &Types.TransCtrlInfo )
+   {
+      self.transUnitIF = transUnitIF;
+      self.targetLuaVer = targetLuaVer;
+      self.ctrl_info = ctrl_info;
+      self.processInfo = Ast.getRootProcessInfo();
+      self.modifier = new TransUnitIF.Modifier( true, self.processInfo );
+   }
+}
+
+macro _DefBuiltinFuncType( class2symMapList:List<Map<str,Map<str,Map<str,List<str>>>>> )
+{
+   {
+      let mut defMemberList:List<stat> = [];
+      let mut initMemberList:List<stat> = [];
+      let mut declProcessList:List<stat> = [];
+      let mut caseList:List<stat> = [];
+      let mut classCaseList:List<stat> = [];
+      foreach class2symMap in class2symMapList {
+         forsort symbolMap, genClassName in class2symMap {
+            let className = genClassName.gsub( "<.*", "" );
+            let mut subcaseList:List<stat> = [];
+
+            let classTypeName = "%s_" ( className ~= "" and className.lower() or "lns" );
+            defMemberList.insert( `{
+               pub let mut ,,,classTypeName:&Ast.TypeInfo;
+            } );
+            initMemberList.insert( `{
+               self.,,,classTypeName = Ast.headTypeInfo;
+            });
+            classCaseList.insert( `{
+               case ,,className ~~{
+                  self. ,,,classTypeName = classInfo;
+               }
+            });
+            
+            
+            forsort _, funcName in symbolMap {
+               let typeName = "%s_%s" ( className ~= "" and className.lower() or "lns",
+                                        funcName );
+               let symName = "%s_sym" (typeName);
+               defMemberList.insert( `{
+                  pub let mut ,,,typeName:&Ast.TypeInfo;
+                  pub let mut ,,,symName:&Ast.SymbolInfo;
+               } );
+               initMemberList.insert( `{
+                  self.,,,typeName = Ast.headTypeInfo;
+                  self.,,,symName = Ast.dummySymbol;
+               });
+               subcaseList.insert( `{
+                  case ,,funcName ~~{
+                     builtinFunc. ,,,typeName = typeInfo;
+                     builtinFunc. ,,,symName = symInfo;
+                     builtinFunc.register( symInfo );
+                  }
+               });
+            }
+            if #subcaseList > 0 {
+               declProcessList.insert( `{
+                  fn ,,,"process_%s" (className) ~~ () {
+                     switch fieldName {
+                        ,,subcaseList
+                     }
+                  }
+               });
+               caseList.insert( `{
+                  case ,,className {
+                     ,,,"process_%s" (className) ~~ ();
+                  }
+               });
+            }
+         }
+      }
+   }
+   /**
+builtin 関数の TypeInfo を保持するクラス。
+   */
+   pub class BuiltinFuncType {
+      ,,defMemberList;
+
+      let mut allSymbol:List<&Ast.SymbolInfo> {pub};
+      let mut allClass:List<&Ast.TypeInfo> {pub};
+
+      let mut allFuncTypeSet:Set<&Ast.TypeInfo> {pub};
+      let mut allSymbolSet:Set<&Ast.SymbolInfo> {pub};
+      let mut needThreadingTypes:Set<&Ast.TypeInfo> {pub};
+      
+      pub fn __init() {
+         ,,initMemberList;
+
+         self.allSymbol = [];
+         self.allClass = [];
+         self.allSymbolSet = (@);
+         self.allFuncTypeSet = (@);
+         self.needThreadingTypes = (@);
+      }
+
+      pub fn register( symbolInfo:&Ast.SymbolInfo ) mut {
+         self.allSymbol.insert( symbolInfo );
+         self.allSymbolSet.add( symbolInfo );
+      }
+      pub fn registerClass( classInfo:&Ast.TypeInfo ) mut {
+         self.allClass.insert( classInfo );
+         switch classInfo.$rawTxt {
+            ,,classCaseList
+         }
+      }
+   }
+
+   let mut builtinFunc = new BuiltinFuncType();
+
+   pub fn getBuiltinFunc() : &BuiltinFuncType {
+      return builtinFunc;
+   }
+
+   fn setupBuiltinTypeInfo( name:str, fieldName:str, symInfo:&Ast.SymbolInfo ) {
+      let typeInfo = symInfo.$typeInfo;
+      
+      ,,declProcessList;
+
+      switch name {
+         ,,caseList
+      }
+   }
+
+   fn getBuiltInInfo(): &List<&Map<str,&Map<str,&Map<str,&List<str>>>>> {
+      return ,,class2symMapList;
+   }
+}
+
+_DefBuiltinFuncType( [
+   {
+      "": {
+         "type": { "arg": [ "&stem!" ], "ret": ["str"] },
+         "error": { "arg": [ "str" ], "ret": [ "__" ] },
+         "print": { "arg": [ "&..." ], "ret": [] },
+         "tonumber": { "arg": [ "str", "int!" ], "ret": ["real!"] },
+         "tostring": { "arg": [ "&stem" ], "ret": ["str"] },
+         //"load": { "arg": [ "str", "str!", "str!", "stem!" ], "ret": ["form!", "str!"] },
+         "loadfile": { "arg": [ "str" ], "ret": ["Luaval<form>!", "str!"] },
+         "require": { "arg": [ "str" ], "ret": ["Luaval<stem>"] },
+         "collectgarbage": { "arg": [ ], "ret": [] },
+         "_fcall": { "arg": [ "form", "&..." ], "ret": [""] },
+         "_load": { "arg": [ "str", "stem!" ], "ret": ["Luaval<form>!", "str!"] },
+         "_kind": { "arg": [ "stem!" ], "ret":[ "int" ] },
+         "expandLuavalMap": { "arg": [ "Luaval<&stem>!" ], "ret":[ "&stem!" ] },
+      },
+   },
+   {
+      "iStream": {
+         "__attrib": { "type": [ "interface" ] },
+         "read": { "type": [ "mut" ], "arg": [ "stem!" ], "ret": [ "str!" ] },
+         "close": { "type": [ "mut" ], "arg": [], "ret": [] },
+      },
+   },
+   {
+      "oStream": {
+         "__attrib": { "type": [ "interface" ] },
+         "write": { "type": [ "mut" ], "arg": [ "str" ], "ret": [ "stem!", "str!"] },
+         "close": { "type": [ "mut" ], "arg": [], "ret": [] },
+         "flush": { "type": [ "mut" ], "arg": [], "ret": [] },
+      },
+   },
+   {
+      "luaStream": {
+         "__attrib": { "type": [ "interface" ], "inplements": [ "iStream", "oStream" ] },
+         "read": { "type": [ "mut" ], "arg": [ "stem!" ], "ret": [ "str!" ] },
+         "write": { "type": [ "mut" ], "arg": [ "str" ], "ret": [ "stem!", "str!" ] },
+         "close": { "type": [ "mut" ], "arg": [], "ret": [] },
+         "flush": { "type": [ "mut" ], "arg": [], "ret": [] },
+         "seek": { "type": [ "mut" ], "arg": [ "str", "int"], "ret": [ "int!", "str!" ] },
+      },
+   },
+   {
+      "Mapping": {
+         "__attrib": { "type": [ "interface" ] },
+         "_toMap": { "type": [ "method" ], "arg": [], "ret": [ ] },
+      },
+   },
+   {
+      "__pipe<T>": {
+         "put": { "type": [ "mut" ], "arg": [ "T!" ], "ret": [ ] },
+         "get": { "type": [ "mut" ], "arg": [], "ret": [ "T!" ] },
+      },
+   },
+   {
+      "LnsThread": {
+         "__init": { "type": [ "method"], "arg": [], "ret": [ ] },
+         "loop": { "type": [ "abstract" ], "arg": [ ], "ret": [] },
+      },
+   },
+   {
+      "io": {
+         "__attrib": { "type": [ "module" ] },
+         "stdin": { "type": [ "var" ], "typeInfo": [ "iStream" ] },
+         "stdout": { "type": [ "var" ], "typeInfo": [ "oStream" ] },
+         "stderr": { "type": [ "var" ], "typeInfo": [ "oStream" ] },
+         "open": { "arg": [ "str", "str!" ], "ret": ["luaStream!", "str!"] },
+         "popen": { "arg": [ "str" ], "ret": ["Luaval<luaStream>!"] },
+      },
+   },
+   {
+      "package": {
+         "__attrib": { "type": [ "module" ] },
+         "path": { "type": [ "var" ], "typeInfo": [ "str" ] },
+         "searchpath": { "arg": [ "str", "str" ], "ret": ["str!"] },
+      },
+   },
+   {
+
+      "os": {
+         "__attrib": { "type": [ "module" ] },
+         "clock": { "arg": [], "ret": ["real"] },
+         "exit": { "arg": [ "int!" ], "ret": [ "__" ] },
+         "remove": {"arg": [ "str" ], "ret": [ "bool!", "str!"] },
+         "date": {"arg": [ "str!", "stem!" ], "ret": [ "Luaval<stem>!"] },
+         "time": {"arg": [ "stem!" ], "ret": [ "stem!"] },
+         "difftime": {"arg": [ "&stem", "&stem" ], "ret": [ "int"] },
+         "rename": {"arg": [ "str", "str" ], "ret": [ "stem!", "str!"] },
+      },
+   },
+   {
+      "string": {
+         "__attrib": { "type": [ "module" ] },
+         "find": { "arg": [ "str", "str", "int!", "bool!" ], "ret": ["...<int>"] },
+         "byte": { "arg": [ "str", "int!", "int!" ], "ret": ["...<int>"] },
+         "format": { "arg": [ "str", "..." ], "ret": ["str"] },
+         "rep": { "arg": [ "str", "int" ], "ret": ["str"] },
+         "gmatch": { "arg": [ "str", "str" ], "ret": ["Luaval<form>", "stem!", "stem!"] },
+         "gsub": { "arg": [ "str", "str", "str" ], "ret": ["str", "int"] },
+         "sub": { "arg": [ "str", "int", "int!" ], "ret": ["str"] },
+         "dump": { "arg": [ "&Luaval<form>", "bool!" ], "ret": ["str"] },
+         "lower": { "arg": [ "str" ], "ret": ["str"] },
+         "upper": { "arg": [ "str" ], "ret": ["str"] },
+         "reverse": { "arg": [ "str" ], "ret": ["str"] },
+      },
+   },
+   {
+      "str": {
+         "__attrib": { "inplements": [ "Mapping" ] },
+         "find": { "type": [ "method" ], "arg": [ "str", "int!", "bool!" ], "ret": ["...<int>"] },
+         "byte": { "type": [ "method" ], "arg": [ "int!","int!" ], "ret": ["...<int!>"] },
+         "format": { "type": [ "method" ], "arg": [ "&..." ], "ret": ["str"] },
+         "rep": { "type": [ "method" ], "arg": [ "int" ], "ret": ["str"] },
+         "gmatch": { "type": [ "method" ], "arg": [ "str" ], "ret": ["Luaval<form>", "stem!", "stem!"] },
+         "gsub": { "type": [ "method" ], "arg": [ "str", "str" ], "ret": ["str", "int"] },
+         "sub": { "type": [ "method" ], "arg": [ "int", "int!" ], "ret": ["str"] },
+         "lower": { "type": [ "method" ], "arg": [ ], "ret": ["str"] },
+         "upper": { "type": [ "method" ], "arg": [ ], "ret": ["str"] },
+         "reverse": { "type": [ "method" ], "arg": [ ], "ret": ["str"] },
+      },
+   },
+   {
+      "List<T>": {
+         "__less": { "type": [ "formfunc" ],
+                        "arg": [ "T", "T" ], "ret":[ "bool" ] },
+         "insert": { "type": [ "mut" ], "arg": [ "T" ], "ret": [""] },
+         "remove": { "type": [ "mut" ], "arg": [ "int!" ], "ret": ["T!"] },
+         "unpack": { "type": [ "method" ], "arg": [ ], "ret": ["..."] },
+         "sort": { "type": [ "mut" ], "arg": [ "__less!" ], "ret": [] },
+      },
+   },
+   {
+      "Array<T>": {
+         "__less": { "type": [ "formfunc" ],
+                        "arg": [ "T", "T" ], "ret":[ "bool" ] },
+         "unpack": { "type": [ "method" ], "arg": [ ], "ret": ["..."] },
+         "sort": { "type": [ "mut" ], "arg": [ "__less!" ], "ret": [] },
+      },
+   },
+   {
+      "Set<T>": {
+         "add": { "type": [ "mut" ], "arg": [ "T" ], "ret": [] },
+         "del": { "type": [ "mut" ], "arg": [ "T" ], "ret": [] },
+         "has": { "type": [ "method" ], "arg": [ "T" ], "ret": [ "bool" ] },
+         "and": { "type": [ "mut" ], "arg": [ "&Set<T>" ], "ret": [ "Set<T>" ] },
+         "or": { "type": [ "mut" ], "arg": [ "&Set<T>" ], "ret": [ "Set<T>" ] },
+         "sub": { "type": [ "mut" ], "arg": [ "&Set<T>" ], "ret": [ "Set<T>" ] },
+         "clone": { "type": [ "method" ], "arg": [], "ret": [ "Set<T>" ] },
+         "len": { "type": [ "method" ], "arg": [], "ret": [ "int" ] },
+      },
+   },
+   {
+      "math": {
+         "__attrib": { "type": [ "module" ] },
+         "random": { "arg": [ "int!", "int!" ], "ret": ["real"] },
+         "randomseed": { "arg": [ "int" ], "ret": [] },
+      }
+   },
+   {
+      "debug": {
+         "__attrib": { "type": [ "module" ] },
+         "getinfo": { "arg": ["int"], "ret": ["Map<str,stem>!"] },
+         "getlocal": { "arg": ["int", "int"], "ret": ["str!", "stem!"] },
+      },
+   },
+   {
+      "Nilable<_T>": {
+         "val": { "type": [ "method" ], "arg": [ ], "ret": [ "_T!" ] },
+      }
+   }
+] );
+   
+
+fn Builtin.getTypeInfo( mut typeName:str ) : &Ast.TypeInfo {
+
+   switch typeName {
+      case "_T" {
+         return Ast.builtinTypeBox.$boxingType;
+      }
+      case "_T!" {
+         return Ast.builtinTypeBox.$boxingType.$nilableTypeInfo;
+      }
+   }
+
+   fn getTypeInfoFromScope(
+      scope:&Ast.Scope, symbol:str, genTypeList:List<&Ast.TypeInfo> ) :
+   &Ast.TypeInfo!
+   {
+      let! typeInfo = scope.getTypeInfo( symbol, scope, false, .Normal ) {
+         return nil;
+      };
+      let mut validGenType = false;
+      foreach genType in genTypeList {
+         if genType.$kind ~= .Alternate {
+            validGenType = true;
+            break;
+         }
+      }
+      if validGenType {
+         switch typeInfo.$kind {
+            case .Map {
+               if #genTypeList ~= 2 {
+                  Util.err( "illegal map param -- %d" (#genTypeList) );
+               }
+               let keyType = genTypeList[ 1 ];
+               let valType = genTypeList[ 2 ];
+               return self.processInfo.createMap(
+                  .Pub, typeInfo.$parentInfo, keyType, valType, typeInfo.$mutMode );
+            }
+            case .Ext {
+               if #genTypeList ~= 1 {
+                  Util.err( "illegal param -- %d" (#genTypeList) );
+               }
+               match self.processInfo.createLuaval( genTypeList[ 1 ], true ) {
+                  case .OK( workType, _ ) {
+                     if self.ctrl_info.validLuaval {
+                        return workType;
+                     }
+                     // luaval が無効な場合は、元の型を返す。
+                     // self.processInfo.createLuaval() を実行しないと、
+                     // builtin 関数の typeId が変ってしまうので、
+                     // luaval が無効でもダミーで実行する。
+                     return genTypeList[ 1 ];
+                  }
+                  case .Err( mess ) {
+                     Util.err( mess );
+                  }
+               }
+            }
+            case .DDD {
+               if #genTypeList ~= 1 {
+                  Util.err( "illegal map param -- %d" (#genTypeList) );
+               }
+               return self.processInfo.createDDD( genTypeList[ 1 ], true, false );
+            }
+            default {
+               Util.err( "not support type -- %s" (typeInfo.getTxt(##)) );
+            }
+         }
+      }
+
+      
+      return typeInfo;
+   }
+
+   let mut mutable = true;
+   if typeName.find( "^&" ## ) {
+      mutable = false;
+      typeName = typeName.gsub( "^&", "" );
+   }
+   let mut genTypeList:List<&Ast.TypeInfo> = [];
+   let _, endIndex = typeName.find( "[%w%.]+<" ## );
+   let mut suffix = "";
+   when! endIndex {
+      let mut genTypeName = typeName.sub( endIndex + 1## );
+      while true {
+         if! let tailIndex = genTypeName.find( "[,>]" ## ) {
+            let genType = self.getTypeInfo( genTypeName.sub( 1, tailIndex - 1 ) );
+            genTypeList.insert( genType );
+            genTypeName = genTypeName.sub( tailIndex + 1## );
+         }
+         else {
+            suffix = genTypeName.sub( 1## );
+            break;
+         }
+      }
+      typeName = typeName.sub( 1, endIndex - 1 ) .. suffix;
+   }
+
+
+   let mut typeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
+   if typeName.find( "!$" ## ) {
+      let orgTypeName = typeName.gsub( "!$", "" );
+      if! getTypeInfoFromScope( self.transUnitIF.$scope, orgTypeName, genTypeList ) {
+         typeInfo = _exp;
+      }
+      else {
+         Util.err( "not found builtin -- %s" (orgTypeName) );
+      }
+      typeInfo = typeInfo.$nilableTypeInfo;
+   }
+   else {
+      if! getTypeInfoFromScope( self.transUnitIF.$scope, typeName, genTypeList ) {
+         typeInfo = _exp;
+      }
+      else {
+         Util.err( "not found builtin -- %s" (typeName) );
+      }
+   }
+   if mutable {
+      return typeInfo;
+   }
+   typeInfo = self.modifier.createModifier( typeInfo, .IMut );
+   return typeInfo;
+}
+
+fn Builtin.processField( name:str, fieldName:str, info:&Map<str,&List<str>>,
+                         parentInfo:&Ast.TypeInfo ) mut
+{
+   if self.targetLuaVer.isSupport( "%s.%s" (name, fieldName) ) {
+      if info.type$[1] == "var" {
+         let symbol = unwrap self.transUnitIF.$scope.add(
+            self.processInfo, .Var, false, true, fieldName, nil,
+            self.getTypeInfo( unwrap info.typeInfo$[1] ), .Pub,
+            true, .Mut, true, false );
+         //builtinFunc.register( symbol );
+         setupBuiltinTypeInfo( name, fieldName, symbol );
+      }
+      else {
+         let mut argTypeList: List<&Ast.TypeInfo> = [];
+         foreach argType in unwrap info[ "arg" ] {
+            argTypeList.insert( self.getTypeInfo( argType ) );
+         }
+
+         let mut retTypeList: List<&Ast.TypeInfo> = [];
+         foreach retType in unwrap info[ "ret" ] {
+            let retTypeInfo = self.getTypeInfo( retType );
+            retTypeList.insert( retTypeInfo );
+         }
+
+         let funcType = info.type$[1];
+         let mutable;
+
+         let staticFlag;
+         let kind:Ast.TypeInfoKind;
+         let symbolKind:Ast.SymbolKind;
+         let abstractFlag:bool;
+         let accessMode:Ast.AccessMode;
+         switch funcType {
+            case "method", "mut" {
+               staticFlag = false;
+               kind = .Method;
+               symbolKind = .Mtd;
+               abstractFlag = false;
+               accessMode = .Pub;
+               mutable = funcType == "mut";
+            }
+            case "abstract" {
+               staticFlag = false;
+               kind = .Method;
+               symbolKind = .Mtd;
+               abstractFlag = true;
+               accessMode = .Pro;
+               mutable = true;
+            }
+            case "macro" {
+               staticFlag = true;
+               kind = .Macro;
+               symbolKind = .Mac;
+               abstractFlag = false;
+               accessMode = .Pub;
+               mutable = false;
+            }
+            case "formfunc" {
+               staticFlag = true;
+               kind = .FormFunc;
+               symbolKind = .Typ;
+               abstractFlag = false;
+               accessMode = .Pub;
+               mutable = false;
+            }
+            default {
+               staticFlag = true;
+               kind = .Func;
+               symbolKind = .Fun;
+               abstractFlag = false;
+               accessMode = .Pub;
+               mutable = false;
+            }
+         }
+         
+         self.transUnitIF.pushScope( false ## );
+
+         let typeInfo = self.processInfo.createFunc(
+            abstractFlag, true, self.transUnitIF.$scope, kind,
+            parentInfo, false, true, staticFlag, accessMode,
+            fieldName, nil, argTypeList, retTypeList, mutable );
+
+         self.transUnitIF.popScope();
+
+         builtinFunc.$allFuncTypeSet.add( typeInfo );
+
+         Ast.addBuiltin( typeInfo );
+         if typeInfo.$nilableTypeInfo ~= Ast.headTypeInfo {
+            Ast.addBuiltin( typeInfo.$nilableTypeInfo );
+         }
+         let symInfo = unwrap self.transUnitIF.$scope.add(
+            self.processInfo, symbolKind, false, kind == .Func,
+            fieldName, nil, typeInfo, accessMode, staticFlag,
+            mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true, false );
+
+         setupBuiltinTypeInfo( name, fieldName, symInfo );
+      }
+   }
+}
+
+let mut readyBuiltin = false;
+pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
+   if readyBuiltin {
+      return builtinFunc;
+   }
+   readyBuiltin = true;
+
+   let builtInInfo = getBuiltInInfo();
+
+
+   //self.scope = Ast.rootScope;
+
+   let mut builtinModuleName2Scope:Map<str,Ast.Scope> = {};
+
+   let mapType = self.processInfo.createMap(
+      .Pub, Ast.headTypeInfo, Ast.builtinTypeString, Ast.builtinTypeStem, .Mut );
+   self.transUnitIF.$scope.addVar(
+      self.processInfo, .Global, "_ENV", nil, mapType, .IMutRe, true );
+   self.transUnitIF.$scope.addVar(
+      self.processInfo, .Global, "_G", nil, mapType, .IMutRe, true );
+   //self.transUnitIF.$scope.addVar( .Global, "__mod__", nil, Ast.builtinTypeString, .IMut, true );
+   self.transUnitIF.$scope.addVar(
+      self.processInfo, .Global, "__line__", nil, Ast.builtinTypeInt, .IMut, true );
+   //self.transUnitIF.$scope.addVar( .Global, "__func__", nil, Ast.builtinTypeString, false, true );
+
+   fn processCopyAlterList( alterList:List<&Ast.AlternateTypeInfo>,
+                            typeList:&List<&Ast.TypeInfo> )
+   {
+      foreach typeInfo in typeList {
+         alterList.insert( unwrap typeInfo@@@Ast.AlternateTypeInfo );
+      }
+   }
+   
+   foreach builtinClassInfo in builtInInfo {
+      foreach name2FieldInfo, className in builtinClassInfo {
+         let mut name = className;
+         let mut genTypeList:List<&Ast.AlternateTypeInfo> = [];
+
+         switch className {
+            case "List<T>" {
+               name = "List";
+               processCopyAlterList(
+                  genTypeList, Ast.builtinTypeList.$itemTypeInfoList );
+            }
+            case "Array<T>" {
+               name = "Array";
+               processCopyAlterList(
+                  genTypeList, Ast.builtinTypeArray.$itemTypeInfoList );
+            }
+            case "Set<T>" {
+               name = "Set";
+               processCopyAlterList(
+                  genTypeList, Ast.builtinTypeSet.$itemTypeInfoList );
+            }
+            case "Nilable<_T>" {
+               name = "Nilable";
+               processCopyAlterList(
+                  genTypeList, Ast.builtinTypeBox.$itemTypeInfoList );
+            }
+            default {
+               if className.find( "<" ## ) {
+                  name = "";
+                  apply token of className.gmatch( "[^<>,%s]+" ) {
+                     if #name == 0 {
+                        name = token;
+                     }
+                     else {
+                        genTypeList.insert(
+                           self.processInfo.createAlternate(
+                              true, #genTypeList + 1,
+                              token, .Pri, Ast.headTypeInfo ## ) );
+                     }
+                  }
+               }
+            }
+         }
+         let mut parentInfo:&Ast.TypeInfo = Ast.headTypeInfo;
+         if name ~= "" {
+            let mut classKind = TransUnitIF.DeclClassMode.Class;
+            if! let types = name2FieldInfo.__attrib$.type {
+               if #types > 0 {
+                  switch types[ 1 ] {
+                     case "interface" {
+                        classKind = .Interface;
+                     }
+                     case "module" {
+                        classKind = .Module;
+                     }
+                  }
+               }
+            }
+            let mut interfaceList:List<&Ast.TypeInfo> = [];
+            if! name2FieldInfo.__attrib$.inplements {
+               foreach ifname in _exp {
+                  let ifType = self.getTypeInfo( ifname );
+                  interfaceList.insert( ifType );
+               }
+            }
+            switch classKind {
+               case .Class, .Interface {
+                  let declMode;
+                  if classKind == .Class {
+                     declMode = TransUnitIF.DeclClassMode.Class;
+                  } else {
+                     declMode = .Interface;
+                  }
+                  parentInfo = self.transUnitIF.pushClass(
+                     self.processInfo, self.transUnitIF.getLatestPos(),
+                     declMode, false, nil, interfaceList,
+                     genTypeList, true, name, true, .Pub ## );
+                  builtinFunc.registerClass( parentInfo );
+               }
+               case .Module {
+                  parentInfo = self.transUnitIF.pushModule(
+                     self.processInfo, true, name, true );  
+
+                  self.transUnitIF.$scope.$parent.add(
+                     self.processInfo, .Typ , false, false, name, nil,
+                     parentInfo, .Local, true, Ast.MutMode.Mut, true, false );
+               }
+            }
+
+            Ast.addBuiltin( parentInfo );
+            Ast.addBuiltin( parentInfo.$nilableTypeInfo );
+         }
+         if not builtinModuleName2Scope[ name ]
+         {
+            if name ~= "" and self.getTypeInfo( name ) {
+               builtinModuleName2Scope[ name ] = self.transUnitIF.$scope;
+            }
+
+            // typeid が一定になるようにソートする
+            forsort info, fieldName in name2FieldInfo {
+               switch fieldName {
+                  case "__attrib" {
+                  }
+                  default {
+                     self.processField( name, fieldName, info, parentInfo );
+                  }
+               }
+            }
+         }
+         if name ~= "" {
+            self.transUnitIF.popClass();
+         }
+      }
+   }
+
+   // スレッド毎に処理を分ける必要がある builtin 関数を登録する
+   let threadSafeSet =
+       (@
+         builtinFunc.lns_error,
+         builtinFunc.lns_print,
+         builtinFunc.lns_type,
+         builtinFunc.lns_tonumber,
+         builtinFunc.io_open,
+
+         // 以下はとりあえず ok とする
+         builtinFunc.set_has,
+         builtinFunc.set_add
+       );
+   
+   foreach typeInfo in builtinFunc.$allFuncTypeSet {
+      if not threadSafeSet.has( typeInfo ) {
+         builtinFunc.$needThreadingTypes.add( typeInfo );
+      }
+   }
+
+   return builtinFunc;
+}

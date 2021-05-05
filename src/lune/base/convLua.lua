@@ -602,6 +602,7 @@ function convFilter:outputMeta( node )
    self:writeln( "}" )
    
    local importModuleType2Index = {}
+   local importProcessInfo2Index = {}
    local importNameMap = {}
    do
       for typeInfo, moduleInfo in pairs( node:get_importModule2moduleInfo() ) do
@@ -622,6 +623,7 @@ function convFilter:outputMeta( node )
             do
                index = index + 1
                importModuleType2Index[typeInfo] = index
+               importProcessInfo2Index[typeInfo:get_processInfo()] = index
             end
          end
       end
@@ -631,7 +633,7 @@ function convFilter:outputMeta( node )
    
    local typeId2TypeInfo = {}
    do
-      local work = node:get_moduleTypeInfo():get_parentInfo()
+      local work = node:get_moduleTypeInfo()
       while work:get_parentInfo() ~= work do
          typeId2TypeInfo[work:get_typeId()] = work
          work = work:get_parentInfo()
@@ -1133,16 +1135,18 @@ function convFilter:outputMeta( node )
       end
       
       wroteTypeIdSet[typeId]= true
+      
       self:write( string.format( "__typeInfoList[%d] = ", listIndex) )
       listIndex = listIndex + 1
       
       local validChildren = validChildrenSet[typeInfo]
-      if not validChildren then
+      if  nil == validChildren then
+         local _validChildren = validChildren
+      
          validChildren = typeId2TypeInfo
       end
       
-      typeInfo:serialize( self, validChildren )
-      
+      typeInfo:serialize( self, Ast.SerializeInfo.new(importProcessInfo2Index, validChildren) )
    end
    
    for typeId, typeInfo in pairs( self.pubEnumId2EnumTypeInfo ) do
@@ -2016,7 +2020,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _6475 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _4409 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -4235,7 +4239,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3526, function (  )
+   Log.log( Log.Level.Trace, __func__, 3511, function (  )
    
       return string.format( "macro: %s", code)
    end )

@@ -521,11 +521,14 @@ pub fn TransUnit.createAST(
    Log._log2( .Log, "%s start -- %s" (__func__, parser.getStreamName()) );
    
    self.moduleName = unwrap moduleName default "";
-
-   let mut backProcessInfo = self.processInfo;
-   self.processInfo = Ast.getRootProcessInfo();
-   self.registBuiltInScope();
-   self.processInfo = backProcessInfo;;
+   
+   {
+      self.scope = Ast.rootScope;
+      let mut builtin = new Builtin.Builtin(
+         self, self.targetLuaVer, self.ctrl_info );
+      builtinFunc = builtin.registBuiltInScope();
+      self.scope = self.topScope;
+   }
 
    let mut moduleTypeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
    let mut moduleSymbolKind = Ast.SymbolKind.Typ;
@@ -534,7 +537,7 @@ pub fn TransUnit.createAST(
       apply txt of string.gmatch(
          frontInterface.getLuaModulePath( moduleName ), '[^%.]+' )
       {
-         moduleTypeInfo = self.pushModule( false, txt, true );
+         moduleTypeInfo = self.pushModule( self.processInfo, false, txt, true );
       }
    }
    self.moduleScope = self.scope;
@@ -611,7 +614,8 @@ pub fn TransUnit.createAST(
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
          children, self.moduleScope, self.macroCtrl.$useModuleMacroSet,
          self.moduleId, self.processInfo, moduleTypeInfo, nil, self.helperInfo,
-         self.nodeManager, self.importModule2ModuleInfo,
+         self.nodeManager,
+         unwrap self.importCtrl$.$importModule2ModuleInfo default {},
          self.macroCtrl.$typeId2MacroInfo, self.typeId2ClassMap );
       ast = rootNode;
       if! self.provideNode {
@@ -950,19 +954,21 @@ Map<&Ast.TypeInfo,&Ast.TypeInfo>, Nodes.ClassInheritInfo
       ifType.$scope$.filterTypeInfoField$(
          true, self.scope, self.scopeAccess,
          fn ( symbolInfo:&Ast.SymbolInfo ): bool {
-            if! let ifFuncType = symbol2TypeInfo[ symbolInfo.$name ] {
-               let ret, mess = ifFuncType.canEvalWith(
-                  self.processInfo, symbolInfo.$typeInfo, .SetOp, ifAlt2typeMap );
-               if not ret {
-                  self.addErrMess(
-                     firstPos,
-                     "mismatch method type -- %s.%s, %s.%s\n%s"
-                     (symbolInfo.$typeInfo.$parentInfo.getTxt(##), symbolInfo.$name,
-                       ifFuncType.$parentInfo.getTxt(##), ifFuncType.getTxt(##), mess));
+            if symbolInfo.$kind == .Mtd {
+               if! let ifFuncType = symbol2TypeInfo[ symbolInfo.$name ] {
+                  let ret, mess = ifFuncType.canEvalWith(
+                     self.processInfo, symbolInfo.$typeInfo, .SetOp, ifAlt2typeMap );
+                  if not ret {
+                     self.addErrMess(
+                        firstPos,
+                        "mismatch method type -- %s.%s, %s.%s\n%s"
+                        (symbolInfo.$typeInfo.$parentInfo.getTxt(##), symbolInfo.$name,
+                          ifFuncType.$parentInfo.getTxt(##), ifFuncType.getTxt(##), mess));
+                  }
                }
-            }
-            else {
-               symbol2TypeInfo[ symbolInfo.$name ] = symbolInfo.$typeInfo;
+               else {
+                  symbol2TypeInfo[ symbolInfo.$name ] = symbolInfo.$typeInfo;
+               }
             }
             return true;
          } );
@@ -1039,7 +1045,7 @@ fn TransUnit.analyzePushClass(
       }
       case .Class, .Interface {
          classTypeInfo = self.pushClass(
-            firstToken.pos, mode, abstractFlag, baseTypeInfo,
+            self.processInfo, firstToken.pos, mode, abstractFlag, baseTypeInfo,
             interfaceList, altTypeList, false, name.txt, allowMultiple, accessMode ## );
       }
    }

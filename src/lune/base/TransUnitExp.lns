@@ -1941,7 +1941,8 @@ fn TransUnit.analyzeAccessClassField(
       foreach val, name in classScope.$symbol2SymbolInfoMap {
          Util.log( "debug: %s, %s" ( name, val ) );
       }
-      self.error( "not found field typeInfo: %s.%s" ( className, token.txt ) );
+      self.error( "not found field typeInfo: %s.%s -- %s"
+                  ( className, token.txt, classTypeInfo.$kind.$_txt ) );
    }
    let typeInfo = unwrap fieldTypeInfo default Ast.builtinTypeNone;
 

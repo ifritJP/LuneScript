@@ -1,0 +1,70 @@
+/*
+MIT License
+
+Copyright (c) 2018, 2019 ifritJP
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+import lune.base.Parser;
+import lune.base.Ast;
+import lune.base.Nodes;
+
+pub enum DeclClassMode {
+   Class,
+   Interface,
+   Module,
+   LazyModule,
+}
+
+pub class Modifier {
+   /** true の場合は mut 制御が有効 */
+   let mut validMutControl: bool {non,pub};
+   let processInfo:Ast.ProcessInfo;
+   
+   pub fn createModifier(
+      typeInfo:&Ast.TypeInfo, mutMode: Ast.MutMode ) mut : &Ast.TypeInfo
+   {
+      if not self.validMutControl {
+         return typeInfo;
+      }
+      return self.processInfo.createModifier( typeInfo, mutMode );
+   }
+}
+
+pub interface TransUnitIF {
+   pub fn get_scope() mut : Ast.Scope;
+   pub fn error( mess: str ) mut : __;
+   pub fn pushScope( classFlag: bool, baseInfo: &Ast.TypeInfo!,
+                     interfaceList: &List<&Ast.TypeInfo>! ) mut: Ast.Scope;
+   pub fn popScope() mut;
+   pub fn pushModule( processInfo:Ast.ProcessInfo,
+                      externalFlag: bool, name:str, mutable: bool ) mut : &Ast.TypeInfo;
+   pub fn popModule() mut;
+   pub fn pushClassScope( errPos:&Parser.Position, classTypeInfo:&Ast.TypeInfo ) mut;
+   pub fn pushClass(
+      processInfo:Ast.ProcessInfo,
+      errPos:&Parser.Position, mode:DeclClassMode, abstractFlag: bool,
+      baseInfo: &Ast.TypeInfo!, interfaceList: &List<&Ast.TypeInfo>!,
+      genTypeList: &List<&Ast.AlternateTypeInfo>!, externalFlag: bool, name:str,
+      allowMultiple:bool, accessMode:Ast.AccessMode,
+      defNamespace: Nodes.NamespaceInfo! ) mut : &Ast.TypeInfo;
+   pub fn popClass() mut;
+   pub fn getLatestPos(): &Parser.Position;
+}

@@ -341,6 +341,7 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
    self.writeln( "}" );
 
    let mut importModuleType2Index:Map<&Ast.TypeInfo,int> = {};
+   let mut importProcessInfo2Index:Map<&Ast.ProcessInfo,int> = {};
    let mut importNameMap:Map<str,&Ast.TypeInfo> = {};
    {
       // foreach importName, typeInfo in self.typeInfo2ModuleName {
@@ -355,12 +356,13 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
       forsort typeInfo in importNameMap {
          index = index + 1;
          importModuleType2Index[ typeInfo ] = index;
+         importProcessInfo2Index[ typeInfo.$processInfo ] = index;
       }
    }
 
    let mut typeId2TypeInfo: Map<&Ast.IdInfo,&Ast.TypeInfo> = {};
    {
-      let mut work = node.$moduleTypeInfo.$parentInfo;
+      let mut work = node.$moduleTypeInfo;
       while work.$parentInfo ~= work {
          typeId2TypeInfo[ work.$typeId ] = work;
          work = work.$parentInfo;
@@ -759,21 +761,6 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
          return;
       }
       
-      // let mut force = false;
-      // if Ast.isExtId( typeInfo ) {
-
-      //    let moduleTypeInfo = typeInfo.getModule();
-      //    // if! let moduleInfo = node.$importModule2moduleInfo[ moduleTypeInfo ] {
-      //    //    if moduleInfo.$localTypeInfo2importIdMap[ typeInfo ] {
-      //    //       return;
-      //    //    }
-      //    // }
-      //    if moduleTypeInfo == self.moduleTypeInfo {
-      //       force = true;
-      //    }
-      // }
-
-
       switch typeInfo.$kind {
          case .Class, .IF {
             switch typeInfo.$accessMode {
@@ -792,17 +779,15 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
          return;
       }
       wroteTypeIdSet.add( typeId );
-      // if force or checkExportTypeInfo( typeInfo ) {
-         self.write( "__typeInfoList[%d] = " (listIndex) );
-         listIndex = listIndex + 1;
 
-         let mut validChildren = validChildrenSet[ typeInfo ];
-         if not validChildren {
-            validChildren = typeId2TypeInfo;
-         }
-         typeInfo.serialize( self, validChildren );
-         //self.writeln( "-- %s" (typeInfo.getTxt(##) ) );
-      // }
+      self.write( "__typeInfoList[%d] = " (listIndex) );
+      listIndex = listIndex + 1;
+
+      let! validChildren = validChildrenSet[ typeInfo ] {
+         validChildren = typeId2TypeInfo;
+      };
+      typeInfo.serialize( self, new Ast.SerializeInfo(
+         importProcessInfo2Index, validChildren ) );
    }
 
    foreach typeInfo, typeId in self.pubEnumId2EnumTypeInfo {

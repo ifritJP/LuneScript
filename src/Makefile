@@ -211,6 +211,9 @@ LNS_SRCS += base/GoMod
 LNS_SRCS += base/Nodes
 LNS_SRCS += base/Formatter
 LNS_SRCS += base/Macro
+LNS_SRCS += base/TransUnitIF
+LNS_SRCS += base/Builtin
+LNS_SRCS += base/Import
 LNS_SRCS += base/TransUnit
 LNS_SRCS += base/DependLuaOnLns
 LNS_SRCS += base/convLua
@@ -254,6 +257,9 @@ define selfhost_buildOp
 	$(call $5,$1,$2,$3,$4,base/Nodes)
 	$(call $5,$1,$2,$3,$4,base/Formatter)
 	$(call $5,$1,$2,$3,$4,base/Macro)
+	$(call $5,$1,$2,$3,$4,base/TransUnitIF)
+	$(call $5,$1,$2,$3,$4,base/Builtin)
+	$(call $5,$1,$2,$3,$4,base/Import)
 	$(call $5,$1,$2,$3,$4,base/TransUnit)
 	$(call $5,$1,$2,$3,$4,base/DependLuaOnLns)
 	$(call $5,$1,$2,$3,$4,base/convLua)
@@ -1593,6 +1599,9 @@ go-build:
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Nodes,./build, --package lnsc)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Formatter,./build, --package lnsc)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Macro,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/TransUnitIF,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Builtin,./build, --package lnsc)
+	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Import,./build, --package lnsc)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/TransUnit,./build, --package lnsc)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convLua,./build, --package lnsc)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/dumpNode,./build, --package lnsc)

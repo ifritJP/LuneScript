@@ -1228,6 +1228,38 @@ CanEvalType._val2NameMap[6] = 'Logical'
 CanEvalType.__allList[7] = CanEvalType.Logical
 
 
+local SerializeInfo = {}
+_moduleObj.SerializeInfo = SerializeInfo
+function SerializeInfo:isValidChildren( idInfo )
+
+   return not self.validChildrenMap[idInfo]
+end
+function SerializeInfo:serializeId( idInfo )
+
+   local processId = _lune.unwrap( self.processInfo2Id[idInfo.processInfo])
+   return string.format( "{ id = %d, mod = %d }", idInfo.id, processId)
+end
+function SerializeInfo.setmeta( obj )
+  setmetatable( obj, { __index = SerializeInfo  } )
+end
+function SerializeInfo.new( processInfo2Id, validChildrenMap )
+   local obj = {}
+   SerializeInfo.setmeta( obj )
+   if obj.__init then
+      obj:__init( processInfo2Id, validChildrenMap )
+   end
+   return obj
+end
+function SerializeInfo:__init( processInfo2Id, validChildrenMap )
+
+   self.processInfo2Id = processInfo2Id
+   self.validChildrenMap = validChildrenMap
+end
+function SerializeInfo:get_validChildrenMap()
+   return self.validChildrenMap
+end
+
+
 _moduleObj.TypeInfo = TypeInfo
 function TypeInfo:getProcessInfo(  )
 
@@ -1309,7 +1341,7 @@ function TypeInfo:get_abstractFlag(  )
 
    return false
 end
-function TypeInfo:serialize( stream, validChildrenSet )
+function TypeInfo:serialize( stream, serializeInfo )
 
    return 
 end
@@ -2129,7 +2161,7 @@ function NilableTypeInfo:get_display_stirng(  )
 
    return self:get_display_stirng_with( self:get_rawTxt(), nil )
 end
-function NilableTypeInfo:serialize( stream, validChildrenSet )
+function NilableTypeInfo:serialize( stream, serializeInfo )
 
    stream:write( string.format( '{ skind = %d, typeId = %d, orgTypeId = %d }\n', SerializeKind.Nilable, self.typeId.id, self.nonnilableType:get_typeId().id) )
 end
@@ -2371,7 +2403,7 @@ function AliasTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
 
    return self:getTxtWithRaw( self.rawTxt, typeNameCtrl, importInfo, localFlag )
 end
-function AliasTypeInfo:serialize( stream, validChildrenSet )
+function AliasTypeInfo:serialize( stream, serializeInfo )
 
    local parentId = self:getParentId(  )
    stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, rawTxt = %q, srcTypeId = %d }\n', SerializeKind.Alias, parentId.id, self.typeId.id, self.rawTxt, self.aliasSrcTypeInfo:get_typeId().id) )
@@ -3804,7 +3836,7 @@ function AlternateTypeInfo:get_mutMode(  )
 
    return MutMode.Mut
 end
-function AlternateTypeInfo:serialize( stream, validChildrenSet )
+function AlternateTypeInfo:serialize( stream, serializeInfo )
 
    local parentId = self:getParentId(  )
    stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, txt = %q, ', SerializeKind.Alternate, parentId.id, self.typeId.id, self.txt) .. string.format( 'accessMode = %d, baseId = %d, ', self.accessMode, self:get_baseId().id) .. string.format( 'belongClassFlag = %s, altIndex = %d, ', tostring( self.belongClassFlag), self.altIndex) )
@@ -3907,7 +3939,7 @@ function BoxTypeInfo:get_display_stirng_with( raw, alt2type )
 
    return string.format( "Nilable<%s>", self.boxingType:get_display_stirng_with( raw, alt2type ))
 end
-function BoxTypeInfo:serialize( stream, validChildrenSet )
+function BoxTypeInfo:serialize( stream, serializeInfo )
 
    stream:write( string.format( '{ skind = %d, typeId = %d, accessMode = %d, boxingType = %d }\n', SerializeKind.Box, self.typeId.id, self.accessMode, self.boxingType:get_typeId().id) )
 end
@@ -4263,7 +4295,7 @@ function GenericTypeInfo:equals( processInfo, other, alt2type, checkModifer )
    
    return true
 end
-function GenericTypeInfo:serialize( stream, validChildrenSet )
+function GenericTypeInfo:serialize( stream, serializeInfo )
 
    stream:write( string.format( '{ skind = %d, typeId = %d, genSrcTypeId = %d, genTypeList = {', SerializeKind.Generic, self.typeId.id, self.genSrcTypeInfo:get_typeId().id) )
    local count = 0
@@ -4482,7 +4514,7 @@ function ModifierTypeInfo:get_display_stirng(  )
 
    return self:get_display_stirng_with( self:get_rawTxt(), nil )
 end
-function ModifierTypeInfo:serialize( stream, validChildrenSet )
+function ModifierTypeInfo:serialize( stream, serializeInfo )
 
    stream:write( string.format( '{ skind = %d, typeId = %d, srcTypeId = %d, mutMode = %d }\n', SerializeKind.Modifier, self.typeId.id, self.srcTypeInfo:get_typeId().id, self.mutMode) )
 end
@@ -4760,31 +4792,11 @@ function ModuleTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
 
    return false, nil
 end
-function ModuleTypeInfo:serialize( stream, validChildrenSet )
+function ModuleTypeInfo:serialize( stream, serializeInfo )
 
    local txt = string.format( "{ skind = %d, parentId = %d, typeId = %d, txt = '%s', ", SerializeKind.Module, self:getParentId(  ).id, self.typeId.id, self.rawTxt)
    stream:write( txt .. '\n' )
-   
-   stream:write( "children = {" )
-   
-   local set = validChildrenSet
-   if  nil == set then
-      local _set = set
-   
-      set = {}
-   end
-   
-   if validChildrenSet then
-      for __index, child in ipairs( self:get_children() ) do
-         if set[child:get_typeId()] and (child:get_accessMode() == AccessMode.Pub or child:get_accessMode() == AccessMode.Global ) then
-            stream:write( string.format( "%d, ", child:get_typeId().id) )
-         end
-         
-      end
-      
-   end
-   
-   stream:write( "} }\n" )
+   stream:write( "}\n" )
 end
 function ModuleTypeInfo.setmeta( obj )
   setmetatable( obj, { __index = ModuleTypeInfo  } )
@@ -5457,7 +5469,7 @@ function NormalTypeInfo:get_display_stirng(  )
 
    return self:get_display_stirng_with( self:get_rawTxt(), nil )
 end
-function NormalTypeInfo:serialize( stream, validChildrenSet )
+function NormalTypeInfo:serialize( stream, serializeInfo )
 
    if self.typeId.id == _moduleObj.rootTypeId then
       return 
@@ -5481,15 +5493,8 @@ function NormalTypeInfo:serialize( stream, validChildrenSet )
    
    
    local children = {}
-   local set = validChildrenSet
-   if  nil == set then
-      local _set = set
-   
-      set = {}
-   end
-   
    for __index, child in ipairs( self:get_children() ) do
-      if set[child:get_typeId()] then
+      if serializeInfo:isValidChildren( child:get_typeId() ) then
          table.insert( children, child )
       end
       
@@ -6635,7 +6640,7 @@ function DDDTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
 
    return self.typeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
 end
-function DDDTypeInfo:serialize( stream, validChildrenSet )
+function DDDTypeInfo:serialize( stream, serializeInfo )
 
    stream:write( string.format( '{ skind=%d, typeId = %d, itemTypeId = %d, parentId = %d, extTypeFlag = %s }\n', SerializeKind.DDD, self.typeId.id, self.typeInfo:get_typeId().id, _moduleObj.headTypeInfo:get_typeId().id, tostring( self:get_extTypeFlag())) )
 end
@@ -7254,7 +7259,7 @@ function AbbrTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
 
    return false, nil
 end
-function AbbrTypeInfo:serialize( stream, validChildrenSet )
+function AbbrTypeInfo:serialize( stream, serializeInfo )
 
    Util.err( "illegal call" )
 end
@@ -7377,7 +7382,7 @@ function ExtTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
    return true, nil
    
 end
-function ExtTypeInfo:serialize( stream, validChildrenSet )
+function ExtTypeInfo:serialize( stream, serializeInfo )
 
    stream:write( string.format( '{ skind = %d, typeId = %d, extedTypeId = %d }\n', SerializeKind.Ext, self.typeId.id, self.extedType:get_typeId().id) )
 end
@@ -7958,7 +7963,7 @@ function ProcessInfo:createEnum( scope, parentInfo, externalFlag, accessMode, en
 end
 
 
-function EnumTypeInfo:serialize( stream, validChildrenSet )
+function EnumTypeInfo:serialize( stream, serializeInfo )
 
    local txt = string.format( [==[{ skind = %d, parentId = %d, typeId = %d, txt = '%s',
 accessMode = %d, kind = %d, valTypeId = %d, ]==], SerializeKind.Enum, self:getParentId(  ).id, self.typeId.id, self.rawTxt, self.accessMode, TypeInfoKind.Enum, self.valTypeInfo:get_typeId().id)
@@ -8017,7 +8022,7 @@ function ProcessInfo:createAlge( scope, parentInfo, externalFlag, accessMode, al
 end
 
 
-function AlgeTypeInfo:serialize( stream, validChildrenSet )
+function AlgeTypeInfo:serialize( stream, serializeInfo )
 
    local txt = string.format( [==[{ skind = %d, parentId = %d, typeId = %d, txt = '%s',
 accessMode = %d, kind = %d, ]==], SerializeKind.Alge, self:getParentId(  ).id, self.typeId.id, self.rawTxt, self.accessMode, TypeInfoKind.Alge)
