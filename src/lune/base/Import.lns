@@ -486,7 +486,7 @@ class _TypeInfoNormal extend _TypeInfo {
                        parentScope.$ownerTypeInfo$.$typeId$.id or -1 ); } );
             
                
-               let baseScope = unwrap param.typeId2Scope[ self.baseId.id ];
+               let baseScope = unwrap Ast.getScope( baseInfo );
                let mut ifScopeList:List<Ast.Scope> = [];
                foreach ifType in interfaceList {
                   ifScopeList.insert( unwrap ifType.$scope );

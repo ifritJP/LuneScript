@@ -1228,7 +1228,7 @@ function _TypeInfoNormal:createTypeInfo( param )
             end )
             
             
-            local baseScope = _lune.unwrap( param.typeId2Scope[self.baseId.id])
+            local baseScope = _lune.unwrap( Ast.getScope( baseInfo ))
             local ifScopeList = {}
             for __index, ifType in ipairs( interfaceList ) do
                table.insert( ifScopeList, _lune.unwrap( ifType:get_scope()) )
