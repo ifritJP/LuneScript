@@ -13,7 +13,7 @@ var GoMod_BlockKindList_ = NewLnsList( []LnsAny {
   GoMod_BlockKind__Require,
   GoMod_BlockKind__Replace,
 })
-func GoMod_BlockKind_get__allList_1122_() *LnsList{
+func GoMod_BlockKind_get__allList_1086_() *LnsList{
     return GoMod_BlockKindList_
 }
 var GoMod_BlockKindMap_ = map[LnsInt]string {
@@ -21,7 +21,7 @@ var GoMod_BlockKindMap_ = map[LnsInt]string {
   GoMod_BlockKind__Replace: "BlockKind.Replace",
   GoMod_BlockKind__Require: "BlockKind.Require",
 }
-func GoMod_BlockKind__from_1115_(arg1 LnsInt) LnsAny{
+func GoMod_BlockKind__from_1081_(arg1 LnsInt) LnsAny{
     if _, ok := GoMod_BlockKindMap_[arg1]; ok { return arg1 }
     return nil
 }
@@ -67,7 +67,7 @@ func GoMod_convExp1024(arg1 []LnsAny) string {
 }
 
 // 191: decl @lune.@base.@GoMod.getReplace
-func GoMod_getReplace_1132_(_map *LnsMap,tokenList *LnsList,modIndex LnsInt) {
+func GoMod_getReplace_1093_(_map *LnsMap,tokenList *LnsList,modIndex LnsInt) {
     var prevArrow bool
     prevArrow = false
     for _, _token := range( tokenList.Items ) {
@@ -123,7 +123,7 @@ func GoMod_getGoMap() *GoMod_ModInfo {
                         inBlock = GoMod_BlockKind__None
                         
                     } else { 
-                        GoMod_getReplace_1132_(replaceMap, tokenList, 1)
+                        GoMod_getReplace_1093_(replaceMap, tokenList, 1)
                     }
                 } else if _switch1230 == GoMod_BlockKind__None {
                     if Lns_isCondTrue( Lns_car(Lns_getVM().String_find(line,"^module%s+", nil, nil))){
@@ -137,7 +137,7 @@ func GoMod_getGoMap() *GoMod_ModInfo {
                         inBlock = GoMod_BlockKind__Require
                         
                     } else if Lns_isCondTrue( Lns_car(Lns_getVM().String_find(line,"^replace%s+[^%(]", nil, nil))){
-                        GoMod_getReplace_1132_(replaceMap, tokenList, 2)
+                        GoMod_getReplace_1093_(replaceMap, tokenList, 2)
                     } else if Lns_isCondTrue( Lns_car(Lns_getVM().String_find(line,"^replace%s+%(", nil, nil))){
                         inBlock = GoMod_BlockKind__Replace
                         

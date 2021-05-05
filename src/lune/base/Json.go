@@ -4,12 +4,12 @@ import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_Json bool
 var Json__mod__ string
 // 4: decl @lune.@base.@Json.getRawTxt
-func Json_getRawTxt_1007_(token *Types_Token) string {
+func Json_getRawTxt_1004_(token *Types_Token) string {
     return Lns_getVM().String_sub(token.Txt,2, -2)
 }
 
 // 8: decl @lune.@base.@Json.getVal
-func Json_getVal_1010_(parser *Parser_DefaultPushbackParser)(LnsAny, bool) {
+func Json_getVal_1006_(parser *Parser_DefaultPushbackParser)(LnsAny, bool) {
     var token *Types_Token
     token = parser.FP.GetTokenNoErr()
     if _switch428 := token.Kind; _switch428 == Types_TokenKind__Dlmt {
@@ -40,11 +40,11 @@ func Json_getVal_1010_(parser *Parser_DefaultPushbackParser)(LnsAny, bool) {
                 }
                 var val LnsAny
                 var ok bool
-                val,ok = Json_getVal_1010_(parser)
+                val,ok = Json_getVal_1006_(parser)
                 if Lns_op_not(ok){
                     return nil, false
                 }
-                _map.Set(Json_getRawTxt_1007_(key),val)
+                _map.Set(Json_getRawTxt_1004_(key),val)
             }
         } else if _switch293 == "[" {
             var list *LnsList
@@ -62,7 +62,7 @@ func Json_getVal_1010_(parser *Parser_DefaultPushbackParser)(LnsAny, bool) {
                 }
                 var val LnsAny
                 var ok bool
-                val,ok = Json_getVal_1010_(parser)
+                val,ok = Json_getVal_1006_(parser)
                 if Lns_op_not(ok){
                     return nil, false
                 }
@@ -97,7 +97,7 @@ func Json_getVal_1010_(parser *Parser_DefaultPushbackParser)(LnsAny, bool) {
         }
         return num, true
     } else if _switch428 == Types_TokenKind__Str {
-        return Json_getRawTxt_1007_(token), true
+        return Json_getRawTxt_1004_(token), true
     } else if _switch428 == Types_TokenKind__Kywd {
         if _switch420 := token.Txt; _switch420 == "true" {
             return true, true
@@ -119,7 +119,7 @@ func Json_fromStr(txt string)(LnsAny, LnsAny) {
     parser = NewParser_DefaultPushbackParser(&NewParser_StreamParser(stream.FP, "json", false, nil).Parser_Parser)
     var val LnsAny
     var ok bool
-    val,ok = Json_getVal_1010_(parser)
+    val,ok = Json_getVal_1006_(parser)
     if Lns_op_not(ok){
         return nil, parser.FP.GetLastPos()
     }
@@ -127,7 +127,7 @@ func Json_fromStr(txt string)(LnsAny, LnsAny) {
 }
 
 // 131: decl @lune.@base.@Json.lenMap
-func _lenMap_1028_(_map LnsAny) LnsInt {
+func _lenMap_1018_(_map LnsAny) LnsInt {
     if _map != nil{
         map_257 := _map
         var count LnsInt

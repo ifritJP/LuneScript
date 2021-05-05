@@ -16,7 +16,7 @@ func glueFilter_convExp1553(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // 67: decl @lune.@base.@glueFilter.getDeclFuncInfo
-func glueFilter_getDeclFuncInfo_1028_(node *Nodes_Node) *Nodes_DeclFuncInfo {
+func glueFilter_getDeclFuncInfo_1019_(node *Nodes_Node) *Nodes_DeclFuncInfo {
     {
         _work := Nodes_DeclConstrNodeDownCastF(node.FP)
         if !Lns_IsNil( _work ) {
@@ -51,7 +51,7 @@ func glueFilter_getDeclFuncInfo_1028_(node *Nodes_Node) *Nodes_DeclFuncInfo {
 }
 
 // 85: decl @lune.@base.@glueFilter.getFuncName
-func glueFilter_getFuncName_1034_(name string) string {
+func glueFilter_getFuncName_1024_(name string) string {
     if name == "__free"{
         return "__gc"
     }
@@ -171,7 +171,7 @@ func (self *glueFilter_glueGenerator) getArgInfo(argNode *Nodes_Node)(string, st
 // 92: decl @lune.@base.@glueFilter.glueGenerator.outputPrototype
 func (self *glueFilter_glueGenerator) outputPrototype(node *Nodes_Node) {
     var name string
-    name = glueFilter_getFuncName_1034_(node.FP.Get_expType().FP.Get_rawTxt())
+    name = glueFilter_getFuncName_1024_(node.FP.Get_expType().FP.Get_rawTxt())
     self.FP.write(Lns_getVM().String_format("static int lns_glue_%s( lua_State * pLua )", []LnsAny{name}))
 }
 
@@ -179,9 +179,9 @@ func (self *glueFilter_glueGenerator) outputPrototype(node *Nodes_Node) {
 func (self *glueFilter_glueGenerator) outputUserPrototype(node *Nodes_Node,gluePrefix string) {
     var expType *Ast_TypeInfo
     expType = node.FP.Get_expType()
-    self.FP.writeHeader(Lns_getVM().String_format("extern int %s%s( lua_State * pLua", []LnsAny{gluePrefix, glueFilter_getFuncName_1034_(expType.FP.Get_rawTxt())}))
+    self.FP.writeHeader(Lns_getVM().String_format("extern int %s%s( lua_State * pLua", []LnsAny{gluePrefix, glueFilter_getFuncName_1024_(expType.FP.Get_rawTxt())}))
     var declInfo *Nodes_DeclFuncInfo
-    declInfo = glueFilter_getDeclFuncInfo_1028_(node)
+    declInfo = glueFilter_getDeclFuncInfo_1019_(node)
     for _, _argNode := range( declInfo.FP.Get_argList().Items ) {
         argNode := _argNode.(Nodes_NodeDownCast).ToNodes_Node()
         var typeTxt string
@@ -223,11 +223,11 @@ func (self *glueFilter_glueGenerator) outputFuncReg(symbolName string,methodNode
     for _, _node := range( methodNodeList.Items ) {
         node := _node.(Nodes_NodeDownCast).ToNodes_Node()
         {
-            _nameToken := glueFilter_getDeclFuncInfo_1028_(node).FP.Get_name()
+            _nameToken := glueFilter_getDeclFuncInfo_1019_(node).FP.Get_name()
             if !Lns_IsNil( _nameToken ) {
                 nameToken := _nameToken.(*Types_Token)
                 var name string
-                name = glueFilter_getFuncName_1034_(nameToken.Txt)
+                name = glueFilter_getFuncName_1024_(nameToken.Txt)
                 self.FP.write(Lns_getVM().String_format("  { \"%s\", lns_glue_%s },\n", []LnsAny{name, name}))
             }
         }
@@ -244,13 +244,13 @@ func (self *glueFilter_glueGenerator) outputCommonFunc(moduleSymbolFull string) 
 // 227: decl @lune.@base.@glueFilter.glueGenerator.outputMethod
 func (self *glueFilter_glueGenerator) outputMethod(node *Nodes_Node,gluePrefix string) {
     var declInfo *Nodes_DeclFuncInfo
-    declInfo = glueFilter_getDeclFuncInfo_1028_(node)
+    declInfo = glueFilter_getDeclFuncInfo_1019_(node)
     var name string
     {
         __exp := declInfo.FP.Get_name()
         if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Types_Token)
-            name = gluePrefix + glueFilter_getFuncName_1034_(_exp.Txt)
+            name = gluePrefix + glueFilter_getFuncName_1024_(_exp.Txt)
             
         } else {
             return 

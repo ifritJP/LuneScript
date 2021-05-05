@@ -582,9 +582,9 @@ function _TypeInfoAlias:createTypeInfo( param )
    local srcTypeInfo = _lune.unwrap( param:getTypeInfo( self.srcTypeId.id ))
    local newTypeInfo = param.processInfo:createAlias( param.processInfo, self.rawTxt, true, Ast.AccessMode.Pub, param.moduleTypeInfo, srcTypeInfo )
    param.typeId2TypeInfo[self.typeId] = newTypeInfo
-   local _3702 = param:getTypeInfo( self.parentId )
-   if  nil == _3702 then
-      local __3702 = _3702
+   local _3700 = param:getTypeInfo( self.parentId )
+   if  nil == _3700 then
+      local __3700 = _3700
    
       return nil, string.format( "%s: not found parentInfo %d %s", __func__, self.parentId, self.rawTxt)
    end
@@ -1720,7 +1720,7 @@ function Import:processImport( modulePath, depth )
          do
             if dependInfo['use'] then
                local _
-               local _4052, metaTypeId2TypeInfoMap = self:processImport( dependName, depth + 1 )
+               local _4050, metaTypeId2TypeInfoMap = self:processImport( dependName, depth + 1 )
                local typeId = math.floor((_lune.unwrap( dependInfo['typeId']) ))
                dependLibId2DependInfo[typeId] = DependModuleInfo.new(typeId, metaTypeId2TypeInfoMap)
             end
@@ -1760,7 +1760,7 @@ function Import:processImport( modulePath, depth )
       moduleTypeInfo = self.transUnitIF:pushModule( self.processInfo, true, moduleName, mutable )
    end
    
-   for __index, _4070 in ipairs( nameList ) do
+   for __index, _4068 in ipairs( nameList ) do
       self.transUnitIF:popModule(  )
    end
    
@@ -2078,7 +2078,7 @@ function Import:processImport( modulePath, depth )
    end
    
    
-   for __index, _4209 in ipairs( nameList ) do
+   for __index, _4207 in ipairs( nameList ) do
       self.transUnitIF:popModule(  )
    end
    

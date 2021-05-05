@@ -29,15 +29,8 @@ import lune.base.Log;
 import lune.base.Types;
 
 pub class IdProvider {
-   let mut id:int {pub};
+   let mut id:int;
    let maxId:int;
-
-   pub fn increment() mut {
-      self.id = self.id + 1;
-      if self.id >= self.maxId {
-         Util.err( "id is over" );
-      }
-   }
 
    pub fn getNewId() mut : int {
       self.id = self.id + 1;
@@ -48,6 +41,47 @@ pub class IdProvider {
    }
 }
 pub proto class TypeInfo2Map;
+
+pub enum TypeInfoKind {
+   Root,
+   Macro,
+   Prim,
+   List,
+   Array,
+   Map,
+   Class,
+   IF,
+   Func,
+   Method,
+   Nilable,
+   Enum,
+   Module,
+   Stem,
+   Alge,
+   /** ... */
+   DDD,
+   /** 省略 ## */
+   Abbr,
+   Set,
+   /** generics の型パラメータ */
+   Alternate,
+   Box,
+   CanEvalCtrl,
+   Etc,
+   Form,
+   FormFunc,
+   /** Lua などの外部モジュール */
+   Ext,
+   /**
+   * リストなどの型を複合する場合の型。共通ののインタフェースを持つ。
+   * この型は export 対象外。
+   * getCommonType() のためだけで使用。他の処理で使用したときは動作を保証しない。
+   */ 
+   CombineIF,
+   // module宣言
+   ExtModule,
+}
+
 
 let extStartId = 100000;
 let extMaxId = 10000000;
@@ -256,46 +290,6 @@ pub enum SerializeKind {
    Generic,
    Box,
    Ext,
-}
-
-pub enum TypeInfoKind {
-   Root,
-   Macro,
-   Prim,
-   List,
-   Array,
-   Map,
-   Class,
-   IF,
-   Func,
-   Method,
-   Nilable,
-   Enum,
-   Module,
-   Stem,
-   Alge,
-   /** ... */
-   DDD,
-   /** 省略 ## */
-   Abbr,
-   Set,
-   /** generics の型パラメータ */
-   Alternate,
-   Box,
-   CanEvalCtrl,
-   Etc,
-   Form,
-   FormFunc,
-   /** Lua などの外部モジュール */
-   Ext,
-   /**
-   * リストなどの型を複合する場合の型。共通ののインタフェースを持つ。
-   * この型は export 対象外。
-   * getCommonType() のためだけで使用。他の処理で使用したときは動作を保証しない。
-   */ 
-   CombineIF,
-   // module宣言
-   ExtModule,
 }
 
 pub fn isBuiltin( typeId: int ) : bool {
@@ -3365,7 +3359,7 @@ pub class ModuleTypeInfo extend TypeInfo {
          _exp.addChildren( self );
       }
 
-      processInfo.$idProv.increment();
+      //processInfo.$idProv.increment();
 
 
       scope.set_ownerTypeInfo( self );
@@ -3779,7 +3773,7 @@ pub class NormalTypeInfo extend TypeInfo {
       baseTypeInfo: &TypeInfo!, interfaceList: &List<&TypeInfo>!,
       autoFlag: bool, externalFlag: bool, staticFlag: bool,
       accessMode: AccessMode,
-      txt: str, parentInfo: &TypeInfo!, typeId: &IdInfo, kind: TypeInfoKind,
+      txt: str, parentInfo: &TypeInfo!, kind: TypeInfoKind,
       itemTypeInfoList: &List<&TypeInfo>!, argTypeInfoList:&List<&TypeInfo>!,
       retTypeInfoList: &List<&TypeInfo>!, mutMode: MutMode!, moduleLang:Types.Lang! )
    {
@@ -3846,7 +3840,7 @@ pub class NormalTypeInfo extend TypeInfo {
       self.alt2typeMap = setupAlt2typeMap();
 
 
-      self.typeId = typeId;
+      self.typeId = processInfo.newId();
       if kind == .Root {
       }
       else {
@@ -3874,7 +3868,6 @@ pub class NormalTypeInfo extend TypeInfo {
          else {
             self.nilableTypeInfo = headTypeInfo;
          }
-         processInfo.$idProv.increment();
       }
    }
 
@@ -4136,7 +4129,7 @@ NormalTypeInfo インスタンスを生成する。
       }
       let mut info = new NormalTypeInfo(
          processInfo, abstractFlag, scope, baseInfo, nil, false, true,
-         staticFlag, accessMode, txt, parentInfo, processInfo.newId(), kind,
+         staticFlag, accessMode, txt, parentInfo, kind,
          itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode, nil );
       return info;
    }
@@ -4301,7 +4294,7 @@ pub fn Scope.addOverrideImut( symbolInfo:&SymbolInfo ) mut {
 
 //pub let typeInfoRoot = rootTypeInfo;
 
-rootProcessInfo.$idProv.increment();
+rootProcessInfo.$idProv.getNewId();
 
 pub fn addBuiltin( typeInfo:&TypeInfo ) {
    builtInTypeIdSet[ typeInfo.$typeId.id ] = typeInfo;
@@ -4378,7 +4371,7 @@ local static fn NormalTypeInfo.createBuiltin(
    }
    let mut info = new NormalTypeInfo(
       rootProcessInfo, false, scope, nil, ifList, false, false, false,
-      AccessMode.Pub, typeTxt, headTypeInfo, rootProcessInfo.newId(),
+      AccessMode.Pub, typeTxt, headTypeInfo, 
       kind, genTypeList, argTypeList, retTypeList, .Mut, nil );
 
    registBuiltin( idName, typeTxt, kind, info, headTypeInfo, scope ~= nil );
@@ -4692,7 +4685,7 @@ pub fn ProcessInfo.createSet(
       return new NormalTypeInfo(
          self, false, getScope( builtinTypeSet ), builtinTypeSet,
          nil, false, false, false, AccessMode.Pub,
-         "Set", headTypeInfo, self.newId(), .Set, itemTypeInfo,
+         "Set", headTypeInfo, .Set, itemTypeInfo,
          nil, nil, workMutMode, nil ); } );
 }
 
@@ -4705,7 +4698,7 @@ pub fn ProcessInfo.createList(
       return new NormalTypeInfo(
          self, false, getScope( builtinTypeList ), builtinTypeList,
          nil, false, false, false, AccessMode.Pub,
-         "List", headTypeInfo, self.newId(), .List, itemTypeInfo,
+         "List", headTypeInfo, .List, itemTypeInfo,
          nil, nil, workMutMode, nil ); } );
 }
 
@@ -4718,7 +4711,7 @@ pub fn ProcessInfo.createArray(
       return new NormalTypeInfo(
          self, false, getScope( builtinTypeArray ), builtinTypeArray,
          nil, false, false, false, AccessMode.Pub,
-         "Array", headTypeInfo, self.newId(), .Array, itemTypeInfo,
+         "Array", headTypeInfo, .Array, itemTypeInfo,
          nil, nil, workMutMode, nil ); } );
 }
 
@@ -4731,7 +4724,7 @@ pub fn ProcessInfo.createMap(
       return new NormalTypeInfo(
          self, false, getScope( builtinTypeMap ), builtinTypeMap,
          nil, false, false, false, AccessMode.Pub,
-         "Map", headTypeInfo, self.newId(), .Map,
+         "Map", headTypeInfo, .Map,
          [ keyTypeInfo, valTypeInfo ], nil, nil, workMutMode, nil );
    });
 }
@@ -4781,7 +4774,7 @@ pub fn ProcessInfo.createClass(
    let mut info = new NormalTypeInfo(
       self, abstractFlag, scope, baseInfo, interfaceList, false,
       externalFlag, false, accessMode,
-      className, parentInfo, self.newId(),
+      className, parentInfo, 
       classFlag and TypeInfoKind.Class or TypeInfoKind.IF,
       genTypeList, nil, nil, .Mut, nil );
 
@@ -4813,7 +4806,7 @@ pub fn ProcessInfo.createExtModule(
    let mut info = new NormalTypeInfo(
       self, false, scope, nil, nil, false,
       externalFlag, false, accessMode,
-      className, parentInfo, self.newId(),
+      className, parentInfo, 
       .ExtModule, nil, nil, nil, .Mut, moduleLang );
    info.set_requirePath(requirePath);
    return info;
@@ -4834,7 +4827,7 @@ pub fn ProcessInfo.createFunc(
 
    let mut info = new NormalTypeInfo(
       self, abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag,
-      accessMode, funcName, parentInfo, self.newId(),
+      accessMode, funcName, parentInfo, 
       kind, unwrap altTypeList default [], unwrap argTypeList default [],
       unwrap retTypeInfoList default [],
       mutable and MutMode.Mut or MutMode.IMut, nil );
@@ -5444,7 +5437,6 @@ pub fn ProcessInfo.createGeneric(
    genSrcTypeInfo:&TypeInfo, itemTypeInfoList:&List<&TypeInfo>,
    moduleTypeInfo:&TypeInfo ) mut : GenericTypeInfo
 {
-   self.$idProv.increment();
    return new GenericTypeInfo( self, genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo );
 }
 
@@ -5753,7 +5745,6 @@ pub fn ProcessInfo.createLuaval(
       if canConv {
          return .OK( luneType, true );
       }
-      self.$idProv.increment();
       let extType = new ExtTypeInfo( self, luneType.$nonnilableType );
       if luneType.$nilable {
          return .OK( extType.$nilableTypeInfo, false );
@@ -7175,7 +7166,7 @@ pub fn TypeAnalyzer.analyzeTypeItemList(
 }
 
 __test case1(ctrl) {
-   print( rootProcessInfo.$idProvBase.$id, rootProcessInfo.$idProvExt.$id );
+   print( rootProcessInfo.$idProvBase.id, rootProcessInfo.$idProvExt.id );
    
    let builtinMap = {
       "$$": headTypeInfo,

@@ -235,14 +235,6 @@ local Types = _lune.loadModule( 'lune.base.Types' )
 
 local IdProvider = {}
 _moduleObj.IdProvider = IdProvider
-function IdProvider:increment(  )
-
-   self.id = self.id + 1
-   if self.id >= self.maxId then
-      Util.err( "id is over" )
-   end
-   
-end
 function IdProvider:getNewId(  )
 
    self.id = self.id + 1
@@ -268,11 +260,113 @@ function IdProvider:__init( id, maxId )
    self.id = id
    self.maxId = maxId
 end
-function IdProvider:get_id()
-   return self.id
-end
 
 local TypeInfo2Map = {}
+
+local TypeInfoKind = {}
+_moduleObj.TypeInfoKind = TypeInfoKind
+TypeInfoKind._val2NameMap = {}
+function TypeInfoKind:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "TypeInfoKind.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+function TypeInfoKind._from( val )
+   if TypeInfoKind._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+    
+TypeInfoKind.__allList = {}
+function TypeInfoKind.get__allList()
+   return TypeInfoKind.__allList
+end
+
+TypeInfoKind.Root = 0
+TypeInfoKind._val2NameMap[0] = 'Root'
+TypeInfoKind.__allList[1] = TypeInfoKind.Root
+TypeInfoKind.Macro = 1
+TypeInfoKind._val2NameMap[1] = 'Macro'
+TypeInfoKind.__allList[2] = TypeInfoKind.Macro
+TypeInfoKind.Prim = 2
+TypeInfoKind._val2NameMap[2] = 'Prim'
+TypeInfoKind.__allList[3] = TypeInfoKind.Prim
+TypeInfoKind.List = 3
+TypeInfoKind._val2NameMap[3] = 'List'
+TypeInfoKind.__allList[4] = TypeInfoKind.List
+TypeInfoKind.Array = 4
+TypeInfoKind._val2NameMap[4] = 'Array'
+TypeInfoKind.__allList[5] = TypeInfoKind.Array
+TypeInfoKind.Map = 5
+TypeInfoKind._val2NameMap[5] = 'Map'
+TypeInfoKind.__allList[6] = TypeInfoKind.Map
+TypeInfoKind.Class = 6
+TypeInfoKind._val2NameMap[6] = 'Class'
+TypeInfoKind.__allList[7] = TypeInfoKind.Class
+TypeInfoKind.IF = 7
+TypeInfoKind._val2NameMap[7] = 'IF'
+TypeInfoKind.__allList[8] = TypeInfoKind.IF
+TypeInfoKind.Func = 8
+TypeInfoKind._val2NameMap[8] = 'Func'
+TypeInfoKind.__allList[9] = TypeInfoKind.Func
+TypeInfoKind.Method = 9
+TypeInfoKind._val2NameMap[9] = 'Method'
+TypeInfoKind.__allList[10] = TypeInfoKind.Method
+TypeInfoKind.Nilable = 10
+TypeInfoKind._val2NameMap[10] = 'Nilable'
+TypeInfoKind.__allList[11] = TypeInfoKind.Nilable
+TypeInfoKind.Enum = 11
+TypeInfoKind._val2NameMap[11] = 'Enum'
+TypeInfoKind.__allList[12] = TypeInfoKind.Enum
+TypeInfoKind.Module = 12
+TypeInfoKind._val2NameMap[12] = 'Module'
+TypeInfoKind.__allList[13] = TypeInfoKind.Module
+TypeInfoKind.Stem = 13
+TypeInfoKind._val2NameMap[13] = 'Stem'
+TypeInfoKind.__allList[14] = TypeInfoKind.Stem
+TypeInfoKind.Alge = 14
+TypeInfoKind._val2NameMap[14] = 'Alge'
+TypeInfoKind.__allList[15] = TypeInfoKind.Alge
+TypeInfoKind.DDD = 15
+TypeInfoKind._val2NameMap[15] = 'DDD'
+TypeInfoKind.__allList[16] = TypeInfoKind.DDD
+TypeInfoKind.Abbr = 16
+TypeInfoKind._val2NameMap[16] = 'Abbr'
+TypeInfoKind.__allList[17] = TypeInfoKind.Abbr
+TypeInfoKind.Set = 17
+TypeInfoKind._val2NameMap[17] = 'Set'
+TypeInfoKind.__allList[18] = TypeInfoKind.Set
+TypeInfoKind.Alternate = 18
+TypeInfoKind._val2NameMap[18] = 'Alternate'
+TypeInfoKind.__allList[19] = TypeInfoKind.Alternate
+TypeInfoKind.Box = 19
+TypeInfoKind._val2NameMap[19] = 'Box'
+TypeInfoKind.__allList[20] = TypeInfoKind.Box
+TypeInfoKind.CanEvalCtrl = 20
+TypeInfoKind._val2NameMap[20] = 'CanEvalCtrl'
+TypeInfoKind.__allList[21] = TypeInfoKind.CanEvalCtrl
+TypeInfoKind.Etc = 21
+TypeInfoKind._val2NameMap[21] = 'Etc'
+TypeInfoKind.__allList[22] = TypeInfoKind.Etc
+TypeInfoKind.Form = 22
+TypeInfoKind._val2NameMap[22] = 'Form'
+TypeInfoKind.__allList[23] = TypeInfoKind.Form
+TypeInfoKind.FormFunc = 23
+TypeInfoKind._val2NameMap[23] = 'FormFunc'
+TypeInfoKind.__allList[24] = TypeInfoKind.FormFunc
+TypeInfoKind.Ext = 24
+TypeInfoKind._val2NameMap[24] = 'Ext'
+TypeInfoKind.__allList[25] = TypeInfoKind.Ext
+TypeInfoKind.CombineIF = 25
+TypeInfoKind._val2NameMap[25] = 'CombineIF'
+TypeInfoKind.__allList[26] = TypeInfoKind.CombineIF
+TypeInfoKind.ExtModule = 26
+TypeInfoKind._val2NameMap[26] = 'ExtModule'
+TypeInfoKind.__allList[27] = TypeInfoKind.ExtModule
+
 
 local extStartId = 100000
 local extMaxId = 10000000
@@ -344,7 +438,7 @@ end
 function ProcessInfo:switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.ProcessInfo.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 112, function (  )
+   Log.log( Log.Level.Trace, __func__, 146, function (  )
    
       return "start"
    end )
@@ -699,111 +793,6 @@ SerializeKind.__allList[11] = SerializeKind.Box
 SerializeKind.Ext = 11
 SerializeKind._val2NameMap[11] = 'Ext'
 SerializeKind.__allList[12] = SerializeKind.Ext
-
-
-local TypeInfoKind = {}
-_moduleObj.TypeInfoKind = TypeInfoKind
-TypeInfoKind._val2NameMap = {}
-function TypeInfoKind:_getTxt( val )
-   local name = self._val2NameMap[ val ]
-   if name then
-      return string.format( "TypeInfoKind.%s", name )
-   end
-   return string.format( "illegal val -- %s", val )
-end
-function TypeInfoKind._from( val )
-   if TypeInfoKind._val2NameMap[ val ] then
-      return val
-   end
-   return nil
-end
-    
-TypeInfoKind.__allList = {}
-function TypeInfoKind.get__allList()
-   return TypeInfoKind.__allList
-end
-
-TypeInfoKind.Root = 0
-TypeInfoKind._val2NameMap[0] = 'Root'
-TypeInfoKind.__allList[1] = TypeInfoKind.Root
-TypeInfoKind.Macro = 1
-TypeInfoKind._val2NameMap[1] = 'Macro'
-TypeInfoKind.__allList[2] = TypeInfoKind.Macro
-TypeInfoKind.Prim = 2
-TypeInfoKind._val2NameMap[2] = 'Prim'
-TypeInfoKind.__allList[3] = TypeInfoKind.Prim
-TypeInfoKind.List = 3
-TypeInfoKind._val2NameMap[3] = 'List'
-TypeInfoKind.__allList[4] = TypeInfoKind.List
-TypeInfoKind.Array = 4
-TypeInfoKind._val2NameMap[4] = 'Array'
-TypeInfoKind.__allList[5] = TypeInfoKind.Array
-TypeInfoKind.Map = 5
-TypeInfoKind._val2NameMap[5] = 'Map'
-TypeInfoKind.__allList[6] = TypeInfoKind.Map
-TypeInfoKind.Class = 6
-TypeInfoKind._val2NameMap[6] = 'Class'
-TypeInfoKind.__allList[7] = TypeInfoKind.Class
-TypeInfoKind.IF = 7
-TypeInfoKind._val2NameMap[7] = 'IF'
-TypeInfoKind.__allList[8] = TypeInfoKind.IF
-TypeInfoKind.Func = 8
-TypeInfoKind._val2NameMap[8] = 'Func'
-TypeInfoKind.__allList[9] = TypeInfoKind.Func
-TypeInfoKind.Method = 9
-TypeInfoKind._val2NameMap[9] = 'Method'
-TypeInfoKind.__allList[10] = TypeInfoKind.Method
-TypeInfoKind.Nilable = 10
-TypeInfoKind._val2NameMap[10] = 'Nilable'
-TypeInfoKind.__allList[11] = TypeInfoKind.Nilable
-TypeInfoKind.Enum = 11
-TypeInfoKind._val2NameMap[11] = 'Enum'
-TypeInfoKind.__allList[12] = TypeInfoKind.Enum
-TypeInfoKind.Module = 12
-TypeInfoKind._val2NameMap[12] = 'Module'
-TypeInfoKind.__allList[13] = TypeInfoKind.Module
-TypeInfoKind.Stem = 13
-TypeInfoKind._val2NameMap[13] = 'Stem'
-TypeInfoKind.__allList[14] = TypeInfoKind.Stem
-TypeInfoKind.Alge = 14
-TypeInfoKind._val2NameMap[14] = 'Alge'
-TypeInfoKind.__allList[15] = TypeInfoKind.Alge
-TypeInfoKind.DDD = 15
-TypeInfoKind._val2NameMap[15] = 'DDD'
-TypeInfoKind.__allList[16] = TypeInfoKind.DDD
-TypeInfoKind.Abbr = 16
-TypeInfoKind._val2NameMap[16] = 'Abbr'
-TypeInfoKind.__allList[17] = TypeInfoKind.Abbr
-TypeInfoKind.Set = 17
-TypeInfoKind._val2NameMap[17] = 'Set'
-TypeInfoKind.__allList[18] = TypeInfoKind.Set
-TypeInfoKind.Alternate = 18
-TypeInfoKind._val2NameMap[18] = 'Alternate'
-TypeInfoKind.__allList[19] = TypeInfoKind.Alternate
-TypeInfoKind.Box = 19
-TypeInfoKind._val2NameMap[19] = 'Box'
-TypeInfoKind.__allList[20] = TypeInfoKind.Box
-TypeInfoKind.CanEvalCtrl = 20
-TypeInfoKind._val2NameMap[20] = 'CanEvalCtrl'
-TypeInfoKind.__allList[21] = TypeInfoKind.CanEvalCtrl
-TypeInfoKind.Etc = 21
-TypeInfoKind._val2NameMap[21] = 'Etc'
-TypeInfoKind.__allList[22] = TypeInfoKind.Etc
-TypeInfoKind.Form = 22
-TypeInfoKind._val2NameMap[22] = 'Form'
-TypeInfoKind.__allList[23] = TypeInfoKind.Form
-TypeInfoKind.FormFunc = 23
-TypeInfoKind._val2NameMap[23] = 'FormFunc'
-TypeInfoKind.__allList[24] = TypeInfoKind.FormFunc
-TypeInfoKind.Ext = 24
-TypeInfoKind._val2NameMap[24] = 'Ext'
-TypeInfoKind.__allList[25] = TypeInfoKind.Ext
-TypeInfoKind.CombineIF = 25
-TypeInfoKind._val2NameMap[25] = 'CombineIF'
-TypeInfoKind.__allList[26] = TypeInfoKind.CombineIF
-TypeInfoKind.ExtModule = 26
-TypeInfoKind._val2NameMap[26] = 'ExtModule'
-TypeInfoKind.__allList[27] = TypeInfoKind.ExtModule
 
 
 local function isBuiltin( typeId )
@@ -4748,8 +4737,6 @@ function ModuleTypeInfo:__init(processInfo, scope, externalFlag, txt, parentInfo
    end
    
    
-   processInfo:get_idProv():increment(  )
-   
    scope:set_ownerTypeInfo( self )
 end
 function ModuleTypeInfo:get_baseTypeInfo(  )
@@ -5240,13 +5227,13 @@ function NormalTypeInfo:switchScopeTo( scope )
 
    self:switchScope( scope )
 end
-function NormalTypeInfo.new( processInfo, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode, moduleLang )
+function NormalTypeInfo.new( processInfo, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode, moduleLang )
    local obj = {}
    NormalTypeInfo.setmeta( obj )
-   if obj.__init then obj:__init( processInfo, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode, moduleLang ); end
+   if obj.__init then obj:__init( processInfo, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode, moduleLang ); end
    return obj
 end
-function NormalTypeInfo:__init(processInfo, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode, moduleLang) 
+function NormalTypeInfo:__init(processInfo, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode, moduleLang) 
    TypeInfo.__init( self,scope, processInfo)
    
    
@@ -5322,7 +5309,7 @@ function NormalTypeInfo:__init(processInfo, abstractFlag, scope, baseTypeInfo, i
    
    self.alt2typeMap = setupAlt2typeMap(  )
    
-   self.typeId = typeId
+   self.typeId = processInfo:newId(  )
    if kind == TypeInfoKind.Root then
    else
     
@@ -5349,7 +5336,6 @@ function NormalTypeInfo:__init(processInfo, abstractFlag, scope, baseTypeInfo, i
          self.nilableTypeInfo = _moduleObj.headTypeInfo
       end
       
-      processInfo:get_idProv():increment(  )
    end
    
 end
@@ -5598,7 +5584,7 @@ function NormalTypeInfo.create( processInfo, accessMode, abstractFlag, scope, ba
       Util.err( string.format( "not found symbol -- %s", txt) )
    end
    
-   local info = NormalTypeInfo.new(processInfo, abstractFlag, scope, baseInfo, nil, false, true, staticFlag, accessMode, txt, parentInfo, processInfo:newId(  ), kind, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode, nil)
+   local info = NormalTypeInfo.new(processInfo, abstractFlag, scope, baseInfo, nil, false, true, staticFlag, accessMode, txt, parentInfo, kind, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode, nil)
    return info
 end
 function NormalTypeInfo.setmeta( obj )
@@ -5867,7 +5853,7 @@ function Scope:addOverrideImut( symbolInfo )
 end
 
 
-rootProcessInfo:get_idProv():increment(  )
+rootProcessInfo:get_idProv():getNewId(  )
 
 local function addBuiltin( typeInfo )
 
@@ -5934,7 +5920,7 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD, ifList )
       end
    end
    
-   local info = NormalTypeInfo.new(rootProcessInfo, false, scope, nil, ifList, false, false, false, AccessMode.Pub, typeTxt, _moduleObj.headTypeInfo, rootProcessInfo:newId(  ), kind, genTypeList, argTypeList, retTypeList, MutMode.Mut, nil)
+   local info = NormalTypeInfo.new(rootProcessInfo, false, scope, nil, ifList, false, false, false, AccessMode.Pub, typeTxt, _moduleObj.headTypeInfo, kind, genTypeList, argTypeList, retTypeList, MutMode.Mut, nil)
    
    registBuiltin( idName, typeTxt, kind, info, _moduleObj.headTypeInfo, scope ~= nil )
    return info
@@ -6331,7 +6317,7 @@ function ProcessInfo:createSet( accessMode, parentInfo, itemTypeInfo, mutMode )
    
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeSet ), _moduleObj.builtinTypeSet, nil, false, false, false, AccessMode.Pub, "Set", _moduleObj.headTypeInfo, self:newId(  ), TypeInfoKind.Set, itemTypeInfo, nil, nil, workMutMode, nil)
+      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeSet ), _moduleObj.builtinTypeSet, nil, false, false, false, AccessMode.Pub, "Set", _moduleObj.headTypeInfo, TypeInfoKind.Set, itemTypeInfo, nil, nil, workMutMode, nil)
    end
    
    
@@ -6360,7 +6346,7 @@ function ProcessInfo:createList( accessMode, parentInfo, itemTypeInfo, mutMode )
    
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeList ), _moduleObj.builtinTypeList, nil, false, false, false, AccessMode.Pub, "List", _moduleObj.headTypeInfo, self:newId(  ), TypeInfoKind.List, itemTypeInfo, nil, nil, workMutMode, nil)
+      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeList ), _moduleObj.builtinTypeList, nil, false, false, false, AccessMode.Pub, "List", _moduleObj.headTypeInfo, TypeInfoKind.List, itemTypeInfo, nil, nil, workMutMode, nil)
    end
    
    
@@ -6389,7 +6375,7 @@ function ProcessInfo:createArray( accessMode, parentInfo, itemTypeInfo, mutMode 
    
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeArray ), _moduleObj.builtinTypeArray, nil, false, false, false, AccessMode.Pub, "Array", _moduleObj.headTypeInfo, self:newId(  ), TypeInfoKind.Array, itemTypeInfo, nil, nil, workMutMode, nil)
+      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeArray ), _moduleObj.builtinTypeArray, nil, false, false, false, AccessMode.Pub, "Array", _moduleObj.headTypeInfo, TypeInfoKind.Array, itemTypeInfo, nil, nil, workMutMode, nil)
    end
    
    
@@ -6418,7 +6404,7 @@ function ProcessInfo:createMap( accessMode, parentInfo, keyTypeInfo, valTypeInfo
    
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeMap ), _moduleObj.builtinTypeMap, nil, false, false, false, AccessMode.Pub, "Map", _moduleObj.headTypeInfo, self:newId(  ), TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, workMutMode, nil)
+      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeMap ), _moduleObj.builtinTypeMap, nil, false, false, false, AccessMode.Pub, "Map", _moduleObj.headTypeInfo, TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, workMutMode, nil)
    end
    
    
@@ -6469,7 +6455,7 @@ function ProcessInfo:createClass( classFlag, abstractFlag, scope, baseInfo, inte
    end
    
    
-   local info = NormalTypeInfo.new(self, abstractFlag, scope, baseInfo, interfaceList, false, externalFlag, false, accessMode, className, parentInfo, self:newId(  ), classFlag and TypeInfoKind.Class or TypeInfoKind.IF, genTypeList, nil, nil, MutMode.Mut, nil)
+   local info = NormalTypeInfo.new(self, abstractFlag, scope, baseInfo, interfaceList, false, externalFlag, false, accessMode, className, parentInfo, classFlag and TypeInfoKind.Class or TypeInfoKind.IF, genTypeList, nil, nil, MutMode.Mut, nil)
    
    for __index, genType in ipairs( genTypeList ) do
       genType:updateParentInfo( info )
@@ -6495,7 +6481,7 @@ function ProcessInfo:createExtModule( scope, parentInfo, externalFlag, accessMod
    end
    
    
-   local info = NormalTypeInfo.new(self, false, scope, nil, nil, false, externalFlag, false, accessMode, className, parentInfo, self:newId(  ), TypeInfoKind.ExtModule, nil, nil, nil, MutMode.Mut, moduleLang)
+   local info = NormalTypeInfo.new(self, false, scope, nil, nil, false, externalFlag, false, accessMode, className, parentInfo, TypeInfoKind.ExtModule, nil, nil, nil, MutMode.Mut, moduleLang)
    info:set_requirePath( requirePath )
    return info
 end
@@ -6508,7 +6494,7 @@ function ProcessInfo:createFunc( abstractFlag, builtinFlag, scope, kind, parentI
    end
    
    
-   local info = NormalTypeInfo.new(self, abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, self:newId(  ), kind, _lune.unwrapDefault( altTypeList, {}), _lune.unwrapDefault( argTypeList, {}), _lune.unwrapDefault( retTypeInfoList, {}), mutable and MutMode.Mut or MutMode.IMut, nil)
+   local info = NormalTypeInfo.new(self, abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, kind, _lune.unwrapDefault( altTypeList, {}), _lune.unwrapDefault( argTypeList, {}), _lune.unwrapDefault( retTypeInfoList, {}), mutable and MutMode.Mut or MutMode.IMut, nil)
    
    if altTypeList ~= nil then
       for __index, genType in ipairs( altTypeList ) do
@@ -7158,7 +7144,6 @@ end
 
 function ProcessInfo:createGeneric( genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo )
 
-   self:get_idProv():increment(  )
    return GenericTypeInfo.new(self, genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo)
 end
 
@@ -7633,7 +7618,6 @@ function ProcessInfo:createLuaval( luneType, validToCheck )
          return _lune.newAlge( LuavalResult.OK, {luneType,true})
       end
       
-      self:get_idProv():increment(  )
       local extType = ExtTypeInfo.new(self, luneType:get_nonnilableType())
       if luneType:get_nilable() then
          return _lune.newAlge( LuavalResult.OK, {extType:get_nilableTypeInfo(),false})

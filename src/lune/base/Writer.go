@@ -102,7 +102,7 @@ func (self *Writer_XML) InitWriter_XML(stream Lns_oStream) {
 }
 
 // 47: decl @lune.@base.@Writer.XML.convertXmlTxt
-func Writer_XML_convertXmlTxt_1052_(val LnsAny) string {
+func Writer_XML_convertXmlTxt_1035_(val LnsAny) string {
     if val == ""{
         return ""
     }
@@ -153,7 +153,7 @@ func (self *Writer_XML) EndElement() {
 
 // 84: decl @lune.@base.@Writer.XML.writeValue
 func (self *Writer_XML) WriteValue(val LnsAny) {
-    self.stream.Write(Writer_XML_convertXmlTxt_1052_(val))
+    self.stream.Write(Writer_XML_convertXmlTxt_1035_(val))
 }
 
 // 87: decl @lune.@base.@Writer.XML.write
@@ -430,7 +430,7 @@ func (self *Writer_JSON) EndElement() {
 }
 
 // 259: decl @lune.@base.@Writer.JSON.convertJsonTxt
-func Writer_JSON_convertJsonTxt_1142_(txt string) string {
+func Writer_JSON_convertJsonTxt_1097_(txt string) string {
     if txt == ""{
         return ""
     }
@@ -459,7 +459,7 @@ func (self *Writer_JSON) WriteValue(val LnsAny) {
             Lns_GetEnv().SetStackVal( "false") ).(string)
         
     } else { 
-        txt = Lns_getVM().String_format("\"%s\"", []LnsAny{Writer_JSON_convertJsonTxt_1142_(Lns_getVM().String_format("%s", []LnsAny{val}))})
+        txt = Lns_getVM().String_format("\"%s\"", []LnsAny{Writer_JSON_convertJsonTxt_1097_(Lns_getVM().String_format("%s", []LnsAny{val}))})
         
     }
     self.stream.Write(txt)

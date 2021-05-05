@@ -85,7 +85,7 @@ func (self *FrontInterface_ModuleMeta) Get_lnsPath() string{ return self.lnsPath
 // declaration Class -- ModuleId
 var FrontInterface_ModuleId__tempId *FrontInterface_ModuleId
 // 38: decl @lune.@base.@frontInterface.ModuleId.___init
-func FrontInterface_ModuleId____init_1046_() {
+func FrontInterface_ModuleId____init_1031_() {
     FrontInterface_ModuleId__tempId = NewFrontInterface_ModuleId(0.0, 0)
     
 }
@@ -288,8 +288,8 @@ func (self *frontInterface_dummyFront) LoadModule(mod string)(LnsAny, *FrontInte
     loaded = frontInterface_convExp362(Lns_2DDD(Lns_getVM().Load("return {}", nil)))
     var emptyTable LnsAny
     if loaded != nil{
-        loaded_1499 := loaded.(*Lns_luaValue)
-        emptyTable = Lns_unwrap( Lns_car(Lns_getVM().RunLoadedfunc(loaded_1499,Lns_2DDD([]LnsAny{}))[0]))
+        loaded_1497 := loaded.(*Lns_luaValue)
+        emptyTable = Lns_unwrap( Lns_car(Lns_getVM().RunLoadedfunc(loaded_1497,Lns_2DDD([]LnsAny{}))[0]))
         
     } else {
         panic("load error")
@@ -340,7 +340,7 @@ func Lns_frontInterface_init() {
     Lns_InitMod()
     Lns_Util_init()
     Lns_Ast_init()
-    FrontInterface_ModuleId____init_1046_()
+    FrontInterface_ModuleId____init_1031_()
     FrontInterface___luneScript = NewfrontInterface_dummyFront().FP
 }
 func init() {

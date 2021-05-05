@@ -53,7 +53,7 @@ func AsyncParser_isLuaKeyword(txt string) bool {
 }
 
 // 63: decl @lune.@base.@AsyncParser.createReserveInfo
-func AsyncParser_createReserveInfo_1031_(luaMode LnsAny)(*LnsSet, *LnsSet, *LnsSet, *LnsMap) {
+func AsyncParser_createReserveInfo_1020_(luaMode LnsAny)(*LnsSet, *LnsSet, *LnsSet, *LnsMap) {
     var keywordSet *LnsSet
     keywordSet = NewLnsSet([]LnsAny{})
     var typeSet *LnsSet
@@ -285,7 +285,7 @@ func (self *AsyncParser_Parser) InitAsyncParser_Parser(stream Lns_iStream,name s
     var keywordSet *LnsSet
     var typeSet *LnsSet
     var multiCharDelimitMap *LnsMap
-    keywordSet,typeSet,_,multiCharDelimitMap = AsyncParser_createReserveInfo_1031_(luaMode)
+    keywordSet,typeSet,_,multiCharDelimitMap = AsyncParser_createReserveInfo_1020_(luaMode)
     self.keywordSet = keywordSet
     
     self.typeSet = typeSet
