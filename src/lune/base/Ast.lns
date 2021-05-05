@@ -958,6 +958,7 @@ static な型か。
    }
 
    pro fn serializeTypeInfoList(
+      serializeInfo:&SerializeInfo,
       name: str, list: &List<&TypeInfo>, onlyPub: bool! ): str
    {
       let mut work = name;
@@ -966,7 +967,7 @@ static な型か。
             if #work ~=  #name {
                work = work .. ", ";
             }
-            work = "%s%d" (work, typeInfo.$typeId.id );
+            work = "%s%s" (work, serializeInfo.serializeId( typeInfo.$typeId ) );
          }
       }
       return work .. "}, ";
@@ -1607,9 +1608,11 @@ pub class AliasTypeInfo extend TypeInfo {
    pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
       let parentId = self.getParentId();
       stream.write(
-         '{ skind = %d, parentId = %d, typeId = %d, rawTxt = %q, srcTypeId = %d }\n' (
-            SerializeKind.Alias, parentId.id, self.typeId.id, self.rawTxt,
-            self.aliasSrcTypeInfo.$typeId.id ) );
+         '{ skind = %d, parentId = %d, typeId = %d, rawTxt = %q, srcTypeId = %s }\n' (
+            SerializeKind.Alias,
+            parentId.id,
+            self.typeId.id, self.rawTxt,
+            serializeInfo.serializeId( self.aliasSrcTypeInfo.$typeId ) ) );
    }
 
    pub override fn get_display_stirng(): str {
@@ -2877,11 +2880,14 @@ pub class AlternateTypeInfo extend TypeInfo {
       let parentId = self.getParentId();
       stream.write(
          '{ skind = %d, parentId = %d, typeId = %d, txt = %q, '
-         ( SerializeKind.Alternate, parentId.id, self.typeId.id, self.txt ) ..
-         'accessMode = %d, baseId = %d, ' ( self.accessMode, self.$baseId.id ) ..
+         ( SerializeKind.Alternate,
+           parentId.id, self.typeId.id, self.txt ) ..
+         'accessMode = %d, baseId = %s, '
+         ( self.accessMode, serializeInfo.serializeId( self.$baseId ) ) ..
          'belongClassFlag = %s, altIndex = %d, ' (self.belongClassFlag, self.altIndex ));
 
-      stream.write( self.serializeTypeInfoList( "ifList = {", self.interfaceList## ) );
+      stream.write( self.serializeTypeInfoList(
+         serializeInfo, "ifList = {", self.interfaceList## ) );
       stream.write( "}\n" );
    }
 
@@ -3205,14 +3211,15 @@ pub class GenericTypeInfo extend TypeInfo {
 
    pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
       stream.write(
-         '{ skind = %d, typeId = %d, genSrcTypeId = %d, genTypeList = {' (
-            SerializeKind.Generic, self.typeId.id, self.genSrcTypeInfo.$typeId.id ) );
+         '{ skind = %d, typeId = %d, genSrcTypeId = %s, genTypeList = {' (
+            SerializeKind.Generic, self.typeId.id,
+            serializeInfo.serializeId( self.genSrcTypeInfo.$typeId ) ) );
       let count = 0;
       foreach genType in self.alt2typeMap {
          if count > 0 {
             stream.write( "," );
          }
-         stream.write( "%d" (genType.$typeId.id) );
+         stream.write( serializeInfo.serializeId( genType.$typeId ) );
       }
       stream.write( '} }\n' );
    }
@@ -3277,8 +3284,9 @@ pub class ModifierTypeInfo extend TypeInfo {
 
    pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
       stream.write(
-         '{ skind = %d, typeId = %d, srcTypeId = %d, mutMode = %d }\n' (
-            SerializeKind.Modifier, self.typeId.id, self.srcTypeInfo.$typeId.id,
+         '{ skind = %d, typeId = %d, srcTypeId = %s, mutMode = %d }\n' (
+            SerializeKind.Modifier, self.typeId.id,
+            serializeInfo.serializeId( self.srcTypeInfo.$typeId ),
             self.mutMode ) );
    }
 
@@ -3417,7 +3425,8 @@ pub class ModuleTypeInfo extend TypeInfo {
    {
       let txt = "{ skind = %d, parentId = %d, typeId = %d, txt = '%s', "
           ( SerializeKind.Module,
-            self.getParentId().id, self.typeId.id, self.rawTxt );
+            self.getParentId().id,
+            self.typeId.id, self.rawTxt );
       stream.write( txt .. '\n' );
       stream.write( "}\n" );
    }
@@ -3987,10 +3996,11 @@ pub class NormalTypeInfo extend TypeInfo {
 
       let parentId = self.getParentId();
 
-      let mut txt = ```{ skind=%d, parentId = %d, typeId = %d, baseId = %d, txt = '%s',
+      let mut txt = ```{ skind=%d, parentId = %d, typeId = %d, baseId = %s, txt = '%s',
         abstractFlag = %s, staticFlag = %s, accessMode = %d, kind = %d, mutMode = %d, ```
-          ( SerializeKind.Normal, parentId.id, self.typeId.id,
-            self.$baseId.id, self.rawTxt,
+          ( SerializeKind.Normal,
+            parentId.id, self.typeId.id,
+            serializeInfo.serializeId( self.$baseId ), self.rawTxt,
             self.abstractFlag, self.staticFlag, self.accessMode,
             self.kind, self.mutMode );
       if! self.moduleLang {
@@ -4009,12 +4019,16 @@ pub class NormalTypeInfo extend TypeInfo {
       }
 
       stream.write(
-         txt .. self.serializeTypeInfoList( "itemTypeId = {",
-                                            self.itemTypeInfoList## ) ..
-         self.serializeTypeInfoList( "ifList = {", self.interfaceList## ) ..
-         self.serializeTypeInfoList( "argTypeId = {", self.argTypeInfoList## ) ..
-         self.serializeTypeInfoList( "retTypeId = {", self.retTypeInfoList## ) ..
-         self.serializeTypeInfoList( "children = {", children, true ) .. "}\n" );
+         txt .. self.serializeTypeInfoList(
+            serializeInfo, "itemTypeId = {", self.itemTypeInfoList## ) ..
+         self.serializeTypeInfoList(
+            serializeInfo, "ifList = {", self.interfaceList## ) ..
+         self.serializeTypeInfoList(
+            serializeInfo, "argTypeId = {", self.argTypeInfoList## ) ..
+         self.serializeTypeInfoList(
+            serializeInfo, "retTypeId = {", self.retTypeInfoList## ) ..
+         self.serializeTypeInfoList(
+            serializeInfo, "children = {", children, true ) .. "}\n" );
    }
 
    pub fn equalsSub( processInfo:ProcessInfo, typeInfo: &TypeInfo,
@@ -4971,9 +4985,10 @@ pub class DDDTypeInfo extend TypeInfo {
 
    pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
       stream.write(
-         '{ skind=%d, typeId = %d, itemTypeId = %d, parentId = %d, extTypeFlag = %s }\n'
+         '{ skind=%d, typeId = %d, itemTypeId = %s, parentId = %d, extTypeFlag = %s }\n'
          ( SerializeKind.DDD, self.typeId.id,
-           self.typeInfo.$typeId.id, headTypeInfo.$typeId.id, self.$extTypeFlag ) );
+           serializeInfo.serializeId( self.typeInfo.$typeId ),
+           headTypeInfo.$typeId.id, self.$extTypeFlag ) );
    }
 
    pub override fn get_display_stirng_with(
@@ -5647,8 +5662,9 @@ pub class ExtTypeInfo extend TypeInfo {
 
    pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
       stream.write(
-         '{ skind = %d, typeId = %d, extedTypeId = %d }\n' (
-            SerializeKind.Ext, self.typeId.id, self.extedType.$typeId.id ) );
+         '{ skind = %d, typeId = %d, extedTypeId = %s }\n' (
+            SerializeKind.Ext, self.typeId.id,
+            serializeInfo.serializeId( self.extedType.$typeId ) ) );
    }
 
    pub override fn get_display_stirng_with(
@@ -5862,7 +5878,8 @@ pub override fn EnumTypeInfo.serialize(
 {
    let txt = ```{ skind = %d, parentId = %d, typeId = %d, txt = '%s',
 accessMode = %d, kind = %d, valTypeId = %d, ```
-       ( SerializeKind.Enum, self.getParentId().id, self.typeId.id, self.rawTxt,
+       ( SerializeKind.Enum,
+         self.getParentId().id, self.typeId.id, self.rawTxt,
          self.accessMode, TypeInfoKind.Enum, self.valTypeInfo.$typeId.id );
    stream.write( txt );
 
@@ -5912,8 +5929,8 @@ pub override fn AlgeTypeInfo.serialize( stream: oStream, serializeInfo: &Seriali
 {
    let txt = ```{ skind = %d, parentId = %d, typeId = %d, txt = '%s',
 accessMode = %d, kind = %d, ```
-       ( SerializeKind.Alge, self.getParentId().id, self.typeId.id, self.rawTxt,
-         self.accessMode, TypeInfoKind.Alge );
+       ( SerializeKind.Alge, self.getParentId().id,
+         self.typeId.id, self.rawTxt, self.accessMode, TypeInfoKind.Alge );
    stream.write( txt );
 
    stream.write( "algeValList = {" );

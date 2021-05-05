@@ -1469,7 +1469,7 @@ function TypeInfo:get_genSrcTypeInfo(  )
 
    return self
 end
-function TypeInfo:serializeTypeInfoList( name, list, onlyPub )
+function TypeInfo:serializeTypeInfoList( serializeInfo, name, list, onlyPub )
 
    local work = name
    for __index, typeInfo in ipairs( list ) do
@@ -1478,7 +1478,7 @@ function TypeInfo:serializeTypeInfoList( name, list, onlyPub )
             work = work .. ", "
          end
          
-         work = string.format( "%s%d", work, typeInfo:get_typeId().id)
+         work = string.format( "%s%s", work, serializeInfo:serializeId( typeInfo:get_typeId() ))
       end
       
    end
@@ -2406,7 +2406,7 @@ end
 function AliasTypeInfo:serialize( stream, serializeInfo )
 
    local parentId = self:getParentId(  )
-   stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, rawTxt = %q, srcTypeId = %d }\n', SerializeKind.Alias, parentId.id, self.typeId.id, self.rawTxt, self.aliasSrcTypeInfo:get_typeId().id) )
+   stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, rawTxt = %q, srcTypeId = %s }\n', SerializeKind.Alias, parentId.id, self.typeId.id, self.rawTxt, serializeInfo:serializeId( self.aliasSrcTypeInfo:get_typeId() )) )
 end
 function AliasTypeInfo:get_display_stirng(  )
 
@@ -3839,9 +3839,9 @@ end
 function AlternateTypeInfo:serialize( stream, serializeInfo )
 
    local parentId = self:getParentId(  )
-   stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, txt = %q, ', SerializeKind.Alternate, parentId.id, self.typeId.id, self.txt) .. string.format( 'accessMode = %d, baseId = %d, ', self.accessMode, self:get_baseId().id) .. string.format( 'belongClassFlag = %s, altIndex = %d, ', self.belongClassFlag, self.altIndex) )
+   stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, txt = %q, ', SerializeKind.Alternate, parentId.id, self.typeId.id, self.txt) .. string.format( 'accessMode = %d, baseId = %s, ', self.accessMode, serializeInfo:serializeId( self:get_baseId() )) .. string.format( 'belongClassFlag = %s, altIndex = %d, ', self.belongClassFlag, self.altIndex) )
    
-   stream:write( self:serializeTypeInfoList( "ifList = {", self.interfaceList ) )
+   stream:write( self:serializeTypeInfoList( serializeInfo, "ifList = {", self.interfaceList ) )
    stream:write( "}\n" )
 end
 function AlternateTypeInfo:applyGeneric( alt2typeMap, moduleTypeInfo )
@@ -4297,14 +4297,14 @@ function GenericTypeInfo:equals( processInfo, other, alt2type, checkModifer )
 end
 function GenericTypeInfo:serialize( stream, serializeInfo )
 
-   stream:write( string.format( '{ skind = %d, typeId = %d, genSrcTypeId = %d, genTypeList = {', SerializeKind.Generic, self.typeId.id, self.genSrcTypeInfo:get_typeId().id) )
+   stream:write( string.format( '{ skind = %d, typeId = %d, genSrcTypeId = %s, genTypeList = {', SerializeKind.Generic, self.typeId.id, serializeInfo:serializeId( self.genSrcTypeInfo:get_typeId() )) )
    local count = 0
    for __index, genType in pairs( self.alt2typeMap ) do
       if count > 0 then
          stream:write( "," )
       end
       
-      stream:write( string.format( "%d", genType:get_typeId().id) )
+      stream:write( serializeInfo:serializeId( genType:get_typeId() ) )
    end
    
    stream:write( '} }\n' )
@@ -4516,7 +4516,7 @@ function ModifierTypeInfo:get_display_stirng(  )
 end
 function ModifierTypeInfo:serialize( stream, serializeInfo )
 
-   stream:write( string.format( '{ skind = %d, typeId = %d, srcTypeId = %d, mutMode = %d }\n', SerializeKind.Modifier, self.typeId.id, self.srcTypeInfo:get_typeId().id, self.mutMode) )
+   stream:write( string.format( '{ skind = %d, typeId = %d, srcTypeId = %s, mutMode = %d }\n', SerializeKind.Modifier, self.typeId.id, serializeInfo:serializeId( self.srcTypeInfo:get_typeId() ), self.mutMode) )
 end
 function ModifierTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
 
@@ -5478,8 +5478,8 @@ function NormalTypeInfo:serialize( stream, serializeInfo )
    
    local parentId = self:getParentId(  )
    
-   local txt = string.format( [==[{ skind=%d, parentId = %d, typeId = %d, baseId = %d, txt = '%s',
-        abstractFlag = %s, staticFlag = %s, accessMode = %d, kind = %d, mutMode = %d, ]==], SerializeKind.Normal, parentId.id, self.typeId.id, self:get_baseId().id, self.rawTxt, self.abstractFlag, self.staticFlag, self.accessMode, self.kind, self.mutMode)
+   local txt = string.format( [==[{ skind=%d, parentId = %d, typeId = %d, baseId = %s, txt = '%s',
+        abstractFlag = %s, staticFlag = %s, accessMode = %d, kind = %d, mutMode = %d, ]==], SerializeKind.Normal, parentId.id, self.typeId.id, serializeInfo:serializeId( self:get_baseId() ), self.rawTxt, self.abstractFlag, self.staticFlag, self.accessMode, self.kind, self.mutMode)
    do
       local _exp = self.moduleLang
       if _exp ~= nil then
@@ -5501,7 +5501,7 @@ function NormalTypeInfo:serialize( stream, serializeInfo )
    end
    
    
-   stream:write( txt .. self:serializeTypeInfoList( "itemTypeId = {", self.itemTypeInfoList ) .. self:serializeTypeInfoList( "ifList = {", self.interfaceList ) .. self:serializeTypeInfoList( "argTypeId = {", self.argTypeInfoList ) .. self:serializeTypeInfoList( "retTypeId = {", self.retTypeInfoList ) .. self:serializeTypeInfoList( "children = {", children, true ) .. "}\n" )
+   stream:write( txt .. self:serializeTypeInfoList( serializeInfo, "itemTypeId = {", self.itemTypeInfoList ) .. self:serializeTypeInfoList( serializeInfo, "ifList = {", self.interfaceList ) .. self:serializeTypeInfoList( serializeInfo, "argTypeId = {", self.argTypeInfoList ) .. self:serializeTypeInfoList( serializeInfo, "retTypeId = {", self.retTypeInfoList ) .. self:serializeTypeInfoList( serializeInfo, "children = {", children, true ) .. "}\n" )
 end
 function NormalTypeInfo:equalsSub( processInfo, typeInfo, alt2type, checkModifer )
 
@@ -6642,7 +6642,7 @@ function DDDTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
 end
 function DDDTypeInfo:serialize( stream, serializeInfo )
 
-   stream:write( string.format( '{ skind=%d, typeId = %d, itemTypeId = %d, parentId = %d, extTypeFlag = %s }\n', SerializeKind.DDD, self.typeId.id, self.typeInfo:get_typeId().id, _moduleObj.headTypeInfo:get_typeId().id, self:get_extTypeFlag()) )
+   stream:write( string.format( '{ skind=%d, typeId = %d, itemTypeId = %s, parentId = %d, extTypeFlag = %s }\n', SerializeKind.DDD, self.typeId.id, serializeInfo:serializeId( self.typeInfo:get_typeId() ), _moduleObj.headTypeInfo:get_typeId().id, self:get_extTypeFlag()) )
 end
 function DDDTypeInfo:get_display_stirng_with( raw, alt2type )
 
@@ -7384,7 +7384,7 @@ function ExtTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
 end
 function ExtTypeInfo:serialize( stream, serializeInfo )
 
-   stream:write( string.format( '{ skind = %d, typeId = %d, extedTypeId = %d }\n', SerializeKind.Ext, self.typeId.id, self.extedType:get_typeId().id) )
+   stream:write( string.format( '{ skind = %d, typeId = %d, extedTypeId = %s }\n', SerializeKind.Ext, self.typeId.id, serializeInfo:serializeId( self.extedType:get_typeId() )) )
 end
 function ExtTypeInfo:get_display_stirng_with( raw, alt2type )
 

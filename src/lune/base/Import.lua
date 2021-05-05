@@ -529,18 +529,65 @@ function _TypeInfoNilable._fromMapSub( obj, val )
 end
 
 
+local _IdInfo = {}
+setmetatable( _IdInfo, { ifList = {Mapping,} } )
+function _IdInfo.setmeta( obj )
+  setmetatable( obj, { __index = _IdInfo  } )
+end
+function _IdInfo.new( id, mod )
+   local obj = {}
+   _IdInfo.setmeta( obj )
+   if obj.__init then
+      obj:__init( id, mod )
+   end
+   return obj
+end
+function _IdInfo:__init( id, mod )
+
+   self.id = id
+   self.mod = mod
+end
+function _IdInfo:_toMap()
+  return self
+end
+function _IdInfo._fromMap( val )
+  local obj, mes = _IdInfo._fromMapSub( {}, val )
+  if obj then
+     _IdInfo.setmeta( obj )
+  end
+  return obj, mes
+end
+function _IdInfo._fromStem( val )
+  return _IdInfo._fromMap( val )
+end
+
+function _IdInfo._fromMapSub( obj, val )
+   local memInfo = {}
+   table.insert( memInfo, { name = "id", func = _lune._toInt, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "mod", func = _lune._toInt, nilable = false, child = {} } )
+   local result, mess = _lune._fromMap( obj, val, memInfo )
+   if not result then
+      return nil, mess
+   end
+   return obj
+end
+
+
 local _TypeInfoAlias = {}
 setmetatable( _TypeInfoAlias, { __index = _TypeInfo } )
 function _TypeInfoAlias:createTypeInfo( param )
    local __func__ = '@lune.@base.@Import._TypeInfoAlias.createTypeInfo'
 
-   local srcTypeInfo = _lune.unwrap( param:getTypeInfo( self.srcTypeId ))
+   local _
+   local srcTypeInfo = _lune.unwrap( param:getTypeInfo( self.srcTypeId.id ))
    local newTypeInfo = param.processInfo:createAlias( param.processInfo, self.rawTxt, true, Ast.AccessMode.Pub, param.moduleTypeInfo, srcTypeInfo )
    param.typeId2TypeInfo[self.typeId] = newTypeInfo
-   if not param:getTypeInfo( self.parentId ) then
-      return nil, string.format( "%s: not found parentInfo %s %s", __func__, self.parentId, self.rawTxt)
-   end
+   local _3702 = param:getTypeInfo( self.parentId )
+   if  nil == _3702 then
+      local __3702 = _3702
    
+      return nil, string.format( "%s: not found parentInfo %d %s", __func__, self.parentId, self.rawTxt)
+   end
    
    
    local parentScope = param.typeId2Scope[self.parentId]
@@ -596,7 +643,7 @@ function _TypeInfoAlias._fromMapSub( obj, val )
    local memInfo = {}
    table.insert( memInfo, { name = "parentId", func = _lune._toInt, nilable = false, child = {} } )
    table.insert( memInfo, { name = "rawTxt", func = _lune._toStr, nilable = false, child = {} } )
-   table.insert( memInfo, { name = "srcTypeId", func = _lune._toInt, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "srcTypeId", func = _IdInfo._fromMap, nilable = false, child = {} } )
    local result, mess = _lune._fromMap( obj, val, memInfo )
    if not result then
       return nil, mess
@@ -609,7 +656,7 @@ local _TypeInfoDDD = {}
 setmetatable( _TypeInfoDDD, { __index = _TypeInfo } )
 function _TypeInfoDDD:createTypeInfo( param )
 
-   local itemTypeInfo = _lune.unwrap( param:getTypeInfo( self.itemTypeId ))
+   local itemTypeInfo = _lune.unwrap( param:getTypeInfo( self.itemTypeId.id ))
    local newTypeInfo = param.processInfo:createDDD( itemTypeInfo, true, self.extTypeFlag )
    param.typeId2TypeInfo[self.typeId] = newTypeInfo
    return newTypeInfo, nil
@@ -654,7 +701,7 @@ function _TypeInfoDDD._fromMapSub( obj, val )
 
    local memInfo = {}
    table.insert( memInfo, { name = "parentId", func = _lune._toInt, nilable = false, child = {} } )
-   table.insert( memInfo, { name = "itemTypeId", func = _lune._toInt, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "itemTypeId", func = _IdInfo._fromMap, nilable = false, child = {} } )
    table.insert( memInfo, { name = "extTypeFlag", func = _lune._toBool, nilable = false, child = {} } )
    local result, mess = _lune._fromMap( obj, val, memInfo )
    if not result then
@@ -668,10 +715,10 @@ local _TypeInfoAlternate = {}
 setmetatable( _TypeInfoAlternate, { __index = _TypeInfo } )
 function _TypeInfoAlternate:createTypeInfo( param )
 
-   local baseInfo = _lune.unwrap( param:getTypeInfo( self.baseId ))
+   local baseInfo = _lune.unwrap( param:getTypeInfo( self.baseId.id ))
    local interfaceList = {}
    for __index, ifTypeId in ipairs( self.ifList ) do
-      table.insert( interfaceList, _lune.unwrap( param:getTypeInfo( ifTypeId )) )
+      table.insert( interfaceList, _lune.unwrap( param:getTypeInfo( ifTypeId.id )) )
    end
    
    local newTypeInfo = param.processInfo:createAlternate( self.belongClassFlag, self.altIndex, self.txt, self.accessMode, param.moduleTypeInfo, baseInfo, interfaceList )
@@ -724,8 +771,8 @@ function _TypeInfoAlternate._fromMapSub( obj, val )
    table.insert( memInfo, { name = "parentId", func = _lune._toInt, nilable = false, child = {} } )
    table.insert( memInfo, { name = "txt", func = _lune._toStr, nilable = false, child = {} } )
    table.insert( memInfo, { name = "accessMode", func = Ast.AccessMode._from, nilable = false, child = {} } )
-   table.insert( memInfo, { name = "baseId", func = _lune._toInt, nilable = false, child = {} } )
-   table.insert( memInfo, { name = "ifList", func = _lune._toList, nilable = false, child = { { func = _lune._toInt, nilable = false, child = {} } } } )
+   table.insert( memInfo, { name = "baseId", func = _IdInfo._fromMap, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "ifList", func = _lune._toList, nilable = false, child = { { func = _IdInfo._fromMap, nilable = false, child = {} } } } )
    table.insert( memInfo, { name = "belongClassFlag", func = _lune._toBool, nilable = false, child = {} } )
    table.insert( memInfo, { name = "altIndex", func = _lune._toInt, nilable = false, child = {} } )
    local result, mess = _lune._fromMap( obj, val, memInfo )
@@ -740,10 +787,10 @@ local _TypeInfoGeneric = {}
 setmetatable( _TypeInfoGeneric, { __index = _TypeInfo } )
 function _TypeInfoGeneric:createTypeInfo( param )
 
-   local genSrcTypeInfo = _lune.unwrap( param:getTypeInfo( self.genSrcTypeId ))
+   local genSrcTypeInfo = _lune.unwrap( param:getTypeInfo( self.genSrcTypeId.id ))
    local genTypeList = {}
    for __index, typeId in ipairs( self.genTypeList ) do
-      table.insert( genTypeList, _lune.unwrap( param:getTypeInfo( typeId )) )
+      table.insert( genTypeList, _lune.unwrap( param:getTypeInfo( typeId.id )) )
    end
    
    local newTypeInfo = param.processInfo:createGeneric( genSrcTypeInfo, genTypeList, param.moduleTypeInfo )
@@ -789,8 +836,8 @@ function _TypeInfoGeneric._fromMapSub( obj, val )
    end
 
    local memInfo = {}
-   table.insert( memInfo, { name = "genSrcTypeId", func = _lune._toInt, nilable = false, child = {} } )
-   table.insert( memInfo, { name = "genTypeList", func = _lune._toList, nilable = false, child = { { func = _lune._toInt, nilable = false, child = {} } } } )
+   table.insert( memInfo, { name = "genSrcTypeId", func = _IdInfo._fromMap, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "genTypeList", func = _lune._toList, nilable = false, child = { { func = _IdInfo._fromMap, nilable = false, child = {} } } } )
    local result, mess = _lune._fromMap( obj, val, memInfo )
    if not result then
       return nil, mess
@@ -860,7 +907,7 @@ local _TypeInfoExt = {}
 setmetatable( _TypeInfoExt, { __index = _TypeInfo } )
 function _TypeInfoExt:createTypeInfo( param )
 
-   local extedType = _lune.unwrap( param:getTypeInfo( self.extedTypeId ))
+   local extedType = _lune.unwrap( param:getTypeInfo( self.extedTypeId.id ))
    local newTypeInfo
    
    do
@@ -917,7 +964,7 @@ function _TypeInfoExt._fromMapSub( obj, val )
    end
 
    local memInfo = {}
-   table.insert( memInfo, { name = "extedTypeId", func = _lune._toInt, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "extedTypeId", func = _IdInfo._fromMap, nilable = false, child = {} } )
    local result, mess = _lune._fromMap( obj, val, memInfo )
    if not result then
       return nil, mess
@@ -930,11 +977,11 @@ local _TypeInfoModifier = {}
 setmetatable( _TypeInfoModifier, { __index = _TypeInfo } )
 function _TypeInfoModifier:createTypeInfo( param )
 
-   local srcTypeInfo = param:getTypeInfo( self.srcTypeId )
+   local srcTypeInfo = param:getTypeInfo( self.srcTypeId.id )
    if  nil == srcTypeInfo then
       local _srcTypeInfo = srcTypeInfo
    
-      return nil, string.format( "not found srcType -- %d", self.srcTypeId)
+      return nil, string.format( "not found srcType -- %d", self.srcTypeId.id)
    end
    
    local newTypeInfo = param.modifier:createModifier( srcTypeInfo, self.mutMode )
@@ -979,7 +1026,7 @@ function _TypeInfoModifier._fromMapSub( obj, val )
    end
 
    local memInfo = {}
-   table.insert( memInfo, { name = "srcTypeId", func = _lune._toInt, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "srcTypeId", func = _IdInfo._fromMap, nilable = false, child = {} } )
    table.insert( memInfo, { name = "mutMode", func = Ast.MutMode._from, nilable = false, child = {} } )
    local result, mess = _lune._fromMap( obj, val, memInfo )
    if not result then
@@ -1000,7 +1047,7 @@ function _TypeInfoModule:createTypeInfo( param )
       if  nil == workTypeInfo then
          local _workTypeInfo = workTypeInfo
       
-         Util.err( string.format( "not found parentInfo %s %s", self.parentId, self.txt) )
+         Util.err( string.format( "not found parentInfo %d %s", self.parentId, self.txt) )
       end
       
       parentInfo = workTypeInfo
@@ -1020,7 +1067,7 @@ function _TypeInfoModule:createTypeInfo( param )
       if _exp ~= nil then
          param.typeId2Scope[self.typeId] = Ast.getScope( _exp )
          if not _exp:get_scope() then
-            return nil, string.format( "not found scope %s %s %s %s %s", parentScope, self.parentId, self.typeId, self.txt, _exp:getTxt(  ))
+            return nil, string.format( "not found scope %s %d %s %s %s", parentScope, self.parentId, self.typeId, self.txt, _exp:getTxt(  ))
          end
          
          param.typeId2TypeInfo[self.typeId] = _exp
@@ -1039,7 +1086,7 @@ function _TypeInfoModule:createTypeInfo( param )
          param.typeId2TypeInfo[self.typeId] = workTypeInfo
          parentScope:addClass( param.processInfo, self.txt, nil, workTypeInfo )
          
-         Log.log( Log.Level.Info, __func__, 369, function (  )
+         Log.log( Log.Level.Info, __func__, 373, function (  )
          
             return string.format( "new module -- %s, %s, %d, %d, %d", self.txt, workTypeInfo:getFullName( Ast.defaultTypeNameCtrl, parentScope, false ), self.typeId, workTypeInfo:get_typeId().id, parentScope:get_scopeId())
          end )
@@ -1110,7 +1157,7 @@ function _TypeInfoNormal:createTypeInfo( param )
          if  nil == workTypeInfo then
             local _workTypeInfo = workTypeInfo
          
-            return nil, string.format( "not found parentInfo %s %s", self.parentId, self.txt)
+            return nil, string.format( "not found parentInfo %d %s", self.parentId, self.txt)
          end
          
          parentInfo = workTypeInfo
@@ -1119,16 +1166,16 @@ function _TypeInfoNormal:createTypeInfo( param )
       
       local itemTypeInfo = {}
       for __index, typeId in ipairs( self.itemTypeId ) do
-         table.insert( itemTypeInfo, _lune.unwrap( param:getTypeInfo( typeId )) )
+         table.insert( itemTypeInfo, _lune.unwrap( param:getTypeInfo( typeId.id )) )
       end
       
       local argTypeInfo = {}
       for index, typeId in ipairs( self.argTypeId ) do
-         local argType, mess = param:getTypeInfo( typeId )
+         local argType, mess = param:getTypeInfo( typeId.id )
          if argType ~= nil then
             table.insert( argTypeInfo, argType )
          else
-            local errmess = string.format( "not found arg (index:%d) -- %s.%s, %d, %d. %s", index, parentInfo:getTxt(  ), self.txt, typeId, #self.argTypeId, mess)
+            local errmess = string.format( "not found arg (index:%d) -- %s.%s, %d, %d. %s", index, parentInfo:getTxt(  ), self.txt, typeId.id, #self.argTypeId, mess)
             return nil, errmess
          end
          
@@ -1136,13 +1183,13 @@ function _TypeInfoNormal:createTypeInfo( param )
       
       local retTypeInfo = {}
       for __index, typeId in ipairs( self.retTypeId ) do
-         table.insert( retTypeInfo, _lune.unwrap( param:getTypeInfo( typeId )) )
+         table.insert( retTypeInfo, _lune.unwrap( param:getTypeInfo( typeId.id )) )
       end
       
-      local baseInfo = _lune.unwrap( param:getTypeInfo( self.baseId ))
+      local baseInfo = _lune.unwrap( param:getTypeInfo( self.baseId.id ))
       local interfaceList = {}
       for __index, ifTypeId in ipairs( self.ifList ) do
-         table.insert( interfaceList, _lune.unwrap( param:getTypeInfo( ifTypeId )) )
+         table.insert( interfaceList, _lune.unwrap( param:getTypeInfo( ifTypeId.id )) )
       end
       
       
@@ -1175,13 +1222,13 @@ function _TypeInfoNormal:createTypeInfo( param )
       else
        
          if self.kind == Ast.TypeInfoKind.Class or self.kind == Ast.TypeInfoKind.IF then
-            Log.log( Log.Level.Debug, __func__, 476, function (  )
+            Log.log( Log.Level.Debug, __func__, 480, function (  )
             
                return string.format( "new type -- %d, %s -- %s, %d", self.parentId, self.txt, _lune.nilacc( parentScope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, parentScope, false ) or "nil", _lune.nilacc( _lune.nilacc( parentScope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ), "id" ) or -1)
             end )
             
             
-            local baseScope = _lune.unwrap( param.typeId2Scope[self.baseId])
+            local baseScope = _lune.unwrap( param.typeId2Scope[self.baseId.id])
             local ifScopeList = {}
             for __index, ifType in ipairs( interfaceList ) do
                table.insert( ifScopeList, _lune.unwrap( ifType:get_scope()) )
@@ -1204,7 +1251,7 @@ function _TypeInfoNormal:createTypeInfo( param )
             param.typeId2Scope[self.typeId] = scope
             param.typeId2TypeInfo[self.typeId] = workTypeInfo
          elseif self.kind == Ast.TypeInfoKind.ExtModule then
-            Log.log( Log.Level.Debug, __func__, 513, function (  )
+            Log.log( Log.Level.Debug, __func__, 517, function (  )
             
                return string.format( "new type -- %d, %s -- %s, %d", self.parentId, self.txt, _lune.nilacc( parentScope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, parentScope, false ) or "nil", _lune.nilacc( _lune.nilacc( parentScope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ), "id" ) or -1)
             end )
@@ -1328,17 +1375,17 @@ function _TypeInfoNormal._fromMapSub( obj, val )
    local memInfo = {}
    table.insert( memInfo, { name = "parentId", func = _lune._toInt, nilable = false, child = {} } )
    table.insert( memInfo, { name = "abstractFlag", func = _lune._toBool, nilable = false, child = {} } )
-   table.insert( memInfo, { name = "baseId", func = _lune._toInt, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "baseId", func = _IdInfo._fromMap, nilable = false, child = {} } )
    table.insert( memInfo, { name = "txt", func = _lune._toStr, nilable = false, child = {} } )
    table.insert( memInfo, { name = "staticFlag", func = _lune._toBool, nilable = false, child = {} } )
    table.insert( memInfo, { name = "accessMode", func = Ast.AccessMode._from, nilable = false, child = {} } )
    table.insert( memInfo, { name = "kind", func = Ast.TypeInfoKind._from, nilable = false, child = {} } )
    table.insert( memInfo, { name = "mutMode", func = Ast.MutMode._from, nilable = false, child = {} } )
-   table.insert( memInfo, { name = "ifList", func = _lune._toList, nilable = false, child = { { func = _lune._toInt, nilable = false, child = {} } } } )
-   table.insert( memInfo, { name = "itemTypeId", func = _lune._toList, nilable = false, child = { { func = _lune._toInt, nilable = false, child = {} } } } )
-   table.insert( memInfo, { name = "argTypeId", func = _lune._toList, nilable = false, child = { { func = _lune._toInt, nilable = false, child = {} } } } )
-   table.insert( memInfo, { name = "retTypeId", func = _lune._toList, nilable = false, child = { { func = _lune._toInt, nilable = false, child = {} } } } )
-   table.insert( memInfo, { name = "children", func = _lune._toList, nilable = false, child = { { func = _lune._toInt, nilable = false, child = {} } } } )
+   table.insert( memInfo, { name = "ifList", func = _lune._toList, nilable = false, child = { { func = _IdInfo._fromMap, nilable = false, child = {} } } } )
+   table.insert( memInfo, { name = "itemTypeId", func = _lune._toList, nilable = false, child = { { func = _IdInfo._fromMap, nilable = false, child = {} } } } )
+   table.insert( memInfo, { name = "argTypeId", func = _lune._toList, nilable = false, child = { { func = _IdInfo._fromMap, nilable = false, child = {} } } } )
+   table.insert( memInfo, { name = "retTypeId", func = _lune._toList, nilable = false, child = { { func = _IdInfo._fromMap, nilable = false, child = {} } } } )
+   table.insert( memInfo, { name = "children", func = _lune._toList, nilable = false, child = { { func = _IdInfo._fromMap, nilable = false, child = {} } } } )
    table.insert( memInfo, { name = "moduleLang", func = Types.Lang._from, nilable = true, child = {} } )
    table.insert( memInfo, { name = "requirePath", func = _lune._toStr, nilable = true, child = {} } )
    local result, mess = _lune._fromMap( obj, val, memInfo )
@@ -1600,7 +1647,7 @@ function Import:processImport( modulePath, depth )
    local orgModulePath = modulePath
    modulePath = frontInterface.getLuaModulePath( modulePath )
    
-   Log.log( Log.Level.Info, __func__, 715, function (  )
+   Log.log( Log.Level.Info, __func__, 719, function (  )
    
       return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), orgModulePath)
    end )
@@ -1617,7 +1664,7 @@ function Import:processImport( modulePath, depth )
          do
             local moduleMeta = frontInterface.loadMeta( self.importModuleInfo, orgModulePath )
             if moduleMeta ~= nil then
-               Log.log( Log.Level.Info, __func__, 730, function (  )
+               Log.log( Log.Level.Info, __func__, 734, function (  )
                
                   return string.format( "%s already", orgModulePath)
                end )
@@ -1654,7 +1701,7 @@ function Import:processImport( modulePath, depth )
    end
    
    local metaInfo = moduleMeta:get_metaInfo()
-   Log.log( Log.Level.Debug, __func__, 754, function (  )
+   Log.log( Log.Level.Debug, __func__, 758, function (  )
    
       return string.format( "%s processing", orgModulePath)
    end )
@@ -1673,7 +1720,7 @@ function Import:processImport( modulePath, depth )
          do
             if dependInfo['use'] then
                local _
-               local _4044, metaTypeId2TypeInfoMap = self:processImport( dependName, depth + 1 )
+               local _4052, metaTypeId2TypeInfoMap = self:processImport( dependName, depth + 1 )
                local typeId = math.floor((_lune.unwrap( dependInfo['typeId']) ))
                dependLibId2DependInfo[typeId] = DependModuleInfo.new(typeId, metaTypeId2TypeInfoMap)
             end
@@ -1713,7 +1760,7 @@ function Import:processImport( modulePath, depth )
       moduleTypeInfo = self.transUnitIF:pushModule( self.processInfo, true, moduleName, mutable )
    end
    
-   for __index, _4062 in ipairs( nameList ) do
+   for __index, _4070 in ipairs( nameList ) do
       self.transUnitIF:popModule(  )
    end
    
@@ -1863,11 +1910,11 @@ function Import:processImport( modulePath, depth )
       if #atomInfo.children > 0 then
          local scope = _lune.unwrap( typeId2Scope[atomInfo.typeId])
          for __index, childId in ipairs( atomInfo.children ) do
-            local typeInfo = typeId2TypeInfo[childId]
+            local typeInfo = typeId2TypeInfo[childId.id]
             if  nil == typeInfo then
                local _typeInfo = typeInfo
             
-               Util.err( string.format( "not found childId -- %s, %d, %s(%d)", orgModulePath, childId, atomInfo.txt, atomInfo.typeId) )
+               Util.err( string.format( "not found childId -- %s, %d, %s(%d)", orgModulePath, childId.id, atomInfo.txt, atomInfo.typeId) )
             end
             
             local symbolKind = Ast.SymbolKind.Typ
@@ -1947,7 +1994,7 @@ function Import:processImport( modulePath, depth )
             
          elseif _switchExp == Ast.TypeInfoKind.Module then
             self.transUnitIF:pushModule( self.processInfo, true, classTypeInfo:getTxt(  ), Ast.TypeInfo.isMut( classTypeInfo ) )
-            Log.log( Log.Level.Debug, __func__, 1034, function (  )
+            Log.log( Log.Level.Debug, __func__, 1038, function (  )
             
                return string.format( "push module -- %s, %s, %d, %d, %d", classTypeInfo:getTxt(  ), _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, self.transUnitIF:get_scope(), false ) or "nil", _lune.nilacc( _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'get_typeId', 'callmtd' ), "id" ) or -1, classTypeInfo:get_typeId().id, self.transUnitIF:get_scope():get_parent():get_scopeId())
             end )
@@ -2031,7 +2078,7 @@ function Import:processImport( modulePath, depth )
    end
    
    
-   for __index, _4201 in ipairs( nameList ) do
+   for __index, _4209 in ipairs( nameList ) do
       self.transUnitIF:popModule(  )
    end
    
@@ -2050,7 +2097,7 @@ function Import:processImport( modulePath, depth )
    
    self.importModuleInfo:remove(  )
    
-   Log.log( Log.Level.Info, __func__, 1136, function (  )
+   Log.log( Log.Level.Info, __func__, 1140, function (  )
    
       return string.format( "%s complete", orgModulePath)
    end )
