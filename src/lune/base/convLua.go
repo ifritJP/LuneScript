@@ -98,12 +98,12 @@ func ConvLua_runLuaOnLns(code string)(LnsAny, string) {
     var err string
     loadFunc,err = DependLuaOnLns_runLuaOnLns(code)
     if loadFunc != nil{
-        loadFunc_5413 := loadFunc.(*Lns_luaValue)
+        loadFunc_5412 := loadFunc.(*Lns_luaValue)
         var mod LnsAny
-        mod = Lns_getVM().RunLoadedfunc(loadFunc_5413,[]LnsAny{})[0]
+        mod = Lns_getVM().RunLoadedfunc(loadFunc_5412,[]LnsAny{})[0]
         if mod != nil{
-            mod_5416 := mod
-            return mod_5416, ""
+            mod_5415 := mod
+            return mod_5415, ""
         }
         return nil, "load error"
     }
@@ -172,9 +172,9 @@ func ConvLua_runTestCode(ctrl *Testing_Ctrl,luaCode string) {
     var mess LnsAny
     loaded,mess = Lns_getVM().Load(luaCode, nil)
     if loaded != nil{
-        loaded_5500 := loaded.(*Lns_luaValue)
+        loaded_5499 := loaded.(*Lns_luaValue)
         {
-            _mod := convLua_convExp18578(Lns_2DDD(Lns_getVM().RunLoadedfunc(loaded_5500,Lns_2DDD([]LnsAny{}))[0]))
+            _mod := convLua_convExp18578(Lns_2DDD(Lns_getVM().RunLoadedfunc(loaded_5499,Lns_2DDD([]LnsAny{}))[0]))
             if !Lns_IsNil( _mod ) {
                 mod := _mod
                 {
@@ -766,7 +766,7 @@ func (self *convLua_convFilter) outputMeta(node *Nodes_RootNode) {
     {
         for _typeInfo, _moduleInfo := range( node.FP.Get_importModule2moduleInfo().Items ) {
             typeInfo := _typeInfo.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
-            moduleInfo := _moduleInfo.(Nodes_ModuleInfoDownCast).ToNodes_ModuleInfo()
+            moduleInfo := _moduleInfo.(FrontInterface_ModuleInfoDownCast).ToFrontInterface_ModuleInfo()
             importNameMap.Set(moduleInfo.FP.Get_fullName(),typeInfo)
         }
         var index LnsInt
@@ -1181,8 +1181,8 @@ func (self *convLua_convFilter) outputMeta(node *Nodes_RootNode) {
             _moduleIndex := importModuleType2Index.Get(moduleTypeInfo)
             if !Lns_IsNil( _moduleIndex ) {
                 moduleIndex := _moduleIndex.(LnsInt)
-                var moduleInfo *Nodes_ModuleInfo
-                moduleInfo = Lns_unwrap( node.FP.Get_importModule2moduleInfo().Get(moduleTypeInfo)).(*Nodes_ModuleInfo)
+                var moduleInfo *FrontInterface_ModuleInfo
+                moduleInfo = Lns_unwrap( node.FP.Get_importModule2moduleInfo().Get(moduleTypeInfo)).(*FrontInterface_ModuleInfo)
                 {
                     _extId := moduleInfo.FP.Get_localTypeInfo2importIdMap().Get(typeInfo)
                     if !Lns_IsNil( _extId ) {
@@ -1331,7 +1331,7 @@ func (self *convLua_convFilter) outputMeta(node *Nodes_RootNode) {
         for _, _name := range( __sorted4102.Items ) {
             moduleTypeInfo := __collection4102.Items[ _name ].(Ast_TypeInfoDownCast).ToAst_TypeInfo()
             name := _name.(string)
-            self.FP.writeln(Lns_getVM().String_format("__dependModuleMap[ '%s' ] = { typeId = %d, use = %s, buildId = %q }", []LnsAny{name, Lns_unwrap( importModuleType2Index.Get(moduleTypeInfo)).(LnsInt), exportNeedModuleTypeInfo.Has(Ast_TypeInfo2Stem(moduleTypeInfo)), (Lns_unwrap( node.FP.Get_importModule2moduleInfo().Get(moduleTypeInfo)).(*Nodes_ModuleInfo)).FP.Get_moduleId().FP.Get_idStr()}))
+            self.FP.writeln(Lns_getVM().String_format("__dependModuleMap[ '%s' ] = { typeId = %d, use = %s, buildId = %q }", []LnsAny{name, Lns_unwrap( importModuleType2Index.Get(moduleTypeInfo)).(LnsInt), exportNeedModuleTypeInfo.Has(Ast_TypeInfo2Stem(moduleTypeInfo)), (Lns_unwrap( node.FP.Get_importModule2moduleInfo().Get(moduleTypeInfo)).(*FrontInterface_ModuleInfo)).FP.Get_moduleId().FP.Get_idStr()}))
         }
     }
     self.FP.Write("_moduleObj.__subModuleMap = {")
@@ -2979,15 +2979,15 @@ func (self *convLua_convFilter) ProcessForeach(node *Nodes_ForeachNode,_opt LnsA
     }
     self.FP.Write("for ")
     if keySym != nil{
-        keySym_4879 := keySym.(*Ast_SymbolInfo)
-        self.FP.Write(convLua_getSymTxt_1047_(keySym_4879.FP.Get_name(), Lns_getVM().String_format("%d", []LnsAny{keySym_4879.FP.Get_symbolId()})))
+        keySym_4878 := keySym.(*Ast_SymbolInfo)
+        self.FP.Write(convLua_getSymTxt_1047_(keySym_4878.FP.Get_name(), Lns_getVM().String_format("%d", []LnsAny{keySym_4878.FP.Get_symbolId()})))
     } else {
         self.FP.Write("__index")
     }
     self.FP.Write(", ")
     if valSym != nil{
-        valSym_4882 := valSym.(*Ast_SymbolInfo)
-        self.FP.Write(convLua_getSymTxt_1047_(valSym_4882.FP.Get_name(), Lns_getVM().String_format("%d", []LnsAny{valSym_4882.FP.Get_symbolId()})))
+        valSym_4881 := valSym.(*Ast_SymbolInfo)
+        self.FP.Write(convLua_getSymTxt_1047_(valSym_4881.FP.Get_name(), Lns_getVM().String_format("%d", []LnsAny{valSym_4881.FP.Get_symbolId()})))
     } else {
         self.FP.Write("__val")
     }
@@ -3039,16 +3039,16 @@ func (self *convLua_convFilter) ProcessForsort(node *Nodes_ForsortNode,_opt LnsA
     var key string
     key = "__key"
     if keySym != nil{
-        keySym_4901 := keySym.(*Ast_SymbolInfo)
-        key = convLua_getSymTxt_1047_(keySym_4901.FP.Get_name(), Lns_getVM().String_format("%d", []LnsAny{keySym_4901.FP.Get_symbolId()}))
+        keySym_4900 := keySym.(*Ast_SymbolInfo)
+        key = convLua_getSymTxt_1047_(keySym_4900.FP.Get_name(), Lns_getVM().String_format("%d", []LnsAny{keySym_4900.FP.Get_symbolId()}))
         
     }
     self.FP.Write(key)
     self.FP.writeln(" in ipairs( __sorted ) do")
     self.FP.pushIndent(nil)
     if valSym != nil{
-        valSym_4903 := valSym.(*Ast_SymbolInfo)
-        self.FP.writeln(Lns_getVM().String_format("local %s = __map[ %s ]", []LnsAny{convLua_getSymTxt_1047_(valSym_4903.FP.Get_name(), Lns_getVM().String_format("%d", []LnsAny{valSym_4903.FP.Get_symbolId()})), key}))
+        valSym_4902 := valSym.(*Ast_SymbolInfo)
+        self.FP.writeln(Lns_getVM().String_format("local %s = __map[ %s ]", []LnsAny{convLua_getSymTxt_1047_(valSym_4902.FP.Get_name(), Lns_getVM().String_format("%d", []LnsAny{valSym_4902.FP.Get_symbolId()})), key}))
     }
     convLua_filter_1118_(&node.FP.Get_block().Nodes_Node, self, &node.Nodes_Node)
     self.FP.writeln("end")
@@ -3304,8 +3304,8 @@ func (self *convLua_convFilter) ProcessExpCall(node *Nodes_ExpCallNode,_opt LnsA
                     var literal LnsAny
                     literal = convLua_convExp14215(Lns_2DDD(expList.GetAt(1).(Nodes_NodeDownCast).ToNodes_Node().FP.GetLiteral()))
                     if literal != nil{
-                        literal_4993 := literal
-                        switch _exp14235 := literal_4993.(type) {
+                        literal_4992 := literal
+                        switch _exp14235 := literal_4992.(type) {
                         case *Nodes_Literal__Str:
                         txt := _exp14235.Val1
                             opList = TransUnit_findForm(txt)
@@ -4005,8 +4005,8 @@ func (self *ConvLua_MacroEvalImp) evalFromMacroCode(code string) *Lns_luaValue {
     var err string
     _func,err = ConvLua_runLuaOnLns(code)
     if _func != nil{
-        func_5428 := _func
-        return func_5428.(*Lns_luaValue)
+        func_5427 := _func
+        return func_5427.(*Lns_luaValue)
     }
     Util_err(err)
 // insert a dummy
@@ -4021,8 +4021,8 @@ func (self *ConvLua_MacroEvalImp) EvalFromCode(processInfo *Ast_ProcessInfo,name
     conv = NewconvLua_convFilter("macro", stream.FP, stream.FP, ConvLua_ConvMode__ConvMeta, true, Ast_headTypeInfo, processInfo, Ast_SymbolKind__Typ, nil, LuaVer_getCurVer(), false, true)
     conv.FP.OutputDeclMacro(name, argNameList, convLua_outputMacroStmtBlock_1289_(func() {
         if code != nil{
-            code_5442 := code.(string)
-            conv.FP.Write(code_5442)
+            code_5441 := code.(string)
+            conv.FP.Write(code_5441)
         }
     }))
     return self.FP.evalFromMacroCode(stream.FP.Get_txt())

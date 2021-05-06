@@ -782,54 +782,6 @@ pub class LuneHelperInfo {
    }
 }
 
-pub class ModuleInfo extend (Ast.ModuleInfoIF) {
-   pri let fullName:str{ pub };
-   pri let localTypeInfo2importIdMap:&Map<&Ast.TypeInfo,int> { pub };
-   pri let mut importId2localTypeInfoMap:Map<int,&Ast.TypeInfo> { pub& };
-   pri let assignName:str{ pub };
-   pri let moduleId:&frontInterface.ModuleId {pub};
-   pri let importedAliasMap: &Map<&Ast.TypeInfo,&Ast.AliasTypeInfo> {pub};
-
-   pub fn __init( fullName:str, assignName:str, idMap:&Map<&Ast.TypeInfo,int>,
-                  moduleId:&frontInterface.ModuleId,
-                  importedAliasMap: &Map<&Ast.TypeInfo,&Ast.AliasTypeInfo> )
-   {
-      self.moduleId = moduleId;
-      self.fullName = fullName;
-      self.assignName = assignName;
-      self.localTypeInfo2importIdMap = idMap;
-      self.importId2localTypeInfoMap = {};
-      foreach importId, typeInfo in idMap {
-         self.importId2localTypeInfoMap[ importId ] = typeInfo;
-      }
-      self.importedAliasMap = importedAliasMap;
-   }
-
-   pub fn get_modulePath(): str {
-      return self.fullName;
-   }
-
-   pub fn assign( assignName: str ): ModuleInfo {
-      return new ModuleInfo(
-         self.fullName, assignName, self.localTypeInfo2importIdMap,
-         self.moduleId, self.importedAliasMap );
-   }
-}
-
-// pub fn TypeInfo.getFullName( importInfo:&Map<&Ast.TypeInfo,&Ast.ModuleInfoIF>, localFlag:bool! ) : str {
-//    return self.getParentFullName( importInfo, localFlag ) .. self.$rawTxt;
-// }
-
-
-// pub class ProcessInfo {
-//    let mut idProvier:Ast.IdProvider {pub};
-//    let mut idProvierExt:Ast.IdProvider {pub};
-//    let mut typeInfo2ModifierMap:Map<&Ast.TypeInfo,&Ast.TypeInfo> {pub};
-//    let mut typeInfo2BoxMap:Map<&Ast.TypeInfo,&Ast.TypeInfo> {pub};
-//    let mut typeInfo2DDDMap:Map<&Ast.TypeInfo,&Ast.DDDTypeInfo> {pub};
-// }
-
-
 /**
 マクロの expand-statement で使用する変数情報。
 
@@ -896,7 +848,7 @@ _declNodeClass( "Root", Node, false, false, false,
                   { "provideNode": "&ProvideNode!" },
                   { "luneHelperInfo": "&LuneHelperInfo" },
                   { "@nodeManager": "&NodeManager" },
-                  { "importModule2moduleInfo": "&Map<&Ast.TypeInfo,&ModuleInfo>" },
+                  { "importModule2moduleInfo": "&Map<&Ast.TypeInfo,&frontInterface.ModuleInfo>" },
                   { "typeId2MacroInfo": "&Map<&Ast.IdInfo,&MacroInfo>" },
                   { "typeId2ClassMap": "&Map<&Ast.IdInfo,&NamespaceInfo>" } ]
 );

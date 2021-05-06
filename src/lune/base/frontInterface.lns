@@ -27,11 +27,6 @@ import lune.base.Ast;
 
 _lune_control ignore_symbol_;
 
-pub class ModuleMeta {
-   let metaInfo:Luaval<&stem> {pub};
-   let lnsPath:str {pub};
-}
-
 /**
 モジュールの識別情報を管理する。
 */
@@ -71,7 +66,56 @@ pub static fn ModuleId.createIdFromTxt( idStr:str ):ModuleId {
    return new ModuleId( modTime, buildCount@@int );
 }
 
+pub class ModuleInfo extend (Ast.ModuleInfoIF) {
+   pri let fullName:str{ pub };
+   /**
+import した TypeInfo の中で、
+import 元の typeId ではなく、内部の typeId で生成された TypeInfo のマップ。
+key: TypeInfo
+val: import 元の TypeId
+   */
+   pri let localTypeInfo2importIdMap:&Map<&Ast.TypeInfo,int> { pub };
+   /** import 元の typeId → 生成されている TypeInfo */
+   pri let mut importId2localTypeInfoMap:Map<int,&Ast.TypeInfo> { pub& };
+   pri let assignName:str{ pub };
+   pri let moduleId:&ModuleId {pub};
+   /**
+import 元のモジュール内で定義されている alias。
+alias で置き換えている元の Type → alias の型。
+   */
+   pri let importedAliasMap: &Map<&Ast.TypeInfo,&Ast.AliasTypeInfo> {pub};
 
+   pub fn __init( fullName:str, assignName:str, idMap:&Map<&Ast.TypeInfo,int>,
+                  moduleId:&ModuleId,
+                  importedAliasMap: &Map<&Ast.TypeInfo,&Ast.AliasTypeInfo> )
+   {
+      self.moduleId = moduleId;
+      self.fullName = fullName;
+      self.assignName = assignName;
+      self.localTypeInfo2importIdMap = idMap;
+      self.importId2localTypeInfoMap = {};
+      foreach importId, typeInfo in idMap {
+         self.importId2localTypeInfoMap[ importId ] = typeInfo;
+      }
+      self.importedAliasMap = importedAliasMap;
+   }
+
+   pub fn get_modulePath(): str {
+      return self.fullName;
+   }
+
+   pub fn assign( assignName: str ): ModuleInfo {
+      return new ModuleInfo(
+         self.fullName, assignName, self.localTypeInfo2importIdMap,
+         self.moduleId, self.importedAliasMap );
+   }
+}
+
+pub class ModuleMeta {
+   let metaInfo:Luaval<&stem> {pub};
+   let lnsPath:str {pub};
+   let processInfo:Ast.ProcessInfo! {pub};
+}
 
 /**
 インポートしたモジュールを管理する。
@@ -111,7 +155,7 @@ Lua からも利用される。
 @return stem! ロードしたモジュール。 失敗した場合 nil
 @return &stem ロードしたモジュールのメタ情報。
    */
-   pub fn loadModule( mod:str ) mut: Luaval<&stem>!, &ModuleMeta;
+   pub fn loadModule( mod:str ) mut: Luaval<&stem>!, ModuleMeta;
 
    /**
 指定の LuneScript のモジュールからメタ情報をロードする。
@@ -121,7 +165,7 @@ Lua からも利用される。
 @return &stem ロードしたモジュールのメタ情報。
    */
    pub fn loadMeta(
-      importModuleInfo:ImportModuleInfo, mod:str ) mut: &ModuleMeta!;
+      importModuleInfo:ImportModuleInfo, mod:str ) mut: ModuleMeta!;
    /**
 LuneScript のコード文字列からロードする。
 
@@ -145,7 +189,7 @@ go/github:com.ifritJP. 等の go 用のパスを、
 }
 
 class dummyFront extend (frontInterface) {
-   pub fn loadModule( mod:str ) mut: Luaval<&stem>!, &ModuleMeta {
+   pub fn loadModule( mod:str ) mut: Luaval<&stem>!, ModuleMeta {
       // error( "not implements" );
       let loaded = _load( "return {}" ## );
       let emptyTable;
@@ -154,10 +198,10 @@ class dummyFront extend (frontInterface) {
       } else {
          error( "load error" );
       }
-      let meta = new ModuleMeta( emptyTable, mod.gsub( "%.", "/" ) .. ".lns" );
+      let mut meta = new ModuleMeta( emptyTable, mod.gsub( "%.", "/" ) .. ".lns", nil );
       return require( mod ), meta;
    }
-   pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ) mut : &ModuleMeta! {
+   pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ) mut : ModuleMeta! {
       error( "not implements" );
    }
    pub fn loadFromLnsTxt(
@@ -182,7 +226,7 @@ pub fn setFront( newFront:frontInterface ) {
    __luneScript = newFront;
 }
 
-pub fn loadModule( mod:str ): Luaval<&stem>!, &ModuleMeta {
+pub fn loadModule( mod:str ): Luaval<&stem>!, ModuleMeta {
    return __luneScript.loadModule( mod )**;
 }
 
@@ -192,7 +236,7 @@ pub fn loadFromLnsTxt(
    return __luneScript.loadFromLnsTxt( importModuleInfo, name, txt );
 }
 
-pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ): &ModuleMeta! {
+pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ): ModuleMeta! {
    return __luneScript.loadMeta( importModuleInfo, mod );
 }
 

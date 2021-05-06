@@ -13,7 +13,7 @@ func OutputDepend_createFilter(stream Lns_oStream) *Nodes_Filter {
 }
 
 // 140: decl @lune.@base.@OutputDepend.Ast2Depend
-func OutputDepend_Ast2Depend_1066_(ast *TransUnit_ASTInfo) string {
+func OutputDepend_Ast2Depend_1067_(ast *TransUnit_ASTInfo) string {
     var stream *Util_memStream
     stream = NewUtil_memStream()
     var conv *Nodes_Filter
@@ -336,18 +336,18 @@ func (self *OutputDepend_Front) LoadMeta(importModuleInfo *FrontInterface_Import
     var mess LnsAny
     loaded,mess = Lns_getVM().Loadfile(metaPath)
     if loaded != nil{
-        loaded_3752 := loaded.(*Lns_luaValue)
+        loaded_3751 := loaded.(*Lns_luaValue)
         var meta LnsAny
         
         {
-            _meta := OutputDepend_convExp502(Lns_2DDD(Lns_getVM().RunLoadedfunc(loaded_3752,Lns_2DDD([]LnsAny{}))[0]))
+            _meta := OutputDepend_convExp502(Lns_2DDD(Lns_getVM().RunLoadedfunc(loaded_3751,Lns_2DDD([]LnsAny{}))[0]))
             if _meta == nil{
                 return nil
             } else {
                 meta = _meta
             }
         }
-        return NewFrontInterface_ModuleMeta(meta, Lns_car(Lns_getVM().String_gsub(metaPath,"%.meta$", ".lns")).(string))
+        return NewFrontInterface_ModuleMeta(meta, Lns_car(Lns_getVM().String_gsub(metaPath,"%.meta$", ".lns")).(string), nil)
     }
     Lns_print([]LnsAny{mess})
     return nil

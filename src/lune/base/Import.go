@@ -3,80 +3,80 @@ package lnsc
 import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_Import bool
 var Import__mod__ string
-// for 835
-func Import_convExp4615(arg1 []LnsAny) (LnsAny, LnsAny) {
-    return Import__TypeInfoDownCastF(Lns_getFromMulti( arg1, 0 )), Lns_getFromMulti( arg1, 1 )
-}
-// for 838
-func Import_convExp4638(arg1 []LnsAny) (LnsAny, LnsAny) {
-    return Import__TypeInfoDownCastF(Lns_getFromMulti( arg1, 0 )), Lns_getFromMulti( arg1, 1 )
-}
-// for 842
-func Import_convExp4670(arg1 []LnsAny) (LnsAny, LnsAny) {
-    return Import__TypeInfoDownCastF(Lns_getFromMulti( arg1, 0 )), Lns_getFromMulti( arg1, 1 )
-}
 // for 853
-func Import_convExp4739(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Import_convExp4634(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Import__TypeInfoDownCastF(Lns_getFromMulti( arg1, 0 )), Lns_getFromMulti( arg1, 1 )
 }
 // for 856
-func Import_convExp4762(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Import_convExp4657(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Import__TypeInfoDownCastF(Lns_getFromMulti( arg1, 0 )), Lns_getFromMulti( arg1, 1 )
 }
-// for 859
-func Import_convExp4785(arg1 []LnsAny) (LnsAny, LnsAny) {
-    return Import__TypeInfoDownCastF(Lns_getFromMulti( arg1, 0 )), Lns_getFromMulti( arg1, 1 )
-}
-// for 862
-func Import_convExp4808(arg1 []LnsAny) (LnsAny, LnsAny) {
-    return Import__TypeInfoDownCastF(Lns_getFromMulti( arg1, 0 )), Lns_getFromMulti( arg1, 1 )
-}
-// for 865
-func Import_convExp4831(arg1 []LnsAny) (LnsAny, LnsAny) {
-    return Import__TypeInfoDownCastF(Lns_getFromMulti( arg1, 0 )), Lns_getFromMulti( arg1, 1 )
-}
-// for 868
-func Import_convExp4854(arg1 []LnsAny) (LnsAny, LnsAny) {
+// for 860
+func Import_convExp4689(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Import__TypeInfoDownCastF(Lns_getFromMulti( arg1, 0 )), Lns_getFromMulti( arg1, 1 )
 }
 // for 871
-func Import_convExp4877(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Import_convExp4758(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Import__TypeInfoDownCastF(Lns_getFromMulti( arg1, 0 )), Lns_getFromMulti( arg1, 1 )
 }
 // for 874
-func Import_convExp4900(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Import_convExp4781(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Import__TypeInfoDownCastF(Lns_getFromMulti( arg1, 0 )), Lns_getFromMulti( arg1, 1 )
 }
-// for 171
-func Import_convExp544(arg1 []LnsAny) LnsAny {
+// for 877
+func Import_convExp4804(arg1 []LnsAny) (LnsAny, LnsAny) {
+    return Import__TypeInfoDownCastF(Lns_getFromMulti( arg1, 0 )), Lns_getFromMulti( arg1, 1 )
+}
+// for 880
+func Import_convExp4827(arg1 []LnsAny) (LnsAny, LnsAny) {
+    return Import__TypeInfoDownCastF(Lns_getFromMulti( arg1, 0 )), Lns_getFromMulti( arg1, 1 )
+}
+// for 883
+func Import_convExp4850(arg1 []LnsAny) (LnsAny, LnsAny) {
+    return Import__TypeInfoDownCastF(Lns_getFromMulti( arg1, 0 )), Lns_getFromMulti( arg1, 1 )
+}
+// for 886
+func Import_convExp4873(arg1 []LnsAny) (LnsAny, LnsAny) {
+    return Import__TypeInfoDownCastF(Lns_getFromMulti( arg1, 0 )), Lns_getFromMulti( arg1, 1 )
+}
+// for 889
+func Import_convExp4896(arg1 []LnsAny) (LnsAny, LnsAny) {
+    return Import__TypeInfoDownCastF(Lns_getFromMulti( arg1, 0 )), Lns_getFromMulti( arg1, 1 )
+}
+// for 892
+func Import_convExp4919(arg1 []LnsAny) (LnsAny, LnsAny) {
+    return Import__TypeInfoDownCastF(Lns_getFromMulti( arg1, 0 )), Lns_getFromMulti( arg1, 1 )
+}
+// for 182
+func Import_convExp552(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 199
-func Import_convExp684(arg1 []LnsAny) LnsAny {
+// for 205
+func Import_convExp681(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 318
-func Import_convExp1289(arg1 []LnsAny) LnsAny {
+// for 324
+func Import_convExp1279(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 336
-func Import_convExp1387(arg1 []LnsAny) LnsAny {
+// for 342
+func Import_convExp1377(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 414
-func Import_convExp1902(arg1 []LnsAny) LnsAny {
+// for 420
+func Import_convExp1892(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 684
-func Import_convExp3679(arg1 []LnsAny) LnsAny {
+// for 690
+func Import_convExp3664(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 766
-func Import_convExp4196(arg1 []LnsAny) (*Lns_luaValue, *LnsMap) {
+// for 784
+func Import_convExp4216(arg1 []LnsAny) (*Lns_luaValue, *LnsMap) {
     return Lns_getFromMulti( arg1, 0 ).(*Lns_luaValue), Lns_getFromMulti( arg1, 1 ).(*LnsMap)
 }
-// for 1017
-func Import_convExp5626(arg1 []LnsAny) LnsAny {
+// for 1035
+func Import_convExp5638(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 
@@ -92,7 +92,7 @@ func Import_convExp5626(arg1 []LnsAny) LnsAny {
 // declaration Class -- Import
 type Import_ImportMtd interface {
     Get_importModule2ModuleInfo() *LnsMap
-    ProcessImport(arg1 string, arg2 LnsInt)(*Lns_luaValue, *LnsMap, *Nodes_ModuleInfo)
+    ProcessImport(arg1 *Ast_ProcessInfo, arg2 string, arg3 LnsInt)(*Lns_luaValue, *LnsMap, *FrontInterface_ModuleInfo)
 }
 type Import_Import struct {
     transUnitIF TransUnitIF_TransUnitIF
@@ -102,12 +102,11 @@ type Import_Import struct {
     globalScope *Ast_Scope
     macroCtrl *Macro_MacroCtrl
     typeNameCtrl *Ast_TypeNameCtrl
-    processInfo *Ast_ProcessInfo
     helperInfo *Nodes_LuneHelperInfo
     importModule2ModuleInfo *LnsMap
     importedAliasMap *LnsMap
     importModuleName2ModuleInfo *LnsMap
-    modifier *TransUnitIF_Modifier
+    validMutControl bool
     FP Import_ImportMtd
 }
 func Import_Import2Stem( obj LnsAny ) LnsAny {
@@ -130,15 +129,17 @@ func Import_ImportDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Import_Import) ToImport_Import() *Import_Import {
     return obj
 }
-func NewImport_Import(arg1 TransUnitIF_TransUnitIF, arg2 *FrontInterface_ImportModuleInfo, arg3 *Ast_TypeInfo, arg4 *Builtin_BuiltinFuncType, arg5 *Ast_Scope, arg6 *Macro_MacroCtrl, arg7 *Ast_TypeNameCtrl, arg8 *Ast_ProcessInfo, arg9 *Nodes_LuneHelperInfo, arg10 *LnsMap, arg11 bool) *Import_Import {
+func NewImport_Import(arg1 TransUnitIF_TransUnitIF, arg2 *FrontInterface_ImportModuleInfo, arg3 *Ast_TypeInfo, arg4 *Builtin_BuiltinFuncType, arg5 *Ast_Scope, arg6 *Macro_MacroCtrl, arg7 *Ast_TypeNameCtrl, arg8 *Nodes_LuneHelperInfo, arg9 *LnsMap, arg10 bool) *Import_Import {
     obj := &Import_Import{}
     obj.FP = obj
-    obj.InitImport_Import(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11)
+    obj.InitImport_Import(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
     return obj
 }
 func (self *Import_Import) Get_importModule2ModuleInfo() *LnsMap{ return self.importModule2ModuleInfo }
 // 67: DeclConstr
-func (self *Import_Import) InitImport_Import(transUnitIF TransUnitIF_TransUnitIF,importModuleInfo *FrontInterface_ImportModuleInfo,moduleType *Ast_TypeInfo,builtinFunc *Builtin_BuiltinFuncType,globalScope *Ast_Scope,macroCtrl *Macro_MacroCtrl,typeNameCtrl *Ast_TypeNameCtrl,processInfo *Ast_ProcessInfo,helperInfo *Nodes_LuneHelperInfo,importedAliasMap *LnsMap,validMutControl bool) {
+func (self *Import_Import) InitImport_Import(transUnitIF TransUnitIF_TransUnitIF,importModuleInfo *FrontInterface_ImportModuleInfo,moduleType *Ast_TypeInfo,builtinFunc *Builtin_BuiltinFuncType,globalScope *Ast_Scope,macroCtrl *Macro_MacroCtrl,typeNameCtrl *Ast_TypeNameCtrl,helperInfo *Nodes_LuneHelperInfo,importedAliasMap *LnsMap,validMutControl bool) {
+    self.validMutControl = validMutControl
+    
     self.transUnitIF = transUnitIF
     
     self.importModuleInfo = importModuleInfo
@@ -153,8 +154,6 @@ func (self *Import_Import) InitImport_Import(transUnitIF TransUnitIF_TransUnitIF
     
     self.typeNameCtrl = typeNameCtrl
     
-    self.processInfo = processInfo
-    
     self.helperInfo = helperInfo
     
     self.importedAliasMap = importedAliasMap
@@ -163,18 +162,18 @@ func (self *Import_Import) InitImport_Import(transUnitIF TransUnitIF_TransUnitIF
     
     self.importModuleName2ModuleInfo = NewLnsMap( map[LnsAny]LnsAny{})
     
-    self.modifier = NewTransUnitIF_Modifier(validMutControl, self.processInfo)
-    
 }
 
-// 713: decl @lune.@base.@Import.Import.processImport
-func (self *Import_Import) ProcessImport(modulePath string,depth LnsInt)(*Lns_luaValue, *LnsMap, *Nodes_ModuleInfo) {
+// 719: decl @lune.@base.@Import.Import.processImport
+func (self *Import_Import) ProcessImport(processInfo *Ast_ProcessInfo,modulePath string,depth LnsInt)(*Lns_luaValue, *LnsMap, *FrontInterface_ModuleInfo) {
     __func__ := "@lune.@base.@Import.Import.processImport"
+    var modifier *TransUnitIF_Modifier
+    modifier = NewTransUnitIF_Modifier(self.validMutControl, processInfo)
     var orgModulePath string
     orgModulePath = modulePath
     modulePath = FrontInterface_getLuaModulePath(modulePath)
     
-    Log_log(Log_Level__Info, __func__, 719, Log_CreateMessage(func() string {
+    Log_log(Log_Level__Info, __func__, 732, Log_CreateMessage(func() string {
         return Lns_getVM().String_format("%s -> %s start", []LnsAny{self.moduleType.FP.GetTxt(self.typeNameCtrl, nil, nil), orgModulePath})
     }))
     
@@ -184,12 +183,12 @@ func (self *Import_Import) ProcessImport(modulePath string,depth LnsInt)(*Lns_lu
     {
         _moduleInfo := self.importModuleName2ModuleInfo.Get(modulePath)
         if !Lns_IsNil( _moduleInfo ) {
-            moduleInfo := _moduleInfo.(*Nodes_ModuleInfo)
+            moduleInfo := _moduleInfo.(*FrontInterface_ModuleInfo)
             {
                 _moduleMeta := FrontInterface_loadMeta(self.importModuleInfo, orgModulePath)
                 if !Lns_IsNil( _moduleMeta ) {
                     moduleMeta := _moduleMeta.(*FrontInterface_ModuleMeta)
-                    Log_log(Log_Level__Info, __func__, 734, Log_CreateMessage(func() string {
+                    Log_log(Log_Level__Info, __func__, 747, Log_CreateMessage(func() string {
                         return Lns_getVM().String_format("%s already", []LnsAny{orgModulePath})
                     }))
                     
@@ -212,12 +211,12 @@ func (self *Import_Import) ProcessImport(modulePath string,depth LnsInt)(*Lns_lu
     var nameList *LnsList
     nameList = NewLnsList([]LnsAny{})
     {
-        _form4077, _param4077, _prev4077 := Lns_getVM().String_gmatch(modulePath, "[^%./:]+")
+        _form4083, _param4083, _prev4083 := Lns_getVM().String_gmatch(modulePath, "[^%./:]+")
         for {
-            _work4077 := _form4077.(*Lns_luaValue).Call( Lns_2DDD( _param4077, _prev4077 ) )
-            _prev4077 = Lns_getFromMulti(_work4077,0)
-            if Lns_IsNil( _prev4077 ) { break }
-            txt := _prev4077.(string)
+            _work4083 := _form4083.(*Lns_luaValue).Call( Lns_2DDD( _param4083, _prev4083 ) )
+            _prev4083 = Lns_getFromMulti(_work4083,0)
+            if Lns_IsNil( _prev4083 ) { break }
+            txt := _prev4083.(string)
             nameList.Insert(txt)
         }
     }
@@ -231,29 +230,31 @@ func (self *Import_Import) ProcessImport(modulePath string,depth LnsInt)(*Lns_lu
             moduleMeta = _moduleMeta.(*FrontInterface_ModuleMeta)
         }
     }
+    var importedProcessInfo LnsAny
+    importedProcessInfo = moduleMeta.FP.Get_processInfo()
     var metaInfo *Lns_luaValue
     metaInfo = moduleMeta.FP.Get_metaInfo().(*Lns_luaValue)
-    Log_log(Log_Level__Debug, __func__, 758, Log_CreateMessage(func() string {
-        return Lns_getVM().String_format("%s processing", []LnsAny{orgModulePath})
+    Log_log(Log_Level__Info, __func__, 775, Log_CreateMessage(func() string {
+        return Lns_getVM().String_format("%s processing -- %s", []LnsAny{orgModulePath, importedProcessInfo})
     }))
     
     var dependLibId2DependInfo *LnsMap
     dependLibId2DependInfo = NewLnsMap( map[LnsAny]LnsAny{})
     {
-        _exp4229 := metaInfo.GetAt( "__dependModuleMap" ).(*Lns_luaValue)
-        _sorted4229 := Lns_getVM().SortMapKeyList( _exp4229 )
-        _index4229, _key4229 := _sorted4229.Get1stFromMap()
-        for _index4229 != nil {
-            dependName := _key4229.(string)
-            dependInfo := _exp4229.GetAt( _key4229 ).(*Lns_luaValue)
+        _exp4249 := metaInfo.GetAt( "__dependModuleMap" ).(*Lns_luaValue)
+        _sorted4249 := Lns_getVM().SortMapKeyList( _exp4249 )
+        _index4249, _key4249 := _sorted4249.Get1stFromMap()
+        for _index4249 != nil {
+            dependName := _key4249.(string)
+            dependInfo := _exp4249.GetAt( _key4249 ).(*Lns_luaValue)
             if Lns_isCondTrue( dependInfo.GetAt("use")){
                 var metaTypeId2TypeInfoMap *LnsMap
-                _,metaTypeId2TypeInfoMap = Import_convExp4196(Lns_2DDD(self.FP.ProcessImport(dependName, depth + 1)))
+                _,metaTypeId2TypeInfoMap = Import_convExp4216(Lns_2DDD(self.FP.ProcessImport(processInfo, dependName, depth + 1)))
                 var typeId LnsInt
                 typeId = Lns_forceCastInt((Lns_unwrap( dependInfo.GetAt("typeId"))))
                 dependLibId2DependInfo.Set(typeId,NewImport_DependModuleInfo(typeId, metaTypeId2TypeInfoMap))
             }
-            _index4229, _key4229 = _sorted4229.NextFromMap( _index4229 )
+            _index4249, _key4249 = _sorted4249.NextFromMap( _index4249 )
         }
     }
     var typeId2TypeInfo *LnsMap
@@ -265,11 +266,11 @@ func (self *Import_Import) ProcessImport(modulePath string,depth LnsInt)(*Lns_lu
     typeId2TypeInfo.Set(self.builtinFunc.Lnsthread_.FP.Get_typeId().Id,self.builtinFunc.Lnsthread_)
     typeId2Scope.Set(self.builtinFunc.Lnsthread_.FP.Get_typeId().Id,self.builtinFunc.Lnsthread_.FP.Get_scope())
     {
-        _exp4377 := metaInfo.GetAt( "__dependIdMap" ).(*Lns_luaValue)
-        _key4377, _val4377 := _exp4377.Get1stFromMap()
-        for _key4377 != nil {
-            typeId := _key4377.(LnsInt)
-            dependIdInfo := _val4377.(*Lns_luaValue)
+        _exp4397 := metaInfo.GetAt( "__dependIdMap" ).(*Lns_luaValue)
+        _key4397, _val4397 := _exp4397.Get1stFromMap()
+        for _key4397 != nil {
+            typeId := _key4397.(LnsInt)
+            dependIdInfo := _val4397.(*Lns_luaValue)
             var dependInfo *Import_DependModuleInfo
             dependInfo = Lns_unwrap( dependLibId2DependInfo.Get(Lns_unwrap( dependIdInfo.GetAt(1)).(LnsInt))).(*Import_DependModuleInfo)
             var typeInfo *Ast_TypeInfo
@@ -282,7 +283,7 @@ func (self *Import_Import) ProcessImport(modulePath string,depth LnsInt)(*Lns_lu
                     typeId2Scope.Set(typeId,_exp)
                 }
             }
-            _key4377, _val4377 = _exp4377.NextFromMap( _key4377 )
+            _key4397, _val4397 = _exp4397.NextFromMap( _key4397 )
         }
     }
     var moduleTypeInfo *Ast_TypeInfo
@@ -296,7 +297,7 @@ func (self *Import_Import) ProcessImport(modulePath string,depth LnsInt)(*Lns_lu
             mutable = metaInfo.GetAt( "__moduleMutable" ).(bool)
             
         }
-        moduleTypeInfo = self.transUnitIF.PushModule(self.processInfo, true, moduleName, mutable)
+        moduleTypeInfo = self.transUnitIF.PushModule(processInfo, true, moduleName, mutable)
         
     }
     for range( nameList.Items ) {
@@ -319,10 +320,10 @@ func (self *Import_Import) ProcessImport(modulePath string,depth LnsInt)(*Lns_lu
     var _typeInfoNormalList *LnsList
     _typeInfoNormalList = NewLnsList([]LnsAny{})
     {
-        _exp4982 := metaInfo.GetAt( "__typeInfoList" ).(*Lns_luaValue)
-        _key4982, _val4982 := _exp4982.Get1stFromMap()
-        for _key4982 != nil {
-            atomInfoLua := _val4982.(*Lns_luaValue)
+        _exp5001 := metaInfo.GetAt( "__typeInfoList" ).(*Lns_luaValue)
+        _key5001, _val5001 := _exp5001.Get1stFromMap()
+        for _key5001 != nil {
+            atomInfoLua := _val5001.(*Lns_luaValue)
             var workAtomInfo LnsAny
             
             {
@@ -345,56 +346,56 @@ func (self *Import_Import) ProcessImport(modulePath string,depth LnsInt)(*Lns_lu
                     mess = nil
                     var kind LnsInt
                     kind = Lns_unwrap( Ast_SerializeKind__from(Lns_forceCastInt(skind))).(LnsInt)
-                    if _switch4903 := kind; _switch4903 == Ast_SerializeKind__Enum {
-                        actInfo, mess = Import_convExp4615(Lns_2DDD(Import__TypeInfoEnum__fromMap_1340_(atomInfo,nil)))
+                    if _switch4922 := kind; _switch4922 == Ast_SerializeKind__Enum {
+                        actInfo, mess = Import_convExp4634(Lns_2DDD(Import__TypeInfoEnum__fromMap_1342_(atomInfo,nil)))
                         
-                    } else if _switch4903 == Ast_SerializeKind__Alge {
-                        actInfo, mess = Import_convExp4638(Lns_2DDD(Import__TypeInfoAlge__fromMap_1382_(atomInfo,nil)))
+                    } else if _switch4922 == Ast_SerializeKind__Alge {
+                        actInfo, mess = Import_convExp4657(Lns_2DDD(Import__TypeInfoAlge__fromMap_1384_(atomInfo,nil)))
                         
                         self.helperInfo.UseAlge = true
                         
-                    } else if _switch4903 == Ast_SerializeKind__Module {
-                        actInfo, mess = Import_convExp4670(Lns_2DDD(Import__TypeInfoModule__fromMap_1252_(atomInfo,nil)))
+                    } else if _switch4922 == Ast_SerializeKind__Module {
+                        actInfo, mess = Import_convExp4689(Lns_2DDD(Import__TypeInfoModule__fromMap_1254_(atomInfo,nil)))
                         
-                    } else if _switch4903 == Ast_SerializeKind__Normal {
+                    } else if _switch4922 == Ast_SerializeKind__Normal {
                         var workInfo LnsAny
-                        workInfo, mess = Import__TypeInfoNormal__fromMap_1318_(atomInfo,nil)
+                        workInfo, mess = Import__TypeInfoNormal__fromMap_1320_(atomInfo,nil)
                         
                         if workInfo != nil{
-                            workInfo_4094 := workInfo.(*Import__TypeInfoNormal)
-                            _typeInfoNormalList.Insert(Import__TypeInfoNormal2Stem(workInfo_4094))
+                            workInfo_4099 := workInfo.(*Import__TypeInfoNormal)
+                            _typeInfoNormalList.Insert(Import__TypeInfoNormal2Stem(workInfo_4099))
                         }
                         actInfo = Import__TypeInfoDownCastF(workInfo)
                         
-                    } else if _switch4903 == Ast_SerializeKind__Nilable {
-                        actInfo, mess = Import_convExp4739(Lns_2DDD(Import__TypeInfoNilable__fromMap_1085_(atomInfo,nil)))
+                    } else if _switch4922 == Ast_SerializeKind__Nilable {
+                        actInfo, mess = Import_convExp4758(Lns_2DDD(Import__TypeInfoNilable__fromMap_1102_(atomInfo,nil)))
                         
-                    } else if _switch4903 == Ast_SerializeKind__Alias {
-                        actInfo, mess = Import_convExp4762(Lns_2DDD(Import__TypeInfoAlias__fromMap_1117_(atomInfo,nil)))
+                    } else if _switch4922 == Ast_SerializeKind__Alias {
+                        actInfo, mess = Import_convExp4781(Lns_2DDD(Import__TypeInfoAlias__fromMap_1119_(atomInfo,nil)))
                         
-                    } else if _switch4903 == Ast_SerializeKind__DDD {
-                        actInfo, mess = Import_convExp4785(Lns_2DDD(Import__TypeInfoDDD__fromMap_1134_(atomInfo,nil)))
+                    } else if _switch4922 == Ast_SerializeKind__DDD {
+                        actInfo, mess = Import_convExp4804(Lns_2DDD(Import__TypeInfoDDD__fromMap_1136_(atomInfo,nil)))
                         
-                    } else if _switch4903 == Ast_SerializeKind__Alternate {
-                        actInfo, mess = Import_convExp4808(Lns_2DDD(Import__TypeInfoAlternate__fromMap_1158_(atomInfo,nil)))
+                    } else if _switch4922 == Ast_SerializeKind__Alternate {
+                        actInfo, mess = Import_convExp4827(Lns_2DDD(Import__TypeInfoAlternate__fromMap_1160_(atomInfo,nil)))
                         
-                    } else if _switch4903 == Ast_SerializeKind__Generic {
-                        actInfo, mess = Import_convExp4831(Lns_2DDD(Import__TypeInfoGeneric__fromMap_1182_(atomInfo,nil)))
+                    } else if _switch4922 == Ast_SerializeKind__Generic {
+                        actInfo, mess = Import_convExp4850(Lns_2DDD(Import__TypeInfoGeneric__fromMap_1184_(atomInfo,nil)))
                         
-                    } else if _switch4903 == Ast_SerializeKind__Modifier {
-                        actInfo, mess = Import_convExp4854(Lns_2DDD(Import__TypeInfoModifier__fromMap_1233_(atomInfo,nil)))
+                    } else if _switch4922 == Ast_SerializeKind__Modifier {
+                        actInfo, mess = Import_convExp4873(Lns_2DDD(Import__TypeInfoModifier__fromMap_1235_(atomInfo,nil)))
                         
-                    } else if _switch4903 == Ast_SerializeKind__Box {
-                        actInfo, mess = Import_convExp4877(Lns_2DDD(Import__TypeInfoBox__fromMap_1199_(atomInfo,nil)))
+                    } else if _switch4922 == Ast_SerializeKind__Box {
+                        actInfo, mess = Import_convExp4896(Lns_2DDD(Import__TypeInfoBox__fromMap_1201_(atomInfo,nil)))
                         
-                    } else if _switch4903 == Ast_SerializeKind__Ext {
-                        actInfo, mess = Import_convExp4900(Lns_2DDD(Import__TypeInfoExt__fromMap_1216_(atomInfo,nil)))
+                    } else if _switch4922 == Ast_SerializeKind__Ext {
+                        actInfo, mess = Import_convExp4919(Lns_2DDD(Import__TypeInfoExt__fromMap_1218_(atomInfo,nil)))
                         
                     }
                     if actInfo != nil{
-                        actInfo_4104 := actInfo.(*Import__TypeInfo)
-                        _typeInfoList.Insert(Import__TypeInfo2Stem(actInfo_4104))
-                        id2atomMap.Set(actInfo_4104.TypeId,actInfo_4104)
+                        actInfo_4109 := actInfo.(*Import__TypeInfo)
+                        _typeInfoList.Insert(Import__TypeInfo2Stem(actInfo_4109))
+                        id2atomMap.Set(actInfo_4109.TypeId,actInfo_4109)
                     } else {
                         for _key, _val := range( atomInfo.Items ) {
                             key := _key.(string)
@@ -402,14 +403,14 @@ func (self *Import_Import) ProcessImport(modulePath string,depth LnsInt)(*Lns_lu
                             Util_errorLog(Lns_getVM().String_format("table: %s:%s", []LnsAny{key, val}))
                         }
                         if mess != nil{
-                            mess_4110 := mess.(string)
-                            Util_errorLog(mess_4110)
+                            mess_4115 := mess.(string)
+                            Util_errorLog(mess_4115)
                         }
                         Util_err(Lns_getVM().String_format("_TypeInfo.%s._fromMap error", []LnsAny{Ast_SerializeKind_getTxt( kind)}))
                     }
                 }
             }
-            _key4982, _val4982 = _exp4982.NextFromMap( _key4982 )
+            _key5001, _val5001 = _exp5001.NextFromMap( _key5001 )
         }
     }
     var orgId2MacroTypeInfo *LnsMap
@@ -417,16 +418,16 @@ func (self *Import_Import) ProcessImport(modulePath string,depth LnsInt)(*Lns_lu
     var lazyModuleSet *LnsSet
     lazyModuleSet = NewLnsSet([]LnsAny{})
     {
-        _exp5022 := metaInfo.GetAt( "__lazyModuleList" ).(*Lns_luaValue)
-        _key5022, _val5022 := _exp5022.Get1stFromMap()
-        for _key5022 != nil {
-            typeId := _val5022.(LnsInt)
+        _exp5041 := metaInfo.GetAt( "__lazyModuleList" ).(*Lns_luaValue)
+        _key5041, _val5041 := _exp5041.Get1stFromMap()
+        for _key5041 != nil {
+            typeId := _val5041.(LnsInt)
             lazyModuleSet.Add(typeId)
-            _key5022, _val5022 = _exp5022.NextFromMap( _key5022 )
+            _key5041, _val5041 = _exp5041.NextFromMap( _key5041 )
         }
     }
     var importParam *Import_ImportParam
-    importParam = NewImport_ImportParam(self.transUnitIF.GetLatestPos(), self.modifier, self.processInfo, typeId2Scope, typeId2TypeInfo, NewLnsMap( map[LnsAny]LnsAny{}), lazyModuleSet, metaInfo, self.transUnitIF.Get_scope(), moduleTypeInfo, Ast_ScopeAccess__Normal, id2atomMap)
+    importParam = NewImport_ImportParam(self.transUnitIF.GetLatestPos(), modifier, processInfo, typeId2Scope, typeId2TypeInfo, NewLnsMap( map[LnsAny]LnsAny{}), lazyModuleSet, metaInfo, self.transUnitIF.Get_scope(), moduleTypeInfo, Ast_ScopeAccess__Normal, id2atomMap)
     for _, _atomInfo := range( _typeInfoList.Items ) {
         atomInfo := _atomInfo.(Import__TypeInfoDownCast).ToImport__TypeInfo()
         var newTypeInfo LnsAny
@@ -440,24 +441,24 @@ func (self *Import_Import) ProcessImport(modulePath string,depth LnsInt)(*Lns_lu
             }
         }
         if newTypeInfo != nil{
-            newTypeInfo_4123 := newTypeInfo.(*Ast_TypeInfo)
-            if newTypeInfo_4123.FP.Get_kind() == Ast_TypeInfoKind__Macro{
-                orgId2MacroTypeInfo.Set(atomInfo.TypeId,newTypeInfo_4123)
+            newTypeInfo_4128 := newTypeInfo.(*Ast_TypeInfo)
+            if newTypeInfo_4128.FP.Get_kind() == Ast_TypeInfoKind__Macro{
+                orgId2MacroTypeInfo.Set(atomInfo.TypeId,newTypeInfo_4128)
             }
-            if newTypeInfo_4123.FP.Get_kind() == Ast_TypeInfoKind__Set{
+            if newTypeInfo_4128.FP.Get_kind() == Ast_TypeInfoKind__Set{
                 self.helperInfo.UseSet = true
                 
             }
-            if newTypeInfo_4123.FP.Get_accessMode() == Ast_AccessMode__Global{
-                if _switch5255 := newTypeInfo_4123.FP.Get_kind(); _switch5255 == Ast_TypeInfoKind__IF || _switch5255 == Ast_TypeInfoKind__Class {
-                    self.globalScope.FP.AddClass(self.processInfo, newTypeInfo_4123.FP.Get_rawTxt(), nil, newTypeInfo_4123)
-                } else if _switch5255 == Ast_TypeInfoKind__Func {
-                    self.globalScope.FP.AddFunc(self.processInfo, nil, newTypeInfo_4123, Ast_AccessMode__Global, newTypeInfo_4123.FP.Get_staticFlag(), Ast_TypeInfo_isMut(newTypeInfo_4123))
-                } else if _switch5255 == Ast_TypeInfoKind__Enum {
-                    self.globalScope.FP.AddEnum(self.processInfo, Ast_AccessMode__Global, newTypeInfo_4123.FP.Get_rawTxt(), nil, newTypeInfo_4123)
-                } else if _switch5255 == Ast_TypeInfoKind__Nilable {
+            if newTypeInfo_4128.FP.Get_accessMode() == Ast_AccessMode__Global{
+                if _switch5269 := newTypeInfo_4128.FP.Get_kind(); _switch5269 == Ast_TypeInfoKind__IF || _switch5269 == Ast_TypeInfoKind__Class {
+                    self.globalScope.FP.AddClass(processInfo, newTypeInfo_4128.FP.Get_rawTxt(), nil, newTypeInfo_4128)
+                } else if _switch5269 == Ast_TypeInfoKind__Func {
+                    self.globalScope.FP.AddFunc(processInfo, nil, newTypeInfo_4128, Ast_AccessMode__Global, newTypeInfo_4128.FP.Get_staticFlag(), Ast_TypeInfo_isMut(newTypeInfo_4128))
+                } else if _switch5269 == Ast_TypeInfoKind__Enum {
+                    self.globalScope.FP.AddEnum(processInfo, Ast_AccessMode__Global, newTypeInfo_4128.FP.Get_rawTxt(), nil, newTypeInfo_4128)
+                } else if _switch5269 == Ast_TypeInfoKind__Nilable {
                 } else {
-                    Util_err(Lns_getVM().String_format("%s: not support kind -- %s", []LnsAny{__func__, Ast_TypeInfoKind_getTxt( newTypeInfo_4123.FP.Get_kind())}))
+                    Util_err(Lns_getVM().String_format("%s: not support kind -- %s", []LnsAny{__func__, Ast_TypeInfoKind_getTxt( newTypeInfo_4128.FP.Get_kind())}))
                 }
             }
         }
@@ -483,24 +484,24 @@ func (self *Import_Import) ProcessImport(modulePath string,depth LnsInt)(*Lns_lu
                 symbolKind = Ast_SymbolKind__Typ
                 var addFlag bool
                 addFlag = true
-                if _switch5390 := typeInfo.FP.Get_kind(); _switch5390 == Ast_TypeInfoKind__Func {
+                if _switch5404 := typeInfo.FP.Get_kind(); _switch5404 == Ast_TypeInfoKind__Func {
                     symbolKind = Ast_SymbolKind__Fun
                     
-                } else if _switch5390 == Ast_TypeInfoKind__Form || _switch5390 == Ast_TypeInfoKind__FormFunc {
+                } else if _switch5404 == Ast_TypeInfoKind__Form || _switch5404 == Ast_TypeInfoKind__FormFunc {
                     symbolKind = Ast_SymbolKind__Typ
                     
-                } else if _switch5390 == Ast_TypeInfoKind__Method {
+                } else if _switch5404 == Ast_TypeInfoKind__Method {
                     symbolKind = Ast_SymbolKind__Mtd
                     
-                } else if _switch5390 == Ast_TypeInfoKind__Class || _switch5390 == Ast_TypeInfoKind__Module {
+                } else if _switch5404 == Ast_TypeInfoKind__Class || _switch5404 == Ast_TypeInfoKind__Module {
                     symbolKind = Ast_SymbolKind__Typ
                     
-                } else if _switch5390 == Ast_TypeInfoKind__Enum {
+                } else if _switch5404 == Ast_TypeInfoKind__Enum {
                     addFlag = false
                     
                 }
                 if addFlag{
-                    scope.FP.Add(self.processInfo, symbolKind, false, typeInfo.FP.Get_kind() == Ast_TypeInfoKind__Func, typeInfo.FP.GetTxt(nil, nil, nil), nil, typeInfo, typeInfo.FP.Get_accessMode(), typeInfo.FP.Get_staticFlag(), typeInfo.FP.Get_mutMode(), true, false)
+                    scope.FP.Add(processInfo, symbolKind, false, typeInfo.FP.Get_kind() == Ast_TypeInfoKind__Func, typeInfo.FP.GetTxt(nil, nil, nil), nil, typeInfo, typeInfo.FP.Get_accessMode(), typeInfo.FP.Get_staticFlag(), typeInfo.FP.Get_mutMode(), true, false)
                 }
             }
         }
@@ -518,7 +519,7 @@ func (self *Import_Import) ProcessImport(modulePath string,depth LnsInt)(*Lns_lu
         }
         var classTypeInfo *Ast_TypeInfo
         classTypeInfo = Lns_unwrap( typeId2TypeInfo.Get(classTypeId)).(*Ast_TypeInfo)
-        if _switch5856 := (classTypeInfo.FP.Get_kind()); _switch5856 == Ast_TypeInfoKind__Class || _switch5856 == Ast_TypeInfoKind__ExtModule {
+        if _switch5867 := (classTypeInfo.FP.Get_kind()); _switch5867 == Ast_TypeInfoKind__Class || _switch5867 == Ast_TypeInfoKind__ExtModule {
             self.transUnitIF.PushClassScope(self.transUnitIF.GetLatestPos(), classTypeInfo)
             {
                 __exp := metaInfo.GetAt( "__typeId2ClassInfoMap" ).(*Lns_luaValue).GetAt(classTypeId)
@@ -543,7 +544,7 @@ func (self *Import_Import) ProcessImport(modulePath string,depth LnsInt)(*Lns_lu
                                 typeId := _typeId
                                 var fieldTypeInfo *Ast_TypeInfo
                                 fieldTypeInfo = Lns_unwrap( typeId2TypeInfo.Get(Lns_forceCastInt(typeId))).(*Ast_TypeInfo)
-                                _ = Import_convExp5626(Lns_2DDD(self.transUnitIF.Get_scope().FP.AddMember(self.processInfo, fieldName, nil, fieldTypeInfo, Lns_unwrap( Ast_AccessMode__from(Lns_forceCastInt((Lns_unwrap( fieldInfo.Get("accessMode")))))).(LnsInt), Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                                _ = Import_convExp5638(Lns_2DDD(self.transUnitIF.Get_scope().FP.AddMember(processInfo, fieldName, nil, fieldTypeInfo, Lns_unwrap( Ast_AccessMode__from(Lns_forceCastInt((Lns_unwrap( fieldInfo.Get("accessMode")))))).(LnsInt), Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
                                     Lns_GetEnv().SetStackVal( fieldInfo.Get("staticFlag")) &&
                                     Lns_GetEnv().SetStackVal( true) ||
                                     Lns_GetEnv().SetStackVal( false) ).(bool), Lns_unwrap( Ast_MutMode__from(Lns_forceCastInt((Lns_unwrap( fieldInfo.Get("mutMode")))))).(LnsInt))))
@@ -556,9 +557,9 @@ func (self *Import_Import) ProcessImport(modulePath string,depth LnsInt)(*Lns_lu
                     self.transUnitIF.Error(Lns_getVM().String_format("not found class -- %s: %d, %s", []LnsAny{orgModulePath, classTypeId, classTypeInfo.FP.GetTxt(nil, nil, nil)}))
                 }
             }
-        } else if _switch5856 == Ast_TypeInfoKind__Module {
-            self.transUnitIF.PushModule(self.processInfo, true, classTypeInfo.FP.GetTxt(nil, nil, nil), Ast_TypeInfo_isMut(classTypeInfo))
-            Log_log(Log_Level__Debug, __func__, 1038, Log_CreateMessage(func() string {
+        } else if _switch5867 == Ast_TypeInfoKind__Module {
+            self.transUnitIF.PushModule(processInfo, true, classTypeInfo.FP.GetTxt(nil, nil, nil), Ast_TypeInfo_isMut(classTypeInfo))
+            Log_log(Log_Level__Debug, __func__, 1056, Log_CreateMessage(func() string {
                 return Lns_getVM().String_format("push module -- %s, %s, %d, %d, %d", []LnsAny{classTypeInfo.FP.GetTxt(nil, nil, nil), Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
                     Lns_GetEnv().SetStackVal( Lns_GetEnv().NilAccFin(Lns_GetEnv().NilAccPush(self.transUnitIF.Get_scope().FP.Get_ownerTypeInfo()) && 
                     Lns_NilAccCall1( Lns_GetEnv(), func () LnsAny { return Lns_GetEnv().NilAccPop().(*Ast_TypeInfo).FP.GetFullName(Ast_defaultTypeNameCtrl, self.transUnitIF.Get_scope().FP, false)})/* 1:72 */)) ||
@@ -584,9 +585,9 @@ func (self *Import_Import) ProcessImport(modulePath string,depth LnsInt)(*Lns_lu
                 }
             }
         }
-        if _switch5944 := classTypeInfo.FP.Get_kind(); _switch5944 == Ast_TypeInfoKind__Class || _switch5944 == Ast_TypeInfoKind__ExtModule {
+        if _switch5955 := classTypeInfo.FP.Get_kind(); _switch5955 == Ast_TypeInfoKind__Class || _switch5955 == Ast_TypeInfoKind__ExtModule {
             self.transUnitIF.PopClass()
-        } else if _switch5944 == Ast_TypeInfoKind__Module {
+        } else if _switch5955 == Ast_TypeInfoKind__Module {
             self.transUnitIF.PopModule()
         }
     }
@@ -621,19 +622,19 @@ func (self *Import_Import) ProcessImport(modulePath string,depth LnsInt)(*Lns_lu
             mutable = metaInfo.GetAt( "__moduleMutable" ).(bool)
             
         }
-        self.transUnitIF.PushModule(self.processInfo, true, moduleName, mutable)
+        self.transUnitIF.PushModule(processInfo, true, moduleName, mutable)
     }
     {
-        _exp6108 := metaInfo.GetAt( "__varName2InfoMap" ).(*Lns_luaValue)
-        _key6108, _val6108 := _exp6108.Get1stFromMap()
-        for _key6108 != nil {
-            varName := _key6108.(string)
-            varInfo := _val6108.(*Lns_luaValue)
+        _exp6117 := metaInfo.GetAt( "__varName2InfoMap" ).(*Lns_luaValue)
+        _key6117, _val6117 := _exp6117.Get1stFromMap()
+        for _key6117 != nil {
+            varName := _key6117.(string)
+            varInfo := _val6117.(*Lns_luaValue)
             {
                 _typeId := varInfo.GetAt("typeId")
                 if !Lns_IsNil( _typeId ) {
                     typeId := _typeId
-                    self.transUnitIF.Get_scope().FP.AddStaticVar(self.processInfo, false, true, varName, nil, Lns_unwrap( typeId2TypeInfo.Get(Lns_forceCastInt(typeId))).(*Ast_TypeInfo), Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
+                    self.transUnitIF.Get_scope().FP.AddStaticVar(processInfo, false, true, varName, nil, Lns_unwrap( typeId2TypeInfo.Get(Lns_forceCastInt(typeId))).(*Ast_TypeInfo), Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
                         Lns_GetEnv().SetStackVal( varInfo.GetAt("mutable")) &&
                         Lns_GetEnv().SetStackVal( Ast_MutMode__Mut) ||
                         Lns_GetEnv().SetStackVal( Ast_MutMode__IMut) ).(LnsInt))
@@ -641,17 +642,17 @@ func (self *Import_Import) ProcessImport(modulePath string,depth LnsInt)(*Lns_lu
                     self.transUnitIF.Error("illegal varInfo.typeId")
                 }
             }
-            _key6108, _val6108 = _exp6108.NextFromMap( _key6108 )
+            _key6117, _val6117 = _exp6117.NextFromMap( _key6117 )
         }
     }
     {
-        _exp6143 := metaInfo.GetAt( "__macroName2InfoMap" ).(*Lns_luaValue)
-        _key6143, _val6143 := _exp6143.Get1stFromMap()
-        for _key6143 != nil {
-            orgTypeId := _key6143.(LnsInt)
-            macroInfoStem := _val6143
-            self.macroCtrl.FP.ImportMacro(self.processInfo, moduleMeta.FP.Get_lnsPath(), Lns_getVM().ExpandLuavalMap(macroInfoStem), Lns_unwrap( orgId2MacroTypeInfo.Get(orgTypeId)).(*Ast_TypeInfo), typeId2TypeInfo)
-            _key6143, _val6143 = _exp6143.NextFromMap( _key6143 )
+        _exp6151 := metaInfo.GetAt( "__macroName2InfoMap" ).(*Lns_luaValue)
+        _key6151, _val6151 := _exp6151.Get1stFromMap()
+        for _key6151 != nil {
+            orgTypeId := _key6151.(LnsInt)
+            macroInfoStem := _val6151
+            self.macroCtrl.FP.ImportMacro(processInfo, moduleMeta.FP.Get_lnsPath(), Lns_getVM().ExpandLuavalMap(macroInfoStem), Lns_unwrap( orgId2MacroTypeInfo.Get(orgTypeId)).(*Ast_TypeInfo), typeId2TypeInfo)
+            _key6151, _val6151 = _exp6151.NextFromMap( _key6151 )
         }
     }
     for range( nameList.Items ) {
@@ -664,12 +665,12 @@ func (self *Import_Import) ProcessImport(modulePath string,depth LnsInt)(*Lns_lu
             self.importedAliasMap.Set(key,val)
         }
     }
-    var moduleInfo *Nodes_ModuleInfo
-    moduleInfo = NewNodes_ModuleInfo(orgModulePath, nameList.GetAt(nameList.Len()).(string), newId2OldIdMap, FrontInterface_ModuleId_createIdFromTxt(metaInfo.GetAt( "__buildId" ).(string)), importParam.ImportedAliasMap)
+    var moduleInfo *FrontInterface_ModuleInfo
+    moduleInfo = NewFrontInterface_ModuleInfo(orgModulePath, nameList.GetAt(nameList.Len()).(string), newId2OldIdMap, FrontInterface_ModuleId_createIdFromTxt(metaInfo.GetAt( "__buildId" ).(string)), importParam.ImportedAliasMap)
     self.importModule2ModuleInfo.Set(moduleTypeInfo,moduleInfo)
     self.importModuleName2ModuleInfo.Set(modulePath,moduleInfo)
     self.importModuleInfo.FP.Remove()
-    Log_log(Log_Level__Info, __func__, 1140, Log_CreateMessage(func() string {
+    Log_log(Log_Level__Info, __func__, 1158, Log_CreateMessage(func() string {
         return Lns_getVM().String_format("%s complete", []LnsAny{orgModulePath})
     }))
     
@@ -680,6 +681,7 @@ func (self *Import_Import) ProcessImport(modulePath string,depth LnsInt)(*Lns_lu
 // declaration Class -- ImportParam
 type Import_ImportParamMtd interface {
     GetTypeInfo(arg1 LnsInt)(LnsAny, LnsAny)
+    GetTypeInfoFrom(arg1 *Import__IdInfo)(LnsAny, LnsAny)
 }
 type Import_ImportParam struct {
     Pos *Types_Position
@@ -736,7 +738,7 @@ func (self *Import_ImportParam) InitImport_ImportParam(arg1 *Types_Position, arg
     self.ScopeAccess = arg11
     self.typeId2AtomMap = arg12
 }
-// 152: decl @lune.@base.@Import.ImportParam.getTypeInfo
+// 153: decl @lune.@base.@Import.ImportParam.getTypeInfo
 func (self *Import_ImportParam) GetTypeInfo(typeId LnsInt)(LnsAny, LnsAny) {
     {
         _typeInfo := self.TypeId2TypeInfo.Get(typeId)
@@ -753,13 +755,18 @@ func (self *Import_ImportParam) GetTypeInfo(typeId LnsInt)(LnsAny, LnsAny) {
             var mess LnsAny
             typeInfo,mess = atom.FP.CreateTypeInfoCache(self)
             if typeInfo != nil{
-                typeInfo_3664 := typeInfo.(*Ast_TypeInfo)
-                self.TypeId2TypeInfo.Set(typeId,typeInfo_3664)
+                typeInfo_3661 := typeInfo.(*Ast_TypeInfo)
+                self.TypeId2TypeInfo.Set(typeId,typeInfo_3661)
             }
             return typeInfo, mess
         }
     }
     return nil, nil
+}
+
+// 172: decl @lune.@base.@Import.ImportParam.getTypeInfoFrom
+func (self *Import_ImportParam) GetTypeInfoFrom(typeId *Import__IdInfo)(LnsAny, LnsAny) {
+    return self.FP.GetTypeInfo(typeId.Id)
 }
 
 
@@ -815,7 +822,7 @@ func Import__TypeInfo_FromMapMain( newObj *Import__TypeInfo, objMap *LnsMap, par
     }
     return true, newObj, nil
 }
-// 125: DeclConstr
+// 126: DeclConstr
 func (self *Import__TypeInfo) InitImport__TypeInfo() {
     self.TypeId = Ast_rootTypeId
     
@@ -824,7 +831,7 @@ func (self *Import__TypeInfo) InitImport__TypeInfo() {
 }
 
 
-// 140: decl @lune.@base.@Import._TypeInfo.createTypeInfoCache
+// 141: decl @lune.@base.@Import._TypeInfo.createTypeInfoCache
 func (self *Import__TypeInfo) CreateTypeInfoCache(param *Import_ImportParam)(LnsAny, LnsAny) {
     {
         _typeInfo := param.TypeId2TypeInfo.Get(self.TypeId)
@@ -837,111 +844,10 @@ func (self *Import__TypeInfo) CreateTypeInfoCache(param *Import_ImportParam)(Lns
     var mess LnsAny
     typeInfo,mess = self.FP.CreateTypeInfo(param)
     if typeInfo != nil{
-        typeInfo_3649 := typeInfo.(*Ast_TypeInfo)
-        param.TypeId2TypeInfo.Set(self.TypeId,typeInfo_3649)
+        typeInfo_3646 := typeInfo.(*Ast_TypeInfo)
+        param.TypeId2TypeInfo.Set(self.TypeId,typeInfo_3646)
     }
     return typeInfo, mess
-}
-
-
-// declaration Class -- _TypeInfoNilable
-type Import__TypeInfoNilableMtd interface {
-    ToMap() *LnsMap
-    CreateTypeInfo(arg1 *Import_ImportParam)(LnsAny, LnsAny)
-    CreateTypeInfoCache(arg1 *Import_ImportParam)(LnsAny, LnsAny)
-}
-type Import__TypeInfoNilable struct {
-    Import__TypeInfo
-    OrgTypeId LnsInt
-    FP Import__TypeInfoNilableMtd
-}
-func Import__TypeInfoNilable2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Import__TypeInfoNilable).FP
-}
-type Import__TypeInfoNilableDownCast interface {
-    ToImport__TypeInfoNilable() *Import__TypeInfoNilable
-}
-func Import__TypeInfoNilableDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Import__TypeInfoNilableDownCast)
-    if ok { return work.ToImport__TypeInfoNilable() }
-    return nil
-}
-func (obj *Import__TypeInfoNilable) ToImport__TypeInfoNilable() *Import__TypeInfoNilable {
-    return obj
-}
-func NewImport__TypeInfoNilable(arg1 LnsInt) *Import__TypeInfoNilable {
-    obj := &Import__TypeInfoNilable{}
-    obj.FP = obj
-    obj.Import__TypeInfo.FP = obj
-    obj.InitImport__TypeInfoNilable(arg1)
-    return obj
-}
-func (self *Import__TypeInfoNilable) InitImport__TypeInfoNilable(arg1 LnsInt) {
-    self.Import__TypeInfo.InitImport__TypeInfo( )
-    self.OrgTypeId = arg1
-}
-func (self *Import__TypeInfoNilable) ToMapSetup( obj *LnsMap ) *LnsMap {
-    obj.Items["orgTypeId"] = Lns_ToCollection( self.OrgTypeId )
-    return self.Import__TypeInfo.ToMapSetup( obj )
-}
-func (self *Import__TypeInfoNilable) ToMap() *LnsMap {
-    return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
-}
-func Import__TypeInfoNilable__fromMap_1085_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
-   return Import__TypeInfoNilable_FromMap( arg1, paramList )
-}
-func Import__TypeInfoNilable__fromStem_1087_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
-   return Import__TypeInfoNilable_FromMap( arg1, paramList )
-}
-func Import__TypeInfoNilable_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
-    _,conv,mess := Import__TypeInfoNilable_FromMapSub(obj,false, paramList);
-    return conv,mess
-}
-func Import__TypeInfoNilable_FromMapSub( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
-    var objMap *LnsMap
-    if work, ok := obj.(*LnsMap); !ok {
-       return false, nil, "no map -- " + Lns_ToString(obj)
-    } else {
-       objMap = work
-    }
-    newObj := &Import__TypeInfoNilable{}
-    newObj.FP = newObj
-    newObj.Import__TypeInfo.FP = newObj
-    return Import__TypeInfoNilable_FromMapMain( newObj, objMap, paramList )
-}
-func Import__TypeInfoNilable_FromMapMain( newObj *Import__TypeInfoNilable, objMap *LnsMap, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
-    if ok,_,mess := Import__TypeInfo_FromMapMain( &newObj.Import__TypeInfo, objMap, paramList ); !ok {
-        return false,nil,mess
-    }
-    if ok,conv,mess := Lns_ToIntSub( objMap.Items["orgTypeId"], false, nil); !ok {
-       return false,nil,"orgTypeId:" + mess.(string)
-    } else {
-       newObj.OrgTypeId = conv.(LnsInt)
-    }
-    return true, newObj, nil
-}
-// 169: decl @lune.@base.@Import._TypeInfoNilable.createTypeInfo
-func (self *Import__TypeInfoNilable) CreateTypeInfo(param *Import_ImportParam)(LnsAny, LnsAny) {
-    var orgTypeInfo *Ast_TypeInfo
-    
-    {
-        _orgTypeInfo := Import_convExp544(Lns_2DDD(param.FP.GetTypeInfo(self.OrgTypeId)))
-        if _orgTypeInfo == nil{
-            Util_err(Lns_getVM().String_format("failed to createTypeInfo -- self.orgTypeId = %d", []LnsAny{self.OrgTypeId}))
-        } else {
-            orgTypeInfo = _orgTypeInfo.(*Ast_TypeInfo)
-        }
-    }
-    var newTypeInfo *Ast_TypeInfo
-    newTypeInfo = orgTypeInfo.FP.Get_nilableTypeInfo()
-    param.TypeId2TypeInfo.Set(self.TypeId,newTypeInfo)
-    return newTypeInfo, nil
 }
 
 
@@ -992,10 +898,10 @@ func (self *Import__IdInfo) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Import__IdInfo) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Import__IdInfo__fromMap_1099_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__IdInfo__fromMap_1082_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__IdInfo_FromMap( arg1, paramList )
 }
-func Import__IdInfo__fromStem_1101_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__IdInfo__fromStem_1084_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__IdInfo_FromMap( arg1, paramList )
 }
 func Import__IdInfo_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
@@ -1026,6 +932,107 @@ func Import__IdInfo_FromMapMain( newObj *Import__IdInfo, objMap *LnsMap, paramLi
     }
     return true, newObj, nil
 }
+
+// declaration Class -- _TypeInfoNilable
+type Import__TypeInfoNilableMtd interface {
+    ToMap() *LnsMap
+    CreateTypeInfo(arg1 *Import_ImportParam)(LnsAny, LnsAny)
+    CreateTypeInfoCache(arg1 *Import_ImportParam)(LnsAny, LnsAny)
+}
+type Import__TypeInfoNilable struct {
+    Import__TypeInfo
+    OrgTypeId LnsInt
+    FP Import__TypeInfoNilableMtd
+}
+func Import__TypeInfoNilable2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Import__TypeInfoNilable).FP
+}
+type Import__TypeInfoNilableDownCast interface {
+    ToImport__TypeInfoNilable() *Import__TypeInfoNilable
+}
+func Import__TypeInfoNilableDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Import__TypeInfoNilableDownCast)
+    if ok { return work.ToImport__TypeInfoNilable() }
+    return nil
+}
+func (obj *Import__TypeInfoNilable) ToImport__TypeInfoNilable() *Import__TypeInfoNilable {
+    return obj
+}
+func NewImport__TypeInfoNilable(arg1 LnsInt) *Import__TypeInfoNilable {
+    obj := &Import__TypeInfoNilable{}
+    obj.FP = obj
+    obj.Import__TypeInfo.FP = obj
+    obj.InitImport__TypeInfoNilable(arg1)
+    return obj
+}
+func (self *Import__TypeInfoNilable) InitImport__TypeInfoNilable(arg1 LnsInt) {
+    self.Import__TypeInfo.InitImport__TypeInfo( )
+    self.OrgTypeId = arg1
+}
+func (self *Import__TypeInfoNilable) ToMapSetup( obj *LnsMap ) *LnsMap {
+    obj.Items["orgTypeId"] = Lns_ToCollection( self.OrgTypeId )
+    return self.Import__TypeInfo.ToMapSetup( obj )
+}
+func (self *Import__TypeInfoNilable) ToMap() *LnsMap {
+    return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
+}
+func Import__TypeInfoNilable__fromMap_1102_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+   return Import__TypeInfoNilable_FromMap( arg1, paramList )
+}
+func Import__TypeInfoNilable__fromStem_1104_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+   return Import__TypeInfoNilable_FromMap( arg1, paramList )
+}
+func Import__TypeInfoNilable_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
+    _,conv,mess := Import__TypeInfoNilable_FromMapSub(obj,false, paramList);
+    return conv,mess
+}
+func Import__TypeInfoNilable_FromMapSub( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
+    var objMap *LnsMap
+    if work, ok := obj.(*LnsMap); !ok {
+       return false, nil, "no map -- " + Lns_ToString(obj)
+    } else {
+       objMap = work
+    }
+    newObj := &Import__TypeInfoNilable{}
+    newObj.FP = newObj
+    newObj.Import__TypeInfo.FP = newObj
+    return Import__TypeInfoNilable_FromMapMain( newObj, objMap, paramList )
+}
+func Import__TypeInfoNilable_FromMapMain( newObj *Import__TypeInfoNilable, objMap *LnsMap, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
+    if ok,_,mess := Import__TypeInfo_FromMapMain( &newObj.Import__TypeInfo, objMap, paramList ); !ok {
+        return false,nil,mess
+    }
+    if ok,conv,mess := Lns_ToIntSub( objMap.Items["orgTypeId"], false, nil); !ok {
+       return false,nil,"orgTypeId:" + mess.(string)
+    } else {
+       newObj.OrgTypeId = conv.(LnsInt)
+    }
+    return true, newObj, nil
+}
+// 180: decl @lune.@base.@Import._TypeInfoNilable.createTypeInfo
+func (self *Import__TypeInfoNilable) CreateTypeInfo(param *Import_ImportParam)(LnsAny, LnsAny) {
+    var orgTypeInfo *Ast_TypeInfo
+    
+    {
+        _orgTypeInfo := Import_convExp552(Lns_2DDD(param.FP.GetTypeInfo(self.OrgTypeId)))
+        if _orgTypeInfo == nil{
+            Util_err(Lns_getVM().String_format("failed to createTypeInfo -- self.orgTypeId = %d", []LnsAny{self.OrgTypeId}))
+        } else {
+            orgTypeInfo = _orgTypeInfo.(*Ast_TypeInfo)
+        }
+    }
+    var newTypeInfo *Ast_TypeInfo
+    newTypeInfo = orgTypeInfo.FP.Get_nilableTypeInfo()
+    param.TypeId2TypeInfo.Set(self.TypeId,newTypeInfo)
+    return newTypeInfo, nil
+}
+
 
 // declaration Class -- _TypeInfoAlias
 type Import__TypeInfoAliasMtd interface {
@@ -1082,10 +1089,10 @@ func (self *Import__TypeInfoAlias) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Import__TypeInfoAlias) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Import__TypeInfoAlias__fromMap_1117_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoAlias__fromMap_1119_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoAlias_FromMap( arg1, paramList )
 }
-func Import__TypeInfoAlias__fromStem_1119_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoAlias__fromStem_1121_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoAlias_FromMap( arg1, paramList )
 }
 func Import__TypeInfoAlias_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
@@ -1125,17 +1132,17 @@ func Import__TypeInfoAlias_FromMapMain( newObj *Import__TypeInfoAlias, objMap *L
     }
     return true, newObj, nil
 }
-// 190: decl @lune.@base.@Import._TypeInfoAlias.createTypeInfo
+// 196: decl @lune.@base.@Import._TypeInfoAlias.createTypeInfo
 func (self *Import__TypeInfoAlias) CreateTypeInfo(param *Import_ImportParam)(LnsAny, LnsAny) {
     __func__ := "@lune.@base.@Import._TypeInfoAlias.createTypeInfo"
     var srcTypeInfo *Ast_TypeInfo
-    srcTypeInfo = Lns_unwrap( Lns_car(param.FP.GetTypeInfo(self.srcTypeId.Id))).(*Ast_TypeInfo)
+    srcTypeInfo = Lns_unwrap( Lns_car(param.FP.GetTypeInfoFrom(self.srcTypeId))).(*Ast_TypeInfo)
     var newTypeInfo *Ast_AliasTypeInfo
     newTypeInfo = param.ProcessInfo.FP.CreateAlias(param.ProcessInfo, self.rawTxt, true, Ast_AccessMode__Pub, param.ModuleTypeInfo, srcTypeInfo)
     param.TypeId2TypeInfo.Set(self.TypeId,&newTypeInfo.Ast_TypeInfo)
     
     {
-        __ := Import_convExp684(Lns_2DDD(param.FP.GetTypeInfo(self.ParentId)))
+        __ := Import_convExp681(Lns_2DDD(param.FP.GetTypeInfo(self.ParentId)))
         if __ == nil{
             return nil, Lns_getVM().String_format("%s: not found parentInfo %d %s", []LnsAny{__func__, self.ParentId, self.rawTxt})
         } else {
@@ -1213,10 +1220,10 @@ func (self *Import__TypeInfoDDD) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Import__TypeInfoDDD) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Import__TypeInfoDDD__fromMap_1134_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoDDD__fromMap_1136_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoDDD_FromMap( arg1, paramList )
 }
-func Import__TypeInfoDDD__fromStem_1136_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoDDD__fromStem_1138_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoDDD_FromMap( arg1, paramList )
 }
 func Import__TypeInfoDDD_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
@@ -1256,10 +1263,10 @@ func Import__TypeInfoDDD_FromMapMain( newObj *Import__TypeInfoDDD, objMap *LnsMa
     }
     return true, newObj, nil
 }
-// 221: decl @lune.@base.@Import._TypeInfoDDD.createTypeInfo
+// 227: decl @lune.@base.@Import._TypeInfoDDD.createTypeInfo
 func (self *Import__TypeInfoDDD) CreateTypeInfo(param *Import_ImportParam)(LnsAny, LnsAny) {
     var itemTypeInfo *Ast_TypeInfo
-    itemTypeInfo = Lns_unwrap( Lns_car(param.FP.GetTypeInfo(self.ItemTypeId.Id))).(*Ast_TypeInfo)
+    itemTypeInfo = Lns_unwrap( Lns_car(param.FP.GetTypeInfoFrom(self.ItemTypeId))).(*Ast_TypeInfo)
     var newTypeInfo *Ast_DDDTypeInfo
     newTypeInfo = param.ProcessInfo.FP.CreateDDD(itemTypeInfo, true, self.ExtTypeFlag)
     param.TypeId2TypeInfo.Set(self.TypeId,&newTypeInfo.Ast_TypeInfo)
@@ -1334,10 +1341,10 @@ func (self *Import__TypeInfoAlternate) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Import__TypeInfoAlternate) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Import__TypeInfoAlternate__fromMap_1158_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoAlternate__fromMap_1160_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoAlternate_FromMap( arg1, paramList )
 }
-func Import__TypeInfoAlternate__fromStem_1160_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoAlternate__fromStem_1162_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoAlternate_FromMap( arg1, paramList )
 }
 func Import__TypeInfoAlternate_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
@@ -1398,15 +1405,15 @@ func Import__TypeInfoAlternate_FromMapMain( newObj *Import__TypeInfoAlternate, o
     }
     return true, newObj, nil
 }
-// 242: decl @lune.@base.@Import._TypeInfoAlternate.createTypeInfo
+// 248: decl @lune.@base.@Import._TypeInfoAlternate.createTypeInfo
 func (self *Import__TypeInfoAlternate) CreateTypeInfo(param *Import_ImportParam)(LnsAny, LnsAny) {
     var baseInfo *Ast_TypeInfo
-    baseInfo = Lns_unwrap( Lns_car(param.FP.GetTypeInfo(self.BaseId.Id))).(*Ast_TypeInfo)
+    baseInfo = Lns_unwrap( Lns_car(param.FP.GetTypeInfoFrom(self.BaseId))).(*Ast_TypeInfo)
     var interfaceList *LnsList
     interfaceList = NewLnsList([]LnsAny{})
     for _, _ifTypeId := range( self.IfList.Items ) {
         ifTypeId := _ifTypeId.(Import__IdInfoDownCast).ToImport__IdInfo()
-        interfaceList.Insert(Ast_TypeInfo2Stem(Lns_unwrap( Lns_car(param.FP.GetTypeInfo(ifTypeId.Id))).(*Ast_TypeInfo)))
+        interfaceList.Insert(Ast_TypeInfo2Stem(Lns_unwrap( Lns_car(param.FP.GetTypeInfoFrom(ifTypeId))).(*Ast_TypeInfo)))
     }
     var newTypeInfo *Ast_AlternateTypeInfo
     newTypeInfo = param.ProcessInfo.FP.CreateAlternate(self.BelongClassFlag, self.AltIndex, self.Txt, self.AccessMode, param.ModuleTypeInfo, baseInfo, interfaceList)
@@ -1467,10 +1474,10 @@ func (self *Import__TypeInfoGeneric) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Import__TypeInfoGeneric) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Import__TypeInfoGeneric__fromMap_1182_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoGeneric__fromMap_1184_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoGeneric_FromMap( arg1, paramList )
 }
-func Import__TypeInfoGeneric__fromStem_1184_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoGeneric__fromStem_1186_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoGeneric_FromMap( arg1, paramList )
 }
 func Import__TypeInfoGeneric_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
@@ -1506,15 +1513,15 @@ func Import__TypeInfoGeneric_FromMapMain( newObj *Import__TypeInfoGeneric, objMa
     }
     return true, newObj, nil
 }
-// 262: decl @lune.@base.@Import._TypeInfoGeneric.createTypeInfo
+// 268: decl @lune.@base.@Import._TypeInfoGeneric.createTypeInfo
 func (self *Import__TypeInfoGeneric) CreateTypeInfo(param *Import_ImportParam)(LnsAny, LnsAny) {
     var genSrcTypeInfo *Ast_TypeInfo
-    genSrcTypeInfo = Lns_unwrap( Lns_car(param.FP.GetTypeInfo(self.GenSrcTypeId.Id))).(*Ast_TypeInfo)
+    genSrcTypeInfo = Lns_unwrap( Lns_car(param.FP.GetTypeInfoFrom(self.GenSrcTypeId))).(*Ast_TypeInfo)
     var genTypeList *LnsList
     genTypeList = NewLnsList([]LnsAny{})
     for _, _typeId := range( self.GenTypeList.Items ) {
         typeId := _typeId.(Import__IdInfoDownCast).ToImport__IdInfo()
-        genTypeList.Insert(Ast_TypeInfo2Stem(Lns_unwrap( Lns_car(param.FP.GetTypeInfo(typeId.Id))).(*Ast_TypeInfo)))
+        genTypeList.Insert(Ast_TypeInfo2Stem(Lns_unwrap( Lns_car(param.FP.GetTypeInfoFrom(typeId))).(*Ast_TypeInfo)))
     }
     var newTypeInfo *Ast_GenericTypeInfo
     newTypeInfo = param.ProcessInfo.FP.CreateGeneric(genSrcTypeInfo, genTypeList, param.ModuleTypeInfo)
@@ -1576,10 +1583,10 @@ func (self *Import__TypeInfoBox) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Import__TypeInfoBox) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Import__TypeInfoBox__fromMap_1199_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoBox__fromMap_1201_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoBox_FromMap( arg1, paramList )
 }
-func Import__TypeInfoBox__fromStem_1201_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoBox__fromStem_1203_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoBox_FromMap( arg1, paramList )
 }
 func Import__TypeInfoBox_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
@@ -1614,7 +1621,7 @@ func Import__TypeInfoBox_FromMapMain( newObj *Import__TypeInfoBox, objMap *LnsMa
     }
     return true, newObj, nil
 }
-// 281: decl @lune.@base.@Import._TypeInfoBox.createTypeInfo
+// 287: decl @lune.@base.@Import._TypeInfoBox.createTypeInfo
 func (self *Import__TypeInfoBox) CreateTypeInfo(param *Import_ImportParam)(LnsAny, LnsAny) {
     var boxingType *Ast_TypeInfo
     boxingType = Lns_unwrap( Lns_car(param.FP.GetTypeInfo(self.BoxingType))).(*Ast_TypeInfo)
@@ -1674,10 +1681,10 @@ func (self *Import__TypeInfoExt) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Import__TypeInfoExt) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Import__TypeInfoExt__fromMap_1216_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoExt__fromMap_1218_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoExt_FromMap( arg1, paramList )
 }
-func Import__TypeInfoExt__fromStem_1218_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoExt__fromStem_1220_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoExt_FromMap( arg1, paramList )
 }
 func Import__TypeInfoExt_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
@@ -1707,18 +1714,18 @@ func Import__TypeInfoExt_FromMapMain( newObj *Import__TypeInfoExt, objMap *LnsMa
     }
     return true, newObj, nil
 }
-// 293: decl @lune.@base.@Import._TypeInfoExt.createTypeInfo
+// 299: decl @lune.@base.@Import._TypeInfoExt.createTypeInfo
 func (self *Import__TypeInfoExt) CreateTypeInfo(param *Import_ImportParam)(LnsAny, LnsAny) {
     var extedType *Ast_TypeInfo
-    extedType = Lns_unwrap( Lns_car(param.FP.GetTypeInfo(self.ExtedTypeId.Id))).(*Ast_TypeInfo)
+    extedType = Lns_unwrap( Lns_car(param.FP.GetTypeInfoFrom(self.ExtedTypeId))).(*Ast_TypeInfo)
     var newTypeInfo *Ast_TypeInfo
-    switch _exp1221 := param.ProcessInfo.FP.CreateLuaval(extedType, true).(type) {
+    switch _exp1212 := param.ProcessInfo.FP.CreateLuaval(extedType, true).(type) {
     case *Ast_LuavalResult__OK:
-    extType := _exp1221.Val1
+    extType := _exp1212.Val1
         newTypeInfo = extType
         
     case *Ast_LuavalResult__Err:
-    mess := _exp1221.Val1
+    mess := _exp1212.Val1
         Util_err(mess)
     }
     param.TypeId2TypeInfo.Set(self.TypeId,newTypeInfo)
@@ -1778,10 +1785,10 @@ func (self *Import__TypeInfoModifier) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Import__TypeInfoModifier) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Import__TypeInfoModifier__fromMap_1233_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoModifier__fromMap_1235_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoModifier_FromMap( arg1, paramList )
 }
-func Import__TypeInfoModifier__fromStem_1235_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoModifier__fromStem_1237_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoModifier_FromMap( arg1, paramList )
 }
 func Import__TypeInfoModifier_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
@@ -1816,12 +1823,12 @@ func Import__TypeInfoModifier_FromMapMain( newObj *Import__TypeInfoModifier, obj
     }
     return true, newObj, nil
 }
-// 315: decl @lune.@base.@Import._TypeInfoModifier.createTypeInfo
+// 321: decl @lune.@base.@Import._TypeInfoModifier.createTypeInfo
 func (self *Import__TypeInfoModifier) CreateTypeInfo(param *Import_ImportParam)(LnsAny, LnsAny) {
     var srcTypeInfo *Ast_TypeInfo
     
     {
-        _srcTypeInfo := Import_convExp1289(Lns_2DDD(param.FP.GetTypeInfo(self.SrcTypeId.Id)))
+        _srcTypeInfo := Import_convExp1279(Lns_2DDD(param.FP.GetTypeInfoFrom(self.SrcTypeId)))
         if _srcTypeInfo == nil{
             return nil, Lns_getVM().String_format("not found srcType -- %d", []LnsAny{self.SrcTypeId.Id})
         } else {
@@ -1887,10 +1894,10 @@ func (self *Import__TypeInfoModule) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Import__TypeInfoModule) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Import__TypeInfoModule__fromMap_1252_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoModule__fromMap_1254_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoModule_FromMap( arg1, paramList )
 }
-func Import__TypeInfoModule__fromStem_1254_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoModule__fromStem_1256_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoModule_FromMap( arg1, paramList )
 }
 func Import__TypeInfoModule_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
@@ -1925,7 +1932,7 @@ func Import__TypeInfoModule_FromMapMain( newObj *Import__TypeInfoModule, objMap 
     }
     return true, newObj, nil
 }
-// 331: decl @lune.@base.@Import._TypeInfoModule.createTypeInfo
+// 337: decl @lune.@base.@Import._TypeInfoModule.createTypeInfo
 func (self *Import__TypeInfoModule) CreateTypeInfo(param *Import_ImportParam)(LnsAny, LnsAny) {
     __func__ := "@lune.@base.@Import._TypeInfoModule.createTypeInfo"
     var parentInfo *Ast_TypeInfo
@@ -1934,7 +1941,7 @@ func (self *Import__TypeInfoModule) CreateTypeInfo(param *Import_ImportParam)(Ln
         var workTypeInfo *Ast_TypeInfo
         
         {
-            _workTypeInfo := Import_convExp1387(Lns_2DDD(param.FP.GetTypeInfo(self.ParentId)))
+            _workTypeInfo := Import_convExp1377(Lns_2DDD(param.FP.GetTypeInfo(self.ParentId)))
             if _workTypeInfo == nil{
                 Util_err(Lns_getVM().String_format("not found parentInfo %d %s", []LnsAny{self.ParentId, self.Txt}))
             } else {
@@ -1981,7 +1988,7 @@ func (self *Import__TypeInfoModule) CreateTypeInfo(param *Import_ImportParam)(Ln
             param.TypeId2Scope.Set(self.TypeId,scope)
             param.TypeId2TypeInfo.Set(self.TypeId,workTypeInfo)
             parentScope.FP.AddClass(param.ProcessInfo, self.Txt, nil, workTypeInfo)
-            Log_log(Log_Level__Info, __func__, 373, Log_CreateMessage(func() string {
+            Log_log(Log_Level__Info, __func__, 379, Log_CreateMessage(func() string {
                 return Lns_getVM().String_format("new module -- %s, %s, %d, %d, %d", []LnsAny{self.Txt, workTypeInfo.FP.GetFullName(Ast_defaultTypeNameCtrl, parentScope.FP, false), self.TypeId, workTypeInfo.FP.Get_typeId().Id, parentScope.FP.Get_scopeId()})
             }))
             
@@ -2082,10 +2089,10 @@ func (self *Import__TypeInfoNormal) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Import__TypeInfoNormal) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Import__TypeInfoNormal__fromMap_1318_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoNormal__fromMap_1320_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoNormal_FromMap( arg1, paramList )
 }
-func Import__TypeInfoNormal__fromStem_1320_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoNormal__fromStem_1322_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoNormal_FromMap( arg1, paramList )
 }
 func Import__TypeInfoNormal_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
@@ -2190,7 +2197,7 @@ func Import__TypeInfoNormal_FromMapMain( newObj *Import__TypeInfoNormal, objMap 
     }
     return true, newObj, nil
 }
-// 401: decl @lune.@base.@Import._TypeInfoNormal.createTypeInfo
+// 407: decl @lune.@base.@Import._TypeInfoNormal.createTypeInfo
 func (self *Import__TypeInfoNormal) CreateTypeInfo(param *Import_ImportParam)(LnsAny, LnsAny) {
     __func__ := "@lune.@base.@Import._TypeInfoNormal.createTypeInfo"
     var newTypeInfo LnsAny
@@ -2208,7 +2215,7 @@ func (self *Import__TypeInfoNormal) CreateTypeInfo(param *Import_ImportParam)(Ln
             var workTypeInfo *Ast_TypeInfo
             
             {
-                _workTypeInfo := Import_convExp1902(Lns_2DDD(param.FP.GetTypeInfo(self.ParentId)))
+                _workTypeInfo := Import_convExp1892(Lns_2DDD(param.FP.GetTypeInfo(self.ParentId)))
                 if _workTypeInfo == nil{
                     return nil, Lns_getVM().String_format("not found parentInfo %d %s", []LnsAny{self.ParentId, self.Txt})
                 } else {
@@ -2222,7 +2229,7 @@ func (self *Import__TypeInfoNormal) CreateTypeInfo(param *Import_ImportParam)(Ln
         itemTypeInfo = NewLnsList([]LnsAny{})
         for _, _typeId := range( self.ItemTypeId.Items ) {
             typeId := _typeId.(Import__IdInfoDownCast).ToImport__IdInfo()
-            itemTypeInfo.Insert(Ast_TypeInfo2Stem(Lns_unwrap( Lns_car(param.FP.GetTypeInfo(typeId.Id))).(*Ast_TypeInfo)))
+            itemTypeInfo.Insert(Ast_TypeInfo2Stem(Lns_unwrap( Lns_car(param.FP.GetTypeInfoFrom(typeId))).(*Ast_TypeInfo)))
         }
         var argTypeInfo *LnsList
         argTypeInfo = NewLnsList([]LnsAny{})
@@ -2231,10 +2238,10 @@ func (self *Import__TypeInfoNormal) CreateTypeInfo(param *Import_ImportParam)(Ln
             typeId := _typeId.(Import__IdInfoDownCast).ToImport__IdInfo()
             var argType LnsAny
             var mess LnsAny
-            argType,mess = param.FP.GetTypeInfo(typeId.Id)
+            argType,mess = param.FP.GetTypeInfoFrom(typeId)
             if argType != nil{
-                argType_3879 := argType.(*Ast_TypeInfo)
-                argTypeInfo.Insert(Ast_TypeInfo2Stem(argType_3879))
+                argType_3881 := argType.(*Ast_TypeInfo)
+                argTypeInfo.Insert(Ast_TypeInfo2Stem(argType_3881))
             } else {
                 var errmess string
                 errmess = Lns_getVM().String_format("not found arg (index:%d) -- %s.%s, %d, %d. %s", []LnsAny{index, parentInfo.FP.GetTxt(nil, nil, nil), self.Txt, typeId.Id, self.ArgTypeId.Len(), mess})
@@ -2245,15 +2252,15 @@ func (self *Import__TypeInfoNormal) CreateTypeInfo(param *Import_ImportParam)(Ln
         retTypeInfo = NewLnsList([]LnsAny{})
         for _, _typeId := range( self.RetTypeId.Items ) {
             typeId := _typeId.(Import__IdInfoDownCast).ToImport__IdInfo()
-            retTypeInfo.Insert(Ast_TypeInfo2Stem(Lns_unwrap( Lns_car(param.FP.GetTypeInfo(typeId.Id))).(*Ast_TypeInfo)))
+            retTypeInfo.Insert(Ast_TypeInfo2Stem(Lns_unwrap( Lns_car(param.FP.GetTypeInfoFrom(typeId))).(*Ast_TypeInfo)))
         }
         var baseInfo *Ast_TypeInfo
-        baseInfo = Lns_unwrap( Lns_car(param.FP.GetTypeInfo(self.BaseId.Id))).(*Ast_TypeInfo)
+        baseInfo = Lns_unwrap( Lns_car(param.FP.GetTypeInfoFrom(self.BaseId))).(*Ast_TypeInfo)
         var interfaceList *LnsList
         interfaceList = NewLnsList([]LnsAny{})
         for _, _ifTypeId := range( self.IfList.Items ) {
             ifTypeId := _ifTypeId.(Import__IdInfoDownCast).ToImport__IdInfo()
-            interfaceList.Insert(Ast_TypeInfo2Stem(Lns_unwrap( Lns_car(param.FP.GetTypeInfo(ifTypeId.Id))).(*Ast_TypeInfo)))
+            interfaceList.Insert(Ast_TypeInfo2Stem(Lns_unwrap( Lns_car(param.FP.GetTypeInfoFrom(ifTypeId))).(*Ast_TypeInfo)))
         }
         var parentScope *Ast_Scope
         
@@ -2290,7 +2297,7 @@ func (self *Import__TypeInfoNormal) CreateTypeInfo(param *Import_ImportParam)(Ln
             if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
                 Lns_GetEnv().SetStackVal( self.Kind == Ast_TypeInfoKind__Class) ||
                 Lns_GetEnv().SetStackVal( self.Kind == Ast_TypeInfoKind__IF) ).(bool){
-                Log_log(Log_Level__Debug, __func__, 480, Log_CreateMessage(func() string {
+                Log_log(Log_Level__Debug, __func__, 486, Log_CreateMessage(func() string {
                     return Lns_getVM().String_format("new type -- %d, %s -- %s, %d", []LnsAny{self.ParentId, self.Txt, Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
                         Lns_GetEnv().SetStackVal( Lns_GetEnv().NilAccFin(Lns_GetEnv().NilAccPush(parentScope.FP.Get_ownerTypeInfo()) && 
                         Lns_NilAccCall1( Lns_GetEnv(), func () LnsAny { return Lns_GetEnv().NilAccPop().(*Ast_TypeInfo).FP.GetFullName(Ast_defaultTypeNameCtrl, parentScope.FP, false)})/* 1:65 */)) ||
@@ -2325,7 +2332,7 @@ func (self *Import__TypeInfoNormal) CreateTypeInfo(param *Import_ImportParam)(Ln
                 param.TypeId2Scope.Set(self.TypeId,scope)
                 param.TypeId2TypeInfo.Set(self.TypeId,workTypeInfo)
             } else if self.Kind == Ast_TypeInfoKind__ExtModule{
-                Log_log(Log_Level__Debug, __func__, 517, Log_CreateMessage(func() string {
+                Log_log(Log_Level__Debug, __func__, 523, Log_CreateMessage(func() string {
                     return Lns_getVM().String_format("new type -- %d, %s -- %s, %d", []LnsAny{self.ParentId, self.Txt, Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
                         Lns_GetEnv().SetStackVal( Lns_GetEnv().NilAccFin(Lns_GetEnv().NilAccPush(parentScope.FP.Get_ownerTypeInfo()) && 
                         Lns_NilAccCall1( Lns_GetEnv(), func () LnsAny { return Lns_GetEnv().NilAccPop().(*Ast_TypeInfo).FP.GetFullName(Ast_defaultTypeNameCtrl, parentScope.FP, false)})/* 1:65 */)) ||
@@ -2363,16 +2370,16 @@ func (self *Import__TypeInfoNormal) CreateTypeInfo(param *Import_ImportParam)(Ln
                 newTypeInfo = workTypeInfo
                 
                 param.TypeId2TypeInfo.Set(self.TypeId,workTypeInfo)
-                if _switch3070 := self.Kind; _switch3070 == Ast_TypeInfoKind__Func || _switch3070 == Ast_TypeInfoKind__Method || _switch3070 == Ast_TypeInfoKind__Macro || _switch3070 == Ast_TypeInfoKind__Form || _switch3070 == Ast_TypeInfoKind__FormFunc {
+                if _switch3055 := self.Kind; _switch3055 == Ast_TypeInfoKind__Func || _switch3055 == Ast_TypeInfoKind__Method || _switch3055 == Ast_TypeInfoKind__Macro || _switch3055 == Ast_TypeInfoKind__Form || _switch3055 == Ast_TypeInfoKind__FormFunc {
                     var symbolKind LnsInt
                     symbolKind = Ast_SymbolKind__Fun
-                    if _switch3008 := self.Kind; _switch3008 == Ast_TypeInfoKind__Method {
+                    if _switch2993 := self.Kind; _switch2993 == Ast_TypeInfoKind__Method {
                         symbolKind = Ast_SymbolKind__Mtd
                         
-                    } else if _switch3008 == Ast_TypeInfoKind__Macro {
+                    } else if _switch2993 == Ast_TypeInfoKind__Macro {
                         symbolKind = Ast_SymbolKind__Mac
                         
-                    } else if _switch3008 == Ast_TypeInfoKind__Form || _switch3008 == Ast_TypeInfoKind__FormFunc {
+                    } else if _switch2993 == Ast_TypeInfoKind__Form || _switch2993 == Ast_TypeInfoKind__FormFunc {
                         symbolKind = Ast_SymbolKind__Typ
                         
                     }
@@ -2460,10 +2467,10 @@ func (self *Import__TypeInfoEnum) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Import__TypeInfoEnum) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Import__TypeInfoEnum__fromMap_1340_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoEnum__fromMap_1342_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoEnum_FromMap( arg1, paramList )
 }
-func Import__TypeInfoEnum__fromStem_1342_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoEnum__fromStem_1344_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoEnum_FromMap( arg1, paramList )
 }
 func Import__TypeInfoEnum_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
@@ -2515,7 +2522,7 @@ func Import__TypeInfoEnum_FromMapMain( newObj *Import__TypeInfoEnum, objMap *Lns
     }
     return true, newObj, nil
 }
-// 609: decl @lune.@base.@Import._TypeInfoEnum.createTypeInfo
+// 615: decl @lune.@base.@Import._TypeInfoEnum.createTypeInfo
 func (self *Import__TypeInfoEnum) CreateTypeInfo(param *Import_ImportParam)(LnsAny, LnsAny) {
     var accessMode LnsInt
     accessMode = Lns_unwrap( Ast_AccessMode__from(LnsInt(self.AccessMode))).(LnsInt)
@@ -2535,11 +2542,11 @@ func (self *Import__TypeInfoEnum) CreateTypeInfo(param *Import_ImportParam)(LnsA
     param.TypeId2TypeInfo.Set(self.TypeId,&enumTypeInfo.Ast_TypeInfo)
     var getEnumLiteral func(val LnsAny) LnsAny
     getEnumLiteral = func(val LnsAny) LnsAny {
-        if _switch3367 := valTypeInfo; _switch3367 == Ast_builtinTypeInt {
+        if _switch3352 := valTypeInfo; _switch3352 == Ast_builtinTypeInt {
             return &Ast_EnumLiteral__Int{Lns_forceCastInt(val)}
-        } else if _switch3367 == Ast_builtinTypeReal {
+        } else if _switch3352 == Ast_builtinTypeReal {
             return &Ast_EnumLiteral__Real{Lns_forceCastReal(val)}
-        } else if _switch3367 == Ast_builtinTypeString {
+        } else if _switch3352 == Ast_builtinTypeString {
             return &Ast_EnumLiteral__Str{val.(string)}
         }
         return nil
@@ -2613,10 +2620,10 @@ func (self *Import__TypeInfoAlgeVal) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Import__TypeInfoAlgeVal) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Import__TypeInfoAlgeVal__fromMap_1357_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoAlgeVal__fromMap_1359_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoAlgeVal_FromMap( arg1, paramList )
 }
-func Import__TypeInfoAlgeVal__fromStem_1359_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoAlgeVal__fromStem_1361_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoAlgeVal_FromMap( arg1, paramList )
 }
 func Import__TypeInfoAlgeVal_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
@@ -2641,7 +2648,7 @@ func Import__TypeInfoAlgeVal_FromMapMain( newObj *Import__TypeInfoAlgeVal, objMa
        newObj.Name = conv.(string)
     }
     if ok,conv,mess := Lns_ToListSub( objMap.Items["typeList"], false, []Lns_ToObjParam{Lns_ToObjParam{
-            Lns_ToIntSub, false,nil}}); !ok {
+            Import__IdInfo_FromMapSub, false,nil}}); !ok {
        return false,nil,"typeList:" + mess.(string)
     } else {
        newObj.TypeList = conv.(*LnsList)
@@ -2707,10 +2714,10 @@ func (self *Import__TypeInfoAlge) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Import__TypeInfoAlge) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Import__TypeInfoAlge__fromMap_1382_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoAlge__fromMap_1384_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoAlge_FromMap( arg1, paramList )
 }
-func Import__TypeInfoAlge__fromStem_1384_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoAlge__fromStem_1386_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoAlge_FromMap( arg1, paramList )
 }
 func Import__TypeInfoAlge_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
@@ -2756,7 +2763,7 @@ func Import__TypeInfoAlge_FromMapMain( newObj *Import__TypeInfoAlge, objMap *Lns
     }
     return true, newObj, nil
 }
-// 663: decl @lune.@base.@Import._TypeInfoAlge.createTypeInfo
+// 669: decl @lune.@base.@Import._TypeInfoAlge.createTypeInfo
 func (self *Import__TypeInfoAlge) CreateTypeInfo(param *Import_ImportParam)(LnsAny, LnsAny) {
     var accessMode LnsInt
     accessMode = Lns_unwrap( Ast_AccessMode__from(LnsInt(self.AccessMode))).(LnsInt)
@@ -2777,11 +2784,11 @@ func (self *Import__TypeInfoAlge) CreateTypeInfo(param *Import_ImportParam)(LnsA
         var typeInfoList *LnsList
         typeInfoList = NewLnsList([]LnsAny{})
         for _, _orgTypeId := range( valInfo.TypeList.Items ) {
-            orgTypeId := _orgTypeId.(LnsInt)
-            typeInfoList.Insert(Ast_TypeInfo2Stem(Lns_unwrap( Lns_car(param.FP.GetTypeInfo(orgTypeId))).(*Ast_TypeInfo)))
+            orgTypeId := _orgTypeId.(Import__IdInfoDownCast).ToImport__IdInfo()
+            typeInfoList.Insert(Ast_TypeInfo2Stem(Lns_unwrap( Lns_car(param.FP.GetTypeInfoFrom(orgTypeId))).(*Ast_TypeInfo)))
         }
         var algeValSym LnsAny
-        algeValSym = Import_convExp3679(Lns_2DDD(scope.FP.AddAlgeVal(param.ProcessInfo, valInfo.Name, nil, &algeTypeInfo.Ast_TypeInfo)))
+        algeValSym = Import_convExp3664(Lns_2DDD(scope.FP.AddAlgeVal(param.ProcessInfo, valInfo.Name, nil, &algeTypeInfo.Ast_TypeInfo)))
         var algeVal *Ast_AlgeValInfo
         algeVal = NewAst_AlgeValInfo(valInfo.Name, typeInfoList, algeTypeInfo, Lns_unwrap( algeValSym).(*Ast_SymbolInfo))
         algeTypeInfo.FP.AddValInfo(algeVal)
@@ -2830,7 +2837,7 @@ func (self *Import_DependModuleInfo) InitImport_DependModuleInfo(arg1 LnsInt, ar
     self.id = arg1
     self.metaTypeId2TypeInfoMap = arg2
 }
-// 707: decl @lune.@base.@Import.DependModuleInfo.getTypeInfo
+// 713: decl @lune.@base.@Import.DependModuleInfo.getTypeInfo
 func (self *Import_DependModuleInfo) GetTypeInfo(metaTypeId LnsInt) *Ast_TypeInfo {
     return Lns_unwrap( self.metaTypeId2TypeInfoMap.Get(metaTypeId)).(*Ast_TypeInfo)
 }

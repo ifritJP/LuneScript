@@ -129,7 +129,7 @@ __test {
                return nil;
             };
             return new frontInterface.ModuleMeta(
-               meta, (metaPath.gsub( "%.meta$", ".lns" )) );
+               meta, (metaPath.gsub( "%.meta$", ".lns" )), nil );
          }
          print( mess );
          return nil;

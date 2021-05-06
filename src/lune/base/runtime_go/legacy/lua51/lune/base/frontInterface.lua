@@ -197,32 +197,6 @@ local Util = _lune.loadModule( 'lune.base.Util' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 
-
-local ModuleMeta = {}
-_moduleObj.ModuleMeta = ModuleMeta
-function ModuleMeta.setmeta( obj )
-  setmetatable( obj, { __index = ModuleMeta  } )
-end
-function ModuleMeta.new( metaInfo, lnsPath )
-   local obj = {}
-   ModuleMeta.setmeta( obj )
-   if obj.__init then
-      obj:__init( metaInfo, lnsPath )
-   end
-   return obj
-end
-function ModuleMeta:__init( metaInfo, lnsPath )
-
-   self.metaInfo = metaInfo
-   self.lnsPath = lnsPath
-end
-function ModuleMeta:get_metaInfo()
-   return self.metaInfo
-end
-function ModuleMeta:get_lnsPath()
-   return self.lnsPath
-end
-
 local ModuleId = {}
 _moduleObj.ModuleId = ModuleId
 function ModuleId.new( modTime, buildCount )
@@ -268,6 +242,87 @@ function ModuleId.createIdFromTxt( idStr )
    return ModuleId.new(modTime, math.floor(buildCount))
 end
 
+
+local ModuleInfo = {}
+setmetatable( ModuleInfo, { ifList = {Ast.ModuleInfoIF,} } )
+_moduleObj.ModuleInfo = ModuleInfo
+function ModuleInfo.new( fullName, assignName, idMap, moduleId, importedAliasMap )
+   local obj = {}
+   ModuleInfo.setmeta( obj )
+   if obj.__init then obj:__init( fullName, assignName, idMap, moduleId, importedAliasMap ); end
+   return obj
+end
+function ModuleInfo:__init(fullName, assignName, idMap, moduleId, importedAliasMap) 
+   self.moduleId = moduleId
+   self.fullName = fullName
+   self.assignName = assignName
+   self.localTypeInfo2importIdMap = idMap
+   self.importId2localTypeInfoMap = {}
+   for typeInfo, importId in pairs( idMap ) do
+      self.importId2localTypeInfoMap[importId] = typeInfo
+   end
+   
+   self.importedAliasMap = importedAliasMap
+end
+function ModuleInfo:get_modulePath(  )
+
+   return self.fullName
+end
+function ModuleInfo:assign( assignName )
+
+   return ModuleInfo.new(self.fullName, assignName, self.localTypeInfo2importIdMap, self.moduleId, self.importedAliasMap)
+end
+function ModuleInfo.setmeta( obj )
+  setmetatable( obj, { __index = ModuleInfo  } )
+end
+function ModuleInfo:get_fullName()
+   return self.fullName
+end
+function ModuleInfo:get_localTypeInfo2importIdMap()
+   return self.localTypeInfo2importIdMap
+end
+function ModuleInfo:get_importId2localTypeInfoMap()
+   return self.importId2localTypeInfoMap
+end
+function ModuleInfo:get_assignName()
+   return self.assignName
+end
+function ModuleInfo:get_moduleId()
+   return self.moduleId
+end
+function ModuleInfo:get_importedAliasMap()
+   return self.importedAliasMap
+end
+
+
+local ModuleMeta = {}
+_moduleObj.ModuleMeta = ModuleMeta
+function ModuleMeta.setmeta( obj )
+  setmetatable( obj, { __index = ModuleMeta  } )
+end
+function ModuleMeta.new( metaInfo, lnsPath, processInfo )
+   local obj = {}
+   ModuleMeta.setmeta( obj )
+   if obj.__init then
+      obj:__init( metaInfo, lnsPath, processInfo )
+   end
+   return obj
+end
+function ModuleMeta:__init( metaInfo, lnsPath, processInfo )
+
+   self.metaInfo = metaInfo
+   self.lnsPath = lnsPath
+   self.processInfo = processInfo
+end
+function ModuleMeta:get_metaInfo()
+   return self.metaInfo
+end
+function ModuleMeta:get_lnsPath()
+   return self.lnsPath
+end
+function ModuleMeta:get_processInfo()
+   return self.processInfo
+end
 
 local ImportModuleInfo = {}
 _moduleObj.ImportModuleInfo = ImportModuleInfo
@@ -333,7 +388,7 @@ function dummyFront:loadModule( mod )
       error( "load error" )
    end
    
-   local meta = ModuleMeta.new(emptyTable, mod:gsub( "%.", "/" ) .. ".lns")
+   local meta = ModuleMeta.new(emptyTable, mod:gsub( "%.", "/" ) .. ".lns", nil)
    return require( mod ), meta
 end
 function dummyFront:loadMeta( importModuleInfo, mod )

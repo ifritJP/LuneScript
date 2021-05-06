@@ -760,7 +760,7 @@ end
 function NodeManager:__init() 
    self.idSeed = 0
    self.nodeKind2NodeList = {}
-   for kind, _1765 in pairs( nodeKind2NameMap ) do
+   for kind, _1772 in pairs( nodeKind2NameMap ) do
       if not self.nodeKind2NodeList[kind] then
          self.nodeKind2NodeList[kind] = {}
       end
@@ -1376,58 +1376,6 @@ function LuneHelperInfo:__init()
 end
 function LuneHelperInfo.setmeta( obj )
   setmetatable( obj, { __index = LuneHelperInfo  } )
-end
-
-
-local ModuleInfo = {}
-setmetatable( ModuleInfo, { ifList = {Ast.ModuleInfoIF,} } )
-_moduleObj.ModuleInfo = ModuleInfo
-function ModuleInfo.new( fullName, assignName, idMap, moduleId, importedAliasMap )
-   local obj = {}
-   ModuleInfo.setmeta( obj )
-   if obj.__init then obj:__init( fullName, assignName, idMap, moduleId, importedAliasMap ); end
-   return obj
-end
-function ModuleInfo:__init(fullName, assignName, idMap, moduleId, importedAliasMap) 
-   self.moduleId = moduleId
-   self.fullName = fullName
-   self.assignName = assignName
-   self.localTypeInfo2importIdMap = idMap
-   self.importId2localTypeInfoMap = {}
-   for typeInfo, importId in pairs( idMap ) do
-      self.importId2localTypeInfoMap[importId] = typeInfo
-   end
-   
-   self.importedAliasMap = importedAliasMap
-end
-function ModuleInfo:get_modulePath(  )
-
-   return self.fullName
-end
-function ModuleInfo:assign( assignName )
-
-   return ModuleInfo.new(self.fullName, assignName, self.localTypeInfo2importIdMap, self.moduleId, self.importedAliasMap)
-end
-function ModuleInfo.setmeta( obj )
-  setmetatable( obj, { __index = ModuleInfo  } )
-end
-function ModuleInfo:get_fullName()
-   return self.fullName
-end
-function ModuleInfo:get_localTypeInfo2importIdMap()
-   return self.localTypeInfo2importIdMap
-end
-function ModuleInfo:get_importId2localTypeInfoMap()
-   return self.importId2localTypeInfoMap
-end
-function ModuleInfo:get_assignName()
-   return self.assignName
-end
-function ModuleInfo:get_moduleId()
-   return self.moduleId
-end
-function ModuleInfo:get_importedAliasMap()
-   return self.importedAliasMap
 end
 
 local MacroValInfo = {}
@@ -13883,7 +13831,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, _10385 in pairs( self.map ) do
+   for key, _10358 in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -13918,8 +13866,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, _10399 in ipairs( __sorted ) do
-         local key = __map[ _10399 ]
+      for __index, _10372 in ipairs( __sorted ) do
+         local key = __map[ _10372 ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false

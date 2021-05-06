@@ -46,24 +46,24 @@ pub class Import {
    let globalScope: Ast.Scope;
    let macroCtrl:Macro.MacroCtrl;
    let typeNameCtrl:&Ast.TypeNameCtrl;
-   let processInfo:Ast.ProcessInfo;
+   //let processInfo:Ast.ProcessInfo;
    let helperInfo:Nodes.LuneHelperInfo;
 
    /**
 インポートしているモジュールの TypeInfo -> シンボル情報。
 import しているモジュールから、さらに import しているサブモジュールも含まれる。
    */ 
-   let importModule2ModuleInfo: Map<&Ast.TypeInfo,&Nodes.ModuleInfo> {pub&};
+   let importModule2ModuleInfo: Map<&Ast.TypeInfo,&frontInterface.ModuleInfo> {pub&};
    /**
 インポートしているモジュール内で定義している alias 情報。
 
 alias で置き換えている元の Type → alias の型
    */
    let importedAliasMap: Map<&Ast.TypeInfo,&Ast.AliasTypeInfo>;
-   let importModuleName2ModuleInfo: Map<str,&Nodes.ModuleInfo>;
-   
-   let modifier:TransUnitIF.Modifier;
+   let importModuleName2ModuleInfo: Map<str,&frontInterface.ModuleInfo>;
 
+   let validMutControl: bool;
+   
    pub fn __init( transUnitIF:TransUnitIF.TransUnitIF,
                   importModuleInfo: frontInterface.ImportModuleInfo,
                   moduleType: &Ast.TypeInfo,
@@ -71,7 +71,7 @@ alias で置き換えている元の Type → alias の型
                   globalScope: Ast.Scope,
                   macroCtrl:Macro.MacroCtrl,
                   typeNameCtrl:&Ast.TypeNameCtrl,
-                  processInfo:Ast.ProcessInfo,
+                  //processInfo:Ast.ProcessInfo,
                   helperInfo:Nodes.LuneHelperInfo,
                   //importModule2ModuleInfo: Map<&Ast.TypeInfo,&Nodes.ModuleInfo>,
                   importedAliasMap: Map<&Ast.TypeInfo,&Ast.AliasTypeInfo>,
@@ -79,6 +79,7 @@ alias で置き換えている元の Type → alias の型
                   
                   validMutControl:bool )
    {
+      self.validMutControl = validMutControl;
       self.transUnitIF = transUnitIF;
       self.importModuleInfo = importModuleInfo;
       self.moduleType = moduleType;
@@ -86,7 +87,7 @@ alias で置き換えている元の Type → alias の型
       self.globalScope = globalScope;
       self.macroCtrl = macroCtrl;
       self.typeNameCtrl = typeNameCtrl;
-      self.processInfo = processInfo;
+//      self.processInfo = processInfo;
       self.helperInfo = helperInfo;
       //self.importModule2ModuleInfo = importModule2ModuleInfo;
       self.importedAliasMap = importedAliasMap;
@@ -96,7 +97,7 @@ alias で置き換えている元の Type → alias の型
       // self.importedAliasMap = {};
       self.importModuleName2ModuleInfo = {};
 
-      self.modifier = new TransUnitIF.Modifier( validMutControl, self.processInfo );
+      // self.modifier = new TransUnitIF.Modifier( validMutControl, self.processInfo );
    }
 }
 
@@ -163,6 +164,16 @@ pub fn ImportParam.getTypeInfo(typeId:int) mut :&Ast.TypeInfo!, str! {
    return nil, nil;
 }
 
+class _IdInfo extend (Mapping) {
+   pub let id:int;
+   pub let mod:int;
+}
+
+pub fn ImportParam.getTypeInfoFrom(typeId:&_IdInfo) mut :&Ast.TypeInfo!, str! {
+   return self.getTypeInfo( typeId.id )**;
+}
+
+
 class _TypeInfoNilable extend _TypeInfo {
    pub let orgTypeId:int;
 
@@ -177,11 +188,6 @@ class _TypeInfoNilable extend _TypeInfo {
    }
 }
 
-class _IdInfo extend (Mapping) {
-   pub let id:int;
-   pub let mod:int;
-}
-
 class _TypeInfoAlias extend _TypeInfo {
    pub let parentId:int;
    pri let rawTxt:str;
@@ -189,7 +195,7 @@ class _TypeInfoAlias extend _TypeInfo {
 
    pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
-      let srcTypeInfo = unwrap param.getTypeInfo( self.srcTypeId.id );
+      let srcTypeInfo = unwrap param.getTypeInfoFrom( self.srcTypeId );
       let newTypeInfo = param.processInfo.createAlias(
          param.processInfo, self.rawTxt, true, .Pub, param.moduleTypeInfo, srcTypeInfo );
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
@@ -221,7 +227,7 @@ class _TypeInfoDDD extend _TypeInfo {
    pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
       //let itemTypeInfo = unwrap param.typeId2TypeInfo[ self.itemTypeId ];
-      let itemTypeInfo = unwrap param.getTypeInfo( self.itemTypeId.id );
+      let itemTypeInfo = unwrap param.getTypeInfoFrom( self.itemTypeId );
       let newTypeInfo = param.processInfo.createDDD(
          itemTypeInfo, true, self.extTypeFlag );
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
@@ -241,11 +247,11 @@ class _TypeInfoAlternate extend _TypeInfo {
 
    pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
-      let baseInfo = unwrap param.getTypeInfo( self.baseId.id );
+      let baseInfo = unwrap param.getTypeInfoFrom( self.baseId );
       let mut interfaceList:List<&Ast.TypeInfo> = [];
       foreach ifTypeId in self.ifList {
          //interfaceList.insert( unwrap param.typeId2TypeInfo[ ifTypeId ] );
-         interfaceList.insert( unwrap param.getTypeInfo( ifTypeId.id ) );
+         interfaceList.insert( unwrap param.getTypeInfoFrom( ifTypeId ) );
       }
       let newTypeInfo = param.processInfo.createAlternate(
          self.belongClassFlag, self.altIndex,
@@ -261,10 +267,10 @@ class _TypeInfoGeneric extend _TypeInfo {
 
    pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
-      let genSrcTypeInfo = unwrap param.getTypeInfo( self.genSrcTypeId.id );
+      let genSrcTypeInfo = unwrap param.getTypeInfoFrom( self.genSrcTypeId );
       let mut genTypeList:List<&Ast.TypeInfo> = [];
       foreach typeId in self.genTypeList {
-         genTypeList.insert( unwrap param.getTypeInfo( typeId.id ) );
+         genTypeList.insert( unwrap param.getTypeInfoFrom( typeId ) );
       }
       let newTypeInfo = param.processInfo.createGeneric(
          genSrcTypeInfo, genTypeList, param.moduleTypeInfo );
@@ -292,7 +298,7 @@ class _TypeInfoExt extend _TypeInfo {
 
    pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
-      let extedType = unwrap param.getTypeInfo( self.extedTypeId.id );
+      let extedType = unwrap param.getTypeInfoFrom( self.extedTypeId );
       let newTypeInfo;
       _match param.processInfo.createLuaval( extedType, true ) {
          case .OK( extType, _ ) {
@@ -315,7 +321,7 @@ class _TypeInfoModifier extend _TypeInfo {
    pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
       //let! srcTypeInfo = param.typeId2TypeInfo[ self.srcTypeId ] {
-      let! srcTypeInfo = param.getTypeInfo( self.srcTypeId.id ) {
+      let! srcTypeInfo = param.getTypeInfoFrom( self.srcTypeId ) {
          return nil, "not found srcType -- %d" ( self.srcTypeId.id );
       };
       let newTypeInfo = param.modifier.createModifier( srcTypeInfo, self.mutMode );
@@ -420,12 +426,12 @@ class _TypeInfoNormal extend _TypeInfo {
          let mut itemTypeInfo:List<&Ast.TypeInfo> = [];
          foreach typeId in self.itemTypeId {
             //itemTypeInfo.insert( unwrap param.typeId2TypeInfo[ typeId ] );
-            itemTypeInfo.insert( unwrap param.getTypeInfo( typeId.id ) );
+            itemTypeInfo.insert( unwrap param.getTypeInfoFrom( typeId ) );
          }
          let mut argTypeInfo:List<&Ast.TypeInfo> = [];
          foreach typeId, index in self.argTypeId {
             //if! let argType = param.typeId2TypeInfo[ typeId ] {
-            let argType, mess = param.getTypeInfo( typeId.id );
+            let argType, mess = param.getTypeInfoFrom( typeId );
             when! argType {
                argTypeInfo.insert( argType );
             }
@@ -439,15 +445,15 @@ class _TypeInfoNormal extend _TypeInfo {
          let mut retTypeInfo:List<&Ast.TypeInfo> = [];
          foreach typeId in self.retTypeId {
             //retTypeInfo.insert( unwrap param.typeId2TypeInfo[ typeId ] );
-            retTypeInfo.insert( unwrap param.getTypeInfo( typeId.id ) );
+            retTypeInfo.insert( unwrap param.getTypeInfoFrom( typeId ) );
          }
 
          //let baseInfo = unwrap param.typeId2TypeInfo[ self.baseId ];
-         let baseInfo = unwrap param.getTypeInfo( self.baseId.id );
+         let baseInfo = unwrap param.getTypeInfoFrom( self.baseId );
          let mut interfaceList:List<&Ast.TypeInfo> = [];
          foreach ifTypeId in self.ifList {
             //interfaceList.insert( unwrap param.typeId2TypeInfo[ ifTypeId ] );
-            interfaceList.insert( unwrap param.getTypeInfo( ifTypeId.id ) );
+            interfaceList.insert( unwrap param.getTypeInfoFrom( ifTypeId ) );
          }
 
          let! mut parentScope = param.typeId2Scope[ self.parentId ] {
@@ -651,7 +657,7 @@ class _TypeInfoEnum extend _TypeInfo {
 
 class _TypeInfoAlgeVal extend (Mapping) {
    pub let name:str;
-   pub let typeList:&List<int>;
+   pub let typeList:&List<&_IdInfo>;
 }
 
 class _TypeInfoAlge extend _TypeInfo {
@@ -679,7 +685,7 @@ class _TypeInfoAlge extend _TypeInfo {
          let mut typeInfoList:List<&Ast.TypeInfo> = [];
          foreach orgTypeId in valInfo.typeList {
             //typeInfoList.insert( unwrap param.typeId2TypeInfo[ orgTypeId ] );
-            typeInfoList.insert( unwrap param.getTypeInfo( orgTypeId ) );
+            typeInfoList.insert( unwrap param.getTypeInfoFrom( orgTypeId ) );
          }
          let algeValSym = scope.addAlgeVal(
             param.processInfo, valInfo.name, nil, algeTypeInfo );
@@ -710,9 +716,16 @@ class DependModuleInfo {
 }
 
 
-pub fn Import.processImport( mut modulePath:str, depth:int ) mut :
-   Luaval<&Meta._MetaInfo>, &Map<int,&Ast.TypeInfo>, &Nodes.ModuleInfo
+pub fn Import.processImport(
+   processInfo:Ast.ProcessInfo, mut modulePath:str, depth:int ) mut :
+   Luaval<&Meta._MetaInfo>, &Map<int,&Ast.TypeInfo>, &frontInterface.ModuleInfo
 {
+   let modifier:TransUnitIF.Modifier =
+      new TransUnitIF.Modifier( self.validMutControl, processInfo );
+      
+
+
+   
    let orgModulePath = modulePath;
    modulePath = frontInterface.getLuaModulePath( modulePath );
    
@@ -751,11 +764,16 @@ pub fn Import.processImport( mut modulePath:str, depth:int ) mut :
       nameList.insert( txt );
    }
 
-   let! moduleMeta = frontInterface.loadMeta( self.importModuleInfo, orgModulePath ) {
+   let! mut moduleMeta = frontInterface.loadMeta( self.importModuleInfo, orgModulePath ) {
       self.transUnitIF.error( "failed to load meta -- " .. orgModulePath );
    };
+   let mut importedProcessInfo = moduleMeta.$processInfo;
+   // processInfo が取得できた場合、
+   
+
    let metaInfo = moduleMeta.$metaInfo@@=Meta._MetaInfo;
-   Log._log( .Debug, `{ return "%s processing" (orgModulePath); } );
+   Log._log2( .Info, "%s processing -- %s" (orgModulePath, importedProcessInfo) );
+
 
 
    // 依存するモジュールのメタ情報を読み込み
@@ -763,7 +781,7 @@ pub fn Import.processImport( mut modulePath:str, depth:int ) mut :
    forsort dependInfo, dependName in metaInfo.__dependModuleMap {
       if dependInfo.use {
          let _, metaTypeId2TypeInfoMap =
-            self.processImport( dependName, depth + 1 );
+            self.processImport( processInfo, dependName, depth + 1 );
          let typeId = (unwrap dependInfo.typeId)@@int;
          dependLibId2DependInfo[ typeId ] =
             new DependModuleInfo( typeId, metaTypeId2TypeInfoMap );
@@ -800,7 +818,7 @@ pub fn Import.processImport( mut modulePath:str, depth:int ) mut :
          mutable = metaInfo.__moduleMutable;
       }
       moduleTypeInfo = self.transUnitIF.pushModule(
-         self.processInfo, true, moduleName, mutable );
+         processInfo, true, moduleName, mutable );
    }
    foreach _ in nameList {
       self.transUnitIF.popModule();
@@ -901,7 +919,7 @@ pub fn Import.processImport( mut modulePath:str, depth:int ) mut :
    
    // 初めに child 以外で TypeInfo を登録
    let mut importParam = new ImportParam(
-      self.transUnitIF.getLatestPos(), self.modifier, self.processInfo, typeId2Scope,
+      self.transUnitIF.getLatestPos(), modifier, processInfo, typeId2Scope,
       typeId2TypeInfo, {}, lazyModuleSet, 
       metaInfo, self.transUnitIF.$scope, moduleTypeInfo, .Normal, id2atomMap );
    
@@ -922,17 +940,17 @@ pub fn Import.processImport( mut modulePath:str, depth:int ) mut :
             switch newTypeInfo.$kind {
                case .IF, .Class {
                   self.globalScope.addClass(
-                     self.processInfo, newTypeInfo.$rawTxt, nil, newTypeInfo );
+                     processInfo, newTypeInfo.$rawTxt, nil, newTypeInfo );
                }
                case .Func {
                   self.globalScope.addFunc(
-                     self.processInfo,
+                     processInfo,
                      nil, newTypeInfo, .Global, newTypeInfo.$staticFlag,
                      Ast.TypeInfo.isMut( newTypeInfo) );
                }
                case .Enum {
                   self.globalScope.addEnum(
-                     self.processInfo, .Global, newTypeInfo.$rawTxt, nil, newTypeInfo );
+                     processInfo, .Global, newTypeInfo.$rawTxt, nil, newTypeInfo );
                }
                case .Nilable {
                   ; // nop
@@ -978,7 +996,7 @@ pub fn Import.processImport( mut modulePath:str, depth:int ) mut :
 
             if addFlag {
                scope.add(
-                  self.processInfo, symbolKind, false, typeInfo.$kind == .Func,
+                  processInfo, symbolKind, false, typeInfo.$kind == .Func,
                   typeInfo.getTxt(##), nil, typeInfo, typeInfo.$accessMode,
                   typeInfo.$staticFlag, typeInfo.$mutMode, true, false );
             }
@@ -1015,7 +1033,7 @@ pub fn Import.processImport( mut modulePath:str, depth:int ) mut :
                   if! let typeId = fieldInfo.typeId {
                      let fieldTypeInfo = unwrap typeId2TypeInfo[ typeId@@int ];
                      let symbolInfo = self.transUnitIF.$scope.addMember(
-                        self.processInfo, fieldName, nil, fieldTypeInfo,
+                        processInfo, fieldName, nil, fieldTypeInfo,
                         unwrap Ast.AccessMode._from( (unwrap fieldInfo.accessMode)@@int ),
                         fieldInfo.staticFlag and true or false,
                         unwrap Ast.MutMode._from( (unwrap fieldInfo.mutMode)@@int ) );
@@ -1033,7 +1051,7 @@ pub fn Import.processImport( mut modulePath:str, depth:int ) mut :
          }
          case .Module {
             self.transUnitIF.pushModule(
-               self.processInfo, true, classTypeInfo.getTxt(##),
+               processInfo, true, classTypeInfo.getTxt(##),
                Ast.TypeInfo.isMut( classTypeInfo ) );
             Log._log(
                .Debug,         
@@ -1090,7 +1108,7 @@ pub fn Import.processImport( mut modulePath:str, depth:int ) mut :
       if index == #nameList {
          mutable = metaInfo.__moduleMutable;
       }
-      self.transUnitIF.pushModule( self.processInfo, true, moduleName, mutable );
+      self.transUnitIF.pushModule( processInfo, true, moduleName, mutable );
    }
 
 
@@ -1098,7 +1116,7 @@ pub fn Import.processImport( mut modulePath:str, depth:int ) mut :
    foreach varInfo, varName in metaInfo.__varName2InfoMap {
       if! let typeId = varInfo.typeId {
          self.transUnitIF.$scope.addStaticVar(
-            self.processInfo, false, true, varName,
+            processInfo, false, true, varName,
             nil, unwrap typeId2TypeInfo[ typeId@@int ],
             varInfo.mutable and Ast.MutMode.Mut or Ast.MutMode.IMut );
       }
@@ -1111,7 +1129,7 @@ pub fn Import.processImport( mut modulePath:str, depth:int ) mut :
    foreach macroInfoStem, orgTypeId in metaInfo.__macroName2InfoMap {
 
       self.macroCtrl.importMacro(
-         self.processInfo, moduleMeta.$lnsPath,
+         processInfo, moduleMeta.$lnsPath,
          expandLuavalMap( macroInfoStem ),
          unwrap orgId2MacroTypeInfo[ orgTypeId ], typeId2TypeInfo );
    }
@@ -1128,7 +1146,7 @@ pub fn Import.processImport( mut modulePath:str, depth:int ) mut :
    }
    
 
-   let moduleInfo = new Nodes.ModuleInfo(
+   let moduleInfo = new frontInterface.ModuleInfo(
       orgModulePath, nameList[#nameList], newId2OldIdMap,
       frontInterface.ModuleId.createIdFromTxt( metaInfo.__buildId ),
       importParam.importedAliasMap );

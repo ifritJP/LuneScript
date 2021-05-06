@@ -1884,7 +1884,7 @@ fn TransUnit.analyzeImportFor(
          self.globalScope,
          self.macroCtrl,
          self.typeNameCtrl,
-         self.processInfo,
+         //self.processInfo,
          self.helperInfo,
          //self.importModule2ModuleInfo,
          self.importedAliasMap,
@@ -1892,7 +1892,8 @@ fn TransUnit.analyzeImportFor(
          self.validMutControl );
       self.importCtrl = importObj;
    };
-   let metaInfo, typeId2TypeInfo, moduleInfo = importObj.processImport( modulePath, 1 );
+   let metaInfo, typeId2TypeInfo, moduleInfo =
+      importObj.processImport( self.processInfo, modulePath, 1 );
 
    
    self.processInfo.switchIdProvier( .Base );
