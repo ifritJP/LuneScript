@@ -176,7 +176,7 @@ pub class Option {
       self.dependsPath = nil;
    }
 
-   pub fn openDepend( relPath:str! ): mut oStream! {
+   pub fn openDepend( relPath:str! ) : oStream! {
       if! let path = self.dependsPath {
          let filePath;
          when! relPath {

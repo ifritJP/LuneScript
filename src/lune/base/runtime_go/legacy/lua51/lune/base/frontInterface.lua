@@ -243,16 +243,48 @@ function ModuleId.createIdFromTxt( idStr )
 end
 
 
+local ModuleProvideInfo = {}
+_moduleObj.ModuleProvideInfo = ModuleProvideInfo
+function ModuleProvideInfo.setmeta( obj )
+  setmetatable( obj, { __index = ModuleProvideInfo  } )
+end
+function ModuleProvideInfo.new( typeInfo, symbolKind, mutable )
+   local obj = {}
+   ModuleProvideInfo.setmeta( obj )
+   if obj.__init then
+      obj:__init( typeInfo, symbolKind, mutable )
+   end
+   return obj
+end
+function ModuleProvideInfo:__init( typeInfo, symbolKind, mutable )
+
+   self.typeInfo = typeInfo
+   self.symbolKind = symbolKind
+   self.mutable = mutable
+end
+function ModuleProvideInfo:get_typeInfo()
+   return self.typeInfo
+end
+function ModuleProvideInfo:get_symbolKind()
+   return self.symbolKind
+end
+function ModuleProvideInfo:get_mutable()
+   return self.mutable
+end
+
+
 local ModuleInfo = {}
 setmetatable( ModuleInfo, { ifList = {Ast.ModuleInfoIF,} } )
 _moduleObj.ModuleInfo = ModuleInfo
-function ModuleInfo.new( fullName, assignName, idMap, moduleId, importedAliasMap )
+function ModuleInfo.new( fullName, assignName, idMap, moduleId, processInfo, moduleProvide, moduleTypeInfo, importedAliasMap )
    local obj = {}
    ModuleInfo.setmeta( obj )
-   if obj.__init then obj:__init( fullName, assignName, idMap, moduleId, importedAliasMap ); end
+   if obj.__init then obj:__init( fullName, assignName, idMap, moduleId, processInfo, moduleProvide, moduleTypeInfo, importedAliasMap ); end
    return obj
 end
-function ModuleInfo:__init(fullName, assignName, idMap, moduleId, importedAliasMap) 
+function ModuleInfo:__init(fullName, assignName, idMap, moduleId, processInfo, moduleProvide, moduleTypeInfo, importedAliasMap) 
+   self.moduleTypeInfo = moduleTypeInfo
+   self.moduleProvide = moduleProvide
    self.moduleId = moduleId
    self.fullName = fullName
    self.assignName = assignName
@@ -262,7 +294,30 @@ function ModuleInfo:__init(fullName, assignName, idMap, moduleId, importedAliasM
       self.importId2localTypeInfoMap[importId] = typeInfo
    end
    
+   self.processInfo = processInfo
    self.importedAliasMap = importedAliasMap
+end
+function ModuleInfo:getImportTypeId( typeInfo )
+
+   do
+      local typeId = self.localTypeInfo2importIdMap[typeInfo]
+      if typeId ~= nil then
+         return typeId
+      end
+   end
+   
+   return nil
+end
+function ModuleInfo:getTypeInfo( localTypeId )
+
+   do
+      local typeInfo = self.importId2localTypeInfoMap[localTypeId]
+      if typeInfo ~= nil then
+         return typeInfo
+      end
+   end
+   
+   return nil
 end
 function ModuleInfo:get_modulePath(  )
 
@@ -270,7 +325,7 @@ function ModuleInfo:get_modulePath(  )
 end
 function ModuleInfo:assign( assignName )
 
-   return ModuleInfo.new(self.fullName, assignName, self.localTypeInfo2importIdMap, self.moduleId, self.importedAliasMap)
+   return ModuleInfo.new(self.fullName, assignName, self.localTypeInfo2importIdMap, self.moduleId, self.processInfo, self.moduleProvide, self.moduleTypeInfo, self.importedAliasMap)
 end
 function ModuleInfo.setmeta( obj )
   setmetatable( obj, { __index = ModuleInfo  } )
@@ -293,6 +348,15 @@ end
 function ModuleInfo:get_importedAliasMap()
    return self.importedAliasMap
 end
+function ModuleInfo:get_processInfo()
+   return self.processInfo
+end
+function ModuleInfo:get_moduleProvide()
+   return self.moduleProvide
+end
+function ModuleInfo:get_moduleTypeInfo()
+   return self.moduleTypeInfo
+end
 
 
 local ModuleMeta = {}
@@ -300,19 +364,19 @@ _moduleObj.ModuleMeta = ModuleMeta
 function ModuleMeta.setmeta( obj )
   setmetatable( obj, { __index = ModuleMeta  } )
 end
-function ModuleMeta.new( metaInfo, lnsPath, processInfo )
+function ModuleMeta.new( metaInfo, lnsPath, moduleInfo )
    local obj = {}
    ModuleMeta.setmeta( obj )
    if obj.__init then
-      obj:__init( metaInfo, lnsPath, processInfo )
+      obj:__init( metaInfo, lnsPath, moduleInfo )
    end
    return obj
 end
-function ModuleMeta:__init( metaInfo, lnsPath, processInfo )
+function ModuleMeta:__init( metaInfo, lnsPath, moduleInfo )
 
    self.metaInfo = metaInfo
    self.lnsPath = lnsPath
-   self.processInfo = processInfo
+   self.moduleInfo = moduleInfo
 end
 function ModuleMeta:get_metaInfo()
    return self.metaInfo
@@ -320,8 +384,8 @@ end
 function ModuleMeta:get_lnsPath()
    return self.lnsPath
 end
-function ModuleMeta:get_processInfo()
-   return self.processInfo
+function ModuleMeta:get_moduleInfo()
+   return self.moduleInfo
 end
 
 local ImportModuleInfo = {}

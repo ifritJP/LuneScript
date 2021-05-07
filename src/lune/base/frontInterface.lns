@@ -136,7 +136,7 @@ alias で置き換えている元の Type → alias の型。
       return self.fullName;
    }
 
-   pub fn assign( assignName: str ): ModuleInfo {
+   pub fn assign( assignName: str ) mut : ModuleInfo {
       return new ModuleInfo(
          self.fullName, assignName, self.localTypeInfo2importIdMap,
          self.moduleId, self.processInfo, self.moduleProvide,

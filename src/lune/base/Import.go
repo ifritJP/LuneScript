@@ -280,19 +280,19 @@ func (self *Import_Import) processImportSub(processInfo *Ast_ProcessInfo,moduleM
                     var kind LnsInt
                     kind = Lns_unwrap( Ast_SerializeKind__from(Lns_forceCastInt(skind))).(LnsInt)
                     if _switch4591 := kind; _switch4591 == Ast_SerializeKind__Enum {
-                        actInfo, mess = Import_convExp4303(Lns_2DDD(Import__TypeInfoEnum__fromMap_1344_(atomInfo,nil)))
+                        actInfo, mess = Import_convExp4303(Lns_2DDD(Import__TypeInfoEnum__fromMap_1341_(atomInfo,nil)))
                         
                     } else if _switch4591 == Ast_SerializeKind__Alge {
-                        actInfo, mess = Import_convExp4326(Lns_2DDD(Import__TypeInfoAlge__fromMap_1386_(atomInfo,nil)))
+                        actInfo, mess = Import_convExp4326(Lns_2DDD(Import__TypeInfoAlge__fromMap_1383_(atomInfo,nil)))
                         
                         self.helperInfo.UseAlge = true
                         
                     } else if _switch4591 == Ast_SerializeKind__Module {
-                        actInfo, mess = Import_convExp4358(Lns_2DDD(Import__TypeInfoModule__fromMap_1256_(atomInfo,nil)))
+                        actInfo, mess = Import_convExp4358(Lns_2DDD(Import__TypeInfoModule__fromMap_1253_(atomInfo,nil)))
                         
                     } else if _switch4591 == Ast_SerializeKind__Normal {
                         var workInfo LnsAny
-                        workInfo, mess = Import__TypeInfoNormal__fromMap_1322_(atomInfo,nil)
+                        workInfo, mess = Import__TypeInfoNormal__fromMap_1319_(atomInfo,nil)
                         
                         if workInfo != nil{
                             workInfo_4093 := workInfo.(*Import__TypeInfoNormal)
@@ -301,28 +301,28 @@ func (self *Import_Import) processImportSub(processInfo *Ast_ProcessInfo,moduleM
                         actInfo = Import__TypeInfoDownCastF(workInfo)
                         
                     } else if _switch4591 == Ast_SerializeKind__Nilable {
-                        actInfo, mess = Import_convExp4427(Lns_2DDD(Import__TypeInfoNilable__fromMap_1104_(atomInfo,nil)))
+                        actInfo, mess = Import_convExp4427(Lns_2DDD(Import__TypeInfoNilable__fromMap_1101_(atomInfo,nil)))
                         
                     } else if _switch4591 == Ast_SerializeKind__Alias {
-                        actInfo, mess = Import_convExp4450(Lns_2DDD(Import__TypeInfoAlias__fromMap_1121_(atomInfo,nil)))
+                        actInfo, mess = Import_convExp4450(Lns_2DDD(Import__TypeInfoAlias__fromMap_1118_(atomInfo,nil)))
                         
                     } else if _switch4591 == Ast_SerializeKind__DDD {
-                        actInfo, mess = Import_convExp4473(Lns_2DDD(Import__TypeInfoDDD__fromMap_1138_(atomInfo,nil)))
+                        actInfo, mess = Import_convExp4473(Lns_2DDD(Import__TypeInfoDDD__fromMap_1135_(atomInfo,nil)))
                         
                     } else if _switch4591 == Ast_SerializeKind__Alternate {
-                        actInfo, mess = Import_convExp4496(Lns_2DDD(Import__TypeInfoAlternate__fromMap_1162_(atomInfo,nil)))
+                        actInfo, mess = Import_convExp4496(Lns_2DDD(Import__TypeInfoAlternate__fromMap_1159_(atomInfo,nil)))
                         
                     } else if _switch4591 == Ast_SerializeKind__Generic {
-                        actInfo, mess = Import_convExp4519(Lns_2DDD(Import__TypeInfoGeneric__fromMap_1186_(atomInfo,nil)))
+                        actInfo, mess = Import_convExp4519(Lns_2DDD(Import__TypeInfoGeneric__fromMap_1183_(atomInfo,nil)))
                         
                     } else if _switch4591 == Ast_SerializeKind__Modifier {
-                        actInfo, mess = Import_convExp4542(Lns_2DDD(Import__TypeInfoModifier__fromMap_1237_(atomInfo,nil)))
+                        actInfo, mess = Import_convExp4542(Lns_2DDD(Import__TypeInfoModifier__fromMap_1234_(atomInfo,nil)))
                         
                     } else if _switch4591 == Ast_SerializeKind__Box {
-                        actInfo, mess = Import_convExp4565(Lns_2DDD(Import__TypeInfoBox__fromMap_1203_(atomInfo,nil)))
+                        actInfo, mess = Import_convExp4565(Lns_2DDD(Import__TypeInfoBox__fromMap_1200_(atomInfo,nil)))
                         
                     } else if _switch4591 == Ast_SerializeKind__Ext {
-                        actInfo, mess = Import_convExp4588(Lns_2DDD(Import__TypeInfoExt__fromMap_1220_(atomInfo,nil)))
+                        actInfo, mess = Import_convExp4588(Lns_2DDD(Import__TypeInfoExt__fromMap_1217_(atomInfo,nil)))
                         
                     }
                     if actInfo != nil{
@@ -665,7 +665,7 @@ func (self *Import_Import) ProcessImport(processInfo *Ast_ProcessInfo,modulePath
     self.importModule2ModuleInfo.Set(moduleInfo.FP.Get_moduleTypeInfo(),moduleInfo)
     self.importModuleName2ModuleInfo.Set(modulePath,moduleInfo)
     self.importModuleInfo.FP.Remove()
-    Log_log(Log_Level__Info, __func__, 1166, Log_CreateMessage(func() string {
+    Log_log(Log_Level__Info, __func__, 1169, Log_CreateMessage(func() string {
         return Lns_getVM().String_format("%s complete", []LnsAny{orgModulePath})
     }))
     
@@ -893,10 +893,10 @@ func (self *Import__IdInfo) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Import__IdInfo) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Import__IdInfo__fromMap_1084_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__IdInfo__fromMap_1081_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__IdInfo_FromMap( arg1, paramList )
 }
-func Import__IdInfo__fromStem_1086_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__IdInfo__fromStem_1083_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__IdInfo_FromMap( arg1, paramList )
 }
 func Import__IdInfo_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
@@ -977,10 +977,10 @@ func (self *Import__TypeInfoNilable) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Import__TypeInfoNilable) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Import__TypeInfoNilable__fromMap_1104_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoNilable__fromMap_1101_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoNilable_FromMap( arg1, paramList )
 }
-func Import__TypeInfoNilable__fromStem_1106_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoNilable__fromStem_1103_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoNilable_FromMap( arg1, paramList )
 }
 func Import__TypeInfoNilable_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
@@ -1084,10 +1084,10 @@ func (self *Import__TypeInfoAlias) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Import__TypeInfoAlias) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Import__TypeInfoAlias__fromMap_1121_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoAlias__fromMap_1118_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoAlias_FromMap( arg1, paramList )
 }
-func Import__TypeInfoAlias__fromStem_1123_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoAlias__fromStem_1120_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoAlias_FromMap( arg1, paramList )
 }
 func Import__TypeInfoAlias_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
@@ -1215,10 +1215,10 @@ func (self *Import__TypeInfoDDD) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Import__TypeInfoDDD) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Import__TypeInfoDDD__fromMap_1138_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoDDD__fromMap_1135_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoDDD_FromMap( arg1, paramList )
 }
-func Import__TypeInfoDDD__fromStem_1140_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoDDD__fromStem_1137_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoDDD_FromMap( arg1, paramList )
 }
 func Import__TypeInfoDDD_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
@@ -1336,10 +1336,10 @@ func (self *Import__TypeInfoAlternate) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Import__TypeInfoAlternate) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Import__TypeInfoAlternate__fromMap_1162_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoAlternate__fromMap_1159_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoAlternate_FromMap( arg1, paramList )
 }
-func Import__TypeInfoAlternate__fromStem_1164_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoAlternate__fromStem_1161_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoAlternate_FromMap( arg1, paramList )
 }
 func Import__TypeInfoAlternate_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
@@ -1469,10 +1469,10 @@ func (self *Import__TypeInfoGeneric) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Import__TypeInfoGeneric) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Import__TypeInfoGeneric__fromMap_1186_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoGeneric__fromMap_1183_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoGeneric_FromMap( arg1, paramList )
 }
-func Import__TypeInfoGeneric__fromStem_1188_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoGeneric__fromStem_1185_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoGeneric_FromMap( arg1, paramList )
 }
 func Import__TypeInfoGeneric_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
@@ -1578,10 +1578,10 @@ func (self *Import__TypeInfoBox) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Import__TypeInfoBox) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Import__TypeInfoBox__fromMap_1203_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoBox__fromMap_1200_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoBox_FromMap( arg1, paramList )
 }
-func Import__TypeInfoBox__fromStem_1205_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoBox__fromStem_1202_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoBox_FromMap( arg1, paramList )
 }
 func Import__TypeInfoBox_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
@@ -1676,10 +1676,10 @@ func (self *Import__TypeInfoExt) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Import__TypeInfoExt) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Import__TypeInfoExt__fromMap_1220_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoExt__fromMap_1217_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoExt_FromMap( arg1, paramList )
 }
-func Import__TypeInfoExt__fromStem_1222_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoExt__fromStem_1219_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoExt_FromMap( arg1, paramList )
 }
 func Import__TypeInfoExt_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
@@ -1780,10 +1780,10 @@ func (self *Import__TypeInfoModifier) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Import__TypeInfoModifier) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Import__TypeInfoModifier__fromMap_1237_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoModifier__fromMap_1234_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoModifier_FromMap( arg1, paramList )
 }
-func Import__TypeInfoModifier__fromStem_1239_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoModifier__fromStem_1236_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoModifier_FromMap( arg1, paramList )
 }
 func Import__TypeInfoModifier_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
@@ -1889,10 +1889,10 @@ func (self *Import__TypeInfoModule) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Import__TypeInfoModule) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Import__TypeInfoModule__fromMap_1256_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoModule__fromMap_1253_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoModule_FromMap( arg1, paramList )
 }
-func Import__TypeInfoModule__fromStem_1258_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoModule__fromStem_1255_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoModule_FromMap( arg1, paramList )
 }
 func Import__TypeInfoModule_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
@@ -2084,10 +2084,10 @@ func (self *Import__TypeInfoNormal) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Import__TypeInfoNormal) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Import__TypeInfoNormal__fromMap_1322_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoNormal__fromMap_1319_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoNormal_FromMap( arg1, paramList )
 }
-func Import__TypeInfoNormal__fromStem_1324_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoNormal__fromStem_1321_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoNormal_FromMap( arg1, paramList )
 }
 func Import__TypeInfoNormal_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
@@ -2462,10 +2462,10 @@ func (self *Import__TypeInfoEnum) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Import__TypeInfoEnum) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Import__TypeInfoEnum__fromMap_1344_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoEnum__fromMap_1341_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoEnum_FromMap( arg1, paramList )
 }
-func Import__TypeInfoEnum__fromStem_1346_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoEnum__fromStem_1343_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoEnum_FromMap( arg1, paramList )
 }
 func Import__TypeInfoEnum_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
@@ -2615,10 +2615,10 @@ func (self *Import__TypeInfoAlgeVal) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Import__TypeInfoAlgeVal) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Import__TypeInfoAlgeVal__fromMap_1361_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoAlgeVal__fromMap_1358_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoAlgeVal_FromMap( arg1, paramList )
 }
-func Import__TypeInfoAlgeVal__fromStem_1363_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoAlgeVal__fromStem_1360_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoAlgeVal_FromMap( arg1, paramList )
 }
 func Import__TypeInfoAlgeVal_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
@@ -2709,10 +2709,10 @@ func (self *Import__TypeInfoAlge) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Import__TypeInfoAlge) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Import__TypeInfoAlge__fromMap_1386_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoAlge__fromMap_1383_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoAlge_FromMap( arg1, paramList )
 }
-func Import__TypeInfoAlge__fromStem_1388_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Import__TypeInfoAlge__fromStem_1385_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Import__TypeInfoAlge_FromMap( arg1, paramList )
 }
 func Import__TypeInfoAlge_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {

@@ -338,7 +338,7 @@ end
 
 function FormatterFilter:processBlankLine( node, opt )
 
-   for _3278 = 1, node:get_lineNum() do
+   for _3288 = 1, node:get_lineNum() do
       self:writeln( "" )
    end
    
@@ -954,8 +954,19 @@ end
 
 function FormatterFilter:processRefType( node, opt )
 
-   if not Ast.TypeInfo.isMut( node:get_expType() ) then
-      self:write( "&" )
+   do
+      local mutMode = node:get_mutMode()
+      if mutMode ~= nil then
+         do
+            local _switchExp = mutMode
+            if _switchExp == Ast.MutMode.IMut then
+               self:write( "&" )
+            elseif _switchExp == Ast.MutMode.AllMut then
+               self:write( "allmut" )
+            end
+         end
+         
+      end
    end
    
    filter( node:get_name(), self, opt:nextOpt( node ) )

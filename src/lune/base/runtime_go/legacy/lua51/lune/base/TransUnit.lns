@@ -1152,8 +1152,8 @@ alias で置き換えている元の Type → alias の型
    pri fn analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNode;
    pub fn getTokenNoErr() mut : &Parser.Token;
    pri fn analyzeRefTypeWithSymbol(
-      accessMode: Ast.AccessMode, allowDDD:bool, refFlag: bool,
-      mutFlag: bool, symbolNode:&Nodes.Node, parentPub:bool ) mut: Nodes.RefTypeNode;
+      accessMode: Ast.AccessMode, allowDDD:bool, mutMode:Ast.MutMode!,
+      symbolNode:&Nodes.Node, parentPub:bool ) mut: Nodes.RefTypeNode;
 
    pri fn checkAlgeComp( token:&Parser.Token, algeTypeInfo: &Ast.AlgeTypeInfo );
 
@@ -1874,7 +1874,6 @@ fn TransUnit.analyzeImportFor(
 
    self.processInfo.switchIdProvier( .Ext );
 
-   // let metaInfo, typeId2TypeInfo, moduleInfo = self.processImport( modulePath, 1 );
    let! mut importObj = self.importCtrl {
       importObj = new Import.Import(
          self,
@@ -1892,8 +1891,7 @@ fn TransUnit.analyzeImportFor(
          self.validMutControl );
       self.importCtrl = importObj;
    };
-   let metaInfo, typeId2TypeInfo, moduleInfo =
-      importObj.processImport( self.processInfo, modulePath, 1 );
+   let moduleInfo = importObj.processImport( self.processInfo, modulePath, 1 );
 
    
    self.processInfo.switchIdProvier( .Base );
@@ -1907,14 +1905,14 @@ fn TransUnit.analyzeImportFor(
 
    // モジュールの末尾のシンボルでスコープに登録する。
    // 例えば hoge.foo.bar をインポートした場合、 bar をスコープに登録する
-   let moduleTypeInfo = unwrap typeId2TypeInfo[ metaInfo.__moduleTypeId ];
+   let moduleTypeInfo = moduleInfo.$moduleProvide.$typeInfo;
    self.scope.addModule( moduleTypeInfo, moduleInfo.assign( assignName ) );
 
-   let moduleSymbolKind = unwrap Ast.SymbolKind._from( metaInfo.__moduleSymbolKind );
+   let moduleSymbolKind = moduleInfo.$moduleProvide.$symbolKind;
    let moduleSymbolInfo, shadowing = self.scope.add(
       self.processInfo, moduleSymbolKind, false, false, assignName, pos,
       moduleTypeInfo, .Local, true,
-      metaInfo.__moduleMutable and Ast.MutMode.Mut or Ast.MutMode.IMut,
+      moduleInfo.$moduleProvide.$mutable and Ast.MutMode.Mut or Ast.MutMode.IMut,
       true, lazyLoad ~= .Off );
 
   

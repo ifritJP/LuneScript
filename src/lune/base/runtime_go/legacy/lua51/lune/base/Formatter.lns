@@ -655,8 +655,15 @@ pub override fn FormatterFilter.processRefType(
    node: &Nodes.RefTypeNode, opt:Opt ) mut
 {
    //self.write( node.$expType.getTxt( ## ) );
-   if not Ast.TypeInfo.isMut( node.$expType ) {
-      self.write( "&" );
+   if! let mutMode = node.$mutMode {
+      switch mutMode {
+         case .IMut {
+            self.write( "&" );
+         }
+         case .AllMut {
+            self.write( "allmut" );
+         }
+      }
    }
    filter( node.$name, self, opt.nextOpt( node ) );
 

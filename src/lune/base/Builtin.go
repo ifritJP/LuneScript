@@ -734,7 +734,7 @@ func Builtin_getBuiltInInfo_1849_() *LnsList {
 
 
 // 600: decl @lune.@base.@Builtin.Builtin.registBuiltInScope.processCopyAlterList
-func Builtin_registBuiltInScope__processCopyAlterList_2593_(alterList *LnsList,typeList *LnsList) {
+func Builtin_registBuiltInScope__processCopyAlterList_2597_(alterList *LnsList,typeList *LnsList) {
     for _, _typeInfo := range( typeList.Items ) {
         typeInfo := _typeInfo.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
         alterList.Insert(Ast_AlternateTypeInfo2Stem(Lns_unwrap( Ast_AlternateTypeInfoDownCastF(typeInfo.FP)).(*Ast_AlternateTypeInfo)))
@@ -1084,19 +1084,19 @@ func (self *Builtin_Builtin) RegistBuiltInScope() *Builtin_BuiltinFuncType {
             if _switch12842 := className; _switch12842 == "List<T>" {
                 name = "List"
                 
-                Builtin_registBuiltInScope__processCopyAlterList_2593_(genTypeList, Ast_builtinTypeList.FP.Get_itemTypeInfoList())
+                Builtin_registBuiltInScope__processCopyAlterList_2597_(genTypeList, Ast_builtinTypeList.FP.Get_itemTypeInfoList())
             } else if _switch12842 == "Array<T>" {
                 name = "Array"
                 
-                Builtin_registBuiltInScope__processCopyAlterList_2593_(genTypeList, Ast_builtinTypeArray.FP.Get_itemTypeInfoList())
+                Builtin_registBuiltInScope__processCopyAlterList_2597_(genTypeList, Ast_builtinTypeArray.FP.Get_itemTypeInfoList())
             } else if _switch12842 == "Set<T>" {
                 name = "Set"
                 
-                Builtin_registBuiltInScope__processCopyAlterList_2593_(genTypeList, Ast_builtinTypeSet.FP.Get_itemTypeInfoList())
+                Builtin_registBuiltInScope__processCopyAlterList_2597_(genTypeList, Ast_builtinTypeSet.FP.Get_itemTypeInfoList())
             } else if _switch12842 == "Nilable<_T>" {
                 name = "Nilable"
                 
-                Builtin_registBuiltInScope__processCopyAlterList_2593_(genTypeList, Ast_builtinTypeBox.FP.Get_itemTypeInfoList())
+                Builtin_registBuiltInScope__processCopyAlterList_2597_(genTypeList, Ast_builtinTypeBox.FP.Get_itemTypeInfoList())
             } else {
                 if Lns_isCondTrue( Lns_car(Lns_getVM().String_find(className,"<", nil, nil))){
                     name = ""

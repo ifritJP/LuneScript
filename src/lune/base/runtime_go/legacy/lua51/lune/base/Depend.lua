@@ -259,8 +259,8 @@ end
 
 local function getLoadedMod(  )
 
-   local loaded = _lune.nilacc( _lune.loadstring51( "return package.loaded" ), nil, 'call' )
-   return (_lune.unwrap( loaded) )
+   local loaded = _lune.unwrap( _lune.nilacc( _lune.loadstring51( "return package.loaded" ), nil, 'call' ))
+   return loaded
 end
 _moduleObj.getLoadedMod = getLoadedMod
 

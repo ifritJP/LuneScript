@@ -1153,10 +1153,13 @@ pub fn Import.processImport(
    {
       self.transUnitIF.error( "failed to load meta -- " .. orgModulePath );
    };
-   //let mut moduleInfo = moduleMeta.$moduleInfo {
-
+   // let! mut moduleInfo = moduleMeta.$moduleInfo {
+   //    moduleInfo = self.processImportSub(
+   //       processInfo, moduleMeta, orgModulePath, modulePath, nameList, depth );
+   // };
    let mut moduleInfo = self.processImportSub(
       processInfo, moduleMeta, orgModulePath, modulePath, nameList, depth );
+
    
    self.importModule2ModuleInfo[ moduleInfo.$moduleTypeInfo ] = moduleInfo;
    self.importModuleName2ModuleInfo[ modulePath ] = moduleInfo;

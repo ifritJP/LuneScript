@@ -756,7 +756,7 @@ end
 function NodeManager:__init() 
    self.idSeed = 0
    self.nodeKind2NodeList = {}
-   for kind, _1782 in pairs( nodeKind2NameMap ) do
+   for kind, _1783 in pairs( nodeKind2NameMap ) do
       if not self.nodeKind2NodeList[kind] then
          self.nodeKind2NodeList[kind] = {}
       end
@@ -1669,28 +1669,27 @@ function RefTypeNode:canBeStatement(  )
 
    return false
 end
-function RefTypeNode.new( id, pos, macroArgFlag, typeList, name, itemNodeList, refFlag, mutFlag, array )
+function RefTypeNode.new( id, pos, macroArgFlag, typeList, name, itemNodeList, mutMode, array )
    local obj = {}
    RefTypeNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, name, itemNodeList, refFlag, mutFlag, array ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, name, itemNodeList, mutMode, array ); end
    return obj
 end
-function RefTypeNode:__init(id, pos, macroArgFlag, typeList, name, itemNodeList, refFlag, mutFlag, array) 
+function RefTypeNode:__init(id, pos, macroArgFlag, typeList, name, itemNodeList, mutMode, array) 
    Node.__init( self,id, 7, pos, macroArgFlag, typeList)
    
    
    
    self.name = name
    self.itemNodeList = itemNodeList
-   self.refFlag = refFlag
-   self.mutFlag = mutFlag
+   self.mutMode = mutMode
    self.array = array
    
    
 end
-function RefTypeNode.create( nodeMan, pos, macroArgFlag, typeList, name, itemNodeList, refFlag, mutFlag, array )
+function RefTypeNode.create( nodeMan, pos, macroArgFlag, typeList, name, itemNodeList, mutMode, array )
 
-   local node = RefTypeNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, name, itemNodeList, refFlag, mutFlag, array)
+   local node = RefTypeNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, name, itemNodeList, mutMode, array)
    nodeMan:addNode( node )
    return node
 end
@@ -1761,11 +1760,8 @@ end
 function RefTypeNode:get_itemNodeList()
    return self.itemNodeList
 end
-function RefTypeNode:get_refFlag()
-   return self.refFlag
-end
-function RefTypeNode:get_mutFlag()
-   return self.mutFlag
+function RefTypeNode:get_mutMode()
+   return self.mutMode
 end
 function RefTypeNode:get_array()
    return self.array
@@ -13827,7 +13823,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, _10368 in pairs( self.map ) do
+   for key, _10365 in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -13862,8 +13858,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, _10382 in ipairs( __sorted ) do
-         local key = __map[ _10382 ]
+      for __index, _10379 in ipairs( __sorted ) do
+         local key = __map[ _10379 ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false

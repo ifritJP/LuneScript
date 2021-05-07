@@ -2892,7 +2892,15 @@ end
 
 function convFilter:processRefType( node, opt )
 
-   self:write( (node:get_refFlag(  ) and "&" or "" ) .. (node:get_mutFlag(  ) and "mut " or "" ) )
+   do
+      local _switchExp = node:get_mutMode()
+      if _switchExp == Ast.MutMode.IMut then
+         self:write( "&" )
+      elseif _switchExp == Ast.MutMode.AllMut then
+         self:write( "+" )
+      end
+   end
+   
    filter( node:get_name(  ), self, node )
    if node:get_array(  ) == "array" then
       self:write( "[@]" )
@@ -4243,7 +4251,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3516, function (  )
+   Log.log( Log.Level.Trace, __func__, 3522, function (  )
    
       return string.format( "macro: %s", code)
    end )

@@ -66,6 +66,12 @@ pub static fn ModuleId.createIdFromTxt( idStr:str ):ModuleId {
    return new ModuleId( modTime, buildCount@@int );
 }
 
+pub class ModuleProvideInfo {
+   let typeInfo:&Ast.TypeInfo {pub};
+   let symbolKind:&Ast.SymbolKind {pub};
+   let mutable:bool {pub};
+}
+
 pub class ModuleInfo extend (Ast.ModuleInfoIF) {
    pri let fullName:str{ pub };
    /**
@@ -84,11 +90,17 @@ import 元のモジュール内で定義されている alias。
 alias で置き換えている元の Type → alias の型。
    */
    pri let importedAliasMap: &Map<&Ast.TypeInfo,&Ast.AliasTypeInfo> {pub};
+   pri let processInfo:Ast.ProcessInfo {pub};
+   pri let moduleProvide:&ModuleProvideInfo {pub};
+   pri let moduleTypeInfo:&Ast.TypeInfo {pub};
 
    pub fn __init( fullName:str, assignName:str, idMap:&Map<&Ast.TypeInfo,int>,
-                  moduleId:&ModuleId,
+                  moduleId:&ModuleId, processInfo:Ast.ProcessInfo,
+                  moduleProvide:&ModuleProvideInfo, moduleTypeInfo:&Ast.TypeInfo, 
                   importedAliasMap: &Map<&Ast.TypeInfo,&Ast.AliasTypeInfo> )
    {
+      self.moduleTypeInfo = moduleTypeInfo;
+      self.moduleProvide = moduleProvide;
       self.moduleId = moduleId;
       self.fullName = fullName;
       self.assignName = assignName;
@@ -97,24 +109,46 @@ alias で置き換えている元の Type → alias の型。
       foreach importId, typeInfo in idMap {
          self.importId2localTypeInfoMap[ importId ] = typeInfo;
       }
+      self.processInfo = processInfo;
       self.importedAliasMap = importedAliasMap;
+   }
+
+   /** インポートした typeInfo を定義しているモジュール内の typeId を返す。 */
+   pub fn getImportTypeId( typeInfo:&Ast.TypeInfo ) : int! {
+      if! let typeId = self.localTypeInfo2importIdMap[ typeInfo ] {
+         return typeId;
+      }
+      // if typeInfo.$processInfo == self.processInfo {
+      //    return typeInfo.$typeId.id;
+      // }
+      return nil;
+   }
+
+   pub fn getTypeInfo( localTypeId:int ) : &Ast.TypeInfo! {
+      if! let typeInfo = self.importId2localTypeInfoMap[ localTypeId ] {
+         return typeInfo;
+      }
+      //return self.processInfo.getTypeInfo( localTypeId );
+      return nil;
    }
 
    pub fn get_modulePath(): str {
       return self.fullName;
    }
 
-   pub fn assign( assignName: str ): ModuleInfo {
+   pub fn assign( assignName: str ) mut : ModuleInfo {
       return new ModuleInfo(
          self.fullName, assignName, self.localTypeInfo2importIdMap,
-         self.moduleId, self.importedAliasMap );
+         self.moduleId, self.processInfo, self.moduleProvide,
+         self.moduleTypeInfo, self.importedAliasMap );
    }
 }
 
 pub class ModuleMeta {
    let metaInfo:Luaval<&stem> {pub};
    let lnsPath:str {pub};
-   let processInfo:Ast.ProcessInfo! {pub};
+   // let processInfo:Ast.ProcessInfo! {pub};
+   let moduleInfo:ModuleInfo! {pub};
 }
 
 /**

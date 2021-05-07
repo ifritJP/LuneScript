@@ -2475,8 +2475,16 @@ fn TransUnit.analyzeExpField(
       self.helperInfo.useNilAccess = true;
    }
 
-   if not Ast.TypeInfo.isMut( prefixExpType ) and symbolMutMode == .Mut {           
-      typeInfo = self.createModifier( typeInfo, .IMut );
+   if not Ast.TypeInfo.isMut( prefixExpType ) {
+      if self.ctrl_info.legacyMutableControl {
+         if symbolMutMode == .Mut {           
+            typeInfo = self.createModifier( typeInfo, .IMut );
+         }
+      } else {
+         if typeInfo.$mutMode == .Mut and symbolMutMode ~= .AllMut {
+            typeInfo = self.createModifier( typeInfo, .IMut );
+         }
+      }
    }
 
    if typeInfo.equals( self.processInfo, builtinFunc.list_unpack ##) or
@@ -4029,7 +4037,7 @@ fn TransUnit.analyzeExp(
          let symbolInfo = symbolInfoList[ 1 ];
          if symbolInfo.$kind == .Typ {
             exp = self.analyzeRefTypeWithSymbol(
-               .Local, false, false, false, exp, false );
+               .Local, false, nil, exp, false );
             let workToken = self.getToken(##);
             if workToken.txt == "." {
                exp = self.analyzeExpSymbol(

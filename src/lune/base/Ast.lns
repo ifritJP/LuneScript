@@ -3277,8 +3277,13 @@ pub class ModifierTypeInfo extend TypeInfo {
    {
       let mut txt = self.srcTypeInfo.getTxtWithRaw(
          raw, typeNameCtrl, importInfo, localFlag );
-      if not isMutable( self.mutMode ) {
-         txt = "&" .. txt;
+      switch self.mutMode {
+         case .IMut, .IMutRe {
+            txt = "&" .. txt;
+         }
+         case .AllMut {
+            txt = "allmut " .. txt;
+         }
       }
       return txt;
    }

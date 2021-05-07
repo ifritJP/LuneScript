@@ -1152,8 +1152,8 @@ alias で置き換えている元の Type → alias の型
    pri fn analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNode;
    pub fn getTokenNoErr() mut : &Parser.Token;
    pri fn analyzeRefTypeWithSymbol(
-      accessMode: Ast.AccessMode, allowDDD:bool, refFlag: bool,
-      mutFlag: bool, symbolNode:&Nodes.Node, parentPub:bool ) mut: Nodes.RefTypeNode;
+      accessMode: Ast.AccessMode, allowDDD:bool, mutMode:Ast.MutMode!,
+      symbolNode:&Nodes.Node, parentPub:bool ) mut: Nodes.RefTypeNode;
 
    pri fn checkAlgeComp( token:&Parser.Token, algeTypeInfo: &Ast.AlgeTypeInfo );
 

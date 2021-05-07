@@ -2106,7 +2106,7 @@ function Import:processImport( processInfo, modulePath, depth )
    
    self.importModuleInfo:remove(  )
    
-   Log.log( Log.Level.Info, __func__, 1166, function (  )
+   Log.log( Log.Level.Info, __func__, 1169, function (  )
    
       return string.format( "%s complete", orgModulePath)
    end )

@@ -4508,8 +4508,13 @@ end
 function ModifierTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag )
 
    local txt = self.srcTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag )
-   if not isMutable( self.mutMode ) then
-      txt = "&" .. txt
+   do
+      local _switchExp = self.mutMode
+      if _switchExp == MutMode.IMut or _switchExp == MutMode.IMutRe then
+         txt = "&" .. txt
+      elseif _switchExp == MutMode.AllMut then
+         txt = "allmut " .. txt
+      end
    end
    
    return txt

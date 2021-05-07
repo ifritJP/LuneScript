@@ -31,3 +31,47 @@ pub class Test2 {
    pub let val3:Map<int,Test>; // error
    pub let val4:Map<int,Map<Test,int>>; // error
 }
+
+{
+   class Val {
+      pub fn func() mut {
+      }
+   }
+   class Hoge {
+      let val:Val {pub};
+      let val1:Val {pub&};
+      let val2:allmut Val {pub};
+      let val3:&Val {pub};
+      pub fn getVal() : Val {
+         self.val.func(); // error
+         self.val1.func(); // error
+         self.val2.func();
+         self.val3.func(); // error
+         return self.val; // error
+      }
+      pub fn getVal2() mut : Val {
+         self.val.func();
+         self.val1.func();
+         self.val2.func();
+         self.val3.func(); // error
+         return self.val;
+      }
+   }
+   {
+      let hoge = new Hoge( new Val(),new Val(),new Val(),new Val() );
+      hoge.$val.func(); // error
+      hoge.$val1.func(); // error
+      hoge.$val2.func();
+      hoge.$val3.func(); // error
+      hoge.getVal();
+   }
+   {
+      let mut hoge = new Hoge( new Val(),new Val(),new Val(),new Val() );
+      hoge.$val.func();
+      hoge.$val1.func(); // error
+      hoge.$val2.func();
+      hoge.$val3.func(); // error
+      hoge.getVal();
+   }
+}
+

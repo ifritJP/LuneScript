@@ -2330,8 +2330,14 @@ pub override fn convFilter.processDeclFunc(
 pub override fn convFilter.processRefType(
    node: &Nodes.RefTypeNode, opt: Opt ) mut
 {
-   self.write( (node.get_refFlag() and "&" or "") ..
-               (node.get_mutFlag() and "mut " or "") );
+   switch node.$mutMode {
+      case .IMut {
+         self.write( "&" );
+      }
+      case .AllMut {
+         self.write( "+" );
+      }
+   }
    filter( node.get_name(),  self, node );
    if node.get_array() == "array" {
       self.write( "[@]" );
