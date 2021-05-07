@@ -1015,8 +1015,8 @@ func (self *dumpNode_dumpFilter) ProcessExpSetItem(node *Nodes_ExpSetItemNode,_o
     self.FP.dump(opt, &node.Nodes_Node, indexSym)
     dumpNode_filter_1033_(node.FP.Get_val(), self, opt.FP.NextOpt())
     if indexNode != nil{
-        indexNode_3808 := indexNode.(*Nodes_Node)
-        dumpNode_filter_1033_(indexNode_3808, self, opt.FP.NextOpt())
+        indexNode_3818 := indexNode.(*Nodes_Node)
+        dumpNode_filter_1033_(indexNode_3818, self, opt.FP.NextOpt())
     }
     dumpNode_filter_1033_(node.FP.Get_exp2(), self, opt.FP.NextOpt())
 }

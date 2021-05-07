@@ -60,7 +60,7 @@ import しているモジュールから、さらに import しているサブ�
 alias で置き換えている元の Type → alias の型
    */
    let importedAliasMap: Map<&Ast.TypeInfo,&Ast.AliasTypeInfo>;
-   let importModuleName2ModuleInfo: Map<str,&frontInterface.ModuleInfo>;
+   let importModuleName2ModuleInfo: Map<str,frontInterface.ModuleInfo>;
 
    let validMutControl: bool;
    
@@ -99,6 +99,10 @@ alias で置き換えている元の Type → alias の型
 
       // self.modifier = new TransUnitIF.Modifier( validMutControl, self.processInfo );
    }
+
+   pub fn processImport(
+      processInfo:Ast.ProcessInfo, mut modulePath:str, depth:int ) mut :
+      frontInterface.ModuleInfo;
 }
 
 proto abstract class _TypeInfo extend (Mapping);
@@ -715,76 +719,23 @@ class DependModuleInfo {
    }
 }
 
-
-pub fn Import.processImport(
-   processInfo:Ast.ProcessInfo, mut modulePath:str, depth:int ) mut :
-   Luaval<&Meta._MetaInfo>, &Map<int,&Ast.TypeInfo>, &frontInterface.ModuleInfo
+fn Import.processImportSub(
+   processInfo:Ast.ProcessInfo, moduleMeta:frontInterface.ModuleMeta,
+   orgModulePath:str, mut modulePath:str, nameList:str[], depth:int ) mut
+: frontInterface.ModuleInfo
 {
-   let modifier:TransUnitIF.Modifier =
-      new TransUnitIF.Modifier( self.validMutControl, processInfo );
-      
-
-
-   
-   let orgModulePath = modulePath;
-   modulePath = frontInterface.getLuaModulePath( modulePath );
-   
-   Log._log( .Info, `{ return "%s -> %s start"
-                       ( self.moduleType.getTxt( self.typeNameCtrl## ),
-                         orgModulePath); } );
-
-
-   if not self.importModuleInfo.add( orgModulePath ) {
-      self.transUnitIF.error( "recursive import: %s -> %s"
-                              ( self.importModuleInfo.getFull(), orgModulePath ) );
-   }
-
-
-   if! let moduleInfo = self.importModuleName2ModuleInfo[ modulePath ] {
-      if! let moduleMeta = frontInterface.loadMeta(
-         self.importModuleInfo, orgModulePath )
-      {
-         Log._log( .Info, `{ return "%s already" (orgModulePath); } );
-
-         let metaInfo = moduleMeta.$metaInfo@@=Meta._MetaInfo;
-         let typeId2TypeInfo = moduleInfo.$importId2localTypeInfoMap;
-         //let moduleTypeInfo = unwrap typeId2TypeInfo[ metaInfo.__moduleTypeId ];
-         self.importModuleInfo.remove();
-
-         foreach val, key in moduleInfo.$importedAliasMap {
-            self.importedAliasMap[key] = val;
-         }
-         return metaInfo, typeId2TypeInfo, moduleInfo;
-      }
-      self.transUnitIF.error( "failed to load meta -- " .. orgModulePath );
-   }
-
-   let mut nameList:str[] = [];
-   apply txt of string.gmatch( modulePath, '[^%./:]+' ) {
-      nameList.insert( txt );
-   }
-
-   let! mut moduleMeta = frontInterface.loadMeta( self.importModuleInfo, orgModulePath ) {
-      self.transUnitIF.error( "failed to load meta -- " .. orgModulePath );
-   };
-   let mut importedProcessInfo = moduleMeta.$processInfo;
-   // processInfo が取得できた場合、
-   
-
    let metaInfo = moduleMeta.$metaInfo@@=Meta._MetaInfo;
-   Log._log2( .Info, "%s processing -- %s" (orgModulePath, importedProcessInfo) );
+   Log._log2( .Info, "%s processing" (orgModulePath) );
 
 
 
    // 依存するモジュールのメタ情報を読み込み
-   let mut dependLibId2DependInfo:Map<int,DependModuleInfo> = {};
+   let mut dependLibId2DependInfo:Map<int,frontInterface.ModuleInfo> = {};
    forsort dependInfo, dependName in metaInfo.__dependModuleMap {
       if dependInfo.use {
-         let _, metaTypeId2TypeInfoMap =
-            self.processImport( processInfo, dependName, depth + 1 );
+         let mut moduleInfo = self.processImport( processInfo, dependName, depth + 1 );
          let typeId = (unwrap dependInfo.typeId)@@int;
-         dependLibId2DependInfo[ typeId ] =
-            new DependModuleInfo( typeId, metaTypeId2TypeInfoMap );
+         dependLibId2DependInfo[ typeId ] = moduleInfo;
       }
    }
 
@@ -804,7 +755,7 @@ pub fn Import.processImport(
    // 依存するモジュールの typeInfo と、 meta 情報内の typeId との紐付け
    foreach dependIdInfo, typeId in metaInfo.__dependIdMap {
       let dependInfo = unwrap dependLibId2DependInfo[ unwrap dependIdInfo[ 1 ] ];
-      let typeInfo = dependInfo.getTypeInfo( unwrap dependIdInfo[ 2 ] );
+      let typeInfo = unwrap dependInfo.getTypeInfo( unwrap dependIdInfo[ 2 ] );
       typeId2TypeInfo[ typeId ] = typeInfo;
       if! Ast.getScope( typeInfo ) {
          typeId2Scope[ typeId ] = _exp;
@@ -916,6 +867,9 @@ pub fn Import.processImport(
       lazyModuleSet.add( typeId );
    }
 
+   let modifier:TransUnitIF.Modifier =
+      new TransUnitIF.Modifier( self.validMutControl, processInfo );
+   
    
    // 初めに child 以外で TypeInfo を登録
    let mut importParam = new ImportParam(
@@ -1144,18 +1098,72 @@ pub fn Import.processImport(
          self.importedAliasMap[key] = val;
       }
    }
+
+   let moduleProvideInfo = new frontInterface.ModuleProvideInfo(
+      unwrap typeId2TypeInfo[ metaInfo.__moduleTypeId ],
+      unwrap Ast.SymbolKind._from( metaInfo.__moduleSymbolKind ),
+      metaInfo.__moduleMutable );
    
 
-   let moduleInfo = new frontInterface.ModuleInfo(
-      orgModulePath, nameList[#nameList], newId2OldIdMap,
+   let mut moduleInfo = new frontInterface.ModuleInfo(
+      orgModulePath, nameList[#nameList], newId2OldIdMap, 
       frontInterface.ModuleId.createIdFromTxt( metaInfo.__buildId ),
-      importParam.importedAliasMap );
-   self.importModule2ModuleInfo[ moduleTypeInfo ] = moduleInfo;
+      processInfo, moduleProvideInfo, moduleTypeInfo, importParam.importedAliasMap );
+
+   return moduleInfo;
+}
+
+
+pub fn Import.processImport(
+   processInfo:Ast.ProcessInfo, mut modulePath:str, depth:int ) mut :
+   frontInterface.ModuleInfo
+{
+   let orgModulePath = modulePath;
+   modulePath = frontInterface.getLuaModulePath( modulePath );
+   
+   Log._log( .Info, `{ return "%s -> %s start"
+                       ( self.moduleType.getTxt( self.typeNameCtrl## ),
+                         orgModulePath); } );
+
+
+   if not self.importModuleInfo.add( orgModulePath ) {
+      self.transUnitIF.error( "recursive import: %s -> %s"
+                              ( self.importModuleInfo.getFull(), orgModulePath ) );
+   }
+
+
+   if! let mut moduleInfo = self.importModuleName2ModuleInfo[ modulePath ] {
+      Log._log( .Info, `{ return "%s already" (orgModulePath); } );
+
+      self.importModuleInfo.remove();
+
+      foreach val, key in moduleInfo.$importedAliasMap {
+         self.importedAliasMap[key] = val;
+      }
+      return moduleInfo;
+   }
+
+   let mut nameList:str[] = [];
+   apply txt of string.gmatch( modulePath, '[^%./:]+' ) {
+      nameList.insert( txt );
+   }
+
+   let! mut moduleMeta =
+      frontInterface.loadMeta( self.importModuleInfo, orgModulePath )
+   {
+      self.transUnitIF.error( "failed to load meta -- " .. orgModulePath );
+   };
+   //let mut moduleInfo = moduleMeta.$moduleInfo {
+
+   let mut moduleInfo = self.processImportSub(
+      processInfo, moduleMeta, orgModulePath, modulePath, nameList, depth );
+   
+   self.importModule2ModuleInfo[ moduleInfo.$moduleTypeInfo ] = moduleInfo;
    self.importModuleName2ModuleInfo[ modulePath ] = moduleInfo;
 
    self.importModuleInfo.remove();
 
    Log._log( .Info, `{ return "%s complete" (orgModulePath); } );
 
-   return metaInfo, typeId2TypeInfo, moduleInfo;
+   return moduleInfo;
 }

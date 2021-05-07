@@ -46,6 +46,7 @@ import lune.base.GoMod;
 import lune.base.Meta;
 import lune.base.LuneControl;
 import lune.base.Nodes;
+import lune.base.Ast;
 //import lune.base.ConvNodes;
 
 _lune_control ignore_symbol_;
@@ -206,7 +207,7 @@ fn Front.convert(
 {
    let mut conv = convLua.createFilter(
       streamName, stream, metaStream, convMode, inMacro,
-      ast.$moduleTypeInfo, ast.$processInfo, ast.$moduleSymbolKind,
+      ast.$moduleTypeInfo, ast.$processInfo, ast.$provideInfo.$symbolKind,
       self.option.useLuneModule, self.option.targetLuaVer,
       self.option.testing, self.option.useIpairs );
    ast.$node.processFilter( conv, new convLua.Opt( ast.$node ) );
@@ -539,6 +540,21 @@ pub fn Front.convertLns2LuaCode(
 }
 
 
+fn createModuleInfo(
+   ast:TransUnit.ASTInfo, mod:str, moduleId:&frontInterface.ModuleId )
+: frontInterface.ModuleInfo
+{
+   let importedAliasMap:Map<&Ast.TypeInfo,&Ast.AliasTypeInfo> = {};
+   let rootNode = unwrap ast.$node@@@Nodes.RootNode;
+   foreach node in rootNode.$nodeManager.getAliasNodeList() {
+      importedAliasMap[ node.$typeInfo ] = node.$expType@@@Ast.AliasTypeInfo;
+   }
+   return new frontInterface.ModuleInfo(
+      mod, ast.$moduleTypeInfo.$rawTxt, {},
+      moduleId, ast.$processInfo, ast.$provideInfo,
+      ast.$moduleTypeInfo, importedAliasMap );
+}
+
 /**
 parser から Lns を AST 解析し、 meta 情報と変換後の Lua コード返す。
 
@@ -550,9 +566,10 @@ fn Front.loadParserToLuaCode(
    parser:Parser.Parser, mod:str ) mut : frontInterface.ModuleMeta, str
 {
    let path = parser.getStreamName();
-   
+
+   let moduleId = getModuleId( path, mod ## );
    let mut ast = self.createAst(
-      importModuleInfo, parser, mod, getModuleId( path, mod ## ), nil, .Compile, nil );
+      importModuleInfo, parser, mod, moduleId, nil, .Compile, nil );
    //self.mod2ast.add( mod, ast );
    
 
@@ -594,7 +611,7 @@ fn Front.loadParserToLuaCode(
    }
 
    let mut meta = new frontInterface.ModuleMeta(
-      unwrap loadFromLuaTxt( metaTxt ), path, ast.$processInfo );
+      unwrap loadFromLuaTxt( metaTxt ), path, createModuleInfo( ast, mod, moduleId ) );
    return meta, luaTxt;
 }
 
@@ -1580,10 +1597,12 @@ pub fn Front.build( buildMode:BuildMode, astCallback:AstCallback! ) mut {
       
       fn createMeta( ast:TransUnit.ASTInfo!, metaStream:&Util.memStream ) {
          if not oneShot {
-            let mut metaInfo = new frontInterface.ModuleMeta(
-               unwrap loadFromLuaTxt( metaStream.$txt ),
-               updateInfo.$scriptPath, ast$.$processInfo );
-            self.loadedMetaMap[ mod ] = metaInfo;
+            when! ast {
+               let mut metaInfo = new frontInterface.ModuleMeta(
+                  unwrap loadFromLuaTxt( metaStream.$txt ), updateInfo.$scriptPath,
+                  createModuleInfo( ast, mod, updateInfo.$moduleId ) );
+               self.loadedMetaMap[ mod ] = metaInfo;
+            }
          }
       }
       

@@ -749,7 +749,8 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
    fn outputDepend( typeInfo:&Ast.TypeInfo, moduleTypeInfo:&Ast.TypeInfo): bool {
       if! let moduleIndex = importModuleType2Index[ moduleTypeInfo ] {
          let moduleInfo = unwrap node.$importModule2moduleInfo[ moduleTypeInfo ];
-         if! let extId = moduleInfo.$localTypeInfo2importIdMap[ typeInfo ] {
+         //if! let extId = moduleInfo.$localTypeInfo2importIdMap[ typeInfo ] {
+         if! let extId = moduleInfo.getImportTypeId( typeInfo ) {
             self.writeln(
                "__dependIdMap[ %d ] = { %d, %d } -- %s"
                ( typeInfo.$typeId.id, moduleIndex, extId, typeInfo.getTxt(##) ) );
@@ -3631,7 +3632,7 @@ _ = 1;
       
       let mut conv = createFilter(
          streamName, stream, metaStream, .ConvMeta, false,
-         ast.$moduleTypeInfo, ast.$processInfo, ast.$moduleSymbolKind,
+         ast.$moduleTypeInfo, ast.$processInfo, ast.$provideInfo.$symbolKind,
          option.useLuneModule, option.targetLuaVer,
          option.testing, option.useIpairs );
       ast.$node.processFilter( conv, new Opt( ast.$node ) );
