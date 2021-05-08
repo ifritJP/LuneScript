@@ -115,7 +115,7 @@ func Option_convExp625(arg1 []LnsAny) LnsAny {
 }
 // 48: decl @lune.@base.@Option.getBuildCount
 func Option_getBuildCount_1009_() LnsInt {
-    return 7958
+    return 7971
 }
 
 // 75: decl @lune.@base.@Option.getRuntimeModule

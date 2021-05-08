@@ -24,16 +24,16 @@ SOFTWARE.
 
 package runtimelns
 
-import "os"
-import "path"
-import "fmt"
-import "runtime/pprof"
-
-
+import (
+	"fmt"
+	"os"
+	"path"
+	"runtime"
+	"runtime/pprof"
+)
 
 func Lns_Depend_init() {
 }
-
 
 /**
 path の最終更新日時を取得する。
@@ -41,47 +41,81 @@ path の最終更新日時を取得する。
 @param path ファイルパス
 @return 1970/1/1 0:0:0 からの秒数。 取得失敗した場合は nil。
 */
-func Depend_getFileLastModifiedTime( path string ) LnsAny {
-    fileinfo, err := os.Stat( path )
-    if err != nil {
-        return nil
-    }
-    return LnsReal(fileinfo.ModTime().Unix())
+func Depend_getFileLastModifiedTime(path string) LnsAny {
+	fileinfo, err := os.Stat(path)
+	if err != nil {
+		return nil
+	}
+	return LnsReal(fileinfo.ModTime().Unix())
 }
-
 
 func Depend_getLoadedMod() *Lns_luaValue {
-    return Lns_getVM().GetEmptyMap()
+	return Lns_getVM().GetEmptyMap()
 }
 
-func Depend_profile( validTest bool, work LnsForm, path string ) LnsAny {
-    if validTest {
-        prof, err := os.Create( path )
-        if err != nil {
-            panic( err )
-        }
-        if err := pprof.StartCPUProfile(prof); err != nil {
-            panic( err )
-        }
-        defer pprof.StopCPUProfile()
-    }
-    
-    return work( []LnsAny{} )
+func printMemInfo(mess string) {
+	var ms runtime.MemStats
+
+	runtime.ReadMemStats(&ms)
+
+	fmt.Printf("----- %s\n", mess)
+	fmt.Printf("Alloc: %d MB\n", ms.Alloc/1024/1024)
+	fmt.Printf("HeapAlloc: %d MB\n", ms.HeapAlloc/1024/1024)
+	fmt.Printf("TotalAlloc: %d MB\n", ms.TotalAlloc/1024/1024)
+	fmt.Printf("Sys: %d MB\n", ms.Sys/1024/1024)
+	fmt.Printf("HeapObjects: %d\n", ms.HeapObjects)
+	fmt.Printf("NumGC: %d\n", ms.NumGC)
+}
+
+func Depend_profile(validTest bool, work LnsForm, path string) LnsAny {
+	if validTest {
+		// start cpu profile
+		prof, err := os.Create(path)
+		if err != nil {
+			panic(err)
+		}
+		if err := pprof.StartCPUProfile(prof); err != nil {
+			panic(err)
+		}
+		defer pprof.StopCPUProfile()
+
+		// mem
+		printMemInfo("start")
+	}
+
+	ret := work([]LnsAny{})
+
+	if validTest {
+		// write mem profile
+		prof, err := os.Create(path + "mem")
+		if err != nil {
+			panic(err)
+		}
+		defer prof.Close()
+		printMemInfo("before gc")
+		runtime.GC() // get up-to-date statistics
+		if err := pprof.WriteHeapProfile(prof); err != nil {
+			panic(err)
+		}
+		printMemInfo("end")
+	}
+
+	return ret
 }
 
 func Depend_getStackTrace() string {
-   return ""
+	return ""
 }
 
-func Depend_searchpath( mod string, pathPattern string ) LnsAny {
-    return Lns_getVM().Package_searchpath( mod, pathPattern );
+func Depend_searchpath(mod string, pathPattern string) LnsAny {
+	return Lns_getVM().Package_searchpath(mod, pathPattern)
 }
 
-func Depend_existFile( path string ) bool {
-    if _, err := os.Stat( path ); err != nil {
-        return false
-    }
-    return true
+func Depend_existFile(path string) bool {
+	if _, err := os.Stat(path); err != nil {
+		return false
+	}
+	return true
 }
 
 // func Depend_getLuaVersion() string {
@@ -92,27 +126,24 @@ func Depend_existFile( path string ) bool {
 //     callback( 53 );
 // }
 
-
 func Depend_canUseChannel() bool {
-   return true
+	return true
 }
 func Depend_canUseAsync() bool {
-   return false
+	return false
 }
 
+var DependLuaOnLns_runLuaOnLnsFunc func(luaCode string) (LnsAny, string) = nil
 
+func DependLuaOnLns_runLuaOnLns(luaCode string) (LnsAny, string) {
 
-var DependLuaOnLns_runLuaOnLnsFunc func(luaCode string) (LnsAny,string) = nil
+	setBindListStr := ""
+	for key, _ := range lnsSrcMap {
+		setBindListStr = fmt.Sprintf(
+			"%s\ntable.insert( bindModuleList, '%s' )", setBindListStr, key)
+	}
 
-func DependLuaOnLns_runLuaOnLns( luaCode string ) (LnsAny,string) {
-
-    setBindListStr := ""
-    for key, _ := range( lnsSrcMap ) {
-        setBindListStr = fmt.Sprintf(
-            "%s\ntable.insert( bindModuleList, '%s' )", setBindListStr, key )
-    }
-    
-    txt := fmt.Sprintf(`
+	txt := fmt.Sprintf(`
 local DependLuaOnLns = require( 'lune.base.DependLuaOnLns' )
 local Depend = require( 'lune.base.Depend' )
 
@@ -179,41 +210,39 @@ local txt=[==[
 ]==]
 
 return DependLuaOnLns.runLuaOnLns( txt )
-    `, setBindListStr, luaCode);
+    `, setBindListStr, luaCode)
 
-    
-
-    luaVM := Lns_getVM()
-    loaded, err := luaVM.Load( txt, nil )
-    if loaded != nil {
-        ret := luaVM.RunLoadedfunc( loaded.(*Lns_luaValue), []LnsAny{} )
-        return ret[ 0 ], ""
-    }
-    if err != nil {
-        return nil, err.(string)
-    }
-    return nil, ""
+	luaVM := Lns_getVM()
+	loaded, err := luaVM.Load(txt, nil)
+	if loaded != nil {
+		ret := luaVM.RunLoadedfunc(loaded.(*Lns_luaValue), []LnsAny{})
+		return ret[0], ""
+	}
+	if err != nil {
+		return nil, err.(string)
+	}
+	return nil, ""
 }
 func Lns_DependLuaOnLns_init() {
 }
 
-func Depend_runMain( mainFunc LnsAny, argList *LnsList ) LnsInt {
-    if !Lns_IsNil( mainFunc ) {
-        luaVM := Lns_getVM()
-        ret := luaVM.RunLoadedfunc( mainFunc.(*Lns_luaValue), []LnsAny{ argList } )
-        return ret[ 0 ].(LnsInt)
-    }
-    return -1
+func Depend_runMain(mainFunc LnsAny, argList *LnsList) LnsInt {
+	if !Lns_IsNil(mainFunc) {
+		luaVM := Lns_getVM()
+		ret := luaVM.RunLoadedfunc(mainFunc.(*Lns_luaValue), []LnsAny{argList})
+		return ret[0].(LnsInt)
+	}
+	return -1
 }
 
 func Depend_getGOPATH() LnsAny {
-    val, exist := os.LookupEnv( "GOPATH" )
-    if !exist {
-        val, exist = os.LookupEnv( "HOME" )
-        if !exist {
-            return nil
-        }
-        return path.Join( val, "go" )
-    }
-    return val
+	val, exist := os.LookupEnv("GOPATH")
+	if !exist {
+		val, exist = os.LookupEnv("HOME")
+		if !exist {
+			return nil
+		}
+		return path.Join(val, "go")
+	}
+	return val
 }

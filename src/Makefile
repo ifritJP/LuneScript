@@ -105,6 +105,7 @@ help:
 	@echo "  make go-build"
 	@echo "  make setup-pkg-lua"
 	@echo "  make test-govslua [BATCH=y] [ONLY_CONV=y]" 
+	@echo "  make goprof"
 
 
 exec:
@@ -1697,7 +1698,11 @@ test-govslua-go-batch:
 
 
 goprof:
-	(cd work/go/build/; go tool pprof -dot cpu.pprof  ) | dot -Tsvg -odump.svg
+	$(call test-buildlns-setup,work/go)
+	$(call selfhost_buildOp_batch,.,$(LNSC_GO),work/go,-langGo -prof)
+	(cd .; go tool pprof -dot @-.profi  ) | dot -Tsvg -odump.svg
+	(cd .; go tool pprof -dot @-.profimem  ) | dot -Tsvg -odumpmem.svg
+
 
 
 
