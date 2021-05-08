@@ -2980,6 +2980,12 @@ function Scope:add( processInfo, kind, canBeLeft, canBeRight, name, pos, typeInf
 end
 
 
+function Scope:addSymbolInfo( processInfo, symbolInfo )
+
+   return self:add( processInfo, symbolInfo:get_kind(), symbolInfo:get_canBeLeft(), symbolInfo:get_canBeRight(), symbolInfo:get_name(), symbolInfo:get_pos(), symbolInfo:get_typeInfo(), symbolInfo:get_accessMode(), symbolInfo:get_staticFlag(), symbolInfo:get_mutMode(), symbolInfo:get_hasValueFlag(), symbolInfo:get_isLazyLoad() )
+end
+
+
 function Scope:addLocalVar( processInfo, argFlag, canBeLeft, name, pos, typeInfo, mutable )
 
    return self:add( processInfo, argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, name ~= "_", name, pos, typeInfo, AccessMode.Local, false, mutable, true, false )

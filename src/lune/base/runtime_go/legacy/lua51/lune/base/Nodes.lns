@@ -2853,6 +2853,10 @@ pub class DefMacroInfo extend MacroInfo {
    }
 }
 
+pub class ExportInfo extend frontInterface.ExportInfo {
+   let typeId2DefMacroInfo:&Map<&Ast.IdInfo, &MacroInfo> {pub};
+}
+
 pub fn NodeManager.MultiTo1(node:&Node) mut : &Node {
    let expType = node.$expType;
    if #node.$expTypeList > 1 {
@@ -2961,8 +2965,7 @@ __test {
       return RootNode.create(
          nodeManager, stmtExp.$pos, false, [ Ast.builtinTypeNone ],
          [ stmtExp ], scope, (@), frontInterface.ModuleId.createId(0.0, 0),
-         processInfo, moduleInfo, nil,
-         new LuneHelperInfo(), nodeManager, {}, {}, {});
+         processInfo, moduleInfo, nil, new LuneHelperInfo(), nodeManager, {}, {}, {});
    }
 }
 

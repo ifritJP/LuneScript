@@ -205,9 +205,11 @@ fn Front.convert(
    ast:TransUnit.ASTInfo, streamName:str,
    mut stream:oStream, mut metaStream:oStream, convMode:convLua.ConvMode, inMacro:bool )
 {
+   let mut exportInfo = ast.$exportInfo;
    let mut conv = convLua.createFilter(
       streamName, stream, metaStream, convMode, inMacro,
-      ast.$moduleTypeInfo, ast.$processInfo, ast.$provideInfo.$symbolKind,
+      exportInfo.$moduleTypeInfo, exportInfo.$processInfo,
+      exportInfo.$provideInfo.$symbolKind,
       self.option.useLuneModule, self.option.targetLuaVer,
       self.option.testing, self.option.useIpairs );
    ast.$node.processFilter( conv, new convLua.Opt( ast.$node ) );
@@ -549,10 +551,10 @@ fn createModuleInfo(
    foreach node in rootNode.$nodeManager.getAliasNodeList() {
       importedAliasMap[ node.$typeInfo ] = node.$expType@@@Ast.AliasTypeInfo;
    }
+   let mut exportInfo = ast.$exportInfo;
    return new frontInterface.ModuleInfo(
-      mod, ast.$moduleTypeInfo.$rawTxt, {},
-      moduleId, ast.$processInfo, ast.$provideInfo,
-      ast.$moduleTypeInfo, importedAliasMap );
+      mod, exportInfo.$moduleTypeInfo.$rawTxt, {},
+      moduleId, exportInfo, importedAliasMap );
 }
 
 /**
@@ -923,7 +925,9 @@ pub fn Front.dumpAst( scriptPath:str ) mut {
             self.createPaser( scriptPath ), mod, getModuleId( scriptPath, mod ## ),
             nil, .Compile ## );
 	 ast.$node.processFilter(
-            dumpNode.createFilter( ast.$moduleTypeInfo, ast.$processInfo, io.stdout ),
+            dumpNode.createFilter(
+               ast.$exportInfo.$moduleTypeInfo,
+               ast.$exportInfo.$processInfo, io.stdout ),
             new dumpNode.Opt( "", 0 ) );
       }, scriptPath .. ".profi" );
 }
@@ -937,8 +941,10 @@ pub fn Front.format( scriptPath:str ) mut {
       new frontInterface.ImportModuleInfo(),
       self.createPaser( scriptPath ), mod, getModuleId( scriptPath, mod ## ),
       nil, .Compile ## );
-   ast.$node.processFilter( Formatter.createFilter( ast.$moduleTypeInfo, io.stdout ),
-                            new Formatter.Opt( ast.$node ) );
+   ast.$node.processFilter(
+      Formatter.createFilter(
+         ast.$exportInfo.$moduleTypeInfo, io.stdout ),
+      new Formatter.Opt( ast.$node ) );
 }
 
 pub fn Front.checkDiag( scriptPath:str ) mut {

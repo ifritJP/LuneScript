@@ -39,7 +39,7 @@ func dumpNode_Ast2Dump_1214_(ast *TransUnit_ASTInfo) string {
     var stream *Util_memStream
     stream = NewUtil_memStream()
     var conv *Nodes_Filter
-    conv = DumpNode_createFilter(ast.FP.Get_moduleTypeInfo(), ast.FP.Get_processInfo(), stream.FP)
+    conv = DumpNode_createFilter(ast.FP.Get_exportInfo().FP.Get_moduleTypeInfo(), ast.FP.Get_exportInfo().FP.Get_processInfo(), stream.FP)
     ast.FP.Get_node().FP.ProcessFilter(conv, DumpNode_Opt2Stem(NewDumpNode_Opt("", 0)))
     return stream.FP.Get_txt()
 }
@@ -1009,8 +1009,8 @@ func (self *dumpNode_dumpFilter) ProcessExpSetItem(node *Nodes_ExpSetItemNode,_o
     self.FP.dump(opt, &node.Nodes_Node, indexSym)
     dumpNode_filter_1033_(node.FP.Get_val(), self, opt.FP.NextOpt())
     if indexNode != nil{
-        indexNode_3818 := indexNode.(*Nodes_Node)
-        dumpNode_filter_1033_(indexNode_3818, self, opt.FP.NextOpt())
+        indexNode_3826 := indexNode.(*Nodes_Node)
+        dumpNode_filter_1033_(indexNode_3826, self, opt.FP.NextOpt())
     }
     dumpNode_filter_1033_(node.FP.Get_exp2(), self, opt.FP.NextOpt())
 }

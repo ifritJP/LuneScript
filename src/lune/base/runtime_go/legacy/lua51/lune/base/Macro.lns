@@ -240,8 +240,10 @@ pub class MacroCtrl
    let mut useModuleMacroSet:Set<&Ast.TypeInfo> {pub&};
    /** マクロを展開する際にマクロを評価する MacroEval のオブジェクト */
    pri let macroEval: Nodes.MacroEval;
-   /** マクロの TypeId -> マクロ情報 */
-   let mut typeId2MacroInfo: Map<&Ast.IdInfo,Nodes.MacroInfo> {pub&};
+   /** マクロの TypeId -> マクロ情報。インポートしたマクロも含める。 */
+   let mut typeId2MacroInfo: Map<&Ast.IdInfo,&Nodes.MacroInfo> {pub&};
+   /** マクロの TypeId -> マクロ情報. インポートしたマクロは含めない。 */
+   let declMacroInfoMap: Map<&Ast.IdInfo,&Nodes.MacroInfo> {pub&};
    /**
    * 現在展開中の macro-expand 内で利用できるシンボルと値の紐付けマップ。
    * macro-statment 内の stat の展開でも利用する。
@@ -264,6 +266,7 @@ pub class MacroCtrl
 
    pub fn __init( macroEval: Nodes.MacroEval )
    {
+      self.declMacroInfoMap = {};
       self.isDeclaringMacro = false;
       self.tokenExpanding = false;
       self.useModuleMacroSet = (@);
@@ -423,7 +426,9 @@ pub fn MacroCtrl.evalMacroOp(
 pub fn MacroCtrl.importMacro(
    processInfo:Ast.ProcessInfo, lnsPath:str, 
    macroInfoStem:&stem!, macroTypeInfo:&Ast.TypeInfo,
-   typeId2TypeInfo: &Map<int,&Ast.TypeInfo> ) mut
+   typeId2TypeInfo: &Map<int,&Ast.TypeInfo>,
+   importedMacroInfoMap:Map<&Ast.IdInfo,&Nodes.MacroInfo> ) mut
+   
 {
    let macroInfo, err = MacroMetaInfo._fromStem( macroInfoStem );
    when! macroInfo {
@@ -472,16 +477,26 @@ pub fn MacroCtrl.importMacro(
       }
 
 
-      self.typeId2MacroInfo[ macroTypeInfo.$typeId ] =
-         new ExtMacroInfo(
-            macroInfo.name,
-            self.macroEval.evalFromCode(
-               processInfo, macroInfo.name, argNameList, macroInfo.stmtBlock ),
-            symbol2MacroValInfoMap, argList, tokenList );
+      let extMacroInfo = new ExtMacroInfo(
+         macroInfo.name,
+         self.macroEval.evalFromCode(
+            processInfo, macroInfo.name, argNameList, macroInfo.stmtBlock ),
+         symbol2MacroValInfoMap, argList, tokenList );
+
+      self.typeId2MacroInfo[ macroTypeInfo.$typeId ] = extMacroInfo;
+      importedMacroInfoMap[ macroTypeInfo.$typeId ] = extMacroInfo;
    }
    else {
       Util.errorLog( "macro load fail -- %s: %s "
                      (macroTypeInfo.getTxt(##), unwrap err default "") );
+   }
+}
+
+pub fn MacroCtrl.importMacroInfo(
+   importedMacroInfoMap:&Map<&Ast.IdInfo,&Nodes.MacroInfo>) mut
+{
+   foreach macroInfo, typeId in importedMacroInfoMap {
+      self.typeId2MacroInfo[ typeId ] = macroInfo;
    }
 }
 
@@ -506,8 +521,9 @@ pub fn MacroCtrl.regist(
       }
    }
    // マクロ情報を登録
-   self.typeId2MacroInfo[ node.$expType.$typeId ] =
-      new Nodes.DefMacroInfo( macroObj, node.$declInfo, remap );
+   let macroInfo = new Nodes.DefMacroInfo( macroObj, node.$declInfo, remap );
+   self.typeId2MacroInfo[ node.$expType.$typeId ] = macroInfo;
+   self.declMacroInfoMap[ node.$expType.$typeId ] = macroInfo;
 
    self.symbol2ValueMapForMacro = {};
    self.isDeclaringMacro = false;

@@ -886,7 +886,8 @@ __test {
    {
       let mut stream = new Util.memStream();
 
-      let mut conv = createFilter( ast.$moduleTypeInfo, ast.$processInfo, stream );
+      let mut conv = createFilter(
+         ast.$exportInfo.$moduleTypeInfo, ast.$exportInfo.$processInfo, stream );
 
       ast.$node.processFilter( conv, new Opt( "", 0 ));
 

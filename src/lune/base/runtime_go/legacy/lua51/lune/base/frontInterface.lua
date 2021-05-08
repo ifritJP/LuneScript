@@ -273,18 +273,51 @@ function ModuleProvideInfo:get_mutable()
 end
 
 
+local ExportInfo = {}
+_moduleObj.ExportInfo = ExportInfo
+function ExportInfo.setmeta( obj )
+  setmetatable( obj, { __index = ExportInfo  } )
+end
+function ExportInfo.new( moduleTypeInfo, provideInfo, processInfo, globalSymbolList )
+   local obj = {}
+   ExportInfo.setmeta( obj )
+   if obj.__init then
+      obj:__init( moduleTypeInfo, provideInfo, processInfo, globalSymbolList )
+   end
+   return obj
+end
+function ExportInfo:__init( moduleTypeInfo, provideInfo, processInfo, globalSymbolList )
+
+   self.moduleTypeInfo = moduleTypeInfo
+   self.provideInfo = provideInfo
+   self.processInfo = processInfo
+   self.globalSymbolList = globalSymbolList
+end
+function ExportInfo:get_moduleTypeInfo()
+   return self.moduleTypeInfo
+end
+function ExportInfo:get_provideInfo()
+   return self.provideInfo
+end
+function ExportInfo:get_processInfo()
+   return self.processInfo
+end
+function ExportInfo:get_globalSymbolList()
+   return self.globalSymbolList
+end
+
+
 local ModuleInfo = {}
 setmetatable( ModuleInfo, { ifList = {Ast.ModuleInfoIF,} } )
 _moduleObj.ModuleInfo = ModuleInfo
-function ModuleInfo.new( fullName, assignName, idMap, moduleId, processInfo, moduleProvide, moduleTypeInfo, importedAliasMap )
+function ModuleInfo.new( fullName, assignName, idMap, moduleId, exportInfo, importedAliasMap )
    local obj = {}
    ModuleInfo.setmeta( obj )
-   if obj.__init then obj:__init( fullName, assignName, idMap, moduleId, processInfo, moduleProvide, moduleTypeInfo, importedAliasMap ); end
+   if obj.__init then obj:__init( fullName, assignName, idMap, moduleId, exportInfo, importedAliasMap ); end
    return obj
 end
-function ModuleInfo:__init(fullName, assignName, idMap, moduleId, processInfo, moduleProvide, moduleTypeInfo, importedAliasMap) 
-   self.moduleTypeInfo = moduleTypeInfo
-   self.moduleProvide = moduleProvide
+function ModuleInfo:__init(fullName, assignName, idMap, moduleId, exportInfo, importedAliasMap) 
+   self.exportInfo = exportInfo
    self.moduleId = moduleId
    self.fullName = fullName
    self.assignName = assignName
@@ -294,7 +327,6 @@ function ModuleInfo:__init(fullName, assignName, idMap, moduleId, processInfo, m
       self.importId2localTypeInfoMap[importId] = typeInfo
    end
    
-   self.processInfo = processInfo
    self.importedAliasMap = importedAliasMap
 end
 function ModuleInfo:getImportTypeId( typeInfo )
@@ -325,7 +357,7 @@ function ModuleInfo:get_modulePath(  )
 end
 function ModuleInfo:assign( assignName )
 
-   return ModuleInfo.new(self.fullName, assignName, self.localTypeInfo2importIdMap, self.moduleId, self.processInfo, self.moduleProvide, self.moduleTypeInfo, self.importedAliasMap)
+   return ModuleInfo.new(self.fullName, assignName, self.localTypeInfo2importIdMap, self.moduleId, self.exportInfo, self.importedAliasMap)
 end
 function ModuleInfo.setmeta( obj )
   setmetatable( obj, { __index = ModuleInfo  } )
@@ -348,14 +380,8 @@ end
 function ModuleInfo:get_importedAliasMap()
    return self.importedAliasMap
 end
-function ModuleInfo:get_processInfo()
-   return self.processInfo
-end
-function ModuleInfo:get_moduleProvide()
-   return self.moduleProvide
-end
-function ModuleInfo:get_moduleTypeInfo()
-   return self.moduleTypeInfo
+function ModuleInfo:get_exportInfo()
+   return self.exportInfo
 end
 
 

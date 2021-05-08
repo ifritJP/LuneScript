@@ -2046,6 +2046,16 @@ pub fn Scope.add(
    return symbolInfo, nil;
 }
 
+pub fn Scope.addSymbolInfo(
+   processInfo:ProcessInfo, symbolInfo:&SymbolInfo ) mut : SymbolInfo!, &SymbolInfo!
+{
+   return self.add(
+      processInfo, symbolInfo.$kind,
+      symbolInfo.$canBeLeft, symbolInfo.$canBeRight, symbolInfo.$name, symbolInfo.$pos,
+      symbolInfo.$typeInfo, symbolInfo.$accessMode, symbolInfo.$staticFlag,
+      symbolInfo.$mutMode, symbolInfo.$hasValueFlag, symbolInfo.$isLazyLoad )**;
+}
+
 pub fn Scope.addLocalVar(
    processInfo:ProcessInfo,
    argFlag:bool, canBeLeft:bool, name:str, pos:&Parser.Position!,

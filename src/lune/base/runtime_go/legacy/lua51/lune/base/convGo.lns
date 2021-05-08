@@ -127,17 +127,18 @@ class convFilter extend Nodes.Filter<Opt> {
    pub fn __init( enableTest:bool, streamName: str, stream: oStream,
                   ast:TransUnit.ASTInfo, option:&Option )
    {
-      super(true, ast.$moduleTypeInfo, ast.$moduleTypeInfo.$scope);
+      super(true, ast.$exportInfo.$moduleTypeInfo,
+             ast.$exportInfo.$moduleTypeInfo.$scope);
 
       self.moduleType2SymbolMap = {};
       self.env = new Env();
       self.option = option;
-      self.processInfo = ast.$processInfo;
+      self.processInfo = ast.$exportInfo.$processInfo;
       self.stream = new Util.SimpleSourceOStream( stream, nil, 4 );
       self.processMode = .Main;
       self.processModeStack = [];
-      self.moduleTypeInfo = ast.$moduleTypeInfo;
-      self.moduleScope = unwrap ast.$moduleTypeInfo.$scope;
+      self.moduleTypeInfo = ast.$exportInfo.$moduleTypeInfo;
+      self.moduleScope = unwrap ast.$exportInfo.$moduleTypeInfo.$scope;
       self.builtin2runtime = {};
       self.type2gotypeMap = {};
       self.nodeManager = new Nodes.NodeManager();

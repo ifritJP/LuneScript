@@ -3635,10 +3635,12 @@ _ = 1;
    {
       let mut stream = new Util.memStream();
       let mut metaStream = new Util.memStream();
-      
+
+      let mut exportInfo = ast.$exportInfo;
       let mut conv = createFilter(
          streamName, stream, metaStream, .ConvMeta, false,
-         ast.$moduleTypeInfo, ast.$processInfo, ast.$provideInfo.$symbolKind,
+         exportInfo.$moduleTypeInfo, exportInfo.$processInfo,
+         exportInfo.$provideInfo.$symbolKind,
          option.useLuneModule, option.targetLuaVer,
          option.testing, option.useIpairs );
       ast.$node.processFilter( conv, new Opt( ast.$node ) );

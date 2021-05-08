@@ -669,6 +669,7 @@ function MacroCtrl.new( macroEval )
    return obj
 end
 function MacroCtrl:__init(macroEval) 
+   self.declMacroInfoMap = {}
    self.isDeclaringMacro = false
    self.tokenExpanding = false
    self.useModuleMacroSet = {}
@@ -688,6 +689,9 @@ function MacroCtrl:get_useModuleMacroSet()
 end
 function MacroCtrl:get_typeId2MacroInfo()
    return self.typeId2MacroInfo
+end
+function MacroCtrl:get_declMacroInfoMap()
+   return self.declMacroInfoMap
 end
 function MacroCtrl:get_analyzeInfo()
    return self.analyzeInfo
@@ -812,7 +816,7 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
 end
 
 
-function MacroCtrl:importMacro( processInfo, lnsPath, macroInfoStem, macroTypeInfo, typeId2TypeInfo )
+function MacroCtrl:importMacro( processInfo, lnsPath, macroInfoStem, macroTypeInfo, typeId2TypeInfo, importedMacroInfoMap )
 
    local macroInfo, err = MacroMetaInfo._fromStem( macroInfoStem )
    if macroInfo ~= nil then
@@ -859,9 +863,21 @@ function MacroCtrl:importMacro( processInfo, lnsPath, macroInfoStem, macroTypeIn
       end
       
       
-      self.typeId2MacroInfo[macroTypeInfo:get_typeId()] = ExtMacroInfo.new(macroInfo.name, self.macroEval:evalFromCode( processInfo, macroInfo.name, argNameList, macroInfo.stmtBlock ), symbol2MacroValInfoMap, argList, tokenList)
+      local extMacroInfo = ExtMacroInfo.new(macroInfo.name, self.macroEval:evalFromCode( processInfo, macroInfo.name, argNameList, macroInfo.stmtBlock ), symbol2MacroValInfoMap, argList, tokenList)
+      
+      self.typeId2MacroInfo[macroTypeInfo:get_typeId()] = extMacroInfo
+      importedMacroInfoMap[macroTypeInfo:get_typeId()] = extMacroInfo
    else
       Util.errorLog( string.format( "macro load fail -- %s: %s ", macroTypeInfo:getTxt(  ), _lune.unwrapDefault( err, "")) )
+   end
+   
+end
+
+
+function MacroCtrl:importMacroInfo( importedMacroInfoMap )
+
+   for typeId, macroInfo in pairs( importedMacroInfoMap ) do
+      self.typeId2MacroInfo[typeId] = macroInfo
    end
    
 end
@@ -889,7 +905,9 @@ function MacroCtrl:regist( processInfo, node, macroScope )
       
    end
    
-   self.typeId2MacroInfo[node:get_expType():get_typeId()] = Nodes.DefMacroInfo.new(macroObj, node:get_declInfo(), remap)
+   local macroInfo = Nodes.DefMacroInfo.new(macroObj, node:get_declInfo(), remap)
+   self.typeId2MacroInfo[node:get_expType():get_typeId()] = macroInfo
+   self.declMacroInfoMap[node:get_expType():get_typeId()] = macroInfo
    
    self.symbol2ValueMapForMacro = {}
    self.isDeclaringMacro = false

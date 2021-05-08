@@ -2424,7 +2424,8 @@ fn TransUnit.analyzeExpField(
       if #prefixSymbolInfoList == 1 {
          let prefixSymbolInfo = prefixSymbolInfoList[1];
          if prefixSymbolInfo.$kind == .Typ {
-            if not symbolInfo.$staticFlag and symbolInfo.$kind ~= .Typ
+            if prefixSymbolInfo.$typeInfo.$kind ~= .Module and
+               not symbolInfo.$staticFlag and symbolInfo.$kind ~= .Typ
             {
                // クラスシンボルから、 static でないメンバにアクセスした場合エラー
                self.addErrMess(

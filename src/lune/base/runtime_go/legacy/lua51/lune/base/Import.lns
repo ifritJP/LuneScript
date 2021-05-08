@@ -1080,12 +1080,20 @@ fn Import.processImportSub(
    }
 
    // マクロ登録
+   let importedMacroInfoMap:Map<&Ast.IdInfo,&Nodes.MacroInfo> = {};
    foreach macroInfoStem, orgTypeId in metaInfo.__macroName2InfoMap {
 
       self.macroCtrl.importMacro(
          processInfo, moduleMeta.$lnsPath,
-         expandLuavalMap( macroInfoStem ),
-         unwrap orgId2MacroTypeInfo[ orgTypeId ], typeId2TypeInfo );
+         expandLuavalMap( macroInfoStem ), unwrap orgId2MacroTypeInfo[ orgTypeId ],
+         typeId2TypeInfo, importedMacroInfoMap );
+   }
+
+   let globalSymbolList:List<&Ast.SymbolInfo> = [];
+   foreach symbolInfo in self.transUnitIF.$scope.$symbol2SymbolInfoMap {
+      if symbolInfo.$accessMode == .Global {
+         globalSymbolList.insert( symbolInfo );
+      }
    }
 
    foreach _ in nameList {
@@ -1103,12 +1111,15 @@ fn Import.processImportSub(
       unwrap typeId2TypeInfo[ metaInfo.__moduleTypeId ],
       unwrap Ast.SymbolKind._from( metaInfo.__moduleSymbolKind ),
       metaInfo.__moduleMutable );
-   
 
+   let mut exportInfo = new Nodes.ExportInfo(
+      moduleTypeInfo, moduleProvideInfo, processInfo,
+      globalSymbolList, importedMacroInfoMap );
+   
    let mut moduleInfo = new frontInterface.ModuleInfo(
       orgModulePath, nameList[#nameList], newId2OldIdMap, 
       frontInterface.ModuleId.createIdFromTxt( metaInfo.__buildId ),
-      processInfo, moduleProvideInfo, moduleTypeInfo, importParam.importedAliasMap );
+      exportInfo, importParam.importedAliasMap );
 
    return moduleInfo;
 }
@@ -1156,12 +1167,19 @@ pub fn Import.processImport(
    // let! mut moduleInfo = moduleMeta.$moduleInfo {
    //    moduleInfo = self.processImportSub(
    //       processInfo, moduleMeta, orgModulePath, modulePath, nameList, depth );
+   // } then {
+   //    if! let exportInfo = moduleInfo.$exportInfo@@@Nodes.ExportInfo {
+   //       self.macroCtrl.importMacroInfo( exportInfo.$typeId2DefMacroInfo );
+   //    }
+   //    foreach globalSymbol in moduleInfo.$exportInfo.$globalSymbolList {
+   //       self.transUnitIF.$scope.addSymbolInfo( processInfo, globalSymbol );
+   //    }
    // };
    let mut moduleInfo = self.processImportSub(
       processInfo, moduleMeta, orgModulePath, modulePath, nameList, depth );
 
    
-   self.importModule2ModuleInfo[ moduleInfo.$moduleTypeInfo ] = moduleInfo;
+   self.importModule2ModuleInfo[ moduleInfo.$exportInfo.$moduleTypeInfo ] = moduleInfo;
    self.importModuleName2ModuleInfo[ modulePath ] = moduleInfo;
 
    self.importModuleInfo.remove();

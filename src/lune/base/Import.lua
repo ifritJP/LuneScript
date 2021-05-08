@@ -587,9 +587,9 @@ function _TypeInfoAlias:createTypeInfo( param )
    local srcTypeInfo = _lune.unwrap( param:getTypeInfoFrom( self.srcTypeId ))
    local newTypeInfo = param.processInfo:createAlias( param.processInfo, self.rawTxt, true, Ast.AccessMode.Pub, param.moduleTypeInfo, srcTypeInfo )
    param.typeId2TypeInfo[self.typeId] = newTypeInfo
-   local _3717 = param:getTypeInfo( self.parentId )
-   if  nil == _3717 then
-      local __3717 = _3717
+   local _3727 = param:getTypeInfo( self.parentId )
+   if  nil == _3727 then
+      local __3727 = _3727
    
       return nil, string.format( "%s: not found parentInfo %d %s", __func__, self.parentId, self.rawTxt)
    end
@@ -1708,7 +1708,7 @@ function Import:processImportSub( processInfo, moduleMeta, orgModulePath, module
       moduleTypeInfo = self.transUnitIF:pushModule( processInfo, true, moduleName, mutable )
    end
    
-   for __index, _4067 in ipairs( nameList ) do
+   for __index, _4077 in ipairs( nameList ) do
       self.transUnitIF:popModule(  )
    end
    
@@ -2022,13 +2022,23 @@ function Import:processImportSub( processInfo, moduleMeta, orgModulePath, module
       
    end
    
+   local importedMacroInfoMap = {}
    for orgTypeId, macroInfoStem in pairs( metaInfo.__macroName2InfoMap ) do
       
-      self.macroCtrl:importMacro( processInfo, moduleMeta:get_lnsPath(), (macroInfoStem ), _lune.unwrap( orgId2MacroTypeInfo[orgTypeId]), typeId2TypeInfo )
+      self.macroCtrl:importMacro( processInfo, moduleMeta:get_lnsPath(), (macroInfoStem ), _lune.unwrap( orgId2MacroTypeInfo[orgTypeId]), typeId2TypeInfo, importedMacroInfoMap )
    end
    
    
-   for __index, _4207 in ipairs( nameList ) do
+   local globalSymbolList = {}
+   for __index, symbolInfo in pairs( self.transUnitIF:get_scope():get_symbol2SymbolInfoMap() ) do
+      if symbolInfo:get_accessMode() == Ast.AccessMode.Global then
+         table.insert( globalSymbolList, symbolInfo )
+      end
+      
+   end
+   
+   
+   for __index, _4222 in ipairs( nameList ) do
       self.transUnitIF:popModule(  )
    end
    
@@ -2043,7 +2053,9 @@ function Import:processImportSub( processInfo, moduleMeta, orgModulePath, module
    
    local moduleProvideInfo = frontInterface.ModuleProvideInfo.new(_lune.unwrap( typeId2TypeInfo[metaInfo.__moduleTypeId]), _lune.unwrap( Ast.SymbolKind._from( metaInfo.__moduleSymbolKind )), metaInfo.__moduleMutable)
    
-   local moduleInfo = frontInterface.ModuleInfo.new(orgModulePath, nameList[#nameList], newId2OldIdMap, frontInterface.ModuleId.createIdFromTxt( metaInfo.__buildId ), processInfo, moduleProvideInfo, moduleTypeInfo, importParam.importedAliasMap)
+   local exportInfo = Nodes.ExportInfo.new(moduleTypeInfo, moduleProvideInfo, processInfo, globalSymbolList, importedMacroInfoMap)
+   
+   local moduleInfo = frontInterface.ModuleInfo.new(orgModulePath, nameList[#nameList], newId2OldIdMap, frontInterface.ModuleId.createIdFromTxt( metaInfo.__buildId ), exportInfo, importParam.importedAliasMap)
    
    return moduleInfo
 end
@@ -2055,7 +2067,7 @@ function Import:processImport( processInfo, modulePath, depth )
    local orgModulePath = modulePath
    modulePath = frontInterface.getLuaModulePath( modulePath )
    
-   Log.log( Log.Level.Info, __func__, 1124, function (  )
+   Log.log( Log.Level.Info, __func__, 1135, function (  )
    
       return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), orgModulePath)
    end )
@@ -2069,7 +2081,7 @@ function Import:processImport( processInfo, modulePath, depth )
    do
       local moduleInfo = self.importModuleName2ModuleInfo[modulePath]
       if moduleInfo ~= nil then
-         Log.log( Log.Level.Info, __func__, 1136, function (  )
+         Log.log( Log.Level.Info, __func__, 1147, function (  )
          
             return string.format( "%s already", orgModulePath)
          end )
@@ -2101,12 +2113,12 @@ function Import:processImport( processInfo, modulePath, depth )
    
    local moduleInfo = self:processImportSub( processInfo, moduleMeta, orgModulePath, modulePath, nameList, depth )
    
-   self.importModule2ModuleInfo[moduleInfo:get_moduleTypeInfo()] = moduleInfo
+   self.importModule2ModuleInfo[moduleInfo:get_exportInfo():get_moduleTypeInfo()] = moduleInfo
    self.importModuleName2ModuleInfo[modulePath] = moduleInfo
    
    self.importModuleInfo:remove(  )
    
-   Log.log( Log.Level.Info, __func__, 1169, function (  )
+   Log.log( Log.Level.Info, __func__, 1187, function (  )
    
       return string.format( "%s complete", orgModulePath)
    end )

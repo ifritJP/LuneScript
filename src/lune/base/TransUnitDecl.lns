@@ -515,9 +515,7 @@ fn TransUnit.checkOverriededMethodOfAllClass() mut
 
 pub class ASTInfo {
    pri let node: &Nodes.Node { pub };
-   pri let moduleTypeInfo: &Ast.TypeInfo { pub };
-   pri let provideInfo:&frontInterface.ModuleProvideInfo { pub };
-   pri let mut processInfo: Ast.ProcessInfo {pub};
+   pri let exportInfo:frontInterface.ExportInfo { pub };
    pri let streamName:str {pub};
 }
 
@@ -561,6 +559,7 @@ pub fn TransUnit.createAST(
 
    
    let ast:Nodes.Node;
+   let globalSymbolList:List<&Ast.SymbolInfo> = [];
 
    let mut lastStatement:&Nodes.Node! = nil;
    if macroFlag {
@@ -619,8 +618,8 @@ pub fn TransUnit.createAST(
          self.nodeManager, self.createPosition( 0, 0 ),
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
          children, self.moduleScope, self.macroCtrl.$useModuleMacroSet,
-         self.moduleId, self.processInfo, moduleTypeInfo, nil, self.helperInfo,
-         self.nodeManager,
+         self.moduleId, self.processInfo, moduleTypeInfo, nil,
+         self.helperInfo, self.nodeManager,
          unwrap self.importCtrl$.$importModule2ModuleInfo default {},
          self.macroCtrl.$typeId2MacroInfo, self.typeId2ClassMap );
       ast = rootNode;
@@ -633,6 +632,23 @@ pub fn TransUnit.createAST(
       }
 
       ClosureFun.checkList( self.closureFunList );
+
+      foreach node in children {
+         if! let workNode = node@@@Nodes.DeclVarNode {
+            foreach symbolInfo in workNode.$symbolInfoList {
+               if symbolInfo.$accessMode == .Global {
+                  globalSymbolList.insert( symbolInfo );
+               }
+            }
+         }
+         if! let workNode = node@@@Nodes.DeclFuncNode {
+            if workNode.$declInfo.$accessMode == .Global {
+               if! let symbolInfo = workNode.$declInfo.$symbol {
+                  globalSymbolList.insert( symbolInfo );
+               }
+            }
+         }
+      }
    }
 
    when! moduleName {
@@ -681,16 +697,20 @@ pub fn TransUnit.createAST(
          os.exit( 0 );
       }
    }
-
-   let moduleSymbo:frontInterface.ModuleProvideInfo;
+   
+   let provideInfo:frontInterface.ModuleProvideInfo;
    when! moduleSymboInfo {
-      moduleSymbo = new frontInterface.ModuleProvideInfo(
+      provideInfo = new frontInterface.ModuleProvideInfo(
          moduleSymboInfo.$typeInfo, moduleSymboInfo.$kind, moduleSymboInfo.$mutable );
    } else {
-      moduleSymbo = new frontInterface.ModuleProvideInfo( moduleTypeInfo, .Typ, false );
+      provideInfo = new frontInterface.ModuleProvideInfo( moduleTypeInfo, .Typ, false );
    }
-   return new ASTInfo( ast, moduleTypeInfo, moduleSymbo, self.processInfo,
-                       parser.getStreamName() );
+
+   let mut exportInfo = new Nodes.ExportInfo(
+      moduleTypeInfo, provideInfo, self.processInfo, globalSymbolList,
+      self.macroCtrl.$declMacroInfoMap );
+   
+   return new ASTInfo( ast, exportInfo, parser.getStreamName() );
 }
 
 

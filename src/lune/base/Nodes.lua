@@ -756,7 +756,7 @@ end
 function NodeManager:__init() 
    self.idSeed = 0
    self.nodeKind2NodeList = {}
-   for kind, _1783 in pairs( nodeKind2NameMap ) do
+   for kind, _1788 in pairs( nodeKind2NameMap ) do
       if not self.nodeKind2NodeList[kind] then
          self.nodeKind2NodeList[kind] = {}
       end
@@ -13823,7 +13823,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, _10365 in pairs( self.map ) do
+   for key, _10370 in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -13858,8 +13858,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, _10379 in ipairs( __sorted ) do
-         local key = __map[ _10379 ]
+      for __index, _10384 in ipairs( __sorted ) do
+         local key = __map[ _10384 ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false
@@ -14284,6 +14284,30 @@ function DefMacroInfo:__init(func, declInfo, symbol2MacroValInfoMap)
 end
 function DefMacroInfo.setmeta( obj )
   setmetatable( obj, { __index = DefMacroInfo  } )
+end
+
+
+local ExportInfo = {}
+setmetatable( ExportInfo, { __index = frontInterface.ExportInfo } )
+_moduleObj.ExportInfo = ExportInfo
+function ExportInfo.setmeta( obj )
+  setmetatable( obj, { __index = ExportInfo  } )
+end
+function ExportInfo.new( __superarg1, __superarg2, __superarg3, __superarg4,typeId2DefMacroInfo )
+   local obj = {}
+   ExportInfo.setmeta( obj )
+   if obj.__init then
+      obj:__init( __superarg1, __superarg2, __superarg3, __superarg4,typeId2DefMacroInfo )
+   end
+   return obj
+end
+function ExportInfo:__init( __superarg1, __superarg2, __superarg3, __superarg4,typeId2DefMacroInfo )
+
+   frontInterface.ExportInfo.__init( self, __superarg1, __superarg2, __superarg3, __superarg4 )
+   self.typeId2DefMacroInfo = typeId2DefMacroInfo
+end
+function ExportInfo:get_typeId2DefMacroInfo()
+   return self.typeId2DefMacroInfo
 end
 
 
