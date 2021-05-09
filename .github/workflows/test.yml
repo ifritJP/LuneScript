@@ -38,7 +38,7 @@ jobs:
     - name: Test
       run: |
         source here/bin/activate
-        make -C src -j test-comp LUA=lua5.3 LUA51= SKIP_CHECKING_TESTING=y
+        make -C src -j3 test-comp LUA=lua5.3 LUA51= SKIP_CHECKING_TESTING=y
         make -C src go-build LUA=lua5.3 LUA51=
         make -C src LUACHECK=luacheck test-global
     - name: 'Upload Artifact'

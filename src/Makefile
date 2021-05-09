@@ -842,7 +842,7 @@ ifeq ($(WITH_GO),y)
 	cp work/3_3_3/lnsc .
 endif
 
-	diff -r work/3_3_2/lune work/3_3_3/lune -x '*.lns' -x '*.meta' -u
+	diff -u -r work/3_3_2/lune work/3_3_3/lune -x '*.lns' -x '*.meta' 
 
 # work/3_3_3 の Ast.meta を削除してビルドしてみる。
 	rm work/3_3_3/lune/base/Ast.meta
@@ -899,7 +899,7 @@ test-comp2-main:
 ## work/2 から work/3 
 	/usr/bin/time -f 'work2:%e/%U/%S' $(MAKE) -C work/3 build_from_d \
 		depend_on=y FROM_DIR=../2 TO_DIR=../3 LNS_OPT="--package lnsc"
-	diff -r -I '_moduleObj.__buildId.*' -I '.*buildId = .*' \
+	diff -u -r -I '_moduleObj.__buildId.*' -I '.*buildId = .*' \
 			-x $(notdir $(LNSC_GO)) work/2 work/3
 
 
@@ -958,10 +958,10 @@ endif
 
 diff-result:
 	(cd work/1; find test/ -iname '*.lua' -exec diff {} ../4/{} \; )
-	diff -r test/proj/  work/3/test/proj/ \
+	diff -u -r test/proj/  work/3/test/proj/ \
 		-I '_moduleObj.__buildId.*' -I '.*buildId = .*'
 ifneq ($(LANG_KIND),lua)
-	diff -r -I '_moduleObj.__buildId' -I '.*buildId = .*'		\
+	diff -u -r -I '_moduleObj.__buildId' -I '.*buildId = .*'		\
 			-x $(notdir $(LNSC_GO))				\
 			-x 'log' -x 'test' work/13 work/3
 endif
@@ -971,7 +971,7 @@ endif
 	diff work/test4.result work/test4-2.result
 	diff work/test4.result work/test5.result
 	diff work/1/start.dep work/3_2/start.dep
-	diff -r work/glue work/newglue
+	diff -u -r work/glue work/newglue
 
 
 define setup-lua51-test
@@ -999,7 +999,7 @@ test-lua51:
 # 比較用にクロスコンパイル前のテスト結果を取得
 	$(MAKE) test-lua51-sub LANG_KIND=lua LUA=$(LUA51) 
 
-	diff -r work/5/lune work/6/lune -x binding.go
+	diff -u -r work/5/lune work/6/lune -x binding.go
 
 # gopher-lua で test-go 実行
 	(cd work/6; $(MAKE) test-go LUA=$(LUA51) LNSC="$(LNSC_LUA51)" GOTAG=gopherlua)
@@ -1701,7 +1701,7 @@ endif
 	/usr/bin/time -f 'lua:%e/%U/%S:$2' -o work/lua.time -a		\
 		$(MAKE) test-govslua-lua
 	cat work/go.time work/lua.time
-	diff -r work/1 work/2 -I buildId				\
+	diff -u -r work/1 work/2 -I buildId				\
 		-I ': Entering directory'				\
 		-I ': Leaving directory' -x '$(notdir $(LNSC_GO))' -x ast -x '*.meta'
 
