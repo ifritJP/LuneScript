@@ -596,6 +596,7 @@ fn Front.loadParserToLuaCode(
          if not forceUpdateMeta and checkUpdate {
             if! let mut fileObj = io.open( newpath ## ) {
                let oldTxt = fileObj.read( "*a" );
+               fileObj.close();
                if saveTxt == oldTxt {
                   // 同じ場合はセーブしない
                   return;
@@ -820,7 +821,7 @@ fn Front.loadMeta(
    let orgMod = mod;
    mod = self.gomodMap.getLuaModulePath( mod );
    
-   if self.loadedMetaMap[ mod ] == nil {
+   if not self.loadedMetaMap[ mod ] {
       if! self.getLoadInfo( mod ) {
          // ロード済みのものを使用する
          self.loadedMetaMap[ mod ] = _exp.meta;
@@ -1069,7 +1070,8 @@ pub fn Front.convertLuaToStreamFromScript(
             retAst = ast;
 
             when! dependsStream {
-               ast.$node.processFilter( OutputDepend.createFilter( dependsStream ), 1 );
+               ast.$node.processFilter(
+                  OutputDepend.createFilter( dependsStream ), 1 );
             }
 
             let mut outStream = stream;

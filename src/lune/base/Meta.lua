@@ -15,15 +15,15 @@ _moduleObj._MetaInfo = _MetaInfo
 function _MetaInfo.setmeta( obj )
   setmetatable( obj, { __index = _MetaInfo  } )
 end
-function _MetaInfo.new( __formatVersion, __enableTest, __buildId, __lazyModuleList, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap, __hasTest, __subModuleMap )
+function _MetaInfo.new( __formatVersion, __enableTest, __buildId, __lazyModuleList, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap, __hasTest, __subModuleMap, __moduleHierarchy )
    local obj = {}
    _MetaInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( __formatVersion, __enableTest, __buildId, __lazyModuleList, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap, __hasTest, __subModuleMap )
+      obj:__init( __formatVersion, __enableTest, __buildId, __lazyModuleList, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap, __hasTest, __subModuleMap, __moduleHierarchy )
    end
    return obj
 end
-function _MetaInfo:__init( __formatVersion, __enableTest, __buildId, __lazyModuleList, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap, __hasTest, __subModuleMap )
+function _MetaInfo:__init( __formatVersion, __enableTest, __buildId, __lazyModuleList, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap, __hasTest, __subModuleMap, __moduleHierarchy )
 
    self.__formatVersion = __formatVersion
    self.__enableTest = __enableTest
@@ -40,6 +40,7 @@ function _MetaInfo:__init( __formatVersion, __enableTest, __buildId, __lazyModul
    self.__macroName2InfoMap = __macroName2InfoMap
    self.__hasTest = __hasTest
    self.__subModuleMap = __subModuleMap
+   self.__moduleHierarchy = __moduleHierarchy
 end
 
 

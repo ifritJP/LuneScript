@@ -41,4 +41,5 @@ pub class _MetaInfo {
    pub let __macroName2InfoMap: &Map<int,&stem>;
    pub let __hasTest: bool;
    pub let __subModuleMap: &Map<int,str>;
+   pub let __moduleHierarchy: &Map<int,int>;
 }

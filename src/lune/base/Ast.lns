@@ -164,9 +164,31 @@ pub class ProcessInfo {
 pub class IdInfo {
    pub let id:int;
    pub let processInfo:&ProcessInfo;
+   let allmut orgId:int!;
+
+   pub fn set_orgId(id:int) {
+      self.orgId = id;
+   }
+
+   pub fn get_orgId() : int {
+      return self.orgId or self.id;
+   }
+   pub fn __init( id:int, processInfo:&ProcessInfo ) {
+      self.id = id;
+      self.processInfo = processInfo;
+      self.orgId = nil;
+   }
 
    pub fn equals( idInfo:&IdInfo ) : bool {
-      return (self.id == idInfo.id) and (self.processInfo == idInfo.processInfo);
+      if self.$orgId == idInfo.$orgId {
+         if self.processInfo == idInfo.processInfo {
+            return true;
+         }
+         if self.$orgId >= extStartId {
+            return true;
+         }
+      }
+      return false;
    }
 }
 
@@ -178,6 +200,9 @@ pub fn getRootProcessInfo(): ProcessInfo {
 local fn ProcessInfo.newIdForRoot() mut : IdInfo {
    let id = self.idProv.getNewId();
    return new IdInfo( id, self );
+}
+local fn ProcessInfo.setRootTypeInfo( id:int, typeInfo:&TypeInfo ) mut {
+   self.id2TypeInfo[ id ] = typeInfo;
 }
 
 local fn ProcessInfo.newId( typeInfo:&TypeInfo ) mut : IdInfo {
@@ -673,8 +698,12 @@ pub class SerializeInfo {
       return not self.validChildrenMap[ idInfo ];
    }
    pub fn serializeId(idInfo:&IdInfo) : str {
+      let id = idInfo.$orgId;
+      if id >= extStartId {
+         return "{ id = %d, mod = 0 }" ( id );
+      }
       let processId = unwrap self.processInfo2Id[ idInfo.processInfo ];
-      return "{ id = %d, mod = %d }" ( idInfo.id, processId );
+      return "{ id = %d, mod = %d }" ( idInfo.$orgId, processId );
    }
 }
 
@@ -1171,9 +1200,10 @@ pub class RootTypeInfo extend TypeInfo {
    }
 }
 
-
 /** TypeInfo の head。 */
 pub let headTypeInfo:&TypeInfo = RootTypeInfo.create();
+rootProcessInfo.setRootTypeInfo( rootTypeId, headTypeInfo );
+
 //pub let headTypeInfo:TypeInfo = new TypeInfo( rootScope, rootProcessInfo );
 //let rootTypeInfo:TypeInfo = new TypeInfo( rootScope );
 
@@ -1306,7 +1336,7 @@ pro static fn TypeInfo.isInherit(
    let baseTypeInfo = typeInfo.$baseTypeInfo;
    //let interfaceList = typeInfo.$interfaceList;
    let otherTypeId = other.$typeId;
-   if typeInfo.$typeId == otherTypeId {
+   if typeInfo.$typeId.equals( otherTypeId ) {
       return true;
    }
    if baseTypeInfo ~= headTypeInfo {
@@ -4058,7 +4088,7 @@ pub class NormalTypeInfo extend TypeInfo {
    pub fn equalsSub( processInfo:ProcessInfo, typeInfo: &TypeInfo,
                      alt2type:Map<&TypeInfo,&TypeInfo>!, checkModifer:bool! ): bool
    {
-      if self.typeId == typeInfo.$typeId {
+      if self.typeId.equals( typeInfo.$typeId ) {
          return true;
       }
 
@@ -6014,7 +6044,7 @@ pub override fn NilableTypeInfo.canEvalWith(
       }
       return true, nil;
    }
-   if self.typeId == otherSrc.$typeId {
+   if self.typeId.equals( otherSrc.$typeId ) {
       return true, nil;
    }
    if otherSrc.$nilable {
@@ -6140,7 +6170,7 @@ pub override fn NormalTypeInfo.isInheritFrom(
    processInfo:ProcessInfo,
    other:&TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>! ) : bool
 {
-   if self.$typeId == other.$typeId {
+   if self.$typeId.equals( other.$typeId ) {
       return true;
    }
    if ( self.$kind ~= .Class and self.$kind ~= .IF ) or
@@ -6333,10 +6363,12 @@ pub static fn TypeInfo.checkMatchType(
                processInfo, expType, .SetOp, alt2type );
                
             if not canEval {
-               return .Error, "exp(%d) type mismatch %s(%d) <- %s(%d)%s"
+               return .Error, "exp(%d) type mismatch %s(%s:%d) <- %s(%s:%d)%s"
                ( index,
-                 dstType.getTxt( defaultTypeNameCtrl## ), dstType.$typeId.id,
-                 expType.getTxt( defaultTypeNameCtrl## ), expType.$typeId.id,
+                 dstType.getTxt( defaultTypeNameCtrl## ),
+                 dstType.$kind.$_txt, dstType.$typeId.id,
+                 expType.getTxt( defaultTypeNameCtrl## ),
+                 expType.$kind.$_txt, expType.$typeId.id,
                  _evalMess( evalMess ) );
             }
             _checkWarnForFollow( index, dstType, expType );
@@ -6529,7 +6561,7 @@ pub static fn TypeInfo.canEvalWithBase(
       }
       return true, nil;
    }
-   if dest.$typeId == otherSrc.$typeId {
+   if dest.$typeId.equals( otherSrc.$typeId ) {
       return true, nil;
    }
 
@@ -6911,6 +6943,10 @@ pub fn createProcessInfo(
       validCheckingMutable, validExtType, builtinTypeInfo2Map.clone() );
 }
 
+pub fn ProcessInfo.newUser() : ProcessInfo {
+   return ProcessInfo.createUser(
+      self.validCheckingMutable, self.validExtType, builtinTypeInfo2Map.clone() );
+}
 
 pub enum BitOpKind {
    And,

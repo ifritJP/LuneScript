@@ -5,43 +5,6 @@ local _lune = {}
 if _lune3 then
    _lune = _lune3
 end
-function _lune.newAlge( kind, vals )
-   local memInfoList = kind[ 2 ]
-   if not memInfoList then
-      return kind
-   end
-   return { kind[ 1 ], vals }
-end
-
-function _lune._fromList( obj, list, memInfoList )
-   if type( list ) ~= "table" then
-      return false
-   end
-   for index, memInfo in ipairs( memInfoList ) do
-      local val, key = memInfo.func( list[ index ], memInfo.child )
-      if val == nil and not memInfo.nilable then
-         return false, key and string.format( "%s[%s]", memInfo.name, key) or memInfo.name
-      end
-      obj[ index ] = val
-   end
-   return true
-end
-function _lune._AlgeFrom( Alge, val )
-   local work = Alge._name2Val[ val[ 1 ] ]
-   if not work then
-      return nil
-   end
-   if #work == 1 then
-     return work
-   end
-   local paramList = {}
-   local result, mess = _lune._fromList( paramList, val[ 2 ], work[ 2 ] )
-   if not result then
-      return nil, mess
-   end
-   return { work[ 1 ], paramList }
-end
-
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
       setObj[ val ] = true
@@ -247,6 +210,7 @@ local Log = _lune.loadModule( 'lune.base.Log' )
 local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
 local Option = _lune.loadModule( 'lune.base.Option' )
 local DependLuaOnLns = _lune.loadModule( 'lune.base.DependLuaOnLns' )
+local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 
 local PubVerInfo = {}
 function PubVerInfo.setmeta( obj )
@@ -604,13 +568,13 @@ function convFilter:outputMeta( node )
    local importModuleType2Index = {}
    local importProcessInfo2Index = {}
    
-   importProcessInfo2Index[Ast.getRootProcessInfo(  )] = -1
+   importProcessInfo2Index[Ast.getRootProcessInfo(  )] = frontInterface.getRootDependModId(  )
    importProcessInfo2Index[self.processInfo] = 0
    
    local importNameMap = {}
    do
-      for typeInfo, moduleInfo in pairs( node:get_importModule2moduleInfo() ) do
-         importNameMap[moduleInfo:get_fullName()] = typeInfo
+      for __index, moduleInfo in pairs( node:get_importModule2moduleInfo() ) do
+         importNameMap[moduleInfo:get_fullName()] = moduleInfo
       end
       
       
@@ -623,11 +587,11 @@ function convFilter:outputMeta( node )
          end
          table.sort( __sorted )
          for __index, __key in ipairs( __sorted ) do
-            local typeInfo = __map[ __key ]
+            local moduleInfo = __map[ __key ]
             do
                index = index + 1
-               importModuleType2Index[typeInfo] = index
-               importProcessInfo2Index[typeInfo:get_processInfo()] = index
+               importModuleType2Index[moduleInfo:get_exportInfo():get_moduleTypeInfo()] = index
+               importProcessInfo2Index[moduleInfo:get_exportInfo():get_processInfo()] = index
             end
          end
       end
@@ -1264,8 +1228,9 @@ function convFilter:outputMeta( node )
       end
       table.sort( __sorted )
       for __index, name in ipairs( __sorted ) do
-         local moduleTypeInfo = __map[ name ]
+         local moduleInfo = __map[ name ]
          do
+            local moduleTypeInfo = moduleInfo:get_exportInfo():get_moduleTypeInfo()
             self:writeln( string.format( "__dependModuleMap[ '%s' ] = { typeId = %d, use = %s, buildId = %q }", name, _lune.unwrap( importModuleType2Index[moduleTypeInfo]), _lune._Set_has(exportNeedModuleTypeInfo, moduleTypeInfo ), (_lune.unwrap( node:get_importModule2moduleInfo()[moduleTypeInfo]) ):get_moduleId():get_idStr()) )
          end
       end
@@ -1291,6 +1256,15 @@ function convFilter:outputMeta( node )
          
       end
       
+   end
+   
+   self:writeln( "}" )
+   
+   self:write( "_moduleObj.__moduleHierarchy = {" )
+   local workType = node:get_moduleTypeInfo()
+   while workType ~= Ast.headTypeInfo do
+      self:write( string.format( "%d,", workType:get_typeId().id) )
+      workType = workType:get_parentInfo()
    end
    
    self:writeln( "}" )
@@ -2024,7 +1998,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _4422 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _761 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -4251,7 +4225,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3522, function (  )
+   Log.log( Log.Level.Trace, __func__, 3534, function (  )
    
       return string.format( "macro: %s", code)
    end )

@@ -1,13 +1,13 @@
 import test.error.Sub6;
 
 {
-   let val = Sub6.func().$_txt;
+   let val = Sub6.func().$_txt; // error
 }
-Sub6.func2( .val1 );
+Sub6.func2( .val1 ); // error
 
 {
-   let val = new Sub6.Test();
-   Sub6.func3( 1 );
+   let val = new Sub6.Test(); // error
+   Sub6.func3( 1 ); // error
 }
 
 enum testEnum {

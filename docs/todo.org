@@ -8,6 +8,14 @@
 
 * バグ
 
+- [ ] allmut の setter が mut になってしまう。 allmut なので imut にすべき。
+  
+- [ ] 
+  以下がエラーにならない。
+errot/enum.lns:6  Sub6.func2( .val1 );
+test/error/import6.lns:4:13: error: not found field typeInfo: &Test.val -- TypeInfoKind.Class
+  
+- [ ] go だと、別モジュールの pub な変数にアクセスできない。
 - [ ] global 宣言は、 変数宣言と、関数宣言以外は禁止する。
 - [ ] go への変換時は、 global 宣言を禁止する。
   

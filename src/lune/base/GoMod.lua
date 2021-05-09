@@ -492,6 +492,7 @@ local function getGoMap(  )
             
          end
          
+         file:close(  )
       end
    end
    

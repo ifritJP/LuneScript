@@ -35,6 +35,7 @@ import lune.base.Log;
 import lune.base.LuneControl;
 import lune.base.Option;
 import lune.base.DependLuaOnLns;
+import lune.base.frontInterface;
 
 class PubVerInfo {
    pub let staticFlag: bool;
@@ -343,24 +344,26 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
    let mut importModuleType2Index:Map<&Ast.TypeInfo,int> = {};
    let mut importProcessInfo2Index:Map<&Ast.ProcessInfo,int> = {};
 
-   importProcessInfo2Index[ Ast.getRootProcessInfo() ] = -1;
+   importProcessInfo2Index[ Ast.getRootProcessInfo() ] =
+      frontInterface.getRootDependModId();
    importProcessInfo2Index[ self.processInfo ] = 0;
    
-   let mut importNameMap:Map<str,&Ast.TypeInfo> = {};
+   let mut importNameMap:Map<str,&frontInterface.ModuleInfo> = {};
    {
       // foreach importName, typeInfo in self.typeInfo2ModuleName {
       //    importNameMap[ importName ] = typeInfo;
       // }
 
-      foreach moduleInfo, typeInfo in node.$importModule2moduleInfo {
-         importNameMap[ moduleInfo.$fullName ] = typeInfo;
+      foreach moduleInfo in node.$importModule2moduleInfo {
+         //importNameMap[ moduleInfo.$fullName ] = typeInfo;
+         importNameMap[ moduleInfo.$fullName ] = moduleInfo;
       }
 
       let mut index = 0;
-      forsort typeInfo in importNameMap {
+      forsort moduleInfo in importNameMap {
          index = index + 1;
-         importModuleType2Index[ typeInfo ] = index;
-         importProcessInfo2Index[ typeInfo.$processInfo ] = index;
+         importModuleType2Index[ moduleInfo.$exportInfo.$moduleTypeInfo ] = index;
+         importProcessInfo2Index[ moduleInfo.$exportInfo.$processInfo ] = index;
       }
    }
 
@@ -855,7 +858,8 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
    // 依存モジュール情報処理
    self.writeln( "local __dependModuleMap = {}" );
    self.writeln( "_moduleObj.__dependModuleMap = __dependModuleMap" );
-   forsort moduleTypeInfo, name in importNameMap {
+   forsort moduleInfo, name in importNameMap {
+      let moduleTypeInfo = moduleInfo.$exportInfo.$moduleTypeInfo;
       self.writeln(
          "__dependModuleMap[ '%s' ] = { typeId = %d, use = %s, buildId = %q }"
          ( name, unwrap importModuleType2Index[ moduleTypeInfo ],
@@ -881,6 +885,14 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
    }
    self.writeln( "}" );
 
+   self.write( "_moduleObj.__moduleHierarchy = {" );
+   let mut workType = node.$moduleTypeInfo;
+   while workType ~= Ast.headTypeInfo {
+      self.write( "%d," (workType.$typeId.id) );
+      workType = workType.$parentInfo;
+   }
+   self.writeln( "}" );
+   
    let mut moduleTypeInfo = self.moduleTypeInfo;
    let mut moduleSymbolKind = Ast.SymbolKind.Typ;
    if! node.$provideNode {
@@ -3565,7 +3577,7 @@ pub class MacroEvalImp extend Nodes.MacroEval {
 
 
 __test {
-   import lune.base.frontInterface;
+   //import lune.base.frontInterface;
    import lune.base.Testing;
 
    pub fn createAstFromStream(
@@ -3588,7 +3600,9 @@ __test {
       let! mut stream = io.open( scriptPath## ) {
          Util.err( "not failed to open -- %s" (scriptPath) );
       };
-      return createAstFromStream( scriptPath, stream, option );
+      let mut ast = createAstFromStream( scriptPath, stream, option );
+      stream.close();
+      return ast;
    }
    
    pub fn createAst(

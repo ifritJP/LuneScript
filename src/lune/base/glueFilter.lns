@@ -406,11 +406,12 @@ pub override fn glueFilter.processRoot( node: &Nodes.RootNode, dummy:int ) mut
       if! let moduleName = declClassNode.$moduleName {
          let moduleSymbolName = moduleName.getExcludedDelimitTxt().gsub( "%.", "_" );
          if! declClassNode.$gluePrefix {
-            let mut glue = new glueGenerator(
-               createFile( moduleSymbolName .. "_glue.c" ),
-               createFile( moduleSymbolName .. "_glue.h" ) );
-
+            let mut cFile = createFile( moduleSymbolName .. "_glue.c" );
+            let mut hFile = createFile( moduleSymbolName .. "_glue.h" );
+            let mut glue = new glueGenerator( cFile, hFile );
             glue.outputClass( moduleSymbolName, declClassNode, _exp );
+            cFile.close();
+            hFile.close();
          }
       }
    }

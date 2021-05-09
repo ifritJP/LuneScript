@@ -24,6 +24,7 @@ SOFTWARE.
 
 import lune.base.Util;
 import lune.base.Ast;
+import lune.base.LuneControl;
 
 _lune_control ignore_symbol_;
 
@@ -70,6 +71,38 @@ pub class ModuleProvideInfo {
    let typeInfo:&Ast.TypeInfo {pub};
    let symbolKind:&Ast.SymbolKind {pub};
    let mutable:bool {pub};
+}
+
+pub class LuneHelperInfo {
+   pub let mut useNilAccess:bool;
+   pub let mut useUnwrapExp:bool;
+   pub let mut hasMappingClassDef:bool;
+   pub let mut useLoad:bool;
+   pub let mut useUnpack:bool;
+   pub let mut useAlge:bool;
+   pub let mut useSet:bool;
+   pub let mut callAnonymous:bool;
+   pub let mut pragmaSet:Set<LuneControl.Pragma>;
+   pub let mut useLazyLoad:bool;
+   pub let mut useLazyRequire:bool;
+
+   pub fn __init() {
+      self.useNilAccess = false;
+      self.useUnwrapExp = false;
+      self.hasMappingClassDef = false;
+      self.useLoad = false;
+      self.useUnpack = false;
+      self.useAlge = false;
+      self.useSet = false;
+      self.callAnonymous = false;
+      self.pragmaSet = (@);
+      self.useLazyLoad = false;
+      self.useLazyRequire = false;
+   }
+}
+
+pub fn getRootDependModId() : int {
+   return -1;
 }
 
 pub class ExportInfo {
@@ -150,7 +183,7 @@ pub class ModuleMeta {
    let metaInfo:Luaval<&stem> {pub};
    let lnsPath:str {pub};
    // let processInfo:Ast.ProcessInfo! {pub};
-   let moduleInfo:ModuleInfo! {pub};
+   let mut moduleInfo:ModuleInfo! {pub,pub};
 }
 
 /**

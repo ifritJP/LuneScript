@@ -754,34 +754,6 @@ _declNodeClass( "Import", Node, false, false, true,
 
 pub proto class ProvideNode extend Node;
 
-pub class LuneHelperInfo {
-   pub let mut useNilAccess:bool;
-   pub let mut useUnwrapExp:bool;
-   pub let mut hasMappingClassDef:bool;
-   pub let mut useLoad:bool;
-   pub let mut useUnpack:bool;
-   pub let mut useAlge:bool;
-   pub let mut useSet:bool;
-   pub let mut callAnonymous:bool;
-   pub let mut pragmaSet:Set<LuneControl.Pragma>;
-   pub let mut useLazyLoad:bool;
-   pub let mut useLazyRequire:bool;
-
-   pub fn __init() {
-      self.useNilAccess = false;
-      self.useUnwrapExp = false;
-      self.hasMappingClassDef = false;
-      self.useLoad = false;
-      self.useUnpack = false;
-      self.useAlge = false;
-      self.useSet = false;
-      self.callAnonymous = false;
-      self.pragmaSet = (@);
-      self.useLazyLoad = false;
-      self.useLazyRequire = false;
-   }
-}
-
 /**
 マクロの expand-statement で使用する変数情報。
 
@@ -846,7 +818,7 @@ _declNodeClass( "Root", Node, false, false, false,
                   { "processInfo": "Ast.ProcessInfo" },
                   { "moduleTypeInfo": "&Ast.TypeInfo" },
                   { "provideNode": "&ProvideNode!" },
-                  { "luneHelperInfo": "&LuneHelperInfo" },
+                  { "luneHelperInfo": "&frontInterface.LuneHelperInfo" },
                   { "@nodeManager": "&NodeManager" },
                   { "importModule2moduleInfo": "&Map<&Ast.TypeInfo,&frontInterface.ModuleInfo>" },
                   { "typeId2MacroInfo": "&Map<&Ast.IdInfo,&MacroInfo>" },
@@ -2965,7 +2937,8 @@ __test {
       return RootNode.create(
          nodeManager, stmtExp.$pos, false, [ Ast.builtinTypeNone ],
          [ stmtExp ], scope, (@), frontInterface.ModuleId.createId(0.0, 0),
-         processInfo, moduleInfo, nil, new LuneHelperInfo(), nodeManager, {}, {}, {});
+         processInfo, moduleInfo, nil,
+         new frontInterface.LuneHelperInfo(), nodeManager, {}, {}, {});
    }
 }
 

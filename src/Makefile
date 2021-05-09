@@ -491,10 +491,8 @@ ifeq ($(WITH_GO),y)
 endif
 else
 	$(call selfhost_buildOp_batch,.,/usr/bin/time -f 'first:%e/%U/%S' $(LNSC_GO),work/1,--depends work/1/ )
-ifeq ($(WITH_GO),y)
 	$(call binding-lns-go,work/1)
 	$(call go-build-lns,work/1)
-endif
 	$(call mk_runtime,$(LNSC),work/1,.,)
 endif
 
@@ -811,6 +809,12 @@ test-new2:
 	$(call exeLune,$(LNSC),work/3_2,test/start.lns,-u SAVE ../4 $(EXE_OPT),)
 	(cd work/4; $(LUA) test/start.lua) > work/test5.result
 
+
+ifeq ($(WITH_GO),y)
+	$(call mk_lune_proj_dir,work/4-2)
+	$(call selfhost_buildOp_batch,work/3_2,/usr/bin/time -f 'first:%e/%U/%S' $(LNSC_GO),../4-2,)
+	$(call go-build-lns,work/4-2)
+endif
 
 
 test-parallel: test-org test-org-proj \

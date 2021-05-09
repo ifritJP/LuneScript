@@ -486,25 +486,42 @@ end
 
 local IdInfo = {}
 _moduleObj.IdInfo = IdInfo
-function IdInfo:equals( idInfo )
+function IdInfo:set_orgId( id )
 
-   return (self.id == idInfo.id ) and (self.processInfo == idInfo.processInfo )
+   self.orgId = id
 end
-function IdInfo.setmeta( obj )
-  setmetatable( obj, { __index = IdInfo  } )
+function IdInfo:get_orgId(  )
+
+   return self.orgId or self.id
 end
 function IdInfo.new( id, processInfo )
    local obj = {}
    IdInfo.setmeta( obj )
-   if obj.__init then
-      obj:__init( id, processInfo )
-   end
+   if obj.__init then obj:__init( id, processInfo ); end
    return obj
 end
-function IdInfo:__init( id, processInfo )
-
+function IdInfo:__init(id, processInfo) 
    self.id = id
    self.processInfo = processInfo
+   self.orgId = nil
+end
+function IdInfo:equals( idInfo )
+
+   if self:get_orgId() == idInfo:get_orgId() then
+      if self.processInfo == idInfo.processInfo then
+         return true
+      end
+      
+      if self:get_orgId() >= extStartId then
+         return true
+      end
+      
+   end
+   
+   return false
+end
+function IdInfo.setmeta( obj )
+  setmetatable( obj, { __index = IdInfo  } )
 end
 
 
@@ -519,6 +536,11 @@ function ProcessInfo:newIdForRoot(  )
 
    local id = self.idProv:getNewId(  )
    return IdInfo.new(id, self)
+end
+
+function ProcessInfo:setRootTypeInfo( id, typeInfo )
+
+   self.id2TypeInfo[id] = typeInfo
 end
 
 
@@ -1238,8 +1260,13 @@ function SerializeInfo:isValidChildren( idInfo )
 end
 function SerializeInfo:serializeId( idInfo )
 
+   local id = idInfo:get_orgId()
+   if id >= extStartId then
+      return string.format( "{ id = %d, mod = 0 }", id)
+   end
+   
    local processId = _lune.unwrap( self.processInfo2Id[idInfo.processInfo])
-   return string.format( "{ id = %d, mod = %d }", idInfo.id, processId)
+   return string.format( "{ id = %d, mod = %d }", idInfo:get_orgId(), processId)
 end
 function SerializeInfo.setmeta( obj )
   setmetatable( obj, { __index = SerializeInfo  } )
@@ -1763,10 +1790,10 @@ function RootTypeInfo:get_typeId()
    return self.typeId
 end
 
-
 local headTypeInfo = RootTypeInfo.create(  )
 _moduleObj.headTypeInfo = headTypeInfo
 
+rootProcessInfo:setRootTypeInfo( _moduleObj.rootTypeId, _moduleObj.headTypeInfo )
 local defaultTypeNameCtrl = TypeNameCtrl.new(_moduleObj.headTypeInfo)
 _moduleObj.defaultTypeNameCtrl = defaultTypeNameCtrl
 
@@ -1926,7 +1953,7 @@ function TypeInfo.isInherit( processInfo, typeInfo, other, alt2type )
 
    local baseTypeInfo = typeInfo:get_baseTypeInfo()
    local otherTypeId = other:get_typeId()
-   if typeInfo:get_typeId() == otherTypeId then
+   if typeInfo:get_typeId():equals( otherTypeId ) then
       return true
    end
    
@@ -5511,7 +5538,7 @@ function NormalTypeInfo:serialize( stream, serializeInfo )
 end
 function NormalTypeInfo:equalsSub( processInfo, typeInfo, alt2type, checkModifer )
 
-   if self.typeId == typeInfo:get_typeId() then
+   if self.typeId:equals( typeInfo:get_typeId() ) then
       return true
    end
    
@@ -8114,7 +8141,7 @@ function NilableTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type 
       return true, nil
    end
    
-   if self.typeId == otherSrc:get_typeId() then
+   if self.typeId:equals( otherSrc:get_typeId() ) then
       return true, nil
    end
    
@@ -8203,7 +8230,7 @@ end
 
 function NormalTypeInfo:isInheritFrom( processInfo, other, alt2type )
 
-   if self:get_typeId() == other:get_typeId() then
+   if self:get_typeId():equals( other:get_typeId() ) then
       return true
    end
    
@@ -8418,7 +8445,9 @@ function TypeInfo.checkMatchType( processInfo, dstTypeList, expTypeList, allowDs
             local canEval, evalMess = dstType:canEvalWith( processInfo, expType, CanEvalType.SetOp, alt2type )
             
             if not canEval then
-               return MatchType.Error, string.format( "exp(%d) type mismatch %s(%d) <- %s(%d)%s", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), dstType:get_typeId().id, expType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:get_typeId().id, (evalMess and string.format( " -- %s", evalMess) or "" )
+               return MatchType.Error, string.format( "exp(%d) type mismatch %s(%s:%d) <- %s(%s:%d)%s", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), TypeInfoKind:_getTxt( dstType:get_kind())
+               , dstType:get_typeId().id, expType:getTxt( _moduleObj.defaultTypeNameCtrl ), TypeInfoKind:_getTxt( expType:get_kind())
+               , expType:get_typeId().id, (evalMess and string.format( " -- %s", evalMess) or "" )
                )
             end
             
@@ -8622,7 +8651,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
       return true, nil
    end
    
-   if dest:get_typeId() == otherSrc:get_typeId() then
+   if dest:get_typeId():equals( otherSrc:get_typeId() ) then
       return true, nil
    end
    
@@ -9016,6 +9045,12 @@ local function createProcessInfo( validCheckingMutable, validExtType )
    return ProcessInfo.createUser( validCheckingMutable, validExtType, builtinTypeInfo2Map:clone(  ) )
 end
 _moduleObj.createProcessInfo = createProcessInfo
+
+function ProcessInfo:newUser(  )
+
+   return ProcessInfo.createUser( self.validCheckingMutable, self.validExtType, builtinTypeInfo2Map:clone(  ) )
+end
+
 
 local BitOpKind = {}
 _moduleObj.BitOpKind = BitOpKind
