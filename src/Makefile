@@ -491,10 +491,8 @@ ifeq ($(WITH_GO),y)
 endif
 else
 	$(call selfhost_buildOp_batch,.,/usr/bin/time -f 'first:%e/%U/%S' $(LNSC_GO),work/1,--depends work/1/ )
-ifeq ($(WITH_GO),y)
 	$(call binding-lns-go,work/1)
 	$(call go-build-lns,work/1)
-endif
 	$(call mk_runtime,$(LNSC),work/1,.,)
 endif
 
@@ -812,9 +810,26 @@ test-new2:
 	(cd work/4; $(LUA) test/start.lua) > work/test5.result
 
 
+# batch モードでビルドして、
+# ビルド前後で同じになるか確認する
+test-new3:
+	mkdir -p work/3_3
+	cp -a work/3/* work/3_3
+	$(MAKE) -C work/3_3 test-new3-sub
+
+test-new3-sub:
+	mkdir -p work/3_3_2
+	cp -a lune work/3_3_2
+	find work/3_3_2/lune -name '*.meta' | grep -v runtime_go | xargs rm
+	$(call selfhost_buildOp_batch,.,$(LNSC),work/3_3_2,--depends work/3_3_2/)
+ifeq ($(WITH_GO),y)
+	$(call go-build-lns,work/3_3_2)
+endif
+	diff -r lune work/3_3_2/lune -x '*.lns' -I buildId
+
 
 test-parallel: test-org test-org-proj \
-			test-new test-new-proj test-new2
+			test-new test-new-proj test-new2 test-new3
 
 
 
@@ -852,8 +867,10 @@ test-comp2-main:
 
 
 # 新しいトランコンパイラで再度自分自身をコンパイルした結果が同じになることを確認する。
+## work/1 から work/2
 	/usr/bin/time -f 'work1:%e/%U/%S' $(MAKE) -C work/2 build_from_d \
 		depend_on=y FROM_DIR=../1 TO_DIR=../2 LNS_OPT="--package lnsc"
+## work/2 から work/3 
 	/usr/bin/time -f 'work2:%e/%U/%S' $(MAKE) -C work/3 build_from_d \
 		depend_on=y FROM_DIR=../2 TO_DIR=../3 LNS_OPT="--package lnsc"
 	diff -r -I '_moduleObj.__buildId.*' -I '.*buildId = .*' \
