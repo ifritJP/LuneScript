@@ -1703,7 +1703,7 @@ endif
 	cat work/go.time work/lua.time
 	diff -r work/1 work/2 -I buildId				\
 		-I ': Entering directory'				\
-		-I ': Leaving directory' -x '$(notdir $(LNSC_GO))' -x ast
+		-I ': Leaving directory' -x '$(notdir $(LNSC_GO))' -x ast -x '*.meta'
 
 
 define test-buildlns-setup
