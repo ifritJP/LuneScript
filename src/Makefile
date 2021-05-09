@@ -844,15 +844,6 @@ endif
 
 	diff -u -r work/3_3_2/lune work/3_3_3/lune -x '*.lns' -x '*.meta' 
 
-# work/3_3_3 の Ast.meta を削除してビルドしてみる。
-	rm work/3_3_3/lune/base/Ast.meta
-	cp Makefile work/3_3_3
-	cp build.counter work/3_3_3
-	$(MAKE) -C work/3_3_3 build_from_d \
-		depend_on=y FROM_DIR=. TO_DIR=. LNS_OPT="--package lnsc"
-
-
-
 
 test-parallel: test-org test-org-proj \
 			test-new test-new-proj test-new2 test-new3
