@@ -842,7 +842,7 @@ ifeq ($(WITH_GO),y)
 	cp work/3_3_3/lnsc .
 endif
 
-	diff -r work/3_3_2/lune work/3_3_3/lune -x '*.lns' -I buildId
+	diff -r work/3_3_2/lune work/3_3_3/lune -x '*.lns' -x '*.meta' -u
 
 # work/3_3_3 の Ast.meta を削除してビルドしてみる。
 	rm work/3_3_3/lune/base/Ast.meta

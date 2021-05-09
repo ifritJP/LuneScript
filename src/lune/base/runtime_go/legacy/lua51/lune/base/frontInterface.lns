@@ -154,9 +154,9 @@ alias で置き換えている元の Type → alias の型。
       if! let typeId = self.localTypeInfo2importIdMap[ typeInfo ] {
          return typeId;
       }
-      // if typeInfo.$processInfo == self.processInfo {
-      //    return typeInfo.$typeId.id;
-      // }
+      // // if typeInfo.$processInfo == self.processInfo {
+      // //    return typeInfo.$typeId.id;
+      // // }
       return nil;
    }
 

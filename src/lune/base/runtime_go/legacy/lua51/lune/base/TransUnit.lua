@@ -10386,7 +10386,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, canLeftExp, prevOpLev
                      expType = aliasType
                   end
                   
-                  if orgExpectType:get_externalFlag() then
+                  if not self.moduleType:equals( self.processInfo, orgExpectType:getModule(  ) ) then
                      if not _lune._Set_has(self.importModuleSet, orgExpectType:getModule(  ) ) then
                         if not aliasType then
                            local fullname = orgExpectType:getFullName( self.typeNameCtrl, self.scope, true )

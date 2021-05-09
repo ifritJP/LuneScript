@@ -486,6 +486,17 @@ end
 
 local IdInfo = {}
 _moduleObj.IdInfo = IdInfo
+function IdInfo:isSwichingId(  )
+
+   local orgId = self.orgId
+   if  nil == orgId then
+      local _orgId = orgId
+   
+      return false
+   end
+   
+   return orgId ~= self.id
+end
 function IdInfo:set_orgId( id )
 
    self.orgId = id
@@ -522,6 +533,9 @@ function IdInfo:equals( idInfo )
 end
 function IdInfo.setmeta( obj )
   setmetatable( obj, { __index = IdInfo  } )
+end
+function IdInfo:get_processInfo()
+   return self.processInfo
 end
 
 
@@ -3413,7 +3427,8 @@ function NormalSymbolInfo:canAccess( fromScope, access )
          
          return nil
       elseif _switchExp == AccessMode.Local then
-         if isBuiltin( self:get_typeInfo():get_typeId().id ) or self:getModule(  ) == fromScope:getModule(  ) then
+         local selfMod = self:getModule(  )
+         if selfMod == _moduleObj.headTypeInfo or selfMod:equals( processInfo, fromScope:getModule(  ) ) then
             return self
          end
          

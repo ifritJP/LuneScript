@@ -8,12 +8,15 @@
 
 * バグ
 
-- [ ] allmut の setter が mut になってしまう。 allmut なので imut にすべき。
+- [ ] override しているメソッドの情報は meta に不要。
+      override しても型情報が代わらないので。
   
-- [ ] 
-  以下がエラーにならない。
-errot/enum.lns:6  Sub6.func2( .val1 );
-test/error/import6.lns:4:13: error: not found field typeInfo: &Test.val -- TypeInfoKind.Class
+- [ ] module の typeinfo が、インポート先と元とで異なってしまう。
+     equals を使えば対応できるが、 === で比較できるようにしたい。
+     static な変数は持ちたくないので、 
+     frontInterface にモジュールの TypeInfo を管理する機能を追加する。
+  
+- [ ] allmut の setter が mut になってしまう。 allmut なので imut にすべき。
   
 - [ ] go だと、別モジュールの pub な変数にアクセスできない。
 - [ ] global 宣言は、 変数宣言と、関数宣言以外は禁止する。

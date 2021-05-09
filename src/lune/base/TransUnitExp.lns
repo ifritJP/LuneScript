@@ -3696,7 +3696,9 @@ fn TransUnit.analyzeExp(
             when! aliasType {
                expType = aliasType;
             }
-            if orgExpectType.$externalFlag {
+            if not self.moduleType.equals(
+               self.processInfo, orgExpectType.getModule() ## )
+            {
                if not self.importModuleSet.has( orgExpectType.getModule() ) {
                   // enum を宣言しているモジュールを import していない場合
                   if not aliasType {

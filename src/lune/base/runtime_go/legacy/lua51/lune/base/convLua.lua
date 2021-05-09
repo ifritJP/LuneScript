@@ -523,6 +523,37 @@ end
 
 
 
+local ExportIdKind = {}
+ExportIdKind._val2NameMap = {}
+function ExportIdKind:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "ExportIdKind.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+function ExportIdKind._from( val )
+   if ExportIdKind._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+    
+ExportIdKind.__allList = {}
+function ExportIdKind.get__allList()
+   return ExportIdKind.__allList
+end
+
+ExportIdKind.Discarded = 0
+ExportIdKind._val2NameMap[0] = 'Discarded'
+ExportIdKind.__allList[1] = ExportIdKind.Discarded
+ExportIdKind.Depend = 1
+ExportIdKind._val2NameMap[1] = 'Depend'
+ExportIdKind.__allList[2] = ExportIdKind.Depend
+ExportIdKind.Normal = 2
+ExportIdKind._val2NameMap[2] = 'Normal'
+ExportIdKind.__allList[3] = ExportIdKind.Normal
+
 function convFilter:outputMeta( node )
 
    if self.convMode == ConvMode.Convert then
@@ -1056,22 +1087,29 @@ function convFilter:outputMeta( node )
    
    local function outputDepend( typeInfo, moduleTypeInfo )
    
-      do
-         local moduleIndex = importModuleType2Index[moduleTypeInfo]
-         if moduleIndex ~= nil then
-            local moduleInfo = _lune.unwrap( node:get_importModule2moduleInfo()[moduleTypeInfo])
-            do
-               local extId = moduleInfo:getImportTypeId( typeInfo )
-               if extId ~= nil then
-                  self:writeln( string.format( "__dependIdMap[ %d ] = { %d, %d } -- %s", typeInfo:get_typeId().id, moduleIndex, extId, typeInfo:getTxt(  )) )
-                  return true
-               end
-            end
-            
-         end
+      local typeId = typeInfo:get_typeId()
+      if self.processInfo == typeId:get_processInfo() or moduleTypeInfo == Ast.headTypeInfo then
+         return ExportIdKind.Normal
       end
       
-      return false
+      if typeId:isSwichingId(  ) then
+         local moduleIndex = importProcessInfo2Index[typeId:get_processInfo()]
+         if  nil == moduleIndex then
+            local _moduleIndex = moduleIndex
+         
+            Util.err( string.format( "illeglal processInfo -- %d (%s:%s)", typeId.id, typeInfo:getTxt(  ), self.moduleTypeInfo:getTxt(  )) )
+         end
+         
+         local extId = typeId:get_orgId()
+         self:writeln( string.format( "__dependIdMap[ %d ] = { %d, %d } -- %s", typeInfo:get_typeId().id, moduleIndex, extId, typeInfo:getTxt(  )) )
+         return ExportIdKind.Depend
+      end
+      
+      if Ast.isExtId( typeInfo ) then
+         return ExportIdKind.Normal
+      end
+      
+      return ExportIdKind.Discarded
    end
    
    local wroteTypeIdSet = {}
@@ -1193,14 +1231,9 @@ function convFilter:outputMeta( node )
                   for __index, __key in ipairs( __sorted ) do
                      local typeInfo = __map[ __key ]
                      do
-                        local valid = false
                         local moduleTypeInfo = typeInfo:getModule(  )
                         exportNeedModuleTypeInfo[moduleTypeInfo]= true
-                        if outputDepend( typeInfo, moduleTypeInfo ) then
-                           valid = true
-                        end
-                        
-                        if not valid then
+                        if outputDepend( typeInfo, moduleTypeInfo ) == ExportIdKind.Normal then
                            outputTypeInfo( typeInfo )
                         end
                         
@@ -1999,7 +2032,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _761 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _769 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -4226,7 +4259,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3534, function (  )
+   Log.log( Log.Level.Trace, __func__, 3553, function (  )
    
       return string.format( "macro: %s", code)
    end )

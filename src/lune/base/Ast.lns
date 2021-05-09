@@ -163,9 +163,16 @@ pub class ProcessInfo {
 
 pub class IdInfo {
    pub let id:int;
-   pub let processInfo:&ProcessInfo;
+   pub let processInfo:&ProcessInfo {pub};
    let allmut orgId:int!;
 
+   pub fn isSwichingId() : bool {
+      let! orgId = self.orgId {
+         return false;
+      };
+      return orgId ~= self.id;
+   }
+   
    pub fn set_orgId(id:int) {
       self.orgId = id;
    }
@@ -2554,8 +2561,11 @@ pub override fn NormalSymbolInfo.canAccess(
          return nil;
       }
       case .Local {
-         if isBuiltin( self.$typeInfo.$typeId.id ) or 
-            self.getModule() == fromScope.getModule()
+         // if isBuiltin( self.$typeInfo.$typeId.id ) or 
+         //    self.getModule().equals( processInfo, fromScope.getModule() ## )
+         let selfMod = self.getModule();
+         if selfMod == headTypeInfo or
+            selfMod.equals( processInfo, fromScope.getModule() ## )
          {
             return self;
          }
