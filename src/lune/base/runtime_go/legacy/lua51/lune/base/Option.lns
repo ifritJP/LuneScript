@@ -40,6 +40,7 @@ macro _defGetBuildCount() {
          if! let txt = fileObj.read( "*l" ) {
             count = (unwrap tonumber( txt ## ) default 0)@@int;
          }
+         fileObj.close();
       }
       if count == 0 {
          error( "error -- build.counter" );
@@ -326,6 +327,7 @@ usage:
          }
          argList = workArgList;
       }
+      file.close();
    }
    
    fn getNextOp():str! {

@@ -815,17 +815,43 @@ test-new2:
 test-new3:
 	mkdir -p work/3_3
 	cp -a work/3/* work/3_3
+	find work/3_3/lune -name '*.meta' | grep -v runtime_go | xargs rm
 	$(MAKE) -C work/3_3 test-new3-sub
 
+# lune 以下を batch ビルドし、 $2 に出力する
+define test-new3-batch
+	mkdir -p $2
+	cp -a $1/lune $2
+	cp -a $1/misc $2
+	-(find $2/lune -name '*.meta' | grep -v runtime_go | xargs rm)
+	$(call selfhost_buildOp_batch,.,$(LNSC),$2,--depends $2/)
+endef
+
+
+
 test-new3-sub:
-	mkdir -p work/3_3_2
-	cp -a lune work/3_3_2
-	find work/3_3_2/lune -name '*.meta' | grep -v runtime_go | xargs rm
-	$(call selfhost_buildOp_batch,.,$(LNSC),work/3_3_2,--depends work/3_3_2/)
+	$(call test-new3-batch,.,work/3_3_2)
 ifeq ($(WITH_GO),y)
 	$(call go-build-lns,work/3_3_2)
+	cp work/3_3_2/lnsc .
 endif
-	diff -r lune work/3_3_2/lune -x '*.lns' -I buildId
+
+	$(call test-new3-batch,work/3_3_2,work/3_3_3)
+ifeq ($(WITH_GO),y)
+	$(call go-build-lns,work/3_3_3)
+	cp work/3_3_3/lnsc .
+endif
+
+	diff -r work/3_3_2/lune work/3_3_3/lune -x '*.lns' -I buildId
+
+# work/3_3_3 の Ast.meta を削除してビルドしてみる。
+	rm work/3_3_3/lune/base/Ast.meta
+	cp Makefile work/3_3_3
+	cp build.counter work/3_3_3
+	$(MAKE) -C work/3_3_3 build_from_d \
+		depend_on=y FROM_DIR=. TO_DIR=. LNS_OPT="--package lnsc"
+
+
 
 
 test-parallel: test-org test-org-proj \
@@ -1716,7 +1742,7 @@ test-govslua-go-batch:
 
 goprof:
 	$(call test-buildlns-setup,work/go)
-	$(call selfhost_buildOp_batch,.,$(LNSC_GO),work/go,-langGo -prof)
+	$(call selfhost_buildOp_batch,.,/usr/bin/time -f 'go:%e/%U/%S:$2' $(LNSC_GO),work/go,-langGo -prof)
 	(cd .; go tool pprof -dot @-.profi  ) | dot -Tsvg -odump.svg
 	(cd .; go tool pprof -dot @-.profimem  ) | dot -Tsvg -odumpmem.svg
 

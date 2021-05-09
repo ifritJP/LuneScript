@@ -25,6 +25,7 @@ SOFTWARE.
 import lune.base.Ast;
 import lune.base.Nodes;
 import lune.base.Parser;
+import lune.base.Types;
 import lune.base.Util;
 
 pub class Opt {

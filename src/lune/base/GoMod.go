@@ -50,7 +50,7 @@ func (self *GoMod_GoModResult__NotGo) GetTxt() string {
 return "GoModResult.NotGo"
 }
 // for 207
-func GoMod_convExp1234(arg1 []LnsAny) LnsAny {
+func GoMod_convExp1239(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 94
@@ -91,7 +91,7 @@ func GoMod_getGoMap() *GoMod_ModInfo {
     var name string
     name = "lnsc"
     {
-        _file := GoMod_convExp1234(Lns_2DDD(Lns_io_open("go.mod", nil)))
+        _file := GoMod_convExp1239(Lns_2DDD(Lns_io_open("go.mod", nil)))
         if !Lns_IsNil( _file ) {
             file := _file.(Lns_luaStream)
             var inBlock LnsInt
@@ -144,6 +144,7 @@ func GoMod_getGoMap() *GoMod_ModInfo {
                     }
                 }
             }
+            file.Close()
         }
     }
     var modInfo *GoMod_ModInfo
@@ -295,14 +296,14 @@ func (self *GoMod_ModInfo) getLocalModulePathList(path string) *LnsList {
                     for _, _aChar := range( NewLnsList(Lns_getVM().String_byte(mod,1, len(mod))).Items ) {
                         aChar := _aChar
                         if aChar != nil{
-                            aChar_258 := aChar.(LnsInt)
+                            aChar_61 := aChar.(LnsInt)
                             if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
-                                Lns_GetEnv().SetStackVal( aChar_258 >= 65) &&
-                                Lns_GetEnv().SetStackVal( aChar_258 <= 90) ).(bool)){
-                                gomod = Lns_getVM().String_format("%s!%c", []LnsAny{gomod, aChar_258 - 65 + 97})
+                                Lns_GetEnv().SetStackVal( aChar_61 >= 65) &&
+                                Lns_GetEnv().SetStackVal( aChar_61 <= 90) ).(bool)){
+                                gomod = Lns_getVM().String_format("%s!%c", []LnsAny{gomod, aChar_61 - 65 + 97})
                                 
                             } else { 
-                                gomod = Lns_getVM().String_format("%s%c", []LnsAny{gomod, aChar_258})
+                                gomod = Lns_getVM().String_format("%s%c", []LnsAny{gomod, aChar_61})
                                 
                             }
                         }

@@ -250,6 +250,8 @@ pub class Parser extend Async.Pipe<AsyncItem> {
       }
       self.lineList = lineList;
 
+      stream.close();
+
       // 最後に start を呼ぶ。 start しないと、同期処理になる。
       self.start();
    }

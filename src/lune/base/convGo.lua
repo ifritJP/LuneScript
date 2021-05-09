@@ -453,7 +453,7 @@ function convFilter:isPubType( typeInfo )
       return true
    end
    
-   return typeInfo:getModule(  ) ~= self.moduleTypeInfo
+   return not typeInfo:getModule(  ):equals( self.processInfo, self.moduleTypeInfo )
 end
 function convFilter:isPubSym( symbol )
 
@@ -461,15 +461,15 @@ function convFilter:isPubSym( symbol )
       return true
    end
    
-   return symbol:getModule(  ) ~= self.moduleTypeInfo
+   return not symbol:getModule(  ):equals( self.processInfo, self.moduleTypeInfo )
 end
 function convFilter:isExtType( typeInfo )
 
-   return typeInfo:getModule(  ) ~= self.moduleTypeInfo
+   return not typeInfo:getModule(  ):equals( self.processInfo, self.moduleTypeInfo )
 end
 function convFilter:isExtSymbol( symbol )
 
-   return symbol:getModule(  ) ~= self.moduleTypeInfo
+   return not symbol:getModule(  ):equals( self.processInfo, self.moduleTypeInfo )
 end
 function convFilter.setmeta( obj )
   setmetatable( obj, { __index = convFilter  } )
@@ -750,7 +750,7 @@ end
 
 function convFilter:isSameModDir( moduleTypeInfo )
 
-   if moduleTypeInfo:get_parentInfo() == self.moduleTypeInfo:get_parentInfo() then
+   if moduleTypeInfo:get_parentInfo():equals( self.processInfo, self.moduleTypeInfo:get_parentInfo() ) then
       return true
    end
    
@@ -801,7 +801,7 @@ function convFilter:getSymbol( kind, name )
          local symbolInfo = _matchExp[2][1]
       
          local modName = self.moduleTypeInfo:get_rawTxt():gsub( "@", "" )
-         if symbolInfo:getModule(  ) ~= self.moduleTypeInfo and symbolInfo:get_staticFlag() then
+         if not symbolInfo:getModule(  ):equals( self.processInfo, self.moduleTypeInfo ) then
             symbolName = string.format( "%s_%s", self:getModuleName( symbolInfo:getModule(  ), false ), symbolInfo:get_name())
          elseif name == "__mod__" then
             symbolName = string.format( "%s__mod__", modName)
@@ -6388,6 +6388,11 @@ function convFilter:processRefField( node, opt )
             return 
          end
          
+         if _lune.nilacc( symbol:get_scope():get_ownerTypeInfo(), 'get_kind', 'callmtd' ) == Ast.TypeInfoKind.Module and symbol:get_kind() == Ast.SymbolKind.Var then
+            self:write( self:getSymbolSym( symbol ) )
+            return 
+         end
+         
       end
    end
    
@@ -6453,7 +6458,7 @@ function convFilter:processRefField( node, opt )
    end
    
    
-   for _2695 = 1, openParenNum do
+   for _2696 = 1, openParenNum do
       self:write( ")" )
    end
    

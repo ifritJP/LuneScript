@@ -407,7 +407,7 @@ pub enum ScopeAccess {
 
 /** シンボル情報 */
 pub abstract class SymbolInfo extend (LowSymbol) {
-   pri let allmut namespaceTypeInfo: &TypeInfo!;
+   pri let allmut namespaceTypeInfo: &TypeInfo! {non,local};
 
    pro fn __init() {
       self.namespaceTypeInfo = nil;
@@ -2040,6 +2040,7 @@ pub fn Scope.add(
    typeInfo: &TypeInfo, accessMode:AccessMode, staticFlag:bool,
    mutMode:MutMode, hasValueFlag:bool, isLazyLoad:bool ) mut : SymbolInfo!, &SymbolInfo!
 {
+   let mut ownerTypeInfo:&TypeInfo! = nil;
    switch kind {
       case .Typ, .Fun, .Mac {
          let existSymbol;
@@ -2067,11 +2068,17 @@ pub fn Scope.add(
             }
          }
       }
+      case .Var {
+         if typeInfo.$kind == .Module {
+            ownerTypeInfo = typeInfo;
+         }
+      }
    }
    
    let mut symbolInfo = new NormalSymbolInfo(
       processInfo, kind, canBeLeft, canBeRight, self, accessMode, staticFlag,
       name, pos, typeInfo, mutMode, hasValueFlag, isLazyLoad );
+   symbolInfo.set_namespaceTypeInfo( ownerTypeInfo );
    self.symbol2SymbolInfoMap[ name ] = symbolInfo;
    return symbolInfo, nil;
 }
@@ -3407,6 +3414,7 @@ pub class ModuleTypeInfo extend TypeInfo {
    pri let rawTxt: str { pub };
    //
    pri let mutable: bool {pub};
+   pri let fullName: str;
 
    pub fn __init( processInfo:ProcessInfo, scope: Scope, externalFlag: bool,
                   txt: str, mut parentInfo: &TypeInfo!, mutable:bool )
@@ -3419,14 +3427,31 @@ pub class ModuleTypeInfo extend TypeInfo {
       self.typeId = processInfo.newId( self );
       self.mutable = mutable;
 
-      if! parentInfo {
-         _exp.addChildren( self );
+      let fullName;
+      when! parentInfo {
+         parentInfo.addChildren( self );
+
+         let parentFull = parentInfo.getParentFullName( defaultTypeNameCtrl ## );
+         fullName = "%s.@%s" ( parentFull,txt );
+      } else {
+         fullName = "%s" (txt );
       }
+      self.fullName = fullName;
 
       //processInfo.$idProv.increment();
 
 
       scope.set_ownerTypeInfo( self );
+   }
+
+   pub override fn equals(
+      processInfo:ProcessInfo, typeInfo: &TypeInfo,
+      alt2type:Map<&TypeInfo,&TypeInfo>!, checkModifer:bool! ): bool
+   {
+      let! other = typeInfo@@@ModuleTypeInfo {
+         return false;
+      };
+      return self.fullName == other.fullName;
    }
 
    /** super クラス。 継承していない場合は headTypeInfo。 */

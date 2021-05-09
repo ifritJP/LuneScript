@@ -1222,6 +1222,9 @@ pub fn Import.processImport(
       foreach globalSymbol in moduleInfo.$exportInfo.$globalSymbolList {
          self.transUnitIF.$scope.addSymbolInfo( processInfo, globalSymbol );
       }
+      foreach val, key in moduleInfo.$importedAliasMap {
+         self.importedAliasMap[key] = val;
+      }
    };
    // let mut moduleInfo = self.processImportSub(
    //    processInfo, moduleMeta, orgModulePath, modulePath, nameList, depth );

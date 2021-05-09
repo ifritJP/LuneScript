@@ -349,7 +349,7 @@ _DefBuiltinFuncType( [
 ] );
    
 
-fn Builtin.getTypeInfo( mut typeName:str ) : &Ast.TypeInfo {
+fn Builtin.getTypeInfo( mut typeName:str ) mut : &Ast.TypeInfo {
 
    switch typeName {
       case "_T" {

@@ -91,6 +91,11 @@ fn TransUnit.analyzeRefTypeWithSymbol(
    Nodes.RefTypeNode
 {
    let mut typeInfo = symbolNode.$expType;
+   if typeInfo.$kind == .Set and not self.helperInfo.useSet {
+      self.helperInfo.useSet = true;
+   }
+
+   
 
    if! let aliasType = typeInfo@@@Ast.AliasTypeInfo {
       let aliasSrc = aliasType.$aliasSrcTypeInfo;

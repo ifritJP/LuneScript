@@ -73,7 +73,7 @@ func (self *TransUnitIF_Modifier) InitTransUnitIF_Modifier(arg1 bool, arg2 *Ast_
     self.processInfo = arg2
 }
 func (self *TransUnitIF_Modifier) Set_validMutControl(arg1 bool){ self.validMutControl = arg1 }
-// 41: decl @lune.@base.@TransUnitIF.Modifier.createModifier
+// 42: decl @lune.@base.@TransUnitIF.Modifier.createModifier
 func (self *TransUnitIF_Modifier) CreateModifier(typeInfo *Ast_TypeInfo,mutMode LnsInt) *Ast_TypeInfo {
     if Lns_op_not(self.validMutControl){
         return typeInfo
@@ -109,6 +109,7 @@ func Lns_TransUnitIF_init() {
     Lns_Parser_init()
     Lns_Ast_init()
     Lns_Nodes_init()
+    Lns_Types_init()
 }
 func init() {
     init_TransUnitIF = false

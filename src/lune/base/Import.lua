@@ -2146,6 +2146,10 @@ function Import:processImport( processInfo, modulePath, depth )
             self.transUnitIF:get_scope():addSymbolInfo( processInfo, globalSymbol )
          end
          
+         for key, val in pairs( moduleInfo:get_importedAliasMap() ) do
+            self.importedAliasMap[key] = val
+         end
+         
    end
    
    self.importModule2ModuleInfo[moduleInfo:get_exportInfo():get_moduleTypeInfo()] = moduleInfo
@@ -2153,7 +2157,7 @@ function Import:processImport( processInfo, modulePath, depth )
    
    self.importModuleInfo:remove(  )
    
-   Log.log( Log.Level.Info, __func__, 1234, function (  )
+   Log.log( Log.Level.Info, __func__, 1237, function (  )
    
       return string.format( "%s complete", orgModulePath)
    end )

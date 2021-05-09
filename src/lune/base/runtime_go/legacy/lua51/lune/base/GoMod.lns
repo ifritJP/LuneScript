@@ -244,6 +244,7 @@ pub fn getGoMap() : ModInfo {
             }
          }
       }
+      file.close();
    }
    let mut modInfo = new ModInfo( name, requireMap, replaceMap );
    return modInfo;

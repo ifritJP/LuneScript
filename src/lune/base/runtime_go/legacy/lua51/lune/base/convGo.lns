@@ -116,7 +116,7 @@ class convFilter extend Nodes.Filter<Opt> {
    pri let mut type2gotypeMap:&Map<&Ast.TypeInfo,str>;
    pri let mut nodeManager:Nodes.NodeManager;
    pri let mut enableTest:bool;
-   let mut processInfo:Ast.ProcessInfo;
+   let processInfo: allmut Ast.ProcessInfo;
    pri let noneNode:Nodes.NoneNode;
    let option:&Option;
    let modDir:str;
@@ -181,20 +181,20 @@ class convFilter extend Nodes.Filter<Opt> {
          }
          return true;
       }
-      return typeInfo.getModule() ~= self.moduleTypeInfo;
+      return not typeInfo.getModule().equals( self.processInfo, self.moduleTypeInfo ##);
    }
    pro fn isPubSym( symbol:&Ast.SymbolInfo ) : bool {
       if Ast.isPubToExternal( symbol.$accessMode ) {
          return true;
       }
-      return symbol.getModule() ~= self.moduleTypeInfo;
+      return not symbol.getModule().equals( self.processInfo, self.moduleTypeInfo ##);
    }
    
    pro fn isExtType( typeInfo:&Ast.TypeInfo ) : bool {
-      return typeInfo.getModule() ~= self.moduleTypeInfo;
+      return not typeInfo.getModule().equals( self.processInfo, self.moduleTypeInfo ##);
    }
    pro fn isExtSymbol( symbol:&Ast.SymbolInfo ) : bool {
-      return symbol.getModule() ~= self.moduleTypeInfo;
+      return not symbol.getModule().equals( self.processInfo, self.moduleTypeInfo ## );
    }
 
    advertise stream;
@@ -358,6 +358,7 @@ func main() {
    }
    
    fileObj.write( code );
+   fileObj.close();
 
    return nil;
 }
@@ -423,7 +424,9 @@ fn convFilter.isSamePackageExtModule( typeInfo:&Ast.TypeInfo ) : bool {
 }
 
 fn convFilter.isSameModDir( moduleTypeInfo:&Ast.TypeInfo ) : bool {
-   if moduleTypeInfo.$parentInfo == self.moduleTypeInfo.$parentInfo {
+   if moduleTypeInfo.$parentInfo.equals(
+      self.processInfo, self.moduleTypeInfo.$parentInfo ## )
+   {
       return true;
    }
    return false;
@@ -459,7 +462,8 @@ fn convFilter.getSymbol( kind:SymbolKind, name:str ) : str {
       }
       case .Var( symbolInfo ) {
          let modName = self.moduleTypeInfo.$rawTxt.gsub( "@", "" );
-         if symbolInfo.getModule() ~= self.moduleTypeInfo and symbolInfo.$staticFlag {
+         if not symbolInfo.getModule().equals( self.processInfo, self.moduleTypeInfo## )
+         {
             symbolName = "%s_%s" (self.getModuleName(symbolInfo.getModule(), false),
                                    symbolInfo.$name );
          }
@@ -5181,6 +5185,12 @@ pub override fn convFilter.processRefField(
 
       if symbol.$staticFlag {
          //self.outputModule( symbol.getModule(), true );
+         self.write( self.getSymbolSym( symbol ) );
+         return;
+      }
+      if symbol.$scope.$ownerTypeInfo$.$kind == .Module and
+         symbol.$kind == .Var
+      {
          self.write( self.getSymbolSym( symbol ) );
          return;
       }

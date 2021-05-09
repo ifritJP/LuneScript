@@ -294,7 +294,7 @@ func Lns_cast2Parser_PushbackParser( obj LnsAny ) LnsAny {
 var Parser_StreamParser__stdinStreamModuleName LnsAny
 var Parser_StreamParser__stdinTxt string
 // 168: decl @lune.@base.@Parser.StreamParser.___init
-func Parser_StreamParser____init_1083_() {
+func Parser_StreamParser____init_1084_() {
     Parser_StreamParser__stdinStreamModuleName = nil
     
     Parser_StreamParser__stdinTxt = ""
@@ -886,40 +886,40 @@ func (self *Parser_CommentCtrl) Pop() {
 
 
 // declaration Class -- LowToken
-type Parser_LowToken1242Mtd interface {
+type Parser_LowToken1244Mtd interface {
 }
-type Parser_LowToken1242 struct {
+type Parser_LowToken1244 struct {
     Txt string
     Kind LnsInt
-    FP Parser_LowToken1242Mtd
+    FP Parser_LowToken1244Mtd
 }
-func Parser_LowToken12422Stem( obj LnsAny ) LnsAny {
+func Parser_LowToken12442Stem( obj LnsAny ) LnsAny {
     if obj == nil {
         return nil
     }
-    return obj.(*Parser_LowToken1242).FP
+    return obj.(*Parser_LowToken1244).FP
 }
-type Parser_LowToken1242DownCast interface {
-    ToParser_LowToken1242() *Parser_LowToken1242
+type Parser_LowToken1244DownCast interface {
+    ToParser_LowToken1244() *Parser_LowToken1244
 }
-func Parser_LowToken1242DownCastF( multi ...LnsAny ) LnsAny {
+func Parser_LowToken1244DownCastF( multi ...LnsAny ) LnsAny {
     if len( multi ) == 0 { return nil }
     obj := multi[ 0 ]
     if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Parser_LowToken1242DownCast)
-    if ok { return work.ToParser_LowToken1242() }
+    work, ok := obj.(Parser_LowToken1244DownCast)
+    if ok { return work.ToParser_LowToken1244() }
     return nil
 }
-func (obj *Parser_LowToken1242) ToParser_LowToken1242() *Parser_LowToken1242 {
+func (obj *Parser_LowToken1244) ToParser_LowToken1244() *Parser_LowToken1244 {
     return obj
 }
-func NewParser_LowToken1242(arg1 string, arg2 LnsInt) *Parser_LowToken1242 {
-    obj := &Parser_LowToken1242{}
+func NewParser_LowToken1244(arg1 string, arg2 LnsInt) *Parser_LowToken1244 {
+    obj := &Parser_LowToken1244{}
     obj.FP = obj
-    obj.InitParser_LowToken1242(arg1, arg2)
+    obj.InitParser_LowToken1244(arg1, arg2)
     return obj
 }
-func (self *Parser_LowToken1242) InitParser_LowToken1242(arg1 string, arg2 LnsInt) {
+func (self *Parser_LowToken1244) InitParser_LowToken1244(arg1 string, arg2 LnsInt) {
     self.Txt = arg1
     self.Kind = arg2
 }
@@ -935,7 +935,7 @@ func Lns_Parser_init() {
     Lns_Async_init()
     Lns_AsyncParser_init()
     Parser_noneToken = Types_noneToken
-    Parser_StreamParser____init_1083_()
+    Parser_StreamParser____init_1084_()
     Parser_eofToken = NewTypes_Token(Types_TokenKind__Eof, "<EOF>", NewTypes_Position(0, 0, "eof"), false, NewLnsList([]LnsAny{}))
 }
 func init() {

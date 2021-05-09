@@ -1007,6 +1007,9 @@ end
 function SymbolInfo.setmeta( obj )
   setmetatable( obj, { __index = SymbolInfo  } )
 end
+function SymbolInfo:set_namespaceTypeInfo( namespaceTypeInfo )
+   self.namespaceTypeInfo = namespaceTypeInfo
+end
 
 
 local DataOwnerInfo = {}
@@ -2967,6 +2970,7 @@ end
 
 function Scope:add( processInfo, kind, canBeLeft, canBeRight, name, pos, typeInfo, accessMode, staticFlag, mutMode, hasValueFlag, isLazyLoad )
 
+   local ownerTypeInfo = nil
    do
       local _switchExp = kind
       if _switchExp == SymbolKind.Typ or _switchExp == SymbolKind.Fun or _switchExp == SymbolKind.Mac then
@@ -2997,11 +3001,17 @@ function Scope:add( processInfo, kind, canBeLeft, canBeRight, name, pos, typeInf
             
          end
          
+      elseif _switchExp == SymbolKind.Var then
+         if typeInfo:get_kind() == TypeInfoKind.Module then
+            ownerTypeInfo = typeInfo
+         end
+         
       end
    end
    
    
    local symbolInfo = NormalSymbolInfo.new(processInfo, kind, canBeLeft, canBeRight, self, accessMode, staticFlag, name, pos, typeInfo, mutMode, hasValueFlag, isLazyLoad)
+   symbolInfo:set_namespaceTypeInfo( ownerTypeInfo )
    self.symbol2SymbolInfoMap[name] = symbolInfo
    return symbolInfo, nil
 end
@@ -3645,6 +3655,10 @@ end
 
 function AccessSymbolInfo:set_hasValueFlag( ... )
    return self.symbolInfo:set_hasValueFlag( ... )
+end
+
+function AccessSymbolInfo:set_namespaceTypeInfo( ... )
+   return self.symbolInfo:set_namespaceTypeInfo( ... )
 end
 
 function AccessSymbolInfo:set_posForLatestMod( ... )
@@ -4776,15 +4790,30 @@ function ModuleTypeInfo:__init(processInfo, scope, externalFlag, txt, parentInfo
    self.typeId = processInfo:newId( self )
    self.mutable = mutable
    
-   do
-      local _exp = parentInfo
-      if _exp ~= nil then
-         _exp:addChildren( self )
-      end
+   local fullName
+   
+   if parentInfo ~= nil then
+      parentInfo:addChildren( self )
+      
+      local parentFull = parentInfo:getParentFullName( _moduleObj.defaultTypeNameCtrl )
+      fullName = string.format( "%s.@%s", parentFull, txt)
+   else
+      fullName = string.format( "%s", txt)
    end
    
-   
+   self.fullName = fullName
    scope:set_ownerTypeInfo( self )
+end
+function ModuleTypeInfo:equals( processInfo, typeInfo, alt2type, checkModifer )
+
+   local other = _lune.__Cast( typeInfo, 3, ModuleTypeInfo )
+   if  nil == other then
+      local _other = other
+   
+      return false
+   end
+   
+   return self.fullName == other.fullName
 end
 function ModuleTypeInfo:get_baseTypeInfo(  )
 

@@ -571,7 +571,7 @@ pub class TransUnit extend (TransUnitIF.TransUnitIF, Parser.PushbackParser) {
    /** 解析対象モジュール */
    pri let analyzeModule: str;
 
-   pri let mut helperInfo:Nodes.LuneHelperInfo;
+   pri let mut helperInfo:frontInterface.LuneHelperInfo;
 
    /** provide ノード */
    pri let mut provideNode: Nodes.ProvideNode!;
@@ -655,7 +655,7 @@ alias で置き換えている元の Type → alias の型
       self.ctrl_info = ctrl_info;
       self.ignoreToCheckSymbol_ = false;
       self.moduleId = moduleId;
-      self.helperInfo = new Nodes.LuneHelperInfo();
+      self.helperInfo = new frontInterface.LuneHelperInfo();
       self.targetLuaVer = targetLuaVer;
       self.importModuleInfo = importModuleInfo;
       self.protoFuncMap = {};
@@ -1878,14 +1878,17 @@ fn TransUnit.analyzeImportFor(
          self.macroCtrl,
          self.typeNameCtrl,
          //self.processInfo,
-         self.helperInfo,
+         //self.helperInfo,
          //self.importModule2ModuleInfo,
          self.importedAliasMap,
          //self.importModuleName2ModuleInfo,
          self.validMutControl );
       self.importCtrl = importObj;
    };
-   let moduleInfo = importObj.processImport( self.processInfo, modulePath, 1 );
+   let mut importProcessInfo = self.processInfo.newUser();
+   importProcessInfo.switchIdProvier( .Ext );
+   let mut moduleInfo = importObj.processImport( importProcessInfo, modulePath, 1 );
+   importProcessInfo.switchIdProvier( .Base );
 
    
    self.processInfo.switchIdProvier( .Base );
@@ -1896,6 +1899,14 @@ fn TransUnit.analyzeImportFor(
    self.scope = backupScope;
 
 
+   // let helperInfo = moduleInfo.$exportInfo.$helperInfo;
+   // if helperInfo.useAlge {
+   //    self.helperInfo.useAlge = true;
+   // }
+   // if helperInfo.useSet {
+   //    self.helperInfo.useSet = true;
+   // }
+   
 
    // モジュールの末尾のシンボルでスコープに登録する。
    // 例えば hoge.foo.bar をインポートした場合、 bar をスコープに登録する

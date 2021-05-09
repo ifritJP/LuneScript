@@ -760,7 +760,7 @@ end
 function NodeManager:__init() 
    self.idSeed = 0
    self.nodeKind2NodeList = {}
-   for kind, _1788 in pairs( nodeKind2NameMap ) do
+   for kind, _313 in pairs( nodeKind2NameMap ) do
       if not self.nodeKind2NodeList[kind] then
          self.nodeKind2NodeList[kind] = {}
       end
@@ -1352,32 +1352,6 @@ end
 
 
 local ProvideNode = {}
-
-local LuneHelperInfo = {}
-_moduleObj.LuneHelperInfo = LuneHelperInfo
-function LuneHelperInfo.new(  )
-   local obj = {}
-   LuneHelperInfo.setmeta( obj )
-   if obj.__init then obj:__init(  ); end
-   return obj
-end
-function LuneHelperInfo:__init() 
-   self.useNilAccess = false
-   self.useUnwrapExp = false
-   self.hasMappingClassDef = false
-   self.useLoad = false
-   self.useUnpack = false
-   self.useAlge = false
-   self.useSet = false
-   self.callAnonymous = false
-   self.pragmaSet = {}
-   self.useLazyLoad = false
-   self.useLazyRequire = false
-end
-function LuneHelperInfo.setmeta( obj )
-  setmetatable( obj, { __index = LuneHelperInfo  } )
-end
-
 local MacroValInfo = {}
 _moduleObj.MacroValInfo = MacroValInfo
 function MacroValInfo.setmeta( obj )
@@ -13827,7 +13801,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, _10370 in pairs( self.map ) do
+   for key, _8879 in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -13862,8 +13836,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, _10384 in ipairs( __sorted ) do
-         local key = __map[ _10384 ]
+      for __index, _8893 in ipairs( __sorted ) do
+         local key = __map[ _8893 ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false
