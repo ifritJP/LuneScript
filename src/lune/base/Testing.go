@@ -5,7 +5,7 @@ var init_Testing bool
 var Testing__mod__ string
 var Testing_testModuleMap *LnsMap
 type Testing_TestcaseFunc func (arg1 *Testing_Ctrl)
-// 164: decl @lune.@base.@Testing.registerTestcase
+// 169: decl @lune.@base.@Testing.registerTestcase
 func Testing_registerTestcase(modName string,caseName string,testcase Testing_TestcaseFunc) {
     var info *Testing_TestModuleInfo
     
@@ -24,7 +24,7 @@ func Testing_registerTestcase(modName string,caseName string,testcase Testing_Te
     info.FP.AddCase(caseName, NewTesting_TestCase(testcase, result))
 }
 
-// 173: decl @lune.@base.@Testing.run
+// 178: decl @lune.@base.@Testing.run
 func Testing_run(modPath string) {
     {
         __collection866 := Testing_testModuleMap
@@ -40,7 +40,7 @@ func Testing_run(modPath string) {
     }
 }
 
-// 180: decl @lune.@base.@Testing.runAll
+// 185: decl @lune.@base.@Testing.runAll
 func Testing_runAll() {
     {
         __collection879 := Testing_testModuleMap
@@ -53,7 +53,7 @@ func Testing_runAll() {
     }
 }
 
-// 186: decl @lune.@base.@Testing.outputAllResult
+// 191: decl @lune.@base.@Testing.outputAllResult
 func Testing_outputAllResult(stream Lns_oStream) {
     {
         __collection897 := Testing_testModuleMap
@@ -114,19 +114,19 @@ func (self *Testing_Result) InitTesting_Result(arg1 string, arg2 LnsInt, arg3 Ln
     self.okNum = arg2
     self.ngNum = arg3
 }
-// 30: decl @lune.@base.@Testing.Result.outputResult
+// 35: decl @lune.@base.@Testing.Result.outputResult
 func (self *Testing_Result) OutputResult(stream Lns_oStream) {
     stream.Write(Lns_getVM().String_format("test total: %s %d (OK:%d, NG:%d)\n", []LnsAny{self.name, self.okNum + self.ngNum, self.okNum, self.ngNum}))
 }
 
-// 36: decl @lune.@base.@Testing.Result.err
+// 41: decl @lune.@base.@Testing.Result.err
 func (self *Testing_Result) Err(mess string,mod string,lineNo LnsInt) {
     self.ngNum = self.ngNum + 1
     
     Lns_io_stderr.Write(Lns_getVM().String_format("error: %s:%d: %s\n", []LnsAny{mod, lineNo, mess}))
 }
 
-// 41: decl @lune.@base.@Testing.Result.isTrue
+// 46: decl @lune.@base.@Testing.Result.isTrue
 func (self *Testing_Result) IsTrue(val1 LnsAny,val1txt string,msg LnsAny,mod string,lineNo LnsInt) bool {
     if val1 == true{
         self.okNum = self.okNum + 1
@@ -139,7 +139,7 @@ func (self *Testing_Result) IsTrue(val1 LnsAny,val1txt string,msg LnsAny,mod str
     return false
 }
 
-// 51: decl @lune.@base.@Testing.Result.isNotTrue
+// 56: decl @lune.@base.@Testing.Result.isNotTrue
 func (self *Testing_Result) IsNotTrue(val1 LnsAny,val1txt string,msg LnsAny,mod string,lineNo LnsInt) bool {
     if Lns_op_not(val1){
         self.okNum = self.okNum + 1
@@ -152,7 +152,7 @@ func (self *Testing_Result) IsNotTrue(val1 LnsAny,val1txt string,msg LnsAny,mod 
     return false
 }
 
-// 61: decl @lune.@base.@Testing.Result.isNil
+// 66: decl @lune.@base.@Testing.Result.isNil
 func (self *Testing_Result) IsNil(val1 LnsAny,val1txt string,msg LnsAny,mod string,lineNo LnsInt) bool {
     if val1 == nil{
         self.okNum = self.okNum + 1
@@ -165,7 +165,7 @@ func (self *Testing_Result) IsNil(val1 LnsAny,val1txt string,msg LnsAny,mod stri
     return false
 }
 
-// 71: decl @lune.@base.@Testing.Result.isNotNil
+// 76: decl @lune.@base.@Testing.Result.isNotNil
 func (self *Testing_Result) IsNotNil(val1 LnsAny,val1txt string,msg LnsAny,mod string,lineNo LnsInt) bool {
     if val1 != nil{
         self.okNum = self.okNum + 1
@@ -178,7 +178,7 @@ func (self *Testing_Result) IsNotNil(val1 LnsAny,val1txt string,msg LnsAny,mod s
     return false
 }
 
-// 81: decl @lune.@base.@Testing.Result.checkEq
+// 86: decl @lune.@base.@Testing.Result.checkEq
 func (self *Testing_Result) CheckEq(val1 LnsAny,val2 LnsAny,val1txt string,val2txt string,msg LnsAny,mod string,lineNo LnsInt) bool {
     if val1 == val2{
         self.okNum = self.okNum + 1
@@ -191,7 +191,7 @@ func (self *Testing_Result) CheckEq(val1 LnsAny,val2 LnsAny,val1txt string,val2t
     return false
 }
 
-// 94: decl @lune.@base.@Testing.Result.checkNotEq
+// 99: decl @lune.@base.@Testing.Result.checkNotEq
 func (self *Testing_Result) CheckNotEq(val1 LnsAny,val2 LnsAny,val1txt string,val2txt string,msg LnsAny,mod string,lineNo LnsInt) bool {
     if val1 != val2{
         self.okNum = self.okNum + 1
@@ -363,7 +363,7 @@ func NewTesting_TestModuleInfo(arg1 string) *Testing_TestModuleInfo {
 func (self *Testing_TestModuleInfo) Get_runned() bool{ return self.runned }
 func (self *Testing_TestModuleInfo) Get_name() string{ return self.name }
 func (self *Testing_TestModuleInfo) Get_testcaseMap() *LnsMap{ return self.testcaseMap }
-// 133: DeclConstr
+// 138: DeclConstr
 func (self *Testing_TestModuleInfo) InitTesting_TestModuleInfo(name string) {
     self.runned = false
     
@@ -373,12 +373,12 @@ func (self *Testing_TestModuleInfo) InitTesting_TestModuleInfo(name string) {
     
 }
 
-// 139: decl @lune.@base.@Testing.TestModuleInfo.addCase
+// 144: decl @lune.@base.@Testing.TestModuleInfo.addCase
 func (self *Testing_TestModuleInfo) AddCase(name string,testCase *Testing_TestCase) {
     self.testcaseMap.Set(name,testCase)
 }
 
-// 143: decl @lune.@base.@Testing.TestModuleInfo.run
+// 148: decl @lune.@base.@Testing.TestModuleInfo.run
 func (self *Testing_TestModuleInfo) Run() {
     self.runned = true
     
@@ -396,7 +396,7 @@ func (self *Testing_TestModuleInfo) Run() {
     }
 }
 
-// 152: decl @lune.@base.@Testing.TestModuleInfo.outputResult
+// 157: decl @lune.@base.@Testing.TestModuleInfo.outputResult
 func (self *Testing_TestModuleInfo) OutputResult(stream Lns_oStream) {
     if Lns_op_not(self.runned){
         return 

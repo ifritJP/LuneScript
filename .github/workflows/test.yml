@@ -14,7 +14,7 @@ jobs:
     # ubuntu の環境でビルドテスト
     runs-on: ubuntu-latest
 
-    timeout-minutes: 8 # 8分で強制停止
+    timeout-minutes: 10 # 8分で強制停止
     
     steps:
     - uses: actions/checkout@v2
@@ -38,7 +38,7 @@ jobs:
     - name: Test
       run: |
         source here/bin/activate
-        make -C src -j3 test-comp LUA=lua5.3 LUA51= SKIP_CHECKING_TESTING=y
+        make -C src -j6 test-comp LUA=lua5.3 LUA51= SKIP_CHECKING_TESTING=y
         make -C src go-build LUA=lua5.3 LUA51=
         make -C src LUACHECK=luacheck test-global
     - name: 'Upload Artifact'

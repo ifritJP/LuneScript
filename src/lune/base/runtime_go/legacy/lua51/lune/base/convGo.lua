@@ -1159,11 +1159,9 @@ end
 
 
 
-
 function convFilter:processBlankLine( node, opt )
 
 end
-
 
 
 function convFilter:processNone( node, opt )
@@ -2303,7 +2301,6 @@ function convFilter:processRoot( node, opt )
    
    local builtinFuncs = TransUnit.getBuiltinFunc(  )
    
-   
    local builtin2runtime = {[builtinFuncs.str_gsub] = 'GETVM.String_gsub', [builtinFuncs.string_gsub] = 'GETVM.String_gsub', [builtinFuncs.str_find] = 'GETVM.String_find', [builtinFuncs.string_find] = 'GETVM.String_find', [builtinFuncs.str_byte] = 'GETVM.String_byte', [builtinFuncs.string_byte] = 'GETVM.String_byte', [builtinFuncs.str_format] = 'GETVM.String_format', [builtinFuncs.string_format] = 'GETVM.String_format', [builtinFuncs.str_rep] = 'GETVM.String_rep', [builtinFuncs.string_rep] = 'GETVM.String_rep', [builtinFuncs.str_gmatch] = 'GETVM.String_gmatch', [builtinFuncs.string_gmatch] = 'GETVM.String_gmatch', [builtinFuncs.str_sub] = 'GETVM.String_sub', [builtinFuncs.string_sub] = 'GETVM.String_sub', [builtinFuncs.str_lower] = 'GETVM.String_lower', [builtinFuncs.string_lower] = 'GETVM.String_lower', [builtinFuncs.str_upper] = 'GETVM.String_upper', [builtinFuncs.string_upper] = 'GETVM.String_upper', [builtinFuncs.str_reverse] = 'GETVM.String_reverse', [builtinFuncs.string_reverse] = 'GETVM.String_reverse', [Ast.builtinTypeNone] = ""}
    
    
@@ -2355,7 +2352,6 @@ function convFilter:processRoot( node, opt )
    local modSym = _lune.unwrap( self.moduleScope:getSymbolInfoChild( "__mod__" ))
    self:writeln( string.format( "var %s string", self:getSymbolSym( modSym )) )
    
-   
    do
       local function procNode( workNode )
       
@@ -2379,7 +2375,6 @@ function convFilter:processRoot( node, opt )
    
    self:popProcessMode(  )
    
-   
    do
       local function procNode( workNode )
       
@@ -2397,7 +2392,6 @@ function convFilter:processRoot( node, opt )
    end
    
    
-   
    do
       local function procNode( workNode )
       
@@ -2413,7 +2407,6 @@ function convFilter:processRoot( node, opt )
       end
       
    end
-   
    
    
    do
@@ -2435,7 +2428,6 @@ function convFilter:processRoot( node, opt )
    end
    
    
-   
    do
       local function procNode( workNode )
       
@@ -2453,7 +2445,6 @@ function convFilter:processRoot( node, opt )
    end
    
    
-   
    do
       local function procNode( workNode )
       
@@ -2469,7 +2460,6 @@ function convFilter:processRoot( node, opt )
       end
       
    end
-   
    
    
    do
@@ -2494,7 +2484,6 @@ function convFilter:processRoot( node, opt )
    end
    
    
-   
    do
       local function procNode( workNode )
       
@@ -2513,7 +2502,6 @@ function convFilter:processRoot( node, opt )
    
    
    
-   
    do
       local function procNode( workNode )
       
@@ -2529,7 +2517,6 @@ function convFilter:processRoot( node, opt )
       end
       
    end
-   
    
    
    do
@@ -2569,7 +2556,6 @@ function convFilter:processRoot( node, opt )
    end
    
    
-   
    do
       local function procNode( workNode )
       
@@ -2589,7 +2575,6 @@ function convFilter:processRoot( node, opt )
    
    
    self:pushProcessMode( ProcessMode.NonClosureFuncDecl )
-   
    do
       local function procNode( workNode )
       
@@ -2611,7 +2596,6 @@ function convFilter:processRoot( node, opt )
    self:popProcessMode(  )
    
    self:pushProcessMode( ProcessMode.DeclClass )
-   
    do
       local function procNode( workNode )
       
@@ -4237,7 +4221,6 @@ function convFilter:processForeach( node, opt )
             do
                local key = node:get_key()
                if key ~= nil then
-                  
                   if key:get_name() ~= "_" then
                      self:write( string.format( "_%s", key:get_name()) )
                   else
@@ -4251,7 +4234,6 @@ function convFilter:processForeach( node, opt )
                   self:write( "_, " )
                end
             end
-            
             
             
             if valName ~= "_" then
@@ -4279,7 +4261,6 @@ function convFilter:processForeach( node, opt )
             end
          end
          
-         
          if valName ~= "_" then
             self:write( string.format( "%s := _%s", valName, valName) )
             self:outputStem2Type( itemType )
@@ -4296,7 +4277,6 @@ function convFilter:processForeach( node, opt )
             do
                local key = node:get_key()
                if key ~= nil then
-                  
                   if key:get_name() ~= "_" then
                      self:write( string.format( "_%s", key:get_name()) )
                   else
@@ -4310,7 +4290,6 @@ function convFilter:processForeach( node, opt )
                   self:write( "_, " )
                end
             end
-            
             
             
             if valName ~= "_" then
@@ -4331,7 +4310,6 @@ function convFilter:processForeach( node, opt )
          do
             local key = node:get_key()
             if key ~= nil then
-               
                if key:get_name() ~= "_" then
                   self:write( string.format( "%s := _%s", key:get_name(), key:get_name()) )
                   self:outputStem2Type( keyType )
@@ -4341,7 +4319,6 @@ function convFilter:processForeach( node, opt )
                
             end
          end
-         
          
          if valName ~= "_" then
             self:write( string.format( "%s := _%s", valName, valName) )
@@ -4355,7 +4332,6 @@ function convFilter:processForeach( node, opt )
          local valType = loopExpType:get_itemTypeInfoList()[1]
          local valName = self:getSymbolSym( node:get_val() )
          if hasAccessLoopSym then
-            
             if valName ~= "_" then
                self:write( string.format( "_%s", valName) )
             else
@@ -4371,7 +4347,6 @@ function convFilter:processForeach( node, opt )
          filter( node:get_exp(), self, node )
          self:writeln( ".Items ) {" )
          self:pushIndent(  )
-         
          if valName ~= "_" then
             self:write( string.format( "%s := _%s", valName, valName) )
             self:outputStem2Type( valType )

@@ -411,15 +411,15 @@ function MacroMetaInfo._fromMapSub( obj, val )
 end
 
 
-local MacroPaser = {}
-setmetatable( MacroPaser, { __index = Parser.Parser } )
-function MacroPaser.new( tokenList, name, overridePos )
+local MacroParser = {}
+setmetatable( MacroParser, { __index = Parser.Parser } )
+function MacroParser.new( tokenList, name, overridePos )
    local obj = {}
-   MacroPaser.setmeta( obj )
+   MacroParser.setmeta( obj )
    if obj.__init then obj:__init( tokenList, name, overridePos ); end
    return obj
 end
-function MacroPaser:__init(tokenList, name, overridePos) 
+function MacroParser:__init(tokenList, name, overridePos) 
    Parser.Parser.__init( self)
    
    self.pos = 1
@@ -427,11 +427,11 @@ function MacroPaser:__init(tokenList, name, overridePos)
    self.name = name
    self.overridePos = overridePos
 end
-function MacroPaser:createPosition( lineNo, column )
+function MacroParser:createPosition( lineNo, column )
 
    return Types.Position.create( lineNo, column, self:getStreamName(  ), self.overridePos )
 end
-function MacroPaser:getToken(  )
+function MacroParser:getToken(  )
 
    if #self.tokenList < self.pos then
       return nil
@@ -448,12 +448,12 @@ function MacroPaser:getToken(  )
    
    return token
 end
-function MacroPaser:getStreamName(  )
+function MacroParser:getStreamName(  )
 
    return self.name
 end
-function MacroPaser.setmeta( obj )
-  setmetatable( obj, { __index = MacroPaser  } )
+function MacroParser.setmeta( obj )
+  setmetatable( obj, { __index = MacroParser  } )
 end
 
 
@@ -775,7 +775,7 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
       
    end
    
-   return MacroPaser.new(macroInfo:getTokenList(  ), string.format( "%s:%d:%d: (macro %s)", streamName, firstToken.pos.lineNo, firstToken.pos.column, macroTypeInfo:getTxt(  )), firstToken.pos:get_orgPos()), nil
+   return MacroParser.new(macroInfo:getTokenList(  ), string.format( "%s:%d:%d: (macro %s)", streamName, firstToken.pos.lineNo, firstToken.pos.column, macroTypeInfo:getTxt(  )), firstToken.pos:get_orgPos()), nil
 end
 
 

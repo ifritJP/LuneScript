@@ -447,17 +447,14 @@ local stepIndent = 3
 
 
 
-
 function convFilter:processBlankLine( node, opt )
 
 end
 
 
-
 function convFilter:processDeclForm( node, opt )
 
 end
-
 
 
 function convFilter:processProtoMethod( node, opt )
@@ -814,6 +811,8 @@ function convFilter:outputMeta( node )
       classId2TypeInfo[idInfo.id] = classTypeInfo
    end
    
+   
+   local serializeInfo = Ast.SerializeInfo.new(importProcessInfo2Index, {})
    self:writeln( "local __typeId2ClassInfoMap = {}" )
    self:writeln( "_moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap" )
    
@@ -841,7 +840,7 @@ function convFilter:outputMeta( node )
                      local memberName = memberNode:get_name().txt
                      local memberTypeInfo = memberNode:get_expType(  )
                      self:writeln( string.format( "__classInfo%d.%s = {", classTypeId, memberName) )
-                     self:writeln( string.format( "  name='%s', staticFlag = %s, mutMode = %d,", memberName, memberNode:get_staticFlag(), memberNode:get_symbolInfo():get_mutMode()) .. string.format( "accessMode = %d, typeId = %d }", memberNode:get_accessMode(), memberTypeInfo:get_typeId().id) )
+                     self:writeln( string.format( "  name='%s', staticFlag = %s, mutMode = %d,", memberName, memberNode:get_staticFlag(), memberNode:get_symbolInfo():get_mutMode()) .. string.format( "accessMode = %d, typeId = %s }", memberNode:get_accessMode(), serializeInfo:serializeId( memberTypeInfo:get_typeId() )) )
                      
                      pickupTypeId( memberTypeInfo, true )
                   end
@@ -1053,7 +1052,7 @@ function convFilter:outputMeta( node )
          local varInfo = __map[ varName ]
          do
             self:writeln( string.format( "__varName2InfoMap.%s = {", varName ) )
-            self:writeln( string.format( "  name='%s', accessMode = %d, typeId = %d, mutable = %s }", varName, varInfo.accessMode, varInfo.typeInfo:get_typeId().id, true) )
+            self:writeln( string.format( "  name='%s', accessMode = %d, typeId = %s, mutable = %s }", varName, varInfo.accessMode, serializeInfo:serializeId( varInfo.typeInfo:get_typeId() ), true) )
             pickupTypeId( varInfo.typeInfo, true )
          end
       end
@@ -1092,16 +1091,8 @@ function convFilter:outputMeta( node )
       end
       
       if typeId:isSwichingId(  ) then
-         local moduleIndex = importProcessInfo2Index[typeId:get_processInfo()]
-         if  nil == moduleIndex then
-            local _moduleIndex = moduleIndex
+         return ExportIdKind.Discarded
          
-            Util.err( string.format( "illeglal processInfo -- %d (%s:%s)", typeId.id, typeInfo:getTxt(  ), self.moduleTypeInfo:getTxt(  )) )
-         end
-         
-         local extId = typeId:get_orgId()
-         self:writeln( string.format( "__dependIdMap[ %d ] = { %d, %d } -- %s", typeInfo:get_typeId().id, moduleIndex, extId, typeInfo:getTxt(  )) )
-         return ExportIdKind.Depend
       end
       
       if Ast.isExtId( typeInfo ) then
@@ -1198,13 +1189,13 @@ function convFilter:outputMeta( node )
    do
       local module2TypeList = {}
       for __index, typeInfo in pairs( typeId2TypeInfo ) do
-         local moduleType = typeInfo:getModule(  )
-         local map = module2TypeList[moduleType:get_rawTxt()]
+         local modIndex = _lune.unwrap( importProcessInfo2Index[typeInfo:get_typeId():get_processInfo()])
+         local map = module2TypeList[modIndex]
          if  nil == map then
             local _map = map
          
             map = {}
-            module2TypeList[moduleType:get_rawTxt()] = map
+            module2TypeList[modIndex] = map
          end
          
          map[typeInfo:get_typeId().id] = typeInfo
@@ -1232,7 +1223,9 @@ function convFilter:outputMeta( node )
                      do
                         local moduleTypeInfo = typeInfo:getModule(  )
                         exportNeedModuleTypeInfo[moduleTypeInfo]= true
-                        if outputDepend( typeInfo, moduleTypeInfo ) == ExportIdKind.Normal then
+                        local ret = outputDepend( typeInfo, moduleTypeInfo )
+                        
+                        if ret == ExportIdKind.Normal then
                            outputTypeInfo( typeInfo )
                         end
                         
@@ -2031,7 +2024,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _769 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _767 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -4258,7 +4251,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3553, function (  )
+   Log.log( Log.Level.Trace, __func__, 3572, function (  )
    
       return string.format( "macro: %s", code)
    end )

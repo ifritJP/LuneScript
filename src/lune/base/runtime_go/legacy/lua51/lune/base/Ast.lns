@@ -191,9 +191,9 @@ pub class IdInfo {
          if self.processInfo == idInfo.processInfo {
             return true;
          }
-         if self.$orgId >= extStartId {
-            return true;
-         }
+         // if self.$orgId >= extStartId {
+         //    return true;
+         // }
       }
       return false;
    }
@@ -1556,8 +1556,9 @@ pub class NilableTypeInfo extend TypeInfo {
 
    pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
       stream.write(
-         '{ skind = %d, typeId = %d, orgTypeId = %d }\n' (
-            SerializeKind.Nilable, self.typeId.id, self.nonnilableType.$typeId.id ) );
+         '{ skind = %d, typeId = %d, orgTypeId = %s }\n' (
+            SerializeKind.Nilable, self.typeId.id,
+            serializeInfo.serializeId( self.nonnilableType.$typeId ) ) );
    }
 
    pub override fn equals( processInfo:ProcessInfo,
@@ -2447,6 +2448,9 @@ pub class NilTypeInfo extend TypeInfo {
       processInfo:ProcessInfo, other:&TypeInfo, canEvalType:CanEvalType,
       alt2type:Map<&TypeInfo,&TypeInfo> ): bool, str!
    {
+      if not other.$nilable {
+         return false, "%s is not nilable." (other.getTxt(##));
+      }
       return other.$nilable, nil;
    }
 
@@ -2851,7 +2855,7 @@ pub class AlternateTypeInfo extend TypeInfo {
          return true, nil;
       }
       if other.$nilable {
-         return false, nil;
+         return false, "is doesn't support nilable.";
       }
       if not self.belongClassFlag {
          if! let altType = other@@@AlternateTypeInfo {
@@ -3183,7 +3187,7 @@ pub class GenericTypeInfo extend TypeInfo {
       canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool, str!
    {
       if other.$nilable {
-         return false, nil;
+         return false, "GenericTypeInfo doesn't support nilable.";
       }
       
       if TypeInfo.isMut( self ) and not TypeInfo.isMut( other ) {
@@ -3390,9 +3394,10 @@ pub class ModifierTypeInfo extend TypeInfo {
       }
 
 
-      return TypeInfo.canEvalWithBase(
+      let result, mess = TypeInfo.canEvalWithBase(
          processInfo, self.srcTypeInfo, TypeInfo.isMut( self ),
-         other.$srcTypeInfo, evalType, alt2type )**;
+         other.$srcTypeInfo, evalType, alt2type );
+      return result, mess;
    }
 
    pub override fn equals(
@@ -6341,13 +6346,14 @@ pub static fn TypeInfo.checkMatchType(
                let isMatch, msg = dstType.canEvalWith(
                   processInfo, expType, .SetOp, alt2type );
                if not isMatch {
-                  return .Error, "exp(%d) type mismatch %s <- %s: index %d%s"
-                  ( index,
-                    applyGenericDefault(
-                       dstType, alt2type, dstType.getModule() ).getTxt(
-                          defaultTypeNameCtrl## ),  
-                    expType.getTxt(defaultTypeNameCtrl## ), index,
-                    msg and " -- %s" (msg) or "");
+                  let workDstType = applyGenericDefault(
+                     dstType, alt2type, dstType.getModule() );
+                  return .Error, "exp(%d) type mismatch %s(%d) <- %s(%d): index %d%s"
+                      ( index, workDstType.getTxt( defaultTypeNameCtrl## ),
+                        workDstType.$typeId.id,
+                        expType.getTxt(defaultTypeNameCtrl## ),
+                        expType.$typeId.id, index,                  
+                        msg and " -- %s" (msg) or "(%s)" (dstType.$kind.$_txt));
                }
                if not allowDstShort and #dstTypeList < #expTypeList {
                   return .Error, "over exp. expect: %d: actual: %d"
@@ -6463,6 +6469,13 @@ pub static fn TypeInfo.canEvalWithBase(
    dest:&TypeInfo, destMut:bool, other:&TypeInfo, canEvalType:CanEvalType,
    alt2type:Map<&TypeInfo,&TypeInfo> ) : bool, str!
 {
+   // 単純な行番号出力だと、関係ない箇所が変っただけで差分が出るので、
+   // この関数の先頭からのオフセットにする。
+   let topLine = __line__;
+   macro _pos() : __exp {
+      "(err:%d)" (__line__ - topLine)
+   }
+   
    if dest ~= dest.$aliasSrc {
       return dest.$aliasSrc.canEvalWith(
          processInfo, other, canEvalType, alt2type )**;
@@ -6473,7 +6486,7 @@ pub static fn TypeInfo.canEvalWithBase(
          return false, "can't eval from '__exp' to '__exps'.";
       }
       if other.equals( processInfo, builtinTypeAbbr## ) {
-         return false, nil;
+         return false, _pos();
       }
       // とりあえず全て OK とする
       return true, nil;
@@ -6501,7 +6514,7 @@ pub static fn TypeInfo.canEvalWithBase(
             // 代入先の型が確定していない状態
             switch otherSrc {
                case builtinTypeAbbr, builtinTypeAbbrNone {
-                  return false, nil;
+                  return false, _pos();
                }
             }
             if otherSrc.$kind == .Func {
@@ -6510,7 +6523,7 @@ pub static fn TypeInfo.canEvalWithBase(
                // それを型推定できないため。
                // 代入先の FormFunc を自動生成すれば対応できなくはないが、
                // その場合は C-lang へのトランスコード対応が必要。
-               return false, nil;
+               return false, _pos();
             }
             return true, nil;
          }
@@ -6520,16 +6533,16 @@ pub static fn TypeInfo.canEvalWithBase(
                let nonNilOtherType = otherSrc.$nonnilableType;
                switch nonNilOtherType.$kind {
                   case .Set, .Map, .List, .IF, .Alternate {
-                     return false, nil;
+                     return false, _pos();
                   }
                   case .Class {
                      if builtinTypeString ~= nonNilOtherType {
-                        return false, nil;
+                        return false, _pos();
                      }
                   }
                   case .Prim {
                      if builtinTypeStem == nonNilOtherType {
-                        return false, nil;
+                        return false, _pos();
                      }
                   }
                }
@@ -6551,7 +6564,7 @@ pub static fn TypeInfo.canEvalWithBase(
             destMut and not otherMut
          {
             if processInfo.$validCheckingMutable {
-               return false, nil;
+               return false, _pos();
             }
          }
       }
@@ -6575,7 +6588,7 @@ pub static fn TypeInfo.canEvalWithBase(
             return dest.canEvalWith(
                processInfo, otherSrc, canEvalType, alt2type )**;
          }
-         return false, nil;
+         return false, _pos();
       }
       else {
          otherSrc = otherSrc.$nonnilableType;
@@ -6588,11 +6601,14 @@ pub static fn TypeInfo.canEvalWithBase(
        ( otherSrc.$kind == .Func or
          otherSrc.$kind == .Form or otherSrc.$kind == .FormFunc )
    {
-      return isSettableToForm( processInfo, otherSrc ), nil;
+      if isSettableToForm( processInfo, otherSrc ) {
+         return true, nil;
+      }
+      return false, _pos();
    }
    if otherSrc == builtinTypeNil or otherSrc.$kind == .Abbr {
       if dest.$kind ~= .Nilable {
-         return false, nil;
+         return false, _pos();
       }
       return true, nil;
    }
@@ -6610,6 +6626,10 @@ pub static fn TypeInfo.canEvalWithBase(
       {
          otherSrc = extTypeInfo.$extedType;
       }
+   }
+
+   if otherSrc.$typeId.equals( dest.$typeId ) {
+      return true, nil;
    }
 
    
@@ -6647,9 +6667,15 @@ pub static fn TypeInfo.canEvalWithBase(
          ( otherSrc.$kind == .Class or otherSrc.$kind == .IF )
       {
          if canEvalType == .SetOp or canEvalType == .SetOpIMut {
-            return otherSrc.isInheritFrom( processInfo, dest, alt2type ), nil;
+            let result = otherSrc.isInheritFrom( processInfo, dest, alt2type );
+            if result {
+               return result, nil;
+            }
+            return false, "not inherit %s(%d) <- %s(%d)"
+                ( dest.getTxt(##), dest.$typeId.$orgId,
+                  otherSrc.getTxt(##), otherSrc.$typeId.$orgId );
          }
-         return false, nil;
+         return false, _pos();
       }
       elseif otherSrc.$kind == .Enum {
          let enumTypeInfo = unwrap (otherSrc@@@EnumTypeInfo);
@@ -6670,7 +6696,10 @@ pub static fn TypeInfo.canEvalWithBase(
                return true, nil;
             }
             case .FormFunc, .Func  {
-               return isSettableToForm( processInfo, otherSrc ), nil;
+               if isSettableToForm( processInfo, otherSrc ) {
+                  return true, nil;
+               }
+               return false, _pos();
             }
          }
       }
@@ -6718,7 +6747,7 @@ pub static fn TypeInfo.canEvalWithBase(
             }
          }
       }
-      return false, nil;
+      return false, "illegal type -- %s, %s" (dest.$kind.$_txt, otherSrc.$kind.$_txt);
    }
    // TypeInfoKind が等しい
    switch dest.$kind {
@@ -6736,7 +6765,7 @@ pub static fn TypeInfo.canEvalWithBase(
          // {
          //    return true;
          // }
-         return false, nil;
+         return false, _pos();
       }
       case .List, .Array, .Set {
          if otherSrc.$itemTypeInfoList[ 1 ] == builtinTypeNone {
@@ -6771,7 +6800,7 @@ pub static fn TypeInfo.canEvalWithBase(
          {
             return true, nil;
          }
-         return false, nil;
+         return false, _pos();
       }
       case .Class, .IF {
          if isGenericType( dest ) {
@@ -6779,13 +6808,22 @@ pub static fn TypeInfo.canEvalWithBase(
                processInfo, otherSrc, canEvalType, alt2type )**;
          }
          if canEvalType == .SetOp or canEvalType == .SetOpIMut {
-            return otherSrc.isInheritFrom( processInfo, dest, alt2type ), nil;
+            let result = otherSrc.isInheritFrom( processInfo, dest, alt2type );
+            if result {
+               return result, nil;
+            }
+            return false, "not inherit %s(%d) <- %s(%d)"
+                ( dest.getTxt(##), dest.$typeId.$orgId,
+                  otherSrc.getTxt(##), otherSrc.$typeId.$orgId );
          }
-         return false, nil;
+         return false, _pos();
          // return otherSrc.isInheritFrom( dest, alt2type );
       }
       case .Form {
-         return isSettableToForm( processInfo, otherSrc ), nil;
+         if isSettableToForm( processInfo, otherSrc ) {
+            return true, nil;
+         }
+         return false, _pos();
       }
       case .Func, .FormFunc {
          if #dest.$retTypeInfoList ~= #otherSrc.$retTypeInfoList {
@@ -6810,7 +6848,7 @@ pub static fn TypeInfo.canEvalWithBase(
          if #dest.$argTypeInfoList ~= #otherSrc.$argTypeInfoList or
             #dest.$retTypeInfoList ~= #otherSrc.$retTypeInfoList
          {
-            return false, nil;
+            return false, _pos();
          }
          foreach argType, index in dest.$argTypeInfoList {
             let otherArgType = otherSrc.$argTypeInfoList[ index ];
@@ -6855,7 +6893,7 @@ pub static fn TypeInfo.canEvalWithBase(
             processInfo, otherSrc, canEvalType, alt2type )**;
       }
       default {
-         return false, nil;
+         return false, _pos();
       }
    }
 }

@@ -8,8 +8,12 @@
 
 * バグ
 
+- [ ] pub なメンバーがいないクラスの  __typeId2ClassInfoMap は出力しない。
+- [ ] List, Set は、同じアイテムの場合、同じ TypeInfo になるようにする。  
 - [ ] override しているメソッドの情報は meta に不要。
-      override しても型情報が代わらないので。
+      というか、 override 用の export 情報にして、 
+      super クラスから型情報を取得して型を作れるようにして、
+      meta 情報を削減する。
   
 - [ ] module の typeinfo が、インポート先と元とで異なってしまう。
      equals を使えば対応できるが、 === で比較できるようにしたい。

@@ -1411,7 +1411,7 @@ pub fn TransUnit.createPosition( lineNo: int, column: int ): &Parser.Position {
 fn TransUnit.getTokenNoErr() mut : &Parser.Token
 {
    let mut token;
-   
+
    let mut commentList:List<&Parser.Token> = [];
    let mut workToken = self.parser.getTokenNoErr();
    while workToken.kind == Parser.TokenKind.Cmnt {
@@ -1548,8 +1548,18 @@ fn TransUnit.getContinueToken() mut : &Parser.Token, bool {
 }
 
 
+/**
+termTxt が表われるまで statement を解析し、 stmtList に格納する。
+
+@param stmtList 解析した statement を格納するリスト
+@param firstSwitchingParser Parser を切り替えた初回の処理かどうか。
+@param termTxt 終端文字列。 nil の場合は EOF まで解析する。
+@return Nodes.Node! 最後に解析した statement
+@return int 最後に解析した statement の直前の行
+*/
 fn TransUnit.analyzeStatementList(
-   stmtList: List<&Nodes.Node>, termTxt: str! ) mut : Nodes.Node!, int
+   stmtList: List<&Nodes.Node>,
+   mut firstSwitchingParser:bool, termTxt: str! ) mut : Nodes.Node!, int
 {
    let mut breakKind = Nodes.BreakKind.None;
    if #stmtList > 0 {
@@ -1632,7 +1642,7 @@ fn TransUnit.analyzeStatementList(
 
          // 空白行と、コメントの処理
          let blank = setTailComment( statement );
-         if blank > 1 {
+         if blank > 1 and not firstSwitchingParser {
             stmtList.insert(
                Nodes.BlankLineNode.create(
                   self.nodeManager, self.createPosition( lastLineNo + 1, 0 ),
@@ -1640,6 +1650,9 @@ fn TransUnit.analyzeStatementList(
                   [ Ast.builtinTypeNone ], blank - 1 ) );
          }
          setLastLineNo( self.parser.getLastPos().lineNo );
+         if firstSwitchingParser {
+            firstSwitchingParser = false;
+         }
 
          stmtList.insert( statement );
          lastStatement = statement;
@@ -1670,7 +1683,7 @@ fn TransUnit.analyzeStatementListSubfile( stmtList: List<&Nodes.Node> ) mut : &N
       self.error( "subfile must have 'subfile' declaration at top." );
    }
 
-   return (self.analyzeStatementList( stmtList ## ));
+   return (self.analyzeStatementList( stmtList, true ## ));
 }
 
 fn TransUnit.supportLang( lang:LuneControl.Code ) : bool {
@@ -1818,7 +1831,7 @@ fn TransUnit.analyzeBlock(
    }
 
    let mut stmtList:List<&Nodes.Node> = [];
-   self.analyzeStatementList( stmtList, "}" );
+   self.analyzeStatementList( stmtList, false, "}" );
 
    self.checkNextToken( "}" );
 
@@ -2054,7 +2067,7 @@ fn TransUnit.analyzeTest( firstToken:&Parser.Token ) mut : Nodes.Node
    self.checkToken( nextToken, "{" );
 
    let mut stmtList:List<&Nodes.Node> = [];
-   self.analyzeStatementList( stmtList, "}" );
+   self.analyzeStatementList( stmtList, false, "}" );
    self.checkNextToken( "}" );
 
    return Nodes.TestBlockNode.create(

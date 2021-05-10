@@ -573,7 +573,7 @@ pub fn TransUnit.createAST(
    else {
       let mut children:List<&Nodes.Node> = [];
       let lastLineNo;
-      lastStatement, lastLineNo = self.analyzeStatementList( children ## );
+      lastStatement, lastLineNo = self.analyzeStatementList( children, false ## );
 
       let mut statement = Nodes.BlankLineNode.create(
          self.nodeManager, self.createPosition( lastLineNo + 1, 0 ),
@@ -804,7 +804,7 @@ fn TransUnit.analyzeDeclMacroSub(
 
       let mut stmtList:List<&Nodes.Node> = [];
       self.prepareTentativeSymbol( self.scope, false, nil );
-      self.analyzeStatementList( stmtList, "}" );
+      self.analyzeStatementList( stmtList, false, "}" );
 
       stmtNode = Nodes.BlockNode.create(
          self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),

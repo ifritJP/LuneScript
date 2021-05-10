@@ -514,11 +514,11 @@ local _TypeInfoNilable = {}
 setmetatable( _TypeInfoNilable, { __index = _TypeInfo } )
 function _TypeInfoNilable:createTypeInfo( param )
 
-   local orgTypeInfo = param:getTypeInfo( self.orgTypeId )
+   local orgTypeInfo = param:getTypeInfoFrom( self.orgTypeId )
    if  nil == orgTypeInfo then
       local _orgTypeInfo = orgTypeInfo
    
-      Util.err( string.format( "failed to createTypeInfo -- self.orgTypeId = %d", self.orgTypeId) )
+      Util.err( string.format( "failed to createTypeInfo -- self.orgTypeId = (%d,%d)", self.orgTypeId.mod, self.orgTypeId.id) )
    end
    
    local newTypeInfo = orgTypeInfo:get_nilableTypeInfo(  )
@@ -563,7 +563,7 @@ function _TypeInfoNilable._fromMapSub( obj, val )
    end
 
    local memInfo = {}
-   table.insert( memInfo, { name = "orgTypeId", func = _lune._toInt, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "orgTypeId", func = _IdInfo._fromMap, nilable = false, child = {} } )
    local result, mess = _lune._fromMap( obj, val, memInfo )
    if not result then
       return nil, mess
@@ -1094,7 +1094,7 @@ function _TypeInfoModule:createTypeInfo( param )
          workTypeInfo:get_typeId():set_orgId( self.typeId )
          parentScope:addClass( param.processInfo, self.txt, nil, workTypeInfo )
          
-         Log.log( Log.Level.Info, __func__, 412, function (  )
+         Log.log( Log.Level.Info, __func__, 413, function (  )
          
             return string.format( "new module -- %s, %s, %d, %d, %d", self.txt, workTypeInfo:getFullName( Ast.defaultTypeNameCtrl, parentScope, false ), self.typeId, workTypeInfo:get_typeId().id, parentScope:get_scopeId())
          end )
@@ -1231,7 +1231,7 @@ function _TypeInfoNormal:createTypeInfo( param )
       else
        
          if self.kind == Ast.TypeInfoKind.Class or self.kind == Ast.TypeInfoKind.IF then
-            Log.log( Log.Level.Debug, __func__, 520, function (  )
+            Log.log( Log.Level.Debug, __func__, 521, function (  )
             
                return string.format( "new type -- %d, %s -- %s, %d", self.parentId, self.txt, _lune.nilacc( parentScope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, parentScope, false ) or "nil", _lune.nilacc( _lune.nilacc( parentScope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ), "id" ) or -1)
             end )
@@ -1261,7 +1261,7 @@ function _TypeInfoNormal:createTypeInfo( param )
             param.typeId2TypeInfo[self.typeId] = workTypeInfo
             workTypeInfo:get_typeId():set_orgId( self.typeId )
          elseif self.kind == Ast.TypeInfoKind.ExtModule then
-            Log.log( Log.Level.Debug, __func__, 558, function (  )
+            Log.log( Log.Level.Debug, __func__, 559, function (  )
             
                return string.format( "new type -- %d, %s -- %s, %d", self.parentId, self.txt, _lune.nilacc( parentScope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, parentScope, false ) or "nil", _lune.nilacc( _lune.nilacc( parentScope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ), "id" ) or -1)
             end )
@@ -1661,7 +1661,7 @@ function Import:processImportSub( processInfo, moduleMeta, orgModulePath, module
    local __func__ = '@lune.@base.@Import.Import.processImportSub'
 
    local metaInfo = moduleMeta:get_metaInfo()
-   Log.log( Log.Level.Info, __func__, 765, function (  )
+   Log.log( Log.Level.Info, __func__, 766, function (  )
    
       return string.format( "%s processing", orgModulePath)
    end )
@@ -1942,9 +1942,9 @@ function Import:processImportSub( processInfo, moduleMeta, orgModulePath, module
                   
                   for fieldName, fieldInfo in pairs( classInfo ) do
                      do
-                        local typeId = fieldInfo['typeId']
+                        local typeId = _IdInfo._fromStem( (fieldInfo['typeId'] ) )
                         if typeId ~= nil then
-                           local fieldTypeInfo = _lune.unwrap( typeId2TypeInfo[math.floor(typeId)])
+                           local fieldTypeInfo = _lune.unwrap( importParam:getTypeInfoFrom( typeId ))
                            local symbolInfo = self.transUnitIF:get_scope():addMember( processInfo, fieldName, nil, fieldTypeInfo, _lune.unwrap( Ast.AccessMode._from( math.floor((_lune.unwrap( fieldInfo['accessMode']) )) )), fieldInfo['staticFlag'] and true or false, _lune.unwrap( Ast.MutMode._from( math.floor((_lune.unwrap( fieldInfo['mutMode']) )) )) )
                         else
                            self.transUnitIF:error( "not found fieldInfo.typeId" )
@@ -1960,7 +1960,7 @@ function Import:processImportSub( processInfo, moduleMeta, orgModulePath, module
             
          elseif _switchExp == Ast.TypeInfoKind.Module then
             self.transUnitIF:pushModule( processInfo, true, classTypeInfo:getTxt(  ), Ast.TypeInfo.isMut( classTypeInfo ) )
-            Log.log( Log.Level.Debug, __func__, 1057, function (  )
+            Log.log( Log.Level.Debug, __func__, 1060, function (  )
             
                return string.format( "push module -- %s, %s, %d, %d, %d", classTypeInfo:getTxt(  ), _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, self.transUnitIF:get_scope(), false ) or "nil", _lune.nilacc( _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'get_typeId', 'callmtd' ), "id" ) or -1, classTypeInfo:get_typeId().id, self.transUnitIF:get_scope():get_parent():get_scopeId())
             end )
@@ -2028,9 +2028,9 @@ function Import:processImportSub( processInfo, moduleMeta, orgModulePath, module
    
    for varName, varInfo in pairs( metaInfo.__varName2InfoMap ) do
       do
-         local typeId = varInfo['typeId']
+         local typeId = _IdInfo._fromStem( (varInfo['typeId'] ) )
          if typeId ~= nil then
-            self.transUnitIF:get_scope():addStaticVar( processInfo, false, true, varName, nil, _lune.unwrap( typeId2TypeInfo[math.floor(typeId)]), varInfo['mutable'] and Ast.MutMode.Mut or Ast.MutMode.IMut )
+            self.transUnitIF:get_scope():addStaticVar( processInfo, false, true, varName, nil, _lune.unwrap( importParam:getTypeInfoFrom( typeId )), varInfo['mutable'] and Ast.MutMode.Mut or Ast.MutMode.IMut )
          else
             self.transUnitIF:error( "illegal varInfo.typeId" )
          end
@@ -2083,7 +2083,7 @@ function Import:processImport( processInfo, modulePath, depth )
    local orgModulePath = modulePath
    modulePath = frontInterface.getLuaModulePath( modulePath )
    
-   Log.log( Log.Level.Info, __func__, 1182, function (  )
+   Log.log( Log.Level.Info, __func__, 1185, function (  )
    
       return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), orgModulePath)
    end )
@@ -2097,7 +2097,7 @@ function Import:processImport( processInfo, modulePath, depth )
    do
       local moduleInfo = self.importModuleName2ModuleInfo[modulePath]
       if moduleInfo ~= nil then
-         Log.log( Log.Level.Info, __func__, 1194, function (  )
+         Log.log( Log.Level.Info, __func__, 1197, function (  )
          
             return string.format( "%s already", orgModulePath)
          end )
@@ -2157,7 +2157,7 @@ function Import:processImport( processInfo, modulePath, depth )
    
    self.importModuleInfo:remove(  )
    
-   Log.log( Log.Level.Info, __func__, 1237, function (  )
+   Log.log( Log.Level.Info, __func__, 1240, function (  )
    
       return string.format( "%s complete", orgModulePath)
    end )

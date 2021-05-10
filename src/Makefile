@@ -272,7 +272,7 @@ define selfhost_buildOp
 endef
 
 define mk_runtime
-	$(call exeLune,$1,$2,$3/$4,-mklunemod,lune/base/runtime.lua) > /dev/null
+	$(call exeLune,$1,$2,$3/$4,-mklunemod,lune/base/runtime.lua $5) > /dev/null
 	cat $2/$3/$(VER_PATH) | $(RUNTIME_VER_PICK) | \
 		awk '//{printf( "$2/$3/lune/base/runtime%s.lua",$$0);}' | \
 		xargs cp $2/$3/lune/base/runtime.lua 
@@ -284,8 +284,8 @@ define selfhost_build
 endef
 
 define selfhost_build_dep
-	$(call selfhost_buildOp,$1,$2,$3,$4,cmd_exec_trans_dep)
-	$(call mk_runtime,$1,$2,$3,$4)
+	$(call selfhost_buildOp,$1,$2,$3,$4 $5,cmd_exec_trans_dep)
+	$(call mk_runtime,$1,$2,$3,$4 $5)
 endef
 
 define dump_ast
@@ -490,7 +490,11 @@ ifeq ($(WITH_GO),y)
 	$(call go-build-lns,work/1)
 endif
 else
+ifneq ($(batch),n)
 	$(call selfhost_buildOp_batch,.,/usr/bin/time -f 'first:%e/%U/%S' $(LNSC_GO),work/1,--depends work/1/ )
+else
+	$(call selfhost_build_dep,$(LNSC),.,work/1,,--package lnsc)
+endif
 	$(call binding-lns-go,work/1)
 	$(call go-build-lns,work/1)
 	$(call mk_runtime,$(LNSC),work/1,.,)
@@ -842,7 +846,7 @@ ifeq ($(WITH_GO),y)
 	cp work/3_3_3/lnsc .
 endif
 
-	diff -u -r work/3_3_2/lune work/3_3_3/lune -x '*.lns' -x '*.meta' 
+	diff -u -r work/3_3_2/lune work/3_3_3/lune -x '*.lns'
 
 
 test-parallel: test-org test-org-proj \
@@ -1694,7 +1698,7 @@ endif
 	cat work/go.time work/lua.time
 	diff -u -r work/1 work/2 -I buildId				\
 		-I ': Entering directory'				\
-		-I ': Leaving directory' -x '$(notdir $(LNSC_GO))' -x ast -x '*.meta'
+		-I ': Leaving directory' -x '$(notdir $(LNSC_GO))' -x ast
 
 
 define test-buildlns-setup
@@ -1736,8 +1740,6 @@ goprof:
 	$(call selfhost_buildOp_batch,.,/usr/bin/time -f 'go:%e/%U/%S:$2' $(LNSC_GO),work/go,-langGo -prof)
 	(cd .; go tool pprof -dot @-.profi  ) | dot -Tsvg -odump.svg
 	(cd .; go tool pprof -dot @-.profimem  ) | dot -Tsvg -odumpmem.svg
-
-
 
 
 test-reference:

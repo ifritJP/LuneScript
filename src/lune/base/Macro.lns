@@ -65,7 +65,7 @@ class MacroMetaInfo extend (Mapping) {
 }
 
 
-class MacroPaser extend Parser.Parser {
+class MacroParser extend Parser.Parser {
    let tokenList: &List<&Parser.Token>;
    let mut pos: int;
    let name: str;
@@ -415,7 +415,7 @@ pub fn MacroCtrl.evalMacroOp(
    // }
 
 
-   return new MacroPaser(
+   return new MacroParser(
       macroInfo.getTokenList(),
       "%s:%d:%d: (macro %s)" ( streamName, firstToken.pos.lineNo, firstToken.pos.column,
                                macroTypeInfo.getTxt(##)),

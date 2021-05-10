@@ -403,49 +403,49 @@ func Macro_MacroMetaInfo_FromMapMain( newObj *Macro_MacroMetaInfo, objMap *LnsMa
     return true, newObj, nil
 }
 
-// declaration Class -- MacroPaser
-type Macro_MacroPaserMtd interface {
+// declaration Class -- MacroParser
+type Macro_MacroParserMtd interface {
     CreatePosition(arg1 LnsInt, arg2 LnsInt) *Types_Position
     GetStreamName() string
     GetToken() LnsAny
 }
-type Macro_MacroPaser struct {
+type Macro_MacroParser struct {
     Parser_Parser
     tokenList *LnsList
     pos LnsInt
     name string
     overridePos LnsAny
-    FP Macro_MacroPaserMtd
+    FP Macro_MacroParserMtd
 }
-func Macro_MacroPaser2Stem( obj LnsAny ) LnsAny {
+func Macro_MacroParser2Stem( obj LnsAny ) LnsAny {
     if obj == nil {
         return nil
     }
-    return obj.(*Macro_MacroPaser).FP
+    return obj.(*Macro_MacroParser).FP
 }
-type Macro_MacroPaserDownCast interface {
-    ToMacro_MacroPaser() *Macro_MacroPaser
+type Macro_MacroParserDownCast interface {
+    ToMacro_MacroParser() *Macro_MacroParser
 }
-func Macro_MacroPaserDownCastF( multi ...LnsAny ) LnsAny {
+func Macro_MacroParserDownCastF( multi ...LnsAny ) LnsAny {
     if len( multi ) == 0 { return nil }
     obj := multi[ 0 ]
     if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Macro_MacroPaserDownCast)
-    if ok { return work.ToMacro_MacroPaser() }
+    work, ok := obj.(Macro_MacroParserDownCast)
+    if ok { return work.ToMacro_MacroParser() }
     return nil
 }
-func (obj *Macro_MacroPaser) ToMacro_MacroPaser() *Macro_MacroPaser {
+func (obj *Macro_MacroParser) ToMacro_MacroParser() *Macro_MacroParser {
     return obj
 }
-func NewMacro_MacroPaser(arg1 *LnsList, arg2 string, arg3 LnsAny) *Macro_MacroPaser {
-    obj := &Macro_MacroPaser{}
+func NewMacro_MacroParser(arg1 *LnsList, arg2 string, arg3 LnsAny) *Macro_MacroParser {
+    obj := &Macro_MacroParser{}
     obj.FP = obj
     obj.Parser_Parser.FP = obj
-    obj.InitMacro_MacroPaser(arg1, arg2, arg3)
+    obj.InitMacro_MacroParser(arg1, arg2, arg3)
     return obj
 }
 // 74: DeclConstr
-func (self *Macro_MacroPaser) InitMacro_MacroPaser(tokenList *LnsList,name string,overridePos LnsAny) {
+func (self *Macro_MacroParser) InitMacro_MacroParser(tokenList *LnsList,name string,overridePos LnsAny) {
     self.InitParser_Parser()
     self.pos = 1
     
@@ -457,13 +457,13 @@ func (self *Macro_MacroPaser) InitMacro_MacroPaser(tokenList *LnsList,name strin
     
 }
 
-// 84: decl @lune.@base.@Macro.MacroPaser.createPosition
-func (self *Macro_MacroPaser) CreatePosition(lineNo LnsInt,column LnsInt) *Types_Position {
+// 84: decl @lune.@base.@Macro.MacroParser.createPosition
+func (self *Macro_MacroParser) CreatePosition(lineNo LnsInt,column LnsInt) *Types_Position {
     return Types_Position_create(lineNo, column, self.FP.GetStreamName(), self.overridePos)
 }
 
-// 89: decl @lune.@base.@Macro.MacroPaser.getToken
-func (self *Macro_MacroPaser) GetToken() LnsAny {
+// 89: decl @lune.@base.@Macro.MacroParser.getToken
+func (self *Macro_MacroParser) GetToken() LnsAny {
     if self.tokenList.Len() < self.pos{
         return nil
     }
@@ -480,8 +480,8 @@ func (self *Macro_MacroPaser) GetToken() LnsAny {
     return token
 }
 
-// 106: decl @lune.@base.@Macro.MacroPaser.getStreamName
-func (self *Macro_MacroPaser) GetStreamName() string {
+// 106: decl @lune.@base.@Macro.MacroParser.getStreamName
+func (self *Macro_MacroParser) GetStreamName() string {
     return self.name
 }
 
@@ -852,7 +852,7 @@ func (self *Macro_MacroCtrl) EvalMacroOp(streamName string,firstToken *Types_Tok
             return nil, "not support ... in macro"
         }
     }
-    return &NewMacro_MacroPaser(macroInfo.FP.GetTokenList(), Lns_getVM().String_format("%s:%d:%d: (macro %s)", []LnsAny{streamName, firstToken.Pos.LineNo, firstToken.Pos.Column, macroTypeInfo.FP.GetTxt(nil, nil, nil)}), firstToken.Pos.FP.Get_orgPos()).Parser_Parser, nil
+    return &NewMacro_MacroParser(macroInfo.FP.GetTokenList(), Lns_getVM().String_format("%s:%d:%d: (macro %s)", []LnsAny{streamName, firstToken.Pos.LineNo, firstToken.Pos.Column, macroTypeInfo.FP.GetTxt(nil, nil, nil)}), firstToken.Pos.FP.Get_orgPos()).Parser_Parser, nil
 }
 
 // 426: decl @lune.@base.@Macro.MacroCtrl.importMacro

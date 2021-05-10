@@ -1109,7 +1109,7 @@ fn TransUnit.evalMacro(
    self.evalMacroOp( firstToken, macroTypeInfo, expList,
                      fn () {
                         if #macroTypeInfo.$retTypeInfoList == 0 {
-                           self.analyzeStatementList( stmtList, "}" );
+                           self.analyzeStatementList( stmtList, true, "}" );
                         }
                         else {
                            stmtList.insert( self.analyzeExp( false, false, false ## ) );

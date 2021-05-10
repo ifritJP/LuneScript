@@ -198,12 +198,13 @@ pub fn ImportParam.getTypeInfoFrom(typeId:&_IdInfo) mut :&Ast.TypeInfo!, str! {
 
 
 class _TypeInfoNilable extend _TypeInfo {
-   pub let orgTypeId:int;
+   pub let orgTypeId:&_IdInfo;
 
    pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
-      let! orgTypeInfo = param.getTypeInfo( self.orgTypeId ) {
-         Util.err( "failed to createTypeInfo -- self.orgTypeId = %d" ( self.orgTypeId ) );
+      let! orgTypeInfo = param.getTypeInfoFrom( self.orgTypeId ) {
+         Util.err( "failed to createTypeInfo -- self.orgTypeId = (%d,%d)"
+                   ( self.orgTypeId.mod, self.orgTypeId.id ) );
       };
       let newTypeInfo = orgTypeInfo.get_nilableTypeInfo();
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
@@ -1031,8 +1032,10 @@ fn Import.processImportSub(
                   self.transUnitIF.error( "illegal val" );
                };
                foreach fieldInfo, fieldName in classInfo@@Map<str,Map<str,stem>> {
-                  if! let typeId = fieldInfo.typeId {
-                     let fieldTypeInfo = unwrap typeId2TypeInfo[ typeId@@int ];
+                  if! let typeId = _IdInfo._fromStem(
+                     expandLuavalMap( fieldInfo.typeId ) )
+                  {
+                     let fieldTypeInfo = unwrap importParam.getTypeInfoFrom( typeId );
                      let symbolInfo = self.transUnitIF.$scope.addMember(
                         processInfo, fieldName, nil, fieldTypeInfo,
                         unwrap Ast.AccessMode._from( (unwrap fieldInfo.accessMode)@@int ),
@@ -1115,10 +1118,10 @@ fn Import.processImportSub(
 
    // 変数登録
    foreach varInfo, varName in metaInfo.__varName2InfoMap {
-      if! let typeId = varInfo.typeId {
+      if! let typeId = _IdInfo._fromStem( expandLuavalMap( varInfo.typeId ) ) {
          self.transUnitIF.$scope.addStaticVar(
             processInfo, false, true, varName,
-            nil, unwrap typeId2TypeInfo[ typeId@@int ],
+            nil, unwrap importParam.getTypeInfoFrom( typeId ),
             varInfo.mutable and Ast.MutMode.Mut or Ast.MutMode.IMut );
       }
       else {

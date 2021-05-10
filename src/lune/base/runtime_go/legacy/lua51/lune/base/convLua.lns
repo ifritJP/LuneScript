@@ -545,6 +545,9 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
       classId2TypeInfo[ idInfo.id ] = classTypeInfo;
    }
 
+
+   let serializeInfo = new Ast.SerializeInfo( importProcessInfo2Index, {} );
+   
    // 公開クラス情報処理
    self.writeln( "local __typeId2ClassInfoMap = {}" );
    self.writeln( "_moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap" );
@@ -572,8 +575,9 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
                   "  name='%s', staticFlag = %s, mutMode = %d,"
                   ( memberName, memberNode.$staticFlag,
                     memberNode.$symbolInfo.$mutMode ) ..
-                  "accessMode = %d, typeId = %d }"
-                  ( memberNode.$accessMode, memberTypeInfo.$typeId.id ) );
+                  "accessMode = %d, typeId = %s }"
+                  ( memberNode.$accessMode,
+                    serializeInfo.serializeId( memberTypeInfo.$typeId ) ) );
 
                pickupTypeId( memberTypeInfo, true ## );
             }
@@ -736,8 +740,9 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
    forsort varInfo, varName in self.pubVarName2InfoMap {
       self.writeln( string.format( "__varName2InfoMap.%s = {", varName ) );
       self.writeln(
-         "  name='%s', accessMode = %d, typeId = %d, mutable = %s }"
-         ( varName, varInfo.accessMode, varInfo.typeInfo.$typeId.id, true ) );
+         "  name='%s', accessMode = %d, typeId = %s, mutable = %s }"
+         ( varName, varInfo.accessMode,
+           serializeInfo.serializeId( varInfo.typeInfo.$typeId ), true ) );
       pickupTypeId( varInfo.$typeInfo, true ## );
    }
 
@@ -764,18 +769,20 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
          return .Normal;
       }
       if typeId.isSwichingId() {
-         // ID の置き換えを行なっている場合、
-         // 内部 ID との置き換えが必要なので __dependIdMap を出力する
-         let! moduleIndex = importProcessInfo2Index[ typeId.$processInfo ] {
-            Util.err(
-               "illeglal processInfo -- %d (%s:%s)"
-               ( typeId.id, typeInfo.getTxt(##), self.moduleTypeInfo.getTxt(##) ) );
-         };
-         let extId = typeId.$orgId;
-         self.writeln(
-            "__dependIdMap[ %d ] = { %d, %d } -- %s"
-            ( typeInfo.$typeId.id, moduleIndex, extId, typeInfo.getTxt(##) ) );
-         return .Depend;
+         return .Discarded;
+         
+         // // ID の置き換えを行なっている場合、
+         // // 内部 ID との置き換えが必要なので __dependIdMap を出力する
+         // let! moduleIndex = importProcessInfo2Index[ typeId.$processInfo ] {
+         //    Util.err(
+         //       "illeglal processInfo -- %d (%s:%s)"
+         //       ( typeId.id, typeInfo.getTxt(##), self.moduleTypeInfo.getTxt(##) ) );
+         // };
+         // let extId = typeId.$orgId;
+         // self.writeln(
+         //    "__dependIdMap[ %d ] = { %d, %d } -- %s"
+         //    ( typeInfo.$typeId.id, moduleIndex, extId, typeInfo.getTxt(##) ) );
+         // return .Depend;
       }
       if Ast.isExtId( typeInfo ) {
          // 処理内で、外部の型を & などに変換している場合、
@@ -850,12 +857,12 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
    let mut exportNeedModuleTypeInfo:Set<&Ast.TypeInfo> = (@);
 
    {
-      let mut module2TypeList:Map<str,Map<int,&Ast.TypeInfo>> = {};
+      let mut module2TypeList:Map<int,Map<int,&Ast.TypeInfo>> = {};
       foreach typeInfo in typeId2TypeInfo {
-         let moduleType = typeInfo.getModule();
-         let! mut map = module2TypeList[ moduleType.$rawTxt ] {
+         let modIndex = unwrap importProcessInfo2Index[ typeInfo.$typeId.$processInfo ];
+         let! mut map = module2TypeList[ modIndex ] {
             map = {};
-            module2TypeList[ moduleType.$rawTxt ] = map;
+            module2TypeList[ modIndex ] = map;
          };
          map[ typeInfo.$typeId.id ] = typeInfo;
       }
@@ -863,7 +870,19 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
          forsort typeInfo in map {
             let moduleTypeInfo = typeInfo.getModule();
             exportNeedModuleTypeInfo.add( moduleTypeInfo );
-            if outputDepend( typeInfo, moduleTypeInfo ) == .Normal {
+            let ret = outputDepend( typeInfo, moduleTypeInfo );
+
+
+            // if typeInfo.$typeId.id == 1178 {
+            //    let typeId = typeInfo.$typeId;
+            //    Log._log2( .Log, "target == (%s, %s, %s, %s)"
+            //               ( ret.$_txt,
+            //                 self.processInfo, typeId.$processInfo,        
+            //                 importProcessInfo2Index[ typeId.$processInfo ] ) );
+            // }
+
+            
+            if ret == .Normal {
                outputTypeInfo( typeInfo );
             }
          }

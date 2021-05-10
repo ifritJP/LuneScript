@@ -523,10 +523,6 @@ function IdInfo:equals( idInfo )
          return true
       end
       
-      if self:get_orgId() >= extStartId then
-         return true
-      end
-      
    end
    
    return false
@@ -2221,7 +2217,7 @@ function NilableTypeInfo:get_display_stirng(  )
 end
 function NilableTypeInfo:serialize( stream, serializeInfo )
 
-   stream:write( string.format( '{ skind = %d, typeId = %d, orgTypeId = %d }\n', SerializeKind.Nilable, self.typeId.id, self.nonnilableType:get_typeId().id) )
+   stream:write( string.format( '{ skind = %d, typeId = %d, orgTypeId = %s }\n', SerializeKind.Nilable, self.typeId.id, serializeInfo:serializeId( self.nonnilableType:get_typeId() )) )
 end
 function NilableTypeInfo:equals( processInfo, typeInfo, alt2type, checkModifer )
 
@@ -3319,6 +3315,10 @@ function NilTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag )
 end
 function NilTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
 
+   if not other:get_nilable() then
+      return false, string.format( "%s is not nilable.", other:getTxt(  ))
+   end
+   
    return other:get_nilable(), nil
 end
 function NilTypeInfo:get_display_stirng_with( raw, alt2type )
@@ -3816,7 +3816,7 @@ function AlternateTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2typ
    end
    
    if other:get_nilable() then
-      return false, nil
+      return false, "is doesn't support nilable."
    end
    
    if not self.belongClassFlag then
@@ -4261,7 +4261,7 @@ end
 function GenericTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
 
    if other:get_nilable() then
-      return false, nil
+      return false, "GenericTypeInfo doesn't support nilable."
    end
    
    
@@ -4619,7 +4619,8 @@ function ModifierTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type
    end
    
    
-   return TypeInfo.canEvalWithBase( processInfo, self.srcTypeInfo, TypeInfo.isMut( self ), other:get_srcTypeInfo(), evalType, alt2type )
+   local result, mess = TypeInfo.canEvalWithBase( processInfo, self.srcTypeInfo, TypeInfo.isMut( self ), other:get_srcTypeInfo(), evalType, alt2type )
+   return result, mess
 end
 function ModifierTypeInfo:equals( processInfo, typeInfo, alt2type, checkModifer )
 
@@ -5769,11 +5770,9 @@ function TypeInfo2Map:clone(  )
    
    
    local obj = TypeInfo2Map.new()
-   
    for key, val in pairs( self.ImutModifierMap ) do
       obj.ImutModifierMap[key] = val
    end
-   
    
    
    for key, val in pairs( self.MutModifierMap ) do
@@ -5781,11 +5780,9 @@ function TypeInfo2Map:clone(  )
    end
    
    
-   
    for key, val in pairs( self.BoxMap ) do
       obj.BoxMap[key] = val
    end
-   
    
    
    for key, val in pairs( self.DDDMap ) do
@@ -5793,11 +5790,9 @@ function TypeInfo2Map:clone(  )
    end
    
    
-   
    for key, val in pairs( self.ExtDDDMap ) do
       obj.ExtDDDMap[key] = val
    end
-   
    
    
    for key, val in pairs( self.ExtMap ) do
@@ -6227,7 +6222,6 @@ local function failCreateLuavalWith( typeInfo, convFlag, validToCheck )
          end
          
          local canConv = true
-         
          for __index, itemType in ipairs( typeInfo:get_itemTypeInfoList() ) do
             local err, work = failCreateLuavalWith( itemType, convFlag, validToCheck )
             if err ~= nil then
@@ -6257,7 +6251,6 @@ local function failCreateLuavalWith( typeInfo, convFlag, validToCheck )
          end
          
          local canConv = true
-         
          for __index, itemType in ipairs( typeInfo:get_argTypeInfoList() ) do
             local err, work = failCreateLuavalWith( itemType, convFlag, validToCheck )
             if err ~= nil then
@@ -6269,7 +6262,6 @@ local function failCreateLuavalWith( typeInfo, convFlag, validToCheck )
             end
             
          end
-         
          
          
          for __index, itemType in ipairs( typeInfo:get_retTypeInfoList() ) do
@@ -6394,7 +6386,6 @@ end
 
 function ProcessInfo:createSet( accessMode, parentInfo, itemTypeInfo, mutMode )
 
-   
    local tmpMutMode
    
    if isMutable( mutMode ) then
@@ -6423,7 +6414,6 @@ end
 
 function ProcessInfo:createList( accessMode, parentInfo, itemTypeInfo, mutMode )
 
-   
    local tmpMutMode
    
    if isMutable( mutMode ) then
@@ -6452,7 +6442,6 @@ end
 
 function ProcessInfo:createArray( accessMode, parentInfo, itemTypeInfo, mutMode )
 
-   
    local tmpMutMode
    
    if isMutable( mutMode ) then
@@ -6481,7 +6470,6 @@ end
 
 function ProcessInfo:createMap( accessMode, parentInfo, keyTypeInfo, valTypeInfo, mutMode )
 
-   
    local tmpMutMode
    
    if isMutable( mutMode ) then
@@ -8378,7 +8366,6 @@ function TypeInfo.checkMatchType( processInfo, dstTypeList, expTypeList, allowDs
          end
          
          
-         
          if warnForFollowSrcIndex ~= nil then
             
             if warnForFollowSrcIndex <= srcIndex then
@@ -8409,7 +8396,9 @@ function TypeInfo.checkMatchType( processInfo, dstTypeList, expTypeList, allowDs
             if dstType:get_srcTypeInfo():get_kind() ~= TypeInfoKind.DDD then
                local isMatch, msg = dstType:canEvalWith( processInfo, expType, CanEvalType.SetOp, alt2type )
                if not isMatch then
-                  return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s: index %d%s", index, applyGenericDefault( dstType, alt2type, dstType:getModule(  ) ):getTxt( _moduleObj.defaultTypeNameCtrl ), expType:getTxt( _moduleObj.defaultTypeNameCtrl ), index, msg and string.format( " -- %s", msg) or "")
+                  local workDstType = applyGenericDefault( dstType, alt2type, dstType:getModule(  ) )
+                  return MatchType.Error, string.format( "exp(%d) type mismatch %s(%d) <- %s(%d): index %d%s", index, workDstType:getTxt( _moduleObj.defaultTypeNameCtrl ), workDstType:get_typeId().id, expType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:get_typeId().id, index, msg and string.format( " -- %s", msg) or string.format( "(%s)", TypeInfoKind:_getTxt( dstType:get_kind())
+                  ))
                end
                
                if not allowDstShort and #dstTypeList < #expTypeList then
@@ -8429,7 +8418,6 @@ function TypeInfo.checkMatchType( processInfo, dstTypeList, expTypeList, allowDs
                end
                
             end
-            
             
             
             if warnForFollowSrcIndex ~= nil then
@@ -8468,7 +8456,6 @@ function TypeInfo.checkMatchType( processInfo, dstTypeList, expTypeList, allowDs
                return result, mess
             end
             
-            
             if warnForFollowSrcIndex ~= nil then
                
                if warnForFollowSrcIndex <= index then
@@ -8494,7 +8481,6 @@ function TypeInfo.checkMatchType( processInfo, dstTypeList, expTypeList, allowDs
                , expType:get_typeId().id, (evalMess and string.format( " -- %s", evalMess) or "" )
                )
             end
-            
             
             if warnForFollowSrcIndex ~= nil then
                
@@ -8562,6 +8548,9 @@ end
 
 function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalType, alt2type )
 
+   local topLine = 6474
+   
+   
    if dest ~= dest:get_aliasSrc() then
       return dest:get_aliasSrc():canEvalWith( processInfo, other, canEvalType, alt2type )
    end
@@ -8573,7 +8562,8 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
       end
       
       if other:equals( processInfo, _moduleObj.builtinTypeAbbr ) then
-         return false, nil
+         return false, string.format( "(err:%d)", 6489 - topLine)
+         
       end
       
       return true, nil
@@ -8607,12 +8597,14 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             do
                local _switchExp = otherSrc
                if _switchExp == _moduleObj.builtinTypeAbbr or _switchExp == _moduleObj.builtinTypeAbbrNone then
-                  return false, nil
+                  return false, string.format( "(err:%d)", 6517 - topLine)
+                  
                end
             end
             
             if otherSrc:get_kind() == TypeInfoKind.Func then
-               return false, nil
+               return false, string.format( "(err:%d)", 6526 - topLine)
+               
             end
             
             return true, nil
@@ -8622,15 +8614,18 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
                do
                   local _switchExp = nonNilOtherType:get_kind()
                   if _switchExp == TypeInfoKind.Set or _switchExp == TypeInfoKind.Map or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.IF or _switchExp == TypeInfoKind.Alternate then
-                     return false, nil
+                     return false, string.format( "(err:%d)", 6536 - topLine)
+                     
                   elseif _switchExp == TypeInfoKind.Class then
                      if _moduleObj.builtinTypeString ~= nonNilOtherType then
-                        return false, nil
+                        return false, string.format( "(err:%d)", 6540 - topLine)
+                        
                      end
                      
                   elseif _switchExp == TypeInfoKind.Prim then
                      if _moduleObj.builtinTypeStem == nonNilOtherType then
-                        return false, nil
+                        return false, string.format( "(err:%d)", 6545 - topLine)
+                        
                      end
                      
                   end
@@ -8643,7 +8638,8 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
          
          if otherSrc ~= _moduleObj.builtinTypeNil and otherSrc ~= _moduleObj.builtinTypeString and otherSrc:get_kind() ~= TypeInfoKind.Prim and otherSrc:get_kind() ~= TypeInfoKind.Func and otherSrc:get_kind() ~= TypeInfoKind.Method and otherSrc:get_kind() ~= TypeInfoKind.Form and otherSrc:get_kind() ~= TypeInfoKind.FormFunc and otherSrc:get_kind() ~= TypeInfoKind.Enum and otherSrc:get_kind() ~= TypeInfoKind.Abbr and otherSrc:get_kind() ~= TypeInfoKind.Alternate and otherSrc:get_kind() ~= TypeInfoKind.Box and not isGenericType( otherSrc ) and destMut and not otherMut then
             if processInfo:get_validCheckingMutable() then
-               return false, nil
+               return false, string.format( "(err:%d)", 6567 - topLine)
+               
             end
             
          end
@@ -8671,7 +8667,8 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             return dest:canEvalWith( processInfo, otherSrc, canEvalType, alt2type )
          end
          
-         return false, nil
+         return false, string.format( "(err:%d)", 6591 - topLine)
+         
       else
        
          otherSrc = otherSrc:get_nonnilableType()
@@ -8684,12 +8681,18 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
    end
    
    if dest == _moduleObj.builtinTypeForm and (otherSrc:get_kind() == TypeInfoKind.Func or otherSrc:get_kind() == TypeInfoKind.Form or otherSrc:get_kind() == TypeInfoKind.FormFunc ) then
-      return isSettableToForm( processInfo, otherSrc ), nil
+      if isSettableToForm( processInfo, otherSrc ) then
+         return true, nil
+      end
+      
+      return false, string.format( "(err:%d)", 6607 - topLine)
+      
    end
    
    if otherSrc == _moduleObj.builtinTypeNil or otherSrc:get_kind() == TypeInfoKind.Abbr then
       if dest:get_kind() ~= TypeInfoKind.Nilable then
-         return false, nil
+         return false, string.format( "(err:%d)", 6611 - topLine)
+         
       end
       
       return true, nil
@@ -8712,6 +8715,11 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
          end
          
       end
+   end
+   
+   
+   if otherSrc:get_typeId():equals( dest:get_typeId() ) then
+      return true, nil
    end
    
    
@@ -8745,10 +8753,16 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
          return dest:canEvalWith( processInfo, otherSrc, canEvalType, alt2type )
       elseif (dest:get_kind() == TypeInfoKind.Class or dest:get_kind() == TypeInfoKind.IF ) and (otherSrc:get_kind() == TypeInfoKind.Class or otherSrc:get_kind() == TypeInfoKind.IF ) then
          if canEvalType == CanEvalType.SetOp or canEvalType == CanEvalType.SetOpIMut then
-            return otherSrc:isInheritFrom( processInfo, dest, alt2type ), nil
+            local result = otherSrc:isInheritFrom( processInfo, dest, alt2type )
+            if result then
+               return result, nil
+            end
+            
+            return false, string.format( "not inherit %s(%d) <- %s(%d)", dest:getTxt(  ), dest:get_typeId():get_orgId(), otherSrc:getTxt(  ), otherSrc:get_typeId():get_orgId())
          end
          
-         return false, nil
+         return false, string.format( "(err:%d)", 6678 - topLine)
+         
       elseif otherSrc:get_kind() == TypeInfoKind.Enum then
          local enumTypeInfo = _lune.unwrap( (_lune.__Cast( otherSrc, 3, EnumTypeInfo ) ))
          return dest:canEvalWith( processInfo, enumTypeInfo:get_valTypeInfo(), canEvalType, alt2type )
@@ -8762,7 +8776,12 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             if _switchExp == TypeInfoKind.Form then
                return true, nil
             elseif _switchExp == TypeInfoKind.FormFunc or _switchExp == TypeInfoKind.Func then
-               return isSettableToForm( processInfo, otherSrc ), nil
+               if isSettableToForm( processInfo, otherSrc ) then
+                  return true, nil
+               end
+               
+               return false, string.format( "(err:%d)", 6702 - topLine)
+               
             end
          end
          
@@ -8813,7 +8832,9 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
          
       end
       
-      return false, nil
+      return false, string.format( "illegal type -- %s, %s", TypeInfoKind:_getTxt( dest:get_kind())
+      , TypeInfoKind:_getTxt( otherSrc:get_kind())
+      )
    end
    
    do
@@ -8823,12 +8844,12 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             return true, nil
          end
          
-         return false, nil
+         return false, string.format( "(err:%d)", 6768 - topLine)
+         
       elseif _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.Set then
          if otherSrc:get_itemTypeInfoList()[1] == _moduleObj.builtinTypeNone then
             return true, nil
          end
-         
          
          if #dest:get_itemTypeInfoList() >= 1 and #otherSrc:get_itemTypeInfoList() >= 1 then
             
@@ -8851,7 +8872,6 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
          
          local function check1(  )
          
-            
             if #dest:get_itemTypeInfoList() >= 1 and #otherSrc:get_itemTypeInfoList() >= 1 then
                
                local ret, mess = (dest:get_itemTypeInfoList()[1] ):canEvalWith( processInfo, otherSrc:get_itemTypeInfoList()[1], destMut and CanEvalType.SetEq or CanEvalType.SetOpIMut, alt2type )
@@ -8869,7 +8889,6 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
          end
          local function check2(  )
          
-            
             if #dest:get_itemTypeInfoList() >= 2 and #otherSrc:get_itemTypeInfoList() >= 2 then
                
                local ret, mess = (dest:get_itemTypeInfoList()[2] ):canEvalWith( processInfo, otherSrc:get_itemTypeInfoList()[2], destMut and CanEvalType.SetEq or CanEvalType.SetOpIMut, alt2type )
@@ -8895,20 +8914,32 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             return true, nil
          end
          
-         return false, nil
+         return false, string.format( "(err:%d)", 6803 - topLine)
+         
       elseif _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.IF then
          if isGenericType( dest ) then
             return dest:canEvalWith( processInfo, otherSrc, canEvalType, alt2type )
          end
          
          if canEvalType == CanEvalType.SetOp or canEvalType == CanEvalType.SetOpIMut then
-            return otherSrc:isInheritFrom( processInfo, dest, alt2type ), nil
+            local result = otherSrc:isInheritFrom( processInfo, dest, alt2type )
+            if result then
+               return result, nil
+            end
+            
+            return false, string.format( "not inherit %s(%d) <- %s(%d)", dest:getTxt(  ), dest:get_typeId():get_orgId(), otherSrc:getTxt(  ), otherSrc:get_typeId():get_orgId())
          end
          
-         return false, nil
+         return false, string.format( "(err:%d)", 6819 - topLine)
+         
          
       elseif _switchExp == TypeInfoKind.Form then
-         return isSettableToForm( processInfo, otherSrc ), nil
+         if isSettableToForm( processInfo, otherSrc ) then
+            return true, nil
+         end
+         
+         return false, string.format( "(err:%d)", 6826 - topLine)
+         
       elseif _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.FormFunc then
          if #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
             return false, string.format( "argNum %d != %d", #dest:get_retTypeInfoList(), #otherSrc:get_retTypeInfoList())
@@ -8927,7 +8958,8 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
          return true, nil
       elseif _switchExp == TypeInfoKind.Method then
          if #dest:get_argTypeInfoList() ~= #otherSrc:get_argTypeInfoList() or #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
-            return false, nil
+            return false, string.format( "(err:%d)", 6851 - topLine)
+            
          end
          
          for index, argType in ipairs( dest:get_argTypeInfoList() ) do
@@ -8973,7 +9005,8 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
          return dest:canEvalWith( processInfo, otherSrc, canEvalType, alt2type )
       else 
          
-            return false, nil
+            return false, string.format( "(err:%d)", 6896 - topLine)
+            
       end
    end
    
@@ -9284,7 +9317,6 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
          end
          
          token = self.parser:getTokenNoErr(  )
-         
          if token.txt ~= ']' then
             return nil, token.pos, "not found -- ']'"
          end
@@ -9302,7 +9334,6 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
             
             nextToken = self.parser:getTokenNoErr(  )
          until nextToken.txt ~= ","
-         
          if nextToken.txt ~= '>' then
             return nil, nextToken.pos, "not found -- ']'"
          end
@@ -9322,7 +9353,6 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
                end
                
             elseif _switchExp == TypeInfoKind.List then
-               
                if #genericList ~= 1 then
                   return nil, pos, string.format( "generic type count is unmatch. -- %d", #genericList)
                end
@@ -9330,7 +9360,6 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
                
                typeInfo = self.processInfo:createList( self.accessMode, self.parentInfo, genericList, MutMode.Mut )
             elseif _switchExp == TypeInfoKind.Array then
-               
                if #genericList ~= 1 then
                   return nil, pos, string.format( "generic type count is unmatch. -- %d", #genericList)
                end
@@ -9338,7 +9367,6 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
                
                typeInfo = self.processInfo:createArray( self.accessMode, self.parentInfo, genericList, MutMode.Mut )
             elseif _switchExp == TypeInfoKind.Set then
-               
                if #genericList ~= 1 then
                   return nil, pos, string.format( "generic type count is unmatch. -- %d", #genericList)
                end
@@ -9346,7 +9374,6 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
                
                typeInfo = self.processInfo:createSet( self.accessMode, self.parentInfo, genericList, MutMode.Mut )
             elseif _switchExp == TypeInfoKind.DDD then
-               
                if #genericList ~= 1 then
                   return nil, pos, string.format( "generic type count is unmatch. -- %d", #genericList)
                end
@@ -9354,7 +9381,6 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
                
                typeInfo = self.processInfo:createDDD( genericList[1], false, false )
             elseif _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.IF then
-               
                if #genericList ~= #typeInfo:get_itemTypeInfoList() then
                   return nil, pos, string.format( "generic type count is unmatch. -- %d", #genericList)
                end
@@ -9370,7 +9396,6 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
                
                typeInfo = self.processInfo:createGeneric( typeInfo, genericList, self.moduleType )
             elseif _switchExp == TypeInfoKind.Box then
-               
                if #genericList ~= 1 then
                   return nil, pos, string.format( "generic type count is unmatch. -- %d", #genericList)
                end
@@ -9378,7 +9403,6 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
                
                typeInfo = self.processInfo:createBox( self.accessMode, genericList[1] )
             elseif _switchExp == TypeInfoKind.Ext then
-               
                if #genericList ~= 1 then
                   return nil, pos, string.format( "generic type count is unmatch. -- %d", #genericList)
                end

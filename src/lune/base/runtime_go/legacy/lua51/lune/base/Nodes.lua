@@ -844,7 +844,6 @@ end
 
 
 
-
 function NodeKind.get_None(  )
 
    return 0
@@ -913,7 +912,6 @@ end
 function NoneNode.setmeta( obj )
   setmetatable( obj, { __index = NoneNode  } )
 end
-
 
 
 
@@ -993,7 +991,6 @@ end
 
 
 
-
 function NodeKind.get_ConvStat(  )
 
    return 2
@@ -1070,7 +1067,6 @@ end
 
 
 
-
 function NodeKind.get_BlankLine(  )
 
    return 3
@@ -1144,7 +1140,6 @@ end
 function BlankLineNode:get_lineNum()
    return self.lineNum
 end
-
 
 
 function NodeKind.get_Subfile(  )
@@ -1253,7 +1248,6 @@ LazyLoad.__allList[2] = LazyLoad.On
 LazyLoad.Auto = 2
 LazyLoad._val2NameMap[2] = 'Auto'
 LazyLoad.__allList[3] = LazyLoad.Auto
-
 
 function NodeKind.get_Import(  )
 
@@ -1420,7 +1414,6 @@ function MacroInfo:__init( func, symbol2MacroValInfoMap )
 end
 
 
-
 function NodeKind.get_Root(  )
 
    return 6
@@ -1499,7 +1492,6 @@ function RootNode:visit( visitor, depth, alreadySet )
    do
       local list = self.children
       for __index, child in ipairs( list ) do
-         
          if not _lune._Set_has(alreadySet, child ) then
             alreadySet[child]= true
             do
@@ -1528,7 +1520,6 @@ function RootNode:visit( visitor, depth, alreadySet )
       do
          local child = self.provideNode
          if child ~= nil then
-            
             if not _lune._Set_has(alreadySet, child ) then
                alreadySet[child]= true
                do
@@ -1605,7 +1596,6 @@ function RootNode:set_provide( node )
 end
 
 
-
 function NodeKind.get_RefType(  )
 
    return 7
@@ -1675,7 +1665,6 @@ function RefTypeNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.name
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -1700,7 +1689,6 @@ function RefTypeNode:visit( visitor, depth, alreadySet )
    do
       local list = self.itemNodeList
       for __index, child in ipairs( list ) do
-         
          if not _lune._Set_has(alreadySet, child ) then
             alreadySet[child]= true
             do
@@ -1834,7 +1822,6 @@ BlockKind._val2NameMap[20] = 'Env'
 BlockKind.__allList[21] = BlockKind.Env
 
 
-
 function NodeKind.get_Block(  )
 
    return 8
@@ -1897,7 +1884,6 @@ function BlockNode:visit( visitor, depth, alreadySet )
    do
       local list = self.stmtList
       for __index, child in ipairs( list ) do
-         
          if not _lune._Set_has(alreadySet, child ) then
             alreadySet[child]= true
             do
@@ -1938,7 +1924,6 @@ end
 function BlockNode:get_stmtList()
    return self.stmtList
 end
-
 
 
 
@@ -2008,7 +1993,6 @@ function EnvNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.block
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -2068,7 +2052,6 @@ end
 ScopeKind.Root = 0
 ScopeKind._val2NameMap[0] = 'Root'
 ScopeKind.__allList[1] = ScopeKind.Root
-
 
 function NodeKind.get_Scope(  )
 
@@ -2139,7 +2122,6 @@ function ScopeNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.block
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -2192,7 +2174,6 @@ local function getBreakKindForStmtList( checkMode, stmtList )
       for __index, stmt in ipairs( stmtList ) do
          if stmt:get_kind() ~= NodeKind.get_BlankLine() then
             local work = stmt:getBreakKind( checkMode )
-            
             if checkMode == CheckBreakMode.IgnoreFlowReturn then
                if work == BreakKind.Return then
                   return BreakKind.Return
@@ -2316,7 +2297,6 @@ function IfStmtInfo:get_block()
    return self.block
 end
 
-
 function NodeKind.get_If(  )
 
    return 11
@@ -2399,7 +2379,6 @@ function IfNode:getBreakKind( checkMode )
    local kind = BreakKind.None
    for __index, stmtInfo in ipairs( self.stmtList ) do
       local work = stmtInfo:get_block():getBreakKind( checkMode )
-      
       if checkMode == CheckBreakMode.IgnoreFlowReturn then
          if work == BreakKind.Return then
             return BreakKind.Return
@@ -2451,7 +2430,6 @@ end
 function IfNode:visitSub( visitor, depth, alreadySet )
 
    for __index, stmt in ipairs( self:get_stmtList() ) do
-      
       if not _lune._Set_has(alreadySet, stmt:get_exp() ) then
          alreadySet[stmt:get_exp()]= true
          do
@@ -2468,7 +2446,6 @@ function IfNode:visitSub( visitor, depth, alreadySet )
          end
          
       end
-      
       
       
       if not _lune._Set_has(alreadySet, stmt:get_block() ) then
@@ -2519,7 +2496,6 @@ end
 function MRetExp:get_index()
    return self.index
 end
-
 
 
 function NodeKind.get_ExpList(  )
@@ -2583,7 +2559,6 @@ function ExpListNode:visit( visitor, depth, alreadySet )
    do
       local list = self.expList
       for __index, child in ipairs( list ) do
-         
          if not _lune._Set_has(alreadySet, child ) then
             alreadySet[child]= true
             do
@@ -2755,7 +2730,6 @@ CaseKind.MustFull = 2
 CaseKind._val2NameMap[2] = 'MustFull'
 CaseKind.__allList[3] = CaseKind.MustFull
 
-
 function NodeKind.get_Switch(  )
 
    return 13
@@ -2826,7 +2800,6 @@ function SwitchNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.exp
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -2852,7 +2825,6 @@ function SwitchNode:visit( visitor, depth, alreadySet )
       do
          local child = self.default
          if child ~= nil then
-            
             if not _lune._Set_has(alreadySet, child ) then
                alreadySet[child]= true
                do
@@ -2909,7 +2881,6 @@ function SwitchNode:getBreakKind( checkMode )
    for __index, caseInfo in ipairs( self.caseList ) do
       local work = caseInfo:get_block():getBreakKind( checkMode )
       local goNext = (work == BreakKind.None ) or not fullCase
-      
       if checkMode == CheckBreakMode.IgnoreFlowReturn then
          if work == BreakKind.Return then
             return BreakKind.Return
@@ -2949,7 +2920,6 @@ function SwitchNode:getBreakKind( checkMode )
       local block = self.default
       if block ~= nil then
          local work = block:getBreakKind( checkMode )
-         
          if checkMode == CheckBreakMode.IgnoreFlowReturn then
             if work == BreakKind.Return then
                return BreakKind.Return
@@ -2999,7 +2969,6 @@ end
 function SwitchNode:visitSub( visitor, depth, alreadySet )
 
    for __index, caseInfo in ipairs( self.caseList ) do
-      
       if not _lune._Set_has(alreadySet, caseInfo:get_expList() ) then
          alreadySet[caseInfo:get_expList()]= true
          do
@@ -3016,7 +2985,6 @@ function SwitchNode:visitSub( visitor, depth, alreadySet )
          end
          
       end
-      
       
       
       if not _lune._Set_has(alreadySet, caseInfo:get_block() ) then
@@ -3041,7 +3009,6 @@ function SwitchNode:visitSub( visitor, depth, alreadySet )
    
    return true
 end
-
 
 
 
@@ -3114,7 +3081,6 @@ function WhileNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.exp
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -3138,7 +3104,6 @@ function WhileNode:visit( visitor, depth, alreadySet )
    
    do
       local child = self.block
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -3176,7 +3141,6 @@ end
 function WhileNode:get_block()
    return self.block
 end
-
 
 
 
@@ -3247,7 +3211,6 @@ function RepeatNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.block
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -3271,7 +3234,6 @@ function RepeatNode:visit( visitor, depth, alreadySet )
    
    do
       local child = self.exp
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -3309,7 +3271,6 @@ end
 
 
 
-
 function RepeatNode:getBreakKind( checkMode )
 
    
@@ -3319,7 +3280,6 @@ function RepeatNode:getBreakKind( checkMode )
    
    return BreakKind.None
 end
-
 
 
 
@@ -3393,7 +3353,6 @@ function ForNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.block
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -3417,7 +3376,6 @@ function ForNode:visit( visitor, depth, alreadySet )
    
    do
       local child = self.init
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -3441,7 +3399,6 @@ function ForNode:visit( visitor, depth, alreadySet )
    
    do
       local child = self.to
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -3467,7 +3424,6 @@ function ForNode:visit( visitor, depth, alreadySet )
       do
          local child = self.delta
          if child ~= nil then
-            
             if not _lune._Set_has(alreadySet, child ) then
                alreadySet[child]= true
                do
@@ -3517,7 +3473,6 @@ end
 
 
 
-
 function ForNode:getBreakKind( checkMode )
 
    
@@ -3527,7 +3482,6 @@ function ForNode:getBreakKind( checkMode )
    
    return BreakKind.None
 end
-
 
 
 
@@ -3599,7 +3553,6 @@ function ApplyNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.expList
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -3623,7 +3576,6 @@ function ApplyNode:visit( visitor, depth, alreadySet )
    
    do
       local child = self.block
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -3664,7 +3616,6 @@ end
 
 
 
-
 function ApplyNode:getBreakKind( checkMode )
 
    
@@ -3674,7 +3625,6 @@ function ApplyNode:getBreakKind( checkMode )
    
    return BreakKind.None
 end
-
 
 
 
@@ -3752,7 +3702,6 @@ function ForeachNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.exp
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -3776,7 +3725,6 @@ function ForeachNode:visit( visitor, depth, alreadySet )
    
    do
       local child = self.block
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -3823,7 +3771,6 @@ end
 
 
 
-
 function ForeachNode:getBreakKind( checkMode )
 
    
@@ -3833,7 +3780,6 @@ function ForeachNode:getBreakKind( checkMode )
    
    return BreakKind.None
 end
-
 
 
 
@@ -3912,7 +3858,6 @@ function ForsortNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.exp
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -3936,7 +3881,6 @@ function ForsortNode:visit( visitor, depth, alreadySet )
    
    do
       local child = self.block
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -3986,7 +3930,6 @@ end
 
 
 
-
 function ForsortNode:getBreakKind( checkMode )
 
    
@@ -3996,7 +3939,6 @@ function ForsortNode:getBreakKind( checkMode )
    
    return BreakKind.None
 end
-
 
 
 
@@ -4068,7 +4010,6 @@ function ReturnNode:visit( visitor, depth, alreadySet )
       do
          local child = self.expList
          if child ~= nil then
-            
             if not _lune._Set_has(alreadySet, child ) then
                alreadySet[child]= true
                do
@@ -4109,7 +4050,6 @@ function ReturnNode:getBreakKind( checkMode )
 
    return BreakKind.Return
 end
-
 
 
 function NodeKind.get_Break(  )
@@ -4189,7 +4129,6 @@ function BreakNode:getBreakKind( checkMode )
 end
 
 
-
 function NodeKind.get_Provide(  )
 
    return 22
@@ -4266,7 +4205,6 @@ end
 
 
 
-
 function NodeKind.get_ExpNew(  )
 
    return 23
@@ -4335,7 +4273,6 @@ function ExpNewNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.symbol
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -4361,7 +4298,6 @@ function ExpNewNode:visit( visitor, depth, alreadySet )
       do
          local child = self.argList
          if child ~= nil then
-            
             if not _lune._Set_has(alreadySet, child ) then
                alreadySet[child]= true
                do
@@ -4402,7 +4338,6 @@ end
 function ExpNewNode:get_argList()
    return self.argList
 end
-
 
 
 
@@ -4473,7 +4408,6 @@ function ExpUnwrapNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.exp
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -4499,7 +4433,6 @@ function ExpUnwrapNode:visit( visitor, depth, alreadySet )
       do
          local child = self.default
          if child ~= nil then
-            
             if not _lune._Set_has(alreadySet, child ) then
                alreadySet[child]= true
                do
@@ -4537,7 +4470,6 @@ end
 function ExpUnwrapNode:get_default()
    return self.default
 end
-
 
 
 
@@ -4622,7 +4554,6 @@ function ExpRefNode:canBeRight( processInfo )
 end
 
 
-
 function NodeKind.get_ExpSetVal(  )
 
    return 26
@@ -4692,7 +4623,6 @@ function ExpSetValNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.exp1
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -4716,7 +4646,6 @@ function ExpSetValNode:visit( visitor, depth, alreadySet )
    
    do
       local child = self.exp2
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -4779,7 +4708,6 @@ IndexVal.NodeIdx = { "NodeIdx", {{}}}
 IndexVal._name2Val["NodeIdx"] = IndexVal.NodeIdx
 IndexVal.SymIdx = { "SymIdx", {{}}}
 IndexVal._name2Val["SymIdx"] = IndexVal.SymIdx
-
 
 
 function NodeKind.get_ExpSetItem(  )
@@ -4850,7 +4778,6 @@ function ExpSetItemNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.val
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -4874,7 +4801,6 @@ function ExpSetItemNode:visit( visitor, depth, alreadySet )
    
    do
       local child = self.exp2
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -4912,7 +4838,6 @@ end
 function ExpSetItemNode:get_exp2()
    return self.exp2
 end
-
 
 
 
@@ -4989,7 +4914,6 @@ function ExpOp2Node:visit( visitor, depth, alreadySet )
 
    do
       local child = self.exp1
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -5013,7 +4937,6 @@ function ExpOp2Node:visit( visitor, depth, alreadySet )
    
    do
       local child = self.exp2
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -5054,7 +4977,6 @@ end
 function ExpOp2Node:get_exp2()
    return self.exp2
 end
-
 
 
 
@@ -5126,7 +5048,6 @@ function UnwrapSetNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.dstExpList
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -5150,7 +5071,6 @@ function UnwrapSetNode:visit( visitor, depth, alreadySet )
    
    do
       local child = self.srcExpList
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -5176,7 +5096,6 @@ function UnwrapSetNode:visit( visitor, depth, alreadySet )
       do
          local child = self.unwrapBlock
          if child ~= nil then
-            
             if not _lune._Set_has(alreadySet, child ) then
                alreadySet[child]= true
                do
@@ -5217,7 +5136,6 @@ end
 function UnwrapSetNode:get_unwrapBlock()
    return self.unwrapBlock
 end
-
 
 
 
@@ -5290,7 +5208,6 @@ function IfUnwrapNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.expList
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -5314,7 +5231,6 @@ function IfUnwrapNode:visit( visitor, depth, alreadySet )
    
    do
       local child = self.block
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -5340,7 +5256,6 @@ function IfUnwrapNode:visit( visitor, depth, alreadySet )
       do
          local child = self.nilBlock
          if child ~= nil then
-            
             if not _lune._Set_has(alreadySet, child ) then
                alreadySet[child]= true
                do
@@ -5391,7 +5306,6 @@ function IfUnwrapNode:getBreakKind( checkMode )
 
    local kind = self.block:getBreakKind( checkMode )
    local work = kind
-   
    if checkMode == CheckBreakMode.IgnoreFlowReturn then
       if work == BreakKind.Return then
          return BreakKind.Return
@@ -5429,7 +5343,6 @@ function IfUnwrapNode:getBreakKind( checkMode )
       local block = self.nilBlock
       if block ~= nil then
          work = block:getBreakKind( checkMode )
-         
          if checkMode == CheckBreakMode.IgnoreFlowReturn then
             if work == BreakKind.Return then
                return BreakKind.Return
@@ -5495,7 +5408,6 @@ end
 function UnwrapSymbolPair:get_dst()
    return self.dst
 end
-
 
 
 function NodeKind.get_When(  )
@@ -5566,7 +5478,6 @@ function WhenNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.block
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -5592,7 +5503,6 @@ function WhenNode:visit( visitor, depth, alreadySet )
       do
          local child = self.elseBlock
          if child ~= nil then
-            
             if not _lune._Set_has(alreadySet, child ) then
                alreadySet[child]= true
                do
@@ -5640,7 +5550,6 @@ function WhenNode:getBreakKind( checkMode )
 
    local kind = self.block:getBreakKind( checkMode )
    local work = kind
-   
    if checkMode == CheckBreakMode.IgnoreFlowReturn then
       if work == BreakKind.Return then
          return BreakKind.Return
@@ -5678,7 +5587,6 @@ function WhenNode:getBreakKind( checkMode )
       local block = self.elseBlock
       if block ~= nil then
          work = block:getBreakKind( checkMode )
-         
          if checkMode == CheckBreakMode.IgnoreFlowReturn then
             if work == BreakKind.Return then
                return BreakKind.Return
@@ -5753,7 +5661,6 @@ CastKind._val2NameMap[2] = 'Implicit'
 CastKind.__allList[3] = CastKind.Implicit
 
 
-
 function NodeKind.get_ExpCast(  )
 
    return 32
@@ -5822,7 +5729,6 @@ function ExpCastNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.exp
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -5877,7 +5783,6 @@ function ExpCastNode:setupLiteralTokenList( list )
 
    return self.exp:setupLiteralTokenList( list )
 end
-
 
 
 function NodeKind.get_ExpToDDD(  )
@@ -5946,7 +5851,6 @@ function ExpToDDDNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.expList
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -5978,7 +5882,6 @@ end
 function ExpToDDDNode:get_expList()
    return self.expList
 end
-
 
 
 
@@ -6049,7 +5952,6 @@ function ExpSubDDDNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.src
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -6120,7 +6022,6 @@ MacroMode._val2NameMap[2] = 'AnalyzeArg'
 MacroMode.__allList[3] = MacroMode.AnalyzeArg
 
 
-
 function NodeKind.get_ExpOp1(  )
 
    return 35
@@ -6189,7 +6090,6 @@ function ExpOp1Node:visit( visitor, depth, alreadySet )
 
    do
       local child = self.exp
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -6227,7 +6127,6 @@ end
 function ExpOp1Node:get_exp()
    return self.exp
 end
-
 
 
 
@@ -6305,7 +6204,6 @@ function ExpRefItemNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.val
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -6331,7 +6229,6 @@ function ExpRefItemNode:visit( visitor, depth, alreadySet )
       do
          local child = self.index
          if child ~= nil then
-            
             if not _lune._Set_has(alreadySet, child ) then
                alreadySet[child]= true
                do
@@ -6393,7 +6290,6 @@ function ExpRefItemNode:canBeLeft(  )
    
    return Ast.TypeInfo.isMut( self:get_val():get_expType() ) and not self.nilAccess
 end
-
 
 
 function NodeKind.get_ExpCall(  )
@@ -6470,7 +6366,6 @@ function ExpCallNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.func
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -6496,7 +6391,6 @@ function ExpCallNode:visit( visitor, depth, alreadySet )
       do
          local child = self.argList
          if child ~= nil then
-            
             if not _lune._Set_has(alreadySet, child ) then
                alreadySet[child]= true
                do
@@ -6577,7 +6471,6 @@ function ExpCallNode:getBreakKind( checkMode )
 end
 
 
-
 function NodeKind.get_ExpMRet(  )
 
    return 38
@@ -6644,7 +6537,6 @@ function ExpMRetNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.mRet
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -6682,7 +6574,6 @@ function ExpMRetNode:getPrefix(  )
 
    return self.mRet:getPrefix(  )
 end
-
 
 
 function NodeKind.get_ExpAccessMRet(  )
@@ -6752,7 +6643,6 @@ function ExpAccessMRetNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.mRet
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -6793,7 +6683,6 @@ function ExpAccessMRetNode:getPrefix(  )
 
    return self.mRet:getPrefix(  )
 end
-
 
 
 function NodeKind.get_ExpMultiTo1(  )
@@ -6862,7 +6751,6 @@ function ExpMultiTo1Node:visit( visitor, depth, alreadySet )
 
    do
       local child = self.exp
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -6900,7 +6788,6 @@ function ExpMultiTo1Node:getPrefix(  )
 
    return self.exp:getPrefix(  )
 end
-
 
 
 function NodeKind.get_ExpParen(  )
@@ -6969,7 +6856,6 @@ function ExpParenNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.exp
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -7013,7 +6899,6 @@ function ExpParenNode:getSymbolInfo(  )
 
    return self.exp:getSymbolInfo(  )
 end
-
 
 
 function NodeKind.get_ExpMacroExp(  )
@@ -7080,7 +6965,6 @@ function ExpMacroExpNode:visit( visitor, depth, alreadySet )
    do
       local list = self.stmtList
       for __index, child in ipairs( list ) do
-         
          if not _lune._Set_has(alreadySet, child ) then
             alreadySet[child]= true
             do
@@ -7163,7 +7047,6 @@ MacroStatKind._val2NameMap[1] = 'Exp'
 MacroStatKind.__allList[2] = MacroStatKind.Exp
 
 
-
 function NodeKind.get_ExpMacroStat(  )
 
    return 43
@@ -7231,7 +7114,6 @@ function ExpMacroStatNode:visit( visitor, depth, alreadySet )
    do
       local list = self.expStrList
       for __index, child in ipairs( list ) do
-         
          if not _lune._Set_has(alreadySet, child ) then
             alreadySet[child]= true
             do
@@ -7266,7 +7148,6 @@ end
 function ExpMacroStatNode:get_expStrList()
    return self.expStrList
 end
-
 
 
 
@@ -7346,7 +7227,6 @@ end
 
 
 
-
 function NodeKind.get_StmtExp(  )
 
    return 45
@@ -7409,7 +7289,6 @@ function StmtExpNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.exp
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -7453,7 +7332,6 @@ function StmtExpNode:getBreakKind( checkMode )
 
    return self:get_exp():getBreakKind( checkMode )
 end
-
 
 
 function NodeKind.get_ExpMacroStatList(  )
@@ -7522,7 +7400,6 @@ function ExpMacroStatListNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.exp
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -7554,7 +7431,6 @@ end
 function ExpMacroStatListNode:get_exp()
    return self.exp
 end
-
 
 
 
@@ -7646,7 +7522,6 @@ end
 
 
 
-
 function NodeKind.get_RefField(  )
 
    return 48
@@ -7717,7 +7592,6 @@ function RefFieldNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.prefix
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -7796,7 +7670,6 @@ function RefFieldNode:canBeRight( processInfo )
    
    return true
 end
-
 
 
 function NodeKind.get_GetField(  )
@@ -7878,7 +7751,6 @@ function GetFieldNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.prefix
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -7936,7 +7808,6 @@ function GetFieldNode:getPrefix(  )
 
    return self.prefix
 end
-
 
 
 function NodeKind.get_Alias(  )
@@ -8007,7 +7878,6 @@ function AliasNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.srcNode
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -8111,7 +7981,6 @@ DeclVarMode._val2NameMap[2] = 'Unwrap'
 DeclVarMode.__allList[3] = DeclVarMode.Unwrap
 
 
-
 function NodeKind.get_DeclVar(  )
 
    return 51
@@ -8191,7 +8060,6 @@ function DeclVarNode:visit( visitor, depth, alreadySet )
       do
          local child = self.expList
          if child ~= nil then
-            
             if not _lune._Set_has(alreadySet, child ) then
                alreadySet[child]= true
                do
@@ -8220,7 +8088,6 @@ function DeclVarNode:visit( visitor, depth, alreadySet )
       do
          local child = self.unwrapBlock
          if child ~= nil then
-            
             if not _lune._Set_has(alreadySet, child ) then
                alreadySet[child]= true
                do
@@ -8249,7 +8116,6 @@ function DeclVarNode:visit( visitor, depth, alreadySet )
       do
          local child = self.thenBlock
          if child ~= nil then
-            
             if not _lune._Set_has(alreadySet, child ) then
                alreadySet[child]= true
                do
@@ -8278,7 +8144,6 @@ function DeclVarNode:visit( visitor, depth, alreadySet )
       do
          local child = self.syncBlock
          if child ~= nil then
-            
             if not _lune._Set_has(alreadySet, child ) then
                alreadySet[child]= true
                do
@@ -8357,7 +8222,6 @@ function DeclVarNode:getBreakKind( checkMode )
       local block = self.unwrapBlock
       if block ~= nil then
          work = block:getBreakKind( checkMode )
-         
          if checkMode == CheckBreakMode.IgnoreFlowReturn then
             if work == BreakKind.Return then
                return BreakKind.Return
@@ -8395,7 +8259,6 @@ function DeclVarNode:getBreakKind( checkMode )
             local thenBlock = self.thenBlock
             if thenBlock ~= nil then
                work = thenBlock:getBreakKind( checkMode )
-               
                if checkMode == CheckBreakMode.IgnoreFlowReturn then
                   if work == BreakKind.Return then
                      return BreakKind.Return
@@ -8433,7 +8296,6 @@ function DeclVarNode:getBreakKind( checkMode )
                   local syncBlock = self.syncBlock
                   if syncBlock ~= nil then
                      work = syncBlock:getBreakKind( checkMode )
-                     
                      if checkMode == CheckBreakMode.IgnoreFlowReturn then
                         if work == BreakKind.Return then
                            return BreakKind.Return
@@ -8491,7 +8353,6 @@ function DeclVarNode:visitSub( visitor, depth, alreadySet )
       do
          local refTypeNode = varInfo:get_refType()
          if refTypeNode ~= nil then
-            
             if not _lune._Set_has(alreadySet, refTypeNode ) then
                alreadySet[refTypeNode]= true
                do
@@ -8637,7 +8498,6 @@ function DeclFuncInfo.createFrom( info, name, symbol )
 end
 
 
-
 function NodeKind.get_DeclForm(  )
 
    return 52
@@ -8704,7 +8564,6 @@ function DeclFormNode:visit( visitor, depth, alreadySet )
 
    do
       for __index, argNode in ipairs( self.declInfo:get_argList() ) do
-         
          if not _lune._Set_has(alreadySet, argNode ) then
             alreadySet[argNode]= true
             do
@@ -8726,7 +8585,6 @@ function DeclFormNode:visit( visitor, depth, alreadySet )
       end
       
       for __index, retTypeNode in ipairs( self.declInfo:get_retTypeNodeList() ) do
-         
          if not _lune._Set_has(alreadySet, retTypeNode ) then
             alreadySet[retTypeNode]= true
             do
@@ -8750,7 +8608,6 @@ function DeclFormNode:visit( visitor, depth, alreadySet )
       do
          local body = self.declInfo:get_body()
          if body ~= nil then
-            
             if not _lune._Set_has(alreadySet, body ) then
                alreadySet[body]= true
                do
@@ -8784,7 +8641,6 @@ end
 function DeclFormNode:get_declInfo()
    return self.declInfo
 end
-
 
 
 
@@ -8846,7 +8702,6 @@ function DeclFuncNode:visit( visitor, depth, alreadySet )
 
    do
       for __index, argNode in ipairs( self.declInfo:get_argList() ) do
-         
          if not _lune._Set_has(alreadySet, argNode ) then
             alreadySet[argNode]= true
             do
@@ -8868,7 +8723,6 @@ function DeclFuncNode:visit( visitor, depth, alreadySet )
       end
       
       for __index, retTypeNode in ipairs( self.declInfo:get_retTypeNodeList() ) do
-         
          if not _lune._Set_has(alreadySet, retTypeNode ) then
             alreadySet[retTypeNode]= true
             do
@@ -8892,7 +8746,6 @@ function DeclFuncNode:visit( visitor, depth, alreadySet )
       do
          local body = self.declInfo:get_body()
          if body ~= nil then
-            
             if not _lune._Set_has(alreadySet, body ) then
                alreadySet[body]= true
                do
@@ -8937,7 +8790,6 @@ function DeclFuncNode:canBeStatement(  )
 
    return not (self.declInfo:get_name() == nil )
 end
-
 
 
 function NodeKind.get_DeclMethod(  )
@@ -9006,7 +8858,6 @@ function DeclMethodNode:visit( visitor, depth, alreadySet )
 
    do
       for __index, argNode in ipairs( self.declInfo:get_argList() ) do
-         
          if not _lune._Set_has(alreadySet, argNode ) then
             alreadySet[argNode]= true
             do
@@ -9028,7 +8879,6 @@ function DeclMethodNode:visit( visitor, depth, alreadySet )
       end
       
       for __index, retTypeNode in ipairs( self.declInfo:get_retTypeNodeList() ) do
-         
          if not _lune._Set_has(alreadySet, retTypeNode ) then
             alreadySet[retTypeNode]= true
             do
@@ -9052,7 +8902,6 @@ function DeclMethodNode:visit( visitor, depth, alreadySet )
       do
          local body = self.declInfo:get_body()
          if body ~= nil then
-            
             if not _lune._Set_has(alreadySet, body ) then
                alreadySet[body]= true
                do
@@ -9086,7 +8935,6 @@ end
 function DeclMethodNode:get_declInfo()
    return self.declInfo
 end
-
 
 
 
@@ -9156,7 +9004,6 @@ function ProtoMethodNode:visit( visitor, depth, alreadySet )
 
    do
       for __index, argNode in ipairs( self.declInfo:get_argList() ) do
-         
          if not _lune._Set_has(alreadySet, argNode ) then
             alreadySet[argNode]= true
             do
@@ -9178,7 +9025,6 @@ function ProtoMethodNode:visit( visitor, depth, alreadySet )
       end
       
       for __index, retTypeNode in ipairs( self.declInfo:get_retTypeNodeList() ) do
-         
          if not _lune._Set_has(alreadySet, retTypeNode ) then
             alreadySet[retTypeNode]= true
             do
@@ -9202,7 +9048,6 @@ function ProtoMethodNode:visit( visitor, depth, alreadySet )
       do
          local body = self.declInfo:get_body()
          if body ~= nil then
-            
             if not _lune._Set_has(alreadySet, body ) then
                alreadySet[body]= true
                do
@@ -9236,7 +9081,6 @@ end
 function ProtoMethodNode:get_declInfo()
    return self.declInfo
 end
-
 
 
 
@@ -9306,7 +9150,6 @@ function DeclConstrNode:visit( visitor, depth, alreadySet )
 
    do
       for __index, argNode in ipairs( self.declInfo:get_argList() ) do
-         
          if not _lune._Set_has(alreadySet, argNode ) then
             alreadySet[argNode]= true
             do
@@ -9328,7 +9171,6 @@ function DeclConstrNode:visit( visitor, depth, alreadySet )
       end
       
       for __index, retTypeNode in ipairs( self.declInfo:get_retTypeNodeList() ) do
-         
          if not _lune._Set_has(alreadySet, retTypeNode ) then
             alreadySet[retTypeNode]= true
             do
@@ -9352,7 +9194,6 @@ function DeclConstrNode:visit( visitor, depth, alreadySet )
       do
          local body = self.declInfo:get_body()
          if body ~= nil then
-            
             if not _lune._Set_has(alreadySet, body ) then
                alreadySet[body]= true
                do
@@ -9386,7 +9227,6 @@ end
 function DeclConstrNode:get_declInfo()
    return self.declInfo
 end
-
 
 
 
@@ -9456,7 +9296,6 @@ function DeclDestrNode:visit( visitor, depth, alreadySet )
 
    do
       for __index, argNode in ipairs( self.declInfo:get_argList() ) do
-         
          if not _lune._Set_has(alreadySet, argNode ) then
             alreadySet[argNode]= true
             do
@@ -9478,7 +9317,6 @@ function DeclDestrNode:visit( visitor, depth, alreadySet )
       end
       
       for __index, retTypeNode in ipairs( self.declInfo:get_retTypeNodeList() ) do
-         
          if not _lune._Set_has(alreadySet, retTypeNode ) then
             alreadySet[retTypeNode]= true
             do
@@ -9502,7 +9340,6 @@ function DeclDestrNode:visit( visitor, depth, alreadySet )
       do
          local body = self.declInfo:get_body()
          if body ~= nil then
-            
             if not _lune._Set_has(alreadySet, body ) then
                alreadySet[body]= true
                do
@@ -9536,7 +9373,6 @@ end
 function DeclDestrNode:get_declInfo()
    return self.declInfo
 end
-
 
 
 
@@ -9610,7 +9446,6 @@ function ExpCallSuperCtorNode:visit( visitor, depth, alreadySet )
       do
          local child = self.expList
          if child ~= nil then
-            
             if not _lune._Set_has(alreadySet, child ) then
                alreadySet[child]= true
                do
@@ -9651,7 +9486,6 @@ end
 function ExpCallSuperCtorNode:get_expList()
    return self.expList
 end
-
 
 
 
@@ -9721,7 +9555,6 @@ function ExpCallSuperNode:visit( visitor, depth, alreadySet )
       do
          local child = self.expList
          if child ~= nil then
-            
             if not _lune._Set_has(alreadySet, child ) then
                alreadySet[child]= true
                do
@@ -9768,7 +9601,6 @@ function ExpCallSuperNode:canBeRight( processInfo )
 
    return self:get_expType() ~= Ast.builtinTypeNone
 end
-
 
 
 function NodeKind.get_DeclMember(  )
@@ -9848,7 +9680,6 @@ function DeclMemberNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.refType
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -9936,7 +9767,6 @@ function DeclMemberNode:getSetterSym(  )
 end
 
 
-
 function NodeKind.get_DeclArg(  )
 
    return 61
@@ -10007,7 +9837,6 @@ function DeclArgNode:visit( visitor, depth, alreadySet )
       do
          local child = self.argType
          if child ~= nil then
-            
             if not _lune._Set_has(alreadySet, child ) then
                alreadySet[child]= true
                do
@@ -10048,7 +9877,6 @@ end
 function DeclArgNode:get_argType()
    return self.argType
 end
-
 
 
 
@@ -10153,7 +9981,6 @@ function AdvertiseInfo:get_pos()
 end
 
 
-
 function NodeKind.get_DeclAdvertise(  )
 
    return 63
@@ -10237,7 +10064,6 @@ function ClassInheritInfo:visit( parent, visitor, depth, alreadySet )
    do
       local base = self.base
       if base ~= nil then
-         
          if not _lune._Set_has(alreadySet, base ) then
             alreadySet[base]= true
             do
@@ -10260,7 +10086,6 @@ function ClassInheritInfo:visit( parent, visitor, depth, alreadySet )
    end
    
    for __index, ifTypeNode in ipairs( self.impliments ) do
-      
       if not _lune._Set_has(alreadySet, ifTypeNode ) then
          alreadySet[ifTypeNode]= true
          do
@@ -10305,7 +10130,6 @@ end
 function ClassInheritInfo:get_impliments()
    return self.impliments
 end
-
 
 
 function NodeKind.get_ProtoClass(  )
@@ -10418,7 +10242,6 @@ function ClassInitBlockInfo:set_func( func )
    self.func = func
 end
 
-
 function NodeKind.get_DeclClass(  )
 
    return 65
@@ -10504,7 +10327,6 @@ function DeclClassNode:visit( visitor, depth, alreadySet )
    do
       local list = self.allStmtList
       for __index, child in ipairs( list ) do
-         
          if not _lune._Set_has(alreadySet, child ) then
             alreadySet[child]= true
             do
@@ -10532,7 +10354,6 @@ function DeclClassNode:visit( visitor, depth, alreadySet )
    do
       local list = self.declStmtList
       for __index, child in ipairs( list ) do
-         
          if not _lune._Set_has(alreadySet, child ) then
             alreadySet[child]= true
             do
@@ -10560,7 +10381,6 @@ function DeclClassNode:visit( visitor, depth, alreadySet )
    do
       local list = self.fieldList
       for __index, child in ipairs( list ) do
-         
          if not _lune._Set_has(alreadySet, child ) then
             alreadySet[child]= true
             do
@@ -10588,7 +10408,6 @@ function DeclClassNode:visit( visitor, depth, alreadySet )
    do
       local list = self.memberList
       for __index, child in ipairs( list ) do
-         
          if not _lune._Set_has(alreadySet, child ) then
             alreadySet[child]= true
             do
@@ -10746,7 +10565,6 @@ function DeclClassNode:hasUserInit(  )
 end
 
 
-
 function NodeKind.get_DeclEnum(  )
 
    return 66
@@ -10889,7 +10707,6 @@ function DeclAlgeValInfo:get_paramList()
    return self.paramList
 end
 
-
 function NodeKind.get_DeclAlge(  )
 
    return 67
@@ -10986,7 +10803,6 @@ function DeclAlgeNode:visitSub( visitor, depth, alreadySet )
 
    for __index, valInfo in ipairs( self.algeValList ) do
       for __index, paramInfo in ipairs( valInfo:get_paramList() ) do
-         
          if not _lune._Set_has(alreadySet, paramInfo:get_typeRef() ) then
             alreadySet[paramInfo:get_typeRef()]= true
             do
@@ -11011,7 +10827,6 @@ function DeclAlgeNode:visitSub( visitor, depth, alreadySet )
    
    return true
 end
-
 
 
 function NodeKind.get_NewAlgeVal(  )
@@ -11086,7 +10901,6 @@ function NewAlgeValNode:visit( visitor, depth, alreadySet )
       do
          local child = self.prefix
          if child ~= nil then
-            
             if not _lune._Set_has(alreadySet, child ) then
                alreadySet[child]= true
                do
@@ -11114,7 +10928,6 @@ function NewAlgeValNode:visit( visitor, depth, alreadySet )
    do
       local list = self.paramList
       for __index, child in ipairs( list ) do
-         
          if not _lune._Set_has(alreadySet, child ) then
             alreadySet[child]= true
             do
@@ -11161,7 +10974,6 @@ end
 function NewAlgeValNode:get_paramList()
    return self.paramList
 end
-
 
 
 
@@ -11275,7 +11087,6 @@ function MatchCase:get_block()
 end
 
 
-
 function NodeKind.get_Match(  )
 
    return 70
@@ -11347,7 +11158,6 @@ function MatchNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.val
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -11373,7 +11183,6 @@ function MatchNode:visit( visitor, depth, alreadySet )
       do
          local child = self.defaultBlock
          if child ~= nil then
-            
             if not _lune._Set_has(alreadySet, child ) then
                alreadySet[child]= true
                do
@@ -11432,7 +11241,6 @@ function MatchNode:getBreakKind( checkMode )
    for __index, caseInfo in ipairs( self.caseList ) do
       local work = caseInfo:get_block():getBreakKind( checkMode )
       local goNext = (work == BreakKind.None ) or not fullCase
-      
       if checkMode == CheckBreakMode.IgnoreFlowReturn then
          if work == BreakKind.Return then
             return BreakKind.Return
@@ -11472,7 +11280,6 @@ function MatchNode:getBreakKind( checkMode )
       local block = self.defaultBlock
       if block ~= nil then
          local work = block:getBreakKind( checkMode )
-         
          if checkMode == CheckBreakMode.IgnoreFlowReturn then
             if work == BreakKind.Return then
                return BreakKind.Return
@@ -11522,7 +11329,6 @@ end
 function MatchNode:visitSub( visitor, depth, alreadySet )
 
    for __index, caseInfo in ipairs( self.caseList ) do
-      
       if not _lune._Set_has(alreadySet, caseInfo:get_valExpRef() ) then
          alreadySet[caseInfo:get_valExpRef()]= true
          do
@@ -11539,7 +11345,6 @@ function MatchNode:visitSub( visitor, depth, alreadySet )
          end
          
       end
-      
       
       
       if not _lune._Set_has(alreadySet, caseInfo:get_block() ) then
@@ -11564,7 +11369,6 @@ function MatchNode:visitSub( visitor, depth, alreadySet )
    
    return true
 end
-
 
 
 function NodeKind.get_LuneKind(  )
@@ -11633,7 +11437,6 @@ function LuneKindNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.exp
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -11665,7 +11468,6 @@ end
 function LuneKindNode:get_exp()
    return self.exp
 end
-
 
 
 
@@ -11762,7 +11564,6 @@ function MacroEval:__init(  )
 end
 
 
-
 function NodeKind.get_TestCase(  )
 
    return 73
@@ -11832,7 +11633,6 @@ function TestCaseNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.impNode
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -11856,7 +11656,6 @@ function TestCaseNode:visit( visitor, depth, alreadySet )
    
    do
       local child = self.block
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -11897,7 +11696,6 @@ end
 function TestCaseNode:get_block()
    return self.block
 end
-
 
 
 
@@ -11968,7 +11766,6 @@ function TestBlockNode:visit( visitor, depth, alreadySet )
    do
       local list = self.stmtList
       for __index, child in ipairs( list ) do
-         
          if not _lune._Set_has(alreadySet, child ) then
             alreadySet[child]= true
             do
@@ -12014,7 +11811,6 @@ function TestBlockNode:isInnerPos( pos )
    
    return false
 end
-
 
 
 function NodeKind.get_Abbr(  )
@@ -12088,7 +11884,6 @@ end
 
 
 
-
 function NodeKind.get_Boxing(  )
 
    return 76
@@ -12155,7 +11950,6 @@ function BoxingNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.src
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -12187,7 +11981,6 @@ end
 function BoxingNode:get_src()
    return self.src
 end
-
 
 
 
@@ -12257,7 +12050,6 @@ function UnboxingNode:visit( visitor, depth, alreadySet )
 
    do
       local child = self.src
-      
       if not _lune._Set_has(alreadySet, child ) then
          alreadySet[child]= true
          do
@@ -12289,7 +12081,6 @@ end
 function UnboxingNode:get_src()
    return self.src
 end
-
 
 
 
@@ -12361,7 +12152,6 @@ end
 function LiteralNilNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralNilNode  } )
 end
-
 
 
 
@@ -12445,7 +12235,6 @@ end
 
 
 
-
 function NodeKind.get_LiteralInt(  )
 
    return 80
@@ -12523,7 +12312,6 @@ end
 function LiteralIntNode:get_num()
    return self.num
 end
-
 
 
 
@@ -12607,7 +12395,6 @@ end
 
 
 
-
 function NodeKind.get_LiteralArray(  )
 
    return 82
@@ -12676,7 +12463,6 @@ function LiteralArrayNode:visit( visitor, depth, alreadySet )
       do
          local child = self.expList
          if child ~= nil then
-            
             if not _lune._Set_has(alreadySet, child ) then
                alreadySet[child]= true
                do
@@ -12711,7 +12497,6 @@ end
 function LiteralArrayNode:get_expList()
    return self.expList
 end
-
 
 
 
@@ -12783,7 +12568,6 @@ function LiteralListNode:visit( visitor, depth, alreadySet )
       do
          local child = self.expList
          if child ~= nil then
-            
             if not _lune._Set_has(alreadySet, child ) then
                alreadySet[child]= true
                do
@@ -12818,7 +12602,6 @@ end
 function LiteralListNode:get_expList()
    return self.expList
 end
-
 
 
 
@@ -12890,7 +12673,6 @@ function LiteralSetNode:visit( visitor, depth, alreadySet )
       do
          local child = self.expList
          if child ~= nil then
-            
             if not _lune._Set_has(alreadySet, child ) then
                alreadySet[child]= true
                do
@@ -12952,7 +12734,6 @@ end
 function PairItem:get_val()
    return self.val
 end
-
 
 function NodeKind.get_LiteralMap(  )
 
@@ -13024,7 +12805,6 @@ function LiteralMapNode:visit( visitor, depth, alreadySet )
       for key, val in pairs( map ) do
          do
             local child = key
-            
             if not _lune._Set_has(alreadySet, child ) then
                alreadySet[child]= true
                do
@@ -13048,7 +12828,6 @@ function LiteralMapNode:visit( visitor, depth, alreadySet )
          
          do
             local child = val
-            
             if not _lune._Set_has(alreadySet, child ) then
                alreadySet[child]= true
                do
@@ -13088,7 +12867,6 @@ end
 function LiteralMapNode:get_pairList()
    return self.pairList
 end
-
 
 
 
@@ -13167,7 +12945,6 @@ function LiteralStringNode:visit( visitor, depth, alreadySet )
       do
          local child = self.orgParam
          if child ~= nil then
-            
             if not _lune._Set_has(alreadySet, child ) then
                alreadySet[child]= true
                do
@@ -13196,7 +12973,6 @@ function LiteralStringNode:visit( visitor, depth, alreadySet )
       do
          local child = self.dddParam
          if child ~= nil then
-            
             if not _lune._Set_has(alreadySet, child ) then
                alreadySet[child]= true
                do
@@ -13240,7 +13016,6 @@ end
 function LiteralStringNode:get_threading()
    return self.threading
 end
-
 
 
 
@@ -13317,7 +13092,6 @@ end
 function LiteralBoolNode:get_token()
    return self.token
 end
-
 
 
 
@@ -13473,7 +13247,6 @@ function WhileNode:getBreakKind( checkMode )
       for __index, stmt in ipairs( self.block:get_stmtList() ) do
          if stmt:get_kind() ~= NodeKind.get_BlankLine() then
             local work = stmt:getBreakKind( checkMode )
-            
             if checkMode == CheckBreakMode.IgnoreFlowReturn then
                if work == BreakKind.Return then
                   return BreakKind.Return
@@ -13527,7 +13300,6 @@ function WhileNode:getBreakKind( checkMode )
       for __index, stmt in ipairs( self.block:get_stmtList() ) do
          if stmt:get_kind() ~= NodeKind.get_BlankLine() then
             local work = stmt:getBreakKind( mode )
-            
             if mode == CheckBreakMode.IgnoreFlowReturn then
                if work == BreakKind.Return then
                   return BreakKind.Return
@@ -14321,7 +14093,6 @@ local function hasMultiValNode( node )
    return #node:get_expTypeList() > 1 or node:get_expType():get_kind() == Ast.TypeInfoKind.DDD
 end
 _moduleObj.hasMultiValNode = hasMultiValNode
-
 
 
 local nodeKindEnum = {}
