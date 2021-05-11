@@ -730,8 +730,7 @@ function convFilter:outputMeta( node )
                local _switchExp = typeInfo:get_kind()
                if _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.Form or _switchExp == Ast.TypeInfoKind.FormFunc or _switchExp == Ast.TypeInfoKind.Alge or _switchExp == Ast.TypeInfoKind.Enum or _switchExp == Ast.TypeInfoKind.Map or _switchExp == Ast.TypeInfoKind.Set or _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Alternate or _switchExp == Ast.TypeInfoKind.Box then
                   pickupTypeId( typeInfo:get_nilableTypeInfo(), true, false )
-                  local imutType = self.processInfo:createModifier( typeInfo, Ast.MutMode.IMut )
-                  pickupTypeId( imutType, true, false )
+                  
                end
             end
             
@@ -2025,7 +2024,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _767 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _766 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end

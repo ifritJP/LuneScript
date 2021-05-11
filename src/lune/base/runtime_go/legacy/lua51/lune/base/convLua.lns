@@ -475,9 +475,9 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
                     .Map, .Set, .List, .Array, .Alternate, .Box
                {
                   pickupTypeId( typeInfo.$nilableTypeInfo, true, false );
-                  // Modifier の Type を export しておく
-                  let imutType = self.processInfo.createModifier( typeInfo, .IMut );
-                  pickupTypeId( imutType, true, false );
+                  // // Modifier の Type を export しておく
+                  // let imutType = self.processInfo.createModifier( typeInfo, .IMut );
+                  // pickupTypeId( imutType, true, false );
                }
             }
          }

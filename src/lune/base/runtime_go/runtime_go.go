@@ -24,77 +24,82 @@ SOFTWARE.
 
 package runtimelns
 
-import "fmt"
-import "os"
-import "math"
-import "reflect"
-import "strconv"
-import "sync"
+import (
+	"fmt"
+	"math"
+	"os"
+	"reflect"
+	"strconv"
+	"sync"
+)
 
 type LnsInt = int
 type LnsReal = float64
 type LnsAny = interface{}
 
-type LnsForm func( []LnsAny ) []LnsAny
+type LnsForm func([]LnsAny) []LnsAny
 
 var LnsNone interface{} = nil
 var Lns_package_path string
 
 type LnsEnv struct {
-    valStack []LnsAny
-    nilAccStack []LnsAny
-    LuaVM *Lns_luaVM
+	valStack    []LnsAny
+	nilAccStack []LnsAny
+	LuaVM       *Lns_luaVM
 }
+
 // デフォルトのシングルタスクで使用する LnsEnv
 var cur_LnsEnv *LnsEnv
+
 // 排他して使用する LnsEnv
 var sync_LnsEnv *LnsEnv
+
 /// sync_LnsEnv を排他するための mutex
 var sync_LnsEnvMutex sync.Mutex
 
-func Lns_GetEnv () *LnsEnv {
-    return cur_LnsEnv
+func Lns_GetEnv() *LnsEnv {
+	return cur_LnsEnv
 }
 
-func Lns_GetEnvSync () *LnsEnv {
-    return sync_LnsEnv
+func Lns_GetEnvSync() *LnsEnv {
+	return sync_LnsEnv
 }
 func Lns_LockEnvSync() {
-    sync_LnsEnvMutex.Lock()
-    if sync_LnsEnv == nil {
-        sync_LnsEnv = createEnv()
-    }
-    
+	sync_LnsEnvMutex.Lock()
+	if sync_LnsEnv == nil {
+		sync_LnsEnv = createEnv()
+	}
+
 }
 func Lns_UnlockEnvSync() {
-    sync_LnsEnvMutex.Unlock()
+	sync_LnsEnvMutex.Unlock()
 }
 
-
 type LnsThreadMtd interface {
-    Loop()
+	Loop()
 }
 
 type LnsThread struct {
-    LnsEnv *LnsEnv
-    FP LnsThreadMtd
+	LnsEnv *LnsEnv
+	FP     LnsThreadMtd
 }
+
 func (self *LnsThread) InitLnsThread() {
-    self.LnsEnv = createEnv()
+	self.LnsEnv = Lns_GetEnv()
 }
 
 func (self *LnsThread) LoopMain() {
-    self.FP.Loop()
 
-    // スレッド処理が終ったら、
-    // メモリ削減のため LnsEnv を共通に戻し、VM を close する。
-    oldEnv := self.LnsEnv
-    self.LnsEnv = Lns_GetEnv()
-    oldEnv.LuaVM.closeVM()
+	self.LnsEnv = createEnv()
+
+	self.FP.Loop()
+
+	// スレッド処理が終ったら、
+	// メモリ削減のため LnsEnv を共通に戻し、VM を close する。
+	oldEnv := self.LnsEnv
+	self.LnsEnv = Lns_GetEnv()
+	oldEnv.LuaVM.closeVM()
 }
-
-
-
 
 /**
 各モジュールを初期化する際に実行する関数。
@@ -108,29 +113,30 @@ func Lns_InitMod() {
 }
 
 func createEnv() *LnsEnv {
-    env := &LnsEnv{}
-    env.valStack = []LnsAny{}
-    env.nilAccStack = []LnsAny{}
-    env.LuaVM = createVM()
+	env := &LnsEnv{}
+	env.valStack = []LnsAny{}
+	env.nilAccStack = []LnsAny{}
+	env.LuaVM = createVM()
 
-    return env
+	return env
 }
 
 // 整数を文字列に変換する場合、 .0 を付加するかどうかのモード
 type Int2strMode_t int
+
 const (
-    // Lua のバージョンに依存。
-    // lua5.1 は .0 不要。
-    // lua5.3 は .0 必要。
-    Int2strModeDepend Int2strMode_t = iota
-    // .0 を付加する
-    Int2strModeNeed0
-    // .0 不要
-    Int2strModeUnneed0
+	// Lua のバージョンに依存。
+	// lua5.1 は .0 不要。
+	// lua5.3 は .0 必要。
+	Int2strModeDepend Int2strMode_t = iota
+	// .0 を付加する
+	Int2strModeNeed0
+	// .0 不要
+	Int2strModeUnneed0
 )
 
 type LnsRuntimeOpt struct {
-    Int2strMode Int2strMode_t
+	Int2strMode Int2strMode_t
 }
 
 var lnsRuntimeOpt LnsRuntimeOpt
@@ -138,265 +144,263 @@ var lnsRuntimeOpt LnsRuntimeOpt
 /**
 各モジュールを初期化する際に実行する関数。
 */
-func Lns_InitModOnce( opts... LnsRuntimeOpt ) {
+func Lns_InitModOnce(opts ...LnsRuntimeOpt) {
 
-    if len( opts ) == 0 {
-        lnsRuntimeOpt = LnsRuntimeOpt { Int2strMode: Int2strModeDepend }
-    } else {
-        lnsRuntimeOpt = opts[ 0 ]
-    }
-    
-    cur_LnsEnv = createEnv()
-    
-    Lns_package_path = cur_LnsEnv.LuaVM.GetPackagePath()
+	if len(opts) == 0 {
+		lnsRuntimeOpt = LnsRuntimeOpt{Int2strMode: Int2strModeDepend}
+	} else {
+		lnsRuntimeOpt = opts[0]
+	}
+
+	cur_LnsEnv = createEnv()
+
+	Lns_package_path = cur_LnsEnv.LuaVM.GetPackagePath()
 }
 
-func Lns_RunMain( mainFunc func (args *LnsList) LnsInt ) {
-    args := []LnsAny{}
-    for _, arg := range( os.Args ) {
-        args = append( args, arg )
-    }
+func Lns_RunMain(mainFunc func(args *LnsList) LnsInt) {
+	args := []LnsAny{}
+	for _, arg := range os.Args {
+		args = append(args, arg)
+	}
 
-    os.Exit( mainFunc( NewLnsList( args ) ) )
-}
-
-
-func Lns_IsNil( val LnsAny ) bool {
-    if val == nil {
-        return true;
-    }
-    switch val.(type) {
-    case LnsInt:
-        return false;
-    case LnsReal:
-        return false;
-    case bool:
-        return false;
-    case string:
-        return false;
-    default:
-        value := reflect.ValueOf(val)
-        if value.Kind() == reflect.Func {
-            return false
-        }
-        return value.IsNil()
-    }    
+	os.Exit(mainFunc(NewLnsList(args)))
 }
 
-func Lns_type( val LnsAny ) string {
-    if val == nil {
-        return "nil";
-    }
-    switch val.(type) {
-    case LnsInt:
-        return "number";
-    case LnsReal:
-        return "number";
-    case bool:
-        return "boolean";
-    case string:
-        return "string";
-    case *Lns_luaValue:
-        switch val.(*Lns_luaValue).core.typeId {
-        case cLUA_TFUNCTION:
-            return "function"
-        case cLUA_TTABLE:
-            return "table"
-        default:
-            return fmt.Sprintf( "<notsupport>:%d, %d, %s",
-                val.(*Lns_luaValue).core.typeId, cLUA_TTABLE,
-                val.(*Lns_luaValue).core.typeId == cLUA_TTABLE)
-        }
-    default:
-        value := reflect.ValueOf(val)
-        if value.Kind() == reflect.Func {
-            return "function";
-        }
-        return "table";
-    }    
+func Lns_IsNil(val LnsAny) bool {
+	if val == nil {
+		return true
+	}
+	switch val.(type) {
+	case LnsInt:
+		return false
+	case LnsReal:
+		return false
+	case bool:
+		return false
+	case string:
+		return false
+	default:
+		value := reflect.ValueOf(val)
+		if value.Kind() == reflect.Func {
+			return false
+		}
+		return value.IsNil()
+	}
 }
 
-func Lns_tonumber( val string, base LnsAny ) LnsAny {
-    if Lns_IsNil( base ) {
-        if Str_startsWith( val, "0x" ) || Str_startsWith( val, "0X" ) {
-            if dig, err := strconv.ParseInt( val[2:], 16, 64 ); err != nil {
-                return nil
-            } else {
-                return LnsReal( dig )
-            }
-        }
-        f, err := strconv.ParseFloat( val, 64)
-        if err != nil {
-            return nil
-        }
-        return f
-    }
-    if bs, ok := base.(LnsInt); ok {
-        print( fmt.Sprint( "hoge: %s %s", val, bs ) );
-        if dig, err := strconv.ParseInt( val, bs, 64 ); err != nil {
-            return nil
-        } else {
-            return LnsReal( dig )
-        }
-    } else {
-        return nil
-    }
+func Lns_type(val LnsAny) string {
+	if val == nil {
+		return "nil"
+	}
+	switch val.(type) {
+	case LnsInt:
+		return "number"
+	case LnsReal:
+		return "number"
+	case bool:
+		return "boolean"
+	case string:
+		return "string"
+	case *Lns_luaValue:
+		switch val.(*Lns_luaValue).core.typeId {
+		case cLUA_TFUNCTION:
+			return "function"
+		case cLUA_TTABLE:
+			return "table"
+		default:
+			return fmt.Sprintf("<notsupport>:%d, %d, %s",
+				val.(*Lns_luaValue).core.typeId, cLUA_TTABLE,
+				val.(*Lns_luaValue).core.typeId == cLUA_TTABLE)
+		}
+	default:
+		value := reflect.ValueOf(val)
+		if value.Kind() == reflect.Func {
+			return "function"
+		}
+		return "table"
+	}
 }
 
-func Lns_require( val string ) LnsAny {
-    panic( "not support" )
-    return nil
+func Lns_tonumber(val string, base LnsAny) LnsAny {
+	if Lns_IsNil(base) {
+		if Str_startsWith(val, "0x") || Str_startsWith(val, "0X") {
+			if dig, err := strconv.ParseInt(val[2:], 16, 64); err != nil {
+				return nil
+			} else {
+				return LnsReal(dig)
+			}
+		}
+		f, err := strconv.ParseFloat(val, 64)
+		if err != nil {
+			return nil
+		}
+		return f
+	}
+	if bs, ok := base.(LnsInt); ok {
+		print(fmt.Sprint("hoge: %s %s", val, bs))
+		if dig, err := strconv.ParseInt(val, bs, 64); err != nil {
+			return nil
+		} else {
+			return LnsReal(dig)
+		}
+	} else {
+		return nil
+	}
 }
 
-
-func Lns_unwrap( val LnsAny ) LnsAny {
-    if Lns_IsNil( val ) {
-        panic( "unwrap nil" );
-    }
-    return val
-}
-func Lns_unwrapDefault( val, def LnsAny ) LnsAny {
-    if Lns_IsNil( val ) {
-        return def
-    }
-    return val
+func Lns_require(val string) LnsAny {
+	panic("not support")
+	return nil
 }
 
-func Lns_cast2LnsInt( val LnsAny ) LnsAny {
-    if _, ok := val.(LnsInt); ok {
-        return val
-    }
-    return nil
+func Lns_unwrap(val LnsAny) LnsAny {
+	if Lns_IsNil(val) {
+		panic("unwrap nil")
+	}
+	return val
 }
-func Lns_cast2LnsReal( val LnsAny ) LnsAny {
-    if _, ok := val.(LnsReal); ok {
-        return val
-    }
-    return nil
-}
-func Lns_cast2bool( val LnsAny ) LnsAny {
-    if _, ok := val.(bool); ok {
-        return val
-    }
-    return nil
-}
-func Lns_cast2string( val LnsAny ) LnsAny {
-    if _, ok := val.(string); ok {
-        return val
-    }
-    return nil
+func Lns_unwrapDefault(val, def LnsAny) LnsAny {
+	if Lns_IsNil(val) {
+		return def
+	}
+	return val
 }
 
-func Lns_forceCastInt( val LnsAny ) LnsInt {
-    switch val.(type) {
-    case LnsInt:
-        return val.(LnsInt)
-    case LnsReal:
-        return LnsInt(val.(LnsReal))
-    }
-    panic( fmt.Sprintf( "illegal type -- %T", val ) );
+func Lns_cast2LnsInt(val LnsAny) LnsAny {
+	if _, ok := val.(LnsInt); ok {
+		return val
+	}
+	return nil
+}
+func Lns_cast2LnsReal(val LnsAny) LnsAny {
+	if _, ok := val.(LnsReal); ok {
+		return val
+	}
+	return nil
+}
+func Lns_cast2bool(val LnsAny) LnsAny {
+	if _, ok := val.(bool); ok {
+		return val
+	}
+	return nil
+}
+func Lns_cast2string(val LnsAny) LnsAny {
+	if _, ok := val.(string); ok {
+		return val
+	}
+	return nil
 }
 
-func Lns_forceCastReal( val LnsAny ) LnsReal {
-    switch val.(type) {
-    case LnsInt:
-        return LnsReal(val.(LnsInt))
-    case LnsReal:
-        return val.(LnsReal)
-    }
-    panic( fmt.Sprintf( "illegal type -- %T", val ) );
+func Lns_forceCastInt(val LnsAny) LnsInt {
+	switch val.(type) {
+	case LnsInt:
+		return val.(LnsInt)
+	case LnsReal:
+		return LnsInt(val.(LnsReal))
+	}
+	panic(fmt.Sprintf("illegal type -- %T", val))
+}
+
+func Lns_forceCastReal(val LnsAny) LnsReal {
+	switch val.(type) {
+	case LnsInt:
+		return LnsReal(val.(LnsInt))
+	case LnsReal:
+		return val.(LnsReal)
+	}
+	panic(fmt.Sprintf("illegal type -- %T", val))
 }
 
 type Lns_ToObjParam struct {
-    Func func ( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny)
-    Nilable bool
-    Child []Lns_ToObjParam
+	Func    func(obj LnsAny, nilable bool, paramList []Lns_ToObjParam) (bool, LnsAny, LnsAny)
+	Nilable bool
+	Child   []Lns_ToObjParam
 }
-type Lns_ToObj func ( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny)
+type Lns_ToObj func(obj LnsAny, nilable bool, paramList []Lns_ToObjParam) (bool, LnsAny, LnsAny)
 
 func Lns_ToStemSub(
-    obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
-    if Lns_IsNil( obj ) {
-        if nilable {
-            return true, nil, nil 
-        }
-        return false, nil, "nil"
-    }
-    return true, obj, nil
+	obj LnsAny, nilable bool, paramList []Lns_ToObjParam) (bool, LnsAny, LnsAny) {
+	if Lns_IsNil(obj) {
+		if nilable {
+			return true, nil, nil
+		}
+		return false, nil, "nil"
+	}
+	return true, obj, nil
 }
 func Lns_ToIntSub(
-    obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
-    if Lns_IsNil( obj ) {
-        if nilable {
-            return true, nil, nil 
-        }
-        return false, nil, "nil"
-    }
-    if _, ok := obj.(LnsInt); ok {
-        return true, obj, nil
-    }
-    if val, ok := obj.(LnsReal); ok {
-        if math.Ceil( val ) == val {
-            return true, LnsInt(val), nil
-        }
-        return true, val, nil
-    }
-    return false, nil, fmt.Sprintf( "no int: %s", reflect.ValueOf( obj ).Kind() )
+	obj LnsAny, nilable bool, paramList []Lns_ToObjParam) (bool, LnsAny, LnsAny) {
+	if Lns_IsNil(obj) {
+		if nilable {
+			return true, nil, nil
+		}
+		return false, nil, "nil"
+	}
+	if _, ok := obj.(LnsInt); ok {
+		return true, obj, nil
+	}
+	if val, ok := obj.(LnsReal); ok {
+		if math.Ceil(val) == val {
+			return true, LnsInt(val), nil
+		}
+		return true, val, nil
+	}
+	return false, nil, fmt.Sprintf("no int: %s", reflect.ValueOf(obj).Kind())
 }
-func Lns_ToRealSub( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
-    if Lns_IsNil( obj ) {
-        if nilable {
-            return true, nil, nil 
-        }
-        return false, nil, "nil"
-    }
-    if _, ok := obj.(LnsReal); ok {
-        return true, obj, nil
-    }
-    return false, nil, "no real"
+func Lns_ToRealSub(obj LnsAny, nilable bool, paramList []Lns_ToObjParam) (bool, LnsAny, LnsAny) {
+	if Lns_IsNil(obj) {
+		if nilable {
+			return true, nil, nil
+		}
+		return false, nil, "nil"
+	}
+	if _, ok := obj.(LnsReal); ok {
+		return true, obj, nil
+	}
+	return false, nil, "no real"
 }
-func Lns_ToBoolSub( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
-    if Lns_IsNil( obj ) {
-        if nilable {
-            return true, nil, nil 
-        }
-        return false, nil, "nil"
-    }
-    if _, ok := obj.(bool); ok {
-        return true, obj, nil
-    }
-    return false, nil, "no bool"
+func Lns_ToBoolSub(obj LnsAny, nilable bool, paramList []Lns_ToObjParam) (bool, LnsAny, LnsAny) {
+	if Lns_IsNil(obj) {
+		if nilable {
+			return true, nil, nil
+		}
+		return false, nil, "nil"
+	}
+	if _, ok := obj.(bool); ok {
+		return true, obj, nil
+	}
+	return false, nil, "no bool"
 }
-func Lns_ToStrSub( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
-    if Lns_IsNil( obj ) {
-        if nilable {
-            return true, nil, nil 
-        }
-        return false, nil, "nil"
-    }
-    if _, ok := obj.(string); ok {
-        return true, obj, nil
-    }
-    return false, nil, "no str"
+func Lns_ToStrSub(obj LnsAny, nilable bool, paramList []Lns_ToObjParam) (bool, LnsAny, LnsAny) {
+	if Lns_IsNil(obj) {
+		if nilable {
+			return true, nil, nil
+		}
+		return false, nil, "nil"
+	}
+	if _, ok := obj.(string); ok {
+		return true, obj, nil
+	}
+	return false, nil, "no str"
 }
 
 type LnsAlgeVal interface {
-    GetTxt() string
+	GetTxt() string
 }
 
-func Lns_getFromMulti( multi []LnsAny, index LnsInt ) LnsAny {
-    if len( multi ) > index {
-        return multi[ index ];
-    }
-    return nil;
+func Lns_getFromMulti(multi []LnsAny, index LnsInt) LnsAny {
+	if len(multi) > index {
+		return multi[index]
+	}
+	return nil
 }
 
-func (self *LnsEnv) NilAccPush( obj interface{} ) bool {
-    if Lns_IsNil( obj )  {
-        return false
-    }
-    self.nilAccStack = append( self.nilAccStack, obj )
-    return true
+func (self *LnsEnv) NilAccPush(obj interface{}) bool {
+	if Lns_IsNil(obj) {
+		return false
+	}
+	self.nilAccStack = append(self.nilAccStack, obj)
+	return true
 }
 
 // func Lns_NilAccLast( obj interface{} ) bool {
@@ -405,144 +409,141 @@ func (self *LnsEnv) NilAccPush( obj interface{} ) bool {
 // }
 
 func (self *LnsEnv) NilAccPop() LnsAny {
-    obj := self.nilAccStack[ len( self.nilAccStack ) - 1 ]
-    self.nilAccStack = self.nilAccStack[ : len( self.nilAccStack ) - 1 ]
-    return obj
+	obj := self.nilAccStack[len(self.nilAccStack)-1]
+	self.nilAccStack = self.nilAccStack[:len(self.nilAccStack)-1]
+	return obj
 }
 
-func (self *LnsEnv) NilAccFin( ret bool) LnsAny {
-    if ret {
-        return self.NilAccPop()
-    }
-    return nil
+func (self *LnsEnv) NilAccFin(ret bool) LnsAny {
+	if ret {
+		return self.NilAccPop()
+	}
+	return nil
 }
 
-func Lns_NilAccCall0( self *LnsEnv, call func () ) bool {
-    call()
-    return self.NilAccPush( true )
+func Lns_NilAccCall0(self *LnsEnv, call func()) bool {
+	call()
+	return self.NilAccPush(true)
 }
-func Lns_NilAccCall1( self *LnsEnv, call func () LnsAny ) bool {
-    return self.NilAccPush( call() )
+func Lns_NilAccCall1(self *LnsEnv, call func() LnsAny) bool {
+	return self.NilAccPush(call())
 }
-func Lns_NilAccCall2( self *LnsEnv, call func () (LnsAny,LnsAny) ) bool {
-    return self.NilAccPush( Lns_2DDD( call() ) )
+func Lns_NilAccCall2(self *LnsEnv, call func() (LnsAny, LnsAny)) bool {
+	return self.NilAccPush(Lns_2DDD(call()))
 }
-func Lns_NilAccFinCall2( ret LnsAny ) (LnsAny,LnsAny) {
-    if Lns_IsNil( ret ) {
-        return nil, nil
-    }
-    list := ret.([]LnsAny)
-    return list[0], list[1]
+func Lns_NilAccFinCall2(ret LnsAny) (LnsAny, LnsAny) {
+	if Lns_IsNil(ret) {
+		return nil, nil
+	}
+	list := ret.([]LnsAny)
+	return list[0], list[1]
 }
-func Lns_NilAccCall3( self *LnsEnv, call func () (LnsAny,LnsAny,LnsAny) ) bool {
-    return self.NilAccPush( Lns_2DDD( call() ) )
+func Lns_NilAccCall3(self *LnsEnv, call func() (LnsAny, LnsAny, LnsAny)) bool {
+	return self.NilAccPush(Lns_2DDD(call()))
 }
-func Lns_NilAccFinCall3( ret LnsAny ) (LnsAny,LnsAny,LnsAny) {
-    if Lns_IsNil( ret ) {
-        return nil, nil, nil
-    }
-    list := ret.([]LnsAny)
-    return list[0], list[1], list[2]
-}
-
-
-
-func Lns_isCondTrue( stem LnsAny ) bool {
-    if Lns_IsNil( stem ) {
-        return false;
-    }
-    switch stem.(type) {
-    case bool:
-        return stem.(bool)
-    default:
-        return true
-    }
+func Lns_NilAccFinCall3(ret LnsAny) (LnsAny, LnsAny, LnsAny) {
+	if Lns_IsNil(ret) {
+		return nil, nil, nil
+	}
+	list := ret.([]LnsAny)
+	return list[0], list[1], list[2]
 }
 
-func Lns_op_not( stem LnsAny ) bool {
-    return !Lns_isCondTrue( stem );
+func Lns_isCondTrue(stem LnsAny) bool {
+	if Lns_IsNil(stem) {
+		return false
+	}
+	switch stem.(type) {
+	case bool:
+		return stem.(bool)
+	default:
+		return true
+	}
+}
+
+func Lns_op_not(stem LnsAny) bool {
+	return !Lns_isCondTrue(stem)
 }
 
 /** 多値返却の先頭を返す
-*/
-func Lns_car( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 {
-        return nil
-    }
-    if Lns_IsNil( multi[0] ) {
-        return nil
-    }
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok {
-        return Lns_car( ddd... )
-    }
-    return multi[0]
+ */
+func Lns_car(multi ...LnsAny) LnsAny {
+	if len(multi) == 0 {
+		return nil
+	}
+	if Lns_IsNil(multi[0]) {
+		return nil
+	}
+	if ddd, ok := multi[0].([]LnsAny); ok {
+		return Lns_car(ddd...)
+	}
+	return multi[0]
 }
 
-func Lns_2DDD( multi ...LnsAny ) []LnsAny {
-    if len( multi ) == 0 {
-        return multi;
-    }
-    switch multi[ len( multi ) - 1 ].(type) {
-    case []LnsAny:
-        ddd := multi[ len( multi ) - 1 ].([]LnsAny)
-        newMulti := multi[ :len( multi ) - 1 ];
-        for _, val := range( ddd ) {
-            newMulti = append( newMulti, val )
-        }
-        return newMulti
-    }
-    return multi
+func Lns_2DDD(multi ...LnsAny) []LnsAny {
+	if len(multi) == 0 {
+		return multi
+	}
+	switch multi[len(multi)-1].(type) {
+	case []LnsAny:
+		ddd := multi[len(multi)-1].([]LnsAny)
+		newMulti := multi[:len(multi)-1]
+		for _, val := range ddd {
+			newMulti = append(newMulti, val)
+		}
+		return newMulti
+	}
+	return multi
 }
 
-func Lns_print( multi []LnsAny ) {
-    for index, val := range( multi ) {
-        if index != 0 {
-            fmt.Print( "\t" )
-        }
-        fmt.Print( Lns_ToString( val ) )
-    }
-    fmt.Print( "\n" )
+func Lns_print(multi []LnsAny) {
+	for index, val := range multi {
+		if index != 0 {
+			fmt.Print("\t")
+		}
+		fmt.Print(Lns_ToString(val))
+	}
+	fmt.Print("\n")
 }
 
-
-func Lns_ToString( val LnsAny ) string {
-    if Lns_IsNil( val ) {
-        return "nil"
-    }
-    switch val.(type) {
-    case LnsInt:
-        return fmt.Sprintf( "%d", val )
-    case LnsReal:
-        real := val.(LnsReal)
-        switch lnsRuntimeOpt.Int2strMode {
-        case Int2strModeUnneed0:
-            return fmt.Sprintf( "%g", real )
-        case Int2strModeNeed0:
-            if digit, frac := math.Modf( real ); frac == 0 {
-                return fmt.Sprintf( "%g.0", digit )
-            }
-            return fmt.Sprintf( "%g", real )
-        }
-        return lns_ToStringFromRead( val.(LnsReal) )
-    case bool:
-        return fmt.Sprintf( "%v", val )
-    case string:
-        return val.(string);
-    default:
-        value := reflect.ValueOf(val)
-        if value.Kind() == reflect.Func {
-            return fmt.Sprintf( "function:%T", val )
-        }
-        return fmt.Sprintf( "table:%T", val )
-    }
+func Lns_ToString(val LnsAny) string {
+	if Lns_IsNil(val) {
+		return "nil"
+	}
+	switch val.(type) {
+	case LnsInt:
+		return fmt.Sprintf("%d", val)
+	case LnsReal:
+		real := val.(LnsReal)
+		switch lnsRuntimeOpt.Int2strMode {
+		case Int2strModeUnneed0:
+			return fmt.Sprintf("%g", real)
+		case Int2strModeNeed0:
+			if digit, frac := math.Modf(real); frac == 0 {
+				return fmt.Sprintf("%g.0", digit)
+			}
+			return fmt.Sprintf("%g", real)
+		}
+		return lns_ToStringFromRead(val.(LnsReal))
+	case bool:
+		return fmt.Sprintf("%v", val)
+	case string:
+		return val.(string)
+	default:
+		value := reflect.ValueOf(val)
+		if value.Kind() == reflect.Func {
+			return fmt.Sprintf("function:%T", val)
+		}
+		return fmt.Sprintf("table:%T", val)
+	}
 }
 
 /**
  * スタックを一段上げる
  */
 func (self *LnsEnv) IncStack() bool {
-    self.valStack = append( self.valStack, nil )
-    return false;
+	self.valStack = append(self.valStack, nil)
+	return false
 }
 
 /**
@@ -554,9 +555,9 @@ func (self *LnsEnv) IncStack() bool {
  * @param pVal スタックに詰む値
  * @return pVal の条件判定結果。 lns_isCondTrue()。
  */
-func (self *LnsEnv) SetStackVal( val LnsAny ) bool {
-    self.valStack[ len( self.valStack ) - 1 ] = val
-    return Lns_isCondTrue( val )
+func (self *LnsEnv) SetStackVal(val LnsAny) bool {
+	self.valStack[len(self.valStack)-1] = val
+	return Lns_isCondTrue(val)
 }
 
 /**
@@ -564,8 +565,8 @@ func (self *LnsEnv) SetStackVal( val LnsAny ) bool {
  *
  * @return pop した値。
  */
-func (self *LnsEnv) PopVal( dummy bool ) LnsAny {
-    val := self.valStack[ len( self.valStack ) - 1 ]
-    self.valStack = self.valStack[:len(self.valStack) - 1]
-    return val;
+func (self *LnsEnv) PopVal(dummy bool) LnsAny {
+	val := self.valStack[len(self.valStack)-1]
+	self.valStack = self.valStack[:len(self.valStack)-1]
+	return val
 }

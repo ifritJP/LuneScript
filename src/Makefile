@@ -102,7 +102,7 @@ help:
 	@echo "  make test-miniGo [NO_TEST=y] [NO_LUA_DIFF=y]"
 	@echo "  make scratch-go"
 	@echo "  make test-tutorial-go"
-	@echo "  make go-build"
+	@echo "  make go-build [GOTAG=gopherlua]"
 	@echo "  make setup-pkg-lua"
 	@echo "  make test-govslua [BATCH=y] [ONLY_CONV=y]" 
 	@echo "  make goprof"

@@ -76,6 +76,18 @@ func (luaVM *Lns_luaVM) RunLoadedfunc(loaded *Lns_luaValue, args []LnsAny) []Lns
 	return luaVM.lua_call(top, len(args), cLUA_MULTRET)
 }
 
+func (luaVM *Lns_luaVM) run_script(txt string, args []LnsAny) ([]LnsAny, string) {
+	loaded, err := luaVM.Load(txt, nil)
+	if loaded != nil {
+		ret := luaVM.RunLoadedfunc(loaded.(*Lns_luaValue), args)
+		return ret, ""
+	}
+	if err != nil {
+		return nil, err.(string)
+	}
+	return nil, ""
+}
+
 func (luaValue *Lns_luaValue) Get1stFromMap() (LnsAny, LnsAny) {
 	vm := luaValue.core.luaVM.vm
 	top := lua_gettop(vm)
