@@ -1900,7 +1900,7 @@ fn TransUnit.analyzeImportFor(
    };
    let mut importProcessInfo = self.processInfo.newUser();
    importProcessInfo.switchIdProvier( .Ext );
-   let mut moduleInfo = importObj.processImport( importProcessInfo, modulePath, 1 );
+   let mut moduleInfo = importObj.processImport( importProcessInfo, modulePath );
    importProcessInfo.switchIdProvier( .Base );
 
    

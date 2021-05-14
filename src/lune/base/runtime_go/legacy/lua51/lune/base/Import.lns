@@ -101,7 +101,7 @@ alias で置き換えている元の Type → alias の型
       // self.modifier = new TransUnitIF.Modifier( validMutControl, self.processInfo );
    }
 
-   pub fn processImport(
+   fn processImportMain(
       processInfo:Ast.ProcessInfo, mut modulePath:str, depth:int ) mut :
       frontInterface.ModuleInfo;
 }
@@ -757,7 +757,7 @@ class DependModuleInfo {
    }
 }
 
-fn Import.processImportSub(
+fn Import.processImportFromFile(
    processInfo:Ast.ProcessInfo, moduleMeta:frontInterface.ModuleMeta,
    orgModulePath:str, mut modulePath:str, nameList:str[], depth:int ) mut
 : frontInterface.ModuleInfo
@@ -775,7 +775,7 @@ fn Import.processImportSub(
       // 常にインポートする。
       let mut workProcessInfo = processInfo.newUser();
       workProcessInfo.switchIdProvier( .Ext );
-      let mut moduleInfo = self.processImport(
+      let mut moduleInfo = self.processImportMain(
          workProcessInfo, dependName, depth + 1 );
       workProcessInfo.switchIdProvier( .Base );
       let typeId = (unwrap dependInfo.typeId)@@int;
@@ -1175,7 +1175,7 @@ fn Import.processImportSub(
 }
 
 
-pub fn Import.processImport(
+pub fn Import.processImportMain(
    processInfo:Ast.ProcessInfo, mut modulePath:str, depth:int ) mut :
    frontInterface.ModuleInfo
 {
@@ -1198,6 +1198,10 @@ pub fn Import.processImport(
 
       self.importModuleInfo.remove();
 
+      if depth == 1 {
+         self.importModule2ModuleInfo[ moduleInfo.$exportInfo.$moduleTypeInfo ] = moduleInfo;
+      }
+      
       foreach val, key in moduleInfo.$importedAliasMap {
          self.importedAliasMap[key] = val;
       }
@@ -1215,7 +1219,7 @@ pub fn Import.processImport(
       self.transUnitIF.error( "failed to load meta -- " .. orgModulePath );
    };
    let! mut moduleInfo = moduleMeta.$moduleInfo {
-      moduleInfo = self.processImportSub(
+      moduleInfo = self.processImportFromFile(
          processInfo, moduleMeta, orgModulePath, modulePath, nameList, depth );
       moduleMeta.set_moduleInfo( moduleInfo );
    } then {
@@ -1229,10 +1233,12 @@ pub fn Import.processImport(
          self.importedAliasMap[key] = val;
       }
    };
-   // let mut moduleInfo = self.processImportSub(
+   // let mut moduleInfo = self.processImportFromFile(
    //    processInfo, moduleMeta, orgModulePath, modulePath, nameList, depth );
 
-   self.importModule2ModuleInfo[ moduleInfo.$exportInfo.$moduleTypeInfo ] = moduleInfo;
+   if depth == 1 {
+      self.importModule2ModuleInfo[ moduleInfo.$exportInfo.$moduleTypeInfo ] = moduleInfo;
+   }
    self.importModuleName2ModuleInfo[ modulePath ] = moduleInfo;
 
    self.importModuleInfo.remove();
@@ -1240,4 +1246,12 @@ pub fn Import.processImport(
    Log._log( .Info, `{ return "%s complete" (orgModulePath); } );
 
    return moduleInfo;
+}
+
+
+pub fn Import.processImport(
+   processInfo:Ast.ProcessInfo, modulePath:str ) mut :
+   frontInterface.ModuleInfo
+{
+   return self.processImportMain( processInfo, modulePath, 1 );
 }

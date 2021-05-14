@@ -135,7 +135,9 @@ $(DEPENDS_META):
 build_from_d: $(DEPENDS_META)
 ifeq ($(WITH_GO),y)
 	$(call binding-lns-go,.)
+ifndef SKIP_GO_BUILD
 	$(call go-build-lns,.)
+endif
 endif
 
 endif
@@ -818,9 +820,10 @@ test-new2:
 # ビルド前後で同じになるか確認する
 test-new3:
 	mkdir -p work/3_3
-	cp -a work/3/* work/3_3
+	cp -a work/1/* work/3_3
 	find work/3_3/lune -name '*.meta' | grep -v runtime_go | xargs rm
 	$(MAKE) -C work/3_3 test-new3-sub
+	@date +'=========== complete test-new3 %c============'
 
 # lune 以下を batch ビルドし、 $2 に出力する
 define test-new3-batch
@@ -841,16 +844,16 @@ ifeq ($(WITH_GO),y)
 endif
 
 	$(call test-new3-batch,work/3_3_2,work/3_3_3)
-ifeq ($(WITH_GO),y)
-	$(call go-build-lns,work/3_3_3)
-	cp work/3_3_3/lnsc .
-endif
+# ifeq ($(WITH_GO),y)
+# 	$(call go-build-lns,work/3_3_3)
+# 	cp work/3_3_3/lnsc .
+# endif
 
 	diff -u -r work/3_3_2/lune work/3_3_3/lune -x '*.lns'
 
 
 test-parallel: test-org test-org-proj \
-			test-new test-new-proj test-new2 test-new3
+			test-new test-new-proj test-new2
 
 
 
@@ -870,18 +873,22 @@ else
 endif
 
 # lua 版と go 版を並列処理させるためのターゲット
-test-comp2-para: test-comp2-main test-comp2-sub
+test-comp2-para: test-comp2-main test-comp2-sub test-new3
+	@date +'=========== complete test-comp2-para %c============'
 
 test-comp2-sub:
-	$(MAKE) test-comp2-sub-2 LANG_KIND=lua LANG_KIND=lua
+	$(call cp_src_set,work/13,work/1)
+	$(MAKE) -C work/13 test-comp2-sub-2 LANG_KIND=lua LANG_KIND=lua
+	@date +'=========== complete test-comp2-sub %c============'
 
-# 一度ビルドしたソース work/ から、 lua 版の lns でビルドして work/13 に出力する。
+# 一度ビルドしたソース work/1 から、 lua 版の lns でビルドして work/13 に出力する。
 # 後工程の diff-result で、 go 版の lns のビルド結果と比較して lua と go で
 # 同じ出力結果になることを確認する
 test-comp2-sub-2:
-	$(call cp_src_set,work/13,work/1)
-	$(MAKE) -C work/13 build_from_d depend_on=y \
-		FROM_DIR=../1 TO_DIR=../13 LNS_OPT="--package lnsc"
+#	$(MAKE) -C . build_from_d depend_on=y \
+#		FROM_DIR=../1 TO_DIR=../13 LNS_OPT="--package lnsc" \
+#		SKIP_GO_BUILD=y
+	$(call selfhost_buildOp_batch,../1,$(LNSC),../13,-langGo )
 
 test-comp2-main:
 #	$(MAKE) test-org
@@ -891,11 +898,27 @@ test-comp2-main:
 ## work/1 から work/2
 	/usr/bin/time -f 'work1:%e/%U/%S' $(MAKE) -C work/2 build_from_d \
 		depend_on=y FROM_DIR=../1 TO_DIR=../2 LNS_OPT="--package lnsc"
-## work/2 から work/3 
+	@date +'=========== complete work/2 %c============'
+
+## work/2 から work/3。
+## ビルド時間短縮のため、 work/3 はトランスコンパイルだけ行ない、
+## go のビルドをしないように SKIP_GO_BUILD=y を指定する。
+## work/3 のトランスコンパイル結果が正しければ、 
+## work/2 と work/3 のビルド結果は work/2 と同じになるので、
+## work/3 をビルドする必要はない。
 	/usr/bin/time -f 'work2:%e/%U/%S' $(MAKE) -C work/3 build_from_d \
-		depend_on=y FROM_DIR=../2 TO_DIR=../3 LNS_OPT="--package lnsc"
-	diff -u -r -I '_moduleObj.__buildId.*' -I '.*buildId = .*' \
-			-x $(notdir $(LNSC_GO)) work/2 work/3
+		depend_on=y FROM_DIR=../2 TO_DIR=../3 LNS_OPT="--package lnsc"	\
+		SKIP_GO_BUILD=y
+	@date +'=========== complete work/3 %c============'
+
+	diff -u -r -I '_moduleObj.__buildId.*' -I '.*buildId = .*'	\
+			-x $(notdir $(LNSC_GO)) -x binding.go		\
+			work/2/lune work/3/lune
+
+# SKIP_GO_BUILD=y で、 work/3 の go ビルドを skip したので、 work2 からコピー
+ifeq ($(WITH_GO),y)
+	cp work/2/lnsc work/3
+endif
 
 
 	cp -a test work/3
@@ -937,6 +960,9 @@ endif
 	$(MAKE) check-meta-format
 
 
+	@date +'=========== complete test-comp2-main %c============'
+
+
 define check-rockspec-op
 	@grep 'lune\.' ../$1 | sed 's@.*src/@@g' | sed 's@\.lua.*@.lua@g' | sort > work/$1.list
 	@(cd $2; find lune -iname '*.lua' ) | grep -v runtime_go | sed 's@^@$3@g' | sort > work/$1.2.list
@@ -956,9 +982,10 @@ diff-result:
 	diff -u -r test/proj/  work/3/test/proj/ \
 		-I '_moduleObj.__buildId.*' -I '.*buildId = .*'
 ifneq ($(LANG_KIND),lua)
-	diff -u -r -I '_moduleObj.__buildId' -I '.*buildId = .*'		\
+	diff -u -r -I '_moduleObj.__buildId' -I '.*buildId = .*'	\
 			-x $(notdir $(LNSC_GO))				\
-			-x 'log' -x 'test' work/13 work/3
+			-x 'log' -x 'test' -x binding.go		\
+			work/13/lune work/3_3/work/3_3_3/lune
 endif
 	diff work/test1.result work/test2.result
 	diff work/test.result work/test3.result
@@ -1740,6 +1767,10 @@ goprof:
 	$(call selfhost_buildOp_batch,.,/usr/bin/time -f 'go:%e/%U/%S:$2' $(LNSC_GO),work/go,-langGo -prof)
 	(cd .; go tool pprof -dot @-.profi  ) | dot -Tsvg -odump.svg
 	(cd .; go tool pprof -dot @-.profimem  ) | dot -Tsvg -odumpmem.svg
+
+luaprof:
+	$(call test-buildlns-setup,work/go)
+	$(call selfhost_buildOp_batch,.,/usr/bin/time -f 'go:%e/%U/%S:$2' env $(LNSC),work/go,-langGo )
 
 
 test-reference:

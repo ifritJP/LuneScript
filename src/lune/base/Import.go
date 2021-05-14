@@ -100,8 +100,9 @@ func Import_convExp5693(arg1 []LnsAny) LnsAny {
 // declaration Class -- Import
 type Import_ImportMtd interface {
     Get_importModule2ModuleInfo() *LnsMap
-    ProcessImport(arg1 *Ast_ProcessInfo, arg2 string, arg3 LnsInt) *FrontInterface_ModuleInfo
-    processImportSub(arg1 *Ast_ProcessInfo, arg2 *FrontInterface_ModuleMeta, arg3 string, arg4 string, arg5 *LnsList, arg6 LnsInt) *FrontInterface_ModuleInfo
+    ProcessImport(arg1 *Ast_ProcessInfo, arg2 string) *FrontInterface_ModuleInfo
+    processImportFromFile(arg1 *Ast_ProcessInfo, arg2 *FrontInterface_ModuleMeta, arg3 string, arg4 string, arg5 *LnsList, arg6 LnsInt) *FrontInterface_ModuleInfo
+    processImportMain(arg1 *Ast_ProcessInfo, arg2 string, arg3 LnsInt) *FrontInterface_ModuleInfo
 }
 type Import_Import struct {
     transUnitIF TransUnitIF_TransUnitIF
@@ -171,9 +172,9 @@ func (self *Import_Import) InitImport_Import(transUnitIF TransUnitIF_TransUnitIF
 }
 
 
-// 760: decl @lune.@base.@Import.Import.processImportSub
-func (self *Import_Import) processImportSub(processInfo *Ast_ProcessInfo,moduleMeta *FrontInterface_ModuleMeta,orgModulePath string,modulePath string,nameList *LnsList,depth LnsInt) *FrontInterface_ModuleInfo {
-    __func__ := "@lune.@base.@Import.Import.processImportSub"
+// 760: decl @lune.@base.@Import.Import.processImportFromFile
+func (self *Import_Import) processImportFromFile(processInfo *Ast_ProcessInfo,moduleMeta *FrontInterface_ModuleMeta,orgModulePath string,modulePath string,nameList *LnsList,depth LnsInt) *FrontInterface_ModuleInfo {
+    __func__ := "@lune.@base.@Import.Import.processImportFromFile"
     var metaInfo *Lns_luaValue
     metaInfo = moduleMeta.FP.Get_metaInfo().(*Lns_luaValue)
     Log_log(Log_Level__Info, __func__, 766, Log_CreateMessage(func() string {
@@ -193,7 +194,7 @@ func (self *Import_Import) processImportSub(processInfo *Ast_ProcessInfo,moduleM
             workProcessInfo = processInfo.FP.NewUser()
             workProcessInfo.FP.SwitchIdProvier(Ast_IdType__Ext)
             var moduleInfo *FrontInterface_ModuleInfo
-            moduleInfo = self.FP.ProcessImport(workProcessInfo, dependName, depth + 1)
+            moduleInfo = self.FP.processImportMain(workProcessInfo, dependName, depth + 1)
             workProcessInfo.FP.SwitchIdProvier(Ast_IdType__Base)
             var typeId LnsInt
             typeId = Lns_forceCastInt((Lns_unwrap( dependInfo.GetAt("typeId"))))
@@ -460,7 +461,7 @@ func (self *Import_Import) processImportSub(processInfo *Ast_ProcessInfo,moduleM
     }
     var registMember func(classTypeId LnsInt)
     registMember = func(classTypeId LnsInt) {
-        __func__ := "@lune.@base.@Import.Import.processImportSub.registMember"
+        __func__ := "@lune.@base.@Import.Import.processImportFromFile.registMember"
         if Lns_isCondTrue( metaInfo.GetAt( "__dependIdMap" ).(*Lns_luaValue).GetAt(classTypeId)){
             return 
         }
@@ -631,9 +632,9 @@ func (self *Import_Import) processImportSub(processInfo *Ast_ProcessInfo,moduleM
     return moduleInfo
 }
 
-// 1178: decl @lune.@base.@Import.Import.processImport
-func (self *Import_Import) ProcessImport(processInfo *Ast_ProcessInfo,modulePath string,depth LnsInt) *FrontInterface_ModuleInfo {
-    __func__ := "@lune.@base.@Import.Import.processImport"
+// 1178: decl @lune.@base.@Import.Import.processImportMain
+func (self *Import_Import) processImportMain(processInfo *Ast_ProcessInfo,modulePath string,depth LnsInt) *FrontInterface_ModuleInfo {
+    __func__ := "@lune.@base.@Import.Import.processImportMain"
     var orgModulePath string
     orgModulePath = modulePath
     modulePath = FrontInterface_getLuaModulePath(modulePath)
@@ -654,6 +655,9 @@ func (self *Import_Import) ProcessImport(processInfo *Ast_ProcessInfo,modulePath
             }))
             
             self.importModuleInfo.FP.Remove()
+            if depth == 1{
+                self.importModule2ModuleInfo.Set(moduleInfo.FP.Get_exportInfo().FP.Get_moduleTypeInfo(),moduleInfo)
+            }
             for _key, _val := range( moduleInfo.FP.Get_importedAliasMap().Items ) {
                 key := _key.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
                 val := _val.(Ast_AliasTypeInfoDownCast).ToAst_AliasTypeInfo()
@@ -665,12 +669,12 @@ func (self *Import_Import) ProcessImport(processInfo *Ast_ProcessInfo,modulePath
     var nameList *LnsList
     nameList = NewLnsList([]LnsAny{})
     {
-        _form6656, _param6656, _prev6656 := Lns_getVM().String_gmatch(modulePath, "[^%./:]+")
+        _form6678, _param6678, _prev6678 := Lns_getVM().String_gmatch(modulePath, "[^%./:]+")
         for {
-            _work6656 := _form6656.(*Lns_luaValue).Call( Lns_2DDD( _param6656, _prev6656 ) )
-            _prev6656 = Lns_getFromMulti(_work6656,0)
-            if Lns_IsNil( _prev6656 ) { break }
-            txt := _prev6656.(string)
+            _work6678 := _form6678.(*Lns_luaValue).Call( Lns_2DDD( _param6678, _prev6678 ) )
+            _prev6678 = Lns_getFromMulti(_work6678,0)
+            if Lns_IsNil( _prev6678 ) { break }
+            txt := _prev6678.(string)
             nameList.Insert(txt)
         }
     }
@@ -689,7 +693,7 @@ func (self *Import_Import) ProcessImport(processInfo *Ast_ProcessInfo,modulePath
     {
         _moduleInfo := moduleMeta.FP.Get_moduleInfo()
         if _moduleInfo == nil{
-            moduleInfo = self.FP.processImportSub(processInfo, moduleMeta, orgModulePath, modulePath, nameList, depth)
+            moduleInfo = self.FP.processImportFromFile(processInfo, moduleMeta, orgModulePath, modulePath, nameList, depth)
             
             moduleMeta.FP.Set_moduleInfo(moduleInfo)
         } else {
@@ -712,14 +716,21 @@ func (self *Import_Import) ProcessImport(processInfo *Ast_ProcessInfo,modulePath
             }
         }
     }
-    self.importModule2ModuleInfo.Set(moduleInfo.FP.Get_exportInfo().FP.Get_moduleTypeInfo(),moduleInfo)
+    if depth == 1{
+        self.importModule2ModuleInfo.Set(moduleInfo.FP.Get_exportInfo().FP.Get_moduleTypeInfo(),moduleInfo)
+    }
     self.importModuleName2ModuleInfo.Set(modulePath,moduleInfo)
     self.importModuleInfo.FP.Remove()
-    Log_log(Log_Level__Info, __func__, 1240, Log_CreateMessage(func() string {
+    Log_log(Log_Level__Info, __func__, 1246, Log_CreateMessage(func() string {
         return Lns_getVM().String_format("%s complete", []LnsAny{orgModulePath})
     }))
     
     return moduleInfo
+}
+
+// 1252: decl @lune.@base.@Import.Import.processImport
+func (self *Import_Import) ProcessImport(processInfo *Ast_ProcessInfo,modulePath string) *FrontInterface_ModuleInfo {
+    return self.FP.processImportMain(processInfo, modulePath, 1)
 }
 
 

@@ -1657,8 +1657,8 @@ function DependModuleInfo:__init( id, metaTypeId2TypeInfoMap )
 end
 
 
-function Import:processImportSub( processInfo, moduleMeta, orgModulePath, modulePath, nameList, depth )
-   local __func__ = '@lune.@base.@Import.Import.processImportSub'
+function Import:processImportFromFile( processInfo, moduleMeta, orgModulePath, modulePath, nameList, depth )
+   local __func__ = '@lune.@base.@Import.Import.processImportFromFile'
 
    local metaInfo = moduleMeta:get_metaInfo()
    Log.log( Log.Level.Info, __func__, 766, function (  )
@@ -1680,7 +1680,7 @@ function Import:processImportSub( processInfo, moduleMeta, orgModulePath, module
          do
             local workProcessInfo = processInfo:newUser(  )
             workProcessInfo:switchIdProvier( Ast.IdType.Ext )
-            local moduleInfo = self:processImport( workProcessInfo, dependName, depth + 1 )
+            local moduleInfo = self:processImportMain( workProcessInfo, dependName, depth + 1 )
             workProcessInfo:switchIdProvier( Ast.IdType.Base )
             local typeId = math.floor((_lune.unwrap( dependInfo['typeId']) ))
             dependLibId2DependInfo[typeId] = moduleInfo
@@ -1917,7 +1917,7 @@ function Import:processImportSub( processInfo, moduleMeta, orgModulePath, module
    
    
    local function registMember( classTypeId )
-      local __func__ = '@lune.@base.@Import.Import.processImportSub.registMember'
+      local __func__ = '@lune.@base.@Import.Import.processImportFromFile.registMember'
    
       if metaInfo.__dependIdMap[classTypeId] then
          return 
@@ -2077,8 +2077,8 @@ function Import:processImportSub( processInfo, moduleMeta, orgModulePath, module
 end
 
 
-function Import:processImport( processInfo, modulePath, depth )
-   local __func__ = '@lune.@base.@Import.Import.processImport'
+function Import:processImportMain( processInfo, modulePath, depth )
+   local __func__ = '@lune.@base.@Import.Import.processImportMain'
 
    local orgModulePath = modulePath
    modulePath = frontInterface.getLuaModulePath( modulePath )
@@ -2104,6 +2104,11 @@ function Import:processImport( processInfo, modulePath, depth )
          
          
          self.importModuleInfo:remove(  )
+         
+         if depth == 1 then
+            self.importModule2ModuleInfo[moduleInfo:get_exportInfo():get_moduleTypeInfo()] = moduleInfo
+         end
+         
          
          for key, val in pairs( moduleInfo:get_importedAliasMap() ) do
             self.importedAliasMap[key] = val
@@ -2131,7 +2136,7 @@ function Import:processImport( processInfo, modulePath, depth )
    if  nil == moduleInfo then
       local _moduleInfo = moduleInfo
    
-      moduleInfo = self:processImportSub( processInfo, moduleMeta, orgModulePath, modulePath, nameList, depth )
+      moduleInfo = self:processImportFromFile( processInfo, moduleMeta, orgModulePath, modulePath, nameList, depth )
       moduleMeta:set_moduleInfo( moduleInfo )
    else
       
@@ -2152,18 +2157,27 @@ function Import:processImport( processInfo, modulePath, depth )
          
    end
    
-   self.importModule2ModuleInfo[moduleInfo:get_exportInfo():get_moduleTypeInfo()] = moduleInfo
+   if depth == 1 then
+      self.importModule2ModuleInfo[moduleInfo:get_exportInfo():get_moduleTypeInfo()] = moduleInfo
+   end
+   
    self.importModuleName2ModuleInfo[modulePath] = moduleInfo
    
    self.importModuleInfo:remove(  )
    
-   Log.log( Log.Level.Info, __func__, 1240, function (  )
+   Log.log( Log.Level.Info, __func__, 1246, function (  )
    
       return string.format( "%s complete", orgModulePath)
    end )
    
    
    return moduleInfo
+end
+
+
+function Import:processImport( processInfo, modulePath )
+
+   return self:processImportMain( processInfo, modulePath, 1 )
 end
 
 

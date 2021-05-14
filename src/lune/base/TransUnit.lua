@@ -2081,7 +2081,7 @@ function TransUnit:analyzeImportFor( pos, modulePath, assignName, assigned, lazy
    
    local importProcessInfo = self.processInfo:newUser(  )
    importProcessInfo:switchIdProvier( Ast.IdType.Ext )
-   local moduleInfo = importObj:processImport( importProcessInfo, modulePath, 1 )
+   local moduleInfo = importObj:processImport( importProcessInfo, modulePath )
    importProcessInfo:switchIdProvier( Ast.IdType.Base )
    
    self.processInfo:switchIdProvier( Ast.IdType.Base )
