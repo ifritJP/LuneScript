@@ -175,7 +175,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 8339
+   return 8368
 end
 
 
@@ -320,6 +320,7 @@ function Option.new(  )
    return obj
 end
 function Option:__init() 
+   self.addEnvArg = false
    self.projDir = nil
    self.runtimeOpt = RuntimeOpt.new()
    self.shebangArgList = {}
@@ -386,6 +387,9 @@ function Option:get_runtimeOpt()
 end
 function Option:get_projDir()
    return self.projDir
+end
+function Option:get_addEnvArg()
+   return self.addEnvArg
 end
 
 
@@ -601,6 +605,8 @@ end
                   useStdInFlag = true
                elseif _switchExp == "-prof" then
                   option.validProf = true
+               elseif _switchExp == "--addEnvArg" then
+                  option.addEnvArg = true
                elseif _switchExp == "--nodebug" then
                   Util.setDebugFlag( false )
                elseif _switchExp == "--debug" then
@@ -894,7 +900,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 626, function (  )
+   Log.log( Log.Level.Log, __func__, 633, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

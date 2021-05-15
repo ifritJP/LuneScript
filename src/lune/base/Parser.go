@@ -847,18 +847,23 @@ func NewParser_CommentCtrl() *Parser_CommentCtrl {
     obj.InitParser_CommentCtrl()
     return obj
 }
+// advertise -- 446
 func (self *Parser_CommentCtrl) Add(arg1 *Types_Token) {
 self.layer. FP.Add( arg1)
 }
+// advertise -- 446
 func (self *Parser_CommentCtrl) AddDirect(arg1 *LnsList) {
 self.layer. FP.AddDirect( arg1)
 }
+// advertise -- 446
 func (self *Parser_CommentCtrl) Clear() {
 self.layer. FP.Clear( )
 }
+// advertise -- 446
 func (self *Parser_CommentCtrl) Get_commentList() *LnsList {
     return self.layer. FP.Get_commentList( )
 }
+// advertise -- 446
 func (self *Parser_CommentCtrl) HasInvalidComment() LnsAny {
     return self.layer. FP.HasInvalidComment( )
 }

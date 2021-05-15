@@ -1068,6 +1068,7 @@ func NewNodes_SimpleModuleInfoManager(arg1 LnsAny) *Nodes_SimpleModuleInfoManage
     obj.InitNodes_SimpleModuleInfoManager(arg1)
     return obj
 }
+// advertise -- 32
 func (self *Nodes_SimpleModuleInfoManager) GetModuleInfo(arg1 *Ast_TypeInfo) LnsAny {
     return self.ModuleInfoManager. GetModuleInfo( arg1)
 }

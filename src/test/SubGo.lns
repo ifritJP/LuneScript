@@ -11,21 +11,23 @@ _section();
    }
 
    class Async extend LnsThread {
+      let name:str;
       let mut count:int {pub};
       let mut pipe:__pipe<Test>!;
       
-      pub fn __init( pipe:__pipe<Test>! ) {
+      pub fn __init( name:str, pipe:__pipe<Test>! ) {
          super();
+         self.name = name;
          self.pipe = pipe;
          self.count = 0;
       }
       
       pro override fn loop() mut {
-         print( "DIFF_IGNORE, hoge:" );
+         print( "DIFF_IGNORE, hoge: start", self.name );
          while true {
             if! let mut pipe = self.pipe {
                let! val = pipe.get() {
-                  print( "DIFF_IGNORE, hoge:" );
+                  print( "DIFF_IGNORE, hoge: end", self.name );
                   break;
                };
                val.$val.find( "%d" (self.count) ## );
@@ -43,14 +45,14 @@ _section();
       }
    }
 
-   let mut async = new Async( Test._createPipe( 10 ) );
+   let mut async = new Async( "async1", Test._createPipe( 10 ) );
    async.start();
-   let mut async2 = new Async( Test._createPipe( 10 ) );
+   let mut async2 = new Async( "async2", Test._createPipe( 10 ) );
    async2.start();
 
    for _ = 1, 100000 {
       async.put( new Test( "abcdefg" ) );
       async2.put( new Test( "abcdefg" ) );
    }
-   print( "DIFF_IGNORE", async.$count, async2.$count );
+   print( "DIFF_IGNORE, fin:", async.$count, async2.$count );
 }

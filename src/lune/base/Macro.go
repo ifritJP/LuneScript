@@ -249,10 +249,10 @@ func (self *Macro_MacroMetaArgInfo) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Macro_MacroMetaArgInfo) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Macro_MacroMetaArgInfo__fromMap_1037_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Macro_MacroMetaArgInfo__fromMap_1037_( arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Macro_MacroMetaArgInfo_FromMap( arg1, paramList )
 }
-func Macro_MacroMetaArgInfo__fromStem_1039_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Macro_MacroMetaArgInfo__fromStem_1039_( arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Macro_MacroMetaArgInfo_FromMap( arg1, paramList )
 }
 func Macro_MacroMetaArgInfo_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
@@ -343,10 +343,10 @@ func (self *Macro_MacroMetaInfo) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Macro_MacroMetaInfo) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Macro_MacroMetaInfo__fromMap_1066_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Macro_MacroMetaInfo__fromMap_1066_( arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Macro_MacroMetaInfo_FromMap( arg1, paramList )
 }
-func Macro_MacroMetaInfo__fromStem_1068_(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Macro_MacroMetaInfo__fromStem_1068_( arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Macro_MacroMetaInfo_FromMap( arg1, paramList )
 }
 func Macro_MacroMetaInfo_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {

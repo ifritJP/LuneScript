@@ -203,21 +203,27 @@ func NewFormatter_FormatterFilter(arg1 *Ast_TypeInfo, arg2 LnsAny, arg3 Lns_oStr
     obj.InitFormatter_FormatterFilter(arg1, arg2, arg3)
     return obj
 }
+// advertise -- 42
 func (self *Formatter_FormatterFilter) PopIndent() {
 self.stream. FP.PopIndent( )
 }
+// advertise -- 42
 func (self *Formatter_FormatterFilter) PushIndent(arg1 LnsAny) {
 self.stream. FP.PushIndent( arg1)
 }
+// advertise -- 42
 func (self *Formatter_FormatterFilter) ReturnToSource() {
 self.stream. FP.ReturnToSource( )
 }
+// advertise -- 42
 func (self *Formatter_FormatterFilter) SwitchToHeader() {
 self.stream. FP.SwitchToHeader( )
 }
+// advertise -- 42
 func (self *Formatter_FormatterFilter) Write(arg1 string) {
 self.stream. FP.Write( arg1)
 }
+// advertise -- 42
 func (self *Formatter_FormatterFilter) Writeln(arg1 string) {
 self.stream. FP.Writeln( arg1)
 }

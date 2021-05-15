@@ -27,7 +27,6 @@ package runtimelns
 import (
 	"fmt"
 	"math"
-	"os"
 	"reflect"
 	"strconv"
 	"sync"
@@ -36,8 +35,6 @@ import (
 type LnsInt = int
 type LnsReal = float64
 type LnsAny = interface{}
-
-type LnsForm func([]LnsAny) []LnsAny
 
 var LnsNone interface{} = nil
 var Lns_package_path string
@@ -73,32 +70,6 @@ func Lns_LockEnvSync() {
 }
 func Lns_UnlockEnvSync() {
 	sync_LnsEnvMutex.Unlock()
-}
-
-type LnsThreadMtd interface {
-	Loop()
-}
-
-type LnsThread struct {
-	LnsEnv *LnsEnv
-	FP     LnsThreadMtd
-}
-
-func (self *LnsThread) InitLnsThread() {
-	self.LnsEnv = Lns_GetEnv()
-}
-
-func (self *LnsThread) LoopMain() {
-
-	self.LnsEnv = createEnv()
-
-	self.FP.Loop()
-
-	// スレッド処理が終ったら、
-	// メモリ削減のため LnsEnv を共通に戻し、VM を close する。
-	oldEnv := self.LnsEnv
-	self.LnsEnv = Lns_GetEnv()
-	oldEnv.LuaVM.closeVM()
 }
 
 /**
@@ -155,15 +126,6 @@ func Lns_InitModOnce(opts ...LnsRuntimeOpt) {
 	cur_LnsEnv = createEnv()
 
 	Lns_package_path = cur_LnsEnv.LuaVM.GetPackagePath()
-}
-
-func Lns_RunMain(mainFunc func(args *LnsList) LnsInt) {
-	args := []LnsAny{}
-	for _, arg := range os.Args {
-		args = append(args, arg)
-	}
-
-	os.Exit(mainFunc(NewLnsList(args)))
 }
 
 func Lns_IsNil(val LnsAny) bool {
@@ -246,6 +208,16 @@ func Lns_tonumber(val string, base LnsAny) LnsAny {
 	} else {
 		return nil
 	}
+}
+
+func Lns_print(multi []LnsAny) {
+	for index, val := range multi {
+		if index != 0 {
+			fmt.Print("\t")
+		}
+		fmt.Print(Lns_ToString(val))
+	}
+	fmt.Print("\n")
 }
 
 func Lns_require(val string) LnsAny {
@@ -494,16 +466,6 @@ func Lns_2DDD(multi ...LnsAny) []LnsAny {
 		return newMulti
 	}
 	return multi
-}
-
-func Lns_print(multi []LnsAny) {
-	for index, val := range multi {
-		if index != 0 {
-			fmt.Print("\t")
-		}
-		fmt.Print(Lns_ToString(val))
-	}
-	fmt.Print("\n")
 }
 
 func Lns_ToString(val LnsAny) string {

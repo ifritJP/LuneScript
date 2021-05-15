@@ -443,7 +443,7 @@ func Lns_GoMod_init() {
     Lns_InitMod()
     Lns_Types_init()
     Lns_Util_init()
-    Lns_LuaVer_init()
+    Lns_LuaVer_init(  )
     Lns_Depend_init()
     Lns_Log_init()
 }

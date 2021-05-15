@@ -24,33 +24,51 @@ SOFTWARE.
 
 package runtimelns
 
-type Lns_pipeMtd interface {
-    Put( val LnsAny )
-    Get() LnsAny
-}
 type Lns__pipe struct {
-    ch chan LnsAny
-    end bool
-    FP Lns_pipeMtd
+	ch  chan LnsAny
+	end bool
+	FP  Lns_pipeMtd
 }
 
-func NewLnspipe( count int ) *Lns__pipe {
-    pipe := &Lns__pipe{}
-    pipe.ch = make(chan LnsAny,count)
-    pipe.FP = pipe
-    pipe.end = false
-    return pipe
+func NewLnspipe(count int) *Lns__pipe {
+	pipe := &Lns__pipe{}
+	pipe.ch = make(chan LnsAny, count)
+	pipe.FP = pipe
+	pipe.end = false
+	return pipe
 }
 
-func (self *Lns__pipe) Put( val LnsAny ) {
-    if Lns_IsNil( val ) {
-        self.end = true
-    }
-    self.ch<- val
+func (self *Lns__pipe) put(val LnsAny) {
+	if Lns_IsNil(val) {
+		self.end = true
+	}
+	self.ch <- val
 }
-func (self *Lns__pipe) Get() LnsAny {
-    if len( self.ch ) == 0 && self.end {
-        return nil
-    }
-    return <-self.ch
+func (self *Lns__pipe) get() LnsAny {
+	if len(self.ch) == 0 && self.end {
+		return nil
+	}
+	return <-self.ch
+}
+
+type LnsThread struct {
+	LnsEnv *LnsEnv
+	FP     LnsThreadMtd
+}
+
+func (self *LnsThread) initLnsThread() {
+	self.LnsEnv = Lns_GetEnv()
+}
+
+func (self *LnsThread) LoopMain() {
+
+	self.LnsEnv = createEnv()
+
+	self.runLoop()
+
+	// スレッド処理が終ったら、
+	// メモリ削減のため LnsEnv を共通に戻し、VM を close する。
+	oldEnv := self.LnsEnv
+	self.LnsEnv = Lns_GetEnv()
+	oldEnv.LuaVM.closeVM()
 }

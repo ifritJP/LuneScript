@@ -5305,108 +5305,143 @@ func NewAst_NilableTypeInfo(arg1 *Ast_ProcessInfo, arg2 *Ast_TypeInfo) *Ast_Nila
 }
 func (self *Ast_NilableTypeInfo) Get_nonnilableType() *Ast_TypeInfo{ return self.nonnilableType }
 func (self *Ast_NilableTypeInfo) Get_typeId() *Ast_IdInfo{ return self.typeId }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) AddChildren(arg1 *Ast_TypeInfo) {
 self.nonnilableType. FP.AddChildren( arg1)
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) CreateAlt2typeMap(arg1 bool) *LnsMap {
     return self.nonnilableType. FP.CreateAlt2typeMap( arg1)
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) GetFullName(arg1 *Ast_TypeNameCtrl,arg2 Ast_ModuleInfoManager,arg3 LnsAny) string {
     return self.nonnilableType. FP.GetFullName( arg1,arg2,arg3)
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) GetModule() *Ast_TypeInfo {
     return self.nonnilableType. FP.GetModule( )
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) GetOverridingType() LnsAny {
     return self.nonnilableType. FP.GetOverridingType( )
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) GetParentFullName(arg1 *Ast_TypeNameCtrl,arg2 LnsAny,arg3 LnsAny) string {
     return self.nonnilableType. FP.GetParentFullName( arg1,arg2,arg3)
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) GetParentId() *Ast_IdInfo {
     return self.nonnilableType. FP.GetParentId( )
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) getProcessInfo() *Ast_ProcessInfo {
     return self.nonnilableType. FP.getProcessInfo( )
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) Get_abstractFlag() bool {
     return self.nonnilableType. FP.Get_abstractFlag( )
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) Get_accessMode() LnsInt {
     return self.nonnilableType. FP.Get_accessMode( )
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) Get_argTypeInfoList() *LnsList {
     return self.nonnilableType. FP.Get_argTypeInfoList( )
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) Get_autoFlag() bool {
     return self.nonnilableType. FP.Get_autoFlag( )
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) Get_baseId() *Ast_IdInfo {
     return self.nonnilableType. FP.Get_baseId( )
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) Get_baseTypeInfo() *Ast_TypeInfo {
     return self.nonnilableType. FP.Get_baseTypeInfo( )
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) Get_children() *LnsList {
     return self.nonnilableType. FP.Get_children( )
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) Get_extedType() *Ast_TypeInfo {
     return self.nonnilableType. FP.Get_extedType( )
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) Get_externalFlag() bool {
     return self.nonnilableType. FP.Get_externalFlag( )
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) Get_genSrcTypeInfo() *Ast_TypeInfo {
     return self.nonnilableType. FP.Get_genSrcTypeInfo( )
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) Get_interfaceList() *LnsList {
     return self.nonnilableType. FP.Get_interfaceList( )
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) Get_itemTypeInfoList() *LnsList {
     return self.nonnilableType. FP.Get_itemTypeInfoList( )
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) Get_mutMode() LnsInt {
     return self.nonnilableType. FP.Get_mutMode( )
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) Get_nilableTypeInfo() *Ast_TypeInfo {
     return self.nonnilableType. FP.Get_nilableTypeInfo( )
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) Get_parentInfo() *Ast_TypeInfo {
     return self.nonnilableType. FP.Get_parentInfo( )
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) Get_processInfo() *Ast_ProcessInfo {
     return self.nonnilableType. FP.Get_processInfo( )
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) Get_rawTxt() string {
     return self.nonnilableType. FP.Get_rawTxt( )
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) Get_retTypeInfoList() *LnsList {
     return self.nonnilableType. FP.Get_retTypeInfoList( )
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) Get_scope() LnsAny {
     return self.nonnilableType. FP.Get_scope( )
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) Get_staticFlag() bool {
     return self.nonnilableType. FP.Get_staticFlag( )
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) Get_typeData() *Ast_TypeData {
     return self.nonnilableType. FP.Get_typeData( )
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) HasBase() bool {
     return self.nonnilableType. FP.HasBase( )
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) HasRouteNamespaceFrom(arg1 *Ast_TypeInfo) bool {
     return self.nonnilableType. FP.HasRouteNamespaceFrom( arg1)
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) IsInheritFrom(arg1 *Ast_ProcessInfo,arg2 *Ast_TypeInfo,arg3 LnsAny) bool {
     return self.nonnilableType. FP.IsInheritFrom( arg1,arg2,arg3)
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) IsModule() bool {
     return self.nonnilableType. FP.IsModule( )
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) SerializeTypeInfoList(arg1 *Ast_SerializeInfo,arg2 string,arg3 *LnsList,arg4 LnsAny) string {
     return self.nonnilableType. FP.SerializeTypeInfoList( arg1,arg2,arg3,arg4)
 }
+// advertise -- 1507
 func (self *Ast_NilableTypeInfo) SwitchScope(arg1 *Ast_Scope) {
 self.nonnilableType. FP.SwitchScope( arg1)
 }
@@ -5615,90 +5650,119 @@ func (self *Ast_AliasTypeInfo) Get_aliasSrcTypeInfo() *Ast_TypeInfo{ return self
 func (self *Ast_AliasTypeInfo) Get_externalFlag() bool{ return self.externalFlag }
 func (self *Ast_AliasTypeInfo) Get_typeId() *Ast_IdInfo{ return self.typeId }
 func (self *Ast_AliasTypeInfo) Get_nilableTypeInfo() *Ast_TypeInfo{ return self.nilableTypeInfo }
+// advertise -- 1592
 func (self *Ast_AliasTypeInfo) AddChildren(arg1 *Ast_TypeInfo) {
 self.aliasSrcTypeInfo. FP.AddChildren( arg1)
 }
+// advertise -- 1592
 func (self *Ast_AliasTypeInfo) CreateAlt2typeMap(arg1 bool) *LnsMap {
     return self.aliasSrcTypeInfo. FP.CreateAlt2typeMap( arg1)
 }
+// advertise -- 1592
 func (self *Ast_AliasTypeInfo) GetOverridingType() LnsAny {
     return self.aliasSrcTypeInfo. FP.GetOverridingType( )
 }
+// advertise -- 1592
 func (self *Ast_AliasTypeInfo) getProcessInfo() *Ast_ProcessInfo {
     return self.aliasSrcTypeInfo. FP.getProcessInfo( )
 }
+// advertise -- 1592
 func (self *Ast_AliasTypeInfo) GetTxtWithRaw(arg1 string,arg2 LnsAny,arg3 LnsAny,arg4 LnsAny) string {
     return self.aliasSrcTypeInfo. FP.GetTxtWithRaw( arg1,arg2,arg3,arg4)
 }
+// advertise -- 1592
 func (self *Ast_AliasTypeInfo) Get_abstractFlag() bool {
     return self.aliasSrcTypeInfo. FP.Get_abstractFlag( )
 }
+// advertise -- 1592
 func (self *Ast_AliasTypeInfo) Get_argTypeInfoList() *LnsList {
     return self.aliasSrcTypeInfo. FP.Get_argTypeInfoList( )
 }
+// advertise -- 1592
 func (self *Ast_AliasTypeInfo) Get_autoFlag() bool {
     return self.aliasSrcTypeInfo. FP.Get_autoFlag( )
 }
+// advertise -- 1592
 func (self *Ast_AliasTypeInfo) Get_baseId() *Ast_IdInfo {
     return self.aliasSrcTypeInfo. FP.Get_baseId( )
 }
+// advertise -- 1592
 func (self *Ast_AliasTypeInfo) Get_baseTypeInfo() *Ast_TypeInfo {
     return self.aliasSrcTypeInfo. FP.Get_baseTypeInfo( )
 }
+// advertise -- 1592
 func (self *Ast_AliasTypeInfo) Get_children() *LnsList {
     return self.aliasSrcTypeInfo. FP.Get_children( )
 }
+// advertise -- 1592
 func (self *Ast_AliasTypeInfo) Get_display_stirng_with(arg1 string,arg2 LnsAny) string {
     return self.aliasSrcTypeInfo. FP.Get_display_stirng_with( arg1,arg2)
 }
+// advertise -- 1592
 func (self *Ast_AliasTypeInfo) Get_extedType() *Ast_TypeInfo {
     return self.aliasSrcTypeInfo. FP.Get_extedType( )
 }
+// advertise -- 1592
 func (self *Ast_AliasTypeInfo) Get_interfaceList() *LnsList {
     return self.aliasSrcTypeInfo. FP.Get_interfaceList( )
 }
+// advertise -- 1592
 func (self *Ast_AliasTypeInfo) Get_itemTypeInfoList() *LnsList {
     return self.aliasSrcTypeInfo. FP.Get_itemTypeInfoList( )
 }
+// advertise -- 1592
 func (self *Ast_AliasTypeInfo) Get_kind() LnsInt {
     return self.aliasSrcTypeInfo. FP.Get_kind( )
 }
+// advertise -- 1592
 func (self *Ast_AliasTypeInfo) Get_mutMode() LnsInt {
     return self.aliasSrcTypeInfo. FP.Get_mutMode( )
 }
+// advertise -- 1592
 func (self *Ast_AliasTypeInfo) Get_nilable() bool {
     return self.aliasSrcTypeInfo. FP.Get_nilable( )
 }
+// advertise -- 1592
 func (self *Ast_AliasTypeInfo) Get_processInfo() *Ast_ProcessInfo {
     return self.aliasSrcTypeInfo. FP.Get_processInfo( )
 }
+// advertise -- 1592
 func (self *Ast_AliasTypeInfo) Get_retTypeInfoList() *LnsList {
     return self.aliasSrcTypeInfo. FP.Get_retTypeInfoList( )
 }
+// advertise -- 1592
 func (self *Ast_AliasTypeInfo) Get_scope() LnsAny {
     return self.aliasSrcTypeInfo. FP.Get_scope( )
 }
+// advertise -- 1592
 func (self *Ast_AliasTypeInfo) Get_staticFlag() bool {
     return self.aliasSrcTypeInfo. FP.Get_staticFlag( )
 }
+// advertise -- 1592
 func (self *Ast_AliasTypeInfo) Get_typeData() *Ast_TypeData {
     return self.aliasSrcTypeInfo. FP.Get_typeData( )
 }
+// advertise -- 1592
 func (self *Ast_AliasTypeInfo) HasBase() bool {
     return self.aliasSrcTypeInfo. FP.HasBase( )
 }
+// advertise -- 1592
 func (self *Ast_AliasTypeInfo) HasRouteNamespaceFrom(arg1 *Ast_TypeInfo) bool {
     return self.aliasSrcTypeInfo. FP.HasRouteNamespaceFrom( arg1)
 }
+// advertise -- 1592
 func (self *Ast_AliasTypeInfo) IsInheritFrom(arg1 *Ast_ProcessInfo,arg2 *Ast_TypeInfo,arg3 LnsAny) bool {
     return self.aliasSrcTypeInfo. FP.IsInheritFrom( arg1,arg2,arg3)
 }
+// advertise -- 1592
 func (self *Ast_AliasTypeInfo) IsModule() bool {
     return self.aliasSrcTypeInfo. FP.IsModule( )
 }
+// advertise -- 1592
 func (self *Ast_AliasTypeInfo) SerializeTypeInfoList(arg1 *Ast_SerializeInfo,arg2 string,arg3 *LnsList,arg4 LnsAny) string {
     return self.aliasSrcTypeInfo. FP.SerializeTypeInfoList( arg1,arg2,arg3,arg4)
 }
+// advertise -- 1592
 func (self *Ast_AliasTypeInfo) SwitchScope(arg1 *Ast_Scope) {
 self.aliasSrcTypeInfo. FP.SwitchScope( arg1)
 }
@@ -6042,81 +6106,107 @@ func NewAst_AccessSymbolInfo(arg1 *Ast_SymbolInfo, arg2 LnsAny, arg3 bool) *Ast_
     return obj
 }
 func (self *Ast_AccessSymbolInfo) Get_symbolInfo() *Ast_SymbolInfo{ return self.symbolInfo }
+// advertise -- 2602
 func (self *Ast_AccessSymbolInfo) ClearValue() {
 self.symbolInfo. FP.ClearValue( )
 }
+// advertise -- 2602
 func (self *Ast_AccessSymbolInfo) GetModule() *Ast_TypeInfo {
     return self.symbolInfo. FP.GetModule( )
 }
+// advertise -- 2602
 func (self *Ast_AccessSymbolInfo) Get_accessMode() LnsInt {
     return self.symbolInfo. FP.Get_accessMode( )
 }
+// advertise -- 2602
 func (self *Ast_AccessSymbolInfo) Get_canBeRight() bool {
     return self.symbolInfo. FP.Get_canBeRight( )
 }
+// advertise -- 2602
 func (self *Ast_AccessSymbolInfo) Get_convModuleParam() LnsAny {
     return self.symbolInfo. FP.Get_convModuleParam( )
 }
+// advertise -- 2602
 func (self *Ast_AccessSymbolInfo) Get_hasAccessFromClosure() bool {
     return self.symbolInfo. FP.Get_hasAccessFromClosure( )
 }
+// advertise -- 2602
 func (self *Ast_AccessSymbolInfo) Get_hasValueFlag() bool {
     return self.symbolInfo. FP.Get_hasValueFlag( )
 }
+// advertise -- 2602
 func (self *Ast_AccessSymbolInfo) Get_isLazyLoad() bool {
     return self.symbolInfo. FP.Get_isLazyLoad( )
 }
+// advertise -- 2602
 func (self *Ast_AccessSymbolInfo) Get_kind() LnsInt {
     return self.symbolInfo. FP.Get_kind( )
 }
+// advertise -- 2602
 func (self *Ast_AccessSymbolInfo) Get_name() string {
     return self.symbolInfo. FP.Get_name( )
 }
+// advertise -- 2602
 func (self *Ast_AccessSymbolInfo) Get_namespaceTypeInfo() *Ast_TypeInfo {
     return self.symbolInfo. FP.Get_namespaceTypeInfo( )
 }
+// advertise -- 2602
 func (self *Ast_AccessSymbolInfo) Get_pos() LnsAny {
     return self.symbolInfo. FP.Get_pos( )
 }
+// advertise -- 2602
 func (self *Ast_AccessSymbolInfo) Get_posForLatestMod() LnsAny {
     return self.symbolInfo. FP.Get_posForLatestMod( )
 }
+// advertise -- 2602
 func (self *Ast_AccessSymbolInfo) Get_posForModToRef() LnsAny {
     return self.symbolInfo. FP.Get_posForModToRef( )
 }
+// advertise -- 2602
 func (self *Ast_AccessSymbolInfo) Get_scope() *Ast_Scope {
     return self.symbolInfo. FP.Get_scope( )
 }
+// advertise -- 2602
 func (self *Ast_AccessSymbolInfo) Get_staticFlag() bool {
     return self.symbolInfo. FP.Get_staticFlag( )
 }
+// advertise -- 2602
 func (self *Ast_AccessSymbolInfo) Get_symbolId() LnsInt {
     return self.symbolInfo. FP.Get_symbolId( )
 }
+// advertise -- 2602
 func (self *Ast_AccessSymbolInfo) HasAccess() bool {
     return self.symbolInfo. FP.HasAccess( )
 }
+// advertise -- 2602
 func (self *Ast_AccessSymbolInfo) Set_convModuleParam(arg1 LnsAny) {
 self.symbolInfo. FP.Set_convModuleParam( arg1)
 }
+// advertise -- 2602
 func (self *Ast_AccessSymbolInfo) Set_hasAccessFromClosure(arg1 bool) {
 self.symbolInfo. FP.Set_hasAccessFromClosure( arg1)
 }
+// advertise -- 2602
 func (self *Ast_AccessSymbolInfo) Set_hasValueFlag(arg1 bool) {
 self.symbolInfo. FP.Set_hasValueFlag( arg1)
 }
+// advertise -- 2602
 func (self *Ast_AccessSymbolInfo) set_namespaceTypeInfo(arg1 LnsAny) {
 self.symbolInfo. FP.set_namespaceTypeInfo( arg1)
 }
+// advertise -- 2602
 func (self *Ast_AccessSymbolInfo) Set_posForLatestMod(arg1 LnsAny) {
 self.symbolInfo. FP.Set_posForLatestMod( arg1)
 }
+// advertise -- 2602
 func (self *Ast_AccessSymbolInfo) Set_posForModToRef(arg1 LnsAny) {
 self.symbolInfo. FP.Set_posForModToRef( arg1)
 }
+// advertise -- 2602
 func (self *Ast_AccessSymbolInfo) Set_typeInfo(arg1 *Ast_TypeInfo) {
 self.symbolInfo. FP.Set_typeInfo( arg1)
 }
+// advertise -- 2602
 func (self *Ast_AccessSymbolInfo) UpdateValue(arg1 LnsAny) {
 self.symbolInfo. FP.UpdateValue( arg1)
 }
@@ -6717,90 +6807,119 @@ func (self *Ast_BoxTypeInfo) Get_typeId() *Ast_IdInfo{ return self.typeId }
 func (self *Ast_BoxTypeInfo) Get_itemTypeInfoList() *LnsList{ return self.itemTypeInfoList }
 func (self *Ast_BoxTypeInfo) Get_accessMode() LnsInt{ return self.accessMode }
 func (self *Ast_BoxTypeInfo) Get_nilableTypeInfo() *Ast_TypeInfo{ return &self.nilableTypeInfo.Ast_TypeInfo }
+// advertise -- 2975
 func (self *Ast_BoxTypeInfo) AddChildren(arg1 *Ast_TypeInfo) {
 self.boxingType. FP.AddChildren( arg1)
 }
+// advertise -- 2975
 func (self *Ast_BoxTypeInfo) GetFullName(arg1 *Ast_TypeNameCtrl,arg2 Ast_ModuleInfoManager,arg3 LnsAny) string {
     return self.boxingType. FP.GetFullName( arg1,arg2,arg3)
 }
+// advertise -- 2975
 func (self *Ast_BoxTypeInfo) GetModule() *Ast_TypeInfo {
     return self.boxingType. FP.GetModule( )
 }
+// advertise -- 2975
 func (self *Ast_BoxTypeInfo) GetOverridingType() LnsAny {
     return self.boxingType. FP.GetOverridingType( )
 }
+// advertise -- 2975
 func (self *Ast_BoxTypeInfo) GetParentFullName(arg1 *Ast_TypeNameCtrl,arg2 LnsAny,arg3 LnsAny) string {
     return self.boxingType. FP.GetParentFullName( arg1,arg2,arg3)
 }
+// advertise -- 2975
 func (self *Ast_BoxTypeInfo) GetParentId() *Ast_IdInfo {
     return self.boxingType. FP.GetParentId( )
 }
+// advertise -- 2975
 func (self *Ast_BoxTypeInfo) getProcessInfo() *Ast_ProcessInfo {
     return self.boxingType. FP.getProcessInfo( )
 }
+// advertise -- 2975
 func (self *Ast_BoxTypeInfo) Get_abstractFlag() bool {
     return self.boxingType. FP.Get_abstractFlag( )
 }
+// advertise -- 2975
 func (self *Ast_BoxTypeInfo) Get_argTypeInfoList() *LnsList {
     return self.boxingType. FP.Get_argTypeInfoList( )
 }
+// advertise -- 2975
 func (self *Ast_BoxTypeInfo) Get_autoFlag() bool {
     return self.boxingType. FP.Get_autoFlag( )
 }
+// advertise -- 2975
 func (self *Ast_BoxTypeInfo) Get_baseId() *Ast_IdInfo {
     return self.boxingType. FP.Get_baseId( )
 }
+// advertise -- 2975
 func (self *Ast_BoxTypeInfo) Get_baseTypeInfo() *Ast_TypeInfo {
     return self.boxingType. FP.Get_baseTypeInfo( )
 }
+// advertise -- 2975
 func (self *Ast_BoxTypeInfo) Get_children() *LnsList {
     return self.boxingType. FP.Get_children( )
 }
+// advertise -- 2975
 func (self *Ast_BoxTypeInfo) Get_externalFlag() bool {
     return self.boxingType. FP.Get_externalFlag( )
 }
+// advertise -- 2975
 func (self *Ast_BoxTypeInfo) Get_genSrcTypeInfo() *Ast_TypeInfo {
     return self.boxingType. FP.Get_genSrcTypeInfo( )
 }
+// advertise -- 2975
 func (self *Ast_BoxTypeInfo) Get_interfaceList() *LnsList {
     return self.boxingType. FP.Get_interfaceList( )
 }
+// advertise -- 2975
 func (self *Ast_BoxTypeInfo) Get_mutMode() LnsInt {
     return self.boxingType. FP.Get_mutMode( )
 }
+// advertise -- 2975
 func (self *Ast_BoxTypeInfo) Get_parentInfo() *Ast_TypeInfo {
     return self.boxingType. FP.Get_parentInfo( )
 }
+// advertise -- 2975
 func (self *Ast_BoxTypeInfo) Get_processInfo() *Ast_ProcessInfo {
     return self.boxingType. FP.Get_processInfo( )
 }
+// advertise -- 2975
 func (self *Ast_BoxTypeInfo) Get_rawTxt() string {
     return self.boxingType. FP.Get_rawTxt( )
 }
+// advertise -- 2975
 func (self *Ast_BoxTypeInfo) Get_retTypeInfoList() *LnsList {
     return self.boxingType. FP.Get_retTypeInfoList( )
 }
+// advertise -- 2975
 func (self *Ast_BoxTypeInfo) Get_staticFlag() bool {
     return self.boxingType. FP.Get_staticFlag( )
 }
+// advertise -- 2975
 func (self *Ast_BoxTypeInfo) Get_typeData() *Ast_TypeData {
     return self.boxingType. FP.Get_typeData( )
 }
+// advertise -- 2975
 func (self *Ast_BoxTypeInfo) HasBase() bool {
     return self.boxingType. FP.HasBase( )
 }
+// advertise -- 2975
 func (self *Ast_BoxTypeInfo) HasRouteNamespaceFrom(arg1 *Ast_TypeInfo) bool {
     return self.boxingType. FP.HasRouteNamespaceFrom( arg1)
 }
+// advertise -- 2975
 func (self *Ast_BoxTypeInfo) IsInheritFrom(arg1 *Ast_ProcessInfo,arg2 *Ast_TypeInfo,arg3 LnsAny) bool {
     return self.boxingType. FP.IsInheritFrom( arg1,arg2,arg3)
 }
+// advertise -- 2975
 func (self *Ast_BoxTypeInfo) IsModule() bool {
     return self.boxingType. FP.IsModule( )
 }
+// advertise -- 2975
 func (self *Ast_BoxTypeInfo) SerializeTypeInfoList(arg1 *Ast_SerializeInfo,arg2 string,arg3 *LnsList,arg4 LnsAny) string {
     return self.boxingType. FP.SerializeTypeInfoList( arg1,arg2,arg3,arg4)
 }
+// advertise -- 2975
 func (self *Ast_BoxTypeInfo) SwitchScope(arg1 *Ast_Scope) {
 self.boxingType. FP.SwitchScope( arg1)
 }
@@ -7037,105 +7156,139 @@ func (self *Ast_GenericTypeInfo) Get_typeId() *Ast_IdInfo{ return self.typeId }
 func (self *Ast_GenericTypeInfo) Get_itemTypeInfoList() *LnsList{ return self.itemTypeInfoList }
 func (self *Ast_GenericTypeInfo) Get_nilableTypeInfo() *Ast_TypeInfo{ return &self.nilableTypeInfo.Ast_TypeInfo }
 func (self *Ast_GenericTypeInfo) Get_genSrcTypeInfo() *Ast_TypeInfo{ return self.genSrcTypeInfo }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) AddChildren(arg1 *Ast_TypeInfo) {
 self.genSrcTypeInfo. FP.AddChildren( arg1)
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) GetFullName(arg1 *Ast_TypeNameCtrl,arg2 Ast_ModuleInfoManager,arg3 LnsAny) string {
     return self.genSrcTypeInfo. FP.GetFullName( arg1,arg2,arg3)
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) GetOverridingType() LnsAny {
     return self.genSrcTypeInfo. FP.GetOverridingType( )
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) GetParentFullName(arg1 *Ast_TypeNameCtrl,arg2 LnsAny,arg3 LnsAny) string {
     return self.genSrcTypeInfo. FP.GetParentFullName( arg1,arg2,arg3)
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) GetParentId() *Ast_IdInfo {
     return self.genSrcTypeInfo. FP.GetParentId( )
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) getProcessInfo() *Ast_ProcessInfo {
     return self.genSrcTypeInfo. FP.getProcessInfo( )
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) GetTxt(arg1 LnsAny,arg2 LnsAny,arg3 LnsAny) string {
     return self.genSrcTypeInfo. FP.GetTxt( arg1,arg2,arg3)
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) GetTxtWithRaw(arg1 string,arg2 LnsAny,arg3 LnsAny,arg4 LnsAny) string {
     return self.genSrcTypeInfo. FP.GetTxtWithRaw( arg1,arg2,arg3,arg4)
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) Get_abstractFlag() bool {
     return self.genSrcTypeInfo. FP.Get_abstractFlag( )
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) Get_accessMode() LnsInt {
     return self.genSrcTypeInfo. FP.Get_accessMode( )
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) Get_argTypeInfoList() *LnsList {
     return self.genSrcTypeInfo. FP.Get_argTypeInfoList( )
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) Get_autoFlag() bool {
     return self.genSrcTypeInfo. FP.Get_autoFlag( )
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) Get_baseId() *Ast_IdInfo {
     return self.genSrcTypeInfo. FP.Get_baseId( )
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) Get_baseTypeInfo() *Ast_TypeInfo {
     return self.genSrcTypeInfo. FP.Get_baseTypeInfo( )
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) Get_children() *LnsList {
     return self.genSrcTypeInfo. FP.Get_children( )
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) Get_display_stirng() string {
     return self.genSrcTypeInfo. FP.Get_display_stirng( )
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) Get_externalFlag() bool {
     return self.genSrcTypeInfo. FP.Get_externalFlag( )
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) Get_interfaceList() *LnsList {
     return self.genSrcTypeInfo. FP.Get_interfaceList( )
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) Get_kind() LnsInt {
     return self.genSrcTypeInfo. FP.Get_kind( )
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) Get_mutMode() LnsInt {
     return self.genSrcTypeInfo. FP.Get_mutMode( )
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) Get_nilable() bool {
     return self.genSrcTypeInfo. FP.Get_nilable( )
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) Get_nonnilableType() *Ast_TypeInfo {
     return self.genSrcTypeInfo. FP.Get_nonnilableType( )
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) Get_parentInfo() *Ast_TypeInfo {
     return self.genSrcTypeInfo. FP.Get_parentInfo( )
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) Get_processInfo() *Ast_ProcessInfo {
     return self.genSrcTypeInfo. FP.Get_processInfo( )
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) Get_rawTxt() string {
     return self.genSrcTypeInfo. FP.Get_rawTxt( )
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) Get_retTypeInfoList() *LnsList {
     return self.genSrcTypeInfo. FP.Get_retTypeInfoList( )
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) Get_scope() LnsAny {
     return self.genSrcTypeInfo. FP.Get_scope( )
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) Get_staticFlag() bool {
     return self.genSrcTypeInfo. FP.Get_staticFlag( )
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) Get_typeData() *Ast_TypeData {
     return self.genSrcTypeInfo. FP.Get_typeData( )
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) HasBase() bool {
     return self.genSrcTypeInfo. FP.HasBase( )
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) HasRouteNamespaceFrom(arg1 *Ast_TypeInfo) bool {
     return self.genSrcTypeInfo. FP.HasRouteNamespaceFrom( arg1)
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) IsModule() bool {
     return self.genSrcTypeInfo. FP.IsModule( )
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) SerializeTypeInfoList(arg1 *Ast_SerializeInfo,arg2 string,arg3 *LnsList,arg4 LnsAny) string {
     return self.genSrcTypeInfo. FP.SerializeTypeInfoList( arg1,arg2,arg3,arg4)
 }
+// advertise -- 3077
 func (self *Ast_GenericTypeInfo) SwitchScope(arg1 *Ast_Scope) {
 self.genSrcTypeInfo. FP.SwitchScope( arg1)
 }
@@ -7489,108 +7642,143 @@ func NewAst_ModifierTypeInfo(arg1 *Ast_ProcessInfo, arg2 *Ast_TypeInfo, arg3 Lns
 func (self *Ast_ModifierTypeInfo) Get_srcTypeInfo() *Ast_TypeInfo{ return self.srcTypeInfo }
 func (self *Ast_ModifierTypeInfo) Get_typeId() *Ast_IdInfo{ return self.typeId }
 func (self *Ast_ModifierTypeInfo) Get_mutMode() LnsInt{ return self.mutMode }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) AddChildren(arg1 *Ast_TypeInfo) {
 self.srcTypeInfo. FP.AddChildren( arg1)
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) CreateAlt2typeMap(arg1 bool) *LnsMap {
     return self.srcTypeInfo. FP.CreateAlt2typeMap( arg1)
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) GetFullName(arg1 *Ast_TypeNameCtrl,arg2 Ast_ModuleInfoManager,arg3 LnsAny) string {
     return self.srcTypeInfo. FP.GetFullName( arg1,arg2,arg3)
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) GetModule() *Ast_TypeInfo {
     return self.srcTypeInfo. FP.GetModule( )
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) GetOverridingType() LnsAny {
     return self.srcTypeInfo. FP.GetOverridingType( )
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) GetParentFullName(arg1 *Ast_TypeNameCtrl,arg2 LnsAny,arg3 LnsAny) string {
     return self.srcTypeInfo. FP.GetParentFullName( arg1,arg2,arg3)
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) GetParentId() *Ast_IdInfo {
     return self.srcTypeInfo. FP.GetParentId( )
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) getProcessInfo() *Ast_ProcessInfo {
     return self.srcTypeInfo. FP.getProcessInfo( )
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) Get_abstractFlag() bool {
     return self.srcTypeInfo. FP.Get_abstractFlag( )
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) Get_accessMode() LnsInt {
     return self.srcTypeInfo. FP.Get_accessMode( )
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) Get_aliasSrc() *Ast_TypeInfo {
     return self.srcTypeInfo. FP.Get_aliasSrc( )
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) Get_argTypeInfoList() *LnsList {
     return self.srcTypeInfo. FP.Get_argTypeInfoList( )
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) Get_autoFlag() bool {
     return self.srcTypeInfo. FP.Get_autoFlag( )
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) Get_baseId() *Ast_IdInfo {
     return self.srcTypeInfo. FP.Get_baseId( )
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) Get_baseTypeInfo() *Ast_TypeInfo {
     return self.srcTypeInfo. FP.Get_baseTypeInfo( )
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) Get_children() *LnsList {
     return self.srcTypeInfo. FP.Get_children( )
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) Get_externalFlag() bool {
     return self.srcTypeInfo. FP.Get_externalFlag( )
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) Get_genSrcTypeInfo() *Ast_TypeInfo {
     return self.srcTypeInfo. FP.Get_genSrcTypeInfo( )
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) Get_interfaceList() *LnsList {
     return self.srcTypeInfo. FP.Get_interfaceList( )
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) Get_itemTypeInfoList() *LnsList {
     return self.srcTypeInfo. FP.Get_itemTypeInfoList( )
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) Get_kind() LnsInt {
     return self.srcTypeInfo. FP.Get_kind( )
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) Get_nilable() bool {
     return self.srcTypeInfo. FP.Get_nilable( )
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) Get_parentInfo() *Ast_TypeInfo {
     return self.srcTypeInfo. FP.Get_parentInfo( )
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) Get_processInfo() *Ast_ProcessInfo {
     return self.srcTypeInfo. FP.Get_processInfo( )
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) Get_rawTxt() string {
     return self.srcTypeInfo. FP.Get_rawTxt( )
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) Get_retTypeInfoList() *LnsList {
     return self.srcTypeInfo. FP.Get_retTypeInfoList( )
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) Get_scope() LnsAny {
     return self.srcTypeInfo. FP.Get_scope( )
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) Get_staticFlag() bool {
     return self.srcTypeInfo. FP.Get_staticFlag( )
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) Get_typeData() *Ast_TypeData {
     return self.srcTypeInfo. FP.Get_typeData( )
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) HasBase() bool {
     return self.srcTypeInfo. FP.HasBase( )
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) HasRouteNamespaceFrom(arg1 *Ast_TypeInfo) bool {
     return self.srcTypeInfo. FP.HasRouteNamespaceFrom( arg1)
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) IsInheritFrom(arg1 *Ast_ProcessInfo,arg2 *Ast_TypeInfo,arg3 LnsAny) bool {
     return self.srcTypeInfo. FP.IsInheritFrom( arg1,arg2,arg3)
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) IsModule() bool {
     return self.srcTypeInfo. FP.IsModule( )
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) SerializeTypeInfoList(arg1 *Ast_SerializeInfo,arg2 string,arg3 *LnsList,arg4 LnsAny) string {
     return self.srcTypeInfo. FP.SerializeTypeInfoList( arg1,arg2,arg3,arg4)
 }
+// advertise -- 3313
 func (self *Ast_ModifierTypeInfo) SwitchScope(arg1 *Ast_Scope) {
 self.srcTypeInfo. FP.SwitchScope( arg1)
 }
@@ -10013,99 +10201,131 @@ func NewAst_ExtTypeInfo(arg1 *Ast_ProcessInfo, arg2 *Ast_TypeInfo) *Ast_ExtTypeI
 func (self *Ast_ExtTypeInfo) Get_typeId() *Ast_IdInfo{ return self.typeId }
 func (self *Ast_ExtTypeInfo) Get_extedType() *Ast_TypeInfo{ return self.extedType }
 func (self *Ast_ExtTypeInfo) Get_nilableTypeInfo() *Ast_TypeInfo{ return self.nilableTypeInfo }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) AddChildren(arg1 *Ast_TypeInfo) {
 self.extedType. FP.AddChildren( arg1)
 }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) CreateAlt2typeMap(arg1 bool) *LnsMap {
     return self.extedType. FP.CreateAlt2typeMap( arg1)
 }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) GetFullName(arg1 *Ast_TypeNameCtrl,arg2 Ast_ModuleInfoManager,arg3 LnsAny) string {
     return self.extedType. FP.GetFullName( arg1,arg2,arg3)
 }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) GetOverridingType() LnsAny {
     return self.extedType. FP.GetOverridingType( )
 }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) GetParentFullName(arg1 *Ast_TypeNameCtrl,arg2 LnsAny,arg3 LnsAny) string {
     return self.extedType. FP.GetParentFullName( arg1,arg2,arg3)
 }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) GetParentId() *Ast_IdInfo {
     return self.extedType. FP.GetParentId( )
 }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) getProcessInfo() *Ast_ProcessInfo {
     return self.extedType. FP.getProcessInfo( )
 }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) Get_abstractFlag() bool {
     return self.extedType. FP.Get_abstractFlag( )
 }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) Get_accessMode() LnsInt {
     return self.extedType. FP.Get_accessMode( )
 }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) Get_argTypeInfoList() *LnsList {
     return self.extedType. FP.Get_argTypeInfoList( )
 }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) Get_autoFlag() bool {
     return self.extedType. FP.Get_autoFlag( )
 }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) Get_baseId() *Ast_IdInfo {
     return self.extedType. FP.Get_baseId( )
 }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) Get_baseTypeInfo() *Ast_TypeInfo {
     return self.extedType. FP.Get_baseTypeInfo( )
 }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) Get_children() *LnsList {
     return self.extedType. FP.Get_children( )
 }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) Get_externalFlag() bool {
     return self.extedType. FP.Get_externalFlag( )
 }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) Get_genSrcTypeInfo() *Ast_TypeInfo {
     return self.extedType. FP.Get_genSrcTypeInfo( )
 }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) Get_interfaceList() *LnsList {
     return self.extedType. FP.Get_interfaceList( )
 }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) Get_itemTypeInfoList() *LnsList {
     return self.extedType. FP.Get_itemTypeInfoList( )
 }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) Get_mutMode() LnsInt {
     return self.extedType. FP.Get_mutMode( )
 }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) Get_parentInfo() *Ast_TypeInfo {
     return self.extedType. FP.Get_parentInfo( )
 }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) Get_processInfo() *Ast_ProcessInfo {
     return self.extedType. FP.Get_processInfo( )
 }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) Get_rawTxt() string {
     return self.extedType. FP.Get_rawTxt( )
 }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) Get_retTypeInfoList() *LnsList {
     return self.extedType. FP.Get_retTypeInfoList( )
 }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) Get_scope() LnsAny {
     return self.extedType. FP.Get_scope( )
 }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) Get_staticFlag() bool {
     return self.extedType. FP.Get_staticFlag( )
 }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) Get_typeData() *Ast_TypeData {
     return self.extedType. FP.Get_typeData( )
 }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) HasBase() bool {
     return self.extedType. FP.HasBase( )
 }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) HasRouteNamespaceFrom(arg1 *Ast_TypeInfo) bool {
     return self.extedType. FP.HasRouteNamespaceFrom( arg1)
 }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) IsInheritFrom(arg1 *Ast_ProcessInfo,arg2 *Ast_TypeInfo,arg3 LnsAny) bool {
     return self.extedType. FP.IsInheritFrom( arg1,arg2,arg3)
 }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) IsModule() bool {
     return self.extedType. FP.IsModule( )
 }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) SerializeTypeInfoList(arg1 *Ast_SerializeInfo,arg2 string,arg3 *LnsList,arg4 LnsAny) string {
     return self.extedType. FP.SerializeTypeInfoList( arg1,arg2,arg3,arg4)
 }
+// advertise -- 5674
 func (self *Ast_ExtTypeInfo) SwitchScope(arg1 *Ast_Scope) {
 self.extedType. FP.SwitchScope( arg1)
 }
@@ -10320,150 +10540,199 @@ func NewAst_AndExpTypeInfo(arg1 *Ast_ProcessInfo, arg2 *Ast_TypeInfo, arg3 *Ast_
 func (self *Ast_AndExpTypeInfo) Get_exp1() *Ast_TypeInfo{ return self.exp1 }
 func (self *Ast_AndExpTypeInfo) Get_exp2() *Ast_TypeInfo{ return self.exp2 }
 func (self *Ast_AndExpTypeInfo) Get_result() *Ast_TypeInfo{ return self.result }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) AddChildren(arg1 *Ast_TypeInfo) {
 self.result. FP.AddChildren( arg1)
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) ApplyGeneric(arg1 *LnsMap,arg2 *Ast_TypeInfo) LnsAny {
     return self.result. FP.ApplyGeneric( arg1,arg2)
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) CanEvalWith(arg1 *Ast_ProcessInfo,arg2 *Ast_TypeInfo,arg3 LnsInt,arg4 *LnsMap)(bool, LnsAny) {
     return self.result. FP.CanEvalWith( arg1,arg2,arg3,arg4)
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) CreateAlt2typeMap(arg1 bool) *LnsMap {
     return self.result. FP.CreateAlt2typeMap( arg1)
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) Equals(arg1 *Ast_ProcessInfo,arg2 *Ast_TypeInfo,arg3 LnsAny,arg4 LnsAny) bool {
     return self.result. FP.Equals( arg1,arg2,arg3,arg4)
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) GetFullName(arg1 *Ast_TypeNameCtrl,arg2 Ast_ModuleInfoManager,arg3 LnsAny) string {
     return self.result. FP.GetFullName( arg1,arg2,arg3)
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) GetModule() *Ast_TypeInfo {
     return self.result. FP.GetModule( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) GetOverridingType() LnsAny {
     return self.result. FP.GetOverridingType( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) GetParentFullName(arg1 *Ast_TypeNameCtrl,arg2 LnsAny,arg3 LnsAny) string {
     return self.result. FP.GetParentFullName( arg1,arg2,arg3)
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) GetParentId() *Ast_IdInfo {
     return self.result. FP.GetParentId( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) getProcessInfo() *Ast_ProcessInfo {
     return self.result. FP.getProcessInfo( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) GetTxt(arg1 LnsAny,arg2 LnsAny,arg3 LnsAny) string {
     return self.result. FP.GetTxt( arg1,arg2,arg3)
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) GetTxtWithRaw(arg1 string,arg2 LnsAny,arg3 LnsAny,arg4 LnsAny) string {
     return self.result. FP.GetTxtWithRaw( arg1,arg2,arg3,arg4)
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) Get_abstractFlag() bool {
     return self.result. FP.Get_abstractFlag( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) Get_accessMode() LnsInt {
     return self.result. FP.Get_accessMode( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) Get_aliasSrc() *Ast_TypeInfo {
     return self.result. FP.Get_aliasSrc( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) Get_argTypeInfoList() *LnsList {
     return self.result. FP.Get_argTypeInfoList( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) Get_autoFlag() bool {
     return self.result. FP.Get_autoFlag( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) Get_baseId() *Ast_IdInfo {
     return self.result. FP.Get_baseId( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) Get_baseTypeInfo() *Ast_TypeInfo {
     return self.result. FP.Get_baseTypeInfo( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) Get_children() *LnsList {
     return self.result. FP.Get_children( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) Get_display_stirng() string {
     return self.result. FP.Get_display_stirng( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) Get_display_stirng_with(arg1 string,arg2 LnsAny) string {
     return self.result. FP.Get_display_stirng_with( arg1,arg2)
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) Get_extedType() *Ast_TypeInfo {
     return self.result. FP.Get_extedType( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) Get_externalFlag() bool {
     return self.result. FP.Get_externalFlag( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) Get_genSrcTypeInfo() *Ast_TypeInfo {
     return self.result. FP.Get_genSrcTypeInfo( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) Get_interfaceList() *LnsList {
     return self.result. FP.Get_interfaceList( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) Get_itemTypeInfoList() *LnsList {
     return self.result. FP.Get_itemTypeInfoList( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) Get_kind() LnsInt {
     return self.result. FP.Get_kind( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) Get_mutMode() LnsInt {
     return self.result. FP.Get_mutMode( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) Get_nilable() bool {
     return self.result. FP.Get_nilable( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) Get_nilableTypeInfo() *Ast_TypeInfo {
     return self.result. FP.Get_nilableTypeInfo( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) Get_nonnilableType() *Ast_TypeInfo {
     return self.result. FP.Get_nonnilableType( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) Get_parentInfo() *Ast_TypeInfo {
     return self.result. FP.Get_parentInfo( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) Get_processInfo() *Ast_ProcessInfo {
     return self.result. FP.Get_processInfo( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) Get_rawTxt() string {
     return self.result. FP.Get_rawTxt( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) Get_retTypeInfoList() *LnsList {
     return self.result. FP.Get_retTypeInfoList( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) Get_scope() LnsAny {
     return self.result. FP.Get_scope( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) Get_srcTypeInfo() *Ast_TypeInfo {
     return self.result. FP.Get_srcTypeInfo( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) Get_staticFlag() bool {
     return self.result. FP.Get_staticFlag( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) Get_typeData() *Ast_TypeData {
     return self.result. FP.Get_typeData( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) Get_typeId() *Ast_IdInfo {
     return self.result. FP.Get_typeId( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) HasBase() bool {
     return self.result. FP.HasBase( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) HasRouteNamespaceFrom(arg1 *Ast_TypeInfo) bool {
     return self.result. FP.HasRouteNamespaceFrom( arg1)
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) IsInheritFrom(arg1 *Ast_ProcessInfo,arg2 *Ast_TypeInfo,arg3 LnsAny) bool {
     return self.result. FP.IsInheritFrom( arg1,arg2,arg3)
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) IsModule() bool {
     return self.result. FP.IsModule( )
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) Serialize(arg1 Lns_oStream,arg2 *Ast_SerializeInfo) {
 self.result. FP.Serialize( arg1,arg2)
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) SerializeTypeInfoList(arg1 *Ast_SerializeInfo,arg2 string,arg3 *LnsList,arg4 LnsAny) string {
     return self.result. FP.SerializeTypeInfoList( arg1,arg2,arg3,arg4)
 }
+// advertise -- 5891
 func (self *Ast_AndExpTypeInfo) SwitchScope(arg1 *Ast_Scope) {
 self.result. FP.SwitchScope( arg1)
 }

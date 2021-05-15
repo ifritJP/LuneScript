@@ -1800,7 +1800,7 @@ function Front:createGoOption( scriptPath )
       end
    end
    
-   return convGo.Option.new(packageName, self:getGoAppName(  ), self.option.mainModule)
+   return convGo.Option.new(packageName, self:getGoAppName(  ), self.option.mainModule, self.option:get_addEnvArg())
 end
 
 
@@ -2042,7 +2042,7 @@ function Front:saveToLua( updateInfo )
             end
             
             if not cont then
-               Log.log( Log.Level.Debug, __func__, 1479, function (  )
+               Log.log( Log.Level.Debug, __func__, 1481, function (  )
                
                   return string.format( "<%s>, <%s>", tostring( oldLine), tostring( newLine))
                end )
@@ -2384,7 +2384,7 @@ _moduleObj.build = build
 function Front:exec(  )
    local __func__ = '@lune.@base.@front.Front.exec'
 
-   Log.log( Log.Level.Trace, __func__, 1771, function (  )
+   Log.log( Log.Level.Trace, __func__, 1773, function (  )
    
       return Option.ModeKind:_getTxt( self.option.mode)
       
@@ -2499,6 +2499,23 @@ local function setFront( bindModuleList )
    Front.new(option, bindModuleList)
 end
 _moduleObj.setFront = setFront
+
+local function __main( argList )
+
+   local list = {}
+   for index, arg in ipairs( argList ) do
+      if index > 1 then
+         table.insert( list, arg )
+      end
+      
+   end
+   
+   
+   exec( list )
+   
+   return 0
+end
+_moduleObj.__main = __main
 
 
 

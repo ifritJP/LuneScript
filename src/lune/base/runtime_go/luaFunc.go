@@ -24,36 +24,35 @@ SOFTWARE.
 
 package runtimelns
 
-func (luaVM *Lns_luaVM) RunCode( code string ) (bool,[]LnsAny, LnsAny) {
-    loaded, mess := luaVM.Load( code, nil )
-    if loaded == nil {
-        return false, []LnsAny{}, mess
-    }
-    ret := luaVM.RunLoadedfunc( loaded.(*Lns_luaValue), []LnsAny{} )
-    return true, ret, nil
+func (luaVM *Lns_luaVM) RunCode(code string) (bool, []LnsAny, LnsAny) {
+	loaded, mess := luaVM.Load(code, nil)
+	if loaded == nil {
+		return false, []LnsAny{}, mess
+	}
+	ret := luaVM.RunLoadedfunc(loaded.(*Lns_luaValue), []LnsAny{})
+	return true, ret, nil
 }
 
 func (luaVM *Lns_luaVM) GetEmptyMap() *Lns_luaValue {
-    code := "return {}"
-    ok, ret, mess := luaVM.RunCode( code )
-    if !ok {
-        panic( mess )
-    }
-    return ret[0].(*Lns_luaValue)
+	code := "return {}"
+	ok, ret, mess := luaVM.RunCode(code)
+	if !ok {
+		panic(mess)
+	}
+	return ret[0].(*Lns_luaValue)
 }
 
 func (luaVM *Lns_luaVM) GetPackagePath() string {
-    code := "return package.path"
-    ok, ret, mess := luaVM.RunCode( code )
-    if !ok {
-        panic( mess )
-    }
-    return ret[0].(string)
+	code := "return package.path"
+	ok, ret, mess := luaVM.RunCode(code)
+	if !ok {
+		panic(mess)
+	}
+	return ret[0].(string)
 }
 
-
-func (luaVM *Lns_luaVM) SortMapKeyList( mapObj *Lns_luaValue ) *Lns_luaValue {
-    code := `
+func (luaVM *Lns_luaVM) SortMapKeyList(mapObj *Lns_luaValue) *Lns_luaValue {
+	code := `
 return function( map )
   local keys = {}
   for key in pairs( map ) do
@@ -63,11 +62,11 @@ return function( map )
   return keys
 end
 `
-    ok, ret, mess := luaVM.RunCode( code )
-    if !ok {
-        panic( mess )
-    }
-    loaded := ret[0].(*Lns_luaValue)
-    vals := luaVM.RunLoadedfunc( loaded, []LnsAny{ mapObj } )
-    return vals[ 0 ].(*Lns_luaValue)
+	ok, ret, mess := luaVM.RunCode(code)
+	if !ok {
+		panic(mess)
+	}
+	loaded := ret[0].(*Lns_luaValue)
+	vals := luaVM.RunLoadedfunc(loaded, []LnsAny{mapObj})
+	return vals[0].(*Lns_luaValue)
 }

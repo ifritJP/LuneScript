@@ -179,10 +179,10 @@ func (self *AsyncParser_AsyncItem) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *AsyncParser_AsyncItem) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func AsyncParser_AsyncItem__fromMap(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func AsyncParser_AsyncItem__fromMap( arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return AsyncParser_AsyncItem_FromMap( arg1, paramList )
 }
-func AsyncParser_AsyncItem__fromStem(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func AsyncParser_AsyncItem__fromStem( arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return AsyncParser_AsyncItem_FromMap( arg1, paramList )
 }
 func AsyncParser_AsyncItem_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {

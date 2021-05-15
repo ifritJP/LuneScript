@@ -24,28 +24,21 @@ SOFTWARE.
 
 package main
 
-import "os"
+import (
+	"os"
 
-import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
-import lnsc "github.com/ifritJP/LuneScript/src/lune/base"
+	lnsc "github.com/ifritJP/LuneScript/src/lune/base"
+	. "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
+)
+
 //import bind "github.com/ifritJP/LuneScript/src/lune"
 
-func exec( args []LnsAny ) error {
-    //    bind.Setup()
-    Lns_InitModOnce()
-    lnsc.Lns_front_init()
-    
-    lnsc.Front_exec( NewLnsList( args[ 1:] ) )
-
-    return nil
-}
-
-
 func main() {
-    args := []LnsAny{}
-    for _, arg := range( os.Args ) {
-        args = append( args, arg )
-    }
+	args := []LnsAny{}
+	for _, arg := range os.Args {
+		args = append(args, arg)
+	}
 
-    exec( args )
+	Lns_InitModOnce()
+	Lns_RunMain(lnsc.Front___main)
 }

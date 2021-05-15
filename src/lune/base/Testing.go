@@ -251,27 +251,35 @@ func (self *Testing_Ctrl) InitTesting_Ctrl(arg1 *Testing_Result) {
     self.result = arg1
 }
 func (self *Testing_Ctrl) Get_result() *Testing_Result{ return self.result }
+// advertise -- 114
 func (self *Testing_Ctrl) CheckEq(arg1 LnsAny,arg2 LnsAny,arg3 string,arg4 string,arg5 LnsAny,arg6 string,arg7 LnsInt) bool {
     return self.result. FP.CheckEq( arg1,arg2,arg3,arg4,arg5,arg6,arg7)
 }
+// advertise -- 114
 func (self *Testing_Ctrl) CheckNotEq(arg1 LnsAny,arg2 LnsAny,arg3 string,arg4 string,arg5 LnsAny,arg6 string,arg7 LnsInt) bool {
     return self.result. FP.CheckNotEq( arg1,arg2,arg3,arg4,arg5,arg6,arg7)
 }
+// advertise -- 114
 func (self *Testing_Ctrl) Err(arg1 string,arg2 string,arg3 LnsInt) {
 self.result. FP.Err( arg1,arg2,arg3)
 }
+// advertise -- 114
 func (self *Testing_Ctrl) IsNil(arg1 LnsAny,arg2 string,arg3 LnsAny,arg4 string,arg5 LnsInt) bool {
     return self.result. FP.IsNil( arg1,arg2,arg3,arg4,arg5)
 }
+// advertise -- 114
 func (self *Testing_Ctrl) IsNotNil(arg1 LnsAny,arg2 string,arg3 LnsAny,arg4 string,arg5 LnsInt) bool {
     return self.result. FP.IsNotNil( arg1,arg2,arg3,arg4,arg5)
 }
+// advertise -- 114
 func (self *Testing_Ctrl) IsNotTrue(arg1 LnsAny,arg2 string,arg3 LnsAny,arg4 string,arg5 LnsInt) bool {
     return self.result. FP.IsNotTrue( arg1,arg2,arg3,arg4,arg5)
 }
+// advertise -- 114
 func (self *Testing_Ctrl) IsTrue(arg1 LnsAny,arg2 string,arg3 LnsAny,arg4 string,arg5 LnsInt) bool {
     return self.result. FP.IsTrue( arg1,arg2,arg3,arg4,arg5)
 }
+// advertise -- 114
 func (self *Testing_Ctrl) OutputResult(arg1 Lns_oStream) {
 self.result. FP.OutputResult( arg1)
 }

@@ -582,7 +582,7 @@ func Lns_Util_init() {
     init_Util = true
     Util__mod__ = "@lune.@base.@Util"
     Lns_InitMod()
-    Lns_LuaVer_init()
+    Lns_LuaVer_init(  )
     Lns_Depend_init()
     Lns_Log_init()
     Lns_Str_init()

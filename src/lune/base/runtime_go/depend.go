@@ -67,7 +67,8 @@ func printMemInfo(mess string) {
 	fmt.Printf("NumGC: %d\n", ms.NumGC)
 }
 
-func Depend_profile(validTest bool, work LnsForm, path string) LnsAny {
+func Depend_profileSub(
+	validTest bool, path string, work func() LnsAny) LnsAny {
 	if validTest {
 		// start cpu profile
 		prof, err := os.Create(path)
@@ -83,7 +84,7 @@ func Depend_profile(validTest bool, work LnsForm, path string) LnsAny {
 		printMemInfo("start")
 	}
 
-	ret := work([]LnsAny{})
+	ret := work()
 
 	if validTest {
 		// write mem profile

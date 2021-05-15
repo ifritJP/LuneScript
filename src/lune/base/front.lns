@@ -1269,7 +1269,9 @@ fn Front.createGoOption( scriptPath:str ) : &convGo.Option {
          }
       }
    }
-   return new convGo.Option( packageName, self.getGoAppName(), self.option.mainModule );
+   return new convGo.Option(
+      packageName, self.getGoAppName(), self.option.mainModule,
+      self.option.$addEnvArg );
 }
 
 fn Front.convertToLua(
@@ -1884,6 +1886,19 @@ pub fn exec( args: &List<str> ) {
 pub fn setFront( bindModuleList:&List<str> ) {
    let mut option = Option.createDefaultOption( ["dummy.lns"], nil );
    new Front( option, bindModuleList );
+}
+
+pub fn __main( argList:&List<str> ) : int {
+   let list:List<str> = [];
+   foreach arg, index in argList {
+      if index > 1 {
+         list.insert( arg );
+      }
+   }
+
+   exec( list );
+
+   return 0;
 }
 
 __test case1(ctrl) {

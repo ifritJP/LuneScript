@@ -219,10 +219,10 @@ func (self *Types_Position) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Types_Position) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Types_Position__fromMap(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Types_Position__fromMap( arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Types_Position_FromMap( arg1, paramList )
 }
-func Types_Position__fromStem(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Types_Position__fromStem( arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Types_Position_FromMap( arg1, paramList )
 }
 func Types_Position_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
@@ -356,10 +356,10 @@ func (self *Types_Token) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Types_Token) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Types_Token__fromMap(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Types_Token__fromMap( arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Types_Token_FromMap( arg1, paramList )
 }
-func Types_Token__fromStem(arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Types_Token__fromStem( arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Types_Token_FromMap( arg1, paramList )
 }
 func Types_Token_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {

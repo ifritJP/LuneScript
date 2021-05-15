@@ -149,7 +149,11 @@ pub class Option {
    // 指定ソースのプロジェクトディレクトリ
    local let mut projDir:str! {pub};
 
+   /** go への変換時、関数の引数に環境情報を追加する */
+   local let mut addEnvArg:bool {pub};
+
    pub fn __init() {
+      self.addEnvArg = false; 
       self.projDir = nil;
       self.runtimeOpt = new RuntimeOpt();
       self.shebangArgList = [];
@@ -352,6 +356,9 @@ usage:
                }
                case "-prof" {
                   option.validProf = true;
+               }
+               case "--addEnvArg" {
+                  option.addEnvArg = true;
                }
                case "--nodebug" {
                   Util.setDebugFlag( false );

@@ -69,6 +69,10 @@ INSTALL=/usr/bin/install -c
 
 NDIR=$(shell pwd)
 
+
+
+LNSC_OP=
+
 .PHONY: help exec build build_from_d luarocks-check luarocks-check-sub
 .PHONY: release-check build test-save build-countup test-comp
 .PHONY: test-registered-rockspec test-etc test-error-all test-error test-org
@@ -113,8 +117,9 @@ exec:
 	$(LUA) lune/base/base.lua test/test.lns ast
 	$(LUA) lune/base/base.lua test/test.lns LUA
 
+LNSC_OP=
 EXE_OPT := --valid-luaval 
-COM_OPT := --use-ipairs -Werror --valid-luaval
+COM_OPT := --use-ipairs -Werror --valid-luaval $(LNSC_OP)
 ifeq ($(WITH_GO),y)
 COM_OPT += -langGo
 endif
@@ -1395,10 +1400,11 @@ define buildGoSetup
 endef
 
 GOBUILD_TAG=
-INT2STR=
 ifdef GOTAG
 GOBUILD_TAG=-tags $(GOTAG)
 endif
+
+INT2STR=
 ifeq ($(GOTAG),gopherlua)
 ifeq ($(LNSC),$(LNSC_LUA51))
 INT2STR=--int2str unneed0
@@ -1406,8 +1412,6 @@ else
 INT2STR=--int2str need0
 endif
 endif
-
-
 
 ifdef GOTAG
 define buildGo
@@ -1433,7 +1437,7 @@ GO_WORK_DIR = work/go
 # $4: 出力先ディレクトリ
 # $5: その他オプション
 define convGo
-	$(call exeLune,$1,$2,$3.lns,SAVE -langGo,$4 $5)
+	$(call exeLune,$1,$2,$3.lns,SAVE -langGo $(LNSC_OP),$4 $5)
 endef
 
 define setup-go
@@ -1472,20 +1476,19 @@ endef
 define test-go-some-setup
 	cp -au $4/$3.lns $2/$4
 	touch $2/$4/$3.lns
-	$(call convGo,$1,$2,$4/$3,$5)
+	$(call convGo,$1,$2,$4/$3,$5 --uptodate forceAll)
 #	mv $2/$4/$3.go $2
 endef
 
 
 define test-go-some
-	$(call test-go-one-exec,$1,$2,$3,$4,$5,$6)
+	$(call test-go-one-exec,$1,$2,$3,$4,$5,$6 --uptodate forceAll)
 endef
 
 
 test-miniGo:
-	$(call cmd_exec_trans,$(LNSC),.,.,,base/convGo)
 	$(call setup-go,$(GO_WORK_DIR))
-#	rm $(GO_WORK_DIR)/go.mod
+	$(call selfhost_buildOp_batch,.,$(LNSC_GO),$(GO_WORK_DIR),)
 	-rm $(GO_WORK_DIR)/*.*
 	cp build.counter $(GO_WORK_DIR)
 ifdef OTHER_GO
