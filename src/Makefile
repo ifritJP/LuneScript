@@ -108,7 +108,7 @@ help:
 	@echo "  make test-tutorial-go"
 	@echo "  make go-build [GOTAG=gopherlua]"
 	@echo "  make setup-pkg-lua"
-	@echo "  make test-govslua [BATCH=y] [ONLY_CONV=y]" 
+	@echo "  make test-govslua [NO_BATCH=y] [ONLY_CONV=y]"
 	@echo "  make goprof"
 
 
@@ -1646,52 +1646,21 @@ go-build:
 	$(call setup-go,$(GO_WORK_DIR)/build)
 	$(call cp_src_set,$(GO_WORK_DIR)/build,.)
 
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Testing,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Async,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Types,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Ver,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Code,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/LuaMod,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/LuaVer,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/LuneControl,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Meta,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Log,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Util,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/AsyncParser,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Parser,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Json,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Writer,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/frontInterface,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Ast,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Option,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/GoMod,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Nodes,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Formatter,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Macro,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/TransUnitIF,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Builtin,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Import,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/TransUnit,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convLua,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/dumpNode,./build, --package lnsc)
-#	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convCC,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/convGo,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/OutputDepend,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/glueFilter,./build, --package lnsc)
-	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/front,./build, --package lnsc)
-
+	cp Makefile $(GO_WORK_DIR)
+	$(call selfhost_buildOp_batch,$(GO_WORK_DIR),$(LNSC),build,-langGo,)
 	$(call binding-lns-go,$(GO_WORK_DIR)/build)
-
 	$(call go-build-lns,$(GO_WORK_DIR)/build)
+	$(call mk_runtime,$(LNSC),$(GO_WORK_DIR)/build,.,)
 
 ifndef NO_TEST
+	cp $(GO_WORK_DIR)/build/$(LNSC_GO) $(GO_WORK_DIR)
 	$(MAKE) test-govslua
 	$(MAKE) LNSC=$(shell pwd)/$(GO_WORK_DIR)/build/$(LNSC_GO) test-lnsc-go
 
 	$(MAKE) -s TEST_DIR=$(GO_WORK_DIR) LOG_DIR=work/0/log test-error | \
 		grep -e 'error:' -e 'warning:' > work/test1.result
 	$(MAKE) -s TEST_DIR=$(GO_WORK_DIR) LOG_DIR=work/1/log \
-		LNSC=./build/$(LNSC_GO) test-error | \
+		LNSC=./$(LNSC_GO) test-error | \
 			grep -e 'error:' -e 'warning:' > work/test2.result
 	diff work/test1.result work/test2.result
 endif
@@ -1716,15 +1685,20 @@ endef
 # lns ソースの変換を行ない。同じ結果になることを確認する。
 test-govslua:
 	-rm work/go.time work/lua.time
-ifdef BATCH
+ifndef NO_BATCH
 	/usr/bin/time -f 'go:%e/%U/%S:$2' -o work/go.time -a		\
 		$(MAKE) test-govslua-go-batch
 else
 	/usr/bin/time -f 'go:%e/%U/%S:$2' -o work/go.time -a		\
 		$(MAKE) test-govslua-go
 endif
+ifndef NO_BATCH
+	/usr/bin/time -f 'lua:%e/%U/%S:$2' -o work/lua.time -a		\
+		$(MAKE) test-govslua-lua-batch
+else
 	/usr/bin/time -f 'lua:%e/%U/%S:$2' -o work/lua.time -a		\
 		$(MAKE) test-govslua-lua
+endif
 	cat work/go.time work/lua.time
 	diff -u -r work/1 work/2 -I buildId				\
 		-I ': Entering directory'				\
@@ -1758,11 +1732,11 @@ endif
 
 
 test-govslua-lua-batch:
-	$(call test-buildlns-setup,work/2)
-	$(call selfhost_buildOp_batch,.,$(LNSC),work/2,--depends work/2/ -langGo --package lnsc)
+	$(call test-buildlns-setup,work/1)
+	$(call selfhost_buildOp_batch,$(GO_WORK_DIR),$(LNSC),../1,--depends ../1/ -langGo --package lnsc)
 test-govslua-go-batch:
 	$(call test-buildlns-setup,work/2)
-	$(call selfhost_buildOp_batch,.,$(LNSC_GO),work/2,--depends work/2/ -langGo --package lnsc)
+	$(call selfhost_buildOp_batch,$(GO_WORK_DIR),$(LNSC_GO),../2,--depends ../2/ -langGo --package lnsc)
 
 
 goprof:
