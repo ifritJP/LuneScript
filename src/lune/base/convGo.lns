@@ -1182,6 +1182,7 @@ fn convFilter.processConvExp( nodeId:int, dstTypeList:&List<&Ast.TypeInfo>,
    self.writeln( "// for %d" (argList.$pos.lineNo) );
    self.write( "func %s(" (self.getConvExpName( nodeId, argList )) );
 
+
    if hasRetEnv {
       self.write( self.getEnvArgDecl( #expList ) );
    }
@@ -1272,19 +1273,26 @@ fn convFilter.processConvExp( nodeId:int, dstTypeList:&List<&Ast.TypeInfo>,
             break;
          }
          if index >= mRetIndex {
+            let valTxt = "Lns_getFromMulti( arg%d, %d )" (mRetIndex, index - mRetIndex);
             let mut wrote = false;
             if index <= #expList {
                let exp = expList[ index ];
                if! let castNode = exp@@@Nodes.ExpCastNode {
+                  let srcTxt;
+                  if castNode.$exp.$expType.$nilable {
+                     srcTxt = valTxt; 
+                  } else {
+                     srcTxt = "%s.(%s)" (valTxt,
+                                          self.type2gotype( castNode.$exp.$expType ));
+                  }
                   let statNode = Nodes.ConvStatNode.create(
-                     self.nodeManager, exp.$pos, false, [ exp.$expType ],
-                     "Lns_getFromMulti( arg%d, 0 )" (index) );
+                     self.nodeManager, exp.$pos, false, [ exp.$expType ], srcTxt );
                   self.outputImplicitCast( castNode.$castType, statNode, castNode );
                   wrote = true;
                }
             }
             if not wrote {
-               self.write( "Lns_getFromMulti( arg%d, %d )" (mRetIndex, index - mRetIndex) );
+               self.write( valTxt );
                self.outputAny2Type( retType);
             }
          }
@@ -1933,10 +1941,11 @@ pub override fn convFilter.processRoot(
    
    _filter( node.$nodeManager.getExpCallNodeList(),
             fn ( workNode:&Nodes.ExpCallNode ) {
+               let needEnv = not Ast.isBuiltin( workNode.$func.$expType.$typeId.id );
                self.processConvExp(
                   workNode.$id,     
                   workNode.$func.$expType.$argTypeInfoList,
-                  workNode.$argList, true );
+                  workNode.$argList, needEnv );
             } );
    _filter( node.$nodeManager.getDeclVarNodeList(),
             fn ( workNode:&Nodes.DeclVarNode ) {
@@ -2594,7 +2603,8 @@ pub override fn convFilter.processDeclEnum(
 
          let scope = unwrap node.$enumType.$scope;
          self.outputDeclFunc(
-            false, .Type( unwrap scope.getTypeInfoChild( "get__allList" ) ) );
+            self.option.$addEnvArg,
+            .Type( unwrap scope.getTypeInfoChild( "get__allList" ) ) );
          self.writeln( "{" );
          self.pushIndent( ## );
          self.writeln( "return %s" (listName));
@@ -4717,9 +4727,9 @@ pub override fn convFilter.processExpCall(
             self.write( "[]LnsAny{}" );
          } else {
             self.write( "Lns_2DDD(" );
-            addEnvArg = false;
             closeTxt = ")";
          }
+         addEnvArg = false;
       }
       case .SortCall( typeInfo ) {
          self.write( "%s, " (getLnsItemKind( typeInfo )) );
@@ -5416,7 +5426,7 @@ pub override fn convFilter.processGetField(
 
       if symbolInfo.$staticFlag {
          self.write( self.getSymbolSym( symbolInfo ) );
-         self.write( "()" );
+         self.write( "(%s)" (getAddEnvArg( 0, self.option.$addEnvArg )) );
       } else {
          let closeParen = self.outputCallPrefix(
             node.isThreading(), node.$id, node, node.$prefix, symbolInfo );

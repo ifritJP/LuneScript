@@ -1855,3 +1855,64 @@ _section();
    let val:stem = 1;
    print( val@@@SubPkg.Hoge );
 }
+_section();
+{
+   fn loadCode( code:str ) : Luaval<&stem> {
+      let loaded, mess = _load( code ## );
+      when! loaded {
+         if! let obj = loaded(##) {
+            return obj;
+         }
+         error( "failed to load" );
+      }
+      error( "%s -- %s" (mess, code) );
+   }
+   form toListEmptyLua() : &List<&stem>;
+   let toListEmpty = loadCode( "return function() return { 'a', 'b', 'c' } end" )@@toListEmptyLua;
+   let valList = toListEmpty();
+   foreach val, key in valList {
+      print( "%s %s" ( expandLuavalMap( key ), expandLuavalMap( val ) ) );
+   }
+}
+_section();
+class HogeHogeHoge {
+   static let val:int {pub};
+   __init {
+      HogeHogeHoge.val = 1;
+   }
+}
+print( HogeHogeHoge.$val );
+_section();
+{
+   class Super {
+      pub fn func():int {
+         return 1;
+      }
+   }
+   class Hoge extend Super {
+   }
+
+   fn func() : &Hoge, &Hoge {
+      return new Hoge(), new Hoge();
+   }
+   {
+      let val1:&Super;
+      let val2:&Hoge;
+      val1, val2 = func();
+      print( val1.func(), val2.func() );
+   }
+   {
+      let val1:&Hoge;
+      let val2:&Hoge;
+      val1, val2 = func();
+      print( val1.func(), val2.func() );
+   }
+   {
+      let txt = "aaa";
+      let mut nonNumIndex = 1;
+      unwrap! nonNumIndex = txt.find( '[^%d]', nonNumIndex ## ) {
+         error( "" );
+      };
+      print( nonNumIndex );
+   }
+}

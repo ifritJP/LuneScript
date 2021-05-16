@@ -32,8 +32,8 @@ import (
 	"runtime/pprof"
 )
 
-func Lns_Depend_init() {
-}
+// func Lns_Depend_init() {
+// }
 
 /**
 path の最終更新日時を取得する。
@@ -41,7 +41,7 @@ path の最終更新日時を取得する。
 @param path ファイルパス
 @return 1970/1/1 0:0:0 からの秒数。 取得失敗した場合は nil。
 */
-func Depend_getFileLastModifiedTime(path string) LnsAny {
+func depend_getFileLastModifiedTime(path string) LnsAny {
 	fileinfo, err := os.Stat(path)
 	if err != nil {
 		return nil
@@ -49,7 +49,7 @@ func Depend_getFileLastModifiedTime(path string) LnsAny {
 	return LnsReal(fileinfo.ModTime().Unix())
 }
 
-func Depend_getLoadedMod() *Lns_luaValue {
+func depend_getLoadedMod() *Lns_luaValue {
 	return Lns_getVM().GetEmptyMap()
 }
 
@@ -104,15 +104,15 @@ func Depend_profileSub(
 	return ret
 }
 
-func Depend_getStackTrace() string {
-	return ""
-}
+// func Depend_getStackTrace() string {
+// 	return ""
+// }
 
-func Depend_searchpath(mod string, pathPattern string) LnsAny {
+func depend_searchpath(mod string, pathPattern string) LnsAny {
 	return Lns_getVM().Package_searchpath(mod, pathPattern)
 }
 
-func Depend_existFile(path string) bool {
+func depend_existFile(path string) bool {
 	if _, err := os.Stat(path); err != nil {
 		return false
 	}
@@ -127,16 +127,16 @@ func Depend_existFile(path string) bool {
 //     callback( 53 );
 // }
 
-func Depend_canUseChannel() bool {
-	return true
-}
-func Depend_canUseAsync() bool {
-	return false
-}
+// func Depend_canUseChannel() bool {
+// 	return true
+// }
+// func Depend_canUseAsync() bool {
+// 	return false
+// }
 
-var DependLuaOnLns_runLuaOnLnsFunc func(luaCode string) (LnsAny, string) = nil
+//var dependLuaOnLns_runLuaOnLnsFunc func(luaCode string) (LnsAny, string) = nil
 
-func DependLuaOnLns_runLuaOnLns(luaCode string) (LnsAny, string) {
+func dependLuaOnLns_runLuaOnLns(luaCode string) (LnsAny, string) {
 
 	setBindListStr := ""
 	for key, _ := range lnsSrcMap {
@@ -224,10 +224,10 @@ return DependLuaOnLns.runLuaOnLns( txt )
 	}
 	return nil, ""
 }
-func Lns_DependLuaOnLns_init() {
+func lns_DependLuaOnLns_init() {
 }
 
-func Depend_runMain(mainFunc LnsAny, argList *LnsList) LnsInt {
+func depend_runMain(mainFunc LnsAny, argList *LnsList) LnsInt {
 	if !Lns_IsNil(mainFunc) {
 		luaVM := Lns_getVM()
 		ret := luaVM.RunLoadedfunc(mainFunc.(*Lns_luaValue), []LnsAny{argList})
@@ -236,7 +236,7 @@ func Depend_runMain(mainFunc LnsAny, argList *LnsList) LnsInt {
 	return -1
 }
 
-func Depend_getGOPATH() LnsAny {
+func depend_getGOPATH() LnsAny {
 	val, exist := os.LookupEnv("GOPATH")
 	if !exist {
 		val, exist = os.LookupEnv("HOME")

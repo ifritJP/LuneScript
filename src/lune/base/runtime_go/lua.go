@@ -176,7 +176,7 @@ var lnsLnsMap map[string]string
 func AddlnsLnsInfo(key string, code string) {
 	lnsLnsMap[key] = code
 }
-func Depend_getBindLns(mod string) LnsAny {
+func depend_getBindLns(mod string) LnsAny {
 	if code, has := lnsLnsMap[mod]; has {
 		return code
 	}

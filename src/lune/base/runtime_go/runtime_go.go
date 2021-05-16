@@ -185,7 +185,7 @@ func Lns_type(val LnsAny) string {
 
 func Lns_tonumber(val string, base LnsAny) LnsAny {
 	if Lns_IsNil(base) {
-		if Str_startsWith(val, "0x") || Str_startsWith(val, "0X") {
+		if str_startsWith(val, "0x") || str_startsWith(val, "0X") {
 			if dig, err := strconv.ParseInt(val[2:], 16, 64); err != nil {
 				return nil
 			} else {

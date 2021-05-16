@@ -1641,13 +1641,19 @@ endef
 
 # セルフホストのソースを go に変換し、 go 版 lns をビルドする
 go-build:
+# ./lune のソースから $(GO_WORK_DIR)/lune 以下に変換結果を出力
 	rm -rf $(GO_WORK_DIR)
 	$(call setup-go,$(GO_WORK_DIR))
-	$(call setup-go,$(GO_WORK_DIR)/build)
-	$(call cp_src_set,$(GO_WORK_DIR)/build,.)
-
+	$(call cp_src_set,$(GO_WORK_DIR),.)
 	cp Makefile $(GO_WORK_DIR)
-	$(call selfhost_buildOp_batch,$(GO_WORK_DIR),$(LNSC),build,-langGo,)
+	$(call selfhost_buildOp_batch,.,$(LNSC),$(GO_WORK_DIR),-langGo,)
+
+# ビルドするため $(GO_WORK_DIR)/lune を $(GO_WORK_DIR)/build/lune にコピー
+	$(call setup-go,$(GO_WORK_DIR)/build)
+	$(call cp_src_set,$(GO_WORK_DIR)/build,$(GO_WORK_DIR))
+	cp -a $(GO_WORK_DIR)/lune $(GO_WORK_DIR)/build
+
+# $(GO_WORK_DIR)/build をビルド
 	$(call binding-lns-go,$(GO_WORK_DIR)/build)
 	$(call go-build-lns,$(GO_WORK_DIR)/build)
 	$(call mk_runtime,$(LNSC),$(GO_WORK_DIR)/build,.,)
