@@ -13,7 +13,7 @@ var LuneControl_CodeList_ = NewLnsList( []LnsAny {
   LuneControl_Code__C,
   LuneControl_Code__Go,
 })
-func LuneControl_Code_get__allList() *LnsList{
+func LuneControl_Code_get__allList(_env *LnsEnv) *LnsList{
     return LuneControl_CodeList_
 }
 var LuneControl_CodeMap_ = map[string]string {
@@ -21,7 +21,7 @@ var LuneControl_CodeMap_ = map[string]string {
   LuneControl_Code__Go: "Code.Go",
   LuneControl_Code__Lua: "Code.Lua",
 }
-func LuneControl_Code__from(arg1 string) LnsAny{
+func LuneControl_Code__from(_env *LnsEnv, arg1 string) LnsAny{
     if _, ok := LuneControl_CodeMap_[arg1]; ok { return arg1 }
     return nil
 }
@@ -79,7 +79,7 @@ var LuneControl_Pragma__use_async_Obj = &LuneControl_Pragma__use_async{}
 func (self *LuneControl_Pragma__use_async) GetTxt() string {
 return "Pragma.use_async"
 }
-func Lns_LuneControl_init() {
+func Lns_LuneControl_init(_env *LnsEnv) {
     if init_LuneControl { return }
     init_LuneControl = true
     LuneControl__mod__ = "@lune.@base.@LuneControl"

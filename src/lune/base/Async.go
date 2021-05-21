@@ -5,7 +5,7 @@ var init_Async bool
 var Async__mod__ string
 // declaration Class -- PipeItem
 type Async_PipeItemMtd interface {
-    Get_item() LnsAny
+    Get_item(_env *LnsEnv) LnsAny
 }
 type Async_PipeItem struct {
     item LnsAny
@@ -31,23 +31,23 @@ func Async_PipeItemDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Async_PipeItem) ToAsync_PipeItem() *Async_PipeItem {
     return obj
 }
-func NewAsync_PipeItem(arg1 LnsAny) *Async_PipeItem {
+func NewAsync_PipeItem(_env *LnsEnv, arg1 LnsAny) *Async_PipeItem {
     obj := &Async_PipeItem{}
     obj.FP = obj
-    obj.InitAsync_PipeItem(arg1)
+    obj.InitAsync_PipeItem(_env, arg1)
     return obj
 }
-func (self *Async_PipeItem) InitAsync_PipeItem(arg1 LnsAny) {
+func (self *Async_PipeItem) InitAsync_PipeItem(_env *LnsEnv, arg1 LnsAny) {
     self.item = arg1
 }
-func (self *Async_PipeItem) Get_item() LnsAny{ return self.item }
+func (self *Async_PipeItem) Get_item(_env *LnsEnv) LnsAny{ return self.item }
 
 // declaration Class -- Pipe
 type Async_PipeMtd interface {
-    Access() LnsAny
-    GetNext() LnsAny
-    Loop()
-    Start()
+    Access(_env *LnsEnv) LnsAny
+    GetNext(_env *LnsEnv) LnsAny
+    Loop(_env *LnsEnv)
+    Start(_env *LnsEnv)
 }
 type Async_Pipe struct {
     LnsThread
@@ -76,8 +76,8 @@ func (obj *Async_Pipe) ToAsync_Pipe() *Async_Pipe {
     return obj
 }
 // 35: DeclConstr
-func (self *Async_Pipe) InitAsync_Pipe(pipe LnsAny) {
-    self.InitLnsThread()
+func (self *Async_Pipe) InitAsync_Pipe(_env *LnsEnv, pipe LnsAny) {
+    self.InitLnsThread(_env)
     self.pipe = pipe
     
     self.started = false
@@ -86,7 +86,7 @@ func (self *Async_Pipe) InitAsync_Pipe(pipe LnsAny) {
 
 
 // 43: decl @lune.@base.@Async.Pipe.getNext
-func (self *Async_Pipe) GetNext() LnsAny {
+func (self *Async_Pipe) GetNext(_env *LnsEnv) LnsAny {
     if self.started{
         {
             _pipe := self.pipe
@@ -95,22 +95,22 @@ func (self *Async_Pipe) GetNext() LnsAny {
                 var val LnsAny
                 
                 {
-                    _val := pipe.FP.Get()
+                    _val := pipe.FP.Get(_env)
                     if _val == nil{
                         return nil
                     } else {
                         val = _val
                     }
                 }
-                return NewAsync_PipeItem(val)
+                return NewAsync_PipeItem(_env, val)
             }
         }
     }
-    return self.FP.Access()
+    return self.FP.Access(_env)
 }
 
 // 55: decl @lune.@base.@Async.Pipe.loop
-func (self *Async_Pipe) Loop() {
+func (self *Async_Pipe) Loop(_env *LnsEnv) {
     var pipe *Lns__pipe
     
     {
@@ -125,27 +125,27 @@ func (self *Async_Pipe) Loop() {
         var val *Async_PipeItem
         
         {
-            _val := self.FP.Access()
+            _val := self.FP.Access(_env)
             if _val == nil{
-                pipe.FP.Put(nil)
+                pipe.FP.Put(_env, nil)
                 break
             } else {
                 val = _val.(*Async_PipeItem)
             }
         }
-        pipe.FP.Put(val.FP.Get_item())
+        pipe.FP.Put(_env, val.FP.Get_item(_env))
     }
 }
 
 // 67: decl @lune.@base.@Async.Pipe.start
-func (self *Async_Pipe) Start() {
+func (self *Async_Pipe) Start(_env *LnsEnv) {
     self.started = true
     
     go self.LoopMain()
 }
 
 
-func Lns_Async_init() {
+func Lns_Async_init(_env *LnsEnv) {
     if init_Async { return }
     init_Async = true
     Async__mod__ = "@lune.@base.@Async"

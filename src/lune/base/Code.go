@@ -9,13 +9,13 @@ const Code_ID__nothing_define_abbr = 0
 var Code_IDList_ = NewLnsList( []LnsAny {
   Code_ID__nothing_define_abbr,
 })
-func Code_ID_get__allList() *LnsList{
+func Code_ID_get__allList(_env *LnsEnv) *LnsList{
     return Code_IDList_
 }
 var Code_IDMap_ = map[LnsInt]string {
   Code_ID__nothing_define_abbr: "ID.nothing_define_abbr",
 }
-func Code_ID__from(arg1 LnsInt) LnsAny{
+func Code_ID__from(_env *LnsEnv, arg1 LnsInt) LnsAny{
     if _, ok := Code_IDMap_[arg1]; ok { return arg1 }
     return nil
 }
@@ -24,21 +24,21 @@ func Code_ID_getTxt(arg1 LnsInt) string {
     return Code_IDMap_[arg1];
 }
 // 29: decl @lune.@base.@Code.format
-func Code_format(id LnsInt,mess string) string {
-    return Lns_getVM().String_format("%05d:%s", []LnsAny{id, mess})
+func Code_format(_env *LnsEnv, id LnsInt,mess string) string {
+    return _env.LuaVM.String_format("%05d:%s", []LnsAny{id, mess})
 }
 
 // 33: decl @lune.@base.@Code.isMessageOf
-func Code_isMessageOf(id LnsInt,mess string) bool {
+func Code_isMessageOf(_env *LnsEnv, id LnsInt,mess string) bool {
     var pat string
-    pat = Lns_getVM().String_format("^%05d:", []LnsAny{id})
-    if Lns_isCondTrue( Lns_car(Lns_getVM().String_find(mess,pat, nil, nil))){
+    pat = _env.LuaVM.String_format("^%05d:", []LnsAny{id})
+    if Lns_isCondTrue( Lns_car(_env.LuaVM.String_find(mess,pat, nil, nil))){
         return true
     }
     return false
 }
 
-func Lns_Code_init() {
+func Lns_Code_init(_env *LnsEnv) {
     if init_Code { return }
     init_Code = true
     Code__mod__ = "@lune.@base.@Code"

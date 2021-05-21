@@ -58,17 +58,17 @@ enum ProcessMode {
 class Env {
    pri let stack:List<&Nodes.Node>;
    let addEnvArg:bool;
-   pub fn __init( addEnvArg:bool ) {
+   local fn __init( addEnvArg:bool ) {
       self.stack = [];
       self.addEnvArg = addEnvArg;
    }
-   pub fn push( node:&Nodes.Node ) mut {
+   local fn push( node:&Nodes.Node ) mut {
       self.stack.insert( node );
    }
-   pub fn pop() mut {
+   local fn pop() mut {
       self.stack.remove(##);
    }
-   pub fn getLuavm( threading:bool ) : str {
+   local fn getLuavm( threading:bool ) : str {
       if self.addEnvArg {
          return "_env.LuaVM";
       }
@@ -82,7 +82,7 @@ class Env {
          return "Lns_getVMSync()";
       }
    }
-   pub fn getEnv( threading:bool ) : str {
+   local fn getEnv( threading:bool ) : str {
       if self.addEnvArg {
          return "_env";
       }
@@ -133,7 +133,7 @@ class convFilter extend Nodes.Filter<Opt> {
    let mut moduleType2SymbolMap:Map<&Ast.TypeInfo,&Ast.SymbolInfo>;
 
    pub fn __init( enableTest:bool, streamName: str, stream: oStream,
-                  ast:TransUnit.ASTInfo, option:&Option )
+                  ast:&TransUnit.ASTInfo, option:&Option )
    {
       super(true, ast.$exportInfo.$moduleTypeInfo,
              ast.$exportInfo.$moduleTypeInfo.$scope);
@@ -363,7 +363,7 @@ func main() {
       // そのパッケージを import する。
       let importPath = mod.gsub( "%.[^%.]+$", "" ).gsub( "%.", "/" );
       code = code.gsub( "//IMPORT_MAIN:", 'import . "%s/%s"' (appName,importPath) );
-   } 
+   }
 
    if testing {
       code = code.gsub( "Lns_init", "Lns_%s_init" (mainMod));
@@ -5678,7 +5678,7 @@ pub override fn convFilter.processAbbr(
 
 pub fn createFilter(
    enableTest:bool, streamName: str,
-   stream: oStream, ast:TransUnit.ASTInfo, option:&Option ) : Nodes.Filter<Opt>
+   stream: oStream, ast:&TransUnit.ASTInfo, option:&Option ) : Nodes.Filter<Opt>
 {
    return new convFilter( enableTest, streamName, stream, ast, option );
 }

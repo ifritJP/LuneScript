@@ -45,13 +45,13 @@ func Meta__MetaInfoDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Meta__MetaInfo) ToMeta__MetaInfo() *Meta__MetaInfo {
     return obj
 }
-func NewMeta__MetaInfo(arg1 string, arg2 bool, arg3 string, arg4 *LnsMap, arg5 *LnsMap, arg6 *LnsMap, arg7 *LnsMap, arg8 LnsInt, arg9 LnsInt, arg10 bool, arg11 *LnsMap, arg12 *LnsMap, arg13 *LnsMap, arg14 bool, arg15 *LnsMap, arg16 *LnsMap) *Meta__MetaInfo {
+func NewMeta__MetaInfo(_env *LnsEnv, arg1 string, arg2 bool, arg3 string, arg4 *LnsMap, arg5 *LnsMap, arg6 *LnsMap, arg7 *LnsMap, arg8 LnsInt, arg9 LnsInt, arg10 bool, arg11 *LnsMap, arg12 *LnsMap, arg13 *LnsMap, arg14 bool, arg15 *LnsMap, arg16 *LnsMap) *Meta__MetaInfo {
     obj := &Meta__MetaInfo{}
     obj.FP = obj
-    obj.InitMeta__MetaInfo(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16)
+    obj.InitMeta__MetaInfo(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16)
     return obj
 }
-func (self *Meta__MetaInfo) InitMeta__MetaInfo(arg1 string, arg2 bool, arg3 string, arg4 *LnsMap, arg5 *LnsMap, arg6 *LnsMap, arg7 *LnsMap, arg8 LnsInt, arg9 LnsInt, arg10 bool, arg11 *LnsMap, arg12 *LnsMap, arg13 *LnsMap, arg14 bool, arg15 *LnsMap, arg16 *LnsMap) {
+func (self *Meta__MetaInfo) InitMeta__MetaInfo(_env *LnsEnv, arg1 string, arg2 bool, arg3 string, arg4 *LnsMap, arg5 *LnsMap, arg6 *LnsMap, arg7 *LnsMap, arg8 LnsInt, arg9 LnsInt, arg10 bool, arg11 *LnsMap, arg12 *LnsMap, arg13 *LnsMap, arg14 bool, arg15 *LnsMap, arg16 *LnsMap) {
     self.G__formatVersion = arg1
     self.G__enableTest = arg2
     self.G__buildId = arg3
@@ -70,7 +70,7 @@ func (self *Meta__MetaInfo) InitMeta__MetaInfo(arg1 string, arg2 bool, arg3 stri
     self.G__moduleHierarchy = arg16
 }
 
-func Lns_Meta_init() {
+func Lns_Meta_init(_env *LnsEnv) {
     if init_Meta { return }
     init_Meta = true
     Meta__mod__ = "@lune.@base.@Meta"

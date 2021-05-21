@@ -8,6 +8,8 @@
 
 * バグ
 
+
+- [ ] Mapping を実装すると、 Lua のコードに存在しない Mapping の参照が出力される。
 - [ ] pub なメンバーがいないクラスの  __typeId2ClassInfoMap は出力しない。
 - [ ] List, Set は、同じアイテムの場合、同じ TypeInfo になるようにする。  
 - [ ] override しているメソッドの情報は meta に不要。

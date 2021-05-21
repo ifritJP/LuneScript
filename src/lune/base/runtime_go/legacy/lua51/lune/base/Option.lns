@@ -153,7 +153,7 @@ pub class Option {
    local let mut addEnvArg:bool {pub};
 
    pub fn __init() {
-      self.addEnvArg = false; 
+      self.addEnvArg = true; 
       self.projDir = nil;
       self.runtimeOpt = new RuntimeOpt();
       self.shebangArgList = [];
@@ -357,8 +357,8 @@ usage:
                case "-prof" {
                   option.validProf = true;
                }
-               case "--addEnvArg" {
-                  option.addEnvArg = true;
+               case "--noEnvArg" {
+                  option.addEnvArg = false;
                }
                case "--nodebug" {
                   Util.setDebugFlag( false );

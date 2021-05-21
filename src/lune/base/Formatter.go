@@ -4,22 +4,22 @@ import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_Formatter bool
 var Formatter__mod__ string
 // 55: decl @lune.@base.@Formatter.createFilter
-func Formatter_createFilter(moduleTypeInfo *Ast_TypeInfo,stream Lns_oStream) *Nodes_Filter {
-    return &NewFormatter_FormatterFilter(moduleTypeInfo, moduleTypeInfo.FP.Get_scope(), stream).Nodes_Filter
+func Formatter_createFilter(_env *LnsEnv, moduleTypeInfo *Ast_TypeInfo,stream Lns_oStream) *Nodes_Filter {
+    return &NewFormatter_FormatterFilter(_env, moduleTypeInfo, moduleTypeInfo.FP.Get_scope(_env), stream).Nodes_Filter
 }
 
 // 65: decl @lune.@base.@Formatter.filter
-func Formatter_filter_1048_(node *Nodes_Node,filter *Formatter_FormatterFilter,opt *Formatter_Opt) {
-    filter.FP.OutputHeadComment(node)
-    node.FP.ProcessFilter(&filter.Nodes_Filter, Formatter_Opt2Stem(opt))
+func Formatter_filter_1048_(_env *LnsEnv, node *Nodes_Node,filter *Formatter_FormatterFilter,opt *Formatter_Opt) {
+    filter.FP.OutputHeadComment(_env, node)
+    node.FP.ProcessFilter(_env, &filter.Nodes_Filter, Formatter_Opt2Stem(opt))
 }
 
 
 
 // declaration Class -- Opt
 type Formatter_OptMtd interface {
-    Get_parent() *Nodes_Node
-    NextOpt(arg1 *Nodes_Node) *Formatter_Opt
+    Get_parent(_env *LnsEnv) *Nodes_Node
+    NextOpt(_env *LnsEnv, arg1 *Nodes_Node) *Formatter_Opt
 }
 type Formatter_Opt struct {
     parent *Nodes_Node
@@ -45,131 +45,131 @@ func Formatter_OptDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Formatter_Opt) ToFormatter_Opt() *Formatter_Opt {
     return obj
 }
-func NewFormatter_Opt(arg1 *Nodes_Node) *Formatter_Opt {
+func NewFormatter_Opt(_env *LnsEnv, arg1 *Nodes_Node) *Formatter_Opt {
     obj := &Formatter_Opt{}
     obj.FP = obj
-    obj.InitFormatter_Opt(arg1)
+    obj.InitFormatter_Opt(_env, arg1)
     return obj
 }
-func (self *Formatter_Opt) Get_parent() *Nodes_Node{ return self.parent }
+func (self *Formatter_Opt) Get_parent(_env *LnsEnv) *Nodes_Node{ return self.parent }
 // 34: DeclConstr
-func (self *Formatter_Opt) InitFormatter_Opt(parent *Nodes_Node) {
+func (self *Formatter_Opt) InitFormatter_Opt(_env *LnsEnv, parent *Nodes_Node) {
     self.parent = parent
     
 }
 
 // 37: decl @lune.@base.@Formatter.Opt.nextOpt
-func (self *Formatter_Opt) NextOpt(parent *Nodes_Node) *Formatter_Opt {
-    return NewFormatter_Opt(parent)
+func (self *Formatter_Opt) NextOpt(_env *LnsEnv, parent *Nodes_Node) *Formatter_Opt {
+    return NewFormatter_Opt(_env, parent)
 }
 
 
 // declaration Class -- FormatterFilter
 type Formatter_FormatterFilterMtd interface {
-    DefaultProcess(arg1 *Nodes_Node, arg2 LnsAny)
-    GetFull(arg1 *Ast_TypeInfo, arg2 bool) string
-    Get_moduleInfoManager() Ast_ModuleInfoManager
-    Get_optStack() *LnsList
-    Get_typeNameCtrl() *Ast_TypeNameCtrl
-    outputDeclClass(arg1 bool, arg2 *Ast_TypeInfo, arg3 LnsAny, arg4 LnsAny)
-    OutputHeadComment(arg1 *Nodes_Node)
-    PopIndent()
-    ProcessAbbr(arg1 *Nodes_AbbrNode, arg2 LnsAny)
-    ProcessAlias(arg1 *Nodes_AliasNode, arg2 LnsAny)
-    ProcessApply(arg1 *Nodes_ApplyNode, arg2 LnsAny)
-    ProcessBlankLine(arg1 *Nodes_BlankLineNode, arg2 LnsAny)
-    ProcessBlock(arg1 *Nodes_BlockNode, arg2 LnsAny)
-    ProcessBlockSub(arg1 *Nodes_BlockNode, arg2 LnsAny)
-    ProcessBoxing(arg1 *Nodes_BoxingNode, arg2 LnsAny)
-    ProcessBreak(arg1 *Nodes_BreakNode, arg2 LnsAny)
-    ProcessConvStat(arg1 *Nodes_ConvStatNode, arg2 LnsAny)
-    ProcessDeclAdvertise(arg1 *Nodes_DeclAdvertiseNode, arg2 LnsAny)
-    ProcessDeclAlge(arg1 *Nodes_DeclAlgeNode, arg2 LnsAny)
-    ProcessDeclArg(arg1 *Nodes_DeclArgNode, arg2 LnsAny)
-    ProcessDeclArgDDD(arg1 *Nodes_DeclArgDDDNode, arg2 LnsAny)
-    ProcessDeclClass(arg1 *Nodes_DeclClassNode, arg2 LnsAny)
-    ProcessDeclConstr(arg1 *Nodes_DeclConstrNode, arg2 LnsAny)
-    ProcessDeclDestr(arg1 *Nodes_DeclDestrNode, arg2 LnsAny)
-    ProcessDeclEnum(arg1 *Nodes_DeclEnumNode, arg2 LnsAny)
-    ProcessDeclForm(arg1 *Nodes_DeclFormNode, arg2 LnsAny)
-    ProcessDeclFunc(arg1 *Nodes_DeclFuncNode, arg2 LnsAny)
-    processDeclFuncInfo(arg1 *Nodes_Node, arg2 *Nodes_DeclFuncInfo, arg3 *Formatter_Opt)
-    ProcessDeclMacro(arg1 *Nodes_DeclMacroNode, arg2 LnsAny)
-    ProcessDeclMember(arg1 *Nodes_DeclMemberNode, arg2 LnsAny)
-    ProcessDeclMethod(arg1 *Nodes_DeclMethodNode, arg2 LnsAny)
-    ProcessDeclVar(arg1 *Nodes_DeclVarNode, arg2 LnsAny)
-    ProcessEnv(arg1 *Nodes_EnvNode, arg2 LnsAny)
-    ProcessExpAccessMRet(arg1 *Nodes_ExpAccessMRetNode, arg2 LnsAny)
-    ProcessExpCall(arg1 *Nodes_ExpCallNode, arg2 LnsAny)
-    ProcessExpCallSuper(arg1 *Nodes_ExpCallSuperNode, arg2 LnsAny)
-    ProcessExpCallSuperCtor(arg1 *Nodes_ExpCallSuperCtorNode, arg2 LnsAny)
-    ProcessExpCast(arg1 *Nodes_ExpCastNode, arg2 LnsAny)
-    ProcessExpList(arg1 *Nodes_ExpListNode, arg2 LnsAny)
-    ProcessExpMRet(arg1 *Nodes_ExpMRetNode, arg2 LnsAny)
-    ProcessExpMacroArgExp(arg1 *Nodes_ExpMacroArgExpNode, arg2 LnsAny)
-    ProcessExpMacroExp(arg1 *Nodes_ExpMacroExpNode, arg2 LnsAny)
-    ProcessExpMacroStat(arg1 *Nodes_ExpMacroStatNode, arg2 LnsAny)
-    ProcessExpMacroStatList(arg1 *Nodes_ExpMacroStatListNode, arg2 LnsAny)
-    ProcessExpMultiTo1(arg1 *Nodes_ExpMultiTo1Node, arg2 LnsAny)
-    ProcessExpNew(arg1 *Nodes_ExpNewNode, arg2 LnsAny)
-    ProcessExpOmitEnum(arg1 *Nodes_ExpOmitEnumNode, arg2 LnsAny)
-    ProcessExpOp1(arg1 *Nodes_ExpOp1Node, arg2 LnsAny)
-    ProcessExpOp2(arg1 *Nodes_ExpOp2Node, arg2 LnsAny)
-    ProcessExpParen(arg1 *Nodes_ExpParenNode, arg2 LnsAny)
-    ProcessExpRef(arg1 *Nodes_ExpRefNode, arg2 LnsAny)
-    ProcessExpRefItem(arg1 *Nodes_ExpRefItemNode, arg2 LnsAny)
-    ProcessExpSetItem(arg1 *Nodes_ExpSetItemNode, arg2 LnsAny)
-    ProcessExpSetVal(arg1 *Nodes_ExpSetValNode, arg2 LnsAny)
-    ProcessExpSubDDD(arg1 *Nodes_ExpSubDDDNode, arg2 LnsAny)
-    ProcessExpToDDD(arg1 *Nodes_ExpToDDDNode, arg2 LnsAny)
-    ProcessExpUnwrap(arg1 *Nodes_ExpUnwrapNode, arg2 LnsAny)
-    ProcessFor(arg1 *Nodes_ForNode, arg2 LnsAny)
-    ProcessForeach(arg1 *Nodes_ForeachNode, arg2 LnsAny)
-    ProcessForsort(arg1 *Nodes_ForsortNode, arg2 LnsAny)
-    ProcessGetField(arg1 *Nodes_GetFieldNode, arg2 LnsAny)
-    ProcessIf(arg1 *Nodes_IfNode, arg2 LnsAny)
-    ProcessIfUnwrap(arg1 *Nodes_IfUnwrapNode, arg2 LnsAny)
-    ProcessImport(arg1 *Nodes_ImportNode, arg2 LnsAny)
-    ProcessLiteralArray(arg1 *Nodes_LiteralArrayNode, arg2 LnsAny)
-    ProcessLiteralBool(arg1 *Nodes_LiteralBoolNode, arg2 LnsAny)
-    ProcessLiteralChar(arg1 *Nodes_LiteralCharNode, arg2 LnsAny)
-    ProcessLiteralInt(arg1 *Nodes_LiteralIntNode, arg2 LnsAny)
-    ProcessLiteralList(arg1 *Nodes_LiteralListNode, arg2 LnsAny)
-    ProcessLiteralMap(arg1 *Nodes_LiteralMapNode, arg2 LnsAny)
-    ProcessLiteralNil(arg1 *Nodes_LiteralNilNode, arg2 LnsAny)
-    ProcessLiteralReal(arg1 *Nodes_LiteralRealNode, arg2 LnsAny)
-    ProcessLiteralSet(arg1 *Nodes_LiteralSetNode, arg2 LnsAny)
-    ProcessLiteralString(arg1 *Nodes_LiteralStringNode, arg2 LnsAny)
-    ProcessLiteralSymbol(arg1 *Nodes_LiteralSymbolNode, arg2 LnsAny)
-    ProcessLuneControl(arg1 *Nodes_LuneControlNode, arg2 LnsAny)
-    ProcessLuneKind(arg1 *Nodes_LuneKindNode, arg2 LnsAny)
-    ProcessMatch(arg1 *Nodes_MatchNode, arg2 LnsAny)
-    ProcessNewAlgeVal(arg1 *Nodes_NewAlgeValNode, arg2 LnsAny)
-    ProcessNone(arg1 *Nodes_NoneNode, arg2 LnsAny)
-    ProcessProtoClass(arg1 *Nodes_ProtoClassNode, arg2 LnsAny)
-    ProcessProtoMethod(arg1 *Nodes_ProtoMethodNode, arg2 LnsAny)
-    ProcessProvide(arg1 *Nodes_ProvideNode, arg2 LnsAny)
-    ProcessRefField(arg1 *Nodes_RefFieldNode, arg2 LnsAny)
-    ProcessRefType(arg1 *Nodes_RefTypeNode, arg2 LnsAny)
-    ProcessRepeat(arg1 *Nodes_RepeatNode, arg2 LnsAny)
-    ProcessReturn(arg1 *Nodes_ReturnNode, arg2 LnsAny)
-    ProcessRoot(arg1 *Nodes_RootNode, arg2 LnsAny)
-    ProcessScope(arg1 *Nodes_ScopeNode, arg2 LnsAny)
-    ProcessShebang(arg1 *Nodes_ShebangNode, arg2 LnsAny)
-    ProcessStmtExp(arg1 *Nodes_StmtExpNode, arg2 LnsAny)
-    ProcessSubfile(arg1 *Nodes_SubfileNode, arg2 LnsAny)
-    ProcessSwitch(arg1 *Nodes_SwitchNode, arg2 LnsAny)
-    ProcessTestBlock(arg1 *Nodes_TestBlockNode, arg2 LnsAny)
-    ProcessTestCase(arg1 *Nodes_TestCaseNode, arg2 LnsAny)
-    ProcessUnboxing(arg1 *Nodes_UnboxingNode, arg2 LnsAny)
-    ProcessUnwrapSet(arg1 *Nodes_UnwrapSetNode, arg2 LnsAny)
-    ProcessWhen(arg1 *Nodes_WhenNode, arg2 LnsAny)
-    ProcessWhile(arg1 *Nodes_WhileNode, arg2 LnsAny)
-    PushIndent(arg1 LnsAny)
-    ReturnToSource()
-    SwitchToHeader()
-    Write(arg1 string)
-    Writeln(arg1 string)
+    DefaultProcess(_env *LnsEnv, arg1 *Nodes_Node, arg2 LnsAny)
+    GetFull(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 bool) string
+    Get_moduleInfoManager(_env *LnsEnv) Ast_ModuleInfoManager
+    Get_optStack(_env *LnsEnv) *LnsList
+    Get_typeNameCtrl(_env *LnsEnv) *Ast_TypeNameCtrl
+    outputDeclClass(_env *LnsEnv, arg1 bool, arg2 *Ast_TypeInfo, arg3 LnsAny, arg4 LnsAny)
+    OutputHeadComment(_env *LnsEnv, arg1 *Nodes_Node)
+    PopIndent(_env *LnsEnv)
+    ProcessAbbr(_env *LnsEnv, arg1 *Nodes_AbbrNode, arg2 LnsAny)
+    ProcessAlias(_env *LnsEnv, arg1 *Nodes_AliasNode, arg2 LnsAny)
+    ProcessApply(_env *LnsEnv, arg1 *Nodes_ApplyNode, arg2 LnsAny)
+    ProcessBlankLine(_env *LnsEnv, arg1 *Nodes_BlankLineNode, arg2 LnsAny)
+    ProcessBlock(_env *LnsEnv, arg1 *Nodes_BlockNode, arg2 LnsAny)
+    ProcessBlockSub(_env *LnsEnv, arg1 *Nodes_BlockNode, arg2 LnsAny)
+    ProcessBoxing(_env *LnsEnv, arg1 *Nodes_BoxingNode, arg2 LnsAny)
+    ProcessBreak(_env *LnsEnv, arg1 *Nodes_BreakNode, arg2 LnsAny)
+    ProcessConvStat(_env *LnsEnv, arg1 *Nodes_ConvStatNode, arg2 LnsAny)
+    ProcessDeclAdvertise(_env *LnsEnv, arg1 *Nodes_DeclAdvertiseNode, arg2 LnsAny)
+    ProcessDeclAlge(_env *LnsEnv, arg1 *Nodes_DeclAlgeNode, arg2 LnsAny)
+    ProcessDeclArg(_env *LnsEnv, arg1 *Nodes_DeclArgNode, arg2 LnsAny)
+    ProcessDeclArgDDD(_env *LnsEnv, arg1 *Nodes_DeclArgDDDNode, arg2 LnsAny)
+    ProcessDeclClass(_env *LnsEnv, arg1 *Nodes_DeclClassNode, arg2 LnsAny)
+    ProcessDeclConstr(_env *LnsEnv, arg1 *Nodes_DeclConstrNode, arg2 LnsAny)
+    ProcessDeclDestr(_env *LnsEnv, arg1 *Nodes_DeclDestrNode, arg2 LnsAny)
+    ProcessDeclEnum(_env *LnsEnv, arg1 *Nodes_DeclEnumNode, arg2 LnsAny)
+    ProcessDeclForm(_env *LnsEnv, arg1 *Nodes_DeclFormNode, arg2 LnsAny)
+    ProcessDeclFunc(_env *LnsEnv, arg1 *Nodes_DeclFuncNode, arg2 LnsAny)
+    processDeclFuncInfo(_env *LnsEnv, arg1 *Nodes_Node, arg2 *Nodes_DeclFuncInfo, arg3 *Formatter_Opt)
+    ProcessDeclMacro(_env *LnsEnv, arg1 *Nodes_DeclMacroNode, arg2 LnsAny)
+    ProcessDeclMember(_env *LnsEnv, arg1 *Nodes_DeclMemberNode, arg2 LnsAny)
+    ProcessDeclMethod(_env *LnsEnv, arg1 *Nodes_DeclMethodNode, arg2 LnsAny)
+    ProcessDeclVar(_env *LnsEnv, arg1 *Nodes_DeclVarNode, arg2 LnsAny)
+    ProcessEnv(_env *LnsEnv, arg1 *Nodes_EnvNode, arg2 LnsAny)
+    ProcessExpAccessMRet(_env *LnsEnv, arg1 *Nodes_ExpAccessMRetNode, arg2 LnsAny)
+    ProcessExpCall(_env *LnsEnv, arg1 *Nodes_ExpCallNode, arg2 LnsAny)
+    ProcessExpCallSuper(_env *LnsEnv, arg1 *Nodes_ExpCallSuperNode, arg2 LnsAny)
+    ProcessExpCallSuperCtor(_env *LnsEnv, arg1 *Nodes_ExpCallSuperCtorNode, arg2 LnsAny)
+    ProcessExpCast(_env *LnsEnv, arg1 *Nodes_ExpCastNode, arg2 LnsAny)
+    ProcessExpList(_env *LnsEnv, arg1 *Nodes_ExpListNode, arg2 LnsAny)
+    ProcessExpMRet(_env *LnsEnv, arg1 *Nodes_ExpMRetNode, arg2 LnsAny)
+    ProcessExpMacroArgExp(_env *LnsEnv, arg1 *Nodes_ExpMacroArgExpNode, arg2 LnsAny)
+    ProcessExpMacroExp(_env *LnsEnv, arg1 *Nodes_ExpMacroExpNode, arg2 LnsAny)
+    ProcessExpMacroStat(_env *LnsEnv, arg1 *Nodes_ExpMacroStatNode, arg2 LnsAny)
+    ProcessExpMacroStatList(_env *LnsEnv, arg1 *Nodes_ExpMacroStatListNode, arg2 LnsAny)
+    ProcessExpMultiTo1(_env *LnsEnv, arg1 *Nodes_ExpMultiTo1Node, arg2 LnsAny)
+    ProcessExpNew(_env *LnsEnv, arg1 *Nodes_ExpNewNode, arg2 LnsAny)
+    ProcessExpOmitEnum(_env *LnsEnv, arg1 *Nodes_ExpOmitEnumNode, arg2 LnsAny)
+    ProcessExpOp1(_env *LnsEnv, arg1 *Nodes_ExpOp1Node, arg2 LnsAny)
+    ProcessExpOp2(_env *LnsEnv, arg1 *Nodes_ExpOp2Node, arg2 LnsAny)
+    ProcessExpParen(_env *LnsEnv, arg1 *Nodes_ExpParenNode, arg2 LnsAny)
+    ProcessExpRef(_env *LnsEnv, arg1 *Nodes_ExpRefNode, arg2 LnsAny)
+    ProcessExpRefItem(_env *LnsEnv, arg1 *Nodes_ExpRefItemNode, arg2 LnsAny)
+    ProcessExpSetItem(_env *LnsEnv, arg1 *Nodes_ExpSetItemNode, arg2 LnsAny)
+    ProcessExpSetVal(_env *LnsEnv, arg1 *Nodes_ExpSetValNode, arg2 LnsAny)
+    ProcessExpSubDDD(_env *LnsEnv, arg1 *Nodes_ExpSubDDDNode, arg2 LnsAny)
+    ProcessExpToDDD(_env *LnsEnv, arg1 *Nodes_ExpToDDDNode, arg2 LnsAny)
+    ProcessExpUnwrap(_env *LnsEnv, arg1 *Nodes_ExpUnwrapNode, arg2 LnsAny)
+    ProcessFor(_env *LnsEnv, arg1 *Nodes_ForNode, arg2 LnsAny)
+    ProcessForeach(_env *LnsEnv, arg1 *Nodes_ForeachNode, arg2 LnsAny)
+    ProcessForsort(_env *LnsEnv, arg1 *Nodes_ForsortNode, arg2 LnsAny)
+    ProcessGetField(_env *LnsEnv, arg1 *Nodes_GetFieldNode, arg2 LnsAny)
+    ProcessIf(_env *LnsEnv, arg1 *Nodes_IfNode, arg2 LnsAny)
+    ProcessIfUnwrap(_env *LnsEnv, arg1 *Nodes_IfUnwrapNode, arg2 LnsAny)
+    ProcessImport(_env *LnsEnv, arg1 *Nodes_ImportNode, arg2 LnsAny)
+    ProcessLiteralArray(_env *LnsEnv, arg1 *Nodes_LiteralArrayNode, arg2 LnsAny)
+    ProcessLiteralBool(_env *LnsEnv, arg1 *Nodes_LiteralBoolNode, arg2 LnsAny)
+    ProcessLiteralChar(_env *LnsEnv, arg1 *Nodes_LiteralCharNode, arg2 LnsAny)
+    ProcessLiteralInt(_env *LnsEnv, arg1 *Nodes_LiteralIntNode, arg2 LnsAny)
+    ProcessLiteralList(_env *LnsEnv, arg1 *Nodes_LiteralListNode, arg2 LnsAny)
+    ProcessLiteralMap(_env *LnsEnv, arg1 *Nodes_LiteralMapNode, arg2 LnsAny)
+    ProcessLiteralNil(_env *LnsEnv, arg1 *Nodes_LiteralNilNode, arg2 LnsAny)
+    ProcessLiteralReal(_env *LnsEnv, arg1 *Nodes_LiteralRealNode, arg2 LnsAny)
+    ProcessLiteralSet(_env *LnsEnv, arg1 *Nodes_LiteralSetNode, arg2 LnsAny)
+    ProcessLiteralString(_env *LnsEnv, arg1 *Nodes_LiteralStringNode, arg2 LnsAny)
+    ProcessLiteralSymbol(_env *LnsEnv, arg1 *Nodes_LiteralSymbolNode, arg2 LnsAny)
+    ProcessLuneControl(_env *LnsEnv, arg1 *Nodes_LuneControlNode, arg2 LnsAny)
+    ProcessLuneKind(_env *LnsEnv, arg1 *Nodes_LuneKindNode, arg2 LnsAny)
+    ProcessMatch(_env *LnsEnv, arg1 *Nodes_MatchNode, arg2 LnsAny)
+    ProcessNewAlgeVal(_env *LnsEnv, arg1 *Nodes_NewAlgeValNode, arg2 LnsAny)
+    ProcessNone(_env *LnsEnv, arg1 *Nodes_NoneNode, arg2 LnsAny)
+    ProcessProtoClass(_env *LnsEnv, arg1 *Nodes_ProtoClassNode, arg2 LnsAny)
+    ProcessProtoMethod(_env *LnsEnv, arg1 *Nodes_ProtoMethodNode, arg2 LnsAny)
+    ProcessProvide(_env *LnsEnv, arg1 *Nodes_ProvideNode, arg2 LnsAny)
+    ProcessRefField(_env *LnsEnv, arg1 *Nodes_RefFieldNode, arg2 LnsAny)
+    ProcessRefType(_env *LnsEnv, arg1 *Nodes_RefTypeNode, arg2 LnsAny)
+    ProcessRepeat(_env *LnsEnv, arg1 *Nodes_RepeatNode, arg2 LnsAny)
+    ProcessReturn(_env *LnsEnv, arg1 *Nodes_ReturnNode, arg2 LnsAny)
+    ProcessRoot(_env *LnsEnv, arg1 *Nodes_RootNode, arg2 LnsAny)
+    ProcessScope(_env *LnsEnv, arg1 *Nodes_ScopeNode, arg2 LnsAny)
+    ProcessShebang(_env *LnsEnv, arg1 *Nodes_ShebangNode, arg2 LnsAny)
+    ProcessStmtExp(_env *LnsEnv, arg1 *Nodes_StmtExpNode, arg2 LnsAny)
+    ProcessSubfile(_env *LnsEnv, arg1 *Nodes_SubfileNode, arg2 LnsAny)
+    ProcessSwitch(_env *LnsEnv, arg1 *Nodes_SwitchNode, arg2 LnsAny)
+    ProcessTestBlock(_env *LnsEnv, arg1 *Nodes_TestBlockNode, arg2 LnsAny)
+    ProcessTestCase(_env *LnsEnv, arg1 *Nodes_TestCaseNode, arg2 LnsAny)
+    ProcessUnboxing(_env *LnsEnv, arg1 *Nodes_UnboxingNode, arg2 LnsAny)
+    ProcessUnwrapSet(_env *LnsEnv, arg1 *Nodes_UnwrapSetNode, arg2 LnsAny)
+    ProcessWhen(_env *LnsEnv, arg1 *Nodes_WhenNode, arg2 LnsAny)
+    ProcessWhile(_env *LnsEnv, arg1 *Nodes_WhileNode, arg2 LnsAny)
+    PushIndent(_env *LnsEnv, arg1 LnsAny)
+    ReturnToSource(_env *LnsEnv)
+    SwitchToHeader(_env *LnsEnv)
+    Write(_env *LnsEnv, arg1 string)
+    Writeln(_env *LnsEnv, arg1 string)
 }
 type Formatter_FormatterFilter struct {
     Nodes_Filter
@@ -196,965 +196,965 @@ func Formatter_FormatterFilterDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Formatter_FormatterFilter) ToFormatter_FormatterFilter() *Formatter_FormatterFilter {
     return obj
 }
-func NewFormatter_FormatterFilter(arg1 *Ast_TypeInfo, arg2 LnsAny, arg3 Lns_oStream) *Formatter_FormatterFilter {
+func NewFormatter_FormatterFilter(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 LnsAny, arg3 Lns_oStream) *Formatter_FormatterFilter {
     obj := &Formatter_FormatterFilter{}
     obj.FP = obj
     obj.Nodes_Filter.FP = obj
-    obj.InitFormatter_FormatterFilter(arg1, arg2, arg3)
+    obj.InitFormatter_FormatterFilter(_env, arg1, arg2, arg3)
     return obj
 }
 // advertise -- 42
-func (self *Formatter_FormatterFilter) PopIndent() {
-self.stream. FP.PopIndent( )
+func (self *Formatter_FormatterFilter) PopIndent(_env *LnsEnv) {
+self.stream. FP.PopIndent( _env)
 }
 // advertise -- 42
-func (self *Formatter_FormatterFilter) PushIndent(arg1 LnsAny) {
-self.stream. FP.PushIndent( arg1)
+func (self *Formatter_FormatterFilter) PushIndent(_env *LnsEnv, arg1 LnsAny) {
+self.stream. FP.PushIndent( _env, arg1)
 }
 // advertise -- 42
-func (self *Formatter_FormatterFilter) ReturnToSource() {
-self.stream. FP.ReturnToSource( )
+func (self *Formatter_FormatterFilter) ReturnToSource(_env *LnsEnv) {
+self.stream. FP.ReturnToSource( _env)
 }
 // advertise -- 42
-func (self *Formatter_FormatterFilter) SwitchToHeader() {
-self.stream. FP.SwitchToHeader( )
+func (self *Formatter_FormatterFilter) SwitchToHeader(_env *LnsEnv) {
+self.stream. FP.SwitchToHeader( _env)
 }
 // advertise -- 42
-func (self *Formatter_FormatterFilter) Write(arg1 string) {
-self.stream. FP.Write( arg1)
+func (self *Formatter_FormatterFilter) Write(_env *LnsEnv, arg1 string) {
+self.stream. FP.Write( _env, arg1)
 }
 // advertise -- 42
-func (self *Formatter_FormatterFilter) Writeln(arg1 string) {
-self.stream. FP.Writeln( arg1)
+func (self *Formatter_FormatterFilter) Writeln(_env *LnsEnv, arg1 string) {
+self.stream. FP.Writeln( _env, arg1)
 }
 // 45: DeclConstr
-func (self *Formatter_FormatterFilter) InitFormatter_FormatterFilter(moduleTypeInfo *Ast_TypeInfo,moduleInfoManager LnsAny,stream Lns_oStream) {
-    self.InitNodes_Filter(true, moduleTypeInfo, moduleInfoManager)
-    self.stream = NewUtil_SimpleSourceOStream(stream, nil, 3)
+func (self *Formatter_FormatterFilter) InitFormatter_FormatterFilter(_env *LnsEnv, moduleTypeInfo *Ast_TypeInfo,moduleInfoManager LnsAny,stream Lns_oStream) {
+    self.InitNodes_Filter(_env, true, moduleTypeInfo, moduleInfoManager)
+    self.stream = NewUtil_SimpleSourceOStream(_env, stream, nil, 3)
     
 }
 
 // 59: decl @lune.@base.@Formatter.FormatterFilter.outputHeadComment
-func (self *Formatter_FormatterFilter) OutputHeadComment(node *Nodes_Node) {
-    for _, _commentNode := range( Lns_unwrapDefault( node.FP.Get_commentList(), NewLnsList([]LnsAny{})).(*LnsList).Items ) {
+func (self *Formatter_FormatterFilter) OutputHeadComment(_env *LnsEnv, node *Nodes_Node) {
+    for _, _commentNode := range( Lns_unwrapDefault( node.FP.Get_commentList(_env), NewLnsList([]LnsAny{})).(*LnsList).Items ) {
         commentNode := _commentNode.(Types_TokenDownCast).ToTypes_Token()
-        self.FP.Writeln(commentNode.Txt)
+        self.FP.Writeln(_env, commentNode.Txt)
     }
 }
 
 // 74: decl @lune.@base.@Formatter.FormatterFilter.processNone
-func (self *Formatter_FormatterFilter) ProcessNone(node *Nodes_NoneNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessNone(_env *LnsEnv, node *Nodes_NoneNode,_opt LnsAny) {
 }
 
 // 80: decl @lune.@base.@Formatter.FormatterFilter.processShebang
-func (self *Formatter_FormatterFilter) ProcessShebang(node *Nodes_ShebangNode,_opt LnsAny) {
-    self.FP.Writeln(node.FP.Get_cmd())
+func (self *Formatter_FormatterFilter) ProcessShebang(_env *LnsEnv, node *Nodes_ShebangNode,_opt LnsAny) {
+    self.FP.Writeln(_env, node.FP.Get_cmd(_env))
 }
 
 // 86: decl @lune.@base.@Formatter.FormatterFilter.processBlankLine
-func (self *Formatter_FormatterFilter) ProcessBlankLine(node *Nodes_BlankLineNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessBlankLine(_env *LnsEnv, node *Nodes_BlankLineNode,_opt LnsAny) {
     {
         var _from262 LnsInt = 1
-        var _to262 LnsInt = node.FP.Get_lineNum()
+        var _to262 LnsInt = node.FP.Get_lineNum(_env)
         for _work262 := _from262; _work262 <= _to262; _work262++ {
-            self.FP.Writeln("")
+            self.FP.Writeln(_env, "")
         }
     }
 }
 
 // 94: decl @lune.@base.@Formatter.FormatterFilter.processImport
-func (self *Formatter_FormatterFilter) ProcessImport(node *Nodes_ImportNode,_opt LnsAny) {
-    self.FP.Write(Lns_getVM().String_format("import %s", []LnsAny{node.FP.Get_modulePath()}))
-    if Lns_op_not(Lns_car(Lns_getVM().String_find(node.FP.Get_modulePath(),"%." + node.FP.Get_assignName() + "$", nil, nil))){
-        self.FP.Write(Lns_getVM().String_format(" as %s", []LnsAny{node.FP.Get_assignName()}))
+func (self *Formatter_FormatterFilter) ProcessImport(_env *LnsEnv, node *Nodes_ImportNode,_opt LnsAny) {
+    self.FP.Write(_env, _env.LuaVM.String_format("import %s", []LnsAny{node.FP.Get_modulePath(_env)}))
+    if Lns_op_not(Lns_car(_env.LuaVM.String_find(node.FP.Get_modulePath(_env),"%." + node.FP.Get_assignName(_env) + "$", nil, nil))){
+        self.FP.Write(_env, _env.LuaVM.String_format(" as %s", []LnsAny{node.FP.Get_assignName(_env)}))
     }
-    self.FP.Writeln(";")
+    self.FP.Writeln(_env, ";")
 }
 
 // 103: decl @lune.@base.@Formatter.FormatterFilter.processRoot
-func (self *Formatter_FormatterFilter) ProcessRoot(node *Nodes_RootNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessRoot(_env *LnsEnv, node *Nodes_RootNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    for _, _child := range( node.FP.Get_children().Items ) {
+    for _, _child := range( node.FP.Get_children(_env).Items ) {
         child := _child.(Nodes_NodeDownCast).ToNodes_Node()
-        Formatter_filter_1048_(child, self, opt.FP.NextOpt(&node.Nodes_Node))
+        Formatter_filter_1048_(_env, child, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
     }
 }
 
 // 110: decl @lune.@base.@Formatter.FormatterFilter.processSubfile
-func (self *Formatter_FormatterFilter) ProcessSubfile(node *Nodes_SubfileNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessSubfile(_env *LnsEnv, node *Nodes_SubfileNode,_opt LnsAny) {
 }
 
 // 115: decl @lune.@base.@Formatter.FormatterFilter.processEnv
-func (self *Formatter_FormatterFilter) ProcessEnv(node *Nodes_EnvNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessEnv(_env *LnsEnv, node *Nodes_EnvNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    self.FP.Write("__envLock")
-    Formatter_filter_1048_(&node.FP.Get_block().Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
+    self.FP.Write(_env, "__envLock")
+    Formatter_filter_1048_(_env, &node.FP.Get_block(_env).Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
 }
 
 // 121: decl @lune.@base.@Formatter.FormatterFilter.processBlockSub
-func (self *Formatter_FormatterFilter) ProcessBlockSub(node *Nodes_BlockNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessBlockSub(_env *LnsEnv, node *Nodes_BlockNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    self.FP.Writeln("{")
-    self.FP.PushIndent(nil)
-    for _, _statement := range( node.FP.Get_stmtList().Items ) {
+    self.FP.Writeln(_env, "{")
+    self.FP.PushIndent(_env, nil)
+    for _, _statement := range( node.FP.Get_stmtList(_env).Items ) {
         statement := _statement.(Nodes_NodeDownCast).ToNodes_Node()
-        Formatter_filter_1048_(statement, self, opt.FP.NextOpt(&node.Nodes_Node))
+        Formatter_filter_1048_(_env, statement, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
     }
-    self.FP.PopIndent()
-    if _switch501 := node.FP.Get_blockKind(); _switch501 == Nodes_BlockKind__LetUnwrap || _switch501 == Nodes_BlockKind__Repeat {
-        self.FP.Write("}")
+    self.FP.PopIndent(_env)
+    if _switch501 := node.FP.Get_blockKind(_env); _switch501 == Nodes_BlockKind__LetUnwrap || _switch501 == Nodes_BlockKind__Repeat {
+        self.FP.Write(_env, "}")
     } else {
-        self.FP.Writeln("}")
+        self.FP.Writeln(_env, "}")
     }
 }
 
 // 142: decl @lune.@base.@Formatter.FormatterFilter.processStmtExp
-func (self *Formatter_FormatterFilter) ProcessStmtExp(node *Nodes_StmtExpNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessStmtExp(_env *LnsEnv, node *Nodes_StmtExpNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    Formatter_filter_1048_(node.FP.Get_exp(), self, opt.FP.NextOpt(&node.Nodes_Node))
+    Formatter_filter_1048_(_env, node.FP.Get_exp(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
     {
-        _tailComment := node.FP.Get_tailComment()
+        _tailComment := node.FP.Get_tailComment(_env)
         if !Lns_IsNil( _tailComment ) {
             tailComment := _tailComment.(*Types_Token)
-            self.FP.Write("; ")
-            self.FP.Writeln(tailComment.Txt)
+            self.FP.Write(_env, "; ")
+            self.FP.Writeln(_env, tailComment.Txt)
         } else {
-            self.FP.Writeln(";")
+            self.FP.Writeln(_env, ";")
         }
     }
 }
 
 // 156: decl @lune.@base.@Formatter.FormatterFilter.processDeclEnum
-func (self *Formatter_FormatterFilter) ProcessDeclEnum(node *Nodes_DeclEnumNode,_opt LnsAny) {
-    self.FP.Writeln(Lns_getVM().String_format("enum %s {", []LnsAny{node.FP.Get_name().Txt}))
-    self.FP.PushIndent(nil)
-    for _, _name := range( node.FP.Get_valueNameList().Items ) {
+func (self *Formatter_FormatterFilter) ProcessDeclEnum(_env *LnsEnv, node *Nodes_DeclEnumNode,_opt LnsAny) {
+    self.FP.Writeln(_env, _env.LuaVM.String_format("enum %s {", []LnsAny{node.FP.Get_name(_env).Txt}))
+    self.FP.PushIndent(_env, nil)
+    for _, _name := range( node.FP.Get_valueNameList(_env).Items ) {
         name := _name.(Types_TokenDownCast).ToTypes_Token()
-        self.FP.Write(Lns_getVM().String_format("%s", []LnsAny{name.Txt}))
-        self.FP.Writeln(",")
+        self.FP.Write(_env, _env.LuaVM.String_format("%s", []LnsAny{name.Txt}))
+        self.FP.Writeln(_env, ",")
     }
-    self.FP.PopIndent()
-    self.FP.Writeln("}")
+    self.FP.PopIndent(_env)
+    self.FP.Writeln(_env, "}")
 }
 
 // 171: decl @lune.@base.@Formatter.FormatterFilter.processDeclAlge
-func (self *Formatter_FormatterFilter) ProcessDeclAlge(node *Nodes_DeclAlgeNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessDeclAlge(_env *LnsEnv, node *Nodes_DeclAlgeNode,_opt LnsAny) {
 }
 
 // 179: decl @lune.@base.@Formatter.FormatterFilter.processNewAlgeVal
-func (self *Formatter_FormatterFilter) ProcessNewAlgeVal(node *Nodes_NewAlgeValNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessNewAlgeVal(_env *LnsEnv, node *Nodes_NewAlgeValNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    for _, _exp := range( node.FP.Get_paramList().Items ) {
+    for _, _exp := range( node.FP.Get_paramList(_env).Items ) {
         exp := _exp.(Nodes_NodeDownCast).ToNodes_Node()
-        Formatter_filter_1048_(exp, self, opt.FP.NextOpt(&node.Nodes_Node))
+        Formatter_filter_1048_(_env, exp, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
     }
 }
 
 // 188: decl @lune.@base.@Formatter.FormatterFilter.outputDeclClass
-func (self *Formatter_FormatterFilter) outputDeclClass(protoFlag bool,classType *Ast_TypeInfo,gluePrefix LnsAny,moduleName LnsAny) {
-    if classType.FP.Get_accessMode() == Ast_AccessMode__Pub{
-        self.FP.Write("pub ")
+func (self *Formatter_FormatterFilter) outputDeclClass(_env *LnsEnv, protoFlag bool,classType *Ast_TypeInfo,gluePrefix LnsAny,moduleName LnsAny) {
+    if classType.FP.Get_accessMode(_env) == Ast_AccessMode__Pub{
+        self.FP.Write(_env, "pub ")
     }
-    if _switch764 := classType.FP.Get_kind(); _switch764 == Ast_TypeInfoKind__Class {
+    if _switch764 := classType.FP.Get_kind(_env); _switch764 == Ast_TypeInfoKind__Class {
         if Lns_isCondTrue( moduleName){
-            self.FP.Write("module ")
+            self.FP.Write(_env, "module ")
         } else { 
-            self.FP.Write("class ")
+            self.FP.Write(_env, "class ")
         }
     } else if _switch764 == Ast_TypeInfoKind__IF {
-        self.FP.Write("interface ")
+        self.FP.Write(_env, "interface ")
     }
-    self.FP.Write(classType.FP.Get_rawTxt())
-    if classType.FP.Get_itemTypeInfoList().Len() > 0{
-        self.FP.Write("<")
-        for _index, _genType := range( classType.FP.Get_itemTypeInfoList().Items ) {
+    self.FP.Write(_env, classType.FP.Get_rawTxt(_env))
+    if classType.FP.Get_itemTypeInfoList(_env).Len() > 0{
+        self.FP.Write(_env, "<")
+        for _index, _genType := range( classType.FP.Get_itemTypeInfoList(_env).Items ) {
             index := _index + 1
             genType := _genType.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
             if index > 1{
-                self.FP.Write(",")
+                self.FP.Write(_env, ",")
             }
-            self.FP.Write(genType.FP.GetTxt(nil, nil, nil))
+            self.FP.Write(_env, genType.FP.GetTxt(_env, nil, nil, nil))
         }
-        self.FP.Write(">")
+        self.FP.Write(_env, ">")
     }
     if moduleName != nil{
         moduleName_180 := moduleName.(*Types_Token)
-        self.FP.Write(" require ")
-        self.FP.Write(Lns_getVM().String_format("%s ", []LnsAny{moduleName_180.Txt}))
+        self.FP.Write(_env, " require ")
+        self.FP.Write(_env, _env.LuaVM.String_format("%s ", []LnsAny{moduleName_180.Txt}))
         if gluePrefix != nil{
             gluePrefix_182 := gluePrefix.(string)
-            self.FP.Write("glue ")
-            self.FP.Write(gluePrefix_182)
+            self.FP.Write(_env, "glue ")
+            self.FP.Write(_env, gluePrefix_182)
         }
     }
-    if Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
-        Lns_GetEnv().SetStackVal( classType.FP.HasBase()) ||
-        Lns_GetEnv().SetStackVal( classType.FP.Get_interfaceList().Len() > 0) ).(bool){
-        self.FP.Write(" extend ")
-        if classType.FP.HasBase(){
-            self.FP.Write(classType.FP.Get_baseTypeInfo().FP.GetTxt(nil, nil, nil))
+    if _env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( classType.FP.HasBase(_env)) ||
+        _env.SetStackVal( classType.FP.Get_interfaceList(_env).Len() > 0) ).(bool){
+        self.FP.Write(_env, " extend ")
+        if classType.FP.HasBase(_env){
+            self.FP.Write(_env, classType.FP.Get_baseTypeInfo(_env).FP.GetTxt(_env, nil, nil, nil))
         }
-        if classType.FP.Get_interfaceList().Len() > 0{
-            self.FP.Write("(")
-            for _index, _ifType := range( classType.FP.Get_interfaceList().Items ) {
+        if classType.FP.Get_interfaceList(_env).Len() > 0{
+            self.FP.Write(_env, "(")
+            for _index, _ifType := range( classType.FP.Get_interfaceList(_env).Items ) {
                 index := _index + 1
                 ifType := _ifType.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
                 if index > 1{
-                    self.FP.Write(",")
+                    self.FP.Write(_env, ",")
                 }
-                self.FP.Write(ifType.FP.GetTxt(nil, nil, nil))
+                self.FP.Write(_env, ifType.FP.GetTxt(_env, nil, nil, nil))
             }
-            self.FP.Write(")")
+            self.FP.Write(_env, ")")
         }
     }
 }
 
 // 248: decl @lune.@base.@Formatter.FormatterFilter.processProtoClass
-func (self *Formatter_FormatterFilter) ProcessProtoClass(node *Nodes_ProtoClassNode,_opt LnsAny) {
-    self.FP.outputDeclClass(true, node.FP.Get_expType(), nil, nil)
+func (self *Formatter_FormatterFilter) ProcessProtoClass(_env *LnsEnv, node *Nodes_ProtoClassNode,_opt LnsAny) {
+    self.FP.outputDeclClass(_env, true, node.FP.Get_expType(_env), nil, nil)
 }
 
 // 254: decl @lune.@base.@Formatter.FormatterFilter.processDeclClass
-func (self *Formatter_FormatterFilter) ProcessDeclClass(node *Nodes_DeclClassNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessDeclClass(_env *LnsEnv, node *Nodes_DeclClassNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    self.FP.outputDeclClass(false, node.FP.Get_expType(), node.FP.Get_gluePrefix(), node.FP.Get_moduleName())
-    self.FP.Writeln("")
-    self.FP.Writeln("{")
-    self.FP.PushIndent(nil)
-    for _, _stmt := range( node.FP.Get_allStmtList().Items ) {
+    self.FP.outputDeclClass(_env, false, node.FP.Get_expType(_env), node.FP.Get_gluePrefix(_env), node.FP.Get_moduleName(_env))
+    self.FP.Writeln(_env, "")
+    self.FP.Writeln(_env, "{")
+    self.FP.PushIndent(_env, nil)
+    for _, _stmt := range( node.FP.Get_allStmtList(_env).Items ) {
         stmt := _stmt.(Nodes_NodeDownCast).ToNodes_Node()
-        Formatter_filter_1048_(stmt, self, opt.FP.NextOpt(&node.Nodes_Node))
+        Formatter_filter_1048_(_env, stmt, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
     }
-    self.FP.PopIndent()
-    self.FP.Writeln("}")
+    self.FP.PopIndent(_env)
+    self.FP.Writeln(_env, "}")
 }
 
 // 328: decl @lune.@base.@Formatter.FormatterFilter.processDeclAdvertise
-func (self *Formatter_FormatterFilter) ProcessDeclAdvertise(node *Nodes_DeclAdvertiseNode,_opt LnsAny) {
-    self.FP.Writeln(Lns_getVM().String_format("advertise %s;", []LnsAny{node.FP.Get_advInfo().FP.Get_member().FP.Get_name().Txt}))
+func (self *Formatter_FormatterFilter) ProcessDeclAdvertise(_env *LnsEnv, node *Nodes_DeclAdvertiseNode,_opt LnsAny) {
+    self.FP.Writeln(_env, _env.LuaVM.String_format("advertise %s;", []LnsAny{node.FP.Get_advInfo(_env).FP.Get_member(_env).FP.Get_name(_env).Txt}))
 }
 
 // 334: decl @lune.@base.@Formatter.FormatterFilter.processDeclMember
-func (self *Formatter_FormatterFilter) ProcessDeclMember(node *Nodes_DeclMemberNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessDeclMember(_env *LnsEnv, node *Nodes_DeclMemberNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    if _switch1177 := node.FP.Get_accessMode(); _switch1177 == Ast_AccessMode__Pub || _switch1177 == Ast_AccessMode__Pro || _switch1177 == Ast_AccessMode__None || _switch1177 == Ast_AccessMode__Local {
-        self.FP.Write(Ast_accessMode2txt(node.FP.Get_accessMode()))
-        self.FP.Write(" ")
+    if _switch1177 := node.FP.Get_accessMode(_env); _switch1177 == Ast_AccessMode__Pub || _switch1177 == Ast_AccessMode__Pro || _switch1177 == Ast_AccessMode__None || _switch1177 == Ast_AccessMode__Local {
+        self.FP.Write(_env, Ast_accessMode2txt(_env, node.FP.Get_accessMode(_env)))
+        self.FP.Write(_env, " ")
     }
-    if node.FP.Get_staticFlag(){
-        self.FP.Write("static ")
+    if node.FP.Get_staticFlag(_env){
+        self.FP.Write(_env, "static ")
     }
-    self.FP.Write("let ")
+    self.FP.Write(_env, "let ")
     var symbol *Ast_SymbolInfo
-    symbol = node.FP.Get_symbolInfo()
-    if symbol.FP.Get_mutable(){
-        self.FP.Write("mut ")
+    symbol = node.FP.Get_symbolInfo(_env)
+    if symbol.FP.Get_mutable(_env){
+        self.FP.Write(_env, "mut ")
     }
-    self.FP.Write(symbol.FP.Get_name())
-    self.FP.Write(":")
-    Formatter_filter_1048_(&node.FP.Get_refType().Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
-    if node.FP.Get_getterMode() == Ast_AccessMode__None{
-        if node.FP.Get_setterMode() != Ast_AccessMode__None{
-            self.FP.Write("{none,")
-            self.FP.Write(Ast_accessMode2txt(node.FP.Get_setterMode()))
-            self.FP.Write("}")
+    self.FP.Write(_env, symbol.FP.Get_name(_env))
+    self.FP.Write(_env, ":")
+    Formatter_filter_1048_(_env, &node.FP.Get_refType(_env).Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+    if node.FP.Get_getterMode(_env) == Ast_AccessMode__None{
+        if node.FP.Get_setterMode(_env) != Ast_AccessMode__None{
+            self.FP.Write(_env, "{none,")
+            self.FP.Write(_env, Ast_accessMode2txt(_env, node.FP.Get_setterMode(_env)))
+            self.FP.Write(_env, "}")
         }
     } else { 
-        self.FP.Write("{")
-        self.FP.Write(Ast_accessMode2txt(node.FP.Get_getterMode()))
-        if Lns_op_not(node.FP.Get_getterMutable()){
-            self.FP.Write("&")
+        self.FP.Write(_env, "{")
+        self.FP.Write(_env, Ast_accessMode2txt(_env, node.FP.Get_getterMode(_env)))
+        if Lns_op_not(node.FP.Get_getterMutable(_env)){
+            self.FP.Write(_env, "&")
         }
-        if node.FP.Get_getterRetType() != symbol.FP.Get_typeInfo(){
-            self.FP.Write(":")
-            self.FP.Write(node.FP.Get_getterRetType().FP.GetTxt(nil, nil, nil))
+        if node.FP.Get_getterRetType(_env) != symbol.FP.Get_typeInfo(_env){
+            self.FP.Write(_env, ":")
+            self.FP.Write(_env, node.FP.Get_getterRetType(_env).FP.GetTxt(_env, nil, nil, nil))
         }
-        if node.FP.Get_setterMode() != Ast_AccessMode__None{
-            self.FP.Write(",")
-            self.FP.Write(Ast_accessMode2txt(node.FP.Get_setterMode()))
+        if node.FP.Get_setterMode(_env) != Ast_AccessMode__None{
+            self.FP.Write(_env, ",")
+            self.FP.Write(_env, Ast_accessMode2txt(_env, node.FP.Get_setterMode(_env)))
         }
-        self.FP.Write("}")
+        self.FP.Write(_env, "}")
     }
-    self.FP.Writeln(";")
+    self.FP.Writeln(_env, ";")
 }
 
 // 384: decl @lune.@base.@Formatter.FormatterFilter.processExpMacroExp
-func (self *Formatter_FormatterFilter) ProcessExpMacroExp(node *Nodes_ExpMacroExpNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessExpMacroExp(_env *LnsEnv, node *Nodes_ExpMacroExpNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
     var stmtList *LnsList
-    stmtList = node.FP.Get_stmtList()
+    stmtList = node.FP.Get_stmtList(_env)
     for _, _stmt := range( stmtList.Items ) {
         stmt := _stmt.(Nodes_NodeDownCast).ToNodes_Node()
-        Formatter_filter_1048_(stmt, self, opt.FP.NextOpt(&node.Nodes_Node))
+        Formatter_filter_1048_(_env, stmt, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
     }
 }
 
 // 393: decl @lune.@base.@Formatter.FormatterFilter.processDeclMacro
-func (self *Formatter_FormatterFilter) ProcessDeclMacro(node *Nodes_DeclMacroNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessDeclMacro(_env *LnsEnv, node *Nodes_DeclMacroNode,_opt LnsAny) {
 }
 
 // 398: decl @lune.@base.@Formatter.FormatterFilter.processExpMacroStat
-func (self *Formatter_FormatterFilter) ProcessExpMacroStat(node *Nodes_ExpMacroStatNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessExpMacroStat(_env *LnsEnv, node *Nodes_ExpMacroStatNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    for _, _strNode := range( node.FP.Get_expStrList().Items ) {
+    for _, _strNode := range( node.FP.Get_expStrList(_env).Items ) {
         strNode := _strNode.(Nodes_NodeDownCast).ToNodes_Node()
-        Formatter_filter_1048_(strNode, self, opt.FP.NextOpt(strNode))
+        Formatter_filter_1048_(_env, strNode, self, opt.FP.NextOpt(_env, strNode))
     }
 }
 
 // 408: decl @lune.@base.@Formatter.FormatterFilter.processUnwrapSet
-func (self *Formatter_FormatterFilter) ProcessUnwrapSet(node *Nodes_UnwrapSetNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessUnwrapSet(_env *LnsEnv, node *Nodes_UnwrapSetNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    Formatter_filter_1048_(&node.FP.Get_dstExpList().Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
-    Formatter_filter_1048_(&node.FP.Get_srcExpList().Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
-    if Lns_isCondTrue( node.FP.Get_unwrapBlock()){
-        Formatter_filter_1048_(&Lns_unwrap( node.FP.Get_unwrapBlock()).(*Nodes_BlockNode).Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
+    Formatter_filter_1048_(_env, &node.FP.Get_dstExpList(_env).Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+    Formatter_filter_1048_(_env, &node.FP.Get_srcExpList(_env).Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+    if Lns_isCondTrue( node.FP.Get_unwrapBlock(_env)){
+        Formatter_filter_1048_(_env, &Lns_unwrap( node.FP.Get_unwrapBlock(_env)).(*Nodes_BlockNode).Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
     }
 }
 
 // 420: decl @lune.@base.@Formatter.FormatterFilter.processIfUnwrap
-func (self *Formatter_FormatterFilter) ProcessIfUnwrap(node *Nodes_IfUnwrapNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessIfUnwrap(_env *LnsEnv, node *Nodes_IfUnwrapNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    self.FP.Write("if! ")
-    if node.FP.Get_varSymList().Len() != 0{
-        self.FP.Write("let ")
-        for _index, _varSym := range( node.FP.Get_varSymList().Items ) {
+    self.FP.Write(_env, "if! ")
+    if node.FP.Get_varSymList(_env).Len() != 0{
+        self.FP.Write(_env, "let ")
+        for _index, _varSym := range( node.FP.Get_varSymList(_env).Items ) {
             index := _index + 1
             varSym := _varSym.(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
             if index > 1{
-                self.FP.Write(",")
+                self.FP.Write(_env, ",")
             }
-            self.FP.Write(varSym.FP.Get_name())
+            self.FP.Write(_env, varSym.FP.Get_name(_env))
         }
-        self.FP.Write(" = ")
+        self.FP.Write(_env, " = ")
     }
-    Formatter_filter_1048_(&node.FP.Get_expList().Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
-    Formatter_filter_1048_(&node.FP.Get_block().Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
-    if Lns_isCondTrue( node.FP.Get_nilBlock()){
-        self.FP.Write("else ")
-        Formatter_filter_1048_(&Lns_unwrap( node.FP.Get_nilBlock()).(*Nodes_BlockNode).Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
+    Formatter_filter_1048_(_env, &node.FP.Get_expList(_env).Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+    Formatter_filter_1048_(_env, &node.FP.Get_block(_env).Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+    if Lns_isCondTrue( node.FP.Get_nilBlock(_env)){
+        self.FP.Write(_env, "else ")
+        Formatter_filter_1048_(_env, &Lns_unwrap( node.FP.Get_nilBlock(_env)).(*Nodes_BlockNode).Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
     }
 }
 
 // 442: decl @lune.@base.@Formatter.FormatterFilter.processWhen
-func (self *Formatter_FormatterFilter) ProcessWhen(node *Nodes_WhenNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessWhen(_env *LnsEnv, node *Nodes_WhenNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    self.FP.Write("when!")
+    self.FP.Write(_env, "when!")
     var symTxt string
     symTxt = " "
-    for _, _symPair := range( node.FP.Get_symPairList().Items ) {
+    for _, _symPair := range( node.FP.Get_symPairList(_env).Items ) {
         symPair := _symPair.(Nodes_UnwrapSymbolPairDownCast).ToNodes_UnwrapSymbolPair()
-        symTxt = Lns_getVM().String_format("%s%s ", []LnsAny{symTxt, symPair.FP.Get_src().FP.Get_name()})
+        symTxt = _env.LuaVM.String_format("%s%s ", []LnsAny{symTxt, symPair.FP.Get_src(_env).FP.Get_name(_env)})
         
     }
-    self.FP.Write(symTxt)
-    Formatter_filter_1048_(&node.FP.Get_block().Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
+    self.FP.Write(_env, symTxt)
+    Formatter_filter_1048_(_env, &node.FP.Get_block(_env).Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
     {
-        __exp := node.FP.Get_elseBlock()
+        __exp := node.FP.Get_elseBlock(_env)
         if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_BlockNode)
-            self.FP.Write("else ")
-            Formatter_filter_1048_(&_exp.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
+            self.FP.Write(_env, "else ")
+            Formatter_filter_1048_(_env, &_exp.Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
         }
     }
 }
 
 // 461: decl @lune.@base.@Formatter.FormatterFilter.processDeclVar
-func (self *Formatter_FormatterFilter) ProcessDeclVar(node *Nodes_DeclVarNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessDeclVar(_env *LnsEnv, node *Nodes_DeclVarNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    if _switch1875 := node.FP.Get_accessMode(); _switch1875 == Ast_AccessMode__Pub {
-        self.FP.Write("pub ")
+    if _switch1875 := node.FP.Get_accessMode(_env); _switch1875 == Ast_AccessMode__Pub {
+        self.FP.Write(_env, "pub ")
     }
-    if _switch1918 := node.FP.Get_mode(); _switch1918 == Nodes_DeclVarMode__Let {
-        if node.FP.Get_unwrapFlag(){
-            self.FP.Write("let! ")
+    if _switch1918 := node.FP.Get_mode(_env); _switch1918 == Nodes_DeclVarMode__Let {
+        if node.FP.Get_unwrapFlag(_env){
+            self.FP.Write(_env, "let! ")
         } else { 
-            self.FP.Write("let ")
+            self.FP.Write(_env, "let ")
         }
     } else if _switch1918 == Nodes_DeclVarMode__Unwrap {
-        self.FP.Write("unwrap! ")
+        self.FP.Write(_env, "unwrap! ")
     }
-    for _index, _symInfo := range( node.FP.Get_symbolInfoList().Items ) {
+    for _index, _symInfo := range( node.FP.Get_symbolInfoList(_env).Items ) {
         index := _index + 1
         symInfo := _symInfo.(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
         if index > 1{
-            self.FP.Write(", ")
+            self.FP.Write(_env, ", ")
         }
-        if symInfo.FP.Get_mutable(){
-            self.FP.Write("mut ")
+        if symInfo.FP.Get_mutable(_env){
+            self.FP.Write(_env, "mut ")
         }
-        self.FP.Write(symInfo.FP.Get_name())
-        if node.FP.Get_varList().Len() >= index{
+        self.FP.Write(_env, symInfo.FP.Get_name(_env))
+        if node.FP.Get_varList(_env).Len() >= index{
             var varInfo *Nodes_VarInfo
-            varInfo = node.FP.Get_varList().GetAt(index).(Nodes_VarInfoDownCast).ToNodes_VarInfo()
+            varInfo = node.FP.Get_varList(_env).GetAt(index).(Nodes_VarInfoDownCast).ToNodes_VarInfo()
             {
-                _varType := varInfo.FP.Get_refType()
+                _varType := varInfo.FP.Get_refType(_env)
                 if !Lns_IsNil( _varType ) {
                     varType := _varType.(*Nodes_RefTypeNode)
-                    self.FP.Write(":")
-                    Formatter_filter_1048_(&varType.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
+                    self.FP.Write(_env, ":")
+                    Formatter_filter_1048_(_env, &varType.Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
                 }
             }
         }
     }
     {
-        __exp := node.FP.Get_expList()
+        __exp := node.FP.Get_expList(_env)
         if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_ExpListNode)
-            self.FP.Write(" = ")
-            Formatter_filter_1048_(&_exp.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
+            self.FP.Write(_env, " = ")
+            Formatter_filter_1048_(_env, &_exp.Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
         }
     }
     {
-        __exp := node.FP.Get_unwrapBlock()
+        __exp := node.FP.Get_unwrapBlock(_env)
         if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_BlockNode)
-            self.FP.Write(" ")
-            Formatter_filter_1048_(&_exp.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
+            self.FP.Write(_env, " ")
+            Formatter_filter_1048_(_env, &_exp.Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
         }
     }
     {
-        __exp := node.FP.Get_thenBlock()
+        __exp := node.FP.Get_thenBlock(_env)
         if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_BlockNode)
-            self.FP.Write("then")
-            Formatter_filter_1048_(&_exp.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
+            self.FP.Write(_env, "then")
+            Formatter_filter_1048_(_env, &_exp.Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
         }
     }
     {
-        __exp := node.FP.Get_syncBlock()
+        __exp := node.FP.Get_syncBlock(_env)
         if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_BlockNode)
-            self.FP.Write("do")
-            Formatter_filter_1048_(&_exp.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
+            self.FP.Write(_env, "do")
+            Formatter_filter_1048_(_env, &_exp.Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
         }
     }
-    self.FP.Writeln(";")
+    self.FP.Writeln(_env, ";")
 }
 
 // 519: decl @lune.@base.@Formatter.FormatterFilter.processDeclArg
-func (self *Formatter_FormatterFilter) ProcessDeclArg(node *Nodes_DeclArgNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessDeclArg(_env *LnsEnv, node *Nodes_DeclArgNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    self.FP.Write(node.FP.Get_symbolInfo().FP.Get_name())
-    self.FP.Write(":")
+    self.FP.Write(_env, node.FP.Get_symbolInfo(_env).FP.Get_name(_env))
+    self.FP.Write(_env, ":")
     {
-        _refType := node.FP.Get_argType()
+        _refType := node.FP.Get_argType(_env)
         if !Lns_IsNil( _refType ) {
             refType := _refType.(*Nodes_RefTypeNode)
-            Formatter_filter_1048_(&refType.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
+            Formatter_filter_1048_(_env, &refType.Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
         } else {
-            self.FP.Write(node.FP.Get_expType().FP.GetTxt(nil, nil, nil))
+            self.FP.Write(_env, node.FP.Get_expType(_env).FP.GetTxt(_env, nil, nil, nil))
         }
     }
 }
 
 // 532: decl @lune.@base.@Formatter.FormatterFilter.processDeclArgDDD
-func (self *Formatter_FormatterFilter) ProcessDeclArgDDD(node *Nodes_DeclArgDDDNode,_opt LnsAny) {
-    self.FP.Write("...")
+func (self *Formatter_FormatterFilter) ProcessDeclArgDDD(_env *LnsEnv, node *Nodes_DeclArgDDDNode,_opt LnsAny) {
+    self.FP.Write(_env, "...")
 }
 
 // 537: decl @lune.@base.@Formatter.FormatterFilter.processExpSubDDD
-func (self *Formatter_FormatterFilter) ProcessExpSubDDD(node *Nodes_ExpSubDDDNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessExpSubDDD(_env *LnsEnv, node *Nodes_ExpSubDDDNode,_opt LnsAny) {
 }
 
 // 544: decl @lune.@base.@Formatter.FormatterFilter.processDeclForm
-func (self *Formatter_FormatterFilter) ProcessDeclForm(node *Nodes_DeclFormNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessDeclForm(_env *LnsEnv, node *Nodes_DeclFormNode,_opt LnsAny) {
 }
 
 // 549: decl @lune.@base.@Formatter.FormatterFilter.processDeclFuncInfo
-func (self *Formatter_FormatterFilter) processDeclFuncInfo(node *Nodes_Node,declInfo *Nodes_DeclFuncInfo,opt *Formatter_Opt) {
+func (self *Formatter_FormatterFilter) processDeclFuncInfo(_env *LnsEnv, node *Nodes_Node,declInfo *Nodes_DeclFuncInfo,opt *Formatter_Opt) {
     var funcType *Ast_TypeInfo
-    funcType = node.FP.Get_expType()
-    if funcType.FP.Get_accessMode() == Ast_AccessMode__Pub{
-        self.FP.Write("pub ")
+    funcType = node.FP.Get_expType(_env)
+    if funcType.FP.Get_accessMode(_env) == Ast_AccessMode__Pub{
+        self.FP.Write(_env, "pub ")
     }
-    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
-        Lns_GetEnv().SetStackVal( declInfo.FP.Get_staticFlag()) &&
-        Lns_GetEnv().SetStackVal( Lns_GetEnv().NilAccFin(Lns_GetEnv().NilAccPush(declInfo.FP.Get_name()) && 
-        Lns_GetEnv().NilAccPush(Lns_GetEnv().NilAccPop().(*Types_Token).Txt)) == "__init") ).(bool)){
-        self.FP.Write("__init")
+    if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( declInfo.FP.Get_staticFlag(_env)) &&
+        _env.SetStackVal( _env.NilAccFin(_env.NilAccPush(declInfo.FP.Get_name(_env)) && 
+        _env.NilAccPush(_env.NilAccPop().(*Types_Token).Txt)) == "__init") ).(bool)){
+        self.FP.Write(_env, "__init")
     } else { 
-        self.FP.Write("fn ")
-        if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
-            Lns_GetEnv().SetStackVal( opt.FP.Get_parent().FP.Get_kind() != Nodes_NodeKind_get_DeclClass()) &&
-            Lns_GetEnv().SetStackVal( funcType.FP.Get_kind() == Ast_TypeInfoKind__Method) ).(bool)){
+        self.FP.Write(_env, "fn ")
+        if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
+            _env.SetStackVal( opt.FP.Get_parent(_env).FP.Get_kind(_env) != Nodes_NodeKind_get_DeclClass(_env)) &&
+            _env.SetStackVal( funcType.FP.Get_kind(_env) == Ast_TypeInfoKind__Method) ).(bool)){
             var classType *Ast_TypeInfo
-            classType = funcType.FP.Get_parentInfo()
-            self.FP.Write(classType.FP.Get_rawTxt())
-            self.FP.Write(".")
+            classType = funcType.FP.Get_parentInfo(_env)
+            self.FP.Write(_env, classType.FP.Get_rawTxt(_env))
+            self.FP.Write(_env, ".")
         }
         {
-            _nameToken := declInfo.FP.Get_name()
+            _nameToken := declInfo.FP.Get_name(_env)
             if !Lns_IsNil( _nameToken ) {
                 nameToken := _nameToken.(*Types_Token)
-                self.FP.Write(nameToken.Txt)
+                self.FP.Write(_env, nameToken.Txt)
             }
         }
-        self.FP.Write("(")
+        self.FP.Write(_env, "(")
         var argList *LnsList
-        argList = declInfo.FP.Get_argList()
+        argList = declInfo.FP.Get_argList(_env)
         if argList.Len() != 0{
-            self.FP.Write(" ")
+            self.FP.Write(_env, " ")
         }
         for _index, _arg := range( argList.Items ) {
             index := _index + 1
             arg := _arg.(Nodes_NodeDownCast).ToNodes_Node()
             if index > 1{
-                self.FP.Write(", ")
+                self.FP.Write(_env, ", ")
             }
-            Formatter_filter_1048_(arg, self, opt.FP.NextOpt(node))
+            Formatter_filter_1048_(_env, arg, self, opt.FP.NextOpt(_env, node))
         }
         if argList.Len() != 0{
-            self.FP.Write(" ")
+            self.FP.Write(_env, " ")
         }
-        self.FP.Write(")")
+        self.FP.Write(_env, ")")
     }
-    if Lns_isCondTrue( Lns_GetEnv().PopVal( Lns_GetEnv().IncStack() ||
-        Lns_GetEnv().SetStackVal( Ast_TypeInfo_isMut(funcType)) &&
-        Lns_GetEnv().SetStackVal( declInfo.FP.Get_kind() == Nodes_FuncKind__Mtd) ).(bool)){
-        self.FP.Write(" mut")
+    if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( Ast_TypeInfo_isMut(_env, funcType)) &&
+        _env.SetStackVal( declInfo.FP.Get_kind(_env) == Nodes_FuncKind__Mtd) ).(bool)){
+        self.FP.Write(_env, " mut")
     }
-    if funcType.FP.Get_retTypeInfoList().Len() != 0{
-        self.FP.Write(" : ")
-        for _index, _retType := range( funcType.FP.Get_retTypeInfoList().Items ) {
+    if funcType.FP.Get_retTypeInfoList(_env).Len() != 0{
+        self.FP.Write(_env, " : ")
+        for _index, _retType := range( funcType.FP.Get_retTypeInfoList(_env).Items ) {
             index := _index + 1
             retType := _retType.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
             if index > 1{
-                self.FP.Write(", ")
+                self.FP.Write(_env, ", ")
             }
-            self.FP.Write(retType.FP.GetTxt(nil, nil, nil))
+            self.FP.Write(_env, retType.FP.GetTxt(_env, nil, nil, nil))
         }
     }
     {
-        __exp := declInfo.FP.Get_body()
+        __exp := declInfo.FP.Get_body(_env)
         if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_BlockNode)
-            self.FP.Write(" ")
-            Formatter_filter_1048_(&_exp.Nodes_Node, self, opt.FP.NextOpt(node))
+            self.FP.Write(_env, " ")
+            Formatter_filter_1048_(_env, &_exp.Nodes_Node, self, opt.FP.NextOpt(_env, node))
         } else {
-            self.FP.Writeln(";")
+            self.FP.Writeln(_env, ";")
         }
     }
 }
 
 // 613: decl @lune.@base.@Formatter.FormatterFilter.processDeclFunc
-func (self *Formatter_FormatterFilter) ProcessDeclFunc(node *Nodes_DeclFuncNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessDeclFunc(_env *LnsEnv, node *Nodes_DeclFuncNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    self.FP.processDeclFuncInfo(&node.Nodes_Node, node.FP.Get_declInfo(), opt)
+    self.FP.processDeclFuncInfo(_env, &node.Nodes_Node, node.FP.Get_declInfo(_env), opt)
 }
 
 // 618: decl @lune.@base.@Formatter.FormatterFilter.processDeclMethod
-func (self *Formatter_FormatterFilter) ProcessDeclMethod(node *Nodes_DeclMethodNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessDeclMethod(_env *LnsEnv, node *Nodes_DeclMethodNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    self.FP.processDeclFuncInfo(&node.Nodes_Node, node.FP.Get_declInfo(), opt)
+    self.FP.processDeclFuncInfo(_env, &node.Nodes_Node, node.FP.Get_declInfo(_env), opt)
 }
 
 // 623: decl @lune.@base.@Formatter.FormatterFilter.processDeclConstr
-func (self *Formatter_FormatterFilter) ProcessDeclConstr(node *Nodes_DeclConstrNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessDeclConstr(_env *LnsEnv, node *Nodes_DeclConstrNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    self.FP.processDeclFuncInfo(&node.Nodes_Node, node.FP.Get_declInfo(), opt)
+    self.FP.processDeclFuncInfo(_env, &node.Nodes_Node, node.FP.Get_declInfo(_env), opt)
 }
 
 // 629: decl @lune.@base.@Formatter.FormatterFilter.processDeclDestr
-func (self *Formatter_FormatterFilter) ProcessDeclDestr(node *Nodes_DeclDestrNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessDeclDestr(_env *LnsEnv, node *Nodes_DeclDestrNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    self.FP.processDeclFuncInfo(&node.Nodes_Node, node.FP.Get_declInfo(), opt)
+    self.FP.processDeclFuncInfo(_env, &node.Nodes_Node, node.FP.Get_declInfo(_env), opt)
 }
 
 // 635: decl @lune.@base.@Formatter.FormatterFilter.processExpCallSuperCtor
-func (self *Formatter_FormatterFilter) ProcessExpCallSuperCtor(node *Nodes_ExpCallSuperCtorNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessExpCallSuperCtor(_env *LnsEnv, node *Nodes_ExpCallSuperCtorNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    self.FP.Write("super(")
+    self.FP.Write(_env, "super(")
     {
-        _expListNode := node.FP.Get_expList()
+        _expListNode := node.FP.Get_expList(_env)
         if !Lns_IsNil( _expListNode ) {
             expListNode := _expListNode.(*Nodes_ExpListNode)
-            Formatter_filter_1048_(&expListNode.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
+            Formatter_filter_1048_(_env, &expListNode.Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
         }
     }
-    self.FP.Writeln(");")
+    self.FP.Writeln(_env, ");")
 }
 
 // 645: decl @lune.@base.@Formatter.FormatterFilter.processExpCallSuper
-func (self *Formatter_FormatterFilter) ProcessExpCallSuper(node *Nodes_ExpCallSuperNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessExpCallSuper(_env *LnsEnv, node *Nodes_ExpCallSuperNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    self.FP.Write("super(")
+    self.FP.Write(_env, "super(")
     {
-        _expListNode := node.FP.Get_expList()
+        _expListNode := node.FP.Get_expList(_env)
         if !Lns_IsNil( _expListNode ) {
             expListNode := _expListNode.(*Nodes_ExpListNode)
-            Formatter_filter_1048_(&expListNode.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
+            Formatter_filter_1048_(_env, &expListNode.Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
         }
     }
-    self.FP.Writeln(")")
+    self.FP.Writeln(_env, ")")
 }
 
 // 655: decl @lune.@base.@Formatter.FormatterFilter.processRefType
-func (self *Formatter_FormatterFilter) ProcessRefType(node *Nodes_RefTypeNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessRefType(_env *LnsEnv, node *Nodes_RefTypeNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
     {
-        _mutMode := node.FP.Get_mutMode()
+        _mutMode := node.FP.Get_mutMode(_env)
         if !Lns_IsNil( _mutMode ) {
             mutMode := _mutMode.(LnsInt)
             if _switch2861 := mutMode; _switch2861 == Ast_MutMode__IMut {
-                self.FP.Write("&")
+                self.FP.Write(_env, "&")
             } else if _switch2861 == Ast_MutMode__AllMut {
-                self.FP.Write("allmut")
+                self.FP.Write(_env, "allmut")
             }
         }
     }
-    Formatter_filter_1048_(node.FP.Get_name(), self, opt.FP.NextOpt(&node.Nodes_Node))
+    Formatter_filter_1048_(_env, node.FP.Get_name(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
     var expType *Ast_TypeInfo
-    expType = node.FP.Get_expType().FP.Get_nonnilableType()
-    if _switch3009 := expType.FP.Get_kind(); _switch3009 == Ast_TypeInfoKind__List || _switch3009 == Ast_TypeInfoKind__Set {
-        self.FP.Write("<")
-        Formatter_filter_1048_(node.FP.Get_itemNodeList().GetAt(1).(Nodes_NodeDownCast).ToNodes_Node(), self, opt.FP.NextOpt(&node.Nodes_Node))
-        self.FP.Write(">")
+    expType = node.FP.Get_expType(_env).FP.Get_nonnilableType(_env)
+    if _switch3009 := expType.FP.Get_kind(_env); _switch3009 == Ast_TypeInfoKind__List || _switch3009 == Ast_TypeInfoKind__Set {
+        self.FP.Write(_env, "<")
+        Formatter_filter_1048_(_env, node.FP.Get_itemNodeList(_env).GetAt(1).(Nodes_NodeDownCast).ToNodes_Node(), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+        self.FP.Write(_env, ">")
     } else if _switch3009 == Ast_TypeInfoKind__Map {
-        self.FP.Write("<")
-        Formatter_filter_1048_(node.FP.Get_itemNodeList().GetAt(1).(Nodes_NodeDownCast).ToNodes_Node(), self, opt.FP.NextOpt(&node.Nodes_Node))
-        self.FP.Write(",")
-        Formatter_filter_1048_(node.FP.Get_itemNodeList().GetAt(2).(Nodes_NodeDownCast).ToNodes_Node(), self, opt.FP.NextOpt(&node.Nodes_Node))
-        self.FP.Write(">")
+        self.FP.Write(_env, "<")
+        Formatter_filter_1048_(_env, node.FP.Get_itemNodeList(_env).GetAt(1).(Nodes_NodeDownCast).ToNodes_Node(), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+        self.FP.Write(_env, ",")
+        Formatter_filter_1048_(_env, node.FP.Get_itemNodeList(_env).GetAt(2).(Nodes_NodeDownCast).ToNodes_Node(), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+        self.FP.Write(_env, ">")
     }
-    if node.FP.Get_expType().FP.Get_nilable(){
-        self.FP.Write("!")
+    if node.FP.Get_expType(_env).FP.Get_nilable(_env){
+        self.FP.Write(_env, "!")
     }
 }
 
 // 692: decl @lune.@base.@Formatter.FormatterFilter.processIf
-func (self *Formatter_FormatterFilter) ProcessIf(node *Nodes_IfNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessIf(_env *LnsEnv, node *Nodes_IfNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
     var stmtList *LnsList
-    stmtList = node.FP.Get_stmtList()
+    stmtList = node.FP.Get_stmtList(_env)
     for _, _stmt := range( stmtList.Items ) {
         stmt := _stmt.(Nodes_IfStmtInfoDownCast).ToNodes_IfStmtInfo()
-        if _switch3084 := stmt.FP.Get_kind(); _switch3084 == Nodes_IfKind__If {
-            self.FP.Write("if ")
+        if _switch3084 := stmt.FP.Get_kind(_env); _switch3084 == Nodes_IfKind__If {
+            self.FP.Write(_env, "if ")
         } else if _switch3084 == Nodes_IfKind__ElseIf {
-            self.FP.Write("elseif ")
+            self.FP.Write(_env, "elseif ")
         } else if _switch3084 == Nodes_IfKind__Else {
-            self.FP.Write("else ")
+            self.FP.Write(_env, "else ")
         }
-        Formatter_filter_1048_(stmt.FP.Get_exp(), self, opt.FP.NextOpt(&node.Nodes_Node))
-        self.FP.Write(" ")
-        Formatter_filter_1048_(&stmt.FP.Get_block().Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
+        Formatter_filter_1048_(_env, stmt.FP.Get_exp(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+        self.FP.Write(_env, " ")
+        Formatter_filter_1048_(_env, &stmt.FP.Get_block(_env).Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
     }
 }
 
 // 713: decl @lune.@base.@Formatter.FormatterFilter.processSwitch
-func (self *Formatter_FormatterFilter) ProcessSwitch(node *Nodes_SwitchNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessSwitch(_env *LnsEnv, node *Nodes_SwitchNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    Formatter_filter_1048_(node.FP.Get_exp(), self, opt.FP.NextOpt(&node.Nodes_Node))
+    Formatter_filter_1048_(_env, node.FP.Get_exp(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
     var caseList *LnsList
-    caseList = node.FP.Get_caseList()
+    caseList = node.FP.Get_caseList(_env)
     for _, _caseInfo := range( caseList.Items ) {
         caseInfo := _caseInfo.(Nodes_CaseInfoDownCast).ToNodes_CaseInfo()
-        Formatter_filter_1048_(&caseInfo.FP.Get_expList().Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
-        Formatter_filter_1048_(&caseInfo.FP.Get_block().Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
+        Formatter_filter_1048_(_env, &caseInfo.FP.Get_expList(_env).Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+        Formatter_filter_1048_(_env, &caseInfo.FP.Get_block(_env).Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
     }
     {
-        __exp := node.FP.Get_default()
+        __exp := node.FP.Get_default(_env)
         if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_BlockNode)
-            Formatter_filter_1048_(&_exp.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
+            Formatter_filter_1048_(_env, &_exp.Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
         }
     }
 }
 
 // 727: decl @lune.@base.@Formatter.FormatterFilter.processMatch
-func (self *Formatter_FormatterFilter) ProcessMatch(node *Nodes_MatchNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessMatch(_env *LnsEnv, node *Nodes_MatchNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    Formatter_filter_1048_(node.FP.Get_val(), self, opt.FP.NextOpt(&node.Nodes_Node))
+    Formatter_filter_1048_(_env, node.FP.Get_val(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
     var caseList *LnsList
-    caseList = node.FP.Get_caseList()
+    caseList = node.FP.Get_caseList(_env)
     for _, _caseInfo := range( caseList.Items ) {
         caseInfo := _caseInfo.(Nodes_MatchCaseDownCast).ToNodes_MatchCase()
-        Formatter_filter_1048_(&caseInfo.FP.Get_block().Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
+        Formatter_filter_1048_(_env, &caseInfo.FP.Get_block(_env).Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
     }
     {
-        __exp := node.FP.Get_defaultBlock()
+        __exp := node.FP.Get_defaultBlock(_env)
         if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_Node)
-            Formatter_filter_1048_(_exp, self, opt.FP.NextOpt(&node.Nodes_Node))
+            Formatter_filter_1048_(_env, _exp, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
         }
     }
 }
 
 // 740: decl @lune.@base.@Formatter.FormatterFilter.processWhile
-func (self *Formatter_FormatterFilter) ProcessWhile(node *Nodes_WhileNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessWhile(_env *LnsEnv, node *Nodes_WhileNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    self.FP.Write("while ")
-    Formatter_filter_1048_(node.FP.Get_exp(), self, opt.FP.NextOpt(&node.Nodes_Node))
-    self.FP.Write(" ")
-    Formatter_filter_1048_(&node.FP.Get_block().Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
+    self.FP.Write(_env, "while ")
+    Formatter_filter_1048_(_env, node.FP.Get_exp(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+    self.FP.Write(_env, " ")
+    Formatter_filter_1048_(_env, &node.FP.Get_block(_env).Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
 }
 
 // 748: decl @lune.@base.@Formatter.FormatterFilter.processRepeat
-func (self *Formatter_FormatterFilter) ProcessRepeat(node *Nodes_RepeatNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessRepeat(_env *LnsEnv, node *Nodes_RepeatNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    self.FP.Write("repeat ")
-    Formatter_filter_1048_(&node.FP.Get_block().Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
-    self.FP.Write(" ")
-    Formatter_filter_1048_(node.FP.Get_exp(), self, opt.FP.NextOpt(&node.Nodes_Node))
-    self.FP.Writeln(";")
+    self.FP.Write(_env, "repeat ")
+    Formatter_filter_1048_(_env, &node.FP.Get_block(_env).Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+    self.FP.Write(_env, " ")
+    Formatter_filter_1048_(_env, node.FP.Get_exp(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+    self.FP.Writeln(_env, ";")
 }
 
 // 757: decl @lune.@base.@Formatter.FormatterFilter.processFor
-func (self *Formatter_FormatterFilter) ProcessFor(node *Nodes_ForNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessFor(_env *LnsEnv, node *Nodes_ForNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    self.FP.Write(Lns_getVM().String_format("for %s = ", []LnsAny{node.FP.Get_val().FP.Get_name()}))
-    Formatter_filter_1048_(node.FP.Get_init(), self, opt.FP.NextOpt(&node.Nodes_Node))
-    self.FP.Write(", ")
-    Formatter_filter_1048_(node.FP.Get_to(), self, opt.FP.NextOpt(&node.Nodes_Node))
+    self.FP.Write(_env, _env.LuaVM.String_format("for %s = ", []LnsAny{node.FP.Get_val(_env).FP.Get_name(_env)}))
+    Formatter_filter_1048_(_env, node.FP.Get_init(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+    self.FP.Write(_env, ", ")
+    Formatter_filter_1048_(_env, node.FP.Get_to(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
     {
-        __exp := node.FP.Get_delta()
+        __exp := node.FP.Get_delta(_env)
         if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_Node)
-            self.FP.Write(", ")
-            Formatter_filter_1048_(_exp, self, opt.FP.NextOpt(&node.Nodes_Node))
+            self.FP.Write(_env, ", ")
+            Formatter_filter_1048_(_env, _exp, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
         }
     }
-    self.FP.Write(" ")
-    Formatter_filter_1048_(&node.FP.Get_block().Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
+    self.FP.Write(_env, " ")
+    Formatter_filter_1048_(_env, &node.FP.Get_block(_env).Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
 }
 
 // 771: decl @lune.@base.@Formatter.FormatterFilter.processApply
-func (self *Formatter_FormatterFilter) ProcessApply(node *Nodes_ApplyNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessApply(_env *LnsEnv, node *Nodes_ApplyNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    self.FP.Write("apply ")
-    for _index, __var := range( node.FP.Get_varList().Items ) {
+    self.FP.Write(_env, "apply ")
+    for _index, __var := range( node.FP.Get_varList(_env).Items ) {
         index := _index + 1
         _var := __var.(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
         if index > 1{
-            self.FP.Write(", ")
+            self.FP.Write(_env, ", ")
         }
-        self.FP.Write(_var.FP.Get_name())
+        self.FP.Write(_env, _var.FP.Get_name(_env))
     }
-    self.FP.Write(" of ")
-    Formatter_filter_1048_(&node.FP.Get_expList().Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
-    self.FP.Write(" ")
-    Formatter_filter_1048_(&node.FP.Get_block().Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
+    self.FP.Write(_env, " of ")
+    Formatter_filter_1048_(_env, &node.FP.Get_expList(_env).Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+    self.FP.Write(_env, " ")
+    Formatter_filter_1048_(_env, &node.FP.Get_block(_env).Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
 }
 
 // 787: decl @lune.@base.@Formatter.FormatterFilter.processForeach
-func (self *Formatter_FormatterFilter) ProcessForeach(node *Nodes_ForeachNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessForeach(_env *LnsEnv, node *Nodes_ForeachNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    self.FP.Write("foreach ")
-    self.FP.Write(node.FP.Get_val().FP.Get_name())
+    self.FP.Write(_env, "foreach ")
+    self.FP.Write(_env, node.FP.Get_val(_env).FP.Get_name(_env))
     {
-        _key := node.FP.Get_key()
+        _key := node.FP.Get_key(_env)
         if !Lns_IsNil( _key ) {
             key := _key.(*Ast_SymbolInfo)
-            self.FP.Write(", ")
-            self.FP.Write(key.FP.Get_name())
+            self.FP.Write(_env, ", ")
+            self.FP.Write(_env, key.FP.Get_name(_env))
         }
     }
-    self.FP.Write(" in ")
-    Formatter_filter_1048_(node.FP.Get_exp(), self, opt.FP.NextOpt(&node.Nodes_Node))
-    self.FP.Writeln("")
-    Formatter_filter_1048_(&node.FP.Get_block().Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
+    self.FP.Write(_env, " in ")
+    Formatter_filter_1048_(_env, node.FP.Get_exp(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+    self.FP.Writeln(_env, "")
+    Formatter_filter_1048_(_env, &node.FP.Get_block(_env).Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
 }
 
 // 801: decl @lune.@base.@Formatter.FormatterFilter.processForsort
-func (self *Formatter_FormatterFilter) ProcessForsort(node *Nodes_ForsortNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessForsort(_env *LnsEnv, node *Nodes_ForsortNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    self.FP.Write("forsort ")
-    self.FP.Write(node.FP.Get_val().FP.Get_name())
+    self.FP.Write(_env, "forsort ")
+    self.FP.Write(_env, node.FP.Get_val(_env).FP.Get_name(_env))
     {
-        _key := node.FP.Get_key()
+        _key := node.FP.Get_key(_env)
         if !Lns_IsNil( _key ) {
             key := _key.(*Ast_SymbolInfo)
-            self.FP.Write(", ")
-            self.FP.Write(key.FP.Get_name())
+            self.FP.Write(_env, ", ")
+            self.FP.Write(_env, key.FP.Get_name(_env))
         }
     }
-    self.FP.Write(" in ")
-    Formatter_filter_1048_(node.FP.Get_exp(), self, opt.FP.NextOpt(&node.Nodes_Node))
-    self.FP.Writeln("")
-    Formatter_filter_1048_(&node.FP.Get_block().Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
+    self.FP.Write(_env, " in ")
+    Formatter_filter_1048_(_env, node.FP.Get_exp(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+    self.FP.Writeln(_env, "")
+    Formatter_filter_1048_(_env, &node.FP.Get_block(_env).Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
 }
 
 // 816: decl @lune.@base.@Formatter.FormatterFilter.processExpUnwrap
-func (self *Formatter_FormatterFilter) ProcessExpUnwrap(node *Nodes_ExpUnwrapNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessExpUnwrap(_env *LnsEnv, node *Nodes_ExpUnwrapNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    self.FP.Write("unwrap ")
-    Formatter_filter_1048_(node.FP.Get_exp(), self, opt.FP.NextOpt(&node.Nodes_Node))
+    self.FP.Write(_env, "unwrap ")
+    Formatter_filter_1048_(_env, node.FP.Get_exp(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
     {
-        __exp := node.FP.Get_default()
+        __exp := node.FP.Get_default(_env)
         if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_Node)
-            self.FP.Write(" default ")
-            Formatter_filter_1048_(_exp, self, opt.FP.NextOpt(&node.Nodes_Node))
+            self.FP.Write(_env, " default ")
+            Formatter_filter_1048_(_env, _exp, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
         }
     }
 }
 
 // 838: decl @lune.@base.@Formatter.FormatterFilter.processExpCall
-func (self *Formatter_FormatterFilter) ProcessExpCall(node *Nodes_ExpCallNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessExpCall(_env *LnsEnv, node *Nodes_ExpCallNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    Formatter_filter_1048_(node.FP.Get_func(), self, opt.FP.NextOpt(&node.Nodes_Node))
-    if node.FP.Get_nilAccess(){
-        self.FP.Write("$(")
+    Formatter_filter_1048_(_env, node.FP.Get_func(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+    if node.FP.Get_nilAccess(_env){
+        self.FP.Write(_env, "$(")
     } else { 
-        self.FP.Write("(")
+        self.FP.Write(_env, "(")
     }
     {
-        __exp := node.FP.Get_argList()
+        __exp := node.FP.Get_argList(_env)
         if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_ExpListNode)
-            self.FP.Write(" ")
-            Formatter_filter_1048_(&_exp.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
-            self.FP.Write(" ")
+            self.FP.Write(_env, " ")
+            Formatter_filter_1048_(_env, &_exp.Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+            self.FP.Write(_env, " ")
         }
     }
-    self.FP.Write(")")
+    self.FP.Write(_env, ")")
 }
 
 // 855: decl @lune.@base.@Formatter.FormatterFilter.processExpList
-func (self *Formatter_FormatterFilter) ProcessExpList(node *Nodes_ExpListNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessExpList(_env *LnsEnv, node *Nodes_ExpListNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
     var expList *LnsList
-    expList = node.FP.Get_expList()
+    expList = node.FP.Get_expList(_env)
     for _index, _exp := range( expList.Items ) {
         index := _index + 1
         exp := _exp.(Nodes_NodeDownCast).ToNodes_Node()
         if index > 1{
-            if exp.FP.Get_kind() == Nodes_NodeKind_get_ExpAccessMRet(){
+            if exp.FP.Get_kind(_env) == Nodes_NodeKind_get_ExpAccessMRet(_env){
                 break
             }
-            if exp.FP.Get_expType().FP.Get_kind() != Ast_TypeInfoKind__Abbr{
-                self.FP.Write(", ")
+            if exp.FP.Get_expType(_env).FP.Get_kind(_env) != Ast_TypeInfoKind__Abbr{
+                self.FP.Write(_env, ", ")
             } else { 
-                self.FP.Write(" ")
+                self.FP.Write(_env, " ")
             }
         }
-        Formatter_filter_1048_(exp, self, opt.FP.NextOpt(&node.Nodes_Node))
+        Formatter_filter_1048_(_env, exp, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
     }
 }
 
 // 876: decl @lune.@base.@Formatter.FormatterFilter.processExpMRet
-func (self *Formatter_FormatterFilter) ProcessExpMRet(node *Nodes_ExpMRetNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessExpMRet(_env *LnsEnv, node *Nodes_ExpMRetNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    Formatter_filter_1048_(node.FP.Get_mRet(), self, opt.FP.NextOpt(&node.Nodes_Node))
+    Formatter_filter_1048_(_env, node.FP.Get_mRet(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
 }
 
 // 882: decl @lune.@base.@Formatter.FormatterFilter.processExpAccessMRet
-func (self *Formatter_FormatterFilter) ProcessExpAccessMRet(node *Nodes_ExpAccessMRetNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessExpAccessMRet(_env *LnsEnv, node *Nodes_ExpAccessMRetNode,_opt LnsAny) {
 }
 
 // 888: decl @lune.@base.@Formatter.FormatterFilter.processExpOp1
-func (self *Formatter_FormatterFilter) ProcessExpOp1(node *Nodes_ExpOp1Node,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessExpOp1(_env *LnsEnv, node *Nodes_ExpOp1Node,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    self.FP.Write(node.FP.Get_op().Txt)
-    if _switch4320 := node.FP.Get_op().Txt; _switch4320 == "not" {
-        self.FP.Write(" ")
+    self.FP.Write(_env, node.FP.Get_op(_env).Txt)
+    if _switch4320 := node.FP.Get_op(_env).Txt; _switch4320 == "not" {
+        self.FP.Write(_env, " ")
     }
-    Formatter_filter_1048_(node.FP.Get_exp(), self, opt.FP.NextOpt(&node.Nodes_Node))
+    Formatter_filter_1048_(_env, node.FP.Get_exp(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
 }
 
 // 900: decl @lune.@base.@Formatter.FormatterFilter.processExpToDDD
-func (self *Formatter_FormatterFilter) ProcessExpToDDD(node *Nodes_ExpToDDDNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessExpToDDD(_env *LnsEnv, node *Nodes_ExpToDDDNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    Formatter_filter_1048_(&node.FP.Get_expList().Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
+    Formatter_filter_1048_(_env, &node.FP.Get_expList(_env).Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
 }
 
 // 907: decl @lune.@base.@Formatter.FormatterFilter.processExpMultiTo1
-func (self *Formatter_FormatterFilter) ProcessExpMultiTo1(node *Nodes_ExpMultiTo1Node,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessExpMultiTo1(_env *LnsEnv, node *Nodes_ExpMultiTo1Node,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    Formatter_filter_1048_(node.FP.Get_exp(), self, opt.FP.NextOpt(&node.Nodes_Node))
+    Formatter_filter_1048_(_env, node.FP.Get_exp(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
 }
 
 // 914: decl @lune.@base.@Formatter.FormatterFilter.processExpCast
-func (self *Formatter_FormatterFilter) ProcessExpCast(node *Nodes_ExpCastNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessExpCast(_env *LnsEnv, node *Nodes_ExpCastNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    Formatter_filter_1048_(node.FP.Get_exp(), self, opt.FP.NextOpt(&node.Nodes_Node))
+    Formatter_filter_1048_(_env, node.FP.Get_exp(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
 }
 
 // 920: decl @lune.@base.@Formatter.FormatterFilter.processExpParen
-func (self *Formatter_FormatterFilter) ProcessExpParen(node *Nodes_ExpParenNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessExpParen(_env *LnsEnv, node *Nodes_ExpParenNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    self.FP.Write("(")
-    Formatter_filter_1048_(node.FP.Get_exp(), self, opt.FP.NextOpt(&node.Nodes_Node))
-    self.FP.Write(")")
+    self.FP.Write(_env, "(")
+    Formatter_filter_1048_(_env, node.FP.Get_exp(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+    self.FP.Write(_env, ")")
 }
 
 // 927: decl @lune.@base.@Formatter.FormatterFilter.processExpSetVal
-func (self *Formatter_FormatterFilter) ProcessExpSetVal(node *Nodes_ExpSetValNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessExpSetVal(_env *LnsEnv, node *Nodes_ExpSetValNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    Formatter_filter_1048_(node.FP.Get_exp1(), self, opt.FP.NextOpt(&node.Nodes_Node))
-    self.FP.Write(" = ")
-    Formatter_filter_1048_(&node.FP.Get_exp2().Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
+    Formatter_filter_1048_(_env, node.FP.Get_exp1(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+    self.FP.Write(_env, " = ")
+    Formatter_filter_1048_(_env, &node.FP.Get_exp2(_env).Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
 }
 
 // 934: decl @lune.@base.@Formatter.FormatterFilter.processExpSetItem
-func (self *Formatter_FormatterFilter) ProcessExpSetItem(node *Nodes_ExpSetItemNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessExpSetItem(_env *LnsEnv, node *Nodes_ExpSetItemNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    Formatter_filter_1048_(node.FP.Get_val(), self, opt.FP.NextOpt(&node.Nodes_Node))
-    switch _exp4626 := node.FP.Get_index().(type) {
+    Formatter_filter_1048_(_env, node.FP.Get_val(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+    switch _exp4626 := node.FP.Get_index(_env).(type) {
     case *Nodes_IndexVal__NodeIdx:
     index := _exp4626.Val1
-        self.FP.Write("[")
-        Formatter_filter_1048_(index, self, opt.FP.NextOpt(&node.Nodes_Node))
-        self.FP.Write("]")
+        self.FP.Write(_env, "[")
+        Formatter_filter_1048_(_env, index, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+        self.FP.Write(_env, "]")
     case *Nodes_IndexVal__SymIdx:
     index := _exp4626.Val1
-        self.FP.Write(Lns_getVM().String_format(".%s", []LnsAny{index}))
+        self.FP.Write(_env, _env.LuaVM.String_format(".%s", []LnsAny{index}))
     }
-    self.FP.Write(" = ")
-    Formatter_filter_1048_(node.FP.Get_exp2(), self, opt.FP.NextOpt(&node.Nodes_Node))
+    self.FP.Write(_env, " = ")
+    Formatter_filter_1048_(_env, node.FP.Get_exp2(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
 }
 
 // 951: decl @lune.@base.@Formatter.FormatterFilter.processExpOp2
-func (self *Formatter_FormatterFilter) ProcessExpOp2(node *Nodes_ExpOp2Node,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessExpOp2(_env *LnsEnv, node *Nodes_ExpOp2Node,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    Formatter_filter_1048_(node.FP.Get_exp1(), self, opt.FP.NextOpt(&node.Nodes_Node))
-    self.FP.Write(Lns_getVM().String_format(" %s ", []LnsAny{node.FP.Get_op().Txt}))
-    Formatter_filter_1048_(node.FP.Get_exp2(), self, opt.FP.NextOpt(&node.Nodes_Node))
+    Formatter_filter_1048_(_env, node.FP.Get_exp1(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+    self.FP.Write(_env, _env.LuaVM.String_format(" %s ", []LnsAny{node.FP.Get_op(_env).Txt}))
+    Formatter_filter_1048_(_env, node.FP.Get_exp2(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
 }
 
 // 958: decl @lune.@base.@Formatter.FormatterFilter.processExpNew
-func (self *Formatter_FormatterFilter) ProcessExpNew(node *Nodes_ExpNewNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessExpNew(_env *LnsEnv, node *Nodes_ExpNewNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    self.FP.Write("new ")
-    Formatter_filter_1048_(node.FP.Get_symbol(), self, opt.FP.NextOpt(&node.Nodes_Node))
-    self.FP.Write("(")
+    self.FP.Write(_env, "new ")
+    Formatter_filter_1048_(_env, node.FP.Get_symbol(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+    self.FP.Write(_env, "(")
     {
-        __exp := node.FP.Get_argList()
+        __exp := node.FP.Get_argList(_env)
         if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_ExpListNode)
-            Formatter_filter_1048_(&_exp.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
+            Formatter_filter_1048_(_env, &_exp.Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
         }
     }
-    self.FP.Write(")")
+    self.FP.Write(_env, ")")
 }
 
 // 970: decl @lune.@base.@Formatter.FormatterFilter.processExpRef
-func (self *Formatter_FormatterFilter) ProcessExpRef(node *Nodes_ExpRefNode,_opt LnsAny) {
-    self.FP.Write(node.FP.Get_symbolInfo().FP.Get_name())
+func (self *Formatter_FormatterFilter) ProcessExpRef(_env *LnsEnv, node *Nodes_ExpRefNode,_opt LnsAny) {
+    self.FP.Write(_env, node.FP.Get_symbolInfo(_env).FP.Get_name(_env))
 }
 
 // 975: decl @lune.@base.@Formatter.FormatterFilter.processExpRefItem
-func (self *Formatter_FormatterFilter) ProcessExpRefItem(node *Nodes_ExpRefItemNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessExpRefItem(_env *LnsEnv, node *Nodes_ExpRefItemNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    Formatter_filter_1048_(node.FP.Get_val(), self, opt.FP.NextOpt(&node.Nodes_Node))
-    if node.FP.Get_nilAccess(){
-        self.FP.Write("$")
+    Formatter_filter_1048_(_env, node.FP.Get_val(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+    if node.FP.Get_nilAccess(_env){
+        self.FP.Write(_env, "$")
     }
     {
-        __exp := node.FP.Get_index()
+        __exp := node.FP.Get_index(_env)
         if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_Node)
-            self.FP.Write("[ ")
-            Formatter_filter_1048_(_exp, self, opt.FP.NextOpt(&node.Nodes_Node))
-            self.FP.Write(" ]")
+            self.FP.Write(_env, "[ ")
+            Formatter_filter_1048_(_env, _exp, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+            self.FP.Write(_env, " ]")
         } else {
             {
-                __exp := node.FP.Get_symbol()
+                __exp := node.FP.Get_symbol(_env)
                 if !Lns_IsNil( __exp ) {
                     _exp := __exp.(string)
-                    self.FP.Write(".")
-                    self.FP.Write(_exp)
+                    self.FP.Write(_env, ".")
+                    self.FP.Write(_env, _exp)
                 }
             }
         }
@@ -1162,209 +1162,209 @@ func (self *Formatter_FormatterFilter) ProcessExpRefItem(node *Nodes_ExpRefItemN
 }
 
 // 994: decl @lune.@base.@Formatter.FormatterFilter.processRefField
-func (self *Formatter_FormatterFilter) ProcessRefField(node *Nodes_RefFieldNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessRefField(_env *LnsEnv, node *Nodes_RefFieldNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    Formatter_filter_1048_(node.FP.Get_prefix(), self, opt.FP.NextOpt(&node.Nodes_Node))
-    if node.FP.Get_nilAccess(){
-        self.FP.Write("$.")
+    Formatter_filter_1048_(_env, node.FP.Get_prefix(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+    if node.FP.Get_nilAccess(_env){
+        self.FP.Write(_env, "$.")
     } else { 
-        self.FP.Write(".")
+        self.FP.Write(_env, ".")
     }
-    self.FP.Write(node.FP.Get_field().Txt)
+    self.FP.Write(_env, node.FP.Get_field(_env).Txt)
 }
 
 // 1006: decl @lune.@base.@Formatter.FormatterFilter.processExpOmitEnum
-func (self *Formatter_FormatterFilter) ProcessExpOmitEnum(node *Nodes_ExpOmitEnumNode,_opt LnsAny) {
-    self.FP.Write(".")
-    self.FP.Write(node.FP.Get_valToken().Txt)
+func (self *Formatter_FormatterFilter) ProcessExpOmitEnum(_env *LnsEnv, node *Nodes_ExpOmitEnumNode,_opt LnsAny) {
+    self.FP.Write(_env, ".")
+    self.FP.Write(_env, node.FP.Get_valToken(_env).Txt)
 }
 
 // 1013: decl @lune.@base.@Formatter.FormatterFilter.processGetField
-func (self *Formatter_FormatterFilter) ProcessGetField(node *Nodes_GetFieldNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessGetField(_env *LnsEnv, node *Nodes_GetFieldNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    Formatter_filter_1048_(node.FP.Get_prefix(), self, opt.FP.NextOpt(&node.Nodes_Node))
-    if node.FP.Get_nilAccess(){
-        self.FP.Write("$")
+    Formatter_filter_1048_(_env, node.FP.Get_prefix(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+    if node.FP.Get_nilAccess(_env){
+        self.FP.Write(_env, "$")
     }
-    self.FP.Write(".$")
-    self.FP.Write(node.FP.Get_field().Txt)
+    self.FP.Write(_env, ".$")
+    self.FP.Write(_env, node.FP.Get_field(_env).Txt)
 }
 
 // 1024: decl @lune.@base.@Formatter.FormatterFilter.processReturn
-func (self *Formatter_FormatterFilter) ProcessReturn(node *Nodes_ReturnNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessReturn(_env *LnsEnv, node *Nodes_ReturnNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    self.FP.Write("return")
+    self.FP.Write(_env, "return")
     {
-        __exp := node.FP.Get_expList()
+        __exp := node.FP.Get_expList(_env)
         if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_ExpListNode)
-            self.FP.Write(" ")
-            Formatter_filter_1048_(&_exp.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
+            self.FP.Write(_env, " ")
+            Formatter_filter_1048_(_env, &_exp.Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
         }
     }
-    self.FP.Writeln(";")
+    self.FP.Writeln(_env, ";")
 }
 
 // 1036: decl @lune.@base.@Formatter.FormatterFilter.processProvide
-func (self *Formatter_FormatterFilter) ProcessProvide(node *Nodes_ProvideNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessProvide(_env *LnsEnv, node *Nodes_ProvideNode,_opt LnsAny) {
 }
 
 // 1042: decl @lune.@base.@Formatter.FormatterFilter.processAlias
-func (self *Formatter_FormatterFilter) ProcessAlias(node *Nodes_AliasNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessAlias(_env *LnsEnv, node *Nodes_AliasNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    self.FP.Write(Lns_getVM().String_format("alias %s = ", []LnsAny{node.FP.Get_newSymbol().FP.Get_name()}))
-    Formatter_filter_1048_(node.FP.Get_srcNode(), self, opt.FP.NextOpt(&node.Nodes_Node))
-    self.FP.Writeln(";")
+    self.FP.Write(_env, _env.LuaVM.String_format("alias %s = ", []LnsAny{node.FP.Get_newSymbol(_env).FP.Get_name(_env)}))
+    Formatter_filter_1048_(_env, node.FP.Get_srcNode(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+    self.FP.Writeln(_env, ";")
 }
 
 // 1050: decl @lune.@base.@Formatter.FormatterFilter.processTestCase
-func (self *Formatter_FormatterFilter) ProcessTestCase(node *Nodes_TestCaseNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessTestCase(_env *LnsEnv, node *Nodes_TestCaseNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    self.FP.Write(Lns_getVM().String_format("__test %s(%s) {", []LnsAny{node.FP.Get_name().Txt, node.FP.Get_ctrlName()}))
-    Formatter_filter_1048_(&node.FP.Get_block().Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
-    self.FP.Write("}")
+    self.FP.Write(_env, _env.LuaVM.String_format("__test %s(%s) {", []LnsAny{node.FP.Get_name(_env).Txt, node.FP.Get_ctrlName(_env)}))
+    Formatter_filter_1048_(_env, &node.FP.Get_block(_env).Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+    self.FP.Write(_env, "}")
 }
 
 // 1058: decl @lune.@base.@Formatter.FormatterFilter.processBoxing
-func (self *Formatter_FormatterFilter) ProcessBoxing(node *Nodes_BoxingNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessBoxing(_env *LnsEnv, node *Nodes_BoxingNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    Formatter_filter_1048_(node.FP.Get_src(), self, opt.FP.NextOpt(&node.Nodes_Node))
+    Formatter_filter_1048_(_env, node.FP.Get_src(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
 }
 
 // 1065: decl @lune.@base.@Formatter.FormatterFilter.processUnboxing
-func (self *Formatter_FormatterFilter) ProcessUnboxing(node *Nodes_UnboxingNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessUnboxing(_env *LnsEnv, node *Nodes_UnboxingNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    Formatter_filter_1048_(node.FP.Get_src(), self, opt.FP.NextOpt(&node.Nodes_Node))
+    Formatter_filter_1048_(_env, node.FP.Get_src(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
 }
 
 // 1072: decl @lune.@base.@Formatter.FormatterFilter.processLiteralList
-func (self *Formatter_FormatterFilter) ProcessLiteralList(node *Nodes_LiteralListNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessLiteralList(_env *LnsEnv, node *Nodes_LiteralListNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    self.FP.Write("[")
+    self.FP.Write(_env, "[")
     {
-        __exp := node.FP.Get_expList()
+        __exp := node.FP.Get_expList(_env)
         if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_ExpListNode)
-            self.FP.Write(" ")
-            Formatter_filter_1048_(&_exp.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
-            self.FP.Write(" ")
+            self.FP.Write(_env, " ")
+            Formatter_filter_1048_(_env, &_exp.Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+            self.FP.Write(_env, " ")
         }
     }
-    self.FP.Write("]")
+    self.FP.Write(_env, "]")
 }
 
 // 1085: decl @lune.@base.@Formatter.FormatterFilter.processLiteralSet
-func (self *Formatter_FormatterFilter) ProcessLiteralSet(node *Nodes_LiteralSetNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessLiteralSet(_env *LnsEnv, node *Nodes_LiteralSetNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    self.FP.Write("(@")
+    self.FP.Write(_env, "(@")
     {
-        __exp := node.FP.Get_expList()
+        __exp := node.FP.Get_expList(_env)
         if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_ExpListNode)
-            self.FP.Write(" ")
-            Formatter_filter_1048_(&_exp.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
-            self.FP.Write(" ")
+            self.FP.Write(_env, " ")
+            Formatter_filter_1048_(_env, &_exp.Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+            self.FP.Write(_env, " ")
         }
     }
-    self.FP.Write(")")
+    self.FP.Write(_env, ")")
 }
 
 // 1098: decl @lune.@base.@Formatter.FormatterFilter.processLiteralMap
-func (self *Formatter_FormatterFilter) ProcessLiteralMap(node *Nodes_LiteralMapNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessLiteralMap(_env *LnsEnv, node *Nodes_LiteralMapNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    self.FP.Write("{")
+    self.FP.Write(_env, "{")
     var pairList *LnsList
-    pairList = node.FP.Get_pairList()
+    pairList = node.FP.Get_pairList(_env)
     for _index, _pair := range( pairList.Items ) {
         index := _index + 1
         pair := _pair.(Nodes_PairItemDownCast).ToNodes_PairItem()
         if index > 1{
-            self.FP.Write(", ")
+            self.FP.Write(_env, ", ")
         }
-        Formatter_filter_1048_(pair.FP.Get_key(), self, opt.FP.NextOpt(&node.Nodes_Node))
-        self.FP.Write(":")
-        Formatter_filter_1048_(pair.FP.Get_val(), self, opt.FP.NextOpt(&node.Nodes_Node))
+        Formatter_filter_1048_(_env, pair.FP.Get_key(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+        self.FP.Write(_env, ":")
+        Formatter_filter_1048_(_env, pair.FP.Get_val(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
     }
-    self.FP.Write("}")
+    self.FP.Write(_env, "}")
 }
 
 // 1116: decl @lune.@base.@Formatter.FormatterFilter.processLiteralArray
-func (self *Formatter_FormatterFilter) ProcessLiteralArray(node *Nodes_LiteralArrayNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessLiteralArray(_env *LnsEnv, node *Nodes_LiteralArrayNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
     {
-        __exp := node.FP.Get_expList()
+        __exp := node.FP.Get_expList(_env)
         if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_ExpListNode)
-            Formatter_filter_1048_(&_exp.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
+            Formatter_filter_1048_(_env, &_exp.Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
         }
     }
 }
 
 // 1124: decl @lune.@base.@Formatter.FormatterFilter.processLiteralChar
-func (self *Formatter_FormatterFilter) ProcessLiteralChar(node *Nodes_LiteralCharNode,_opt LnsAny) {
-    self.FP.Write(Lns_getVM().String_format("?%s", []LnsAny{node.FP.Get_token().Txt}))
+func (self *Formatter_FormatterFilter) ProcessLiteralChar(_env *LnsEnv, node *Nodes_LiteralCharNode,_opt LnsAny) {
+    self.FP.Write(_env, _env.LuaVM.String_format("?%s", []LnsAny{node.FP.Get_token(_env).Txt}))
 }
 
 // 1129: decl @lune.@base.@Formatter.FormatterFilter.processLiteralInt
-func (self *Formatter_FormatterFilter) ProcessLiteralInt(node *Nodes_LiteralIntNode,_opt LnsAny) {
-    self.FP.Write(node.FP.Get_token().Txt)
+func (self *Formatter_FormatterFilter) ProcessLiteralInt(_env *LnsEnv, node *Nodes_LiteralIntNode,_opt LnsAny) {
+    self.FP.Write(_env, node.FP.Get_token(_env).Txt)
 }
 
 // 1134: decl @lune.@base.@Formatter.FormatterFilter.processLiteralReal
-func (self *Formatter_FormatterFilter) ProcessLiteralReal(node *Nodes_LiteralRealNode,_opt LnsAny) {
-    self.FP.Write(node.FP.Get_token().Txt)
+func (self *Formatter_FormatterFilter) ProcessLiteralReal(_env *LnsEnv, node *Nodes_LiteralRealNode,_opt LnsAny) {
+    self.FP.Write(_env, node.FP.Get_token(_env).Txt)
 }
 
 // 1139: decl @lune.@base.@Formatter.FormatterFilter.processLiteralString
-func (self *Formatter_FormatterFilter) ProcessLiteralString(node *Nodes_LiteralStringNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessLiteralString(_env *LnsEnv, node *Nodes_LiteralStringNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    self.FP.Write(node.FP.Get_token().Txt)
+    self.FP.Write(_env, node.FP.Get_token(_env).Txt)
     {
-        _expList := node.FP.Get_orgParam()
+        _expList := node.FP.Get_orgParam(_env)
         if !Lns_IsNil( _expList ) {
             expList := _expList.(*Nodes_ExpListNode)
-            self.FP.Write(" ( ")
-            Formatter_filter_1048_(&expList.Nodes_Node, self, opt.FP.NextOpt(&node.Nodes_Node))
-            self.FP.Write(" )")
+            self.FP.Write(_env, " ( ")
+            Formatter_filter_1048_(_env, &expList.Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
+            self.FP.Write(_env, " )")
         }
     }
 }
 
 // 1151: decl @lune.@base.@Formatter.FormatterFilter.processLiteralBool
-func (self *Formatter_FormatterFilter) ProcessLiteralBool(node *Nodes_LiteralBoolNode,_opt LnsAny) {
-    self.FP.Write(node.FP.Get_token().Txt)
+func (self *Formatter_FormatterFilter) ProcessLiteralBool(_env *LnsEnv, node *Nodes_LiteralBoolNode,_opt LnsAny) {
+    self.FP.Write(_env, node.FP.Get_token(_env).Txt)
 }
 
 // 1156: decl @lune.@base.@Formatter.FormatterFilter.processLiteralNil
-func (self *Formatter_FormatterFilter) ProcessLiteralNil(node *Nodes_LiteralNilNode,_opt LnsAny) {
-    self.FP.Write("nil")
+func (self *Formatter_FormatterFilter) ProcessLiteralNil(_env *LnsEnv, node *Nodes_LiteralNilNode,_opt LnsAny) {
+    self.FP.Write(_env, "nil")
 }
 
 // 1161: decl @lune.@base.@Formatter.FormatterFilter.processBreak
-func (self *Formatter_FormatterFilter) ProcessBreak(node *Nodes_BreakNode,_opt LnsAny) {
-    self.FP.Writeln("break;")
+func (self *Formatter_FormatterFilter) ProcessBreak(_env *LnsEnv, node *Nodes_BreakNode,_opt LnsAny) {
+    self.FP.Writeln(_env, "break;")
 }
 
 // 1167: decl @lune.@base.@Formatter.FormatterFilter.processLiteralSymbol
-func (self *Formatter_FormatterFilter) ProcessLiteralSymbol(node *Nodes_LiteralSymbolNode,_opt LnsAny) {
+func (self *Formatter_FormatterFilter) ProcessLiteralSymbol(_env *LnsEnv, node *Nodes_LiteralSymbolNode,_opt LnsAny) {
 }
 
 // 1173: decl @lune.@base.@Formatter.FormatterFilter.processAbbr
-func (self *Formatter_FormatterFilter) ProcessAbbr(node *Nodes_AbbrNode,_opt LnsAny) {
-    self.FP.Write("##")
+func (self *Formatter_FormatterFilter) ProcessAbbr(_env *LnsEnv, node *Nodes_AbbrNode,_opt LnsAny) {
+    self.FP.Write(_env, "##")
 }
 
 
-func Lns_Formatter_init() {
+func Lns_Formatter_init(_env *LnsEnv) {
     if init_Formatter { return }
     init_Formatter = true
     Formatter__mod__ = "@lune.@base.@Formatter"
     Lns_InitMod()
-    Lns_Ast_init()
-    Lns_Nodes_init()
-    Lns_Parser_init()
-    Lns_Types_init()
-    Lns_Util_init()
+    Lns_Ast_init(_env)
+    Lns_Nodes_init(_env)
+    Lns_Parser_init(_env)
+    Lns_Types_init(_env)
+    Lns_Util_init(_env)
 }
 func init() {
     init_Formatter = false

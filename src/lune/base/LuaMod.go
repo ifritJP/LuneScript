@@ -41,7 +41,7 @@ var LuaMod_CodeKindList_ = NewLnsList( []LnsAny {
   LuaMod_CodeKind__LazyRequire,
   LuaMod_CodeKind__Finalize,
 })
-func LuaMod_CodeKind_get__allList() *LnsList{
+func LuaMod_CodeKind_get__allList(_env *LnsEnv) *LnsList{
     return LuaMod_CodeKindList_
 }
 var LuaMod_CodeKindMap_ = map[LnsInt]string {
@@ -63,7 +63,7 @@ var LuaMod_CodeKindMap_ = map[LnsInt]string {
   LuaMod_CodeKind__Unpack: "CodeKind.Unpack",
   LuaMod_CodeKind__Unwrap: "CodeKind.Unwrap",
 }
-func LuaMod_CodeKind__from(arg1 LnsInt) LnsAny{
+func LuaMod_CodeKind__from(_env *LnsEnv, arg1 LnsInt) LnsAny{
     if _, ok := LuaMod_CodeKindMap_[arg1]; ok { return arg1 }
     return nil
 }
@@ -83,7 +83,7 @@ var LuaMod_CastKindList_ = NewLnsList( []LnsAny {
   LuaMod_CastKind__Str,
   LuaMod_CastKind__Class,
 })
-func LuaMod_CastKind_get__allList() *LnsList{
+func LuaMod_CastKind_get__allList(_env *LnsEnv) *LnsList{
     return LuaMod_CastKindList_
 }
 var LuaMod_CastKindMap_ = map[LnsInt]string {
@@ -92,7 +92,7 @@ var LuaMod_CastKindMap_ = map[LnsInt]string {
   LuaMod_CastKind__Real: "CastKind.Real",
   LuaMod_CastKind__Str: "CastKind.Str",
 }
-func LuaMod_CastKind__from(arg1 LnsInt) LnsAny{
+func LuaMod_CastKind__from(_env *LnsEnv, arg1 LnsInt) LnsAny{
     if _, ok := LuaMod_CastKindMap_[arg1]; ok { return arg1 }
     return nil
 }
@@ -102,11 +102,11 @@ func LuaMod_CastKind_getTxt(arg1 LnsInt) string {
 }
 var LuaMod_codeMap *LnsMap
 // 441: decl @lune.@base.@LuaMod.getCode
-func LuaMod_getCode(kind LnsInt) string {
+func LuaMod_getCode(_env *LnsEnv, kind LnsInt) string {
     return Lns_unwrap( LuaMod_codeMap.Get(kind)).(string)
 }
 
-func Lns_LuaMod_init() {
+func Lns_LuaMod_init(_env *LnsEnv) {
     if init_LuaMod { return }
     init_LuaMod = true
     LuaMod__mod__ = "@lune.@base.@LuaMod"
@@ -125,7 +125,7 @@ func Lns_LuaMod_init() {
     LuaMod_codeMap.Set(LuaMod_CodeKind__AlgeMapping,"function _lune._fromList( obj, list, memInfoList )\n   if type( list ) ~= \"table\" then\n      return false\n   end\n   for index, memInfo in ipairs( memInfoList ) do\n      local val, key = memInfo.func( list[ index ], memInfo.child )\n      if val == nil and not memInfo.nilable then\n         return false, key and string.format( \"%s[%s]\", memInfo.name, key) or memInfo.name\n      end\n      obj[ index ] = val\n   end\n   return true\nend\nfunction _lune._AlgeFrom( Alge, val )\n   local work = Alge._name2Val[ val[ 1 ] ]\n   if not work then\n      return nil\n   end\n   if #work == 1 then\n     return work\n   end\n   local paramList = {}\n   local result, mess = _lune._fromList( paramList, val[ 2 ], work[ 2 ] )\n   if not result then\n      return nil, mess\n   end\n   return { work[ 1 ], paramList }\nend\n")
     LuaMod_codeMap.Set(LuaMod_CodeKind__Alge,"function _lune.newAlge( kind, vals )\n   local memInfoList = kind[ 2 ]\n   if not memInfoList then\n      return kind\n   end\n   return { kind[ 1 ], vals }\nend\n")
     LuaMod_codeMap.Set(LuaMod_CodeKind__InstanceOf,"function _lune.__isInstanceOf( obj, class )\n   while obj do\n      local meta = getmetatable( obj )\n      if not meta then\n\t return false\n      end\n      local indexTbl = meta.__index\n      if indexTbl == class then\n\t return true\n      end\n      if meta.ifList then\n         for index, ifType in ipairs( meta.ifList ) do\n            if ifType == class then\n               return true\n            end\n            if _lune.__isInstanceOf( ifType, class ) then\n               return true\n            end\n         end\n      end\n      obj = indexTbl\n   end\n   return false\nend\n")
-    LuaMod_codeMap.Set(LuaMod_CodeKind__Cast,Lns_getVM().String_format("function _lune.__Cast( obj, kind, class )\n   if kind == %d then -- int\n      if type( obj ) ~= \"number\" then\n         return nil\n      end\n      if math.floor( obj ) ~= obj then\n         return nil\n      end\n      return obj\n   elseif kind == %d then -- real\n      if type( obj ) ~= \"number\" then\n         return nil\n      end\n      return obj\n   elseif kind == %d then -- str\n      if type( obj ) ~= \"string\" then\n         return nil\n      end\n      return obj\n   elseif kind == %d then -- class\n      return _lune.__isInstanceOf( obj, class ) and obj or nil\n   end\n   return nil\nend\n", []LnsAny{LuaMod_CastKind__Int, LuaMod_CastKind__Real, LuaMod_CastKind__Str, LuaMod_CastKind__Class}))
+    LuaMod_codeMap.Set(LuaMod_CodeKind__Cast,_env.LuaVM.String_format("function _lune.__Cast( obj, kind, class )\n   if kind == %d then -- int\n      if type( obj ) ~= \"number\" then\n         return nil\n      end\n      if math.floor( obj ) ~= obj then\n         return nil\n      end\n      return obj\n   elseif kind == %d then -- real\n      if type( obj ) ~= \"number\" then\n         return nil\n      end\n      return obj\n   elseif kind == %d then -- str\n      if type( obj ) ~= \"string\" then\n         return nil\n      end\n      return obj\n   elseif kind == %d then -- class\n      return _lune.__isInstanceOf( obj, class ) and obj or nil\n   end\n   return nil\nend\n", []LnsAny{LuaMod_CastKind__Int, LuaMod_CastKind__Real, LuaMod_CastKind__Str, LuaMod_CastKind__Class}))
     LuaMod_codeMap.Set(LuaMod_CodeKind__LazyLoad,"function _lune._lazyImport( modName )\n  local mod\n  return function()\n    if mod then\n       return mod\n    end\n    mod = _lune.loadModule( modName )\n    return mod\n  end\nend\n")
     LuaMod_codeMap.Set(LuaMod_CodeKind__LazyRequire,"function _lune._lazyRequire( modName )\n  local mod\n  return function()\n    if mod then\n       return mod\n    end\n    mod = require( modName )\n    return mod\n  end\nend\n")
     LuaMod_codeMap.Set(LuaMod_CodeKind__Finalize,"return _lune\n")

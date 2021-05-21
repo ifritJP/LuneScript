@@ -1,4 +1,4 @@
-// +build addEnvArg
+// +build !noEnvArg
 
 /*
 MIT License

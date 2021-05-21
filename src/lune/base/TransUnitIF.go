@@ -15,7 +15,7 @@ var TransUnitIF_DeclClassModeList_ = NewLnsList( []LnsAny {
   TransUnitIF_DeclClassMode__Module,
   TransUnitIF_DeclClassMode__LazyModule,
 })
-func TransUnitIF_DeclClassMode_get__allList() *LnsList{
+func TransUnitIF_DeclClassMode_get__allList(_env *LnsEnv) *LnsList{
     return TransUnitIF_DeclClassModeList_
 }
 var TransUnitIF_DeclClassModeMap_ = map[LnsInt]string {
@@ -24,7 +24,7 @@ var TransUnitIF_DeclClassModeMap_ = map[LnsInt]string {
   TransUnitIF_DeclClassMode__LazyModule: "DeclClassMode.LazyModule",
   TransUnitIF_DeclClassMode__Module: "DeclClassMode.Module",
 }
-func TransUnitIF_DeclClassMode__from(arg1 LnsInt) LnsAny{
+func TransUnitIF_DeclClassMode__from(_env *LnsEnv, arg1 LnsInt) LnsAny{
     if _, ok := TransUnitIF_DeclClassModeMap_[arg1]; ok { return arg1 }
     return nil
 }
@@ -34,8 +34,8 @@ func TransUnitIF_DeclClassMode_getTxt(arg1 LnsInt) string {
 }
 // declaration Class -- Modifier
 type TransUnitIF_ModifierMtd interface {
-    CreateModifier(arg1 *Ast_TypeInfo, arg2 LnsInt) *Ast_TypeInfo
-    Set_validMutControl(arg1 bool)
+    CreateModifier(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 LnsInt) *Ast_TypeInfo
+    Set_validMutControl(_env *LnsEnv, arg1 bool)
 }
 type TransUnitIF_Modifier struct {
     validMutControl bool
@@ -62,37 +62,37 @@ func TransUnitIF_ModifierDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *TransUnitIF_Modifier) ToTransUnitIF_Modifier() *TransUnitIF_Modifier {
     return obj
 }
-func NewTransUnitIF_Modifier(arg1 bool, arg2 *Ast_ProcessInfo) *TransUnitIF_Modifier {
+func NewTransUnitIF_Modifier(_env *LnsEnv, arg1 bool, arg2 *Ast_ProcessInfo) *TransUnitIF_Modifier {
     obj := &TransUnitIF_Modifier{}
     obj.FP = obj
-    obj.InitTransUnitIF_Modifier(arg1, arg2)
+    obj.InitTransUnitIF_Modifier(_env, arg1, arg2)
     return obj
 }
-func (self *TransUnitIF_Modifier) InitTransUnitIF_Modifier(arg1 bool, arg2 *Ast_ProcessInfo) {
+func (self *TransUnitIF_Modifier) InitTransUnitIF_Modifier(_env *LnsEnv, arg1 bool, arg2 *Ast_ProcessInfo) {
     self.validMutControl = arg1
     self.processInfo = arg2
 }
-func (self *TransUnitIF_Modifier) Set_validMutControl(arg1 bool){ self.validMutControl = arg1 }
+func (self *TransUnitIF_Modifier) Set_validMutControl(_env *LnsEnv, arg1 bool){ self.validMutControl = arg1 }
 // 42: decl @lune.@base.@TransUnitIF.Modifier.createModifier
-func (self *TransUnitIF_Modifier) CreateModifier(typeInfo *Ast_TypeInfo,mutMode LnsInt) *Ast_TypeInfo {
+func (self *TransUnitIF_Modifier) CreateModifier(_env *LnsEnv, typeInfo *Ast_TypeInfo,mutMode LnsInt) *Ast_TypeInfo {
     if Lns_op_not(self.validMutControl){
         return typeInfo
     }
-    return self.processInfo.FP.CreateModifier(typeInfo, mutMode)
+    return self.processInfo.FP.CreateModifier(_env, typeInfo, mutMode)
 }
 
 
 type TransUnitIF_TransUnitIF interface {
-        Error(arg1 string)
-        GetLatestPos() *Types_Position
-        Get_scope() *Ast_Scope
-        PopClass()
-        PopModule()
-        PopScope()
-        PushClass(arg1 *Ast_ProcessInfo, arg2 *Types_Position, arg3 LnsInt, arg4 bool, arg5 LnsAny, arg6 LnsAny, arg7 LnsAny, arg8 bool, arg9 string, arg10 bool, arg11 LnsInt, arg12 LnsAny) *Ast_TypeInfo
-        PushClassScope(arg1 *Types_Position, arg2 *Ast_TypeInfo)
-        PushModule(arg1 *Ast_ProcessInfo, arg2 bool, arg3 string, arg4 bool) *Ast_TypeInfo
-        PushScope(arg1 bool, arg2 LnsAny, arg3 LnsAny) *Ast_Scope
+        Error(_env *LnsEnv, arg1 string)
+        GetLatestPos(_env *LnsEnv) *Types_Position
+        Get_scope(_env *LnsEnv) *Ast_Scope
+        PopClass(_env *LnsEnv)
+        PopModule(_env *LnsEnv)
+        PopScope(_env *LnsEnv)
+        PushClass(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 *Types_Position, arg3 LnsInt, arg4 bool, arg5 LnsAny, arg6 LnsAny, arg7 LnsAny, arg8 bool, arg9 string, arg10 bool, arg11 LnsInt, arg12 LnsAny) *Ast_TypeInfo
+        PushClassScope(_env *LnsEnv, arg1 *Types_Position, arg2 *Ast_TypeInfo)
+        PushModule(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 bool, arg3 string, arg4 bool) *Ast_TypeInfo
+        PushScope(_env *LnsEnv, arg1 bool, arg2 LnsAny, arg3 LnsAny) *Ast_Scope
 }
 func Lns_cast2TransUnitIF_TransUnitIF( obj LnsAny ) LnsAny {
     if _, ok := obj.(TransUnitIF_TransUnitIF); ok { 
@@ -101,15 +101,15 @@ func Lns_cast2TransUnitIF_TransUnitIF( obj LnsAny ) LnsAny {
     return nil
 }
 
-func Lns_TransUnitIF_init() {
+func Lns_TransUnitIF_init(_env *LnsEnv) {
     if init_TransUnitIF { return }
     init_TransUnitIF = true
     TransUnitIF__mod__ = "@lune.@base.@TransUnitIF"
     Lns_InitMod()
-    Lns_Parser_init()
-    Lns_Ast_init()
-    Lns_Nodes_init()
-    Lns_Types_init()
+    Lns_Parser_init(_env)
+    Lns_Ast_init(_env)
+    Lns_Nodes_init(_env)
+    Lns_Types_init(_env)
 }
 func init() {
     init_TransUnitIF = false
