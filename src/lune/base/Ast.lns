@@ -714,6 +714,17 @@ pub class SerializeInfo {
    }
 }
 
+pub enum Async {
+   /**
+次の要件を満す。   
+- mutable な大域変数、あるいはクロージャの変数にアクセスしない。
+- allmut への更新がない。
+*/
+   Async,
+   /** Async の条件を満さない */
+   Noasync
+}
+
 pub abstract class TypeInfo {
 
    // この TypeInfo のスコープ。
@@ -723,6 +734,10 @@ pub abstract class TypeInfo {
    // この TypeInfo の typeId を生成した processInfo
    pri let allmut processInfo:ProcessInfo {pub&};
 
+   pub fn get_asyncMode() : Async {
+      return .Async;
+   }
+   
    local fn getProcessInfo(): ProcessInfo {
       return self.processInfo;
    }
@@ -3833,6 +3848,8 @@ pub class NormalTypeInfo extend TypeInfo {
    pri let moduleLang:Types.Lang!;
    pri let mut requirePath:str {pub,local};
 
+   pri let asyncMode: Async {pub};
+
    /**
    オーバーライド元の TypeInfo。
    */
@@ -3877,9 +3894,12 @@ pub class NormalTypeInfo extend TypeInfo {
       accessMode: AccessMode,
       txt: str, parentInfo: &TypeInfo!, kind: TypeInfoKind,
       itemTypeInfoList: &List<&TypeInfo>!, argTypeInfoList:&List<&TypeInfo>!,
-      retTypeInfoList: &List<&TypeInfo>!, mutMode: MutMode!, moduleLang:Types.Lang! )
+      retTypeInfoList: &List<&TypeInfo>!, mutMode: MutMode!,
+      moduleLang:Types.Lang!, asyncMode:Async )
    {
       super( scope, processInfo );
+
+      self.asyncMode = asyncMode;
 
       if type(kind) ~= "number" {
          Util.printStackTrace();
@@ -4091,12 +4111,14 @@ pub class NormalTypeInfo extend TypeInfo {
       let parentId = self.getParentId();
 
       let mut txt = ```{ skind=%d, parentId = %d, typeId = %d, baseId = %s, txt = '%s',
-        abstractFlag = %s, staticFlag = %s, accessMode = %d, kind = %d, mutMode = %d, ```
+  abstractFlag = %s, staticFlag = %s, accessMode = %d, kind = %d, mutMode = %d,
+  asyncMode = %d,     
+```
           ( SerializeKind.Normal,
             parentId.id, self.typeId.id,
             serializeInfo.serializeId( self.$baseId ), self.rawTxt,
             self.abstractFlag, self.staticFlag, self.accessMode,
-            self.kind, self.mutMode );
+            self.kind, self.mutMode, self.asyncMode );
       if! self.moduleLang {
          txt = txt .. 'moduleLang = %d, ' (_exp );
       }
@@ -4215,7 +4237,7 @@ NormalTypeInfo インスタンスを生成する。
       parentInfo: &TypeInfo, staticFlag: bool,
       kind: TypeInfoKind, txt: str, itemTypeInfo: List<&TypeInfo>,
       argTypeInfoList: List<&TypeInfo>, retTypeInfoList: List<&TypeInfo>,
-      mutMode: MutMode! ): &TypeInfo
+      mutMode: MutMode!, asyncMode:Async ): &TypeInfo
    {
       switch kind {
          case .Class, .ExtModule, .IF {
@@ -4231,7 +4253,7 @@ NormalTypeInfo インスタンスを生成する。
       let mut info = new NormalTypeInfo(
          processInfo, abstractFlag, scope, baseInfo, nil, false, true,
          staticFlag, accessMode, txt, parentInfo, kind,
-         itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode, nil );
+         itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode, nil, asyncMode );
       return info;
    }
 
@@ -4468,7 +4490,7 @@ local static fn NormalTypeInfo.createBuiltin(
    let mut info = new NormalTypeInfo(
       rootProcessInfo, false, scope, nil, ifList, false, false, false,
       AccessMode.Pub, typeTxt, headTypeInfo, 
-      kind, genTypeList, argTypeList, retTypeList, .Mut, nil );
+      kind, genTypeList, argTypeList, retTypeList, .Mut, nil, .Async );
 
    registBuiltin( idName, typeTxt, kind, info, headTypeInfo, scope ~= nil );
    return info;
@@ -4495,6 +4517,8 @@ pub let builtinTypeChar:&TypeInfo =
    NormalTypeInfo.createBuiltin( "char", "__char" , .Prim## );
 pub let builtinTypeMapping:&TypeInfo =
    NormalTypeInfo.createBuiltin( "Mapping", "Mapping" , .IF## );
+pub let builtinTypeRunner:&TypeInfo =
+   NormalTypeInfo.createBuiltin( "__Runner", "__Runner" , .IF## );
 pub let builtinTypeAsyncItem:&TypeInfo =
    NormalTypeInfo.createBuiltin( "__AsyncItem", "__AsyncItem" , .IF## );
 pub let builtinTypeString:&TypeInfo =
@@ -4780,7 +4804,7 @@ pub fn ProcessInfo.createSet(
          self, false, getScope( builtinTypeSet ), builtinTypeSet,
          nil, false, false, false, AccessMode.Pub,
          "Set", headTypeInfo, .Set, itemTypeInfo,
-         nil, nil, workMutMode, nil ); } );
+         nil, nil, workMutMode, nil, .Async ); } );
 }
 
 //pub static fn NormalTypeInfo.createList(
@@ -4793,7 +4817,7 @@ pub fn ProcessInfo.createList(
          self, false, getScope( builtinTypeList ), builtinTypeList,
          nil, false, false, false, AccessMode.Pub,
          "List", headTypeInfo, .List, itemTypeInfo,
-         nil, nil, workMutMode, nil ); } );
+         nil, nil, workMutMode, nil, .Async ); } );
 }
 
 //pub static fn NormalTypeInfo.createArray(
@@ -4806,7 +4830,7 @@ pub fn ProcessInfo.createArray(
          self, false, getScope( builtinTypeArray ), builtinTypeArray,
          nil, false, false, false, AccessMode.Pub,
          "Array", headTypeInfo, .Array, itemTypeInfo,
-         nil, nil, workMutMode, nil ); } );
+         nil, nil, workMutMode, nil, .Async ); } );
 }
 
 //pub static fn NormalTypeInfo.createMap(
@@ -4819,7 +4843,7 @@ pub fn ProcessInfo.createMap(
          self, false, getScope( builtinTypeMap ), builtinTypeMap,
          nil, false, false, false, AccessMode.Pub,
          "Map", headTypeInfo, .Map,
-         [ keyTypeInfo, valTypeInfo ], nil, nil, workMutMode, nil );
+         [ keyTypeInfo, valTypeInfo ], nil, nil, workMutMode, nil, .Async );
    });
 }
 
@@ -4869,7 +4893,7 @@ pub fn ProcessInfo.createClass(
       externalFlag, false, accessMode,
       className, parentInfo, 
       classFlag and TypeInfoKind.Class or TypeInfoKind.IF,
-      genTypeList, nil, nil, .Mut, nil );
+      genTypeList, nil, nil, .Mut, nil, .Async );
 
    foreach genType in genTypeList {
       genType.updateParentInfo( info );
@@ -4900,7 +4924,7 @@ pub fn ProcessInfo.createExtModule(
       self, false, scope, nil, nil, false,
       externalFlag, false, accessMode,
       className, parentInfo, 
-      .ExtModule, nil, nil, nil, .Mut, moduleLang );
+      .ExtModule, nil, nil, nil, .Mut, moduleLang, .Noasync );
    info.set_requirePath(requirePath);
    return info;
 }
@@ -4909,10 +4933,10 @@ pub fn ProcessInfo.createExtModule(
 //pub static fn NormalTypeInfo.createFunc(
 pub fn ProcessInfo.createFunc(
    abstractFlag: bool, builtinFlag:bool, scope: Scope!, kind: TypeInfoKind,
-   parentInfo: &TypeInfo, autoFlag: bool, externalFlag: bool,
-   staticFlag: bool, accessMode: AccessMode, funcName: str,
-   altTypeList: &List<&TypeInfo>!, argTypeList: &List<&TypeInfo>!,
-   retTypeInfoList: &List<&TypeInfo>!, mutable: bool! ) mut : NormalTypeInfo
+   parentInfo: &TypeInfo, autoFlag: bool, externalFlag: bool, staticFlag: bool,
+   accessMode: AccessMode, funcName: str, asyncMode:Async, altTypeList: &List<&TypeInfo>!,
+   argTypeList: &List<&TypeInfo>!, retTypeInfoList: &List<&TypeInfo>!,
+   mutable: bool! ) mut : NormalTypeInfo
 {
    if not builtinFlag and Parser.isLuaKeyword( funcName ) {
       Util.err( "This symbol can not use for a function. -- %s" (funcName) );
@@ -4923,7 +4947,7 @@ pub fn ProcessInfo.createFunc(
       accessMode, funcName, parentInfo, 
       kind, unwrap altTypeList default [], unwrap argTypeList default [],
       unwrap retTypeInfoList default [],
-      mutable and MutMode.Mut or MutMode.IMut, nil );
+      mutable and MutMode.Mut or MutMode.IMut, nil, asyncMode );
 
    when! altTypeList {
       foreach genType in altTypeList {
@@ -4943,8 +4967,8 @@ pub fn ProcessInfo.createAdvertiseMethodFrom(
    return self.createFunc(
       false, false, getScope( typeInfo ), typeInfo.$kind,
       classTypeInfo, true, false, false, typeInfo.$accessMode, typeInfo.$rawTxt,
-      typeInfo.$itemTypeInfoList,
-      typeInfo.$argTypeInfoList, typeInfo.$retTypeInfoList, TypeInfo.isMut( typeInfo ) );
+      typeInfo.$asyncMode, typeInfo.$itemTypeInfoList, typeInfo.$argTypeInfoList,
+      typeInfo.$retTypeInfoList, TypeInfo.isMut( typeInfo ) );
 }
 
 
@@ -5933,13 +5957,13 @@ pub fn ProcessInfo.createEnum(
    let mut getEnumName = self.createFunc(
       false, true, nil, .Method, info,
       true, externalFlag, false, AccessMode.Pub,
-      "get__txt", nil, nil, [ builtinTypeString ], false );
+      "get__txt", .Async, nil, nil, [ builtinTypeString ], false );
    scope.addMethod( self, nil, getEnumName, AccessMode.Pub, false, false );
 
    let mut fromVal = self.createFunc(
       false, true, nil, .Func, info,
       true, externalFlag, true, AccessMode.Pub,
-      "_from", nil, [ self.createModifier( valTypeInfo, .IMut ) ],
+      "_from", .Async, nil, [ self.createModifier( valTypeInfo, .IMut ) ],
       [ info.$nilableTypeInfo ], false );
    scope.addMethod( self, nil, fromVal, AccessMode.Pub, true, false );
 
@@ -5947,7 +5971,7 @@ pub fn ProcessInfo.createEnum(
    let mut allList = self.createFunc(
       false, true, nil, .Func, info,
       true, externalFlag, true, AccessMode.Pub,
-      "get__allList", nil, nil,
+      "get__allList", .Async, nil, nil,
       [ self.createModifier( allListType, .IMut ) ], false );
    scope.addMethod( self, nil, allList, AccessMode.Pub, true, false );
 
@@ -6000,7 +6024,7 @@ pub fn ProcessInfo.createAlge(
    let mut getAlgeName = self.createFunc(
       false, true, nil, .Method, info,
       true, externalFlag, false, AccessMode.Pub,
-      "get__txt", nil, nil, [ builtinTypeString ], false );
+      "get__txt", .Async, nil, nil, [ builtinTypeString ], false );
    scope.addMethod( self, nil, getAlgeName, AccessMode.Pub, false, false );
 
    return info;
@@ -6978,7 +7002,7 @@ pub override fn NormalTypeInfo.applyGeneric(
             return processInfo.createFunc(
                self.abstractFlag, false, getScope( self ), self.kind,
                self.parentInfo, self.autoFlag, self.externalFlag,
-               self.staticFlag, self.accessMode, self.rawTxt,
+               self.staticFlag, self.accessMode, self.rawTxt, self.asyncMode,
                itemTypeInfoList, argTypeInfoList, retTypeInfoList, 
                TypeInfo.isMut( self ) );
          }

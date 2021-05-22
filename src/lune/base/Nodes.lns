@@ -79,10 +79,10 @@ pub class Filter<T>  {
       self.optStack = [];
    }
 
-   local fn pushOpt( opt:T ) mut {
+   pri fn pushOpt( opt:T ) mut {
       self.optStack.insert( opt );
    }
-   local fn popOpt( opt:T ) mut {
+   pri fn popOpt( opt:T ) mut {
       self.optStack.remove(##);
    }
 

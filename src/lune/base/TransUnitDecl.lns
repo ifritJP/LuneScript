@@ -789,7 +789,7 @@ fn TransUnit.analyzeDeclMacroSub(
 
       let funcType = self.processInfo.createFunc(
          false, true, nil, .Func, Ast.headTypeInfo, false, true,
-         true, .Global, "_lnsLoad",
+         true, .Global, "_lnsLoad", .Async,
          nil, [ Ast.builtinTypeString, Ast.builtinTypeString ],
          [ Ast.builtinTypeStem ], false );
       macroScope.addLocalVar(
@@ -852,7 +852,7 @@ fn TransUnit.analyzeDeclMacroSub(
 
    let typeInfo = self.processInfo.createFunc(
       false, false, macroScope, .Macro, parentType, false, false, true,
-      accessMode, nameToken.txt, nil, argTypeList, retTypeList## );
+      accessMode, nameToken.txt, .Async, nil, argTypeList, retTypeList## );
    //self.scope.addLocalVar( false, false, nameToken.txt, typeInfo, false );
    // self.scope.addMacro( typeInfo, accessMode );
 
@@ -1565,7 +1565,7 @@ mut : Nodes.DeclFormNode
    let formType = self.processInfo.createFunc(
       false, false, nil, .FormFunc,
       self.getCurrentNamespaceTypeInfo(), false, false,
-      true, accessMode, name.txt, nil, argTypeInfoList, retTypeList, false );
+      true, accessMode, name.txt, .Noasync, nil, argTypeInfoList, retTypeList, false );
 
    let formSymbol, shadowing = self.scope.addForm(
       self.processInfo, name.pos, formType, accessMode );
@@ -1895,7 +1895,7 @@ fn TransUnit.addDefaultConstructor(
    let mut ctorScope = self.pushScope( false ## );
    let initTypeInfo = self.processInfo.createFunc(
       false, false, ctorScope, .Method, classTypeInfo,
-      true, false, false, .Pub, "__init", nil, argTypeList, [] ## );
+      true, false, false, .Pub, "__init", .Noasync, nil, argTypeList, [] ## );
    if oldFlag {
       // oldFlag の場合は スコープに "" のシンボルを追加する
       ctorScope.addVar( self.processInfo, .Pri, "", nil, Ast.headTypeInfo, .IMut, true);
@@ -1997,7 +1997,7 @@ fn TransUnit.addAccessor(
          let retTypeInfo = self.processInfo.createFunc(
             false, false, self.pushScope( false ## ),
             typeKind, classTypeInfo, false, false, memberNode.$staticFlag, accessMode,
-            getterName, nil, [], [ getterMemberType ] ## );
+            getterName, .Noasync, nil, [], [ getterMemberType ] ## );
          self.popScope();
 
          classScope.addMethod(
@@ -2027,7 +2027,7 @@ fn TransUnit.addAccessor(
             self.processInfo.createFunc(
                false, false, self.pushScope( false ## ),
                typeKind, classTypeInfo, false, false, memberNode.$staticFlag, accessMode,
-               setterName, nil, [ memberType ], nil, mutable ),
+               setterName, .Noasync, nil, [ memberType ], nil, mutable ),
             accessMode, memberNode.$staticFlag, true );
          self.popScope();
          methodNameSet.add( setterName );
@@ -2206,7 +2206,7 @@ nil の場合、メンバの宣言位置。
       let ininame = "___init";
       let funcTypeInfo = self.processInfo.createFunc(
          false, false, initBlockScope, .Func, classTypeInfo,
-         false, false, true, .Pri, ininame, nil, nil, nil, false );
+         false, false, true, .Pri, ininame, .Noasync, nil, nil, nil, false );
       let funcSym, shadowing = parentScope.addFunc(
          self.processInfo, token.$pos, funcTypeInfo, .Pri, true, true );
       
@@ -2574,7 +2574,7 @@ fn TransUnit.analyzeDeclClass(
       // _toMap の追加
       let toMapFuncTypeInfo = self.processInfo.createFunc(
          false, false, nil, .Method, classTypeInfo,
-         true, false, false, .Pub, "_toMap", nil, [], [ mapType ], false );
+         true, false, false, .Pub, "_toMap", .Async, nil, [], [ mapType ], false );
       classScope.addMethod(
          self.processInfo, nil, toMapFuncTypeInfo, .Pub, false, false );
    }
@@ -2665,7 +2665,7 @@ fn TransUnit.analyzeDeclClass(
       // _fromMap の追加
       let fromMapFuncTypeInfo = self.processInfo.createFunc(
          false, false, nil, .Func, classTypeInfo,
-         true, false, true, .Pub, "_fromMap",
+         true, false, true, .Pub, "_fromMap", .Async,
          nil, [ mapType.$nilableTypeInfo ],
          [ classTypeInfo.$nilableTypeInfo, Ast.builtinTypeString.$nilableTypeInfo ],
          true );
@@ -2675,7 +2675,7 @@ fn TransUnit.analyzeDeclClass(
       // _fromStem の追加
       let fromStemFuncTypeInfo = self.processInfo.createFunc(
          false, false, nil, .Func, classTypeInfo,
-         true, false, true, .Pub, "_fromStem",
+         true, false, true, .Pub, "_fromStem", .Async,
          nil, [ Ast.builtinTypeStem_ ],
          [ classTypeInfo.$nilableTypeInfo, Ast.builtinTypeString.$nilableTypeInfo ],
          true );
@@ -2698,7 +2698,7 @@ fn TransUnit.analyzeDeclClass(
          builtinFunc.__pipe_, [classTypeInfo], self.moduleType );
       let createPipeFuncTypeInfo = self.processInfo.createFunc(
          false, false, nil, .Func, classTypeInfo,
-         true, false, true, .Pub, "_createPipe",
+         true, false, true, .Pub, "_createPipe", .Async, 
          nil, [ Ast.builtinTypeInt ], [ pipeType.$nilableTypeInfo ], true );
       classScope.addMethod(
          self.processInfo, nil, createPipeFuncTypeInfo, .Pub, true, false );
@@ -2958,9 +2958,18 @@ fn TransUnit.analyzeDeclFunc(
    token = self.getToken(##);
 
    let mut mutable = false;
-   if token.txt == "mut" {
-      token = self.getToken(##);
-      mutable = true;
+   let mut asyncMode:Ast.Async! = nil;
+
+   while true {
+      if token.txt == "mut" {
+         mutable = true;
+         token = self.getToken(##);
+      } elseif token.txt == "async" {
+         asyncMode = .Async;
+         token = self.getToken(##);
+      } else {
+         break;
+      }
    }
 
    let mut pubToExtFlag = Ast.isPubToExternal( accessMode );
@@ -3037,9 +3046,9 @@ fn TransUnit.analyzeDeclFunc(
    {
       let mut workTypeInfo = self.processInfo.createFunc(
          abstractFlag, false, funcBodyScope,
-         typeKind, namespaceInfo,
-         false, false, staticFlag, accessMode,
-         funcName, altTypeList, argTypeList, retTypeInfoList, mutable );
+         typeKind, namespaceInfo, false, false, staticFlag, accessMode,
+         funcName, unwrap asyncMode default Ast.Async.Noasync,
+         altTypeList, argTypeList, retTypeInfoList, mutable );
 
       when! name {
          let workSym = self.processAddFunc(
@@ -3735,7 +3744,8 @@ fn TransUnit.analyzeDeclVar(
                      typeInfo.$abstractFlag, false, typeInfo.$scope,
                      typeInfo.$kind, typeInfo.$parentInfo,
                      false, false, typeInfo.$staticFlag, accessMode,
-                     letVarInfo.varName.txt, typeInfo.$itemTypeInfoList,
+                     letVarInfo.varName.txt, typeInfo.$asyncMode,
+                     typeInfo.$itemTypeInfoList,
                      typeInfo.$argTypeInfoList, typeInfo.$retTypeInfoList,
                      Ast.TypeInfo.isMut( typeInfo ) );
                   let funcSym = self.processAddFunc(

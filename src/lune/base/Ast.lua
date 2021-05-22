@@ -1302,7 +1302,41 @@ function SerializeInfo:get_validChildrenMap()
 end
 
 
+local Async = {}
+_moduleObj.Async = Async
+Async._val2NameMap = {}
+function Async:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "Async.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+function Async._from( val )
+   if Async._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+    
+Async.__allList = {}
+function Async.get__allList()
+   return Async.__allList
+end
+
+Async.Async = 0
+Async._val2NameMap[0] = 'Async'
+Async.__allList[1] = Async.Async
+Async.Noasync = 1
+Async._val2NameMap[1] = 'Noasync'
+Async.__allList[2] = Async.Noasync
+
+
 _moduleObj.TypeInfo = TypeInfo
+function TypeInfo:get_asyncMode(  )
+
+   return Async.Async
+end
 function TypeInfo:getProcessInfo(  )
 
    return self.processInfo
@@ -2293,6 +2327,10 @@ function NilableTypeInfo:get_argTypeInfoList( ... )
    return self.nonnilableType:get_argTypeInfoList( ... )
 end
 
+function NilableTypeInfo:get_asyncMode( ... )
+   return self.nonnilableType:get_asyncMode( ... )
+end
+
 function NilableTypeInfo:get_autoFlag( ... )
    return self.nonnilableType:get_autoFlag( ... )
 end
@@ -2523,6 +2561,10 @@ end
 
 function AliasTypeInfo:get_argTypeInfoList( ... )
    return self.aliasSrcTypeInfo:get_argTypeInfoList( ... )
+end
+
+function AliasTypeInfo:get_asyncMode( ... )
+   return self.aliasSrcTypeInfo:get_asyncMode( ... )
 end
 
 function AliasTypeInfo:get_autoFlag( ... )
@@ -4079,6 +4121,10 @@ function BoxTypeInfo:get_argTypeInfoList( ... )
    return self.boxingType:get_argTypeInfoList( ... )
 end
 
+function BoxTypeInfo:get_asyncMode( ... )
+   return self.boxingType:get_asyncMode( ... )
+end
+
 function BoxTypeInfo:get_autoFlag( ... )
    return self.boxingType:get_autoFlag( ... )
 end
@@ -4439,6 +4485,10 @@ function GenericTypeInfo:get_argTypeInfoList( ... )
    return self.genSrcTypeInfo:get_argTypeInfoList( ... )
 end
 
+function GenericTypeInfo:get_asyncMode( ... )
+   return self.genSrcTypeInfo:get_asyncMode( ... )
+end
+
 function GenericTypeInfo:get_autoFlag( ... )
    return self.genSrcTypeInfo:get_autoFlag( ... )
 end
@@ -4691,6 +4741,10 @@ end
 
 function ModifierTypeInfo:get_argTypeInfoList( ... )
    return self.srcTypeInfo:get_argTypeInfoList( ... )
+end
+
+function ModifierTypeInfo:get_asyncMode( ... )
+   return self.srcTypeInfo:get_asyncMode( ... )
 end
 
 function ModifierTypeInfo:get_autoFlag( ... )
@@ -5319,15 +5373,17 @@ function NormalTypeInfo:switchScopeTo( scope )
 
    self:switchScope( scope )
 end
-function NormalTypeInfo.new( processInfo, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode, moduleLang )
+function NormalTypeInfo.new( processInfo, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode, moduleLang, asyncMode )
    local obj = {}
    NormalTypeInfo.setmeta( obj )
-   if obj.__init then obj:__init( processInfo, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode, moduleLang ); end
+   if obj.__init then obj:__init( processInfo, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode, moduleLang, asyncMode ); end
    return obj
 end
-function NormalTypeInfo:__init(processInfo, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode, moduleLang) 
+function NormalTypeInfo:__init(processInfo, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode, moduleLang, asyncMode) 
    TypeInfo.__init( self,scope, processInfo)
    
+   
+   self.asyncMode = asyncMode
    
    if type( kind ) ~= "number" then
       Util.printStackTrace(  )
@@ -5557,7 +5613,9 @@ function NormalTypeInfo:serialize( stream, serializeInfo )
    local parentId = self:getParentId(  )
    
    local txt = string.format( [==[{ skind=%d, parentId = %d, typeId = %d, baseId = %s, txt = '%s',
-        abstractFlag = %s, staticFlag = %s, accessMode = %d, kind = %d, mutMode = %d, ]==], SerializeKind.Normal, parentId.id, self.typeId.id, serializeInfo:serializeId( self:get_baseId() ), self.rawTxt, self.abstractFlag, self.staticFlag, self.accessMode, self.kind, self.mutMode)
+  abstractFlag = %s, staticFlag = %s, accessMode = %d, kind = %d, mutMode = %d,
+  asyncMode = %d,     
+]==], SerializeKind.Normal, parentId.id, self.typeId.id, serializeInfo:serializeId( self:get_baseId() ), self.rawTxt, self.abstractFlag, self.staticFlag, self.accessMode, self.kind, self.mutMode, self.asyncMode)
    do
       local _exp = self.moduleLang
       if _exp ~= nil then
@@ -5656,7 +5714,7 @@ function NormalTypeInfo:equals( processInfo, typeInfo, alt2type, checkModifer )
 
    return self:equalsSub( processInfo, typeInfo, alt2type, checkModifer )
 end
-function NormalTypeInfo.create( processInfo, accessMode, abstractFlag, scope, baseInfo, parentInfo, staticFlag, kind, txt, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode )
+function NormalTypeInfo.create( processInfo, accessMode, abstractFlag, scope, baseInfo, parentInfo, staticFlag, kind, txt, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode, asyncMode )
 
    do
       local _switchExp = kind
@@ -5676,7 +5734,7 @@ function NormalTypeInfo.create( processInfo, accessMode, abstractFlag, scope, ba
       Util.err( string.format( "not found symbol -- %s", txt) )
    end
    
-   local info = NormalTypeInfo.new(processInfo, abstractFlag, scope, baseInfo, nil, false, true, staticFlag, accessMode, txt, parentInfo, kind, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode, nil)
+   local info = NormalTypeInfo.new(processInfo, abstractFlag, scope, baseInfo, nil, false, true, staticFlag, accessMode, txt, parentInfo, kind, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode, nil, asyncMode)
    return info
 end
 function NormalTypeInfo.setmeta( obj )
@@ -5738,6 +5796,9 @@ function NormalTypeInfo:get_requirePath()
 end
 function NormalTypeInfo:set_requirePath( requirePath )
    self.requirePath = requirePath
+end
+function NormalTypeInfo:get_asyncMode()
+   return self.asyncMode
 end
 
 
@@ -6004,7 +6065,7 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD, ifList )
       end
    end
    
-   local info = NormalTypeInfo.new(rootProcessInfo, false, scope, nil, ifList, false, false, false, AccessMode.Pub, typeTxt, _moduleObj.headTypeInfo, kind, genTypeList, argTypeList, retTypeList, MutMode.Mut, nil)
+   local info = NormalTypeInfo.new(rootProcessInfo, false, scope, nil, ifList, false, false, false, AccessMode.Pub, typeTxt, _moduleObj.headTypeInfo, kind, genTypeList, argTypeList, retTypeList, MutMode.Mut, nil, Async.Async)
    
    registBuiltin( idName, typeTxt, kind, info, _moduleObj.headTypeInfo, scope ~= nil )
    return info
@@ -6041,6 +6102,9 @@ _moduleObj.builtinTypeChar = builtinTypeChar
 
 local builtinTypeMapping = NormalTypeInfo.createBuiltin( "Mapping", "Mapping", TypeInfoKind.IF )
 _moduleObj.builtinTypeMapping = builtinTypeMapping
+
+local builtinTypeRunner = NormalTypeInfo.createBuiltin( "__Runner", "__Runner", TypeInfoKind.IF )
+_moduleObj.builtinTypeRunner = builtinTypeRunner
 
 local builtinTypeAsyncItem = NormalTypeInfo.createBuiltin( "__AsyncItem", "__AsyncItem", TypeInfoKind.IF )
 _moduleObj.builtinTypeAsyncItem = builtinTypeAsyncItem
@@ -6397,7 +6461,7 @@ function ProcessInfo:createSet( accessMode, parentInfo, itemTypeInfo, mutMode )
    
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeSet ), _moduleObj.builtinTypeSet, nil, false, false, false, AccessMode.Pub, "Set", _moduleObj.headTypeInfo, TypeInfoKind.Set, itemTypeInfo, nil, nil, workMutMode, nil)
+      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeSet ), _moduleObj.builtinTypeSet, nil, false, false, false, AccessMode.Pub, "Set", _moduleObj.headTypeInfo, TypeInfoKind.Set, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
    end
    
    
@@ -6425,7 +6489,7 @@ function ProcessInfo:createList( accessMode, parentInfo, itemTypeInfo, mutMode )
    
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeList ), _moduleObj.builtinTypeList, nil, false, false, false, AccessMode.Pub, "List", _moduleObj.headTypeInfo, TypeInfoKind.List, itemTypeInfo, nil, nil, workMutMode, nil)
+      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeList ), _moduleObj.builtinTypeList, nil, false, false, false, AccessMode.Pub, "List", _moduleObj.headTypeInfo, TypeInfoKind.List, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
    end
    
    
@@ -6453,7 +6517,7 @@ function ProcessInfo:createArray( accessMode, parentInfo, itemTypeInfo, mutMode 
    
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeArray ), _moduleObj.builtinTypeArray, nil, false, false, false, AccessMode.Pub, "Array", _moduleObj.headTypeInfo, TypeInfoKind.Array, itemTypeInfo, nil, nil, workMutMode, nil)
+      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeArray ), _moduleObj.builtinTypeArray, nil, false, false, false, AccessMode.Pub, "Array", _moduleObj.headTypeInfo, TypeInfoKind.Array, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
    end
    
    
@@ -6481,7 +6545,7 @@ function ProcessInfo:createMap( accessMode, parentInfo, keyTypeInfo, valTypeInfo
    
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeMap ), _moduleObj.builtinTypeMap, nil, false, false, false, AccessMode.Pub, "Map", _moduleObj.headTypeInfo, TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, workMutMode, nil)
+      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeMap ), _moduleObj.builtinTypeMap, nil, false, false, false, AccessMode.Pub, "Map", _moduleObj.headTypeInfo, TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, workMutMode, nil, Async.Async)
    end
    
    
@@ -6532,7 +6596,7 @@ function ProcessInfo:createClass( classFlag, abstractFlag, scope, baseInfo, inte
    end
    
    
-   local info = NormalTypeInfo.new(self, abstractFlag, scope, baseInfo, interfaceList, false, externalFlag, false, accessMode, className, parentInfo, classFlag and TypeInfoKind.Class or TypeInfoKind.IF, genTypeList, nil, nil, MutMode.Mut, nil)
+   local info = NormalTypeInfo.new(self, abstractFlag, scope, baseInfo, interfaceList, false, externalFlag, false, accessMode, className, parentInfo, classFlag and TypeInfoKind.Class or TypeInfoKind.IF, genTypeList, nil, nil, MutMode.Mut, nil, Async.Async)
    
    for __index, genType in ipairs( genTypeList ) do
       genType:updateParentInfo( info )
@@ -6558,20 +6622,20 @@ function ProcessInfo:createExtModule( scope, parentInfo, externalFlag, accessMod
    end
    
    
-   local info = NormalTypeInfo.new(self, false, scope, nil, nil, false, externalFlag, false, accessMode, className, parentInfo, TypeInfoKind.ExtModule, nil, nil, nil, MutMode.Mut, moduleLang)
+   local info = NormalTypeInfo.new(self, false, scope, nil, nil, false, externalFlag, false, accessMode, className, parentInfo, TypeInfoKind.ExtModule, nil, nil, nil, MutMode.Mut, moduleLang, Async.Noasync)
    info:set_requirePath( requirePath )
    return info
 end
 
 
-function ProcessInfo:createFunc( abstractFlag, builtinFlag, scope, kind, parentInfo, autoFlag, externalFlag, staticFlag, accessMode, funcName, altTypeList, argTypeList, retTypeInfoList, mutable )
+function ProcessInfo:createFunc( abstractFlag, builtinFlag, scope, kind, parentInfo, autoFlag, externalFlag, staticFlag, accessMode, funcName, asyncMode, altTypeList, argTypeList, retTypeInfoList, mutable )
 
    if not builtinFlag and Parser.isLuaKeyword( funcName ) then
       Util.err( string.format( "This symbol can not use for a function. -- %s", funcName) )
    end
    
    
-   local info = NormalTypeInfo.new(self, abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, kind, _lune.unwrapDefault( altTypeList, {}), _lune.unwrapDefault( argTypeList, {}), _lune.unwrapDefault( retTypeInfoList, {}), mutable and MutMode.Mut or MutMode.IMut, nil)
+   local info = NormalTypeInfo.new(self, abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, kind, _lune.unwrapDefault( altTypeList, {}), _lune.unwrapDefault( argTypeList, {}), _lune.unwrapDefault( retTypeInfoList, {}), mutable and MutMode.Mut or MutMode.IMut, nil, asyncMode)
    
    if altTypeList ~= nil then
       for __index, genType in ipairs( altTypeList ) do
@@ -6592,7 +6656,7 @@ end
 
 function ProcessInfo:createAdvertiseMethodFrom( classTypeInfo, typeInfo )
 
-   return self:createFunc( false, false, getScope( typeInfo ), typeInfo:get_kind(), classTypeInfo, true, false, false, typeInfo:get_accessMode(), typeInfo:get_rawTxt(), typeInfo:get_itemTypeInfoList(), typeInfo:get_argTypeInfoList(), typeInfo:get_retTypeInfoList(), TypeInfo.isMut( typeInfo ) )
+   return self:createFunc( false, false, getScope( typeInfo ), typeInfo:get_kind(), classTypeInfo, true, false, false, typeInfo:get_accessMode(), typeInfo:get_rawTxt(), typeInfo:get_asyncMode(), typeInfo:get_itemTypeInfoList(), typeInfo:get_argTypeInfoList(), typeInfo:get_retTypeInfoList(), TypeInfo.isMut( typeInfo ) )
 end
 
 
@@ -7541,6 +7605,10 @@ function ExtTypeInfo:get_argTypeInfoList( ... )
    return self.extedType:get_argTypeInfoList( ... )
 end
 
+function ExtTypeInfo:get_asyncMode( ... )
+   return self.extedType:get_asyncMode( ... )
+end
+
 function ExtTypeInfo:get_autoFlag( ... )
    return self.extedType:get_autoFlag( ... )
 end
@@ -7860,6 +7928,10 @@ function AndExpTypeInfo:get_argTypeInfoList( ... )
    return self.result:get_argTypeInfoList( ... )
 end
 
+function AndExpTypeInfo:get_asyncMode( ... )
+   return self.result:get_asyncMode( ... )
+end
+
 function AndExpTypeInfo:get_autoFlag( ... )
    return self.result:get_autoFlag( ... )
 end
@@ -8010,14 +8082,14 @@ function ProcessInfo:createEnum( scope, parentInfo, externalFlag, accessMode, en
    
    local info = EnumTypeInfo.new(self, scope, externalFlag, accessMode, enumName, parentInfo, valTypeInfo)
    
-   local getEnumName = self:createFunc( false, true, nil, TypeInfoKind.Method, info, true, externalFlag, false, AccessMode.Pub, "get__txt", nil, nil, {_moduleObj.builtinTypeString}, false )
+   local getEnumName = self:createFunc( false, true, nil, TypeInfoKind.Method, info, true, externalFlag, false, AccessMode.Pub, "get__txt", Async.Async, nil, nil, {_moduleObj.builtinTypeString}, false )
    scope:addMethod( self, nil, getEnumName, AccessMode.Pub, false, false )
    
-   local fromVal = self:createFunc( false, true, nil, TypeInfoKind.Func, info, true, externalFlag, true, AccessMode.Pub, "_from", nil, {self:createModifier( valTypeInfo, MutMode.IMut )}, {info:get_nilableTypeInfo()}, false )
+   local fromVal = self:createFunc( false, true, nil, TypeInfoKind.Func, info, true, externalFlag, true, AccessMode.Pub, "_from", Async.Async, nil, {self:createModifier( valTypeInfo, MutMode.IMut )}, {info:get_nilableTypeInfo()}, false )
    scope:addMethod( self, nil, fromVal, AccessMode.Pub, true, false )
    
    local allListType = self:createList( AccessMode.Pub, info, {info}, MutMode.IMut )
-   local allList = self:createFunc( false, true, nil, TypeInfoKind.Func, info, true, externalFlag, true, AccessMode.Pub, "get__allList", nil, nil, {self:createModifier( allListType, MutMode.IMut )}, false )
+   local allList = self:createFunc( false, true, nil, TypeInfoKind.Func, info, true, externalFlag, true, AccessMode.Pub, "get__allList", Async.Async, nil, nil, {self:createModifier( allListType, MutMode.IMut )}, false )
    scope:addMethod( self, nil, allList, AccessMode.Pub, true, false )
    
    return info
@@ -8076,7 +8148,7 @@ function ProcessInfo:createAlge( scope, parentInfo, externalFlag, accessMode, al
    
    local info = AlgeTypeInfo.new(self, scope, externalFlag, accessMode, algeName, parentInfo)
    
-   local getAlgeName = self:createFunc( false, true, nil, TypeInfoKind.Method, info, true, externalFlag, false, AccessMode.Pub, "get__txt", nil, nil, {_moduleObj.builtinTypeString}, false )
+   local getAlgeName = self:createFunc( false, true, nil, TypeInfoKind.Method, info, true, externalFlag, false, AccessMode.Pub, "get__txt", Async.Async, nil, nil, {_moduleObj.builtinTypeString}, false )
    scope:addMethod( self, nil, getAlgeName, AccessMode.Pub, false, false )
    
    return info
@@ -8548,7 +8620,7 @@ end
 
 function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalType, alt2type )
 
-   local topLine = 6474
+   local topLine = 6498
    
    
    if dest ~= dest:get_aliasSrc() then
@@ -8562,7 +8634,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
       end
       
       if other:equals( processInfo, _moduleObj.builtinTypeAbbr ) then
-         return false, string.format( "(err:%d)", 6489 - topLine)
+         return false, string.format( "(err:%d)", 6513 - topLine)
          
       end
       
@@ -8597,13 +8669,13 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             do
                local _switchExp = otherSrc
                if _switchExp == _moduleObj.builtinTypeAbbr or _switchExp == _moduleObj.builtinTypeAbbrNone then
-                  return false, string.format( "(err:%d)", 6517 - topLine)
+                  return false, string.format( "(err:%d)", 6541 - topLine)
                   
                end
             end
             
             if otherSrc:get_kind() == TypeInfoKind.Func then
-               return false, string.format( "(err:%d)", 6526 - topLine)
+               return false, string.format( "(err:%d)", 6550 - topLine)
                
             end
             
@@ -8614,17 +8686,17 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
                do
                   local _switchExp = nonNilOtherType:get_kind()
                   if _switchExp == TypeInfoKind.Set or _switchExp == TypeInfoKind.Map or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.IF or _switchExp == TypeInfoKind.Alternate then
-                     return false, string.format( "(err:%d)", 6536 - topLine)
+                     return false, string.format( "(err:%d)", 6560 - topLine)
                      
                   elseif _switchExp == TypeInfoKind.Class then
                      if _moduleObj.builtinTypeString ~= nonNilOtherType then
-                        return false, string.format( "(err:%d)", 6540 - topLine)
+                        return false, string.format( "(err:%d)", 6564 - topLine)
                         
                      end
                      
                   elseif _switchExp == TypeInfoKind.Prim then
                      if _moduleObj.builtinTypeStem == nonNilOtherType then
-                        return false, string.format( "(err:%d)", 6545 - topLine)
+                        return false, string.format( "(err:%d)", 6569 - topLine)
                         
                      end
                      
@@ -8638,7 +8710,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
          
          if otherSrc ~= _moduleObj.builtinTypeNil and otherSrc ~= _moduleObj.builtinTypeString and otherSrc:get_kind() ~= TypeInfoKind.Prim and otherSrc:get_kind() ~= TypeInfoKind.Func and otherSrc:get_kind() ~= TypeInfoKind.Method and otherSrc:get_kind() ~= TypeInfoKind.Form and otherSrc:get_kind() ~= TypeInfoKind.FormFunc and otherSrc:get_kind() ~= TypeInfoKind.Enum and otherSrc:get_kind() ~= TypeInfoKind.Abbr and otherSrc:get_kind() ~= TypeInfoKind.Alternate and otherSrc:get_kind() ~= TypeInfoKind.Box and not isGenericType( otherSrc ) and destMut and not otherMut then
             if processInfo:get_validCheckingMutable() then
-               return false, string.format( "(err:%d)", 6567 - topLine)
+               return false, string.format( "(err:%d)", 6591 - topLine)
                
             end
             
@@ -8667,7 +8739,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             return dest:canEvalWith( processInfo, otherSrc, canEvalType, alt2type )
          end
          
-         return false, string.format( "(err:%d)", 6591 - topLine)
+         return false, string.format( "(err:%d)", 6615 - topLine)
          
       else
        
@@ -8685,13 +8757,13 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
          return true, nil
       end
       
-      return false, string.format( "(err:%d)", 6607 - topLine)
+      return false, string.format( "(err:%d)", 6631 - topLine)
       
    end
    
    if otherSrc == _moduleObj.builtinTypeNil or otherSrc:get_kind() == TypeInfoKind.Abbr then
       if dest:get_kind() ~= TypeInfoKind.Nilable then
-         return false, string.format( "(err:%d)", 6611 - topLine)
+         return false, string.format( "(err:%d)", 6635 - topLine)
          
       end
       
@@ -8761,7 +8833,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             return false, string.format( "not inherit %s(%d) <- %s(%d)", dest:getTxt(  ), dest:get_typeId():get_orgId(), otherSrc:getTxt(  ), otherSrc:get_typeId():get_orgId())
          end
          
-         return false, string.format( "(err:%d)", 6678 - topLine)
+         return false, string.format( "(err:%d)", 6702 - topLine)
          
       elseif otherSrc:get_kind() == TypeInfoKind.Enum then
          local enumTypeInfo = _lune.unwrap( (_lune.__Cast( otherSrc, 3, EnumTypeInfo ) ))
@@ -8780,7 +8852,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
                   return true, nil
                end
                
-               return false, string.format( "(err:%d)", 6702 - topLine)
+               return false, string.format( "(err:%d)", 6726 - topLine)
                
             end
          end
@@ -8844,7 +8916,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             return true, nil
          end
          
-         return false, string.format( "(err:%d)", 6768 - topLine)
+         return false, string.format( "(err:%d)", 6792 - topLine)
          
       elseif _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.Set then
          if otherSrc:get_itemTypeInfoList()[1] == _moduleObj.builtinTypeNone then
@@ -8914,7 +8986,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             return true, nil
          end
          
-         return false, string.format( "(err:%d)", 6803 - topLine)
+         return false, string.format( "(err:%d)", 6827 - topLine)
          
       elseif _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.IF then
          if isGenericType( dest ) then
@@ -8930,7 +9002,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             return false, string.format( "not inherit %s(%d) <- %s(%d)", dest:getTxt(  ), dest:get_typeId():get_orgId(), otherSrc:getTxt(  ), otherSrc:get_typeId():get_orgId())
          end
          
-         return false, string.format( "(err:%d)", 6819 - topLine)
+         return false, string.format( "(err:%d)", 6843 - topLine)
          
          
       elseif _switchExp == TypeInfoKind.Form then
@@ -8938,7 +9010,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             return true, nil
          end
          
-         return false, string.format( "(err:%d)", 6826 - topLine)
+         return false, string.format( "(err:%d)", 6850 - topLine)
          
       elseif _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.FormFunc then
          if #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
@@ -8958,7 +9030,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
          return true, nil
       elseif _switchExp == TypeInfoKind.Method then
          if #dest:get_argTypeInfoList() ~= #otherSrc:get_argTypeInfoList() or #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
-            return false, string.format( "(err:%d)", 6851 - topLine)
+            return false, string.format( "(err:%d)", 6875 - topLine)
             
          end
          
@@ -9005,7 +9077,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
          return dest:canEvalWith( processInfo, otherSrc, canEvalType, alt2type )
       else 
          
-            return false, string.format( "(err:%d)", 6896 - topLine)
+            return false, string.format( "(err:%d)", 6920 - topLine)
             
       end
    end
@@ -9089,7 +9161,7 @@ function NormalTypeInfo:applyGeneric( alt2typeMap, moduleTypeInfo )
          end
          
          if needNew or workArg or workRet then
-            return processInfo:createFunc( self.abstractFlag, false, getScope( self ), self.kind, self.parentInfo, self.autoFlag, self.externalFlag, self.staticFlag, self.accessMode, self.rawTxt, itemTypeInfoList, argTypeInfoList, retTypeInfoList, TypeInfo.isMut( self ) )
+            return processInfo:createFunc( self.abstractFlag, false, getScope( self ), self.kind, self.parentInfo, self.autoFlag, self.externalFlag, self.staticFlag, self.accessMode, self.rawTxt, self.asyncMode, itemTypeInfoList, argTypeInfoList, retTypeInfoList, TypeInfo.isMut( self ) )
          end
          
          return self

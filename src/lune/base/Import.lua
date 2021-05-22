@@ -1231,7 +1231,7 @@ function _TypeInfoNormal:createTypeInfo( param )
       else
        
          if self.kind == Ast.TypeInfoKind.Class or self.kind == Ast.TypeInfoKind.IF then
-            Log.log( Log.Level.Debug, __func__, 521, function (  )
+            Log.log( Log.Level.Debug, __func__, 522, function (  )
             
                return string.format( "new type -- %d, %s -- %s, %d", self.parentId, self.txt, _lune.nilacc( parentScope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, parentScope, false ) or "nil", _lune.nilacc( _lune.nilacc( parentScope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ), "id" ) or -1)
             end )
@@ -1261,7 +1261,7 @@ function _TypeInfoNormal:createTypeInfo( param )
             param.typeId2TypeInfo[self.typeId] = workTypeInfo
             workTypeInfo:get_typeId():set_orgId( self.typeId )
          elseif self.kind == Ast.TypeInfoKind.ExtModule then
-            Log.log( Log.Level.Debug, __func__, 559, function (  )
+            Log.log( Log.Level.Debug, __func__, 560, function (  )
             
                return string.format( "new type -- %d, %s -- %s, %d", self.parentId, self.txt, _lune.nilacc( parentScope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, parentScope, false ) or "nil", _lune.nilacc( _lune.nilacc( parentScope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ), "id" ) or -1)
             end )
@@ -1288,7 +1288,7 @@ function _TypeInfoNormal:createTypeInfo( param )
             
             local typeInfoKind = self.kind
             local accessMode = self.accessMode
-            local workTypeInfo = Ast.NormalTypeInfo.create( param.processInfo, accessMode, self.abstractFlag, scope, baseInfo, parentInfo, self.staticFlag, typeInfoKind, self.txt, itemTypeInfo, argTypeInfo, retTypeInfo, self.mutMode )
+            local workTypeInfo = Ast.NormalTypeInfo.create( param.processInfo, accessMode, self.abstractFlag, scope, baseInfo, parentInfo, self.staticFlag, typeInfoKind, self.txt, itemTypeInfo, argTypeInfo, retTypeInfo, self.mutMode, self.asyncMode )
             newTypeInfo = workTypeInfo
             
             param.typeId2TypeInfo[self.typeId] = workTypeInfo
@@ -1339,15 +1339,15 @@ end
 function _TypeInfoNormal.setmeta( obj )
   setmetatable( obj, { __index = _TypeInfoNormal  } )
 end
-function _TypeInfoNormal.new( parentId, abstractFlag, baseId, txt, staticFlag, accessMode, kind, mutMode, ifList, itemTypeId, argTypeId, retTypeId, children, moduleLang, requirePath )
+function _TypeInfoNormal.new( parentId, abstractFlag, baseId, txt, staticFlag, accessMode, kind, mutMode, asyncMode, ifList, itemTypeId, argTypeId, retTypeId, children, moduleLang, requirePath )
    local obj = {}
    _TypeInfoNormal.setmeta( obj )
    if obj.__init then
-      obj:__init( parentId, abstractFlag, baseId, txt, staticFlag, accessMode, kind, mutMode, ifList, itemTypeId, argTypeId, retTypeId, children, moduleLang, requirePath )
+      obj:__init( parentId, abstractFlag, baseId, txt, staticFlag, accessMode, kind, mutMode, asyncMode, ifList, itemTypeId, argTypeId, retTypeId, children, moduleLang, requirePath )
    end
    return obj
 end
-function _TypeInfoNormal:__init( parentId, abstractFlag, baseId, txt, staticFlag, accessMode, kind, mutMode, ifList, itemTypeId, argTypeId, retTypeId, children, moduleLang, requirePath )
+function _TypeInfoNormal:__init( parentId, abstractFlag, baseId, txt, staticFlag, accessMode, kind, mutMode, asyncMode, ifList, itemTypeId, argTypeId, retTypeId, children, moduleLang, requirePath )
 
    _TypeInfo.__init( self)
    self.parentId = parentId
@@ -1358,6 +1358,7 @@ function _TypeInfoNormal:__init( parentId, abstractFlag, baseId, txt, staticFlag
    self.accessMode = accessMode
    self.kind = kind
    self.mutMode = mutMode
+   self.asyncMode = asyncMode
    self.ifList = ifList
    self.itemTypeId = itemTypeId
    self.argTypeId = argTypeId
@@ -1395,6 +1396,7 @@ function _TypeInfoNormal._fromMapSub( obj, val )
    table.insert( memInfo, { name = "accessMode", func = Ast.AccessMode._from, nilable = false, child = {} } )
    table.insert( memInfo, { name = "kind", func = Ast.TypeInfoKind._from, nilable = false, child = {} } )
    table.insert( memInfo, { name = "mutMode", func = Ast.MutMode._from, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "asyncMode", func = Ast.Async._from, nilable = false, child = {} } )
    table.insert( memInfo, { name = "ifList", func = _lune._toList, nilable = false, child = { { func = _IdInfo._fromMap, nilable = false, child = {} } } } )
    table.insert( memInfo, { name = "itemTypeId", func = _lune._toList, nilable = false, child = { { func = _IdInfo._fromMap, nilable = false, child = {} } } } )
    table.insert( memInfo, { name = "argTypeId", func = _lune._toList, nilable = false, child = { { func = _IdInfo._fromMap, nilable = false, child = {} } } } )
@@ -1661,7 +1663,7 @@ function Import:processImportFromFile( processInfo, moduleMeta, orgModulePath, m
    local __func__ = '@lune.@base.@Import.Import.processImportFromFile'
 
    local metaInfo = moduleMeta:get_metaInfo()
-   Log.log( Log.Level.Info, __func__, 766, function (  )
+   Log.log( Log.Level.Info, __func__, 767, function (  )
    
       return string.format( "%s processing", orgModulePath)
    end )
@@ -1723,7 +1725,7 @@ function Import:processImportFromFile( processInfo, moduleMeta, orgModulePath, m
       typeId2Scope[typeId] = self.transUnitIF:get_scope()
    end
    
-   for __index, _501 in ipairs( nameList ) do
+   for __index, _502 in ipairs( nameList ) do
       self.transUnitIF:popModule(  )
    end
    
@@ -1960,7 +1962,7 @@ function Import:processImportFromFile( processInfo, moduleMeta, orgModulePath, m
             
          elseif _switchExp == Ast.TypeInfoKind.Module then
             self.transUnitIF:pushModule( processInfo, true, classTypeInfo:getTxt(  ), Ast.TypeInfo.isMut( classTypeInfo ) )
-            Log.log( Log.Level.Debug, __func__, 1060, function (  )
+            Log.log( Log.Level.Debug, __func__, 1061, function (  )
             
                return string.format( "push module -- %s, %s, %d, %d, %d", classTypeInfo:getTxt(  ), _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, self.transUnitIF:get_scope(), false ) or "nil", _lune.nilacc( _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'get_typeId', 'callmtd' ), "id" ) or -1, classTypeInfo:get_typeId().id, self.transUnitIF:get_scope():get_parent():get_scopeId())
             end )
@@ -2054,7 +2056,7 @@ function Import:processImportFromFile( processInfo, moduleMeta, orgModulePath, m
    end
    
    
-   for __index, _646 in ipairs( nameList ) do
+   for __index, _647 in ipairs( nameList ) do
       self.transUnitIF:popModule(  )
    end
    
@@ -2083,7 +2085,7 @@ function Import:processImportMain( processInfo, modulePath, depth )
    local orgModulePath = modulePath
    modulePath = frontInterface.getLuaModulePath( modulePath )
    
-   Log.log( Log.Level.Info, __func__, 1185, function (  )
+   Log.log( Log.Level.Info, __func__, 1186, function (  )
    
       return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), orgModulePath)
    end )
@@ -2097,7 +2099,7 @@ function Import:processImportMain( processInfo, modulePath, depth )
    do
       local moduleInfo = self.importModuleName2ModuleInfo[modulePath]
       if moduleInfo ~= nil then
-         Log.log( Log.Level.Info, __func__, 1197, function (  )
+         Log.log( Log.Level.Info, __func__, 1198, function (  )
          
             return string.format( "%s already", orgModulePath)
          end )
@@ -2165,7 +2167,7 @@ function Import:processImportMain( processInfo, modulePath, depth )
    
    self.importModuleInfo:remove(  )
    
-   Log.log( Log.Level.Info, __func__, 1246, function (  )
+   Log.log( Log.Level.Info, __func__, 1247, function (  )
    
       return string.format( "%s complete", orgModulePath)
    end )
