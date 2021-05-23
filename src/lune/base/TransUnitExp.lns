@@ -1170,7 +1170,7 @@ fn TransUnit.evalMacro(
 /**
 format の書式から %? を検索して、リストを返す。
 */
-pub fn findForm( format:str ): List<str> {
+pub fn findForm( format:str ) __async : List<str> {
    let mut remain = format.gsub( "%%%%", "" );
    let mut opList:List<str> = [];
 
@@ -1203,7 +1203,7 @@ pub enum FormType {
    Unmatch,
 }
 pub fn isMatchStringFormatType(
-   opKind:str, mut argType:&Ast.TypeInfo, luaVer:&LuaVer.LuaVerInfo ):
+   opKind:str, mut argType:&Ast.TypeInfo, luaVer:&LuaVer.LuaVerInfo ) __async :
    FormType, &Ast.TypeInfo
 {
    if! let enumType = argType.$srcTypeInfo.$aliasSrc@@@Ast.EnumTypeInfo {

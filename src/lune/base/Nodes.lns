@@ -291,7 +291,7 @@ pub abstract class Node {
    pub fn getLiteral(): Literal!, str! {
       return nil, nil;
    }
-   pub fn processFilter<OPT>( filter: Filter<OPT>, opt:OPT ) __noasync {
+   pub fn processFilter<OPT>( filter: Filter<OPT>, opt:OPT ) {
    }
    /** 代入式の左辺になれるかどうか */
    pub fn canBeLeft(): bool {
@@ -641,7 +641,7 @@ macro _declNodeClass(
       }
 
       fieldStatList.insert( `{
-         pub override fn processFilter<OPT>( filter: Filter<OPT>, opt:OPT ) __noasync {
+         pub override fn processFilter<OPT>( filter: Filter<OPT>, opt:OPT )  {
             filter.,,,"process%s" (baseName) (self, opt );
          } } );
 
@@ -670,7 +670,7 @@ macro _declNodeClass(
 
       if baseName ~= "Block" {
          relateStat.insert( `{
-            pub fn Filter. ,,,"process%s" (baseName) ( node: &,,className, opt:T ) __noasync mut {
+            pub fn Filter. ,,,"process%s" (baseName) ( node: &,,className, opt:T )  mut {
                self.pushOpt( opt );
                self.defaultProcess( node, opt );
                self.popOpt( opt );
@@ -679,7 +679,7 @@ macro _declNodeClass(
       }
       else {
          relateStat.insert( `{
-            pub fn Filter. ,,,"process%s" (baseName) ( node: &,,className, opt:T ) __noasync mut;
+            pub fn Filter. ,,,"process%s" (baseName) ( node: &,,className, opt:T )  mut;
          } );
       }
       
@@ -2849,10 +2849,10 @@ pub fn NodeManager.MultiTo1(node:&Node) mut : &Node {
    return node;
 }
 
-pub fn Filter.processBlockSub( node: &BlockNode, opt:T ) __noasync mut {
+pub fn Filter.processBlockSub( node: &BlockNode, opt:T )  mut {
 }
 
-pub fn Filter.processBlock( node: &BlockNode, opt:T ) __noasync mut {
+pub fn Filter.processBlock( node: &BlockNode, opt:T )  mut {
    self.moduleInfoManager.push( node.$scope );
 
    self.processBlockSub( node, opt );

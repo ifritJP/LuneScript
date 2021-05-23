@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+_lune_control default_async_all;
+
 import lune.base.Ver;
 import lune.base.Str;
 import lune.base.Ast;
@@ -79,7 +81,7 @@ fn getSymTxt( name:str, id:str ) : str {
 }
 
 class convFilter extend Nodes.Filter<Opt> (oStream) {
-   //_lune_control default_async_this_class;
+   _lune_control default_async_this_class;
    
    pri let streamName: str;
    pri let mut stream: oStream;
@@ -204,7 +206,7 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
 }
 
 fn filter( node: &Nodes.Node, filter: convFilter,
-           parent: &Nodes.Node )
+           parent: &Nodes.Node ) __async
 {
    node.processFilter( filter, new Opt( parent ) );
 }
@@ -3559,7 +3561,7 @@ pub fn createFilter(
       moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest, useIpairs );
 }
 
-pub fn runLuaOnLns( code:str ) : Luaval<&stem>!, str {
+pub fn runLuaOnLns( code:str ) __noasync : Luaval<&stem>!, str {
    let loadFunc, err = DependLuaOnLns.runLuaOnLns( code );
    when! loadFunc {
       let mod = loadFunc();
@@ -3573,7 +3575,7 @@ pub fn runLuaOnLns( code:str ) : Luaval<&stem>!, str {
 
 pub class MacroEvalImp extend Nodes.MacroEval {
 
-   //_lune_control default_async_this_class;
+   _lune_control default_noasync_this_class;
    
    fn evalFromMacroCode( code:str ): Luaval<Nodes.macroStatmentProc> {
 
@@ -3627,7 +3629,7 @@ __test {
    import lune.base.Testing;
 
    pub fn createAstFromStream(
-      scriptPath:str, stream:iStream, option:&Option.Option ) : TransUnit.ASTInfo
+      scriptPath:str, stream:iStream, option:&Option.Option ) __noasync: TransUnit.ASTInfo
    {
       let moduleId = frontInterface.ModuleId.createId( 0.0, 0 );
       let mut moduleInfo = new frontInterface.ImportModuleInfo();
@@ -3642,7 +3644,7 @@ __test {
    }
    
    
-   pub fn createAstFromFile( scriptPath:str, option:&Option.Option ) : TransUnit.ASTInfo {
+   pub fn createAstFromFile( scriptPath:str, option:&Option.Option ) __noasync: TransUnit.ASTInfo {
       let! mut stream = io.open( scriptPath## ) {
          Util.err( "not failed to open -- %s" (scriptPath) );
       };
@@ -3652,7 +3654,7 @@ __test {
    }
    
    pub fn createAst(
-      scriptPath:str, lnsCode:str, option:&Option.Option ) : TransUnit.ASTInfo
+      scriptPath:str, lnsCode:str, option:&Option.Option ) __noasync: TransUnit.ASTInfo
    {
       return createAstFromStream(
          scriptPath, new Parser.TxtStream( lnsCode ), option );
@@ -3708,7 +3710,7 @@ _ = 1;
       return metaStream.$txt, stream.$txt;
    }
 
-   pub fn runTestCode( ctrl:Testing.Ctrl, luaCode:str ) {
+   pub fn runTestCode( ctrl:Testing.Ctrl, luaCode:str ) __noasync {
       let loaded, mess = _load( luaCode## );
       when! loaded {
          if! let mod = loaded(##) {

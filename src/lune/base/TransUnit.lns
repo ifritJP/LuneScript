@@ -1356,7 +1356,7 @@ pub fn getBuiltinFunc() __async : &BuiltinFuncType {
 }
 
    
-pub fn isStrFormFunc( typeInfo:&Ast.TypeInfo ):bool {
+pub fn isStrFormFunc( typeInfo:&Ast.TypeInfo ) __async :bool {
    if typeInfo.$srcTypeInfo == builtinFunc.string_format {
       return true;
    }
