@@ -181,11 +181,17 @@ alias で置き換えている元の Type → alias の型。
    }
 }
 
+pub alge MetaOrModule {
+   Meta( Luaval<&stem> ),
+   Module( ModuleInfo )
+}
+
 pub class ModuleMeta {
-   let metaInfo:Luaval<&stem> {pub};
    let lnsPath:str {pub};
-   // let processInfo:Ast.ProcessInfo! {pub};
-   let mut moduleInfo:ModuleInfo! {pub,pub};
+   let mut metaOrModule:MetaOrModule {pub, pub};
+   // let metaInfo:Luaval<&stem> {pub};
+   // // let processInfo:Ast.ProcessInfo! {pub};
+   // let mut moduleInfo:ModuleInfo! {pub,pub};
 }
 
 /**
@@ -269,7 +275,8 @@ class dummyFront extend (frontInterface) {
       } else {
          error( "load error" );
       }
-      let mut meta = new ModuleMeta( emptyTable, mod.gsub( "%.", "/" ) .. ".lns", nil );
+      let mut meta = new ModuleMeta( mod.gsub( "%.", "/" ) .. ".lns",
+                                     MetaOrModule.Meta( emptyTable ) );           
       return require( mod ), meta;
    }
    pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ) __noasync mut : ModuleMeta! {

@@ -1659,10 +1659,10 @@ function DependModuleInfo:__init( id, metaTypeId2TypeInfoMap )
 end
 
 
-function Import:processImportFromFile( processInfo, moduleMeta, orgModulePath, modulePath, nameList, depth )
+function Import:processImportFromFile( processInfo, lnsPath, metaInfoStem, orgModulePath, modulePath, nameList, depth )
    local __func__ = '@lune.@base.@Import.Import.processImportFromFile'
 
-   local metaInfo = moduleMeta:get_metaInfo()
+   local metaInfo = metaInfoStem
    Log.log( Log.Level.Info, __func__, 767, function (  )
    
       return string.format( "%s processing", orgModulePath)
@@ -1725,7 +1725,7 @@ function Import:processImportFromFile( processInfo, moduleMeta, orgModulePath, m
       typeId2Scope[typeId] = self.transUnitIF:get_scope()
    end
    
-   for __index, _502 in ipairs( nameList ) do
+   for __index, _503 in ipairs( nameList ) do
       self.transUnitIF:popModule(  )
    end
    
@@ -2043,7 +2043,7 @@ function Import:processImportFromFile( processInfo, moduleMeta, orgModulePath, m
    local importedMacroInfoMap = {}
    for orgTypeId, macroInfoStem in pairs( metaInfo.__macroName2InfoMap ) do
       
-      self.macroCtrl:importMacro( processInfo, moduleMeta:get_lnsPath(), (macroInfoStem ), _lune.unwrap( orgId2MacroTypeInfo[orgTypeId]), typeId2TypeInfo, importedMacroInfoMap )
+      self.macroCtrl:importMacro( processInfo, lnsPath, (macroInfoStem ), _lune.unwrap( orgId2MacroTypeInfo[orgTypeId]), typeId2TypeInfo, importedMacroInfoMap )
    end
    
    
@@ -2056,7 +2056,7 @@ function Import:processImportFromFile( processInfo, moduleMeta, orgModulePath, m
    end
    
    
-   for __index, _647 in ipairs( nameList ) do
+   for __index, _648 in ipairs( nameList ) do
       self.transUnitIF:popModule(  )
    end
    
@@ -2134,14 +2134,15 @@ function Import:processImportMain( processInfo, modulePath, depth )
       self.transUnitIF:error( "failed to load meta -- " .. orgModulePath )
    end
    
-   local moduleInfo = moduleMeta:get_moduleInfo()
-   if  nil == moduleInfo then
-      local _moduleInfo = moduleInfo
+   local moduleInfo
    
-      moduleInfo = self:processImportFromFile( processInfo, moduleMeta, orgModulePath, modulePath, nameList, depth )
-      moduleMeta:set_moduleInfo( moduleInfo )
-   else
+   
+   do
+      local _matchExp = moduleMeta:get_metaOrModule()
+      if _matchExp[1] == frontInterface.MetaOrModule.Module[1] then
+         local info = _matchExp[2][1]
       
+         moduleInfo = info
          do
             local exportInfo = _lune.__Cast( moduleInfo:get_exportInfo(), 3, Nodes.ExportInfo )
             if exportInfo ~= nil then
@@ -2157,7 +2158,14 @@ function Import:processImportMain( processInfo, modulePath, depth )
             self.importedAliasMap[key] = val
          end
          
+      elseif _matchExp[1] == frontInterface.MetaOrModule.Meta[1] then
+         local metaInfo = _matchExp[2][1]
+      
+         moduleInfo = self:processImportFromFile( processInfo, moduleMeta:get_lnsPath(), metaInfo, orgModulePath, modulePath, nameList, depth )
+         moduleMeta:set_metaOrModule( _lune.newAlge( frontInterface.MetaOrModule.Module, {moduleInfo}) )
+      end
    end
+   
    
    if depth == 1 then
       self.importModule2ModuleInfo[moduleInfo:get_exportInfo():get_moduleTypeInfo()] = moduleInfo
@@ -2167,7 +2175,7 @@ function Import:processImportMain( processInfo, modulePath, depth )
    
    self.importModuleInfo:remove(  )
    
-   Log.log( Log.Level.Info, __func__, 1247, function (  )
+   Log.log( Log.Level.Info, __func__, 1252, function (  )
    
       return string.format( "%s complete", orgModulePath)
    end )

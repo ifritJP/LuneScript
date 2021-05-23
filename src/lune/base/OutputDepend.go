@@ -351,7 +351,7 @@ func (self *OutputDepend_Front) LoadMeta(_env *LnsEnv, importModuleInfo *FrontIn
                 meta = _meta
             }
         }
-        return NewFrontInterface_ModuleMeta(_env, meta, Lns_car(_env.LuaVM.String_gsub(metaPath,"%.meta$", ".lns")).(string), nil)
+        return NewFrontInterface_ModuleMeta(_env, Lns_car(_env.LuaVM.String_gsub(metaPath,"%.meta$", ".lns")).(string), &FrontInterface_MetaOrModule__Meta{meta})
     }
     Lns_print([]LnsAny{mess})
     return nil

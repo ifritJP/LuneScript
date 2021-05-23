@@ -5,6 +5,43 @@ local _lune = {}
 if _lune3 then
    _lune = _lune3
 end
+function _lune.newAlge( kind, vals )
+   local memInfoList = kind[ 2 ]
+   if not memInfoList then
+      return kind
+   end
+   return { kind[ 1 ], vals }
+end
+
+function _lune._fromList( obj, list, memInfoList )
+   if type( list ) ~= "table" then
+      return false
+   end
+   for index, memInfo in ipairs( memInfoList ) do
+      local val, key = memInfo.func( list[ index ], memInfo.child )
+      if val == nil and not memInfo.nilable then
+         return false, key and string.format( "%s[%s]", memInfo.name, key) or memInfo.name
+      end
+      obj[ index ] = val
+   end
+   return true
+end
+function _lune._AlgeFrom( Alge, val )
+   local work = Alge._name2Val[ val[ 1 ] ]
+   if not work then
+      return nil
+   end
+   if #work == 1 then
+     return work
+   end
+   local paramList = {}
+   local result, mess = _lune._fromList( paramList, val[ 2 ], work[ 2 ] )
+   if not result then
+      return nil, mess
+   end
+   return { work[ 1 ], paramList }
+end
+
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
       setObj[ val ] = true
@@ -382,36 +419,53 @@ function ModuleInfo:get_exportInfo()
 end
 
 
+local MetaOrModule = {}
+MetaOrModule._name2Val = {}
+_moduleObj.MetaOrModule = MetaOrModule
+function MetaOrModule:_getTxt( val )
+   local name = val[ 1 ]
+   if name then
+      return string.format( "MetaOrModule.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+
+function MetaOrModule._from( val )
+   return _lune._AlgeFrom( MetaOrModule, val )
+end
+
+MetaOrModule.Meta = { "Meta", {{}}}
+MetaOrModule._name2Val["Meta"] = MetaOrModule.Meta
+MetaOrModule.Module = { "Module", {{}}}
+MetaOrModule._name2Val["Module"] = MetaOrModule.Module
+
+
 local ModuleMeta = {}
 _moduleObj.ModuleMeta = ModuleMeta
 function ModuleMeta.setmeta( obj )
   setmetatable( obj, { __index = ModuleMeta  } )
 end
-function ModuleMeta.new( metaInfo, lnsPath, moduleInfo )
+function ModuleMeta.new( lnsPath, metaOrModule )
    local obj = {}
    ModuleMeta.setmeta( obj )
    if obj.__init then
-      obj:__init( metaInfo, lnsPath, moduleInfo )
+      obj:__init( lnsPath, metaOrModule )
    end
    return obj
 end
-function ModuleMeta:__init( metaInfo, lnsPath, moduleInfo )
+function ModuleMeta:__init( lnsPath, metaOrModule )
 
-   self.metaInfo = metaInfo
    self.lnsPath = lnsPath
-   self.moduleInfo = moduleInfo
-end
-function ModuleMeta:get_metaInfo()
-   return self.metaInfo
+   self.metaOrModule = metaOrModule
 end
 function ModuleMeta:get_lnsPath()
    return self.lnsPath
 end
-function ModuleMeta:get_moduleInfo()
-   return self.moduleInfo
+function ModuleMeta:get_metaOrModule()
+   return self.metaOrModule
 end
-function ModuleMeta:set_moduleInfo( moduleInfo )
-   self.moduleInfo = moduleInfo
+function ModuleMeta:set_metaOrModule( metaOrModule )
+   self.metaOrModule = metaOrModule
 end
 
 local ImportModuleInfo = {}
@@ -478,7 +532,7 @@ function dummyFront:loadModule( mod )
       error( "load error" )
    end
    
-   local meta = ModuleMeta.new(emptyTable, mod:gsub( "%.", "/" ) .. ".lns", nil)
+   local meta = ModuleMeta.new(mod:gsub( "%.", "/" ) .. ".lns", _lune.newAlge( MetaOrModule.Meta, {emptyTable}))
    return require( mod ), meta
 end
 function dummyFront:loadMeta( importModuleInfo, mod )

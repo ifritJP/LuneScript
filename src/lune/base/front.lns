@@ -142,6 +142,8 @@ class ModuleMgr {
       }
       let mut moduleInfo = self.createModuleInfo( ast, mod, moduleId );
       self.mod2info.add( mod, UptodateInfo.Update( moduleInfo, ast ) );
+      self.loadedMetaMap[ mod ] = new frontInterface.ModuleMeta(
+         ast.$streamName, .Module( moduleInfo ));
       return moduleInfo;
    }
 
@@ -713,8 +715,10 @@ fn Front.loadParserToLuaCode(
       saveFile( ".meta", metaTxt, self.option.byteCompile, true, true );
    }
 
+   // let mut meta = new frontInterface.ModuleMeta(
+   //    unwrap loadFromLuaTxt( metaTxt ), path, createModuleInfo( ast, mod, moduleId ) );
    let mut meta = new frontInterface.ModuleMeta(
-      unwrap loadFromLuaTxt( metaTxt ), path, createModuleInfo( ast, mod, moduleId ) );
+      path, .Module( createModuleInfo( ast, mod, moduleId ) ) );
    return meta, luaTxt;
 }
 
@@ -826,7 +830,7 @@ fn Front.checkUptodateMeta(
          return nil;
       }
    }
-   return new frontInterface.ModuleMeta( meta, lnsPath, nil );
+   return new frontInterface.ModuleMeta( lnsPath, .Meta( meta ) );
 }
 
 /**
@@ -895,8 +899,8 @@ fn Front.loadModule( mut mod:str ) mut : Luaval<&stem>!, frontInterface.ModuleMe
                // meta は使用しないのでダミーで生成する。
                // 将来 meta を利用することになった場合は、修正が必要。             
                let mut meta = new frontInterface.ModuleMeta(
-                  unwrap loadFromLuaTxt( "return {}" ),
-                  mod.gsub( "%.", "/" ) .. ".lns", nil );
+                  mod.gsub( "%.", "/" ) .. ".lns",
+                  .Meta( unwrap loadFromLuaTxt( "return {}" ) ) );
 	       self.setLoadInfo( mod, new LoadInfo( workMod, meta ) );
             }
          }
@@ -1710,14 +1714,14 @@ pub fn Front.build( buildMode:BuildMode, astCallback:AstCallback! ) mut {
       let mod = self.scriptPath2Module( updateInfo.$scriptPath );
       
       fn createMeta( ast:TransUnit.ASTInfo!, metaStream:&Util.memStream ) {
-         if not oneShot {
-            when! ast {
-               let mut metaInfo = new frontInterface.ModuleMeta(
-                  unwrap loadFromLuaTxt( metaStream.$txt ), updateInfo.$scriptPath,
-                  createModuleInfo( ast, mod, updateInfo.$moduleId ) );
-               self.moduleMgr.addMeta( mod, metaInfo );
-            }
-         }
+         // if not oneShot {
+         //    when! ast {
+         //       let mut metaInfo = new frontInterface.ModuleMeta(
+         //          unwrap loadFromLuaTxt( metaStream.$txt ), updateInfo.$scriptPath,
+         //          createModuleInfo( ast, mod, updateInfo.$moduleId ) );
+         //       self.moduleMgr.addMeta( mod, metaInfo );
+         //    }
+         // }
       }
       
       _match buildMode {

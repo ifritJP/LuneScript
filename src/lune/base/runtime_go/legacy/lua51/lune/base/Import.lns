@@ -759,11 +759,11 @@ class DependModuleInfo {
 }
 
 fn Import.processImportFromFile(
-   processInfo:Ast.ProcessInfo, moduleMeta:frontInterface.ModuleMeta,
+   processInfo:Ast.ProcessInfo, lnsPath:str, metaInfoStem:Luaval<&stem>,
    orgModulePath:str, mut modulePath:str, nameList:str[], depth:int ) mut
 : frontInterface.ModuleInfo
 {
-   let metaInfo = moduleMeta.$metaInfo@@=Meta._MetaInfo;
+   let metaInfo = metaInfoStem@@=Meta._MetaInfo;
    Log._log2( .Info, "%s processing" (orgModulePath) );
 
 
@@ -1135,7 +1135,7 @@ fn Import.processImportFromFile(
    foreach macroInfoStem, orgTypeId in metaInfo.__macroName2InfoMap {
 
       self.macroCtrl.importMacro(
-         processInfo, moduleMeta.$lnsPath,
+         processInfo, lnsPath,
          expandLuavalMap( macroInfoStem ), unwrap orgId2MacroTypeInfo[ orgTypeId ],
          typeId2TypeInfo, importedMacroInfoMap );
    }
@@ -1219,23 +1219,28 @@ pub fn Import.processImportMain(
    {
       self.transUnitIF.error( "failed to load meta -- " .. orgModulePath );
    };
-   let! mut moduleInfo = moduleMeta.$moduleInfo {
-      moduleInfo = self.processImportFromFile(
-         processInfo, moduleMeta, orgModulePath, modulePath, nameList, depth );
-      moduleMeta.set_moduleInfo( moduleInfo );
-   } then {
-      if! let exportInfo = moduleInfo.$exportInfo@@@Nodes.ExportInfo {
-         self.macroCtrl.importMacroInfo( exportInfo.$typeId2DefMacroInfo );
+   let mut moduleInfo;
+
+   _match moduleMeta.$metaOrModule {
+      case .Module( info ) {
+         moduleInfo = info;
+         if! let exportInfo = moduleInfo.$exportInfo@@@Nodes.ExportInfo {
+            self.macroCtrl.importMacroInfo( exportInfo.$typeId2DefMacroInfo );
+         }
+         foreach globalSymbol in moduleInfo.$exportInfo.$globalSymbolList {
+            self.transUnitIF.$scope.addSymbolInfo( processInfo, globalSymbol );
+         }
+         foreach val, key in moduleInfo.$importedAliasMap {
+            self.importedAliasMap[key] = val;
+         }
       }
-      foreach globalSymbol in moduleInfo.$exportInfo.$globalSymbolList {
-         self.transUnitIF.$scope.addSymbolInfo( processInfo, globalSymbol );
+      case .Meta( metaInfo ) {
+         moduleInfo = self.processImportFromFile(
+            processInfo, moduleMeta.$lnsPath, metaInfo,
+            orgModulePath, modulePath, nameList, depth );
+         moduleMeta.set_metaOrModule( .Module( moduleInfo ) );
       }
-      foreach val, key in moduleInfo.$importedAliasMap {
-         self.importedAliasMap[key] = val;
-      }
-   };
-   // let mut moduleInfo = self.processImportFromFile(
-   //    processInfo, moduleMeta, orgModulePath, modulePath, nameList, depth );
+   }
 
    if depth == 1 {
       self.importModule2ModuleInfo[ moduleInfo.$exportInfo.$moduleTypeInfo ] = moduleInfo;
