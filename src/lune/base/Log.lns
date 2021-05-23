@@ -54,7 +54,7 @@ pub fn str2level( txt:str ) : Level! {
    return name2levelMap[ txt ];
 }
 
-pub form CreateMessage() : str;
+pub form CreateMessage() __trans : str;
 class Control {
    let level:Level;
    local fn log( level:Level, funcName:str, lineNo:int, callback: CreateMessage ) {
@@ -93,13 +93,9 @@ pub fn direct( level:Level, funcName:str, lineNo:int, mess:str) {
 }
 
 pub macro _log( level:Level, mess : stat ) {
-   Log.log( ,,level, __func__, __line__, fn () :str { ,,mess } );
+   Log.log( ,,level, __func__, __line__, fn () __trans :str { ,,mess } );
 }
 
 pub macro _log2( level:Level, mess : __exp ) {
-   Log.log( ,,level, __func__, __line__, fn () :str { return ,,mess; } );
-}
-
-pub macro _direct( level:Level, mess : __exp ) {
-   Log.direct( ,,level, __func__, __line__, ,,mess );
+   Log.log( ,,level, __func__, __line__, fn () __trans :str { return ,,mess; } );
 }

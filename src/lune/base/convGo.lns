@@ -3683,7 +3683,8 @@ fn convFilter.outputIFMethods( node: &Nodes.DeclClassNode ) mut {
    let mut name2MtdType:Map<str,&Ast.TypeInfo> = {};
    let scope = unwrap node.$expType.$scope;
    scope.filterTypeInfoField(
-      true, scope, .Normal, fn ( symbolInfo:&Ast.SymbolInfo ): bool {
+      true, scope, .Normal,
+      fn ( symbolInfo:&Ast.SymbolInfo ) __trans : bool {
          if symbolInfo.$kind == .Mtd and symbolInfo.$name ~= "__init" and
             not symbolInfo.$staticFlag
          {
@@ -4283,7 +4284,7 @@ fn convFilter.outputDummyAbstractMethodOfClass( classType:&Ast.TypeInfo ) mut
    let scope = unwrap classType.$scope;
    scope.filterSymbolInfoIfField(
       scope, .Normal,
-      fn ( symbolInfo:&Ast.SymbolInfo ): bool {
+      fn ( symbolInfo:&Ast.SymbolInfo ) __trans : bool {
          if symbolInfo.$kind == .Mtd and symbolInfo.$typeInfo.$abstractFlag {
             if! let methodType = scope.getTypeInfoChild( symbolInfo.$name ) {
                if methodType.$abstractFlag {
@@ -4313,7 +4314,7 @@ fn convFilter.outputAdvertise( node: &Nodes.DeclClassNode ) mut
       if! let scope = adv.$member.$expType.$scope {
          scope.filterTypeInfoField(
             true, scope, .Normal,
-            fn ( symbol:&Ast.SymbolInfo ): bool {
+            fn ( symbol:&Ast.SymbolInfo ) __trans: bool {
                if symbol.$kind == .Mtd and symbol.$name ~= "__init" and
                   not methodNameSet.has( symbol.$name ) and not symbol.$staticFlag
                {

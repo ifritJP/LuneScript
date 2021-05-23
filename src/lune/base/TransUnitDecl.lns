@@ -1516,6 +1516,7 @@ fn TransUnit.analyzeRetTypeList(
             self.addErrMess( refTypeNode.$pos,
                              "this is not public type -- %s" (retType.getTxt(##)) );
          }
+
          retTypeInfoList.insert( retType );
          retTypeNodeList.insert( refTypeNode );
          token = self.getToken(##);
@@ -1580,6 +1581,9 @@ mut : &Types.Token, bool, Ast.Async!
          token = self.getToken(##);
       } elseif token.txt == "__noasync" {
          asyncMode = .Noasync;
+         token = self.getToken(##);
+      } elseif token.txt == "__trans" {
+         asyncMode = .Transient;
          token = self.getToken(##);
       } else {
          break;
@@ -1770,6 +1774,12 @@ fn TransUnit.analyzeDeclMember(
       let refType = self.analyzeRefType(
          accessMode, false, Ast.isPubToExternal( classTypeInfo.$accessMode ));
       token = self.getToken(##);
+
+      if refType.$expType.$asyncMode == .Transient {
+         self.addErrMess( refType.$pos,
+                          "can't hold with the type of __trans. -- %s"
+                          (varName.txt) );
+      }
 
       // accessor
       let mut getterMode = Ast.AccessMode.None;
@@ -3907,6 +3917,14 @@ fn TransUnit.analyzeDeclVar(
          self.scope.addVar(
             self.processInfo, accessMode, varName.txt, varName.pos,
             typeInfo, letVarInfo.mutable, hasValue );
+
+         if typeInfo.$asyncMode == .Transient {
+            // Transient は変数への代入禁止
+            self.addErrMess(
+               varName.pos,
+               "can't set the __trans type -- index:%d, %s"
+               (index, typeInfo.getTxt(##)) );
+         }
       }
       symbolInfoList.insert(
          unwrap self.scope.getSymbolInfo( varName.txt, self.scope,

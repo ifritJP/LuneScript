@@ -733,14 +733,20 @@ pub class SerializeInfo {
 }
 
 pub enum Async {
+   /** Async の条件を満さない */
+   Noasync,
    /**
 次の要件を満す。   
 - mutable な大域変数、あるいはクロージャの変数にアクセスしない。
 - allmut への更新がない。
 */
    Async,
-   /** Async の条件を満さない */
-   Noasync
+   /**
+Async の要件に次を追加
+- メンバや大域変数にはセットできない型。
+- 別スレッドには渡せない。
+*/   
+   Transient,
 }
 
 pub abstract class TypeInfo {
@@ -1741,7 +1747,7 @@ pub class AliasTypeInfo extend TypeInfo {
 
 @return 列挙を続ける場合は true
 */
-pub form filterForm( symbolInfo:&SymbolInfo ): bool;
+pub form filterForm( symbolInfo:&SymbolInfo ) __trans : bool;
 
 /**
 このスコープからアクセス可能なフィールドを列挙し callback を実行する。

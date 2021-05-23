@@ -3,25 +3,25 @@ package lnsc
 import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_dumpNode bool
 var dumpNode__mod__ string
-// for 59
-func dumpNode_convExp137(arg1 []LnsAny) string {
+// for 62
+func dumpNode_convExp139(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 477
-func dumpNode_convExp2566(arg1 []LnsAny) (string, LnsInt) {
+// for 480
+func dumpNode_convExp2568(arg1 []LnsAny) (string, LnsInt) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(LnsInt)
 }
-// 102: decl @lune.@base.@dumpNode.createFilter
+// 105: decl @lune.@base.@dumpNode.createFilter
 func DumpNode_createFilter(_env *LnsEnv, moduleTypeInfo *Ast_TypeInfo,processInfo *Ast_ProcessInfo,stream Lns_oStream) *Nodes_Filter {
     return &NewdumpNode_dumpFilter(_env, true, moduleTypeInfo, moduleTypeInfo.FP.Get_scope(_env), stream, processInfo).Nodes_Filter
 }
 
-// 109: decl @lune.@base.@dumpNode.filter
+// 112: decl @lune.@base.@dumpNode.filter
 func dumpNode_filter_1036_(_env *LnsEnv, node *Nodes_Node,filter *dumpNode_dumpFilter,opt *DumpNode_Opt) {
     node.FP.ProcessFilter(_env, &filter.Nodes_Filter, DumpNode_Opt2Stem(opt))
 }
 
-// 560: decl @lune.@base.@dumpNode.getTypeListTxt
+// 563: decl @lune.@base.@dumpNode.getTypeListTxt
 func dumpNode_getTypeListTxt_1195_(_env *LnsEnv, typeList *LnsList) string {
     var txt string
     txt = ""
@@ -38,7 +38,7 @@ func dumpNode_getTypeListTxt_1195_(_env *LnsEnv, typeList *LnsList) string {
     return txt
 }
 
-// 885: decl @lune.@base.@dumpNode.Ast2Dump
+// 888: decl @lune.@base.@dumpNode.Ast2Dump
 func dumpNode_Ast2Dump_1315_(_env *LnsEnv, ast *TransUnit_ASTInfo) string {
     var stream *Util_memStream
     stream = NewUtil_memStream(_env)
@@ -85,7 +85,7 @@ func NewDumpNode_Opt(_env *LnsEnv, arg1 string, arg2 LnsInt) *DumpNode_Opt {
     obj.InitDumpNode_Opt(_env, arg1, arg2)
     return obj
 }
-// 36: DeclConstr
+// 39: DeclConstr
 func (self *DumpNode_Opt) InitDumpNode_Opt(_env *LnsEnv, prefix string,depth LnsInt) {
     self.prefix = prefix
     
@@ -95,12 +95,12 @@ func (self *DumpNode_Opt) InitDumpNode_Opt(_env *LnsEnv, prefix string,depth Lns
     
 }
 
-// 41: decl @lune.@base.@dumpNode.Opt.get
+// 44: decl @lune.@base.@dumpNode.Opt.get
 func (self *DumpNode_Opt) Get(_env *LnsEnv)(string, LnsInt) {
     return self.prefix, self.depth
 }
 
-// 44: decl @lune.@base.@dumpNode.Opt.nextOpt
+// 47: decl @lune.@base.@dumpNode.Opt.nextOpt
 func (self *DumpNode_Opt) NextOpt(_env *LnsEnv) *DumpNode_Opt {
     {
         __exp := self.next
@@ -256,14 +256,14 @@ func (self *dumpNode_dumpFilter) InitdumpNode_dumpFilter(_env *LnsEnv, arg1 bool
     self.stream = arg4
     self.processInfo = arg5
 }
-// 58: decl @lune.@base.@dumpNode.dumpFilter.writeln
+// 61: decl @lune.@base.@dumpNode.dumpFilter.writeln
 func (self *dumpNode_dumpFilter) writeln(_env *LnsEnv, opt *DumpNode_Opt,txt string) {
     var prefix string
-    prefix = dumpNode_convExp137(Lns_2DDD(opt.FP.Get(_env)))
+    prefix = dumpNode_convExp139(Lns_2DDD(opt.FP.Get(_env)))
     self.stream.Write(_env, _env.LuaVM.String_format("%s%s\n", []LnsAny{prefix, Lns_car(_env.LuaVM.String_gsub(txt," *$", "")).(string)}))
 }
 
-// 62: decl @lune.@base.@dumpNode.dumpFilter.dump
+// 65: decl @lune.@base.@dumpNode.dumpFilter.dump
 func (self *dumpNode_dumpFilter) dump(_env *LnsEnv, opt *DumpNode_Opt,node *Nodes_Node,txt string) {
     var typeStr string
     typeStr = ""
@@ -310,44 +310,44 @@ func (self *dumpNode_dumpFilter) dump(_env *LnsEnv, opt *DumpNode_Opt,node *Node
     self.FP.writeln(_env, opt, _env.LuaVM.String_format(": %s:%d(%d:%d) %s %s %s %s", []LnsAny{Nodes_getNodeKindName(_env, node.FP.Get_kind(_env)), node.FP.Get_id(_env), node.FP.Get_effectivePos(_env).LineNo, node.FP.Get_effectivePos(_env).Column, attrib, txt, typeStr, comment}))
 }
 
-// 113: decl @lune.@base.@dumpNode.dumpFilter.processNone
+// 116: decl @lune.@base.@dumpNode.dumpFilter.processNone
 func (self *dumpNode_dumpFilter) ProcessNone(_env *LnsEnv, node *Nodes_NoneNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "")
 }
 
-// 118: decl @lune.@base.@dumpNode.dumpFilter.processShebang
+// 121: decl @lune.@base.@dumpNode.dumpFilter.processShebang
 func (self *dumpNode_dumpFilter) ProcessShebang(_env *LnsEnv, node *Nodes_ShebangNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, node.FP.Get_cmd(_env))
 }
 
-// 123: decl @lune.@base.@dumpNode.dumpFilter.processLuneControl
+// 126: decl @lune.@base.@dumpNode.dumpFilter.processLuneControl
 func (self *dumpNode_dumpFilter) ProcessLuneControl(_env *LnsEnv, node *Nodes_LuneControlNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, node.FP.Get_pragma(_env).(LnsAlgeVal).GetTxt())
 }
 
-// 128: decl @lune.@base.@dumpNode.dumpFilter.processBlankLine
+// 131: decl @lune.@base.@dumpNode.dumpFilter.processBlankLine
 func (self *dumpNode_dumpFilter) ProcessBlankLine(_env *LnsEnv, node *Nodes_BlankLineNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, _env.LuaVM.String_format("%d", []LnsAny{node.FP.Get_lineNum(_env)}))
 }
 
-// 133: decl @lune.@base.@dumpNode.dumpFilter.processLuneKind
+// 136: decl @lune.@base.@dumpNode.dumpFilter.processLuneKind
 func (self *dumpNode_dumpFilter) ProcessLuneKind(_env *LnsEnv, node *Nodes_LuneKindNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "")
     dumpNode_filter_1036_(_env, node.FP.Get_exp(_env), self, opt.FP.NextOpt(_env))
 }
 
-// 139: decl @lune.@base.@dumpNode.dumpFilter.processImport
+// 142: decl @lune.@base.@dumpNode.dumpFilter.processImport
 func (self *dumpNode_dumpFilter) ProcessImport(_env *LnsEnv, node *Nodes_ImportNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, node.FP.Get_modulePath(_env))
 }
 
-// 144: decl @lune.@base.@dumpNode.dumpFilter.processRoot
+// 147: decl @lune.@base.@dumpNode.dumpFilter.processRoot
 func (self *dumpNode_dumpFilter) ProcessRoot(_env *LnsEnv, node *Nodes_RootNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "")
@@ -357,20 +357,20 @@ func (self *dumpNode_dumpFilter) ProcessRoot(_env *LnsEnv, node *Nodes_RootNode,
     }
 }
 
-// 152: decl @lune.@base.@dumpNode.dumpFilter.processSubfile
+// 155: decl @lune.@base.@dumpNode.dumpFilter.processSubfile
 func (self *dumpNode_dumpFilter) ProcessSubfile(_env *LnsEnv, node *Nodes_SubfileNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "")
 }
 
-// 158: decl @lune.@base.@dumpNode.dumpFilter.processEnv
+// 161: decl @lune.@base.@dumpNode.dumpFilter.processEnv
 func (self *dumpNode_dumpFilter) ProcessEnv(_env *LnsEnv, node *Nodes_EnvNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "")
     dumpNode_filter_1036_(_env, &node.FP.Get_block(_env).Nodes_Node, self, opt.FP.NextOpt(_env))
 }
 
-// 165: decl @lune.@base.@dumpNode.dumpFilter.processBlockSub
+// 168: decl @lune.@base.@dumpNode.dumpFilter.processBlockSub
 func (self *dumpNode_dumpFilter) ProcessBlockSub(_env *LnsEnv, node *Nodes_BlockNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "")
@@ -380,21 +380,21 @@ func (self *dumpNode_dumpFilter) ProcessBlockSub(_env *LnsEnv, node *Nodes_Block
     }
 }
 
-// 174: decl @lune.@base.@dumpNode.dumpFilter.processScope
+// 177: decl @lune.@base.@dumpNode.dumpFilter.processScope
 func (self *dumpNode_dumpFilter) ProcessScope(_env *LnsEnv, node *Nodes_ScopeNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, Nodes_ScopeKind_getTxt( node.FP.Get_scopeKind(_env)))
     dumpNode_filter_1036_(_env, &node.FP.Get_block(_env).Nodes_Node, self, opt.FP.NextOpt(_env))
 }
 
-// 181: decl @lune.@base.@dumpNode.dumpFilter.processStmtExp
+// 184: decl @lune.@base.@dumpNode.dumpFilter.processStmtExp
 func (self *dumpNode_dumpFilter) ProcessStmtExp(_env *LnsEnv, node *Nodes_StmtExpNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "")
     dumpNode_filter_1036_(_env, node.FP.Get_exp(_env), self, opt.FP.NextOpt(_env))
 }
 
-// 188: decl @lune.@base.@dumpNode.dumpFilter.processDeclEnum
+// 191: decl @lune.@base.@dumpNode.dumpFilter.processDeclEnum
 func (self *dumpNode_dumpFilter) ProcessDeclEnum(_env *LnsEnv, node *Nodes_DeclEnumNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, node.FP.Get_name(_env).Txt)
@@ -405,17 +405,17 @@ func (self *dumpNode_dumpFilter) ProcessDeclEnum(_env *LnsEnv, node *Nodes_DeclE
         var valInfo *Ast_EnumValInfo
         valInfo = Lns_unwrap( enumTypeInfo.FP.GetEnumValInfo(_env, name.Txt)).(*Ast_EnumValInfo)
         var val LnsAny
-        switch _exp971 := valInfo.FP.Get_val(_env).(type) {
+        switch _exp973 := valInfo.FP.Get_val(_env).(type) {
         case *Ast_EnumLiteral__Int:
-        x := _exp971.Val1
+        x := _exp973.Val1
             val = x
             
         case *Ast_EnumLiteral__Real:
-        x := _exp971.Val1
+        x := _exp973.Val1
             val = x
             
         case *Ast_EnumLiteral__Str:
-        x := _exp971.Val1
+        x := _exp973.Val1
             val = x
             
         }
@@ -423,24 +423,24 @@ func (self *dumpNode_dumpFilter) ProcessDeclEnum(_env *LnsEnv, node *Nodes_DeclE
     }
 }
 
-// 211: decl @lune.@base.@dumpNode.dumpFilter.processDeclAlge
+// 214: decl @lune.@base.@dumpNode.dumpFilter.processDeclAlge
 func (self *dumpNode_dumpFilter) ProcessDeclAlge(_env *LnsEnv, node *Nodes_DeclAlgeNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     var algeTypeInfo *Ast_AlgeTypeInfo
     algeTypeInfo = node.FP.Get_algeType(_env)
     self.FP.dump(_env, opt, &node.Nodes_Node, algeTypeInfo.FP.Get_rawTxt(_env))
     {
-        __collection1052 := algeTypeInfo.FP.Get_valInfoMap(_env)
-        __sorted1052 := __collection1052.CreateKeyListStr()
-        __sorted1052.Sort( LnsItemKindStr, nil )
-        for _, ___key1052 := range( __sorted1052.Items ) {
-            valInfo := __collection1052.Items[ ___key1052 ].(Ast_AlgeValInfoDownCast).ToAst_AlgeValInfo()
+        __collection1054 := algeTypeInfo.FP.Get_valInfoMap(_env)
+        __sorted1054 := __collection1054.CreateKeyListStr()
+        __sorted1054.Sort( LnsItemKindStr, nil )
+        for _, ___key1054 := range( __sorted1054.Items ) {
+            valInfo := __collection1054.Items[ ___key1054 ].(Ast_AlgeValInfoDownCast).ToAst_AlgeValInfo()
             self.FP.writeln(_env, opt, _env.LuaVM.String_format("  %s: %s", []LnsAny{algeTypeInfo.FP.Get_rawTxt(_env), valInfo.FP.Get_name(_env)}))
         }
     }
 }
 
-// 221: decl @lune.@base.@dumpNode.dumpFilter.processNewAlgeVal
+// 224: decl @lune.@base.@dumpNode.dumpFilter.processNewAlgeVal
 func (self *dumpNode_dumpFilter) ProcessNewAlgeVal(_env *LnsEnv, node *Nodes_NewAlgeValNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, node.FP.Get_name(_env).Txt)
@@ -450,13 +450,13 @@ func (self *dumpNode_dumpFilter) ProcessNewAlgeVal(_env *LnsEnv, node *Nodes_New
     }
 }
 
-// 230: decl @lune.@base.@dumpNode.dumpFilter.processProtoClass
+// 233: decl @lune.@base.@dumpNode.dumpFilter.processProtoClass
 func (self *dumpNode_dumpFilter) ProcessProtoClass(_env *LnsEnv, node *Nodes_ProtoClassNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, node.FP.Get_name(_env).Txt)
 }
 
-// 236: decl @lune.@base.@dumpNode.dumpFilter.processDeclClass
+// 239: decl @lune.@base.@dumpNode.dumpFilter.processDeclClass
 func (self *dumpNode_dumpFilter) ProcessDeclClass(_env *LnsEnv, node *Nodes_DeclClassNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, _env.LuaVM.String_format("%s (%s)", []LnsAny{node.FP.Get_name(_env).Txt, self.FP.GetFull(_env, node.FP.Get_expType(_env), false)}))
@@ -466,14 +466,14 @@ func (self *dumpNode_dumpFilter) ProcessDeclClass(_env *LnsEnv, node *Nodes_Decl
     }
 }
 
-// 246: decl @lune.@base.@dumpNode.dumpFilter.processDeclMember
+// 249: decl @lune.@base.@dumpNode.dumpFilter.processDeclMember
 func (self *dumpNode_dumpFilter) ProcessDeclMember(_env *LnsEnv, node *Nodes_DeclMemberNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, node.FP.Get_name(_env).Txt)
     dumpNode_filter_1036_(_env, &node.FP.Get_refType(_env).Nodes_Node, self, opt.FP.NextOpt(_env))
 }
 
-// 252: decl @lune.@base.@dumpNode.dumpFilter.processExpMacroExp
+// 255: decl @lune.@base.@dumpNode.dumpFilter.processExpMacroExp
 func (self *dumpNode_dumpFilter) ProcessExpMacroExp(_env *LnsEnv, node *Nodes_ExpMacroExpNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "")
@@ -485,13 +485,13 @@ func (self *dumpNode_dumpFilter) ProcessExpMacroExp(_env *LnsEnv, node *Nodes_Ex
     }
 }
 
-// 261: decl @lune.@base.@dumpNode.dumpFilter.processDeclMacro
+// 264: decl @lune.@base.@dumpNode.dumpFilter.processDeclMacro
 func (self *dumpNode_dumpFilter) ProcessDeclMacro(_env *LnsEnv, node *Nodes_DeclMacroNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, node.FP.Get_expType(_env).FP.GetTxt(_env, nil, nil, nil))
 }
 
-// 266: decl @lune.@base.@dumpNode.dumpFilter.processExpMacroStat
+// 269: decl @lune.@base.@dumpNode.dumpFilter.processExpMacroStat
 func (self *dumpNode_dumpFilter) ProcessExpMacroStat(_env *LnsEnv, node *Nodes_ExpMacroStatNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, node.FP.Get_expType(_env).FP.GetTxt(_env, nil, nil, nil))
@@ -501,7 +501,7 @@ func (self *dumpNode_dumpFilter) ProcessExpMacroStat(_env *LnsEnv, node *Nodes_E
     }
 }
 
-// 276: decl @lune.@base.@dumpNode.dumpFilter.processUnwrapSet
+// 279: decl @lune.@base.@dumpNode.dumpFilter.processUnwrapSet
 func (self *dumpNode_dumpFilter) ProcessUnwrapSet(_env *LnsEnv, node *Nodes_UnwrapSetNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "")
@@ -512,7 +512,7 @@ func (self *dumpNode_dumpFilter) ProcessUnwrapSet(_env *LnsEnv, node *Nodes_Unwr
     }
 }
 
-// 288: decl @lune.@base.@dumpNode.dumpFilter.processIfUnwrap
+// 291: decl @lune.@base.@dumpNode.dumpFilter.processIfUnwrap
 func (self *dumpNode_dumpFilter) ProcessIfUnwrap(_env *LnsEnv, node *Nodes_IfUnwrapNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "")
@@ -526,7 +526,7 @@ func (self *dumpNode_dumpFilter) ProcessIfUnwrap(_env *LnsEnv, node *Nodes_IfUnw
     }
 }
 
-// 301: decl @lune.@base.@dumpNode.dumpFilter.processWhen
+// 304: decl @lune.@base.@dumpNode.dumpFilter.processWhen
 func (self *dumpNode_dumpFilter) ProcessWhen(_env *LnsEnv, node *Nodes_WhenNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     var symTxt string
@@ -547,7 +547,7 @@ func (self *dumpNode_dumpFilter) ProcessWhen(_env *LnsEnv, node *Nodes_WhenNode,
     }
 }
 
-// 317: decl @lune.@base.@dumpNode.dumpFilter.processDeclVar
+// 320: decl @lune.@base.@dumpNode.dumpFilter.processDeclVar
 func (self *dumpNode_dumpFilter) ProcessDeclVar(_env *LnsEnv, node *Nodes_DeclVarNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     var varName string
@@ -609,31 +609,31 @@ func (self *dumpNode_dumpFilter) ProcessDeclVar(_env *LnsEnv, node *Nodes_DeclVa
     }
 }
 
-// 356: decl @lune.@base.@dumpNode.dumpFilter.processDeclArg
+// 359: decl @lune.@base.@dumpNode.dumpFilter.processDeclArg
 func (self *dumpNode_dumpFilter) ProcessDeclArg(_env *LnsEnv, node *Nodes_DeclArgNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, _env.LuaVM.String_format("%s:%s", []LnsAny{node.FP.Get_name(_env).Txt, node.FP.Get_expType(_env).FP.GetTxt(_env, nil, nil, nil)}))
 }
 
-// 362: decl @lune.@base.@dumpNode.dumpFilter.processDeclArgDDD
+// 365: decl @lune.@base.@dumpNode.dumpFilter.processDeclArgDDD
 func (self *dumpNode_dumpFilter) ProcessDeclArgDDD(_env *LnsEnv, node *Nodes_DeclArgDDDNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "...")
 }
 
-// 367: decl @lune.@base.@dumpNode.dumpFilter.processExpSubDDD
+// 370: decl @lune.@base.@dumpNode.dumpFilter.processExpSubDDD
 func (self *dumpNode_dumpFilter) ProcessExpSubDDD(_env *LnsEnv, node *Nodes_ExpSubDDDNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, _env.LuaVM.String_format("... (%d)", []LnsAny{node.FP.Get_remainIndex(_env)}))
 }
 
-// 374: decl @lune.@base.@dumpNode.dumpFilter.processDeclForm
+// 377: decl @lune.@base.@dumpNode.dumpFilter.processDeclForm
 func (self *dumpNode_dumpFilter) ProcessDeclForm(_env *LnsEnv, node *Nodes_DeclFormNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, node.FP.Get_expType(_env).FP.GetTxt(_env, self.FP.Get_typeNameCtrl(_env), nil, nil))
 }
 
-// 379: decl @lune.@base.@dumpNode.dumpFilter.processDeclFuncInfo
+// 382: decl @lune.@base.@dumpNode.dumpFilter.processDeclFuncInfo
 func (self *dumpNode_dumpFilter) processDeclFuncInfo(_env *LnsEnv, node *Nodes_Node,declInfo *Nodes_DeclFuncInfo,opt *DumpNode_Opt) {
     var name string
     
@@ -680,37 +680,37 @@ func (self *dumpNode_dumpFilter) processDeclFuncInfo(_env *LnsEnv, node *Nodes_N
     }
 }
 
-// 403: decl @lune.@base.@dumpNode.dumpFilter.processDeclFunc
+// 406: decl @lune.@base.@dumpNode.dumpFilter.processDeclFunc
 func (self *dumpNode_dumpFilter) ProcessDeclFunc(_env *LnsEnv, node *Nodes_DeclFuncNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.processDeclFuncInfo(_env, &node.Nodes_Node, node.FP.Get_declInfo(_env), opt)
 }
 
-// 408: decl @lune.@base.@dumpNode.dumpFilter.processDeclMethod
+// 411: decl @lune.@base.@dumpNode.dumpFilter.processDeclMethod
 func (self *dumpNode_dumpFilter) ProcessDeclMethod(_env *LnsEnv, node *Nodes_DeclMethodNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.processDeclFuncInfo(_env, &node.Nodes_Node, node.FP.Get_declInfo(_env), opt)
 }
 
-// 413: decl @lune.@base.@dumpNode.dumpFilter.processProtoMethod
+// 416: decl @lune.@base.@dumpNode.dumpFilter.processProtoMethod
 func (self *dumpNode_dumpFilter) ProcessProtoMethod(_env *LnsEnv, node *Nodes_ProtoMethodNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.processDeclFuncInfo(_env, &node.Nodes_Node, node.FP.Get_declInfo(_env), opt)
 }
 
-// 418: decl @lune.@base.@dumpNode.dumpFilter.processDeclConstr
+// 421: decl @lune.@base.@dumpNode.dumpFilter.processDeclConstr
 func (self *dumpNode_dumpFilter) ProcessDeclConstr(_env *LnsEnv, node *Nodes_DeclConstrNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.processDeclFuncInfo(_env, &node.Nodes_Node, node.FP.Get_declInfo(_env), opt)
 }
 
-// 424: decl @lune.@base.@dumpNode.dumpFilter.processDeclDestr
+// 427: decl @lune.@base.@dumpNode.dumpFilter.processDeclDestr
 func (self *dumpNode_dumpFilter) ProcessDeclDestr(_env *LnsEnv, node *Nodes_DeclDestrNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "")
 }
 
-// 430: decl @lune.@base.@dumpNode.dumpFilter.processExpCallSuperCtor
+// 433: decl @lune.@base.@dumpNode.dumpFilter.processExpCallSuperCtor
 func (self *dumpNode_dumpFilter) ProcessExpCallSuperCtor(_env *LnsEnv, node *Nodes_ExpCallSuperCtorNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     var typeInfo *Ast_TypeInfo
@@ -718,7 +718,7 @@ func (self *dumpNode_dumpFilter) ProcessExpCallSuperCtor(_env *LnsEnv, node *Nod
     self.FP.dump(_env, opt, &node.Nodes_Node, typeInfo.FP.GetTxt(_env, nil, nil, nil))
 }
 
-// 436: decl @lune.@base.@dumpNode.dumpFilter.processExpCallSuper
+// 439: decl @lune.@base.@dumpNode.dumpFilter.processExpCallSuper
 func (self *dumpNode_dumpFilter) ProcessExpCallSuper(_env *LnsEnv, node *Nodes_ExpCallSuperNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     var typeInfo *Ast_TypeInfo
@@ -726,14 +726,14 @@ func (self *dumpNode_dumpFilter) ProcessExpCallSuper(_env *LnsEnv, node *Nodes_E
     self.FP.dump(_env, opt, &node.Nodes_Node, typeInfo.FP.GetTxt(_env, nil, nil, nil))
 }
 
-// 442: decl @lune.@base.@dumpNode.dumpFilter.processRefType
+// 445: decl @lune.@base.@dumpNode.dumpFilter.processRefType
 func (self *dumpNode_dumpFilter) ProcessRefType(_env *LnsEnv, node *Nodes_RefTypeNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "")
     dumpNode_filter_1036_(_env, node.FP.Get_name(_env), self, opt.FP.NextOpt(_env))
 }
 
-// 448: decl @lune.@base.@dumpNode.dumpFilter.processIf
+// 451: decl @lune.@base.@dumpNode.dumpFilter.processIf
 func (self *dumpNode_dumpFilter) ProcessIf(_env *LnsEnv, node *Nodes_IfNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "")
@@ -748,7 +748,7 @@ func (self *dumpNode_dumpFilter) ProcessIf(_env *LnsEnv, node *Nodes_IfNode,_opt
     }
 }
 
-// 460: decl @lune.@base.@dumpNode.dumpFilter.processSwitch
+// 463: decl @lune.@base.@dumpNode.dumpFilter.processSwitch
 func (self *dumpNode_dumpFilter) ProcessSwitch(_env *LnsEnv, node *Nodes_SwitchNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "")
@@ -769,7 +769,7 @@ func (self *dumpNode_dumpFilter) ProcessSwitch(_env *LnsEnv, node *Nodes_SwitchN
     }
 }
 
-// 474: decl @lune.@base.@dumpNode.dumpFilter.processMatch
+// 477: decl @lune.@base.@dumpNode.dumpFilter.processMatch
 func (self *dumpNode_dumpFilter) ProcessMatch(_env *LnsEnv, node *Nodes_MatchNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     var prefix string
@@ -793,7 +793,7 @@ func (self *dumpNode_dumpFilter) ProcessMatch(_env *LnsEnv, node *Nodes_MatchNod
     }
 }
 
-// 490: decl @lune.@base.@dumpNode.dumpFilter.processWhile
+// 493: decl @lune.@base.@dumpNode.dumpFilter.processWhile
 func (self *dumpNode_dumpFilter) ProcessWhile(_env *LnsEnv, node *Nodes_WhileNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "")
@@ -801,7 +801,7 @@ func (self *dumpNode_dumpFilter) ProcessWhile(_env *LnsEnv, node *Nodes_WhileNod
     dumpNode_filter_1036_(_env, &node.FP.Get_block(_env).Nodes_Node, self, opt.FP.NextOpt(_env))
 }
 
-// 497: decl @lune.@base.@dumpNode.dumpFilter.processRepeat
+// 500: decl @lune.@base.@dumpNode.dumpFilter.processRepeat
 func (self *dumpNode_dumpFilter) ProcessRepeat(_env *LnsEnv, node *Nodes_RepeatNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "")
@@ -809,7 +809,7 @@ func (self *dumpNode_dumpFilter) ProcessRepeat(_env *LnsEnv, node *Nodes_RepeatN
     dumpNode_filter_1036_(_env, node.FP.Get_exp(_env), self, opt.FP.NextOpt(_env))
 }
 
-// 504: decl @lune.@base.@dumpNode.dumpFilter.processFor
+// 507: decl @lune.@base.@dumpNode.dumpFilter.processFor
 func (self *dumpNode_dumpFilter) ProcessFor(_env *LnsEnv, node *Nodes_ForNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, node.FP.Get_val(_env).FP.Get_name(_env))
@@ -825,7 +825,7 @@ func (self *dumpNode_dumpFilter) ProcessFor(_env *LnsEnv, node *Nodes_ForNode,_o
     dumpNode_filter_1036_(_env, &node.FP.Get_block(_env).Nodes_Node, self, opt.FP.NextOpt(_env))
 }
 
-// 515: decl @lune.@base.@dumpNode.dumpFilter.processApply
+// 518: decl @lune.@base.@dumpNode.dumpFilter.processApply
 func (self *dumpNode_dumpFilter) ProcessApply(_env *LnsEnv, node *Nodes_ApplyNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     var varNames string
@@ -842,7 +842,7 @@ func (self *dumpNode_dumpFilter) ProcessApply(_env *LnsEnv, node *Nodes_ApplyNod
     dumpNode_filter_1036_(_env, &node.FP.Get_block(_env).Nodes_Node, self, opt.FP.NextOpt(_env))
 }
 
-// 527: decl @lune.@base.@dumpNode.dumpFilter.processForeach
+// 530: decl @lune.@base.@dumpNode.dumpFilter.processForeach
 func (self *dumpNode_dumpFilter) ProcessForeach(_env *LnsEnv, node *Nodes_ForeachNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     var index string
@@ -860,7 +860,7 @@ func (self *dumpNode_dumpFilter) ProcessForeach(_env *LnsEnv, node *Nodes_Foreac
     dumpNode_filter_1036_(_env, &node.FP.Get_block(_env).Nodes_Node, self, opt.FP.NextOpt(_env))
 }
 
-// 538: decl @lune.@base.@dumpNode.dumpFilter.processForsort
+// 541: decl @lune.@base.@dumpNode.dumpFilter.processForsort
 func (self *dumpNode_dumpFilter) ProcessForsort(_env *LnsEnv, node *Nodes_ForsortNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     var index string
@@ -878,7 +878,7 @@ func (self *dumpNode_dumpFilter) ProcessForsort(_env *LnsEnv, node *Nodes_Forsor
     dumpNode_filter_1036_(_env, &node.FP.Get_block(_env).Nodes_Node, self, opt.FP.NextOpt(_env))
 }
 
-// 550: decl @lune.@base.@dumpNode.dumpFilter.processExpUnwrap
+// 553: decl @lune.@base.@dumpNode.dumpFilter.processExpUnwrap
 func (self *dumpNode_dumpFilter) ProcessExpUnwrap(_env *LnsEnv, node *Nodes_ExpUnwrapNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "")
@@ -892,7 +892,7 @@ func (self *dumpNode_dumpFilter) ProcessExpUnwrap(_env *LnsEnv, node *Nodes_ExpU
     }
 }
 
-// 571: decl @lune.@base.@dumpNode.dumpFilter.processExpCall
+// 574: decl @lune.@base.@dumpNode.dumpFilter.processExpCall
 func (self *dumpNode_dumpFilter) ProcessExpCall(_env *LnsEnv, node *Nodes_ExpCallNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     var mess string
@@ -908,7 +908,7 @@ func (self *dumpNode_dumpFilter) ProcessExpCall(_env *LnsEnv, node *Nodes_ExpCal
     }
 }
 
-// 582: decl @lune.@base.@dumpNode.dumpFilter.processExpList
+// 585: decl @lune.@base.@dumpNode.dumpFilter.processExpList
 func (self *dumpNode_dumpFilter) ProcessExpList(_env *LnsEnv, node *Nodes_ExpListNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     var mess string
@@ -937,55 +937,55 @@ func (self *dumpNode_dumpFilter) ProcessExpList(_env *LnsEnv, node *Nodes_ExpLis
     }
 }
 
-// 602: decl @lune.@base.@dumpNode.dumpFilter.processExpMRet
+// 605: decl @lune.@base.@dumpNode.dumpFilter.processExpMRet
 func (self *dumpNode_dumpFilter) ProcessExpMRet(_env *LnsEnv, node *Nodes_ExpMRetNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "")
     dumpNode_filter_1036_(_env, node.FP.Get_mRet(_env), self, opt.FP.NextOpt(_env))
 }
 
-// 609: decl @lune.@base.@dumpNode.dumpFilter.processExpAccessMRet
+// 612: decl @lune.@base.@dumpNode.dumpFilter.processExpAccessMRet
 func (self *dumpNode_dumpFilter) ProcessExpAccessMRet(_env *LnsEnv, node *Nodes_ExpAccessMRetNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, _env.LuaVM.String_format("%d", []LnsAny{node.FP.Get_index(_env)}))
 }
 
-// 615: decl @lune.@base.@dumpNode.dumpFilter.processExpOp1
+// 618: decl @lune.@base.@dumpNode.dumpFilter.processExpOp1
 func (self *dumpNode_dumpFilter) ProcessExpOp1(_env *LnsEnv, node *Nodes_ExpOp1Node,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, node.FP.Get_op(_env).Txt)
     dumpNode_filter_1036_(_env, node.FP.Get_exp(_env), self, opt.FP.NextOpt(_env))
 }
 
-// 622: decl @lune.@base.@dumpNode.dumpFilter.processExpToDDD
+// 625: decl @lune.@base.@dumpNode.dumpFilter.processExpToDDD
 func (self *dumpNode_dumpFilter) ProcessExpToDDD(_env *LnsEnv, node *Nodes_ExpToDDDNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "")
     dumpNode_filter_1036_(_env, &node.FP.Get_expList(_env).Nodes_Node, self, opt.FP.NextOpt(_env))
 }
 
-// 629: decl @lune.@base.@dumpNode.dumpFilter.processExpMultiTo1
+// 632: decl @lune.@base.@dumpNode.dumpFilter.processExpMultiTo1
 func (self *dumpNode_dumpFilter) ProcessExpMultiTo1(_env *LnsEnv, node *Nodes_ExpMultiTo1Node,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "")
     dumpNode_filter_1036_(_env, node.FP.Get_exp(_env), self, opt.FP.NextOpt(_env))
 }
 
-// 636: decl @lune.@base.@dumpNode.dumpFilter.processExpCast
+// 639: decl @lune.@base.@dumpNode.dumpFilter.processExpCast
 func (self *dumpNode_dumpFilter) ProcessExpCast(_env *LnsEnv, node *Nodes_ExpCastNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, _env.LuaVM.String_format("%s(%d) -> %s(%d)", []LnsAny{node.FP.Get_exp(_env).FP.Get_expType(_env).FP.GetTxt(_env, self.FP.Get_typeNameCtrl(_env), nil, nil), node.FP.Get_exp(_env).FP.Get_expType(_env).FP.Get_typeId(_env).Id, node.FP.Get_castType(_env).FP.GetTxt(_env, self.FP.Get_typeNameCtrl(_env), nil, nil), node.FP.Get_castType(_env).FP.Get_typeId(_env).Id}))
     dumpNode_filter_1036_(_env, node.FP.Get_exp(_env), self, opt.FP.NextOpt(_env))
 }
 
-// 647: decl @lune.@base.@dumpNode.dumpFilter.processExpParen
+// 650: decl @lune.@base.@dumpNode.dumpFilter.processExpParen
 func (self *dumpNode_dumpFilter) ProcessExpParen(_env *LnsEnv, node *Nodes_ExpParenNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "()")
     dumpNode_filter_1036_(_env, node.FP.Get_exp(_env), self, opt.FP.NextOpt(_env))
 }
 
-// 653: decl @lune.@base.@dumpNode.dumpFilter.processExpSetVal
+// 656: decl @lune.@base.@dumpNode.dumpFilter.processExpSetVal
 func (self *dumpNode_dumpFilter) ProcessExpSetVal(_env *LnsEnv, node *Nodes_ExpSetValNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, _env.LuaVM.String_format("= %s", []LnsAny{node.FP.Get_expType(_env).FP.GetTxt(_env, self.FP.Get_typeNameCtrl(_env), nil, nil)}))
@@ -993,20 +993,20 @@ func (self *dumpNode_dumpFilter) ProcessExpSetVal(_env *LnsEnv, node *Nodes_ExpS
     dumpNode_filter_1036_(_env, &node.FP.Get_exp2(_env).Nodes_Node, self, opt.FP.NextOpt(_env))
 }
 
-// 660: decl @lune.@base.@dumpNode.dumpFilter.processExpSetItem
+// 663: decl @lune.@base.@dumpNode.dumpFilter.processExpSetItem
 func (self *dumpNode_dumpFilter) ProcessExpSetItem(_env *LnsEnv, node *Nodes_ExpSetItemNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     var indexSym string
     indexSym = ""
     var indexNode LnsAny
     indexNode = nil
-    switch _exp3848 := node.FP.Get_index(_env).(type) {
+    switch _exp3850 := node.FP.Get_index(_env).(type) {
     case *Nodes_IndexVal__NodeIdx:
-    index := _exp3848.Val1
+    index := _exp3850.Val1
         indexNode = index
         
     case *Nodes_IndexVal__SymIdx:
-    index := _exp3848.Val1
+    index := _exp3850.Val1
         indexSym = index
         
     }
@@ -1019,7 +1019,7 @@ func (self *dumpNode_dumpFilter) ProcessExpSetItem(_env *LnsEnv, node *Nodes_Exp
     dumpNode_filter_1036_(_env, node.FP.Get_exp2(_env), self, opt.FP.NextOpt(_env))
 }
 
-// 680: decl @lune.@base.@dumpNode.dumpFilter.processExpOp2
+// 683: decl @lune.@base.@dumpNode.dumpFilter.processExpOp2
 func (self *dumpNode_dumpFilter) ProcessExpOp2(_env *LnsEnv, node *Nodes_ExpOp2Node,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, _env.LuaVM.String_format("%s -> %s", []LnsAny{node.FP.Get_op(_env).Txt, node.FP.Get_expType(_env).FP.GetTxt(_env, self.FP.Get_typeNameCtrl(_env), nil, nil)}))
@@ -1027,7 +1027,7 @@ func (self *dumpNode_dumpFilter) ProcessExpOp2(_env *LnsEnv, node *Nodes_ExpOp2N
     dumpNode_filter_1036_(_env, node.FP.Get_exp2(_env), self, opt.FP.NextOpt(_env))
 }
 
-// 688: decl @lune.@base.@dumpNode.dumpFilter.processExpNew
+// 691: decl @lune.@base.@dumpNode.dumpFilter.processExpNew
 func (self *dumpNode_dumpFilter) ProcessExpNew(_env *LnsEnv, node *Nodes_ExpNewNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "")
@@ -1041,13 +1041,13 @@ func (self *dumpNode_dumpFilter) ProcessExpNew(_env *LnsEnv, node *Nodes_ExpNewN
     }
 }
 
-// 698: decl @lune.@base.@dumpNode.dumpFilter.processExpRef
+// 701: decl @lune.@base.@dumpNode.dumpFilter.processExpRef
 func (self *dumpNode_dumpFilter) ProcessExpRef(_env *LnsEnv, node *Nodes_ExpRefNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, _env.LuaVM.String_format("%s:%s", []LnsAny{node.FP.Get_symbolInfo(_env).FP.Get_name(_env), node.FP.Get_expType(_env).FP.GetTxt(_env, nil, nil, nil)}))
 }
 
-// 704: decl @lune.@base.@dumpNode.dumpFilter.processExpRefItem
+// 707: decl @lune.@base.@dumpNode.dumpFilter.processExpRefItem
 func (self *dumpNode_dumpFilter) ProcessExpRefItem(_env *LnsEnv, node *Nodes_ExpRefItemNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "seq[exp] " + node.FP.Get_expType(_env).FP.GetTxt(_env, nil, nil, nil))
@@ -1061,7 +1061,7 @@ func (self *dumpNode_dumpFilter) ProcessExpRefItem(_env *LnsEnv, node *Nodes_Exp
     }
 }
 
-// 713: decl @lune.@base.@dumpNode.dumpFilter.processRefField
+// 716: decl @lune.@base.@dumpNode.dumpFilter.processRefField
 func (self *dumpNode_dumpFilter) ProcessRefField(_env *LnsEnv, node *Nodes_RefFieldNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, _env.LuaVM.String_format("%s:%s:%s", []LnsAny{node.FP.Get_field(_env).Txt, _env.PopVal( _env.IncStack() ||
@@ -1072,20 +1072,20 @@ func (self *dumpNode_dumpFilter) ProcessRefField(_env *LnsEnv, node *Nodes_RefFi
     dumpNode_filter_1036_(_env, node.FP.Get_prefix(_env), self, opt.FP.NextOpt(_env))
 }
 
-// 722: decl @lune.@base.@dumpNode.dumpFilter.processExpOmitEnum
+// 725: decl @lune.@base.@dumpNode.dumpFilter.processExpOmitEnum
 func (self *dumpNode_dumpFilter) ProcessExpOmitEnum(_env *LnsEnv, node *Nodes_ExpOmitEnumNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, _env.LuaVM.String_format("%s.%s", []LnsAny{node.FP.Get_expType(_env).FP.GetTxt(_env, nil, nil, nil), node.FP.Get_valToken(_env).Txt}))
 }
 
-// 729: decl @lune.@base.@dumpNode.dumpFilter.processGetField
+// 732: decl @lune.@base.@dumpNode.dumpFilter.processGetField
 func (self *dumpNode_dumpFilter) ProcessGetField(_env *LnsEnv, node *Nodes_GetFieldNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, _env.LuaVM.String_format("get_%s:%s", []LnsAny{node.FP.Get_field(_env).Txt, node.FP.Get_expType(_env).FP.GetTxt(_env, nil, nil, nil)}))
     dumpNode_filter_1036_(_env, node.FP.Get_prefix(_env), self, opt.FP.NextOpt(_env))
 }
 
-// 737: decl @lune.@base.@dumpNode.dumpFilter.processReturn
+// 740: decl @lune.@base.@dumpNode.dumpFilter.processReturn
 func (self *dumpNode_dumpFilter) ProcessReturn(_env *LnsEnv, node *Nodes_ReturnNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "")
@@ -1098,26 +1098,26 @@ func (self *dumpNode_dumpFilter) ProcessReturn(_env *LnsEnv, node *Nodes_ReturnN
     }
 }
 
-// 747: decl @lune.@base.@dumpNode.dumpFilter.processProvide
+// 750: decl @lune.@base.@dumpNode.dumpFilter.processProvide
 func (self *dumpNode_dumpFilter) ProcessProvide(_env *LnsEnv, node *Nodes_ProvideNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, node.FP.Get_symbol(_env).FP.Get_name(_env))
 }
 
-// 753: decl @lune.@base.@dumpNode.dumpFilter.processAlias
+// 756: decl @lune.@base.@dumpNode.dumpFilter.processAlias
 func (self *dumpNode_dumpFilter) ProcessAlias(_env *LnsEnv, node *Nodes_AliasNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, _env.LuaVM.String_format("%s = %s", []LnsAny{node.FP.Get_newSymbol(_env).FP.Get_name(_env), node.FP.Get_typeInfo(_env).FP.GetTxt(_env, nil, nil, nil)}))
 }
 
-// 759: decl @lune.@base.@dumpNode.dumpFilter.processTestCase
+// 762: decl @lune.@base.@dumpNode.dumpFilter.processTestCase
 func (self *dumpNode_dumpFilter) ProcessTestCase(_env *LnsEnv, node *Nodes_TestCaseNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, node.FP.Get_name(_env).Txt)
     dumpNode_filter_1036_(_env, &node.FP.Get_block(_env).Nodes_Node, self, opt.FP.NextOpt(_env))
 }
 
-// 766: decl @lune.@base.@dumpNode.dumpFilter.processTestBlock
+// 769: decl @lune.@base.@dumpNode.dumpFilter.processTestBlock
 func (self *dumpNode_dumpFilter) ProcessTestBlock(_env *LnsEnv, node *Nodes_TestBlockNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "")
@@ -1127,21 +1127,21 @@ func (self *dumpNode_dumpFilter) ProcessTestBlock(_env *LnsEnv, node *Nodes_Test
     }
 }
 
-// 775: decl @lune.@base.@dumpNode.dumpFilter.processBoxing
+// 778: decl @lune.@base.@dumpNode.dumpFilter.processBoxing
 func (self *dumpNode_dumpFilter) ProcessBoxing(_env *LnsEnv, node *Nodes_BoxingNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "")
     dumpNode_filter_1036_(_env, node.FP.Get_src(_env), self, opt.FP.NextOpt(_env))
 }
 
-// 782: decl @lune.@base.@dumpNode.dumpFilter.processUnboxing
+// 785: decl @lune.@base.@dumpNode.dumpFilter.processUnboxing
 func (self *dumpNode_dumpFilter) ProcessUnboxing(_env *LnsEnv, node *Nodes_UnboxingNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "")
     dumpNode_filter_1036_(_env, node.FP.Get_src(_env), self, opt.FP.NextOpt(_env))
 }
 
-// 789: decl @lune.@base.@dumpNode.dumpFilter.processLiteralList
+// 792: decl @lune.@base.@dumpNode.dumpFilter.processLiteralList
 func (self *dumpNode_dumpFilter) ProcessLiteralList(_env *LnsEnv, node *Nodes_LiteralListNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "[]")
@@ -1154,7 +1154,7 @@ func (self *dumpNode_dumpFilter) ProcessLiteralList(_env *LnsEnv, node *Nodes_Li
     }
 }
 
-// 797: decl @lune.@base.@dumpNode.dumpFilter.processLiteralSet
+// 800: decl @lune.@base.@dumpNode.dumpFilter.processLiteralSet
 func (self *dumpNode_dumpFilter) ProcessLiteralSet(_env *LnsEnv, node *Nodes_LiteralSetNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "(@)")
@@ -1167,7 +1167,7 @@ func (self *dumpNode_dumpFilter) ProcessLiteralSet(_env *LnsEnv, node *Nodes_Lit
     }
 }
 
-// 805: decl @lune.@base.@dumpNode.dumpFilter.processLiteralMap
+// 808: decl @lune.@base.@dumpNode.dumpFilter.processLiteralMap
 func (self *dumpNode_dumpFilter) ProcessLiteralMap(_env *LnsEnv, node *Nodes_LiteralMapNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "{}")
@@ -1180,7 +1180,7 @@ func (self *dumpNode_dumpFilter) ProcessLiteralMap(_env *LnsEnv, node *Nodes_Lit
     }
 }
 
-// 816: decl @lune.@base.@dumpNode.dumpFilter.processLiteralArray
+// 819: decl @lune.@base.@dumpNode.dumpFilter.processLiteralArray
 func (self *dumpNode_dumpFilter) ProcessLiteralArray(_env *LnsEnv, node *Nodes_LiteralArrayNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "[@]")
@@ -1193,25 +1193,25 @@ func (self *dumpNode_dumpFilter) ProcessLiteralArray(_env *LnsEnv, node *Nodes_L
     }
 }
 
-// 824: decl @lune.@base.@dumpNode.dumpFilter.processLiteralChar
+// 827: decl @lune.@base.@dumpNode.dumpFilter.processLiteralChar
 func (self *dumpNode_dumpFilter) ProcessLiteralChar(_env *LnsEnv, node *Nodes_LiteralCharNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, _env.LuaVM.String_format("%s(%s)", []LnsAny{node.FP.Get_num(_env), node.FP.Get_token(_env).Txt}))
 }
 
-// 830: decl @lune.@base.@dumpNode.dumpFilter.processLiteralInt
+// 833: decl @lune.@base.@dumpNode.dumpFilter.processLiteralInt
 func (self *dumpNode_dumpFilter) ProcessLiteralInt(_env *LnsEnv, node *Nodes_LiteralIntNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, _env.LuaVM.String_format("%s(%s)", []LnsAny{node.FP.Get_num(_env), node.FP.Get_token(_env).Txt}))
 }
 
-// 836: decl @lune.@base.@dumpNode.dumpFilter.processLiteralReal
+// 839: decl @lune.@base.@dumpNode.dumpFilter.processLiteralReal
 func (self *dumpNode_dumpFilter) ProcessLiteralReal(_env *LnsEnv, node *Nodes_LiteralRealNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, _env.LuaVM.String_format("%s(%s)", []LnsAny{node.FP.Get_num(_env), node.FP.Get_token(_env).Txt}))
 }
 
-// 842: decl @lune.@base.@dumpNode.dumpFilter.processLiteralString
+// 845: decl @lune.@base.@dumpNode.dumpFilter.processLiteralString
 func (self *dumpNode_dumpFilter) ProcessLiteralString(_env *LnsEnv, node *Nodes_LiteralStringNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, node.FP.Get_token(_env).Txt)
@@ -1227,7 +1227,7 @@ func (self *dumpNode_dumpFilter) ProcessLiteralString(_env *LnsEnv, node *Nodes_
     }
 }
 
-// 852: decl @lune.@base.@dumpNode.dumpFilter.processLiteralBool
+// 855: decl @lune.@base.@dumpNode.dumpFilter.processLiteralBool
 func (self *dumpNode_dumpFilter) ProcessLiteralBool(_env *LnsEnv, node *Nodes_LiteralBoolNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, _env.PopVal( _env.IncStack() ||
@@ -1236,25 +1236,25 @@ func (self *dumpNode_dumpFilter) ProcessLiteralBool(_env *LnsEnv, node *Nodes_Li
         _env.SetStackVal( "false") ).(string))
 }
 
-// 858: decl @lune.@base.@dumpNode.dumpFilter.processLiteralNil
+// 861: decl @lune.@base.@dumpNode.dumpFilter.processLiteralNil
 func (self *dumpNode_dumpFilter) ProcessLiteralNil(_env *LnsEnv, node *Nodes_LiteralNilNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "")
 }
 
-// 863: decl @lune.@base.@dumpNode.dumpFilter.processBreak
+// 866: decl @lune.@base.@dumpNode.dumpFilter.processBreak
 func (self *dumpNode_dumpFilter) ProcessBreak(_env *LnsEnv, node *Nodes_BreakNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "")
 }
 
-// 868: decl @lune.@base.@dumpNode.dumpFilter.processLiteralSymbol
+// 871: decl @lune.@base.@dumpNode.dumpFilter.processLiteralSymbol
 func (self *dumpNode_dumpFilter) ProcessLiteralSymbol(_env *LnsEnv, node *Nodes_LiteralSymbolNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, node.FP.Get_token(_env).Txt)
 }
 
-// 874: decl @lune.@base.@dumpNode.dumpFilter.processAbbr
+// 877: decl @lune.@base.@dumpNode.dumpFilter.processAbbr
 func (self *dumpNode_dumpFilter) ProcessAbbr(_env *LnsEnv, node *Nodes_AbbrNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "##")

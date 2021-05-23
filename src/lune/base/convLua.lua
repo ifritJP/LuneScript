@@ -197,6 +197,8 @@ end
 if not _lune3 then
    _lune3 = _lune
 end
+
+
 local Ver = _lune.loadModule( 'lune.base.Ver' )
 local Str = _lune.loadModule( 'lune.base.Str' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
@@ -4250,7 +4252,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3580, function (  )
+   Log.log( Log.Level.Trace, __func__, 3582, function (  )
    
       return string.format( "macro: %s", code)
    end )
