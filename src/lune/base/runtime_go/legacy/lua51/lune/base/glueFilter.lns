@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+_lune_control default_async_all;
+
 import lune.base.Ast;
 import lune.base.Nodes;
 //import lune.base.Parser;

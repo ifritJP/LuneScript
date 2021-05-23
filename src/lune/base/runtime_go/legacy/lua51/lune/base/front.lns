@@ -22,6 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+      
+// _lune_control default_async_all;
+
 import lune.base.Types;
 import lune.base.Str;
 import lune.base.frontInterface;
@@ -60,21 +63,25 @@ Depend.setup( fn(ver:int) {
 let forceUpdateMeta = true;
 
 class LoadInfo {
+   /** モジュールの lua コードのロード結果 */
    pub let mut mod:Luaval<&stem>;
+   /** モジュールのメタ情報 */
    pub let mut meta:frontInterface.ModuleMeta;
 }
 
 pub form AstCallback( ast: TransUnit.ASTInfo );
 
 alge UptodateInfo {
-   /** 最新で更新不要 */
+   /** 最新で更新不要。 .meta から情報を読み込んでいる */
    Uptodate(frontInterface.ModuleMeta),
-   /** 更新済み */
+   /** 更新済み。 .lns から .meta を構築している */
    Update(frontInterface.ModuleInfo, TransUnit.ASTInfo),
 }
 
 class ModuleMgr {
+   /** mod → 更新情報 */
    let mut mod2info:Util.OrderdMap<str,UptodateInfo>;
+   /** mod → ロード済みメタ情報 */
    let mut loadedMetaMap:Map<str,frontInterface.ModuleMeta>;
    
    pub fn __init() {
@@ -156,11 +163,12 @@ class Front extend (frontInterface.frontInterface) {
    let mut loadedMap:Map<str,LoadInfo>;
    /** import 済みの Test ビルド用モジュールと、その LoadInfoの紐付け。 */ 
    let mut loadedMapTest:Map<str,LoadInfo>;
+   /** import 済みのモジュール → Lua コードのマップ */
    let mut convertedMap:Map<str,str>;
    let mut gomodMap:GoMod.ModInfo;
 
    let mut bindModuleSet:Set<str>;
-   let moduleMgr:allmut ModuleMgr;
+   let moduleMgr:ModuleMgr;
    let targetSet:Set<str>;
 
 
@@ -268,8 +276,9 @@ fn Front.createPaser( scriptPath:str ): Parser.Parser
 
 fn Front.createAst(
    importModuleInfo:frontInterface.ImportModuleInfo,
-   parser:Parser.Parser, mod:str, moduleId:&frontInterface.ModuleId, analyzeModule:str!,
-   analyzeMode:TransUnit.AnalyzeMode, pos:&Parser.Position! ) mut : TransUnit.ASTInfo
+   parser:Parser.Parser, mod:str, moduleId:&frontInterface.ModuleId,
+   analyzeModule:str!, analyzeMode:TransUnit.AnalyzeMode,
+   pos:&Parser.Position! ) mut : TransUnit.ASTInfo
 {
    if! self.moduleMgr.get( mod ) {
       match _exp {

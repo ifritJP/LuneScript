@@ -1,5 +1,3 @@
-// +build noEnvArg
-
 /*
 MIT License
 
@@ -24,36 +22,38 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-package runtimelns
+_lune_control default_async_all;
 
-type Lns_pipeMtd interface {
-	Put(val LnsAny)
-	Get() LnsAny
+class RunItem extend (__AsyncItem,Mapping) {
+   let result:bool {pub};
 }
 
-func (self *Lns__pipe) Put(val LnsAny) {
-	self.put(val)
-}
-func (self *Lns__pipe) Get() LnsAny {
-	return self.get()
-}
+abstract class Runner extend (__Runner) {
+   
+   let pipe:__pipe<RunItem>!;
 
-type LnsThreadMtd interface {
-	Loop()
-}
+   pub fn __init() {
+      self.pipe = RunItem._createPipe( 1 );
+   }
+   
+   pub abstract fn runMain() mut;
 
-func (self *LnsThread) InitLnsThread() {
-	self.initLnsThread()
-}
+   pub fn run() mut {
+      self.runMain();
 
-func (self *LnsThread) runLoop() {
-	self.FP.Loop()
-}
+      if! self.pipe {
+         _exp.put( new RunItem( true ));
+      }
+   }
 
-type LnsRunner interface {
-	Run()
-}
-
-func LnsRun(self LnsRunner) {
-	self.Run()
+   
+   pub fn start() mut {
+      _lune_control run_async_runner;
+   }
+   pub fn getResult() mut : bool {
+      if! let mut pipe = self.pipe {
+         return unwrap pipe.get()$.$result default false;
+      }
+      return false;
+   }
 }

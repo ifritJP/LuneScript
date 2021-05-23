@@ -1778,6 +1778,20 @@ fn TransUnit.analyzeLuneControl(
             return nil;
          }
       }
+      case "run_async_runner" {
+         let nowMethod = self.getCurrentNamespaceTypeInfo();
+         let nowClass = self.getCurrentClass();
+         if nowMethod.$kind == .Method and
+            nowClass.isInheritFrom( self.processInfo, Ast.builtinTypeRunner, nil )
+         {
+            pragma = LuneControl.Pragma.run_async_runner;
+         } else {
+            self.addErrMess(
+               nextToken.pos, 
+               "this option only use in the class inherit the __Runner." );
+            return nil;
+         }
+      }
       case "default_async_func" {
          pragma = LuneControl.Pragma.default_async_func;
          self.defaultAsyncMode = .AsyncFunc;

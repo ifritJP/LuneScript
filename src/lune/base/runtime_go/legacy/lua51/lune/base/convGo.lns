@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+_lune_control default_async_all;
+
 import lune.base.Ver;
 import lune.base.Ast;
 import lune.base.Nodes;
@@ -124,7 +126,7 @@ class convFilter extend Nodes.Filter<Opt> {
    pri let mut type2gotypeMap:&Map<&Ast.TypeInfo,str>;
    pri let mut nodeManager:Nodes.NodeManager;
    pri let mut enableTest:bool;
-   let processInfo: allmut Ast.ProcessInfo;
+   let processInfo: Ast.ProcessInfo;
    pri let noneNode:Nodes.NoneNode;
    let option:&Option;
    let modDir:str;
@@ -133,7 +135,7 @@ class convFilter extend Nodes.Filter<Opt> {
    let mut moduleType2SymbolMap:Map<&Ast.TypeInfo,&Ast.SymbolInfo>;
 
    pub fn __init( enableTest:bool, streamName: str, stream: oStream,
-                  ast:&TransUnit.ASTInfo, option:&Option )
+                  ast:TransUnit.ASTInfo, option:&Option )
    {
       super(true, ast.$exportInfo.$moduleTypeInfo,
              ast.$exportInfo.$moduleTypeInfo.$scope);
@@ -178,7 +180,7 @@ class convFilter extend Nodes.Filter<Opt> {
       self.processModeStack.remove(##);
    }
 
-   pro fn isPubType( typeInfo:&Ast.TypeInfo ) : bool {
+   pro fn isPubType( typeInfo:&Ast.TypeInfo ) mut : bool {
       if Ast.isPubToExternal( typeInfo.$accessMode ) {
          if typeInfo.$kind == .Func {
             switch typeInfo.$parentInfo.$kind {
@@ -191,17 +193,17 @@ class convFilter extend Nodes.Filter<Opt> {
       }
       return not typeInfo.getModule().equals( self.processInfo, self.moduleTypeInfo ##);
    }
-   pro fn isPubSym( symbol:&Ast.SymbolInfo ) : bool {
+   pro fn isPubSym( symbol:&Ast.SymbolInfo ) mut : bool {
       if Ast.isPubToExternal( symbol.$accessMode ) {
          return true;
       }
       return not symbol.getModule().equals( self.processInfo, self.moduleTypeInfo ##);
    }
    
-   pro fn isExtType( typeInfo:&Ast.TypeInfo ) : bool {
+   pro fn isExtType( typeInfo:&Ast.TypeInfo ) mut : bool {
       return not typeInfo.getModule().equals( self.processInfo, self.moduleTypeInfo ##);
    }
-   pro fn isExtSymbol( symbol:&Ast.SymbolInfo ) : bool {
+   pro fn isExtSymbol( symbol:&Ast.SymbolInfo ) mut : bool {
       return not symbol.getModule().equals( self.processInfo, self.moduleTypeInfo ## );
    }
 
@@ -430,7 +432,7 @@ fn convFilter.getModuleName( typeInfo:&Ast.TypeInfo, assign:bool ) : str {
    return (moduleType.$rawTxt.gsub( "@", "" ));
 }
 
-fn convFilter.concatSymWithType( name:str, typeInfo:&Ast.TypeInfo ) : str {
+fn convFilter.concatSymWithType( name:str, typeInfo:&Ast.TypeInfo ) mut : str {
    let modName = self.getModuleName( typeInfo.getModule(), false );
    let typeName;
    if modName == "" {
@@ -453,7 +455,7 @@ fn convFilter.isSamePackageExtModule( typeInfo:&Ast.TypeInfo ) : bool {
    return requireParent == moduleParent;
 }
 
-fn convFilter.isSameModDir( moduleTypeInfo:&Ast.TypeInfo ) : bool {
+fn convFilter.isSameModDir( moduleTypeInfo:&Ast.TypeInfo ) mut : bool {
    if moduleTypeInfo.$parentInfo.equals(
       self.processInfo, self.moduleTypeInfo.$parentInfo ## )
    {
@@ -462,14 +464,14 @@ fn convFilter.isSameModDir( moduleTypeInfo:&Ast.TypeInfo ) : bool {
    return false;
 }
 
-fn convFilter.isSamePackage( typeInfo:&Ast.TypeInfo ) : bool {
+fn convFilter.isSamePackage( typeInfo:&Ast.TypeInfo ) mut : bool {
    if typeInfo.$kind == .ExtModule {
       return self.isSamePackageExtModule( typeInfo );
    }
    return self.isSameModDir( typeInfo );
 }
 
-fn convFilter.needPrefix( typeInfo:&Ast.TypeInfo ) : bool {
+fn convFilter.needPrefix( typeInfo:&Ast.TypeInfo ) mut : bool {
    if Ast.isBuiltin( typeInfo.$typeId.id ) {
       return false;
    }
@@ -483,7 +485,7 @@ fn normalizeSym( name:str ) : str {
    return name;
 }
 
-fn convFilter.getSymbol( kind:SymbolKind, name:str ) : str {
+fn convFilter.getSymbol( kind:SymbolKind, name:str ) mut : str {
    let mut symbolName = normalizeSym( name );
 
    _match kind {
@@ -608,7 +610,7 @@ fn convFilter.getSymbol( kind:SymbolKind, name:str ) : str {
    return symbolName;
 }
 
-fn convFilter.getTypeSymbol( typeInfo:&Ast.TypeInfo ) : str {
+fn convFilter.getTypeSymbol( typeInfo:&Ast.TypeInfo ) mut : str {
    let orgType = typeInfo.$srcTypeInfo.$nonnilableType.$aliasSrc;
    return self.getSymbol( .Type( orgType, false ), orgType.$rawTxt );
 }
@@ -618,17 +620,17 @@ typeInfo のシンボルを取得する。
 
 typeInfo が外部モジュールで定義されている場合、その外部モジュール名を付加する。
 */
-fn convFilter.getTypeSymbolWithPrefix( typeInfo:&Ast.TypeInfo ) : str {
+fn convFilter.getTypeSymbolWithPrefix( typeInfo:&Ast.TypeInfo ) mut : str {
    let orgType = typeInfo.$srcTypeInfo.$nonnilableType.$aliasSrc;
    return self.getSymbol( .Type( orgType, true ), orgType.$rawTxt );
 }
 
 
-fn convFilter.getConstrSymbol( typeInfo:&Ast.TypeInfo ) : str {
+fn convFilter.getConstrSymbol( typeInfo:&Ast.TypeInfo ) mut : str {
    return "Init%s" ( self.getTypeSymbol( typeInfo ) );
 }
 
-fn convFilter.getFuncSymbol( typeInfo:&Ast.TypeInfo ) : str {
+fn convFilter.getFuncSymbol( typeInfo:&Ast.TypeInfo ) mut : str {
    if typeInfo.$kind == .Method and typeInfo.$staticFlag {
       return self.getSymbol( .Static( typeInfo.$parentInfo ), typeInfo.$rawTxt );
    }
@@ -637,11 +639,11 @@ fn convFilter.getFuncSymbol( typeInfo:&Ast.TypeInfo ) : str {
       typeInfo.$rawTxt == "" and "_anonymous" or typeInfo.$rawTxt );
 }
 
-fn convFilter.getAlgeSymbol( valInfo:&Ast.AlgeValInfo ): str {
+fn convFilter.getAlgeSymbol( valInfo:&Ast.AlgeValInfo ) mut : str {
    return self.getSymbol( .Static( valInfo.$algeTpye ), valInfo.$name );
 }
 
-fn convFilter.getSymbolSym( symbolInfo:&Ast.SymbolInfo ) : str {
+fn convFilter.getSymbolSym( symbolInfo:&Ast.SymbolInfo ) mut : str {
    switch symbolInfo.$kind {
       case .Fun, .Mtd {
          return self.getFuncSymbol( symbolInfo.$typeInfo );
@@ -672,11 +674,11 @@ fn convFilter.getSymbolSym( symbolInfo:&Ast.SymbolInfo ) : str {
    }
 }
 
-fn convFilter.getAccessorSym( accessMode:&Ast.AccessMode, name:str ) : str {
+fn convFilter.getAccessorSym( accessMode:&Ast.AccessMode, name:str ) mut : str {
    return self.getSymbol( .Member( Ast.isPubToExternal( accessMode ) ), name );
 }
 
-fn convFilter.outputSymbol( kind:SymbolKind, name:str ) {
+fn convFilter.outputSymbol( kind:SymbolKind, name:str ) mut {
    self.write( self.getSymbol( kind, name ) );
 }
 
@@ -724,7 +726,7 @@ fn getOrgTypeInfo( typeInfo:&Ast.TypeInfo ) : &Ast.TypeInfo {
    return typeInfo.$srcTypeInfo.$nonnilableType;
 }
 
-fn convFilter.type2gotypeOrg( typeInfo:&Ast.TypeInfo, addClassAster:bool ) : str {
+fn convFilter.type2gotypeOrg( typeInfo:&Ast.TypeInfo, addClassAster:bool ) mut : str {
    if typeInfo.$kind == .DDD {
       return "[]LnsAny";
    }
@@ -782,7 +784,7 @@ fn convFilter.type2gotypeOrg( typeInfo:&Ast.TypeInfo, addClassAster:bool ) : str
    Util.err( "not support yet -- %s" (typeInfo.getTxt(##) ) );
 }
 
-fn convFilter.type2gotype( typeInfo:&Ast.TypeInfo ) : str {
+fn convFilter.type2gotype( typeInfo:&Ast.TypeInfo ) mut : str {
    return self.type2gotypeOrg( typeInfo, true );
 }
 
@@ -796,14 +798,14 @@ fn getExpType( expListNode:&Nodes.ExpListNode, index:int ) : &Ast.TypeInfo {
 }
 
 // LnsAny から dstType への型変換用コードを出力する
-fn convFilter.outputAny2Type( dstType:&Ast.TypeInfo ) {
+fn convFilter.outputAny2Type( dstType:&Ast.TypeInfo ) mut {
    if not isAnyType( dstType ) and dstType.$kind ~= .Alternate {
       self.write( ".(%s)" (self.type2gotype( dstType )) );
    }
 }
 
 // LnsAny から dstType への型変換用コードを出力する
-fn convFilter.outputStem2Type( dstType:&Ast.TypeInfo ) {
+fn convFilter.outputStem2Type( dstType:&Ast.TypeInfo ) mut {
    if dstType.$kind == .Alternate and dstType.hasBase() {
       self.write( ".(%s)" (self.type2gotype( dstType )) );
    } elseif dstType.$kind == .Class and dstType ~= Ast.builtinTypeString {
@@ -1668,7 +1670,7 @@ fn convFilter.outputTopScopeVar( node: &Nodes.DeclVarNode ) mut {
    }
 }
 
-fn convFilter.outputConvExt( funcNode:&Nodes.Node ) {
+fn convFilter.outputConvExt( funcNode:&Nodes.Node ) mut {
    if! let fieldNode = funcNode@@@Nodes.RefFieldNode {
       if fieldNode.$prefix.$expType.$nonnilableType.$kind ~= .Ext {
          return;
@@ -2562,7 +2564,7 @@ pub override fn convFilter.processProtoMethod(
    //Util.err( "not support -- %s" (__func__) );
 }
 
-fn convFilter.getEnumGetTxtSym( enumType:&Ast.EnumTypeInfo ) : str {
+fn convFilter.getEnumGetTxtSym( enumType:&Ast.EnumTypeInfo ) mut : str {
    return "%s_getTxt" (self.getTypeSymbol( enumType ));
 }
 
@@ -3681,7 +3683,8 @@ fn convFilter.outputIFMethods( node: &Nodes.DeclClassNode ) mut {
    let mut name2MtdType:Map<str,&Ast.TypeInfo> = {};
    let scope = unwrap node.$expType.$scope;
    scope.filterTypeInfoField(
-      true, scope, .Normal, fn ( symbolInfo:&Ast.SymbolInfo ): bool {
+      true, scope, .Normal,
+      fn ( symbolInfo:&Ast.SymbolInfo ) __trans : bool {
          if symbolInfo.$kind == .Mtd and symbolInfo.$name ~= "__init" and
             not symbolInfo.$staticFlag
          {
@@ -4029,7 +4032,7 @@ let type2FromStemNameMap = {
    Ast.builtinTypeString:"Lns_ToStr",
    Ast.builtinTypeStem:"Lns_ToStem"
 };
-fn convFilter.getFromStemName(typeInfo:&Ast.TypeInfo) : str {
+fn convFilter.getFromStemName(typeInfo:&Ast.TypeInfo) mut : str {
    let workTypeInfo = getOrgTypeInfo( typeInfo );
    if! let name = type2FromStemNameMap[ workTypeInfo ] {
       return name;
@@ -4281,7 +4284,7 @@ fn convFilter.outputDummyAbstractMethodOfClass( classType:&Ast.TypeInfo ) mut
    let scope = unwrap classType.$scope;
    scope.filterSymbolInfoIfField(
       scope, .Normal,
-      fn ( symbolInfo:&Ast.SymbolInfo ): bool {
+      fn ( symbolInfo:&Ast.SymbolInfo ) __trans : bool {
          if symbolInfo.$kind == .Mtd and symbolInfo.$typeInfo.$abstractFlag {
             if! let methodType = scope.getTypeInfoChild( symbolInfo.$name ) {
                if methodType.$abstractFlag {
@@ -4311,7 +4314,7 @@ fn convFilter.outputAdvertise( node: &Nodes.DeclClassNode ) mut
       if! let scope = adv.$member.$expType.$scope {
          scope.filterTypeInfoField(
             true, scope, .Normal,
-            fn ( symbol:&Ast.SymbolInfo ): bool {
+            fn ( symbol:&Ast.SymbolInfo ) __trans: bool {
                if symbol.$kind == .Mtd and symbol.$name ~= "__init" and
                   not methodNameSet.has( symbol.$name ) and not symbol.$staticFlag
                {
@@ -5662,8 +5665,18 @@ pub override fn convFilter.processLuneControl(
       case .use_async {
       }
       case .run_async_pipe {
-         //self.writeln( "go self.FP.Loop()" );
          self.writeln( "go self.LoopMain()" );
+      }
+      case .run_async_runner {
+         self.writeln( "LnsRun( self )" );
+      }
+      case .default_async_func {
+      }
+      case .default_async_all {
+      }
+      case .default_async_this_class {
+      }
+      case .default_noasync_this_class {
       }
    }
 }
@@ -5678,7 +5691,7 @@ pub override fn convFilter.processAbbr(
 
 pub fn createFilter(
    enableTest:bool, streamName: str,
-   stream: oStream, ast:&TransUnit.ASTInfo, option:&Option ) : Nodes.Filter<Opt>
+   stream: oStream, ast:TransUnit.ASTInfo, option:&Option ) : Nodes.Filter<Opt>
 {
    return new convFilter( enableTest, streamName, stream, ast, option );
 }

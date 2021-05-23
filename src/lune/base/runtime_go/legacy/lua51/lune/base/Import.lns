@@ -181,7 +181,7 @@ pub fn ImportParam.getTypeInfoFrom(typeId:&_IdInfo) mut :&Ast.TypeInfo!, str! {
       return self.getTypeInfo( typeId.id )**;
    }
    if typeId.mod == frontInterface.getRootDependModId() {
-      return Ast.getRootProcessInfo().getTypeInfo( typeId.id), nil;
+      return Ast.getRootProcessInfoRo().getTypeInfo( typeId.id), nil;
    }
    let! moduleInfo = self.dependLibId2DependInfo[ typeId.mod ] {
       Util.err( "%s, %d, %d" (self.moduleTypeInfo.getTxt(##), typeId.mod, typeId.id) );
@@ -430,6 +430,7 @@ class _TypeInfoNormal extend _TypeInfo {
    pub let accessMode:Ast.AccessMode;
    pub let kind:Ast.TypeInfoKind;
    pub let mutMode: Ast.MutMode;
+   pub let asyncMode: Ast.Async;
    pub let ifList: &List<&_IdInfo>;
    pub let itemTypeId: &List<&_IdInfo>;
    pub let argTypeId: &List<&_IdInfo>;
@@ -597,7 +598,7 @@ class _TypeInfoNormal extend _TypeInfo {
                   self.abstractFlag, scope, baseInfo,
                   parentInfo, self.staticFlag, typeInfoKind,
                   self.txt, itemTypeInfo, argTypeInfo,
-                  retTypeInfo, self.mutMode );
+                  retTypeInfo, self.mutMode, self.asyncMode );
                newTypeInfo = workTypeInfo;
 
                param.typeId2TypeInfo[ self.typeId ] = workTypeInfo;

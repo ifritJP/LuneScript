@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+_lune_control default_async_all;
 _lune_control ignore_symbol_;
 
 pub class _MetaInfo {

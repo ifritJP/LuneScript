@@ -4,6 +4,8 @@ import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 import _ "embed"
 //go:embed Async.lua
 var lune_base_Async []byte
+//go:embed Runner.lua
+var lune_base_Runner []byte
 //go:embed Str.lua
 var lune_base_Str []byte
 //go:embed Types.lua
@@ -78,6 +80,7 @@ var lune_base_front []byte
 var lune_base_runtime3 []byte
 func init() {
 AddlnsSrcInfo( "lune.base.Async", lune_base_Async )
+AddlnsSrcInfo( "lune.base.Runner", lune_base_Runner )
 AddlnsSrcInfo( "lune.base.Str", lune_base_Str )
 AddlnsSrcInfo( "lune.base.Types", lune_base_Types )
 AddlnsSrcInfo( "lune.base.Ver", lune_base_Ver )

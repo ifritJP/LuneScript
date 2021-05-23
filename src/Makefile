@@ -194,6 +194,7 @@ endef
 
 LNS_SRCS :=
 LNS_SRCS += base/Async
+LNS_SRCS += base/Runner
 LNS_SRCS += base/Str
 LNS_SRCS += base/Types
 LNS_SRCS += base/Ver
@@ -242,6 +243,7 @@ endef
 
 define selfhost_buildOp
 	$(call $5,$1,$2,$3,$4,base/Async)
+	$(call $5,$1,$2,$3,$4,base/Runner)
 	$(call $5,$1,$2,$3,$4,base/Str)
 	$(call $5,$1,$2,$3,$4,base/Types)
 	$(call $5,$1,$2,$3,$4,base/Ver)
@@ -1032,7 +1034,7 @@ test-lua51:
 	diff -u -r work/5/lune work/6/lune -x binding.go
 
 # gopher-lua で test-go 実行
-	(cd work/6; $(MAKE) test-go LUA=$(LUA51) LNSC="$(LNSC_LUA51)" GOTAG=gopherlua)
+	(cd work/6; $(MAKE) test-go LUA=$(LUA51) LNSC="$(LNSC_LUA51)" GOTAG=gopherlua SKIP_SETUP=y SETUP_LUA=y)
 
 # サンプルを lua5.1 にクロスコンパイルして実行テスト
 	$(call mk_lune_proj_dir,work/7)
@@ -1501,15 +1503,22 @@ endif
 	cat work/result-testGo.txt
 
 ifndef NO_TEST
-	$(MAKE) test-go
+	$(MAKE) test-go SKIP_SETUP=y
 endif
 
 miniGo-go:
 	$(call buildGo,$(GO_WORK_DIR),miniGo.exe,minigo)
 
 test-go:
-	$(call cmd_exec_trans,$(LNSC),.,.,,base/convGo)
+ifndef SKIP_SETUP
 	$(call setup-go,$(GO_WORK_DIR))
+	$(call selfhost_buildOp_batch,.,$(LNSC_GO),$(GO_WORK_DIR),)
+endif
+ifdef SETUP_LUA
+	$(call setup-go,$(GO_WORK_DIR))
+	$(call selfhost_buildOp_batch,.,$(LNSC),$(GO_WORK_DIR),)
+endif
+	-rm $(GO_WORK_DIR)/*.*
 #	rm $(GO_WORK_DIR)/go.mod
 	$(call test-go-one-setup,$(GO_WORK_DIR))
 ifeq ($(GOTAG),gopherlua)

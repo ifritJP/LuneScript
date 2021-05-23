@@ -226,7 +226,8 @@ _DefBuiltinFuncType( [
    },
    {
       "__Runner": {
-         "__attrib": { "type": [ "interface" ] }
+         "__attrib": { "type": [ "interface" ] },
+         "run": { "type": [ "mut" ], "arg": [], "ret": [ ] },
       },
    },
    {

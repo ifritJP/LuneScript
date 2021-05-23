@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+_lune_control default_async_all;
+
 import lune.base.Ver;
 import lune.base.Str;
 import lune.base.Ast;
@@ -57,6 +59,8 @@ pub enum ConvMode {
 }
 
 class ModuleInfo extend (Ast.ModuleInfoIF){
+   _lune_control default_async_this_class;
+   
    let assignName:str {pub};
    let modulePath:str {pub};
 }
@@ -77,6 +81,8 @@ fn getSymTxt( name:str, id:str ) : str {
 }
 
 class convFilter extend Nodes.Filter<Opt> (oStream) {
+   _lune_control default_async_this_class;
+   
    pri let streamName: str;
    pri let mut stream: oStream;
    pri let mut metaStream: oStream;
@@ -172,12 +178,12 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
       return self.getCanonicalName( typeInfo, true );
    }
 
-   pub fn close() mut {
+   pub fn close() __async mut {
    }
-   pub fn flush() mut {
+   pub fn flush() __async mut {
    }
 
-   pub fn write( mut txt: str ) mut : stem!, str! {
+   pub fn write( mut txt: str ) __async mut : stem!, str! {
       let mut stream = self.stream;
       if self.outMetaFlag {
          stream = self.metaStream;
@@ -200,7 +206,7 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
 }
 
 fn filter( node: &Nodes.Node, filter: convFilter,
-           parent: &Nodes.Node )
+           parent: &Nodes.Node ) __async
 {
    node.processFilter( filter, new Opt( parent ) );
 }
@@ -353,7 +359,7 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
    let mut importModuleType2Index:Map<&Ast.TypeInfo,int> = {};
    let mut importProcessInfo2Index:Map<&Ast.ProcessInfo,int> = {};
 
-   importProcessInfo2Index[ Ast.getRootProcessInfo() ] =
+   importProcessInfo2Index[ Ast.getRootProcessInfoRo() ] =
       frontInterface.getRootDependModId();
    importProcessInfo2Index[ self.processInfo ] = 0;
    
@@ -388,7 +394,7 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
 
    let mut pickupClassMap: Map<&Ast.IdInfo,&Ast.TypeInfo> = {};
 
-   fn checkExportTypeInfo( typeInfo:&Ast.TypeInfo ): bool! {
+   _direct fn checkExportTypeInfo( typeInfo:&Ast.TypeInfo ): bool! {
       let moduleTypeInfo = typeInfo.getModule();
       let typeId = typeInfo.$typeId;
       return typeId2TypeInfo[ typeId ] and not Ast.isBuiltin( typeId.id ) and
@@ -405,7 +411,9 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
    }
    
    // 公開される型情報を typeId2TypeInfo にピックアップする
-   fn pickupTypeId( typeInfo: &Ast.TypeInfo, forceFlag: bool!, pickupChildFlag: bool! ) {
+   _direct fn pickupTypeId(
+      typeInfo: &Ast.TypeInfo, forceFlag: bool!, pickupChildFlag: bool! )
+   {
 
       if typeInfo.$typeId == Ast.rootTypeIdInfo {
          return;
@@ -794,7 +802,7 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
    }
    
    let mut wroteTypeIdSet:Set<&Ast.IdInfo> = (@);
-   fn outputTypeInfo( typeInfo: &Ast.TypeInfo ) {
+   _direct fn outputTypeInfo( typeInfo: &Ast.TypeInfo ) {
       if Ast.isBuiltin( typeInfo.$typeId.id) {
          return;
       }
@@ -3539,6 +3547,9 @@ pub override fn convFilter.processLuneControl(
       case .load__lune_module {
          self.processLoadRuntime();
       }
+      case .run_async_runner {
+         self.writeln( "self:run()" );
+      }
    }
 }
 
@@ -3553,7 +3564,7 @@ pub fn createFilter(
       moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest, useIpairs );
 }
 
-pub fn runLuaOnLns( code:str ): Luaval<&stem>!, str {
+pub fn runLuaOnLns( code:str ) __noasync : Luaval<&stem>!, str {
    let loadFunc, err = DependLuaOnLns.runLuaOnLns( code );
    when! loadFunc {
       let mod = loadFunc();
@@ -3567,6 +3578,8 @@ pub fn runLuaOnLns( code:str ): Luaval<&stem>!, str {
 
 pub class MacroEvalImp extend Nodes.MacroEval {
 
+   _lune_control default_noasync_this_class;
+   
    fn evalFromMacroCode( code:str ): Luaval<Nodes.macroStatmentProc> {
 
       Log._log2( .Trace, "macro: %s" (code) );
@@ -3619,7 +3632,7 @@ __test {
    import lune.base.Testing;
 
    pub fn createAstFromStream(
-      scriptPath:str, stream:iStream, option:&Option.Option ) : TransUnit.ASTInfo
+      scriptPath:str, stream:iStream, option:&Option.Option ) __noasync: TransUnit.ASTInfo
    {
       let moduleId = frontInterface.ModuleId.createId( 0.0, 0 );
       let mut moduleInfo = new frontInterface.ImportModuleInfo();
@@ -3634,7 +3647,7 @@ __test {
    }
    
    
-   pub fn createAstFromFile( scriptPath:str, option:&Option.Option ) : TransUnit.ASTInfo {
+   pub fn createAstFromFile( scriptPath:str, option:&Option.Option ) __noasync: TransUnit.ASTInfo {
       let! mut stream = io.open( scriptPath## ) {
          Util.err( "not failed to open -- %s" (scriptPath) );
       };
@@ -3644,7 +3657,7 @@ __test {
    }
    
    pub fn createAst(
-      scriptPath:str, lnsCode:str, option:&Option.Option ) : TransUnit.ASTInfo
+      scriptPath:str, lnsCode:str, option:&Option.Option ) __noasync: TransUnit.ASTInfo
    {
       return createAstFromStream(
          scriptPath, new Parser.TxtStream( lnsCode ), option );
@@ -3700,7 +3713,7 @@ _ = 1;
       return metaStream.$txt, stream.$txt;
    }
 
-   pub fn runTestCode( ctrl:Testing.Ctrl, luaCode:str ) {
+   pub fn runTestCode( ctrl:Testing.Ctrl, luaCode:str ) __noasync {
       let loaded, mess = _load( luaCode## );
       when! loaded {
          if! let mod = loaded(##) {

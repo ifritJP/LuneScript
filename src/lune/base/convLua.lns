@@ -3547,6 +3547,9 @@ pub override fn convFilter.processLuneControl(
       case .load__lune_module {
          self.processLoadRuntime();
       }
+      case .run_async_runner {
+         self.writeln( "self:run()" );
+      }
    }
 }
 

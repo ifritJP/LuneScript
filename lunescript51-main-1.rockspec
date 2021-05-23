@@ -38,6 +38,7 @@ build = {
       [ "lune.base.Str" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/Str.lua",
       [ "lune.base.Types" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/Types.lua",
       [ "lune.base.Async" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/Async.lua",
+      [ "lune.base.Runner" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/Runner.lua",
       [ "lune.base.Ver" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/Ver.lua",
       [ "lune.base.Meta" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/Meta.lua",
       [ "lune.base.LuneControl" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/LuneControl.lua",

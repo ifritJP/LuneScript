@@ -778,7 +778,7 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
          let alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
          let callback = self.processInfo.createFunc(
             false, false, nil, Ast.TypeInfoKind.Func,
-            Ast.headTypeInfo, false, false, true, .Pri, "sort", nil,
+            Ast.headTypeInfo, false, false, true, .Pri, "sort", .Async, nil,
             [ genericTypeList[ 1 ], genericTypeList[ 1 ] ],
             [ Ast.builtinTypeBool ], false );
          argTypeList = [ callback.$nilableTypeInfo ];
@@ -1170,7 +1170,7 @@ fn TransUnit.evalMacro(
 /**
 format の書式から %? を検索して、リストを返す。
 */
-pub fn findForm( format:str ): List<str> {
+pub fn findForm( format:str ) __async : List<str> {
    let mut remain = format.gsub( "%%%%", "" );
    let mut opList:List<str> = [];
 
@@ -1203,7 +1203,7 @@ pub enum FormType {
    Unmatch,
 }
 pub fn isMatchStringFormatType(
-   opKind:str, mut argType:&Ast.TypeInfo, luaVer:&LuaVer.LuaVerInfo ):
+   opKind:str, mut argType:&Ast.TypeInfo, luaVer:&LuaVer.LuaVerInfo ) __async :
    FormType, &Ast.TypeInfo
 {
    if! let enumType = argType.$srcTypeInfo.$aliasSrc@@@Ast.EnumTypeInfo {
@@ -1602,6 +1602,34 @@ fn TransUnit.processFunc(
       retTypeInfoList, funcExp, errorFuncFlag, nilAccess, threading, argList );
 }
 
+fn TransUnit.checkCallAsync( funcTypeInfo:&Ast.TypeInfo, pos:&Types.Position ) mut {
+   if funcTypeInfo.$asyncMode == .Noasync {
+      let curType = self.getCurrentNamespaceTypeInfo();
+      switch curType.$kind {
+         case .Func, .Method {
+            switch curType.$asyncMode {
+               case .Async, .Transient {
+                  // async の関数から、 noasync 関数は実行できない。
+                  self.addErrMess(
+                     pos,
+                     "can't access noasync function in async. -- %s on %s"
+                     (funcTypeInfo.getTxt(##), curType.getTxt(##)));
+               }
+            }
+         }
+      }
+      if self.getCurrentClass().isInheritFrom(
+         self.processInfo, Ast.builtinTypeRunner ## )
+      {
+         // __runner から noasync 関数は呼べない。
+         self.addErrMess(
+            pos,
+            "can't access noasync function in __Runner. -- %s"
+            (funcTypeInfo.getTxt(##)) );
+      }
+   }
+}
+
 
 /**
 関数コール処理。
@@ -1617,10 +1645,24 @@ fn TransUnit.analyzeExpCall(
    Nodes.Node, &Parser.Token
 {
    self.checkSymbolHavingValue( funcExp.$pos, funcExp.getSymbolInfo() );
-   
+
 
    let funcTypeInfo = funcExp.$expType.$nonnilableType;
 
+   self.checkCallAsync( funcTypeInfo, funcExp.$effectivePos );
+
+   if funcTypeInfo.$accessMode == .Direct {
+      let curNs = self.getCurrentNamespaceTypeInfo();
+      if curNs.$accessMode ~= .Direct and curNs ~= funcTypeInfo.$parentInfo
+      {
+         self.addErrMess(
+            funcExp.$effectivePos,
+            "can't call the _direct function from the no _direct function -- %s"
+            (funcTypeInfo.getTxt(##) ) );
+      }
+   }
+
+   
    // 引数の型チェック
    let mut genericTypeList = funcTypeInfo.$itemTypeInfoList;
    let mut refFieldNode:&Nodes.RefFieldNode! = nil;
@@ -2449,7 +2491,24 @@ fn TransUnit.analyzeExpField(
             fieldToken.pos,
             "can't access mutable method. -- %s.%s"
             (prefixExpType.getTxt(##), fieldToken.txt) );
-      }  
+      }
+
+      if symbolInfo.$typeInfo.$mutMode == .AllMut {
+         let curType = self.getCurrentNamespaceTypeInfo();
+         switch curType.$kind {
+            case .Func, .Method {
+               switch curType.$asyncMode {
+                  case .Async, .Transient {
+                     // async から allmut 型を格納するシンボルにはアクセスできない。
+                     self.addErrMess(
+                        fieldToken.pos,
+                        "can't access allmut type's field(%s) in async function."
+                        (symbolInfo.$name) );
+                  }
+               }
+            }
+         }
+      }
    }
 
    let mut accessSymbolInfo:Ast.AccessSymbolInfo! = nil;
@@ -2614,6 +2673,48 @@ fn TransUnit.analyzeNewAlge(
    }
 }
 
+fn TransUnit.checkAsyncSymbol( symbolInfo:&Ast.SymbolInfo, pos:&Types.Position ) mut {
+   // 現在の名前空間が async で、
+   // mutable な大域変数かクロージャ変数にアクセスしている場合エラー。
+   let curNs = self.getCurrentNamespaceTypeInfo();
+   let mut warn = false;
+   if curNs.$asyncMode == .Async and symbolInfo.$name ~= "self" {
+      switch symbolInfo.$kind {
+         case .Arg, .Mbr, .Var {
+            if not Ast.isPrimitive( symbolInfo.$typeInfo ) {
+               warn = true;
+            }
+         }
+      }
+   }
+   if warn {
+      switch curNs.$kind {
+         case .Func {
+            if symbolInfo.$namespaceTypeInfo ~= curNs and
+               curNs.$accessMode ~= .Direct
+            {
+               if Ast.TypeInfo.isMut( symbolInfo.$typeInfo ) {
+                  self.addErrMess(
+                     pos,               
+                     "can't access the mutable type's symbol(%s) from async (%s)."
+                     (symbolInfo.$name, symbolInfo.$typeInfo.getTxt(##) ) );
+               }
+            }
+         }
+         case .Method {
+            if symbolInfo.$namespaceTypeInfo ~= curNs {
+               if Ast.TypeInfo.isMut( symbolInfo.$typeInfo ) {
+                  self.addErrMess(
+                     pos,               
+                     "can't access the mutable type's symbol(%s) from async (%s)."
+                     (symbolInfo.$name, symbolInfo.$typeInfo.getTxt(##) ) );
+               }
+            }
+         }
+      }
+   }
+}
+
 fn TransUnit.analyzeExpSymbol(
    firstToken: &Parser.Token, symbolToken: &Parser.Token, mode: ExpSymbolMode,
    prefixExp: &Nodes.Node!, mut skipFlag: bool, canLeftExp:bool ) mut : Nodes.Node
@@ -2678,6 +2779,8 @@ fn TransUnit.analyzeExpSymbol(
          };
 
          self.accessSymbol( symbolInfo, canLeftExp );
+
+         self.checkAsyncSymbol( symbolInfo, firstToken.pos );
          
          let typeInfo = symbolInfo.$typeInfo;
 
@@ -2829,6 +2932,14 @@ fn TransUnit.analyzeExpOpSet(
    }
    
    let mut expList = self.analyzeExpList( false, false, false, nil, expectTypeList## );
+   foreach expType, index in expList.$expTypeList {
+      if expType.$asyncMode == .Transient {
+         // Transient は変数への代入禁止
+         self.addErrMess(
+            expList.$pos,
+            "can't set the __trans type -- index:%d, %s" (index, expType.getTxt(##)) );
+      }
+   }
 
    if not expList.canBeRight( self.processInfo ) {
       self.addErrMess( expList.$pos,
@@ -3758,7 +3869,10 @@ fn TransUnit.analyzeExp(
       let classScope = classTypeInfo.get_scope();
       let! initTypeInfo = (unwrap classScope).getTypeInfoChild( "__init" ) {
          self.error( "not found __init" );
-      }; 
+      };
+
+      self.checkCallAsync( initTypeInfo, token.pos );
+
       
       self.checkNextToken( "(" );
       let nextToken = self.getToken(##);

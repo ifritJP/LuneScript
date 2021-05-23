@@ -160,6 +160,8 @@ end
 if not _lune3 then
    _lune3 = _lune
 end
+
+
 local Types = _lune.loadModule( 'lune.base.Types' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Json = _lune.loadModule( 'lune.base.Json' )
@@ -175,7 +177,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 8404
+   return 8633
 end
 
 
@@ -900,7 +902,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 633, function (  )
+   Log.log( Log.Level.Log, __func__, 635, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

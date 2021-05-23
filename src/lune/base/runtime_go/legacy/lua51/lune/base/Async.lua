@@ -60,6 +60,7 @@ if not _lune3 then
 end
 
 
+
 local PipeItem = {}
 _moduleObj.PipeItem = PipeItem
 function PipeItem.setmeta( obj )
@@ -80,7 +81,6 @@ end
 function PipeItem:get_item()
    return self.item
 end
-
 
 local Pipe = {}
 _moduleObj.Pipe = Pipe
@@ -145,6 +145,64 @@ function Pipe:start(  )
 end
 function Pipe.setmeta( obj )
   setmetatable( obj, { __index = Pipe  } )
+end
+
+local WritePipe = {}
+_moduleObj.WritePipe = WritePipe
+function WritePipe.new( pipe )
+   local obj = {}
+   WritePipe.setmeta( obj )
+   if obj.__init then obj:__init( pipe ); end
+   return obj
+end
+function WritePipe:__init(pipe) 
+   
+   self.pipe = pipe
+   self.started = false
+end
+function WritePipe:put( item )
+
+   if self.started then
+      do
+         local pipe = self.pipe
+         if pipe ~= nil then
+            pipe:put( item )
+         end
+      end
+      
+   else
+    
+      error( "not started" )
+   end
+   
+   self:process( item )
+end
+function WritePipe:loop(  )
+
+   local pipe = self.pipe
+   if  nil == pipe then
+      local _pipe = pipe
+   
+      return 
+   end
+   
+   while true do
+      local item = pipe:get(  )
+      self:process( item )
+      if not item then
+         break
+      end
+      
+   end
+   
+end
+function WritePipe:start(  )
+
+   self.started = true
+   
+end
+function WritePipe.setmeta( obj )
+  setmetatable( obj, { __index = WritePipe  } )
 end
 
 

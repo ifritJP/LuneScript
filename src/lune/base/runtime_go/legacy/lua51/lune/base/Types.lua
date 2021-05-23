@@ -190,6 +190,8 @@ end
 if not _lune3 then
    _lune3 = _lune
 end
+
+
 local Lang = {}
 _moduleObj.Lang = Lang
 Lang._val2NameMap = {}
@@ -255,15 +257,15 @@ _moduleObj.TransCtrlInfo = TransCtrlInfo
 function TransCtrlInfo.setmeta( obj )
   setmetatable( obj, { __index = TransCtrlInfo  } )
 end
-function TransCtrlInfo.new( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode, validLuaval, defaultLazy, validCheckingMutable, legacyMutableControl )
+function TransCtrlInfo.new( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode, validLuaval, defaultLazy, validCheckingMutable, legacyMutableControl, validAstDetailError )
    local obj = {}
    TransCtrlInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode, validLuaval, defaultLazy, validCheckingMutable, legacyMutableControl )
+      obj:__init( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode, validLuaval, defaultLazy, validCheckingMutable, legacyMutableControl, validAstDetailError )
    end
    return obj
 end
-function TransCtrlInfo:__init( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode, validLuaval, defaultLazy, validCheckingMutable, legacyMutableControl )
+function TransCtrlInfo:__init( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode, validLuaval, defaultLazy, validCheckingMutable, legacyMutableControl, validAstDetailError )
 
    self.warningShadowing = warningShadowing
    self.compatComment = compatComment
@@ -274,12 +276,13 @@ function TransCtrlInfo:__init( warningShadowing, compatComment, checkingDefineAb
    self.defaultLazy = defaultLazy
    self.validCheckingMutable = validCheckingMutable
    self.legacyMutableControl = legacyMutableControl
+   self.validAstDetailError = validAstDetailError
 end
 
 
 function TransCtrlInfo.create_normal(  )
 
-   return TransCtrlInfo.new(false, false, true, false, _lune.newAlge( CheckingUptodateMode.Touch), false, false, true, false)
+   return TransCtrlInfo.new(false, false, true, false, _lune.newAlge( CheckingUptodateMode.Touch), false, false, true, false, false)
 end
 
 
@@ -450,7 +453,7 @@ end
 function Token:getLineCount(  )
 
    local count = 1
-   for _117 in self.txt:gmatch( "\n" ) do
+   for _118 in self.txt:gmatch( "\n" ) do
       count = count + 1
    end
    

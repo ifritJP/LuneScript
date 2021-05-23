@@ -120,6 +120,8 @@ end
 if not _lune3 then
    _lune3 = _lune
 end
+
+
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
@@ -763,6 +765,23 @@ function FormatterFilter:processDeclFuncInfo( node, declInfo, opt )
    
    if Ast.TypeInfo.isMut( funcType ) and declInfo:get_kind() == Nodes.FuncKind.Mtd then
       self:write( " mut" )
+   end
+   
+   do
+      local asyncMode = declInfo:get_asyncMode()
+      if asyncMode ~= nil then
+         do
+            local _switchExp = asyncMode
+            if _switchExp == Ast.Async.Async then
+               self:write( " __async" )
+            elseif _switchExp == Ast.Async.Noasync then
+               self:write( " __noasync" )
+            elseif _switchExp == Ast.Async.Transient then
+               self:write( " __trans" )
+            end
+         end
+         
+      end
    end
    
    

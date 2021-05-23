@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+_lune_control default_async_all;
+
 pub enum Code {
    Lua = "lua",
    C = "c",
@@ -37,4 +39,9 @@ pub alge Pragma {
    limit_conv_code( codeSet:&Set<Code> ),
    use_async,
    run_async_pipe,
+   run_async_runner,
+   default_async_func,
+   default_async_all,
+   default_async_this_class,
+   default_noasync_this_class,
 }

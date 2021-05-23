@@ -198,6 +198,8 @@ end
 if not _lune3 then
    _lune3 = _lune
 end
+
+
 local Ver = _lune.loadModule( 'lune.base.Ver' )
 local Str = _lune.loadModule( 'lune.base.Str' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
@@ -597,7 +599,7 @@ function convFilter:outputMeta( node )
    local importModuleType2Index = {}
    local importProcessInfo2Index = {}
    
-   importProcessInfo2Index[Ast.getRootProcessInfo(  )] = frontInterface.getRootDependModId(  )
+   importProcessInfo2Index[Ast.getRootProcessInfoRo(  )] = frontInterface.getRootDependModId(  )
    importProcessInfo2Index[self.processInfo] = 0
    
    local importNameMap = {}
@@ -4216,6 +4218,9 @@ function convFilter:processLuneControl( node, opt )
       if _matchExp[1] == LuneControl.Pragma.load__lune_module[1] then
       
          self:processLoadRuntime(  )
+      elseif _matchExp[1] == LuneControl.Pragma.run_async_runner[1] then
+      
+         self:writeln( "self:run()" )
       end
    end
    
@@ -4251,7 +4256,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3572, function (  )
+   Log.log( Log.Level.Trace, __func__, 3585, function (  )
    
       return string.format( "macro: %s", code)
    end )

@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+_lune_control default_async_all;
+
 import lune.base.Ast;
 import lune.base.Nodes;
 import lune.base.Parser;
@@ -590,6 +592,19 @@ fn FormatterFilter.processDeclFuncInfo(
       
    if Ast.TypeInfo.isMut( funcType ) and declInfo.$kind == .Mtd {
       self.write( " mut" );
+   }
+   if! let asyncMode = declInfo.$asyncMode {
+      _switch asyncMode {
+         case .Async {
+            self.write( " __async" );
+         }
+         case .Noasync {
+            self.write( " __noasync" );
+         }
+         case .Transient {
+            self.write( " __trans" );
+         }
+      }
    }
 
    if #funcType.$retTypeInfoList ~= 0 {

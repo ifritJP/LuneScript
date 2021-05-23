@@ -49,3 +49,11 @@ func (self *LnsThread) InitLnsThread(_env *LnsEnv) {
 func (self *LnsThread) runLoop() {
 	self.FP.Loop(self.LnsEnv)
 }
+
+type LnsRunner interface {
+	Run(*LnsEnv)
+}
+
+func LnsRun(self LnsRunner) {
+	go self.Run(createEnv())
+}

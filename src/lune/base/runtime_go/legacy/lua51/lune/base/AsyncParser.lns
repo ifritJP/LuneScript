@@ -24,12 +24,13 @@ SOFTWARE.
 
 
 _lune_control use_async;
+_lune_control default_async_all;
 
 import lune.base.Util;
 import lune.base.Types;
 import lune.base.Async;
 
-let luaKeywordSet:Set<str> =
+let luaKeywordSet:&Set<str> =
     (@
       "if", 
       "else",
@@ -137,7 +138,7 @@ Set<str>, Set<str>, Set<str>, Map<str,str[@]>
 }
 
 
-let quotedCharSet:Set<str> =
+let quotedCharSet:&Set<str> =
     (@
       'a',  
       'b',  
@@ -152,7 +153,7 @@ let quotedCharSet:Set<str> =
     );
 
 
-let op2Set:Set<str> =
+let op2Set:&Set<str> =
     (@
       '+',  
       '-',  
@@ -180,7 +181,7 @@ let op2Set:Set<str> =
       '='
     );
 
-let op1Set:Set<str> =
+let op1Set:&Set<str> =
     (@
       '-',  
       'not',

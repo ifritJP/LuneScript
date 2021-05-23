@@ -225,6 +225,12 @@ _DefBuiltinFuncType( [
       },
    },
    {
+      "__Runner": {
+         "__attrib": { "type": [ "interface" ] },
+         "run": { "type": [ "mut" ], "arg": [], "ret": [ ] },
+      },
+   },
+   {
       "__pipe<T>": {
          "put": { "type": [ "mut" ], "arg": [ "T!" ], "ret": [ ] },
          "get": { "type": [ "mut" ], "arg": [], "ret": [ "T!" ] },
@@ -552,7 +558,7 @@ fn Builtin.processField( name:str, fieldName:str, info:&Map<str,&List<str>>,
          let typeInfo = self.processInfo.createFunc(
             abstractFlag, true, self.transUnitIF.$scope, kind,
             parentInfo, false, true, staticFlag, accessMode,
-            fieldName, nil, argTypeList, retTypeList, mutable );
+            fieldName, .Async, nil, argTypeList, retTypeList, mutable );
 
          self.transUnitIF.popScope();
 

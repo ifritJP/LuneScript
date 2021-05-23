@@ -80,6 +80,15 @@ pub enum AnalyzeMode {
    Inquire,
 }
 
+enum DefaultAsyncMode {
+   /** noasync */
+   NoAsync,
+   /** 関数が async */
+   AsyncFunc,
+   /** 全て async */
+   AsyncAll,
+}
+
 class AccessSymPos {
    pri let symbol:&Ast.SymbolInfo {pub};
    pri let pos:&Parser.Position {pub};
@@ -630,6 +639,11 @@ pub class TransUnit extend (TransUnitIF.TransUnitIF, Parser.PushbackParser) {
 alias で置き換えている元の Type → alias の型
    */
    let importedAliasMap: Map<&Ast.TypeInfo,&Ast.AliasTypeInfo> {pub&};
+
+   /** async 宣言のデフォルト */
+   let mut defaultAsyncMode: DefaultAsyncMode;
+
+   let class2defaultAsyncMode: Map<&Ast.TypeInfo,DefaultAsyncMode>;
    
 
    pub fn __init( moduleId:&frontInterface.ModuleId,
@@ -638,10 +652,13 @@ alias で置き換えている元の Type → alias の型
                   pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
                   ctrl_info: &Types.TransCtrlInfo )
    {
+      self.class2defaultAsyncMode = {};
+      self.defaultAsyncMode = .NoAsync;
       self.importedAliasMap = {};
       self.importModuleSet = (@);
       self.processInfo = Ast.createProcessInfo(
-         ctrl_info.validCheckingMutable, ctrl_info.validLuaval );
+         ctrl_info.validCheckingMutable,
+         ctrl_info.validLuaval, ctrl_info.validAstDetailError );
       self.accessSymbolSetQueue = new AccessSymbolSetQueue();
       self.advertisedTypeSet = (@);
       self.closureFunList = [];
@@ -697,8 +714,8 @@ alias で置き換えている元の Type → alias の型
       return self.parser.$currentToken.pos;
    }
 
-   pub fn error( mess: str ) mut : __;
-   pub fn errorAt( pos:&Parser.Position, mess: str ) mut : __;
+   pub fn error( mess: str ) __async mut : __;
+   pub fn errorAt( pos:&Parser.Position, mess: str ) __async mut : __;
 
    pri fn pushAnalyzingState( state:AnalyzingState ) mut {
       self.analyzingStateQueue.insert( state );
@@ -723,7 +740,7 @@ alias で置き換えている元の Type → alias の型
       return false;
    }
 
-   pri fn addErrMess( pos: &Parser.Position, mut mess: str ) mut {
+   pri fn addErrMess( pos: &Parser.Position, mut mess: str ) __async mut {
       if mess.find( "type mismatch.*<- &" ##) {
          mess = mess .. ". if your code is the old style, use the opiton '--legacy-mutable-control'.";
       }
@@ -732,13 +749,13 @@ alias で置き換えている元の Type → alias の型
                                  pos.lineNo, pos.column, mess ) );
    }
 
-   pri fn addWarnMess( pos: &Parser.Position, mess: str ) mut {
+   pri fn addWarnMess( pos: &Parser.Position, mess: str ) __async mut {
       self.warnMessList.insert(
          "%s:%d:%d: warning: %s" ( self.parser.getStreamName(),
                                    pos.lineNo, pos.column, mess ) );
    }
 
-   pri fn addWarnErrMess( pos:&Parser.Position, err:bool, mess: str ) mut {
+   pri fn addWarnErrMess( pos:&Parser.Position, err:bool, mess: str ) __async mut {
       if err {
          self.addErrMess( pos, mess );
       }
@@ -1115,7 +1132,7 @@ alias で置き換えている元の Type → alias の型
       self.popScope();
    }
 
-   pub fn pushbackStr( name: str, statement: str, pos:&Types.Position ) mut;
+   pub fn pushbackStr( name: str, statement: str, pos:&Types.Position ) __async mut;
    pri fn analyzeDecl( accessMode: Ast.AccessMode, staticFlag:
                        bool, firstToken: &Parser.Token,
                        token: &Parser.Token ) mut: Nodes.Node!;
@@ -1144,7 +1161,7 @@ alias で置き換えている元の Type → alias の型
       allowNoneType:bool, skipOp2Flag: bool, canLeftExp:bool, expNode: &Nodes.Node!,
       expectTypeList: &List<&Ast.TypeInfo>!, contExpect: bool! ) mut : Nodes.ExpListNode;
    pri fn analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNode;
-   pub fn getTokenNoErr() mut : &Parser.Token;
+   pub fn getTokenNoErr() __async mut : &Parser.Token;
    pri fn analyzeRefTypeWithSymbol(
       accessMode: Ast.AccessMode, allowDDD:bool, mutMode:Ast.MutMode!,
       symbolNode:&Nodes.Node, parentPub:bool ) mut: Nodes.RefTypeNode;
@@ -1333,13 +1350,13 @@ fn TransUnit.createExtType(
 
 
 pub alias BuiltinFuncType = Builtin.BuiltinFuncType;
-let mut builtinFunc = new Builtin.BuiltinFuncType();
-pub fn getBuiltinFunc() : &BuiltinFuncType {
+let mut builtinFunc:&Builtin.BuiltinFuncType = new Builtin.BuiltinFuncType();
+pub fn getBuiltinFunc() __async : &BuiltinFuncType {
    return builtinFunc;
 }
 
    
-pub fn isStrFormFunc( typeInfo:&Ast.TypeInfo ):bool {
+pub fn isStrFormFunc( typeInfo:&Ast.TypeInfo ) __async :bool {
    if typeInfo.$srcTypeInfo == builtinFunc.string_format {
       return true;
    }
@@ -1362,7 +1379,7 @@ pri fn TransUnit.checkThreading( pos:&Parser.Position ) mut : bool {
 }
 
 
-pub fn TransUnit.errorAt( pos:&Parser.Position, mess: str ) mut : __ {
+pub fn TransUnit.errorAt( pos:&Parser.Position, mess: str ) __async mut : __ {
    self.addErrMess( pos, mess);
 
    foreach errmess in self.errMessList {
@@ -1380,7 +1397,7 @@ pub fn TransUnit.errorAt( pos:&Parser.Position, mess: str ) mut : __ {
    Util.err( "has error" );
 }
 
-pub fn TransUnit.error( mess: str ) mut : __ {
+pub fn TransUnit.error( mess: str ) __async mut : __ {
    self.errorAt( self.parser.getLastPos(), mess );
 }
 
@@ -1391,24 +1408,24 @@ fn TransUnit.createNoneNode( pos: &Parser.Position ) mut : Nodes.Node {
       self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ] );
 }
 
-pub fn TransUnit.pushbackToken( token: &Parser.Token ) mut {
+pub fn TransUnit.pushbackToken( token: &Parser.Token ) __async mut {
    self.parser.pushbackToken( token );
 }
 
 
-pub fn TransUnit.newPushback( tokenList: List<&Parser.Token> ) mut {
+pub fn TransUnit.newPushback( tokenList: List<&Parser.Token> ) __async mut {
    self.parser.newPushback( tokenList );
 }
 
-pub fn TransUnit.getStreamName(): str {
+pub fn TransUnit.getStreamName() __async : str {
    return self.parser.getStreamName();
 }
 
-pub fn TransUnit.createPosition( lineNo: int, column: int ): &Parser.Position {
+pub fn TransUnit.createPosition( lineNo: int, column: int ) __async : &Parser.Position {
    return self.parser.createPosition( lineNo, column );
 }
 
-fn TransUnit.getTokenNoErr() mut : &Parser.Token
+fn TransUnit.getTokenNoErr() __async mut : &Parser.Token
 {
    let mut token;
 
@@ -1454,11 +1471,11 @@ fn TransUnit.getToken( allowEof:bool! ) mut : &Parser.Token {
    return token;
 }
 
-pub fn TransUnit.pushback() mut {
+pub fn TransUnit.pushback() __async mut {
    self.parser.pushback();
 }
 
-fn TransUnit.pushbackStr( name: str, statement: str, pos:&Types.Position ) mut {
+fn TransUnit.pushbackStr( name: str, statement: str, pos:&Types.Position ) __async mut {
    self.parser.pushbackStr( name, statement, pos );
 }
 
@@ -1760,6 +1777,28 @@ fn TransUnit.analyzeLuneControl(
                "this option only use in method of the class have loop method." );
             return nil;
          }
+      }
+      case "run_async_runner" {
+         let nowMethod = self.getCurrentNamespaceTypeInfo();
+         let nowClass = self.getCurrentClass();
+         if nowMethod.$kind == .Method and
+            nowClass.isInheritFrom( self.processInfo, Ast.builtinTypeRunner, nil )
+         {
+            pragma = LuneControl.Pragma.run_async_runner;
+         } else {
+            self.addErrMess(
+               nextToken.pos, 
+               "this option only use in the class inherit the __Runner." );
+            return nil;
+         }
+      }
+      case "default_async_func" {
+         pragma = LuneControl.Pragma.default_async_func;
+         self.defaultAsyncMode = .AsyncFunc;
+      }
+      case "default_async_all" {
+         pragma = LuneControl.Pragma.default_async_all;
+         self.defaultAsyncMode = .AsyncAll;
       }
       default {
          self.addErrMess( nextToken.pos, "unknown option -- %s" (nextToken.txt) );

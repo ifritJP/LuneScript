@@ -27,6 +27,8 @@ import lune.base.Ast;
 import lune.base.LuneControl;
 
 _lune_control ignore_symbol_;
+_lune_control default_async_all;
+
 
 /**
 モジュールの識別情報を管理する。
@@ -224,7 +226,7 @@ Lua からも利用される。
 @return stem! ロードしたモジュール。 失敗した場合 nil
 @return &stem ロードしたモジュールのメタ情報。
    */
-   pub fn loadModule( mod:str ) mut: Luaval<&stem>!, ModuleMeta;
+   pub fn loadModule( mod:str ) __noasync mut: Luaval<&stem>!, ModuleMeta;
 
    /**
 指定の LuneScript のモジュールからメタ情報をロードする。
@@ -234,7 +236,7 @@ Lua からも利用される。
 @return &stem ロードしたモジュールのメタ情報。
    */
    pub fn loadMeta(
-      importModuleInfo:ImportModuleInfo, mod:str ) mut: ModuleMeta!;
+      importModuleInfo:ImportModuleInfo, mod:str ) __noasync mut: ModuleMeta!;
    /**
 LuneScript のコード文字列からロードする。
 
@@ -244,7 +246,7 @@ LuneScript のコード文字列からロードする。
 @return stem ロードしたモジュール。
    */
    pub fn loadFromLnsTxt(
-      importModuleInfo:ImportModuleInfo, name:str, txt:str ) mut : Luaval<&stem>;
+      importModuleInfo:ImportModuleInfo, name:str, txt:str ) __noasync mut : Luaval<&stem>;
 
    /**
 go/github:com.ifritJP. 等の go 用のパスを、
@@ -252,13 +254,13 @@ go/github:com.ifritJP. 等の go 用のパスを、
 
 詳しくは、GoMod.lns を参照。
    */
-   pub fn getLuaModulePath( mod:str ) mut : str;
-   pub fn searchModule( mod:str ) mut: str!;
-   pub fn error( message:str );
+   pub fn getLuaModulePath( mod:str ) __noasync mut : str;
+   pub fn searchModule( mod:str ) __noasync mut: str!;
+   pub fn error( message:str ) __noasync;
 }
 
 class dummyFront extend (frontInterface) {
-   pub fn loadModule( mod:str ) mut: Luaval<&stem>!, ModuleMeta {
+   pub fn loadModule( mod:str ) __noasync mut: Luaval<&stem>!, ModuleMeta {
       // error( "not implements" );
       let loaded = _load( "return {}" ## );
       let emptyTable;
@@ -270,49 +272,49 @@ class dummyFront extend (frontInterface) {
       let mut meta = new ModuleMeta( emptyTable, mod.gsub( "%.", "/" ) .. ".lns", nil );
       return require( mod ), meta;
    }
-   pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ) mut : ModuleMeta! {
+   pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ) __noasync mut : ModuleMeta! {
       error( "not implements" );
    }
    pub fn loadFromLnsTxt(
-      importModuleInfo:ImportModuleInfo, name:str, txt:str ) mut : Luaval<&stem>
+      importModuleInfo:ImportModuleInfo, name:str, txt:str ) __noasync mut : Luaval<&stem>
    {
       error( "not implements" );
    }
-   pub fn getLuaModulePath( mod:str ) mut : str {
+   pub fn getLuaModulePath( mod:str ) __noasync mut : str {
       error( "not implements" );
    }
-   pub fn searchModule( mod:str ) mut: str! {
+   pub fn searchModule( mod:str ) __noasync mut: str! {
       error( "not implements" );
    }
-   pub fn error( message:str ) {
+   pub fn error( message:str ) __noasync {
       error( "not implements" );
    }
 }
 
 global let mut __luneScript:frontInterface = new dummyFront();
 
-pub fn setFront( newFront:frontInterface ) {
+pub fn setFront( newFront:frontInterface ) __noasync {
    __luneScript = newFront;
 }
 
-pub fn loadModule( mod:str ): Luaval<&stem>!, ModuleMeta {
+pub fn loadModule( mod:str )  __noasync : Luaval<&stem>!, ModuleMeta {
    return __luneScript.loadModule( mod )**;
 }
 
 pub fn loadFromLnsTxt(
-   importModuleInfo:ImportModuleInfo, name:str, txt:str ): Luaval<&stem>
+   importModuleInfo:ImportModuleInfo, name:str, txt:str )  __noasync : Luaval<&stem>
 {
    return __luneScript.loadFromLnsTxt( importModuleInfo, name, txt );
 }
 
-pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ): ModuleMeta! {
+pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ) __noasync : ModuleMeta! {
    return __luneScript.loadMeta( importModuleInfo, mod );
 }
 
-pub fn searchModule( mod:str ): str! {
+pub fn searchModule( mod:str ) __noasync: str! {
    return __luneScript.searchModule( mod );
 }
 
-pub fn getLuaModulePath( mod:str ): str {
+pub fn getLuaModulePath( mod:str ) __noasync: str {
    return __luneScript.getLuaModulePath( mod );
 }

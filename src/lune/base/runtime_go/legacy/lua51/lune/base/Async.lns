@@ -23,11 +23,16 @@ SOFTWARE.
 */
 
 _lune_control use_async;
+_lune_control default_async_all;
+
 
 pub class PipeItem<T> {
    let item:T {pub};
 }
 
+/**
+T 型のデータを生成して返す処理を別スレッドにする。
+*/
 pub abstract class Pipe<T> extend LnsThread {
    let mut pipe:__pipe<T>!;
    let mut started:bool;
@@ -62,6 +67,54 @@ pub abstract class Pipe<T> extend LnsThread {
             break;
          };
          pipe.put( val.$item );
+      }
+   }
+   pub fn start() mut {
+      self.started = true;
+      _lune_control run_async_pipe;
+   }
+}
+
+/**
+渡された T 型のデータを別スレッドで処理する。
+*/
+pub abstract class WritePipe<T> extend LnsThread {
+   let pipe:__pipe<T>!;
+   let mut started:bool;
+   
+   pro fn __init( pipe:__pipe<T>! ) {
+      super();
+      self.pipe = pipe;
+      self.started = false;
+   }
+
+/**
+T 型のデータを処理する。
+item が nil の場合、処理終了。
+*/
+   pro abstract fn process(item:T!) mut;
+
+   pub fn put( item:T! ) mut {
+      if self.started {
+         if! let mut pipe = self.pipe {
+            pipe.put( item );
+         }
+      } else {
+         error( "not started" );
+      }
+      self.process( item );
+   }
+
+   pro override fn loop() mut {
+      let! mut pipe = self.pipe {
+         return;
+      };
+      while true {
+         let mut item = pipe.get();
+         self.process( item );
+         if not item {
+            break;
+         }
       }
    }
    pub fn start() mut {

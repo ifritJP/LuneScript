@@ -5,6 +5,13 @@ local _lune = {}
 if _lune3 then
    _lune = _lune3
 end
+function _lune.loadModule( mod )
+   if __luneScript then
+      return  __luneScript:loadModule( mod )
+   end
+   return require( mod )
+end
+
 function _lune.__isInstanceOf( obj, class )
    while obj do
       local meta = getmetatable( obj )
@@ -58,6 +65,10 @@ end
 if not _lune3 then
    _lune3 = _lune
 end
+
+
+local Async = _lune.loadModule( 'lune.base.Async' )
+
 local Level = {}
 _moduleObj.Level = Level
 Level._val2NameMap = {}
@@ -103,14 +114,21 @@ Level._val2NameMap[6] = 'Trace'
 Level.__allList[7] = Level.Trace
 
 
-local name2levelMap = {}
-name2levelMap["fatal"] = Level.Fatal
-name2levelMap["error"] = Level.Err
-name2levelMap["warn"] = Level.Warn
-name2levelMap["log"] = Level.Log
-name2levelMap["info"] = Level.Info
-name2levelMap["debug"] = Level.Debug
-name2levelMap["trace"] = Level.Trace
+local name2levelMap
+
+
+do
+   local work = {}
+   work["fatal"] = Level.Fatal
+   work["error"] = Level.Err
+   work["warn"] = Level.Warn
+   work["log"] = Level.Log
+   work["info"] = Level.Info
+   work["debug"] = Level.Debug
+   work["trace"] = Level.Trace
+   name2levelMap = work
+end
+
 
 local function str2level( txt )
 
@@ -118,22 +136,14 @@ local function str2level( txt )
 end
 _moduleObj.str2level = str2level
 
-local outputLevel = Level.Err
 
-local function setLevel( level )
+local Control = {}
+function Control:log( level, funcName, lineNo, callback )
 
-   outputLevel = level
-end
-_moduleObj.setLevel = setLevel
-
-
-
-local logStream = io.stderr
-
-local function log( level, funcName, lineNo, callback )
-
-   if level <= outputLevel then
+   local logStream = io.stderr
+   if level <= self.level then
       local nowClock = os.clock(  )
+      
       logStream:write( string.format( "%6d:%s:%s:%d:", math.floor((nowClock * 1000 )), Level:_getTxt( level)
       , funcName, lineNo) )
       logStream:write( callback(  ) )
@@ -141,7 +151,49 @@ local function log( level, funcName, lineNo, callback )
    end
    
 end
+function Control:direct( level, funcName, lineNo, mess )
+
+   self:log( level, funcName, lineNo, function (  )
+   
+      return mess
+   end )
+end
+function Control.setmeta( obj )
+  setmetatable( obj, { __index = Control  } )
+end
+function Control.new( level )
+   local obj = {}
+   Control.setmeta( obj )
+   if obj.__init then
+      obj:__init( level )
+   end
+   return obj
+end
+function Control:__init( level )
+
+   self.level = level
+end
+
+
+local control = Control.new(Level.Err)
+
+local function setLevel( level )
+
+   control = Control.new(level)
+end
+_moduleObj.setLevel = setLevel
+
+local function log( level, funcName, lineNo, callback )
+
+   control:log( level, funcName, lineNo, callback )
+end
 _moduleObj.log = log
+
+local function direct( level, funcName, lineNo, mess )
+
+   control:direct( level, funcName, lineNo, mess )
+end
+_moduleObj.direct = direct
 
 
 

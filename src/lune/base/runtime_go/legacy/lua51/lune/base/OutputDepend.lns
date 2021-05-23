@@ -22,6 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+_lune_control default_async_all;
+
+
 import lune.base.Nodes;
 import lune.base.Util;
 import lune.base.Ast;
@@ -99,6 +102,8 @@ __test {
    import lune.base.frontInterface;
 
    class Front extend (frontInterface.frontInterface) {
+      _lune_control default_noasync_this_class;
+      
       pub fn loadModule( mod:str ) mut: Luaval<&stem>!, &frontInterface.ModuleMeta {
          Util.err( "not implements" );
       }
@@ -137,7 +142,7 @@ __test {
    }
    
 
-   fn Ast2Depend( ast:&TransUnit.ASTInfo ) : str
+   fn Ast2Depend( ast:&TransUnit.ASTInfo ) __noasync : str
    {
       let mut stream = new Util.memStream();
 

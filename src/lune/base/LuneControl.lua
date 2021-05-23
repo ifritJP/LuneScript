@@ -187,6 +187,8 @@ Pragma.load__lune_module = { "load__lune_module"}
 Pragma._name2Val["load__lune_module"] = Pragma.load__lune_module
 Pragma.run_async_pipe = { "run_async_pipe"}
 Pragma._name2Val["run_async_pipe"] = Pragma.run_async_pipe
+Pragma.run_async_runner = { "run_async_runner"}
+Pragma._name2Val["run_async_runner"] = Pragma.run_async_runner
 Pragma.use_async = { "use_async"}
 Pragma._name2Val["use_async"] = Pragma.use_async
 

@@ -4217,6 +4217,9 @@ function convFilter:processLuneControl( node, opt )
       if _matchExp[1] == LuneControl.Pragma.load__lune_module[1] then
       
          self:processLoadRuntime(  )
+      elseif _matchExp[1] == LuneControl.Pragma.run_async_runner[1] then
+      
+         self:writeln( "self:run()" )
       end
    end
    
@@ -4252,7 +4255,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3582, function (  )
+   Log.log( Log.Level.Trace, __func__, 3585, function (  )
    
       return string.format( "macro: %s", code)
    end )

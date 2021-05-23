@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+_lune_control default_async_all;
+
 pub enum Lang {
    // 変換先言語と同じ。
    Same,
@@ -62,11 +64,12 @@ pub class TransCtrlInfo {
    mut 宣言しないと、変数の型が immutable になる。
    */ 
    pub let mut legacyMutableControl:bool;
+   pub let mut validAstDetailError:bool;
 }
 
 pub static fn TransCtrlInfo.create_normal(): TransCtrlInfo {
    return new TransCtrlInfo(
-      false, false, true, false, .Touch, false, false, true, false );
+      false, false, true, false, .Touch, false, false, true, false, false );
 }
 
 

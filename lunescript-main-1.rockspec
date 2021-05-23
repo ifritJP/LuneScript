@@ -38,6 +38,7 @@ build = {
       [ "lune.base.Str" ] = "src/lune/base/Str.lua",
       [ "lune.base.Types" ] = "src/lune/base/Types.lua",
       [ "lune.base.Async" ] = "src/lune/base/Async.lua",
+      [ "lune.base.Runner" ] = "src/lune/base/Runner.lua",
       [ "lune.base.Ver" ] = "src/lune/base/Ver.lua",
       [ "lune.base.Meta" ] = "src/lune/base/Meta.lua",
       [ "lune.base.LuneControl" ] = "src/lune/base/LuneControl.lua",
