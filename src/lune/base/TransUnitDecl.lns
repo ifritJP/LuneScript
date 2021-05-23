@@ -3126,7 +3126,9 @@ fn TransUnit.analyzeDeclFunc(
       let mut workTypeInfo = self.processInfo.createFunc(
          abstractFlag, false, funcBodyScope,
          typeKind, namespaceInfo, false, false, staticFlag, accessMode,
-         funcName, self.getDefaultAsync( typeKind, classTypeInfo, asyncMode ),
+         funcName,
+         self.getDefaultAsync(
+            typeKind, classTypeInfo or self.getCurrentClass(), asyncMode ),
          altTypeList, argTypeList, retTypeInfoList, mutable );
 
       when! name {

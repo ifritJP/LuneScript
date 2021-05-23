@@ -79,6 +79,8 @@ fn getSymTxt( name:str, id:str ) : str {
 }
 
 class convFilter extend Nodes.Filter<Opt> (oStream) {
+   //_lune_control default_async_this_class;
+   
    pri let streamName: str;
    pri let mut stream: oStream;
    pri let mut metaStream: oStream;

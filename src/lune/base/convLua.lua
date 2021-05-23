@@ -4250,7 +4250,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3578, function (  )
+   Log.log( Log.Level.Trace, __func__, 3580, function (  )
    
       return string.format( "macro: %s", code)
    end )
