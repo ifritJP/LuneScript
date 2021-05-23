@@ -47,7 +47,31 @@ class Test {
       }
    }
 }
+{
+   class Super {
+      _lune_control default_async_this_class;
+   }
 
+   fn Super.func() {
+      fn func() {
+      }
+      func();
+   }
+}
+{
+   form Test2() __trans;
+
+   let mut test:Test2 = fn () __trans {}; // error
+
+   fn func( val:Test2 ) {
+      test = val; // error
+      func( val );
+   }
+
+   class Hoge {
+      let test:Test2; // error
+   }
+}
 {
 
    class Super {

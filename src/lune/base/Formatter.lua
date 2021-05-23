@@ -771,9 +771,11 @@ function FormatterFilter:processDeclFuncInfo( node, declInfo, opt )
          do
             local _switchExp = asyncMode
             if _switchExp == Ast.Async.Async then
-               self:write( " async" )
+               self:write( " __async" )
             elseif _switchExp == Ast.Async.Noasync then
-               self:write( " noasync" )
+               self:write( " __noasync" )
+            elseif _switchExp == Ast.Async.Transient then
+               self:write( " __trans" )
             end
          end
          

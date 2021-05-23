@@ -596,10 +596,13 @@ fn FormatterFilter.processDeclFuncInfo(
    if! let asyncMode = declInfo.$asyncMode {
       _switch asyncMode {
          case .Async {
-            self.write( " async" );
+            self.write( " __async" );
          }
          case .Noasync {
-            self.write( " noasync" );
+            self.write( " __noasync" );
+         }
+         case .Transient {
+            self.write( " __trans" );
          }
       }
    }

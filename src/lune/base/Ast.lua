@@ -1330,12 +1330,15 @@ function Async.get__allList()
    return Async.__allList
 end
 
-Async.Async = 0
-Async._val2NameMap[0] = 'Async'
-Async.__allList[1] = Async.Async
-Async.Noasync = 1
-Async._val2NameMap[1] = 'Noasync'
-Async.__allList[2] = Async.Noasync
+Async.Noasync = 0
+Async._val2NameMap[0] = 'Noasync'
+Async.__allList[1] = Async.Noasync
+Async.Async = 1
+Async._val2NameMap[1] = 'Async'
+Async.__allList[2] = Async.Async
+Async.Transient = 2
+Async._val2NameMap[2] = 'Transient'
+Async.__allList[3] = Async.Transient
 
 
 _moduleObj.TypeInfo = TypeInfo
