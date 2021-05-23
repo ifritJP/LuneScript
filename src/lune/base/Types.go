@@ -125,6 +125,7 @@ type Types_TransCtrlInfo struct {
     DefaultLazy bool
     ValidCheckingMutable bool
     LegacyMutableControl bool
+    ValidAstDetailError bool
     FP Types_TransCtrlInfoMtd
 }
 func Types_TransCtrlInfo2Stem( obj LnsAny ) LnsAny {
@@ -147,13 +148,13 @@ func Types_TransCtrlInfoDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Types_TransCtrlInfo) ToTypes_TransCtrlInfo() *Types_TransCtrlInfo {
     return obj
 }
-func NewTypes_TransCtrlInfo(_env *LnsEnv, arg1 bool, arg2 bool, arg3 bool, arg4 bool, arg5 LnsAny, arg6 bool, arg7 bool, arg8 bool, arg9 bool) *Types_TransCtrlInfo {
+func NewTypes_TransCtrlInfo(_env *LnsEnv, arg1 bool, arg2 bool, arg3 bool, arg4 bool, arg5 LnsAny, arg6 bool, arg7 bool, arg8 bool, arg9 bool, arg10 bool) *Types_TransCtrlInfo {
     obj := &Types_TransCtrlInfo{}
     obj.FP = obj
-    obj.InitTypes_TransCtrlInfo(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+    obj.InitTypes_TransCtrlInfo(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
     return obj
 }
-func (self *Types_TransCtrlInfo) InitTypes_TransCtrlInfo(_env *LnsEnv, arg1 bool, arg2 bool, arg3 bool, arg4 bool, arg5 LnsAny, arg6 bool, arg7 bool, arg8 bool, arg9 bool) {
+func (self *Types_TransCtrlInfo) InitTypes_TransCtrlInfo(_env *LnsEnv, arg1 bool, arg2 bool, arg3 bool, arg4 bool, arg5 LnsAny, arg6 bool, arg7 bool, arg8 bool, arg9 bool, arg10 bool) {
     self.WarningShadowing = arg1
     self.CompatComment = arg2
     self.CheckingDefineAbbr = arg3
@@ -163,10 +164,11 @@ func (self *Types_TransCtrlInfo) InitTypes_TransCtrlInfo(_env *LnsEnv, arg1 bool
     self.DefaultLazy = arg7
     self.ValidCheckingMutable = arg8
     self.LegacyMutableControl = arg9
+    self.ValidAstDetailError = arg10
 }
-// 67: decl @lune.@base.@Types.TransCtrlInfo.create_normal
+// 70: decl @lune.@base.@Types.TransCtrlInfo.create_normal
 func Types_TransCtrlInfo_create_normal(_env *LnsEnv) *Types_TransCtrlInfo {
-    return NewTypes_TransCtrlInfo(_env, false, false, true, false, Types_CheckingUptodateMode__Touch_Obj, false, false, true, false)
+    return NewTypes_TransCtrlInfo(_env, false, false, true, false, Types_CheckingUptodateMode__Touch_Obj, false, false, true, false, false)
 }
 
 
@@ -263,7 +265,7 @@ func Types_Position_FromMapMain( newObj *Types_Position, objMap *LnsMap, paramLi
     }
     return true, newObj, nil
 }
-// 87: DeclConstr
+// 90: DeclConstr
 func (self *Types_Position) InitTypes_Position(_env *LnsEnv, lineNo LnsInt,column LnsInt,streamName string) {
     self.LineNo = lineNo
     
@@ -275,7 +277,7 @@ func (self *Types_Position) InitTypes_Position(_env *LnsEnv, lineNo LnsInt,colum
     
 }
 
-// 94: decl @lune.@base.@Types.Position.get_orgPos
+// 97: decl @lune.@base.@Types.Position.get_orgPos
 func (self *Types_Position) Get_orgPos(_env *LnsEnv) *Types_Position {
     {
         __exp := self.OrgPos
@@ -287,12 +289,12 @@ func (self *Types_Position) Get_orgPos(_env *LnsEnv) *Types_Position {
     return self
 }
 
-// 101: decl @lune.@base.@Types.Position.get_RawOrgPos
+// 104: decl @lune.@base.@Types.Position.get_RawOrgPos
 func (self *Types_Position) Get_RawOrgPos(_env *LnsEnv) LnsAny {
     return self.OrgPos
 }
 
-// 105: decl @lune.@base.@Types.Position.create
+// 108: decl @lune.@base.@Types.Position.create
 func Types_Position_create(_env *LnsEnv, lineNo LnsInt,column LnsInt,streamName string,orgPos LnsAny) *Types_Position {
     var pos *Types_Position
     pos = NewTypes_Position(_env, lineNo, column, streamName)
@@ -406,7 +408,7 @@ func Types_Token_FromMapMain( newObj *Types_Token, objMap *LnsMap, paramList []L
     }
     return true, newObj, nil
 }
-// 138: DeclConstr
+// 141: DeclConstr
 func (self *Types_Token) InitTypes_Token(_env *LnsEnv, kind LnsInt,txt string,pos *Types_Position,consecutive bool,commentList LnsAny) {
     self.Kind = kind
     
@@ -420,14 +422,14 @@ func (self *Types_Token) InitTypes_Token(_env *LnsEnv, kind LnsInt,txt string,po
     
 }
 
-// 148: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
+// 151: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
 func (self *Types_Token) GetExcludedDelimitTxt(_env *LnsEnv) string {
     if self.Kind != Types_TokenKind__Str{
         return self.Txt
     }
-    if _switch354 := LnsInt(self.Txt[1-1]); _switch354 == 39 || _switch354 == 34 {
+    if _switch361 := LnsInt(self.Txt[1-1]); _switch361 == 39 || _switch361 == 34 {
         return _env.LuaVM.String_sub(self.Txt,2, len(self.Txt) - 1)
-    } else if _switch354 == 96 {
+    } else if _switch361 == 96 {
         return _env.LuaVM.String_sub(self.Txt,1 + 3, len(self.Txt) - 3)
     }
     panic(_env.LuaVM.String_format("illegal delimit -- %s", []LnsAny{self.Txt}))
@@ -435,22 +437,22 @@ func (self *Types_Token) GetExcludedDelimitTxt(_env *LnsEnv) string {
     return ""
 }
 
-// 163: decl @lune.@base.@Types.Token.set_commentList
+// 166: decl @lune.@base.@Types.Token.set_commentList
 func (self *Types_Token) Set_commentList(_env *LnsEnv, commentList *LnsList) {
     self.commentList = commentList
     
 }
 
-// 167: decl @lune.@base.@Types.Token.getLineCount
+// 170: decl @lune.@base.@Types.Token.getLineCount
 func (self *Types_Token) GetLineCount(_env *LnsEnv) LnsInt {
     var count LnsInt
     count = 1
     {
-        _form417, _param417, _prev417 := _env.LuaVM.String_gmatch(self.Txt,"\n")
+        _form424, _param424, _prev424 := _env.LuaVM.String_gmatch(self.Txt,"\n")
         for {
-            _work417 := _form417.(*Lns_luaValue).Call( Lns_2DDD( _param417, _prev417 ) )
-            _prev417 = Lns_getFromMulti(_work417,0)
-            if Lns_IsNil( _prev417 ) { break }
+            _work424 := _form424.(*Lns_luaValue).Call( Lns_2DDD( _param424, _prev424 ) )
+            _prev424 = Lns_getFromMulti(_work424,0)
+            if Lns_IsNil( _prev424 ) { break }
             count = count + 1
             
         }

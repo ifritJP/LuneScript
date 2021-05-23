@@ -5,7 +5,7 @@ var init_Testing bool
 var Testing__mod__ string
 var Testing_testModuleMap *LnsMap
 type Testing_TestcaseFunc func (_env *LnsEnv, arg1 *Testing_Ctrl)
-// 169: decl @lune.@base.@Testing.registerTestcase
+// 168: decl @lune.@base.@Testing.registerTestcase
 func Testing_registerTestcase(_env *LnsEnv, modName string,caseName string,testcase Testing_TestcaseFunc) {
     var info *Testing_TestModuleInfo
     
@@ -24,7 +24,7 @@ func Testing_registerTestcase(_env *LnsEnv, modName string,caseName string,testc
     info.FP.AddCase(_env, caseName, NewTesting_TestCase(_env, testcase, result))
 }
 
-// 178: decl @lune.@base.@Testing.run
+// 177: decl @lune.@base.@Testing.run
 func Testing_run(_env *LnsEnv, modPath string) {
     {
         __collection866 := Testing_testModuleMap
@@ -40,7 +40,7 @@ func Testing_run(_env *LnsEnv, modPath string) {
     }
 }
 
-// 185: decl @lune.@base.@Testing.runAll
+// 184: decl @lune.@base.@Testing.runAll
 func Testing_runAll(_env *LnsEnv) {
     {
         __collection879 := Testing_testModuleMap
@@ -53,7 +53,7 @@ func Testing_runAll(_env *LnsEnv) {
     }
 }
 
-// 191: decl @lune.@base.@Testing.outputAllResult
+// 190: decl @lune.@base.@Testing.outputAllResult
 func Testing_outputAllResult(_env *LnsEnv, stream Lns_oStream) {
     {
         __collection897 := Testing_testModuleMap
@@ -114,19 +114,19 @@ func (self *Testing_Result) InitTesting_Result(_env *LnsEnv, arg1 string, arg2 L
     self.okNum = arg2
     self.ngNum = arg3
 }
-// 35: decl @lune.@base.@Testing.Result.outputResult
+// 34: decl @lune.@base.@Testing.Result.outputResult
 func (self *Testing_Result) OutputResult(_env *LnsEnv, stream Lns_oStream) {
     stream.Write(_env, _env.LuaVM.String_format("test total: %s %d (OK:%d, NG:%d)\n", []LnsAny{self.name, self.okNum + self.ngNum, self.okNum, self.ngNum}))
 }
 
-// 41: decl @lune.@base.@Testing.Result.err
+// 40: decl @lune.@base.@Testing.Result.err
 func (self *Testing_Result) Err(_env *LnsEnv, mess string,mod string,lineNo LnsInt) {
     self.ngNum = self.ngNum + 1
     
     Lns_io_stderr.Write(_env, _env.LuaVM.String_format("error: %s:%d: %s\n", []LnsAny{mod, lineNo, mess}))
 }
 
-// 46: decl @lune.@base.@Testing.Result.isTrue
+// 45: decl @lune.@base.@Testing.Result.isTrue
 func (self *Testing_Result) IsTrue(_env *LnsEnv, val1 LnsAny,val1txt string,msg LnsAny,mod string,lineNo LnsInt) bool {
     if val1 == true{
         self.okNum = self.okNum + 1
@@ -139,7 +139,7 @@ func (self *Testing_Result) IsTrue(_env *LnsEnv, val1 LnsAny,val1txt string,msg 
     return false
 }
 
-// 56: decl @lune.@base.@Testing.Result.isNotTrue
+// 55: decl @lune.@base.@Testing.Result.isNotTrue
 func (self *Testing_Result) IsNotTrue(_env *LnsEnv, val1 LnsAny,val1txt string,msg LnsAny,mod string,lineNo LnsInt) bool {
     if Lns_op_not(val1){
         self.okNum = self.okNum + 1
@@ -152,7 +152,7 @@ func (self *Testing_Result) IsNotTrue(_env *LnsEnv, val1 LnsAny,val1txt string,m
     return false
 }
 
-// 66: decl @lune.@base.@Testing.Result.isNil
+// 65: decl @lune.@base.@Testing.Result.isNil
 func (self *Testing_Result) IsNil(_env *LnsEnv, val1 LnsAny,val1txt string,msg LnsAny,mod string,lineNo LnsInt) bool {
     if val1 == nil{
         self.okNum = self.okNum + 1
@@ -165,7 +165,7 @@ func (self *Testing_Result) IsNil(_env *LnsEnv, val1 LnsAny,val1txt string,msg L
     return false
 }
 
-// 76: decl @lune.@base.@Testing.Result.isNotNil
+// 75: decl @lune.@base.@Testing.Result.isNotNil
 func (self *Testing_Result) IsNotNil(_env *LnsEnv, val1 LnsAny,val1txt string,msg LnsAny,mod string,lineNo LnsInt) bool {
     if val1 != nil{
         self.okNum = self.okNum + 1
@@ -178,7 +178,7 @@ func (self *Testing_Result) IsNotNil(_env *LnsEnv, val1 LnsAny,val1txt string,ms
     return false
 }
 
-// 86: decl @lune.@base.@Testing.Result.checkEq
+// 85: decl @lune.@base.@Testing.Result.checkEq
 func (self *Testing_Result) CheckEq(_env *LnsEnv, val1 LnsAny,val2 LnsAny,val1txt string,val2txt string,msg LnsAny,mod string,lineNo LnsInt) bool {
     if val1 == val2{
         self.okNum = self.okNum + 1
@@ -191,7 +191,7 @@ func (self *Testing_Result) CheckEq(_env *LnsEnv, val1 LnsAny,val2 LnsAny,val1tx
     return false
 }
 
-// 99: decl @lune.@base.@Testing.Result.checkNotEq
+// 98: decl @lune.@base.@Testing.Result.checkNotEq
 func (self *Testing_Result) CheckNotEq(_env *LnsEnv, val1 LnsAny,val2 LnsAny,val1txt string,val2txt string,msg LnsAny,mod string,lineNo LnsInt) bool {
     if val1 != val2{
         self.okNum = self.okNum + 1
@@ -251,35 +251,35 @@ func (self *Testing_Ctrl) InitTesting_Ctrl(_env *LnsEnv, arg1 *Testing_Result) {
     self.result = arg1
 }
 func (self *Testing_Ctrl) Get_result(_env *LnsEnv) *Testing_Result{ return self.result }
-// advertise -- 114
+// advertise -- 113
 func (self *Testing_Ctrl) CheckEq(_env *LnsEnv, arg1 LnsAny,arg2 LnsAny,arg3 string,arg4 string,arg5 LnsAny,arg6 string,arg7 LnsInt) bool {
     return self.result. FP.CheckEq( _env, arg1,arg2,arg3,arg4,arg5,arg6,arg7)
 }
-// advertise -- 114
+// advertise -- 113
 func (self *Testing_Ctrl) CheckNotEq(_env *LnsEnv, arg1 LnsAny,arg2 LnsAny,arg3 string,arg4 string,arg5 LnsAny,arg6 string,arg7 LnsInt) bool {
     return self.result. FP.CheckNotEq( _env, arg1,arg2,arg3,arg4,arg5,arg6,arg7)
 }
-// advertise -- 114
+// advertise -- 113
 func (self *Testing_Ctrl) Err(_env *LnsEnv, arg1 string,arg2 string,arg3 LnsInt) {
 self.result. FP.Err( _env, arg1,arg2,arg3)
 }
-// advertise -- 114
+// advertise -- 113
 func (self *Testing_Ctrl) IsNil(_env *LnsEnv, arg1 LnsAny,arg2 string,arg3 LnsAny,arg4 string,arg5 LnsInt) bool {
     return self.result. FP.IsNil( _env, arg1,arg2,arg3,arg4,arg5)
 }
-// advertise -- 114
+// advertise -- 113
 func (self *Testing_Ctrl) IsNotNil(_env *LnsEnv, arg1 LnsAny,arg2 string,arg3 LnsAny,arg4 string,arg5 LnsInt) bool {
     return self.result. FP.IsNotNil( _env, arg1,arg2,arg3,arg4,arg5)
 }
-// advertise -- 114
+// advertise -- 113
 func (self *Testing_Ctrl) IsNotTrue(_env *LnsEnv, arg1 LnsAny,arg2 string,arg3 LnsAny,arg4 string,arg5 LnsInt) bool {
     return self.result. FP.IsNotTrue( _env, arg1,arg2,arg3,arg4,arg5)
 }
-// advertise -- 114
+// advertise -- 113
 func (self *Testing_Ctrl) IsTrue(_env *LnsEnv, arg1 LnsAny,arg2 string,arg3 LnsAny,arg4 string,arg5 LnsInt) bool {
     return self.result. FP.IsTrue( _env, arg1,arg2,arg3,arg4,arg5)
 }
-// advertise -- 114
+// advertise -- 113
 func (self *Testing_Ctrl) OutputResult(_env *LnsEnv, arg1 Lns_oStream) {
 self.result. FP.OutputResult( _env, arg1)
 }
@@ -371,7 +371,7 @@ func NewTesting_TestModuleInfo(_env *LnsEnv, arg1 string) *Testing_TestModuleInf
 func (self *Testing_TestModuleInfo) Get_runned(_env *LnsEnv) bool{ return self.runned }
 func (self *Testing_TestModuleInfo) Get_name(_env *LnsEnv) string{ return self.name }
 func (self *Testing_TestModuleInfo) Get_testcaseMap(_env *LnsEnv) *LnsMap{ return self.testcaseMap }
-// 138: DeclConstr
+// 137: DeclConstr
 func (self *Testing_TestModuleInfo) InitTesting_TestModuleInfo(_env *LnsEnv, name string) {
     self.runned = false
     
@@ -381,12 +381,12 @@ func (self *Testing_TestModuleInfo) InitTesting_TestModuleInfo(_env *LnsEnv, nam
     
 }
 
-// 144: decl @lune.@base.@Testing.TestModuleInfo.addCase
+// 143: decl @lune.@base.@Testing.TestModuleInfo.addCase
 func (self *Testing_TestModuleInfo) AddCase(_env *LnsEnv, name string,testCase *Testing_TestCase) {
     self.testcaseMap.Set(name,testCase)
 }
 
-// 148: decl @lune.@base.@Testing.TestModuleInfo.run
+// 147: decl @lune.@base.@Testing.TestModuleInfo.run
 func (self *Testing_TestModuleInfo) Run(_env *LnsEnv) {
     self.runned = true
     
@@ -404,7 +404,7 @@ func (self *Testing_TestModuleInfo) Run(_env *LnsEnv) {
     }
 }
 
-// 157: decl @lune.@base.@Testing.TestModuleInfo.outputResult
+// 156: decl @lune.@base.@Testing.TestModuleInfo.outputResult
 func (self *Testing_TestModuleInfo) OutputResult(_env *LnsEnv, stream Lns_oStream) {
     if Lns_op_not(self.runned){
         return 

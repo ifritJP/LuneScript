@@ -1,3 +1,5 @@
+_lune_control default_async_all;
+
 import lune.base.Types;
 import lune.base.Util;
 import lune.base.Depend;

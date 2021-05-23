@@ -391,11 +391,15 @@ fn TransUnit.checkOverrideMethod(
       errList.insert( "%s: %s: %s -- %s" ( fullName, mess, typeInfo.$display_stirng,
                                            typeInfo.$display_stirng ) );
    }
+
+   if overrideType.$asyncMode ~= typeInfo.$asyncMode {
+      addErr( "mismatch asyncMode --  %s, %s"
+              ( overrideType.$asyncMode.$_txt, typeInfo.$asyncMode.$_txt ) );
+   }
    
    if overrideType.get_accessMode() ~= accessMode {
-      let mess = "mismatch override accessMode -- %s,%s,%s"
-          ( funcName, overrideType.get_accessMode().$_txt,
-            accessMode.$_txt );
+      let mess = "mismatch override accessMode -- %s,%s"
+          ( overrideType.get_accessMode().$_txt, accessMode.$_txt );
       addErr( mess );
    }
    if overrideType.get_staticFlag() ~= typeInfo.$staticFlag {
@@ -1523,6 +1527,66 @@ fn TransUnit.analyzeRetTypeList(
    return retTypeInfoList, token, retTypeNodeList;
 }
 
+fn TransUnit.getDefaultAsync(
+   kind:&Ast.TypeInfoKind,
+   classTypeInfo:&Ast.TypeInfo!, asyncMode:Ast.Async! ) : Ast.Async
+{
+   when! asyncMode {
+      return asyncMode;
+   }
+
+   fn process( defaultAsyncMode:DefaultAsyncMode ) : Ast.Async {
+      _switch defaultAsyncMode {
+         case .AsyncAll, .AsyncFunc {
+            return .Async;
+         }
+         case .NoAsync {
+            return .Noasync;
+         }
+      }
+   }
+
+   when! classTypeInfo {
+      if! self.class2defaultAsyncMode[ classTypeInfo ] {
+         return process( _exp );
+      }
+   }
+   
+   switch kind {
+      case .Method {
+         if self.defaultAsyncMode == .AsyncAll {
+            return .Async;
+         }
+      }
+      case .Func, .FormFunc {
+         return process( self.defaultAsyncMode );
+      }
+   }
+   return .Noasync;
+}
+
+fn TransUnit.getMutableAsync( mut token: &Types.Token )
+mut : &Types.Token, bool, Ast.Async!
+{
+   let mut mutable = false;
+   let mut asyncMode:Ast.Async! = nil;
+   
+   while true {
+      if token.txt == "mut" {
+         mutable = true;
+         token = self.getToken(##);
+      } elseif token.txt == "__async" {
+         asyncMode = .Async;
+         token = self.getToken(##);
+      } elseif token.txt == "__noasync" {
+         asyncMode = .Noasync;
+         token = self.getToken(##);
+      } else {
+         break;
+      }
+   }
+   return token, mutable, asyncMode;
+}
 
 fn TransUnit.analyzeDeclForm( accessMode:Ast.AccessMode, firstToken:&Parser.Token )
 mut : Nodes.DeclFormNode
@@ -1546,8 +1610,11 @@ mut : Nodes.DeclFormNode
 
    self.checkToken( nextToken, ")" );
 
+   let asyncMode;
+   nextToken, _, asyncMode = self.getMutableAsync( self.getToken(##) );
+   
    let mut retTypeList:List<&Ast.TypeInfo> = [];
-   nextToken = self.getToken(##);
+   //nextToken = self.getToken(##);
    let retNodeList;
    retTypeList, nextToken, retNodeList = self.analyzeRetTypeList(
       Ast.isPubToExternal( accessMode ), accessMode, nextToken,
@@ -1565,7 +1632,9 @@ mut : Nodes.DeclFormNode
    let formType = self.processInfo.createFunc(
       false, false, nil, .FormFunc,
       self.getCurrentNamespaceTypeInfo(), false, false,
-      true, accessMode, name.txt, .Noasync, nil, argTypeInfoList, retTypeList, false );
+      true, accessMode, name.txt,
+      self.getDefaultAsync( .FormFunc, self.getCurrentClass(), asyncMode ),
+      nil, argTypeInfoList, retTypeList, false );
 
    let formSymbol, shadowing = self.scope.addForm(
       self.processInfo, name.pos, formType, accessMode );
@@ -1573,7 +1642,7 @@ mut : Nodes.DeclFormNode
 
    let declFuncInfo = new Nodes.DeclFuncInfo(
       .Form, nil, nil, name, formSymbol or shadowing, argList, false,
-      accessMode, nil, retTypeList, retNodeList, false, false );
+      accessMode, asyncMode, nil, retTypeList, retNodeList, false, false );
    
    return Nodes.DeclFormNode.create(
       self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
@@ -1895,7 +1964,7 @@ fn TransUnit.addDefaultConstructor(
    let mut ctorScope = self.pushScope( false ## );
    let initTypeInfo = self.processInfo.createFunc(
       false, false, ctorScope, .Method, classTypeInfo,
-      true, false, false, .Pub, "__init", .Noasync, nil, argTypeList, [] ## );
+      true, false, false, .Pub, "__init", .Async, nil, argTypeList, [] ## );
    if oldFlag {
       // oldFlag の場合は スコープに "" のシンボルを追加する
       ctorScope.addVar( self.processInfo, .Pri, "", nil, Ast.headTypeInfo, .IMut, true);
@@ -1997,7 +2066,8 @@ fn TransUnit.addAccessor(
          let retTypeInfo = self.processInfo.createFunc(
             false, false, self.pushScope( false ## ),
             typeKind, classTypeInfo, false, false, memberNode.$staticFlag, accessMode,
-            getterName, .Noasync, nil, [], [ getterMemberType ] ## );
+            getterName, self.getDefaultAsync( typeKind, classTypeInfo, nil ),
+            nil, [], [ getterMemberType ] ## );
          self.popScope();
 
          classScope.addMethod(
@@ -2027,7 +2097,9 @@ fn TransUnit.addAccessor(
             self.processInfo.createFunc(
                false, false, self.pushScope( false ## ),
                typeKind, classTypeInfo, false, false, memberNode.$staticFlag, accessMode,
-               setterName, .Noasync, nil, [ memberType ], nil, mutable ),
+               setterName,
+               self.getDefaultAsync( typeKind, classTypeInfo, nil ),
+               nil, [ memberType ], nil, mutable ),
             accessMode, memberNode.$staticFlag, true );
          self.popScope();
          methodNameSet.add( setterName );
@@ -2216,7 +2288,7 @@ nil の場合、メンバの宣言位置。
 
       let mut info = new Nodes.DeclFuncInfo(
          .InitBlock, classTypeInfo, node, token, unwrap (funcSym or shadowing),
-         [], true, .Pri, block, [], [], false, false );
+         [], true, .Pri, nil, block, [], [], false, false );
       let initBlockNode = Nodes.DeclMethodNode.create(
          self.nodeManager, firstToken.pos,
          self.macroCtrl.isInAnalyzeArgMode(), [ funcTypeInfo ], info );
@@ -2298,6 +2370,14 @@ nil の場合、メンバの宣言位置。
                nextToken.pos, classTypeInfo,
                self.scope, memberList, methodNameSet, true );
             node.setHasOldCtor();
+         }
+         case "default_async_this_class" {
+            pragma = LuneControl.Pragma.default_async_this_class;
+            self.class2defaultAsyncMode[ self.getCurrentNamespaceTypeInfo() ] = .AsyncAll;
+         }
+         case "default_noasync_this_class" {
+            pragma = LuneControl.Pragma.default_noasync_this_class;
+            self.class2defaultAsyncMode[ self.getCurrentNamespaceTypeInfo() ] = .NoAsync;
          }
          default {
             self.error( "unknown option -- %s" (nextToken.txt) );
@@ -2768,6 +2848,15 @@ fn TransUnit.processAddFunc(
             matched = false;
          }
       }
+      {
+         if prottype.$asyncMode ~= typeInfo.$asyncMode {
+            self.addErrMess(
+               name.pos,
+               "mismatch async -- %s / %s"
+               (prottype.$asyncMode.$_txt, typeInfo.$asyncMode.$_txt) );
+            matched = false;
+         }
+      }
 
       if self.protoFuncMap[ prottype ] {
          hasPrototype = true;
@@ -2957,20 +3046,10 @@ fn TransUnit.analyzeDeclFunc(
    self.checkToken( token, ")" );
    token = self.getToken(##);
 
-   let mut mutable = false;
-   let mut asyncMode:Ast.Async! = nil;
+   let mut mutable;
+   let asyncMode;
 
-   while true {
-      if token.txt == "mut" {
-         mutable = true;
-         token = self.getToken(##);
-      } elseif token.txt == "async" {
-         asyncMode = .Async;
-         token = self.getToken(##);
-      } else {
-         break;
-      }
-   }
+   token, mutable, asyncMode = self.getMutableAsync( token );
 
    let mut pubToExtFlag = Ast.isPubToExternal( accessMode );
 
@@ -3047,7 +3126,7 @@ fn TransUnit.analyzeDeclFunc(
       let mut workTypeInfo = self.processInfo.createFunc(
          abstractFlag, false, funcBodyScope,
          typeKind, namespaceInfo, false, false, staticFlag, accessMode,
-         funcName, unwrap asyncMode default Ast.Async.Noasync,
+         funcName, self.getDefaultAsync( typeKind, classTypeInfo, asyncMode ),
          altTypeList, argTypeList, retTypeInfoList, mutable );
 
       when! name {
@@ -3214,7 +3293,7 @@ fn TransUnit.analyzeDeclFunc(
       
       return new Nodes.DeclFuncInfo(
          funcKind, classTypeInfo, classDeclNode, name, funcSym,
-         argList, orgStaticFlag, accessMode, body,
+         argList, orgStaticFlag, accessMode, asyncMode, body,
          retTypeInfoList, retTypeNodeList,
          self.has__func__Symbol.has( typeInfo ), overrideFlag );
    }

@@ -42,46 +42,109 @@ func Log_Level_getTxt(arg1 LnsInt) string {
     return Log_LevelMap_[arg1];
 }
 var Log_name2levelMap *LnsMap
-var Log_outputLevel LnsInt
-var Log_logStream Lns_oStream
+var Log_control *Log_Control
 type Log_CreateMessage func (_env *LnsEnv) string
-// 44: decl @lune.@base.@Log.str2level
+// 53: decl @lune.@base.@Log.str2level
 func Log_str2level(_env *LnsEnv, txt string) LnsAny {
     return Log_name2levelMap.Get(txt)
 }
 
-// 50: decl @lune.@base.@Log.setLevel
+
+// 82: decl @lune.@base.@Log.setLevel
 func Log_setLevel(_env *LnsEnv, level LnsInt) {
-    Log_outputLevel = level
+    Log_control = NewLog_Control(_env, level)
     
 }
 
-// 58: decl @lune.@base.@Log.log
+// 87: decl @lune.@base.@Log.log
 func Log_log(_env *LnsEnv, level LnsInt,funcName string,lineNo LnsInt,callback Log_CreateMessage) {
-    if level <= Log_outputLevel{
+    Log_control.FP.log(_env, level, funcName, lineNo, callback)
+}
+
+// 91: decl @lune.@base.@Log.direct
+func Log_direct(_env *LnsEnv, level LnsInt,funcName string,lineNo LnsInt,mess string) {
+    Log_control.FP.direct(_env, level, funcName, lineNo, mess)
+}
+
+// declaration Class -- Control
+type Log_ControlMtd interface {
+    direct(_env *LnsEnv, arg1 LnsInt, arg2 string, arg3 LnsInt, arg4 string)
+    log(_env *LnsEnv, arg1 LnsInt, arg2 string, arg3 LnsInt, arg4 Log_CreateMessage)
+}
+type Log_Control struct {
+    level LnsInt
+    FP Log_ControlMtd
+}
+func Log_Control2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Log_Control).FP
+}
+type Log_ControlDownCast interface {
+    ToLog_Control() *Log_Control
+}
+func Log_ControlDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Log_ControlDownCast)
+    if ok { return work.ToLog_Control() }
+    return nil
+}
+func (obj *Log_Control) ToLog_Control() *Log_Control {
+    return obj
+}
+func NewLog_Control(_env *LnsEnv, arg1 LnsInt) *Log_Control {
+    obj := &Log_Control{}
+    obj.FP = obj
+    obj.InitLog_Control(_env, arg1)
+    return obj
+}
+func (self *Log_Control) InitLog_Control(_env *LnsEnv, arg1 LnsInt) {
+    self.level = arg1
+}
+// 60: decl @lune.@base.@Log.Control.log
+func (self *Log_Control) log(_env *LnsEnv, level LnsInt,funcName string,lineNo LnsInt,callback Log_CreateMessage) {
+    var logStream Lns_oStream
+    logStream = Lns_io_stderr
+    if level <= self.level{
         var nowClock LnsReal
         nowClock = _env.LuaVM.OS_clock()
-        Log_logStream.Write(_env, _env.LuaVM.String_format("%6d:%s:%s:%d:", []LnsAny{(LnsInt)((nowClock * LnsReal(1000))), Log_Level_getTxt( level), funcName, lineNo}))
-        Log_logStream.Write(_env, callback(_env))
-        Log_logStream.Write(_env, "\n")
+        logStream.Write(_env, _env.LuaVM.String_format("%6d:%s:%s:%d:", []LnsAny{(LnsInt)((nowClock * LnsReal(1000))), Log_Level_getTxt( level), funcName, lineNo}))
+        logStream.Write(_env, callback(_env))
+        logStream.Write(_env, "\n")
     }
 }
+
+// 72: decl @lune.@base.@Log.Control.direct
+func (self *Log_Control) direct(_env *LnsEnv, level LnsInt,funcName string,lineNo LnsInt,mess string) {
+    self.FP.log(_env, level, funcName, lineNo, Log_CreateMessage(func(_env *LnsEnv) string {
+        return mess
+    }))
+}
+
 
 func Lns_Log_init(_env *LnsEnv) {
     if init_Log { return }
     init_Log = true
     Log__mod__ = "@lune.@base.@Log"
     Lns_InitMod()
-    Log_name2levelMap = NewLnsMap( map[LnsAny]LnsAny{})
-    Log_name2levelMap.Set("fatal",Log_Level__Fatal)
-    Log_name2levelMap.Set("error",Log_Level__Err)
-    Log_name2levelMap.Set("warn",Log_Level__Warn)
-    Log_name2levelMap.Set("log",Log_Level__Log)
-    Log_name2levelMap.Set("info",Log_Level__Info)
-    Log_name2levelMap.Set("debug",Log_Level__Debug)
-    Log_name2levelMap.Set("trace",Log_Level__Trace)
-    Log_outputLevel = Log_Level__Err
-    Log_logStream = Lns_io_stderr
+    Lns_Async_init(_env)
+    {
+        var work *LnsMap
+        work = NewLnsMap( map[LnsAny]LnsAny{})
+        work.Set("fatal",Log_Level__Fatal)
+        work.Set("error",Log_Level__Err)
+        work.Set("warn",Log_Level__Warn)
+        work.Set("log",Log_Level__Log)
+        work.Set("info",Log_Level__Info)
+        work.Set("debug",Log_Level__Debug)
+        work.Set("trace",Log_Level__Trace)
+        Log_name2levelMap = work
+        
+    }
+    Log_control = NewLog_Control(_env, Log_Level__Err)
 }
 func init() {
     init_Log = false

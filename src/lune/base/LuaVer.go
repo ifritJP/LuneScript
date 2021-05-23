@@ -60,7 +60,7 @@ var LuaVer_ver52 *LuaVer_LuaVerInfo
 var LuaVer_ver53 *LuaVer_LuaVerInfo
 var LuaVer_kind2verMap *LnsMap
 var LuaVer_curVer LnsAny
-// 77: decl @lune.@base.@LuaVer.setCurVer
+// 79: decl @lune.@base.@LuaVer.setCurVer
 func LuaVer_setCurVer(_env *LnsEnv, ver LnsInt) {
     var verKind LnsInt
     
@@ -76,7 +76,7 @@ func LuaVer_setCurVer(_env *LnsEnv, ver LnsInt) {
     
 }
 
-// 83: decl @lune.@base.@LuaVer.getCurVer
+// 85: decl @lune.@base.@LuaVer.getCurVer
 func LuaVer_getCurVer(_env *LnsEnv) *LuaVer_LuaVerInfo {
     return Lns_unwrap( LuaVer_curVer).(*LuaVer_LuaVerInfo)
 }
@@ -149,12 +149,12 @@ func (self *LuaVer_LuaVerInfo) Get_canFormStem2Str(_env *LnsEnv) bool{ return se
 func (self *LuaVer_LuaVerInfo) Get_hasSearchPath(_env *LnsEnv) bool{ return self.hasSearchPath }
 func (self *LuaVer_LuaVerInfo) Get_loadStrFuncName(_env *LnsEnv) string{ return self.loadStrFuncName }
 func (self *LuaVer_LuaVerInfo) Get_canUseMetaGc(_env *LnsEnv) bool{ return self.canUseMetaGc }
-// 53: decl @lune.@base.@LuaVer.LuaVerInfo.isSupport
+// 55: decl @lune.@base.@LuaVer.LuaVerInfo.isSupport
 func (self *LuaVer_LuaVerInfo) IsSupport(_env *LnsEnv, symbol string) bool {
     return Lns_op_not(self.noSupportSymMap.Has(symbol))
 }
 
-// 57: decl @lune.@base.@LuaVer.LuaVerInfo.getLoadCode
+// 59: decl @lune.@base.@LuaVer.LuaVerInfo.getLoadCode
 func (self *LuaVer_LuaVerInfo) GetLoadCode(_env *LnsEnv) string {
     return LuaMod_getCode(_env, self.loadKind)
 }

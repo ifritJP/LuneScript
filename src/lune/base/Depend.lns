@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 _lune_control limit_conv_code lua;
+_lune_control default_async_all;
 
 import lune.base.LuaVer;
 

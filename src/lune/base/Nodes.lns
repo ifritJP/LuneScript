@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+_lune_control default_async_all;
+
 import lune.base.Parser;
 import lune.base.Util;
 import lune.base.frontInterface;
@@ -289,7 +291,7 @@ pub abstract class Node {
    pub fn getLiteral(): Literal!, str! {
       return nil, nil;
    }
-   pub fn processFilter<OPT>( filter: Filter<OPT>, opt:OPT ) {
+   pub fn processFilter<OPT>( filter: Filter<OPT>, opt:OPT ) __noasync {
    }
    /** 代入式の左辺になれるかどうか */
    pub fn canBeLeft(): bool {
@@ -365,13 +367,14 @@ pub class DeclMacroInfo {
    pri let tokenList: List<&Parser.Token> { pub };
 }
 
-let mut nodeKind2NameMap: Map<int,str> = {};
+let mut nodeKind2NameMapWork: Map<int,str> = {};
+let nodeKind2NameMap = nodeKind2NameMapWork;
 let mut nodeKindSeed = 0;
 
-fn regKind( name:str ): int {
+fn regKind( name:str ) __noasync : int {
    let kind = nodeKindSeed;
    nodeKindSeed = nodeKindSeed + 1;
-   nodeKind2NameMap[ kind ] = name;
+   nodeKind2NameMapWork[ kind ] = name;
    return kind;
 }
 
@@ -585,7 +588,7 @@ macro _declNodeClass(
                      _procVisitor( child, self, ,,fieldName );
                   };
 
-                  fn processNilable( varName:str, statVar:stat ) {
+                  _direct fn processNilable( varName:str, statVar:stat ) {
                      if typeName.find( "!$" ## ) {
                         visitStatList.insert( `{
                            {
@@ -638,7 +641,7 @@ macro _declNodeClass(
       }
 
       fieldStatList.insert( `{
-         pub override fn processFilter<OPT>( filter: Filter<OPT>, opt:OPT ) {
+         pub override fn processFilter<OPT>( filter: Filter<OPT>, opt:OPT ) __noasync {
             filter.,,,"process%s" (baseName) (self, opt );
          } } );
 
@@ -667,7 +670,7 @@ macro _declNodeClass(
 
       if baseName ~= "Block" {
          relateStat.insert( `{
-            pub fn Filter. ,,,"process%s" (baseName) ( node: &,,className, opt:T ) mut {
+            pub fn Filter. ,,,"process%s" (baseName) ( node: &,,className, opt:T ) __noasync mut {
                self.pushOpt( opt );
                self.defaultProcess( node, opt );
                self.popOpt( opt );
@@ -676,7 +679,7 @@ macro _declNodeClass(
       }
       else {
          relateStat.insert( `{
-            pub fn Filter. ,,,"process%s" (baseName) ( node: &,,className, opt:T ) mut;
+            pub fn Filter. ,,,"process%s" (baseName) ( node: &,,className, opt:T ) __noasync mut;
          } );
       }
       
@@ -1722,6 +1725,7 @@ pub class DeclFuncInfo {
    let argList: &List<&Node> { pub };
    let staticFlag: bool { pub };
    let accessMode: Ast.AccessMode { pub };
+   let asyncMode: Ast.Async! {pub};
    let body: &BlockNode! { pub };
    let retTypeInfoList: &List<&Ast.TypeInfo> { pub };
    let retTypeNodeList: &List<&RefTypeNode> { pub };
@@ -1734,8 +1738,8 @@ pub static fn DeclFuncInfo.createFrom(
 {
    return new DeclFuncInfo(
       info.$kind, info.classTypeInfo, info.declClassNode,
-      name, symbol, info.argList, info.staticFlag,
-      info.accessMode, info.body, info.retTypeInfoList, info.retTypeNodeList,
+      name, symbol, info.argList, info.staticFlag, info.accessMode,
+      info.asyncMode, info.body, info.retTypeInfoList, info.retTypeNodeList,
       info.has__func__Symbol, info.overrideFlag );
 }
 
@@ -2071,11 +2075,14 @@ _declNodeClass( "DeclMacro", Node, false, false, true,
 
 
 pub abstract class MacroEval {
+   _lune_control default_noasync_this_class;
+   
    pub abstract fn evalFromCode(
       processInfo:Ast.ProcessInfo,
-      name:str, argNameList:&List<str>, code:str! ): Luaval<macroStatmentProc>;
+      name:str, argNameList:&List<str>, code:str! ) : Luaval<macroStatmentProc>;
    pub abstract fn eval(
-      processInfo:Ast.ProcessInfo, macroNode: DeclMacroNode ): Luaval<macroStatmentProc>;
+      processInfo:Ast.ProcessInfo,
+      macroNode: DeclMacroNode ) : Luaval<macroStatmentProc>;
 }
 
 
@@ -2842,10 +2849,10 @@ pub fn NodeManager.MultiTo1(node:&Node) mut : &Node {
    return node;
 }
 
-pub fn Filter.processBlockSub( node: &BlockNode, opt:T ) mut {
+pub fn Filter.processBlockSub( node: &BlockNode, opt:T ) __noasync mut {
 }
 
-pub fn Filter.processBlock( node: &BlockNode, opt:T ) mut {
+pub fn Filter.processBlock( node: &BlockNode, opt:T ) __noasync mut {
    self.moduleInfoManager.push( node.$scope );
 
    self.processBlockSub( node, opt );
@@ -2903,7 +2910,7 @@ __test {
          new Parser.StreamParser(
             new Parser.TxtStream( "print( 'hoge' );" ), "test" ## ) );
 
-      let mut processInfo = Ast.createProcessInfo( true, true );
+      let mut processInfo = Ast.createProcessInfo( true, true, false );
       let mut scope = new Ast.Scope( processInfo, nil, false ##);
 
       let printToken = parser.getTokenNoErr(); // print

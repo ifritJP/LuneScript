@@ -144,6 +144,8 @@ end
 if not _lune3 then
    _lune3 = _lune
 end
+
+
 local Types = _lune.loadModule( 'lune.base.Types' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Depend = _lune.loadModule( 'lune.base.Depend' )
@@ -340,7 +342,7 @@ function ModInfo:convLocalModulePath( mod, suffix )
          return _lune.newAlge( GoModResult.Found, {projInfo})
       else
        
-         Log.log( Log.Level.Log, __func__, 151, function (  )
+         Log.log( Log.Level.Log, __func__, 153, function (  )
          
             return string.format( "not found %s", path)
          end )

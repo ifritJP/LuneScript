@@ -848,7 +848,7 @@ func (self *Import_ImportParam) GetTypeInfoFrom(_env *LnsEnv, typeId *Import__Id
         return self.FP.GetTypeInfo(_env, typeId.Id)
     }
     if typeId.Mod == FrontInterface_getRootDependModId(_env){
-        return Ast_getRootProcessInfo(_env).FP.GetTypeInfo(_env, typeId.Id), nil
+        return Ast_getRootProcessInfoRo(_env).FP.GetTypeInfo(_env, typeId.Id), nil
     }
     var moduleInfo *FrontInterface_ModuleInfo
     

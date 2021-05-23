@@ -181,7 +181,7 @@ pub fn ImportParam.getTypeInfoFrom(typeId:&_IdInfo) mut :&Ast.TypeInfo!, str! {
       return self.getTypeInfo( typeId.id )**;
    }
    if typeId.mod == frontInterface.getRootDependModId() {
-      return Ast.getRootProcessInfo().getTypeInfo( typeId.id), nil;
+      return Ast.getRootProcessInfoRo().getTypeInfo( typeId.id), nil;
    }
    let! moduleInfo = self.dependLibId2DependInfo[ typeId.mod ] {
       Util.err( "%s, %d, %d" (self.moduleTypeInfo.getTxt(##), typeId.mod, typeId.id) );

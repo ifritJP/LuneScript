@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
   */
 
+_lune_control default_async_all;
+
 pub enum CodeKind {
    Init,
    Unpack,
@@ -45,19 +47,27 @@ pub enum CodeKind {
    Finalize,
 }
 
-let mut codeMap:Map<CodeKind,str> = {};
+let codeMap:&Map<CodeKind,str>;
+pub enum CastKind {
+   Int,
+   Real,
+   Str,
+   Class,
+}
 
-codeMap[ .Init] = ```
+{
+   let work:Map<CodeKind,str> = {};
+   work[ .Init] = ```
 local _lune = {}
 ```;
 
-codeMap[ .Unpack ] = ```
+   work[ .Unpack ] = ```
 if not table.unpack then
    table.unpack = unpack
 end
 ```;
 
-codeMap[ .NilAcc ] = ```
+   work[ .NilAcc ] = ```
 function _lune.nilacc( val, fieldName, access, ... )
    if not val then
       return nil
@@ -101,7 +111,7 @@ function _lune.nilacc( val, fieldName, access, ... )
 end
 ```;
 
-codeMap[ .Unwrap ] = ```
+   work[ .Unwrap ] = ```
 function _lune.unwrap( val )
    if val == nil then
       __luneScript:error( 'unwrap val is nil' )
@@ -116,7 +126,7 @@ function _lune.unwrapDefault( val, defval )
 end
 ```;
 
-codeMap[ .LoadModule ] =```
+   work[ .LoadModule ] =```
 function _lune.loadModule( mod )
    if __luneScript then
       return  __luneScript:loadModule( mod )
@@ -126,7 +136,7 @@ end
 ```;
 
 
-codeMap[ .LoadStr51 ] =```
+   work[ .LoadStr51 ] =```
 function _lune.loadstring51( txt, env )
    local func = loadstring( txt )
    if func and env then
@@ -136,7 +146,7 @@ function _lune.loadstring51( txt, env )
 end
 ```;
 
-codeMap[ .LoadStr52 ] =```
+   work[ .LoadStr52 ] =```
 function _lune.loadstring52( txt, env )
    if not env then
       return load( txt )
@@ -145,7 +155,7 @@ function _lune.loadstring52( txt, env )
 end
 ```;
 
-codeMap[ .Mapping ] = ```
+   work[ .Mapping ] = ```
 function _lune._toStem( val )
    return val
 end
@@ -229,7 +239,7 @@ function _lune._fromMap( obj, map, memInfoList )
 end
 ```;
 
-codeMap[ .SetOp ] = ```
+   work[ .SetOp ] = ```
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
       setObj[ val ] = true
@@ -279,7 +289,7 @@ function _lune._Set_clone( setObj )
 end
 ```;
 
-codeMap[ .SetMapping ] = ```
+   work[ .SetMapping ] = ```
 function _lune._toSet( val, toKeyInfo )
    if type( val ) == "table" then
       local tbl = {}
@@ -304,7 +314,7 @@ end
 ```;
 
 
-codeMap[ .AlgeMapping ] = ```
+   work[ .AlgeMapping ] = ```
 function _lune._fromList( obj, list, memInfoList )
    if type( list ) ~= "table" then
       return false
@@ -335,7 +345,7 @@ function _lune._AlgeFrom( Alge, val )
 end
 ```;
 
-codeMap[ .Alge ] = ```
+   work[ .Alge ] = ```
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
    if not memInfoList then
@@ -345,7 +355,7 @@ function _lune.newAlge( kind, vals )
 end
 ```;
 
-codeMap[ .InstanceOf ] = ```
+   work[ .InstanceOf ] = ```
 function _lune.__isInstanceOf( obj, class )
    while obj do
       local meta = getmetatable( obj )
@@ -373,14 +383,7 @@ end
 ```;
 
 
-pub enum CastKind {
-   Int,
-   Real,
-   Str,
-   Class,
-}
-
-codeMap[ .Cast ] = ```
+   work[ .Cast ] = ```
 function _lune.__Cast( obj, kind, class )
    if kind == %d then -- int
       if type( obj ) ~= "number" then
@@ -407,7 +410,7 @@ function _lune.__Cast( obj, kind, class )
 end
 ``` ( CastKind.Int, CastKind.Real, CastKind.Str, CastKind.Class );
 
-codeMap[ .LazyLoad ] = ```
+   work[ .LazyLoad ] = ```
 function _lune._lazyImport( modName )
   local mod
   return function()
@@ -420,7 +423,7 @@ function _lune._lazyImport( modName )
 end
 ```;
 
-codeMap[ .LazyRequire ] = ```
+   work[ .LazyRequire ] = ```
 function _lune._lazyRequire( modName )
   local mod
   return function()
@@ -433,9 +436,11 @@ function _lune._lazyRequire( modName )
 end
 ```;
 
-codeMap[ .Finalize ] = ```
+   work[ .Finalize ] = ```
 return _lune
 ```;
+   codeMap = work;
+}
 
 
 pub fn getCode( kind:CodeKind ): str {

@@ -3,20 +3,20 @@ package lnsc
 import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_OutputDepend bool
 var OutputDepend__mod__ string
-// for 126
-func OutputDepend_convExp485(arg1 []LnsAny) (LnsAny, LnsAny) {
+// for 131
+func OutputDepend_convExp488(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
-// for 128
-func OutputDepend_convExp502(arg1 []LnsAny) LnsAny {
+// for 133
+func OutputDepend_convExp505(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// 92: decl @lune.@base.@OutputDepend.createFilter
+// 95: decl @lune.@base.@OutputDepend.createFilter
 func OutputDepend_createFilter(_env *LnsEnv, stream Lns_oStream) *Nodes_Filter {
     return &NewOutputDepend_convFilter(_env, stream).Nodes_Filter
 }
 
-// 140: decl @lune.@base.@OutputDepend.Ast2Depend
+// 145: decl @lune.@base.@OutputDepend.Ast2Depend
 func OutputDepend_Ast2Depend_1070_(_env *LnsEnv, ast *TransUnit_ASTInfo) string {
     var stream *Util_memStream
     stream = NewUtil_memStream(_env)
@@ -64,7 +64,7 @@ func NewOutputDepend_DependInfo(_env *LnsEnv, arg1 string) *OutputDepend_DependI
     obj.InitOutputDepend_DependInfo(_env, arg1)
     return obj
 }
-// 35: DeclConstr
+// 38: DeclConstr
 func (self *OutputDepend_DependInfo) InitOutputDepend_DependInfo(_env *LnsEnv, targetModule string) {
     self.targetModule = Ast_TypeInfo_getModulePath(_env, targetModule)
     
@@ -74,17 +74,17 @@ func (self *OutputDepend_DependInfo) InitOutputDepend_DependInfo(_env *LnsEnv, t
     
 }
 
-// 41: decl @lune.@base.@OutputDepend.DependInfo.addImpotModule
+// 44: decl @lune.@base.@OutputDepend.DependInfo.addImpotModule
 func (self *OutputDepend_DependInfo) AddImpotModule(_env *LnsEnv, mod string) {
     self.importModuleList.Insert(mod)
 }
 
-// 44: decl @lune.@base.@OutputDepend.DependInfo.addSubMod
+// 47: decl @lune.@base.@OutputDepend.DependInfo.addSubMod
 func (self *OutputDepend_DependInfo) AddSubMod(_env *LnsEnv, path string) {
     self.subModList.Insert(path)
 }
 
-// 49: decl @lune.@base.@OutputDepend.DependInfo.output
+// 52: decl @lune.@base.@OutputDepend.DependInfo.output
 func (self *OutputDepend_DependInfo) Output(_env *LnsEnv, stream Lns_oStream) {
     stream.Write(_env, _env.LuaVM.String_format("%s.meta: \\\n", []LnsAny{Lns_car(_env.LuaVM.String_gsub(self.targetModule,"%.", "/")).(string)}))
     stream.Write(_env, _env.LuaVM.String_format("  %s.lns \\\n", []LnsAny{Lns_car(_env.LuaVM.String_gsub(self.targetModule,"%.", "/")).(string)}))
@@ -229,14 +229,14 @@ func NewOutputDepend_convFilter(_env *LnsEnv, arg1 Lns_oStream) *OutputDepend_co
     obj.InitOutputDepend_convFilter(_env, arg1)
     return obj
 }
-// 66: DeclConstr
+// 69: DeclConstr
 func (self *OutputDepend_convFilter) InitOutputDepend_convFilter(_env *LnsEnv, stream Lns_oStream) {
     self.InitNodes_Filter(_env, false, nil, nil)
     self.stream = stream
     
 }
 
-// 73: decl @lune.@base.@OutputDepend.convFilter.processRoot
+// 76: decl @lune.@base.@OutputDepend.convFilter.processRoot
 func (self *OutputDepend_convFilter) ProcessRoot(_env *LnsEnv, node *Nodes_RootNode,_dummy LnsAny) {
     var moduleFull string
     moduleFull = node.FP.Get_moduleTypeInfo(_env).FP.GetFullName(_env, self.FP.Get_typeNameCtrl(_env), Ast_DummyModuleInfoManager_get_instance(_env).FP, nil)
@@ -300,38 +300,38 @@ func NewOutputDepend_Front(_env *LnsEnv) *OutputDepend_Front {
 }
 func (self *OutputDepend_Front) InitOutputDepend_Front(_env *LnsEnv) {
 }
-// 102: decl @lune.@base.@OutputDepend.Front.loadModule
+// 107: decl @lune.@base.@OutputDepend.Front.loadModule
 func (self *OutputDepend_Front) LoadModule(_env *LnsEnv, mod string)(LnsAny, *FrontInterface_ModuleMeta) {
     Util_err(_env, "not implements")
 // insert a dummy
     return nil,nil
 }
 
-// 105: decl @lune.@base.@OutputDepend.Front.loadFromLnsTxt
+// 110: decl @lune.@base.@OutputDepend.Front.loadFromLnsTxt
 func (self *OutputDepend_Front) LoadFromLnsTxt(_env *LnsEnv, importModuleInfo *FrontInterface_ImportModuleInfo,name string,txt string) LnsAny {
     Util_err(_env, "not implements")
 // insert a dummy
     return nil
 }
 
-// 111: decl @lune.@base.@OutputDepend.Front.getLuaModulePath
+// 116: decl @lune.@base.@OutputDepend.Front.getLuaModulePath
 func (self *OutputDepend_Front) GetLuaModulePath(_env *LnsEnv, mod string) string {
     return mod
 }
 
-// 114: decl @lune.@base.@OutputDepend.Front.searchModule
+// 119: decl @lune.@base.@OutputDepend.Front.searchModule
 func (self *OutputDepend_Front) SearchModule(_env *LnsEnv, mod string) LnsAny {
     Util_err(_env, "not implements")
 // insert a dummy
     return nil
 }
 
-// 117: decl @lune.@base.@OutputDepend.Front.error
+// 122: decl @lune.@base.@OutputDepend.Front.error
 func (self *OutputDepend_Front) Error(_env *LnsEnv, message string) {
     Util_err(_env, message)
 }
 
-// 121: decl @lune.@base.@OutputDepend.Front.loadMeta
+// 126: decl @lune.@base.@OutputDepend.Front.loadMeta
 func (self *OutputDepend_Front) LoadMeta(_env *LnsEnv, importModuleInfo *FrontInterface_ImportModuleInfo,mod string) LnsAny {
     var metaPath string
     metaPath = Lns_car(_env.LuaVM.String_gsub(mod,"%.", "/")).(string) + ".meta"
@@ -344,7 +344,7 @@ func (self *OutputDepend_Front) LoadMeta(_env *LnsEnv, importModuleInfo *FrontIn
         var meta LnsAny
         
         {
-            _meta := OutputDepend_convExp502(Lns_2DDD(_env.LuaVM.RunLoadedfunc(loaded_104,Lns_2DDD([]LnsAny{}))[0]))
+            _meta := OutputDepend_convExp505(Lns_2DDD(_env.LuaVM.RunLoadedfunc(loaded_104,Lns_2DDD([]LnsAny{}))[0]))
             if _meta == nil{
                 return nil
             } else {

@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+_lune_control default_async_all;
+
 import lune.base.Types;
 import lune.base.Parser;
 import lune.base.Json;
@@ -247,7 +249,7 @@ SOFTWARE.
    return nil;
 }
 
-pub fn analyze( mut argList: &List<str> ) : Option {
+pub fn analyze( mut argList: &List<str> ) __noasync : Option {
 
    fn printUsage(code:int) : __ {
       print( ```
@@ -630,7 +632,7 @@ usage:
    }
    
 
-   Log._log2( .Log, "mode is '%s'" (option.mode.$_txt) );
+   Log._direct( .Log, "mode is '%s'" (option.mode.$_txt) );
 
    return option;
 }

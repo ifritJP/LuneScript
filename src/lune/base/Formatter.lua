@@ -765,6 +765,21 @@ function FormatterFilter:processDeclFuncInfo( node, declInfo, opt )
       self:write( " mut" )
    end
    
+   do
+      local asyncMode = declInfo:get_asyncMode()
+      if asyncMode ~= nil then
+         do
+            local _switchExp = asyncMode
+            if _switchExp == Ast.Async.Async then
+               self:write( " async" )
+            elseif _switchExp == Ast.Async.Noasync then
+               self:write( " noasync" )
+            end
+         end
+         
+      end
+   end
+   
    
    if #funcType:get_retTypeInfoList() ~= 0 then
       self:write( " : " )

@@ -591,6 +591,16 @@ fn FormatterFilter.processDeclFuncInfo(
    if Ast.TypeInfo.isMut( funcType ) and declInfo.$kind == .Mtd {
       self.write( " mut" );
    }
+   if! let asyncMode = declInfo.$asyncMode {
+      _switch asyncMode {
+         case .Async {
+            self.write( " async" );
+         }
+         case .Noasync {
+            self.write( " noasync" );
+         }
+      }
+   }
 
    if #funcType.$retTypeInfoList ~= 0 {
       self.write( " : " );

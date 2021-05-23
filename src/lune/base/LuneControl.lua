@@ -115,6 +115,8 @@ end
 if not _lune3 then
    _lune3 = _lune
 end
+
+
 local Code = {}
 _moduleObj.Code = Code
 Code._val2NameMap = {}
@@ -167,6 +169,14 @@ Pragma.default__init = { "default__init"}
 Pragma._name2Val["default__init"] = Pragma.default__init
 Pragma.default__init_old = { "default__init_old"}
 Pragma._name2Val["default__init_old"] = Pragma.default__init_old
+Pragma.default_async_all = { "default_async_all"}
+Pragma._name2Val["default_async_all"] = Pragma.default_async_all
+Pragma.default_async_func = { "default_async_func"}
+Pragma._name2Val["default_async_func"] = Pragma.default_async_func
+Pragma.default_async_this_class = { "default_async_this_class"}
+Pragma._name2Val["default_async_this_class"] = Pragma.default_async_this_class
+Pragma.default_noasync_this_class = { "default_noasync_this_class"}
+Pragma._name2Val["default_noasync_this_class"] = Pragma.default_noasync_this_class
 Pragma.disable_mut_control = { "disable_mut_control"}
 Pragma._name2Val["disable_mut_control"] = Pragma.disable_mut_control
 Pragma.ignore_symbol_ = { "ignore_symbol_"}

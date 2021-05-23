@@ -227,6 +227,8 @@ end
 if not _lune3 then
    _lune3 = _lune
 end
+
+
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Code = _lune.loadModule( 'lune.base.Code' )
@@ -417,13 +419,14 @@ function ProcessInfo:getTypeInfo( id )
 
    return self.id2TypeInfo[id]
 end
-function ProcessInfo.new( validCheckingMutable, idProvBase, validExtType, typeInfo2Map )
+function ProcessInfo.new( validCheckingMutable, idProvBase, validExtType, validDetailError, typeInfo2Map )
    local obj = {}
    ProcessInfo.setmeta( obj )
-   if obj.__init then obj:__init( validCheckingMutable, idProvBase, validExtType, typeInfo2Map ); end
+   if obj.__init then obj:__init( validCheckingMutable, idProvBase, validExtType, validDetailError, typeInfo2Map ); end
    return obj
 end
-function ProcessInfo:__init(validCheckingMutable, idProvBase, validExtType, typeInfo2Map) 
+function ProcessInfo:__init(validCheckingMutable, idProvBase, validExtType, validDetailError, typeInfo2Map) 
+   self.validDetailError = validDetailError
    self.id2TypeInfo = {}
    self.validCheckingMutable = validCheckingMutable
    self.validExtType = validExtType
@@ -436,16 +439,16 @@ function ProcessInfo:__init(validCheckingMutable, idProvBase, validExtType, type
 end
 function ProcessInfo.createRoot(  )
 
-   return ProcessInfo.new(true, IdProvider.new(0, userStartId), true, nil)
+   return ProcessInfo.new(true, IdProvider.new(0, userStartId), true, false, nil)
 end
-function ProcessInfo.createUser( validCheckingMutable, validExtType, typeInfo2Map )
+function ProcessInfo.createUser( validCheckingMutable, validExtType, validDetailError, typeInfo2Map )
 
-   return ProcessInfo.new(validCheckingMutable, IdProvider.new(userStartId, extStartId), validExtType, typeInfo2Map)
+   return ProcessInfo.new(validCheckingMutable, IdProvider.new(userStartId, extStartId), validExtType, validDetailError, typeInfo2Map)
 end
 function ProcessInfo:switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.ProcessInfo.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 154, function (  )
+   Log.log( Log.Level.Trace, __func__, 159, function (  )
    
       return "start"
    end )
@@ -481,6 +484,9 @@ function ProcessInfo:get_validExtType()
 end
 function ProcessInfo:get_validCheckingMutable()
    return self.validCheckingMutable
+end
+function ProcessInfo:get_validDetailError()
+   return self.validDetailError
 end
 
 
@@ -536,11 +542,17 @@ end
 
 
 local rootProcessInfo = ProcessInfo.createRoot(  )
+local rootProcessInfoRo = rootProcessInfo
 local function getRootProcessInfo(  )
 
    return rootProcessInfo
 end
 _moduleObj.getRootProcessInfo = getRootProcessInfo
+local function getRootProcessInfoRo(  )
+
+   return rootProcessInfoRo
+end
+_moduleObj.getRootProcessInfoRo = getRootProcessInfoRo
 
 function ProcessInfo:newIdForRoot(  )
 
@@ -695,9 +707,12 @@ AccessMode.__allList[4] = AccessMode.Pri
 AccessMode.Local = 4
 AccessMode._val2NameMap[4] = 'Local'
 AccessMode.__allList[5] = AccessMode.Local
-AccessMode.Global = 5
-AccessMode._val2NameMap[5] = 'Global'
-AccessMode.__allList[6] = AccessMode.Global
+AccessMode.Direct = 5
+AccessMode._val2NameMap[5] = 'Direct'
+AccessMode.__allList[6] = AccessMode.Direct
+AccessMode.Global = 6
+AccessMode._val2NameMap[6] = 'Global'
+AccessMode.__allList[7] = AccessMode.Global
 
 
 local SymbolKind = {}
@@ -767,13 +782,16 @@ end
 
 local SymbolInfo = {}
 
-local sym2builtInTypeMap = {}
+local sym2builtInTypeMapWork = {}
+local sym2builtInTypeMap = sym2builtInTypeMapWork
+local builtInTypeIdSetWork = {}
+local builtInTypeIdSet = builtInTypeIdSetWork
+
 local function getSym2builtInTypeMap(  )
 
    return sym2builtInTypeMap
 end
 _moduleObj.getSym2builtInTypeMap = getSym2builtInTypeMap
-local builtInTypeIdSet = {}
 local function getBuiltInTypeIdMap(  )
 
    return builtInTypeIdSet
@@ -859,26 +877,14 @@ local function isPubToExternal( mode )
 end
 _moduleObj.isPubToExternal = isPubToExternal
 
-local txt2AccessModeMap = {}
-txt2AccessModeMap["none"] = AccessMode.None
-txt2AccessModeMap["pub"] = AccessMode.Pub
-txt2AccessModeMap["pro"] = AccessMode.Pro
-txt2AccessModeMap["pri"] = AccessMode.Pri
-txt2AccessModeMap["local"] = AccessMode.Local
-txt2AccessModeMap["global"] = AccessMode.Global
+local txt2AccessModeMap = {["none"] = AccessMode.None, ["pub"] = AccessMode.Pub, ["pro"] = AccessMode.Pro, ["pri"] = AccessMode.Pri, ["local"] = AccessMode.Local, ["_direct"] = AccessMode.Direct, ["global"] = AccessMode.Global}
 local function txt2AccessMode( accessMode )
 
    return txt2AccessModeMap[accessMode]
 end
 _moduleObj.txt2AccessMode = txt2AccessMode
 
-local accessMode2txtMap = {}
-accessMode2txtMap[AccessMode.None] = "none"
-accessMode2txtMap[AccessMode.Pub] = "pub"
-accessMode2txtMap[AccessMode.Pro] = "pro"
-accessMode2txtMap[AccessMode.Pri] = "pri"
-accessMode2txtMap[AccessMode.Local] = "local"
-accessMode2txtMap[AccessMode.Global] = "global"
+local accessMode2txtMap = {[AccessMode.None] = "none", [AccessMode.Pub] = "pub", [AccessMode.Pro] = "pro", [AccessMode.Pri] = "pri", [AccessMode.Local] = "local", [AccessMode.Direct] = "_direct", [AccessMode.Global] = "global"}
 local function accessMode2txt( accessMode )
 
    return _lune.unwrap( accessMode2txtMap[accessMode])
@@ -1178,10 +1184,11 @@ end
 local rootScope = Scope.new(rootProcessInfo, nil, false, nil)
 _moduleObj.rootScope = rootScope
 
+local rootScopeRo = _moduleObj.rootScope
 function Scope:isInnerOf( scope )
 
    local workScope = self
-   while workScope ~= _moduleObj.rootScope do
+   while workScope ~= rootScopeRo do
       if workScope == scope then
          return true
       end
@@ -1194,7 +1201,6 @@ end
 
 
 local dummyList = {}
-local rootChildren = {}
 local TypeData = {}
 _moduleObj.TypeData = TypeData
 function TypeData:addChildren( child )
@@ -2955,7 +2961,7 @@ function Scope:getSymbolTypeInfo( name, fromScope, moduleScope, access )
    do
       local _exp = self.ownerTypeInfo
       if _exp ~= nil then
-         if _exp:get_kind() == TypeInfoKind.Func or _exp:get_kind() == TypeInfoKind.Method or self == moduleScope or self == _moduleObj.rootScope then
+         if _exp:get_kind() == TypeInfoKind.Func or _exp:get_kind() == TypeInfoKind.Method or self == moduleScope or self == rootScopeRo then
             validThisScope = true
          elseif _exp:get_kind() == TypeInfoKind.IF or _exp:get_kind() == TypeInfoKind.Class or _exp:get_kind() == TypeInfoKind.Module then
             limitSymbol = true
@@ -3281,7 +3287,7 @@ function Scope:isClosureAccess( moduleScope, symbol )
    do
       local _switchExp = symbol:get_kind()
       if _switchExp == SymbolKind.Var or _switchExp == SymbolKind.Arg or _switchExp == SymbolKind.Fun then
-         if symbol:get_scope() == moduleScope or symbol:get_scope() == _moduleObj.rootScope then
+         if symbol:get_scope() == moduleScope or symbol:get_scope() == rootScopeRo then
             
          elseif symbol:get_name() == "self" then
             local funcType = self:getNamespaceTypeInfo(  )
@@ -3475,16 +3481,17 @@ function NormalSymbolInfo:canAccess( fromScope, access )
          end
          
          return nil
-      elseif _switchExp == AccessMode.Pri then
+      elseif _switchExp == AccessMode.Pri or _switchExp == AccessMode.Direct then
          if fromScope:isInnerOf( self.scope ) then
             return self
          end
          
          return nil
+      elseif _switchExp == AccessMode.None then
+         Util.err( string.format( "illegl accessmode -- %s, %s", self:get_accessMode(), self:get_name()) )
       end
    end
    
-   Util.err( string.format( "illegl accessmode -- %s, %s", self:get_accessMode(), self:get_name()) )
 end
 
 
@@ -5893,7 +5900,8 @@ local function isExtType( typeInfo )
 end
 _moduleObj.isExtType = isExtType
 
-local immutableTypeSet = {}
+local immutableTypeSetWork = {}
+local immutableTypeSet = immutableTypeSetWork
 local function isMutableType( typeInfo )
 
    typeInfo = typeInfo:get_nonnilableType()
@@ -6002,16 +6010,16 @@ end
 
 local function addBuiltin( typeInfo )
 
-   builtInTypeIdSet[typeInfo:get_typeId().id] = typeInfo
+   builtInTypeIdSetWork[typeInfo:get_typeId().id] = typeInfo
 end
 _moduleObj.addBuiltin = addBuiltin
 addBuiltin( _moduleObj.headTypeInfo )
 
 local function registBuiltin( idName, typeTxt, kind, typeInfo, nilableTypeInfo, registScope )
 
-   sym2builtInTypeMap[typeTxt] = NormalSymbolInfo.new(rootProcessInfo, SymbolKind.Typ, false, false, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, nil, typeInfo, MutMode.IMut, true, false)
+   sym2builtInTypeMapWork[typeTxt] = NormalSymbolInfo.new(rootProcessInfo, SymbolKind.Typ, false, false, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, nil, typeInfo, MutMode.IMut, true, false)
    if nilableTypeInfo ~= _moduleObj.headTypeInfo then
-      sym2builtInTypeMap[typeTxt .. "!"] = NormalSymbolInfo.new(rootProcessInfo, SymbolKind.Typ, false, kind == TypeInfoKind.Func, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, nil, nilableTypeInfo, MutMode.IMut, true, false)
+      sym2builtInTypeMapWork[typeTxt .. "!"] = NormalSymbolInfo.new(rootProcessInfo, SymbolKind.Typ, false, kind == TypeInfoKind.Func, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, nil, nilableTypeInfo, MutMode.IMut, true, false)
    end
    
    addBuiltin( typeInfo )
@@ -6125,11 +6133,11 @@ local builtinTypeArray = NormalTypeInfo.createBuiltin( "Array", "Array", TypeInf
 _moduleObj.builtinTypeArray = builtinTypeArray
 
 
-immutableTypeSet[_moduleObj.builtinTypeBool]= true
-immutableTypeSet[_moduleObj.builtinTypeInt]= true
-immutableTypeSet[_moduleObj.builtinTypeReal]= true
-immutableTypeSet[_moduleObj.builtinTypeChar]= true
-immutableTypeSet[_moduleObj.builtinTypeString]= true
+immutableTypeSetWork[_moduleObj.builtinTypeBool]= true
+immutableTypeSetWork[_moduleObj.builtinTypeInt]= true
+immutableTypeSetWork[_moduleObj.builtinTypeReal]= true
+immutableTypeSetWork[_moduleObj.builtinTypeChar]= true
+immutableTypeSetWork[_moduleObj.builtinTypeString]= true
 
 local function isClass( typeInfo )
 
@@ -6436,10 +6444,6 @@ function BoxTypeInfo:applyGeneric( alt2typeMap, moduleTypeInfo )
    local typeInfo = self.boxingType:applyGeneric( alt2typeMap, moduleTypeInfo )
    if typeInfo == self.boxingType then
       return self
-   end
-   
-   if typeInfo ~= nil then
-      return moduleTypeInfo:getProcessInfo(  ):createBox( self.accessMode, typeInfo )
    end
    
    return nil
@@ -6916,7 +6920,7 @@ registBuiltin( "DDD", "...", TypeInfoKind.DDD, _moduleObj.builtinTypeDDD, _modul
 local builtinTypeForm = NormalTypeInfo.createBuiltin( "Form", "form", TypeInfoKind.Form, _moduleObj.builtinTypeDDD )
 _moduleObj.builtinTypeForm = builtinTypeForm
 
-immutableTypeSet[_moduleObj.builtinTypeForm]= true
+immutableTypeSetWork[_moduleObj.builtinTypeForm]= true
 
 local builtinTypeSymbol = NormalTypeInfo.createBuiltin( "Symbol", "sym", TypeInfoKind.Prim )
 _moduleObj.builtinTypeSymbol = builtinTypeSymbol
@@ -8062,10 +8066,7 @@ end
 
 
 
-local numberTypeSet = {}
-numberTypeSet[_moduleObj.builtinTypeInt]= true
-numberTypeSet[_moduleObj.builtinTypeChar]= true
-numberTypeSet[_moduleObj.builtinTypeReal]= true
+local numberTypeSet = {[_moduleObj.builtinTypeInt] = true, [_moduleObj.builtinTypeChar] = true, [_moduleObj.builtinTypeReal] = true}
 
 local function isNumberType( typeInfo )
 
@@ -8594,18 +8595,22 @@ end
 
 local function isSettableToForm( processInfo, typeInfo )
 
+   if typeInfo:get_accessMode() == AccessMode.Direct then
+      return false, "can't set the _direct function."
+   end
+   
    if #typeInfo:get_argTypeInfoList() > 0 then
-      for __index, argType in ipairs( typeInfo:get_argTypeInfoList() ) do
+      for index, argType in ipairs( typeInfo:get_argTypeInfoList() ) do
          do
             local dddType = _lune.__Cast( argType, 3, DDDTypeInfo )
             if dddType ~= nil then
                if not dddType:get_typeInfo():get_nilableTypeInfo():equals( processInfo, _moduleObj.builtinTypeStem_ ) then
-                  return false
+                  return false, string.format( "mismatch arg%d", index)
                end
                
             else
                if not argType:get_srcTypeInfo():equals( processInfo, _moduleObj.builtinTypeStem_ ) then
-                  return false
+                  return false, string.format( "mismatch arg%d", index)
                end
                
             end
@@ -8615,12 +8620,11 @@ local function isSettableToForm( processInfo, typeInfo )
       
    end
    
-   return true
+   return true, ""
 end
 
 function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalType, alt2type )
 
-   local topLine = 6498
    
    
    if dest ~= dest:get_aliasSrc() then
@@ -8634,7 +8638,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
       end
       
       if other:equals( processInfo, _moduleObj.builtinTypeAbbr ) then
-         return false, string.format( "(err:%d)", 6513 - topLine)
+         return false, ""
          
       end
       
@@ -8669,13 +8673,13 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             do
                local _switchExp = otherSrc
                if _switchExp == _moduleObj.builtinTypeAbbr or _switchExp == _moduleObj.builtinTypeAbbrNone then
-                  return false, string.format( "(err:%d)", 6541 - topLine)
+                  return false, ""
                   
                end
             end
             
             if otherSrc:get_kind() == TypeInfoKind.Func then
-               return false, string.format( "(err:%d)", 6550 - topLine)
+               return false, ""
                
             end
             
@@ -8686,17 +8690,17 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
                do
                   local _switchExp = nonNilOtherType:get_kind()
                   if _switchExp == TypeInfoKind.Set or _switchExp == TypeInfoKind.Map or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.IF or _switchExp == TypeInfoKind.Alternate then
-                     return false, string.format( "(err:%d)", 6560 - topLine)
+                     return false, ""
                      
                   elseif _switchExp == TypeInfoKind.Class then
                      if _moduleObj.builtinTypeString ~= nonNilOtherType then
-                        return false, string.format( "(err:%d)", 6564 - topLine)
+                        return false, ""
                         
                      end
                      
                   elseif _switchExp == TypeInfoKind.Prim then
                      if _moduleObj.builtinTypeStem == nonNilOtherType then
-                        return false, string.format( "(err:%d)", 6569 - topLine)
+                        return false, ""
                         
                      end
                      
@@ -8710,7 +8714,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
          
          if otherSrc ~= _moduleObj.builtinTypeNil and otherSrc ~= _moduleObj.builtinTypeString and otherSrc:get_kind() ~= TypeInfoKind.Prim and otherSrc:get_kind() ~= TypeInfoKind.Func and otherSrc:get_kind() ~= TypeInfoKind.Method and otherSrc:get_kind() ~= TypeInfoKind.Form and otherSrc:get_kind() ~= TypeInfoKind.FormFunc and otherSrc:get_kind() ~= TypeInfoKind.Enum and otherSrc:get_kind() ~= TypeInfoKind.Abbr and otherSrc:get_kind() ~= TypeInfoKind.Alternate and otherSrc:get_kind() ~= TypeInfoKind.Box and not isGenericType( otherSrc ) and destMut and not otherMut then
             if processInfo:get_validCheckingMutable() then
-               return false, string.format( "(err:%d)", 6591 - topLine)
+               return false, ""
                
             end
             
@@ -8739,7 +8743,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             return dest:canEvalWith( processInfo, otherSrc, canEvalType, alt2type )
          end
          
-         return false, string.format( "(err:%d)", 6615 - topLine)
+         return false, ""
          
       else
        
@@ -8757,13 +8761,13 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
          return true, nil
       end
       
-      return false, string.format( "(err:%d)", 6631 - topLine)
+      return false, ""
       
    end
    
    if otherSrc == _moduleObj.builtinTypeNil or otherSrc:get_kind() == TypeInfoKind.Abbr then
       if dest:get_kind() ~= TypeInfoKind.Nilable then
-         return false, string.format( "(err:%d)", 6635 - topLine)
+         return false, ""
          
       end
       
@@ -8833,7 +8837,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             return false, string.format( "not inherit %s(%d) <- %s(%d)", dest:getTxt(  ), dest:get_typeId():get_orgId(), otherSrc:getTxt(  ), otherSrc:get_typeId():get_orgId())
          end
          
-         return false, string.format( "(err:%d)", 6702 - topLine)
+         return false, ""
          
       elseif otherSrc:get_kind() == TypeInfoKind.Enum then
          local enumTypeInfo = _lune.unwrap( (_lune.__Cast( otherSrc, 3, EnumTypeInfo ) ))
@@ -8852,7 +8856,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
                   return true, nil
                end
                
-               return false, string.format( "(err:%d)", 6726 - topLine)
+               return false, ""
                
             end
          end
@@ -8861,6 +8865,10 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
          do
             local _switchExp = otherSrc:get_kind()
             if _switchExp == TypeInfoKind.FormFunc or _switchExp == TypeInfoKind.Func then
+               if otherSrc:get_accessMode() == AccessMode.Direct then
+                  return false, "can't set the _direct function."
+               end
+               
                do
                   local result, mess = TypeInfo.checkMatchType( processInfo, dest:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false, nil, alt2type )
                   if result == MatchType.Error then
@@ -8916,7 +8924,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             return true, nil
          end
          
-         return false, string.format( "(err:%d)", 6792 - topLine)
+         return false, ""
          
       elseif _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.Set then
          if otherSrc:get_itemTypeInfoList()[1] == _moduleObj.builtinTypeNone then
@@ -8986,7 +8994,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             return true, nil
          end
          
-         return false, string.format( "(err:%d)", 6827 - topLine)
+         return false, ""
          
       elseif _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.IF then
          if isGenericType( dest ) then
@@ -9002,7 +9010,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             return false, string.format( "not inherit %s(%d) <- %s(%d)", dest:getTxt(  ), dest:get_typeId():get_orgId(), otherSrc:getTxt(  ), otherSrc:get_typeId():get_orgId())
          end
          
-         return false, string.format( "(err:%d)", 6843 - topLine)
+         return false, ""
          
          
       elseif _switchExp == TypeInfoKind.Form then
@@ -9010,7 +9018,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             return true, nil
          end
          
-         return false, string.format( "(err:%d)", 6850 - topLine)
+         return false, ""
          
       elseif _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.FormFunc then
          if #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
@@ -9030,7 +9038,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
          return true, nil
       elseif _switchExp == TypeInfoKind.Method then
          if #dest:get_argTypeInfoList() ~= #otherSrc:get_argTypeInfoList() or #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
-            return false, string.format( "(err:%d)", 6875 - topLine)
+            return false, ""
             
          end
          
@@ -9077,7 +9085,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
          return dest:canEvalWith( processInfo, otherSrc, canEvalType, alt2type )
       else 
          
-            return false, string.format( "(err:%d)", 6920 - topLine)
+            return false, ""
             
       end
    end
@@ -9187,17 +9195,36 @@ function TypeInfo:getFullName( typeNameCtrl, importInfo, localFlag )
    return self:getParentFullName( typeNameCtrl, importInfo, localFlag ) .. self:get_rawTxt()
 end
 
+
+local function isPrimitive( typeInfo )
+
+   local srcType = typeInfo:get_nonnilableType():get_srcTypeInfo()
+   do
+      local _switchExp = srcType:get_kind()
+      if _switchExp == TypeInfoKind.Prim or _switchExp == TypeInfoKind.Enum then
+         return true
+      end
+   end
+   
+   if srcType == _moduleObj.builtinTypeString then
+      return true
+   end
+   
+   return false
+end
+_moduleObj.isPrimitive = isPrimitive
+
 local builtinTypeInfo2Map = rootProcessInfo:get_typeInfo2Map():clone(  )
 
-local function createProcessInfo( validCheckingMutable, validExtType )
+local function createProcessInfo( validCheckingMutable, validExtType, validDetailError )
 
-   return ProcessInfo.createUser( validCheckingMutable, validExtType, builtinTypeInfo2Map:clone(  ) )
+   return ProcessInfo.createUser( validCheckingMutable, validExtType, validDetailError, builtinTypeInfo2Map:clone(  ) )
 end
 _moduleObj.createProcessInfo = createProcessInfo
 
 function ProcessInfo:newUser(  )
 
-   return ProcessInfo.createUser( self.validCheckingMutable, self.validExtType, builtinTypeInfo2Map:clone(  ) )
+   return ProcessInfo.createUser( self.validCheckingMutable, self.validExtType, self.validDetailError, builtinTypeInfo2Map:clone(  ) )
 end
 
 

@@ -57,6 +57,8 @@ pub enum ConvMode {
 }
 
 class ModuleInfo extend (Ast.ModuleInfoIF){
+   _lune_control default_async_this_class;
+   
    let assignName:str {pub};
    let modulePath:str {pub};
 }
@@ -172,12 +174,12 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
       return self.getCanonicalName( typeInfo, true );
    }
 
-   pub fn close() mut {
+   pub fn close() __async mut {
    }
-   pub fn flush() mut {
+   pub fn flush() __async mut {
    }
 
-   pub fn write( mut txt: str ) mut : stem!, str! {
+   pub fn write( mut txt: str ) __async mut : stem!, str! {
       let mut stream = self.stream;
       if self.outMetaFlag {
          stream = self.metaStream;
@@ -353,7 +355,7 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
    let mut importModuleType2Index:Map<&Ast.TypeInfo,int> = {};
    let mut importProcessInfo2Index:Map<&Ast.ProcessInfo,int> = {};
 
-   importProcessInfo2Index[ Ast.getRootProcessInfo() ] =
+   importProcessInfo2Index[ Ast.getRootProcessInfoRo() ] =
       frontInterface.getRootDependModId();
    importProcessInfo2Index[ self.processInfo ] = 0;
    
@@ -388,7 +390,7 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
 
    let mut pickupClassMap: Map<&Ast.IdInfo,&Ast.TypeInfo> = {};
 
-   fn checkExportTypeInfo( typeInfo:&Ast.TypeInfo ): bool! {
+   _direct fn checkExportTypeInfo( typeInfo:&Ast.TypeInfo ): bool! {
       let moduleTypeInfo = typeInfo.getModule();
       let typeId = typeInfo.$typeId;
       return typeId2TypeInfo[ typeId ] and not Ast.isBuiltin( typeId.id ) and
@@ -405,7 +407,9 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
    }
    
    // 公開される型情報を typeId2TypeInfo にピックアップする
-   fn pickupTypeId( typeInfo: &Ast.TypeInfo, forceFlag: bool!, pickupChildFlag: bool! ) {
+   _direct fn pickupTypeId(
+      typeInfo: &Ast.TypeInfo, forceFlag: bool!, pickupChildFlag: bool! )
+   {
 
       if typeInfo.$typeId == Ast.rootTypeIdInfo {
          return;
@@ -794,7 +798,7 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
    }
    
    let mut wroteTypeIdSet:Set<&Ast.IdInfo> = (@);
-   fn outputTypeInfo( typeInfo: &Ast.TypeInfo ) {
+   _direct fn outputTypeInfo( typeInfo: &Ast.TypeInfo ) {
       if Ast.isBuiltin( typeInfo.$typeId.id) {
          return;
       }
@@ -3553,7 +3557,7 @@ pub fn createFilter(
       moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest, useIpairs );
 }
 
-pub fn runLuaOnLns( code:str ): Luaval<&stem>!, str {
+pub fn runLuaOnLns( code:str ) : Luaval<&stem>!, str {
    let loadFunc, err = DependLuaOnLns.runLuaOnLns( code );
    when! loadFunc {
       let mod = loadFunc();
@@ -3567,6 +3571,8 @@ pub fn runLuaOnLns( code:str ): Luaval<&stem>!, str {
 
 pub class MacroEvalImp extend Nodes.MacroEval {
 
+   //_lune_control default_async_this_class;
+   
    fn evalFromMacroCode( code:str ): Luaval<Nodes.macroStatmentProc> {
 
       Log._log2( .Trace, "macro: %s" (code) );

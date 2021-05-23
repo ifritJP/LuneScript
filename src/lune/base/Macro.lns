@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+_lune_control default_async_all;
+
 import lune.base.Util;
 import lune.base.Nodes;
 import lune.base.Ast;
@@ -427,8 +429,7 @@ pub fn MacroCtrl.importMacro(
    processInfo:Ast.ProcessInfo, lnsPath:str, 
    macroInfoStem:&stem!, macroTypeInfo:&Ast.TypeInfo,
    typeId2TypeInfo: &Map<int,&Ast.TypeInfo>,
-   importedMacroInfoMap:Map<&Ast.IdInfo,&Nodes.MacroInfo> ) mut
-   
+   importedMacroInfoMap:Map<&Ast.IdInfo,&Nodes.MacroInfo> ) __noasync mut
 {
    let macroInfo, err = MacroMetaInfo._fromStem( macroInfoStem );
    when! macroInfo {
@@ -502,7 +503,8 @@ pub fn MacroCtrl.importMacroInfo(
 
 
 pub fn MacroCtrl.regist(
-   processInfo:Ast.ProcessInfo, node:Nodes.DeclMacroNode, macroScope:&Ast.Scope ) mut
+   processInfo:Ast.ProcessInfo,
+   node:Nodes.DeclMacroNode, macroScope:&Ast.Scope ) __noasync mut
 {
    let macroObj = self.macroEval.eval( processInfo, node );
 
@@ -613,7 +615,7 @@ pub fn MacroCtrl.expandMacroVal(
       return token;
    }
 
-   fn getToken(): &Parser.Token {
+   _direct fn getToken(): &Parser.Token {
       self.tokenExpanding = true;
       let work = parser.getTokenNoErr();
       self.tokenExpanding = false;
@@ -935,7 +937,7 @@ pub fn MacroCtrl.isInAnalyzeArgMode(): bool {
 }
 
 
-pub fn nodeToCodeTxt(node:&Nodes.Node, moduleTypeInfo:&Ast.TypeInfo ):str
+pub fn nodeToCodeTxt(node:&Nodes.Node, moduleTypeInfo:&Ast.TypeInfo ) __noasync :str
 {
    let mut memStream = new Util.memStream();
    let mut formatter = Formatter.createFilter( moduleTypeInfo, memStream );

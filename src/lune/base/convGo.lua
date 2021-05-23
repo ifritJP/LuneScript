@@ -6876,6 +6876,14 @@ function convFilter:processLuneControl( node, opt )
       elseif _matchExp[1] == LuneControl.Pragma.run_async_pipe[1] then
       
          self:writeln( "go self.LoopMain()" )
+      elseif _matchExp[1] == LuneControl.Pragma.default_async_func[1] then
+      
+      elseif _matchExp[1] == LuneControl.Pragma.default_async_all[1] then
+      
+      elseif _matchExp[1] == LuneControl.Pragma.default_async_this_class[1] then
+      
+      elseif _matchExp[1] == LuneControl.Pragma.default_noasync_this_class[1] then
+      
       end
    end
    

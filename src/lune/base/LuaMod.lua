@@ -78,6 +78,8 @@ end
 if not _lune3 then
    _lune3 = _lune
 end
+
+
 local CodeKind = {}
 _moduleObj.CodeKind = CodeKind
 CodeKind._val2NameMap = {}
@@ -153,19 +155,57 @@ CodeKind._val2NameMap[16] = 'Finalize'
 CodeKind.__allList[17] = CodeKind.Finalize
 
 
-local codeMap = {}
+local codeMap
 
-codeMap[CodeKind.Init] = [==[
+local CastKind = {}
+_moduleObj.CastKind = CastKind
+CastKind._val2NameMap = {}
+function CastKind:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "CastKind.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+function CastKind._from( val )
+   if CastKind._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+    
+CastKind.__allList = {}
+function CastKind.get__allList()
+   return CastKind.__allList
+end
+
+CastKind.Int = 0
+CastKind._val2NameMap[0] = 'Int'
+CastKind.__allList[1] = CastKind.Int
+CastKind.Real = 1
+CastKind._val2NameMap[1] = 'Real'
+CastKind.__allList[2] = CastKind.Real
+CastKind.Str = 2
+CastKind._val2NameMap[2] = 'Str'
+CastKind.__allList[3] = CastKind.Str
+CastKind.Class = 3
+CastKind._val2NameMap[3] = 'Class'
+CastKind.__allList[4] = CastKind.Class
+
+
+do
+   local work = {}
+   work[CodeKind.Init] = [==[
 local _lune = {}
 ]==]
-
-codeMap[CodeKind.Unpack] = [==[
+   
+   work[CodeKind.Unpack] = [==[
 if not table.unpack then
    table.unpack = unpack
 end
 ]==]
-
-codeMap[CodeKind.NilAcc] = [==[
+   
+   work[CodeKind.NilAcc] = [==[
 function _lune.nilacc( val, fieldName, access, ... )
    if not val then
       return nil
@@ -208,8 +248,8 @@ function _lune.nilacc( val, fieldName, access, ... )
    error( string.format( "illegal access -- %s", access ) )
 end
 ]==]
-
-codeMap[CodeKind.Unwrap] = [==[
+   
+   work[CodeKind.Unwrap] = [==[
 function _lune.unwrap( val )
    if val == nil then
       __luneScript:error( 'unwrap val is nil' )
@@ -223,8 +263,8 @@ function _lune.unwrapDefault( val, defval )
    return val
 end
 ]==]
-
-codeMap[CodeKind.LoadModule] = [==[
+   
+   work[CodeKind.LoadModule] = [==[
 function _lune.loadModule( mod )
    if __luneScript then
       return  __luneScript:loadModule( mod )
@@ -232,8 +272,8 @@ function _lune.loadModule( mod )
    return require( mod )
 end
 ]==]
-
-codeMap[CodeKind.LoadStr51] = [==[
+   
+   work[CodeKind.LoadStr51] = [==[
 function _lune.loadstring51( txt, env )
    local func = loadstring( txt )
    if func and env then
@@ -242,8 +282,8 @@ function _lune.loadstring51( txt, env )
    return func
 end
 ]==]
-
-codeMap[CodeKind.LoadStr52] = [==[
+   
+   work[CodeKind.LoadStr52] = [==[
 function _lune.loadstring52( txt, env )
    if not env then
       return load( txt )
@@ -251,8 +291,8 @@ function _lune.loadstring52( txt, env )
    return load( txt, "", "bt", env )
 end
 ]==]
-
-codeMap[CodeKind.Mapping] = [==[
+   
+   work[CodeKind.Mapping] = [==[
 function _lune._toStem( val )
    return val
 end
@@ -335,8 +375,8 @@ function _lune._fromMap( obj, map, memInfoList )
    return true
 end
 ]==]
-
-codeMap[CodeKind.SetOp] = [==[
+   
+   work[CodeKind.SetOp] = [==[
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
       setObj[ val ] = true
@@ -385,8 +425,8 @@ function _lune._Set_clone( setObj )
    return obj
 end
 ]==]
-
-codeMap[CodeKind.SetMapping] = [==[
+   
+   work[CodeKind.SetMapping] = [==[
 function _lune._toSet( val, toKeyInfo )
    if type( val ) == "table" then
       local tbl = {}
@@ -409,8 +449,8 @@ function _lune._toSet( val, toKeyInfo )
    return nil
 end
 ]==]
-
-codeMap[CodeKind.AlgeMapping] = [==[
+   
+   work[CodeKind.AlgeMapping] = [==[
 function _lune._fromList( obj, list, memInfoList )
    if type( list ) ~= "table" then
       return false
@@ -440,8 +480,8 @@ function _lune._AlgeFrom( Alge, val )
    return { work[ 1 ], paramList }
 end
 ]==]
-
-codeMap[CodeKind.Alge] = [==[
+   
+   work[CodeKind.Alge] = [==[
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
    if not memInfoList then
@@ -450,8 +490,8 @@ function _lune.newAlge( kind, vals )
    return { kind[ 1 ], vals }
 end
 ]==]
-
-codeMap[CodeKind.InstanceOf] = [==[
+   
+   work[CodeKind.InstanceOf] = [==[
 function _lune.__isInstanceOf( obj, class )
    while obj do
       local meta = getmetatable( obj )
@@ -477,44 +517,8 @@ function _lune.__isInstanceOf( obj, class )
    return false
 end
 ]==]
-
-local CastKind = {}
-_moduleObj.CastKind = CastKind
-CastKind._val2NameMap = {}
-function CastKind:_getTxt( val )
-   local name = self._val2NameMap[ val ]
-   if name then
-      return string.format( "CastKind.%s", name )
-   end
-   return string.format( "illegal val -- %s", val )
-end
-function CastKind._from( val )
-   if CastKind._val2NameMap[ val ] then
-      return val
-   end
-   return nil
-end
-    
-CastKind.__allList = {}
-function CastKind.get__allList()
-   return CastKind.__allList
-end
-
-CastKind.Int = 0
-CastKind._val2NameMap[0] = 'Int'
-CastKind.__allList[1] = CastKind.Int
-CastKind.Real = 1
-CastKind._val2NameMap[1] = 'Real'
-CastKind.__allList[2] = CastKind.Real
-CastKind.Str = 2
-CastKind._val2NameMap[2] = 'Str'
-CastKind.__allList[3] = CastKind.Str
-CastKind.Class = 3
-CastKind._val2NameMap[3] = 'Class'
-CastKind.__allList[4] = CastKind.Class
-
-
-codeMap[CodeKind.Cast] = string.format( [==[
+   
+   work[CodeKind.Cast] = string.format( [==[
 function _lune.__Cast( obj, kind, class )
    if kind == %d then -- int
       if type( obj ) ~= "number" then
@@ -540,8 +544,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 ]==], CastKind.Int, CastKind.Real, CastKind.Str, CastKind.Class)
-
-codeMap[CodeKind.LazyLoad] = [==[
+   
+   work[CodeKind.LazyLoad] = [==[
 function _lune._lazyImport( modName )
   local mod
   return function()
@@ -553,8 +557,8 @@ function _lune._lazyImport( modName )
   end
 end
 ]==]
-
-codeMap[CodeKind.LazyRequire] = [==[
+   
+   work[CodeKind.LazyRequire] = [==[
 function _lune._lazyRequire( modName )
   local mod
   return function()
@@ -566,10 +570,13 @@ function _lune._lazyRequire( modName )
   end
 end
 ]==]
-
-codeMap[CodeKind.Finalize] = [==[
+   
+   work[CodeKind.Finalize] = [==[
 return _lune
 ]==]
+   codeMap = work
+end
+
 
 local function getCode( kind )
 

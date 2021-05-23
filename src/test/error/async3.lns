@@ -1,0 +1,63 @@
+let globalVal1:List<int> = [];
+let globalVal2:&List<int> = [];
+
+fn foo1() {
+   print( globalVal1[1] );
+}
+fn foo2() __async {
+   print( globalVal1[1] ); // error
+}
+
+class Val {
+   pub fn func1() mut {
+   }
+}
+
+class Test {
+   pri let allmut val:Val;
+   pub fn func1()  {
+      self.val.func1();
+   }
+   pub fn func2() __async {
+      self.val.func1(); // error
+   }
+
+   pri let val2:allmut Val;
+   pub fn sub1() {
+      self.val2.func1();
+   }
+   pub fn sub2() __async {
+      self.sub1(); // error
+      self.val2.func1(); // error
+      globalVal1.insert(1); // error
+      print( globalVal2[1] );
+   }
+}
+
+{
+   class Hoge extend (__Runner) {
+      let test:Test;
+      pub fn func() {
+         let work = new Test( new Val() ); // error
+         print( work );
+         self.test.func1(); // error
+         self.test.func2();
+         foo1(); // error
+         foo2();
+      }
+   }
+}
+
+{
+
+   class Super {
+      pub fn func() {
+      }
+   }
+   class Sub extend Super {
+      _lune_control default_async_this_class;
+      pub fn sub() {
+         self.func(); // error
+      }
+   }
+}

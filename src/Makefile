@@ -612,6 +612,8 @@ TEST_CASE += multiple.lns
 TEST_CASE += switch.lns
 TEST_CASE += lua.lns
 TEST_CASE += async3.lns
+TEST_CASE += async4.lns
+TEST_CASE += async5.lns
 TEST_CASE_SRCS := $(addprefix test/error/,$(TEST_CASE))
 TEST_CASE_LOGS := $(addprefix $(LOG_DIR)/,$(addsuffix .log,$(TEST_CASE)))
 

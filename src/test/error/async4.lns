@@ -1,0 +1,12 @@
+_lune_control default_async_func;
+
+let globalVal1:List<int> = [];
+let globalVal2:&List<int> = [];
+
+fn foo1() __noasync {
+   print( globalVal1[1] );
+}
+fn foo2() {
+   print( globalVal1[1] ); // error
+   print( globalVal2[1] );
+}

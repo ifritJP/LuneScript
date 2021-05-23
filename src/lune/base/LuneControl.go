@@ -43,6 +43,30 @@ var LuneControl_Pragma__default__init_old_Obj = &LuneControl_Pragma__default__in
 func (self *LuneControl_Pragma__default__init_old) GetTxt() string {
 return "Pragma.default__init_old"
 }
+type LuneControl_Pragma__default_async_all struct{
+}
+var LuneControl_Pragma__default_async_all_Obj = &LuneControl_Pragma__default_async_all{}
+func (self *LuneControl_Pragma__default_async_all) GetTxt() string {
+return "Pragma.default_async_all"
+}
+type LuneControl_Pragma__default_async_func struct{
+}
+var LuneControl_Pragma__default_async_func_Obj = &LuneControl_Pragma__default_async_func{}
+func (self *LuneControl_Pragma__default_async_func) GetTxt() string {
+return "Pragma.default_async_func"
+}
+type LuneControl_Pragma__default_async_this_class struct{
+}
+var LuneControl_Pragma__default_async_this_class_Obj = &LuneControl_Pragma__default_async_this_class{}
+func (self *LuneControl_Pragma__default_async_this_class) GetTxt() string {
+return "Pragma.default_async_this_class"
+}
+type LuneControl_Pragma__default_noasync_this_class struct{
+}
+var LuneControl_Pragma__default_noasync_this_class_Obj = &LuneControl_Pragma__default_noasync_this_class{}
+func (self *LuneControl_Pragma__default_noasync_this_class) GetTxt() string {
+return "Pragma.default_noasync_this_class"
+}
 type LuneControl_Pragma__disable_mut_control struct{
 }
 var LuneControl_Pragma__disable_mut_control_Obj = &LuneControl_Pragma__disable_mut_control{}

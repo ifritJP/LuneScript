@@ -721,12 +721,12 @@ func convFilter_processAndOr__isAndOr_1785_(_env *LnsEnv, exp *Nodes_Node) bool 
     return false
 }
 
-// 5679: decl @lune.@base.@convGo.createFilter
+// 5687: decl @lune.@base.@convGo.createFilter
 func ConvGo_createFilter(_env *LnsEnv, enableTest bool,streamName string,stream Lns_oStream,ast *TransUnit_ASTInfo,option *ConvGo_Option) *Nodes_Filter {
     return &NewconvGo_convFilter(_env, enableTest, streamName, stream, ast, option).Nodes_Filter
 }
 
-// 5689: decl @lune.@base.@convGo.Ast2Code
+// 5697: decl @lune.@base.@convGo.Ast2Code
 func convGo_Ast2Code_1879_(_env *LnsEnv, streamName string,ast *TransUnit_ASTInfo) string {
     var stream *Util_memStream
     stream = NewUtil_memStream(_env)
@@ -6404,10 +6404,14 @@ func (self *convGo_convFilter) ProcessLuneControl(_env *LnsEnv, node *Nodes_Lune
     case *LuneControl_Pragma__use_async:
     case *LuneControl_Pragma__run_async_pipe:
         self.FP.Writeln(_env, "go self.LoopMain()")
+    case *LuneControl_Pragma__default_async_func:
+    case *LuneControl_Pragma__default_async_all:
+    case *LuneControl_Pragma__default_async_this_class:
+    case *LuneControl_Pragma__default_noasync_this_class:
     }
 }
 
-// 5671: decl @lune.@base.@convGo.convFilter.processAbbr
+// 5679: decl @lune.@base.@convGo.convFilter.processAbbr
 func (self *convGo_convFilter) ProcessAbbr(_env *LnsEnv, node *Nodes_AbbrNode,_opt LnsAny) {
     __func__ := "@lune.@base.@convGo.convFilter.processAbbr"
     Util_err(_env, _env.LuaVM.String_format("not support -- %s:%d", []LnsAny{__func__, node.FP.Get_pos(_env).LineNo}))

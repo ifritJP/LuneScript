@@ -146,6 +146,14 @@ pub fn () {} // error
    print( func() + 1 ); // error
 }
 
+{
+   let val:form;
+   _direct fn func() {
+   }
+   val = func; // error
+   val(##);
+}
+
 abstract class Super {
    pub abstract fn func2();
    pub abstract fn func() : int;

@@ -23,12 +23,12 @@ func Code_ID__from(_env *LnsEnv, arg1 LnsInt) LnsAny{
 func Code_ID_getTxt(arg1 LnsInt) string {
     return Code_IDMap_[arg1];
 }
-// 29: decl @lune.@base.@Code.format
+// 31: decl @lune.@base.@Code.format
 func Code_format(_env *LnsEnv, id LnsInt,mess string) string {
     return _env.LuaVM.String_format("%05d:%s", []LnsAny{id, mess})
 }
 
-// 33: decl @lune.@base.@Code.isMessageOf
+// 35: decl @lune.@base.@Code.isMessageOf
 func Code_isMessageOf(_env *LnsEnv, id LnsInt,mess string) bool {
     var pat string
     pat = _env.LuaVM.String_format("^%05d:", []LnsAny{id})

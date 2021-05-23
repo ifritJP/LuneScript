@@ -1012,15 +1012,15 @@ Macro._section();
    print( SUB2.Boxfunc( SUB2.Boxfunc2( SUB2.Boxfunc3( nil ) ) ) );
 }
 
-{
-   fn func__c<T>( val:Nilable<T> ): Nilable<T> {
-      return val;
-   }  
+// {
+//    fn func__c<T>( val:Nilable<T> ): Nilable<T> {
+//       return val;
+//    }  
 
-   print( func__c( 1 ).val() );
-   print( func__c( 1.0 ).val() );
-   print( func__c( "str" ).val() );
-}
+//    print( func__c( 1 ).val() );
+//    print( func__c( 1.0 ).val() );
+//    print( func__c( "str" ).val() );
+// }
 
 macro _dump( symbol:stat ) {
    print( "%s:%d> %s" (__mod__, __line__, ,,symbol ) );

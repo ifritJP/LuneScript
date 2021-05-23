@@ -482,7 +482,7 @@ function ImportParam:getTypeInfoFrom( typeId )
    end
    
    if typeId.mod == frontInterface.getRootDependModId(  ) then
-      return Ast.getRootProcessInfo(  ):getTypeInfo( typeId.id ), nil
+      return Ast.getRootProcessInfoRo(  ):getTypeInfo( typeId.id ), nil
    end
    
    local moduleInfo = self.dependLibId2DependInfo[typeId.mod]

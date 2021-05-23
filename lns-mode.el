@@ -69,7 +69,7 @@
 		   "override" "macro" "let" "unwrap" "if" "module" "subfile" "allmut"
 		   "mut" "__init" "local" "pub" "pro" "pri" "form" "advertise" "provide" 
 		   "wrap" "static" "global" "sync" "then" "do" "interface" "enum"
-		   "glue" "when" "alge" "non" "alias" "async" "noasync"
+		   "glue" "when" "alge" "non" "alias"
 		   "abstract" "trust" "import" "import\\.l" "import\\.d"
 		   "as" "not" "and" "or" "break" "new" )))
   (defconst

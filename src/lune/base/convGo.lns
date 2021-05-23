@@ -5665,6 +5665,14 @@ pub override fn convFilter.processLuneControl(
          //self.writeln( "go self.FP.Loop()" );
          self.writeln( "go self.LoopMain()" );
       }
+      case .default_async_func {
+      }
+      case .default_async_all {
+      }
+      case .default_async_this_class {
+      }
+      case .default_noasync_this_class {
+      }
    }
 }
 
