@@ -5,6 +5,7 @@ macro _section() {
 _section();
 {
    _lune_control use_async;
+   _lune_control default_async_all;
 
    class Test extend (__AsyncItem,Mapping) {
       let val:str {pub};
