@@ -54,6 +54,7 @@ type Str_BuilderMtd interface {
 	Add(_env *LnsEnv, arg1 string)
 	Len(_env *LnsEnv) LnsInt
 	Clear(_env *LnsEnv)
+	Flush(_env *LnsEnv)
 }
 
 func Str_Builder2Stem(_env *LnsEnv, obj LnsAny) LnsAny {
@@ -85,4 +86,7 @@ func (self *Str_Builder) Len(_env *LnsEnv) LnsInt {
 
 func (self *Str_Builder) Clear(_env *LnsEnv) {
 	self.clear()
+}
+
+func (self *Str_Builder) Flush(_env *LnsEnv) {
 }

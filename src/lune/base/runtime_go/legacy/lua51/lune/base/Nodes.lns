@@ -588,7 +588,7 @@ macro _declNodeClass(
                      _procVisitor( child, self, ,,fieldName );
                   };
 
-                  _direct fn processNilable( varName:str, statVar:stat ) {
+                  fn processNilable( varName:str, statVar:stat ) __trans {
                      if typeName.find( "!$" ## ) {
                         visitStatList.insert( `{
                            {

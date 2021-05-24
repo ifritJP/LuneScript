@@ -1,40 +1,40 @@
 let globalVal1:List<int> = [];
 let globalVal2:&List<int> = [];
 
-fn foo1() {
-   print( globalVal1[1] );
-}
-fn foo2() __async {
-   print( globalVal1[1] ); // error
-}
-
-class Val {
-   pub fn func1() mut {
-   }
-}
-
-class Test {
-   pri let allmut val:Val;
-   pub fn func1()  {
-      self.val.func1();
-   }
-   pub fn func2() __async {
-      self.val.func1(); // error
-   }
-
-   pri let val2:allmut Val;
-   pub fn sub1() {
-      self.val2.func1();
-   }
-   pub fn sub2() __async {
-      self.sub1(); // error
-      self.val2.func1(); // error
-      globalVal1.insert(1); // error
-      print( globalVal2[1] );
-   }
-}
-
 {
+   fn foo1() {
+      print( globalVal1[1] );
+   }
+   fn foo2() __async {
+      print( globalVal1[1] ); // error
+   }
+
+   class Val {
+      pub fn func1() mut {
+      }
+   }
+
+   class Test {
+      pri let allmut val:Val;
+      pub fn func1()  {
+         self.val.func1();
+      }
+      pub fn func2() __async {
+         self.val.func1(); // error
+      }
+
+      pri let val2:allmut Val;
+      pub fn sub1() {
+         self.val2.func1();
+      }
+      pub fn sub2() __async {
+         self.sub1(); // error
+         self.val2.func1(); // error
+         globalVal1.insert(1); // error
+         print( globalVal2[1] );
+      }
+   }
+
    class Hoge extend (__Runner) {
       let test:Test;
       pub fn func() {
@@ -46,6 +46,30 @@ class Test {
          foo2();
       }
    }
+}
+{
+   class Foo {
+   }
+   class Hoge extend (__Runner) {
+      pub fn func( foo1:Foo, foo2:&Foo ) { // error
+      }
+      pub fn run() __async mut {
+      }
+   }
+}
+{
+   form Test() __trans;
+   form Test2();
+
+   fn sub( test2:Test2 ) {
+   }
+
+   fn func( test:Test ) {
+      let test2:Test2 = test; // error
+      test2();
+      sub( test ); // error
+   }
+   func( fn () {} );
 }
 {
    class Super {

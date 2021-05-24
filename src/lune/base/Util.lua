@@ -298,6 +298,7 @@ function memStream:__init()
 end
 function memStream:get_txt(  )
 
+   self.txt:flush(  )
    return self.txt:get_txt()
 end
 function memStream:write( val )
@@ -307,9 +308,11 @@ function memStream:write( val )
 end
 function memStream:close(  )
 
+   self.txt:flush(  )
 end
 function memStream:flush(  )
 
+   self.txt:flush(  )
 end
 function memStream.setmeta( obj )
   setmetatable( obj, { __index = memStream  } )
@@ -469,7 +472,7 @@ local function getReadyCode( depPath, tgtPath )
       return true
    end
    
-   Log.log( Log.Level.Warn, __func__, 283, function (  )
+   Log.log( Log.Level.Warn, __func__, 286, function (  )
    
       return string.format( "not ready %g < %g : %s, %s", tgtTime, depTime, tgtPath, depPath)
    end )

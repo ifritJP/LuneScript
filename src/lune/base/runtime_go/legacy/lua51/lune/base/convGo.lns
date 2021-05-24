@@ -114,6 +114,7 @@ pub class Option {
    local let appName:str {pub};
    local let mainModule:str {pub};
    local let addEnvArg:bool {pub};
+   local let enableRunner:bool {pub};
 }
 
 class convFilter extend Nodes.Filter<Opt> {
@@ -135,7 +136,7 @@ class convFilter extend Nodes.Filter<Opt> {
    let mut moduleType2SymbolMap:Map<&Ast.TypeInfo,&Ast.SymbolInfo>;
 
    pub fn __init( enableTest:bool, streamName: str, stream: oStream,
-                  ast:TransUnit.ASTInfo, option:&Option )
+                  ast:&TransUnit.ASTInfo, option:&Option )
    {
       super(true, ast.$exportInfo.$moduleTypeInfo,
              ast.$exportInfo.$moduleTypeInfo.$scope);
@@ -143,7 +144,7 @@ class convFilter extend Nodes.Filter<Opt> {
       self.moduleType2SymbolMap = {};
       self.env = new Env( option.$addEnvArg );
       self.option = option;
-      self.processInfo = ast.$exportInfo.$processInfo;
+      self.processInfo = ast.$exportInfo.$processInfo.clone();
       self.stream = new Util.SimpleSourceOStream( stream, nil, 4 );
       self.processMode = .Main;
       self.processModeStack = [];
@@ -5668,7 +5669,15 @@ pub override fn convFilter.processLuneControl(
          self.writeln( "go self.LoopMain()" );
       }
       case .run_async_runner {
-         self.writeln( "LnsRun( self )" );
+         if self.option.$enableRunner {
+            self.writeln( "LnsRun( self )" );
+         } else {
+            if self.option.$addEnvArg {
+               self.writeln( "self.Run( _env )" );
+            } else {
+               self.writeln( "self.Run()" );
+            }
+         }
       }
       case .default_async_func {
       }
@@ -5704,7 +5713,7 @@ __test {
       let mut stream = new Util.memStream();
 
       let mut conv = createFilter( false, streamName, stream, ast,
-                                   new Option( "lns", "lnsgo", "", false ) );
+                                   new Option( "lns", "lnsgo", "", false, true ) );
 
       ast.$node.processFilter( conv, new Opt( ast.$node ));
 

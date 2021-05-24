@@ -148,7 +148,7 @@ pub fn () {} // error
 
 {
    let val:form;
-   _direct fn func() {
+   fn func() __trans {
    }
    val = func; // error
    val(##);

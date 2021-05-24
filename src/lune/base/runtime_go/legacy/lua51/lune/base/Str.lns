@@ -65,18 +65,37 @@ pub fn getLineList( txt:str ) : List<str> {
 }
 
 pub class Builder {
-   let mut txt: str { pub };
+   let mut txt: str;
+   let mut progress: str;
+
+   pub fn get_txt() :str {
+      if #self.progress == 0 {
+         return self.txt;
+      }
+      return self.txt .. self.progress;
+   }
    pub fn __init() {
       self.txt = "";
+      self.progress = "";
    }
    pub fn add( val: str ) mut {
-      self.txt = self.txt .. val;
+      if #self.progress + #val > 1000 {
+         self.txt = "%s%s%s" (self.txt, self.progress, val );
+         self.progress = "";
+      } else {
+         self.progress = self.progress .. val;
+      }
    }
    pub fn len() : int {
-      return #self.txt;
+      return #self.txt + #self.progress;
    }
    pub fn clear() mut {
       self.txt = "";
+      self.progress = "";
+   }
+   pub fn flush() mut {
+      self.txt = self.txt .. self.progress;
+      self.progress = "";
    }
 }
 

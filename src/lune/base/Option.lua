@@ -177,7 +177,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 8641
+   return 8803
 end
 
 
@@ -322,6 +322,7 @@ function Option.new(  )
    return obj
 end
 function Option:__init() 
+   self.enableRunner = true
    self.addEnvArg = true
    self.projDir = nil
    self.runtimeOpt = RuntimeOpt.new()
@@ -392,6 +393,9 @@ function Option:get_projDir()
 end
 function Option:get_addEnvArg()
    return self.addEnvArg
+end
+function Option:get_enableRunner()
+   return self.enableRunner
 end
 
 
@@ -609,6 +613,10 @@ end
                   option.validProf = true
                elseif _switchExp == "--noEnvArg" then
                   option.addEnvArg = false
+               elseif _switchExp == "--disableRunner" then
+                  option.enableRunner = false
+               elseif _switchExp == "--enableAsyncCtl" then
+                  option.transCtrlInfo.validAsyncCtrl = true
                elseif _switchExp == "--nodebug" then
                   Util.setDebugFlag( false )
                elseif _switchExp == "--debug" then
@@ -747,6 +755,7 @@ end
                elseif _switchExp == "-langGo" then
                   option.convTo = Types.Lang.Go
                   option.transCtrlInfo.validLuaval = true
+                  option.transCtrlInfo.validAsyncCtrl = true
                elseif _switchExp == "-ol" then
                   do
                      local txt = getNextOp(  )
@@ -902,7 +911,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 635, function (  )
+   Log.log( Log.Level.Log, __func__, 644, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

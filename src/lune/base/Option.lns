@@ -153,8 +153,10 @@ pub class Option {
 
    /** go への変換時、関数の引数に環境情報を追加する */
    local let mut addEnvArg:bool {pub};
+   local let mut enableRunner:bool {pub};
 
    pub fn __init() {
+      self.enableRunner = true;
       self.addEnvArg = true; 
       self.projDir = nil;
       self.runtimeOpt = new RuntimeOpt();
@@ -362,6 +364,12 @@ usage:
                case "--noEnvArg" {
                   option.addEnvArg = false;
                }
+               case "--disableRunner" {
+                  option.enableRunner = false;
+               }
+               case "--enableAsyncCtl" {
+                  option.transCtrlInfo.validAsyncCtrl = true;
+               }
                case "--nodebug" {
                   Util.setDebugFlag( false );
                }
@@ -497,6 +505,7 @@ usage:
                case "-langGo" {
                   option.convTo = .Go;
                   option.transCtrlInfo.validLuaval = true;
+                  option.transCtrlInfo.validAsyncCtrl = true;
                }
                case "-ol" {
                   if! let txt = getNextOp() {

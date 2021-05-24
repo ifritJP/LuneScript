@@ -88,6 +88,14 @@ _moduleObj.getLineList = getLineList
 
 local Builder = {}
 _moduleObj.Builder = Builder
+function Builder:get_txt(  )
+
+   if #self.progress == 0 then
+      return self.txt
+   end
+   
+   return self.txt .. self.progress
+end
 function Builder.new(  )
    local obj = {}
    Builder.setmeta( obj )
@@ -96,24 +104,35 @@ function Builder.new(  )
 end
 function Builder:__init() 
    self.txt = ""
+   self.progress = ""
 end
 function Builder:add( val )
 
-   self.txt = self.txt .. val
+   if #self.progress + #val > 1000 then
+      self.txt = string.format( "%s%s%s", self.txt, self.progress, val)
+      self.progress = ""
+   else
+    
+      self.progress = self.progress .. val
+   end
+   
 end
 function Builder:len(  )
 
-   return #self.txt
+   return #self.txt + #self.progress
 end
 function Builder:clear(  )
 
    self.txt = ""
+   self.progress = ""
+end
+function Builder:flush(  )
+
+   self.txt = self.txt .. self.progress
+   self.progress = ""
 end
 function Builder.setmeta( obj )
   setmetatable( obj, { __index = Builder  } )
-end
-function Builder:get_txt()
-   return self.txt
 end
 
 

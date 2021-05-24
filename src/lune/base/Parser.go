@@ -294,7 +294,7 @@ func Lns_cast2Parser_PushbackParser( obj LnsAny ) LnsAny {
 var Parser_StreamParser__stdinStreamModuleName LnsAny
 var Parser_StreamParser__stdinTxt string
 // 170: decl @lune.@base.@Parser.StreamParser.___init
-func Parser_StreamParser____init_1084_(_env *LnsEnv) {
+func Parser_StreamParser____init_1168_(_env *LnsEnv) {
     Parser_StreamParser__stdinStreamModuleName = nil
     
     Parser_StreamParser__stdinTxt = ""
@@ -891,40 +891,40 @@ func (self *Parser_CommentCtrl) Pop(_env *LnsEnv) {
 
 
 // declaration Class -- LowToken
-type Parser_LowToken1244Mtd interface {
+type Parser_LowToken1562Mtd interface {
 }
-type Parser_LowToken1244 struct {
+type Parser_LowToken1562 struct {
     Txt string
     Kind LnsInt
-    FP Parser_LowToken1244Mtd
+    FP Parser_LowToken1562Mtd
 }
-func Parser_LowToken12442Stem( obj LnsAny ) LnsAny {
+func Parser_LowToken15622Stem( obj LnsAny ) LnsAny {
     if obj == nil {
         return nil
     }
-    return obj.(*Parser_LowToken1244).FP
+    return obj.(*Parser_LowToken1562).FP
 }
-type Parser_LowToken1244DownCast interface {
-    ToParser_LowToken1244() *Parser_LowToken1244
+type Parser_LowToken1562DownCast interface {
+    ToParser_LowToken1562() *Parser_LowToken1562
 }
-func Parser_LowToken1244DownCastF( multi ...LnsAny ) LnsAny {
+func Parser_LowToken1562DownCastF( multi ...LnsAny ) LnsAny {
     if len( multi ) == 0 { return nil }
     obj := multi[ 0 ]
     if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Parser_LowToken1244DownCast)
-    if ok { return work.ToParser_LowToken1244() }
+    work, ok := obj.(Parser_LowToken1562DownCast)
+    if ok { return work.ToParser_LowToken1562() }
     return nil
 }
-func (obj *Parser_LowToken1244) ToParser_LowToken1244() *Parser_LowToken1244 {
+func (obj *Parser_LowToken1562) ToParser_LowToken1562() *Parser_LowToken1562 {
     return obj
 }
-func NewParser_LowToken1244(_env *LnsEnv, arg1 string, arg2 LnsInt) *Parser_LowToken1244 {
-    obj := &Parser_LowToken1244{}
+func NewParser_LowToken1562(_env *LnsEnv, arg1 string, arg2 LnsInt) *Parser_LowToken1562 {
+    obj := &Parser_LowToken1562{}
     obj.FP = obj
-    obj.InitParser_LowToken1244(_env, arg1, arg2)
+    obj.InitParser_LowToken1562(_env, arg1, arg2)
     return obj
 }
-func (self *Parser_LowToken1244) InitParser_LowToken1244(_env *LnsEnv, arg1 string, arg2 LnsInt) {
+func (self *Parser_LowToken1562) InitParser_LowToken1562(_env *LnsEnv, arg1 string, arg2 LnsInt) {
     self.Txt = arg1
     self.Kind = arg2
 }
@@ -940,7 +940,7 @@ func Lns_Parser_init(_env *LnsEnv) {
     Lns_Async_init(_env)
     Lns_AsyncParser_init(_env)
     Parser_noneToken = Types_noneToken
-    Parser_StreamParser____init_1084_(_env)
+    Parser_StreamParser____init_1168_(_env)
     Parser_eofToken = NewTypes_Token(_env, Types_TokenKind__Eof, "<EOF>", NewTypes_Position(_env, 0, 0, "eof"), false, NewLnsList([]LnsAny{}))
 }
 func init() {

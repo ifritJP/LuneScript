@@ -54,6 +54,14 @@ type LnsRunner interface {
 	Run(*LnsEnv)
 }
 
+func lnsRunMain(self LnsRunner) {
+    env := createEnv()
+    
+	self.Run( env )
+    
+    env.LuaVM.closeVM()
+}
+
 func LnsRun(self LnsRunner) {
-	go self.Run(createEnv())
+	go lnsRunMain( self )
 }

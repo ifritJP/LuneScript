@@ -1479,7 +1479,8 @@ fn TransUnit.processFunc(
    let mut retTypeInfoList:List<&Ast.TypeInfo> = [];
    foreach retType, index in funcTypeInfo.$retTypeInfoList {
       retTypeInfoList.insert( retType );
-      if! let applyType = retType.applyGeneric( alt2typeMap, self.moduleType ) {
+      if! let applyType = retType.applyGeneric(
+         self.processInfo, alt2typeMap, self.moduleType ) {
          retTypeInfoList[ index ] = applyType;
       }
       else {
@@ -1650,17 +1651,6 @@ fn TransUnit.analyzeExpCall(
    let funcTypeInfo = funcExp.$expType.$nonnilableType;
 
    self.checkCallAsync( funcTypeInfo, funcExp.$effectivePos );
-
-   if funcTypeInfo.$accessMode == .Direct {
-      let curNs = self.getCurrentNamespaceTypeInfo();
-      if curNs.$accessMode ~= .Direct and curNs ~= funcTypeInfo.$parentInfo
-      {
-         self.addErrMess(
-            funcExp.$effectivePos,
-            "can't call the _direct function from the no _direct function -- %s"
-            (funcTypeInfo.getTxt(##) ) );
-      }
-   }
 
    
    // 引数の型チェック
@@ -1946,6 +1936,7 @@ fn TransUnit.analyzeAccessClassField(
             symbolInfo = fieldSymbolInfo;
             if #retTypeList > 0 {
                if! let applyedType = retTypeList[ 1 ].applyGeneric(
+                  self.processInfo,
                   classTypeInfo.createAlt2typeMap(false), self.moduleType )
                {                 
                   fieldTypeInfo = applyedType;
@@ -2516,7 +2507,7 @@ fn TransUnit.analyzeExpField(
    let mut symbolMutMode = typeInfo.$mutMode;
    when! symbolInfo {
       let mut workSymInfo = new Ast.AccessSymbolInfo(
-         symbolInfo, .Prefix( prefixExpType ), not accessNil );
+         self.processInfo, symbolInfo, .Prefix( prefixExpType ), not accessNil );
       if not getterTypeInfo {
          typeInfo = workSymInfo.$typeInfo;
       }
@@ -2691,7 +2682,7 @@ fn TransUnit.checkAsyncSymbol( symbolInfo:&Ast.SymbolInfo, pos:&Types.Position )
       switch curNs.$kind {
          case .Func {
             if symbolInfo.$namespaceTypeInfo ~= curNs and
-               curNs.$accessMode ~= .Direct
+               curNs.$asyncMode ~= .Transient
             {
                if Ast.TypeInfo.isMut( symbolInfo.$typeInfo ) {
                   self.addErrMess(
@@ -2858,7 +2849,7 @@ fn TransUnit.analyzeExpSymbol(
          exp = Nodes.ExpRefNode.create(
             self.nodeManager, firstToken.pos,
             self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ], 
-            new Ast.AccessSymbolInfo( symbolInfo, .None, true ) );
+            new Ast.AccessSymbolInfo( self.processInfo, symbolInfo, .None, true ) );
       }
    }
    elseif mode == .Fn {
@@ -4179,7 +4170,7 @@ fn TransUnit.analyzeExp(
       exp = Nodes.ExpRefNode.create(
          self.nodeManager, firstToken.pos,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], 
-         new Ast.AccessSymbolInfo( symbolTypeInfo, .None, false ) );
+         new Ast.AccessSymbolInfo( self.processInfo, symbolTypeInfo, .None, false ) );
    }
    elseif token.kind == Parser.TokenKind.Kywd and
        ( token.txt == "true" or token.txt == "false" )

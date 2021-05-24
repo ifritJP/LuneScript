@@ -113,13 +113,13 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
    pri let targetLuaVer:&LuaVer.LuaVerInfo;
    pri let enableTest:bool;
    pri let useIpairs:bool;
-   let allmut processInfo:Ast.ProcessInfo;
+   let allmut processInfo:&Ast.ProcessInfo;
    let mut moduleType2SymbolMap:Map<&Ast.TypeInfo,&Ast.SymbolInfo>;
 
 
    pub fn __init( streamName: str, stream: oStream, metaStream: oStream,
                   convMode: ConvMode, inMacro: bool, moduleTypeInfo: &Ast.TypeInfo,
-                  processInfo:Ast.ProcessInfo,
+                  processInfo:&Ast.ProcessInfo,
                   moduleSymbolKind: Ast.SymbolKind, useLuneRuntime: str!,
                   targetLuaVer:&LuaVer.LuaVerInfo, enableTest:bool, useIpairs:bool )
    {
@@ -394,7 +394,7 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
 
    let mut pickupClassMap: Map<&Ast.IdInfo,&Ast.TypeInfo> = {};
 
-   _direct fn checkExportTypeInfo( typeInfo:&Ast.TypeInfo ): bool! {
+   fn checkExportTypeInfo( typeInfo:&Ast.TypeInfo ) __trans : bool! {
       let moduleTypeInfo = typeInfo.getModule();
       let typeId = typeInfo.$typeId;
       return typeId2TypeInfo[ typeId ] and not Ast.isBuiltin( typeId.id ) and
@@ -411,8 +411,8 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
    }
    
    // 公開される型情報を typeId2TypeInfo にピックアップする
-   _direct fn pickupTypeId(
-      typeInfo: &Ast.TypeInfo, forceFlag: bool!, pickupChildFlag: bool! )
+   fn pickupTypeId(
+      typeInfo: &Ast.TypeInfo, forceFlag: bool!, pickupChildFlag: bool! ) __trans
    {
 
       if typeInfo.$typeId == Ast.rootTypeIdInfo {
@@ -802,7 +802,7 @@ fn convFilter.outputMeta( node: &Nodes.RootNode ) mut
    }
    
    let mut wroteTypeIdSet:Set<&Ast.IdInfo> = (@);
-   _direct fn outputTypeInfo( typeInfo: &Ast.TypeInfo ) {
+   fn outputTypeInfo( typeInfo: &Ast.TypeInfo ) __trans {
       if Ast.isBuiltin( typeInfo.$typeId.id) {
          return;
       }

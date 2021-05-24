@@ -63,7 +63,7 @@ fn TransUnit.analyzeRefType(
       name = Nodes.ExpRefNode.create(
          self.nodeManager, token.pos,
          self.macroCtrl.isInAnalyzeArgMode(), [ dddSym.$typeInfo ], 
-         new Ast.AccessSymbolInfo( dddSym, .None, true ) );
+         new Ast.AccessSymbolInfo( self.processInfo, dddSym, .None, true ) );
    }
    else {
       name = self.analyzeExpSymbol( firstToken, token, .Symbol, nil, true, false );
@@ -392,9 +392,11 @@ fn TransUnit.checkOverrideMethod(
                                            typeInfo.$display_stirng ) );
    }
 
-   if overrideType.$asyncMode ~= typeInfo.$asyncMode {
-      addErr( "mismatch asyncMode --  %s, %s"
-              ( overrideType.$asyncMode.$_txt, typeInfo.$asyncMode.$_txt ) );
+   if self.ctrl_info.validAsyncCtrl {
+      if overrideType.$asyncMode ~= typeInfo.$asyncMode {
+         addErr( "mismatch asyncMode --  %s, %s"
+                 ( overrideType.$asyncMode.$_txt, typeInfo.$asyncMode.$_txt ) );
+      }
    }
    
    if overrideType.get_accessMode() ~= accessMode {
@@ -3101,6 +3103,19 @@ fn TransUnit.analyzeDeclFunc(
          if not workClass.$abstractFlag and abstractFlag {
             self.addErrMess( firstToken.pos,
                              "no abstract class does not have abstract method" );
+         }
+      }
+
+      if classTypeInfo.isInheritFrom(
+         self.processInfo, Ast.builtinTypeRunner ## )
+      {
+         foreach argNode, index in argList {
+            if Ast.isMutableType( argNode.$expType ) {
+               self.addErrMess(
+                  argNode.$pos,
+                  "__Runner can't have the mutable argument. -- %d: %s"
+                  (index, argNode.$expType.getTxt(##) ) );
+            }
          }
       }
    }

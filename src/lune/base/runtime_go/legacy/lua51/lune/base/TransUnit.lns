@@ -2838,7 +2838,7 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
          // scope.addLocalVar(
          //    seqSymbol.$kind == .Arg, false,
          //    seqSymbol.$name, exp.$pos, typeInfo, .IMut );
-         scope.addOverrideImut( seqSymbol );
+         scope.addOverrideImut( self.processInfo, seqSymbol );
          seqSym = seqSymbol.$name;
       }
    }

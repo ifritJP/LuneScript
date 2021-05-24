@@ -65,11 +65,13 @@ pub class TransCtrlInfo {
    */ 
    pub let mut legacyMutableControl:bool;
    pub let mut validAstDetailError:bool;
+   /** async 制御を有効にする */
+   pub let mut validAsyncCtrl:bool;
 }
 
 pub static fn TransCtrlInfo.create_normal(): TransCtrlInfo {
    return new TransCtrlInfo(
-      false, false, true, false, .Touch, false, false, true, false, false );
+      false, false, true, false, .Touch, false, false, true, false, false, false );
 }
 
 

@@ -102,7 +102,7 @@ func (self *Writer_XML) InitWriter_XML(_env *LnsEnv, stream Lns_oStream) {
 }
 
 // 49: decl @lune.@base.@Writer.XML.convertXmlTxt
-func Writer_XML_convertXmlTxt_1035_(_env *LnsEnv, val LnsAny) string {
+func Writer_XML_convertXmlTxt_1065_(_env *LnsEnv, val LnsAny) string {
     if val == ""{
         return ""
     }
@@ -153,7 +153,7 @@ func (self *Writer_XML) EndElement(_env *LnsEnv) {
 
 // 86: decl @lune.@base.@Writer.XML.writeValue
 func (self *Writer_XML) WriteValue(_env *LnsEnv, val LnsAny) {
-    self.stream.Write(_env, Writer_XML_convertXmlTxt_1035_(_env, val))
+    self.stream.Write(_env, Writer_XML_convertXmlTxt_1065_(_env, val))
 }
 
 // 89: decl @lune.@base.@Writer.XML.write
@@ -430,7 +430,7 @@ func (self *Writer_JSON) EndElement(_env *LnsEnv) {
 }
 
 // 261: decl @lune.@base.@Writer.JSON.convertJsonTxt
-func Writer_JSON_convertJsonTxt_1097_(_env *LnsEnv, txt string) string {
+func Writer_JSON_convertJsonTxt_1275_(_env *LnsEnv, txt string) string {
     if txt == ""{
         return ""
     }
@@ -459,7 +459,7 @@ func (self *Writer_JSON) WriteValue(_env *LnsEnv, val LnsAny) {
             _env.SetStackVal( "false") ).(string)
         
     } else { 
-        txt = _env.LuaVM.String_format("\"%s\"", []LnsAny{Writer_JSON_convertJsonTxt_1097_(_env, _env.LuaVM.String_format("%s", []LnsAny{val}))})
+        txt = _env.LuaVM.String_format("\"%s\"", []LnsAny{Writer_JSON_convertJsonTxt_1275_(_env, _env.LuaVM.String_format("%s", []LnsAny{val}))})
         
     }
     self.stream.Write(_env, txt)

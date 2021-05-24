@@ -615,7 +615,7 @@ pub fn MacroCtrl.expandMacroVal(
       return token;
    }
 
-   _direct fn getToken(): &Parser.Token {
+   fn getToken() __trans : &Parser.Token {
       self.tokenExpanding = true;
       let work = parser.getTokenNoErr();
       self.tokenExpanding = false;

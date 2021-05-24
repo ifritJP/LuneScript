@@ -128,7 +128,8 @@ pub class memStream extend (oStream) {
    pub fn __init() {
       self.txt = new Str.Builder();
    }
-   pub fn get_txt() : str {
+   pub fn get_txt() mut : str {
+      self.txt.flush();
       return self.txt.$txt;
    }
    pub fn write( val: str ) mut : stem!, str! {
@@ -136,8 +137,10 @@ pub class memStream extend (oStream) {
       return self, nil;
    }
    pub fn close() mut {
+      self.txt.flush();
    }
    pub fn flush() mut {
+      self.txt.flush();
    }
 }
 
