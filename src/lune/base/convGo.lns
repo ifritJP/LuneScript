@@ -5700,7 +5700,7 @@ pub override fn convFilter.processAbbr(
 
 pub fn createFilter(
    enableTest:bool, streamName: str,
-   stream: oStream, ast:TransUnit.ASTInfo, option:&Option ) : Nodes.Filter<Opt>
+   stream: oStream, ast:&TransUnit.ASTInfo, option:&Option ) : Nodes.Filter<Opt>
 {
    return new convFilter( enableTest, streamName, stream, ast, option );
 }

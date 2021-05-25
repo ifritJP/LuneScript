@@ -28,7 +28,7 @@ class RunItem extend (__AsyncItem,Mapping) {
    let result:bool {pub};
 }
 
-abstract class Runner extend (__Runner) {
+pub abstract class Runner extend (__Runner) {
    
    let pipe:__pipe<RunItem>!;
 

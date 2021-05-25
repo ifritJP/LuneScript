@@ -154,8 +154,10 @@ pub class Option {
    /** go への変換時、関数の引数に環境情報を追加する */
    local let mut addEnvArg:bool {pub};
    local let mut enableRunner:bool {pub};
+   local let mut validPostBuild:bool {pub};
 
    pub fn __init() {
+      self.validPostBuild = true;
       self.enableRunner = true;
       self.addEnvArg = true; 
       self.projDir = nil;
@@ -366,6 +368,9 @@ usage:
                }
                case "--disableRunner" {
                   option.enableRunner = false;
+               }
+               case "--disablePostBuild" {
+                  option.validPostBuild = false;
                }
                case "--enableAsyncCtl" {
                   option.transCtrlInfo.validAsyncCtrl = true;

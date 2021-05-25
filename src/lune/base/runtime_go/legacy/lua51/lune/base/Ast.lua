@@ -1346,13 +1346,13 @@ Async.__allList[3] = Async.Transient
 
 
 _moduleObj.TypeInfo = TypeInfo
+function TypeInfo:getScopeMut(  )
+
+   return self.scope
+end
 function TypeInfo:get_asyncMode(  )
 
    return Async.Async
-end
-function TypeInfo:getProcessInfo(  )
-
-   return self.processInfo
 end
 function TypeInfo:switchScope( scope )
 
@@ -1578,7 +1578,7 @@ function TypeInfo.createScope( processInfo, parent, classFlag, baseInfo, interfa
 
    local inheritScope = nil
    if baseInfo ~= nil then
-      inheritScope = _lune.unwrap( baseInfo:get_scope())
+      inheritScope = _lune.unwrap( baseInfo:getScopeMut(  ))
    end
    
    local ifScopeList = {}
@@ -1596,9 +1596,6 @@ function TypeInfo.setmeta( obj )
 end
 function TypeInfo:get_scope()
    return self.scope
-end
-function TypeInfo:get_typeData()
-   return self.typeData
 end
 function TypeInfo:get_processInfo()
    return self.processInfo
@@ -1794,7 +1791,7 @@ end
 
 local function getScope( typeInfo )
 
-   return typeInfo:get_scope()
+   return typeInfo:getScopeMut(  )
    
 end
 _moduleObj.getScope = getScope
@@ -1861,7 +1858,8 @@ function RootTypeInfo:get_typeId()
    return self.typeId
 end
 
-local headTypeInfo = RootTypeInfo.create(  )
+local headTypeInfoMut = RootTypeInfo.create(  )
+local headTypeInfo = headTypeInfoMut
 _moduleObj.headTypeInfo = headTypeInfo
 
 rootProcessInfo:setRootTypeInfo( _moduleObj.rootTypeId, _moduleObj.headTypeInfo )
@@ -1902,7 +1900,7 @@ end
 
 function Scope:getProcessInfo(  )
 
-   return self:getModule(  ):getProcessInfo(  )
+   return self:getModule(  ):get_processInfo()
 end
 
 
@@ -2178,8 +2176,8 @@ function ModifierTypeInfo:getParentId( ... )
    return self.srcTypeInfo:getParentId( ... )
 end
 
-function ModifierTypeInfo:getProcessInfo( ... )
-   return self.srcTypeInfo:getProcessInfo( ... )
+function ModifierTypeInfo:getScopeMut( ... )
+   return self.srcTypeInfo:getScopeMut( ... )
 end
 
 function ModifierTypeInfo:get_abstractFlag( ... )
@@ -2272,10 +2270,6 @@ end
 
 function ModifierTypeInfo:get_staticFlag( ... )
    return self.srcTypeInfo:get_staticFlag( ... )
-end
-
-function ModifierTypeInfo:get_typeData( ... )
-   return self.srcTypeInfo:get_typeData( ... )
 end
 
 function ModifierTypeInfo:hasBase( ... )
@@ -2845,8 +2839,8 @@ function NilableTypeInfo:getParentId( ... )
    return self.nonnilableType:getParentId( ... )
 end
 
-function NilableTypeInfo:getProcessInfo( ... )
-   return self.nonnilableType:getProcessInfo( ... )
+function NilableTypeInfo:getScopeMut( ... )
+   return self.nonnilableType:getScopeMut( ... )
 end
 
 function NilableTypeInfo:get_abstractFlag( ... )
@@ -2935,10 +2929,6 @@ end
 
 function NilableTypeInfo:get_staticFlag( ... )
    return self.nonnilableType:get_staticFlag( ... )
-end
-
-function NilableTypeInfo:get_typeData( ... )
-   return self.nonnilableType:get_typeData( ... )
 end
 
 function NilableTypeInfo:hasBase( ... )
@@ -3096,8 +3086,8 @@ function AliasTypeInfo:getOverridingType( ... )
    return self.aliasSrcTypeInfo:getOverridingType( ... )
 end
 
-function AliasTypeInfo:getProcessInfo( ... )
-   return self.aliasSrcTypeInfo:getProcessInfo( ... )
+function AliasTypeInfo:getScopeMut( ... )
+   return self.aliasSrcTypeInfo:getScopeMut( ... )
 end
 
 function AliasTypeInfo:getTxtWithRaw( ... )
@@ -3174,10 +3164,6 @@ end
 
 function AliasTypeInfo:get_staticFlag( ... )
    return self.aliasSrcTypeInfo:get_staticFlag( ... )
-end
-
-function AliasTypeInfo:get_typeData( ... )
-   return self.aliasSrcTypeInfo:get_typeData( ... )
 end
 
 function AliasTypeInfo:hasBase( ... )
@@ -3801,7 +3787,7 @@ function Scope:setClosure( workSymbol )
    local funcType = self:getNamespaceTypeInfo(  )
    
    while true do
-      local funcScope = _lune.unwrap( funcType:get_scope())
+      local funcScope = _lune.unwrap( funcType:getScopeMut(  ))
       if not funcScope.closureSymMap[symbol:get_symbolId()] then
          funcScope.closureSymMap[symbol:get_symbolId()] = symbol
          funcScope.closureSym2NumMap[symbol] = #funcScope.closureSymList
@@ -3826,7 +3812,7 @@ end
 
 function Scope:isClosureAccess( moduleScope, symbol )
 
-   local processInfo = moduleScope:getModule(  ):getProcessInfo(  )
+   local processInfo = moduleScope:getModule(  ):get_processInfo()
    do
       local _switchExp = symbol:get_kind()
       if _switchExp == SymbolKind.Var or _switchExp == SymbolKind.Arg or _switchExp == SymbolKind.Fun then
@@ -4587,6 +4573,10 @@ function BoxTypeInfo:get_scope(  )
 
    return TypeInfo.get_scope( self)
 end
+function BoxTypeInfo:getScopeMut(  )
+
+   return TypeInfo.getScopeMut( self)
+end
 function BoxTypeInfo:get_kind(  )
 
    return TypeInfoKind.Box
@@ -4699,10 +4689,6 @@ function BoxTypeInfo:getParentId( ... )
    return self.boxingType:getParentId( ... )
 end
 
-function BoxTypeInfo:getProcessInfo( ... )
-   return self.boxingType:getProcessInfo( ... )
-end
-
 function BoxTypeInfo:get_abstractFlag( ... )
    return self.boxingType:get_abstractFlag( ... )
 end
@@ -4767,10 +4753,6 @@ function BoxTypeInfo:get_staticFlag( ... )
    return self.boxingType:get_staticFlag( ... )
 end
 
-function BoxTypeInfo:get_typeData( ... )
-   return self.boxingType:get_typeData( ... )
-end
-
 function BoxTypeInfo:hasBase( ... )
    return self.boxingType:hasBase( ... )
 end
@@ -4815,7 +4797,7 @@ function GenericTypeInfo.new( processInfo, genSrcTypeInfo, itemTypeInfoList, mod
    return obj
 end
 function GenericTypeInfo:__init(processInfo, genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo) 
-   TypeInfo.__init( self,TypeInfo.createScope( processInfo, (_lune.unwrap( genSrcTypeInfo:get_scope()) ):get_parent(), true, genSrcTypeInfo, nil ), processInfo)
+   TypeInfo.__init( self,TypeInfo.createScope( processInfo, (_lune.unwrap( genSrcTypeInfo:getScopeMut(  )) ):get_parent(), true, genSrcTypeInfo, nil ), processInfo)
    
    self.imutType = _moduleObj.headTypeInfo
    self.typeId = processInfo:newId( self )
@@ -5062,8 +5044,8 @@ function GenericTypeInfo:getParentId( ... )
    return self.genSrcTypeInfo:getParentId( ... )
 end
 
-function GenericTypeInfo:getProcessInfo( ... )
-   return self.genSrcTypeInfo:getProcessInfo( ... )
+function GenericTypeInfo:getScopeMut( ... )
+   return self.genSrcTypeInfo:getScopeMut( ... )
 end
 
 function GenericTypeInfo:getTxt( ... )
@@ -5156,10 +5138,6 @@ end
 
 function GenericTypeInfo:get_staticFlag( ... )
    return self.genSrcTypeInfo:get_staticFlag( ... )
-end
-
-function GenericTypeInfo:get_typeData( ... )
-   return self.genSrcTypeInfo:get_typeData( ... )
 end
 
 function GenericTypeInfo:hasBase( ... )
@@ -6027,7 +6005,6 @@ function NormalTypeInfo:serialize( stream, serializeInfo )
       
    end
    
-   
    stream:write( txt .. self:serializeTypeInfoList( serializeInfo, "itemTypeId = {", self.itemTypeInfoList ) .. self:serializeTypeInfoList( serializeInfo, "ifList = {", self.interfaceList ) .. self:serializeTypeInfoList( serializeInfo, "argTypeId = {", self.argTypeInfoList ) .. self:serializeTypeInfoList( serializeInfo, "retTypeId = {", self.retTypeInfoList ) .. self:serializeTypeInfoList( serializeInfo, "children = {", children, true ) .. "}\n" )
 end
 function NormalTypeInfo:equalsSub( processInfo, typeInfo, alt2type, checkModifer )
@@ -6050,12 +6027,12 @@ function NormalTypeInfo:equalsSub( processInfo, typeInfo, alt2type, checkModifer
    end
    
    
-   if self.kind ~= typeInfo:get_kind() or self.staticFlag ~= typeInfo:get_staticFlag() or self.autoFlag ~= typeInfo:get_autoFlag() or self:get_nilable() ~= typeInfo:get_nilable() or self.rawTxt ~= typeInfo:get_rawTxt() or self.parentInfo ~= typeInfo:get_parentInfo() or self.baseTypeInfo ~= typeInfo:get_baseTypeInfo() then
+   if self.kind ~= typeInfo:get_kind() or self.staticFlag ~= typeInfo:get_staticFlag() or self.autoFlag ~= typeInfo:get_autoFlag() or self:get_nilable() ~= typeInfo:get_nilable() or self.rawTxt ~= typeInfo:get_rawTxt() or self.baseTypeInfo ~= typeInfo:get_baseTypeInfo() then
       return false
    end
    
    
-   if self.accessMode ~= typeInfo:get_accessMode() then
+   if self.accessMode ~= typeInfo:get_accessMode() or self.parentInfo ~= typeInfo:get_parentInfo() then
       do
          local _switchExp = self.kind
          if _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Map or _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.Set then
@@ -6299,7 +6276,7 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD, ifList )
       end
    end
    
-   local info = NormalTypeInfo.new(rootProcessInfo, false, scope, nil, ifList, false, false, false, AccessMode.Pub, typeTxt, _moduleObj.headTypeInfo, kind, genTypeList, argTypeList, retTypeList, MutMode.Mut, nil, Async.Async)
+   local info = NormalTypeInfo.new(rootProcessInfo, false, scope, nil, ifList, false, false, false, AccessMode.Pub, typeTxt, headTypeInfoMut, kind, genTypeList, argTypeList, retTypeList, MutMode.Mut, nil, Async.Async)
    rootProcessInfo:setupImut( info )
    
    registBuiltin( idName, typeTxt, kind, info, _moduleObj.headTypeInfo, scope ~= nil )
@@ -6701,7 +6678,7 @@ function ProcessInfo:createSet( accessMode, parentInfo, itemTypeInfo, mutMode )
    
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeSet ), _moduleObj.builtinTypeSet, nil, false, false, false, AccessMode.Pub, "Set", _moduleObj.headTypeInfo, TypeInfoKind.Set, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
+      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeSet ), _moduleObj.builtinTypeSet, nil, false, false, false, AccessMode.Pub, "Set", headTypeInfoMut, TypeInfoKind.Set, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
    end
    
    
@@ -6730,7 +6707,7 @@ function ProcessInfo:createList( accessMode, parentInfo, itemTypeInfo, mutMode )
    
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeList ), _moduleObj.builtinTypeList, nil, false, false, false, AccessMode.Pub, "List", _moduleObj.headTypeInfo, TypeInfoKind.List, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
+      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeList ), _moduleObj.builtinTypeList, nil, false, false, false, AccessMode.Pub, "List", headTypeInfoMut, TypeInfoKind.List, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
    end
    
    
@@ -6759,7 +6736,7 @@ function ProcessInfo:createArray( accessMode, parentInfo, itemTypeInfo, mutMode 
    
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeArray ), _moduleObj.builtinTypeArray, nil, false, false, false, AccessMode.Pub, "Array", _moduleObj.headTypeInfo, TypeInfoKind.Array, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
+      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeArray ), _moduleObj.builtinTypeArray, nil, false, false, false, AccessMode.Pub, "Array", headTypeInfoMut, TypeInfoKind.Array, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
    end
    
    
@@ -6788,7 +6765,7 @@ function ProcessInfo:createMap( accessMode, parentInfo, keyTypeInfo, valTypeInfo
    
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeMap ), _moduleObj.builtinTypeMap, nil, false, false, false, AccessMode.Pub, "Map", _moduleObj.headTypeInfo, TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, workMutMode, nil, Async.Async)
+      return NormalTypeInfo.new(self, false, getScope( _moduleObj.builtinTypeMap ), _moduleObj.builtinTypeMap, nil, false, false, false, AccessMode.Pub, "Map", headTypeInfoMut, TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, workMutMode, nil, Async.Async)
    end
    
    
@@ -6973,6 +6950,10 @@ function DDDTypeInfo:get_extTypeFlag(  )
    return self.extedType ~= self
 end
 function DDDTypeInfo:get_scope(  )
+
+   return nil
+end
+function DDDTypeInfo:getScopeMut(  )
 
    return nil
 end
@@ -7458,13 +7439,13 @@ function TypeInfo.getCommonTypeCombo( processInfo, commonType, otherType, alt2ty
       do
          local _switchExp = type1:get_kind()
          if _switchExp == TypeInfoKind.List then
-            return getType( processInfo:createList( AccessMode.Local, _moduleObj.headTypeInfo, {getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
+            return getType( processInfo:createList( AccessMode.Local, headTypeInfoMut, {getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
          elseif _switchExp == TypeInfoKind.Array then
-            return getType( processInfo:createArray( AccessMode.Local, _moduleObj.headTypeInfo, {getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
+            return getType( processInfo:createArray( AccessMode.Local, headTypeInfoMut, {getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
          elseif _switchExp == TypeInfoKind.Set then
-            return getType( processInfo:createSet( AccessMode.Local, _moduleObj.headTypeInfo, {getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
+            return getType( processInfo:createSet( AccessMode.Local, headTypeInfoMut, {getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
          elseif _switchExp == TypeInfoKind.Map then
-            return getType( processInfo:createMap( AccessMode.Local, _moduleObj.headTypeInfo, getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type ), getCommon( type1:get_itemTypeInfoList()[2], type2:get_itemTypeInfoList()[2], alt2type ), mutMode ) )
+            return getType( processInfo:createMap( AccessMode.Local, headTypeInfoMut, getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type ), getCommon( type1:get_itemTypeInfoList()[2], type2:get_itemTypeInfoList()[2], alt2type ), mutMode ) )
          end
       end
       
@@ -7620,6 +7601,10 @@ function AbbrTypeInfo:get_scope(  )
 
    return nil
 end
+function AbbrTypeInfo:getScopeMut(  )
+
+   return nil
+end
 function AbbrTypeInfo:get_baseTypeInfo(  )
 
    return _moduleObj.headTypeInfo
@@ -7729,7 +7714,7 @@ function ExtTypeInfo.new( processInfo, extedType )
    return obj
 end
 function ExtTypeInfo:__init(processInfo, extedType) 
-   TypeInfo.__init( self,extedType:get_scope(), processInfo)
+   TypeInfo.__init( self,nil, processInfo)
    
    
    self.typeId = processInfo:newId( self )
@@ -7876,8 +7861,8 @@ function ExtTypeInfo:getParentId( ... )
    return self.extedType:getParentId( ... )
 end
 
-function ExtTypeInfo:getProcessInfo( ... )
-   return self.extedType:getProcessInfo( ... )
+function ExtTypeInfo:getScopeMut( ... )
+   return self.extedType:getScopeMut( ... )
 end
 
 function ExtTypeInfo:get_abstractFlag( ... )
@@ -7954,10 +7939,6 @@ end
 
 function ExtTypeInfo:get_staticFlag( ... )
    return self.extedType:get_staticFlag( ... )
-end
-
-function ExtTypeInfo:get_typeData( ... )
-   return self.extedType:get_typeData( ... )
 end
 
 function ExtTypeInfo:hasBase( ... )
@@ -8137,7 +8118,7 @@ function AndExpTypeInfo.new( processInfo, exp1, exp2, result )
    return obj
 end
 function AndExpTypeInfo:__init(processInfo, exp1, exp2, result) 
-   TypeInfo.__init( self,result:get_scope(), processInfo)
+   TypeInfo.__init( self,nil, processInfo)
    
    self.exp1 = exp1
    self.exp2 = exp2
@@ -8195,8 +8176,8 @@ function AndExpTypeInfo:getParentId( ... )
    return self.result:getParentId( ... )
 end
 
-function AndExpTypeInfo:getProcessInfo( ... )
-   return self.result:getProcessInfo( ... )
+function AndExpTypeInfo:getScopeMut( ... )
+   return self.result:getScopeMut( ... )
 end
 
 function AndExpTypeInfo:getTxt( ... )
@@ -8325,10 +8306,6 @@ end
 
 function AndExpTypeInfo:get_staticFlag( ... )
    return self.result:get_staticFlag( ... )
-end
-
-function AndExpTypeInfo:get_typeData( ... )
-   return self.result:get_typeData( ... )
 end
 
 function AndExpTypeInfo:get_typeId( ... )
@@ -8670,6 +8647,8 @@ function ProcessInfo:newUser(  )
 end
 
 
+
+
 local MatchType = {}
 _moduleObj.MatchType = MatchType
 MatchType._val2NameMap = {}
@@ -8703,7 +8682,7 @@ MatchType._val2NameMap[2] = 'Error'
 MatchType.__allList[3] = MatchType.Error
 
 
-function TypeInfo.checkMatchType( processInfo, dstTypeList, expTypeList, allowDstShort, warnForFollowSrcIndex, alt2type )
+function TypeInfo.checkMatchTypeMain( processInfo, dstTypeList, expTypeList, allowDstShort, warnForFollowSrcIndex, alt2type, mismatchErrMess )
 
    
    
@@ -8788,19 +8767,7 @@ function TypeInfo.checkMatchType( processInfo, dstTypeList, expTypeList, allowDs
             if dstType:get_srcTypeInfo():get_kind() ~= TypeInfoKind.DDD then
                local isMatch, msg = dstType:canEvalWith( processInfo, expType, CanEvalType.SetOp, alt2type )
                if not isMatch then
-                  local workProcessInfo = ProcessInfo.createUser( processInfo:get_validCheckingMutable(), processInfo:get_validExtType(), processInfo:get_validDetailError(), builtinTypeInfo2Map:clone(  ) )
-                  local workDstType = applyGenericDefault( workProcessInfo, dstType, alt2type, dstType:getModule(  ) )
-                  local workDstId
-                  
-                  if isBuiltin( workDstType:get_typeId().id ) then
-                     workDstId = workDstType:get_typeId().id
-                  else
-                   
-                     workDstId = dstType:get_typeId().id
-                  end
-                  
-                  return MatchType.Error, string.format( "exp(%d) type mismatch %s(%d) <- %s(%d): index %d%s", index, workDstType:getTxt( _moduleObj.defaultTypeNameCtrl ), workDstId, expType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:get_typeId().id, index, msg and string.format( " -- %s", tostring( msg)) or string.format( "(%s)", TypeInfoKind:_getTxt( dstType:get_kind())
-                  ))
+                  return MatchType.Error, mismatchErrMess( index, msg, dstType, expType, alt2type )
                end
                
                if not allowDstShort and #dstTypeList < #expTypeList then
@@ -8921,6 +8888,42 @@ function TypeInfo.checkMatchType( processInfo, dstTypeList, expTypeList, allowDs
    
    return MatchType.Match, ""
 end
+
+
+function TypeInfo.checkMatchType( processInfo, dstTypeList, expTypeList, allowDstShort, warnForFollowSrcIndex, alt2type )
+
+   local function mismatchErrMess( index, errorMess, dstType, srcType, alt2typeWork )
+   
+      local workProcessInfo = ProcessInfo.createUser( processInfo:get_validCheckingMutable(), processInfo:get_validExtType(), processInfo:get_validDetailError(), builtinTypeInfo2Map:clone(  ) )
+      local workDstType = applyGenericDefault( workProcessInfo, dstType, alt2typeWork, dstType:getModule(  ) )
+      local workDstId
+      
+      if isBuiltin( workDstType:get_typeId().id ) then
+         workDstId = workDstType:get_typeId().id
+      else
+       
+         workDstId = dstType:get_typeId().id
+      end
+      
+      return string.format( "exp(%d) type mismatch %s(%d) <- %s(%d): index %d%s", index, workDstType:getTxt( _moduleObj.defaultTypeNameCtrl ), workDstId, srcType:getTxt( _moduleObj.defaultTypeNameCtrl ), srcType:get_typeId().id, index, errorMess and string.format( " -- %s", tostring( errorMess)) or string.format( "(%s)", TypeInfoKind:_getTxt( dstType:get_kind())
+      ))
+   end
+   
+   return TypeInfo.checkMatchTypeMain( processInfo, dstTypeList, expTypeList, allowDstShort, warnForFollowSrcIndex, alt2type, mismatchErrMess )
+end
+
+
+function TypeInfo.checkMatchTypeAsync( processInfo, dstTypeList, expTypeList, allowDstShort, warnForFollowSrcIndex, alt2type )
+
+   local function mismatchErrMess( index, errorMess, dstType, srcType, alt2typeWork )
+   
+      return string.format( "exp(%d) type mismatch %s(%d) <- %s(%d): index %d%s", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), dstType:get_typeId().id, srcType:getTxt( _moduleObj.defaultTypeNameCtrl ), srcType:get_typeId().id, index, errorMess and string.format( " -- %s", tostring( errorMess)) or string.format( "(%s)", TypeInfoKind:_getTxt( dstType:get_kind())
+      ))
+   end
+   
+   return TypeInfo.checkMatchTypeMain( processInfo, dstTypeList, expTypeList, allowDstShort, warnForFollowSrcIndex, alt2type, mismatchErrMess )
+end
+
 
 local function isSettableToForm( processInfo, typeInfo )
 
@@ -9199,7 +9202,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             local _switchExp = otherSrc:get_kind()
             if _switchExp == TypeInfoKind.FormFunc or _switchExp == TypeInfoKind.Func then
                do
-                  local result, mess = TypeInfo.checkMatchType( processInfo, dest:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false, nil, alt2type )
+                  local result, mess = TypeInfo.checkMatchTypeAsync( processInfo, dest:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false, nil, alt2type )
                   if result == MatchType.Error then
                      return false, mess
                   end
@@ -9207,7 +9210,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
                end
                
                do
-                  local result, mess = TypeInfo.checkMatchType( processInfo, otherSrc:get_argTypeInfoList(), dest:get_argTypeInfoList(), false, nil, alt2type )
+                  local result, mess = TypeInfo.checkMatchTypeAsync( processInfo, otherSrc:get_argTypeInfoList(), dest:get_argTypeInfoList(), false, nil, alt2type )
                   if result == MatchType.Error then
                      return false, mess
                   end
@@ -9215,7 +9218,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
                end
                
                do
-                  local result, mess = TypeInfo.checkMatchType( processInfo, dest:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false, nil, alt2type )
+                  local result, mess = TypeInfo.checkMatchTypeAsync( processInfo, dest:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false, nil, alt2type )
                   if result == MatchType.Error then
                      return false, mess
                   end
@@ -9223,7 +9226,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
                end
                
                do
-                  local result, mess = TypeInfo.checkMatchType( processInfo, otherSrc:get_retTypeInfoList(), dest:get_retTypeInfoList(), false, nil, alt2type )
+                  local result, mess = TypeInfo.checkMatchTypeAsync( processInfo, otherSrc:get_retTypeInfoList(), dest:get_retTypeInfoList(), false, nil, alt2type )
                   if result == MatchType.Error then
                      return false, mess
                   end
@@ -9354,12 +9357,12 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             return false, string.format( "argNum %d != %d", #dest:get_retTypeInfoList(), #otherSrc:get_retTypeInfoList())
          end
          
-         local argCheck, argMess = TypeInfo.checkMatchType( processInfo, dest:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false, nil, alt2type )
+         local argCheck, argMess = TypeInfo.checkMatchTypeAsync( processInfo, dest:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false, nil, alt2type )
          if argCheck == MatchType.Error then
             return false, argMess
          end
          
-         local retCheck, retMess = TypeInfo.checkMatchType( processInfo, dest:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false, nil, alt2type )
+         local retCheck, retMess = TypeInfo.checkMatchTypeAsync( processInfo, dest:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false, nil, alt2type )
          if retCheck == MatchType.Error then
             return false, retMess
          end

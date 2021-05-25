@@ -244,6 +244,7 @@ end
 
 local Runner = {}
 setmetatable( Runner, { ifList = {__Runner,} } )
+_moduleObj.Runner = Runner
 function Runner.new(  )
    local obj = {}
    Runner.setmeta( obj )

@@ -1767,7 +1767,7 @@ goprof:
 
 luaprof:
 	$(call test-buildlns-setup,work/go)
-	$(call selfhost_buildOp_batch,.,/usr/bin/time -f 'go:%e/%U/%S:$2' env $(LNSC),work/go,-langGo )
+	$(call selfhost_buildOp_batch,.,/usr/bin/time -f 'lua:%e/%U/%S:$2' env $(LNSC),work/go,-langGo )
 
 
 test-reference:

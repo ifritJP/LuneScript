@@ -1240,7 +1240,7 @@ function _TypeInfoNormal:createTypeInfo( param )
             local baseScope = _lune.unwrap( Ast.getScope( baseInfo ))
             local ifScopeList = {}
             for __index, ifType in ipairs( interfaceList ) do
-               table.insert( ifScopeList, _lune.unwrap( ifType:get_scope()) )
+               table.insert( ifScopeList, _lune.unwrap( ifType:getScopeMut(  )) )
             end
             
             
@@ -1697,7 +1697,6 @@ function Import:processImportFromFile( processInfo, lnsPath, metaInfoStem, orgMo
    typeId2Scope[Ast.rootTypeId] = self.transUnitIF:get_scope()
    
    typeId2TypeInfo[self.builtinFunc.lnsthread_:get_typeId().id] = self.builtinFunc.lnsthread_
-   typeId2Scope[self.builtinFunc.lnsthread_:get_typeId().id] = self.builtinFunc.lnsthread_:get_scope()
    for typeId, dependIdInfo in pairs( metaInfo.__dependIdMap ) do
       local dependInfo = _lune.unwrap( dependLibId2DependInfo[_lune.unwrap( dependIdInfo[1])])
       local typeInfo = _lune.unwrap( dependInfo:getTypeInfo( _lune.unwrap( dependIdInfo[2]) ))
@@ -1962,7 +1961,7 @@ function Import:processImportFromFile( processInfo, lnsPath, metaInfoStem, orgMo
             
          elseif _switchExp == Ast.TypeInfoKind.Module then
             self.transUnitIF:pushModule( processInfo, true, classTypeInfo:getTxt(  ), Ast.TypeInfo.isMut( classTypeInfo ) )
-            Log.log( Log.Level.Debug, __func__, 1061, function (  )
+            Log.log( Log.Level.Debug, __func__, 1059, function (  )
             
                return string.format( "push module -- %s, %s, %d, %d, %d", classTypeInfo:getTxt(  ), _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, self.transUnitIF:get_scope(), false ) or "nil", _lune.nilacc( _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'get_typeId', 'callmtd' ), "id" ) or -1, classTypeInfo:get_typeId().id, self.transUnitIF:get_scope():get_parent():get_scopeId())
             end )
@@ -2085,7 +2084,7 @@ function Import:processImportMain( processInfo, modulePath, depth )
    local orgModulePath = modulePath
    modulePath = frontInterface.getLuaModulePath( modulePath )
    
-   Log.log( Log.Level.Info, __func__, 1186, function (  )
+   Log.log( Log.Level.Info, __func__, 1184, function (  )
    
       return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), orgModulePath)
    end )
@@ -2099,7 +2098,7 @@ function Import:processImportMain( processInfo, modulePath, depth )
    do
       local moduleInfo = self.importModuleName2ModuleInfo[modulePath]
       if moduleInfo ~= nil then
-         Log.log( Log.Level.Info, __func__, 1198, function (  )
+         Log.log( Log.Level.Info, __func__, 1196, function (  )
          
             return string.format( "%s already", orgModulePath)
          end )
@@ -2175,7 +2174,7 @@ function Import:processImportMain( processInfo, modulePath, depth )
    
    self.importModuleInfo:remove(  )
    
-   Log.log( Log.Level.Info, __func__, 1252, function (  )
+   Log.log( Log.Level.Info, __func__, 1250, function (  )
    
       return string.format( "%s complete", orgModulePath)
    end )

@@ -29,7 +29,7 @@ pub class ModInfo {
    let replaceMap:&Map<str,str> {pub};
 
    /** convPath で変換した path → 対応するローカルパス */
-   let allmut path2modProjInfo:Map<str,&ModProjInfo>;
+   let path2modProjInfo:Map<str,&ModProjInfo>;
 
    /** convLocalModulePath() で最後にマッチしたパス */
    let mut latestModProjInfo:&ModProjInfo!;

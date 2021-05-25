@@ -33,7 +33,7 @@ import lune.base.Formatter;
 //import lune.base.Depend;
 
 
-fn loadCode( code:str ) : Luaval<&stem> {
+fn loadCode( code:str ) __noasync : Luaval<&stem> {
    let loaded, mess = _load( code ## );
    when! loaded {
       if! let obj = loaded(##) {

@@ -2881,7 +2881,8 @@ fn TransUnit.processAddFunc(
          }
       }
       if matched {
-         (unwrap prottype@@@Ast.NormalTypeInfo).switchScopeTo( unwrap typeInfo.$scope );
+         (unwrap prottype@@@Ast.NormalTypeInfo).switchScopeTo(
+            unwrap typeInfo.getScopeMut() );
          typeInfo = prottype;
       }
    }
@@ -3847,7 +3848,7 @@ fn TransUnit.analyzeDeclVar(
                   // let func = fn () {}; → fn func() {}
                   let letVarInfo = letVarList[ 1 ];
                   let newTypeInfo = self.processInfo.createFunc(
-                     typeInfo.$abstractFlag, false, typeInfo.$scope,
+                     typeInfo.$abstractFlag, false, typeInfo.getScopeMut(),
                      typeInfo.$kind, typeInfo.$parentInfo,
                      false, false, typeInfo.$staticFlag, accessMode,
                      letVarInfo.varName.txt, typeInfo.$asyncMode,

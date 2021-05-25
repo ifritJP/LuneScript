@@ -955,7 +955,7 @@ func Nodes_getBreakKindForStmtList_3073_(_env *LnsEnv, checkMode LnsInt,stmtList
 }
 
 // 2178: decl @lune.@base.@Nodes.Node.getSymbolInfo.processExpNode
-func Node_getSymbolInfo__processExpNode_13183_(_env *LnsEnv, node *Nodes_Node) *LnsList {
+func Node_getSymbolInfo__processExpNode_13182_(_env *LnsEnv, node *Nodes_Node) *LnsList {
     if _switch50200 := (node.FP.Get_kind(_env)); _switch50200 == Nodes_NodeKind_get_ExpRef(_env) {
         return NewLnsList([]LnsAny{Ast_SymbolInfo2Stem((Lns_unwrap( (Nodes_ExpRefNodeDownCastF(node.FP))).(*Nodes_ExpRefNode)).FP.Get_symbolInfo(_env))})
     } else if _switch50200 == Nodes_NodeKind_get_RefField(_env) {
@@ -986,12 +986,12 @@ func Node_getSymbolInfo__processExpNode_13183_(_env *LnsEnv, node *Nodes_Node) *
                     index := _index + 1
                     expNode := _expNode.(Nodes_NodeDownCast).ToNodes_Node()
                     if index == expListNode.FP.Get_expList(_env).Len(){
-                        for _, _symbolInfo := range( Node_getSymbolInfo__processExpNode_13183_(_env, expNode).Items ) {
+                        for _, _symbolInfo := range( Node_getSymbolInfo__processExpNode_13182_(_env, expNode).Items ) {
                             symbolInfo := _symbolInfo.(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
                             list.Insert(Ast_SymbolInfo2Stem(symbolInfo))
                         }
                     } else { 
-                        for _, _symbolInfo := range( Node_getSymbolInfo__processExpNode_13183_(_env, expNode).Items ) {
+                        for _, _symbolInfo := range( Node_getSymbolInfo__processExpNode_13182_(_env, expNode).Items ) {
                             symbolInfo := _symbolInfo.(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
                             list.Insert(Ast_SymbolInfo2Stem(symbolInfo))
                             break
@@ -1014,7 +1014,7 @@ func Node_getSymbolInfo__processExpNode_13183_(_env *LnsEnv, node *Nodes_Node) *
 }
 
 // 2554: decl @lune.@base.@Nodes.enumLiteral2Literal
-func Nodes_enumLiteral2Literal_13527_(_env *LnsEnv, obj LnsAny)(LnsAny, LnsAny) {
+func Nodes_enumLiteral2Literal_13526_(_env *LnsEnv, obj LnsAny)(LnsAny, LnsAny) {
     switch _exp51877 := obj.(type) {
     case *Ast_EnumLiteral__Int:
     val := _exp51877.Val1
@@ -2235,7 +2235,7 @@ func (self *Nodes_Node) VisitSub(_env *LnsEnv, visitor Nodes_NodeVisitor,depth L
 
 // 2177: decl @lune.@base.@Nodes.Node.getSymbolInfo
 func (self *Nodes_Node) GetSymbolInfo(_env *LnsEnv) *LnsList {
-    return Node_getSymbolInfo__processExpNode_13183_(_env, self)
+    return Node_getSymbolInfo__processExpNode_13182_(_env, self)
 }
 
 
@@ -7689,7 +7689,7 @@ func (self *Nodes_ExpRefNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
                 _env.SetStackVal( self.symbolInfo.FP.Get_namespaceTypeInfo(_env).FP.Get_kind(_env) == Ast_TypeInfoKind__Enum) ).(bool)){
                 var enumval *Ast_EnumValInfo
                 enumval = Lns_unwrap( enumTypeInfo.FP.GetEnumValInfo(_env, self.symbolInfo.FP.Get_name(_env))).(*Ast_EnumValInfo)
-                return Nodes_enumLiteral2Literal_13527_(_env, enumval.FP.Get_val(_env))
+                return Nodes_enumLiteral2Literal_13526_(_env, enumval.FP.Get_val(_env))
             }
         }
     }
@@ -11167,7 +11167,7 @@ func (self *Nodes_ExpOmitEnumNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor
 func (self *Nodes_ExpOmitEnumNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
     var enumval *Ast_EnumValInfo
     enumval = self.valInfo
-    return Nodes_enumLiteral2Literal_13527_(_env, enumval.FP.Get_val(_env))
+    return Nodes_enumLiteral2Literal_13526_(_env, enumval.FP.Get_val(_env))
 }
 
 // 2658: decl @lune.@base.@Nodes.ExpOmitEnumNode.setupLiteralTokenList
@@ -11366,7 +11366,7 @@ func (self *Nodes_RefFieldNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
             if Lns_isCondTrue( Ast_EnumTypeInfoDownCastF(self.prefix.FP.Get_expType(_env).FP.Get_aliasSrc(_env).FP)){
                 var enumval *Ast_EnumValInfo
                 enumval = Lns_unwrap( enumTypeInfo.FP.GetEnumValInfo(_env, self.field.Txt)).(*Ast_EnumValInfo)
-                return Nodes_enumLiteral2Literal_13527_(_env, enumval.FP.Get_val(_env))
+                return Nodes_enumLiteral2Literal_13526_(_env, enumval.FP.Get_val(_env))
             }
         }
     }

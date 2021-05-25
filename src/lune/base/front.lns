@@ -50,6 +50,7 @@ import lune.base.Meta;
 import lune.base.LuneControl;
 import lune.base.Nodes;
 import lune.base.Ast;
+import lune.base.Runner;
 //import lune.base.ConvNodes;
 
 _lune_control ignore_symbol_;
@@ -304,25 +305,10 @@ fn Front.createAst(
    return ast;
 }
 
-macro _ast2Lua(
-   ast:__exp, streamName:__exp,
-   stream:__exp, metaStream:__exp, convMode:__exp, inMacro:__exp, option:__exp )
-{
-   {}
-   let mut exportInfo = ,,ast.$exportInfo;
-   let mut conv = convLua.createFilter(
-      ,,streamName, ,,stream, ,,metaStream, ,,convMode, ,,inMacro,
-      exportInfo.$moduleTypeInfo, exportInfo.$processInfo,
-      exportInfo.$provideInfo.$symbolKind,
-      ,,option.useLuneModule, ,,option.targetLuaVer,
-      ,,option.testing, ,,option.useIpairs );
-   ,,ast.$node.processFilter( conv, new convLua.Opt( ,,ast.$node ) );
-}
-
-
-fn ast2Lua(
-   ast:TransUnit.ASTInfo, streamName:str, mut stream:oStream, mut metaStream:oStream,
-   convMode:convLua.ConvMode, inMacro:bool, option:&Option.Option )
+fn ast2LuaMain(
+   ast:&TransUnit.ASTInfo, streamName:str, stream:oStream,
+   metaStream:oStream, convMode:convLua.ConvMode,
+   inMacro:bool, option:&Option.Option ) __async : convLua.FilterInfo
 {
    let mut exportInfo = ast.$exportInfo;
    let mut conv = convLua.createFilter(
@@ -331,14 +317,16 @@ fn ast2Lua(
       exportInfo.$provideInfo.$symbolKind,
       option.useLuneModule, option.targetLuaVer,
       option.testing, option.useIpairs );
-   ast.$node.processFilter( conv, new convLua.Opt( ast.$node ) );
+   return conv;
 }
 
-fn Front.ast2Lua(
-   ast:TransUnit.ASTInfo, streamName:str, stream:oStream,
-   metaStream:oStream, convMode:convLua.ConvMode, inMacro:bool )
+fn ast2Lua(
+   ast:&TransUnit.ASTInfo, streamName:str, stream:oStream, metaStream:oStream,
+   convMode:convLua.ConvMode, inMacro:bool, option:&Option.Option )
 {
-   ast2Lua( ast, streamName, stream, metaStream, convMode, inMacro, self.option );
+   let mut conv = ast2LuaMain(
+      ast, streamName, stream, metaStream, convMode, inMacro, option );
+   conv.outputLuaAndMeta( unwrap ast.$node@@@Nodes.RootNode );
 }
 
 fn loadFromChunk( chunk:Luaval<form>!, err:str! ): Luaval<&stem>! {
@@ -382,7 +370,7 @@ fn Front.convertFromAst(
    let mut stream = new Util.memStream();
    let mut metaStream = new Util.memStream();
 
-   self.ast2Lua( ast, streamName, stream, metaStream, mode, false );
+   ast2Lua( ast, streamName, stream, metaStream, mode, false, self.option );
 
    return metaStream.$txt, stream.$txt;
 }
@@ -1117,80 +1105,263 @@ pub fn Front.createGlue(scriptPath:str) mut {
    ast.$node.processFilter( filter, 0 );
 }
 
-/**
-変換結果出力用のストリームを開く。
-
-@return oStream Lua 用ストリーム
-@return oStream meta 用ストリーム
-@return oStream! 依存ファイル用ストリーム
-*/
-form OpenOStreamForConvert( mode:ModuleUptodate ): oStream!, oStream!, oStream!;
-form CloseOStreamForConvert( stream:oStream!, metaStream:oStream!, dependStream:oStream! );
-
-fn saveLuaFromAst(
-   ast:TransUnit.ASTInfo, uptodate:ModuleUptodate, convMode:convLua.ConvMode, path:str,
-   byteCompile:bool, stripDebugInfo:bool, option:&Option.Option,
-   streamDst:oStream!, metaStreamDst:oStream!, dependsStreamDst:oStream! )
+fn closeStreams( stream:oStream!, metaStream:Util.memStream!,
+                 dependStream:oStream!, metaPath:str, saveMetaFlag:bool )
 {
-   when! streamDst, metaStreamDst {
-      // 一旦メモリに出力するためのストリーム作成
-      let mut streamMem = new Util.memStream();
-      let mut metaStreamMem = new Util.memStream();
-      let mut dependsStreamMem = new Util.memStream();
-      
-      let mut stream:oStream;
-      let mut metaStream:oStream;
-      let mut dependsStream:oStream!;
+   fn txt2ModuleId( txt:str ) : frontInterface.ModuleId {
+      let mut buildIdTxt = txt.gsub( "^_moduleObj.__buildId = ", "" ).gsub( '"', "" );
+      return frontInterface.ModuleId.createIdFromTxt( buildIdTxt );
+   }
 
-      if Str.isValidStrBuilder() {
-         stream = streamMem;
-         metaStream = metaStreamMem;
-         dependsStream = dependsStreamMem;
-      } else {
-         stream = streamDst;
-         metaStream = metaStreamDst;
-         dependsStream = dependsStreamDst;
-      }
-      
-      let mut outStream, mut oMetaStream = stream, metaStream;
+   /**
+oldStream, newStream に格納されているモジュールのメタ情報が、
+モジュールのビルド ID 情報以外が一致しているかどうかを調べる。
 
-      when! dependsStream {
-         ast.$node.processFilter(
-            OutputDepend.createFilter( dependsStream ), 1 );
-      }
+モジュールのビルド ID 情報以外が一致している場合、
+モジュールのビルド ID 情報の部分だけを更新したメタ情報を返す。
 
-      let mut byteStream = new Util.memStream();
-      let mut byteMetaStream = new Util.memStream();
-      if byteCompile {
-         // byteCompile 時は、出力先をメモリに切り替える
-         outStream = byteStream;
-         oMetaStream = byteMetaStream;
-      }
-
-      ast2Lua( ast, path, outStream, oMetaStream, convMode, false, option );
-
-      if byteCompile {
-         // byteCompile 時は、
-         // メモリに出力したコードをバイトコンパイルしてセーブする
-         stream.write( byteCompileFromLuaTxt( byteStream.$txt, stripDebugInfo ) );
-         if metaStream ~= stream {
-            metaStream.write( byteCompileFromLuaTxt( byteMetaStream.$txt, true ) );
+@param oldStream 古いメタ情報
+@param newStream 新しいメタ情報
+@return bool 一致している場合 true。 true の場合、次の str の情報が有効。
+@return str 新しく書き込むメタ情報の文字列。
+   */
+   fn checkDiff( oldStream:Parser.TxtStream, newStream:Parser.TxtStream ) : bool, str
+   {
+      macro _getBuildId( line:__exp, buildIdLine:__exp ) {
+         when! ,,line {
+            if #,,buildIdLine == 0 {
+               if ,,line.find( "^_moduleObj.__buildId" ## ) {
+                  // ビルド ID 情報を取得する。
+                  ,,buildIdLine = ,,line;
+               }
+            }
          }
       }
 
-      // メモリに出力したものから本来出力先に
-      if Str.isValidStrBuilder() {
-         streamDst.write( streamMem.$txt );
-         metaStreamDst.write( metaStreamMem.$txt );
-         dependsStreamDst$.write$( dependsStreamMem.$txt );
+
+      // ビルド ID よりも前のファイル内部の位置
+      let mut headEndPos = 0;
+      // ビルド ID よりも後のファイル内部の位置
+      let mut tailBeginPos = 0;
+
+      // 古い build ID を記録した行
+      let mut oldBuildIdLine = "";
+      // 新しい build ID を記録した行
+      let mut newBuildIdLine = "";
+      while true {
+         let newLine = newStream.read( "*l" );
+         let oldLine = oldStream.read( "*l" );
+         _getBuildId( oldLine, oldBuildIdLine );
+         _getBuildId( newLine, newBuildIdLine );
+
+         if newLine ~= oldLine {
+            // 差分がある箇所を見つけて、それが ビルド ID の場合、
+            // 
+            let mut cont = false;
+            when! newLine, oldLine {
+               if oldLine.find( "^_moduleObj.__buildId" ## ) {
+                  if newLine.find( "^_moduleObj.__buildId" ## ) {
+                     tailBeginPos = newStream.$lineNo;
+                     cont = true;
+                  }
+               }
+               elseif oldLine.find( "^__dependModuleMap.*buildId =" ## ) and
+                  newLine.find( "^__dependModuleMap.*buildId =" ## )
+               {
+                  let oldSub = oldLine.gsub( "buildId =.*", "" );
+                  let newSub = newLine.gsub( "buildId =.*", "" );
+                  if oldSub == newSub {
+                     cont = true;
+                  }
+               }
+            }
+            if not cont {
+               Log._log( .Debug, `{ return "<%s>, <%s>" (oldLine, newLine ); } );
+               return false, "";
+            }
+         }
+         else {
+            if tailBeginPos == 0 {
+               headEndPos = newStream.$lineNo;
+            }
+            if not oldLine {
+               // ファイル一致
+               if tailBeginPos == 0 {
+                  return true, oldStream.$txt;
+               }
+
+               let oldBuildId = txt2ModuleId( oldBuildIdLine );
+               let newBuildId = txt2ModuleId( newBuildIdLine );
+               let worlBuildId = frontInterface.ModuleId.createId(
+                  newBuildId.$modTime, oldBuildId.$buildCount );
+               let buildIdLine = "_moduleObj.__buildId = %q" (worlBuildId.$idStr);
+
+               let txt = "%s%s\n%s" ( newStream.getSubstring( 1, headEndPos ),
+                                      buildIdLine,
+                                      newStream.getSubstring( tailBeginPos## ) );
+               return true, txt;
+            }
+         }
       }
-   } else {
-      Util.err( "failed to open lua stream or meta stream" );
    }
 
-   // when! closeOStream {
-   //    closeOStream( streamDst, metaStreamDst, dependsStreamDst );
-   // }
+   
+   when! stream {
+      stream.close();
+   }
+   when! dependStream {
+      dependStream.close();
+   }
+
+   when! metaStream {
+      if saveMetaFlag {
+         // メタファイルが変っているかどうかを確認し、
+         // 変更がない場合はビルド情報だけ更新する。
+         let newMetaTxt = metaStream.$txt;
+         let mut oldMetaTxt = "";
+         if! let mut oldFileObj = io.open( metaPath ## ) {
+            oldMetaTxt = unwrap oldFileObj.read( "*a" ) default "";
+            oldFileObj.close();
+         }
+
+         let sameFlag, txt = checkDiff( new Parser.TxtStream( oldMetaTxt ),
+                                        new Parser.TxtStream( newMetaTxt ) );
+
+         fn saveMeta( meta:str ) {
+            if! let mut fileObj = io.open( metaPath, "w" ) {
+               fileObj.write( meta );
+               fileObj.close();
+            } else {
+               Util.err( "failed to open -- %s" (metaPath) );
+            }
+         }
+         
+         if not sameFlag {
+            saveMeta( newMetaTxt );
+         }
+         else {        
+            if txt ~= "" {
+               saveMeta( txt );
+            }
+         }
+      }
+   }
+}
+
+form ConverterFunc() __async;
+
+class LuaConverter extend Runner.Runner {
+   let luaPath:str;
+   let dependsPath:str!;
+   let metaPath:str;
+   let option:&Option.Option;
+   let byteCompile:bool;
+   let stripDebugInfo:bool;
+   let byteStream:Util.memStream;
+   let byteMetaStream:Util.memStream;
+   let streamMem:Util.memStream;
+   let metaStreamMem:Util.memStream;
+   let dependsStreamMem:Util.memStream;
+
+   let converterFunc:ConverterFunc;
+   let filterInfo:convLua.FilterInfo;
+   let rootNode:&Nodes.RootNode;
+
+   pub fn __init(
+      luaPath:str, metaPath:str, dependsPath:str!, 
+      ast:&TransUnit.ASTInfo, convMode:convLua.ConvMode,
+      path:str, byteCompile:bool,
+      stripDebugInfo:bool, option:&Option.Option )
+   {
+      super();
+      
+      self.luaPath = luaPath;
+      self.metaPath = metaPath;
+      self.dependsPath = dependsPath;
+      self.option = option;
+      self.stripDebugInfo = stripDebugInfo;
+      self.byteCompile = byteCompile;
+      self.byteStream = new Util.memStream();
+      self.byteMetaStream = new Util.memStream();
+      self.streamMem = new Util.memStream();
+      self.metaStreamMem = new Util.memStream();
+      self.dependsStreamMem = new Util.memStream();
+      self.rootNode = unwrap ast.$node@@@Nodes.RootNode;
+
+
+      self.converterFunc = fn() __async {
+         // 一旦メモリに出力するためのストリーム作成
+         let mut stream = self.streamMem;
+         let mut metaStream = self.metaStreamMem;
+         
+         let mut outStream, mut oMetaStream = stream, metaStream;
+
+         let needDepends = option.dependsPath ~= nil;
+         if needDepends {
+            ast.$node.processFilter(
+               OutputDepend.createFilter( self.dependsStreamMem ), 1 );
+         }
+
+         if byteCompile {
+            // byteCompile 時は、出力先をメモリに切り替える
+            outStream = self.byteStream;
+            oMetaStream = self.byteMetaStream;
+         }
+
+         self.filterInfo = ast2LuaMain(
+            ast, path, outStream, oMetaStream, convMode, false, option );
+         self.filterInfo.outputLua( self.rootNode );
+      };
+      self.start();
+   }
+
+   pub override fn runMain() __async mut {
+      self.converterFunc();
+   }
+   
+   pub fn saveLua() mut {
+      self.getResult();
+      
+      //self.converterFunc();
+      self.filterInfo.outputMeta( self.rootNode );
+      
+      
+      if self.byteCompile {
+         // byteCompile 時は、
+         // メモリに出力したコードをバイトコンパイルしてセーブする
+         self.streamMem.write(
+            byteCompileFromLuaTxt( self.byteStream.$txt, self.stripDebugInfo ) );
+         self.metaStreamMem.write(
+            byteCompileFromLuaTxt( self.byteMetaStream.$txt, true ) );
+      }
+
+      // メモリに出力したものから本来出力先に
+      let luaCode = self.streamMem.$txt;
+      let metaTxt = self.metaStreamMem.$txt;
+      let dependTxt:str!;
+      let needDepends = self.option.dependsPath ~= nil;
+      if needDepends {
+         dependTxt = self.dependsStreamMem.$txt;
+      } else {
+         dependTxt = nil;
+      }
+      
+      let! mut streamDst = io.open( self.luaPath, "w" ) {
+         error( "write open error -- %s" (self.luaPath) );
+      };
+      let mut dependsStreamDst = self.option.openDepend( self.dependsPath );
+      
+
+      streamDst.write( luaCode );
+      let mut metaMemStream = new Util.memStream();
+      metaMemStream.write( metaTxt );
+      when! dependsStreamDst {
+         dependsStreamDst.write( unwrap dependTxt );
+      }
+      
+      closeStreams( streamDst, metaMemStream, dependsStreamDst,
+                    self.metaPath, self.option.mode == .SaveMeta );
+   }
 }
 
 fn outputDependInfo( stream:oStream!, metaInfo:&MetaForBuildId, mod:str ) {
@@ -1324,48 +1495,70 @@ fn Front.convertToLua(
    return ast;
 }
 
+class GoConverter extend Runner.Runner {
+   let mut memStream:Util.memStream;
+   let path:str;
+   let converter:ConverterFunc;
+   
+   local fn __init( scriptPath:str, ast:&TransUnit.ASTInfo,
+                    option:&Option.Option, goOpt:&convGo.Option )
+   {
+      super();
+      
+      let mut path = scriptPath.gsub( "%.lns$", ".go" );
+
+      if! let dir = option.outputDir {
+         path = "%s/%s" (dir,path);
+      }
+
+      self.path = path;
+      self.memStream = new Util.memStream();
+
+      self.converter = fn () {
+         let mut conv = convGo.createFilter(
+            option.testing, path, self.memStream, ast, goOpt );
+         ast.$node.processFilter( conv, new convGo.Opt( ast.$node ) );
+      };
+      self.start();
+   }
+
+   pub override fn runMain() __async mut {
+      self.converter();
+   }
+
+   local fn saveGo() mut {
+      self.getResult();
+      
+      let! mut file = io.open( self.path, "w" ) {
+         return;
+      };
+      
+      file.write( self.memStream.$txt );
+
+      file.close();
+   }
+}
+
+
 /**
 Go に変換しファイルに書き込む
 */
-pub fn Front.saveToGo( scriptPath:str, ast:TransUnit.ASTInfo ) mut {
+local fn Front.saveToGo( scriptPath:str, ast:TransUnit.ASTInfo ) mut : GoConverter! {
    let! rootNode = ast.$node@@@Nodes.RootNode {
-      return;
+      return nil;
    };
    foreach pragma in rootNode.$luneHelperInfo.pragmaSet {
       match pragma {
          case .limit_conv_code( codeSet ) {
             if not codeSet.has( LuneControl.Code.Go ) {
-               return;
+               return nil;
             }
          }
       }
    }
-   
-   let mut path = scriptPath.gsub( "%.lns$", ".go" );
 
-   if! let dir = self.option.outputDir {
-      path = "%s/%s" (dir,path);
-   }
-   let! mut file = io.open( path, "w" ) {
-      return;
-   };
-   let mut memStream = new Util.memStream();
-   let mut dstStream:oStream;
-   if Str.isValidStrBuilder() {
-      dstStream = memStream;
-   } else {
-      dstStream = file;
-   }
-
-   let mut conv = convGo.createFilter(
-      self.option.testing, path, dstStream, ast, self.createGoOption( scriptPath ) );
-   ast.$node.processFilter( conv, new convGo.Opt( ast.$node ) );
-
-   if Str.isValidStrBuilder() {
-      file.write( memStream.$txt );
-   }
-
-   file.close();
+   return new GoConverter(
+      scriptPath, ast, self.option, self.createGoOption( scriptPath ) );
 }
 
 
@@ -1403,146 +1596,6 @@ pub fn Front.outputBuiltin( scriptPath:str ) mut {
    self.saveToC( scriptPath, ast );
 }
 
-fn closeStreams( stream:oStream!, metaStream:Util.memStream,
-                 dependStream:oStream!, metaPath:str, saveMetaFlag:bool )
-{
-   fn txt2ModuleId( txt:str ) : frontInterface.ModuleId {
-      let mut buildIdTxt = txt.gsub( "^_moduleObj.__buildId = ", "" ).gsub( '"', "" );
-      return frontInterface.ModuleId.createIdFromTxt( buildIdTxt );
-   }
-
-   /**
-oldStream, newStream に格納されているモジュールのメタ情報が、
-モジュールのビルド ID 情報以外が一致しているかどうかを調べる。
-
-モジュールのビルド ID 情報以外が一致している場合、
-モジュールのビルド ID 情報の部分だけを更新したメタ情報を返す。
-
-@param oldStream 古いメタ情報
-@param newStream 新しいメタ情報
-@return bool 一致している場合 true。 true の場合、次の str の情報が有効。
-@return str 新しく書き込むメタ情報の文字列。
-   */
-   fn checkDiff( oldStream:Parser.TxtStream, newStream:Parser.TxtStream ) : bool, str
-   {
-      macro _getBuildId( line:__exp, buildIdLine:__exp ) {
-         when! ,,line {
-            if #,,buildIdLine == 0 {
-               if ,,line.find( "^_moduleObj.__buildId" ## ) {
-                  // ビルド ID 情報を取得する。
-                  ,,buildIdLine = ,,line;
-               }
-            }
-         }
-      }
-
-
-      // ビルド ID よりも前のファイル内部の位置
-      let mut headEndPos = 0;
-      // ビルド ID よりも後のファイル内部の位置
-      let mut tailBeginPos = 0;
-
-      // 古い build ID を記録した行
-      let mut oldBuildIdLine = "";
-      // 新しい build ID を記録した行
-      let mut newBuildIdLine = "";
-      while true {
-         let newLine = newStream.read( "*l" );
-         let oldLine = oldStream.read( "*l" );
-         _getBuildId( oldLine, oldBuildIdLine );
-         _getBuildId( newLine, newBuildIdLine );
-
-         if newLine ~= oldLine {
-            // 差分がある箇所を見つけて、それが ビルド ID の場合、
-            // 
-            let mut cont = false;
-            when! newLine, oldLine {
-               if oldLine.find( "^_moduleObj.__buildId" ## ) {
-                  if newLine.find( "^_moduleObj.__buildId" ## ) {
-                     tailBeginPos = newStream.$lineNo;
-                     cont = true;
-                  }
-               }
-               elseif oldLine.find( "^__dependModuleMap.*buildId =" ## ) and
-                  newLine.find( "^__dependModuleMap.*buildId =" ## )
-               {
-                  let oldSub = oldLine.gsub( "buildId =.*", "" );
-                  let newSub = newLine.gsub( "buildId =.*", "" );
-                  if oldSub == newSub {
-                     cont = true;
-                  }
-               }
-            }
-            if not cont {
-               Log._log( .Debug, `{ return "<%s>, <%s>" (oldLine, newLine ); } );
-               return false, "";
-            }
-         }
-         else {
-            if tailBeginPos == 0 {
-               headEndPos = newStream.$lineNo;
-            }
-            if not oldLine {
-               // ファイル一致
-               if tailBeginPos == 0 {
-                  return true, oldStream.$txt;
-               }
-
-               let oldBuildId = txt2ModuleId( oldBuildIdLine );
-               let newBuildId = txt2ModuleId( newBuildIdLine );
-               let worlBuildId = frontInterface.ModuleId.createId(
-                  newBuildId.$modTime, oldBuildId.$buildCount );
-               let buildIdLine = "_moduleObj.__buildId = %q" (worlBuildId.$idStr);
-
-               let txt = "%s%s\n%s" ( newStream.getSubstring( 1, headEndPos ),
-                                      buildIdLine,
-                                      newStream.getSubstring( tailBeginPos## ) );
-               return true, txt;
-            }
-         }
-      }
-   }
-
-   
-   when! stream {
-      stream.close();
-   }
-   when! dependStream {
-      dependStream.close();
-   }
-
-   if saveMetaFlag {
-      // メタファイルが変っているかどうかを確認し、
-      // 変更がない場合はビルド情報だけ更新する。
-      let newMetaTxt = metaStream.$txt;
-      let mut oldMetaTxt = "";
-      if! let mut oldFileObj = io.open( metaPath ## ) {
-         oldMetaTxt = unwrap oldFileObj.read( "*a" ) default "";
-         oldFileObj.close();
-      }
-
-      let sameFlag, txt = checkDiff( new Parser.TxtStream( oldMetaTxt ),
-                                     new Parser.TxtStream( newMetaTxt ) );
-
-      fn saveMeta( meta:str ) {
-         if! let mut fileObj = io.open( metaPath, "w" ) {
-            fileObj.write( meta );
-            fileObj.close();
-         } else {
-            Util.err( "failed to open -- %s" (metaPath) );
-         }
-      }
-      
-      if not sameFlag {
-         saveMeta( newMetaTxt );
-      }
-      else {        
-         if txt ~= "" {
-            saveMeta( txt );
-         }
-      }
-   }
-}
 
 class UpdateInfo {
    let scriptPath:str {pub};
@@ -1555,7 +1608,7 @@ class UpdateInfo {
 /**
 Lua に変換しファイルに書き込む
 */
-pub fn Front.saveToLua( updateInfo:UpdateInfo ) mut 
+pub fn Front.saveToLua( updateInfo:UpdateInfo ) mut : LuaConverter!, GoConverter!
 {
    let scriptPath = updateInfo.$scriptPath;
    let dependsPath = updateInfo.$dependsPath;
@@ -1573,106 +1626,71 @@ pub fn Front.saveToLua( updateInfo:UpdateInfo ) mut
       metaPath = "%s/%s.meta" ( self.option.outputDir, filename );
    }
 
-   let mut metaMemStream = new Util.memStream();
-
    // Meta 出力モードで変換する。
    // Meta は memStream 上に出力し、不要な場合は保存せずに破棄する。
    let convMode = convLua.ConvMode.ConvMeta;
 
 
 
-   fn prepareStreams( mode:ModuleUptodate ): oStream!, oStream! {
-      fn openLuaStream(): oStream! {
-	 let! mut fileObj = io.open( luaPath, "w" ) {
-            error( "write open error -- %s" (luaPath) );
-         };
-         return fileObj;
-      }
-      fn openStreams( luaFlag:bool ): oStream! {
-	 let mut stream:oStream! = nil;
-         if luaFlag {
-	    stream = openLuaStream();
-         }
-         return stream;
-      }
-      let mut stream:oStream! = nil;
-      _match mode {
-         case .Uptodate( _ ) {
-         }
-         case .NeedTouch( _, _ ) {
-            stream = openStreams( false );
-         }
-         case .NeedUpdate {
-            stream = openStreams( true );
-         }
-      }
-
-      return stream, self.option.openDepend( dependsPath );
-   }
-   
    if luaPath == scriptPath {
       Util.errorLog( "%s is illegal filename." (luaPath) );
+      return nil, nil;
    }
-   else {
-      // .meta ファイルを更新すると、このモジュールを import している
-      // モジュール全てを更新する必要がある。
-      // しかし、この更新処理は無駄になることが多い。
-      // 例えば、モジュール内の local な関数の挙動を変更しただけならば、
-      // このモジュールを import しているモジュールには影響がないので、
-      // 更新の必要はない。
-      // このような無駄な更新処理をスキップできるように、
-      // .meta 情報に変更がない場合は、外部モジュールの更新が行なわれないように
-      // 制御を行なう。
+   
+   // .meta ファイルを更新すると、このモジュールを import している
+   // モジュール全てを更新する必要がある。
+   // しかし、この更新処理は無駄になることが多い。
+   // 例えば、モジュール内の local な関数の挙動を変更しただけならば、
+   // このモジュールを import しているモジュールには影響がないので、
+   // 更新の必要はない。
+   // このような無駄な更新処理をスキップできるように、
+   // .meta 情報に変更がない場合は、外部モジュールの更新が行なわれないように
+   // 制御を行なう。
 
 
-      match uptodate {
-         case .NeedUpdate {
-            let mut ast = self.createAst(
-               new frontInterface.ImportModuleInfo(),
-               createPaser( scriptPath, mod ), mod, moduleId, nil, .Compile, ## );
+   _match uptodate {
+      case .NeedUpdate {
+         let mut ast = self.createAst(
+            new frontInterface.ImportModuleInfo(),
+            createPaser( scriptPath, mod ), mod, moduleId, nil, .Compile, ## );
+         let mut converter = new LuaConverter(
+            luaPath, metaPath, dependsPath,
+            ast, convMode, scriptPath, self.option.byteCompile,
+            self.option.stripDebugInfo, self.option );
 
-            let mut streamDst:oStream! = nil;
-            let mut dependsStreamDst:oStream! = nil;
-            
-            streamDst, dependsStreamDst = prepareStreams( updateInfo.$uptodate );
-            
-            saveLuaFromAst(
-               ast, uptodate, convMode, scriptPath, self.option.byteCompile,
-               self.option.stripDebugInfo, self.option,
-               streamDst, metaMemStream, dependsStreamDst );
-
-            closeStreams( streamDst, metaMemStream, dependsStreamDst,
-                          metaPath, self.option.mode == .SaveMeta );
-
-            switch self.option.convTo {
-               case .C {
-                  self.saveToC( scriptPath, ast );
-               }
-               case .Go {
-                  self.saveToGo( scriptPath, ast );
-               }
+         let mut goConv:GoConverter! = nil;
+         switch self.option.convTo {
+            case .C {
+               self.saveToC( scriptPath, ast );
+            }
+            case .Go {
+               goConv = self.saveToGo( scriptPath, ast );
             }
          }
-         case .Uptodate( metaInfo ) {
-            Util.errorLog( "uptodate -- " .. scriptPath );
+         return converter, goConv;
+      }
+      case .Uptodate( metaInfo ) {
+         Util.errorLog( "uptodate -- " .. scriptPath );
 
-            let _, mut dependsStream = prepareStreams( updateInfo.$uptodate );
-            outputDependInfo( dependsStream, metaInfo, mod );
-            closeStreams( nil, metaMemStream, dependsStream,
-                          metaPath, self.option.mode == .SaveMeta );
-         }
-         case .NeedTouch( metaCode, metaInfo ) {
-            // Lns は解析せずにメタファイルの更新日時だけ更新する。
-            Util.errorLog( "touch -- " .. scriptPath );
+         let mut dependsStream = self.option.openDepend( dependsPath );
+         outputDependInfo( dependsStream, metaInfo, mod );
+         closeStreams( nil, nil, dependsStream, metaPath, false );
 
-            let _, mut dependsStream = prepareStreams( updateInfo.$uptodate );
-            if self.option.mode == .SaveMeta {
-               metaMemStream.write( metaCode );
-            }
-            outputDependInfo( dependsStream, metaInfo, mod );
-            closeStreams( nil, metaMemStream, dependsStream,
-                          metaPath, self.option.mode == .SaveMeta );
+         return nil, nil;
+      }
+      case .NeedTouch( metaCode, metaInfo ) {
+         // Lns は解析せずにメタファイルの更新日時だけ更新する。
+         Util.errorLog( "touch -- " .. scriptPath );
+
+         let mut dependsStream = self.option.openDepend( dependsPath );
+         let mut metaMemStream = new Util.memStream();
+         if self.option.mode == .SaveMeta {
+            metaMemStream.write( metaCode );
          }
+         outputDependInfo( dependsStream, metaInfo, mod );
+         closeStreams( nil, metaMemStream, dependsStream,
+                       metaPath, self.option.mode == .SaveMeta );
+         return nil, nil;
       }
    }
 }
@@ -1722,25 +1740,31 @@ pub fn Front.build( buildMode:BuildMode, astCallback:AstCallback! ) mut {
       return new UpdateInfo( scriptPath, dependsPath, moduleId, uptodate );
    }
 
-   fn process( oneShot:bool, updateInfo:UpdateInfo ) {
+   form PostProcess();
+   
+   fn process( oneShot:bool, updateInfo:UpdateInfo ) : PostProcess! {
       let mod = self.scriptPath2Module( updateInfo.$scriptPath );
       
       _match buildMode {
          case .Save {
-            self.saveToLua( updateInfo );
+            let mut luaConv, mut goConv = self.saveToLua( updateInfo );
+            return fn () {
+               luaConv$.saveLua$();
+               goConv$.saveGo$();
+            };
          }
          case .Output( streamLua, streamMeta ) {
             self.convertToLua(
                updateInfo.$scriptPath, .ConvMeta, streamLua, streamMeta );       
          }
          case .CreateAst {
-            if self.moduleMgr.getAst( mod ) {
-               return;
+            if not self.moduleMgr.getAst( mod ) {
+               self.convertToLua( updateInfo.$scriptPath, .ConvMeta,
+                                  new Util.NullOStream(), new Util.NullOStream() );
             }
-            self.convertToLua( updateInfo.$scriptPath, .ConvMeta,
-                               new Util.NullOStream(), new Util.NullOStream() );
          }
       }
+      return nil;
    }
 
    Depend.profile(
@@ -1751,17 +1775,31 @@ pub fn Front.build( buildMode:BuildMode, astCallback:AstCallback! ) mut {
             foreach path in self.option.batchList {
                self.targetSet.add( self.scriptPath2Module( path ) );
             }
-            
+
+            let postProcessList:List<PostProcess> = [];
             foreach path in self.option.batchList {
                let mut updateInfo =
                   createUpdateInfo( path, (path.gsub( ".lns$", ".d" )) );
                let prev = os.clock();
                print( "%s: processing..." ( updateInfo.$scriptPath));
-               process( false, updateInfo );    
+               if! process( false, updateInfo ) {
+                  if self.option.$validPostBuild {
+                     postProcessList.insert( _exp );
+                  } else {
+                     _exp();
+                  }
+               }
                print( "%s: done %g" ( updateInfo.$scriptPath, os.clock() - prev));
             }
+            foreach postProcess in postProcessList {
+               postProcess();
+            }
          } else {
-            process( true, createUpdateInfo( self.option.scriptPath, nil ) );
+            if! let postProcess = process(
+               true, createUpdateInfo( self.option.scriptPath, nil ) )
+            {
+               postProcess();
+            }
          }
 
          when! astCallback {

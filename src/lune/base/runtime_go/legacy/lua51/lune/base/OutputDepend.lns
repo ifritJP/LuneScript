@@ -123,8 +123,8 @@ __test {
          Util.err( message );
       }
 
-      pub fn loadMeta( importModuleInfo:frontInterface.ImportModuleInfo, mod:str ) mut:
-         &frontInterface.ModuleMeta!
+      pub fn loadMeta( importModuleInfo:frontInterface.ImportModuleInfo,
+                       mod:str ) mut: &frontInterface.ModuleMeta!
       {
          let metaPath = mod.gsub( "%.", "/" ) .. ".meta";
          print( metaPath );

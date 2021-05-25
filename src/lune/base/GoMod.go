@@ -13,7 +13,7 @@ var GoMod_BlockKindList_ = NewLnsList( []LnsAny {
   GoMod_BlockKind__Require,
   GoMod_BlockKind__Replace,
 })
-func GoMod_BlockKind_get__allList_1210_(_env *LnsEnv) *LnsList{
+func GoMod_BlockKind_get__allList_1209_(_env *LnsEnv) *LnsList{
     return GoMod_BlockKindList_
 }
 var GoMod_BlockKindMap_ = map[LnsInt]string {
@@ -21,7 +21,7 @@ var GoMod_BlockKindMap_ = map[LnsInt]string {
   GoMod_BlockKind__Replace: "BlockKind.Replace",
   GoMod_BlockKind__Require: "BlockKind.Require",
 }
-func GoMod_BlockKind__from_1204_(_env *LnsEnv, arg1 LnsInt) LnsAny{
+func GoMod_BlockKind__from_1203_(_env *LnsEnv, arg1 LnsInt) LnsAny{
     if _, ok := GoMod_BlockKindMap_[arg1]; ok { return arg1 }
     return nil
 }
@@ -71,7 +71,7 @@ func GoMod_convExp1026(arg1 []LnsAny) string {
 }
 
 // 193: decl @lune.@base.@GoMod.getReplace
-func GoMod_getReplace_1220_(_env *LnsEnv, _map *LnsMap,tokenList *LnsList,modIndex LnsInt) {
+func GoMod_getReplace_1219_(_env *LnsEnv, _map *LnsMap,tokenList *LnsList,modIndex LnsInt) {
     var prevArrow bool
     prevArrow = false
     for _, _token := range( tokenList.Items ) {
@@ -127,7 +127,7 @@ func GoMod_getGoMap(_env *LnsEnv) *GoMod_ModInfo {
                         inBlock = GoMod_BlockKind__None
                         
                     } else { 
-                        GoMod_getReplace_1220_(_env, replaceMap, tokenList, 1)
+                        GoMod_getReplace_1219_(_env, replaceMap, tokenList, 1)
                     }
                 } else if _switch1232 == GoMod_BlockKind__None {
                     if Lns_isCondTrue( Lns_car(_env.LuaVM.String_find(line,"^module%s+", nil, nil))){
@@ -141,7 +141,7 @@ func GoMod_getGoMap(_env *LnsEnv) *GoMod_ModInfo {
                         inBlock = GoMod_BlockKind__Require
                         
                     } else if Lns_isCondTrue( Lns_car(_env.LuaVM.String_find(line,"^replace%s+[^%(]", nil, nil))){
-                        GoMod_getReplace_1220_(_env, replaceMap, tokenList, 2)
+                        GoMod_getReplace_1219_(_env, replaceMap, tokenList, 2)
                     } else if Lns_isCondTrue( Lns_car(_env.LuaVM.String_find(line,"^replace%s+%(", nil, nil))){
                         inBlock = GoMod_BlockKind__Replace
                         

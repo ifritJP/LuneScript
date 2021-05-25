@@ -357,7 +357,7 @@ func convGo_isClosure_1307_(_env *LnsEnv, typeInfo *Ast_TypeInfo) bool {
 }
 
 // 313: decl @lune.@base.@convGo.concatGLSym
-func convGo_concatGLSym_1327_(_env *LnsEnv, name string,external bool) string {
+func convGo_concatGLSym_1326_(_env *LnsEnv, name string,external bool) string {
     if external{
         var frontChar LnsInt
         frontChar = LnsInt(name[1-1])
@@ -424,7 +424,7 @@ func ConvGo_outputGoMain(_env *LnsEnv, appName string,mod string,testing bool,pa
         code = convGo_convExp1509(Lns_2DDD(_env.LuaVM.String_gsub(code,"//IMPORT:", "import . \"github.com/ifritJP/LuneScript/src/lune/base\"")))
         
     } else { 
-        code = convGo_convExp1539(Lns_2DDD(_env.LuaVM.String_gsub(code,"Lns_init%(%)", _env.LuaVM.String_format("Lns_RunMain( %s___main )", []LnsAny{convGo_concatGLSym_1327_(_env, mainMod, true)}))))
+        code = convGo_convExp1539(Lns_2DDD(_env.LuaVM.String_gsub(code,"Lns_init%(%)", _env.LuaVM.String_format("Lns_RunMain( %s___main )", []LnsAny{convGo_concatGLSym_1326_(_env, mainMod, true)}))))
         
     }
     if _switch1607 := opt.FP.Get_int2strMode(_env); _switch1607 == Option_Int2strMode__Int2strModeNeed0 {
@@ -443,7 +443,7 @@ func ConvGo_outputGoMain(_env *LnsEnv, appName string,mod string,testing bool,pa
 }
 
 // 403: decl @lune.@base.@convGo.isInnerDeclType
-func convGo_isInnerDeclType_1381_(_env *LnsEnv, typeInfo *Ast_TypeInfo) bool {
+func convGo_isInnerDeclType_1380_(_env *LnsEnv, typeInfo *Ast_TypeInfo) bool {
     if typeInfo.FP.Get_kind(_env) == Ast_TypeInfoKind__FormFunc{
         return typeInfo.FP.Get_parentInfo(_env).FP.Get_kind(_env) != Ast_TypeInfoKind__Module
     }
@@ -1325,7 +1325,7 @@ func (self *convGo_convFilter) concatSymWithType(_env *LnsEnv, name string,typeI
         typeName = _env.LuaVM.String_format("%s_%s", []LnsAny{modName, name})
         
     }
-    return convGo_concatGLSym_1327_(_env, typeName, self.FP.IsPubType(_env, typeInfo))
+    return convGo_concatGLSym_1326_(_env, typeName, self.FP.IsPubType(_env, typeInfo))
 }
 
 // 447: decl @lune.@base.@convGo.convFilter.isSamePackageExtModule
@@ -1390,7 +1390,7 @@ func (self *convGo_convFilter) getSymbol(_env *LnsEnv, kind LnsAny,name string) 
             symbolName = _env.LuaVM.String_format("%s__mod__", []LnsAny{modName})
             
         } else if symbolInfo.FP.Get_scope(_env) == self.moduleScope{
-            symbolName = convGo_concatGLSym_1327_(_env, _env.LuaVM.String_format("%s_", []LnsAny{modName}) + symbolName, Ast_isPubToExternal(_env, symbolInfo.FP.Get_accessMode(_env)))
+            symbolName = convGo_concatGLSym_1326_(_env, _env.LuaVM.String_format("%s_", []LnsAny{modName}) + symbolName, Ast_isPubToExternal(_env, symbolInfo.FP.Get_accessMode(_env)))
             
         } else if Lns_op_not(symbolInfo.FP.Get_posForModToRef(_env)){
             if symbolName != "__func__"{
@@ -1404,7 +1404,7 @@ func (self *convGo_convFilter) getSymbol(_env *LnsEnv, kind LnsAny,name string) 
         }
     case *convGo_SymbolKind__Member:
     external := _exp2834.Val1
-        symbolName = convGo_concatGLSym_1327_(_env, symbolName, external)
+        symbolName = convGo_concatGLSym_1326_(_env, symbolName, external)
         
     case *convGo_SymbolKind__Func:
     typeInfo := _exp2834.Val1
@@ -1412,14 +1412,14 @@ func (self *convGo_convFilter) getSymbol(_env *LnsEnv, kind LnsAny,name string) 
             if _switch2346 := symbolName; _switch2346 == "_toMap" {
                 return "ToMap"
             } else {
-                symbolName = convGo_concatGLSym_1327_(_env, symbolName, Ast_isPubToExternal(_env, typeInfo.FP.Get_accessMode(_env)))
+                symbolName = convGo_concatGLSym_1326_(_env, symbolName, Ast_isPubToExternal(_env, typeInfo.FP.Get_accessMode(_env)))
                 
             }
         } else { 
             var prefix LnsAny
             prefix = nil
             if _switch2621 := typeInfo.FP.Get_parentInfo(_env).FP.Get_kind(_env); _switch2621 == Ast_TypeInfoKind__Module || _switch2621 == Ast_TypeInfoKind__Func || _switch2621 == Ast_TypeInfoKind__Method {
-                if convGo_isInnerDeclType_1381_(_env, typeInfo){
+                if convGo_isInnerDeclType_1380_(_env, typeInfo){
                     if Lns_op_not(convGo_isClosure_1307_(_env, typeInfo)){
                         var parentName string
                         parentName = typeInfo.FP.GetParentFullName(_env, self.FP.Get_typeNameCtrl(_env), self.FP.Get_moduleInfoManager(_env), true)
@@ -1446,7 +1446,7 @@ func (self *convGo_convFilter) getSymbol(_env *LnsEnv, kind LnsAny,name string) 
                     
                 }
             } else if _switch2621 == Ast_TypeInfoKind__ExtModule {
-                symbolName = convGo_concatGLSym_1327_(_env, symbolName, true)
+                symbolName = convGo_concatGLSym_1326_(_env, symbolName, true)
                 
                 if Lns_op_not(self.FP.isSamePackageExtModule(_env, typeInfo.FP.Get_parentInfo(_env))){
                     prefix = typeInfo.FP.Get_parentInfo(_env).FP.Get_rawTxt(_env)
@@ -1475,7 +1475,7 @@ func (self *convGo_convFilter) getSymbol(_env *LnsEnv, kind LnsAny,name string) 
         }
         var workName string
         if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
-            _env.SetStackVal( convGo_isInnerDeclType_1381_(_env, typeInfo)) &&
+            _env.SetStackVal( convGo_isInnerDeclType_1380_(_env, typeInfo)) &&
             _env.SetStackVal( Lns_op_not(Ast_isBuiltin(_env, typeInfo.FP.Get_typeId(_env).Id))) ).(bool)){
             workName = _env.LuaVM.String_format("%s%d", []LnsAny{name, typeInfo.FP.Get_typeId(_env).Id})
             
@@ -2844,7 +2844,7 @@ func (self *convGo_convFilter) ProcessRoot(_env *LnsEnv, node *Nodes_RootNode,_o
             }
             var moduleSym string
             moduleSym = self.FP.getModuleName(_env, self.moduleTypeInfo, false)
-            self.FP.Writeln(_env, _env.LuaVM.String_format("func %s___main( %sargs *LnsList ) LnsInt {", []LnsAny{convGo_concatGLSym_1327_(_env, moduleSym, true), self.FP.getEnvArgDecl(_env, 1)}))
+            self.FP.Writeln(_env, _env.LuaVM.String_format("func %s___main( %sargs *LnsList ) LnsInt {", []LnsAny{convGo_concatGLSym_1326_(_env, moduleSym, true), self.FP.getEnvArgDecl(_env, 1)}))
             self.FP.Writeln(_env, _env.LuaVM.String_format("Lns_%s_init( %s )", []LnsAny{moduleSym, callArgs}))
             self.FP.Writeln(_env, "return 0")
             self.FP.Writeln(_env, "}")

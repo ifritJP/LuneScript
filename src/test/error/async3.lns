@@ -37,7 +37,7 @@ let globalVal2:&List<int> = [];
 
    class Hoge extend (__Runner) {
       let test:Test;
-      pub fn func() {
+      pub fn func() __async {
          let work = new Test( new Val() ); // error
          print( work );
          self.test.func1(); // error

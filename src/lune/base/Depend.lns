@@ -69,7 +69,7 @@ fn searchpath51( mod:str, pathPattern:str ) : str! {
    return nil;
 }
 
-pub fn getLoadedMod() : Luaval<&Map<str,&stem>>
+pub fn getLoadedMod() __noasync : Luaval<&Map<str,&stem>>
 {
    let loaded = unwrap _load( "return package.loaded"## )$(##);
    return loaded@@Luaval<&Map<str,&stem>>;

@@ -531,7 +531,7 @@ class _TypeInfoNormal extend _TypeInfo {
                let baseScope = unwrap Ast.getScope( baseInfo );
                let mut ifScopeList:List<Ast.Scope> = [];
                foreach ifType in interfaceList {
-                  ifScopeList.insert( unwrap ifType.$scope );
+                  ifScopeList.insert( unwrap ifType.getScopeMut() );
                }
 
                let mut scope = new Ast.Scope(
@@ -794,8 +794,6 @@ fn Import.processImportFromFile(
 
    typeId2TypeInfo[ self.builtinFunc.lnsthread_.$typeId.id ] =
       self.builtinFunc.lnsthread_;
-   typeId2Scope[ self.builtinFunc.lnsthread_.$typeId.id ] =
-      self.builtinFunc.lnsthread_.$scope;
 
    // 依存するモジュールの typeInfo と、 meta 情報内の typeId との紐付け
    foreach dependIdInfo, typeId in metaInfo.__dependIdMap {

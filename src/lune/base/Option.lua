@@ -177,7 +177,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 8803
+   return 8947
 end
 
 
@@ -322,6 +322,7 @@ function Option.new(  )
    return obj
 end
 function Option:__init() 
+   self.validPostBuild = true
    self.enableRunner = true
    self.addEnvArg = true
    self.projDir = nil
@@ -396,6 +397,9 @@ function Option:get_addEnvArg()
 end
 function Option:get_enableRunner()
    return self.enableRunner
+end
+function Option:get_validPostBuild()
+   return self.validPostBuild
 end
 
 
@@ -615,6 +619,8 @@ end
                   option.addEnvArg = false
                elseif _switchExp == "--disableRunner" then
                   option.enableRunner = false
+               elseif _switchExp == "--disablePostBuild" then
+                  option.validPostBuild = false
                elseif _switchExp == "--enableAsyncCtl" then
                   option.transCtrlInfo.validAsyncCtrl = true
                elseif _switchExp == "--nodebug" then
@@ -911,7 +917,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 644, function (  )
+   Log.log( Log.Level.Log, __func__, 649, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

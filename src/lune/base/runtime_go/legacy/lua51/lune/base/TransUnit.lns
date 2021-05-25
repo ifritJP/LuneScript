@@ -629,7 +629,7 @@ pub class TransUnit extend (TransUnitIF.TransUnitIF, Parser.PushbackParser) {
 
    let mut accessSymbolSetQueue:AccessSymbolSetQueue;
 
-   local let allmut processInfo:Ast.ProcessInfo;
+   local let processInfo:Ast.ProcessInfo;
 
    let mut importCtrl:Import.Import!;
 
@@ -872,9 +872,9 @@ alias で置き換えている元の Type → alias の型
       return self.scope.getNamespaceTypeInfo();
    }
 
-   pri fn getCurrentNamespaceScope(): Ast.Scope {
-      return unwrap self.getCurrentNamespaceTypeInfo().$scope;
-   }
+   // pri fn getCurrentNamespaceScope(): Ast.Scope {
+   //    return unwrap self.getCurrentNamespaceTypeInfo().$scope;
+   // }
 
    pub fn pushModule(
       processInfo:Ast.ProcessInfo,
@@ -1325,8 +1325,8 @@ quotedChar2Code[ '\\' ] = ?\\; // \\
 quotedChar2Code[ '"' ] = ?\";  // "
 quotedChar2Code[ "'" ] = ?\';  // '
 
-pub fn TransUnit.createModifier(
-   typeInfo:&Ast.TypeInfo, mutMode: Ast.MutMode ) : &Ast.TypeInfo
+fn TransUnit.createModifier(
+   typeInfo:&Ast.TypeInfo, mutMode: Ast.MutMode ) mut : &Ast.TypeInfo
 {
    if not self.validMutControl {
       return typeInfo;

@@ -1619,15 +1619,15 @@ fn TransUnit.checkCallAsync( funcTypeInfo:&Ast.TypeInfo, pos:&Types.Position ) m
             }
          }
       }
-      if self.getCurrentClass().isInheritFrom(
-         self.processInfo, Ast.builtinTypeRunner ## )
-      {
-         // __runner から noasync 関数は呼べない。
-         self.addErrMess(
-            pos,
-            "can't access noasync function in __Runner. -- %s"
-            (funcTypeInfo.getTxt(##)) );
-      }
+      // if self.getCurrentClass().isInheritFrom(
+      //    self.processInfo, Ast.builtinTypeRunner ## )
+      // {
+      //    // __runner から noasync 関数は呼べない。
+      //    self.addErrMess(
+      //       pos,
+      //       "can't access noasync function in __Runner. -- %s"
+      //       (funcTypeInfo.getTxt(##)) );
+      // }
    }
 }
 
