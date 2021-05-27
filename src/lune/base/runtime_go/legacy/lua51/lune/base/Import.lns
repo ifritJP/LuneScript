@@ -1051,16 +1051,16 @@ fn Import.processImportFromFile(
             self.transUnitIF.pushModule(
                processInfo, true, classTypeInfo.getTxt(##),
                Ast.TypeInfo.isMut( classTypeInfo ) );
-            Log._log(
+            Log._log3(
                .Debug,         
-               `{ return "push module -- %s, %s, %d, %d, %d"
-                  ( classTypeInfo.getTxt(##),
-                    self.transUnitIF.$scope.$ownerTypeInfo$.getFullName$(
-                       Ast.defaultTypeNameCtrl,
-                       self.transUnitIF.$scope, false ) or "nil",
-                    self.transUnitIF.$scope.$ownerTypeInfo$.$typeId$.id or -1,
-                    classTypeInfo.$typeId.id,
-                    self.transUnitIF.$scope.$parent.$scopeId ); } );
+               "push module -- %s, %s, %d, %d, %d"
+               ( classTypeInfo.getTxt(##),
+                 self.transUnitIF.$scope.$ownerTypeInfo$.getFullName$(
+                    Ast.defaultTypeNameCtrl,
+                    self.transUnitIF.$scope, false ) or "nil",
+                 self.transUnitIF.$scope.$ownerTypeInfo$.$typeId$.id or -1,
+                 classTypeInfo.$typeId.id,
+                 self.transUnitIF.$scope.$parent.$scopeId ) );
          }
       }
 

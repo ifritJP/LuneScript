@@ -357,8 +357,15 @@ class Test9 extend Super7 {
 }
 {
    class Test {
-      let val:int {pub}; // error
-      pub fn get_val():int {
+      let val:int {pub}; 
+      pub fn get_val():int { // error
+         return 1;
+      }
+   }
+}
+{
+   class Test {
+      pub fn get_val() __async:int {
          return 1;
       }
    }

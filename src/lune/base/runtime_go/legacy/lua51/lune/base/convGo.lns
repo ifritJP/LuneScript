@@ -279,7 +279,7 @@ fn isClosure( typeInfo:&Ast.TypeInfo ): bool {
    let! scope = typeInfo.$scope {
       return false;
    };
-   return #scope.$closureSymList > 0;
+   return scope.$hasClosureAccess;
 }
 
 let golanKeywordSet =

@@ -2084,7 +2084,7 @@ fn TransUnit.addAccessor(
          let retTypeInfo = self.processInfo.createFunc(
             false, false, self.pushScope( false ## ),
             typeKind, classTypeInfo, false, false, memberNode.$staticFlag, accessMode,
-            getterName, mutable and asyncMode or Ast.Async.Async,
+            getterName, asyncMode,
             nil, [], [ getterMemberType ] ## );
          self.popScope();
 
@@ -3288,6 +3288,9 @@ fn TransUnit.analyzeDeclFunc(
          analyzingState, firstToken, classTypeInfo, typeInfo,
          funcName, funcBodyScope, typeInfo.$retTypeInfoList );
       body = workBody;
+      if #funcBodyScope.$closureSymList > 0 {
+         funcBodyScope.set_hasClosureAccess( true );
+      }
 
       if isCtorFlag {
          when! classTypeInfo {

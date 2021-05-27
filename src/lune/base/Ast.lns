@@ -780,7 +780,7 @@ pub abstract class TypeInfo {
       return .Async;
    }
    
-   pro fn switchScope( scope: &Scope ) __noasync {
+   pro fn switchScope( scope: &Scope ) {
       self.scope = scope;
       scope.switchOwnerTypeInfo( self );
    }
@@ -1068,7 +1068,7 @@ static な型か。
 
    pub static fn createScope(
       processInfo:ProcessInfo, parent: Scope!, classFlag: bool,
-      baseInfo: &TypeInfo!, interfaceList: &List<&TypeInfo>! ) __noasync : Scope
+      baseInfo: &TypeInfo!, interfaceList: &List<&TypeInfo>! ) : Scope
    {
       let mut inheritScope:&Scope! = nil;
       when! baseInfo {
@@ -3102,7 +3102,7 @@ pub class AlternateTypeInfo extend TypeInfo {
    local fn __init(
       processInfo:ProcessInfo, scope:Scope, belongClassFlag:bool, altIndex:int,
       txt:str, accessMode:AccessMode, parentInfo:&TypeInfo,
-      baseTypeInfo: &TypeInfo!, interfaceList: &List<&TypeInfo>! ) __noasync
+      baseTypeInfo: &TypeInfo!, interfaceList: &List<&TypeInfo>! ) 
    {
       super( scope, processInfo );
 
@@ -3126,7 +3126,7 @@ pub class AlternateTypeInfo extend TypeInfo {
    local static fn create(
       processInfo:ProcessInfo, belongClassFlag:bool, altIndex:int,
       txt:str, accessMode:AccessMode, parentInfo:&TypeInfo, baseTypeInfo: &TypeInfo!,
-      interfaceList: &List<&TypeInfo>! ) __noasync : AlternateTypeInfo, Scope
+      interfaceList: &List<&TypeInfo>! ) : AlternateTypeInfo, Scope
    {
       let mut scope = TypeInfo.createScope(
          processInfo, nil, true, baseTypeInfo, interfaceList );
@@ -4212,7 +4212,7 @@ pub class NormalTypeInfo extend TypeInfo {
       }
    }
 
-   pub fn switchScopeTo( scope: &Scope ) __noasync {
+   pub fn switchScopeTo( scope: &Scope ) {
       self.switchScope( scope );
    }
    
@@ -4616,7 +4616,7 @@ NormalTypeInfo インスタンスを生成する。
 pub fn ProcessInfo.createAlternate(
    belongClassFlag:bool, altIndex:int, txt:str, accessMode:AccessMode,
    parentInfo:&TypeInfo, baseTypeInfo: &TypeInfo!,
-   interfaceList: &List<&TypeInfo>! ) __noasync mut : AlternateTypeInfo, Scope
+   interfaceList: &List<&TypeInfo>! ) mut : AlternateTypeInfo, Scope
 {
    return AlternateTypeInfo.create(
       self, belongClassFlag, altIndex, txt,

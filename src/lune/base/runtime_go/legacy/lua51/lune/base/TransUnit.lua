@@ -5157,7 +5157,7 @@ function TransUnit:addAccessor( memberNode, methodNameSet, classScope, classType
             getterMemberType = self:createModifier( getterMemberType, Ast.MutMode.IMut )
          end
          
-         local retTypeInfo = self.processInfo:createFunc( false, false, self:pushScope( false ), typeKind, classTypeInfo, false, false, memberNode:get_staticFlag(), accessMode, getterName, mutable and asyncMode or Ast.Async.Async, nil, {}, {getterMemberType} )
+         local retTypeInfo = self.processInfo:createFunc( false, false, self:pushScope( false ), typeKind, classTypeInfo, false, false, memberNode:get_staticFlag(), accessMode, getterName, asyncMode, nil, {}, {getterMemberType} )
          self:popScope(  )
          
          classScope:addMethod( self.processInfo, memberName.pos, retTypeInfo, accessMode, memberNode:get_staticFlag(), false )
@@ -6260,6 +6260,10 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
       
       local workBody = self:analyzeFuncBlock( analyzingState, firstToken, classTypeInfo, typeInfo, funcName, funcBodyScope, typeInfo:get_retTypeInfoList() )
       body = workBody
+      if #funcBodyScope:get_closureSymList() > 0 then
+         funcBodyScope:set_hasClosureAccess( true )
+      end
+      
       
       if isCtorFlag then
          if classTypeInfo ~= nil then
@@ -6455,7 +6459,7 @@ function TransUnit:analyzeInitExp( firstPos, accessMode, unwrapFlag, letVarList,
       
       if unwrapFlag then
          local hasNilable = false
-         for index, _2944 in ipairs( letVarList ) do
+         for index, _2945 in ipairs( letVarList ) do
             if expList:getExpTypeAt( index ):get_nilable() then
                hasNilable = true
                break
@@ -7807,7 +7811,7 @@ function TransUnit:checkMatchValType( pos, funcTypeInfo, expList, genericTypeLis
       alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( #funcTypeInfo:get_itemTypeInfoList() > 0 )
    end
    
-   local matchResult, _3534, newExpNodeList = self:checkMatchType( funcTypeInfo:getTxt(  ), pos, argTypeList, expList, false, warnForFollow, alt2typeMap )
+   local matchResult, _3535, newExpNodeList = self:checkMatchType( funcTypeInfo:getTxt(  ), pos, argTypeList, expList, false, warnForFollow, alt2typeMap )
    
    if expList and newExpNodeList then
       return matchResult, alt2typeMap, newExpNodeList
@@ -7871,7 +7875,7 @@ function TransUnit:analyzeListItems( firstPos, nextToken, termTxt, expectTypeLis
                   table.insert( expTypeList, expNode:get_expType() )
                else
                 
-                  for _3569 = 1, #expNode:get_expTypeList() do
+                  for _3570 = 1, #expNode:get_expTypeList() do
                      table.insert( expTypeList, itemTypeInfo )
                   end
                   
@@ -7886,7 +7890,7 @@ function TransUnit:analyzeListItems( firstPos, nextToken, termTxt, expectTypeLis
          
       end
       
-      local _3572, _3573, workExpList = self:checkMatchType( "List constructor", firstPos, expTypeList, expList, false, false, nil )
+      local _3573, _3574, workExpList = self:checkMatchType( "List constructor", firstPos, expTypeList, expList, false, false, nil )
       if workExpList ~= nil then
          expList = workExpList
       end
@@ -8577,7 +8581,7 @@ function TransUnit:processFunc( firstToken, nextToken, refFieldNode, funcExp, fu
 end
 
 
-function TransUnit:checkCallAsync( funcTypeInfo, pos )
+function TransUnit:checkNoasyncType( pos, funcTypeInfo )
 
    if funcTypeInfo:get_asyncMode() == Ast.Async.Noasync then
       local curType = self:getCurrentNamespaceTypeInfo(  )
@@ -8594,7 +8598,6 @@ function TransUnit:checkCallAsync( funcTypeInfo, pos )
          end
       end
       
-      
    end
    
 end
@@ -8606,8 +8609,7 @@ function TransUnit:analyzeExpCall( firstToken, funcExp, nextToken )
    
    local funcTypeInfo = funcExp:get_expType():get_nonnilableType()
    
-   self:checkCallAsync( funcTypeInfo, funcExp:get_effectivePos() )
-   
+   self:checkNoasyncType( funcExp:get_effectivePos(), funcTypeInfo )
    local genericTypeList = funcTypeInfo:get_itemTypeInfoList()
    local refFieldNode = nil
    local genericsClass = Ast.headTypeInfo
@@ -9284,6 +9286,8 @@ function TransUnit:analyzeExpField( firstToken, fieldToken, mode, prefixExp )
                local _exp = symbolInfo
                if _exp ~= nil then
                   getterTypeInfo = _exp:get_typeInfo()
+                  
+                  self:checkNoasyncType( fieldToken.pos, _exp:get_typeInfo() )
                end
             end
             
@@ -9586,7 +9590,7 @@ function TransUnit:analyzeNewAlge( firstToken, algeTypeInfo, prefix )
          
          
          do
-            local _4322, _4323, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, nil )
+            local _4323, _4324, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, nil )
             if newExpNodeList ~= nil then
                argList = newExpNodeList:get_expList()
             end
@@ -9894,7 +9898,7 @@ function TransUnit:analyzeExpOpSet( exp, opeToken, expectTypeList )
    end
    
    
-   local _4444, _4445, workList, expTypeList = self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), expList, true, false, nil )
+   local _4445, _4446, workList, expTypeList = self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), expList, true, false, nil )
    if workList ~= nil then
       expList = workList
    end
@@ -10621,7 +10625,7 @@ function TransUnit:analyzeStrConst( firstToken, token )
          local argNodeList = self:analyzeExpList( false, false, false )
          param = argNodeList
          
-         local _4720, _4721, workExpList = self:checkMatchType( "str constructor", firstToken.pos, {Ast.builtinTypeDDD}, argNodeList, false, false, nil )
+         local _4721, _4722, workExpList = self:checkMatchType( "str constructor", firstToken.pos, {Ast.builtinTypeDDD}, argNodeList, false, false, nil )
          if workExpList ~= nil then
             dddParam = workExpList
          else
@@ -10775,7 +10779,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, canLeftExp, prevOpLev
       end
       
       
-      self:checkCallAsync( initTypeInfo, token.pos )
+      self:checkNoasyncType( token.pos, initTypeInfo )
       
       self:checkNextToken( "(" )
       local nextToken = self:getToken(  )
@@ -10796,7 +10800,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, canLeftExp, prevOpLev
       end
       
       
-      local _4789, alt2type, newArgList = self:checkMatchValType( exp:get_pos(), initTypeInfo, argList, classTypeInfo:get_itemTypeInfoList(), classTypeInfo )
+      local _4790, alt2type, newArgList = self:checkMatchValType( exp:get_pos(), initTypeInfo, argList, classTypeInfo:get_itemTypeInfoList(), classTypeInfo )
       
       if #classTypeInfo:get_itemTypeInfoList() > 0 then
          if classTypeInfo:get_itemTypeInfoList()[1]:get_kind() == Ast.TypeInfoKind.Alternate then
@@ -11079,7 +11083,7 @@ function TransUnit:analyzeReturn( token )
       local workList = expList
       if workList ~= nil then
          do
-            local _4893, _4894, newExpNodeList = self:checkMatchType( "return", token.pos, retTypeList, workList, false, not workList:get_followOn(), nil )
+            local _4894, _4895, newExpNodeList = self:checkMatchType( "return", token.pos, retTypeList, workList, false, not workList:get_followOn(), nil )
             if newExpNodeList ~= nil then
                expList = newExpNodeList
             end

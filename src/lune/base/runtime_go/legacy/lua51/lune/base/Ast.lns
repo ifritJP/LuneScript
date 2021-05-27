@@ -562,6 +562,7 @@ pub class Scope extend (ModuleInfoManager) {
    pri let mut closureSymMap: allmut Map<int,&SymbolInfo> {pub};
    pri let mut closureSymList: allmut List<&SymbolInfo> {pub};
    pri let mut closureSym2NumMap: allmut Map<&SymbolInfo,int> {pub};
+   pri let mut hasClosureAccess: bool {pub,pub};
    pri let mut typeInfo2ModuleInfoMap: Map<&TypeInfo,&ModuleInfoIF>;
    pri let mut validCheckingUnaccess:bool {pub,pub};
    
@@ -571,6 +572,8 @@ pub class Scope extend (ModuleInfoManager) {
    {
       self.scopeId = processInfo.$idProvScope.getNewId();
       // Scope.seedId = Scope.seedId + 1;
+
+      self.hasClosureAccess = false;
 
       self.typeInfo2ModuleInfoMap = {};
       self.closureSymMap = {};
@@ -777,7 +780,7 @@ pub abstract class TypeInfo {
       return .Async;
    }
    
-   pro fn switchScope( scope: &Scope ) __noasync {
+   pro fn switchScope( scope: &Scope ) {
       self.scope = scope;
       scope.switchOwnerTypeInfo( self );
    }
@@ -889,7 +892,7 @@ pub abstract class TypeInfo {
    }
 
    /** この型情報を oStream にシリアライズする */
-   pub fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
+   pub fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) __noasync {
       return;
    }
 
@@ -1065,7 +1068,7 @@ static な型か。
 
    pub static fn createScope(
       processInfo:ProcessInfo, parent: Scope!, classFlag: bool,
-      baseInfo: &TypeInfo!, interfaceList: &List<&TypeInfo>! ) __noasync : Scope
+      baseInfo: &TypeInfo!, interfaceList: &List<&TypeInfo>! ) : Scope
    {
       let mut inheritScope:&Scope! = nil;
       when! baseInfo {
@@ -1466,7 +1469,7 @@ pub class ModifierTypeInfo extend TypeInfo {
       return self.get_display_stirng_with( self.$rawTxt, nil );
    }
 
-   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) __noasync {
       stream.write(
          '{ skind = %d, typeId = %d, srcTypeId = %s, mutMode = %d }\n' (
             SerializeKind.Modifier, self.typeId.id,
@@ -1893,7 +1896,7 @@ pub class NilableTypeInfo extend TypeInfo {
       return self.get_display_stirng_with( self.$rawTxt, nil );
    }
 
-   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) __noasync {
       stream.write(
          '{ skind = %d, typeId = %d, orgTypeId = %s }\n' (
             SerializeKind.Nilable, self.typeId.id,
@@ -2001,7 +2004,7 @@ pub class AliasTypeInfo extend TypeInfo {
       return self.getTxtWithRaw( self.rawTxt, typeNameCtrl, importInfo, localFlag );
    }
 
-   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) __noasync{
       let parentId = self.getParentId();
       stream.write(
          '{ skind = %d, parentId = %d, typeId = %d, rawTxt = %q, srcTypeId = %s }\n' (
@@ -3099,7 +3102,7 @@ pub class AlternateTypeInfo extend TypeInfo {
    local fn __init(
       processInfo:ProcessInfo, scope:Scope, belongClassFlag:bool, altIndex:int,
       txt:str, accessMode:AccessMode, parentInfo:&TypeInfo,
-      baseTypeInfo: &TypeInfo!, interfaceList: &List<&TypeInfo>! ) __noasync
+      baseTypeInfo: &TypeInfo!, interfaceList: &List<&TypeInfo>! ) 
    {
       super( scope, processInfo );
 
@@ -3123,7 +3126,7 @@ pub class AlternateTypeInfo extend TypeInfo {
    local static fn create(
       processInfo:ProcessInfo, belongClassFlag:bool, altIndex:int,
       txt:str, accessMode:AccessMode, parentInfo:&TypeInfo, baseTypeInfo: &TypeInfo!,
-      interfaceList: &List<&TypeInfo>! ) __noasync : AlternateTypeInfo, Scope
+      interfaceList: &List<&TypeInfo>! ) : AlternateTypeInfo, Scope
    {
       let mut scope = TypeInfo.createScope(
          processInfo, nil, true, baseTypeInfo, interfaceList );
@@ -3330,7 +3333,7 @@ pub class AlternateTypeInfo extend TypeInfo {
    //    return "";
    // }
 
-   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) __noasync{
       let parentId = self.getParentId();
       stream.write(
          '{ skind = %d, parentId = %d, typeId = %d, txt = %q, '
@@ -3431,7 +3434,7 @@ pub class BoxTypeInfo extend TypeInfo {
       return "Nilable<%s>" (self.boxingType.get_display_stirng_with( raw, alt2type ) );
    }
 
-   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) __noasync{
       stream.write(
          '{ skind = %d, typeId = %d, accessMode = %d, boxingType = %d }\n' (
             SerializeKind.Box, self.typeId.id,
@@ -3692,7 +3695,7 @@ pub class GenericTypeInfo extend TypeInfo {
       return true;
    }
 
-   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) __noasync{
       stream.write(
          '{ skind = %d, typeId = %d, genSrcTypeId = %s, genTypeList = {' (
             SerializeKind.Generic, self.typeId.id,
@@ -3838,7 +3841,7 @@ pub class ModuleTypeInfo extend TypeInfo {
    }
 
    pub override fn serialize(
-      stream: oStream, serializeInfo: &SerializeInfo )
+      stream: oStream, serializeInfo: &SerializeInfo ) __noasync
    {
       let txt = "{ skind = %d, parentId = %d, typeId = %d, txt = '%s', "
           ( SerializeKind.Module,
@@ -4104,7 +4107,7 @@ pub class AlgeValInfo {
    pri let algeTpye:&AlgeTypeInfo {pub};
    pri let symbolInfo:&SymbolInfo {pub};
 
-   pub fn serialize( stream: oStream, serializeInfo:&SerializeInfo ) {
+   pub fn serialize( stream: oStream, serializeInfo:&SerializeInfo ) __noasync{
       stream.write( "{ name = '%s', typeList = {" (self.name) );
       foreach typeInfo, index in self.typeList {
          if index > 1 {
@@ -4209,7 +4212,7 @@ pub class NormalTypeInfo extend TypeInfo {
       }
    }
 
-   pub fn switchScopeTo( scope: &Scope ) __noasync {
+   pub fn switchScopeTo( scope: &Scope ) {
       self.switchScope( scope );
    }
    
@@ -4430,7 +4433,7 @@ pub class NormalTypeInfo extend TypeInfo {
    }
 
 
-   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) __noasync{
       if self.typeId.id == rootTypeId {
          return;
       }
@@ -4613,7 +4616,7 @@ NormalTypeInfo インスタンスを生成する。
 pub fn ProcessInfo.createAlternate(
    belongClassFlag:bool, altIndex:int, txt:str, accessMode:AccessMode,
    parentInfo:&TypeInfo, baseTypeInfo: &TypeInfo!,
-   interfaceList: &List<&TypeInfo>! ) __noasync mut : AlternateTypeInfo, Scope
+   interfaceList: &List<&TypeInfo>! ) mut : AlternateTypeInfo, Scope
 {
    return AlternateTypeInfo.create(
       self, belongClassFlag, altIndex, txt,
@@ -5364,7 +5367,7 @@ pub class DDDTypeInfo extend TypeInfo {
       return self.typeInfo.canEvalWith( processInfo, other, canEvalType, alt2type )**;
    }
 
-   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) __noasync{
       stream.write(
          '{ skind=%d, typeId = %d, itemTypeId = %s, parentId = %d, extTypeFlag = %s }\n'
          ( SerializeKind.DDD, self.typeId.id,
@@ -5950,7 +5953,7 @@ pub class AbbrTypeInfo extend TypeInfo {
       return false, nil;
    }
 
-   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) __noasync{
       Util.err( "illegal call" );
    }
 
@@ -6066,7 +6069,7 @@ pub class ExtTypeInfo extend TypeInfo {
       // return self.extedType.canEvalWith( other, canEvalType, alt2type )**;
    }
 
-   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) __noasync{
       stream.write(
          '{ skind = %d, typeId = %d, extedTypeId = %s }\n' (
             SerializeKind.Ext, self.typeId.id,
@@ -6296,7 +6299,7 @@ pub fn ProcessInfo.createEnum(
 }
 
 pub override fn EnumTypeInfo.serialize(
-   stream: oStream, serializeInfo: &SerializeInfo )
+   stream: oStream, serializeInfo: &SerializeInfo ) __noasync
 {
    let txt = ```{ skind = %d, parentId = %d, typeId = %d, txt = '%s',
 accessMode = %d, kind = %d, valTypeId = %d, ```
@@ -6348,7 +6351,8 @@ pub fn ProcessInfo.createAlge(
    return info;
 }
 
-pub override fn AlgeTypeInfo.serialize( stream: oStream, serializeInfo: &SerializeInfo )
+pub override fn AlgeTypeInfo.serialize(
+   stream: oStream, serializeInfo: &SerializeInfo ) __noasync
 {
    let txt = ```{ skind = %d, parentId = %d, typeId = %d, txt = '%s',
 accessMode = %d, kind = %d, ```

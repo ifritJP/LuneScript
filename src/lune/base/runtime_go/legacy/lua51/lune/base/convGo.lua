@@ -592,7 +592,7 @@ local function isClosure( typeInfo )
       return false
    end
    
-   return #scope:get_closureSymList() > 0
+   return scope:get_hasClosureAccess()
 end
 
 local golanKeywordSet = {["func"] = true, ["select"] = true, ["defer"] = true, ["go"] = true, ["chan"] = true, ["package"] = true, ["const"] = true, ["fallthrough"] = true, ["range"] = true, ["continue"] = true, ["var"] = true, ["map"] = true, ["default"] = true}

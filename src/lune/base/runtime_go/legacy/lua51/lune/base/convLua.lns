@@ -416,7 +416,7 @@ fn ConvFilter.outputMeta( node: &Nodes.RootNode ) __noasync mut
    
    // 公開される型情報を typeId2TypeInfo にピックアップする
    fn pickupTypeId(
-      typeInfo: &Ast.TypeInfo, forceFlag: bool!, pickupChildFlag: bool! ) __trans
+      typeInfo: &Ast.TypeInfo, forceFlag: bool!, pickupChildFlag: bool! ) __noasync
    {
 
       if typeInfo.$typeId == Ast.rootTypeIdInfo {
@@ -806,7 +806,7 @@ fn ConvFilter.outputMeta( node: &Nodes.RootNode ) __noasync mut
    }
    
    let mut wroteTypeIdSet:Set<&Ast.IdInfo> = (@);
-   fn outputTypeInfo( typeInfo: &Ast.TypeInfo ) __trans {
+   fn outputTypeInfo( typeInfo: &Ast.TypeInfo ) __noasync {
       if Ast.isBuiltin( typeInfo.$typeId.id) {
          return;
       }

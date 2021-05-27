@@ -1089,6 +1089,8 @@ function Scope.new( processInfo, parent, classFlag, inherit, ifScopeList )
 end
 function Scope:__init(processInfo, parent, classFlag, inherit, ifScopeList) 
    self.scopeId = processInfo:get_idProvScope():getNewId(  )
+   self.hasClosureAccess = false
+   
    self.typeInfo2ModuleInfoMap = {}
    self.closureSymMap = {}
    self.closureSym2NumMap = {}
@@ -1189,6 +1191,12 @@ function Scope:get_closureSymList()
 end
 function Scope:get_closureSym2NumMap()
    return self.closureSym2NumMap
+end
+function Scope:get_hasClosureAccess()
+   return self.hasClosureAccess
+end
+function Scope:set_hasClosureAccess( hasClosureAccess )
+   self.hasClosureAccess = hasClosureAccess
 end
 function Scope:get_validCheckingUnaccess()
    return self.validCheckingUnaccess
