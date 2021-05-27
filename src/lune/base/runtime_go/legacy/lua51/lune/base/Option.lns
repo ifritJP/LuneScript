@@ -394,8 +394,8 @@ usage:
                   option.projDir = getNextOp();
                }
                case "--builtin" {
-                  forsort typeInfo, typeId in Ast.getBuiltInTypeIdMap() {
-                     print( typeId, typeInfo.getTxt( ## ) );
+                  forsort builtinTypeInfo, typeId in Ast.getBuiltInTypeIdMap() {
+                     print( typeId, builtinTypeInfo.$typeInfo.getTxt( ## ) );
                   }
                   os.exit( 0 );
                }

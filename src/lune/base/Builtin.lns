@@ -555,8 +555,9 @@ fn Builtin.processField( name:str, fieldName:str, info:&Map<str,&List<str>>,
          
          self.transUnitIF.pushScope( false ## );
 
+         let mut scope = self.transUnitIF.$scope;
          let typeInfo = self.processInfo.createFunc(
-            abstractFlag, true, self.transUnitIF.$scope, kind,
+            abstractFlag, true, scope, kind,
             parentInfo, false, true, staticFlag, accessMode,
             fieldName, .Async, nil, argTypeList, retTypeList, mutable );
 
@@ -564,9 +565,9 @@ fn Builtin.processField( name:str, fieldName:str, info:&Map<str,&List<str>>,
 
          builtinFunc.$allFuncTypeSet.add( typeInfo );
 
-         Ast.addBuiltin( typeInfo );
+         Ast.addBuiltin( typeInfo, scope );
          if typeInfo.$nilableTypeInfo ~= Ast.headTypeInfo {
-            Ast.addBuiltin( typeInfo.$nilableTypeInfo );
+            Ast.addBuiltin( typeInfo.$nilableTypeInfo, scope );
          }
          let symInfo = unwrap self.transUnitIF.$scope.add(
             self.processInfo, symbolKind, false, kind == .Func,
@@ -646,9 +647,9 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
                      }
                      else {
                         genTypeList.insert(
-                           self.processInfo.createAlternate(
+                           (self.processInfo.createAlternate(
                               true, #genTypeList + 1,
-                              token, .Pri, Ast.headTypeInfo ## ) );
+                              token, .Pri, Ast.headTypeInfo ## )) );
                      }
                   }
                }
@@ -700,8 +701,8 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
                }
             }
 
-            Ast.addBuiltin( parentInfo );
-            Ast.addBuiltin( parentInfo.$nilableTypeInfo );
+            Ast.addBuiltin( parentInfo, self.transUnitIF.$scope );
+            Ast.addBuiltin( parentInfo.$nilableTypeInfo, self.transUnitIF.$scope );
          }
          if not builtinModuleName2Scope[ name ]
          {

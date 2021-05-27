@@ -1353,15 +1353,16 @@ function Builtin:processField( name, fieldName, info, parentInfo )
          
          self.transUnitIF:pushScope( false )
          
-         local typeInfo = self.processInfo:createFunc( abstractFlag, true, self.transUnitIF:get_scope(), kind, parentInfo, false, true, staticFlag, accessMode, fieldName, Ast.Async.Async, nil, argTypeList, retTypeList, mutable )
+         local scope = self.transUnitIF:get_scope()
+         local typeInfo = self.processInfo:createFunc( abstractFlag, true, scope, kind, parentInfo, false, true, staticFlag, accessMode, fieldName, Ast.Async.Async, nil, argTypeList, retTypeList, mutable )
          
          self.transUnitIF:popScope(  )
          
          builtinFunc:get_allFuncTypeSet()[typeInfo]= true
          
-         Ast.addBuiltin( typeInfo )
+         Ast.addBuiltin( typeInfo, scope )
          if typeInfo:get_nilableTypeInfo() ~= Ast.headTypeInfo then
-            Ast.addBuiltin( typeInfo:get_nilableTypeInfo() )
+            Ast.addBuiltin( typeInfo:get_nilableTypeInfo(), scope )
          end
          
          local symInfo = _lune.unwrap( self.transUnitIF:get_scope():add( self.processInfo, symbolKind, false, kind == Ast.TypeInfoKind.Func, fieldName, nil, typeInfo, accessMode, staticFlag, mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true, false ))
@@ -1427,7 +1428,7 @@ function Builtin:registBuiltInScope(  )
                            name = token
                         else
                          
-                           table.insert( genTypeList, self.processInfo:createAlternate( true, #genTypeList + 1, token, Ast.AccessMode.Pri, Ast.headTypeInfo ) )
+                           table.insert( genTypeList, (self.processInfo:createAlternate( true, #genTypeList + 1, token, Ast.AccessMode.Pri, Ast.headTypeInfo ) ) )
                         end
                         
                      end
@@ -1492,8 +1493,8 @@ function Builtin:registBuiltInScope(  )
             end
             
             
-            Ast.addBuiltin( parentInfo )
-            Ast.addBuiltin( parentInfo:get_nilableTypeInfo() )
+            Ast.addBuiltin( parentInfo, self.transUnitIF:get_scope() )
+            Ast.addBuiltin( parentInfo:get_nilableTypeInfo(), self.transUnitIF:get_scope() )
          end
          
          if not builtinModuleName2Scope[name] then

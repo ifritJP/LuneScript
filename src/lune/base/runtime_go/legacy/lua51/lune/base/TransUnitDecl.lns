@@ -2065,6 +2065,12 @@ fn TransUnit.addAccessor(
    else {
       typeKind = .Method;
    }
+   let asyncMode:Ast.Async;
+   if memberType.$mutMode == .AllMut {
+      asyncMode = .Noasync;
+   } else {
+      asyncMode = .Async;
+   }
    if accessMode ~= .None {
       if classScope.getTypeInfoChild( getterName ) {
          self.addErrMess( memberName.$pos,
@@ -2078,7 +2084,7 @@ fn TransUnit.addAccessor(
          let retTypeInfo = self.processInfo.createFunc(
             false, false, self.pushScope( false ## ),
             typeKind, classTypeInfo, false, false, memberNode.$staticFlag, accessMode,
-            getterName, self.getDefaultAsync( typeKind, classTypeInfo, nil ),
+            getterName, mutable and asyncMode or Ast.Async.Async,
             nil, [], [ getterMemberType ] ## );
          self.popScope();
 
@@ -2110,7 +2116,7 @@ fn TransUnit.addAccessor(
                false, false, self.pushScope( false ## ),
                typeKind, classTypeInfo, false, false, memberNode.$staticFlag, accessMode,
                setterName,
-               self.getDefaultAsync( typeKind, classTypeInfo, nil ),
+               asyncMode,
                nil, [ memberType ], nil, mutable ),
             accessMode, memberNode.$staticFlag, true );
          self.popScope();
@@ -2881,8 +2887,7 @@ fn TransUnit.processAddFunc(
          }
       }
       if matched {
-         (unwrap prottype@@@Ast.NormalTypeInfo).switchScopeTo(
-            unwrap typeInfo.getScopeMut() );
+         (unwrap prottype@@@Ast.NormalTypeInfo).switchScopeTo( unwrap typeInfo.$scope );
          typeInfo = prottype;
       }
    }
@@ -2964,7 +2969,8 @@ fn TransUnit.analyzeDeclFunc(
             //    name.pos, classTypeInfo.$kind == .Class,
             //    classTypeInfo.$abstractFlag, nil, nil, nil, false, className,
             //    classTypeInfo.$accessMode ## );
-            self.pushClassScope( name.pos, classTypeInfo );
+            self.pushClassScope( name.pos, classTypeInfo,
+                                 unwrap self.namespace2Scope[ classTypeInfo ] );       
          }
          else {
             self.error( "not found class -- %s" (className) );
@@ -3180,6 +3186,7 @@ fn TransUnit.analyzeDeclFunc(
          typeInfo = workTypeInfo;
          funcSym = nil;
       }
+      self.namespace2Scope[ typeInfo ] = funcBodyScope;
    }
 
    if overrideFlag {
@@ -3848,7 +3855,8 @@ fn TransUnit.analyzeDeclVar(
                   // let func = fn () {}; → fn func() {}
                   let letVarInfo = letVarList[ 1 ];
                   let newTypeInfo = self.processInfo.createFunc(
-                     typeInfo.$abstractFlag, false, typeInfo.getScopeMut(),
+                     typeInfo.$abstractFlag, false,
+                     unwrap self.namespace2Scope[ typeInfo ],
                      typeInfo.$kind, typeInfo.$parentInfo,
                      false, false, typeInfo.$staticFlag, accessMode,
                      letVarInfo.varName.txt, typeInfo.$asyncMode,

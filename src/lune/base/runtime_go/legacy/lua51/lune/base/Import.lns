@@ -300,11 +300,11 @@ class _TypeInfoGeneric extend _TypeInfo {
       foreach typeId in self.genTypeList {
          genTypeList.insert( unwrap param.getTypeInfoFrom( typeId ) );
       }
-      let newTypeInfo = param.processInfo.createGeneric(
+      let newTypeInfo, mut scope = param.processInfo.createGeneric(
          genSrcTypeInfo, genTypeList, param.moduleTypeInfo );
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
       newTypeInfo.$typeId.set_orgId( self.typeId );
-      param.typeId2Scope[ self.typeId ] = Ast.getScope( newTypeInfo );
+      param.typeId2Scope[ self.typeId ] = scope;
       return newTypeInfo, nil;
    }
 }
@@ -384,14 +384,16 @@ class _TypeInfoModule extend _TypeInfo {
 
       let mut newTypeInfo = parentScope.getTypeInfoChild( self.txt );
       if! newTypeInfo {
-         param.typeId2Scope[ self.typeId ] = Ast.getScope( _exp );
-         if not _exp.$scope {
-            return nil, "not found scope %s %d %s %s %s" ( parentScope, self.parentId,
-                                                           self.typeId,
-                                                           self.txt, _exp.getTxt(##) );
-         }
-         param.typeId2TypeInfo[ self.typeId ] = _exp;
-         _exp.$typeId.set_orgId( self.typeId );
+         // ここには入らないはず
+         error( "internal error" );
+         // param.typeId2Scope[ self.typeId ] = Ast.getScope( _exp );
+         // if not _exp.$scope {
+         //    return nil, "not found scope %s %d %s %s %s" ( parentScope, self.parentId,
+         //                                                   self.typeId,
+         //                                                   self.txt, _exp.getTxt(##) );
+         // }
+         // param.typeId2TypeInfo[ self.typeId ] = _exp;
+         // _exp.$typeId.set_orgId( self.typeId );
       }
       else {
          let mut scope = new Ast.Scope( param.processInfo, parentScope, true, nil ## );
@@ -503,17 +505,8 @@ class _TypeInfoNormal extend _TypeInfo {
                               self.kind == Ast.TypeInfoKind.ExtModule or
                               self.kind == Ast.TypeInfoKind.IF )
          {
-            if! newTypeInfo {
-               param.typeId2Scope[ self.typeId ] = Ast.getScope( _exp );
-               if not _exp.$scope {
-                  Util.err( "not found scope %s %s %s %s %s"
-                            ( parentScope, self.parentId,
-                              self.typeId,
-                              self.txt, _exp.getTxt(##) ) );
-               }
-               param.typeId2TypeInfo[ self.typeId ] = _exp;
-               _exp.$typeId.set_orgId( self.typeId );
-            };
+            error("internal error");
+            // 登録済みのクラスはないはず。
          }
          else {
             if self.kind == Ast.TypeInfoKind.Class or
@@ -528,10 +521,10 @@ class _TypeInfoNormal extend _TypeInfo {
                        parentScope.$ownerTypeInfo$.$typeId$.id or -1 ); } );
             
                
-               let baseScope = unwrap Ast.getScope( baseInfo );
-               let mut ifScopeList:List<Ast.Scope> = [];
+               let baseScope = unwrap baseInfo.$scope;
+               let mut ifScopeList:List<&Ast.Scope> = [];
                foreach ifType in interfaceList {
-                  ifScopeList.insert( unwrap ifType.getScopeMut() );
+                  ifScopeList.insert( unwrap ifType.$scope );
                }
 
                let mut scope = new Ast.Scope(
@@ -658,8 +651,7 @@ class _TypeInfoEnum extend _TypeInfo {
       let accessMode = unwrap Ast.AccessMode._from( self.accessMode );
       //let parentInfo = unwrap param.typeId2TypeInfo[ self.parentId ];
       let parentInfo = unwrap param.getTypeInfo( self.parentId );
-      //let mut name2EnumValInfo:Map<str,Ast.EnumValInfo> = {};
-      let mut parentScope = unwrap Ast.getScope( parentInfo );
+      let mut parentScope = unwrap param.typeId2Scope[ self.parentId ];
       let mut scope = new Ast.Scope( param.processInfo, parentScope, true, nil ## );
 
       param.typeId2Scope[ self.typeId ] = scope;
@@ -714,7 +706,7 @@ class _TypeInfoAlge extend _TypeInfo {
       //let parentInfo = unwrap param.typeId2TypeInfo[ self.parentId ];
       let parentInfo = unwrap param.getTypeInfo( self.parentId );
       //let mut name2AlgeValInfo:Map<str,Ast.AlgeValInfo> = {};
-      let mut parentScope = unwrap Ast.getScope( parentInfo );
+      let mut parentScope = unwrap param.typeId2Scope[ self.parentId ];
       let mut scope = new Ast.Scope(
          param.processInfo, parentScope, true, nil ## );
 
@@ -800,9 +792,10 @@ fn Import.processImportFromFile(
       let dependInfo = unwrap dependLibId2DependInfo[ unwrap dependIdInfo[ 1 ] ];
       let typeInfo = unwrap dependInfo.getTypeInfo( unwrap dependIdInfo[ 2 ] );
       typeId2TypeInfo[ typeId ] = typeInfo;
-      if! Ast.getScope( typeInfo ) {
-         typeId2Scope[ typeId ] = _exp;
-      }
+      // 依存モジュールのスコープに mutable でアセスすることはない
+      // if! Ast.getScope( typeInfo ) {
+      //    typeId2Scope[ typeId ] = _exp;
+      // }
    }
 
    let mut moduleTypeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
@@ -827,7 +820,8 @@ fn Import.processImportFromFile(
       typeId2TypeInfo[ symbolInfo.$typeInfo.get_typeId().id ] = symbolInfo.$typeInfo;
    }
    foreach builtinTypeInfo in Ast.getBuiltInTypeIdMap() {
-      typeId2TypeInfo[ builtinTypeInfo.$typeId.id ] = builtinTypeInfo;
+      let typeInfo = builtinTypeInfo.$typeInfo;
+      typeId2TypeInfo[ typeInfo.$typeId.id ] = typeInfo;
    }
 
 
@@ -1023,8 +1017,9 @@ fn Import.processImportFromFile(
          case .Class, .ExtModule {
             // self.pushClass( self.currentToken.pos, true, classTypeInfo.$abstractFlag,
             //                 nil, nil, nil, true, classTypeInfo.getTxt(##), .Pub ## );
+            let mut scope = unwrap typeId2Scope[ classTypeId ];
             self.transUnitIF.pushClassScope(
-               self.transUnitIF.getLatestPos(), classTypeInfo );
+               self.transUnitIF.getLatestPos(), classTypeInfo, scope );
             
             if! metaInfo.__typeId2ClassInfoMap[ classTypeId ] {
                let! classInfo = expandLuavalMap( _exp ) {

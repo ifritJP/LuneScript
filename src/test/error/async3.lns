@@ -97,6 +97,38 @@ let globalVal2:&List<int> = [];
    }
 }
 {
+   class Test {
+   }
+   class Hoge {
+      let val:allmut Test;
+      pub fn __init() __async {
+         self.val = new Test();
+      }
+      pub fn func() __async {
+         print( self.val ); // error
+      }
+      pub fn func2() __noasync {
+         print( self.val );
+      }
+   }
+}
+{
+   class Hoge {
+      let val1:allmut List<int> {pub&};
+      let val2:allmut List<int> {pub};
+      pub fn func() __async {
+         print( self.$val1 ); // error
+         print( self.$val2 ); // error
+         print( self.get_val2() ); // error
+      }
+   }
+   fn func(hoge:Hoge) __async {
+      print( hoge.$val1 ); // error
+      print( hoge.$val2 ); // error
+      print( hoge.get_val2() ); // error
+   }
+}
+{
 
    class Super {
       pub fn func() {

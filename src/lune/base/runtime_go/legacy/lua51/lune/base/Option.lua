@@ -177,7 +177,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 8947
+   return 9031
 end
 
 
@@ -643,9 +643,9 @@ end
                      end
                      table.sort( __sorted )
                      for __index, typeId in ipairs( __sorted ) do
-                        local typeInfo = __map[ typeId ]
+                        local builtinTypeInfo = __map[ typeId ]
                         do
-                           print( typeId, typeInfo:getTxt(  ) )
+                           print( typeId, builtinTypeInfo:get_typeInfo():getTxt(  ) )
                         end
                      end
                   end

@@ -59,7 +59,8 @@ pub interface TransUnitIF {
    pub fn pushModule( processInfo:Ast.ProcessInfo,
                       externalFlag: bool, name:str, mutable: bool ) mut : &Ast.TypeInfo;
    pub fn popModule() mut;
-   pub fn pushClassScope( errPos:&Parser.Position, classTypeInfo:&Ast.TypeInfo ) mut;
+   pub fn pushClassScope(
+      errPos:&Parser.Position, classTypeInfo:&Ast.TypeInfo, scope:Ast.Scope ) mut;
    pub fn pushClass(
       processInfo:Ast.ProcessInfo,
       errPos:&Parser.Position, mode:DeclClassMode, abstractFlag: bool,

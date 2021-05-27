@@ -594,14 +594,8 @@ function dumpFilter:processDeclFuncInfo( node, declInfo, opt )
       name = name .. " mut"
    end
    
-   do
-      local _exp = _lune.nilacc( node:get_expType():get_scope(), 'get_closureSymList', 'callmtd' )
-      if _exp ~= nil then
-         if #_exp > 0 then
-            name = name .. " closure"
-         end
-         
-      end
+   if _lune.nilacc( node:get_expType():get_scope(), 'get_hasClosureAccess', 'callmtd' ) then
+      name = name .. " closure"
    end
    
    self:dump( opt, node, name )

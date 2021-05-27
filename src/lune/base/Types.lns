@@ -138,7 +138,7 @@ pub class Token extend (Mapping) {
    pub let pos: &Position;
    /** 直前のトークンと連続しているトークンかどうか。 true の場合連続。 */
    pub let consecutive: bool;
-   pri let allmut commentList: &List<&Token> { pub& };
+   pri let allmut commentList: &List<&Token> { pub };
 
    pub fn __init( kind: TokenKind, txt: str, pos: &Position,
                   consecutive:bool, commentList: &List<&Token>! )

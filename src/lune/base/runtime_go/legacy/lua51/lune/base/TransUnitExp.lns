@@ -2490,11 +2490,13 @@ fn TransUnit.analyzeExpField(
             case .Func, .Method {
                switch curType.$asyncMode {
                   case .Async, .Transient {
-                     // async から allmut 型を格納するシンボルにはアクセスできない。
-                     self.addErrMess(
-                        fieldToken.pos,
-                        "can't access allmut type's field(%s) in async function."
-                        (symbolInfo.$name) );
+                     if curType.$kind ~= .Method or curType.$rawTxt ~= "__init" {
+                        // async から allmut 型を格納するシンボルにはアクセスできない。
+                        self.addErrMess(
+                           fieldToken.pos,
+                           "can't access allmut type's field(%s) in async function."
+                           (symbolInfo.$name) );
+                     }
                   }
                }
             }
@@ -2532,7 +2534,7 @@ fn TransUnit.analyzeExpField(
             typeInfo = self.createModifier( typeInfo, .IMut );
          }
       } else {
-         if typeInfo.$mutMode == .Mut and symbolMutMode ~= .AllMut {
+         if typeInfo.$mutMode == .Mut and typeInfo.$mutMode ~= .AllMut {
             typeInfo = self.createModifier( typeInfo, .IMut );
          }
       }

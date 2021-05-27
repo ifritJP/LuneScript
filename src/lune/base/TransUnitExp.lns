@@ -1603,7 +1603,7 @@ fn TransUnit.processFunc(
       retTypeInfoList, funcExp, errorFuncFlag, nilAccess, threading, argList );
 }
 
-fn TransUnit.checkCallAsync( funcTypeInfo:&Ast.TypeInfo, pos:&Types.Position ) mut {
+fn TransUnit.checkNoasyncType( pos:&Parser.Position, funcTypeInfo:&Ast.TypeInfo ) mut {
    if funcTypeInfo.$asyncMode == .Noasync {
       let curType = self.getCurrentNamespaceTypeInfo();
       switch curType.$kind {
@@ -1612,22 +1612,13 @@ fn TransUnit.checkCallAsync( funcTypeInfo:&Ast.TypeInfo, pos:&Types.Position ) m
                case .Async, .Transient {
                   // async の関数から、 noasync 関数は実行できない。
                   self.addErrMess(
-                     pos,
+                     pos,        
                      "can't access noasync function in async. -- %s on %s"
                      (funcTypeInfo.getTxt(##), curType.getTxt(##)));
                }
             }
          }
       }
-      // if self.getCurrentClass().isInheritFrom(
-      //    self.processInfo, Ast.builtinTypeRunner ## )
-      // {
-      //    // __runner から noasync 関数は呼べない。
-      //    self.addErrMess(
-      //       pos,
-      //       "can't access noasync function in __Runner. -- %s"
-      //       (funcTypeInfo.getTxt(##)) );
-      // }
    }
 }
 
@@ -1650,8 +1641,7 @@ fn TransUnit.analyzeExpCall(
 
    let funcTypeInfo = funcExp.$expType.$nonnilableType;
 
-   self.checkCallAsync( funcTypeInfo, funcExp.$effectivePos );
-
+   self.checkNoasyncType( funcExp.$effectivePos, funcTypeInfo );
    
    // 引数の型チェック
    let mut genericTypeList = funcTypeInfo.$itemTypeInfoList;
@@ -2340,6 +2330,8 @@ fn TransUnit.analyzeExpField(
          if getterFlag {
             if! symbolInfo {
                getterTypeInfo = _exp.$typeInfo;
+
+               self.checkNoasyncType( fieldToken.pos, _exp.$typeInfo );
             }
          }
       }
@@ -2490,11 +2482,13 @@ fn TransUnit.analyzeExpField(
             case .Func, .Method {
                switch curType.$asyncMode {
                   case .Async, .Transient {
-                     // async から allmut 型を格納するシンボルにはアクセスできない。
-                     self.addErrMess(
-                        fieldToken.pos,
-                        "can't access allmut type's field(%s) in async function."
-                        (symbolInfo.$name) );
+                     if curType.$kind ~= .Method or curType.$rawTxt ~= "__init" {
+                        // async から allmut 型を格納するシンボルにはアクセスできない。
+                        self.addErrMess(
+                           fieldToken.pos,
+                           "can't access allmut type's field(%s) in async function."
+                           (symbolInfo.$name) );
+                     }
                   }
                }
             }
@@ -2532,7 +2526,7 @@ fn TransUnit.analyzeExpField(
             typeInfo = self.createModifier( typeInfo, .IMut );
          }
       } else {
-         if typeInfo.$mutMode == .Mut and symbolMutMode ~= .AllMut {
+         if typeInfo.$mutMode == .Mut and typeInfo.$mutMode ~= .AllMut {
             typeInfo = self.createModifier( typeInfo, .IMut );
          }
       }
@@ -3862,8 +3856,7 @@ fn TransUnit.analyzeExp(
          self.error( "not found __init" );
       };
 
-      self.checkCallAsync( initTypeInfo, token.pos );
-
+      self.checkNoasyncType( token.pos, initTypeInfo );
       
       self.checkNextToken( "(" );
       let nextToken = self.getToken(##);

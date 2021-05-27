@@ -795,10 +795,10 @@ function _TypeInfoGeneric:createTypeInfo( param )
       table.insert( genTypeList, _lune.unwrap( param:getTypeInfoFrom( typeId )) )
    end
    
-   local newTypeInfo = param.processInfo:createGeneric( genSrcTypeInfo, genTypeList, param.moduleTypeInfo )
+   local newTypeInfo, scope = param.processInfo:createGeneric( genSrcTypeInfo, genTypeList, param.moduleTypeInfo )
    param.typeId2TypeInfo[self.typeId] = newTypeInfo
    newTypeInfo:get_typeId():set_orgId( self.typeId )
-   param.typeId2Scope[self.typeId] = Ast.getScope( newTypeInfo )
+   param.typeId2Scope[self.typeId] = scope
    return newTypeInfo, nil
 end
 function _TypeInfoGeneric.setmeta( obj )
@@ -1071,13 +1071,8 @@ function _TypeInfoModule:createTypeInfo( param )
    do
       local _exp = newTypeInfo
       if _exp ~= nil then
-         param.typeId2Scope[self.typeId] = Ast.getScope( _exp )
-         if not _exp:get_scope() then
-            return nil, string.format( "not found scope %s %d %s %s %s", tostring( parentScope), self.parentId, tostring( self.typeId), self.txt, _exp:getTxt(  ))
-         end
+         error( "internal error" )
          
-         param.typeId2TypeInfo[self.typeId] = _exp
-         _exp:get_typeId():set_orgId( self.typeId )
       else
          local scope = Ast.Scope.new(param.processInfo, parentScope, true, nil)
          
@@ -1094,7 +1089,7 @@ function _TypeInfoModule:createTypeInfo( param )
          workTypeInfo:get_typeId():set_orgId( self.typeId )
          parentScope:addClass( param.processInfo, self.txt, nil, workTypeInfo )
          
-         Log.log( Log.Level.Info, __func__, 413, function (  )
+         Log.log( Log.Level.Info, __func__, 415, function (  )
          
             return string.format( "new module -- %s, %s, %d, %d, %d", self.txt, workTypeInfo:getFullName( Ast.defaultTypeNameCtrl, parentScope, false ), self.typeId, workTypeInfo:get_typeId().id, parentScope:get_scopeId())
          end )
@@ -1214,33 +1209,21 @@ function _TypeInfoNormal:createTypeInfo( param )
       end
       
       if newTypeInfo and (self.kind == Ast.TypeInfoKind.Class or self.kind == Ast.TypeInfoKind.ExtModule or self.kind == Ast.TypeInfoKind.IF ) then
-         do
-            local _exp = newTypeInfo
-            if _exp ~= nil then
-               param.typeId2Scope[self.typeId] = Ast.getScope( _exp )
-               if not _exp:get_scope() then
-                  Util.err( string.format( "not found scope %s %s %s %s %s", tostring( parentScope), tostring( self.parentId), tostring( self.typeId), self.txt, _exp:getTxt(  )) )
-               end
-               
-               param.typeId2TypeInfo[self.typeId] = _exp
-               _exp:get_typeId():set_orgId( self.typeId )
-            end
-         end
-         
+         error( "internal error" )
          
       else
        
          if self.kind == Ast.TypeInfoKind.Class or self.kind == Ast.TypeInfoKind.IF then
-            Log.log( Log.Level.Debug, __func__, 522, function (  )
+            Log.log( Log.Level.Debug, __func__, 515, function (  )
             
                return string.format( "new type -- %d, %s -- %s, %d", self.parentId, self.txt, _lune.nilacc( parentScope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, parentScope, false ) or "nil", _lune.nilacc( _lune.nilacc( parentScope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ), "id" ) or -1)
             end )
             
             
-            local baseScope = _lune.unwrap( Ast.getScope( baseInfo ))
+            local baseScope = _lune.unwrap( baseInfo:get_scope())
             local ifScopeList = {}
             for __index, ifType in ipairs( interfaceList ) do
-               table.insert( ifScopeList, _lune.unwrap( ifType:getScopeMut(  )) )
+               table.insert( ifScopeList, _lune.unwrap( ifType:get_scope()) )
             end
             
             
@@ -1261,7 +1244,7 @@ function _TypeInfoNormal:createTypeInfo( param )
             param.typeId2TypeInfo[self.typeId] = workTypeInfo
             workTypeInfo:get_typeId():set_orgId( self.typeId )
          elseif self.kind == Ast.TypeInfoKind.ExtModule then
-            Log.log( Log.Level.Debug, __func__, 560, function (  )
+            Log.log( Log.Level.Debug, __func__, 553, function (  )
             
                return string.format( "new type -- %d, %s -- %s, %d", self.parentId, self.txt, _lune.nilacc( parentScope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, parentScope, false ) or "nil", _lune.nilacc( _lune.nilacc( parentScope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ), "id" ) or -1)
             end )
@@ -1418,7 +1401,7 @@ function _TypeInfoEnum:createTypeInfo( param )
 
    local accessMode = _lune.unwrap( Ast.AccessMode._from( self.accessMode ))
    local parentInfo = _lune.unwrap( param:getTypeInfo( self.parentId ))
-   local parentScope = _lune.unwrap( Ast.getScope( parentInfo ))
+   local parentScope = _lune.unwrap( param.typeId2Scope[self.parentId])
    local scope = Ast.Scope.new(param.processInfo, parentScope, true, nil)
    
    param.typeId2Scope[self.typeId] = scope
@@ -1563,7 +1546,7 @@ function _TypeInfoAlge:createTypeInfo( param )
 
    local accessMode = _lune.unwrap( Ast.AccessMode._from( self.accessMode ))
    local parentInfo = _lune.unwrap( param:getTypeInfo( self.parentId ))
-   local parentScope = _lune.unwrap( Ast.getScope( parentInfo ))
+   local parentScope = _lune.unwrap( param.typeId2Scope[self.parentId])
    local scope = Ast.Scope.new(param.processInfo, parentScope, true, nil)
    
    param.typeId2Scope[self.typeId] = scope
@@ -1663,7 +1646,7 @@ function Import:processImportFromFile( processInfo, lnsPath, metaInfoStem, orgMo
    local __func__ = '@lune.@base.@Import.Import.processImportFromFile'
 
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 767, function (  )
+   Log.log( Log.Level.Info, __func__, 759, function (  )
    
       return string.format( "%s processing", orgModulePath)
    end )
@@ -1701,12 +1684,6 @@ function Import:processImportFromFile( processInfo, lnsPath, metaInfoStem, orgMo
       local dependInfo = _lune.unwrap( dependLibId2DependInfo[_lune.unwrap( dependIdInfo[1])])
       local typeInfo = _lune.unwrap( dependInfo:getTypeInfo( _lune.unwrap( dependIdInfo[2]) ))
       typeId2TypeInfo[typeId] = typeInfo
-      do
-         local _exp = Ast.getScope( typeInfo )
-         if _exp ~= nil then
-            typeId2Scope[typeId] = _exp
-         end
-      end
       
    end
    
@@ -1724,7 +1701,7 @@ function Import:processImportFromFile( processInfo, lnsPath, metaInfoStem, orgMo
       typeId2Scope[typeId] = self.transUnitIF:get_scope()
    end
    
-   for __index, _503 in ipairs( nameList ) do
+   for __index, _498 in ipairs( nameList ) do
       self.transUnitIF:popModule(  )
    end
    
@@ -1733,7 +1710,8 @@ function Import:processImportFromFile( processInfo, lnsPath, metaInfoStem, orgMo
    end
    
    for __index, builtinTypeInfo in pairs( Ast.getBuiltInTypeIdMap(  ) ) do
-      typeId2TypeInfo[builtinTypeInfo:get_typeId().id] = builtinTypeInfo
+      local typeInfo = builtinTypeInfo:get_typeInfo()
+      typeId2TypeInfo[typeInfo:get_typeId().id] = typeInfo
    end
    
    
@@ -1929,7 +1907,8 @@ function Import:processImportFromFile( processInfo, lnsPath, metaInfoStem, orgMo
       do
          local _switchExp = (classTypeInfo:get_kind() )
          if _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.ExtModule then
-            self.transUnitIF:pushClassScope( self.transUnitIF:getLatestPos(  ), classTypeInfo )
+            local scope = _lune.unwrap( typeId2Scope[classTypeId])
+            self.transUnitIF:pushClassScope( self.transUnitIF:getLatestPos(  ), classTypeInfo, scope )
             
             do
                local _exp = metaInfo.__typeId2ClassInfoMap[classTypeId]
@@ -1961,7 +1940,7 @@ function Import:processImportFromFile( processInfo, lnsPath, metaInfoStem, orgMo
             
          elseif _switchExp == Ast.TypeInfoKind.Module then
             self.transUnitIF:pushModule( processInfo, true, classTypeInfo:getTxt(  ), Ast.TypeInfo.isMut( classTypeInfo ) )
-            Log.log( Log.Level.Debug, __func__, 1059, function (  )
+            Log.log( Log.Level.Debug, __func__, 1054, function (  )
             
                return string.format( "push module -- %s, %s, %d, %d, %d", classTypeInfo:getTxt(  ), _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, self.transUnitIF:get_scope(), false ) or "nil", _lune.nilacc( _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'get_typeId', 'callmtd' ), "id" ) or -1, classTypeInfo:get_typeId().id, self.transUnitIF:get_scope():get_parent():get_scopeId())
             end )
@@ -2055,7 +2034,7 @@ function Import:processImportFromFile( processInfo, lnsPath, metaInfoStem, orgMo
    end
    
    
-   for __index, _648 in ipairs( nameList ) do
+   for __index, _645 in ipairs( nameList ) do
       self.transUnitIF:popModule(  )
    end
    
@@ -2084,7 +2063,7 @@ function Import:processImportMain( processInfo, modulePath, depth )
    local orgModulePath = modulePath
    modulePath = frontInterface.getLuaModulePath( modulePath )
    
-   Log.log( Log.Level.Info, __func__, 1184, function (  )
+   Log.log( Log.Level.Info, __func__, 1179, function (  )
    
       return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), orgModulePath)
    end )
@@ -2098,7 +2077,7 @@ function Import:processImportMain( processInfo, modulePath, depth )
    do
       local moduleInfo = self.importModuleName2ModuleInfo[modulePath]
       if moduleInfo ~= nil then
-         Log.log( Log.Level.Info, __func__, 1196, function (  )
+         Log.log( Log.Level.Info, __func__, 1191, function (  )
          
             return string.format( "%s already", orgModulePath)
          end )
@@ -2174,7 +2153,7 @@ function Import:processImportMain( processInfo, modulePath, depth )
    
    self.importModuleInfo:remove(  )
    
-   Log.log( Log.Level.Info, __func__, 1250, function (  )
+   Log.log( Log.Level.Info, __func__, 1245, function (  )
    
       return string.format( "%s complete", orgModulePath)
    end )

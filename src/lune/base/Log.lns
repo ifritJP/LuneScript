@@ -99,3 +99,7 @@ pub macro _log( level:Level, mess : stat ) {
 pub macro _log2( level:Level, mess : __exp ) {
    Log.log( ,,level, __func__, __line__, fn () __trans :str { return ,,mess; } );
 }
+
+pub macro _log3( level:Level, mess : __exp ) {
+   Log.log( ,,level, __func__, __line__, fn () __noasync :str { return ,,mess; } );
+}

@@ -644,6 +644,8 @@ alias で置き換えている元の Type → alias の型
    let mut defaultAsyncMode: DefaultAsyncMode;
 
    let class2defaultAsyncMode: Map<&Ast.TypeInfo,DefaultAsyncMode>;
+
+   let namespace2Scope: Map<&Ast.TypeInfo,Ast.Scope>;
    
 
    pub fn __init( moduleId:&frontInterface.ModuleId,
@@ -652,6 +654,7 @@ alias で置き換えている元の Type → alias の型
                   pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
                   ctrl_info: &Types.TransCtrlInfo )
    {
+      self.namespace2Scope = {};
       self.class2defaultAsyncMode = {};
       self.defaultAsyncMode = .NoAsync;
       self.importedAliasMap = {};
@@ -892,7 +895,11 @@ alias で置き換えている元の Type → alias の型
       
       if! self.scope.getTypeInfoChild( modName ) {
          typeInfo = _exp;
-         self.scope = unwrap Ast.getScope( typeInfo );
+         if! let mut scope = self.namespace2Scope[ typeInfo ] {
+            self.scope = scope;
+         } else {
+            self.error( "not found scope -- %s" (name) );
+         }
       }
       else {
          let parentInfo = self.getCurrentNamespaceTypeInfo();
@@ -900,6 +907,7 @@ alias で置き換えている元の Type → alias の型
          let mut scope = self.pushScope( true ## );
          typeInfo = processInfo.createModule(
             scope, parentInfo, externalFlag, modName, mutable );
+         self.namespace2Scope[ typeInfo ] = scope;
 
          let _, existSym = parentScope.addClass( processInfo, modName, nil, typeInfo );
          when! existSym {
@@ -956,7 +964,8 @@ alias で置き換えている元の Type → alias の型
    /**
 既存クラスの Scope を push する。
    */
-   pub fn pushClassScope( errPos:&Parser.Position, classTypeInfo:&Ast.TypeInfo ) mut {
+   pub fn pushClassScope(
+      errPos:&Parser.Position, classTypeInfo:&Ast.TypeInfo, scope:Ast.Scope ) mut {
       if self.scope ~= classTypeInfo.$scope$.$parent {
          let classParentName;
          let classParentTypeId;
@@ -977,7 +986,7 @@ alias で置き換えている元の Type → alias の型
               self.scope.$ownerTypeInfo$.$typeId$.id or -1,
               classParentName, classParentTypeId.id ) );
       }
-      self.scope = unwrap Ast.getScope( classTypeInfo );
+      self.scope = scope;
    }
 
    /**
@@ -1074,7 +1083,15 @@ alias で置き換えている元の Type → alias の型
 
          
 
-         self.scope = unwrap Ast.getScope( typeInfo );
+         if! let mut scope = self.namespace2Scope[ typeInfo ] {
+            self.scope = scope;
+         } else {
+            if! let mut scope = Ast.getBuiltInTypeIdMap()[ typeInfo.$typeId.id ]$.$scope {
+               self.scope = scope;
+            } else {
+               self.errorAt( errPos, "not find scope -- %s" (name) );
+            }
+         }
          switch ( typeInfo.$kind ) {
             case .Class {
                if mode == .Interface {
@@ -1110,6 +1127,7 @@ alias で置き換えている元の Type → alias の型
          typeInfo = processInfo.createClass(
             mode ~= .Interface, abstractFlag, scope, baseInfo, interfaceList,
             workGenTypeList, parentInfo, externalFlag, accessMode, name );
+         self.namespace2Scope[ typeInfo ] = scope;
          
          parentScope.addClassLazy(
             processInfo, name, errPos, typeInfo, mode == .LazyModule );

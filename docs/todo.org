@@ -8,13 +8,21 @@
 
 * バグ
 
+- [ ] 現状、 allmut 型のメンバを __async から参照するだけでエラーになるが、
+      参照するだけでそのオブジェクトのメンバやメソッドアクセスしなければ、
+      エラーにしなくて良いはず。
+- [ ] ログのマクロを __async と __noasync で使い分けが必要。
+      
+- [ ] imut な alge 型で、パラメータを持つ場合の制御が出来ていない？
 - [ ] メンバーを変更する処理を form で書いて、
       その form を imut のメソッドで実行できてしまう。
 - [ ] luaval<> の処理している箇所は unsafe __async では使えなくする。
       __async では unsafe で括って使えるようにする。
-- [ ] imut なメソッドから、 allmut 変数の mut メソッドにアクセスが __async で出来てしまっている。
+- [ ] __async は、luaval<> の引数、戻り値を持ってはならない。
+      メンバに luaval<> を持つものもダメ。
 - [ ] allmut 変数の getter が async 設定になってしまう。
       allmut 型を mutable で返すメソッドは __noasync にすべき。
+- [ ] __init から allmut 型へのアクセスは、許可すべき。
 - [ ] allmut 変数を上書きするアクセスする場合、 unsafe などの警告があった方が良い。
 - [ ] __trans の関数を、 __trans でないクロージャで保持できてしまう。
 - [ ] noasync の関数を async の form として登録できてしまう。
@@ -960,6 +968,7 @@ hoge.$val = 2; // error しない
 
 - [X] override 時の、引数の mutable チェックが抜けている。
 - [X] list.sort()  のコールバックが型不一致エラーする。
+- [X] allmut 型メンバへのアクセスが __async で出来てしまっている。
   
   
   

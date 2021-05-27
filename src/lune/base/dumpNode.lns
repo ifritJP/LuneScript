@@ -389,10 +389,8 @@ fn dumpFilter.processDeclFuncInfo(
    if Ast.TypeInfo.isMut( node.$expType ) {
       name = name .. " mut";
    }
-   if! node.$expType.$scope$.$closureSymList {
-      if #_exp > 0 {
-         name = name .. " closure";
-      }
+   if node.$expType.$scope$.$hasClosureAccess {
+      name = name .. " closure";
    }
    self.dump( opt, node, name );
    let argList = declInfo.get_argList();

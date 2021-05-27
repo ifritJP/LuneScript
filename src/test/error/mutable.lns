@@ -146,6 +146,10 @@ class Test3 {
    let allmut val6:&List<int> {pub&};
    let mut val7:&List<int> {pub};
    let mut val8:&List<int> {pub&};
+   let mut val9:allmut List<int> {pub};
+   let mut val10:List<int> {pub&};
+   let mut val11:allmut List<int> {pub};
+   let mut val12:List<int> {pub&};
    pub fn __init() {
       self.val1 = [];
       self.val2 = [];
@@ -155,14 +159,26 @@ class Test3 {
       self.val6 = [];
       self.val7 = [];
       self.val8 = [];
+      self.val9 = [];
+      self.val10 = [];
+      self.val11 = [];
+      self.val12 = [];
    }
    pub fn func() {
-      self.val1.insert( 1 );
+      self.val1.insert( 1 ); // error
       self.val3.insert( 1 ); // error
       self.val5.insert( 1 ); // error
       self.val7.insert( 1 ); // error
+      self.val9.insert( 1 ); 
+      self.val11.insert( 1 ); 
+   }
+   pub fn func2() __async {
+      print( self.val1 );
+      self.val9.insert( 1 ); 
+      self.val11.insert( 1 ); 
    }
 }
+
 
 {
    let test2 = new Test3(); // error
@@ -174,6 +190,10 @@ class Test3 {
    test2.$val6.insert( 1 ); // error
    test2.$val7.insert( 1 ); // error
    test2.$val8.insert( 1 ); // error
+   test2.$val9.insert( 1 ); 
+   test2.$val10.insert( 1 ); // error
+   test2.$val11.insert( 1 ); 
+   test2.$val12.insert( 1 ); // error
 }
 
 {
@@ -186,6 +206,10 @@ class Test3 {
    test2.$val6.insert( 1 ); // error
    test2.$val7.insert( 1 ); // error
    test2.$val8.insert( 1 ); // error
+   test2.$val9.insert( 1 );
+   test2.$val10.insert( 1 ); // error
+   test2.$val11.insert( 1 );
+   test2.$val12.insert( 1 ); // error
 }
 {
    let val = [ [1, 2] ];
@@ -197,12 +221,12 @@ class Test3 {
       list[1].insert( 1 );
    }
    fn func2( list:List<&List<int>> ) {
-      list.insert( [1] ); // error
-      list[1].insert( 1 );
+      list.insert( [1] ); 
+      list[1].insert( 1 ); // error
    }
    fn func3( list:&List<&List<int>> ) {
       list.insert( [1] ); // error
-      list[1].insert( 1 );
+      list[1].insert( 1 ); // error
    }
 }
 
