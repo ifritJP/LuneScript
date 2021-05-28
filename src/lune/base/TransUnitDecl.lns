@@ -337,14 +337,10 @@ fn TransUnit.analyzeDeclArgList(
 
          self.checkShadowing( argName.pos, argName.txt, scope );
 
-         // if scope.getSymbolTypeInfo(
-         //    argName.txt, scope, self.moduleScope, self.scopeAccess ) {
-         //    self.addErrMess( argName.pos,
-         //                     "shadowing variable -- %s" (argName.txt) );
-         // }
-
          self.checkNextToken( ":" );
+
          let refType = self.analyzeRefType( accessMode, false, parentPub );
+         
          if refType.$expType.$kind == .Class and #refType.$expType.$itemTypeInfoList > 0
          {
             let argType = refType.$expType.$srcTypeInfo;
@@ -1871,7 +1867,7 @@ fn TransUnit.analyzeDeclMember(
          }
       } else {
          if Ast.TypeInfo.isMut( getterRetType ) {
-            if mutMode == .AllMut or getterMutable == .AllMut {
+            if getterMutable == .AllMut {
                getterRetType = self.createModifier( getterRetType, .AllMut );
             } elseif getterMutable == .IMut {
                getterRetType = self.createModifier( getterRetType, .IMut );
@@ -3036,6 +3032,11 @@ fn TransUnit.analyzeDeclFunc(
 
    let mut parentScope = self.scope;
    let mut funcBodyScope = self.pushScope( false ## );
+
+   if staticFlag and classTypeInfo {
+      self.analyzingStaticMethodArgsScope = funcBodyScope;
+   }
+
    
    let mut altTypeList:&List<&Ast.TypeInfo> = [];
    // generic 宣言
@@ -3076,7 +3077,7 @@ fn TransUnit.analyzeDeclFunc(
    foreach argNode in argList {
       argTypeList.insert( argNode.$expType );
    }
-   
+
 
    let mut alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
    when! classTypeInfo {
@@ -3320,6 +3321,11 @@ fn TransUnit.analyzeDeclFunc(
       }
    }
 
+   if staticFlag and classTypeInfo {
+      self.analyzingStaticMethodArgsScope = nil;
+   }
+   
+
    fn createDeclFuncInfo( funcKind:Nodes.FuncKind ): &Nodes.DeclFuncInfo {
       let classDeclNode:Nodes.DeclClassNode!;
       when! classTypeInfo {
@@ -3338,6 +3344,21 @@ fn TransUnit.analyzeDeclFunc(
 
    switch ( kind ) {
       case Nodes.NodeKind.$DeclConstr {
+         if classTypeInfo$.isInheritFrom$( self.processInfo, Ast.builtinTypeRunner ## )
+         {
+            // runner のコンストラクタから、
+            // noasync で競合データを取得してメンバにセットされると
+            // 競合のガードが破綻するので、
+            // コンストラクタの __async をチェックする。
+            if typeInfo.$asyncMode ~= .Async {
+               let message =
+                  "The constructor of the class extended __Runner must be __async. -- %s"
+                   (typeInfo.$parentInfo.getTxt(##) );
+               self.addErrMess( firstToken.pos, message );
+            }
+         }
+         
+         
          let info = createDeclFuncInfo( .Ctor );
          node = Nodes.DeclConstrNode.create(
             self.nodeManager, firstToken.pos,
@@ -3447,9 +3468,7 @@ fn TransUnit.accessSymbol( symbolInfo:&Ast.SymbolInfo, canLeftExp:bool ) mut {
       
       // クロージャの変数をアクセスありにする
       if! let scope = symbolInfo.$typeInfo.$scope {
-         foreach symInfo in scope.$closureSymList {
-            symInfo.set_posForModToRef( symInfo.$posForLatestMod );
-         }
+         scope.updateClosureRefPos();        
       }
    }
    else {

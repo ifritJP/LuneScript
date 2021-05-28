@@ -182,7 +182,7 @@ class Test3 {
 
 {
    let test2 = new Test3(); // error
-   test2.$val1.insert( 1 );
+   test2.$val1.insert( 1 ); // error
    test2.$val2.insert( 1 ); // error
    test2.$val3.insert( 1 ); // error
    test2.$val4.insert( 1 ); // error

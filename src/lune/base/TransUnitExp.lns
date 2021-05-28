@@ -2768,6 +2768,18 @@ fn TransUnit.analyzeExpSymbol(
          self.checkAsyncSymbol( symbolInfo, firstToken.pos );
          
          let typeInfo = symbolInfo.$typeInfo;
+         if symbolInfo.$kind == .Typ and
+            typeInfo.$kind == .Alternate and
+            self.analyzingStaticMethodArgsScope ~= nil and
+            symbolInfo.$scope ~= self.analyzingStaticMethodArgsScope
+         {
+            // static メソッド内では、
+            // そのメソッドで定義した型パラメータ以外を使用できない。
+            self.addErrMess(
+               firstToken.pos,    
+               "The static method can't use the type parameter. -- %s"
+               (typeInfo.getTxt(##)));
+         }
 
          switch symbolInfo.$kind {
             case .Typ {  

@@ -507,10 +507,6 @@ class AccessSymbolSetQueue {
 }
 
 
-// pub interface TransUnitIF {
-//    pub fn createModifier( typeInfo:&Ast.TypeInfo, mutMode: Ast.MutMode ) : &Ast.TypeInfo;
-// }
-
 pub class TransUnit extend (TransUnitIF.TransUnitIF, Parser.PushbackParser) {
 
    /** 解析状態 */
@@ -646,6 +642,11 @@ alias で置き換えている元の Type → alias の型
    let class2defaultAsyncMode: Map<&Ast.TypeInfo,DefaultAsyncMode>;
 
    let namespace2Scope: Map<&Ast.TypeInfo,Ast.Scope>;
+
+   /** 引数解析中の static method の Scope */
+   let mut analyzingStaticMethodArgsScope:&Ast.Scope!;
+
+   
    
 
    pub fn __init( moduleId:&frontInterface.ModuleId,
@@ -654,6 +655,7 @@ alias で置き換えている元の Type → alias の型
                   pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
                   ctrl_info: &Types.TransCtrlInfo )
    {
+      self.analyzingStaticMethodArgsScope = nil;
       self.namespace2Scope = {};
       self.class2defaultAsyncMode = {};
       self.defaultAsyncMode = .NoAsync;
@@ -863,15 +865,6 @@ alias で置き換えている元の Type → alias の型
    }
 
    pri fn getCurrentNamespaceTypeInfo() : &Ast.TypeInfo {
-      // let typeInfo = Ast.headTypeInfo;
-      // let mut scope = self.scope;
-      // repeat {
-      //    if! scope.$ownerTypeInfo {
-      //       return _exp;
-      //    }
-      //    scope = scope.$parent;
-      // } scope.isRoot();
-      // return typeInfo;
       return self.scope.getNamespaceTypeInfo();
    }
 

@@ -1986,3 +1986,27 @@ _section();
       test.getResult();
    }
 }
+_section();
+{
+   form Closure();
+   fn func( val:int ) : Closure, Closure {
+      let mut work = val;
+      fn create( val2:int ): Closure {
+         return fn() {
+            work = work + val2;
+         };
+      }
+      fn sub2() {
+         print( work );
+      }
+      return create( 10 ), sub2;
+   }
+   {
+      let sub1, sub2 = func( 1 );
+      let sub10, sub20 = func( 100 );
+      sub1();
+      sub10();
+      sub2();
+      sub20();
+   }
+}

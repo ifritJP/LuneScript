@@ -80,7 +80,7 @@
 }
 {
    class Test22<T> {
-      pub static fn func(val:T) : T {
+      pub static fn func(val:T) : T { // error
          return val;
       }
    }

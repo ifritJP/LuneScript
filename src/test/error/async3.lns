@@ -129,6 +129,18 @@ let globalVal2:&List<int> = [];
    }
 }
 {
+   class Val {
+      pub fn func() mut {
+      }
+   }
+   class Test {
+      let allmut val:Val{pub};
+   }
+   fn func( test:&Test ) __noasync {
+      test.$val.func();  // error
+   }
+}
+{
 
    class Super {
       pub fn func() {

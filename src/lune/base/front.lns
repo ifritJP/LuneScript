@@ -1271,7 +1271,7 @@ class LuaConverter extend Runner.Runner {
       luaPath:str, metaPath:str, dependsPath:str!, 
       ast:&TransUnit.ASTInfo, convMode:convLua.ConvMode,
       path:str, byteCompile:bool,
-      stripDebugInfo:bool, option:&Option.Option )
+      stripDebugInfo:bool, option:&Option.Option ) __async
    {
       super();
       
@@ -1501,7 +1501,7 @@ class GoConverter extend Runner.Runner {
    let converter:ConverterFunc;
    
    local fn __init( scriptPath:str, ast:&TransUnit.ASTInfo,
-                    option:&Option.Option, goOpt:&convGo.Option )
+                    option:&Option.Option, goOpt:&convGo.Option ) __async
    {
       super();
       
