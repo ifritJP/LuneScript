@@ -5670,7 +5670,7 @@ typeInfo と other に互換性がない場合は stem あるいは stem! の型
 */
 pub static fn TypeInfo.getCommonTypeCombo(
    processInfo:ProcessInfo, commonType:CommonType, otherType:CommonType,
-   alt2type:Map<&TypeInfo,&TypeInfo> ) __noasync: CommonType
+   alt2type:Map<&TypeInfo,&TypeInfo> ) : CommonType
 {
    let mut typeInfo = builtinTypeNone;
    
@@ -5741,7 +5741,7 @@ pub static fn TypeInfo.getCommonTypeCombo(
    if type1.$kind == type2.$kind {
 
       fn getCommon( workTypeInfo:&TypeInfo, workOther:&TypeInfo,
-                    workAlt2type:Map<&TypeInfo,&TypeInfo> ) __noasync : &TypeInfo
+                    workAlt2type:Map<&TypeInfo,&TypeInfo> ) __trans : &TypeInfo
       {
          _match TypeInfo.getCommonTypeCombo(
             processInfo, CommonType.Normal( workTypeInfo ),
@@ -5759,28 +5759,28 @@ pub static fn TypeInfo.getCommonTypeCombo(
       switch type1.$kind {
          case .List {
             return getType( processInfo.createList(
-               .Local, headTypeInfoMut,
+               .Local, headTypeInfo,
                [ getCommon(
                   type1.$itemTypeInfoList[ 1 ],
                   type2.$itemTypeInfoList[ 1 ], alt2type ) ], mutMode ) );
          }
          case .Array {
             return getType( processInfo.createArray(
-               .Local, headTypeInfoMut,
+               .Local, headTypeInfo,
                [ getCommon(
                   type1.$itemTypeInfoList[ 1 ],
                   type2.$itemTypeInfoList[ 1 ], alt2type ) ], mutMode ) );
          }
          case .Set {
             return getType( processInfo.createSet(
-               .Local, headTypeInfoMut,
+               .Local, headTypeInfo,
                [ getCommon(
                   type1.$itemTypeInfoList[ 1 ],
                   type2.$itemTypeInfoList[ 1 ], alt2type ) ], mutMode ) );
          }
          case .Map {
             return getType( processInfo.createMap(
-               .Local, headTypeInfoMut,
+               .Local, headTypeInfo,
                getCommon(
                   type1.$itemTypeInfoList[ 1 ],
                   type2.$itemTypeInfoList[ 1 ], alt2type ),
@@ -5815,7 +5815,7 @@ pub static fn TypeInfo.getCommonTypeCombo(
 
 pub static fn TypeInfo.getCommonType(
    processInfo:ProcessInfo, typeInfo:&TypeInfo,
-   other:&TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo> ) __noasync: &TypeInfo
+   other:&TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo> ) : &TypeInfo
 {
    _match TypeInfo.getCommonTypeCombo(
       processInfo, CommonType.Normal( typeInfo ), CommonType.Normal( other ), alt2type )
@@ -6835,7 +6835,7 @@ static fn TypeInfo.checkMatchTypeMain(
 pub static fn TypeInfo.checkMatchType(
    processInfo:&ProcessInfo, dstTypeList: &List<&TypeInfo>,
    expTypeList: &List<&TypeInfo>, allowDstShort:bool, warnForFollowSrcIndex:int!,
-   alt2type:Map<&TypeInfo,&TypeInfo> ) __noasync : MatchType, str
+   alt2type:Map<&TypeInfo,&TypeInfo> ) : MatchType, str
 {
    fn mismatchErrMess( index:int, errorMess:str!, dstType:&TypeInfo, srcType:&TypeInfo,
                        alt2typeWork:Map<&TypeInfo,&TypeInfo> ) __noasync :str
