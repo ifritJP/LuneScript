@@ -88,6 +88,39 @@ function Modifier:set_validMutControl( validMutControl )
 end
 
 
+local NSInfo = {}
+_moduleObj.NSInfo = NSInfo
+function NSInfo.setmeta( obj )
+  setmetatable( obj, { __index = NSInfo  } )
+end
+function NSInfo.new( nobody, typeInfo, pos )
+   local obj = {}
+   NSInfo.setmeta( obj )
+   if obj.__init then
+      obj:__init( nobody, typeInfo, pos )
+   end
+   return obj
+end
+function NSInfo:__init( nobody, typeInfo, pos )
+
+   self.nobody = nobody
+   self.typeInfo = typeInfo
+   self.pos = pos
+end
+function NSInfo:get_nobody()
+   return self.nobody
+end
+function NSInfo:set_nobody( nobody )
+   self.nobody = nobody
+end
+function NSInfo:get_typeInfo()
+   return self.typeInfo
+end
+function NSInfo:get_pos()
+   return self.pos
+end
+
+
 local TransUnitIF = {}
 _moduleObj.TransUnitIF = TransUnitIF
 function TransUnitIF.setmeta( obj )

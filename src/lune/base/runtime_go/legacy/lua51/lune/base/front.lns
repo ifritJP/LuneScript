@@ -183,8 +183,11 @@ loadedMap で管理する前にシステムにロードされているため、
 */
    let preloadedModMap:&Map<str,Luaval<&stem>>;
 
+   let mut loadCount:int;
+
    
    pub fn __init( option:&Option.Option, bindModuleList:&List<str>! ) {
+      self.loadCount = 0;
       self.targetSet = (@);
       self.bindModuleSet = (@);
       when! bindModuleList {
@@ -389,7 +392,8 @@ fn Front.loadFromLnsTxt(
    let mut stream = new Parser.TxtStream( txt );
    let mut parser = new Parser.StreamParser( stream, name, false, nil );
 
-   let mut ast = transUnit.createAST( parser, false, nil );
+   let mut ast = transUnit.createAST( parser, false, "$load%d" (self.loadCount) );
+   self.loadCount = self.loadCount + 1;
 
    let _, luaTxt = self.convertFromAst( ast, name, .ConvMeta );
    return unwrap loadFromLuaTxt( luaTxt );
@@ -1271,7 +1275,7 @@ class LuaConverter extend Runner.Runner {
       luaPath:str, metaPath:str, dependsPath:str!, 
       ast:&TransUnit.ASTInfo, convMode:convLua.ConvMode,
       path:str, byteCompile:bool,
-      stripDebugInfo:bool, option:&Option.Option )
+      stripDebugInfo:bool, option:&Option.Option ) __async
    {
       super();
       
@@ -1501,7 +1505,7 @@ class GoConverter extend Runner.Runner {
    let converter:ConverterFunc;
    
    local fn __init( scriptPath:str, ast:&TransUnit.ASTInfo,
-                    option:&Option.Option, goOpt:&convGo.Option )
+                    option:&Option.Option, goOpt:&convGo.Option ) __async
    {
       super();
       

@@ -1,0 +1,285 @@
+/*
+MIT License
+
+Copyright (c) 2018, 2019 ifritJP
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+import lune.base.Types;
+import lune.base.Parser;
+import lune.base.Util;
+import lune.base.Ast;
+import lune.base.Nodes;
+import lune.base.TransUnitIF;
+
+pub class TransUnit extend (TransUnitIF.TransUnitIF) {
+
+   local let processInfo:Ast.ProcessInfo;
+   pri let mut scope:Ast.Scope;
+   let namespace2Scope: Map<&Ast.TypeInfo,Ast.Scope>;
+
+   pub fn get_scope() mut : Ast.Scope {
+      return self.scope;
+   }
+   
+   pub fn __init( ctrl_info: &Types.TransCtrlInfo )
+   {
+      self.namespace2Scope = {};
+      self.processInfo = Ast.createProcessInfo(
+         ctrl_info.validCheckingMutable,
+         ctrl_info.validLuaval, ctrl_info.validAstDetailError );
+      self.scope = Ast.rootScope;
+   }
+
+   pub fn getLatestPos() : &Parser.Position {
+      return new Parser.Position( 0, 0, "@builtin@");
+   }
+
+   pub fn error( mess: str ) __async mut : __ {
+      Util.err( mess );
+   }
+
+   pub fn pushScope( classFlag: bool, baseInfo: &Ast.TypeInfo!,
+                     interfaceList: &List<&Ast.TypeInfo>! ) mut: Ast.Scope
+   {
+      // self.scope = new Ast.Scope( self.scope, classFlag, inheritScope, ifScopeList );
+      self.scope = Ast.TypeInfo.createScope(
+         self.processInfo, self.scope, classFlag, baseInfo, interfaceList );
+      return self.scope;
+   }
+
+   pub fn popScope() mut {
+      self.scope = self.scope.get_parent();
+   }
+
+   pri fn getCurrentNamespaceTypeInfo() : &Ast.TypeInfo {
+      return self.scope.getNamespaceTypeInfo();
+   }
+
+   pub fn pushModuleLow(
+      processInfo:Ast.ProcessInfo,
+      externalFlag: bool, name:str, mutable: bool ) mut : &Ast.TypeInfo
+   {
+      let mut typeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
+
+      let modName;
+      if name.find( "^@" ## ) {
+         modName = name;
+      }
+      else {
+         modName = "@%s" (name);
+      }
+
+      if! self.scope.getTypeInfoChild( modName ) {
+         typeInfo = _exp;
+         if! let mut scope = self.namespace2Scope[ typeInfo ] {
+            self.scope = scope;
+         } else {
+            self.error( "not found scope -- %s" (name) );
+         }
+      }
+      else {
+         let parentInfo = self.getCurrentNamespaceTypeInfo();
+         let mut parentScope = self.scope;
+         let mut scope = self.pushScope( true ## );
+         let mut newType = processInfo.createModule(
+            scope, parentInfo, externalFlag, modName, mutable );
+         typeInfo = newType;
+         self.namespace2Scope[ typeInfo ] = scope;
+
+         let _, existSym = parentScope.addClass( processInfo, modName, nil, typeInfo );
+         when! existSym {
+            self.error(
+               "module symbols exist -- %s.%s -- %s.%s"
+               ( existSym.$namespaceTypeInfo.getTxt(##),
+                 existSym.$name, parentInfo.getTxt(##), modName ) );
+         }
+      }
+      return typeInfo;
+   }
+
+   pub fn popModule() mut {
+      self.popScope();
+   }
+
+   /**
+既存クラスの Scope を push する。
+   */
+   pub fn pushClassScope(
+      errPos:&Parser.Position, classTypeInfo:&Ast.TypeInfo, scope:Ast.Scope ) mut {
+      if self.scope ~= classTypeInfo.$scope$.$parent {
+         let classParentName;
+         let classParentTypeId;
+         if! let parentType = classTypeInfo.$scope$.$parent$.$ownerTypeInfo {
+            classParentName = parentType.getTxt(##);
+            classParentTypeId = parentType.$typeId;
+         }
+         else {
+            classParentName = "nil";
+            classParentTypeId = Ast.dummyIdInfo;
+         }
+         self.error(
+            "This class does not exist in this scope. -- %s -- %s(%d), %s(%d)"
+            ( classTypeInfo.getTxt( ## ),
+              self.scope.$ownerTypeInfo$.getTxt$(##),
+              self.scope.$ownerTypeInfo$.$typeId$.id or -1,
+              classParentName, classParentTypeId.id ) );
+      }
+      self.scope = scope;
+   }
+
+   /**
+指定クラスの Scope を push し、TypeInfo を取得する。
+
+クラスが生成済みの場合は baseInfo, interfaceList, genTypeList に nil を指定する。
+   */
+   pub fn pushClassLow(
+      processInfo:Ast.ProcessInfo,
+      errPos:&Parser.Position, mode:TransUnitIF.DeclClassMode, abstractFlag: bool,
+      baseInfo: &Ast.TypeInfo!, interfaceList: &List<&Ast.TypeInfo>!,
+      genTypeList: &List<&Ast.AlternateTypeInfo>!, externalFlag: bool, name:str,
+      allowMultiple:bool, accessMode:Ast.AccessMode,
+      defNamespace: Nodes.NamespaceInfo! ) mut : &Ast.TypeInfo
+   {
+      let typeInfo:&Ast.TypeInfo;
+      if! self.scope.getTypeInfo( name, self.scope, true, .Normal ) {
+         // 宣言済み
+         typeInfo = _exp;
+
+         if typeInfo.$scope$.$parent ~= self.scope {
+            self.error(
+               "multiple class(%s)" (typeInfo.getTxt( ##)));
+         }
+
+         if typeInfo.$abstractFlag ~= abstractFlag {
+            self.error(
+               "mismatch class(%s) abstract for prototpye"
+               (typeInfo.getTxt(##)));
+         }
+         if typeInfo.$accessMode ~= accessMode {
+            self.error(
+               "mismatch class(%s) accessmode(%s) for prototpye accessmode(%s)"
+               ( typeInfo.getTxt(##),
+                 accessMode.$_txt, typeInfo.$accessMode.$_txt));
+         }
+         when! baseInfo {
+            if typeInfo.$baseTypeInfo ~= baseInfo {
+               self.error(
+                  "mismatch class(%s) base class(%s) for prototpye base class(%s)"
+                  ( typeInfo.getTxt(##),
+                    baseInfo.getTxt(##), typeInfo.$baseTypeInfo.getTxt(##)));
+            }
+         }
+         else {
+            if typeInfo.hasBase() {
+               self.error(
+                  "mismatch class(%s) base class(None) for prototpye base class(%s)"
+                  ( typeInfo.getTxt(##),
+                    typeInfo.$baseTypeInfo.getTxt(##)));
+            }
+         }
+
+         fn compareList( protoList:&List<&Ast.TypeInfo>,
+                         typeList:&List<&Ast.TypeInfo>, message:str )
+         {
+            if #protoList == #typeList {
+               foreach protoType, index in protoList {
+                  if protoType ~= typeList[ index ] {
+                     self.error(
+                        "mismatch class(%s) %s(%s) for prototpye %s(%s)"
+                        ( typeInfo.getTxt(##), message,
+                          typeList[ index ].getTxt(##),
+                          message, protoType.getTxt(##)));
+                  }
+               }
+            }
+            else {
+               self.error(
+                  "mismatch class(%s) %s(%d) for prototpye %s(%d)"
+                  ( typeInfo.getTxt(##), message, #typeList,
+                    message, #protoList) );
+            }
+         }
+         
+         compareList( typeInfo.$interfaceList,
+                      unwrap interfaceList default [], "interface" );
+         
+         compareList( typeInfo.$itemTypeInfoList,
+                      unwrap genTypeList default [], "generics" );
+
+         
+
+         if! let mut scope = self.namespace2Scope[ typeInfo ] {
+            self.scope = scope;
+         } else {
+            if! let mut scope = Ast.getBuiltInTypeIdMap()[ typeInfo.$typeId.id ]$.$scope {
+               self.scope = scope;
+            } else {
+               self.error("not find scope -- %s" (name) );
+            }
+         }
+         switch ( typeInfo.$kind ) {
+            case .Class {
+               if mode == .Interface {
+                  self.error( "define interface already -- %s" (name) );
+               }
+            }
+            case .IF {
+               if mode ~= .Interface {
+                  self.error( "define class already -- %s" (name) );
+               }
+            }
+         }
+      }
+      else {
+         let parentInfo = self.getCurrentNamespaceTypeInfo();
+
+         let mut parentScope = self.scope;
+         let mut scope = self.pushScope( true, baseInfo, interfaceList );
+         let workGenTypeList;
+         when! genTypeList {
+            workGenTypeList = genTypeList;
+         }
+         else {
+            workGenTypeList = [];
+         }
+
+         let mut newType = processInfo.createClass(
+            mode ~= .Interface, abstractFlag, scope, baseInfo, interfaceList,
+            workGenTypeList, parentInfo, externalFlag, accessMode, name );
+         typeInfo = newType;
+         self.namespace2Scope[ typeInfo ] = scope;
+
+         parentScope.addClassLazy(
+            processInfo, name, errPos, typeInfo, mode == .LazyModule );
+      }
+      when! genTypeList {
+         foreach genType in genTypeList {
+            self.scope.addAlternate(
+               processInfo, accessMode, genType.$txt, errPos, genType );
+         }
+      }
+      return typeInfo;
+   }
+
+   pub fn popClass() mut {
+      self.popScope();
+   }
+}

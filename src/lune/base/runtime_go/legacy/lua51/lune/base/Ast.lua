@@ -382,6 +382,28 @@ local extMaxId = 10000000
 local userStartId = 1000
 
 local TypeInfo = {}
+local TypeData = {}
+_moduleObj.TypeData = TypeData
+function TypeData.new(  )
+   local obj = {}
+   TypeData.setmeta( obj )
+   if obj.__init then obj:__init(  ); end
+   return obj
+end
+function TypeData:__init() 
+   self.children = {}
+end
+function TypeData:addChildren( child )
+
+   table.insert( self.children, child )
+end
+function TypeData.setmeta( obj )
+  setmetatable( obj, { __index = TypeData  } )
+end
+function TypeData:get_children()
+   return self.children
+end
+
 
 local IdType = {}
 _moduleObj.IdType = IdType
@@ -433,6 +455,7 @@ function ProcessInfo.new( validCheckingMutable, idProvBase, validExtType, validD
    return obj
 end
 function ProcessInfo:__init(validCheckingMutable, idProvBase, validExtType, validDetailError, typeInfo2Map) 
+   self.miscTypeData = TypeData.new()
    self.validDetailError = validDetailError
    self.id2TypeInfo = {}
    self.validCheckingMutable = validCheckingMutable
@@ -455,7 +478,7 @@ end
 function ProcessInfo:switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.ProcessInfo.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 167, function (  )
+   Log.log( Log.Level.Trace, __func__, 183, function (  )
    
       return "start"
    end )
@@ -1079,8 +1102,54 @@ function DataOwnerInfo:__init( hasData, symbolInfo )
 end
 
 
+local ClosureInfo = {}
+function ClosureInfo.new(  )
+   local obj = {}
+   ClosureInfo.setmeta( obj )
+   if obj.__init then obj:__init(  ); end
+   return obj
+end
+function ClosureInfo:__init() 
+   self.closureSymMap = {}
+   self.closureSym2NumMap = {}
+   self.closureSymList = {}
+end
+function ClosureInfo:setClosure( symbol )
+
+   if not self.closureSymMap[symbol:get_symbolId()] then
+      self.closureSymMap[symbol:get_symbolId()] = symbol
+      self.closureSym2NumMap[symbol] = #self.closureSymList
+      table.insert( self.closureSymList, symbol )
+      return true
+   end
+   
+   return false
+end
+function ClosureInfo:setRefPos(  )
+
+   for __index, symInfo in ipairs( self.closureSymList ) do
+      symInfo:set_posForModToRef( symInfo:get_posForLatestMod() )
+   end
+   
+end
+function ClosureInfo.setmeta( obj )
+  setmetatable( obj, { __index = ClosureInfo  } )
+end
+function ClosureInfo:get_closureSymList()
+   return self.closureSymList
+end
+
+
 setmetatable( Scope, { ifList = {ModuleInfoManager,} } )
 _moduleObj.Scope = Scope
+function Scope:get_closureSymList(  )
+
+   return self.closureInfo:get_closureSymList()
+end
+function Scope:updateClosureRefPos(  )
+
+   self.closureInfo:setRefPos(  )
+end
 function Scope.new( processInfo, parent, classFlag, inherit, ifScopeList )
    local obj = {}
    Scope.setmeta( obj )
@@ -1091,10 +1160,9 @@ function Scope:__init(processInfo, parent, classFlag, inherit, ifScopeList)
    self.scopeId = processInfo:get_idProvScope():getNewId(  )
    self.hasClosureAccess = false
    
+   self.closureInfo = ClosureInfo.new()
+   
    self.typeInfo2ModuleInfoMap = {}
-   self.closureSymMap = {}
-   self.closureSym2NumMap = {}
-   self.closureSymList = {}
    self.parent = _lune.unwrapDefault( parent, self)
    self.symbol2SymbolInfoMap = {}
    self.inherit = inherit
@@ -1183,15 +1251,6 @@ end
 function Scope:get_inherit()
    return self.inherit
 end
-function Scope:get_closureSymMap()
-   return self.closureSymMap
-end
-function Scope:get_closureSymList()
-   return self.closureSymList
-end
-function Scope:get_closureSym2NumMap()
-   return self.closureSym2NumMap
-end
 function Scope:get_hasClosureAccess()
    return self.hasClosureAccess
 end
@@ -1240,31 +1299,6 @@ end
 
 
 local dummyList = {}
-local TypeData = {}
-_moduleObj.TypeData = TypeData
-function TypeData:addChildren( child )
-
-   table.insert( self.children, child )
-end
-function TypeData.setmeta( obj )
-  setmetatable( obj, { __index = TypeData  } )
-end
-function TypeData.new( children )
-   local obj = {}
-   TypeData.setmeta( obj )
-   if obj.__init then
-      obj:__init( children )
-   end
-   return obj
-end
-function TypeData:__init( children )
-
-   self.children = children
-end
-function TypeData:get_children()
-   return self.children
-end
-
 local CanEvalType = {}
 _moduleObj.CanEvalType = CanEvalType
 CanEvalType._val2NameMap = {}
@@ -1409,7 +1443,7 @@ function TypeInfo:__init(scope, processInfo)
       end
    end
    
-   self.typeData = TypeData.new({})
+   self.typeData = TypeData.new()
    self.processInfo = processInfo
    
 end
@@ -1565,10 +1599,6 @@ function TypeInfo:get_children(  )
 
    return self.typeData:get_children()
 end
-function TypeInfo:addChildren( child )
-
-   self.typeData:addChildren( child )
-end
 function TypeInfo:get_mutMode(  )
 
    return MutMode.Mut
@@ -1627,6 +1657,9 @@ function TypeInfo.setmeta( obj )
 end
 function TypeInfo:get_scope()
    return self.scope
+end
+function TypeInfo:get_typeData()
+   return self.typeData
 end
 function TypeInfo:get_processInfo()
    return self.processInfo
@@ -2172,10 +2205,6 @@ end
 function ModifierTypeInfo:get_mutMode()
    return self.mutMode
 end
-function ModifierTypeInfo:addChildren( ... )
-   return self.srcTypeInfo:addChildren( ... )
-end
-
 function ModifierTypeInfo:createAlt2typeMap( ... )
    return self.srcTypeInfo:createAlt2typeMap( ... )
 end
@@ -2290,6 +2319,10 @@ end
 
 function ModifierTypeInfo:get_staticFlag( ... )
    return self.srcTypeInfo:get_staticFlag( ... )
+end
+
+function ModifierTypeInfo:get_typeData( ... )
+   return self.srcTypeInfo:get_typeData( ... )
 end
 
 function ModifierTypeInfo:hasBase( ... )
@@ -2831,10 +2864,6 @@ end
 function NilableTypeInfo:set_imutType( imutType )
    self.imutType = imutType
 end
-function NilableTypeInfo:addChildren( ... )
-   return self.nonnilableType:addChildren( ... )
-end
-
 function NilableTypeInfo:createAlt2typeMap( ... )
    return self.nonnilableType:createAlt2typeMap( ... )
 end
@@ -2945,6 +2974,10 @@ end
 
 function NilableTypeInfo:get_staticFlag( ... )
    return self.nonnilableType:get_staticFlag( ... )
+end
+
+function NilableTypeInfo:get_typeData( ... )
+   return self.nonnilableType:get_typeData( ... )
 end
 
 function NilableTypeInfo:hasBase( ... )
@@ -3090,10 +3123,6 @@ end
 function AliasTypeInfo:set_imutType( imutType )
    self.imutType = imutType
 end
-function AliasTypeInfo:addChildren( ... )
-   return self.aliasSrcTypeInfo:addChildren( ... )
-end
-
 function AliasTypeInfo:createAlt2typeMap( ... )
    return self.aliasSrcTypeInfo:createAlt2typeMap( ... )
 end
@@ -3176,6 +3205,10 @@ end
 
 function AliasTypeInfo:get_staticFlag( ... )
    return self.aliasSrcTypeInfo:get_staticFlag( ... )
+end
+
+function AliasTypeInfo:get_typeData( ... )
+   return self.aliasSrcTypeInfo:get_typeData( ... )
 end
 
 function AliasTypeInfo:hasBase( ... )
@@ -3794,23 +3827,35 @@ end
 _moduleObj.dumpScope = dumpScope
 function Scope:setClosure( workSymbol )
 
-   local symbol = workSymbol:getOrg(  )
-   local targetFuncType = symbol:get_namespaceTypeInfo()
-   local funcType = self:getNamespaceTypeInfo(  )
+   local function getFuncScope( scope )
    
-   while true do
-      local funcScope = _lune.unwrap( funcType:get_scope())
-      if not funcScope.closureSymMap[symbol:get_symbolId()] then
-         funcScope.closureSymMap[symbol:get_symbolId()] = symbol
-         funcScope.closureSym2NumMap[symbol] = #funcScope.closureSymList
-         table.insert( funcScope.closureSymList, symbol )
-         funcType = funcScope.parent:getNamespaceTypeInfo(  )
-      else
-       
+      repeat 
+         do
+            local _exp = scope:get_ownerTypeInfo()
+            if _exp ~= nil then
+               if _exp:get_kind() == TypeInfoKind.Func then
+                  return scope
+               end
+               
+            end
+         end
+         
+         scope = scope:get_parent()
+      until scope:isRoot(  )
+      return scope
+   end
+   
+   local symbol = workSymbol:getOrg(  )
+   local targetFuncScope = _lune.unwrap( symbol:get_namespaceTypeInfo():get_scope())
+   local funcScope = getFuncScope( self )
+   
+   while not funcScope:isRoot(  ) do
+      if not funcScope.closureInfo:setClosure( symbol ) then
          break
       end
       
-      if funcType == targetFuncType then
+      funcScope = getFuncScope( funcScope.parent )
+      if funcScope == targetFuncScope then
          break
       end
       
@@ -4676,10 +4721,6 @@ end
 function BoxTypeInfo:set_imutType( imutType )
    self.imutType = imutType
 end
-function BoxTypeInfo:addChildren( ... )
-   return self.boxingType:addChildren( ... )
-end
-
 function BoxTypeInfo:getFullName( ... )
    return self.boxingType:getFullName( ... )
 end
@@ -4762,6 +4803,10 @@ end
 
 function BoxTypeInfo:get_staticFlag( ... )
    return self.boxingType:get_staticFlag( ... )
+end
+
+function BoxTypeInfo:get_typeData( ... )
+   return self.boxingType:get_typeData( ... )
 end
 
 function BoxTypeInfo:hasBase( ... )
@@ -5043,10 +5088,6 @@ end
 function GenericTypeInfo:set_imutType( imutType )
    self.imutType = imutType
 end
-function GenericTypeInfo:addChildren( ... )
-   return self.genSrcTypeInfo:addChildren( ... )
-end
-
 function GenericTypeInfo:getFullName( ... )
    return self.genSrcTypeInfo:getFullName( ... )
 end
@@ -5155,6 +5196,10 @@ function GenericTypeInfo:get_staticFlag( ... )
    return self.genSrcTypeInfo:get_staticFlag( ... )
 end
 
+function GenericTypeInfo:get_typeData( ... )
+   return self.genSrcTypeInfo:get_typeData( ... )
+end
+
 function GenericTypeInfo:hasBase( ... )
    return self.genSrcTypeInfo:hasBase( ... )
 end
@@ -5209,21 +5254,14 @@ function ModuleTypeInfo:__init(processInfo, scope, externalFlag, txt, parentInfo
    
    self.externalFlag = externalFlag
    self.rawTxt = txt
-   self.parentInfo = _lune.unwrapDefault( parentInfo, _moduleObj.headTypeInfo)
+   self.parentInfo = parentInfo
    self.typeId = processInfo:newId( self )
    self.mutable = mutable
    
-   local fullName
+   parentInfo:get_typeData():addChildren( self )
    
-   if parentInfo ~= nil then
-      parentInfo:addChildren( self )
-      
-      local parentFull = parentInfo:getParentFullName( _moduleObj.defaultTypeNameCtrl )
-      fullName = string.format( "%s.@%s", parentFull, txt)
-   else
-      fullName = string.format( "%s", txt)
-   end
-   
+   local parentFull = parentInfo:getParentFullName( _moduleObj.defaultTypeNameCtrl )
+   local fullName = string.format( "%s.@%s", parentFull, txt)
    self.fullName = fullName
    scope:set_ownerTypeInfo( self )
 end
@@ -5392,13 +5430,13 @@ end
 function EnumTypeInfo:set_imutType( typeInfo )
 
 end
-function EnumTypeInfo.new( processInfo, scope, externalFlag, accessMode, txt, parentInfo, valTypeInfo )
+function EnumTypeInfo.new( processInfo, scope, externalFlag, accessMode, txt, parentInfo, typeData, valTypeInfo )
    local obj = {}
    EnumTypeInfo.setmeta( obj )
-   if obj.__init then obj:__init( processInfo, scope, externalFlag, accessMode, txt, parentInfo, valTypeInfo ); end
+   if obj.__init then obj:__init( processInfo, scope, externalFlag, accessMode, txt, parentInfo, typeData, valTypeInfo ); end
    return obj
 end
-function EnumTypeInfo:__init(processInfo, scope, externalFlag, accessMode, txt, parentInfo, valTypeInfo) 
+function EnumTypeInfo:__init(processInfo, scope, externalFlag, accessMode, txt, parentInfo, typeData, valTypeInfo) 
    TypeInfo.__init( self,scope, processInfo)
    
    
@@ -5412,11 +5450,8 @@ function EnumTypeInfo:__init(processInfo, scope, externalFlag, accessMode, txt, 
    
    self.val2EnumValInfo = {}
    
-   do
-      local _exp = parentInfo
-      if _exp ~= nil then
-         _exp:addChildren( self )
-      end
+   if typeData ~= nil then
+      typeData:addChildren( self )
    end
    
    
@@ -5526,13 +5561,13 @@ function AlgeTypeInfo:get_nilableTypeInfoMut(  )
 
    return self.nilableTypeInfo
 end
-function AlgeTypeInfo.new( processInfo, scope, externalFlag, accessMode, txt, parentInfo )
+function AlgeTypeInfo.new( processInfo, scope, externalFlag, accessMode, txt, parentInfo, typeData )
    local obj = {}
    AlgeTypeInfo.setmeta( obj )
-   if obj.__init then obj:__init( processInfo, scope, externalFlag, accessMode, txt, parentInfo ); end
+   if obj.__init then obj:__init( processInfo, scope, externalFlag, accessMode, txt, parentInfo, typeData ); end
    return obj
 end
-function AlgeTypeInfo:__init(processInfo, scope, externalFlag, accessMode, txt, parentInfo) 
+function AlgeTypeInfo:__init(processInfo, scope, externalFlag, accessMode, txt, parentInfo, typeData) 
    TypeInfo.__init( self,scope, processInfo)
    
    
@@ -5545,11 +5580,8 @@ function AlgeTypeInfo:__init(processInfo, scope, externalFlag, accessMode, txt, 
    self.valInfoMap = {}
    self.valInfoNum = 0
    
-   do
-      local _exp = parentInfo
-      if _exp ~= nil then
-         _exp:addChildren( self )
-      end
+   if typeData ~= nil then
+      typeData:addChildren( self )
    end
    
    
@@ -5756,13 +5788,13 @@ function NormalTypeInfo:switchScopeTo( scope )
 
    self:switchScope( scope )
 end
-function NormalTypeInfo.new( processInfo, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode, moduleLang, asyncMode )
+function NormalTypeInfo.new( processInfo, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeData, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode, moduleLang, asyncMode )
    local obj = {}
    NormalTypeInfo.setmeta( obj )
-   if obj.__init then obj:__init( processInfo, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode, moduleLang, asyncMode ); end
+   if obj.__init then obj:__init( processInfo, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeData, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode, moduleLang, asyncMode ); end
    return obj
 end
-function NormalTypeInfo:__init(processInfo, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode, moduleLang, asyncMode) 
+function NormalTypeInfo:__init(processInfo, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeData, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode, moduleLang, asyncMode) 
    TypeInfo.__init( self,scope, processInfo)
    
    
@@ -5845,8 +5877,8 @@ function NormalTypeInfo:__init(processInfo, abstractFlag, scope, baseTypeInfo, i
    if kind == TypeInfoKind.Root then
    else
     
-      if parentInfo ~= nil then
-         parentInfo:addChildren( self )
+      if typeData ~= nil then
+         typeData:addChildren( self )
       end
       
       
@@ -6117,7 +6149,7 @@ function NormalTypeInfo.create( processInfo, accessMode, abstractFlag, scope, ba
       Util.err( string.format( "not found symbol -- %s", txt) )
    end
    
-   local info = NormalTypeInfo.new(processInfo, abstractFlag, scope, baseInfo, nil, false, true, staticFlag, accessMode, txt, parentInfo, kind, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode, nil, asyncMode)
+   local info = NormalTypeInfo.new(processInfo, abstractFlag, scope, baseInfo, nil, false, true, staticFlag, accessMode, txt, parentInfo, parentInfo:get_typeData(), kind, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode, nil, asyncMode)
    processInfo:setupImut( info )
    return info
 end
@@ -6290,7 +6322,7 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD, ifList )
       end
    end
    
-   local info = NormalTypeInfo.new(rootProcessInfo, false, scope, nil, ifList, false, false, false, AccessMode.Pub, typeTxt, headTypeInfoMut, kind, genTypeList, argTypeList, retTypeList, MutMode.Mut, nil, Async.Async)
+   local info = NormalTypeInfo.new(rootProcessInfo, false, scope, nil, ifList, false, false, false, AccessMode.Pub, typeTxt, headTypeInfoMut, headTypeInfoMut:get_typeData(), kind, genTypeList, argTypeList, retTypeList, MutMode.Mut, nil, Async.Async)
    rootProcessInfo:setupImut( info )
    
    registBuiltin( idName, typeTxt, kind, info, _moduleObj.headTypeInfo, scope )
@@ -6681,7 +6713,6 @@ end
 
 function ProcessInfo:createSet( accessMode, parentInfo, itemTypeInfo, mutMode )
 
-   local builtinTypeInfo = _lune.unwrap( builtInTypeIdSetWork[_moduleObj.builtinTypeSet:get_typeId().id])
    local tmpMutMode
    
    if isMutable( mutMode ) then
@@ -6693,7 +6724,7 @@ function ProcessInfo:createSet( accessMode, parentInfo, itemTypeInfo, mutMode )
    
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo.new(self, false, builtinTypeInfo:get_scope(), _moduleObj.builtinTypeSet, nil, false, false, false, AccessMode.Pub, "Set", headTypeInfoMut, TypeInfoKind.Set, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
+      return NormalTypeInfo.new(self, false, nil, _moduleObj.builtinTypeSet, nil, false, false, false, AccessMode.Pub, "Set", _moduleObj.headTypeInfo, self.miscTypeData, TypeInfoKind.Set, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
    end
    
    
@@ -6711,7 +6742,7 @@ end
 
 function ProcessInfo:createList( accessMode, parentInfo, itemTypeInfo, mutMode )
 
-   local builtinTypeInfo = _lune.unwrap( builtInTypeIdSetWork[_moduleObj.builtinTypeList:get_typeId().id])
+   
    local tmpMutMode
    
    if isMutable( mutMode ) then
@@ -6723,7 +6754,8 @@ function ProcessInfo:createList( accessMode, parentInfo, itemTypeInfo, mutMode )
    
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo.new(self, false, builtinTypeInfo:get_scope(), _moduleObj.builtinTypeList, nil, false, false, false, AccessMode.Pub, "List", headTypeInfoMut, TypeInfoKind.List, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
+      
+      return NormalTypeInfo.new(self, false, nil, _moduleObj.builtinTypeList, nil, false, false, false, AccessMode.Pub, "List", _moduleObj.headTypeInfo, self.miscTypeData, TypeInfoKind.List, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
    end
    
    
@@ -6741,7 +6773,7 @@ end
 
 function ProcessInfo:createArray( accessMode, parentInfo, itemTypeInfo, mutMode )
 
-   local builtinTypeInfo = _lune.unwrap( builtInTypeIdSetWork[_moduleObj.builtinTypeArray:get_typeId().id])
+   
    local tmpMutMode
    
    if isMutable( mutMode ) then
@@ -6753,7 +6785,7 @@ function ProcessInfo:createArray( accessMode, parentInfo, itemTypeInfo, mutMode 
    
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo.new(self, false, builtinTypeInfo:get_scope(), _moduleObj.builtinTypeArray, nil, false, false, false, AccessMode.Pub, "Array", headTypeInfoMut, TypeInfoKind.Array, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
+      return NormalTypeInfo.new(self, false, nil, _moduleObj.builtinTypeArray, nil, false, false, false, AccessMode.Pub, "Array", _moduleObj.headTypeInfo, self.miscTypeData, TypeInfoKind.Array, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
    end
    
    
@@ -6771,7 +6803,6 @@ end
 
 function ProcessInfo:createMap( accessMode, parentInfo, keyTypeInfo, valTypeInfo, mutMode )
 
-   local builtinTypeInfo = _lune.unwrap( builtInTypeIdSetWork[_moduleObj.builtinTypeMap:get_typeId().id])
    local tmpMutMode
    
    if isMutable( mutMode ) then
@@ -6783,7 +6814,7 @@ function ProcessInfo:createMap( accessMode, parentInfo, keyTypeInfo, valTypeInfo
    
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo.new(self, false, builtinTypeInfo:get_scope(), _moduleObj.builtinTypeMap, nil, false, false, false, AccessMode.Pub, "Map", headTypeInfoMut, TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, workMutMode, nil, Async.Async)
+      return NormalTypeInfo.new(self, false, nil, _moduleObj.builtinTypeMap, nil, false, false, false, AccessMode.Pub, "Map", _moduleObj.headTypeInfo, self.miscTypeData, TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, workMutMode, nil, Async.Async)
    end
    
    
@@ -6801,20 +6832,13 @@ end
 
 function ProcessInfo:createModule( scope, parentInfo, externalFlag, moduleName, mutable )
 
-   do
-      local _exp = sym2builtInTypeMap[moduleName]
-      if _exp ~= nil then
-         return _exp:get_typeInfo()
-      end
-   end
-   
-   
    if Parser.isLuaKeyword( moduleName ) then
       Util.err( string.format( "This symbol can not use for a class or script file. -- %s", moduleName) )
    end
    
    
    local info = ModuleTypeInfo.new(self, scope, externalFlag, moduleName, parentInfo, mutable)
+   
    self:setupImut( info )
    
    return info
@@ -6823,21 +6847,12 @@ end
 
 function ProcessInfo:createClass( classFlag, abstractFlag, scope, baseInfo, interfaceList, genTypeList, parentInfo, externalFlag, accessMode, className )
 
-   do
-      local _exp = sym2builtInTypeMap[className]
-      if _exp ~= nil then
-         return _exp:get_typeInfo()
-         
-      end
-   end
-   
-   
    if Parser.isLuaKeyword( className ) then
       Util.err( string.format( "This symbol can not use for a class or script file. -- %s", className) )
    end
    
    
-   local info = NormalTypeInfo.new(self, abstractFlag, scope, baseInfo, interfaceList, false, externalFlag, false, accessMode, className, parentInfo, classFlag and TypeInfoKind.Class or TypeInfoKind.IF, genTypeList, nil, nil, MutMode.Mut, nil, Async.Async)
+   local info = NormalTypeInfo.new(self, abstractFlag, scope, baseInfo, interfaceList, false, externalFlag, false, accessMode, className, parentInfo, parentInfo:get_typeData(), classFlag and TypeInfoKind.Class or TypeInfoKind.IF, genTypeList, nil, nil, MutMode.Mut, nil, Async.Async)
    self:setupImut( info )
    
    for __index, genType in ipairs( genTypeList ) do
@@ -6851,20 +6866,12 @@ end
 
 function ProcessInfo:createExtModule( scope, parentInfo, externalFlag, accessMode, className, moduleLang, requirePath )
 
-   do
-      local _exp = sym2builtInTypeMap[className]
-      if _exp ~= nil then
-         return _exp:get_typeInfo()
-      end
-   end
-   
-   
    if Parser.isLuaKeyword( className ) then
       Util.err( string.format( "This symbol can not use for a class or script file. -- %s", className) )
    end
    
    
-   local info = NormalTypeInfo.new(self, false, scope, nil, nil, false, externalFlag, false, accessMode, className, parentInfo, TypeInfoKind.ExtModule, nil, nil, nil, MutMode.Mut, moduleLang, Async.Noasync)
+   local info = NormalTypeInfo.new(self, false, scope, nil, nil, false, externalFlag, false, accessMode, className, parentInfo, parentInfo:get_typeData(), TypeInfoKind.ExtModule, nil, nil, nil, MutMode.Mut, moduleLang, Async.Noasync)
    self:setupImut( info )
    info:set_requirePath( requirePath )
    return info
@@ -6878,7 +6885,7 @@ function ProcessInfo:createFunc( abstractFlag, builtinFlag, scope, kind, parentI
    end
    
    
-   local info = NormalTypeInfo.new(self, abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, kind, _lune.unwrapDefault( altTypeList, {}), _lune.unwrapDefault( argTypeList, {}), _lune.unwrapDefault( retTypeInfoList, {}), mutable and MutMode.Mut or MutMode.IMut, nil, asyncMode)
+   local info = NormalTypeInfo.new(self, abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, parentInfo:get_typeData(), kind, _lune.unwrapDefault( altTypeList, {}), _lune.unwrapDefault( argTypeList, {}), _lune.unwrapDefault( retTypeInfoList, {}), mutable and MutMode.Mut or MutMode.IMut, nil, asyncMode)
    self:setupImut( info )
    
    if altTypeList ~= nil then
@@ -6894,6 +6901,14 @@ function ProcessInfo:createFunc( abstractFlag, builtinFlag, scope, kind, parentI
       
    end
    
+   
+   return info
+end
+
+function ProcessInfo:createDummyNameSpace( scope, parentInfo, asyncMode )
+
+   local info = NormalTypeInfo.new(self, false, scope, nil, nil, true, false, true, AccessMode.Local, string.format( "__scope_%d", scope:get_scopeId()), parentInfo, self.miscTypeData, TypeInfoKind.Func, {}, {}, {}, MutMode.IMut, nil, asyncMode)
+   self:setupImut( info )
    
    return info
 end
@@ -7453,13 +7468,13 @@ function TypeInfo.getCommonTypeCombo( processInfo, commonType, otherType, alt2ty
       do
          local _switchExp = type1:get_kind()
          if _switchExp == TypeInfoKind.List then
-            return getType( processInfo:createList( AccessMode.Local, headTypeInfoMut, {getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
+            return getType( processInfo:createList( AccessMode.Local, _moduleObj.headTypeInfo, {getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
          elseif _switchExp == TypeInfoKind.Array then
-            return getType( processInfo:createArray( AccessMode.Local, headTypeInfoMut, {getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
+            return getType( processInfo:createArray( AccessMode.Local, _moduleObj.headTypeInfo, {getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
          elseif _switchExp == TypeInfoKind.Set then
-            return getType( processInfo:createSet( AccessMode.Local, headTypeInfoMut, {getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
+            return getType( processInfo:createSet( AccessMode.Local, _moduleObj.headTypeInfo, {getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
          elseif _switchExp == TypeInfoKind.Map then
-            return getType( processInfo:createMap( AccessMode.Local, headTypeInfoMut, getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type ), getCommon( type1:get_itemTypeInfoList()[2], type2:get_itemTypeInfoList()[2], alt2type ), mutMode ) )
+            return getType( processInfo:createMap( AccessMode.Local, _moduleObj.headTypeInfo, getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type ), getCommon( type1:get_itemTypeInfoList()[2], type2:get_itemTypeInfoList()[2], alt2type ), mutMode ) )
          end
       end
       
@@ -7844,10 +7859,6 @@ end
 function ExtTypeInfo:set_imutType( imutType )
    self.imutType = imutType
 end
-function ExtTypeInfo:addChildren( ... )
-   return self.extedType:addChildren( ... )
-end
-
 function ExtTypeInfo:createAlt2typeMap( ... )
    return self.extedType:createAlt2typeMap( ... )
 end
@@ -7942,6 +7953,10 @@ end
 
 function ExtTypeInfo:get_staticFlag( ... )
    return self.extedType:get_staticFlag( ... )
+end
+
+function ExtTypeInfo:get_typeData( ... )
+   return self.extedType:get_typeData( ... )
 end
 
 function ExtTypeInfo:hasBase( ... )
@@ -8139,10 +8154,6 @@ end
 function AndExpTypeInfo:get_result()
    return self.result
 end
-function AndExpTypeInfo:addChildren( ... )
-   return self.result:addChildren( ... )
-end
-
 function AndExpTypeInfo:applyGeneric( ... )
    return self.result:applyGeneric( ... )
 end
@@ -8307,6 +8318,10 @@ function AndExpTypeInfo:get_staticFlag( ... )
    return self.result:get_staticFlag( ... )
 end
 
+function AndExpTypeInfo:get_typeData( ... )
+   return self.result:get_typeData( ... )
+end
+
 function AndExpTypeInfo:get_typeId( ... )
    return self.result:get_typeId( ... )
 end
@@ -8360,7 +8375,7 @@ function ProcessInfo:createEnum( scope, parentInfo, externalFlag, accessMode, en
    end
    
    
-   local info = EnumTypeInfo.new(self, scope, externalFlag, accessMode, enumName, parentInfo, valTypeInfo)
+   local info = EnumTypeInfo.new(self, scope, externalFlag, accessMode, enumName, parentInfo, parentInfo:get_typeData(), valTypeInfo)
    self:setupImut( info )
    
    local getEnumName = self:createFunc( false, true, nil, TypeInfoKind.Method, info, true, externalFlag, false, AccessMode.Pub, "get__txt", Async.Async, nil, nil, {_moduleObj.builtinTypeString}, false )
@@ -8427,7 +8442,7 @@ function ProcessInfo:createAlge( scope, parentInfo, externalFlag, accessMode, al
    end
    
    
-   local info = AlgeTypeInfo.new(self, scope, externalFlag, accessMode, algeName, parentInfo)
+   local info = AlgeTypeInfo.new(self, scope, externalFlag, accessMode, algeName, parentInfo, parentInfo:get_typeData())
    self:setupImut( info )
    
    local getAlgeName = self:createFunc( false, true, nil, TypeInfoKind.Method, info, true, externalFlag, false, AccessMode.Pub, "get__txt", Async.Async, nil, nil, {_moduleObj.builtinTypeString}, false )
@@ -9481,28 +9496,6 @@ function NormalTypeInfo:applyGeneric( processInfo, alt2typeMap, moduleTypeInfo )
          end
          
          return processInfo:createMap( self.accessMode, self.parentInfo, itemTypeInfoList[1], itemTypeInfoList[2], self.mutMode )
-      elseif _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.Form or _switchExp == TypeInfoKind.FormFunc then
-         local argTypeInfoList, workArg = applyGenericList( processInfo, self.argTypeInfoList, alt2typeMap, moduleTypeInfo )
-         if  nil == argTypeInfoList or  nil == workArg then
-            local _argTypeInfoList = argTypeInfoList
-            local _workArg = workArg
-         
-            return nil
-         end
-         
-         local retTypeInfoList, workRet = applyGenericList( processInfo, self.retTypeInfoList, alt2typeMap, moduleTypeInfo )
-         if  nil == retTypeInfoList or  nil == workRet then
-            local _retTypeInfoList = retTypeInfoList
-            local _workRet = workRet
-         
-            return nil
-         end
-         
-         if needNew or workArg or workRet then
-            return processInfo:createFunc( self.abstractFlag, false, nil, self.kind, self.parentInfo, self.autoFlag, self.externalFlag, self.staticFlag, self.accessMode, self.rawTxt, self.asyncMode, itemTypeInfoList, argTypeInfoList, retTypeInfoList, TypeInfo.isMut( self ) )
-         end
-         
-         return self
       else 
          
             if #self.itemTypeInfoList == 0 then

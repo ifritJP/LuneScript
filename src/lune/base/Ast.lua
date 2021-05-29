@@ -5242,36 +5242,26 @@ end
 function ModuleTypeInfo:set_imutType( typeInfo )
 
 end
-function ModuleTypeInfo.new( processInfo, scope, externalFlag, txt, parentInfo, typeData, mutable )
+function ModuleTypeInfo.new( processInfo, scope, externalFlag, txt, parentInfo, mutable )
    local obj = {}
    ModuleTypeInfo.setmeta( obj )
-   if obj.__init then obj:__init( processInfo, scope, externalFlag, txt, parentInfo, typeData, mutable ); end
+   if obj.__init then obj:__init( processInfo, scope, externalFlag, txt, parentInfo, mutable ); end
    return obj
 end
-function ModuleTypeInfo:__init(processInfo, scope, externalFlag, txt, parentInfo, typeData, mutable) 
+function ModuleTypeInfo:__init(processInfo, scope, externalFlag, txt, parentInfo, mutable) 
    TypeInfo.__init( self,scope, processInfo)
    
    
    self.externalFlag = externalFlag
    self.rawTxt = txt
-   self.parentInfo = _lune.unwrapDefault( parentInfo, _moduleObj.headTypeInfo)
+   self.parentInfo = parentInfo
    self.typeId = processInfo:newId( self )
    self.mutable = mutable
    
-   if typeData ~= nil then
-      typeData:addChildren( self )
-   end
+   parentInfo:get_typeData():addChildren( self )
    
-   
-   local fullName
-   
-   if parentInfo ~= nil then
-      local parentFull = parentInfo:getParentFullName( _moduleObj.defaultTypeNameCtrl )
-      fullName = string.format( "%s.@%s", parentFull, txt)
-   else
-      fullName = string.format( "%s", txt)
-   end
-   
+   local parentFull = parentInfo:getParentFullName( _moduleObj.defaultTypeNameCtrl )
+   local fullName = string.format( "%s.@%s", parentFull, txt)
    self.fullName = fullName
    scope:set_ownerTypeInfo( self )
 end
@@ -6842,20 +6832,13 @@ end
 
 function ProcessInfo:createModule( scope, parentInfo, externalFlag, moduleName, mutable )
 
-   do
-      local _exp = sym2builtInTypeMap[moduleName]
-      if _exp ~= nil then
-         return _exp:get_typeInfo()
-      end
-   end
-   
-   
    if Parser.isLuaKeyword( moduleName ) then
       Util.err( string.format( "This symbol can not use for a class or script file. -- %s", moduleName) )
    end
    
    
-   local info = ModuleTypeInfo.new(self, scope, externalFlag, moduleName, parentInfo, parentInfo:get_typeData(), mutable)
+   local info = ModuleTypeInfo.new(self, scope, externalFlag, moduleName, parentInfo, mutable)
+   
    self:setupImut( info )
    
    return info
@@ -6864,15 +6847,6 @@ end
 
 function ProcessInfo:createClass( classFlag, abstractFlag, scope, baseInfo, interfaceList, genTypeList, parentInfo, externalFlag, accessMode, className )
 
-   do
-      local _exp = sym2builtInTypeMap[className]
-      if _exp ~= nil then
-         return _exp:get_typeInfo()
-         
-      end
-   end
-   
-   
    if Parser.isLuaKeyword( className ) then
       Util.err( string.format( "This symbol can not use for a class or script file. -- %s", className) )
    end
@@ -6892,14 +6866,6 @@ end
 
 function ProcessInfo:createExtModule( scope, parentInfo, externalFlag, accessMode, className, moduleLang, requirePath )
 
-   do
-      local _exp = sym2builtInTypeMap[className]
-      if _exp ~= nil then
-         return _exp:get_typeInfo()
-      end
-   end
-   
-   
    if Parser.isLuaKeyword( className ) then
       Util.err( string.format( "This symbol can not use for a class or script file. -- %s", className) )
    end
@@ -6935,6 +6901,14 @@ function ProcessInfo:createFunc( abstractFlag, builtinFlag, scope, kind, parentI
       
    end
    
+   
+   return info
+end
+
+function ProcessInfo:createDummyNameSpace( scope, parentInfo, asyncMode )
+
+   local info = NormalTypeInfo.new(self, false, scope, nil, nil, true, false, true, AccessMode.Local, string.format( "__scope_%d", scope:get_scopeId()), parentInfo, self.miscTypeData, TypeInfoKind.Func, {}, {}, {}, MutMode.IMut, nil, asyncMode)
+   self:setupImut( info )
    
    return info
 end

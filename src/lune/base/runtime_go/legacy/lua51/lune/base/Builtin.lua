@@ -198,19 +198,20 @@ local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
 local Log = _lune.loadModule( 'lune.base.Log' )
 
 local TransUnitIF = _lune.loadModule( 'lune.base.TransUnitIF' )
+local SimpleTransUnit = _lune.loadModule( 'lune.base.SimpleTransUnit' )
 
 
 
 local Builtin = {}
 _moduleObj.Builtin = Builtin
-function Builtin.new( transUnitIF, targetLuaVer, ctrl_info )
+function Builtin.new( targetLuaVer, ctrl_info )
    local obj = {}
    Builtin.setmeta( obj )
-   if obj.__init then obj:__init( transUnitIF, targetLuaVer, ctrl_info ); end
+   if obj.__init then obj:__init( targetLuaVer, ctrl_info ); end
    return obj
 end
-function Builtin:__init(transUnitIF, targetLuaVer, ctrl_info) 
-   self.transUnitIF = transUnitIF
+function Builtin:__init(targetLuaVer, ctrl_info) 
+   self.transUnitIF = SimpleTransUnit.TransUnit.new(ctrl_info)
    self.targetLuaVer = targetLuaVer
    self.ctrl_info = ctrl_info
    self.processInfo = Ast.getRootProcessInfo(  )
@@ -1483,10 +1484,10 @@ function Builtin:registBuiltInScope(  )
                      declMode = TransUnitIF.DeclClassMode.Interface
                   end
                   
-                  parentInfo = self.transUnitIF:pushClass( self.processInfo, self.transUnitIF:getLatestPos(  ), declMode, false, nil, interfaceList, genTypeList, true, name, true, Ast.AccessMode.Pub )
+                  parentInfo = self.transUnitIF:pushClassLow( self.processInfo, self.transUnitIF:getLatestPos(  ), declMode, false, nil, interfaceList, genTypeList, true, name, true, Ast.AccessMode.Pub )
                   builtinFunc:registerClass( parentInfo )
                elseif _switchExp == TransUnitIF.DeclClassMode.Module then
-                  parentInfo = self.transUnitIF:pushModule( self.processInfo, true, name, true )
+                  parentInfo = self.transUnitIF:pushModuleLow( self.processInfo, true, name, true )
                   
                   self.transUnitIF:get_scope():get_parent():add( self.processInfo, Ast.SymbolKind.Typ, false, false, name, nil, parentInfo, Ast.AccessMode.Local, true, Ast.MutMode.Mut, true, false )
                end

@@ -804,7 +804,7 @@ fn Import.processImportFromFile(
       if index == #nameList {
          mutable = metaInfo.__moduleMutable;
       }
-      moduleTypeInfo = self.transUnitIF.pushModule(
+      moduleTypeInfo = self.transUnitIF.pushModuleLow(
          processInfo, true, moduleName, mutable );
       let typeId = unwrap metaInfo.__moduleHierarchy[ #nameList - index + 1 ];
       typeId2TypeInfo[ typeId ] = moduleTypeInfo;
@@ -1048,7 +1048,7 @@ fn Import.processImportFromFile(
             }
          }
          case .Module {
-            self.transUnitIF.pushModule(
+            self.transUnitIF.pushModuleLow(
                processInfo, true, classTypeInfo.getTxt(##),
                Ast.TypeInfo.isMut( classTypeInfo ) );
             Log._log3(
@@ -1106,7 +1106,7 @@ fn Import.processImportFromFile(
       if index == #nameList {
          mutable = metaInfo.__moduleMutable;
       }
-      self.transUnitIF.pushModule( processInfo, true, moduleName, mutable );
+      self.transUnitIF.pushModuleLow( processInfo, true, moduleName, mutable );
    }
 
 

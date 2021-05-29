@@ -60,6 +60,7 @@ build = {
       [ "lune.base.Nodes" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/Nodes.lua",
       [ "lune.base.Macro" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/Macro.lua",
       [ "lune.base.TransUnitIF" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/TransUnitIF.lua",
+      [ "lune.base.SimpleTransUnit" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/SimpleTransUnit.lua",
       [ "lune.base.Builtin" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/Builtin.lua",
       [ "lune.base.Import" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/Import.lua",
       [ "lune.base.TransUnit" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/TransUnit.lua",

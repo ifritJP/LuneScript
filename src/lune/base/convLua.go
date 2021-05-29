@@ -36,7 +36,7 @@ var convLua_ExportIdKindList_ = NewLnsList( []LnsAny {
   convLua_ExportIdKind__Depend,
   convLua_ExportIdKind__Normal,
 })
-func convLua_ExportIdKind_get__allList_1339_(_env *LnsEnv) *LnsList{
+func convLua_ExportIdKind_get__allList_1341_(_env *LnsEnv) *LnsList{
     return convLua_ExportIdKindList_
 }
 var convLua_ExportIdKindMap_ = map[LnsInt]string {
@@ -44,7 +44,7 @@ var convLua_ExportIdKindMap_ = map[LnsInt]string {
   convLua_ExportIdKind__Discarded: "ExportIdKind.Discarded",
   convLua_ExportIdKind__Normal: "ExportIdKind.Normal",
 }
-func convLua_ExportIdKind__from_1333_(_env *LnsEnv, arg1 LnsInt) LnsAny{
+func convLua_ExportIdKind__from_1335_(_env *LnsEnv, arg1 LnsInt) LnsAny{
     if _, ok := convLua_ExportIdKindMap_[arg1]; ok { return arg1 }
     return nil
 }
@@ -53,7 +53,7 @@ func convLua_ExportIdKind_getTxt(arg1 LnsInt) string {
     return convLua_ExportIdKindMap_[arg1];
 }
 var convLua_stepIndent LnsInt
-type convLua_outputMacroStmtBlock_2339_ func (_env *LnsEnv)
+type convLua_outputMacroStmtBlock_2341_ func (_env *LnsEnv)
 // for 3743
 func convLua_convExp18753(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
@@ -141,7 +141,7 @@ func convLua_filter_1250_(_env *LnsEnv, node *Nodes_Node,filter *convLua_ConvFil
 
 
 // 1241: decl @lune.@base.@convLua.isGenericType
-func convLua_isGenericType_1957_(_env *LnsEnv, typeInfo *Ast_TypeInfo) bool {
+func convLua_isGenericType_1959_(_env *LnsEnv, typeInfo *Ast_TypeInfo) bool {
     if Ast_isGenericType(_env, typeInfo){
         return true
     }
@@ -230,7 +230,7 @@ func ConvLua_getTestLnsCode(_env *LnsEnv) string {
 }
 
 // 3722: decl @lune.@base.@convLua.Ast2Code
-func convLua_Ast2Code_3732_(_env *LnsEnv, option *Option_Option,ast *TransUnit_ASTInfo,streamName string)(string, string) {
+func convLua_Ast2Code_3734_(_env *LnsEnv, option *Option_Option,ast *TransUnit_ASTInfo,streamName string)(string, string) {
     var stream *Util_memStream
     stream = NewUtil_memStream(_env)
     var metaStream *Util_memStream
@@ -452,7 +452,7 @@ type convLua_ConvFilterMtd interface {
     Get_optStack(_env *LnsEnv) *LnsList
     Get_typeNameCtrl(_env *LnsEnv) *Ast_TypeNameCtrl
     outputAlter2MapFunc(_env *LnsEnv, arg1 Lns_oStream, arg2 *LnsMap)
-    OutputDeclMacro(_env *LnsEnv, arg1 string, arg2 *LnsList, arg3 convLua_outputMacroStmtBlock_2339_)
+    OutputDeclMacro(_env *LnsEnv, arg1 string, arg2 *LnsList, arg3 convLua_outputMacroStmtBlock_2341_)
     outputMeta(_env *LnsEnv, arg1 *Nodes_RootNode)
     popIndent(_env *LnsEnv)
     ProcessAbbr(_env *LnsEnv, arg1 *Nodes_AbbrNode, arg2 LnsAny)
@@ -1729,7 +1729,7 @@ func (self *convLua_ConvFilter) getMapInfo(_env *LnsEnv, typeInfo *Ast_TypeInfo)
             if Ast_NormalTypeInfo_isAvailableMapping(_env, self.processInfo, nonnilableType, NewLnsMap( map[LnsAny]LnsAny{})){
                 funcTxt = _env.LuaVM.String_format("%s._fromMap", []LnsAny{self.FP.getFullName(_env, nonnilableType)})
                 
-                if convLua_isGenericType_1957_(_env, nonnilableType){
+                if convLua_isGenericType_1959_(_env, nonnilableType){
                     var memStream *Util_memStream
                     memStream = NewUtil_memStream(_env)
                     self.FP.outputAlter2MapFunc(_env, memStream.FP, nonnilableType.FP.CreateAlt2typeMap(_env, false))
@@ -2244,7 +2244,7 @@ func (self *convLua_ConvFilter) ProcessDeclClass(_env *LnsEnv, node *Nodes_DeclC
         declArgTxt = "val"
         var argTxt string
         argTxt = "{}, val"
-        if convLua_isGenericType_1957_(_env, classTypeInfo){
+        if convLua_isGenericType_1959_(_env, classTypeInfo){
             declArgTxt = "val, __alt2mapFunc"
             
             argTxt = "{ __alt2mapFunc = __alt2mapFunc }, val"
@@ -2282,7 +2282,7 @@ func (self *convLua_ConvFilter) ProcessExpMacroExp(_env *LnsEnv, node *Nodes_Exp
 }
 
 // 1832: decl @lune.@base.@convLua.ConvFilter.outputDeclMacro
-func (self *convLua_ConvFilter) OutputDeclMacro(_env *LnsEnv, name string,argNameList *LnsList,callback convLua_outputMacroStmtBlock_2339_) {
+func (self *convLua_ConvFilter) OutputDeclMacro(_env *LnsEnv, name string,argNameList *LnsList,callback convLua_outputMacroStmtBlock_2341_) {
     self.FP.Write(_env, _env.LuaVM.String_format("local function %s(", []LnsAny{name}))
     self.FP.writeln(_env, "__macroArgs )")
     self.FP.pushIndent(_env, nil)
@@ -2326,7 +2326,7 @@ func (self *convLua_ConvFilter) ProcessDeclMacro(_env *LnsEnv, node *Nodes_DeclM
             arg := _arg.(Nodes_DeclArgNodeDownCast).ToNodes_DeclArgNode()
             argNameList.Insert(arg.FP.Get_name(_env).Txt)
         }
-        self.FP.OutputDeclMacro(_env, macroInfo.FP.Get_name(_env).Txt, argNameList, convLua_outputMacroStmtBlock_2339_(func(_env *LnsEnv) {
+        self.FP.OutputDeclMacro(_env, macroInfo.FP.Get_name(_env).Txt, argNameList, convLua_outputMacroStmtBlock_2341_(func(_env *LnsEnv) {
             {
                 _stmtBlock := macroInfo.FP.Get_stmtBlock(_env)
                 if !Lns_IsNil( _stmtBlock ) {
@@ -3272,7 +3272,7 @@ func (self *convLua_ConvFilter) ProcessExpCall(_env *LnsEnv, node *Nodes_ExpCall
             } else if _switch13916 == Ast_TypeInfoKind__Class {
                 if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
                     _env.SetStackVal( prefixType.FP.IsInheritFrom(_env, self.processInfo, Ast_builtinTypeMapping, nil)) &&
-                    _env.SetStackVal( convLua_isGenericType_1957_(_env, prefixType)) &&
+                    _env.SetStackVal( convLua_isGenericType_1959_(_env, prefixType)) &&
                     _env.SetStackVal( (_env.PopVal( _env.IncStack() ||
                         _env.SetStackVal( fieldNode.FP.Get_field(_env).Txt == "_fromMap") ||
                         _env.SetStackVal( fieldNode.FP.Get_field(_env).Txt == "_fromStem") ).(bool))) ).(bool)){
@@ -4166,7 +4166,7 @@ func (self *ConvLua_MacroEvalImp) EvalFromCode(_env *LnsEnv, processInfo *Ast_Pr
     stream = NewUtil_memStream(_env)
     var conv *convLua_ConvFilter
     conv = NewconvLua_ConvFilter(_env, "macro", stream.FP, NewUtil_NullOStream(_env).FP, ConvLua_ConvMode__ConvMeta, true, Ast_headTypeInfo, processInfo, Ast_SymbolKind__Typ, nil, LuaVer_getCurVer(_env), false, true)
-    conv.FP.OutputDeclMacro(_env, name, argNameList, convLua_outputMacroStmtBlock_2339_(func(_env *LnsEnv) {
+    conv.FP.OutputDeclMacro(_env, name, argNameList, convLua_outputMacroStmtBlock_2341_(func(_env *LnsEnv) {
         if code != nil{
             code_1827 := code.(string)
             conv.FP.Write(_env, code_1827)

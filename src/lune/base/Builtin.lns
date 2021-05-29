@@ -30,6 +30,7 @@ import lune.base.LuaVer;
 import lune.base.Log;
 
 import lune.base.TransUnitIF;
+import lune.base.SimpleTransUnit;
 
 _lune_control ignore_symbol_;
 
@@ -43,11 +44,10 @@ pub class Builtin {
    let processInfo:Ast.ProcessInfo;
    let modifier:TransUnitIF.Modifier;
 
-   pub fn __init( transUnitIF:TransUnitIF.TransUnitIF,
-                  targetLuaVer:&LuaVer.LuaVerInfo,
+   pub fn __init( targetLuaVer:&LuaVer.LuaVerInfo,
                   ctrl_info: &Types.TransCtrlInfo )
    {
-      self.transUnitIF = transUnitIF;
+      self.transUnitIF = new SimpleTransUnit.TransUnit( ctrl_info );
       self.targetLuaVer = targetLuaVer;
       self.ctrl_info = ctrl_info;
       self.processInfo = Ast.getRootProcessInfo();
@@ -685,15 +685,15 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
                   } else {
                      declMode = .Interface;
                   }
-                  parentInfo = self.transUnitIF.pushClass(
+                  parentInfo = self.transUnitIF.pushClassLow(
                      self.processInfo, self.transUnitIF.getLatestPos(),
                      declMode, false, nil, interfaceList,
                      genTypeList, true, name, true, .Pub ## );
                   builtinFunc.registerClass( parentInfo );
                }
                case .Module {
-                  parentInfo = self.transUnitIF.pushModule(
-                     self.processInfo, true, name, true );  
+                  parentInfo = self.transUnitIF.pushModuleLow(
+                     self.processInfo, true, name, true );
 
                   self.transUnitIF.$scope.$parent.add(
                      self.processInfo, .Typ , false, false, name, nil,

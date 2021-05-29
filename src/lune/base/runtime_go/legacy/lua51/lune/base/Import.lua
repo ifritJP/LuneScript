@@ -1695,7 +1695,7 @@ function Import:processImportFromFile( processInfo, lnsPath, metaInfoStem, orgMo
          mutable = metaInfo.__moduleMutable
       end
       
-      moduleTypeInfo = self.transUnitIF:pushModule( processInfo, true, moduleName, mutable )
+      moduleTypeInfo = self.transUnitIF:pushModuleLow( processInfo, true, moduleName, mutable )
       local typeId = _lune.unwrap( metaInfo.__moduleHierarchy[#nameList - index + 1])
       typeId2TypeInfo[typeId] = moduleTypeInfo
       typeId2Scope[typeId] = self.transUnitIF:get_scope()
@@ -1939,7 +1939,7 @@ function Import:processImportFromFile( processInfo, lnsPath, metaInfoStem, orgMo
             end
             
          elseif _switchExp == Ast.TypeInfoKind.Module then
-            self.transUnitIF:pushModule( processInfo, true, classTypeInfo:getTxt(  ), Ast.TypeInfo.isMut( classTypeInfo ) )
+            self.transUnitIF:pushModuleLow( processInfo, true, classTypeInfo:getTxt(  ), Ast.TypeInfo.isMut( classTypeInfo ) )
             Log.log( Log.Level.Debug, __func__, 1054, function (  )
             
                return string.format( "push module -- %s, %s, %d, %d, %d", classTypeInfo:getTxt(  ), _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, self.transUnitIF:get_scope(), false ) or "nil", _lune.nilacc( _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'get_typeId', 'callmtd' ), "id" ) or -1, classTypeInfo:get_typeId().id, self.transUnitIF:get_scope():get_parent():get_scopeId())
@@ -2002,7 +2002,7 @@ function Import:processImportFromFile( processInfo, lnsPath, metaInfoStem, orgMo
          mutable = metaInfo.__moduleMutable
       end
       
-      self.transUnitIF:pushModule( processInfo, true, moduleName, mutable )
+      self.transUnitIF:pushModuleLow( processInfo, true, moduleName, mutable )
    end
    
    

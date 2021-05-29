@@ -1973,7 +1973,7 @@ fn TransUnit.analyzeAccessClassField(
       if self.inAnalyzingState( .InitBlock ) or self.inAnalyzingState( .ClassMethod ) 
       {     
          let mut errorMess:str! = nil;
-         if self.protoFuncMap[ symbolInfo.$typeInfo ] {
+         if self.nsInfoMap[ symbolInfo.$typeInfo ]$.$nobody {
 
             // __init ブロックの制御
             errorMess = "It can't call prototype function from static -- %s" (symbolInfo.$name);
@@ -1987,7 +1987,7 @@ fn TransUnit.analyzeAccessClassField(
       }
       elseif self.inAnalyzingState( .Constructor ) {
          let mut errorMess:str! = nil;
-         if self.protoFuncMap[ symbolInfo.$typeInfo ] {
+         if self.nsInfoMap[ symbolInfo.$typeInfo ]$.$nobody {
             errorMess = "It can't call prototype function from '__init'";
          }
          else {
@@ -2768,6 +2768,18 @@ fn TransUnit.analyzeExpSymbol(
          self.checkAsyncSymbol( symbolInfo, firstToken.pos );
          
          let typeInfo = symbolInfo.$typeInfo;
+         if symbolInfo.$kind == .Typ and
+            typeInfo.$kind == .Alternate and
+            self.analyzingStaticMethodArgsScope ~= nil and
+            symbolInfo.$scope ~= self.analyzingStaticMethodArgsScope
+         {
+            // static メソッド内では、
+            // そのメソッドで定義した型パラメータ以外を使用できない。
+            self.addErrMess(
+               firstToken.pos,    
+               "The static method can't use the type parameter. -- %s"
+               (typeInfo.getTxt(##)));
+         }
 
          switch symbolInfo.$kind {
             case .Typ {  

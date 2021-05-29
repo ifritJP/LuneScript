@@ -506,11 +506,6 @@ class AccessSymbolSetQueue {
    }
 }
 
-
-// pub interface TransUnitIF {
-//    pub fn createModifier( typeInfo:&Ast.TypeInfo, mutMode: Ast.MutMode ) : &Ast.TypeInfo;
-// }
-
 pub class TransUnit extend (TransUnitIF.TransUnitIF, Parser.PushbackParser) {
 
    /** 解析状態 */
@@ -591,17 +586,12 @@ pub class TransUnit extend (TransUnitIF.TransUnitIF, Parser.PushbackParser) {
    pri let mut loopScopeQueue: List<&Ast.Scope>;
 
    /**
-プロトタイプだけの関数のタイプ Map。
-解析終了時に、この  Map に残っているとエラー。
+名前空間タイプ Map。
+解析終了時に、この Map に nobody 設定が残っているとエラー。
 
-関数の TypeInfo → Position.
+TypeInfo → NSInfo.
    */
-   pri let mut protoFuncMap:Map<&Ast.TypeInfo,&Parser.Position>;
-   /**
-   プロトタイプ宣言しているクラス。
-   解析終了時に、この  Map に残っているとエラー。
-   */
-   pri let mut protoClassMap:Map<&Ast.TypeInfo,&Parser.Position>;
+   pri let mut nsInfoMap:Map<&Ast.TypeInfo,TransUnitIF.NSInfo>;
 
    /**
 トランスコンパイル先の lua バージョン
@@ -646,6 +636,11 @@ alias で置き換えている元の Type → alias の型
    let class2defaultAsyncMode: Map<&Ast.TypeInfo,DefaultAsyncMode>;
 
    let namespace2Scope: Map<&Ast.TypeInfo,Ast.Scope>;
+
+   /** 引数解析中の static method の Scope */
+   let mut analyzingStaticMethodArgsScope:&Ast.Scope!;
+
+   
    
 
    pub fn __init( moduleId:&frontInterface.ModuleId,
@@ -654,6 +649,7 @@ alias で置き換えている元の Type → alias の型
                   pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
                   ctrl_info: &Types.TransCtrlInfo )
    {
+      self.analyzingStaticMethodArgsScope = nil;
       self.namespace2Scope = {};
       self.class2defaultAsyncMode = {};
       self.defaultAsyncMode = .NoAsync;
@@ -668,7 +664,6 @@ alias で置き換えている元の Type → alias の型
       self.scopeAccess = .Normal;
       self.macroCtrl = new Macro.MacroCtrl( macroEval );
       self.typeNameCtrl = Ast.defaultTypeNameCtrl;
-      self.protoClassMap = {};
       self.analyzingStateQueue = [];
       // self.macroCallLineNo = 0;
       //self.useModuleMacroSet = (@);
@@ -678,7 +673,7 @@ alias で置き換えている元の Type → alias の型
       self.helperInfo = new frontInterface.LuneHelperInfo();
       self.targetLuaVer = targetLuaVer;
       self.importModuleInfo = importModuleInfo;
-      self.protoFuncMap = {};
+      self.nsInfoMap = {};
       self.loopScopeQueue = [];
       self.has__func__Symbol = (@);
       self.nodeManager = new Nodes.NodeManager();
@@ -784,6 +779,26 @@ alias で置き換えている元の Type → alias の型
       self.scope = self.scope.get_parent();
    }
 
+   /**
+解析した名前空間の情報を登録する。
+この情報は、&TypeInfo から imut を外すために利用する。
+   */ 
+   fn newNSInfo( typeInfo:Ast.TypeInfo, pos:&Parser.Position) mut : TransUnitIF.NSInfo
+   {
+      let mut nsInfo = new TransUnitIF.NSInfo( false, typeInfo, pos );
+      self.nsInfoMap[ typeInfo ] = nsInfo;
+      return nsInfo;
+   }
+
+   /** scope を名前空間に属させるためのダミーの関数を定義 */
+   fn createDummyNS( scope:Ast.Scope, pos:&Parser.Position, asyncMode:Ast.Async ) mut {
+      let mut dummyType = self.processInfo.createDummyNameSpace(
+         scope, Ast.headTypeInfo, asyncMode );
+      self.newNSInfo( dummyType, pos );
+   }
+
+   
+
    pri fn prepareTentativeSymbol(
       scope:&Ast.Scope, loopFlag:bool, list:&List<RefAccessSymPos>! ) mut
    {
@@ -862,26 +877,30 @@ alias で置き換えている元の Type → alias の型
       return typeInfo;
    }
 
-   pri fn getCurrentNamespaceTypeInfo() : &Ast.TypeInfo {
-      // let typeInfo = Ast.headTypeInfo;
-      // let mut scope = self.scope;
-      // repeat {
-      //    if! scope.$ownerTypeInfo {
-      //       return _exp;
-      //    }
-      //    scope = scope.$parent;
-      // } scope.isRoot();
-      // return typeInfo;
-      return self.scope.getNamespaceTypeInfo();
+   /**
+現在のスコープが属する名前空間の型を取得する。
+
+※
+現在のスコープが属する名前空間が、
+この TransUnit で生成した名前空間でない場合はエラーするので注意すること。
+
+例えば、現在のスコープが rootScope だった場合はエラーする。
+*/ 
+   pri fn getCurrentNamespaceTypeInfoMut() mut : Ast.TypeInfo {
+      let typeInfo = self.scope.getNamespaceTypeInfo();
+      let! mut nsInfo = self.nsInfoMap[ typeInfo ] {
+         self.error( "not found nsInfo -- %s" (typeInfo.getTxt(##)) );
+      };
+      return nsInfo.$typeInfo;
    }
 
-   // pri fn getCurrentNamespaceScope(): Ast.Scope {
-   //    return unwrap self.getCurrentNamespaceTypeInfo().$scope;
-   // }
-
+   pri fn getCurrentNamespaceTypeInfo() : &Ast.TypeInfo {
+      return self.scope.getNamespaceTypeInfo();
+   }
+   
    pub fn pushModule(
       processInfo:Ast.ProcessInfo,
-      externalFlag: bool, name:str, mutable: bool ) mut : &Ast.TypeInfo
+      externalFlag: bool, name:str, mutable: bool ) mut : TransUnitIF.NSInfo
    {
       let mut typeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
 
@@ -892,7 +911,8 @@ alias で置き換えている元の Type → alias の型
       else {
          modName = "@%s" (name);
       }
-      
+
+      let mut nsInfo;
       if! self.scope.getTypeInfoChild( modName ) {
          typeInfo = _exp;
          if! let mut scope = self.namespace2Scope[ typeInfo ] {
@@ -900,14 +920,17 @@ alias で置き換えている元の Type → alias の型
          } else {
             self.error( "not found scope -- %s" (name) );
          }
+         nsInfo = unwrap self.nsInfoMap[ typeInfo ];
       }
       else {
          let parentInfo = self.getCurrentNamespaceTypeInfo();
          let mut parentScope = self.scope;
          let mut scope = self.pushScope( true ## );
-         typeInfo = processInfo.createModule(
+         let mut newType = processInfo.createModule(
             scope, parentInfo, externalFlag, modName, mutable );
+         typeInfo = newType;
          self.namespace2Scope[ typeInfo ] = scope;
+         nsInfo = self.newNSInfo( newType, self.parser.getLastPos() );
 
          let _, existSym = parentScope.addClass( processInfo, modName, nil, typeInfo );
          when! existSym {
@@ -925,39 +948,46 @@ alias で置き換えている元の Type → alias の型
          let namespace = new Nodes.NamespaceInfo( modName, self.scope, typeInfo );
          self.typeId2ClassMap[ typeInfo.$typeId ] = namespace;
       }
-      return typeInfo;
+      return nsInfo;
    }
+
+   pub fn pushModuleLow(
+      processInfo:Ast.ProcessInfo,
+      externalFlag: bool, name:str, mutable: bool ) mut : &Ast.TypeInfo
+   {
+      return self.pushModule( processInfo, externalFlag, name, mutable ).$typeInfo;
+   }
+   
 
    pub fn popModule() mut {
       self.popScope();
    }
 
    pri fn pushExtModule(
-      externalFlag: bool, name:str, accessMode:Ast.AccessMode,
-      pos:&Parser.Position, lazy:bool, lang:Types.Lang, requirePath:str ) mut : &Ast.TypeInfo
+      externalFlag: bool, name:str, accessMode:Ast.AccessMode, pos:&Parser.Position,
+      lazy:bool, lang:Types.Lang, requirePath:str ) mut : TransUnitIF.NSInfo
    {
-      let mut typeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
 
       let modName = name;
       if! self.scope.getTypeInfoChild( modName ) {
          self.addErrMess( pos, "multiple define -- %s" (name) );
-         return _exp;
       }
-      else {
-         let parentInfo = self.getCurrentNamespaceTypeInfo();
-         let mut parentScope = self.scope;
-         let mut scope = self.pushScope( true ## );
-         typeInfo = self.processInfo.createExtModule(
-            scope, parentInfo, externalFlag,
-            accessMode, name, lang, requirePath );
 
-         parentScope.addExtModule( self.processInfo, name, pos, typeInfo, lazy, lang );
-      }
+      let parentInfo = self.getCurrentNamespaceTypeInfoMut();
+      let mut parentScope = self.scope;
+      let mut scope = self.pushScope( true ## );
+      let mut typeInfo = self.processInfo.createExtModule(
+         scope, parentInfo, externalFlag,
+         accessMode, name, lang, requirePath );
+
+      parentScope.addExtModule( self.processInfo, name, pos, typeInfo, lazy, lang );
+
       if not self.typeId2ClassMap[ typeInfo.$typeId ] {
          let namespace = new Nodes.NamespaceInfo( modName, self.scope, typeInfo );
          self.typeId2ClassMap[ typeInfo.$typeId ] = namespace;
       }
-      return typeInfo;
+
+      return self.newNSInfo( typeInfo, pos );
    }
 
 
@@ -999,16 +1029,16 @@ alias で置き換えている元の Type → alias の型
       errPos:&Parser.Position, mode:TransUnitIF.DeclClassMode, abstractFlag: bool,
       baseInfo: &Ast.TypeInfo!, interfaceList: &List<&Ast.TypeInfo>!,
       genTypeList: &List<&Ast.AlternateTypeInfo>!, externalFlag: bool, name:str,
-      allowMultiple:bool,
-      accessMode:Ast.AccessMode, defNamespace: Nodes.NamespaceInfo! ) mut : &Ast.TypeInfo
+      allowMultiple:bool, accessMode:Ast.AccessMode,
+      defNamespace: Nodes.NamespaceInfo! ) mut : TransUnitIF.NSInfo
    {
-      let mut typeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
+      let typeInfo:&Ast.TypeInfo;
+      let mut nsInfo;
       if! self.scope.getTypeInfo( name, self.scope, true, .Normal ) {
+         // 宣言済み
          typeInfo = _exp;
-      }
-      //if! self.scope.getTypeInfoChild( name ) {
+         nsInfo = unwrap self.nsInfoMap[ typeInfo ];
 
-      if typeInfo ~= Ast.headTypeInfo {
          if typeInfo.$scope$.$parent ~= self.scope {
             self.addErrMess(
                errPos,     
@@ -1016,10 +1046,6 @@ alias で置き換えている元の Type → alias の型
             // クラスの複数定義は、その後の解析すると、
             self.error( "stop by error" );
          }
-      }
-      if typeInfo ~= Ast.headTypeInfo
-      {
-         // 宣言済み
 
          if typeInfo.$abstractFlag ~= abstractFlag {
             self.addErrMess( errPos,
@@ -1112,7 +1138,7 @@ alias で置き換えている元の Type → alias の型
          }
       }
       else {
-         let parentInfo = self.getCurrentNamespaceTypeInfo();
+         let parentInfo = self.getCurrentNamespaceTypeInfoMut();
 
          let mut parentScope = self.scope;
          let mut scope = self.pushScope( true, baseInfo, interfaceList );
@@ -1123,11 +1149,13 @@ alias で置き換えている元の Type → alias の型
          else {
             workGenTypeList = [];
          }
-         
-         typeInfo = processInfo.createClass(
+
+         let mut newType = processInfo.createClass(
             mode ~= .Interface, abstractFlag, scope, baseInfo, interfaceList,
             workGenTypeList, parentInfo, externalFlag, accessMode, name );
+         typeInfo = newType;
          self.namespace2Scope[ typeInfo ] = scope;
+         nsInfo = self.newNSInfo( newType, errPos );
          
          parentScope.addClassLazy(
             processInfo, name, errPos, typeInfo, mode == .LazyModule );
@@ -1143,8 +1171,24 @@ alias で置き換えている元の Type → alias の型
          namespace = new Nodes.NamespaceInfo( name, self.scope, typeInfo );
       };
       self.typeId2ClassMap[ typeInfo.get_typeId() ] = namespace;
-      return typeInfo;
+      
+      return nsInfo;
    }
+
+   pub fn pushClassLow(
+      processInfo:Ast.ProcessInfo,
+      errPos:&Parser.Position, mode:TransUnitIF.DeclClassMode, abstractFlag: bool,
+      baseInfo: &Ast.TypeInfo!, interfaceList: &List<&Ast.TypeInfo>!,
+      genTypeList: &List<&Ast.AlternateTypeInfo>!, externalFlag: bool, name:str,
+      allowMultiple:bool, accessMode:Ast.AccessMode,
+      defNamespace: Nodes.NamespaceInfo! ) mut : &Ast.TypeInfo
+   {
+      return self.pushClass(
+         processInfo, errPos, mode, abstractFlag,
+         baseInfo, interfaceList, genTypeList, externalFlag, name,
+         allowMultiple, accessMode, defNamespace ).$typeInfo;
+   }
+   
 
    pub fn popClass() mut {
       self.popScope();
@@ -1582,6 +1626,44 @@ fn TransUnit.getContinueToken() mut : &Parser.Token, bool {
    return token, token.consecutive;
 }
 
+
+fn TransUnit.getDefaultAsync(
+   kind:&Ast.TypeInfoKind,
+   classTypeInfo:&Ast.TypeInfo!, asyncMode:Ast.Async! ) : Ast.Async
+{
+   when! asyncMode {
+      return asyncMode;
+   }
+
+   fn process( defaultAsyncMode:DefaultAsyncMode ) : Ast.Async {
+      _switch defaultAsyncMode {
+         case .AsyncAll, .AsyncFunc {
+            return .Async;
+         }
+         case .NoAsync {
+            return .Noasync;
+         }
+      }
+   }
+
+   when! classTypeInfo {
+      if! self.class2defaultAsyncMode[ classTypeInfo ] {
+         return process( _exp );
+      }
+   }
+   
+   switch kind {
+      case .Method {
+         if self.defaultAsyncMode == .AsyncAll {
+            return .Async;
+         }
+      }
+      case .Func, .FormFunc {
+         return process( self.defaultAsyncMode );
+      }
+   }
+   return .Noasync;
+}
 
 /**
 termTxt が表われるまで statement を解析し、 stmtList に格納する。
@@ -2964,10 +3046,15 @@ fn TransUnit.analyzeScope( firstToken: &Parser.Token ) mut : Nodes.ScopeNode {
       self.pushback();
    }
 
+   let asyncMode = self.getDefaultAsync( .Func, nil, nil );
+   
    // スコープを切り替え
    let mut bakScope = self.scope;
    self.scope = self.topScope;
-   self.pushScope( false ## );
+   let mut localScope = self.pushScope( false ## );
+
+   // 名前空間に属させるためのダミーの関数を定義
+   self.createDummyNS( localScope, nextToken.pos, asyncMode );
 
    // 継承するシンボル情報をスコープに設定設定
    foreach symInfo in symList {

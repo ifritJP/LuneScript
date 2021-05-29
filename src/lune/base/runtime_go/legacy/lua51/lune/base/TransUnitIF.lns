@@ -50,18 +50,25 @@ pub class Modifier {
    }
 }
 
+pub class NSInfo {
+   let mut nobody:bool {pub,pub};
+   let typeInfo:Ast.TypeInfo {pub};
+   let pos:&Parser.Position {pub};
+}
+
 pub interface TransUnitIF {
    pub fn get_scope() mut : Ast.Scope;
    pub fn error( mess: str ) __async mut : __;
    pub fn pushScope( classFlag: bool, baseInfo: &Ast.TypeInfo!,
                      interfaceList: &List<&Ast.TypeInfo>! ) mut: Ast.Scope;
    pub fn popScope() mut;
-   pub fn pushModule( processInfo:Ast.ProcessInfo,
-                      externalFlag: bool, name:str, mutable: bool ) mut : &Ast.TypeInfo;
+   pub fn pushModuleLow(
+      processInfo:Ast.ProcessInfo,
+      externalFlag: bool, name:str, mutable: bool ) mut : &Ast.TypeInfo;
    pub fn popModule() mut;
    pub fn pushClassScope(
       errPos:&Parser.Position, classTypeInfo:&Ast.TypeInfo, scope:Ast.Scope ) mut;
-   pub fn pushClass(
+   pub fn pushClassLow(
       processInfo:Ast.ProcessInfo,
       errPos:&Parser.Position, mode:DeclClassMode, abstractFlag: bool,
       baseInfo: &Ast.TypeInfo!, interfaceList: &List<&Ast.TypeInfo>!,

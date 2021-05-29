@@ -872,7 +872,7 @@ func Nodes_getLiteralObj(_env *LnsEnv, obj LnsAny) LnsAny {
 }
 
 // 374: decl @lune.@base.@Nodes.regKind
-func Nodes_regKind_1415_(_env *LnsEnv, name string) LnsInt {
+func Nodes_regKind_1417_(_env *LnsEnv, name string) LnsInt {
     var kind LnsInt
     kind = Nodes_nodeKindSeed
     Nodes_nodeKindSeed = Nodes_nodeKindSeed + 1
@@ -888,7 +888,7 @@ func Nodes_getNodeKindName(_env *LnsEnv, kind LnsInt) string {
 
 
 // 923: decl @lune.@base.@Nodes.getBreakKindForStmtList
-func Nodes_getBreakKindForStmtList_3073_(_env *LnsEnv, checkMode LnsInt,stmtList *LnsList) LnsInt {
+func Nodes_getBreakKindForStmtList_3079_(_env *LnsEnv, checkMode LnsInt,stmtList *LnsList) LnsInt {
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( checkMode != Nodes_CheckBreakMode__Normal) &&
         _env.SetStackVal( checkMode != Nodes_CheckBreakMode__Return) ).(bool)){
@@ -955,7 +955,7 @@ func Nodes_getBreakKindForStmtList_3073_(_env *LnsEnv, checkMode LnsInt,stmtList
 }
 
 // 2178: decl @lune.@base.@Nodes.Node.getSymbolInfo.processExpNode
-func Node_getSymbolInfo__processExpNode_13182_(_env *LnsEnv, node *Nodes_Node) *LnsList {
+func Node_getSymbolInfo__processExpNode_13190_(_env *LnsEnv, node *Nodes_Node) *LnsList {
     if _switch50200 := (node.FP.Get_kind(_env)); _switch50200 == Nodes_NodeKind_get_ExpRef(_env) {
         return NewLnsList([]LnsAny{Ast_SymbolInfo2Stem((Lns_unwrap( (Nodes_ExpRefNodeDownCastF(node.FP))).(*Nodes_ExpRefNode)).FP.Get_symbolInfo(_env))})
     } else if _switch50200 == Nodes_NodeKind_get_RefField(_env) {
@@ -986,12 +986,12 @@ func Node_getSymbolInfo__processExpNode_13182_(_env *LnsEnv, node *Nodes_Node) *
                     index := _index + 1
                     expNode := _expNode.(Nodes_NodeDownCast).ToNodes_Node()
                     if index == expListNode.FP.Get_expList(_env).Len(){
-                        for _, _symbolInfo := range( Node_getSymbolInfo__processExpNode_13182_(_env, expNode).Items ) {
+                        for _, _symbolInfo := range( Node_getSymbolInfo__processExpNode_13190_(_env, expNode).Items ) {
                             symbolInfo := _symbolInfo.(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
                             list.Insert(Ast_SymbolInfo2Stem(symbolInfo))
                         }
                     } else { 
-                        for _, _symbolInfo := range( Node_getSymbolInfo__processExpNode_13182_(_env, expNode).Items ) {
+                        for _, _symbolInfo := range( Node_getSymbolInfo__processExpNode_13190_(_env, expNode).Items ) {
                             symbolInfo := _symbolInfo.(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
                             list.Insert(Ast_SymbolInfo2Stem(symbolInfo))
                             break
@@ -1014,7 +1014,7 @@ func Node_getSymbolInfo__processExpNode_13182_(_env *LnsEnv, node *Nodes_Node) *
 }
 
 // 2554: decl @lune.@base.@Nodes.enumLiteral2Literal
-func Nodes_enumLiteral2Literal_13526_(_env *LnsEnv, obj LnsAny)(LnsAny, LnsAny) {
+func Nodes_enumLiteral2Literal_13534_(_env *LnsEnv, obj LnsAny)(LnsAny, LnsAny) {
     switch _exp51877 := obj.(type) {
     case *Ast_EnumLiteral__Int:
     val := _exp51877.Val1
@@ -2235,7 +2235,7 @@ func (self *Nodes_Node) VisitSub(_env *LnsEnv, visitor Nodes_NodeVisitor,depth L
 
 // 2177: decl @lune.@base.@Nodes.Node.getSymbolInfo
 func (self *Nodes_Node) GetSymbolInfo(_env *LnsEnv) *LnsList {
-    return Node_getSymbolInfo__processExpNode_13182_(_env, self)
+    return Node_getSymbolInfo__processExpNode_13190_(_env, self)
 }
 
 
@@ -4760,7 +4760,7 @@ func (self *Nodes_BlockNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,depth
 
 // 948: decl @lune.@base.@Nodes.BlockNode.getBreakKind
 func (self *Nodes_BlockNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsInt {
-    return Nodes_getBreakKindForStmtList_3073_(_env, checkMode, self.stmtList)
+    return Nodes_getBreakKindForStmtList_3079_(_env, checkMode, self.stmtList)
 }
 
 
@@ -7689,7 +7689,7 @@ func (self *Nodes_ExpRefNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
                 _env.SetStackVal( self.symbolInfo.FP.Get_namespaceTypeInfo(_env).FP.Get_kind(_env) == Ast_TypeInfoKind__Enum) ).(bool)){
                 var enumval *Ast_EnumValInfo
                 enumval = Lns_unwrap( enumTypeInfo.FP.GetEnumValInfo(_env, self.symbolInfo.FP.Get_name(_env))).(*Ast_EnumValInfo)
-                return Nodes_enumLiteral2Literal_13526_(_env, enumval.FP.Get_val(_env))
+                return Nodes_enumLiteral2Literal_13534_(_env, enumval.FP.Get_val(_env))
             }
         }
     }
@@ -10531,7 +10531,7 @@ func (self *Nodes_ExpMacroExpNode) CanBeRight(_env *LnsEnv, processInfo *Ast_Pro
 
 // 1487: decl @lune.@base.@Nodes.ExpMacroExpNode.getBreakKind
 func (self *Nodes_ExpMacroExpNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsInt {
-    return Nodes_getBreakKindForStmtList_3073_(_env, checkMode, self.stmtList)
+    return Nodes_getBreakKindForStmtList_3079_(_env, checkMode, self.stmtList)
 }
 
 
@@ -11167,7 +11167,7 @@ func (self *Nodes_ExpOmitEnumNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor
 func (self *Nodes_ExpOmitEnumNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
     var enumval *Ast_EnumValInfo
     enumval = self.valInfo
-    return Nodes_enumLiteral2Literal_13526_(_env, enumval.FP.Get_val(_env))
+    return Nodes_enumLiteral2Literal_13534_(_env, enumval.FP.Get_val(_env))
 }
 
 // 2658: decl @lune.@base.@Nodes.ExpOmitEnumNode.setupLiteralTokenList
@@ -11366,7 +11366,7 @@ func (self *Nodes_RefFieldNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
             if Lns_isCondTrue( Ast_EnumTypeInfoDownCastF(self.prefix.FP.Get_expType(_env).FP.Get_aliasSrc(_env).FP)){
                 var enumval *Ast_EnumValInfo
                 enumval = Lns_unwrap( enumTypeInfo.FP.GetEnumValInfo(_env, self.field.Txt)).(*Ast_EnumValInfo)
-                return Nodes_enumLiteral2Literal_13526_(_env, enumval.FP.Get_val(_env))
+                return Nodes_enumLiteral2Literal_13534_(_env, enumval.FP.Get_val(_env))
             }
         }
     }
@@ -18328,188 +18328,188 @@ func Lns_Nodes_init(_env *LnsEnv) {
     Nodes_nodeKind2NameMapWork = NewLnsMap( map[LnsAny]LnsAny{})
     Nodes_nodeKind2NameMap = Nodes_nodeKind2NameMapWork
     Nodes_nodeKindSeed = 0
-    Nodes_regKind_1415_(_env, "None")
+    Nodes_regKind_1417_(_env, "None")
     
-    Nodes_regKind_1415_(_env, "Shebang")
+    Nodes_regKind_1417_(_env, "Shebang")
     
-    Nodes_regKind_1415_(_env, "ConvStat")
+    Nodes_regKind_1417_(_env, "ConvStat")
     
-    Nodes_regKind_1415_(_env, "BlankLine")
+    Nodes_regKind_1417_(_env, "BlankLine")
     
-    Nodes_regKind_1415_(_env, "Subfile")
+    Nodes_regKind_1417_(_env, "Subfile")
     
-    Nodes_regKind_1415_(_env, "Import")
+    Nodes_regKind_1417_(_env, "Import")
     
-    Nodes_regKind_1415_(_env, "Root")
+    Nodes_regKind_1417_(_env, "Root")
     
-    Nodes_regKind_1415_(_env, "RefType")
+    Nodes_regKind_1417_(_env, "RefType")
     
-    Nodes_regKind_1415_(_env, "Block")
+    Nodes_regKind_1417_(_env, "Block")
     
-    Nodes_regKind_1415_(_env, "Env")
+    Nodes_regKind_1417_(_env, "Env")
     
-    Nodes_regKind_1415_(_env, "Scope")
+    Nodes_regKind_1417_(_env, "Scope")
     
-    Nodes_regKind_1415_(_env, "If")
+    Nodes_regKind_1417_(_env, "If")
     
-    Nodes_regKind_1415_(_env, "ExpList")
+    Nodes_regKind_1417_(_env, "ExpList")
     
-    Nodes_regKind_1415_(_env, "Switch")
+    Nodes_regKind_1417_(_env, "Switch")
     
-    Nodes_regKind_1415_(_env, "While")
+    Nodes_regKind_1417_(_env, "While")
     
-    Nodes_regKind_1415_(_env, "Repeat")
+    Nodes_regKind_1417_(_env, "Repeat")
     
     
-    Nodes_regKind_1415_(_env, "For")
+    Nodes_regKind_1417_(_env, "For")
     
     
-    Nodes_regKind_1415_(_env, "Apply")
+    Nodes_regKind_1417_(_env, "Apply")
     
     
-    Nodes_regKind_1415_(_env, "Foreach")
+    Nodes_regKind_1417_(_env, "Foreach")
     
     
-    Nodes_regKind_1415_(_env, "Forsort")
+    Nodes_regKind_1417_(_env, "Forsort")
     
     
-    Nodes_regKind_1415_(_env, "Return")
+    Nodes_regKind_1417_(_env, "Return")
     
-    Nodes_regKind_1415_(_env, "Break")
+    Nodes_regKind_1417_(_env, "Break")
     
-    Nodes_regKind_1415_(_env, "Provide")
+    Nodes_regKind_1417_(_env, "Provide")
     
-    Nodes_regKind_1415_(_env, "ExpNew")
+    Nodes_regKind_1417_(_env, "ExpNew")
     
-    Nodes_regKind_1415_(_env, "ExpUnwrap")
+    Nodes_regKind_1417_(_env, "ExpUnwrap")
     
-    Nodes_regKind_1415_(_env, "ExpRef")
+    Nodes_regKind_1417_(_env, "ExpRef")
     
-    Nodes_regKind_1415_(_env, "ExpSetVal")
+    Nodes_regKind_1417_(_env, "ExpSetVal")
     
-    Nodes_regKind_1415_(_env, "ExpSetItem")
+    Nodes_regKind_1417_(_env, "ExpSetItem")
     
-    Nodes_regKind_1415_(_env, "ExpOp2")
+    Nodes_regKind_1417_(_env, "ExpOp2")
     
-    Nodes_regKind_1415_(_env, "UnwrapSet")
+    Nodes_regKind_1417_(_env, "UnwrapSet")
     
-    Nodes_regKind_1415_(_env, "IfUnwrap")
+    Nodes_regKind_1417_(_env, "IfUnwrap")
     
-    Nodes_regKind_1415_(_env, "When")
+    Nodes_regKind_1417_(_env, "When")
     
-    Nodes_regKind_1415_(_env, "ExpCast")
+    Nodes_regKind_1417_(_env, "ExpCast")
     
-    Nodes_regKind_1415_(_env, "ExpToDDD")
+    Nodes_regKind_1417_(_env, "ExpToDDD")
     
-    Nodes_regKind_1415_(_env, "ExpSubDDD")
+    Nodes_regKind_1417_(_env, "ExpSubDDD")
     
-    Nodes_regKind_1415_(_env, "ExpOp1")
+    Nodes_regKind_1417_(_env, "ExpOp1")
     
-    Nodes_regKind_1415_(_env, "ExpRefItem")
+    Nodes_regKind_1417_(_env, "ExpRefItem")
     
-    Nodes_regKind_1415_(_env, "ExpCall")
+    Nodes_regKind_1417_(_env, "ExpCall")
     
-    Nodes_regKind_1415_(_env, "ExpMRet")
+    Nodes_regKind_1417_(_env, "ExpMRet")
     
-    Nodes_regKind_1415_(_env, "ExpAccessMRet")
+    Nodes_regKind_1417_(_env, "ExpAccessMRet")
     
-    Nodes_regKind_1415_(_env, "ExpMultiTo1")
+    Nodes_regKind_1417_(_env, "ExpMultiTo1")
     
-    Nodes_regKind_1415_(_env, "ExpParen")
+    Nodes_regKind_1417_(_env, "ExpParen")
     
-    Nodes_regKind_1415_(_env, "ExpMacroExp")
+    Nodes_regKind_1417_(_env, "ExpMacroExp")
     
-    Nodes_regKind_1415_(_env, "ExpMacroStat")
+    Nodes_regKind_1417_(_env, "ExpMacroStat")
     
-    Nodes_regKind_1415_(_env, "ExpMacroArgExp")
+    Nodes_regKind_1417_(_env, "ExpMacroArgExp")
     
-    Nodes_regKind_1415_(_env, "StmtExp")
+    Nodes_regKind_1417_(_env, "StmtExp")
     
-    Nodes_regKind_1415_(_env, "ExpMacroStatList")
+    Nodes_regKind_1417_(_env, "ExpMacroStatList")
     
-    Nodes_regKind_1415_(_env, "ExpOmitEnum")
+    Nodes_regKind_1417_(_env, "ExpOmitEnum")
     
-    Nodes_regKind_1415_(_env, "RefField")
+    Nodes_regKind_1417_(_env, "RefField")
     
-    Nodes_regKind_1415_(_env, "GetField")
+    Nodes_regKind_1417_(_env, "GetField")
     
-    Nodes_regKind_1415_(_env, "Alias")
+    Nodes_regKind_1417_(_env, "Alias")
     
-    Nodes_regKind_1415_(_env, "DeclVar")
+    Nodes_regKind_1417_(_env, "DeclVar")
     
-    Nodes_regKind_1415_(_env, "DeclForm")
+    Nodes_regKind_1417_(_env, "DeclForm")
     
-    Nodes_regKind_1415_(_env, "DeclFunc")
+    Nodes_regKind_1417_(_env, "DeclFunc")
     
-    Nodes_regKind_1415_(_env, "DeclMethod")
+    Nodes_regKind_1417_(_env, "DeclMethod")
     
-    Nodes_regKind_1415_(_env, "ProtoMethod")
+    Nodes_regKind_1417_(_env, "ProtoMethod")
     
-    Nodes_regKind_1415_(_env, "DeclConstr")
+    Nodes_regKind_1417_(_env, "DeclConstr")
     
-    Nodes_regKind_1415_(_env, "DeclDestr")
+    Nodes_regKind_1417_(_env, "DeclDestr")
     
-    Nodes_regKind_1415_(_env, "ExpCallSuperCtor")
+    Nodes_regKind_1417_(_env, "ExpCallSuperCtor")
     
-    Nodes_regKind_1415_(_env, "ExpCallSuper")
+    Nodes_regKind_1417_(_env, "ExpCallSuper")
     
-    Nodes_regKind_1415_(_env, "DeclMember")
+    Nodes_regKind_1417_(_env, "DeclMember")
     
-    Nodes_regKind_1415_(_env, "DeclArg")
+    Nodes_regKind_1417_(_env, "DeclArg")
     
-    Nodes_regKind_1415_(_env, "DeclArgDDD")
+    Nodes_regKind_1417_(_env, "DeclArgDDD")
     
-    Nodes_regKind_1415_(_env, "DeclAdvertise")
+    Nodes_regKind_1417_(_env, "DeclAdvertise")
     
-    Nodes_regKind_1415_(_env, "ProtoClass")
+    Nodes_regKind_1417_(_env, "ProtoClass")
     
-    Nodes_regKind_1415_(_env, "DeclClass")
+    Nodes_regKind_1417_(_env, "DeclClass")
     
-    Nodes_regKind_1415_(_env, "DeclEnum")
+    Nodes_regKind_1417_(_env, "DeclEnum")
     
-    Nodes_regKind_1415_(_env, "DeclAlge")
+    Nodes_regKind_1417_(_env, "DeclAlge")
     
-    Nodes_regKind_1415_(_env, "NewAlgeVal")
+    Nodes_regKind_1417_(_env, "NewAlgeVal")
     
-    Nodes_regKind_1415_(_env, "LuneControl")
+    Nodes_regKind_1417_(_env, "LuneControl")
     
-    Nodes_regKind_1415_(_env, "Match")
+    Nodes_regKind_1417_(_env, "Match")
     
-    Nodes_regKind_1415_(_env, "LuneKind")
+    Nodes_regKind_1417_(_env, "LuneKind")
     
-    Nodes_regKind_1415_(_env, "DeclMacro")
+    Nodes_regKind_1417_(_env, "DeclMacro")
     
-    Nodes_regKind_1415_(_env, "TestCase")
+    Nodes_regKind_1417_(_env, "TestCase")
     
-    Nodes_regKind_1415_(_env, "TestBlock")
+    Nodes_regKind_1417_(_env, "TestBlock")
     
-    Nodes_regKind_1415_(_env, "Abbr")
+    Nodes_regKind_1417_(_env, "Abbr")
     
-    Nodes_regKind_1415_(_env, "Boxing")
+    Nodes_regKind_1417_(_env, "Boxing")
     
-    Nodes_regKind_1415_(_env, "Unboxing")
+    Nodes_regKind_1417_(_env, "Unboxing")
     
-    Nodes_regKind_1415_(_env, "LiteralNil")
+    Nodes_regKind_1417_(_env, "LiteralNil")
     
-    Nodes_regKind_1415_(_env, "LiteralChar")
+    Nodes_regKind_1417_(_env, "LiteralChar")
     
-    Nodes_regKind_1415_(_env, "LiteralInt")
+    Nodes_regKind_1417_(_env, "LiteralInt")
     
-    Nodes_regKind_1415_(_env, "LiteralReal")
+    Nodes_regKind_1417_(_env, "LiteralReal")
     
-    Nodes_regKind_1415_(_env, "LiteralArray")
+    Nodes_regKind_1417_(_env, "LiteralArray")
     
-    Nodes_regKind_1415_(_env, "LiteralList")
+    Nodes_regKind_1417_(_env, "LiteralList")
     
-    Nodes_regKind_1415_(_env, "LiteralSet")
+    Nodes_regKind_1417_(_env, "LiteralSet")
     
-    Nodes_regKind_1415_(_env, "LiteralMap")
+    Nodes_regKind_1417_(_env, "LiteralMap")
     
-    Nodes_regKind_1415_(_env, "LiteralString")
+    Nodes_regKind_1417_(_env, "LiteralString")
     
-    Nodes_regKind_1415_(_env, "LiteralBool")
+    Nodes_regKind_1417_(_env, "LiteralBool")
     
-    Nodes_regKind_1415_(_env, "LiteralSymbol")
+    Nodes_regKind_1417_(_env, "LiteralSymbol")
     
     
 }

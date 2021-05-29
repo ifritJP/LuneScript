@@ -1973,7 +1973,7 @@ fn TransUnit.analyzeAccessClassField(
       if self.inAnalyzingState( .InitBlock ) or self.inAnalyzingState( .ClassMethod ) 
       {     
          let mut errorMess:str! = nil;
-         if self.protoFuncMap[ symbolInfo.$typeInfo ] {
+         if self.nsInfoMap[ symbolInfo.$typeInfo ]$.$nobody {
 
             // __init ブロックの制御
             errorMess = "It can't call prototype function from static -- %s" (symbolInfo.$name);
@@ -1987,7 +1987,7 @@ fn TransUnit.analyzeAccessClassField(
       }
       elseif self.inAnalyzingState( .Constructor ) {
          let mut errorMess:str! = nil;
-         if self.protoFuncMap[ symbolInfo.$typeInfo ] {
+         if self.nsInfoMap[ symbolInfo.$typeInfo ]$.$nobody {
             errorMess = "It can't call prototype function from '__init'";
          }
          else {

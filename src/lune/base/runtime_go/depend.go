@@ -206,9 +206,9 @@ _lnsLoad = function( name, code )
    return frontInterface.loadFromLnsTxt( importModuleInfo, name, code )
 end
 
-local txt=[==[
+local txt=[===[
 %s
-]==]
+]===]
 
 return DependLuaOnLns.runLuaOnLns( txt )
     `, setBindListStr, luaCode)

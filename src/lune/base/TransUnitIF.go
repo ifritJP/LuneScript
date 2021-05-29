@@ -82,6 +82,55 @@ func (self *TransUnitIF_Modifier) CreateModifier(_env *LnsEnv, typeInfo *Ast_Typ
 }
 
 
+// declaration Class -- NSInfo
+type TransUnitIF_NSInfoMtd interface {
+    Get_nobody(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_typeInfo(_env *LnsEnv) *Ast_TypeInfo
+    Set_nobody(_env *LnsEnv, arg1 bool)
+}
+type TransUnitIF_NSInfo struct {
+    nobody bool
+    typeInfo *Ast_TypeInfo
+    pos *Types_Position
+    FP TransUnitIF_NSInfoMtd
+}
+func TransUnitIF_NSInfo2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*TransUnitIF_NSInfo).FP
+}
+type TransUnitIF_NSInfoDownCast interface {
+    ToTransUnitIF_NSInfo() *TransUnitIF_NSInfo
+}
+func TransUnitIF_NSInfoDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(TransUnitIF_NSInfoDownCast)
+    if ok { return work.ToTransUnitIF_NSInfo() }
+    return nil
+}
+func (obj *TransUnitIF_NSInfo) ToTransUnitIF_NSInfo() *TransUnitIF_NSInfo {
+    return obj
+}
+func NewTransUnitIF_NSInfo(_env *LnsEnv, arg1 bool, arg2 *Ast_TypeInfo, arg3 *Types_Position) *TransUnitIF_NSInfo {
+    obj := &TransUnitIF_NSInfo{}
+    obj.FP = obj
+    obj.InitTransUnitIF_NSInfo(_env, arg1, arg2, arg3)
+    return obj
+}
+func (self *TransUnitIF_NSInfo) InitTransUnitIF_NSInfo(_env *LnsEnv, arg1 bool, arg2 *Ast_TypeInfo, arg3 *Types_Position) {
+    self.nobody = arg1
+    self.typeInfo = arg2
+    self.pos = arg3
+}
+func (self *TransUnitIF_NSInfo) Get_nobody(_env *LnsEnv) bool{ return self.nobody }
+func (self *TransUnitIF_NSInfo) Set_nobody(_env *LnsEnv, arg1 bool){ self.nobody = arg1 }
+func (self *TransUnitIF_NSInfo) Get_typeInfo(_env *LnsEnv) *Ast_TypeInfo{ return self.typeInfo }
+func (self *TransUnitIF_NSInfo) Get_pos(_env *LnsEnv) *Types_Position{ return self.pos }
+
 type TransUnitIF_TransUnitIF interface {
         Error(_env *LnsEnv, arg1 string)
         GetLatestPos(_env *LnsEnv) *Types_Position
@@ -89,9 +138,9 @@ type TransUnitIF_TransUnitIF interface {
         PopClass(_env *LnsEnv)
         PopModule(_env *LnsEnv)
         PopScope(_env *LnsEnv)
-        PushClass(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 *Types_Position, arg3 LnsInt, arg4 bool, arg5 LnsAny, arg6 LnsAny, arg7 LnsAny, arg8 bool, arg9 string, arg10 bool, arg11 LnsInt, arg12 LnsAny) *Ast_TypeInfo
+        PushClassLow(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 *Types_Position, arg3 LnsInt, arg4 bool, arg5 LnsAny, arg6 LnsAny, arg7 LnsAny, arg8 bool, arg9 string, arg10 bool, arg11 LnsInt, arg12 LnsAny) *Ast_TypeInfo
         PushClassScope(_env *LnsEnv, arg1 *Types_Position, arg2 *Ast_TypeInfo, arg3 *Ast_Scope)
-        PushModule(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 bool, arg3 string, arg4 bool) *Ast_TypeInfo
+        PushModuleLow(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 bool, arg3 string, arg4 bool) *Ast_TypeInfo
         PushScope(_env *LnsEnv, arg1 bool, arg2 LnsAny, arg3 LnsAny) *Ast_Scope
 }
 func Lns_cast2TransUnitIF_TransUnitIF( obj LnsAny ) LnsAny {

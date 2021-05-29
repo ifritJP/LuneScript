@@ -3769,29 +3769,20 @@ pub class ModuleTypeInfo extend TypeInfo {
 
    local fn __init(
       processInfo:ProcessInfo, scope: Scope, externalFlag: bool, txt: str,
-      mut parentInfo: &TypeInfo!, typeData:TypeData!, mutable:bool ) 
+      mut parentInfo: &TypeInfo, mutable:bool ) __noasync
    {
       super( scope, processInfo );
 
       self.externalFlag = externalFlag;
       self.rawTxt = txt;
-      self.parentInfo = unwrap parentInfo default headTypeInfo;
+      self.parentInfo = parentInfo;
       self.typeId = processInfo.newId( self );
       self.mutable = mutable;
 
-      when! typeData {
-         typeData.addChildren( self );
-      }
+      parentInfo.$typeData.addChildren( self );
          
-      let fullName;
-      when! parentInfo {
-         //parentInfo.addChildren( self );
-
-         let parentFull = parentInfo.getParentFullName( defaultTypeNameCtrl ## );
-         fullName = "%s.@%s" ( parentFull,txt );
-      } else {
-         fullName = "%s" (txt );
-      }
+      let parentFull = parentInfo.getParentFullName( defaultTypeNameCtrl ## );
+      let fullName = "%s.@%s" ( parentFull,txt );
       self.fullName = fullName;
 
       //processInfo.$idProv.increment();
@@ -5143,14 +5134,13 @@ pub fn ProcessInfo.createMap(
 }
 
 
-//pub static fn NormalTypeInfo.createModule(
 pub fn ProcessInfo.createModule(
    scope: Scope, parentInfo: &TypeInfo, externalFlag: bool,
-   moduleName: str, mutable:bool ) __noasync mut : &TypeInfo
+   moduleName: str, mutable:bool ) __noasync mut : TypeInfo
 {
-   if! sym2builtInTypeMap[ moduleName ] {
-      return _exp.$typeInfo;
-   }
+   // if! sym2builtInTypeMap[ moduleName ] {
+   //    return _exp.$typeInfo;
+   // }
 
    if Parser.isLuaKeyword( moduleName ) {
       Util.err( "This symbol can not use for a class or script file. -- %s"
@@ -5158,7 +5148,8 @@ pub fn ProcessInfo.createModule(
    }
 
    let mut info = new ModuleTypeInfo(
-      self, scope, externalFlag, moduleName, parentInfo, parentInfo.$typeData, mutable );
+      self, scope, externalFlag, moduleName, parentInfo, mutable );
+   
    self.setupImut( info );
    
    return info;
@@ -5170,15 +5161,12 @@ pub fn ProcessInfo.createClass(
    classFlag: bool, abstractFlag: bool, scope: Scope!, baseInfo: &TypeInfo!,
    interfaceList: &List<&TypeInfo>!, genTypeList: &List<&AlternateTypeInfo>,
    parentInfo: &TypeInfo, externalFlag: bool,
-   accessMode: AccessMode, className: str ) __noasync mut : &TypeInfo
+   accessMode: AccessMode, className: str ) __noasync mut : TypeInfo
 {
-   // if className == "str" {
-   //     return sym2builtInTypeMap[ className ]@TypeInfo;
+   // if! sym2builtInTypeMap[ className ] {
+   //    return _exp.$typeInfo;
+   //    //return classTypeInfo@TypeInfo;
    // }
-   if! sym2builtInTypeMap[ className ] {
-      return _exp.$typeInfo;
-      //return classTypeInfo@TypeInfo;
-   }
 
    if Parser.isLuaKeyword( className ) {
       Util.err( "This symbol can not use for a class or script file. -- %s"
@@ -5204,14 +5192,14 @@ pub fn ProcessInfo.createClass(
 pub fn ProcessInfo.createExtModule(
    scope: Scope!, parentInfo: &TypeInfo, externalFlag: bool,
    accessMode: AccessMode, className: str,
-   moduleLang:Types.Lang, requirePath:str ) __noasync mut : &TypeInfo
+   moduleLang:Types.Lang, requirePath:str ) __noasync mut : TypeInfo
 {
    // if className == "str" {
    //     return sym2builtInTypeMap[ className ]@TypeInfo;
    // }
-   if! sym2builtInTypeMap[ className ] {
-      return _exp.$typeInfo;
-   }
+   // if! sym2builtInTypeMap[ className ] {
+   //    return _exp.$typeInfo;
+   // }
 
    if Parser.isLuaKeyword( className ) {
       Util.err( "This symbol can not use for a class or script file. -- %s"
@@ -5257,6 +5245,19 @@ pub fn ProcessInfo.createFunc(
       }
    }
    
+   return info;
+}
+
+//pub static fn NormalTypeInfo.createFunc(
+pub fn ProcessInfo.createDummyNameSpace(
+   scope: Scope, parentInfo: &TypeInfo, asyncMode:Async ) mut : NormalTypeInfo
+{
+   let mut info = new NormalTypeInfo(
+      self, false, scope, nil, nil, true, false, true,
+      .Local, "__scope_%d" (scope.$scopeId), parentInfo, self.miscTypeData,
+      .Func, [], [], [], MutMode.IMut, nil, asyncMode );
+   self.setupImut( info );
+
    return info;
 }
 
