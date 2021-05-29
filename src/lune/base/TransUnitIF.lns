@@ -65,6 +65,9 @@ pub interface TransUnitIF {
    pub fn pushModuleLow(
       processInfo:Ast.ProcessInfo,
       externalFlag: bool, name:str, mutable: bool ) mut : &Ast.TypeInfo;
+   pub fn pushModule(
+      processInfo:Ast.ProcessInfo,
+      externalFlag: bool, name:str, mutable: bool ) mut : NSInfo;
    pub fn popModule() mut;
    pub fn pushClassScope(
       errPos:&Parser.Position, classTypeInfo:&Ast.TypeInfo, scope:Ast.Scope ) mut;

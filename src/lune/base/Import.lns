@@ -115,6 +115,7 @@ class ImportParam {
    pub let mut processInfo:Ast.ProcessInfo;
    pub let mut typeId2Scope:Map<int,Ast.Scope>;
    pub let mut typeId2TypeInfo:Map<int,&Ast.TypeInfo>;
+   pub let mut typeId2TypeInfoMut:Map<int,Ast.TypeInfo>;
    pub let mut importedAliasMap: Map<&Ast.TypeInfo,&Ast.AliasTypeInfo>;
    pub let lazyModuleSet:&Set<int>;
    pub let metaInfo:Luaval<&Meta._MetaInfo>;
@@ -171,6 +172,18 @@ pub fn ImportParam.getTypeInfo(typeId:int) mut :&Ast.TypeInfo!, str! {
    return nil, nil;
 }
 
+pub fn ImportParam.getTypeInfoMut(typeId:int) mut :Ast.TypeInfo {
+   let typeInfo, mess = self.getTypeInfo( typeId );
+   when! typeInfo {
+      let! mut typeInfoMut = self.typeId2TypeInfoMut[ typeId ] {
+         Util.err( "not found TypeInfoMut for %d: %s" (typeId, typeInfo.getTxt(##)) );
+      };
+      return typeInfoMut;
+   }
+   Util.err( "not found TypeInfo for %d: %s" (typeId, mess or "") );
+}
+
+
 class _IdInfo extend (Mapping) {
    pub let id:int;
    pub let mod:int;
@@ -206,7 +219,7 @@ class _TypeInfoNilable extend _TypeInfo {
          Util.err( "failed to createTypeInfo -- self.orgTypeId = (%d,%d)"
                    ( self.orgTypeId.mod, self.orgTypeId.id ) );
       };
-      let newTypeInfo = orgTypeInfo.get_nilableTypeInfo();
+      let mut newTypeInfo = orgTypeInfo.get_nilableTypeInfo();
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
       newTypeInfo.$typeId.set_orgId( self.typeId );
       return newTypeInfo,nil;
@@ -221,9 +234,11 @@ class _TypeInfoAlias extend _TypeInfo {
    pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
       let srcTypeInfo = unwrap param.getTypeInfoFrom( self.srcTypeId );
-      let newTypeInfo = param.processInfo.createAlias(
+      let mut newTypeInfo = param.processInfo.createAlias(
          param.processInfo, self.rawTxt, true, .Pub, param.moduleTypeInfo, srcTypeInfo );
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
+      param.typeId2TypeInfoMut[ self.typeId ] = newTypeInfo;
+
       newTypeInfo.$typeId.set_orgId( self.typeId );
 
       // param.typeId2Scope で親のスコースを取得するために、
@@ -257,6 +272,7 @@ class _TypeInfoDDD extend _TypeInfo {
       let newTypeInfo = param.processInfo.createDDD(
          itemTypeInfo, true, self.extTypeFlag );
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
+
       newTypeInfo.$typeId.set_orgId( self.typeId );
       return newTypeInfo,nil;
    }
@@ -280,10 +296,11 @@ class _TypeInfoAlternate extend _TypeInfo {
          //interfaceList.insert( unwrap param.typeId2TypeInfo[ ifTypeId ] );
          interfaceList.insert( unwrap param.getTypeInfoFrom( ifTypeId ) );
       }
-      let newTypeInfo = param.processInfo.createAlternate(
+      let mut newTypeInfo = param.processInfo.createAlternate(
          self.belongClassFlag, self.altIndex,
          self.txt, self.accessMode, param.moduleTypeInfo, baseInfo, interfaceList );
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
+      param.typeId2TypeInfoMut[ self.typeId ] = newTypeInfo;
       newTypeInfo.$typeId.set_orgId( self.typeId );
       return newTypeInfo, nil;
    }
@@ -300,9 +317,10 @@ class _TypeInfoGeneric extend _TypeInfo {
       foreach typeId in self.genTypeList {
          genTypeList.insert( unwrap param.getTypeInfoFrom( typeId ) );
       }
-      let newTypeInfo, mut scope = param.processInfo.createGeneric(
+      let mut newTypeInfo, mut scope = param.processInfo.createGeneric(
          genSrcTypeInfo, genTypeList, param.moduleTypeInfo );
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
+      param.typeId2TypeInfoMut[ self.typeId ] = newTypeInfo;
       newTypeInfo.$typeId.set_orgId( self.typeId );
       param.typeId2Scope[ self.typeId ] = scope;
       return newTypeInfo, nil;
@@ -318,6 +336,7 @@ class _TypeInfoBox extend _TypeInfo {
       let boxingType = unwrap param.getTypeInfo( self.boxingType );
       let newTypeInfo = param.processInfo.createBox( self.accessMode, boxingType );
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
+
       newTypeInfo.$typeId.set_orgId( self.typeId );
       return newTypeInfo, nil;
    }
@@ -402,8 +421,14 @@ class _TypeInfoModule extend _TypeInfo {
          if self.typeId == param.metaInfo.__moduleTypeId {
             mutable = param.metaInfo.__moduleMutable;
          }
+         let parentInfoMut;
+         if Ast.isBuiltin( parentInfo.$typeId.id ) {
+            parentInfoMut = Ast.getBuiltinMut( parentInfo );
+         } else {
+            parentInfoMut = param.getTypeInfoMut( parentInfo.$typeId.id );
+         }
          let workTypeInfo = param.processInfo.createModule(
-            scope, parentInfo, true, self.txt, mutable );
+            scope, parentInfoMut, true, self.txt, mutable );
 
          newTypeInfo = workTypeInfo;
          param.typeId2Scope[ self.typeId ] = scope;
@@ -509,116 +534,151 @@ class _TypeInfoNormal extend _TypeInfo {
             // 登録済みのクラスはないはず。
          }
          else {
-            if self.kind == Ast.TypeInfoKind.Class or
-               self.kind == Ast.TypeInfoKind.IF
-            {
-               Log._log(
-                  .Debug,         
-                  `{ return "new type -- %d, %s -- %s, %d"
-                     (self.parentId, self.txt, 
-                       parentScope.$ownerTypeInfo$.getFullName$(
-                          Ast.defaultTypeNameCtrl, parentScope, false ) or "nil",
-                       parentScope.$ownerTypeInfo$.$typeId$.id or -1 ); } );
-            
-               
-               let baseScope = unwrap baseInfo.$scope;
-               let mut ifScopeList:List<&Ast.Scope> = [];
-               foreach ifType in interfaceList {
-                  ifScopeList.insert( unwrap ifType.$scope );
-               }
-
-               let mut scope = new Ast.Scope(
-                  param.processInfo, parentScope, true, baseScope, ifScopeList );
-
-               let mut altTypeList:List<&Ast.AlternateTypeInfo> = [];
-               foreach itemType in itemTypeInfo {
-                  altTypeList.insert( unwrap (itemType@@@Ast.AlternateTypeInfo) );
-               }
-
-               let workTypeInfo = param.processInfo.createClass(
-                  self.kind == Ast.TypeInfoKind.Class, self.abstractFlag,
-                  scope, baseInfo, interfaceList, altTypeList,
-                  parentInfo, true, .Pub, self.txt );
-               parentScope.addClassLazy(
-                  param.processInfo, self.txt, nil,
-                  workTypeInfo, param.lazyModuleSet.has( self.typeId ) );
-               
+            fn postProcess( workTypeInfo:&Ast.TypeInfo, scope:Ast.Scope! ) {
                newTypeInfo = workTypeInfo;
-
-               param.typeId2Scope[ self.typeId ] = scope;
+               
+               when! scope {
+                  param.typeId2Scope[ self.typeId ] = scope;
+               }
                param.typeId2TypeInfo[ self.typeId ] = workTypeInfo;
+
                workTypeInfo.$typeId.set_orgId( self.typeId );
             }
-            elseif self.kind == Ast.TypeInfoKind.ExtModule {
-               Log._log(
-                  .Debug,         
-                  `{ return "new type -- %d, %s -- %s, %d"
-                     (self.parentId, self.txt, 
-                       parentScope.$ownerTypeInfo$.getFullName$(
-                          Ast.defaultTypeNameCtrl, parentScope, false ) or "nil",
-                       parentScope.$ownerTypeInfo$.$typeId$.id or -1 ); } );
             
-               
-               let mut scope = new Ast.Scope(
-                  param.processInfo, parentScope, true, nil, [] );
-
-               let workTypeInfo = param.processInfo.createExtModule(
-                  scope, parentInfo, true, .Pub, self.txt,
-                  unwrap self.moduleLang, unwrap self.requirePath );
-               parentScope.addExtModule(
-                  param.processInfo, self.txt, nil, workTypeInfo,
-                  param.lazyModuleSet.has( self.typeId ), unwrap self.moduleLang );
-               
-               newTypeInfo = workTypeInfo;
-
-               param.typeId2Scope[ self.typeId ] = scope;
-               param.typeId2TypeInfo[ self.typeId ] = workTypeInfo;
-               workTypeInfo.$typeId.set_orgId( self.typeId );
-            } else {
-               let mut scope:Ast.Scope! = nil;
-
-               if self.kind == Ast.TypeInfoKind.Func or
-                  self.kind == Ast.TypeInfoKind.Method
-               {
-                  scope = new Ast.Scope( param.processInfo, parentScope, false, nil ## );
-               }
-
-
-               let typeInfoKind = self.kind;
-               let accessMode = self.accessMode;
-               let workTypeInfo = Ast.NormalTypeInfo.create(
-                  param.processInfo, accessMode,
-                  self.abstractFlag, scope, baseInfo,
-                  parentInfo, self.staticFlag, typeInfoKind,
-                  self.txt, itemTypeInfo, argTypeInfo,
-                  retTypeInfo, self.mutMode, self.asyncMode );
-               newTypeInfo = workTypeInfo;
-
-               param.typeId2TypeInfo[ self.typeId ] = workTypeInfo;
-               workTypeInfo.$typeId.set_orgId( self.typeId );
-
-               switch self.kind {
-                  case .Func, .Method, .Macro, .Form, .FormFunc {
-                     let mut symbolKind = Ast.SymbolKind.Fun;
-                     switch self.kind {
-                        case .Method {
-                           symbolKind = Ast.SymbolKind.Mtd;
-                        }
-                        case .Macro {
-                           symbolKind = Ast.SymbolKind.Mac;
-                        }
-                        case .Form, .FormFunc {
-                           symbolKind = Ast.SymbolKind.Typ;
-                        }
-                     }
-                     let mut workParentScope =
-                        unwrap param.typeId2Scope[ self.parentId ];
-                     workParentScope.add(
-                        param.processInfo, symbolKind, false, self.kind == .Func,
-                        self.txt, nil, workTypeInfo, accessMode,
-                        self.staticFlag, .IMut, true, false );
-                     param.typeId2Scope[ self.typeId ] = scope;
+            switch self.kind {
+               case .Class, .IF {
+                  Log._log(
+                     .Debug,         
+                     `{ return "new type -- %d, %s -- %s, %d"
+                        (self.parentId, self.txt, 
+                          parentScope.$ownerTypeInfo$.getFullName$(
+                             Ast.defaultTypeNameCtrl, parentScope, false ) or "nil",
+                          parentScope.$ownerTypeInfo$.$typeId$.id or -1 ); } );
+                  
+                  
+                  let baseScope = unwrap baseInfo.$scope;
+                  let mut ifScopeList:List<&Ast.Scope> = [];
+                  foreach ifType in interfaceList {
+                     ifScopeList.insert( unwrap ifType.$scope );
                   }
+
+                  let mut scope = new Ast.Scope(
+                     param.processInfo, parentScope, true, baseScope, ifScopeList );
+
+                  let mut altTypeList:List<&Ast.AlternateTypeInfo> = [];
+                  foreach itemType in itemTypeInfo {
+                     altTypeList.insert( unwrap (itemType@@@Ast.AlternateTypeInfo) );
+                  }
+
+                  let mut parentInfoMut = param.getTypeInfoMut( self.parentId );
+                  let mut workTypeInfo = param.processInfo.createClassAsync(
+                     self.kind == Ast.TypeInfoKind.Class, self.abstractFlag,
+                     scope, baseInfo, interfaceList, altTypeList,
+                     parentInfoMut, true, .Pub, self.txt );
+                  parentScope.addClassLazy(
+                     param.processInfo, self.txt, nil,
+                     workTypeInfo, param.lazyModuleSet.has( self.typeId ) );
+
+                  postProcess( workTypeInfo, scope );
+
+                  param.typeId2TypeInfoMut[ self.typeId ] = workTypeInfo;
+               }
+               case .ExtModule {
+                  Log._log(
+                     .Debug,         
+                     `{ return "new type -- %d, %s -- %s, %d"
+                        (self.parentId, self.txt, 
+                          parentScope.$ownerTypeInfo$.getFullName$(
+                             Ast.defaultTypeNameCtrl, parentScope, false ) or "nil",
+                          parentScope.$ownerTypeInfo$.$typeId$.id or -1 ); } );
+                  
+                  
+                  let mut scope = new Ast.Scope(
+                     param.processInfo, parentScope, true, nil, [] );
+
+                  let mut parentInfoMut = param.getTypeInfoMut( self.parentId );
+                  let mut workTypeInfo = param.processInfo.createExtModule(
+                     scope, parentInfoMut, true, .Pub, self.txt,
+                     unwrap self.moduleLang, unwrap self.requirePath );
+                  parentScope.addExtModule(
+                     param.processInfo, self.txt, nil, workTypeInfo,
+                     param.lazyModuleSet.has( self.typeId ), unwrap self.moduleLang );
+
+                  postProcess( workTypeInfo, scope );
+
+                  param.typeId2TypeInfoMut[ self.typeId ] = workTypeInfo;
+               }
+               case .Func, .Method, .FormFunc, .Macro {
+                  let typeInfoKind = self.kind;
+                  let accessMode = self.accessMode;
+
+                  let mut workTypeInfo:&Ast.TypeInfo;
+                  let mut scope:Ast.Scope! = nil;
+                  if self.kind ~= Ast.TypeInfoKind.FormFunc {
+                     scope = new Ast.Scope(
+                        param.processInfo, parentScope, false, nil ## );
+                  }
+
+                  let mut parentInfoMut = param.getTypeInfoMut( self.parentId );
+                  let mut workTypeInfoMut = param.processInfo.createFuncAsync(
+                     self.abstractFlag, false, scope, typeInfoKind,
+                     parentInfoMut, false, true, self.staticFlag,
+                     accessMode, self.txt, self.asyncMode,
+                     itemTypeInfo, argTypeInfo, retTypeInfo, 
+                     Ast.isMutable( self.mutMode ) );
+                  param.typeId2TypeInfoMut[ self.typeId ] = workTypeInfoMut;
+
+                  postProcess( workTypeInfoMut, scope );
+
+                  switch self.kind {
+                     case .Func, .Method, .Macro, .FormFunc {
+                        let mut symbolKind = Ast.SymbolKind.Fun;
+                        switch self.kind {
+                           case .Method {
+                              symbolKind = Ast.SymbolKind.Mtd;
+                           }
+                           case .Macro {
+                              symbolKind = Ast.SymbolKind.Mac;
+                           }
+                           case .FormFunc {
+                              symbolKind = Ast.SymbolKind.Typ;
+                           }
+                        }
+                        let mut workParentScope =
+                           unwrap param.typeId2Scope[ self.parentId ];
+                        workParentScope.add(
+                           param.processInfo, symbolKind, false, self.kind == .Func,
+                           self.txt, nil, workTypeInfoMut, accessMode,
+                           self.staticFlag, .IMut, true, false );
+                     }
+                  }
+               }
+               case .Set {
+                  let workTypeInfo = param.processInfo.createSet(
+                     self.accessMode, parentInfo,
+                     itemTypeInfo, self.mutMode );
+                  postProcess( workTypeInfo, nil );
+               }
+               case .List {
+                  let workTypeInfo = param.processInfo.createList(
+                     self.accessMode, parentInfo,
+                     itemTypeInfo, self.mutMode );
+                  postProcess( workTypeInfo, nil );
+               }
+               case .Array {
+                  let workTypeInfo = param.processInfo.createArray(
+                     self.accessMode, parentInfo,
+                     itemTypeInfo, self.mutMode );
+                  postProcess( workTypeInfo, nil );
+               }
+               case .Map {
+                  let workTypeInfo = param.processInfo.createMap(
+                     self.accessMode, parentInfo,
+                     itemTypeInfo[1], itemTypeInfo[2], self.mutMode );
+                  postProcess( workTypeInfo, nil );
+               }
+               default {
+                  Util.err( "illegal kind -- %s" (self.kind.$_txt) );
                }
             }
          }
@@ -650,7 +710,7 @@ class _TypeInfoEnum extend _TypeInfo {
    {
       let accessMode = unwrap Ast.AccessMode._from( self.accessMode );
       //let parentInfo = unwrap param.typeId2TypeInfo[ self.parentId ];
-      let parentInfo = unwrap param.getTypeInfo( self.parentId );
+      let mut parentInfo = param.getTypeInfoMut( self.parentId );
       let mut parentScope = unwrap param.typeId2Scope[ self.parentId ];
       let mut scope = new Ast.Scope( param.processInfo, parentScope, true, nil ## );
 
@@ -660,6 +720,7 @@ class _TypeInfoEnum extend _TypeInfo {
          scope, parentInfo, true, accessMode, self.txt, valTypeInfo );
       let newTypeInfo = enumTypeInfo;
       param.typeId2TypeInfo[ self.typeId ] = enumTypeInfo;
+      param.typeId2TypeInfoMut[ self.typeId ] = enumTypeInfo;
       enumTypeInfo.$typeId.set_orgId( self.typeId );
 
       fn getEnumLiteral( val:stem ) : Ast.EnumLiteral! {
@@ -704,7 +765,7 @@ class _TypeInfoAlge extend _TypeInfo {
    {
       let accessMode = unwrap Ast.AccessMode._from( self.accessMode );
       //let parentInfo = unwrap param.typeId2TypeInfo[ self.parentId ];
-      let parentInfo = unwrap param.getTypeInfo( self.parentId );
+      let mut parentInfo = param.getTypeInfoMut( self.parentId );
       //let mut name2AlgeValInfo:Map<str,Ast.AlgeValInfo> = {};
       let mut parentScope = unwrap param.typeId2Scope[ self.parentId ];
       let mut scope = new Ast.Scope(
@@ -715,6 +776,8 @@ class _TypeInfoAlge extend _TypeInfo {
          scope, parentInfo, true, accessMode, self.txt );
       let newTypeInfo = algeTypeInfo;
       param.typeId2TypeInfo[ self.typeId ] = algeTypeInfo;
+      param.typeId2TypeInfoMut[ self.typeId ] = algeTypeInfo;
+
       algeTypeInfo.$typeId.set_orgId( self.typeId );
       foreach valInfo in self.algeValList {
          let mut typeInfoList:List<&Ast.TypeInfo> = [];
@@ -780,6 +843,7 @@ fn Import.processImportFromFile(
 
    // meta情報内の typeId -> typeInfo
    let mut typeId2TypeInfo: Map<int,&Ast.TypeInfo> = {};
+   let mut typeId2TypeInfoMut: Map<int,Ast.TypeInfo> = {};
    typeId2TypeInfo[ Ast.rootTypeId ] = Ast.headTypeInfo;
    let mut typeId2Scope: Map<int,Ast.Scope> = {};
    typeId2Scope[ Ast.rootTypeId ] = self.transUnitIF.$scope;
@@ -804,10 +868,12 @@ fn Import.processImportFromFile(
       if index == #nameList {
          mutable = metaInfo.__moduleMutable;
       }
-      moduleTypeInfo = self.transUnitIF.pushModuleLow(
+      let mut nsInfo = self.transUnitIF.pushModule(
          processInfo, true, moduleName, mutable );
+      moduleTypeInfo = nsInfo.$typeInfo;
       let typeId = unwrap metaInfo.__moduleHierarchy[ #nameList - index + 1 ];
       typeId2TypeInfo[ typeId ] = moduleTypeInfo;
+      typeId2TypeInfoMut[ typeId ] = nsInfo.$typeInfo;
       typeId2Scope[ typeId ] = self.transUnitIF.$scope;
    }
    foreach _ in nameList {
@@ -914,7 +980,8 @@ fn Import.processImportFromFile(
    // 初めに child 以外で TypeInfo を登録
    let mut importParam = new ImportParam(
       self.transUnitIF.getLatestPos(), modifier, processInfo, typeId2Scope,
-      typeId2TypeInfo, {}, lazyModuleSet, metaInfo, self.transUnitIF.$scope,
+      typeId2TypeInfo, typeId2TypeInfoMut, {},
+      lazyModuleSet, metaInfo, self.transUnitIF.$scope,
       moduleTypeInfo, .Normal, id2atomMap, dependLibId2DependInfo );
    
    foreach atomInfo in _typeInfoList {

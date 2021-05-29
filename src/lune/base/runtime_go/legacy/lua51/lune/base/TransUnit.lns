@@ -640,15 +640,16 @@ alias で置き換えている元の Type → alias の型
    /** 引数解析中の static method の Scope */
    let mut analyzingStaticMethodArgsScope:&Ast.Scope!;
 
-   
-   
+   let builtinFunc:&Builtin.BuiltinFuncType;
 
    pub fn __init( moduleId:&frontInterface.ModuleId,
                   importModuleInfo:frontInterface.ImportModuleInfo,
                   macroEval: Nodes.MacroEval, analyzeModule:str!, mode:AnalyzeMode!,
                   pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
-                  ctrl_info: &Types.TransCtrlInfo )
+                  ctrl_info: &Types.TransCtrlInfo,
+                  builtinFunc:&Builtin.BuiltinFuncType)
    {
+      self.builtinFunc = builtinFunc;
       self.analyzingStaticMethodArgsScope = nil;
       self.namespace2Scope = {};
       self.class2defaultAsyncMode = {};
@@ -790,6 +791,13 @@ alias で置き換えている元の Type → alias の型
       return nsInfo;
    }
 
+   fn getNSType( typeInfo:&Ast.TypeInfo ) : Ast.TypeInfo {
+      let! mut nsInfo = self.nsInfoMap[ typeInfo ] {
+         Util.err( "not found TypeInfo -- %s" (typeInfo.getTxt(##)) );
+      };
+      return nsInfo.$typeInfo;
+   }
+
    /** scope を名前空間に属させるためのダミーの関数を定義 */
    fn createDummyNS( scope:Ast.Scope, pos:&Parser.Position, asyncMode:Ast.Async ) mut {
       let mut dummyType = self.processInfo.createDummyNameSpace(
@@ -897,6 +905,14 @@ alias で置き換えている元の Type → alias の型
    pri fn getCurrentNamespaceTypeInfo() : &Ast.TypeInfo {
       return self.scope.getNamespaceTypeInfo();
    }
+
+   pri fn getCurrentNamespaceTypeInfoMutWithBuiltin() mut __noasync : Ast.TypeInfo {
+      let typeInfo = self.scope.getNamespaceTypeInfo();
+      if Ast.isBuiltin( typeInfo.$typeId.id ) {
+         return Ast.getBuiltinMut( typeInfo );
+      }
+      return self.getCurrentNamespaceTypeInfoMut();
+   }
    
    pub fn pushModule(
       processInfo:Ast.ProcessInfo,
@@ -923,7 +939,7 @@ alias で置き換えている元の Type → alias の型
          nsInfo = unwrap self.nsInfoMap[ typeInfo ];
       }
       else {
-         let parentInfo = self.getCurrentNamespaceTypeInfo();
+         let mut parentInfo = self.getCurrentNamespaceTypeInfoMutWithBuiltin();
          let mut parentScope = self.scope;
          let mut scope = self.pushScope( true ## );
          let mut newType = processInfo.createModule(
@@ -973,7 +989,7 @@ alias で置き換えている元の Type → alias の型
          self.addErrMess( pos, "multiple define -- %s" (name) );
       }
 
-      let parentInfo = self.getCurrentNamespaceTypeInfoMut();
+      let mut parentInfo = self.getCurrentNamespaceTypeInfoMut();
       let mut parentScope = self.scope;
       let mut scope = self.pushScope( true ## );
       let mut typeInfo = self.processInfo.createExtModule(
@@ -1138,7 +1154,7 @@ alias で置き換えている元の Type → alias の型
          }
       }
       else {
-         let parentInfo = self.getCurrentNamespaceTypeInfoMut();
+         let mut parentInfo = self.getCurrentNamespaceTypeInfoMut();
 
          let mut parentScope = self.scope;
          let mut scope = self.pushScope( true, baseInfo, interfaceList );
@@ -1150,7 +1166,7 @@ alias で置き換えている元の Type → alias の型
             workGenTypeList = [];
          }
 
-         let mut newType = processInfo.createClass(
+         let mut newType = processInfo.createClassAsync(
             mode ~= .Interface, abstractFlag, scope, baseInfo, interfaceList,
             workGenTypeList, parentInfo, externalFlag, accessMode, name );
          typeInfo = newType;
@@ -1411,25 +1427,10 @@ fn TransUnit.createExtType(
 }
 
 
-pub alias BuiltinFuncType = Builtin.BuiltinFuncType;
-let mut builtinFunc:&Builtin.BuiltinFuncType = new Builtin.BuiltinFuncType();
-pub fn getBuiltinFunc() __async : &BuiltinFuncType {
-   return builtinFunc;
-}
-
-   
-pub fn isStrFormFunc( typeInfo:&Ast.TypeInfo ) __async :bool {
-   if typeInfo.$srcTypeInfo == builtinFunc.string_format {
-      return true;
-   }
-   return false;
-}
-
-
 pri fn TransUnit.checkThreading( pos:&Parser.Position ) mut : bool {
    let curClass = self.getCurrentClass();
    if curClass ~= Ast.headTypeInfo {
-      if curClass.isInheritFrom( self.processInfo, builtinFunc.lnsthread_, nil ) {
+      if curClass.isInheritFrom( self.processInfo, self.builtinFunc.lnsthread_, nil ) {
          return true;
       }
    }
@@ -2025,7 +2026,7 @@ fn TransUnit.analyzeImportFor(
          self,
          self.importModuleInfo,
          self.moduleType,
-         builtinFunc,
+         self.builtinFunc,
          self.globalScope,
          self.macroCtrl,
          self.typeNameCtrl,
@@ -2731,8 +2732,8 @@ fn TransUnit.analyzeApply( token: &Parser.Token ) mut : Nodes.ApplyNode {
    let mut readyFlag = false;
    if! let callNode = Nodes.getUnwraped( expListNode.$expList[ 1 ] )@@@Nodes.ExpCallNode {
       let callFuncType = callNode.$func.$expType;
-      if callFuncType.equals( self.processInfo, builtinFunc.str_gmatch ## ) or
-         callFuncType.equals( self.processInfo, builtinFunc.string_gmatch ## )
+      if callFuncType.equals( self.processInfo, self.builtinFunc.str_gmatch ## ) or
+         callFuncType.equals( self.processInfo, self.builtinFunc.string_gmatch ## )
       {
          itemTypeList.insert( Ast.builtinTypeString );
          defaultItemType = Ast.builtinTypeString.$nilableTypeInfo;

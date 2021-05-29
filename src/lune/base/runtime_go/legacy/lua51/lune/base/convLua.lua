@@ -214,6 +214,7 @@ local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
 local Option = _lune.loadModule( 'lune.base.Option' )
 local DependLuaOnLns = _lune.loadModule( 'lune.base.DependLuaOnLns' )
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
+local Builtin = _lune.loadModule( 'lune.base.Builtin' )
 
 local PubVerInfo = {}
 function PubVerInfo.setmeta( obj )
@@ -341,13 +342,13 @@ end
 
 local ConvFilter = {}
 setmetatable( ConvFilter, { __index = Nodes.Filter,ifList = {oStream,} } )
-function ConvFilter.new( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest, useIpairs )
+function ConvFilter.new( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, builtinFunc, useLuneRuntime, targetLuaVer, enableTest, useIpairs )
    local obj = {}
    ConvFilter.setmeta( obj )
-   if obj.__init then obj:__init( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest, useIpairs ); end
+   if obj.__init then obj:__init( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, builtinFunc, useLuneRuntime, targetLuaVer, enableTest, useIpairs ); end
    return obj
 end
-function ConvFilter:__init(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest, useIpairs) 
+function ConvFilter:__init(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, builtinFunc, useLuneRuntime, targetLuaVer, enableTest, useIpairs) 
    Nodes.Filter.__init( self,true, moduleTypeInfo, moduleTypeInfo:get_scope())
    
    
@@ -356,6 +357,7 @@ function ConvFilter:__init(streamName, stream, metaStream, convMode, inMacro, mo
    end
    
    
+   self.builtinFunc = builtinFunc
    self.moduleType2SymbolMap = {}
    self.processInfo = processInfo
    self.enableTest = enableTest
@@ -1007,7 +1009,7 @@ function ConvFilter:outputMeta( node )
             if stmtBlock ~= nil then
                local memStream = Util.memStream.new()
                
-               local workFilter = ConvFilter.new(declInfo:get_name().txt, memStream, Util.NullOStream.new(), ConvMode.Convert, false, Ast.headTypeInfo, self.processInfo, Ast.SymbolKind.Typ, self.useLuneRuntime, self.targetLuaVer, self.enableTest, self.useIpairs)
+               local workFilter = ConvFilter.new(declInfo:get_name().txt, memStream, Util.NullOStream.new(), ConvMode.Convert, false, Ast.headTypeInfo, self.processInfo, Ast.SymbolKind.Typ, self.builtinFunc, self.useLuneRuntime, self.targetLuaVer, self.enableTest, self.useIpairs)
                
                workFilter.macroDepth = workFilter.macroDepth + 1
                workFilter:processBlock( stmtBlock, Opt.new(node) )
@@ -1918,7 +1920,7 @@ function ConvFilter:processDeclClass( node, opt )
    
    local baseInfo = classTypeInfo:get_baseTypeInfo(  )
    local baseTxt = ""
-   if baseInfo:get_typeId(  ) ~= Ast.rootTypeIdInfo and baseInfo ~= TransUnit.getBuiltinFunc(  ).lnsthread_ then
+   if baseInfo:get_typeId(  ) ~= Ast.rootTypeIdInfo and baseInfo ~= self.builtinFunc.lnsthread_ then
       baseTxt = string.format( "__index = %s", self:getFullName( baseInfo ))
    end
    
@@ -2024,7 +2026,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _765 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _768 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -2070,7 +2072,7 @@ function %s:__init( %s )
 ]==], className, argTxt, className, argTxt, className, argTxt) )
       self:pushIndent(  )
       
-      if baseInfo ~= Ast.headTypeInfo and baseInfo ~= TransUnit.getBuiltinFunc(  ).lnsthread_ then
+      if baseInfo ~= Ast.headTypeInfo and baseInfo ~= self.builtinFunc.lnsthread_ then
          if (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" ) then
             self:write( string.format( "%s.__init( self", self:getFullName( baseInfo )) )
             if #superArgTxt > 0 then
@@ -2457,7 +2459,7 @@ function ConvFilter:processExpCallSuperCtor( node, opt )
 
    local typeInfo = node:get_superType()
    
-   if typeInfo == TransUnit.getBuiltinFunc(  ).lnsthread_ then
+   if typeInfo == self.builtinFunc.lnsthread_ then
       return 
    end
    
@@ -3387,7 +3389,7 @@ function ConvFilter:processExpCall( node, opt )
             setArgFlag = true
             local funcType = refNode:get_expType()
             self:write( string.format( "%s.%s( self ", self:getFullName( funcType:get_parentInfo() ), funcType:get_rawTxt()) )
-         elseif refNode:get_expType() == TransUnit.getBuiltinFunc(  ).lns_expandLuavalMap then
+         elseif refNode:get_expType() == self.builtinFunc.lns_expandLuavalMap then
             wroteFuncFlag = true
             self:write( "(" )
          end
@@ -3414,7 +3416,7 @@ function ConvFilter:processExpCall( node, opt )
    
    local convStrFlag = false
    
-   if not self.targetLuaVer:get_canFormStem2Str() and TransUnit.isStrFormFunc( node:get_func():get_expType() ) then
+   if not self.targetLuaVer:get_canFormStem2Str() and self.builtinFunc:isStrFormFunc( node:get_func():get_expType() ) then
       convStrFlag = true
    end
    
@@ -3747,7 +3749,7 @@ function ConvFilter:processExpRef( node, opt )
          self:write( string.format( "%s.%s", self:getFullName( funcType:get_parentInfo() ), funcType:get_rawTxt()) )
       else 
          
-            local builtinFunc = TransUnit.getBuiltinFunc(  )
+            local builtinFunc = self.builtinFunc
             if node:get_expType():equals( self.processInfo, builtinFunc.lns__load ) then
                self:write( "_lune." .. self.targetLuaVer:get_loadStrFuncName() )
             else
@@ -4272,9 +4274,9 @@ function FilterInfo:get_filter()
 end
 
 
-local function createFilter( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest, useIpairs )
+local function createFilter( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, builtinFunc, useLuneRuntime, targetLuaVer, enableTest, useIpairs )
 
-   local convFilter = ConvFilter.new(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer, enableTest, useIpairs)
+   local convFilter = ConvFilter.new(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, builtinFunc, useLuneRuntime, targetLuaVer, enableTest, useIpairs)
    return FilterInfo.new(convFilter)
 end
 _moduleObj.createFilter = createFilter
@@ -4302,7 +4304,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3609, function (  )
+   Log.log( Log.Level.Trace, __func__, 3619, function (  )
    
       return string.format( "macro: %s", code)
    end )
@@ -4318,7 +4320,7 @@ end
 function MacroEvalImp:evalFromCode( processInfo, name, argNameList, code )
 
    local stream = Util.memStream.new()
-   local conv = ConvFilter.new("macro", stream, Util.NullOStream.new(), ConvMode.ConvMeta, true, Ast.headTypeInfo, processInfo, Ast.SymbolKind.Typ, nil, LuaVer.getCurVer(  ), false, true)
+   local conv = ConvFilter.new("macro", stream, Util.NullOStream.new(), ConvMode.ConvMeta, true, Ast.headTypeInfo, processInfo, Ast.SymbolKind.Typ, self.builtinFunc, nil, LuaVer.getCurVer(  ), false, true)
    
    conv:outputDeclMacro( name, argNameList, function (  )
    
@@ -4333,7 +4335,7 @@ end
 function MacroEvalImp:eval( processInfo, node )
 
    local stream = Util.memStream.new()
-   local conv = ConvFilter.new("macro", stream, Util.NullOStream.new(), ConvMode.ConvMeta, true, Ast.headTypeInfo, processInfo, Ast.SymbolKind.Typ, nil, LuaVer.getCurVer(  ), false, true)
+   local conv = ConvFilter.new("macro", stream, Util.NullOStream.new(), ConvMode.ConvMeta, true, Ast.headTypeInfo, processInfo, Ast.SymbolKind.Typ, self.builtinFunc, nil, LuaVer.getCurVer(  ), false, true)
    
    conv:processDeclMacro( node, Opt.new(node) )
    
@@ -4342,17 +4344,18 @@ end
 function MacroEvalImp.setmeta( obj )
   setmetatable( obj, { __index = MacroEvalImp  } )
 end
-function MacroEvalImp.new(  )
+function MacroEvalImp.new( builtinFunc )
    local obj = {}
    MacroEvalImp.setmeta( obj )
    if obj.__init then
-      obj:__init(  )
+      obj:__init( builtinFunc )
    end
    return obj
 end
-function MacroEvalImp:__init(  )
+function MacroEvalImp:__init( builtinFunc )
 
    Nodes.MacroEval.__init( self)
+   self.builtinFunc = builtinFunc
 end
 
 

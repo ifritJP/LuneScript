@@ -221,7 +221,7 @@ LNS_SRCS += base/Nodes
 LNS_SRCS += base/Formatter
 LNS_SRCS += base/Macro
 LNS_SRCS += base/TransUnitIF
-LNS_SRCS += base/SimpleTransUnit
+LNS_SRCS += base/BuiltinTransUnit
 LNS_SRCS += base/Builtin
 LNS_SRCS += base/Import
 LNS_SRCS += base/TransUnit
@@ -269,7 +269,7 @@ define selfhost_buildOp
 	$(call $5,$1,$2,$3,$4,base/Formatter)
 	$(call $5,$1,$2,$3,$4,base/Macro)
 	$(call $5,$1,$2,$3,$4,base/TransUnitIF)
-	$(call $5,$1,$2,$3,$4,base/SimpleTransUnit)
+	$(call $5,$1,$2,$3,$4,base/BuiltinTransUnit)
 	$(call $5,$1,$2,$3,$4,base/Builtin)
 	$(call $5,$1,$2,$3,$4,base/Import)
 	$(call $5,$1,$2,$3,$4,base/TransUnit)

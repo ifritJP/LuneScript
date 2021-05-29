@@ -771,19 +771,21 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
    }
    
    switch funcTypeInfo {
-      case builtinFunc.list_insert, builtinFunc.set_add, builtinFunc.set_del {
+      case self.builtinFunc.list_insert,
+           self.builtinFunc.set_add, self.builtinFunc.set_del {
          //argTypeList = genericTypeList;
       }
-      case builtinFunc.list_sort {
+      case self.builtinFunc.list_sort {
          let alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
-         let callback = self.processInfo.createFunc(
+         let callback = self.processInfo.createFuncAsync(
             false, false, nil, Ast.TypeInfoKind.Func,
-            Ast.headTypeInfo, false, false, true, .Pri, "sort", .Async, nil,
+            Ast.getBuiltinMut( Ast.headTypeInfo ),
+            false, false, true, .Pri, "sort", .Async, nil,
             [ genericTypeList[ 1 ], genericTypeList[ 1 ] ],
             [ Ast.builtinTypeBool ], false );
          argTypeList = [ callback.$nilableTypeInfo ];
       }
-      case builtinFunc.list_remove {
+      case self.builtinFunc.list_remove {
       }
    }
 
@@ -1484,7 +1486,7 @@ fn TransUnit.processFunc(
          retTypeInfoList[ index ] = applyType;
       }
       else {
-         if funcTypeInfo == builtinFunc.list_remove {
+         if funcTypeInfo == self.builtinFunc.list_remove {
             // pending: List.remove の戻り値設定を暫定対応
             retTypeInfoList[ index ] = genericTypeList[ 1 ].$nilableTypeInfo;
          }
@@ -1505,8 +1507,8 @@ fn TransUnit.processFunc(
    }
    
    when! refFieldNode {
-      if funcTypeInfo.equals( self.processInfo, builtinFunc.list_unpack ##) or
-         funcTypeInfo.equals( self.processInfo, builtinFunc.array_unpack ##)
+      if funcTypeInfo.equals( self.processInfo, self.builtinFunc.list_unpack ##) or
+         funcTypeInfo.equals( self.processInfo, self.builtinFunc.array_unpack ##)
       {
          // unpack の型を list の要素の DDD 型にする
          let prefixType = refFieldNode.$prefix.$expType;
@@ -1544,16 +1546,16 @@ fn TransUnit.processFunc(
 
    when! argList {
       switch funcTypeInfo {
-         case builtinFunc.string_format {
+         case self.builtinFunc.string_format {
             self.checkArgForStringForm( firstToken, argList );
          }
-         case builtinFunc.list_sort, builtinFunc.array_sort {
+         case self.builtinFunc.list_sort, self.builtinFunc.array_sort {
             self.checkArgForSort( firstToken, genericTypeList, argList );
          }
       }
    }
 
-   if funcTypeInfo.equals( self.processInfo, builtinFunc.lns__kind ##) {
+   if funcTypeInfo.equals( self.processInfo, self.builtinFunc.lns__kind ##) {
       if! let expList = argList$.$expList {
          if #expList > 0 {
             return Nodes.LuneKindNode.create(
@@ -1587,7 +1589,7 @@ fn TransUnit.processFunc(
 
    let threading;
    if nilAccess or funcType.$kind == .Ext or
-      builtinFunc.$needThreadingTypes.has( funcType.$nonnilableType.$srcTypeInfo )
+      self.builtinFunc.$needThreadingTypes.has( funcType.$nonnilableType.$srcTypeInfo )
    {
       threading = self.checkThreading( firstToken.pos );
       if threading and funcType.$kind == .Ext {
@@ -1665,21 +1667,21 @@ fn TransUnit.analyzeExpCall(
    let mut alt2typeMap, argList = self.prepareExpCall(
       funcExp.$pos, funcTypeInfo, genericTypeList, genericsClass );
 
-   if funcTypeInfo.equals( self.processInfo, builtinFunc.list_insert ##) {
+   if funcTypeInfo.equals( self.processInfo, self.builtinFunc.list_insert ##) {
       when! argList {
          if argList.$expType.$nilable {
             self.addErrMess( argList.$pos, "list can't insert nilable" );
          }
       }
    }
-   if funcTypeInfo.equals( self.processInfo, builtinFunc.set_add ##) {
+   if funcTypeInfo.equals( self.processInfo, self.builtinFunc.set_add ##) {
       when! argList {
          if argList.$expType.$nilable {
             self.addErrMess( argList.$pos, "set can't add nilable" );
          }
       }
    }
-   elseif funcTypeInfo.equals( self.processInfo, builtinFunc.list_remove ##) {
+   elseif funcTypeInfo.equals( self.processInfo, self.builtinFunc.list_remove ##) {
       if #genericTypeList > 0 {
          if genericTypeList[ 1 ].$nilable {
             self.addWarnMess( funcExp.$pos, "remove() is dangerous for nilable's list." );
@@ -1905,6 +1907,9 @@ fn TransUnit.analyzeAccessClassField(
       }
       case .Set {
          classTypeInfo = Ast.builtinTypeSet;
+      }
+      case .Box {
+         classTypeInfo = Ast.builtinTypeBox;
       }
    }
    let className = classTypeInfo.getTxt(##);
@@ -2309,7 +2314,7 @@ fn TransUnit.analyzeExpField(
    if accessNil {
       self.helperInfo.useNilAccess = true;
       switch prefixExpType.get_kind() {
-         case .Set, .Enum, .Alge {
+         case .Set, .Enum, .Alge, .Box {
          // 現状は set, enum, alge の accessNil はサポートしていない。
             self.addErrMess( firstToken.pos,
                              "%s does not support $." (prefixExpType.getTxt( nil ##) ) );
@@ -2532,8 +2537,8 @@ fn TransUnit.analyzeExpField(
       }
    }
 
-   if typeInfo.equals( self.processInfo, builtinFunc.list_unpack ##) or
-      typeInfo.equals( self.processInfo, builtinFunc.array_unpack ##)
+   if typeInfo.equals( self.processInfo, self.builtinFunc.list_unpack ##) or
+      typeInfo.equals( self.processInfo, self.builtinFunc.array_unpack ##)
    {
       self.helperInfo.useUnpack = true;
    }
@@ -2810,7 +2815,7 @@ fn TransUnit.analyzeExpSymbol(
          if typeInfo.equals( self.processInfo, Ast.builtinTypeSymbol ##) {
             skipFlag = true;
          }
-         if typeInfo.equals( self.processInfo, builtinFunc.lns__load ##) {
+         if typeInfo.equals( self.processInfo, self.builtinFunc.lns__load ##) {
             self.helperInfo.useLoad = true;
          }
 

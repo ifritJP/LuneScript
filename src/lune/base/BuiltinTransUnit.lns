@@ -69,10 +69,17 @@ pub class TransUnit extend (TransUnitIF.TransUnitIF) {
       self.scope = self.scope.get_parent();
    }
 
-   pri fn getCurrentNamespaceTypeInfo() : &Ast.TypeInfo {
-      return self.scope.getNamespaceTypeInfo();
+   pri fn getCurrentNamespaceTypeInfo() : Ast.TypeInfo {
+      return Ast.getBuiltinMut( self.scope.getNamespaceTypeInfo() );
    }
 
+   pub fn pushModule(
+      processInfo:Ast.ProcessInfo,
+      externalFlag: bool, name:str, mutable: bool ) mut : TransUnitIF.NSInfo
+   {
+      Util.err( "not support" );
+   }
+   
    pub fn pushModuleLow(
       processInfo:Ast.ProcessInfo,
       externalFlag: bool, name:str, mutable: bool ) mut : &Ast.TypeInfo
@@ -96,13 +103,14 @@ pub class TransUnit extend (TransUnitIF.TransUnitIF) {
          }
       }
       else {
-         let parentInfo = self.getCurrentNamespaceTypeInfo();
+         let mut parentInfo = self.getCurrentNamespaceTypeInfo();
          let mut parentScope = self.scope;
          let mut scope = self.pushScope( true ## );
          let mut newType = processInfo.createModule(
             scope, parentInfo, externalFlag, modName, mutable );
          typeInfo = newType;
          self.namespace2Scope[ typeInfo ] = scope;
+         Ast.addBuiltinMut( newType, scope );
 
          let _, existSym = parentScope.addClass( processInfo, modName, nil, typeInfo );
          when! existSym {
@@ -163,10 +171,10 @@ pub class TransUnit extend (TransUnitIF.TransUnitIF) {
          // 宣言済み
          typeInfo = _exp;
 
-         if typeInfo.$scope$.$parent ~= self.scope {
-            self.error(
-               "multiple class(%s)" (typeInfo.getTxt( ##)));
-         }
+         // if typeInfo.$scope$.$parent ~= self.scope {
+         //    self.error(
+         //       "multiple class(%s)" (typeInfo.getTxt( ##)));
+         // }
 
          if typeInfo.$abstractFlag ~= abstractFlag {
             self.error(
@@ -249,7 +257,7 @@ pub class TransUnit extend (TransUnitIF.TransUnitIF) {
          }
       }
       else {
-         let parentInfo = self.getCurrentNamespaceTypeInfo();
+         let mut parentInfo = self.getCurrentNamespaceTypeInfo();
 
          let mut parentScope = self.scope;
          let mut scope = self.pushScope( true, baseInfo, interfaceList );
@@ -261,11 +269,12 @@ pub class TransUnit extend (TransUnitIF.TransUnitIF) {
             workGenTypeList = [];
          }
 
-         let mut newType = processInfo.createClass(
+         let mut newType = processInfo.createClassAsync(
             mode ~= .Interface, abstractFlag, scope, baseInfo, interfaceList,
             workGenTypeList, parentInfo, externalFlag, accessMode, name );
          typeInfo = newType;
          self.namespace2Scope[ typeInfo ] = scope;
+         Ast.addBuiltinMut( newType, scope );
 
          parentScope.addClassLazy(
             processInfo, name, errPos, typeInfo, mode == .LazyModule );

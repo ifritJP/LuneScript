@@ -30,12 +30,12 @@ import lune.base.LuaVer;
 import lune.base.Log;
 
 import lune.base.TransUnitIF;
-import lune.base.SimpleTransUnit;
+import lune.base.BuiltinTransUnit;
 
 _lune_control ignore_symbol_;
 
 pub class Builtin {
-   let transUnitIF:TransUnitIF.TransUnitIF;
+   let transUnit:BuiltinTransUnit.TransUnit;
    /**
 トランスコンパイル先の lua バージョン
    */
@@ -47,7 +47,7 @@ pub class Builtin {
    pub fn __init( targetLuaVer:&LuaVer.LuaVerInfo,
                   ctrl_info: &Types.TransCtrlInfo )
    {
-      self.transUnitIF = new SimpleTransUnit.TransUnit( ctrl_info );
+      self.transUnit = new BuiltinTransUnit.TransUnit( ctrl_info );
       self.targetLuaVer = targetLuaVer;
       self.ctrl_info = ctrl_info;
       self.processInfo = Ast.getRootProcessInfo();
@@ -353,7 +353,13 @@ _DefBuiltinFuncType( [
       }
    }
 ] );
-   
+
+pub fn BuiltinFuncType.isStrFormFunc( typeInfo:&Ast.TypeInfo ) __async :bool {
+   if typeInfo.$srcTypeInfo == self.string_format {
+      return true;
+   }
+   return false;
+}
 
 fn Builtin.getTypeInfo( mut typeName:str ) mut : &Ast.TypeInfo {
 
@@ -455,7 +461,7 @@ fn Builtin.getTypeInfo( mut typeName:str ) mut : &Ast.TypeInfo {
    let mut typeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
    if typeName.find( "!$" ## ) {
       let orgTypeName = typeName.gsub( "!$", "" );
-      if! getTypeInfoFromScope( self.transUnitIF.$scope, orgTypeName, genTypeList ) {
+      if! getTypeInfoFromScope( self.transUnit.$scope, orgTypeName, genTypeList ) {
          typeInfo = _exp;
       }
       else {
@@ -464,7 +470,7 @@ fn Builtin.getTypeInfo( mut typeName:str ) mut : &Ast.TypeInfo {
       typeInfo = typeInfo.$nilableTypeInfo;
    }
    else {
-      if! getTypeInfoFromScope( self.transUnitIF.$scope, typeName, genTypeList ) {
+      if! getTypeInfoFromScope( self.transUnit.$scope, typeName, genTypeList ) {
          typeInfo = _exp;
       }
       else {
@@ -483,7 +489,7 @@ fn Builtin.processField( name:str, fieldName:str, info:&Map<str,&List<str>>,
 {
    if self.targetLuaVer.isSupport( "%s.%s" (name, fieldName) ) {
       if info.type$[1] == "var" {
-         let symbol = unwrap self.transUnitIF.$scope.add(
+         let symbol = unwrap self.transUnit.$scope.add(
             self.processInfo, .Var, false, true, fieldName, nil,
             self.getTypeInfo( unwrap info.typeInfo$[1] ), .Pub,
             true, .Mut, true, false );
@@ -553,23 +559,20 @@ fn Builtin.processField( name:str, fieldName:str, info:&Map<str,&List<str>>,
             }
          }
          
-         self.transUnitIF.pushScope( false ## );
+         self.transUnit.pushScope( false ## );
 
-         let mut scope = self.transUnitIF.$scope;
-         let typeInfo = self.processInfo.createFunc(
+         let mut scope = self.transUnit.$scope;
+         let mut typeInfo = self.processInfo.createFuncAsync(
             abstractFlag, true, scope, kind,
-            parentInfo, false, true, staticFlag, accessMode,
+            Ast.getBuiltinMut( parentInfo), false, true, staticFlag, accessMode,
             fieldName, .Async, nil, argTypeList, retTypeList, mutable );
 
-         self.transUnitIF.popScope();
+         self.transUnit.popScope();
 
          builtinFunc.$allFuncTypeSet.add( typeInfo );
 
-         Ast.addBuiltin( typeInfo, scope );
-         if typeInfo.$nilableTypeInfo ~= Ast.headTypeInfo {
-            Ast.addBuiltin( typeInfo.$nilableTypeInfo, scope );
-         }
-         let symInfo = unwrap self.transUnitIF.$scope.add(
+         Ast.addBuiltinMut( typeInfo, scope );
+         let symInfo = unwrap self.transUnit.$scope.add(
             self.processInfo, symbolKind, false, kind == .Func,
             fieldName, nil, typeInfo, accessMode, staticFlag,
             mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true, false );
@@ -595,14 +598,14 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
 
    let mapType = self.processInfo.createMap(
       .Pub, Ast.headTypeInfo, Ast.builtinTypeString, Ast.builtinTypeStem, .Mut );
-   self.transUnitIF.$scope.addVar(
+   self.transUnit.$scope.addVar(
       self.processInfo, .Global, "_ENV", nil, mapType, .IMutRe, true );
-   self.transUnitIF.$scope.addVar(
+   self.transUnit.$scope.addVar(
       self.processInfo, .Global, "_G", nil, mapType, .IMutRe, true );
-   //self.transUnitIF.$scope.addVar( .Global, "__mod__", nil, Ast.builtinTypeString, .IMut, true );
-   self.transUnitIF.$scope.addVar(
+   //self.transUnit.$scope.addVar( .Global, "__mod__", nil, Ast.builtinTypeString, .IMut, true );
+   self.transUnit.$scope.addVar(
       self.processInfo, .Global, "__line__", nil, Ast.builtinTypeInt, .IMut, true );
-   //self.transUnitIF.$scope.addVar( .Global, "__func__", nil, Ast.builtinTypeString, false, true );
+   //self.transUnit.$scope.addVar( .Global, "__func__", nil, Ast.builtinTypeString, false, true );
 
    fn processCopyAlterList( alterList:List<&Ast.AlternateTypeInfo>,
                             typeList:&List<&Ast.TypeInfo> )
@@ -685,29 +688,26 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
                   } else {
                      declMode = .Interface;
                   }
-                  parentInfo = self.transUnitIF.pushClassLow(
-                     self.processInfo, self.transUnitIF.getLatestPos(),
+                  parentInfo = self.transUnit.pushClassLow(
+                     self.processInfo, self.transUnit.getLatestPos(),
                      declMode, false, nil, interfaceList,
                      genTypeList, true, name, true, .Pub ## );
                   builtinFunc.registerClass( parentInfo );
                }
                case .Module {
-                  parentInfo = self.transUnitIF.pushModuleLow(
+                  parentInfo = self.transUnit.pushModuleLow(
                      self.processInfo, true, name, true );
 
-                  self.transUnitIF.$scope.$parent.add(
+                  self.transUnit.$scope.$parent.add(
                      self.processInfo, .Typ , false, false, name, nil,
                      parentInfo, .Local, true, Ast.MutMode.Mut, true, false );
                }
             }
-
-            Ast.addBuiltin( parentInfo, self.transUnitIF.$scope );
-            Ast.addBuiltin( parentInfo.$nilableTypeInfo, self.transUnitIF.$scope );
          }
          if not builtinModuleName2Scope[ name ]
          {
             if name ~= "" and self.getTypeInfo( name ) {
-               builtinModuleName2Scope[ name ] = self.transUnitIF.$scope;
+               builtinModuleName2Scope[ name ] = self.transUnit.$scope;
             }
 
             // typeid が一定になるようにソートする
@@ -722,7 +722,7 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
             }
          }
          if name ~= "" {
-            self.transUnitIF.popClass();
+            self.transUnit.popClass();
          }
       }
    }

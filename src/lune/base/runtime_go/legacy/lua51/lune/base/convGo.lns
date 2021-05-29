@@ -35,6 +35,7 @@ import lune.base.Parser;
 import lune.base.LuneControl;
 import lune.base.Types;
 import lune.base.Option as LnsOpt;
+import lune.base.Builtin;
 
 let MaxNilAccNum = 3;
 
@@ -134,6 +135,7 @@ class convFilter extend Nodes.Filter<Opt> {
    let mut module2PackSym:Map<&Ast.TypeInfo,str>;
    let mut env:Env;
    let mut moduleType2SymbolMap:Map<&Ast.TypeInfo,&Ast.SymbolInfo>;
+   let builtinFuncs:&Builtin.BuiltinFuncType;
 
    pub fn __init( enableTest:bool, streamName: str, stream: oStream,
                   ast:&TransUnit.ASTInfo, option:&Option )
@@ -141,6 +143,7 @@ class convFilter extend Nodes.Filter<Opt> {
       super(true, ast.$exportInfo.$moduleTypeInfo,
              ast.$exportInfo.$moduleTypeInfo.$scope);
 
+      self.builtinFuncs = ast.$builtinFunc;
       self.moduleType2SymbolMap = {};
       self.env = new Env( option.$addEnvArg );
       self.option = option;
@@ -765,7 +768,7 @@ fn convFilter.type2gotypeOrg( typeInfo:&Ast.TypeInfo, addClassAster:bool ) mut :
          return self.getFuncSymbol( typeInfo );
       }
       case .Class {
-         if typeInfo.$genSrcTypeInfo == TransUnit.getBuiltinFunc().__pipe_ {
+         if typeInfo.$genSrcTypeInfo == self.builtinFuncs.__pipe_ {
             return "*Lns__pipe";
          }
          let mut symbol = self.getTypeSymbolWithPrefix( typeInfo );
@@ -1804,7 +1807,6 @@ pub override fn convFilter.processRoot(
       }
    }
    
-   let builtinFuncs = TransUnit.getBuiltinFunc();
    macro _makemap( nameMap:Map<str,List<str>> ) {
       {
          let mut itemStatList:List<stat> = [];
@@ -1815,12 +1817,12 @@ pub override fn convFilter.processRoot(
                      {
                         let fieldName = "str_%s" (name);
                         let runtime = "GETVM.String_%s" (name);
-                        itemStatList.insert( `{ builtinFuncs.,,,fieldName: ,,runtime, } );
+                        itemStatList.insert( `{ self.builtinFuncs.,,,fieldName: ,,runtime, } );
                      }
                      {
                         let fieldName = "string_%s" (name);
                         let runtime = "GETVM.String_%s" (name);
-                        itemStatList.insert( `{ builtinFuncs.,,,fieldName: ,,runtime, } );
+                        itemStatList.insert( `{ self.builtinFuncs.,,,fieldName: ,,runtime, } );
                      }
                   }
                }
@@ -1835,29 +1837,29 @@ pub override fn convFilter.processRoot(
    _makemap( { "str": [ "gsub", "find", "byte", "format", "rep", "gmatch",
                         "sub", "lower", "upper", "reverse" ] } );
 
-   builtin2runtime[ builtinFuncs.lns_error ] = "panic";
-   builtin2runtime[ builtinFuncs.lns_print ] = "Lns_print";
-   builtin2runtime[ builtinFuncs.lns_type ] = "Lns_type";
-   builtin2runtime[ builtinFuncs.lns_require ] = "Lns_require";
-   builtin2runtime[ builtinFuncs.lns_tonumber ] = "Lns_tonumber";
-   builtin2runtime[ builtinFuncs.lns__load ] = "GETVM.Load";
-   builtin2runtime[ builtinFuncs.lns_loadfile ] = "GETVM.Loadfile";
-   builtin2runtime[ builtinFuncs.lns_expandLuavalMap ] = "GETVM.ExpandLuavalMap";
+   builtin2runtime[ self.builtinFuncs.lns_error ] = "panic";
+   builtin2runtime[ self.builtinFuncs.lns_print ] = "Lns_print";
+   builtin2runtime[ self.builtinFuncs.lns_type ] = "Lns_type";
+   builtin2runtime[ self.builtinFuncs.lns_require ] = "Lns_require";
+   builtin2runtime[ self.builtinFuncs.lns_tonumber ] = "Lns_tonumber";
+   builtin2runtime[ self.builtinFuncs.lns__load ] = "GETVM.Load";
+   builtin2runtime[ self.builtinFuncs.lns_loadfile ] = "GETVM.Loadfile";
+   builtin2runtime[ self.builtinFuncs.lns_expandLuavalMap ] = "GETVM.ExpandLuavalMap";
 
-   builtin2runtime[ builtinFuncs.string_dump ] = "GETVM.String_dump";
+   builtin2runtime[ self.builtinFuncs.string_dump ] = "GETVM.String_dump";
    
-   builtin2runtime[ builtinFuncs.io_open ] = "Lns_io_open";
-   builtin2runtime[ builtinFuncs.io_popen ] = "GETVM.IO_popen";
-   builtin2runtime[ builtinFuncs.package_searchpath ] = "GETVM.Package_searchpath";
-   builtin2runtime[ builtinFuncs.os_clock ] = "GETVM.OS_clock";
-   builtin2runtime[ builtinFuncs.os_exit ] = "GETVM.OS_exit";
-   builtin2runtime[ builtinFuncs.os_remove ] = "GETVM.OS_remove";
-   builtin2runtime[ builtinFuncs.os_date ] = "GETVM.OS_date";
-   builtin2runtime[ builtinFuncs.os_time ] = "GETVM.OS_time";
-   builtin2runtime[ builtinFuncs.os_difftime ] = "GETVM.OS_difftime";
-   builtin2runtime[ builtinFuncs.os_rename ]= "GETVM.OS_rename";
-   builtin2runtime[ builtinFuncs.math_random ] = "GETVM.Math_random";
-   builtin2runtime[ builtinFuncs.math_randomseed ] = "GETVM.Math_randomseed";
+   builtin2runtime[ self.builtinFuncs.io_open ] = "Lns_io_open";
+   builtin2runtime[ self.builtinFuncs.io_popen ] = "GETVM.IO_popen";
+   builtin2runtime[ self.builtinFuncs.package_searchpath ] = "GETVM.Package_searchpath";
+   builtin2runtime[ self.builtinFuncs.os_clock ] = "GETVM.OS_clock";
+   builtin2runtime[ self.builtinFuncs.os_exit ] = "GETVM.OS_exit";
+   builtin2runtime[ self.builtinFuncs.os_remove ] = "GETVM.OS_remove";
+   builtin2runtime[ self.builtinFuncs.os_date ] = "GETVM.OS_date";
+   builtin2runtime[ self.builtinFuncs.os_time ] = "GETVM.OS_time";
+   builtin2runtime[ self.builtinFuncs.os_difftime ] = "GETVM.OS_difftime";
+   builtin2runtime[ self.builtinFuncs.os_rename ]= "GETVM.OS_rename";
+   builtin2runtime[ self.builtinFuncs.math_random ] = "GETVM.Math_random";
+   builtin2runtime[ self.builtinFuncs.math_randomseed ] = "GETVM.Math_randomseed";
    
    
    self.builtin2runtime = builtin2runtime;
@@ -1869,9 +1871,9 @@ pub override fn convFilter.processRoot(
       Ast.builtinTypeStem : "LnsAny",
       Ast.builtinTypeString : "string",
       Ast.builtinTypeBool : "bool",
-      builtinFuncs.ostream_: "Lns_oStream",
-      builtinFuncs.istream_: "Lns_iStream",
-      builtinFuncs.luastream_ : "Lns_luaStream",
+      self.builtinFuncs.ostream_: "Lns_oStream",
+      self.builtinFuncs.istream_: "Lns_iStream",
+      self.builtinFuncs.luastream_ : "Lns_luaStream",
    };
 
    
@@ -4577,14 +4579,15 @@ pub fn convFilter.outputCallPrefix(
                      self.write( ".FP.%s"( self.getSymbolSym( funcSymbol ) ) );
                   }
                   default {
-                     let builtinFuncs = TransUnit.getBuiltinFunc();
                      if! let runtime = self.getVM( threading, funcType ) {
                         self.write ( runtime );
                         callKind = .BuiltinCall;
                      }
                      else {
                         switch funcType {
-                           case builtinFuncs.list_sort, builtinFuncs.array_sort {
+                           case self.builtinFuncs.list_sort,
+                                self.builtinFuncs.array_sort
+                           {  
                               callKind = .SortCall( prefixType.$itemTypeInfoList[ 1 ] );
                            }
                         }
@@ -5177,7 +5180,7 @@ pub override fn convFilter.processExpRef(
             }
             case .Fun {
                if Ast.isBuiltin( node.$expType.$typeId.id ) {
-                  let builtinFunc = TransUnit.getBuiltinFunc();
+                  let builtinFunc = self.builtinFuncs;
                   switch node.$expType {
                      case builtinFunc.lns_print {
                         self.write( "Lns_print" );
@@ -5328,8 +5331,7 @@ pub override fn convFilter.processRefField(
    }
    if! let symbol = node.$symbolInfo {
       let orgSym = symbol.getOrg();
-      let builtinFuncs = TransUnit.getBuiltinFunc();
-      if builtinFuncs.$allSymbolSet.has( orgSym ) {
+      if self.builtinFuncs.$allSymbolSet.has( orgSym ) {
          self.write( "Lns_%s_%s" ( node.$prefix.$expType.$rawTxt.gsub( "@", "" ),
                                    orgSym.$name ) );                  
          return;

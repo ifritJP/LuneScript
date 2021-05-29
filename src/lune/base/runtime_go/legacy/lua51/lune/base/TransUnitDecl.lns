@@ -524,6 +524,7 @@ pub class ASTInfo {
    pri let node: &Nodes.Node { pub };
    pri let exportInfo:frontInterface.ExportInfo { pub };
    pri let streamName:str {pub};
+   pri let builtinFunc:&Builtin.BuiltinFuncType {pub};
 }
 
 pub fn TransUnit.createAST(
@@ -533,13 +534,11 @@ pub fn TransUnit.createAST(
    
    self.moduleName = unwrap moduleName default "";
    
-   {
-      self.scope = Ast.rootScope;
-      let mut builtin = new Builtin.Builtin(
-         self.targetLuaVer, self.ctrl_info );
-      builtinFunc = builtin.registBuiltInScope();
-      self.scope = self.topScope;
-   }
+   // {
+   //    let mut builtin = new Builtin.Builtin(
+   //       self.targetLuaVer, self.ctrl_info );
+   //    self.builtinFunc = builtin.registBuiltInScope();
+   // }
 
    let mut moduleTypeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
    let mut moduleSymboInfo:&Ast.SymbolInfo! = nil;
@@ -723,14 +722,14 @@ pub fn TransUnit.createAST(
       moduleTypeInfo, provideInfo, self.processInfo, globalSymbolList,
       self.macroCtrl.$declMacroInfoMap );
    
-   return new ASTInfo( ast, exportInfo, parser.getStreamName() );
+   return new ASTInfo( ast, exportInfo, parser.getStreamName(), self.builtinFunc );
 }
 
 
 fn TransUnit.analyzeDeclMacroSub(
    accessMode: Ast.AccessMode,
    firstToken: &Parser.Token, nameToken: &Parser.Token,
-   macroScope:Ast.Scope, parentType:&Ast.TypeInfo,
+   macroScope:Ast.Scope, parentType:Ast.TypeInfo,
    workArgList: List<&Nodes.Node> ) mut : Nodes.DeclMacroNode
 {
    if self.macroCtrl.$isDeclaringMacro {
@@ -795,8 +794,9 @@ fn TransUnit.analyzeDeclMacroSub(
   
       
 
-      let funcType = self.processInfo.createFunc(
-         false, true, nil, .Func, Ast.headTypeInfo, false, true,
+      let funcType = self.processInfo.createFuncAsync(
+         false, true, nil, .Func,
+         Ast.getBuiltinMut( Ast.headTypeInfo ), false, true,
          true, .Global, "_lnsLoad", .Async,
          nil, [ Ast.builtinTypeString, Ast.builtinTypeString ],
          [ Ast.builtinTypeStem ], false );
@@ -858,7 +858,7 @@ fn TransUnit.analyzeDeclMacroSub(
       tokenList.insert( nextToken );
    }
 
-   let typeInfo = self.processInfo.createFunc(
+   let typeInfo = self.processInfo.createFuncAsync(
       false, false, macroScope, .Macro, parentType, false, false, true,
       accessMode, nameToken.txt, .Async, nil, argTypeList, retTypeList## );
    //self.scope.addLocalVar( false, false, nameToken.txt, typeInfo, false );
@@ -901,7 +901,7 @@ fn TransUnit.analyzeDeclMacro(
    self.analyzeDeclArgList( accessMode, scope, workArgList, false );
 
    // マクロ解析用スコープに変更する前に、登録する namespace を取っおく
-   let parentInfo = self.getCurrentNamespaceTypeInfoMut();
+   let mut parentInfo = self.getCurrentNamespaceTypeInfoMut();
    
    // スコープをマクロ用スコープに変更
    let mut backScope = self.scope;
@@ -1069,7 +1069,7 @@ fn TransUnit.analyzePushClass(
             }
          };
          if baseTypeInfo.isInheritFrom( self.processInfo,
-                                        builtinFunc.lnsthread_, nil ) and
+                                        self.builtinFunc.lnsthread_, nil ) and
             not self.helperInfo.pragmaSet.has( LuneControl.Pragma.use_async )
          {
             self.addErrMess( nextToken.pos, "must set '_lune_control use_async'" );
@@ -1604,7 +1604,7 @@ mut : Nodes.DeclFormNode
       argTypeInfoList.insert( argNode.$expType );
    }
 
-   let formType = self.processInfo.createFunc(
+   let formType = self.processInfo.createFuncAsync(
       false, false, nil, .FormFunc,
       self.getCurrentNamespaceTypeInfoMut(), false, false,
       true, accessMode, name.txt,
@@ -1896,7 +1896,7 @@ fn TransUnit.analyzeDeclMethod(
 @param methodNameSet メソッド名の集合
 */
 fn TransUnit.addDefaultConstructor(
-   pos:&Parser.Position, classTypeInfo:&Ast.TypeInfo,
+   pos:&Parser.Position, classTypeInfo:Ast.TypeInfo,
    classScope:Ast.Scope, memberNodeList:&List<&Nodes.DeclMemberNode>,
    methodNameSet:Set<str>, oldFlag:bool ) mut
 {
@@ -1943,7 +1943,7 @@ fn TransUnit.addDefaultConstructor(
 
    // デフォルトコンストラクタの登録
    let mut ctorScope = self.pushScope( false ## );
-   let initTypeInfo = self.processInfo.createFunc(
+   let initTypeInfo = self.processInfo.createFuncAsync(
       false, false, ctorScope, .Method, classTypeInfo,
       true, false, false, .Pub, "__init", .Async, nil, argTypeList, [] ## );
    if oldFlag {
@@ -2020,7 +2020,7 @@ fn TransUnit.analyzeFuncBlock(
 
 fn TransUnit.addAccessor(
    memberNode:&Nodes.DeclMemberNode, methodNameSet: Set<str>,
-   classScope:Ast.Scope, classTypeInfo:&Ast.TypeInfo ) mut
+   classScope:Ast.Scope, classTypeInfo:Ast.TypeInfo ) mut
 {
    let memberType = memberNode.$expType;
    let memberName = memberNode.$name;
@@ -2050,9 +2050,10 @@ fn TransUnit.addAccessor(
          if Ast.TypeInfo.isMut( getterMemberType ) and not mutable {
             getterMemberType = self.createModifier( getterMemberType, .IMut );
          }
-         let retTypeInfo = self.processInfo.createFunc(
+         let retTypeInfo = self.processInfo.createFuncAsync(
             false, false, self.pushScope( false ## ),
-            typeKind, classTypeInfo, false, false, memberNode.$staticFlag, accessMode,
+            typeKind, classTypeInfo,
+            false, false, memberNode.$staticFlag, accessMode,
             getterName, asyncMode,
             nil, [], [ getterMemberType ] ## );
          self.popScope();
@@ -2081,9 +2082,10 @@ fn TransUnit.addAccessor(
          }
          classScope.addMethod(
             self.processInfo, memberName.pos,
-            self.processInfo.createFunc(
+            self.processInfo.createFuncAsync(
                false, false, self.pushScope( false ## ),
-               typeKind, classTypeInfo, false, false, memberNode.$staticFlag, accessMode,
+               typeKind, classTypeInfo,
+               false, false, memberNode.$staticFlag, accessMode,
                setterName,
                asyncMode,
                nil, [ memberType ], nil, mutable ),
@@ -2112,7 +2114,7 @@ fn TransUnit.addAccessor(
 */
 fn TransUnit.analyzeClassBody(
    hasProto:bool, classAccessMode: Ast.AccessMode, firstToken: &Parser.Token,
-   mode:DeclClassMode, gluePrefix:str!, classTypeInfo: &Ast.TypeInfo,
+   mode:DeclClassMode, gluePrefix:str!, classTypeInfo: Ast.TypeInfo,
    name:&Parser.Token, moduleLang:Types.Lang!,
    moduleName: &Parser.Token!, lazyLoad:Nodes.LazyLoad,
    mut nextToken:&Parser.Token, inheritInfo:&Nodes.ClassInheritInfo ) mut :
@@ -2263,7 +2265,7 @@ nil の場合、メンバの宣言位置。
       self.prepareTentativeSymbol( initBlockScope, false, nil );
 
       let ininame = "___init";
-      let funcTypeInfo = self.processInfo.createFunc(
+      let funcTypeInfo = self.processInfo.createFuncAsync(
          false, false, initBlockScope, .Func, classTypeInfo,
          false, false, true, .Pri, ininame, .Noasync, nil, nil, nil, false );
       let funcSym, shadowing = parentScope.addFunc(
@@ -2639,7 +2641,7 @@ fn TransUnit.analyzeDeclClass(
             "must extend Mapping at %s" (classTypeInfo.$baseTypeInfo.getTxt(##) ) );
       }
       // _toMap の追加
-      let toMapFuncTypeInfo = self.processInfo.createFunc(
+      let toMapFuncTypeInfo = self.processInfo.createFuncAsync(
          false, false, nil, .Method, classTypeInfo,
          true, false, false, .Pub, "_toMap", .Async, nil, [], [ mapType ], false );
       classScope.addMethod(
@@ -2730,7 +2732,7 @@ fn TransUnit.analyzeDeclClass(
       }
 
       // _fromMap の追加
-      let fromMapFuncTypeInfo = self.processInfo.createFunc(
+      let fromMapFuncTypeInfo = self.processInfo.createFuncAsync(
          false, false, nil, .Func, classTypeInfo,
          true, false, true, .Pub, "_fromMap", .Async,
          nil, [ mapType.$nilableTypeInfo ],
@@ -2740,7 +2742,7 @@ fn TransUnit.analyzeDeclClass(
          self.processInfo, nil, fromMapFuncTypeInfo, ctorAccessMode, true, false );
 
       // _fromStem の追加
-      let fromStemFuncTypeInfo = self.processInfo.createFunc(
+      let fromStemFuncTypeInfo = self.processInfo.createFuncAsync(
          false, false, nil, .Func, classTypeInfo,
          true, false, true, .Pub, "_fromStem", .Async,
          nil, [ Ast.builtinTypeStem_ ],
@@ -2762,8 +2764,8 @@ fn TransUnit.analyzeDeclClass(
 
       //
       let pipeType = self.processInfo.createGeneric(
-         builtinFunc.__pipe_, [classTypeInfo], self.moduleType );
-      let createPipeFuncTypeInfo = self.processInfo.createFunc(
+         self.builtinFunc.__pipe_, [classTypeInfo], self.moduleType );
+      let createPipeFuncTypeInfo = self.processInfo.createFuncAsync(
          false, false, nil, .Func, classTypeInfo,
          true, false, true, .Pub, "_createPipe", .Async, 
          nil, [ Ast.builtinTypeInt ], [ pipeType.$nilableTypeInfo ], true );
@@ -3117,7 +3119,7 @@ fn TransUnit.analyzeDeclFunc(
    retTypeInfoList, token, retTypeNodeList = self.analyzeRetTypeList(
       pubToExtFlag, accessMode, token, parentPub );
 
-   let namespaceInfo = self.getCurrentNamespaceTypeInfoMut();
+   let mut namespaceInfo = self.getCurrentNamespaceTypeInfoMut();
 
    let mut funcName = "";
    when! name {
@@ -3140,7 +3142,7 @@ fn TransUnit.analyzeDeclFunc(
    let funcSym:&Ast.SymbolInfo!;
    let mut nsInfo;
    {
-      let mut workTypeInfo = self.processInfo.createFunc(
+      let mut workTypeInfo = self.processInfo.createFuncAsync(
          abstractFlag, false, funcBodyScope,
          typeKind, namespaceInfo, false, false, staticFlag, accessMode,
          funcName,
@@ -3862,10 +3864,10 @@ fn TransUnit.analyzeDeclVar(
                   // 次のような感じ。
                   // let func = fn () {}; → fn func() {}
                   let letVarInfo = letVarList[ 1 ];
-                  let mut newTypeInfo = self.processInfo.createFunc(
+                  let mut newTypeInfo = self.processInfo.createFuncAsync(
                      typeInfo.$abstractFlag, false,
                      unwrap self.namespace2Scope[ typeInfo ],
-                     typeInfo.$kind, typeInfo.$parentInfo,
+                     typeInfo.$kind, self.getNSType( typeInfo.$parentInfo ),
                      false, false, typeInfo.$staticFlag, accessMode,
                      letVarInfo.varName.txt, typeInfo.$asyncMode,
                      typeInfo.$itemTypeInfoList,

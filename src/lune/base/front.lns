@@ -51,6 +51,7 @@ import lune.base.LuneControl;
 import lune.base.Nodes;
 import lune.base.Ast;
 import lune.base.Runner;
+import lune.base.Builtin;
 //import lune.base.ConvNodes;
 
 _lune_control ignore_symbol_;
@@ -185,6 +186,8 @@ loadedMap で管理する前にシステムにロードされているため、
 
    let mut loadCount:int;
 
+   let mut builtinFunc:&Builtin.BuiltinFuncType;
+
    
    pub fn __init( option:&Option.Option, bindModuleList:&List<str>! ) {
       self.loadCount = 0;
@@ -201,6 +204,12 @@ loadedMap で管理する前にシステムにロードされているため、
       self.loadedMap = {};
       self.loadedMapTest = {};
       self.convertedMap = {};
+
+      {
+         let mut builtin = new Builtin.Builtin(
+            self.option.targetLuaVer, option.transCtrlInfo );
+         self.builtinFunc = builtin.registBuiltInScope();
+      }
       
 
       frontInterface.setFront( self );
@@ -298,9 +307,9 @@ fn Front.createAst(
    }
    
    let mut transUnit = new TransUnit.TransUnit(
-      moduleId, importModuleInfo, new convLua.MacroEvalImp(),
+      moduleId, importModuleInfo, new convLua.MacroEvalImp( self.builtinFunc ),
       analyzeModule, analyzeMode, pos, self.option.targetLuaVer,
-      self.option.transCtrlInfo );
+      self.option.transCtrlInfo, self.builtinFunc );
 
    let mut ast = transUnit.createAST( parser, false, mod );
    self.moduleMgr.add( mod, ast, moduleId );
@@ -317,7 +326,7 @@ fn ast2LuaMain(
    let mut conv = convLua.createFilter(
       streamName, stream, metaStream, convMode, inMacro,
       exportInfo.$moduleTypeInfo, exportInfo.$processInfo,
-      exportInfo.$provideInfo.$symbolKind,
+      exportInfo.$provideInfo.$symbolKind, ast.$builtinFunc,
       option.useLuneModule, option.targetLuaVer,
       option.testing, option.useIpairs );
    return conv;
@@ -387,8 +396,8 @@ fn Front.loadFromLnsTxt(
 {
    let mut transUnit = new TransUnit.TransUnit(
       frontInterface.ModuleId.tempId,
-      importModuleInfo, new convLua.MacroEvalImp(),
-      nil, nil, nil, self.option.targetLuaVer, self.option.transCtrlInfo );
+      importModuleInfo, new convLua.MacroEvalImp( self.builtinFunc ), nil, nil, nil,
+      self.option.targetLuaVer, self.option.transCtrlInfo, self.builtinFunc );
    let mut stream = new Parser.TxtStream( txt );
    let mut parser = new Parser.StreamParser( stream, name, false, nil );
 

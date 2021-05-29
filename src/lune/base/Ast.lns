@@ -347,6 +347,7 @@ let sym2builtInTypeMap = sym2builtInTypeMapWork;
 
 pub class BuiltinTypeInfo {
    let typeInfo:&TypeInfo {pub};
+   let typeInfoMut:TypeInfo! {pub};
    let scope:Scope! {pub};
 }
 
@@ -784,7 +785,7 @@ pub abstract class TypeInfo {
    // この TypeInfo のスコープ。
    // class, func など名前空間を持つ TypeInfo は有効。
    pri let allmut scope: &Scope! {pub};
-   pri let typeData: allmut TypeData {local};
+   pri let typeData: TypeData {local};
    // この TypeInfo の typeId を生成した processInfo
    pri let processInfo:&ProcessInfo {pub};
 
@@ -3377,7 +3378,6 @@ pub class AlternateTypeInfo extend TypeInfo {
 let boxRootAltType:&TypeInfo;
 boxRootAltType = AlternateTypeInfo.create(
    rootProcessInfo, true, 1, "_T", .Pub, headTypeInfo ## );
-let mut boxRootScope = new Scope( rootProcessInfo, rootScope, true, nil## );
 
 pub class BoxTypeInfo extend TypeInfo {
    pri let boxingType: &TypeInfo {pub};
@@ -3387,10 +3387,10 @@ pub class BoxTypeInfo extend TypeInfo {
    pri let nilableTypeInfo: NilableTypeInfo {pub:&TypeInfo};
    pri let mut imutType:&TypeInfo {pub,local};
 
-   local fn __init( processInfo:ProcessInfo,
-                  accessMode:AccessMode, boxingType: &TypeInfo ) __noasync
+   local fn __init( processInfo:ProcessInfo, scope:Scope!,
+                    accessMode:AccessMode, boxingType: &TypeInfo )
    {
-      super( boxRootScope, processInfo );
+      super( scope, processInfo );
       self.boxingType = boxingType;
       self.typeId = processInfo.newId( self );
       self.itemTypeInfoList = [ boxingType ];
@@ -3769,7 +3769,7 @@ pub class ModuleTypeInfo extend TypeInfo {
 
    local fn __init(
       processInfo:ProcessInfo, scope: Scope, externalFlag: bool, txt: str,
-      mut parentInfo: &TypeInfo, mutable:bool ) __noasync
+      mut parentInfo: TypeInfo, mutable:bool )
    {
       super( scope, processInfo );
 
@@ -4603,41 +4603,6 @@ pub class NormalTypeInfo extend TypeInfo {
    {
       return self.equalsSub( processInfo, typeInfo, alt2type, checkModifer );
    }
-
-
-   /**
-NormalTypeInfo インスタンスを生成する。
-
-クラス用、インタフェース用、モジュール用は専用の create 関数を利用すること。
-
-   */
-   pub static fn create(
-      processInfo:ProcessInfo, accessMode:AccessMode, abstractFlag: bool,
-      scope: Scope!, baseInfo: &TypeInfo,
-      parentInfo: &TypeInfo, staticFlag: bool,
-      kind: TypeInfoKind, txt: str, itemTypeInfo: List<&TypeInfo>,
-      argTypeInfoList: List<&TypeInfo>, retTypeInfoList: List<&TypeInfo>,
-      mutMode: MutMode!, asyncMode:Async ) __noasync: &TypeInfo
-   {
-      switch kind {
-         case .Class, .ExtModule, .IF {
-            Util.err( "can't use create() method. use createClass(), createExtModule()." );
-         }
-      }
-      if kind == .Prim {
-         if! sym2builtInTypeMap[ txt ] {
-            return _exp.$typeInfo;
-         }
-         Util.err( "not found symbol -- %s" (txt ) );
-      }
-      let mut info = new NormalTypeInfo(
-         processInfo, abstractFlag, scope, baseInfo, nil, false, true,
-         staticFlag, accessMode, txt, parentInfo, parentInfo.$typeData, kind,
-         itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode, nil, asyncMode );
-      processInfo.setupImut( info );
-      return info;
-   }
-
 }
 
 pub fn ProcessInfo.createAlternate(
@@ -4677,15 +4642,37 @@ pub fn Scope.addOverrideImut(
 
 
 pub fn addBuiltin( typeInfo:&TypeInfo, scope:Scope! ) __noasync {
-   builtInTypeIdSetWork[ typeInfo.$typeId.id ] = new BuiltinTypeInfo( typeInfo, scope );
+   builtInTypeIdSetWork[ typeInfo.$typeId.id ] =
+   new BuiltinTypeInfo( typeInfo, nil, scope );
 }
-addBuiltin( headTypeInfo, rootScope );
+pub fn addBuiltinMut( typeInfo:TypeInfo, scope:Scope! ) __noasync {
+   builtInTypeIdSetWork[ typeInfo.$typeId.id ] =
+   new BuiltinTypeInfo( typeInfo, typeInfo, scope );
+}
+addBuiltinMut( headTypeInfoMut, rootScope );
 
+pub fn getBuiltinMut( typeInfo:&TypeInfo ) __noasync : TypeInfo {
+   if typeInfo.$typeId.$processInfo ~= rootProcessInfoRo {
+      Util.err( "not found builtinMut, mismatch processInfo-- %s"
+                (typeInfo.getTxt(##) ) );
+   }
+   let! mut info = builtInTypeIdSetWork[ typeInfo.$typeId.id ] {
+      Util.err( "not found builtinMut -- %s" (typeInfo.getTxt(##) ) );
+   };
+   let! mut typeInfoMut = info.$typeInfoMut {
+      Util.err( "typeInfoMut is nil -- %s" (typeInfo.getTxt(##) ) );
+   };
+   return typeInfoMut;
+}
 
 fn registBuiltin(
-   idName: str, typeTxt: str, kind: TypeInfoKind, typeInfo:&TypeInfo,
+   idName: str, typeTxt: str, kind: TypeInfoKind,
+   worktypeInfo:&TypeInfo!, typeInfoMut:TypeInfo!,
    nilableTypeInfo:&TypeInfo, scope:Scope! ) __noasync : &TypeInfo
 {
+   let! typeInfo = worktypeInfo {
+      typeInfo = unwrap typeInfoMut;
+   };
    let registScope = scope ~= nil;
    //typeInfoKind[ idName ] = typeInfo;
    sym2builtInTypeMapWork[ typeTxt ] = new NormalSymbolInfo(
@@ -4698,6 +4685,9 @@ fn registBuiltin(
          AccessMode.Pub, false, typeTxt, nil, nilableTypeInfo, .IMut, true, false );
    }
    addBuiltin( typeInfo, scope );
+   when! typeInfoMut {
+      addBuiltinMut( typeInfoMut, scope );
+   }
    // builtIn は modifier も作成しておく
    let imutType = rootProcessInfo.createModifier( typeInfo, .IMut );
    addBuiltin( imutType, scope );
@@ -4765,7 +4755,7 @@ local static fn NormalTypeInfo.createBuiltin(
       kind, genTypeList, argTypeList, retTypeList, .Mut, nil, .Async );
    rootProcessInfo.setupImut( info );
 
-   registBuiltin( idName, typeTxt, kind, info, headTypeInfo, scope );
+   registBuiltin( idName, typeTxt, kind, info, info, headTypeInfo, scope );
    return info;
 }
 
@@ -5014,9 +5004,10 @@ pub fn isStruct( typeInfo:&TypeInfo ) __noasync : bool {
 
 pub let builtinTypeBox:&BoxTypeInfo;
 {
-   let mut work = new BoxTypeInfo( rootProcessInfo, .Pub, boxRootAltType );
+   let mut boxRootScope = new Scope( rootProcessInfo, rootScope, true, nil## );
+   let mut work = new BoxTypeInfo( rootProcessInfo, boxRootScope, .Pub, boxRootAltType );
    rootProcessInfo.setupImut( work );
-   registBuiltin( "Nilable", "Nilable", .Box, work, headTypeInfo, boxRootScope );
+   registBuiltin( "Nilable", "Nilable", .Box, work, work, headTypeInfo, boxRootScope );
    builtinTypeBox = work;
 }
 
@@ -5030,13 +5021,13 @@ pub fn isConditionalbe( processInfo:&ProcessInfo, typeInfo:&TypeInfo ) : bool {
 
 //pub static fn NormalTypeInfo.createBox(
 pub fn ProcessInfo.createBox(
-   accessMode:AccessMode, nonnilableType: &TypeInfo ) __noasync mut : &TypeInfo
+   accessMode:AccessMode, nonnilableType: &TypeInfo ) mut : &TypeInfo
 {
    if! let boxType = self.$typeInfo2Map.BoxMap[ nonnilableType ] {
       return boxType;
    }
 
-   let mut boxType = new BoxTypeInfo( self, accessMode, nonnilableType );
+   let mut boxType = new BoxTypeInfo( self, nil, accessMode, nonnilableType );
    self.setupImut( boxType );
    
    self.$typeInfo2Map.BoxMap[ nonnilableType ] = boxType;
@@ -5095,7 +5086,6 @@ pub fn ProcessInfo.createList(
    accessMode: AccessMode, parentInfo: &TypeInfo,
    itemTypeInfo: &List<&TypeInfo>, mutMode:MutMode ) mut : &TypeInfo
 {
-   //let mut builtinTypeInfo = unwrap builtInTypeIdSetWork[ builtinTypeList.$typeId.id ];
    _createType( fn (workMutMode:MutMode) : TypeInfo {
       return new NormalTypeInfo(
          self, false, nil, builtinTypeList,
@@ -5110,7 +5100,6 @@ pub fn ProcessInfo.createArray(
    accessMode: AccessMode, parentInfo: &TypeInfo,
    itemTypeInfo: &List<&TypeInfo>, mutMode:MutMode ) mut : &TypeInfo
 {
-   //let mut builtinTypeInfo = unwrap builtInTypeIdSetWork[ builtinTypeArray.$typeId.id ];
    _createType( fn (workMutMode:MutMode) : TypeInfo {
       return new NormalTypeInfo(
          self, false, nil, builtinTypeArray,
@@ -5135,8 +5124,8 @@ pub fn ProcessInfo.createMap(
 
 
 pub fn ProcessInfo.createModule(
-   scope: Scope, parentInfo: &TypeInfo, externalFlag: bool,
-   moduleName: str, mutable:bool ) __noasync mut : TypeInfo
+   scope: Scope, parentInfo: TypeInfo, externalFlag: bool,
+   moduleName: str, mutable:bool ) mut : TypeInfo
 {
    // if! sym2builtInTypeMap[ moduleName ] {
    //    return _exp.$typeInfo;
@@ -5155,19 +5144,12 @@ pub fn ProcessInfo.createModule(
    return info;
 }
 
-
-// pub static fn NormalTypeInfo.createClass(
-pub fn ProcessInfo.createClass(
+pub fn ProcessInfo.createClassAsync(
    classFlag: bool, abstractFlag: bool, scope: Scope!, baseInfo: &TypeInfo!,
    interfaceList: &List<&TypeInfo>!, genTypeList: &List<&AlternateTypeInfo>,
-   parentInfo: &TypeInfo, externalFlag: bool,
-   accessMode: AccessMode, className: str ) __noasync mut : TypeInfo
+   parentInfo: TypeInfo, externalFlag: bool,
+   accessMode: AccessMode, className: str ) mut : TypeInfo
 {
-   // if! sym2builtInTypeMap[ className ] {
-   //    return _exp.$typeInfo;
-   //    //return classTypeInfo@TypeInfo;
-   // }
-
    if Parser.isLuaKeyword( className ) {
       Util.err( "This symbol can not use for a class or script file. -- %s"
                   (className) );
@@ -5184,15 +5166,16 @@ pub fn ProcessInfo.createClass(
    foreach genType in genTypeList {
       genType.updateParentInfo( info );
    }
-   
+
    return info;
 }
 
 
+
 pub fn ProcessInfo.createExtModule(
-   scope: Scope!, parentInfo: &TypeInfo, externalFlag: bool,
+   scope: Scope!, parentInfo: TypeInfo, externalFlag: bool,
    accessMode: AccessMode, className: str,
-   moduleLang:Types.Lang, requirePath:str ) __noasync mut : TypeInfo
+   moduleLang:Types.Lang, requirePath:str ) mut : TypeInfo
 {
    // if className == "str" {
    //     return sym2builtInTypeMap[ className ]@TypeInfo;
@@ -5217,13 +5200,12 @@ pub fn ProcessInfo.createExtModule(
 }
 
 
-//pub static fn NormalTypeInfo.createFunc(
-pub fn ProcessInfo.createFunc(
+pub fn ProcessInfo.createFuncAsync(
    abstractFlag: bool, builtinFlag:bool, scope: Scope!, kind: TypeInfoKind,
-   parentInfo: &TypeInfo, autoFlag: bool, externalFlag: bool, staticFlag: bool,
+   parentInfo: TypeInfo, autoFlag: bool, externalFlag: bool, staticFlag: bool,
    accessMode: AccessMode, funcName: str, asyncMode:Async, altTypeList: &List<&TypeInfo>!,
    argTypeList: &List<&TypeInfo>!, retTypeInfoList: &List<&TypeInfo>!,
-   mutable: bool! ) __noasync mut : NormalTypeInfo
+   mutable: bool! ) mut : NormalTypeInfo
 {
    if not builtinFlag and Parser.isLuaKeyword( funcName ) {
       Util.err( "This symbol can not use for a function. -- %s" (funcName) );
@@ -5248,6 +5230,7 @@ pub fn ProcessInfo.createFunc(
    return info;
 }
 
+
 //pub static fn NormalTypeInfo.createFunc(
 pub fn ProcessInfo.createDummyNameSpace(
    scope: Scope, parentInfo: &TypeInfo, asyncMode:Async ) mut : NormalTypeInfo
@@ -5263,9 +5246,9 @@ pub fn ProcessInfo.createDummyNameSpace(
 
 //pub static fn NormalTypeInfo.createAdvertiseMethodFrom(
 pub fn ProcessInfo.createAdvertiseMethodFrom(
-   classTypeInfo:&TypeInfo, typeInfo:&TypeInfo ) __noasync mut : &TypeInfo
+   classTypeInfo:TypeInfo, typeInfo:&TypeInfo ) mut : &TypeInfo
 {
-   return self.createFunc(
+   return self.createFuncAsync(
       false, false, nil, typeInfo.$kind,
       classTypeInfo, true, false, false, typeInfo.$accessMode, typeInfo.$rawTxt,
       typeInfo.$asyncMode, typeInfo.$itemTypeInfoList, typeInfo.$argTypeInfoList,
@@ -5294,7 +5277,7 @@ pub override fn ModifierTypeInfo.get_nilableTypeInfo(): &TypeInfo {
 //pub static fn NormalTypeInfo.createAlias(
 pub fn ProcessInfo.createAlias(
    processInfo:ProcessInfo, name:str, externalFlag:bool, accessMode:AccessMode,
-   parentInfo: &TypeInfo, typeInfo: &TypeInfo ) mut : &AliasTypeInfo
+   parentInfo: &TypeInfo, typeInfo: &TypeInfo ) mut : AliasTypeInfo
 {
    let mut newType = new AliasTypeInfo(
       processInfo, name, accessMode, parentInfo, typeInfo.$srcTypeInfo, externalFlag );
@@ -5512,14 +5495,14 @@ pub fn ProcessInfo.createDDD(
 
 
 pub let builtinTypeNil:&TypeInfo = registBuiltin(
-   "Nil", "nil", .Prim, new NilTypeInfo( rootProcessInfo ), headTypeInfo, nil );
+   "Nil", "nil", .Prim, nil, new NilTypeInfo( rootProcessInfo ), headTypeInfo, nil );
 
    
 
 
 pub let builtinTypeDDD:&TypeInfo = registBuiltin(
    "DDD", "...", .DDD,
-   rootProcessInfo.createDDD( builtinTypeStem_, true, false ), headTypeInfo, nil );
+   rootProcessInfo.createDDD( builtinTypeStem_, true, false ), nil, headTypeInfo, nil );
    
 
 
@@ -6239,10 +6222,10 @@ match rootProcessInfo.createLuaval( builtinTypeStem, true ) {
       Util.err( "illegal" );
    }
 }
-registBuiltin( "Luaval", "Luaval", .Ext, builtinTypeLua, headTypeInfo, nil );
+registBuiltin( "Luaval", "Luaval", .Ext, builtinTypeLua, nil, headTypeInfo, nil );
 pub let builtinTypeDDDLua:&TypeInfo =
    rootProcessInfo.createDDD( builtinTypeStem_, true, true );
-registBuiltin( "__LuaDDD", "__LuaDDD", .Ext, builtinTypeDDDLua, headTypeInfo, nil );
+registBuiltin( "__LuaDDD", "__LuaDDD", .Ext, builtinTypeDDDLua, nil, headTypeInfo, nil );
 
 pub fn convToExtTypeList(
    processInfo:ProcessInfo, list:&List<&TypeInfo> ) : List<&TypeInfo>!, str
@@ -6297,8 +6280,8 @@ pub fn isNumberType( typeInfo:&TypeInfo ): bool {
 
 //pub static fn NormalTypeInfo.createEnum(
 pub fn ProcessInfo.createEnum(
-   scope: Scope, parentInfo: &TypeInfo, externalFlag: bool, accessMode: AccessMode,
-   enumName: str, valTypeInfo:&TypeInfo ) __noasync mut : EnumTypeInfo
+   scope: Scope, parentInfo: TypeInfo, externalFlag: bool, accessMode: AccessMode,
+   enumName: str, valTypeInfo:&TypeInfo ) mut : EnumTypeInfo
 {
    if Parser.isLuaKeyword( enumName ) {
       Util.err( "This symbol can not use for a enum. -- %s"
@@ -6310,13 +6293,13 @@ pub fn ProcessInfo.createEnum(
       parentInfo, parentInfo.$typeData, valTypeInfo );
    self.setupImut( info );
 
-   let mut getEnumName = self.createFunc(
+   let mut getEnumName = self.createFuncAsync(
       false, true, nil, .Method, info,
       true, externalFlag, false, AccessMode.Pub,
       "get__txt", .Async, nil, nil, [ builtinTypeString ], false );
    scope.addMethod( self, nil, getEnumName, AccessMode.Pub, false, false );
 
-   let mut fromVal = self.createFunc(
+   let mut fromVal = self.createFuncAsync(
       false, true, nil, .Func, info,
       true, externalFlag, true, AccessMode.Pub,
       "_from", .Async, nil, [ self.createModifier( valTypeInfo, .IMut ) ],
@@ -6324,7 +6307,7 @@ pub fn ProcessInfo.createEnum(
    scope.addMethod( self, nil, fromVal, AccessMode.Pub, true, false );
 
    let allListType = self.createList( .Pub, info, [ info ], .IMut );
-   let mut allList = self.createFunc(
+   let mut allList = self.createFuncAsync(
       false, true, nil, .Func, info,
       true, externalFlag, true, AccessMode.Pub,
       "get__allList", .Async, nil, nil,
@@ -6366,8 +6349,8 @@ accessMode = %d, kind = %d, valTypeId = %d, ```
 
 //pub static fn NormalTypeInfo.createAlge(
 pub fn ProcessInfo.createAlge(
-   scope: Scope, parentInfo: &TypeInfo, externalFlag: bool,
-   accessMode: AccessMode, algeName: str ) __noasync mut : AlgeTypeInfo
+   scope: Scope, parentInfo: TypeInfo, externalFlag: bool,
+   accessMode: AccessMode, algeName: str ) mut : AlgeTypeInfo
 {
    if Parser.isLuaKeyword( algeName ) {
       Util.err( "This symbol can not use for a alge. -- %s"
@@ -6378,7 +6361,7 @@ pub fn ProcessInfo.createAlge(
       self, scope, externalFlag, accessMode, algeName, parentInfo, parentInfo.$typeData );
    self.setupImut( info );
 
-   let mut getAlgeName = self.createFunc(
+   let mut getAlgeName = self.createFuncAsync(
       false, true, nil, .Method, info,
       true, externalFlag, false, AccessMode.Pub,
       "get__txt", .Async, nil, nil, [ builtinTypeString ], false );
@@ -6839,7 +6822,7 @@ pub static fn TypeInfo.checkMatchType(
    alt2type:Map<&TypeInfo,&TypeInfo> ) : MatchType, str
 {
    fn mismatchErrMess( index:int, errorMess:str!, dstType:&TypeInfo, srcType:&TypeInfo,
-                       alt2typeWork:Map<&TypeInfo,&TypeInfo> ) __noasync :str
+                       alt2typeWork:Map<&TypeInfo,&TypeInfo> )  :str
    {
       // エラーメッセージ用に processInfo を生成する。
       let mut workProcessInfo = ProcessInfo.createUser(
@@ -7882,13 +7865,13 @@ __test case1(ctrl) {
 
 
    // Super と Sub の canEvalWith
-   let superType = processInfo.createClass(
+   let superType = processInfo.createClassAsync(
       true, false, new Scope( processInfo, rootScope, true ## ),
-      nil, nil, [], headTypeInfo, false, .Local, "Super" );
+      nil, nil, [], headTypeInfoMut, false, .Local, "Super" );
    testScope.addClass( processInfo, "Super", nil, superType );   
-   let subType = processInfo.createClass(
+   let subType = processInfo.createClassAsync(
       true, false, new Scope( processInfo, rootScope, true ## ),
-      superType, nil, [], headTypeInfo, false, .Local, "Sub" );
+      superType, nil, [], headTypeInfoMut, false, .Local, "Sub" );
    testScope.addClass( processInfo, "Sub", nil, subType );   
 
    _checkCanEvalWith( "Super", "Sub", "OK" );
@@ -7964,9 +7947,9 @@ __test case1(ctrl) {
    let mut genTypeList:List<AlternateTypeInfo> = [];
    let mut alter = processInfo.createAlternate( true, 1, "T", .Pri, headTypeInfo ## );
    genTypeList.insert( alter );
-   let hogeType = processInfo.createClass(
+   let hogeType = processInfo.createClassAsync(
       true, false, new Scope( processInfo, rootScope, true ## ),
-      nil, nil, genTypeList, headTypeInfo, false, .Local, "Hoge" );
+      nil, nil, genTypeList, headTypeInfoMut, false, .Local, "Hoge" );
    testScope.addClass( processInfo, "Hoge", nil, hogeType );
 
    _checkCanEvalWith( "Hoge<int>", "Hoge<int>", "OK" );

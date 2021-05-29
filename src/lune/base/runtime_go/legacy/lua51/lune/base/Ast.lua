@@ -817,21 +817,25 @@ _moduleObj.BuiltinTypeInfo = BuiltinTypeInfo
 function BuiltinTypeInfo.setmeta( obj )
   setmetatable( obj, { __index = BuiltinTypeInfo  } )
 end
-function BuiltinTypeInfo.new( typeInfo, scope )
+function BuiltinTypeInfo.new( typeInfo, typeInfoMut, scope )
    local obj = {}
    BuiltinTypeInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( typeInfo, scope )
+      obj:__init( typeInfo, typeInfoMut, scope )
    end
    return obj
 end
-function BuiltinTypeInfo:__init( typeInfo, scope )
+function BuiltinTypeInfo:__init( typeInfo, typeInfoMut, scope )
 
    self.typeInfo = typeInfo
+   self.typeInfoMut = typeInfoMut
    self.scope = scope
 end
 function BuiltinTypeInfo:get_typeInfo()
    return self.typeInfo
+end
+function BuiltinTypeInfo:get_typeInfoMut()
+   return self.typeInfoMut
 end
 function BuiltinTypeInfo:get_scope()
    return self.scope
@@ -4604,19 +4608,18 @@ end
 local boxRootAltType
 
 boxRootAltType = AlternateTypeInfo.create( rootProcessInfo, true, 1, "_T", AccessMode.Pub, _moduleObj.headTypeInfo )
-local boxRootScope = Scope.new(rootProcessInfo, _moduleObj.rootScope, true, nil)
 
 local BoxTypeInfo = {}
 setmetatable( BoxTypeInfo, { __index = TypeInfo } )
 _moduleObj.BoxTypeInfo = BoxTypeInfo
-function BoxTypeInfo.new( processInfo, accessMode, boxingType )
+function BoxTypeInfo.new( processInfo, scope, accessMode, boxingType )
    local obj = {}
    BoxTypeInfo.setmeta( obj )
-   if obj.__init then obj:__init( processInfo, accessMode, boxingType ); end
+   if obj.__init then obj:__init( processInfo, scope, accessMode, boxingType ); end
    return obj
 end
-function BoxTypeInfo:__init(processInfo, accessMode, boxingType) 
-   TypeInfo.__init( self,boxRootScope, processInfo)
+function BoxTypeInfo:__init(processInfo, scope, accessMode, boxingType) 
+   TypeInfo.__init( self,scope, processInfo)
    
    self.boxingType = boxingType
    self.typeId = processInfo:newId( self )
@@ -6129,30 +6132,6 @@ function NormalTypeInfo:equals( processInfo, typeInfo, alt2type, checkModifer )
 
    return self:equalsSub( processInfo, typeInfo, alt2type, checkModifer )
 end
-function NormalTypeInfo.create( processInfo, accessMode, abstractFlag, scope, baseInfo, parentInfo, staticFlag, kind, txt, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode, asyncMode )
-
-   do
-      local _switchExp = kind
-      if _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.ExtModule or _switchExp == TypeInfoKind.IF then
-         Util.err( "can't use create() method. use createClass(), createExtModule()." )
-      end
-   end
-   
-   if kind == TypeInfoKind.Prim then
-      do
-         local _exp = sym2builtInTypeMap[txt]
-         if _exp ~= nil then
-            return _exp:get_typeInfo()
-         end
-      end
-      
-      Util.err( string.format( "not found symbol -- %s", txt) )
-   end
-   
-   local info = NormalTypeInfo.new(processInfo, abstractFlag, scope, baseInfo, nil, false, true, staticFlag, accessMode, txt, parentInfo, parentInfo:get_typeData(), kind, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode, nil, asyncMode)
-   processInfo:setupImut( info )
-   return info
-end
 function NormalTypeInfo.setmeta( obj )
   setmetatable( obj, { __index = NormalTypeInfo  } )
 end
@@ -6254,13 +6233,49 @@ end
 
 local function addBuiltin( typeInfo, scope )
 
-   builtInTypeIdSetWork[typeInfo:get_typeId().id] = BuiltinTypeInfo.new(typeInfo, scope)
+   builtInTypeIdSetWork[typeInfo:get_typeId().id] = BuiltinTypeInfo.new(typeInfo, nil, scope)
 end
 _moduleObj.addBuiltin = addBuiltin
-addBuiltin( _moduleObj.headTypeInfo, _moduleObj.rootScope )
+local function addBuiltinMut( typeInfo, scope )
 
-local function registBuiltin( idName, typeTxt, kind, typeInfo, nilableTypeInfo, scope )
+   builtInTypeIdSetWork[typeInfo:get_typeId().id] = BuiltinTypeInfo.new(typeInfo, typeInfo, scope)
+end
+_moduleObj.addBuiltinMut = addBuiltinMut
+addBuiltinMut( headTypeInfoMut, _moduleObj.rootScope )
 
+local function getBuiltinMut( typeInfo )
+
+   if typeInfo:get_typeId():get_processInfo() ~= rootProcessInfoRo then
+      Util.err( string.format( "not found builtinMut, mismatch processInfo-- %s", typeInfo:getTxt(  )) )
+   end
+   
+   local info = builtInTypeIdSetWork[typeInfo:get_typeId().id]
+   if  nil == info then
+      local _info = info
+   
+      Util.err( string.format( "not found builtinMut -- %s", typeInfo:getTxt(  )) )
+   end
+   
+   local typeInfoMut = info:get_typeInfoMut()
+   if  nil == typeInfoMut then
+      local _typeInfoMut = typeInfoMut
+   
+      Util.err( string.format( "typeInfoMut is nil -- %s", typeInfo:getTxt(  )) )
+   end
+   
+   return typeInfoMut
+end
+_moduleObj.getBuiltinMut = getBuiltinMut
+
+local function registBuiltin( idName, typeTxt, kind, worktypeInfo, typeInfoMut, nilableTypeInfo, scope )
+
+   local typeInfo = worktypeInfo
+   if  nil == typeInfo then
+      local _typeInfo = typeInfo
+   
+      typeInfo = _lune.unwrap( typeInfoMut)
+   end
+   
    local registScope = scope ~= nil
    sym2builtInTypeMapWork[typeTxt] = NormalSymbolInfo.new(rootProcessInfo, SymbolKind.Typ, false, false, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, nil, typeInfo, MutMode.IMut, true, false)
    if nilableTypeInfo ~= _moduleObj.headTypeInfo then
@@ -6268,6 +6283,10 @@ local function registBuiltin( idName, typeTxt, kind, typeInfo, nilableTypeInfo, 
    end
    
    addBuiltin( typeInfo, scope )
+   if typeInfoMut ~= nil then
+      addBuiltinMut( typeInfoMut, scope )
+   end
+   
    local imutType = rootProcessInfo:createModifier( typeInfo, MutMode.IMut )
    addBuiltin( imutType, scope )
    
@@ -6325,7 +6344,7 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD, ifList )
    local info = NormalTypeInfo.new(rootProcessInfo, false, scope, nil, ifList, false, false, false, AccessMode.Pub, typeTxt, headTypeInfoMut, headTypeInfoMut:get_typeData(), kind, genTypeList, argTypeList, retTypeList, MutMode.Mut, nil, Async.Async)
    rootProcessInfo:setupImut( info )
    
-   registBuiltin( idName, typeTxt, kind, info, _moduleObj.headTypeInfo, scope )
+   registBuiltin( idName, typeTxt, kind, info, info, _moduleObj.headTypeInfo, scope )
    return info
 end
 
@@ -6663,9 +6682,10 @@ local builtinTypeBox
 _moduleObj.builtinTypeBox = builtinTypeBox
 
 do
-   local work = BoxTypeInfo.new(rootProcessInfo, AccessMode.Pub, boxRootAltType)
+   local boxRootScope = Scope.new(rootProcessInfo, _moduleObj.rootScope, true, nil)
+   local work = BoxTypeInfo.new(rootProcessInfo, boxRootScope, AccessMode.Pub, boxRootAltType)
    rootProcessInfo:setupImut( work )
-   registBuiltin( "Nilable", "Nilable", TypeInfoKind.Box, work, _moduleObj.headTypeInfo, boxRootScope )
+   registBuiltin( "Nilable", "Nilable", TypeInfoKind.Box, work, work, _moduleObj.headTypeInfo, boxRootScope )
    _moduleObj.builtinTypeBox = work
 end
 
@@ -6690,7 +6710,7 @@ function ProcessInfo:createBox( accessMode, nonnilableType )
    end
    
    
-   local boxType = BoxTypeInfo.new(self, accessMode, nonnilableType)
+   local boxType = BoxTypeInfo.new(self, nil, accessMode, nonnilableType)
    self:setupImut( boxType )
    
    self:get_typeInfo2Map().BoxMap[nonnilableType] = boxType
@@ -6742,7 +6762,6 @@ end
 
 function ProcessInfo:createList( accessMode, parentInfo, itemTypeInfo, mutMode )
 
-   
    local tmpMutMode
    
    if isMutable( mutMode ) then
@@ -6773,7 +6792,6 @@ end
 
 function ProcessInfo:createArray( accessMode, parentInfo, itemTypeInfo, mutMode )
 
-   
    local tmpMutMode
    
    if isMutable( mutMode ) then
@@ -6845,7 +6863,7 @@ function ProcessInfo:createModule( scope, parentInfo, externalFlag, moduleName, 
 end
 
 
-function ProcessInfo:createClass( classFlag, abstractFlag, scope, baseInfo, interfaceList, genTypeList, parentInfo, externalFlag, accessMode, className )
+function ProcessInfo:createClassAsync( classFlag, abstractFlag, scope, baseInfo, interfaceList, genTypeList, parentInfo, externalFlag, accessMode, className )
 
    if Parser.isLuaKeyword( className ) then
       Util.err( string.format( "This symbol can not use for a class or script file. -- %s", className) )
@@ -6878,7 +6896,7 @@ function ProcessInfo:createExtModule( scope, parentInfo, externalFlag, accessMod
 end
 
 
-function ProcessInfo:createFunc( abstractFlag, builtinFlag, scope, kind, parentInfo, autoFlag, externalFlag, staticFlag, accessMode, funcName, asyncMode, altTypeList, argTypeList, retTypeInfoList, mutable )
+function ProcessInfo:createFuncAsync( abstractFlag, builtinFlag, scope, kind, parentInfo, autoFlag, externalFlag, staticFlag, accessMode, funcName, asyncMode, altTypeList, argTypeList, retTypeInfoList, mutable )
 
    if not builtinFlag and Parser.isLuaKeyword( funcName ) then
       Util.err( string.format( "This symbol can not use for a function. -- %s", funcName) )
@@ -6905,6 +6923,7 @@ function ProcessInfo:createFunc( abstractFlag, builtinFlag, scope, kind, parentI
    return info
 end
 
+
 function ProcessInfo:createDummyNameSpace( scope, parentInfo, asyncMode )
 
    local info = NormalTypeInfo.new(self, false, scope, nil, nil, true, false, true, AccessMode.Local, string.format( "__scope_%d", scope:get_scopeId()), parentInfo, self.miscTypeData, TypeInfoKind.Func, {}, {}, {}, MutMode.IMut, nil, asyncMode)
@@ -6915,7 +6934,7 @@ end
 
 function ProcessInfo:createAdvertiseMethodFrom( classTypeInfo, typeInfo )
 
-   return self:createFunc( false, false, nil, typeInfo:get_kind(), classTypeInfo, true, false, false, typeInfo:get_accessMode(), typeInfo:get_rawTxt(), typeInfo:get_asyncMode(), typeInfo:get_itemTypeInfoList(), typeInfo:get_argTypeInfoList(), typeInfo:get_retTypeInfoList(), TypeInfo.isMut( typeInfo ) )
+   return self:createFuncAsync( false, false, nil, typeInfo:get_kind(), classTypeInfo, true, false, false, typeInfo:get_accessMode(), typeInfo:get_rawTxt(), typeInfo:get_asyncMode(), typeInfo:get_itemTypeInfoList(), typeInfo:get_argTypeInfoList(), typeInfo:get_retTypeInfoList(), TypeInfo.isMut( typeInfo ) )
 end
 
 
@@ -7177,11 +7196,11 @@ function ProcessInfo:createDDD( typeInfo, externalFlag, extTypeFlag )
 end
 
 
-local builtinTypeNil = registBuiltin( "Nil", "nil", TypeInfoKind.Prim, NilTypeInfo.new(rootProcessInfo), _moduleObj.headTypeInfo, nil )
+local builtinTypeNil = registBuiltin( "Nil", "nil", TypeInfoKind.Prim, nil, NilTypeInfo.new(rootProcessInfo), _moduleObj.headTypeInfo, nil )
 _moduleObj.builtinTypeNil = builtinTypeNil
 
 
-local builtinTypeDDD = registBuiltin( "DDD", "...", TypeInfoKind.DDD, rootProcessInfo:createDDD( _moduleObj.builtinTypeStem_, true, false ), _moduleObj.headTypeInfo, nil )
+local builtinTypeDDD = registBuiltin( "DDD", "...", TypeInfoKind.DDD, rootProcessInfo:createDDD( _moduleObj.builtinTypeStem_, true, false ), nil, _moduleObj.headTypeInfo, nil )
 _moduleObj.builtinTypeDDD = builtinTypeDDD
 
 
@@ -8097,11 +8116,11 @@ do
    end
 end
 
-registBuiltin( "Luaval", "Luaval", TypeInfoKind.Ext, _moduleObj.builtinTypeLua, _moduleObj.headTypeInfo, nil )
+registBuiltin( "Luaval", "Luaval", TypeInfoKind.Ext, _moduleObj.builtinTypeLua, nil, _moduleObj.headTypeInfo, nil )
 local builtinTypeDDDLua = rootProcessInfo:createDDD( _moduleObj.builtinTypeStem_, true, true )
 _moduleObj.builtinTypeDDDLua = builtinTypeDDDLua
 
-registBuiltin( "__LuaDDD", "__LuaDDD", TypeInfoKind.Ext, _moduleObj.builtinTypeDDDLua, _moduleObj.headTypeInfo, nil )
+registBuiltin( "__LuaDDD", "__LuaDDD", TypeInfoKind.Ext, _moduleObj.builtinTypeDDDLua, nil, _moduleObj.headTypeInfo, nil )
 
 local function convToExtTypeList( processInfo, list )
 
@@ -8378,14 +8397,14 @@ function ProcessInfo:createEnum( scope, parentInfo, externalFlag, accessMode, en
    local info = EnumTypeInfo.new(self, scope, externalFlag, accessMode, enumName, parentInfo, parentInfo:get_typeData(), valTypeInfo)
    self:setupImut( info )
    
-   local getEnumName = self:createFunc( false, true, nil, TypeInfoKind.Method, info, true, externalFlag, false, AccessMode.Pub, "get__txt", Async.Async, nil, nil, {_moduleObj.builtinTypeString}, false )
+   local getEnumName = self:createFuncAsync( false, true, nil, TypeInfoKind.Method, info, true, externalFlag, false, AccessMode.Pub, "get__txt", Async.Async, nil, nil, {_moduleObj.builtinTypeString}, false )
    scope:addMethod( self, nil, getEnumName, AccessMode.Pub, false, false )
    
-   local fromVal = self:createFunc( false, true, nil, TypeInfoKind.Func, info, true, externalFlag, true, AccessMode.Pub, "_from", Async.Async, nil, {self:createModifier( valTypeInfo, MutMode.IMut )}, {info:get_nilableTypeInfo()}, false )
+   local fromVal = self:createFuncAsync( false, true, nil, TypeInfoKind.Func, info, true, externalFlag, true, AccessMode.Pub, "_from", Async.Async, nil, {self:createModifier( valTypeInfo, MutMode.IMut )}, {info:get_nilableTypeInfo()}, false )
    scope:addMethod( self, nil, fromVal, AccessMode.Pub, true, false )
    
    local allListType = self:createList( AccessMode.Pub, info, {info}, MutMode.IMut )
-   local allList = self:createFunc( false, true, nil, TypeInfoKind.Func, info, true, externalFlag, true, AccessMode.Pub, "get__allList", Async.Async, nil, nil, {self:createModifier( allListType, MutMode.IMut )}, false )
+   local allList = self:createFuncAsync( false, true, nil, TypeInfoKind.Func, info, true, externalFlag, true, AccessMode.Pub, "get__allList", Async.Async, nil, nil, {self:createModifier( allListType, MutMode.IMut )}, false )
    scope:addMethod( self, nil, allList, AccessMode.Pub, true, false )
    
    return info
@@ -8445,7 +8464,7 @@ function ProcessInfo:createAlge( scope, parentInfo, externalFlag, accessMode, al
    local info = AlgeTypeInfo.new(self, scope, externalFlag, accessMode, algeName, parentInfo, parentInfo:get_typeData())
    self:setupImut( info )
    
-   local getAlgeName = self:createFunc( false, true, nil, TypeInfoKind.Method, info, true, externalFlag, false, AccessMode.Pub, "get__txt", Async.Async, nil, nil, {_moduleObj.builtinTypeString}, false )
+   local getAlgeName = self:createFuncAsync( false, true, nil, TypeInfoKind.Method, info, true, externalFlag, false, AccessMode.Pub, "get__txt", Async.Async, nil, nil, {_moduleObj.builtinTypeString}, false )
    scope:addMethod( self, nil, getAlgeName, AccessMode.Pub, false, false )
    
    return info

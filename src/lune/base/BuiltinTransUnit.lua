@@ -1,6 +1,6 @@
---lune/base/SimpleTransUnit.lns
+--lune/base/BuiltinTransUnit.lns
 local _moduleObj = {}
-local __mod__ = '@lune.@base.@SimpleTransUnit'
+local __mod__ = '@lune.@base.@BuiltinTransUnit'
 local _lune = {}
 if _lune3 then
    _lune = _lune3
@@ -164,7 +164,7 @@ function TransUnit:popScope(  )
 end
 function TransUnit:getCurrentNamespaceTypeInfo(  )
 
-   return self.scope:getNamespaceTypeInfo(  )
+   return Ast.getBuiltinMut( self.scope:getNamespaceTypeInfo(  ) )
 end
 function TransUnit:pushModule( processInfo, externalFlag, name, mutable )
 
@@ -205,6 +205,7 @@ function TransUnit:pushModuleLow( processInfo, externalFlag, name, mutable )
          local newType = processInfo:createModule( scope, parentInfo, externalFlag, modName, mutable )
          typeInfo = newType
          self.namespace2Scope[typeInfo] = scope
+         Ast.addBuiltinMut( newType, scope )
          
          local _79, existSym = parentScope:addClass( processInfo, modName, nil, typeInfo )
          if existSym ~= nil then
@@ -341,9 +342,10 @@ function TransUnit:pushClassLow( processInfo, errPos, mode, abstractFlag, baseIn
          end
          
          
-         local newType = processInfo:createClass( mode ~= TransUnitIF.DeclClassMode.Interface, abstractFlag, scope, baseInfo, interfaceList, workGenTypeList, parentInfo, externalFlag, accessMode, name )
+         local newType = processInfo:createClassAsync( mode ~= TransUnitIF.DeclClassMode.Interface, abstractFlag, scope, baseInfo, interfaceList, workGenTypeList, parentInfo, externalFlag, accessMode, name )
          typeInfo = newType
          self.namespace2Scope[typeInfo] = scope
+         Ast.addBuiltinMut( newType, scope )
          
          parentScope:addClassLazy( processInfo, name, errPos, typeInfo, mode == TransUnitIF.DeclClassMode.LazyModule )
       end

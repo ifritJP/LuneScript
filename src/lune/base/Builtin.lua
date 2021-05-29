@@ -198,7 +198,7 @@ local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
 local Log = _lune.loadModule( 'lune.base.Log' )
 
 local TransUnitIF = _lune.loadModule( 'lune.base.TransUnitIF' )
-local SimpleTransUnit = _lune.loadModule( 'lune.base.SimpleTransUnit' )
+local BuiltinTransUnit = _lune.loadModule( 'lune.base.BuiltinTransUnit' )
 
 
 
@@ -211,7 +211,7 @@ function Builtin.new( targetLuaVer, ctrl_info )
    return obj
 end
 function Builtin:__init(targetLuaVer, ctrl_info) 
-   self.transUnitIF = SimpleTransUnit.TransUnit.new(ctrl_info)
+   self.transUnit = BuiltinTransUnit.TransUnit.new(ctrl_info)
    self.targetLuaVer = targetLuaVer
    self.ctrl_info = ctrl_info
    self.processInfo = Ast.getRootProcessInfo(  )
@@ -1126,6 +1126,16 @@ local function getBuiltInInfo(  )
 end
 
 
+function BuiltinFuncType:isStrFormFunc( typeInfo )
+
+   if typeInfo:get_srcTypeInfo() == self.string_format then
+      return true
+   end
+   
+   return false
+end
+
+
 function Builtin:getTypeInfo( typeName )
 
    local _
@@ -1217,7 +1227,7 @@ function Builtin:getTypeInfo( typeName )
    end
    
    local genTypeList = {}
-   local _530, endIndex = typeName:find( "[%w%.]+<" )
+   local _536, endIndex = typeName:find( "[%w%.]+<" )
    local suffix = ""
    if endIndex ~= nil then
       local genTypeName = typeName:sub( endIndex + 1 )
@@ -1244,7 +1254,7 @@ function Builtin:getTypeInfo( typeName )
    if typeName:find( "!$" ) then
       local orgTypeName = typeName:gsub( "!$", "" )
       do
-         local _exp = getTypeInfoFromScope( self.transUnitIF:get_scope(), orgTypeName, genTypeList )
+         local _exp = getTypeInfoFromScope( self.transUnit:get_scope(), orgTypeName, genTypeList )
          if _exp ~= nil then
             typeInfo = _exp
          else
@@ -1256,7 +1266,7 @@ function Builtin:getTypeInfo( typeName )
    else
     
       do
-         local _exp = getTypeInfoFromScope( self.transUnitIF:get_scope(), typeName, genTypeList )
+         local _exp = getTypeInfoFromScope( self.transUnit:get_scope(), typeName, genTypeList )
          if _exp ~= nil then
             typeInfo = _exp
          else
@@ -1279,7 +1289,7 @@ function Builtin:processField( name, fieldName, info, parentInfo )
 
    if self.targetLuaVer:isSupport( string.format( "%s.%s", name, fieldName) ) then
       if _lune.nilacc( info['type'], nil, 'item', 1) == "var" then
-         local symbol = _lune.unwrap( self.transUnitIF:get_scope():add( self.processInfo, Ast.SymbolKind.Var, false, true, fieldName, nil, self:getTypeInfo( _lune.unwrap( _lune.nilacc( info['typeInfo'], nil, 'item', 1)) ), Ast.AccessMode.Pub, true, Ast.MutMode.Mut, true, false ))
+         local symbol = _lune.unwrap( self.transUnit:get_scope():add( self.processInfo, Ast.SymbolKind.Var, false, true, fieldName, nil, self:getTypeInfo( _lune.unwrap( _lune.nilacc( info['typeInfo'], nil, 'item', 1)) ), Ast.AccessMode.Pub, true, Ast.MutMode.Mut, true, false ))
          setupBuiltinTypeInfo( name, fieldName, symbol )
       else
        
@@ -1352,21 +1362,17 @@ function Builtin:processField( name, fieldName, info, parentInfo )
          end
          
          
-         self.transUnitIF:pushScope( false )
+         self.transUnit:pushScope( false )
          
-         local scope = self.transUnitIF:get_scope()
-         local typeInfo = self.processInfo:createFunc( abstractFlag, true, scope, kind, parentInfo, false, true, staticFlag, accessMode, fieldName, Ast.Async.Async, nil, argTypeList, retTypeList, mutable )
+         local scope = self.transUnit:get_scope()
+         local typeInfo = self.processInfo:createFuncAsync( abstractFlag, true, scope, kind, Ast.getBuiltinMut( parentInfo ), false, true, staticFlag, accessMode, fieldName, Ast.Async.Async, nil, argTypeList, retTypeList, mutable )
          
-         self.transUnitIF:popScope(  )
+         self.transUnit:popScope(  )
          
          builtinFunc:get_allFuncTypeSet()[typeInfo]= true
          
-         Ast.addBuiltin( typeInfo, scope )
-         if typeInfo:get_nilableTypeInfo() ~= Ast.headTypeInfo then
-            Ast.addBuiltin( typeInfo:get_nilableTypeInfo(), scope )
-         end
-         
-         local symInfo = _lune.unwrap( self.transUnitIF:get_scope():add( self.processInfo, symbolKind, false, kind == Ast.TypeInfoKind.Func, fieldName, nil, typeInfo, accessMode, staticFlag, mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true, false ))
+         Ast.addBuiltinMut( typeInfo, scope )
+         local symInfo = _lune.unwrap( self.transUnit:get_scope():add( self.processInfo, symbolKind, false, kind == Ast.TypeInfoKind.Func, fieldName, nil, typeInfo, accessMode, staticFlag, mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true, false ))
          
          setupBuiltinTypeInfo( name, fieldName, symInfo )
       end
@@ -1390,9 +1396,9 @@ function Builtin:registBuiltInScope(  )
    local builtinModuleName2Scope = {}
    
    local mapType = self.processInfo:createMap( Ast.AccessMode.Pub, Ast.headTypeInfo, Ast.builtinTypeString, Ast.builtinTypeStem, Ast.MutMode.Mut )
-   self.transUnitIF:get_scope():addVar( self.processInfo, Ast.AccessMode.Global, "_ENV", nil, mapType, Ast.MutMode.IMutRe, true )
-   self.transUnitIF:get_scope():addVar( self.processInfo, Ast.AccessMode.Global, "_G", nil, mapType, Ast.MutMode.IMutRe, true )
-   self.transUnitIF:get_scope():addVar( self.processInfo, Ast.AccessMode.Global, "__line__", nil, Ast.builtinTypeInt, Ast.MutMode.IMut, true )
+   self.transUnit:get_scope():addVar( self.processInfo, Ast.AccessMode.Global, "_ENV", nil, mapType, Ast.MutMode.IMutRe, true )
+   self.transUnit:get_scope():addVar( self.processInfo, Ast.AccessMode.Global, "_G", nil, mapType, Ast.MutMode.IMutRe, true )
+   self.transUnit:get_scope():addVar( self.processInfo, Ast.AccessMode.Global, "__line__", nil, Ast.builtinTypeInt, Ast.MutMode.IMut, true )
    local function processCopyAlterList( alterList, typeList )
    
       for __index, typeInfo in ipairs( typeList ) do
@@ -1484,23 +1490,20 @@ function Builtin:registBuiltInScope(  )
                      declMode = TransUnitIF.DeclClassMode.Interface
                   end
                   
-                  parentInfo = self.transUnitIF:pushClassLow( self.processInfo, self.transUnitIF:getLatestPos(  ), declMode, false, nil, interfaceList, genTypeList, true, name, true, Ast.AccessMode.Pub )
+                  parentInfo = self.transUnit:pushClassLow( self.processInfo, self.transUnit:getLatestPos(  ), declMode, false, nil, interfaceList, genTypeList, true, name, true, Ast.AccessMode.Pub )
                   builtinFunc:registerClass( parentInfo )
                elseif _switchExp == TransUnitIF.DeclClassMode.Module then
-                  parentInfo = self.transUnitIF:pushModuleLow( self.processInfo, true, name, true )
+                  parentInfo = self.transUnit:pushModuleLow( self.processInfo, true, name, true )
                   
-                  self.transUnitIF:get_scope():get_parent():add( self.processInfo, Ast.SymbolKind.Typ, false, false, name, nil, parentInfo, Ast.AccessMode.Local, true, Ast.MutMode.Mut, true, false )
+                  self.transUnit:get_scope():get_parent():add( self.processInfo, Ast.SymbolKind.Typ, false, false, name, nil, parentInfo, Ast.AccessMode.Local, true, Ast.MutMode.Mut, true, false )
                end
             end
             
-            
-            Ast.addBuiltin( parentInfo, self.transUnitIF:get_scope() )
-            Ast.addBuiltin( parentInfo:get_nilableTypeInfo(), self.transUnitIF:get_scope() )
          end
          
          if not builtinModuleName2Scope[name] then
             if name ~= "" and self:getTypeInfo( name ) then
-               builtinModuleName2Scope[name] = self.transUnitIF:get_scope()
+               builtinModuleName2Scope[name] = self.transUnit:get_scope()
             end
             
             do
@@ -1529,7 +1532,7 @@ function Builtin:registBuiltInScope(  )
          end
          
          if name ~= "" then
-            self.transUnitIF:popClass(  )
+            self.transUnit:popClass(  )
          end
          
       end
