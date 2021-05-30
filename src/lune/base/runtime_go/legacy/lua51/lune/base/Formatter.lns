@@ -114,11 +114,12 @@ pub override fn FormatterFilter.processSubfile(
 {
    
 }
-pub override fn FormatterFilter.processEnv(
-   node: &Nodes.EnvNode, opt:Opt ) mut
+pub override fn FormatterFilter.processAsyncLock(
+   node: &Nodes.AsyncLockNode, opt:Opt ) mut
 {
-   self.write( "__envLock" );
+   self.writeln( "__asyncLock {" );
    filter( node.$block, self, opt.nextOpt( node ) );
+   self.writeln( "}" );
 }
 pub override fn FormatterFilter.processBlockSub(
    node: &Nodes.BlockNode, opt:Opt ) mut

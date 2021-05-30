@@ -34,6 +34,10 @@ fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Nodes.ReturnNode {
          token.pos,
          "'return' could not use here" );
    }
+   let nsInfo = self.getNSInfo( funcTypeInfo );
+   if nsInfo.isLockedAsync() {
+      self.addErrMess( token.pos, "can't use 'return' in the __asyncLock." );
+   }
 
    let nextToken = self.getToken(##);
 
@@ -126,8 +130,8 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
       elseif token.txt == "super" {
          statement = self.analyzeSuper( token );
       }
-      elseif token.txt == "__envLock" {
-         statement = self.analyzeEnvLock( token );
+      elseif token.txt == "__asyncLock" {
+         statement = self.analyzeAsyncLock( token );
       }
       elseif token.txt == "if" {
          statement = self.analyzeIf( token );
@@ -169,9 +173,11 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
          statement = Nodes.BreakNode.create(
             self.nodeManager, token.pos,
             self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ] );
-         if #self.loopScopeQueue == 0 {
+         
+         let nsInfo = self.getCurrentNSInfo();
+         if not nsInfo.canBreak() {
             self.addErrMess( token.pos, "no loop syntax." );
-         }
+         } 
       }
       elseif token.txt == "unwrap" {
          statement = self.analyzeUnwrap( token );

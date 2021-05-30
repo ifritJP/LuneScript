@@ -860,17 +860,13 @@ pub enum BlockKind {
    IfUnwrap,
    When,
    Test,
-   Env,
+   AsyncLock,
 }
 
 _declNodeClass( "Block", Node, false, false, true,
                 [ { "blockKind": "BlockKind" },
                   { "scope": "&Ast.Scope" },
                   { "stmtList": "List<&Node>" } ]
-);
-
-_declNodeClass( "Env", Node, false, false, true,
-                [ { "block": "BlockNode" } ]
 );
 
 pub enum ScopeKind {
@@ -1792,6 +1788,9 @@ pub override fn ExpCallSuperNode.canBeRight( processInfo:Ast.ProcessInfo ):bool 
    return self.$expType ~= Ast.builtinTypeNone;
 }
 
+_declNodeClass( "AsyncLock", Node, false, false, true,
+                [ { "block": "&BlockNode" } ]
+);
 
 _declNodeClass( "DeclMember", Node, false, false, true,
                 [ { "name": "&Parser.Token" },

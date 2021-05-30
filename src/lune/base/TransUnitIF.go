@@ -84,15 +84,22 @@ func (self *TransUnitIF_Modifier) CreateModifier(_env *LnsEnv, typeInfo *Ast_Typ
 
 // declaration Class -- NSInfo
 type TransUnitIF_NSInfoMtd interface {
+    CanBreak(_env *LnsEnv) bool
+    DecLock(_env *LnsEnv)
+    Get_loopScopeQueue(_env *LnsEnv) *LnsList
     Get_nobody(_env *LnsEnv) bool
     Get_pos(_env *LnsEnv) *Types_Position
     Get_typeInfo(_env *LnsEnv) *Ast_TypeInfo
+    IncLock(_env *LnsEnv)
+    IsLockedAsync(_env *LnsEnv) bool
     Set_nobody(_env *LnsEnv, arg1 bool)
 }
 type TransUnitIF_NSInfo struct {
     nobody bool
     typeInfo *Ast_TypeInfo
     pos *Types_Position
+    loopScopeQueue *LnsList
+    lockedAsyncStack *LnsList
     FP TransUnitIF_NSInfoMtd
 }
 func TransUnitIF_NSInfo2Stem( obj LnsAny ) LnsAny {
@@ -115,21 +122,58 @@ func TransUnitIF_NSInfoDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *TransUnitIF_NSInfo) ToTransUnitIF_NSInfo() *TransUnitIF_NSInfo {
     return obj
 }
-func NewTransUnitIF_NSInfo(_env *LnsEnv, arg1 bool, arg2 *Ast_TypeInfo, arg3 *Types_Position) *TransUnitIF_NSInfo {
+func NewTransUnitIF_NSInfo(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 *Types_Position) *TransUnitIF_NSInfo {
     obj := &TransUnitIF_NSInfo{}
     obj.FP = obj
-    obj.InitTransUnitIF_NSInfo(_env, arg1, arg2, arg3)
+    obj.InitTransUnitIF_NSInfo(_env, arg1, arg2)
     return obj
-}
-func (self *TransUnitIF_NSInfo) InitTransUnitIF_NSInfo(_env *LnsEnv, arg1 bool, arg2 *Ast_TypeInfo, arg3 *Types_Position) {
-    self.nobody = arg1
-    self.typeInfo = arg2
-    self.pos = arg3
 }
 func (self *TransUnitIF_NSInfo) Get_nobody(_env *LnsEnv) bool{ return self.nobody }
 func (self *TransUnitIF_NSInfo) Set_nobody(_env *LnsEnv, arg1 bool){ self.nobody = arg1 }
 func (self *TransUnitIF_NSInfo) Get_typeInfo(_env *LnsEnv) *Ast_TypeInfo{ return self.typeInfo }
 func (self *TransUnitIF_NSInfo) Get_pos(_env *LnsEnv) *Types_Position{ return self.pos }
+func (self *TransUnitIF_NSInfo) Get_loopScopeQueue(_env *LnsEnv) *LnsList{ return self.loopScopeQueue }
+// 65: decl @lune.@base.@TransUnitIF.NSInfo.isLockedAsync
+func (self *TransUnitIF_NSInfo) IsLockedAsync(_env *LnsEnv) bool {
+    return self.lockedAsyncStack.Len() > 0
+}
+
+// 69: DeclConstr
+func (self *TransUnitIF_NSInfo) InitTransUnitIF_NSInfo(_env *LnsEnv, typeInfo *Ast_TypeInfo,pos *Types_Position) {
+    self.nobody = false
+    
+    self.lockedAsyncStack = NewLnsList([]LnsAny{})
+    
+    self.loopScopeQueue = NewLnsList([]LnsAny{})
+    
+    self.typeInfo = typeInfo
+    
+    self.pos = pos
+    
+}
+
+// 78: decl @lune.@base.@TransUnitIF.NSInfo.incLock
+func (self *TransUnitIF_NSInfo) IncLock(_env *LnsEnv) {
+    self.lockedAsyncStack.Insert(self.loopScopeQueue.Len())
+}
+
+// 81: decl @lune.@base.@TransUnitIF.NSInfo.decLock
+func (self *TransUnitIF_NSInfo) DecLock(_env *LnsEnv) {
+    self.lockedAsyncStack.Remove(nil)
+}
+
+// 94: decl @lune.@base.@TransUnitIF.NSInfo.canBreak
+func (self *TransUnitIF_NSInfo) CanBreak(_env *LnsEnv) bool {
+    var len LnsInt
+    len = self.lockedAsyncStack.Len()
+    var loopQueueLen LnsInt
+    loopQueueLen = self.loopScopeQueue.Len()
+    if len == 0{
+        return loopQueueLen > 0
+    }
+    return self.lockedAsyncStack.GetAt(len).(LnsInt) < loopQueueLen
+}
+
 
 type TransUnitIF_TransUnitIF interface {
         Error(_env *LnsEnv, arg1 string)

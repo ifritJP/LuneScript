@@ -1659,7 +1659,7 @@ fn TransUnit.analyzeDecl(
          // anonymous 関数でも、 pub 等が指定されている場合は、
          // エラー処理用に analyzeDeclFunc() をコールする。
          return self.analyzeDeclFunc(
-            .Func, abstractFlag, overrideFlag,
+            .Func, false, abstractFlag, overrideFlag,
             accessMode, staticFlag, nil, firstToken, nil );
       }
       // anonymous 関数の場合は、 関数定義ではなく関数オブジェクトを利用した式。
@@ -1880,7 +1880,7 @@ fn TransUnit.analyzeDeclMethod(
    staticFlag: bool, firstToken: &Parser.Token, name: &Parser.Token ) mut : Nodes.Node
 {
    let mut node = self.analyzeDeclFunc(
-      declFuncMode, abstractFlag,
+      declFuncMode, false, abstractFlag,
       overrideFlag, accessMode, staticFlag, classTypeInfo, name, name );
    return node;
 }
@@ -2265,11 +2265,14 @@ nil の場合、メンバの宣言位置。
       self.prepareTentativeSymbol( initBlockScope, false, nil );
 
       let ininame = "___init";
-      let funcTypeInfo = self.processInfo.createFuncAsync(
+      let mut funcTypeInfo = self.processInfo.createFuncAsync(
          false, false, initBlockScope, .Func, classTypeInfo,
          false, false, true, .Pri, ininame, .Noasync, nil, nil, nil, false );
       let funcSym, shadowing = parentScope.addFunc(
          self.processInfo, token.$pos, funcTypeInfo, .Pri, true, true );
+
+      self.newNSInfo( funcTypeInfo, token.pos );
+      
       
       let block = self.analyzeFuncBlock(
          .InitBlock, token, classTypeInfo, funcTypeInfo, ininame, initBlockScope,
@@ -2905,9 +2908,14 @@ fn TransUnit.processAddFunc(
 
 let CantOverrideMethods = (@ "__init", "__free" );
 
+/**
+関数定義の解析。
+
+@parm asyncLocked __asyncLock で指定された関数であることを示す。
+*/
 fn TransUnit.analyzeDeclFunc(
-   declFuncMode: DeclFuncMode, abstractFlag: bool, overrideFlag: bool,
-   mut accessMode: Ast.AccessMode,
+   declFuncMode: DeclFuncMode, asyncLocked: bool,
+   abstractFlag: bool, overrideFlag: bool, mut accessMode: Ast.AccessMode,
    mut staticFlag: bool, mut classTypeInfo: &Ast.TypeInfo!,
    firstToken: &Parser.Token, mut name: &Parser.Token! ) mut : Nodes.Node
 {
@@ -3176,6 +3184,9 @@ fn TransUnit.analyzeDeclFunc(
          nsInfo = self.newNSInfo( typeInfo, firstToken.pos );
       }
       self.namespace2Scope[ typeInfo ] = funcBodyScope;
+   }
+   if asyncLocked {
+      nsInfo.incLock();
    }
 
    if overrideFlag {

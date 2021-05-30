@@ -5090,7 +5090,6 @@ pub fn ProcessInfo.createList(
       return new NormalTypeInfo(
          self, false, nil, builtinTypeList,
          nil, false, false, false, AccessMode.Pub,
-         //"List", headTypeInfoMut, headTypeInfoMut.$typeData, .List, itemTypeInfo,
          "List", headTypeInfo, self.miscTypeData, .List, itemTypeInfo,
          nil, nil, workMutMode, nil, .Async ); } );
 }

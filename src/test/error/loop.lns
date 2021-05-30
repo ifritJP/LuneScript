@@ -227,3 +227,13 @@ return 1;  // error
    forsort _ in (@ new Hoge() ) { // error
    }
 }
+{
+   let list = [1];
+   foreach _ in list {
+      fn func() {
+         break; // error
+      }
+      func();
+   }
+}
+

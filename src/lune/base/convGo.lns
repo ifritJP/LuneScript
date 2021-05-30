@@ -2071,25 +2071,15 @@ pub override fn convFilter.processSubfile(
    //Util.err( "not support -- %s" (__func__) );
 }
 
-pub override fn convFilter.processEnv(
-   node: &Nodes.EnvNode, opt: Opt ) mut
+pub override fn convFilter.processAsyncLock(
+   node: &Nodes.AsyncLockNode, opt: Opt ) mut
 {
-   self.writeln( "{" );
-   self.pushIndent(##);
-   self.writeln( "Lns_LockEnvSync()" );
-   self.popIndent();
+   self.writeln( "Lns_LockEnvSync( %s, func () {"
+                 (self.env.getEnv( node.isThreading() )) );
 
-   self.env.push( node );
-   
    filter( node.$block, self, node );
 
-
-   self.env.pop();
-   
-   self.pushIndent(##);
-   self.writeln( "Lns_UnlockEnvSync()" );
-   self.popIndent();
-   self.writeln( "}" );
+   self.writeln( "})" );
 }
 
 pub override fn convFilter.processBlockSub(

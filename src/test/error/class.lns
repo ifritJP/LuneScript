@@ -37,16 +37,6 @@ Test__a.func( 1 ); // error
 
 
 
-class Test2 {
-   pri let val:int;
-   pri let val2:int!;
-   pub fn __init() { // error: does not set 'val';
-   }
-   pub fn func():str;
-}
-pub fn Test2.func():int { // error
-}
-
 class Test3 {
    pri let val1:int;
    pub let mut val2:int;
@@ -506,4 +496,3 @@ class Test9 extend Super7 {
    }
    
 }
-

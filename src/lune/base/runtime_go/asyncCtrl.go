@@ -62,7 +62,7 @@ func (self *LnsThread) initLnsThread() {
 
 func (self *LnsThread) LoopMain() {
 
-	self.LnsEnv = createEnv()
+	self.LnsEnv = createEnv(true)
 
 	self.runLoop()
 
@@ -71,4 +71,19 @@ func (self *LnsThread) LoopMain() {
 	oldEnv := self.LnsEnv
 	self.LnsEnv = Lns_GetEnv()
 	oldEnv.LuaVM.closeVM()
+}
+
+func Lns_LockEnvSync(_env *LnsEnv, callback func()) {
+	if _env.async {
+		// __noasync が待ちになるまで待つために lock する
+		sync_LnsEnvMutex.Lock()
+
+		// 処理終了後に lock を開放するために defer する。
+		defer sync_LnsEnvMutex.Unlock()
+
+		callback()
+
+	} else {
+		callback()
+	}
 }

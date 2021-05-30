@@ -1612,11 +1612,13 @@ fn TransUnit.checkNoasyncType( pos:&Parser.Position, funcTypeInfo:&Ast.TypeInfo 
          case .Func, .Method {
             switch curType.$asyncMode {
                case .Async, .Transient {
-                  // async の関数から、 noasync 関数は実行できない。
-                  self.addErrMess(
-                     pos,        
-                     "can't access noasync function in async. -- %s on %s"
-                     (funcTypeInfo.getTxt(##), curType.getTxt(##)));
+                  if not self.getNSInfo( curType ).isLockedAsync() {
+                     // async の関数から、 noasync 関数は実行できない。
+                     self.addErrMess(
+                        pos,        
+                        "can't access noasync function in async. -- %s on %s"
+                        (funcTypeInfo.getTxt(##), curType.getTxt(##)));
+                  }
                }
             }
          }
@@ -2865,7 +2867,7 @@ fn TransUnit.analyzeExpSymbol(
    }
    elseif mode == .Fn {
       exp = self.analyzeDeclFunc(
-         .Func, false, false, .Local, false, nil, symbolToken, nil );
+         .Func, false, false, false, .Local, false, nil, symbolToken, nil );
    }
    else {
       self.error( "illegal mode -- %s" ( mode ) );

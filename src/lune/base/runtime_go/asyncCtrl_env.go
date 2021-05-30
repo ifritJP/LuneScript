@@ -35,6 +35,15 @@ func (self *Lns__pipe) Put(_env *LnsEnv, val LnsAny) {
 	self.put(val)
 }
 func (self *Lns__pipe) Get(_env *LnsEnv) LnsAny {
+	if !_env.async {
+		// __noasync で get する際に、
+		// __asyncLock の処理が動くように sync_LnsEnvMutex を unlock する。
+		sync_LnsEnvMutex.Unlock()
+
+		// get 後、sync_LnsEnvMutex を lock するために defer する。
+		defer sync_LnsEnvMutex.Lock()
+	}
+
 	return self.get()
 }
 
@@ -55,13 +64,13 @@ type LnsRunner interface {
 }
 
 func lnsRunMain(self LnsRunner) {
-    env := createEnv()
-    
-	self.Run( env )
-    
-    env.LuaVM.closeVM()
+	env := createEnv(true)
+
+	self.Run(env)
+
+	env.LuaVM.closeVM()
 }
 
 func LnsRun(self LnsRunner) {
-	go lnsRunMain( self )
+	go lnsRunMain(self)
 }

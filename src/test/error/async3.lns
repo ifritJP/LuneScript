@@ -141,6 +141,22 @@ let globalVal2:&List<int> = [];
    }
 }
 {
+   fn func() {
+      let list = [1];
+      foreach _ in list {
+         __asyncLock {
+            foreach val in list {
+               if val == 0 {
+                  return; // error
+               }
+               break;
+            }
+            break; // error
+         }
+      }
+   }
+}
+{
 
    class Super {
       pub fn func() {
@@ -153,3 +169,4 @@ let globalVal2:&List<int> = [];
       }
    }
 }
+

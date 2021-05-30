@@ -266,10 +266,11 @@ function FormatterFilter:processSubfile( node, opt )
 
 end
 
-function FormatterFilter:processEnv( node, opt )
+function FormatterFilter:processAsyncLock( node, opt )
 
-   self:write( "__envLock" )
+   self:writeln( "__asyncLock {" )
    filter( node:get_block(), self, opt:nextOpt( node ) )
+   self:writeln( "}" )
 end
 
 function FormatterFilter:processBlockSub( node, opt )

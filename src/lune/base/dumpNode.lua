@@ -296,7 +296,7 @@ function dumpFilter:processSubfile( node, opt )
 end
 
 
-function dumpFilter:processEnv( node, opt )
+function dumpFilter:processAsyncLock( node, opt )
 
    self:dump( opt, node, "" )
    filter( node:get_block(), self, opt:nextOpt(  ) )

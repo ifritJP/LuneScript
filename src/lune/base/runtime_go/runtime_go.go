@@ -43,6 +43,7 @@ type LnsEnv struct {
 	valStack    []LnsAny
 	nilAccStack []LnsAny
 	LuaVM       *Lns_luaVM
+	async       bool
 }
 
 // デフォルトのシングルタスクで使用する LnsEnv
@@ -51,7 +52,7 @@ var cur_LnsEnv *LnsEnv
 // 排他して使用する LnsEnv
 var sync_LnsEnv *LnsEnv
 
-/// sync_LnsEnv を排他するための mutex
+/// __nosync を排他するための mutex
 var sync_LnsEnvMutex sync.Mutex
 
 func Lns_GetEnv() *LnsEnv {
@@ -60,16 +61,6 @@ func Lns_GetEnv() *LnsEnv {
 
 func Lns_GetEnvSync() *LnsEnv {
 	return sync_LnsEnv
-}
-func Lns_LockEnvSync() {
-	sync_LnsEnvMutex.Lock()
-	if sync_LnsEnv == nil {
-		sync_LnsEnv = createEnv()
-	}
-
-}
-func Lns_UnlockEnvSync() {
-	sync_LnsEnvMutex.Unlock()
 }
 
 /**
@@ -83,11 +74,12 @@ import エラーを回避するため、
 func Lns_InitMod() {
 }
 
-func createEnv() *LnsEnv {
+func createEnv(async bool) *LnsEnv {
 	env := &LnsEnv{}
 	env.valStack = []LnsAny{}
 	env.nilAccStack = []LnsAny{}
 	env.LuaVM = createVM()
+	env.async = async
 
 	return env
 }
@@ -123,9 +115,12 @@ func Lns_InitModOnce(opts ...LnsRuntimeOpt) {
 		lnsRuntimeOpt = opts[0]
 	}
 
-	cur_LnsEnv = createEnv()
+	cur_LnsEnv = createEnv(false)
 
 	Lns_package_path = cur_LnsEnv.LuaVM.GetPackagePath()
+
+	// __asyncLock 用にロックしておく
+	sync_LnsEnvMutex.Lock()
 }
 
 func Lns_IsNil(val LnsAny) bool {

@@ -12,6 +12,56 @@ function _lune.loadModule( mod )
    return require( mod )
 end
 
+function _lune.__isInstanceOf( obj, class )
+   while obj do
+      local meta = getmetatable( obj )
+      if not meta then
+	 return false
+      end
+      local indexTbl = meta.__index
+      if indexTbl == class then
+	 return true
+      end
+      if meta.ifList then
+         for index, ifType in ipairs( meta.ifList ) do
+            if ifType == class then
+               return true
+            end
+            if _lune.__isInstanceOf( ifType, class ) then
+               return true
+            end
+         end
+      end
+      obj = indexTbl
+   end
+   return false
+end
+
+function _lune.__Cast( obj, kind, class )
+   if kind == 0 then -- int
+      if type( obj ) ~= "number" then
+         return nil
+      end
+      if math.floor( obj ) ~= obj then
+         return nil
+      end
+      return obj
+   elseif kind == 1 then -- real
+      if type( obj ) ~= "number" then
+         return nil
+      end
+      return obj
+   elseif kind == 2 then -- str
+      if type( obj ) ~= "string" then
+         return nil
+      end
+      return obj
+   elseif kind == 3 then -- class
+      return _lune.__isInstanceOf( obj, class ) and obj or nil
+   end
+   return nil
+end
+
 if not _lune3 then
    _lune3 = _lune
 end
@@ -90,22 +140,44 @@ end
 
 local NSInfo = {}
 _moduleObj.NSInfo = NSInfo
-function NSInfo.setmeta( obj )
-  setmetatable( obj, { __index = NSInfo  } )
+function NSInfo:isLockedAsync(  )
+
+   return #self.lockedAsyncStack > 0
 end
-function NSInfo.new( nobody, typeInfo, pos )
+function NSInfo.new( typeInfo, pos )
    local obj = {}
    NSInfo.setmeta( obj )
-   if obj.__init then
-      obj:__init( nobody, typeInfo, pos )
-   end
+   if obj.__init then obj:__init( typeInfo, pos ); end
    return obj
 end
-function NSInfo:__init( nobody, typeInfo, pos )
-
-   self.nobody = nobody
+function NSInfo:__init(typeInfo, pos) 
+   self.nobody = false
+   self.lockedAsyncStack = {}
+   self.loopScopeQueue = {}
+   
    self.typeInfo = typeInfo
    self.pos = pos
+end
+function NSInfo:incLock(  )
+
+   table.insert( self.lockedAsyncStack, #self.loopScopeQueue )
+end
+function NSInfo:decLock(  )
+
+   table.remove( self.lockedAsyncStack )
+end
+function NSInfo:canBreak(  )
+
+   local len = #self.lockedAsyncStack
+   local loopQueueLen = #self.loopScopeQueue
+   if len == 0 then
+      return loopQueueLen > 0
+   end
+   
+   return self.lockedAsyncStack[len] < loopQueueLen
+end
+function NSInfo.setmeta( obj )
+  setmetatable( obj, { __index = NSInfo  } )
 end
 function NSInfo:get_nobody()
    return self.nobody
@@ -118,6 +190,9 @@ function NSInfo:get_typeInfo()
 end
 function NSInfo:get_pos()
    return self.pos
+end
+function NSInfo:get_loopScopeQueue()
+   return self.loopScopeQueue
 end
 
 

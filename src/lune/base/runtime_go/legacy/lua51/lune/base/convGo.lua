@@ -2791,23 +2791,13 @@ function convFilter:processSubfile( node, opt )
 end
 
 
-function convFilter:processEnv( node, opt )
+function convFilter:processAsyncLock( node, opt )
 
-   self:writeln( "{" )
-   self:pushIndent(  )
-   self:writeln( "Lns_LockEnvSync()" )
-   self:popIndent(  )
-   
-   self.env:push( node )
+   self:writeln( string.format( "Lns_LockEnvSync( %s, func () {", self.env:getEnv( node:isThreading(  ) )) )
    
    filter( node:get_block(), self, node )
    
-   self.env:pop(  )
-   
-   self:pushIndent(  )
-   self:writeln( "Lns_UnlockEnvSync()" )
-   self:popIndent(  )
-   self:writeln( "}" )
+   self:writeln( "})" )
 end
 
 

@@ -54,6 +54,51 @@ pub class NSInfo {
    let mut nobody:bool {pub,pub};
    let typeInfo:Ast.TypeInfo {pub};
    let pos:&Parser.Position {pub};
+
+   /** ループ系制御構文(for 等)の Scope */
+   let mut loopScopeQueue: List<&Ast.Scope> {pub};
+   
+   /** __asyncLock した時の loopScopeQueue の長さ */
+   let mut lockedAsyncStack:List<int>;
+
+   
+   pub fn isLockedAsync() : bool {
+      return #self.lockedAsyncStack > 0;
+   }
+
+   pub fn __init( typeInfo:Ast.TypeInfo, pos:&Parser.Position ) {
+      self.nobody = false;
+      self.lockedAsyncStack = [];
+      self.loopScopeQueue = [];
+      
+      self.typeInfo = typeInfo;
+      self.pos = pos;
+   }
+
+   pub fn incLock() mut {
+      self.lockedAsyncStack.insert( #self.loopScopeQueue );
+   }
+   pub fn decLock() mut {
+      self.lockedAsyncStack.remove(##);
+   }
+
+   /**
+break が可能かどうか調べる。
+
+__asyncLock されていない場合、
+loopScopeQueue の数でループ内部かどうかを判断し、ループ内の場合は break 可能。
+
+__asyncLock されている場合、
+lockedAsyncStack に格納されている情報よりも、今のループ数の方が多い場合は break 可能。
+   */ 
+   pub fn canBreak() : bool {
+      let len = #self.lockedAsyncStack;
+      let loopQueueLen = #self.loopScopeQueue;
+      if len == 0 {
+         return loopQueueLen > 0;
+      }
+      return self.lockedAsyncStack[ len ] < loopQueueLen;
+   }
 }
 
 pub interface TransUnitIF {

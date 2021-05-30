@@ -1,0 +1,11 @@
+{
+   class Test2 {
+      pri let val:int;
+      pri let val2:int!;
+      pub fn __init() { // error: does not set 'val';
+      }
+      pub fn func():str;
+   }
+   pub fn Test2.func():int { // error
+   }
+}

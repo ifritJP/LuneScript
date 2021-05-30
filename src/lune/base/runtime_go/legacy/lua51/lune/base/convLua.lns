@@ -1067,6 +1067,10 @@ end``` (luneSymbol, luneSymbol) );
    else {
       self.writeln( "return _moduleObj" );
    }
+
+   // __asyncLock fn() {
+   //    self.outputMeta( node );
+   // }
 };
 
 pub override fn ConvFilter.processSubfile(
@@ -1074,8 +1078,8 @@ pub override fn ConvFilter.processSubfile(
 {
 }
 
-pub override fn ConvFilter.processEnv(
-   node: &Nodes.EnvNode, opt: Opt ) mut
+pub override fn ConvFilter.processAsyncLock(
+   node: &Nodes.AsyncLockNode, opt: Opt ) mut
 {
    filter( node.$block, self, node );
 }
@@ -1116,7 +1120,7 @@ pub override fn ConvFilter.processBlockSub(
       case .Default {
          word = "";
       }
-      case .Block, .Env {
+      case .Block, .AsyncLock {
          word = "do";
       }
       case .LetUnwrap {
@@ -1145,7 +1149,7 @@ pub override fn ConvFilter.processBlockSub(
 
    self.popIndent();
    switch node.get_blockKind() {
-      case .Block, .Env {
+      case .Block, .AsyncLock {
          self.writeln( "end" );
       }
    }

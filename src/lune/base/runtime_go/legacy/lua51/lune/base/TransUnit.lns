@@ -582,8 +582,8 @@ pub class TransUnit extend (TransUnitIF.TransUnitIF, Parser.PushbackParser) {
    /** NodeKind -> Node[]  */
    pri let mut nodeManager: Nodes.NodeManager;
 
-   /** ループ系制御構文(for 等)の Scope */
-   pri let mut loopScopeQueue: List<&Ast.Scope>;
+   // /** ループ系制御構文(for 等)の Scope */
+   // pri let mut loopScopeQueue: List<&Ast.Scope>;
 
    /**
 名前空間タイプ Map。
@@ -675,7 +675,6 @@ alias で置き換えている元の Type → alias の型
       self.targetLuaVer = targetLuaVer;
       self.importModuleInfo = importModuleInfo;
       self.nsInfoMap = {};
-      self.loopScopeQueue = [];
       self.has__func__Symbol = (@);
       self.nodeManager = new Nodes.NodeManager();
       self.macroScope = nil;
@@ -786,16 +785,20 @@ alias で置き換えている元の Type → alias の型
    */ 
    fn newNSInfo( typeInfo:Ast.TypeInfo, pos:&Parser.Position) mut : TransUnitIF.NSInfo
    {
-      let mut nsInfo = new TransUnitIF.NSInfo( false, typeInfo, pos );
+      let mut nsInfo = new TransUnitIF.NSInfo( typeInfo, pos );
       self.nsInfoMap[ typeInfo ] = nsInfo;
       return nsInfo;
    }
 
-   fn getNSType( typeInfo:&Ast.TypeInfo ) : Ast.TypeInfo {
+   fn getNSInfo( typeInfo:&Ast.TypeInfo ) mut : TransUnitIF.NSInfo {
       let! mut nsInfo = self.nsInfoMap[ typeInfo ] {
-         Util.err( "not found TypeInfo -- %s" (typeInfo.getTxt(##)) );
+         self.error( "not found TypeInfo -- %s" (typeInfo.getTxt(##)) );
       };
-      return nsInfo.$typeInfo;
+      return nsInfo;
+   }
+
+   fn getNSType( typeInfo:&Ast.TypeInfo ) mut : Ast.TypeInfo {
+      return self.getNSInfo( typeInfo ).$typeInfo;
    }
 
    /** scope を名前空間に属させるためのダミーの関数を定義 */
@@ -906,6 +909,10 @@ alias で置き換えている元の Type → alias の型
       return self.scope.getNamespaceTypeInfo();
    }
 
+   fn getCurrentNSInfo() mut : TransUnitIF.NSInfo {
+      return self.getNSInfo( self.getCurrentNamespaceTypeInfo() );
+   }
+   
    pri fn getCurrentNamespaceTypeInfoMutWithBuiltin() mut __noasync : Ast.TypeInfo {
       let typeInfo = self.scope.getNamespaceTypeInfo();
       if Ast.isBuiltin( typeInfo.$typeId.id ) {
@@ -1218,7 +1225,7 @@ alias で置き換えている元の Type → alias の型
       mode:Nodes.DeclVarMode,
       accessMode: Ast.AccessMode, firstToken: &Parser.Token ) mut: Nodes.Node;
    pri fn analyzeDeclFunc(
-      declFuncMode: DeclFuncMode, abstractFlag: bool,
+      declFuncMode: DeclFuncMode, asyncLocked:bool, abstractFlag: bool,
       overrideFlag: bool, accessMode: Ast.AccessMode, staticFlag: bool,
       mut classTypeInfo: &Ast.TypeInfo!,
       firstToken: &Parser.Token, name: &Parser.Token! ) mut : Nodes.Node;
@@ -1949,6 +1956,7 @@ fn TransUnit.analyzeBlock(
 
    blockScope.addIgnoredVar( self.processInfo );
 
+   let mut nsInfo = self.getCurrentNSInfo();
 
    switch tentativeMode {
       case .Loop {
@@ -1966,18 +1974,18 @@ fn TransUnit.analyzeBlock(
    switch blockKind {
       case .For, .Apply, .While, .Repeat, .Foreach {
          loopFlag = true;
-         self.loopScopeQueue.insert( self.scope );
+         nsInfo.$loopScopeQueue.insert( self.scope );
       }
    }
 
    let mut stmtList:List<&Nodes.Node> = [];
    self.analyzeStatementList( stmtList, false, "}" );
 
-   self.checkNextToken( "}" );
-
    if loopFlag {
-      self.loopScopeQueue.remove(##);
+      nsInfo.$loopScopeQueue.remove(##);
    }
+
+   self.checkNextToken( "}" );
 
    when! scope {
       self.scope = backScope;
@@ -2269,10 +2277,22 @@ fn TransUnit.analyzeSubfile( token: &Parser.Token ) mut : Nodes.SubfileNode {
       [ Ast.builtinTypeNone ], usePath );
 }
 
-fn TransUnit.analyzeEnvLock( token: &Parser.Token ) mut : Nodes.Node {
-   return Nodes.EnvNode.create(
-      self.nodeManager, token.pos, self.macroCtrl.isInAnalyzeArgMode(),
-      [ Ast.builtinTypeNone ], self.analyzeBlock( .Env, .Simple ## ) );
+fn TransUnit.analyzeAsyncLock( asyncToken: &Parser.Token ) mut : Nodes.Node {
+
+   let mut nsInfo = self.getNSInfo( self.getCurrentNamespaceTypeInfo() );
+   if nsInfo.isLockedAsync() {
+      self.addErrMess( asyncToken.pos, "can't nest __asyncLock." );
+   }
+   
+   nsInfo.incLock();
+   
+   let block = self.analyzeBlock( .AsyncLock, .Simple, nil, nil );
+
+   nsInfo.decLock();
+   
+   return Nodes.AsyncLockNode.create(
+      self.nodeManager, asyncToken.pos,
+      self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], block );
 }
 
 fn TransUnit.analyzeIf( token: &Parser.Token ) mut : Nodes.Node {

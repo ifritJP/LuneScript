@@ -158,8 +158,8 @@ pub override fn dumpFilter.processSubfile(
    self.dump( opt, node, "" );
 }
 
-pub override fn dumpFilter.processEnv(
-   node: &Nodes.EnvNode, opt:Opt ) mut
+pub override fn dumpFilter.processAsyncLock(
+   node: &Nodes.AsyncLockNode, opt:Opt ) mut
 {
    self.dump( opt, node, "" );
    filter( node.$block, self, opt.nextOpt() );
