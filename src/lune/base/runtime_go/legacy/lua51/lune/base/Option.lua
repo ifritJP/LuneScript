@@ -177,7 +177,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 9291
+   return 9349
 end
 
 
@@ -623,6 +623,8 @@ end
                   option.validPostBuild = false
                elseif _switchExp == "--enableAsyncCtl" then
                   option.transCtrlInfo.validAsyncCtrl = true
+               elseif _switchExp == "--defaultAsync" then
+                  option.transCtrlInfo.defaultAsync = true
                elseif _switchExp == "--nodebug" then
                   Util.setDebugFlag( false )
                elseif _switchExp == "--debug" then
@@ -917,7 +919,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 649, function (  )
+   Log.log( Log.Level.Log, __func__, 652, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

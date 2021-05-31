@@ -44,9 +44,12 @@ pub class Builtin {
    let processInfo:Ast.ProcessInfo;
    let modifier:TransUnitIF.Modifier;
 
+   let mut hasLuaval:bool;
+
    pub fn __init( targetLuaVer:&LuaVer.LuaVerInfo,
                   ctrl_info: &Types.TransCtrlInfo )
    {
+      self.hasLuaval = false;
       self.transUnit = new BuiltinTransUnit.TransUnit( ctrl_info );
       self.targetLuaVer = targetLuaVer;
       self.ctrl_info = ctrl_info;
@@ -398,6 +401,7 @@ fn Builtin.getTypeInfo( mut typeName:str ) mut : &Ast.TypeInfo {
                   .Pub, typeInfo.$parentInfo, keyType, valType, typeInfo.$mutMode );
             }
             case .Ext {
+               self.hasLuaval = true;
                if #genTypeList ~= 1 {
                   Util.err( "illegal param -- %d" (#genTypeList) );
                }
@@ -487,6 +491,7 @@ fn Builtin.getTypeInfo( mut typeName:str ) mut : &Ast.TypeInfo {
 fn Builtin.processField( name:str, fieldName:str, info:&Map<str,&List<str>>,
                          parentInfo:&Ast.TypeInfo ) mut
 {
+   self.hasLuaval = false;
    if self.targetLuaVer.isSupport( "%s.%s" (name, fieldName) ) {
       if info.type$[1] == "var" {
          let symbol = unwrap self.transUnit.$scope.add(
@@ -562,10 +567,18 @@ fn Builtin.processField( name:str, fieldName:str, info:&Map<str,&List<str>>,
          self.transUnit.pushScope( false ## );
 
          let mut scope = self.transUnit.$scope;
+         let asyncMode:Ast.Async;
+         if self.hasLuaval {
+            asyncMode = .Noasync;
+         } else {
+            asyncMode = .Async;
+         }
+         // asyncMode = .Async;
+         
          let mut typeInfo = self.processInfo.createFuncAsync(
             abstractFlag, true, scope, kind,
             Ast.getBuiltinMut( parentInfo), false, true, staticFlag, accessMode,
-            fieldName, .Async, nil, argTypeList, retTypeList, mutable );
+            fieldName, asyncMode, nil, argTypeList, retTypeList, mutable );
 
          self.transUnit.popScope();
 

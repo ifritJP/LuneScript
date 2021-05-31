@@ -8,34 +8,28 @@
 
 * バグ
 
-- [ ] ループ内に定義している 関数内で break が指定できる。
-     実際には break 出来ないのでエラーにするべき。
-- [ ] __async から大域変数へのアクセスは、大域変数が完全に imuttable でなければならない。
-    例えば &List<&List<int>> は完全に immutable でアクセス可能だが、
-    &List<List<int>>  は不完全な immutable なのでアクセス不能。
 - [ ] allmut 型のインスタンスで実行するメソッドについて
       - [ ] メソッドコールは __async ではできない。
-      - [ ] 戻り値が mutable の場合は allmut に変更。
+      - [ ] 戻り値が  の場合は allmut に変更。
 - [ ] allmut 型が、他の型 imut 等に代入できてしまい、チェックを擦り抜けられる。
-- [ ] import as したモジュールの ENUM の $_txt が、 go 変換時にエラーする。
 - [ ] 現状、 allmut 型のメンバを __async から参照するだけでエラーになるが、
       参照するだけでそのオブジェクトのメンバやメソッドアクセスしなければ、
       エラーにしなくて良いはず。
 - [ ] ログのマクロを __async と __noasync で使い分けが必要。
       
-- [ ] imut な alge 型で、パラメータを持つ場合の制御が出来ていない？
 - [ ] メンバーを変更する処理を form で書いて、
       その form を imut のメソッドで実行できてしまう。
-- [ ] luaval<> の処理している箇所は unsafe __async では使えなくする。
+- [ ] luaval<> の処理している箇所は __async では使えなくする。
       __async では unsafe で括って使えるようにする。
 - [ ] __async は、luaval<> の引数、戻り値を持ってはならない。
       メンバに luaval<> を持つものもダメ。
 - [ ] allmut 変数の getter が async 設定になってしまう。
       allmut 型を mutable で返すメソッドは __noasync にすべき。
-- [ ] __init から allmut 型へのアクセスは、許可すべき。
-- [ ] allmut 変数を上書きするアクセスする場合、 unsafe などの警告があった方が良い。
+- [ ] allmut 変数を上書きする場合、 unsafe などの警告があった方が良い。
 - [ ] __trans の関数を、 __trans でないクロージャで保持できてしまう。
 - [ ] noasync の関数を async の form として登録できてしまう。
+
+- [ ] import as したモジュールの ENUM の $_txt が、 go 変換時にエラーする。
 - [ ] Mapping を実装すると、 Lua のコードに存在しない Mapping の参照が出力される。
 - [ ] pub なメンバーがいないクラスの  __typeId2ClassInfoMap は出力しない。
 - [ ] List, Set は、同じアイテムの場合、同じ TypeInfo になるようにする。  
@@ -979,6 +973,12 @@ hoge.$val = 2; // error しない
 - [X] override 時の、引数の mutable チェックが抜けている。
 - [X] list.sort()  のコールバックが型不一致エラーする。
 - [X] allmut 型メンバへのアクセスが __async で出来てしまっている。
+- [X] __init から allmut 型へのアクセスは、許可すべき。
+- [X] __async から大域変数へのアクセスは、大域変数が完全に imuttable でなければならない。
+    例えば &List<&List<int>> は完全に immutable でアクセス可能だが、
+    &List<List<int>>  は不完全な immutable なのでアクセス不能。
+- [X] ループ内に定義している 関数内で break が指定できる。
+     実際には break 出来ないのでエラーにするべき。
   
   
   

@@ -306,10 +306,6 @@ local function loadCode( code )
 end
 
 
-local toList = loadCode( "return function( ... ) return { ... } end" )
-_moduleObj.toList = toList
-
-
 local toListEmpty = loadCode( "return function() return {} end" )
 _moduleObj.toListEmpty = toListEmpty
 
@@ -644,7 +640,11 @@ function MacroCtrl:__init(macroEval)
    self.analyzeInfo = MacroAnalyzeInfo.new(Ast.builtinTypeNone, Nodes.MacroMode.None)
    self.macroCallLineNo = 0
    self.macroAnalyzeInfoStack = {self.analyzeInfo}
-   self.macroLocalVarMap = _moduleObj.toListEmpty(  )
+   
+   do
+      self.macroLocalVarMap = _moduleObj.toListEmpty(  )
+   end
+   
 end
 function MacroCtrl.setmeta( obj )
   setmetatable( obj, { __index = MacroCtrl  } )
@@ -700,27 +700,27 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
    
    local macroInfo = _lune.unwrap( self.typeId2MacroInfo[macroTypeInfo:get_typeId()])
    local argValMap = {}
-   local macroArgValMap = {["__var"] = self.macroLocalVarMap}
+   local macroArgValMap = {}
    local macroArgNodeList = macroInfo:getArgList(  )
    local macroArgName2ArgNode = {}
    if expList ~= nil then
       for index, argNode in ipairs( expList:get_expList() ) do
+         local declArgNode = macroArgNodeList[index]
+         macroArgName2ArgNode[declArgNode:get_name()] = argNode
          local literal, mess = argNode:getLiteral(  )
          if literal ~= nil then
             do
                local val = getLiteralMacroVal( literal )
                if val ~= nil then
-                  argValMap[index] = _moduleObj.toLuaval( val )
-                  local declArgNode = macroArgNodeList[index]
+                  argValMap[index] = val
                   
                   if argNode:get_expType() == Ast.builtinTypeSymbol then
-                     macroArgValMap[declArgNode:get_name()] = val[1]
+                     macroArgValMap[declArgNode:get_name()] = _moduleObj.toLuaval( val[1] )
                   else
                    
-                     macroArgValMap[declArgNode:get_name()] = val
+                     macroArgValMap[declArgNode:get_name()] = _moduleObj.toLuaval( val )
                   end
                   
-                  macroArgName2ArgNode[declArgNode:get_name()] = argNode
                end
             end
             
@@ -733,8 +733,10 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
       
    end
    
+   
+   macroArgValMap["__var"] = self.macroLocalVarMap
    local func = macroInfo.func
-   local macroVars = func( macroArgValMap )
+   local macroVars = _lune.unwrap( (func( macroArgValMap ) ))
    self.macroLocalVarMap = _lune.unwrap( macroVars['__var'])
    for __index, name in pairs( (_lune.unwrap( macroVars['__names']) ) ) do
       local valInfo = macroInfo.symbol2MacroValInfoMap[name]
@@ -745,24 +747,24 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
       end
       
       local typeInfo = valInfo.typeInfo
-      local valList
+      local valMap
       
       do
          local val = macroVars[name]
          if val ~= nil then
             if equalsType( typeInfo, Ast.builtinTypeSymbol ) then
-               valList = _moduleObj.toList( val )
+               valMap = {[1] = val}
             else
              
-               valList = val
+               valMap = val
             end
             
          else
-            valList = _moduleObj.toListEmpty(  )
+            valMap = {}
          end
       end
       
-      self.symbol2ValueMapForMacro[name] = Nodes.MacroValInfo.new(valList, typeInfo, macroArgName2ArgNode[name])
+      self.symbol2ValueMapForMacro[name] = Nodes.MacroValInfo.new(valMap, typeInfo, nil)
    end
    
    for index, arg in ipairs( macroInfo:getArgList(  ) ) do
@@ -801,7 +803,6 @@ function MacroCtrl:importMacro( processInfo, lnsPath, macroInfoStem, macroTypeIn
          local argTypeInfo = _lune.unwrap( typeId2TypeInfo[argInfo.typeId])
          table.insert( argList, Nodes.MacroArgInfo.new(argInfo.name, argTypeInfo) )
          table.insert( argNameList, argInfo.name )
-         
       end
       
       for __index, symInfo in ipairs( macroInfo.symList ) do
@@ -950,7 +951,40 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
       return work
    end
    
+   local function macroVal2strList( name, macroVal, workParser )
+   
+      local val = macroVal.val
+      if  nil == val then
+         local _val = val
+      
+         workParser:error( string.format( "macroVal is nil -- %s", name) )
+      end
+      
+      if macroVal.argNode then
+         return val
+      end
+      
+      local list = {}
+      do
+         local __sorted = {}
+         local __map = val
+         for __key in pairs( __map ) do
+            table.insert( __sorted, __key )
+         end
+         table.sort( __sorted )
+         for __index, __key in ipairs( __sorted ) do
+            local item = __map[ __key ]
+            do
+               table.insert( list, item )
+            end
+         end
+      end
+      
+      return list
+   end
+   
    local tokenTxt = token.txt
+   
    if tokenTxt == ',,' or tokenTxt == ',,,' or tokenTxt == ',,,,' then
       local nextToken = getToken(  )
       
@@ -965,7 +999,7 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
       if tokenTxt == ',,' then
          if equalsType( macroVal.typeInfo, Ast.builtinTypeSymbol ) then
             local txtList = {}
-            for __index, txt in pairs( (_lune.unwrap( macroVal.val) ) ) do
+            for __index, txt in ipairs( macroVal2strList( nextToken.txt, macroVal, parser ) ) do
                table.insert( txtList, txt )
             end
             
@@ -976,7 +1010,7 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
          elseif macroVal.typeInfo:get_kind() == Ast.TypeInfoKind.Array or macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKind.List then
             if equalsType( macroVal.typeInfo:get_itemTypeInfoList()[1], Ast.builtinTypeStat ) then
                local pos = _lune.nilacc( _lune.nilacc( macroVal.argNode, 'get_pos', 'callmtd' ), 'get_RawOrgPos', 'callmtd' ) or nextToken.pos:get_RawOrgPos() or token.pos:get_orgPos()
-               local strList = (_lune.unwrap( macroVal.val) )
+               local strList = macroVal2strList( nextToken.txt, macroVal, parser )
                for index = #strList, 1, -1 do
                   parser:pushbackStr( string.format( "macroVal %s[%d]", nextToken.txt, index), strList[index], pos )
                end
@@ -1004,11 +1038,7 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
          elseif macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKind.Enum then
             local enumTypeInfo = _lune.unwrap( _lune.__Cast( macroVal.typeInfo:get_aliasSrc(), 3, Ast.EnumTypeInfo ))
             local fullname = macroVal.typeInfo:getFullName( typeNameCtrl, scope, true )
-            local nameList = {}
-            for name in fullname:gmatch( "[^%.]+" ) do
-               table.insert( nameList, name )
-            end
-            
+            local nameList = Util.splitStr( fullname, "[^%.]+" )
             local enumValInfo = _lune.unwrap( enumTypeInfo:get_val2EnumValInfo()[_lune.unwrap( macroVal.val)])
             nextToken = Parser.Token.new(Parser.TokenKind.Symb, enumValInfo:get_name(), nextToken.pos, false)
             parser:pushbackToken( nextToken )
@@ -1051,7 +1081,7 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
          if equalsType( macroVal.typeInfo, Ast.builtinTypeSymbol ) then
             local txtList = (_lune.unwrap( macroVal.val) )
             local newToken = ""
-            for __index, txt in pairs( txtList ) do
+            for __index, txt in ipairs( txtList ) do
                newToken = string.format( "%s%s", newToken, txt)
             end
             

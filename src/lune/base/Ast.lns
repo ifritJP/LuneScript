@@ -343,7 +343,7 @@ pub proto abstract class SymbolInfo extend (LowSymbol) ;
 
 
 let mut sym2builtInTypeMapWork:Map<str,SymbolInfo> = {};
-let sym2builtInTypeMap = sym2builtInTypeMapWork;
+let sym2builtInTypeMap:&Map<str,&SymbolInfo> = sym2builtInTypeMapWork;
 
 pub class BuiltinTypeInfo {
    let typeInfo:&TypeInfo {pub};
@@ -352,12 +352,12 @@ pub class BuiltinTypeInfo {
 }
 
 let mut builtInTypeIdSetWork:Map<int,BuiltinTypeInfo> = {};
-let builtInTypeIdSet = builtInTypeIdSetWork;
+let builtInTypeIdSet:&Map<int,&BuiltinTypeInfo> = builtInTypeIdSetWork;
 
-pub fn getSym2builtInTypeMap(): &Map<str,SymbolInfo> {
+pub fn getSym2builtInTypeMap(): &Map<str,&SymbolInfo> {
    return sym2builtInTypeMap;
 }
-pub fn getBuiltInTypeIdMap():&Map<int,BuiltinTypeInfo> {
+pub fn getBuiltInTypeIdMap():&Map<int,&BuiltinTypeInfo> {
    return builtInTypeIdSet;
 }
 
@@ -810,7 +810,7 @@ pub abstract class TypeInfo {
    pub fn getOverridingType() : &TypeInfo! {
       return nil;
    }
-   
+
    // pub fn get_scope(): Scope! {
    //    return typeInfo2ScopeMap[ self ];
    // }
@@ -1609,19 +1609,46 @@ rootProcessInfo.set_typeInfo2Map( new TypeInfo2Map() );
 
 let immutableTypeSetWork:Set<&TypeInfo> = (@);
 let immutableTypeSet = immutableTypeSetWork;
-// 指定の型が mutable/imuttable に切り替え可能かどうか
-pub fn isMutableType( mut typeInfo:&TypeInfo ) : bool {
+
+/**
+指定の型が非破壊型なオブジェクトかどうか。
+
+例えば int, str 型や enum などが非破壊型。
+*/
+pub static fn TypeInfo.isImmortal( mut typeInfo:&TypeInfo ) : bool {
    typeInfo = typeInfo.$nonnilableType;
    if immutableTypeSet.has( typeInfo ) {
-      return false;
+      return true;
    }
    switch typeInfo.$kind {
       case .FormFunc, .Enum {
+         return true;
+      }
+   }
+   return false;
+}
+
+// 指定の型が mutable/imuttable に切り替え可能かどうか
+pub static fn TypeInfo.isMutableType( mut typeInfo:&TypeInfo ) : bool {
+   if TypeInfo.isImmortal( typeInfo ) {
+      return false;
+   }
+   typeInfo = typeInfo.$nonnilableType;
+   return isMutable( typeInfo.$mutMode );
+}
+
+pub static fn TypeInfo.canBeAsyncParam(typeInfo:&TypeInfo): bool {
+   if TypeInfo.isMutableType( typeInfo ) {
+      return false;
+   }
+   foreach itemType in typeInfo.$itemTypeInfoList {
+      if not TypeInfo.canBeAsyncParam( itemType ) {
          return false;
       }
    }
-   return isMutable( typeInfo.$mutMode );
+   return true;
 }
+
 
 pub fn ProcessInfo.createModifier(
    mut srcTypeInfo: &TypeInfo, mutMode:MutMode) mut : &TypeInfo
@@ -1629,7 +1656,7 @@ pub fn ProcessInfo.createModifier(
 //    mut srcTypeInfo: &TypeInfo, mutMode:MutMode): &TypeInfo
 {
    srcTypeInfo = srcTypeInfo.$srcTypeInfo;
-   if not isMutableType( srcTypeInfo ) {
+   if not TypeInfo.isMutableType( srcTypeInfo ) {
       return srcTypeInfo;
    }
    
@@ -3761,6 +3788,10 @@ pub class ModuleTypeInfo extend TypeInfo {
    pri let mutable: bool {pub};
    pri let fullName: str;
 
+   pub override fn get_asyncMode() : Async {
+      return .Noasync;
+   }
+   
    pub override fn get_imutType(): &TypeInfo {
       return self;
    }
@@ -4651,7 +4682,7 @@ pub fn addBuiltinMut( typeInfo:TypeInfo, scope:Scope! ) __noasync {
 }
 addBuiltinMut( headTypeInfoMut, rootScope );
 
-pub fn getBuiltinMut( typeInfo:&TypeInfo ) __noasync : TypeInfo {
+pub static fn TypeInfo.getBuiltinInfo( typeInfo:&TypeInfo ) __noasync : BuiltinTypeInfo {
    if typeInfo.$typeId.$processInfo ~= rootProcessInfoRo {
       Util.err( "not found builtinMut, mismatch processInfo-- %s"
                 (typeInfo.getTxt(##) ) );
@@ -4659,6 +4690,12 @@ pub fn getBuiltinMut( typeInfo:&TypeInfo ) __noasync : TypeInfo {
    let! mut info = builtInTypeIdSetWork[ typeInfo.$typeId.id ] {
       Util.err( "not found builtinMut -- %s" (typeInfo.getTxt(##) ) );
    };
+   return info;
+}
+
+
+pub fn getBuiltinMut( typeInfo:&TypeInfo ) __noasync : TypeInfo {
+   let mut info = TypeInfo.getBuiltinInfo( typeInfo );
    let! mut typeInfoMut = info.$typeInfoMut {
       Util.err( "typeInfoMut is nil -- %s" (typeInfo.getTxt(##) ) );
    };

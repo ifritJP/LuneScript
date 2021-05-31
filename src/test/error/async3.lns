@@ -48,15 +48,6 @@ let globalVal2:&List<int> = [];
    }
 }
 {
-   class Foo {
-   }
-   class Hoge extend (__Runner) {
-      pub fn func( foo1:Foo, foo2:&Foo ) { // error
-      }
-      pub fn run() __async mut {
-      }
-   }
-}
 {
    form Test() __trans;
    form Test2();
@@ -153,6 +144,53 @@ let globalVal2:&List<int> = [];
             }
             break; // error
          }
+      }
+   }
+}
+{
+   class Foo {
+      let val:allmut List<int> {pub};
+   }
+   class Hoge extend (__Runner) {
+      let val:allmut List<int>;
+      pub fn __init( foo:&Foo ) __async {
+         self.val = [];
+         print( foo.$val ); // error
+      }
+      pub fn run() __async mut {
+      }
+      pub fn func( foo1:Foo, foo2:&Foo ) { // error
+      }
+      pub fn func2( foo:List<Foo> ) { // error
+      }
+      pub fn func3( foo:&List<Foo> ) { // error
+      }
+      pub fn func4( foo:&List<&Foo> ) {
+      }
+      pub fn func5( foo:List<List<Foo>> ) { // error
+      }
+      pub fn func6( foo:&List<List<Foo>> ) { // error
+      }
+      pub fn func7( foo:&List<&List<Foo>> ) { // error
+      }
+      pub fn func8( foo:&List<&List<&Foo>> ) { // error
+      }
+   }
+}
+{
+   let val1:List<int> = [];
+   let val2:&List<int> = [];
+   let val3:List<List<int>> = [];
+   let val4:&List<List<int>> = [];
+   let val5:&List<&List<int>> = [];
+   class Hoge {
+      _lune_control default_async_this_class;
+      pub fn func() {
+         print( val1[1] ); // error
+         print( val2[1] );
+         print( val3[1] ); // error
+         print( val4[1] ); // error
+         print( val5[1] );
       }
    }
 }

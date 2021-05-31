@@ -1,4 +1,29 @@
 {
+   alge Value {
+      Val1( List<int> ),
+   }
+   {
+      fn func() : Value {
+         return .Val1( [1] );
+      }
+      match func() {
+         case .Val1( val ) {
+            val.insert( 1 );
+         }
+      }
+   }
+   {
+      fn func() : &Value {
+         return .Val1( [1] );
+      }
+      match func() {
+         case .Val1( val ) {
+            val.insert( 1 ); // error
+         }
+      }
+   }
+}
+{
    proto class Hoge;
    alge Test {
       Val( Hoge ), // error

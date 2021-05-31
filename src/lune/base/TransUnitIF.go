@@ -73,7 +73,7 @@ func (self *TransUnitIF_Modifier) InitTransUnitIF_Modifier(_env *LnsEnv, arg1 bo
     self.processInfo = arg2
 }
 func (self *TransUnitIF_Modifier) Set_validMutControl(_env *LnsEnv, arg1 bool){ self.validMutControl = arg1 }
-// 43: decl @lune.@base.@TransUnitIF.Modifier.createModifier
+// 45: decl @lune.@base.@TransUnitIF.Modifier.createModifier
 func (self *TransUnitIF_Modifier) CreateModifier(_env *LnsEnv, typeInfo *Ast_TypeInfo,mutMode LnsInt) *Ast_TypeInfo {
     if Lns_op_not(self.validMutControl){
         return typeInfo
@@ -133,12 +133,12 @@ func (self *TransUnitIF_NSInfo) Set_nobody(_env *LnsEnv, arg1 bool){ self.nobody
 func (self *TransUnitIF_NSInfo) Get_typeInfo(_env *LnsEnv) *Ast_TypeInfo{ return self.typeInfo }
 func (self *TransUnitIF_NSInfo) Get_pos(_env *LnsEnv) *Types_Position{ return self.pos }
 func (self *TransUnitIF_NSInfo) Get_loopScopeQueue(_env *LnsEnv) *LnsList{ return self.loopScopeQueue }
-// 65: decl @lune.@base.@TransUnitIF.NSInfo.isLockedAsync
+// 67: decl @lune.@base.@TransUnitIF.NSInfo.isLockedAsync
 func (self *TransUnitIF_NSInfo) IsLockedAsync(_env *LnsEnv) bool {
     return self.lockedAsyncStack.Len() > 0
 }
 
-// 69: DeclConstr
+// 71: DeclConstr
 func (self *TransUnitIF_NSInfo) InitTransUnitIF_NSInfo(_env *LnsEnv, typeInfo *Ast_TypeInfo,pos *Types_Position) {
     self.nobody = false
     
@@ -152,17 +152,17 @@ func (self *TransUnitIF_NSInfo) InitTransUnitIF_NSInfo(_env *LnsEnv, typeInfo *A
     
 }
 
-// 78: decl @lune.@base.@TransUnitIF.NSInfo.incLock
+// 80: decl @lune.@base.@TransUnitIF.NSInfo.incLock
 func (self *TransUnitIF_NSInfo) IncLock(_env *LnsEnv) {
     self.lockedAsyncStack.Insert(self.loopScopeQueue.Len())
 }
 
-// 81: decl @lune.@base.@TransUnitIF.NSInfo.decLock
+// 83: decl @lune.@base.@TransUnitIF.NSInfo.decLock
 func (self *TransUnitIF_NSInfo) DecLock(_env *LnsEnv) {
     self.lockedAsyncStack.Remove(nil)
 }
 
-// 94: decl @lune.@base.@TransUnitIF.NSInfo.canBreak
+// 96: decl @lune.@base.@TransUnitIF.NSInfo.canBreak
 func (self *TransUnitIF_NSInfo) CanBreak(_env *LnsEnv) bool {
     var len LnsInt
     len = self.lockedAsyncStack.Len()
@@ -181,12 +181,9 @@ type TransUnitIF_TransUnitIF interface {
         Get_scope(_env *LnsEnv) *Ast_Scope
         PopClass(_env *LnsEnv)
         PopModule(_env *LnsEnv)
-        PopScope(_env *LnsEnv)
-        PushClassLow(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 *Types_Position, arg3 LnsInt, arg4 bool, arg5 LnsAny, arg6 LnsAny, arg7 LnsAny, arg8 bool, arg9 string, arg10 bool, arg11 LnsInt, arg12 LnsAny) *Ast_TypeInfo
         PushClassScope(_env *LnsEnv, arg1 *Types_Position, arg2 *Ast_TypeInfo, arg3 *Ast_Scope)
         PushModule(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 bool, arg3 string, arg4 bool) *TransUnitIF_NSInfo
         PushModuleLow(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 bool, arg3 string, arg4 bool) *Ast_TypeInfo
-        PushScope(_env *LnsEnv, arg1 bool, arg2 LnsAny, arg3 LnsAny) *Ast_Scope
 }
 func Lns_cast2TransUnitIF_TransUnitIF( obj LnsAny ) LnsAny {
     if _, ok := obj.(TransUnitIF_TransUnitIF); ok { 

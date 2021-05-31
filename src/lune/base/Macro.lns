@@ -45,11 +45,11 @@ fn loadCode( code:str ) __noasync : Luaval<&stem> {
 }
    
 
-pub form toListLua( val:Luaval<&stem> ) : &List<&stem>;
-pub let toList = loadCode( "return function( ... ) return { ... } end" )@@toListLua;
-pub form toListEmptyLua() : &List<&stem>;
+// pub form toListLua( val:Luaval<&stem> ) __noasync : &List<&stem>;
+// pub let toList = loadCode( "return function( ... ) return { ... } end" )@@toListLua;
+pub form toListEmptyLua() __noasync : &List<&stem>;
 pub let toListEmpty = loadCode( "return function() return {} end" )@@toListEmptyLua;
-pub form toLuavalLua( val:&stem! ) : &stem!;
+pub form toLuavalLua( val:&stem! ) __noasync : &stem!;
 pub let toLuaval = loadCode( "return function( val ) return val end" )@@toLuavalLua;
 
 
@@ -278,7 +278,10 @@ pub class MacroCtrl
       self.analyzeInfo = new MacroAnalyzeInfo( Ast.builtinTypeNone, .None );
       self.macroCallLineNo = 0;
       self.macroAnalyzeInfoStack = [ self.analyzeInfo ];
-      self.macroLocalVarMap = toListEmpty();
+
+      __asyncLock {
+         self.macroLocalVarMap = toListEmpty();
+      }
    }
 }
 
@@ -298,7 +301,7 @@ fn equalsType( typeInfo:&Ast.TypeInfo, builtinType:&Ast.TypeInfo ) : bool {
 */
 pub fn MacroCtrl.evalMacroOp(
    streamName:str, firstToken: &Parser.Token, macroTypeInfo: &Ast.TypeInfo,
-   expList: &Nodes.ExpListNode! ) mut: Parser.Parser!, str!
+   expList: &Nodes.ExpListNode! ) __noasync mut: Parser.Parser!, str!
 {
    self.useModuleMacroSet.add( macroTypeInfo.getModule() );
 
@@ -337,25 +340,27 @@ pub fn MacroCtrl.evalMacroOp(
    let macroInfo = unwrap self.typeId2MacroInfo[ macroTypeInfo.$typeId ];
 
    // マクロに渡す引数をセットする
-   let mut argValMap:Map<int,Luaval<&stem>> = {};
-   let mut macroArgValMap:Map<str,&stem> = { "__var": self.macroLocalVarMap };
+   let mut argValMap:Map<int,&stem> = {};
+   let mut macroArgValMap:Map<str,Luaval<&stem>> = {};
    let macroArgNodeList = macroInfo.getArgList();
+
+   // マクロ引数名 → 引数の Node
    let mut macroArgName2ArgNode:Map<str,&Nodes.Node> = {};
    when! expList {
       foreach argNode, index in expList.$expList {
+         let declArgNode = macroArgNodeList[ index ];
+         macroArgName2ArgNode[ declArgNode.$name ] = argNode;
          let literal, mess = argNode.getLiteral();
          when! literal {
             if! let val = getLiteralMacroVal( literal ) {
-               argValMap[ index ] = toLuaval(val);
-               let declArgNode = macroArgNodeList[ index ];
+               argValMap[ index ] = val;
 
                if argNode.$expType == Ast.builtinTypeSymbol {
-                  macroArgValMap[ declArgNode.$name ] = val[ 1 ];
+                  macroArgValMap[ declArgNode.$name ] = toLuaval( val[ 1 ] );
                }
                else {
-                  macroArgValMap[ declArgNode.$name ] = val;
+                  macroArgValMap[ declArgNode.$name ] = toLuaval( val );
                }
-               macroArgName2ArgNode[ declArgNode.$name ] = argNode;
             }
          }
          else {
@@ -366,33 +371,41 @@ pub fn MacroCtrl.evalMacroOp(
       }
    }
 
+   
+   macroArgValMap[ "__var" ] = self.macroLocalVarMap;
+
    // マクロの macro-statment を実行
    let func = macroInfo.func;
-   let mut macroVars = func( macroArgValMap );
+   let mut macroVars = unwrap expandLuavalMap( func( macroArgValMap ) );
 
    // macroVars.__var に、 macro-statment 内で実行した結果が入ってくるので
    // self.macroLocalVarMap に入れなおす。
    self.macroLocalVarMap = unwrap macroVars.__var;
 
    // macro-statment の実行結果から、
-   // symbol2ValueMapForMacro にシンボル名と値を紐付け
-   foreach name in (unwrap macroVars.__names)@@List<str> {
+   // symbol2ValueMapForMacro にシンボル名と値を紐付け。
+   // macroVars.__names には、 macro-statment で定義された変数シンボル名が入る。
+   // これは convLua の processDeclVar() でセットしている。
+   foreach name in (unwrap macroVars.__names)@@Map<int,str> {
       let! valInfo = macroInfo.symbol2MacroValInfoMap[ name ] {
          Util.err( "not found macro symbol -- %s" (name) );
       };
       let typeInfo = valInfo.typeInfo;
-      let mut valList:Luaval<&stem>;
+      // macro-statment で定義する変数は、
+      // expandLuavalMap 時に Lua の Table が Map として展開されるので、
+      // List ではなく Map で登録してやる。
+      let mut valMap:&stem;
       if! let mut val = macroVars[ name ] {
          if equalsType( typeInfo, Ast.builtinTypeSymbol ) {
-            valList = toList( val );
+            valMap = { 1: val };
          } else {
-            valList = val;
+            valMap = val;
          }
       } else {
-         valList = toListEmpty();
+         valMap = {};
       }
       self.symbol2ValueMapForMacro[ name ] =
-         new Nodes.MacroValInfo( valList, typeInfo, macroArgName2ArgNode[ name ] );
+         new Nodes.MacroValInfo( valMap, typeInfo, nil );
    }
 
    //let scope = self.pushScope();
@@ -402,10 +415,8 @@ pub fn MacroCtrl.evalMacroOp(
       if arg.$typeInfo.$kind ~= .DDD {
          let argType = arg.$typeInfo;
          let argName = arg.$name;
-         //scope.add( argName, argType.expType );
-         self.symbol2ValueMapForMacro[ argName ] =
-            new Nodes.MacroValInfo( argValMap[ index ],
-                                    argType, macroArgName2ArgNode[ argName ] );
+         self.symbol2ValueMapForMacro[ argName ] = new Nodes.MacroValInfo(
+            argValMap[ index ], argType, macroArgName2ArgNode[ argName ] );
       }
       else {
          return nil, "not support ... in macro";
@@ -447,8 +458,6 @@ pub fn MacroCtrl.importMacro(
          let argTypeInfo = unwrap typeId2TypeInfo[ argInfo.typeId ];
          argList.insert( new Nodes.MacroArgInfo( argInfo.name, argTypeInfo ) );
          argNameList.insert( argInfo.name );
-         // symbol2MacroValInfoMap[ argInfo.name ] =
-         //    new Nodes.MacroValInfo( nil, argTypeInfo );
       }
       foreach symInfo in macroInfo.symList {
          let symTypeInfo = unwrap typeId2TypeInfo[ symInfo.typeId ];
@@ -622,14 +631,25 @@ pub fn MacroCtrl.expandMacroVal(
       return work;
    }
    
+   fn macroVal2strList( name:str, macroVal: &Nodes.MacroValInfo,
+                        workParser:Parser.PushbackParser ) : &List<str> {
+      let! val = macroVal.val {
+         workParser.error( "macroVal is nil -- %s" (name) );
+      };
+      if macroVal.argNode {
+         // マクロ引数の場合、そのまま List<str> にキャスト
+         return val@@List<str>;
+      }
+      let list:List<str> = [];
+      forsort item in val@@Map<int,str> {
+         list.insert( item );
+      }
+      return list;
+   }
 
+   
    let tokenTxt = token.txt;
 
-   // let mut nextToken = getToken();
-   
-   // if nextToken.txt ~= "~~" {
-   //    parser.pushbackToken( nextToken );
-   // }
    
    if tokenTxt == ',,' or tokenTxt == ',,,' or tokenTxt == ',,,,' {
       let mut nextToken = getToken();
@@ -642,7 +662,7 @@ pub fn MacroCtrl.expandMacroVal(
          //Util.errorLog( "nextToken: %s" ( nextToken.txt ) );
          if equalsType( macroVal.typeInfo, Ast.builtinTypeSymbol ) {
             let mut txtList:List<str> = [];
-            foreach txt in (unwrap macroVal.val)@@str[] {
+            foreach txt in macroVal2strList( nextToken.txt, macroVal, parser ) {
                txtList.insert( txt );
             }
             pushbackTxt( parser, txtList, nextToken.txt, nextToken.pos ); 
@@ -664,7 +684,7 @@ pub fn MacroCtrl.expandMacroVal(
             {
                let pos = macroVal.argNode$.$pos$.$RawOrgPos or
                   nextToken.pos.$RawOrgPos or token.$pos.$orgPos;
-               let strList = (unwrap macroVal.val)@@str[];
+               let strList = macroVal2strList( nextToken.txt, macroVal, parser );
                for index = #strList, 1, -1 {
                   parser.pushbackStr(
                      "macroVal %s[%d]" (nextToken.txt, index),
@@ -689,10 +709,11 @@ pub fn MacroCtrl.expandMacroVal(
          elseif macroVal.typeInfo.get_kind() == .Enum {
             let enumTypeInfo = unwrap macroVal.typeInfo.$aliasSrc@@@Ast.EnumTypeInfo;
             let fullname = macroVal.typeInfo.getFullName( typeNameCtrl, scope, true );
-            let mut nameList:List<str> = [];
-            apply name of fullname.gmatch( "[^%.]+" ) {
-               nameList.insert( name );
-            }
+            // let mut nameList:List<str> = [];
+            // apply name of fullname.gmatch( "[^%.]+" ) {
+            //    nameList.insert( name );
+            // }
+            let nameList = Util.splitStr( fullname, "[^%.]+" );
             let enumValInfo = unwrap enumTypeInfo.$val2EnumValInfo[ unwrap macroVal.val ];
             nextToken = new Parser.Token(
                .Symb, enumValInfo.$name, nextToken.pos, false ## );
@@ -949,3 +970,4 @@ pub fn nodeToCodeTxt(node:&Nodes.Node, moduleTypeInfo:&Ast.TypeInfo ) __noasync 
 
 __test case1(ctrl) {
 }
+

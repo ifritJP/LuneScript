@@ -29,7 +29,7 @@ import lune.base.Ast;
 import lune.base.Nodes;
 import lune.base.TransUnitIF;
 
-pub class TransUnit extend (TransUnitIF.TransUnitIF) {
+pub class TransUnit {
 
    local let processInfo:Ast.ProcessInfo;
    pri let mut scope:Ast.Scope;
@@ -237,7 +237,7 @@ pub class TransUnit extend (TransUnitIF.TransUnitIF) {
          if! let mut scope = self.namespace2Scope[ typeInfo ] {
             self.scope = scope;
          } else {
-            if! let mut scope = Ast.getBuiltInTypeIdMap()[ typeInfo.$typeId.id ]$.$scope {
+            if! let mut scope = Ast.TypeInfo.getBuiltinInfo( typeInfo ).$scope {
                self.scope = scope;
             } else {
                self.error("not find scope -- %s" (name) );

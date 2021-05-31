@@ -128,7 +128,6 @@ local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local TransUnitIF = _lune.loadModule( 'lune.base.TransUnitIF' )
 
 local TransUnit = {}
-setmetatable( TransUnit, { ifList = {TransUnitIF.TransUnitIF,} } )
 _moduleObj.TransUnit = TransUnit
 function TransUnit:get_scope(  )
 
@@ -302,7 +301,7 @@ function TransUnit:pushClassLow( processInfo, errPos, mode, abstractFlag, baseIn
                self.scope = scope
             else
                do
-                  local scope = _lune.nilacc( Ast.getBuiltInTypeIdMap(  )[typeInfo:get_typeId().id], 'get_scope', 'callmtd' )
+                  local scope = Ast.TypeInfo.getBuiltinInfo( typeInfo ):get_scope()
                   if scope ~= nil then
                      self.scope = scope
                   else

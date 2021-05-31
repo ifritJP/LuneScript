@@ -1605,19 +1605,31 @@ fn TransUnit.processFunc(
       retTypeInfoList, funcExp, errorFuncFlag, nilAccess, threading, argList );
 }
 
+/**
+現在の名前空間から funcTypeInfo をコールする上での nosync 系チェック。
+*/
 fn TransUnit.checkNoasyncType( pos:&Parser.Position, funcTypeInfo:&Ast.TypeInfo ) mut {
-   if funcTypeInfo.$asyncMode == .Noasync {
+   if funcTypeInfo.$asyncMode == .Noasync or funcTypeInfo.$kind == .Ext {
       let curType = self.getCurrentNamespaceTypeInfo();
       switch curType.$kind {
          case .Func, .Method {
             switch curType.$asyncMode {
                case .Async, .Transient {
                   if not self.getNSInfo( curType ).isLockedAsync() {
-                     // async の関数から、 noasync 関数は実行できない。
-                     self.addErrMess(
-                        pos,        
-                        "can't access noasync function in async. -- %s on %s"
-                        (funcTypeInfo.getTxt(##), curType.getTxt(##)));
+                     if funcTypeInfo.$asyncMode == .Noasync {
+                        // async の関数から、 noasync 関数は実行できない。
+                        self.addErrMess(
+                           pos,        
+                           "can't access noasync function in async. -- %s on %s"
+                           (funcTypeInfo.getTxt(##), curType.getTxt(##)));
+                     }
+                     if funcTypeInfo.$kind == .Ext {
+                        // async の関数から、 luaval 関数は実行できない。
+                        self.addErrMess(
+                           pos,        
+                           "can't access Luaval function in async. -- %s on %s"
+                           (funcTypeInfo.getTxt(##), curType.getTxt(##)));
+                     }
                   }
                }
             }
@@ -1643,8 +1655,7 @@ fn TransUnit.analyzeExpCall(
    self.checkSymbolHavingValue( funcExp.$pos, funcExp.getSymbolInfo() );
 
 
-   let funcTypeInfo = funcExp.$expType.$nonnilableType;
-
+   let funcTypeInfo = funcExp.$expType.$nonnilableType;   
    self.checkNoasyncType( funcExp.$effectivePos, funcTypeInfo );
    
    // 引数の型チェック
@@ -2685,7 +2696,7 @@ fn TransUnit.checkAsyncSymbol( symbolInfo:&Ast.SymbolInfo, pos:&Types.Position )
             if symbolInfo.$namespaceTypeInfo ~= curNs and
                curNs.$asyncMode ~= .Transient
             {
-               if Ast.TypeInfo.isMut( symbolInfo.$typeInfo ) {
+               if not Ast.TypeInfo.canBeAsyncParam( symbolInfo.$typeInfo ) {
                   self.addErrMess(
                      pos,               
                      "can't access the mutable type's symbol(%s) from async (%s)."
@@ -2695,7 +2706,7 @@ fn TransUnit.checkAsyncSymbol( symbolInfo:&Ast.SymbolInfo, pos:&Types.Position )
          }
          case .Method {
             if symbolInfo.$namespaceTypeInfo ~= curNs {
-               if Ast.TypeInfo.isMut( symbolInfo.$typeInfo ) {
+               if not Ast.TypeInfo.canBeAsyncParam( symbolInfo.$typeInfo ) {
                   self.addErrMess(
                      pos,               
                      "can't access the mutable type's symbol(%s) from async (%s)."

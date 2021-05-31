@@ -375,6 +375,9 @@ usage:
                case "--enableAsyncCtl" {
                   option.transCtrlInfo.validAsyncCtrl = true;
                }
+               case "--defaultAsync" {
+                  option.transCtrlInfo.defaultAsync = true;
+               }
                case "--nodebug" {
                   Util.setDebugFlag( false );
                }

@@ -42,11 +42,15 @@ pub fn getFileLastModifiedTime( path: str ): real! {
       return nil;
    }
 
-   let! mut stream = io.popen( "stat -c '%%Y' %s" (path) ) {
-      return nil;
-   };
-   let val = stream.read('*a');
-   stream.close();
+   let val;   
+   __asyncLock {
+      if! let mut stream = io.popen( "stat -c '%%Y' %s" (path) ) {
+         val = stream.read('*a');
+         stream.close();
+      } else {
+         val = nil;
+      }
+   }
    if! val {
       return tonumber( _exp## );
    }
@@ -55,16 +59,22 @@ pub fn getFileLastModifiedTime( path: str ): real! {
 
 
 fn searchpath51( mod:str, pathPattern:str ) : str! {
-   apply path of string.gmatch( pathPattern, "[^;]+" ) {
-      if! let index = path.find( "%?.l[un][as]$"## ) {
-         let dir = path.sub( 1, index - 1 );
-         let suffix = path.sub( #path - 3 ## );
-         let target = dir .. mod.gsub( "%.", "/" ) .. suffix;
-         if! let mut fileObj = io.open( target## ) {
-            fileObj.close();
-            return target;
+   let mut target = "";
+   __asyncLock {
+      apply path of string.gmatch( pathPattern, "[^;]+" ) {
+         if! let index = path.find( "%?.l[un][as]$"## ) {
+            let dir = path.sub( 1, index - 1 );
+            let suffix = path.sub( #path - 3 ## );
+            target = dir .. mod.gsub( "%.", "/" ) .. suffix;
+            if! let mut fileObj = io.open( target## ) {
+               fileObj.close();
+               break;
+            }
          }
       }
+   }
+   if target ~= "" {
+      return target;
    }
    return nil;
 }
@@ -114,8 +124,11 @@ pub fn getLuaVersion():str {
    when! lua_version {
       return lua_version;
    }
-   let loaded = _load( "return _VERSION"## )$(##);
-   let version = (unwrap loaded)@@str;
+   let version;
+   __asyncLock {
+      let loaded = _load( "return _VERSION"## )$(##);
+      version = (unwrap loaded)@@str;
+   }
    lua_version = version.gsub( "^[^%d]+", "" );
    return version;
 }
@@ -163,7 +176,7 @@ pub fn canUseAsync() : bool {
    return false;
 }
 
-pub fn runMain( mainFunc: &Luaval<stem>!, argList:&List<str> ) : int {
+pub fn runMain( mainFunc: &Luaval<stem>!, argList:&List<str> ) __noasync : int {
    form MainFunc( list:&List<str> ) : int;
    when! mainFunc {
       return (mainFunc@@MainFunc)( argList );

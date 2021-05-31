@@ -144,15 +144,21 @@ local function getFileLastModifiedTime( path )
    end
    
    
-   local stream = io.popen( string.format( "stat -c '%%Y' %s", path) )
-   if  nil == stream then
-      local _stream = stream
+   local val
    
-      return nil
+   do
+      do
+         local stream = io.popen( string.format( "stat -c '%%Y' %s", path) )
+         if stream ~= nil then
+            val = stream:read( '*a' )
+            stream:close(  )
+         else
+            val = nil
+         end
+      end
+      
    end
    
-   local val = stream:read( '*a' )
-   stream:close(  )
    do
       local _exp = val
       if _exp ~= nil then
@@ -166,24 +172,32 @@ _moduleObj.getFileLastModifiedTime = getFileLastModifiedTime
 
 local function searchpath51( mod, pathPattern )
 
-   for path in string.gmatch( pathPattern, "[^;]+" ) do
-      do
-         local index = path:find( "%?.l[un][as]$" )
-         if index ~= nil then
-            local dir = path:sub( 1, index - 1 )
-            local suffix = path:sub( #path - 3 )
-            local target = dir .. mod:gsub( "%.", "/" ) .. suffix
-            do
-               local fileObj = io.open( target )
-               if fileObj ~= nil then
-                  fileObj:close(  )
-                  return target
+   local target = ""
+   do
+      for path in string.gmatch( pathPattern, "[^;]+" ) do
+         do
+            local index = path:find( "%?.l[un][as]$" )
+            if index ~= nil then
+               local dir = path:sub( 1, index - 1 )
+               local suffix = path:sub( #path - 3 )
+               target = dir .. mod:gsub( "%.", "/" ) .. suffix
+               do
+                  local fileObj = io.open( target )
+                  if fileObj ~= nil then
+                     fileObj:close(  )
+                     break
+                  end
                end
+               
             end
-            
          end
+         
       end
       
+   end
+   
+   if target ~= "" then
+      return target
    end
    
    return nil
@@ -240,8 +254,13 @@ local function getLuaVersion(  )
       return lua_version
    end
    
-   local loaded = _lune.nilacc( _lune.loadstring52( "return _VERSION" ), nil, 'call' )
-   local version = (_lune.unwrap( loaded) )
+   local version
+   
+   do
+      local loaded = _lune.nilacc( _lune.loadstring52( "return _VERSION" ), nil, 'call' )
+      version = (_lune.unwrap( loaded) )
+   end
+   
    lua_version = version:gsub( "^[^%d]+", "" )
    return version
 end

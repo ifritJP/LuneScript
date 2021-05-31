@@ -74,12 +74,16 @@ _moduleObj.endsWith = endsWith
 local function getLineList( txt )
 
    local list = {}
-   for line in string.gmatch( txt, "[^\n]*\n" ) do
-      table.insert( list, line )
-   end
    
-   for last in string.gmatch( txt, "[^\n]+$" ) do
-      table.insert( list, last )
+   do
+      for line in string.gmatch( txt, "[^\n]*\n" ) do
+         table.insert( list, line )
+      end
+      
+      for last in string.gmatch( txt, "[^\n]+$" ) do
+         table.insert( list, last )
+      end
+      
    end
    
    return list

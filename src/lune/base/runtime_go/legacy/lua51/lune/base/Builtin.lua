@@ -211,6 +211,7 @@ function Builtin.new( targetLuaVer, ctrl_info )
    return obj
 end
 function Builtin:__init(targetLuaVer, ctrl_info) 
+   self.hasLuaval = false
    self.transUnit = BuiltinTransUnit.TransUnit.new(ctrl_info)
    self.targetLuaVer = targetLuaVer
    self.ctrl_info = ctrl_info
@@ -1180,6 +1181,7 @@ function Builtin:getTypeInfo( typeName )
                local valType = genTypeList[2]
                return self.processInfo:createMap( Ast.AccessMode.Pub, typeInfo:get_parentInfo(), keyType, valType, typeInfo:get_mutMode() )
             elseif _switchExp == Ast.TypeInfoKind.Ext then
+               self.hasLuaval = true
                if #genTypeList ~= 1 then
                   Util.err( string.format( "illegal param -- %d", #genTypeList) )
                end
@@ -1227,7 +1229,7 @@ function Builtin:getTypeInfo( typeName )
    end
    
    local genTypeList = {}
-   local _536, endIndex = typeName:find( "[%w%.]+<" )
+   local _537, endIndex = typeName:find( "[%w%.]+<" )
    local suffix = ""
    if endIndex ~= nil then
       local genTypeName = typeName:sub( endIndex + 1 )
@@ -1287,6 +1289,7 @@ end
 
 function Builtin:processField( name, fieldName, info, parentInfo )
 
+   self.hasLuaval = false
    if self.targetLuaVer:isSupport( string.format( "%s.%s", name, fieldName) ) then
       if _lune.nilacc( info['type'], nil, 'item', 1) == "var" then
          local symbol = _lune.unwrap( self.transUnit:get_scope():add( self.processInfo, Ast.SymbolKind.Var, false, true, fieldName, nil, self:getTypeInfo( _lune.unwrap( _lune.nilacc( info['typeInfo'], nil, 'item', 1)) ), Ast.AccessMode.Pub, true, Ast.MutMode.Mut, true, false ))
@@ -1365,7 +1368,16 @@ function Builtin:processField( name, fieldName, info, parentInfo )
          self.transUnit:pushScope( false )
          
          local scope = self.transUnit:get_scope()
-         local typeInfo = self.processInfo:createFuncAsync( abstractFlag, true, scope, kind, Ast.getBuiltinMut( parentInfo ), false, true, staticFlag, accessMode, fieldName, Ast.Async.Async, nil, argTypeList, retTypeList, mutable )
+         local asyncMode
+         
+         if self.hasLuaval then
+            asyncMode = Ast.Async.Noasync
+         else
+          
+            asyncMode = Ast.Async.Async
+         end
+         
+         local typeInfo = self.processInfo:createFuncAsync( abstractFlag, true, scope, kind, Ast.getBuiltinMut( parentInfo ), false, true, staticFlag, accessMode, fieldName, asyncMode, nil, argTypeList, retTypeList, mutable )
          
          self.transUnit:popScope(  )
          

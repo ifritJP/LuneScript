@@ -2467,28 +2467,55 @@ rootProcessInfo:set_typeInfo2Map( TypeInfo2Map.new() )
 
 local immutableTypeSetWork = {}
 local immutableTypeSet = immutableTypeSetWork
-local function isMutableType( typeInfo )
+function TypeInfo.isImmortal( typeInfo )
 
    typeInfo = typeInfo:get_nonnilableType()
    if _lune._Set_has(immutableTypeSet, typeInfo ) then
-      return false
+      return true
    end
    
    do
       local _switchExp = typeInfo:get_kind()
       if _switchExp == TypeInfoKind.FormFunc or _switchExp == TypeInfoKind.Enum then
-         return false
+         return true
       end
    end
    
+   return false
+end
+
+function TypeInfo.isMutableType( typeInfo )
+
+   if TypeInfo.isImmortal( typeInfo ) then
+      return false
+   end
+   
+   typeInfo = typeInfo:get_nonnilableType()
    return isMutable( typeInfo:get_mutMode() )
 end
-_moduleObj.isMutableType = isMutableType
+
+
+function TypeInfo.canBeAsyncParam( typeInfo )
+
+   if TypeInfo.isMutableType( typeInfo ) then
+      return false
+   end
+   
+   for __index, itemType in ipairs( typeInfo:get_itemTypeInfoList() ) do
+      if not TypeInfo.canBeAsyncParam( itemType ) then
+         return false
+      end
+      
+   end
+   
+   return true
+end
+
 
 function ProcessInfo:createModifier( srcTypeInfo, mutMode )
 
    srcTypeInfo = srcTypeInfo:get_srcTypeInfo()
-   if not isMutableType( srcTypeInfo ) then
+   if not TypeInfo.isMutableType( srcTypeInfo ) then
       return srcTypeInfo
    end
    
@@ -5238,6 +5265,10 @@ _moduleObj.isGenericType = isGenericType
 local ModuleTypeInfo = {}
 setmetatable( ModuleTypeInfo, { __index = TypeInfo } )
 _moduleObj.ModuleTypeInfo = ModuleTypeInfo
+function ModuleTypeInfo:get_asyncMode(  )
+
+   return Async.Noasync
+end
 function ModuleTypeInfo:get_imutType(  )
 
    return self
@@ -6243,7 +6274,7 @@ end
 _moduleObj.addBuiltinMut = addBuiltinMut
 addBuiltinMut( headTypeInfoMut, _moduleObj.rootScope )
 
-local function getBuiltinMut( typeInfo )
+function TypeInfo.getBuiltinInfo( typeInfo )
 
    if typeInfo:get_typeId():get_processInfo() ~= rootProcessInfoRo then
       Util.err( string.format( "not found builtinMut, mismatch processInfo-- %s", typeInfo:getTxt(  )) )
@@ -6256,6 +6287,13 @@ local function getBuiltinMut( typeInfo )
       Util.err( string.format( "not found builtinMut -- %s", typeInfo:getTxt(  )) )
    end
    
+   return info
+end
+
+
+local function getBuiltinMut( typeInfo )
+
+   local info = TypeInfo.getBuiltinInfo( typeInfo )
    local typeInfoMut = info:get_typeInfoMut()
    if  nil == typeInfoMut then
       local _typeInfoMut = typeInfoMut

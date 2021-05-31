@@ -127,6 +127,7 @@ type Types_TransCtrlInfo struct {
     LegacyMutableControl bool
     ValidAstDetailError bool
     ValidAsyncCtrl bool
+    DefaultAsync bool
     FP Types_TransCtrlInfoMtd
 }
 func Types_TransCtrlInfo2Stem( obj LnsAny ) LnsAny {
@@ -149,13 +150,13 @@ func Types_TransCtrlInfoDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Types_TransCtrlInfo) ToTypes_TransCtrlInfo() *Types_TransCtrlInfo {
     return obj
 }
-func NewTypes_TransCtrlInfo(_env *LnsEnv, arg1 bool, arg2 bool, arg3 bool, arg4 bool, arg5 LnsAny, arg6 bool, arg7 bool, arg8 bool, arg9 bool, arg10 bool, arg11 bool) *Types_TransCtrlInfo {
+func NewTypes_TransCtrlInfo(_env *LnsEnv, arg1 bool, arg2 bool, arg3 bool, arg4 bool, arg5 LnsAny, arg6 bool, arg7 bool, arg8 bool, arg9 bool, arg10 bool, arg11 bool, arg12 bool) *Types_TransCtrlInfo {
     obj := &Types_TransCtrlInfo{}
     obj.FP = obj
-    obj.InitTypes_TransCtrlInfo(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11)
+    obj.InitTypes_TransCtrlInfo(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12)
     return obj
 }
-func (self *Types_TransCtrlInfo) InitTypes_TransCtrlInfo(_env *LnsEnv, arg1 bool, arg2 bool, arg3 bool, arg4 bool, arg5 LnsAny, arg6 bool, arg7 bool, arg8 bool, arg9 bool, arg10 bool, arg11 bool) {
+func (self *Types_TransCtrlInfo) InitTypes_TransCtrlInfo(_env *LnsEnv, arg1 bool, arg2 bool, arg3 bool, arg4 bool, arg5 LnsAny, arg6 bool, arg7 bool, arg8 bool, arg9 bool, arg10 bool, arg11 bool, arg12 bool) {
     self.WarningShadowing = arg1
     self.CompatComment = arg2
     self.CheckingDefineAbbr = arg3
@@ -167,10 +168,11 @@ func (self *Types_TransCtrlInfo) InitTypes_TransCtrlInfo(_env *LnsEnv, arg1 bool
     self.LegacyMutableControl = arg9
     self.ValidAstDetailError = arg10
     self.ValidAsyncCtrl = arg11
+    self.DefaultAsync = arg12
 }
-// 72: decl @lune.@base.@Types.TransCtrlInfo.create_normal
+// 74: decl @lune.@base.@Types.TransCtrlInfo.create_normal
 func Types_TransCtrlInfo_create_normal(_env *LnsEnv) *Types_TransCtrlInfo {
-    return NewTypes_TransCtrlInfo(_env, false, false, true, false, Types_CheckingUptodateMode__Touch_Obj, false, false, true, false, false, false)
+    return NewTypes_TransCtrlInfo(_env, false, false, true, false, Types_CheckingUptodateMode__Touch_Obj, false, false, true, false, false, false, false)
 }
 
 
@@ -267,7 +269,7 @@ func Types_Position_FromMapMain( newObj *Types_Position, objMap *LnsMap, paramLi
     }
     return true, newObj, nil
 }
-// 92: DeclConstr
+// 95: DeclConstr
 func (self *Types_Position) InitTypes_Position(_env *LnsEnv, lineNo LnsInt,column LnsInt,streamName string) {
     self.LineNo = lineNo
     
@@ -279,7 +281,7 @@ func (self *Types_Position) InitTypes_Position(_env *LnsEnv, lineNo LnsInt,colum
     
 }
 
-// 99: decl @lune.@base.@Types.Position.get_orgPos
+// 102: decl @lune.@base.@Types.Position.get_orgPos
 func (self *Types_Position) Get_orgPos(_env *LnsEnv) *Types_Position {
     {
         __exp := self.OrgPos
@@ -291,12 +293,12 @@ func (self *Types_Position) Get_orgPos(_env *LnsEnv) *Types_Position {
     return self
 }
 
-// 106: decl @lune.@base.@Types.Position.get_RawOrgPos
+// 109: decl @lune.@base.@Types.Position.get_RawOrgPos
 func (self *Types_Position) Get_RawOrgPos(_env *LnsEnv) LnsAny {
     return self.OrgPos
 }
 
-// 110: decl @lune.@base.@Types.Position.create
+// 113: decl @lune.@base.@Types.Position.create
 func Types_Position_create(_env *LnsEnv, lineNo LnsInt,column LnsInt,streamName string,orgPos LnsAny) *Types_Position {
     var pos *Types_Position
     pos = NewTypes_Position(_env, lineNo, column, streamName)
@@ -410,7 +412,7 @@ func Types_Token_FromMapMain( newObj *Types_Token, objMap *LnsMap, paramList []L
     }
     return true, newObj, nil
 }
-// 143: DeclConstr
+// 146: DeclConstr
 func (self *Types_Token) InitTypes_Token(_env *LnsEnv, kind LnsInt,txt string,pos *Types_Position,consecutive bool,commentList LnsAny) {
     self.Kind = kind
     
@@ -424,14 +426,14 @@ func (self *Types_Token) InitTypes_Token(_env *LnsEnv, kind LnsInt,txt string,po
     
 }
 
-// 153: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
+// 156: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
 func (self *Types_Token) GetExcludedDelimitTxt(_env *LnsEnv) string {
     if self.Kind != Types_TokenKind__Str{
         return self.Txt
     }
-    if _switch366 := LnsInt(self.Txt[1-1]); _switch366 == 39 || _switch366 == 34 {
+    if _switch371 := LnsInt(self.Txt[1-1]); _switch371 == 39 || _switch371 == 34 {
         return _env.LuaVM.String_sub(self.Txt,2, len(self.Txt) - 1)
-    } else if _switch366 == 96 {
+    } else if _switch371 == 96 {
         return _env.LuaVM.String_sub(self.Txt,1 + 3, len(self.Txt) - 3)
     }
     panic(_env.LuaVM.String_format("illegal delimit -- %s", []LnsAny{self.Txt}))
@@ -439,26 +441,28 @@ func (self *Types_Token) GetExcludedDelimitTxt(_env *LnsEnv) string {
     return ""
 }
 
-// 168: decl @lune.@base.@Types.Token.set_commentList
+// 171: decl @lune.@base.@Types.Token.set_commentList
 func (self *Types_Token) Set_commentList(_env *LnsEnv, commentList *LnsList) {
     self.commentList = commentList
     
 }
 
-// 172: decl @lune.@base.@Types.Token.getLineCount
+// 175: decl @lune.@base.@Types.Token.getLineCount
 func (self *Types_Token) GetLineCount(_env *LnsEnv) LnsInt {
     var count LnsInt
     count = 1
-    {
-        _form429, _param429, _prev429 := _env.LuaVM.String_gmatch(self.Txt,"\n")
-        for {
-            _work429 := _form429.(*Lns_luaValue).Call( Lns_2DDD( _param429, _prev429 ) )
-            _prev429 = Lns_getFromMulti(_work429,0)
-            if Lns_IsNil( _prev429 ) { break }
-            count = count + 1
-            
+    Lns_LockEnvSync( _env, func () {
+        {
+            _form434, _param434, _prev434 := _env.LuaVM.String_gmatch(self.Txt,"\n")
+            for {
+                _work434 := _form434.(*Lns_luaValue).Call( Lns_2DDD( _param434, _prev434 ) )
+                _prev434 = Lns_getFromMulti(_work434,0)
+                if Lns_IsNil( _prev434 ) { break }
+                count = count + 1
+                
+            }
         }
-    }
+    })
     return count
 }
 

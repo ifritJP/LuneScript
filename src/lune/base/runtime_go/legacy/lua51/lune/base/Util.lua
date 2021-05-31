@@ -186,8 +186,11 @@ _moduleObj.err = err
 local function splitStr( txt, pattern )
 
    local list = {}
-   for token in string.gmatch( txt, pattern ) do
-      table.insert( list, token )
+   do
+      for token in string.gmatch( txt, pattern ) do
+         table.insert( list, token )
+      end
+      
    end
    
    return list
@@ -472,7 +475,7 @@ local function getReadyCode( depPath, tgtPath )
       return true
    end
    
-   Log.log( Log.Level.Warn, __func__, 286, function (  )
+   Log.log( Log.Level.Warn, __func__, 288, function (  )
    
       return string.format( "not ready %g < %g : %s, %s", tgtTime, depTime, tgtPath, depPath)
    end )

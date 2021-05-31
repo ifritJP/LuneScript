@@ -4,7 +4,7 @@ import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_BuiltinTransUnit bool
 var BuiltinTransUnit__mod__ string
 // for 115
-func BuiltinTransUnit_convExp421(arg1 []LnsAny) (LnsAny, LnsAny) {
+func BuiltinTransUnit_convExp418(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 
@@ -245,8 +245,7 @@ func (self *BuiltinTransUnit_TransUnit) PushClassLow(_env *LnsEnv, processInfo *
                     
                 } else {
                     {
-                        _scope := _env.NilAccFin(_env.NilAccPush(Ast_getBuiltInTypeIdMap(_env).Get(typeInfo.FP.Get_typeId(_env).Id)) && 
-                        Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_BuiltinTypeInfo).FP.Get_scope(_env)}))
+                        _scope := Ast_TypeInfo_getBuiltinInfo(_env, typeInfo).FP.Get_scope(_env)
                         if !Lns_IsNil( _scope ) {
                             scope := _scope.(*Ast_Scope)
                             self.scope = scope
@@ -257,11 +256,11 @@ func (self *BuiltinTransUnit_TransUnit) PushClassLow(_env *LnsEnv, processInfo *
                     }
                 }
             }
-            if _switch1083 := (typeInfo.FP.Get_kind(_env)); _switch1083 == Ast_TypeInfoKind__Class {
+            if _switch1079 := (typeInfo.FP.Get_kind(_env)); _switch1079 == Ast_TypeInfoKind__Class {
                 if mode == TransUnitIF_DeclClassMode__Interface{
                     self.FP.Error(_env, _env.LuaVM.String_format("define interface already -- %s", []LnsAny{name}))
                 }
-            } else if _switch1083 == Ast_TypeInfoKind__IF {
+            } else if _switch1079 == Ast_TypeInfoKind__IF {
                 if mode != TransUnitIF_DeclClassMode__Interface{
                     self.FP.Error(_env, _env.LuaVM.String_format("define class already -- %s", []LnsAny{name}))
                 }

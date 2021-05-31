@@ -67,11 +67,14 @@ pub class TransCtrlInfo {
    pub let mut validAstDetailError:bool;
    /** async 制御を有効にする */
    pub let mut validAsyncCtrl:bool;
+   /** async 属性の default を __async にする */
+   pub let mut defaultAsync:bool;
 }
 
 pub static fn TransCtrlInfo.create_normal(): TransCtrlInfo {
    return new TransCtrlInfo(
-      false, false, true, false, .Touch, false, false, true, false, false, false );
+      false, false, true, false, .Touch,
+      false, false, true, false, false, false, false );
 }
 
 
@@ -171,8 +174,10 @@ pub class Token extend (Mapping) {
 
    pub fn getLineCount():int {
       let mut count = 1;
-      apply _ of self.txt.gmatch( "\n" ) {
-         count = count + 1;
+      __asyncLock {
+         apply _ of self.txt.gmatch( "\n" ) {
+            count = count + 1;
+         }
       }
       return count;
    }

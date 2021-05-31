@@ -3111,7 +3111,7 @@ fn TransUnit.analyzeDeclFunc(
          self.processInfo, Ast.builtinTypeRunner ## )
       {
          foreach argNode, index in argList {
-            if Ast.isMutableType( argNode.$expType ) {
+            if not Ast.TypeInfo.canBeAsyncParam( argNode.$expType ) {
                self.addErrMess(
                   argNode.$pos,
                   "__Runner can't have the mutable argument. -- %d: %s"

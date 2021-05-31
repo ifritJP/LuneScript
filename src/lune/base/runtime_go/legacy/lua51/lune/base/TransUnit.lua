@@ -873,7 +873,16 @@ function TransUnit:__init(moduleId, importModuleInfo, macroEval, analyzeModule, 
    self.analyzingStaticMethodArgsScope = nil
    self.namespace2Scope = {}
    self.class2defaultAsyncMode = {}
-   self.defaultAsyncMode = DefaultAsyncMode.NoAsync
+   local defaultAsyncMode
+   
+   if ctrl_info.defaultAsync then
+      defaultAsyncMode = DefaultAsyncMode.AsyncAll
+   else
+    
+      defaultAsyncMode = DefaultAsyncMode.NoAsync
+   end
+   
+   self.defaultAsyncMode = defaultAsyncMode
    self.importedAliasMap = {}
    self.importModuleSet = {}
    self.processInfo = Ast.createProcessInfo( ctrl_info.validCheckingMutable, ctrl_info.validLuaval, ctrl_info.validAstDetailError )
@@ -1175,7 +1184,7 @@ function TransUnit:pushModule( processInfo, externalFlag, name, mutable )
          self.namespace2Scope[typeInfo] = scope
          nsInfo = self:newNSInfo( newType, self.parser:getLastPos(  ) )
          
-         local _557, existSym = parentScope:addClass( processInfo, modName, nil, typeInfo )
+         local _560, existSym = parentScope:addClass( processInfo, modName, nil, typeInfo )
          if existSym ~= nil then
             self:addErrMess( self.parser:getLastPos(  ), string.format( "module symbols exist -- %s.%s -- %s.%s", existSym:get_namespaceTypeInfo():getFullName( self.typeNameCtrl, parentScope, false ), existSym:get_name(), parentInfo:getFullName( self.typeNameCtrl, parentScope, false ), modName) )
          end
@@ -1315,15 +1324,7 @@ function TransUnit:pushClass( processInfo, errPos, mode, abstractFlag, baseInfo,
             if scope ~= nil then
                self.scope = scope
             else
-               do
-                  local scope = _lune.nilacc( Ast.getBuiltInTypeIdMap(  )[typeInfo:get_typeId().id], 'get_scope', 'callmtd' )
-                  if scope ~= nil then
-                     self.scope = scope
-                  else
-                     self:errorAt( errPos, string.format( "not find scope -- %s", name) )
-                  end
-               end
-               
+               self:errorAt( errPos, string.format( "not find scope -- %s", name) )
             end
          end
          
@@ -3079,6 +3080,15 @@ function TransUnit:analyzeForeach( token, sortFlag )
    self:checkToken( nextToken, "in" )
    
    local exp = self:analyzeExpOneRVal( false, false )
+   if exp:get_expType():get_kind() == Ast.TypeInfoKind.Ext then
+      local nsType = self:getCurrentNamespaceTypeInfo(  )
+      if nsType:get_asyncMode() ~= Ast.Async.Noasync then
+         self:addErrMess( exp:get_pos(), string.format( "can't access the luaval with the foreach. -- %s in %s", exp:get_expType():getTxt(  ), nsType:getTxt(  )) )
+      end
+      
+   end
+   
+   
    local function checkSortType( sortKeyType )
    
       if sortFlag then
@@ -3930,7 +3940,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
    
    
    if moduleName ~= nil then
-      for _1895 in string.gmatch( moduleName, '[^%.]+' ) do
+      for _1898 in string.gmatch( moduleName, '[^%.]+' ) do
          self:popModule(  )
       end
       
@@ -4149,7 +4159,7 @@ function TransUnit:analyzeDeclMacro( accessMode, firstToken )
    local node = self:analyzeDeclMacroSub( accessMode, firstToken, nameToken, scope, parentInfo, workArgList )
    self.scope = backScope
    
-   local _1978, existSym = self.scope:addMacro( self.processInfo, nameToken.pos, node:get_expType(), accessMode )
+   local _1981, existSym = self.scope:addMacro( self.processInfo, nameToken.pos, node:get_expType(), accessMode )
    if existSym then
       self:addErrMess( nameToken.pos, string.format( "multiple define symbol -- %s", nameToken.txt) )
    end
@@ -4563,7 +4573,7 @@ function TransUnit:analyzeDeclEnum( accessMode, firstToken )
    
    self:popScope(  )
    
-   local _2153, shadowing = self.scope:addEnum( self.processInfo, accessMode, name.txt, name.pos, enumTypeInfo )
+   local _2156, shadowing = self.scope:addEnum( self.processInfo, accessMode, name.txt, name.pos, enumTypeInfo )
    self:errorShadowing( name.pos, shadowing )
    
    return Nodes.DeclEnumNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {enumTypeInfo}, enumTypeInfo, accessMode, name, valueList, scope )
@@ -4583,7 +4593,7 @@ function TransUnit:analyzeDeclAlge( accessMode, firstToken )
    local algeScope = self:pushScope( true )
    
    local algeTypeInfo = self.processInfo:createAlge( algeScope, self:getCurrentNamespaceTypeInfoMut(  ), false, accessMode, name.txt )
-   local _2165, shadowing = scope:addAlge( self.processInfo, accessMode, name.txt, name.pos, algeTypeInfo )
+   local _2168, shadowing = scope:addAlge( self.processInfo, accessMode, name.txt, name.pos, algeTypeInfo )
    self:newNSInfo( algeTypeInfo, name.pos )
    self:errorShadowing( name.pos, shadowing )
    
@@ -5782,7 +5792,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
    end
    
    
-   local node, _2703, methodNameSet = self:analyzeClassBody( hasProto, classAccessMode, firstToken, mode, gluePrefix, classTypeInfo, name, moduleLang, moduleName, lazyLoad, nextToken, inheritInfo )
+   local node, _2706, methodNameSet = self:analyzeClassBody( hasProto, classAccessMode, firstToken, mode, gluePrefix, classTypeInfo, name, moduleLang, moduleName, lazyLoad, nextToken, inheritInfo )
    local ctorAccessMode = Ast.AccessMode.Pub
    do
       local ctorTypeInfo = classScope:getTypeInfoChild( "__init" )
@@ -6185,7 +6195,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, asyncLocked, abstractFlag, ove
       
       if classTypeInfo:isInheritFrom( self.processInfo, Ast.builtinTypeRunner ) then
          for index, argNode in ipairs( argList ) do
-            if Ast.isMutableType( argNode:get_expType() ) then
+            if not Ast.TypeInfo.canBeAsyncParam( argNode:get_expType() ) then
                self:addErrMess( argNode:get_pos(), string.format( "__Runner can't have the mutable argument. -- %d: %s", index, argNode:get_expType():getTxt(  )) )
             end
             
@@ -6569,7 +6579,7 @@ function TransUnit:analyzeInitExp( firstPos, accessMode, unwrapFlag, letVarList,
       
       if unwrapFlag then
          local hasNilable = false
-         for index, _3030 in ipairs( letVarList ) do
+         for index, _3033 in ipairs( letVarList ) do
             if expList:getExpTypeAt( index ):get_nilable() then
                hasNilable = true
                break
@@ -7921,7 +7931,7 @@ function TransUnit:checkMatchValType( pos, funcTypeInfo, expList, genericTypeLis
       alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( #funcTypeInfo:get_itemTypeInfoList() > 0 )
    end
    
-   local matchResult, _3620, newExpNodeList = self:checkMatchType( funcTypeInfo:getTxt(  ), pos, argTypeList, expList, false, warnForFollow, alt2typeMap )
+   local matchResult, _3623, newExpNodeList = self:checkMatchType( funcTypeInfo:getTxt(  ), pos, argTypeList, expList, false, warnForFollow, alt2typeMap )
    
    if expList and newExpNodeList then
       return matchResult, alt2typeMap, newExpNodeList
@@ -7985,7 +7995,7 @@ function TransUnit:analyzeListItems( firstPos, nextToken, termTxt, expectTypeLis
                   table.insert( expTypeList, expNode:get_expType() )
                else
                 
-                  for _3655 = 1, #expNode:get_expTypeList() do
+                  for _3658 = 1, #expNode:get_expTypeList() do
                      table.insert( expTypeList, itemTypeInfo )
                   end
                   
@@ -8000,7 +8010,7 @@ function TransUnit:analyzeListItems( firstPos, nextToken, termTxt, expectTypeLis
          
       end
       
-      local _3658, _3659, workExpList = self:checkMatchType( "List constructor", firstPos, expTypeList, expList, false, false, nil )
+      local _3661, _3662, workExpList = self:checkMatchType( "List constructor", firstPos, expTypeList, expList, false, false, nil )
       if workExpList ~= nil then
          expList = workExpList
       end
@@ -8690,10 +8700,9 @@ function TransUnit:processFunc( firstToken, nextToken, refFieldNode, funcExp, fu
    return Nodes.ExpCallNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), retTypeInfoList, funcExp, errorFuncFlag, nilAccess, threading, argList )
 end
 
-
 function TransUnit:checkNoasyncType( pos, funcTypeInfo )
 
-   if funcTypeInfo:get_asyncMode() == Ast.Async.Noasync then
+   if funcTypeInfo:get_asyncMode() == Ast.Async.Noasync or funcTypeInfo:get_kind() == Ast.TypeInfoKind.Ext then
       local curType = self:getCurrentNamespaceTypeInfo(  )
       do
          local _switchExp = curType:get_kind()
@@ -8702,7 +8711,14 @@ function TransUnit:checkNoasyncType( pos, funcTypeInfo )
                local _switchExp = curType:get_asyncMode()
                if _switchExp == Ast.Async.Async or _switchExp == Ast.Async.Transient then
                   if not self:getNSInfo( curType ):isLockedAsync(  ) then
-                     self:addErrMess( pos, string.format( "can't access noasync function in async. -- %s on %s", funcTypeInfo:getTxt(  ), curType:getTxt(  )) )
+                     if funcTypeInfo:get_asyncMode() == Ast.Async.Noasync then
+                        self:addErrMess( pos, string.format( "can't access noasync function in async. -- %s on %s", funcTypeInfo:getTxt(  ), curType:getTxt(  )) )
+                     end
+                     
+                     if funcTypeInfo:get_kind() == Ast.TypeInfoKind.Ext then
+                        self:addErrMess( pos, string.format( "can't access Luaval function in async. -- %s on %s", funcTypeInfo:getTxt(  ), curType:getTxt(  )) )
+                     end
+                     
                   end
                   
                end
@@ -8721,7 +8737,6 @@ function TransUnit:analyzeExpCall( firstToken, funcExp, nextToken )
    self:checkSymbolHavingValue( funcExp:get_pos(), funcExp:getSymbolInfo(  ) )
    
    local funcTypeInfo = funcExp:get_expType():get_nonnilableType()
-   
    self:checkNoasyncType( funcExp:get_effectivePos(), funcTypeInfo )
    local genericTypeList = funcTypeInfo:get_itemTypeInfoList()
    local refFieldNode = nil
@@ -9705,7 +9720,7 @@ function TransUnit:analyzeNewAlge( firstToken, algeTypeInfo, prefix )
          
          
          do
-            local _4410, _4411, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, nil )
+            local _4415, _4416, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, nil )
             if newExpNodeList ~= nil then
                argList = newExpNodeList:get_expList()
             end
@@ -9751,7 +9766,7 @@ function TransUnit:checkAsyncSymbol( symbolInfo, pos )
          local _switchExp = curNs:get_kind()
          if _switchExp == Ast.TypeInfoKind.Func then
             if symbolInfo:get_namespaceTypeInfo() ~= curNs and curNs:get_asyncMode() ~= Ast.Async.Transient then
-               if Ast.TypeInfo.isMut( symbolInfo:get_typeInfo() ) then
+               if not Ast.TypeInfo.canBeAsyncParam( symbolInfo:get_typeInfo() ) then
                   self:addErrMess( pos, string.format( "can't access the mutable type's symbol(%s) from async (%s).", symbolInfo:get_name(), symbolInfo:get_typeInfo():getTxt(  )) )
                end
                
@@ -9759,7 +9774,7 @@ function TransUnit:checkAsyncSymbol( symbolInfo, pos )
             
          elseif _switchExp == Ast.TypeInfoKind.Method then
             if symbolInfo:get_namespaceTypeInfo() ~= curNs then
-               if Ast.TypeInfo.isMut( symbolInfo:get_typeInfo() ) then
+               if not Ast.TypeInfo.canBeAsyncParam( symbolInfo:get_typeInfo() ) then
                   self:addErrMess( pos, string.format( "can't access the mutable type's symbol(%s) from async (%s).", symbolInfo:get_name(), symbolInfo:get_typeInfo():getTxt(  )) )
                end
                
@@ -10017,7 +10032,7 @@ function TransUnit:analyzeExpOpSet( exp, opeToken, expectTypeList )
    end
    
    
-   local _4533, _4534, workList, expTypeList = self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), expList, true, false, nil )
+   local _4538, _4539, workList, expTypeList = self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), expList, true, false, nil )
    if workList ~= nil then
       expList = workList
    end
@@ -10744,7 +10759,7 @@ function TransUnit:analyzeStrConst( firstToken, token )
          local argNodeList = self:analyzeExpList( false, false, false )
          param = argNodeList
          
-         local _4809, _4810, workExpList = self:checkMatchType( "str constructor", firstToken.pos, {Ast.builtinTypeDDD}, argNodeList, false, false, nil )
+         local _4814, _4815, workExpList = self:checkMatchType( "str constructor", firstToken.pos, {Ast.builtinTypeDDD}, argNodeList, false, false, nil )
          if workExpList ~= nil then
             dddParam = workExpList
          else
@@ -10919,7 +10934,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, canLeftExp, prevOpLev
       end
       
       
-      local _4878, alt2type, newArgList = self:checkMatchValType( exp:get_pos(), initTypeInfo, argList, classTypeInfo:get_itemTypeInfoList(), classTypeInfo )
+      local _4883, alt2type, newArgList = self:checkMatchValType( exp:get_pos(), initTypeInfo, argList, classTypeInfo:get_itemTypeInfoList(), classTypeInfo )
       
       if #classTypeInfo:get_itemTypeInfoList() > 0 then
          if classTypeInfo:get_itemTypeInfoList()[1]:get_kind() == Ast.TypeInfoKind.Alternate then
@@ -11207,7 +11222,7 @@ function TransUnit:analyzeReturn( token )
       local workList = expList
       if workList ~= nil then
          do
-            local _4984, _4985, newExpNodeList = self:checkMatchType( "return", token.pos, retTypeList, workList, false, not workList:get_followOn(), nil )
+            local _4989, _4990, newExpNodeList = self:checkMatchType( "return", token.pos, retTypeList, workList, false, not workList:get_followOn(), nil )
             if newExpNodeList ~= nil then
                expList = newExpNodeList
             end
