@@ -3081,9 +3081,9 @@ function TransUnit:analyzeForeach( token, sortFlag )
    
    local exp = self:analyzeExpOneRVal( false, false )
    if exp:get_expType():get_kind() == Ast.TypeInfoKind.Ext then
-      local nsType = self:getCurrentNamespaceTypeInfo(  )
-      if nsType:get_asyncMode() ~= Ast.Async.Noasync then
-         self:addErrMess( exp:get_pos(), string.format( "can't access the luaval with the foreach. -- %s in %s", exp:get_expType():getTxt(  ), nsType:getTxt(  )) )
+      local nsInfo = self:getCurrentNSInfo(  )
+      if not nsInfo:canAccessNoasync(  ) then
+         self:addErrMess( exp:get_pos(), string.format( "can't access the luaval with the foreach on __async. -- %s in %s", exp:get_expType():getTxt(  ), nsInfo:get_typeInfo():getTxt(  )) )
       end
       
    end
@@ -7530,6 +7530,16 @@ function TransUnit:analyzeExpRefItem( token, exp, nilAccess )
    
    if Ast.isExtType( exp:get_expType():get_nonnilableType() ) then
       typeInfo = self:createExtType( exp:get_pos(), typeInfo )
+      
+      if self:checkThreading( token.pos ) then
+         self:addErrMess( token.pos, "not support to use Luaval on thread." )
+      end
+      
+      
+      if not self:getCurrentNSInfo(  ):canAccessNoasync(  ) then
+         self:addErrMess( token.pos, string.format( "can't access Luaval on __async. -- %s", exp:get_expType():getTxt(  )) )
+      end
+      
    end
    
    
@@ -7931,7 +7941,7 @@ function TransUnit:checkMatchValType( pos, funcTypeInfo, expList, genericTypeLis
       alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( #funcTypeInfo:get_itemTypeInfoList() > 0 )
    end
    
-   local matchResult, _3623, newExpNodeList = self:checkMatchType( funcTypeInfo:getTxt(  ), pos, argTypeList, expList, false, warnForFollow, alt2typeMap )
+   local matchResult, _3625, newExpNodeList = self:checkMatchType( funcTypeInfo:getTxt(  ), pos, argTypeList, expList, false, warnForFollow, alt2typeMap )
    
    if expList and newExpNodeList then
       return matchResult, alt2typeMap, newExpNodeList
@@ -7995,7 +8005,7 @@ function TransUnit:analyzeListItems( firstPos, nextToken, termTxt, expectTypeLis
                   table.insert( expTypeList, expNode:get_expType() )
                else
                 
-                  for _3658 = 1, #expNode:get_expTypeList() do
+                  for _3660 = 1, #expNode:get_expTypeList() do
                      table.insert( expTypeList, itemTypeInfo )
                   end
                   
@@ -8010,7 +8020,7 @@ function TransUnit:analyzeListItems( firstPos, nextToken, termTxt, expectTypeLis
          
       end
       
-      local _3661, _3662, workExpList = self:checkMatchType( "List constructor", firstPos, expTypeList, expList, false, false, nil )
+      local _3663, _3664, workExpList = self:checkMatchType( "List constructor", firstPos, expTypeList, expList, false, false, nil )
       if workExpList ~= nil then
          expList = workExpList
       end
@@ -9379,6 +9389,16 @@ function TransUnit:analyzeExpField( firstToken, fieldToken, mode, prefixExp )
    local extFlag
    
    if Ast.isExtType( prefixExpType ) then
+      if not self:getCurrentNSInfo(  ):canAccessNoasync(  ) then
+         self:addErrMess( firstToken.pos, string.format( "can't access Luaval on __async. -- %s", prefixExp:get_expType():getTxt(  )) )
+      end
+      
+      
+      if self:checkThreading( firstToken.pos ) then
+         self:addErrMess( firstToken.pos, "not support to use Luaval on thread." )
+      end
+      
+      
       extFlag = true
       prefixExpType = prefixExpType:get_extedType()
    else
@@ -9675,11 +9695,6 @@ function TransUnit:analyzeExpField( firstToken, fieldToken, mode, prefixExp )
    
    if extFlag then
       typeInfo = self:createExtType( firstToken.pos, typeInfo )
-      
-      if self:checkThreading( firstToken.pos ) then
-         self:addErrMess( firstToken.pos, "not support to use Luaval on thread." )
-      end
-      
    end
    
    
@@ -9720,7 +9735,7 @@ function TransUnit:analyzeNewAlge( firstToken, algeTypeInfo, prefix )
          
          
          do
-            local _4415, _4416, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, nil )
+            local _4418, _4419, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, nil )
             if newExpNodeList ~= nil then
                argList = newExpNodeList:get_expList()
             end
@@ -10032,7 +10047,7 @@ function TransUnit:analyzeExpOpSet( exp, opeToken, expectTypeList )
    end
    
    
-   local _4538, _4539, workList, expTypeList = self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), expList, true, false, nil )
+   local _4541, _4542, workList, expTypeList = self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), expList, true, false, nil )
    if workList ~= nil then
       expList = workList
    end
@@ -10759,7 +10774,7 @@ function TransUnit:analyzeStrConst( firstToken, token )
          local argNodeList = self:analyzeExpList( false, false, false )
          param = argNodeList
          
-         local _4814, _4815, workExpList = self:checkMatchType( "str constructor", firstToken.pos, {Ast.builtinTypeDDD}, argNodeList, false, false, nil )
+         local _4817, _4818, workExpList = self:checkMatchType( "str constructor", firstToken.pos, {Ast.builtinTypeDDD}, argNodeList, false, false, nil )
          if workExpList ~= nil then
             dddParam = workExpList
          else
@@ -10934,7 +10949,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, canLeftExp, prevOpLev
       end
       
       
-      local _4883, alt2type, newArgList = self:checkMatchValType( exp:get_pos(), initTypeInfo, argList, classTypeInfo:get_itemTypeInfoList(), classTypeInfo )
+      local _4886, alt2type, newArgList = self:checkMatchValType( exp:get_pos(), initTypeInfo, argList, classTypeInfo:get_itemTypeInfoList(), classTypeInfo )
       
       if #classTypeInfo:get_itemTypeInfoList() > 0 then
          if classTypeInfo:get_itemTypeInfoList()[1]:get_kind() == Ast.TypeInfoKind.Alternate then
@@ -10999,6 +11014,14 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, canLeftExp, prevOpLev
             if expType:get_extedType():get_kind() ~= Ast.TypeInfoKind.List and expType:get_extedType():get_kind() ~= Ast.TypeInfoKind.Array and not Ast.builtinTypeString:canEvalWith( self.processInfo, expType, Ast.CanEvalType.SetOp, {} ) then
                self:addErrMess( token.pos, string.format( 'unmatch type for "#" -- %s', expType:getTxt(  )) )
             end
+            
+            if expType:get_kind() == Ast.TypeInfoKind.Ext then
+               if not self:getCurrentNSInfo(  ):canAccessNoasync(  ) then
+                  self:addErrMess( token.pos, string.format( "can't access the Luaval with '#' in __async. -- %s", expType:getTxt(  )) )
+               end
+               
+            end
+            
             
             typeInfo = Ast.builtinTypeInt
          elseif _switchExp == "not" then
@@ -11222,7 +11245,7 @@ function TransUnit:analyzeReturn( token )
       local workList = expList
       if workList ~= nil then
          do
-            local _4989, _4990, newExpNodeList = self:checkMatchType( "return", token.pos, retTypeList, workList, false, not workList:get_followOn(), nil )
+            local _4994, _4995, newExpNodeList = self:checkMatchType( "return", token.pos, retTypeList, workList, false, not workList:get_followOn(), nil )
             if newExpNodeList ~= nil then
                expList = newExpNodeList
             end

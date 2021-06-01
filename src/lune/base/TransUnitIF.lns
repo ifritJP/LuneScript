@@ -101,6 +101,16 @@ lockedAsyncStack に格納されている情報よりも、今のループ数の方が多い場合は break 
       }
       return self.lockedAsyncStack[ len ] < loopQueueLen;
    }
+
+   /**
+現在の状態で __noasync にアクセス可能かどうか。
+*/
+   pub fn canAccessNoasync() : bool {
+      if self.typeInfo.$asyncMode == .Noasync or #self.lockedAsyncStack > 0 {
+         return true;
+      }
+      return false;
+   }
 }
 
 pub interface TransUnitIF {

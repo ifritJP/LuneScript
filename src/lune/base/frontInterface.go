@@ -589,11 +589,11 @@ func (self *frontInterface_dummyFront) InitfrontInterface_dummyFront(_env *LnsEn
 // 269: decl @lune.@base.@frontInterface.dummyFront.loadModule
 func (self *frontInterface_dummyFront) LoadModule(_env *LnsEnv, mod string)(LnsAny, *FrontInterface_ModuleMeta) {
     var loaded LnsAny
-    loaded = frontInterface_convExp785(Lns_2DDD(_env.LuaVM.Load("return {}", nil)))
+    loaded = frontInterface_convExp785(Lns_2DDD(_env.CommonLuaVM.Load("return {}", nil)))
     var emptyTable LnsAny
     if loaded != nil{
         loaded_192 := loaded.(*Lns_luaValue)
-        emptyTable = Lns_unwrap( Lns_car(_env.LuaVM.RunLoadedfunc(loaded_192,Lns_2DDD([]LnsAny{}))[0]))
+        emptyTable = Lns_unwrap( Lns_car(_env.CommonLuaVM.RunLoadedfunc(loaded_192,Lns_2DDD([]LnsAny{}))[0]))
         
     } else {
         panic("load error")

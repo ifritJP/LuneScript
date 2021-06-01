@@ -345,10 +345,6 @@ func Lns_getVM() *Lns_luaVM {
 	return Lns_processFreeList(cur_LnsEnv.LuaVM)
 }
 
-func Lns_getVMSync() *Lns_luaVM {
-	return Lns_processFreeList(sync_LnsEnv.LuaVM)
-}
-
 func Lns_processFreeListMain(freeList []*Lns_luaValueCoreList) {
 	for _, coreList := range freeList {
 		for _, core := range coreList.list {

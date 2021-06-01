@@ -338,13 +338,13 @@ func (self *OutputDepend_Front) LoadMeta(_env *LnsEnv, importModuleInfo *FrontIn
     Lns_print([]LnsAny{metaPath})
     var loaded LnsAny
     var mess LnsAny
-    loaded,mess = _env.LuaVM.Loadfile(metaPath)
+    loaded,mess = _env.CommonLuaVM.Loadfile(metaPath)
     if loaded != nil{
         loaded_104 := loaded.(*Lns_luaValue)
         var meta LnsAny
         
         {
-            _meta := OutputDepend_convExp505(Lns_2DDD(_env.LuaVM.RunLoadedfunc(loaded_104,Lns_2DDD([]LnsAny{}))[0]))
+            _meta := OutputDepend_convExp505(Lns_2DDD(_env.CommonLuaVM.RunLoadedfunc(loaded_104,Lns_2DDD([]LnsAny{}))[0]))
             if _meta == nil{
                 return nil
             } else {

@@ -195,6 +195,33 @@ let globalVal2:&List<int> = [];
    }
 }
 {
+   fn func() __async {
+      let obj:Luaval<&stem>! = nil;
+      when! obj {
+         {
+            let list = obj@@&List<int>;
+            print( #list ); // error
+            foreach val, key in list { // error
+               print( key, val );
+            }
+            forsort val, key in list { // error
+               print( key, val );
+            }
+            print( list[ 1 ] ); // error
+         }
+         {
+            let map = obj@@&Map<str,int>;
+            print( map.val ); // error
+            print( map[ "val" ] ); // error
+         }
+         {
+            let luaform = obj@@form;
+            luaform(##); // error
+         }
+      }
+   }
+}
+{
 
    class Super {
       pub fn func() {

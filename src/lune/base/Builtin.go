@@ -1135,7 +1135,7 @@ func (self *Builtin_Builtin) RegistBuiltInScope(_env *LnsEnv) *Builtin_BuiltinFu
                     name = ""
                     
                     {
-                        _form13149, _param13149, _prev13149 := _env.LuaVM.String_gmatch(className,"[^<>,%s]+")
+                        _form13149, _param13149, _prev13149 := _env.CommonLuaVM.String_gmatch(className,"[^<>,%s]+")
                         for {
                             _work13149 := _form13149.(*Lns_luaValue).Call( Lns_2DDD( _param13149, _prev13149 ) )
                             _prev13149 = Lns_getFromMulti(_work13149,0)

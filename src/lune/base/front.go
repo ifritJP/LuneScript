@@ -341,7 +341,7 @@ func front_loadFromChunk_1336_(_env *LnsEnv, chunk LnsAny,err LnsAny) LnsAny {
     if chunk != nil{
         chunk_256 := chunk.(*Lns_luaValue)
         {
-            _work := front_convExp1418(Lns_2DDD(_env.LuaVM.RunLoadedfunc(chunk_256,Lns_2DDD([]LnsAny{}))[0]))
+            _work := front_convExp1418(Lns_2DDD(_env.CommonLuaVM.RunLoadedfunc(chunk_256,Lns_2DDD([]LnsAny{}))[0]))
             if !Lns_IsNil( _work ) {
                 work := _work
                 return work
@@ -356,17 +356,17 @@ func front_loadFromChunk_1336_(_env *LnsEnv, chunk LnsAny,err LnsAny) LnsAny {
 
 // 357: decl @lune.@base.@front.loadFromLuaTxt
 func Front_loadFromLuaTxt(_env *LnsEnv, txt string) LnsAny {
-    return front_loadFromChunk_1336_(front_convExp1455(_env, Lns_2DDD(_env.LuaVM.Load(txt, nil))))
+    return front_loadFromChunk_1336_(front_convExp1455(_env, Lns_2DDD(_env.CommonLuaVM.Load(txt, nil))))
 }
 
 // 370: decl @lune.@base.@front.byteCompileFromLuaTxt
 func front_byteCompileFromLuaTxt_1348_(_env *LnsEnv, txt string,stripDebugInfo bool) string {
     var chunk LnsAny
     var err LnsAny
-    chunk,err = _env.LuaVM.Load(txt, nil)
+    chunk,err = _env.CommonLuaVM.Load(txt, nil)
     if chunk != nil{
         chunk_271 := chunk.(*Lns_luaValue)
-        return _env.LuaVM.String_dump(chunk_271, stripDebugInfo)
+        return _env.CommonLuaVM.String_dump(chunk_271, stripDebugInfo)
     }
     panic(Lns_unwrapDefault( err, "load error").(string))
 // insert a dummy
@@ -1053,10 +1053,10 @@ func (self *front_Front) Error(_env *LnsEnv, message string) {
 func (self *front_Front) loadLua(_env *LnsEnv, path string) LnsAny {
     var chunk LnsAny
     var err LnsAny
-    chunk,err = _env.LuaVM.Loadfile(path)
+    chunk,err = _env.CommonLuaVM.Loadfile(path)
     if chunk != nil{
         chunk_185 := chunk.(*Lns_luaValue)
-        return Lns_unwrap( Lns_car(_env.LuaVM.RunLoadedfunc(chunk_185,Lns_2DDD([]LnsAny{}))[0]))
+        return Lns_unwrap( Lns_car(_env.CommonLuaVM.RunLoadedfunc(chunk_185,Lns_2DDD([]LnsAny{}))[0]))
     }
     Util_errorLog(_env, Lns_unwrapDefault( err, _env.LuaVM.String_format("load error -- %s.", []LnsAny{path})).(string))
     return nil
@@ -2220,14 +2220,14 @@ func (self *front_Front) Exec(_env *LnsEnv) {
             code = "local Testing = require( \"lune.base.Testing\" )\nreturn function( path )\n  Testing.run( path );\n  Testing.outputAllResult( io.stdout );\nend\n"
             var loaded LnsAny
             var mess LnsAny
-            loaded,mess = _env.LuaVM.Load(code, nil)
+            loaded,mess = _env.CommonLuaVM.Load(code, nil)
             if loaded != nil{
                 loaded_1178 := loaded.(*Lns_luaValue)
                 {
-                    _mod := front_convExp9413(Lns_2DDD(_env.LuaVM.RunLoadedfunc(loaded_1178,Lns_2DDD([]LnsAny{}))[0]))
+                    _mod := front_convExp9413(Lns_2DDD(_env.CommonLuaVM.RunLoadedfunc(loaded_1178,Lns_2DDD([]LnsAny{}))[0]))
                     if !Lns_IsNil( _mod ) {
                         mod := _mod
-                        _env.LuaVM.RunLoadedfunc((mod.(*Lns_luaValue)),Lns_2DDD([]LnsAny{self.FP.scriptPath2Module(_env, self.option.ScriptPath)}))
+                        _env.CommonLuaVM.RunLoadedfunc((mod.(*Lns_luaValue)),Lns_2DDD([]LnsAny{self.FP.scriptPath2Module(_env, self.option.ScriptPath)}))
                     }
                 }
             } else {
@@ -2454,7 +2454,7 @@ func front_MetaForBuildId_LoadFromMeta_1436_(_env *LnsEnv, metaPath string)(LnsA
             if luaCode != nil{
                 luaCode_322 := luaCode.(string)
                 var meta LnsAny
-                meta = front_convExp1829(Lns_2DDD(front_MetaForBuildId__fromStem_1432_(_env, _env.LuaVM.ExpandLuavalMap(Front_loadFromLuaTxt(_env, luaCode_322)),nil)))
+                meta = front_convExp1829(Lns_2DDD(front_MetaForBuildId__fromStem_1432_(_env, _env.CommonLuaVM.ExpandLuavalMap(Front_loadFromLuaTxt(_env, luaCode_322)),nil)))
                 return meta, luaCode_322
             }
         }

@@ -218,7 +218,7 @@ func (self *Import_Import) processImportFromFile(_env *LnsEnv, processInfo *Ast_
     dependLibId2DependInfo = NewLnsMap( map[LnsAny]LnsAny{})
     {
         _exp4470 := metaInfo.GetAt( "__dependModuleMap" ).(*Lns_luaValue)
-        _sorted4470 := _env.LuaVM.SortMapKeyList( _exp4470 )
+        _sorted4470 := _env.CommonLuaVM.SortMapKeyList( _exp4470 )
         _index4470, _key4470 := _sorted4470.Get1stFromMap()
         for _index4470 != nil {
             dependName := _key4470.(string)
@@ -308,7 +308,7 @@ func (self *Import_Import) processImportFromFile(_env *LnsEnv, processInfo *Ast_
             var workAtomInfo LnsAny
             
             {
-                _workAtomInfo := _env.LuaVM.ExpandLuavalMap(atomInfoLua)
+                _workAtomInfo := _env.CommonLuaVM.ExpandLuavalMap(atomInfoLua)
                 if _workAtomInfo == nil{
                     self.transUnitIF.Error(_env, "illegal atomInfo")
                 } else {
@@ -510,7 +510,7 @@ func (self *Import_Import) processImportFromFile(_env *LnsEnv, processInfo *Ast_
                     var classInfo LnsAny
                     
                     {
-                        _classInfo := _env.LuaVM.ExpandLuavalMap(_exp)
+                        _classInfo := _env.CommonLuaVM.ExpandLuavalMap(_exp)
                         if _classInfo == nil{
                             self.transUnitIF.Error(_env, "illegal val")
                         } else {
@@ -521,7 +521,7 @@ func (self *Import_Import) processImportFromFile(_env *LnsEnv, processInfo *Ast_
                         fieldName := _fieldName.(string)
                         fieldInfo := _fieldInfo.(*LnsMap)
                         {
-                            _typeId := Import_convExp5950(Lns_2DDD(Import__IdInfo__fromStem_1187_(_env, _env.LuaVM.ExpandLuavalMap(fieldInfo.Get("typeId")),nil)))
+                            _typeId := Import_convExp5950(Lns_2DDD(Import__IdInfo__fromStem_1187_(_env, _env.CommonLuaVM.ExpandLuavalMap(fieldInfo.Get("typeId")),nil)))
                             if !Lns_IsNil( _typeId ) {
                                 typeId := _typeId.(*Import__IdInfo)
                                 var fieldTypeInfo *Ast_TypeInfo
@@ -613,7 +613,7 @@ func (self *Import_Import) processImportFromFile(_env *LnsEnv, processInfo *Ast_
             varName := _key6418.(string)
             varInfo := _val6418.(*Lns_luaValue)
             {
-                _typeId := Import_convExp6416(Lns_2DDD(Import__IdInfo__fromStem_1187_(_env, _env.LuaVM.ExpandLuavalMap(varInfo.GetAt("typeId")),nil)))
+                _typeId := Import_convExp6416(Lns_2DDD(Import__IdInfo__fromStem_1187_(_env, _env.CommonLuaVM.ExpandLuavalMap(varInfo.GetAt("typeId")),nil)))
                 if !Lns_IsNil( _typeId ) {
                     typeId := _typeId.(*Import__IdInfo)
                     self.transUnitIF.Get_scope(_env).FP.AddStaticVar(_env, processInfo, false, true, varName, nil, Lns_unwrap( Lns_car(importParam.FP.GetTypeInfoFrom(_env, typeId))).(*Ast_TypeInfo), _env.PopVal( _env.IncStack() ||
@@ -635,7 +635,7 @@ func (self *Import_Import) processImportFromFile(_env *LnsEnv, processInfo *Ast_
         for _key6467 != nil {
             orgTypeId := _key6467.(LnsInt)
             macroInfoStem := _val6467
-            self.macroCtrl.FP.ImportMacro(_env, processInfo, lnsPath, _env.LuaVM.ExpandLuavalMap(macroInfoStem), Lns_unwrap( orgId2MacroTypeInfo.Get(orgTypeId)).(*Ast_TypeInfo), typeId2TypeInfo, importedMacroInfoMap)
+            self.macroCtrl.FP.ImportMacro(_env, processInfo, lnsPath, _env.CommonLuaVM.ExpandLuavalMap(macroInfoStem), Lns_unwrap( orgId2MacroTypeInfo.Get(orgTypeId)).(*Ast_TypeInfo), typeId2TypeInfo, importedMacroInfoMap)
             _key6467, _val6467 = _exp6467.NextFromMap( _key6467 )
         }
     }
@@ -703,7 +703,7 @@ func (self *Import_Import) processImportMain(_env *LnsEnv, processInfo *Ast_Proc
     var nameList *LnsList
     nameList = NewLnsList([]LnsAny{})
     {
-        _form6912, _param6912, _prev6912 := _env.LuaVM.String_gmatch(modulePath, "[^%./:]+")
+        _form6912, _param6912, _prev6912 := _env.CommonLuaVM.String_gmatch(modulePath, "[^%./:]+")
         for {
             _work6912 := _form6912.(*Lns_luaValue).Call( Lns_2DDD( _param6912, _prev6912 ) )
             _prev6912 = Lns_getFromMulti(_work6912,0)

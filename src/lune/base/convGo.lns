@@ -59,44 +59,38 @@ enum ProcessMode {
 }
 
 class Env {
-   pri let stack:List<&Nodes.Node>;
    let addEnvArg:bool;
    local fn __init( addEnvArg:bool ) {
-      self.stack = [];
       self.addEnvArg = addEnvArg;
    }
-   local fn push( node:&Nodes.Node ) mut {
-      self.stack.insert( node );
-   }
-   local fn pop() mut {
-      self.stack.remove(##);
+   local fn getCommonVm( threading:bool ) : str {
+      if self.addEnvArg {
+         return "_env.CommonLuaVM";
+      }
+      if threading {
+         return "self.LnsEnv.LuaVM";
+      } else {
+         return "Lns_getVM()";
+      }
    }
    local fn getLuavm( threading:bool ) : str {
       if self.addEnvArg {
          return "_env.LuaVM";
       }
-      if #self.stack == 0 {
-         if threading {
-            return "self.LnsEnv.LuaVM";
-         } else {
-            return "Lns_getVM()";
-         }
+      if threading {
+         return "self.LnsEnv.LuaVM";
       } else {
-         return "Lns_getVMSync()";
+         return "Lns_getVM()";
       }
    }
    local fn getEnv( threading:bool ) : str {
       if self.addEnvArg {
          return "_env";
       }
-      if #self.stack == 0 {
-         if threading {
-            return "self.LnsEnv";
-         } else {
-            return "Lns_GetEnv()";
-         }
+      if threading {
+         return "self.LnsEnv";
       } else {
-            return "Lns_GetEnvSync()";
+         return "Lns_GetEnv()";
       }
    }
 }
@@ -172,7 +166,13 @@ class convFilter extend Nodes.Filter<Opt> {
       let! txt = self.builtin2runtime[ typeInfo ] {
          return nil;
       };
-      return (txt.gsub( "GETVM", self.env.getLuavm( threading ) ));
+      let vmTxt;
+      if typeInfo.$asyncMode == .Noasync {
+         vmTxt = self.env.getCommonVm( threading );
+      } else {
+         vmTxt = self.env.getLuavm( threading );
+      }
+      return (txt.gsub( "GETVM", vmTxt ));
    }
    
    fn pushProcessMode( mode:ProcessMode ) mut {
@@ -1597,7 +1597,7 @@ func %s( luaform LnsAny ) LnsForm {
     return func (argList []LnsAny) []LnsAny {
         return %s.RunLoadedfunc( luaform.(*Lns_luaValue), argList )
     }
-}``` (self.getConv2formName( node ), self.env.getLuavm( node.$exp.isThreading() ) ) );
+}``` (self.getConv2formName( node ), self.env.getCommonVm( node.$exp.isThreading() ) ) );
       return;
    }
    
@@ -3364,7 +3364,7 @@ fn convFilter.outputForeachLua(
          if sortFlag {
             self.writeln(
                "%s := %s.SortMapKeyList( %s )"
-               (sorted, self.env.getLuavm( node.isThreading()), tmpExp) );
+               (sorted, self.env.getCommonVm( node.isThreading()), tmpExp) );
             self.writeln( "%s, %s := %s.Get1stFromMap()"
                (tmpIndex,tmpKey, sorted) );
             self.writeln( "for %s != nil {" (tmpIndex));
@@ -4663,11 +4663,23 @@ pub override fn convFilter.processExpCall(
             addEnvArg = false;
          }
       }
+
+      if funcType.$kind == .Ext {
+         //self.write( "%s.RunLoadedfunc" (self.env.getLuavm( node.isThreading() )) );
+         self.write( "%s.RunLoadedfunc(" (self.env.getCommonVm( node.isThreading() )) );
+         addEnvArg = false;
+      }
       
       withPrefix = true;
       closeParen, callKind = self.outputCallPrefix(
          node.isThreading(), node.$id,
          fieldNode, fieldNode.$prefix, unwrap fieldNode.$symbolInfo );
+
+      if funcType.$kind == .Ext {
+         self.write( ", " );
+      } else {
+         self.write( "(" );
+      }
    } else {
       withPrefix = false;
       if Ast.isBuiltin( funcType.$typeId.id ) {
@@ -4692,15 +4704,16 @@ pub override fn convFilter.processExpCall(
          }
       } else {
          if funcType.$kind == .Ext {
-            self.write( "%s.RunLoadedfunc" (self.env.getLuavm( node.isThreading() )) );
+            //self.write( "%s.RunLoadedfunc" (self.env.getLuavm( node.isThreading() )) );
+            self.write( "%s.RunLoadedfunc" (self.env.getCommonVm( node.isThreading() )) );
             callKind = .RunLoaded;
          } else {
             filter( node.$func, self, node );
          }
       }
+      self.write( "(" );
    }
 
-   self.write( "(" );
 
    let mut skipArg = false;
    let mut closeTxt:str! = nil;

@@ -1954,36 +1954,102 @@ _section();
       }
    }
 
-   class TestRunner extend Runner {
-      _lune_control default_async_this_class;
+   {
+      class TestRunner extend Runner {
+         _lune_control default_async_this_class;
 
-      let txt:str;
-      
-      pub fn __init( txt:str) {
-         super();
-         self.txt = txt;
-      }
-      
-      pub override fn runMain() mut {
-         fn fib_lns( num:int ) : int {
-            if num < 2 {
-               return num;
-            }
-            return fib_lns( num - 2 ) + fib_lns( num - 1 );
+         let txt:str;
+         
+         pub fn __init( txt:str) {
+            super();
+            self.txt = txt;
          }
-         fib_lns( 25 );
+         
+         pub override fn runMain() mut {
+            fn fib_lns( num:int ) : int {
+               if num < 2 {
+                  return num;
+               }
+               return fib_lns( num - 2 ) + fib_lns( num - 1 );
+            }
+            fib_lns( 25 );
+         }
+      }
+
+
+      let list:List<Runner> = [];
+      for index = 1, 100 {
+         let mut test = new TestRunner( "%d" (index) );
+         test.start();
+         list.insert( test );
+      }
+      foreach test in list {
+         test.getResult();
       }
    }
 
+   {
+      class TestRunner extend Runner {
+         _lune_control default_async_this_class;
 
-   let list:List<Runner> = [];
-   for index = 1, 100 {
-      let mut test = new TestRunner( "%d" (index) );
-      test.start();
-      list.insert( test );
-   }
-   foreach test in list {
-      test.getResult();
+         let funcObj:Luaval<form>;
+         let mapObj:Luaval<&Map<str,int>>;
+         let listObj:Luaval<&List<str>>;
+
+         
+         pub fn __init( txt:str) {
+            super();
+
+            fn loadlua( code:str ) __noasync : Luaval<&stem> {
+               let! loaded = _load( code, nil ) {
+                  error("load error");
+               };
+               let! obj = loaded( ## ) {
+                  error( "lua func error" );
+               };
+               return obj;
+            }
+
+            __asyncLock {
+               self.funcObj = loadlua( "return function() return 1 end" )@@Luaval<form>;
+               self.mapObj = loadlua( "return { val = 10 }" )@@Luaval<&Map<str,int>>;
+               self.listObj = loadlua( "return { 'a', 'b', 'c' }" )@@Luaval<&List<str>>;
+            }
+         }
+         
+         pub override fn runMain() mut {
+            __asyncLock {
+               {
+                  print( #self.listObj );
+                  foreach val, key in self.listObj {
+                     print( key, val );   
+                  }
+                  print( self.listObj[ 1 ] );
+               }
+               {
+                  print( self.mapObj.val );
+                  print( self.mapObj[ "val" ] );
+                  forsort val, key in self.mapObj {
+                     print( key, val );   
+                  }
+               }
+               {
+                  self.funcObj(##);
+               }
+            }
+         }
+      }
+
+
+      let list:List<Runner> = [];
+      for index = 1, 1 {
+         let mut test = new TestRunner( "%d" (index) );
+         test.start();
+         list.insert( test );
+      }
+      foreach test in list {
+         test.getResult();
+      }
    }
 }
 _section();

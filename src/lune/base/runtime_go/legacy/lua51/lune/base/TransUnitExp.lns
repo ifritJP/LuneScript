@@ -377,6 +377,18 @@ fn TransUnit.analyzeExpRefItem(
 
    if Ast.isExtType( exp.$expType.$nonnilableType ) {
       typeInfo = self.createExtType( exp.$pos, typeInfo );
+
+      if self.checkThreading( token.$pos ) {
+         // Luaval は VM を識別する必要がある。
+         // 現状は VM を識別しないので、 別スレッドでの luaval の使用はサポートしない。
+         self.addErrMess( token.$pos, "not support to use Luaval on thread."  );
+      }
+      
+      if not self.getCurrentNSInfo().canAccessNoasync() {
+         self.addErrMess(
+            token.$pos,
+            "can't access Luaval on __async. -- %s" (exp.$expType.getTxt(##)) );
+      }
    }
 
    let indexExp = self.analyzeExpOneRVal( false, false, nil, expectItemType );
@@ -2315,6 +2327,18 @@ fn TransUnit.analyzeExpField(
 
    let extFlag;
    if Ast.isExtType( prefixExpType ) {
+      if not self.getCurrentNSInfo().canAccessNoasync() {
+         self.addErrMess(
+            firstToken.$pos,
+            "can't access Luaval on __async. -- %s" (prefixExp.$expType.getTxt(##)) );
+      }
+      
+      if self.checkThreading( firstToken.$pos ) {
+         // Luaval は VM を識別する必要がある。
+         // 現状は VM を識別しないので、 別スレッドでの luaval の使用はサポートしない。
+         self.addErrMess( firstToken.$pos, "not support to use Luaval on thread."  );
+      }
+
       extFlag = true;
       prefixExpType = prefixExpType.$extedType;
    } else {
@@ -2597,12 +2621,6 @@ fn TransUnit.analyzeExpField(
    
    if extFlag {
       typeInfo = self.createExtType( firstToken.pos, typeInfo );
-
-      if self.checkThreading( firstToken.$pos ) {
-         // Luaval は VM を識別する必要がある。
-         // 現状は VM を識別しないので、 別スレッドでの luaval の使用はサポートしない。
-         self.addErrMess( firstToken.$pos, "not support to use Luaval on thread."  );
-      }
    }
 
    
@@ -3992,6 +4010,15 @@ fn TransUnit.analyzeExp(
                   token.pos,
                   'unmatch type for "#" -- %s' ( expType.getTxt(##) ) );
             }
+            if expType.$kind == .Ext {
+               if not self.getCurrentNSInfo().canAccessNoasync() {
+                  self.addErrMess(
+                     token.pos,
+                     "can't access the Luaval with '#' in __async. -- %s"
+                     ( expType.getTxt(##) ) );
+               }
+            }
+            
             typeInfo = Ast.builtinTypeInt;
          }  
          case "not" {

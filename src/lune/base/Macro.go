@@ -28,11 +28,11 @@ func Macro_convExp1712(arg1 []LnsAny) (LnsAny, LnsAny) {
 func Macro_loadCode_1007_(_env *LnsEnv, code string) LnsAny {
     var loaded LnsAny
     var mess LnsAny
-    loaded,mess = _env.LuaVM.Load(code, nil)
+    loaded,mess = _env.CommonLuaVM.Load(code, nil)
     if loaded != nil{
         loaded_18 := loaded.(*Lns_luaValue)
         {
-            _obj := Macro_convExp44(Lns_2DDD(_env.LuaVM.RunLoadedfunc(loaded_18,Lns_2DDD([]LnsAny{}))[0]))
+            _obj := Macro_convExp44(Lns_2DDD(_env.CommonLuaVM.RunLoadedfunc(loaded_18,Lns_2DDD([]LnsAny{}))[0]))
             if !Lns_IsNil( _obj ) {
                 obj := _obj
                 return obj
@@ -772,7 +772,7 @@ func (self *Macro_MacroCtrl) InitMacro_MacroCtrl(_env *LnsEnv, macroEval *Nodes_
     self.macroAnalyzeInfoStack = NewLnsList([]LnsAny{Macro_MacroAnalyzeInfo2Stem(self.analyzeInfo)})
     
     Lns_LockEnvSync( _env, func () {
-        self.macroLocalVarMap = _env.LuaVM.RunLoadedfunc(Macro_toListEmpty,[]LnsAny{})[0].(*Lns_luaValue)
+        self.macroLocalVarMap = _env.CommonLuaVM.RunLoadedfunc(Macro_toListEmpty,[]LnsAny{})[0].(*Lns_luaValue)
         
     })
 }
@@ -823,9 +823,9 @@ func (self *Macro_MacroCtrl) EvalMacroOp(_env *LnsEnv, streamName string,firstTo
                         val := _val
                         argValMap.Set(index,val)
                         if argNode.FP.Get_expType(_env) == Ast_builtinTypeSymbol{
-                            macroArgValMap.Set(declArgNode.FP.Get_name(_env),_env.LuaVM.RunLoadedfunc(Macro_toLuaval,Lns_2DDD(Lns_FromStemGetAt(val,1, false )))[0])
+                            macroArgValMap.Set(declArgNode.FP.Get_name(_env),_env.CommonLuaVM.RunLoadedfunc(Macro_toLuaval,Lns_2DDD(Lns_FromStemGetAt(val,1, false )))[0])
                         } else { 
-                            macroArgValMap.Set(declArgNode.FP.Get_name(_env),_env.LuaVM.RunLoadedfunc(Macro_toLuaval,Lns_2DDD(val))[0])
+                            macroArgValMap.Set(declArgNode.FP.Get_name(_env),_env.CommonLuaVM.RunLoadedfunc(Macro_toLuaval,Lns_2DDD(val))[0])
                         }
                     }
                 }
@@ -840,7 +840,7 @@ func (self *Macro_MacroCtrl) EvalMacroOp(_env *LnsEnv, streamName string,firstTo
     var _func *Lns_luaValue
     _func = macroInfo.G_func
     var macroVars LnsAny
-    macroVars = Lns_unwrap( _env.LuaVM.ExpandLuavalMap(_env.LuaVM.RunLoadedfunc(_func,Lns_2DDD(macroArgValMap))[0].(*Lns_luaValue)))
+    macroVars = Lns_unwrap( _env.CommonLuaVM.ExpandLuavalMap(_env.CommonLuaVM.RunLoadedfunc(_func,Lns_2DDD(macroArgValMap))[0].(*Lns_luaValue)))
     self.macroLocalVarMap = Lns_unwrap( Lns_FromStemGetAt(macroVars,"__var", false ))
     
     for _, _name := range( (Lns_unwrap( Lns_FromStemGetAt(macroVars,"__names", false ))).(*LnsMap).Items ) {

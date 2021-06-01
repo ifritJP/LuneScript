@@ -84,6 +84,7 @@ func (self *TransUnitIF_Modifier) CreateModifier(_env *LnsEnv, typeInfo *Ast_Typ
 
 // declaration Class -- NSInfo
 type TransUnitIF_NSInfoMtd interface {
+    CanAccessNoasync(_env *LnsEnv) bool
     CanBreak(_env *LnsEnv) bool
     DecLock(_env *LnsEnv)
     Get_loopScopeQueue(_env *LnsEnv) *LnsList
@@ -172,6 +173,16 @@ func (self *TransUnitIF_NSInfo) CanBreak(_env *LnsEnv) bool {
         return loopQueueLen > 0
     }
     return self.lockedAsyncStack.GetAt(len).(LnsInt) < loopQueueLen
+}
+
+// 108: decl @lune.@base.@TransUnitIF.NSInfo.canAccessNoasync
+func (self *TransUnitIF_NSInfo) CanAccessNoasync(_env *LnsEnv) bool {
+    if _env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( self.typeInfo.FP.Get_asyncMode(_env) == Ast_Async__Noasync) ||
+        _env.SetStackVal( self.lockedAsyncStack.Len() > 0) ).(bool){
+        return true
+    }
+    return false
 }
 
 

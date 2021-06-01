@@ -53,7 +53,7 @@ func Util_splitStr(_env *LnsEnv, txt string,pattern string) *LnsList {
     list = NewLnsList([]LnsAny{})
     Lns_LockEnvSync( _env, func () {
         {
-            _form140, _param140, _prev140 := _env.LuaVM.String_gmatch(txt, pattern)
+            _form140, _param140, _prev140 := _env.CommonLuaVM.String_gmatch(txt, pattern)
             for {
                 _work140 := _form140.(*Lns_luaValue).Call( Lns_2DDD( _param140, _prev140 ) )
                 _prev140 = Lns_getFromMulti(_work140,0)

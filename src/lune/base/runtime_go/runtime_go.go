@@ -40,17 +40,20 @@ var LnsNone interface{} = nil
 var Lns_package_path string
 
 type LnsEnv struct {
+    // and or 演算で利用するスタック
 	valStack    []LnsAny
+    // nil アクセス演算子で利用するスタック
 	nilAccStack []LnsAny
+    // gsub などの runtime 移植していない Lua API を動かすための LuaVM
 	LuaVM       *Lns_luaVM
+    // load などの、全体を通して共通で動作させる必要のある VM
+	CommonLuaVM   *Lns_luaVM
+    // async 用の Env かどうか
 	async       bool
 }
 
 // デフォルトのシングルタスクで使用する LnsEnv
 var cur_LnsEnv *LnsEnv
-
-// 排他して使用する LnsEnv
-var sync_LnsEnv *LnsEnv
 
 /// __nosync を排他するための mutex
 var sync_LnsEnvMutex sync.Mutex
@@ -59,9 +62,6 @@ func Lns_GetEnv() *LnsEnv {
 	return cur_LnsEnv
 }
 
-func Lns_GetEnvSync() *LnsEnv {
-	return sync_LnsEnv
-}
 
 /**
 各モジュールを初期化する際に実行する関数。
@@ -79,6 +79,11 @@ func createEnv(async bool) *LnsEnv {
 	env.valStack = []LnsAny{}
 	env.nilAccStack = []LnsAny{}
 	env.LuaVM = createVM()
+    if async {
+        env.CommonLuaVM = cur_LnsEnv.LuaVM
+    } else {
+        env.CommonLuaVM = env.LuaVM
+    }
 	env.async = async
 
 	return env

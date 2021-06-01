@@ -172,7 +172,7 @@ func ConvLua_runLuaOnLns(_env *LnsEnv, code string)(LnsAny, string) {
     if loadFunc != nil{
         loadFunc_1802 := loadFunc.(*Lns_luaValue)
         var mod LnsAny
-        mod = _env.LuaVM.RunLoadedfunc(loadFunc_1802,[]LnsAny{})[0]
+        mod = _env.CommonLuaVM.RunLoadedfunc(loadFunc_1802,[]LnsAny{})[0]
         if mod != nil{
             mod_1805 := mod
             return mod_1805, ""
@@ -251,11 +251,11 @@ func convLua_Ast2Code_3736_(_env *LnsEnv, option *Option_Option,ast *TransUnit_A
 func ConvLua_runTestCode(_env *LnsEnv, ctrl *Testing_Ctrl,luaCode string) {
     var loaded LnsAny
     var mess LnsAny
-    loaded,mess = _env.LuaVM.Load(luaCode, nil)
+    loaded,mess = _env.CommonLuaVM.Load(luaCode, nil)
     if loaded != nil{
         loaded_1893 := loaded.(*Lns_luaValue)
         {
-            _mod := convLua_convExp18815(Lns_2DDD(_env.LuaVM.RunLoadedfunc(loaded_1893,Lns_2DDD([]LnsAny{}))[0]))
+            _mod := convLua_convExp18815(Lns_2DDD(_env.CommonLuaVM.RunLoadedfunc(loaded_1893,Lns_2DDD([]LnsAny{}))[0]))
             if !Lns_IsNil( _mod ) {
                 mod := _mod
                 {

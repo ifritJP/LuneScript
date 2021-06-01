@@ -176,6 +176,14 @@ function NSInfo:canBreak(  )
    
    return self.lockedAsyncStack[len] < loopQueueLen
 end
+function NSInfo:canAccessNoasync(  )
+
+   if self.typeInfo:get_asyncMode() == Ast.Async.Noasync or #self.lockedAsyncStack > 0 then
+      return true
+   end
+   
+   return false
+end
 function NSInfo.setmeta( obj )
   setmetatable( obj, { __index = NSInfo  } )
 end

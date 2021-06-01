@@ -453,7 +453,7 @@ func (self *Types_Token) GetLineCount(_env *LnsEnv) LnsInt {
     count = 1
     Lns_LockEnvSync( _env, func () {
         {
-            _form434, _param434, _prev434 := _env.LuaVM.String_gmatch(self.Txt,"\n")
+            _form434, _param434, _prev434 := _env.CommonLuaVM.String_gmatch(self.Txt,"\n")
             for {
                 _work434 := _form434.(*Lns_luaValue).Call( Lns_2DDD( _param434, _prev434 ) )
                 _prev434 = Lns_getFromMulti(_work434,0)
