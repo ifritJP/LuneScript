@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-//_lune_control default_async_all;
+_lune_control default_async_all;
 
 import lune.base.Parser;
 import lune.base.Ast;
@@ -43,7 +43,7 @@ pub class Modifier {
    let processInfo:Ast.ProcessInfo;
    
    pub fn createModifier(
-      typeInfo:&Ast.TypeInfo, mutMode: Ast.MutMode ) mut : &Ast.TypeInfo
+      typeInfo:&Ast.TypeInfo, mutMode: Ast.MutMode ) __async mut : &Ast.TypeInfo
    {
       if not self.validMutControl {
          return typeInfo;

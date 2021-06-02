@@ -241,7 +241,7 @@ pub class MacroCtrl
 {
    let mut useModuleMacroSet:Set<&Ast.TypeInfo> {pub&};
    /** マクロを展開する際にマクロを評価する MacroEval のオブジェクト */
-   pri let macroEval: Nodes.MacroEval;
+   pri let macroEval: &Nodes.MacroEval;
    /** マクロの TypeId -> マクロ情報。インポートしたマクロも含める。 */
    let mut typeId2MacroInfo: Map<&Ast.IdInfo,&Nodes.MacroInfo> {pub&};
    /** マクロの TypeId -> マクロ情報. インポートしたマクロは含めない。 */
@@ -266,7 +266,7 @@ pub class MacroCtrl
    /** マクロ定義中の場合 true */
    pri let mut isDeclaringMacro:bool {pub};
 
-   pub fn __init( macroEval: Nodes.MacroEval )
+   pub fn __init( macroEval: &Nodes.MacroEval )
    {
       self.declMacroInfoMap = {};
       self.isDeclaringMacro = false;
@@ -301,7 +301,7 @@ fn equalsType( typeInfo:&Ast.TypeInfo, builtinType:&Ast.TypeInfo ) : bool {
 */
 pub fn MacroCtrl.evalMacroOp(
    streamName:str, firstToken: &Parser.Token, macroTypeInfo: &Ast.TypeInfo,
-   expList: &Nodes.ExpListNode! ) __noasync mut: Parser.Parser!, str!
+   expList: &Nodes.ExpListNode! ) mut: Parser.Parser!, str!
 {
    self.useModuleMacroSet.add( macroTypeInfo.getModule() );
 
@@ -337,96 +337,96 @@ pub fn MacroCtrl.evalMacroOp(
       }
    }
 
+
    let macroInfo = unwrap self.typeId2MacroInfo[ macroTypeInfo.$typeId ];
+   
+   fn process() __noasync : str! {
+      
+      // マクロに渡す引数をセットする
+      let mut argValMap:Map<int,&stem> = {};
+      let mut macroArgValMap:Map<str,Luaval<&stem>> = {};
+      let macroArgNodeList = macroInfo.getArgList();
 
-   // マクロに渡す引数をセットする
-   let mut argValMap:Map<int,&stem> = {};
-   let mut macroArgValMap:Map<str,Luaval<&stem>> = {};
-   let macroArgNodeList = macroInfo.getArgList();
+      // マクロ引数名 → 引数の Node
+      let mut macroArgName2ArgNode:Map<str,&Nodes.Node> = {};
+      when! expList {
+         foreach argNode, index in expList.$expList {
+            let declArgNode = macroArgNodeList[ index ];
+            macroArgName2ArgNode[ declArgNode.$name ] = argNode;
+            let literal, mess = argNode.getLiteral();
+            when! literal {
+               if! let val = getLiteralMacroVal( literal ) {
+                  argValMap[ index ] = val;
 
-   // マクロ引数名 → 引数の Node
-   let mut macroArgName2ArgNode:Map<str,&Nodes.Node> = {};
-   when! expList {
-      foreach argNode, index in expList.$expList {
-         let declArgNode = macroArgNodeList[ index ];
-         macroArgName2ArgNode[ declArgNode.$name ] = argNode;
-         let literal, mess = argNode.getLiteral();
-         when! literal {
-            if! let val = getLiteralMacroVal( literal ) {
-               argValMap[ index ] = val;
-
-               if argNode.$expType == Ast.builtinTypeSymbol {
-                  macroArgValMap[ declArgNode.$name ] = toLuaval( val[ 1 ] );
-               }
-               else {
-                  macroArgValMap[ declArgNode.$name ] = toLuaval( val );
+                  if argNode.$expType == Ast.builtinTypeSymbol {
+                     macroArgValMap[ declArgNode.$name ] = toLuaval( val[ 1 ] );
+                  }
+                  else {
+                     macroArgValMap[ declArgNode.$name ] = toLuaval( val );
+                  }
                }
             }
+            else {
+               let errmess = "not support node at arg(%d) -- %s:%s"
+                   ( index, Nodes.getNodeKindName( argNode.$kind ), mess );
+               return errmess;
+            }
+         }
+      }
+
+      macroArgValMap[ "__var" ] = self.macroLocalVarMap;
+
+      // マクロの macro-statment を実行
+      let func = macroInfo.func;
+      let mut macroVars = unwrap expandLuavalMap( func( macroArgValMap ) );
+
+      // macroVars.__var に、 macro-statment 内で実行した結果が入ってくるので
+      // self.macroLocalVarMap に入れなおす。
+      self.macroLocalVarMap = unwrap macroVars.__var;
+
+      // macro-statment の実行結果から、
+      // symbol2ValueMapForMacro にシンボル名と値を紐付け。
+      // macroVars.__names には、 macro-statment で定義された変数シンボル名が入る。
+      // これは convLua の processDeclVar() でセットしている。
+      foreach name in (unwrap macroVars.__names)@@Map<int,str> {
+         let! valInfo = macroInfo.symbol2MacroValInfoMap[ name ] {
+            Util.err( "not found macro symbol -- %s" (name) );
+         };
+         let typeInfo = valInfo.typeInfo;
+         // macro-statment で定義する変数は、
+         // expandLuavalMap 時に Lua の Table が Map として展開されるので、
+         // List ではなく Map で登録してやる。
+         let mut valMap:&stem;
+         if! let mut val = macroVars[ name ] {
+            if equalsType( typeInfo, Ast.builtinTypeSymbol ) {
+               valMap = { 1: val };
+            } else {
+               valMap = val;
+            }
+         } else {
+            valMap = {};
+         }
+         self.symbol2ValueMapForMacro[ name ] =
+            new Nodes.MacroValInfo( valMap, typeInfo, nil );
+      }
+
+      foreach arg, index in macroInfo.getArgList() {
+         if arg.$typeInfo.$kind ~= .DDD {
+            let argType = arg.$typeInfo;
+            let argName = arg.$name;
+            self.symbol2ValueMapForMacro[ argName ] = new Nodes.MacroValInfo(
+               argValMap[ index ], argType, macroArgName2ArgNode[ argName ] );
          }
          else {
-            let errmess = "not support node at arg(%d) -- %s:%s"
-                ( index, Nodes.getNodeKindName( argNode.$kind ), mess );
-            return nil, errmess;
+            return "not support ... in macro";
          }
       }
+      return nil;
    }
 
-   
-   macroArgValMap[ "__var" ] = self.macroLocalVarMap;
-
-   // マクロの macro-statment を実行
-   let func = macroInfo.func;
-   let mut macroVars = unwrap expandLuavalMap( func( macroArgValMap ) );
-
-   // macroVars.__var に、 macro-statment 内で実行した結果が入ってくるので
-   // self.macroLocalVarMap に入れなおす。
-   self.macroLocalVarMap = unwrap macroVars.__var;
-
-   // macro-statment の実行結果から、
-   // symbol2ValueMapForMacro にシンボル名と値を紐付け。
-   // macroVars.__names には、 macro-statment で定義された変数シンボル名が入る。
-   // これは convLua の processDeclVar() でセットしている。
-   foreach name in (unwrap macroVars.__names)@@Map<int,str> {
-      let! valInfo = macroInfo.symbol2MacroValInfoMap[ name ] {
-         Util.err( "not found macro symbol -- %s" (name) );
-      };
-      let typeInfo = valInfo.typeInfo;
-      // macro-statment で定義する変数は、
-      // expandLuavalMap 時に Lua の Table が Map として展開されるので、
-      // List ではなく Map で登録してやる。
-      let mut valMap:&stem;
-      if! let mut val = macroVars[ name ] {
-         if equalsType( typeInfo, Ast.builtinTypeSymbol ) {
-            valMap = { 1: val };
-         } else {
-            valMap = val;
-         }
-      } else {
-         valMap = {};
-      }
-      self.symbol2ValueMapForMacro[ name ] =
-         new Nodes.MacroValInfo( valMap, typeInfo, nil );
+   __asyncLock {
+      process();
    }
-
-   //let scope = self.pushScope();
-
-
-   foreach arg, index in macroInfo.getArgList() {
-      if arg.$typeInfo.$kind ~= .DDD {
-         let argType = arg.$typeInfo;
-         let argName = arg.$name;
-         self.symbol2ValueMapForMacro[ argName ] = new Nodes.MacroValInfo(
-            argValMap[ index ], argType, macroArgName2ArgNode[ argName ] );
-      }
-      else {
-         return nil, "not support ... in macro";
-      }
-   }
-
-   // foreach macroValInfo, symbol in self.symbol2ValueMapForMacro {
-   //     Util.errorLog( "HOGE: %s %s" (symbol, macroValInfo) );
-   // }
-
 
    return new MacroParser(
       macroInfo.getTokenList(),
@@ -906,7 +906,7 @@ pub fn MacroCtrl.startDecl() mut {
    self.isDeclaringMacro = true;   
 }
 
-pub form EvalMacroCallback();
+pub form EvalMacroCallback() __trans;
 
 pub fn MacroCtrl.finishMacroMode() mut {
    self.macroAnalyzeInfoStack.remove(##);
@@ -958,14 +958,18 @@ pub fn MacroCtrl.isInAnalyzeArgMode(): bool {
 }
 
 
-pub fn nodeToCodeTxt(node:&Nodes.Node, moduleTypeInfo:&Ast.TypeInfo ) __noasync :str
+pub fn nodeToCodeTxt(node:&Nodes.Node, moduleTypeInfo:&Ast.TypeInfo ) :str
 {
-   let mut memStream = new Util.memStream();
-   let mut formatter = Formatter.createFilter( moduleTypeInfo, memStream );
+   let code;
+   __asyncLock {
+      let mut memStream = new Util.memStream();
+      let mut formatter = Formatter.createFilter( moduleTypeInfo, memStream );
 
-   node.processFilter( formatter, new Formatter.Opt( node ) );
-   
-   return memStream.$txt;
+      node.processFilter( formatter, new Formatter.Opt( node ) );
+      
+      code = memStream.$txt;
+   }
+   return code;
 }
 
 __test case1(ctrl) {

@@ -30,6 +30,17 @@ import lune.base.Code;
 import lune.base.Log;
 import lune.base.Types;
 
+
+/**
+ビルトインでないユーザが定義した型情報の ID 開始番号。
+
+import 等で、別モジュールを解析する際に、モジュール毎の開始番号として使用する。
+*/
+pub let builtinRootId = 0;
+let builtinStartId = 1;
+pub let userRootId = 1000;
+let userStartId = 1001;
+
 pub class IdProvider {
    let mut id:int;
    let maxId:int;
@@ -92,15 +103,26 @@ pub enum TypeInfoKind {
 
 let extStartId = 100000;
 let extMaxId = 10000000;
-/**
-ビルトインでないユーザが定義した型情報の ID 開始番号。
-
-import 等で、別モジュールを解析する際に、モジュール毎の開始番号として使用する。
-*/
-let userStartId = 1000;
 
 
 pub proto abstract class TypeInfo;
+
+pub interface ModuleInfoIF {
+   /** import したモジュールを assign したシンボル名 */
+   pub fn get_assignName():str;
+   /** import したモジュールのパス */
+   pub fn get_modulePath():str;
+}
+
+pub class SimpleModuleInfo extend (ModuleInfoIF) {
+   let assignName:str {pub};
+   let modulePath:str {pub};
+}
+
+pub interface ModuleInfoManager {
+   pub fn getModuleInfo( typeInfo:&TypeInfo ) : &ModuleInfoIF!;
+}
+pub proto class Scope extend(ModuleInfoManager);
 
 /**
 TypeInfo の付随した情報で、かつ mutable な情報。
@@ -130,6 +152,15 @@ pub class ProcessInfo {
    let validCheckingMutable:bool {pub};
    let id2TypeInfo:Map<int,&TypeInfo>;
    let validDetailError:bool {pub};
+   let mut topScope:Scope! {non,local};
+   let mut dummyParentType:TypeInfo! {non,local};
+
+   pub fn get_topScope() mut : Scope {
+      return unwrap self.topScope;
+   }
+   pub fn get_dummyParentType() mut : TypeInfo {
+      return unwrap self.dummyParentType;
+   }
 
    let mut miscTypeData:TypeData;
       
@@ -151,6 +182,8 @@ pub class ProcessInfo {
       validCheckingMutable:bool, idProvBase:IdProvider,
       validExtType:bool, validDetailError:bool, typeInfo2Map:TypeInfo2Map! )
    {
+      self.dummyParentType = nil;
+      self.topScope = nil;
       self.miscTypeData = new TypeData();
       self.validDetailError = validDetailError;
       self.id2TypeInfo = {};
@@ -167,17 +200,9 @@ pub class ProcessInfo {
    local static fn createRoot() : ProcessInfo
    {
       return new ProcessInfo(
-         true, new IdProvider( 0, userStartId ), true, false, nil );
+         true, new IdProvider( builtinStartId, userStartId ), true, false, nil );
    }
 
-   local static fn createUser(
-      validCheckingMutable:bool, validExtType:bool,
-      validDetailError:bool, typeInfo2Map:TypeInfo2Map! ) : ProcessInfo
-   {
-      return new ProcessInfo(
-         validCheckingMutable, new IdProvider( userStartId, extStartId ),
-         validExtType, validDetailError, typeInfo2Map );    
-   }
    
    pub fn switchIdProvier( idType:IdType ) mut {
       Log._log2( .Trace, "start" );
@@ -238,8 +263,10 @@ pub fn getRootProcessInfoRo() : &ProcessInfo {
 }
 
 local fn ProcessInfo.newIdForRoot() mut : IdInfo {
-   let id = self.idProv.getNewId();
-   return new IdInfo( id, self );
+   return new IdInfo( builtinRootId, self );
+}
+local fn ProcessInfo.newIdForSubRoot() mut : IdInfo {
+   return new IdInfo( userRootId, self );
 }
 local fn ProcessInfo.setRootTypeInfo( id:int, typeInfo:&TypeInfo ) mut {
    self.id2TypeInfo[ id ] = typeInfo;
@@ -253,26 +280,9 @@ local fn ProcessInfo.newId( typeInfo:&TypeInfo ) mut : IdInfo {
 
 
 pub let rootTypeIdInfo = rootProcessInfo.newIdForRoot();
-pub let rootTypeId = rootTypeIdInfo.id;
-
-
-pub interface ModuleInfoIF {
-   /** import したモジュールを assign したシンボル名 */
-   pub fn get_assignName():str;
-   /** import したモジュールのパス */
-   pub fn get_modulePath():str;
-}
-
-pub class SimpleModuleInfo extend (ModuleInfoIF) {
-   let assignName:str {pub};
-   let modulePath:str {pub};
-}
 
 
 /** 所定の TypeInfo が属するモジュールの ModuleInfoIF の問い合わせを行なう */
-pub interface ModuleInfoManager {
-   pub fn getModuleInfo( typeInfo:&TypeInfo ) : &ModuleInfoIF!;
-}
 
 pub class DummyModuleInfoManager extend (ModuleInfoManager) {
    pri static let instance:DummyModuleInfoManager {pub};
@@ -311,8 +321,6 @@ pub enum SymbolKind {
    /** マクロ */
    Mac,
 }
-
-pub proto class Scope extend(ModuleInfoManager);
 
 pub interface LowSymbol {
    /** このシンボルが属するスコープ */
@@ -391,7 +399,7 @@ pub fn isPubToExternal( mode:AccessMode ): bool {
    return false;
 }
 
-let mut txt2AccessModeMap:&Map<str,AccessMode> = {
+let txt2AccessModeMap:&Map<str,AccessMode> = {
    "none" : .None,
    "pub" : .Pub,
    "pro" : .Pro,
@@ -403,7 +411,7 @@ pub fn txt2AccessMode( accessMode:str ) : AccessMode! {
    return txt2AccessModeMap[ accessMode ];
 }
 
-let mut accessMode2txtMap:&Map<AccessMode,str> = {
+let accessMode2txtMap:&Map<AccessMode,str> = {
    .None:  "none",
    .Pub:  "pub",
    .Pro:  "pro",
@@ -695,6 +703,12 @@ pub class Scope extend (ModuleInfoManager) {
    }
 }
 
+// 最上位のスコープ
+let rootScope:Scope = new Scope( rootProcessInfo, nil, false, nil## );
+// rootScope の Immutable 版
+let rootScopeRo = rootScope;
+rootProcessInfo.set_topScope( rootScope );
+
 pub fn SymbolInfo.get_namespaceTypeInfo(): &TypeInfo {
    if! self.namespaceTypeInfo {
       return _exp;
@@ -704,10 +718,6 @@ pub fn SymbolInfo.get_namespaceTypeInfo(): &TypeInfo {
    return work;
 }
 
-// 最上位のスコープ
-pub let rootScope:Scope = new Scope( rootProcessInfo, nil, false, nil## );
-// rootScope の Immutable 版
-let rootScopeRo = rootScope;
 
 /**
 このスコープが、 scope の同じか内部のスコープか調べる。
@@ -715,8 +725,11 @@ let rootScopeRo = rootScope;
 @return bool: 同じか内部のスコープの場合 true。
 */
 pub fn Scope.isInnerOf( scope:&Scope ): bool {
+   if self == scope {
+      return true;
+   }
    let mut workScope = self;
-   while workScope ~= rootScopeRo {
+   while workScope.$parent ~= workScope {
       if workScope == scope {
          return true;
       }
@@ -909,7 +922,7 @@ pub abstract class TypeInfo {
    }
 
    /** この型情報を oStream にシリアライズする */
-   pub fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) __noasync {
+   pub fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
       return;
    }
 
@@ -965,6 +978,10 @@ pub abstract class TypeInfo {
    /** 名前空間の親 */
    pub abstract fn get_parentInfo(): &TypeInfo;
 
+   pub static fn hasParent(typeInfo:&TypeInfo): bool {
+      return typeInfo.$parentInfo ~= typeInfo;
+   }
+   
    /**
    この型情報に、 other から辿ることができるか？
    具体的には other の名前空間の上位に、この型情報が宣言されているか？
@@ -1031,7 +1048,7 @@ static な型か。
    local abstract fn get_nilableTypeInfoMut() mut: TypeInfo;
    
    /** 子リスト取得 */
-   pub fn get_children() __noasync : &List<&TypeInfo> {
+   pub fn get_children() : &List<&TypeInfo> {
       return self.typeData.$children;
    }
    /** mutable かどうか */
@@ -1237,11 +1254,12 @@ pub class RootTypeInfo extend TypeInfo {
    pri let typeId:&IdInfo {pub};
 
 
-   pub fn __init() __noasync {
-      super( rootScope, rootProcessInfo );
+   pri fn __init( processInfo:ProcessInfo, rootId:&IdInfo ) {
+      super( processInfo.$topScope, processInfo );
 
-      //self.typeId = rootProcessInfo.$idProv.$id;
-      self.typeId = rootTypeIdInfo;
+      self.typeId = rootId;
+
+      processInfo.set_dummyParentType( self );
    }
    /** super クラス。 継承していない場合は headTypeInfo。 */
    pub override fn get_baseTypeInfo(): &TypeInfo {
@@ -1261,8 +1279,8 @@ pub class RootTypeInfo extend TypeInfo {
       return self;
    }
 
-   local static fn create() __noasync : RootTypeInfo {
-      return new RootTypeInfo();
+   local static fn create( processInfo:ProcessInfo, rootId:&IdInfo ) : RootTypeInfo {
+      return new RootTypeInfo( processInfo, rootId );
    }
 
    pub override fn get_rawTxt(): str {
@@ -1277,9 +1295,25 @@ pub class RootTypeInfo extend TypeInfo {
 }
 
 /** TypeInfo の head。 */
-let headTypeInfoMut:TypeInfo = RootTypeInfo.create();
+let headTypeInfoMut:TypeInfo = RootTypeInfo.create( rootProcessInfo, rootTypeIdInfo );
 pub let headTypeInfo:&TypeInfo = headTypeInfoMut;
-rootProcessInfo.setRootTypeInfo( rootTypeId, headTypeInfo );
+rootProcessInfo.setRootTypeInfo( headTypeInfo.$typeId.id, headTypeInfo );
+
+
+local static fn ProcessInfo.createUser(
+   validCheckingMutable:bool, validExtType:bool,
+   validDetailError:bool, typeInfo2Map:TypeInfo2Map! ) : ProcessInfo
+{
+   let mut processInfo = new ProcessInfo(
+      validCheckingMutable, new IdProvider( userStartId, extStartId ),
+      validExtType, validDetailError, typeInfo2Map );
+   let mut scope = new Scope( processInfo, nil, false, nil## );
+   processInfo.set_topScope( scope );
+   let topType = RootTypeInfo.create( processInfo, processInfo.newIdForSubRoot());
+   scope.set_ownerTypeInfo( topType );
+      
+   return processInfo;
+}
 
 
 //pub let headTypeInfo:TypeInfo = new TypeInfo( rootScope, rootProcessInfo );
@@ -1293,7 +1327,6 @@ pub fn TypeInfo.hasBase(): bool {
 
 
 pub fn Scope.getNamespaceTypeInfo() : &TypeInfo {
-   let typeInfo = headTypeInfo;
    let mut scope = self;
    repeat {
       if! scope.$ownerTypeInfo {
@@ -1301,7 +1334,8 @@ pub fn Scope.getNamespaceTypeInfo() : &TypeInfo {
       }
       scope = scope.$parent;
    } scope.isRoot();
-   return typeInfo;
+   return unwrap scope.$ownerTypeInfo;
+   // return headTypeInfo;
 }
 
 pub fn Scope.getModule() : &TypeInfo {
@@ -1481,7 +1515,7 @@ pub class ModifierTypeInfo extend TypeInfo {
       return self.get_display_stirng_with( self.$rawTxt, nil );
    }
 
-   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) __noasync {
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
       stream.write(
          '{ skind = %d, typeId = %d, srcTypeId = %s, mutMode = %d }\n' (
             SerializeKind.Modifier, self.typeId.id,
@@ -1771,7 +1805,7 @@ pub class CanEvalCtrlTypeInfo extend TypeInfo {
    pub static let needAutoBoxing:CanEvalCtrlTypeInfo;
    pub static let checkTypeTarget:CanEvalCtrlTypeInfo;
 
-   pub fn __init() __noasync {
+   pri fn __init() __noasync {
       super( nil, rootProcessInfo );
    }
    __init {
@@ -1935,7 +1969,7 @@ pub class NilableTypeInfo extend TypeInfo {
       return self.get_display_stirng_with( self.$rawTxt, nil );
    }
 
-   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) __noasync {
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
       stream.write(
          '{ skind = %d, typeId = %d, orgTypeId = %s }\n' (
             SerializeKind.Nilable, self.typeId.id,
@@ -2043,7 +2077,7 @@ pub class AliasTypeInfo extend TypeInfo {
       return self.getTxtWithRaw( self.rawTxt, typeNameCtrl, importInfo, localFlag );
    }
 
-   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) __noasync{
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
       let parentId = self.getParentId();
       stream.write(
          '{ skind = %d, parentId = %d, typeId = %d, rawTxt = %q, srcTypeId = %s }\n' (
@@ -2315,6 +2349,9 @@ pub fn Scope.getSymbolInfo(
       if self.parent ~= self {
          return self.parent.getSymbolInfo(
             name, fromScope, onlySameNsFlag, access );
+      } elseif self ~= rootScopeRo {
+         return rootScopeRo.getSymbolInfo(
+            name, fromScope, onlySameNsFlag, access );
       }
    }
    else {
@@ -2327,6 +2364,9 @@ pub fn Scope.getSymbolInfo(
                name, fromScope, onlySameNsFlag, access );
          }
          workScope = workScope.parent;
+      }
+      if workScope ~= rootScopeRo {
+         return rootScopeRo.getSymbolInfo( name, fromScope, onlySameNsFlag, access );
       }
    }
    if! sym2builtInTypeMap[ name ] {
@@ -2405,8 +2445,10 @@ pub fn Scope.getSymbolTypeInfo(
          }
       }
    }
-   if self.parent ~= self {
+    if self.parent ~= self {
       return self.parent.getSymbolTypeInfo( name, fromScope, moduleScope, access );
+   } elseif self ~= rootScopeRo {
+      return rootScopeRo.getSymbolTypeInfo( name, fromScope, moduleScope, access );
    }
    return sym2builtInTypeMap[ name ];
 }
@@ -2430,6 +2472,8 @@ pub fn Scope.filterSymbolTypeInfo(
 
    if self.parent ~= self {
       self.parent.filterSymbolTypeInfo( fromScope, moduleScope, access, callback );
+   } elseif self ~= rootScopeRo {
+      rootScopeRo.filterSymbolTypeInfo( fromScope, moduleScope, access, callback );
    }
 }
 
@@ -2976,7 +3020,7 @@ pub override fn NormalSymbolInfo.canAccess(
          // if isBuiltin( self.$typeInfo.$typeId.id ) or 
          //    self.getModule().equals( processInfo, fromScope.getModule() ## )
          let selfMod = self.getModule();
-         if selfMod == headTypeInfo or
+         if not TypeInfo.hasParent( selfMod ) or
             selfMod.equals( processInfo, fromScope.getModule() ## )
          {
             return self;
@@ -3379,7 +3423,7 @@ pub class AlternateTypeInfo extend TypeInfo {
    //    return "";
    // }
 
-   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) __noasync{
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
       let parentId = self.getParentId();
       stream.write(
          '{ skind = %d, parentId = %d, typeId = %d, txt = %q, '
@@ -3479,7 +3523,7 @@ pub class BoxTypeInfo extend TypeInfo {
       return "Nilable<%s>" (self.boxingType.get_display_stirng_with( raw, alt2type ) );
    }
 
-   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) __noasync{
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
       stream.write(
          '{ skind = %d, typeId = %d, accessMode = %d, boxingType = %d }\n' (
             SerializeKind.Box, self.typeId.id,
@@ -3740,7 +3784,7 @@ pub class GenericTypeInfo extend TypeInfo {
       return true;
    }
 
-   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) __noasync{
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
       stream.write(
          '{ skind = %d, typeId = %d, genSrcTypeId = %s, genTypeList = {' (
             SerializeKind.Generic, self.typeId.id,
@@ -3886,7 +3930,7 @@ pub class ModuleTypeInfo extend TypeInfo {
    }
 
    pub override fn serialize(
-      stream: oStream, serializeInfo: &SerializeInfo ) __noasync
+      stream: oStream, serializeInfo: &SerializeInfo ) 
    {
       let txt = "{ skind = %d, parentId = %d, typeId = %d, txt = '%s', "
           ( SerializeKind.Module,
@@ -3959,7 +4003,7 @@ pub class EnumTypeInfo extend TypeInfo {
       self.externalFlag = externalFlag;
       self.accessMode = accessMode;
       self.rawTxt = txt;
-      self.parentInfo = unwrap parentInfo default headTypeInfo;
+      self.parentInfo = unwrap parentInfo default processInfo.$dummyParentType;
       self.typeId = processInfo.newId( self );
       self.name2EnumValInfo = {};
       self.valTypeInfo = valTypeInfo;
@@ -4162,7 +4206,7 @@ pub class AlgeValInfo {
    pri let algeTpye:&AlgeTypeInfo {pub};
    pri let symbolInfo:&SymbolInfo {pub};
 
-   pub fn serialize( stream: oStream, serializeInfo:&SerializeInfo ) __noasync{
+   pub fn serialize( stream: oStream, serializeInfo:&SerializeInfo ) {
       stream.write( "{ name = '%s', typeList = {" (self.name) );
       foreach typeInfo, index in self.typeList {
          if index > 1 {
@@ -4491,8 +4535,8 @@ pub class NormalTypeInfo extend TypeInfo {
    }
 
 
-   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) __noasync{
-      if self.typeId.id == rootTypeId {
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
+      if self.typeId.id == userRootId {
          return;
       }
 
@@ -4684,11 +4728,12 @@ addBuiltinMut( headTypeInfoMut, rootScope );
 
 pub static fn TypeInfo.getBuiltinInfo( typeInfo:&TypeInfo ) __noasync : BuiltinTypeInfo {
    if typeInfo.$typeId.$processInfo ~= rootProcessInfoRo {
-      Util.err( "not found builtinMut, mismatch processInfo-- %s"
-                (typeInfo.getTxt(##) ) );
+      Util.err( "not found builtinMut, mismatch processInfo-- %s (%d)"
+                (typeInfo.getTxt(##), typeInfo.$typeId.id ) );
    }
    let! mut info = builtInTypeIdSetWork[ typeInfo.$typeId.id ] {
-      Util.err( "not found builtinMut -- %s" (typeInfo.getTxt(##) ) );
+      Util.err( "not found builtinMut -- %s( %d)"
+                (typeInfo.getTxt(##), typeInfo.$typeId.id ) );
    };
    return info;
 }
@@ -4697,7 +4742,8 @@ pub static fn TypeInfo.getBuiltinInfo( typeInfo:&TypeInfo ) __noasync : BuiltinT
 pub fn getBuiltinMut( typeInfo:&TypeInfo ) __noasync : TypeInfo {
    let mut info = TypeInfo.getBuiltinInfo( typeInfo );
    let! mut typeInfoMut = info.$typeInfoMut {
-      Util.err( "typeInfoMut is nil -- %s" (typeInfo.getTxt(##) ) );
+      Util.err( "typeInfoMut is nil -- %s (%d)"
+                (typeInfo.getTxt(##), typeInfo.$typeId.id ) );
    };
    return typeInfoMut;
 }
@@ -5020,7 +5066,7 @@ pub static fn AlternateTypeInfo.getAssign(
 
 
 
-pub fn isStruct( typeInfo:&TypeInfo ) __noasync : bool {
+pub fn isStruct( typeInfo:&TypeInfo ) : bool {
    switch typeInfo.$kind {
       case .Class {
          if typeInfo == builtinTypeString {
@@ -5114,7 +5160,7 @@ pub fn ProcessInfo.createSet(
       return new NormalTypeInfo(
          self, false, nil, builtinTypeSet,
          nil, false, false, false, AccessMode.Pub,
-         "Set", headTypeInfo, self.miscTypeData, .Set, itemTypeInfo,
+         "Set", self.$dummyParentType, self.miscTypeData, .Set, itemTypeInfo,
          nil, nil, workMutMode, nil, .Async ); } );
 }
 
@@ -5127,7 +5173,7 @@ pub fn ProcessInfo.createList(
       return new NormalTypeInfo(
          self, false, nil, builtinTypeList,
          nil, false, false, false, AccessMode.Pub,
-         "List", headTypeInfo, self.miscTypeData, .List, itemTypeInfo,
+         "List", self.$dummyParentType, self.miscTypeData, .List, itemTypeInfo,
          nil, nil, workMutMode, nil, .Async ); } );
 }
 
@@ -5140,7 +5186,7 @@ pub fn ProcessInfo.createArray(
       return new NormalTypeInfo(
          self, false, nil, builtinTypeArray,
          nil, false, false, false, AccessMode.Pub,
-         "Array", headTypeInfo, self.miscTypeData, .Array, itemTypeInfo,
+         "Array", self.$dummyParentType, self.miscTypeData, .Array, itemTypeInfo,
          nil, nil, workMutMode, nil, .Async ); } );
 }
 
@@ -5153,7 +5199,7 @@ pub fn ProcessInfo.createMap(
       return new NormalTypeInfo(
          self, false, nil, builtinTypeMap,
          nil, false, false, false, AccessMode.Pub,
-         "Map", headTypeInfo, self.miscTypeData, .Map,
+         "Map", self.$dummyParentType, self.miscTypeData, .Map,
          [ keyTypeInfo, valTypeInfo ], nil, nil, workMutMode, nil, .Async );
    });
 }
@@ -5422,7 +5468,7 @@ pub class DDDTypeInfo extend TypeInfo {
       return self.typeInfo.canEvalWith( processInfo, other, canEvalType, alt2type )**;
    }
 
-   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) __noasync{
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
       stream.write(
          '{ skind=%d, typeId = %d, itemTypeId = %s, parentId = %d, extTypeFlag = %s }\n'
          ( SerializeKind.DDD, self.typeId.id,
@@ -6008,7 +6054,7 @@ pub class AbbrTypeInfo extend TypeInfo {
       return false, nil;
    }
 
-   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) __noasync{
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
       Util.err( "illegal call" );
    }
 
@@ -6124,7 +6170,7 @@ pub class ExtTypeInfo extend TypeInfo {
       // return self.extedType.canEvalWith( other, canEvalType, alt2type )**;
    }
 
-   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) __noasync{
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
       stream.write(
          '{ skind = %d, typeId = %d, extedTypeId = %s }\n' (
             SerializeKind.Ext, self.typeId.id,
@@ -6302,7 +6348,7 @@ pub class AndExpTypeInfo extend TypeInfo {
 }
 
 
-let mut numberTypeSet:&Set<&TypeInfo> =
+let numberTypeSet:&Set<&TypeInfo> =
     (@
       builtinTypeInt,                          
       builtinTypeChar,                         
@@ -6354,7 +6400,7 @@ pub fn ProcessInfo.createEnum(
 }
 
 pub override fn EnumTypeInfo.serialize(
-   stream: oStream, serializeInfo: &SerializeInfo ) __noasync
+   stream: oStream, serializeInfo: &SerializeInfo ) 
 {
    let txt = ```{ skind = %d, parentId = %d, typeId = %d, txt = '%s',
 accessMode = %d, kind = %d, valTypeId = %d, ```
@@ -6407,7 +6453,7 @@ pub fn ProcessInfo.createAlge(
 }
 
 pub override fn AlgeTypeInfo.serialize(
-   stream: oStream, serializeInfo: &SerializeInfo ) __noasync
+   stream: oStream, serializeInfo: &SerializeInfo ) 
 {
    let txt = ```{ skind = %d, parentId = %d, typeId = %d, txt = '%s',
 accessMode = %d, kind = %d, ```

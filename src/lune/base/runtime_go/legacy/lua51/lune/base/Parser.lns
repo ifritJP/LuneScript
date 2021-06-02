@@ -500,6 +500,34 @@ pub fn quoteStr( txt:str ) : str {
    return work;
 }
 
+pub alge ParserSrc {
+   LnsCode( code:str, path:str ),
+   LnsPath( path:str, moduleName:str ),
+   Parser( path: str, luaMode: bool, moduleName:str ),
+}
+
+pub fn createParserFrom( src:&ParserSrc ) : Parser {
+   _match src {
+      case .LnsCode( txt, path ) {
+         let mut stream = new TxtStream( txt );
+         let mut parser = new StreamParser( stream, path, false, nil );
+         return parser;
+      }
+      case .LnsPath( path, mod ) {
+         let! mut parser = StreamParser.create( path, false, mod ) {
+            error( "failed to open -- %s" (path) );
+         };
+         return parser;
+      }
+      case .Parser( path, luaMode, mod ) {
+         let! mut parser = StreamParser.create( path, luaMode, mod ) {
+            error( "failed to open -- %s" (path) );
+         };
+         return parser;
+      }
+   }
+}
+
 
 __test case1(ctrl) {
    {

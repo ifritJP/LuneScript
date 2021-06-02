@@ -698,85 +698,97 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
    
    
    local macroInfo = _lune.unwrap( self.typeId2MacroInfo[macroTypeInfo:get_typeId()])
-   local argValMap = {}
-   local macroArgValMap = {}
-   local macroArgNodeList = macroInfo:getArgList(  )
-   local macroArgName2ArgNode = {}
-   if expList ~= nil then
-      for index, argNode in ipairs( expList:get_expList() ) do
-         local declArgNode = macroArgNodeList[index]
-         macroArgName2ArgNode[declArgNode:get_name()] = argNode
-         local literal, mess = argNode:getLiteral(  )
-         if literal ~= nil then
-            do
-               local val = getLiteralMacroVal( literal )
-               if val ~= nil then
-                  argValMap[index] = val
-                  
-                  if argNode:get_expType() == Ast.builtinTypeSymbol then
-                     macroArgValMap[declArgNode:get_name()] = _moduleObj.toLuaval( val[1] )
-                  else
-                   
-                     macroArgValMap[declArgNode:get_name()] = _moduleObj.toLuaval( val )
+   
+   local function process(  )
+   
+      local argValMap = {}
+      local macroArgValMap = {}
+      local macroArgNodeList = macroInfo:getArgList(  )
+      local macroArgName2ArgNode = {}
+      if expList ~= nil then
+         for index, argNode in ipairs( expList:get_expList() ) do
+            local declArgNode = macroArgNodeList[index]
+            macroArgName2ArgNode[declArgNode:get_name()] = argNode
+            local literal, mess = argNode:getLiteral(  )
+            if literal ~= nil then
+               do
+                  local val = getLiteralMacroVal( literal )
+                  if val ~= nil then
+                     argValMap[index] = val
+                     
+                     if argNode:get_expType() == Ast.builtinTypeSymbol then
+                        macroArgValMap[declArgNode:get_name()] = _moduleObj.toLuaval( val[1] )
+                     else
+                      
+                        macroArgValMap[declArgNode:get_name()] = _moduleObj.toLuaval( val )
+                     end
+                     
                   end
-                  
                end
+               
+            else
+               local errmess = string.format( "not support node at arg(%d) -- %s:%s", index, Nodes.getNodeKindName( argNode:get_kind() ), mess)
+               return errmess
             end
             
-         else
-            local errmess = string.format( "not support node at arg(%d) -- %s:%s", index, Nodes.getNodeKindName( argNode:get_kind() ), mess)
-            return nil, errmess
          end
          
       end
       
-   end
-   
-   
-   macroArgValMap["__var"] = self.macroLocalVarMap
-   local func = macroInfo.func
-   local macroVars = _lune.unwrap( (func( macroArgValMap ) ))
-   self.macroLocalVarMap = _lune.unwrap( macroVars['__var'])
-   for __index, name in pairs( (_lune.unwrap( macroVars['__names']) ) ) do
-      local valInfo = macroInfo.symbol2MacroValInfoMap[name]
-      if  nil == valInfo then
-         local _valInfo = valInfo
       
-         Util.err( string.format( "not found macro symbol -- %s", name) )
-      end
-      
-      local typeInfo = valInfo.typeInfo
-      local valMap
-      
-      do
-         local val = macroVars[name]
-         if val ~= nil then
-            if equalsType( typeInfo, Ast.builtinTypeSymbol ) then
-               valMap = {[1] = val}
-            else
-             
-               valMap = val
-            end
-            
-         else
-            valMap = {}
+      macroArgValMap["__var"] = self.macroLocalVarMap
+      local func = macroInfo.func
+      local macroVars = _lune.unwrap( (func( macroArgValMap ) ))
+      self.macroLocalVarMap = _lune.unwrap( macroVars['__var'])
+      for __index, name in pairs( (_lune.unwrap( macroVars['__names']) ) ) do
+         local valInfo = macroInfo.symbol2MacroValInfoMap[name]
+         if  nil == valInfo then
+            local _valInfo = valInfo
+         
+            Util.err( string.format( "not found macro symbol -- %s", name) )
          end
+         
+         local typeInfo = valInfo.typeInfo
+         local valMap
+         
+         do
+            local val = macroVars[name]
+            if val ~= nil then
+               if equalsType( typeInfo, Ast.builtinTypeSymbol ) then
+                  valMap = {[1] = val}
+               else
+                
+                  valMap = val
+               end
+               
+            else
+               valMap = {}
+            end
+         end
+         
+         self.symbol2ValueMapForMacro[name] = Nodes.MacroValInfo.new(valMap, typeInfo, nil)
       end
       
-      self.symbol2ValueMapForMacro[name] = Nodes.MacroValInfo.new(valMap, typeInfo, nil)
+      
+      for index, arg in ipairs( macroInfo:getArgList(  ) ) do
+         if arg:get_typeInfo():get_kind() ~= Ast.TypeInfoKind.DDD then
+            local argType = arg:get_typeInfo()
+            local argName = arg:get_name()
+            self.symbol2ValueMapForMacro[argName] = Nodes.MacroValInfo.new(argValMap[index], argType, macroArgName2ArgNode[argName])
+         else
+          
+            return "not support ... in macro"
+         end
+         
+      end
+      
+      return nil
    end
    
-   for index, arg in ipairs( macroInfo:getArgList(  ) ) do
-      if arg:get_typeInfo():get_kind() ~= Ast.TypeInfoKind.DDD then
-         local argType = arg:get_typeInfo()
-         local argName = arg:get_name()
-         self.symbol2ValueMapForMacro[argName] = Nodes.MacroValInfo.new(argValMap[index], argType, macroArgName2ArgNode[argName])
-      else
-       
-         return nil, "not support ... in macro"
-      end
-      
+   do
+      process(  )
    end
+   
    
    return MacroParser.new(macroInfo:getTokenList(  ), string.format( "%s:%d:%d: (macro %s)", streamName, firstToken.pos.lineNo, firstToken.pos.column, macroTypeInfo:getTxt(  )), firstToken.pos:get_orgPos()), nil
 end
@@ -1270,12 +1282,18 @@ end
 
 local function nodeToCodeTxt( node, moduleTypeInfo )
 
-   local memStream = Util.memStream.new()
-   local formatter = Formatter.createFilter( moduleTypeInfo, memStream )
+   local code
    
-   node:processFilter( formatter, Formatter.Opt.new(node) )
+   do
+      local memStream = Util.memStream.new()
+      local formatter = Formatter.createFilter( moduleTypeInfo, memStream )
+      
+      node:processFilter( formatter, Formatter.Opt.new(node) )
+      
+      code = memStream:get_txt()
+   end
    
-   return memStream:get_txt()
+   return code
 end
 _moduleObj.nodeToCodeTxt = nodeToCodeTxt
 

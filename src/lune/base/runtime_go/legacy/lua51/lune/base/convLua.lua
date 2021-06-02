@@ -638,7 +638,7 @@ function ConvFilter:outputMeta( node )
    local typeId2TypeInfo = {}
    do
       local work = node:get_moduleTypeInfo()
-      while work:get_parentInfo() ~= work do
+      while Ast.TypeInfo.hasParent( work ) do
          typeId2TypeInfo[work:get_typeId()] = work
          work = work:get_parentInfo()
       end
@@ -795,7 +795,7 @@ function ConvFilter:outputMeta( node )
    
    do
       local typeInfo = self.moduleTypeInfo
-      while typeInfo ~= Ast.headTypeInfo do
+      while Ast.TypeInfo.hasParent( typeInfo ) do
          validChildrenSet[typeInfo:get_parentInfo()] = {[typeInfo:get_typeId()] = typeInfo}
          typeInfo = typeInfo:get_parentInfo()
       end
@@ -1093,7 +1093,7 @@ function ConvFilter:outputMeta( node )
    local function outputDepend( typeInfo, moduleTypeInfo )
    
       local typeId = typeInfo:get_typeId()
-      if self.processInfo == typeId:get_processInfo() or moduleTypeInfo == Ast.headTypeInfo then
+      if self.processInfo == typeId:get_processInfo() or not Ast.TypeInfo.hasParent( moduleTypeInfo ) then
          return ExportIdKind.Normal
       end
       
@@ -1110,9 +1110,14 @@ function ConvFilter:outputMeta( node )
    end
    
    local wroteTypeIdSet = {}
+   
    local function outputTypeInfo( typeInfo )
    
       if Ast.isBuiltin( typeInfo:get_typeId().id ) then
+         return 
+      end
+      
+      if not Ast.TypeInfo.hasParent( typeInfo ) then
          return 
       end
       
@@ -1295,7 +1300,7 @@ function ConvFilter:outputMeta( node )
    
    self:write( "_moduleObj.__moduleHierarchy = {" )
    local workType = node:get_moduleTypeInfo()
-   while workType ~= Ast.headTypeInfo do
+   while Ast.TypeInfo.hasParent( workType ) do
       self:write( string.format( "%d,", workType:get_typeId().id) )
       workType = workType:get_parentInfo()
    end
@@ -1441,6 +1446,7 @@ end]==], luneSymbol, luneSymbol) )
    end
    
    
+   self:outputMeta( node )
 end
 
 
@@ -1557,7 +1563,7 @@ function ConvFilter:processDeclEnum( node, opt )
    local typeInfo = _lune.unwrap( _lune.__Cast( node:get_expType():get_aliasSrc(), 3, Ast.EnumTypeInfo ))
    local parentInfo = typeInfo:get_parentInfo()
    local isTopNS = true
-   if parentInfo ~= Ast.headTypeInfo and parentInfo:get_kind() == Ast.TypeInfoKind.Class then
+   if Ast.TypeInfo.hasParent( typeInfo ) and parentInfo:get_kind() == Ast.TypeInfoKind.Class then
       enumFullName = string.format( "%s.%s", self:getFullName( parentInfo ), enumFullName)
       access = ""
       isTopNS = false
@@ -1723,7 +1729,7 @@ function ConvFilter:processDeclAlge( node, opt )
    local typeInfo = _lune.unwrap( _lune.__Cast( node:get_expType(), 3, Ast.AlgeTypeInfo ))
    local parentInfo = typeInfo:get_parentInfo()
    local isTopNS = true
-   if parentInfo ~= Ast.headTypeInfo and parentInfo:get_kind() == Ast.TypeInfoKind.Class then
+   if Ast.TypeInfo.hasParent( typeInfo ) and parentInfo:get_kind() == Ast.TypeInfoKind.Class then
       algeFullName = string.format( "%s.%s", self:getFullName( parentInfo ), algeFullName)
       access = ""
       isTopNS = false
@@ -1822,7 +1828,7 @@ end
 function ConvFilter:getDestrClass( classTypeInfo )
 
    local typeInfo = classTypeInfo
-   while not typeInfo:equals( self.processInfo, Ast.headTypeInfo ) do
+   while typeInfo ~= Ast.headTypeInfo do
       local scope = _lune.unwrap( typeInfo:get_scope())
       if scope:getTypeInfoChild( "__free" ) then
          return typeInfo
@@ -2027,7 +2033,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _768 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _769 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -4232,13 +4238,7 @@ local FilterInfo = {}
 _moduleObj.FilterInfo = FilterInfo
 function FilterInfo:outputLuaAndMeta( node )
 
-   do
-      local convFilter = _lune.__Cast( self.filter, 3, ConvFilter )
-      if convFilter ~= nil then
-         node:processFilter( self.filter, Opt.new(node) )
-         convFilter:outputMeta( node )
-      end
-   end
+   node:processFilter( self.filter, Opt.new(node) )
    
 end
 function FilterInfo:outputLua( node )
@@ -4247,12 +4247,6 @@ function FilterInfo:outputLua( node )
 end
 function FilterInfo:outputMeta( node )
 
-   do
-      local convFilter = _lune.__Cast( self.filter, 3, ConvFilter )
-      if convFilter ~= nil then
-         convFilter:outputMeta( node )
-      end
-   end
    
 end
 function FilterInfo.setmeta( obj )
@@ -4305,7 +4299,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3623, function (  )
+   Log.log( Log.Level.Trace, __func__, 3627, function (  )
    
       return string.format( "macro: %s", code)
    end )

@@ -133,16 +133,16 @@ function TransUnit:get_scope(  )
 
    return self.scope
 end
-function TransUnit.new( ctrl_info )
+function TransUnit.new( ctrl_info, processInfo )
    local obj = {}
    TransUnit.setmeta( obj )
-   if obj.__init then obj:__init( ctrl_info ); end
+   if obj.__init then obj:__init( ctrl_info, processInfo ); end
    return obj
 end
-function TransUnit:__init(ctrl_info) 
+function TransUnit:__init(ctrl_info, processInfo) 
    self.namespace2Scope = {}
-   self.processInfo = Ast.createProcessInfo( ctrl_info.validCheckingMutable, ctrl_info.validLuaval, ctrl_info.validAstDetailError )
-   self.scope = Ast.rootScope
+   self.processInfo = processInfo
+   self.scope = processInfo:get_topScope()
 end
 function TransUnit:getLatestPos(  )
 
@@ -206,7 +206,7 @@ function TransUnit:pushModuleLow( processInfo, externalFlag, name, mutable )
          self.namespace2Scope[typeInfo] = scope
          Ast.addBuiltinMut( newType, scope )
          
-         local _79, existSym = parentScope:addClass( processInfo, modName, nil, typeInfo )
+         local _80, existSym = parentScope:addClass( processInfo, modName, nil, typeInfo )
          if existSym ~= nil then
             self:error( string.format( "module symbols exist -- %s.%s -- %s.%s", existSym:get_namespaceTypeInfo():getTxt(  ), existSym:get_name(), parentInfo:getTxt(  ), modName) )
          end

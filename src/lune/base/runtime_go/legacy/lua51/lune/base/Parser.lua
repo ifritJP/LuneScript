@@ -5,6 +5,43 @@ local _lune = {}
 if _lune3 then
    _lune = _lune3
 end
+function _lune.newAlge( kind, vals )
+   local memInfoList = kind[ 2 ]
+   if not memInfoList then
+      return kind
+   end
+   return { kind[ 1 ], vals }
+end
+
+function _lune._fromList( obj, list, memInfoList )
+   if type( list ) ~= "table" then
+      return false
+   end
+   for index, memInfo in ipairs( memInfoList ) do
+      local val, key = memInfo.func( list[ index ], memInfo.child )
+      if val == nil and not memInfo.nilable then
+         return false, key and string.format( "%s[%s]", memInfo.name, key) or memInfo.name
+      end
+      obj[ index ] = val
+   end
+   return true
+end
+function _lune._AlgeFrom( Alge, val )
+   local work = Alge._name2Val[ val[ 1 ] ]
+   if not work then
+      return nil
+   end
+   if #work == 1 then
+     return work
+   end
+   local paramList = {}
+   local result, mess = _lune._fromList( paramList, val[ 2 ], work[ 2 ] )
+   if not result then
+      return nil, mess
+   end
+   return { work[ 1 ], paramList }
+end
+
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
       setObj[ val ] = true
@@ -746,6 +783,71 @@ local function quoteStr( txt )
    return work
 end
 _moduleObj.quoteStr = quoteStr
+
+local ParserSrc = {}
+ParserSrc._name2Val = {}
+_moduleObj.ParserSrc = ParserSrc
+function ParserSrc:_getTxt( val )
+   local name = val[ 1 ]
+   if name then
+      return string.format( "ParserSrc.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+
+function ParserSrc._from( val )
+   return _lune._AlgeFrom( ParserSrc, val )
+end
+
+ParserSrc.LnsCode = { "LnsCode", {{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toStr, nilable=false, child={} }}}
+ParserSrc._name2Val["LnsCode"] = ParserSrc.LnsCode
+ParserSrc.LnsPath = { "LnsPath", {{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toStr, nilable=false, child={} }}}
+ParserSrc._name2Val["LnsPath"] = ParserSrc.LnsPath
+ParserSrc.Parser = { "Parser", {{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toBool, nilable=false, child={} },{ func=_lune._toStr, nilable=false, child={} }}}
+ParserSrc._name2Val["Parser"] = ParserSrc.Parser
+
+
+local function createParserFrom( src )
+
+   do
+      local _matchExp = src
+      if _matchExp[1] == ParserSrc.LnsCode[1] then
+         local txt = _matchExp[2][1]
+         local path = _matchExp[2][2]
+      
+         local stream = TxtStream.new(txt)
+         local parser = StreamParser.new(stream, path, false, nil)
+         return parser
+      elseif _matchExp[1] == ParserSrc.LnsPath[1] then
+         local path = _matchExp[2][1]
+         local mod = _matchExp[2][2]
+      
+         local parser = StreamParser.create( path, false, mod )
+         if  nil == parser then
+            local _parser = parser
+         
+            error( string.format( "failed to open -- %s", path) )
+         end
+         
+         return parser
+      elseif _matchExp[1] == ParserSrc.Parser[1] then
+         local path = _matchExp[2][1]
+         local luaMode = _matchExp[2][2]
+         local mod = _matchExp[2][3]
+      
+         local parser = StreamParser.create( path, luaMode, mod )
+         if  nil == parser then
+            local _parser = parser
+         
+            error( string.format( "failed to open -- %s", path) )
+         end
+         
+         return parser
+      end
+   end
+   
+end
+_moduleObj.createParserFrom = createParserFrom
 
 
 

@@ -322,7 +322,7 @@ enum ExportIdKind {
 
 @param node RootNode
 */
-fn ConvFilter.outputMeta( node: &Nodes.RootNode ) __noasync mut
+fn ConvFilter.outputMeta( node: &Nodes.RootNode ) mut
 {
    if self.convMode == .Convert {
       return;
@@ -393,7 +393,7 @@ fn ConvFilter.outputMeta( node: &Nodes.RootNode ) __noasync mut
    let mut typeId2TypeInfo: Map<&Ast.IdInfo,&Ast.TypeInfo> = {};
    {
       let mut work = node.$moduleTypeInfo;
-      while work.$parentInfo ~= work {
+      while Ast.TypeInfo.hasParent( work ) {
          typeId2TypeInfo[ work.$typeId ] = work;
          work = work.$parentInfo;
       }
@@ -420,7 +420,7 @@ fn ConvFilter.outputMeta( node: &Nodes.RootNode ) __noasync mut
    
    // 公開される型情報を typeId2TypeInfo にピックアップする
    fn pickupTypeId(
-      typeInfo: &Ast.TypeInfo, forceFlag: bool!, pickupChildFlag: bool! ) __noasync
+      typeInfo: &Ast.TypeInfo, forceFlag: bool!, pickupChildFlag: bool! ) __trans
    {
 
       if typeInfo.$typeId == Ast.rootTypeIdInfo {
@@ -540,7 +540,7 @@ fn ConvFilter.outputMeta( node: &Nodes.RootNode ) __noasync mut
 
    {
       let mut typeInfo = self.moduleTypeInfo;
-      while typeInfo ~= Ast.headTypeInfo {
+      while Ast.TypeInfo.hasParent( typeInfo ) {
          validChildrenSet[ typeInfo.$parentInfo ] = { typeInfo.$typeId: typeInfo };
          typeInfo = typeInfo.$parentInfo;
       }
@@ -782,7 +782,9 @@ fn ConvFilter.outputMeta( node: &Nodes.RootNode ) __noasync mut
 
    fn outputDepend( typeInfo:&Ast.TypeInfo, moduleTypeInfo:&Ast.TypeInfo): ExportIdKind {
       let typeId = typeInfo.$typeId;
-      if self.processInfo == typeId.$processInfo or moduleTypeInfo == Ast.headTypeInfo {
+      if self.processInfo == typeId.$processInfo or
+         not Ast.TypeInfo.hasParent( moduleTypeInfo )
+      {
          return .Normal;
       }
       if typeId.isSwichingId() {
@@ -811,8 +813,12 @@ fn ConvFilter.outputMeta( node: &Nodes.RootNode ) __noasync mut
    }
    
    let mut wroteTypeIdSet:Set<&Ast.IdInfo> = (@);
-   fn outputTypeInfo( typeInfo: &Ast.TypeInfo ) __noasync {
+
+   fn outputTypeInfo( typeInfo: &Ast.TypeInfo ) __trans {
       if Ast.isBuiltin( typeInfo.$typeId.id) {
+         return;
+      }
+      if not Ast.TypeInfo.hasParent( typeInfo ) {
          return;
       }
       
@@ -942,7 +948,7 @@ fn ConvFilter.outputMeta( node: &Nodes.RootNode ) __noasync mut
 
    self.write( "_moduleObj.__moduleHierarchy = {" );
    let mut workType = node.$moduleTypeInfo;
-   while workType ~= Ast.headTypeInfo {
+   while Ast.TypeInfo.hasParent( workType ) {
       self.write( "%d," (workType.$typeId.id) );
       workType = workType.$parentInfo;
    }
@@ -1068,9 +1074,7 @@ end``` (luneSymbol, luneSymbol) );
       self.writeln( "return _moduleObj" );
    }
 
-   // __asyncLock fn() {
-   //    self.outputMeta( node );
-   // }
+   self.outputMeta( node );
 };
 
 pub override fn ConvFilter.processSubfile(
@@ -1189,7 +1193,7 @@ pub override fn ConvFilter.processDeclEnum(
    let typeInfo = unwrap node.$expType.$aliasSrc@@@Ast.EnumTypeInfo;
    let parentInfo = typeInfo.$parentInfo;
    let mut isTopNS = true;
-   if parentInfo ~= Ast.headTypeInfo and parentInfo.$kind == .Class {
+   if Ast.TypeInfo.hasParent( typeInfo ) and parentInfo.$kind == .Class {
       enumFullName = "%s.%s" (self.getFullName( parentInfo ), enumFullName );
       access = "";
       isTopNS = false;
@@ -1361,7 +1365,7 @@ pub override fn ConvFilter.processDeclAlge(
    let typeInfo = unwrap node.$expType@@@Ast.AlgeTypeInfo;
    let parentInfo = typeInfo.$parentInfo;
    let mut isTopNS = true;
-   if parentInfo ~= Ast.headTypeInfo and parentInfo.$kind == .Class {
+   if Ast.TypeInfo.hasParent( typeInfo ) and parentInfo.$kind == .Class {
       algeFullName = "%s.%s" (self.getFullName( parentInfo ), algeFullName );
       access = "";
       isTopNS = false;
@@ -1445,7 +1449,7 @@ pub override fn ConvFilter.processNewAlgeVal(
 fn ConvFilter.getDestrClass( classTypeInfo:&Ast.TypeInfo ) : &Ast.TypeInfo!
 {
    let mut typeInfo = classTypeInfo;
-   while not typeInfo.equals( self.processInfo, Ast.headTypeInfo ##) {
+   while typeInfo ~= Ast.headTypeInfo {
       let scope = unwrap typeInfo.$scope;
       if scope.getTypeInfoChild( "__free" ) {
          return typeInfo;
@@ -3564,11 +3568,11 @@ pub override fn ConvFilter.processLuneControl(
 pub class FilterInfo {
    let filter:Nodes.Filter<Opt> {pub};
 
-   pub fn outputLuaAndMeta( node: &Nodes.RootNode ) __noasync mut {
-      if! let mut convFilter = self.filter@@@ConvFilter {
+   pub fn outputLuaAndMeta( node: &Nodes.RootNode ) mut {
+      // if! let mut convFilter = self.filter@@@ConvFilter {
          node.processFilter( self.filter, new Opt( node ) );
-         convFilter.outputMeta( node );
-      }
+      //    convFilter.outputMeta( node );
+      // }
    }
 
    pub fn outputLua( node: &Nodes.RootNode ) mut {
@@ -3576,10 +3580,10 @@ pub class FilterInfo {
    }
 
    /** outputMeta() を実行する前に outputLua() を実行する必要がある。 */
-   pub fn outputMeta( node: &Nodes.RootNode ) __noasync mut {
-      if! let mut convFilter = self.filter@@@ConvFilter {
-         convFilter.outputMeta( node );
-      }
+   pub fn outputMeta( node: &Nodes.RootNode ) mut {
+      // if! let mut convFilter = self.filter@@@ConvFilter {
+      // convFilter.outputMeta( node );
+      // }
    }
 }
 
@@ -3672,7 +3676,8 @@ __test {
    import lune.base.Testing;
 
    pub fn createAstFromStream(
-      scriptPath:str, stream:iStream, option:&Option.Option ) __noasync: TransUnit.ASTInfo
+      parserSrc:Parser.ParserSrc, scriptPath:str,
+      stream:iStream, option:&Option.Option ) __noasync: TransUnit.ASTInfo
    {
       let moduleId = frontInterface.ModuleId.createId( 0.0, 0 );
       let mut moduleInfo = new frontInterface.ImportModuleInfo();
@@ -3686,8 +3691,7 @@ __test {
          moduleId, moduleInfo, new MacroEvalImp(builtinFunc), nil, .Compile,
          nil, option.targetLuaVer, option.transCtrlInfo, builtinFunc );
       
-      let mut parser = new Parser.StreamParser( stream, scriptPath, false, nil );
-      return transUnit.createAST( parser, false, mod );
+      return transUnit.createAST( parserSrc, false, mod );
    }
    
    
@@ -3695,7 +3699,9 @@ __test {
       let! mut stream = io.open( scriptPath## ) {
          Util.err( "not failed to open -- %s" (scriptPath) );
       };
-      let mut ast = createAstFromStream( scriptPath, stream, option );
+      let mut ast = createAstFromStream(
+         Parser.ParserSrc.LnsPath( scriptPath, Util.scriptPath2Module( scriptPath ) ),
+         scriptPath, stream, option );
       stream.close();
       return ast;
    }
@@ -3704,6 +3710,7 @@ __test {
       scriptPath:str, lnsCode:str, option:&Option.Option ) __noasync: TransUnit.ASTInfo
    {
       return createAstFromStream(
+         Parser.ParserSrc.LnsPath( scriptPath, Util.scriptPath2Module( scriptPath ) ),
          scriptPath, new Parser.TxtStream( lnsCode ), option );
    }
    

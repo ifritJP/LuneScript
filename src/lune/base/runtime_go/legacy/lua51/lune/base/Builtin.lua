@@ -212,10 +212,10 @@ function Builtin.new( targetLuaVer, ctrl_info )
 end
 function Builtin:__init(targetLuaVer, ctrl_info) 
    self.hasLuaval = false
-   self.transUnit = BuiltinTransUnit.TransUnit.new(ctrl_info)
+   self.processInfo = Ast.getRootProcessInfo(  )
+   self.transUnit = BuiltinTransUnit.TransUnit.new(ctrl_info, self.processInfo)
    self.targetLuaVer = targetLuaVer
    self.ctrl_info = ctrl_info
-   self.processInfo = Ast.getRootProcessInfo(  )
    self.modifier = TransUnitIF.Modifier.new(true, self.processInfo)
 end
 function Builtin.setmeta( obj )

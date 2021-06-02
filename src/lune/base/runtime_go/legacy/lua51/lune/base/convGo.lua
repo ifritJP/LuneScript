@@ -750,7 +750,7 @@ end
 
 function convFilter:getModuleName( typeInfo, assign )
 
-   if typeInfo == Ast.headTypeInfo then
+   if not Ast.TypeInfo.hasParent( typeInfo ) then
       return ""
    end
    

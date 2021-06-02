@@ -60,12 +60,12 @@ func Json_convExp1568(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // 6: decl @lune.@base.@Json.getRawTxt
-func Json_getRawTxt_1007_(_env *LnsEnv, token *Types_Token) string {
+func Json_getRawTxt_1008_(_env *LnsEnv, token *Types_Token) string {
     return _env.LuaVM.String_sub(token.Txt,2, -2)
 }
 
 // 10: decl @lune.@base.@Json.getVal
-func Json_getVal_1011_(_env *LnsEnv, parser *Parser_DefaultPushbackParser)(LnsAny, bool) {
+func Json_getVal_1012_(_env *LnsEnv, parser *Parser_DefaultPushbackParser)(LnsAny, bool) {
     var token *Types_Token
     token = parser.FP.GetTokenNoErr(_env)
     if _switch430 := token.Kind; _switch430 == Types_TokenKind__Dlmt {
@@ -96,11 +96,11 @@ func Json_getVal_1011_(_env *LnsEnv, parser *Parser_DefaultPushbackParser)(LnsAn
                 }
                 var val LnsAny
                 var ok bool
-                val,ok = Json_getVal_1011_(_env, parser)
+                val,ok = Json_getVal_1012_(_env, parser)
                 if Lns_op_not(ok){
                     return nil, false
                 }
-                _map.Set(Json_getRawTxt_1007_(_env, key),val)
+                _map.Set(Json_getRawTxt_1008_(_env, key),val)
             }
         } else if _switch295 == "[" {
             var list *LnsList
@@ -118,7 +118,7 @@ func Json_getVal_1011_(_env *LnsEnv, parser *Parser_DefaultPushbackParser)(LnsAn
                 }
                 var val LnsAny
                 var ok bool
-                val,ok = Json_getVal_1011_(_env, parser)
+                val,ok = Json_getVal_1012_(_env, parser)
                 if Lns_op_not(ok){
                     return nil, false
                 }
@@ -153,7 +153,7 @@ func Json_getVal_1011_(_env *LnsEnv, parser *Parser_DefaultPushbackParser)(LnsAn
         }
         return num, true
     } else if _switch430 == Types_TokenKind__Str {
-        return Json_getRawTxt_1007_(_env, token), true
+        return Json_getRawTxt_1008_(_env, token), true
     } else if _switch430 == Types_TokenKind__Kywd {
         if _switch422 := token.Txt; _switch422 == "true" {
             return true, true
@@ -175,7 +175,7 @@ func Json_fromStr(_env *LnsEnv, txt string)(LnsAny, LnsAny) {
     parser = NewParser_DefaultPushbackParser(_env, &NewParser_StreamParser(_env, stream.FP, "json", false, nil).Parser_Parser)
     var val LnsAny
     var ok bool
-    val,ok = Json_getVal_1011_(_env, parser)
+    val,ok = Json_getVal_1012_(_env, parser)
     if Lns_op_not(ok){
         return nil, parser.FP.GetLastPos(_env)
     }
@@ -183,7 +183,7 @@ func Json_fromStr(_env *LnsEnv, txt string)(LnsAny, LnsAny) {
 }
 
 // 133: decl @lune.@base.@Json.lenMap
-func _lenMap_1091_(_env *LnsEnv, _map LnsAny) LnsInt {
+func _lenMap_1092_(_env *LnsEnv, _map LnsAny) LnsInt {
     if _map != nil{
         map_73 := _map
         var count LnsInt

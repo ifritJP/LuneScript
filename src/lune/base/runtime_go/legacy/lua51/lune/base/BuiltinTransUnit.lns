@@ -39,13 +39,11 @@ pub class TransUnit {
       return self.scope;
    }
    
-   pub fn __init( ctrl_info: &Types.TransCtrlInfo )
+   pub fn __init( ctrl_info: &Types.TransCtrlInfo, processInfo:Ast.ProcessInfo )
    {
       self.namespace2Scope = {};
-      self.processInfo = Ast.createProcessInfo(
-         ctrl_info.validCheckingMutable,
-         ctrl_info.validLuaval, ctrl_info.validAstDetailError );
-      self.scope = Ast.rootScope;
+      self.processInfo = processInfo;
+      self.scope = processInfo.$topScope;
    }
 
    pub fn getLatestPos() : &Parser.Position {

@@ -50,10 +50,10 @@ pub class Builtin {
                   ctrl_info: &Types.TransCtrlInfo )
    {
       self.hasLuaval = false;
-      self.transUnit = new BuiltinTransUnit.TransUnit( ctrl_info );
+      self.processInfo = Ast.getRootProcessInfo();
+      self.transUnit = new BuiltinTransUnit.TransUnit( ctrl_info, self.processInfo );
       self.targetLuaVer = targetLuaVer;
       self.ctrl_info = ctrl_info;
-      self.processInfo = Ast.getRootProcessInfo();
       self.modifier = new TransUnitIF.Modifier( true, self.processInfo );
    }
 }

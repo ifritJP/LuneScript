@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+
 import lune.base.Types;
 import lune.base.Meta;
 import lune.base.Parser;
@@ -130,8 +131,7 @@ abstract class _TypeInfo extend (Mapping) {
    pub let skind: Ast.SerializeKind;
    pub let typeId: int;
    pub fn __init() {
-//      self.parentId = Ast.rootTypeId;
-      self.typeId = Ast.rootTypeId;
+      self.typeId = Ast.userRootId;
       self.skind = .Normal;
    }
 
@@ -387,7 +387,7 @@ class _TypeInfoModule extend _TypeInfo {
    pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
       let mut parentInfo:&Ast.TypeInfo = Ast.headTypeInfo;
-      if self.parentId ~= Ast.rootTypeId {
+      if self.parentId ~= Ast.userRootId {
          //let! workTypeInfo = param.typeId2TypeInfo[ self.parentId ] {
          let! workTypeInfo = param.getTypeInfo( self.parentId ) {
             Util.err( "not found parentInfo %d %s"
@@ -421,11 +421,12 @@ class _TypeInfoModule extend _TypeInfo {
             mutable = param.metaInfo.__moduleMutable;
          }
          let parentInfoMut;
-         if Ast.isBuiltin( parentInfo.$typeId.id ) {
-            parentInfoMut = Ast.getBuiltinMut( parentInfo );
-         } else {
-            parentInfoMut = param.getTypeInfoMut( parentInfo.$typeId.id );
-         }
+         // if Ast.isBuiltin( parentInfo.$typeId.id ) {
+         //    parentInfoMut = Ast.getBuiltinMut( parentInfo );
+         // } else {
+         //    parentInfoMut = param.getTypeInfoMut( parentInfo.$typeId.id );
+         // }
+         parentInfoMut = param.getTypeInfoMut( parentInfo.$typeId.id );
          let workTypeInfo = param.processInfo.createModule(
             scope, parentInfoMut, true, self.txt, mutable );
 
@@ -468,7 +469,7 @@ class _TypeInfoNormal extend _TypeInfo {
    pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
       let mut newTypeInfo:&Ast.TypeInfo! = nil;
-      if self.parentId ~= Ast.rootTypeId or
+      if self.parentId ~= Ast.userRootId or
          not Ast.getBuiltInTypeIdMap()[ self.typeId ] or
          self.kind == Ast.TypeInfoKind.List or
          self.kind == Ast.TypeInfoKind.Array or
@@ -476,7 +477,7 @@ class _TypeInfoNormal extend _TypeInfo {
          self.kind == Ast.TypeInfoKind.Set
       {
          let mut parentInfo:&Ast.TypeInfo = Ast.headTypeInfo;
-         if self.parentId ~= Ast.rootTypeId {
+         if self.parentId ~= Ast.userRootId {
             //let! workTypeInfo = param.typeId2TypeInfo[ self.parentId ] {
             let! workTypeInfo = param.getTypeInfo( self.parentId ) {
                return nil, "not found parentInfo %d %s" ( self.parentId, self.txt );
@@ -533,7 +534,7 @@ class _TypeInfoNormal extend _TypeInfo {
             // 登録済みのクラスはないはず。
          }
          else {
-            fn postProcess( workTypeInfo:&Ast.TypeInfo, scope:Ast.Scope! ) {
+            fn postProcess( workTypeInfo:&Ast.TypeInfo, scope:Ast.Scope! ) __trans {
                newTypeInfo = workTypeInfo;
                
                when! scope {
@@ -814,7 +815,7 @@ class DependModuleInfo {
 
 fn Import.processImportFromFile(
    processInfo:Ast.ProcessInfo, lnsPath:str, metaInfoStem:Luaval<&stem>,
-   orgModulePath:str, mut modulePath:str, nameList:str[], depth:int ) __noasync mut
+   orgModulePath:str, mut modulePath:str, nameList:&List<str>, depth:int ) mut
 : frontInterface.ModuleInfo
 {
    let metaInfo = metaInfoStem@@=Meta._MetaInfo;
@@ -843,9 +844,11 @@ fn Import.processImportFromFile(
    // meta情報内の typeId -> typeInfo
    let mut typeId2TypeInfo: Map<int,&Ast.TypeInfo> = {};
    let mut typeId2TypeInfoMut: Map<int,Ast.TypeInfo> = {};
-   typeId2TypeInfo[ Ast.rootTypeId ] = Ast.headTypeInfo;
+   //typeId2TypeInfo[ Ast.builtinRootId ] = Ast.headTypeInfo;
+   typeId2TypeInfo[ Ast.userRootId ] = processInfo.$dummyParentType;
    let mut typeId2Scope: Map<int,Ast.Scope> = {};
-   typeId2Scope[ Ast.rootTypeId ] = self.transUnitIF.$scope;
+   typeId2Scope[ Ast.userRootId ] = processInfo.$topScope;
+   //typeId2Scope[ Ast.builtinRootId ] = self.transUnitIF.$scope;
 
    typeId2TypeInfo[ self.builtinFunc.lnsthread_.$typeId.id ] =
       self.builtinFunc.lnsthread_;
@@ -1072,6 +1075,7 @@ fn Import.processImportFromFile(
 
    // メンバーの登録
    fn registMember( classTypeId: int ) {
+      
       if metaInfo.__dependIdMap[ classTypeId ] {
          return;
       }
@@ -1154,12 +1158,12 @@ fn Import.processImportFromFile(
    }
    foreach atomInfo in _typeInfoList {
       if! let workInfo = atomInfo@@@_TypeInfoNormal {
-         if workInfo.parentId == Ast.rootTypeId {
+         if workInfo.parentId == Ast.userRootId {
             registMember( atomInfo.typeId );
          }
       } else {
          if! let workInfo = atomInfo@@@_TypeInfoModule {
-            if workInfo.parentId == Ast.rootTypeId {
+            if workInfo.parentId == Ast.userRootId {
                registMember( atomInfo.typeId );
             }
          }
@@ -1268,16 +1272,15 @@ pub fn Import.processImportMain(
       return moduleInfo;
    }
 
-   let mut nameList:str[] = [];
-   apply txt of string.gmatch( modulePath, '[^%./:]+' ) {
-      nameList.insert( txt );
+   let mut nameList = Util.splitStr(modulePath, '[^%./:]+' );
+
+   let mut moduleMeta;
+   if! frontInterface.loadMeta( self.importModuleInfo, orgModulePath ) {
+      moduleMeta = _exp;
+   } else {
+      self.transUnitIF.error( "failed to load meta -- " .. orgModulePath );
    }
 
-   let! mut moduleMeta =
-      frontInterface.loadMeta( self.importModuleInfo, orgModulePath )
-   {
-      self.transUnitIF.error( "failed to load meta -- " .. orgModulePath );
-   };
    let mut moduleInfo;
 
    _match moduleMeta.$metaOrModule {

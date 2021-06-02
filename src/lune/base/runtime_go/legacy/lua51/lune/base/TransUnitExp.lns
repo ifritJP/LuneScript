@@ -132,19 +132,6 @@ fn TransUnit.createExpList(
       }
    }
 
-   // if not allowNoneType {
-   //    foreach expType, expIndex in expTypeList {
-   //       if expType == Ast.builtinTypeNone {
-   //          self.addErrMess( unwrap pos default new Parser.Position( 0, 0 ),
-   //                           "The type of exp(%d) is None!!" (expIndex) );
-   //       }
-   //    }
-   // }
-
-   // when! abbrNode {
-   //    expList.insert( abbrNode );
-   // }
-
    when! abbrNode {
       workList.insert( abbrNode );
    }
@@ -454,8 +441,8 @@ fn TransUnit.checkImplicitCast(
 
    // 代入元の値から、代入先の型に暗黙キャストしているかどうか確認し、
    // 暗黙キャストしている場合は ExpCastNode を生成する。
-   fn process( index:int, dstType:&Ast.TypeInfo,
-               expNode:&Nodes.Node, mut workNode:&Nodes.Node ) : &Nodes.Node, bool
+   fn process( index:int, dstType:&Ast.TypeInfo, expNode:&Nodes.Node,
+               mut workNode:&Nodes.Node ) __trans : &Nodes.Node, bool
    {
       //if dstType.$kind == .Box and expNode.$expType.$kind ~= .Box {
       if! let repNode = callback( dstType, expNode ) {
@@ -791,7 +778,8 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
          let alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
          let callback = self.processInfo.createFuncAsync(
             false, false, nil, Ast.TypeInfoKind.Func,
-            Ast.getBuiltinMut( Ast.headTypeInfo ),
+            self.processInfo.$dummyParentType,
+            //Ast.getBuiltinMut( Ast.headTypeInfo ),
             false, false, true, .Pri, "sort", .Async, nil,
             [ genericTypeList[ 1 ], genericTypeList[ 1 ] ],
             [ Ast.builtinTypeBool ], false );
@@ -1121,7 +1109,7 @@ fn TransUnit.evalMacro(
    let mut stmtList:List<&Nodes.Node> = [];
    
    self.evalMacroOp( firstToken, macroTypeInfo, expList,
-                     fn () {
+                     fn () __trans {
                         if #macroTypeInfo.$retTypeInfoList == 0 {
                            self.analyzeStatementList( stmtList, true, "}" );
                         }
@@ -2008,9 +1996,6 @@ fn TransUnit.analyzeAccessClassField(
             // __init ブロックの制御
             errorMess = "It can't call prototype function from static -- %s" (symbolInfo.$name);
          }
-         // elseif symbolInfo.$scope == classTypeInfo.$scope and symbolInfo.$kind == .Mtd {
-         //    errorMess = "It can't call the method from __init.-- %s" (symbolInfo.$name);
-         // }
          when! errorMess {
             self.addErrMess( token.pos, errorMess );
          }
@@ -2115,7 +2100,7 @@ fn TransUnit.dumpFieldComp(
 
    scope.filterTypeInfoField(
       true, self.scope, self.scopeAccess,
-      fn ( symbolInfo: &Ast.SymbolInfo ) : bool {
+      fn ( symbolInfo: &Ast.SymbolInfo ) __trans : bool {
          if ( isPrefixType ) {
             if not symbolInfo.$staticFlag and
                not symbolInfo.$typeInfo.$staticFlag and
@@ -2151,7 +2136,7 @@ fn TransUnit.dumpFieldComp(
 fn TransUnit.dumpSymbolComp( writer: Writer.Writer, scope: &Ast.Scope, pattern: str ) {
    scope.filterSymbolTypeInfo(
       scope, self.moduleScope, self.scopeAccess,
-      fn ( symbolInfo: &Ast.SymbolInfo ) : bool {
+      fn ( symbolInfo: &Ast.SymbolInfo ) __trans : bool {
          return self.dumpComp(writer, pattern, symbolInfo, false );
       });    
 }
@@ -2228,7 +2213,7 @@ fn TransUnit.checkEnumComp(
          let pattern = prefix == "" and "" or "^" .. prefix;
          scope.filterTypeInfoField(
             true, self.scope, self.scopeAccess,
-            fn ( symbolInfo: &Ast.SymbolInfo ) : bool {
+            fn ( symbolInfo: &Ast.SymbolInfo ) __trans : bool {
                if symbolInfo.$kind == .Mbr {
                   return self.dumpComp( jsonWriter, pattern, symbolInfo, false );
                }
@@ -2772,17 +2757,13 @@ fn TransUnit.analyzeExpSymbol(
       else {
          self.checkSymbolComp( symbolToken );
 
-         // if symbolToken.txt == "_" {
-         //    self.addErrMess( symbolToken.pos, "can't access '_' symbol." );
-         // }
-         
          let! symbolInfo = self.scope.getSymbolTypeInfo(
             symbolToken.txt, self.scope, self.moduleScope, self.scopeAccess )
          {
             if self.analyzeMode ~= .Diag {
                let mut work = self.scope;
                while true {
-                  print( work, self.globalScope, Ast.rootScope );
+                  print( work, self.globalScope );
                   if work == work.$parent {
                      break;
                   }
@@ -2834,10 +2815,6 @@ fn TransUnit.analyzeExpSymbol(
                   if not symbolInfo.$scope.isInnerOf( unwrap nsTypeInfo.$scope ) {
                      self.tentativeSymbol.addAccessSymPos(
                         new AccessSymPos( symbolInfo, firstToken.pos ) );
-                     // self.addErrMess(
-                     //    firstToken.pos,         
-                     //    "This can't access variable have no value -- %s"
-                     //    (symbolInfo.$name) );
                   }
                }
             }           
@@ -3542,7 +3519,8 @@ fn TransUnit.analyzeExpMacroStat( firstToken: &Parser.Token ) mut : Nodes.ExpMac
       let token = self.getToken(##);
 
       if token.txt == ",," or token.txt == ",,," or token.txt == ",,,," {
-         let exp = self.analyzeExp( false, true, false, unwrap op1levelMap[ token.txt ] ## );
+         let exp = self.analyzeExp(
+            false, true, false, unwrap op1levelMap[ token.txt ] ## );
 
          let literalStr = self.macroCtrl.expandSymbol(
             self, token, exp, self.nodeManager, errMessList );
@@ -4205,12 +4183,6 @@ fn TransUnit.analyzeExp(
                self.pushback();
             }
          }
-         // else {
-         //    self.scope.accessSymbol( self.moduleScope, symbolInfo );
-         //    // self.scope.accessSymbol( self.moduleScope, symbolInfo, .Read );
-         //    // self.scope.accessSymbol( self.moduleScope, symbolInfo,
-         //    //                          self.getCurrentNamespaceScope() );
-         // }
       }
    }  
    elseif token.kind == Parser.TokenKind.Type {

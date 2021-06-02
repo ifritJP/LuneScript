@@ -497,6 +497,15 @@ function ImportModuleInfo:getFull(  )
    
    return txt
 end
+function ImportModuleInfo:clone(  )
+
+   local info = ImportModuleInfo.new()
+   for __index, mod in ipairs( self.orderedSet:get_list() ) do
+      info:add( mod )
+   end
+   
+   return info
+end
 function ImportModuleInfo.setmeta( obj )
   setmetatable( obj, { __index = ImportModuleInfo  } )
 end

@@ -424,7 +424,7 @@ fn convFilter.getCanonicalName( typeInfo:&Ast.TypeInfo, localFlag:bool ): str {
 
 
 fn convFilter.getModuleName( typeInfo:&Ast.TypeInfo, assign:bool ) : str {
-   if typeInfo == Ast.headTypeInfo {
+   if not Ast.TypeInfo.hasParent( typeInfo ) {
       return "";
    }
    let moduleType = typeInfo.getModule();

@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+_lune_control default_async_all;
+
 subfile use lune.base.TransUnitDecl;
 subfile use lune.base.TransUnitExp;
 subfile use lune.base.TransUnitStatementList;
@@ -105,7 +107,7 @@ fn clearThePosForModToRef(
    let mut list:List<RefAccessSymPos> = [];
    scope.filterSymbolTypeInfo(
       scope, moduleScope, .Normal,
-      fn ( symInfo:&Ast.SymbolInfo ) : bool {
+      fn ( symInfo:&Ast.SymbolInfo ) __trans : bool {
          if symInfo.$kind == .Var {
             list.insert( new RefAccessSymPos( symInfo, symInfo.$posForModToRef ) );
             symInfo.set_posForModToRef(nil);
@@ -643,11 +645,11 @@ alias で置き換えている元の Type → alias の型
    let builtinFunc:&Builtin.BuiltinFuncType;
 
    pub fn __init( moduleId:&frontInterface.ModuleId,
-                  importModuleInfo:frontInterface.ImportModuleInfo,
-                  macroEval: Nodes.MacroEval, analyzeModule:str!, mode:AnalyzeMode!,
+                  importModuleInfo:&frontInterface.ImportModuleInfo,
+                  macroEval: &Nodes.MacroEval, analyzeModule:str!, mode:AnalyzeMode!,
                   pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
                   ctrl_info: &Types.TransCtrlInfo,
-                  builtinFunc:&Builtin.BuiltinFuncType)
+                  builtinFunc:&Builtin.BuiltinFuncType) 
    {
       self.builtinFunc = builtinFunc;
       self.analyzingStaticMethodArgsScope = nil;
@@ -679,7 +681,7 @@ alias で置き換えている元の Type → alias の型
       self.moduleId = moduleId;
       self.helperInfo = new frontInterface.LuneHelperInfo();
       self.targetLuaVer = targetLuaVer;
-      self.importModuleInfo = importModuleInfo;
+      self.importModuleInfo = importModuleInfo.clone();
       self.nsInfoMap = {};
       self.has__func__Symbol = (@);
       self.nodeManager = new Nodes.NodeManager();
@@ -691,7 +693,10 @@ alias で置き換えている元の Type → alias の型
       self.moduleType = Ast.headTypeInfo;
       self.parser = new Parser.DefaultPushbackParser( new Parser.DummyParser() );
       self.subfileList = [];
-      self.globalScope = new Ast.Scope( self.processInfo, Ast.rootScope, false, nil ## );
+      self.globalScope = self.processInfo.$topScope;
+      let mut subRootTypeInfo = self.processInfo.$dummyParentType;
+      self.nsInfoMap[ subRootTypeInfo ] = new TransUnitIF.NSInfo(
+         subRootTypeInfo, self.parser.createPosition(0, 0) );
 
       self.scope = new Ast.Scope( self.processInfo, self.globalScope, true, nil ## );
       self.topScope = self.scope;
@@ -714,7 +719,7 @@ alias で置き換えている元の Type → alias の型
       self.importCtrl = nil;
    }
 
-   pub fn getLatestPos() : &Parser.Position {
+   pub fn getLatestPos() __async : &Parser.Position {
       return self.parser.$currentToken.pos;
    }
 
@@ -781,7 +786,7 @@ alias で置き換えている元の Type → alias の型
       return self.scope;
    }
 
-   pub fn popScope() mut {
+   pub fn popScope() __async mut {
       self.scope = self.scope.get_parent();
    }
 
@@ -789,7 +794,8 @@ alias で置き換えている元の Type → alias の型
 解析した名前空間の情報を登録する。
 この情報は、&TypeInfo から imut を外すために利用する。
    */ 
-   fn newNSInfo( typeInfo:Ast.TypeInfo, pos:&Parser.Position) mut : TransUnitIF.NSInfo
+   fn newNSInfo(
+      typeInfo:Ast.TypeInfo, pos:&Parser.Position) __async mut : TransUnitIF.NSInfo
    {
       let mut nsInfo = new TransUnitIF.NSInfo( typeInfo, pos );
       self.nsInfoMap[ typeInfo ] = nsInfo;
@@ -903,10 +909,11 @@ alias で置き換えている元の Type → alias の型
 
 例えば、現在のスコープが rootScope だった場合はエラーする。
 */ 
-   pri fn getCurrentNamespaceTypeInfoMut() mut : Ast.TypeInfo {
+   pri fn getCurrentNamespaceTypeInfoMut() __async mut : Ast.TypeInfo {
       let typeInfo = self.scope.getNamespaceTypeInfo();
       let! mut nsInfo = self.nsInfoMap[ typeInfo ] {
-         self.error( "not found nsInfo -- %s" (typeInfo.getTxt(##)) );
+         self.error( "not found nsInfo -- %s (%d)"
+                     (typeInfo.getTxt(##), typeInfo.$typeId.id) );
       };
       return nsInfo.$typeInfo;
    }
@@ -919,17 +926,9 @@ alias で置き換えている元の Type → alias の型
       return self.getNSInfo( self.getCurrentNamespaceTypeInfo() );
    }
 
-   pri fn getCurrentNamespaceTypeInfoMutWithBuiltin() mut __noasync : Ast.TypeInfo {
-      let typeInfo = self.scope.getNamespaceTypeInfo();
-      if Ast.isBuiltin( typeInfo.$typeId.id ) {
-         return Ast.getBuiltinMut( typeInfo );
-      }
-      return self.getCurrentNamespaceTypeInfoMut();
-   }
-   
    pub fn pushModule(
       processInfo:Ast.ProcessInfo,
-      externalFlag: bool, name:str, mutable: bool ) mut : TransUnitIF.NSInfo
+      externalFlag: bool, name:str, mutable: bool ) __async mut : TransUnitIF.NSInfo
    {
       let mut typeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
 
@@ -952,7 +951,7 @@ alias で置き換えている元の Type → alias の型
          nsInfo = unwrap self.nsInfoMap[ typeInfo ];
       }
       else {
-         let mut parentInfo = self.getCurrentNamespaceTypeInfoMutWithBuiltin();
+         let mut parentInfo = self.getCurrentNamespaceTypeInfoMut();
          let mut parentScope = self.scope;
          let mut scope = self.pushScope( true ## );
          let mut newType = processInfo.createModule(
@@ -982,13 +981,13 @@ alias で置き換えている元の Type → alias の型
 
    pub fn pushModuleLow(
       processInfo:Ast.ProcessInfo,
-      externalFlag: bool, name:str, mutable: bool ) mut : &Ast.TypeInfo
+      externalFlag: bool, name:str, mutable: bool ) __async mut : &Ast.TypeInfo
    {
       return self.pushModule( processInfo, externalFlag, name, mutable ).$typeInfo;
    }
    
 
-   pub fn popModule() mut {
+   pub fn popModule() __async mut {
       self.popScope();
    }
 
@@ -1024,7 +1023,9 @@ alias で置き換えている元の Type → alias の型
 既存クラスの Scope を push する。
    */
    pub fn pushClassScope(
-      errPos:&Parser.Position, classTypeInfo:&Ast.TypeInfo, scope:Ast.Scope ) mut {
+      errPos:&Parser.Position,
+      classTypeInfo:&Ast.TypeInfo, scope:Ast.Scope ) __async mut
+   {
       if self.scope ~= classTypeInfo.$scope$.$parent {
          let classParentName;
          let classParentTypeId;
@@ -1215,7 +1216,7 @@ alias で置き換えている元の Type → alias の型
    }
    
 
-   pub fn popClass() mut {
+   pub fn popClass() __async mut {
       self.popScope();
    }
 
@@ -1360,15 +1361,15 @@ alias で置き換えている元の Type → alias の型
 }
 
 
-let mut op2levelMap:Map<str,int> = {};
-let mut op1levelMap:Map<str,int> = {};
-
 /** 最高優先度 */
 let mut opTopLevel = 0;
 
-{
+fn setupOpLevel() : &Map<str,int>, &Map<str,int> {
+   let op2levelMap:Map<str,int> = {};
+   let op1levelMap:Map<str,int> = {};
+   
    let mut opLevelBase = 0;
-   fn regOpLevel( opnum: int, opList: str[@] ) {
+   fn regOpLevel( opnum: int, opList: str[@] ) __trans {
       opLevelBase = opLevelBase + 1;
       if opnum == 1 {
          foreach op in opList {
@@ -1397,20 +1398,26 @@ let mut opTopLevel = 0;
    regOpLevel( 1, [@ "^" ] );
 
    opTopLevel = opLevelBase + 1;
+
+   return op2levelMap, op1levelMap;
 }
 
+let op2levelMap, op1levelMap = setupOpLevel();
 
-let mut quotedChar2Code:Map<str,int> = {};
-quotedChar2Code[ 'a' ] = 7;    // \a
-quotedChar2Code[ 'b' ] = 8;    // \b
-quotedChar2Code[ 't' ] = 9;    // \t
-quotedChar2Code[ 'n' ] = 10;   // \t
-quotedChar2Code[ 'v' ] = 11;   // \v
-quotedChar2Code[ 'f' ] = 12;   // \f
-quotedChar2Code[ 'r' ] = 13;   // \r
-quotedChar2Code[ '\\' ] = ?\\; // \\
-quotedChar2Code[ '"' ] = ?\";  // "
-quotedChar2Code[ "'" ] = ?\';  // '
+
+
+let quotedChar2Code = {
+   'a' : 7,    // \a
+   'b' : 8,    // \b
+   't' : 9,    // \t
+   'n' : 10,   // \t
+   'v' : 11,   // \v
+   'f' : 12,   // \f
+   'r' : 13,   // \r
+   '\\' : ?\\, // \\
+   '"' : ?\",  // "
+   "'" : ?\',  // '
+};
 
 fn TransUnit.createModifier(
    typeInfo:&Ast.TypeInfo, mutMode: Ast.MutMode ) __async mut : &Ast.TypeInfo
@@ -1694,13 +1701,13 @@ fn TransUnit.analyzeStatementList(
    }
 
    let mut parser2lastLineMap:Map<&Parser.PushbackParser,int> = {};
-   fn getLastLineNo(): int {
+   fn getLastLineNo() __trans : int {
       if! let lastLineNo = parser2lastLineMap[ self.parser ] {
          return lastLineNo;
       }
       return self.parser.getLastPos().lineNo;
    }
-   fn setLastLineNo( lineNo:int ) {
+   fn setLastLineNo( lineNo:int ) __trans {
       parser2lastLineMap[ self.parser ] = lineNo;
    }
    
@@ -1709,7 +1716,7 @@ fn TransUnit.analyzeStatementList(
 
    // コメントが、直前の文の末尾と同じ行にあるかどうか調べ、
    // 同じ行にある場合は、直前の文のコメントとしてセットする
-   fn setTailComment( statement:Nodes.Node! ): int
+   fn setTailComment( statement:Nodes.Node! ) __trans: int
    {
       let blank;
       let mut commentList = self.commentCtrl.$commentList;
@@ -2023,13 +2030,11 @@ fn TransUnit.analyzeBlock(
 
 fn TransUnit.analyzeImportFor(
    pos: &Parser.Position, modulePath:str,
-   assignName:str, assigned:bool, lazyLoad:Nodes.LazyLoad ) mut : Nodes.Node
+   assignName:str, assigned:bool, lazyLoad:Nodes.LazyLoad ) __noasync mut : Nodes.Node
 {
    let mut backupScope = self.scope;
    // スコープをルートに変更
    self.scope = self.topScope;
-
-   self.processInfo.switchIdProvier( .Ext );
 
    let! mut importObj = self.importCtrl {
       importObj = new Import.Import(
@@ -2040,11 +2045,7 @@ fn TransUnit.analyzeImportFor(
          self.globalScope,
          self.macroCtrl,
          self.typeNameCtrl,
-         //self.processInfo,
-         //self.helperInfo,
-         //self.importModule2ModuleInfo,
          self.importedAliasMap,
-         //self.importModuleName2ModuleInfo,
          self.validMutControl );
       self.importCtrl = importObj;
    };
@@ -2054,22 +2055,9 @@ fn TransUnit.analyzeImportFor(
    importProcessInfo.switchIdProvier( .Base );
 
    
-   self.processInfo.switchIdProvier( .Base );
-
-
    // スコープを元に戻す
-   //self.scope = self.moduleScope;
    self.scope = backupScope;
 
-
-   // let helperInfo = moduleInfo.$exportInfo.$helperInfo;
-   // if helperInfo.useAlge {
-   //    self.helperInfo.useAlge = true;
-   // }
-   // if helperInfo.useSet {
-   //    self.helperInfo.useSet = true;
-   // }
-   
 
    // モジュールの末尾のシンボルでスコープに登録する。
    // 例えば hoge.foo.bar をインポートした場合、 bar をスコープに登録する
@@ -2087,11 +2075,6 @@ fn TransUnit.analyzeImportFor(
 
   
    when! moduleSymbolInfo {
-      // if self.moduleScope ~= self.scope {
-      //    self.error( "illegal top scope." );
-      // }
-
-
       return Nodes.ImportNode.create(
          self.nodeManager, pos,
          self.macroCtrl.isInAnalyzeArgMode(), [ moduleTypeInfo ],
@@ -2163,8 +2146,12 @@ fn TransUnit.analyzeImport( opeToken: &Parser.Token ) mut : Nodes.Node {
    }
    self.checkToken( nextToken, ";" );
 
-   let mut node = self.analyzeImportFor(
-      opeToken.pos, modulePath, assignName.txt, assigned, lazyLoad );
+   let mut node;
+
+   __asyncLock {
+      node = self.analyzeImportFor(
+         opeToken.pos, modulePath, assignName.txt, assigned, lazyLoad );
+   }
    self.importModuleSet.add( node.$expType );
    
    return node;
@@ -2174,9 +2161,13 @@ fn TransUnit.analyzeImport( opeToken: &Parser.Token ) mut : Nodes.Node {
 fn TransUnit.analyzeTestCase( firstToken:&Parser.Token ) mut : Nodes.TestCaseNode
 {
    let mut newScope = self.pushScope( false ## );
-   
-   let importNode = self.analyzeImportFor(
-      firstToken.pos, "lune.base.Testing", "__t", false, .Off );
+
+   let importNode;
+
+   __asyncLock {
+      importNode = self.analyzeImportFor(
+         firstToken.pos, "lune.base.Testing", "__t", false, .Off );
+   }
    
    let nameToken = self.getSymbolToken( .MustNot_ );
 
@@ -2226,7 +2217,7 @@ fn TransUnit.analyzeTest( firstToken:&Parser.Token ) mut : Nodes.Node
 }
 
 
-fn TransUnit.analyzeSubfile( token: &Parser.Token ) mut : Nodes.SubfileNode {
+fn TransUnit.analyzeSubfile( token: &Parser.Token ) __noasync mut : Nodes.SubfileNode {
    if self.scope ~= self.moduleScope {
       self.error( "'module' must be top scope." );
    }

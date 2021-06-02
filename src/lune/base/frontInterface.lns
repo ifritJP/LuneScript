@@ -219,6 +219,14 @@ pub class ImportModuleInfo {
       }
       return txt;
    }
+
+   pub fn clone() : ImportModuleInfo {
+      let mut info = new ImportModuleInfo();
+      foreach mod in self.orderedSet.$list {
+         info.add( mod );
+      }
+      return info;
+   }
 }
 
 pub interface frontInterface {

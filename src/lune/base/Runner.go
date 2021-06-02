@@ -49,10 +49,10 @@ func (self *Runner_RunItem) ToMapSetup( obj *LnsMap ) *LnsMap {
 func (self *Runner_RunItem) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Runner_RunItem__fromMap_1021_(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Runner_RunItem__fromMap_1022_(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Runner_RunItem_FromMap( arg1, paramList )
 }
-func Runner_RunItem__fromStem_1025_(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+func Runner_RunItem__fromStem_1026_(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
    return Runner_RunItem_FromMap( arg1, paramList )
 }
 func Runner_RunItem_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
@@ -78,7 +78,7 @@ func Runner_RunItem_FromMapMain( newObj *Runner_RunItem, objMap *LnsMap, paramLi
     }
     return true, newObj, nil
 }
-func Runner_RunItem__createPipe_1033_(_env *LnsEnv, arg1 LnsInt) LnsAny{
+func Runner_RunItem__createPipe_1034_(_env *LnsEnv, arg1 LnsInt) LnsAny{
    return NewLnspipe( arg1 )
 }
 
@@ -115,7 +115,7 @@ func (obj *Runner_Runner) ToRunner_Runner() *Runner_Runner {
 }
 // 35: DeclConstr
 func (self *Runner_Runner) InitRunner_Runner(_env *LnsEnv) {
-    self.pipe = Runner_RunItem__createPipe_1033_(_env, 1)
+    self.pipe = Runner_RunItem__createPipe_1034_(_env, 1)
     
 }
 

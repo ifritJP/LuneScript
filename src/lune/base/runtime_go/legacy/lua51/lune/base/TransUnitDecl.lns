@@ -165,7 +165,7 @@ fn TransUnit.analyzeRefTypeWithSymbol(
          } nextToken.txt ~= ",";
          self.checkToken( nextToken, '>' );
 
-         fn checkAlternateTypeCount( count:int ): bool {
+         fn checkAlternateTypeCount( count:int ) __trans : bool {
             if #genericList ~= count {
                self.addErrMess(
                   symbolNode.$pos,
@@ -382,7 +382,7 @@ fn TransUnit.checkOverrideMethod(
    let mut errList:List<str> = [];
 
    
-   fn addErr( mess:str ) {
+   fn addErr( mess:str ) __trans {
       let fullName = "%s.%s" (typeInfo.$parentInfo.$rawTxt, typeInfo.$rawTxt );
       errList.insert( "%s: %s: %s -- %s" ( fullName, mess, typeInfo.$display_stirng,
                                            typeInfo.$display_stirng ) );
@@ -528,26 +528,25 @@ pub class ASTInfo {
 }
 
 pub fn TransUnit.createAST(
-   parser: Parser.Parser, macroFlag: bool, moduleName: str! ) mut : ASTInfo
+   parserSrc: &Parser.ParserSrc, macroFlag: bool, moduleName: str! ) mut : ASTInfo
 {
+   let mut parser = Parser.createParserFrom( parserSrc );
+   
    Log._log2( .Log, "%s start -- %s" (__func__, parser.getStreamName()) );
    
    self.moduleName = unwrap moduleName default "";
    
-   // {
-   //    let mut builtin = new Builtin.Builtin(
-   //       self.targetLuaVer, self.ctrl_info );
-   //    self.builtinFunc = builtin.registBuiltInScope();
-   // }
-
    let mut moduleTypeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
    let mut moduleSymboInfo:&Ast.SymbolInfo! = nil;
 
-   when! moduleName {
-      apply txt of string.gmatch(
-         frontInterface.getLuaModulePath( moduleName ), '[^%.]+' )
-      {
-         moduleTypeInfo = self.pushModule( self.processInfo, false, txt, true ).$typeInfo;
+   __asyncLock {
+      when! moduleName {
+         apply txt of string.gmatch(
+            frontInterface.getLuaModulePath( moduleName ), '[^%.]+' )
+         {
+            moduleTypeInfo = self.pushModule(
+               self.processInfo, false, txt, true ).$typeInfo;
+         }
       }
    }
    self.moduleScope = self.scope;
@@ -593,9 +592,14 @@ pub fn TransUnit.createAST(
       }
 
       foreach subModule in self.subfileList {
-         let! file = frontInterface.searchModule( subModule ) {
-            self.error( "not found subfile -- %s" ( subModule ) );
-         };
+         let file;
+         __asyncLock {
+            if! frontInterface.searchModule( subModule ) {
+               file = _exp;
+            } else {
+               self.error( "not found subfile -- %s" ( subModule ) );
+            }
+         }
 
          if self.scope ~= self.moduleScope {
             self.error( "scope does not close" );
@@ -658,8 +662,7 @@ pub fn TransUnit.createAST(
    }
 
    when! moduleName {
-      apply _ of string.gmatch( moduleName, '[^%.]+' ) {
-         //self.popClass();
+      foreach _ in Util.splitStr( moduleName, '[^%.]+' ) {
          self.popModule();
       }
    }
@@ -796,7 +799,8 @@ fn TransUnit.analyzeDeclMacroSub(
 
       let funcType = self.processInfo.createFuncAsync(
          false, true, nil, .Func,
-         Ast.getBuiltinMut( Ast.headTypeInfo ), false, true,
+         //Ast.getBuiltinMut( Ast.headTypeInfo ), false, true,
+         self.processInfo.$dummyParentType, false, true,
          true, .Global, "_lnsLoad", .Async,
          nil, [ Ast.builtinTypeString, Ast.builtinTypeString ],
          [ Ast.builtinTypeStem ], false );
@@ -871,8 +875,9 @@ fn TransUnit.analyzeDeclMacroSub(
       self.nodeManager, firstToken.pos,
       self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ], declMacroInfo );
 
-   self.macroCtrl.regist( self.processInfo, node, macroScope );
-
+   __asyncLock { 
+      self.macroCtrl.regist( self.processInfo, node, macroScope );
+   }
 
    return node;
 }
@@ -1002,7 +1007,7 @@ Map<&Ast.TypeInfo,&Ast.TypeInfo>, Nodes.ClassInheritInfo
    foreach ifType in interfaceList {
       ifType.$scope$.filterTypeInfoField$(
          true, self.scope, self.scopeAccess,
-         fn ( symbolInfo:&Ast.SymbolInfo ): bool {
+         fn ( symbolInfo:&Ast.SymbolInfo ) __trans : bool {
             if symbolInfo.$kind == .Mtd {
                if! let ifFuncType = symbol2TypeInfo[ symbolInfo.$name ] {
                   let ret, mess = ifFuncType.canEvalWith(
@@ -1704,7 +1709,7 @@ fn TransUnit.analyzeDecl(
 
 fn TransUnit.checkPublic( pos:&Parser.Position, typeInfo:&Ast.TypeInfo ) mut {
    let mut checkedTypeSet:Set<&Ast.TypeInfo> = (@);
-   fn checkPub( workType:&Ast.TypeInfo ) {
+   fn checkPub( workType:&Ast.TypeInfo ) __trans {
       if checkedTypeSet.has( workType ) {
          return;
       }
@@ -1761,7 +1766,8 @@ fn TransUnit.analyzeDeclMember(
       let mut setterToken:&Types.Token! = nil;
       if token.txt == "{" {
 
-         fn analyzeAccessorMode(): Ast.AccessMode, &Ast.TypeInfo, &Parser.Token, &Parser.Token
+         fn analyzeAccessorMode():
+         Ast.AccessMode, &Ast.TypeInfo, &Parser.Token, &Parser.Token
          {
             let mut retType = Ast.headTypeInfo;
             let mut mode = Ast.AccessMode.None;
@@ -2145,7 +2151,7 @@ fn TransUnit.analyzeClassBody(
    let mut classScope = self.scope;
 
    fn processLet( token:&Parser.Token, staticFlag:bool,
-                  accessMode:Ast.AccessMode, alreadyFlag:bool )
+                  accessMode:Ast.AccessMode, alreadyFlag:bool ) __trans
    {
       if staticFlag {
          hasStaticMember = true;
@@ -2177,7 +2183,7 @@ memberName2Node のメンバに値がセットされたかどうかを調べる�
 @param pos セットされていなかった場合のエラー表示位置。
 nil の場合、メンバの宣言位置。
    */
-   fn checkInitializeMember( staticFlag:bool, pos:&Parser.Position! ) {
+   fn checkInitializeMember( staticFlag:bool, pos:&Parser.Position! ) __trans {
       foreach memberNode, memberName in memberName2Node {
          if memberNode.$staticFlag == staticFlag {
             let symbolInfo = unwrap self.scope.getSymbolInfoChild( memberName );
@@ -2204,7 +2210,8 @@ nil の場合、メンバの宣言位置。
    }
 
    fn processFn( token:&Parser.Token, staticFlag:bool, accessMode:Ast.AccessMode,
-                 abstractFlag:bool, overrideFlag:bool ) {
+                 abstractFlag:bool, overrideFlag:bool ) __trans
+   {
       let nameToken = self.getSymbolToken( .MustNot_ );
       let mut declFuncMode = DeclFuncMode.Class;
       if mode == .Module or mode == .LazyModule {
@@ -2238,7 +2245,7 @@ nil の場合、メンバの宣言位置。
       }
    }
 
-   fn processInitBlock( token:&Parser.Token ) {
+   fn processInitBlock( token:&Parser.Token ) __trans {
 
       if classTypeInfo.$scope$.$parent ~= self.moduleScope {
          // top level クラスでないと、
@@ -2247,8 +2254,6 @@ nil の場合、メンバの宣言位置。
             token.pos, "The '__init' block only support at the top level classes." );
       }
       
-      // self.pushAnalyzingState( .InitBlock );
-
       if mode ~= .Class {
          self.error( "%s can not have __init block." (mode) );
       }
@@ -2286,24 +2291,12 @@ nil の場合、メンバの宣言位置。
          self.macroCtrl.isInAnalyzeArgMode(), [ funcTypeInfo ], info );
       initBlockInfo.set_func( initBlockNode );
       allStmtList.insert( initBlockNode );
-      //fieldList.insert( initBlockNode );
-
-      // foreach stmtNode in block.$stmtList {
-      //    initStmtList.insert( stmtNode );
-      // }
-      
-
-      // self.checkNextToken( "{" );
-      // self.analyzeStatementList( initStmtList, "}" );
-      // self.checkNextToken( "}" );
 
       self.popScope();
       self.finishTentativeSymbol( false );
-
-      // self.popAnalyzingState();
    }
 
-   fn processAdvertise() {
+   fn processAdvertise() __trans {
       let memberToken = self.getSymbolToken( .MustNot_ );
       nextToken = self.getToken(##);
       let mut prefix = "";
@@ -2326,7 +2319,7 @@ nil の場合、メンバの宣言位置。
          memberNode.$expType.$srcTypeInfo.$genSrcTypeInfo );
    }
 
-   fn processEnum( token:&Parser.Token, accessMode:Ast.AccessMode ) {
+   fn processEnum( token:&Parser.Token, accessMode:Ast.AccessMode ) __trans {
       if accessMode ~= .Pri and
           ( classAccessMode == .Pri or classAccessMode == .Local )
       {
@@ -2340,7 +2333,7 @@ nil の場合、メンバの宣言位置。
       
    }
 
-   fn processLuneControl() {
+   fn processLuneControl() __trans {
       nextToken = self.getToken(##);
 
       let pragma;
@@ -3325,7 +3318,7 @@ fn TransUnit.analyzeDeclFunc(
    }
    
 
-   fn createDeclFuncInfo( funcKind:Nodes.FuncKind ): &Nodes.DeclFuncInfo {
+   fn createDeclFuncInfo( funcKind:Nodes.FuncKind ) __trans : &Nodes.DeclFuncInfo {
       let classDeclNode:Nodes.DeclClassNode!;
       when! classTypeInfo {
          classDeclNode = self.typeInfo2ClassNode[ classTypeInfo ];
@@ -3424,12 +3417,6 @@ fn TransUnit.createExpListNode(
       //    self.addErrMess( orgExpList.$pos, "unmatch mRetIndex -- %d" (mRetIndex) );
       // }
    }
-   // 最終ノードが複数の値を持つ場合は、その型を追加する
-   // foreach expType, listIndex in newExpList[ #newExpList ].$expTypeList {
-   //    if listIndex ~= 1 {
-   //       newExpTypeList.insert( expType );
-   //    }
-   // }
    return Nodes.ExpListNode.create(
       self.nodeManager, orgExpList.$pos,
       self.macroCtrl.isInAnalyzeArgMode(), newExpTypeList, newExpList,

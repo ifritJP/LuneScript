@@ -5,6 +5,30 @@ var init_Parser bool
 var Parser__mod__ string
 var Parser_noneToken *Types_Token
 var Parser_eofToken *Types_Token
+// decl alge -- ParserSrc
+type Parser_ParserSrc = LnsAny
+type Parser_ParserSrc__LnsCode struct{
+Val1 string
+Val2 string
+}
+func (self *Parser_ParserSrc__LnsCode) GetTxt() string {
+return "ParserSrc.LnsCode"
+}
+type Parser_ParserSrc__LnsPath struct{
+Val1 string
+Val2 string
+}
+func (self *Parser_ParserSrc__LnsPath) GetTxt() string {
+return "ParserSrc.LnsPath"
+}
+type Parser_ParserSrc__Parser struct{
+Val1 string
+Val2 bool
+Val3 string
+}
+func (self *Parser_ParserSrc__Parser) GetTxt() string {
+return "ParserSrc.Parser"
+}
 // for 143
 func Parser_convExp475(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
@@ -132,6 +156,51 @@ func Parser_quoteStr(_env *LnsEnv, txt string) string {
     work = part + "\""
     
     return work
+}
+
+// 509: decl @lune.@base.@Parser.createParserFrom
+func Parser_createParserFrom(_env *LnsEnv, src LnsAny) *Parser_Parser {
+    switch _exp2298 := src.(type) {
+    case *Parser_ParserSrc__LnsCode:
+    txt := _exp2298.Val1
+    path := _exp2298.Val2
+        var stream *Parser_TxtStream
+        stream = NewParser_TxtStream(_env, txt)
+        var parser *Parser_StreamParser
+        parser = NewParser_StreamParser(_env, stream.FP, path, false, nil)
+        return &parser.Parser_Parser
+    case *Parser_ParserSrc__LnsPath:
+    path := _exp2298.Val1
+    mod := _exp2298.Val2
+        var parser *Parser_StreamParser
+        
+        {
+            _parser := Parser_StreamParser_create(_env, path, false, mod)
+            if _parser == nil{
+                panic(_env.LuaVM.String_format("failed to open -- %s", []LnsAny{path}))
+            } else {
+                parser = _parser.(*Parser_StreamParser)
+            }
+        }
+        return &parser.Parser_Parser
+    case *Parser_ParserSrc__Parser:
+    path := _exp2298.Val1
+    luaMode := _exp2298.Val2
+    mod := _exp2298.Val3
+        var parser *Parser_StreamParser
+        
+        {
+            _parser := Parser_StreamParser_create(_env, path, luaMode, mod)
+            if _parser == nil{
+                panic(_env.LuaVM.String_format("failed to open -- %s", []LnsAny{path}))
+            } else {
+                parser = _parser.(*Parser_StreamParser)
+            }
+        }
+        return &parser.Parser_Parser
+    }
+// insert a dummy
+    return nil
 }
 
 // declaration Class -- TxtStream
@@ -294,7 +363,7 @@ func Lns_cast2Parser_PushbackParser( obj LnsAny ) LnsAny {
 var Parser_StreamParser__stdinStreamModuleName LnsAny
 var Parser_StreamParser__stdinTxt string
 // 170: decl @lune.@base.@Parser.StreamParser.___init
-func Parser_StreamParser____init_1168_(_env *LnsEnv) {
+func Parser_StreamParser____init_1169_(_env *LnsEnv) {
     Parser_StreamParser__stdinStreamModuleName = nil
     
     Parser_StreamParser__stdinTxt = ""
@@ -891,40 +960,40 @@ func (self *Parser_CommentCtrl) Pop(_env *LnsEnv) {
 
 
 // declaration Class -- LowToken
-type Parser_LowToken1562Mtd interface {
+type Parser_LowToken1586Mtd interface {
 }
-type Parser_LowToken1562 struct {
+type Parser_LowToken1586 struct {
     Txt string
     Kind LnsInt
-    FP Parser_LowToken1562Mtd
+    FP Parser_LowToken1586Mtd
 }
-func Parser_LowToken15622Stem( obj LnsAny ) LnsAny {
+func Parser_LowToken15862Stem( obj LnsAny ) LnsAny {
     if obj == nil {
         return nil
     }
-    return obj.(*Parser_LowToken1562).FP
+    return obj.(*Parser_LowToken1586).FP
 }
-type Parser_LowToken1562DownCast interface {
-    ToParser_LowToken1562() *Parser_LowToken1562
+type Parser_LowToken1586DownCast interface {
+    ToParser_LowToken1586() *Parser_LowToken1586
 }
-func Parser_LowToken1562DownCastF( multi ...LnsAny ) LnsAny {
+func Parser_LowToken1586DownCastF( multi ...LnsAny ) LnsAny {
     if len( multi ) == 0 { return nil }
     obj := multi[ 0 ]
     if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Parser_LowToken1562DownCast)
-    if ok { return work.ToParser_LowToken1562() }
+    work, ok := obj.(Parser_LowToken1586DownCast)
+    if ok { return work.ToParser_LowToken1586() }
     return nil
 }
-func (obj *Parser_LowToken1562) ToParser_LowToken1562() *Parser_LowToken1562 {
+func (obj *Parser_LowToken1586) ToParser_LowToken1586() *Parser_LowToken1586 {
     return obj
 }
-func NewParser_LowToken1562(_env *LnsEnv, arg1 string, arg2 LnsInt) *Parser_LowToken1562 {
-    obj := &Parser_LowToken1562{}
+func NewParser_LowToken1586(_env *LnsEnv, arg1 string, arg2 LnsInt) *Parser_LowToken1586 {
+    obj := &Parser_LowToken1586{}
     obj.FP = obj
-    obj.InitParser_LowToken1562(_env, arg1, arg2)
+    obj.InitParser_LowToken1586(_env, arg1, arg2)
     return obj
 }
-func (self *Parser_LowToken1562) InitParser_LowToken1562(_env *LnsEnv, arg1 string, arg2 LnsInt) {
+func (self *Parser_LowToken1586) InitParser_LowToken1586(_env *LnsEnv, arg1 string, arg2 LnsInt) {
     self.Txt = arg1
     self.Kind = arg2
 }
@@ -940,7 +1009,7 @@ func Lns_Parser_init(_env *LnsEnv) {
     Lns_Async_init(_env)
     Lns_AsyncParser_init(_env)
     Parser_noneToken = Types_noneToken
-    Parser_StreamParser____init_1168_(_env)
+    Parser_StreamParser____init_1169_(_env)
     Parser_eofToken = NewTypes_Token(_env, Types_TokenKind__Eof, "<EOF>", NewTypes_Position(_env, 0, 0, "eof"), false, NewLnsList([]LnsAny{}))
 }
 func init() {
