@@ -13,3 +13,7 @@ pub class Test {
 
 pub fn func3( val:Test ) {
 }
+
+pub fn func4(): Sub5.Sub5alge {
+   return .val1;
+}

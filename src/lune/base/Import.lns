@@ -60,7 +60,7 @@ import しているモジュールから、さらに import しているサブ�
 alias で置き換えている元の Type → alias の型
    */
    let importedAliasMap: Map<&Ast.TypeInfo,&Ast.AliasTypeInfo>;
-   let importModuleName2ModuleInfo: Map<str,frontInterface.ModuleInfo>;
+   let importModuleName2ModuleInfo: Map<str,&frontInterface.ModuleInfo>;
 
    let validMutControl: bool;
    
@@ -103,7 +103,7 @@ alias で置き換えている元の Type → alias の型
 
    fn processImportMain(
       processInfo:Ast.ProcessInfo, mut modulePath:str, depth:int ) mut :
-      frontInterface.ModuleInfo;
+      &frontInterface.ModuleInfo;
 }
 
 proto abstract class _TypeInfo extend (Mapping);
@@ -816,7 +816,7 @@ class DependModuleInfo {
 fn Import.processImportFromFile(
    processInfo:Ast.ProcessInfo, lnsPath:str, metaInfoStem:Luaval<&stem>,
    orgModulePath:str, mut modulePath:str, nameList:&List<str>, depth:int ) mut
-: frontInterface.ModuleInfo
+: &frontInterface.ModuleInfo
 {
    let metaInfo = metaInfoStem@@=Meta._MetaInfo;
    Log._log2( .Info, "%s processing" (orgModulePath) );
@@ -824,7 +824,7 @@ fn Import.processImportFromFile(
 
 
    // 依存するモジュールのメタ情報を読み込み
-   let mut dependLibId2DependInfo:Map<int,frontInterface.ModuleInfo> = {};
+   let mut dependLibId2DependInfo:Map<int,&frontInterface.ModuleInfo> = {};
    forsort dependInfo, dependName in metaInfo.__dependModuleMap {
       //if dependInfo.use {
       // Testing.lng などは、 use でなくてもインポートしないとエラーするので、
@@ -1241,7 +1241,7 @@ fn Import.processImportFromFile(
 
 pub fn Import.processImportMain(
    processInfo:Ast.ProcessInfo, mut modulePath:str, depth:int ) mut :
-   frontInterface.ModuleInfo
+   &frontInterface.ModuleInfo
 {
    let orgModulePath = modulePath;
    modulePath = frontInterface.getLuaModulePath( modulePath );
@@ -1281,7 +1281,7 @@ pub fn Import.processImportMain(
       self.transUnitIF.error( "failed to load meta -- " .. orgModulePath );
    }
 
-   let mut moduleInfo;
+   let moduleInfo:&frontInterface.ModuleInfo;
 
    _match moduleMeta.$metaOrModule {
       case .Module( info ) {
@@ -1319,7 +1319,7 @@ pub fn Import.processImportMain(
 
 pub fn Import.processImport(
    processInfo:Ast.ProcessInfo, modulePath:str ) mut :
-   frontInterface.ModuleInfo
+   &frontInterface.ModuleInfo
 {
    return self.processImportMain( processInfo, modulePath, 1 );
 }

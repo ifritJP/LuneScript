@@ -1020,6 +1020,13 @@ end
 
 
 
+function dumpFilter:processJoinRunner( node, opt )
+
+   self:dump( opt, node, "" )
+   filter( node:get_runner(), self, opt:nextOpt(  ) )
+end
+
+
 function dumpFilter:processReturn( node, opt )
 
    self:dump( opt, node, "" )

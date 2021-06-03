@@ -1,3 +1,4 @@
+import test.error.Sub6;
 {
    alge Value {
       Val1( List<int> ),
@@ -29,6 +30,12 @@
       Val( Hoge ), // error
    }
    class Hoge {
+   }
+}
+{
+   match Sub6.func4() {
+      case .val1 {
+      }
    }
 }
 

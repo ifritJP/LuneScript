@@ -56,7 +56,7 @@ pub class Opt {
 
 class dumpFilter extend Nodes.Filter<Opt> {
    let mut stream:oStream;
-   let mut processInfo:Ast.ProcessInfo;
+   let mut processInfo:&Ast.ProcessInfo;
 
    fn writeln( opt:&Opt, txt:str ) mut {
       let prefix = opt.get();
@@ -102,7 +102,7 @@ class dumpFilter extend Nodes.Filter<Opt> {
    }
 }
 
-pub fn createFilter( moduleTypeInfo:&Ast.TypeInfo, processInfo:Ast.ProcessInfo,
+pub fn createFilter( moduleTypeInfo:&Ast.TypeInfo, processInfo:&Ast.ProcessInfo,
                      stream:oStream ): Nodes.Filter<Opt>
 {
    return new dumpFilter( true, moduleTypeInfo, moduleTypeInfo.$scope,
@@ -735,9 +735,14 @@ pub override fn dumpFilter.processGetField(
    filter( node.get_prefix(), self, opt.nextOpt() );
 };
 
+pub override fn dumpFilter.processJoinRunner( node: &Nodes.JoinRunnerNode, opt:Opt ) mut
+{
+   self.dump( opt, node, "" );
+   filter( node.$runner, self, opt.nextOpt() );
+}
+
 pub override fn dumpFilter.processReturn(
    node: &Nodes.ReturnNode, opt:Opt ) mut
-
 {
    self.dump( opt, node, "" );
    if! node.get_expList() {

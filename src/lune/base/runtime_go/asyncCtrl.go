@@ -24,6 +24,8 @@ SOFTWARE.
 
 package runtimelns
 
+import "sync"
+
 type Lns__pipe struct {
 	ch  chan LnsAny
 	end bool
@@ -53,11 +55,13 @@ func (self *Lns__pipe) get() LnsAny {
 
 type LnsThread struct {
 	LnsEnv *LnsEnv
+    wg *sync.WaitGroup
 	FP     LnsThreadMtd
 }
 
 func (self *LnsThread) initLnsThread() {
 	self.LnsEnv = Lns_GetEnv()
+    self.wg = &sync.WaitGroup{}
 }
 
 func (self *LnsThread) LoopMain() {
@@ -73,13 +77,20 @@ func (self *LnsThread) LoopMain() {
 	oldEnv.LuaVM.closeVM()
 }
 
+
+
 func Lns_LockEnvSync(_env *LnsEnv, callback func()) {
 	if _env.async {
 		// __noasync が待ちになるまで待つために lock する
 		sync_LnsEnvMutex.Lock()
+        _env.async = false
 
-		// 処理終了後に lock を開放するために defer する。
-		defer sync_LnsEnvMutex.Unlock()
+        // 処理終了後に lock を開放するために defer する。
+        defer func () {
+            _env.async = true
+            sync_LnsEnvMutex.Unlock()
+        }()
+
 
 		callback()
 
@@ -87,3 +98,8 @@ func Lns_LockEnvSync(_env *LnsEnv, callback func()) {
 		callback()
 	}
 }
+
+type Lns_syncFlag struct {
+    wg sync.WaitGroup
+}
+

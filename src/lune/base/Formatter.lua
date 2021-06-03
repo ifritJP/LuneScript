@@ -127,6 +127,7 @@ local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Types = _lune.loadModule( 'lune.base.Types' )
 local Util = _lune.loadModule( 'lune.base.Util' )
+local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
 
 local Opt = {}
 _moduleObj.Opt = Opt
@@ -234,7 +235,7 @@ end
 
 function FormatterFilter:processBlankLine( node, opt )
 
-   for _83 = 1, node:get_lineNum() do
+   for _84 = 1, node:get_lineNum() do
       self:writeln( "" )
    end
    
@@ -265,6 +266,63 @@ end
 function FormatterFilter:processSubfile( node, opt )
 
 end
+
+
+function FormatterFilter:processLuneControl( node, opt )
+
+   self:writeln( "_lune_control " )
+   do
+      local _matchExp = node:get_pragma()
+      if _matchExp[1] == LuneControl.Pragma.default__init[1] then
+      
+         self:writeln( "default__init" )
+      elseif _matchExp[1] == LuneControl.Pragma.default__init_old[1] then
+      
+         self:writeln( "default__init_old" )
+      elseif _matchExp[1] == LuneControl.Pragma.disable_mut_control[1] then
+      
+         self:writeln( "disable_mut_control" )
+      elseif _matchExp[1] == LuneControl.Pragma.ignore_symbol_[1] then
+      
+         self:writeln( "ignore_symbol_" )
+      elseif _matchExp[1] == LuneControl.Pragma.load__lune_module[1] then
+      
+         self:writeln( "load__lune_module" )
+      elseif _matchExp[1] == LuneControl.Pragma.limit_conv_code[1] then
+         local codeSet = _matchExp[2][1]
+      
+         self:writeln( "limit_conv_code" )
+         for code, __val in pairs( codeSet ) do
+            self:write( string.format( " %s", code) )
+         end
+         
+      elseif _matchExp[1] == LuneControl.Pragma.use_async[1] then
+      
+         self:writeln( "use_async" )
+      elseif _matchExp[1] == LuneControl.Pragma.run_async_pipe[1] then
+      
+         self:writeln( "run_async_pipe" )
+      elseif _matchExp[1] == LuneControl.Pragma.run_async_runner[1] then
+      
+         self:writeln( "run_async_runner" )
+      elseif _matchExp[1] == LuneControl.Pragma.default_async_func[1] then
+      
+         self:writeln( "default_async_func" )
+      elseif _matchExp[1] == LuneControl.Pragma.default_async_all[1] then
+      
+         self:writeln( "default_async_all" )
+      elseif _matchExp[1] == LuneControl.Pragma.default_async_this_class[1] then
+      
+         self:writeln( "default_async_this_class" )
+      elseif _matchExp[1] == LuneControl.Pragma.default_noasync_this_class[1] then
+      
+         self:writeln( "default_noasync_this_class" )
+      end
+   end
+   
+   self:writeln( ";" )
+end
+
 
 function FormatterFilter:processAsyncLock( node, opt )
 
@@ -1324,6 +1382,14 @@ function FormatterFilter:processGetField( node, opt )
    self:write( node:get_field().txt )
 end
 
+
+
+function FormatterFilter:processJoinRunner( node, opt )
+
+   self:write( "__join " )
+   filter( node:get_runner(), self, opt:nextOpt( node ) )
+   self:writeln( "" )
+end
 
 
 function FormatterFilter:processReturn( node, opt )

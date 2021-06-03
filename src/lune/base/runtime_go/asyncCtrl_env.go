@@ -47,6 +47,7 @@ func (self *Lns__pipe) Get(_env *LnsEnv) LnsAny {
 	return self.get()
 }
 
+
 type LnsThreadMtd interface {
 	Loop(*LnsEnv)
 }
@@ -61,16 +62,31 @@ func (self *LnsThread) runLoop() {
 
 type LnsRunner interface {
 	Run(*LnsEnv)
+    GetLnsSyncFlag() *Lns_syncFlag
 }
 
 func lnsRunMain(self LnsRunner) {
 	env := createEnv(true)
 
 	self.Run(env)
+    self.GetLnsSyncFlag().wg.Done()
 
+    
 	env.LuaVM.closeVM()
 }
 
 func LnsRun(self LnsRunner) {
+    self.GetLnsSyncFlag().wg.Add(1)
 	go lnsRunMain(self)
+}
+
+func (self *Lns_syncFlag) Wait( _env *LnsEnv ) {
+	if !_env.async {
+		// __asyncLock の処理が動くように sync_LnsEnvMutex を unlock する。
+		sync_LnsEnvMutex.Unlock()
+
+		// wait 後、sync_LnsEnvMutex を lock するために defer する。
+		defer sync_LnsEnvMutex.Lock()
+	}
+    self.wg.Wait()    
 }

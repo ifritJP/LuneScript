@@ -52,8 +52,15 @@ func (self *LnsThread) runLoop() {
 
 type LnsRunner interface {
 	Run()
+    GetLnsSyncFlag(_env *LnsEnv) *Lns_syncFlag
 }
 
 func LnsRun(self LnsRunner) {
+    self.GetLnsSyncFlag().wg.Add(1)
 	self.Run()
+    self.GetLnsSyncFlag().wg.Done()
+}
+
+func (self *Lns_syncFlag) Wait() {
+    self.wg.Wait()
 }

@@ -2368,6 +2368,14 @@ fn convFilter.outputDeclFuncArg(funcType:&Ast.TypeInfo) mut {
    }
 }
 
+fn convFilter.isImplementedRunner( typeInfo:&Ast.TypeInfo ) : bool {
+   foreach ifType in typeInfo.$interfaceList {
+      if ifType == self.builtinFuncs.__runner_ {
+         return true;
+      }
+   }
+   return false;
+}
 
 pub override fn convFilter.processDeclConstr(
    node: &Nodes.DeclConstrNode, opt: Opt ) mut
@@ -2386,6 +2394,12 @@ pub override fn convFilter.processDeclConstr(
       filter( arg, self, node );
    }
    self.writeln( ") {" );
+
+   if self.isImplementedRunner( classType ) {
+      self.pushIndent(##);
+      self.writeln("self._syncFlag = &Lns_syncFlag{}" );
+      self.popIndent();
+   }
 
    filter( unwrap node.$declInfo.$body, self, node );
 
@@ -3673,6 +3687,11 @@ pub override fn convFilter.processExpNew(
 fn convFilter.outputIFMethods( node: &Nodes.DeclClassNode ) mut {
    self.pushIndent(##);
 
+   if self.isImplementedRunner( node.$expType ) {
+      self.writeln( "GetLnsSyncFlag() *Lns_syncFlag");
+   }
+   
+ 
    let mut name2MtdType:Map<str,&Ast.TypeInfo> = {};
    let scope = unwrap node.$expType.$scope;
    scope.filterTypeInfoField(
@@ -3737,14 +3756,7 @@ fn convFilter.outputInterfaceType( node: &Nodes.DeclClassNode ) mut {
    
 }
 
-
-
 fn convFilter.outputClassType( node: &Nodes.DeclClassNode ) mut {
-// type Parent struct {
-//     val1 int
-//     FP ParentMtd
-// }
-   
    self.write( "type " );
    self.write( self.getTypeSymbol( node.$expType ) );
    self.writeln( " struct {" );
@@ -3754,6 +3766,11 @@ fn convFilter.outputClassType( node: &Nodes.DeclClassNode ) mut {
    if node.$expType.hasBase() {
       let superClassType = node.$expType.$baseTypeInfo;
       self.writeln( self.getTypeSymbolWithPrefix( superClassType ) );
+   }
+
+   let hasRunner = self.isImplementedRunner( node.$expType );
+   if hasRunner {
+      self.writeln( "_syncFlag *Lns_syncFlag" );
    }
    
    foreach memberNode in node.$memberList {
@@ -3766,6 +3783,12 @@ fn convFilter.outputClassType( node: &Nodes.DeclClassNode ) mut {
    self.popIndent();
 
    self.writeln( "}" );
+
+   if hasRunner {
+      self.writeln(
+         "func (self *%s) GetLnsSyncFlag() *Lns_syncFlag { return self._syncFlag }"
+         ( self.getTypeSymbol( node.$expType )) );
+   }
 }
 
 fn convFilter.outputToStem( node: &Nodes.DeclClassNode ) mut {
@@ -3909,6 +3932,10 @@ fn convFilter.outputConstructor( node: &Nodes.DeclClassNode ) mut
       }
       else {
          superArgNum = 0;
+      }
+
+      if self.isImplementedRunner( node.$expType ) {
+         self.writeln("self._syncFlag = &Lns_syncFlag{}" );
       }
 
       // メンバをセットする
@@ -5463,6 +5490,13 @@ pub override fn convFilter.processGetField(
    }
 }
 
+
+pub override fn convFilter.processJoinRunner(
+   node: &Nodes.JoinRunnerNode, opt:Opt ) mut
+{
+   filter( node.$runner, self, node );
+   self.writeln( ".GetLnsSyncFlag().Wait(_env)" );
+}
 
 pub override fn convFilter.processReturn(
    node: &Nodes.ReturnNode, opt: Opt ) mut

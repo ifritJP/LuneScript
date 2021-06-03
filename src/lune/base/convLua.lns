@@ -3314,6 +3314,11 @@ pub override fn ConvFilter.processGetField(
    }
 };
 
+pub override fn ConvFilter.processJoinRunner(
+   node: &Nodes.JoinRunnerNode, opt:Opt ) mut
+{
+}
+
 
 pub override fn ConvFilter.processReturn(
    node: &Nodes.ReturnNode, opt: Opt ) mut

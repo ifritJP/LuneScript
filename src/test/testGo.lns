@@ -2076,3 +2076,97 @@ _section();
       sub20();
    }
 }
+_section();
+{
+   abstract class Runner extend (__Runner) {
+      _lune_control default_async_this_class;
+      
+      pub fn __init() {
+      }
+      
+      pub abstract fn runMain() mut;
+
+      pub fn run() mut {
+         self.runMain();
+      }
+
+      
+      pub fn start() mut {
+         _lune_control run_async_runner;
+      }
+      pub fn join() mut {
+         __join self;
+      }
+   }
+
+   fn busyWait( count:int ) {
+      let mut total = 0;
+      for _ = 0, count * 1000000 {
+         total = total + 1;
+      }
+   }
+
+   class TestRunner extend Runner {
+      _lune_control default_async_this_class;
+
+      let txt:str;
+      let mut fin:bool {pub};
+      
+      pub fn __init( txt:str) {
+         super();
+         self.txt = txt;
+         self.fin = false;
+      }
+      
+      pub override fn runMain() mut {
+         for _ = 1, 10 {
+            __asyncLock {
+               busyWait( 10 );
+            }
+         }
+         self.fin = true;
+      }
+   }
+
+   class TestRunner2 extend Runner {
+      _lune_control default_async_this_class;
+
+      let mut fin:bool {pub};
+      
+      pub fn __init( txt:str) {
+         super();
+         self.fin = false;
+      }
+      
+      pub override fn runMain() mut {
+         let mut test = new TestRunner("hoge");
+         let mut test2 = new TestRunner("hoge2");
+         print( "hoge start" );
+         test.start();
+         test2.start();
+         test.join();
+         test2.join();
+         print( "hoge end" );
+
+         if test.$fin and test2.$fin {
+            self.fin = true;
+         } else {
+            print( "hoge", test.$fin, test2.$fin );
+         }
+      }
+   }
+   {
+      let list:List<TestRunner2> = [];
+      for index = 1, 1 {
+         let mut test = new TestRunner2( "%d" (index) );
+         test.start();
+         list.insert( test );
+      }
+      busyWait( 300 );
+      foreach test in list {
+         test.join();
+         print( "wait done2" );
+         print( "fin", test.$fin );
+      }
+    }
+}

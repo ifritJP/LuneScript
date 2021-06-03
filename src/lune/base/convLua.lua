@@ -3938,6 +3938,11 @@ end
 
 
 
+function ConvFilter:processJoinRunner( node, opt )
+
+end
+
+
 function ConvFilter:processReturn( node, opt )
 
    self:write( "return " )
@@ -4298,7 +4303,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3627, function (  )
+   Log.log( Log.Level.Trace, __func__, 3632, function (  )
    
       return string.format( "macro: %s", code)
    end )

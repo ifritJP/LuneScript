@@ -48,8 +48,10 @@ type LnsEnv struct {
 	LuaVM       *Lns_luaVM
     // load などの、全体を通して共通で動作させる必要のある VM
 	CommonLuaVM   *Lns_luaVM
-    // async 用の Env かどうか
+    // async 用の Env かどうか。現在の設定。 __asyncLock している間は変る。
 	async       bool
+    // async 用の Env かどうか。起動時の設定。
+	orgAsync       bool
 }
 
 // デフォルトのシングルタスクで使用する LnsEnv
@@ -85,6 +87,7 @@ func createEnv(async bool) *LnsEnv {
         env.CommonLuaVM = env.LuaVM
     }
 	env.async = async
+    env.orgAsync = async
 
 	return env
 }

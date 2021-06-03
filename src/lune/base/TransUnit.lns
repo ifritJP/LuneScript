@@ -2518,6 +2518,21 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
       self.error( "match must have alge value -- %s" (exp.$expType.getTxt(##)) );
    };
 
+   if not self.moduleType.equals(
+      self.processInfo, algeTypeInfo.getModule() ## )
+   {
+      if not self.importModuleSet.has( algeTypeInfo.getModule() ) {
+         // alge を宣言しているモジュールを import していない場合
+         let fullname = algeTypeInfo.getFullName(
+            self.typeNameCtrl, self.scope, true );
+         self.addErrMess(
+            firstToken.pos,              
+            "need to import module -- %s (%s)"
+            ( fullname, algeTypeInfo.getTxt(##) ) );
+      }
+   }  
+   
+   
    self.checkNextToken( "{" );
 
    let mut caseList: List<&Nodes.MatchCase> = [];
