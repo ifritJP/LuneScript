@@ -135,7 +135,7 @@ function convFilter:processRoot( node, dummy )
    local dependInfo = DependInfo.new(moduleFull)
    
    for __index, impNode in ipairs( node:get_nodeManager():getImportNodeList(  ) ) do
-      dependInfo:addImpotModule( impNode:get_modulePath() )
+      dependInfo:addImpotModule( impNode:get_info():get_modulePath() )
    end
    
    for __index, subfileNode in ipairs( node:get_nodeManager():getSubfileNodeList(  ) ) do

@@ -535,6 +535,14 @@ pub fn TransUnit.createAST(
    Log._log2( .Log, "%s start -- %s" (__func__, parser.getStreamName()) );
    
    self.moduleName = unwrap moduleName default "";
+
+   when! moduleName {
+      // 自分自身をインポートしないように、self.importModuleInfo に登録する。
+      if self.importModuleInfo.len() == 0 and not self.importModuleInfo.add( moduleName )
+      {
+         self.error( "already imported -- %s" (moduleName) );
+      }
+   }
    
    let mut moduleTypeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
    let mut moduleSymboInfo:&Ast.SymbolInfo! = nil;

@@ -245,9 +245,10 @@ end
 
 function FormatterFilter:processImport( node, opt )
 
-   self:write( string.format( "import %s", node:get_modulePath()) )
-   if not node:get_modulePath():find( "%." .. node:get_assignName() .. "$" ) then
-      self:write( string.format( " as %s", node:get_assignName()) )
+   local info = node:get_info()
+   self:write( string.format( "import %s", info:get_modulePath()) )
+   if not info:get_modulePath():find( "%." .. info:get_assignName() .. "$" ) then
+      self:write( string.format( " as %s", info:get_assignName()) )
    end
    
    self:writeln( ";" )

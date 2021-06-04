@@ -853,20 +853,22 @@ pub override fn convFilter.processImport(
    } else {
       args = "";
    }
+
+   let info = node.$info;
    
-   if node.$modulePath == "lune.base.Depend" {
+   if info.$modulePath == "lune.base.Depend" {
       // Depend は builtin しているので、関連モジュールはここで処理する
       self.writeln( "Lns_LuaVer_init( %s )" (args) );
    }
 
-   if not self.isSameModDir( node.$moduleTypeInfo ) and
-      not Ast.isBuiltin( node.$moduleTypeInfo.$typeId.id )
+   if not self.isSameModDir( info.$moduleTypeInfo ) and
+      not Ast.isBuiltin( info.$moduleTypeInfo.$typeId.id )
    {
-      self.write( "%s." (self.getModuleName( node.$moduleTypeInfo, true )) );
+      self.write( "%s." (self.getModuleName( info.$moduleTypeInfo, true )) );
    } 
    self.writeln(
       "Lns_%s_init(%s)"
-      (self.getModuleName( node.$moduleTypeInfo, false ), args ) );
+      (self.getModuleName( info.$moduleTypeInfo, false ), args ) );
 }
 
 fn convFilter.needConvFormFunc( node:&Nodes.ExpCastNode ) mut : bool {
@@ -1706,10 +1708,11 @@ fn convFilter.outputModule( moduleTypeInfo:&Ast.TypeInfo, addDot:bool ) {
 }
 
 fn getModulePrefix( node:&Nodes.ImportNode ) : str {
-   if node.$assigned {
-      return "%s." (node.$assignName);
+   let info = node.$info;
+   if info.$assigned {
+      return "%s." (info.$assignName);
    }
-   let mod = node.$moduleTypeInfo.$parentInfo.$rawTxt.gsub("@", "");
+   let mod = info.$moduleTypeInfo.$parentInfo.$rawTxt.gsub("@", "");
    if mod == "" {
       return "main.";
    }
@@ -1739,20 +1742,21 @@ fn convFilter.outputModuleImport( node:&Nodes.DeclClassNode ) mut {
 
 
 fn convFilter.outputImport( node:&Nodes.ImportNode ) mut {
-   if self.isSameModDir( node.$moduleTypeInfo ) or
-      Ast.isBuiltin( node.$moduleTypeInfo.$typeId.id )
+   let info = node.$info;
+   if self.isSameModDir( info.$moduleTypeInfo ) or
+      Ast.isBuiltin( info.$moduleTypeInfo.$typeId.id )
    {
       return;
    }
    
 
    self.write( "import " );
-   let packSym = node.$assignName;
-   if node.$modulePath.find( "^go/"## ) {
-      let workMod = node.$modulePath.gsub( "^go/", "" ).gsub( "%.", "/").gsub( ":", "." );
+   let packSym = info.$assignName;
+   if info.$modulePath.find( "^go/"## ) {
+      let workMod = info.$modulePath.gsub( "^go/", "" ).gsub( "%.", "/").gsub( ":", "." );
       self.writeln( '%s "%s"' (packSym,(workMod.gsub( "/[^/]+$", "" ))) );
    } else {
-      let modulePath, count = node.$modulePath.gsub( "([^%.]+)%.[^%.]+$", "/%1" );
+      let modulePath, count = info.$modulePath.gsub( "([^%.]+)%.[^%.]+$", "/%1" );
       if count == 0 {
          self.writeln( '%s "%s"' (packSym,self.option.appName));
       } else {
@@ -1762,14 +1766,15 @@ fn convFilter.outputImport( node:&Nodes.ImportNode ) mut {
       }
    }
 
-   self.module2PackSym[ node.$moduleTypeInfo ] = packSym;
+   self.module2PackSym[ info.$moduleTypeInfo ] = packSym;
 }
 
 pub override fn convFilter.processRoot(
    node: &Nodes.RootNode, opt: Opt ) mut
 {
    foreach importNode in node.$nodeManager.getImportNodeList() {
-      self.moduleType2SymbolMap[ importNode.$moduleTypeInfo ] = importNode.$symbolInfo;
+      let info = importNode.$info;
+      self.moduleType2SymbolMap[ info.$moduleTypeInfo ] = info.$symbolInfo;
    }
    
    foreach pragma in node.$luneHelperInfo.pragmaSet {

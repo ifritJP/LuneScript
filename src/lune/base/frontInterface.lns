@@ -227,6 +227,10 @@ pub class ImportModuleInfo {
       }
       return info;
    }
+
+   pub fn len() : int {
+      return #self.orderedSet.$list;
+   }
 }
 
 pub interface frontInterface {

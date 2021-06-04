@@ -505,6 +505,10 @@ function ImportModuleInfo:clone(  )
    
    return info
 end
+function ImportModuleInfo:len(  )
+
+   return #self.orderedSet:get_list()
+end
 function ImportModuleInfo.setmeta( obj )
   setmetatable( obj, { __index = ImportModuleInfo  } )
 end

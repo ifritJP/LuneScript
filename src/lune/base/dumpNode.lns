@@ -142,7 +142,7 @@ pub override fn dumpFilter.processLuneKind(
 pub override fn dumpFilter.processImport(
    node: &Nodes.ImportNode, opt:Opt ) mut
 {
-   self.dump( opt, node, node.get_modulePath() );
+   self.dump( opt, node, node.$info.$modulePath );
 };
 pub override fn dumpFilter.processRoot(
    node: &Nodes.RootNode, opt:Opt ) mut

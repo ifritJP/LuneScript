@@ -1248,6 +1248,48 @@ LazyLoad.Auto = 2
 LazyLoad._val2NameMap[2] = 'Auto'
 LazyLoad.__allList[3] = LazyLoad.Auto
 
+
+local ImportInfo = {}
+_moduleObj.ImportInfo = ImportInfo
+function ImportInfo.setmeta( obj )
+  setmetatable( obj, { __index = ImportInfo  } )
+end
+function ImportInfo.new( modulePath, lazy, assignName, assigned, symbolInfo, moduleTypeInfo )
+   local obj = {}
+   ImportInfo.setmeta( obj )
+   if obj.__init then
+      obj:__init( modulePath, lazy, assignName, assigned, symbolInfo, moduleTypeInfo )
+   end
+   return obj
+end
+function ImportInfo:__init( modulePath, lazy, assignName, assigned, symbolInfo, moduleTypeInfo )
+
+   self.modulePath = modulePath
+   self.lazy = lazy
+   self.assignName = assignName
+   self.assigned = assigned
+   self.symbolInfo = symbolInfo
+   self.moduleTypeInfo = moduleTypeInfo
+end
+function ImportInfo:get_modulePath()
+   return self.modulePath
+end
+function ImportInfo:get_lazy()
+   return self.lazy
+end
+function ImportInfo:get_assignName()
+   return self.assignName
+end
+function ImportInfo:get_assigned()
+   return self.assigned
+end
+function ImportInfo:get_symbolInfo()
+   return self.symbolInfo
+end
+function ImportInfo:get_moduleTypeInfo()
+   return self.moduleTypeInfo
+end
+
 function NodeKind.get_Import(  )
 
    return 5
@@ -1289,29 +1331,24 @@ function ImportNode:canBeStatement(  )
 
    return true
 end
-function ImportNode.new( id, pos, macroArgFlag, typeList, modulePath, lazy, assignName, assigned, symbolInfo, moduleTypeInfo )
+function ImportNode.new( id, pos, macroArgFlag, typeList, info )
    local obj = {}
    ImportNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, modulePath, lazy, assignName, assigned, symbolInfo, moduleTypeInfo ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, info ); end
    return obj
 end
-function ImportNode:__init(id, pos, macroArgFlag, typeList, modulePath, lazy, assignName, assigned, symbolInfo, moduleTypeInfo) 
+function ImportNode:__init(id, pos, macroArgFlag, typeList, info) 
    Node.__init( self,id, 5, pos, macroArgFlag, typeList)
    
    
    
-   self.modulePath = modulePath
-   self.lazy = lazy
-   self.assignName = assignName
-   self.assigned = assigned
-   self.symbolInfo = symbolInfo
-   self.moduleTypeInfo = moduleTypeInfo
+   self.info = info
    
    
 end
-function ImportNode.create( nodeMan, pos, macroArgFlag, typeList, modulePath, lazy, assignName, assigned, symbolInfo, moduleTypeInfo )
+function ImportNode.create( nodeMan, pos, macroArgFlag, typeList, info )
 
-   local node = ImportNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, modulePath, lazy, assignName, assigned, symbolInfo, moduleTypeInfo)
+   local node = ImportNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, info)
    nodeMan:addNode( node )
    return node
 end
@@ -1323,23 +1360,8 @@ end
 function ImportNode.setmeta( obj )
   setmetatable( obj, { __index = ImportNode  } )
 end
-function ImportNode:get_modulePath()
-   return self.modulePath
-end
-function ImportNode:get_lazy()
-   return self.lazy
-end
-function ImportNode:get_assignName()
-   return self.assignName
-end
-function ImportNode:get_assigned()
-   return self.assigned
-end
-function ImportNode:get_symbolInfo()
-   return self.symbolInfo
-end
-function ImportNode:get_moduleTypeInfo()
-   return self.moduleTypeInfo
+function ImportNode:get_info()
+   return self.info
 end
 
 
@@ -13676,7 +13698,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, _8955 in pairs( self.map ) do
+   for key, _8949 in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -13711,8 +13733,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, _8969 in ipairs( __sorted ) do
-         local key = __map[ _8969 ]
+      for __index, _8963 in ipairs( __sorted ) do
+         local key = __map[ _8963 ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false

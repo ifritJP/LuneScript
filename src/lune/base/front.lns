@@ -78,7 +78,7 @@ alge UptodateInfo {
 
 fn createModuleInfo(
    ast:&TransUnit.ASTInfo, mod:str,
-   moduleId:&frontInterface.ModuleId ) : frontInterface.ModuleInfo
+   moduleId:&frontInterface.ModuleId ) __async : frontInterface.ModuleInfo
 {
    let importedAliasMap:Map<&Ast.TypeInfo,&Ast.AliasTypeInfo> = {};
    let rootNode = unwrap ast.$node@@@Nodes.RootNode;
@@ -158,11 +158,11 @@ class ModuleMgr {
    }
 }
 
-form ConverterFuncSub() __async;
-form ConverterFunc() __async: ConverterFuncSub!;
+form ConverterFunc() __async;
 
-class AstCreater {
-
+class AstCreater extend Runner.Runner {
+   _lune_control default_async_this_class;
+   
    let option:&Option.Option;
    let builtinFunc:&Builtin.BuiltinFuncType;
    let mod:str;
@@ -192,25 +192,34 @@ class AstCreater {
       analyzeModule:str!, analyzeMode:TransUnit.AnalyzeMode, pos:&Parser.Position!,
       builtinFunc:&Builtin.BuiltinFuncType, option:&Option.Option )
    {
+      super();
+      
       self.option = option;
       self.builtinFunc = builtinFunc;
       self.mod = mod;
       self.moduleId = moduleId;
       self.moduleInfo = nil;
       
-      self.converter = fn () : ConverterFuncSub! {
+      self.converter = fn () {
          let ast = self.createAst(
             importModuleInfo, parserSrc, analyzeModule, analyzeMode, pos );
          self.ast = ast;
          self.moduleInfo = createModuleInfo( ast, self.mod, self.moduleId );
-         return nil;
+         Log._log2( .Log, "generated AST -- %s" (mod) );
       };
 
 
-      self.converter();
+      self.start();
+      //self.converter();
    }
 
+   pub override fn runMain() __async mut {
+      self.converter();
+   }
+   
+
    local fn getAst() : &TransUnit.ASTInfo, &frontInterface.ModuleInfo {
+      self.join();
       return unwrap self.ast, unwrap self.moduleInfo;
    }
    
@@ -352,6 +361,17 @@ alge CreateAstResult {
    Creater(AstCreater),
 }
 
+fn getAstFromResult( result:&CreateAstResult ) __async : &TransUnit.ASTInfo {
+   match result {
+      case .Ast( ast ) {
+         return ast;
+      }
+      case .Creater( creater ) {
+         return (creater.getAst());
+      }
+   }
+}
+
 fn Front.createAstSub(
    importModuleInfo:frontInterface.ImportModuleInfo,
    parserSrc:&Parser.ParserSrc,
@@ -395,6 +415,22 @@ fn Front.processAstCreater( astCreater:AstCreater ) mut : &TransUnit.ASTInfo {
    return ast;
 }
 
+fn Front.applyAstResult( result:&CreateAstResult ) mut : &TransUnit.ASTInfo {
+   _match result {
+      case .Ast( ast ) {
+         return ast;
+      }
+      case .Creater( astCreater ) {
+         let ast, moduleInfo = astCreater.getAst();
+         self.moduleMgr.add( ast, moduleInfo );
+         
+         return ast;
+      }
+   }
+}
+
+
+
 fn Front.createAst(
    importModuleInfo:frontInterface.ImportModuleInfo,
    parserSrc:&Parser.ParserSrc,
@@ -402,16 +438,8 @@ fn Front.createAst(
    analyzeModule:str!, analyzeMode:TransUnit.AnalyzeMode,
    pos:&Parser.Position! ) mut : &TransUnit.ASTInfo
 {
-   _match self.createAstSub(
-      importModuleInfo, parserSrc, mod, moduleId, analyzeModule, analyzeMode, pos )
-   {
-      case .Ast( ast ) {
-         return ast;
-      }
-      case .Creater( astCreater ) {
-         return self.processAstCreater( astCreater );
-      }
-   }
+   return self.applyAstResult( self.createAstSub(
+      importModuleInfo, parserSrc, mod, moduleId, analyzeModule, analyzeMode, pos ) );
 }
 
 
@@ -1331,14 +1359,14 @@ class LuaConverter extend Runner.Runner {
    let streamMem:Util.memStream;
    let metaStreamMem:Util.memStream;
    let dependsStreamMem:Util.memStream;
+   let astResult:&CreateAstResult;
 
    let converterFunc:ConverterFunc;
    let filterInfo:convLua.FilterInfo;
-   let rootNode:&Nodes.RootNode;
 
    pub fn __init(
       luaPath:str, metaPath:str, dependsPath:str!, 
-      ast:&TransUnit.ASTInfo, convMode:convLua.ConvMode,
+      astResult:&CreateAstResult, convMode:convLua.ConvMode,
       path:str, byteCompile:bool,
       stripDebugInfo:bool, option:&Option.Option ) __async
    {
@@ -1355,16 +1383,17 @@ class LuaConverter extend Runner.Runner {
       self.streamMem = new Util.memStream();
       self.metaStreamMem = new Util.memStream();
       self.dependsStreamMem = new Util.memStream();
-      self.rootNode = unwrap ast.$node@@@Nodes.RootNode;
+      self.astResult = astResult;
 
-
-      self.converterFunc = fn() __async : ConverterFuncSub!  {
+      self.converterFunc = fn() __async {
          // 一旦メモリに出力するためのストリーム作成
          let mut stream = self.streamMem;
          let mut metaStream = self.metaStreamMem;
          
          let mut outStream, mut oMetaStream = stream, metaStream;
 
+         let ast = getAstFromResult( self.astResult );
+         
          let needDepends = option.dependsPath ~= nil;
          if needDepends {
             ast.$node.processFilter(
@@ -1379,8 +1408,7 @@ class LuaConverter extend Runner.Runner {
 
          self.filterInfo = ast2LuaMain(
             ast, path, outStream, oMetaStream, convMode, false, option );
-         self.filterInfo.outputLua( self.rootNode );
-         return nil;
+         self.filterInfo.outputLua( unwrap ast.$node@@@Nodes.RootNode );
       };
       self.start();
    }
@@ -1391,9 +1419,9 @@ class LuaConverter extend Runner.Runner {
    
    pub fn saveLua() mut {
       self.join();
-      
-      //self.converterFunc();
-      self.filterInfo.outputMeta( self.rootNode );
+
+      let ast = getAstFromResult( self.astResult );
+      self.filterInfo.outputMeta( unwrap ast.$node@@@Nodes.RootNode );
       
       
       if self.byteCompile {
@@ -1512,11 +1540,13 @@ class GoConverter extend Runner.Runner {
    let mut memStream:Util.memStream;
    let path:str;
    let converter:ConverterFunc;
+   let mut validFlag:bool;
    
-   local fn __init( scriptPath:str, ast:&TransUnit.ASTInfo,
+   local fn __init( scriptPath:str, astResult:&CreateAstResult,
                     option:&Option.Option, goOpt:&convGo.Option ) __async
    {
       super();
+      self.validFlag = true;
       
       let mut path = scriptPath.gsub( "%.lns$", ".go" );
 
@@ -1527,11 +1557,27 @@ class GoConverter extend Runner.Runner {
       self.path = path;
       self.memStream = new Util.memStream();
 
-      self.converter = fn () : ConverterFuncSub! {
+      self.converter = fn () {
+         let ast = getAstFromResult( astResult );
+
+         let! rootNode = ast.$node@@@Nodes.RootNode {
+            return;
+         };
+         foreach pragma in rootNode.$luneHelperInfo.pragmaSet {
+            match pragma {
+               case .limit_conv_code( codeSet ) {
+                  if not codeSet.has( LuneControl.Code.Go ) {
+                     self.validFlag = false;
+                     return;
+                  }
+               }
+            }
+         }
+
+         
          let mut conv = convGo.createFilter(
             option.testing, path, self.memStream, ast, goOpt );
          ast.$node.processFilter( conv, new convGo.Opt( ast.$node ) );
-         return nil;
       };
       self.start();
    }
@@ -1542,6 +1588,11 @@ class GoConverter extend Runner.Runner {
 
    local fn saveGo() mut {
       self.join();
+
+      if not self.validFlag {
+         return;
+      }
+      
       
       let! mut file = io.open( self.path, "w" ) {
          return;
@@ -1557,22 +1608,9 @@ class GoConverter extend Runner.Runner {
 /**
 Go に変換しファイルに書き込む
 */
-local fn Front.saveToGo( scriptPath:str, ast:&TransUnit.ASTInfo ) mut : GoConverter! {
-   let! rootNode = ast.$node@@@Nodes.RootNode {
-      return nil;
-   };
-   foreach pragma in rootNode.$luneHelperInfo.pragmaSet {
-      match pragma {
-         case .limit_conv_code( codeSet ) {
-            if not codeSet.has( LuneControl.Code.Go ) {
-               return nil;
-            }
-         }
-      }
-   }
-
+local fn Front.saveToGo( scriptPath:str, astResult:&CreateAstResult ) mut : GoConverter! {
    return new GoConverter(
-      scriptPath, ast, self.option, self.createGoOption( scriptPath ) );
+      scriptPath, astResult, self.option, self.createGoOption( scriptPath ) );
 }
 
 
@@ -1659,44 +1697,29 @@ fn Front.saveToLua( updateInfo:UpdateInfo ) mut : ConverterFunc!
 
    _match uptodate {
       case .NeedUpdate {
-         fn process( ast:&TransUnit.ASTInfo ) : ConverterFuncSub! {
-            let mut luaConv = new LuaConverter(
-               luaPath, metaPath, dependsPath,
-               ast, convMode, scriptPath, self.option.byteCompile,
-               self.option.stripDebugInfo, self.option );
-
-            let mut goConv:GoConverter! = nil;
-            switch self.option.convTo {
-               case .C {
-                  self.saveToC( scriptPath, ast );
-               }
-               case .Go {
-                  goConv = self.saveToGo( scriptPath, ast );
-               }
-            }
-            return fn () {
-               luaConv.saveLua();
-               goConv$.saveGo$();
-            };
-         }
-         
          let mut result = self.createAstSub(
             new frontInterface.ImportModuleInfo(),
             Parser.ParserSrc.LnsPath( scriptPath, mod ),
             mod, moduleId, nil, .Compile, ## );
 
-         match result {
-            case .Ast( ast ) {
-               return fn () : ConverterFuncSub! {
-                  return process( ast );
-               };
-            }
-            case .Creater( astCreater ) {
-               return fn() : ConverterFuncSub! {
-                  return process( self.processAstCreater( astCreater ) );
-               };
+         let mut luaConv = new LuaConverter(
+            luaPath, metaPath, dependsPath,
+            result, convMode, scriptPath, self.option.byteCompile,
+            self.option.stripDebugInfo, self.option );
+
+         let mut goConv:GoConverter! = nil;
+         switch self.option.convTo {
+            // case .C {
+            //    self.saveToC( scriptPath,  );
+            // }
+            case .Go {
+               goConv = self.saveToGo( scriptPath, result );
             }
          }
+         return fn () {
+            luaConv.saveLua();
+            goConv$.saveGo$();
+         };
       }
       case .Uptodate( metaInfo ) {
          Util.errorLog( "uptodate -- " .. scriptPath );
@@ -1783,8 +1806,13 @@ pub fn Front.build( buildMode:BuildMode, astCallback:AstCallback! ) mut {
          }
          case .CreateAst {
             if not self.moduleMgr.getAst( mod ) {
-               self.convertToLua( updateInfo.$scriptPath, .ConvMeta,
-                                  new Util.NullOStream(), new Util.NullOStream() );
+               let mut result = self.createAstSub(
+                  new frontInterface.ImportModuleInfo(),
+                  Parser.ParserSrc.LnsPath( updateInfo.$scriptPath, mod ),
+                  mod, updateInfo.$moduleId, nil, .Compile, ## );
+               return fn () {
+                  self.applyAstResult( result );
+               };
             }
          }
       }
@@ -1800,37 +1828,31 @@ pub fn Front.build( buildMode:BuildMode, astCallback:AstCallback! ) mut {
                self.targetSet.add( self.scriptPath2Module( path ) );
             }
 
-            let postProcessList:List<ConverterFunc> = [];
-            foreach path in self.option.batchList {
+            let postProcessMap:Map<int,ConverterFunc> = {};
+            foreach path, index in self.option.batchList {
                let mut updateInfo =
                   createUpdateInfo( path, (path.gsub( ".lns$", ".d" )) );
-               let prev = os.clock();
-               print( "%s: processing..." ( updateInfo.$scriptPath));
+               print( "%s: start..." ( updateInfo.$scriptPath));
                if! process( false, updateInfo ) {
                   if self.option.$validPostBuild {
-                     postProcessList.insert( _exp );
+                     postProcessMap[ index ] = _exp;
                   } else {
                      _exp();
                   }
                }
-               print( "%s: done %g" ( updateInfo.$scriptPath, os.clock() - prev));
             }
-            let subProcessList:List<ConverterFuncSub> = [];
-            foreach postProcess in postProcessList {
-               if! let subProcess = postProcess() {
-                  subProcessList.insert( subProcess );
-               }
-            }
-            foreach subProcess in subProcessList {
-               subProcess();
+            forsort postProcess, index in postProcessMap {
+               let prev = os.clock();
+               let path = self.option.batchList[ index ];
+               print( "%s: waiting..." (path) );
+               postProcess();
+               print( "%s: done %g msec" ( path, (os.clock() - prev) * 1000));
             }
          } else {
             if! let postProcess = process(
                true, createUpdateInfo( self.option.scriptPath, nil ) )
             {
-               if! let subProcess = postProcess() {
-                  subProcess();
-               }
+               postProcess();
             }
          }
 

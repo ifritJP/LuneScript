@@ -745,13 +745,17 @@ pub enum LazyLoad {
    On,
    Auto,
 }
+
+pub class ImportInfo {
+   let modulePath: str {pub};
+   let lazy: LazyLoad {pub};
+   let assignName: str {pub};
+   let assigned: bool {pub};
+   let symbolInfo: &Ast.SymbolInfo {pub};
+   let moduleTypeInfo: &Ast.TypeInfo {pub};
+}
 _declNodeClass( "Import", Node, false, false, true,
-                [ { "modulePath": "str" },
-                  { "lazy": "LazyLoad" },
-                  { "assignName": "str" },
-                  { "assigned": "bool" },
-                  { "symbolInfo": "&Ast.SymbolInfo" },
-                  { "moduleTypeInfo": "&Ast.TypeInfo" } ]
+                [ { "info": "&ImportInfo" } ]
 );
 
 

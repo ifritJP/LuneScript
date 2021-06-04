@@ -2029,8 +2029,8 @@ fn TransUnit.analyzeBlock(
 }
 
 fn TransUnit.analyzeImportFor(
-   pos: &Parser.Position, modulePath:str,
-   assignName:str, assigned:bool, lazyLoad:Nodes.LazyLoad ) __noasync mut : Nodes.Node
+   pos: &Parser.Position, modulePath:str, assignName:str,
+   assigned:bool, lazyLoad:Nodes.LazyLoad ) __noasync mut : Nodes.ImportNode
 {
    let mut backupScope = self.scope;
    // スコープをルートに変更
@@ -2075,20 +2075,21 @@ fn TransUnit.analyzeImportFor(
 
   
    when! moduleSymbolInfo {
+      let info = new Nodes.ImportInfo(
+         modulePath, lazyLoad, assignName, assigned, moduleSymbolInfo, moduleTypeInfo );
       return Nodes.ImportNode.create(
          self.nodeManager, pos,
-         self.macroCtrl.isInAnalyzeArgMode(), [ moduleTypeInfo ],
-         modulePath, lazyLoad, assignName, assigned, moduleSymbolInfo, moduleTypeInfo );
+         self.macroCtrl.isInAnalyzeArgMode(), [ moduleTypeInfo ], info );
    }
 
    when! shadowing {
       self.errorShadowingOp( pos, shadowing, shadowing.$typeInfo ~= moduleTypeInfo );
    }
-   return self.createNoneNode( pos );
+   self.error( "failed to import -- %s" (modulePath) );
 }
 
 
-fn TransUnit.analyzeImport( opeToken: &Parser.Token ) mut : Nodes.Node {
+fn TransUnit.analyzeImport( opeToken: &Parser.Token ) mut : Nodes.ImportNode {
    let lazyLoad:Nodes.LazyLoad;
    if self.getToken(##).txt == "." {
       let modeToken = self.getToken(##);

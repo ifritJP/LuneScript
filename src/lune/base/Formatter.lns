@@ -97,9 +97,10 @@ pub override fn FormatterFilter.processBlankLine(
 pub override fn FormatterFilter.processImport(
    node: &Nodes.ImportNode, opt:Opt ) mut
 {
-   self.write( "import %s" (node.$modulePath) );
-   if not node.$modulePath.find( "%." .. node.$assignName .. "$"## ) {
-      self.write( " as %s" (node.$assignName) );
+   let info = node.$info;
+   self.write( "import %s" (info.$modulePath) );
+   if not info.$modulePath.find( "%." .. info.$assignName .. "$"## ) {
+      self.write( " as %s" (info.$assignName) );
    }
    self.writeln( ";" );
 };

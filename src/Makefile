@@ -110,6 +110,7 @@ help:
 	@echo "  make setup-pkg-lua"
 	@echo "  make test-govslua [NO_BATCH=y] [ONLY_CONV=y]"
 	@echo "  make goprof"
+	@echo "  make goprofview"
 
 
 exec:
@@ -1767,6 +1768,8 @@ goprof:
 	$(call selfhost_buildOp_batch,.,/usr/bin/time -f 'go:%e/%U/%S:$2' $(LNSC_GO),work/go,-langGo -prof)
 	(cd .; go tool pprof -dot @-.profi  ) | dot -Tsvg -odump.svg
 	(cd .; go tool pprof -dot @-.profimem  ) | dot -Tsvg -odumpmem.svg
+goprofview:
+	go tool pprof -http=0.0.0.0:8888 lnsc @-.profi 
 
 luaprof:
 	$(call test-buildlns-setup,work/go)

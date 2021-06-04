@@ -39,7 +39,7 @@ pub abstract class Runner extend (__Runner) {
    pub fn start() mut {
       _lune_control run_async_runner;
    }
-   pub fn join() mut {
+   pub fn join() {
       __join self;
    }
 }

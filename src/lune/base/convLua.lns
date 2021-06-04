@@ -280,11 +280,12 @@ pub override fn ConvFilter.processShebang(
 pub override fn ConvFilter.processImport(
    node: &Nodes.ImportNode, opt: Opt ) mut
 {
-   let modulePath = node.get_modulePath();
+   let info = node.$info;
+   let modulePath = info.$modulePath;
    let mut modSym = modulePath.gsub( ".*%.", "" );
-   modSym = node.$assignName;
+   modSym = info.$assignName;
    self.write( "local %s = _lune." ( modSym ) );
-   _switch node.$lazy {
+   _switch info.$lazy {
       case .Off {
          self.write( "loadModule" );
       }
@@ -1048,8 +1049,9 @@ if not %s then
 end``` (luneSymbol, luneSymbol) );
 
    foreach importNode in node.$nodeManager.getImportNodeList() {
-      if importNode.$lazy ~= .Off {
-         self.moduleType2SymbolMap[ importNode.$moduleTypeInfo ] = importNode.$symbolInfo;
+      let info = importNode.$info;
+      if info.$lazy ~= .Off {
+         self.moduleType2SymbolMap[ info.$moduleTypeInfo ] = info.$symbolInfo;
       }
    }
 

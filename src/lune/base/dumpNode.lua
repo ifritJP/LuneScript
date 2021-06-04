@@ -276,7 +276,7 @@ end
 
 function dumpFilter:processImport( node, opt )
 
-   self:dump( opt, node, node:get_modulePath(  ) )
+   self:dump( opt, node, node:get_info():get_modulePath() )
 end
 
 

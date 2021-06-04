@@ -1748,21 +1748,21 @@ pub fn ProcessInfo.createModifier(
 
 
 pub class AutoBoxingInfo extend TypeInfo {
-   static let mut allObj:Map<&TypeInfo,AutoBoxingInfo>;
+   //static let mut allObj:Map<&TypeInfo,AutoBoxingInfo>;
    pri let mut imutType:&TypeInfo {pub,local};
 
-   let mut count:int{pub};
+   let allmut count:int{pub};
 
    local fn __init( processInfo:ProcessInfo ) {
       super( nil, processInfo );
       self.count = 0;
-      AutoBoxingInfo.allObj[ self ] = self;
+      //AutoBoxingInfo.allObj[ self ] = self;
       self.imutType = headTypeInfo;
    }
 
 
    __init {
-      AutoBoxingInfo.allObj = {};
+      //AutoBoxingInfo.allObj = {};
    }
 
    /** super クラス。 継承していない場合は headTypeInfo。 */
@@ -1782,12 +1782,13 @@ pub class AutoBoxingInfo extend TypeInfo {
    }
 
    pub fn inc() {
-      let mut obj = unwrap AutoBoxingInfo.allObj[ self ];
+      //let mut obj = unwrap AutoBoxingInfo.allObj[ self ];
+      let mut obj = self;
       obj.count = obj.count + 1;
    }
 
    pub fn unregist() {
-      AutoBoxingInfo.allObj[ self ] = nil;
+      //AutoBoxingInfo.allObj[ self ] = nil;
    }
 }
 
@@ -1801,9 +1802,9 @@ local fn ProcessInfo.setupImut( typeInfo:TypeInfo ) mut {
 
 pub let dummyIdInfo = new IdInfo( 1, rootProcessInfo );
 pub class CanEvalCtrlTypeInfo extend TypeInfo {
-   pub static let detectAlt:CanEvalCtrlTypeInfo;
-   pub static let needAutoBoxing:CanEvalCtrlTypeInfo;
-   pub static let checkTypeTarget:CanEvalCtrlTypeInfo;
+   pub static let detectAlt:&CanEvalCtrlTypeInfo;
+   pub static let needAutoBoxing:&CanEvalCtrlTypeInfo;
+   pub static let checkTypeTarget:&CanEvalCtrlTypeInfo;
 
    pri fn __init() __noasync {
       super( nil, rootProcessInfo );

@@ -511,12 +511,13 @@ end
 
 function ConvFilter:processImport( node, opt )
 
-   local modulePath = node:get_modulePath(  )
+   local info = node:get_info()
+   local modulePath = info:get_modulePath()
    local modSym = modulePath:gsub( ".*%.", "" )
-   modSym = node:get_assignName()
+   modSym = info:get_assignName()
    self:write( string.format( "local %s = _lune.", modSym) )
    do
-      local _switchExp = node:get_lazy()
+      local _switchExp = info:get_lazy()
       if _switchExp == Nodes.LazyLoad.Off then
          self:write( "loadModule" )
       elseif _switchExp == Nodes.LazyLoad.On or _switchExp == Nodes.LazyLoad.Auto then
@@ -1413,8 +1414,9 @@ if not %s then
 end]==], luneSymbol, luneSymbol) )
    
    for __index, importNode in ipairs( node:get_nodeManager():getImportNodeList(  ) ) do
-      if importNode:get_lazy() ~= Nodes.LazyLoad.Off then
-         self.moduleType2SymbolMap[importNode:get_moduleTypeInfo()] = importNode:get_symbolInfo()
+      local info = importNode:get_info()
+      if info:get_lazy() ~= Nodes.LazyLoad.Off then
+         self.moduleType2SymbolMap[info:get_moduleTypeInfo()] = info:get_symbolInfo()
       end
       
    end
@@ -2032,7 +2034,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _769 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _771 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -4303,7 +4305,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3632, function (  )
+   Log.log( Log.Level.Trace, __func__, 3634, function (  )
    
       return string.format( "macro: %s", code)
    end )

@@ -81,7 +81,7 @@ pub override fn convFilter.processRoot(
    let mut dependInfo = new DependInfo( moduleFull );
 
    foreach impNode in node.$nodeManager.getImportNodeList() {
-      dependInfo.addImpotModule( impNode.$modulePath );
+      dependInfo.addImpotModule( impNode.$info.$modulePath );
    }
    foreach subfileNode in node.$nodeManager.getSubfileNodeList() {
       if! let usePath = subfileNode.$usePath {

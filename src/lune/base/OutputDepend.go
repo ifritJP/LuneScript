@@ -4,11 +4,11 @@ import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_OutputDepend bool
 var OutputDepend__mod__ string
 // for 131
-func OutputDepend_convExp488(arg1 []LnsAny) (LnsAny, LnsAny) {
+func OutputDepend_convExp489(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 133
-func OutputDepend_convExp505(arg1 []LnsAny) LnsAny {
+func OutputDepend_convExp506(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // 95: decl @lune.@base.@OutputDepend.createFilter
@@ -245,7 +245,7 @@ func (self *OutputDepend_convFilter) ProcessRoot(_env *LnsEnv, node *Nodes_RootN
     dependInfo = NewOutputDepend_DependInfo(_env, moduleFull)
     for _, _impNode := range( node.FP.Get_nodeManager(_env).FP.GetImportNodeList(_env).Items ) {
         impNode := _impNode.(Nodes_ImportNodeDownCast).ToNodes_ImportNode()
-        dependInfo.FP.AddImpotModule(_env, impNode.FP.Get_modulePath(_env))
+        dependInfo.FP.AddImpotModule(_env, impNode.FP.Get_info(_env).FP.Get_modulePath(_env))
     }
     for _, _subfileNode := range( node.FP.Get_nodeManager(_env).FP.GetSubfileNodeList(_env).Items ) {
         subfileNode := _subfileNode.(Nodes_SubfileNodeDownCast).ToNodes_SubfileNode()
@@ -345,7 +345,7 @@ func (self *OutputDepend_Front) LoadMeta(_env *LnsEnv, importModuleInfo *FrontIn
         var meta LnsAny
         
         {
-            _meta := OutputDepend_convExp505(Lns_2DDD(_env.CommonLuaVM.RunLoadedfunc(loaded_104,Lns_2DDD([]LnsAny{}))[0]))
+            _meta := OutputDepend_convExp506(Lns_2DDD(_env.CommonLuaVM.RunLoadedfunc(loaded_104,Lns_2DDD([]LnsAny{}))[0]))
             if _meta == nil{
                 return nil
             } else {

@@ -22,7 +22,7 @@ func dumpNode_filter_1099_(_env *LnsEnv, node *Nodes_Node,filter *dumpNode_dumpF
 }
 
 // 561: decl @lune.@base.@dumpNode.getTypeListTxt
-func dumpNode_getTypeListTxt_1624_(_env *LnsEnv, typeList *LnsList) string {
+func dumpNode_getTypeListTxt_1623_(_env *LnsEnv, typeList *LnsList) string {
     var txt string
     txt = ""
     for _index, _typeInfo := range( typeList.Items ) {
@@ -39,7 +39,7 @@ func dumpNode_getTypeListTxt_1624_(_env *LnsEnv, typeList *LnsList) string {
 }
 
 // 891: decl @lune.@base.@dumpNode.Ast2Dump
-func dumpNode_Ast2Dump_2016_(_env *LnsEnv, ast *TransUnit_ASTInfo) string {
+func dumpNode_Ast2Dump_2015_(_env *LnsEnv, ast *TransUnit_ASTInfo) string {
     var stream *Util_memStream
     stream = NewUtil_memStream(_env)
     var conv *Nodes_Filter
@@ -345,7 +345,7 @@ func (self *dumpNode_dumpFilter) ProcessLuneKind(_env *LnsEnv, node *Nodes_LuneK
 // 142: decl @lune.@base.@dumpNode.dumpFilter.processImport
 func (self *dumpNode_dumpFilter) ProcessImport(_env *LnsEnv, node *Nodes_ImportNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
-    self.FP.dump(_env, opt, &node.Nodes_Node, node.FP.Get_modulePath(_env))
+    self.FP.dump(_env, opt, &node.Nodes_Node, node.FP.Get_info(_env).FP.Get_modulePath(_env))
 }
 
 // 147: decl @lune.@base.@dumpNode.dumpFilter.processRoot
@@ -891,7 +891,7 @@ func (self *dumpNode_dumpFilter) ProcessExpUnwrap(_env *LnsEnv, node *Nodes_ExpU
 func (self *dumpNode_dumpFilter) ProcessExpCall(_env *LnsEnv, node *Nodes_ExpCallNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     var mess string
-    mess = dumpNode_getTypeListTxt_1624_(_env, node.FP.Get_expTypeList(_env))
+    mess = dumpNode_getTypeListTxt_1623_(_env, node.FP.Get_expTypeList(_env))
     self.FP.dump(_env, opt, &node.Nodes_Node, mess)
     dumpNode_filter_1099_(_env, node.FP.Get_func(_env), self, opt.FP.NextOpt(_env))
     {
