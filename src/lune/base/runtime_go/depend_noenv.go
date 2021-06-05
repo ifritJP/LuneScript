@@ -66,3 +66,7 @@ func Depend_getBindLns(mod string) LnsAny {
 func Depend_runMain(mainFunc LnsAny, argList *LnsList) LnsInt {
 	return depend_runMain(mainFunc, argList)
 }
+
+func Depend_setRuntimeLog(valid bool) {
+	depend_setRuntimeLog(valid)
+}

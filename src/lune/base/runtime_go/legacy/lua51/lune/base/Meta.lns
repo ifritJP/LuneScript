@@ -32,7 +32,8 @@ pub class _MetaInfo {
    pub let __lazyModuleList: &Map<int,int>;
    pub let __typeId2ClassInfoMap: &Map<int,&Map<str,&stem>>;
    pub let __typeInfoList: &Map<int,&Map<str,&stem>>;
-   pub let __varName2InfoMap: &Map<str,&Map<str,&stem>>;
+   //pub let __varName2InfoMap: &Map<str,&Map<str,&stem>>;
+   pub let __varName2InfoMap: &Map<str,&stem>;
 //   pub let __funcName2InfoMap: &Map<str,&stem>;
    pub let __moduleTypeId: int;
    pub let __moduleSymbolKind: int;

@@ -2649,7 +2649,6 @@ function AutoBoxingInfo:__init(processInfo)
    TypeInfo.__init( self,nil, processInfo)
    
    self.count = 0
-   AutoBoxingInfo.allObj[self] = self
    self.imutType = _moduleObj.headTypeInfo
 end
 function AutoBoxingInfo:get_baseTypeInfo(  )
@@ -2670,12 +2669,12 @@ function AutoBoxingInfo:get_kind(  )
 end
 function AutoBoxingInfo:inc(  )
 
-   local obj = _lune.unwrap( AutoBoxingInfo.allObj[self])
+   local obj = self
    obj.count = obj.count + 1
 end
 function AutoBoxingInfo:unregist(  )
 
-   AutoBoxingInfo.allObj[self] = nil
+   
 end
 function AutoBoxingInfo.setmeta( obj )
   setmetatable( obj, { __index = AutoBoxingInfo  } )
@@ -2690,7 +2689,7 @@ function AutoBoxingInfo:get_count()
    return self.count
 end
 do
-   AutoBoxingInfo.allObj = {}
+   
 end
 
 
@@ -3755,9 +3754,9 @@ function Scope:addUnwrapedVar( processInfo, argFlag, canBeLeft, name, pos, typeI
 end
 
 
-function Scope:addStaticVar( processInfo, argFlag, canBeLeft, name, pos, typeInfo, mutable )
+function Scope:addExportedVar( processInfo, canBeLeft, accessMode, name, pos, typeInfo, mutable )
 
-   return self:add( processInfo, argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, pos, typeInfo, AccessMode.Pub, true, mutable, true, false )
+   return self:add( processInfo, SymbolKind.Var, canBeLeft, true, name, pos, typeInfo, accessMode, true, mutable, true, false )
 end
 
 

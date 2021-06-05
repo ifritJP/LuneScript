@@ -200,3 +200,6 @@ pub fn getGOPATH() : str! {
 pub fn getBindLns( mod:str ) : str! {
    return nil;
 }
+
+pub fn setRuntimeLog( valid:bool ) {
+}

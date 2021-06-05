@@ -22,5 +22,5 @@ func Lns_RunMain(mainFunc func(args *LnsList) LnsInt) {
 		args = append(args, arg)
 	}
 
-	os.Exit(mainFunc(NewLnsList(args)))
+	exitRuntime(mainFunc(NewLnsList(args)))
 }

@@ -235,8 +235,8 @@ _DefBuiltinFuncType( [
    },
    {
       "__pipe<T>": {
-         "put": { "type": [ "mut" ], "arg": [ "T!" ], "ret": [ ] },
-         "get": { "type": [ "mut" ], "arg": [], "ret": [ "T!" ] },
+         "put": { "type": [ "method" ], "arg": [ "T!" ], "ret": [ ] },
+         "get": { "type": [ "method" ], "arg": [], "ret": [ "T!" ] },
       },
    },
    {

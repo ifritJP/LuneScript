@@ -27,6 +27,7 @@ package runtimelns
 import (
 	"fmt"
 	"math"
+	"os"
 	"reflect"
 	"strconv"
 	"sync"
@@ -40,18 +41,18 @@ var LnsNone interface{} = nil
 var Lns_package_path string
 
 type LnsEnv struct {
-    // and or 演算で利用するスタック
-	valStack    []LnsAny
-    // nil アクセス演算子で利用するスタック
+	// and or 演算で利用するスタック
+	valStack []LnsAny
+	// nil アクセス演算子で利用するスタック
 	nilAccStack []LnsAny
-    // gsub などの runtime 移植していない Lua API を動かすための LuaVM
-	LuaVM       *Lns_luaVM
-    // load などの、全体を通して共通で動作させる必要のある VM
-	CommonLuaVM   *Lns_luaVM
-    // async 用の Env かどうか。現在の設定。 __asyncLock している間は変る。
-	async       bool
-    // async 用の Env かどうか。起動時の設定。
-	orgAsync       bool
+	// gsub などの runtime 移植していない Lua API を動かすための LuaVM
+	LuaVM *Lns_luaVM
+	// load などの、全体を通して共通で動作させる必要のある VM
+	CommonLuaVM *Lns_luaVM
+	// async 用の Env かどうか。現在の設定。 __asyncLock している間は変る。
+	async bool
+	// async 用の Env かどうか。起動時の設定。
+	orgAsync bool
 }
 
 // デフォルトのシングルタスクで使用する LnsEnv
@@ -63,7 +64,6 @@ var sync_LnsEnvMutex sync.Mutex
 func Lns_GetEnv() *LnsEnv {
 	return cur_LnsEnv
 }
-
 
 /**
 各モジュールを初期化する際に実行する関数。
@@ -81,15 +81,24 @@ func createEnv(async bool) *LnsEnv {
 	env.valStack = []LnsAny{}
 	env.nilAccStack = []LnsAny{}
 	env.LuaVM = createVM()
-    if async {
-        env.CommonLuaVM = cur_LnsEnv.LuaVM
-    } else {
-        env.CommonLuaVM = env.LuaVM
-    }
+	if async {
+		env.CommonLuaVM = cur_LnsEnv.LuaVM
+	} else {
+		env.CommonLuaVM = env.LuaVM
+	}
 	env.async = async
-    env.orgAsync = async
+	env.orgAsync = async
 
 	return env
+}
+
+func exitRuntime(code LnsInt) {
+	if validRuntimeLog {
+		fmt.Printf("----------\n")
+		fmt.Printf("vmFreeMap = %d\n", len(lns_freeVMMap))
+		fmt.Printf("totalReqVM = %d\n", lns_countOfRequestToCreateVM)
+	}
+	os.Exit(code)
 }
 
 // 整数を文字列に変換する場合、 .0 を付加するかどうかのモード

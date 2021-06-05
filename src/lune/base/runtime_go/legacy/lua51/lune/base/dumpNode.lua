@@ -276,7 +276,7 @@ end
 
 function dumpFilter:processImport( node, opt )
 
-   self:dump( opt, node, node:get_modulePath(  ) )
+   self:dump( opt, node, node:get_info():get_modulePath() )
 end
 
 
@@ -1018,6 +1018,13 @@ function dumpFilter:processGetField( node, opt )
    filter( node:get_prefix(  ), self, opt:nextOpt(  ) )
 end
 
+
+
+function dumpFilter:processJoinRunner( node, opt )
+
+   self:dump( opt, node, "" )
+   filter( node:get_runner(), self, opt:nextOpt(  ) )
+end
 
 
 function dumpFilter:processReturn( node, opt )

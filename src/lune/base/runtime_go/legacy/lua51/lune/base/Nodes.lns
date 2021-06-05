@@ -745,13 +745,18 @@ pub enum LazyLoad {
    On,
    Auto,
 }
+
+pub class ImportInfo {
+   let pos:&Parser.Position {pub};
+   let modulePath: str {pub};
+   let lazy: LazyLoad {pub};
+   let assignName: str {pub};
+   let assigned: bool {pub};
+   let symbolInfo: &Ast.SymbolInfo {pub};
+   let moduleTypeInfo: &Ast.TypeInfo {pub};
+}
 _declNodeClass( "Import", Node, false, false, true,
-                [ { "modulePath": "str" },
-                  { "lazy": "LazyLoad" },
-                  { "assignName": "str" },
-                  { "assigned": "bool" },
-                  { "symbolInfo": "&Ast.SymbolInfo" },
-                  { "moduleTypeInfo": "&Ast.TypeInfo" } ]
+                [ { "info": "&ImportInfo" } ]
 );
 
 
@@ -816,6 +821,7 @@ pub abstract class MacroInfo {
 _declNodeClass( "Root", Node, false, false, false,
                 [ { "children": "&List<&Node>" },
                   { "moduleScope": "&Ast.Scope" },
+                  { "globalScope": "&Ast.Scope" },
                   { "useModuleMacroSet": "&Set<&Ast.TypeInfo>" },
                   { "moduleId": "&frontInterface.ModuleId" },
                   { "processInfo": "Ast.ProcessInfo" },
@@ -1205,6 +1211,10 @@ _declNodeClass( "Break", Node, false, false, true, [] );
 pub override fn BreakNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
    return .Break;
 }
+
+_declNodeClass( "JoinRunner", Node, false, false, true,
+                [ { "runner": "&Node" } ]
+);
 
 _declNodeClass( "Provide", Node, false, false, true,
                 [ { "symbol": "&Ast.SymbolInfo" } ]
@@ -2942,7 +2952,7 @@ __test {
 
       return RootNode.create(
          nodeManager, stmtExp.$pos, false, [ Ast.builtinTypeNone ],
-         [ stmtExp ], scope, (@), frontInterface.ModuleId.createId(0.0, 0),
+         [ stmtExp ], scope, scope, (@), frontInterface.ModuleId.createId(0.0, 0),
          processInfo, moduleInfo, nil,
          new frontInterface.LuneHelperInfo(), nodeManager, {}, {}, {});
    }

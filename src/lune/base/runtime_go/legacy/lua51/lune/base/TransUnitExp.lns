@@ -1073,7 +1073,7 @@ fn TransUnit.evalMacroOp(
    let mut bakParser = self.parser;
 
    when! parser {
-      self.parser = new Parser.DefaultPushbackParser( parser );
+      self.setParser( new Parser.DefaultPushbackParser( parser ) );
    }
    else {
       self.error( unwrap mess );
@@ -1088,7 +1088,7 @@ fn TransUnit.evalMacroOp(
 
    let nextToken = self.getTokenNoErr();
 
-   self.parser = bakParser;
+   self.setParser( bakParser );
    
    if nextToken ~= Parser.getEofToken() {
       self.addErrMess( firstToken.pos,
@@ -2239,6 +2239,80 @@ fn TransUnit.checkAlgeComp(
    );
 }
 
+fn TransUnit.checkAsyncSymbol( symbolInfo:&Ast.SymbolInfo, pos:&Types.Position ) mut {
+   // 現在の名前空間が async で、
+   // mutable な大域変数かクロージャ変数にアクセスしている場合エラー。
+   let curNs = self.getCurrentNamespaceTypeInfo();
+   let mut warn = false;
+   if curNs.$asyncMode == .Async and symbolInfo.$name ~= "self" {
+      switch symbolInfo.$kind {
+         case .Arg, .Mbr, .Var {
+            if not Ast.isPrimitive( symbolInfo.$typeInfo ) {
+               warn = true;
+            }
+         }
+      }
+   }
+   if warn {
+      switch curNs.$kind {
+         case .Func {
+            if symbolInfo.$namespaceTypeInfo ~= curNs and
+               curNs.$asyncMode ~= .Transient
+            {
+               if not Ast.TypeInfo.canBeAsyncParam( symbolInfo.$typeInfo ) {
+                  self.addErrMess(
+                     pos,               
+                     "can't access the mutable type's symbol(%s) from async (%s)."
+                     (symbolInfo.$name, symbolInfo.$typeInfo.getTxt(##) ) );
+               }
+            }
+         }
+         case .Method {
+            if symbolInfo.$namespaceTypeInfo ~= curNs or
+               ( symbolInfo.$staticFlag and symbolInfo.$kind == .Mbr )
+            {
+               if not Ast.TypeInfo.canBeAsyncParam( symbolInfo.$typeInfo ) {
+                  self.addErrMess(
+                     pos,               
+                     "can't access the mutable type's symbol(%s) from async (%s)."
+                     (symbolInfo.$name, symbolInfo.$typeInfo.getTxt(##) ) );
+               }
+            }
+         }
+      }
+   }
+}
+
+
+fn TransUnit.checkAsyncField( symbolInfo:&Ast.SymbolInfo, pos:&Types.Position ) mut {
+   // 現在の名前空間が async で、
+   // mutable な大域変数かクロージャ変数にアクセスしている場合エラー。
+   let curNs = self.getCurrentNamespaceTypeInfo();
+   let mut warn = false;
+   if curNs.$asyncMode == .Async {
+      if not Ast.isPrimitive( symbolInfo.$typeInfo ) {
+         warn = true;
+      }
+   }
+   if warn {
+      if ( ( symbolInfo.$staticFlag and symbolInfo.$kind == .Mbr ) or
+           symbolInfo.$kind == .Var ) and
+         not self.builtinFunc.$allSymbolSet.has( symbolInfo.getOrg() ) and
+         not Ast.TypeInfo.canBeAsyncParam( symbolInfo.$typeInfo )
+      {
+         // 以下の builtin ではないシンボルにアクセスし、
+         // - static メンバ
+         // - 外部モジュールの大域変数
+         // さらに、そのシンボルの型が次の場合、エラーとする。
+         // - async のパラメータとして渡せない型。 (canBeAsyncParam) 
+         self.addErrMess(
+            pos,               
+            "can't access the mutable symbol(%s) from async (%s)."
+            (symbolInfo.$name, symbolInfo.$typeInfo.getTxt(##) ) );
+      }
+   }
+}
+
 
 fn TransUnit.checkSymbolComp( token:&Parser.Token ) 
 {
@@ -2618,6 +2692,10 @@ fn TransUnit.analyzeExpField(
          //token, canBeLeft, accessNil, prefixExp, _exp );
    }
    else {
+      when! accessSymbolInfo {
+         self.checkAsyncField( accessSymbolInfo, fieldToken.pos );
+      }
+      
       return Nodes.RefFieldNode.create(
          self.nodeManager, firstToken.pos,
          self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ],
@@ -2679,48 +2757,6 @@ fn TransUnit.analyzeNewAlge(
    }
 }
 
-fn TransUnit.checkAsyncSymbol( symbolInfo:&Ast.SymbolInfo, pos:&Types.Position ) mut {
-   // 現在の名前空間が async で、
-   // mutable な大域変数かクロージャ変数にアクセスしている場合エラー。
-   let curNs = self.getCurrentNamespaceTypeInfo();
-   let mut warn = false;
-   if curNs.$asyncMode == .Async and symbolInfo.$name ~= "self" {
-      switch symbolInfo.$kind {
-         case .Arg, .Mbr, .Var {
-            if not Ast.isPrimitive( symbolInfo.$typeInfo ) {
-               warn = true;
-            }
-         }
-      }
-   }
-   if warn {
-      switch curNs.$kind {
-         case .Func {
-            if symbolInfo.$namespaceTypeInfo ~= curNs and
-               curNs.$asyncMode ~= .Transient
-            {
-               if not Ast.TypeInfo.canBeAsyncParam( symbolInfo.$typeInfo ) {
-                  self.addErrMess(
-                     pos,               
-                     "can't access the mutable type's symbol(%s) from async (%s)."
-                     (symbolInfo.$name, symbolInfo.$typeInfo.getTxt(##) ) );
-               }
-            }
-         }
-         case .Method {
-            if symbolInfo.$namespaceTypeInfo ~= curNs {
-               if not Ast.TypeInfo.canBeAsyncParam( symbolInfo.$typeInfo ) {
-                  self.addErrMess(
-                     pos,               
-                     "can't access the mutable type's symbol(%s) from async (%s)."
-                     (symbolInfo.$name, symbolInfo.$typeInfo.getTxt(##) ) );
-               }
-            }
-         }
-      }
-   }
-}
-
 fn TransUnit.analyzeExpSymbol(
    firstToken: &Parser.Token, symbolToken: &Parser.Token, mode: ExpSymbolMode,
    prefixExp: &Nodes.Node!, mut skipFlag: bool, canLeftExp:bool ) mut : Nodes.Node
@@ -2763,7 +2799,7 @@ fn TransUnit.analyzeExpSymbol(
             if self.analyzeMode ~= .Diag {
                let mut work = self.scope;
                while true {
-                  print( work, self.globalScope );
+                  print( work, self.moduleScope );
                   if work == work.$parent {
                      break;
                   }

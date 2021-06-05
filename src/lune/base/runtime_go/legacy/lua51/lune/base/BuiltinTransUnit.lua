@@ -144,10 +144,6 @@ function TransUnit:__init(ctrl_info, processInfo)
    self.processInfo = processInfo
    self.scope = processInfo:get_topScope()
 end
-function TransUnit:getLatestPos(  )
-
-   return Parser.Position.new(0, 0, "@builtin@")
-end
 function TransUnit:error( mess )
 
    Util.err( mess )
@@ -164,10 +160,6 @@ end
 function TransUnit:getCurrentNamespaceTypeInfo(  )
 
    return Ast.getBuiltinMut( self.scope:getNamespaceTypeInfo(  ) )
-end
-function TransUnit:pushModule( processInfo, externalFlag, name, mutable )
-
-   Util.err( "not support" )
 end
 function TransUnit:pushModuleLow( processInfo, externalFlag, name, mutable )
 
@@ -206,7 +198,7 @@ function TransUnit:pushModuleLow( processInfo, externalFlag, name, mutable )
          self.namespace2Scope[typeInfo] = scope
          Ast.addBuiltinMut( newType, scope )
          
-         local _80, existSym = parentScope:addClass( processInfo, modName, nil, typeInfo )
+         local _70, existSym = parentScope:addClass( processInfo, modName, nil, typeInfo )
          if existSym ~= nil then
             self:error( string.format( "module symbols exist -- %s.%s -- %s.%s", existSym:get_namespaceTypeInfo():getTxt(  ), existSym:get_name(), parentInfo:getTxt(  ), modName) )
          end
@@ -251,6 +243,7 @@ function TransUnit:pushClassLow( processInfo, errPos, mode, abstractFlag, baseIn
       local _exp = self.scope:getTypeInfo( name, self.scope, true, Ast.ScopeAccess.Normal )
       if _exp ~= nil then
          typeInfo = _exp
+         
          if typeInfo:get_abstractFlag() ~= abstractFlag then
             self:error( string.format( "mismatch class(%s) abstract for prototpye", typeInfo:getTxt(  )) )
          end

@@ -459,6 +459,7 @@ test-global:
 		grep -v _lune | \
 		grep -v -e 'field.*unpack.*of.*global.*table' && exit 1 || echo ok
 	find work/3/test/ -iname '*.lua' | \
+		grep -v ImpSub.lua | \
 		xargs $(LUACHECK) | grep global | \
 		grep -v _lune | \
 		grep -v -e 'field.*unpack.*of.*global.*table' && exit 1 || echo ok

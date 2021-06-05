@@ -247,3 +247,9 @@ func depend_getGOPATH() LnsAny {
 	}
 	return val
 }
+
+var validRuntimeLog = false
+
+func depend_setRuntimeLog(valid bool) {
+	validRuntimeLog = valid
+}

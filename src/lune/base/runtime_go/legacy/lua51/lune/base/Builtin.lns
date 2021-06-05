@@ -235,8 +235,8 @@ _DefBuiltinFuncType( [
    },
    {
       "__pipe<T>": {
-         "put": { "type": [ "mut" ], "arg": [ "T!" ], "ret": [ ] },
-         "get": { "type": [ "mut" ], "arg": [], "ret": [ "T!" ] },
+         "put": { "type": [ "method" ], "arg": [ "T!" ], "ret": [ ] },
+         "get": { "type": [ "method" ], "arg": [], "ret": [ "T!" ] },
       },
    },
    {
@@ -627,6 +627,8 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
          alterList.insert( unwrap typeInfo@@@Ast.AlternateTypeInfo );
       }
    }
+
+   let pos = new Parser.Position( 0, 0, "@builtin@");
    
    foreach builtinClassInfo in builtInInfo {
       foreach name2FieldInfo, className in builtinClassInfo {
@@ -702,7 +704,7 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
                      declMode = .Interface;
                   }
                   parentInfo = self.transUnit.pushClassLow(
-                     self.processInfo, self.transUnit.getLatestPos(),
+                     self.processInfo, pos,
                      declMode, false, nil, interfaceList,
                      genTypeList, true, name, true, .Pub ## );
                   builtinFunc.registerClass( parentInfo );

@@ -38,6 +38,8 @@ import lune.base.Builtin;
 _lune_control ignore_symbol_;
 
 
+pub proto class ModuleLoader;
+   
 pub class Import {
    let transUnitIF:TransUnitIF.TransUnitIF;
    let importModuleInfo: frontInterface.ImportModuleInfo;
@@ -46,8 +48,6 @@ pub class Import {
    let globalScope: Ast.Scope;
    let macroCtrl:Macro.MacroCtrl;
    let typeNameCtrl:&Ast.TypeNameCtrl;
-   //let processInfo:Ast.ProcessInfo;
-   //   let helperInfo:frontInterface.LuneHelperInfo;
 
    /**
 インポートしているモジュールの TypeInfo -> シンボル情報。
@@ -60,50 +60,41 @@ import しているモジュールから、さらに import しているサブ�
 alias で置き換えている元の Type → alias の型
    */
    let importedAliasMap: Map<&Ast.TypeInfo,&Ast.AliasTypeInfo>;
-   let importModuleName2ModuleInfo: Map<str,frontInterface.ModuleInfo>;
+   let importModuleName2ModuleInfo: Map<str,&frontInterface.ModuleInfo>;
 
    let validMutControl: bool;
+
+   let curPos:&Parser.Position;
    
-   pub fn __init( transUnitIF:TransUnitIF.TransUnitIF,
+   pub fn __init( curPos:&Parser.Position,
+                  transUnitIF:TransUnitIF.TransUnitBase,
                   importModuleInfo: frontInterface.ImportModuleInfo,
                   moduleType: &Ast.TypeInfo,
                   builtinFunc:&Builtin.BuiltinFuncType,
-                  globalScope: Ast.Scope,
                   macroCtrl:Macro.MacroCtrl,
                   typeNameCtrl:&Ast.TypeNameCtrl,
-                  //processInfo:Ast.ProcessInfo,
-                  //helperInfo:frontInterface.LuneHelperInfo,
-                  //importModule2ModuleInfo: Map<&Ast.TypeInfo,&Nodes.ModuleInfo>,
                   importedAliasMap: Map<&Ast.TypeInfo,&Ast.AliasTypeInfo>,
-                  //importModuleName2ModuleInfo: Map<str,&Nodes.ModuleInfo>,
                   
-                  validMutControl:bool )
+                  validMutControl:bool ) __async
    {
+      self.curPos = curPos;
       self.validMutControl = validMutControl;
       self.transUnitIF = transUnitIF;
       self.importModuleInfo = importModuleInfo;
       self.moduleType = moduleType;
       self.builtinFunc = builtinFunc;
-      self.globalScope = globalScope;
+      self.globalScope = transUnitIF.$globalScope;
       self.macroCtrl = macroCtrl;
       self.typeNameCtrl = typeNameCtrl;
-//      self.processInfo = processInfo;
-      //self.helperInfo = helperInfo;
-//      self.helperInfo = new frontInterface.LuneHelperInfo();
-      //self.importModule2ModuleInfo = importModule2ModuleInfo;
       self.importedAliasMap = importedAliasMap;
-      //self.importModuleName2ModuleInfo = importModuleName2ModuleInfo;
 
       self.importModule2ModuleInfo = {};
-      // self.importedAliasMap = {};
       self.importModuleName2ModuleInfo = {};
-
-      // self.modifier = new TransUnitIF.Modifier( validMutControl, self.processInfo );
    }
 
    fn processImportMain(
-      processInfo:Ast.ProcessInfo, mut modulePath:str, depth:int ) mut :
-      frontInterface.ModuleInfo;
+      processInfo:Ast.ProcessInfo,
+      mut modulePath:str, depth:int ) mut : &frontInterface.ModuleInfo;
 }
 
 proto abstract class _TypeInfo extend (Mapping);
@@ -111,7 +102,6 @@ proto abstract class _TypeInfo extend (Mapping);
 class ImportParam {
    pub let pos:&Parser.Position;
    pub let modifier:TransUnitIF.Modifier;
-   //pub let mut transUnit:TransUnitIF;
    pub let mut processInfo:Ast.ProcessInfo;
    pub let mut typeId2Scope:Map<int,Ast.Scope>;
    pub let mut typeId2TypeInfo:Map<int,&Ast.TypeInfo>;
@@ -816,7 +806,7 @@ class DependModuleInfo {
 fn Import.processImportFromFile(
    processInfo:Ast.ProcessInfo, lnsPath:str, metaInfoStem:Luaval<&stem>,
    orgModulePath:str, mut modulePath:str, nameList:&List<str>, depth:int ) mut
-: frontInterface.ModuleInfo
+: &frontInterface.ModuleInfo
 {
    let metaInfo = metaInfoStem@@=Meta._MetaInfo;
    Log._log2( .Info, "%s processing" (orgModulePath) );
@@ -824,16 +814,14 @@ fn Import.processImportFromFile(
 
 
    // 依存するモジュールのメタ情報を読み込み
-   let mut dependLibId2DependInfo:Map<int,frontInterface.ModuleInfo> = {};
+   let mut dependLibId2DependInfo:Map<int,&frontInterface.ModuleInfo> = {};
    forsort dependInfo, dependName in metaInfo.__dependModuleMap {
       //if dependInfo.use {
       // Testing.lng などは、 use でなくてもインポートしないとエラーするので、
       // 常にインポートする。
       let mut workProcessInfo = processInfo.newUser();
-      workProcessInfo.switchIdProvier( .Ext );
       let mut moduleInfo = self.processImportMain(
          workProcessInfo, dependName, depth + 1 );
-      workProcessInfo.switchIdProvier( .Base );
       let typeId = (unwrap dependInfo.typeId)@@int;
       dependLibId2DependInfo[ typeId ] = moduleInfo;
       //}
@@ -848,7 +836,6 @@ fn Import.processImportFromFile(
    typeId2TypeInfo[ Ast.userRootId ] = processInfo.$dummyParentType;
    let mut typeId2Scope: Map<int,Ast.Scope> = {};
    typeId2Scope[ Ast.userRootId ] = processInfo.$topScope;
-   //typeId2Scope[ Ast.builtinRootId ] = self.transUnitIF.$scope;
 
    typeId2TypeInfo[ self.builtinFunc.lnsthread_.$typeId.id ] =
       self.builtinFunc.lnsthread_;
@@ -981,7 +968,7 @@ fn Import.processImportFromFile(
    
    // 初めに child 以外で TypeInfo を登録
    let mut importParam = new ImportParam(
-      self.transUnitIF.getLatestPos(), modifier, processInfo, typeId2Scope,
+      self.curPos, modifier, processInfo, typeId2Scope,
       typeId2TypeInfo, typeId2TypeInfoMut, {},
       lazyModuleSet, metaInfo, self.transUnitIF.$scope,
       moduleTypeInfo, .Normal, id2atomMap, dependLibId2DependInfo );
@@ -1085,11 +1072,9 @@ fn Import.processImportFromFile(
       
       switch ( classTypeInfo.$kind ) {
          case .Class, .ExtModule {
-            // self.pushClass( self.currentToken.pos, true, classTypeInfo.$abstractFlag,
-            //                 nil, nil, nil, true, classTypeInfo.getTxt(##), .Pub ## );
             let mut scope = unwrap typeId2Scope[ classTypeId ];
             self.transUnitIF.pushClassScope(
-               self.transUnitIF.getLatestPos(), classTypeInfo, scope );
+               self.curPos, classTypeInfo, scope );
             
             if! metaInfo.__typeId2ClassInfoMap[ classTypeId ] {
                let! classInfo = expandLuavalMap( _exp ) {
@@ -1179,14 +1164,29 @@ fn Import.processImportFromFile(
       self.transUnitIF.pushModuleLow( processInfo, true, moduleName, mutable );
    }
 
+   class VarNameInfo extend (Mapping) {
+      pub let typeId:_IdInfo;
+      pub let accessMode:Ast.AccessMode;
+      pub let mutable:bool;
+   }
 
    // 変数登録
    foreach varInfo, varName in metaInfo.__varName2InfoMap {
-      if! let typeId = _IdInfo._fromStem( expandLuavalMap( varInfo.typeId ) ) {
-         self.transUnitIF.$scope.addStaticVar(
-            processInfo, false, true, varName,
+      //if! let typeId = _IdInfo._fromStem( expandLuavalMap( varInfo.typeId ) ) {
+      if! let varNameInfo = VarNameInfo._fromStem( expandLuavalMap( varInfo ) ) {
+         let typeId = varNameInfo.typeId;
+         let mut scope;
+         if varNameInfo.accessMode == Ast.AccessMode.Global {
+            scope = self.globalScope;
+         } else {
+            scope = self.transUnitIF.$scope;
+         }
+         //scope = self.transUnitIF.$scope;
+
+         scope.addExportedVar(
+            processInfo, varNameInfo.mutable, varNameInfo.accessMode, varName,
             nil, unwrap importParam.getTypeInfoFrom( typeId ),
-            varInfo.mutable and Ast.MutMode.Mut or Ast.MutMode.IMut );
+            varNameInfo.mutable and Ast.MutMode.Mut or Ast.MutMode.IMut );
       }
       else {
          self.transUnitIF.error( "illegal varInfo.typeId" );
@@ -1204,7 +1204,8 @@ fn Import.processImportFromFile(
    }
 
    let globalSymbolList:List<&Ast.SymbolInfo> = [];
-   foreach symbolInfo in self.transUnitIF.$scope.$symbol2SymbolInfoMap {
+   //foreach symbolInfo in self.transUnitIF.$scope.$symbol2SymbolInfoMap {
+   foreach symbolInfo in self.globalScope.$symbol2SymbolInfoMap {
       if symbolInfo.$accessMode == .Global {
          globalSymbolList.insert( symbolInfo );
       }
@@ -1239,28 +1240,68 @@ fn Import.processImportFromFile(
 }
 
 
-pub fn Import.processImportMain(
-   processInfo:Ast.ProcessInfo, mut modulePath:str, depth:int ) mut :
-   frontInterface.ModuleInfo
+// 非同期化できるように準備をしておくが、
+// ここで単純に非同期化すると大量のスレッドが出来てしまいそうなので、
+// 形だけ作っておく。
+pub class ModuleLoader {
+   let moduleInfo:&frontInterface.ModuleInfo! {local};
+   let mut moduleMeta:frontInterface.ModuleMeta!;
+   let modulePath:str {pub};
+   let orgModulePath:str {pub};
+   let mut err:str!{pub};
+   let depth:int{pub};
+   
+   pub fn __init( moduleInfo:&frontInterface.ModuleInfo!,
+                  workImportModuleInfo: &frontInterface.ImportModuleInfo,
+                  modulePath:str, orgModulePath:str, depth:int ) __async
+   {
+      self.moduleInfo = moduleInfo;
+      self.moduleMeta = nil;
+      self.modulePath = modulePath;
+      self.orgModulePath = orgModulePath;
+      self.depth = depth;
+
+      if not self.moduleInfo {
+         let mut importModuleInfo = workImportModuleInfo.clone();
+         if not importModuleInfo.add( orgModulePath ) {
+            self.err = "recursive import: %s -> %s"
+            ( importModuleInfo.getFull(), orgModulePath );
+         } else {
+            __asyncLock {
+               if! frontInterface.loadMeta( importModuleInfo.clone(), modulePath ) {
+                  self.moduleMeta = _exp;
+               } else {
+                  self.err = "failed to load meta -- " .. orgModulePath;
+               }
+            }
+            importModuleInfo.remove();
+         }
+      }
+   }
+
+   pub fn getModuleMeta() mut : frontInterface.ModuleMeta! {
+      return self.moduleMeta;
+   }
+}
+
+pub fn Import.createModuleLoader(
+   mut modulePath:str, depth:int ) __async mut : ModuleLoader
 {
    let orgModulePath = modulePath;
-   modulePath = frontInterface.getLuaModulePath( modulePath );
+
+   __asyncLock {
+      modulePath = frontInterface.getLuaModulePath( modulePath );
+   }
    
    Log._log( .Info, `{ return "%s -> %s start"
                        ( self.moduleType.getTxt( self.typeNameCtrl## ),
                          orgModulePath); } );
 
 
-   if not self.importModuleInfo.add( orgModulePath ) {
-      self.transUnitIF.error( "recursive import: %s -> %s"
-                              ( self.importModuleInfo.getFull(), orgModulePath ) );
-   }
+   let mut moduleInfo = self.importModuleName2ModuleInfo[ modulePath ];
 
-
-   if! let mut moduleInfo = self.importModuleName2ModuleInfo[ modulePath ] {
+   when! moduleInfo {
       Log._log( .Info, `{ return "%s already" (orgModulePath); } );
-
-      self.importModuleInfo.remove();
 
       if depth == 1 {
          self.importModule2ModuleInfo[ moduleInfo.$exportInfo.$moduleTypeInfo ] = moduleInfo;
@@ -1269,20 +1310,41 @@ pub fn Import.processImportMain(
       foreach val, key in moduleInfo.$importedAliasMap {
          self.importedAliasMap[key] = val;
       }
-      return moduleInfo;
    }
 
+   return new ModuleLoader( moduleInfo, self.importModuleInfo,
+                            modulePath, orgModulePath, depth );
+}
+
+
+
+pub fn Import.loadModuleInfo(
+   processInfo:Ast.ProcessInfo, moduleLoader:ModuleLoader ) mut :
+   &frontInterface.ModuleInfo
+{
+   if! moduleLoader.$err {
+      self.transUnitIF.error( _exp );
+   }
+
+   if! moduleLoader.$moduleInfo {
+      return _exp;
+   }
+
+   let modulePath = moduleLoader.$modulePath;
+   let orgModulePath = moduleLoader.$orgModulePath;
+   let depth = moduleLoader.$depth;
+   
    let mut nameList = Util.splitStr(modulePath, '[^%./:]+' );
 
-   let mut moduleMeta;
-   if! frontInterface.loadMeta( self.importModuleInfo, orgModulePath ) {
-      moduleMeta = _exp;
-   } else {
+   let! mut moduleMeta = moduleLoader.getModuleMeta() {
       self.transUnitIF.error( "failed to load meta -- " .. orgModulePath );
-   }
+   };
 
-   let mut moduleInfo;
 
+   self.importModuleInfo.add( orgModulePath );
+   processInfo.switchIdProvier( .Ext );
+   
+   let moduleInfo:&frontInterface.ModuleInfo;
    _match moduleMeta.$metaOrModule {
       case .Module( info ) {
          moduleInfo = info;
@@ -1304,22 +1366,33 @@ pub fn Import.processImportMain(
       }
    }
 
+   processInfo.switchIdProvier( .Base );
+   self.importModuleInfo.remove();
+
+   
    if depth == 1 {
       self.importModule2ModuleInfo[ moduleInfo.$exportInfo.$moduleTypeInfo ] = moduleInfo;
    }
    self.importModuleName2ModuleInfo[ modulePath ] = moduleInfo;
 
-   self.importModuleInfo.remove();
    
    Log._log( .Info, `{ return "%s complete" (orgModulePath); } );
 
    return moduleInfo;
 }
 
-
-pub fn Import.processImport(
-   processInfo:Ast.ProcessInfo, modulePath:str ) mut :
-   frontInterface.ModuleInfo
+pub fn Import.processImportMain(
+   processInfo:Ast.ProcessInfo,
+   mut modulePath:str, depth:int ) mut : &frontInterface.ModuleInfo
 {
-   return self.processImportMain( processInfo, modulePath, 1 );
+   let mut moduleLoader = self.createModuleLoader( modulePath, depth );
+
+   return self.loadModuleInfo( processInfo, moduleLoader );
+}
+
+pub fn Import.processImport( modulePath:str ) __async mut : ModuleLoader
+{
+   let mut moduleLoader = self.createModuleLoader( modulePath, 1 );
+
+   return moduleLoader;
 }

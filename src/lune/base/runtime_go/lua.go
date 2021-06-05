@@ -191,14 +191,17 @@ func init() {
 	lns_luaValProcEndChan = make(chan bool, 0)
 
 	go lns_luaValChanProc()
-
 }
+
+var lns_countOfRequestToCreateVM = 0
 
 func getVMFromCache() *Lns_luaVM {
 	var luaVM *Lns_luaVM = nil
 
 	lns_createVMMutex.Lock()
 	defer lns_createVMMutex.Unlock()
+
+	lns_countOfRequestToCreateVM++
 
 	for vm := range lns_freeVMMap {
 		luaVM = vm

@@ -125,6 +125,7 @@ function __luneGetLocal( varName )
    
    error( "not found -- " .. varName )
 end
+_moduleObj.__luneGetLocal = __luneGetLocal
 
 function __luneSym2Str( val )
 
@@ -147,5 +148,6 @@ function __luneSym2Str( val )
    
    return nil
 end
+_moduleObj.__luneSym2Str = __luneSym2Str
 
 return _moduleObj

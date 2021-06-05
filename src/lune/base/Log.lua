@@ -68,6 +68,7 @@ end
 
 
 local Async = _lune.loadModule( 'lune.base.Async' )
+local Depend = _lune.loadModule( 'lune.base.Depend' )
 
 local Level = {}
 _moduleObj.Level = Level
@@ -180,6 +181,10 @@ local control = Control.new(Level.Err)
 local function setLevel( level )
 
    control = Control.new(level)
+   if level >= Level.Log then
+      Depend.setRuntimeLog( true )
+   end
+   
 end
 _moduleObj.setLevel = setLevel
 

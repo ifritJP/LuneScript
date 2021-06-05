@@ -29,6 +29,7 @@ import lune.base.Nodes;
 import lune.base.Parser;
 import lune.base.Types;
 import lune.base.Util;
+import lune.base.LuneControl;
 
 pub class Opt {
    let parent:&Nodes.Node {pub};
@@ -96,9 +97,10 @@ pub override fn FormatterFilter.processBlankLine(
 pub override fn FormatterFilter.processImport(
    node: &Nodes.ImportNode, opt:Opt ) mut
 {
-   self.write( "import %s" (node.$modulePath) );
-   if not node.$modulePath.find( "%." .. node.$assignName .. "$"## ) {
-      self.write( " as %s" (node.$assignName) );
+   let info = node.$info;
+   self.write( "import %s" (info.$modulePath) );
+   if not info.$modulePath.find( "%." .. info.$assignName .. "$"## ) {
+      self.write( " as %s" (info.$assignName) );
    }
    self.writeln( ";" );
 };
@@ -112,8 +114,59 @@ pub override fn FormatterFilter.processRoot(
 pub override fn FormatterFilter.processSubfile(
    node: &Nodes.SubfileNode, opt:Opt ) mut
 {
-   
 }
+
+pub override fn FormatterFilter.processLuneControl(
+   node: &Nodes.LuneControlNode, opt: Opt ) mut
+{
+   self.writeln( "_lune_control " );
+   _match node.$pragma {
+      case .default__init {
+         self.writeln( "default__init" );
+      }
+      case .default__init_old {
+         self.writeln( "default__init_old" );
+      }
+      case .disable_mut_control {
+         self.writeln( "disable_mut_control" );
+      }
+      case .ignore_symbol_ {
+         self.writeln( "ignore_symbol_" );
+      }
+      case .load__lune_module {
+         self.writeln( "load__lune_module" );
+      }
+      case .limit_conv_code( codeSet ) {
+         self.writeln( "limit_conv_code" );
+         foreach code in codeSet {
+            self.write( " %s" (code) );
+         }
+      }
+      case .use_async {
+         self.writeln( "use_async" );
+      }
+      case .run_async_pipe {
+         self.writeln( "run_async_pipe" );
+      }
+      case .run_async_runner {
+         self.writeln( "run_async_runner" );
+      }
+      case .default_async_func {
+         self.writeln( "default_async_func" );
+      }
+      case .default_async_all {
+         self.writeln( "default_async_all" );
+      }
+      case .default_async_this_class {
+         self.writeln( "default_async_this_class" );
+      }
+      case .default_noasync_this_class {
+         self.writeln( "default_noasync_this_class" );
+      }
+   }
+   self.writeln( ";" );
+}
+
 pub override fn FormatterFilter.processAsyncLock(
    node: &Nodes.AsyncLockNode, opt:Opt ) mut
 {
@@ -1036,6 +1089,14 @@ pub override fn FormatterFilter.processGetField(
    self.write( ".$" );
    self.write( node.$field.txt );
 };
+
+pub override fn FormatterFilter.processJoinRunner(
+   node: &Nodes.JoinRunnerNode, opt:Opt ) mut
+{
+   self.write( "__join " );
+   filter( node.$runner, self, opt.nextOpt( node ) );
+   self.writeln( "" );
+}
 
 pub override fn FormatterFilter.processReturn(
    node: &Nodes.ReturnNode, opt:Opt ) mut

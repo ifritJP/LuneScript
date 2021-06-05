@@ -46,10 +46,6 @@ pub class TransUnit {
       self.scope = processInfo.$topScope;
    }
 
-   pub fn getLatestPos() : &Parser.Position {
-      return new Parser.Position( 0, 0, "@builtin@");
-   }
-
    pub fn error( mess: str ) __async mut : __ {
       Util.err( mess );
    }
@@ -57,7 +53,6 @@ pub class TransUnit {
    pub fn pushScope( classFlag: bool, baseInfo: &Ast.TypeInfo!,
                      interfaceList: &List<&Ast.TypeInfo>! ) mut: Ast.Scope
    {
-      // self.scope = new Ast.Scope( self.scope, classFlag, inheritScope, ifScopeList );
       self.scope = Ast.TypeInfo.createScope(
          self.processInfo, self.scope, classFlag, baseInfo, interfaceList );
       return self.scope;
@@ -71,13 +66,6 @@ pub class TransUnit {
       return Ast.getBuiltinMut( self.scope.getNamespaceTypeInfo() );
    }
 
-   pub fn pushModule(
-      processInfo:Ast.ProcessInfo,
-      externalFlag: bool, name:str, mutable: bool ) mut : TransUnitIF.NSInfo
-   {
-      Util.err( "not support" );
-   }
-   
    pub fn pushModuleLow(
       processInfo:Ast.ProcessInfo,
       externalFlag: bool, name:str, mutable: bool ) mut : &Ast.TypeInfo
@@ -168,11 +156,6 @@ pub class TransUnit {
       if! self.scope.getTypeInfo( name, self.scope, true, .Normal ) {
          // 宣言済み
          typeInfo = _exp;
-
-         // if typeInfo.$scope$.$parent ~= self.scope {
-         //    self.error(
-         //       "multiple class(%s)" (typeInfo.getTxt( ##)));
-         // }
 
          if typeInfo.$abstractFlag ~= abstractFlag {
             self.error(

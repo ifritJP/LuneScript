@@ -506,6 +506,10 @@ function ImportModuleInfo:clone(  )
    
    return info
 end
+function ImportModuleInfo:len(  )
+
+   return #self.orderedSet:get_list()
+end
 function ImportModuleInfo.setmeta( obj )
   setmetatable( obj, { __index = ImportModuleInfo  } )
 end
@@ -582,6 +586,8 @@ end
 
 
 __luneScript = dummyFront.new()
+_moduleObj.__luneScript = __luneScript
+
 
 local function setFront( newFront )
 

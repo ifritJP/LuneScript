@@ -363,4 +363,9 @@ local function getBindLns( mod )
 end
 _moduleObj.getBindLns = getBindLns
 
+local function setRuntimeLog( valid )
+
+end
+_moduleObj.setRuntimeLog = setRuntimeLog
+
 return _moduleObj

@@ -280,11 +280,12 @@ pub override fn ConvFilter.processShebang(
 pub override fn ConvFilter.processImport(
    node: &Nodes.ImportNode, opt: Opt ) mut
 {
-   let modulePath = node.get_modulePath();
+   let info = node.$info;
+   let modulePath = info.$modulePath;
    let mut modSym = modulePath.gsub( ".*%.", "" );
-   modSym = node.$assignName;
+   modSym = info.$assignName;
    self.write( "local %s = _lune." ( modSym ) );
-   _switch node.$lazy {
+   _switch info.$lazy {
       case .Off {
          self.write( "loadModule" );
       }
@@ -1048,8 +1049,9 @@ if not %s then
 end``` (luneSymbol, luneSymbol) );
 
    foreach importNode in node.$nodeManager.getImportNodeList() {
-      if importNode.$lazy ~= .Off {
-         self.moduleType2SymbolMap[ importNode.$moduleTypeInfo ] = importNode.$symbolInfo;
+      let info = importNode.$info;
+      if info.$lazy ~= .Off {
+         self.moduleType2SymbolMap[ info.$moduleTypeInfo ] = info.$symbolInfo;
       }
    }
 
@@ -2317,17 +2319,19 @@ pub override fn ConvFilter.processDeclVar(
       self.writeln( "end" );
    }
 
-
-   if node.get_accessMode() == .Pub {
-      self.writeln( "" );
-      foreach varName, index in varNameList {
-         let name = varName;
-         if self.needModuleObj {
-            self.writeln( "_moduleObj.%s = %s" ( name, name ) );
+   
+   switch node.get_accessMode() {
+      case .Pub, .Global {
+         self.writeln( "" );
+         foreach varName, index in varNameList {
+            let name = varName;
+            if self.needModuleObj {
+               self.writeln( "_moduleObj.%s = %s" ( name, name ) );
+            }
+            self.pubVarName2InfoMap[ name ] = new PubVerInfo(
+               node.$staticFlag, node.$accessMode,
+               node.$symbolInfoList[ index ].$mutable, node.$typeInfoList[ index ] );
          }
-         self.pubVarName2InfoMap[ name ] = new PubVerInfo(
-            node.$staticFlag, node.$accessMode,
-            node.$symbolInfoList[ index ].$mutable, node.$typeInfoList[ index ] );
       }
    }
 
@@ -2384,16 +2388,17 @@ pub override fn ConvFilter.processDeclFunc(
    }
    self.write( "end" );
 
-   //if declInfo.get_accessMode() == .Pub {
    let expType: &Ast.TypeInfo = node.get_expType();
-   if expType.get_accessMode() == .Pub {
-      if self.needModuleObj {
-         self.writeln( "" );
-         self.write( "_moduleObj.%s = %s" ( name, name ) );
-      }
+   switch expType.get_accessMode() {
+      case .Pub, .Global {
+         if self.needModuleObj {
+            self.writeln( "" );
+            self.write( "_moduleObj.%s = %s" ( name, name ) );
+         }
 
-      self.pubFuncName2InfoMap[ name ] = new PubFuncInfo(
-         declInfo.get_accessMode(), node.get_expType() );
+         self.pubFuncName2InfoMap[ name ] = new PubFuncInfo(
+            declInfo.get_accessMode(), node.get_expType() );
+      }
    }
 };
 
@@ -3313,6 +3318,11 @@ pub override fn ConvFilter.processGetField(
       }
    }
 };
+
+pub override fn ConvFilter.processJoinRunner(
+   node: &Nodes.JoinRunnerNode, opt:Opt ) mut
+{
+}
 
 
 pub override fn ConvFilter.processReturn(
