@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@Ver'
 local _lune = {}
-if _lune3 then
-   _lune = _lune3
+if _lune4 then
+   _lune = _lune4
 end
 function _lune.loadModule( mod )
    if __luneScript then
@@ -12,8 +12,8 @@ function _lune.loadModule( mod )
    return require( mod )
 end
 
-if not _lune3 then
-   _lune3 = _lune
+if not _lune4 then
+   _lune4 = _lune
 end
 
 local version = "1.3.0"
@@ -22,7 +22,7 @@ _moduleObj.version = version
 local metaVersion = "1.0.137"
 _moduleObj.metaVersion = metaVersion
 
-local luaModVersion = 3
+local luaModVersion = 4
 _moduleObj.luaModVersion = luaModVersion
 
 

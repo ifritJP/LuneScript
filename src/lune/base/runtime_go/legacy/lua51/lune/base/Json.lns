@@ -117,9 +117,9 @@ txt に与えた JSON 文字列からデータを解析して返す。
 @return Types.Position! 解析エラーした際の位置情報。 解析成功した場合は nil。
 */
 pub fn fromStr(txt:str) : stem!, &Types.Position! {
-   let mut stream = new Parser.TxtStream( txt );
    let mut parser = new Parser.DefaultPushbackParser(
-      new Parser.StreamParser( stream, "json", false, nil ) );
+      Parser.StreamParser.create(
+         Types.ParserSrc.LnsCode( txt, "json" ) ## ) );
    let val, ok = getVal( parser );
    if not ok {
       return nil, parser.getLastPos();

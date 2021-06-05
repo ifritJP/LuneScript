@@ -322,10 +322,6 @@ pub abstract class Node {
    pub fn hasNilAccess(): bool {
       return false;
    }
-   /** このノードは別 Thread で動作するか */
-   pub fn isThreading(): bool {
-      return false;
-   }
 
    /**
 _declNodeClass ではカバーできない visit() のカスタマイズ用
@@ -555,13 +551,6 @@ macro _declNodeClass(
                         return self.nilAccess;
                      }
                   });
-               }
-               case "threading" {
-                  fieldStatList.insert( `{
-                     pub override fn isThreading(): bool {
-                        return self.threading;
-                     }
-                  } );
                }
             }
                
@@ -1180,7 +1169,6 @@ _declNodeClass( "Foreach", Node, false, false, true,
                 [ { "val": "&Ast.SymbolInfo" },
                   { "key": "&Ast.SymbolInfo!" },
                   { "exp": "&Node" },
-                  { "threading": "bool" },
                   { "block": "&BlockNode" } ]
 );
 
@@ -1191,7 +1179,6 @@ _declNodeClass( "Forsort", Node, false, false, true,
                 [ { "val": "&Ast.SymbolInfo" },
                   { "key": "&Ast.SymbolInfo!" },
                   { "exp": "&Node" },
-                  { "threading": "bool" },
                   { "block": "&BlockNode" },
                   { "sort": "bool" } ]
 );
@@ -1211,10 +1198,6 @@ _declNodeClass( "Break", Node, false, false, true, [] );
 pub override fn BreakNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
    return .Break;
 }
-
-_declNodeClass( "JoinRunner", Node, false, false, true,
-                [ { "runner": "&Node" } ]
-);
 
 _declNodeClass( "Provide", Node, false, false, true,
                 [ { "symbol": "&Ast.SymbolInfo" } ]
@@ -1277,7 +1260,6 @@ _declNodeClass( "ExpSetItem", Node, false, false, true,
 
 _declNodeClass( "ExpOp2", Node, false, true, false,
                 [ { "op": "&Parser.Token" },
-                  { "threading": "bool" },
                   { "exp1": "&Node" },
                   { "exp2": "&Node" } ]
 );
@@ -1397,7 +1379,6 @@ _declNodeClass( "ExpOp1", Node, false, true, false,
 _declNodeClass( "ExpRefItem", Node, nil, true, false,
                 [ { "val": "&Node" },
                   { "nilAccess": "bool" },
-                  { "threading": "bool" },
                   { "symbol": "str!" },
                   { "index": "&Node!" } ]
 );
@@ -1416,7 +1397,6 @@ _declNodeClass( "ExpCall", Node, false, nil, true,
                 [ { "func": "&Node" },
                   { "errorFunc": "bool" },
                   { "nilAccess": "bool" },
-                  { "threading": "bool" },
                   { "argList": "&ExpListNode!" } ]
 );
 pub override fn ExpCallNode.get_effectivePos(): &Parser.Position {
@@ -1536,7 +1516,6 @@ _declNodeClass( "RefField", Node, nil, nil, false,
                   //{ "overrideCanBeLeft": "bool!" },
                   { "symbolInfo": "&Ast.SymbolInfo!" },
                   { "nilAccess": "bool" },
-                  { "threading": "bool" },
                   { "prefix": "&Node" }] 
 );
 pub override fn RefFieldNode.get_effectivePos(): &Parser.Position {
@@ -1575,7 +1554,6 @@ _declNodeClass( "GetField", Node, false, true, false,
                   //{ "overrideCanBeLeft": "bool!" },
                   { "symbolInfo": "&Ast.SymbolInfo!" },
                   { "nilAccess": "bool" },
-                  { "threading": "bool" },
                   { "prefix": "&Node" },
                   { "getterTypeInfo": "&Ast.TypeInfo" } ]               
 );
@@ -2171,8 +2149,7 @@ _declNodeClass( "LiteralString", Node, false, true, false,
                   // 文字列リテラルの %s に対する各パラメータ
                   { "orgParam": "&ExpListNode!" },
                   // 上記 orgParam を ... に変換した時のパラメータ
-                  { "dddParam": "&ExpListNode!" },
-                  { "threading": "bool" } ]
+                  { "dddParam": "&ExpListNode!" } ]
 );
 
 _declNodeClass( "LiteralBool", Node, false, true, false,
@@ -2915,9 +2892,8 @@ pub fn getCastUnwraped( node:&Node ) : &Node {
 
 __test {
    pub fn createTestNodes() : RootNode {
-      let mut parser = new Parser.DefaultPushbackParser(
-         new Parser.StreamParser(
-            new Parser.TxtStream( "print( 'hoge' );" ), "test" ## ) );
+      let mut parser = Parser.DefaultPushbackParser.createFromLnsCode(
+         "print( 'hoge' );", "test" );
 
       let mut processInfo = Ast.createProcessInfo( true, true, false );
       let mut scope = new Ast.Scope( processInfo, nil, false ##);
@@ -2935,7 +2911,7 @@ __test {
 
       let strNode = LiteralStringNode.create( 
          nodeManager, hogeToken.pos, false,
-         [ Ast.builtinTypeString ], hogeToken, nil, nil, false );
+         [ Ast.builtinTypeString ], hogeToken, nil, nil );
       let argListNode = ExpListNode.create(
          nodeManager, hogeToken.pos, false, strNode.$expTypeList,
          [ strNode ], nil, false );
@@ -2943,7 +2919,7 @@ __test {
          nodeManager, printToken.pos, false, [ symbol.$typeInfo ], symbol );
       let callNode = ExpCallNode.create(
          nodeManager, printToken.pos, false, [ Ast.builtinTypeNone ],
-         refNode, false, false, false, argListNode );
+         refNode, false, false, argListNode );
       let stmtExp = StmtExpNode.create(
          nodeManager, callNode.$pos, false, [ Ast.builtinTypeNone ], callNode );
 

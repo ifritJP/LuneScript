@@ -349,4 +349,8 @@ function _lune._lazyRequire( modName )
     return mod
   end
 end
+function _lune._run( runner, mod )
+    runner:run()
+    return false
+end
 return _lune

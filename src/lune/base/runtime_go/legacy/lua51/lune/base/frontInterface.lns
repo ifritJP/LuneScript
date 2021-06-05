@@ -87,6 +87,7 @@ pub class LuneHelperInfo {
    pub let mut pragmaSet:Set<LuneControl.Pragma>;
    pub let mut useLazyLoad:bool;
    pub let mut useLazyRequire:bool;
+   pub let mut useRun:bool;
 
    pub fn __init() {
       self.useNilAccess = false;
@@ -100,6 +101,7 @@ pub class LuneHelperInfo {
       self.pragmaSet = (@);
       self.useLazyLoad = false;
       self.useLazyRequire = false;
+      self.useRun = false;
    }
 }
 

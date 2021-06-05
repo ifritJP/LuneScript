@@ -184,3 +184,14 @@ pub class Token extend (Mapping) {
 }
 
 pub let noneToken = new Token( .Eof, "", new Position( 0, -1, "eof" ), false, [] );
+
+pub class StdinFile {
+   let mod:str {pub};
+   let txt:str {pub};
+}
+
+pub alge ParserSrc {
+   LnsCode( code:str, path:str ),
+   LnsPath( path:str, moduleName:str ),
+   Parser( path: str, luaMode: bool, moduleName:str ),
+}

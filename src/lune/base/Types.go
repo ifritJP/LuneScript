@@ -112,6 +112,30 @@ var Types_CheckingUptodateMode__Touch_Obj = &Types_CheckingUptodateMode__Touch{}
 func (self *Types_CheckingUptodateMode__Touch) GetTxt() string {
 return "CheckingUptodateMode.Touch"
 }
+// decl alge -- ParserSrc
+type Types_ParserSrc = LnsAny
+type Types_ParserSrc__LnsCode struct{
+Val1 string
+Val2 string
+}
+func (self *Types_ParserSrc__LnsCode) GetTxt() string {
+return "ParserSrc.LnsCode"
+}
+type Types_ParserSrc__LnsPath struct{
+Val1 string
+Val2 string
+}
+func (self *Types_ParserSrc__LnsPath) GetTxt() string {
+return "ParserSrc.LnsPath"
+}
+type Types_ParserSrc__Parser struct{
+Val1 string
+Val2 bool
+Val3 string
+}
+func (self *Types_ParserSrc__Parser) GetTxt() string {
+return "ParserSrc.Parser"
+}
 // declaration Class -- TransCtrlInfo
 type Types_TransCtrlInfoMtd interface {
 }
@@ -466,6 +490,49 @@ func (self *Types_Token) GetLineCount(_env *LnsEnv) LnsInt {
     return count
 }
 
+
+// declaration Class -- StdinFile
+type Types_StdinFileMtd interface {
+    Get_mod(_env *LnsEnv) string
+    Get_txt(_env *LnsEnv) string
+}
+type Types_StdinFile struct {
+    mod string
+    txt string
+    FP Types_StdinFileMtd
+}
+func Types_StdinFile2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Types_StdinFile).FP
+}
+type Types_StdinFileDownCast interface {
+    ToTypes_StdinFile() *Types_StdinFile
+}
+func Types_StdinFileDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Types_StdinFileDownCast)
+    if ok { return work.ToTypes_StdinFile() }
+    return nil
+}
+func (obj *Types_StdinFile) ToTypes_StdinFile() *Types_StdinFile {
+    return obj
+}
+func NewTypes_StdinFile(_env *LnsEnv, arg1 string, arg2 string) *Types_StdinFile {
+    obj := &Types_StdinFile{}
+    obj.FP = obj
+    obj.InitTypes_StdinFile(_env, arg1, arg2)
+    return obj
+}
+func (self *Types_StdinFile) InitTypes_StdinFile(_env *LnsEnv, arg1 string, arg2 string) {
+    self.mod = arg1
+    self.txt = arg2
+}
+func (self *Types_StdinFile) Get_mod(_env *LnsEnv) string{ return self.mod }
+func (self *Types_StdinFile) Get_txt(_env *LnsEnv) string{ return self.txt }
 
 func Lns_Types_init(_env *LnsEnv) {
     if init_Types { return }

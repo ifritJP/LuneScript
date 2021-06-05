@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@Import'
 local _lune = {}
-if _lune3 then
-   _lune = _lune3
+if _lune4 then
+   _lune = _lune4
 end
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
@@ -269,8 +269,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune3 then
-   _lune3 = _lune
+if not _lune4 then
+   _lune4 = _lune
 end
 local Types = _lune.loadModule( 'lune.base.Types' )
 local Meta = _lune.loadModule( 'lune.base.Meta' )
@@ -1741,8 +1741,6 @@ function Import:processImportFromFile( processInfo, lnsPath, metaInfoStem, orgMo
    typeId2TypeInfo[Ast.userRootId] = processInfo:get_dummyParentType()
    local typeId2Scope = {}
    typeId2Scope[Ast.userRootId] = processInfo:get_topScope()
-   
-   typeId2TypeInfo[self.builtinFunc.lnsthread_:get_typeId().id] = self.builtinFunc.lnsthread_
    for typeId, dependIdInfo in pairs( metaInfo.__dependIdMap ) do
       local dependInfo = _lune.unwrap( dependLibId2DependInfo[_lune.unwrap( dependIdInfo[1])])
       local typeInfo = _lune.unwrap( dependInfo:getTypeInfo( _lune.unwrap( dependIdInfo[2]) ))
@@ -2006,7 +2004,7 @@ function Import:processImportFromFile( processInfo, lnsPath, metaInfoStem, orgMo
             
          elseif _switchExp == Ast.TypeInfoKind.Module then
             self.transUnitIF:pushModuleLow( processInfo, true, classTypeInfo:getTxt(  ), Ast.TypeInfo.isMut( classTypeInfo ) )
-            Log.log( Log.Level.Debug, __func__, 1109, function (  )
+            Log.log( Log.Level.Debug, __func__, 1106, function (  )
             
                return string.format( "push module -- %s, %s, %d, %d, %d", classTypeInfo:getTxt(  ), _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, self.transUnitIF:get_scope(), false ) or "nil", _lune.nilacc( _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'get_typeId', 'callmtd' ), "id" ) or -1, classTypeInfo:get_typeId().id, self.transUnitIF:get_scope():get_parent():get_scopeId())
             end )
@@ -2250,7 +2248,7 @@ function Import:createModuleLoader( modulePath, depth )
    end
    
    
-   Log.log( Log.Level.Info, __func__, 1296, function (  )
+   Log.log( Log.Level.Info, __func__, 1293, function (  )
    
       return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), orgModulePath)
    end )
@@ -2259,7 +2257,7 @@ function Import:createModuleLoader( modulePath, depth )
    local moduleInfo = self.importModuleName2ModuleInfo[modulePath]
    
    if moduleInfo ~= nil then
-      Log.log( Log.Level.Info, __func__, 1304, function (  )
+      Log.log( Log.Level.Info, __func__, 1301, function (  )
       
          return string.format( "%s already", orgModulePath)
       end )
@@ -2358,7 +2356,7 @@ function Import:loadModuleInfo( processInfo, moduleLoader )
    
    self.importModuleName2ModuleInfo[modulePath] = moduleInfo
    
-   Log.log( Log.Level.Info, __func__, 1379, function (  )
+   Log.log( Log.Level.Info, __func__, 1376, function (  )
    
       return string.format( "%s complete", orgModulePath)
    end )

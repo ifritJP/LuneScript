@@ -1,4 +1,3 @@
-import.d test.SubGo;
 import test.subGoPkg.SubPkg;
 
 pub fn __main( args:&List<str> ):int {
@@ -1944,7 +1943,7 @@ _section();
 
       
       pub fn start() mut {
-         _lune_control run_async_runner;
+         __run( self, 0 );
       }
       pub fn getResult() mut : bool {
          if! let mut pipe = self.pipe {
@@ -2092,10 +2091,10 @@ _section();
 
       
       pub fn start() mut {
-         _lune_control run_async_runner;
+         __run( self, 0 );
       }
       pub fn join() mut {
-         __join self;
+         __join( self );
       }
    }
 
@@ -2168,7 +2167,7 @@ _section();
          print( "wait done2" );
          print( "fin", test.$fin );
       }
-    }
+   }
 }
 _section();
 {

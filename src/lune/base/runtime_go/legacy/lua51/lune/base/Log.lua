@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@Log'
 local _lune = {}
-if _lune3 then
-   _lune = _lune3
+if _lune4 then
+   _lune = _lune4
 end
 function _lune.loadModule( mod )
    if __luneScript then
@@ -62,12 +62,13 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune3 then
-   _lune3 = _lune
+if not _lune4 then
+   _lune4 = _lune
 end
 
 
 local Async = _lune.loadModule( 'lune.base.Async' )
+local Depend = _lune.loadModule( 'lune.base.Depend' )
 
 local Level = {}
 _moduleObj.Level = Level
@@ -180,6 +181,10 @@ local control = Control.new(Level.Err)
 local function setLevel( level )
 
    control = Control.new(level)
+   if level >= Level.Log then
+      Depend.setRuntimeLog( true )
+   end
+   
 end
 _moduleObj.setLevel = setLevel
 

@@ -25,6 +25,8 @@ SOFTWARE.
 _lune_control default_async_all;
 
 import lune.base.Async;
+import lune.base.Depend;
+
 
 pub enum Level {
    Fatal,
@@ -81,6 +83,9 @@ let mut control:&Control = new Control( Level.Err );
 
 pub fn setLevel( level:Level ) __noasync {
    control = new Control( level );
+   if level >= .Log {
+      Depend.setRuntimeLog( true );
+   }
 }
 
 

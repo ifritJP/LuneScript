@@ -837,9 +837,6 @@ fn Import.processImportFromFile(
    let mut typeId2Scope: Map<int,Ast.Scope> = {};
    typeId2Scope[ Ast.userRootId ] = processInfo.$topScope;
 
-   typeId2TypeInfo[ self.builtinFunc.lnsthread_.$typeId.id ] =
-      self.builtinFunc.lnsthread_;
-
    // 依存するモジュールの typeInfo と、 meta 情報内の typeId との紐付け
    foreach dependIdInfo, typeId in metaInfo.__dependIdMap {
       let dependInfo = unwrap dependLibId2DependInfo[ unwrap dependIdInfo[ 1 ] ];

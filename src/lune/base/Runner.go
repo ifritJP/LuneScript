@@ -49,12 +49,12 @@ func (self *Runner_Runner) Run(_env *LnsEnv) {
 
 // 39: decl @lune.@base.@Runner.Runner.start
 func (self *Runner_Runner) Start(_env *LnsEnv) {
-    LnsRun( self )
+    LnsRun2(_env, self.FP, 0)
 }
 
 // 42: decl @lune.@base.@Runner.Runner.join
 func (self *Runner_Runner) Join(_env *LnsEnv) {
-    self.FP.GetLnsSyncFlag().Wait(_env)
+    LnsJoin(_env, self.FP)
 }
 
 

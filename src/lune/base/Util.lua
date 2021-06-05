@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@Util'
 local _lune = {}
-if _lune3 then
-   _lune = _lune3
+if _lune4 then
+   _lune = _lune4
 end
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
@@ -145,8 +145,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune3 then
-   _lune3 = _lune
+if not _lune4 then
+   _lune4 = _lune
 end
 
 
@@ -322,6 +322,68 @@ function memStream.setmeta( obj )
 end
 
 
+local TxtStream = {}
+setmetatable( TxtStream, { ifList = {iStream,} } )
+_moduleObj.TxtStream = TxtStream
+function TxtStream.new( txt )
+   local obj = {}
+   TxtStream.setmeta( obj )
+   if obj.__init then obj:__init( txt ); end
+   return obj
+end
+function TxtStream:__init(txt) 
+   self.txt = txt
+   self.start = 1
+   self.eof = false
+   self.lineList = Str.getLineList( self.txt )
+   self.lineNo = 1
+end
+function TxtStream:getSubstring( fromLineNo, toLineNo )
+
+   local txt = ""
+   local to = _lune.unwrapDefault( toLineNo, #self.lineList + 1)
+   for index = fromLineNo, to - 1 do
+      if index < 1 or index > #self.lineList then
+         break
+      end
+      
+      txt = string.format( "%s%s", txt, self.lineList[index])
+   end
+   
+   return txt
+end
+function TxtStream:read( mode )
+
+   if mode ~= '*l' then
+      err( string.format( "not support -- %s", mode) )
+   end
+   
+   if self.lineNo > #self.lineList then
+      return nil
+   end
+   
+   self.lineNo = self.lineNo + 1
+   local line = self.lineList[self.lineNo - 1]
+   if Str.endsWith( line, "\n" ) then
+      return line:sub( 1, #line - 1 )
+   end
+   
+   return line
+end
+function TxtStream:close(  )
+
+end
+function TxtStream.setmeta( obj )
+  setmetatable( obj, { __index = TxtStream  } )
+end
+function TxtStream:get_txt()
+   return self.txt
+end
+function TxtStream:get_lineNo()
+   return self.lineNo
+end
+
+
 local NullOStream = {}
 setmetatable( NullOStream, { ifList = {oStream,} } )
 _moduleObj.NullOStream = NullOStream
@@ -475,7 +537,7 @@ local function getReadyCode( depPath, tgtPath )
       return true
    end
    
-   Log.log( Log.Level.Warn, __func__, 288, function (  )
+   Log.log( Log.Level.Warn, __func__, 345, function (  )
    
       return string.format( "not ready %g < %g : %s, %s", tgtTime, depTime, tgtPath, depPath)
    end )

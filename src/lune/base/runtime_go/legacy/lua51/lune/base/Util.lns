@@ -146,6 +146,63 @@ pub class memStream extend (oStream) {
    }
 }
 
+pub class TxtStream extend (iStream) {
+   let txt: str {pub};
+   let lineList:&List<str>;
+   let mut start: int;
+   let mut eof: bool;
+   let mut lineNo: int {pub};
+   pub fn __init( txt: str ) {
+      self.txt = txt;
+      self.start = 1;
+      self.eof = false;
+      self.lineList = Str.getLineList( self.txt );
+      self.lineNo = 1;
+   }
+
+   /**
+指定範囲の文字列を取得する。
+
+fromLineNo: 1,  toLineNo: 2 を指定した場合、 1 行目だけを取得する。
+
+行番号は、 1 から。
+
+
+@param fromLineNo 取得開始する行番号
+@param toLineNo 取得終了する行番号。
+   */
+   pub fn getSubstring( fromLineNo:int, toLineNo:int! ) : str {
+      let mut txt = "";
+      let to = unwrap toLineNo default #self.lineList + 1;
+      for index = fromLineNo, to - 1 {
+         if index < 1 or index > #self.lineList {
+            break;
+         }
+         txt = "%s%s" (txt, self.lineList[ index ] );
+      }
+      return txt;
+   }
+
+   pub fn read( mode:stem! ) mut : str! {
+      if mode ~= '*l' {
+         err( "not support -- %s" (mode) );
+      }
+      if self.lineNo > #self.lineList {
+         return nil;
+      }
+      self.lineNo = self.lineNo + 1;
+      let line = self.lineList[ self.lineNo - 1 ];
+      if Str.endsWith( line, "\n") {
+         return line.sub( 1, #line - 1 );
+      }
+      return line;
+   }
+   pub fn close() mut {
+   }
+}
+
+
+
 pub class NullOStream extend (oStream) {
    pub fn write( val: str ) mut : stem!, str! {
       return self, nil;

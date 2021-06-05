@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@frontInterface'
 local _lune = {}
-if _lune3 then
-   _lune = _lune3
+if _lune4 then
+   _lune = _lune4
 end
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -189,8 +189,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune3 then
-   _lune3 = _lune
+if not _lune4 then
+   _lune4 = _lune
 end
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
@@ -295,6 +295,7 @@ function LuneHelperInfo:__init()
    self.pragmaSet = {}
    self.useLazyLoad = false
    self.useLazyRequire = false
+   self.useRun = false
 end
 function LuneHelperInfo.setmeta( obj )
   setmetatable( obj, { __index = LuneHelperInfo  } )

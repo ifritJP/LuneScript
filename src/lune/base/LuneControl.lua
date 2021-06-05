@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@LuneControl'
 local _lune = {}
-if _lune3 then
-   _lune = _lune3
+if _lune4 then
+   _lune = _lune4
 end
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -112,8 +112,8 @@ function _lune._toSet( val, toKeyInfo )
    return nil
 end
 
-if not _lune3 then
-   _lune3 = _lune
+if not _lune4 then
+   _lune4 = _lune
 end
 
 
@@ -187,8 +187,6 @@ Pragma.load__lune_module = { "load__lune_module"}
 Pragma._name2Val["load__lune_module"] = Pragma.load__lune_module
 Pragma.run_async_pipe = { "run_async_pipe"}
 Pragma._name2Val["run_async_pipe"] = Pragma.run_async_pipe
-Pragma.run_async_runner = { "run_async_runner"}
-Pragma._name2Val["run_async_runner"] = Pragma.run_async_runner
 Pragma.use_async = { "use_async"}
 Pragma._name2Val["use_async"] = Pragma.use_async
 

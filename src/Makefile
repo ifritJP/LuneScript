@@ -519,7 +519,9 @@ endif
 	$(call cp_src_set,work/2,work/1)
 	$(call cp_src_set,work/3,work/1)
 	$(call cp_src_set,work/5,work/1)
+ifndef SKIP_RUNTIME_VER_CHECK
 	$(MAKE) check-runtime-format
+endif
 	$(MAKE) test-comp2
 
 
@@ -713,7 +715,8 @@ COMP_TARGETS += test/comp9.lns@1_test/comp9.lns@2_4.3.comp
 
 # コード補完のテスト
 test-cmpl: $(COMP_TARGETS)
-	find $(LOG_DIR) -type f | sort | xargs cat >> $(LOG_FILE)
+	(find $(LOG_DIR) -type f | sort | \
+		xargs -n 1 bash -c 'echo $$0 | sed "s@$(LOG_DIR)@@g"; cat $$0') >> $(LOG_FILE)
 
 
 # オリジナルの LuneScript のテストを行ない、結果を work/test1.resut に出力する
@@ -791,7 +794,8 @@ ifndef SKIP_CHECKING_TESTING
 # 現状、CI 環境では --testing が正常が動かないので、ここは skip する
 	$(call exeLune,$(LNSC),work/3,test/testing.lns,exe,--testing $(EXE_OPT) 2>&1) >> work/test2.result
 endif
-	$(call check_singleBin,work/3/lnsc,work/test2.result,testpack2) 
+	$(call check_singleBin,work/3/lnsc,work/test2.result,testpack2)
+
 
 
 test-new-proj:
@@ -877,9 +881,20 @@ endif
 
 
 test-parallel: test-org test-org-proj \
-			test-new test-new-proj test-new2
+			test-new test-new-proj test-new2 \
+			test-comp-go-new test-comp-go-org
 
+# 元の lnsc で test-go を実行
+test-comp-go-org:
+ifeq ($(WITH_GO),y)
+	(cd .; $(MAKE) test-go LNSC=$(PWD)/lnsc)
+endif
 
+# 新しい lnsc で test-go を実行
+test-comp-go-new:
+ifeq ($(WITH_GO),y)
+	(cd work/3; $(MAKE) test-go LNSC=$(PWD)/work/3/lnsc)
+endif
 
 
 test-comp2:
@@ -1018,6 +1033,9 @@ endif
 	diff work/test4.result work/test5.result
 	diff work/1/start.dep work/3_2/start.dep
 	diff -u -r work/glue work/newglue
+	diff -C 2 -I 'ONLY_LUA' -I 'DIFF_IGNORE' \
+		work/result-testGo.txt work/3/work/result-testGo.txt 
+
 
 
 define setup-lua51-test
@@ -1540,7 +1558,6 @@ ifeq ($(GOTAG),gopherlua)
 	sed -i.bak 's@/.nolua51./@//@g' $(GO_WORK_DIR)/test/testGo.lns
 endif
 	-rm $(GO_WORK_DIR)/test/*.c
-	$(call test-go-some-setup,$(LNSC),$(GO_WORK_DIR),SubGo,test,--app testgo)
 	$(call test-go-some-setup,$(LNSC),$(GO_WORK_DIR),SubPkg,test/subGoPkg,--app testgo)
 	$(call test-go-some,$(LNSC),$(GO_WORK_DIR),testGo,test,test.testGo,--app testgo $(INT2STR))
 

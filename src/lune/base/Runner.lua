@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@Runner'
 local _lune = {}
-if _lune3 then
-   _lune = _lune3
+if _lune4 then
+   _lune = _lune4
 end
 function _lune.__isInstanceOf( obj, class )
    while obj do
@@ -55,8 +55,13 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune3 then
-   _lune3 = _lune
+function _lune._run( runner, mod )
+    runner:run()
+    return false
+end
+
+if not _lune4 then
+   _lune4 = _lune
 end
 
 
@@ -77,8 +82,7 @@ function Runner:run(  )
 end
 function Runner:start(  )
 
-   self:run()
-   
+   _lune._run(self, 0 )
 end
 function Runner:join(  )
 

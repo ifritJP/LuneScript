@@ -591,9 +591,9 @@ fn pushbackTxt( pushbackParser:Parser.PushbackParser,
 {
    let mut tokenList:List<&Parser.Token> = [];
    foreach txt in txtList {
-      let mut stream = new Parser.TxtStream( txt );
-      let mut parser = new Parser.StreamParser(
-         stream, "macro symbol -- %s" (streamName), false, pos.$RawOrgPos );
+      let mut parser = Parser.StreamParser.create(
+         Types.ParserSrc.LnsCode(
+            txt, "macro symbol -- %s" (streamName) ), nil, pos.$RawOrgPos );
       let mut workParser = new Parser.DefaultPushbackParser( parser );
       while true {
          let worktoken = workParser.getTokenNoErr();
@@ -879,7 +879,7 @@ pub fn MacroCtrl.expandSymbol(
       expListNode,
       Nodes.ExpListNode.create(
          nodeManager, exp.$pos, self.analyzeInfo.$mode == .AnalyzeArg,
-         exp.$expTypeList, [ dddNode ], nil, false ), false );
+         exp.$expTypeList, [ dddNode ], nil, false ) );
    return literalStr;
 }
 

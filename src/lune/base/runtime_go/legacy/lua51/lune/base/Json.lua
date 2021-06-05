@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@Json'
 local _lune = {}
-if _lune3 then
-   _lune = _lune3
+if _lune4 then
+   _lune = _lune4
 end
 function _lune.unwrap( val )
    if val == nil then
@@ -75,8 +75,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune3 then
-   _lune3 = _lune
+if not _lune4 then
+   _lune4 = _lune
 end
 
 
@@ -208,8 +208,7 @@ end
 
 local function fromStr( txt )
 
-   local stream = Parser.TxtStream.new(txt)
-   local parser = Parser.DefaultPushbackParser.new(Parser.StreamParser.new(stream, "json", false, nil))
+   local parser = Parser.DefaultPushbackParser.new(Parser.StreamParser.create( _lune.newAlge( Types.ParserSrc.LnsCode, {txt,"json"}) ))
    local val, ok = getVal( parser )
    if not ok then
       return nil, parser:getLastPos(  )

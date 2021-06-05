@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@Ast'
 local _lune = {}
-if _lune3 then
-   _lune = _lune3
+if _lune4 then
+   _lune = _lune4
 end
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -224,8 +224,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune3 then
-   _lune3 = _lune
+if not _lune4 then
+   _lune4 = _lune
 end
 
 
@@ -9755,8 +9755,7 @@ function TypeAnalyzer:analyzeType( scope, parser, accessMode, allowDDD, parentPu
 end
 function TypeAnalyzer:analyzeTypeFromTxt( txt, scope, accessMode, parentPub )
 
-   local stream = Parser.TxtStream.new(txt)
-   local parser = Parser.DefaultPushbackParser.new(Parser.StreamParser.new(stream, "test"))
+   local parser = Parser.DefaultPushbackParser.createFromLnsCode( txt, "test" )
    return self:analyzeType( scope, parser, accessMode, true, parentPub )
 end
 function TypeAnalyzer.setmeta( obj )

@@ -8,6 +8,15 @@
 
 * バグ
 
+- [ ] go 版で、以下ができない。
+fn sub(): int, int, int {  
+   fn func() : int, int {
+      return 1, 2;
+   }
+   return 0, func()**; // ここがエラー
+}
+  
+  
 - [ ] go 版 lnsc で lnsc test/imp.lns exe が出来ない。
       動的な import が処理できていない。  
 - [ ] クラス内からも、アクセッサを通さないとメンバにアクセスできない修飾子を追加する。

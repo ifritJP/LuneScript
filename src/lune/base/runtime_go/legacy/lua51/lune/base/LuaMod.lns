@@ -41,6 +41,7 @@ pub enum CodeKind {
    Cast,
    LazyLoad,
    LazyRequire,
+   Run,
 
 
    // 最後
@@ -436,6 +437,13 @@ function _lune._lazyRequire( modName )
 end
 ```;
 
+   work[ .Run ] = ```
+function _lune._run( runner, mod )
+    runner:run()
+    return false
+end
+```;
+   
    work[ .Finalize ] = ```
 return _lune
 ```;

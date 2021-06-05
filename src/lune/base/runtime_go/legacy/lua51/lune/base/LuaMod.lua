@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@LuaMod'
 local _lune = {}
-if _lune3 then
-   _lune = _lune3
+if _lune4 then
+   _lune = _lune4
 end
 function _lune.unwrap( val )
    if val == nil then
@@ -75,8 +75,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune3 then
-   _lune3 = _lune
+if not _lune4 then
+   _lune4 = _lune
 end
 
 
@@ -150,9 +150,12 @@ CodeKind.__allList[15] = CodeKind.LazyLoad
 CodeKind.LazyRequire = 15
 CodeKind._val2NameMap[15] = 'LazyRequire'
 CodeKind.__allList[16] = CodeKind.LazyRequire
-CodeKind.Finalize = 16
-CodeKind._val2NameMap[16] = 'Finalize'
-CodeKind.__allList[17] = CodeKind.Finalize
+CodeKind.Run = 16
+CodeKind._val2NameMap[16] = 'Run'
+CodeKind.__allList[17] = CodeKind.Run
+CodeKind.Finalize = 17
+CodeKind._val2NameMap[17] = 'Finalize'
+CodeKind.__allList[18] = CodeKind.Finalize
 
 
 local codeMap
@@ -568,6 +571,13 @@ function _lune._lazyRequire( modName )
     mod = require( modName )
     return mod
   end
+end
+]==]
+   
+   work[CodeKind.Run] = [==[
+function _lune._run( runner, mod )
+    runner:run()
+    return false
 end
 ]==]
    

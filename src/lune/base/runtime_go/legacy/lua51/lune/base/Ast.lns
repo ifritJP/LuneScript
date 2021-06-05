@@ -7631,9 +7631,7 @@ class TypeAnalyzer {
       txt:str, scope:&Scope, accessMode: AccessMode, parentPub:bool ) __noasync mut :
       &RefTypeInfo!, &Parser.Position!, str!
    {
-      let mut stream = new Parser.TxtStream( txt );
-      let mut parser =
-         new Parser.DefaultPushbackParser( new Parser.StreamParser( stream, "test" ## ) );
+      let mut parser = Parser.DefaultPushbackParser.createFromLnsCode( txt, "test" );
       return self.analyzeType( scope, parser, accessMode, true, parentPub )**;
    }
 }

@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@convLua'
 local _lune = {}
-if _lune3 then
-   _lune = _lune3
+if _lune4 then
+   _lune = _lune4
 end
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
@@ -195,8 +195,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune3 then
-   _lune3 = _lune
+if not _lune4 then
+   _lune4 = _lune
 end
 
 
@@ -209,6 +209,7 @@ local TransUnit = _lune.loadModule( 'lune.base.TransUnit' )
 local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
 local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
+local Types = _lune.loadModule( 'lune.base.Types' )
 local Log = _lune.loadModule( 'lune.base.Log' )
 local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
 local Option = _lune.loadModule( 'lune.base.Option' )
@@ -1406,6 +1407,10 @@ end]==], luneSymbol, luneSymbol) )
             self:writeln( LuaMod.getCode( LuaMod.CodeKind.LazyRequire ) )
          end
          
+         if node:get_luneHelperInfo().useRun then
+            self:writeln( LuaMod.getCode( LuaMod.CodeKind.Run ) )
+         end
+         
       end
    end
    
@@ -1929,7 +1934,7 @@ function ConvFilter:processDeclClass( node, opt )
    
    local baseInfo = classTypeInfo:get_baseTypeInfo(  )
    local baseTxt = ""
-   if baseInfo:get_typeId(  ) ~= Ast.rootTypeIdInfo and baseInfo ~= self.builtinFunc.lnsthread_ then
+   if baseInfo:get_typeId(  ) ~= Ast.rootTypeIdInfo then
       baseTxt = string.format( "__index = %s", self:getFullName( baseInfo ))
    end
    
@@ -2035,7 +2040,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _779 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _781 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -2081,7 +2086,7 @@ function %s:__init( %s )
 ]==], className, argTxt, className, argTxt, className, argTxt) )
       self:pushIndent(  )
       
-      if baseInfo ~= Ast.headTypeInfo and baseInfo ~= self.builtinFunc.lnsthread_ then
+      if baseInfo ~= Ast.headTypeInfo then
          if (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" ) then
             self:write( string.format( "%s.__init( self", self:getFullName( baseInfo )) )
             if #superArgTxt > 0 then
@@ -2467,11 +2472,6 @@ end
 function ConvFilter:processExpCallSuperCtor( node, opt )
 
    local typeInfo = node:get_superType()
-   
-   if typeInfo == self.builtinFunc.lnsthread_ then
-      return 
-   end
-   
    
    self:write( string.format( "%s.%s( self", self:getFullName( typeInfo ), node:get_methodType():get_rawTxt()) )
    
@@ -3405,9 +3405,21 @@ function ConvFilter:processExpCall( node, opt )
             setArgFlag = true
             local funcType = refNode:get_expType()
             self:write( string.format( "%s.%s( self ", self:getFullName( funcType:get_parentInfo() ), funcType:get_rawTxt()) )
-         elseif refNode:get_expType() == self.builtinFunc.lns_expandLuavalMap then
-            wroteFuncFlag = true
-            self:write( "(" )
+         else
+          
+            do
+               local _switchExp = refNode:get_expType()
+               if _switchExp == self.builtinFunc.lns_expandLuavalMap then
+                  wroteFuncFlag = true
+                  self:write( "(" )
+               elseif _switchExp == self.builtinFunc.lns___run then
+                  self:write( "_lune._run(" )
+                  wroteFuncFlag = true
+               elseif _switchExp == self.builtinFunc.lns___join or _switchExp == self.builtinFunc.lns___join2 then
+                  return 
+               end
+            end
+            
          end
          
       end
@@ -3948,11 +3960,6 @@ end
 
 
 
-function ConvFilter:processJoinRunner( node, opt )
-
-end
-
-
 function ConvFilter:processReturn( node, opt )
 
    self:write( "return " )
@@ -4239,9 +4246,6 @@ function ConvFilter:processLuneControl( node, opt )
       if _matchExp[1] == LuneControl.Pragma.load__lune_module[1] then
       
          self:processLoadRuntime(  )
-      elseif _matchExp[1] == LuneControl.Pragma.run_async_runner[1] then
-      
-         self:writeln( "self:run()" )
       end
    end
    
@@ -4313,7 +4317,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3637, function (  )
+   Log.log( Log.Level.Trace, __func__, 3636, function (  )
    
       return string.format( "macro: %s", code)
    end )

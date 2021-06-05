@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@Macro'
 local _lune = {}
-if _lune3 then
-   _lune = _lune3
+if _lune4 then
+   _lune = _lune4
 end
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
@@ -277,8 +277,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune3 then
-   _lune3 = _lune
+if not _lune4 then
+   _lune4 = _lune
 end
 
 
@@ -928,8 +928,7 @@ local function pushbackTxt( pushbackParser, txtList, streamName, pos )
 
    local tokenList = {}
    for __index, txt in ipairs( txtList ) do
-      local stream = Parser.TxtStream.new(txt)
-      local parser = Parser.StreamParser.new(stream, string.format( "macro symbol -- %s", streamName), false, pos:get_RawOrgPos())
+      local parser = Parser.StreamParser.create( _lune.newAlge( Types.ParserSrc.LnsCode, {txt,string.format( "macro symbol -- %s", streamName)}), nil, pos:get_RawOrgPos() )
       local workParser = Parser.DefaultPushbackParser.new(parser)
       while true do
          local worktoken = workParser:getTokenNoErr(  )
@@ -1202,7 +1201,7 @@ function MacroCtrl:expandSymbol( parser, prefixToken, exp, nodeManager, errMessL
    local expListNode = Nodes.ExpListNode.create( nodeManager, exp:get_pos(), self.analyzeInfo:get_mode() == Nodes.MacroMode.AnalyzeArg, exp:get_expTypeList(), {exp}, nil, false )
    local dddNode = Nodes.ExpToDDDNode.create( nodeManager, exp:get_pos(), self.analyzeInfo:get_mode() == Nodes.MacroMode.AnalyzeArg, exp:get_expTypeList(), expListNode )
    
-   local literalStr = Nodes.LiteralStringNode.create( nodeManager, prefixToken.pos, self.analyzeInfo:get_mode() == Nodes.MacroMode.AnalyzeArg, {Ast.builtinTypeString}, newToken, expListNode, Nodes.ExpListNode.create( nodeManager, exp:get_pos(), self.analyzeInfo:get_mode() == Nodes.MacroMode.AnalyzeArg, exp:get_expTypeList(), {dddNode}, nil, false ), false )
+   local literalStr = Nodes.LiteralStringNode.create( nodeManager, prefixToken.pos, self.analyzeInfo:get_mode() == Nodes.MacroMode.AnalyzeArg, {Ast.builtinTypeString}, newToken, expListNode, Nodes.ExpListNode.create( nodeManager, exp:get_pos(), self.analyzeInfo:get_mode() == Nodes.MacroMode.AnalyzeArg, exp:get_expTypeList(), {dddNode}, nil, false ) )
    return literalStr
 end
 

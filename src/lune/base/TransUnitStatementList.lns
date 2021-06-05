@@ -24,25 +24,6 @@ SOFTWARE.
 
 subfile owner lune.base.TransUnit;
 
-fn TransUnit.analyzeJoinRunner( token: &Parser.Token ) mut: Nodes.JoinRunnerNode {
-   let exp = self.analyzeExpOneRVal(
-      false, true, nil, self.builtinFunc.__runner_ );
-
-   if not exp.$expType.isInheritFrom(
-      self.processInfo, self.builtinFunc.__runner_, nil )
-   {
-      self.addErrMess(
-         exp.$pos,
-         "this doesn't inherit the __Runner. -- %s" (exp.$expType.getTxt(##)));
-   }
-   
-   self.checkNextToken( ";" );
-   
-   return Nodes.JoinRunnerNode.create(
-      self.nodeManager, token.pos,
-      self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], exp );
-}
-
 fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Nodes.ReturnNode {
    let mut expList: &Nodes.ExpListNode! = nil;
    let funcTypeInfo = self.getCurrentNamespaceTypeInfo();
@@ -184,9 +165,6 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
       }
       elseif token.txt == "return" {
          statement = self.analyzeReturn( token );
-      }
-      elseif token.txt == "__join" {
-         statement = self.analyzeJoinRunner( token );
       }
       elseif token.txt == "break" {
          self.checkNextToken( ";" );

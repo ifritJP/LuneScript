@@ -53,44 +53,17 @@ func (self *Lns__pipe) get() LnsAny {
 	return <-self.ch
 }
 
-type LnsThread struct {
-	LnsEnv *LnsEnv
-    wg *sync.WaitGroup
-	FP     LnsThreadMtd
-}
-
-func (self *LnsThread) initLnsThread() {
-	self.LnsEnv = Lns_GetEnv()
-    self.wg = &sync.WaitGroup{}
-}
-
-func (self *LnsThread) LoopMain() {
-
-	self.LnsEnv = createEnv(true)
-
-	self.runLoop()
-
-	// スレッド処理が終ったら、
-	// メモリ削減のため LnsEnv を共通に戻し、VM を close する。
-	oldEnv := self.LnsEnv
-	self.LnsEnv = Lns_GetEnv()
-	oldEnv.LuaVM.closeVM()
-}
-
-
-
 func Lns_LockEnvSync(_env *LnsEnv, callback func()) {
 	if _env.async {
 		// __noasync が待ちになるまで待つために lock する
 		sync_LnsEnvMutex.Lock()
-        _env.async = false
+		_env.async = false
 
-        // 処理終了後に lock を開放するために defer する。
-        defer func () {
-            _env.async = true
-            sync_LnsEnvMutex.Unlock()
-        }()
-
+		// 処理終了後に lock を開放するために defer する。
+		defer func() {
+			_env.async = true
+			sync_LnsEnvMutex.Unlock()
+		}()
 
 		callback()
 
@@ -100,6 +73,5 @@ func Lns_LockEnvSync(_env *LnsEnv, callback func()) {
 }
 
 type Lns_syncFlag struct {
-    wg sync.WaitGroup
+	wg sync.WaitGroup
 }
-

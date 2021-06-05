@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@Option'
 local _lune = {}
-if _lune3 then
-   _lune = _lune3
+if _lune4 then
+   _lune = _lune4
 end
 function _lune.unwrap( val )
    if val == nil then
@@ -157,8 +157,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune3 then
-   _lune3 = _lune
+if not _lune4 then
+   _lune4 = _lune
 end
 
 
@@ -177,7 +177,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 9725
+   return 9830
 end
 
 
@@ -322,6 +322,7 @@ function Option.new(  )
    return obj
 end
 function Option:__init() 
+   self.stdinFile = nil
    self.validPostBuild = true
    self.enableRunner = true
    self.addEnvArg = true
@@ -400,6 +401,9 @@ function Option:get_enableRunner()
 end
 function Option:get_validPostBuild()
    return self.validPostBuild
+end
+function Option:get_stdinFile()
+   return self.stdinFile
 end
 
 
@@ -888,12 +892,19 @@ end
    
    
    if useStdInFlag then
+      local code = io.stdin:read( "*a" )
+      if  nil == code then
+         local _code = code
+      
+         Util.err( "read error from stdin." )
+      end
+      
       if option.analyzeModule then
-         Parser.StreamParser.setStdinStream( _lune.unwrap( option.analyzeModule) )
+         option.stdinFile = Types.StdinFile.new(_lune.unwrap( option.analyzeModule), code)
       else
        
          if option.scriptPath ~= "" then
-            Parser.StreamParser.setStdinStream( Util.scriptPath2Module( option.scriptPath ) )
+            option.stdinFile = Types.StdinFile.new(Util.scriptPath2Module( option.scriptPath ), code)
          end
          
       end
@@ -919,7 +930,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 652, function (  )
+   Log.log( Log.Level.Log, __func__, 658, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

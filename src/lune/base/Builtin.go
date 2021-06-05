@@ -5,24 +5,24 @@ var init_Builtin bool
 var Builtin__mod__ string
 var Builtin_builtinFunc *Builtin_BuiltinFuncType
 var Builtin_readyBuiltin bool
-// for 451
-func Builtin_convExp11980(arg1 []LnsAny) LnsAny {
+// for 448
+func Builtin_convExp12019(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 443
-func Builtin_convExp11861(arg1 []LnsAny) string {
+// for 440
+func Builtin_convExp11900(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 71
 func Builtin_convExp201(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 446
-func Builtin_convExp11886(arg1 []LnsAny) (LnsAny, LnsAny) {
+// for 443
+func Builtin_convExp11925(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
-// for 467
-func Builtin_convExp12035(arg1 []LnsAny) string {
+// for 464
+func Builtin_convExp12074(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // 162: decl @lune.@base.@Builtin.getBuiltinFunc
@@ -48,80 +48,97 @@ func Builtin_getBuiltinFunc(_env *LnsEnv) *Builtin_BuiltinFuncType {
 
 
 
-
 // 166: decl @lune.@base.@Builtin.setupBuiltinTypeInfo
-func Builtin_setupBuiltinTypeInfo_2891_(_env *LnsEnv, name string,fieldName string,symInfo *Ast_SymbolInfo) {
+func Builtin_setupBuiltinTypeInfo_2887_(_env *LnsEnv, name string,fieldName string,symInfo *Ast_SymbolInfo) {
     var typeInfo *Ast_TypeInfo
     typeInfo = symInfo.FP.Get_typeInfo(_env)
     var process_ func(_env *LnsEnv)
     process_ = func(_env *LnsEnv) {
-        if _switch6437 := fieldName; _switch6437 == "_fcall" {
+        if _switch6534 := fieldName; _switch6534 == "__join" {
+            Builtin_builtinFunc.Lns___join = typeInfo
+            
+            Builtin_builtinFunc.Lns___join_sym = symInfo
+            
+            Builtin_builtinFunc.FP.Register(_env, symInfo)
+        } else if _switch6534 == "__join2" {
+            Builtin_builtinFunc.Lns___join2 = typeInfo
+            
+            Builtin_builtinFunc.Lns___join2_sym = symInfo
+            
+            Builtin_builtinFunc.FP.Register(_env, symInfo)
+        } else if _switch6534 == "__run" {
+            Builtin_builtinFunc.Lns___run = typeInfo
+            
+            Builtin_builtinFunc.Lns___run_sym = symInfo
+            
+            Builtin_builtinFunc.FP.Register(_env, symInfo)
+        } else if _switch6534 == "_fcall" {
             Builtin_builtinFunc.Lns__fcall = typeInfo
             
             Builtin_builtinFunc.Lns__fcall_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch6437 == "_kind" {
+        } else if _switch6534 == "_kind" {
             Builtin_builtinFunc.Lns__kind = typeInfo
             
             Builtin_builtinFunc.Lns__kind_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch6437 == "_load" {
+        } else if _switch6534 == "_load" {
             Builtin_builtinFunc.Lns__load = typeInfo
             
             Builtin_builtinFunc.Lns__load_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch6437 == "collectgarbage" {
+        } else if _switch6534 == "collectgarbage" {
             Builtin_builtinFunc.Lns_collectgarbage = typeInfo
             
             Builtin_builtinFunc.Lns_collectgarbage_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch6437 == "error" {
+        } else if _switch6534 == "error" {
             Builtin_builtinFunc.Lns_error = typeInfo
             
             Builtin_builtinFunc.Lns_error_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch6437 == "expandLuavalMap" {
+        } else if _switch6534 == "expandLuavalMap" {
             Builtin_builtinFunc.Lns_expandLuavalMap = typeInfo
             
             Builtin_builtinFunc.Lns_expandLuavalMap_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch6437 == "loadfile" {
+        } else if _switch6534 == "loadfile" {
             Builtin_builtinFunc.Lns_loadfile = typeInfo
             
             Builtin_builtinFunc.Lns_loadfile_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch6437 == "print" {
+        } else if _switch6534 == "print" {
             Builtin_builtinFunc.Lns_print = typeInfo
             
             Builtin_builtinFunc.Lns_print_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch6437 == "require" {
+        } else if _switch6534 == "require" {
             Builtin_builtinFunc.Lns_require = typeInfo
             
             Builtin_builtinFunc.Lns_require_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch6437 == "tonumber" {
+        } else if _switch6534 == "tonumber" {
             Builtin_builtinFunc.Lns_tonumber = typeInfo
             
             Builtin_builtinFunc.Lns_tonumber_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch6437 == "tostring" {
+        } else if _switch6534 == "tostring" {
             Builtin_builtinFunc.Lns_tostring = typeInfo
             
             Builtin_builtinFunc.Lns_tostring_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch6437 == "type" {
+        } else if _switch6534 == "type" {
             Builtin_builtinFunc.Lns_type = typeInfo
             
             Builtin_builtinFunc.Lns_type_sym = symInfo
@@ -131,19 +148,19 @@ func Builtin_setupBuiltinTypeInfo_2891_(_env *LnsEnv, name string,fieldName stri
     }
     var process_iStream func(_env *LnsEnv)
     process_iStream = func(_env *LnsEnv) {
-        if _switch6527 := fieldName; _switch6527 == "__attrib" {
+        if _switch6624 := fieldName; _switch6624 == "__attrib" {
             Builtin_builtinFunc.Istream___attrib = typeInfo
             
             Builtin_builtinFunc.Istream___attrib_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch6527 == "close" {
+        } else if _switch6624 == "close" {
             Builtin_builtinFunc.Istream_close = typeInfo
             
             Builtin_builtinFunc.Istream_close_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch6527 == "read" {
+        } else if _switch6624 == "read" {
             Builtin_builtinFunc.Istream_read = typeInfo
             
             Builtin_builtinFunc.Istream_read_sym = symInfo
@@ -153,25 +170,25 @@ func Builtin_setupBuiltinTypeInfo_2891_(_env *LnsEnv, name string,fieldName stri
     }
     var process_oStream func(_env *LnsEnv)
     process_oStream = func(_env *LnsEnv) {
-        if _switch6645 := fieldName; _switch6645 == "__attrib" {
+        if _switch6742 := fieldName; _switch6742 == "__attrib" {
             Builtin_builtinFunc.Ostream___attrib = typeInfo
             
             Builtin_builtinFunc.Ostream___attrib_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch6645 == "close" {
+        } else if _switch6742 == "close" {
             Builtin_builtinFunc.Ostream_close = typeInfo
             
             Builtin_builtinFunc.Ostream_close_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch6645 == "flush" {
+        } else if _switch6742 == "flush" {
             Builtin_builtinFunc.Ostream_flush = typeInfo
             
             Builtin_builtinFunc.Ostream_flush_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch6645 == "write" {
+        } else if _switch6742 == "write" {
             Builtin_builtinFunc.Ostream_write = typeInfo
             
             Builtin_builtinFunc.Ostream_write_sym = symInfo
@@ -181,37 +198,37 @@ func Builtin_setupBuiltinTypeInfo_2891_(_env *LnsEnv, name string,fieldName stri
     }
     var process_luaStream func(_env *LnsEnv)
     process_luaStream = func(_env *LnsEnv) {
-        if _switch6819 := fieldName; _switch6819 == "__attrib" {
+        if _switch6916 := fieldName; _switch6916 == "__attrib" {
             Builtin_builtinFunc.Luastream___attrib = typeInfo
             
             Builtin_builtinFunc.Luastream___attrib_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch6819 == "close" {
+        } else if _switch6916 == "close" {
             Builtin_builtinFunc.Luastream_close = typeInfo
             
             Builtin_builtinFunc.Luastream_close_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch6819 == "flush" {
+        } else if _switch6916 == "flush" {
             Builtin_builtinFunc.Luastream_flush = typeInfo
             
             Builtin_builtinFunc.Luastream_flush_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch6819 == "read" {
+        } else if _switch6916 == "read" {
             Builtin_builtinFunc.Luastream_read = typeInfo
             
             Builtin_builtinFunc.Luastream_read_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch6819 == "seek" {
+        } else if _switch6916 == "seek" {
             Builtin_builtinFunc.Luastream_seek = typeInfo
             
             Builtin_builtinFunc.Luastream_seek_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch6819 == "write" {
+        } else if _switch6916 == "write" {
             Builtin_builtinFunc.Luastream_write = typeInfo
             
             Builtin_builtinFunc.Luastream_write_sym = symInfo
@@ -221,13 +238,13 @@ func Builtin_setupBuiltinTypeInfo_2891_(_env *LnsEnv, name string,fieldName stri
     }
     var process_Mapping func(_env *LnsEnv)
     process_Mapping = func(_env *LnsEnv) {
-        if _switch6881 := fieldName; _switch6881 == "__attrib" {
+        if _switch6978 := fieldName; _switch6978 == "__attrib" {
             Builtin_builtinFunc.Mapping___attrib = typeInfo
             
             Builtin_builtinFunc.Mapping___attrib_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch6881 == "_toMap" {
+        } else if _switch6978 == "_toMap" {
             Builtin_builtinFunc.Mapping__toMap = typeInfo
             
             Builtin_builtinFunc.Mapping__toMap_sym = symInfo
@@ -237,13 +254,13 @@ func Builtin_setupBuiltinTypeInfo_2891_(_env *LnsEnv, name string,fieldName stri
     }
     var process___Runner func(_env *LnsEnv)
     process___Runner = func(_env *LnsEnv) {
-        if _switch6943 := fieldName; _switch6943 == "__attrib" {
+        if _switch7040 := fieldName; _switch7040 == "__attrib" {
             Builtin_builtinFunc.G__runner___attrib = typeInfo
             
             Builtin_builtinFunc.G__runner___attrib_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch6943 == "run" {
+        } else if _switch7040 == "run" {
             Builtin_builtinFunc.G__runner_run = typeInfo
             
             Builtin_builtinFunc.G__runner_run_sym = symInfo
@@ -253,13 +270,13 @@ func Builtin_setupBuiltinTypeInfo_2891_(_env *LnsEnv, name string,fieldName stri
     }
     var process___pipe func(_env *LnsEnv)
     process___pipe = func(_env *LnsEnv) {
-        if _switch7005 := fieldName; _switch7005 == "get" {
+        if _switch7102 := fieldName; _switch7102 == "get" {
             Builtin_builtinFunc.G__pipe_get = typeInfo
             
             Builtin_builtinFunc.G__pipe_get_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch7005 == "put" {
+        } else if _switch7102 == "put" {
             Builtin_builtinFunc.G__pipe_put = typeInfo
             
             Builtin_builtinFunc.G__pipe_put_sym = symInfo
@@ -267,55 +284,39 @@ func Builtin_setupBuiltinTypeInfo_2891_(_env *LnsEnv, name string,fieldName stri
             Builtin_builtinFunc.FP.Register(_env, symInfo)
         }
     }
-    var process_LnsThread func(_env *LnsEnv)
-    process_LnsThread = func(_env *LnsEnv) {
-        if _switch7067 := fieldName; _switch7067 == "__init" {
-            Builtin_builtinFunc.Lnsthread___init = typeInfo
-            
-            Builtin_builtinFunc.Lnsthread___init_sym = symInfo
-            
-            Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch7067 == "loop" {
-            Builtin_builtinFunc.Lnsthread_loop = typeInfo
-            
-            Builtin_builtinFunc.Lnsthread_loop_sym = symInfo
-            
-            Builtin_builtinFunc.FP.Register(_env, symInfo)
-        }
-    }
     var process_io func(_env *LnsEnv)
     process_io = func(_env *LnsEnv) {
-        if _switch7241 := fieldName; _switch7241 == "__attrib" {
+        if _switch7276 := fieldName; _switch7276 == "__attrib" {
             Builtin_builtinFunc.Io___attrib = typeInfo
             
             Builtin_builtinFunc.Io___attrib_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch7241 == "open" {
+        } else if _switch7276 == "open" {
             Builtin_builtinFunc.Io_open = typeInfo
             
             Builtin_builtinFunc.Io_open_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch7241 == "popen" {
+        } else if _switch7276 == "popen" {
             Builtin_builtinFunc.Io_popen = typeInfo
             
             Builtin_builtinFunc.Io_popen_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch7241 == "stderr" {
+        } else if _switch7276 == "stderr" {
             Builtin_builtinFunc.Io_stderr = typeInfo
             
             Builtin_builtinFunc.Io_stderr_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch7241 == "stdin" {
+        } else if _switch7276 == "stdin" {
             Builtin_builtinFunc.Io_stdin = typeInfo
             
             Builtin_builtinFunc.Io_stdin_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch7241 == "stdout" {
+        } else if _switch7276 == "stdout" {
             Builtin_builtinFunc.Io_stdout = typeInfo
             
             Builtin_builtinFunc.Io_stdout_sym = symInfo
@@ -325,19 +326,19 @@ func Builtin_setupBuiltinTypeInfo_2891_(_env *LnsEnv, name string,fieldName stri
     }
     var process_package func(_env *LnsEnv)
     process_package = func(_env *LnsEnv) {
-        if _switch7331 := fieldName; _switch7331 == "__attrib" {
+        if _switch7366 := fieldName; _switch7366 == "__attrib" {
             Builtin_builtinFunc.Package___attrib = typeInfo
             
             Builtin_builtinFunc.Package___attrib_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch7331 == "path" {
+        } else if _switch7366 == "path" {
             Builtin_builtinFunc.Package_path = typeInfo
             
             Builtin_builtinFunc.Package_path_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch7331 == "searchpath" {
+        } else if _switch7366 == "searchpath" {
             Builtin_builtinFunc.Package_searchpath = typeInfo
             
             Builtin_builtinFunc.Package_searchpath_sym = symInfo
@@ -347,49 +348,49 @@ func Builtin_setupBuiltinTypeInfo_2891_(_env *LnsEnv, name string,fieldName stri
     }
     var process_os func(_env *LnsEnv)
     process_os = func(_env *LnsEnv) {
-        if _switch7561 := fieldName; _switch7561 == "__attrib" {
+        if _switch7596 := fieldName; _switch7596 == "__attrib" {
             Builtin_builtinFunc.Os___attrib = typeInfo
             
             Builtin_builtinFunc.Os___attrib_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch7561 == "clock" {
+        } else if _switch7596 == "clock" {
             Builtin_builtinFunc.Os_clock = typeInfo
             
             Builtin_builtinFunc.Os_clock_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch7561 == "date" {
+        } else if _switch7596 == "date" {
             Builtin_builtinFunc.Os_date = typeInfo
             
             Builtin_builtinFunc.Os_date_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch7561 == "difftime" {
+        } else if _switch7596 == "difftime" {
             Builtin_builtinFunc.Os_difftime = typeInfo
             
             Builtin_builtinFunc.Os_difftime_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch7561 == "exit" {
+        } else if _switch7596 == "exit" {
             Builtin_builtinFunc.Os_exit = typeInfo
             
             Builtin_builtinFunc.Os_exit_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch7561 == "remove" {
+        } else if _switch7596 == "remove" {
             Builtin_builtinFunc.Os_remove = typeInfo
             
             Builtin_builtinFunc.Os_remove_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch7561 == "rename" {
+        } else if _switch7596 == "rename" {
             Builtin_builtinFunc.Os_rename = typeInfo
             
             Builtin_builtinFunc.Os_rename_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch7561 == "time" {
+        } else if _switch7596 == "time" {
             Builtin_builtinFunc.Os_time = typeInfo
             
             Builtin_builtinFunc.Os_time_sym = symInfo
@@ -399,73 +400,73 @@ func Builtin_setupBuiltinTypeInfo_2891_(_env *LnsEnv, name string,fieldName stri
     }
     var process_string func(_env *LnsEnv)
     process_string = func(_env *LnsEnv) {
-        if _switch7903 := fieldName; _switch7903 == "__attrib" {
+        if _switch7938 := fieldName; _switch7938 == "__attrib" {
             Builtin_builtinFunc.String___attrib = typeInfo
             
             Builtin_builtinFunc.String___attrib_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch7903 == "byte" {
+        } else if _switch7938 == "byte" {
             Builtin_builtinFunc.String_byte = typeInfo
             
             Builtin_builtinFunc.String_byte_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch7903 == "dump" {
+        } else if _switch7938 == "dump" {
             Builtin_builtinFunc.String_dump = typeInfo
             
             Builtin_builtinFunc.String_dump_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch7903 == "find" {
+        } else if _switch7938 == "find" {
             Builtin_builtinFunc.String_find = typeInfo
             
             Builtin_builtinFunc.String_find_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch7903 == "format" {
+        } else if _switch7938 == "format" {
             Builtin_builtinFunc.String_format = typeInfo
             
             Builtin_builtinFunc.String_format_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch7903 == "gmatch" {
+        } else if _switch7938 == "gmatch" {
             Builtin_builtinFunc.String_gmatch = typeInfo
             
             Builtin_builtinFunc.String_gmatch_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch7903 == "gsub" {
+        } else if _switch7938 == "gsub" {
             Builtin_builtinFunc.String_gsub = typeInfo
             
             Builtin_builtinFunc.String_gsub_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch7903 == "lower" {
+        } else if _switch7938 == "lower" {
             Builtin_builtinFunc.String_lower = typeInfo
             
             Builtin_builtinFunc.String_lower_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch7903 == "rep" {
+        } else if _switch7938 == "rep" {
             Builtin_builtinFunc.String_rep = typeInfo
             
             Builtin_builtinFunc.String_rep_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch7903 == "reverse" {
+        } else if _switch7938 == "reverse" {
             Builtin_builtinFunc.String_reverse = typeInfo
             
             Builtin_builtinFunc.String_reverse_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch7903 == "sub" {
+        } else if _switch7938 == "sub" {
             Builtin_builtinFunc.String_sub = typeInfo
             
             Builtin_builtinFunc.String_sub_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch7903 == "upper" {
+        } else if _switch7938 == "upper" {
             Builtin_builtinFunc.String_upper = typeInfo
             
             Builtin_builtinFunc.String_upper_sym = symInfo
@@ -475,67 +476,67 @@ func Builtin_setupBuiltinTypeInfo_2891_(_env *LnsEnv, name string,fieldName stri
     }
     var process_str func(_env *LnsEnv)
     process_str = func(_env *LnsEnv) {
-        if _switch8217 := fieldName; _switch8217 == "__attrib" {
+        if _switch8252 := fieldName; _switch8252 == "__attrib" {
             Builtin_builtinFunc.Str___attrib = typeInfo
             
             Builtin_builtinFunc.Str___attrib_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch8217 == "byte" {
+        } else if _switch8252 == "byte" {
             Builtin_builtinFunc.Str_byte = typeInfo
             
             Builtin_builtinFunc.Str_byte_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch8217 == "find" {
+        } else if _switch8252 == "find" {
             Builtin_builtinFunc.Str_find = typeInfo
             
             Builtin_builtinFunc.Str_find_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch8217 == "format" {
+        } else if _switch8252 == "format" {
             Builtin_builtinFunc.Str_format = typeInfo
             
             Builtin_builtinFunc.Str_format_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch8217 == "gmatch" {
+        } else if _switch8252 == "gmatch" {
             Builtin_builtinFunc.Str_gmatch = typeInfo
             
             Builtin_builtinFunc.Str_gmatch_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch8217 == "gsub" {
+        } else if _switch8252 == "gsub" {
             Builtin_builtinFunc.Str_gsub = typeInfo
             
             Builtin_builtinFunc.Str_gsub_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch8217 == "lower" {
+        } else if _switch8252 == "lower" {
             Builtin_builtinFunc.Str_lower = typeInfo
             
             Builtin_builtinFunc.Str_lower_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch8217 == "rep" {
+        } else if _switch8252 == "rep" {
             Builtin_builtinFunc.Str_rep = typeInfo
             
             Builtin_builtinFunc.Str_rep_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch8217 == "reverse" {
+        } else if _switch8252 == "reverse" {
             Builtin_builtinFunc.Str_reverse = typeInfo
             
             Builtin_builtinFunc.Str_reverse_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch8217 == "sub" {
+        } else if _switch8252 == "sub" {
             Builtin_builtinFunc.Str_sub = typeInfo
             
             Builtin_builtinFunc.Str_sub_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch8217 == "upper" {
+        } else if _switch8252 == "upper" {
             Builtin_builtinFunc.Str_upper = typeInfo
             
             Builtin_builtinFunc.Str_upper_sym = symInfo
@@ -545,31 +546,31 @@ func Builtin_setupBuiltinTypeInfo_2891_(_env *LnsEnv, name string,fieldName stri
     }
     var process_List func(_env *LnsEnv)
     process_List = func(_env *LnsEnv) {
-        if _switch8363 := fieldName; _switch8363 == "__less" {
+        if _switch8398 := fieldName; _switch8398 == "__less" {
             Builtin_builtinFunc.List___less = typeInfo
             
             Builtin_builtinFunc.List___less_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch8363 == "insert" {
+        } else if _switch8398 == "insert" {
             Builtin_builtinFunc.List_insert = typeInfo
             
             Builtin_builtinFunc.List_insert_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch8363 == "remove" {
+        } else if _switch8398 == "remove" {
             Builtin_builtinFunc.List_remove = typeInfo
             
             Builtin_builtinFunc.List_remove_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch8363 == "sort" {
+        } else if _switch8398 == "sort" {
             Builtin_builtinFunc.List_sort = typeInfo
             
             Builtin_builtinFunc.List_sort_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch8363 == "unpack" {
+        } else if _switch8398 == "unpack" {
             Builtin_builtinFunc.List_unpack = typeInfo
             
             Builtin_builtinFunc.List_unpack_sym = symInfo
@@ -579,19 +580,19 @@ func Builtin_setupBuiltinTypeInfo_2891_(_env *LnsEnv, name string,fieldName stri
     }
     var process_Array func(_env *LnsEnv)
     process_Array = func(_env *LnsEnv) {
-        if _switch8453 := fieldName; _switch8453 == "__less" {
+        if _switch8488 := fieldName; _switch8488 == "__less" {
             Builtin_builtinFunc.Array___less = typeInfo
             
             Builtin_builtinFunc.Array___less_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch8453 == "sort" {
+        } else if _switch8488 == "sort" {
             Builtin_builtinFunc.Array_sort = typeInfo
             
             Builtin_builtinFunc.Array_sort_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch8453 == "unpack" {
+        } else if _switch8488 == "unpack" {
             Builtin_builtinFunc.Array_unpack = typeInfo
             
             Builtin_builtinFunc.Array_unpack_sym = symInfo
@@ -601,49 +602,49 @@ func Builtin_setupBuiltinTypeInfo_2891_(_env *LnsEnv, name string,fieldName stri
     }
     var process_Set func(_env *LnsEnv)
     process_Set = func(_env *LnsEnv) {
-        if _switch8683 := fieldName; _switch8683 == "add" {
+        if _switch8718 := fieldName; _switch8718 == "add" {
             Builtin_builtinFunc.Set_add = typeInfo
             
             Builtin_builtinFunc.Set_add_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch8683 == "and" {
+        } else if _switch8718 == "and" {
             Builtin_builtinFunc.Set_and = typeInfo
             
             Builtin_builtinFunc.Set_and_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch8683 == "clone" {
+        } else if _switch8718 == "clone" {
             Builtin_builtinFunc.Set_clone = typeInfo
             
             Builtin_builtinFunc.Set_clone_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch8683 == "del" {
+        } else if _switch8718 == "del" {
             Builtin_builtinFunc.Set_del = typeInfo
             
             Builtin_builtinFunc.Set_del_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch8683 == "has" {
+        } else if _switch8718 == "has" {
             Builtin_builtinFunc.Set_has = typeInfo
             
             Builtin_builtinFunc.Set_has_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch8683 == "len" {
+        } else if _switch8718 == "len" {
             Builtin_builtinFunc.Set_len = typeInfo
             
             Builtin_builtinFunc.Set_len_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch8683 == "or" {
+        } else if _switch8718 == "or" {
             Builtin_builtinFunc.Set_or = typeInfo
             
             Builtin_builtinFunc.Set_or_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch8683 == "sub" {
+        } else if _switch8718 == "sub" {
             Builtin_builtinFunc.Set_sub = typeInfo
             
             Builtin_builtinFunc.Set_sub_sym = symInfo
@@ -653,19 +654,19 @@ func Builtin_setupBuiltinTypeInfo_2891_(_env *LnsEnv, name string,fieldName stri
     }
     var process_math func(_env *LnsEnv)
     process_math = func(_env *LnsEnv) {
-        if _switch8773 := fieldName; _switch8773 == "__attrib" {
+        if _switch8808 := fieldName; _switch8808 == "__attrib" {
             Builtin_builtinFunc.Math___attrib = typeInfo
             
             Builtin_builtinFunc.Math___attrib_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch8773 == "random" {
+        } else if _switch8808 == "random" {
             Builtin_builtinFunc.Math_random = typeInfo
             
             Builtin_builtinFunc.Math_random_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch8773 == "randomseed" {
+        } else if _switch8808 == "randomseed" {
             Builtin_builtinFunc.Math_randomseed = typeInfo
             
             Builtin_builtinFunc.Math_randomseed_sym = symInfo
@@ -675,19 +676,19 @@ func Builtin_setupBuiltinTypeInfo_2891_(_env *LnsEnv, name string,fieldName stri
     }
     var process_debug func(_env *LnsEnv)
     process_debug = func(_env *LnsEnv) {
-        if _switch8863 := fieldName; _switch8863 == "__attrib" {
+        if _switch8898 := fieldName; _switch8898 == "__attrib" {
             Builtin_builtinFunc.Debug___attrib = typeInfo
             
             Builtin_builtinFunc.Debug___attrib_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch8863 == "getinfo" {
+        } else if _switch8898 == "getinfo" {
             Builtin_builtinFunc.Debug_getinfo = typeInfo
             
             Builtin_builtinFunc.Debug_getinfo_sym = symInfo
             
             Builtin_builtinFunc.FP.Register(_env, symInfo)
-        } else if _switch8863 == "getlocal" {
+        } else if _switch8898 == "getlocal" {
             Builtin_builtinFunc.Debug_getlocal = typeInfo
             
             Builtin_builtinFunc.Debug_getlocal_sym = symInfo
@@ -697,7 +698,7 @@ func Builtin_setupBuiltinTypeInfo_2891_(_env *LnsEnv, name string,fieldName stri
     }
     var process_Nilable func(_env *LnsEnv)
     process_Nilable = func(_env *LnsEnv) {
-        if _switch8897 := fieldName; _switch8897 == "val" {
+        if _switch8932 := fieldName; _switch8932 == "val" {
             Builtin_builtinFunc.Nilable_val = typeInfo
             
             Builtin_builtinFunc.Nilable_val_sym = symInfo
@@ -705,55 +706,53 @@ func Builtin_setupBuiltinTypeInfo_2891_(_env *LnsEnv, name string,fieldName stri
             Builtin_builtinFunc.FP.Register(_env, symInfo)
         }
     }
-    if _switch9056 := name; _switch9056 == "" {
+    if _switch9083 := name; _switch9083 == "" {
         process_(_env)
-    } else if _switch9056 == "iStream" {
+    } else if _switch9083 == "iStream" {
         process_iStream(_env)
-    } else if _switch9056 == "oStream" {
+    } else if _switch9083 == "oStream" {
         process_oStream(_env)
-    } else if _switch9056 == "luaStream" {
+    } else if _switch9083 == "luaStream" {
         process_luaStream(_env)
-    } else if _switch9056 == "Mapping" {
+    } else if _switch9083 == "Mapping" {
         process_Mapping(_env)
-    } else if _switch9056 == "__Runner" {
+    } else if _switch9083 == "__Runner" {
         process___Runner(_env)
-    } else if _switch9056 == "__pipe" {
+    } else if _switch9083 == "__pipe" {
         process___pipe(_env)
-    } else if _switch9056 == "LnsThread" {
-        process_LnsThread(_env)
-    } else if _switch9056 == "io" {
+    } else if _switch9083 == "io" {
         process_io(_env)
-    } else if _switch9056 == "package" {
+    } else if _switch9083 == "package" {
         process_package(_env)
-    } else if _switch9056 == "os" {
+    } else if _switch9083 == "os" {
         process_os(_env)
-    } else if _switch9056 == "string" {
+    } else if _switch9083 == "string" {
         process_string(_env)
-    } else if _switch9056 == "str" {
+    } else if _switch9083 == "str" {
         process_str(_env)
-    } else if _switch9056 == "List" {
+    } else if _switch9083 == "List" {
         process_List(_env)
-    } else if _switch9056 == "Array" {
+    } else if _switch9083 == "Array" {
         process_Array(_env)
-    } else if _switch9056 == "Set" {
+    } else if _switch9083 == "Set" {
         process_Set(_env)
-    } else if _switch9056 == "math" {
+    } else if _switch9083 == "math" {
         process_math(_env)
-    } else if _switch9056 == "debug" {
+    } else if _switch9083 == "debug" {
         process_debug(_env)
-    } else if _switch9056 == "Nilable" {
+    } else if _switch9083 == "Nilable" {
         process_Nilable(_env)
     }
 }
 
 // 176: decl @lune.@base.@Builtin.getBuiltInInfo
-func Builtin_getBuiltInInfo_3259_(_env *LnsEnv) *LnsList {
-    return NewLnsList([]LnsAny{NewLnsMap( map[LnsAny]LnsAny{"":NewLnsMap( map[LnsAny]LnsAny{"_fcall":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"form", "&..."}),"ret":NewLnsList([]LnsAny{""}),}),"_kind":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"stem!"}),"ret":NewLnsList([]LnsAny{"int"}),}),"_load":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str", "stem!"}),"ret":NewLnsList([]LnsAny{"Luaval<form>!", "str!"}),}),"collectgarbage":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{}),}),"error":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str"}),"ret":NewLnsList([]LnsAny{"__"}),}),"expandLuavalMap":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"Luaval<&stem>!"}),"ret":NewLnsList([]LnsAny{"&stem!"}),}),"loadfile":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str"}),"ret":NewLnsList([]LnsAny{"Luaval<form>!", "str!"}),}),"print":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"&..."}),"ret":NewLnsList([]LnsAny{}),}),"require":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str"}),"ret":NewLnsList([]LnsAny{"Luaval<stem>"}),}),"tonumber":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str", "int!"}),"ret":NewLnsList([]LnsAny{"real!"}),}),"tostring":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"&stem"}),"ret":NewLnsList([]LnsAny{"str"}),}),"type":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"&stem!"}),"ret":NewLnsList([]LnsAny{"str"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"iStream":NewLnsMap( map[LnsAny]LnsAny{"__attrib":NewLnsMap( map[LnsAny]LnsAny{"type":NewLnsList([]LnsAny{"interface"}),}),"close":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{}),"type":NewLnsList([]LnsAny{"mut"}),}),"read":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"stem!"}),"ret":NewLnsList([]LnsAny{"str!"}),"type":NewLnsList([]LnsAny{"mut"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"oStream":NewLnsMap( map[LnsAny]LnsAny{"__attrib":NewLnsMap( map[LnsAny]LnsAny{"type":NewLnsList([]LnsAny{"interface"}),}),"close":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{}),"type":NewLnsList([]LnsAny{"mut"}),}),"flush":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{}),"type":NewLnsList([]LnsAny{"mut"}),}),"write":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str"}),"ret":NewLnsList([]LnsAny{"stem!", "str!"}),"type":NewLnsList([]LnsAny{"mut"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"luaStream":NewLnsMap( map[LnsAny]LnsAny{"__attrib":NewLnsMap( map[LnsAny]LnsAny{"inplements":NewLnsList([]LnsAny{"iStream", "oStream"}),"type":NewLnsList([]LnsAny{"interface"}),}),"close":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{}),"type":NewLnsList([]LnsAny{"mut"}),}),"flush":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{}),"type":NewLnsList([]LnsAny{"mut"}),}),"read":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"stem!"}),"ret":NewLnsList([]LnsAny{"str!"}),"type":NewLnsList([]LnsAny{"mut"}),}),"seek":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str", "int"}),"ret":NewLnsList([]LnsAny{"int!", "str!"}),"type":NewLnsList([]LnsAny{"mut"}),}),"write":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str"}),"ret":NewLnsList([]LnsAny{"stem!", "str!"}),"type":NewLnsList([]LnsAny{"mut"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"Mapping":NewLnsMap( map[LnsAny]LnsAny{"__attrib":NewLnsMap( map[LnsAny]LnsAny{"type":NewLnsList([]LnsAny{"interface"}),}),"_toMap":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{}),"type":NewLnsList([]LnsAny{"method"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"__Runner":NewLnsMap( map[LnsAny]LnsAny{"__attrib":NewLnsMap( map[LnsAny]LnsAny{"type":NewLnsList([]LnsAny{"interface"}),}),"run":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{}),"type":NewLnsList([]LnsAny{"mut"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"__pipe<T>":NewLnsMap( map[LnsAny]LnsAny{"get":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{"T!"}),"type":NewLnsList([]LnsAny{"method"}),}),"put":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"T!"}),"ret":NewLnsList([]LnsAny{}),"type":NewLnsList([]LnsAny{"method"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"LnsThread":NewLnsMap( map[LnsAny]LnsAny{"__init":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{}),"type":NewLnsList([]LnsAny{"method"}),}),"loop":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{}),"type":NewLnsList([]LnsAny{"abstract"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"io":NewLnsMap( map[LnsAny]LnsAny{"__attrib":NewLnsMap( map[LnsAny]LnsAny{"type":NewLnsList([]LnsAny{"module"}),}),"open":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str", "str!"}),"ret":NewLnsList([]LnsAny{"luaStream!", "str!"}),}),"popen":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str"}),"ret":NewLnsList([]LnsAny{"Luaval<luaStream>!"}),}),"stderr":NewLnsMap( map[LnsAny]LnsAny{"type":NewLnsList([]LnsAny{"var"}),"typeInfo":NewLnsList([]LnsAny{"oStream"}),}),"stdin":NewLnsMap( map[LnsAny]LnsAny{"type":NewLnsList([]LnsAny{"var"}),"typeInfo":NewLnsList([]LnsAny{"iStream"}),}),"stdout":NewLnsMap( map[LnsAny]LnsAny{"type":NewLnsList([]LnsAny{"var"}),"typeInfo":NewLnsList([]LnsAny{"oStream"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"package":NewLnsMap( map[LnsAny]LnsAny{"__attrib":NewLnsMap( map[LnsAny]LnsAny{"type":NewLnsList([]LnsAny{"module"}),}),"path":NewLnsMap( map[LnsAny]LnsAny{"type":NewLnsList([]LnsAny{"var"}),"typeInfo":NewLnsList([]LnsAny{"str"}),}),"searchpath":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str", "str"}),"ret":NewLnsList([]LnsAny{"str!"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"os":NewLnsMap( map[LnsAny]LnsAny{"__attrib":NewLnsMap( map[LnsAny]LnsAny{"type":NewLnsList([]LnsAny{"module"}),}),"clock":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{"real"}),}),"date":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str!", "stem!"}),"ret":NewLnsList([]LnsAny{"Luaval<stem>!"}),}),"difftime":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"&stem", "&stem"}),"ret":NewLnsList([]LnsAny{"int"}),}),"exit":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"int!"}),"ret":NewLnsList([]LnsAny{"__"}),}),"remove":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str"}),"ret":NewLnsList([]LnsAny{"bool!", "str!"}),}),"rename":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str", "str"}),"ret":NewLnsList([]LnsAny{"stem!", "str!"}),}),"time":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"stem!"}),"ret":NewLnsList([]LnsAny{"stem!"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"string":NewLnsMap( map[LnsAny]LnsAny{"__attrib":NewLnsMap( map[LnsAny]LnsAny{"type":NewLnsList([]LnsAny{"module"}),}),"byte":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str", "int!", "int!"}),"ret":NewLnsList([]LnsAny{"...<int>"}),}),"dump":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"&Luaval<form>", "bool!"}),"ret":NewLnsList([]LnsAny{"str"}),}),"find":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str", "str", "int!", "bool!"}),"ret":NewLnsList([]LnsAny{"...<int>"}),}),"format":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str", "..."}),"ret":NewLnsList([]LnsAny{"str"}),}),"gmatch":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str", "str"}),"ret":NewLnsList([]LnsAny{"Luaval<form>", "stem!", "stem!"}),}),"gsub":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str", "str", "str"}),"ret":NewLnsList([]LnsAny{"str", "int"}),}),"lower":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str"}),"ret":NewLnsList([]LnsAny{"str"}),}),"rep":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str", "int"}),"ret":NewLnsList([]LnsAny{"str"}),}),"reverse":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str"}),"ret":NewLnsList([]LnsAny{"str"}),}),"sub":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str", "int", "int!"}),"ret":NewLnsList([]LnsAny{"str"}),}),"upper":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str"}),"ret":NewLnsList([]LnsAny{"str"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"str":NewLnsMap( map[LnsAny]LnsAny{"__attrib":NewLnsMap( map[LnsAny]LnsAny{"inplements":NewLnsList([]LnsAny{"Mapping"}),}),"byte":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"int!", "int!"}),"ret":NewLnsList([]LnsAny{"...<int!>"}),"type":NewLnsList([]LnsAny{"method"}),}),"find":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str", "int!", "bool!"}),"ret":NewLnsList([]LnsAny{"...<int>"}),"type":NewLnsList([]LnsAny{"method"}),}),"format":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"&..."}),"ret":NewLnsList([]LnsAny{"str"}),"type":NewLnsList([]LnsAny{"method"}),}),"gmatch":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str"}),"ret":NewLnsList([]LnsAny{"Luaval<form>", "stem!", "stem!"}),"type":NewLnsList([]LnsAny{"method"}),}),"gsub":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str", "str"}),"ret":NewLnsList([]LnsAny{"str", "int"}),"type":NewLnsList([]LnsAny{"method"}),}),"lower":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{"str"}),"type":NewLnsList([]LnsAny{"method"}),}),"rep":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"int"}),"ret":NewLnsList([]LnsAny{"str"}),"type":NewLnsList([]LnsAny{"method"}),}),"reverse":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{"str"}),"type":NewLnsList([]LnsAny{"method"}),}),"sub":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"int", "int!"}),"ret":NewLnsList([]LnsAny{"str"}),"type":NewLnsList([]LnsAny{"method"}),}),"upper":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{"str"}),"type":NewLnsList([]LnsAny{"method"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"List<T>":NewLnsMap( map[LnsAny]LnsAny{"__less":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"T", "T"}),"ret":NewLnsList([]LnsAny{"bool"}),"type":NewLnsList([]LnsAny{"formfunc"}),}),"insert":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"T"}),"ret":NewLnsList([]LnsAny{""}),"type":NewLnsList([]LnsAny{"mut"}),}),"remove":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"int!"}),"ret":NewLnsList([]LnsAny{"T!"}),"type":NewLnsList([]LnsAny{"mut"}),}),"sort":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"__less!"}),"ret":NewLnsList([]LnsAny{}),"type":NewLnsList([]LnsAny{"mut"}),}),"unpack":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{"..."}),"type":NewLnsList([]LnsAny{"method"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"Array<T>":NewLnsMap( map[LnsAny]LnsAny{"__less":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"T", "T"}),"ret":NewLnsList([]LnsAny{"bool"}),"type":NewLnsList([]LnsAny{"formfunc"}),}),"sort":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"__less!"}),"ret":NewLnsList([]LnsAny{}),"type":NewLnsList([]LnsAny{"mut"}),}),"unpack":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{"..."}),"type":NewLnsList([]LnsAny{"method"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"Set<T>":NewLnsMap( map[LnsAny]LnsAny{"add":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"T"}),"ret":NewLnsList([]LnsAny{}),"type":NewLnsList([]LnsAny{"mut"}),}),"and":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"&Set<T>"}),"ret":NewLnsList([]LnsAny{"Set<T>"}),"type":NewLnsList([]LnsAny{"mut"}),}),"clone":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{"Set<T>"}),"type":NewLnsList([]LnsAny{"method"}),}),"del":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"T"}),"ret":NewLnsList([]LnsAny{}),"type":NewLnsList([]LnsAny{"mut"}),}),"has":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"T"}),"ret":NewLnsList([]LnsAny{"bool"}),"type":NewLnsList([]LnsAny{"method"}),}),"len":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{"int"}),"type":NewLnsList([]LnsAny{"method"}),}),"or":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"&Set<T>"}),"ret":NewLnsList([]LnsAny{"Set<T>"}),"type":NewLnsList([]LnsAny{"mut"}),}),"sub":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"&Set<T>"}),"ret":NewLnsList([]LnsAny{"Set<T>"}),"type":NewLnsList([]LnsAny{"mut"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"math":NewLnsMap( map[LnsAny]LnsAny{"__attrib":NewLnsMap( map[LnsAny]LnsAny{"type":NewLnsList([]LnsAny{"module"}),}),"random":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"int!", "int!"}),"ret":NewLnsList([]LnsAny{"real"}),}),"randomseed":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"int"}),"ret":NewLnsList([]LnsAny{}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"debug":NewLnsMap( map[LnsAny]LnsAny{"__attrib":NewLnsMap( map[LnsAny]LnsAny{"type":NewLnsList([]LnsAny{"module"}),}),"getinfo":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"int"}),"ret":NewLnsList([]LnsAny{"Map<str,stem>!"}),}),"getlocal":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"int", "int"}),"ret":NewLnsList([]LnsAny{"str!", "stem!"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"Nilable<_T>":NewLnsMap( map[LnsAny]LnsAny{"val":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{"_T!"}),"type":NewLnsList([]LnsAny{"method"}),}),}),})})
+func Builtin_getBuiltInInfo_3255_(_env *LnsEnv) *LnsList {
+    return NewLnsList([]LnsAny{NewLnsMap( map[LnsAny]LnsAny{"":NewLnsMap( map[LnsAny]LnsAny{"__join":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"&__Runner"}),"ret":NewLnsList([]LnsAny{""}),}),"__join2":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"&__Runner"}),"ret":NewLnsList([]LnsAny{""}),}),"__run":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"__Runner", "int"}),"ret":NewLnsList([]LnsAny{"bool"}),}),"_fcall":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"form", "&..."}),"ret":NewLnsList([]LnsAny{""}),}),"_kind":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"stem!"}),"ret":NewLnsList([]LnsAny{"int"}),}),"_load":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str", "stem!"}),"ret":NewLnsList([]LnsAny{"Luaval<form>!", "str!"}),}),"collectgarbage":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{}),}),"error":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str"}),"ret":NewLnsList([]LnsAny{"__"}),}),"expandLuavalMap":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"Luaval<&stem>!"}),"ret":NewLnsList([]LnsAny{"&stem!"}),}),"loadfile":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str"}),"ret":NewLnsList([]LnsAny{"Luaval<form>!", "str!"}),}),"print":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"&..."}),"ret":NewLnsList([]LnsAny{}),}),"require":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str"}),"ret":NewLnsList([]LnsAny{"Luaval<stem>"}),}),"tonumber":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str", "int!"}),"ret":NewLnsList([]LnsAny{"real!"}),}),"tostring":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"&stem"}),"ret":NewLnsList([]LnsAny{"str"}),}),"type":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"&stem!"}),"ret":NewLnsList([]LnsAny{"str"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"iStream":NewLnsMap( map[LnsAny]LnsAny{"__attrib":NewLnsMap( map[LnsAny]LnsAny{"type":NewLnsList([]LnsAny{"interface"}),}),"close":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{}),"type":NewLnsList([]LnsAny{"mut"}),}),"read":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"stem!"}),"ret":NewLnsList([]LnsAny{"str!"}),"type":NewLnsList([]LnsAny{"mut"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"oStream":NewLnsMap( map[LnsAny]LnsAny{"__attrib":NewLnsMap( map[LnsAny]LnsAny{"type":NewLnsList([]LnsAny{"interface"}),}),"close":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{}),"type":NewLnsList([]LnsAny{"mut"}),}),"flush":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{}),"type":NewLnsList([]LnsAny{"mut"}),}),"write":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str"}),"ret":NewLnsList([]LnsAny{"stem!", "str!"}),"type":NewLnsList([]LnsAny{"mut"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"luaStream":NewLnsMap( map[LnsAny]LnsAny{"__attrib":NewLnsMap( map[LnsAny]LnsAny{"inplements":NewLnsList([]LnsAny{"iStream", "oStream"}),"type":NewLnsList([]LnsAny{"interface"}),}),"close":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{}),"type":NewLnsList([]LnsAny{"mut"}),}),"flush":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{}),"type":NewLnsList([]LnsAny{"mut"}),}),"read":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"stem!"}),"ret":NewLnsList([]LnsAny{"str!"}),"type":NewLnsList([]LnsAny{"mut"}),}),"seek":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str", "int"}),"ret":NewLnsList([]LnsAny{"int!", "str!"}),"type":NewLnsList([]LnsAny{"mut"}),}),"write":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str"}),"ret":NewLnsList([]LnsAny{"stem!", "str!"}),"type":NewLnsList([]LnsAny{"mut"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"Mapping":NewLnsMap( map[LnsAny]LnsAny{"__attrib":NewLnsMap( map[LnsAny]LnsAny{"type":NewLnsList([]LnsAny{"interface"}),}),"_toMap":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{}),"type":NewLnsList([]LnsAny{"method"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"__Runner":NewLnsMap( map[LnsAny]LnsAny{"__attrib":NewLnsMap( map[LnsAny]LnsAny{"type":NewLnsList([]LnsAny{"interface"}),}),"run":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{}),"type":NewLnsList([]LnsAny{"mut"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"__pipe<T>":NewLnsMap( map[LnsAny]LnsAny{"get":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{"T!"}),"type":NewLnsList([]LnsAny{"method"}),}),"put":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"T!"}),"ret":NewLnsList([]LnsAny{}),"type":NewLnsList([]LnsAny{"method"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"io":NewLnsMap( map[LnsAny]LnsAny{"__attrib":NewLnsMap( map[LnsAny]LnsAny{"type":NewLnsList([]LnsAny{"module"}),}),"open":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str", "str!"}),"ret":NewLnsList([]LnsAny{"luaStream!", "str!"}),}),"popen":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str"}),"ret":NewLnsList([]LnsAny{"Luaval<luaStream>!"}),}),"stderr":NewLnsMap( map[LnsAny]LnsAny{"type":NewLnsList([]LnsAny{"var"}),"typeInfo":NewLnsList([]LnsAny{"oStream"}),}),"stdin":NewLnsMap( map[LnsAny]LnsAny{"type":NewLnsList([]LnsAny{"var"}),"typeInfo":NewLnsList([]LnsAny{"iStream"}),}),"stdout":NewLnsMap( map[LnsAny]LnsAny{"type":NewLnsList([]LnsAny{"var"}),"typeInfo":NewLnsList([]LnsAny{"oStream"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"package":NewLnsMap( map[LnsAny]LnsAny{"__attrib":NewLnsMap( map[LnsAny]LnsAny{"type":NewLnsList([]LnsAny{"module"}),}),"path":NewLnsMap( map[LnsAny]LnsAny{"type":NewLnsList([]LnsAny{"var"}),"typeInfo":NewLnsList([]LnsAny{"str"}),}),"searchpath":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str", "str"}),"ret":NewLnsList([]LnsAny{"str!"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"os":NewLnsMap( map[LnsAny]LnsAny{"__attrib":NewLnsMap( map[LnsAny]LnsAny{"type":NewLnsList([]LnsAny{"module"}),}),"clock":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{"real"}),}),"date":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str!", "stem!"}),"ret":NewLnsList([]LnsAny{"Luaval<stem>!"}),}),"difftime":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"&stem", "&stem"}),"ret":NewLnsList([]LnsAny{"int"}),}),"exit":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"int!"}),"ret":NewLnsList([]LnsAny{"__"}),}),"remove":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str"}),"ret":NewLnsList([]LnsAny{"bool!", "str!"}),}),"rename":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str", "str"}),"ret":NewLnsList([]LnsAny{"stem!", "str!"}),}),"time":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"stem!"}),"ret":NewLnsList([]LnsAny{"stem!"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"string":NewLnsMap( map[LnsAny]LnsAny{"__attrib":NewLnsMap( map[LnsAny]LnsAny{"type":NewLnsList([]LnsAny{"module"}),}),"byte":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str", "int!", "int!"}),"ret":NewLnsList([]LnsAny{"...<int>"}),}),"dump":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"&Luaval<form>", "bool!"}),"ret":NewLnsList([]LnsAny{"str"}),}),"find":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str", "str", "int!", "bool!"}),"ret":NewLnsList([]LnsAny{"...<int>"}),}),"format":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str", "..."}),"ret":NewLnsList([]LnsAny{"str"}),}),"gmatch":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str", "str"}),"ret":NewLnsList([]LnsAny{"Luaval<form>", "stem!", "stem!"}),}),"gsub":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str", "str", "str"}),"ret":NewLnsList([]LnsAny{"str", "int"}),}),"lower":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str"}),"ret":NewLnsList([]LnsAny{"str"}),}),"rep":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str", "int"}),"ret":NewLnsList([]LnsAny{"str"}),}),"reverse":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str"}),"ret":NewLnsList([]LnsAny{"str"}),}),"sub":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str", "int", "int!"}),"ret":NewLnsList([]LnsAny{"str"}),}),"upper":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str"}),"ret":NewLnsList([]LnsAny{"str"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"str":NewLnsMap( map[LnsAny]LnsAny{"__attrib":NewLnsMap( map[LnsAny]LnsAny{"inplements":NewLnsList([]LnsAny{"Mapping"}),}),"byte":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"int!", "int!"}),"ret":NewLnsList([]LnsAny{"...<int!>"}),"type":NewLnsList([]LnsAny{"method"}),}),"find":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str", "int!", "bool!"}),"ret":NewLnsList([]LnsAny{"...<int>"}),"type":NewLnsList([]LnsAny{"method"}),}),"format":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"&..."}),"ret":NewLnsList([]LnsAny{"str"}),"type":NewLnsList([]LnsAny{"method"}),}),"gmatch":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str"}),"ret":NewLnsList([]LnsAny{"Luaval<form>", "stem!", "stem!"}),"type":NewLnsList([]LnsAny{"method"}),}),"gsub":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"str", "str"}),"ret":NewLnsList([]LnsAny{"str", "int"}),"type":NewLnsList([]LnsAny{"method"}),}),"lower":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{"str"}),"type":NewLnsList([]LnsAny{"method"}),}),"rep":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"int"}),"ret":NewLnsList([]LnsAny{"str"}),"type":NewLnsList([]LnsAny{"method"}),}),"reverse":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{"str"}),"type":NewLnsList([]LnsAny{"method"}),}),"sub":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"int", "int!"}),"ret":NewLnsList([]LnsAny{"str"}),"type":NewLnsList([]LnsAny{"method"}),}),"upper":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{"str"}),"type":NewLnsList([]LnsAny{"method"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"List<T>":NewLnsMap( map[LnsAny]LnsAny{"__less":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"T", "T"}),"ret":NewLnsList([]LnsAny{"bool"}),"type":NewLnsList([]LnsAny{"formfunc"}),}),"insert":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"T"}),"ret":NewLnsList([]LnsAny{""}),"type":NewLnsList([]LnsAny{"mut"}),}),"remove":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"int!"}),"ret":NewLnsList([]LnsAny{"T!"}),"type":NewLnsList([]LnsAny{"mut"}),}),"sort":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"__less!"}),"ret":NewLnsList([]LnsAny{}),"type":NewLnsList([]LnsAny{"mut"}),}),"unpack":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{"..."}),"type":NewLnsList([]LnsAny{"method"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"Array<T>":NewLnsMap( map[LnsAny]LnsAny{"__less":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"T", "T"}),"ret":NewLnsList([]LnsAny{"bool"}),"type":NewLnsList([]LnsAny{"formfunc"}),}),"sort":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"__less!"}),"ret":NewLnsList([]LnsAny{}),"type":NewLnsList([]LnsAny{"mut"}),}),"unpack":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{"..."}),"type":NewLnsList([]LnsAny{"method"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"Set<T>":NewLnsMap( map[LnsAny]LnsAny{"add":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"T"}),"ret":NewLnsList([]LnsAny{}),"type":NewLnsList([]LnsAny{"mut"}),}),"and":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"&Set<T>"}),"ret":NewLnsList([]LnsAny{"Set<T>"}),"type":NewLnsList([]LnsAny{"mut"}),}),"clone":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{"Set<T>"}),"type":NewLnsList([]LnsAny{"method"}),}),"del":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"T"}),"ret":NewLnsList([]LnsAny{}),"type":NewLnsList([]LnsAny{"mut"}),}),"has":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"T"}),"ret":NewLnsList([]LnsAny{"bool"}),"type":NewLnsList([]LnsAny{"method"}),}),"len":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{"int"}),"type":NewLnsList([]LnsAny{"method"}),}),"or":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"&Set<T>"}),"ret":NewLnsList([]LnsAny{"Set<T>"}),"type":NewLnsList([]LnsAny{"mut"}),}),"sub":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"&Set<T>"}),"ret":NewLnsList([]LnsAny{"Set<T>"}),"type":NewLnsList([]LnsAny{"mut"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"math":NewLnsMap( map[LnsAny]LnsAny{"__attrib":NewLnsMap( map[LnsAny]LnsAny{"type":NewLnsList([]LnsAny{"module"}),}),"random":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"int!", "int!"}),"ret":NewLnsList([]LnsAny{"real"}),}),"randomseed":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"int"}),"ret":NewLnsList([]LnsAny{}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"debug":NewLnsMap( map[LnsAny]LnsAny{"__attrib":NewLnsMap( map[LnsAny]LnsAny{"type":NewLnsList([]LnsAny{"module"}),}),"getinfo":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"int"}),"ret":NewLnsList([]LnsAny{"Map<str,stem>!"}),}),"getlocal":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{"int", "int"}),"ret":NewLnsList([]LnsAny{"str!", "stem!"}),}),}),}), NewLnsMap( map[LnsAny]LnsAny{"Nilable<_T>":NewLnsMap( map[LnsAny]LnsAny{"val":NewLnsMap( map[LnsAny]LnsAny{"arg":NewLnsList([]LnsAny{}),"ret":NewLnsList([]LnsAny{"_T!"}),"type":NewLnsList([]LnsAny{"method"}),}),}),})})
 }
 
 
-// 623: decl @lune.@base.@Builtin.Builtin.registBuiltInScope.processCopyAlterList
-func Builtin_registBuiltInScope__processCopyAlterList_4909_(_env *LnsEnv, alterList *LnsList,typeList *LnsList) {
+// 620: decl @lune.@base.@Builtin.Builtin.registBuiltInScope.processCopyAlterList
+func Builtin_registBuiltInScope__processCopyAlterList_4901_(_env *LnsEnv, alterList *LnsList,typeList *LnsList) {
     for _, _typeInfo := range( typeList.Items ) {
         typeInfo := _typeInfo.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
         alterList.Insert(Ast_AlternateTypeInfo2Stem(Lns_unwrap( Ast_AlternateTypeInfoDownCastF(typeInfo.FP)).(*Ast_AlternateTypeInfo)))
@@ -817,11 +816,11 @@ func (self *Builtin_Builtin) InitBuiltin_Builtin(_env *LnsEnv, targetLuaVer *Lua
     
 }
 
-// 367: decl @lune.@base.@Builtin.Builtin.getTypeInfo
+// 364: decl @lune.@base.@Builtin.Builtin.getTypeInfo
 func (self *Builtin_Builtin) getTypeInfo(_env *LnsEnv, typeName string) *Ast_TypeInfo {
-    if _switch11536 := typeName; _switch11536 == "_T" {
+    if _switch11575 := typeName; _switch11575 == "_T" {
         return Ast_builtinTypeBox.FP.Get_boxingType(_env)
-    } else if _switch11536 == "_T!" {
+    } else if _switch11575 == "_T!" {
         return Ast_builtinTypeBox.FP.Get_boxingType(_env).FP.Get_nilableTypeInfo(_env)
     }
     var getTypeInfoFromScope func(_env *LnsEnv, scope *Ast_Scope,symbol string,genTypeList *LnsList) LnsAny
@@ -847,7 +846,7 @@ func (self *Builtin_Builtin) getTypeInfo(_env *LnsEnv, typeName string) *Ast_Typ
             }
         }
         if validGenType{
-            if _switch11815 := typeInfo.FP.Get_kind(_env); _switch11815 == Ast_TypeInfoKind__Map {
+            if _switch11854 := typeInfo.FP.Get_kind(_env); _switch11854 == Ast_TypeInfoKind__Map {
                 if genTypeList.Len() != 2{
                     Util_err(_env, _env.LuaVM.String_format("illegal map param -- %d", []LnsAny{genTypeList.Len()}))
                 }
@@ -856,24 +855,24 @@ func (self *Builtin_Builtin) getTypeInfo(_env *LnsEnv, typeName string) *Ast_Typ
                 var valType *Ast_TypeInfo
                 valType = genTypeList.GetAt(2).(Ast_TypeInfoDownCast).ToAst_TypeInfo()
                 return self.processInfo.FP.CreateMap(_env, Ast_AccessMode__Pub, typeInfo.FP.Get_parentInfo(_env), keyType, valType, typeInfo.FP.Get_mutMode(_env))
-            } else if _switch11815 == Ast_TypeInfoKind__Ext {
+            } else if _switch11854 == Ast_TypeInfoKind__Ext {
                 self.hasLuaval = true
                 
                 if genTypeList.Len() != 1{
                     Util_err(_env, _env.LuaVM.String_format("illegal param -- %d", []LnsAny{genTypeList.Len()}))
                 }
-                switch _exp11745 := self.processInfo.FP.CreateLuaval(_env, genTypeList.GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), true).(type) {
+                switch _exp11784 := self.processInfo.FP.CreateLuaval(_env, genTypeList.GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), true).(type) {
                 case *Ast_LuavalResult__OK:
-                workType := _exp11745.Val1
+                workType := _exp11784.Val1
                     if self.ctrl_info.ValidLuaval{
                         return workType
                     }
                     return genTypeList.GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo()
                 case *Ast_LuavalResult__Err:
-                mess := _exp11745.Val1
+                mess := _exp11784.Val1
                     Util_err(_env, mess)
                 }
-            } else if _switch11815 == Ast_TypeInfoKind__DDD {
+            } else if _switch11854 == Ast_TypeInfoKind__DDD {
                 if genTypeList.Len() != 1{
                     Util_err(_env, _env.LuaVM.String_format("illegal map param -- %d", []LnsAny{genTypeList.Len()}))
                 }
@@ -889,22 +888,22 @@ func (self *Builtin_Builtin) getTypeInfo(_env *LnsEnv, typeName string) *Ast_Typ
     if Lns_isCondTrue( Lns_car(_env.LuaVM.String_find(typeName,"^&", nil, nil))){
         mutable = false
         
-        typeName = Builtin_convExp11861(Lns_2DDD(_env.LuaVM.String_gsub(typeName,"^&", "")))
+        typeName = Builtin_convExp11900(Lns_2DDD(_env.LuaVM.String_gsub(typeName,"^&", "")))
         
     }
     var genTypeList *LnsList
     genTypeList = NewLnsList([]LnsAny{})
     var endIndex LnsAny
-    _,endIndex = Builtin_convExp11886(Lns_2DDD(_env.LuaVM.String_find(typeName,"[%w%.]+<", nil, nil)))
+    _,endIndex = Builtin_convExp11925(Lns_2DDD(_env.LuaVM.String_find(typeName,"[%w%.]+<", nil, nil)))
     var suffix string
     suffix = ""
     if endIndex != nil{
-        endIndex_542 := endIndex.(LnsInt)
+        endIndex_539 := endIndex.(LnsInt)
         var genTypeName string
-        genTypeName = _env.LuaVM.String_sub(typeName,endIndex_542 + 1, nil)
+        genTypeName = _env.LuaVM.String_sub(typeName,endIndex_539 + 1, nil)
         for  {
             {
-                _tailIndex := Builtin_convExp11980(Lns_2DDD(_env.LuaVM.String_find(genTypeName,"[,>]", nil, nil)))
+                _tailIndex := Builtin_convExp12019(Lns_2DDD(_env.LuaVM.String_find(genTypeName,"[,>]", nil, nil)))
                 if !Lns_IsNil( _tailIndex ) {
                     tailIndex := _tailIndex.(LnsInt)
                     var genType *Ast_TypeInfo
@@ -919,14 +918,14 @@ func (self *Builtin_Builtin) getTypeInfo(_env *LnsEnv, typeName string) *Ast_Typ
                 }
             }
         }
-        typeName = _env.LuaVM.String_sub(typeName,1, endIndex_542 - 1) + suffix
+        typeName = _env.LuaVM.String_sub(typeName,1, endIndex_539 - 1) + suffix
         
     }
     var typeInfo *Ast_TypeInfo
     typeInfo = Ast_headTypeInfo
     if Lns_isCondTrue( Lns_car(_env.LuaVM.String_find(typeName,"!$", nil, nil))){
         var orgTypeName string
-        orgTypeName = Builtin_convExp12035(Lns_2DDD(_env.LuaVM.String_gsub(typeName,"!$", "")))
+        orgTypeName = Builtin_convExp12074(Lns_2DDD(_env.LuaVM.String_gsub(typeName,"!$", "")))
         {
             __exp := getTypeInfoFromScope(_env, self.transUnit.FP.Get_scope(_env), orgTypeName, genTypeList)
             if !Lns_IsNil( __exp ) {
@@ -959,7 +958,7 @@ func (self *Builtin_Builtin) getTypeInfo(_env *LnsEnv, typeName string) *Ast_Typ
     return typeInfo
 }
 
-// 491: decl @lune.@base.@Builtin.Builtin.processField
+// 488: decl @lune.@base.@Builtin.Builtin.processField
 func (self *Builtin_Builtin) processField(_env *LnsEnv, name string,fieldName string,info *LnsMap,parentInfo *Ast_TypeInfo) {
     self.hasLuaval = false
     
@@ -971,7 +970,7 @@ func (self *Builtin_Builtin) processField(_env *LnsEnv, name string,fieldName st
             symbol = Lns_unwrap( Lns_car(self.transUnit.FP.Get_scope(_env).FP.Add(_env, self.processInfo, Ast_SymbolKind__Var, false, true, fieldName, nil, self.FP.getTypeInfo(_env, Lns_unwrap( _env.NilAccFin( _env.NilAccPush(
             info.Get("typeInfo")) && 
             _env.NilAccPush( _env.NilAccPop().(*LnsList).GetAt(1)))).(string)), Ast_AccessMode__Pub, true, Ast_MutMode__Mut, true, false))).(*Ast_SymbolInfo)
-            Builtin_setupBuiltinTypeInfo_2891_(_env, name, fieldName, symbol)
+            Builtin_setupBuiltinTypeInfo_2887_(_env, name, fieldName, symbol)
         } else { 
             var argTypeList *LnsList
             argTypeList = NewLnsList([]LnsAny{})
@@ -997,7 +996,7 @@ func (self *Builtin_Builtin) processField(_env *LnsEnv, name string,fieldName st
             var symbolKind LnsInt
             var abstractFlag bool
             var accessMode LnsInt
-            if _switch12604 := funcType; _switch12604 == "method" || _switch12604 == "mut" {
+            if _switch12643 := funcType; _switch12643 == "method" || _switch12643 == "mut" {
                 staticFlag = false
                 
                 kind = Ast_TypeInfoKind__Method
@@ -1010,7 +1009,7 @@ func (self *Builtin_Builtin) processField(_env *LnsEnv, name string,fieldName st
                 
                 mutable = funcType == "mut"
                 
-            } else if _switch12604 == "abstract" {
+            } else if _switch12643 == "abstract" {
                 staticFlag = false
                 
                 kind = Ast_TypeInfoKind__Method
@@ -1023,7 +1022,7 @@ func (self *Builtin_Builtin) processField(_env *LnsEnv, name string,fieldName st
                 
                 mutable = true
                 
-            } else if _switch12604 == "macro" {
+            } else if _switch12643 == "macro" {
                 staticFlag = true
                 
                 kind = Ast_TypeInfoKind__Macro
@@ -1036,7 +1035,7 @@ func (self *Builtin_Builtin) processField(_env *LnsEnv, name string,fieldName st
                 
                 mutable = false
                 
-            } else if _switch12604 == "formfunc" {
+            } else if _switch12643 == "formfunc" {
                 staticFlag = true
                 
                 kind = Ast_TypeInfoKind__FormFunc
@@ -1084,12 +1083,12 @@ func (self *Builtin_Builtin) processField(_env *LnsEnv, name string,fieldName st
                 _env.SetStackVal( mutable) &&
                 _env.SetStackVal( Ast_MutMode__Mut) ||
                 _env.SetStackVal( Ast_MutMode__IMut) ).(LnsInt), true, false))).(*Ast_SymbolInfo)
-            Builtin_setupBuiltinTypeInfo_2891_(_env, name, fieldName, symInfo)
+            Builtin_setupBuiltinTypeInfo_2887_(_env, name, fieldName, symInfo)
         }
     }
 }
 
-// 599: decl @lune.@base.@Builtin.Builtin.registBuiltInScope
+// 596: decl @lune.@base.@Builtin.Builtin.registBuiltInScope
 func (self *Builtin_Builtin) RegistBuiltInScope(_env *LnsEnv) *Builtin_BuiltinFuncType {
     if Builtin_readyBuiltin{
         return Builtin_builtinFunc
@@ -1097,7 +1096,7 @@ func (self *Builtin_Builtin) RegistBuiltInScope(_env *LnsEnv) *Builtin_BuiltinFu
     Builtin_readyBuiltin = true
     
     var builtInInfo *LnsList
-    builtInInfo = Builtin_getBuiltInInfo_3259_(_env)
+    builtInInfo = Builtin_getBuiltInInfo_3255_(_env)
     var builtinModuleName2Scope *LnsMap
     builtinModuleName2Scope = NewLnsMap( map[LnsAny]LnsAny{})
     var mapType *Ast_TypeInfo
@@ -1116,33 +1115,33 @@ func (self *Builtin_Builtin) RegistBuiltInScope(_env *LnsEnv) *Builtin_BuiltinFu
             name = className
             var genTypeList *LnsList
             genTypeList = NewLnsList([]LnsAny{})
-            if _switch13171 := className; _switch13171 == "List<T>" {
+            if _switch13210 := className; _switch13210 == "List<T>" {
                 name = "List"
                 
-                Builtin_registBuiltInScope__processCopyAlterList_4909_(_env, genTypeList, Ast_builtinTypeList.FP.Get_itemTypeInfoList(_env))
-            } else if _switch13171 == "Array<T>" {
+                Builtin_registBuiltInScope__processCopyAlterList_4901_(_env, genTypeList, Ast_builtinTypeList.FP.Get_itemTypeInfoList(_env))
+            } else if _switch13210 == "Array<T>" {
                 name = "Array"
                 
-                Builtin_registBuiltInScope__processCopyAlterList_4909_(_env, genTypeList, Ast_builtinTypeArray.FP.Get_itemTypeInfoList(_env))
-            } else if _switch13171 == "Set<T>" {
+                Builtin_registBuiltInScope__processCopyAlterList_4901_(_env, genTypeList, Ast_builtinTypeArray.FP.Get_itemTypeInfoList(_env))
+            } else if _switch13210 == "Set<T>" {
                 name = "Set"
                 
-                Builtin_registBuiltInScope__processCopyAlterList_4909_(_env, genTypeList, Ast_builtinTypeSet.FP.Get_itemTypeInfoList(_env))
-            } else if _switch13171 == "Nilable<_T>" {
+                Builtin_registBuiltInScope__processCopyAlterList_4901_(_env, genTypeList, Ast_builtinTypeSet.FP.Get_itemTypeInfoList(_env))
+            } else if _switch13210 == "Nilable<_T>" {
                 name = "Nilable"
                 
-                Builtin_registBuiltInScope__processCopyAlterList_4909_(_env, genTypeList, Ast_builtinTypeBox.FP.Get_itemTypeInfoList(_env))
+                Builtin_registBuiltInScope__processCopyAlterList_4901_(_env, genTypeList, Ast_builtinTypeBox.FP.Get_itemTypeInfoList(_env))
             } else {
                 if Lns_isCondTrue( Lns_car(_env.LuaVM.String_find(className,"<", nil, nil))){
                     name = ""
                     
                     {
-                        _form13167, _param13167, _prev13167 := _env.CommonLuaVM.String_gmatch(className,"[^<>,%s]+")
+                        _form13206, _param13206, _prev13206 := _env.CommonLuaVM.String_gmatch(className,"[^<>,%s]+")
                         for {
-                            _work13167 := _form13167.(*Lns_luaValue).Call( Lns_2DDD( _param13167, _prev13167 ) )
-                            _prev13167 = Lns_getFromMulti(_work13167,0)
-                            if Lns_IsNil( _prev13167 ) { break }
-                            token := _prev13167.(string)
+                            _work13206 := _form13206.(*Lns_luaValue).Call( Lns_2DDD( _param13206, _prev13206 ) )
+                            _prev13206 = Lns_getFromMulti(_work13206,0)
+                            if Lns_IsNil( _prev13206 ) { break }
+                            token := _prev13206.(string)
                             if len(name) == 0{
                                 name = token
                                 
@@ -1165,10 +1164,10 @@ func (self *Builtin_Builtin) RegistBuiltInScope(_env *LnsEnv) *Builtin_BuiltinFu
                     if !Lns_IsNil( _types ) {
                         types := _types.(*LnsList)
                         if types.Len() > 0{
-                            if _switch13231 := types.GetAt(1).(string); _switch13231 == "interface" {
+                            if _switch13270 := types.GetAt(1).(string); _switch13270 == "interface" {
                                 classKind = TransUnitIF_DeclClassMode__Interface
                                 
-                            } else if _switch13231 == "module" {
+                            } else if _switch13270 == "module" {
                                 classKind = TransUnitIF_DeclClassMode__Module
                                 
                             }
@@ -1191,7 +1190,7 @@ func (self *Builtin_Builtin) RegistBuiltInScope(_env *LnsEnv) *Builtin_BuiltinFu
                         }
                     }
                 }
-                if _switch13415 := classKind; _switch13415 == TransUnitIF_DeclClassMode__Class || _switch13415 == TransUnitIF_DeclClassMode__Interface {
+                if _switch13454 := classKind; _switch13454 == TransUnitIF_DeclClassMode__Class || _switch13454 == TransUnitIF_DeclClassMode__Interface {
                     var declMode LnsInt
                     if classKind == TransUnitIF_DeclClassMode__Class{
                         declMode = TransUnitIF_DeclClassMode__Class
@@ -1203,7 +1202,7 @@ func (self *Builtin_Builtin) RegistBuiltInScope(_env *LnsEnv) *Builtin_BuiltinFu
                     parentInfo = self.transUnit.FP.PushClassLow(_env, self.processInfo, pos, declMode, false, nil, interfaceList, genTypeList, true, name, true, Ast_AccessMode__Pub, nil)
                     
                     Builtin_builtinFunc.FP.RegisterClass(_env, parentInfo)
-                } else if _switch13415 == TransUnitIF_DeclClassMode__Module {
+                } else if _switch13454 == TransUnitIF_DeclClassMode__Module {
                     parentInfo = self.transUnit.FP.PushModuleLow(_env, self.processInfo, true, name, true)
                     
                     self.transUnit.FP.Get_scope(_env).FP.Get_parent(_env).FP.Add(_env, self.processInfo, Ast_SymbolKind__Typ, false, false, name, nil, parentInfo, Ast_AccessMode__Local, true, Ast_MutMode__Mut, true, false)
@@ -1216,13 +1215,13 @@ func (self *Builtin_Builtin) RegistBuiltInScope(_env *LnsEnv) *Builtin_BuiltinFu
                     builtinModuleName2Scope.Set(name,self.transUnit.FP.Get_scope(_env))
                 }
                 {
-                    __collection13479 := name2FieldInfo
-                    __sorted13479 := __collection13479.CreateKeyListStr()
-                    __sorted13479.Sort( LnsItemKindStr, nil )
-                    for _, _fieldName := range( __sorted13479.Items ) {
-                        info := __collection13479.Items[ _fieldName ].(*LnsMap)
+                    __collection13518 := name2FieldInfo
+                    __sorted13518 := __collection13518.CreateKeyListStr()
+                    __sorted13518.Sort( LnsItemKindStr, nil )
+                    for _, _fieldName := range( __sorted13518.Items ) {
+                        info := __collection13518.Items[ _fieldName ].(*LnsMap)
                         fieldName := _fieldName.(string)
-                        if _switch13477 := fieldName; _switch13477 == "__attrib" {
+                        if _switch13516 := fieldName; _switch13516 == "__attrib" {
                         } else {
                             self.FP.processField(_env, name, fieldName, info, parentInfo)
                         }
@@ -1259,6 +1258,12 @@ type Builtin_BuiltinFuncTypeMtd interface {
 }
 type Builtin_BuiltinFuncType struct {
     Lns_ *Ast_TypeInfo
+    Lns___join *Ast_TypeInfo
+    Lns___join_sym *Ast_SymbolInfo
+    Lns___join2 *Ast_TypeInfo
+    Lns___join2_sym *Ast_SymbolInfo
+    Lns___run *Ast_TypeInfo
+    Lns___run_sym *Ast_SymbolInfo
     Lns__fcall *Ast_TypeInfo
     Lns__fcall_sym *Ast_SymbolInfo
     Lns__kind *Ast_TypeInfo
@@ -1327,11 +1332,6 @@ type Builtin_BuiltinFuncType struct {
     G__pipe_get_sym *Ast_SymbolInfo
     G__pipe_put *Ast_TypeInfo
     G__pipe_put_sym *Ast_SymbolInfo
-    Lnsthread_ *Ast_TypeInfo
-    Lnsthread___init *Ast_TypeInfo
-    Lnsthread___init_sym *Ast_SymbolInfo
-    Lnsthread_loop *Ast_TypeInfo
-    Lnsthread_loop_sym *Ast_SymbolInfo
     Io_ *Ast_TypeInfo
     Io___attrib *Ast_TypeInfo
     Io___attrib_sym *Ast_SymbolInfo
@@ -1511,6 +1511,18 @@ func (self *Builtin_BuiltinFuncType) Get_needThreadingTypes(_env *LnsEnv) *LnsSe
 func (self *Builtin_BuiltinFuncType) InitBuiltin_BuiltinFuncType(_env *LnsEnv) {
     self.Lns_ = Ast_headTypeInfo
     
+    self.Lns___join = Ast_headTypeInfo
+    
+    self.Lns___join_sym = Ast_dummySymbol
+    
+    self.Lns___join2 = Ast_headTypeInfo
+    
+    self.Lns___join2_sym = Ast_dummySymbol
+    
+    self.Lns___run = Ast_headTypeInfo
+    
+    self.Lns___run_sym = Ast_dummySymbol
+    
     self.Lns__fcall = Ast_headTypeInfo
     
     self.Lns__fcall_sym = Ast_dummySymbol
@@ -1646,16 +1658,6 @@ func (self *Builtin_BuiltinFuncType) InitBuiltin_BuiltinFuncType(_env *LnsEnv) {
     self.G__pipe_put = Ast_headTypeInfo
     
     self.G__pipe_put_sym = Ast_dummySymbol
-    
-    self.Lnsthread_ = Ast_headTypeInfo
-    
-    self.Lnsthread___init = Ast_headTypeInfo
-    
-    self.Lnsthread___init_sym = Ast_dummySymbol
-    
-    self.Lnsthread_loop = Ast_headTypeInfo
-    
-    self.Lnsthread_loop_sym = Ast_dummySymbol
     
     self.Io_ = Ast_headTypeInfo
     
@@ -1952,67 +1954,64 @@ func (self *Builtin_BuiltinFuncType) Register(_env *LnsEnv, symbolInfo *Ast_Symb
 // 152: decl @lune.@base.@Builtin.BuiltinFuncType.registerClass
 func (self *Builtin_BuiltinFuncType) RegisterClass(_env *LnsEnv, classInfo *Ast_TypeInfo) {
     self.allClass.Insert(Ast_TypeInfo2Stem(classInfo))
-    if _switch6062 := classInfo.FP.Get_rawTxt(_env); _switch6062 == "" {
+    if _switch6075 := classInfo.FP.Get_rawTxt(_env); _switch6075 == "" {
         self.Lns_ = classInfo
         
-    } else if _switch6062 == "iStream" {
+    } else if _switch6075 == "iStream" {
         self.Istream_ = classInfo
         
-    } else if _switch6062 == "oStream" {
+    } else if _switch6075 == "oStream" {
         self.Ostream_ = classInfo
         
-    } else if _switch6062 == "luaStream" {
+    } else if _switch6075 == "luaStream" {
         self.Luastream_ = classInfo
         
-    } else if _switch6062 == "Mapping" {
+    } else if _switch6075 == "Mapping" {
         self.Mapping_ = classInfo
         
-    } else if _switch6062 == "__Runner" {
+    } else if _switch6075 == "__Runner" {
         self.G__runner_ = classInfo
         
-    } else if _switch6062 == "__pipe" {
+    } else if _switch6075 == "__pipe" {
         self.G__pipe_ = classInfo
         
-    } else if _switch6062 == "LnsThread" {
-        self.Lnsthread_ = classInfo
-        
-    } else if _switch6062 == "io" {
+    } else if _switch6075 == "io" {
         self.Io_ = classInfo
         
-    } else if _switch6062 == "package" {
+    } else if _switch6075 == "package" {
         self.Package_ = classInfo
         
-    } else if _switch6062 == "os" {
+    } else if _switch6075 == "os" {
         self.Os_ = classInfo
         
-    } else if _switch6062 == "string" {
+    } else if _switch6075 == "string" {
         self.String_ = classInfo
         
-    } else if _switch6062 == "str" {
+    } else if _switch6075 == "str" {
         self.Str_ = classInfo
         
-    } else if _switch6062 == "List" {
+    } else if _switch6075 == "List" {
         self.List_ = classInfo
         
-    } else if _switch6062 == "Array" {
+    } else if _switch6075 == "Array" {
         self.Array_ = classInfo
         
-    } else if _switch6062 == "Set" {
+    } else if _switch6075 == "Set" {
         self.Set_ = classInfo
         
-    } else if _switch6062 == "math" {
+    } else if _switch6075 == "math" {
         self.Math_ = classInfo
         
-    } else if _switch6062 == "debug" {
+    } else if _switch6075 == "debug" {
         self.Debug_ = classInfo
         
-    } else if _switch6062 == "Nilable" {
+    } else if _switch6075 == "Nilable" {
         self.Nilable_ = classInfo
         
     }
 }
 
-// 360: decl @lune.@base.@Builtin.BuiltinFuncType.isStrFormFunc
+// 357: decl @lune.@base.@Builtin.BuiltinFuncType.isStrFormFunc
 func (self *Builtin_BuiltinFuncType) IsStrFormFunc(_env *LnsEnv, typeInfo *Ast_TypeInfo) bool {
     if typeInfo.FP.Get_srcTypeInfo(_env) == self.String_format{
         return true

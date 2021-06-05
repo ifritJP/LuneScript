@@ -33,12 +33,12 @@ pub class PipeItem<T> {
 /**
 T 型のデータを生成して返す処理を別スレッドにする。
 */
-pub abstract class Pipe<T> extend LnsThread {
+pub abstract class Pipe<T> {
    let mut pipe:__pipe<T>!;
    let mut started:bool;
    
    pro fn __init( pipe:__pipe<T>! ) {
-      super();
+      //super();
       self.pipe = pipe;
       self.started = false;
    }
@@ -56,8 +56,9 @@ pub abstract class Pipe<T> extend LnsThread {
       }
       return self.access();
    }
-   
-   pro override fn loop() mut {
+
+   //pro override fn loop() mut {
+   pub fn run() mut {
       let! mut pipe = self.pipe {
          return;
       };
@@ -69,56 +70,58 @@ pub abstract class Pipe<T> extend LnsThread {
          pipe.put( val.$item );
       }
    }
+
    pub fn start() mut {
       self.started = true;
-      _lune_control run_async_pipe;
+      //_lune_control run_async_pipe;
+      //__run( self, 0 );
    }
 }
 
-/**
-渡された T 型のデータを別スレッドで処理する。
-*/
-pub abstract class WritePipe<T> extend LnsThread {
-   let pipe:__pipe<T>!;
-   let mut started:bool;
+// /**
+// 渡された T 型のデータを別スレッドで処理する。
+// */
+// pub abstract class WritePipe<T> extend LnsThread {
+//    let pipe:__pipe<T>!;
+//    let mut started:bool;
    
-   pro fn __init( pipe:__pipe<T>! ) {
-      super();
-      self.pipe = pipe;
-      self.started = false;
-   }
+//    pro fn __init( pipe:__pipe<T>! ) {
+//       super();
+//       self.pipe = pipe;
+//       self.started = false;
+//    }
 
-/**
-T 型のデータを処理する。
-item が nil の場合、処理終了。
-*/
-   pro abstract fn process(item:T!) mut;
+// /**
+// T 型のデータを処理する。
+// item が nil の場合、処理終了。
+// */
+//    pro abstract fn process(item:T!) mut;
 
-   pub fn put( item:T! ) mut {
-      if self.started {
-         if! let mut pipe = self.pipe {
-            pipe.put( item );
-         }
-      } else {
-         error( "not started" );
-      }
-      self.process( item );
-   }
+//    pub fn put( item:T! ) mut {
+//       if self.started {
+//          if! let mut pipe = self.pipe {
+//             pipe.put( item );
+//          }
+//       } else {
+//          error( "not started" );
+//       }
+//       self.process( item );
+//    }
 
-   pro override fn loop() mut {
-      let! mut pipe = self.pipe {
-         return;
-      };
-      while true {
-         let mut item = pipe.get();
-         self.process( item );
-         if not item {
-            break;
-         }
-      }
-   }
-   pub fn start() mut {
-      self.started = true;
-      _lune_control run_async_pipe;
-   }
-}
+//    pro override fn loop() mut {
+//       let! mut pipe = self.pipe {
+//          return;
+//       };
+//       while true {
+//          let mut item = pipe.get();
+//          self.process( item );
+//          if not item {
+//             break;
+//          }
+//       }
+//    }
+//    pub fn start() mut {
+//       self.started = true;
+//       _lune_control run_async_pipe;
+//    }
+// }

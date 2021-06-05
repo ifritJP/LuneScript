@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@dumpNode'
 local _lune = {}
-if _lune3 then
-   _lune = _lune3
+if _lune4 then
+   _lune = _lune4
 end
 function _lune.nilacc( val, fieldName, access, ... )
    if not val then
@@ -117,8 +117,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune3 then
-   _lune3 = _lune
+if not _lune4 then
+   _lune4 = _lune
 end
 
 
@@ -199,10 +199,6 @@ function dumpFilter:dump( opt, node, txt )
    local attrib = ""
    if node:hasNilAccess(  ) then
       attrib = string.format( "%s %s", attrib, "nilacc")
-   end
-   
-   if node:isThreading(  ) then
-      attrib = string.format( "%s %s", attrib, "thread")
    end
    
    if #attrib ~= 0 then
@@ -1018,13 +1014,6 @@ function dumpFilter:processGetField( node, opt )
    filter( node:get_prefix(  ), self, opt:nextOpt(  ) )
 end
 
-
-
-function dumpFilter:processJoinRunner( node, opt )
-
-   self:dump( opt, node, "" )
-   filter( node:get_runner(), self, opt:nextOpt(  ) )
-end
 
 
 function dumpFilter:processReturn( node, opt )

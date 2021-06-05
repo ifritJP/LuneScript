@@ -87,9 +87,6 @@ class dumpFilter extend Nodes.Filter<Opt> {
       if node.hasNilAccess() {
          attrib = "%s %s" (attrib, "nilacc" );
       }
-      if node.isThreading() {
-         attrib = "%s %s" (attrib, "thread" );
-      }
       if #attrib ~= 0 {
          attrib = "[%s]" (attrib);
       }
@@ -734,12 +731,6 @@ pub override fn dumpFilter.processGetField(
          "get_%s:%s" ( node.get_field().txt, node.$expType.getTxt(##)) );
    filter( node.get_prefix(), self, opt.nextOpt() );
 };
-
-pub override fn dumpFilter.processJoinRunner( node: &Nodes.JoinRunnerNode, opt:Opt ) mut
-{
-   self.dump( opt, node, "" );
-   filter( node.$runner, self, opt.nextOpt() );
-}
 
 pub override fn dumpFilter.processReturn(
    node: &Nodes.ReturnNode, opt:Opt ) mut

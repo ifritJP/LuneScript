@@ -34,63 +34,7 @@ pub fn isLuaKeyword( txt:str ) : bool {
    return AsyncParser.isLuaKeyword( txt );
 }
 
-
-pub class TxtStream extend (iStream) {
-   let txt: str {pub};
-   let lineList:&List<str>;
-   let mut start: int;
-   let mut eof: bool;
-   let mut lineNo: int {pub};
-   pub fn __init( txt: str ) {
-      self.txt = txt;
-      self.start = 1;
-      self.eof = false;
-      self.lineList = Str.getLineList( self.txt );
-      self.lineNo = 1;
-   }
-
-   /**
-指定範囲の文字列を取得する。
-
-fromLineNo: 1,  toLineNo: 2 を指定した場合、 1 行目だけを取得する。
-
-行番号は、 1 から。
-
-
-@param fromLineNo 取得開始する行番号
-@param toLineNo 取得終了する行番号。
-   */
-   pub fn getSubstring( fromLineNo:int, toLineNo:int! ) : str {
-      let mut txt = "";
-      let to = unwrap toLineNo default #self.lineList + 1;
-      for index = fromLineNo, to - 1 {
-         if index < 1 or index > #self.lineList {
-            break;
-         }
-         txt = "%s%s" (txt, self.lineList[ index ] );
-      }
-      return txt;
-   }
-
-   pub fn read( mode:stem! ) mut : str! {
-      if mode ~= '*l' {
-         Util.err( "not support -- %s" (mode) );
-      }
-      if self.lineNo > #self.lineList {
-         return nil;
-      }
-      self.lineNo = self.lineNo + 1;
-      let line = self.lineList[ self.lineNo - 1 ];
-      if Str.endsWith( line, "\n") {
-         return line.sub( 1, #line - 1 );
-      }
-      return line;
-   }
-   pub fn close() mut {
-   }
-}
-
-
+pub alias TxtStream = Util.TxtStream;
 pub alias Position = Types.Position;
 pub alias TokenKind = Types.TokenKind;
 pub alias Token = Types.Token;
@@ -187,17 +131,23 @@ pub class StreamParser extend Parser {
    let mut asyncParser:AsyncParser.Parser;
    let overridePos:&Types.Position!;
    // let mut pipe:AsyncPipe;
-
-   pub fn __init( stream: iStream, name: str, luaMode: bool!, pos:&Types.Position! ) {
+   
+   local fn __init( parserSrc:&Types.ParserSrc,
+                    stdinFile:&Types.StdinFile!, pos:&Types.Position! )
+   {
       super();
 
-      
-      self.streamName = name;
       self.pos = 1;
       self.lineTokenList = [];
       self.overridePos = pos;
 
-      self.asyncParser = new AsyncParser.Parser( stream, name, luaMode, pos );
+      let mut asyncParser, errMess = AsyncParser.create( parserSrc, stdinFile, pos );
+      if! asyncParser {
+         self.asyncParser = _exp;
+      } else {
+         Util.err( errMess );
+      }
+      self.streamName = self.asyncParser.$streamName;
    }
 
    pub override fn createPosition( lineNo: int, column: int ) : &Position {
@@ -209,18 +159,11 @@ pub class StreamParser extend Parser {
       return self.streamName;
    }
 
-   pub static fn create( path: str, luaMode: bool, moduleName:str ): StreamParser! {
-      let mut stream:iStream;
-      if StreamParser.stdinStreamModuleName ~= moduleName {
-         unwrap! stream = io.open( path, "r" ) {
-            return nil;
-         };
-      } else {
-         stream = new TxtStream( StreamParser.stdinTxt );
-      }
-
-      return new StreamParser(
-         stream, path, luaMode or Str.endsWith( path, ".lua" ) and true, nil );
+   pub static fn create(
+      parserSrc:&Types.ParserSrc,
+      stdinFile:&Types.StdinFile!, pos:&Types.Position! ): StreamParser
+   {
+      return new StreamParser( parserSrc,stdinFile, pos );
    }
 
    pub override fn getToken() mut : &Token! {
@@ -255,6 +198,12 @@ pub class DefaultPushbackParser extend (PushbackParser) {
       self.currentToken = Types.noneToken;
    }
 
+   pub static fn createFromLnsCode( code:str, name:str ): DefaultPushbackParser {
+      return new DefaultPushbackParser(
+         new StreamParser( Types.ParserSrc.LnsCode( code, name ) ## ) );
+   }
+   
+   
    pub fn createPosition( lineNo: int, column: int ) : &Position {
       return self.parser.createPosition( lineNo, column );
    }
@@ -304,8 +253,8 @@ pub class DefaultPushbackParser extend (PushbackParser) {
       self.pushbackToken( self.currentToken );
    }
    pub fn pushbackStr( name:str, statement: str, pos:&Types.Position ) mut {
-      let mut memStream = new TxtStream( statement );
-      let mut parser = new StreamParser( memStream, name, false, pos );
+      let mut parser = new StreamParser(
+         Types.ParserSrc.LnsCode( statement, name ), nil, pos );
 
       let mut list:List<&Token> = [];
       while true {
@@ -499,45 +448,21 @@ pub fn quoteStr( txt:str ) : str {
    return work;
 }
 
-pub alge ParserSrc {
-   LnsCode( code:str, path:str ),
-   LnsPath( path:str, moduleName:str ),
-   Parser( path: str, luaMode: bool, moduleName:str ),
-}
-
-pub fn createParserFrom( src:&ParserSrc ) : Parser {
-   _match src {
-      case .LnsCode( txt, path ) {
-         let mut stream = new TxtStream( txt );
-         let mut parser = new StreamParser( stream, path, false, nil );
-         return parser;
-      }
-      case .LnsPath( path, mod ) {
-         let! mut parser = StreamParser.create( path, false, mod ) {
-            error( "failed to open -- %s" (path) );
-         };
-         return parser;
-      }
-      case .Parser( path, luaMode, mod ) {
-         let! mut parser = StreamParser.create( path, luaMode, mod ) {
-            error( "failed to open -- %s" (path) );
-         };
-         return parser;
-      }
-   }
+pub fn createParserFrom( src:&Types.ParserSrc, stdinFile:&Types.StdinFile! ) : Parser {
+   return new StreamParser( src, stdinFile, nil );
 }
 
 
 __test case1(ctrl) {
    {
-      let mut stream = new TxtStream( ```
+      let mut txt = ```
 let hoge:real = 2.0;
 let val = ?a;
 // hoge
 fn func():int {
    return "%g" val + 1 + 2.0;
-}```);
-      let mut parser = new StreamParser( stream, "test" ## );
+}```;
+      let mut parser = new StreamParser( Types.ParserSrc.LnsCode( txt, "test" )## );
 
       class LowToken {
          pub let txt:str;
@@ -575,9 +500,8 @@ fn func():int {
    }
 
    {
-      let mut stream = new TxtStream( "1 2 3 4 5" );
       let mut parser = new DefaultPushbackParser(
-         new StreamParser( stream, "test" ## ) );
+         new StreamParser(Types.ParserSrc.LnsCode( "1 2 3 4 5", "test" ) ## ) );
 
       __t._eq( ctrl, parser.getTokenNoErr().txt, "1" );
       __t._eq( ctrl, parser.getTokenNoErr().txt, "2" );
@@ -606,9 +530,8 @@ fn func():int {
       __t._eq( ctrl, parser.getTokenNoErr().kind, TokenKind.Eof );
    }
    {
-      let mut stream = new TxtStream( "int" );
       let mut parser = new DefaultPushbackParser(
-         new StreamParser( stream, "test" ## ) );
+         new StreamParser(Types.ParserSrc.LnsCode( "int", "test" ) ## ) );
 
       __t._eq( ctrl, parser.getTokenNoErr().txt, "int" );
       __t._eq( ctrl, parser.getTokenNoErr().kind, TokenKind.Eof );

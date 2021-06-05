@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@Formatter'
 local _lune = {}
-if _lune3 then
-   _lune = _lune3
+if _lune4 then
+   _lune = _lune4
 end
 function _lune.nilacc( val, fieldName, access, ... )
    if not val then
@@ -117,8 +117,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune3 then
-   _lune3 = _lune
+if not _lune4 then
+   _lune4 = _lune
 end
 
 
@@ -303,9 +303,6 @@ function FormatterFilter:processLuneControl( node, opt )
       elseif _matchExp[1] == LuneControl.Pragma.run_async_pipe[1] then
       
          self:writeln( "run_async_pipe" )
-      elseif _matchExp[1] == LuneControl.Pragma.run_async_runner[1] then
-      
-         self:writeln( "run_async_runner" )
       elseif _matchExp[1] == LuneControl.Pragma.default_async_func[1] then
       
          self:writeln( "default_async_func" )
@@ -1383,14 +1380,6 @@ function FormatterFilter:processGetField( node, opt )
    self:write( node:get_field().txt )
 end
 
-
-
-function FormatterFilter:processJoinRunner( node, opt )
-
-   self:write( "__join " )
-   filter( node:get_runner(), self, opt:nextOpt( node ) )
-   self:writeln( "" )
-end
 
 
 function FormatterFilter:processReturn( node, opt )

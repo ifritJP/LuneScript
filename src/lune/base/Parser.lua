@@ -2,46 +2,9 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@Parser'
 local _lune = {}
-if _lune3 then
-   _lune = _lune3
+if _lune4 then
+   _lune = _lune4
 end
-function _lune.newAlge( kind, vals )
-   local memInfoList = kind[ 2 ]
-   if not memInfoList then
-      return kind
-   end
-   return { kind[ 1 ], vals }
-end
-
-function _lune._fromList( obj, list, memInfoList )
-   if type( list ) ~= "table" then
-      return false
-   end
-   for index, memInfo in ipairs( memInfoList ) do
-      local val, key = memInfo.func( list[ index ], memInfo.child )
-      if val == nil and not memInfo.nilable then
-         return false, key and string.format( "%s[%s]", memInfo.name, key) or memInfo.name
-      end
-      obj[ index ] = val
-   end
-   return true
-end
-function _lune._AlgeFrom( Alge, val )
-   local work = Alge._name2Val[ val[ 1 ] ]
-   if not work then
-      return nil
-   end
-   if #work == 1 then
-     return work
-   end
-   local paramList = {}
-   local result, mess = _lune._fromList( paramList, val[ 2 ], work[ 2 ] )
-   if not result then
-      return nil, mess
-   end
-   return { work[ 1 ], paramList }
-end
-
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
       setObj[ val ] = true
@@ -182,8 +145,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune3 then
-   _lune3 = _lune
+if not _lune4 then
+   _lune4 = _lune
 end
 
 
@@ -199,68 +162,8 @@ local function isLuaKeyword( txt )
 end
 _moduleObj.isLuaKeyword = isLuaKeyword
 
-local TxtStream = {}
-setmetatable( TxtStream, { ifList = {iStream,} } )
+local TxtStream = Util.TxtStream
 _moduleObj.TxtStream = TxtStream
-function TxtStream.new( txt )
-   local obj = {}
-   TxtStream.setmeta( obj )
-   if obj.__init then obj:__init( txt ); end
-   return obj
-end
-function TxtStream:__init(txt) 
-   self.txt = txt
-   self.start = 1
-   self.eof = false
-   self.lineList = Str.getLineList( self.txt )
-   self.lineNo = 1
-end
-function TxtStream:getSubstring( fromLineNo, toLineNo )
-
-   local txt = ""
-   local to = _lune.unwrapDefault( toLineNo, #self.lineList + 1)
-   for index = fromLineNo, to - 1 do
-      if index < 1 or index > #self.lineList then
-         break
-      end
-      
-      txt = string.format( "%s%s", txt, self.lineList[index])
-   end
-   
-   return txt
-end
-function TxtStream:read( mode )
-
-   if mode ~= '*l' then
-      Util.err( string.format( "not support -- %s", mode) )
-   end
-   
-   if self.lineNo > #self.lineList then
-      return nil
-   end
-   
-   self.lineNo = self.lineNo + 1
-   local line = self.lineList[self.lineNo - 1]
-   if Str.endsWith( line, "\n" ) then
-      return line:sub( 1, #line - 1 )
-   end
-   
-   return line
-end
-function TxtStream:close(  )
-
-end
-function TxtStream.setmeta( obj )
-  setmetatable( obj, { __index = TxtStream  } )
-end
-function TxtStream:get_txt()
-   return self.txt
-end
-function TxtStream:get_lineNo()
-   return self.lineNo
-end
-
-
 local Position = Types.Position
 _moduleObj.Position = Position
 local TokenKind = Types.TokenKind
@@ -371,22 +274,31 @@ function StreamParser.setStdinStream( moduleName )
    StreamParser.stdinStreamModuleName = moduleName
    StreamParser.stdinTxt = _lune.unwrapDefault( io.stdin:read( '*a' ), "")
 end
-function StreamParser.new( stream, name, luaMode, pos )
+function StreamParser.new( parserSrc, stdinFile, pos )
    local obj = {}
    StreamParser.setmeta( obj )
-   if obj.__init then obj:__init( stream, name, luaMode, pos ); end
+   if obj.__init then obj:__init( parserSrc, stdinFile, pos ); end
    return obj
 end
-function StreamParser:__init(stream, name, luaMode, pos) 
+function StreamParser:__init(parserSrc, stdinFile, pos) 
    Parser.__init( self)
    
    
-   self.streamName = name
    self.pos = 1
    self.lineTokenList = {}
    self.overridePos = pos
    
-   self.asyncParser = AsyncParser.Parser.new(stream, name, luaMode, pos)
+   local asyncParser, errMess = AsyncParser.create( parserSrc, stdinFile, pos )
+   do
+      local _exp = asyncParser
+      if _exp ~= nil then
+         self.asyncParser = _exp
+      else
+         Util.err( errMess )
+      end
+   end
+   
+   self.streamName = self.asyncParser:get_streamName()
 end
 function StreamParser:createPosition( lineNo, column )
 
@@ -396,25 +308,9 @@ function StreamParser:getStreamName(  )
 
    return self.streamName
 end
-function StreamParser.create( path, luaMode, moduleName )
+function StreamParser.create( parserSrc, stdinFile, pos )
 
-   local stream
-   
-   if StreamParser.stdinStreamModuleName ~= moduleName then
-      stream = io.open( path, "r" )
-      if  nil == stream then
-         local _stream = stream
-      
-         return nil
-      end
-      
-   else
-    
-      stream = TxtStream.new(StreamParser.stdinTxt)
-   end
-   
-   
-   return StreamParser.new(stream, path, luaMode or Str.endsWith( path, ".lua" ) and true, nil)
+   return StreamParser.new(parserSrc, stdinFile, pos)
 end
 function StreamParser:getToken(  )
 
@@ -463,6 +359,10 @@ function DefaultPushbackParser:__init(parser)
    self.pushbackedList = {}
    self.usedTokenList = {}
    self.currentToken = Types.noneToken
+end
+function DefaultPushbackParser.createFromLnsCode( code, name )
+
+   return DefaultPushbackParser.new(StreamParser.new(_lune.newAlge( Types.ParserSrc.LnsCode, {code,name})))
 end
 function DefaultPushbackParser:createPosition( lineNo, column )
 
@@ -527,8 +427,7 @@ function DefaultPushbackParser:pushback(  )
 end
 function DefaultPushbackParser:pushbackStr( name, statement, pos )
 
-   local memStream = TxtStream.new(statement)
-   local parser = StreamParser.new(memStream, name, false, pos)
+   local parser = StreamParser.new(_lune.newAlge( Types.ParserSrc.LnsCode, {statement,name}), nil, pos)
    
    local list = {}
    while true do
@@ -784,68 +683,9 @@ local function quoteStr( txt )
 end
 _moduleObj.quoteStr = quoteStr
 
-local ParserSrc = {}
-ParserSrc._name2Val = {}
-_moduleObj.ParserSrc = ParserSrc
-function ParserSrc:_getTxt( val )
-   local name = val[ 1 ]
-   if name then
-      return string.format( "ParserSrc.%s", name )
-   end
-   return string.format( "illegal val -- %s", val )
-end
+local function createParserFrom( src, stdinFile )
 
-function ParserSrc._from( val )
-   return _lune._AlgeFrom( ParserSrc, val )
-end
-
-ParserSrc.LnsCode = { "LnsCode", {{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toStr, nilable=false, child={} }}}
-ParserSrc._name2Val["LnsCode"] = ParserSrc.LnsCode
-ParserSrc.LnsPath = { "LnsPath", {{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toStr, nilable=false, child={} }}}
-ParserSrc._name2Val["LnsPath"] = ParserSrc.LnsPath
-ParserSrc.Parser = { "Parser", {{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toBool, nilable=false, child={} },{ func=_lune._toStr, nilable=false, child={} }}}
-ParserSrc._name2Val["Parser"] = ParserSrc.Parser
-
-
-local function createParserFrom( src )
-
-   do
-      local _matchExp = src
-      if _matchExp[1] == ParserSrc.LnsCode[1] then
-         local txt = _matchExp[2][1]
-         local path = _matchExp[2][2]
-      
-         local stream = TxtStream.new(txt)
-         local parser = StreamParser.new(stream, path, false, nil)
-         return parser
-      elseif _matchExp[1] == ParserSrc.LnsPath[1] then
-         local path = _matchExp[2][1]
-         local mod = _matchExp[2][2]
-      
-         local parser = StreamParser.create( path, false, mod )
-         if  nil == parser then
-            local _parser = parser
-         
-            error( string.format( "failed to open -- %s", path) )
-         end
-         
-         return parser
-      elseif _matchExp[1] == ParserSrc.Parser[1] then
-         local path = _matchExp[2][1]
-         local luaMode = _matchExp[2][2]
-         local mod = _matchExp[2][3]
-      
-         local parser = StreamParser.create( path, luaMode, mod )
-         if  nil == parser then
-            local _parser = parser
-         
-            error( string.format( "failed to open -- %s", path) )
-         end
-         
-         return parser
-      end
-   end
-   
+   return StreamParser.new(src, stdinFile, nil)
 end
 _moduleObj.createParserFrom = createParserFrom
 

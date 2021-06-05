@@ -156,7 +156,10 @@ pub class Option {
    local let mut enableRunner:bool {pub};
    local let mut validPostBuild:bool {pub};
 
+   local let mut stdinFile:Types.StdinFile! {pub};
+
    pub fn __init() {
+      self.stdinFile = nil;
       self.validPostBuild = true;
       self.enableRunner = true;
       self.addEnvArg = true; 
@@ -626,13 +629,16 @@ usage:
    }
 
    if useStdInFlag {
+      let! code = io.stdin.read("*a") {
+         Util.err( "read error from stdin." );
+      };
       if option.analyzeModule {
-         Parser.StreamParser.setStdinStream( unwrap option.analyzeModule );
+         option.stdinFile = new Types.StdinFile( unwrap option.analyzeModule, code );
       }
       else {
          if option.scriptPath ~= "" {
-            Parser.StreamParser.setStdinStream(
-               Util.scriptPath2Module( option.scriptPath ) );
+            option.stdinFile = new Types.StdinFile(
+               Util.scriptPath2Module( option.scriptPath ), code );
          }
       }
    }

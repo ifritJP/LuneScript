@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@Types'
 local _lune = {}
-if _lune3 then
-   _lune = _lune3
+if _lune4 then
+   _lune = _lune4
 end
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -187,8 +187,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune3 then
-   _lune3 = _lune
+if not _lune4 then
+   _lune4 = _lune
 end
 
 
@@ -501,6 +501,55 @@ end
 
 local noneToken = Token.new(TokenKind.Eof, "", Position.new(0, -1, "eof"), false, {})
 _moduleObj.noneToken = noneToken
+
+
+local StdinFile = {}
+_moduleObj.StdinFile = StdinFile
+function StdinFile.setmeta( obj )
+  setmetatable( obj, { __index = StdinFile  } )
+end
+function StdinFile.new( mod, txt )
+   local obj = {}
+   StdinFile.setmeta( obj )
+   if obj.__init then
+      obj:__init( mod, txt )
+   end
+   return obj
+end
+function StdinFile:__init( mod, txt )
+
+   self.mod = mod
+   self.txt = txt
+end
+function StdinFile:get_mod()
+   return self.mod
+end
+function StdinFile:get_txt()
+   return self.txt
+end
+
+
+local ParserSrc = {}
+ParserSrc._name2Val = {}
+_moduleObj.ParserSrc = ParserSrc
+function ParserSrc:_getTxt( val )
+   local name = val[ 1 ]
+   if name then
+      return string.format( "ParserSrc.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+
+function ParserSrc._from( val )
+   return _lune._AlgeFrom( ParserSrc, val )
+end
+
+ParserSrc.LnsCode = { "LnsCode", {{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toStr, nilable=false, child={} }}}
+ParserSrc._name2Val["LnsCode"] = ParserSrc.LnsCode
+ParserSrc.LnsPath = { "LnsPath", {{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toStr, nilable=false, child={} }}}
+ParserSrc._name2Val["LnsPath"] = ParserSrc.LnsPath
+ParserSrc.Parser = { "Parser", {{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toBool, nilable=false, child={} },{ func=_lune._toStr, nilable=false, child={} }}}
+ParserSrc._name2Val["Parser"] = ParserSrc.Parser
 
 
 return _moduleObj

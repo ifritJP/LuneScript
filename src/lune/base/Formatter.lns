@@ -148,9 +148,6 @@ pub override fn FormatterFilter.processLuneControl(
       case .run_async_pipe {
          self.writeln( "run_async_pipe" );
       }
-      case .run_async_runner {
-         self.writeln( "run_async_runner" );
-      }
       case .default_async_func {
          self.writeln( "default_async_func" );
       }
@@ -1089,14 +1086,6 @@ pub override fn FormatterFilter.processGetField(
    self.write( ".$" );
    self.write( node.$field.txt );
 };
-
-pub override fn FormatterFilter.processJoinRunner(
-   node: &Nodes.JoinRunnerNode, opt:Opt ) mut
-{
-   self.write( "__join " );
-   filter( node.$runner, self, opt.nextOpt( node ) );
-   self.writeln( "" );
-}
 
 pub override fn FormatterFilter.processReturn(
    node: &Nodes.ReturnNode, opt:Opt ) mut

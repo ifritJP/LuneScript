@@ -33,6 +33,7 @@ import lune.base.TransUnit;
 import lune.base.LuaMod;
 import lune.base.LuaVer;
 import lune.base.Parser;
+import lune.base.Types;
 import lune.base.Log;
 import lune.base.LuneControl;
 import lune.base.Option;
@@ -1042,6 +1043,9 @@ end``` (luneSymbol, luneSymbol) );
       if node.$luneHelperInfo.useLazyRequire {
          self.writeln( LuaMod.getCode( .LazyRequire ) );
       }
+      if node.$luneHelperInfo.useRun {
+         self.writeln( LuaMod.getCode( .Run ) );
+      }
    }
    self.writeln( ```
 if not %s then
@@ -1540,9 +1544,7 @@ pub override fn ConvFilter.processDeclClass(
 
    let baseInfo = classTypeInfo.get_baseTypeInfo();
    let mut baseTxt = "";
-   if baseInfo.get_typeId() ~= Ast.rootTypeIdInfo and
-      baseInfo ~= self.builtinFunc.lnsthread_ 
-   {
+   if baseInfo.get_typeId() ~= Ast.rootTypeIdInfo {
       baseTxt = "__index = %s" ( self.getFullName( baseInfo ) );
    }
 
@@ -1670,9 +1672,7 @@ function %s:__init( %s )
               argTxt, className, argTxt ) );
       self.pushIndent(##);
 
-      if baseInfo ~= Ast.headTypeInfo and
-         baseInfo ~= self.builtinFunc.lnsthread_ 
-      {
+      if baseInfo ~= Ast.headTypeInfo {
          // Super クラスを持つ場合、その Super クラスの __init をコールする。
          if(unwrap baseInfo.$scope).getSymbolInfoChild( "__init" ) {
             self.write( "%s.__init( self" ( self.getFullName( baseInfo ) ) );
@@ -2038,10 +2038,6 @@ pub override fn ConvFilter.processExpCallSuperCtor(
 {
    let typeInfo:&Ast.TypeInfo = node.$superType;
 
-   if typeInfo == self.builtinFunc.lnsthread_ {
-      return;
-   }
-   
    self.write( "%s.%s( self"
       ( self.getFullName( typeInfo ), node.$methodType.$rawTxt ) );
 
@@ -2848,10 +2844,22 @@ pub override fn ConvFilter.processExpCall(
          let funcType = refNode.$expType;
          self.write( "%s.%s( self " ( self.getFullName( funcType.$parentInfo ),
                                       funcType.$rawTxt ) );
-      } elseif refNode.$expType == self.builtinFunc.lns_expandLuavalMap {
-         // なにもしない
-         wroteFuncFlag = true;
-         self.write( "(" );
+      } else {
+         switch refNode.$expType {
+            case self.builtinFunc.lns_expandLuavalMap
+            {
+               // なにもしない
+               wroteFuncFlag = true;
+               self.write( "(" );
+            }
+            case self.builtinFunc.lns___run {
+               self.write( "_lune._run(" );
+               wroteFuncFlag = true;
+            }
+            case self.builtinFunc.lns___join, self.builtinFunc.lns___join2 {
+               return;
+            }
+         }
       }
    }
 
@@ -3319,12 +3327,6 @@ pub override fn ConvFilter.processGetField(
    }
 };
 
-pub override fn ConvFilter.processJoinRunner(
-   node: &Nodes.JoinRunnerNode, opt:Opt ) mut
-{
-}
-
-
 pub override fn ConvFilter.processReturn(
    node: &Nodes.ReturnNode, opt: Opt ) mut
 {
@@ -3569,9 +3571,6 @@ pub override fn ConvFilter.processLuneControl(
       case .load__lune_module {
          self.processLoadRuntime();
       }
-      case .run_async_runner {
-         self.writeln( "self:run()" );
-      }
    }
 }
 
@@ -3686,7 +3685,7 @@ __test {
    import lune.base.Testing;
 
    pub fn createAstFromStream(
-      parserSrc:Parser.ParserSrc, scriptPath:str,
+      parserSrc:&Types.ParserSrc, scriptPath:str,
       stream:iStream, option:&Option.Option ) __noasync: TransUnit.ASTInfo
    {
       let moduleId = frontInterface.ModuleId.createId( 0.0, 0 );
@@ -3701,7 +3700,7 @@ __test {
          moduleId, moduleInfo, new MacroEvalImp(builtinFunc), nil, .Compile,
          nil, option.targetLuaVer, option.transCtrlInfo, builtinFunc );
       
-      return transUnit.createAST( parserSrc, false, mod );
+      return transUnit.createAST( parserSrc, nil, false, mod );
    }
    
    
@@ -3710,7 +3709,7 @@ __test {
          Util.err( "not failed to open -- %s" (scriptPath) );
       };
       let mut ast = createAstFromStream(
-         Parser.ParserSrc.LnsPath( scriptPath, Util.scriptPath2Module( scriptPath ) ),
+         Types.ParserSrc.LnsPath( scriptPath, Util.scriptPath2Module( scriptPath ) ),
          scriptPath, stream, option );
       stream.close();
       return ast;
@@ -3720,7 +3719,7 @@ __test {
       scriptPath:str, lnsCode:str, option:&Option.Option ) __noasync: TransUnit.ASTInfo
    {
       return createAstFromStream(
-         Parser.ParserSrc.LnsPath( scriptPath, Util.scriptPath2Module( scriptPath ) ),
+         Types.ParserSrc.LnsPath( scriptPath, Util.scriptPath2Module( scriptPath ) ),
          scriptPath, new Parser.TxtStream( lnsCode ), option );
    }
    

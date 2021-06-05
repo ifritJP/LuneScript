@@ -194,6 +194,9 @@ _DefBuiltinFuncType( [
          "_load": { "arg": [ "str", "stem!" ], "ret": ["Luaval<form>!", "str!"] },
          "_kind": { "arg": [ "stem!" ], "ret":[ "int" ] },
          "expandLuavalMap": { "arg": [ "Luaval<&stem>!" ], "ret":[ "&stem!" ] },
+         "__run": { "arg": [ "__Runner", "int" ], "ret":[ "bool" ] },
+         "__join": { "arg": [ "&__Runner" ], "ret":[ "" ] },
+         "__join2": { "arg": [ "&__Runner" ], "ret":[ "" ] },
       },
    },
    {
@@ -237,12 +240,6 @@ _DefBuiltinFuncType( [
       "__pipe<T>": {
          "put": { "type": [ "method" ], "arg": [ "T!" ], "ret": [ ] },
          "get": { "type": [ "method" ], "arg": [], "ret": [ "T!" ] },
-      },
-   },
-   {
-      "LnsThread": {
-         "__init": { "type": [ "method"], "arg": [], "ret": [ ] },
-         "loop": { "type": [ "abstract" ], "arg": [ ], "ret": [] },
       },
    },
    {

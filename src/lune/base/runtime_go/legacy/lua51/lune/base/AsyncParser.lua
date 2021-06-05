@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@AsyncParser'
 local _lune = {}
-if _lune3 then
-   _lune = _lune3
+if _lune4 then
+   _lune = _lune4
 end
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
@@ -227,10 +227,14 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune3 then
-   _lune3 = _lune
+function _lune._run( runner, mod )
+    runner:run()
+    return false
 end
 
+if not _lune4 then
+   _lune4 = _lune
+end
 
 
 local Util = _lune.loadModule( 'lune.base.Util' )
@@ -385,25 +389,25 @@ end
 local Parser = {}
 setmetatable( Parser, { __index = Async.Pipe } )
 _moduleObj.Parser = Parser
-function Parser.new( stream, name, luaMode, overridePos )
+function Parser.new( streamName, stream, luaMode, overridePos )
    local obj = {}
    Parser.setmeta( obj )
-   if obj.__init then obj:__init( stream, name, luaMode, overridePos ); end
+   if obj.__init then obj:__init( streamName, stream, luaMode, overridePos ); end
    return obj
 end
-function Parser:__init(stream, name, luaMode, overridePos) 
+function Parser:__init(streamName, stream, luaMode, overridePos) 
    local _
    Async.Pipe.__init( self,nil)
    
    
+   self.streamName = streamName
    self.overridePos = overridePos
    self.firstLine = true
-   self.streamName = name
    self.lineNo = 0
    self.prevToken = Types.noneToken
-   self.luaMode = _lune.unwrapDefault( luaMode, false)
+   self.luaMode = luaMode
    
-   local keywordSet, typeSet, _68, multiCharDelimitMap = createReserveInfo( luaMode )
+   local keywordSet, typeSet, _69, multiCharDelimitMap = createReserveInfo( luaMode )
    
    self.keywordSet = keywordSet
    self.typeSet = typeSet
@@ -424,7 +428,67 @@ function Parser:__init(stream, name, luaMode, overridePos)
    self.lineList = lineList
    
    stream:close(  )
-   self:start(  )
+end
+function Parser.create( parserSrc, stdinFile, overridePos )
+
+   local function createStream( mod, path )
+   
+      if stdinFile ~= nil then
+         if stdinFile:get_mod() == mod then
+            return Util.TxtStream.new(stdinFile:get_txt()), ""
+         end
+         
+      end
+      
+      do
+         local _exp = io.open( path, "r" )
+         if _exp ~= nil then
+            return _exp, ""
+         end
+      end
+      
+      return nil, string.format( "failed to open -- %s", path)
+   end
+   
+   local function createStreamFrom(  )
+   
+      do
+         local _matchExp = parserSrc
+         if _matchExp[1] == Types.ParserSrc.LnsCode[1] then
+            local txt = _matchExp[2][1]
+            local path = _matchExp[2][2]
+         
+            return path, false, Util.TxtStream.new(txt), ""
+         elseif _matchExp[1] == Types.ParserSrc.LnsPath[1] then
+            local path = _matchExp[2][1]
+            local mod = _matchExp[2][2]
+         
+            local stream, mess = createStream( mod, path )
+            return path, false, stream, mess
+         elseif _matchExp[1] == Types.ParserSrc.Parser[1] then
+            local path = _matchExp[2][1]
+            local luaMode = _matchExp[2][2]
+            local mod = _matchExp[2][3]
+         
+            local stream, mess = createStream( mod, path )
+            return path, luaMode, stream, mess
+         end
+      end
+      
+   end
+   
+   local streamName, luaMode, stream, mess = createStreamFrom(  )
+   if  nil == streamName or  nil == luaMode or  nil == stream or  nil == mess then
+      local _streamName = streamName
+      local _luaMode = luaMode
+      local _stream = stream
+      local _mess = mess
+   
+      return nil, mess
+   end
+   
+   
+   return Parser.new(streamName, stream, luaMode, overridePos), ""
 end
 function Parser:access(  )
 
@@ -440,7 +504,60 @@ end
 function Parser.setmeta( obj )
   setmetatable( obj, { __index = Parser  } )
 end
+function Parser:get_streamName()
+   return self.streamName
+end
 
+
+local Runner = {}
+setmetatable( Runner, { ifList = {__Runner,} } )
+function Runner.new( parserSrc, stdinFile, overridePos )
+   local obj = {}
+   Runner.setmeta( obj )
+   if obj.__init then obj:__init( parserSrc, stdinFile, overridePos ); end
+   return obj
+end
+function Runner:__init(parserSrc, stdinFile, overridePos) 
+   self.parser, self.errMess = Parser.create( parserSrc, stdinFile, overridePos )
+   
+   do
+      local _exp = self.parser
+      if _exp ~= nil then
+         _exp:start(  )
+         _lune._run(self, 1 )
+         
+      end
+   end
+   
+end
+function Runner:run(  )
+
+   do
+      local _exp = self.parser
+      if _exp ~= nil then
+         _exp:run(  )
+      end
+   end
+   
+end
+function Runner.setmeta( obj )
+  setmetatable( obj, { __index = Runner  } )
+end
+function Runner:get_parser()
+   return self.parser
+end
+function Runner:get_errMess()
+   return self.errMess
+end
+
+
+local function create( parserSrc, stdinFile, overridePos )
+
+   local runner = Runner.new(parserSrc, stdinFile, overridePos)
+   
+   return runner:get_parser(), runner:get_errMess()
+end
+_moduleObj.create = create
 
 function Parser:createInfo( tokenKind, token, tokenColumn )
 
@@ -665,7 +782,7 @@ function Parser:parse(  )
       local comment = ""
       while true do
          do
-            local _194, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
+            local _264, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
             if termEndIndex ~= nil then
                comment = comment .. rawLine:sub( searchIndex, termEndIndex )
                return comment, termEndIndex + 1

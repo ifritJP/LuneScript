@@ -23,7 +23,7 @@ SOFTWARE.
 */
 
 
-_lune_control use_async;
+//_lune_control use_async;
 _lune_control default_async_all;
 
 import lune.base.Util;
@@ -212,7 +212,7 @@ pub class AsyncItem extend (__AsyncItem,Mapping) {
 }
 
 pub class Parser extend Async.Pipe<AsyncItem> {
-   let streamName: str;
+   let streamName: str {pub};
    let mut lineNo : int;
    let mut prevToken: &Types.Token;
    let keywordSet : &Set<str>;
@@ -223,17 +223,17 @@ pub class Parser extend Async.Pipe<AsyncItem> {
    let mut firstLine:bool;
    let overridePos:&Types.Position!;
 
-   pub fn __init( stream: iStream, name: str,
-                  luaMode: bool!, overridePos:&Types.Position! )
+   pub fn __init( streamName:str, stream:iStream, luaMode:bool,
+                  overridePos:&Types.Position! )
    {
       super( AsyncItem._createPipe( 100 ) );
 
+      self.streamName = streamName;
       self.overridePos = overridePos;
       self.firstLine = true;
-      self.streamName = name;
       self.lineNo = 0;
       self.prevToken = Types.noneToken;
-      self.luaMode = unwrap luaMode default false;
+      self.luaMode = luaMode;
 
       let keywordSet, typeSet, _, multiCharDelimitMap = createReserveInfo( luaMode );
 
@@ -252,9 +252,45 @@ pub class Parser extend Async.Pipe<AsyncItem> {
       self.lineList = lineList;
 
       stream.close();
+   }
 
-      // 最後に start を呼ぶ。 start しないと、同期処理になる。
-      self.start();
+   local static fn create( parserSrc:&Types.ParserSrc, stdinFile:&Types.StdinFile!,
+                         overridePos:&Types.Position! ) : Parser!, str
+   {
+      fn createStream(mod:str,path:str) __trans : iStream!, str {
+         when! stdinFile {
+            if stdinFile.$mod == mod {
+               return new Util.TxtStream( stdinFile.$txt ), "";
+            }
+         }
+         if! io.open( path, "r" ) {
+            return _exp, "";
+         }
+         return nil, "failed to open -- %s" (path);
+      }
+      
+
+      fn createStreamFrom() __trans : str, bool, iStream!, str {
+         _match parserSrc {
+            case .LnsCode( txt, path ) {
+               return path, false, new Util.TxtStream( txt ), "";
+            }
+            case .LnsPath( path, mod ) {
+               let mut stream, mess = createStream( mod, path );
+               return path, false, stream, mess;
+            }
+            case .Parser( path, luaMode, mod ) {
+               let mut stream, mess = createStream( mod, path );
+               return path, luaMode, stream, mess;
+            }
+         }
+      }
+
+      let! streamName, luaMode, mut stream, mess = createStreamFrom() {
+         return nil, mess;
+      };
+
+      return new Parser( streamName, stream, luaMode, overridePos ), "";
    }
 
    pub fn parse() mut : Types.Token[]!;
@@ -265,6 +301,37 @@ pub class Parser extend Async.Pipe<AsyncItem> {
       };
       return new Async.PipeItem( new AsyncItem( tokenList ) );
    }
+}
+
+class Runner extend (__Runner)
+{
+   let mut parser:Parser! {pub};
+   let mut errMess:str {pub};
+
+   pub fn __init( parserSrc:&Types.ParserSrc, stdinFile:&Types.StdinFile!,
+                  overridePos:&Types.Position! )
+   {
+      self.parser, self.errMess = Parser.create( parserSrc, stdinFile, overridePos );
+
+      if! self.parser {
+         _exp.start();
+         __run( self, 1 ); // スレッドフルの場合、同期実行せずに待ちに入れる
+      }
+   }
+
+   pub fn run() mut {
+      if! self.parser {
+         _exp.run();
+      }
+   }
+}
+
+pub fn create( parserSrc:&Types.ParserSrc, stdinFile:&Types.StdinFile!,
+               overridePos:&Types.Position! ) : Parser!, str
+{
+   let mut runner = new Runner( parserSrc, stdinFile, overridePos );
+
+   return runner.$parser, runner.$errMess;
 }
 
 

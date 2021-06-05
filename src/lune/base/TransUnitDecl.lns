@@ -528,9 +528,12 @@ pub class ASTInfo {
 }
 
 pub fn TransUnit.createAST(
-   parserSrc: &Parser.ParserSrc, macroFlag: bool, moduleName: str! ) mut : ASTInfo
+   parserSrc: &Types.ParserSrc, stdinFile:&Types.StdinFile!,
+   macroFlag: bool, moduleName: str! ) mut : ASTInfo
 {
-   let mut parser = Parser.createParserFrom( parserSrc );
+   let mut parser = Parser.createParserFrom( parserSrc, stdinFile );
+
+   self.stdinFile = stdinFile;
    
    Log._log2( .Log, "%s start -- %s" (__func__, parser.getStreamName()) );
    
@@ -613,9 +616,8 @@ pub fn TransUnit.createAST(
             self.error( "scope does not close" );
          }
 
-         let! mut subParser = Parser.StreamParser.create( file, false, subModule ) {
-            self.error( "open error -- %s" (file) );
-         };
+         let mut subParser = Parser.StreamParser.create(
+            Types.ParserSrc.LnsPath( file, subModule ), self.stdinFile, nil );
 
          self.setParser( new Parser.DefaultPushbackParser( subParser ) );
 
@@ -1082,12 +1084,6 @@ fn TransUnit.analyzePushClass(
                   firstToken.pos, "The access mode of '__init' is 'pri'." );
             }
          };
-         if baseTypeInfo.isInheritFrom( self.processInfo,
-                                        self.builtinFunc.lnsthread_, nil ) and
-            not self.helperInfo.pragmaSet.has( LuneControl.Pragma.use_async )
-         {
-            self.addErrMess( nextToken.pos, "must set '_lune_control use_async'" );
-         }
       }
    } else {
       inheritInfo = new Nodes.ClassInheritInfo( nil, [] );
@@ -3113,7 +3109,7 @@ fn TransUnit.analyzeDeclFunc(
          self.processInfo, Ast.builtinTypeRunner ## )
       {
          foreach argNode, index in argList {
-            if not Ast.TypeInfo.canBeAsyncParam( argNode.$expType ) {
+            if not self.canBeAsyncParam( argNode.$expType ) {
                self.addErrMess(
                   argNode.$pos,
                   "__Runner can't have the mutable argument. -- %d: %s"
