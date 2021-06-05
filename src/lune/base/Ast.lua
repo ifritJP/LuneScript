@@ -3754,9 +3754,9 @@ function Scope:addUnwrapedVar( processInfo, argFlag, canBeLeft, name, pos, typeI
 end
 
 
-function Scope:addStaticVar( processInfo, argFlag, canBeLeft, name, pos, typeInfo, mutable )
+function Scope:addExportedVar( processInfo, canBeLeft, accessMode, name, pos, typeInfo, mutable )
 
-   return self:add( processInfo, argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, pos, typeInfo, AccessMode.Pub, true, mutable, true, false )
+   return self:add( processInfo, SymbolKind.Var, canBeLeft, true, name, pos, typeInfo, accessMode, true, mutable, true, false )
 end
 
 

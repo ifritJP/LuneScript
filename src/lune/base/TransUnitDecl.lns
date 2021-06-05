@@ -566,7 +566,7 @@ pub fn TransUnit.createAST(
    self.typeNameCtrl = new Ast.TypeNameCtrl( moduleTypeInfo );
 
 
-   self.parser = new Parser.DefaultPushbackParser( parser );
+   self.setParser( new Parser.DefaultPushbackParser( parser ) );
 
    self.scope.addIgnoredVar( self.processInfo );
 
@@ -617,7 +617,7 @@ pub fn TransUnit.createAST(
             self.error( "open error -- %s" (file) );
          };
 
-         self.parser = new Parser.DefaultPushbackParser( subParser );
+         self.setParser( new Parser.DefaultPushbackParser( subParser ) );
 
          lastStatement = self.analyzeStatementListSubfile( children );
 
@@ -635,7 +635,8 @@ pub fn TransUnit.createAST(
       let mut rootNode = Nodes.RootNode.create(
          self.nodeManager, self.createPosition( 0, 0 ),
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
-         children, self.moduleScope, self.macroCtrl.$useModuleMacroSet,
+         children, self.moduleScope, self.globalScope,
+         self.macroCtrl.$useModuleMacroSet,
          self.moduleId, self.processInfo, moduleTypeInfo, nil,
          self.helperInfo, self.nodeManager,
          unwrap self.importCtrl$.$importModule2ModuleInfo default {},

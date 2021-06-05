@@ -523,7 +523,7 @@ pub class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackParser) {
    pri let mut moduleName: str;
    pri let mut moduleType: &Ast.TypeInfo;
 
-   pri let mut globalScope: Ast.Scope;
+   // pri let mut globalScope: Ast.Scope;
    pri let mut topScope: Ast.Scope;
    /** モジュールの最上位スコープ */
    pri let mut moduleScope: Ast.Scope;
@@ -544,8 +544,12 @@ pub class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackParser) {
 
    /** クラスの型情報 -> そのクラスを宣言しているノード */
    pri let mut typeInfo2ClassNode: Map<&Ast.TypeInfo,Nodes.DeclClassNode>;
-   // /** パーサー */
-   // pri let mut parser: Parser.DefaultPushbackParser;
+   /** パーサー */
+   pri let mut parser: Parser.DefaultPushbackParser;
+   pri fn setParser( parser:Parser.DefaultPushbackParser ) mut {
+      self.parser = parser;
+   }
+   
    // /** push バックしたトークンリスト */
    // pri let mut pushbackList: List<&Parser.Token>;
    // /** 現在のトークン */
@@ -557,8 +561,8 @@ pub class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackParser) {
    // // pri let mut usedTokenList: List<&Parser.Token>;
    // /** 解析エラーメッセージ */
    // pri let mut errMessList: str[] { pub };
-   // /** 解析警告ーメッセージ */
-   // pri let mut warnMessList: str[] { pub };
+   /** 解析警告ーメッセージ */
+   pri let mut warnMessList: str[] { pub };
 
 
    /** このモジュール内から直接 import しているモジュールのセット */
@@ -607,7 +611,7 @@ pub class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackParser) {
 
    pri let ctrl_info: &Types.TransCtrlInfo;
 
-   // pri let mut macroCtrl:Macro.MacroCtrl;
+   pri let mut macroCtrl:Macro.MacroCtrl;
    
    // pri let mut typeNameCtrl:&Ast.TypeNameCtrl;
 
@@ -644,17 +648,13 @@ alias で置き換えている元の Type → alias の型
 
    let builtinFunc:&Builtin.BuiltinFuncType;
 
-   static fn getSuperParam( ctrl_info: &Types.TransCtrlInfo,
-                            macroEval: &Nodes.MacroEval ) : 
-      &Types.TransCtrlInfo, Ast.ProcessInfo, Ast.Scope,
-      Parser.DefaultPushbackParser, &Nodes.MacroEval
+   static fn getSuperParam( ctrl_info: &Types.TransCtrlInfo ) : 
+      &Types.TransCtrlInfo, Ast.ProcessInfo
    {
       let mut processInfo = Ast.createProcessInfo(
          ctrl_info.validCheckingMutable,
          ctrl_info.validLuaval, ctrl_info.validAstDetailError );
-      let mut scope = new Ast.Scope( processInfo, processInfo.$topScope, true, nil ## );
-      let mut parser = new Parser.DefaultPushbackParser( new Parser.DummyParser() );
-      return ctrl_info, processInfo, scope, parser, macroEval;
+      return ctrl_info, processInfo;
    }
    
    pub fn __init( moduleId:&frontInterface.ModuleId,
@@ -664,7 +664,7 @@ alias で置き換えている元の Type → alias の型
                   ctrl_info: &Types.TransCtrlInfo,
                   builtinFunc:&Builtin.BuiltinFuncType) 
    {
-      super( TransUnit.getSuperParam( ctrl_info, macroEval )** ); 
+      super( TransUnit.getSuperParam( ctrl_info )** ); 
       self.builtinFunc = builtinFunc;
       self.analyzingStaticMethodArgsScope = nil;
       // self.namespace2Scope = {};
@@ -685,7 +685,7 @@ alias で置き換えている元の Type → alias の型
       self.advertisedTypeSet = (@);
       self.closureFunList = [];
       self.scopeAccess = .Normal;
-      // self.macroCtrl = new Macro.MacroCtrl( macroEval );
+      self.macroCtrl = new Macro.MacroCtrl( macroEval );
       // self.typeNameCtrl = Ast.defaultTypeNameCtrl;
       self.analyzingStateQueue = [];
       // self.macroCallLineNo = 0;
@@ -705,9 +705,9 @@ alias で置き換えている元の Type → alias の型
          self.validMutControl, self.processInfo );
       self.moduleName = "";
       self.moduleType = Ast.headTypeInfo;
-      // self.parser = new Parser.DefaultPushbackParser( new Parser.DummyParser() );
+      self.parser = new Parser.DefaultPushbackParser( new Parser.DummyParser() );
       self.subfileList = [];
-      self.globalScope = self.processInfo.$topScope;
+      // self.globalScope = self.processInfo.$topScope;
       // let mut subRootTypeInfo = self.processInfo.$dummyParentType;
       // self.nsInfoMap[ subRootTypeInfo ] = new TransUnitIF.NSInfo(
       //    subRootTypeInfo, self.parser.createPosition(0, 0) );
@@ -724,7 +724,7 @@ alias で置き換えている元の Type → alias の型
       // self.currentToken = Parser.getEofToken();
       self.commentCtrl = new Parser.CommentCtrl();
       // self.errMessList = [];
-      // self.warnMessList = [];
+      self.warnMessList = [];
       self.analyzeMode = unwrap mode default AnalyzeMode.Compile;
       self.analyzePos = unwrap pos default self.createPosition( 0, 0 );
       self.analyzeModule = unwrap analyzeModule default "";
@@ -733,8 +733,9 @@ alias で置き換えている元の Type → alias の型
       self.importCtrl = nil;
    }
 
-   pub fn getLatestPos() __async : &Parser.Position {
-      return self.parser.$currentToken.pos;
+   pub override fn getLatestPos() __async : &Parser.Position {
+      //return self.parser.$currentToken.pos;
+      return self.parser.getLastPos();
    }
 
    // pub fn error( mess: str ) __async mut : __;
@@ -1471,24 +1472,23 @@ pri fn TransUnit.checkThreading( pos:&Parser.Position ) mut : bool {
    return false;
 }
 
+pub override fn TransUnit.errorAt( pos:&Parser.Position, mess: str ) __async mut : __ {
+   self.addErrMess( pos, mess);
 
-// pub fn TransUnit.errorAt( pos:&Parser.Position, mess: str ) __async mut : __ {
-//    self.addErrMess( pos, mess);
-
-//    foreach errmess in self.errMessList {
-//       Util.errorLog( errmess );
-//    }
-//    foreach warnmess in self.warnMessList {
-//       Util.errorLog( warnmess );
-//    }
-//    if self.macroCtrl.$analyzeInfo.$mode ~= .None {
-//       print( "------ near code -----", self.macroCtrl.$analyzeInfo.$mode.$_txt );
-//       print( self.parser.getNearCode() );
-//       print( "------" );
-//    }
+   foreach errmess in self.errMessList {
+      Util.errorLog( errmess );
+   }
+   foreach warnmess in self.warnMessList {
+      Util.errorLog( warnmess );
+   }
+   if self.macroCtrl.$analyzeInfo.$mode ~= .None {
+      print( "------ near code -----", self.macroCtrl.$analyzeInfo.$mode.$_txt );
+      print( self.parser.getNearCode() );
+      print( "------" );
+   }
    
-//    Util.err( "has error" );
-// }
+   Util.err( "has error" );
+}
 
 // pub fn TransUnit.error( mess: str ) __async mut : __ {
 //    self.errorAt( self.parser.getLastPos(), mess );
@@ -2044,30 +2044,50 @@ fn TransUnit.analyzeBlock(
 
 fn TransUnit.analyzeImportFor(
    pos: &Parser.Position, modulePath:str, assignName:str,
-   assigned:bool, lazyLoad:Nodes.LazyLoad ) __noasync mut : Nodes.ImportNode
+   assigned:bool, lazyLoad:Nodes.LazyLoad ) mut : Nodes.ImportNode
 {
    let mut backupScope = self.scope;
    // スコープをルートに変更
    self.scope = self.topScope;
 
+   let mut importProcessInfo = self.processInfo.newUser();
+
+   let macroMode;
+   let nearCode:str!;
+   if self.macroCtrl.$analyzeInfo.$mode ~= .None {
+      macroMode = self.macroCtrl.$analyzeInfo.$mode.$_txt;
+      nearCode = self.parser.getNearCode();
+   } else {
+      macroMode = "";
+      nearCode = nil;
+   }
+
+   let mut simpleTransUnit = new TransUnitIF.SimpeTransUnit(
+      self.ctrl_info, importProcessInfo,
+      self.getLatestPos(), macroMode, nearCode );
+   
    let! mut importObj = self.importCtrl {
       importObj = new Import.Import(
          self.getLatestPos(),
-         self,
+         simpleTransUnit,
          self.importModuleInfo,
          self.moduleType,
          self.builtinFunc,
-         self.globalScope,
          self.macroCtrl,
          self.typeNameCtrl,
          self.importedAliasMap,
          self.validMutControl );
       self.importCtrl = importObj;
    };
-   let mut importProcessInfo = self.processInfo.newUser();
-   importProcessInfo.switchIdProvier( .Ext );
-   let mut moduleInfo = importObj.processImport( importProcessInfo, modulePath );
-   importProcessInfo.switchIdProvier( .Base );
+   let mut moduleLoader = importObj.processImport( modulePath );
+   let moduleInfo;
+   __asyncLock {
+      moduleInfo = importObj.loadModuleInfo( importProcessInfo, moduleLoader );
+   }
+
+   foreach symbol in moduleInfo.$exportInfo.$globalSymbolList {
+      self.globalScope.addSymbolInfo( self.processInfo, symbol );
+   }
 
    
    // スコープを元に戻す

@@ -821,6 +821,7 @@ pub abstract class MacroInfo {
 _declNodeClass( "Root", Node, false, false, false,
                 [ { "children": "&List<&Node>" },
                   { "moduleScope": "&Ast.Scope" },
+                  { "globalScope": "&Ast.Scope" },
                   { "useModuleMacroSet": "&Set<&Ast.TypeInfo>" },
                   { "moduleId": "&frontInterface.ModuleId" },
                   { "processInfo": "Ast.ProcessInfo" },
@@ -2951,7 +2952,7 @@ __test {
 
       return RootNode.create(
          nodeManager, stmtExp.$pos, false, [ Ast.builtinTypeNone ],
-         [ stmtExp ], scope, (@), frontInterface.ModuleId.createId(0.0, 0),
+         [ stmtExp ], scope, scope, (@), frontInterface.ModuleId.createId(0.0, 0),
          processInfo, moduleInfo, nil,
          new frontInterface.LuneHelperInfo(), nodeManager, {}, {}, {});
    }

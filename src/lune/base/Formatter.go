@@ -421,13 +421,13 @@ func (self *Formatter_FormatterFilter) outputDeclClass(_env *LnsEnv, protoFlag b
         self.FP.Write(_env, ">")
     }
     if moduleName != nil{
-        moduleName_205 := moduleName.(*Types_Token)
+        moduleName_206 := moduleName.(*Types_Token)
         self.FP.Write(_env, " require ")
-        self.FP.Write(_env, _env.LuaVM.String_format("%s ", []LnsAny{moduleName_205.Txt}))
+        self.FP.Write(_env, _env.LuaVM.String_format("%s ", []LnsAny{moduleName_206.Txt}))
         if gluePrefix != nil{
-            gluePrefix_207 := gluePrefix.(string)
+            gluePrefix_208 := gluePrefix.(string)
             self.FP.Write(_env, "glue ")
-            self.FP.Write(_env, gluePrefix_207)
+            self.FP.Write(_env, gluePrefix_208)
         }
     }
     if _env.PopVal( _env.IncStack() ||

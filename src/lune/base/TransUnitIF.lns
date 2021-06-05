@@ -28,7 +28,6 @@ import lune.base.Parser;
 import lune.base.Ast;
 import lune.base.Nodes;
 import lune.base.Util;
-import lune.base.Macro;
 
 import lune.base.Types;
 
@@ -40,7 +39,6 @@ pub enum DeclClassMode {
 }
 
 pub class Modifier {
-   /** true ã®å ´åˆã¯ mut åˆ¶å¾¡ãŒæœ‰åŠ¹ */
    let mut validMutControl: bool {non,pub};
    let processInfo:Ast.ProcessInfo;
    
@@ -59,10 +57,10 @@ pub class NSInfo {
    let typeInfo:Ast.TypeInfo {pub};
    let pos:&Parser.Position {pub};
 
-   /** ƒ‹[ƒvŒn§Œä\•¶(for “™)‚Ì Scope */
+   /** ãƒ«ãƒ¼ãƒ—ç³»åˆ¶å¾¡æ§‹æ–‡(for ç­‰)ã® Scope */
    let mut loopScopeQueue: List<&Ast.Scope> {pub};
    
-   /** __asyncLock ‚µ‚½‚Ì loopScopeQueue ‚Ì’·‚³ */
+   /** __asyncLock ã—ãŸæ™‚ã® loopScopeQueue ã®é•·ã• */
    let mut lockedAsyncStack:List<int>;
 
    
@@ -87,13 +85,13 @@ pub class NSInfo {
    }
 
    /**
-break ‚ª‰Â”\‚©‚Ç‚¤‚©’²‚×‚éB
+break ãŒå¯èƒ½ã‹ã©ã†ã‹èª¿ã¹ã‚‹ã€‚
 
-__asyncLock ‚³‚ê‚Ä‚¢‚È‚¢ê‡A
-loopScopeQueue ‚Ì”‚Åƒ‹[ƒv“à•”‚©‚Ç‚¤‚©‚ğ”»’f‚µAƒ‹[ƒv“à‚Ìê‡‚Í break ‰Â”\B
+__asyncLock ã•ã‚Œã¦ã„ãªã„å ´åˆã€
+loopScopeQueue ã®æ•°ã§ãƒ«ãƒ¼ãƒ—å†…éƒ¨ã‹ã©ã†ã‹ã‚’åˆ¤æ–­ã—ã€ãƒ«ãƒ¼ãƒ—å†…ã®å ´åˆã¯ break å¯èƒ½ã€‚
 
-__asyncLock ‚³‚ê‚Ä‚¢‚éê‡A
-lockedAsyncStack ‚ÉŠi”[‚³‚ê‚Ä‚¢‚éî•ñ‚æ‚è‚àA¡‚Ìƒ‹[ƒv”‚Ì•û‚ª‘½‚¢ê‡‚Í break ‰Â”\B
+__asyncLock ã•ã‚Œã¦ã„ã‚‹å ´åˆã€
+lockedAsyncStack ã«æ ¼ç´ã•ã‚Œã¦ã„ã‚‹æƒ…å ±ã‚ˆã‚Šã‚‚ã€ä»Šã®ãƒ«ãƒ¼ãƒ—æ•°ã®æ–¹ãŒå¤šã„å ´åˆã¯ break å¯èƒ½ã€‚
    */ 
    pub fn canBreak() : bool {
       let len = #self.lockedAsyncStack;
@@ -105,7 +103,7 @@ lockedAsyncStack ‚ÉŠi”[‚³‚ê‚Ä‚¢‚éî•ñ‚æ‚è‚àA¡‚Ìƒ‹[ƒv”‚Ì•û‚ª‘½‚¢ê‡‚Í break 
    }
 
    /**
-Œ»İ‚Ìó‘Ô‚Å __noasync ‚ÉƒAƒNƒZƒX‰Â”\‚©‚Ç‚¤‚©B
+ç¾åœ¨ã®çŠ¶æ…‹ã§ __noasync ã«ã‚¢ã‚¯ã‚»ã‚¹å¯èƒ½ã‹ã©ã†ã‹ã€‚
 */
    pub fn canAccessNoasync() : bool {
       if self.typeInfo.$asyncMode == .Noasync or #self.lockedAsyncStack > 0 {
@@ -131,57 +129,50 @@ pub interface TransUnitIF {
 }
 
 
-pub class TransUnitBase extend (TransUnitIF) {
+pub abstract class TransUnitBase extend (TransUnitIF) {
 
    pro let processInfo:Ast.ProcessInfo;
    pro let mut scope:Ast.Scope;
+   pro let mut globalScope: Ast.Scope {pub};
    pro let namespace2Scope: Map<&Ast.TypeInfo,Ast.Scope>;
-   /** ƒp[ƒT[ */
-   pro let mut parser: Parser.DefaultPushbackParser;
 
    /**
-–¼‘O‹óŠÔƒ^ƒCƒv MapB
-‰ğÍI—¹‚ÉA‚±‚Ì Map ‚É nobody İ’è‚ªc‚Á‚Ä‚¢‚é‚ÆƒGƒ‰[B
+åå‰ç©ºé–“ã‚¿ã‚¤ãƒ— Mapã€‚
+è§£æçµ‚äº†æ™‚ã«ã€ã“ã® Map ã« nobody è¨­å®šãŒæ®‹ã£ã¦ã„ã‚‹ã¨ã‚¨ãƒ©ãƒ¼ã€‚
 
-TypeInfo ¨ NSInfo.
+TypeInfo â†’ NSInfo.
    */
    pro let mut nsInfoMap:Map<&Ast.TypeInfo,NSInfo>;
 
-   // /** ‰ğÍÏ‚İƒg[ƒNƒ“ƒŠƒXƒg */
+   // /** è§£ææ¸ˆã¿ãƒˆãƒ¼ã‚¯ãƒ³ãƒªã‚¹ãƒˆ */
    // pri let mut usedTokenList: List<&Parser.Token>;
-   /** ‰ğÍƒGƒ‰[ƒƒbƒZ[ƒW */
+   /** è§£æã‚¨ãƒ©ãƒ¼ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ */
    pro let mut errMessList: str[] { pub };
-   pro let mut warnMessList: str[] { pub };
 
    pro let mut typeNameCtrl:&Ast.TypeNameCtrl;
 
-   /** ƒNƒ‰ƒX‚Ì TypeId -> NamespaceInfo */
+   /** ã‚¯ãƒ©ã‚¹ã® TypeId -> NamespaceInfo */
    pro let mut typeId2ClassMap: Map<&Ast.IdInfo,&Nodes.NamespaceInfo>;
-   
-   pro let mut macroCtrl:Macro.MacroCtrl;
-
    
    pub fn get_scope() mut : Ast.Scope {
       return self.scope;
    }
    
    pub fn __init(
-      ctrl_info: &Types.TransCtrlInfo, processInfo:Ast.ProcessInfo, scope:Ast.Scope,
-      parser:Parser.DefaultPushbackParser, macroEval: &Nodes.MacroEval )
+      ctrl_info: &Types.TransCtrlInfo, processInfo:Ast.ProcessInfo )
    {
-      self.macroCtrl = new Macro.MacroCtrl( macroEval );
       self.typeId2ClassMap = {};
       self.typeNameCtrl = Ast.defaultTypeNameCtrl;
       self.errMessList = [];
-      self.warnMessList = [];
       self.namespace2Scope = {};
       self.processInfo = processInfo;
-      self.scope = scope;
+      self.globalScope = new Ast.Scope(
+         processInfo, processInfo.$topScope, true, nil ## );
+      self.scope = new Ast.Scope( processInfo, self.globalScope, true, nil ## );
       self.nsInfoMap = {};
       let mut subRootTypeInfo = self.processInfo.$dummyParentType;
       self.nsInfoMap[ subRootTypeInfo ] = new NSInfo(
          subRootTypeInfo, new Types.Position( 0,0, "@builtin@" ) );
-      self.parser = parser;
    }
 
    pro fn addErrMess( pos: &Parser.Position, mut mess: str ) __async mut {
@@ -194,26 +185,28 @@ TypeInfo ¨ NSInfo.
    }
 
    
-   pub fn errorAt( pos:&Parser.Position, mess: str ) __async mut : __ {
-      self.addErrMess( pos, mess);
+   pub abstract fn errorAt( pos:&Parser.Position, mess: str ) __async mut : __;
+   //    self.addErrMess( pos, mess);
 
-      foreach errmess in self.errMessList {
-         Util.errorLog( errmess );
-      }
-      foreach warnmess in self.warnMessList {
-         Util.errorLog( warnmess );
-      }
-      if self.macroCtrl.$analyzeInfo.$mode ~= .None {
-         print( "------ near code -----", self.macroCtrl.$analyzeInfo.$mode.$_txt );
-         print( self.parser.getNearCode() );
-         print( "------" );
-      }
+   //    foreach errmess in self.errMessList {
+   //       Util.errorLog( errmess );
+   //    }
+   //    foreach warnmess in self.warnMessList {
+   //       Util.errorLog( warnmess );
+   //    }
+   //    if self.macroCtrl.$analyzeInfo.$mode ~= .None {
+   //       print( "------ near code -----", self.macroCtrl.$analyzeInfo.$mode.$_txt );
+   //       print( self.parserPosInfo.getNearCode() );
+   //       print( "------" );
+   //    }
       
-      Util.err( "has error" );
-   }
+   //    Util.err( "has error" );
+   // }
+
+   pub abstract fn getLatestPos() : &Parser.Position;
 
    pub fn error( mess: str ) __async mut : __ {
-      self.errorAt( self.parser.getLastPos(), mess );
+      self.errorAt( self.getLatestPos(), mess );
    }
 
    pub fn pushScope( classFlag: bool, baseInfo: &Ast.TypeInfo!,
@@ -229,8 +222,8 @@ TypeInfo ¨ NSInfo.
    }
 
    /**
-‰ğÍ‚µ‚½–¼‘O‹óŠÔ‚Ìî•ñ‚ğ“o˜^‚·‚éB
-‚±‚Ìî•ñ‚ÍA&TypeInfo ‚©‚ç imut ‚ğŠO‚·‚½‚ß‚É—˜—p‚·‚éB
+è§£æã—ãŸåå‰ç©ºé–“ã®æƒ…å ±ã‚’ç™»éŒ²ã™ã‚‹ã€‚
+ã“ã®æƒ…å ±ã¯ã€&TypeInfo ã‹ã‚‰ imut ã‚’å¤–ã™ãŸã‚ã«åˆ©ç”¨ã™ã‚‹ã€‚
    */ 
    pro fn newNSInfo(
       typeInfo:Ast.TypeInfo, pos:&Parser.Position) __async mut : NSInfo
@@ -241,13 +234,13 @@ TypeInfo ¨ NSInfo.
    }
    
    /**
-Œ»İ‚ÌƒXƒR[ƒv‚ª‘®‚·‚é–¼‘O‹óŠÔ‚ÌŒ^‚ğæ“¾‚·‚éB
+ç¾åœ¨ã®ã‚¹ã‚³ãƒ¼ãƒ—ãŒå±ã™ã‚‹åå‰ç©ºé–“ã®å‹ã‚’å–å¾—ã™ã‚‹ã€‚
 
-¦
-Œ»İ‚ÌƒXƒR[ƒv‚ª‘®‚·‚é–¼‘O‹óŠÔ‚ªA
-‚±‚Ì TransUnit ‚Å¶¬‚µ‚½–¼‘O‹óŠÔ‚Å‚È‚¢ê‡‚ÍƒGƒ‰[‚·‚é‚Ì‚Å’ˆÓ‚·‚é‚±‚ÆB
+â€»
+ç¾åœ¨ã®ã‚¹ã‚³ãƒ¼ãƒ—ãŒå±ã™ã‚‹åå‰ç©ºé–“ãŒã€
+ã“ã® TransUnit ã§ç”Ÿæˆã—ãŸåå‰ç©ºé–“ã§ãªã„å ´åˆã¯ã‚¨ãƒ©ãƒ¼ã™ã‚‹ã®ã§æ³¨æ„ã™ã‚‹ã“ã¨ã€‚
 
-—á‚¦‚ÎAŒ»İ‚ÌƒXƒR[ƒv‚ª rootScope ‚¾‚Á‚½ê‡‚ÍƒGƒ‰[‚·‚éB
+ä¾‹ãˆã°ã€ç¾åœ¨ã®ã‚¹ã‚³ãƒ¼ãƒ—ãŒ rootScope ã ã£ãŸå ´åˆã¯ã‚¨ãƒ©ãƒ¼ã™ã‚‹ã€‚
 */ 
    pro fn getCurrentNamespaceTypeInfoMut() __async mut : Ast.TypeInfo {
       let typeInfo = self.scope.getNamespaceTypeInfo();
@@ -294,12 +287,12 @@ TypeInfo ¨ NSInfo.
             scope, parentInfo, externalFlag, modName, mutable );
          typeInfo = newType;
          self.namespace2Scope[ typeInfo ] = scope;
-         nsInfo = self.newNSInfo( newType, self.parser.getLastPos() );
+         nsInfo = self.newNSInfo( newType, self.getLatestPos() );
 
          let _, existSym = parentScope.addClass( processInfo, modName, nil, typeInfo );
          when! existSym {
             self.addErrMess(
-               self.parser.getLastPos(),
+               self.getLatestPos(),
                "module symbols exist -- %s.%s -- %s.%s"
                ( existSym.$namespaceTypeInfo.getFullName(
                   self.typeNameCtrl, parentScope, false ),
@@ -327,7 +320,7 @@ TypeInfo ¨ NSInfo.
    }
 
    /**
-Šù‘¶ƒNƒ‰ƒX‚Ì Scope ‚ğ push ‚·‚éB
+æ—¢å­˜ã‚¯ãƒ©ã‚¹ã® Scope ã‚’ push ã™ã‚‹ã€‚
    */
    pub fn pushClassScope(
       errPos:&Parser.Position, classTypeInfo:&Ast.TypeInfo, scope:Ast.Scope ) mut
@@ -357,9 +350,9 @@ TypeInfo ¨ NSInfo.
 
 
    /**
-w’èƒNƒ‰ƒX‚Ì Scope ‚ğ push ‚µATypeInfo ‚ğæ“¾‚·‚éB
+æŒ‡å®šã‚¯ãƒ©ã‚¹ã® Scope ã‚’ push ã—ã€TypeInfo ã‚’å–å¾—ã™ã‚‹ã€‚
 
-ƒNƒ‰ƒX‚ª¶¬Ï‚İ‚Ìê‡‚Í baseInfo, interfaceList, genTypeList ‚É nil ‚ğw’è‚·‚éB
+ã‚¯ãƒ©ã‚¹ãŒç”Ÿæˆæ¸ˆã¿ã®å ´åˆã¯ baseInfo, interfaceList, genTypeList ã« nil ã‚’æŒ‡å®šã™ã‚‹ã€‚
    */
    pub fn pushClass(
       processInfo:Ast.ProcessInfo,
@@ -372,7 +365,7 @@ TypeInfo ¨ NSInfo.
       let typeInfo:&Ast.TypeInfo;
       let mut nsInfo;
       if! self.scope.getTypeInfo( name, self.scope, true, .Normal ) {
-         // éŒ¾Ï‚İ
+         // å®£è¨€æ¸ˆã¿
          typeInfo = _exp;
          nsInfo = unwrap self.nsInfoMap[ typeInfo ];
 
@@ -380,7 +373,7 @@ TypeInfo ¨ NSInfo.
             self.addErrMess(
                errPos,     
                "multiple class(%s)" (typeInfo.getTxt( self.typeNameCtrl ##)));
-            // ƒNƒ‰ƒX‚Ì•¡”’è‹`‚ÍA‚»‚ÌŒã‚Ì‰ğÍ‚·‚é‚ÆA
+            // ã‚¯ãƒ©ã‚¹ã®è¤‡æ•°å®šç¾©ã¯ã€ãã®å¾Œã®è§£æã™ã‚‹ã¨ã€
             self.error( "stop by error" );
          }
 
@@ -509,9 +502,9 @@ TypeInfo ¨ NSInfo.
    }
    
    /**
-w’èƒNƒ‰ƒX‚Ì Scope ‚ğ push ‚µATypeInfo ‚ğæ“¾‚·‚éB
+æŒ‡å®šã‚¯ãƒ©ã‚¹ã® Scope ã‚’ push ã—ã€TypeInfo ã‚’å–å¾—ã™ã‚‹ã€‚
 
-ƒNƒ‰ƒX‚ª¶¬Ï‚İ‚Ìê‡‚Í baseInfo, interfaceList, genTypeList ‚É nil ‚ğw’è‚·‚éB
+ã‚¯ãƒ©ã‚¹ãŒç”Ÿæˆæ¸ˆã¿ã®å ´åˆã¯ baseInfo, interfaceList, genTypeList ã« nil ã‚’æŒ‡å®šã™ã‚‹ã€‚
    */
    pub fn pushClassLow(
       processInfo:Ast.ProcessInfo,
@@ -529,5 +522,28 @@ TypeInfo ¨ NSInfo.
 
    pub fn popClass() mut {
       self.popScope();
+   }
+}
+
+pub class SimpeTransUnit extend TransUnitBase {
+   let latestPos:&Parser.Position;
+   let macroMode:str;
+   let nearCode:str!;
+   pub override fn errorAt( pos:&Parser.Position, mess: str ) __async mut : __
+   {
+      self.addErrMess( pos, mess);
+      foreach errmess in self.errMessList {
+         Util.errorLog( errmess );
+      }
+      if! let nearCode = self.nearCode {
+         print( "------ near code -----", self.macroMode );
+         print( nearCode );
+         print( "------" );
+      }
+      
+      Util.err( "has error" );
+   }
+   pub override fn getLatestPos() : &Parser.Position {
+      return self.latestPos;
    }
 }

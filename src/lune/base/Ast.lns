@@ -2562,14 +2562,14 @@ pub fn Scope.addUnwrapedVar(
 }
 
 
-pub fn Scope.addStaticVar(
+pub fn Scope.addExportedVar(
    processInfo:ProcessInfo,
-   argFlag:bool, canBeLeft:bool, name:str, pos:&Parser.Position!,
+   canBeLeft:bool, accessMode:AccessMode, name:str, pos:&Parser.Position!,
    typeInfo: &TypeInfo, mutable:MutMode ) mut : &SymbolInfo!, &SymbolInfo!
 {
    return self.add(
-      processInfo, argFlag and SymbolKind.Arg or SymbolKind.Var,
-      canBeLeft, true, name, pos, typeInfo, .Pub, true, mutable, true, false )**;
+      processInfo, SymbolKind.Var, canBeLeft, true, name,
+      pos, typeInfo, accessMode, true, mutable, true, false )**;
 }
 
 pub fn Scope.addVar(

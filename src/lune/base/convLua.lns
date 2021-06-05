@@ -2319,17 +2319,19 @@ pub override fn ConvFilter.processDeclVar(
       self.writeln( "end" );
    }
 
-
-   if node.get_accessMode() == .Pub {
-      self.writeln( "" );
-      foreach varName, index in varNameList {
-         let name = varName;
-         if self.needModuleObj {
-            self.writeln( "_moduleObj.%s = %s" ( name, name ) );
+   
+   switch node.get_accessMode() {
+      case .Pub, .Global {
+         self.writeln( "" );
+         foreach varName, index in varNameList {
+            let name = varName;
+            if self.needModuleObj {
+               self.writeln( "_moduleObj.%s = %s" ( name, name ) );
+            }
+            self.pubVarName2InfoMap[ name ] = new PubVerInfo(
+               node.$staticFlag, node.$accessMode,
+               node.$symbolInfoList[ index ].$mutable, node.$typeInfoList[ index ] );
          }
-         self.pubVarName2InfoMap[ name ] = new PubVerInfo(
-            node.$staticFlag, node.$accessMode,
-            node.$symbolInfoList[ index ].$mutable, node.$typeInfoList[ index ] );
       }
    }
 
@@ -2386,16 +2388,17 @@ pub override fn ConvFilter.processDeclFunc(
    }
    self.write( "end" );
 
-   //if declInfo.get_accessMode() == .Pub {
    let expType: &Ast.TypeInfo = node.get_expType();
-   if expType.get_accessMode() == .Pub {
-      if self.needModuleObj {
-         self.writeln( "" );
-         self.write( "_moduleObj.%s = %s" ( name, name ) );
-      }
+   switch expType.get_accessMode() {
+      case .Pub, .Global {
+         if self.needModuleObj {
+            self.writeln( "" );
+            self.write( "_moduleObj.%s = %s" ( name, name ) );
+         }
 
-      self.pubFuncName2InfoMap[ name ] = new PubFuncInfo(
-         declInfo.get_accessMode(), node.get_expType() );
+         self.pubFuncName2InfoMap[ name ] = new PubFuncInfo(
+            declInfo.get_accessMode(), node.get_expType() );
+      }
    }
 };
 

@@ -785,6 +785,41 @@ pub fn Front.convertLns2LuaCode(
    return luaTxt;
 }
 
+fn Front.getGoAppName(): str {
+   let! appName = self.option.appName {
+      appName = self.gomodMap.$name;
+   };
+   return appName;
+}
+
+fn Front.createGoOption( scriptPath:str ) : &convGo.Option {
+   let packageName;
+   if! self.option.packageName {
+      packageName = _exp;
+   } else {
+      if not scriptPath.find( "/" ## ) {
+         // "/" がない場合は main
+         packageName = "main";
+      }
+      else {
+         let parentPath = scriptPath.gsub( "/[^/]+$", "" ).gsub( ".*/", "" );
+         if #parentPath == 0 {
+            // root ファイルの場合
+            packageName = "main";
+         } elseif parentPath == "." {
+            packageName = "main";
+         } elseif parentPath == ".." {
+            packageName = "main";
+         } else {
+            packageName = parentPath.gsub( "[^%w]", "" );
+         }
+      }
+   }
+   return new convGo.Option(
+      packageName, self.getGoAppName(), self.option.mainModule,
+      self.option.$addEnvArg, self.option.$enableRunner );
+}
+
 
 /**
 parser から Lns を AST 解析し、 meta 情報と変換後の Lua コード返す。
@@ -838,6 +873,17 @@ fn Front.loadParserToLuaCode(
       saveFile( ".lua", luaTxt, self.option.byteCompile,
                 self.option.stripDebugInfo, false );
       saveFile( ".meta", metaTxt, self.option.byteCompile, true, true );
+
+      switch self.option.convTo {
+         case .Go {
+            let mut memStream = new Util.memStream();
+            let mut conv = convGo.createFilter(
+               self.option.testing, path, memStream, ast,
+               self.createGoOption( path ) );
+            ast.$node.processFilter( conv, new convGo.Opt( ast.$node ) );
+            saveFile( ".go", memStream.$txt, false, false, false );
+         }
+      }
    }
 
    // let mut meta = new frontInterface.ModuleMeta(
@@ -1473,41 +1519,6 @@ fn outputDependInfo( stream:oStream!, metaInfo:&MetaForBuildId, mod:str ) {
       }
       dependInfo.output( stream );
    }
-}
-
-fn Front.getGoAppName(): str {
-   let! appName = self.option.appName {
-      appName = self.gomodMap.$name;
-   };
-   return appName;
-}
-
-fn Front.createGoOption( scriptPath:str ) : &convGo.Option {
-   let packageName;
-   if! self.option.packageName {
-      packageName = _exp;
-   } else {
-      if not scriptPath.find( "/" ## ) {
-         // "/" がない場合は main
-         packageName = "main";
-      }
-      else {
-         let parentPath = scriptPath.gsub( "/[^/]+$", "" ).gsub( ".*/", "" );
-         if #parentPath == 0 {
-            // root ファイルの場合
-            packageName = "main";
-         } elseif parentPath == "." {
-            packageName = "main";
-         } elseif parentPath == ".." {
-            packageName = "main";
-         } else {
-            packageName = parentPath.gsub( "[^%w]", "" );
-         }
-      }
-   }
-   return new convGo.Option(
-      packageName, self.getGoAppName(), self.option.mainModule,
-      self.option.$addEnvArg, self.option.$enableRunner );
 }
 
 fn Front.convertToLua(

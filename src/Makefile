@@ -627,10 +627,11 @@ TEST_CASE_LOGS := $(addprefix $(LOG_DIR)/,$(addsuffix .log,$(TEST_CASE)))
 
 # テストケースを実行して、テストケース毎にログをログディレクトリに出力する
 $(LOG_DIR)/%.log: test/error/%
-	-$(call exeLune,$(LNSC),$(TEST_DIR),$<,exe,$(EXE_OPT) 2>&1) | grep -e 'error:' -e 'warning:' > $@
+	echo $@ > $@
+	-$(call exeLune,$(LNSC),$(TEST_DIR),$<,exe,$(EXE_OPT) 2>&1)  >> $@
 
 test-error-all: $(TEST_CASE_LOGS)
-	cat $(TEST_CASE_LOGS)
+	cat $(TEST_CASE_LOGS) | grep -e 'error:' -e 'warning:'
 
 # エラー系テストケースを実行し、結果を stdout に出力する
 define test-error-all-case
@@ -720,11 +721,12 @@ test-org:
 	$(MAKE) build-glue
 	$(call exeLune,$(LNSC),.,test/start.lns,exe,$(EXE_OPT) 2>&1) > work/test1.result
 	$(call exeLune,$(LNSC),.,test/start.lns,save,$(EXE_OPT) --depends work/1/start.dep)
+	$(call exeLune,$(LNSC_LUA),.,test/imp.lns,exe,$(EXE_OPT) 2>&1) >> work/test1.result
 
 	$(call exeLune,$(LNSC),.,test/Sub2.lns,SAVE,work/1 $(EXE_OPT))
 
 
-	grep -v 'warning:' work/test1.result > work/test.result
+	grep -v -e 'warning:' -e 'skip:' work/test1.result > work/test.result
 
 	mkdir -p work/0/log/comp
 	$(MAKE) test-cmpl TEST_DIR=. LOG_DIR=work/0/log/comp LOG_FILE=work/test1.result
@@ -763,6 +765,13 @@ test-new:
 	$(call exeLune,$(LNSC),work/3,test/start.lns,ast,$(EXE_OPT)) > work/ast2.result
 	$(call exeLune,$(LNSC),work/3,test/start.lns,lua,$(EXE_OPT)) > work/lua.result
 	$(call exeLune,$(LNSC),work/3,test/start.lns,exe,$(EXE_OPT) 2>&1) > work/test2.result
+
+# meta ファイルを生成する
+	-rm work/3/test/imp.meta
+	$(call exeLune,$(LNSC),work/3,test/imp.lns,SAVE,$(EXE_OPT) -u) > /dev/null
+# meta ファイルから正常に import できることを確認する
+	-rm work/3/test/imp.meta
+	$(call exeLune,$(LNSC),work/3,test/imp.lns,exe,$(EXE_OPT) -u) >> work/test2.result
 
 
 	mkdir -p work/3/log/comp
@@ -1503,7 +1512,7 @@ test-miniGo:
 ifdef OTHER_GO
 	cp $(OTHER_GO) $(GO_WORK_DIR)
 endif
-	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),miniGo,.,miniGo,$(INT2STR))
+	$(call test-go-one,$(LNSC),$(GO_WORK_DIR),miniGo,.,miniGo,$(INT2STR) -u --package main)
 	cat work/result-testGo.txt
 
 ifndef NO_TEST

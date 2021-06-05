@@ -1,0 +1,4 @@
+global let val = 1;
+global fn func() {
+   print( "aa", "skip:" );
+}

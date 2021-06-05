@@ -1008,8 +1008,8 @@ func (self *dumpNode_dumpFilter) ProcessExpSetItem(_env *LnsEnv, node *Nodes_Exp
     self.FP.dump(_env, opt, &node.Nodes_Node, indexSym)
     dumpNode_filter_1099_(_env, node.FP.Get_val(_env), self, opt.FP.NextOpt(_env))
     if indexNode != nil{
-        indexNode_610 := indexNode.(*Nodes_Node)
-        dumpNode_filter_1099_(_env, indexNode_610, self, opt.FP.NextOpt(_env))
+        indexNode_611 := indexNode.(*Nodes_Node)
+        dumpNode_filter_1099_(_env, indexNode_611, self, opt.FP.NextOpt(_env))
     }
     dumpNode_filter_1099_(_env, node.FP.Get_exp2(_env), self, opt.FP.NextOpt(_env))
 }

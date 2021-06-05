@@ -899,9 +899,9 @@ func (self *Builtin_Builtin) getTypeInfo(_env *LnsEnv, typeName string) *Ast_Typ
     var suffix string
     suffix = ""
     if endIndex != nil{
-        endIndex_540 := endIndex.(LnsInt)
+        endIndex_542 := endIndex.(LnsInt)
         var genTypeName string
-        genTypeName = _env.LuaVM.String_sub(typeName,endIndex_540 + 1, nil)
+        genTypeName = _env.LuaVM.String_sub(typeName,endIndex_542 + 1, nil)
         for  {
             {
                 _tailIndex := Builtin_convExp11980(Lns_2DDD(_env.LuaVM.String_find(genTypeName,"[,>]", nil, nil)))
@@ -919,7 +919,7 @@ func (self *Builtin_Builtin) getTypeInfo(_env *LnsEnv, typeName string) *Ast_Typ
                 }
             }
         }
-        typeName = _env.LuaVM.String_sub(typeName,1, endIndex_540 - 1) + suffix
+        typeName = _env.LuaVM.String_sub(typeName,1, endIndex_542 - 1) + suffix
         
     }
     var typeInfo *Ast_TypeInfo

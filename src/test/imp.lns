@@ -1,0 +1,4 @@
+import test.ImpSub;
+print( val, "skip:" );
+func();
+

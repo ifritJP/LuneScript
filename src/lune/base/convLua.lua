@@ -2034,7 +2034,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _771 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _779 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -2808,17 +2808,20 @@ function ConvFilter:processDeclVar( node, opt )
    end
    
    
-   if node:get_accessMode(  ) == Ast.AccessMode.Pub then
-      self:writeln( "" )
-      for index, varName in ipairs( varNameList ) do
-         local name = varName
-         if self.needModuleObj then
-            self:writeln( string.format( "_moduleObj.%s = %s", name, name) )
+   do
+      local _switchExp = node:get_accessMode(  )
+      if _switchExp == Ast.AccessMode.Pub or _switchExp == Ast.AccessMode.Global then
+         self:writeln( "" )
+         for index, varName in ipairs( varNameList ) do
+            local name = varName
+            if self.needModuleObj then
+               self:writeln( string.format( "_moduleObj.%s = %s", name, name) )
+            end
+            
+            self.pubVarName2InfoMap[name] = PubVerInfo.new(node:get_staticFlag(), node:get_accessMode(), node:get_symbolInfoList()[index]:get_mutable(), node:get_typeInfoList()[index])
          end
          
-         self.pubVarName2InfoMap[name] = PubVerInfo.new(node:get_staticFlag(), node:get_accessMode(), node:get_symbolInfoList()[index]:get_mutable(), node:get_typeInfoList()[index])
       end
-      
    end
    
    
@@ -2885,15 +2888,19 @@ function ConvFilter:processDeclFunc( node, opt )
    end
    
    self:write( "end" )
+   
    local expType = node:get_expType(  )
-   if expType:get_accessMode(  ) == Ast.AccessMode.Pub then
-      if self.needModuleObj then
-         self:writeln( "" )
-         self:write( string.format( "_moduleObj.%s = %s", name, name) )
+   do
+      local _switchExp = expType:get_accessMode(  )
+      if _switchExp == Ast.AccessMode.Pub or _switchExp == Ast.AccessMode.Global then
+         if self.needModuleObj then
+            self:writeln( "" )
+            self:write( string.format( "_moduleObj.%s = %s", name, name) )
+         end
+         
+         
+         self.pubFuncName2InfoMap[name] = PubFuncInfo.new(declInfo:get_accessMode(  ), node:get_expType(  ))
       end
-      
-      
-      self.pubFuncName2InfoMap[name] = PubFuncInfo.new(declInfo:get_accessMode(  ), node:get_expType(  ))
    end
    
 end
@@ -4305,7 +4312,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3634, function (  )
+   Log.log( Log.Level.Trace, __func__, 3637, function (  )
    
       return string.format( "macro: %s", code)
    end )

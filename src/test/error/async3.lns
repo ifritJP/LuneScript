@@ -48,7 +48,6 @@ let globalVal2:&List<int> = [];
    }
 }
 {
-{
    form Test() __trans;
    form Test2();
 
@@ -234,4 +233,3 @@ let globalVal2:&List<int> = [];
       }
    }
 }
-

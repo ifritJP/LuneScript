@@ -829,7 +829,7 @@ function Front:loadFromLnsTxt( importModuleInfo, name, txt )
    local ast = transUnit:createAST( _lune.newAlge( Parser.ParserSrc.LnsCode, {txt,name}), false, string.format( "$load%d", self.loadCount) )
    self.loadCount = self.loadCount + 1
    
-   local _378, luaTxt = self:convertFromAst( ast, name, convLua.ConvMode.ConvMeta )
+   local _395, luaTxt = self:convertFromAst( ast, name, convLua.ConvMode.ConvMeta )
    return _lune.unwrap( loadFromLuaTxt( luaTxt ))
 end
 
@@ -1218,9 +1218,56 @@ function Front:convertLns2LuaCode( importModuleInfo, parserSrc, stream, streamNa
    local mod = self:scriptPath2Module( streamName )
    local ast = self:createAst( importModuleInfo, parserSrc, mod, frontInterface.ModuleId.createId( 0.0, 0 ), nil, TransUnit.AnalyzeMode.Compile )
    
-   local _544, luaTxt = self:convertFromAst( ast, streamName, convLua.ConvMode.ConvMeta )
+   local _561, luaTxt = self:convertFromAst( ast, streamName, convLua.ConvMode.ConvMeta )
    
    return luaTxt
+end
+
+
+function Front:getGoAppName(  )
+
+   local appName = self.option.appName
+   if  nil == appName then
+      local _appName = appName
+   
+      appName = self.gomodMap:get_name()
+   end
+   
+   return appName
+end
+
+
+function Front:createGoOption( scriptPath )
+
+   local packageName
+   
+   do
+      local _exp = self.option.packageName
+      if _exp ~= nil then
+         packageName = _exp
+      else
+         if not scriptPath:find( "/" ) then
+            packageName = "main"
+         else
+          
+            local parentPath = scriptPath:gsub( "/[^/]+$", "" ):gsub( ".*/", "" )
+            if #parentPath == 0 then
+               packageName = "main"
+            elseif parentPath == "." then
+               packageName = "main"
+            elseif parentPath == ".." then
+               packageName = "main"
+            else
+             
+               packageName = parentPath:gsub( "[^%w]", "" )
+            end
+            
+         end
+         
+      end
+   end
+   
+   return convGo.Option.new(packageName, self:getGoAppName(  ), self.option.mainModule, self.option:get_addEnvArg(), self.option:get_enableRunner())
 end
 
 
@@ -1232,7 +1279,7 @@ function Front:loadParserToLuaCode( importModuleInfo, parserSrc, path, mod )
    local ast = self:createAst( importModuleInfo, parserSrc, mod, moduleId, nil, TransUnit.AnalyzeMode.Compile, nil )
    
    local metaTxt, luaTxt = self:convertFromAst( ast, path, convLua.ConvMode.ConvMeta )
-   Log.log( Log.Level.Trace, __func__, 806, function (  )
+   Log.log( Log.Level.Trace, __func__, 841, function (  )
    
       return string.format( "Meta = %s", metaTxt)
    end )
@@ -1282,6 +1329,17 @@ function Front:loadParserToLuaCode( importModuleInfo, parserSrc, path, mod )
       end
       saveFile( ".lua", luaTxt, self.option.byteCompile, self.option.stripDebugInfo, false )
       saveFile( ".meta", metaTxt, self.option.byteCompile, true, true )
+      
+      do
+         local _switchExp = self.option.convTo
+         if _switchExp == Types.Lang.Go then
+            local memStream = Util.memStream.new()
+            local conv = convGo.createFilter( self.option.testing, path, memStream, ast, self:createGoOption( path ) )
+            ast:get_node():processFilter( conv, convGo.Opt.new(ast:get_node()) )
+            saveFile( ".go", memStream:get_txt(), false, false, false )
+         end
+      end
+      
    end
    
    local meta = frontInterface.ModuleMeta.new(path, _lune.newAlge( frontInterface.MetaOrModule.Module, {createModuleInfo( ast, mod, moduleId )}))
@@ -1292,7 +1350,7 @@ end
 function Front:loadFile( importModuleInfo, path, mod )
    local __func__ = '@lune.@base.@front.Front.loadFile'
 
-   Log.log( Log.Level.Info, __func__, 860, function (  )
+   Log.log( Log.Level.Info, __func__, 906, function (  )
       local __func__ = '@lune.@base.@front.Front.loadFile.<anonymous>'
    
       return string.format( "start %s:%s", __func__, mod)
@@ -1331,7 +1389,7 @@ function Front:checkUptodateMeta( lnsPath, metaPath, addSearchPath )
    if  nil == metaObj then
       local _metaObj = metaObj
    
-      Log.log( Log.Level.Warn, __func__, 891, function (  )
+      Log.log( Log.Level.Warn, __func__, 937, function (  )
       
          return string.format( "load error -- %s", metaPath)
       end )
@@ -1341,7 +1399,7 @@ function Front:checkUptodateMeta( lnsPath, metaPath, addSearchPath )
    
    local meta = metaObj
    if meta.__formatVersion ~= Ver.metaVersion then
-      Log.log( Log.Level.Warn, __func__, 896, function (  )
+      Log.log( Log.Level.Warn, __func__, 942, function (  )
       
          return string.format( "unmatch meta version -- %s", metaPath)
       end )
@@ -1352,7 +1410,7 @@ function Front:checkUptodateMeta( lnsPath, metaPath, addSearchPath )
    if meta.__hasTest then
       
       if meta.__enableTest ~= self.option.testing then
-         Log.log( Log.Level.Warn, __func__, 902, function (  )
+         Log.log( Log.Level.Warn, __func__, 948, function (  )
          
             return string.format( "unmatch test setting -- %s", metaPath)
          end )
@@ -1363,7 +1421,7 @@ function Front:checkUptodateMeta( lnsPath, metaPath, addSearchPath )
    end
    
    
-   for moduleFullName, _627 in pairs( meta.__dependModuleMap ) do
+   for moduleFullName, _670 in pairs( meta.__dependModuleMap ) do
       do
          local moduleLnsPath = self:searchModule( moduleFullName )
          if moduleLnsPath ~= nil then
@@ -1372,7 +1430,7 @@ function Front:checkUptodateMeta( lnsPath, metaPath, addSearchPath )
                if moduleLuaPath ~= nil then
                   if not Util.getReadyCode( moduleLnsPath, metaPath ) then
                      
-                     Log.log( Log.Level.Warn, __func__, 913, function (  )
+                     Log.log( Log.Level.Warn, __func__, 959, function (  )
                      
                         return string.format( "not ready -- %s, %s", moduleLnsPath, metaPath)
                      end )
@@ -1382,7 +1440,7 @@ function Front:checkUptodateMeta( lnsPath, metaPath, addSearchPath )
                   
                   local moduleMetaPath = moduleLuaPath:gsub( "%.lua$", ".meta" )
                   if Depend.existFile( moduleMetaPath ) and not Util.getReadyCode( moduleMetaPath, metaPath ) then
-                     Log.log( Log.Level.Warn, __func__, 921, function (  )
+                     Log.log( Log.Level.Warn, __func__, 967, function (  )
                      
                         return string.format( "not ready -- %s, %s", moduleMetaPath, metaPath)
                      end )
@@ -1391,7 +1449,7 @@ function Front:checkUptodateMeta( lnsPath, metaPath, addSearchPath )
                   end
                   
                else
-                  Log.log( Log.Level.Warn, __func__, 926, function (  )
+                  Log.log( Log.Level.Warn, __func__, 972, function (  )
                   
                      return string.format( "not found .lua file for -- %s", moduleFullName)
                   end )
@@ -1401,7 +1459,7 @@ function Front:checkUptodateMeta( lnsPath, metaPath, addSearchPath )
             end
             
          else
-            Log.log( Log.Level.Warn, __func__, 931, function (  )
+            Log.log( Log.Level.Warn, __func__, 977, function (  )
             
                return string.format( "not found .lns file -- %s", moduleFullName)
             end )
@@ -1493,7 +1551,7 @@ function Front:loadModule( mod )
                else
                   
                   if _lune._Set_has(self.bindModuleSet, mod ) then
-                     Log.log( Log.Level.Warn, __func__, 998, function (  )
+                     Log.log( Log.Level.Warn, __func__, 1044, function (  )
                      
                         return string.format( "load from the binding -- %s", mod)
                      end )
@@ -1591,7 +1649,7 @@ function Front:loadMeta( importModuleInfo, mod )
                                  meta = self:checkUptodateMeta( lnsPath, metaPath, self.option.outputDir )
                               else
                                
-                                 Log.log( Log.Level.Warn, __func__, 1074, function (  )
+                                 Log.log( Log.Level.Warn, __func__, 1120, function (  )
                                  
                                     return string.format( "%s not ready meta %s, %s", orgMod, lnsPath, metaPath)
                                  end )
@@ -1600,7 +1658,7 @@ function Front:loadMeta( importModuleInfo, mod )
                               
                            else
                             
-                              Log.log( Log.Level.Warn, __func__, 1078, function (  )
+                              Log.log( Log.Level.Warn, __func__, 1124, function (  )
                               
                                  return string.format( "%s not ready lua %s, %s", orgMod, lnsPath, luaPath)
                               end )
@@ -1609,7 +1667,7 @@ function Front:loadMeta( importModuleInfo, mod )
                            
                         else
                          
-                           Log.log( Log.Level.Warn, __func__, 1082, function (  )
+                           Log.log( Log.Level.Warn, __func__, 1128, function (  )
                            
                               return string.format( "force analyze -- %s", orgMod)
                            end )
@@ -1617,7 +1675,7 @@ function Front:loadMeta( importModuleInfo, mod )
                         end
                         
                      else
-                        Log.log( Log.Level.Warn, __func__, 1086, function (  )
+                        Log.log( Log.Level.Warn, __func__, 1132, function (  )
                         
                            return string.format( "%s not found lua in %s", orgMod, self.option.outputDir)
                         end )
@@ -1800,7 +1858,7 @@ local function closeStreams( stream, metaStream, dependStream, metaPath, saveMet
             end
             
             if not cont then
-               Log.log( Log.Level.Debug, __func__, 1278, function (  )
+               Log.log( Log.Level.Debug, __func__, 1324, function (  )
                
                   return string.format( "<%s>, <%s>", oldLine, newLine)
                end )
@@ -1997,7 +2055,7 @@ local function outputDependInfo( stream, metaInfo, mod )
 
    if stream ~= nil then
       local dependInfo = OutputDepend.DependInfo.new(mod)
-      for dependMod, _960 in pairs( metaInfo.__dependModuleMap ) do
+      for dependMod, _1003 in pairs( metaInfo.__dependModuleMap ) do
          dependInfo:addImpotModule( dependMod )
       end
       
@@ -2009,53 +2067,6 @@ local function outputDependInfo( stream, metaInfo, mod )
    end
    
 end
-
-function Front:getGoAppName(  )
-
-   local appName = self.option.appName
-   if  nil == appName then
-      local _appName = appName
-   
-      appName = self.gomodMap:get_name()
-   end
-   
-   return appName
-end
-
-
-function Front:createGoOption( scriptPath )
-
-   local packageName
-   
-   do
-      local _exp = self.option.packageName
-      if _exp ~= nil then
-         packageName = _exp
-      else
-         if not scriptPath:find( "/" ) then
-            packageName = "main"
-         else
-          
-            local parentPath = scriptPath:gsub( "/[^/]+$", "" ):gsub( ".*/", "" )
-            if #parentPath == 0 then
-               packageName = "main"
-            elseif parentPath == "." then
-               packageName = "main"
-            elseif parentPath == ".." then
-               packageName = "main"
-            else
-             
-               packageName = parentPath:gsub( "[^%w]", "" )
-            end
-            
-         end
-         
-      end
-   end
-   
-   return convGo.Option.new(packageName, self:getGoAppName(  ), self.option.mainModule, self.option:get_addEnvArg(), self.option:get_enableRunner())
-end
-
 
 function Front:convertToLua( scriptPath, convMode, streamLua, streamMeta )
 
@@ -2483,7 +2494,7 @@ _moduleObj.build = build
 function Front:exec(  )
    local __func__ = '@lune.@base.@front.Front.exec'
 
-   Log.log( Log.Level.Trace, __func__, 1876, function (  )
+   Log.log( Log.Level.Trace, __func__, 1887, function (  )
    
       return Option.ModeKind:_getTxt( self.option.mode)
       

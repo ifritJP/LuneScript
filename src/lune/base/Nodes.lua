@@ -759,7 +759,7 @@ end
 function NodeManager:__init() 
    self.idSeed = 0
    self.nodeKind2NodeList = {}
-   for kind, _314 in pairs( nodeKind2NameMap ) do
+   for kind, _315 in pairs( nodeKind2NameMap ) do
       if not self.nodeKind2NodeList[kind] then
          self.nodeKind2NodeList[kind] = {}
       end
@@ -1480,19 +1480,20 @@ function RootNode:canBeStatement(  )
 
    return false
 end
-function RootNode.new( id, pos, macroArgFlag, typeList, children, moduleScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap )
+function RootNode.new( id, pos, macroArgFlag, typeList, children, moduleScope, globalScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap )
    local obj = {}
    RootNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, children, moduleScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap ); end
+   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, children, moduleScope, globalScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap ); end
    return obj
 end
-function RootNode:__init(id, pos, macroArgFlag, typeList, children, moduleScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap) 
+function RootNode:__init(id, pos, macroArgFlag, typeList, children, moduleScope, globalScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap) 
    Node.__init( self,id, 6, pos, macroArgFlag, typeList)
    
    
    
    self.children = children
    self.moduleScope = moduleScope
+   self.globalScope = globalScope
    self.useModuleMacroSet = useModuleMacroSet
    self.moduleId = moduleId
    self.processInfo = processInfo
@@ -1506,9 +1507,9 @@ function RootNode:__init(id, pos, macroArgFlag, typeList, children, moduleScope,
    
    
 end
-function RootNode.create( nodeMan, pos, macroArgFlag, typeList, children, moduleScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap )
+function RootNode.create( nodeMan, pos, macroArgFlag, typeList, children, moduleScope, globalScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap )
 
-   local node = RootNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, children, moduleScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap)
+   local node = RootNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, children, moduleScope, globalScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap)
    nodeMan:addNode( node )
    return node
 end
@@ -1581,6 +1582,9 @@ function RootNode:get_children()
 end
 function RootNode:get_moduleScope()
    return self.moduleScope
+end
+function RootNode:get_globalScope()
+   return self.globalScope
 end
 function RootNode:get_useModuleMacroSet()
    return self.useModuleMacroSet
@@ -13702,7 +13706,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, _8951 in pairs( self.map ) do
+   for key, _8956 in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -13737,8 +13741,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, _8965 in ipairs( __sorted ) do
-         local key = __map[ _8965 ]
+      for __index, _8970 in ipairs( __sorted ) do
+         local key = __map[ _8970 ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false

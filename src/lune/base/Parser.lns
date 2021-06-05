@@ -242,7 +242,6 @@ pub class StreamParser extend Parser {
    }
 }
 
-
 pub class DefaultPushbackParser extend (PushbackParser) {
    let mut parser:Parser;
    let mut pushbackedList:List<&Token>;

@@ -126,7 +126,6 @@ local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Util = _lune.loadModule( 'lune.base.Util' )
-local Macro = _lune.loadModule( 'lune.base.Macro' )
 
 local Types = _lune.loadModule( 'lune.base.Types' )
 
@@ -288,25 +287,23 @@ function TransUnitBase:get_scope(  )
 
    return self.scope
 end
-function TransUnitBase.new( ctrl_info, processInfo, scope, parser, macroEval )
+function TransUnitBase.new( ctrl_info, processInfo )
    local obj = {}
    TransUnitBase.setmeta( obj )
-   if obj.__init then obj:__init( ctrl_info, processInfo, scope, parser, macroEval ); end
+   if obj.__init then obj:__init( ctrl_info, processInfo ); end
    return obj
 end
-function TransUnitBase:__init(ctrl_info, processInfo, scope, parser, macroEval) 
-   self.macroCtrl = Macro.MacroCtrl.new(macroEval)
+function TransUnitBase:__init(ctrl_info, processInfo) 
    self.typeId2ClassMap = {}
    self.typeNameCtrl = Ast.defaultTypeNameCtrl
    self.errMessList = {}
-   self.warnMessList = {}
    self.namespace2Scope = {}
    self.processInfo = processInfo
-   self.scope = scope
+   self.globalScope = Ast.Scope.new(processInfo, processInfo:get_topScope(), true, nil)
+   self.scope = Ast.Scope.new(processInfo, self.globalScope, true, nil)
    self.nsInfoMap = {}
    local subRootTypeInfo = self.processInfo:get_dummyParentType()
    self.nsInfoMap[subRootTypeInfo] = NSInfo.new(subRootTypeInfo, Types.Position.new(0, 0, "@builtin@"))
-   self.parser = parser
 end
 function TransUnitBase:addErrMess( pos, mess )
 
@@ -316,31 +313,9 @@ function TransUnitBase:addErrMess( pos, mess )
    
    table.insert( self.errMessList, string.format( "%s:%d:%d: error: %s", pos.streamName, pos.lineNo, pos.column, mess) )
 end
-function TransUnitBase:errorAt( pos, mess )
-
-   self:addErrMess( pos, mess )
-   
-   for __index, errmess in ipairs( self.errMessList ) do
-      Util.errorLog( errmess )
-   end
-   
-   for __index, warnmess in ipairs( self.warnMessList ) do
-      Util.errorLog( warnmess )
-   end
-   
-   if self.macroCtrl:get_analyzeInfo():get_mode() ~= Nodes.MacroMode.None then
-      print( "------ near code -----", Nodes.MacroMode:_getTxt( self.macroCtrl:get_analyzeInfo():get_mode())
-       )
-      print( self.parser:getNearCode(  ) )
-      print( "------" )
-   end
-   
-   
-   Util.err( "has error" )
-end
 function TransUnitBase:error( mess )
 
-   self:errorAt( self.parser:getLastPos(  ), mess )
+   self:errorAt( self:getLatestPos(  ), mess )
 end
 function TransUnitBase:pushScope( classFlag, baseInfo, interfaceList )
 
@@ -411,11 +386,11 @@ function TransUnitBase:pushModule( processInfo, externalFlag, name, mutable )
          local newType = processInfo:createModule( scope, parentInfo, externalFlag, modName, mutable )
          typeInfo = newType
          self.namespace2Scope[typeInfo] = scope
-         nsInfo = self:newNSInfo( newType, self.parser:getLastPos(  ) )
+         nsInfo = self:newNSInfo( newType, self:getLatestPos(  ) )
          
-         local _204, existSym = parentScope:addClass( processInfo, modName, nil, typeInfo )
+         local _194, existSym = parentScope:addClass( processInfo, modName, nil, typeInfo )
          if existSym ~= nil then
-            self:addErrMess( self.parser:getLastPos(  ), string.format( "module symbols exist -- %s.%s -- %s.%s", existSym:get_namespaceTypeInfo():getFullName( self.typeNameCtrl, parentScope, false ), existSym:get_name(), parentInfo:getFullName( self.typeNameCtrl, parentScope, false ), modName) )
+            self:addErrMess( self:getLatestPos(  ), string.format( "module symbols exist -- %s.%s -- %s.%s", existSym:get_namespaceTypeInfo():getFullName( self.typeNameCtrl, parentScope, false ), existSym:get_name(), parentInfo:getFullName( self.typeNameCtrl, parentScope, false ), modName) )
          end
          
       end
@@ -600,11 +575,57 @@ end
 function TransUnitBase.setmeta( obj )
   setmetatable( obj, { __index = TransUnitBase  } )
 end
+function TransUnitBase:get_globalScope()
+   return self.globalScope
+end
 function TransUnitBase:get_errMessList()
    return self.errMessList
 end
-function TransUnitBase:get_warnMessList()
-   return self.warnMessList
+
+
+local SimpeTransUnit = {}
+setmetatable( SimpeTransUnit, { __index = TransUnitBase } )
+_moduleObj.SimpeTransUnit = SimpeTransUnit
+function SimpeTransUnit:errorAt( pos, mess )
+
+   self:addErrMess( pos, mess )
+   for __index, errmess in ipairs( self.errMessList ) do
+      Util.errorLog( errmess )
+   end
+   
+   do
+      local nearCode = self.nearCode
+      if nearCode ~= nil then
+         print( "------ near code -----", self.macroMode )
+         print( nearCode )
+         print( "------" )
+      end
+   end
+   
+   
+   Util.err( "has error" )
+end
+function SimpeTransUnit:getLatestPos(  )
+
+   return self.latestPos
+end
+function SimpeTransUnit.setmeta( obj )
+  setmetatable( obj, { __index = SimpeTransUnit  } )
+end
+function SimpeTransUnit.new( __superarg1, __superarg2,latestPos, macroMode, nearCode )
+   local obj = {}
+   SimpeTransUnit.setmeta( obj )
+   if obj.__init then
+      obj:__init( __superarg1, __superarg2,latestPos, macroMode, nearCode )
+   end
+   return obj
+end
+function SimpeTransUnit:__init( __superarg1, __superarg2,latestPos, macroMode, nearCode )
+
+   TransUnitBase.__init( self, __superarg1, __superarg2 )
+   self.latestPos = latestPos
+   self.macroMode = macroMode
+   self.nearCode = nearCode
 end
 
 

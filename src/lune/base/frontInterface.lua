@@ -585,6 +585,8 @@ end
 
 
 __luneScript = dummyFront.new()
+_moduleObj.__luneScript = __luneScript
+
 
 local function setFront( newFront )
 
