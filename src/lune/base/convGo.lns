@@ -4313,7 +4313,10 @@ fn convFilter.outputDummyAbstractMethodOfClass( classType:&Ast.TypeInfo ) mut
       scope, .Normal,
       fn ( symbolInfo:&Ast.SymbolInfo ) __trans : bool {
          if symbolInfo.$kind == .Mtd and symbolInfo.$typeInfo.$abstractFlag {
-            if! let methodType = scope.getTypeInfoChild( symbolInfo.$name ) {
+            //if! let methodType = scope.getTypeInfoChild( symbolInfo.$name ) {
+            if! let methodType = scope.getTypeInfoField(
+               symbolInfo.$name, true, scope, .Normal )
+            {
                if methodType.$abstractFlag {
                   name2typeMap[ symbolInfo.$name ] = symbolInfo.$typeInfo;
                }

@@ -2170,3 +2170,19 @@ _section();
       }
     }
 }
+_section();
+{
+   class Super {
+      pub fn func() {
+         print( "1" );
+      }
+   }
+   interface IF {
+      pub fn func();
+   }
+   class Sub extend Super (IF) {
+   }
+
+   let sub = new Sub();
+   sub.func();
+}
