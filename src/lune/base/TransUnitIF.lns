@@ -184,10 +184,6 @@ TypeInfo Å® NSInfo.
       self.parser = parser;
    }
 
-   pub fn error( mess: str ) __async mut : __ {
-      Util.err( mess );
-   }
-
    pro fn addErrMess( pos: &Parser.Position, mut mess: str ) __async mut {
       if mess.find( "type mismatch.*<- &" ##) {
          mess = mess .. ". if your code is the old style, use the opiton '--legacy-mutable-control'.";
@@ -214,6 +210,10 @@ TypeInfo Å® NSInfo.
       }
       
       Util.err( "has error" );
+   }
+
+   pub fn error( mess: str ) __async mut : __ {
+      self.errorAt( self.parser.getLastPos(), mess );
    }
 
    pub fn pushScope( classFlag: bool, baseInfo: &Ast.TypeInfo!,

@@ -1957,6 +1957,22 @@ pub override fn convFilter.processRoot(
                   workNode.$func.$expType.$argTypeInfoList,
                   workNode.$argList, needEnv );
             } );
+   _filter( node.$nodeManager.getExpCallSuperCtorNodeList(),
+            fn ( workNode:&Nodes.ExpCallSuperCtorNode ) {
+               let needEnv = not Ast.isBuiltin( workNode.$methodType.$typeId.id );
+               self.processConvExp(
+                  workNode.$id,     
+                  workNode.$methodType.$argTypeInfoList,
+                  workNode.$expList, needEnv );
+            } );
+   _filter( node.$nodeManager.getExpCallSuperNodeList(),
+            fn ( workNode:&Nodes.ExpCallSuperNode ) {
+               let needEnv = not Ast.isBuiltin( workNode.$methodType.$typeId.id );
+               self.processConvExp(
+                  workNode.$id,     
+                  workNode.$methodType.$argTypeInfoList,
+                  workNode.$expList, needEnv );
+            } );
    _filter( node.$nodeManager.getDeclVarNodeList(),
             fn ( workNode:&Nodes.DeclVarNode ) {
                let mut typeList:List<&Ast.TypeInfo> = [];

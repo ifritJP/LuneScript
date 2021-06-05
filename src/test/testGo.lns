@@ -2186,3 +2186,27 @@ _section();
    let sub = new Sub();
    sub.func();
 }
+_section();
+{
+   class Super {
+      pro fn __init( val1:int, val2:int ) {
+         print( val1, val2 );
+      }
+      pro fn sub( val1:int, val2:int ) {
+         print( val1, val2 );
+      }
+   }
+   class Hoge extend Super {
+      static fn func() : int, int {
+         return 1, 2;
+      }
+      pro override fn sub( val1:int, val2:int ) {
+         super( Hoge.func()** );
+      }
+      pub fn __init() {
+         super( Hoge.func()** );
+         self.sub( 3, 4 );
+      }
+   }
+   new Hoge();
+}

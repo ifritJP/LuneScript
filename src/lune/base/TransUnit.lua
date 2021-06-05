@@ -858,11 +858,14 @@ end
 
 
 local TransUnit = {}
-setmetatable( TransUnit, { ifList = {TransUnitIF.TransUnitIF,Parser.PushbackParser,} } )
+setmetatable( TransUnit, { __index = TransUnitIF.TransUnitBase,ifList = {Parser.PushbackParser,} } )
 _moduleObj.TransUnit = TransUnit
-function TransUnit:get_scope(  )
+function TransUnit.getSuperParam( ctrl_info, macroEval )
 
-   return self.scope
+   local processInfo = Ast.createProcessInfo( ctrl_info.validCheckingMutable, ctrl_info.validLuaval, ctrl_info.validAstDetailError )
+   local scope = Ast.Scope.new(processInfo, processInfo:get_topScope(), true, nil)
+   local parser = Parser.DefaultPushbackParser.new(Parser.DummyParser.new())
+   return ctrl_info, processInfo, scope, parser, macroEval
 end
 function TransUnit.new( moduleId, importModuleInfo, macroEval, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc )
    local obj = {}
@@ -871,9 +874,10 @@ function TransUnit.new( moduleId, importModuleInfo, macroEval, analyzeModule, mo
    return obj
 end
 function TransUnit:__init(moduleId, importModuleInfo, macroEval, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc) 
+   TransUnitIF.TransUnitBase.__init( self,TransUnit.getSuperParam( ctrl_info, macroEval ))
+   
    self.builtinFunc = builtinFunc
    self.analyzingStaticMethodArgsScope = nil
-   self.namespace2Scope = {}
    self.class2defaultAsyncMode = {}
    local defaultAsyncMode
    
@@ -887,13 +891,10 @@ function TransUnit:__init(moduleId, importModuleInfo, macroEval, analyzeModule, 
    self.defaultAsyncMode = defaultAsyncMode
    self.importedAliasMap = {}
    self.importModuleSet = {}
-   self.processInfo = Ast.createProcessInfo( ctrl_info.validCheckingMutable, ctrl_info.validLuaval, ctrl_info.validAstDetailError )
    self.accessSymbolSetQueue = AccessSymbolSetQueue.new()
    self.advertisedTypeSet = {}
    self.closureFunList = {}
    self.scopeAccess = Ast.ScopeAccess.Normal
-   self.macroCtrl = Macro.MacroCtrl.new(macroEval)
-   self.typeNameCtrl = Ast.defaultTypeNameCtrl
    self.analyzingStateQueue = {}
    self.ctrl_info = ctrl_info
    self.ignoreToCheckSymbol_ = false
@@ -901,7 +902,6 @@ function TransUnit:__init(moduleId, importModuleInfo, macroEval, analyzeModule, 
    self.helperInfo = frontInterface.LuneHelperInfo.new()
    self.targetLuaVer = targetLuaVer
    self.importModuleInfo = importModuleInfo:clone(  )
-   self.nsInfoMap = {}
    self.has__func__Symbol = {}
    self.nodeManager = Nodes.NodeManager.new()
    self.macroScope = nil
@@ -909,23 +909,14 @@ function TransUnit:__init(moduleId, importModuleInfo, macroEval, analyzeModule, 
    self.modifier = TransUnitIF.Modifier.new(self.validMutControl, self.processInfo)
    self.moduleName = ""
    self.moduleType = Ast.headTypeInfo
-   self.parser = Parser.DefaultPushbackParser.new(Parser.DummyParser.new())
    self.subfileList = {}
    self.globalScope = self.processInfo:get_topScope()
-   local subRootTypeInfo = self.processInfo:get_dummyParentType()
-   self.nsInfoMap[subRootTypeInfo] = TransUnitIF.NSInfo.new(subRootTypeInfo, self.parser:createPosition( 0, 0 ))
-   
-   self.scope = Ast.Scope.new(self.processInfo, self.globalScope, true, nil)
    self.topScope = self.scope
    self.moduleScope = self.scope
    
    self.tentativeSymbol = TentativeSymbol.new(nil, self.globalScope, self.moduleScope, false, nil)
-   
-   self.typeId2ClassMap = {}
    self.typeInfo2ClassNode = {}
    self.commentCtrl = Parser.CommentCtrl.new()
-   self.errMessList = {}
-   self.warnMessList = {}
    self.analyzeMode = _lune.unwrapDefault( mode, AnalyzeMode.Compile)
    self.analyzePos = _lune.unwrapDefault( pos, self:createPosition( 0, 0 ))
    self.analyzeModule = _lune.unwrapDefault( analyzeModule, "")
@@ -957,14 +948,6 @@ function TransUnit:inAnalyzingState( state )
    
    return false
 end
-function TransUnit:addErrMess( pos, mess )
-
-   if mess:find( "type mismatch.*<- &" ) then
-      mess = mess .. ". if your code is the old style, use the opiton '--legacy-mutable-control'."
-   end
-   
-   table.insert( self.errMessList, string.format( "%s:%d:%d: error: %s", pos.streamName, pos.lineNo, pos.column, mess) )
-end
 function TransUnit:addWarnMess( pos, mess )
 
    table.insert( self.warnMessList, string.format( "%s:%d:%d: warning: %s", self.parser:getStreamName(  ), pos.lineNo, pos.column, mess) )
@@ -978,21 +961,6 @@ function TransUnit:addWarnErrMess( pos, err, mess )
       self:addWarnMess( pos, mess )
    end
    
-end
-function TransUnit:pushScope( classFlag, baseInfo, interfaceList )
-
-   self.scope = Ast.TypeInfo.createScope( self.processInfo, self.scope, classFlag, baseInfo, interfaceList )
-   return self.scope
-end
-function TransUnit:popScope(  )
-
-   self.scope = self.scope:get_parent(  )
-end
-function TransUnit:newNSInfo( typeInfo, pos )
-
-   local nsInfo = TransUnitIF.NSInfo.new(typeInfo, pos)
-   self.nsInfoMap[typeInfo] = nsInfo
-   return nsInfo
 end
 function TransUnit:getNSInfo( typeInfo )
 
@@ -1119,88 +1087,9 @@ function TransUnit:getCurrentClass(  )
    until scope:isRoot(  )
    return typeInfo
 end
-function TransUnit:getCurrentNamespaceTypeInfoMut(  )
-
-   local typeInfo = self.scope:getNamespaceTypeInfo(  )
-   local nsInfo = self.nsInfoMap[typeInfo]
-   if  nil == nsInfo then
-      local _nsInfo = nsInfo
-   
-      self:error( string.format( "not found nsInfo -- %s (%d)", typeInfo:getTxt(  ), typeInfo:get_typeId().id) )
-   end
-   
-   return nsInfo:get_typeInfo()
-end
-function TransUnit:getCurrentNamespaceTypeInfo(  )
-
-   return self.scope:getNamespaceTypeInfo(  )
-end
 function TransUnit:getCurrentNSInfo(  )
 
    return self:getNSInfo( self:getCurrentNamespaceTypeInfo(  ) )
-end
-function TransUnit:pushModule( processInfo, externalFlag, name, mutable )
-
-   local typeInfo = Ast.headTypeInfo
-   
-   local modName
-   
-   if name:find( "^@" ) then
-      modName = name
-   else
-    
-      modName = string.format( "@%s", name)
-   end
-   
-   
-   local nsInfo
-   
-   do
-      local _exp = self.scope:getTypeInfoChild( modName )
-      if _exp ~= nil then
-         typeInfo = _exp
-         do
-            local scope = self.namespace2Scope[typeInfo]
-            if scope ~= nil then
-               self.scope = scope
-            else
-               self:error( string.format( "not found scope -- %s", name) )
-            end
-         end
-         
-         nsInfo = _lune.unwrap( self.nsInfoMap[typeInfo])
-      else
-         local _
-         local parentInfo = self:getCurrentNamespaceTypeInfoMut(  )
-         local parentScope = self.scope
-         local scope = self:pushScope( true )
-         local newType = processInfo:createModule( scope, parentInfo, externalFlag, modName, mutable )
-         typeInfo = newType
-         self.namespace2Scope[typeInfo] = scope
-         nsInfo = self:newNSInfo( newType, self.parser:getLastPos(  ) )
-         
-         local _555, existSym = parentScope:addClass( processInfo, modName, nil, typeInfo )
-         if existSym ~= nil then
-            self:addErrMess( self.parser:getLastPos(  ), string.format( "module symbols exist -- %s.%s -- %s.%s", existSym:get_namespaceTypeInfo():getFullName( self.typeNameCtrl, parentScope, false ), existSym:get_name(), parentInfo:getFullName( self.typeNameCtrl, parentScope, false ), modName) )
-         end
-         
-      end
-   end
-   
-   if not self.typeId2ClassMap[typeInfo:get_typeId()] then
-      local namespace = Nodes.NamespaceInfo.new(modName, self.scope, typeInfo)
-      self.typeId2ClassMap[typeInfo:get_typeId()] = namespace
-   end
-   
-   return nsInfo
-end
-function TransUnit:pushModuleLow( processInfo, externalFlag, name, mutable )
-
-   return self:pushModule( processInfo, externalFlag, name, mutable ):get_typeInfo()
-end
-function TransUnit:popModule(  )
-
-   self:popScope(  )
 end
 function TransUnit:pushExtModule( externalFlag, name, accessMode, pos, lazy, lang, requirePath )
 
@@ -1228,167 +1117,6 @@ function TransUnit:pushExtModule( externalFlag, name, accessMode, pos, lazy, lan
    
    
    return self:newNSInfo( typeInfo, pos )
-end
-function TransUnit:pushClassScope( errPos, classTypeInfo, scope )
-
-   if self.scope ~= _lune.nilacc( classTypeInfo:get_scope(), 'get_parent', 'callmtd' ) then
-      local classParentName
-      
-      local classParentTypeId
-      
-      do
-         local parentType = _lune.nilacc( _lune.nilacc( classTypeInfo:get_scope(), 'get_parent', 'callmtd' ), 'get_ownerTypeInfo', 'callmtd' )
-         if parentType ~= nil then
-            classParentName = parentType:getFullName( self.typeNameCtrl, _lune.unwrap( parentType:get_scope()), false )
-            classParentTypeId = parentType:get_typeId()
-         else
-            classParentName = "nil"
-            classParentTypeId = Ast.dummyIdInfo
-         end
-      end
-      
-      self:addErrMess( errPos, string.format( "This class does not exist in this scope. -- %s -- %s(%d), %s(%d)", classTypeInfo:getTxt(  ), _lune.nilacc( self.scope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , self.typeNameCtrl, self.scope, false ), _lune.nilacc( _lune.nilacc( self.scope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ), "id" ) or -1, classParentName, classParentTypeId.id) )
-   end
-   
-   self.scope = scope
-end
-function TransUnit:pushClass( processInfo, errPos, mode, abstractFlag, baseInfo, interfaceList, genTypeList, externalFlag, name, allowMultiple, accessMode, defNamespace )
-
-   local typeInfo
-   
-   local nsInfo
-   
-   do
-      local _exp = self.scope:getTypeInfo( name, self.scope, true, Ast.ScopeAccess.Normal )
-      if _exp ~= nil then
-         typeInfo = _exp
-         nsInfo = _lune.unwrap( self.nsInfoMap[typeInfo])
-         
-         if _lune.nilacc( typeInfo:get_scope(), 'get_parent', 'callmtd' ) ~= self.scope then
-            self:addErrMess( errPos, string.format( "multiple class(%s)", typeInfo:getTxt( self.typeNameCtrl )) )
-            self:error( "stop by error" )
-         end
-         
-         
-         if typeInfo:get_abstractFlag() ~= abstractFlag then
-            self:addErrMess( errPos, string.format( "mismatch class(%s) abstract for prototpye", typeInfo:getTxt( self.typeNameCtrl )) )
-         end
-         
-         if typeInfo:get_accessMode() ~= accessMode then
-            self:addErrMess( errPos, string.format( "mismatch class(%s) accessmode(%s) for prototpye accessmode(%s)", typeInfo:getTxt( self.typeNameCtrl ), Ast.AccessMode:_getTxt( accessMode)
-            , Ast.AccessMode:_getTxt( typeInfo:get_accessMode())
-            ) )
-         end
-         
-         if baseInfo ~= nil then
-            if typeInfo:get_baseTypeInfo() ~= baseInfo then
-               self:addErrMess( errPos, string.format( "mismatch class(%s) base class(%s) for prototpye base class(%s)", typeInfo:getTxt( self.typeNameCtrl ), baseInfo:getTxt(  ), typeInfo:get_baseTypeInfo():getTxt(  )) )
-            end
-            
-         else
-            if typeInfo:hasBase(  ) then
-               self:addErrMess( errPos, string.format( "mismatch class(%s) base class(None) for prototpye base class(%s)", typeInfo:getTxt( self.typeNameCtrl ), typeInfo:get_baseTypeInfo():getTxt(  )) )
-            end
-            
-         end
-         
-         
-         local function compareList( protoList, typeList, message )
-         
-            if #protoList == #typeList then
-               for index, protoType in ipairs( protoList ) do
-                  if protoType ~= typeList[index] then
-                     self:addErrMess( errPos, string.format( "mismatch class(%s) %s(%s) for prototpye %s(%s)", typeInfo:getTxt( self.typeNameCtrl ), message, typeList[index]:getTxt( self.typeNameCtrl ), message, protoType:getTxt(  )) )
-                  end
-                  
-               end
-               
-            else
-             
-               self:addErrMess( errPos, string.format( "mismatch class(%s) %s(%d) for prototpye %s(%d)", typeInfo:getTxt( self.typeNameCtrl ), message, #typeList, message, #protoList) )
-            end
-            
-         end
-         
-         compareList( typeInfo:get_interfaceList(), _lune.unwrapDefault( interfaceList, {}), "interface" )
-         
-         compareList( typeInfo:get_itemTypeInfoList(), _lune.unwrapDefault( genTypeList, {}), "generics" )
-         
-         do
-            local scope = self.namespace2Scope[typeInfo]
-            if scope ~= nil then
-               self.scope = scope
-            else
-               self:errorAt( errPos, string.format( "not find scope -- %s", name) )
-            end
-         end
-         
-         do
-            local _switchExp = (typeInfo:get_kind() )
-            if _switchExp == Ast.TypeInfoKind.Class then
-               if mode == TransUnitIF.DeclClassMode.Interface then
-                  self:addErrMess( errPos, string.format( "define interface already -- %s", name) )
-                  Util.printStackTrace(  )
-               end
-               
-            elseif _switchExp == Ast.TypeInfoKind.IF then
-               if mode ~= TransUnitIF.DeclClassMode.Interface then
-                  self:addErrMess( errPos, string.format( "define class already -- %s", name) )
-                  Util.printStackTrace(  )
-               end
-               
-            end
-         end
-         
-      else
-         local parentInfo = self:getCurrentNamespaceTypeInfoMut(  )
-         
-         local parentScope = self.scope
-         local scope = self:pushScope( true, baseInfo, interfaceList )
-         local workGenTypeList
-         
-         if genTypeList ~= nil then
-            workGenTypeList = genTypeList
-         else
-            workGenTypeList = {}
-         end
-         
-         
-         local newType = processInfo:createClassAsync( mode ~= TransUnitIF.DeclClassMode.Interface, abstractFlag, scope, baseInfo, interfaceList, workGenTypeList, parentInfo, externalFlag, accessMode, name )
-         typeInfo = newType
-         self.namespace2Scope[typeInfo] = scope
-         nsInfo = self:newNSInfo( newType, errPos )
-         
-         parentScope:addClassLazy( processInfo, name, errPos, typeInfo, mode == TransUnitIF.DeclClassMode.LazyModule )
-      end
-   end
-   
-   if genTypeList ~= nil then
-      for __index, genType in ipairs( genTypeList ) do
-         self.scope:addAlternate( processInfo, accessMode, genType:get_txt(), errPos, genType )
-      end
-      
-   end
-   
-   
-   local namespace = defNamespace
-   if  nil == namespace then
-      local _namespace = namespace
-   
-      namespace = Nodes.NamespaceInfo.new(name, self.scope, typeInfo)
-   end
-   
-   self.typeId2ClassMap[typeInfo:get_typeId(  )] = namespace
-   
-   return nsInfo
-end
-function TransUnit:pushClassLow( processInfo, errPos, mode, abstractFlag, baseInfo, interfaceList, genTypeList, externalFlag, name, allowMultiple, accessMode, defNamespace )
-
-   return self:pushClass( processInfo, errPos, mode, abstractFlag, baseInfo, interfaceList, genTypeList, externalFlag, name, allowMultiple, accessMode, defNamespace ):get_typeInfo()
-end
-function TransUnit:popClass(  )
-
-   self:popScope(  )
 end
 function TransUnit:isTargetTokenPos( txt, pos )
 
@@ -1470,12 +1198,6 @@ function TransUnit:addLocalVar( pos, argFlag, canBeLeft, name, typeInfo, mutable
 end
 function TransUnit.setmeta( obj )
   setmetatable( obj, { __index = TransUnit  } )
-end
-function TransUnit:get_errMessList()
-   return self.errMessList
-end
-function TransUnit:get_warnMessList()
-   return self.warnMessList
 end
 function TransUnit:get_importedAliasMap()
    return self.importedAliasMap
@@ -1576,36 +1298,6 @@ function TransUnit:checkThreading( pos )
    end
    
    return false
-end
-
-
-function TransUnit:errorAt( pos, mess )
-
-   self:addErrMess( pos, mess )
-   
-   for __index, errmess in ipairs( self.errMessList ) do
-      Util.errorLog( errmess )
-   end
-   
-   for __index, warnmess in ipairs( self.warnMessList ) do
-      Util.errorLog( warnmess )
-   end
-   
-   if self.macroCtrl:get_analyzeInfo():get_mode() ~= Nodes.MacroMode.None then
-      print( "------ near code -----", Nodes.MacroMode:_getTxt( self.macroCtrl:get_analyzeInfo():get_mode())
-       )
-      print( self.parser:getNearCode(  ) )
-      print( "------" )
-   end
-   
-   
-   Util.err( "has error" )
-end
-
-
-function TransUnit:error( mess )
-
-   self:errorAt( self.parser:getLastPos(  ), mess )
 end
 
 
@@ -3968,7 +3660,7 @@ function TransUnit:createAST( parserSrc, macroFlag, moduleName )
    
    
    if moduleName ~= nil then
-      for __index, _1910 in ipairs( Util.splitStr( moduleName, '[^%.]+' ) ) do
+      for __index, _1705 in ipairs( Util.splitStr( moduleName, '[^%.]+' ) ) do
          self:popModule(  )
       end
       
@@ -4190,7 +3882,7 @@ function TransUnit:analyzeDeclMacro( accessMode, firstToken )
    local node = self:analyzeDeclMacroSub( accessMode, firstToken, nameToken, scope, parentInfo, workArgList )
    self.scope = backScope
    
-   local _1994, existSym = self.scope:addMacro( self.processInfo, nameToken.pos, node:get_expType(), accessMode )
+   local _1789, existSym = self.scope:addMacro( self.processInfo, nameToken.pos, node:get_expType(), accessMode )
    if existSym then
       self:addErrMess( nameToken.pos, string.format( "multiple define symbol -- %s", nameToken.txt) )
    end
@@ -4604,7 +4296,7 @@ function TransUnit:analyzeDeclEnum( accessMode, firstToken )
    
    self:popScope(  )
    
-   local _2169, shadowing = self.scope:addEnum( self.processInfo, accessMode, name.txt, name.pos, enumTypeInfo )
+   local _1964, shadowing = self.scope:addEnum( self.processInfo, accessMode, name.txt, name.pos, enumTypeInfo )
    self:errorShadowing( name.pos, shadowing )
    
    return Nodes.DeclEnumNode.create( self.nodeManager, firstToken.pos, self.macroCtrl:isInAnalyzeArgMode(  ), {enumTypeInfo}, enumTypeInfo, accessMode, name, valueList, scope )
@@ -4624,7 +4316,7 @@ function TransUnit:analyzeDeclAlge( accessMode, firstToken )
    local algeScope = self:pushScope( true )
    
    local algeTypeInfo = self.processInfo:createAlge( algeScope, self:getCurrentNamespaceTypeInfoMut(  ), false, accessMode, name.txt )
-   local _2181, shadowing = scope:addAlge( self.processInfo, accessMode, name.txt, name.pos, algeTypeInfo )
+   local _1976, shadowing = scope:addAlge( self.processInfo, accessMode, name.txt, name.pos, algeTypeInfo )
    self:newNSInfo( algeTypeInfo, name.pos )
    self:errorShadowing( name.pos, shadowing )
    
@@ -5823,7 +5515,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
    end
    
    
-   local node, _2719, methodNameSet = self:analyzeClassBody( hasProto, classAccessMode, firstToken, mode, gluePrefix, classTypeInfo, name, moduleLang, moduleName, lazyLoad, nextToken, inheritInfo )
+   local node, _2514, methodNameSet = self:analyzeClassBody( hasProto, classAccessMode, firstToken, mode, gluePrefix, classTypeInfo, name, moduleLang, moduleName, lazyLoad, nextToken, inheritInfo )
    local ctorAccessMode = Ast.AccessMode.Pub
    do
       local ctorTypeInfo = classScope:getTypeInfoChild( "__init" )
@@ -6610,7 +6302,7 @@ function TransUnit:analyzeInitExp( firstPos, accessMode, unwrapFlag, letVarList,
       
       if unwrapFlag then
          local hasNilable = false
-         for index, _3046 in ipairs( letVarList ) do
+         for index, _2841 in ipairs( letVarList ) do
             if expList:getExpTypeAt( index ):get_nilable() then
                hasNilable = true
                break
@@ -7973,7 +7665,7 @@ function TransUnit:checkMatchValType( pos, funcTypeInfo, expList, genericTypeLis
       alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( #funcTypeInfo:get_itemTypeInfoList() > 0 )
    end
    
-   local matchResult, _3638, newExpNodeList = self:checkMatchType( funcTypeInfo:getTxt(  ), pos, argTypeList, expList, false, warnForFollow, alt2typeMap )
+   local matchResult, _3433, newExpNodeList = self:checkMatchType( funcTypeInfo:getTxt(  ), pos, argTypeList, expList, false, warnForFollow, alt2typeMap )
    
    if expList and newExpNodeList then
       return matchResult, alt2typeMap, newExpNodeList
@@ -8037,7 +7729,7 @@ function TransUnit:analyzeListItems( firstPos, nextToken, termTxt, expectTypeLis
                   table.insert( expTypeList, expNode:get_expType() )
                else
                 
-                  for _3673 = 1, #expNode:get_expTypeList() do
+                  for _3468 = 1, #expNode:get_expTypeList() do
                      table.insert( expTypeList, itemTypeInfo )
                   end
                   
@@ -8052,7 +7744,7 @@ function TransUnit:analyzeListItems( firstPos, nextToken, termTxt, expectTypeLis
          
       end
       
-      local _3676, _3677, workExpList = self:checkMatchType( "List constructor", firstPos, expTypeList, expList, false, false, nil )
+      local _3471, _3472, workExpList = self:checkMatchType( "List constructor", firstPos, expTypeList, expList, false, false, nil )
       if workExpList ~= nil then
          expList = workExpList
       end
@@ -9837,7 +9529,7 @@ function TransUnit:analyzeNewAlge( firstToken, algeTypeInfo, prefix )
          
          
          do
-            local _4463, _4464, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, nil )
+            local _4258, _4259, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, nil )
             if newExpNodeList ~= nil then
                argList = newExpNodeList:get_expList()
             end
@@ -10105,7 +9797,7 @@ function TransUnit:analyzeExpOpSet( exp, opeToken, expectTypeList )
    end
    
    
-   local _4568, _4569, workList, expTypeList = self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), expList, true, false, nil )
+   local _4363, _4364, workList, expTypeList = self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), expList, true, false, nil )
    if workList ~= nil then
       expList = workList
    end
@@ -10832,7 +10524,7 @@ function TransUnit:analyzeStrConst( firstToken, token )
          local argNodeList = self:analyzeExpList( false, false, false )
          param = argNodeList
          
-         local _4844, _4845, workExpList = self:checkMatchType( "str constructor", firstToken.pos, {Ast.builtinTypeDDD}, argNodeList, false, false, nil )
+         local _4639, _4640, workExpList = self:checkMatchType( "str constructor", firstToken.pos, {Ast.builtinTypeDDD}, argNodeList, false, false, nil )
          if workExpList ~= nil then
             dddParam = workExpList
          else
@@ -11007,7 +10699,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, canLeftExp, prevOpLev
       end
       
       
-      local _4913, alt2type, newArgList = self:checkMatchValType( exp:get_pos(), initTypeInfo, argList, classTypeInfo:get_itemTypeInfoList(), classTypeInfo )
+      local _4708, alt2type, newArgList = self:checkMatchValType( exp:get_pos(), initTypeInfo, argList, classTypeInfo:get_itemTypeInfoList(), classTypeInfo )
       
       if #classTypeInfo:get_itemTypeInfoList() > 0 then
          if classTypeInfo:get_itemTypeInfoList()[1]:get_kind() == Ast.TypeInfoKind.Alternate then
@@ -11318,7 +11010,7 @@ function TransUnit:analyzeReturn( token )
       local workList = expList
       if workList ~= nil then
          do
-            local _5028, _5029, newExpNodeList = self:checkMatchType( "return", token.pos, retTypeList, workList, false, not workList:get_followOn(), nil )
+            local _4823, _4824, newExpNodeList = self:checkMatchType( "return", token.pos, retTypeList, workList, false, not workList:get_followOn(), nil )
             if newExpNodeList ~= nil then
                expList = newExpNodeList
             end

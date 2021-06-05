@@ -288,13 +288,13 @@ function TransUnitBase:get_scope(  )
 
    return self.scope
 end
-function TransUnitBase.new( ctrl_info, processInfo, parser, macroEval )
+function TransUnitBase.new( ctrl_info, processInfo, scope, parser, macroEval )
    local obj = {}
    TransUnitBase.setmeta( obj )
-   if obj.__init then obj:__init( ctrl_info, processInfo, parser, macroEval ); end
+   if obj.__init then obj:__init( ctrl_info, processInfo, scope, parser, macroEval ); end
    return obj
 end
-function TransUnitBase:__init(ctrl_info, processInfo, parser, macroEval) 
+function TransUnitBase:__init(ctrl_info, processInfo, scope, parser, macroEval) 
    self.macroCtrl = Macro.MacroCtrl.new(macroEval)
    self.typeId2ClassMap = {}
    self.typeNameCtrl = Ast.defaultTypeNameCtrl
@@ -302,15 +302,11 @@ function TransUnitBase:__init(ctrl_info, processInfo, parser, macroEval)
    self.warnMessList = {}
    self.namespace2Scope = {}
    self.processInfo = processInfo
-   self.scope = processInfo:get_topScope()
+   self.scope = scope
    self.nsInfoMap = {}
    local subRootTypeInfo = self.processInfo:get_dummyParentType()
    self.nsInfoMap[subRootTypeInfo] = NSInfo.new(subRootTypeInfo, Types.Position.new(0, 0, "@builtin@"))
    self.parser = parser
-end
-function TransUnitBase:error( mess )
-
-   Util.err( mess )
 end
 function TransUnitBase:addErrMess( pos, mess )
 
@@ -341,6 +337,10 @@ function TransUnitBase:errorAt( pos, mess )
    
    
    Util.err( "has error" )
+end
+function TransUnitBase:error( mess )
+
+   self:errorAt( self.parser:getLastPos(  ), mess )
 end
 function TransUnitBase:pushScope( classFlag, baseInfo, interfaceList )
 
@@ -413,7 +413,7 @@ function TransUnitBase:pushModule( processInfo, externalFlag, name, mutable )
          self.namespace2Scope[typeInfo] = scope
          nsInfo = self:newNSInfo( newType, self.parser:getLastPos(  ) )
          
-         local _203, existSym = parentScope:addClass( processInfo, modName, nil, typeInfo )
+         local _204, existSym = parentScope:addClass( processInfo, modName, nil, typeInfo )
          if existSym ~= nil then
             self:addErrMess( self.parser:getLastPos(  ), string.format( "module symbols exist -- %s.%s -- %s.%s", existSym:get_namespaceTypeInfo():getFullName( self.typeNameCtrl, parentScope, false ), existSym:get_name(), parentInfo:getFullName( self.typeNameCtrl, parentScope, false ), modName) )
          end
